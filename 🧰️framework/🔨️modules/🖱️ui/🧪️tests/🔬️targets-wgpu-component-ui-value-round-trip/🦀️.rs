@@ -73,6 +73,7 @@ mod value_round_trip_tests {
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_item_node_round_trips() {
         let value = UiTreeItemNode {
+            tone: None,
             window: None,
             granularity: None,
             id: "item1".into(),

@@ -1,0 +1,28 @@
+{
+  "schemaBytes": 3250,
+  "tableWidths": {
+    "ifc_aggregate_element": 4,
+    "ifc_argument": 5,
+    "ifc_complex_type": 4,
+    "ifc_document": 3,
+    "ifc_entity": 5,
+    "ifc_file_description_argument": 4,
+    "ifc_file_name_argument": 4,
+    "ifc_file_schema_argument": 4,
+    "ifc_header": 1,
+    "ifc_typed_argument": 4,
+    "ifc_value": 11
+  },
+  "cases": [
+    {
+      "id": "originalSourceFull",
+      "rows": 65,
+      "valueBytes": 1869
+    },
+    {
+      "id": "emptyEntitiesRetainHeader",
+      "rows": 18,
+      "valueBytes": 456
+    }
+  ]
+}

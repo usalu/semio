@@ -27,6 +27,7 @@
           "en": "Position in the DATA section, counted from 0.",
           "de": "Position im DATA-Abschnitt, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10

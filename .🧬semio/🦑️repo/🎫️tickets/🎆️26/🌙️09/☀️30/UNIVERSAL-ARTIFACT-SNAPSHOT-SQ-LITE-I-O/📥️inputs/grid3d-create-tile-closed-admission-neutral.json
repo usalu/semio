@@ -1,0 +1,136 @@
+{
+  "qualification": "Hand-authored schema admission cases; not executed; no rawIEEE inference from JSON.",
+  "schema": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️create-tile/🧬️schema/🔣️.json",
+  "cases": [
+    {
+      "id": "inline-mesh-u32-bound",
+      "accepted": true,
+      "value": {
+        "tile": {
+          "id": "",
+          "weight": 1,
+          "media": {
+            "kind": "mesh",
+            "mesh": {
+              "positions": [
+                0,
+                -1,
+                2
+              ],
+              "indices": [
+                0,
+                4294967295
+              ],
+              "color": {
+                "r": 0,
+                "g": 4294967295,
+                "b": 127,
+                "a": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "literal-child-unrestricted-identities",
+      "accepted": true,
+      "value": {
+        "tile": {
+          "id": "日本\u0000",
+          "label": "",
+          "weight": 1,
+          "media": {
+            "kind": "meshChild",
+            "child": {
+              "childId": "",
+              "target": {
+                "artifactId": "!@/\u0000世界",
+                "dialect": {
+                  "artifactKind": "",
+                  "standard": "",
+                  "subset": ""
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "index-u32-overflow",
+      "accepted": false,
+      "value": {
+        "tile": {
+          "id": "",
+          "weight": 1,
+          "media": {
+            "kind": "mesh",
+            "mesh": {
+              "positions": [
+                0
+              ],
+              "indices": [
+                4294967296
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "zero-weight",
+      "accepted": false,
+      "value": {
+        "tile": {
+          "id": "",
+          "weight": 0,
+          "media": {
+            "kind": "mesh",
+            "mesh": {
+              "positions": [],
+              "indices": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "wrong-media-discriminant",
+      "accepted": false,
+      "value": {
+        "tile": {
+          "id": "",
+          "weight": 1,
+          "media": {
+            "kind": "opaque",
+            "payload": "{}"
+          }
+        }
+      }
+    },
+    {
+      "id": "missing-child-subset",
+      "accepted": false,
+      "value": {
+        "tile": {
+          "id": "",
+          "weight": 1,
+          "media": {
+            "kind": "meshChild",
+            "child": {
+              "childId": "",
+              "target": {
+                "artifactId": "",
+                "dialect": {
+                  "artifactKind": "",
+                  "standard": ""
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

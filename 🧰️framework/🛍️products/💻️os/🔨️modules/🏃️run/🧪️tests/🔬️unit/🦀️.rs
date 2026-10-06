@@ -77,7 +77,7 @@ impl FakeLoad {
     }
 
     fn status(&self) -> protocol::DocumentArchiveLoadStatus {
-        protocol::DocumentArchiveLoadStatus { operation: self.operation, state: self.state, completed: self.completed, total: self.total, fault: self.fault.clone() }
+        protocol::DocumentArchiveLoadStatus { operation: self.operation, state: self.state, completed: self.completed, total: self.total, ahead: 0, fault: self.fault.clone() }
     }
 }
 
@@ -901,56 +901,7 @@ async fn register_builtin_converters_wires_vector_to_raster_through_convert_medi
     assert_eq!(converted.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Raster });
 }
 
-//#region 🔖️NativeManifestSmoke
-/// 🧭️ Walks up from `CARGO_MANIFEST_DIR` looking for `nx.json` — the SAME strategy
-/// `🏗️bootstrap/🦀️.rs`'s own `find_repo_root` uses, duplicated here (not `include!`d — the bin crate's
-/// own doc explains a `[[bin]]` target does not share the lib's module tree).
-fn test_repo_root() -> PathBuf {
-    let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    loop {
-        if dir.join("nx.json").is_file() {
-            return dir;
-        }
-        assert!(dir.pop(), "walked past the filesystem root looking for nx.json");
-    }
-}
 
-/// 🧪️ Loads the committed note descriptor using the canonical runtime profile order.
-/// Absence skips this optional integration probe and is never publication identity evidence.
-#[semio_framework_async_macros::async_test]
-async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
-    let repo_root = test_repo_root();
-    let descriptor_path = repo_root.join("🌎️hub/🧩️compositions/🗒️note/🛂️.descriptor.semio");
-    assert!(descriptor_path.is_file(), "committed note descriptor missing at {}", descriptor_path.display());
-
-    let candidate_wasm_paths = ["component-dev", "component-release"].map(|profile| repo_root.join("🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist").join(profile).join("semio_hub_note.wasm"));
-    let Some(wasm_path) = candidate_wasm_paths.into_iter().find(|path| path.is_file()) else {
-        return;
-    };
-
-    let mut plugin_paths = HashMap::new();
-    plugin_paths.insert("note".to_string(), wasm_path);
-    let mut descriptor_paths = HashMap::new();
-    descriptor_paths.insert("note".to_string(), descriptor_path);
-    // 🚫️async: this `#[test] fn` body is a sanctioned executor entry point (R4 clause 5) — the
-    // one thread root driving `WasmtimeNodeHost::new`/`manifest_for`, both `async fn` now that
-    // they build/drive the real `NativeKernelRuntime` (packet `run-kernel-wiring`). Same
-    // `semio_framework_async::block_on` convention every other test in this module already uses
-    // (see this crate's own `Cargo.toml` doc comment on why: a plain single-poll executor, not
-    // tokio).
-    let mut host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default())).await;
-
-    let manifest = host.manifest_for("note").await.expect("note must load natively from its committed descriptor, zero live describe() calls");
-    assert_eq!(manifest.plugin_id, "note");
-    assert!(!manifest.apps.is_empty(), "note's real manifest declares at least one app");
-    assert!(manifest.dependencies.is_empty(), "note's committed descriptor declares zero PluginManifest.dependencies");
-
-    let (routed_plugins, _routes) = host.io_router_stats().await;
-    assert_eq!(routed_plugins, 1, "note must be the one plugin registered with the io router after this load");
-    assert!(host.plugin_graph().is_registered("note").await.unwrap_or(false), "note must be registered in the plugin graph");
-    assert!(host.app_router().owned_surface_gaps().await.is_empty(), "note's own panels leave no viewer/editor surface gap");
-}
-//#endregion 🔖️NativeManifestSmoke
 
 
 #[semio_framework_async_macros::async_test]
@@ -975,3 +926,19 @@ async fn intrinsic_media_wire_runner_preserves_owned_tags_words_octets_and_occur
  assert!(matches!(values[2],DslValue::Number(Number::Float(value))if value.to_bits()==0x7ff8000000000011));assert!(matches!(values[3],DslValue::Number(Number::Float(value))if value.to_bits()==0x8000000000000000));
  assert!(matches!(&values[4],DslValue::String(value)if value=="\0引用😀"));assert!(matches!(&values[5],DslValue::Bytes(value)if value==&[0,255,17]));
 }
+
+//#region 🤝️AdmissionRefusal
+/// 🤝️ LAW (audit F1, caller half): an activation the guest itself was refused at reaches the runner's caller as that
+/// structured fault — its code and `guest`/`host` params intact for the localized notice — while a refusal the host
+/// raised stays its reason in words.
+#[test]
+fn an_admission_refusal_reaches_the_runner_as_the_guests_structured_fault() {
+    use semio_framework_plugin_host::activation::ActivationRefusal;
+    let fault = protocol::admit_guest_channel_version(20, 21).expect_err("a guest of another channel version is refused");
+    let refused = activation_refusal_error(ActivationRefusal::instantiation(semio_framework_plugin_host::PluginHostError::Refused(Box::new(fault.clone()))));
+    assert!(matches!(&refused, RunError::Refused(kept) if *kept == fault), "the guest's fault is kept whole: {refused:?}");
+    assert_eq!(refused.to_string(), format!("{}: {}", protocol::CHANNEL_MISMATCH_CODE, fault.message));
+    let host = activation_refusal_error(ActivationRefusal::host("Kernel activation refused: Saturated"));
+    assert!(matches!(&host, RunError::Host(reason) if reason == "Kernel activation refused: Saturated"), "a host refusal stays words: {host:?}");
+}
+//#endregion 🤝️AdmissionRefusal

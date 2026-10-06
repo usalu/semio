@@ -26,6 +26,7 @@
           "en": "Index of the frame, counted from 0.",
           "de": "Index des Einzelbildes, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -52,6 +53,7 @@
           "en": "Palette index drawn transparent; empty disables transparency.",
           "de": "Palettenindex, der transparent gezeichnet wird; leer schaltet Transparenz ab."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 20

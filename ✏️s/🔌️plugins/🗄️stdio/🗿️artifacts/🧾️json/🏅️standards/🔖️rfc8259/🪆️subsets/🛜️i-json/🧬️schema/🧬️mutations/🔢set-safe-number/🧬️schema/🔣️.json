@@ -18,6 +18,18 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/JsonPathSegment"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Path",
+          "de": "Pfad"
+        },
+        "description": {
+          "en": "Member names and array indices leading from the root to the value that is set; empty for the root.",
+          "de": "Eigenschaftsnamen und Array-Indizes von der Wurzel bis zum Wert, der gesetzt wird; leer für die Wurzel."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "lexeme": {

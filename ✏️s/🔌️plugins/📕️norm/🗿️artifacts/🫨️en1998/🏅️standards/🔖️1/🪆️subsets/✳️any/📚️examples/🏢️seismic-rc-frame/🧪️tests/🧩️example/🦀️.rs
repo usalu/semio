@@ -32,7 +32,7 @@ async fn every_example_asset_decodes_to_its_code_built_snapshot() {
         (crate::seismic_multipart::ID, crate::seismic_multipart::PRIMARY_TEXT, crate::seismic_multipart::snapshot()),
         (crate::seismic_multipart_fail::ID, crate::seismic_multipart_fail::PRIMARY_TEXT, crate::seismic_multipart_fail::snapshot()),
     ] {
-        let decoded = crate::standards::v1::subsets::any::schema::snapshot::decode_en1998_dsl(text).unwrap_or_else(|error| panic!("{id}: {error}"));
+        let decoded = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1998_dsl(text).unwrap_or_else(|error| panic!("{id}: {error}"));
         assert!(decoded == snapshot, "{id}: the committed asset must be the code-built snapshot");
     }
 }

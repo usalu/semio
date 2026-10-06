@@ -1,5 +1,5 @@
 import type { BrowserFrameDomEvent } from "../🚚️browser-frame-transport/🟦️.ts";
-import { WGPU_ACCESSIBILITY_MIRROR_ID } from "../♿️accessibility-mirror/🟦️.ts";
+import { accessibilityMirrorOwnsKey, WGPU_ACCESSIBILITY_MIRROR_ID } from "../♿️accessibility-mirror/🟦️.ts";
 
 export type BrowserKeyboardEvent = Extract<BrowserFrameDomEvent, { readonly type: "keydown" | "keyup" }>;
 
@@ -83,7 +83,8 @@ export function wireBrowserKeyboard(root: HTMLElement, canvas: HTMLCanvasElement
       const combobox = event.target.closest('[role="combobox"]');
       const editableCombobox = combobox instanceof HTMLInputElement || combobox instanceof HTMLTextAreaElement || combobox?.matches('[contenteditable]:not([contenteditable="false"])') === true;
       const retainedComboboxKey = ["Escape", "ArrowDown", "ArrowUp", "Home", "End", "PageDown", "PageUp", "Enter"].includes(event.key);
-      if (!modifier && (event.key === "Tab" || (editableCombobox && !retainedComboboxKey) || (!combobox && event.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])')))) return;
+      const owned = accessibilityMirrorOwnsKey(event.target, event);
+      if (!modifier && !owned && (event.key === "Tab" || (editableCombobox && !retainedComboboxKey) || (!combobox && event.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])')))) return;
       if (!combobox && event.target.closest("button") && ["Enter", " "].includes(event.key)) return;
       if (!modifier) event.preventDefault();
     }

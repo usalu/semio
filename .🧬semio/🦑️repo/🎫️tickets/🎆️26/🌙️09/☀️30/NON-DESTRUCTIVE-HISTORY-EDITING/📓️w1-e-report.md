@@ -1343,3 +1343,484 @@ Raw-code fallbacks still in the Rust history body (TT, S4-RUNTIME's regions; rou
 3. When "TESTS RESUMED": the S4.12 OWED list (contract tests, `semio-framework` reprojection + typegen, land and run the drafted plugin law,
    puzzle 2d `select_tool_history`).
 
+
+## Session 5 — 2026-10-05
+
+S5-UI (Opus) inherits S4-UI (UI contract, manifest input descriptors, React shell time-travel helpers, band corpus). Brief: P1 parity
+gap 3 (React disabled band controls), P2 design §22.2 (`nextProblem` band control), P3 design §22.7 (multiline + segmented + icon select,
+keyed list, `cloud-download`), P4 parity gap 4 React half (window size to AT), P5 naming, P6 owed verification. Scratch:
+`🗑️generated/s5-ui/`. Private test target `target-nde-s5-ui`. Locks: `landing` for Rust under `🧰️framework/**`, `serve` for bundled TS.
+
+### S5.1 Repair-first (rule 46) — done, nothing half-finished
+
+- 00:19 — `git diff HEAD --stat` over `🖱️ui`, `🛂️manifest`, `📺️renderer`: one file differs from HEAD, `🖱️ui/🌐️locale/🏷️label/🦀️.rs`
+  (+17 lines, a peer's `close_owned_cell_one` / `next_owned_close_byte_demand`, 10-04 23:19; not mine, complete).
+- Files newer than S4.13 (10-04 11:35): 178 carry the 18:26–18:27 mtime of the stash/pull/pop incident (resume §0.6) and equal HEAD;
+  three later ones are peer work (`🔮️oracles/🔣️.json` 18:44, `🎬️scene/📦️pack/🦀️.rs` 21:26, the label file above). I repaired nothing.
+- Locks at launch: `landing` and `serve` HELD by `COORDINATOR-ACTIVATION` (00:14 / 00:15). Waves are prepared under `🗑️generated/s5-ui/`.
+
+### S5.2 Status (kept current)
+
+- 00:25 — reading done (rules 1–54, resume §0/§1.5/§5, design §6/§10/§18/§22, parity audit, goal audit clause 5, e2e S4.2/S4.7).
+- 00:27 — P1 contract + P2/P3/P5 name proposals sent to `main`; all approved 00:3x. Coordinator sequencing (binding): the P3
+  VOCABULARY (Rust contract + manifest) lands as soon as the `landing` lock frees; served React TypeScript (P1, P2, P4, P5 and the
+  React rendering of P3) lands only after "REACT RUN 5 DONE"; the band copy moves into ONE corpus `labels` table (P5 wave);
+  S5-WGPU is the one writer of the contract's 🔖️AccessibilityProjection region (`set_size`/`pos_in_set`/… fields);
+  S5-RUNTIME owns the kernel `nextProblem` field, the manifest 🔖️HistoryEdit hunk and three new refusal labels.
+- 00:45 — staged, nothing on disk yet (both locks still `COORDINATOR-ACTIVATION`): wave `v1` (vocabulary, Rust + JSON, 17 files
+  + 2 manifest hunks) and wave `r1` part 1 (P1 band controls, P4 window size) under `🗑️generated/s5-ui/waves/`.
+- 05:20 — `s1` (30 non-Rust files) + `s1r` (4 Rust files) staged, dry-run clean and GREEN under overlay (S5.9): both React
+  packages type-check, 1063 + 79 + 204 + 805 + 1 Vitest laws and the Bun twins pass against the staged bytes; the only reds are
+  two laws that are red on the untouched tree. Nothing served is on disk. Waiting for "REACT RUN 5 DONE".
+
+### S5.3 Staging layout (`🗑️generated/s5-ui/`)
+
+- `stage.py` — `stage <wave> <name> <live path>` (base + new copy, base hash), `check <wave>`, `land <wave> [--dry]` (copy, or a
+  `diff3` three-way merge when the live file moved since staging; refuses on conflict; keeps `undo/`), `undo <wave>`.
+- `waves/v1/apply-contract.py`, `waves/v1/apply-manifest.py` — rebuild `new/` from `base/` (every anchor asserted unique);
+  `waves/v1/manifest-edits.md` — the two hunks of the hot shared `🛂️manifest/🦀️.rs` (Edit tool at landing, rule 17).
+- `waves/r1/` — served React TypeScript, lands after "REACT RUN 5 DONE".
+- `probe-reader*.ts` — the TS manifest reader over candidate corpus cases (how the new `expectedInputs` were derived).
+
+### S5.4 Decisions taken (all relayed and approved by `main`)
+
+| Item | Decision |
+|---|---|
+| P1 band controls | never `disabled`/`title`; a refused control is `aria-disabled="true"` + `aria-describedby` → `[data-slot=row-action-reason]` (sr-only at rest; `[data-revealed][role=tooltip]` on hover 400 ms / focus / press; hidden on leave / blur / Escape), wrapper `[data-slot=disabled-reason-hint]`, press dispatches nothing. Controls sit in `[data-semio-time-travel-controls][aria-live=off]` so a revealed reason never re-announces the status |
+| P2 | wire `HistoryTimeTravel.nextProblem?: { mutationId, store? }` (S5-RUNTIME); corpus control `nextProblem` first in `reviewing`: `[nextProblem, rerun, finalize, exit]`, verb `historyEditBegin{mutationId, store?}` (no `generation`); key `ui.timeTravel.nextProblem` |
+| P3 multiline | manifest `ActionArgControl::Multiline` (`{kind:"multiline"}`); contract node = existing `Input` + `InputKind::LongText` + `commit:"blur"`; law `text_input_key(kind, key, {primary, shift, alt})` + TS `uiTextInputKey`, corpus `🖱️ui/🧬️contract/🧫️fixtures/🧫️text-controls` |
+| P3 segmented | contract `SelectProps.appearance: SelectAppearance::{Menu (off the wire), Segmented}`; builder `.appearance(…)`; typed ordinal 3 |
+| P3 icon select | existing `Component::IconSelect`; new builder `icon_select(value, classifier_kind)` (+ `.mixed()`) |
+| P3 keyed list | no widget: the declared shape `{ entries: [{ <key>, value }] }` reads as list rows of text inputs with the readers as they are (corpus case `keyed-list-of-typed-values`); S5-TOOLS drops `widget:"dictionary"` and labels `entries`/`questionId` in the forms dictionary schema |
+| P3 icon | source SVG `🖼️assets/🔣️icons/💻️devices/🌧️cloud-download.svg` + `catalog` row; the generated `IconName` needs the coordinator's icon generate |
+| P5 term | "History editing" / "Verlaufsbearbeitung" (the term of `TimeTravelLabel`, the manifest verbs, kernel notices and the guest section); only the React/wgpu host chrome said "Time travel" / "Zeitreise" |
+- 01:05 — all three waves staged and self-checked (every anchor unique; the staged band corpus validates against its staged
+  schema with Python `jsonschema`, 0 errors; the staged `🧫️mutation-inputs` cases equal the TS reader's output byte for byte in
+  canonical JSON). Baseline RUN on the untouched tree: renderer-react `bun ./📜️script.ts test '⏪️time-travel/🧪️tests/🧩️component'`
+  → **1 file, 49/49 ✔** (36 s). Routing notes sent to `main` (wgpu role arm, layout/forms leaf edit, drafted plugin law, icon generate).
+
+### S5.5 The three waves (what each holds, what it waits for)
+
+| Wave | Lock | Waits for | Holds |
+|---|---|---|---|
+| `v1` vocabulary, Rust + JSON | `landing` | the lock only | contract: `SelectAppearance` + `SelectProps.appearance` (component, builder, typed catalog ordinal 3, copy / compare / retirement scalar lists), builder `icon_select`, law `text_input_key` + corpus `🧫️text-controls` (+ schema) + Rust law, 3 new Rust tests; manifest: `ActionArgControl::Multiline` + `control()` arm, corpus cases `multiline-text` and `keyed-list-of-typed-values` + Rust assertions; icon source `cloud-download` (SVG + catalog row); 2 `SelectProps` literals in the wgpu shell |
+| `v2` vocabulary, TS + projections + React | `landing` then `serve` | "REACT RUN 5 DONE", `v1` | TS projection strings (`🧬️contract/🧬️schema/🦀️.rs` `SelectAppearance` + `SelectProps` v2, `🧬️schema/📽️projection/🦀️.rs` `ActionArgControl` v3) with the two hand-mirrored generated TS files (so both `exports_typescript_bindings` laws stay green in every intermediate state); contract TS twin `uiTextInputKey` / `uiTextInputKeyOf` + `🧪️tests/🧪️text-controls/🟦️.ts` (wired into the contract `📜️script.ts`); manifest TS `argControl` multiline; retained typed decoder `appearance` + fixture row 28; `ToggleGroup` `semantics="radio"`; Interpreter `InputView` key law + segmented `SelectView` + in-source law `🧪️text-keyboard-law`; staged-arg `multiline` + radio segmented |
+| `r1` React chrome + band corpora | `serve` | "REACT RUN 5 DONE"; `--p2` needs the kernel `nextProblem` (TS + schema), `--codes` needs RUNTIME's `⏪️time-travel/🟦️.ts` rows | P1 band controls; P4 `aria-setsize`/`aria-posinset`; P5 = the corpus `labels` table (55 keys × 2 tiers × 2 locales) + `controlId` per control row + `label` per refusal row + renamed copy in the i18n catalogue and both corpora; P2 `nextProblem` control, cases, `scrollTo` transitions, reveal + scroll hook; the two new refusal codes + read-only label |
+- 01:40 — still nothing on disk. `landing` was free 01:10:52 and has been taken first-come by S5-STORE, S5-RUNTIME, S5-TOOLS since
+  (my three blocking acquires lost the 15 s poll race; I now poll every 2–5 s). Rule 55 (build gate v4: < 4 cargo, < 6 rustc,
+  `CARGO_BUILD_JOBS=3`, tests need ≥ 25 GiB free), rule 56 (foundation status: `RED 01:32:54 semio-framework-pack` — a Codex peer
+  mid-wave in `🎒️pack`; I do not acquire `landing` for v1 while it is RED, a blocked verifying check under the lock would stall the
+  fleet) and rule 57 (every non-test TS under `🧰️framework/**` needs `serve`) read and applied.
+- 01:40 — S5-RUNTIME's wire is on disk (kernel `HistoryTimeTravel.nextProblem: HistoryTimeTravelProblem {mutationId, store?}` in Rust,
+  TS and the `history-patch` schema; `TIME_TRAVEL_CODE_LABELS` 20 with `timeTravel.not-withdrawable` / `timeTravel.editor-closed`,
+  label `refusalReadOnly`): wave `r1` is built as `apply.py --p2 --codes`; its staged corpus validates against its staged schema AND
+  the LIVE kernel schema (Python `jsonschema`, 0 errors). Until `r1` lands the React law "names every timeTravel.* code the vocabulary
+  lists" is expected RED on disk (20 codes in the twin, 18 in `HISTORY_REFUSAL_LABEL_KEYS`) — `r1` waits for "REACT RUN 5 DONE".
+
+### S5.6 Wave `v1` — LANDED 02:00:57 → 02:10:48 (`landing` held 9 m 51 s), verified
+
+Files (13 modified, 3 new): contract `🧩️component/🦀️.rs` (`SelectAppearance`, `SelectProps.appearance`, `TextInputKey`,
+`TextInputModifiers`, `TextInputKeyAction`, `text_input_key`), `🏗️builder/🦀️.rs` (`SelectBuilder::appearance`, `icon_select` +
+`IconSelectBuilder::mixed`), `🧾️typed/🦀️.rs` (ordinal 3), `🪞️copy/🦀️.rs`, `⚖️compare/🦀️.rs`,
+`♻️retirement/🌳️typed/🧱️component/🦀️.rs`, `🧪️tests/🔬️component-unit/🦀️.rs`, `🧪️tests/🔬️builder-unit/🦀️.rs`, NEW
+`🧫️fixtures/🧫️text-controls/🔣️.json` + `🧬️schema/🔣️.json` (15 rows); manifest `🛂️manifest/🦀️.rs` (3 hunks, Edit tool:
+`ActionArgControl::Multiline`, the `control()` arm, its docstring), `🧫️fixtures/🧫️mutation-inputs/🔣️.json` (+2 cases, 44),
+`🧪️tests/🧪️mutation-inputs/🦀️.rs`; icons NEW `🖼️assets/🔣️icons/💻️devices/🌧️cloud-download.svg` + `🔣️shortcodes.json` catalog row;
+foreign: 2 `SelectProps` literals in `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`.
+
+| Command (gate v5, `CARGO_BUILD_JOBS=3`) | Result |
+|---|---|
+| `cargo check -p semio-framework-ui-contract --lib` (`out/v1-check-contract.txt`) | exit 0, 11 s |
+| `cargo check -p semio-framework-ui-contract -p semio-framework -p semio-framework-plugin -p semio-framework-ui -p semio-framework-os-renderer-wgpu --lib` (`out/v1-check-batch.txt`) | exit 0, 2 m 20 s; all five type-checked (warnings ui 48 / framework 154 / plugin 283 / renderer-wgpu 274) |
+| `cargo test -p semio-framework-ui-contract --lib -- text_controls a_select_states select_builder icon_select every_component_variant typed_wire number_controls_fixture color_input_fixture --test-threads=1` (private uplift `target-nde-s5-ui`, `out/v1-test-contract.txt`) | **11 ✔ / 0 ✘** (215 filtered out), incl. the 4 new laws |
+
+My fault (rule 61, written after it): the SVG and `🔣️shortcodes.json` are non-Rust framework files and went in without `serve`;
+the page reloaded under a probe batch. From here every non-Rust, non-test framework file takes `serve`.
+OWED for v1: `cargo test -p semio-framework --lib -- mutation_inputs derived_controls every_corpus_case` (the Rust reader over the two
+new corpus cases and `ActionArgControl::Multiline`; a `semio-framework` test build — needs ≥ 25 GiB free and a quiet gate).
+
+### S5.7 Live fault F1 (S5-E2E, React 6012, step 10) — root cause found, fix staged as wave `f1`
+
+Symptom: the slider's readout editor closes "from outside" (typed `-5` + Enter shows no refusal; sometimes it does not stay open
+at all) — only when the History body is refreshed while it is open; focus ends on a tree row.
+
+Reproduction (jsdom, the real History leaf: `panelTabDefinitionToNode` + `UiDocumentStore.loadSnapshot`, temporary law in the band
+component test, removed again): open the readout editor, then refresh the body —
+
+| Refresh | Editor open after | Same `<input>` | Same slider element | Focus |
+|---|---|---|---|---|
+| identical body | yes | yes | yes | input |
+| row description changed | yes | yes | yes | input |
+| a row appended AFTER the input row | yes | yes | yes | input |
+| rows inserted BEFORE the input row (node id 6 → 8) | **no** | no | **no** (the row element itself is the same) | body |
+
+Root cause: `🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx` renders a section's rows from a state copy of the `sections` prop
+(`getTreeSectionItems = sectionItemsById[section.id] ?? section.items`, re-seeded in a `useEffect`), one render behind the prop.
+`builtNodeToSnapshot` mints node ids by pre-order DFS, so a shape change ahead of a row renumbers it; in the stale render the row
+still holds `<UiNodeView id=old>`, whose per-node store subscription has already fired and now reads a DIFFERENT node — React
+unmounts the control and mounts a fresh one a pass later. Open readout editor, stepper / text / LongText drafts and focus are lost;
+`retainTreeFocus` then (correctly) repairs the removed focus onto a row, which is what the probe's focus trace saw.
+
+Fix (staged, `waves/f1/apply.py`): a section's own `items` are read off the prop in the same render; state keeps only the rows an
+async `getItems` loaded (`treeSectionItemsSeed` / `treeSectionItemsMapsEqual` deleted, the loader skips a section that has its own
+rows, a sections change still forgets loaded rows as before). Laws staged: `🌳️Tree` component — "never renders a row control
+against rows the prop no longer holds" (external-store-bound control; fails on today's tree by construction) and the lazy-section
+reload law; band component — "a body refresh never remounts an input that is being edited" with E2E's sequence (focus the Inputs
+header, double-click the factor readout, type `-5`, refresh with 2 / 0 / 1 leading rows, Enter → editor open, `aria-invalid`,
+alert "Must be greater than 0", nothing dispatched) and the stepper / text / LongText variant.
+Baselines RUN on the untouched tree: ui-react `🌳️Tree/🧪️tests/🧩️component` **54/54 ✔** (`zsh 🗑️generated/s5-ui/uireact-vitest.sh …`,
+budget 540 s — the default 15 s budget is exceeded under fleet load); renderer band suite **49/49 ✔**.
+Status: WRITTEN, UNVERIFIED (needs `serve`: the Tree element is bundled) — slot requested from `main`.
+
+### S5.8 Resume after the 02:40 usage cut (04:22) — repair-first, then ONE served landing staged
+
+- Repair-first (rule 62): v1 intact — all 15 landed files equal the staged bytes, the 3 manifest hunks are on disk; the temporary
+  F1 repro law was already removed from the live band test before the cut (0 `[DEBUG]` left). Nothing half on disk.
+- New since the cut (relayed by `main`): F1 root cause accepted; S5-RUNTIME's wire on disk (`nextProblem`, 20 codes, row actions
+  `[Edit, Withdraw | Restore]`, 13th verb `historyEditRestore`, guest arms for Segmented / IconSelect / LongText); live faults
+  **F2** (band controls 22.39 px high), **O5 / O1** (band has no opaque surface and lies over panel rows / the footer),
+  **F3** (a row's Edit natively `disabled` without a reason while replaying); rule 63 (`foundation.status = BUILDING` → no cargo).
+- 04:43 — everything staged as ONE served landing, dry-run clean. Baselines RUN on the untouched tree: ui-react `tsc --noEmit`
+  **0 errors** (28 s), renderer-react `tsc --noEmit` **0 errors** (41 s).
+
+#### What the landing holds (`waves/s1` = 29 non-Rust files, `serve`; `waves/s1r` = 4 Rust files, `landing` + cargo)
+
+`waves/s1/build.py` refreshes each wave's base from the live tree, rebuilds `f1`, `r1 --p2 --codes`, `v2` with their own apply
+scripts and folds the results per file with `merge3.py` — a byte-safe three-way line merge written because `diff3 -m` silently
+drops the rest of a line after a NUL byte and the interpreter source carries NUL separators in two template literals (caught by
+the transpile check: `bun build --no-bundle` of every staged TS/TSX file).
+
+| Part | Change | Law staged with it |
+|---|---|---|
+| F1 | `🌳️Tree`: a section's own rows are read off the `sections` prop in the same render (state keeps only `getItems` rows) | Tree: a store-bound row control never renders against rows the prop no longer holds; lazy sections still load and reload. Band: E2E's sequence (focus the Inputs header → double-click the factor readout → type → 3 refreshes → Enter refused naming the bound); stepper / text / LongText drafts keep element, text, focus |
+| F1+ | `DisabledReasonHint` takes `reason: string \| undefined` and ALWAYS wraps its action (tree rows, table rows, band controls): a control keeps its element and its focus when it becomes refused or runnable | Tree "Row action identity"; band "keeps a control's element and the focus on it…" |
+| F3 (host half) | `TreeRowActionButton`: a busy action is `aria-disabled` + `aria-busy`, never the native attribute (`disabled={!busy && disabled && !reason}`); a disabled action without a reason stays unreachable as the shared corpus `♿️disabled-row-action` says | Tree "Busy row action focus" (4-row matrix); band: every `timeTravel.*` refusal × en/de renders focusable + described, and the pending-dispatch case keeps focus and then names the reason |
+| F2 | band and reprojection controls `inline-flex min-h-large min-w-large` (`--size-large` = 9 × `--ui-spacing`: 28.8 px compact, 39.6 px touch) | band: utilities exist in the styling CSS, token ≥ 24 px at both densities (read from the CSS source), every control wears both classes |
+| O5 / O1 | `bg-menu` names no colour (`--color-menu` does not exist) → band + reprojection status are `Surface level="panel"` (opaque `ui-surface`); new `Layout` slot `superfooter` (in flow above the footer, below the merged mobile panel); ShellHost mounts the bottom bands there instead of an `absolute bottom-double` overlay; the reprojection status is now mounted whenever a reprojection exists (it was shown only beside another band) | Layout: superfooter row in flow, order navbar / middle / superfooter / footer, desktop + mobile; band: `data-level=panel` + `ui-surface`, no `bg-menu`; ShellHost source pin (one slot, no out-of-flow class, reprojection in the condition). A real-geometry (Playwright) law is OWED as a test-only file after the landing |
+| P1 | band controls: never `disabled` / `title`; `aria-disabled` + reason hint; controls group `aria-live="off"` | band: per-stage attributes, Tab walk, hover / focus / press reveal, en + de |
+| P2 | `nextProblem` control (first in `reviewing` when the session names one), `historyEditBegin{mutationId, store?}`; `timeTravelTransitionV1` gains `scrollTo`; `scheduleTimeTravelScrollV1`; reveal on the edge into a blocked review | corpus cases ×2 (+store), transitions ×3 with `scrollTo`; band laws for control, dispatch, scroll, statechart |
+| P4 | windowed rows publish `aria-posinset` / `aria-setsize` (`treeWindowRowAriaAttributes`) | Tree + band (40-mutation row) |
+| P5 | corpus `labels` table (55 keys × normal / beginner × en / de), `controls[].controlId`, `refusals[].label`; copy renamed to "History editing" / "Verlaufsbearbeitung"; i18n catalogue + peers corpus follow; `TIME_TRAVEL_CONTROL_IDS`, DOM `id` per control | band: catalogue pinned to the table (keys, tiers, locales, no other key), every corpus line derived from the table, no "time travel" / "Zeitreise" left |
+| codes | `timeTravel.not-withdrawable`, `timeTravel.editor-closed` (+ label `refusalReadOnly`), texts read from the live `⏪️time-travel/🟦️.ts` twin at build time | the existing "names every timeTravel.* code" law (20 codes) |
+| rows | fixture row shapes `[Edit, Withdraw]`, `[Edit, Restore]`, `[Edit (refused), Withdraw]`, `[Edit]` | band: each action its own verb on the row's one target |
+| v2 | TS twins `uiTextInputKey` / `uiTextInputKeyOf`, `SelectAppearance` in the projections + typed decoder (+ fixture row 28, wire schema count), manifest `argControl` multiline; React: `InputView` key law (Enter = line in LongText, Ctrl/⌘+Enter commits, Escape reverts, composing Enter ignored), segmented select = `ToggleGroup semantics="radio"`, `IconSelectView` named + lockable, staged-arg `multiline` | contract `🧪️text-controls` twin (wired into the contract script); Interpreter in-source `🧪️text-keyboard-law` (corpus rows through physical keys with `user-event` as oracle, segmented radio group, icon select); ToggleGroup radio law; staged-arg laws; manifest TS corpus assertions |
+
+`history.unit-spans-documents` needs no React change: it is a kernel history notice (`HISTORY_NOTICE_LABELS`, fixture
+`🧫️history-notices`), shown through `historyLaneNoticeV1`, and the existing law enumerates the fixture.
+
+### S5.9 Pre-landing verification without touching the tree (04:50 → 05:20) — s1 is 30 files, green under overlay
+
+`main` approved `s1` then `s1r` (04:4x) and added two items; both are in `s1` now, plus four things the overlay runs found.
+
+**Tools written** (all under `🗑️generated/s5-ui/`, nothing is written to the tree):
+
+| Tool | What it does |
+|---|---|
+| `overlay-tsc.ts <package> <wave>` | TypeScript compiler host with the wave's `new/` files over their live paths (new files and their directories included) |
+| `overlay-vitest/config.ts` + `setup.ts` + `run.sh <ui\|react> <level> <wave> <filters…>` | the package's own Vitest config plus a `pre` plugin that resolves and loads overlaid modules from the staged files, and a setup file that gives `node:fs` reads (`readFileSync`, `existsSync`, `promises.readFile`) of the same paths the same bytes; own Vite cache `out/vite-overlay-*` |
+| `overlay-vitest/bun-preload.ts` | the Bun twin (`bun --preload`), created files in a namespace of their own with their future `import.meta.url` |
+| `check-s1.sh` | transpile of every staged TS/TSX, JSON parse, both overlay type-checks, landing dry-run |
+
+**Added to `s1` since S5.8**
+
+| Part | Change | Law |
+|---|---|---|
+| O3 (`main`, design §4) | a shell never tells a silent refusal: `HISTORY_SILENT_REFUSALS_V1 = {timeTravel.stale}`, `historyFaultNoticeV1` / `historyOutputNoticeV1` answer `null` for it; `historySilentRefusalOfFaultV1` / `…OfOutputV1` keep the code for the trace; ShellHost: the `{rejected}` result is logged with `console.debug` and shows no notice, a thrown fault settles the input ledger as refused (its one `console.warn` line) without a notice, the command path the same. Corpus: `refusals[].silent: true` on that one row (+ schema) — language-neutral, for the wgpu shell too | band: corpus rows × (verb result, fault code, fault cause) — notice is `null` exactly for the silent rows, the code is still named; the corpus and the shell name the same set |
+| F3 "answer ends pending" | no host change needed: `useRowActionAdmissionV1` finishes its token when the host's dispatch promise settles, resolved or rejected. What kept the button dead in the live page was the native `disabled` of the pending state plus the Tree's row copy (F1). The table row action had the same native `disabled` while pending → now `disabled={unavailable}` only (a retired document) | `🧪️tests/🎬️row-action-admission` (existing law, three endings completed / refused / rejected): pending = `[disabled, aria-disabled, aria-busy] = [false, "true", "true"]` and keeps the focus; settled = none of the three, still focused. Band: press → pending → answer → enabled again without a reason, same element, focused → press again → guest refusal while pending → answer leaves the refusal standing |
+| found by overlay | segmented radio group: the chosen option is the group's one Tab stop (it followed the last focused option) | ToggleGroup radio law |
+| found by overlay | staged-arg fixture `schema: { kind: "string", options: [] }` (type error) | overlay type-check |
+| found by overlay | table row action kept focusable for a guest-disabled action without a reason, as the existing `📊️table` law demands (my first cut made it native) | existing "dispatches a tree row and a table row with one target identically" |
+| found by overlay | text-keyboard law: caret set to the end before a multi-line Enter; radio names compared trimmed | — |
+
+**RUN under overlay (wave `s1` as staged at 05:16, tree untouched)**
+
+| Command (`zsh 🗑️generated/s5-ui/overlay-vitest/run.sh …`, or as stated) | Result |
+|---|---|
+| `check-s1.sh`: transpile + JSON | 0 failures |
+| overlay `tsc` ui-react / renderer-react | **0 / 0 diagnostics** |
+| `stage.py land s1 --dry` | 30 × copy (no live file moved) |
+| `ui long` — `🌳️Tree` `🎛️ToggleGroup` `📐️Layout` `💡️ChromeControlHint` component laws | **75 ✔ / 0 ✘** (4 files; untouched tree: 68) |
+| `ui long` — whole ui-react suite | **1063 ✔ / 1 ✘** (40 files). The red is `🕸️Diagram` "owned Diagram force", a timing law that is red on the untouched tree too under this load (re-run alone: untouched 54 ✔ / 1 ✘, overlay 53 ✔ / 2 ✘ — different laws of the same describe each time); not touched by the wave |
+| `react long` — band component + `🧪️staged-arg-controls` | **79 ✔ / 0 ✘** (untouched tree: 65 ✔ / 1 ✘, the 20-codes law) |
+| `react long` — `🗣️Interpreter/🟦️.tsx` + `🧾️typed/🟦️.ts` + `🎬️row-action-admission` | **204 ✔ / 1 ✘** — the red is the known "normalizes the native Input draft target through the retained browser cursor" (`Invalid native buffer admission`), red on the untouched tree |
+| `react exhaustive` — `📃️UiDocumentStore` "normalizes all native component variants" | **1 ✔** |
+| `react long` — every `🛠️ShellHelpers/🧪️tests/*`, `📊️Table` button accessibility, `🎛️UtilityTree`, local folders, session-authority notice, shell utility leaves, current contracts, engine contract, tool-run panel | **805 ✔ / 0 ✘** (17 files) |
+| `bun --preload …/bun-preload.ts` — contract twins | text-controls **40**, number-controls **273**, accessibility-projection **279** checks, exit 0 |
+| `bun test --preload …/bun-preload.ts ./🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🟦️.ts` | **96 ✔ / 0 ✘**, 544 expects (untouched: 542) |
+
+Not covered by an overlay: the Rust half (`s1r`), and anything only a browser shows (the live band at 375 / 768 / desktop is
+S5-E2E's re-probe; the band's own geometry law runs in Chromium inside the band suite and passed).
+
+**Landing procedure** (on "REACT RUN 5 DONE"): `zsh 🔐️lock.sh acquire serve S5-UI` → `python3 stage.py land s1` → "LABELS ON DISK"
+to `main` → `zsh verify-s1.sh` (real tree) → release `serve`. Then `landing` (FIFO) for `s1r` once `foundation.status` is GREEN.
+
+**Red by design between `s1` and `s1r`** (only my own contract laws, nobody else's): `cargo test -p semio-framework-ui-contract`
+component-unit `rows.len() == 27` (the typed fixture has row 28 after `s1`) and the typegen export laws (the hand-mirrored
+`🤖️generated` TS carries `SelectAppearance` / `multiline`, the two Rust projection tables only after `s1r`). **No typegen
+`generate` may run between the two** — it would regenerate the TS without `SelectAppearance` and break `comp.ts` / `manifest.ts`.
+
+### S5.10 Landing (05:21 → 05:40) — s1 and r2 on disk, verified on the real tree
+
+| When | What | Lock |
+|---|---|---|
+| 05:20 | "REACT RUN 5 DONE (en only; 376 PASS / 10 FAIL)" relayed by `main` | — |
+| 05:21:15 → 05:24:41 | **s1 LANDED** (30 files, `stage.py land s1` = 30 × copy, 05:21:16); "LABELS ON DISK" sent; real-tree `tsc --noEmit` ui-react **0**, renderer-react **0** (`verify-s1.sh tsc-ui tsc-react`), then released | `serve` 3 m 26 s |
+| 05:24 → 05:27 | real-tree laws: bun twins + mutation-inputs 96 ✔; ui-react 4 files **75 ✔**; band + staged-arg **79 ✔**; store **1 ✔**; Interpreter + typed + admission + command-rejection 206 ✔ / 2 ✘ — one the known native-buffer law, one NEW: `🧪️command-rejection` compares the order of `HISTORY_REFUSAL_LABEL_KEYS` with the corpus, and a peer had rewritten that table at 05:24:53 (derived from the kernel's `TIME_TRAVEL_CODE_LABELS`, twin order). The corpus was re-ordered by a peer at 05:29; green since | — |
+| 05:38:34 | **r2 LANDED** (3 files) — F5, see below | `serve` ~10 s |
+| 05:39 | real tree, after s1 + r2 + the peers' waves (S5-LOAD attach, S5-PUZZLE outcome codes): `tsc` renderer-react **0**; band + staged-arg **80 ✔ / 0 ✘**; Interpreter + typed + `🎬️row-action-admission` + `🧪️command-rejection` **208 ✔ / 0 ✘** | — |
+
+**F5 (live, Run 5 step 18)** — during a stepped document load the status `[data-semio-history-reprojection]` never showed
+outside the panel. Two halves. (1) Mount: before s1 the status was rendered only inside the block of another bottom band
+(session / check-in / reconnect); s1's `superfooter` condition includes `focusedReprojection !== null`. (2) Feed, **wave r2**:
+`loadDocumentPair` only fed the document-transfer task, and the program's history projection got a snapshot only after the
+load, so no `reprojection {kind:"load"}` ever reached the shell store while loading. Now the host folds its own polled
+progress: `shellHistoryProjectionWithLoadV1(projection, {completed, total} | null)` (sets the `load` reprojection alone;
+`null` ends a `load` one and never another kind; same object when nothing changes) and
+`programHistoryProjectionsWithLoadV1(projections, key, load)` (same map when nothing changes — the store wakes no reader);
+ShellHost's load call site calls it on every `progress` and in `finally`. Law (band suite): the first poll alone raises the
+status in en + de with the kernel's own title / text and the Cancel control; a step moves nothing else; a repeated poll is
+the same object; settle / fail / cancel leaves none; another kind is untouched; only the loading program's projection moves;
+source pin of the call site (one fold, in `progress` and in `finally`). What the status can show is what the load reports
+(E2E saw "0 of 1" for a two-example archive: F6, the guest load machine, S5-LOAD).
+
+`landing` ticket for s1r: lapsed on `main`'s order (S5-WGPU's waves 2 + 3 go first); re-queue when status shows `HELD by S5-WGPU`.
+
+### S5.11 r3 (F8), s1r, typegen laws (05:43 → 06:15) — everything of mine is on disk
+
+**F8 (live, tablet 768 × 1024, regression of s1)** — the bottom-right tab bar was painted over the band's first row ("Accept
+draft" / "Discard draft" unreachable by touch). Cause: an OPEN chrome-hosted bottom panel pulls its cap half a row below the
+canvas region into the footer band (`chromeHostedOpenPanelPositionStyle`: `bottom: -(footer-height + panel-header-height) / 2`);
+s1's `superfooter` row sat between that region and the footer, so the cap landed on it at every width (only visible where
+the band is wide). **Wave r3, LANDED 05:50:57** (`serve` ~8 s; 5 files): the Layout slot is now the last row, under the footer
+— prop `superfooter` → `subfooter`, DOM `[data-slot="layout-subfooter"] > [data-semio-bottom-bands]`; ShellHost, the band's
+docstring and both laws follow. No row may sit between the canvas/panels region and the footer (docstring says why).
+
+- Law (band suite, Chromium): the geometry law now mounts the REAL `Panel` (bottom-left + bottom-right open, chrome-hosted)
+  at tablet (non-mobile branch, touch density) and desktop; per control `elementFromPoint(centre)` must be the control; the
+  band must be rect-disjoint from both docks; each dock's cap must really overhang the canvas region into the footer.
+- Red-proof RUN on the s1 layout (overlay wave `r3-proof`, same law with the old slot): **fails** "tablet en reviewing: the band
+  lies under no part of the bottom-right dock". With r3 overlaid: band suite **62 ✔**, Layout suite **4 ✔**, overlay `tsc` 0 / 0.
+- Real tree after r3 (05:53): `tsc` ui-react **0**, renderer-react **0**; band + staged-arg **80 ✔**; ui-react 4 files **75 ✔**.
+- Follow-ups handed to `main`: S5-E2E's probe compares the slot with `layout-superfooter` in three places (verdict
+  `band-sits-in-the-superfooter-bands`) → `layout-subfooter`; S5-WGPU: the reserved band row belongs under the footer;
+  `subnavbar` (tutorial bar) has the mirrored exposure to an open chrome-hosted TOP panel's cap (not changed here).
+
+**s1r, LANDED 06:01:27** (`landing` 06:01:20 → 06:03:14; 4 Rust files, 4 × copy). RUN:
+
+| Command | Result |
+|---|---|
+| `cargo check -p semio-framework-ui-contract -p semio-framework --lib --features typegen` | exit 0, 55 s (154 warnings on `semio-framework` = type-checked) |
+| `cargo test -p semio-framework-ui-contract --features typegen --lib --test typegen_export -- typed_wire_neutral exports_typescript text_controls select --test-threads=1` (private target dir) | **7 + 1 ✔ / 0 ✘** — Rust-rendered TS == `🤖️generated/📜️ui-contract/🟦️.ts` (TYPES 92), typed fixture 28 rows |
+| `cargo test -p semio-framework --lib --features typegen -- exports_typescript_bindings mutation_inputs derived_controls every_corpus_case --test-threads=1` | **9 ✔ / 1 ✘** — the owed v1 descriptor-reader laws all pass; `manifest::app_label_tests::exports_typescript_bindings` is red on THREE FOREIGN rows |
+
+The red typegen law, diagnosed without another cargo run (the built test binary with `SEMIO_TYPEGEN_OUT`, diff kept at
+`🗑️generated/s5-ui/out/manifest-typegen.diff`): my `ActionArgControl { "kind": "multiline" }` is byte-equal. The generated
+`🤖️generated/🪪️manifest/🟦️.ts` carries three fields the Rust projection tables on disk do not: `ToolRunDefinition.member?`
+(line 1037), `UiTreeItemAction.reason?: Label` (1415), the tree item's `tone?: Tone` (1437–1442). A typegen `generate` before
+those Rust-table hunks are on disk would delete the three fields from the TS.
+
+**Real tree, 06:14 (last run of the session):** bun twins + mutation-inputs **96 ✔**; Interpreter + typed + row-action
+admission + command-rejection **208 ✔ / 0 ✘**; store variants **1 ✔**; every `🛠️ShellHelpers/🧪️tests/*`, Table button
+accessibility, UtilityTree, local folders, session-authority notice, shell utility leaves, current contracts, engine contract,
+tool-run panel **806 ✔ / 0 ✘** (17 files).
+
+**06:12 stand-back for wave B** (S5-CHANNEL holds all five locks): no landings, no served saves, no cargo until "LOCKS OPEN".
+
+### S5.12 Open items and coordinator actions (final for this session)
+
+| Item | State |
+|---|---|
+| P1, P2, P3, P4, P5, new codes, F1, F2, F3 (host half), F5 (host feed), F8, O1/O5, O3 | DONE, on disk, verified (S5.6, S5.9–S5.11) |
+| OWED (cargo, blocked by the stand-back) | `cargo test -p semio-framework-ui-contract --all-features --tests -- --test-threads=1`; `cargo test -p semio-framework --lib -- history_reprojection history_notices` (both carried over from S4.14; `CARGO_INCREMENTAL=0`, private `CARGO_TARGET_DIR`, build gate first) |
+| Coordinator: typegen `generate` | only after the three foreign Rust-table rows above are on disk; then `exports_typescript_bindings` (framework) must be re-run |
+| Coordinator: icon catalog generate | `cloud-download` (SVG + `🔣️shortcodes.json` row landed in v1) |
+| S5-E2E | probe slot name `layout-subfooter`; re-probe F3 / F5 / F8 / O3 live (not observable from a component law) |
+| S5-WGPU | corpus `refusals[].silent` (no notice for `timeTravel.stale`); `radiogroup` / `radio` for a segmented select with the chosen option as the one Tab stop; band row under the footer; touch token `--size-large` |
+| S5-RUNTIME | the drafted law `long_option_rows_state_their_choice_as_selected` (S5.4) |
+| S5-TOOLS | drop `widget: "dictionary"`, label `entries` / `questionId` (keyed-list vocabulary landed in v1) |
+| Not a fleet WP | `HISTORY_REFUSAL_LABEL_KEYS` was rewritten at 05:24:53 (derived from `TIME_TRAVEL_CODE_LABELS`) and the corpus refusals re-ordered at 05:29 outside a `serve` hold; my laws are green with both |
+
+### S5.13 Resume after the 07:45 usage cut (09:37 →) — typegen rows, a test-only real-stylesheet geometry law, Run 6 pre-diagnosis
+
+**Repair-first (rules 62 / 64):** s1, r2, r3, s1r on disk (`stage.py check`: every file `landed`, or `MOVED` by a later peer wave
+on top of mine); the projection table was untouched since s1r (06:01:27); nothing half-applied. One unregistered test file of
+mine was in the tree (`⏪️time-travel/🧪️tests/📐️geometry/🟦️.tsx`, in no config) — finished below.
+
+**1. The three projection rows (gate of the final regeneration wave) — APPLIED 10:01, `landing` held < 1 min (rule 67, apply only).**
+`🧬️schema/📽️projection/🦀️.rs`: `ToolRunDefinition … member?: string` (v1 → v2), `UiTreeItemAction … reason?: Label` (v2 → v3),
+`UiTreeItemNode … tone?: Tone` with its docstring (v1 → v2; the generated line before it ends in a space — the Edit tool trimmed
+it, restored byte-exactly). All three Rust fields exist (`⏯️tool-run`, wgpu `🧩️component`). Train line written, restore =
+`cp 🗑️generated/s5-ui/waves/t1/undo/projection.rs <table>`.
+Checked without a build: `python3 🗑️generated/s5-ui/render-projection.py` renders the table's own text the way
+`render_typescript` does (header literal + 205 rows joined by a blank line) → **byte-equal** to
+`🤖️generated/🪪️manifest/🟦️.ts` (95 309 bytes).
+
+**2. A peer's type error, relayed by `main`:** `🎛️UtilityTree/🧪️tests/🎛️picker-explicit-press/🟦️.tsx(52,61)` TS2769 — not a fleet
+file (63 uncommitted lines of a new "selection choices" law, saved 09:28). Fixed in one Edit (`children` as a prop of
+`ShellScopeProvider`). RUN: renderer-react `tsc --noEmit` **0 errors**; that suite **13 ✔ / 0 ✘**.
+
+**3. The Playwright real-geometry band law as a test-only file — DONE (three files, all inside `🧪️tests` directories, no lock).**
+- NEW `🛠️ShellHelpers/⏪️time-travel/🧪️tests/📐️geometry/🟦️.tsx`, registered in the renderer-react Vitest config
+  (`elementSuite("🛠️ShellHelpers/⏪️time-travel", "📐️geometry", "tsx")`). The Chromium law left the jsdom component suite
+  (89 lines; its hand-written utility sheet is gone).
+- What is real now: the stylesheet is the styling module's own `🖌️ui/🎨️.css`, compiled by Tailwind **the way the product
+  build does** — `Scanner` over the sheet's own `@source` (31 403 candidates, 290 kB CSS) plus the page's classes — and the
+  page is the real `Layout`, `Navbar`, `Footer`, two open chrome-hosted `Panel`s (the merged panel on a phone),
+  `TimeTravelBand` and `HistoryReprojectionStatus`, inside the wrapper class read from ShellHost's own source.
+  Why the scan matters: `--footer-height`, `--navbar-height`, `--panel-header-height`, `--panel-inset` are `@theme` tokens
+  Tailwind emits only when a class references them; compiled for the page's classes alone they are undefined, the dock's
+  `bottom: calc(…)` is dropped and the dock does NOT overhang — the first version of this law failed exactly there.
+- Scenes: the widest case and one case per corpus stage (reviewing, editing, replaying, choosing, finalizing), a document
+  load's status alone (F5), a session over a paused remote change — × phone 375 / tablet 768 (non-mobile, touch) /
+  desktop 1440 × en / de. Assertions: rows `navbar, region, footer, layout-subfooter` stacked inside the viewport; both docks
+  open and really overhanging the region into the footer band; every band inside its row, apart from navbar / region /
+  footer / every dock, **opaque** (computed background alpha 1), bands apart from each other; every control the top element at
+  its own centre, ≥ 24 × 24, apart from the others.
+- Red-proof RUN (overlay wave `g1-proof`: the pre-r3 `Layout` with the row above the footer): **fails** at tablet AND desktop —
+  "band 0 lies … under no dock: [true, true, true, false, false]". On the tree: **3 ✔ / 0 ✘**.
+- Found while moving it: my own law "offers Next problem first…" left the shell label locale in German; the Chromium law
+  that used to follow it restored English by accident. The describe now restores it after each law.
+- RUN on the real tree (10:09): `⏪️time-travel/🧪️tests/` + `🧪️staged-arg-controls` **82 ✔ / 0 ✘** (3 files).
+
+**4. Run 6 (build B1) pre-diagnosis from `🗑️generated/s5-e2e/`:** batch A 75 / 76, batch B 63 / 70 (+ 2 uncaught), batch C
+running. **Nothing shell-side.** Every red is the document-port control fault at attach — uncaught
+`actor-document-control.receipt-count` (A, B) and, on the 10:02 attach run, `actor-document-control.noncanonical` in
+`🔌️plugin/📡️backbone/🔗️binding/🟦️.ts` (`decodeDocumentBackboneControlV1` / `#exchange`): no archive is written
+(`folder-attach-writes-the-document-archive`, files `[]`), so the reload re-runs the example and `folder-reconnect-offered`
+(band `null` — correct: no folder was ever bound), `positions-persist…`, `edit-ids-survive…`, `document-rows-survive…`,
+`overwrite-row-survives…` fall with it. Owner: S5-LOAD / the backbone binding. The shell verdicts of my waves pass in A–C:
+`band-sits-in-the-subfooter-bands`, `band-overlaps-no-other-text-while-blocked` (slot `layout-subfooter`),
+`band-offers-next-problem-first-while-blocked`, `refused-band-controls-stay-reachable-and-name-why` (`native: false`, ids),
+`the-first-blocking-row-is-revealed-on-a-blocked-review`, `n15-edit-is-refused-while-choosing-naming-why` (`native: false`).
+
+**5. Regeneration, prepared (runs after "TYPEGEN LAW GREEN").** Typegen `generate` is the same law with `SEMIO_TYPEGEN_OUT`
+(it writes what it would compare) → no content change is expected in either generated TS. The icon catalog generate
+(`bun ./📜️script.ts generate` in `🖼️assets/📦️packages/🟦️typescript`) was previewed (`preview-generated`, diffed against disk):
+7 files, all `cloud-download` — README, `🖼️icons/🟦️.ts` / `🔷️.cs` / `🐍️.py`, the copied SVG, `🔤️shortcodes/🟦️.ts` (+ two
+docstring spellings of the generator), and the Rust `🪪️icon-name/🦀️.rs` (+ `IconName::CloudDownload`, 9 lines) — so it
+needs `landing` then `serve`, apply-only, with a train line.
+
+**6. §22.33 "Accept needs a change" — STAGED as wave `a1` (5 files; lands with B3, after the kernel field and the probe).**
+The session patch carries no "draft differs" fact (`changed` lives only in the guest's `TimeTravelPanel`), so the row needs one
+wire field — proposed to `main` for S5-RUNTIME: `HistoryTimeTravel.draftChanged` (omitted when false). The wire name is
+spelled once in `waves/a1/apply.py` (`FIELD`). Staged: corpus label `ui.timeTravel.refusal.unchanged` (en "Nothing to accept:
+no change yet" / de "Nichts zu übernehmen: noch keine Änderung", both tiers); the editing case becomes the changed draft
+(`draftChanged: true`, Accept runnable), a new case is the unchanged draft (Accept `disabledBy` the new key), the faulted
+editing case refuses Accept too; React `timeTravelBandControlsV1` reads the field; i18n catalogue + types; law: the refused
+Accept is focusable and names why in en + de, neither its press nor its chord dispatches, Discard and Exit run, and the
+first change makes the SAME button runnable. RUN under overlay with a scratch-only kernel twin + `history-patch` schema
+carrying the field (`waves/a1-proof`, never landed): overlay `tsc` renderer-react **0** / ui-react **0**; band component +
+geometry + command-rejection **68 ✔ / 0 ✘** (the corpus sessions validate against the patched kernel schema).
+Land: `python3 waves/a1/apply.py && python3 stage.py land a1` under `serve` — only once the kernel schema carries the field.
+
+**7. §22.31 (artifact-neutral board host)** — waits for S5-PUZZLE's field list ("BOARD CONTRACT WRITTEN"); nothing changed yet.
+
+### S5.14 Typegen law green, icon catalog on disk, owed law runs (10:23 → 11:00)
+
+Private build (`CARGO_TARGET_DIR` = `CARGO_BUILD_BUILD_DIR` = `🗑️generated/s5-ui/target`, `CARGO_BUILD_JOBS=3`, no gate; deleted
+again at 11:00 when the owed runs were done). The train reported FRAMEWORK GREEN 10:18:38 through a line after my 10:01 rows.
+
+| Command | Result |
+|---|---|
+| `cargo test -p semio-framework-ui-contract --features typegen --test typegen_export` | **1 ✔ / 0 ✘** (10:25) |
+| `cargo test -p semio-framework --lib --features typegen -- exports_typescript_bindings` | **1 ✔ / 0 ✘** (10:34) → "TYPEGEN LAW GREEN" sent |
+| both law binaries with `SEMIO_TYPEGEN_OUT` into scratch, `cmp` with the generated files | manifest TS 97 403 bytes and ui-contract TS 49 345 bytes **byte-identical** → the typegen regenerate changes nothing; not rewritten (a rewrite would only reload the live page) |
+| `cargo check -p semio-framework-os-infinite --lib` (after the icon wave) | exit 0, 47 warnings (12 m 58 s cold) |
+| `cargo test -p semio-framework --lib --features typegen -- history_reprojection history_notices mutation_inputs derived_controls every_corpus_case exports_typescript_bindings --test-threads=1` | **13 ✔ / 0 ✘** (10:58) — the owed S4 history laws and the v1 descriptor-reader laws |
+| `cargo test -p semio-framework-ui-contract --all-features --tests -- --test-threads=1` | **239 ✔ / 0 ✘** (lib 226, catalogue-carrier-map 12, typegen-export 1; 10:59) |
+
+**Icon catalog (`cloud-download`) — wave `i1`, ON DISK 10:39:50** (`landing` + `serve` held 14 s, apply only, train line
+10:40:00; FRAMEWORK GREEN 10:49:37 covers it). The generator's `generate` rewrites all 287 artifacts unconditionally
+(`writeAssetArtifacts`) — every icon the Rust catalog `include_str!`s would be touched and the live page reloaded 287 times —
+so `waves/i1/apply.py` writes only the files whose bytes change, taken from the generator's own `preview-generated` output:
+README, `🖼️icons/🟦️.ts` / `🔷️.cs` / `🐍️.py`, the SVG copy, `🔤️shortcodes/🟦️.ts`, Rust `🪪️icon-name/🦀️.rs`
+(`IconName::CloudDownload`). Proof: the generator's `check-generated` → "287 deterministic outputs are fresh".
+One file beyond the generator, found BEFORE applying: `♾️infinite/🖼️canvas/🌉️icon-name-value/🦀️.rs` is a hand-kept exhaustive
+`IconName` ↔ value bridge without a wildcard arm — a new variant breaks `semio-framework-os-infinite`. The two `cloud-download`
+arms went in in the same hold. It is the only such bridge in `🧰️framework`, `✏️s`, `🌎️hub`, `♻️mit-bestand`, `🎓️teaching`,
+`🏢️semio-tech`. Restore: `zsh 🗑️generated/s5-ui/waves/i1/restore.sh`.
+
+**Nothing OWED in cargo any more.** Open: wave `a1` (§22.33, approved names `draftChanged` / `timeTravel.unchanged` /
+`refusalUnchanged`; lands after "DRAFT-CHANGED ON DISK"), §22.31 React half (below).
+
+### S5.15 Icon fallout fixed forward, `a1` aligned, §22.31 React step 2 staged as `b1` (11:07 → 11:30)
+
+**The 13 renderer-react `tsc` errors (relayed 11:07) were fallout of my icon wave — fixed forward before the activation flag.**
+`🧱️elements/🛠️ShellHelpers/🟦️.tsx` reported `Type '"map" | … | "zoom-out"' is not assignable to type 'IconName'`: there is a
+SECOND icon union, the manifest's own `IconName` (projection-table row `IconName` → generated `🤖️generated/🪪️manifest/🟦️.ts:625`).
+After `i1` the assets union had `"cloud-download"`, the manifest union did not. Wave `i2`: the Rust row (v1 → v2; `landing`
+11:09:28 → 11:12, train line) and the generated TS (`serve` 11:12:28 → 11:12:39). Proof without a build:
+`render-projection.py` → byte-equal again; renderer-react `tsc --noEmit` **0 errors** (11:16:53).
+A full icon list now exists in exactly nine files under `🧰️framework` (grep for a complete list), all carrying the new name:
+the six asset artifacts + `🔣️shortcodes.json`, the manifest TS, the projection table, the `♾️infinite` bridge.
+**Lesson for the next icon:** asset `generate` → + the `♾️infinite` value bridge → + the projection-table `IconName` row and
+its generated manifest TS. **OWED (no cargo during activation B2):**
+`cargo test -p semio-framework --lib --features typegen -- exports_typescript_bindings` (private build) for the `IconName` row.
+
+**Wave `a1` (§22.33) aligned to the accepted decision:** `draftChanged` = "Accept would be admitted" (the draft differs from
+what it was opened with); labels en "Nothing to accept: the draft is unchanged" / de "Nichts zu übernehmen: der Entwurf ist
+unverändert"; the `refusals[]` row for `timeTravel.unchanged` is added automatically (in the twin's order, with a text-equality
+assert) once the kernel twin names the code. Rebuilt, dry-run 5 × copy. Lands after B2 with S5-RUNTIME's waves J + K.
+
+**Wave `b1` — §22.31, board contract § 6 step 2, the React half — STAGED (7 files), not landed.**
+- Pure renames, 97 identifier uses of the 11 names of the contract's table § 4.1 that keep their signature
+  (`…Puzzle2d…` → `…Board…`: live mirror, screen/world transforms, peer-gesture functions, entity flag, drop ghost push), in
+  the host, the renderer barrel, the engine-contract and canvas-presence suites and the puzzle plugin's own
+  `🪪️session-factory` test (S5-PUZZLE's tree, test-only — it imports three of them); 9 suite titles "puzzle 2d" → "board 2d".
+- The two hand-kept name sets are gone: `coalesceBoard2dEvents`, `latestBoard2dHoverId` and `collectBoardLiveMirrorMutations`
+  read the generated `BOARD_EVENT_DELIVERY` (`delivery`, `coalesce`, `lane`, `awaits`, `mirror`) through one reader
+  `board2dDelivery`; a kind the schema does not name is kept in order and never flushes by itself. The script asserts that
+  the only artifact names left in the host are the three drop-payload names of step 3.
+- Verified with a scratch stand-in of S5-PUZZLE's table (contract § 1.2, wave `b1-proof`, never landed): overlay `tsc`
+  renderer-react **0**; `🖥️Board2dHost/🧪️tests/*` (the shared coalescing corpus included) + canvas-presence **59 ✔ / 0 ✘**
+  (8 files); engine-contract board laws **52 ✔ / 0 ✘**.
+- Land: when S5-PUZZLE's `♾️infinite/🎲️board/🤖️generated/🔣️board-event/🟦️.ts` is on disk — rebuild
+  (`python3 waves/b1/apply.py`), overlay `tsc` against the REAL table (field names / optionality may differ from my
+  stand-in), then `stage.py land b1` under `serve`.
+- Step 3 (scene verbs, `dropPayload`, granularity classifier, `shapeGlyph`, the domain label) changes `Board2dScene` — Rust
+  struct with hand-written value encode/decode in `🖱️ui/🎬️scene/🎬️scenes/🦀️.rs:2523` and its TS twin `🎬️scene/🟦️.ts:1197`, both
+  in MY module — plus every guest's struct literal and both hosts: one contract wave, needs cargo; not staged blind.
+
+### S5.16 Usage stop (11:30) — state for the resume
+- STAGED, not landed: `a1` (§22.33; `python3 🗑️generated/s5-ui/waves/a1/apply.py && python3 🗑️generated/s5-ui/stage.py land a1` under `serve`, after "DRAFT-CHANGED ON DISK"); `b1` (§22.31 React step 2; rebuild with `waves/b1/apply.py`, overlay `tsc` against S5-PUZZLE's REAL `🤖️generated/🔣️board-event/🟦️.ts`, then `stage.py land b1` under `serve`). Scratch-only proof waves `a1-proof` / `b1-proof` / `g1-proof` are never landed.
+- NOT STARTED: §22.31 step 3 (`Board2dScene` fields — writer undecided, asked `main`).
+- OPEN live faults, NOT diagnosed by me (reported at the stop, no evidence read yet): F3 — `aria-describedby` reason on a row's Edit while replaying; F12 — the first blocking row is not revealed. Start from the laws that pass in jsdom ("keeps a refused Edit focusable…", "the-first-blocking-row-is-revealed…" passed in Run 6 batch C) and the Run 7 output in `🗑️generated/s5-e2e/`.
+- OWED: `CARGO_TARGET_DIR=T/🗑️generated/s5-ui/target CARGO_BUILD_BUILD_DIR=T/🗑️generated/s5-ui/target CARGO_BUILD_JOBS=3 cargo test -p semio-framework --lib --features typegen -- exports_typescript_bindings` (the `IconName` row of 11:09; delete the target dir afterwards).
+- Locks held: none. Private build dir: deleted. Nothing half-applied on disk.
+
+### S5.17 F3 closed host-side (wave `f3`, 21:33); O6 looked at (21:27 → 21:40)
+
+**F3 (Run 8, `n15-edit-is-disabled-while-replaying-naming-why`) — cause confirmed.** The probe's frames: band `replaying` at
+194 ms with Edit runnable and no `aria-describedby`; the probe's press → host pending (`aria-busy`) at 428 ms; the guest's
+refreshed row (`aria-disabled` + "Not possible right now") at 1039 ms, after the 770 ms replay. The row actions' state came
+only from the guest's History body; the stage comes in the session patch at once.
+**Fix, wave `f3`, LANDED 21:33:51 (`serve` held < 1 min; 6 files).** One shared table — band corpus `rowActions`:
+`verbs` (`historyEditBegin`, `historyEditWithdraw`, `historyEditRestore`) and per stage the refusal label every row action
+names, or `null` (`replaying` and `finalizing` → `ui.timeTravel.refusal.illegal`; `editing`, `reviewing`, `choosing` → `null`:
+the rows' own published state rules) + schema. React: `TIME_TRAVEL_ROW_ACTION_VERBS` / `TIME_TRAVEL_ROW_ACTION_REFUSALS` /
+`timeTravelRowActionRefusalsV1(session)` in `⏪️time-travel`; the interpreter's new `RowActionRefusalsContext`
+(verb → reason; read by the row-action admission controller: a refused action is `aria-disabled` + described, focusable,
+and its dispatch is refused at the controller, tree and table rows alike); ShellHost provides it from the focused session's
+stage, memoised on the stage (a replay's progress ticks re-walk nothing).
+Law (band suite): a commit witness (`useLayoutEffect`) records every commit — none shows `replaying` / `finalizing` with a
+runnable row action; same buttons, focus kept, reason in en + de, presses dispatch nothing; the guest's rows arriving with
+the same reason flip nothing; back in `reviewing` the rows run again. **Red-proof RUN** (wave `f3-proof`: the interpreter
+ignoring the context): fails "replaying: the commit that shows the stage already refuses every row action".
+RUN on the real tree (21:35): band component + geometry + `🎬️row-action-admission` + `🧪️command-rejection` + Interpreter
+in-source **269 ✔ / 0 ✘** (5 files). Renderer-react `tsc`: 1 error, NOT mine — the outside peer's
+`✏️TextEditor/🧪️tests/🪞️echo-pack/🟦️.ts(14,27)` imports `textEditorSyncPackV1`, which `✏️TextEditor/🟦️.tsx` does not export.
+For S5-WGPU (same rule): read `rowActions` from the embedded corpus; while `session.stage` has a non-null entry, every row
+action whose verb is in `verbs` is refused with that label in the frame that shows the stage.
+
+**O6 (camera back at (0, 0) zoom 1) — not the React board host; the GUEST publishes it.** The probe reads
+`data-board-camera-json`, which is `scene.cameraJson` verbatim (`🖥️Board2dHost/🟦️.tsx` ≈ :1758), and the host's only camera
+write from the scene is the effect keyed on `scene.cameraJson` (≈ :1203–1213) — it follows what is published and mints no
+camera. The trace ALTERNATES between exactly two values (the person's −0.05 / −0.06 / 1.331 and the origin, and back again
+at later marks), which a host re-initialisation could not do: two guest-side view states are published in turn (the window's
+own camera, written by the `setCamera` view verb on the WindowConfig lane, and a default one on scenes built after a
+structural change or a session). Owner: S5-PUZZLE (puzzle 2d scene build) with S5-RUNTIME (WindowConfig lane).
+
+**OWED (disk at 10 GiB, below the test-build floor):** `cargo test -p semio-framework --lib --features typegen --
+exports_typescript_bindings` (private target + build dir) for the `IconName` row of 11:09; `render-projection.py` → equal.
+Staged, waiting: `a1` (J + K), `b1` (S5-PUZZLE's generated table) — both must be REBUILT from live before landing (`f3`
+touched the band module, corpus and band suite they patch; their scripts refresh their bases themselves).

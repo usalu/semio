@@ -17,13 +17,53 @@
     },
     "descriptorOrdinal": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Font descriptor",
+          "de": "Schriftdeskriptor"
+        },
+        "description": {
+          "en": "Index of the font descriptor in document order, counted from 0.",
+          "de": "Index des Schriftdeskriptors in Dokumentreihenfolge, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Font file key",
+          "de": "Schlüssel der Schriftdatei"
+        },
+        "description": {
+          "en": "Descriptor entry that carries the font program: FontFile, FontFile2 or FontFile3.",
+          "de": "Deskriptoreintrag, der das Schriftprogramm trägt: FontFile, FontFile2 oder FontFile3."
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "program": {
-      "$ref": "#/$defs/ObjRef"
+      "$ref": "#/$defs/ObjRef",
+      "x-semio-ui": {
+        "label": {
+          "en": "Font program",
+          "de": "Schriftprogramm"
+        },
+        "description": {
+          "en": "Object and generation number of the stream that holds the embedded font program.",
+          "de": "Objekt- und Generationsnummer des Datenstroms mit dem eingebetteten Schriftprogramm."
+        },
+        "group": "target",
+        "order": 30
+      }
     }
   },
   "$defs": {

@@ -1,0 +1,5 @@
+# Unified General Fixture Path Correction
+
+The held Unified original-owning input refused two literal paths. Raster's test used `../../🧫️fixtures/🔣️.json`, which resolves to Canvas's absent root fixture, while its genuine admitted 945-byte fixture is defined inside Raster. The corrected literal is `../🧫️fixtures/🔣️.json`. The relocated Board node-graph edit law retained the old Specific-relative depth and escaped the authored workspace. Its corrected path resolves to the existing defining General Tool Machine node-graph fixture.
+
+`🗑️generated/unified-fixture-path-owner/source-1.json` retains both exact held predecessor bodies and inverses, two actual defining fixture bodies, 12 complete original/after function associations, 22 byte-exact assertion macros, and two independently resolved path controls. Original Unified, actual plan3 and actual failed Rust supplement2 hashes are bound. No fixture was invented, no assertion changed, and no production source was written. Finite input review and actual original owning native execution remain separate gates.

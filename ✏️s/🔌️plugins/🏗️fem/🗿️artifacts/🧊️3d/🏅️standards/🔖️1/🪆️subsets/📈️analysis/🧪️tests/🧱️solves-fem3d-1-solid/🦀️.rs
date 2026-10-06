@@ -225,7 +225,7 @@ mod subject {
 
     /// 🧫️ The declared JSON fixture this scenario names.
     fn fixture(ctx: &Context, needle: &str) -> Result<Json, String> {
-        ctx.fixture_json(&uri_in(ctx, needle)?)
+        ctx.input_json(&uri_in(ctx, needle)?)
     }
 
     /// 🔮️ This scenario's slice of the committed third-party reference.

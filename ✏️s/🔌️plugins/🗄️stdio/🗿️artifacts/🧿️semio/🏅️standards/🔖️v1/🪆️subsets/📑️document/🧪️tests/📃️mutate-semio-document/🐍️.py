@@ -748,12 +748,12 @@ def doc_string(ctx: Context) -> str:
 
 def memo(ctx: Context) -> dict:
     """📄️ The real committed memo, read through this implementation's own DSL parser."""
-    return parse_dsl(ctx.fixture_bytes(MEMO_DSL).decode("utf-8"))
+    return parse_dsl(ctx.input_bytes(MEMO_DSL).decode("utf-8"))
 
 
 def vector(ctx: Context, kind: str) -> dict:
     """🧫️ One committed `(before, mutation, after)` specification vector."""
-    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://📃️mutate-semio-document/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
+    return json.loads(ctx.input_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://📃️mutate-semio-document/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input
@@ -800,7 +800,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
     agreeing with itself. The two encodings also cross-check each other — the binary twin has to
     decode to the same memo the text does, which no single codec can arrange on its own.
     """
-    committed = ctx.fixture_bytes(MEMO_DSL)
+    committed = ctx.input_bytes(MEMO_DSL)
     snapshot = parse_dsl(committed.decode("utf-8"))
     printed = print_dsl(snapshot).encode("utf-8")
     if printed != committed:
@@ -809,7 +809,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
         raise AssertionError("re-parsing the printed memo lost content")
     if snapshot["schema"] != DOCUMENT_SCHEMA:
         raise AssertionError("the committed memo declares schema %r, expected %r" % (snapshot["schema"], DOCUMENT_SCHEMA))
-    committed_pack = ctx.fixture_bytes(MEMO_PACK)
+    committed_pack = ctx.input_bytes(MEMO_PACK)
     unpacked = parse_pack(committed_pack)
     if unpacked != snapshot:
         raise AssertionError("the committed binary twin decodes to a different memo than the committed text\n     got: %s\nexpected: %s" % (json.dumps(unpacked), json.dumps(snapshot)))

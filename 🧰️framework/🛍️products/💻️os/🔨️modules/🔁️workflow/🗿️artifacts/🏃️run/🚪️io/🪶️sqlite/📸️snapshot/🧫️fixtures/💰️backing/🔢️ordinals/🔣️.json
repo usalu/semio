@@ -1,0 +1,21 @@
+{
+  "schema": "semio.workflow.run.sqlite.ordinal-backing.v1",
+  "tables": [
+    "run_document",
+    "run_log",
+    "run_node",
+    "run_output_artifact",
+    "run_parameter_value",
+    "run_port_fingerprint",
+    "run_trigger"
+  ],
+  "singletons": [
+    "run_document",
+    "run_trigger"
+  ],
+  "tableIndexSlots": 16,
+  "tableIndexWordBytes": 4,
+  "ordinalWordBytes": 8,
+  "priorDebt": 19,
+  "replays": 2
+}

@@ -1,7 +1,7 @@
 //! 🔐️ Serialises every test that admits a `generation2d_admit_publication_authority` lease.
 //!
 //! The lease table is a PROCESS-GLOBAL fixed registry of `GENERATION2D_PUBLICATION_SLOTS` (4)
-//! entries (`🧬️schema/🧬️mutations/💾️binary/🦀️.rs`), so two tests holding leases at the same time
+//! entries (`🚪️io/💾️binary/🧬️mutations/🦀️.rs`), so two tests holding leases at the same time
 //! saturate it and the loser fails with `generation2d-publication.saturated` — an order- and
 //! thread-count-dependent failure that has nothing to do with what either test asserts
 //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).

@@ -20,7 +20,7 @@ mod subject {
 
     /// 🧫️ The committed vectors.
     fn vectors(ctx: &Context) -> Result<Value, String> {
-        serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))
+        serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))
     }
 
     /// 🗂️ One group of the committed vectors.

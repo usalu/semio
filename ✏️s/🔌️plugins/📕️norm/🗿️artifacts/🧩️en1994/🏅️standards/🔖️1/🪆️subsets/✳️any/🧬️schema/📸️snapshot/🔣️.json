@@ -141,7 +141,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "deltaSigmaKPa": {
@@ -155,7 +156,8 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 1000000
           }
         },
         "deltaTauKPa": {
@@ -169,7 +171,8 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 1000000
           }
         }
       },
@@ -217,7 +220,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "widthM": {
@@ -231,7 +235,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "twM": {
@@ -245,7 +250,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001
           }
         },
         "tfM": {
@@ -259,7 +265,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001
           }
         },
         "aM2": {
@@ -273,7 +280,8 @@
             "unit": "m²",
             "displayUnit": "cm²",
             "displayFactor": 10000.0,
-            "precision": 2
+            "precision": 2,
+            "step": 1e-05
           }
         },
         "wPlYM3": {
@@ -287,7 +295,8 @@
             "unit": "m³",
             "displayUnit": "cm³",
             "displayFactor": 1000000.0,
-            "precision": 0
+            "precision": 0,
+            "step": 1e-06
           }
         },
         "iYM4": {
@@ -301,7 +310,8 @@
             "unit": "m⁴",
             "displayUnit": "cm⁴",
             "displayFactor": 100000000.0,
-            "precision": 0
+            "precision": 0,
+            "step": 1e-08
           }
         },
         "aVM2": {
@@ -315,7 +325,8 @@
             "unit": "m²",
             "displayUnit": "cm²",
             "displayFactor": 10000.0,
-            "precision": 2
+            "precision": 2,
+            "step": 1e-05
           }
         }
       },
@@ -363,7 +374,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "ribWidthM": {
@@ -377,7 +389,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "thicknessM": {
@@ -391,7 +404,15 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 2,
+            "step": 1e-05,
+            "snaps": [
+              0.00075,
+              0.00088,
+              0.001,
+              0.00125,
+              0.0015
+            ]
           }
         },
         "ribsParallelToBeam": {
@@ -451,7 +472,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005
           }
         },
         "fUPa": {
@@ -639,7 +661,19 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 1000000,
+            "snaps": [
+              20000000,
+              25000000,
+              30000000,
+              35000000,
+              40000000,
+              45000000,
+              50000000,
+              55000000,
+              60000000
+            ]
           }
         },
         "concreteECmPa": {
@@ -653,7 +687,8 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 1000000000
           }
         },
         "sheeting": {
@@ -698,7 +733,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "asHoggingM2PerM": {
@@ -712,7 +748,8 @@
             "unit": "m²/m",
             "displayUnit": "cm²/m",
             "displayFactor": 10000.0,
-            "precision": 2
+            "precision": 2,
+            "step": 1e-05
           }
         },
         "barSpacingM": {
@@ -726,7 +763,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005
           }
         },
         "wkLimitM": {
@@ -740,7 +778,13 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001,
+            "snaps": [
+              0.0002,
+              0.0003,
+              0.0004
+            ]
           }
         },
         "nCycles": {
@@ -751,7 +795,13 @@
               "de": "Lastspielzahl N"
             },
             "widget": "stepper",
-            "precision": 0
+            "precision": 0,
+            "step": 10000,
+            "snaps": [
+              2000000,
+              5000000,
+              100000000
+            ]
           }
         },
         "actions": {
@@ -821,7 +871,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "outerSizeM": {
@@ -835,7 +886,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "wallThicknessM": {
@@ -849,7 +901,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001
           }
         },
         "steelAM2": {
@@ -863,7 +916,8 @@
             "unit": "m²",
             "displayUnit": "cm²",
             "displayFactor": 10000.0,
-            "precision": 2
+            "precision": 2,
+            "step": 1e-05
           }
         },
         "steelFYPa": {
@@ -892,7 +946,8 @@
             "unit": "m²",
             "displayUnit": "cm²",
             "displayFactor": 10000.0,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001
           }
         },
         "concreteFCkPa": {
@@ -906,7 +961,19 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 1000000,
+            "snaps": [
+              20000000,
+              25000000,
+              30000000,
+              35000000,
+              40000000,
+              45000000,
+              50000000,
+              55000000,
+              60000000
+            ]
           }
         },
         "reinforcementAsM2": {
@@ -920,7 +987,8 @@
             "unit": "m²",
             "displayUnit": "cm²",
             "displayFactor": 10000.0,
-            "precision": 2
+            "precision": 2,
+            "step": 1e-05
           }
         },
         "reinforcementFYkPa": {
@@ -934,7 +1002,13 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 10000000,
+            "snaps": [
+              400000000,
+              500000000,
+              600000000
+            ]
           }
         },
         "iM4": {
@@ -948,7 +1022,8 @@
             "unit": "m⁴",
             "displayUnit": "cm⁴",
             "displayFactor": 100000000.0,
-            "precision": 0
+            "precision": 0,
+            "step": 1e-08
           }
         },
         "bucklingCurve": {
@@ -1014,7 +1089,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "support": {
@@ -1066,7 +1142,19 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 1000000,
+            "snaps": [
+              20000000,
+              25000000,
+              30000000,
+              35000000,
+              40000000,
+              45000000,
+              50000000,
+              55000000,
+              60000000
+            ]
           }
         },
         "mFactor": {
@@ -1077,7 +1165,8 @@
               "de": "m-k-Beiwert m"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 1
           }
         },
         "kFactor": {
@@ -1088,7 +1177,8 @@
               "de": "m-k-Beiwert k"
             },
             "widget": "stepper",
-            "precision": 3
+            "precision": 3,
+            "step": 0.001
           }
         },
         "asM2PerM": {
@@ -1102,7 +1192,8 @@
             "unit": "m²/m",
             "displayUnit": "cm²/m",
             "displayFactor": 10000.0,
-            "precision": 2
+            "precision": 2,
+            "step": 1e-05
           }
         },
         "actions": {
@@ -1205,7 +1296,8 @@
             "unit": "N·m",
             "displayUnit": "kN·m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         }
       },

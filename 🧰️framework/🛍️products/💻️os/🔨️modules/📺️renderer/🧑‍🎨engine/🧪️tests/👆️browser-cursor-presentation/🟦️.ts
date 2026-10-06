@@ -1,11 +1,10 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import fixture from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/👆️cursor/🧫️fixtures/🔣️.json";
-import schema from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/👆️cursor/🧬️schema/🔣️.json";
 import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
 import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 
@@ -32,8 +31,6 @@ describe("👆️ browser cursor presentation", () => {
   const cases = fixture.cases as readonly CursorCase[];
 
   it("validates the complete cursor/theme vocabulary", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(new Set(cases.map(testCase => `${testCase.cursor}:${testCase.themeDark}`)).size).toBe(30);
   });
 

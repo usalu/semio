@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::parse_layout_document;
 use super::*;
 
 #[test]
@@ -74,11 +75,11 @@ async fn resolve_page_marks_overridden_parent_frames_and_ignores_missing_parent(
 async fn parse_layout_document_rejects_wrong_schema_and_invalid_json() {
     let wrong_schema = r#"{"schema":"other.schema","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[]}"#;
     let error = parse_layout_document(wrong_schema).expect_err("wrong schema must fail");
-    assert!(matches!(error, crate::io::LayoutError::UnexpectedSchema(schema) if schema == "other.schema"));
+    assert!(matches!(error, crate::standards::v1::subsets::any::io::LayoutError::UnexpectedSchema(schema) if schema == "other.schema"));
 
     let invalid_json = "not json";
     let error = parse_layout_document(invalid_json).expect_err("invalid json must fail");
-    assert!(matches!(error, crate::io::LayoutError::Json(_)));
+    assert!(matches!(error, crate::standards::v1::subsets::any::io::LayoutError::Json(_)));
 }
 
 #[semio_framework_async_macros::async_test]

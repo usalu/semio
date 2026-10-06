@@ -1,0 +1,50 @@
+{
+  "tableWidths": {
+    "binary_document": 2,
+    "binary_byte": 4
+  },
+  "cases": [
+    {
+      "id": "populated",
+      "snapshot": {
+        "schema": "stdio.binary",
+        "bytes": [
+          0,
+          1,
+          127,
+          128,
+          255,
+          0
+        ]
+      },
+      "rows": 7,
+      "bytes": 212
+    },
+    {
+      "id": "empty",
+      "snapshot": {
+        "schema": "stdio.binary",
+        "bytes": []
+      },
+      "rows": 1,
+      "bytes": 20
+    },
+    {
+      "id": "octets",
+      "snapshot": {
+        "schema": "stdio.binary",
+        "bytes": [
+          255,
+          0,
+          128,
+          127,
+          1,
+          254,
+          0
+        ]
+      },
+      "rows": 8,
+      "bytes": 244
+    }
+  ]
+}

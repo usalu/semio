@@ -248,6 +248,39 @@
         "default"
       ],
       "dependsOn": []
+    },
+    "test-launch-seed-reconcile": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts test-launch-seed-reconcile"
+      },
+      "inputs": [
+        "default"
+      ],
+      "dependsOn": []
+    },
+    "check-launch-seed": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts reconcile-launch-seed --check"
+      },
+      "outputs": [],
+      "dependsOn": []
+    },
+    "reconcile-launch-seed": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts reconcile-launch-seed",
+        "forwardAllArgs": true
+      },
+      "outputs": [],
+      "dependsOn": []
     }
   },
   "tags": [

@@ -28,7 +28,7 @@ class OwnedVerifyScript extends BundleScript {
       return;
     }
     if (segments[0] === "semantic-wire") {
-      const { assertGeneration3dSemanticWire } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🧪️tests/🧬️semantic-wire/🟦️.ts");
+      const { assertGeneration3dSemanticWire } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧬️semantic-wire/🟦️.ts");
       console.log(`generation3d-semantic-wire checks=${assertGeneration3dSemanticWire()} independentAjv=true`);
       if (segments[1] === "native") await runCargo(["test", "-p", "semio-s-artifact-procedural-generation3d", "--lib", "semantic_wire_vectors", "--", "--nocapture"], this.repoRoot);
       return;
@@ -67,7 +67,7 @@ if (process.argv[2] === "canonical-io") {
   await runArtifactRustTests("semio-s-artifact-procedural-generation3d", resolve(import.meta.dir, "../../../../../../.."), ["quick", "--locked", "--test", "io-round-trip"]);
 } else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-procedural-generation3d", { ...{
   testFeatures: ["component-app-assembly"],
-  snapshotSqliteTestFeatures: [], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"],
+  snapshotSqliteTestFeatures: ["component-app-assembly"], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],
   snapshotSqliteTestBudgetMs: 120000,
   twins: [
     { name: "generation3d-mesh-selection", run: generation3dMeshSelectionSelfTests },

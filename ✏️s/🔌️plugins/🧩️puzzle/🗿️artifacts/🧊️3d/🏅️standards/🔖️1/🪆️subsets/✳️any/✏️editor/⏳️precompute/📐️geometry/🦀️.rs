@@ -25,20 +25,20 @@ pub(crate) const FIXED_OWNER_SLOTS: usize = 32;
 /// 📏️ Byte ceiling for one bookkeeping owner page.
 pub(crate) const FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024;
 /// 📐️ Byte ceiling for one document-scale owner page, expressed in bookkeeping pages: the widest
-/// declared page is `FixedOwnerVec<FixtureObject, DOCUMENT_OBJECT_SLOTS>` (≈432 KiB), and the fill
+/// declared page is `FixedOwnerVec<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>` (≈432 KiB), and the fill
 /// envelope reserves `FILL_ENVELOPE_MAX_BYTES` (256 × 16 KiB) for every page of one session
 /// together, so a single page may claim at most a quarter of that reservation.
 pub(crate) const DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES;
-/// 🏢️ Objects the flagship fixture carries — the Nakagin capsule tower, the largest real document
+/// 🏢️ Objects the flagship scene_snapshot carries — the Nakagin capsule tower, the largest real document
 /// this artifact plans against. Every document-scale page is sized from it plus
 /// [`DOCUMENT_FILL_HEADROOM_SLOTS`], never from a plan ceiling: the planner has none any more.
 pub(crate) const NAKAGIN_DOCUMENT_OBJECTS: usize = 180;
-/// 🧊️ Fill placements a document page keeps free above the flagship fixture. It is a DOCUMENT
+/// 🧊️ Fill placements a document page keeps free above the flagship scene_snapshot. It is a DOCUMENT
 /// capacity, not a request ceiling — the count the user asks for is unbounded, and a plan that
 /// exhausts these slots reports `stall_reason = "artifact-capacity"` and stops, visibly, instead of
 /// being clamped or faulting.
 pub(crate) const DOCUMENT_FILL_HEADROOM_SLOTS: usize = 1024;
-/// 🧊️ Objects one fill session owns: the flagship fixture plus its fill headroom — 1204 — rounded up
+/// 🧊️ Objects one fill session owns: the flagship scene_snapshot plus its fill headroom — 1204 — rounded up
 /// to the next power of two, 2048, which also bounds `placed`/`placed_lookup`/the spatial entry map.
 pub(crate) const DOCUMENT_OBJECT_SLOTS: usize = (NAKAGIN_DOCUMENT_OBJECTS + DOCUMENT_FILL_HEADROOM_SLOTS).next_power_of_two();
 /// 🔘️ Vortices one fill session reasons about: Nakagin measures 358 vortices over 180 objects (≈2
@@ -53,7 +53,7 @@ pub(crate) const DOCUMENT_ATTRACTION_SLOTS: usize = DOCUMENT_OBJECT_SLOTS;
 pub(crate) const DOCUMENT_VOLUME_SLOTS: usize = DOCUMENT_KIND_SLOTS;
 /// 🗂️ Catalog rows one fill session owns — object/vortex/cable kinds, compatibility rows, kind
 /// weight maps, registered mesh urls. Nakagin declares 12 object kinds, 18 vortex kinds and 14
-/// compatibility rows, so 256 is an order of magnitude of headroom on the flagship fixture.
+/// compatibility rows, so 256 is an order of magnitude of headroom on the flagship scene_snapshot.
 pub(crate) const DOCUMENT_KIND_SLOTS: usize = 256;
 /// 🎯️ Candidates one target vortex may enumerate: object kinds × their vortex templates, drained
 /// again before the next target, so four templates per kind slot bounds the classification maps.

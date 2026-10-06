@@ -1,0 +1,27 @@
+{
+  "qualification": "bounded source screen only; inline cfg test split heuristic, hits need actual owner verification; no universal denominator",
+  "rows": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/🦀️.rs",
+      "hits": [
+        {
+          "line": 280,
+          "text": "        fn snapshot_blob_step(connection: &Connection, task: &mut DbIoTask) -> Result<(DbIoExecutionStep, Option<DbIoResult>), DbError> {"
+        },
+        {
+          "line": 399,
+          "text": "                None => Self::snapshot_blob_step(connection, task),"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/🗿️artifacts/🚫️snapshot-refusal/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "hits": [
+        {
+          "line": 81,
+          "text": "     SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(semio_framework_pack_json::to_json_string_controlled(self,&mut native)?),"
+        }
+      ]
+    }
+  ]
+}

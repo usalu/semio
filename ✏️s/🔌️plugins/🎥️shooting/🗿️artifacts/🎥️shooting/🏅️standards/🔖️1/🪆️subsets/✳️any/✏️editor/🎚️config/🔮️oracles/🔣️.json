@@ -180,9 +180,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-config-applied",
       "class": "handcrafted",
       "target": {
@@ -247,7 +246,6 @@
       "notes": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-shot-selection-applied",
       "class": "handcrafted",
       "target": {
@@ -312,7 +310,6 @@
       "notes": "The owner's committed contract vector for `set-shot-selection` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-center-model-applied",
       "class": "handcrafted",
       "target": {
@@ -377,7 +374,6 @@
       "notes": "The owner's committed contract vector for `set-center-model` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-fit-revision-applied",
       "class": "handcrafted",
       "target": {
@@ -442,7 +438,6 @@
       "notes": "The owner's committed contract vector for `set-fit-revision` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -507,7 +502,6 @@
       "notes": "The owner's committed contract vector for `set-camera` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-defaults-applied",
       "class": "handcrafted",
       "target": {

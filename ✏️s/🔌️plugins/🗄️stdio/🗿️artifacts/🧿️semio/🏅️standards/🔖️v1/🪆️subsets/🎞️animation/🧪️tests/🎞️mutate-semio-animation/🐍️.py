@@ -443,12 +443,12 @@ def doc_string(ctx: Context) -> str:
 
 def walk(ctx: Context) -> dict:
     """🚶️ The real committed walk cycle, read through this implementation's own DSL parser."""
-    return parse_dsl(ctx.fixture_bytes(WALK_DSL).decode("utf-8"))
+    return parse_dsl(ctx.input_bytes(WALK_DSL).decode("utf-8"))
 
 
 def vector(ctx: Context, kind: str) -> dict:
     """🧫️ One committed `(before, mutation, after)` specification vector."""
-    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://🎞️mutate-semio-animation/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
+    return json.loads(ctx.input_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://🎞️mutate-semio-animation/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input
@@ -495,7 +495,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
     bridge, so the committed `🎒️.pack.semio` twin is deliberately not read and no claim is
     made about it — one carrier measured, the other named as unmeasured.
     """
-    committed = ctx.fixture_bytes(WALK_DSL)
+    committed = ctx.input_bytes(WALK_DSL)
     snapshot = parse_dsl(committed.decode("utf-8"))
     printed = print_dsl(snapshot).encode("utf-8")
     if printed != committed:

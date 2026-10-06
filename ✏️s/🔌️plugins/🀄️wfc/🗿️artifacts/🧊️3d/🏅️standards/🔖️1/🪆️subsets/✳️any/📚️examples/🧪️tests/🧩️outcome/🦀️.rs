@@ -146,7 +146,7 @@ fn regenerate_committed_example_assets() {
     let slugs = [("🚪️two-room-corridor", super::two_room_corridor::ID), ("🧱️wall-roof-facade-strip", super::wall_roof_facade_strip::ID), ("🗼️tower-stack", super::tower_stack::ID)];
     for (case, (slug, id)) in committed().into_iter().zip(slugs) {
         let snapshot = (case.snapshot)();
-        std::fs::write(root.join(slug).join("🖼️assets").join(slug).join("🗣️.dsl.semio"), crate::schema::snapshot::text::print_dsl(&snapshot)).expect("write dsl asset");
+        std::fs::write(root.join(slug).join("🖼️assets").join(slug).join("🗣️.dsl.semio"), crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&snapshot)).expect("write dsl asset");
         let solved = solve_assignments(&snapshot);
         let outcome = serde_json::json!({
             "schema": OUTCOME_SCHEMA,

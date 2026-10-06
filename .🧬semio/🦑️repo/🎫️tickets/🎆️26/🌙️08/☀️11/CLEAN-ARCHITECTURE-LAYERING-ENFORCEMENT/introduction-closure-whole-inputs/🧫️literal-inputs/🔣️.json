@@ -1,0 +1,84 @@
+{
+  "cases": [
+    {
+      "name": "module",
+      "source": "#[path = \"../icons/🦀️.rs\"] mod icons;",
+      "expected": [
+        {
+          "kind": "path",
+          "literal": "../icons/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "name": "raw-module",
+      "source": "#[path = r#\"../icons/🦀️.rs\"#] mod icons;",
+      "expected": [
+        {
+          "kind": "path",
+          "literal": "../icons/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "name": "plain-str",
+      "source": "const X:&str=include_str!(\"../x.svg\");",
+      "expected": [
+        {
+          "kind": "include_str",
+          "literal": "../x.svg"
+        }
+      ]
+    },
+    {
+      "name": "raw-bytes",
+      "source": "const X:&[u8]=include_bytes!(r#\"../x.bin\"#);",
+      "expected": [
+        {
+          "kind": "include_bytes",
+          "literal": "../x.bin"
+        }
+      ]
+    },
+    {
+      "name": "module-include",
+      "source": "include!(\"../module.rs\");",
+      "expected": [
+        {
+          "kind": "include",
+          "literal": "../module.rs"
+        }
+      ]
+    },
+    {
+      "name": "comments-ignore",
+      "source": "// include_str!(\"ghost\")\n/* #[path=\"ghost\"] mod ghost; */",
+      "expected": []
+    },
+    {
+      "name": "strings-ignore",
+      "source": "const X:&str=\"include_str!(\\\"ghost\\\")\";",
+      "expected": []
+    },
+    {
+      "name": "nested-token-tree",
+      "source": "quote! { const X:&str=include_str!(\"../data\"); }",
+      "expected": [
+        {
+          "kind": "include_str",
+          "literal": "../data"
+        }
+      ]
+    },
+    {
+      "name": "qualified-system",
+      "source": "const X:&str=std::include_str!(\"../std\");",
+      "expected": [
+        {
+          "kind": "include_str",
+          "literal": "../std"
+        }
+      ]
+    }
+  ]
+}

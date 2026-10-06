@@ -1,0 +1,16 @@
+{
+  "qualification": "HELD apply to existing held pair.after only; no provider overwrite/no production/gates",
+  "rows": [
+    {
+      "capsule": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/fem3d-populated-public-owner-fresh-held.json",
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "field": "after",
+      "regions": [
+        {
+          "before": "n!==19n)throw Error('all18domainTablesPlusMetadata')",
+          "after": "n!==20n)throw Error('all19domainTablesPlusMetadata')"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+//! 🚪️ Artifact representation codecs.
+
+#[allow(unused_imports)]
+mod mutations_codec {
+use super::*;
+use crate::editor::generation3d::config::component::mutations::*;
+use crate::editor::generation3d::config::component::{CameraJson, Generation3dConfig, Generation3dPreviewCamera};
+use set_camera::SetCamera;
+use set_lod_mode::SetLodMode;
+use set_preview_camera::SetPreviewCamera;
+use set_selected_generation::SetSelectedGeneration;
+use set_show_mode::SetShowMode;
+use set_snapshot::SetSnapshot;
+use set_sun::SetSun;
+
+impl protocol::OpText for Generation3dConfigMutation {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{keyword} ");
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown mutation line '{line}'"),semio_framework_diagnostic::TextSpan::at(1,1)))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
+    }
+}
+}
+pub use mutations_codec::*;
+
+#[allow(unused_imports)]
+mod mutations_wire_codec {
+use super::*;
+use crate::editor::generation3d::config::component::mutations::*;
+use crate::editor::generation3d::config::component::{CameraJson, Generation3dConfig, Generation3dPreviewCamera};
+use set_camera::SetCamera;
+use set_lod_mode::SetLodMode;
+use set_preview_camera::SetPreviewCamera;
+use set_selected_generation::SetSelectedGeneration;
+use set_show_mode::SetShowMode;
+use set_snapshot::SetSnapshot;
+use set_sun::SetSun;
+
+/// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
+/// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Generation3dConfig`.
+///
+/// @see store::os_store::test_support::mutation_report_json
+pub fn generation3d_config_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    store::os_store::test_support::mutation_report_json::<Generation3dConfig, Generation3dConfigMutation>(base_json, mutation_json, after_json)
+}
+}
+pub use mutations_wire_codec::*;

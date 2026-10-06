@@ -1,9 +1,10 @@
 /** 🗂️ Shared layer-stack vectors checked against independent SVG mask compositing. */
-import {expect,test} from "bun:test";
+import {expect,test,spyOn} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
+import {CompositeJob} from "../../🟦️.ts";
 import {RasterStackJob,type RasterStackLayer} from "../🟦️.ts";
 const images=()=>Object.fromEntries(Object.entries(fixture.images).map(([key,image])=>[key,{...image,pixels:Uint8Array.from(image.pixels)}]));
 const validate=new Ajv({strict:false}).compile<{layers:RasterStackLayer[]}>(schema);
@@ -39,9 +40,9 @@ test("grants include deduplicated mask preparation with monotonic fixed totals",
   const job=new RasterStackJob({layers:[first,second],images:images()});
   let progress=job.advance(1);expect(progress).toEqual({completed:1,total:12,done:false});
   for(let completed=2;completed<=12;completed++){
-    progress=job.advance(1);expect(progress).toEqual({completed,total:12,done:completed===12});
+    progress=job.advance(1);expect(progress).toEqual({completed,total:12,done:false});
   }
-  expect(job.advance(1)).toEqual(progress);
+  while(!progress.done){progress=job.advance(1);expect(progress.completed).toBe(12);expect(progress.total).toBe(12);}expect(job.advance(1)).toEqual(progress);
 });
 test("layer metadata is owned while immutable image bytes remain borrowed",()=>{
   const source=layer(),assets=images();
@@ -79,4 +80,13 @@ test("blank pixels remain valid at the maximum group depth",()=>{
   let source=layer();if(source.kind!=="pixel")throw new Error("Expected pixel fixture");source.imageKey=null;source.mask=null;
   for(let depth=0;depth<32;depth++)source={kind:"group",id:`group-${depth}`,visible:true,opacity:1,blendMode:"normal",transform:{x:0.0,y:0.0,a:1.0,b:0.0,c:-0.0,d:1.0},children:[source]};
   const result=finish(new RasterStackJob({layers:[source],images:{}}));expect(result.image.pixels).toEqual(new Uint8Array(12));
+});
+
+test("raster stack waits for actual compositor retirement before publication",()=>{
+  const original=CompositeJob.prototype.intoRetirement;
+  for(const row of fixture.cases)for(const grant of [1,7,4096]){
+    const source={layers:admitted(row.layers),images:images()},before=structuredClone(source),job=new RasterStackJob(source),state=job as any;let closed:any=null,work=0,adopted=0;
+    const spy=spyOn(CompositeJob.prototype,"intoRetirement").mockImplementation(function(this:CompositeJob){adopted++;closed=original.call(this);expect(closed.output).not.toBeNull();const advance=closed.job.advance.bind(closed.job);closed.job.advance=(unit:number)=>{expect(unit).toBe(1);expect(state.composite).toBeNull();expect(state.output).toBe(closed.output);expect(()=>job.result()).toThrow();const p=advance(unit);expect(p.work-work).toBe(1);work=p.work;return p;};return closed;});
+    try{let done=false;for(let at=0;at<10000;at++){const p=job.advance(grant);if(p.done){done=true;break;}}expect(done).toBe(true);expect(adopted).toBe(1);expect(work).toBeGreaterThanOrEqual(5);expect(closed.job.terminalIsEmpty()).toBe(true);expect(state.compositeRetirement).toBeNull();expect(job.result().image).toBe(closed.output);expect(source).toEqual(before);console.error(`[DEBUG] Actual raster stack compositor handoff ${row.name}: grant=${grant} work=${work} unchanged source`);}finally{spy.mockRestore();}
+  }
 });

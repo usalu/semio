@@ -6,6 +6,12 @@
 # See ../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/🔮️oracle/📦️packages/🦀️rust/Cargo.toml
 # for the same standalone-workspace pattern.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "semio-equation-oracle-probe"

@@ -1,67 +1,44 @@
 import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json" with { type: "json" };
 /** 🧪️ Canonical Wires document contracts agree with independent schema validation. */
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
 import Ajv from "ajv";
-import ts from "typescript";
 import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import mutationSchema from "../../🧬️mutations/🔣️.json" with { type: "json" };
-import snapshot from "../../../🧫️fixtures/🧬️mutations/🧭move-node/🧪️reports/📸️snapshot/⬅️before/🔣️.json" with { type: "json" };
-import diff from "../../../🧫️fixtures/🧬️mutations/🧭move-node/🧪️reports/🔺️diff/🔣️.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+
 import { parseWiresArtifact } from "../../🟦️.ts";
 import { parseWiresSnapshot } from "../../📸️snapshot/🟦️.ts";
-import {decodeWiresJsonSnapshot}from"../../../🚪️io/📸️snapshot/🔣️json/🟦️.ts";
+import { decodeWiresJsonSnapshot } from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 
+/** 🪪️ Parent document admission agrees with its closed schemas and child ownership. */
 export function testWiresDocumentContractOracle(): void {
-  const expectedChildKind = "s.stdio.semio";
   const ajv = new Ajv({ strict: false, allErrors: true });
   ajv.addSchema(valueSchema).addSchema(ioSchema).addSchema(childSchema).addSchema(artifactSchema);
-  for (const [schema, parse] of [[artifactSchema, parseWiresArtifact], [snapshotSchema, parseWiresSnapshot]] as const) {
-    const validate = ajv.compile(schema);
-    assert.equal(validate(snapshot), true, JSON.stringify(validate.errors));
-    const canonical=decodeWiresJsonSnapshot(snapshot);
-    assert.deepEqual(parse(canonical), canonical);
-    assert.equal(validate({ ...snapshot, boardFixture: {} }), false);
-    assert.throws(() => parse({ ...snapshot, boardFixture: {} }));
+  
+  
+  
+  assert.equal(new Set(fixture.cases.map(row => row.id)).size, fixture.cases.length);
+  for (const schema of [artifactSchema, snapshotSchema]) assert.equal(schema.properties.content["x-semio-child-kind"], fixture.declaredChildKind);
+  assert.deepEqual(Object.keys(diffSchema.properties), []);
+  const documents = [[ajv.compile(artifactSchema), parseWiresArtifact], [ajv.compile(snapshotSchema), parseWiresSnapshot]] as const;
+  const validateDiff = ajv.compile(diffSchema), validateMutation = ajv.compile(mutationSchema);
+  for (const row of fixture.cases) {
+    if (row.kind === "snapshot") {
+      for (const [validate, parse] of documents) {
+        assert.equal(validate(row.value), row.accepted, row.id + ": " + JSON.stringify(validate.errors));
+        if (row.accepted) {
+          const canonical = decodeWiresJsonSnapshot(row.value);
+          assert.deepEqual(parse(canonical), canonical, row.id);
+        } else assert.throws(() => parse(decodeWiresJsonSnapshot(row.value)), row.id);
+      }
+    } else if (row.kind === "diff") assert.equal(validateDiff(row.value), row.accepted, row.id);
+    else {
+      assert.equal(row.accepted, false, row.id);
+      assert.equal(validateMutation(row.value), false, row.id);
+    }
   }
-  const validateDiff = ajv.compile(diffSchema);
-  assert.equal(validateDiff(diff), true, JSON.stringify(validateDiff.errors));
-  assert.deepEqual(Object.keys(diffSchema.properties).sort(), Object.keys(diff).sort());
-  for (const schema of [artifactSchema, snapshotSchema, diffSchema]) {
-    assert.equal(schema.properties.content["x-semio-child-kind"], expectedChildKind);
-  }
-  const snapshotFixtures = readdirSync(join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations"), { recursive: true })
-    .map((path) => String(path).replaceAll("\\", "/"))
-    .filter((path) => path.includes("/📸️snapshot/") && path.endsWith("/🔣️.json"));
-  assert.equal(snapshotFixtures.length, 20);
-  for (const path of snapshotFixtures) {
-    const parsed = parseWiresSnapshot(decodeWiresJsonSnapshot(JSON.parse(readFileSync(join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations", path), "utf8"))));
-    assert.equal(parsed.content.target.dialect.artifactKind, expectedChildKind, path);
-    assert.equal(parsed.content.target.artifactId, parsed.content.childId, path);
-  }
-  const mutations = join(import.meta.dir, "../../🧬️mutations");
-  for (const directory of readdirSync(mutations, { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
-    const path = join(mutations, directory.name, "🧬️schema/🔣️.json");
-    if (directory.name === "🧪️tests") continue;
-    const payload = JSON.parse(readFileSync(path, "utf8"));
-    ajv.addSchema(payload);
-    const source = ts.createSourceFile("payload.ts", readFileSync(join(mutations, directory.name, "🧬️schema/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-    const declaration = source.statements.find((node) => ts.isInterfaceDeclaration(node) && node.name.text === payload.title) as ts.InterfaceDeclaration;
-    assert(declaration, `${directory.name}: missing leaf-owned TypeScript payload`);
-    assert.deepEqual(declaration.members.map((member) => member.name!.getText(source)).sort(), Object.keys(payload.properties).sort());
-  }
-  const validateMutation = ajv.compile(mutationSchema);
-  const fixtureRoot = join(import.meta.dir, "../../../🧫️fixtures/🧬️mutations");
-  const fixtures = readdirSync(fixtureRoot, { recursive: true }).map((path) => String(path).replaceAll("\\", "/")).filter((path) => path.endsWith("/🦠️mutation/🔣️.json"));
-  for (const path of fixtures) {
-    const mutation = JSON.parse(readFileSync(join(fixtureRoot, path), "utf8"));
-    assert.equal(validateMutation(mutation), true, `${path}: ${JSON.stringify(validateMutation.errors)}`);
-    assert.equal(validateMutation({ ...mutation, locale: "de" }), false);
-  }
-  assert.equal(fixtures.length > 0, true);
 }

@@ -1,0 +1,1009 @@
+[
+  {
+    "id": "no-panel-leaves-the-rail-flush",
+    "affordance": [
+      1355,
+      83,
+      75,
+      16
+    ],
+    "host": [
+      493,
+      26,
+      947,
+      814
+    ],
+    "anchor": "top-right",
+    "panels": [],
+    "yield": "either",
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 0
+    }
+  },
+  {
+    "id": "a-panel-that-does-not-cover-the-rail-reserves-nothing",
+    "affordance": [
+      1355,
+      83,
+      75,
+      16
+    ],
+    "host": [
+      493,
+      26,
+      947,
+      814
+    ],
+    "anchor": "top-right",
+    "panels": [
+      [
+        0,
+        3,
+        300,
+        120
+      ]
+    ],
+    "yield": "either",
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 0
+    }
+  },
+  {
+    "id": "the-tool-run-panel-over-the-generation3d-rail-drops-it-below",
+    "affordance": [
+      1355,
+      83,
+      75,
+      16
+    ],
+    "host": [
+      493,
+      26,
+      947,
+      814
+    ],
+    "anchor": "top-right",
+    "panels": [
+      [
+        1137,
+        3,
+        300,
+        120
+      ]
+    ],
+    "yield": "either",
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 48
+    }
+  },
+  {
+    "id": "the-same-corner-yielded-inline-costs-301",
+    "affordance": [
+      1355,
+      83,
+      75,
+      16
+    ],
+    "host": [
+      493,
+      26,
+      947,
+      814
+    ],
+    "anchor": "top-right",
+    "panels": [
+      [
+        1137,
+        3,
+        300,
+        120
+      ]
+    ],
+    "yield": "inline",
+    "gap": 8,
+    "expected": {
+      "inline": 301,
+      "block": 0
+    }
+  },
+  {
+    "id": "a-full-height-column-has-no-bottom-edge-to-drop-under",
+    "affordance": [
+      1355,
+      83,
+      75,
+      16
+    ],
+    "host": [
+      493,
+      26,
+      947,
+      814
+    ],
+    "anchor": "top-right",
+    "panels": [
+      [
+        1137,
+        3,
+        300,
+        897
+      ]
+    ],
+    "yield": "either",
+    "gap": 8,
+    "expected": {
+      "inline": 301,
+      "block": 0
+    }
+  },
+  {
+    "id": "two-panels-sharing-a-corner-reserve-their-union",
+    "affordance": [
+      1355,
+      83,
+      75,
+      16
+    ],
+    "host": [
+      493,
+      26,
+      947,
+      814
+    ],
+    "anchor": "top-right",
+    "panels": [
+      [
+        1137,
+        3,
+        300,
+        120
+      ],
+      [
+        1300,
+        3,
+        137,
+        237
+      ]
+    ],
+    "yield": "either",
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 165
+    }
+  },
+  {
+    "id": "a-left-floating-panel-moves-a-wgpu-overlay-row-right",
+    "affordance": [
+      8,
+      48,
+      90,
+      22
+    ],
+    "host": [
+      0,
+      40,
+      960,
+      600
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        4,
+        44,
+        300,
+        592
+      ]
+    ],
+    "yield": "either",
+    "gap": 8,
+    "expected": {
+      "inline": 304,
+      "block": 0
+    }
+  },
+  {
+    "id": "a-window-right-edge-chrome-column-yields-only-inline",
+    "affordance": [
+      1240,
+      26,
+      200,
+      814
+    ],
+    "host": [
+      493,
+      26,
+      947,
+      814
+    ],
+    "anchor": "top-right",
+    "panels": [
+      [
+        1137,
+        3,
+        300,
+        120
+      ]
+    ],
+    "yield": "inline",
+    "gap": 0,
+    "expected": {
+      "inline": 303,
+      "block": 0
+    }
+  },
+  {
+    "id": "an-affordance-with-no-room-to-clear-does-not-move-at-all",
+    "affordance": [
+      1240,
+      26,
+      200,
+      814
+    ],
+    "host": [
+      1300,
+      26,
+      140,
+      814
+    ],
+    "anchor": "top-right",
+    "panels": [
+      [
+        1137,
+        3,
+        300,
+        120
+      ]
+    ],
+    "yield": "inline",
+    "gap": 0,
+    "expected": {
+      "inline": 0,
+      "block": 0
+    }
+  },
+  {
+    "id": "folded-top-left",
+    "affordance": [
+      10,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        0,
+        0,
+        140,
+        100
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 98
+    },
+    "yield": "either"
+  },
+  {
+    "id": "folded-top-middle",
+    "affordance": [
+      210,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-middle",
+    "panels": [
+      [
+        200,
+        0,
+        100,
+        100
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 98
+    },
+    "yield": "either"
+  },
+  {
+    "id": "folded-top-right",
+    "affordance": [
+      410,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-right",
+    "panels": [
+      [
+        360,
+        0,
+        140,
+        100
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 98
+    },
+    "yield": "either"
+  },
+  {
+    "id": "folded-right-middle",
+    "affordance": [
+      410,
+      190,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "right-middle",
+    "panels": [
+      [
+        360,
+        100,
+        140,
+        200
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 138,
+      "block": 0
+    },
+    "yield": "either"
+  },
+  {
+    "id": "folded-bottom-right",
+    "affordance": [
+      410,
+      370,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "bottom-right",
+    "panels": [
+      [
+        360,
+        300,
+        140,
+        100
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 98
+    },
+    "yield": "either"
+  },
+  {
+    "id": "folded-bottom-middle",
+    "affordance": [
+      210,
+      370,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "bottom-middle",
+    "panels": [
+      [
+        200,
+        300,
+        100,
+        100
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 98
+    },
+    "yield": "either"
+  },
+  {
+    "id": "folded-bottom-left",
+    "affordance": [
+      10,
+      370,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "bottom-left",
+    "panels": [
+      [
+        0,
+        300,
+        140,
+        100
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 98
+    },
+    "yield": "either"
+  },
+  {
+    "id": "folded-left-middle",
+    "affordance": [
+      10,
+      190,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "left-middle",
+    "panels": [
+      [
+        0,
+        100,
+        140,
+        200
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 138,
+      "block": 0
+    },
+    "yield": "either"
+  },
+  {
+    "id": "block-cascade",
+    "affordance": [
+      10,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        0,
+        0,
+        140,
+        80
+      ],
+      [
+        0,
+        90,
+        140,
+        90
+      ],
+      [
+        0,
+        190,
+        140,
+        90
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 278
+    },
+    "yield": "block"
+  },
+  {
+    "id": "block-cascade-reversed",
+    "affordance": [
+      10,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        0,
+        190,
+        140,
+        90
+      ],
+      [
+        0,
+        90,
+        140,
+        90
+      ],
+      [
+        0,
+        0,
+        140,
+        80
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 278
+    },
+    "yield": "block"
+  },
+  {
+    "id": "cascade-chooses-clear-inline",
+    "affordance": [
+      10,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        0,
+        0,
+        140,
+        80
+      ],
+      [
+        0,
+        90,
+        140,
+        90
+      ],
+      [
+        0,
+        190,
+        140,
+        90
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 138,
+      "block": 0
+    },
+    "yield": "either"
+  },
+  {
+    "id": "inline-cascade",
+    "affordance": [
+      10,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        0,
+        0,
+        100,
+        100
+      ],
+      [
+        110,
+        0,
+        90,
+        100
+      ],
+      [
+        210,
+        0,
+        90,
+        100
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 298,
+      "block": 0
+    },
+    "yield": "inline"
+  },
+  {
+    "id": "right-inline-cascade",
+    "affordance": [
+      410,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-right",
+    "panels": [
+      [
+        400,
+        0,
+        100,
+        100
+      ],
+      [
+        300,
+        0,
+        90,
+        100
+      ],
+      [
+        200,
+        0,
+        90,
+        100
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 298,
+      "block": 0
+    },
+    "yield": "inline"
+  },
+  {
+    "id": "bottom-block-cascade",
+    "affordance": [
+      10,
+      370,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "bottom-left",
+    "panels": [
+      [
+        0,
+        320,
+        140,
+        80
+      ],
+      [
+        0,
+        220,
+        140,
+        90
+      ],
+      [
+        0,
+        120,
+        140,
+        90
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 278
+    },
+    "yield": "block"
+  },
+  {
+    "id": "block-inset-overflow",
+    "affordance": [
+      10,
+      80,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      200,
+      120
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        0,
+        70,
+        200,
+        40
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 0
+    },
+    "yield": "either"
+  },
+  {
+    "id": "inline-inset-overflow",
+    "affordance": [
+      80,
+      10,
+      20,
+      80
+    ],
+    "host": [
+      0,
+      0,
+      120,
+      200
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        70,
+        0,
+        40,
+        200
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 0
+    },
+    "yield": "either"
+  },
+  {
+    "id": "overflow-chooses-clear-inline",
+    "affordance": [
+      10,
+      80,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      300,
+      120
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        0,
+        70,
+        110,
+        40
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 108,
+      "block": 0
+    },
+    "yield": "either"
+  },
+  {
+    "id": "edge-contact-stays-flush",
+    "affordance": [
+      10,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        90,
+        0,
+        100,
+        100
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 0
+    },
+    "yield": "either"
+  },
+  {
+    "id": "fractional-outward-rounding",
+    "affordance": [
+      10.25,
+      10.25,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        0,
+        0,
+        140,
+        100.5
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 99
+    },
+    "yield": "either"
+  },
+  {
+    "id": "expanded-body-clears-left-column",
+    "affordance": [
+      8,
+      8,
+      300,
+      260
+    ],
+    "host": [
+      0,
+      0,
+      1280,
+      720
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        4,
+        0,
+        298,
+        290
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 290
+    },
+    "yield": "either"
+  },
+  {
+    "id": "expanded-body-chooses-inline-after-block-overflow",
+    "affordance": [
+      8,
+      8,
+      300,
+      600
+    ],
+    "host": [
+      0,
+      0,
+      1280,
+      720
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        4,
+        0,
+        298,
+        290
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 302,
+      "block": 0
+    },
+    "yield": "either"
+  },
+  {
+    "id": "gap-cascade-before-geometric-contact",
+    "affordance": [
+      10,
+      10,
+      80,
+      20
+    ],
+    "host": [
+      0,
+      0,
+      500,
+      400
+    ],
+    "anchor": "top-left",
+    "panels": [
+      [
+        0,
+        0,
+        140,
+        80
+      ],
+      [
+        0,
+        111,
+        140,
+        69
+      ]
+    ],
+    "gap": 8,
+    "expected": {
+      "inline": 0,
+      "block": 178
+    },
+    "yield": "block"
+  }
+]

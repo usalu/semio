@@ -5,7 +5,7 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-    use crate::standards::v1::subsets::mesh::schema::SemioMeshAnalyzer;
+    use crate::standards::v1::subsets::mesh::io::SemioMeshAnalyzer;
     #[cfg(feature = "conversion-mesh")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -248,7 +248,7 @@ pub fn encode_mesh(mesh: &crate::standards::v1::subsets::mesh::schema::snapshot:
         SemioMeshFormat::Gltf => Ok(semio_s_artifact_stdio_gltf::engine::serialize_gltf_document(&::semio_framework_async::poll::resolve_ready(SemioMeshToGltf::serialize(mesh)).map_err(|e| e.to_string())?)),
         SemioMeshFormat::Las => semio_s_artifact_stdio_las::engine::encode_las(&::semio_framework_async::poll::resolve_ready(SemioMeshToLas::serialize(mesh)).map_err(|e| e.to_string())?),
         SemioMeshFormat::Dwg => semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&::semio_framework_async::poll::resolve_ready(SemioMeshToDwg::serialize(mesh)).map_err(|e| e.to_string())?.drawing.to_native()?),
-        SemioMeshFormat::Png => semio_s_artifact_stdio_png::io::encode_png(&::semio_framework_async::poll::resolve_ready(SemioMeshToPng::serialize(mesh)).map_err(|e| e.to_string())?),
+        SemioMeshFormat::Png => semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&::semio_framework_async::poll::resolve_ready(SemioMeshToPng::serialize(mesh)).map_err(|e| e.to_string())?),
     }
 }
 
@@ -261,16 +261,141 @@ pub fn decode_mesh(bytes: &[u8], format: SemioMeshFormat) -> Result<crate::stand
     use semio_framework_plugin::{ ArtifactDeserializer};
     let text = || std::str::from_utf8(bytes).map_err(|e| e.to_string());
     match format {
-        SemioMeshFormat::Stl => ::semio_framework_async::poll::resolve_ready(SemioMeshFromStl::deserialize(&semio_s_artifact_stdio_stl::io::decode_stl_auto(bytes)?)).map_err(|e| e.to_string()),
-        SemioMeshFormat::Obj => ::semio_framework_async::poll::resolve_ready(SemioMeshFromObj::deserialize(&semio_s_artifact_stdio_obj::io::decode_obj(text()?)?)).map_err(|e| e.to_string()),
-        SemioMeshFormat::Ply => ::semio_framework_async::poll::resolve_ready(SemioMeshFromPly::deserialize(&semio_s_artifact_stdio_ply::io::decode_ply(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Stl => ::semio_framework_async::poll::resolve_ready(SemioMeshFromStl::deserialize(&semio_s_artifact_stdio_stl::standards::v_ascii::subsets::any::io::decode_stl_auto(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Obj => ::semio_framework_async::poll::resolve_ready(SemioMeshFromObj::deserialize(&semio_s_artifact_stdio_obj::standards::v3_0::subsets::any::io::decode_obj(text()?)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Ply => ::semio_framework_async::poll::resolve_ready(SemioMeshFromPly::deserialize(&semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::io::decode_ply(bytes)?)).map_err(|e| e.to_string()),
         SemioMeshFormat::Gltf => {
-            let gltf = if bytes.starts_with(b"glTF") { semio_s_artifact_stdio_gltf::io::decode_glb(bytes)? } else { semio_s_artifact_stdio_gltf::io::parse_gltf_document(bytes)? };
+            let gltf = if bytes.starts_with(b"glTF") { semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::decode_glb(bytes)? } else { semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::parse_gltf_document(bytes)? };
             ::semio_framework_async::poll::resolve_ready(SemioMeshFromGltf::deserialize(&gltf)).map_err(|e| e.to_string())
         }
-        SemioMeshFormat::Las => ::semio_framework_async::poll::resolve_ready(SemioMeshFromLas::deserialize(&semio_s_artifact_stdio_las::io::decode_las(bytes)?)).map_err(|e| e.to_string()),
-        SemioMeshFormat::Dwg => ::semio_framework_async::poll::resolve_ready(SemioMeshFromDwg::deserialize(&semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Las => ::semio_framework_async::poll::resolve_ready(SemioMeshFromLas::deserialize(&semio_s_artifact_stdio_las::standards::v1_0::subsets::any::io::decode_las(bytes)?)).map_err(|e| e.to_string()),
+        SemioMeshFormat::Dwg => ::semio_framework_async::poll::resolve_ready(SemioMeshFromDwg::deserialize(&semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg(bytes)?)).map_err(|e| e.to_string()),
         SemioMeshFormat::Png => Err("semio/mesh←png: a picture of a mesh carries no geometry".into()),
     }
 }
 //#endregion 🧾️Encoding
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
+    use crate::standards::v1::subsets::mesh::schema::mutations::{apply_semio_mesh_mutation, SemioMeshMutation};
+    use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioMeshBuilderConstruction {
+        snapshot: SemioMeshSnapshot,
+    }
+
+    impl ArtifactBuilder for SemioMeshBuilderConstruction {
+        type Snapshot = SemioMeshSnapshot;
+        type Mutation = SemioMeshMutation;
+        type Diff = SemioMeshDiff;
+        fn empty() -> Self {
+            Self { snapshot: SemioMeshSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioMeshSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = apply_semio_mesh_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioMeshDiff as protocol::MutationDiff<SemioMeshSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            Ok(self.snapshot)
+        }
+    }
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioMeshParts {
+        pub snapshot: Option<SemioMeshSnapshot>,
+    }
+
+    pub struct SemioMeshAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SemioMeshAnalyzerAnalysis {
+        type Parts = SemioMeshParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    let marker = STDIO_SEMIOMESH_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    if text.contains(STDIO_SEMIOMESH_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SemioMeshParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SemioMeshSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SemioMeshBuilderFacets {
+        construction: SemioMeshBuilderConstruction,
+        analysis: SemioMeshAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::mesh::io::derived_composition::SemioMeshComposerComposition,
+    }
+    builder: SemioMeshBuilder,
+    analyzer: SemioMeshAnalyzer,
+    composer: SemioMeshComposer,
+);

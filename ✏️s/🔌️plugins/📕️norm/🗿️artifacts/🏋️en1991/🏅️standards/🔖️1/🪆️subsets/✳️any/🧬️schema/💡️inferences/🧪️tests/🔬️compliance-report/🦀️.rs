@@ -268,7 +268,8 @@ async fn crane_and_silo_applicability_gating() {
 #[semio_framework_async_macros::async_test]
 async fn regenerate_example_assets_once() {
     use crate::example_subjects::{de_office_compliant, multi_fail_noncompliant};
-    use crate::standards::v1::subsets::any::schema::snapshot::{encode_en1991_dsl, encode_en1991_pack};
+    use crate::standards::v1::subsets::any::io::binary::snapshot::{encode_en1991_pack};
+    use crate::standards::v1::subsets::any::io::text::snapshot::{encode_en1991_dsl};
     use std::fs;
     use std::path::PathBuf;
     if std::env::var("EN1991_REGEN_ASSETS").ok().as_deref() != Some("1") { return; }
@@ -287,7 +288,7 @@ async fn regenerate_example_assets_once() {
 
 #[semio_framework_async_macros::async_test]
 async fn python_oracle_within_half_percent() {
-    use crate::standards::v1::subsets::any::schema::snapshot::encode_en1991_snapshot_json;
+    use crate::standards::v1::subsets::any::io::text::snapshot::encode_en1991_snapshot_json;
     use std::process::Command;
     let doc = En1991Snapshot::default();
     let report = evaluate(&doc);
@@ -316,7 +317,7 @@ async fn python_oracle_within_half_percent() {
 
 #[semio_framework_async_macros::async_test]
 async fn snapshot_json_validates_against_schema() {
-    use crate::standards::v1::subsets::any::schema::snapshot::encode_en1991_snapshot_json;
+    use crate::standards::v1::subsets::any::io::text::snapshot::encode_en1991_snapshot_json;
     use std::process::Command;
     let doc = En1991Snapshot::default();
     let json = encode_en1991_snapshot_json(&doc);
@@ -339,7 +340,7 @@ async fn field_meta_coverage_all_committed_examples() {
         de_accidental_variants, de_bridge_compliant, de_bridge_noncompliant, de_fire_parametric_compliant,
         de_fire_parametric_noncompliant, de_office_compliant, multi_fail_noncompliant,
     };
-    use crate::standards::v1::subsets::any::schema::snapshot::encode_en1991_snapshot_json;
+    use crate::standards::v1::subsets::any::io::text::snapshot::encode_en1991_snapshot_json;
     for doc in [
         de_office_compliant(),
         multi_fail_noncompliant(),

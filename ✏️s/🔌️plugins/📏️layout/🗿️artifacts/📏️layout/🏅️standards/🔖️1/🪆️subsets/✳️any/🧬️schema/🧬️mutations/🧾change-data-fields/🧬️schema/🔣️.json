@@ -15,7 +15,6 @@
         }
       ],
       "x-semio-ui": {
-        "widget": "dictionary",
         "role": "value",
         "label": {
           "en": "Data fields",

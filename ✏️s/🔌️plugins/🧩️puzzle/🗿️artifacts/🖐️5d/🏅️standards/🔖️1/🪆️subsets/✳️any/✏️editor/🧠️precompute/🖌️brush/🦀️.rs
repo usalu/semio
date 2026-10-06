@@ -5,7 +5,7 @@
 use crate::editor::puzzle5d::modes::edit::windows::board2d::utilities::brush::UTILITY_ID;
 use crate::editor::puzzle5d::precompute::{puzzle3d_config, puzzle3d_kind_catalogs, puzzle3d_snapshot, puzzle5d_authored_kind_catalogs, Puzzle5dPlannerBoard, Puzzle5dPlannerToolRunJob};
 use crate::editor::puzzle5d::{Puzzle5dDocument, Puzzle5dFastener, Puzzle5dPart, Puzzle5dPlayApp};
-use crate::standards::v1::subsets::any::schema::mutations::text::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dPlaySnapshot;
 use semio_framework_plugin::{EditorApp, Fault, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::brush as brush3d;
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::brush::BrushSuggestionsFound;

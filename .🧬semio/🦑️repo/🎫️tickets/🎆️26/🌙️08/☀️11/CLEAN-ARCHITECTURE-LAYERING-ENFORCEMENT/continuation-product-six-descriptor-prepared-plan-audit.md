@@ -1,0 +1,5 @@
+# Product Six-Descriptor Prepared Diagnostic Audit
+
+All4526 retained canonical source frames were SHA/byte/readback checked against exact Source4 or actual compiler-current full bodies. The950 added compiler-current frames remain explicitly predecessor-unavailable. Five complete temporary cuts retain full inverses: two debug function scopes, one print insertion before the unchanged complete scene assertion, declared73-provider workspace membership and exact lock. The original complete fixture and all resource limits are conserved. Actual ordinary/locked metadata agree and every local provider manifest is retained.
+
+Separate helper5 binds this exact metadata and retains the actual owning outcome even if final source guards refuse, including cancellation. Initial/immediate/final raw and source guards and pre/post-import executor checks remain. The combined diagnostic plan/dispatch gate is Ready. This is one exact diagnostic law, not an original whole rerun or resource/assertion relaxation.

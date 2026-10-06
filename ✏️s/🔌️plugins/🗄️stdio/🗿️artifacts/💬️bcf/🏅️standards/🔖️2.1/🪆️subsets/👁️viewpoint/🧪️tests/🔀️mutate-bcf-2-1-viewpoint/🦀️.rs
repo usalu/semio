@@ -21,8 +21,8 @@ const INPUT: &str = "shared://🏥️wellness-center-coordination-review.bcf";
 /// 🧫️ Copies the scenario's own committed input — its pair's `⬅️before.bcf`, else the real coordination review — into
 /// the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let uri = ctx.step_fixture_uris().into_iter().find(|uri| uri.ends_with("/⬅️before.bcf")).unwrap_or_else(|| INPUT.to_string());
-    let copy = ctx.copy_fixture(&uri, Some("coordination-review.bcf"))?;
+    let uri = ctx.step_input_uris().into_iter().find(|uri| uri.ends_with("/⬅️before.bcf")).unwrap_or_else(|| INPUT.to_string());
+    let copy = ctx.copy_input(&uri, Some("coordination-review.bcf"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

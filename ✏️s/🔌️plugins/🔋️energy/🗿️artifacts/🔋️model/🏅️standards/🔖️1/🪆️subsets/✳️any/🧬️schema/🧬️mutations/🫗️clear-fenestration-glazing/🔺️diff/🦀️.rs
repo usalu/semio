@@ -16,6 +16,6 @@ pub fn diff(payload: &super::ClearFenestrationGlazingConstruction, base: &Energy
     if let Some(item) = model.fenestrations.iter_mut().find(|item| item.id == payload.id) {
         item.glazing_construction_id = None;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

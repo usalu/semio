@@ -1,0 +1,3 @@
+# Canonical Native Typed Input Fixture
+
+Independent three-pair actual current source admission: full endpoints/inverses/hash identities are exact. One existing fixture row gains exactly 159 lowercase hex bytes; removing that field restores the entire original fixture data. The schema adds only optional closed nativeHex validation. The existing test keeps its original expected object and other bodies exact, constructs a fresh whole Uint8Array from fixture transport bytes, checks transfer detachment and closes both payload and cursor. No production API or compatibility path changes. Retained direct observations report detach/expected/payload/cursor success; the original four-law owning result remains separate pending raw receipt admission.

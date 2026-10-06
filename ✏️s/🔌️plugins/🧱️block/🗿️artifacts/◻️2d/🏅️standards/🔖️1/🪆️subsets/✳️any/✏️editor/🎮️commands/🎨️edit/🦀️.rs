@@ -141,7 +141,7 @@ fn replace_document_operations(current: &Block2dSnapshot, next: &Block2dSnapshot
 }
 //#endregion 🔖️ReplaceDocument
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 use crate::Block2dSnapshot;
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

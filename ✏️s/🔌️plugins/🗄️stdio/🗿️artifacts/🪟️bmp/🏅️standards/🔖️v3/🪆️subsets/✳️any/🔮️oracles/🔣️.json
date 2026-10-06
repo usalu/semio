@@ -554,9 +554,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-palette-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -605,7 +604,6 @@
       "notes": "A new colour is inserted into the palette table at index 2; the 16-entry index buffer is left byte-identical, matching this subset's own semantics that a palette edit changes the table and leaves the picture alone."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-palette-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -654,7 +652,6 @@
       "notes": "The unreferenced spare palette entry (index 5, colour [0,0,0]) is removed; the index buffer is left byte-identical."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-palette-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -703,7 +700,6 @@
       "notes": "The unreferenced spare palette entry (index 5) is replaced with a new colour; the index buffer is left byte-identical."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-pixel-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -752,7 +748,6 @@
       "notes": "A direct-colour 4x4 BMP's entire pixel array is replaced with a different solid RGB fill."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "header-change-header-fields",
       "class": "third-party-generated",
       "target": {
@@ -799,7 +794,6 @@
       "comparisonPipeline": "bmp-3-header-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -842,7 +836,6 @@
       "notes": "SetSnapshot replaces the committed small indexed document's octets with the committed 2x2 top-down direct-colour document's."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -892,7 +885,6 @@
       "notes": "One RFC 6901 set of octet 82 — the first stored pixel index of the small indexed document — from 2 to 5; the after-reading is the host's independent patched_snapshot, and Pillow decodes both."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "paint-indexed-region-applied",
       "class": "handcrafted",
       "target": {
@@ -949,7 +941,6 @@
       "notes": "The committed revision-guarded paint-indexed-region history-edit vector: before and after as the snapshot's hex DSL, the guarded payload and its applied outcome."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "paint-direct-region-applied",
       "class": "handcrafted",
       "target": {

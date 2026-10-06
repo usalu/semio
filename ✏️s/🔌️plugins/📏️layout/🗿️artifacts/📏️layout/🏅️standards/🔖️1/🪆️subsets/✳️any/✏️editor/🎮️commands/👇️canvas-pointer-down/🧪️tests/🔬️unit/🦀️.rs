@@ -128,7 +128,7 @@ async fn pointer_move_hovers_the_hit_frame_inline() {
 /// (the `dispatch` route is gated by the tool-proof catalog and `canvasPointerMove`'s
 /// `BatchOnlyPendingRewrite` classification, which are framework-owned).
 fn hover_targets(payload: &canvas_pointer_move::CanvasPointerMove) -> String {
-    let document = crate::standards::v1::subsets::any::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
     let config = NoConfig::default();
@@ -165,7 +165,7 @@ async fn a_batched_pointer_move_hovers_its_last_sample_only() {
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_release_is_inert_and_the_wire_defaults_hold() {
     use semio_framework_value::FromValue;
-    let document = crate::standards::v1::subsets::any::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
     let config = NoConfig::default();

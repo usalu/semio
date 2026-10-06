@@ -1,0 +1,19 @@
+{
+  "law": "Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.",
+  "provenance": ".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md",
+  "boundedThreadStackBytes": 1048576,
+  "workerPoolStackBytes": 2097152,
+  "conversionThresholdBytes": 65536,
+  "tables": [
+    {
+      "guard": "ui::wgpu_engine",
+      "crate": "semio-framework-ui",
+      "owner": "wgpu::engine::UiSurfaceRegistry",
+      "capacityConstant": "UI_LAYOUT_SURFACE_SLOTS",
+      "capacity": 64,
+      "elementType": "Option<UiSurfaceSlot>",
+      "elementSizeBytes": 165984,
+      "ownerSizeBytes": 520
+    }
+  ]
+}

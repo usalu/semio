@@ -1,0 +1,1336 @@
+# Framework Wrapper Edits
+
+Removed duplicate corpus schema imports and validators while keeping behavioral assertions and independent SQLite, Buffer, decimal, parser and accessibility oracles.
+
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts`
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🟦️.ts`
+- `🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️history-edit-actions/🟦️.ts`
+- `🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️number-facets/🟦️.ts`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🧪️tests/🧩️component/🟦️.tsx`
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🧪️tests/🧩️component/🟦️.tsx`
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️color-input/🟦️.ts`
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️text-controls/🟦️.ts`
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️number-controls/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧱️ownership/🟦️.ts`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/🔬️oracle/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪢️cargo-provider-binding/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🏛️space-administration/🟦️.tsx`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📃️document/🧪️tests/🧪️renderdocument/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-authority/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️mutation-fixtures/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🟦️.ts`
+
+Removed schema files:
+
+- `🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧫️fixtures/🖨️macro-staging/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧠️logical-owner/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧫️fixtures/⚠️refusal/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧫️fixtures/🧮️allocation/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧫️fixtures/🫳️reconstruction/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧫️fixtures/🔮️semantic-extent/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧫️fixtures/📏️file-bound/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🧫️number-facets/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🧫️history-edit-actions/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🧫️dialog-choices/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧫️fixtures/📣️reporting/🛂️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/✏️selected-solid-scope/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/💰️record-backing/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/💰️record-backing/🛑️rejected-insert/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/🧵️continuation/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/🔤️occurrences/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧫️fixtures/🔢️number-refusal/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📦️nested/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧫️fixtures/📦️paging/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧫️fixtures/📦️owners/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧫️fixtures/📦️copy/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/🗂️static-dir-mounts/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧫️fixtures/🏷️conditional-delivery/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🎯️row-target/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧫️text-controls/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧫️number-controls/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧫️color-input/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🫳️borrowed-object/🧫️fixtures/📍️coordinates/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🫳️borrowed-object/🧫️fixtures/🏷️tagged/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧫️fixtures/compiler-imports/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🧫️fixtures/📡️channel/🗃️document-archive/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📡️mutation-reachability/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📽️cargo-provider-projection/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️mutation-type-origin/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪢️cargo-provider-binding/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🏷️metadata-source-provider/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🪪️mutation-metadata/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧫️fixtures/🌐️html-source-pair/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/📏️semantic-cells/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎞️wire/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🛂️semantic/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/artifact-registry/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/📏️semantic-cells/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/artifact-packages/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️frontiers/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/⚠️refusals/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/💰️backing/🔬️requests/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/💰️backing/🔢️ordinals/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/command-boundaries/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/graph-coalescing/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/native-preparation/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/continuous-services/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/nx-bootstrap/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📦️native-dependencies/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/dependency-bootstrap/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/nx-contract/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🏛️administration/🧫️fixtures/📄️page-retirement/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/runtime-components/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🏛️administration/🧫️fixtures/🛂️command-admission/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/native-inputs/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/cache-prune/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/hub-build/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/bun-dependencies/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/📮️wgpu-frame-deferred-ownership/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎬️media-app-acceptance/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/⏳️wgpu-directory-http-deadline/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️composed-child-history/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️folder-reload-route/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️history-label-reload/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️supersede-ledger/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🔬️wgpu-shell-boot-selection/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️time-travel/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧫️history-alternatives/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧫️canonical-descriptor-pack/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🛂️semantic/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🛂️semantic/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🖼️image/🧫️fixtures/🚫️unavailable/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📊️table/🧫️fixtures/🏠️row-capacity/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📊️table/🧫️fixtures/↔️two-axis/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📃️document/🧫️fixtures/✏️editable/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🧫️fixtures/🗑️delete-space/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🧫️fixtures/⚙️properties/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🪟️window-icon-overrides/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧫️fixtures/🧫️folder-archive-persistence/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧫️fixtures/🧫️folder-read-back/🧬️schema/🔣️.json`
+
+Direct fixture-root wrapper consumers:
+
+- `🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🧪️tests/🟦️.ts`
+- `🧰️framework/🔨️modules/🪪️identity/📁️installation/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/⏱️budget/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🔎️projection/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/📨️emission/🟦️.ts`
+
+Rust oracle consumers:
+
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧾️record-list/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🫳️borrowed-object/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🔤️occurrences/🦀️.rs`
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🫳️reconstruction/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧪️tests/🛫️encoding/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧾️record-list/🦀️.rs`
+
+Removed direct fixture-root schema files:
+
+- `🧰️framework/🔨️modules/🪪️identity/📁️installation/🧫️fixtures/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-port-control-turn/🧫️fixtures/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/⏱️budget/🧫️fixtures/🛂️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧪️tests/🛫️encoding/🧫️fixtures/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🧫️fixtures/🧬️schema/🔣️.json`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧾️record-list/🧫️fixtures/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🔎️projection/🧫️fixtures/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/🧫️fixtures/🧬️schema/📦️nested-parent-return.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/🧫️fixtures/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧾️record-list/🧫️fixtures/🧬️schema/🔣️.json`
+
+## Test-case corpus wrapper removals
+
+- Removed 🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔣️absolute-varint/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/⏭️continuation/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🗂️row-index/🔗️parent-column/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🗂️row-index/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🗂️typed-index/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔢️backing-limits/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️action-argument-gate/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧭️current-contracts/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📖️grammar/🧪️tests/🧬️originals/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/🧾️label-receipt/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/✍️authored-label/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/🪪️retained-source-registry/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/📤️child-group-producer/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/📢️owned-publication/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/🔤️semantic-text-wire/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/🔁️retained-source-registry-reuse/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/🔁️repeated-prefix/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/🎒️child-group-wire/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/📨️authored-operation-source/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧬️schema/🌓️partial-label/🔣️.json
+
+## Removed bindings and task inputs
+
+- Updated 🧰️framework/🔨️modules/🏗️mesh-engine/🧫️fixtures/🥽️scene-mesh-kinds/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-port-control-turn/🧫️fixtures/🔣️.json
+- Updated 🧰️framework/🔨️modules/🚪️io/🔀️stream-mux/🧫️fixtures/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🧫️fixtures/⌨️input-publication-receipt.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🧊️wgpu-browser-boot-cache-inputs/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/artifact-ephemeral-one-item-publication-v1/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/artifact-store-one-item-publication-v1/🔣️.json
+
+## Reviewed corpus wrappers outside collections
+
+The root properties enumerate example cases, expected outputs, fixed inputs, test controls and source assertions; these are corpus admission duplicates. Domain contracts for actual runtime values remain owned by their semantic modules.
+
+- Removed 🧰️framework/🔨️modules/✍️editor/⚠️error/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/✍️editor/🧬️scene/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/⚠️diagnostic/🚧️text-error/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/⚠️diagnostic/🧬️schema/🎛️controlled/🔣️.json
+- Removed 🧰️framework/🔨️modules/⚠️diagnostic/🧬️schema/🧯️fault/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎠️kernel/🫧️transient/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🔏️hash/🧬️schema/🧮️blake3/🔣️.json
+- Removed 🧰️framework/🔨️modules/🧪️test/🧬️schema/🔌️adapter-ownership/🔣️.json
+- Removed 🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📤️generation/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/📥️source/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/🗂️catalog/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🗜️deflate/🧬️schema/🛫️controlled/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🚦️refusals/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🎞️intrinsic-media/🌲️depth/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/🚦️provider/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/👥️context/💥️lifecycle/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/👥️context/🧾️claim/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/👥️context/🎛️policy/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/👥️context/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/📋️paged/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/📡️codec/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/⚠️refusal/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/📍️text-refusal/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🧩️host-slots/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🔣️history-reprojection/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🔤️json/🧬️schema/🧫️members/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/📋️context/🧬️schema/🚫️paths/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎓️introduction/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/🪓️termination/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/🧭️routing/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/📥️capture/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪜️stepper-pointer-commit/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/📤️prepared-readback/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/♿️retained-toggle-semantics/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔽️retained-select-origin/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎚️slider-presentation/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-pointer-transfer/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🛟️panel-window-reservation/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎚️numeric-press-input/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/⌨️table-stepper-keyboard/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪪️fixture-ownership/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/♿️tree-disclosure/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔽️select-popup-geometry/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/↔️panel-resize/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪪️window-surface-owner/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️icon-render-camera/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧭️native-command/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/📣️engagement-status/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🆚️diff-view-produced-surface/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-terminal/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️retained-control-commit/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/⌨️text-owner-lifecycle/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖥️prepared-gpu-clip-pieces/🔣️.json
+- Removed 🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧬️schema/🚦️refusals/🔣️.json
+- Removed 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json
+- Removed 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/⚠️value-refusals/🔣️.json
+- Removed 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️transaction-ref/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🏛️ownership/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🔎️frontiers/📏️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema/🎨️world3d-inline-surface/🔣️.json
+- Removed 🧰️framework/🔨️modules/📡️replication/📡️wire/🧬️schema/🖱️typed-field-order/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json
+- Removed 🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🔣️history-transition/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🧬️schema/🔎️search-fold-routing/🔣️.json
+- Removed 🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🧮️document-backbone-batch-v1/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🧬️schema/🔀️pane-fold-independence/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🧬️schema/🚧️content-clearance/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️contract/⌨️caret-cadence/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧬️schema/📏️row-anchor/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧬️schema/🪟️window-requests/🔣️.json
+- Removed 🧰️framework/🔨️modules/◻️2d/📝️text/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧬️schema/🎯️stack-drop-destination/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/👆️cursor/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🚚️text-editor-lanes/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🎯️component-source/🔣️.json
+- Removed 🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧬️schema/⚠️refusal/🔣️.json
+- Removed 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧬️schema/🧩️composition/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🧬️schema/🧩️execution-target-module-resolution-v1/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🧬️schema/🌱️space-artifact-creation-generation-v1/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏗️mesh-engine/🧬️schema/🎨️attributes/🔣️.json
+- Removed 🧰️framework/🔨️modules/📁️filesystem/📷️snapshot/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/📁️filesystem/🔎️discovery/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🧬️schema/✅️validator/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/⏳️async/🔂️poll/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/⏳️async/🔐️publication/🛂️checkpoint/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/⏳️async/🔐️publication/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧬️schema/🔣️channel-handshake/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧬️schema/🔣️document-archive-load-host/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧬️schema/document-echo-suppression/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧬️schema/🔣️folder-archive-presence/🔣️.json
+- Removed 🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🧩️consumption/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧬️schema/🔣️cold-pair-loading/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️supersede-replay/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️viewer-head/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧬️schema/🌿️branch-provenance/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧬️schema/📸️paged-history-stack/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🔁️codec/🧬️schema/🛬️controlled/🔗️borrowed-keys.json
+- Removed 🧰️framework/🔨️modules/🌱️value/📋️list/🧬️schema/🏠️parent-return.json
+- Removed 🧰️framework/🔨️modules/🌱️value/📋️list/🧬️schema/⚠️refusal/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🤏️inline-text-stream/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🧾️semantic-text-retirement/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/📦️paged/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🪆️stage/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🫴️recipient.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🌊️text-stream/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/📝️paged-text.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/📤️outbound-announcement/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/⚡️hot-path/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️deferred-reprojection/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️tool-transaction/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️graphql/🔢️int64/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/🧬️schema/🧩️neutral-owner/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔤️utf8/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount/🧬️schema/🔐️pool-use/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/📣️registration/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️schema/⚔️concurrent-write/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧬️schema/🚦️refusals/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🆔️ids/🧬️schema/⚠️error/🎒️pack/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📍️output/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🧬️.schema.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⏱️frame-latency/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/↔️input-commits/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎬️row-action-admission/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️world3d-glb-material/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🕸️node-graph-domain-interaction/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧬️schema/🔔️deferred-wake/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️world3d-glb-outline/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎓️host-introduction/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧵️kernel-pool-future/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🌳️ui-contract-presentation/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🌳️window-measures-tree-parity/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🖼️reference-image-decode/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/💬️chat-input-accessibility/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️icon-svg-lighting/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧊️wgpu-browser-boot-cache-inputs/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⌨️dock-tab-keyboard/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♿️native-accessibility-tree/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎬️surface-behavior/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🪆️embedded-mount/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🔗️hub-projection/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♻️tiled-map-gesture-lifecycle/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⌨️browser-keyboard-scope/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🛑️scene-pointer-cancellation/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🖱️wheel-application-point/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🖋️ink-canvas-domain-interaction/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️agent-credential/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧬️schema/🏁️job-completion-publication/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧬️schema/🛬️construction/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧬️schema/🌐️browser-acceptance/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🧬️schema/🎨️layout/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🧬️schema/♿️accessible-entry/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🌐️grid-visual/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🎯️analytic-vertex-picking/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🎯️analytic-component-picking/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/📤️asset-cancellation/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️schema/🏁️job-completion-ownership/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🪶️sqlite/🧬️schema/💰️release/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎬️initial-example/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/🪟️maximize-resync/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/🎯️spawned-document-routing/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️schema/🪪️pack-identity/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/🧬️schema/🎯️checkpoint-hit/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/🧬️schema/🎨️layout/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧬️schema/🔣️time-travel-band/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧰️utility-assignment/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧬️schema/🔣️float32-decimal/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧬️schema/🔣️board-event-coalescing/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖱️context-menu/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧬️schema/🪟️canvas-clearance/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/🧬️schema/🧭️navigator-camera/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎛️UtilityTree/🧬️schema/📐️bounded-palette/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/🏷️status/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/⭕️svg-mask/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/📤️export-batch/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/🚚️request/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/📥️download/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/📤️svg-export/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/🖼️frame-presentation/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🧬️schema/🔣️seed-reconcile/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/📤️png-export/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪟️mounted-window-refresh/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧬️schema/📮️delivery/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧬️schema/📝️explicit-draft/🧭️retention.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧬️schema/📝️explicit-draft/⚖️lifecycle.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🏗️component-instantiation/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📊️Table/🧬️schema/🔘️button-accessibility/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🧾️transaction-command-close/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🤝️cooperative-pump/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧬️schema/🔣️gumball-live-protocol/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧬️schema/🔣️path-paint/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧬️schema/🔣️gumball-dispatch/🔣️.json
+
+## Computed fixture-base consumers
+
+- 🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-archive-persistence/🟦️.ts: 6 wrapper expressions removed
+- 🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-read-back/🟦️.ts: 8 wrapper expressions removed
+- 🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-port-control-turn/🟦️.ts: 6 wrapper expressions removed
+
+## Rust outside-wrapper consumers
+
+- Updated 🧰️framework/🔨️modules/⚠️diagnostic/🚧️text-error/🧪️tests/🦀️.rs; actual independent domain oracle retained.
+- Updated 🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🧪️tests/🦀️.rs; actual independent domain oracle retained.
+- Updated 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs; actual independent domain oracle retained.
+- Updated 🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/⚠️refusal/🦀️.rs; actual independent domain oracle retained.
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧪️tests/🦀️.rs; actual independent domain oracle retained.
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🦀️.rs; actual independent domain oracle retained.
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧪️tests/🦀️.rs; actual independent domain oracle retained.
+
+## Outside-wrapper TypeScript consumers
+
+- 🧰️framework/🔨️modules/✍️editor/⚠️error/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/⚠️diagnostic/🚧️text-error/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/⏪️time-travel/🧪️tests/🧪️conformance/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/📁️filesystem/📷️snapshot/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/📁️filesystem/🔎️discovery/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🚫️paths/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/🪓️termination/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts: 1 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts: 7 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts: 1 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🔏️hash/🧪️tests/🧮️blake3/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🧪️test/🔌️adapter/🧪️tests/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🧪️tests/🟦️.ts: 11 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔣️absolute-varint/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🚦️refusals/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🎞️intrinsic-media/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/⏭️continuation/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🗂️row-index/🟦️.ts: 12 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️frontiers/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🗂️typed-index/🟦️.ts: 8 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🏛️ownership/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧪️source-contract/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧱️ownership/🟦️.ts: 8 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧭️producer-authority/🟦️.ts: 13 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🎓️introduction/🧪️tests/🔬️unit/🟦️.ts: 8 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/⏳️async/🔐️publication/🛂️checkpoint/🧪️tests/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/⏳️async/🔐️publication/🧪️tests/🟦️.ts: 16 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📤️generation/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🧪️tests/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/📤️prepared-readback/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🧪️tests/🧩️component/🟦️.tsx: 11 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🚚️text-editor-lanes/🟦️.test.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️icon-render-camera/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🧪️tests/🧩️component/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🧪️tests/🧩️component/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎠️kernel/🫧️transient/🧪️tests/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧭️native-command/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/📣️engagement-status/🟦️.tsx: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts: 7 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧪️tests/🧩️component/🟦️.tsx: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧪️tests/🎯️stack-drop-destination/🟦️.tsx: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧪️history-reprojection/🟦️.ts: 8 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🧪️tests/🔬️translation-totality/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🔤️text-flow/🟦️.tsx: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-archive-load-host/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🌱️value/🔁️codec/🧪️tests/🛬️controlled/🟦️.ts: 7 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️graphql/🔢️int64/🧪️tests/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/◻️2d/📝️text/🧪️tests/🔬️unit/🟦️.ts: 1 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📍️output/🧪️tests/🔬️unit/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🪪️pack-identity/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧪️tests/🧪️cold-pair-loading/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🧪️tests/🧪️seed-reconcile/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️frame-latency/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️maximize-resync/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️row-action-admission/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-glb-material/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🕸️node-graph-domain-interaction/🟦️.tsx: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-glb-outline/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏰️shell-chrome-deadline/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌳️ui-contract-presentation/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️release/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️wgpu-browser-media/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️initial-example/🟦️.tsx: 1 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️retained-toggle-semantics/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎚️window-measure-controls/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️icon-svg-lighting/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🤝️cooperative-pump/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️puzzle3d-settings-document/🟦️.tsx: 12 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️presented-media-slots/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/👆️browser-cursor-presentation/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️reference-image-decode/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️wgpu-accessibility-interaction/🟦️.tsx: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️surface-behavior/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️retained-clock/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️native-accessibility/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📤️asset-cancellation/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-inline-surface/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: 26 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️mounted-window-fetch/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📄️surface-document/🟦️.ts: 1 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🆚️diff-view-produced-surface/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🛑️scene-pointer-cancellation/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖱️wheel-application-point/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧭️current-contracts/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖋️ink-canvas-domain-interaction/🟦️.tsx: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧲️scene-input-residency/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️caret-cadence/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️browser-keyboard-scope/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔗️hub-projection/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️tiled-map-gesture-lifecycle/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts: 9 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️action-argument-gate/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖱️context-menu/🧪️tests/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts: 12 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎛️UtilityTree/🧪️tests/🎛️picker-explicit-press/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/💬️AgentChatPanel/🧪️tests/🧩️component/🟦️.tsx: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/🏷️status/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/⭕️svg-mask/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/🚚️request/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📥️download/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/🖼️frame-presentation/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📊️Table/🧪️tests/🔘️button-accessibility/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️png-export/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🧪️tests/🎨️layout/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🧪️tests/♿️accessible-entry/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔄️ShellSync/🧪️tests/🧩️component/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🧪️tests/🧩️component/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧪️tests/📝️explicit-draft/🟦️.test.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/🧪️tests/🧭️navigator-camera/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🖱️input-contract/🟦️.tsx: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧪️tests/🧪️board-event-coalescing/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧪️tests/🧪️float32-decimal/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🧪️gumball-dispatch/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🧪️path-paint/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/📜️script.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/🧪️tests/🎯️checkpoint-hit/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/🧪️tests/🎨️layout/🟦️.tsx: 3 duplicate admission expressions removed
+
+## Additional Reviewed Corpus Wrappers
+
+Scenario recipes and expected observations removed; actual domain/process/image/geometry/transport inputs retained.
+
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🧮️allocation/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🏗️projection/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/💰️frontiers/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/💰️production/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/💰️operation/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🫳️import-ownership/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🔎️frontiers/🔣️.json
+- Removed 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🔁️transfer/🔣️.json
+- Removed 🧰️framework/📏️script-boundary/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🗄️durable-collaborative-redo-v1/🔣️.json
+- Removed 🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/📡️replication/🎮️mutation/📦️bytes/🧬️schema/🏠️child-carrier.json
+- Removed 🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🧬️schema/🧹️retirement/🔣️.json
+- Removed 🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🧬️schema/🧹️retirement/🔣️.json
+- Removed 🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧬️schema/🧹️retirement/🔣️.json
+- Removed 🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧬️schema/🚮️absence/🔣️.json
+- Removed 🧰️framework/🔨️modules/🗜️deflate/🧬️schema/⚠️refusal/🔣️.json
+- Removed 🧰️framework/🔨️modules/🕸️graph/🧬️schema/🪆️record-owner/🔣️.json
+- Removed 🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️ownership/🔣️.json
+- Removed 🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️ownership/🧭️direction/🔣️.json
+- Removed 🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🏷️type/🔣️.json
+- Removed 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧱️ownership/🔣️.json
+- Removed 🧰️framework/🔨️modules/⏳️async/📏️api/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/⏳️async/🧬️schema/🧱️boxed-fixed-slots/🔣️.json
+- Removed 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧩️selection/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧬️schema/🎞️animation/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/📐️overlay-flow/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪟️dock-accessible-names/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/⌨️slider-readout-editing/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪜️stepper-presentation/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🥞️layered-overview/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🛟️chrome-panel-safe-area/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🌳️tree-row-density/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/♿️disabled-row-action/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/⌨️arrow-chords/🔣️.json
+- Removed 🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📤️progress/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/📐️dock-axis-geometry/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/📁️virtual-file-system-interaction/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧩️block-list-presentation/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🌌️prepared-scene-ui-stacking/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/♿️retained-select-accessibility/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪗️retained-section-collapse/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️raster-residency/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪟️surface-lifetime/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/💡️retained-control-tooltip/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/👥️graph-timeline-authors/🔣️.json
+- Removed 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🚮️absence/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔤️text-advances/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪜️prepared-scene-overlay-stacking/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🌳️tree-window-row-extent/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/📐️section-field-presentation/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧾️correlated-action-receipts/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖋️ink-clipboard/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️raster-capacity-followup/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/⌨️number-stepper-editing/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧭️canvas2d-camera-gestures/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧊️feature-ownership/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔝️navbar-centered-band/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧬️schema/🎭️color-primitives/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧬️schema/📏️relative-sizing/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🚚️node-graph-scene-lanes/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🚚️table-lanes/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/✂️text-splice/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🚚️world3d-scene-lanes/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🔤️json/🧬️schema/🚮️absence/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🧬️schema/⚠️error/🪪️identity/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/🧬️schema/🔣️.json
+- Removed 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧬️schema/🔤️text-flow/🔣️.json
+- Removed 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🔁️value-projection/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/🏭️native-schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🎨️scene-shading/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🖼️reference-visual/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🧲️scene-input-residency/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🎯️component-contract/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/📥️host-kind-admission/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🧬️schema/🚶️shell-interaction/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/👷️worker-freshness/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🚪️opening/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧷️assembly/⏳️lifetime/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧬️schema/⚠️emission/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧬️schema/🚦️controlled/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🔢️ieee754/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧬️schema/🪆️record-owner/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️schema/🚪️provisioning-lifecycle/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️schema/📥️retained-pack-load/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🎮️playground-session/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🧬️catalog-complete/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🚀️launch/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🧬️schema/🧱️placement/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🧬️schema/🏭️generate/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🔣️codec/🧵️send/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪆️child/👁️capture/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/⏳️completion/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📄️natural-file-lifecycle/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🏗️fixture-channel-interfaces/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧬️schema/🧾️document-authority/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏳️operation-progress/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🚪️lifetime/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️chrome-palette/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/👕️canvas-presence/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧬️schema/🪶️workspace-lease/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🏛️ownership/🧮️compute/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🌓️native-theme-invalidation/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🪟️window-lifecycle-template-drag/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🌐️settings-locale-panel-refresh/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♿️wgpu-accessibility-interaction/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎥️tutorial-bridge/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🔄️shell-utility-leaves/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♻️shell-document-retirement-index/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⏳️boot-lifecycle/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎬️boot-execution/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♿️editable-controls/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🪟️body-window-reports/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🚗️driver-editor/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🤏️surface-pinch/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🪆️embedded-browser/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⌨️os-command-shortcuts/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♿️wgpu-accessibility-visibility/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️settings-theme-publication/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔎️ShellSearch/🧬️schema/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🧬️schema/♻️lifecycle/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧬️schema/🌐️instance-title/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧬️schema/🪟️empty-dock-notice/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧬️schema/🧰️utility-action-policy/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/📤️gpu-export/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/🎛️command-panel/🔣️.json
+- Removed 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/🎓️manifest/🔣️.json
+
+## Additional TypeScript Helpers And Admissions
+
+- 🧰️framework/📏️script-boundary/🧪️tests/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️retained-pack-source-laws/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔣️absolute-varint/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes/🧪️tests/🟦️.ts: 7 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-archive-restore/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🧪️tests/🧩️execution-target-module-resolution/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/⏳️async/📏️api/🧪️tests/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧪️tests/🚮️absence/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🗜️deflate/🧪️tests/🧱️ownership/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧱️ownership/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🚮️absence/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts: 1 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/⏳️async/🔂️poll/🧪️tests/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/⏳️async/🧪️tests/🧱️boxed-fixed-slots/🟦️.ts: 7 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/📐️overlay-flow/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🛟️chrome-panel-safe-area/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/📐️dock-axis-geometry/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️ring-press/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔤️text-advances/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧊️feature-ownership/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧪️tests/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🕸️graph/🧪️tests/🪆️record-owner/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧪️tests/🏷️type/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️frontiers/🟦️.ts: 12 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️operation/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔬️unit/🟦️.ts: 16 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️tests/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🧪️tests/🧩️component/🟦️.tsx: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧪️tests/🧩️component/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🔤️text-flow/🟦️.tsx: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx: 7 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🧪️tests/🧩️component/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🚚️node-graph-scene-lanes/🟦️.test.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🚚️world3d-scene-lanes/🟦️.test.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🚚️table-lanes/🟦️.test.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/🎭️color-primitives/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/📏️relative-sizing/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🧪️tests/🔬️unit/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🚶️shell-interaction/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/♨️hot-update/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧪️tests/📥️host-kind-admission/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🧪️tests/🔬️source-plan/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🧭️direction/🟦️.ts: 7 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️tests/🧾️document-authority/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts: 19 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🪟️tree-windows/🟦️.tsx: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🚪️provisioning-lifecycle/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🌐️instance-title/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🪟️empty-dock-notice/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/⏪️time-travel/🧪️tests/🧩️component/🟦️.tsx: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔎️ShellSearch/🧪️tests/🧩️component/🟦️.tsx: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🪶️workspace-lease/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧱️ownership/🟦️.ts: 8 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🚀️launch/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️chrome-palette/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/👕️canvas-presence/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🧪️tests/🧱️placement/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🧪️tests/🏭️generate/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️os-command-shortcuts/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🧱️placement/🟦️.ts: 10 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧪️tests/🧱️ownership/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🏷️name-prefix/🧬️schema/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🏷️name-prefix/🧪️tests/🟦️.ts: 5 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🧱️ownership/🟦️.ts: 13 duplicate admission expressions removed
+- 🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🚮️absence/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-browser/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎛️command-panel/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚗️driver-editor/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️puzzle3d-settings-document/🟦️.tsx: 6 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖋️ink-canvas-clipboard/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️block-list-presentation/🟦️.tsx: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️editable-controls/🟦️.tsx: 5 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: 18 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪗️retained-section-collapse/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts: 8 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧾️frame-action-ledger/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌳️tree-row-rects/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧷️assembly/⏳️lifetime/🧪️tests/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🧪️tests/🧩️component/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌓️native-theme-invalidation/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖱️wheel-application-point/🟦️.ts: 1 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏳️operation-progress/🧪️tests/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️viewer-head/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🖱️input-contract/🟦️.tsx: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/📜️script.ts: 1 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/🧪️tests/🎨️layout/🟦️.tsx: 1 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️export-batch/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️gpu-export/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️svg-export/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧪️tests/🤏️pinch-gesture/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️gpu-animation-clock/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️settings-general-layout/🟦️.ts: 6 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️wgpu-accessibility-interaction/🟦️.tsx: 6 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎥️tutorial-bridge/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔄️shell-utility-leaves/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️window-lifecycle-template-drag/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌐️settings-locale-panel-refresh/🟦️.tsx: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️shell-document-retirement-index/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️scene-raster-ownership/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️reactor-contract-oracles/🟦️.ts: 4 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts: 7 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts: 2 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🔢️ieee754/🧪️tests/🟦️.ts: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️settings-theme-publication/🟦️.tsx: 3 duplicate admission expressions removed
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🪆️record-owner/🟦️.ts: 4 duplicate admission expressions removed
+
+## Metadata And Nx Input Closure
+
+- Updated 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json
+- Updated 🧰️framework/🔨️modules/🔏️hash/🧫️fixtures/🧮️blake3/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️viewer-head/🔣️.json
+- Updated 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json
+- Updated 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📋️project.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️tool-transaction/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️folder-archive-presence/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-replay/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️deferred-reprojection/🔣️.json
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📋️project.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️channel-handshake/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️document-archive-load-host/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧫️fixtures/⏱️compile-cancellation-law.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🧫️fixtures/⏱️binding-cancellation-law.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🧫️fixtures/💼️inference-service-law.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗿️artifact/🧫️fixtures/🧷️untrusted-content-law.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🗿️artifact/🧫️fixtures/⏱️create-cancellation-law.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📋️project.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🌐️grid-visual/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎨️scene-shading/🔣️.json
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🖼️reference-visual/🔣️.json
+
+## Explicit Corpus Definition Extraction
+
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/⏳️async/🔐️use/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/⏳️async/🔔️maintenance/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🪪️root/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/✍️writer/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📮️handback/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/📋️list/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🧵️job/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🗺️surface/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🧩️action-argument-resolution/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🌳️root/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/📡️replication/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧬️schema/🔣️.json
+- Removed pure wrapper 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🧰️ui-action-collection/🔣️.json
+- Removed pure wrapper 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🌲️fixture-projection/🔣️.json
+- Updated 🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/🧬️schema/🔣️.json; removed LayoutRunFixture, LayoutRunFixtureCase while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/⏳️async/🔔️worker-parking/🧬️schema/🔣️.json; removed WorkerParkingFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️.json; removed GestureDriveLawFixture, NodeDragLawFixture, ScrubLawFixture, TransactionLawFixture, TypingLawFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json; removed Fixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema/🔣️.json; removed MetalObjectiveCAbiFixture, SceneListTransferFixture, World3dLightingFixture, World3dShadowFixture, World3dShadowParityFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️schema/🔣️.json; removed TypedFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🔣️.json; removed ConformanceCatalogFixture, ContractFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json; removed ActionSemanticsFixture, ArtifactKindFormatsFixture, CapabilityDescriptionFixture, ExamplePickerFixture, ToolRunActionsFixture, TutorialDocumentTrackFixture, TutorialLocalInteractionFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🧬️schema/🔣️.json; removed PagesFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🔢️scalar/🧬️schema/🔣️.json; removed ScalarTestsFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🧬️schema/🔣️.json; removed MetadataFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📦️payload/🧬️schema/🔣️.json; removed PayloadFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/📋️copied/🧬️schema/🔣️.json; removed CopiedFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧬️schema/🔣️.json; removed EvidenceFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🚫️cancellation/🧬️schema/🔣️.json; removed CancellationFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🧬️schema/🔣️.json; removed PageFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📃️page/🔗️binding/🧬️schema/🔣️.json; removed BindingFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🏗️builder/🧬️schema/🔣️.json; removed BuilderFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📨️slot/🧬️schema/🔣️.json; removed SlotFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json; removed LocalInteractionFixture, QueryFixture, RetirementFixture, TopologyAuthorityFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🧬️schema/🔣️.json; removed TransportFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🧬️schema/🔣️.json; removed Fixture, FixtureCase while retaining domain definitions.
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🧬️schema/🔣️.json; removed TestBrowserGisProvenanceFixtureV1 while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/📖️reader/🧬️schema/🔣️.json; removed ReaderFixture while retaining domain definitions.
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/🔣️.json; removed BootBudgetFixtureV1 while retaining domain definitions.
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json; removed ActorDocumentPortFixtureV1, BrowserDocumentMountFixtureV1 while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/⏪️time-travel/🧬️schema/🔣️.json; removed LifecycleLawFixture while retaining domain definitions.
+- Updated 🧰️framework/🔨️modules/⏯️tool-run/🧬️schema/🔣️.json; removed LifecycleLawFixture, TickFixture, TracePageFixture while retaining domain definitions.
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json; removed DocumentBackboneBindingFixtureV1 while retaining domain definitions.
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🔍️freshness/🧬️schema/🔣️.json; removed SourceFreshnessFixtureV1 while retaining domain definitions.
+- Updated 🧰️framework/🛍️products/🐾️pets/🧬️schema/🔣️.json; removed Fixture while retaining domain definitions.
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧬️schema/🔣️.json; removed SetGraphParameterFixtureV1 while retaining domain definitions.
+
+## Behavioral Integrity Follow-Up
+
+Restored six behavioral leaves across time travel, renderer engine/integration/embedded mount, and backbone DSL/pack pairing. Removed only embedded corpus Ajv admission. Two workflow SQL budget tests awaiting parent ownership review; four corpus admission-only leaves intentionally absent.
+
+## Mixed Corpus Definition Consumer Closure
+
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🧪️tests/🧪️docklayoutstore/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️conformance/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧪️source-contract/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️conformance-corpus/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🥾️boot-budget/🧮️reducers/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📡️actor-backbone/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧯️router-plugin-faults/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📥️inbound-request/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️source-freshness/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️actorreturnresponseframing-uses-canonical-vectors-with-no-payload-copies/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts
+- Removed only corpus definition validator declarations, assertions and refusal guards in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📥️poll/🏘️composition/🧪️tests/🧪️pluginpollcompositionwit-preserves-the-canonical-six-scalars-and-exact-n/🟦️.ts
+
+## Admission Remnant Cleanup
+
+Removed unused schema/Ajv bindings, empty admission leaves and empty validator loops in 0 TypeScript files. Semantic validation bindings referenced by actual domain assertions remain.
+
+
+
+## Admission Remnant Cleanup Verified Against HEAD
+
+Removed unused schema/Ajv bindings and empty admission leaves/loops in 6 files; actual domain bindings retained.
+
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🧪️tests/🪶️sqlite/🔬️oracle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🧪️tests/🧩️execution-target-module-resolution/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-archive-load-host/🟦️.ts
+- 🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts
+- 🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts
+
+## Admission Remnant Cleanup Verified Against HEAD
+
+Removed unused schema/Ajv bindings and empty admission leaves/loops in 165 files; actual domain bindings retained.
+
+- 🧰️framework/📏️script-boundary/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/⏳️async/📏️api/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/⏳️async/🔂️poll/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/⏳️async/🔐️publication/🛂️checkpoint/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/⏳️async/🔐️publication/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/⏳️async/🧪️tests/🧱️boxed-fixed-slots/🟦️.ts
+- 🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🟦️.ts
+- 🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🧭️direction/🟦️.ts
+- 🧰️framework/🔨️modules/🎒️pack/⚠️error/🧪️tests/🧱️ownership/🟦️.ts
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔣️absolute-varint/🟦️.ts
+- 🧰️framework/🔨️modules/🎒️pack/📐️format/🧪️tests/🔬️retained-pack-source-laws/🟦️.ts
+- 🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🚮️absence/🟦️.ts
+- 🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts
+- 🧰️framework/🔨️modules/🏃️process/📋️context/🧪️tests/🚫️paths/🟦️.ts
+- 🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🏃️process/🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts
+- 🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🏃️process/🪓️termination/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧪️tests/🚮️absence/🟦️.ts
+- 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts
+- 🧰️framework/🔨️modules/📡️replication/🧪️tests/🧪️artifact-bootstrap-protocol/🟦️.ts
+- 🧰️framework/🔨️modules/🔏️hash/🧪️tests/🧮️blake3/🟦️.ts
+- 🧰️framework/🔨️modules/🔲️pixels/🧪️testing/🧭️ownership/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧪️tests/🏷️type/🟦️.ts
+- 🧰️framework/🔨️modules/🕸️graph/🧪️tests/🪆️record-owner/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/📏️relative-sizing/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/✂️text-splice/🟦️.test.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🚚️node-graph-scene-lanes/🟦️.test.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🚚️table-lanes/🟦️.test.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🚚️text-editor-lanes/🟦️.test.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧪️tests/🚚️world3d-scene-lanes/🟦️.test.ts
+- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🧪️tests/🔬️unit/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/📐️dock-axis-geometry/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/📐️overlay-flow/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/📤️prepared-readback/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔤️text-advances/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧊️feature-ownership/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧭️native-command/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️conformance-corpus/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️color-input/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️number-controls/🟦️.ts
+- 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🧪️tests/🔬️translation-totality/🟦️.ts
+- 🧰️framework/🔨️modules/🗜️deflate/🧪️tests/🧱️ownership/🟦️.ts
+- 🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🗣️dsl/🧪️tests/🚮️absence/🟦️.ts
+- 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧪️tests/🧱️ownership/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🧪️tests/🧮️allocation/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/⏭️continuation/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️frontiers/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️operation/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔬️unit/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🗂️row-index/🟦️.ts
+- 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🗂️typed-index/🟦️.ts
+- 🧰️framework/🔨️modules/🛂️manifest/🟦️.ts
+- 🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️history-edit-actions/🟦️.ts
+- 🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️number-facets/🟦️.ts
+- 🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️conformance/🟦️.ts
+- 🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧪️tests/📥️host-kind-admission/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧵️canonical-edit/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧷️assembly/⏳️lifetime/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️browser-keyboard-scope/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️caret-cadence/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️os-command-shortcuts/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️frame-latency/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️gpu-animation-clock/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️shell-document-retirement-index/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♻️tiled-map-gesture-lifecycle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️action-argument-gate/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️native-accessibility/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️settings-general-layout/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌓️native-theme-invalidation/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌳️tree-row-rects/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🌳️ui-contract-presentation/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎥️tutorial-bridge/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️chrome-palette/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️icon-svg-lighting/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-glb-material/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-glb-outline/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-inline-surface/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎬️surface-behavior/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/👆️browser-cursor-presentation/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/👕️canvas-presence/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📡️actor-backbone/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📤️asset-cancellation/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📥️inbound-request/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔗️hub-projection/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖱️wheel-application-point/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️reference-image-decode/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🖼️scene-raster-ownership/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚗️driver-editor/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🛑️scene-pointer-cancellation/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧭️current-contracts/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧯️router-plugin-faults/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧲️scene-input-residency/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧾️frame-action-ledger/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-browser/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️mounted-window-fetch/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️window-lifecycle-template-drag/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🧪️gumball-dispatch/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🧪️path-paint/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧪️tests/🧪️board-event-coalescing/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧪️tests/🧪️float32-decimal/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/⭕️svg-mask/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️export-batch/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️gpu-export/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️png-export/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️svg-export/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📥️download/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/📜️script.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🧪️tests/🔬️source-plan/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️tests/🧾️document-authority/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🧪️tests/🏭️generate/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🪶️workspace-lease/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖱️context-menu/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-declarations-fixture/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🤝️cooperative-pump/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/📨️emission/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🔎️projection/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️actorreturnresponseframing-uses-canonical-vectors-with-no-payload-copies/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📃️document/🧪️tests/🧪️renderdocument/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/📥️retained-pack-load/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🚪️provisioning-lifecycle/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🪪️pack-identity/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🪆️record-owner/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/🧪️tests/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📍️output/🧪️tests/🔬️unit/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/♨️hot-update/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🚶️shell-interaction/🟦️.ts
+- 🧰️framework/🛍️products/💻️os/🟦️.ts
+
+## Corpus and Case Definition Ownership
+
+- Updated 🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json; removed FaultNoticeCorpus, MutationInputCorpus
+- Updated 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json; removed PortableCorpusV1
+- Updated 🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🔣️.json; removed CheckedIntegersV1, DslUnsignedCases
+- Updated 🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧬️schema/🔣️.json; removed MeshTransportCasesV1
+- Updated 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧬️schema/🔣️.json; removed CasesV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔎️scalar-witness/🧬️schema/🔣️.json; removed ScalarRecordCase, ScalarRecordWire
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json; removed DocumentBackboneBindingCaseV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json; removed DeploymentInventoryCasesV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧬️schema/🔣️.json; removed DurableOwnedGroupCase, DurableOwnedGroupDecision
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧬️schema/🔣️.json; removed Case, CompositionOpenHistoryDictionary
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧾️record/🧬️schema/🔣️.json; removed Case, CompositionOpenHistoryDictionaryRecord
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-dialect/🧬️schema/🔣️.json; removed Case, ClosedMemberDialectAdmission, GraphCase, IdentityCase, ProjectionCase, PublicRestoreCase
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧬️schema/🔣️.json; removed CorpusV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🧬️schema/🔣️.json; removed CasesV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📣️contributions/🧬️schema/🔣️.json; removed CasesV1, CensusCasesV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/🔣️.json; removed CanonicalBootstrapFolderMirrorCorpusV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json; removed RetainedCommandBoundaryCase, RetainedCommandCorpusLimits, RetainedCommandDeclaredLimits, RetainedCommandLimits
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🧬️schema/🔣️.json; removed HistoryIdentityCase, HistoryIdentityV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json; removed ArtifactCreationCatalogCaseV1, ArtifactCreationProgressCaseV1, ArtifactCreationProgressUiV1, ArtifactCreationReadyOpeningCase, ArtifactCreationReadyOpeningV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧬️schema/🔣️.json; removed EditDigestChains, EditDigestChainsEditCase, EditDigestChainsGeneratedCase
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️.json; removed FlowPackageContractCasesV1
+- Deleted 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️owned-schema-record/🔣️.json; removed InvalidCase, OwnedSchemaRecord, PageCase, SourceCase
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🚫️rejected-page-close/🔣️.json; removed Case, RejectedPageCloseGrantLaws
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️.json; removed GroupReadCase, GroupReadVisibility
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧬️schema/🔣️.json; removed AuthenticatedHubDescriptorIndexCaseV1, AuthenticatedHubDescriptorIndexV1, HubComponentAssetCorpusV1, HubUnavailableRefusalCorpusV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧬️schema/🔣️.json; removed MandatoryMutationDescriptorCase, MandatoryMutationDescriptorFactsV1
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🔣️.json; removed CheckedIntegersV1, DslUnsignedCases
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/🔣️.json; removed PackageContractCase, PackageContractCases
+- Updated 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🔣️.json; removed SliderOverlay, SliderOverlayCase
+
+## Corpus/Case Consumer Closure
+
+- Removed corpus-only validator leaves in 🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️fault-notices/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧪️tests/🧩️suite/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧪️tests/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📣️contributions/🧪️tests/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧪️tests/📇️inventory/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🔐️authenticated-hub-workspace/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🧪️tests/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/👁️group-visibility/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🗄️durable-owned-group/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🗣️member-dialect/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🧪️tests/🔎️scalar-witness/🟦️.ts
+- Removed corpus-only validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️artifact-creation-ready-opening/🟦️.ts
+
+## Example Schema Reference Closure
+
+- Removed deleted corpus schema pointer from 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🌞️scene-lighting/🔣️.json
+- Removed deleted corpus schema pointer from 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🌑️scene-shadows/🔣️.json
+- Removed deleted corpus schema pointer from 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json
+- Removed deleted corpus schema pointer from 🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json
+- Removed deleted corpus schema pointer from 🧰️framework/🔨️modules/📡️replication/🧫️fixtures/🚀️artifact-bootstrap/🔣️.json
+- Removed deleted corpus schema pointer from 🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🍎️metal/🔣️.json
+
+## Deleted Pure Schema Consumer Closure
+
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧩️suite/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️tests/🔬️wire-retirement/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧪️source-contract/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/🧪️tests/🔬️input-commit-observer/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🔗️commit/📥️enqueue/🧪️tests/🔬️single-enqueue-publication/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🪪️root/🧪️tests/🔬️input-root/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/✍️writer/🧪️tests/🔬️input-writer/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/🧪️tests/🔬️input-admission/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🧪️tests/🔬️watchdog-tail/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts
+- Removed absent corpus schema reads and only their validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts
+
+## Confirmed Pure Actor/Kernel Wrapper Consumer Closure
+
+- Removed deleted pure test wrapper loads and validator statements in 🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🧪️tests/🟦️.ts
+- Removed deleted pure test wrapper loads and validator statements in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts
+- Removed deleted pure test wrapper loads and validator statements in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts
+
+## Validator Loop Syntax Closure
+
+- Removed validator-only orphan loop header in 🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🧪️tests/🔬️watchdog-tail/🟦️.ts
+- Removed validator-only orphan loop header in 🧰️framework/🔨️modules/🎯️action-bus/🧹️wire-retirement/🧪️tests/🔬️wire-retirement/🟦️.ts
+- Removed validator-only orphan loop header in 🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎟️admission/✍️writer/🧪️tests/🔬️input-writer/🟦️.ts
+
+## Retired Standalone Fixture Schema Leaves
+
+- Deleted 🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎨️encoded-world-pipelines/🧬️schema.json
+- Deleted 🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🧱️world-instance-layout/🧬️schema.json
+- Deleted 🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📦️retained-string-action/🧬️schema.json
+- Deleted 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧩️extension-retirement/📐️schema.json
+- Deleted 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🫳️child-dispatch/🧬️schema.json
+- Deleted 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧫️fixtures/🛰️offer-answers/🧬️schema.json
+- Deleted 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🪪️scene-pointer-owner/📐️schema.json
+- Deleted 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/📄️native-asset-response/📐️schema.json
+- Deleted 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🧵️component-close-frame-turn/📐️schema.json
+- Deleted 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🧵️frame-turn-scheduling/📐️schema.json
+- Deleted 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🛑️browser-component-asset-cancellation/📐️schema.json
+
+## Actual Agent Bridge Wire Contracts
+
+Extracted genuine AgentBridgeOfferAnswerV1 and AgentBridgeOfferRecordV2 from the removed misplaced fixture schema into OS renderer canonical schema $defs. Retargeted answer/record Ajv checks to the real domain exports; encoding, parsing and scoped selection laws preserved.
+
+## Retired Standalone Fixture Schema Consumer Closure
+
+- Removed only retired standalone wrapper loads/validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️extension-retirement/🟦️.ts
+- Removed only retired standalone wrapper loads/validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧲️engine-surface-retention/🟦️.ts
+- Removed only retired standalone wrapper loads/validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📨️browser-frame-transport/🟦️.ts
+- Removed only retired standalone wrapper loads/validator leaves in 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts
+
+## Final Corpus Admission Closure
+
+Removed the four fresh-component corpus definitions FreshSourceEpochLawsV1, FreshStagingV1, FreshProcessV1 and RustDepInfoLawsV1 from OS describe schema. The extracted test factory keeps the actual FreshSourceEpochV1 domain validation, stable-stringify/WebCrypto/Pack/BLAKE3 comparisons, dep-info parser cases, staging retention and process cancellation behavior. Removed unused corpus Ajv imports and reads from staging/process callbacks.
+
+Removed repository GraphQL DocumentCorpus/CoercionCorpus/ErrorCorpus and restored the actual Document root contract. Removed native observer TransactionProcessOwnershipVector/TransactionProcessDecisionCase while retaining actual observation, layout, decision and birth token contracts plus the independent Ajv/Lodash/SmartBuffer behavioral oracle. Removed OS TestRunnerForwardingV1 schema and its admission assertions while keeping actual parseArgs forwarding cases.
+
+Moved actual AgentBridge offered-answer and offer-record contracts from the misplaced fixture schema to the canonical renderer schema. Retargeted only the tests validating actual produced offers/records; behavioral encoding and scoped-selection cases remain. Removed eleven other standalone retired schema filenames under own fixture collections and their direct wrapper admission consumers.
+
+Latest Bun transpiler audit parsed all 626 staged and unstaged changed framework TypeScript files with no syntax failures. Direct relative TypeScript schema imports/new URL reads and Rust includes inspected 7501 framework files: one nonexistent URL is only a schema-vocabulary exclusion sentinel, never read. All actual static consumed paths resolve.
+
+Native artifact capture suite passed seven tests and thirty expectations, including independent actual Cargo compile/run and publication oracles. The real compiler case now declares a thirty-second test budget rather than the unrelated Bun five-second default; Cargo remains bounded to ten seconds for each build.
+
+## Last Authored Inventory Closure
+
+Deleted obsolete fixture mutation aggregate schemas, nested compute runner corpus schema and Directory adjacent corpus wrappers. Extracted actual empty-state Record/Text/Pack contracts to canonical plugin schema and kept per-value Ajv comparisons. Removed WGPU corpus schema markers. Moved eight raw Directory examples from implementation/schema trees into dedicated fixture collections and repaired static consumed paths.
+
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/⏱️timestamped/🧬️mutations/🔣️.json`
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🚦️severity/🧬️mutations/🔣️.json`
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🛂️validated/🧬️mutations/🔣️.json`
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧮️demo/🧬️mutations/🔣️.json`
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🪤️lossy/🧬️mutations/🔣️.json`
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🧒️children-fixture/🧬️mutations/🔣️.json`
+- Removed `🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution/🧪️tests/🧬️schema/🎚️level/🔣️.json`
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🚫️empty-state/📐️schema/🔣️.json`
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🧬️.schema.json`
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🧬️.schema.json`
+- Removed `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🧬️.schema.json`
+- Example `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️artifact-genesis-v1/🔣️.json` → `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🌱️artifact-genesis-v1/🔣️.json`
+- Example `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🔣️.json` → `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🌱️space-artifact-creation-v1/🔣️.json`
+- Example `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📇️document-index-v1/🔣️.json` → `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/📇️document-index-v1/🔣️.json`
+- Example `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json` → `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🪪️session-authority-v1/🔣️.json`
+- Example `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🔣️.json` → `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🪪️session-refresh/🔣️.json`
+- Example `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🔣️.json` → `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🪪️session-port/🔣️.json`
+- Example `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🔣️.json` → `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🏘️spaces/🔣️.json`
+- Example `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🔣️.json` → `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔐️sign-in/🔣️.json`
+- Consumer `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🔬️unit/🦀️.rs`
+- Consumer `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🧪️tests/🔬️unit/🦀️.rs`
+- Consumer `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔐️HubSignIn/🧪️tests/🔬️wgpu-unit/🦀️.rs`
+- Consumer `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏘️SpaceBrowser/🧪️tests/🔬️wgpu-unit/🦀️.rs`
+
+AgentBridge canonical answer/record contracts passed the registered renderer check: 83 Vitest tests. Compute runner corpus removal retained its registered independent Node oracle and actual runner laws: two tests, 152 expectations. Empty-state genuine Record/Text/Pack validation was an unregistered test helper; registered it in the existing OS Vitest include list so the canonical domain extraction is executed by existing Nx/launch test commands.
+
+## Dev Flow and Lowpoly Final Classification
+
+Deleted Dev Flow SFlowCompositionV1/SFlowGeometryCompositionV1 pure corpus schemas and only their Ajv corpus admissions. Kept actual native test-name/source ownership, neutral framework import independence and installed-extension absence assertions.
+
+Deleted LowpolyInteractiveJobPartition fixed 48-route/budget/source-census envelope. Preserved its real lane/preparation signature policy as LowpolyPublicationPolicyV1 in the actual Lowpoly artifact subset schema. The registered Lowpoly script now compares every actual action declaration, publication lane and resumable proof against examples, verifies exact action identity uniqueness, and checks produced lane/preparation policies against first-party derivation and independent Ajv. Four invalid policy examples compare both implementations without imposing a schema on corpus structure.
+
+Registered empty-state domain oracle passed the existing OS Nx test command (one Vitest test). A broader filtered invocation also collected an unrelated preexisting empty backbone-helper file; the exact registered file run passed. Lowpoly registered target passed two shipped-example tests and independently verified all 48 actual source action contracts plus four invalid lane/preparation policies against Ajv.

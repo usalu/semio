@@ -1,3 +1,5 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 use super::*;
 
 /// 🌉️ Once-guarded stdio registration so `render_drawing_to_svg`'s `io_dispatch` call can

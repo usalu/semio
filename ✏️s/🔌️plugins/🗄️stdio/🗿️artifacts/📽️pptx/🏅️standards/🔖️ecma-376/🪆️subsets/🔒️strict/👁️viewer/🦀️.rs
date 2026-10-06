@@ -68,7 +68,7 @@ impl ArtifactViewer for PptxStrictViewer {
     const DOCUMENT_SCHEMA: &'static str = STDIO_PPTX_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> PptxSnapshot {
-        crate::standards::v_ecma_376::subsets::base::schema::blank_pptx_snapshot()
+        crate::standards::v_ecma_376::subsets::strict::schema::blank_strict_pptx_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `PptxStrictViewCommand::Noop` variant never carries a

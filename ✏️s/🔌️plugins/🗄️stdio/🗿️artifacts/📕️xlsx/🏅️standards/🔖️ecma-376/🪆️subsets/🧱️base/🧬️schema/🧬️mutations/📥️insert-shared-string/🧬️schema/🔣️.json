@@ -14,7 +14,21 @@
       "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
     },
     "value": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "description": {
+          "en": "Text of the shared string appended to the table.",
+          "de": "Text der gemeinsamen Zeichenfolge, die an die Tabelle angehängt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

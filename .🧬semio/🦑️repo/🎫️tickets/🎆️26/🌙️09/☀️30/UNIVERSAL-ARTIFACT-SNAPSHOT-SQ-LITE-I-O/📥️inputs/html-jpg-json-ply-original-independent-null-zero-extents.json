@@ -1,0 +1,546 @@
+[
+  {
+    "name": "html",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 38,
+        "valueBytes": 864,
+        "schemaBytes": 1245,
+        "tableCount": 8,
+        "maxColumns": 5,
+        "tables": [
+          {
+            "table": "html_attribute",
+            "width": 5,
+            "rows": 5,
+            "semanticBytes": 150
+          },
+          {
+            "table": "html_child",
+            "width": 4,
+            "rows": 10,
+            "semanticBytes": 320
+          },
+          {
+            "table": "html_comment",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 12
+          },
+          {
+            "table": "html_document",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 30
+          },
+          {
+            "table": "html_element",
+            "width": 2,
+            "rows": 7,
+            "semanticBytes": 85
+          },
+          {
+            "table": "html_node",
+            "width": 2,
+            "rows": 11,
+            "semanticBytes": 164
+          },
+          {
+            "table": "html_raw_text",
+            "width": 3,
+            "rows": 2,
+            "semanticBytes": 76
+          },
+          {
+            "table": "html_text",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 27
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 4,
+        "valueBytes": 87,
+        "schemaBytes": 1245,
+        "tableCount": 8,
+        "maxColumns": 5,
+        "tables": [
+          {
+            "table": "html_attribute",
+            "width": 5,
+            "rows": 1,
+            "semanticBytes": 30
+          },
+          {
+            "table": "html_child",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "html_comment",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "html_document",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 30
+          },
+          {
+            "table": "html_element",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 12
+          },
+          {
+            "table": "html_node",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 15
+          },
+          {
+            "table": "html_raw_text",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "html_text",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "jpg",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 182,
+        "valueBytes": 5992,
+        "schemaBytes": 4750,
+        "tableCount": 14,
+        "maxColumns": 13,
+        "tables": [
+          {
+            "table": "jpg_document",
+            "width": 13,
+            "rows": 1,
+            "semanticBytes": 108
+          },
+          {
+            "table": "jpg_frame",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 32
+          },
+          {
+            "table": "jpg_frame_component",
+            "width": 7,
+            "rows": 2,
+            "semanticBytes": 112
+          },
+          {
+            "table": "jpg_huffman_code_length",
+            "width": 4,
+            "rows": 32,
+            "semanticBytes": 1024
+          },
+          {
+            "table": "jpg_huffman_symbol",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 96
+          },
+          {
+            "table": "jpg_huffman_table",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 68
+          },
+          {
+            "table": "jpg_quantization_coefficient",
+            "width": 4,
+            "rows": 128,
+            "semanticBytes": 4096
+          },
+          {
+            "table": "jpg_quantization_table",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 80
+          },
+          {
+            "table": "jpg_quantizer",
+            "width": 2,
+            "rows": 2,
+            "semanticBytes": 32
+          },
+          {
+            "table": "jpg_rgba_pixel",
+            "width": 7,
+            "rows": 2,
+            "semanticBytes": 112
+          },
+          {
+            "table": "jpg_segment",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 64
+          },
+          {
+            "table": "jpg_segment_octet",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 96
+          },
+          {
+            "table": "jpg_thumbnail",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 24
+          },
+          {
+            "table": "jpg_thumbnail_rgb_pixel",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 48
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 179,
+        "valueBytes": 5832,
+        "schemaBytes": 4750,
+        "tableCount": 14,
+        "maxColumns": 13,
+        "tables": [
+          {
+            "table": "jpg_document",
+            "width": 13,
+            "rows": 1,
+            "semanticBytes": 108
+          },
+          {
+            "table": "jpg_frame",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 32
+          },
+          {
+            "table": "jpg_frame_component",
+            "width": 7,
+            "rows": 2,
+            "semanticBytes": 112
+          },
+          {
+            "table": "jpg_huffman_code_length",
+            "width": 4,
+            "rows": 32,
+            "semanticBytes": 1024
+          },
+          {
+            "table": "jpg_huffman_symbol",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 96
+          },
+          {
+            "table": "jpg_huffman_table",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 68
+          },
+          {
+            "table": "jpg_quantization_coefficient",
+            "width": 4,
+            "rows": 128,
+            "semanticBytes": 4096
+          },
+          {
+            "table": "jpg_quantization_table",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 80
+          },
+          {
+            "table": "jpg_quantizer",
+            "width": 2,
+            "rows": 2,
+            "semanticBytes": 32
+          },
+          {
+            "table": "jpg_rgba_pixel",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "jpg_segment",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 64
+          },
+          {
+            "table": "jpg_segment_octet",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 96
+          },
+          {
+            "table": "jpg_thumbnail",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 24
+          },
+          {
+            "table": "jpg_thumbnail_rgb_pixel",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "json",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 20,
+        "valueBytes": 552,
+        "schemaBytes": 1397,
+        "tableCount": 4,
+        "maxColumns": 6,
+        "tables": [
+          {
+            "table": "json_array_element",
+            "width": 4,
+            "rows": 6,
+            "semanticBytes": 192
+          },
+          {
+            "table": "json_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 26
+          },
+          {
+            "table": "json_object_member",
+            "width": 5,
+            "rows": 3,
+            "semanticBytes": 99
+          },
+          {
+            "table": "json_value",
+            "width": 6,
+            "rows": 10,
+            "semanticBytes": 235
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 2,
+        "valueBytes": 40,
+        "schemaBytes": 1397,
+        "tableCount": 4,
+        "maxColumns": 6,
+        "tables": [
+          {
+            "table": "json_array_element",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "json_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 26
+          },
+          {
+            "table": "json_object_member",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "json_value",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 14
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "ply",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 62,
+        "valueBytes": 1893,
+        "schemaBytes": 3213,
+        "tableCount": 8,
+        "maxColumns": 8,
+        "tables": [
+          {
+            "table": "ply_cell",
+            "width": 4,
+            "rows": 19,
+            "semanticBytes": 608
+          },
+          {
+            "table": "ply_comment",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 80
+          },
+          {
+            "table": "ply_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 42
+          },
+          {
+            "table": "ply_element",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 90
+          },
+          {
+            "table": "ply_list_item",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 96
+          },
+          {
+            "table": "ply_property",
+            "width": 8,
+            "rows": 10,
+            "semanticBytes": 376
+          },
+          {
+            "table": "ply_row",
+            "width": 3,
+            "rows": 3,
+            "semanticBytes": 72
+          },
+          {
+            "table": "ply_value",
+            "width": 6,
+            "rows": 22,
+            "semanticBytes": 529
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 3,
+        "valueBytes": 122,
+        "schemaBytes": 3213,
+        "tableCount": 8,
+        "maxColumns": 8,
+        "tables": [
+          {
+            "table": "ply_cell",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "ply_comment",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 80
+          },
+          {
+            "table": "ply_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 42
+          },
+          {
+            "table": "ply_element",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "ply_list_item",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "ply_property",
+            "width": 8,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "ply_row",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "ply_value",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  }
+]

@@ -574,11 +574,11 @@ def doc_string(ctx: Context) -> str:
 
 def forest(ctx: Context) -> dict:
     """🌲️ The real building model, read through this implementation's own DSL parser."""
-    return parse_dsl(ctx.fixture_bytes(FOREST_DSL).decode("utf-8"))
+    return parse_dsl(ctx.input_bytes(FOREST_DSL).decode("utf-8"))
 
 
-def fixture_json(ctx: Context, uri: str) -> dict:
-    return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
+def snapshot_json(ctx: Context, uri: str) -> dict:
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input
@@ -610,10 +610,10 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
     what the verb means, independent of both implementations."""
-    before_uri, mutation_uri, after_uri = ctx.step_fixture_uris()[:3]
-    before = fixture_json(ctx, before_uri)
-    after = fixture_json(ctx, after_uri)
-    mutation = fixture_json(ctx, mutation_uri)
+    before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
+    before = snapshot_json(ctx, before_uri)
+    after = snapshot_json(ctx, after_uri)
+    mutation = snapshot_json(ctx, mutation_uri)
     applied = apply_mutation(before, mutation)
     if applied != after:
         raise AssertionError("%s: the applied document does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(after)))
@@ -628,7 +628,7 @@ def spec_vector(ctx: Context) -> Outcome:
 def payload_fidelity(ctx: Context) -> Outcome:
     """🌲️ The derived fixture against the real JSON it came from, re-read on every run by Python's own
     RFC 8259 parser with lexeme-preserving number hooks."""
-    derived = derive_document_from_json(ctx.fixture_bytes(FOREST_JSON))
+    derived = derive_document_from_json(ctx.input_bytes(FOREST_JSON))
     committed = forest(ctx)
     if derived != committed:
         raise AssertionError("the committed building document no longer matches the JSON it was derived from")
@@ -645,23 +645,23 @@ def identity_round_trip(ctx: Context) -> Outcome:
     emitted: the demo graph's two files were written by the Rust codec and are reproduced here from
     the grammar alone, while the building model's two files were written by this implementation and
     the Rust codec has to reproduce THOSE."""
-    graph_dsl = ctx.fixture_bytes(GRAPH_DSL)
+    graph_dsl = ctx.input_bytes(GRAPH_DSL)
     graph = parse_dsl(graph_dsl.decode("utf-8"))
     printed = print_dsl(graph).encode("utf-8")
     if printed != graph_dsl:
         raise AssertionError("re-printing the demo graph did not reproduce the committed DSL bytes (%d vs %d bytes)" % (len(printed), len(graph_dsl)))
-    graph_pack = ctx.fixture_bytes(GRAPH_PACK)
+    graph_pack = ctx.input_bytes(GRAPH_PACK)
     if parse_pack(graph_pack) != graph:
         raise AssertionError("the demo graph's binary twin decodes to a different document than its text")
     repacked = pack_bytes(graph)
     if repacked != graph_pack:
         raise AssertionError("re-encoding the demo graph did not reproduce the committed pack bytes (%d vs %d bytes)" % (len(repacked), len(graph_pack)))
-    forest_dsl = ctx.fixture_bytes(FOREST_DSL)
+    forest_dsl = ctx.input_bytes(FOREST_DSL)
     document = parse_dsl(forest_dsl.decode("utf-8"))
     forest_printed = print_dsl(document).encode("utf-8")
     if forest_printed != forest_dsl:
         raise AssertionError("re-printing the building model did not reproduce its committed DSL bytes (%d vs %d bytes)" % (len(forest_printed), len(forest_dsl)))
-    committed_forest_pack = ctx.fixture_bytes(FOREST_PACK)
+    committed_forest_pack = ctx.input_bytes(FOREST_PACK)
     if parse_pack(committed_forest_pack) != document:
         raise AssertionError("the building model's binary twin decodes to a different document than its text")
     forest_repacked = pack_bytes(document)

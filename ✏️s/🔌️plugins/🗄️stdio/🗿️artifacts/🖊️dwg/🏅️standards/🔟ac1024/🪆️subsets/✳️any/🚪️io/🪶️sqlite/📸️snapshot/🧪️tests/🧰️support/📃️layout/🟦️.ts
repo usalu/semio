@@ -1,0 +1,7 @@
+/** 🧫️ Handcrafted DWG typed boundary fixture shared by component and complete snapshot laws. */
+import type { DwgLayout } from "../../../../../../🧬️schema/🟦️.ts";
+
+const max=18446744073709551615n,zero={bits:0x8000000000000000n},nan={bits:0xfff0123456789abcn},infinity={bits:0x7ff0000000000000n};
+const layout:DwgLayout={pageSetupName:"setup",printerConfiguration:"printer",canonicalMediaName:"media",stylesheet:"style",name:"layout",plotOptions:{useStandardScale:true,plotViewportBorders:false,plotWithLineweights:true,drawViewportsFirst:false,modelType:true,updatePaper:false,initializing:true},margins:[nan,zero],paperSize:[],plotOrigin:[infinity],paperUnit:"inches",rotation:"quarterTurn",plotArea:"display",plotWindowLowerLeft:[zero],plotWindowUpperRight:[nan,infinity],paperUnits:nan,drawingUnits:zero,standardScale:"oneToOne",standardScaleFactor:infinity,paperImageOrigin:[],shadePlot:"asDisplayed",shadePlotResolution:"normal",shadePlotDpi:65535,tabOrder:65535,options:{paperSpaceLinetypeScaling:true},insertionBase:[nan,zero,infinity,nan],limitsMinimum:[],limitsMaximum:[nan],ucsOrigin:[zero],ucsXAxis:[infinity],ucsYAxis:[nan,zero],ucsElevation:nan,orthographicView:"right",extentsMinimum:[],extentsMaximum:[zero,nan],plotViewHandle:undefined,visualStyleHandle:0n,blockHeaderHandle:max,activeViewportHandle:max,baseUcsHandle:undefined,namedUcsHandle:0n,viewportHandles:[0n,max,9007199254740993n]};
+
+export { layout as dwgLayoutFixture };

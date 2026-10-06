@@ -9,7 +9,7 @@ import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import { type AdapterContext, type AdapterOutcome, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, type AdapterOutcome, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { compileOwnedMarkdownToHtml } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/🔨️modules/📝️markdown-html-compiler/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -39,7 +39,7 @@ function rows(ctx: AdapterContext): Record<string, string>[] {
 
 /** 🧫️ The markdown source of one vector, read from the immutable fixture the feature names. */
 function markdownOf(ctx: AdapterContext, uri: string): string {
-  return new TextDecoder().decode(ctx.fixtureBytes(uri));
+  return new TextDecoder().decode(ctx.inputBytes(uri));
 }
 
 /** 🎛️ Compiles every vector of the scenario with one compiler and keys the fragments by vector. */

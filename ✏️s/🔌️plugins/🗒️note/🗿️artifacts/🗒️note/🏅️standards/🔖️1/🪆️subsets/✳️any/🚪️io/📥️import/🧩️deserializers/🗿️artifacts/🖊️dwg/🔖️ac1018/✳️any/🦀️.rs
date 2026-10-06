@@ -22,7 +22,7 @@ impl Deserializer<NoteSnapshot> for DwgIntoNote {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DwgIntoNote: expected a binary dwg payload".to_string())));
         };
         let drawing = dwg_from_bytes(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DwgIntoNote: {error}"))))?;
-        let value = crate::io::note_document_json_from_dwg(&drawing).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DwgIntoNote: {error}"))))?;
+        let value = crate::standards::v1::subsets::any::io::note_document_json_from_dwg(&drawing).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DwgIntoNote: {error}"))))?;
         let snapshot: NoteSnapshot = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DwgIntoNote: {error}"))))?;
         Ok(IoOutcome::clean(snapshot))
     }

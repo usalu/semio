@@ -14,8 +14,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { cleanup, fireEvent, render } = await import("@semio-tech/ui-react/test");
   const { createElement } = await import("react");
   const { default: lifetime } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🪟️surface-lifetime/🔣️.json");
-  const { default: lifetimeSchema } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🪟️surface-lifetime/🔣️.json");
-  const { default: Ajv } = await import("ajv");
 
   type AnyRecord = Record<string, any>;
 
@@ -99,8 +97,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     afterEach(() => cleanup());
 
     it("validates the shared retained surface lifetime contract", () => {
-      const validate = new Ajv({ allErrors: true, strict: false }).compile(lifetimeSchema);
-      expect(validate(lifetime), JSON.stringify(validate.errors)).toBe(true);
+      const view = mount([container(1, "lifetime-probe", "section", "Lifetime", [2]), node(2, "lifetime-value", { type: "text", value: lifetime.silentBlurCommit.initialValue, emphasize: null, dataAttributes: null })], 1);
+      expect(document.getElementById(`${SURFACE}/lifetime-probe`)).not.toBeNull();
+      view.unmount();
+      expect(document.getElementById(`${SURFACE}/lifetime-probe`)).toBeNull();
     });
 
     it("silently unmounts focused drafts and rejects detached predecessors through repeated same-id mounts", () => {

@@ -1,0 +1,123 @@
+//! 🖋️ Ordered PDF operators with explicitly named operands and intrinsic inline-image bytes.
+use semio_framework_value::{ValueError,ValueRefusalKind};
+use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
+
+#[derive(Clone, Copy)]
+enum O { LineWidth, LineCap, LineJoin, MiterLimit, DashPhase, RenderingIntent, Flatness, ExtGState, X1, Y1, X2, Y2, X3, Y3, Width, Height, CharSpacing, WordSpacing, HorizontalScale, Leading, FontName, FontSize, TextRenderingMode, TextRise, Tx, Ty, TextKind, TextValue, TextCodes, GlyphWx, GlyphWy, BboxLlx, BboxLly, BboxUrx, BboxUry, ColorSpaceName, PatternName, Gray, Red, Green, Blue, Cyan, Magenta, Yellow, Black, ShadingName, XobjectName, MarkedTag, PropertyKind, PropertyName, PropertyDictionary, InlineImage, UnknownOperator }
+const WIDTH: usize = O::UnknownOperator as usize + 1;
+impl O { fn column(self) -> usize { self as usize + 4 } fn real(self, row:Row<'_>) -> Result<f64,ValueError> { row.real(self.column()) } fn text<'a>(self, row:Row<'a>) -> Result<&'a str,ValueError> { row.text(self.column()) } }
+
+fn text_fields<'a>(fields: &mut [C<'a>; WIDTH], value: &'a PdfTextString) { match value { PdfTextString::Text { text } => { fields[O::TextKind as usize] = C::Text("text"); fields[O::TextValue as usize] = C::Text(text); }, PdfTextString::Codes { bytes } => { fields[O::TextKind as usize] = C::Text("codes"); fields[O::TextCodes as usize] = C::Blob(bytes); } } }
+fn read_text(reader:&mut Reader<'_,'_,'_>,row:Row<'_>) -> Result<PdfTextString,ValueError> { match O::TextKind.text(row)? { "text" => { if row.values[O::TextCodes.column()] != V::Null { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF text operand has both text and codes")); } Ok(PdfTextString::Text { text: reader.text(row,O::TextValue.column())? }) }, "codes" => { if row.values[O::TextValue.column()] != V::Null { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF text operand has both codes and text")); } Ok(PdfTextString::Codes { bytes: reader.blob(row,O::TextCodes.column())? }) }, _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF text operand kind")) } }
+
+fn write_inline(out: &mut Projection<'_, '_>, image: &PdfInlineImage) -> Result<i64,ValueError> {
+    let color = image.color_space.as_ref().map(|color| color::write_color(out, color)).transpose()?; let filters = cos::write_filters(out, &image.filters)?; let extra = cos::write_dictionary(out, &image.extra)?;
+    let key = out.insert("pdf_inline_image", &[C::Integer(i64::from(image.width)), C::Integer(i64::from(image.height)), C::Integer(i64::from(image.bits_per_component)), color.map_or(C::Null, C::Integer), C::Integer(i64::from(image.image_mask)), C::Integer(i64::from(image.interpolate)), C::Integer(filters), C::Blob(&image.data), C::Integer(extra)])?;
+    for (ordinal, value) in image.decode.iter().enumerate() { out.insert("pdf_inline_decode", &[C::Integer(key), C::Integer(ordinal as i64), C::Real(*value)])?; }
+    Ok(key)
+}
+fn read_inline(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfInlineImage,ValueError> {
+    let row = reader.take("pdf_inline_image", key, 10)?; let mut decode = Vec::new(); for value in reader.children("pdf_inline_decode", 1, 2, key)? { let value = reader.take("pdf_inline_decode", value.rowid, 4)?; decode.push(value.real(3)?); }
+    Ok(PdfInlineImage { width: integer(row, 1)?, height: integer(row, 2)?, bits_per_component: integer(row, 3)?, color_space: optional_integer(row, 4)?.map(|key| color::read_color(reader, key)).transpose()?, image_mask: boolean(row, 5)?, decode, interpolate: boolean(row, 6)?, filters: cos::read_filters(reader, row.integer(7)?)?, data: reader.blob(row,8)?, extra: cos::read_dictionary(reader, row.integer(9)?)? })
+}
+
+pub(super) fn write_ops(out: &mut Projection<'_, '_>, operations: &[PdfOp]) -> Result<i64,ValueError> {
+    let content = out.insert("pdf_content", &[])?;
+    for (ordinal, operation) in operations.iter().enumerate() {
+        let mut fields = [C::Null; WIDTH];
+        let kind = match operation {
+            PdfOp::SetLineWidth { width } => { fields[O::LineWidth as usize] = C::Real(*width); "setLineWidth" },
+            PdfOp::SetLineCap { cap } => { fields[O::LineCap as usize] = C::Text(match cap { PdfLineCap::Butt => "butt", PdfLineCap::Round => "round", PdfLineCap::Square => "square" }); "setLineCap" },
+            PdfOp::SetLineJoin { join } => { fields[O::LineJoin as usize] = C::Text(match join { PdfLineJoin::Miter => "miter", PdfLineJoin::Round => "round", PdfLineJoin::Bevel => "bevel" }); "setLineJoin" },
+            PdfOp::SetMiterLimit { limit } => { fields[O::MiterLimit as usize] = C::Real(*limit); "setMiterLimit" },
+            PdfOp::SetDash { phase, .. } => { fields[O::DashPhase as usize] = C::Real(*phase); "setDash" },
+            PdfOp::SetRenderingIntent { intent } => { fields[O::RenderingIntent as usize] = C::Text(intent); "setRenderingIntent" },
+            PdfOp::SetFlatness { flatness } => { fields[O::Flatness as usize] = C::Real(*flatness); "setFlatness" },
+            PdfOp::SetExtGState { name } => { fields[O::ExtGState as usize] = C::Text(name); "setExtGState" },
+            PdfOp::Save => "save", PdfOp::Restore => "restore", PdfOp::Transform { .. } => "transform",
+            PdfOp::MoveTo { x, y } | PdfOp::LineTo { x, y } => { fields[O::X1 as usize] = C::Real(*x); fields[O::Y1 as usize] = C::Real(*y); if matches!(operation, PdfOp::MoveTo { .. }) { "moveTo" } else { "lineTo" } },
+            PdfOp::CurveTo { x1, y1, x2, y2, x3, y3 } => { for (column, value) in [(O::X1,x1),(O::Y1,y1),(O::X2,x2),(O::Y2,y2),(O::X3,x3),(O::Y3,y3)] { fields[column as usize] = C::Real(*value); } "curveTo" },
+            PdfOp::CurveToInitial { x2, y2, x3, y3 } => { for (column, value) in [(O::X2,x2),(O::Y2,y2),(O::X3,x3),(O::Y3,y3)] { fields[column as usize] = C::Real(*value); } "curveToInitial" },
+            PdfOp::CurveToFinal { x1, y1, x3, y3 } => { for (column, value) in [(O::X1,x1),(O::Y1,y1),(O::X3,x3),(O::Y3,y3)] { fields[column as usize] = C::Real(*value); } "curveToFinal" },
+            PdfOp::ClosePath => "closePath", PdfOp::Rectangle { x, y, width, height } => { for (column, value) in [(O::X1,x),(O::Y1,y),(O::Width,width),(O::Height,height)] { fields[column as usize] = C::Real(*value); } "rectangle" },
+            PdfOp::Stroke => "stroke", PdfOp::CloseStroke => "closeStroke", PdfOp::Fill => "fill", PdfOp::FillEvenOdd => "fillEvenOdd", PdfOp::FillStroke => "fillStroke", PdfOp::FillStrokeEvenOdd => "fillStrokeEvenOdd", PdfOp::CloseFillStroke => "closeFillStroke", PdfOp::CloseFillStrokeEvenOdd => "closeFillStrokeEvenOdd", PdfOp::EndPath => "endPath", PdfOp::Clip => "clip", PdfOp::ClipEvenOdd => "clipEvenOdd", PdfOp::BeginText => "beginText", PdfOp::EndText => "endText",
+            PdfOp::SetCharSpacing { spacing } => { fields[O::CharSpacing as usize] = C::Real(*spacing); "setCharSpacing" }, PdfOp::SetWordSpacing { spacing } => { fields[O::WordSpacing as usize] = C::Real(*spacing); "setWordSpacing" }, PdfOp::SetHorizontalScale { scale } => { fields[O::HorizontalScale as usize] = C::Real(*scale); "setHorizontalScale" }, PdfOp::SetLeading { leading } => { fields[O::Leading as usize] = C::Real(*leading); "setLeading" },
+            PdfOp::SetFont { name, size } => { fields[O::FontName as usize] = C::Text(name); fields[O::FontSize as usize] = C::Real(*size); "setFont" }, PdfOp::SetTextRenderingMode { mode } => { fields[O::TextRenderingMode as usize] = C::Integer(i64::from(*mode)); "setTextRenderingMode" }, PdfOp::SetTextRise { rise } => { fields[O::TextRise as usize] = C::Real(*rise); "setTextRise" },
+            PdfOp::MoveText { tx, ty } | PdfOp::MoveTextSetLeading { tx, ty } => { fields[O::Tx as usize] = C::Real(*tx); fields[O::Ty as usize] = C::Real(*ty); if matches!(operation,PdfOp::MoveText { .. }) { "moveText" } else { "moveTextSetLeading" } }, PdfOp::SetTextMatrix { .. } => "setTextMatrix", PdfOp::NextLine => "nextLine",
+            PdfOp::ShowText { text } => { text_fields(&mut fields, text); "showText" }, PdfOp::ShowTextArray { .. } => "showTextArray", PdfOp::NextLineShowText { text } => { text_fields(&mut fields,text); "nextLineShowText" }, PdfOp::NextLineShowTextSpaced { word_spacing, char_spacing, text } => { fields[O::WordSpacing as usize] = C::Real(*word_spacing); fields[O::CharSpacing as usize] = C::Real(*char_spacing); text_fields(&mut fields,text); "nextLineShowTextSpaced" },
+            PdfOp::SetGlyphWidth { wx, wy } => { fields[O::GlyphWx as usize] = C::Real(*wx); fields[O::GlyphWy as usize] = C::Real(*wy); "setGlyphWidth" }, PdfOp::SetGlyphWidthAndBox { wx, wy, llx, lly, urx, ury } => { for (column,value) in [(O::GlyphWx,wx),(O::GlyphWy,wy),(O::BboxLlx,llx),(O::BboxLly,lly),(O::BboxUrx,urx),(O::BboxUry,ury)] { fields[column as usize] = C::Real(*value); } "setGlyphWidthAndBox" },
+            PdfOp::SetStrokeColorSpace { name } | PdfOp::SetFillColorSpace { name } => { fields[O::ColorSpaceName as usize] = C::Text(name); if matches!(operation,PdfOp::SetStrokeColorSpace { .. }) { "setStrokeColorSpace" } else { "setFillColorSpace" } },
+            PdfOp::SetStrokeColor { .. } => "setStrokeColor", PdfOp::SetFillColor { .. } => "setFillColor", PdfOp::SetStrokeColorN { pattern, .. } => { fields[O::PatternName as usize] = text_cell(pattern); "setStrokeColorN" }, PdfOp::SetFillColorN { pattern, .. } => { fields[O::PatternName as usize] = text_cell(pattern); "setFillColorN" },
+            PdfOp::SetStrokeGray { gray } | PdfOp::SetFillGray { gray } => { fields[O::Gray as usize] = C::Real(*gray); if matches!(operation,PdfOp::SetStrokeGray { .. }) { "setStrokeGray" } else { "setFillGray" } },
+            PdfOp::SetStrokeRgb { r, g, b } | PdfOp::SetFillRgb { r, g, b } => { fields[O::Red as usize] = C::Real(*r); fields[O::Green as usize] = C::Real(*g); fields[O::Blue as usize] = C::Real(*b); if matches!(operation,PdfOp::SetStrokeRgb { .. }) { "setStrokeRgb" } else { "setFillRgb" } },
+            PdfOp::SetStrokeCmyk { c, m, y, k } | PdfOp::SetFillCmyk { c, m, y, k } => { for (column,value) in [(O::Cyan,c),(O::Magenta,m),(O::Yellow,y),(O::Black,k)] { fields[column as usize] = C::Real(*value); } if matches!(operation,PdfOp::SetStrokeCmyk { .. }) { "setStrokeCmyk" } else { "setFillCmyk" } },
+            PdfOp::PaintShading { name } => { fields[O::ShadingName as usize] = C::Text(name); "paintShading" }, PdfOp::PaintXObject { name } => { fields[O::XobjectName as usize] = C::Text(name); "paintXObject" }, PdfOp::InlineImage { image } => { fields[O::InlineImage as usize] = C::Integer(write_inline(out,image)?); "inlineImage" },
+            PdfOp::MarkedContentPoint { tag } | PdfOp::BeginMarkedContent { tag } => { fields[O::MarkedTag as usize] = C::Text(tag); if matches!(operation,PdfOp::MarkedContentPoint { .. }) { "markedContentPoint" } else { "beginMarkedContent" } },
+            PdfOp::MarkedContentPointWithProperties { tag, properties } | PdfOp::BeginMarkedContentWithProperties { tag, properties } => { fields[O::MarkedTag as usize] = C::Text(tag); match properties { PdfPropertyList::Named { name } => { fields[O::PropertyKind as usize] = C::Text("named"); fields[O::PropertyName as usize] = C::Text(name); }, PdfPropertyList::Inline { entries } => { fields[O::PropertyKind as usize] = C::Text("inline"); fields[O::PropertyDictionary as usize] = C::Integer(cos::write_dictionary(out,entries)?); } } if matches!(operation,PdfOp::MarkedContentPointWithProperties { .. }) { "markedContentPointWithProperties" } else { "beginMarkedContentWithProperties" } },
+            PdfOp::EndMarkedContent => "endMarkedContent", PdfOp::BeginCompatibility => "beginCompatibility", PdfOp::EndCompatibility => "endCompatibility", PdfOp::Unknown { operator, .. } => { fields[O::UnknownOperator as usize] = C::Text(operator); "unknown" },
+        };
+        let mut cells = vec![C::Integer(content), C::Integer(ordinal as i64), C::Text(kind)]; cells.extend(fields); let key = out.insert("pdf_operation",&cells)?;
+        match operation {
+            PdfOp::Transform { matrix } | PdfOp::SetTextMatrix { matrix } => { out.insert_key("pdf_operation_matrix",key,&matrix.iter().copied().map(C::Real).collect::<Vec<_>>())?; },
+            PdfOp::SetDash { array, .. } | PdfOp::SetStrokeColor { components: array } | PdfOp::SetFillColor { components: array } | PdfOp::SetStrokeColorN { components: array, .. } | PdfOp::SetFillColorN { components: array, .. } => { for (ordinal,value) in array.iter().enumerate() { out.insert("pdf_operation_component",&[C::Integer(key),C::Integer(ordinal as i64),C::Real(*value)])?; } },
+            PdfOp::ShowTextArray { items } => { for (ordinal,item) in items.iter().enumerate() { let (kind,text,codes,adjust) = match item { PdfTextArrayItem::Text { text } => ("text",C::Text(text),C::Null,C::Null), PdfTextArrayItem::Codes { bytes } => ("codes",C::Null,C::Blob(bytes),C::Null), PdfTextArrayItem::Adjust { amount } => ("adjust",C::Null,C::Null,C::Real(*amount)) }; out.insert("pdf_text_array_item",&[C::Integer(key),C::Integer(ordinal as i64),C::Text(kind),text,codes,adjust])?; } },
+            PdfOp::Unknown { operands, .. } => { for (ordinal,operand) in operands.iter().enumerate() { let value = cos::write_object(out,operand)?; out.insert("pdf_unknown_operand",&[C::Integer(key),C::Integer(ordinal as i64),C::Integer(value)])?; } }, _ => {},
+        }
+    }
+    Ok(content)
+}
+
+fn read_components(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<Vec<f64>,ValueError> { let mut values = Vec::new(); for value in reader.children("pdf_operation_component",1,2,key)? { let value = reader.take("pdf_operation_component",value.rowid,4)?; values.push(value.real(3)?); } Ok(values) }
+fn read_matrix(reader: &mut Reader<'_, '_, '_>, key: i64) -> Result<PdfMatrix,ValueError> { let value = reader.take("pdf_operation_matrix",key,7)?; Ok([value.real(1)?,value.real(2)?,value.real(3)?,value.real(4)?,value.real(5)?,value.real(6)?]) }
+fn read_properties(reader: &mut Reader<'_, '_, '_>, row:Row<'_>) -> Result<PdfPropertyList,ValueError> {
+    match O::PropertyKind.text(row)? {
+        "named" => { if row.values[O::PropertyDictionary.column()] != V::Null { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"named PDF property list also has an inline dictionary")); } Ok(PdfPropertyList::Named { name: reader.text(row,O::PropertyName.column())? }) },
+        "inline" => { if row.values[O::PropertyName.column()] != V::Null { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"inline PDF property list also has a resource name")); } Ok(PdfPropertyList::Inline { entries: cos::read_dictionary(reader,row.integer(O::PropertyDictionary.column())?)? }) },
+        _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF property list kind")),
+    }
+}
+
+pub(super) fn read_ops(reader: &mut Reader<'_, '_, '_>, content: i64) -> Result<Vec<PdfOp>,ValueError> {
+    use O::*;
+    reader.take("pdf_content",content,1)?;
+    let mut operations = Vec::new();
+    for row in reader.children("pdf_operation",1,2,content)? {
+        let row = reader.take("pdf_operation",row.rowid,WIDTH+4)?; let key = row.rowid;
+        let (operation,present): (PdfOp,&[O]) = match row.text(3)? {
+            "setLineWidth" => (PdfOp::SetLineWidth { width: LineWidth.real(row)? }, &[LineWidth]),
+            "setLineCap" => (PdfOp::SetLineCap { cap: match LineCap.text(row)? { "butt" => PdfLineCap::Butt, "round" => PdfLineCap::Round, "square" => PdfLineCap::Square, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF line cap")) } }, &[LineCap]),
+            "setLineJoin" => (PdfOp::SetLineJoin { join: match LineJoin.text(row)? { "miter" => PdfLineJoin::Miter, "round" => PdfLineJoin::Round, "bevel" => PdfLineJoin::Bevel, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF line join")) } }, &[LineJoin]),
+            "setMiterLimit" => (PdfOp::SetMiterLimit { limit: MiterLimit.real(row)? }, &[MiterLimit]),
+            "setDash" => (PdfOp::SetDash { array: read_components(reader,key)?, phase: DashPhase.real(row)? }, &[DashPhase]),
+            "setRenderingIntent" => (PdfOp::SetRenderingIntent { intent: reader.text(row,RenderingIntent.column())? }, &[RenderingIntent]),
+            "setFlatness" => (PdfOp::SetFlatness { flatness: Flatness.real(row)? }, &[Flatness]), "setExtGState" => (PdfOp::SetExtGState { name: reader.text(row,ExtGState.column())? }, &[ExtGState]),
+            "save" => (PdfOp::Save,&[]), "restore" => (PdfOp::Restore,&[]), "transform" => (PdfOp::Transform { matrix: read_matrix(reader,key)? },&[]),
+            "moveTo" => (PdfOp::MoveTo { x: X1.real(row)?, y: Y1.real(row)? }, &[X1,Y1]), "lineTo" => (PdfOp::LineTo { x: X1.real(row)?, y: Y1.real(row)? }, &[X1,Y1]),
+            "curveTo" => (PdfOp::CurveTo { x1:X1.real(row)?,y1:Y1.real(row)?,x2:X2.real(row)?,y2:Y2.real(row)?,x3:X3.real(row)?,y3:Y3.real(row)? }, &[X1,Y1,X2,Y2,X3,Y3]),
+            "curveToInitial" => (PdfOp::CurveToInitial { x2:X2.real(row)?,y2:Y2.real(row)?,x3:X3.real(row)?,y3:Y3.real(row)? }, &[X2,Y2,X3,Y3]), "curveToFinal" => (PdfOp::CurveToFinal { x1:X1.real(row)?,y1:Y1.real(row)?,x3:X3.real(row)?,y3:Y3.real(row)? }, &[X1,Y1,X3,Y3]),
+            "closePath" => (PdfOp::ClosePath,&[]), "rectangle" => (PdfOp::Rectangle { x:X1.real(row)?,y:Y1.real(row)?,width:Width.real(row)?,height:Height.real(row)? }, &[X1,Y1,Width,Height]),
+            "stroke" => (PdfOp::Stroke,&[]), "closeStroke" => (PdfOp::CloseStroke,&[]), "fill" => (PdfOp::Fill,&[]), "fillEvenOdd" => (PdfOp::FillEvenOdd,&[]), "fillStroke" => (PdfOp::FillStroke,&[]), "fillStrokeEvenOdd" => (PdfOp::FillStrokeEvenOdd,&[]), "closeFillStroke" => (PdfOp::CloseFillStroke,&[]), "closeFillStrokeEvenOdd" => (PdfOp::CloseFillStrokeEvenOdd,&[]), "endPath" => (PdfOp::EndPath,&[]), "clip" => (PdfOp::Clip,&[]), "clipEvenOdd" => (PdfOp::ClipEvenOdd,&[]), "beginText" => (PdfOp::BeginText,&[]), "endText" => (PdfOp::EndText,&[]),
+            "setCharSpacing" => (PdfOp::SetCharSpacing { spacing: CharSpacing.real(row)? }, &[CharSpacing]), "setWordSpacing" => (PdfOp::SetWordSpacing { spacing: WordSpacing.real(row)? }, &[WordSpacing]), "setHorizontalScale" => (PdfOp::SetHorizontalScale { scale: HorizontalScale.real(row)? }, &[HorizontalScale]), "setLeading" => (PdfOp::SetLeading { leading: Leading.real(row)? }, &[Leading]),
+            "setFont" => (PdfOp::SetFont { name:reader.text(row,FontName.column())?,size:FontSize.real(row)? }, &[FontName,FontSize]), "setTextRenderingMode" => (PdfOp::SetTextRenderingMode { mode:integer(row,TextRenderingMode.column())? }, &[TextRenderingMode]), "setTextRise" => (PdfOp::SetTextRise { rise:TextRise.real(row)? }, &[TextRise]),
+            "moveText" => (PdfOp::MoveText { tx:Tx.real(row)?,ty:Ty.real(row)? }, &[Tx,Ty]), "moveTextSetLeading" => (PdfOp::MoveTextSetLeading { tx:Tx.real(row)?,ty:Ty.real(row)? }, &[Tx,Ty]), "setTextMatrix" => (PdfOp::SetTextMatrix { matrix:read_matrix(reader,key)? }, &[]), "nextLine" => (PdfOp::NextLine,&[]),
+            "showText" => (PdfOp::ShowText { text:read_text(reader,row)? }, &[TextKind,TextValue,TextCodes]), "nextLineShowText" => (PdfOp::NextLineShowText { text:read_text(reader,row)? }, &[TextKind,TextValue,TextCodes]), "nextLineShowTextSpaced" => (PdfOp::NextLineShowTextSpaced { word_spacing:WordSpacing.real(row)?,char_spacing:CharSpacing.real(row)?,text:read_text(reader,row)? }, &[WordSpacing,CharSpacing,TextKind,TextValue,TextCodes]),
+            "showTextArray" => {
+                let mut items = Vec::new(); for item in reader.children("pdf_text_array_item",1,2,key)? { let item = reader.take("pdf_text_array_item",item.rowid,7)?; items.push(match item.text(3)? { "text" => { null_except(item,4..7,&[4])?; PdfTextArrayItem::Text { text:reader.text(item,4)? } }, "codes" => { null_except(item,4..7,&[5])?; PdfTextArrayItem::Codes { bytes:reader.blob(item,5)? } }, "adjust" => { null_except(item,4..7,&[6])?; PdfTextArrayItem::Adjust { amount:item.real(6)? } }, _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF text-array item kind")) }); } (PdfOp::ShowTextArray { items },&[])
+            },
+            "setGlyphWidth" => (PdfOp::SetGlyphWidth { wx:GlyphWx.real(row)?,wy:GlyphWy.real(row)? }, &[GlyphWx,GlyphWy]), "setGlyphWidthAndBox" => (PdfOp::SetGlyphWidthAndBox { wx:GlyphWx.real(row)?,wy:GlyphWy.real(row)?,llx:BboxLlx.real(row)?,lly:BboxLly.real(row)?,urx:BboxUrx.real(row)?,ury:BboxUry.real(row)? }, &[GlyphWx,GlyphWy,BboxLlx,BboxLly,BboxUrx,BboxUry]),
+            "setStrokeColorSpace" => (PdfOp::SetStrokeColorSpace { name:reader.text(row,ColorSpaceName.column())? }, &[ColorSpaceName]), "setFillColorSpace" => (PdfOp::SetFillColorSpace { name:reader.text(row,ColorSpaceName.column())? }, &[ColorSpaceName]),
+            "setStrokeColor" => (PdfOp::SetStrokeColor { components:read_components(reader,key)? },&[]), "setFillColor" => (PdfOp::SetFillColor { components:read_components(reader,key)? },&[]), "setStrokeColorN" => (PdfOp::SetStrokeColorN { components:read_components(reader,key)?,pattern:row.optional_text(PatternName.column())?.map(str::to_owned) }, &[PatternName]), "setFillColorN" => (PdfOp::SetFillColorN { components:read_components(reader,key)?,pattern:row.optional_text(PatternName.column())?.map(str::to_owned) }, &[PatternName]),
+            "setStrokeGray" => (PdfOp::SetStrokeGray { gray:Gray.real(row)? }, &[Gray]), "setFillGray" => (PdfOp::SetFillGray { gray:Gray.real(row)? }, &[Gray]),
+            "setStrokeRgb" => (PdfOp::SetStrokeRgb { r:Red.real(row)?,g:Green.real(row)?,b:Blue.real(row)? }, &[Red,Green,Blue]), "setFillRgb" => (PdfOp::SetFillRgb { r:Red.real(row)?,g:Green.real(row)?,b:Blue.real(row)? }, &[Red,Green,Blue]),
+            "setStrokeCmyk" => (PdfOp::SetStrokeCmyk { c:Cyan.real(row)?,m:Magenta.real(row)?,y:Yellow.real(row)?,k:Black.real(row)? }, &[Cyan,Magenta,Yellow,Black]), "setFillCmyk" => (PdfOp::SetFillCmyk { c:Cyan.real(row)?,m:Magenta.real(row)?,y:Yellow.real(row)?,k:Black.real(row)? }, &[Cyan,Magenta,Yellow,Black]),
+            "paintShading" => (PdfOp::PaintShading { name:reader.text(row,ShadingName.column())? }, &[ShadingName]), "paintXObject" => (PdfOp::PaintXObject { name:reader.text(row,XobjectName.column())? }, &[XobjectName]), "inlineImage" => (PdfOp::InlineImage { image:read_inline(reader,row.integer(InlineImage.column())?)? }, &[InlineImage]),
+            "markedContentPoint" => (PdfOp::MarkedContentPoint { tag:reader.text(row,MarkedTag.column())? }, &[MarkedTag]), "beginMarkedContent" => (PdfOp::BeginMarkedContent { tag:reader.text(row,MarkedTag.column())? }, &[MarkedTag]), "markedContentPointWithProperties" => (PdfOp::MarkedContentPointWithProperties { tag:reader.text(row,MarkedTag.column())?,properties:read_properties(reader,row)? }, &[MarkedTag,PropertyKind,PropertyName,PropertyDictionary]), "beginMarkedContentWithProperties" => (PdfOp::BeginMarkedContentWithProperties { tag:reader.text(row,MarkedTag.column())?,properties:read_properties(reader,row)? }, &[MarkedTag,PropertyKind,PropertyName,PropertyDictionary]),
+            "endMarkedContent" => (PdfOp::EndMarkedContent,&[]), "beginCompatibility" => (PdfOp::BeginCompatibility,&[]), "endCompatibility" => (PdfOp::EndCompatibility,&[]),
+            "unknown" => { let mut operands = Vec::new(); for value in reader.children("pdf_unknown_operand",1,2,key)? { let value = reader.take("pdf_unknown_operand",value.rowid,4)?; operands.push(cos::read_object(reader,value.integer(3)?)?); } (PdfOp::Unknown { operator:reader.text(row,UnknownOperator.column())?,operands }, &[UnknownOperator]) },
+            _ => return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown PDF operation kind")),
+        };
+        let present = present.iter().copied().map(O::column).collect::<Vec<_>>(); null_except(row,4..WIDTH+4,&present)?;
+        operations.push(operation);
+    }
+    Ok(operations)
+}

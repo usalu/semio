@@ -8,7 +8,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed filter fixture.
     fn fixture(ctx: &Context) -> Result<Json, String> {
-        parse_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://🔎️filter-vectors.json")?))
+        parse_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🔎️filter-vectors.json")?))
     }
 
     /// 🌿️ The filter tree the whole case works on.

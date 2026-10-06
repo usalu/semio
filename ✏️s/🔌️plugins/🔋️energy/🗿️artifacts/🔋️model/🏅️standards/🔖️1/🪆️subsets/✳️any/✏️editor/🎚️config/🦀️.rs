@@ -115,3 +115,6 @@ mod tests;
 
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

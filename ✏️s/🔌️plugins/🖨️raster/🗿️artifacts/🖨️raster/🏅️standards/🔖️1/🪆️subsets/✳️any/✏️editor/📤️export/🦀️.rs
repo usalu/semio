@@ -227,7 +227,7 @@ impl semio_framework_plugin::ArtifactSnapshotDisposer<crate::RasterSnapshot> for
         }
         let Some(owner)=snapshot.take() else{return Ok(PluginCloseStep::Complete)};
         if let Some(value)=std::sync::Arc::into_inner(owner){
-            self.retirement=Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::spr::RasterSnapshotRetirementFactory,value));
+            self.retirement=Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::standards::v1::subsets::any::io::binary::mutations::RasterSnapshotRetirementFactory,value));
             return Ok(PluginCloseStep::Pending {released_items:0,released_bytes:0});
         }
         Ok(PluginCloseStep::Pending {released_items:1,released_bytes:0})

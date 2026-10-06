@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "roots": [
+    "general",
+    "specific",
+    "specific/plugins",
+    "specific/plugins/alpha/artifacts"
+  ],
+  "rules": [
+    {
+      "name": "general-no-specific",
+      "severity": "error",
+      "from": {
+        "path": [
+          "^general(?:/|$)"
+        ]
+      },
+      "to": {
+        "path": [
+          "^specific(?:/|$)"
+        ]
+      },
+      "oracle": {
+        "from": "general{,/**}",
+        "to": "specific{,/**}"
+      }
+    },
+    {
+      "name": "modules-no-plugins",
+      "severity": "error",
+      "from": {
+        "path": [
+          "^specific/modules(?:/|$)"
+        ]
+      },
+      "to": {
+        "path": [
+          "^specific/plugins(?:/|$)"
+        ]
+      },
+      "oracle": {
+        "from": "specific/modules{,/**}",
+        "to": "specific/plugins{,/**}"
+      }
+    },
+    {
+      "name": "plugin-no-artifacts",
+      "severity": "error",
+      "from": {
+        "path": [
+          "^specific/plugins/alpha/core(?:/|$)"
+        ]
+      },
+      "to": {
+        "path": [
+          "^specific/plugins/alpha/artifacts(?:/|$)"
+        ]
+      },
+      "oracle": {
+        "from": "specific/plugins/alpha/core{,/**}",
+        "to": "specific/plugins/alpha/artifacts{,/**}"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "general-specific",
+      "from": "general/tests.rs",
+      "source": "fn f() { root.join(\"specific/data\"); }",
+      "expectedRules": [
+        "general-no-specific"
+      ]
+    },
+    {
+      "id": "general-neutral",
+      "from": "general/tests.rs",
+      "source": "fn f() { root.join(\"general/data\"); }",
+      "expectedRules": []
+    },
+    {
+      "id": "modules-plugin",
+      "from": "specific/modules/a.rs",
+      "source": "fn f() { root.join(\"specific/plugins/alpha/data\"); }",
+      "expectedRules": [
+        "modules-no-plugins"
+      ]
+    },
+    {
+      "id": "composition-plugin",
+      "from": "specific/composition/a.rs",
+      "source": "fn f() { root.join(\"specific/plugins/alpha/data\"); }",
+      "expectedRules": []
+    },
+    {
+      "id": "plugin-artifact",
+      "from": "specific/plugins/alpha/core/a.rs",
+      "source": "fn f() { root.join(\"specific/plugins/alpha/artifacts/x/data\"); }",
+      "expectedRules": [
+        "plugin-no-artifacts"
+      ]
+    },
+    {
+      "id": "plugin-own-core",
+      "from": "specific/plugins/alpha/core/a.rs",
+      "source": "fn f() { root.join(\"specific/plugins/alpha/core/data\"); }",
+      "expectedRules": []
+    },
+    {
+      "id": "plugin-artifact-root",
+      "from": "specific/plugins/alpha/core/a.rs",
+      "source": "fn f() { root.join(\"specific/plugins/alpha/artifacts\"); }",
+      "expectedRules": [
+        "plugin-no-artifacts"
+      ]
+    },
+    {
+      "id": "root-only",
+      "from": "general/tests.rs",
+      "source": "fn f() { root.join(\"specific\"); }",
+      "expectedRules": [
+        "general-no-specific"
+      ]
+    },
+    {
+      "id": "windows-path",
+      "from": "general/tests.rs",
+      "source": "fn f() { root.join(\"specific\\\\plugins\\\\x\"); }",
+      "expectedRules": [
+        "general-no-specific"
+      ]
+    },
+    {
+      "id": "unicode-escape",
+      "from": "general/tests.rs",
+      "source": "fn f() { root.join(\"\\u{73}pecific/data\"); }",
+      "expectedRules": [
+        "general-no-specific"
+      ]
+    },
+    {
+      "id": "relative-path",
+      "from": "general/tests.rs",
+      "source": "fn f() { root.join(\"../../specific/data\"); }",
+      "expectedRules": [
+        "general-no-specific"
+      ]
+    },
+    {
+      "id": "comment-excluded",
+      "from": "general/tests.rs",
+      "source": "// root.join(\"specific/data\")\nfn f() {}",
+      "expectedRules": []
+    },
+    {
+      "id": "diagnostic-excluded",
+      "from": "general/tests.rs",
+      "source": "fn f() { println!(\"specific/data\"); }",
+      "expectedRules": []
+    },
+    {
+      "id": "specific-prefix-excluded",
+      "from": "general/tests.rs",
+      "source": "fn f() { root.join(\"specificity/data\"); }",
+      "expectedRules": []
+    }
+  ],
+  "physicalCases": [
+    {
+      "id": "present-specific-runtime-reference",
+      "source": "🧰️framework/🔨️modules/🧪️runtime/🦀️.rs",
+      "value": "✏️s/🔌️plugins",
+      "removeSpecific": false,
+      "violations": 1
+    },
+    {
+      "id": "deleted-specific-runtime-reference",
+      "source": "🧰️framework/🔨️modules/🧪️runtime/🦀️.rs",
+      "value": "✏️s/🔌️plugins",
+      "removeSpecific": true,
+      "violations": 1
+    },
+    {
+      "id": "neutral-owned-runtime-reference",
+      "source": "🧰️framework/🔨️modules/🧪️runtime/🦀️.rs",
+      "value": "🧰️framework/🔨️modules",
+      "removeSpecific": true,
+      "violations": 0
+    }
+  ]
+}

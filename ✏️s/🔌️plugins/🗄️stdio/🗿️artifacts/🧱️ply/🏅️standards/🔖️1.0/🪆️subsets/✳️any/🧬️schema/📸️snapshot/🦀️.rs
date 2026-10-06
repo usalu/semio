@@ -133,12 +133,7 @@ impl Default for PlySnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-#[path="📦️pack/🦀️.rs"]
-mod native_pack;
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+

@@ -1,0 +1,534 @@
+{
+  "schemaDocuments": [
+    "../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+    "../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json"
+  ],
+  "snapshot": {
+    "workingGraph": {
+      "schema": "trinity.graph",
+      "name": "literal \"\\u0000 世界😀",
+      "manifest": {
+        "nodeKinds": [
+          {
+            "name": "Piece",
+            "properties": [
+              {
+                "name": "enabled",
+                "kind": "data",
+                "valueType": {
+                  "kind": "boolean"
+                }
+              },
+              {
+                "name": "count",
+                "kind": "data",
+                "valueType": {
+                  "kind": "integer"
+                }
+              },
+              {
+                "name": "value",
+                "kind": "data",
+                "valueType": {
+                  "kind": "decimal"
+                }
+              },
+              {
+                "name": "caption",
+                "kind": "data",
+                "valueType": {
+                  "kind": "text"
+                }
+              },
+              {
+                "name": "labels",
+                "kind": "data",
+                "valueType": {
+                  "kind": "list",
+                  "of": {
+                    "kind": "text"
+                  }
+                }
+              },
+              {
+                "name": "nested",
+                "kind": "data",
+                "valueType": {
+                  "kind": "any"
+                }
+              },
+              {
+                "name": "derived",
+                "kind": "derived",
+                "valueType": {
+                  "kind": "schema",
+                  "of": "引用\u0000🧩"
+                },
+                "expr": "caption + \"引用\u0000🧩\""
+              }
+            ],
+            "portKinds": [
+              "Signal",
+              "Input"
+            ]
+          }
+        ],
+        "edgeKinds": [
+          {
+            "name": "Connection",
+            "properties": [
+              {
+                "name": "caption",
+                "kind": "data",
+                "valueType": {
+                  "kind": "text"
+                }
+              }
+            ]
+          },
+          {
+            "name": "Signal",
+            "properties": [
+              {
+                "name": "caption",
+                "kind": "data",
+                "valueType": {
+                  "kind": "text"
+                }
+              },
+              {
+                "name": "nil",
+                "kind": "data",
+                "valueType": {
+                  "kind": "any"
+                }
+              }
+            ]
+          }
+        ],
+        "portKinds": [
+          {
+            "name": "Signal",
+            "direction": "out",
+            "properties": [
+              {
+                "name": "caption",
+                "kind": "data",
+                "valueType": {
+                  "kind": "text"
+                }
+              },
+              {
+                "name": "count",
+                "kind": "data",
+                "valueType": {
+                  "kind": "integer"
+                }
+              }
+            ]
+          },
+          {
+            "name": "Input",
+            "direction": "in",
+            "properties": []
+          }
+        ]
+      },
+      "camera": {
+        "x": {
+          "bits": "0000000000000000"
+        },
+        "y": {
+          "bits": "0000000000000000"
+        },
+        "zoom": {
+          "bits": "3ff0000000000000"
+        }
+      },
+      "content": {
+        "childId": "jack-content-move-node-noop-snapshot",
+        "target": {
+          "artifactId": "jack-content-move-node-noop-snapshot",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          }
+        }
+      },
+      "query": "MATCH (a:Piece) WHERE a.name = 'null' RETURN a.name"
+    },
+    "lhs": {
+      "pattern": {
+        "leftVar": "a",
+        "leftKind": "Piece",
+        "edgeVar": "r",
+        "edgeKind": "Connection",
+        "rightVar": "b",
+        "rightKind": "Piece"
+      },
+      "whereClause": "a.name = 'null' AND b.label != 'quoted'"
+    },
+    "rhs": {
+      "create": [
+        {
+          "leftVar": "c",
+          "leftKind": "Piece"
+        }
+      ],
+      "delete": [
+        "b",
+        "r"
+      ],
+      "set": [
+        {
+          "var": "a",
+          "prop": "label",
+          "value": {
+            "kind": "string",
+            "value": "quote\" slash\\ \u0000 世界😀"
+          }
+        },
+        {
+          "var": "c",
+          "prop": "enabled",
+          "value": {
+            "kind": "bool",
+            "value": true
+          }
+        }
+      ],
+      "merge": [
+        {
+          "leftVar": "a",
+          "leftKind": "Piece",
+          "edgeVar": "r",
+          "edgeKind": "Connection",
+          "rightVar": "b",
+          "rightKind": "Piece"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "caption",
+          "kind": "string",
+          "default": {
+            "kind": "string",
+            "value": "quote\" slash\\ \u0000 世界😀"
+          }
+        },
+        {
+          "name": "weight",
+          "kind": "number",
+          "default": {
+            "kind": "number",
+            "value": {
+              "bits": "7ff0000000001234"
+            }
+          }
+        },
+        {
+          "name": "enabled",
+          "kind": "boolean",
+          "default": {
+            "kind": "bool",
+            "value": false
+          }
+        }
+      ]
+    },
+    "parameterBindings": {
+      "literal": {
+        "kind": "string",
+        "value": "quote\" slash\\ \u0000 世界😀"
+      },
+      "depth": {
+        "kind": "array",
+        "values": [
+          {
+            "kind": "object",
+            "values": {
+              "": {
+                "kind": "null"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "ruleLayout": {
+      "": {
+        "x": {
+          "bits": "8000000000000000"
+        },
+        "y": {
+          "bits": "7ff8000000000042"
+        }
+      }
+    }
+  },
+  "oracle": {
+    "pattern": {
+      "left_var": "a",
+      "edge_var": "r",
+      "right_var": "b",
+      "where_clause": "a.name = 'null' AND b.label != 'quoted'"
+    },
+    "assignments": [
+      {
+        "ordinal": 0,
+        "var": "a",
+        "prop": "label"
+      },
+      {
+        "ordinal": 1,
+        "var": "c",
+        "prop": "enabled"
+      }
+    ],
+    "parameters": [
+      {
+        "ordinal": 0,
+        "name": "caption",
+        "kind": "string"
+      },
+      {
+        "ordinal": 1,
+        "name": "weight",
+        "kind": "number"
+      },
+      {
+        "ordinal": 2,
+        "name": "enabled",
+        "kind": "boolean"
+      }
+    ],
+    "query": "MATCH (a:Piece) WHERE a.name = 'null' RETURN a.name",
+    "literal": "quote\" slash\\ \u0000 世界😀"
+  },
+  "childSnapshot": {
+    "schema": "s.stdio.semio.graph",
+    "nodes": [
+      {
+        "id": {
+          "value": "a"
+        },
+        "kind": "Piece",
+        "label": "幅\u0000🧩引用",
+        "position": {
+          "x": {
+            "bits": "8000000000000000"
+          },
+          "y": {
+            "bits": "7ff8000000000011"
+          }
+        },
+        "width": {
+          "bits": "7ff0000000000000"
+        },
+        "height": {
+          "bits": "0000000000000001"
+        },
+        "ports": [
+          {
+            "name": "write@literal",
+            "kind": "out",
+            "category": "Signal",
+            "properties": [
+              {
+                "key": "caption",
+                "value": {
+                  "kind": "str",
+                  "value": "幅\u0000🧩引用"
+                }
+              },
+              {
+                "key": "count",
+                "value": {
+                  "kind": "int",
+                  "lexeme": "18446744073709551615"
+                }
+              }
+            ]
+          }
+        ],
+        "properties": [
+          {
+            "key": "enabled",
+            "value": {
+              "kind": "bool",
+              "value": true
+            }
+          },
+          {
+            "key": "nested",
+            "value": {
+              "kind": "map",
+              "entries": [
+                {
+                  "key": "leaf",
+                  "value": {
+                    "kind": "str",
+                    "value": "幅\u0000🧩引用"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": {
+          "value": "b"
+        },
+        "kind": "Piece",
+        "label": "target",
+        "position": {
+          "x": {
+            "bits": "fff0000000000000"
+          },
+          "y": {
+            "bits": "7ff0000000000001"
+          }
+        },
+        "width": {
+          "bits": "bff0000000000000"
+        },
+        "height": {
+          "bits": "3ff0000000000000"
+        },
+        "ports": [
+          {
+            "name": "read",
+            "kind": "in",
+            "category": "Input",
+            "properties": []
+          }
+        ],
+        "properties": []
+      }
+    ],
+    "edges": [
+      {
+        "id": {
+          "value": "wire"
+        },
+        "source": {
+          "value": "a"
+        },
+        "sourcePort": "write@literal",
+        "target": {
+          "value": "b"
+        },
+        "targetPort": "read",
+        "kind": "Signal",
+        "label": "wire",
+        "properties": [
+          {
+            "key": "caption",
+            "value": {
+              "kind": "str",
+              "value": "幅\u0000🧩引用"
+            }
+          },
+          {
+            "key": "nil",
+            "value": {
+              "kind": "null"
+            }
+          }
+        ]
+      },
+      {
+        "id": {
+          "value": "loop"
+        },
+        "source": {
+          "value": "a"
+        },
+        "sourcePort": "write@literal",
+        "target": {
+          "value": "a"
+        },
+        "kind": "Signal",
+        "label": "cycle",
+        "properties": []
+      }
+    ]
+  },
+  "childBinding": {
+    "slot": "workingGraph",
+    "childId": "jack-content-move-node-noop-snapshot",
+    "target": {
+      "artifactId": "jack-content-move-node-noop-snapshot",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "graph"
+      }
+    }
+  },
+  "childOracle": {
+    "nodeCount": 2,
+    "portCount": 2,
+    "edgeCount": 2,
+    "portPropertyCount": 2,
+    "edgePropertyCount": 2,
+    "widthBits": "7ff0000000000000",
+    "heightBits": "0000000000000001",
+    "sourcePort": "write@literal",
+    "literal": "幅\u0000🧩引用"
+  },
+  "manifestOracle": {
+    "schema": "引用\u0000🧩",
+    "properties": [
+      {
+        "name": "enabled",
+        "property_kind": "data",
+        "variant": "boolean",
+        "expression": null
+      },
+      {
+        "name": "count",
+        "property_kind": "data",
+        "variant": "integer",
+        "expression": null
+      },
+      {
+        "name": "value",
+        "property_kind": "data",
+        "variant": "decimal",
+        "expression": null
+      },
+      {
+        "name": "caption",
+        "property_kind": "data",
+        "variant": "text",
+        "expression": null
+      },
+      {
+        "name": "labels",
+        "property_kind": "data",
+        "variant": "list",
+        "expression": null
+      },
+      {
+        "name": "nested",
+        "property_kind": "data",
+        "variant": "any",
+        "expression": null
+      },
+      {
+        "name": "derived",
+        "property_kind": "derived",
+        "variant": "schema",
+        "expression": "caption + \"引用\u0000🧩\""
+      }
+    ]
+  }
+}

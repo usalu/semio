@@ -5,7 +5,7 @@
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::PresentationDispatchCtx;
 use crate::mutations::resize_tile_crop::ResizeTileCrop;
-use crate::op::PresentationMutation;
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::clamp_tile_crop;
 use crate::PresentationSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

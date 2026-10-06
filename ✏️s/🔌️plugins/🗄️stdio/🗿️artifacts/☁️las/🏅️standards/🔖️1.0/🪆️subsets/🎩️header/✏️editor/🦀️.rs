@@ -212,7 +212,7 @@ impl ArtifactEditor for LasAnyEditor {
             return Ok(None);
         }
         if lasAnyEditor_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-example-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,

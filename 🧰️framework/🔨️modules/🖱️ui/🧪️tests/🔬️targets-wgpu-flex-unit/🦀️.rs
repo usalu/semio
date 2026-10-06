@@ -85,7 +85,7 @@ fn overlay_flow_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/📐️overlay-flow/🔣️.json")).expect("overlay flow fixture")
 }
 
-fn fixture_layout(fixture: &serde_json::Value, node: &str) -> LayoutSpec {
+fn snapshot_layout(fixture: &serde_json::Value, node: &str) -> LayoutSpec {
     serde_json::from_value(fixture[node]["layout"].clone()).unwrap_or_else(|error| panic!("{node} layout: {error}"))
 }
 
@@ -234,11 +234,11 @@ fn a_two_column_grid_renders_two_columns_not_two_rows() {
 fn an_overlay_is_an_in_flow_positioning_context_and_absolute_stays_out_of_flow() {
     let source = overlay_flow_fixture();
     let mut fixture = Fixture::new();
-    let root_layout = fixture_layout(&source, "root");
-    let overlay_layout = fixture_layout(&source, "overlay");
-    let content_layout = fixture_layout(&source, "content");
-    let absolute_layout = fixture_layout(&source, "absolute");
-    let following_layout = fixture_layout(&source, "following");
+    let root_layout = snapshot_layout(&source, "root");
+    let overlay_layout = snapshot_layout(&source, "overlay");
+    let content_layout = snapshot_layout(&source, "content");
+    let absolute_layout = snapshot_layout(&source, "absolute");
+    let following_layout = snapshot_layout(&source, "following");
     let parent = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&root_layout));
     let overlay = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, Some(parent), Some(&overlay_layout));
     let content = fixture.push(LayoutNodeKind::Leaf, Some(overlay), Some(&content_layout));
@@ -255,11 +255,11 @@ fn an_overlay_is_an_in_flow_positioning_context_and_absolute_stays_out_of_flow()
 #[test]
 fn taffy_confirms_the_shared_overlay_flow_geometry() {
     let source = overlay_flow_fixture();
-    let LayoutSpec::Stack(root) = fixture_layout(&source, "root") else { panic!("root stack") };
-    let LayoutSpec::Overlay(overlay) = fixture_layout(&source, "overlay") else { panic!("overlay") };
-    let LayoutSpec::Leaf(content) = fixture_layout(&source, "content") else { panic!("content leaf") };
-    let LayoutSpec::Absolute(absolute) = fixture_layout(&source, "absolute") else { panic!("absolute") };
-    let LayoutSpec::Leaf(following) = fixture_layout(&source, "following") else { panic!("following leaf") };
+    let LayoutSpec::Stack(root) = snapshot_layout(&source, "root") else { panic!("root stack") };
+    let LayoutSpec::Overlay(overlay) = snapshot_layout(&source, "overlay") else { panic!("overlay") };
+    let LayoutSpec::Leaf(content) = snapshot_layout(&source, "content") else { panic!("content leaf") };
+    let LayoutSpec::Absolute(absolute) = snapshot_layout(&source, "absolute") else { panic!("absolute") };
+    let LayoutSpec::Leaf(following) = snapshot_layout(&source, "following") else { panic!("following leaf") };
     let dimension = |sizing: Sizing| match sizing {
         Sizing::Hug => taffy::style::Dimension::auto(),
         Sizing::Fill => taffy::style::Dimension::percent(1.0),

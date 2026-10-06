@@ -195,20 +195,14 @@ pub struct PngSnapshot {
 
 impl Default for PngSnapshot {
     fn default() -> Self {
-        Self { schema: STDIO_PNG_DOCUMENT_SCHEMA.into(), bytes: crate::io::empty_png_bytes() }
+        Self { schema: STDIO_PNG_DOCUMENT_SCHEMA.into(), bytes: crate::standards::v1_2::subsets::any::io::empty_png_bytes() }
     }
 }
 
-#[path="📦️pack/🦀️.rs"]
-mod owned_codecs;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;
-#[path = "🚦️native/🦀️.rs"]
-mod sqlite_native;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+
+
+
 
 #[cfg(test)]
 #[path="🧪️tests/🪆️owner/🦀️.rs"]

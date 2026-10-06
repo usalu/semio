@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/test/mutation-inventory/execution-policy/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumUnits",
+    "maximumOwnedBytes",
+    "maximumCaptureBytes",
+    "budgetMs",
+    "compilerStorage"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumUnits": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "maximumOwnedBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "maximumCaptureBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "budgetMs": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 86400000
+    },
+    "compilerStorage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "buildDirectory",
+        "leaseDirectory",
+        "targetDirectory",
+        "captureDirectory"
+      ],
+      "properties": {
+        "buildDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+        },
+        "leaseDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+        },
+        "targetDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+        },
+        "captureDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+        }
+      }
+    }
+  }
+}

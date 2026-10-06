@@ -1,39 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio.pdf.cos-owned-output/v1",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "maximumBytes",
-    "cases"
-  ],
-  "properties": {
-    "schema": {
-      "const": "semio.pdf.cos-owned-output/v1"
-    },
-    "maximumBytes": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "cases": {
-      "type": "array",
-      "minItems": 10,
-      "maxItems": 10,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "wire"
-        ],
-        "properties": {
-          "wire": {
-            "$ref": "#/$defs/Cos"
-          }
-        }
-      }
-    }
-  },
+  "$id": "schema://s.stdio.pdf.1.7.base.cos-output",
+  "title": "PdfCosValue",
+  "$ref": "#/$defs/Cos",
   "$defs": {
     "Cos": {
       "oneOf": [

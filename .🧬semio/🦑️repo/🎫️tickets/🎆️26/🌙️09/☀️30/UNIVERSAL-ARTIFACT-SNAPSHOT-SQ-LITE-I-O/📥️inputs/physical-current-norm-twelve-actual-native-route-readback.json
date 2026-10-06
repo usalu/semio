@@ -1,0 +1,462 @@
+[
+  {
+    "artifact": "🪵️en1995",
+    "project": "@semio-tech/norm-en1995-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1995\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_en1995_owned_native_decoder_controls_both_physical_payloads",
+      "sqlite_snapshot_en1995_actual_bare_factory_exposes_owned_relational_capability",
+      "sqlite_snapshot_en1995_all_neutral_fields_agree_with_serde_and_empty_domains",
+      "sqlite_snapshot_en1995_native_unsigned_widths_and_all_choices_agree_with_serde",
+      "sqlite_snapshot_en1995_every_numeric_domain_preserves_all_neutral_binary64_words",
+      "sqlite_snapshot_en1995_independent_sqlite_joins_and_domain_edits",
+      "sqlite_snapshot_en1995_refuses_malformed_choices_widths_booleans_ordinals_parents_and_words",
+      "sqlite_snapshot_en1995_initial_and_nested_operations_support_cancellation_and_native_admission",
+      "sqlite_snapshot_en1995_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+      "sqlite_snapshot_en1995_actual_erased_codec_and_declaration_preserve_all_owned_words",
+      "sqlite_snapshot_en1995_genuine_output_admits_exact_row_and_file_frontiers",
+      "sqlite_snapshot_en1995_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_en1995_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "🪶️en1999",
+    "project": "@semio-tech/norm-en1999-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1999\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_en1999_all_owned_fields_and_legal_invalid_references",
+      "sqlite_snapshot_en1999_independent_sqlite_queries_and_semantic_edit",
+      "sqlite_snapshot_en1999_malformed_ownership_flags_and_native_widths",
+      "sqlite_snapshot_en1999_all_binary64_states_preserve_native_words",
+      "sqlite_snapshot_en1999_limits_and_cancellation_precede_large_native_copies",
+      "sqlite_snapshot_en1999_actual_bare_capability_erased_encodings_and_coordinate_refusal",
+      "sqlite_snapshot_en1999_actual_declaration_typed_io_uses_no_native_encoding",
+      "sqlite_snapshot_en1999_all_sixty_four_fields_have_independent_exact_word_oracle",
+      "sqlite_snapshot_en1999_empty_annex_variants_need_exact_one_domain_row",
+      "sqlite_snapshot_en1999_scalar_query_word_class_and_annex_are_consistent",
+      "sqlite_snapshot_en1999_every_ieee_word_survives_actual_erased_native_encodings",
+      "sqlite_snapshot_en1999_controlled_native_owner_admits_physical_and_typed_state",
+      "sqlite_snapshot_en1999_controlled_output_has_exact_wire_and_real_interior_admission",
+      "sqlite_snapshot_en1999_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_en1999_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "🧱️din4108",
+    "project": "@semio-tech/norm-din4108-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-din4108\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_din4108_owned_native_decoder_controls_both_physical_payloads",
+      "sqlite_snapshot_din4108_actual_bare_factory_exposes_owned_relational_capability",
+      "sqlite_snapshot_din4108_all_neutral_fields_agree_with_serde_and_empty_domains",
+      "sqlite_snapshot_din4108_all_climate_choices_agree_with_independent_serde",
+      "sqlite_snapshot_din4108_every_numeric_domain_retains_every_neutral_binary64_word",
+      "sqlite_snapshot_din4108_independent_sqlite_nested_joins_and_domain_edits",
+      "sqlite_snapshot_din4108_refuses_malformed_choice_boolean_parent_ordinal_word_and_identity",
+      "sqlite_snapshot_din4108_initial_and_nested_operations_support_cancellation_and_native_admission",
+      "sqlite_snapshot_din4108_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+      "sqlite_snapshot_din4108_actual_erased_codec_and_declaration_preserve_all_owned_words",
+      "sqlite_snapshot_din4108_genuine_output_admits_exact_row_and_file_frontiers",
+      "sqlite_snapshot_din4108_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_din4108_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "🏋️en1991",
+    "project": "@semio-tech/norm-en1991-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1991\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_en1991_actual_bare_factory_exposes_owned_relational_capability",
+      "sqlite_snapshot_en1991_owned_native_decoder_controls_both_physical_payloads",
+      "sqlite_snapshot_en1991_all_neutral_fields_and_empty_owned_domains",
+      "sqlite_snapshot_en1991_neutral_unsigned8_widths_and_choices_agree_with_serde",
+      "sqlite_snapshot_en1991_every_numeric_domain_retains_each_neutral_binary64_word",
+      "sqlite_snapshot_en1991_independent_sqlite_joins_and_full_domain_edits",
+      "sqlite_snapshot_en1991_refuses_malformed_choices_widths_relationships_and_words",
+      "sqlite_snapshot_en1991_initial_and_nested_operations_support_cancellation_and_native_admission",
+      "sqlite_snapshot_en1991_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+      "sqlite_snapshot_en1991_actual_erased_codec_and_declaration_preserve_all_owned_words",
+      "sqlite_snapshot_en1991_genuine_output_admits_exact_row_and_file_frontiers",
+      "sqlite_snapshot_en1991_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_en1991_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "⚖️en1990",
+    "project": "@semio-tech/norm-en1990-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../📜️artifact-definition.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ]
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1990\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_en1990_actual_bare_factory_exposes_owned_relational_capability",
+      "sqlite_snapshot_en1990_owned_native_decoder_controls_both_physical_payloads",
+      "sqlite_snapshot_en1990_all_neutral_fields_and_empty_owned_domains",
+      "sqlite_snapshot_en1990_neutral_unsigned8_widths_agree_with_serde",
+      "sqlite_snapshot_en1990_every_numeric_domain_retains_each_neutral_binary64_word",
+      "sqlite_snapshot_en1990_independent_sqlite_joins_and_full_domain_edits",
+      "sqlite_snapshot_en1990_refuses_malformed_choice_coverage_and_semantic_relationships",
+      "sqlite_snapshot_en1990_initial_cancellation_and_borrowed_native_admission",
+      "sqlite_snapshot_en1990_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+      "sqlite_snapshot_en1990_actual_erased_codec_and_declaration_preserve_all_owned_words",
+      "sqlite_snapshot_en1990_genuine_output_admits_exact_row_and_file_frontiers",
+      "sqlite_snapshot_en1990_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_en1990_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "🪨️en1996",
+    "project": "@semio-tech/norm-en1996-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\nimport { startNativeProgress } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts\";\n/** 📦️ norm artifact Rust package router + example-asset regeneration. */\nimport { resolve } from \"node:path\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runRepositoryCommand } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts\";\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\n\nconst packageRoot = import.meta.dir;\nconst cargoName = \"semio-s-artifact-norm-en1996\";\nconst command = process.argv[2];\n\nclass RegenerateExampleAssetsScript extends BundleScript {\n  async run(_segments: string[]): Promise<void> {\n    const stop = startNativeProgress(`artifact-rust:${cargoName}:regenerate-example-assets`);\n    try {\n      await runRepositoryCommand(\n        \"cargo\",\n        [\n          \"run\",\n          \"--locked\",\n          \"--manifest-path\",\n          resolve(this.root, \"Cargo.toml\"),\n          \"--bin\",\n          \"regenerate-en1996-example-assets\",\n          \"--quiet\",\n        ],\n        this.repoRoot,\n        `artifact-rust:${cargoName}:regenerate-example-assets`,\n      );\n    } finally {\n      stop();\n    }\n  }\n}\n\nif (command === \"regenerate-example-assets\") {\n  const router = new ScriptRouter(packageRoot).register(\"regenerate-example-assets\", RegenerateExampleAssetsScript);\n  await router.run([\"regenerate-example-assets\"]);\n} else {\n  await runArtifactRustPackageMain(packageRoot, cargoName, {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n}\n",
+    "tests": [
+      "sqlite_snapshot_en1996_owned_native_decoder_controls_both_physical_payloads",
+      "sqlite_snapshot_en1996_actual_bare_factory_exposes_owned_relational_capability",
+      "sqlite_snapshot_en1996_all_neutral_fields_agree_with_serde_and_empty_domains",
+      "sqlite_snapshot_en1996_native_unsigned_widths_and_all_choices_agree_with_serde",
+      "sqlite_snapshot_en1996_every_numeric_domain_preserves_all_neutral_binary64_words",
+      "sqlite_snapshot_en1996_independent_sqlite_joins_and_domain_edits",
+      "sqlite_snapshot_en1996_refuses_malformed_choices_widths_booleans_ordinals_parents_and_words",
+      "sqlite_snapshot_en1996_initial_and_nested_operations_support_cancellation_and_native_admission",
+      "sqlite_snapshot_en1996_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+      "sqlite_snapshot_en1996_actual_erased_codec_and_declaration_preserve_all_owned_words",
+      "sqlite_snapshot_en1996_genuine_output_admits_exact_row_and_file_frontiers",
+      "sqlite_snapshot_en1996_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_en1996_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "🧩️en1994",
+    "project": "@semio-tech/norm-en1994-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1994\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_en1994_owned_native_decoder_controls_both_physical_payloads",
+      "sqlite_snapshot_en1994_actual_bare_factory_exposes_full_owned_capability",
+      "sqlite_snapshot_en1994_neutral_complete_subject_agrees_with_serde_and_empty_domains",
+      "sqlite_snapshot_en1994_all_annex_choices_and_unsigned_studs_agree_with_independent_serde",
+      "sqlite_snapshot_en1994_every_complete_numeric_domain_retains_every_neutral_raw_word",
+      "sqlite_snapshot_en1994_independent_sqlite_queries_all_components_and_applies_semantic_edits",
+      "sqlite_snapshot_en1994_refuses_malformed_shape_width_boolean_parent_ordinal_word_and_missing_mandatory_entities",
+      "sqlite_snapshot_en1994_initial_and_nested_operations_support_cancellation_and_borrowed_native_admission",
+      "sqlite_snapshot_en1994_large_owned_text_cancels_before_projection_reconstruction_and_native_encoding_copy",
+      "sqlite_snapshot_en1994_actual_erased_codec_and_declaration_preserve_every_owned_word",
+      "sqlite_snapshot_en1994_genuine_output_admits_exact_row_and_file_frontiers",
+      "sqlite_snapshot_en1994_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_en1994_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "🌬️din16798",
+    "project": "@semio-tech/norm-din16798-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-din16798\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_din16798_owned_native_decoder_controls_both_physical_payloads",
+      "sqlite_snapshot_din16798_actual_bare_factory_exposes_owned_relational_capability",
+      "sqlite_snapshot_din16798_all_neutral_fields_agree_with_serde_and_empty_domains",
+      "sqlite_snapshot_din16798_native_unsigned_widths_and_annex_agree_with_serde",
+      "sqlite_snapshot_din16798_every_numeric_domain_preserves_all_neutral_binary64_words",
+      "sqlite_snapshot_din16798_independent_sqlite_joins_and_domain_edits",
+      "sqlite_snapshot_din16798_refuses_malformed_annex_widths_ordinals_parents_and_words",
+      "sqlite_snapshot_din16798_initial_and_nested_operations_support_cancellation_and_native_admission",
+      "sqlite_snapshot_din16798_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+      "sqlite_snapshot_din16798_actual_erased_codec_and_declaration_preserve_all_owned_words",
+      "sqlite_snapshot_din16798_genuine_output_admits_exact_row_and_file_frontiers",
+      "sqlite_snapshot_din16798_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_din16798_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "⚡️din18599",
+    "project": "@semio-tech/norm-din18599-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-din18599\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_din18599_owned_native_decoder_controls_both_physical_payloads",
+      "sqlite_snapshot_din18599_actual_bare_factory_exposes_owned_relational_capability",
+      "sqlite_snapshot_din18599_all_neutral_fields_agree_with_serde_and_empty_domains",
+      "sqlite_snapshot_din18599_all_native_choices_and_unsigned32_widths_agree_with_serde",
+      "sqlite_snapshot_din18599_every_numeric_domain_retains_each_neutral_binary64_word",
+      "sqlite_snapshot_din18599_independent_sqlite_joins_climate_identity_and_plant_edits",
+      "sqlite_snapshot_din18599_refuses_malformed_choices_widths_parents_ordinals_and_word_companions",
+      "sqlite_snapshot_din18599_initial_and_nested_operations_support_cancellation_and_native_admission",
+      "sqlite_snapshot_din18599_large_child_identity_cancels_before_any_encoding_or_semantic_copy",
+      "sqlite_snapshot_din18599_actual_erased_codec_and_declaration_preserve_all_owned_words",
+      "sqlite_snapshot_din18599_genuine_output_admits_exact_row_and_file_frontiers",
+      "sqlite_snapshot_din18599_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_din18599_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "🔩️en1993",
+    "project": "@semio-tech/norm-en1993-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1993\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts\",\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_en1993_all_entities_and_independent_sqlite_edit",
+      "sqlite_snapshot_en1993_ownership_order_width_and_ieee_guards",
+      "sqlite_snapshot_en1993_limits_and_large_copy_cancellation",
+      "sqlite_snapshot_en1993_actual_bare_erased_encodings_and_coordinates",
+      "sqlite_snapshot_en1993_actual_declaration_typed_io_has_no_native_encoding",
+      "sqlite_snapshot_en1993_empty_collections_and_annex_variants",
+      "sqlite_snapshot_en1993_all_ninety_six_fields_have_independent_exact_word_oracle",
+      "sqlite_snapshot_en1993_every_ieee_word_survives_actual_erased_native_encodings",
+      "sqlite_snapshot_en1993_collection_progress_cancellation",
+      "sqlite_snapshot_en1993_controlled_native_owner_admits_physical_and_typed_state",
+      "sqlite_snapshot_en1993_controlled_output_has_exact_wire_and_real_interior_admission",
+      "sqlite_snapshot_en1993_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_en1993_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "🏭️vdi3805",
+    "project": "@semio-tech/norm-vdi3805-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir,\"semio-s-artifact-norm-vdi3805\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_vdi3805_native_sheet_id_refuses_every_out_of_width_word",
+      "sqlite_snapshot_vdi3805_owned_native_decoder_controls_physical_and_typed_construction",
+      "sqlite_snapshot_vdi3805_controlled_native_binding_preserves_every_neutral_numeric_word",
+      "sqlite_snapshot_vdi3805_controlled_attribute_binding_admits_before_owned_copy_and_cancels_inside_entries",
+      "sqlite_snapshot_vdi3805_complete_native_fixture_agrees_with_independent_serde",
+      "sqlite_snapshot_vdi3805_actual_bare_factory_exposes_complete_owned_capability",
+      "sqlite_snapshot_vdi3805_all_fields_and_empty_independent_catalogue_subjects_survive_sqlite",
+      "sqlite_snapshot_vdi3805_every_complete_numeric_domain_retains_all_neutral_raw_words",
+      "sqlite_snapshot_vdi3805_all_neutral_unsigned64_security_words_retain_native_width",
+      "sqlite_snapshot_vdi3805_all_neutral_quantity_and_edition_choices_retain_exact_identity",
+      "sqlite_snapshot_vdi3805_shared_independent_sql_corpus_refuses_lost_native_ownership",
+      "sqlite_snapshot_vdi3805_independent_sqlite_queries_complete_entities_and_applies_semantic_edits",
+      "sqlite_snapshot_vdi3805_refuses_malformed_choices_widths_booleans_parents_ordinals_maps_words_and_mandatory_subjects",
+      "sqlite_snapshot_vdi3805_initial_and_nested_operations_support_cancellation_and_borrowed_native_admission",
+      "sqlite_snapshot_vdi3805_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+      "sqlite_snapshot_vdi3805_actual_erased_codec_and_declaration_preserve_every_owned_word",
+      "sqlite_snapshot_vdi3805_genuine_output_admits_exact_row_and_file_frontiers",
+      "sqlite_snapshot_vdi3805_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_vdi3805_complete_independent_copied_columns_admission"
+    ]
+  },
+  {
+    "artifact": "🌍️en1997",
+    "project": "@semio-tech/norm-en1997-rs",
+    "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📋️project.json",
+    "target": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      }
+    },
+    "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📜️script.ts",
+    "script": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport {BundleScript} from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport {runRepositoryCommand} from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts\";\nimport {resolve} from \"node:path\";\n/** 🛂️ Checks the actual EN1997 facade and complete independent SQLite oracle types. */\nclass VerifyScript extends BundleScript{\n async run(segments:string[]):Promise<void>{\n  if(segments.length!==1||segments[0]!==\"snapshot-sqlite-source\")throw Error(\"Unknown EN1997 owned verification\");\n  const snapshot=resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot\");\n  await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--target\",\"ESNext\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",\"--resolveJsonModule\",\"--skipLibCheck\",resolve(snapshot,\"🟦️.ts\"),resolve(snapshot,\"🧪️tests/🪶️sqlite/🟦️.ts\")],this.repoRoot,\"en1997-snapshot-sqlite-public-types\");\n }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1997\",{commands:{verify:VerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts\",\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n",
+    "tests": [
+      "sqlite_snapshot_en1997_every_owned_field_and_independent_engine_edit",
+      "sqlite_snapshot_en1997_ownership_ordinals_widths_and_scalar_consistency",
+      "sqlite_snapshot_en1997_limits_and_large_copy_cancellation",
+      "sqlite_snapshot_en1997_actual_bare_erased_encodings_and_owned_coordinates",
+      "sqlite_snapshot_en1997_actual_declaration_typed_io_has_no_native_encoding",
+      "sqlite_snapshot_en1997_empty_collections_and_annex_variants_need_one_domain_row",
+      "sqlite_snapshot_en1997_all_fifty_five_fields_have_independent_exact_word_oracle",
+      "sqlite_snapshot_en1997_every_ieee_word_survives_actual_erased_native_encodings",
+      "sqlite_snapshot_en1997_controlled_native_owner_admits_physical_and_typed_state",
+      "sqlite_snapshot_en1997_controlled_output_has_exact_wire_and_real_interior_admission",
+      "sqlite_snapshot_en1997_independent_complete_nested_edit_both_annex_public_io",
+      "sqlite_snapshot_en1997_original_native_semantic_extent_has_independent_exact_boundaries",
+      "sqlite_snapshot_en1997_complete_independent_native_semantic_limits",
+      "sqlite_snapshot_en1997_complete_independent_copied_columns_admission"
+    ]
+  }
+]

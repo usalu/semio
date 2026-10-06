@@ -1,4 +1,4 @@
-import {binary64,binary64Value,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬 s.wfc.grid3d snapshot — the TypeScript twin of the normative JSON Schema, ported field by
  * field (never generated). The wire form is camelCase, exactly as the Rust `#[value(rename_all =
  * "camelCase")]` records emit it. */

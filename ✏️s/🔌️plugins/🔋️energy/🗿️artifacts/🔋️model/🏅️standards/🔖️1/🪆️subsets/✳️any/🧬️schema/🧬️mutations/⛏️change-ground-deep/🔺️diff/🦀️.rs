@@ -14,6 +14,6 @@ pub fn diff(payload: &super::ChangeGroundDeep, base: &EnergyModelSnapshot) -> pr
     }
     let mut model = base.model.clone();
     model.ground_temperature.deep_c = payload.new_temperature_c;
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

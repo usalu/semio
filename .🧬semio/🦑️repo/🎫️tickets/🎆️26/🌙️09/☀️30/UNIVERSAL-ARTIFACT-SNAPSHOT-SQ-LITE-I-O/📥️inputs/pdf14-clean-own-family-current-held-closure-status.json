@@ -1,0 +1,49 @@
+{
+  "qualification": "HELD/source-only review bundle; not coherent mounted provider and no type/runtime claim. Source inventories must re-guard at actual mount.",
+  "identities": {
+    "documentCodec": "stdio.pdf",
+    "artifactStructural": "s.stdio.pdf",
+    "mutationStructural": "s.stdio.pdf.1.4"
+  },
+  "readyHeldInputs": [
+    "pdf14-sparse-diff-exact-bit-demand-held-pair.json",
+    "pdf14-sparse-diff-exact-bit-provider-held-region.json",
+    "pdf14-populated-own-domain-public-demand-held-pair.json",
+    "pdf14-populated-own-domain-public-neutral-contract.json",
+    "pdf14-populated-own-domain-public-neutral-schema.json",
+    "pdf14-own-page-target-helper-held-pair.json",
+    "pdf14-own-viewer-three-subsets-held-pairs.json",
+    "pdf14-own-set-snapshot-leaf-held-pairs.json"
+  ],
+  "withdrawn": [
+    "pdf14-sparse-schema-totality-demand-held-pair.json: DO NOT MOUNT; identity immutable normative",
+    "whole-Set finite-only guard removed; Resize policy unchanged"
+  ],
+  "remainingCoherentJoins": [
+    {
+      "family": "own mutations",
+      "required": "complete Set/Patch schema/descriptor/text/binary/aggregate/protocol/TS/GraphQL/proto and all5 old primitive references; frozen base schema; exact raw words and inversion/absorb; no JSON codec preservation assumption",
+      "sourceAuthority": "v1_4/base/schema/mutations; actual SnapshotDetails snapshot_edit_patch closure requires both variants"
+    },
+    {
+      "family": "editor/helper",
+      "required": "three editor roots own Snapshot/Mutation and document schema; own helper module mount; real caller publication revision; explicit locale; no object inspector/interaction; set-page target guard and5 typed primitive actions"
+    },
+    {
+      "family": "rosters/actions",
+      "required": "replace rich PDF17 native roster/tools with set-page + actual5 own primitives; use existing shared SnapshotDetails actions independently; Source controller facade/menu/window manifests/neutral command contracts must match"
+    },
+    {
+      "family": "render/revision",
+      "required": "own PageDoc geometry accessory plus actualeditable view; root caller gathersgenuine publication revision and locale, no default; viewer9path slice compatible with own root but declaration join still required"
+    },
+    {
+      "family": "declaration/fixtures",
+      "required": "actual three14 editor/viewer types must bind same native14 codec SnapshotTypeId; preserve own14 schema-gap predicates; handcraft all existing Root17 demo/renderer/actions fixtures to own14 full literalowners without encoder migration"
+    },
+    {
+      "family": "signed-zero publication",
+      "required": "actual shared expected==snapshot shortcut uses derivedPartialEq, so privateDiff fix alone insufficient; exact TDD editor publication demand and an owner-specific valid hook need sourceauthority before repair"
+    }
+  ]
+}

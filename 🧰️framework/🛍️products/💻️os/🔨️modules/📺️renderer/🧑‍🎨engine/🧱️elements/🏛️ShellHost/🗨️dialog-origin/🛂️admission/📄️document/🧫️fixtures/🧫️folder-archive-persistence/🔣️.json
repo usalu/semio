@@ -1,0 +1,250 @@
+{
+  "note": "When a folder-bound document's archive is written (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §22.22): the folder holds the document whenever this replica's log holds events the folder's archive lacks. Each case is the events one bound document sees, in order, and `writes` names the events (by index) at which an archive write starts. `publish`: the program published a batch. `absent`: the bind's first folder read found no archive. `foldStart`/`foldEnd`: a batch another transport delivered is being folded and settles (`ok` false: refused, nothing changed). `merge`: a folder read-back was merged, `ahead` events of this replica are not in the archive. `writeEnd`: the write in flight settles (`ok` false: it failed). Writes are single-flight with one trailing write; folds in flight are one write when they drain. Every shell's persistence reaches exactly these writes.",
+  "cases": [
+    {
+      "id": "an-existing-document-bound-to-an-empty-folder-is-written-without-an-edit",
+      "events": [
+        {
+          "absent": null
+        },
+        {
+          "writeEnd": true
+        }
+      ],
+      "writes": [
+        0
+      ]
+    },
+    {
+      "id": "a-published-batch-is-written",
+      "events": [
+        {
+          "publish": null
+        },
+        {
+          "writeEnd": true
+        }
+      ],
+      "writes": [
+        0
+      ]
+    },
+    {
+      "id": "a-replica-that-only-receives-refreshes-its-folder",
+      "events": [
+        {
+          "foldStart": "a"
+        },
+        {
+          "foldEnd": {
+            "id": "a",
+            "ok": true
+          }
+        },
+        {
+          "writeEnd": true
+        }
+      ],
+      "writes": [
+        1
+      ]
+    },
+    {
+      "id": "batches-folded-in-one-turn-are-one-write",
+      "events": [
+        {
+          "foldStart": "a"
+        },
+        {
+          "foldStart": "b"
+        },
+        {
+          "foldStart": "c"
+        },
+        {
+          "foldEnd": {
+            "id": "a",
+            "ok": true
+          }
+        },
+        {
+          "foldEnd": {
+            "id": "b",
+            "ok": true
+          }
+        },
+        {
+          "foldEnd": {
+            "id": "c",
+            "ok": true
+          }
+        },
+        {
+          "writeEnd": true
+        }
+      ],
+      "writes": [
+        5
+      ]
+    },
+    {
+      "id": "a-refused-batch-writes-nothing",
+      "events": [
+        {
+          "foldStart": "a"
+        },
+        {
+          "foldEnd": {
+            "id": "a",
+            "ok": false
+          }
+        }
+      ],
+      "writes": []
+    },
+    {
+      "id": "one-folded-batch-among-refused-ones-is-written-when-they-drain",
+      "events": [
+        {
+          "foldStart": "a"
+        },
+        {
+          "foldStart": "b"
+        },
+        {
+          "foldEnd": {
+            "id": "a",
+            "ok": true
+          }
+        },
+        {
+          "foldEnd": {
+            "id": "b",
+            "ok": false
+          }
+        },
+        {
+          "writeEnd": true
+        }
+      ],
+      "writes": [
+        3
+      ]
+    },
+    {
+      "id": "a-merge-that-taught-only-what-the-folder-held-writes-nothing",
+      "events": [
+        {
+          "merge": 0
+        }
+      ],
+      "writes": []
+    },
+    {
+      "id": "a-merge-that-left-this-replica-ahead-is-written",
+      "events": [
+        {
+          "merge": 2
+        },
+        {
+          "writeEnd": true
+        }
+      ],
+      "writes": [
+        0
+      ]
+    },
+    {
+      "id": "changes-during-a-write-are-one-trailing-write",
+      "events": [
+        {
+          "publish": null
+        },
+        {
+          "publish": null
+        },
+        {
+          "publish": null
+        },
+        {
+          "writeEnd": true
+        },
+        {
+          "writeEnd": true
+        }
+      ],
+      "writes": [
+        0,
+        3
+      ]
+    },
+    {
+      "id": "a-failed-write-still-lets-the-newer-state-be-written",
+      "events": [
+        {
+          "publish": null
+        },
+        {
+          "publish": null
+        },
+        {
+          "writeEnd": false
+        },
+        {
+          "writeEnd": true
+        }
+      ],
+      "writes": [
+        0,
+        2
+      ]
+    },
+    {
+      "id": "folds-draining-during-a-write-are-written-after-it",
+      "events": [
+        {
+          "publish": null
+        },
+        {
+          "foldStart": "a"
+        },
+        {
+          "foldEnd": {
+            "id": "a",
+            "ok": true
+          }
+        },
+        {
+          "writeEnd": true
+        },
+        {
+          "writeEnd": true
+        }
+      ],
+      "writes": [
+        0,
+        3
+      ]
+    },
+    {
+      "id": "two-peers-on-one-folder-terminate",
+      "events": [
+        {
+          "publish": null
+        },
+        {
+          "writeEnd": true
+        },
+        {
+          "merge": 0
+        },
+        {
+          "merge": 0
+        }
+      ],
+      "writes": [
+        0
+      ]
+    }
+  ]
+}

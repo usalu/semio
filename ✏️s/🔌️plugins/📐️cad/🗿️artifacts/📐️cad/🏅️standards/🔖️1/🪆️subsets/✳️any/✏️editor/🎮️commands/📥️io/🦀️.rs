@@ -1,11 +1,12 @@
 //! 📥️ CAD play app commands — the shell file round-trip: native/spatial import and the three export flavours.
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
+use crate::editor::cad::modes::edit::tools::transform::{cad_transform_tool_emit, CadToolEntry};
 use crate::editor::cad::CadDispatchCtx;
 use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, cad_pane_from_view, export_solid_for_pane, export_solid_modelspace, export_spatial_json, publish_engagement, reset_document_effect, runtime_of, CadInteractionSnapshot, CadPlayView};
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
-use crate::CadSnapshot;
+use crate::{CadPaneId, CadSnapshot};
 use semio_framework_value::DslValue;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
@@ -22,21 +23,21 @@ pub mod import_cad_file {
         pub payload: String,
     }
 
-    pub fn handle(payload: &ImportCadFile, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    /// 📥️ A single object file (STEP, OBJ, STL, GLB) lands as ONE `insert-element` transaction on the composed model child
+    /// of the addressed pane (the shape pane without an addressed window, design §20.15); a whole spatial scene replaces
+    /// the document through the host's `LoadDocument`. Selecting the imported object is the host's follow-up
+    /// `interactionSelect` — selection is framework-owned.
+    pub fn handle(payload: &ImportCadFile, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg, &ctx.window_transient);
         let name_lower = payload.name.to_ascii_lowercase();
         let payload_value: DslValue = semio_framework_pack_json::from_json_str(&payload.payload, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_value::DslValue::String(payload.payload.clone()));
-        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
-        // now returns a `SemioModelElement` (id/placement/`GeometryRef`), the composed-child shape —
-        // composing it into a pane's `SemioModelSnapshot` CHILD needs a child-dispatch seam on
-        // `CadDispatchCtx`/`Emit<CadMutation, _>` that does not exist yet (`🔌️plugin/🦀️.rs`
-        // framework-kernel surface, W1-owned). Documented no-op. ⚠️ FIRST-CLASS-HOVER-AND-SELECTION-
-        // MECHANISM (26/08/14): auto-selecting the imported object is no longer reachable from a
-        // single `handle()` dispatch — selection is framework-owned (`interaction_store`), written
-        // only through the injected `interactionSelect` verb; a host wanting "select on import" now
-        // issues that as a follow-up command.
-        if import_cad_object_by_extension(&name_lower, &payload_value).is_some() {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.import-object-unavailable"), format!("importCadFile cannot place the object \"{}\": composed pane models accept no imported object yet", payload.name)));
+        if let Some(element) = import_cad_object_by_extension(&name_lower, &payload_value) {
+            let pane = ctx.view_state.as_ref().and_then(|view| cad_pane_from_view(view).ok()).unwrap_or(CadPaneId::Shape);
+            let emit = cad_transform_tool_emit(doc, "importCadFile", vec![CadToolEntry::Create { pane, element }]);
+            if emit.child_preparations.is_empty() {
+                return Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.import-object-refused"), format!("importCadFile cannot place the object \"{}\": the addressed pane composes no model child or already holds its id", payload.name)));
+            }
+            return Ok(emit);
         }
         let unwrapped = unwrap_spatial_load_payload(&payload_value).unwrap_or(payload_value);
         let scene = scene_from_spatial_payload(&unwrapped).or_else(|| <CadSnapshot as semio_framework_value::FromValue>::from_value(unwrapped).ok());
@@ -60,7 +61,7 @@ pub mod save_selected {
 
     pub fn handle(_payload: &SaveSelected, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let pane = cad_pane_from_view(ctx.view_state.as_ref().ok_or_else(|| Fault::from("cad.window.invalid: selected export has no host view context"))?)?;
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg, &ctx.window_transient), interaction: CadInteractionSnapshot::default() };
+        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, &ctx.window_transient), CadInteractionSnapshot::default());
         let export = export_spatial_json(&view, "selected", Some(pane))?;
         Ok(Emit::effect(cad_spatial_export_effect(&export, "cad.selected.spatial.dsl")))
     }
@@ -76,7 +77,7 @@ pub mod save_in_play {
     pub struct SaveInPlay {}
 
     pub fn handle(_payload: &SaveInPlay, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg, &ctx.window_transient), interaction: CadInteractionSnapshot::default() };
+        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, &ctx.window_transient), CadInteractionSnapshot::default());
         let effect = match export_solid_modelspace(&view, CAD_SOLID_EXPORT_DIALECT_STEP) {
             Some(export) => cad_solid_export_effect(export),
             None => cad_spatial_export_effect(&export_spatial_json(&view, "modelspace", None)?, "cad.modelspace.spatial.dsl"),
@@ -97,14 +98,13 @@ pub mod save_current {
     }
 
     pub fn handle(payload: &SaveCurrent, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let document = doc.snapshot;
         let format = match payload.format.as_deref() {
             Some("obj") => CAD_SOLID_EXPORT_DIALECT_OBJ,
             Some("stl") => CAD_SOLID_EXPORT_DIALECT_STL,
             _ => CAD_SOLID_EXPORT_DIALECT_STEP,
         };
         let pane = cad_pane_from_view(ctx.view_state.as_ref().ok_or_else(|| Fault::from("cad.window.invalid: current export has no host view context"))?)?;
-        let view = CadPlayView { document: document.clone(), runtime: runtime_of(cfg, &ctx.window_transient), interaction: CadInteractionSnapshot::default() };
+        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, &ctx.window_transient), CadInteractionSnapshot::default());
         let export = export_solid_for_pane(&view, pane, format).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("cad.export.empty-pane"), "The current pane has no solid to export."))?;
         Ok(Emit::effect(cad_solid_export_effect(export)))
     }

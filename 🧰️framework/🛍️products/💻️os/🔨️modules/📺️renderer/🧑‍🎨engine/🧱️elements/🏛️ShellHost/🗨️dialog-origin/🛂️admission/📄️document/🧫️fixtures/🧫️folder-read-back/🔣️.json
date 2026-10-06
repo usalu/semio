@@ -1,0 +1,431 @@
+{
+  "note": "The read-backs of one folder attachment (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §22.22, live fault F4). Each case is what the attachments of one document see in order — `absent` (the bind's first read found the folder empty) or an `archive` with what the program answers to a merge (`merged` events taken and events `ahead`, or `unmergeable`: another document's archive, or one whose members differ) and to a load (`loaded`, `stale`: superseded, the program does not hold it, `cancelled`, `failed`) — and `calls` is exactly what the shell drives, in order: `merge`, `load`, `history`, `refresh` (the last two in either order, written as `history`, `refresh`), `write` (the folder's archive is written), `detach`. The first archive after an attach loads; later ones merge without replacing the document; a merge that took nothing re-reads nothing; the folder is written only when the program is ahead of it or the folder was empty. `outcomes` is how each event ends for the program: `adopted` (an empty folder took the program's document), `held` (the archive's events are in the program's document), `superseded`, `detached`, `cancelled`, `failed` or `reattached`. Nothing of the program is ever written over an archive it did not take (live fault F13 and the coordinator's decision on it): when the FIRST archive of an attachment is not loaded — the load answers `cancelled` (the person cancelled it) or `failed` — the shell is asked to `detach` the folder, which stays remembered so that it is offered again, the event ends `detached`, no failure is told for a cancel, and later events of that attachment drive nothing; `reconnect` is the person reattaching the remembered folder, a new attachment whose first archive is loaded again. Once the folder is adopted, a cancelled load of a later read-back ends `cancelled` and a failed one `failed` (the read-back rejects); the document stays attached and written. While a load runs, the shell shows its polled status outside the History panel from the first status the host polls until the load ends; a load that ends within its first poll may show none (F5).",
+  "cases": [
+    {
+      "id": "the-first-archive-after-an-attach-is-loaded",
+      "events": [
+        {
+          "archive": {
+            "load": "loaded"
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "history",
+        "refresh"
+      ],
+      "outcomes": [
+        "held"
+      ]
+    },
+    {
+      "id": "a-later-read-back-merges-and-keeps-the-document",
+      "events": [
+        {
+          "archive": {
+            "load": "loaded"
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 1,
+              "ahead": 0
+            }
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "history",
+        "refresh",
+        "merge",
+        "history",
+        "refresh"
+      ],
+      "outcomes": [
+        "held",
+        "held"
+      ]
+    },
+    {
+      "id": "a-merge-that-left-the-program-ahead-writes-the-folder",
+      "events": [
+        {
+          "archive": {
+            "load": "loaded"
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 1,
+              "ahead": 4
+            }
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "history",
+        "refresh",
+        "merge",
+        "history",
+        "refresh",
+        "write"
+      ],
+      "outcomes": [
+        "held",
+        "held"
+      ]
+    },
+    {
+      "id": "a-merge-that-took-nothing-re-reads-nothing",
+      "events": [
+        {
+          "archive": {
+            "load": "loaded"
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 0,
+              "ahead": 0
+            }
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "history",
+        "refresh",
+        "merge"
+      ],
+      "outcomes": [
+        "held",
+        "held"
+      ]
+    },
+    {
+      "id": "a-program-ahead-of-an-archive-it-already-holds-writes-without-re-reading",
+      "events": [
+        {
+          "archive": {
+            "load": "loaded"
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 0,
+              "ahead": 1
+            }
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "history",
+        "refresh",
+        "merge",
+        "write"
+      ],
+      "outcomes": [
+        "held",
+        "held"
+      ]
+    },
+    {
+      "id": "an-empty-folder-takes-the-programs-document-and-later-read-backs-merge",
+      "events": [
+        {
+          "absent": null
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 2,
+              "ahead": 0
+            }
+          }
+        }
+      ],
+      "calls": [
+        "write",
+        "merge",
+        "history",
+        "refresh"
+      ],
+      "outcomes": [
+        "adopted",
+        "held"
+      ]
+    },
+    {
+      "id": "an-archive-the-program-cannot-merge-is-loaded",
+      "events": [
+        {
+          "absent": null
+        },
+        {
+          "archive": {
+            "merge": "unmergeable",
+            "load": "loaded"
+          }
+        }
+      ],
+      "calls": [
+        "write",
+        "merge",
+        "load",
+        "history",
+        "refresh"
+      ],
+      "outcomes": [
+        "adopted",
+        "held"
+      ]
+    },
+    {
+      "id": "a-superseded-first-load-leaves-the-next-archive-a-load",
+      "events": [
+        {
+          "archive": {
+            "load": "stale"
+          }
+        },
+        {
+          "archive": {
+            "load": "loaded"
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 1,
+              "ahead": 0
+            }
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "load",
+        "history",
+        "refresh",
+        "merge",
+        "history",
+        "refresh"
+      ],
+      "outcomes": [
+        "superseded",
+        "held",
+        "held"
+      ]
+    },
+    {
+      "id": "two-peers-on-one-folder-through-an-open-history-edit",
+      "events": [
+        {
+          "absent": null
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 1,
+              "ahead": 0
+            }
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 0,
+              "ahead": 1
+            }
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 0,
+              "ahead": 0
+            }
+          }
+        }
+      ],
+      "calls": [
+        "write",
+        "merge",
+        "history",
+        "refresh",
+        "merge",
+        "write",
+        "merge"
+      ],
+      "outcomes": [
+        "adopted",
+        "held",
+        "held",
+        "held"
+      ]
+    },
+    {
+      "id": "a-cancelled-first-load-detaches-the-folder-and-keeps-it-remembered",
+      "events": [
+        {
+          "archive": {
+            "load": "cancelled"
+          }
+        },
+        {
+          "archive": {
+            "load": "loaded"
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "detach"
+      ],
+      "outcomes": [
+        "detached",
+        "superseded"
+      ]
+    },
+    {
+      "id": "a-failed-first-load-detaches-the-folder-and-keeps-it-remembered",
+      "events": [
+        {
+          "archive": {
+            "load": "failed"
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "detach"
+      ],
+      "outcomes": [
+        "detached"
+      ]
+    },
+    {
+      "id": "a-reconnect-after-a-declined-first-load-loads-again",
+      "events": [
+        {
+          "archive": {
+            "load": "cancelled"
+          }
+        },
+        {
+          "reconnect": null
+        },
+        {
+          "archive": {
+            "load": "loaded"
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 1,
+              "ahead": 0
+            }
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "detach",
+        "load",
+        "history",
+        "refresh",
+        "merge",
+        "history",
+        "refresh"
+      ],
+      "outcomes": [
+        "detached",
+        "reattached",
+        "held",
+        "held"
+      ]
+    },
+    {
+      "id": "a-cancelled-later-load-keeps-the-adopted-folder-attached-and-written",
+      "events": [
+        {
+          "archive": {
+            "load": "loaded"
+          }
+        },
+        {
+          "archive": {
+            "merge": "unmergeable",
+            "load": "cancelled"
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 0,
+              "ahead": 1
+            }
+          }
+        }
+      ],
+      "calls": [
+        "load",
+        "history",
+        "refresh",
+        "merge",
+        "load",
+        "merge",
+        "write"
+      ],
+      "outcomes": [
+        "held",
+        "cancelled",
+        "held"
+      ]
+    },
+    {
+      "id": "a-failed-later-load-fails-its-read-back-and-keeps-the-adopted-folder-attached",
+      "events": [
+        {
+          "absent": null
+        },
+        {
+          "archive": {
+            "merge": "unmergeable",
+            "load": "failed"
+          }
+        },
+        {
+          "archive": {
+            "merge": {
+              "merged": 1,
+              "ahead": 0
+            }
+          }
+        }
+      ],
+      "calls": [
+        "write",
+        "merge",
+        "load",
+        "merge",
+        "history",
+        "refresh"
+      ],
+      "outcomes": [
+        "adopted",
+        "failed",
+        "held"
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@ import {stlSnapshotToSqliteDatabase,stlSnapshotFromSqliteDatabase,stlSnapshotVal
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import ieee from "../../../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔢️ieee754/🔣️.json";
+import ieee from "../../../../🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔢️ieee754/🔣️.json";
 test("STL public package exposes typed queryable SQLite snapshot I/O",async()=>{
  const bits=BigInt("0x"+ieee.binary64Bits[6]!);const scalar={bits};
  const snapshot:StlSnapshot={schema:"public STL",solidName:"queryable",triangles:[{normal:[scalar,scalar,scalar],vertices:[[scalar,scalar,scalar],[scalar,scalar,scalar],[scalar,scalar,scalar]]}]};

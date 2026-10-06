@@ -40,7 +40,7 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; .dsl.semio; 🔒️dependencies.json",
+        "specificationSource": "../🧬️schema/📸️snapshot/🔣️.json; ../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio; .dsl.semio; 🔒️dependencies.json",
         "fixtureCoverage": {
           "vectors": 2,
           "capabilitiesCovered": [

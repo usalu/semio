@@ -1,0 +1,9 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,"required":["schemaVersion","cases","packages"],
+  "properties":{
+    "schemaVersion":{"const":1},
+    "cases":{"type":"array","minItems":2,"items":{"type":"object","additionalProperties":false,"required":["id","partition","rootNames","childNames"],"properties":{"id":{"type":"string","minLength":1},"partition":{"type":"boolean"},"rootNames":{"type":"array","items":{"type":"string"},"uniqueItems":true},"childNames":{"type":"array","items":{"type":"string"},"uniqueItems":true}}}},
+    "packages":{"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["directory","name"],"properties":{"directory":{"type":"string","minLength":1},"name":{"type":"string","minLength":1}}}}
+  }
+}

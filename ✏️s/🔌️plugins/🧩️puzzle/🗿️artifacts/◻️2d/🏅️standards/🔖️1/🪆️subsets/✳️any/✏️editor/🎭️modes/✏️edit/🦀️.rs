@@ -7,7 +7,7 @@ use crate::editor::puzzle2d::engine::{BoardHost, BOARD_CAMERA_ZOOM_MAX, BOARD_CA
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle2d_action, runtime_camera, Puzzle2dScene, PUZZLE2D_LOD_MODE_AUTOMATIC, PUZZLE2D_PLAY_SURFACE_ID};
+use crate::editor::puzzle2d::{board_snapshot_edges, board_snapshot_nodes, puzzle2d_action, runtime_camera, Puzzle2dScene, PUZZLE2D_LOD_MODE_AUTOMATIC, PUZZLE2D_PLAY_SURFACE_ID};
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::Board2dScene;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -60,12 +60,12 @@ fn puzzle2d_clamp_zoom(value: f64) -> f64 {
 }
 
 /// 📐️ World-space center and half-span of every node's extent (circle radius or rectangle half-size), used to frame pane cameras.
-fn puzzle2d_fixture_world_bounds(fixture: &Value) -> (f64, f64, f64) {
+fn puzzle2d_fixture_world_bounds(snapshot: &Value) -> (f64, f64, f64) {
     let mut min_x = f64::INFINITY;
     let mut min_y = f64::INFINITY;
     let mut max_x = f64::NEG_INFINITY;
     let mut max_y = f64::NEG_INFINITY;
-    for node in fixture_nodes(fixture) {
+    for node in board_snapshot_nodes(snapshot) {
         let (Some(x), Some(y)) = (node.get("x").and_then(|value| value.as_f64()), node.get("y").and_then(|value| value.as_f64())) else {
             continue;
         };
@@ -87,22 +87,22 @@ fn puzzle2d_fixture_world_bounds(fixture: &Value) -> (f64, f64, f64) {
     ((min_x + max_x) * 0.5, (min_y + max_y) * 0.5, half_span)
 }
 
-/// 📷️ Triptych camera for a pane: overview is zoomed out and centered on the fixture, detail zooms
+/// 📷️ Triptych camera for a pane: overview is zoomed out and centered on the snapshot, detail zooms
 /// into the last-placed node, selection frames a lower-left quadrant — mirrors the pre-migration
 /// `puzzle2dPlayTriptychCameraForPane`.
-pub fn puzzle2d_pane_camera(fixture: &Value, runtime: &Puzzle2dPlayRuntime, pane: &str) -> (f64, f64, f64) {
+pub fn puzzle2d_pane_camera(snapshot: &Value, runtime: &Puzzle2dPlayRuntime, pane: &str) -> (f64, f64, f64) {
     let (camera_x, camera_y, camera_zoom) = runtime_camera(runtime);
     if pane == overview::WINDOW_KIND_ID {
         return (camera_x, camera_y, puzzle2d_clamp_zoom(camera_zoom));
     }
-    let (cx, cy, half_span) = puzzle2d_fixture_world_bounds(fixture);
+    let (cx, cy, half_span) = puzzle2d_fixture_world_bounds(snapshot);
     let usable = PUZZLE2D_VIEWPORT_REF_SHORT_PX * (1.0 - 2.0 * PUZZLE2D_VIEWPORT_MARGIN);
     let world_span = (2.0 * half_span * PUZZLE2D_VIEWPORT_FRAMING_HALF_SPAN_SCALE).max(1.0);
     let base_zoom = puzzle2d_clamp_zoom((usable / world_span) * PUZZLE2D_VIEWPORT_ZOOM_BOOST);
     let zoom = puzzle2d_clamp_zoom(base_zoom * puzzle2d_pane_zoom_scale(pane));
     match pane {
         detail::WINDOW_KIND_ID => {
-            let nodes = fixture_nodes(fixture);
+            let nodes = board_snapshot_nodes(snapshot);
             let detail_node = nodes.get(nodes.len().saturating_sub(1).min(42));
             let x = detail_node.and_then(|node| node.get("x")).and_then(|value| value.as_f64()).unwrap_or(cx) + camera_x * 0.02;
             let y = detail_node.and_then(|node| node.get("y")).and_then(|value| value.as_f64()).unwrap_or(cy) + camera_y * 0.02;
@@ -115,11 +115,11 @@ pub fn puzzle2d_pane_camera(fixture: &Value, runtime: &Puzzle2dPlayRuntime, pane
 //#endregion 🔖️PaneCamera
 
 //#region 🔖️Canvas
-/// 🗄️ Caches the last serialized fixture keyed by an fnv1a hash of the raw `document_json` it came
+/// 🗄️ Caches the last serialized snapshot keyed by an fnv1a hash of the raw `document_json` it came
 /// from, so the overview/detail/selection panes of the same `refreshUi` tick reuse one `String`
-/// instead of each re-serializing the whole fixture graph.
-fn cached_fixture_json(_document_json: &str, fixture: &Value) -> String {
-    fixture.to_string()
+/// instead of each re-serializing the whole snapshot graph.
+fn cached_snapshot_json(_document_json: &str, snapshot: &Value) -> String {
+    snapshot.to_string()
 }
 
 /// 💡️ How many placement candidates ONE handle-suggestions popup publishes. The surface doc it rides
@@ -175,10 +175,10 @@ fn puzzle2d_suggestion_menu_json(envelope: &Puzzle2dScene, glyph_catalogs_json: 
 /// 🖼️ The board-2d scene one pane publishes. Public so the laws can assert what reaches the client
 /// (hover id, suggestion popup) without decoding a rendered surface node.
 pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {
-    let fixture = &envelope.fixture;
-    let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, &envelope.runtime, pane);
+    let snapshot = &envelope.board_snapshot;
+    let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(snapshot, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
-    let glyph_catalogs_json = crate::editor::puzzle2d::board_kind_catalogs_json_or_inferred(fixture).unwrap_or_else(|| "{}".into());
+    let glyph_catalogs_json = crate::editor::puzzle2d::board_kind_catalogs_json_or_inferred(snapshot).unwrap_or_else(|| "{}".into());
     // 🕹️ The framework-owned `vortex` selection, resolved once per render by
     // `Puzzle2dPlayApp::render_with_request_context`, echoes back to the board engine here.
     let selection_json = envelope.interaction.selection_json();
@@ -187,11 +187,11 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
         "handleWeights": envelope.runtime.handle_kind_weights,
     }))
     .unwrap_or_else(|_| "{}".into());
-    let placement_compatibility_json = fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| fixture.get("kindCompatibility")).map_or_else(|| "[]".into(), |value| value.to_string());
+    let placement_compatibility_json = snapshot.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| snapshot.get("kindCompatibility")).map_or_else(|| "[]".into(), |value| value.to_string());
     let lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).cloned().unwrap_or_else(|| PUZZLE2D_LOD_MODE_AUTOMATIC.to_string());
     let suggestion_menu_json = puzzle2d_suggestion_menu_json(envelope, &glyph_catalogs_json);
     Board2dScene {
-        fixture_json: cached_fixture_json(document_json, fixture),
+        snapshot_json: cached_snapshot_json(document_json, snapshot),
         camera_json,
         glyph_catalogs_json,
         selection_json,
@@ -215,7 +215,7 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
         lod_mode,
         transform_flags: Some(json!({ "move": envelope.runtime.transform_move, "rotate": envelope.runtime.transform_rotate }).to_string()),
         // 🖍️ The Area Brush's own W/H steppers as world extent — what ONE click paints. The regions
-        // themselves ride the fixture lane (the document's `targetRegions`), not a second carrier.
+        // themselves ride the snapshot lane (the document's `targetRegions`), not a second carrier.
         area_brush_size: Some({
             let (width, height) = crate::editor::puzzle2d::puzzle2d_area_brush_extent_world(&envelope.runtime);
             json!({ "width": width, "height": height }).to_string()
@@ -227,8 +227,8 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
     }
 }
 
-/// 🖼️ The board-2d surface node for one pane — bound by each window's own `render()`. The fixture rides
-/// as its own paged lane carrier (`Board2dSceneLane::Fixture`), so a 180-node board is bounded by its
+/// 🖼️ The board-2d surface node for one pane — bound by each window's own `render()`. The snapshot rides
+/// as its own paged lane carrier (`Board2dSceneLane::Snapshot`), so a 180-node board is bounded by its
 /// carrier pages instead of by the 32 KiB surface doc that refused it outright.
 pub fn render_canvas(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let scene = puzzle2d_board_scene(document_json, envelope, pane);
@@ -242,8 +242,8 @@ pub fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &st
     let overlay: Value = serde_json::from_str(&host.overlay_paint_state_json()).unwrap_or(Value::Null);
     let pane_lod_mode = envelope.runtime.lod_mode_by_pane.get(pane).map_or(PUZZLE2D_LOD_MODE_AUTOMATIC, String::as_str);
     let lod = overlay.get("lod").and_then(|value| value.as_str()).unwrap_or(if pane_lod_mode == PUZZLE2D_LOD_MODE_AUTOMATIC { "auto" } else { pane_lod_mode });
-    let node_count = fixture_nodes(&envelope.fixture).len();
-    let edge_count = fixture_edges(&envelope.fixture).len();
+    let node_count = board_snapshot_nodes(&envelope.board_snapshot).len();
+    let edge_count = board_snapshot_edges(&envelope.board_snapshot).len();
     let input_value = envelope.runtime.engagement_input_by_pane.get(pane).cloned().unwrap_or_default();
     let placeholder = match envelope.active_utility.as_str() {
         "brush" => "Brush",

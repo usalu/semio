@@ -9,7 +9,24 @@
   ],
   "properties": {
     "path": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Paketteil"
+        },
+        "description": {
+          "en": "Package part name of the VML drawing that is removed.",
+          "de": "Name des Paketteils der VML-Zeichnung, die entfernt wird."
+        },
+        "ref": {
+          "kind": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

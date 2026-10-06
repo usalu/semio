@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/pixels/compositing/layers.json",
   "title": "Raster Layer Stack",
-  "description": "Centered display extents, linked or parent-relative masks, and degree rotations. Images are immutably borrowed during a job. Mask coverage preparation and compositing advance in bounded grants; only completed output is published. At most 1024 layers and 32 nested groups. Unique identifiers are required. Unique mask coverage is limited to 64 MiB. A blank layer contributes transparent bounds; an empty document produces one transparent pixel with empty=true.",
+  "description": "Centered display extents, linked or parent-relative masks, and degree rotations. Images are immutably borrowed during a job. Mask coverage preparation and compositing advance in bounded grants; only completed output is published. At most 1024 layers and 32 nested groups. Unique identifiers are required. Unique mask coverage is limited to 64 MiB. A blank layer contributes transparent bounds; an empty document produces one transparent pixel with empty=true. Pixel progress completed/total counts remain fixed while the actual compositor frontier drains. done and publication require terminal compositor ownership plus a later child-header handoff. Shared input bytes remain unchanged; this is successful child composition, not whole stack cancellation or resource admission.",
   "type": "object",
   "required": [
     "layers",

@@ -1,0 +1,5 @@
+# General UI Fixture Source1 Audit
+
+Ready as scoped publication/native input. Eleven exact physical preimages and three unchanged defining contexts match their full captured bodies. All 31 chrome vectors remain logically identical; only the two extracted Product fields are removed and all other fields are conserved. The original closed schema changes only its owner id. Independent draft7/2020 Ajv validates the 31 rows and eight neutral arrow records. All seven TypeScript fixture imports and the Rust literal include resolve to the authored General owners; five TS endpoints and the Rust endpoint parse without errors. All original Rust assertion macros are exact.
+
+The observed TS cuts change fixture aliases/imports, replace the weaker inline schema with the original closed schema plus the retained minimum-six assertion, and retain positive/mismatch DOM loops using neutral ids/chords. This is source admission only: mounted UI laws, live original Product whole results and whole Root direction acceptance remain separate.

@@ -2,6 +2,7 @@
 package adapter
 
 import (
+	json "encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -10,17 +11,43 @@ import (
 	host "semio.tech/repo/test"
 )
 
-// region 🔖️Support
-
-func vectors(ctx *host.Context) (testrunner.DetectionVectors, error) {
-	source, err := ctx.FixtureBytes("shared://🧭️detection-vectors.json")
-	if err != nil {
-		return testrunner.DetectionVectors{}, err
-	}
-	return testrunner.ParseDetectionVectors(source)
+type detectionVector struct {
+	// 🏷️ID is the scenario-local id.
+	ID string `json:"id"`
+	// 📦️BundleRoot is the bundle root to probe.
+	BundleRoot string `json:"bundleRoot"`
+	// 🎯️TestFilter is the filter handed to the JavaScript runner detection.
+	TestFilter string `json:"testFilter"`
+	// 🗣️ExpectedLanguage is the language detection must answer.
+	ExpectedLanguage string `json:"expectedLanguage"`
+	// 📜️ExpectedArgv is the JavaScript runner argv detection must answer, where declared.
+	ExpectedArgv *[]string `json:"expectedArgv,omitempty"`
 }
 
-func jsArgv(fixture *testrunner.DetectionVectors, bundleRoot string, filter string) []string {
+type detectionVectors struct {
+	// 🌍️Snapshot is the world the vectors probe.
+	Snapshot testrunner.FilesystemSnapshot `json:"snapshot"`
+	// 🧭️Vectors are the vectors.
+	Vectors []detectionVector `json:"vectors"`
+}
+
+func parseDetectionVectors(source []byte) (detectionVectors, error) {
+	vectors := detectionVectors{}
+	err := json.Unmarshal(source, &vectors)
+	return vectors, err
+}
+
+// region 🔖️Support
+
+func vectors(ctx *host.Context) (detectionVectors, error) {
+	source, err := ctx.InputBytes("shared://🧭️detection-vectors.json")
+	if err != nil {
+		return detectionVectors{}, err
+	}
+	return parseDetectionVectors(source)
+}
+
+func jsArgv(fixture *detectionVectors, bundleRoot string, filter string) []string {
 	_, args := fixture.Snapshot.DetectJSTestRunner(fixture.Snapshot.Absolute(bundleRoot), filter)
 	return args
 }

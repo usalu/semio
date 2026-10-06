@@ -26,6 +26,7 @@ import { accessibilityProjectionSelfTests } from "../../🧪️tests/🔬️acce
 import { catalogueCarrierMapSelfTests } from "../../🧪️tests/🛍️catalogue-carrier-map/🟦️.ts";
 import { numberControlsSelfTests } from "../../🧪️tests/🧪️number-controls/🟦️.ts";
 import { colorInputSelfTests } from "../../🧪️tests/🧪️color-input/🟦️.ts";
+import { textControlsSelfTests } from "../../🧪️tests/🧪️text-controls/🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
@@ -56,6 +57,7 @@ class TestScript extends BundleScript {
     console.log(`catalogue-carrier-map-twin checks=${catalogueCarrierMapSelfTests()}`);
     console.log(`number-controls-twin checks=${numberControlsSelfTests()}`);
     console.log(`color-input-twin checks=${colorInputSelfTests()}`);
+    console.log(`text-controls-twin checks=${textControlsSelfTests()}`);
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env));
   }
 }

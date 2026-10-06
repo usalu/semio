@@ -126,6 +126,46 @@
       },
       "cache": false
     },
+    "test-snapshot-sqlite-census-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite census all",
+        "forwardAllArgs": true
+      }
+    },
+    "check-snapshot-sqlite-census-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite census check",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-census-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite census source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-census": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite census",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-sqlite-catalog-contract": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts snapshot-sqlite catalog-contract",
+        "forwardAllArgs": true
+      }
+    },
     "test-snapshot-sqlite-catalog": {
       "executor": "nx:run-commands",
       "options": {

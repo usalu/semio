@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { pathRound } from "d3-path";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { vizArc, vizArcCentroid, vizPie, type VizArcOptions } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import base from "../🌗️shape-arc-pie/🟦️.ts";
 // #endregion 🔌️Adapters

@@ -1,0 +1,12 @@
+{
+  "schemaVersion":1,
+  "cases":[
+    {"id":"nested-package-without-workspace","partition":false,"rootNames":["neutral-core","neutral-parent","neutral-child"],"childNames":[]},
+    {"id":"explicit-child-workspace-partition","partition":true,"rootNames":["neutral-core"],"childNames":["neutral-parent","neutral-child"]}
+  ],
+  "packages":[
+    {"directory":"generic/core","name":"neutral-core"},
+    {"directory":"packages/parent","name":"neutral-parent"},
+    {"directory":"packages/parent/child","name":"neutral-child"}
+  ]
+}

@@ -257,9 +257,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-photometric-interpretation-applied",
       "class": "handcrafted",
       "target": {
@@ -302,7 +301,6 @@
       "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetPhotometricInterpretation{photometric:2} switches PhotometricInterpretation (tag 262) from 1 (BlackIsZero) to 2 (RGB), TIFF6 §Baseline's own well-known values."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-tile-tags-applied",
       "class": "handcrafted",
       "target": {
@@ -345,7 +343,6 @@
       "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). RemoveTileTags{} drops TileWidth (322) and TileLength (323) from IFD 0, converting a tiled directory back to a stripped one."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-tile-tags-applied",
       "class": "handcrafted",
       "target": {
@@ -388,7 +385,6 @@
       "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). InsertTileTags{tileWidth:4,tileLength:4} adds TileWidth (322) and TileLength (323) to IFD 0, per TIFF6 §Tiled Images."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-strip-offsets-applied",
       "class": "handcrafted",
       "target": {
@@ -431,7 +427,6 @@
       "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). RemoveStripOffsets{} drops the StripOffsets tag (273) from IFD 0."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-strip-offsets-applied",
       "class": "handcrafted",
       "target": {
@@ -474,7 +469,6 @@
       "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetStripOffsets{offsets:[16]} overwrites the StripOffsets tag (273) value in place."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -517,7 +511,6 @@
       "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetSnapshot replaces the whole document — byte order flips littleEndian to bigEndian, BitsPerSample (258) moves 8->16, and the raster payload is a different real byte sequence."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-compression-applied",
       "class": "handcrafted",
       "target": {
@@ -560,7 +553,6 @@
       "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetCompression{compression:5} switches Compression (tag 259) from 1 (None) to 5 (LZW), a TIFF6 §Baseline-extension value in real use."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-bits-per-sample-applied",
       "class": "handcrafted",
       "target": {

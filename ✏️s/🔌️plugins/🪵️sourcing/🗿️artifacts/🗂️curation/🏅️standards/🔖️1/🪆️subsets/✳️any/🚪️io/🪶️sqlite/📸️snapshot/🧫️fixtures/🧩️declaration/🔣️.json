@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "assembly": "Runtime",
+  "snapshot": "CurationSnapshot",
+  "dialect": {
+    "artifactKind": "s.sourcing.curation",
+    "standard": "1",
+    "subset": "*"
+  },
+  "schema": "sourcing.curation/v1",
+  "tables": [
+    "curation_box",
+    "curation_catalog",
+    "curation_curated",
+    "curation_document",
+    "curation_frame",
+    "curation_geometry",
+    "curation_glb",
+    "curation_mesh",
+    "curation_mesh_index",
+    "curation_mesh_normal",
+    "curation_mesh_position",
+    "curation_slab",
+    "curation_stock_extra",
+    "curation_typology_segment"
+  ],
+  "requirements": {
+    "concreteSnapshotType": true,
+    "completeDeclaredInstalledHookIdentity": true,
+    "nonemptyExactAuthoredSql": true,
+    "nativeSqlLookup": true,
+    "oneHopExactRoutesBothDirections": true
+  }
+}

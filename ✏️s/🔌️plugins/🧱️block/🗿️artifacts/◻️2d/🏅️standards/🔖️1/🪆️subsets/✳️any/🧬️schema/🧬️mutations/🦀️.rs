@@ -3,8 +3,6 @@
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
 use crate::standards::v1::subsets::any::schema::diff::Block2dDiff;
@@ -137,39 +135,7 @@ pub fn inverse_block2d_mutation(projection: &Block2dSnapshot, mutation: &Block2d
 }
 
 //#region 🌉️TestBridge
-/// 🌉️ One report for a `(base, mutation, after)` triple, in the framework's own JSON, so a test host
-/// can exercise this subset's codec without linking `serde_json` itself. Mirrors the bridge every
-/// other converted subset ships (`🗺️gismap`, `🏗️fem`); this subset had none, so its adapter could
-/// only read committed vectors and never ran the implementation at all.
-///
-/// `base` is the decoded input, `snapshot` the applied document, `expectedSnapshot` the decoded
-/// `after_json`, `diff` the produced delta, `messages` the diagnostics it raised, `inverseSteps` the
-/// computed inverse and `inverseSnapshot` the document those steps land on.
-pub fn block2d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let base: Block2dSnapshot = semio_framework_pack_json::from_json_str(base_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let expected: Block2dSnapshot = semio_framework_pack_json::from_json_str(after_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mutation: Block2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mut applied = base.clone();
-    let forward = <Block2dMutation as Mutation<Block2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <Block2dMutation as Mutation<Block2dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
-    let mut undone = applied.clone();
-    let mut inverse_messages = Vec::new();
-    for step in &inverse {
-        let outcome = <Block2dMutation as Mutation<Block2dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
-        inverse_messages.extend(outcome.messages().iter().cloned());
-    }
-    let report = semio_framework_value::DslValue::object([
-        ("base".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&base))),
-        ("expectedSnapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&expected))),
-        ("snapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&applied))),
-        ("diff".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(forward.diff()))),
-        ("messages".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&forward.messages().to_vec()))),
-        ("inverseSteps".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&inverse))),
-        ("inverseSnapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&undone))),
-        ("inverseMessages".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&inverse_messages))),
-    ]);
-    Ok(semio_framework_pack_json::to_json_string(&report))
-}
+
 //#endregion 🌉️TestBridge
 
 //#region 🧪️Tests

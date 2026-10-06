@@ -93,3 +93,6 @@ export function parseSemioKitSnapshot(value: unknown, at = "$"): SemioKitSnapsho
   if (Object.hasOwn(row, "properties")) result.properties = parseSemioChild(row.properties, "value", at + ".properties");
   return result;
 }
+
+/** 🪆️ The typed Kit dialect boundary retains child and target identities independently. */
+export function semioKitDialectParts(kind:string,standard:string,subset:string):boolean{return kind==="s.stdio.semio"&&standard==="v1"&&(subset==="kit"||subset==="*")}

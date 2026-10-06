@@ -193,9 +193,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-structural-entity-applied",
       "class": "third-party-generated",
       "target": {
@@ -246,7 +245,6 @@
       "notes": "Set #619887 IfcColumn.Name via ifcopenshell — a real structural building element already present in this fixture, standing in for CV2.0's structural-entity row."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-project-units-applied",
       "class": "third-party-generated",
       "target": {
@@ -297,7 +295,6 @@
       "notes": "Set #43 IfcSIUnit (LENGTHUNIT, previously unprefixed metre)'s Prefix to .CENTI. via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-product-placement-applied",
       "class": "third-party-generated",
       "target": {
@@ -348,7 +345,6 @@
       "notes": "Set #619881 IfcCartesianPoint (the coordinate underlying #619887 IfcColumn's own ObjectPlacement chain)'s Coordinates via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-view-definition-applied",
       "class": "third-party-generated",
       "target": {
@@ -399,7 +395,6 @@
       "notes": "Replaced the header FILE_DESCRIPTION's view-definition text via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {

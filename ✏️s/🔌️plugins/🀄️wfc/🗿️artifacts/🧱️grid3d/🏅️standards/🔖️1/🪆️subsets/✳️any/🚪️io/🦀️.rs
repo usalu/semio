@@ -15,7 +15,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::schema::Grid3dAnalyzer;
+    use crate::standards::v1::subsets::any::io::Grid3dAnalyzer;
     use crate::Grid3dSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -58,3 +58,120 @@ pub use derived_composition::*;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🎪️Tests
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{Grid3dDiff, Grid3dMutation, Grid3dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct Grid3dBuilderConstruction {
+        snapshot: Grid3dSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for Grid3dBuilderConstruction {
+        type Snapshot = Grid3dSnapshot;
+        type Mutation = Grid3dMutation;
+        type Diff = Grid3dDiff;
+        fn empty() -> Self {
+            Self { snapshot: Grid3dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<Grid3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<Grid3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
+            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
+            }
+            (self, outcome)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <Grid3dDiff as protocol::MutationDiff<Grid3dSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::Grid3dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct Grid3dParts {
+        pub snapshot: Option<Grid3dSnapshot>,
+    }
+
+    pub struct Grid3dAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for Grid3dAnalyzerAnalysis {
+        type Parts = Grid3dParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.wfc.grid3d", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = Grid3dParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <Grid3dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(error) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <Grid3dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(error) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec Grid3dBuilderFacets {
+        construction: Grid3dBuilderConstruction,
+        analysis: Grid3dAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::any::io::derived_composition::Grid3dComposerComposition,
+    }
+    builder: Grid3dBuilder,
+    analyzer: Grid3dAnalyzer,
+    composer: Grid3dComposer,
+);

@@ -12,3 +12,9 @@ path = "../../🦀️.rs"
 syn = { version = "2", features = ["full"] }
 
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]

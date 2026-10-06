@@ -1,0 +1,11 @@
+{
+  "contract": "defining-dag-identity/v1",
+  "cases": [
+    {"id": "empty-node", "kind": "node", "identity": ""},
+    {"id": "unicode-node", "kind": "node", "identity": "節点🕸️"},
+    {"id": "nul-node", "kind": "node", "identity": "a\u0000b"},
+    {"id": "empty-edge", "kind": "edge", "identity": ""},
+    {"id": "unicode-edge", "kind": "edge", "identity": "連結🔗️"},
+    {"id": "nul-edge", "kind": "edge", "identity": "c\u0000d"}
+  ]
+}

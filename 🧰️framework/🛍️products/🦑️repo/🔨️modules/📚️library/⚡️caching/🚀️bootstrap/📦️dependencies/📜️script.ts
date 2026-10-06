@@ -10,7 +10,7 @@ import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 /** 🏃️ Runs one tool with progress, bounded optional output and cancellation of its process tree. */
 export async function runTool(command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean | "ignore" = false, environment: NodeJS.ProcessEnv = process.env): Promise<string> {
     signal.throwIfAborted();
-    if (command === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, cwd);
+    if (command === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(environment), args, cwd, environment);
     const child = spawn(command, args, { cwd, env: environment, detached: process.platform !== "win32", stdio: ["ignore", capture === "ignore" ? "ignore" : capture ? "pipe" : "inherit", "inherit"], windowsHide: true });
     let output = "", overflow = false;
     let force: ReturnType<typeof setTimeout> | undefined;
@@ -31,7 +31,7 @@ export async function runTool(command: string, args: string[], cwd: string, sign
       const status = await new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", code => accept(code ?? 1)); });
       signal.throwIfAborted();
       if (overflow) throw new Error(`${command} output exceeds its limit`);
-      if (status !== 0) throw new Error(`${command} ${args[0]} failed (${status})`);
+      if (status !== 0) throw new Error(`${command} ${args[0]} failed (${status})${output ? "\n" + output : ""}`);
       return output;
     } finally {
       if (signal.aborted) kill("SIGKILL");

@@ -15,7 +15,22 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "description": {
+          "en": "Index of the page, counted from 0.",
+          "de": "Index der Seite, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "userUnit": {
       "anyOf": [
@@ -35,7 +50,10 @@
         "description": {
           "en": "Size of one default user space unit in multiples of 1/72 inch.",
           "de": "Größe einer Einheit des Standard-Benutzerraums in Vielfachen von 1/72 Zoll."
-        }
+        },
+        "step": 1,
+        "precision": 2,
+        "softMin": 1
       }
     }
   }

@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff, MutationLeaf};
 use store::OpBinary;
 
 fn vectors() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🧬️job-test-mutations/🔣️.json")).expect("neutral job vectors")
+    serde_json::from_str(include_str!("../../🧪️testing/🧬️job-test-mutations/🔣️.json")).expect("neutral job vectors")
 }
 
 fn apply_stored_inverse(stored: &[JobTestOp], after: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {
@@ -13,7 +13,7 @@ fn apply_stored_inverse(stored: &[JobTestOp], after: &JobTestSnapshot) -> protoc
 
 #[test]
 fn leaf_descriptor_matches_actual_authored_file() {
-    let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️job-test-mutations/🧬️mutations/➕️add-value/🔣️.json")).expect("descriptor");
+    let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧪️testing/🧬️job-test-mutations/🧬️mutations/➕️add-value/🔣️.json")).expect("descriptor");
     assert_eq!(authored["owner"], AddValue::DESCRIPTOR.owner);
     assert_eq!(authored["semanticKind"], AddValue::DESCRIPTOR.semantic_kind);
     assert_eq!(authored["aggregateVariant"], "AddValue");

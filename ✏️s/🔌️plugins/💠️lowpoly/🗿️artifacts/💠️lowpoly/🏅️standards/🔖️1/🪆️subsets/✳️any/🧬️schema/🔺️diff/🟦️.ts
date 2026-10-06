@@ -1,7 +1,8 @@
 import{parseLowpolyMeshState,type LowpolyMeshState}from"../🕸️mesh/🟦️.ts";
 /** 🧬️ Lowpoly diff schema — sparse field delta. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import {type Binary32,parseBinary32Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { type Binary32 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary32 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {
   parseLowpolyArtifact,
   parseLowpolyObject,
@@ -196,7 +197,7 @@ export function parseLowpolyPaintLayerPatch(value: unknown, at = "$"): LowpolyPa
   return {
     name: row["name"] === null ? null : lowpolyLowpolyDiffGuardString(row["name"], `${at}.name`),
     visible: row["visible"] === null ? null : lowpolyLowpolyDiffGuardBoolean(row["visible"], `${at}.visible`),
-    opacity: row["opacity"] === null ? null : parseBinary32Transport(row["opacity"]),
+    opacity: row["opacity"] === null ? null : parseBinary32(row["opacity"]),
     blendMode: row["blendMode"] === null ? null : lowpolyLowpolyDiffGuardString(row["blendMode"], `${at}.blendMode`),
   };
 }

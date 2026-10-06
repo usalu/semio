@@ -1,0 +1,36 @@
+{
+  "kind": "s.stdio.pdf",
+  "standard": "1.7",
+  "subset": "x",
+  "conditionIdentifier": "FOGRA39",
+  "profile": {
+    "name": "sRGB2014",
+    "bytes": 3024,
+    "sha256": "384b832de3412066743b52a75ee906b6fb9fb8d9e09e936fc2c43223815c6e0a",
+    "tags": 16,
+    "components": 3
+  },
+  "graph": {
+    "root": 1,
+    "outputIntent": 2,
+    "profileStream": 3,
+    "pages": 4,
+    "kids": [],
+    "count": 0
+  },
+  "conformance": {
+    "encryptionDictionaries": [],
+    "outputIntents": [
+      {
+        "subtype": "GTS_PDFX",
+        "outputConditionIdentifier": "FOGRA39",
+        "hasDestOutputProfile": true
+      }
+    ],
+    "pageBoxes": [],
+    "fontPrograms": [],
+    "javaScriptActions": [],
+    "launchActions": [],
+    "mediaAnnotations": []
+  }
+}

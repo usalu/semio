@@ -28,6 +28,7 @@
           "en": "Index of the record, counted from 0.",
           "de": "Index des Datensatzes, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -46,6 +47,7 @@
           "en": "Index of the field within the record, counted from 0.",
           "de": "Index des Feldes im Datensatz, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 20

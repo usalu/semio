@@ -3,7 +3,7 @@ use crate::FemAxis;
 use semio_s_artifact_fem_2d::editor::fem2d::transient::{fem_gumball_drive, FemGumballDrive, FemGumballTransient};
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
+    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 fn ids(values: &[&str]) -> Vec<String> {
@@ -77,7 +77,7 @@ fn ticks_compose_into_one_net_leaf() {
 
 /// 🛠️ Drives the tool the way the retained route does, on window `window` of `transient`.
 fn drive(transient: &FemGumballTransient, window: &str, verb: &str, phase: GesturePhase, tick: Option<MoveSelection>, base: &str) -> FemGumballDrive<Fem3dMutation> {
-    fem_gumball_drive::<Fem3dGumballTool>(transient, window, verb, phase, tick, "seed", base)
+    fem_gumball_drive::<Fem3dGumballTool>(transient, window, verb, phase, tick, "seed", base).expect("the gumball tool accepts the dispatch")
 }
 
 /// 💾️ LAW: a one-shot dispatch is ONE committed transaction holding the one leaf and leaves no transient behind; a
@@ -171,7 +171,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let mut store = store::ArtifactStore::<Fem3dSnapshot, Fem3dMutation>::new(store::create_document_envelope::<Fem3dSnapshot, Fem3dMutation>(crate::FEM_3D_SCHEMA, "gumball-time-travel", base.clone(), None)).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Fem3dSnapshot, Fem3dMutation>());
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the edit applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = tick(Fem3dGumballMotion::Translate { dx: -0.5, dy: 3.0, dz: 0.25 });

@@ -1,12 +1,12 @@
-use crate::editor::puzzle2d::engine::{apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_normal_undirected_redraw_layout_to_fixture_v1_json, apply_ported_redraw_layout_to_fixture_v1_json};
+use crate::editor::puzzle2d::engine::{apply_edge_handle_snap_to_board_snapshot_json, apply_force_graph_layout_to_board_snapshot_json, apply_normal_undirected_redraw_layout_to_board_snapshot_json, apply_ported_redraw_layout_to_board_snapshot_json};
 
 use serde_json::json;
 use std::collections::HashMap;
 
 #[test]
 fn force_graph_spreads_two_linked_circles_along_x() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -34,7 +34,7 @@ fn force_graph_spreads_two_linked_circles_along_x() {
         "gravity": 0.0,
         "randomSeed": 7
     });
-    let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
@@ -44,8 +44,8 @@ fn force_graph_spreads_two_linked_circles_along_x() {
 
 #[test]
 fn force_graph_pins_locked_node_positions() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -74,7 +74,7 @@ fn force_graph_pins_locked_node_positions() {
         "randomSeed": 101,
         "lockedNodeIds": ["a"]
     });
-    let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
@@ -86,8 +86,8 @@ fn force_graph_pins_locked_node_positions() {
 
 #[test]
 fn redraw_force_graph_top_level_locked_node_ids_pins() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -120,7 +120,7 @@ fn redraw_force_graph_top_level_locked_node_ids_pins() {
             "gravity": 0.0
         }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     assert!((nodes[0]["x"].as_f64().unwrap() - 0.0).abs() < 1e-9);
@@ -129,8 +129,8 @@ fn redraw_force_graph_top_level_locked_node_ids_pins() {
 
 #[test]
 fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
-    let fixture = json!({
-        "schema": "reasoning.mindmap.fixture",
+    let snapshot = json!({
+        "schema": "board.normal.undirected.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             { "id": "a", "x": 0.0, "y": 0.0, "radius": 40.0 },
@@ -149,7 +149,7 @@ fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
             "gravity": 0.0
         }
     });
-    let out = apply_normal_undirected_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_normal_undirected_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
@@ -159,8 +159,8 @@ fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
 
 #[test]
 fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             { "id": "a", "x": 0.0, "y": 0.0, "radius": 40.0, "handles": [] },
@@ -176,7 +176,7 @@ fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
         "gravity": 0.0,
         "randomSeed": 7
     });
-    let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
@@ -186,7 +186,7 @@ fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
 
 #[test]
 fn force_graph_rejects_bad_schema() {
-    let err = apply_force_graph_layout_to_fixture_v1_json(r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
+    let err = apply_force_graph_layout_to_board_snapshot_json(r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
     assert!(err.contains("schema"));
 }
 
@@ -212,8 +212,8 @@ fn force_graph_barnes_hut_many_bodies_yields_finite_coordinates() {
             }));
         }
     }
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": nodes,
         "edges": edges
@@ -228,7 +228,7 @@ fn force_graph_barnes_hut_many_bodies_yields_finite_coordinates() {
         "barnesHutTheta": 0.72,
         "pairwiseRepulsionMaxBodies": 12
     });
-    let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     for row in parsed["nodes"].as_array().unwrap() {
         let x = row["x"].as_f64().unwrap();
@@ -264,8 +264,8 @@ fn force_graph_bh_layout_is_deterministic_for_fixed_seed() {
             }));
         }
     }
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": nodes,
         "edges": edges
@@ -280,17 +280,17 @@ fn force_graph_bh_layout_is_deterministic_for_fixed_seed() {
         "barnesHutTheta": 0.55,
         "pairwiseRepulsionMaxBodies": 8
     });
-    let s = fixture.to_string();
+    let s = snapshot.to_string();
     let o = opts.to_string();
-    let out_a = apply_force_graph_layout_to_fixture_v1_json(&s, &o).unwrap();
-    let out_b = apply_force_graph_layout_to_fixture_v1_json(&s, &o).unwrap();
+    let out_a = apply_force_graph_layout_to_board_snapshot_json(&s, &o).unwrap();
+    let out_b = apply_force_graph_layout_to_board_snapshot_json(&s, &o).unwrap();
     assert_eq!(out_a, out_b, "BH path must be bitwise reproducible for identical inputs");
 }
 
 #[test]
 fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             { "id": "a", "x": 0.0, "y": 0.0, "radius": 30.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }] },
@@ -311,17 +311,17 @@ fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
         "randomSeed": 909,
         "pairwiseRepulsionMaxBodies": 80
     });
-    let s = fixture.to_string();
+    let s = snapshot.to_string();
     let o = opts.to_string();
-    let out_a = apply_force_graph_layout_to_fixture_v1_json(&s, &o).unwrap();
-    let out_b = apply_force_graph_layout_to_fixture_v1_json(&s, &o).unwrap();
+    let out_a = apply_force_graph_layout_to_board_snapshot_json(&s, &o).unwrap();
+    let out_b = apply_force_graph_layout_to_board_snapshot_json(&s, &o).unwrap();
     assert_eq!(out_a, out_b);
 }
 
 #[test]
 fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             { "id": "a", "x": 0.0, "y": 0.0, "radius": 20.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }] },
@@ -343,7 +343,7 @@ fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
         "barnesHutTheta": 500.0,
         "pairwiseRepulsionMaxBodies": 2
     });
-    let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_force_graph_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     for row in parsed["nodes"].as_array().unwrap() {
         assert!(row["x"].as_f64().unwrap().is_finite());
@@ -353,8 +353,8 @@ fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
 
 #[test]
 fn redraw_force_graph_wraps_flat_options() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -385,7 +385,7 @@ fn redraw_force_graph_wraps_flat_options() {
             "gravity": 0.0
         }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ax = nodes[0]["x"].as_f64().unwrap();
@@ -395,8 +395,8 @@ fn redraw_force_graph_wraps_flat_options() {
 
 #[test]
 fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -416,7 +416,7 @@ fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
         ],
         "edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
     });
-    let out = apply_edge_handle_snap_to_fixture_v1_json(&fixture.to_string()).unwrap();
+    let out = apply_edge_handle_snap_to_board_snapshot_json(&snapshot.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
@@ -427,8 +427,8 @@ fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
 
 #[test]
 fn redraw_force_graph_with_snap_sets_handle_angles() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -460,7 +460,7 @@ fn redraw_force_graph_with_snap_sets_handle_angles() {
             "gravity": 0.0
         }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let nodes = parsed["nodes"].as_array().unwrap();
     let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
@@ -484,8 +484,8 @@ fn redraw_force_graph_with_snap_sets_handle_angles() {
 
 #[test]
 fn force_graph_accepts_logical_nodes_without_xy() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -508,7 +508,7 @@ fn force_graph_accepts_logical_nodes_without_xy() {
         "randomSeed": 3,
         "forceGraph": { "iterations": 120, "idealEdgeLength": 160.0, "gravity": 0.0 }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     for n in parsed["nodes"].as_array().unwrap() {
         assert!(n["x"].as_f64().unwrap().is_finite());
@@ -518,8 +518,8 @@ fn force_graph_accepts_logical_nodes_without_xy() {
 
 #[test]
 fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             { "id": "r", "root": true, "radius": 18.0, "handles": [] },
@@ -537,7 +537,7 @@ fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
         "centerY": 0.0,
         "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let mut ys: HashMap<String, f64> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
@@ -554,8 +554,8 @@ fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
 
 #[test]
 fn hierarchical_tree_stacks_by_depth() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -586,7 +586,7 @@ fn hierarchical_tree_stacks_by_depth() {
         "centerY": 0.0,
         "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let mut ys: HashMap<String, f64> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
@@ -603,8 +603,8 @@ fn hierarchical_tree_stacks_by_depth() {
 
 #[test]
 fn hierarchical_tree_pins_locked_root_coordinates() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -642,7 +642,7 @@ fn hierarchical_tree_pins_locked_root_coordinates() {
         "lockedNodeIds": ["r"],
         "hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
@@ -659,8 +659,8 @@ fn hierarchical_tree_pins_locked_root_coordinates() {
 
 #[test]
 fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -692,7 +692,7 @@ fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
             "lockedNodeIds": ["r"]
         }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let mut by_id: HashMap<String, (f64, f64)> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
@@ -705,8 +705,8 @@ fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
 
 #[test]
 fn hierarchical_tree_right_places_children_larger_x_than_root() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -729,7 +729,7 @@ fn hierarchical_tree_right_places_children_larger_x_than_root() {
         "centerY": 0.0,
         "hierarchicalTree": { "direction": "right", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let mut xs: HashMap<String, f64> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
@@ -743,8 +743,8 @@ fn hierarchical_tree_right_places_children_larger_x_than_root() {
 
 #[test]
 fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -767,7 +767,7 @@ fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
         "centerY": 0.0,
         "hierarchicalTree": { "direction": "upwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
     });
-    let out = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+    let out = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
     let mut ys: HashMap<String, f64> = HashMap::new();
     for n in parsed["nodes"].as_array().unwrap() {
@@ -781,8 +781,8 @@ fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
 
 #[test]
 fn hierarchical_tree_rejects_unknown_direction() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [
             {
@@ -798,18 +798,18 @@ fn hierarchical_tree_rejects_unknown_direction() {
         "mode": "hierarchical-tree",
         "hierarchicalTree": { "direction": "sideways" }
     });
-    let err = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap_err();
+    let err = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), &opts.to_string()).unwrap_err();
     assert!(err.contains("unknown hierarchical tree direction"));
 }
 
 #[test]
 fn redraw_rejects_unknown_mode() {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [],
         "edges": []
     });
-    let err = apply_ported_redraw_layout_to_fixture_v1_json(&fixture.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
+    let err = apply_ported_redraw_layout_to_board_snapshot_json(&snapshot.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
     assert!(err.contains("unknown redraw mode"));
 }

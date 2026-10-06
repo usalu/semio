@@ -1,3 +1,9 @@
+fn canonical_scene(json:&str)->EditorScene {
+ let mut accepted=|_|true;
+ let mut control=semio_framework_value::NativeDecodeControl::new(16_777_216,&mut accepted);
+ scene::from_json(json,&mut control).unwrap()
+}
+
 
 use super::*;
 
@@ -57,11 +63,11 @@ fn insert_and_caret() {
 }
 
 #[test]
-fn sync_from_scene_json_sets_and_clears_hover_range() {
+fn synchronize_scene_sets_and_clears_hover_range() {
     let mut host = EditorHost::new();
-    host.sync_from_scene_json(r#"{"buffer":"abc","hoverJson":"{\"start\":1,\"end\":2}"}"#).unwrap();
+    host.synchronize_scene(canonical_scene(r#"{"buffer":"abc","hover":{"kind":"range","start":1,"end":2}}"#));
     assert_eq!(host.hover_token_range(), Some((1, 2)));
-    host.sync_from_scene_json(r#"{"buffer":"abc","hoverJson":"null"}"#).unwrap();
+    host.synchronize_scene(canonical_scene(r#"{"buffer":"abc","hover":{"kind":"clear"}}"#));
     assert_eq!(host.hover_token_range(), None);
 }
 
@@ -376,28 +382,9 @@ fn set_size_clamps_to_minimum() {
 }
 
 #[test]
-fn sync_from_scene_json_applies_all_optional_fields() {
+fn synchronize_scene_applies_all_optional_fields() {
     let mut host = EditorHost::new();
-    let occurrences_inner = serde_json::json!({
-        "hover": serde_json::json!([{"start":0,"end":1}]).to_string(),
-        "selection": serde_json::json!([{"start":1,"end":2}]).to_string(),
-    })
-    .to_string();
-    let outer = serde_json::json!({
-        "buffer": "abc",
-        "selectionJson": serde_json::json!({"start":0,"end":2}).to_string(),
-        "tokensJson": serde_json::json!([{"start":0,"end":1,"class":"keyword"}]).to_string(),
-        "diagnosticsJson": serde_json::json!([{"start":0,"end":1,"severity":"error","message":"x"}]).to_string(),
-        "placeholdersJson": serde_json::json!([{"offset":0,"label":"?"}]).to_string(),
-        "occurrencesJson": occurrences_inner,
-        "extraCaretsJson": serde_json::json!([1,2]).to_string(),
-        "selectableSpansJson": serde_json::json!([{"start":0,"end":1,"kind":"atomic"}]).to_string(),
-        "settingsJson": serde_json::json!({"fontPx":18}).to_string(),
-        "cameraJson": serde_json::json!({"y":5}).to_string(),
-        "overlaysJson": serde_json::json!({"deadLineY":10}).to_string(),
-    })
-    .to_string();
-    host.sync_from_scene_json(&outer).unwrap();
+    host.synchronize_scene(canonical_scene(r#"{"buffer":"abc","selection":{"start":0,"end":2},"tokens":[{"start":0,"end":1,"class":"keyword"}],"diagnostics":[{"start":0,"end":1,"severity":"error","message":"x"}],"placeholders":[{"offset":0,"label":"?"}],"occurrences":{"hover":[{"start":0,"end":1}],"selection":[{"start":1,"end":2}]},"extraCarets":[1,2],"selectableSpans":[{"start":0,"end":1,"kind":"atomic"}],"settings":{"fontPx":18.0,"lineHeight":22.0,"showLineNumbers":true,"tabSize":4},"camera":{"y":5.0},"overlays":{"deadLineY":10.0}}"#));
     assert_eq!(host.text(), "abc");
     assert_eq!(host.anchor(), 0);
     assert_eq!(host.caret(), 2);

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "documents": [
+    {
+      "scope": "s.stdio.xml",
+      "export": "document",
+      "id": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json",
+      "schemaPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json",
+      "definitions": [
+        {
+          "artifact": "📰️xml",
+          "scope": "s.stdio.xml",
+          "export": "document"
+        },
+        {
+          "artifact": "🎨️svg",
+          "scope": "s.stdio.svg",
+          "export": "xml-document"
+        },
+        {
+          "artifact": "📜️docx",
+          "scope": "s.stdio.docx",
+          "export": "xml-document"
+        },
+        {
+          "artifact": "📽️pptx",
+          "scope": "s.stdio.pptx",
+          "export": "xml-document"
+        },
+        {
+          "artifact": "📕️xlsx",
+          "scope": "s.stdio.xlsx",
+          "export": "xml-document"
+        }
+      ]
+    },
+    {
+      "scope": "s.stdio.semio",
+      "export": "brep-inference",
+      "id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/brep/inference.json",
+      "schemaPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🔣️.json",
+      "definitions": [
+        {
+          "artifact": "🧿️semio",
+          "scope": "s.stdio.semio",
+          "export": "brep-inference"
+        }
+      ]
+    }
+  ],
+  "contracts": [
+    {
+      "scope": "s.stdio.svg",
+      "schemaPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json"
+    },
+    {
+      "scope": "s.stdio.docx",
+      "schemaPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json"
+    },
+    {
+      "scope": "s.stdio.pptx",
+      "schemaPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json"
+    },
+    {
+      "scope": "s.stdio.xlsx",
+      "schemaPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json"
+    },
+    {
+      "scope": "s.stdio.semio.brep",
+      "schemaPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🔣️.json"
+    }
+  ]
+}

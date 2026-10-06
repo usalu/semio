@@ -1,0 +1,16 @@
+{
+  "exit": 1,
+  "qualifiedOwners": [
+    {
+      "owner": "en1995",
+      "selected": 14,
+      "passed": 14,
+      "seconds": 0.296,
+      "nextestRunId": "32904342-ff47-42d4-af1e-02dafa4da7bb",
+      "outside": 378
+    }
+  ],
+  "otherOwners": "Eleven did not enter tests: selected Cargo preparation ENOENT shared process wasm-build schema JSON",
+  "whole177Qualified": false,
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-norm-twelve-complete-native-after-preparation-repaired.log"
+}

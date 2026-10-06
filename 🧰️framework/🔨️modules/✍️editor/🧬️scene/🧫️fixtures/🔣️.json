@@ -1,0 +1,300 @@
+{
+  "contract": "framework.editor.canonical-scene/v1",
+  "cases": [
+    {
+      "id": "empty-update",
+      "accepted": true,
+      "input": {},
+      "expected": {}
+    },
+    {
+      "id": "unicode-buffer",
+      "accepted": true,
+      "input": {
+        "buffer": "café 日本語 🧰\nsecond"
+      },
+      "expected": {
+        "buffer": "café 日本語 🧰\nsecond"
+      }
+    },
+    {
+      "id": "selection",
+      "accepted": true,
+      "input": {
+        "selection": {
+          "start": 0,
+          "end": 2
+        }
+      },
+      "expected": {
+        "selection": {
+          "start": 0,
+          "end": 2
+        }
+      }
+    },
+    {
+      "id": "all-adornments",
+      "accepted": true,
+      "input": {
+        "buffer": "abc",
+        "selection": {
+          "start": 0,
+          "end": 2
+        },
+        "tokens": [
+          {
+            "start": 0,
+            "end": 1,
+            "class": "keyword"
+          }
+        ],
+        "diagnostics": [
+          {
+            "start": 0,
+            "end": 1,
+            "severity": "error",
+            "message": "x"
+          }
+        ],
+        "placeholders": [
+          {
+            "offset": 0,
+            "label": "?"
+          }
+        ],
+        "occurrences": {
+          "hover": [
+            {
+              "start": 0,
+              "end": 1
+            }
+          ],
+          "selection": [
+            {
+              "start": 1,
+              "end": 2
+            }
+          ]
+        },
+        "extraCarets": [
+          1,
+          2
+        ],
+        "selectableSpans": [
+          {
+            "start": 0,
+            "end": 1,
+            "kind": "atomic"
+          }
+        ],
+        "settings": {
+          "fontPx": 18.0,
+          "lineHeight": 22.0,
+          "showLineNumbers": true,
+          "tabSize": 4
+        },
+        "camera": {
+          "y": 5.0
+        },
+        "overlays": {
+          "deadLineY": 10.0
+        }
+      },
+      "expected": {
+        "buffer": "abc",
+        "selection": {
+          "start": 0,
+          "end": 2
+        },
+        "tokens": [
+          {
+            "start": 0,
+            "end": 1,
+            "class": "keyword"
+          }
+        ],
+        "diagnostics": [
+          {
+            "start": 0,
+            "end": 1,
+            "severity": "error",
+            "message": "x"
+          }
+        ],
+        "placeholders": [
+          {
+            "offset": 0,
+            "label": "?"
+          }
+        ],
+        "occurrences": {
+          "hover": [
+            {
+              "start": 0,
+              "end": 1
+            }
+          ],
+          "selection": [
+            {
+              "start": 1,
+              "end": 2
+            }
+          ]
+        },
+        "extraCarets": [
+          1,
+          2
+        ],
+        "selectableSpans": [
+          {
+            "start": 0,
+            "end": 1,
+            "kind": "atomic"
+          }
+        ],
+        "settings": {
+          "fontPx": 18.0,
+          "lineHeight": 22.0,
+          "showLineNumbers": true,
+          "tabSize": 4
+        },
+        "camera": {
+          "y": 5.0
+        },
+        "overlays": {
+          "deadLineY": 10.0
+        }
+      }
+    },
+    {
+      "id": "hover-clear",
+      "accepted": true,
+      "input": {
+        "hover": {
+          "kind": "clear"
+        }
+      },
+      "expected": {
+        "hover": {
+          "kind": "clear"
+        }
+      }
+    },
+    {
+      "id": "hover-range",
+      "accepted": true,
+      "input": {
+        "hover": {
+          "kind": "range",
+          "start": 1,
+          "end": 2
+        }
+      },
+      "expected": {
+        "hover": {
+          "kind": "range",
+          "start": 1,
+          "end": 2
+        }
+      }
+    },
+    {
+      "id": "old-string-field-refused",
+      "accepted": false,
+      "input": {
+        "selectionJson": "{\"start\":0,\"end\":2}"
+      },
+      "expected": null
+    },
+    {
+      "id": "foreign-root-refused",
+      "accepted": false,
+      "input": {
+        "plugin": "specific"
+      },
+      "expected": null
+    },
+    {
+      "id": "wrong-nested-type-refused",
+      "accepted": false,
+      "input": {
+        "tokens": "[]"
+      },
+      "expected": null
+    },
+    {
+      "id": "foreign-nested-field-refused",
+      "accepted": false,
+      "input": {
+        "selection": {
+          "start": 0,
+          "end": 1,
+          "foreign": true
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "ambiguous-hover-refused",
+      "accepted": false,
+      "input": {
+        "hover": {
+          "kind": "clear",
+          "start": 0
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "fractional-offset-refused",
+      "accepted": false,
+      "input": {
+        "selection": {
+          "start": 0.5,
+          "end": 1
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "partial-settings-normalize",
+      "accepted": true,
+      "input": {
+        "settings": {
+          "fontPx": 18
+        }
+      },
+      "expected": {
+        "settings": {
+          "fontPx": 18.0,
+          "lineHeight": 22.0,
+          "showLineNumbers": true,
+          "tabSize": 2
+        }
+      }
+    },
+    {
+      "id": "absent-diagnostic-severity",
+      "accepted": true,
+      "input": {
+        "diagnostics": [
+          {
+            "start": 0,
+            "end": 1,
+            "message": "warning"
+          }
+        ]
+      },
+      "expected": {
+        "diagnostics": [
+          {
+            "start": 0,
+            "end": 1,
+            "message": "warning"
+          }
+        ]
+      }
+    }
+  ]
+}

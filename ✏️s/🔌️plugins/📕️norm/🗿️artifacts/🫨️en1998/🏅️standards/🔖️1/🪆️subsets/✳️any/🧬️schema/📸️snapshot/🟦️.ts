@@ -187,5 +187,3 @@ export const parseEn1998Tower: NormWireReader<En1998Tower> = normWireObject<En19
 export const parseEn1998VariableAction: NormWireReader<En1998VariableAction> = normWireObject<En1998VariableAction>({ id: normWireRequired(normWireString), category: normWireRequired(normWireString), qkN: normWireRequired(normWireNumber) });
 export const parseDeSeismicZone: NormWireReader<DeSeismicZone> = normWireLiteral("zone0", "zone1", "zone2", "zone3");
 export const parseDeGroundCombo: NormWireReader<DeGroundCombo> = normWireLiteral("A-R", "B-R", "C-R", "B-T", "C-T", "C-S");
-
-export * from "./🪶️sqlite/🟦️.ts";

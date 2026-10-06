@@ -17,7 +17,7 @@ macro_rules! ui_typed_field_catalog {
         $visitor!(ButtonProps { 0 => icon: UiText, 1 => label: Label });
         $visitor!(SeparatorProps {});
         $visitor!(InputProps { 0 => kind: InputKind, 1 => value: UiText, 2 => placeholder: Option<Label>, 3 => commit: Option<UiText>, 4 => min: Option<f64>, 5 => max: Option<f64>, 6 => step: Option<f64>, 7 => accept: Option<UiText>, 8 => precision: Option<u16>, 9 => snaps: UiFixedList<f64>, 10 => display_factor: Option<f64>, 11 => limits: Option<UiNumberLimits>, 12 => draft_target: Option<UiText>, 13 => publication_revision: Option<UiPublicationRevision> });
-        $visitor!(SelectProps { 0 => value: UiText, 1 => items: UiFixedList<SelectItem>, 2 => placeholder: Option<Label> });
+        $visitor!(SelectProps { 0 => value: UiText, 1 => items: UiFixedList<SelectItem>, 2 => placeholder: Option<Label>, 3 => appearance: SelectAppearance });
         $visitor!(ToggleProps { 0 => on: bool, 1 => icon: UiText, 2 => text: Option<Label>, 3 => appearance: ToggleAppearance });
         $visitor!(KeyValueListProps { 0 => entries: UiFixedList<KeyValueEntry> });
         $visitor!(UiNumberBound { 0 => value: f64, 1 => exclusive: bool, 2 => refusal: Option<Label> });

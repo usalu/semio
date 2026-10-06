@@ -1,0 +1,49 @@
+{
+  "qualification": "Read-only source readiness; no native execution or full-field claim. Minimum composition tranche, not universal denominator.",
+  "owner": {
+    "cargo": "semio-hub-space",
+    "manifest": "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+    "test": "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🪐️space/🧪️tests/🔬️interactive-job-catalog/🦀️.rs",
+    "module": "interactive_job_catalog_tests",
+    "nx": "@semio-tech/space-plugin:interactive-job-catalog-native-check",
+    "existingSelector": "interactive_job_catalog_tests::plugin_assembly_succeeds_and_registers_all_five_surfaces",
+    "launchLine": 35170
+  },
+  "builder": {
+    "path": "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🪐️space/🦀️.rs",
+    "line": 227,
+    "signature": "pub fn plugin() -> Result<Plugin<SpaceApps>, PluginAssemblyError>",
+    "members": [
+      "semio_s_artifact_space_home::declaration() async resolve_ready",
+      "semio_s_artifact_space_space::declaration() sync"
+    ],
+    "foreignCodec": "engine::space::SpaceApp at OS_SPACE_SCHEMA; separate framework-owned document authority"
+  },
+  "minimumOwners": [
+    {
+      "kind": "s.space.home",
+      "schema": "s.home",
+      "snapshot": "semio_s_artifact_space_home::SHomeSnapshot",
+      "dialectConstant": "HOME_DIALECT"
+    },
+    {
+      "kind": "s.space.space",
+      "schema": "s.space",
+      "snapshot": "semio_s_artifact_space_space::SSpaceSnapshot",
+      "dialectConstant": "SPACE_INDEX_DIALECT"
+    }
+  ],
+  "excludedDependencyOnly": [
+    "Draw Drawing",
+    "Writer Writer",
+    "Infinite DAG without explicit public registration",
+    "framework Space without explicit public registration"
+  ],
+  "secondTranche": {
+    "cargo": "semio-hub-flow",
+    "builder": "Plugin<FlowApps>",
+    "published": "plugin Flow only; Playbook linked but not automatically a member",
+    "preserve": "plugin Flow and framework FlowHost distinct TypeIds; never schema-key deduplicate"
+  },
+  "gap": "No existing central Hub owning package links every complementary builder or Chart. Additional composition tranches or explicit first-party dependency additions required for broader demand."
+}

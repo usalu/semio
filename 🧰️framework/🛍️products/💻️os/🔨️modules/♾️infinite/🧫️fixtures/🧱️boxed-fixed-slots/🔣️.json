@@ -1,0 +1,29 @@
+{
+  "law": "Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.",
+  "provenance": ".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md",
+  "boundedThreadStackBytes": 1048576,
+  "workerPoolStackBytes": 2097152,
+  "conversionThresholdBytes": 65536,
+  "tables": [
+    {
+      "guard": "infinite::canvas",
+      "crate": "semio-framework-os-infinite",
+      "owner": "canvas::renderer::OpaqueSceneRetirementRegistry",
+      "capacityConstant": "OPAQUE_SCENE_RETIREMENT_CAPACITY",
+      "capacity": 1024,
+      "elementType": "OpaqueSceneRetirementSlot",
+      "elementSizeBytes": 312,
+      "ownerSizeBytes": 16
+    },
+    {
+      "guard": "infinite::world",
+      "crate": "semio-framework-os-infinite",
+      "owner": "world::WorldInteractionObjectRegistry",
+      "capacityConstant": "WORLD_INTERACTION_OBJECT_CAPACITY",
+      "capacity": 1024,
+      "elementType": "Option<WorldInteractionObjectSlot>",
+      "elementSizeBytes": 528,
+      "ownerSizeBytes": 168
+    }
+  ]
+}

@@ -1,0 +1,254 @@
+[
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": 1774,
+    "beforeContext": "lt<store::os_io::IoPayload,ValueError>{crate::text::schema::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mu",
+    "currentContext": "lt<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::text::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::"
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "beforeMatches": true,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/📏️native/🦀️.rs",
+    "beforeMatches": true,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "audio",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": 1487,
+    "beforeContext": "lt<store::os_io::IoPayload,ValueError>{crate::audio::schema::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&m",
+    "currentContext": "lt<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::audio::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store:"
+  },
+  {
+    "family": "audio",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "beforeMatches": true,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "audio",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "audio",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "video",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": 1458,
+    "beforeContext": "lt<store::os_io::IoPayload,ValueError>{crate::video::schema::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&m",
+    "currentContext": "lt<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::video::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store:"
+  },
+  {
+    "family": "video",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "beforeMatches": true,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "video",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "video",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "object",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": 2868,
+    "beforeContext": "lt<store::os_io::IoPayload,ValueError>{crate::object::schema::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&",
+    "currentContext": "lt<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::object::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store"
+  },
+  {
+    "family": "object",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "beforeMatches": true,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "object",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "object",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": 679,
+    "beforeContext": "et};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned;\n\nfn number(value: usize) -> Result<i64,ValueError> { i64::try_from(value).map_err(|error|ValueError::new(Va",
+    "currentContext": "et};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;\n\nfn number(value: usize) -> Result<i64,ValueError> { i64::try_from(value).map_err(|error|ValueError::ne"
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": 262,
+    "beforeContext": "und;\nuse crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned;\nuse crate::table::schema::snapshot::{SemioTableSnapshot,SemioTableColumn,SemioTableRow,SemioTableCellKind};",
+    "currentContext": "und;\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;\nuse crate::table::schema::snapshot::{SemioTableSnapshot,SemioTableColumn,SemioTableRow,SemioTableCellKi"
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": 383,
+    "beforeContext": "54};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned;\nuse crate::graph::schema::snapshot::{SemioGraphSnapshot,SemioGraphNode,SemioGraphEdge,SemioGraphPort,SemioG",
+    "currentContext": "54};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;\nuse crate::graph::schema::snapshot::{SemioGraphSnapshot,SemioGraphNode,SemioGraphEdge,SemioGraphPort,Se"
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "beforeMatches": true,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "beforeMatches": true,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "beforeMatches": false,
+    "afterMatches": false,
+    "firstDifferentChar": -1,
+    "beforeContext": null,
+    "currentContext": null
+  }
+]

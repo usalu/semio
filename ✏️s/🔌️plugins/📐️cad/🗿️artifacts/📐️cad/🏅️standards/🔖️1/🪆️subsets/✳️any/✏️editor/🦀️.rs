@@ -19,18 +19,21 @@ use crate::editor::cad::commands::utility::set_dislocate_option;
 use crate::editor::cad::config::{cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
-use crate::editor::cad::modes::edit::tools::transform::{CadToolEntry, CadTransformRecord};
+use crate::editor::cad::modes::edit::tools::transform::{cad_child_leaves_emit, cad_pane_models, CadPaneModels, CadToolEntry, CadToolLeaf, CadTransformRecord};
 use crate::editor::cad::modes::edit::windows::transient::{self as window_transient, CadWorldWindowTransient};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::panels::{catalogue, document, inspection};
 use crate::editor::cad::terminology::{cad_is_de_locale, cad_labels};
 use crate::op::CadMutation;
+use crate::standards::v1::subsets::any::io::geometry_import::{cad_object_from_model_element, model_element_from_cad_object, objects_from_model_snapshot, CadObject, CAD_OBJECT_PSET};
 use crate::standards::v1::subsets::any::io::{export_solids_as, CadSolidExport, CAD_SOLID_EXPORT_DIALECT_STEP};
 use crate::standards::v1::subsets::any::schema::inferences::{
     cad_brep_kernel, cad_camera_projection_config, ensure_object_solid_handle, forest_play_scene, next_cad_id, CAD_EXAMPLE_FOREST_LEFT, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE,
     CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
-use crate::{artifact_kind, CadCamera, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
+use crate::{artifact_kind, CadCamera, CadComposedPanes, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::{insert_element::InsertElement, remove_element::RemoveElement, set_element::SetElement, SemioModelMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement;
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -50,6 +53,7 @@ use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ChildContentView;
 use semio_framework_plugin::CommandDefinition;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::ContextMenuItemSpec;
@@ -340,16 +344,23 @@ pub fn cad_pane_camera_runtime_mut(runtime: &mut CadPlayRuntime, pane: CadPaneId
     }
 }
 
-/// 🎛️ Ephemeral read/render view assembled per call from the store's materialized
-/// `CadSnapshot` projection and the app's `CadPlayRuntime` view-state. Replaces the old persisted play
-/// envelope: its embedded history/undo stacks are now owned by the wrapping `VcsArtifactApp`'s
-/// `ArtifactStore`, and its runtime view-state lives directly on the `CadPlayApp` struct.
+/// 🎛️ Ephemeral read/render view assembled per call from the store's `CadSnapshot` projection, the panes its composed
+/// model children hold now ([`CadComposedPanes`], design §20.15) and the app's `CadPlayRuntime` view-state. Its history
+/// lives in the wrapping `VcsArtifactApp`'s stores, its runtime view-state in config and the window transient.
 pub struct CadPlayView {
     pub document: CadSnapshot,
+    pub(crate) panes: CadComposedPanes,
     pub runtime: CadPlayRuntime,
     /// 🕹️ The live `"cad"` domain at this render — empty on the interaction-less `render` path
     /// (exports, tests) and on every `handle`-side view.
     pub interaction: CadInteractionSnapshot,
+}
+
+impl CadPlayView {
+    /// 🎛️ The view over `document` composed with its live `children`.
+    pub fn of(document: &CadSnapshot, children: &ChildContentView, runtime: CadPlayRuntime, interaction: CadInteractionSnapshot) -> Self {
+        Self { document: document.clone(), panes: CadComposedPanes::compose(document, children), runtime, interaction }
+    }
 }
 
 pub fn cad_action(action: &str, args: Option<UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<UiValue>)> {
@@ -524,84 +535,51 @@ pub fn publish_engagement(runtime: &CadPlayRuntime, ctx: &mut CadDispatchCtx) {
 //#endregion 🔖️Runtime
 
 //#region 🔖️Helpers
-/// 🪆️ THE RE-MATERIALIZATION SEAM, app side. An object gesture reads the addressed pane's live
-/// working objects out of its composed `s.stdio.semio.model` child's local materialization, decides
-/// the next object list, and emits ONE parent op per touched pane; that op's diff re-mints the pane's
-/// content-addressed child handle with the updated `CadWorkingScene` attached, so the very next
-/// render of that pane tessellates the edit and the gumball no longer snaps back. Undo/redo needs
-/// nothing new: the ops are ordinary in-history `CadMutation`s with real inverses.
-pub(crate) fn cad_pane_objects(document: &CadSnapshot, pane: CadPaneId) -> Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject> {
-    crate::cad_pane_local_scene(document, pane).map(|scene| crate::cad_scene_pane_objects(&scene, pane).to_vec()).unwrap_or_default()
+/// 🧱️ `pane`'s objects read losslessly out of its composed model child — what every object writer decides against; a
+/// pane without a composed model has none.
+pub(crate) fn cad_model_objects(models: &CadPaneModels, pane: CadPaneId) -> Vec<CadObject> {
+    models.model(pane).map(objects_from_model_snapshot).unwrap_or_default()
 }
 
-/// 🔎️ The pane whose materialized working scene holds `object_id` — object ids are unique across the
-/// document (they are the `"cad"` domain's own target ids), so the first pane that owns one wins.
-pub fn cad_pane_of_object(document: &CadSnapshot, object_id: &str) -> Option<CadPaneId> {
-    CadPaneId::all().into_iter().find(|pane| cad_pane_objects(document, *pane).iter().any(|object| object.id == object_id))
+/// 🆕️ The entry that lands `object` in `pane`'s model child: one `insert-element` the transform tool yields.
+pub fn create_object_entry(pane: CadPaneId, object: &CadObject) -> CadToolEntry {
+    CadToolEntry::Create { pane, element: model_element_from_cad_object(object) }
 }
 
-/// 🔎️ `ids` grouped by the pane that owns them — one parent op per pane, never one per object.
-pub(crate) fn cad_objects_by_pane(document: &CadSnapshot, ids: &[String]) -> Vec<(CadPaneId, Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject>)> {
-    CadPaneId::all()
-        .into_iter()
-        .filter_map(|pane| {
-            let owned: Vec<_> = cad_pane_objects(document, pane).into_iter().filter(|object| ids.iter().any(|id| id == &object.id)).collect();
-            (!owned.is_empty()).then_some((pane, owned))
-        })
-        .collect()
+/// 📄️ `source` under a fresh id and a `copy` label, offset by `offset` so the copy is visibly its own instance.
+pub(crate) fn cad_object_copy(source: &CadObject, offset: [f64; 3]) -> CadObject {
+    CadObject { id: next_cad_id("object"), label: format!("{} copy", source.label), origin: [source.origin[0] + offset[0], source.origin[1] + offset[1], source.origin[2] + offset[2]], ..source.clone() }
 }
 
-/// 🆕️ `addObject`'s / `duplicateObject`'s op: one `create-object` appended to `pane`.
-pub fn create_object_mutations(document: &CadSnapshot, pane: CadPaneId, object: crate::standards::v1::subsets::any::io::geometry_import::CadObject) -> Vec<CadMutation> {
-    let index = cad_pane_objects(document, pane).len() as u32;
-    vec![CadMutation::CreateObject(crate::mutations::create_object::CreateObject { pane, index, object: crate::mutations::cad_object_spec_of(&object), primitives: crate::mutations::cad_object_primitives_of(&object) })]
+/// ❌️ `deleteObject`'s leaf: one `remove-element` on the pane child holding `object_id` — an id no pane holds produces
+/// nothing rather than a fabricated target.
+pub fn delete_object_leaves(models: &CadPaneModels, object_id: &str) -> Vec<CadToolLeaf> {
+    models.pane_of(object_id).map_or_else(Vec::new, |pane| vec![CadToolLeaf { pane, leaf: SemioModelMutation::RemoveElement(RemoveElement { id: object_id.to_string() }) }])
 }
 
-/// ❌️ `deleteObject`'s op — an id no pane owns produces nothing rather than a fabricated target.
-pub fn delete_object_mutations(document: &CadSnapshot, object_id: &str) -> Vec<CadMutation> {
-    cad_pane_of_object(document, object_id).map_or_else(Vec::new, |pane| vec![CadMutation::DeleteObject(crate::mutations::delete_object::DeleteObject { pane, object_id: object_id.to_string() })])
-}
-
-/// 📄️ `duplicateObject`'s ops: the source object re-created under a fresh id, offset so the copy is
-/// visibly its own instance.
-pub fn duplicate_object_mutations(document: &CadSnapshot, object_id: &str) -> Vec<CadMutation> {
-    let Some(pane) = cad_pane_of_object(document, object_id) else {
+/// 📄️ `duplicateObject`'s entry: the source object re-inserted in its own pane as [`cad_object_copy`].
+pub fn duplicate_object_entries(models: &CadPaneModels, object_id: &str) -> Vec<CadToolEntry> {
+    let Some(pane) = models.pane_of(object_id) else {
         return Vec::new();
     };
-    let Some(source) = cad_pane_objects(document, pane).into_iter().find(|object| object.id == object_id) else {
-        return Vec::new();
-    };
-    let mut copy = source.clone();
-    copy.id = next_cad_id("object");
-    copy.label = format!("{} copy", source.label);
-    copy.origin = [source.origin[0] + CAD_DUPLICATE_OFFSET, source.origin[1], source.origin[2]];
-    create_object_mutations(document, pane, copy)
+    cad_model_objects(models, pane).iter().find(|object| object.id == object_id).map_or_else(Vec::new, |source| vec![create_object_entry(pane, &cad_object_copy(source, [CAD_DUPLICATE_OFFSET, 0.0, 0.0]))])
 }
 
 /// 📄️ World-space offset a duplicate is placed at so it never hides inside its source.
 pub const CAD_DUPLICATE_OFFSET: f64 = 1.0;
 
-/// 🔁️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3 retired `ReplacePaneObjects`, and
-/// the per-pane re-materialization seam that replaces it landed on 2026-09-16 (see
-/// [`crate::cad_pane_rematerialized_child`]). Re-deriving building/energy/structure typologies from shape
-/// geometry is expressible on it as a `create-object` run against the target pane, but the derivation
-/// RULES (which typology each source solid becomes, how openings and storeys map) are not written
-/// anywhere yet — that is a modelling decision, not a missing seam. Still a documented no-op, for a
-/// different reason than before.
-pub fn apply_transformation_mutations(_document: &CadSnapshot, _qid: &str) -> Vec<CadMutation> {
+/// 🔁️ Re-deriving building/energy/structure typologies from shape geometry is expressible as `insert-element` entries
+/// on the target pane's model child, but the derivation RULES (which typology each source solid becomes, how openings and
+/// storeys map) are not written anywhere yet — a modelling decision, not a missing seam. Yields nothing until they are.
+pub fn apply_transformation_entries(_models: &CadPaneModels, _qid: &str) -> Vec<CadToolEntry> {
     Vec::new()
 }
 
-/// 📦️ The pane's visible objects as world-space kernel solids, read through the composed pane-model child's in-process
-/// seam (`edit::cad_pane_working_scene`: the child's materialized working scene, or the bundled catalogue for a
-/// wire-loaded example) and built as the viewport builds them
-/// ([`crate::standards::v1::subsets::any::schema::inferences::pane_world_solids`]).
+/// 📦️ The pane's visible objects as world-space kernel solids, read from the composed pane ([`CadComposedPanes`]) and
+/// built as the viewport builds them ([`crate::standards::v1::subsets::any::schema::inferences::pane_world_solids`]).
 pub fn collect_pane_solids(kernel: &mut Brep, envelope: &CadPlayView, pane: CadPaneId) -> Vec<GeometryHandle> {
-    let Some(scene) = crate::editor::cad::modes::edit::cad_pane_working_scene(&envelope.document, pane) else {
-        return Vec::new();
-    };
-    let (objects, geometry) = crate::editor::cad::modes::edit::cad_pane_working_objects(&scene, pane);
-    crate::standards::v1::subsets::any::schema::inferences::pane_world_solids(kernel, objects, geometry)
+    let composed = envelope.panes.pane(pane);
+    crate::standards::v1::subsets::any::schema::inferences::pane_world_solids(kernel, &composed.objects, composed.geometry(pane))
 }
 
 pub fn collect_modelspace_solids(kernel: &mut Brep, envelope: &CadPlayView) -> Vec<GeometryHandle> {
@@ -683,18 +661,6 @@ pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
     Effect::LoadDocument { pack, spr }
 }
 
-/// 🎯️ Builds the whole-value-field semantic mutation for one object addressed by `pane`/`object_id`
-/// (label/typology/hidden/locked) — the counterpart of the axis-addressed spatial fields
-/// `patch_objects_mutations` below resolves separately.
-/// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `rename-object`/
-/// `change-object-typology`/`change-object-visible`/`change-object-locked` are retired — object
-/// fields live inside composed `s.stdio.semio.model` CHILD documents now, whose own mutations are
-/// dispatched against that child directly (no seam for that from here yet; see
-/// `patch_objects_mutations`'s doc comment). Documented no-op.
-pub fn object_field_mutation(_pane: CadPaneId, _object_id: &str, _field: &str, _value: Option<&semio_framework_value::DslValue>) -> Option<CadMutation> {
-    None
-}
-
 pub fn resolve_number_edit(current: f64, value: Option<&semio_framework_value::DslValue>, delta: Option<&semio_framework_value::DslValue>) -> Option<f64> {
     if let Some(absolute) = value.and_then(semio_framework_value::DslValue::as_f64) {
         return Some(absolute);
@@ -729,83 +695,71 @@ pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
     [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
 }
 
-/// 🎯️ Builds the semantic mutation(s) that apply `field`'s edit across `object_ids`.
-///
-/// 🪆️ Pose fields (`origin.<axis>`, `scale.<axis>`, `orientation.<axis>`) read each object's own
-/// current component, so `value` (absolute) or `delta` (relative) applies per object and preserves
-/// the other axes across a multi-select; they become one `move-objects`/`scale-objects`/
-/// `rotate-objects` per touched pane. Whole-value fields (`label`, `typology`, `visible`/`hidden`,
-/// `locked`) have no narrow verb of their own — the object is RE-DECLARED at its exact slot as a
-/// `delete-object` + `create-object` pair, which lands as one gesture (one `Emit`, one undo step)
-/// and inverts correctly because each half carries its own inverse.
-pub fn patch_objects_mutations(document: &CadSnapshot, object_ids: &[String], field: &str, value: Option<&semio_framework_value::DslValue>, delta: Option<&semio_framework_value::DslValue>) -> Vec<CadMutation> {
-    let mut mutations = Vec::new();
-    for (pane, objects) in cad_objects_by_pane(document, object_ids) {
-        if field.starts_with("origin.") {
-            let Some(axis) = axis3_index(field, "origin") else { continue };
-            let placements: Vec<crate::mutations::CadObjectOrigin> = objects
-                .iter()
-                .filter_map(|object| {
-                    let mut origin = object.origin;
-                    origin[axis] = resolve_number_edit(origin[axis], value, delta)?;
-                    Some(crate::mutations::CadObjectOrigin { object_id: object.id.clone(), new_origin: origin })
-                })
-                .collect();
-            if !placements.is_empty() {
-                mutations.push(CadMutation::MoveObjects(crate::mutations::move_objects::MoveObjects { pane, placements }));
-            }
-        } else if field.starts_with("scale.") {
-            let Some(axis) = axis3_index(field, "scale") else { continue };
-            let placements: Vec<crate::mutations::CadObjectScale> = objects
-                .iter()
-                .filter_map(|object| {
-                    let mut scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
-                    scale[axis] = resolve_number_edit(scale[axis], value, delta)?;
-                    Some(crate::mutations::CadObjectScale { new_scale: scale, object_id: object.id.clone() })
-                })
-                .collect();
-            if !placements.is_empty() {
-                mutations.push(CadMutation::ScaleObjects(crate::mutations::scale_objects::ScaleObjects { pane, placements }));
-            }
-        } else if field.starts_with("orientation.") {
-            let Some(axis) = axis4_index(field, "orientation") else { continue };
-            let placements: Vec<crate::mutations::CadObjectOrientation> = objects
-                .iter()
-                .filter_map(|object| {
-                    let mut orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-                    orientation[axis] = resolve_number_edit(orientation[axis], value, delta)?;
-                    Some(crate::mutations::CadObjectOrientation { new_orientation: quat_normalize(orientation), object_id: object.id.clone() })
-                })
-                .collect();
-            if !placements.is_empty() {
-                mutations.push(CadMutation::RotateObjects(crate::mutations::rotate_objects::RotateObjects { pane, placements }));
-            }
-        } else {
-            let live = cad_pane_objects(document, pane);
-            for object in &objects {
-                let Some(index) = live.iter().position(|candidate| candidate.id == object.id) else { continue };
-                let mut next = object.clone();
-                match field {
-                    "label" => next.label = value.and_then(semio_framework_value::DslValue::as_str).map(str::to_string).unwrap_or(next.label),
-                    "typology" => next.typology = value.and_then(semio_framework_value::DslValue::as_str).map(str::to_string).unwrap_or(next.typology),
-                    "visible" => next.visible = value.and_then(semio_framework_value::DslValue::as_bool).unwrap_or(next.visible),
-                    "hidden" => next.visible = value.and_then(semio_framework_value::DslValue::as_bool).map_or(next.visible, |hidden| !hidden),
-                    "locked" => next.locked = value.and_then(semio_framework_value::DslValue::as_bool).unwrap_or(next.locked),
-                    _ => continue,
-                }
-                if next == *object {
-                    continue;
-                }
-                mutations.push(CadMutation::DeleteObject(crate::mutations::delete_object::DeleteObject { pane, object_id: object.id.clone() }));
-                mutations.push(CadMutation::CreateObject(crate::mutations::create_object::CreateObject { pane, index: index as u32, object: crate::mutations::cad_object_spec_of(&next), primitives: crate::mutations::cad_object_primitives_of(&next) }));
-            }
+/// 🎛️ The `set-element` that brings `element` to `next`'s authoring state: only the facets that differ — the class for a
+/// typology, the placement for an origin/orientation/scale, the [`CAD_OBJECT_PSET`] property set (replaced in place,
+/// every foreign set kept) for a label/visibility/lock — `None` when nothing differs.
+pub(crate) fn cad_set_element_leaf(element: &SemioModelElement, next: &CadObject) -> Option<SemioModelMutation> {
+    let current = cad_object_from_model_element(element);
+    let target = model_element_from_cad_object(next);
+    let placed = next.origin != current.origin || next.orientation != current.orientation || next.scale != current.scale;
+    let authored = placed || next.label != current.label || next.visible != current.visible || next.locked != current.locked;
+    let psets = authored.then(|| {
+        let set = target.psets.iter().find(|set| set.name == CAD_OBJECT_PSET).cloned();
+        let mut psets = element.psets.clone();
+        match (psets.iter_mut().find(|candidate| candidate.name == CAD_OBJECT_PSET), set) {
+            (Some(slot), Some(set)) => *slot = set,
+            (None, Some(set)) => psets.push(set),
+            (_, None) => {}
         }
-    }
-    mutations
+        psets
+    });
+    let leaf = SetElement { id: element.id.clone(), class: (next.typology != current.typology).then_some(target.class), placement: placed.then_some(target.placement), geometry: None, spatial_id: None, psets: psets.filter(|psets| *psets != element.psets) };
+    (leaf.class.is_some() || leaf.placement.is_some() || leaf.psets.is_some()).then_some(SemioModelMutation::SetElement(leaf))
 }
 
-pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> crate::standards::v1::subsets::any::io::geometry_import::CadObject {
-    use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
+/// 🎯️ The child leaves that apply `field`'s edit across `object_ids`: one `set-element` per object that changes, on the
+/// pane child holding it. Pose fields (`origin.<axis>`, `scale.<axis>`, `orientation.<axis>`) read each object's own
+/// current component, so `value` (absolute) or `delta` (relative) applies per object and keeps the other axes across a
+/// multi-select; whole-value fields (`label`, `typology`, `visible`/`hidden`, `locked`) replace that facet. An inspector
+/// origin DELTA never reaches here: it is the transform tool's relative `drag-elements`.
+pub fn patch_objects_leaves(models: &CadPaneModels, object_ids: &[String], field: &str, value: Option<&semio_framework_value::DslValue>, delta: Option<&semio_framework_value::DslValue>) -> Vec<CadToolLeaf> {
+    let patched = |object: &CadObject| -> Option<CadObject> {
+        let mut next = object.clone();
+        if let Some(axis) = axis3_index(field, "origin") {
+            next.origin[axis] = resolve_number_edit(object.origin[axis], value, delta)?;
+        } else if let Some(axis) = axis3_index(field, "scale") {
+            let mut scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
+            scale[axis] = resolve_number_edit(scale[axis], value, delta)?;
+            next.scale = Some(scale);
+        } else if let Some(axis) = axis4_index(field, "orientation") {
+            let mut orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+            orientation[axis] = resolve_number_edit(orientation[axis], value, delta)?;
+            next.orientation = Some(quat_normalize(orientation));
+        } else {
+            match field {
+                "label" => next.label = value.and_then(semio_framework_value::DslValue::as_str)?.to_string(),
+                "typology" => next.typology = value.and_then(semio_framework_value::DslValue::as_str)?.to_string(),
+                "visible" => next.visible = value.and_then(semio_framework_value::DslValue::as_bool)?,
+                "hidden" => next.visible = !value.and_then(semio_framework_value::DslValue::as_bool)?,
+                "locked" => next.locked = value.and_then(semio_framework_value::DslValue::as_bool)?,
+                _ => return None,
+            }
+        }
+        Some(next)
+    };
+    models
+        .0
+        .iter()
+        .flat_map(|(pane, _, model)| {
+            model.elements.iter().filter(|element| object_ids.contains(&element.id)).filter_map(move |element| {
+                let next = patched(&cad_object_from_model_element(element))?;
+                Some(CadToolLeaf { pane: *pane, leaf: cad_set_element_leaf(element, &next)? })
+            })
+        })
+        .collect()
+}
+
+pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> CadObject {
     let label = TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == typology).map_or("Object", |entry| entry.label);
     let extent = match typology {
         t if t.contains("column") => Some([0.5, 0.5, 3.0]),
@@ -834,52 +788,37 @@ pub(crate) fn make_object_for_typology(typology: &str, label_count: usize, pane:
 }
 
 /// 🧭️ Commits `session` if it satisfies `can_commit`: clears the session runtime state and answers what the
-/// transform tool yields for it — a construction's `create-object`s, a copy's duplicated objects, or the parametric
-/// transform of `transform.move`/`rotate`/`scale*` — as ONE tool request (empty when no commit happened). Used by both
-/// the direct-event and keyed-transition REPL paths in `engagement_submit_entries` (a state reached via either path can
-/// be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed transition).
-pub fn try_commit_session_entries(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadToolEntry> {
+/// transform tool yields for it on the panes' composed `models` — a construction's created elements, a copy's duplicated
+/// objects, or the relative transform of `transform.move`/`rotate`/`scale*` — as ONE tool request (empty when no commit
+/// happened). Used by both the direct-event and keyed-transition REPL paths in `engagement_submit_entries` (a state
+/// reached via either path can be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed transition).
+pub fn try_commit_session_entries(models: &CadPaneModels, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementScratch) -> Vec<CadToolEntry> {
     if !can_commit(session) {
         return Vec::new();
     }
     let mut kernel = cad_brep_kernel();
-    let label_count = cad_pane_objects(document, session.pane).len();
+    let label_count = models.model(session.pane).map_or(0, |model| model.elements.len());
     let outcome = interaction::commit_session(&mut kernel, session, label_count, next_cad_id);
     let interaction_id = session.interaction_id.clone();
     let pane = if session.pane == pane { pane } else { session.pane };
     runtime.engagement_input.clear();
     runtime.last_finalized_interaction_id = Some(interaction_id.clone());
     runtime.engagement_session = None;
-    let created = |snapshot: &mut CadSnapshot, pane: CadPaneId, object: crate::standards::v1::subsets::any::io::geometry_import::CadObject| {
-        let created = create_object_mutations(snapshot, pane, object);
-        for op in &created {
-            let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(op, snapshot);
-            if let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), snapshot) {
-                *snapshot = next;
-            }
-        }
-        created.into_iter().map(CadToolEntry::Leaf)
-    };
     let (entries, step): (Vec<CadToolEntry>, String) = match outcome {
         Some(interaction::CommitOutcome::Objects(objects)) => {
             let count = objects.len();
-            let mut snapshot = document.clone();
-            let entries = objects.into_iter().flat_map(|object| created(&mut snapshot, pane, object).collect::<Vec<_>>()).collect();
-            (entries, format!("Committed {count} object(s)"))
+            (objects.iter().map(|object| create_object_entry(pane, object)).collect(), format!("Committed {count} object(s)"))
         }
         Some(interaction::CommitOutcome::Move { targets, delta }) => (vec![CadToolEntry::Transform(CadTransformRecord::drag(targets, delta))], "Moved".to_string()),
         Some(interaction::CommitOutcome::Copy { targets, delta }) => {
-            let mut snapshot = document.clone();
-            let mut entries = Vec::new();
-            for target in &targets {
-                let Some(source_pane) = cad_pane_of_object(&snapshot, target) else { continue };
-                let Some(source) = cad_pane_objects(&snapshot, source_pane).into_iter().find(|object| &object.id == target) else { continue };
-                let mut copy = source.clone();
-                copy.id = next_cad_id("object");
-                copy.label = format!("{} copy", source.label);
-                copy.origin = [source.origin[0] + delta[0], source.origin[1] + delta[1], source.origin[2] + delta[2]];
-                entries.extend(created(&mut snapshot, source_pane, copy));
-            }
+            let entries = targets
+                .iter()
+                .filter_map(|target| {
+                    let source_pane = models.pane_of(target)?;
+                    let source = cad_model_objects(models, source_pane).into_iter().find(|object| &object.id == target)?;
+                    Some(create_object_entry(source_pane, &cad_object_copy(&source, delta)))
+                })
+                .collect();
             (entries, "Copied".to_string())
         }
         Some(interaction::CommitOutcome::Rotate { targets, axis, angle }) => (vec![CadToolEntry::Transform(CadTransformRecord::rotate(targets, axis, angle))], "Rotated".to_string()),
@@ -892,8 +831,8 @@ pub fn try_commit_session_entries(document: &CadSnapshot, runtime: &mut CadPlayR
 }
 
 /// ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
-/// session state and returning the transform-tool entries its commit yields (empty without one).
-pub fn engagement_submit_entries(document: &CadSnapshot, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadToolEntry> {
+/// session state and returning the transform-tool entries its commit yields on `models` (empty without one).
+pub fn engagement_submit_entries(models: &CadPaneModels, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadToolEntry> {
     let input = runtime.engagement_input.trim().to_string();
     if input.is_empty() {
         // ⏎️ An empty line during a session is the shell's Enter/Space: it is the state's own
@@ -903,7 +842,7 @@ pub fn engagement_submit_entries(document: &CadSnapshot, runtime: &mut CadPlayRu
             if apply_event(session, "confirm", None) {
                 runtime.engagement_step = session.state.clone();
                 let session_snapshot = session.clone();
-                return try_commit_session_entries(document, runtime, pane, &session_snapshot);
+                return try_commit_session_entries(models, runtime, pane, &session_snapshot);
             }
             runtime.engagement_step = session.state.clone();
             return Vec::new();
@@ -924,14 +863,14 @@ pub fn engagement_submit_entries(document: &CadSnapshot, runtime: &mut CadPlayRu
                 // prompt) must not linger as the published line, or the shell's next Enter re-submits it.
                 runtime.engagement_input.clear();
                 let session_snapshot = session.clone();
-                return try_commit_session_entries(document, runtime, pane, &session_snapshot);
+                return try_commit_session_entries(models, runtime, pane, &session_snapshot);
             }
             for transition in keyed_transitions(session) {
                 if (transition.key.eq_ignore_ascii_case(&input) || transition.event_kind.eq_ignore_ascii_case(&input)) && apply_event(session, &transition.event_kind, None) {
                     runtime.engagement_step = session.state.clone();
                     runtime.engagement_input.clear();
                     let session_snapshot = session.clone();
-                    return try_commit_session_entries(document, runtime, pane, &session_snapshot);
+                    return try_commit_session_entries(models, runtime, pane, &session_snapshot);
                 }
             }
         } else if let Some(entry) = resolve_interaction_key(&event_kind, model_definition_id) {
@@ -1225,7 +1164,7 @@ impl CadPlayApp {
     /// 🪟️ The one window-chrome implementation both trait entry points share — `interaction` is the
     /// live `"cad"` domain for the request-context twin and empty for the interaction-less one.
     fn window_engagements_body(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> HashMap<String, WindowEngagement> {
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg, transient), interaction };
+        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, transient), interaction);
         let labels = cad_labels(view_state);
         HashMap::from([
             (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels)),
@@ -1238,7 +1177,7 @@ impl CadPlayApp {
     /// 🖼️ The one render implementation both trait entry points share.
     fn render_body(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: runtime_of(cfg, transient), interaction };
+        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, transient), interaction);
         let labels = cad_labels(view_state);
         let window_kind_id = match body_key {
             shape::BODY_KEY => shape::WINDOW_KIND_ID,
@@ -1267,9 +1206,9 @@ impl CadPlayApp {
 }
 
 //#region 🧵️RetainedCommands
-// 🤝️ `engagementSubmit`/`engagementPossibleSelect`/`worldPointerDown` route through the artifact
-// lane: an interaction step that reaches its commit state lands objects (Artifact) besides the
-// addressed window's engagement transient (WindowTransient, design §17.4).
+// 🤝️ `engagementSubmit`/`engagementPossibleSelect`/`worldPointerDown` are admitted against the document like every object
+// gesture: an interaction step that reaches its commit state lands child leaves on the panes' model children (Child)
+// besides the addressed window's engagement transient (WindowTransient, design §17.4, §20.15).
 const CAD_RETAINED_ARTIFACT_TOOL_IDS: &[&str] = &["addNode", "renameNode", "patchCadPlayReference", "setReferenceHidden", "setReferenceLocked", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection", "engagementSubmit", "engagementPossibleSelect", "worldPointerDown", "applyTransformation"];
 const CAD_RETAINED_CONFIG_TOOL_IDS: &[&str] = &[
     "setCamera",
@@ -1344,20 +1283,20 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "patchCadPlayReference", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setReferenceHidden", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setReferenceLocked", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    // 🪆️ Every object gesture publishes on the Artifact lane alone: its ops re-mint the addressed
-    // pane's composed model child handle on the parent document, which is ordinary in-history state.
-    ArtifactToolPublicationContract { tool_id: "addObject", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "patchObject", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "patchSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "deleteObject", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "duplicateObject", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    // 🪆️ Every object gesture publishes on the Child lane alone: its leaves land in the addressed panes' composed
+    // `s.stdio.semio@v1/model` children, never in the parent document (design §20.15).
+    ArtifactToolPublicationContract { tool_id: "addObject", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "patchObject", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "patchSelection", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "deleteObject", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "duplicateObject", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Child] },
     // 🤝️ Interaction steps: the window's engagement transient (WindowTransient) every step, plus the committed
-    // objects (Artifact) on the step that reaches the spec's commit state — never a config edit (design §17.4).
-    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
-    ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    // objects' child leaves (Child) on the step that reaches the spec's commit state — never a config edit (design §17.4).
+    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "worldPointerDown", lanes: &[ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setProjection", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setProjectionParam", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -1366,7 +1305,7 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     ArtifactToolPublicationContract { tool_id: "setReferenceSelection", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Interaction] },
     ArtifactToolPublicationContract { tool_id: "referenceHover", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
-    ArtifactToolPublicationContract { tool_id: "engagementPossibleSelect", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "engagementPossibleSelect", lanes: &[ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "engagementAbort", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "worldPointerMove", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
@@ -1380,9 +1319,10 @@ const CAD_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
     // `build_document_store_initialization_job` — never an in-history artifact edit.
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "applyTransformation", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    // 🗃️ A whole spatial scene imports like an example switch: the window's reset engagement plus ONE host `LoadDocument`.
-    ArtifactToolPublicationContract { tool_id: "importCadFile", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+    ArtifactToolPublicationContract { tool_id: "applyTransformation", lanes: &[ArtifactToolPublicationLane::Child] },
+    // 🗃️ A whole spatial scene imports like an example switch: the window's reset engagement plus ONE host `LoadDocument`;
+    // a single object file lands as ONE `insert-element` transaction on the addressed pane's model child (Child).
+    ArtifactToolPublicationContract { tool_id: "importCadFile", lanes: &[ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient] },
     ArtifactToolPublicationContract { tool_id: "saveSelected", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "saveInPlay", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "saveCurrent", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -1415,10 +1355,14 @@ fn cad_retained_extent(command: &CadCommand, _snapshot: &CadSnapshot, _interacti
 }
 
 /// 🧵️ One retained cad command over the operation's observed roots: the command's reducer over the dispatch context
-/// the operation carries — the addressed window's engagement transient in, its next state out (design §17.4).
+/// the operation carries — the panes' composed model children the object writers decide against, the addressed
+/// window's engagement transient in and its next state out (design §17.4, §20.15).
 fn cad_retained_reduce(input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>) -> Result<(Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Option<CadWorldWindowTransient>), Fault> {
     let ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context, operation } = *input;
-    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let doc = match context {
+        Some(context) => ArtifactView::with_children(snapshot, history, (*context.children).clone()).bound_to_operation(operation.clone()),
+        None => ArtifactView::with_operation(snapshot, history, operation.clone()),
+    };
     let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
     let selection = interaction.selection.get(CAD_INTERACTION_DOMAIN).cloned().unwrap_or_default();
     let hovered_ids = hover.get(CAD_INTERACTION_DOMAIN).filter(|hover| hover.channel == CadInteractionSnapshot::POINTER_CHANNEL).map(|hover| hover.ids.clone()).unwrap_or_default();
@@ -1535,7 +1479,6 @@ struct CadConfigStorePreparationFactory;
 struct CadConfigStorePreparation {
     base: Option<store::SnapshotRead<CadConfig>>,
     mutation: Option<CadConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -1592,9 +1535,9 @@ fn prepare_cad_config(base: &CadConfig, mutation: CadConfigMutation) -> Result<(
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation> for CadConfigStorePreparationFactory {
-    fn preflight(&self, mutation: &CadConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("CAD config preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &CadConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("CAD config preparation rejected its lane".into());
         }
         admit_cad_config_mutation(mutation)
     }
@@ -1614,7 +1557,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation>
         Ok(Box::new(CadConfigStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -1667,7 +1609,7 @@ impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for Ca
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -1687,7 +1629,7 @@ impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for Ca
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ConfigStorePreparation
@@ -1701,7 +1643,6 @@ struct CadArtifactStorePreparationFactory;
 struct CadArtifactStorePreparation {
     base: Option<store::SnapshotRead<CadSnapshot>>,
     mutation: Option<CadMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -1772,9 +1713,9 @@ fn prepare_cad_artifact(base: &CadSnapshot, mutation: CadMutation) -> Result<(Ca
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for CadArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &CadMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("CAD Artifact preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &CadMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("CAD Artifact preparation rejected its lane".into());
         }
         admit_cad_artifact_mutation(mutation)
     }
@@ -1794,7 +1735,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for
         Ok(Box::new(CadArtifactStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -1847,7 +1787,7 @@ impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArt
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -1867,7 +1807,7 @@ impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArt
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ArtifactStorePreparation
@@ -2090,7 +2030,7 @@ impl ArtifactEditor for CadPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id || cad_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-            return Err(Fault::from("cad-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "CAD command does not match its exact retained tool registration"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(CadRetainedCommandWork { tool_id, consumed: false });
@@ -2140,10 +2080,10 @@ impl ArtifactEditor for CadPlayApp {
     // this hook.
 
     /// 🎞️ `geometry:in` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): accepts incoming mesh/brep
-    /// geometry from any upstream 3D producer and inserts it as a new `CadObject` in the Shape pane,
-    /// through the same brep kernel every other import path shares. Falls through to the default
+    /// geometry from any upstream 3D producer and inserts it as one `insert-element` on the Shape pane's composed model
+    /// child, through the same brep kernel every other import path shares (design §20.15). Falls through to the default
     /// `document:in` importer for any other port.
-    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, CadSnapshot>) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, CadSnapshot>) -> Result<Emit<CadMutation, CadConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "geometry:in" {
             if port != "artifact:in" {
                 return Err(MediaError::NotImplemented);
@@ -2165,15 +2105,12 @@ impl ArtifactEditor for CadPlayApp {
             MediaPayload::Intrinsic { value, .. } => value,
             MediaPayload::Binary { .. } => return Err(MediaError::Payload(port.to_string(), "geometry:in requires an intrinsic or structured file payload".into())),
         };
-        // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
-        // now returns a `SemioModelElement` (composed-child shape); `create-object` is retired.
-        // Composing the imported element into the Shape pane's `SemioModelSnapshot` CHILD needs a
-        // child-dispatch seam on `Emit<CadMutation, _>` that does not exist yet
-        // (`🔌️plugin/🦀️.rs` framework-kernel surface, W1-owned). Documented no-op.
-        match crate::standards::v1::subsets::any::io::import_cad_object_by_extension(name, payload) {
-            Some(_element) => Ok(Emit::default()),
-            None => Err(MediaError::Payload(port.to_string(), "unrecognized geometry payload".into())),
+        let element = crate::standards::v1::subsets::any::io::import_cad_object_by_extension(name, payload).ok_or_else(|| MediaError::Payload(port.to_string(), "unrecognized geometry payload".into()))?;
+        let models = cad_pane_models(doc.snapshot, &doc.children);
+        if models.model(CadPaneId::Shape).is_none() {
+            return Err(MediaError::Payload(port.to_string(), "the shape pane composes no model child to insert into".into()));
         }
+        Ok(cad_child_leaves_emit(&models, None, vec![CadToolLeaf { pane: CadPaneId::Shape, leaf: SemioModelMutation::InsertElement(InsertElement { element }) }]))
     }
 
     /// 🎞️ `brep:out` (WORKFLOWS-END-TO-END-TYPED-PORTS port recipe): exports the cad document's current
@@ -2188,7 +2125,7 @@ impl ArtifactEditor for CadPlayApp {
             let bytes = <CadSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
-        let view = CadPlayView { document: doc.snapshot.clone(), runtime: CadPlayRuntime::default(), interaction: CadInteractionSnapshot::default() };
+        let view = CadPlayView::of(doc.snapshot, &doc.children, CadPlayRuntime::default(), CadInteractionSnapshot::default());
         let mut kernel = cad_brep_kernel();
         let solids = collect_modelspace_solids(&mut kernel, &view);
         if solids.is_empty() {
@@ -2417,8 +2354,8 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected objects by an angle around a given axis.", "Dreht die ausgewählten Objekte um einen Winkel um eine angegebene Achse."))
             .action_use_when("rotateSelection", vec!["rotate the selection 90 degrees".into()])
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected objects by a factor per axis.", "Skaliert die ausgewählten Objekte um einen Faktor je Achse."))
-            .action_describe("applyTransformation", LocalizedLabel::native("Bakes the staged transformation into the selected objects' geometry; refused until composed pane models support it.", "Schreibt die vorbereitete Transformation fest in die Geometrie der ausgewählten Objekte."))
-            .action_describe("importCadFile", LocalizedLabel::native("Replaces the whole CAD scene with a spatial scene file; single STEP, OBJ or STL objects are refused until composed pane models support them.", "Ersetzt die gesamte CAD-Szene durch eine räumliche Szenendatei; einzelne STEP-, OBJ- oder STL-Objekte werden abgelehnt, bis zusammengesetzte Bereichsmodelle sie unterstützen."))
+            .action_describe("applyTransformation", LocalizedLabel::native("Bakes the staged transformation into the target pane's model; refused until its derivation rules exist.", "Schreibt die vorbereitete Transformation fest in das Modell des Zielbereichs; abgelehnt, bis ihre Ableitungsregeln existieren."))
+            .action_describe("importCadFile", LocalizedLabel::native("Replaces the whole CAD scene with a spatial scene file, or inserts a single STEP, OBJ or STL object into the addressed pane's model.", "Ersetzt die gesamte CAD-Szene durch eine räumliche Szenendatei oder fügt ein einzelnes STEP-, OBJ- oder STL-Objekt in das Modell des angesprochenen Bereichs ein."))
             .action_use_when("importCadFile", vec!["import a step file".into(), "load this geometry".into()])
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole model with one of the plugin's declared playground examples.", "Ersetzt das gesamte Modell durch eines der deklarierten Beispiele des Plugins."))
             .action_describe("saveCurrent", LocalizedLabel::native("Exports the current model to a downloadable CAD file in the chosen format.", "Exportiert das aktuelle Modell als herunterladbare CAD-Datei im gewählten Format."))

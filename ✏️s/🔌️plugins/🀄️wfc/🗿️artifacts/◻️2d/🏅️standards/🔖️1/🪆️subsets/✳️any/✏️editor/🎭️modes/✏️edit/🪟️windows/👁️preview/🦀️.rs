@@ -36,6 +36,7 @@ const WFC_2D_PREVIEW_SURFACE: &str = "wfc.wfc2d.preview";
 /// the preview declares no actions, because nothing here is authored.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WFC_2D_PREVIEW_WINDOW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: WFC_2D_PREVIEW_BODY.into(),
@@ -157,7 +158,7 @@ fn slot_layers(slot: &crate::schema::snapshot::Wfc2dSlot, tile: Option<&Wfc2dTil
                 ));
             }
         }
-        Wfc2dTileMedia::Bitmap { width, height, .. } => match crate::standards::v1::subsets::any::io::snapshot::binary::tile_media_png_data_url(&tile.media) {
+        Wfc2dTileMedia::Bitmap { width, height, .. } => match crate::standards::v1::subsets::any::io::binary::snapshot::tile_media_png_data_url(&tile.media) {
             Some(data_url) => layers.push(format!(
                 "{{\"id\":\"tile-{}-{}-bitmap\",\"kind\":\"image\",\"dataUrl\":{},\"x\":{:.6},\"y\":{:.6},\"width\":{:.6},\"height\":{:.6}}}",
                 slot.id,

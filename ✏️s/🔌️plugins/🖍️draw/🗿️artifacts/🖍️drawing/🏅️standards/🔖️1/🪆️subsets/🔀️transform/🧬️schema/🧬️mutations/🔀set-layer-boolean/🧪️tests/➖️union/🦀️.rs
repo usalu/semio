@@ -109,7 +109,7 @@ async fn produces_committed_diff() {
     assert_eq!(delta.patched[0].id, "boolean-a", "the entry addresses the boolean layer, never its operands");
     let patch = &delta.patched[0].patch;
     assert_eq!(patch.boolean_operation.as_deref(), Some("subtract"), "the boolean-operation lane carries the new operation");
-    assert!(patch.trace_params_json.is_none(), "the sibling variant-specific lane stays empty");
+    assert!(patch.trace_params.is_none(), "the sibling variant-specific lane stays empty");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

@@ -20,7 +20,7 @@ pub struct PngDimensions {
 /// 📐️ Computes [`PngDimensions`] from a snapshot's IHDR fields — pure, total, O(1).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn compute_png_dimensions(snapshot: &PngSnapshot) -> PngDimensions {
-    let layout = crate::io::png_layout(snapshot).expect("PngSnapshot invariant");
+    let layout = crate::standards::v1_2::subsets::any::io::png_layout(snapshot).expect("PngSnapshot invariant");
     PngDimensions {
         width: layout.width,
         height: layout.height,

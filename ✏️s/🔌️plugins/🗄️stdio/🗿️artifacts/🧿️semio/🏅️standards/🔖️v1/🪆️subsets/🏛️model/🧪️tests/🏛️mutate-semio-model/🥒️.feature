@@ -7,7 +7,7 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   `.dsl.semio` or `.pack.semio`, so the second producer a differential comparison needs is a second
   IMPLEMENTATION. `🐍️component.py` beside this file is that implementation — the envelope, the DSL
   grammar with its `spatial-kind`/`element-class`/`geometry-ref`/`pset-value`/`relation-kind`
-  vocabularies, the LEB128 pack frame with its little-endian `f64` transforms, and all eleven verbs
+  vocabularies, the LEB128 pack frame with its little-endian `f64` transforms, and all fourteen verbs
   with their inverses, written in Python from the committed specification documents alone
   (`../../🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`,
   `…/📸️snapshot/💾️binary/📡️component.protocol.semio`, `…/🧬️mutations/📝️text/📖️component.grammar.semio`,
@@ -65,7 +65,10 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
   its `kind` and `parentId` untouched — the tri-state slots the committed vectors spell as `null` —
   `set-element` rewrites the assembly's class, geometry, containing storey and property sets at once,
   and `set-relation` retags one relation to `fillsVoid`, a kind neither the demo building nor any
-  committed vector uses.
+  committed vector uses. The three relative placement verbs (design §12, §17.6, §20.15) move two capsules by a
+  fractional offset, turn two already-rotated capsules a half-turn about the vertical so the turn composes onto their
+  recorded quarter-turn quaternions, and scale one capsule non-uniformly; each undo is the exact absolute `set-element`
+  placement of every addressed element, never a negated motion.
 
   `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed
   `(before, mutation, after)` vector for each kind, whose before-snapshot is the real demo building
@@ -105,6 +108,9 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
       | remove-relation     | {"mutation":"removeRelation","id":"2mdiribe9DXeLAu6hdMs_9"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
       | set-relation        | {"mutation":"setRelation","id":"1RxL5nFpL4dwsNtKgSpmM_-0","kind":{"kind":"fillsVoid"},"from":null,"to":null}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
       | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/spatial/0/name", "value": "Kapselgeschoss"}} |
+      | drag-elements | {"mutation":"dragElements","targets":["1sOT_enZLFPBJFdV$98DhF","1tZkmTaMP4R8yLkBdfebfl"],"offset":[250.0,-125.5,2750.0]} |
+      | rotate-elements | {"mutation":"rotateElements","targets":["0IEifuk9T5eR2vbWao4vJp","10oJDBNhD5uvT1yRtDdA2k"],"axis":[0.0,0.0,1.0],"angle":3.141592653589793} |
+      | scale-elements | {"mutation":"scaleElements","targets":["1sOT_enZLFPBJFdV$98DhF"],"factors":[2.0,0.5,1.25]} |
 
   @id-no-mutation-baseline-mutate
   @level-exhaustive
@@ -140,6 +146,9 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
       | remove-relation     | {"mutation":"removeRelation","id":"2mdiribe9DXeLAu6hdMs_9"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
       | set-relation        | {"mutation":"setRelation","id":"1RxL5nFpL4dwsNtKgSpmM_-0","kind":{"kind":"fillsVoid"},"from":null,"to":null}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
       | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/spatial/0/name", "value": "Kapselgeschoss"}} |
+      | drag-elements | {"mutation":"dragElements","targets":["1sOT_enZLFPBJFdV$98DhF","1tZkmTaMP4R8yLkBdfebfl"],"offset":[250.0,-125.5,2750.0]} |
+      | rotate-elements | {"mutation":"rotateElements","targets":["0IEifuk9T5eR2vbWao4vJp","10oJDBNhD5uvT1yRtDdA2k"],"axis":[0.0,0.0,1.0],"angle":3.141592653589793} |
+      | scale-elements | {"mutation":"scaleElements","targets":["1sOT_enZLFPBJFdV$98DhF"],"factors":[2.0,0.5,1.25]} |
 
   @id-no-mutation-baseline-inverse
   @level-exhaustive
@@ -176,6 +185,9 @@ Feature: Apply every typed semio MODEL mutation to the Nakagin Capsule Tower, ag
       | insert-relation | 🪢insert-relation |
       | remove-relation | ✂️remove-relation |
       | set-relation | 🔧️set-relation |
+      | drag-elements | ✋️drag-elements |
+      | rotate-elements | 🔄️rotate-elements |
+      | scale-elements | 🔍️scale-elements |
 
   @id-identity-round-trip
   @level-long

@@ -111,3 +111,6 @@ impl semio_framework_plugin::WindowTransientOwner for JackEditorWindowTransientO
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

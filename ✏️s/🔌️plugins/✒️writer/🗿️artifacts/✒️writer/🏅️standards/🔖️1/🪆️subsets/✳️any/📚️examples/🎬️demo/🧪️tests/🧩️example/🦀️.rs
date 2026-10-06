@@ -11,10 +11,10 @@ async fn primary_asset_is_nonempty() {
 #[semio_framework_async_macros::async_test]
 async fn every_demo_asset_is_the_printers_own_content_addressed_output() {
     for (label, asset, example) in [
-        ("🖼️assets/🎬️demo", crate::document_dsl::JACK_EXAMPLE_TEXT, crate::document_dsl::jack_example_document()),
-        ("📚️examples/🎬️demo/🖼️assets/🧪️dag-example", crate::document_dsl::DAG_JACK_EXAMPLE_TEXT, crate::document_dsl::dag_jack_example_document()),
+        ("🖼️assets/🎬️demo", crate::standards::v1::subsets::any::io::text::snapshot::JACK_EXAMPLE_TEXT, crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document()),
+        ("📚️examples/🎬️demo/🖼️assets/🧪️dag-example", crate::standards::v1::subsets::any::io::text::snapshot::DAG_JACK_EXAMPLE_TEXT, crate::standards::v1::subsets::any::io::text::snapshot::dag_jack_example_document()),
     ] {
-        let canonical = crate::document_dsl::print_writer_dsl(&crate::writer_snapshot_with_text(&example.schema, &example.id, &example.language_id, &example.uri, &crate::writer_text(&example)));
+        let canonical = crate::standards::v1::subsets::any::io::text::snapshot::print_writer_dsl(&crate::writer_snapshot_with_text(&example.schema, &example.id, &example.language_id, &example.uri, &crate::writer_text(&example)));
         let minted = crate::document_child_handle(&example.id, &crate::writer_text(&example), &example.language_id);
         assert_eq!(minted.child_id, minted.target.artifact_id, "{label}: a content-addressed child handle owns its target artifact id");
         assert_eq!(canonical, asset, "{label}: the committed asset must be this crate's own printed output");

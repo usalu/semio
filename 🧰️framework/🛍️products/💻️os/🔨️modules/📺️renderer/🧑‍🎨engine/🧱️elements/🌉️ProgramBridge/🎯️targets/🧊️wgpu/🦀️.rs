@@ -638,7 +638,7 @@ pub struct ProgramBridgeEntry {
     #[cfg(test)]
     fixture_action: Option<fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>>,
     #[cfg(test)]
-    fixture_progress: Option<fn(u32) -> Vec<semio_framework::kernel::HistoryPatch>>,
+    fixture_publications: Option<fn(u32) -> Vec<OperationPublication>>,
     #[cfg(test)]
     fixture_document: Option<ProgramFixtureDocument>,
 }
@@ -673,7 +673,7 @@ impl ProgramBridgeEntry {
             #[cfg(test)]
             fixture_action: None,
             #[cfg(test)]
-            fixture_progress: None,
+            fixture_publications: None,
             #[cfg(test)]
             fixture_document: None,
         })
@@ -698,7 +698,7 @@ impl ProgramBridgeEntry {
             #[cfg(test)]
             fixture_action: None,
             #[cfg(test)]
-            fixture_progress: None,
+            fixture_publications: None,
             #[cfg(test)]
             fixture_document: None,
         })
@@ -720,8 +720,8 @@ impl ProgramBridgeEntry {
     }
 
     #[cfg(test)]
-    pub(crate) fn install_fixture_progress(&mut self, progress: fn(u32) -> Vec<semio_framework::kernel::HistoryPatch>) {
-        self.fixture_progress = Some(progress);
+    pub(crate) fn install_fixture_publications(&mut self, publications: fn(u32) -> Vec<OperationPublication>) {
+        self.fixture_publications = Some(publications);
     }
 
     /// 🎠️ H3-wgpu-native — replaces the old `Arc<WasmPluginRuntime>`-returning `wasm_runtime()`.
@@ -1020,14 +1020,14 @@ impl ProgramBridgeEntry {
         }
     }
 
-    /// ⏪️ The history patches this instance's guest pushed on uncorrelated progress frames since the last take —
-    /// the throttled UI-progress answers of a history-edit replay, React's `subscribeOperationProgress` history lane.
-    /// The browser takes them off the JS bridge's queue (`takeProgressHistoryPatches`); natively every such frame is
-    /// folded into the next exchange's reply (`invocation_from_frames`), so there is nothing queued to take.
-    pub fn take_progress_history_patches(&self, instance_id: u32) -> Vec<semio_framework::kernel::HistoryPatch> {
+    /// 🏁️ What this instance's guest published between two host calls since the last take — typed-operation completions
+    /// and UI-progress frames, React's `subscribeOperationCompletions` and `subscribeOperationProgress` lanes. The
+    /// browser takes them off the JS bridge's queue (`takeOperationPublications`); natively every such frame is folded
+    /// into the next exchange's reply (`invocation_from_frames`), so there is nothing queued to take.
+    pub fn take_operation_publications(&self, instance_id: u32) -> Vec<OperationPublication> {
         #[cfg(test)]
-        if let Some(progress) = self.fixture_progress {
-            return progress(instance_id);
+        if let Some(publications) = self.fixture_publications {
+            return publications(instance_id);
         }
         match &self.backend {
             #[cfg(not(target_arch = "wasm32"))]
@@ -1036,7 +1036,7 @@ impl ProgramBridgeEntry {
                 Vec::new()
             }
             #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => take_progress_history_patches_js(handle, instance_id),
+            ProgramBridgeBackend::Js(handle) => take_operation_publications_js(handle, instance_id),
         }
     }
 
@@ -1325,13 +1325,64 @@ fn destroy_app_js(handle: &Rc<JsValue>, instance_id: u32) {
     }
 }
 
-/// ⏪️ Takes the JS bridge's queued progress patches — a JSON array of `HistoryPatch`; an absent door, a failed call or
-/// an unreadable answer takes nothing, the next dispatch reply still carries the session status.
+/// 🏁️ One guest publication that answered no host call, as the browser bridge queued it (`WgpuOperationPublication`,
+/// `🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts`): a typed operation's completion (`completed`) or a UI-progress frame, with
+/// the dirty scope and the history patch it carried. `fault` is the standing drain's own failure; `resync` says entries
+/// were lost before this one, so the whole history projection has to be read again. What each one owes the shell is the
+/// shared corpus `🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct OperationPublication {
+    pub completed: bool,
+    pub ui_scope: semio_framework::kernel::UiDirtyScope,
+    pub history_patch: Option<semio_framework::kernel::HistoryPatch>,
+    pub fault: Option<String>,
+    pub resync: bool,
+}
+
+/// 🧯️ What an unreadable bridge answer becomes: a fault the shell tells, and a re-read of everything it may have hidden.
+#[cfg(any(target_arch = "wasm32", test))]
+fn unreadable_operation_publication(detail: String) -> OperationPublication {
+    OperationPublication { completed: false, ui_scope: semio_framework::kernel::UiDirtyScope::Full, history_patch: None, fault: Some(format!("wgpu-bridge.operation-publication.unreadable: {detail}")), resync: true }
+}
+
+/// 🏁️ Reads the bridge's publication array (`takeOperationPublications`). An array or an entry this host cannot read is
+/// answered as a fault publication naming what was unreadable — nothing a guest published is dropped in silence.
+#[cfg(any(target_arch = "wasm32", test))]
+pub(crate) fn operation_publications_from_json(text: &str) -> Vec<OperationPublication> {
+    match serde_json::from_str::<serde_json::Value>(text) {
+        Ok(serde_json::Value::Array(entries)) => entries.iter().map(|entry| operation_publication_from_json(entry).unwrap_or_else(unreadable_operation_publication)).collect(),
+        Ok(_) => vec![unreadable_operation_publication("expected an array".to_string())],
+        Err(error) => vec![unreadable_operation_publication(error.to_string())],
+    }
+}
+
+/// 🏁️ One entry of [`operation_publications_from_json`]: an absent or null scope asks for nothing, an absent patch is none.
+#[cfg(any(target_arch = "wasm32", test))]
+fn operation_publication_from_json(entry: &serde_json::Value) -> Result<OperationPublication, String> {
+    let member = |name: &str| entry.get(name).filter(|value| !value.is_null());
+    let ui_scope = match member("uiScope") {
+        Some(scope) => semio_framework_pack_json::from_json_str::<semio_framework::kernel::UiDirtyScope>(&scope.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("uiScope: {error}"))?,
+        None => semio_framework::kernel::UiDirtyScope::None,
+    };
+    let history_patch = match member("historyPatch") {
+        Some(patch) => Some(semio_framework_pack_json::from_json_str::<semio_framework::kernel::HistoryPatch>(&patch.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("historyPatch: {error}"))?),
+        None => None,
+    };
+    Ok(OperationPublication {
+        completed: member("completed").and_then(serde_json::Value::as_bool).unwrap_or(false),
+        ui_scope,
+        history_patch,
+        fault: member("fault").and_then(serde_json::Value::as_str).map(str::to_string),
+        resync: member("resync").and_then(serde_json::Value::as_bool).unwrap_or(false),
+    })
+}
+
+/// 🏁️ Takes the JS bridge's queued publications; an absent door or a failed call takes nothing.
 #[cfg(target_arch = "wasm32")]
-fn take_progress_history_patches_js(handle: &Rc<JsValue>, instance_id: u32) -> Vec<semio_framework::kernel::HistoryPatch> {
-    let Some(take) = Reflect::get(handle.as_ref(), &JsValue::from_str("takeProgressHistoryPatches")).ok().and_then(|value| value.dyn_into::<Function>().ok()) else { return Vec::new() };
+fn take_operation_publications_js(handle: &Rc<JsValue>, instance_id: u32) -> Vec<OperationPublication> {
+    let Some(take) = Reflect::get(handle.as_ref(), &JsValue::from_str("takeOperationPublications")).ok().and_then(|value| value.dyn_into::<Function>().ok()) else { return Vec::new() };
     let Some(text) = take.call1(&JsValue::NULL, &JsValue::from_f64(f64::from(instance_id))).ok().and_then(|answer| answer.as_string()) else { return Vec::new() };
-    semio_framework_pack_json::from_json_str::<Vec<semio_framework::kernel::HistoryPatch>>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
+    operation_publications_from_json(&text)
 }
 
 #[cfg(target_arch = "wasm32")]

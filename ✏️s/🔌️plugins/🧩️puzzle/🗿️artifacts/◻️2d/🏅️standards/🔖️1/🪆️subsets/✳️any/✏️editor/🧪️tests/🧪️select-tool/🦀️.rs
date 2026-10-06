@@ -1,17 +1,19 @@
 //! 🧪️ The select tool machine on its own: gesture records decode, a record yields its parametric leaf plus the
 //! connections its drop lands with minted ids, the commit is ONE transaction under a deterministic ref,
-//! all-locked, identity, missing and empty requests leave zero trace, and a streamed gesture persists, resumes
-//! by stable ids and commits as ONE transaction or aborts with zero trace.
+//! all-locked, identity, missing and empty requests leave zero trace, a streamed gesture is the window's ONE gesture on
+//! the framework runner (resumed by stable ids, committed as ONE transaction or dropped with zero trace), and a committed
+//! leaf states its inputs at their declared precision.
 
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles, DragSelection};
 use protocol::Mutation as _;
+use semio_framework_tool_machine::{drive_chart_gesture, ChartGesture, GestureDrive, GestureState, GestureTool, ToolAbortReason, ToolRefusal};
 use serde_json::json;
 
 /// 🧱️ Two facing circle nodes 1000 apart whose `v0` handles are compatible, a locked node, and one free region.
 fn board() -> Puzzle2dSnapshot {
-    let fixture = json!({
-        "schema": "puzzle.2d.fixture",
+    let snapshot = json!({
+        "schema": "board.ports.directed.v1",
         "meta": { "kindCompatibility": [{ "source": "a", "target": "a", "bidirectional": true, "important": false, "specificity": "handle" }] },
         "nodes": [
             { "id": "left", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "handles": [{ "id": "left:v0", "handleKind": "a", "angle": 0.0 }] },
@@ -21,7 +23,7 @@ fn board() -> Puzzle2dSnapshot {
         "edges": [],
         "targetRegions": [{ "id": "region-1", "x": 10.0, "y": 10.0, "width": 20.0, "height": 20.0, "hidden": false, "locked": false }]
     });
-    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&fixture)).expect("typed board")
+    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(&snapshot)).expect("typed board")
 }
 
 fn ids(values: &[&str]) -> Vec<String> {
@@ -59,8 +61,9 @@ fn a_drag_record_yields_its_leaf_then_the_connection_its_drop_lands() {
     let yields = puzzle2d_selection_yields(&base, &[Puzzle2dSelectionRecord::drag(ids(&["right"]), -948.0, 0.0)], 12.0);
     assert_eq!(yields.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), vec!["selection:0", "connect:edge-left:v0-right:v0"]);
     assert_eq!(yields[0].1, Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: -948.0, dy: 0.0 }), "the leaf records the literal targets and the offset");
-    let Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, .. }) = &yields[1].1 else { panic!("the drop lands a connection: {:?}", yields[1].1) };
+    let Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, tolerance, .. }) = &yields[1].1 else { panic!("the drop lands a connection: {:?}", yields[1].1) };
     assert_eq!((id.as_str(), source.as_str(), target.as_str()), ("edge-left:v0-right:v0", "left:v0", "right:v0"), "the stationary peer is the source");
+    assert_eq!(*tolerance, Some(12.0), "the connection states the radius its search found it within");
     let far = puzzle2d_selection_yields(&base, &[Puzzle2dSelectionRecord::drag(ids(&["right"]), -500.0, 0.0)], 12.0);
     assert_eq!(far.len(), 1, "a drop outside the radius lands no connection");
     let quiet = puzzle2d_selection_yields(&base, &[Puzzle2dSelectionRecord { connect: false, ..Puzzle2dSelectionRecord::drag(ids(&["right"]), -948.0, 0.0) }], 12.0);
@@ -74,6 +77,11 @@ fn recorded_pairs_connect_as_recorded_and_minted_ids_stay_unique() {
     let record = Puzzle2dSelectionRecord { targets: ids(&["right"]), motion: Puzzle2dSelectionMotion::Drag { dx: -10.0, dy: 0.0 }, proximity: vec![("right:v0".into(), "left:v0".into()), ("right:v0".into(), "missing:v9".into())], connect: false };
     let yields = puzzle2d_selection_yields(&base, &[record], 0.0);
     assert_eq!(yields.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), vec!["selection:0", "connect:edge-right:v0-left:v0-2"], "the recorded pair connects as recorded, past the id the document already holds; a pair naming a missing handle is dropped");
+    let Puzzle2dMutation::ConnectHandles(ConnectHandles { tolerance, .. }) = &yields[1].1 else { panic!("the recorded pair lands a connection: {:?}", yields[1].1) };
+    let mut dropped = base.clone();
+    apply_puzzle2d_mutation(&mut dropped, &yields[0].1).expect("the drag applies");
+    assert_eq!(*tolerance, crate::standards::v1::subsets::any::schema::mutations::puzzle2d_handle_distance(&dropped, "right:v0", "left:v0"), "a pair the board recorded from farther than the radius states its recorded distance");
+    assert!(yields[1].1.diff(&dropped).messages().is_empty(), "replayed where it was recorded, the connection reports nothing");
     assert_eq!(puzzle2d_minted_edge_id(&board(), "a", "b"), "edge-a-b");
 }
 
@@ -143,75 +151,72 @@ fn the_select_tool_rests_idle_and_streams_one_gesture() {
     assert!(definition.transitions.iter().take(2).all(|transition| transition.guard.is_some() && transition.actions.len() == 1), "every gesture opens behind a guard and yields");
 }
 
+/// 🌊️ One dispatch of a streamed `translateSelection` against the gesture its window holds.
+fn drive(held: Option<&GestureState<Puzzle2dMutation>>, phase: GesturePhase, request: Option<SelectToolRequest>, revision: &str) -> GestureDrive<GestureState<Puzzle2dMutation>, Puzzle2dMutation> {
+    drive_chart_gesture::<select_tool::SelectTool>(held, "translateSelection", phase, request, "seed-1", revision).expect("the select tool drives")
+}
+
 #[test]
 fn a_streamed_gesture_spans_dispatches_and_commits_one_transaction() {
     let base = board();
-    let mut tool = Puzzle2dSelectTool::start("translateSelection", "seed-1", "rev-1").expect("the tool starts at rest");
-    assert!(tool.at_rest());
-    assert_eq!(tool.send(select_tool::Event::Stream(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -400.0, 0.0)]))), Ok(ToolStep::Open));
-    let first = tool.persist().expect("an open gesture persists");
-    assert_eq!((first.states.as_slice(), first.verb.as_str(), first.base_revision.as_str(), first.connect), (&["root".to_string(), "streaming".to_string()][..], "translateSelection", "rev-1", true));
-    assert_eq!(first.entries.len(), 1, "a stream holds ONE net leaf: {:?}", first.entries);
-    let preview = puzzle2d_select_tool_preview(&base, &first);
-    assert_eq!(preview.nodes.iter().find(|node| node.id == "right").map(|node| node.x), Some(600.0), "the window previews the open transaction");
-    assert_eq!(base.nodes.iter().find(|node| node.id == "right").map(|node| node.x), Some(1000.0), "the document never moves while the gesture streams");
-    let mut tool = Puzzle2dSelectTool::resume(&first).expect("the persisted gesture resumes by stable ids");
-    assert!(!tool.at_rest());
-    assert_eq!(tool.send(select_tool::Event::Stream(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -548.0, 0.0)]))), Ok(ToolStep::Open));
-    let second = tool.persist().expect("the gesture is still open");
+    let opened = drive(None, GesturePhase::Stream, Some(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -400.0, 0.0)])), "rev-1");
+    assert!(opened.committed.is_none() && !opened.continued, "the first tick opens a gesture and publishes nothing");
+    let first = opened.next.flatten().expect("an open gesture is the window's next gesture");
+    assert_eq!((first.states.as_slice(), first.verb.as_str(), first.base_revision.as_str(), &first.context), (&["root".to_string(), "streaming".to_string()][..], "translateSelection", "rev-1", &semio_framework_value::DslValue::Bool(true)));
+    assert_eq!(first.entries, vec![(PUZZLE2D_SELECT_TOOL_LEAF_KEY.to_string(), Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: -400.0, dy: 0.0 }))], "a stream holds ONE net leaf");
+    let ticked = drive(Some(&first), GesturePhase::Stream, Some(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -548.0, 0.0)])), "rev-1");
+    assert!(ticked.committed.is_none() && ticked.continued, "a second tick continues the held gesture");
+    let second = ticked.next.flatten().expect("the gesture is still open");
     assert_eq!(second.transaction, first.transaction, "every tick of one gesture joins ONE transaction");
-    assert_eq!(second.entries, vec![Puzzle2dSelectToolEntry { key: PUZZLE2D_SELECT_TOOL_LEAF_KEY.into(), mutation: semio_framework_value::ToValue::to_value(&Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: -948.0, dy: 0.0 })) }], "the ticks add up into the one leaf");
-    let mut tool = Puzzle2dSelectTool::resume(&second).expect("resumes again");
-    let Ok(ToolStep::Committed(transaction, mutations)) = tool.send(select_tool::Event::Finish(request(&base, Vec::new()))) else { panic!("the finish commits") };
+    assert_eq!(second.entries, vec![(PUZZLE2D_SELECT_TOOL_LEAF_KEY.to_string(), Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: -948.0, dy: 0.0 }))], "the ticks add up into the one leaf");
+    let finished = drive(Some(&second), GesturePhase::Commit, Some(request(&base, Vec::new())), "rev-1");
+    let (transaction, mutations) = finished.committed.expect("the commit publishes the gesture");
     assert_eq!(transaction, first.transaction, "the commit publishes the ref minted at the first tick");
     assert_eq!(transaction.tool, "s.puzzle.puzzle2d@1/*#editor#translateSelection");
     assert_eq!(mutations, puzzle2d_selection_yields(&base, &[Puzzle2dSelectionRecord::drag(ids(&["right"]), -948.0, 0.0)], 12.0).into_iter().map(|(_, mutation)| mutation).collect::<Vec<_>>(), "the net leaf plus the connection its drop lands");
-    assert!(tool.at_rest());
-    assert_eq!(tool.persist(), None, "a committed gesture leaves nothing to persist");
+    assert_eq!(finished.next, Some(None), "a committed gesture leaves the window's slot empty");
 }
 
 #[test]
-fn a_host_abort_mid_gesture_leaves_zero_trace() {
+fn a_host_abort_or_a_moved_base_mid_gesture_leaves_zero_trace() {
     let base = board();
+    let open = drive(None, GesturePhase::Stream, Some(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -400.0, 0.0)])), "rev-1").next.flatten().expect("open");
     for reason in [ToolAbortReason::Blur, ToolAbortReason::CaptureLost, ToolAbortReason::BaseMoved, ToolAbortReason::Frozen, ToolAbortReason::Retired] {
-        let mut tool = Puzzle2dSelectTool::start("translateSelection", "seed-1", "rev-1").expect("starts");
-        tool.send(select_tool::Event::Stream(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -400.0, 0.0)]))).expect("opens");
-        let state = tool.persist().expect("open");
-        let mut tool = Puzzle2dSelectTool::resume(&state).expect("resumes");
-        assert_eq!(tool.abort(reason), ToolStep::Aborted(state.transaction.clone(), reason));
-        assert!(tool.at_rest(), "{reason:?} returns the tool to rest");
-        assert_eq!(tool.persist(), None, "{reason:?} leaves no open transaction behind");
-        assert!(puzzle2d_select_tool_abort(&state, reason), "the host abort of a persisted gesture reports it was open");
+        let aborted = drive(Some(&open), GesturePhase::Abort(reason), None, "rev-1");
+        assert!(aborted.committed.is_none() && aborted.next == Some(None), "{reason:?} drops the open gesture and publishes nothing");
     }
-    let mut idle = Puzzle2dSelectTool::start("translateSelection", "seed-1", "rev-1").expect("starts");
-    assert_eq!(idle.abort(ToolAbortReason::Blur), ToolStep::Idle, "aborting a resting tool is a no-op");
+    let moved = drive(Some(&open), GesturePhase::Commit, Some(request(&base, Vec::new())), "rev-2");
+    assert!(moved.committed.is_none() && moved.next == Some(None), "a commit on a moved base commits nothing and drops the gesture");
+    let resting = drive(None, GesturePhase::Abort(ToolAbortReason::Blur), None, "rev-1");
+    assert!(resting.committed.is_none() && resting.next.is_none(), "aborting a resting tool is a no-op");
 }
 
 #[test]
-fn a_tampered_or_resting_state_never_resumes() {
+fn a_tampered_or_resting_gesture_never_resumes() {
     let base = board();
-    let mut tool = Puzzle2dSelectTool::start("translateSelection", "seed-1", "rev-1").expect("starts");
-    tool.send(select_tool::Event::Stream(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -400.0, 0.0)]))).expect("opens");
-    let state = tool.persist().expect("open");
-    let resting = Puzzle2dSelectToolState { states: vec!["root".into(), "idle".into()], ..state.clone() };
-    assert!(matches!(Puzzle2dSelectTool::resume(&resting), Err(ToolRefusal::Unclosed)), "a resting chart with an open transaction would let the next gesture join it");
-    let unknown = Puzzle2dSelectToolState { states: vec!["root".into(), "dragging".into()], ..state.clone() };
-    assert!(Puzzle2dSelectTool::resume(&unknown).is_err(), "a configuration the chart does not know is refused");
-    let garbled = Puzzle2dSelectToolState { entries: vec![Puzzle2dSelectToolEntry { key: PUZZLE2D_SELECT_TOOL_LEAF_KEY.into(), mutation: semio_framework_value::DslValue::from(&json!({ "kind": "nonsense" })) }], ..state };
-    assert!(matches!(Puzzle2dSelectTool::resume(&garbled), Err(ToolRefusal::Closed)), "an entry that does not decode drops the gesture");
+    let open = drive(None, GesturePhase::Stream, Some(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -400.0, 0.0)])), "rev-1").next.flatten().expect("open");
+    let resting = GestureState { states: vec!["root".into(), "idle".into()], ..open.clone() };
+    assert!(matches!(<ChartGesture<select_tool::SelectTool> as GestureTool>::resume(&resting), Err(ToolRefusal::Unclosed)), "a resting chart with an open transaction would let the next gesture join it");
+    let unknown = GestureState { states: vec!["root".into(), "dragging".into()], ..open.clone() };
+    assert!(<ChartGesture<select_tool::SelectTool> as GestureTool>::resume(&unknown).is_err(), "a configuration the chart does not know is refused");
+    let dropped = drive(Some(&unknown), GesturePhase::Commit, Some(request(&base, Vec::new())), "rev-1");
+    assert!(dropped.committed.is_none() && dropped.next == Some(None), "a gesture the tool cannot restore is dropped with zero trace");
 }
 
+/// 🎚️ LAW (F21): a committed leaf states its inputs at the precision their schema declares, whatever a host measured —
+/// an `f32` drag of 60 recorded as 59.99996 is the row "by (60, 0)", and a motion that rounds to the identity is no
+/// edit at all.
 #[test]
-fn a_persisted_gesture_round_trips_the_window_transient_wire() {
+fn a_committed_leaf_states_its_inputs_at_their_declared_precision() {
     let base = board();
-    let mut tool = Puzzle2dSelectTool::start("translateSelection", "seed-1", "rev-1").expect("starts");
-    tool.send(select_tool::Event::Stream(request(&base, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), -400.0, 0.0)]))).expect("opens");
-    let state = tool.persist().expect("open");
-    let text = semio_framework_pack_json::to_json_string(&state);
-    assert_eq!(semio_framework_pack_json::from_json_str::<Puzzle2dSelectToolState>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).as_ref().ok(), Some(&state), "the gesture state survives its wire: {text}");
-    let transient = crate::editor::puzzle2d::window::Puzzle2dWindowTransient { select_tool: Some(Box::new(state)), ..Default::default() };
-    let text = semio_framework_pack_json::to_json_string(&transient);
-    assert_eq!(semio_framework_pack_json::from_json_str::<crate::editor::puzzle2d::window::Puzzle2dWindowTransient>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).as_ref().ok(), Some(&transient), "the window transient carries it: {text}");
+    let (_, dragged) = commit("seed-1", &base, 0.0, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), 59.99996, -0.004)]).expect("the drag commits");
+    assert_eq!(dragged, vec![Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: 60.0, dy: 0.0 })]);
+    let scale = Puzzle2dSelectionRecord { targets: ids(&["right"]), motion: Puzzle2dSelectionMotion::Scale { pivot_x: 10.004999, pivot_y: -0.001, factor: 1.4999999 }, proximity: Vec::new(), connect: false };
+    let (_, scaled) = commit("seed-1", &base, 0.0, vec![scale]).expect("the scaling commits");
+    assert_eq!(Puzzle2dSelectionRecord::from_leaf(&scaled[0], false).map(|record| record.motion), Some(Puzzle2dSelectionMotion::Scale { pivot_x: 10.0, pivot_y: 0.0, factor: 1.5 }));
+    assert_eq!(commit("seed-1", &base, 0.0, vec![Puzzle2dSelectionRecord::drag(ids(&["right"]), 0.004, -0.004)]), None, "a drag that rounds to nothing leaves zero trace");
+    let exact = Puzzle2dMutation::DragSelection(DragSelection { targets: ids(&["right"]), dx: 12.25, dy: -7.5 });
+    assert_eq!(puzzle2d_declared_precision(exact.clone()), exact, "an input already at its precision is untouched");
 }
 
 #[test]

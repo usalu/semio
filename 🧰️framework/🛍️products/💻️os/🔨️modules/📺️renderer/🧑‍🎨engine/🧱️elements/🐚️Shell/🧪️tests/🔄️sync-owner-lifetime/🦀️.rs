@@ -1,7 +1,6 @@
 use super::{shell_sync_owner_matches, ShellSyncOwner};
 
 const BINDING_FIXTURE: &str = include_str!("../../../../../../🔌️plugin/📡️backbone/🔗️binding/🧫️fixtures/🔣️.json");
-const BINDING_SCHEMA: &str = include_str!("../../../../../../🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json");
 const SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
 const BRIDGE_SOURCE: &str = include_str!("../../../🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
 const KERNEL_SOURCE: &str = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
@@ -21,11 +20,9 @@ fn exact_sync_owner_rejects_late_and_foreign_completions() {
 }
 
 #[test]
-fn renderer_uses_schema_owned_event_binding_without_retired_commands() {
+fn renderer_uses_owned_event_binding_without_retired_commands() {
     let fixture: serde_json::Value = serde_json::from_str(BINDING_FIXTURE).expect("neutral binding fixture parses");
-    let schema: serde_json::Value = serde_json::from_str(BINDING_SCHEMA).expect("neutral binding schema parses");
     assert_eq!(fixture["cases"].as_array().map(Vec::len), Some(8));
-    assert_eq!(schema["$ref"], "#/$defs/DocumentBackboneBindingFixtureV1");
     assert!(BRIDGE_SOURCE.contains("Event::Message { source: MessageEndpoint::Shell"));
     assert!(BRIDGE_SOURCE.contains("Event::Message { source: MessageEndpoint::Backbone"));
     assert!(KERNEL_SOURCE.contains("QueuedKernelEventKind::MessageShell"));

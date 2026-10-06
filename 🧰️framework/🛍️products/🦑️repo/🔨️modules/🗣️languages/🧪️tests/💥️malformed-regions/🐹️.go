@@ -27,7 +27,7 @@ func flat(sections []model.Section) []any {
 }
 
 func parse(ctx *host.Context, name string) (map[string]any, error) {
-	path, err := ctx.Fixture("shared://💥️malformed-regions/" + name)
+	path, err := ctx.Input("shared://💥️malformed-regions/" + name)
 	if err != nil {
 		return nil, err
 	}

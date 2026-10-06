@@ -80,7 +80,7 @@ class Outcome:
         return self
 
 
-#: 🧫️ The platform's one fixture-URI grammar — the Python twin of `FIXTURE_URI_RE` in `🧪️test/🟦️.ts`.
+#: 🧫️ The platform's one fixture-URI grammar — the Python twin of `TEST_INPUT_URI_RE` in `🧪️test/🟦️.ts`.
 FIXTURE_URI = re.compile(r"\b(shared|local|asset|schema)://([^\s\"'`,;)\]]+)")
 
 
@@ -127,21 +127,21 @@ class Context:
             raise KeyError("case %s declares no subset target — Protocol v2 scopes every mutation case to its smallest owning subset" % self.plan["case"])
         return target
 
-    def fixture(self, uri: str) -> str:
+    def input(self, uri: str) -> str:
         """🧫️ Absolute path of a declared fixture; an undeclared URI is an error, never a default."""
-        for entry in self.plan.get("fixtures", []):
+        for entry in self.plan.get("inputs", []):
             if entry["uri"] == uri:
                 return os.path.join(self.repo_root, entry["path"])
         raise KeyError("fixture %s is not part of this plan — declare it in the feature file" % uri)
 
-    def step_fixture_uris(self) -> List[str]:
+    def step_input_uris(self) -> List[str]:
         """🔗️ Every fixture URI the scenario's steps name — step text and data-table cells, in step order, whatever
         scheme the feature uses. The feature is the single place a vector path is written down."""
         return [match.group(0) for step in self.scenario["steps"] for text in [step.get("text", "")] + [cell for row in (step.get("dataTable") or []) for cell in row] for match in FIXTURE_URI.finditer(text)]
 
-    def fixture_bytes(self, uri: str) -> bytes:
+    def input_bytes(self, uri: str) -> bytes:
         """🧫️ Bytes of a declared fixture."""
-        with open(self.fixture(uri), "rb") as handle:
+        with open(self.input(uri), "rb") as handle:
             return handle.read()
 
     def subject_raw_bytes(self, implementation: str) -> bytes:
@@ -152,9 +152,9 @@ class Context:
         with open(path, "rb") as handle:
             return handle.read()
 
-    def copy_fixture(self, uri: str, as_name: Optional[str] = None) -> str:
+    def copy_input(self, uri: str, as_name: Optional[str] = None) -> str:
         """🧫️ Copies an immutable fixture into the work directory and returns the mutable copy."""
-        source = self.fixture(uri)
+        source = self.input(uri)
         os.makedirs(self.work_dir, exist_ok=True)
         target = os.path.join(self.work_dir, as_name or os.path.basename(source))
         shutil.copyfile(source, target)

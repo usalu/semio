@@ -4,7 +4,6 @@ import { act,createElement,StrictMode } from "react";
 import { afterEach,expect,it } from "vitest";
 import Ajv from "ajv";
 import fixture from "../../🧱️elements/🐚️Shell/🎬️initial-example/🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../../🧱️elements/🐚️Shell/🎬️initial-example/🧬️schema/🔣️.json" with { type: "json" };
 import { useInitialExampleReadiness } from "../../🧱️elements/🐚️Shell/🎬️initial-example/🟦️.ts";
 afterEach(cleanup);
 it("validates initial-view traces independently", () => expect(new Ajv().compile(schema)(fixture)).toBe(true));

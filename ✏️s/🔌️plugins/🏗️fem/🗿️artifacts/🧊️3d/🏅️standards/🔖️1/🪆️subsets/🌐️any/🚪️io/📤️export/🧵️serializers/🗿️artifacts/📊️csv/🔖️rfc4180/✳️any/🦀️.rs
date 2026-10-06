@@ -8,7 +8,8 @@ use crate::Fem3dSnapshot;
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_csv::schema::snapshot::{encode_csv, CsvField, CsvRecord};
+use semio_s_artifact_stdio_csv::schema::snapshot::{CsvField, CsvRecord};
+use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::{encode_csv};
 use semio_s_artifact_stdio_csv::{CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 
 /// 🎯️ The foreign dialect this leaf writes.

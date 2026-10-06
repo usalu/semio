@@ -44,7 +44,7 @@ type formattingVectorFile struct {
 
 func loadFormattingVectors(ctx *host.Context) (formattingVectorFile, error) {
 	var file formattingVectorFile
-	raw, err := ctx.FixtureBytes(formattingVectors)
+	raw, err := ctx.InputBytes(formattingVectors)
 	if err != nil {
 		return file, err
 	}

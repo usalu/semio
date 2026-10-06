@@ -1,0 +1,779 @@
+{
+  "qualification": "Declared source-only field role authority",
+  "types": {
+    "Puzzle2dSnapshot": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "line": 33,
+      "totalFieldCount": 6,
+      "fields": [
+        {
+          "id": 0,
+          "name": "schema",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "camera",
+          "type": "Puzzle2dCamera"
+        },
+        {
+          "id": 2,
+          "name": "nodes",
+          "type": "Vec<Puzzle2dNode>"
+        },
+        {
+          "id": 3,
+          "name": "edges",
+          "type": "Vec<Puzzle2dEdge>"
+        },
+        {
+          "id": 4,
+          "name": "target_regions",
+          "type": "Vec<Puzzle2dTargetRegion>"
+        },
+        {
+          "id": 5,
+          "name": "meta",
+          "type": "Puzzle2dMeta"
+        }
+      ]
+    },
+    "Puzzle2dCamera": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 42,
+      "totalFieldCount": 3,
+      "fields": [
+        {
+          "id": 0,
+          "name": "x",
+          "type": "f64"
+        },
+        {
+          "id": 1,
+          "name": "y",
+          "type": "f64"
+        },
+        {
+          "id": 2,
+          "name": "zoom",
+          "type": "f64"
+        }
+      ]
+    },
+    "Puzzle2dNode": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 111,
+      "totalFieldCount": 16,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "node_kind",
+          "type": "Option<String>"
+        },
+        {
+          "id": 2,
+          "name": "shape",
+          "type": "Option<String>"
+        },
+        {
+          "id": 3,
+          "name": "x",
+          "type": "f64"
+        },
+        {
+          "id": 4,
+          "name": "y",
+          "type": "f64"
+        },
+        {
+          "id": 5,
+          "name": "radius",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 6,
+          "name": "width",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 7,
+          "name": "height",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 8,
+          "name": "text",
+          "type": "Option<String>"
+        },
+        {
+          "id": 9,
+          "name": "icon_kind",
+          "type": "Option<String>"
+        },
+        {
+          "id": 10,
+          "name": "root",
+          "type": "Option<bool>"
+        },
+        {
+          "id": 11,
+          "name": "scale",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 12,
+          "name": "visible",
+          "type": "Option<bool>"
+        },
+        {
+          "id": 13,
+          "name": "locked",
+          "type": "Option<bool>"
+        },
+        {
+          "id": 14,
+          "name": "anchor",
+          "type": "Puzzle2dNodeAnchor"
+        },
+        {
+          "id": 15,
+          "name": "handles",
+          "type": "Vec<Puzzle2dHandle>"
+        }
+      ]
+    },
+    "Puzzle2dHandle": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 59,
+      "totalFieldCount": 9,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "handle_kind",
+          "type": "Option<String>"
+        },
+        {
+          "id": 2,
+          "name": "angle",
+          "type": "f64"
+        },
+        {
+          "id": 3,
+          "name": "radius",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 4,
+          "name": "color",
+          "type": "Option<String>"
+        },
+        {
+          "id": 5,
+          "name": "icon_kind",
+          "type": "Option<String>"
+        },
+        {
+          "id": 6,
+          "name": "scale",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 7,
+          "name": "visible",
+          "type": "Option<bool>"
+        },
+        {
+          "id": 8,
+          "name": "locked",
+          "type": "Option<bool>"
+        }
+      ]
+    },
+    "Puzzle2dEdge": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 184,
+      "totalFieldCount": 16,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "source",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "target",
+          "type": "String"
+        },
+        {
+          "id": 3,
+          "name": "edge_kind",
+          "type": "Option<String>"
+        },
+        {
+          "id": 4,
+          "name": "gap",
+          "type": "f64"
+        },
+        {
+          "id": 5,
+          "name": "shift",
+          "type": "f64"
+        },
+        {
+          "id": 6,
+          "name": "rise",
+          "type": "f64"
+        },
+        {
+          "id": 7,
+          "name": "rotation",
+          "type": "f64"
+        },
+        {
+          "id": 8,
+          "name": "turn",
+          "type": "f64"
+        },
+        {
+          "id": 9,
+          "name": "tilt",
+          "type": "f64"
+        },
+        {
+          "id": 10,
+          "name": "x",
+          "type": "f64"
+        },
+        {
+          "id": 11,
+          "name": "y",
+          "type": "f64"
+        },
+        {
+          "id": 12,
+          "name": "source_tip",
+          "type": "Option<String>"
+        },
+        {
+          "id": 13,
+          "name": "target_tip",
+          "type": "Option<String>"
+        },
+        {
+          "id": 14,
+          "name": "visible",
+          "type": "Option<bool>"
+        },
+        {
+          "id": 15,
+          "name": "locked",
+          "type": "Option<bool>"
+        }
+      ]
+    },
+    "Puzzle2dTargetRegion": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 478,
+      "totalFieldCount": 8,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "x",
+          "type": "f64"
+        },
+        {
+          "id": 2,
+          "name": "y",
+          "type": "f64"
+        },
+        {
+          "id": 3,
+          "name": "width",
+          "type": "f64"
+        },
+        {
+          "id": 4,
+          "name": "height",
+          "type": "f64"
+        },
+        {
+          "id": 5,
+          "name": "label",
+          "type": "Option<String>"
+        },
+        {
+          "id": 6,
+          "name": "hidden",
+          "type": "bool"
+        },
+        {
+          "id": 7,
+          "name": "locked",
+          "type": "bool"
+        }
+      ]
+    },
+    "Puzzle2dMeta": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 534,
+      "totalFieldCount": 3,
+      "fields": [
+        {
+          "id": 0,
+          "name": "manifest_id",
+          "type": "Option<String>"
+        },
+        {
+          "id": 1,
+          "name": "kind_compatibility",
+          "type": "Vec<Puzzle2dKindCompatibility>"
+        },
+        {
+          "id": 2,
+          "name": "kind_catalogs",
+          "type": "Option<Puzzle2dKindCatalogs>"
+        }
+      ]
+    },
+    "Puzzle2dKindCompatibility": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 257,
+      "totalFieldCount": 5,
+      "fields": [
+        {
+          "id": 0,
+          "name": "source",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "target",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "bidirectional",
+          "type": "bool"
+        },
+        {
+          "id": 3,
+          "name": "important",
+          "type": "bool"
+        },
+        {
+          "id": 4,
+          "name": "specificity",
+          "type": "Puzzle2dCompatSpecificity"
+        }
+      ]
+    },
+    "Puzzle2dKindCatalogs": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 451,
+      "totalFieldCount": 4,
+      "fields": [
+        {
+          "id": 0,
+          "name": "nodes",
+          "type": "Vec<Puzzle2dCatalogNodeKind>"
+        },
+        {
+          "id": 1,
+          "name": "handles",
+          "type": "Vec<Puzzle2dCatalogHandleKind>"
+        },
+        {
+          "id": 2,
+          "name": "edges",
+          "type": "Vec<Puzzle2dCatalogEdgeKind>"
+        },
+        {
+          "id": 3,
+          "name": "wires",
+          "type": "Vec<Puzzle2dCatalogWireKind>"
+        }
+      ]
+    },
+    "Puzzle2dCatalogNodeKind": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 359,
+      "totalFieldCount": 13,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "id": 3,
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "id": 4,
+          "name": "icon",
+          "type": "String"
+        },
+        {
+          "id": 5,
+          "name": "image",
+          "type": "String"
+        },
+        {
+          "id": 6,
+          "name": "unit",
+          "type": "String"
+        },
+        {
+          "id": 7,
+          "name": "is_abstract",
+          "type": "bool"
+        },
+        {
+          "id": 8,
+          "name": "base_kinds",
+          "type": "Vec<String>"
+        },
+        {
+          "id": 9,
+          "name": "representations",
+          "type": "Vec<Puzzle2dRepresentation>"
+        },
+        {
+          "id": 10,
+          "name": "handles",
+          "type": "Vec<Puzzle2dHandleTemplate>"
+        },
+        {
+          "id": 11,
+          "name": "attributes",
+          "type": "Vec<Puzzle2dAttribute>"
+        },
+        {
+          "id": 12,
+          "name": "authors",
+          "type": "Vec<Puzzle2dAuthor>"
+        }
+      ]
+    },
+    "Puzzle2dRepresentation": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 305,
+      "totalFieldCount": 7,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "url",
+          "type": "String"
+        },
+        {
+          "id": 3,
+          "name": "mime",
+          "type": "String"
+        },
+        {
+          "id": 4,
+          "name": "tags",
+          "type": "Vec<String>"
+        },
+        {
+          "id": 5,
+          "name": "lod",
+          "type": "Option<String>"
+        },
+        {
+          "id": 6,
+          "name": "description",
+          "type": "String"
+        }
+      ]
+    },
+    "Puzzle2dHandleTemplate": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 324,
+      "totalFieldCount": 10,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "id": 3,
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "id": 4,
+          "name": "icon",
+          "type": "String"
+        },
+        {
+          "id": 5,
+          "name": "handle_kind",
+          "type": "Option<String>"
+        },
+        {
+          "id": 6,
+          "name": "angle",
+          "type": "f64"
+        },
+        {
+          "id": 7,
+          "name": "t",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 8,
+          "name": "mandatory",
+          "type": "Option<bool>"
+        },
+        {
+          "id": 9,
+          "name": "radius",
+          "type": "Option<f64>"
+        }
+      ]
+    },
+    "Puzzle2dAttribute": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 274,
+      "totalFieldCount": 4,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "key",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "value",
+          "type": "String"
+        },
+        {
+          "id": 3,
+          "name": "definition",
+          "type": "Option<String>"
+        }
+      ]
+    },
+    "Puzzle2dAuthor": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 288,
+      "totalFieldCount": 5,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "email",
+          "type": "String"
+        },
+        {
+          "id": 3,
+          "name": "role",
+          "type": "Option<String>"
+        },
+        {
+          "id": 4,
+          "name": "rank",
+          "type": "Option<i32>"
+        }
+      ]
+    },
+    "Puzzle2dCatalogHandleKind": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 393,
+      "totalFieldCount": 9,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "code",
+          "type": "Option<String>"
+        },
+        {
+          "id": 2,
+          "name": "label",
+          "type": "Option<String>"
+        },
+        {
+          "id": 3,
+          "name": "order",
+          "type": "Option<i32>"
+        },
+        {
+          "id": 4,
+          "name": "compatible_with",
+          "type": "Vec<String>"
+        },
+        {
+          "id": 5,
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "id": 6,
+          "name": "icon",
+          "type": "String"
+        },
+        {
+          "id": 7,
+          "name": "color",
+          "type": "String"
+        },
+        {
+          "id": 8,
+          "name": "default_wire_kind",
+          "type": "String"
+        }
+      ]
+    },
+    "Puzzle2dCatalogEdgeKind": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 419,
+      "totalFieldCount": 6,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "id": 3,
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "id": 4,
+          "name": "icon",
+          "type": "String"
+        },
+        {
+          "id": 5,
+          "name": "color",
+          "type": "String"
+        }
+      ]
+    },
+    "Puzzle2dCatalogWireKind": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "line": 434,
+      "totalFieldCount": 7,
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "id": 3,
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "id": 4,
+          "name": "icon",
+          "type": "String"
+        },
+        {
+          "id": 5,
+          "name": "color",
+          "type": "String"
+        },
+        {
+          "id": 6,
+          "name": "default_edge_kind",
+          "type": "String"
+        }
+      ]
+    }
+  }
+}

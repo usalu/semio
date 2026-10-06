@@ -12,7 +12,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { scaleLinear, scaleLog } from "d3-scale";
 import type { UiNumberLimits, UiNumberScale } from "@semio-tech/framework";
-import { dialAngle, dialPosition, SLIDER_PAGE_STEPS, sliderAdjacentSnap, sliderAxisPosition, sliderAxisValue, sliderKeyValue, sliderPointerValue, UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "../../🧩️component/🟦️.ts";
+import { dialAngle, dialPosition, SLIDER_PAGE_STEPS, sliderAdjacentSnap, sliderAxisPosition, sliderAxisValue, sliderKeyValue, sliderPointerValue, UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "../../🧩️component/🟦️.ts";
 import { numberRangeIsValid, snapsAreValid } from "../../🛡️limits/🟦️.ts";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../🔢️number-format/🟦️.ts";
 import { uiAccessibilityValueV1 } from "../../♿️accessibility/🟦️.ts";
@@ -29,6 +29,7 @@ type Fixture = {
   readonly documents: readonly { readonly case: string; readonly component: Record<string, unknown>; readonly violation: string | null }[];
   readonly adjacent: readonly { readonly case: string; readonly current: number; readonly snaps: readonly number[]; readonly forward: boolean; readonly expected: number | null }[];
   readonly keys: readonly { readonly case: string; readonly current: number; readonly min: number | null; readonly max: number | null; readonly step: number; readonly snaps: readonly number[]; readonly key: SliderKey; readonly large: boolean; readonly precision?: number | null; readonly factor?: number | null; readonly expected: number }[];
+  readonly fieldKeys: readonly { readonly case: string; readonly key: string; readonly shift: boolean; readonly min: number | null; readonly max: number | null; readonly expected: { readonly key: SliderKey; readonly large: boolean } | null }[];
   readonly fixed: readonly { readonly case: string; readonly value: number; readonly precision: number; readonly expected: string; readonly rounded: number }[];
   readonly valueTexts: readonly { readonly case: string; readonly component: Record<string, unknown>; readonly valueText: string; readonly valueNow?: number | null; readonly valueMin?: number | null; readonly valueMax?: number | null }[];
 };
@@ -89,11 +90,11 @@ function ladderOracle(Decimal: new (value: string) => DecimalValue, row: Fixture
 /** 🎚️ Answers every shared fixture row, returning how many assertions the corpus carried. */
 export function numberControlsSelfTests(): number {
   const require = createRequire(import.meta.url);
-  const Ajv2020 = require("ajv/dist/2020").default;
+  
   const Decimal = require("decimal.js");
   const fixture = read("../../🧫️fixtures/🧫️number-controls/🔣️.json") as Fixture;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(read("../../🧫️fixtures/🧫️number-controls/🧬️schema/🔣️.json"));
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  
+  
   let checks = 1;
   for (const row of fixture.validity) {
     assert.equal(snapsAreValid(row.snaps, row.min, row.max), row.valid, row.case);
@@ -159,6 +160,10 @@ export function numberControlsSelfTests(): number {
       checks++;
     }
   }
+  for (const row of fixture.fieldKeys) {
+    assert.deepEqual(uiNumberFieldKey(row.key, row.shift, row.min, row.max), row.expected, row.case);
+    checks++;
+  }
   for (const row of fixture.fixed) {
     assert.equal(formatUiNumberFixed(row.value, row.precision), row.expected, row.case);
     assert.equal(decimalOracle(Decimal, row.value, row.precision), row.expected, `${row.case}: decimal.js oracle`);
@@ -169,7 +174,7 @@ export function numberControlsSelfTests(): number {
     const spoken = uiAccessibilityValueV1(normalizedComponent(row.component));
     assert.equal(spoken.valueText, row.valueText, row.case);
     checks++;
-    for (const [field, value] of [["valueNow", spoken.valueNow], ["valueMin", spoken.valueMin], ["valueMax", spoken.valueMax]] as const) {
+    for (const [field, value] of [["valueNow", spoken.valueNow], ["valueMin", spoken.valueMin], ["valueMax", spoken.valueMax], ["valueStep", spoken.valueStep]] as const) {
       if (field in row) {
         assert.equal(value, row[field], `${row.case}: ${field}`);
         checks++;

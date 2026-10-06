@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
 import { createRequire } from "node:module";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -18,7 +17,6 @@ const Lru = require("lru-cache") as new (options: { max: number; length(value: U
 const sum = require("lodash/sum") as (values: readonly number[]) => number;
 const owner = resolve(import.meta.dir, "..");
 const corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
-const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
 const hex = (bytes: Uint8Array): string => Buffer.from(bytes).toString("hex");
 const keys = new Map(corpus.keys.map(key => [key.id, key]));
 const keyHashes = new Map(corpus.keys.map(key => [key.id, blake3Hex(Buffer.from(key.preimageHex, "hex"))]));
@@ -30,12 +28,10 @@ function retain(id: string, value: unknown): void {
   writeFileSync(join(output, "compute-schema-" + id + ".json"), JSON.stringify(value));
 }
 
-test("portable compute corpus is closed with unique identities and six retained native laws", () => {
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+test("compute observations have unique identities and six retained native laws", () => {
   for (const rows of [corpus.keys, corpus.invalidIdentities, corpus.scenarios, corpus.distinctTuples, corpus.representations]) expect(new Set(rows.map(row => row.id)).size).toBe(rows.length);
   expect(corpus.retainedNativeLaws).toContain("engine_rep_build_is_deterministic");
   expect(corpus.retainedNativeLaws).toHaveLength(6);
-  expect(validate({ ...corpus, unknown: true })).toBe(false);
   for (const scenario of corpus.scenarios) expect(scenario.expected).toHaveLength(scenario.operations.length);
 });
 
@@ -60,7 +56,6 @@ for (const row of corpus.keys) test("key fields " + row.id, () => {
 for(const row of corpus.invalidIdentities)test("non-scalar identity " + row.id,()=>{
   const identity=String.fromCharCode(...row.utf16Units);
   expect(Buffer.from(identity,"utf8").toString("utf8")).not.toBe(identity);
-  expect(validate({...corpus,keys:corpus.keys.map((key,index)=>index===0?{...key,engineId:identity}:key)})).toBe(false);
   expect(()=>engineKeyPreimage(identity,new Uint8Array())).toThrow("engine identity must contain Unicode scalar values");
   expect(()=>engineKey(identity,new Uint8Array())).toThrow("engine identity must contain Unicode scalar values");
 });

@@ -46,7 +46,7 @@ fn snapshot_lease_is_preceded_by_a_fixed_pending_admission_and_idle_polling_reus
 #[test]
 fn snapshot_census_completes_within_one_opportunity_and_rejects_exact_plus_one_without_partial_credit() {
     let render = AppRenderOperationContext { app_instance_id: 2_000_000_006, base_revision: semio_framework_job::RevisionId(29), generation: semio_framework_job::Generation(31), canonical_base_revision: [37; 32] };
-    let snapshot = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let mut census = SnapshotAdmissionCursor::new();
     let mut units = 0;
     while census.step_one(&snapshot) == Ok(false) {

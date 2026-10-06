@@ -145,14 +145,7 @@ pub fn inverse_semio_animation_mutation(mutation: &SemioAnimationMutation, base:
     })
 }
 
-/// 📥️ Decodes this subset's internally tagged (`{"mutation": "<camelCaseVariant>", ...}`) wire value — the shape
-/// `🎞️mutate-semio-animation`'s committed specification vectors and doc strings carry — into a real [`SemioAnimationMutation`]. A thin
-/// `pack::from_json_str` wrapper over `ToValue`/`FromValue`, so the test adapter reads the committed wire value instead of
-/// re-declaring it field by field beside it.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_animation_mutation_json(text: &str) -> Result<SemioAnimationMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(semio_framework_value::ValueError::into_message)
-}
+
 
 //#region 🔖️MutationTrait
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
@@ -227,154 +220,14 @@ pub(crate) fn agg_inverse(this: &SemioAnimationMutation, base: &SemioAnimationSn
 //#endregion 🔖️MutationTrait
 
 //#region SnapshotLit
-/// 🧩️ `SetSnapshot`'s whole-snapshot payload — `[hex(schema),[timeline,...]]`, reusing the diff
-/// facet's own `pub(crate)` `enc_timeline`/`dec_timeline`/`enc_str`/`dec_str`/`enc_list`/`dec_list`
-/// value codecs (one source of truth, not a third independent copy). W2c closer fix: this REPLACES
-/// the old whole-enum `serde_json::to_string`/`from_str` passthrough — a real JSON-transfer-ban
-/// violation the brief specifically flagged as a recurring pattern to check for (confirmed present
-/// here, unlike the sibling `🔺️diff` facet, which was already fully real pre-wave).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_animation_snapshot(s: &SemioAnimationSnapshot) -> String {
-    use crate::standards::v1::subsets::animation::schema::diff::{enc_list, enc_str, enc_timeline};
-    format!("[{},{}]", enc_str(&s.schema), enc_list(&s.timelines, enc_timeline))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_animation_snapshot(s: &str) -> Result<SemioAnimationSnapshot, String> {
-    use crate::standards::v1::subsets::animation::schema::diff::{dec_list, dec_str, dec_timeline};
-    use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, timelines] = parts.as_slice() else { return Err(format!("snapshot-lit: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioAnimationSnapshot { schema: dec_str(schema)?, timelines: dec_list(timelines, dec_timeline)? })
-}
+
+
 //#endregion SnapshotLit
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` — one `TAG:payload` line per variant, reusing the diff
-/// module's `pub(crate)` value codecs (`enc_timeline`/`enc_channel`/`enc_keyframe`/`enc_target`/
-/// `enc_value`/`enc_interpolation`/hex-string helpers) instead of re-deriving a second parallel
-/// grammar. `SetSnapshot` reuses the `enc_animation_snapshot`/`dec_animation_snapshot` whole-
-/// snapshot codec above (W2c closer fix — was `serde_json`, see that region's doc comment).
-impl OpText for SemioAnimationMutation {
-    fn print_op(&self) -> String {
-        use crate::standards::v1::subsets::animation::schema::diff::{enc_channel, enc_interpolation, enc_keyframe, enc_str, enc_target, enc_timeline, enc_value};
-        use SemioAnimationMutation::*;
-        match self {
-            PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-            SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("S:{}", enc_animation_snapshot(snapshot)),
-            InsertTimeline(insert_timeline::InsertTimeline { index, timeline }) => format!("IT:{index},{}", enc_timeline(timeline)),
-            RemoveTimeline(remove_timeline::RemoveTimeline { index }) => format!("RT:{index}"),
-            SetTimelineName(set_timeline_name::SetTimelineName { index, name }) => format!(
-                "TN:{index},{}",
-                match name {
-                    None => "[0]".to_string(),
-                    Some(n) => format!("[1,{}]", enc_str(n)),
-                }
-            ),
-            InsertChannel(insert_channel::InsertChannel { timeline_index, index, channel }) => format!("IC:{timeline_index},{index},{}", enc_channel(channel)),
-            RemoveChannel(remove_channel::RemoveChannel { timeline_index, index }) => format!("RC:{timeline_index},{index}"),
-            SetChannelTarget(set_channel_target::SetChannelTarget { timeline_index, index, target }) => format!("CT:{timeline_index},{index},{}", enc_target(target)),
-            SetChannelInterpolation(set_channel_interpolation::SetChannelInterpolation { timeline_index, index, interpolation }) => format!("CI:{timeline_index},{index},{}", enc_interpolation(*interpolation)),
-            InsertKeyframe(insert_keyframe::InsertKeyframe { timeline_index, channel_index, index, keyframe }) => format!("IK:{timeline_index},{channel_index},{index},{}", enc_keyframe(keyframe)),
-            RemoveKeyframe(remove_keyframe::RemoveKeyframe { timeline_index, channel_index, index }) => format!("RK:{timeline_index},{channel_index},{index}"),
-            SetKeyframeTime(set_keyframe_time::SetKeyframeTime { timeline_index, channel_index, index, t }) => format!("KT:{timeline_index},{channel_index},{index},{t}"),
-            SetKeyframeValue(set_keyframe_value::SetKeyframeValue { timeline_index, channel_index, index, value }) => format!("KV:{timeline_index},{channel_index},{index},{}", enc_value(value)),
-        }
-    }
 
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        use crate::standards::v1::subsets::animation::schema::diff::{dec_channel, dec_interpolation, dec_keyframe, dec_str, dec_target, dec_timeline, dec_value};
-        use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-        use SemioAnimationMutation::*;
-        let fail = |e: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1));
-        if line.starts_with("patch-snapshot patch=") {
-            return semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| Self::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })).map_err(fail);
-        }
-        let parse_usize = |s: &str| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string());
-        let parse_f64 = |s: &str| s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string());
 
-        let (tag, rest) = line.split_once(':').ok_or_else(|| fail(format!("op: bad shape {line:?}")))?;
-        (|| -> Result<Self, String> {
-            match tag {
-                "S" => Ok(SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_animation_snapshot(rest)? })),
-                "IT" => {
-                    let (index, timeline) = rest.split_once(',').ok_or_else(|| "IT: missing comma".to_string())?;
-                    Ok(InsertTimeline(insert_timeline::InsertTimeline { index: parse_usize(index)?, timeline: dec_timeline(timeline)? }))
-                }
-                "RT" => Ok(RemoveTimeline(remove_timeline::RemoveTimeline { index: parse_usize(rest)? })),
-                "TN" => {
-                    let (index, name) = rest.split_once(',').ok_or_else(|| "TN: missing comma".to_string())?;
-                    let parts = split_top_level(strip_brackets(name)?, ',');
-                    let name = match parts.as_slice() {
-                        ["0"] => None,
-                        [tag, value] if *tag == "1" => Some(dec_str(value)?),
-                        other => return Err(format!("TN: bad option shape {other:?}")),
-                    };
-                    Ok(SetTimelineName(set_timeline_name::SetTimelineName { index: parse_usize(index)?, name }))
-                }
-                "IC" => {
-                    let parts = split_top_level(rest, ',');
-                    let [ti, index, rest_channel @ ..] = parts.as_slice() else { return Err("IC: expected 3+ fields".to_string()) };
-                    let channel = rest_channel.join(",");
-                    Ok(InsertChannel(insert_channel::InsertChannel { timeline_index: parse_usize(ti)?, index: parse_usize(index)?, channel: dec_channel(&channel)? }))
-                }
-                "RC" => {
-                    let (ti, index) = rest.split_once(',').ok_or_else(|| "RC: missing comma".to_string())?;
-                    Ok(RemoveChannel(remove_channel::RemoveChannel { timeline_index: parse_usize(ti)?, index: parse_usize(index)? }))
-                }
-                "CT" => {
-                    let parts = split_top_level(rest, ',');
-                    let [ti, index, rest_target @ ..] = parts.as_slice() else { return Err("CT: expected 3+ fields".to_string()) };
-                    Ok(SetChannelTarget(set_channel_target::SetChannelTarget { timeline_index: parse_usize(ti)?, index: parse_usize(index)?, target: dec_target(&rest_target.join(","))? }))
-                }
-                "CI" => {
-                    let parts: Vec<&str> = rest.splitn(3, ',').collect();
-                    let [ti, index, interp] = parts.as_slice() else { return Err("CI: expected 3 fields".to_string()) };
-                    Ok(SetChannelInterpolation(set_channel_interpolation::SetChannelInterpolation { timeline_index: parse_usize(ti)?, index: parse_usize(index)?, interpolation: dec_interpolation(interp)? }))
-                }
-                "IK" => {
-                    let parts = split_top_level(rest, ',');
-                    let [ti, ci, index, rest_kf @ ..] = parts.as_slice() else { return Err("IK: expected 4+ fields".to_string()) };
-                    Ok(InsertKeyframe(insert_keyframe::InsertKeyframe { timeline_index: parse_usize(ti)?, channel_index: parse_usize(ci)?, index: parse_usize(index)?, keyframe: dec_keyframe(&rest_kf.join(","))? }))
-                }
-                "RK" => {
-                    let parts: Vec<&str> = rest.splitn(3, ',').collect();
-                    let [ti, ci, index] = parts.as_slice() else { return Err("RK: expected 3 fields".to_string()) };
-                    Ok(RemoveKeyframe(remove_keyframe::RemoveKeyframe { timeline_index: parse_usize(ti)?, channel_index: parse_usize(ci)?, index: parse_usize(index)? }))
-                }
-                "KT" => {
-                    let parts: Vec<&str> = rest.splitn(4, ',').collect();
-                    let [ti, ci, index, t] = parts.as_slice() else { return Err("KT: expected 4 fields".to_string()) };
-                    Ok(SetKeyframeTime(set_keyframe_time::SetKeyframeTime { timeline_index: parse_usize(ti)?, channel_index: parse_usize(ci)?, index: parse_usize(index)?, t: parse_f64(t)? }))
-                }
-                "KV" => {
-                    let parts = split_top_level(rest, ',');
-                    let [ti, ci, index, rest_value @ ..] = parts.as_slice() else { return Err("KV: expected 4+ fields".to_string()) };
-                    Ok(SetKeyframeValue(set_keyframe_value::SetKeyframeValue { timeline_index: parse_usize(ti)?, channel_index: parse_usize(ci)?, index: parse_usize(index)?, value: dec_value(&rest_value.join(","))? }))
-                }
-                other => Err(format!("op: unknown tag {other:?}")),
-            }
-        })()
-        .map_err(fail)
-    }
-}
 
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `SemioAnimationMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
-const TAG_INSERT_TIMELINE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-timeline");
-const TAG_REMOVE_TIMELINE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-timeline");
-const TAG_SET_TIMELINE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-timeline-name");
-const TAG_INSERT_CHANNEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-channel");
-const TAG_REMOVE_CHANNEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-channel");
-const TAG_SET_CHANNEL_TARGET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-channel-target");
-const TAG_SET_CHANNEL_INTERPOLATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-channel-interpolation");
-const TAG_INSERT_KEYFRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-keyframe");
-const TAG_REMOVE_KEYFRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-keyframe");
-const TAG_SET_KEYFRAME_TIME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-keyframe-time");
-const TAG_SET_KEYFRAME_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-keyframe-value");
-//#endregion 🏷️WireTags
 
 /// 🧾️ Each record kind's text-grammar tag, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
 const TEXT_KEYWORDS: [(&str, &str); 12] = [
@@ -391,66 +244,11 @@ const TEXT_KEYWORDS: [(&str, &str); 12] = [
     ("set-keyframe-time", "KT"),
     ("set-keyframe-value", "KV"),
 ];
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn wire_tag(m: &SemioAnimationMutation) -> u8 {
-    use SemioAnimationMutation::*;
-    match m {
-        SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
-        InsertTimeline(_) => TAG_INSERT_TIMELINE,
-        RemoveTimeline(_) => TAG_REMOVE_TIMELINE,
-        SetTimelineName(_) => TAG_SET_TIMELINE_NAME,
-        InsertChannel(_) => TAG_INSERT_CHANNEL,
-        RemoveChannel(_) => TAG_REMOVE_CHANNEL,
-        SetChannelTarget(_) => TAG_SET_CHANNEL_TARGET,
-        SetChannelInterpolation(_) => TAG_SET_CHANNEL_INTERPOLATION,
-        InsertKeyframe(_) => TAG_INSERT_KEYFRAME,
-        RemoveKeyframe(_) => TAG_REMOVE_KEYFRAME,
-        SetKeyframeTime(_) => TAG_SET_KEYFRAME_TIME,
-        SetKeyframeValue(_) => TAG_SET_KEYFRAME_VALUE,
-    }
-}
+
 
 const OP_BINARY_FORMAT: u8 = 1;
 
-/// 🔢️ Real binary op frame (animation wave — off the old whole-`OpText`-line `.into_bytes()` F6
-/// text-as-binary shortcut). `format u8` + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) as two real fixed
-/// fields, then the variant's own `key=value,...` argument text (i.e. `print_op`'s output with its
-/// `TAG:` prefix stripped) as one opaque trailing `bytes` chain — reuses the real, tested
-/// `print_op`/`parse_op` text codec (one source of truth), same treatment every prior semio wave's
-/// `OpBinary` upgrade uses.
-impl OpBinary for SemioAnimationMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
-        let printed = <Self as OpText>::print_op(self);
-        let args = match printed.split_once(':') {
-            Some((_, rest)) => rest,
-            None => "",
-        };
-        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
-        out.extend_from_slice(args.as_bytes());
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 0, detail };
-        let [format, tag, rest @ ..] = bytes else { return Err(malformed("op header", format!("expected at least 2 bytes, got {}", bytes.len()))) };
-        if *format != OP_BINARY_FORMAT {
-            return Err(malformed("op format", format!("unsupported op format {format}")));
-        }
-        if *tag == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(rest)? }));
-        }
-        let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(*tag)).ok_or_else(|| malformed("op tag", format!("tag {tag} names no record of 📡️.protocol.semio")))?;
-        let keyword = TEXT_KEYWORDS.iter().find(|(record, _)| *record == kind).map(|(_, keyword)| *keyword).ok_or_else(|| malformed("op tag", format!("record {kind} has no text keyword")))?;
-        let args = std::str::from_utf8(rest).map_err(|e| malformed("op args utf8", e.to_string()))?;
-        let line = format!("{keyword}:{args}");
-        <Self as OpText>::parse_op(&line).map_err(|e| malformed("op text", e.to_string()))
-    }
-}
+
 //#endregion OpCodecs
 
 /// 🧱️ Module-scope (not `mod tests`-local) fixture + demo mutation cases — so the `🎹️composer`

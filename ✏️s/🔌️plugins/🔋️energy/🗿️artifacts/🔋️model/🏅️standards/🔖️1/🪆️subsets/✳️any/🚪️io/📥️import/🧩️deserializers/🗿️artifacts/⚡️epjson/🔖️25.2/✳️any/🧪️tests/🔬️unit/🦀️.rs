@@ -1,5 +1,5 @@
 use super::*;
-use crate::io::export::serializers::artifacts::epjson::v25_2::any::encode_model;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::epjson::v25_2::any::encode_model;
 
 fn round_trip(case: &str) -> (String, String) {
     let model = crate::bestest::model(case).expect("bestest case");

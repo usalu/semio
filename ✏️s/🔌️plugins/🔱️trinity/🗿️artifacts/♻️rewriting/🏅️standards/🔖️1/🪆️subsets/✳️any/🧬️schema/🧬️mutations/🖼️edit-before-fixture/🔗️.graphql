@@ -1,2 +1,0 @@
-# 🧬️ EditBeforeFixtureInput owns its declared typed payload.
-input EditBeforeFixtureInput { newWorkingGraph: JackSnapshotInput! }

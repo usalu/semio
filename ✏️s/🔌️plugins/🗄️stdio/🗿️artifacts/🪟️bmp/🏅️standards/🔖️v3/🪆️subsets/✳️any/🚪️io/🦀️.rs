@@ -2,7 +2,7 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_v3::subsets::any::schema::BmpAnalyzer;
+    use crate::standards::v_v3::subsets::any::io::BmpAnalyzer;
     use crate::BmpSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -535,31 +535,31 @@ pub fn register_pilot_languages() {
         id: "stdio.bmp",
         extension: Some("bmp"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v_v3::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v_v3::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v_v3::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_v3::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.bmp.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v_v3::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v_v3::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v_v3::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_v3::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.bmp.diff",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::standards::v_v3::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v_v3::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
         // 🎫️ The 5-role scheme has no dedicated "diff binary" role even when a real diff
         // protocol file exists (this ticket's own recipe §4 checklist item) — `BmpDiff`'s own
-        // `.spk`-container protocol IS real (see ../🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/
+        // `.spk`-container protocol IS real (see ../🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/
         // 📡️.protocol.semio), just not registered here.
         protocol: None,
         protocol_path: None,
@@ -571,8 +571,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v_v3::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_v3::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp.pack"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -581,8 +581,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v_v3::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_v3::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp.spr"),
     });
 }
@@ -610,7 +610,7 @@ mod tests;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_v3::subsets::any::schema::BmpComposer as BmpRawAnyComposer;
+    use crate::standards::v_v3::subsets::any::io::BmpComposer as BmpRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -622,3 +622,157 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{BmpDiff, BmpMutation, BmpSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.bmp` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct BmpBuilderConstruction {
+        snapshot: BmpSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for BmpBuilderConstruction {
+        type Snapshot = BmpSnapshot;
+        type Mutation = BmpMutation;
+        type Diff = BmpDiff;
+        fn empty() -> Self {
+            Self { snapshot: BmpSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<BmpSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<BmpSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::schema::mutations::apply_bmp_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <BmpDiff as protocol::MutationDiff<BmpSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::BmpSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.bmp` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct BmpParts {
+        pub snapshot: Option<BmpSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.bmp` (v3/✳️any) sources.
+    pub struct BmpAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for BmpAnalyzerAnalysis {
+        type Parts = BmpParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            const SIG: [u8; 2] = *b"BM";
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    if bytes.len() >= 2 && bytes[0..2] == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    // 🔍 stdio.bmp's text envelope is a hex dump of the raw bytes after the
+                    // `semio ...` preamble line — decode the first 2 bytes to sniff the real signature.
+                    let body = match store::semio_format::split_text_preamble(text) {
+                        Ok((_, rest)) => rest,
+                        Err(_) => text,
+                    };
+                    let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(4).collect();
+                    if hex.len() < 4 {
+                        return IoConfidence::Low;
+                    }
+                    let mut decoded = [0u8; 2];
+                    for (i, byte) in decoded.iter_mut().enumerate() {
+                        match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
+                            Ok(b) => *byte = b,
+                            Err(_) => return IoConfidence::Low,
+                        }
+                    }
+                    if decoded == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = BmpParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <BmpSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <BmpSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec BmpBuilderFacets {
+        construction: BmpBuilderConstruction,
+        analysis: BmpAnalyzerAnalysis,
+        composition: crate::standards::v_v3::subsets::any::io::derived_composition::BmpComposerComposition,
+    }
+    builder: BmpBuilder,
+    analyzer: BmpAnalyzer,
+    composer: BmpComposer,
+);

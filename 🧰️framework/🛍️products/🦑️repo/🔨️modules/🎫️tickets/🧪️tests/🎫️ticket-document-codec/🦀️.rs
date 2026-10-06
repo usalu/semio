@@ -31,7 +31,7 @@ mod subject {
 
     /// 📖️ Every committed document decodes to the same ticket.
     pub fn real_documents_decode_to_the_same_ticket(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let mut projected: Vec<(String, Json)> = Vec::new();
         for (source, text) in documents(&vectors) {
             let ticket = decode_ticket_document(&text).map_err(|error| error.message)?;
@@ -56,7 +56,7 @@ mod subject {
 
     /// 🖨️ Re-encoding reproduces Go's bytes.
     pub fn encoding_is_go_marshal_indent(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let mut projected: Vec<(String, Json)> = Vec::new();
         for (source, text) in documents(&vectors) {
             let ticket = decode_ticket_document(&text).map_err(|error| error.message)?;
@@ -67,7 +67,7 @@ mod subject {
 
     /// 🔁️ Encoding is idempotent and unknown members are gone.
     pub fn unknown_members_are_dropped(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let mut projected: Vec<(String, Json)> = Vec::new();
         for (source, text) in documents(&vectors) {
             let first = encode_ticket_document(&decode_ticket_document(&text).map_err(|error| error.message)?);
@@ -82,7 +82,7 @@ mod subject {
 
     /// ⚠️ A document without a status is refused.
     pub fn a_document_without_a_status_is_refused(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let projected: Vec<(String, Json)> = vectors
             .array("refused")
             .into_iter()

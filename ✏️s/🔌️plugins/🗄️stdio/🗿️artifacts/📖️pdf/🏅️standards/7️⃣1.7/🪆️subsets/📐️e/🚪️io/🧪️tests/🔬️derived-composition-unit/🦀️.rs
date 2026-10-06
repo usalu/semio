@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v1_7::subsets::e::schema::PdfEBuilderConstruction as PdfEBuilder;
+    use crate::standards::v1_7::subsets::e::io::PdfEBuilderConstruction as PdfEBuilder;
     use semio_framework_plugin::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;
 

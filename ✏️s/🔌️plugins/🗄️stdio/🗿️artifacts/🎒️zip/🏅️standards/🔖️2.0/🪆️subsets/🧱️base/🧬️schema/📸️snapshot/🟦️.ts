@@ -1,5 +1,4 @@
 export interface ZipExtraField { id: number; data: number[]; }
-export * from "./🪶️sqlite/🟦️.ts";
 export interface ZipLocalHeaderMetadata {
   versionNeeded: number;
   flags: number;

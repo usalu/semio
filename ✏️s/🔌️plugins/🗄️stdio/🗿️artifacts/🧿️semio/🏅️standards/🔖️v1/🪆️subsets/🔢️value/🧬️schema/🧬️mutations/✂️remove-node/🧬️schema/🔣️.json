@@ -14,7 +14,19 @@
       "description": "Aggregate discriminator spliced in by SemioValueMutation; absent when the payload stands alone."
     },
     "id": {
-      "$ref": "#/$defs/ValueId"
+      "$ref": "#/$defs/ValueId",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Id of the value node.",
+          "de": "Kennung des Wertknotens."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   },
   "$defs": {

@@ -101,28 +101,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.bcf",
                     extension: Some("bcf"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.bcf.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.bcf.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf.diff"),
@@ -133,8 +133,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -143,8 +143,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.bcf.spr"),
                 },
             ]
@@ -217,30 +217,18 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod diff {
                         #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod topicstats {
                             #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/💡️inferences/🗒️topicstats/🦀️.rs"]
@@ -253,10 +241,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -316,9 +300,7 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v2_1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v2_1::subsets::any::io::*;
-}
+
 
 #[path = "."]
 pub mod examples {
@@ -407,3 +389,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v2_1::subsets::any::io::{BcfBuilderConstruction, BcfParts, BcfAnalyzerAnalysis, BcfBuilderFacets, BcfBuilder, BcfAnalyzer, BcfComposer};

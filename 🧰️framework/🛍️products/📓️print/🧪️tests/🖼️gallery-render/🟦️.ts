@@ -1,3 +1,4 @@
+import type { GalleryRenderEvidence } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🧬️schema/🟦️.ts";
 // #region 🧲️Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -5,15 +6,15 @@
 
 // #region 🔌️Adapters
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
-import { measurePrintGalleryVariant, printGalleryMatrix, type PrintGalleryFixture } from "../../🔨️modules/📊️visualization-gallery/🔬️probes/🟦️.ts";
+import { measurePrintGalleryVariant, printGalleryMatrix } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Evidence
 /** 🧫️ The committed evidence, read through the plan so an unreferenced fixture can never be used. */
-function evidence(ctx: AdapterContext): PrintGalleryFixture {
-  return JSON.parse(readFileSync(ctx.fixture("shared://🖼️gallery-render/🖼️gallery-render.json"), "utf8")) as PrintGalleryFixture;
+function evidence(ctx: AdapterContext): GalleryRenderEvidence {
+  return JSON.parse(readFileSync(ctx.input("shared://🖼️gallery-render/🖼️gallery-render.json"), "utf8")) as GalleryRenderEvidence;
 }
 
 /** 🔀️ Every family whose kinds collide on their option string — the projection the property asserts is empty. */

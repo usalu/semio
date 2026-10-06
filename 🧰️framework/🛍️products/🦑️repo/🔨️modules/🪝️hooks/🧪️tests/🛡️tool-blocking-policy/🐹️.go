@@ -29,7 +29,7 @@ type blockingVectorFile struct {
 
 func loadBlockingVectors(ctx *host.Context) (blockingVectorFile, error) {
 	var file blockingVectorFile
-	raw, err := ctx.FixtureBytes(blockingVectors)
+	raw, err := ctx.InputBytes(blockingVectors)
 	if err != nil {
 		return file, err
 	}

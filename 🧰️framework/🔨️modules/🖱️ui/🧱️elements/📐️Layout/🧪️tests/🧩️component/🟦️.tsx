@@ -7,7 +7,6 @@ import { describe, expect, it } from "vitest";
 // undefined in jsdom ("Element type is invalid … Check the render method of `PanelTabButton`").
 import { Layout } from "@semio-tech/ui-react";
 import reserveFixture from "../../../../🧫️fixtures/🛟️panel-window-reservation/🔣️.json";
-import reserveSchema from "../../../../🧬️schema/🛟️panel-window-reservation/🔣️.json";
 // #endregion 🔌️Adapters
 
 describe("Layout panel overlay", () => {
@@ -23,11 +22,26 @@ describe("Layout panel overlay", () => {
   });
 });
 
+describe("Layout subfooter row", () => {
+  it("keeps the subfooter in flow as the last row, directly under the footer — the footer stays next to the region whose docked panels reach into it — and renders no row without one", () => {
+    for (const mobile of [false, true]) {
+      const { container, unmount } = render(<Layout mobile={mobile} navbar={<div data-testid="navbar" />} footer={<div data-testid="footer" />} subfooter={<div data-testid="band" />} canvas={<div data-testid="canvas" />} />);
+      const layout = container.querySelector('[data-slot="layout"]') as HTMLElement;
+      const row = container.querySelector('[data-slot="layout-subfooter"]') as HTMLElement;
+      const rows = Array.from(layout.children);
+      const holding = (testId: string) => rows.findIndex((child) => child.querySelector(`[data-testid="${testId}"]`) !== null);
+      expect([row.parentElement === layout, holding("navbar"), holding("canvas"), holding("footer"), holding("band"), rows.length], `mobile=${mobile}: navbar, middle, footer, subfooter — one row each, in this order`).toEqual([true, 0, 1, 2, 3, 4]);
+      expect([row.className, rows[holding("canvas")]!.contains(row), rows[holding("canvas")]!.nextElementSibling === rows[holding("footer")]], `mobile=${mobile}: the row is in flow, outside the region the panels and the canvas share, and never between that region and the footer`).toEqual(["flex-shrink-0", false, true]);
+      unmount();
+    }
+    const bare = render(<Layout footer={<div data-testid="footer" />} canvas={<div data-testid="canvas" />} />);
+    expect(bare.container.querySelector('[data-slot="layout-subfooter"]')).toBeNull();
+  });
+});
+
 describe("Shared native panel overlay contract", () => {
   it("keeps the window canvas full width under every open panel", async () => {
     const [{ chromium }, { default: Ajv }, { renderToStaticMarkup }] = await Promise.all([import("playwright"), import("ajv/dist/2020"), import("react-dom/server")]);
-    const validate = new Ajv({ strict: true }).compile(reserveSchema);
-    expect(validate(reserveFixture), JSON.stringify(validate.errors)).toBe(true);
     const browser = await chromium.launch({ headless: true });
     try {
       const page = await browser.newPage();

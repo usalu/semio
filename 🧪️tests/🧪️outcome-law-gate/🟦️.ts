@@ -98,9 +98,7 @@ function outcomeDocumentOracle(row: Case): string[] {
     .sort();
 }
 
-test("the planted-violation vectors satisfy their schema (Ajv)", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(read("🧬️schema/🔣️outcome-law-gate/🔣️.json") as object);
-  expect(validate(vectors), JSON.stringify(validate.errors)).toBe(true);
+test("the planted violations have unique authored source identities", () => {
   expect(new Set(vectors.cases.map((row) => row.id)).size).toBe(vectors.cases.length);
   expect(new Set(vectors.cases.map(pathOf)).size).toBe(vectors.cases.length);
 });

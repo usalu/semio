@@ -1,4 +1,4 @@
-//! 🧪️ `rotate-selection` fixture — `🧱️repeated-targets`.
+//! 🧪️ `rotate-selection` snapshot — `🧱️repeated-targets`.
 //!
 //! A target named twice is what the schema's `uniqueItems` forbids: a Fatal `mutation.invariant`, nothing turns.
 //!

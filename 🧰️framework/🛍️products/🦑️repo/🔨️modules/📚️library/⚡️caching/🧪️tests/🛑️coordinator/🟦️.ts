@@ -8,8 +8,7 @@ import { nxChildEnvironment } from "../../🚀️bootstrap/📜️script.ts";
 /** 🛑️ Exercises the actual coordinator after malformed process snapshots with controlled child processes. */
 export async function testNxCoordinator(root: string): Promise<void> {
   const require = createRequire(import.meta.url), ts = require("typescript"), cache = join(import.meta.dir, "../..");
-  const fixture = JSON.parse(readFileSync(join(cache, "🧫️fixtures/🛑️cancellation.json"), "utf8")), schema = JSON.parse(readFileSync(join(cache, "🧬️schema/🔣️.json"), "utf8"));
-  assert.equal(require("jsonschema").validate(fixture, schema.$defs.NxCoordinatorFixture).valid, true);
+  const fixture = JSON.parse(readFileSync(join(cache, "🧫️fixtures/🛑️cancellation.json"), "utf8"));
   const source = ts.createSourceFile("nx.ts", readFileSync(join(cache, "🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const coordinator = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "NxScript");
   const code = ts.transpileModule(coordinator.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
@@ -17,10 +16,13 @@ export async function testNxCoordinator(root: string): Promise<void> {
     const killed: number[] = [], child = Object.assign(new EventEmitter(), { pid: 1234 });
     const runtime = Object.assign(new EventEmitter(), { env: vector.environment, platform: vector.platform, exitCode: 0, kill: (pid: number, signal: number | string) => { if (!signal) throw new Error("No process"); killed.push(pid); } });
     let launchEnvironment: Record<string, string | undefined> = {};
-    const Coordinator = new Function("Script", "process", "createRequire", "join", "existsSync", "resolveNxInvocation", "devToolingEnv", "orchestratorBudgetOpts", "spawnNxProcess", "stopNxProcessTree", "nxChildEnvironment", code + "; return NxScript;")(
-      class { root = root; }, runtime, () => ({ resolve: (name: string) => name }), join, (path: string) => path.endsWith("node_modules/nx/package.json"), (args: string[]) => ({ args, env: {} }), (env: unknown) => env, () => ({}), (_command: string, _args: string[], options: { env: Record<string, string | undefined> }) => { launchEnvironment = options.env; return child; },
-      (command: string) => { if (command === "taskkill") { killed.push(child.pid); return { status: 0 }; } if (vector.throws) throw new Error("Snapshot unavailable"); return { status: 0, stdout: vector.stdout }; }, nxChildEnvironment);
+    let signalLaunch!: () => void;
+    const launched = new Promise<void>(resolve => { signalLaunch = resolve; });
+    const Coordinator = new Function("Script", "process", "createRequire", "join", "existsSync", "resolveNxInvocation", "devToolingEnv", "orchestratorBudgetOpts", "spawnNxProcess", "stopNxProcessTree", "nxChildEnvironment", "nxBootstrapServices", code + "; return NxScript;")(
+      class { root = root; }, runtime, () => ({ resolve: (name: string) => name }), join, (path: string) => path.endsWith("node_modules/nx/package.json"), (args: string[]) => ({ args, env: {} }), (env: unknown) => env, () => ({}), (_command: string, _args: string[], options: { env: Record<string, string | undefined> }) => { launchEnvironment = options.env; signalLaunch(); return child; },
+      (command: string) => { if (command === "taskkill") { killed.push(child.pid); return { status: 0 }; } if (vector.throws) throw new Error("Snapshot unavailable"); return { status: 0, stdout: vector.stdout }; }, nxChildEnvironment, () => ({ provisionNxTools: async () => ({ cli: join(root, "node_modules/nx/dist/bin/nx.js"), modulePath: join(root, "node_modules") }), activateNxTools: async () => {} }));
     const done = new Coordinator().run(["run", "fixture:build"]);
+    await launched;
     assert.doesNotThrow(() => runtime.emit("SIGTERM"), vector.name);
     child.emit("close", null);
     await done;

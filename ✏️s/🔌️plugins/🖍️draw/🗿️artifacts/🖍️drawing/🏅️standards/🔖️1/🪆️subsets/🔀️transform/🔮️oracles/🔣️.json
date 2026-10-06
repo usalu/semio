@@ -398,9 +398,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "update-layer-transform-moves-a-node",
       "class": "third-party-generated",
       "target": {

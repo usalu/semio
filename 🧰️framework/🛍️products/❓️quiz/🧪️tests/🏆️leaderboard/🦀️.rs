@@ -22,7 +22,7 @@ mod subject {
 
     /// 🧫️ The committed vectors and the catalog view they are viewed against.
     fn committed(ctx: &Context) -> Result<(Value, CatalogView), String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         let view = catalog_view(&decode!(vectors["catalog"], Catalog)?, &decode!(vectors["quizzes"], Vec<Quiz>)?);
         Ok((vectors, view))
     }
@@ -68,7 +68,7 @@ mod subject {
 
     /// 🗺️ The catalog view of every committed catalog with its quizzes.
     pub fn catalog_views(ctx: &Context) -> Result<Outcome, String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         keyed(&vectors["catalogs"], |vector| serde_json::to_value(catalog_view(&decode!(vector["catalog"], Catalog)?, &decode!(vector["quizzes"], Vec<Quiz>)?)).map_err(|error| error.to_string()))
     }
 
@@ -86,7 +86,7 @@ mod subject {
 
     /// 🪟️ The window of every period around every committed instant; `null` for all-time.
     pub fn windows(ctx: &Context) -> Result<Outcome, String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         keyed(&vectors["windows"], |vector| {
             let at = vector["at"].as_u64().ok_or("the vector names no instant")?;
             let mut windows = Map::new();

@@ -3,6 +3,7 @@ import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process
 /** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
 import { join, resolve } from "node:path";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { artifactIoArchitectureBreaches } from "../../🚪️io/🏛️architecture/🟦️.ts";
 import { dependencyDirectionEdges, dependencyDirectionSourceInventory, type DependencyDirectionGraphScope, type DependencyDirectionRule } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
 import { loadDependencyDirectionPolicy } from "../../🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts";
 import { verifyRustSourceDirection } from "../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
@@ -67,6 +68,13 @@ async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEn
 
 class LintScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "artifact-io-ownership") {
+      let checked = 0;
+      const breaches = artifactIoArchitectureBreaches(this.repoRoot, undefined, undefined, { progress: event => { if (++checked % 1000 === 0 || event.phase === "complete") console.log(`[artifact-io-ownership] ${event.phase}; checked=${checked}; ${event.path}`); } });
+      if (breaches.length) throw Error(`Artifact I/O ownership found ${breaches.length} breaches:\n${breaches.map(row => `${row.kind}: ${row.scope}`).join("\n")}`);
+      console.log("[artifact-io-ownership] all artifact schema and native codec ownership boundaries passed");
+      return;
+    }
     if (segments.length === 1 && ["styling-pixels", "styling-colors"].includes(segments[0]!)) {
       const { loadWorkspaceStylingSourceV1 } = await import("../../🎨️styling/📇️source/🟦️.ts");
       const { collectStylingViolationsV1 } = await import("../../../../../../🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts");
@@ -86,6 +94,16 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "artifact-io-ownership") {
+      if (segments.length !== 1) throw Error("Expected test artifact-io-ownership");
+      await runRepositoryTestCommand(process.execPath, ["test", "../../🧪️tests/🚪️artifact-io-ownership/🟦️.ts", "../../🚪️io/🏛️architecture/🧪️tests/physical-codecs/🟦️.ts", "../../../../../../🔨️modules/🌱️value/📝️text/🧪️tests/📏️utf8/🟦️.ts"], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "artifact-io-ownership"), budgetMs: 60_000 });
+      return;
+    }
+    if (segments.length === 1 && segments[0] === "rust-runtime-path-direction") {
+      const domain = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📁️runtime/🧪️tests");
+      await runRepositoryTestCommand(process.execPath, ["test", join(domain, "🟦️.ts"), join(domain, "🏘️execution/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "rust-runtime-path-direction"), budgetMs: 30_000 });
+      return;
+    }
     if (segments[0] === "nx-project-inference") {
       const revision = segments.length === 2 && segments[1] === "revision";
       const imports = segments.length === 2 && segments[1] === "imports";
@@ -94,8 +112,7 @@ class TestScript extends BundleScript {
       if (revision) {
         const output = repoTestArtifactEnvironment(this.repoRoot, "nx-project-inference-revision").SEMIO_TEST_ARTIFACT_DIR!;
         mkdirSync(output, { recursive: true });
-        const { testGraphRevision } = await import("../../⚡️caching/🧪️tests/🔁️graph-revision/🟦️.ts");
-        await testGraphRevision(this.repoRoot, output);
+        await runRepositoryTestCommand(process.execPath, [join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"), "test", "graph-revision"], { cwd: this.repoRoot, env: { ...repoTestArtifactEnvironment(this.repoRoot, "nx-project-inference-revision"), SEMIO_TEST_ARTIFACT_DIR: output } });
         console.log("[nx-project-inference] original Node/Bun graph revision laws passed");
         return;
       }
@@ -129,7 +146,7 @@ class TestScript extends BundleScript {
     if (segments[0] === "native-owner-command-policy") {
       if (segments.length !== 1) throw Error("Expected test native-owner-command-policy");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-command-policy/🟦️.ts");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "native-owner-command-policy") });
       return;
     }
@@ -160,10 +177,9 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "native-dependencies") {
       if (segments.length !== 1) throw new Error("Expected test native-dependencies");
-      const { testNativeDependencies } = await import("../../⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts");
       const env = repoTestArtifactEnvironment(this.repoRoot, "native-dependencies");
       mkdirSync(env.SEMIO_TEST_ARTIFACT_DIR!, { recursive: true });
-      await testNativeDependencies(this.repoRoot, env.SEMIO_TEST_ARTIFACT_DIR!);
+      await runRepositoryTestCommand(process.execPath, [join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"), "test", "native-dependencies"], { cwd: this.repoRoot, env });
       console.log("[DEBUG] native-dependencies: neutral environment vectors and independent bundler/schema/Cargo/Nx oracles passed");
       return;
     }
@@ -268,6 +284,41 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 30_000 });
       return;
     }
+    if (segments[0] === "runtime-corpus-behavior") {
+      if (segments.length !== 1) throw new Error("Expected test runtime-corpus-behavior");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("Caller-owned test output required");
+      const sources = [
+        "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔮️corpus-oracles/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🧪️tests/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🧪️tests/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔮️corpus-oracles/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧪️tests/🔮️corpus-oracles/🟦️.ts",
+        "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️gesture-drive-law/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🧩️shape/🟦️.ts",
+        "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧱️ownership/🟦️.ts",
+        "🧰️framework/🔨️modules/📡️replication/🧪️tests/🔮️corpus-oracles/🟦️.ts",
+        "🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts",
+        "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🏷️entity-kinds/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️artifact-packages/🔮️oracle/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧱️command-source/🟦️.ts",
+        "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🧪️tests/🟦️.ts",
+        "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🟦️.ts",
+        "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🚦️refusals/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔗️backbone-detach/🔮️oracle/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧩️pair/🧪️tests/🧪️canonical-pair-oracle/🔮️oracle/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🛑️coordinator/🔮️oracle/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧵️canonical-edit/🔮️oracle/🟦️.ts",
+        "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/💰️storage/🟦️.ts",
+        "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🧱️ownership/🟦️.ts",
+        "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧪️tests/🟦️.ts",
+        "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧪️tests/🟦️.ts",
+        "🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧱️neutrality/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts"
+      ];
+      await runRepositoryTestCommand(process.execPath, ["test", ...sources.map(source => join(this.repoRoot, source))], { cwd: this.repoRoot, env: process.env, budgetMs: 120_000 });
+      return;
+    }
     if (segments[0] === "go-test-dispatch") {
       if (segments.length !== 1) throw new Error("Expected test go-test-dispatch");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts");
@@ -336,8 +387,9 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "root-artifact-schema-law-source") {
       if (segments.length !== 1) throw new Error("Expected test root-artifact-schema-law-source");
+      const { level } = resolveTestLevel([], "quick");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-artifact-schema-law-source/🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "root-artifact-schema-law-source"), budgetMs: 45_000 });
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "root-artifact-schema-law-source"), budgetMs: TEST_LEVEL_BUDGET_MS[level] });
       return;
     }
     if (segments[0] === "root-surface-abstraction-law-source") {

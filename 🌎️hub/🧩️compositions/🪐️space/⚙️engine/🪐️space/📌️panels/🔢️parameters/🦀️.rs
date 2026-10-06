@@ -29,7 +29,7 @@ use semio_framework_ui_contract::{InputKind, Label, Trigger};
 pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(S_PLAY_PARAMETERS_TAB_ID.into()),
-        label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, "Parameter"),
+        label: semio_framework_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, "Parameter"),
         group: PanelGroup::Workbench,
         body_key: Some(crate::engine::space::S_PLAY_PARAMETERS_BODY_KEY.into()),
         children: Vec::new(),

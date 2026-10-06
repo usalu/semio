@@ -3,7 +3,7 @@
 pub mod set_active_example {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::editor::architect::reset_document_effect;
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::{sample_plugin, ProgramSnapshot};
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;

@@ -12,14 +12,14 @@ use crate::editor::puzzle5d::{
     collect_mesh_urls, engine_grip_kind, grips_from_templates, puzzle5d_grip_full_id, resolve_part_mesh_url, world_grip_position, Puzzle5dDocument, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dPart, Puzzle5dPart2d,
     Puzzle5dPart3d, PUZZLE5D_BOARD_PLACEMENT_GAP, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_FALLBACK_MESH_KIND,
 };
-use crate::standards::v1::subsets::any::schema::mutations::text::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::{connect_grips, create_part, Puzzle5dMutation};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_plugin::{Fault, ToolRunJob};
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunTick, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_TRACE_PAGE_OPS_MAX};
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::config::Puzzle3dConfig;
 use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main as world3d;
-use semio_s_artifact_puzzle_3d::editor::puzzle3d::puzzle3d_fixture_from_snapshot;
+use semio_s_artifact_puzzle_3d::editor::puzzle3d::puzzle3d_scene_snapshot_from_document;
 use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{ConnectVortices, Puzzle3dMutation};
 use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::BrushPreviewState;
 use semio_s_artifact_puzzle_3d::{Puzzle3dAttraction, Puzzle3dCatalogObjectKind, Puzzle3dCatalogVortexKind, Puzzle3dCatalogVortexTemplate, Puzzle3dKindCatalogs, Puzzle3dMeta, Puzzle3dObject, Puzzle3dPlaySnapshot, Puzzle3dRepresentation, Puzzle3dScale, Puzzle3dSnapshot, Puzzle3dVortex, PUZZLE_3D_SCHEMA};
@@ -51,7 +51,7 @@ pub fn puzzle5d_placement_entity(part_id: &str) -> u64 {
 /// of `document`, or the kind meshes and sorted urls when that document cannot be built (no run can start then).
 pub fn puzzle5d_mesh_lane(snapshot: &Puzzle5dPlaySnapshot, document: &Puzzle5dDocument) -> Vec<String> {
     match puzzle5d_authored_kind_catalogs(snapshot).and_then(|catalogs| puzzle3d_snapshot(document, catalogs)) {
-        Ok(snapshot) => world3d::mesh_lane(&puzzle3d_fixture_from_snapshot(snapshot.typed())),
+        Ok(snapshot) => world3d::mesh_lane(&puzzle3d_scene_snapshot_from_document(snapshot.typed())),
         Err(_) => {
             let mut urls = collect_mesh_urls(document);
             urls.sort();

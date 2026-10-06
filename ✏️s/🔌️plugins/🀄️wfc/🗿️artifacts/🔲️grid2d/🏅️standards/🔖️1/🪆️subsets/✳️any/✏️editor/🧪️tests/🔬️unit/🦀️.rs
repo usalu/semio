@@ -177,9 +177,10 @@ fn a_canvas_press_on_the_grid_pins_the_cell_under_the_pointer() {
     let centre = grid::cell_at(&document, &config, 400.0, 300.0, 800.0, 600.0).expect("the pane centre is a cell");
     assert_eq!(centre, (document.width / 2, document.height / 2));
     let pinned = Grid2dEditor::armed_pick(&document, &config, grid::UTILITY_PIN, centre.0, centre.1).expect("pick").expect("the pin utility edits");
-    assert_eq!(pinned.1, format!("Pin cell ({}, {})", centre.0, centre.1));
+    let english = |mutation: &Grid2dMutation| protocol::SemanticMutation::<Grid2dSnapshot>::label(mutation).resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string();
+    assert!(english(&pinned).starts_with(&format!("Pin cell ({}, {}) to ", centre.0, centre.1)), "{}", english(&pinned));
     let masked = Grid2dEditor::armed_pick(&document, &config, grid::UTILITY_MASK, 5, 5).expect("pick").expect("the mask utility edits");
-    assert_eq!(masked.1, "Unmask cell (5, 5)", "an already masked cell toggles back");
+    assert_eq!(english(&masked), "Unmask cell (5, 5)", "an already masked cell toggles back");
     assert!(Grid2dEditor::armed_pick(&document, &config, grid::UTILITY_SELECT, 1, 1).expect("pick").is_none(), "the select utility only picks");
     assert_eq!(grid::cell_at(&document, &config, 1.0, 1.0, 800.0, 600.0), None, "a press beside the grid picks nothing");
     assert!(!grid::owns_surface(preview::SURFACE_ID), "a press on the read-only preview surface never edits");
@@ -258,7 +259,7 @@ fn the_solve_command_starts_the_fill_run() {
 #[test]
 fn the_commit_fill_command_writes_solve_json() {
     let document = crate::examples::grid2d::pipes::document();
-    let commit = crate::schema::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("pipes solves");
+    let commit = crate::host::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("pipes solves");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let no_config = NoConfig::default();
@@ -269,6 +270,33 @@ fn the_commit_fill_command_writes_solve_json() {
     let solve_json = semio_framework_pack_json::to_json_string(&commit);
     let emit = Grid2dEditor::dispatch(&Grid2dEditorCommand::CommitFill { solve_json: solve_json.clone() }, &doc, &cfg, Some(&view)).expect("commit-fill writes");
     assert_eq!(emit.window_config_mutations.len(), 1);
+}
+
+/// 🎯️ LAW (design §22.32): a cell click of an armed writing utility is the framework's one-step tool — ONE tool transaction
+/// `s.wfc.grid2d@1/*#editor#<utility>` holding the click's one leaf, from the pick verb; `select` yields nothing and leaves
+/// zero trace; a view without an admission publishes the leaf plainly.
+#[test]
+fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
+    let document = crate::examples::grid2d::pipes::document();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let admitted = ArtifactView::with_operation(&document, &history, semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], authoring_seed: "seed".into() });
+    let no_config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &no_config, window: None };
+    let armed = |utility: &str| {
+        let mut view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        view.active_utility_id = Some(utility.into());
+        view
+    };
+    let click = Grid2dEditorCommand::PickCell { x: 0, y: 0 };
+    for utility in [grid::UTILITY_PIN, grid::UTILITY_MASK] {
+        let emit = Grid2dEditor::dispatch(&click, &admitted, &cfg, Some(&armed(utility))).expect("the armed click dispatches");
+        let transaction = emit.transaction.clone().expect("the click is a tool transaction");
+        assert_eq!((transaction.tool, emit.artifact_mutations.len()), (format!("{}#{utility}", Grid2dEditor::TOOL_APP_ID), 1), "ONE transaction of the click's one leaf");
+    }
+    let selected = Grid2dEditor::dispatch(&click, &admitted, &cfg, Some(&armed(grid::UTILITY_SELECT))).expect("select dispatches");
+    assert!(selected.transaction.is_none() && selected.artifact_mutations.is_empty(), "select yields nothing: zero trace");
+    let plain = Grid2dEditor::dispatch(&click, &ArtifactView::new(&document, &history), &cfg, Some(&armed(grid::UTILITY_MASK))).expect("a view without an admission dispatches");
+    assert!(plain.transaction.is_none() && plain.artifact_mutations.len() == 1, "no admission: the leaf publishes plainly");
 }
 
 /// ⚖️ LAW: `TOOL_IDS`, the per-tool publication-lane contracts and the `bounded_first_step_tool_proofs!`

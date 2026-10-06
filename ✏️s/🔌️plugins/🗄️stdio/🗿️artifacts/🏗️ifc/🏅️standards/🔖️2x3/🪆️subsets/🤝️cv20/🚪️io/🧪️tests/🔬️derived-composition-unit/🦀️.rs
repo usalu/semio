@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::standards::v2x3::subsets::cv20::schema::CODE_VIEW_DEFINITION;
-    use crate::standards::v2x3::subsets::cv20::schema::Ifc2x3Cv20BuilderConstruction as Ifc2x3Cv20Builder;
+    use crate::standards::v2x3::subsets::cv20::io::Ifc2x3Cv20BuilderConstruction as Ifc2x3Cv20Builder;
     use semio_framework_plugin::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;
 

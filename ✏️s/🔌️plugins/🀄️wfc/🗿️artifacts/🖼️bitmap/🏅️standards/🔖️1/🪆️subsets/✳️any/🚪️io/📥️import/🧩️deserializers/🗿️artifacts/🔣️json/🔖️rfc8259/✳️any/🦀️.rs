@@ -9,7 +9,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 
 /// 📖️ Typed decode of canonical JSON text into `BitmapSnapshot`.
 pub fn deserialize(text: &str) -> Result<BitmapSnapshot, semio_framework_value::ValueError> {
-    semio_framework_pack_json::from_json_str::<BitmapSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject)
+    crate::standards::v1::subsets::any::io::text::bitmap_json_decode::<BitmapSnapshot>(text)
 }
 
 pub struct JsonIntoBitmap;

@@ -1,0 +1,30 @@
+{
+  "scope": "held-own14-set-snapshot-codec-authority",
+  "productionMounted": false,
+  "gatesRun": false,
+  "binaryRegistrySignature": "fn(&PdfMutation) -> Option<Result<Vec<u8>, String>>",
+  "textRegistrySignature": "fn(&PdfMutation) -> Option<String>",
+  "constraints": [
+    {
+      "owner": "existing binary::Reader::number",
+      "actual": "rejects nonfinite f64",
+      "preserve": "original InsertPage/Resize policy",
+      "newWholeReplacement": "must not reuse this reader for accepted raw Snapshot words"
+    },
+    {
+      "owner": "existing leaf text printer",
+      "actual": "PackJSON serialization followed by hex",
+      "newWholeReplacement": "do not copy JSON carrier: full Snapshot raw-word preservation unproved"
+    },
+    {
+      "owner": "own14 ArtifactDsl",
+      "actual": "print_dsl/parse_dsl use genuine own Record spec and schema identity",
+      "proposal": "own Set text payload can frame exact own DSL text; demand NaN payload/±infinity/-0 preservation before approval"
+    },
+    {
+      "owner": "own14 ArtifactPack",
+      "actual": "encode_pack_with/decode_pack_with receive explicit caller options",
+      "proposal": "reuse only if options remain caller-owned at required operation boundary; no hidden unlimited/default-policy assertion"
+    }
+  ]
+}

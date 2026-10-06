@@ -253,11 +253,11 @@ impl ArtifactEditor for BmpEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::io::encode_bmp(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+        crate::standards::v_v3::subsets::any::io::encode_bmp(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        crate::io::decode_bmp(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+        crate::standards::v_v3::subsets::any::io::decode_bmp(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
     fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
@@ -296,7 +296,7 @@ impl ArtifactEditor for BmpEditor {
         }
         if paint_region::TOOL_IDS.contains(&request.tool_id.as_str()) {
             if bmpEditor_command_id(&request.command) != request.tool_id {
-                return Err(Fault::from("stdio-bmp-paint-region-tool-mismatch"));
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-bmp-paint-region-tool-mismatch"));
             }
             let operation = AppOperationContext {
                 app_instance_id: request.app_instance_id,
@@ -330,7 +330,7 @@ impl ArtifactEditor for BmpEditor {
             return Ok(None);
         }
         if bmpEditor_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-example-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,

@@ -2,14 +2,14 @@
 
 use super::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::any::schema::wire_runtime::{JackEffectRetirementFactory, JackSnapshotCloneAuthority, JackSnapshotCloneStep, JackSnapshotRetirementFactory};
+use crate::host::{JackEffectRetirementFactory, JackSnapshotCloneAuthority, JackSnapshotCloneStep, JackSnapshotRetirementFactory};
 use crate::{port_key, JackSnapshot, Port, PortDirection, PropertyBag};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use std::collections::{BTreeSet, VecDeque};
 use std::ops::Bound::{Excluded, Unbounded};
 
 const QUERY_ENTITY_MAXIMUM: usize = 16_384;
-pub(crate) const QUERY_OUTPUT_MAXIMUM_BYTES: usize = 1_048_576;
+pub const QUERY_RESULT_MAXIMUM_OWNED_BYTES: usize = 1_048_576;
 const QUERY_ENTITY_COLLECTION_MAXIMUM: usize = 128;
 const QUERY_ENTITY_NESTING_MAXIMUM: usize = 16;
 
@@ -109,48 +109,62 @@ fn content_edge_bytes(edge:&semio_s_artifact_stdio_semio::standards::v1::subsets
     content_bag_bytes(&edge.properties,&mut items,&mut bytes,maximum)
 }
 
-fn json_string_bytes(value: &str) -> Result<usize, ValueError> {
-    let mut bytes = 2usize;
-    for byte in value.bytes() {
-        let escaped = match byte {
-            b'"' | b'\\' | b'\x08' | b'\x0c' | b'\n' | b'\r' | b'\t' => 2,
-            0..=0x1f => 6,
-            _ => 1,
-        };
-        bytes = bytes.checked_add(escaped).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit,"query JSON string bound overflow"))?;
-    }
-    Ok(bytes)
+fn reserve_result<T>(values: &mut Vec<T>, owned: &mut usize, maximum: usize) -> Result<(), ValueError> {
+    if values.len() < values.capacity() { return Ok(()); }
+    let inline = size_of::<T>();
+    let previous = values.capacity();
+    let growth = previous.max(1).min(maximum.saturating_sub(*owned).checked_div(inline).unwrap_or(usize::MAX)).max(1);
+    let admitted = growth.checked_mul(inline).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query result capacity overflow"))?;
+    add_result_owned(owned, admitted, maximum)?;
+    values.try_reserve_exact(growth).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "query result allocation refused"))?;
+    let extra = values.capacity().checked_sub(previous).and_then(|count| count.checked_sub(growth)).and_then(|count| count.checked_mul(inline)).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query result capacity overflow"))?;
+    add_result_owned(owned, extra, maximum)
 }
 
-fn property_json_upper_bound(value: &PropertyValue, depth: usize, items: &mut usize) -> Result<usize, ValueError> {
-    if depth > QUERY_ENTITY_NESTING_MAXIMUM {
-        return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query result exceeds its nesting admission"));
-    }
-    *items = items.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit,"query result item count overflow"))?;
-    if *items > QUERY_ENTITY_COLLECTION_MAXIMUM {
-        return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query result exceeds its collection admission"));
-    }
-    match value {
-        PropertyValue::Null => Ok(4),
-        PropertyValue::Bool(_) => Ok(5),
-        PropertyValue::Number(_) => Ok(32),
-        PropertyValue::String(value) => json_string_bytes(value),
-        PropertyValue::Array(values) => {
-            let mut bytes = 2usize;
-            for value in values {
-                bytes = bytes.checked_add(property_json_upper_bound(value, depth + 1, items)?).and_then(|bytes| bytes.checked_add(1)).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit,"query result byte count overflow"))?;
+fn add_result_owned(owned: &mut usize, additional: usize, maximum: usize) -> Result<(), ValueError> {
+    *owned = owned.checked_add(additional).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query result byte count overflow"))?;
+    if *owned > maximum { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "query result exceeds its retained ownership grant")); }
+    Ok(())
+}
+
+fn graph_result_metadata_owned_bytes(graph: &Graph, maximum: usize) -> Result<usize, ValueError> {
+    let mut bytes = size_of::<JackSnapshot>() + size_of::<crate::JackContentOwner>() + 2 * size_of::<usize>();
+    add_result_owned(&mut bytes, JackSnapshot::SCHEMA.len() + graph.name.capacity() + graph.manifest_id.as_ref().map_or(0, String::capacity) + graph.root_node_id.as_ref().map_or(0, String::capacity), maximum)?;
+    let mut properties = |values: &Vec<crate::PropertyDef>| -> Result<(), ValueError> {
+        add_result_owned(&mut bytes, values.capacity().checked_mul(size_of::<crate::PropertyDef>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query metadata capacity overflow"))?, maximum)?;
+        for value in values {
+            add_result_owned(&mut bytes, value.name.capacity() + value.expr.as_ref().map_or(0, String::capacity), maximum)?;
+            let mut value_type = &value.value_type;
+            let mut depth = 0;
+            loop {
+                match value_type {
+                    semio_framework_value::ValueType::List(inner) => {
+                        depth += 1;
+                        if depth > QUERY_ENTITY_NESTING_MAXIMUM { return Err(ValueError::new(ValueRefusalKind::WorkLimit, "query result metadata exceeds its nesting admission")); }
+                        add_result_owned(&mut bytes, size_of::<semio_framework_value::ValueType>(), maximum)?;
+                        value_type = inner;
+                    }
+                    semio_framework_value::ValueType::Schema(text) => { add_result_owned(&mut bytes, text.capacity(), maximum)?; break; }
+                    _ => break,
+                }
             }
-            Ok(bytes)
         }
-        PropertyValue::Object(values) => {
-            let mut bytes = 2usize;
-            for (key, value) in values {
-                let value_bytes = property_json_upper_bound(value, depth + 1, items)?;
-                bytes = bytes.checked_add(json_string_bytes(key)?).and_then(|bytes| bytes.checked_add(value_bytes)).and_then(|bytes| bytes.checked_add(2)).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit,"query result byte count overflow"))?;
-            }
-            Ok(bytes)
-        }
+        Ok(())
+    };
+    for kind in &graph.manifest.node_kinds { properties(&kind.properties)?; }
+    for kind in &graph.manifest.edge_kinds { properties(&kind.properties)?; }
+    for kind in &graph.manifest.port_kinds { properties(&kind.properties)?; }
+    for (capacity, inline) in [(graph.manifest.node_kinds.capacity(), size_of::<crate::NodeKindDef>()), (graph.manifest.edge_kinds.capacity(), size_of::<crate::EdgeKindDef>()), (graph.manifest.port_kinds.capacity(), size_of::<crate::PortKindDef>())] {
+        add_result_owned(&mut bytes, capacity.checked_mul(inline).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query metadata capacity overflow"))?, maximum)?;
     }
+    for kind in &graph.manifest.node_kinds {
+        add_result_owned(&mut bytes, kind.name.capacity(), maximum)?;
+        add_result_owned(&mut bytes, kind.port_kinds.capacity().checked_mul(size_of::<String>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query metadata capacity overflow"))?, maximum)?;
+        for port in &kind.port_kinds { add_result_owned(&mut bytes, port.capacity(), maximum)?; }
+    }
+    for kind in &graph.manifest.edge_kinds { add_result_owned(&mut bytes, kind.name.capacity(), maximum)?; }
+    for kind in &graph.manifest.port_kinds { add_result_owned(&mut bytes, kind.name.capacity(), maximum)?; }
+    Ok(bytes)
 }
 
 /// 🧱 One preparation turn clones one snapshot metadata field or one working-scene entity.
@@ -167,14 +181,16 @@ pub struct QueryExecutionPreparation {
     graph: Option<Graph>,
     node: usize,
     edge: usize,
-    metadata_output_upper_bound: usize,
+    maximum_result_owned_bytes: usize,
     closing: bool,
     terminal: bool,
 }
 
 impl QueryExecutionPreparation {
-    pub fn new(query: Query) -> Self {
-        Self { query: Some(query), metadata: JackSnapshotCloneAuthority::metadata_only(), metadata_retirement: None, graph: None, node: 0, edge: 0, metadata_output_upper_bound: 512, closing: false, terminal: false }
+    pub fn new(query: Query) -> Self { Self::with_result_grant(query, QUERY_RESULT_MAXIMUM_OWNED_BYTES) }
+
+    pub fn with_result_grant(query: Query, maximum_result_owned_bytes: usize) -> Self {
+        Self { query: Some(query), metadata: JackSnapshotCloneAuthority::metadata_only(), metadata_retirement: None, graph: None, node: 0, edge: 0, maximum_result_owned_bytes, closing: false, terminal: false }
     }
 
     pub fn step(&mut self, snapshot: &JackSnapshot, scene: &SemioGraphSnapshot, maximum_bytes: usize) -> Result<QueryPreparationStep, ValueError> {
@@ -183,8 +199,7 @@ impl QueryExecutionPreparation {
         }
         if self.graph.is_none() {
             match self.metadata.advance(snapshot, maximum_bytes)? {
-                JackSnapshotCloneStep::Pending { copied_bytes } => {
-                    self.metadata_output_upper_bound = self.metadata_output_upper_bound.saturating_add(copied_bytes.saturating_mul(6)).saturating_add(128);
+                JackSnapshotCloneStep::Pending { .. } => {
                     return Ok(QueryPreparationStep::Pending);
                 }
                 JackSnapshotCloneStep::Complete => {}
@@ -245,7 +260,7 @@ impl QueryExecutionPreparation {
         let graph = self.graph.take().expect("query preparation graph remains owned");
         let query = self.query.take().expect("query preparation AST remains owned");
         self.terminal = true;
-        Ok(QueryPreparationStep::Complete(Box::new(QueryExecution::with_metadata_output_upper_bound(graph, query, self.metadata_output_upper_bound))))
+        Ok(QueryPreparationStep::Complete(Box::new(QueryExecution::with_result_grant(graph, query, self.maximum_result_owned_bytes))))
     }
 
     pub fn begin_close(&mut self) {
@@ -407,12 +422,12 @@ struct ReturnExecution {
     nodes: Vec<Node>,
     edges: Vec<Edge>,
     root_selected: bool,
-    output_bytes: usize,
-    metadata_output_upper_bound: usize,
+    result_owned_bytes: usize,
+    maximum_result_owned_bytes: usize,
 }
 
 impl ReturnExecution {
-    fn new(metadata_output_upper_bound: usize) -> Self {
+    fn new(maximum_result_owned_bytes: usize) -> Self {
         Self {
             phase: ReturnPhase::Columns,
             columns: Vec::new(),
@@ -425,16 +440,12 @@ impl ReturnExecution {
             nodes: Vec::new(),
             edges: Vec::new(),
             root_selected: false,
-            output_bytes: 256,
-            metadata_output_upper_bound,
+            result_owned_bytes: size_of::<QueryResult>(),
+            maximum_result_owned_bytes,
         }
     }
-    fn add_output(&mut self, bytes: usize) -> Result<(), ValueError> {
-        self.output_bytes = self.output_bytes.checked_add(bytes).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit,"query result byte count overflow"))?;
-        if self.output_bytes > QUERY_OUTPUT_MAXIMUM_BYTES {
-            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"query result exceeds its output admission"));
-        }
-        Ok(())
+    fn add_owned(&mut self, bytes: usize) -> Result<(), ValueError> {
+        add_result_owned(&mut self.result_owned_bytes, bytes, self.maximum_result_owned_bytes)
     }
     fn advance_pair(&mut self, items: &[ReturnItem]) {
         self.item += 1;
@@ -444,6 +455,7 @@ impl ReturnExecution {
         }
     }
     fn step(&mut self, graph: &mut Graph, bindings: &[Binding], items: &[ReturnItem]) -> Result<Option<QueryResult>, ValueError> {
+        self.add_owned(0)?;
         match self.phase {
             ReturnPhase::Columns => {
                 if let Some(item) = items.get(self.item) {
@@ -451,7 +463,8 @@ impl ReturnExecution {
                         ReturnItem::Var(value) => value.clone(),
                         ReturnItem::Property { var, prop } => format!("{var}.{prop}"),
                     };
-                    self.add_output(json_string_bytes(&column)?.saturating_add(1))?;
+                    self.add_owned(column.capacity())?;
+                    reserve_result(&mut self.columns, &mut self.result_owned_bytes, self.maximum_result_owned_bytes)?;
                     self.columns.push(column);
                     self.item += 1;
                 } else {
@@ -464,10 +477,10 @@ impl ReturnExecution {
                     self.binding = 0;
                     self.item = 0;
                     if self.graph_result {
-                        self.add_output(self.metadata_output_upper_bound)?;
+                        graph.name.try_reserve_exact(" subgraph".len()).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "query graph name allocation refused"))?;
+                        self.add_owned(graph_result_metadata_owned_bytes(graph, self.maximum_result_owned_bytes)?)?;
                         self.phase = ReturnPhase::Select;
                     } else {
-                        self.add_output(2)?;
                         self.phase = ReturnPhase::Table;
                     }
                 } else {
@@ -496,7 +509,8 @@ impl ReturnExecution {
                 if let Some(id) = self.node_ids.pop_first() {
                     if let Some(node) = graph.nodes.get(&id) {
                         let bytes = node_owned_bytes(node, 4_096)?;
-                        self.add_output(bytes.saturating_mul(6).saturating_add(512))?;
+                        self.add_owned(bytes - size_of::<Node>())?;
+                        reserve_result(&mut self.nodes, &mut self.result_owned_bytes, self.maximum_result_owned_bytes)?;
                         self.root_selected |= graph.root_node_id.as_deref() == Some(id.as_str());
                         self.nodes.push(node.clone());
                     }
@@ -508,7 +522,8 @@ impl ReturnExecution {
                 if let Some(id) = self.edge_ids.pop_first() {
                     if let Some(edge) = graph.edges.get(&id) {
                         let bytes = edge_owned_bytes(edge, 4_096)?;
-                        self.add_output(bytes.saturating_mul(6).saturating_add(384))?;
+                        self.add_owned(bytes - size_of::<Edge>())?;
+                        reserve_result(&mut self.edges, &mut self.result_owned_bytes, self.maximum_result_owned_bytes)?;
                         self.edges.push(edge.clone());
                     }
                 } else {
@@ -535,7 +550,7 @@ impl ReturnExecution {
                     return Ok(Some(QueryResult::table(std::mem::take(&mut self.columns), std::mem::take(&mut self.rows))));
                 } else {
                     if self.rows.len() == self.binding {
-                        self.add_output(3)?;
+                        reserve_result(&mut self.rows, &mut self.result_owned_bytes, self.maximum_result_owned_bytes)?;
                         self.rows.push(Vec::new());
                     }
                     {
@@ -543,8 +558,11 @@ impl ReturnExecution {
                             ReturnItem::Var(var) => bindings[self.binding].nodes.get(var).and_then(|id| graph.node(id)).map_or(PropertyValue::Null, |node| PropertyValue::String(node.name.clone())),
                             ReturnItem::Property { var, prop } => binding_value(graph, &bindings[self.binding], var, prop).unwrap_or(PropertyValue::Null),
                         };
-                        let mut output_items = 0;
-                        self.add_output(property_json_upper_bound(&value, 0, &mut output_items)?.saturating_add(1))?;
+                        let mut retained_items = 0;
+                        let mut retained_bytes = 0;
+                        property_owned_bytes(&value, 0, &mut retained_items, &mut retained_bytes, self.maximum_result_owned_bytes)?;
+                        self.add_owned(retained_bytes - size_of::<PropertyValue>())?;
+                        reserve_result(&mut self.rows[self.binding], &mut self.result_owned_bytes, self.maximum_result_owned_bytes)?;
                         self.rows[self.binding].push(value);
                         self.advance_pair(items);
                     }
@@ -570,7 +588,7 @@ pub struct QueryExecution {
     pending: VecDeque<GraphEffect>,
     deleting: Option<DeleteExecution>,
     operations: Vec<GraphEffect>,
-    metadata_output_upper_bound: usize,
+    maximum_result_owned_bytes: usize,
     pending_clause_advance: bool,
     finished: bool,
     closing: bool,
@@ -581,9 +599,9 @@ pub struct QueryExecution {
 
 impl QueryExecution {
     pub fn new(graph: Graph, query: Query) -> Self {
-        Self::with_metadata_output_upper_bound(graph, query, 512)
+        Self::with_result_grant(graph, query, QUERY_RESULT_MAXIMUM_OWNED_BYTES)
     }
-    fn with_metadata_output_upper_bound(graph: Graph, query: Query, metadata_output_upper_bound: usize) -> Self {
+    pub fn with_result_grant(graph: Graph, query: Query, maximum_result_owned_bytes: usize) -> Self {
         Self {
             graph,
             query: Some(query),
@@ -597,7 +615,7 @@ impl QueryExecution {
             pending: VecDeque::new(),
             deleting: None,
             operations: Vec::new(),
-            metadata_output_upper_bound,
+            maximum_result_owned_bytes,
             pending_clause_advance: false,
             finished: false,
             closing: false,
@@ -762,11 +780,12 @@ impl QueryExecution {
     fn query_step(&mut self, query: &Query) -> Result<Option<(QueryResult, Vec<GraphEffect>)>, ValueError> {
         let Some(clause) = query.clauses.get(self.clause) else {
             if self.return_clause.is_none() {
+                add_result_owned(&mut 0, size_of::<QueryResult>(), self.maximum_result_owned_bytes)?;
                 self.finished = true;
                 return Ok(Some((QueryResult::table(Vec::new(), Vec::new()), std::mem::take(&mut self.operations))));
             }
-            let metadata_output_upper_bound = self.metadata_output_upper_bound;
-            let returning = self.returning.get_or_insert_with(|| ReturnExecution::new(metadata_output_upper_bound));
+            let maximum_result_owned_bytes = self.maximum_result_owned_bytes;
+            let returning = self.returning.get_or_insert_with(|| ReturnExecution::new(maximum_result_owned_bytes));
             let items = self
                 .return_clause
                 .and_then(|index| query.clauses.get(index))

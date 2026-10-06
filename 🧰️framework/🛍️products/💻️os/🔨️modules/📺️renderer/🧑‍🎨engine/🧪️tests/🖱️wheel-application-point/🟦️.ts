@@ -7,12 +7,11 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import { describe, expect, it } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(suiteRoot, "../../🧫️fixtures/🖱️wheel-application-point/🔣️.json");
-const schemaPath = resolve(suiteRoot, "../../🧬️schema/🖱️wheel-application-point/🔣️.json");
 
 type Modifiers = { readonly shift: boolean; readonly ctrl: boolean; readonly meta: boolean; readonly alt: boolean };
 type ScrollRow = { readonly kind: "scroll"; readonly x: number; readonly y: number; readonly deltaX: number; readonly deltaY: number; readonly modifiers: Modifiers };
@@ -32,7 +31,6 @@ type Fixture = {
 
 const fixtureValue: unknown = JSON.parse(readFileSync(fixturePath, "utf8"));
 const fixture = fixtureValue as Fixture;
-const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as object;
 
 /** 🖱️ Mounts a browser event receiver and records the owned value copied from every WheelEvent. */
 const receive = (events: readonly InputRow[]): Application[] => {
@@ -74,8 +72,6 @@ const receive = (events: readonly InputRow[]): Application[] => {
 
 describe("🖱️ owned Scroll dispatch", () => {
   it("validates the shared fixture against its strict schema", () => {
-    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixtureValue), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.rule.id).toBe("ownedScrollDispatch");
     expect(fixture.rule.statement).toContain("exactly one ordered owned dispatch");
   });

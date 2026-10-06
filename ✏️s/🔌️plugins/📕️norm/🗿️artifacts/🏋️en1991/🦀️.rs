@@ -238,20 +238,20 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "en1991.document",
                     extension: Some("en1991"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1991.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "en1991.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1991.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -270,8 +270,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1991.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -280,8 +280,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("en1991.spr"),
                 },
             ]
@@ -308,20 +308,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod outline {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
@@ -334,21 +326,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                                                 #[path = "."]
                         pub mod change_annex {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍change-annex/🦀️.rs"]
@@ -1167,62 +1150,36 @@ pub mod standards {
 pub mod artifact_schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
-pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-}
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-}
+
+
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-    }
+
+
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::mutations::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-    }
+
+
+
 }
 pub mod snapshot {
     pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-    }
+
+
+
 }
 pub use crate::standards::v1::subsets::any::schema::diff::En1991Diff;
 pub use crate::standards::v1::subsets::any::schema::mutations::En1991Mutation;
@@ -1351,3 +1308,5 @@ pub mod multi_fail_noncompliant;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/⚠️multi-fail-noncompliant/🧪️tests/📚️example/🦀️.rs"]
 mod example_multi_fail_noncompliant;
 //#endregion 🚢️TaxonomyMounts
+
+pub use crate::standards::v1::subsets::any::io::{En1991BuilderConstruction, En1991Parts, En1991AnalyzerAnalysis, En1991BuilderFacets, En1991Builder, En1991Analyzer, En1991Composer};

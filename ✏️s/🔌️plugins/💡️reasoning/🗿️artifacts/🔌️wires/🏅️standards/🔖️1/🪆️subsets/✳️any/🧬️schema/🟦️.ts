@@ -4,7 +4,7 @@ import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../
 
 export interface WiresArtifact {
   /** @state artifact */
-  wiresFixture: WiresValue;
+  wiresSnapshot: WiresValue;
   /** @state artifact @child kind=s.stdio.semio */
   content: ArtifactChild;
   /** @state artifact */
@@ -15,7 +15,7 @@ export interface WiresArtifact {
 export function parseWiresArtifact(value: unknown, at = "$" ): WiresArtifact {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: document must be an object`);
   const row = value as Record<string, unknown>;
-  const keys = ["wiresFixture", "content", "meta"];
+  const keys = ["wiresSnapshot", "content", "meta"];
   if (Object.keys(row).length !== keys.length || keys.some((key) => !Object.hasOwn(row, key))) throw new Error(`${at}: document fields do not match its schema`);
-  return { wiresFixture: parseWiresValue(row.wiresFixture), content: parseArtifactChild(row.content), meta: parseWiresValue(row.meta) };
+  return { wiresSnapshot: parseWiresValue(row.wiresSnapshot), content: parseArtifactChild(row.content), meta: parseWiresValue(row.meta) };
 }

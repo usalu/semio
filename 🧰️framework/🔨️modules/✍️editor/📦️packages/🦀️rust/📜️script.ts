@@ -35,6 +35,16 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);
+/** 🧫️ Runs the complete shared owner corpus and independent oracle. */
+class OwnedErrorScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-owned-error accepts no arguments");
+  const {runBudgetedTestCommand}=await import("../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts");
+  const source=resolve(this.root,"../../⚠️error/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+ }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test-owned-error",OwnedErrorScript).register("wasm", WasmScript).register("test", TestScript);
 
 await runScriptMain(router, { defaultCommand: "wasm" });

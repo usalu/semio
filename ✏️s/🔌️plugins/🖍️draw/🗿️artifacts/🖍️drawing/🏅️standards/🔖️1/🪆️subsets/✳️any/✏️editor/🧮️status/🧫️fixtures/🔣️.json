@@ -1,0 +1,13 @@
+{
+ "schema":"drawing.selection-status/v1",
+ "counting":"top-level-layers-and-framework-layer-selection",
+ "labels":[
+  {"locale":"en","layerOne":"{count} layer","layerMany":"{count} layers","selected":"{count} selected","layerName":"Layer name"},
+  {"locale":"de","layerOne":"{count} Ebene","layerMany":"{count} Ebenen","selected":"{count} ausgewählt","layerName":"Ebenenname"}
+ ],
+ "cases":[
+  {"id":"empty-document","layers":0,"selections":[[]],"expected":{"en":["0 layers · 0 selected"],"de":["0 Ebenen · 0 ausgewählt"]}},
+  {"id":"select-and-clear-single-layer","layers":1,"selections":[[],[0],[]],"expected":{"en":["1 layer · 0 selected","1 layer · 1 selected","1 layer · 0 selected"],"de":["1 Ebene · 0 ausgewählt","1 Ebene · 1 ausgewählt","1 Ebene · 0 ausgewählt"]}},
+  {"id":"replace-and-clear-multiple-layers","layers":3,"selections":[[],[0,2],[1],[]],"expected":{"en":["3 layers · 0 selected","3 layers · 2 selected","3 layers · 1 selected","3 layers · 0 selected"],"de":["3 Ebenen · 0 ausgewählt","3 Ebenen · 2 ausgewählt","3 Ebenen · 1 ausgewählt","3 Ebenen · 0 ausgewählt"]}}
+ ]
+}

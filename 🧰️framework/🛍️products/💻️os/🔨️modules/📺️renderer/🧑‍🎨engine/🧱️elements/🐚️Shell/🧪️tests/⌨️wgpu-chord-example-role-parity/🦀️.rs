@@ -274,7 +274,7 @@ fn picking_an_example_row_selects_it_and_dispatches_set_active_example() {
 /// session instance (`noExampleResetInstanceIdRef`), which is why `role-viewer` and `role-editor` each
 /// journal `setActiveExample` even though neither click touched the picker.
 ///
-/// 🩸️ `apply_boot_example` covers the boot alone and only for `?example=`, so this shell's role switch
+/// 🩸️ The boot once announced only a `?example=` query's example, so this shell's role switch
 /// mounted its successor on the dialect's first document and journalled nothing.
 #[test]
 fn a_freshly_mounted_instance_is_announced_its_resolved_example() {

@@ -1,13 +1,11 @@
 use super::*;
 use semio_s_artifact_stdio_pptx::schema::snapshot::{PptxPresentation, PptxSlide};
+use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::build_minimal_pptx;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
-use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn sample_pptx() -> PptxSnapshot {
-    PptxSnapshot::from_parts(
-        OpcPackage::default(),
-        Vec::new(),
+    build_minimal_pptx(
         PptxPresentation {
             slides: vec![PptxSlide {
                 shapes: vec![

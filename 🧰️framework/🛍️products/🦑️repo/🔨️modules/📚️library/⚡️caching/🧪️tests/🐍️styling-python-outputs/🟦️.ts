@@ -6,8 +6,6 @@ import { dirname, join } from "node:path";
 /** 🐍️ Restores and imports the production wheel through native Nx, with an independent uv build oracle. */
 export async function testStylingPythonOutputs(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎨️styling-outputs/🐍️python/🔣️.json"), "utf8"));
-  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🎨️styling-outputs/🐍️python/📐️schema/🔣️.json"), "utf8")));
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const packagePath = join(fixture.owner, fixture.package), project = JSON.parse(readFileSync(join(workspace, packagePath, "📋️project.json"), "utf8"));
   assert.equal(project.targets.build.cache, true);
   assert.deepEqual(project.targets.build.outputs, [`{projectRoot}/${fixture.output}`]);

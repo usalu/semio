@@ -140,7 +140,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001
           }
         },
         "number": {
@@ -182,7 +183,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005
           }
         },
         "edgeDistanceM": {
@@ -196,7 +198,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005
           }
         },
         "endDistanceM": {
@@ -210,7 +213,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005
           }
         },
         "t1M": {
@@ -224,7 +228,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "t2M": {
@@ -238,7 +243,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "steelPlate": {
@@ -262,7 +268,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "shearPlanes": {
@@ -290,7 +297,14 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 10000000,
+            "snaps": [
+              400000000,
+              600000000,
+              800000000,
+              1000000000
+            ]
           }
         },
         "actions": {
@@ -364,7 +378,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         }
       },
@@ -493,7 +508,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "hM": {
@@ -507,7 +523,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "spanM": {
@@ -519,7 +536,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "supportLengthM": {
@@ -533,7 +551,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "bearingLengthM": {
@@ -547,7 +566,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "bucklingLengthYM": {
@@ -559,7 +579,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "bucklingLengthZM": {
@@ -571,7 +592,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "lateralRestraintSpacingM": {
@@ -583,7 +605,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "notchDepthM": {
@@ -597,7 +620,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "notchDistanceM": {
@@ -611,7 +635,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "mCritNm": {
@@ -625,7 +650,8 @@
             "unit": "N·m",
             "displayUnit": "kN·m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "massKgPerM": {
@@ -637,7 +663,8 @@
             },
             "widget": "stepper",
             "unit": "kg/m",
-            "precision": 1
+            "precision": 1,
+            "step": 0.5
           }
         },
         "massKgPerM2": {
@@ -649,7 +676,8 @@
             },
             "widget": "stepper",
             "unit": "kg/m²",
-            "precision": 1
+            "precision": 1,
+            "step": 0.5
           }
         },
         "dampingXi": {
@@ -663,7 +691,12 @@
             "unit": "1",
             "displayUnit": "%",
             "displayFactor": 100,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005,
+            "snaps": [
+              0.01,
+              0.015
+            ]
           }
         },
         "fireDurationS": {
@@ -677,7 +710,18 @@
             "unit": "s",
             "displayUnit": "min",
             "displayFactor": 0.016666666666666666,
-            "precision": 0
+            "precision": 0,
+            "step": 60,
+            "snaps": [
+              900,
+              1800,
+              2700,
+              3600,
+              5400,
+              7200,
+              10800,
+              14400
+            ]
           }
         },
         "bridgeNObs": {
@@ -702,7 +746,14 @@
             },
             "widget": "stepper",
             "unit": "a",
-            "precision": 0
+            "precision": 0,
+            "step": 1,
+            "snaps": [
+              10,
+              25,
+              50,
+              100
+            ]
           }
         },
         "bridgeBeta": {
@@ -762,7 +813,8 @@
             },
             "widget": "stepper",
             "unit": "1/m²",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1
           }
         },
         "actions": {
@@ -857,7 +909,8 @@
             "unit": "N/m",
             "displayUnit": "kN/m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "fPointN": {
@@ -871,7 +924,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "mKNm": {
@@ -885,7 +939,8 @@
             "unit": "N·m",
             "displayUnit": "kN·m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "vKN": {
@@ -899,7 +954,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "nKN": {
@@ -913,7 +969,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "nTKN": {
@@ -927,7 +984,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "fC90KN": {
@@ -941,7 +999,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         }
       },

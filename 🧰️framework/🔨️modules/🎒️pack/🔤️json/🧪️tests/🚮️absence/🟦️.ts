@@ -2,15 +2,13 @@
 import { expect, test } from "bun:test";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv from "ajv/dist/2020.js";
+
 import contract from "../../🧫️fixtures/🚮️absence/🔣️.json";
-import schema from "../../🧬️schema/🚮️absence/🔣️.json";
 import { runBudgetedTestCommand } from "../../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 
 test("the complete JSON reference route executes with products, S, Hub and ticket sources absent", async () => {
-  expect(new Ajv({strict: true}).validate(schema, contract)).toBe(true);
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
   mkdirSync(output, {recursive: true});

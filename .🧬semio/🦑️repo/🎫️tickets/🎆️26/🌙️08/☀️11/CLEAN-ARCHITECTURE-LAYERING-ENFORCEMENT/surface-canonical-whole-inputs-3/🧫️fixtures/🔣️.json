@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "id": "UTF8",
+      "path": "source.rs",
+      "source": "// 🧬️ owned\n",
+      "mutation": null,
+      "refused": false,
+      "encoding": "utf8"
+    },
+    {
+      "id": "Empty",
+      "path": "empty.rs",
+      "source": "",
+      "mutation": null,
+      "refused": false,
+      "encoding": "utf8"
+    },
+    {
+      "id": "ByteChange",
+      "path": "foreign.rs",
+      "source": "before",
+      "mutation": "after",
+      "refused": true,
+      "encoding": "utf8"
+    },
+    {
+      "id": "Truncate",
+      "path": "truncated.rs",
+      "source": "whole source",
+      "mutation": "whole",
+      "refused": true,
+      "encoding": "utf8"
+    },
+    {
+      "id": "BinaryFont",
+      "path": "binary.ttf",
+      "source": "AAECA//+",
+      "encoding": "base64",
+      "mutation": null,
+      "refused": false
+    }
+  ]
+}

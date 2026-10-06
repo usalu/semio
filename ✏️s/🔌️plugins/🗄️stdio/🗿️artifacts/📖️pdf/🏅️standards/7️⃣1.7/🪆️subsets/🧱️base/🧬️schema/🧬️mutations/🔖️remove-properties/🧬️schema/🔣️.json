@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Property list",
+          "de": "Eigenschaftsliste"
+        },
+        "description": {
+          "en": "Resource name of the property list that is removed.",
+          "de": "Ressourcenname der Eigenschaftsliste, die entfernt wird."
+        },
+        "ref": {
+          "kind": "properties"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

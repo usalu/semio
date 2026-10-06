@@ -47,7 +47,7 @@ function evidence(path: string) {
 
 const catalogBytes = evidence(vector.catalogPath).bytes, originalCatalog = JSON.parse(catalogBytes.toString("utf8"));
 const fixtureAuthorityInput = evidence(vector.fixtureInputs.path), fixtureAuthority: ReviewedFixtureAuthority = JSON.parse(fixtureAuthorityInput.bytes.toString("utf8"));
-const fixtureSchema = JSON.parse(evidence("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/👀️readme-reviewed-fixture-inputs/📋️manifest/🔣️.json").bytes.toString("utf8"));
+
 if (sha(fixtureAuthorityInput.bytes) !== vector.fixtureInputs.sha256 || !new Ajv({ allErrors: true }).compile<ReviewedFixtureAuthority>(fixtureSchema)(fixtureAuthority) || fixtureAuthority.catalog.path !== vector.catalogPath || fixtureAuthority.catalog.sha256 !== vector.catalogSha256 || fixtureAuthority.revision.id !== vector.revisionId) throw new Error("Reviewed fixture authority drift");
 
 /** 🧫️ Maps verified fixture bytes to declared logical evidence without reading the historical live path. */

@@ -1,0 +1,136 @@
+{
+  "words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "3ff0000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff0000000000001",
+    "7ff8000000000042"
+  ],
+  "roles": [
+    [
+      "vortices",
+      0,
+      "position",
+      0
+    ],
+    [
+      "vortices",
+      0,
+      "position",
+      1
+    ],
+    [
+      "vortices",
+      0,
+      "position",
+      2
+    ],
+    [
+      "vortices",
+      0,
+      "direction",
+      0
+    ],
+    [
+      "vortices",
+      0,
+      "direction",
+      1
+    ],
+    [
+      "vortices",
+      0,
+      "direction",
+      2
+    ],
+    [
+      "vortices",
+      0,
+      "radius"
+    ],
+    [
+      "camera3d",
+      "position",
+      0
+    ],
+    [
+      "camera3d",
+      "position",
+      1
+    ],
+    [
+      "camera3d",
+      "position",
+      2
+    ],
+    [
+      "camera3d",
+      "target",
+      0
+    ],
+    [
+      "camera3d",
+      "target",
+      1
+    ],
+    [
+      "camera3d",
+      "target",
+      2
+    ],
+    [
+      "camera3d",
+      "zoom"
+    ]
+  ],
+  "invalidWords": [
+    {
+      "bits": "7FF0000000000000"
+    },
+    {
+      "bits": "0"
+    },
+    {
+      "bits": "0000000000000000",
+      "foreign": true
+    },
+    {
+      "bits": 0
+    },
+    {}
+  ],
+  "childDialects": {
+    "accepted": [
+      {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "kit"
+      },
+      {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "*"
+      }
+    ],
+    "refused": [
+      {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "graph"
+      },
+      {
+        "artifactKind": "s.stdio.semio",
+        "standard": "1",
+        "subset": "kit"
+      },
+      {
+        "artifactKind": "s.other",
+        "standard": "v1",
+        "subset": "kit"
+      }
+    ]
+  }
+}

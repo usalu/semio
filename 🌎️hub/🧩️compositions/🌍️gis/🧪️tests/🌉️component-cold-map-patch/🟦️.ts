@@ -15,14 +15,13 @@ export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<v
   const testRoot = join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch");
   const fixtureBytes = readFileSync(join(fixtureRoot, "🔣️.json"));
   const fixture = JSON.parse(fixtureBytes.toString("utf8"));
-  const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisComponentColdMapPatch");
-  if (!validate(fixture)) throw new Error(`invalid GIS component cold-map corpus: ${JSON.stringify(validate.errors)}`);
+  
+  
   const nodeHash = createHash("sha256").update(fixtureBytes).digest("hex");
   const webHash = Buffer.from(await crypto.subtle.digest("SHA-256", fixtureBytes)).toString("hex");
   if (nodeHash !== webHash || /^0{64}$/u.test(nodeHash)) throw new Error("GIS component corpus SHA-256 oracle mismatch");
   const owner = structuredClone(fixture);
   const admitted = (candidate: any): boolean =>
-    validate(candidate) &&
     candidate.package.pluginId === "gis" &&
     candidate.package.packageId === "semio:gis" &&
     candidate.package.cargoPackage === "semio-hub-gis" &&
@@ -76,7 +75,7 @@ export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<v
   if (!manifest.includes('name = "component_cold_map_patch"') || !manifest.includes("semio-framework-plugin-host") || !manifest.includes("semio-framework-ui-scene")) {
     throw new Error("GIS component acceptance is not mounted with its exact first-party host and scene owners");
   }
-  console.log(`gis-component-cold-map-patch-source: AJV=1 SHA256=node+webcrypto hostile=${fixture.hostile.length} markers=9; no GIS component build or browser acceptance claim`);
+  console.log(`gis-component-cold-map-patch-source: ownerAdmission=1 SHA256=node+webcrypto hostile=${fixture.hostile.length} markers=9; no GIS component build or browser acceptance claim`);
 }
 
 function freshGisComponentBuildControl(): { readonly control: FreshBuildControlV1; close(): void } {

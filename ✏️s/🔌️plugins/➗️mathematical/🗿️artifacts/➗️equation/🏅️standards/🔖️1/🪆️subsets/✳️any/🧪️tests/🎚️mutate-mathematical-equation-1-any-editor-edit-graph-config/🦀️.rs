@@ -64,7 +64,7 @@ fn keep_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_mathematical_equation::editor::equation::modes::edit::windows::graph::config::equation_graph_window_config_mutation_report_json;
+    use semio_s_artifact_mathematical_equation::editor::equation::modes::edit::windows::graph::config::io::text::mutations::equation_graph_window_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         equation_graph_window_config_mutation_report_json(committed.before, committed.mutation, committed.after)

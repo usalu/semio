@@ -1,0 +1,699 @@
+[
+  {
+    "artifact": "🪵️en1995",
+    "root": [
+      "                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),"
+    ],
+    "schema": [
+      "crate::impl_norm_artifact_record!(En1995Snapshot, extension = \"en1995\", envelope_id = \"norm.en1995\", sqlite = sqlite::sqlite_codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::En1995Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "🪶️en1999",
+    "root": [
+      "                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),"
+    ],
+    "schema": [
+      "crate::impl_norm_artifact_record!(En1999Snapshot, extension = \"en1999\", envelope_id = \"norm.en1999\", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::En1999Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "🧱️din4108",
+    "root": [
+      "                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),"
+    ],
+    "schema": [
+      "crate::impl_norm_artifact_record!(Din4108Snapshot, extension = \"din4108\", envelope_id = \"norm.din4108\", sqlite = sqlite::sqlite_codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::Din4108Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "🏋️en1991",
+    "root": [
+      "                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),"
+    ],
+    "schema": [
+      "crate::impl_norm_artifact_record!(En1991Snapshot, extension = \"en1991\", envelope_id = \"norm.en1991\", sqlite = sqlite::sqlite_codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::*;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "⚖️en1990",
+    "root": [
+      "                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),"
+    ],
+    "schema": [
+      "crate::impl_norm_artifact_record!(En1990Snapshot, extension = \"en1990\", envelope_id = \"norm.en1990\", sqlite = sqlite::sqlite_codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::En1990Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "🪨️en1996",
+    "root": [],
+    "schema": [
+      "crate::impl_norm_artifact_record!(En1996Snapshot, extension = \"en1996\", envelope_id = \"norm.en1996\", sqlite = sqlite::sqlite_codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::En1996Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "🧩️en1994",
+    "root": [
+      "                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),"
+    ],
+    "schema": [
+      "crate::impl_norm_artifact_record!(En1994Snapshot, extension = \"en1994\", envelope_id = \"norm.en1994\", sqlite = sqlite::sqlite_codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::En1994Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "🌬️din16798",
+    "root": [
+      "                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),"
+    ],
+    "schema": [
+      "crate::impl_norm_artifact_record!(Din16798Snapshot, extension = \"din16798\", envelope_id = \"norm.din16798\", sqlite = sqlite::sqlite_codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::Din16798Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "⚡️din18599",
+    "root": [
+      "                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),"
+    ],
+    "schema": [],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::Din18599Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "🔩️en1993",
+    "root": [],
+    "schema": [
+      "crate::impl_norm_artifact_record!(En1993Snapshot, extension = \"en1993\", envelope_id = \"norm.en1993\", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "🏭️vdi3805",
+    "root": [
+      "                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),",
+      "                    grammar: Some(diff::COMPONENT_GRAMMAR_SEMIO),",
+      "                    grammar_path: Some(diff::COMPONENT_GRAMMAR_PATH),",
+      "                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),",
+      "                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),",
+      "                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),"
+    ],
+    "schema": [],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::Vdi3805Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  },
+  {
+    "artifact": "🌍️en1997",
+    "root": [],
+    "schema": [
+      "crate::impl_norm_artifact_record!(En1997Snapshot, extension = \"en1997\", envelope_id = \"norm.en1997\", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);"
+    ],
+    "nativeDuplicates": 1,
+    "mutationStale": [
+      "use crate::artifact_schema::mutations::text::En1997Mutation;"
+    ],
+    "physicalConstants": [
+      {
+        "p": "📝️text/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/📸️snapshot",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      },
+      {
+        "p": "💾️binary/🧬️mutations",
+        "lines": [
+          "pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!(\"📡️.protocol.semio\");",
+          "pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), \"::📡️.protocol.semio\");"
+        ]
+      },
+      {
+        "p": "📝️text/🔺️diff",
+        "lines": [
+          "pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!(\"📖️.grammar.semio\");",
+          "pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), \"::📖️.grammar.semio\");"
+        ]
+      }
+    ]
+  }
+]

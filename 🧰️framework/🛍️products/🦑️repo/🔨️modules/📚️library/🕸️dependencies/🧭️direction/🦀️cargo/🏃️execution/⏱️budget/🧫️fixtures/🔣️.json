@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "preparation-wait-is-separate",
+      "budgetMs": 30000,
+      "steps": [
+        {
+          "phase": "prepare",
+          "milliseconds": 90000
+        },
+        {
+          "phase": "capture",
+          "milliseconds": 12000
+        },
+        {
+          "phase": "prepare",
+          "milliseconds": 60000
+        },
+        {
+          "phase": "capture",
+          "milliseconds": 17999
+        }
+      ],
+      "remainingMs": 1,
+      "refused": false
+    },
+    {
+      "id": "aggregate-native-budget-is-preserved",
+      "budgetMs": 30000,
+      "steps": [
+        {
+          "phase": "capture",
+          "milliseconds": 15000
+        },
+        {
+          "phase": "prepare",
+          "milliseconds": 0
+        },
+        {
+          "phase": "capture",
+          "milliseconds": 15000
+        }
+      ],
+      "remainingMs": 0,
+      "refused": true
+    },
+    {
+      "id": "overrun-is-refused",
+      "budgetMs": 30000,
+      "steps": [
+        {
+          "phase": "prepare",
+          "milliseconds": 100000
+        },
+        {
+          "phase": "capture",
+          "milliseconds": 30001
+        }
+      ],
+      "remainingMs": 0,
+      "refused": true
+    },
+    {
+      "id": "no-native-work-spends-nothing",
+      "budgetMs": 30000,
+      "steps": [
+        {
+          "phase": "prepare",
+          "milliseconds": 200000
+        }
+      ],
+      "remainingMs": 30000,
+      "refused": false
+    },
+    {
+      "id": "zero-duration-capture",
+      "budgetMs": 10,
+      "steps": [
+        {
+          "phase": "capture",
+          "milliseconds": 0
+        },
+        {
+          "phase": "prepare",
+          "milliseconds": 100
+        },
+        {
+          "phase": "capture",
+          "milliseconds": 1.25
+        }
+      ],
+      "remainingMs": 8.75,
+      "refused": false
+    }
+  ],
+  "invalidBudgets": [
+    0,
+    -1
+  ],
+  "invalidCaptures": [
+    -1
+  ]
+}

@@ -48,7 +48,7 @@ pub fn measure(definition: &Block3dSnapshot, config: &Block3dConfig, labels: &Bl
                 label: Some(labels.flip_normal.as_str().to_string()),
                 pressed: config.brush_flip,
                 text: None,
-                on_change: crate::editor::block3d::block3d_window_action("setBrushFlip", Some(dsl::DslValue::object([("flip".to_string(), dsl::DslValue::Bool(!config.brush_flip))]))),
+                on_change: crate::editor::block3d::block3d_window_action("setBrushFlip", Some(semio_framework_value::DslValue::object([("flip".to_string(), semio_framework_value::DslValue::Bool(!config.brush_flip))]))),
             },
         ],
     }

@@ -28,6 +28,7 @@ const GENERATION2D_PLAY_SURFACE_MAIN: &str = "generation2d.play.main";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GENERATION2D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Flow", "Fluss"),
         body_key: GENERATION2D_PLAY_BODY_MAIN.into(),

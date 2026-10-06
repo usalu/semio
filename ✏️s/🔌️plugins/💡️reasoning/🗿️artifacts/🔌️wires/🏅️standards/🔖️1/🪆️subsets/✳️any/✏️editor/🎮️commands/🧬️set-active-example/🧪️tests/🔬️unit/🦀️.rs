@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::wires::unit_tests::context::{dispatch_receipt, metabolism_app, new_app};
 use crate::editor::wires::WiresCommand;
-use crate::schema::fixture_nodes;
+use crate::schema::board_snapshot_nodes;
 
 /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned
 /// outright), so `setActiveExample` now surfaces as a `Effect::LoadDocument` carrying the
@@ -26,7 +26,7 @@ async fn set_active_example_metabolism_loads_seven_nodes() {
     let child_pack = crate::genesis_wires_child_pack(&document, crate::WIRES_CONTENT_SLOT, &document.content.child_id).expect("declared example child pack");
     let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&child_pack).expect("full example graph child");
     let board = crate::wires_composed(&document, &content).board;
-    assert_eq!(fixture_nodes(&board).len(), 7);
+    assert_eq!(board_snapshot_nodes(&board).len(), 7);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -41,5 +41,5 @@ async fn set_active_example_unknown_id_loads_empty_document() {
     let child_pack = crate::genesis_wires_child_pack(&document, crate::WIRES_CONTENT_SLOT, &document.content.child_id).expect("declared example child pack");
     let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&child_pack).expect("full example graph child");
     let board = crate::wires_composed(&document, &content).board;
-    assert!(fixture_nodes(&board).is_empty());
+    assert!(board_snapshot_nodes(&board).is_empty());
 }

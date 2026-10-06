@@ -30,6 +30,7 @@ pub const SOURCING_CURATION_BODY_POOL: &str = "sourcing.pool";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SOURCING_CURATION_WINDOW_POOL.into(),
         label: LocalizedLabel::native("Pool", "Pool"),
         body_key: SOURCING_CURATION_BODY_POOL.into(),

@@ -4,7 +4,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { parseProgramArtifact } from "../../🟦️.ts";
-import { programArtifactFromJson, programDiffFromJson } from "../../🔣️json/🟦️.ts";
+import {programArtifactFromJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+import {programDiffFromJson} from "../../../🚪️io/📝️text/🔺️diff/🔣️json/🟦️.ts";
 import { parseProgramSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseProgramDiff } from "../../🔺️diff/🟦️.ts";
 

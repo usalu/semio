@@ -55,43 +55,6 @@
           }
         }
       }
-    },
-    "SourceFreshnessFixtureV1": {
-      "type": "object",
-      "required": [
-        "metadataFiles",
-        "sourceFiles",
-        "componentBase",
-        "unexpected",
-        "schema"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "metadataFiles": {
-          "const": [
-            ".source-content-sha256",
-            ".source-stat-index.json"
-          ]
-        },
-        "sourceFiles": {
-          "type": "object",
-          "minProperties": 1,
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "componentBase": {
-          "type": "string",
-          "minLength": 1
-        },
-        "unexpected": {
-          "type": "string",
-          "minLength": 1
-        },
-        "schema": {
-          "const": "semio.dev.source-stat-index/v1"
-        }
-      }
     }
   }
 }

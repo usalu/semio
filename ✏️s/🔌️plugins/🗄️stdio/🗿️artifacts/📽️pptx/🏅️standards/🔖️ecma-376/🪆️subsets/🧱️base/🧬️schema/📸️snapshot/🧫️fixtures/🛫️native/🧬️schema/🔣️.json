@@ -1,1 +1,0 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["depth","lateTextBytes","cancelAfter","smallStackBytes"],"properties":{"depth":{"type":"integer","minimum":1},"lateTextBytes":{"type":"integer","minimum":65537},"cancelAfter":{"type":"integer","minimum":256},"smallStackBytes":{"type":"integer","minimum":65536}}}

@@ -1,0 +1,10 @@
+{
+ "cases":[
+  {"name":"single","parents":[null],"radii":[32],"positions":[[5,7]],"options":{"direction":"downwards","layerSpacing":120,"siblingGap":28,"center":[0,0],"locked":[]}},
+  {"name":"chain","parents":[null,0,1,2],"radii":[32,32,32,32],"positions":[[0,0],[0,0],[0,0],[0,0]],"options":{"direction":"downwards","layerSpacing":120,"siblingGap":28,"center":[10,20],"locked":[]}},
+  {"name":"siblings","parents":[null,0,0],"radii":[32,32,32],"positions":[[0,0],[0,0],[0,0]],"options":{"direction":"downwards","layerSpacing":120,"siblingGap":28,"center":[0,0],"locked":[]}},
+  {"name":"forest","parents":[null,0,null,2,2],"radii":[20,30,40,50,20],"positions":[[0,0],[0,0],[0,0],[0,0],[0,0]],"options":{"direction":"upwards","layerSpacing":80,"siblingGap":16,"center":[0,0],"locked":[]}},
+  {"name":"right-pinned","parents":[null,0,0,1,1,2],"radii":[20,30,40,50,20,32],"positions":[[3,4],[0,0],[0,0],[0,0],[0,0],[0,0]],"options":{"direction":"right","layerSpacing":80,"siblingGap":16,"center":[100,200],"locked":[0]}},
+  {"name":"left","parents":[null,0,0,1,1,2,2],"radii":[32,32,32,32,32,32,32],"positions":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],"options":{"direction":"left","layerSpacing":80,"siblingGap":16,"center":[0,0],"locked":[]}}
+ ]
+}

@@ -68,6 +68,8 @@ fn field_at(fields: &[(&'static str, bool)], index: usize) -> Result<(usize, &'s
     fields.iter().enumerate().filter(|(_, (_, present))| *present).nth(index).map(|(ordinal, (name, _))| (ordinal, *name)).ok_or_else(invalid_path)
 }
 
+/// 🪺️ Typed cursor over what an edit's revision identity covers (`CursorRevisionAccumulator::revision_value`): every member
+/// of the edit but `sequenceNumber`, its position in one replica's ledger.
 enum CanonicalEditNode<'a, M> {
     Edit(&'a Edit<M>),
     Mutation(&'a M),
@@ -91,15 +93,13 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         let mut fields = [("", false); 12];
         match self {
             Self::Edit(edit) => {
-                fields[..11].copy_from_slice(&[
+                fields[..9].copy_from_slice(&[
                     ("id", true),
                     ("actor", edit.actor.is_some()),
                     ("forwards", true),
                     ("inverse", true),
                     ("mutationMeta", !edit.mutation_meta.is_empty()),
-                    ("description", edit.description.is_some()),
                     ("verb", edit.verb.is_some()),
-                    ("sequenceNumber", true),
                     ("startedAt", true),
                     ("finishedAt", edit.finished_at.is_some()),
                     ("line", true),
@@ -142,12 +142,10 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
                 2 => Self::Mutations(&edit.forwards),
                 3 => Self::Mutations(&edit.inverse),
                 4 => Self::Metas(&edit.mutation_meta),
-                5 => Self::Scalar(N::String(edit.description.as_deref().ok_or_else(invalid_path)?)),
-                6 => Self::Scalar(N::String(edit.verb.as_deref().ok_or_else(invalid_path)?)),
-                7 => Self::Scalar(N::I64(i64::from(edit.sequence_number))),
-                8 => Self::Scalar(N::String(&edit.started_at)),
-                9 => Self::Scalar(N::String(edit.finished_at.as_deref().ok_or_else(invalid_path)?)),
-                10 => Self::Scalar(edit.line.as_deref().map_or(N::Null, N::String)),
+                5 => Self::Scalar(N::String(edit.verb.as_deref().ok_or_else(invalid_path)?)),
+                6 => Self::Scalar(N::String(&edit.started_at)),
+                7 => Self::Scalar(N::String(edit.finished_at.as_deref().ok_or_else(invalid_path)?)),
+                8 => Self::Scalar(edit.line.as_deref().map_or(N::Null, N::String)),
                 _ => return Err(invalid_path()),
             },
             Self::Mutations(values) => Self::Mutation(values.get(index).ok_or_else(invalid_path)?),

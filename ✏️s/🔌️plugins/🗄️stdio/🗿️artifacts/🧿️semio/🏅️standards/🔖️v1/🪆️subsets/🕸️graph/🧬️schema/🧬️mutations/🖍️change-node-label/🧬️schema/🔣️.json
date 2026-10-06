@@ -10,7 +10,19 @@
   ],
   "properties": {
     "id": {
-      "$ref": "#/$defs/GraphNodeId"
+      "$ref": "#/$defs/GraphNodeId",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node the mutation addresses.",
+          "de": "Der Knoten, den die Mutation adressiert."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "new_label": {
       "type": "string",
@@ -32,7 +44,20 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node id",
+              "de": "Knoten-ID"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "graph",
+              "granularity": "node"
+            }
+          }
         }
       }
     }

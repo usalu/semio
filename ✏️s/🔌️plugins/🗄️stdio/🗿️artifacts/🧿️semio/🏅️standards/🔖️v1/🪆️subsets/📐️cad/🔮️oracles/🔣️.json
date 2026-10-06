@@ -1179,9 +1179,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "no-mutation-identity",
       "class": "third-party-generated",
       "target": {
@@ -1234,7 +1233,6 @@
       "notes": "The identity edit — before and after are the same drawing. The control the whole corpus is read against."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-replaces-drawing",
       "class": "third-party-generated",
       "target": {
@@ -1289,7 +1287,6 @@
       "notes": "The whole drawing replaced by a different one: a single GRID layer with one line and one circle, sharing nothing with the base."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-layer-hidden-services",
       "class": "third-party-generated",
       "target": {
@@ -1344,7 +1341,6 @@
       "notes": "A SERVICES layer added, dashed and switched OFF, so visibility and linetype are exercised alongside the name."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-layer-scratch",
       "class": "third-party-generated",
       "target": {
@@ -1399,7 +1395,6 @@
       "notes": "The WALLS layer removed while entities still reference it by name — a dangling reference the carrier records faithfully rather than repairing."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-layer-walls-color",
       "class": "third-party-generated",
       "target": {
@@ -1454,7 +1449,6 @@
       "notes": "WALLS recoloured from index 1 to index 5, the whole edit confined to one table field."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-block-door",
       "class": "third-party-generated",
       "target": {
@@ -1509,7 +1503,6 @@
       "notes": "A COLUMN block added with its own base point and a nested circle."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-window",
       "class": "third-party-generated",
       "target": {
@@ -1564,7 +1557,6 @@
       "notes": "The WINDOW block removed along with its two nested entities."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-base-point-door",
       "class": "third-party-generated",
       "target": {
@@ -1619,7 +1611,6 @@
       "notes": "The DOOR block's base point moved from (0,0) to (0.5,0.25) with its entities untouched, isolating the base point from its contents."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-entity-arc-fillet",
       "class": "third-party-generated",
       "target": {
@@ -1674,7 +1665,6 @@
       "notes": "A fillet arc appended on the WALLS layer."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-entity-middle-polyline",
       "class": "third-party-generated",
       "target": {
@@ -1729,7 +1719,6 @@
       "notes": "The polyline removed from the MIDDLE of the entity list, so the edit is not confusable with a truncation."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entity-layer-text-to-annotations",
       "class": "third-party-generated",
       "target": {
@@ -1784,7 +1773,6 @@
       "notes": "The text entity moved to a new ANNOTATIONS layer, its geometry untouched. Witnessable precisely because TEXT is one of the seven shapes r12 expresses typed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entity-geometry-circle-radius",
       "class": "third-party-generated",
       "target": {
@@ -1846,7 +1834,6 @@
       "notes": "The circle widened from radius 1.5 to 2.25, centre unchanged. Carries a third file, `counterexample-after.dxf`, whose radius is 2.30 and centre x is 2.1 — the deliberate known-BAD answer the gate is validated against, small enough that a loose tolerance would wave it through."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-block-entity-door-swing",
       "class": "third-party-generated",
       "target": {
@@ -1901,7 +1888,6 @@
       "notes": "A swing line added INSIDE the DOOR block, exercising the nested collection rather than the top-level one."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-entity-window-mullion",
       "class": "third-party-generated",
       "target": {
@@ -1956,7 +1942,6 @@
       "notes": "The mullion removed from inside the WINDOW block."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-entity-layer-door-leaf",
       "class": "third-party-generated",
       "target": {
@@ -2011,7 +1996,6 @@
       "notes": "A nested block entity moved to a new LEAF layer."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-entity-geometry-window-pane",
       "class": "third-party-generated",
       "target": {
@@ -2066,7 +2050,6 @@
       "notes": "A nested block entity's endpoint moved, the block's own base point untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "step-no-mutation-identity",
       "class": "handcrafted",
       "target": {
@@ -2119,7 +2102,6 @@
       "notes": "The identity edit through the Part-21 carrier."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "step-set-snapshot-replaces-entities",
       "class": "handcrafted",
       "target": {
@@ -2174,7 +2156,6 @@
       "notes": "Both entities replaced. Only the ENTITY half of a set-snapshot is visible here; layers and blocks are not in this carrier at all, which is why STEP is registered alongside dxf rather than instead of it."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "step-add-entity-circle",
       "class": "handcrafted",
       "target": {
@@ -2229,7 +2210,6 @@
       "notes": "A third entity appended, growing the graph from 7 to 10 Part-21 records."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "step-remove-entity-line",
       "class": "handcrafted",
       "target": {
@@ -2284,7 +2264,6 @@
       "notes": "The LINE removed, dropping its CARTESIAN_POINT, DIRECTION and VECTOR referents with it — the decomposition the export leaf builds, unwound."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "step-set-entity-geometry-circle-radius",
       "class": "handcrafted",
       "target": {

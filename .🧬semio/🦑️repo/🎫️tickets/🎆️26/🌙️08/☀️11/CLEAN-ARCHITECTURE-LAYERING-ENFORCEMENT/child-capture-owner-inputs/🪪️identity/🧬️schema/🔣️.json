@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "slot", "childId", "target", "replacement", "dialect", "cases", "previewRetainsOriginal", "rejectedRetirementRetainsOriginal", "digestBindsTarget"],
+  "properties": {
+    "contract": {"const": "child-capture-target-identity/v1"},
+    "slot": {"type": "string", "minLength": 1, "maxLength": 128},
+    "childId": {"type": "string", "minLength": 1, "maxLength": 128},
+    "target": {"type": "string", "minLength": 1, "maxLength": 128},
+    "replacement": {"type": "string", "minLength": 1, "maxLength": 128},
+    "dialect": {"type": "object", "additionalProperties": false, "required": ["artifactKind", "standard", "subset"], "properties": {"artifactKind": {"const": "s.test.child"}, "standard": {"const": "native"}, "subset": {"const": "*"}}},
+    "cases": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["id", "requestedTarget", "accepted"], "properties": {"id": {"enum": ["original-target", "replacement-target", "member-key-is-not-target", "empty-target-is-not-original"]}, "requestedTarget": {"type": "string", "maxLength": 128}, "accepted": {"type": "boolean"}}}},
+    "previewRetainsOriginal": {"const": true},
+    "rejectedRetirementRetainsOriginal": {"const": true},
+    "digestBindsTarget": {"const": true}
+  }
+}

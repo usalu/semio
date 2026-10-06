@@ -1,6 +1,5 @@
 import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-export type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ Fem3d snapshot schema — artifact-lane fields only. */
 
 //#region 🔖️Entities
@@ -137,7 +136,7 @@ const femFem3dSnapshotGuardArray=(v:unknown,at:string,b:{minItems?:number;maxIte
 const femFem3dSnapshotGuardString=(v:unknown,at:string):string=>{if(typeof v!=="string")throw Error(`${at}: text required`);return v};
 const femFem3dSnapshotGuardBoolean=(v:unknown,at:string):boolean=>{if(typeof v!=="boolean")throw Error(`${at}: boolean required`);return v};
 const femFem3dSnapshotGuardMember=<T extends string>(v:unknown,at:string,m:readonly T[]):T=>{if(typeof v!=="string"||!m.includes(v as T))throw Error(`${at}: variant differs`);return v as T};
-const femFem3dSnapshotGuardWord=(v:unknown,_at:string):Binary64=>parseBinary64Transport(v);
+const femFem3dSnapshotGuardWord=(v:unknown,_at:string):Binary64=>parseBinary64(v);
 function parseFemTerms(value:unknown,at:string):Map<string,Binary64>{if(!(value instanceof Map))throw Error(`${at}: owned map required`);const out=new Map<string,Binary64>();for(const[key,v]of value){if(typeof key!=="string")throw Error(`${at}: text map key required`);out.set(key,femFem3dSnapshotGuardWord(v,`${at}.${key}`))}return out}
 
 function parseFemPoint(value: unknown, at: string): [Binary64, Binary64] {
@@ -270,5 +269,3 @@ export function parseFemCombination(value: unknown, at = "$"): FemCombination {
     terms: parseFemTerms(row["terms"], `${at}.terms`),
   };
 }
-
-export {fem3dSnapshotToSqliteDatabase,fem3dSnapshotFromSqliteDatabase,FEM3D_SQLITE_SCHEMA} from "./🪶️sqlite/🟦️.ts";

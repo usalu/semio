@@ -1349,3 +1349,402 @@ Coordinator actions:
 - Describe wave must regenerate: hub descriptors (old `withoutOperations/onlyOperations` filter options), lowpoly transient leaf emoji
   (🖌️ → 🫧️), and every converted plugin (owner/descriptor unchanged otherwise).
 - At CARGO OPEN: let S4-RUNTIME run the OWED list above first (K3 crates native + wasip2 → COMPOSITION GREEN per plugin).
+
+## Session 5 — 2026-10-05
+
+S5-RUNTIME (successor of S4-RUNTIME, agent `ab0af284ec8750474`). Scratch: `🗑️generated/s5-runtime/`. Priorities per rule 54:
+live-probe findings → §22.1 / §22.2 / §22.6 / §22.7 guest half → owed verification → inherited open items.
+
+### 11.1 Repair (rule 46) — nothing half-written (00:24)
+
+- `git diff --stat HEAD` over `TT`, `FW/⏪️time-travel`, `🔌️plugin/🧪️tests/🧪️time-travel`, `🧫️fixtures/🧫️time-travel`,
+  `🪟️window/🫧️transient`, `FW/🎠️kernel`: **no difference to HEAD** (commit 670, 23:07). `PLG` differs in 32 hunks
+  (12901–13395 Emit, 20283, 21147, 28475, 31128, 32223) — none in my regions (`🔖️CommandLog`, `🔖️HistoryPanel`, history view,
+  K3). So the session-4 source of 10.2–10.5 is what HEAD holds; nothing to repair.
+- Launch state: `landing` + `serve` HELD by `COORDINATOR-ACTIVATION` (00:14) → no saves under `🧰️framework/**`; waves are
+  prepared under `🗑️generated/s5-runtime/` and land one at a time under the lock (rule 51).
+
+### 11.2 Contracts sent to `main` before landing (00:3x)
+
+1. **§22.2 wire shape**: `HistoryPatch.timeTravel.nextProblem?: { mutationId: string, store?: string }` (the args of
+   `historyEditBegin`); kernel `HistoryTimeTravel.next_problem: Option<HistoryTimeTravelProblem { mutation_id, store }>`;
+   present iff the session's report blocks finalizing. A keyed value-map field (default + skip-if-none) — **no channel frame
+   layout change** (the status is named nowhere in `📡️spr/🧵️channel`), nothing for wave B.
+2. **§22.1 verb shape**: no 13th verb — `historyEditWithdraw{mutationId?, store?, generation?}`; with `mutationId` it is the
+   row action. Wire row gains `HistoryMutationEntry.withdrawable?: boolean`.
+3. **§22.1 STORE LAW GAP** (S5-STORE / coordinator decision): `admit_replacement` (`STORE` ≈ :23705) refuses every
+   supersession of an operation that plans foreign steps, `Withdrawn` included (it folds as a `mutation.invariant` Fatal). A
+   foreign-step blocker is therefore NOT resolvable by a withdrawal today. The row predicate asks the store's own law, so it
+   follows the store the moment it admits such a withdrawal.
+4. **§22.7 names** asked of S5-UI: `ActionArgControl::Multiline` → `input(InputKind::LongText)`; `Segmented` →
+   `select(..)` + a contract facet `SelectAppearance::Segmented`; `IconSelect` → a contract builder `icon_select(..)`
+   (`Component::IconSelect` has props but no builder).
+
+### 11.3 Coordinator decisions received (00:3x–00:5x) — binding for the waves below
+
+- `nextProblem?: { mutationId, store? }` confirmed; band order while blocked `[nextProblem, rerun, finalize, exit]`, label key
+  `ui.timeTravel.nextProblem`; **the kernel field + schema + TS twin land FIRST** (S5-UI's corpus validates against it).
+- `historyEditWithdraw{mutationId?, store?, generation?}` + `HistoryMutationEntry.withdrawable?` approved; I own the manifest
+  `🔖️HistoryEdit` hunk. `rowActions = [Edit?, Withdraw?]` (Edit stays index 0); I add `withdrawable` to the three literals of
+  other WPs' tests (wgpu `🧪️wgpu-time-travel` :822 / :1304, plugin `🧪️composed-child-history` :27).
+- Store law (S5-STORE, design note in `📓️w1-g-report.md`): `Withdrawn` is admitted for every operation; a foreign-step unit =
+  every applied op with its `MutationMeta.group_id`; STORE lands `unit_operations(mutation_id)` / `unit_id(mutation_id)`; my
+  Withdraw row drafts `unit_operations(target)` together and `editable` is false inside a unit. Cross-instance units refused by
+  the store with a localized reason. The row predicate keeps asking the store's own law.
+- Two codes + one label approved: `timeTravel.not-withdrawable` (`refusalNotWithdrawable`), `timeTravel.editor-closed`
+  (`refusalEditorClosed`), `refusalReadOnly`; reducer event `beginWithdrawn`.
+- **Restore (decision 5):** an accepted draft is individually revertible — reducer event `Restore{target}` (legal in
+  `Reviewing`; removes the target from `accepted`, replays the rest, or leaves time travel with zero trace when it was the
+  only draft), verb `historyEditRestore{mutationId, store?, generation?}`, row action "Restore" / "Wiederherstellen" that
+  replaces Withdraw on a row whose mutation has an accepted draft. Fixture + TS twin first.
+- Guest half of "reveal + scroll": status `nextProblem`, stable row key, entry open, blocking rows first among an entry's
+  children. Hosts scroll.
+- P4 names confirmed by S5-UI (it lands contract + manifest first): `ActionArgControl::Multiline` →
+  `input(InputKind::LongText)` + `commit("blur")`; `Segmented` → `select(value).appearance(SelectAppearance::Segmented)`;
+  `icon_select(value, classifier_kind)`. S5-PUZZLE owns one hunk in `history_code_text` (`mutation.precondition-drifted`,
+  `mutation.inverse-refused`) — not mine.
+
+### 11.4 Landing mechanism and staged waves (lock held by the activation since 00:14)
+
+- `🧪️s5-runtime-land.py <check|land|revert> <wave>` (ticket input): exact-anchor patches (each anchor must occur once in the
+  live file) or whole-file producers per wave module `🧪️s5-runtime-wave-<x>.py`; `check` writes the result under
+  `🗑️generated/s5-runtime/wave-<x>/after/` and touches nothing; `land` keeps every replaced file under `…/before/` (rule 51
+  rollback) and writes the tree; `revert` restores.
+- **Wave A — STAGED, schema-verified** (`🧪️s5-runtime-wave-a.py`): kernel `HistoryTimeTravelProblem` +
+  `HistoryTimeTravel.next_problem` (`FW/🎠️kernel/🦀️.rs`), schema `🧬️schema/🔣️history-patch` (`HistoryTimeTravelProblem`,
+  `nextProblem`), TS twin, wire fixture (blocked case names its problem; new valid case with a member store; two invalid
+  cases), `TT` (`TimeTravelLedger::next_problem`, the one predicate `ReplayReport::blocks_finalize` reads, feeds status and
+  panel). Ran: python `jsonschema` over the staged schema + fixture — 14 valid accepted, 13 invalid refused, fixture schema ok.
+- **Wave B — STAGED, TS-verified** (`🧪️s5-runtime-wave-b.py` + generator `🧪️w1-b-generate-lifecycle-law.py`, which also
+  regains the `memberEdited` label it had lost): pure session `beginWithdrawn{target, original}` (one `open` path shared with
+  `begin`; legal exactly where `begin` is) and `restore{generation, target}` (`restore_refusal`; `Reviewing` + accepted draft
+  → replay the rest, or close when it was the only one), codes `timeTravel.not-withdrawable` / `timeTravel.editor-closed`,
+  label `refusalReadOnly`; fixture 18 → 20 event keys, 24 → 27 guards, 22 → 23 contexts, 130 → 145 matrix rows, 45 → 57 cases,
+  10 → 14 scenarios, 37 → 40 labels, 18 → 20 codes (every previous row kept, checked by script); schema counts; Rust reducer +
+  unit laws (3 new); TS twin + conformance (3 new laws; xstate guards/assignments for both events).
+  Ran: `bun test ./…/wave-b/after/…/🧪️tests/🧪️conformance/🟦️.ts` on the staged tree → **22 pass / 0 fail** (ajv fixture
+  schema, xstate agreement on every matrix row, fast-check random sequences, pinned seed visits every legal row incl. the new
+  ones). Rust half compiles and runs only at landing.
+- **Wave A also carries** (coordinator 00:5x) the kernel history notice row `history.unit-spans-documents` (S5-STORE's
+  cross-document unit refusal; `HISTORY_NOTICE_LABELS` 7 → 8, TS twin, `🧫️history-notices` fixture) so the store finds it.
+- **Wave C — STAGED, partly verified** (`🧪️s5-runtime-wave-c.py`, 16 files, applies on A + B; `check c a b`):
+  - Manifest `🔖️HistoryEdit` (Rust + TS twin + `🧫️history-edit-actions` fixture + its schema): `historyEditWithdraw` args
+    `[mutationId?, store?, generation?]`; 13th verb `historyEditRestore{mutationId, store?, generation?}` after
+    `historyEditDiscard` (icon `undo-2`, "Restore Mutation" / "Mutation wiederherstellen").
+  - Kernel wire `HistoryMutationEntry.withdrawable` (Rust, schema, TS twin, fixture: one valid row, one invalid case).
+  - `TT`: `TimeTravelStoreCommand::Open{withdraw}` — a row's Withdraw asks the STORE's supersede law
+    (`time_travel_admits_withdrawal` = `store::admit_replacement(op, Withdrawn)`), needs no input schema and opens an editor
+    without inputs (`schema: Option`); `begin_time_travel(withdraw)` sends `BeginWithdrawn`, or the editor's own `Withdraw`
+    on the mutation already being edited; `historyEditRestore` → `Restore`; refusals `NotWithdrawable` / `EditorClosed`; both
+    `.expect(` of the user-input path are gone (§22.6: `open` asks the schema as data, a draft whose editor vanished answers
+    `timeTravel.editor-closed`, a draft on a mutation without inputs `timeTravel.not-editable`); the editor's withdrawn state
+    is the session's pending draft (the stored flag was never set by the editor's Withdraw — a latent bug: the heading never
+    read "Withdrawn" and the button stayed enabled); panel `accepted` set + `editable`; `MutationView.withdrawable`;
+    `mutation_row_refusals` (one place for the Edit / Withdraw / Restore refusals of a row, incl. a session on another store).
+  - `PLG` `🔖️HistoryPanel`: row actions `[Edit?, Withdraw | Restore]` on the one row target, each disabled with its localized
+    reason (viewer → `refusalReadOnly`, store law → `refusalNotWithdrawable`, session → its refusal, busy); blocking rows lead
+    an entry's children (guest half of "reveal + scroll", §22.2).
+  - Laws: plugin scenario fixture 9 → 15 scenarios (`withdrawRow`, `restore`, `status.nextProblem`) + schema + Rust driver +
+    TS oracle; `a_mutation_row_offers_withdraw_and_restore_takes_an_accepted_draft_back` (app level, rendered rows + verbs);
+    `a_blocking_mutation_without_editable_inputs_is_withdrawn_and_the_review_becomes_ready` (store-level, over
+    `InertLabelOp`: a kind without input schema that an upstream edit breaks → not editable, withdrawable, review ready,
+    one overwrite).
+  - Other WPs' literals (approved): wgpu `🧪️wgpu-time-travel` (`withdrawable`, panel `accepted`, editor `editable`), plugin
+    `🧪️composed-child-history` (`withdrawable`) — edited by me, NOT compiled by me (wgpu `--tests`).
+  - Ran on the staged tree: python `jsonschema` — kernel wire 14 valid / 14 invalid as expected, manifest fixture valid (13
+    verbs), plugin scenario fixture valid; `bun run …/run-plugin-oracle.ts` → `time-travel-scenario-oracle cases=15` (the
+    staged scenarios through the staged reducer twin). Rust compiles and runs only at landing.
+- **LANDED 01:16–01:23 (landing + serve held 7 min): waves A + B.** Ran on the landed tree:
+  `CARGO_BUILD_JOBS=3 cargo check -p semio-framework-time-travel -p semio-framework -p semio-framework-plugin --lib
+  --message-format=short` → **exit 0** (`check-wave-ab-1.txt`; plugin lib 283 warnings = type-checked);
+  `bun test ./🧰️framework/🔨️modules/⏪️time-travel/🧪️tests/🧪️conformance/🟦️.ts` → **22 pass / 0 fail**;
+  `bun test ./🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧪️history-patch/🟦️.ts` → **3 / 0**; `…/🧪️history-notices/🟦️.ts` →
+  **2 / 0**. OWED for A + B (test builds): `cargo test -p semio-framework-time-travel` (Rust reducer against the new
+  fixture) and `cargo test -p semio-framework --lib -- history_patch history_notices`.
+- P5 started while the lock was held (01:01–01:08, gate v3): the owed K3 native batch (command of §10.5) → **exit 101**, one
+  error, NOT K3 and not mine: `✏️s/🔌️plugins/🌊️flow/…/🎮️commands/🩹️patch-flow-widgets/🦀️.rs:12:45 E0432 unresolved import
+  semio_framework_plugin::ChildEmitPreparation` (the type is exported only inside `semio_framework_plugin::app`, PLG:384, a
+  peer hunk newer than HEAD; told `main`). fem-2d and remodel compiled (warnings only) before cargo stopped; the other
+  K3 crates need the batch again with `--keep-going` (`check-k3-native-1.txt`).
+- **LANDED 02:16–02:25: wave C** (landing 9 min; serve 02:24–02:25 for the two bundled TS twins, wave `c-ts`), with
+  three additions made while waiting for the lock: design §22.20 (a mutation is editable only when its payload schema shows
+  at least one input row — `time_travel_schema_shows_inputs`, memoized per schema; `open` refuses an editor with zero rows;
+  the row ALWAYS names Edit, disabled with "The inputs of this mutation cannot be edited" / the viewer reason), §22.7 guest
+  arms (`SelectAppearance::Segmented`, `icon_select`, `InputKind::LongText`; a text over `UI_TEXT_MAX_BYTES` is read-only so a
+  commit never writes it clipped — label `TooLong`), and S5-UI's drafted law `long_option_rows_state_their_choice_as_selected`
+  adopted with the new struct shapes. Row actions are now `[Edit, Withdraw | Restore]` (a withdrawn row: `[Edit]`).
+  Ran on the landed tree: `CARGO_BUILD_JOBS=3 cargo check -p semio-framework -p semio-framework-plugin --lib` → **exit 0**
+  twice (`check-wave-c-1.txt`, `-2.txt`; plugin lib 283 warnings = the baseline after I unqualified 5 new paths);
+  `cargo test -p semio-framework-time-travel` → **16 passed / 0 failed** (`test-fwt-1.txt`, after waves A + B);
+  bun: conformance **22/0**, manifest `🧪️history-edit-actions` **3/0**, kernel `🧪️history-patch` **3/0**, plugin scenario
+  oracle `cases=15`.
+- **02:33 RED OF MINE, tests only** (`check-plugin-tests-1.txt`, exit 101): 2 × E0502 in my new law
+  (`verb(&mut app, …, seeded_mutation(&app, 0))`, `🧪️tests/🧪️time-travel/🦀️.rs:2206/:2220`). Repair = wave `c-fix`
+  (3 lines, tests-only), told `main` at 02:34; the fleet was cut at ~02:40 before a lock came. **Saved 04:24** on the
+  coordinator's order (no lock: tests-only file). Its verifying check (`check-plugin-tests-2.txt`, started 04:24:03) sat
+  childless in the post-prune cargo flock cycle for 21 min (1.56 s CPU) → killed by me at 04:45 (rule 63), exit 143 = NO
+  VERDICT. `foundation.status` = `BUILDING` (S5-INFRA warms the closure alone; its pass includes plugin `--lib --tests`).
+  **OWED until GREEN**: `CARGO_BUILD_JOBS=3 cargo check -p semio-framework-plugin --lib --tests --features
+  artifact-app-testing --message-format=short`, then `CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s5-runtime
+  cargo test -p semio-framework-plugin --lib --features artifact-app-testing -- a_mutation_row a_blocking_mutation
+  long_option_rows every_fixture_scenario`.
+- Live probe findings against my trees (rule 54 priority 1):
+  - F3 (React/en batch G: Edit natively `disabled` with no reason while `replaying`): **not guest** — the guest has one path
+    for every refusing stage (`render(history)` passes `time_travel.panel()` for every non-inactive stage; `begin_refusal` is
+    `Illegal` in replaying / choosing / finalizing alike) and can only disable a row action through
+    `RowAction::disabled_because(reason)`; the stage edge and the body's dirty scope leave in the same reply. The probe's
+    timeline shows the button it PRESSED at t=150 still natively disabled at t=803 in `reviewing`, where the guest offers
+    Edit again → a host in-flight state of the row action button that hides the guest's reason and is not cleared after a
+    `{rejected}` reply (S5-UI). Told `main` 04:46.
+  - O3 (transient `timeTravel.stale` / `timeTravel.illegal` notices on Discard-then-Begin): a late blur-commit of an editor
+    field after Discard is answered `timeTravel.stale` by design (§4: a silent no-op) — a host must not surface `stale` as
+    a notice (S5-UI); for `illegal` E2E has to name the press.
+  - Withdrawn by the coordinator (probe timing faults): "Edit not disabled behind the finalize prompt", "no undone/redone
+    rows". Live on record before the cut (B0 guest, React/en): batches A 72/0, B 67/0, C 48/1, D 44/0, G green but F3.
+  - **F4** (first two-peer run, React/en batch H: A edits a draft, B's edit arrives through the folder; A never lists it,
+    one `timeTravel.stale`). Store + route halves are S5-STORE's / S5-LOAD's (the folder route replaced the store under the
+    session; a replaced document exits the session by design, which is where the generation changed). SESSION half,
+    decided with the coordinator (design §22.24): (a) a base move while `Editing` keeps the generation (reducer law
+    `editing × baseMoved`), so the editor's controls stay valid; (b) the remote edit is listed downstream "Not applied
+    while editing"; (c) an open session does NOT pause remote adoption — a tail edit is adopted at ingest, a change that
+    needs a replay shows "Replaying a remote history change: n of m", "paused" only after the user cancelled one;
+    (d) Accept replays the remote edit too. No runtime law covered a remote edit while EDITING (only while reviewing) →
+    **wave D, STAGED** (`🧪️s5-runtime-wave-d.py`): law `a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too`
+    (two toy replicas over memory backbones; asserts (a)–(d), an input stamped with the pre-move generation applies, and the
+    overwrite converges on the other replica); one real bug fixed: the pending rows were counted from the position the
+    EDITOR recorded when it opened, so a remote edit sorting before the edited mutation made the edited row itself read
+    "not applied" — a base move now re-resolves the editor's position with the session's (no law pins the upstream case:
+    the toy harness cannot order a remote edit before a local one); `open` asks the store's `unit_id(target)` (Withdraw of
+    a cross-document unit op → the store's `history.unit-spans-documents`, Edit → `timeTravel.not-editable`; const
+    `HISTORY_UNIT_SPANS_DOCUMENTS_CODE` in `PLG` `🔖️CommandLog`). Asked S5-STORE (approved, relayed) for
+    `AppliedMutation.unit` on the applied row so `editable` / `withdrawable` can read it per row without re-deriving store
+    law (`unit_id` re-locates by a linear scan per call).
+- **PLUGIN TESTS GREEN 04:55:59** (S5-INFRA's warm pass) and by my own run 04:56:46–04:56:47:
+  `CARGO_BUILD_JOBS=3 cargo check -p semio-framework-plugin --lib --tests --features artifact-app-testing` → **exit 0**
+  (`check-plugin-tests-3.txt`). Targeted laws started 04:57:14 (`test-plugin-laws-1.txt`), verdict below when it exists.
+- **Owed laws of wave C RAN** (gate v5, 40 GiB free, uplift `target-nde-s5-runtime`):
+  `cargo test -p semio-framework-plugin --lib --features artifact-app-testing -- a_mutation_row a_blocking_mutation
+  long_option_rows every_fixture_scenario` → **5 passed / 0 failed** (`test-plugin-laws-1.txt`, 05:09). Families
+  `-- time_travel supersede history_label_reload history_alternatives ui_history_panel rendering_the_history_body
+  composed_child_history` → **65 passed / 2 failed** (`test-plugin-laws-2.txt`, 05:16; session-4 baseline 75/15 on a wider
+  filter). The 2 reds = my own law helper `apply_other_edits` (600 edits seeded straight on the store saturate its
+  displaced-owner retirement authority of 1024 → `ValidationFailed("… authority is saturated")`), repaired in wave D.
+- **K3 native batch RAN** (12 converted plugin crates, `--keep-going`, command of §10.5): **exit 0** at 05:28
+  (`check-k3-native-2.txt`, 8 m 28 s cold). OWED: the same with `--target wasm32-wasip2`.
+- **LANDED 05:35:52–05:39:55: waves D + E** (landing 4 min; serve 05:38:40–05:38:49 for the served half `d-serve`).
+  - Wave D, on top of the staged content above, by coordinator decisions of 05:2x–05:3x: the session's base is the CONTENT
+    REVISION alone — `TimeTravelBase { content_revision }` (pure crate, TS twin, schema, generator + lifecycle-law fixture,
+    both law drivers, plugin base query, plugin TS oracle); a document port attaching or detaching moves the store's local
+    generation and no event, which used to be a `BaseMoved` and a `stale` for the user's next input; law
+    `a_backbone_attach_and_detach_while_editing_is_no_base_move`. `row.unit` (S5-STORE's `AppliedMutation.unit`, landed
+    05:20): `editable` / `withdrawable` are false inside a cross-document unit; `open` refuses it without a second scan.
+  - Wave E (approved 04:5x): `apply_time_travel_event` marks the rendered document dirty only when the identity of the shown
+    snapshot changed across the event and its effects; `shown(Replaying)` falls back to the head reviewed last; law
+    `a_session_edge_republishes_every_window_only_when_the_shown_document_swaps`.
+  - Ran on the landed tree: `CARGO_BUILD_JOBS=3 cargo check -p semio-framework-time-travel -p semio-framework-plugin --lib
+    --tests --features semio-framework-plugin/artifact-app-testing` → **exit 0** after D (`check-wave-d-1.txt`, 05:38:22)
+    and after E (`check-wave-e-1.txt`, 05:39:47); bun conformance **22/0**, plugin scenario oracle `cases=15`.
+  - NOT in wave D: "a replay finished before a port change still commits" — needs S5-STORE's wave RB
+    (`commit_finished_replay` still refuses `finished.generation != self.generation`, store ≈ :21625). Until RB: a port
+    change while REVIEWING → one `timeTravel.stale` finalize fault, automatic re-replay, second Finalize commits.
+  - Law runs on D + E: started 05:40 (`test-plugin-laws-3.txt`), verdict below.
+- **Law run on D + E, 05:44:27** (`test-plugin-laws-3.txt`, the family filter above): **68 passed / 2 failed**. Every law
+  of waves C/D/E passes (row Withdraw + Restore, row refusal reasons, §22.20, `long_option_rows…`,
+  `a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too`,
+  `a_backbone_attach_and_detach_while_editing_is_no_base_move`,
+  `a_session_edge_republishes_every_window_only_when_the_shown_document_swaps`). The 2 reds = the two N17 laws, now past
+  the harness saturation and failing at their real assertion `local_step_pending()` ("the interior undo waits for its
+  replay").
+- **N17 diagnosis — a LAW HARNESS fault, no runtime or store regression.** Both laws were re-written in session 4 onto
+  `apply_other_edits` and never ran green since (rule 43, then the saturation). A mutation dispatched by a plain
+  `ArtifactCommand::Apply` names no author; the store authors it as `local` (`replay_mutations` ≈ :22224,
+  `author_id().unwrap_or("local")`) and takes that actor as its local one (≈ :22061). So
+  `set_local_actor_id("other")` + 600 Applies never made "600 edits of another author": they were the fixture actor's own,
+  its undo hit the applied TAIL, and the store's tail step (design §20.14, D22) adopts that inside the dispatch — correct,
+  O(change), nothing waits. First repair attempt (wave `f`, 05:53): the acting author's edit through the runtime's
+  `dispatch_emit` — measured "0 of 605 rows" authored by that actor (`test-plugin-laws-4.txt`, 05:56): the runtime's plain
+  emit route is an `Apply` too. Wave `f-fix` (06:00): helper `bury_edit_of(app, author, count)` publishes the acting
+  author's one edit through the store's batched publication (`begin_apply_batch(.., actor, ..)` → `advance_apply_batch`
+  → acknowledge → close; the retained tool route, the only one that stamps the acting actor), puts `count` one-op edits
+  of the fixture actor downstream and asserts exactly one interior history row is that author's. Both laws undo as that
+  author.
+- **RB commit clause** (S5-STORE's wave RB on disk 05:42: `commit_finished_replay` refuses `Stale` on the content revision
+  alone): law `a_replay_finished_before_a_backbone_attach_and_detach_still_commits` — reviewing → backbone attach + detach
+  (store generation moved, content revision not) → 4 driver turns: the session is unchanged, no second replay → Finalize +
+  Overwrite are accepted, the session closes, the head and every window show the reviewed head. The "one
+  `timeTravel.stale`, re-replay, second Finalize" window noted under wave D is closed.
+- **Waves `f` + `f-fix` saved 05:53 / 06:00** (tests only, without lock by coordinator order): `🧪️time-travel/🦀️.rs`.
+  **Targeted run 06:08** (`test-plugin-laws-5.txt`): `-- an_interior_undo_over_a_long_history a_deferred_history_step_ends
+  a_replay_finished_before a_backbone_attach_and_detach` → **4 passed / 0 failed**.
+- **Full W2A law list 06:13:50** (`test-plugin-laws-6.txt`): `cargo test -p semio-framework-plugin --lib --features
+  artifact-app-testing -- time_travel supersede history_label_reload history_alternatives ui_history_panel
+  rendering_the_history_body composed_child_history transient_root` → **74 passed / 1 failed**: the whole W2A list is
+  green (71 = 68 + the 2 N17 laws + the RB clause), and of the four K3 `transient_root` laws (first run ever) three pass.
+  The red, `the_snapshot_mutation_replaces_the_whole_root_and_inverts_to_the_base`
+  (`🪟️window/🫧️transient/🧪️tests/🧪️transient-root/🦀️.rs:52`), is my own law's last clause "unknown members are refused":
+  no contract carries it — `transient_root!` parses with `JsonMemberPolicy::Reject`, the authority over REPEATED member
+  names (`🎒️pack/🔤️json/🦀️.rs` ≈ :1806 `DuplicateMember`), and a member the root does not declare is read past by the
+  value derive for every root alike. Every assertion before it passed (wire text, text and binary round trip, diff,
+  inverse, descriptor). Wave `g` (tests only, CHECKED, NOT LANDED — stand-back for wave B since 06:12) states what the
+  macro promises: a repeated member is refused. OWED after "LOCKS OPEN": `python3 🧪️s5-runtime-land.py land g`, then
+  `cargo test -p semio-framework-plugin --lib --features artifact-app-testing -- transient_root`.
+- **Observation handed to S5-STORE through `main`** (measured, not mine to change): the runtime's legacy emit route
+  (`dispatch_emit` → plain `Apply`, `PLG` ≈ :28825) authors every edit as `local` whatever `meta.actor` is; only the
+  retained batch route stamps `meta.actor`. A document verb still on the legacy route in a two-peer session would make
+  `undo` (`edit_is_local`) find nothing of its own (host actor ≠ `local`) or take the peer's tail edit (both `local`).
+- Observations for a later wave (not done): (a) [DONE in wave E] any session effect marks the rendered document dirty, so RequestFinalize /
+  Back / Choose / Accept-into-replay answer `UiDirtyScope::Full` although the document a window shows does not change —
+  narrowing to the shown-slot change (committed ↔ preview ↔ replayed head) would re-publish only the history body on those
+  edges (the ~450 ms the probe measured on the `choosing` edge); (b) `TimeTravelStoreState::shown(Replaying)` is the draft
+  preview only — a replay started from `Reviewing` (Rerun, Restore, BaseMoved) has none, so windows fall back to the
+  committed document until the new head arrives.
+- Store law since S5-STORE's landing (read 04:45): `admit_replacement` admits `Withdrawn` for every operation;
+  `ArtifactStore::unit_id` / `unit_operations` exist; a cross-document unit is refused at authoring
+  (`VcsError::UnitSpansDocuments` → `history.unit-spans-documents`). My row predicate follows the admit law automatically;
+  the unit half is the follow-up below.
+- Unit withdraw (S5-STORE `unit_operations` / `unit_id`): NOT in wave C — the API is not on disk. Today every product
+  operation is its own unit, so the single-target path is complete for them; a real multi-op unit would be refused by the
+  store's authoring law at finalize (`timeTravel.commit-failed`) until the follow-up wave expands a withdrawn draft to
+  `unit_operations(target)` and makes `editable` false inside a unit.
+
+### 11.5 State at 06:20 — stand-back for wave B (S5-CHANNEL holds all five locks since 06:12; no cargo, no landings)
+
+On disk and verified by runs named in 11.4: waves A–E (runtime, pure session, kernel, manifest, fixtures, twins) and the
+tests-only waves `c-fix`, `f`, `f-fix`. Plugin `--lib --tests --features artifact-app-testing` check exit 0 (05:39:47);
+W2A law list 71/0 inside the 74/1 run of 06:13:50.
+
+OWED — every step is one call of `zsh 🧪️s5-runtime-owed.sh <step>` after "LOCKS OPEN" (gate v5 inside the script):
+
+| step | what | why owed |
+| --- | --- | --- |
+| `g` | lands tests-only wave `g` (K3 law clause: a repeated member is refused) | checked 06:15, not landed (stand-back) |
+| `transient` | `cargo test -p semio-framework-plugin --lib --features artifact-app-testing -- transient_root` | 3/1 at 06:13; expect 4/0 after `g` |
+| `fwt` | `cargo test -p semio-framework-time-travel` | last run 16/0 was before wave D (base = content revision, new corpus rows) |
+| `kernel` | `cargo test -p semio-framework --lib -- history_patch history_notices history_edit framework_notices` | never run this session (waves A, C touched the rows) |
+| `k3-wasip2` | the K3 batch of 10.5 with `--keep-going --target wasm32-wasip2` | native half exit 0 at 05:28; a wasm32 build needs the coordinator's word on the wasm build mutex |
+| `w2a` | the full law list again | only if wave B or the B1 activation touched `TT` / `PLG` history regions |
+
+Not verified by me: the wgpu shell's `--tests` compile of the three literals I edited in
+`🐚️Shell/🧪️tests/🧪️wgpu-time-travel/🦀️.rs` (S5-WGPU's build). My uplift dir `target-nde-s5-runtime` holds no executables
+(tests link in the shared build dir), so rule 48 leaves nothing of mine to delete.
+
+Coordinator actions: the next activation must re-describe (wave C added the 13th HistoryEdit verb `historyEditRestore` and
+changed the args of `historyEditWithdraw`); waves C/D/E reach the browser with build B1.
+
+### 11.6 After the 07:45 usage cut — waves H + I (09:37–10:07)
+
+Repair-first (rule 64): nothing of mine was half-applied. Wave `g` was on disk (07:28); the `transient` build started 07:28
+was killed at the cut (`exit=137`, 07:43, no verdict).
+
+**Wave H — an instance always acts as someone (runtime half of S5-STORE's widened P3; LANDED 10:06:37–10:06:50, apply-only
+hold, rule 67; NOT compiled by me — the train's verdict in `🗑️generated/coord/train.status` is the check).**
+What was missing, read from code:
+- nothing gave an instance its actor at open (`plugin_open_actor_instance` kept the admitted actor in the runtime's registry
+  only): the document store acted as nobody until the first verb and, after a load, as the author of the loaded history's
+  newest edit (the store's initializer takes the tail edit's actor). `deliver_base_moved` answered nothing without a store
+  actor, `revertible` read another author's rows, and the routes without an `ActionMeta` (text ingest, media import,
+  transaction undo/redo, conflict resolve) authored as whoever wrote last;
+- the app constructor applied `A::genesis()` on a store without an actor — with STORE's refusal on disk every app with
+  genesis edits would have panicked at construction, hence the order "H before the refusal" (coordinator 10:0x);
+- `begin_framework_revert_route` read `revertible` and undid as whoever wrote last; `hydrate_pure_head` reset the store and
+  lost the actor;
+- two actor sources: `plugin_handle_action` / `plugin_handle_command` read `context.actor` with a literal `local` fallback
+  while every other entry point used the admitted `instance_actor`.
+Landed (`🔌️plugin/🦀️.rs`, 10 exact-anchor hunks): `LOCAL_ACTOR_ID` (`🔖️CommandLog` region); the constructor binds it to
+the fresh document store before genesis (genesis stays authored `local`, explicit and identical on every replica —
+coordinator decision); `PluginApp::bind_actor` (default: nothing; `VcsArtifactApp` sets the document store's actor) called by
+`plugin_open_actor_instance` right after `bind_instance_id`; `instance_actor` falls back to the const; both `plugin_handle_*`
+act as the admitted `instance_actor` (coordinator decision: one actor source); the revert route sets `meta.actor` before it
+reads the log; `hydrate_pure_head` carries the actor across its reset. Folder attach / reload already carried it (archive-load
+commit; the `pack reload` clause of `a_history_edit_is_its_own_row_locally_remotely_and_after_reload` proves it).
+Law `an_instance_always_acts_as_someone_and_every_edit_names_its_actor` (boot, bind, text ingest, plain emit, reload, pure
+hydrate, revert, undo). Its ingest and emit clauses need STORE's half (a plain `Apply` authoring as the store's actor).
+Left alone, named to `main`: PLG media import ≈ :36066 / :36079 still spell `unwrap_or("local")` on the store's actor (LOAD's
+region; harmless with a bound identity); codec `apply_ops` binds `LOCAL_ACTOR_ID` on its bare store in STORE's wave; the
+later-turn commit of an authored undo/redo of a finalize (`step_supersede_authoring`) acts as the store's actor at that turn
+(the instance's, since nothing else changes it); `revertToCommand` under a foreign tail undoes the target itself instead of
+"everything after it" (pre-existing multi-actor semantics of `framework_revert_unit`, no decision asked yet).
+Restore: `python3 🧪️s5-runtime-land.py revert i && python3 🧪️s5-runtime-land.py unland h` (`unland` = new verb: takes a
+wave's exact-anchor replacements out of the LIVE files and keeps what peers landed since).
+
+**Wave I — tests only, landed with H:** `an_inverse_refusal_is_one_mutations_fatal_that_its_row_names_and_resolves`
+(§22.5 + §22.17: Report replay completes; one `Fatal` `mutation.inverse-refused` on the mutation; the operation after it
+applies; row line "Fatal: Cannot be reversed" / "Kritisch: Nicht umkehrbar"; withdraw → finalizes),
+`hostile_history_edit_input_is_answered_never_panicked_on` (§22.6: 13 verbs × 5 hostile argument sets without a session,
+15 hostile calls inside an editing session; an answer every time, stage / document / revision / session untouched);
+`InertLabelOp`'s children kind has no inverse under a count below -1; the two `InertLabelOp` laws share `inert_document` /
+`close_inert`. §22.6's `timeTravel.editor-closed` branch (TT ≈ :3011) is a guard after an await and cannot be driven through
+the verbs; the law covers every refusal a user can reach.
+
+**Owed after the train's GREEN that includes H+I** (`zsh 🧪️s5-runtime-owed.sh <step>`, gate v6 inside, shared build dir):
+`transient` (running since 09:51, compiles the tree with H+I), `fwt`, `kernel`, `w2a`, `s22` (the two wave-I laws + the
+refactored §22.20 law), `actor` (after STORE's half), `k3-wasip2 1|2|3`.
+
+### 11.7 USAGE STOP 11:30 — the ONE plugin test binary (build running since 11:09:13, not linked when I stopped; resume after 14:20)
+
+- Build: `CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 cargo test -p semio-framework-plugin --lib --features artifact-app-testing --no-run` on the shared dirs; log `🗑️generated/s5-runtime/owed-plugin-test-build-2.txt`. Verdict = its `exit=` line; binary path = its `Executable unittests … (<path>)` line (expected `<shared target>/debug/deps/semio_framework_plugin-<hash>`; NOT seen by me). No `exit=` line = killed, NO VERDICT: re-issue once.
+- Invocation (not run by me): `cd 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust && CARGO_MANIFEST_DIR="$PWD" <path> <filter…>` with whatever `[env]` the repo's cargo config sets for tests (check it; I did not).
+- RUNTIME: `transient_root` · `an_inverse_refusal_is_one_mutations_fatal hostile_history_edit_input a_blocking_mutation_without_editable_inputs` · `an_instance_always_acts_as_someone` (ingest + emit clauses red until STORE's P3 is on disk) · W2A `time_travel supersede history_label_reload history_alternatives ui_history_panel rendering_the_history_body composed_child_history`.
+- LOAD: `folder_reload_route a_merge_archive_command document_backbone` · TOOLS: `gesture_laws` · GATES: `a_blocking_ledger_replay` · NESTED: its P1 / registry / recursive filters · CHANNEL: its funnel law (their names are theirs; not known to me).
+- The 10:48 build is NO VERDICT (interim tree, the 11 `ChildPackEntry.owner` / arity errors of the 10:56 train RED, none in my files). Nothing of waves H / I / g has a test verdict yet.
+- Staged, not landed (B3, after B2 is live): wave J + `j-serve` (§22.33; TS conformance 23/0 and kernel fixture 14 valid / 15 invalid on an overlay, Rust half not compiled), wave K (`.expect` → refusal). `🧪️w1-b-generate-lifecycle-law.py` is already edited for J: do not run it standalone before J lands (it would write the new corpus under the old reducer).
+- Owed after the reset, in order: the filters above, `zsh 🧪️s5-runtime-owed.sh fwt`, `… kernel`, `… k3-wasip2 1|2|3`; then J + K in one `landing` + `serve` hold.
+
+### 11.8 After the reboot — shared plugin law run, wave H2, owed laws (16:18–16:43)
+
+Repair-first: H + I + g on disk, J + K staged only (checked 16:18). The 11:09 build had linked at 11:30 (`exit=0`); the
+tree moved since, so I built again.
+
+- **ONE plugin test binary** (`CARGO_BUILD_JOBS=4 RUST_MIN_STACK=268435456 cargo test -p semio-framework-plugin --lib
+  --features artifact-app-testing --no-run`, 16:19–16:23, exit 0; rebuilt 16:31–16:38 after H2, exit 0):
+  `.🧬semio/🦑️repo/⚡️cache/cargo/build/debug/build/semio-framework-plugin/b80951f2dbb7024a/out/semio_framework_plugin-b80951f2dbb7024a`.
+  Every owner's filters ran on it through `🧪️s5-plugin-law-run.py`; table and attribution notes: `📓️s5-plugin-law-run.md`
+  — **142 passed / 11 failed** over the owner rows (1 mine and expected, 1 LOAD, 8 NESTED / tool-run family, + 1 overlap).
+- **My verdicts (second run, tree with H2):** `transient_root` 4 / 0 (wave g) · wave I's laws + the §22.20 law 3 / 0 ·
+  `an_opened_instance_acts_as_its_admitted_actor_across_reload_and_on_the_revert_route` 1 / 0 · `w2a` 79 / 1 ·
+  `time_travel` module 66 / 1. The single red is `every_route_authors_as_its_acting_actor` — the store half, expected
+  until S5-STORE's §22.34 ("a route without an actor of its own authors as the instance's": got `local`, wanted `ada`).
+- **Wave H2 (fix-forward of H, landed 16:31:02, 2 files, restore `python3 🧪️s5-runtime-land.py revert h2`).** The first
+  run showed nothing of mine red but the expected clause, and eight foreign reds whose shape ("work never ends", "store
+  reached Drop without its witness") made me read what H does to a fixture: H gave every constructed document store the
+  actor `local`, and `replace_local_actor_retained` retires a replaced actor string as a displaced owner — so every
+  directly constructed app gained one displaced owner on its first verb, and an opened instance one at its bind. Fixed:
+  the constructor binds nobody; genesis alone is authored `LOCAL_ACTOR_ID` (the state a genesis `Apply` left before H);
+  `plugin_open_actor_instance` binds the admitted actor (nobody → actor, nothing displaced). The foreign reds did NOT move
+  (NESTED 39 / 8 before and after), so they were not H's; the fix stands on its own reason. The actor law is split:
+  runtime half (bind, reload, pure hydrate, revert route, undo — edits authored through `publish_as`, the batched
+  publication) and store half (text ingest + plain emit). The first run's law had died at its ingest clause, so the
+  clauses behind it had never executed; they are green now.
+- **Owed laws RAN:** `cargo test -p semio-framework-time-travel` → **16 passed / 0 failed** (16:41, `owed-fwt.txt`);
+  `cargo test -p semio-framework --lib -- history_patch history_notices history_edit framework_notices` → **14 passed /
+  0 failed** (16:42, `owed-kernel.txt`).
+- **Still owed:** K3 batch `--target wasm32-wasip2` (`zsh 🧪️s5-runtime-owed.sh k3-wasip2 1|2|3`, on the coordinator's word
+  for the wasm mutex); waves J + `j-serve` + K (B3) with `fwt`, `kernel`, bun conformance and the plugin law
+  `accept_needs_a_change…` after them; §22.31 (iii) after S5-PUZZLE's declaration. The train lanes were not running at
+  16:31 — H2's lib half has my test build (exit 0) as its only check.
+
+### 11.9 Wave L — shared schema documents in every instance's resolver (design §23; 2026-10-06 01:25–01:41)
+
+- **Cause.** The runtime resolver `manifest::registered_input_schema_document` reads two process-wide lists: the
+  `schema://` export registry and the documents an app's own leaves declare (`Mutation::INPUT_SCHEMA_DOCUMENTS`, registered
+  by the app constructor). The framework's shared documents entered neither on their own: nobody published
+  `framework/value/schema.json` (the manifest reader embeds it only for its numeric-transport shape test), and the store's
+  and io vocabulary's documents were published only by a plugin ASSEMBLY
+  (`PluginRuntimeRegistry::publish_declared_catalogs`) — an instance constructed without one held none of them.
+- **Fix (landed 01:37:18, apply-only hold, train line; restore `python3 🧪️s5-runtime-land.py unland l`).**
+  `🛂️manifest/🦀️.rs`: `FRAMEWORK_INPUT_SCHEMA_DOCUMENTS` (the value schema) is part of the resolver itself.
+  `🔌️plugin/🦀️.rs`: `PluginRuntimeRegistry::publish_framework_schema_documents` (store child / owner / link / blob + io
+  vocabulary; the catalog tolerates exact duplicates) runs at every app construction; the assembly calls the same function.
+- **Always present now:** `framework/value/schema.json` (every process); `framework/io/schema.json`,
+  `os/store/child/schema.json`, `os/store/child/owner/schema.json`, `os/store/link/schema.json`,
+  `os/store/blob/schema.json` (every instance). Other framework / os schema ids (`kernel`, `interaction`, `manifest`,
+  `tool-run`, `time-travel`, `os/store/schema.json`, …) are contracts, not input vocabularies, and are not published.
+- **RAN:** the one allowed `CARGO_BUILD_JOBS=3 cargo check -p semio-framework-plugin --lib` → exit 0 (01:41, 3 m 43 s,
+  warnings present = type-checked; `check-wave-l.txt`). It compiles the manifest (`semio-framework`) and the plugin lib.
+- **NOT RUN (no test build this turn):** law `an_input_that_references_a_shared_framework_schema_resolves_on_any_instance`
+  (`🧪️tests/🧪️time-travel/🦀️.rs`, region `🪣️SharedSchemaDocuments`) — neither compiled nor executed; and the raster
+  acceptance law `history_edit_inputs_resolve` that found the gap. OWED: rebuild the plugin test binary, then
+  `python3 🧪️s5-plugin-law-run.py <binary> RUNTIME` plus the filter `an_input_that_references_a_shared_framework_schema`.
+- **Noted for later (U-o1, live journey):** the generic `index` stepper has min 0 and no max, so a step past the collection
+  is caught only by the replay (Fatal); the reference / index control should carry the collection's bound when the
+  descriptor names the collection.

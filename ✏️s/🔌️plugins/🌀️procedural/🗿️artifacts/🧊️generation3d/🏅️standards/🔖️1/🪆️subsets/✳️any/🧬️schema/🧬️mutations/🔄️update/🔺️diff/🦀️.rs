@@ -1,7 +1,7 @@
 //! 🔺️ `update-synapse` sparse diff construction.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::standards::v1::subsets::any::schema::mutations::synapse_index;
 use crate::standards::v1::subsets::any::schema::mutations::update_synapse::UpdateSynapse;
 use crate::Generation3dSnapshot;
@@ -16,5 +16,5 @@ pub fn diff(payload: &UpdateSynapse, base: &Generation3dSnapshot) -> protocol::M
     if base.host_snapshot.synapses[index] == payload.synapse {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", format!("Synapse \"{id}\" is already in the requested state."));
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(0, payload.synapse.clone())] }, &LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(0, payload.synapse.clone())] }, &LayoutDiff::default(), None, None))
 }

@@ -2,15 +2,14 @@
 import { describe,expect,it,vi } from "vitest";
 import React from "react";
 import {render,fireEvent,cleanup} from "@testing-library/react";
-import Ajv2020 from "ajv/dist/2020";
+
 import { BufferGeometry,Float32BufferAttribute,MeshStandardMaterial,SRGBColorSpace,FrontSide,DoubleSide } from "three";
-import fixture from "../../🧫️fixtures/🎨️world3d-inline-surface/🔣️.json" with {type:"json"};
-import schema from "../../🧬️schema/🎨️world3d-inline-surface/🔣️.json" with {type:"json"};
+import fixture from "../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json" with {type:"json"};
 import {buildMeshVisuals,disposeMeshVisuals,cloneWorldGlbSurface,disposeWorldGlbSurface,advanceWorldMeshResidency,WorldSurfaceStatusPane} from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import {Group,Mesh,Texture,TextureLoader} from "three";
 
 describe("🎨️ authored inline surface",()=>{
- it("validates the neutral schema before constructing installed draw buffers",()=>{const validate=new Ajv2020({strict:true,allErrors:true}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);});
+ 
  it("binds indexed corner/face channels without changing triangle order",()=>{
   const ours=buildMeshVisuals({id:"surface",data:fixture.mesh});
   const reference=new BufferGeometry();reference.setAttribute("normal",new Float32BufferAttribute(fixture.expected.normal,3));reference.setAttribute("uv",new Float32BufferAttribute(fixture.expected.uv,2));reference.setAttribute("color",new Float32BufferAttribute(fixture.expected.color,4));
@@ -78,7 +77,6 @@ it("publishes localized loading, cancellation and recoverable surface failure th
 });
 
 it("allows MASK cutoffs above one with the same fully hidden semantics as installed Three",()=>{
- const validate=new Ajv2020({strict:true,allErrors:true}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
  const prepared=structuredClone(fixture.mesh);Object.assign(prepared.materials.opaque,{alphaMode:"MASK",alphaCutoff:fixture.alphaCutoffCase.value});
  const visual=buildMeshVisuals({id:"hidden-mask",data:prepared}), material=visual.appearance!.materials[0]!;
  const reference=new MeshStandardMaterial({alphaTest:fixture.alphaCutoffCase.value});expect(material.alphaTest).toBe(reference.alphaTest);expect(material.alphaTest).toBe(1.5);

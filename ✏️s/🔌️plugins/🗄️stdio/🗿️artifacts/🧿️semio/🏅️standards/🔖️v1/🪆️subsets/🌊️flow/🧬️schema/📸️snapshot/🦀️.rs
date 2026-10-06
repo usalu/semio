@@ -5,7 +5,8 @@
 //! fixed arrays.
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+
+
 
 //#region 🔖️PortRef
 /// 🔌️ Addresses one named port on one node — the endpoint shape `FlowEdge` connects through.
@@ -89,330 +90,55 @@ impl Default for SemioFlowSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️TextPrimitives
-/// 🧪️ P2 pilot (flow, the FIRST semio subset upgraded): real hex/bracket-encoded value
-/// primitives backing the hand-rolled `ArtifactDsl` below — same style as this subset's own
-/// `🔺️diff`/`🧬️mutations` facets (`GifDiff`/`SvgDiff`/`DocxDiff`'s established hand-rolled
-/// convention), duplicated here (not imported from `schema::diff`) to keep `snapshot` — the base
-/// type `diff`/`mutations` both depend ON — free of a reverse dependency on either sibling facet.
-///
-/// 🧩️ The `#[derive(dsl::DslArtifact)]` path was tried first per this ticket's brief and hits a
-/// real mechanism gap: `position: SemioPoint2` would need `SemioPoint2` (`engine::geometry`,
-/// OUTSIDE this ticket's `🌊️flow/`-only edit scope) to implement `dsl::DslField`/`DslRecord`,
-/// which it does not. Hand-rolled instead — see this wave's report `mechanism_gaps`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_f64(v: f64) -> String {
-    if v.is_nan(){format!("nan64_{:016x}",v.to_bits())}else{v.to_string()}
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_f64(s: &str) -> Result<f64, String> {
-    if let Some(word)=s.strip_prefix("nan64_"){if word.len()!=16||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err("invalid Flow binary64 NaN word".into())}let bits=u64::from_str_radix(word,16).map_err(|error|error.to_string())?;let value=f64::from_bits(bits);if !value.is_nan(){return Err("Flow binary64 NaN word has a non-NaN class".into())}return Ok(value)}
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_point2(p: &SemioPoint2) -> String {
-    format!("[{},{}]", enc_f64(p.x), enc_f64(p.y))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioPoint2 { x: dec_f64(x)?, y: dec_f64(y)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_port_ref(p: &PortRef) -> String {
-    format!("[{},{}]", enc_str(&p.node), enc_str(&p.port))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_port_ref(s: &str) -> Result<PortRef, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [node, port] = parts.as_slice() else { return Err(format!("port ref: expected 2 fields, got {}", parts.len())) };
-    Ok(PortRef { node: dec_str(node)?, port: dec_str(port)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_param(p: &FlowParam) -> String {
-    format!("[{},{}]", enc_str(&p.key), enc_str(&p.value))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_param(s: &str) -> Result<FlowParam, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [key, value] = parts.as_slice() else { return Err(format!("param: expected 2 fields, got {}", parts.len())) };
-    Ok(FlowParam { key: dec_str(key)?, value: dec_str(value)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_node(n: &FlowNode) -> String {
-    format!("[{},{},{},{},{}]", enc_str(&n.id), enc_str(&n.kind), enc_str(&n.label), format_args!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")), enc_point2(&n.position))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_node(s: &str) -> Result<FlowNode, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [id, kind, label, params, position] = parts.as_slice() else { return Err(format!("node: expected 5 fields, got {}", parts.len())) };
-    let params = split_top_level(strip_brackets(params)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_param).collect::<Result<Vec<_>, String>>()?;
-    Ok(FlowNode { id: dec_str(id)?, kind: dec_str(kind)?, label: dec_str(label)?, params, position: dec_point2(position)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_edge(e: &FlowEdge) -> String {
-    format!("[{},{},{},{}]", enc_str(&e.id), enc_port_ref(&e.from), enc_port_ref(&e.to), enc_str(&e.kind))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_edge(s: &str) -> Result<FlowEdge, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [id, from, to, kind] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };
-    Ok(FlowEdge { id: dec_str(id)?, from: dec_port_ref(from)?, to: dec_port_ref(to)?, kind: dec_str(kind)? })
-}
 
-/// 📄️ The real structured text body: three lines — `schema=<hex>`, `nodes=[<node>,...]`,
-/// `edges=[<edge>,...]` — matching the grammar's `document = artifact-mark schema-line nodes-line
-/// edges-line`. Newlines are pure lexer trivia in the shared dialect, so this is genuinely
-/// recognizable by `dsl::Recognizer`, not merely readable.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_flow_snapshot_body(s: &SemioFlowSnapshot) -> String {
-    format!("schema={}\nnodes=[{}]\nedges=[{}]", enc_str(&s.schema), s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(","), s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_flow_snapshot_body(body: &str) -> Result<SemioFlowSnapshot, String> {
-    let mut schema = None;
-    let mut nodes = Vec::new();
-    let mut edges = Vec::new();
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("nodes=") {
-            let inner = strip_brackets(rest)?;
-            nodes = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_node).collect::<Result<Vec<_>, String>>()?;
-        } else if let Some(rest) = line.strip_prefix("edges=") {
-            let inner = strip_brackets(rest)?;
-            edges = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_edge).collect::<Result<Vec<_>, String>>()?;
-        } else {
-            return Err(format!("flow snapshot: unknown line {line:?}"));
-        }
-    }
-    let schema = schema.ok_or_else(|| "flow snapshot: missing schema line".to_string())?;
-    Ok(SemioFlowSnapshot { schema, nodes, edges })
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `stdio.json`'s upgraded `OpBinary`/`DiffCodec` reuse) backing
-/// the real `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope shortcut.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_flow_snapshot_binary(s: &SemioFlowSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut out = Vec::new();
-    out.push(PACK_BINARY_FORMAT);
-    write_str_lp(&mut out, &s.schema);
-    store::pack_rt::write_varint_u64(&mut out, s.nodes.len() as u64);
-    for n in &s.nodes {
-        write_str_lp(&mut out, &n.id);
-        write_str_lp(&mut out, &n.kind);
-        write_str_lp(&mut out, &n.label);
-        store::pack_rt::write_varint_u64(&mut out, n.params.len() as u64);
-        for p in &n.params {
-            write_str_lp(&mut out, &p.key);
-            write_str_lp(&mut out, &p.value);
-        }
-        out.extend_from_slice(&n.position.x.to_le_bytes());
-        out.extend_from_slice(&n.position.y.to_le_bytes());
-    }
-    store::pack_rt::write_varint_u64(&mut out, s.edges.len() as u64);
-    for e in &s.edges {
-        write_str_lp(&mut out, &e.id);
-        write_str_lp(&mut out, &e.from.node);
-        write_str_lp(&mut out, &e.from.port);
-        write_str_lp(&mut out, &e.to.node);
-        write_str_lp(&mut out, &e.to.port);
-        write_str_lp(&mut out, &e.kind);
-    }
-    out
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_flow_snapshot_binary(bytes: &[u8]) -> Result<SemioFlowSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
-    }
-    let schema = read_str_lp(&mut reader)?;
-    let node_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut nodes = Vec::with_capacity(node_count as usize);
-    for _ in 0..node_count {
-        let id = read_str_lp(&mut reader)?;
-        let kind = read_str_lp(&mut reader)?;
-        let label = read_str_lp(&mut reader)?;
-        let param_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-        let mut params = Vec::with_capacity(param_count as usize);
-        for _ in 0..param_count {
-            let key = read_str_lp(&mut reader)?;
-            let value = read_str_lp(&mut reader)?;
-            params.push(FlowParam { key, value });
-        }
-        let x = reader.read_f64_le().map_err(|e| e.to_string())?;
-        let y = reader.read_f64_le().map_err(|e| e.to_string())?;
-        nodes.push(FlowNode { id, kind, label, params, position: SemioPoint2 { x, y } });
-    }
-    let edge_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut edges = Vec::with_capacity(edge_count as usize);
-    for _ in 0..edge_count {
-        let id = read_str_lp(&mut reader)?;
-        let from_node = read_str_lp(&mut reader)?;
-        let from_port = read_str_lp(&mut reader)?;
-        let to_node = read_str_lp(&mut reader)?;
-        let to_port = read_str_lp(&mut reader)?;
-        let kind = read_str_lp(&mut reader)?;
-        edges.push(FlowEdge { id, from: PortRef { node: from_node, port: from_port }, to: PortRef { node: to_node, port: to_port }, kind });
-    }
-    Ok(SemioFlowSnapshot { schema, nodes, edges })
-}
+
+
+
+
+
+
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🎁 Real structured text/binary codecs (P2 pilot — first semio subset upgraded off the old
-/// hex-dump-of-`serde_json` shortcut). Wrapped in the repo-wide `store::semio_format` envelope,
-/// unchanged.
-impl store::ArtifactDsl for SemioFlowSnapshot {
-    const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
-        STDIO_SEMIOFLOW_DOCUMENT_SCHEMA
-    }
 
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        parse_flow_snapshot_body(body).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
 
-    fn print_dsl(&self) -> String {
-        let body = print_flow_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl store::ArtifactPack for SemioFlowSnapshot {
-
-    /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
-
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_flow_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-        }
-        let _ = options;
-        decode_flow_snapshot_binary(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
-    }
-}
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioFlowSnapshot`] — a thin
-/// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
-/// crate's private `store` extern-crate item (the `🌊️mutate-semio-flow` test adapter, which reads the
-/// REAL committed example artifact rather than a hand-transcribed Rust literal of it) can still
-/// drive the same codec production does. Same rationale as `🧰️kit`'s `decode_kit_snapshot_json`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn parse_semio_flow_dsl(text: &str) -> Result<SemioFlowSnapshot, String> {
-    <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
-}
 
-/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_flow_dsl`] — same rationale.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn print_semio_flow_dsl(snapshot: &SemioFlowSnapshot) -> String {
-    <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
-}
 
-/// 📥️ Decodes this subset's own committed `.pack.semio` bytes into a real [`SemioFlowSnapshot`] — the
-/// binary half of the same bridge, so a caller outside this crate can check the two codecs against
-/// each other on the two real committed artifacts instead of against itself.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_flow_pack(bytes: &[u8]) -> Result<SemioFlowSnapshot, String> {
-    <SemioFlowSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
-}
 
-/// 📤️ The `store::ArtifactPack::encode_pack` inverse of [`decode_semio_flow_pack`].
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_semio_flow_pack(snapshot: &SemioFlowSnapshot) -> Vec<u8> {
-    <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(snapshot)
-}
 
-/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.flow` — the shape the `🌊️mutate-semio-flow` case compares under `ordered-json-v1`. A thin
-/// `pack::to_json_string` wrapper (over `ToValue`/`FromValue`, first-party, per this ticket's
-/// serde→value conversion), so a projection is derived from the snapshot type itself rather than
-/// hand-written a second time in the adapter, where it could drift.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_semio_flow_snapshot_json(snapshot: &SemioFlowSnapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_flow_snapshot_json`] — decodes the
-/// `before`/`after` halves of `🌊️mutate-semio-flow`'s committed specification vectors
-/// (`../../../../../🧪️tests/🌊️mutate-semio-flow/🧫️fixtures/🦠️<kind>.json`) into real [`SemioFlowSnapshot`]
-/// values, so the adapter never hand-transcribes a fixture into a Rust literal that could silently
-/// drift away from the JSON it claims to mirror.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_flow_snapshot_json(text: &str) -> Result<SemioFlowSnapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Demo
@@ -446,14 +172,8 @@ pub(crate) fn demo_flow_snapshot() -> SemioFlowSnapshot {
 mod tests;
 //#endregion 🔖️Tests
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
 
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
-#[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
 
-#[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+
+
+

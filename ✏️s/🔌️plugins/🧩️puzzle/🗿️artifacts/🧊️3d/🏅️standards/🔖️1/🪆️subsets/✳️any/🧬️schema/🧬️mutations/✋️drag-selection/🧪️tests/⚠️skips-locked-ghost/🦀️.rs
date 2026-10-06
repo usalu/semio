@@ -1,4 +1,4 @@
-//! 🧪️ `drag-selection` fixture — `⚠️skips-locked-ghost`.
+//! 🧪️ `drag-selection` scene_snapshot — `⚠️skips-locked-ghost`.
 //!
 //! `object-b` moves by (1, 1, 0) away from `object-a`, so `attraction-1` is re-derived from the moved pose (`mutation.cascade`); the absent `object-ghost` and the locked `object-c` and `volume-2` are skipped with one Warning-level `mutation.partial` per reason.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "drag-selection/skips-locked-ghost: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

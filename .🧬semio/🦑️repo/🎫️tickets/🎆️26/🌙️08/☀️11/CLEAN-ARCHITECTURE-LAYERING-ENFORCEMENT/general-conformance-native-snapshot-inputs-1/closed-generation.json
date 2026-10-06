@@ -1,0 +1,32 @@
+[
+  {
+    "before": "old",
+    "current": "new",
+    "held": "old"
+  },
+  {
+    "before": "held",
+    "current": null,
+    "held": "held"
+  },
+  {
+    "before": "same",
+    "current": "same",
+    "held": "same"
+  },
+  {
+    "before": "ä🔣",
+    "current": "ö",
+    "held": "ä🔣"
+  },
+  {
+    "before": "",
+    "current": null,
+    "held": ""
+  },
+  {
+    "before": "line\nline",
+    "current": "line\r\nline",
+    "held": "line\nline"
+  }
+]

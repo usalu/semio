@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "Defaults",
+      "arguments": [
+        "--lib",
+        "-E",
+        "test(owner)"
+      ],
+      "status": "fail",
+      "finalStatus": "fail"
+    },
+    {
+      "name": "Separate",
+      "arguments": [
+        "--lib",
+        "--status-level",
+        "leak",
+        "--final-status-level",
+        "all",
+        "-E",
+        "test(owner)"
+      ],
+      "status": "leak",
+      "finalStatus": "all"
+    },
+    {
+      "name": "Equals",
+      "arguments": [
+        "--lib",
+        "--status-level=pass",
+        "--final-status-level=all"
+      ],
+      "status": "pass",
+      "finalStatus": "all"
+    },
+    {
+      "name": "Only Status",
+      "arguments": [
+        "--status-level",
+        "leak"
+      ],
+      "status": "leak",
+      "finalStatus": "fail"
+    },
+    {
+      "name": "Only Final",
+      "arguments": [
+        "--final-status-level=all"
+      ],
+      "status": "fail",
+      "finalStatus": "all"
+    },
+    {
+      "name": "Libtest",
+      "arguments": [
+        "--status-level=pass",
+        "--",
+        "--nocapture"
+      ],
+      "status": "pass",
+      "finalStatus": "fail"
+    }
+  ],
+  "invalid": [
+    [
+      "--status-level"
+    ],
+    [
+      "--final-status-level"
+    ],
+    [
+      "--status-level="
+    ],
+    [
+      "--final-status-level",
+      ""
+    ],
+    [
+      "--status-level",
+      "--lib"
+    ],
+    [
+      "--status-level",
+      "pass",
+      "--status-level=pass"
+    ],
+    [
+      "--final-status-level=all",
+      "--final-status-level",
+      "all"
+    ],
+    [
+      "--status-level=leak",
+      "--status-level=pass"
+    ]
+  ]
+}

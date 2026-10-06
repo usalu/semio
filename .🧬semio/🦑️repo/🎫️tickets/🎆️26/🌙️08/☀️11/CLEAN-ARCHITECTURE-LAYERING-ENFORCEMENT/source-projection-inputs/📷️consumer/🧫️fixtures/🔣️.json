@@ -1,0 +1,20 @@
+{
+  "retention": [
+    { "id": "owner-walk", "operation": "retain", "required": false, "expected": "omitted" },
+    { "id": "authored-rows", "operation": "retain", "required": false, "expected": "omitted" },
+    { "id": "required-library", "operation": "retain", "required": true, "expected": "deleted-reference" },
+    { "id": "required-manifest", "operation": "source", "required": true, "expected": "deleted-reference" },
+    { "id": "runtime-asset", "operation": "retain", "required": true, "expected": "deleted-reference" },
+    { "id": "declaring-source", "operation": "require", "required": true, "expected": "deleted-reference" },
+    { "id": "literal-target", "operation": "require", "required": true, "expected": "deleted-reference" },
+    { "id": "surviving-ancestor-before-deleted-candidate", "operation": "ancestor", "required": true, "expected": "survivor" }
+  ],
+  "paths": [
+    { "id": "windows-owned", "platform": "win32", "root": "C:\\repo", "target": "C:\\repo\\child\\a.rs", "canonical": "child/a.rs", "escaped": false },
+    { "id": "windows-escaped", "platform": "win32", "root": "C:\\repo", "target": "C:\\foreign\\x.rs", "canonical": "../foreign/x.rs", "escaped": true },
+    { "id": "windows-parent", "platform": "win32", "root": "C:\\repo", "target": "C:\\", "canonical": "..", "escaped": true },
+    { "id": "posix-owned", "platform": "posix", "root": "/repo", "target": "/repo/child/a.rs", "canonical": "child/a.rs", "escaped": false },
+    { "id": "posix-escaped", "platform": "posix", "root": "/repo", "target": "/foreign/x.rs", "canonical": "../foreign/x.rs", "escaped": true },
+    { "id": "posix-parent", "platform": "posix", "root": "/repo", "target": "/", "canonical": "..", "escaped": true }
+  ]
+}

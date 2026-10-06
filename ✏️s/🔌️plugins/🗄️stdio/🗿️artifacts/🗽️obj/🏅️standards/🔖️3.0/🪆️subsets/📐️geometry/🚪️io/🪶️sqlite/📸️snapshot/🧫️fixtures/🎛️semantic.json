@@ -1,0 +1,36 @@
+{
+  "schemaBytes": 6231,
+  "tableWidths": {
+    "obj_document": 3,
+    "obj_face": 3,
+    "obj_face_boundary": 4,
+    "obj_face_vertex": 9,
+    "obj_group": 4,
+    "obj_group_face": 6,
+    "obj_material_range": 7,
+    "obj_normal": 12,
+    "obj_object": 4,
+    "obj_object_face": 6,
+    "obj_smoothing_range": 7,
+    "obj_texcoord": 12,
+    "obj_unknown_statement": 6,
+    "obj_vertex": 15
+  },
+  "cases": [
+    {
+      "id": "originalSharedSourceNative",
+      "rows": 34,
+      "valueBytes": 1830
+    },
+    {
+      "id": "emptyCollectionsRetainMetadata",
+      "rows": 2,
+      "valueBytes": 60
+    },
+    {
+      "id": "originalSourceEmpty",
+      "rows": 2,
+      "valueBytes": 41
+    }
+  ]
+}

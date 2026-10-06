@@ -13,7 +13,7 @@ pub fn diff(payload: &SpliceText, base: &WriterSnapshot) -> protocol::MutationOu
     if applied.text == current {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Document text is unchanged.".to_string());
     }
-    let outcome = protocol::MutationOutcome::new(crate::standards::v1::subsets::any::io::diff::text::diff_set_text(&applied.text, &base.id, &base.language_id));
+    let outcome = protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_set_text(&applied.text, &base.id, &base.language_id));
     if applied.located.clamped {
         return outcome.warning("mutation.clamped", "The text this edit replaced had already changed; nothing was deleted.".to_string());
     }

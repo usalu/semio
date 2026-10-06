@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "installationDirectories": ["node_modules"],
+  "derivedDirectories": [{
+    "directory":"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/dist",
+    "manifest":"build/.nx-artifact.json",
+    "owner":"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml",
+    "files":["dump-guestslim-typst-fonts"]
+  }],
+  "canvas": {
+    "previousDirectory": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas",
+    "directory": "🧰️framework/🔨️modules/🖱️ui/🖼️canvas",
+    "package": "semio-framework-ui-canvas"
+  },
+  "dag": {
+    "engine": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
+    "snapshot": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/📸️snapshot/🦀️.rs",
+    "artifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🦀️.rs"
+  },
+  "controls": [
+    {"directory":"旧/🖼️canvas","file":"🧪️tests/neutral/law.rs","literal":"../../🧫️fixtures/value.json","target":"旧/🖼️canvas/🧫️fixtures/value.json"},
+    {"directory":"旧/🖼️canvas","file":"🦀️.rs","literal":"../../neutral/owner.rs","target":"neutral/owner.rs"},
+    {"directory":"旧/🖼️canvas","file":"🌉️icon/🦀️.rs","literal":"../🦀️.rs","target":"旧/🖼️canvas/🦀️.rs"}
+  ]
+}

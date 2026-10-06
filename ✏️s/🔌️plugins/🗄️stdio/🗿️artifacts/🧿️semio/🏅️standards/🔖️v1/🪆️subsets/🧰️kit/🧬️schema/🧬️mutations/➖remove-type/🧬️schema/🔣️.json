@@ -9,7 +9,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Type",
+          "de": "Typ"
+        },
+        "description": {
+          "en": "Id of the type.",
+          "de": "Kennung des Typs."
+        },
+        "ref": {
+          "kind": "type"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -176,7 +176,7 @@ impl ArtifactEditor for DocxStrictEditor {
     }
 
     fn initial_snapshot() -> DocxSnapshot {
-        crate::standards::v_ecma_376::subsets::strict::schema::DocxStrictBuilderConstruction::empty().add_paragraph(crate::schema::snapshot::DocxParagraph::default()).build().expect("the schema-authored initial strict DOCX is conformant")
+        crate::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_paragraph(crate::schema::snapshot::DocxParagraph::default()).build().expect("the schema-authored initial strict DOCX is conformant")
     }
 
     /// ✏️ Replaces the addressed paragraph's text after its optimistic revision matches.

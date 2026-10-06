@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "No library in any ecosystem reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so the second producer a differential comparison needs is a second IMPLEMENTATION. `../../../../../../🧪️tests/mutate-semio-flow/🐍️component.py` is that implementation: the semio envelope, the `stdio.semio.flow` DSL grammar, the LEB128 pack frame with its little-endian `f64` coordinates, and all thirteen verbs with their inverses, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`, `../🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed `(before, mutation, after)` vectors in the case's own `🧫️fixtures/`, and the envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`. It imports nothing from and transliterates nothing of the Rust it judges, and it needs no host package, which is why `package` is empty. The protocol description stops at the repeated `nodes`/`edges` records and names only their shape; that shape was turned into a reader and a writer by taking the field order from the DSL grammar, and the derivation is PINNED by the implementation re-encoding the committed `../../✉️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio` byte for byte. The earlier `semio-flow-mutation-semantics` no-oracle decision this entry replaces declined json-rust as a weak reference — a generic JSON DOM supplies no knowledge of nodes, edges, ports or params, so every one of the thirteen semantics would still have been hand-written on top of it. That judgement stands; what changed is that a second implementation of the VOCABULARY now exists, in another language, and the two are compared scenario for scenario. The artifact the case mutates is likewise real rather than synthetic: a 180-node, 179-edge connection network derived once from the committed Nakagin Capsule Tower IFC 4 model with IfcOpenShell 0.8.4.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-flow-mutate`'s external-oracle requirement for its 13-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "No library in any ecosystem reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so the second producer a differential comparison needs is a second IMPLEMENTATION. `../../../../../../🧪️tests/mutate-semio-flow/🐍️component.py` is that implementation: the semio envelope, the `stdio.semio.flow` DSL grammar, the LEB128 pack frame with its little-endian `f64` coordinates, and all thirteen verbs with their inverses, written in Python from the committed specification documents alone — `../🚪️io/📝️text/📸️snapshot/📖️.grammar.semio`, `../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio`, `../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio`, the committed `(before, mutation, after)` vectors in the case's own `🧫️fixtures/`, and the envelope region of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`. It imports nothing from and transliterates nothing of the Rust it judges, and it needs no host package, which is why `package` is empty. The protocol description stops at the repeated `nodes`/`edges` records and names only their shape; that shape was turned into a reader and a writer by taking the field order from the DSL grammar, and the derivation is PINNED by the implementation re-encoding the committed `../../✉️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio` byte for byte. The earlier `semio-flow-mutation-semantics` no-oracle decision this entry replaces declined json-rust as a weak reference — a generic JSON DOM supplies no knowledge of nodes, edges, ports or params, so every one of the thirteen semantics would still have been hand-written on top of it. That judgement stands; what changed is that a second implementation of the VOCABULARY now exists, in another language, and the two are compared scenario for scenario. The artifact the case mutates is likewise real rather than synthetic: a 180-node, 179-edge connection network derived once from the committed Nakagin Capsule Tower IFC 4 model with IfcOpenShell 0.8.4.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-flow-mutate`'s external-oracle requirement for its 13-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -39,7 +39,7 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": ".dsl.semio; .pack.semio; ../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio; ../🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/✉️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio",
+        "specificationSource": ".dsl.semio; .pack.semio; ../🚪️io/📝️text/📸️snapshot/📖️.grammar.semio; ../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio; ../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/✉️base/📚️examples/🌊️pipeline/🖼️assets/🎒️.pack.semio",
         "fixtureCoverage": {
           "vectors": 12,
           "capabilitiesCovered": [
@@ -391,9 +391,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-edge-applied",
       "class": "third-party-generated",
       "target": {
@@ -444,7 +443,6 @@
       "notes": "Applied insert-edge (payload {\"edge\": {\"id\": \"f1-inserted-edge\", \"from\": {\"node\": \"0POPlhUSnC1REPvcqnensi\", \"port\": \"28MKF16un8NBtKsWfORP5Y\"}, \"to\": {\"node\": \"0IEifuk9T5eR2vbWao4vJp\", \"port\": \"0DFWl3CFjFrhgWeoJyVitG\"}, \"kind\": \"The center of the east rectangular core (an elevator and a staircase around it).\"}, \"mutation\": \"insertEdge\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -495,7 +493,6 @@
       "notes": "Applied insert-node (payload {\"node\": {\"id\": \"f1-inserted-node\", \"kind\": \"IfcBuildingElementProxy\", \"label\": \"b\", \"params\": [{\"key\": \"ComposePieceAttributes.name\", \"value\": \"b\"}, {\"key\": \"ComposePieceAttributes.composeGuid\", \"value\": \"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\"}, {\"key\": \"ComposeConnectionParams.rotation\", \"value\": \"90.0\"}], \"position\": {\"x\": 0.0, \"y\": 0.0}}, \"mutation\": \"insertNode\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-edge-applied",
       "class": "third-party-generated",
       "target": {
@@ -546,7 +543,6 @@
       "notes": "Applied remove-edge (payload {\"id\": \"3NLh69tTrEpfV9iDbwoXYL\", \"mutation\": \"removeEdge\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -597,7 +593,6 @@
       "notes": "Applied remove-node (payload {\"id\": \"1tZkmTaMP4R8yLkBdfebfl\", \"mutation\": \"removeNode\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-node-param-applied",
       "class": "third-party-generated",
       "target": {
@@ -648,7 +643,6 @@
       "notes": "Applied remove-node-param (payload {\"id\": \"0POPlhUSnC1REPvcqnensi\", \"key\": \"ComposePieceAttributes.name\", \"mutation\": \"removeNodeParam\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-edge-endpoints-applied",
       "class": "third-party-generated",
       "target": {
@@ -699,7 +693,6 @@
       "notes": "Applied set-edge-endpoints (payload {\"id\": \"2jGlFQA9H2mvmjiNpnYG5Q\", \"from\": {\"node\": \"0IEifuk9T5eR2vbWao4vJp\", \"port\": \"0DFWl3CFjFrhgWeoJyVitG\"}, \"to\": {\"node\": \"0POPlhUSnC1REPvcqnensi\", \"port\": \"28MKF16un8NBtKsWfORP5Y\"}, \"mutation\": \"setEdgeEndpoints\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-edge-kind-applied",
       "class": "third-party-generated",
       "target": {
@@ -750,7 +743,6 @@
       "notes": "Applied set-edge-kind (payload {\"id\": \"2jGlFQA9H2mvmjiNpnYG5Q\", \"kind\": \"The center of the west rectangular core (an elevator and a staircase around it).\", \"mutation\": \"setEdgeKind\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-node-kind-applied",
       "class": "third-party-generated",
       "target": {
@@ -801,7 +793,6 @@
       "notes": "Applied set-node-kind (payload {\"id\": \"0POPlhUSnC1REPvcqnensi\", \"kind\": \"IfcBuildingElementProxyRenamed\", \"mutation\": \"setNodeKind\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-node-label-applied",
       "class": "third-party-generated",
       "target": {
@@ -852,7 +843,6 @@
       "notes": "Applied set-node-label (payload {\"id\": \"0POPlhUSnC1REPvcqnensi\", \"label\": \"f1-relabelled\", \"mutation\": \"setNodeLabel\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-node-param-applied",
       "class": "third-party-generated",
       "target": {
@@ -903,7 +893,6 @@
       "notes": "Applied set-node-param (payload {\"id\": \"0POPlhUSnC1REPvcqnensi\", \"key\": \"ComposePieceAttributes.name\", \"value\": \"f1-mutated-value\", \"mutation\": \"setNodeParam\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-node-position-applied",
       "class": "third-party-generated",
       "target": {

@@ -14,8 +14,6 @@ use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Mutations
@@ -358,9 +356,6 @@ pub fn inverse_fem3d_mutation(snapshot: &Fem3dSnapshot, mutation: &Fem3dMutation
 mod tests;
 // #endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
-mod semio_grammar_conformance;
 
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every `Fem3dMutation` variant, in declaration order — the vocabulary the `fem3d-1-any` mutation catalog
@@ -402,51 +397,7 @@ pub const KINDS: &[&str] = &[
 //#endregion 🔖️Kinds
 
 //#region 🌉️TestBridge
-/// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
-///
-/// A generated test host links only `semio-repo-test-host` and, behind its `sut` feature, this crate —
-/// no third-party codec or `protocol` is reachable from an adapter, and this crate's
-/// `protocol`/`store` extern-crate aliases are private — so neither `Fem3dMutation` nor
-/// `Fem3dSnapshot` can be named there, and hand-transcribing either into a Rust literal
-/// would be a second copy of the committed specification vector, free to drift away from it. This
-/// bridge is the whole surface an adapter needs, and every type in its signature is a `str`.
-///
-/// `after_json` is decoded through the SAME path as `base_json` and returned as `expectedSnapshot`,
-/// so the caller compares like with like. The report carries the forward half (`base`, `snapshot`,
-/// `diff`, `messages`) and the inverse half (`inverseSteps`, `inverseSnapshot`, `inverseMessages`),
-/// so the inverse law is checked against the mutation's OWN computed inverse rather than against a
-/// hand-written undo.
-///
-/// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
-pub fn fem3d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<Fem3dSnapshot, String> {
-        let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-        Ok(decoded)
-    };
-    let base = decode_snapshot(base_json)?;
-    let expected = decode_snapshot(after_json)?;
-    let mutation: Fem3dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mut applied = base.clone();
-    let forward = <Fem3dMutation as Mutation<Fem3dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <Fem3dMutation as Mutation<Fem3dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
-    let mut undone = applied.clone();
-    let mut inverse_messages = Vec::new();
-    for step in &inverse {
-        let outcome = <Fem3dMutation as Mutation<Fem3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
-        inverse_messages.extend(outcome.messages().iter().cloned());
-    }
-    let report = semio_framework_value::DslValue::object([
-        ("base".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&base))),
-        ("expectedSnapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&expected))),
-        ("snapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&applied))),
-        ("diff".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(forward.diff()))),
-        ("messages".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(forward.messages()))),
-        ("inverseSteps".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&inverse))),
-        ("inverseSnapshot".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&undone))),
-        ("inverseMessages".to_string(), semio_framework_value::ToValue::to_value(&semio_framework_value::ToValue::to_value(&inverse_messages))),
-    ]);
-    Ok(semio_framework_pack_json::to_json_string(&report))
-}
+
 //#endregion 🌉️TestBridge
 
 //#region 🧪️KindsConformance

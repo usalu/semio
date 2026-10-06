@@ -1,1 +1,0 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["width","height","indices"],"properties":{"width":{"const":0},"height":{"const":4294967295},"indices":{"type":"array","items":{"type":"integer","minimum":0,"maximum":255},"minItems":3,"maxItems":3}}}

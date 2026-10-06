@@ -33,7 +33,7 @@ type nativeEventVectorFile struct {
 
 func loadNativeEventVectors(ctx *host.Context) (nativeEventVectorFile, error) {
 	var file nativeEventVectorFile
-	raw, err := ctx.FixtureBytes(nativeEventVectors)
+	raw, err := ctx.InputBytes(nativeEventVectors)
 	if err != nil {
 		return file, err
 	}

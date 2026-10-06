@@ -1,0 +1,392 @@
+[
+  {
+    "owner": "las",
+    "rawBytes": 5794,
+    "sqliteSchemaBytes": 5875,
+    "tableCount": 8,
+    "rows": [
+      {
+        "name": "las_document",
+        "statementBytes": 86,
+        "nameBytes": 12
+      },
+      {
+        "name": "las_header",
+        "statementBytes": 3164,
+        "nameBytes": 10
+      },
+      {
+        "name": "las_point",
+        "statementBytes": 1307,
+        "nameBytes": 9
+      },
+      {
+        "name": "las_point_gps",
+        "statementBytes": 241,
+        "nameBytes": 13
+      },
+      {
+        "name": "las_point_rgb",
+        "statementBytes": 241,
+        "nameBytes": 13
+      },
+      {
+        "name": "las_return_histogram",
+        "statementBytes": 252,
+        "nameBytes": 20
+      },
+      {
+        "name": "las_vlr",
+        "statementBytes": 287,
+        "nameBytes": 7
+      },
+      {
+        "name": "las_vlr_octet",
+        "statementBytes": 200,
+        "nameBytes": 13
+      }
+    ]
+  },
+  {
+    "owner": "md",
+    "rawBytes": 3625,
+    "sqliteSchemaBytes": 3901,
+    "tableCount": 27,
+    "rows": [
+      {
+        "name": "md_block",
+        "statementBytes": 166,
+        "nameBytes": 8
+      },
+      {
+        "name": "md_block_inline",
+        "statementBytes": 202,
+        "nameBytes": 15
+      },
+      {
+        "name": "md_block_quote",
+        "statementBytes": 76,
+        "nameBytes": 14
+      },
+      {
+        "name": "md_code_block",
+        "statementBytes": 109,
+        "nameBytes": 13
+      },
+      {
+        "name": "md_code_span",
+        "statementBytes": 98,
+        "nameBytes": 12
+      },
+      {
+        "name": "md_document",
+        "statementBytes": 71,
+        "nameBytes": 11
+      },
+      {
+        "name": "md_document_block",
+        "statementBytes": 208,
+        "nameBytes": 17
+      },
+      {
+        "name": "md_emphasis",
+        "statementBytes": 74,
+        "nameBytes": 11
+      },
+      {
+        "name": "md_emphasis_inline",
+        "statementBytes": 211,
+        "nameBytes": 18
+      },
+      {
+        "name": "md_hard_break",
+        "statementBytes": 76,
+        "nameBytes": 13
+      },
+      {
+        "name": "md_heading",
+        "statementBytes": 128,
+        "nameBytes": 10
+      },
+      {
+        "name": "md_html_block",
+        "statementBytes": 94,
+        "nameBytes": 13
+      },
+      {
+        "name": "md_html_inline",
+        "statementBytes": 96,
+        "nameBytes": 14
+      },
+      {
+        "name": "md_image",
+        "statementBytes": 121,
+        "nameBytes": 8
+      },
+      {
+        "name": "md_inline",
+        "statementBytes": 171,
+        "nameBytes": 9
+      },
+      {
+        "name": "md_link",
+        "statementBytes": 101,
+        "nameBytes": 7
+      },
+      {
+        "name": "md_link_text",
+        "statementBytes": 197,
+        "nameBytes": 12
+      },
+      {
+        "name": "md_list",
+        "statementBytes": 221,
+        "nameBytes": 7
+      },
+      {
+        "name": "md_list_item",
+        "statementBytes": 144,
+        "nameBytes": 12
+      },
+      {
+        "name": "md_list_item_block",
+        "statementBytes": 206,
+        "nameBytes": 18
+      },
+      {
+        "name": "md_paragraph",
+        "statementBytes": 74,
+        "nameBytes": 12
+      },
+      {
+        "name": "md_quote_block",
+        "statementBytes": 205,
+        "nameBytes": 14
+      },
+      {
+        "name": "md_soft_break",
+        "statementBytes": 76,
+        "nameBytes": 13
+      },
+      {
+        "name": "md_strong",
+        "statementBytes": 72,
+        "nameBytes": 9
+      },
+      {
+        "name": "md_strong_inline",
+        "statementBytes": 205,
+        "nameBytes": 16
+      },
+      {
+        "name": "md_text",
+        "statementBytes": 90,
+        "nameBytes": 7
+      },
+      {
+        "name": "md_thematic_break",
+        "statementBytes": 79,
+        "nameBytes": 17
+      }
+    ]
+  },
+  {
+    "owner": "step",
+    "rawBytes": 3282,
+    "sqliteSchemaBytes": 3437,
+    "tableCount": 12,
+    "rows": [
+      {
+        "name": "step_aggregate_element",
+        "statementBytes": 233,
+        "nameBytes": 22
+      },
+      {
+        "name": "step_argument",
+        "statementBytes": 327,
+        "nameBytes": 13
+      },
+      {
+        "name": "step_author",
+        "statementBytes": 181,
+        "nameBytes": 11
+      },
+      {
+        "name": "step_complex_type",
+        "statementBytes": 187,
+        "nameBytes": 17
+      },
+      {
+        "name": "step_description",
+        "statementBytes": 189,
+        "nameBytes": 16
+      },
+      {
+        "name": "step_document",
+        "statementBytes": 136,
+        "nameBytes": 13
+      },
+      {
+        "name": "step_entity",
+        "statementBytes": 214,
+        "nameBytes": 11
+      },
+      {
+        "name": "step_header",
+        "statementBytes": 245,
+        "nameBytes": 11
+      },
+      {
+        "name": "step_organization",
+        "statementBytes": 187,
+        "nameBytes": 17
+      },
+      {
+        "name": "step_schema_identifier",
+        "statementBytes": 192,
+        "nameBytes": 22
+      },
+      {
+        "name": "step_typed_value",
+        "statementBytes": 203,
+        "nameBytes": 16
+      },
+      {
+        "name": "step_value",
+        "statementBytes": 964,
+        "nameBytes": 10
+      }
+    ]
+  },
+  {
+    "owner": "ifc4",
+    "rawBytes": 3089,
+    "sqliteSchemaBytes": 3250,
+    "tableCount": 11,
+    "rows": [
+      {
+        "name": "ifc_aggregate_element",
+        "statementBytes": 230,
+        "nameBytes": 21
+      },
+      {
+        "name": "ifc_argument",
+        "statementBytes": 323,
+        "nameBytes": 12
+      },
+      {
+        "name": "ifc_complex_type",
+        "statementBytes": 185,
+        "nameBytes": 16
+      },
+      {
+        "name": "ifc_document",
+        "statementBytes": 134,
+        "nameBytes": 12
+      },
+      {
+        "name": "ifc_entity",
+        "statementBytes": 212,
+        "nameBytes": 10
+      },
+      {
+        "name": "ifc_file_description_argument",
+        "statementBytes": 230,
+        "nameBytes": 29
+      },
+      {
+        "name": "ifc_file_name_argument",
+        "statementBytes": 223,
+        "nameBytes": 22
+      },
+      {
+        "name": "ifc_file_schema_argument",
+        "statementBytes": 225,
+        "nameBytes": 24
+      },
+      {
+        "name": "ifc_header",
+        "statementBytes": 48,
+        "nameBytes": 10
+      },
+      {
+        "name": "ifc_typed_argument",
+        "statementBytes": 223,
+        "nameBytes": 18
+      },
+      {
+        "name": "ifc_value",
+        "statementBytes": 1034,
+        "nameBytes": 9
+      }
+    ]
+  },
+  {
+    "owner": "ifc2x3",
+    "rawBytes": 3792,
+    "sqliteSchemaBytes": 4006,
+    "tableCount": 12,
+    "rows": [
+      {
+        "name": "ifc2x3_document",
+        "statementBytes": 202,
+        "nameBytes": 15
+      },
+      {
+        "name": "ifc2x3_edm_preamble",
+        "statementBytes": 522,
+        "nameBytes": 19
+      },
+      {
+        "name": "ifc2x3_entity_argument",
+        "statementBytes": 239,
+        "nameBytes": 22
+      },
+      {
+        "name": "ifc2x3_entity_type",
+        "statementBytes": 194,
+        "nameBytes": 18
+      },
+      {
+        "name": "ifc2x3_file_description_argument",
+        "statementBytes": 239,
+        "nameBytes": 32
+      },
+      {
+        "name": "ifc2x3_file_name_argument",
+        "statementBytes": 232,
+        "nameBytes": 25
+      },
+      {
+        "name": "ifc2x3_file_schema_argument",
+        "statementBytes": 234,
+        "nameBytes": 27
+      },
+      {
+        "name": "ifc2x3_header",
+        "statementBytes": 51,
+        "nameBytes": 13
+      },
+      {
+        "name": "ifc2x3_instance",
+        "statementBytes": 198,
+        "nameBytes": 15
+      },
+      {
+        "name": "ifc2x3_list_element",
+        "statementBytes": 229,
+        "nameBytes": 19
+      },
+      {
+        "name": "ifc2x3_typed_argument",
+        "statementBytes": 232,
+        "nameBytes": 21
+      },
+      {
+        "name": "ifc2x3_value",
+        "statementBytes": 1196,
+        "nameBytes": 12
+      }
+    ]
+  }
+]

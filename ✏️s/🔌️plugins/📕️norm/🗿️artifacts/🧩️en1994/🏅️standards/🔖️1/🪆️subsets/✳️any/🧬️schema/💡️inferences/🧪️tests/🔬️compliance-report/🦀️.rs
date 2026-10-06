@@ -2,7 +2,8 @@ use super::*;
 use crate::app_surface::{apply_remedy_edit, get_value_at_path, insert_value_at_path, remove_value_at_path, set_value_at_path};
 use crate::document::{AnnexChoice, CheckStatus, RemedyBound};
 use crate::field_meta::en1994_field_meta;
-use crate::{encode_en1994_snapshot_json, En1994Snapshot, SteelSection};
+use crate::{En1994Snapshot, SteelSection};
+use crate::standards::v1::subsets::any::io::text::snapshot::{encode_en1994_snapshot_json};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -176,14 +177,14 @@ fn insulation_remedy_flips_fire_check() {
 
 #[test]
 fn passing_example_dsl_complies() {
-    let doc = crate::decode_en1994_dsl(&example_dsl("composite-floor-beam")).expect("decode");
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam")).expect("decode");
     let report = evaluate(&doc);
     assert!(report.complies(), "fails={:?}", report.failing().map(|c| c.id.as_str()).collect::<Vec<_>>());
 }
 
 #[test]
 fn failing_example_dsl_does_not_comply_with_named_ids() {
-    let doc = crate::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).expect("decode");
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).expect("decode");
     assert!(doc.beams[0].steel.a_m2 > 0.01, "nested steel must be present");
     assert!(doc.beams[0].studs.total_count > 0);
     let report = evaluate(&doc);
@@ -195,7 +196,7 @@ fn failing_example_dsl_does_not_comply_with_named_ids() {
 
 #[test]
 fn bridge_example_runs_fatigue_checks() {
-    let doc = crate::decode_en1994_dsl(&example_dsl("composite-bridge-girder")).expect("decode");
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-bridge-girder")).expect("decode");
     assert_eq!(doc.structure_kind, "bridge");
     assert!(doc.beams[0].steel.a_m2 > 0.01);
     let report = evaluate(&doc);
@@ -205,7 +206,7 @@ fn bridge_example_runs_fatigue_checks() {
 
 #[test]
 fn bridge_girder_ltb_and_crack_remedy0_clear() {
-    let doc = crate::decode_en1994_dsl(&example_dsl("composite-bridge-girder")).expect("decode");
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-bridge-girder")).expect("decode");
     let report = evaluate(&doc);
     for id in ["en1994.6.4.ltb.girder-G1", "en1994.7.4.crack.girder-G1"] {
         let fail = report.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("missing {id}"));
@@ -280,8 +281,8 @@ fn example_snapshot_validates_against_json_schema() {
     let schema_path = snapshot_schema_path();
     for (label, snap) in [
         ("default", En1994Snapshot::default()),
-        ("passing", crate::decode_en1994_dsl(&example_dsl("composite-floor-beam")).unwrap()),
-        ("failing", crate::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).unwrap()),
+        ("passing", crate::standards::v1::subsets::any::io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam")).unwrap()),
+        ("failing", crate::standards::v1::subsets::any::io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).unwrap()),
     ] {
         let instance = encode_en1994_snapshot_json(&snap);
         let tmp = std::env::temp_dir().join(format!("en1994-instance-{label}.json"));
@@ -306,7 +307,7 @@ fn example_snapshot_validates_against_json_schema() {
 fn python_oracle_matches_evaluate_json_within_half_percent() {
     for (label, snap) in [
         ("compliant", En1994Snapshot::default()),
-        ("failing", crate::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).unwrap()),
+        ("failing", crate::standards::v1::subsets::any::io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).unwrap()),
     ] {
         let rust = evaluate(&snap);
         let report_json = serde_json::to_string(&rust).expect("report json");
@@ -459,7 +460,7 @@ fn every_editable_leaf_affects_at_least_one_check() {
     }
 
     type Pred = fn(&str) -> bool;
-    let failing_beam = crate::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).expect("failing beam");
+    let failing_beam = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).expect("failing beam");
     let scopes: [(&str, En1994Snapshot, Pred); 6] = [
         (
             "default-building",

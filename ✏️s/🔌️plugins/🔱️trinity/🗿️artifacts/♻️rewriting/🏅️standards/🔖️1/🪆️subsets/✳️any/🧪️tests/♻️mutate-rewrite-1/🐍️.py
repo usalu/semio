@@ -6,9 +6,9 @@ import struct
 from semio_repo_test import Adapter, Outcome
 
 MEMBERS = ("workingGraph", "lhs", "rhs", "parameterBindings", "ruleLayout")
-KINDS = ("edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point", "drag-rule-nodes", "set-rule-layout-points")
-TAGS = dict(zip(KINDS, ("editBeforeFixture", "editLhs", "editRhs", "changeParameterBinding", "removeParameterBinding", "changeRuleLayoutPoint", "removeRuleLayoutPoint", "dragRuleNodes", "setRuleLayoutPoints")))
-DOCUMENTS = {"edit-before-fixture": ("workingGraph", "newWorkingGraph"), "edit-lhs": ("lhs", "newLhs"), "edit-rhs": ("rhs", "newRhs")}
+KINDS = ("edit-working-graph", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point", "drag-rule-nodes", "set-rule-layout-points")
+TAGS = dict(zip(KINDS, ("editWorkingGraph", "editLhs", "editRhs", "changeParameterBinding", "removeParameterBinding", "changeRuleLayoutPoint", "removeRuleLayoutPoint", "dragRuleNodes", "setRuleLayoutPoints")))
+DOCUMENTS = {"edit-working-graph": ("workingGraph", "newWorkingGraph"), "edit-lhs": ("lhs", "newLhs"), "edit-rhs": ("rhs", "newRhs")}
 RULE_ROWS = ("create", "merge", "set", "delete", "parameters")
 
 def exact(value, required, optional=()):
@@ -126,7 +126,7 @@ def fixture(ctx, role):
     hits = [step["text"][len(role) + 1:] for step in ctx.scenario["steps"] if step["text"].startswith(prefix)]
     if len(hits) != 1 or not hits[0].startswith("shared://"):
         raise AssertionError("scenario %s must declare exactly one %s input" % (ctx.scenario["id"], role))
-    return json.loads(ctx.fixture_bytes(hits[0]).decode("utf-8"))
+    return json.loads(ctx.input_bytes(hits[0]).decode("utf-8"))
 
 def owner_input(ctx, parent_role, child_role):
     owner = (fixture(ctx, parent_role), fixture(ctx, child_role))
@@ -170,9 +170,9 @@ def apply_mutation(owner, mutation, replacement=None):
     if kind in DOCUMENTS:
         field, argument = DOCUMENTS[kind]
         parent[field] = copy.deepcopy(mutation[argument])
-        if kind == "edit-before-fixture":
+        if kind == "edit-working-graph":
             if replacement is None:
-                raise AssertionError("edit-before-fixture requires its declared full replacement child")
+                raise AssertionError("edit-working-graph requires its declared full replacement child")
             child = copy.deepcopy(replacement)
     elif kind.endswith("parameter-binding"):
         if kind == "change-parameter-binding":
@@ -202,8 +202,8 @@ def apply_mutation(owner, mutation, replacement=None):
 def inverse_mutation(owner, mutation):
     parent, child = owner
     kind = kind_of(mutation)
-    if kind == "edit-before-fixture":
-        return ({"mutation": TAGS["edit-before-fixture"], "newWorkingGraph": copy.deepcopy(parent["workingGraph"])}, copy.deepcopy(child))
+    if kind == "edit-working-graph":
+        return ({"mutation": TAGS["edit-working-graph"], "newWorkingGraph": copy.deepcopy(parent["workingGraph"])}, copy.deepcopy(child))
     if kind in DOCUMENTS:
         field, argument = DOCUMENTS[kind]
         return ({"mutation": TAGS[kind], argument: copy.deepcopy(parent[field])}, None)
@@ -254,7 +254,7 @@ def mutate_handler(kind, inverse=False):
         mutation = payload(ctx)
         if kind_of(mutation) != kind:
             raise AssertionError("scenario payload discriminator differs from its exact declared kind")
-        replacement = fixture(ctx, "the replacement working child") if kind == "edit-before-fixture" else None
+        replacement = fixture(ctx, "the replacement working child") if kind == "edit-working-graph" else None
         applied = apply_mutation(before, mutation, replacement)
         if projection(applied) == projection(before):
             raise AssertionError("forward operation must move its declared member")
@@ -273,7 +273,7 @@ def spec_vector_handler(kind):
         mutation = fixture(ctx, "the committed mutation")
         if kind_of(mutation) != kind:
             raise AssertionError("committed discriminator differs from the declared scenario")
-        replacement = fixture(ctx, "the committed after-child") if kind == "edit-before-fixture" else None
+        replacement = fixture(ctx, "the committed after-child") if kind == "edit-working-graph" else None
         applied = apply_mutation(before, mutation, replacement)
         after = owner_input(ctx, "the committed after-rule", "the committed after-child")
         if projection(applied) != projection(after):

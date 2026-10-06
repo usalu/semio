@@ -56,6 +56,7 @@ pub const WFC_3D_PLACEHOLDER_MESH: &str = "tile:__placeholder";
 /// declares no actions: it paints a derived value and authors nothing.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WFC_3D_PREVIEW_WINDOW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: WFC_3D_PREVIEW_BODY.into(),

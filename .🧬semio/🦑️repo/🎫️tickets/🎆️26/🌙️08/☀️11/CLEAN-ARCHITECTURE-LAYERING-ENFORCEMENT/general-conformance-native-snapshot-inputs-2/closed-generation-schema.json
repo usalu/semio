@@ -1,0 +1,28 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "maxItems": 6,
+  "items": {
+    "type": "object",
+    "required": [
+      "before",
+      "current",
+      "held"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "before": {
+        "type": "string"
+      },
+      "current": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "held": {
+        "type": "string"
+      }
+    }
+  }
+}

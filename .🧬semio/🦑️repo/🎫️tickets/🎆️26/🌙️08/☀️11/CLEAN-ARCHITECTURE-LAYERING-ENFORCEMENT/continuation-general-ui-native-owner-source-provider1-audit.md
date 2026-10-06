@@ -1,0 +1,3 @@
+# General UI Native Owning Source and Providers
+
+All 2,603 canonical full frames and 28 declaring provider manifests are independently hash-checked against captured and current bodies. Ordinary and locked selected wgpu-engine metadata agree exactly with an unchanged Root lock; all 28 reachable local provider manifests and normalized library/build target paths are captured. The original long whole route keeps empty package selection and --features wgpu-engine --lib. Unselected workspace metadata is qualified. Initial reviewer target lookup omitted normalization of Cargo ../ segments; normalized lookup confirms the full held frames. Compiler execution requires a separate dispatcher gate.

@@ -15,10 +15,38 @@
       "description": "Aggregate discriminator spliced in by PdfXMutation; absent when the payload stands alone."
     },
     "subtype": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Annotation subtype",
+          "de": "Anmerkungsuntertyp"
+        },
+        "description": {
+          "en": "Subtype of the media annotation: Movie, Sound, Screen or 3D.",
+          "de": "Untertyp der Medienanmerkung: Movie, Sound, Screen oder 3D."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "title": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Title",
+          "de": "Titel"
+        },
+        "description": {
+          "en": "Title (T entry) of the media annotation.",
+          "de": "Titel (Eintrag T) der Medienanmerkung."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

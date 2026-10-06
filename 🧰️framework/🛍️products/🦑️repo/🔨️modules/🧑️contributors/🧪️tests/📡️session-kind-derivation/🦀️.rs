@@ -8,7 +8,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 #[cfg(feature = "sut")]
 fn source(ctx: &Context) -> Result<semio_framework_repo_contributors::MemorySessionSource, String> {
     use semio_framework_repo_contributors as contributors;
-    let file = ctx.fixture_json("shared://📡️session-vectors.json")?;
+    let file = ctx.input_json("shared://📡️session-vectors.json")?;
     let entries = file
         .array("sessions")
         .iter()

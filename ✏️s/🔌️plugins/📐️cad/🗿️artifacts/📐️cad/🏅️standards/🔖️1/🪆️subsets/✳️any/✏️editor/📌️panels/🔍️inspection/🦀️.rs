@@ -3,7 +3,6 @@
 
 use crate::editor::cad::engine::picking;
 use crate::editor::cad::terminology::{typology_label, CadLabels};
-use crate::editor::cad::modes::edit;
 use crate::editor::cad::{cad_pane_suffix, ui_label, ui_value_map, ui_value_text, CadPlayView};
 use crate::standards::v1::subsets::any::io::geometry_import::CadObject;
 use crate::standards::v1::subsets::any::schema::inferences::object_scale_json;
@@ -75,8 +74,7 @@ fn vec4(value: [f64; 4]) -> String {
 pub(crate) fn selected_objects(envelope: &CadPlayView) -> Vec<(CadPaneId, CadObject)> {
     let mut selected = Vec::new();
     for pane in CadPaneId::all() {
-        let Some(scene) = edit::cad_pane_working_scene(&envelope.document, pane) else { continue };
-        let (objects, _) = edit::cad_pane_working_objects(&scene, pane);
+        let objects = &envelope.panes.pane(pane).objects;
         for id in &envelope.interaction.ids {
             if let Some(object) = objects.iter().find(|object| &object.id == id) {
                 selected.push((pane, object.clone()));
@@ -188,10 +186,11 @@ pub(crate) struct PaneGeometryCensus {
 
 pub(crate) fn pane_geometry_census(envelope: &CadPlayView, pane: CadPaneId) -> PaneGeometryCensus {
     let model_definition_id = pane.model_definition_id();
-    let Some(scene) = edit::cad_pane_working_scene(&envelope.document, pane) else {
+    let composed = envelope.panes.pane(pane);
+    let (objects, geometry) = (composed.objects.as_slice(), composed.geometry(pane));
+    if objects.is_empty() && geometry.is_none() {
         return PaneGeometryCensus { objects: 0, primitives: 0, by_typology: Vec::new() };
-    };
-    let (objects, geometry) = edit::cad_pane_working_objects(&scene, pane);
+    }
     let targets = picking::create_spatial_pick_targets(objects, geometry, Some(model_definition_id));
     let targets = picking::filter_spatial_pick_targets_for_active_view(targets, Some(model_definition_id));
     let visibility = picking::spatial_scene_kind_toggles_for_model_definition(Some(model_definition_id), &picking::default_spatial_primitive_toggles());
@@ -228,7 +227,7 @@ pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active
     if let Some(section) = selected_object_section(envelope, labels, windows).or_else(|| selected_reference_section(envelope, labels)).or_else(|| selected_node_section(envelope, labels)) {
         return section;
     }
-    let objects = CadPaneId::all().into_iter().filter_map(|pane| edit::cad_pane_working_scene(&envelope.document, pane).map(|scene| edit::cad_pane_working_objects(&scene, pane).0.len())).sum::<usize>();
+    let objects = CadPaneId::all().into_iter().map(|pane| envelope.panes.pane(pane).objects.len()).sum::<usize>();
     let mut rows = UiFixedList::default();
     push(&mut rows, tree_item("cad-play-inspector.schema", ui_label(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))?))?;
     push(&mut rows, tree_item("cad-play-inspector.utility", ui_label(format!("{}: {}", labels.utility.as_str(), active_utility.unwrap_or(labels.none_placeholder.as_str())))?))?;

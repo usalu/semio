@@ -34,8 +34,8 @@ mod tests {
     async fn subset_validator_recheck_flags_no_hard_diagnostics_for_a_real_encode() {
         let (w, h) = (16u32, 16u32);
         let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
-        let bytes = crate::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
-        let decoded = crate::standards::v_jfif_1_01::engine::decode_jpg(&bytes).expect("decode");
+        let bytes = crate::subsets::document::io::encode_jpg(&snap).expect("encode");
+        let decoded = crate::subsets::document::io::decode_jpg(&bytes).expect("decode");
         let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
         let diagnostics = JpgBaselineValidator::validate(&IoPayload::Binary(packed)).await;
         assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a real baseline encode: {diagnostics:?}");

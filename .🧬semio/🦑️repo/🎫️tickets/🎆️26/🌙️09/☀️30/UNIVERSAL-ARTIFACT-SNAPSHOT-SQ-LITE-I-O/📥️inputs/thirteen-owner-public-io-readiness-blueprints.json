@@ -1,0 +1,836 @@
+{
+  "qualification": "Source-only13-owner readiness. Only Process3d complete concrete initial capsule authored; generic memberships not fabricated and incomplete fixtures explicitly retained as gaps.",
+  "owners": [
+    {
+      "owner": "Process3dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "process.3d",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/process-process3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 1019,
+          "signature": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 1084,
+          "signature": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "full",
+          "line": 25,
+          "source": "fn full(word: u64) -> Process3dSnapshot {\n    let f = f64::from_bits(word);\n    let l = laws();\n    let literal = l[\"literal\"].as_str().unwrap();\n    let recipes = vec![\n        MeasureRecipe::DiscCut { diameter: literal.into(), kerf: String::new() },\n        MeasureRecipe::BladeCut { kerf: String::new(), length: literal.into(), depth: String::new() },\n        MeasureRecipe::PocketCut { diameter: literal.into(), depth: String::new() },\n        MeasureRecipe::BoreDrill { radius: String::new(), depth: literal.into() },\n        MeasureRecipe::CylinderAttach { radius: literal.into(), length: String::new() },\n        MeasureRecipe::BoxAttach { width: String::new(), depth: literal.into(), height: String::new() },\n    ];\n    let mut rules = Vec::new();\n    for quantity in [StockQuantity::Width, StockQuantity::Depth, StockQuantity::Height, StockQuantity::MaxDimension, StockQuantity::MinDimension] {\n        rules.push(CapabilityRule::Min { quantity, parameter: literal.into(), margin: f });\n        rules.push(CapabilityRule::Max { quantity, parameter: String::new(), margin: f });\n    }\n    let capabilities = recipes\n        .into_iter()\n        .map(|recipe| crate::Capability { id: String::new(), label: literal.into(), icon_id: String::new(), recipe, parameters: vec![CapabilityParameter { id: literal.into(), label: String::new(), value: f }], rules: rules.clone() })\n        .collect();\n    let solids = vec![\n        WorkingSolid::Box { width: f, depth: f, height: f },\n        WorkingSolid::Cylinder { radius: f, height: f },\n        WorkingSolid::Sphere { radius: f },\n        WorkingSolid::ImportedMesh { mesh_url: literal.into() },\n        WorkingSolid::ImportedSolid { solid_handle: literal.into() },\n        WorkingSolid::Reference { reference_id: literal.into() },\n    ];\n    let mut steps = Vec::new();\n    for solid in solids {\n        steps.push(ProcessStep { id: String::new(), label: literal.into(), enabled: false, origin: Some(StepOrigin { machine_id: String::new(), capability_id: literal.into() }), measure: ProcessMeasure::Cut { tool: solid.clone(), pose: pose(f) } });\n        steps.push(ProcessStep { id: String::new(), label: literal.into(), enabled: true, origin: None, measure: ProcessMeasure::Attach { component: solid, pose: pose(f) } });\n    }\n    steps.push(ProcessStep { id: literal.into(), label: String::new(), enabled: true, origin: None, measure: ProcessMeasure::Drill { radius: f, depth: f, pose: pose(f) } });\n    Process3dSnapshot {\n        workshop: Workshop {\n            machines: vec![\n                WorkshopMachine { id: String::new(), label: literal.into(), icon_id: String::new(), catalog_id: Some(String::new()), capabilities },\n                WorkshopMachine { id: String::new(), label: String::new(), icon_id: literal.into(), catalog_id: None, capabilities: Vec::new() },\n            ],\n        },\n        stock_id: l[\"rootStock\"][\"id\"].as_str().unwrap().into(),\n        stock_label: l[\"rootStock\"][\"label\"].as_str().unwrap().into(),\n        stock_pose: pose(f),\n        stock_payload: Stock { id: l[\"payloadStock\"][\"id\"].as_str().unwrap().into(), label: l[\"payloadStock\"][\"label\"].as_str().unwrap().into(), solid: WorkingSolid::Box { width: f, depth: f, height: f }, pose: pose(f) },\n        stock_solid: child(0),\n        steps: child(1),\n        step_payloads: steps,\n        tool_solids: vec![child(0), child(0)],\n    }\n}"
+        },
+        {
+          "name": "assert_full",
+          "line": 98,
+          "source": "fn assert_full(actual: &Process3dSnapshot, expected: &Process3dSnapshot, w: u64) {\n    assert_eq!(actual.stock_id, expected.stock_id);\n    assert_eq!(actual.stock_label, expected.stock_label);\n    assert_eq!(actual.stock_payload.id, expected.stock_payload.id);\n    assert_eq!(actual.stock_payload.label, expected.stock_payload.label);\n    assert_ne!(actual.stock_id, actual.stock_payload.id);\n    assert_pose(&actual.stock_pose, w);\n    assert_pose(&actual.stock_payload.pose, w);\n    assert_solid(&actual.stock_payload.solid, w);\n    assert_eq!(actual.stock_solid, expected.stock_solid);\n    assert_eq!(actual.steps, expected.steps);\n    assert_eq!(actual.tool_solids, expected.tool_solids);\n    assert_eq!(actual.print_dsl(), expected.print_dsl());\n    for machine in &actual.workshop.machines {\n        for c in &machine.capabilities {\n            for p in &c.parameters {\n                assert_eq!(p.value.to_bits(), w);\n            }\n            for r in &c.rules {\n                let (CapabilityRule::Min { margin, .. } | CapabilityRule::Max { margin, .. }) = r;\n                assert_eq!(margin.to_bits(), w);\n            }\n        }\n    }\n    for step in &actual.step_payloads {\n        assert_pose(step.measure.pose(), w);\n        match &step.measure {\n            ProcessMeasure::Cut { tool, .. } => assert_solid(tool, w),\n            ProcessMeasure::Attach { component, .. } => assert_solid(component, w),\n            ProcessMeasure::Drill { radius, depth, .. } => {\n                assert_eq!(radius.to_bits(), w);\n                assert_eq!(depth.to_bits(), w);\n            }\n        }\n    }\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_process3d_complete_parent_native_formats_preserve_all_fields_and_words",
+          "line": 139,
+          "markers": [],
+          "sourceBody": "fn sqlite_snapshot_process3d_complete_parent_native_formats_preserve_all_fields_and_words() {\n    for word in words() {\n        let expected = full(word);\n        let actual = Process3dSnapshot::parse_dsl(&expected.print_dsl()).unwrap();\n        assert_full(&actual, &expected, word);\n        let actual = Process3dSnapshot::decode_pack(&expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()).unwrap();\n        assert_full(&actual, &expected, word);\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_domain_fields",
+          "line": 174,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_domain_fields() {\n    use store::sqlite_snapshot::*;\n    let codec = store::ArtifactCodec::bare::<Process3dSnapshot, crate::Process3dMutation>(crate::PROCESS_3D_SCHEMA);\n    let capability = codec.snapshot_sqlite.expect(\"Process3d parent owned relational capability\");\n    let dialect = store::io_schema::ArtifactDialect { artifact_kind: \"s.process.process3d\".into(), standard: \"1\".into(), subset: \"*\".into() };\n    for word in words() {\n        let expected = full(word);\n        for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {\n            let input = match encoding {\n                SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),\n                SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),\n            };\n            let database = (capability.export)(crate::PROCESS_3D_SCHEMA, &dialect, &input, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            assert_eq!(database.tables.len(), 32);\n            assert_eq!(database.table(\"process3_document\").unwrap().single_row().unwrap().text(1).unwrap(), expected.stock_id);\n            assert_eq!(database.table(\"process3_stock_payload\").unwrap().single_row().unwrap().text(2).unwrap(), expected.stock_payload.id);\n            let output = (capability.import)(crate::PROCESS_3D_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            let actual = match output {\n                store::io_schema::IoPayload::Text(v) => Process3dSnapshot::parse_dsl(&v).unwrap(),\n                store::io_schema::IoPayload::Binary(v) => Process3dSnapshot::decode_pack(&v).unwrap(),\n            };\n            assert_full(&actual, &expected, word);\n        }\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_actual_document_declaration_exposes_parent_capability",
+          "line": 212,
+          "markers": [],
+          "sourceBody": "fn sqlite_snapshot_process3d_actual_document_declaration_exposes_parent_capability() {\n    semio_framework_plugin::Plugin::<SqliteProcessApps>::builder(\"process\").label(\"Process owned SQLite\").version(\"0.0.1\").package_id(\"semio:process\").artifact(crate::declaration().unwrap()).try_build().unwrap();\n    let codec = store::document_codec(crate::PROCESS_3D_SCHEMA).await.unwrap().unwrap();\n    assert!(codec.snapshot_sqlite.is_some(), \"Actual Process3d declared document has no parent SQLite capability\");\n}\n#[test]\n"
+        }
+      ],
+      "status": "Process3d exact concrete capsule provided",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.2d",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/fem-2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 419,
+          "signature": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "state",
+          "line": 15,
+          "source": "fn state()->Fem2dSnapshot{\n let f=fixture();let s=&f[\"document\"];\n Fem2dSnapshot{\n  nodes:s[\"nodes\"].as_array().unwrap().iter().map(|v|FemNode{id:text(v,\"id\"),x:real(v,\"xBits\"),y:real(v,\"yBits\")}).collect(),\n  elements:s[\"elements\"].as_array().unwrap().iter().map(|v|{let(id,start,end,material_id,section_id)=(text(v,\"id\"),text(v,\"start\"),text(v,\"end\"),text(v,\"materialId\"),text(v,\"sectionId\"));match v[\"kind\"].as_str().unwrap(){\"bar\"=>FemElement::Bar{id,start,end,material_id,section_id},\"beam\"=>FemElement::Beam{id,start,end,material_id,section_id},_=>panic!(\"fixture element\")}}).collect(),\n  regions:s[\"regions\"].as_array().unwrap().iter().map(|v|FemRegion{id:text(v,\"id\"),name:text(v,\"name\"),outline:v[\"outlineBits\"].as_array().unwrap().iter().map(point).collect(),holes:v[\"holesBits\"].as_array().unwrap().iter().map(|h|h.as_array().unwrap().iter().map(point).collect()).collect(),thickness:real(v,\"thicknessBits\"),material_id:text(v,\"materialId\"),mesh_size:real(v,\"meshSizeBits\")}).collect(),\n  materials:s[\"materials\"].as_array().unwrap().iter().map(|v|FemMaterial{id:text(v,\"id\"),name:text(v,\"name\"),e:real(v,\"eBits\"),nu:real(v,\"nuBits\"),rho:real(v,\"rhoBits\")}).collect(),\n  sections:s[\"sections\"].as_array().unwrap().iter().map(|v|FemSection{id:text(v,\"id\"),name:text(v,\"name\"),area:real(v,\"areaBits\"),iy:real(v,\"iyBits\")}).collect(),\n  supports:s[\"supports\"].as_array().unwrap().iter().map(|v|FemSupport{id:text(v,\"id\"),node_id:text(v,\"nodeId\"),fixed:v[\"fixed\"].as_array().unwrap().iter().map(|x|dof(x.as_str().unwrap())).collect()}).collect(),\n  load_cases:s[\"loadCases\"].as_array().unwrap().iter().map(|v|FemLoadCase{id:text(v,\"id\"),name:text(v,\"name\"),self_weight:v[\"selfWeight\"].as_bool().unwrap(),loads:v[\"loads\"].as_array().unwrap().iter().map(|x|match x[\"kind\"].as_str().unwrap(){\"nodal\"=>FemLoad::Nodal{id:text(x,\"id\"),node_id:text(x,\"nodeId\"),dof:dof(x[\"dof\"].as_str().unwrap()),value:real(x,\"valueBits\")},\"memberUdl\"=>FemLoad::MemberUdl{id:text(x,\"id\"),element_id:text(x,\"elementId\"),wx:real(x,\"wxBits\"),wy:real(x,\"wyBits\")},\"area\"=>FemLoad::Area{id:text(x,\"id\"),region_id:text(x,\"regionId\"),pressure:real(x,\"pressureBits\")},_=>panic!(\"fixture load\")}).collect()}).collect(),\n  combinations:s[\"combinations\"].as_array().unwrap().iter().map(|v|FemCombination{id:text(v,\"id\"),name:text(v,\"name\"),terms:v[\"terms\"].as_array().unwrap().iter().map(|x|FemCombinationTerm{case_id:text(x,\"caseId\"),factor:real(x,\"factorBits\")}).collect()}).collect(),\n  analysis:FemAnalysisSettings{modal_count:s[\"analysis\"][\"modalCount\"].as_str().unwrap().parse().unwrap(),buckling_count:s[\"analysis\"][\"bucklingCount\"].as_str().unwrap().parse().unwrap(),deformation_scale:real(&s[\"analysis\"],\"deformationScaleBits\")}\n }\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_fem2d_complete_physical_state",
+          "line": 32,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_fem2d_complete_physical_state(){let source=state();let d=project(&source);let bytes=export_sqlite_database(&d,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let imported=import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!(project(&restore(&imported).unwrap()),d);assert!(restore(&d).unwrap().regions[0].holes[0].is_empty());for(name,count)in fixture()[\"tableRowCounts\"].as_object().unwrap(){assert_eq!(d.table(name).unwrap().rows.len(),count.as_u64().unwrap()as usize);}}\n#[test]"
+        },
+        {
+          "name": "sqlite_snapshot_fem2d_all_words_and_count_widths",
+          "line": 34,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_fem2d_all_words_and_count_widths(){for word in fixture()[\"ieee754Words\"].as_array().unwrap(){let mut s=state();every_word(&mut s,u64::from_str_radix(word.as_str().unwrap(),16).unwrap());let d=project(&s);assert_eq!(project(&restore(&d).unwrap()),d);}for word in fixture()[\"countWords\"].as_array().unwrap(){let mut s=state();s.analysis.modal_count=word.as_str().unwrap().parse().unwrap();s.analysis.buckling_count=s.analysis.modal_count;let d=project(&s);assert_eq!(project(&restore(&d).unwrap()),d);}}\n#[test]"
+        },
+        {
+          "name": "sqlite_snapshot_fem2d_actual_declaration_erased_words_both_encodings",
+          "line": 36,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_fem2d_actual_declaration_erased_words_both_encodings(){let codec=crate::standards::v1::subsets::any::io::io().native.codec;let schema=codec.schema.clone();let provider=codec.snapshot_sqlite.unwrap();let dialect=store::io_schema::ArtifactDialect{artifact_kind:\"s.fem.fem2d\".into(),standard:\"1\".into(),subset:\"*\".into()};for word in fixture()[\"ieee754Words\"].as_array().unwrap(){let mut s=state();every_word(&mut s,u64::from_str_radix(word.as_str().unwrap(),16).unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let expected=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&s))};let d=(provider.export)(&schema,&dialect,&expected,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=(provider.import)(&schema,&dialect,d,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(actual,expected);}}}\n#[test]"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.3d",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/fem-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 398,
+          "signature": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "state",
+          "line": 15,
+          "source": "fn state()->Fem3dSnapshot{\n let f=fixture();let s=&f[\"document\"];\n Fem3dSnapshot{\n  nodes:s[\"nodes\"].as_array().unwrap().iter().map(|v|FemNode{id:text(v,\"id\"),x:real(v,\"xBits\"),y:real(v,\"yBits\"),z:real(v,\"zBits\")}).collect(),\n  elements:s[\"elements\"].as_array().unwrap().iter().map(|v|{let(id,start,end,material_id,section_id)=(text(v,\"id\"),text(v,\"start\"),text(v,\"end\"),text(v,\"materialId\"),text(v,\"sectionId\"));match v[\"kind\"].as_str().unwrap(){\"bar\"=>FemElement::Bar{id,start,end,material_id,section_id},\"frame\"=>FemElement::Frame{id,start,end,material_id,section_id,roll:real(v,\"rollBits\")},_=>panic!(\"fixture member\")}}).collect(),\n  materials:s[\"materials\"].as_array().unwrap().iter().map(|v|FemMaterial{id:text(v,\"id\"),name:text(v,\"name\"),e:real(v,\"eBits\"),g:real(v,\"gBits\"),nu:real(v,\"nuBits\"),rho:real(v,\"rhoBits\")}).collect(),\n  sections:s[\"sections\"].as_array().unwrap().iter().map(|v|FemSection{id:text(v,\"id\"),name:text(v,\"name\"),area:real(v,\"areaBits\"),iy:real(v,\"iyBits\"),iz:real(v,\"izBits\"),j:real(v,\"jBits\")}).collect(),\n  solids:s[\"solids\"].as_array().unwrap().iter().map(|v|FemSolid{id:text(v,\"id\"),name:text(v,\"name\"),outline:v[\"outlineBits\"].as_array().unwrap().iter().map(point).collect(),holes:v[\"holesBits\"].as_array().unwrap().iter().map(|h|h.as_array().unwrap().iter().map(point).collect()).collect(),base_z:real(v,\"baseZBits\"),height:real(v,\"heightBits\"),layers:v[\"layers\"].as_str().unwrap().parse().unwrap(),mesh_size:real(v,\"meshSizeBits\"),material_id:text(v,\"materialId\"),axis:match v[\"axis\"].as_str().unwrap(){\"x\"=>FemAxis::X,\"y\"=>FemAxis::Y,\"z\"=>FemAxis::Z,_=>panic!(\"fixture axis\")}}).collect(),\n  supports:s[\"supports\"].as_array().unwrap().iter().map(|v|FemSupport{id:text(v,\"id\"),node_id:text(v,\"nodeId\"),fixed:v[\"fixed\"].as_array().unwrap().iter().map(|x|dof(x.as_str().unwrap())).collect()}).collect(),\n  load_cases:s[\"loadCases\"].as_array().unwrap().iter().map(|v|FemLoadCase{id:text(v,\"id\"),name:text(v,\"name\"),self_weight:v[\"selfWeight\"].as_bool().unwrap(),loads:v[\"loads\"].as_array().unwrap().iter().map(|x|match x[\"kind\"].as_str().unwrap(){\"nodal\"=>FemLoad::Nodal{id:text(x,\"id\"),node_id:text(x,\"nodeId\"),dof:dof(x[\"dof\"].as_str().unwrap()),value:real(x,\"valueBits\")},\"memberUdl\"=>FemLoad::MemberUdl{id:text(x,\"id\"),element_id:text(x,\"elementId\"),wx:real(x,\"wxBits\"),wy:real(x,\"wyBits\"),wz:real(x,\"wzBits\")},\"area\"=>FemLoad::Area{id:text(x,\"id\"),solid_id:text(x,\"solidId\"),pressure:real(x,\"pressureBits\")},_=>panic!(\"fixture load\")}).collect()}).collect(),\n  combinations:s[\"combinations\"].as_array().unwrap().iter().map(|v|FemCombination{id:text(v,\"id\"),name:text(v,\"name\"),terms:v[\"terms\"].as_array().unwrap().iter().map(|t|(text(t,\"caseId\"),real(t,\"factorBits\"))).collect()}).collect(),\n  analysis:FemAnalysisSettings{modal_count:s[\"analysis\"][\"modalCount\"].as_str().unwrap().parse().unwrap(),buckling_count:s[\"analysis\"][\"bucklingCount\"].as_str().unwrap().parse().unwrap(),deformation_scale:real(&s[\"analysis\"],\"deformationScaleBits\")}\n }\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_fem3d_complete_physical_state",
+          "line": 32,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_fem3d_complete_physical_state(){let s=state();let d=project(&s);let bytes=export_sqlite_database(&d,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let imported=import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!(project(&restore(&imported).unwrap()),d);assert!(restore(&d).unwrap().solids[0].holes[0].is_empty());for(name,count)in fixture()[\"tableRowCounts\"].as_object().unwrap(){assert_eq!(d.table(name).unwrap().rows.len(),count.as_u64().unwrap()as usize);}}\n#[test]"
+        },
+        {
+          "name": "sqlite_snapshot_fem3d_all_words_counts_axes",
+          "line": 34,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_fem3d_all_words_counts_axes(){for word in fixture()[\"ieee754Words\"].as_array().unwrap(){let mut s=state();every_word(&mut s,u64::from_str_radix(word.as_str().unwrap(),16).unwrap());let d=project(&s);assert_eq!(project(&restore(&d).unwrap()),d);}for word in fixture()[\"countWords\"].as_array().unwrap(){let mut s=state();s.analysis.modal_count=word.as_str().unwrap().parse().unwrap();s.analysis.buckling_count=s.analysis.modal_count;s.solids[0].layers=s.analysis.modal_count;let d=project(&s);assert_eq!(project(&restore(&d).unwrap()),d);}for axis in[FemAxis::X,FemAxis::Y,FemAxis::Z]{let mut s=state();s.solids[0].axis=axis;assert_eq!(restore(&project(&s)).unwrap(),s);}}\n#[test]"
+        },
+        {
+          "name": "sqlite_snapshot_fem3d_actual_declaration_erased_words_both_encodings",
+          "line": 36,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_fem3d_actual_declaration_erased_words_both_encodings(){let codec=crate::standards::v1::subsets::any::io::io().native.codec;let schema=codec.schema.clone();let provider=codec.snapshot_sqlite.unwrap();let dialect=store::io_schema::ArtifactDialect{artifact_kind:\"s.fem.fem3d\".into(),standard:\"1\".into(),subset:\"*\".into()};for word in fixture()[\"ieee754Words\"].as_array().unwrap(){let mut s=state();every_word(&mut s,u64::from_str_radix(word.as_str().unwrap(),16).unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&s)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&s))};let d=(provider.export)(&schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));let actual=(provider.import)(&schema,&dialect,d,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(actual,payload);}}}\n#[test]"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "WiresSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.reasoning.wires",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "reasoning.wires.fixture",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 294,
+          "signature": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 368,
+          "signature": "pub fn artifact<A: WiresApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "native_fixture",
+          "line": 5,
+          "source": "fn native_fixture()->WiresSnapshot{\n let f:serde_json::Value=serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap();\n let child=&f[\"content\"];let target=&child[\"target\"];let dialect=&target[\"dialect\"];\n WiresSnapshot{content:store::ArtifactChild::new(child[\"childId\"].as_str().unwrap().into(),store::os_io::ArtifactRef{artifact_id:target[\"artifactId\"].as_str().unwrap().into(),dialect:store::os_io::ArtifactDialect{artifact_kind:dialect[\"artifactKind\"].as_str().unwrap().into(),standard:dialect[\"standard\"].as_str().unwrap().into(),subset:dialect[\"subset\"].as_str().unwrap().into()}}),\n wires_fixture:semio_framework_value::DslValue::Object(vec![\n (\"same\".into(),semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(f[\"unsigned\"][2].as_str().unwrap().parse().unwrap()))),\n (\"same\".into(),semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(f[\"signed\"][0].as_str().unwrap().parse().unwrap()))),\n (\"\".into(),semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(f64::from_bits(u64::from_str_radix(f[\"floatWords\"][5].as_str().unwrap(),16).unwrap())))),\n (\"Unicode 🪐\\0\".into(),semio_framework_value::DslValue::Bytes(f[\"byteValues\"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect()))\n ]),\n meta:semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Null,semio_framework_value::DslValue::Bool(true),semio_framework_value::DslValue::String(f[\"texts\"][1].as_str().unwrap().into())])}\n}"
+        },
+        {
+          "name": "assert_intrinsic",
+          "line": 17,
+          "source": "fn assert_intrinsic(expected:&semio_framework_value::DslValue,actual:&semio_framework_value::DslValue){\n let mut pending=vec![(expected,actual)];while let Some((a,b))=pending.pop(){match(a,b){\n (semio_framework_value::DslValue::Null,semio_framework_value::DslValue::Null)=>{},\n (semio_framework_value::DslValue::Bool(a),semio_framework_value::DslValue::Bool(b))=>assert_eq!(a,b),\n (semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(a)),semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(b)))=>assert_eq!(a,b),\n (semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(a)),semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(b)))=>assert_eq!(a,b),\n (semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(a)),semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),\n (semio_framework_value::DslValue::String(a),semio_framework_value::DslValue::String(b))=>assert_eq!(a,b),\n (semio_framework_value::DslValue::Bytes(a),semio_framework_value::DslValue::Bytes(b))=>assert_eq!(a,b),\n (semio_framework_value::DslValue::Array(a),semio_framework_value::DslValue::Array(b))=>{assert_eq!(a.len(),b.len());pending.extend(a.iter().zip(b));},\n (semio_framework_value::DslValue::Object(a),semio_framework_value::DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((name_a,value_a),(name_b,value_b))in a.iter().zip(b){assert_eq!(name_a,name_b);pending.push((value_a,value_b));}},\n _=>panic!(\"native Wires intrinsic variant changed\")\n }}\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_wires_exact_native_records_preserve_complete_intrinsic_and_handle",
+          "line": 32,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_wires_exact_native_records_preserve_complete_intrinsic_and_handle(){\n let expected=native_fixture();\n for payload in[store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&expected)),store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(&expected))]{\n  let restored=match payload{store::os_io::IoPayload::Binary(bytes)=><WiresSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),store::os_io::IoPayload::Text(text)=><WiresSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),_=>panic!(\"owned native encoding\")};\n  assert_eq!(restored.content.child_id,expected.content.child_id);assert_eq!(restored.content.target,expected.content.target);\n  assert_intrinsic(&expected.wires_fixture,&restored.wires_fixture);assert_intrinsic(&expected.meta,&restored.meta);\n }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_wires_deep_complete_native_records_preserve_allowed_intrinsic_depth",
+          "line": 41,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_wires_deep_complete_native_records_preserve_allowed_intrinsic_depth(){\n let fixture:serde_json::Value=serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap();\n let mut snapshot=native_fixture();snapshot.wires_fixture=semio_framework_value::DslValue::Null;snapshot.meta=semio_framework_value::DslValue::Null;\n let mut expected=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(snapshot,<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);\n for _ in 0..fixture[\"deepLevels\"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}\n for payload in[store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(expected.as_mut())),store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(expected.as_mut()))]{\n  let restored=match payload{store::os_io::IoPayload::Binary(bytes)=><WiresSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),store::os_io::IoPayload::Text(text)=><WiresSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),_=>panic!(\"owned native encoding\")};\n  let mut restored=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(restored,<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);\n  assert_intrinsic(&expected.as_mut().meta,&restored.as_mut().meta);\n  assert_eq!(expected.as_mut().content,restored.as_mut().content);\n }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_quota",
+          "line": 54,
+          "markers": [
+            "sqlite_snapshot_codec",
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_quota(){\n use store::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding};\n let codec=<WiresSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().expect(\"Wires owning native pack must declare its actual SQLite capability\");\n let f:serde_json::Value=serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap();\n let mut expected=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(native_fixture(),<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);\n for _ in 0..f[\"deepLevels\"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}\n let dialect=store::os_io::ArtifactDialect{artifact_kind:\"s.reasoning.wires\".into(),standard:\"1\".into(),subset:\"*\".into()};let limits=SqliteDatabaseLimits::default();let mut reference=None;\n for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{\n  let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(expected.as_mut())),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(expected.as_mut()))};\n  let database=(codec.export)(\"s.reasoning.wires\",&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;\n  if let Some(reference)=&reference{assert_eq!(&database,reference);}else{reference=Some(database.clone());}\n  let encoded=(codec.import)(\"s.reasoning.wires\",&dialect,database.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;\n  assert_eq!((codec.export)(\"s.reasoning.wires\",&dialect,&encoded,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value,database);\n }\n}\n\n#[path=\"🧮️census/🦀️.rs\"]\nmod native_semantic_census;\n"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.layout.layout",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "layout.layout",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/layout-layout-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 528,
+          "signature": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 655,
+          "signature": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        }
+      ],
+      "fixtureHelpers": [],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec",
+          "line": 4,
+          "markers": [
+            "TypeId",
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec(){\n    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder(\"layout\").label(\"Layout owned SQLite\").version(\"0.0.1\").package_id(\"semio:layout\").artifact(crate::declaration().unwrap()).try_build().unwrap();\n    let codec=store::document_codec(LAYOUT_DOCUMENT_SCHEMA).await.unwrap().unwrap();\n    let provider=codec.snapshot_sqlite.expect(\"actual Layout declaration must publish semantic SQLite capability\");\n    assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<LayoutSnapshot>()));\n    let snapshot=crate::standards::v1::subsets::any::schema::default_document();\n    let dialect=store::os_io::ArtifactDialect{artifact_kind:\"s.layout.layout\".into(),standard:\"1\".into(),subset:\"*\".into()};\n    let payload=store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot));\n    let database=(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default())).unwrap().value;\n    assert!(database.table(\"layout_document\").is_ok());\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_layout_complete_owned_fields_words_and_literals_cross_both_native_encodings",
+          "line": 96,
+          "markers": [
+            "sqlite_snapshot_codec",
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_layout_complete_owned_fields_words_and_literals_cross_both_native_encodings(){\n    use store::{ArtifactDsl,ArtifactPack};\n    let fixture:serde_json::Value=serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap();\n    let codec=<LayoutSnapshot as ArtifactPack>::sqlite_snapshot_codec().expect(\"complete Layout native capability\");\n    let dialect=store::os_io::ArtifactDialect{artifact_kind:\"s.layout.layout\".into(),standard:\"1\".into(),subset:\"*\".into()};\n    for(index,bits)in fixture[\"float64Bits\"].as_array().unwrap().iter().enumerate(){\n        let word=u64::from_str_radix(bits.as_str().unwrap(),16).unwrap();let color=u32::from_str_radix(fixture[\"float32Bits\"][index].as_str().unwrap(),16).unwrap();let expected=complete_fixture(f64::from_bits(word),f32::from_bits(color));\n        for encoding in [store::sqlite_snapshot::SnapshotEncoding::Binary,store::sqlite_snapshot::SnapshotEncoding::Text]{\n            let payload=match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(expected.encode_pack()),store::sqlite_snapshot::SnapshotEncoding::Text=>store::os_io::IoPayload::Text(expected.print_dsl())};\n            let mut callback=|_|true;let mut control=store::sqlite_snapshot::SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits::default());\n            let database=(codec.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut control).unwrap().value;\n            assert_eq!(database.table(\"layout_frame\").unwrap().rows.len(),6);assert_eq!(database.table(\"layout_image_link\").unwrap().rows[0].text(12).unwrap(),fixture[\"imageArtifactKind\"].as_str().unwrap());\n            assert_eq!(database.table(\"layout_scalar64\").unwrap().rows[0].integer(2).unwrap() as u64,word);\n            let result=(codec.import)(LAYOUT_DOCUMENT_SCHEMA,&dialect,database,encoding,&mut control).unwrap().value;\n            let restored=match result{store::os_io::IoPayload::Binary(bytes)=>LayoutSnapshot::decode_pack(&bytes).unwrap(),store::os_io::IoPayload::Text(text)=>LayoutSnapshot::parse_dsl(&text).unwrap()};\n            assert_eq!(restored.grid.baseline_grid.to_bits(),word);assert_eq!(restored.character_styles[0].color.unwrap()[0].to_bits(),color);assert_eq!(restored.stories[0].style_runs[0].start,expected.stories[0].style_runs[0].start);assert_eq!(restored.links,expected.links);assert_eq!(restored.background_drawing.as_ref(),expected.background_drawing.as_ref());assert_eq!(restored.referenced_model,expected.referenced_model);assert_eq!(restored.data_fields,expected.data_fields);\n            assert!(restored.encode_pack()==expected.encode_pack(),\"complete derived owner fields must survive relational reconstruction\");\n        }\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_layout_inline_drawing_all_node_fields_preserve_ieee_words",
+          "line": 132,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_layout_inline_drawing_all_node_fields_preserve_ieee_words(){\n    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode,PathSegment,SemioPoint2};\n    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioTransform;\n    let fixture:serde_json::Value=serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap();\n    for bits in fixture[\"float64Bits\"].as_array().unwrap(){\n        let word=u64::from_str_radix(bits.as_str().unwrap(),16).unwrap();let number=f64::from_bits(word);let point=SemioPoint2{x:number,y:-0.0};\n        let mut transform=SemioTransform::identity();transform.translation.x=number;\n        let mut expected=component_fixture();expected.content.layers[0].root=DrawNode::Group{transform,children:vec![\n            DrawNode::Path{segments:vec![PathSegment::MoveTo{to:point},PathSegment::LineTo{to:point},PathSegment::CubicTo{c1:point,c2:point,to:point},PathSegment::QuadTo{c:point,to:point},PathSegment::ArcTo{rx:number,ry:number,x_rotation:number,large_arc:false,sweep:true,to:point},PathSegment::Close],style:Some(String::new())},\n            DrawNode::Text{value:\"English Deutsch\\0文\".into(),at:point,style:None},\n            DrawNode::Image{at:point,width:number,height:-0.0,mime:String::new(),bytes:vec![0,127,255]},\n        ]};\n        let output=<crate::LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut |_|true)).unwrap();\n        let restored=<crate::LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&output,&mut semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut |_|true)).unwrap();\n        assert_eq!(restored.handle,expected.handle);\n        assert!(store::ArtifactPack::encode_pack(&restored.content)==store::ArtifactPack::encode_pack(&expected.content),\"every authored Drawing node and path field must remain exact\");\n        let DrawNode::Group{transform,children}=&restored.content.layers[0].root else{panic!(\"literal group\")};\n        assert_eq!(transform.translation.x.to_bits(),word);\n        let DrawNode::Image{width,bytes,..}=&children[2] else{panic!(\"literal image\")};assert_eq!(width.to_bits(),word);assert_eq!(bytes,&[0,127,255]);\n        <crate::SemioDrawingSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(expected.content);<crate::SemioDrawingSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(restored.content);\n    }\n}\n\n#[path=\"💰️backing/🦀️.rs\"]mod backing;\n"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.remodel.remodeling",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "remodeling.scene",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 42,
+          "signature": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 115,
+          "signature": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>"
+        }
+      ],
+      "fixtureHelpers": [],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_remodeling_actual_factory_owns_parent_capability",
+          "line": 5,
+          "markers": [],
+          "sourceBody": "fn sqlite_snapshot_remodeling_actual_factory_owns_parent_capability(){let codec=store::ArtifactCodec::bare::<RemodelingSnapshot,crate::RemodelingMutation>(crate::REMODELING_DOCUMENT_SCHEMA);assert!(codec.snapshot_sqlite.is_some(),\"Remodeling parent has no authored relational capability\");}\n#[semio_framework_async_macros::async_test]\nasync "
+        },
+        {
+          "name": "sqlite_snapshot_remodeling_binary32_samples_agree_with_independent_words",
+          "line": 24,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_remodeling_binary32_samples_agree_with_independent_words(){for raw in laws()[\"binary32Words\"].as_array().unwrap(){let bits=u32::from_str_radix(raw.as_str().unwrap(),16).unwrap();let samples=[f32::from_bits(bits),f32::from_bits(bits)];let actual=crate::Float32Buffer::from_f32_slice(&samples).to_f32_vec();assert_eq!(actual.iter().map(|value|value.to_bits()).collect::<Vec<_>>(),vec![bits,bits]);let lexical=serde_json::from_str::<u32>(&bits.to_string()).unwrap();assert_eq!(lexical,bits);}}\n\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_remodeling_native_text_binary32_words_match_source_neutral_spelling",
+          "line": 27,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_remodeling_native_text_binary32_words_match_source_neutral_spelling(){\n    use store::ArtifactDsl;\n    let fixture=laws();\n    for row in fixture[\"nativeTextWordCases\"].as_array().unwrap(){\n        let bits=u32::from_str_radix(row[\"binary32Bits\"].as_str().unwrap(),16).unwrap();let mut snapshot=crate::default_remodeling_scene();snapshot.params.ingest.min_sharpness=f32::from_bits(bits);\n        let text=snapshot.print_dsl();assert!(text.contains(&format!(\"nan64_{}\",row[\"widenedBinary64Bits\"].as_str().unwrap())),\"actual native Text must preserve its exact widened IEEE word\");\n        let restored=RemodelingSnapshot::parse_dsl(&text).unwrap();assert_eq!(restored.params.ingest.min_sharpness.to_bits(),bits);\n    }\n}\n\n#[semio_framework_async_macros::async_test]\nasync "
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.trinity.rewriting",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "trinity.rewrite.rule",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 137,
+          "signature": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 266,
+          "signature": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "full",
+          "line": 63,
+          "source": "fn full(word:u64)->RewritingSnapshot{\n use semio_framework_value::FromValue;\n let l=laws();let c=&l[\"nativeCase\"];\n RewritingSnapshot{\n  working_graph:semio_s_artifact_trinity_jack::JackSnapshot::from_value(read_intrinsic(&c[\"workingGraph\"])).unwrap(),\n  lhs:crate::standards::v1::subsets::any::schema::Lhs::from_value(read_intrinsic(&c[\"lhs\"])).unwrap(),\n  rhs:rhs_fixture(&c[\"rhs\"],word),\n  parameter_bindings:c[\"parameterBindings\"].as_array().unwrap().iter().map(|v|(v[\"key\"].as_str().unwrap().into(),property(&v[\"value\"],word))).collect(),\n  rule_layout:c[\"ruleLayout\"].as_array().unwrap().iter().map(|v|(v[\"key\"].as_str().unwrap().into(),LayoutPoint{x:f64::from_bits(word),y:f64::from_bits(word)})).collect(),\n }\n}"
+        },
+        {
+          "name": "assert_full",
+          "line": 127,
+          "source": "fn assert_full(a: &RewritingSnapshot, b: &RewritingSnapshot) {\n    assert_eq!(view_intrinsic(&semio_framework_value::ToValue::to_value(&a.working_graph)),view_intrinsic(&semio_framework_value::ToValue::to_value(&b.working_graph)));\n    assert_eq!(view_intrinsic(&semio_framework_value::ToValue::to_value(&a.lhs)),view_intrinsic(&semio_framework_value::ToValue::to_value(&b.lhs)));\n    assert_eq!(view_intrinsic(&semio_framework_value::ToValue::to_value(&a.rhs)),view_intrinsic(&semio_framework_value::ToValue::to_value(&b.rhs)));\n    assert_eq!(a.parameter_bindings.len(), b.parameter_bindings.len());\n    for ((ka, a), (kb, b)) in a.parameter_bindings.iter().zip(&b.parameter_bindings) {\n        assert_eq!(ka, kb);\n        assert_property(a, b)\n    }\n    assert_eq!(a.rule_layout.len(), b.rule_layout.len());\n    for ((ka, a), (kb, b)) in a.rule_layout.iter().zip(&b.rule_layout) {\n        assert_eq!(ka, kb);\n        assert_eq!(a.x.to_bits(), b.x.to_bits());\n        assert_eq!(a.y.to_bits(), b.y.to_bits())\n    }\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_rewriting_binary_keeps_all_authored_strings_and_property_words",
+          "line": 148,
+          "markers": [],
+          "sourceBody": "fn sqlite_snapshot_rewriting_binary_keeps_all_authored_strings_and_property_words() {\n    for word in words() {\n        let expected = Owned::new(full(word));\n        let actual = Owned::new(RewritingSnapshot::decode_pack(&expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()).unwrap());\n        assert_full(&actual, &expected)\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_text_keeps_all_authored_strings_and_property_words",
+          "line": 156,
+          "markers": [],
+          "sourceBody": "fn sqlite_snapshot_rewriting_text_keeps_all_authored_strings_and_property_words() {\n    for word in words() {\n        let expected = Owned::new(full(word));\n        let actual = Owned::new(RewritingSnapshot::parse_dsl(&expected.print_dsl()).unwrap());\n        assert_full(&actual, &expected)\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_declared_json_retains_layout_words_and_all_property_states",
+          "line": 180,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_rewriting_declared_json_retains_layout_words_and_all_property_states() {\n    use crate::standards::v1::subsets::any::io::{export::serializers::artifacts::json::v_rfc8259::any as writer, import::deserializers::artifacts::json::v_rfc8259::any as reader};\n    for word in words() {\n        let expected = Owned::new(full(word));\n        let bytes = writer::serialize_bytes(&expected).unwrap();\n        let oracle: serde_json::Value = serde_json::from_slice(&bytes).unwrap();\n        for key in [\"x\", \"y\"] {\n            assert_eq!(oracle[\"ruleLayout\"][\"\"][key][\"bits\"].as_str(), Some(format!(\"{word:016x}\").as_str()))\n        }\n        let actual = Owned::new(reader::deserialize_bytes(&bytes).unwrap());\n        assert_full(&actual, &expected)\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_strings",
+          "line": 230,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_strings() {\n    use store::sqlite_snapshot::*;\n    let codec = store::ArtifactCodec::bare::<RewritingSnapshot, crate::RewriteRuleMutation>(crate::REWRITE_RULE_SCHEMA).snapshot_sqlite.expect(\"missing parent capability\");\n    let dialect = store::io_schema::ArtifactDialect { artifact_kind: \"s.trinity.rewriting\".into(), standard: \"1\".into(), subset: \"*\".into() };\n    let expected = Owned::new(full(0));\n    for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {\n        let payload = match encoding {\n            SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),\n            SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),\n        };\n        let database = (codec.export)(crate::REWRITE_RULE_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n        assert_eq!(database.tables.len(), 30);\n        let root = database.table(\"rewriting_document\").unwrap().single_row().unwrap();\n        let graph=database.table(\"jack_document\").unwrap().single_row().unwrap();\n        assert_eq!(root.integer(1).unwrap(),graph.rowid);\n        assert_eq!(graph.text(2).unwrap(),expected.working_graph.name);\n        assert_eq!(graph.text(5).unwrap(),expected.working_graph.query);\n        let lhs=database.table(\"rewriting_lhs\").unwrap().single_row().unwrap();\n        assert_eq!(lhs.optional_text(3).unwrap(),expected.lhs.where_clause.as_deref());\n        let payload = (codec.import)(crate::REWRITE_RULE_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n        let actual = Owned::new(match payload {\n            store::io_schema::IoPayload::Text(text) => RewritingSnapshot::parse_dsl(&text).unwrap(),\n            store::io_schema::IoPayload::Binary(bytes) => RewritingSnapshot::decode_pack(&bytes).unwrap(),\n        });\n        assert_full(&actual, &expected)\n    }\n}\n\n#[test]\n"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "JackSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.trinity.jack",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.trinity.jack",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/trinity-jack-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 493,
+          "signature": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 645,
+          "signature": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "full",
+          "line": 40,
+          "source": "fn full(word: u64, address: usize) -> JackSnapshot {\n    let l = laws();\n    let c = &l[\"childAddresses\"][address];\n    let content = store::ArtifactChild::new(\n        c[\"childId\"].as_str().unwrap().into(),\n        store::io_schema::ArtifactRef {\n            artifact_id: c[\"artifactId\"].as_str().unwrap().into(),\n            dialect: store::io_schema::ArtifactDialect { artifact_kind: c[\"artifactKind\"].as_str().unwrap().into(), standard: c[\"standard\"].as_str().unwrap().into(), subset: c[\"subset\"].as_str().unwrap().into() },\n        },\n    );\n    let f = f64::from_bits(word);\n    JackSnapshot {\n        schema: l[\"documentSchema\"].as_str().unwrap().into(),\n        name: l[\"name\"].as_str().unwrap().into(),\n        manifest_id: Some(l[\"manifestId\"].as_str().unwrap().into()),\n        manifest: Manifest {\n            node_kinds: (0..2).map(|_| NodeKindDef { name: String::new(), properties: properties(), port_kinds: vec![String::new(), l[\"literal\"].as_str().unwrap().into(), String::new()] }).collect(),\n            edge_kinds: (0..2).map(|_| EdgeKindDef { name: String::new(), properties: properties() }).collect(),\n            port_kinds: [PortDirection::In, PortDirection::Out].into_iter().map(|direction| PortKindDef { name: String::new(), direction, properties: properties() }).collect(),\n        },\n        camera: Camera { x: f, y: f, zoom: f },\n        content,\n        root_node_id: Some(l[\"rootNodeId\"].as_str().unwrap().into()),\n        query: l[\"query\"].as_str().unwrap().into(),\n    }\n}"
+        },
+        {
+          "name": "assert_full",
+          "line": 95,
+          "source": "fn assert_full(a: &JackSnapshot, b: &JackSnapshot, word: u64) {\n    assert_eq!(a.schema, b.schema);\n    assert_eq!(a.name, b.name);\n    assert_eq!(a.manifest_id, b.manifest_id);\n    assert_eq!(a.manifest, b.manifest);\n    assert_eq!(a.root_node_id, b.root_node_id);\n    assert_eq!(a.query, b.query);\n    assert_eq!(a.content, b.content);\n    for f in [a.camera.x, a.camera.y, a.camera.zoom] {\n        assert_eq!(f.to_bits(), word);\n    }\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_jack_every_native_camera_word_preserves_full_parent",
+          "line": 125,
+          "markers": [],
+          "sourceBody": "fn sqlite_snapshot_jack_every_native_camera_word_preserves_full_parent() {\n    for word in words() {\n        let expected = Owned::new(full(word, 0));\n        for binary in [false, true] {\n            let actual = Owned::new(if binary { JackSnapshot::decode_pack(&expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()).unwrap() } else { JackSnapshot::parse_dsl(&expected.print_dsl()).unwrap() });\n            assert_full(&actual, &expected, word);\n        }\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_jack_declared_json_camera_words_are_closed_and_exact",
+          "line": 162,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_jack_declared_json_camera_words_are_closed_and_exact() {\n    use crate::standards::v1::subsets::any::io::{export::serializers::artifacts::json::v_rfc8259::any as writer, import::deserializers::artifacts::json::v_rfc8259::any as reader};\n    for word in words() {\n        let expected = Owned::new(full(word, 0));\n        let bytes = writer::serialize_bytes(&expected).unwrap();\n        let oracle: serde_json::Value = serde_json::from_slice(&bytes).unwrap();\n        for field in [\"x\", \"y\", \"zoom\"] {\n            assert_eq!(oracle[\"camera\"][field][\"bits\"].as_str(), Some(format!(\"{word:016x}\").as_str()));\n        }\n        let actual = Owned::new(reader::deserialize_bytes(&bytes).unwrap());\n        assert_full(&actual, &expected, word);\n    }\n}\n\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and_words",
+          "line": 194,
+          "markers": [
+            "bun",
+            "SELECT"
+          ],
+          "sourceBody": "fn sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and_words() {\n    let script = r#\"import{Database}from'bun:sqlite';const d=new Database(':memory:',{safeIntegers:true});d.exec(process.argv[1]);const l=JSON.parse(process.argv[2]);const rows=d.query('SELECT name FROM sqlite_schema WHERE type=\\'table\\'').all();if(rows.length!==13)throw Error('table count');for(const{name}of rows)if(d.query('PRAGMA table_info('+name+')').all().length!==l.tableWidths[name])throw Error(name);d.exec(\"INSERT INTO jack_document VALUES(1,'trinity.graph','name',NULL,'','query');INSERT INTO jack_content_child VALUES(1,1,'','independent target','s.stdio.semio','v1','graph')\");for(const hex of l.binary64Bits){const word=BigInt('0x'+hex),data=new DataView(new ArrayBuffer(8));data.setBigUint64(0,word);const f=data.getFloat64(0),kind=Number.isNaN(f)?'nan':f===Infinity?'positiveInfinity':f===-Infinity?'negativeInfinity':'finite',cells=[1n,1n,...Array(3).fill(Number.isNaN(f)?null:f),...Array.from({length:3},()=>[BigInt.asIntN(64,word),kind]).flat()];d.query('INSERT OR REPLACE INTO jack_camera VALUES('+Array(11).fill('?').join(',')+')').run(...cells);const row=d.query('SELECT x_ieee754_bits,x_numeric_class FROM jack_camera').get();if(BigInt.asUintN(64,row.x_ieee754_bits).toString(16).padStart(16,'0')!==hex||row.x_numeric_class!==kind)throw Error('exact word')}if(d.query('PRAGMA foreign_key_check').all().length)throw Error('foreign keys');d.close();\"#;\n    let out = std::process::Command::new(\"bun\").args([\"-e\", script, include_str!(\"../../🪶️sqlite/🗄️.sql\"), &laws().to_string()]).output().unwrap();\n    assert!(out.status.success(), \"{}\", String::from_utf8_lossy(&out.stderr));\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent",
+          "line": 200,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent() {\n    use store::sqlite_snapshot::*;\n    let codec = store::ArtifactCodec::bare::<JackSnapshot, crate::TrinityGraphMutation>(crate::TRINITY_GRAPH_SCHEMA).snapshot_sqlite.expect(\"Jack absent parent capability\");\n    let dialect = store::io_schema::ArtifactDialect { artifact_kind: \"s.trinity.jack\".into(), standard: \"1\".into(), subset: \"*\".into() };\n    let expected = Owned::new(full(0, 0));\n    for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {\n        let native = match encoding {\n            SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),\n            SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),\n        };\n        let db = (codec.export)(crate::TRINITY_GRAPH_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n        assert_eq!(db.tables.len(), 13);\n        assert_eq!(db.table(\"jack_document\").unwrap().single_row().unwrap().text(2).unwrap(), expected.name);\n        let native = (codec.import)(crate::TRINITY_GRAPH_SCHEMA, &dialect, db, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n        let actual = Owned::new(match native {\n            store::io_schema::IoPayload::Text(v) => JackSnapshot::parse_dsl(&v).unwrap(),\n            store::io_schema::IoPayload::Binary(v) => JackSnapshot::decode_pack(&v).unwrap(),\n        });\n        assert_full(&actual, &expected, 0);\n    }\n}\n\n"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "DagSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.dag.dag",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "dag.dag",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/dag-dag-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 292,
+          "signature": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 359,
+          "signature": "pub fn artifact<A: DagApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "full",
+          "line": 9,
+          "source": "fn full(index: usize) -> DagSnapshot {\n    let l = laws();\n    let row = &l[\"nativeCases\"][index];\n    let child = &row[\"content\"];\n    let target = &child[\"target\"];\n    let dialect = &target[\"dialect\"];\n    DagSnapshot {\n        schema: row[\"schema\"].as_str().unwrap().into(),\n        content: store::ArtifactChild::new(\n            child[\"childId\"].as_str().unwrap().into(),\n            store::io_schema::ArtifactRef {\n                artifact_id: target[\"artifactId\"].as_str().unwrap().into(),\n                dialect: store::io_schema::ArtifactDialect { artifact_kind: dialect[\"artifactKind\"].as_str().unwrap().into(), standard: dialect[\"standard\"].as_str().unwrap().into(), subset: dialect[\"subset\"].as_str().unwrap().into() },\n            },\n        ),\n    }\n}"
+        },
+        {
+          "name": "assert_full",
+          "line": 56,
+          "source": "fn assert_full(actual: &DagSnapshot, expected: &DagSnapshot) {\n    assert_eq!(actual.schema, expected.schema);\n    assert_eq!(actual.content.child_id, expected.content.child_id);\n    assert_eq!(actual.content.target, expected.content.target);\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_dag_actual_io_declaration_owns_parent_capability",
+          "line": 66,
+          "markers": [],
+          "sourceBody": "fn sqlite_snapshot_dag_actual_io_declaration_owns_parent_capability() {\n    assert!(crate::standards::v1::subsets::any::io::io().native.codec.snapshot_sqlite.is_some(), \"DAG actual declared Native document lacks parent capability\");\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns",
+          "line": 117,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns() {\n    use store::sqlite_snapshot::*;\n    let codec = store::ArtifactCodec::bare::<DagSnapshot, DagMutation>(DAG_DOCUMENT_SCHEMA).snapshot_sqlite.expect(\"missing DAG parent capability\");\n    let dialect = store::io_schema::ArtifactDialect { artifact_kind: \"s.dag.dag\".into(), standard: \"1\".into(), subset: \"*\".into() };\n    for index in 0..3 {\n        let expected = Owned::new(full(index));\n        for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {\n            let native = match encoding {\n                SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),\n                SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),\n            };\n            let database = (codec.export)(DAG_DOCUMENT_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            assert_eq!(database.tables.len(), 2);\n            assert_eq!(database.table(\"dag_document\").unwrap().single_row().unwrap().text(1).unwrap(), expected.schema);\n            let child = database.table(\"dag_content_child\").unwrap().single_row().unwrap();\n            assert_eq!(child.text(2).unwrap(), expected.content.child_id);\n            assert_eq!(child.text(3).unwrap(), expected.content.target.artifact_id);\n            assert_eq!(child.text(4).unwrap(), expected.content.target.dialect.artifact_kind);\n            assert_eq!(child.text(5).unwrap(), expected.content.target.dialect.standard);\n            assert_eq!(child.text(6).unwrap(), expected.content.target.dialect.subset);\n            let payload = (codec.import)(DAG_DOCUMENT_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            let actual = Owned::new(match payload {\n                store::io_schema::IoPayload::Text(text) => DagSnapshot::parse_dsl(&text).unwrap(),\n                store::io_schema::IoPayload::Binary(bytes) => DagSnapshot::decode_pack(&bytes).unwrap(),\n            });\n            assert_full(&actual, &expected);\n        }\n    }\n}\n\n#[test]\n"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.3d",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 729,
+          "signature": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 847,
+          "signature": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "specimen",
+          "line": 10,
+          "source": "fn specimen(word: u64) -> Puzzle3dSnapshot {\n    let f = f64::from_bits(word);\n    let mut s = Puzzle3dSnapshot::default();\n    s.schema = String::new();\n    s.domain = \"literal\\0😀\".into();\n    s.objects.push(Puzzle3dObject {\n        id: String::new(),\n        label: Some(String::new()),\n        object_kind: Some(\"unresolved\".into()),\n        anchor: Puzzle3dObjectAnchor::Derived,\n        origin: [f; 3],\n        orientation: Some([f; 4]),\n        scale: Some(Puzzle3dScale::Uniform(f)),\n        mesh_url: Some(String::new()),\n        vortices: vec![Puzzle3dVortex { id: String::new(), vortex_kind: None, label: Some(String::new()), position: [f; 3], direction: Some([f; 3]), radius: Some(f), hidden: false, locked: true }],\n        hidden: false,\n        locked: true,\n    });\n    s.target_volumes.push(Puzzle3dTargetVolume { id: String::new(), origin: [f; 3], orientation: Some([f; 4]), scale: Some(Puzzle3dScale::Vec3([f; 3])), hidden: true, locked: false });\n    s.references.push(Puzzle3dReference { id: String::new(), source: Puzzle3dReferenceSource { url: \"literal\\0!@/😀\".into(), media_kind: Some(String::new()) }, origin: [f; 3], width_world: f, hidden: false, locked: true });\n    s.attractions.push(Puzzle3dAttraction { id: String::new(), attracting: \"unresolved\\0😀\".into(), attracted: String::new(), gap: f, shift: f, rise: f, rotation: f, turn: f, tilt: f, x: f, y: f });\n    s.meta.kind_compatibility = [Puzzle3dCompatSpecificity::General, Puzzle3dCompatSpecificity::Object, Puzzle3dCompatSpecificity::Attraction, Puzzle3dCompatSpecificity::Cable, Puzzle3dCompatSpecificity::Vortex]\n        .into_iter()\n        .map(|specificity| Puzzle3dKindCompatibility { source: String::new(), target: \"unresolved\".into(), bidirectional: false, important: true, specificity })\n        .collect();\n    s.meta.kind_catalogs = Some(Puzzle3dKindCatalogs {\n        objects: vec![Puzzle3dCatalogObjectKind {\n            id: String::new(),\n            name: \"name\\0😀\".into(),\n            label: String::new(),\n            description: \"description\".into(),\n            icon: String::new(),\n            image: String::new(),\n            unit: String::new(),\n            is_abstract: true,\n            base_kinds: vec![String::new(), \"unresolved\".into()],\n            representations: vec![Puzzle3dRepresentation { id: String::new(), name: String::new(), url: String::new(), mime: String::new(), tags: vec![String::new(), String::new()], lod: Some(String::new()), description: String::new() }],\n            vortices: vec![Puzzle3dCatalogVortexTemplate {\n                id: String::new(),\n                name: String::new(),\n                label: String::new(),\n                description: String::new(),\n                icon: String::new(),\n                vortex_kind: Some(String::new()),\n                point: [f; 3],\n                direction: [f; 3],\n                t: Some(f),\n                mandatory: Some(false),\n                radius: Some(f),\n            }],\n            attributes: vec![Puzzle3dAttribute { id: String::new(), key: String::new(), value: \"value\\0😀\".into(), definition: Some(String::new()) }],\n            authors: vec![Puzzle3dAuthor { id: String::new(), name: String::new(), email: String::new(), role: Some(String::new()), rank: Some(i32::MIN) }],\n        }],\n        vortices: vec![Puzzle3dCatalogVortexKind {\n            id: String::new(),\n            code: Some(String::new()),\n            label: Some(String::new()),\n            order: Some(i32::MAX),\n            compatible_with: vec![String::new(), \"unresolved\".into()],\n            description: String::new(),\n            icon: String::new(),\n            color: String::new(),\n            default_cable_kind: String::new(),\n        }],\n        cables: vec![Puzzle3dCatalogCableKind { id: String::new(), label: String::new(), name: String::new(), default_attraction_kind: String::new() }],\n        attractions: vec![Puzzle3dCatalogAttractionKind { id: String::new(), label: String::new(), name: String::new() }],\n    });\n    s\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_puzzle3d_all23_tables_physical_oracle_and_edit_reconstruct_all_words",
+          "line": 151,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_puzzle3d_all23_tables_physical_oracle_and_edit_reconstruct_all_words() {\n    use store::sqlite_snapshot::*;\n    use store::ArtifactSqliteSnapshot;\n    for word in words() {\n        let expected = specimen(word);\n        let mut cb = |_| true;\n        let mut control = SqliteSnapshotControl::new(&mut cb, SqliteDatabaseLimits::default());\n        let database = expected.to_sqlite_database(&mut control).unwrap();\n        assert_eq!(database.tables.len(), 23);\n        assert_eq!(database.tables.iter().map(|t| t.rows.len()).sum::<usize>(), 30);\n        let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();\n        let edited = independent_puzzle3_edit(&bytes, \"UPDATE puzzle3_document SET domain='independent'; UPDATE puzzle3_reference_source SET url='unresolved!@/';\");\n        let database = import_sqlite_database(&edited, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();\n        let actual = Puzzle3dSnapshot::from_sqlite_database(&database, &mut control).unwrap();\n        let mut expected = expected;\n        expected.domain = \"independent\".into();\n        expected.references[0].source.url = \"unresolved!@/\".into();\n        assert_eq!(actual.print_dsl(), expected.print_dsl());\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_codecs_keep_all23_domain_tables",
+          "line": 189,
+          "markers": [
+            "sqlite_snapshot_codec",
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_codecs_keep_all23_domain_tables() {\n    use store::sqlite_snapshot::*;\n    let dialect = store::io_schema::ArtifactDialect { artifact_kind: \"s.puzzle.puzzle3d\".into(), standard: \"1\".into(), subset: \"*\".into() };\n    for word in words() {\n        let value = specimen(word);\n        for codec in [<Puzzle3dSnapshot as ArtifactPack>::sqlite_snapshot_codec().unwrap(), <Puzzle3dPlaySnapshot as ArtifactPack>::sqlite_snapshot_codec().unwrap()] {\n            for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {\n                let payload = match encoding {\n                    SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(value.encode_pack()),\n                    SnapshotEncoding::Text => store::io_schema::IoPayload::Text(value.print_dsl()),\n                };\n                let database = (codec.export)(PUZZLE_3D_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n                assert_eq!(database.tables.len(), 23);\n                let output = (codec.import)(PUZZLE_3D_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n                let actual = match output {\n                    store::io_schema::IoPayload::Binary(bytes) => Puzzle3dSnapshot::decode_pack(&bytes).unwrap(),\n                    store::io_schema::IoPayload::Text(text) => Puzzle3dSnapshot::parse_dsl(&text).unwrap(),\n                };\n                assert_eq!(actual.print_dsl(), value.print_dsl());\n            }\n        }\n    }\n}\n\n#[test]\n"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.2d",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/block-2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 108,
+          "signature": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 214,
+          "signature": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "full",
+          "line": 11,
+          "source": "fn full(word: u64) -> Block2dSnapshot {\n    let f = f64::from_bits(word);\n    let l = laws();\n    let text = l[\"nativeCase\"][\"literal\"].as_str().unwrap();\n    Block2dSnapshot {\n        schema: String::new(),\n        node_kind: BlockKindIdentity { id: String::new(), name: text.into(), label: String::new(), variant: Some(String::new()), description: text.into(), icon: Some(String::new()), unit: Some(String::new()) },\n        presentation: Block2dPresentation { shape: Some(String::new()), radius: Some(f), width: Some(f), height: Some(f), color: Some(String::new()), icon_kind: Some(String::new()) },\n        handle_kinds: vec![Block2dHandleKind { id: String::new(), name: text.into(), label: String::new(), color: String::new(), default_wire_kind: text.into() }],\n        handles: vec![Block2dHandleTemplate { id: String::new(), handle_kind: l[\"nativeCase\"][\"unresolvedHandleKind\"].as_str().unwrap().into(), angle: f, radius: f }],\n        compatibility: vec![BlockCompatibilityRule { id: String::new(), source: String::new(), target: text.into(), bidirectional: true }],\n        attributes: vec![BlockAttribute { key: String::new(), value: text.into(), definition: Some(String::new()) }],\n        authors: vec![BlockAuthor { id: String::new(), name: text.into(), email: Some(String::new()) }],\n        camera2d: BlockCamera2d { x: f, y: f, zoom: f },\n        meta: BlockMeta { description: text.into() },\n    }\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_block2d_all_fields_and_words_survive_actual_text_and_pack",
+          "line": 43,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_block2d_all_fields_and_words_survive_actual_text_and_pack() {\n    for word in words() {\n        let s = full(word);\n        let text = s.print_dsl();\n        let parsed = Block2dSnapshot::parse_dsl(&text).unwrap();\n        assert_words(&parsed, word);\n        assert_eq!(parsed.print_dsl(), text);\n        let parsed = Block2dSnapshot::decode_pack(&s.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()).unwrap();\n        assert_words(&parsed, word);\n        assert_eq!(parsed.print_dsl(), text);\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_actual_erased_declared_binary_text_retains_full_domain",
+          "line": 201,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_block2d_actual_erased_declared_binary_text_retains_full_domain() {\n    use store::sqlite_snapshot::*;\n    let codec = crate::standards::v1::subsets::any::io::io().native.codec.snapshot_sqlite.unwrap();\n    let dialect = store::io_schema::ArtifactDialect { artifact_kind: \"s.block.block2d\".into(), standard: \"1\".into(), subset: \"*\".into() };\n    for word in words() {\n        let expected = full(word);\n        for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {\n            let native = match encoding {\n                SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack()),\n                SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),\n            };\n            let database = (codec.export)(BLOCK_2D_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            assert_eq!(database.tables.len(), 10);\n            assert_eq!(database.table(\"block2_document\").unwrap().single_row().unwrap().text(1).unwrap(), \"\");\n            let native = (codec.import)(BLOCK_2D_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            let actual = match native {\n                store::io_schema::IoPayload::Binary(v) => Block2dSnapshot::decode_pack(&v).unwrap(),\n                store::io_schema::IoPayload::Text(v) => Block2dSnapshot::parse_dsl(&v).unwrap(),\n            };\n            assert_words(&actual, word);\n            assert_eq!(actual.print_dsl(), expected.print_dsl());\n        }\n    }\n}\n"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.5d",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/block-5d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 138,
+          "signature": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 215,
+          "signature": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "full",
+          "line": 11,
+          "source": "fn full(word: u64) -> Block5dSnapshot {\n    let f = f64::from_bits(word);\n    let l = laws();\n    let text = l[\"nativeCase\"][\"literal\"].as_str().unwrap();\n    Block5dSnapshot {\n        schema: String::new(),\n        part_kind: BlockKindIdentity { id: String::new(), name: text.into(), label: String::new(), variant: Some(String::new()), description: text.into(), icon: Some(String::new()), unit: Some(String::new()) },\n        part_2d: Block5dPart2d { shape: Some(String::new()), radius: Some(f), width: Some(f), height: Some(f), color: Some(String::new()), icon_kind: Some(String::new()) },\n        part_3d: Block5dPart3d { orientation: Some([f; 4]), scale: Some([f; 3]) },\n        representations: vec![BlockRepresentation {\n            id: String::new(),\n            name: text.into(),\n            mesh_url: Some(String::new()),\n            tags: vec![String::new(), text.into()],\n            lod: Some(String::new()),\n            description: text.into(),\n            attributes: vec![BlockAttribute { key: String::new(), value: text.into(), definition: Some(String::new()) }],\n        }],\n        grip_kinds: vec![Block5dGripKind { id: String::new(), name: text.into(), label: String::new(), color: String::new(), default_rope_kind: text.into() }],\n        grips: vec![Block5dGripTemplate { id: String::new(), grip_kind: l[\"nativeCase\"][\"unresolvedGripKind\"].as_str().unwrap().into(), angle: f, radius_2d: f, position: [f; 3], direction: [f; 3], radius_3d: f }],\n        compatibility: vec![BlockCompatibilityRule { id: String::new(), source: String::new(), target: text.into(), bidirectional: true }],\n        attributes: vec![BlockAttribute { key: String::new(), value: text.into(), definition: Some(String::new()) }],\n        authors: vec![BlockAuthor { id: String::new(), name: text.into(), email: Some(String::new()) }],\n        camera2d: BlockCamera2d { x: f, y: f, zoom: f },\n        camera3d: BlockCamera3d { position: [f; 3], target: [f; 3], zoom: f },\n        meta: BlockMeta { description: text.into() },\n    }\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_block5d_all_fields_and_words_survive_actual_text_and_pack",
+          "line": 65,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_block5d_all_fields_and_words_survive_actual_text_and_pack() {\n    for word in words() {\n        let s = full(word);\n        let text = s.print_dsl();\n        let p = Block5dSnapshot::parse_dsl(&text).unwrap();\n        assert_words(&p, word);\n        assert_eq!(p.print_dsl(), text);\n        let p = Block5dSnapshot::decode_pack(&s.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()).unwrap();\n        assert_words(&p, word);\n        assert_eq!(p.print_dsl(), text);\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_full_relational_words_and_independent_edited_file_reconstruct",
+          "line": 149,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_block5d_full_relational_words_and_independent_edited_file_reconstruct() {\n    use store::{ArtifactSqliteSnapshot, sqlite_snapshot::*};\n    for word in words() {\n        let expected = full(word);\n        let database = expected.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();\n        assert_eq!(database.tables.len(), 15);\n        assert_eq!(database.tables.iter().map(|v| v.rows.len()).sum::<usize>(), 16);\n        let actual = Block5dSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();\n        assert_words(&actual, word);\n        assert_eq!(actual.print_dsl(), expected.print_dsl());\n        let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();\n        let bytes = independent_edit(&bytes, \"UPDATE block5_meta SET description='independent edited metadata';UPDATE block5_grip SET grip_kind='independent unresolved semantic kind'\");\n        let edited = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();\n        let actual = Block5dSnapshot::from_sqlite_database(&edited, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();\n        assert_words(&actual, word);\n        assert_eq!(actual.meta.description, \"independent edited metadata\");\n        assert_eq!(actual.grips[0].grip_kind, \"independent unresolved semantic kind\");\n        assert_eq!(actual.schema, \"\");\n        assert_eq!(actual.part_kind.description, expected.part_kind.description);\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_malformed_relational_ownership_and_optional_words_refuse",
+          "line": 171,
+          "markers": [],
+          "sourceBody": "fn sqlite_snapshot_block5d_malformed_relational_ownership_and_optional_words_refuse() {\n    use store::{ArtifactSqliteSnapshot, sqlite_snapshot::*};\n    let expected = full(0);\n    let database = expected.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();\n    let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();\n    for edit in [\n        \"UPDATE block5_grip SET ordinal=2\",\n        \"UPDATE block5_camera2d SET x_ieee754_bits=1\",\n        \"UPDATE block5_camera2d SET x_numeric_class='nan'\",\n        \"UPDATE block5_part3d SET orientation_y=NULL,orientation_y_ieee754_bits=NULL,orientation_y_numeric_class=NULL\",\n        \"DELETE FROM block5_kind\",\n        \"UPDATE block5_compatibility SET bidirectional=3\",\n        \"UPDATE block5_representation_tag SET representation_id=99999\",\n        \"INSERT INTO block5_meta VALUES(99,1,'duplicate singleton')\",\n    ] {\n        let malformed = import_sqlite_database(&independent_edit(&bytes, edit), SqliteDatabaseLimits::default(), &mut |_| true).unwrap();\n        assert!(Block5dSnapshot::from_sqlite_database(&malformed, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err(), \"{edit}\");\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_actual_declared_erased_binary_text_queries_every_domain_table",
+          "line": 225,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_block5d_actual_declared_erased_binary_text_queries_every_domain_table() {\n    use store::sqlite_snapshot::*;\n    let codec = crate::standards::v1::subsets::any::io::io().native.codec.snapshot_sqlite.unwrap();\n    let dialect = store::io_schema::ArtifactDialect { artifact_kind: \"s.block.block5d\".into(), standard: \"1\".into(), subset: \"*\".into() };\n    for word in words() {\n        let expected = full(word);\n        for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {\n            let native = match encoding {\n                SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),\n                SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),\n            };\n            let database = (codec.export)(BLOCK_5D_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            assert_eq!(database.tables.len(), 15);\n            assert_eq!(database.table(\"block5_document\").unwrap().single_row().unwrap().text(1).unwrap(), \"\");\n            assert_eq!(database.table(\"block5_grip\").unwrap().single_row().unwrap().text(4).unwrap(), expected.grips[0].grip_kind);\n            let native = (codec.import)(BLOCK_5D_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            let actual = match native {\n                store::io_schema::IoPayload::Binary(v) => Block5dSnapshot::decode_pack(&v).unwrap(),\n                store::io_schema::IoPayload::Text(v) => Block5dSnapshot::parse_dsl(&v).unwrap(),\n            };\n            assert_words(&actual, word);\n            assert_eq!(actual.print_dsl(), expected.print_dsl());\n        }\n    }\n}\n"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.3d",
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "selectedCommand": "bun nx run @semio-tech/block-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "line": 264,
+          "signature": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 351,
+          "signature": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "fixtureHelpers": [
+        {
+          "name": "full",
+          "line": 11,
+          "source": "fn full(word: u64) -> Block3dSnapshot {\n    let f = f64::from_bits(word);\n    let l = laws();\n    let text = l[\"nativeCase\"][\"literal\"].as_str().unwrap();\n    Block3dSnapshot {\n        schema: String::new(),\n        object_kind: BlockKindIdentity { id: String::new(), name: text.into(), label: String::new(), variant: Some(String::new()), description: text.into(), icon: Some(String::new()), unit: Some(String::new()) },\n        representations: vec![BlockRepresentation {\n            id: String::new(),\n            name: text.into(),\n            mesh_url: Some(String::new()),\n            tags: vec![String::new(), text.into()],\n            lod: Some(String::new()),\n            description: text.into(),\n            attributes: vec![BlockAttribute { key: String::new(), value: text.into(), definition: Some(String::new()) }],\n        }],\n        catalog: store::ArtifactChild::new(\n            \"local\\0!@/😀\".into(),\n            store::os_io::ArtifactRef { artifact_id: \"target\\0!@/😀\".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: \"s.stdio.semio\".into(), standard: \"v1\".into(), subset: \"kit\".into() } },\n        ),\n        vortex_kind_extra: vec![Block3dVortexKindExtra { id: String::new(), name: text.into(), label: String::new(), color: String::new(), default_cable_kind: text.into() }],\n        vortices: vec![Block3dVortexTemplate { id: String::new(), vortex_kind: l[\"nativeCase\"][\"unresolvedVortexKind\"].as_str().unwrap().into(), position: [f; 3], direction: [f; 3], radius: f, label: Some(String::new()) }],\n        compatibility: vec![BlockCompatibilityRule { id: String::new(), source: String::new(), target: text.into(), bidirectional: true }],\n        attributes: vec![BlockAttribute { key: String::new(), value: text.into(), definition: Some(String::new()) }],\n        authors: vec![BlockAuthor { id: String::new(), name: text.into(), email: Some(String::new()) }],\n        camera3d: BlockCamera3d { position: [f; 3], target: [f; 3], zoom: f },\n        meta: BlockMeta { description: text.into() },\n    }\n}"
+        }
+      ],
+      "existingRelevantSelectedLaws": [
+        {
+          "name": "sqlite_snapshot_block3d_all_fields_and_words_survive_actual_text_and_pack",
+          "line": 55,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_block3d_all_fields_and_words_survive_actual_text_and_pack() {\n    for word in words() {\n        let s = full(word);\n        let text = s.print_dsl();\n        let p = Block3dSnapshot::parse_dsl(&text).unwrap();\n        assert_words(&p, word);\n        assert_eq!(p.print_dsl(), text);\n        let p = Block3dSnapshot::decode_pack(&s.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()).unwrap();\n        assert_words(&p, word);\n        assert_eq!(p.print_dsl(), text);\n    }\n}\n#[test]\n"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_actual_erased_declared_binary_text_retains_full_domain",
+          "line": 235,
+          "markers": [
+            "assert_eq!"
+          ],
+          "sourceBody": "fn sqlite_snapshot_block3d_actual_erased_declared_binary_text_retains_full_domain() {\n    use store::sqlite_snapshot::*;\n    let codec = crate::standards::v1::subsets::any::io::io().native.codec.snapshot_sqlite.unwrap();\n    let dialect = store::io_schema::ArtifactDialect { artifact_kind: \"s.block.block3d\".into(), standard: \"1\".into(), subset: \"*\".into() };\n    for word in words() {\n        let expected = full(word);\n        for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {\n            let native = match encoding {\n                SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack()),\n                SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),\n            };\n            let database = (codec.export)(BLOCK_3D_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            assert_eq!(database.tables.len(), 13);\n            assert_eq!(database.table(\"block3_document\").unwrap().single_row().unwrap().text(1).unwrap(), \"\");\n            let child = database.table(\"block3_catalog_child\").unwrap().single_row().unwrap();\n            assert_eq!(child.text(2).unwrap(), expected.catalog.child_id);\n            assert_eq!(child.text(3).unwrap(), expected.catalog.target.artifact_id);\n            let native = (codec.import)(BLOCK_3D_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;\n            let actual = match native {\n                store::io_schema::IoPayload::Binary(v) => Block3dSnapshot::decode_pack(&v).unwrap(),\n                store::io_schema::IoPayload::Text(v) => Block3dSnapshot::parse_dsl(&v).unwrap(),\n            };\n            assert_words(&actual, word);\n            assert_eq!(actual.print_dsl(), expected.print_dsl());\n        }\n    }\n}\n"
+        }
+      ],
+      "status": "blueprint; actual generic application membership and full equality helper require per-owner readback before compile-ready capsule",
+      "requiredPublicDemand": [
+        "actual own Plugin declaration or normative explicit native registration; preserve lifecycle policy",
+        "exact registered schema/TypeId and both directed routes, no schema dedupe",
+        "export/import same complete authored owner in Binary and Text; retain ordinary native bytes/text equality and raw words",
+        "third-party Bun SQLite integrity/FK plus exact authored tables/columns/domain rows, not projector-derived expected",
+        "genuine same-control admission/cancellation remain unchanged"
+      ]
+    }
+  ]
+}

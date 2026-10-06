@@ -10,8 +10,8 @@
 use crate::editor::gis3d::commands::{example, exaggeration, view};
 use crate::editor::gis3d::modes::view as view_mode;
 use crate::editor::gis3d::modes::view::windows::terrain;
-use crate::op::GisTerrainMutation;
-use crate::schema::default_terrain_document;
+use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
 use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
@@ -273,7 +273,6 @@ type Gis3dPrepareOne<P, M> = fn(&P, M) -> Result<(P, Vec<M>, M, usize), String>;
 struct Gis3dOneItemPreparation<P, M> {
     base: Option<store::SnapshotRead<P>>,
     mutation: Option<M>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(P, Vec<M>, M, usize)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
@@ -357,7 +356,7 @@ where
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -376,7 +375,7 @@ where
         Ok(store::SnapshotRetirementStep::Complete)
     }
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 
@@ -398,7 +397,6 @@ where
     Ok(Box::new(Gis3dOneItemPreparation {
         base: Some(request.base),
         mutation: Some(request.mutation),
-        description: request.description,
         authority: Some(request.authority),
         candidate: None,
         prepared: None,
@@ -411,10 +409,10 @@ where
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<GisTerrainSnapshot, GisTerrainMutation> for Gis3dArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &GisTerrainMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite())
+    fn preflight(&self, mutation: &GisTerrainMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document || !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite())
         {
-            return Err("GIS terrain Artifact preparation rejected its lane, description, or mutation".into());
+            return Err("GIS terrain Artifact preparation rejected its lane or mutation".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, 8))
     }

@@ -1051,7 +1051,7 @@ fn paint_session_windows(shell: &mut ShellState, body: Rect) -> Vec<String> {
 /// `SurfaceKind::Board2d` pane on both shells, so each user has a board to point at and to paint the other's
 /// cursor over (block2d's only window is a summary surface with no board).
 #[cfg(not(target_arch = "wasm32"))]
-const CROSS_SHELL_BOARD_SCHEMA: &str = "puzzle.2d.fixture";
+const CROSS_SHELL_BOARD_SCHEMA: &str = "board.ports.directed.v1";
 
 /// 🤝️ Steps 1–4 of the cross-shell journey (audit s12 P1-4, ticket 26/09/23 slice WG8), shared by both
 /// cross-shell laws: the native wgpu user A signs in, creates a space, seats the React user B as an author,

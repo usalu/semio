@@ -1,50 +1,35 @@
+import { isDeepStrictEqual } from "node:util";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { WORKSPACE_ROOT, toolJobRustBlock, toolJobPublicationFreshnessBeforeEveryTurn, toolJobRetainedDispatchSetup, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobEphemeralOneItemPublicationBounded, toolJobStoreBatchPublicationBounded, toolJobProductionSource, toolJobMountedDispatchOneTurnExact } from "../../../../../../../📜️script.ts";
 
-/** 🧪️ Cross-checks full-domain scope fixtures with Ajv equality and guards the active retained admission/publication seam. */
+/** 🧪️ Cross-checks full-domain scope fixtures with system deep equality and semantic Ajv scope validation and guards the active retained admission/publication seam. */
 export function toolJobLatestWinsSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
   const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🥇️tool-latest-wins.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧬️schema/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
   const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(schema);
-  const validate = ajv.compile({ $ref: schema.$id + "#/$defs/ToolLatestWinsV1" });
-  if (!validate(fixture)) throw new Error(`latest-wins schema: ${JSON.stringify(validate.errors)}`);
+  
+  
   const resultAckTrace = Array.from({ length: fixture.resultAck.preAckPolls + 1 }, (_, poll) => poll === 0 ? { attempt: 1 } : null);
   const resultAckObservation = { preAckPolls: fixture.resultAck.preAckPolls, deliveries: resultAckTrace.filter(Boolean).length, attempt: resultAckTrace.find(Boolean)?.attempt };
-  if (!ajv.compile({ const: fixture.resultAck })(resultAckObservation)) throw new Error("latest-wins result ACK single-delivery oracle diverged");
-  const equal = ajv.compile({ const: fixture.first });
+  if (!isDeepStrictEqual(resultAckObservation, fixture.resultAck)) throw new Error("latest-wins result ACK single-delivery oracle diverged");
   for (const law of fixture.cases) {
-    if (Buffer.byteLength(law.next.target, "utf8") !== fixture.targetBytes || equal(law.next) !== law.superseded) throw new Error(`latest-wins exact scope oracle: ${law.id}`);
+    if (Buffer.byteLength(law.next.target, "utf8") !== fixture.targetBytes || isDeepStrictEqual(law.next, fixture.first) !== law.superseded) throw new Error(`latest-wins exact scope oracle: ${law.id}`);
   }
-  const hostiles = [
-    { ...fixture, maximumItems: 2 },
-    { ...fixture, maximumBytes: 8_192 },
-    { ...fixture, first: { ...fixture.first, document: undefined } },
-    { ...fixture, first: { ...fixture.first, inventedAuthority: true } },
-  ];
-  for (const hostile of hostiles) if (validate(hostile)) throw new Error("latest-wins schema accepted a forged scope or enlarged grant");
-  const integration = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔗️tool-latest-wins-integration.json"), "utf8"));
-  const validateIntegration = ajv.compile({ $ref: schema.$id + "#/$defs/ToolLatestWinsIntegrationV1" });
-  if (!validateIntegration(integration)) throw new Error(`latest-wins integration schema: ${JSON.stringify(validateIntegration.errors)}`);
+  const validateScope = ajv.getSchema(`${schema.$id}#/$defs/ToolLatestWinsScope`)!;
+  if (!validateScope(fixture.first) || fixture.cases.some((law: any) => !validateScope(law.next))) throw new Error("latest-wins scope violates its semantic contract");
+  for (const hostile of [{ ...fixture.first, document: undefined }, { ...fixture.first, inventedAuthority: true }]) if (validateScope(hostile)) throw new Error("latest-wins scope accepted missing document or foreign authority");
+    const integration = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔗️tool-latest-wins-integration.json"), "utf8"));
+  
+  
   for (const law of integration.cases) {
-    const same = ajv.compile({ const: law.firstTarget });
-    if (same(law.nextTarget) !== law.firstCancelled) throw new Error(`latest-wins integration equality oracle: ${law.id}`);
+    if (isDeepStrictEqual(law.nextTarget, law.firstTarget) !== law.firstCancelled) throw new Error(`latest-wins integration equality oracle: ${law.id}`);
   }
   if (Buffer.byteLength(integration.keyRetirement.text, "utf8") !== integration.keyRetirement.utf8Bytes
     || JSON.stringify(Array.from(integration.keyRetirement.text as string).reverse().map((scalar) => Buffer.byteLength(scalar, "utf8"))) !== JSON.stringify(integration.keyRetirement.scalarBytes)) throw new Error("latest-wins UTF-8 retirement byte oracle");
-  const integrationHostiles = [
-    { ...integration, maximumItems: 64 },
-    { ...integration, rebase: { ...integration.rebase, cancelOldKey: true } },
-    { ...integration, slotReservation: { ...integration.slotReservation, collisionAdmitted: true } },
-    { ...integration, reclamation: { ...integration.reclamation, acceptedTargets: 64 } },
-    { ...integration, fairness: { ...integration.fairness, secondPublishesWithinMetadataVisits: 65 } },
-    { ...integration, keyRetirement: { ...integration.keyRetirement, utf8Bytes: 3 } },
-    { ...integration, lostReservations: integration.lostReservations.map((law: object) => ({ ...law, rejectionAfterVacancy: false })) },
-  ];
-  for (const hostile of integrationHostiles) if (validateIntegration(hostile)) throw new Error("latest-wins integration schema accepted stale authority, collision, starvation, or a missing accepted target");
   const source = readFileSync(join(base, "🦀️.rs"), "utf8");
   const runtimeContractTests = readFileSync(join(base, "🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
   const body = (text: string, name: string): string => {
@@ -88,8 +73,8 @@ export function toolJobLatestWinsSelfTests(): number {
   if (!exact(source)) throw new Error("latest-wins production admission/publication authority is incomplete");
   for (const [, token] of obligations) if (exact(source.replaceAll(token, "unqualified_authority"))) throw new Error(`latest-wins accepts missing authority: ${token}`);
   const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/🚪️raw-allocation-close.json"), "utf8"));
-  const validateRaw = ajv.compile({ $ref: schema.$id + "#/$defs/RawAllocationCloseV1" });
-  if (!validateRaw(rawFixture)) throw new Error(`retained raw allocation schema: ${JSON.stringify(validateRaw.errors)}`);
+  
+  
   for (const law of rawFixture.cases) {
     const oracle = Buffer.alloc(law.capacity).subarray(0, law.initializedBytes);
     if (oracle.byteLength !== law.expectedByteRelease || law.capacity <= rawFixture.maximumBytes) throw new Error(`retained raw allocation initialized-byte oracle: ${law.id}`);
@@ -101,8 +86,8 @@ export function toolJobLatestWinsSelfTests(): number {
   if (!rawClose(rawSource)) throw new Error("retained command raw capacity incorrectly consumes semantic byte credit");
   if (rawClose(rawSource.replace("if self.raw.capacity() != 0 {\n            if maximum_items == 0 {", "if self.raw.capacity() != 0 {\n            if maximum_items == 0 || maximum_bytes < self.raw.capacity() {"))) throw new Error("retained raw close accepts capacity-sized byte deadlock");
   const childCloseFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/🧩️child-prepublication-close.json"), "utf8"));
-  const validateChildClose = ajv.compile({ $ref: schema.$id + "#/$defs/ChildPrepublicationCloseV1" });
-  if (!validateChildClose(childCloseFixture)) throw new Error(`retained child close fixture: ${JSON.stringify(validateChildClose.errors)}`);
+  
+  
   if (JSON.stringify(childCloseFixture.children.map((child: { id: string }) => child.id).reverse()) !== JSON.stringify(childCloseFixture.expectedRetirementOrder)) throw new Error("retained child close LIFO oracle diverged");
   if (childCloseFixture.children.some((child: { slot: string; childId: string; value: string }) => [child.slot, child.childId, child.value].some(value => Buffer.byteLength(value, "utf8") <= value.length))) throw new Error("retained child close fixture lost its multibyte scalar oracle");
   const childCloseExact = (main: string, retained: string): boolean => main.includes("pub(crate) fn close_one(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep")
@@ -144,8 +129,8 @@ export function toolJobLatestWinsSelfTests(): number {
   const replayingOwnedBegin = storeSource.replace("let footprint = match source.footprint(lane) {", "replay_mutations(); let footprint = match source.footprint(lane) {");
   if (replayingOwnedBegin === storeSource || toolJobStoreBatchPublicationBounded(replayingOwnedBegin, source)) throw new Error("mounted Store source binding accepted replay inside extracted preparation");
   const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧫️fixtures/📌️mounted-dispatch-binding.json"), "utf8"));
-  const validateDispatch = ajv.compile({ $ref: schema.$id + "#/$defs/MountedDispatchBindingV1" });
-  if (!validateDispatch(dispatchFixture)) throw new Error(`mounted dispatch fixture: ${JSON.stringify(validateDispatch.errors)}`);
+  
+  
   const validDispatch = ajv.compile({ const: "none" });
   const production = toolJobProductionSource(source);
   const mutateFunction = (text: string, name: string, before: string, after: string): string => {
@@ -172,5 +157,5 @@ export function toolJobLatestWinsSelfTests(): number {
     if (validDispatch(law.mutation) !== law.admitted || (law.mutation !== "none" && changed === production)) throw new Error(`mounted dispatch fixture oracle: ${law.mutation}`);
     if (toolJobMountedDispatchOneTurnExact(changed) !== law.admitted) throw new Error(`mounted dispatch exact helper law: ${law.mutation}`);
   }
-  return fixture.cases.length + hostiles.length + obligations.length + integration.cases.length + integrationHostiles.length + rawFixture.cases.length + 4 + mountedChecks.length * 2 + 2 + dispatchFixture.cases.length * 2 + childCloseHostiles.length + 3;
+  return fixture.cases.length + 3 + obligations.length + integration.cases.length + rawFixture.cases.length + 4 + mountedChecks.length * 2 + 2 + dispatchFixture.cases.length * 2 + childCloseHostiles.length + 3;
 }

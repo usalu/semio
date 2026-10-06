@@ -4,14 +4,14 @@ use semio_framework::kernel::{Effect, RequestId};
 
 #[test]
 fn request_file_open_survives_wire_effect_round_trip() {
-    let effect = Effect::RequestFileOpen { req: RequestId(121), accept: "application/json,.json".into(), read_as: Some("text".into()), import_action: "importFixture".into(), multiple: false, args: None };
+    let effect = Effect::RequestFileOpen { req: RequestId(121), accept: "application/json,.json".into(), read_as: Some("text".into()), import_action: "importSnapshot".into(), multiple: false, args: None };
     let bytes = store::pack_rt::encode_wire_value(&effect.to_value());
     let decoded = decode_wire_effect(&bytes).expect("RequestFileOpen must survive the browser wire table");
     match decoded {
         Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. } => {
             assert!(accept.contains("json"), "{accept}");
             assert_eq!(read_as.as_deref(), Some("text"));
-            assert_eq!(import_action, "importFixture");
+            assert_eq!(import_action, "importSnapshot");
             assert!(!multiple);
         }
         other => panic!("wire dropped RequestFileOpen: {other:?}"),

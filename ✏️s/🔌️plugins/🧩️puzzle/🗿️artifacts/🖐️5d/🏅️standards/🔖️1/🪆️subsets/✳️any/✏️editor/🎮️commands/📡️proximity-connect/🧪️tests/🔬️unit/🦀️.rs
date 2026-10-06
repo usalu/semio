@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::puzzle5d::commands::world_relocate::world_relocate;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::{capsule_dream_example_document, concrete_forest_example_document, find_part_by_grip_full_id, nakagin_example_document, Puzzle5dPart, Puzzle5dScene};
-use crate::standards::v1::subsets::any::schema::mutations::text::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dPlaySnapshot;
 use std::time::{Duration, Instant};
 
 const PROXIMITY_FIXTURE: &str = include_str!("../../🧫️fixtures/🔣️.json");

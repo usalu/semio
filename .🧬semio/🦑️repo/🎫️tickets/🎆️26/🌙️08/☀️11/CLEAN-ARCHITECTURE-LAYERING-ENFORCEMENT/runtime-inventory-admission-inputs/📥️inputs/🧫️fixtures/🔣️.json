@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "empty",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample.item\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[]}",
+      "accepted": true
+    },
+    {
+      "id": "dispatch",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample.item\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[{\"id\":\"move-node\",\"variant\":\"position\",\"outcomes\":[\"applied\",\"rejected\"]}]}",
+      "accepted": true
+    },
+    {
+      "id": "optional-owned-fields",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample.item\",\"standard\":\"\",\"subset\":\"any\",\"surface\":\"local\",\"bridgeVersion\":1.0,\"producedBy\":\"sample\",\"mutations\":[{\"id\":\"change-value\",\"variant\":\"\",\"verb\":\"change\",\"entity\":\"node\",\"record\":\"value\",\"outcomes\":[\"no-op\",\"empty\",\"disjoint\"]}]}",
+      "accepted": true
+    },
+    {
+      "id": "undeclared-root",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample.item\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[],\"control\":true}",
+      "accepted": false
+    },
+    {
+      "id": "uppercase-identity",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"Sample\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[]}",
+      "accepted": false
+    },
+    {
+      "id": "missing-version",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample\",\"standard\":\"1\",\"subset\":\"any\",\"mutations\":[]}",
+      "accepted": false
+    },
+    {
+      "id": "unknown-outcome",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[{\"id\":\"move\",\"variant\":\"position\",\"outcomes\":[\"success\"]}]}",
+      "accepted": false
+    },
+    {
+      "id": "empty-outcomes",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[{\"id\":\"move\",\"variant\":\"position\",\"outcomes\":[]}]}",
+      "accepted": false
+    },
+    {
+      "id": "unsafe-version",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":9007199254740992,\"mutations\":[]}",
+      "accepted": false
+    },
+    {
+      "id": "undeclared-mutation",
+      "source": "{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[{\"id\":\"move\",\"variant\":\"position\",\"outcomes\":[\"applied\"],\"unknown\":0}]}",
+      "accepted": false
+    }
+  ]
+}

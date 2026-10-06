@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import * as geometry from "../../🟦️.ts";
-import {point3Fixture,point2Fixture,uvFixture,rgbaFixture,quaternionFixture,transformFixture} from "../🧫️fixtures/🟦️.ts";
+import {point3Fixture,point2Fixture,uvFixture,rgbaFixture,quaternionFixture,transformFixture} from "../🧰️support/🟦️.ts";
 
 /** 🧫️ Shared geometry admission agrees with an independent JSON Schema validator. */
 export function testSemioGeometryContract(): void {

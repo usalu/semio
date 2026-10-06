@@ -178,7 +178,6 @@ pub mod os_spr {
     #[path = "../../🔨️modules/📡️spr/📜️history/🦀️.rs"]
     pub mod history;
 
-    #[cfg(not(target_arch = "wasm32"))]
     #[path = "../../🔨️modules/📡️spr/🔌️io/🦀️.rs"]
     pub mod io;
 
@@ -234,8 +233,7 @@ pub use crate::os_io::{ComposeFuture, ErasedComposeSource};
 
 pub use semio_framework_io_schema as io_schema;
 
-#[path = "../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs"]
-pub mod sqlite_snapshot;
+pub use semio_framework_io_sqlite_snapshot as sqlite_snapshot;
 
 
 #[path = "."]

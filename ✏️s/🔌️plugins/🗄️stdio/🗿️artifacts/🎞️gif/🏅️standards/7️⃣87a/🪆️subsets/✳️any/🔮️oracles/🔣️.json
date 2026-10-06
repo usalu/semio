@@ -528,9 +528,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "no-mutation-no-op",
       "class": "third-party-generated",
       "target": {
@@ -577,7 +576,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -626,7 +624,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-screen-size-applied",
       "class": "third-party-generated",
       "target": {
@@ -675,7 +672,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-global-color-table-applied",
       "class": "third-party-generated",
       "target": {
@@ -724,7 +720,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-background-color-index-applied",
       "class": "third-party-generated",
       "target": {
@@ -773,7 +768,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-image-applied",
       "class": "third-party-generated",
       "target": {
@@ -822,7 +816,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-image-applied",
       "class": "third-party-generated",
       "target": {
@@ -871,7 +864,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-image-applied",
       "class": "third-party-generated",
       "target": {
@@ -920,7 +912,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-image-geometry-applied",
       "class": "third-party-generated",
       "target": {
@@ -969,7 +960,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-image-pixels-applied",
       "class": "third-party-generated",
       "target": {
@@ -1018,7 +1008,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-image-interlace-applied",
       "class": "third-party-generated",
       "target": {
@@ -1067,7 +1056,6 @@
       "comparisonPipeline": "gif-87a-reader-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "aspect-set-pixel-aspect-ratio",
       "class": "third-party-generated",
       "target": {

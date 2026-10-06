@@ -24,7 +24,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("normalizes the native Input draft target through the retained browser cursor", () => {
     const row = typedFixture.components.find((candidate: { wire: { draftTarget?: string } }) => candidate.wire.draftTarget);
     expect(row).toBeDefined();
-    const cursor = new RetainedUiTypedCursor(row!.wire, "component");
+    if (!row?.nativeHex) throw new Error("Typed input fixture requires its native transport bytes");
+    const input = Uint8Array.from(Buffer.from(row.nativeHex, "hex"));
+    const cursor = new RetainedUiTypedCursor(input, "component");
+    expect(input.byteLength).toBe(0);
     for (let i = 0; i < 100_000; i++) {
       const step = cursor.advance({ maxItems: 1, maxBytes: 4096 });
       if (step.kind === "rejected") throw new Error(cursor.failure ?? "typed normalization rejected native input");
@@ -34,6 +37,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(owner?.value).toEqual(row!.expected);
     const retirement = owner!.beginClose();
     while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 });
+    cursor.beginClose();
+    while (cursor.closeStep({ maxItems: 1, maxBytes: 4096 }).kind !== "complete") {}
   });
 
   it("TypedNodeFields preflights every capture before transfer under private reference saturation", () => {

@@ -18,5 +18,5 @@ async fn every_source_carries_its_committed_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_boot_document_parses_the_demo_example() {
-    assert_eq!(boot_snapshot(), crate::snapshot::text::parse_dsl(example_text(REMODELING_EXAMPLE_BOOT_ID).expect("boot example text")).expect("boot example parses"));
+    assert_eq!(boot_snapshot(), crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(example_text(REMODELING_EXAMPLE_BOOT_ID).expect("boot example text")).expect("boot example parses"));
 }

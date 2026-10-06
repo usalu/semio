@@ -351,7 +351,7 @@ semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryComposition
 semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryTransitionRecord { id, actor, hlt, dependencies, observed, payload });
 semio_framework_value::artifact_retire_struct!(crate::os_spr::history::HistoryConflict { id, kind, status, actors, hlt, edit_ids, envelopes, messages });
 semio_framework_value::artifact_retire_struct!(crate::os_spr::history::HistoryMessage { level, code, message, target, op_index });
-semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, line, started_at, finished_at, description, verb, ops, inverse, meta, lane });
+semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryEdit { id, actor, line, started_at, finished_at, verb, ops, inverse, meta, lane });
 semio_framework_value::artifact_retire_struct!(crate::os_spr::OpPayload { text, binary });
 semio_framework_value::artifact_retire_struct!(crate::os_spr::HistoryOpMeta { op_id, dependencies, base_version, author_id, hlt, undo_policy, payload_hash, group_id, origin, messages, transaction });
 

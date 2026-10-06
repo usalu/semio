@@ -1,5 +1,5 @@
-//! ⏱️ Write and reopen throughput laws (`🧫️fixtures/⏱️throughput`, schema `ThroughputV1` in
-//! `⚙️engine/🧬️schema`): what one durable commit and one reopened greeting cost in typed DB I/O (the
+//! ⏱️ Write and reopen throughput laws against neutral examples in `🧫️fixtures/⏱️throughput`: what
+//! one durable commit and one reopened greeting cost in typed DB I/O (the
 //! census: exact, load-free), commit acknowledgements relative to the backend's own durable append
 //! measured in the same moment by the same number of writers, and a reopen storm relative to the same
 //! greetings made one after another on a freshly opened database (both under the same machine load),

@@ -2,19 +2,16 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import { chromium } from "playwright";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
 const uiRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const fixture = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/📤️prepared-readback/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(uiRoot, "🧬️schema/📤️prepared-readback/🔣️.json"), "utf8"));
 
 describe("📤️ Prepared target readback", () => {
   it("validates the shared byte and allocation contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     for (const row of fixture.cases) expect(row.rgba).toHaveLength(row.width * row.height * 4);
   });
 

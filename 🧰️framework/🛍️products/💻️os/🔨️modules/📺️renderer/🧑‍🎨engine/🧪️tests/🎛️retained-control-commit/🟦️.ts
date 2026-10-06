@@ -29,7 +29,7 @@ const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const uiRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui");
 
 type Binding = { readonly trigger: string; readonly action: string; readonly args?: Record<string, unknown> };
-type FixtureNode = {
+type SnapshotNode = {
   readonly kind: string;
   readonly id: string;
   readonly inputKind?: string;
@@ -47,7 +47,7 @@ type FixtureNode = {
 type Gesture = { readonly kind: string; readonly at: readonly [number, number]; readonly to?: readonly [number, number]; readonly text?: string };
 type FixtureCase = {
   readonly name: string;
-  readonly node: FixtureNode;
+  readonly node: SnapshotNode;
   readonly binding: Binding | null;
   readonly deltaBinding?: Binding | null;
   readonly bounds: readonly [number, number, number, number];
@@ -68,10 +68,10 @@ const dispatch = (binding: Binding | null | undefined, value: unknown): { action
 };
 
 /** ✍️ The buffer an editable control holds after the gesture's text is typed at the caret, which focus seeds at the END of the declarative value. */
-const typedBuffer = (node: FixtureNode, gesture: Gesture): string => `${node.value ?? ""}${gesture.text ?? ""}`;
+const typedBuffer = (node: SnapshotNode, gesture: Gesture): string => `${node.value ?? ""}${gesture.text ?? ""}`;
 
 /** ⏎️ React's `InputView`: `commit === "blur"` commits through `Trigger::Commit` (Enter / blur), everything else through `Trigger::Change` (every keystroke). */
-const inputCommitsOnBlur = (node: FixtureNode): boolean => node.kind === "input" && node.commit === "blur";
+const inputCommitsOnBlur = (node: SnapshotNode): boolean => node.kind === "input" && node.commit === "blur";
 
 /** 🎚️ The slider value a press at `x` reports from the painted track cell, excluding the fixed readout. */
 const sliderValueAt = (bounds: readonly [number, number, number, number], x: number, min: number, max: number, step: number): number => {

@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { arc as d3Arc } from "d3-shape";
-import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { compileVizProbe, roundProbeNumbers, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -31,7 +31,7 @@ function rows(ctx: AdapterContext): Record<string, string>[] {
 
 /** 🎯️ The compiled probe of one fixture, kept whole so the arc and its centroid stay paired. */
 async function probe(ctx: AdapterContext, fixture: string): Promise<ProbeRecord[]> {
-  const parsed = await compileVizProbe(ctx.fixture(`shared://⏱️charts-kpi-gauge/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const parsed = await compileVizProbe(ctx.input(`shared://⏱️charts-kpi-gauge/${fixture}`), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return roundProbeNumbers(parsed, DECIMALS);
 }
 

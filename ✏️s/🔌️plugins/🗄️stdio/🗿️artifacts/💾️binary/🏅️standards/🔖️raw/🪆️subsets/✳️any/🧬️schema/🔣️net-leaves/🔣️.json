@@ -1,83 +1,30 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/net-leaves/schema.json",
-  "title": "BinaryNetLeavesFixture",
-  "description": "Language-neutral corpus of the ONE net byte-range replacement one explicit Apply of the hex window means; `null` when the Apply changes no byte.",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/net-mutation/schema.json",
+  "title": "BinaryNetMutation",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema",
-    "note",
-    "cases"
+    "kind",
+    "offset",
+    "removeLen",
+    "insert"
   ],
   "properties": {
-    "schema": {
-      "const": "semio.stdio.binary.net-leaves.v1"
+    "kind": {
+      "const": "replace-byte-range"
     },
-    "note": {
-      "type": "string"
+    "offset": {
+      "type": "integer",
+      "minimum": 0
     },
-    "cases": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "before",
-          "after",
-          "leaf"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-          },
-          "before": {
-            "type": "string",
-            "pattern": "^([0-9a-f]{2})*$"
-          },
-          "after": {
-            "type": "string",
-            "pattern": "^([0-9a-f]{2})*$"
-          },
-          "leaf": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "kind",
-                  "offset",
-                  "removeLen",
-                  "insert"
-                ],
-                "properties": {
-                  "kind": {
-                    "const": "replace-byte-range"
-                  },
-                  "offset": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "removeLen": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "insert": {
-                    "type": "string",
-                    "pattern": "^([0-9a-f]{2})*$"
-                  }
-                }
-              }
-            ]
-          }
-        }
-      }
+    "removeLen": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "insert": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})*$"
     }
   }
 }

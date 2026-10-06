@@ -54,3 +54,6 @@ semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️
 
 [package.metadata.semio.sources]
 artifacts = ["../../../../../✏️s/🔌️plugins/🗒️note/🗿️artifacts"]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+semio-framework-os-run = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust", package = "semio-framework-os-run" }

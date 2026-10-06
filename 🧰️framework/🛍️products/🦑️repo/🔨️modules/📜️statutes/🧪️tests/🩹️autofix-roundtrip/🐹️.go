@@ -15,7 +15,7 @@ import (
 
 // readFixture reads one declared fixture as text.
 func readFixture(ctx *host.Context, uri string) (string, error) {
-	path, err := ctx.Fixture(uri)
+	path, err := ctx.Input(uri)
 	if err != nil {
 		return "", err
 	}

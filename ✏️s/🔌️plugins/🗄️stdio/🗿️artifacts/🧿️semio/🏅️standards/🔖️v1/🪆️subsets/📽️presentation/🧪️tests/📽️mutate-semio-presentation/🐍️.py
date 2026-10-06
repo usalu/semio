@@ -901,24 +901,24 @@ def doc_string(ctx: Context) -> str:
 
 def step_uris(ctx: Context, prefix: str) -> list:
     """🧫️ The fixture URIs under one prefix the scenario's steps name, in step order (the host's one fixture-URI grammar)."""
-    return [uri for uri in ctx.step_fixture_uris() if uri.startswith(prefix)]
+    return [uri for uri in ctx.step_input_uris() if uri.startswith(prefix)]
 
 
-def fixture_json(ctx: Context, uri: str):
+def snapshot_json(ctx: Context, uri: str):
     """🧫️ A declared fixture read as JSON."""
-    return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
 def payload(ctx: Context) -> dict:
     """🦠️ The scenario's own mutation payload — the committed fixture its steps name, or, for the `no-mutation`
     baselines, the sentinel in its doc string."""
     uri = next((uri for uri in step_uris(ctx, "shared://📽️mutate-semio-presentation/") if uri.endswith("/🦠️mutation/🔣️.json")), None)
-    return json.loads(doc_string(ctx)) if uri is None else fixture_json(ctx, uri)
+    return json.loads(doc_string(ctx)) if uri is None else snapshot_json(ctx, uri)
 
 
 def talk(ctx: Context) -> dict:
     """🎤️ The real derived talk deck, parsed through this implementation's own DSL reader."""
-    return parse_dsl(ctx.fixture_bytes(TALK_DSL).decode("utf-8"))
+    return parse_dsl(ctx.input_bytes(TALK_DSL).decode("utf-8"))
 
 
 def projection_of(document: dict) -> dict:
@@ -956,9 +956,9 @@ def spec_vector(ctx: Context) -> Outcome:
     before-state is the committed `📽️deck` example artifact — a THIRD statement of what the verb
     means, independent of both implementations."""
     uris = step_uris(ctx, "shared://📽️mutate-semio-presentation/")
-    before = fixture_json(ctx, uris[0])
-    mutation = fixture_json(ctx, uris[1])
-    expected = fixture_json(ctx, uris[2])
+    before = snapshot_json(ctx, uris[0])
+    mutation = snapshot_json(ctx, uris[1])
+    expected = snapshot_json(ctx, uris[2])
     applied = apply_mutation(before, mutation)
     if applied != expected:
         raise AssertionError("%s: the applied deck is not the committed after-snapshot" % ctx.scenario["id"])
@@ -977,12 +977,12 @@ def identity_round_trip(ctx: Context) -> Outcome:
     """
     report = {}
     for name, dsl_uri, pack_uri in (("talk", TALK_DSL, TALK_PACK), ("deck", DECK_DSL, DECK_PACK)):
-        dsl_bytes = ctx.fixture_bytes(dsl_uri)
+        dsl_bytes = ctx.input_bytes(dsl_uri)
         parsed = parse_dsl(dsl_bytes.decode("utf-8"))
         printed = print_dsl(parsed).encode("utf-8")
         if printed != dsl_bytes:
             raise AssertionError("identity-round-trip: re-printing the %s did not reproduce its committed DSL file" % name)
-        pack = ctx.fixture_bytes(pack_uri)
+        pack = ctx.input_bytes(pack_uri)
         unpacked = parse_pack(pack)
         if unpacked != parsed:
             raise AssertionError("identity-round-trip: the %s's binary twin decodes to a different deck than its text artifact" % name)

@@ -15,10 +15,40 @@
       "description": "Aggregate discriminator spliced in by PdfEMutation; absent when the payload stands alone."
     },
     "version": {
-      "type": "integer"
+      "type": "integer",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Algorithm version (V)",
+          "de": "Algorithmusversion (V)"
+        },
+        "description": {
+          "en": "V entry of the encryption dictionary that is removed.",
+          "de": "Eintrag V des Verschlüsselungswörterbuchs, das entfernt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "revision": {
-      "type": "integer"
+      "type": "integer",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Revision (R)",
+          "de": "Revision (R)"
+        },
+        "description": {
+          "en": "R entry of the encryption dictionary that is removed.",
+          "de": "Eintrag R des Verschlüsselungswörterbuchs, das entfernt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

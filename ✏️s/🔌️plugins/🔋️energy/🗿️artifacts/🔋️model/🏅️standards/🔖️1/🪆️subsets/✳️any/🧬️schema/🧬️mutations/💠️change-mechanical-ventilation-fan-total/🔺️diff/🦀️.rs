@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeMechanicalVentilationFanTotalEfficiency, base
     if let Some(item) = model.mechanical_ventilations.iter_mut().find(|item| item.id == payload.id) {
         item.fan_total_efficiency = payload.new_fan_total_efficiency;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

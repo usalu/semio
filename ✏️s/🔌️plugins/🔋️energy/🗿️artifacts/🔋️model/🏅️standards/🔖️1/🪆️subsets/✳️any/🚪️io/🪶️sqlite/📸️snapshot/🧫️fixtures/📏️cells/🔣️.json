@@ -1,0 +1,4229 @@
+{
+  "authority": "Complete Energy authored relational cells interpreted by independent SQLite",
+  "cases": [
+    {
+      "case": "authored",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 108
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1104
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 234
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 97
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 318
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 279
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 816
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 150
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 258
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 164
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 180
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 138
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 104
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 129,
+      "semanticBytes": 8374
+    },
+    {
+      "case": "0000000000000000",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 108
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1104
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 234
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 97
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 318
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 279
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 816
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 150
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 258
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 164
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 180
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 138
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 104
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 129,
+      "semanticBytes": 8374
+    },
+    {
+      "case": "8000000000000000",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 108
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1104
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 234
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 97
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 318
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 279
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 816
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 150
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 258
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 164
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 180
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 138
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 104
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 129,
+      "semanticBytes": 8374
+    },
+    {
+      "case": "7ff0000000000000",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 83
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 160
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 128
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1344
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 72
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 294
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 107
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 438
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 72
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 389
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 1056
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 348
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 176
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 270
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 184
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 192
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 77
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 240
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 168
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 92
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 124
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 129,
+      "semanticBytes": 10104
+    },
+    {
+      "case": "fff0000000000000",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 83
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 160
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 128
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1344
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 72
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 294
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 107
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 438
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 72
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 389
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 1056
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 348
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 176
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 270
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 184
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 192
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 77
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 240
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 168
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 92
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 124
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 129,
+      "semanticBytes": 10104
+    },
+    {
+      "case": "7ff8000000000042",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 76
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 86
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 840
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 168
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 81
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 86
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 186
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 158
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 552
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 78
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 95
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 159
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 92
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 123
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 81
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 59
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 79
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 98
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 59
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 87
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 56
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 78
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 105
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 59
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 71
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 129,
+      "semanticBytes": 6471
+    },
+    {
+      "case": "7ff0000000000042",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 76
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 86
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 840
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 168
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 81
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 86
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 186
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 158
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 552
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 78
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 95
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 159
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 92
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 123
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 81
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 59
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 79
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 98
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 59
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 87
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 56
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 78
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 105
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 59
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 71
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 129,
+      "semanticBytes": 6471
+    },
+    {
+      "case": "0000000000000001",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 108
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1104
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 234
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 97
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 318
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 279
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 816
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 150
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 258
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 164
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 180
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 138
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 104
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 129,
+      "semanticBytes": 8374
+    },
+    {
+      "case": "7fefffffffffffff",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 108
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1104
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 234
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 97
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 318
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 279
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 816
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 150
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 258
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 164
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 180
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 138
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 104
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 129,
+      "semanticBytes": 8374
+    },
+    {
+      "case": "head",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 108
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1104
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 234
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 97
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 318
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 279
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 816
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 150
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 258
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 164
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 180
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 138
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 104
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 131,
+      "semanticBytes": 8448
+    },
+    {
+      "case": "checkpoint",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 108
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1104
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 234
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 97
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 318
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 279
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 816
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 150
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 258
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 164
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 180
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 138
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 104
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 131,
+      "semanticBytes": 8476
+    },
+    {
+      "case": "snapshot",
+      "tables": [
+        {
+          "table": "energy_adjacency_pair",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_air_loop",
+          "rows": 1,
+          "semanticBytes": 73
+        },
+        {
+          "table": "energy_air_loop_terminal",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_link",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_airflow_network",
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "energy_airflow_zone_node",
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "energy_annual_holiday",
+          "rows": 2,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_annual_rule",
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_annual_schedule",
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "energy_battery",
+          "rows": 1,
+          "semanticBytes": 120
+        },
+        {
+          "table": "energy_constant_schedule",
+          "rows": 2,
+          "semanticBytes": 108
+        },
+        {
+          "table": "energy_construction",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "energy_construction_layer",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_daily_hour",
+          "rows": 24,
+          "semanticBytes": 1104
+        },
+        {
+          "table": "energy_daily_limits",
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "energy_daily_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_daylight_zone",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_document",
+          "rows": 1,
+          "semanticBytes": 234
+        },
+        {
+          "table": "energy_electrical_battery",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_electrical_generator",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_electrical_load_center",
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "energy_electrical_pv",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "energy_equipment",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_fault",
+          "rows": 1,
+          "semanticBytes": 97
+        },
+        {
+          "table": "energy_fenestration",
+          "rows": 1,
+          "semanticBytes": 318
+        },
+        {
+          "table": "energy_fenestration_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_gas_material",
+          "rows": 1,
+          "semanticBytes": 62
+        },
+        {
+          "table": "energy_glazing_material",
+          "rows": 1,
+          "semanticBytes": 279
+        },
+        {
+          "table": "energy_ground_month",
+          "rows": 12,
+          "semanticBytes": 816
+        },
+        {
+          "table": "energy_humidistat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_ideal_loads",
+          "rows": 1,
+          "semanticBytes": 150
+        },
+        {
+          "table": "energy_infiltration",
+          "rows": 1,
+          "semanticBytes": 258
+        },
+        {
+          "table": "energy_lighting",
+          "rows": 1,
+          "semanticBytes": 136
+        },
+        {
+          "table": "energy_material",
+          "rows": 1,
+          "semanticBytes": 200
+        },
+        {
+          "table": "energy_mechanical_ventilation",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "energy_outdoor_air_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_output_variable",
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "energy_people",
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "energy_plant_loop",
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "energy_plant_loop_equipment",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_pv_system",
+          "rows": 1,
+          "semanticBytes": 164
+        },
+        {
+          "table": "energy_referenced_model_link",
+          "rows": 1,
+          "semanticBytes": 69
+        },
+        {
+          "table": "energy_refrigeration",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_room_air_model",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_setpoint_manager",
+          "rows": 1,
+          "semanticBytes": 60
+        },
+        {
+          "table": "energy_setpoint_outdoor_reset",
+          "rows": 1,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_shading_surface",
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "energy_shading_vertex",
+          "rows": 1,
+          "semanticBytes": 90
+        },
+        {
+          "table": "energy_shw_system",
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "energy_sizing_object",
+          "rows": 1,
+          "semanticBytes": 57
+        },
+        {
+          "table": "energy_solar_thermal",
+          "rows": 1,
+          "semanticBytes": 142
+        },
+        {
+          "table": "energy_space",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "energy_space_list",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "energy_space_list_member",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_structure_child",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "energy_surface",
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "energy_surface_vertex",
+          "rows": 2,
+          "semanticBytes": 180
+        },
+        {
+          "table": "energy_thermal_enclosure",
+          "rows": 1,
+          "semanticBytes": 41
+        },
+        {
+          "table": "energy_thermal_enclosure_zone",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "energy_thermostat",
+          "rows": 1,
+          "semanticBytes": 100
+        },
+        {
+          "table": "energy_time_series_schedule",
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "energy_time_series_value",
+          "rows": 3,
+          "semanticBytes": 138
+        },
+        {
+          "table": "energy_water_system",
+          "rows": 1,
+          "semanticBytes": 70
+        },
+        {
+          "table": "energy_weather_link",
+          "rows": 1,
+          "semanticBytes": 69
+        },
+        {
+          "table": "energy_weekly_day",
+          "rows": 7,
+          "semanticBytes": 224
+        },
+        {
+          "table": "energy_weekly_schedule",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "energy_zone",
+          "rows": 1,
+          "semanticBytes": 82
+        },
+        {
+          "table": "energy_zone_equipment",
+          "rows": 1,
+          "semanticBytes": 104
+        },
+        {
+          "table": "energy_zones_child",
+          "rows": 1,
+          "semanticBytes": 41
+        }
+      ],
+      "rows": 131,
+      "semanticBytes": 8512
+    }
+  ]
+}

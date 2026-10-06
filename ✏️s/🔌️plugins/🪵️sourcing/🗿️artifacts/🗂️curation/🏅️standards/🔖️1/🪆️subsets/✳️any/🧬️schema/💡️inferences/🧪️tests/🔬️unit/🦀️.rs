@@ -39,7 +39,7 @@ async fn sourcing_catalog_fragment_maps_stock_into_the_puzzle3d_kit_catalog_shap
     let object_kinds = fragment.get("objectKinds").and_then(|value| value.as_array()).expect("objectKinds array");
     assert_eq!(object_kinds.len(), stock.len());
     assert_eq!(object_kinds[0].get("id").and_then(|value| value.as_str()), Some(stock[0].id.as_str()));
-    assert_eq!(object_kinds[0].get("meshUrl"), Some(&dsl::DslValue::Null));
+    assert_eq!(object_kinds[0].get("meshUrl"), Some(&semio_framework_value::DslValue::Null));
     let left = object_kinds.iter().find(|row| row.get("id").and_then(|value| value.as_str()) == Some("hexagonal-cut-concrete-forest-left")).expect("demo stock ships concrete forest left");
     assert_eq!(left.get("meshUrl").and_then(|value| value.as_str()), Some(crate::schema::reuse::MESH_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT));
     assert!(object_kinds[0].get("vortices").and_then(|value| value.as_array()).unwrap().is_empty());

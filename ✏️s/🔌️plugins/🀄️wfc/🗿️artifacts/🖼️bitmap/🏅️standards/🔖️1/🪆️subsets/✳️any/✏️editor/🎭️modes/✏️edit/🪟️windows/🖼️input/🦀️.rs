@@ -81,6 +81,7 @@ fn palette_color_args() -> Vec<ActionArgDef> {
 /// 🧱️ Stitched into the editor manifest by `crate::editor::bitmap::create_bitmap_editor`.
 pub fn definition() -> WindowKindDefinition {
     let mut definition = WindowKindDefinition {
+        initial_utility_id: None,
         id: WFC_BITMAP_WINDOW_INPUT.into(),
         label: LocalizedLabel::native("Input", "Eingabe"),
         body_key: BODY_KEY.into(),

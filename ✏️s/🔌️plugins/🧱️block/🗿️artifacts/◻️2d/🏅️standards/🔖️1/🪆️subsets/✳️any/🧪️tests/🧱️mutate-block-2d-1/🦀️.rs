@@ -71,7 +71,7 @@ const MEMBERS: &[&str] = &["schema", "nodeKind", "presentation", "handleKinds", 
 mod subject {
     use super::{DERIVED_ASSET, MEMBERS};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_block_2d::standards::v1::subsets::any::schema::mutations::block2d_mutation_report_json;
+    use semio_s_artifact_block_2d::standards::v1::subsets::any::io::text::mutations::block2d_mutation_report_json;
 
     //#region 🔖️Plan
     /// 📋️ One member of the bridge's report, named in the error when it is absent — never defaulted.
@@ -101,7 +101,7 @@ mod subject {
     /// 🧫️ The declared fixture's bytes as UTF-8 text.
     fn fixture_text(ctx: &Context, needle: &str) -> Result<String, String> {
         let uri = uri_in(ctx, needle)?;
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
     }
 
     fn report_of(scenario: &str, base: &str, mutation: &str, after: &str) -> Result<Json, String> {

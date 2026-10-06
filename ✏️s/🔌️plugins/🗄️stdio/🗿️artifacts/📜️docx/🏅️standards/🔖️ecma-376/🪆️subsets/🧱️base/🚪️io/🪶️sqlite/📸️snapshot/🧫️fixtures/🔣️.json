@@ -1,0 +1,162 @@
+{
+  "schema": "Docx owned literal 世界\\u0000",
+  "opc": {
+    "parts": [
+      {
+        "path": "",
+        "contentType": "",
+        "bytes": [
+          0,
+          255,
+          7
+        ]
+      },
+      {
+        "path": "",
+        "contentType": "unknown\u0000",
+        "bytes": []
+      }
+    ],
+    "contentTypes": {
+      "defaults": [
+        {"name":"xml","contentType":"a"},
+        {"name":"XML","contentType":"b"}
+      ],
+      "overrides": [
+        {"name":"/duplicate","contentType":"x"},
+        {"name":"/duplicate","contentType":""}
+      ]
+    },
+    "relationships": {
+      "": [],
+      "__proto__": [
+        {
+          "id": "",
+          "relType": "type\u0000",
+          "target": "../../../../🧬️schema/📸️snapshot/🧫️fixtures/世界",
+          "targetMode": "external"
+        }
+      ],
+      "world/世界": [
+        {
+          "id": "duplicate",
+          "relType": "",
+          "target": "",
+          "targetMode": "internal"
+        },
+        {
+          "id": "duplicate",
+          "relType": "different",
+          "target": "!@/",
+          "targetMode": "external"
+        }
+      ]
+    },
+    "comment": "literal comment 世界\u0000"
+  },
+  "xmlParts": [
+    {
+      "path": "",
+      "contentType": "application/xml",
+      "document": {
+        "nodes": [
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "text",
+              "text": "intermediate"
+            }
+          },
+          {
+            "nextSibling": 2,
+            "value": {
+              "kind": "text",
+              "text": "shared 世界\u0000"
+            }
+          },
+          {
+            "nextSibling": 3,
+            "value": {
+              "kind": "cData",
+              "text": "raw <>"
+            }
+          },
+          {
+            "nextSibling": 4,
+            "value": {
+              "kind": "comment",
+              "text": "middle"
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "processingInstruction",
+              "target": "render",
+              "data": "now"
+            }
+          },
+          {
+            "nextSibling": null,
+            "value": {
+              "kind": "element",
+              "name": "book",
+              "first_attribute": 0,
+              "attribute_count": 2,
+              "first_child": 1
+            }
+          }
+        ],
+        "attributes": [
+          {
+            "name": "z",
+            "value": "last"
+          },
+          {
+            "name": "z",
+            "value": "duplicate"
+          }
+        ],
+        "prolog": [0],
+        "epilog": [],
+        "root": 5,
+        "declaration": {
+          "version": "arbitrary",
+          "encoding": "custom",
+          "standalone": false,
+          "quote": "single"
+        },
+        "doctype": {
+          "prologPosition": "18446744073709551615",
+          "name": "type",
+          "externalId": {
+            "kind": "public",
+            "publicId": "public",
+            "systemId": "system"
+          },
+          "declarations": [
+            {
+              "kind": "entity",
+              "parameter": true,
+              "name": "entity",
+              "value": "literal"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "",
+      "contentType": "",
+      "document": {
+        "nodes": [],
+        "attributes": [],
+        "prolog": [],
+        "epilog": [],
+        "root": null,
+        "doctype": null,
+        "declaration": null
+      }
+    }
+  ]
+}

@@ -74,7 +74,7 @@
       "comparisonProfiles": [
         "semantic-ifc-v1"
       ],
-      "rationale": "📖️ F1 (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). `4/any`'s own `IfcMutation` operates at the RAW Part-21 entity-graph level (InsertEntity/RemoveEntity/SetEntityName/SetEntityArg/InsertEntityArg/RemoveEntityArg over an id-keyed `entities` collection and its positional `args`) — the exact same generic model `step/ap214/base`'s own `StepMutation` uses, already discharged there by this same package (`steputils-step-ap214-base-mutate-reader`). The sibling `ifcopenshell-ifc-4-any-differential` entry registered in this file is schema-TYPED (IFC4 EXPRESS entities have fixed attribute arity in ifcopenshell's own C++ core) and cannot perform an arity-changing edit like InsertEntityArg/RemoveEntityArg at all — verified directly this session. `steputils` 0.1 (mozman, MIT) is schema-agnostic ISO 10303-21 Part-21 syntax: IFC4 is physically Part-21 text under a different EXPRESS schema, exactly as `ruststep`'s own sibling rationale in `2x3/base` already establishes for IFC2X3. Verified genuinely this session by round-tripping this subset's own real fixture (`shared://🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc`, IFC4, 24792 real entities) through `p21.readfile`/`StepFile.save` and diffing the result. Used here as the generator for every `fixtureManifests[]` entry below this rationale registers: `before` is this fixture round-tripped unmodified, `after` is the same load with exactly one raw entity/header edit applied through steputils' own object model before saving."
+      "rationale": "📖️ F1 (ticket SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION). `4/any`'s own `IfcMutation` operates at the RAW Part-21 entity-graph level (InsertEntity/RemoveEntity/SetEntityName/SetEntityArg/InsertEntityArg/RemoveEntityArg over an id-keyed `entities` collection and its positional `args`) — the exact same generic model `step/ap214/base`'s own `StepMutation` uses, already discharged there by this same package (`steputils-step-ap214-base-mutate-reader`). The sibling `ifcopenshell-ifc-4-any-differential` entry registered in this file is schema-TYPED (IFC4 EXPRESS entities have fixed attribute arity in ifcopenshell's own C++ core) and cannot perform an arity-changing edit like InsertEntityArg/RemoveEntityArg at all — verified directly this session. `steputils` 0.1 (mozman, MIT) is schema-agnostic ISO 10303-21 Part-21 syntax: IFC4 is physically Part-21 text under a different EXPRESS schema, exactly as `ruststep`'s own sibling rationale in `2x3/base` already establishes for IFC2X3. Verified genuinely this session by round-tripping this subset's own real fixture (`shared://🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc`, IFC4, 24792 real entities) through `p21.readfile`/`StepFile.save` and diffing the result. Used here as the generator for every `testEvidence[]` entry below this rationale registers: `before` is this fixture round-tripped unmodified, `after` is the same load with exactly one raw entity/header edit applied through steputils' own object model before saving."
     }
   ],
   "noOracleDecisions": [],
@@ -116,7 +116,7 @@
     {
       "id": "semantic-ifc-v1",
       "description": "IFC4 (ISO 10303-21 exchange structures carrying IFC4's own EXPRESS schema) compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface IfcDiff/IfcMutation themselves operate over.",
-      "tolerance": 1e-06,
+      "tolerance": 0.000001,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",
@@ -369,9 +369,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-entity-applied",
       "class": "third-party-generated",
       "target": {
@@ -422,7 +421,6 @@
       "notes": "Inserted a new #999001 IFCCARTESIANPOINT-shaped entity with no prior referent — a genuine raw insert, re-serialized by steputils' own writer."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-entity-arg-applied",
       "class": "third-party-generated",
       "target": {
@@ -473,7 +471,6 @@
       "notes": "Inserted a new positional string argument at index 2 of #1 IFCPROJECT."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-entity-applied",
       "class": "third-party-generated",
       "target": {
@@ -524,7 +521,6 @@
       "notes": "Removed #15 outright — confirmed zero inbound references among this fixture's own entity graph before removal, so nothing else is left dangling by this specific removal."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-entity-arg-applied",
       "class": "third-party-generated",
       "target": {
@@ -575,7 +571,6 @@
       "notes": "Removed the positional argument at index 3 of #1 IFCPROJECT."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entity-arg-applied",
       "class": "third-party-generated",
       "target": {
@@ -626,7 +621,6 @@
       "notes": "Replaced argument index 2 (Name) of #1 IFCPROJECT."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entity-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -677,7 +671,6 @@
       "notes": "Renamed the type keyword of #1 from IFCPROJECT to IFCPROJECT_RENAMED — a raw entity-name rewrite, args untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-file-description-applied",
       "class": "third-party-generated",
       "target": {
@@ -728,7 +721,6 @@
       "notes": "Replaced the header FILE_DESCRIPTION's description list."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-file-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -779,7 +771,6 @@
       "notes": "Replaced the header FILE_NAME's name/author/organization fields."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-file-schema-applied",
       "class": "third-party-generated",
       "target": {

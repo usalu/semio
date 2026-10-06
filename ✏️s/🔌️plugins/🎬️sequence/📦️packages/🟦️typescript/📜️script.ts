@@ -9,7 +9,7 @@ class TestScript extends BundleScript {
   run(): void {
     const plugin = resolve(this.repoRoot, "✏️s/🔌️plugins/🎬️sequence");
     const subset = resolve(plugin, "🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any");
-    for (const entry of [resolve(subset, "✏️editor/🌉️wasm/🧪️tests/🧬️schema/🟨️.js"), resolve(subset, "✏️editor/🌉️wasm/🧪️tests/🖥️host/🟨️.js"), resolve(subset, "✏️editor/🌉️wasm/🧪️tests/📌️retained-actions/🟨️.js"), resolve(plugin, "🗿️artifacts/🎬️sequence/🧪️tests/🌐️browser-consumer/🟨️.js"), resolve(plugin, "🗿️artifacts/🎬️sequence/🧪️tests/🔮️protocol-oracle/🟨️.js")]) {
+    for (const entry of [resolve(subset, "✏️editor/🌉️wasm/🧪️tests/🛂️interface/🟨️.js"), resolve(subset, "✏️editor/🌉️wasm/🧪️tests/🖥️host/🟨️.js"), resolve(subset, "✏️editor/🌉️wasm/🧪️tests/📌️retained-actions/🟨️.js"), resolve(plugin, "🗿️artifacts/🎬️sequence/🧪️tests/🌐️browser-consumer/🟨️.js"), resolve(plugin, "🗿️artifacts/🎬️sequence/🧪️tests/🔮️protocol-oracle/🟨️.js")]) {
       runCmd(process.execPath, [entry], { cwd: this.repoRoot });
     }
     runCmd(process.execPath, ["test", resolve(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts"), resolve(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts")], { cwd: this.repoRoot });

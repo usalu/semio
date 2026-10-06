@@ -1,5 +1,5 @@
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 /// 🧪️ F6/P2-FG1: `DiffCodec` round-trip laws over the hand-rolled `MdDiff` grammar — see
 /// `demo_diff_cases()`'s own doc comment for exactly what each case exercises.

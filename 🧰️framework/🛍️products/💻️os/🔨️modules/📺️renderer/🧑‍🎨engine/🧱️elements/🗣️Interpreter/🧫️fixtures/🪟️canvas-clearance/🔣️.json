@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"id": "folded-canvas", "kind": "canvas-2d", "chromeHeight": 26, "scrollTop": 0, "inset": 0},
+    {"id": "expanded-canvas", "kind": "canvas-2d", "chromeHeight": 625, "scrollTop": 0, "inset": 0},
+    {"id": "scrolled-canvas", "kind": "canvas-2d", "chromeHeight": 625, "scrollTop": 12, "inset": 0},
+    {"id": "expanded-table", "kind": "table", "chromeHeight": 625, "scrollTop": 20, "inset": 625}
+  ]
+}

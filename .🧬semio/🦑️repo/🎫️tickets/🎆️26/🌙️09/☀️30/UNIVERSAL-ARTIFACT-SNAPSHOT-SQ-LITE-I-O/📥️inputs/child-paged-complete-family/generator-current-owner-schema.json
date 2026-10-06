@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "feature",
+    "rows"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "feature": {
+      "const": "relocated-generator-current-owner-membership"
+    },
+    "rows": {
+      "const": [
+        {
+          "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+          "stale": "../../../../🧫️fixtures/📦️packages/🦀️rust",
+          "expected": "self"
+        },
+        {
+          "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+          "stale": "../../../../🧫️fixtures/📦️packages/🦀️rust",
+          "expected": "self"
+        },
+        {
+          "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+          "stale": "../../../../🧫️fixtures/📦️packages/🦀️rust",
+          "expected": "self"
+        },
+        {
+          "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+          "stale": "../../../../🧫️fixtures/📦️packages/🦀️rust",
+          "expected": "self"
+        }
+      ]
+    }
+  }
+}

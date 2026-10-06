@@ -15,8 +15,8 @@ namespace Semio.Repo.Test;
 
 #region 🔖️Protocol
 
-/// <summary>🧫️ One immutable fixture the coordinator resolved for this case.</summary>
-public sealed record Fixture(
+/// <summary>📥️ One example, asset, or schema input resolved for this case.</summary>
+public sealed record TestInput(
     [property: JsonPropertyName("uri")] string Uri,
     [property: JsonPropertyName("scope")] string Scope,
     [property: JsonPropertyName("name")] string Name,
@@ -58,7 +58,7 @@ public sealed record Plan(
     [property: JsonPropertyName("workDir")] string WorkDir,
     [property: JsonPropertyName("outputDir")] string OutputDir,
     [property: JsonPropertyName("resultsPath")] string ResultsPath,
-    [property: JsonPropertyName("fixtures")] List<Fixture>? Fixtures,
+    [property: JsonPropertyName("inputs")] List<TestInput>? Inputs,
     [property: JsonPropertyName("scenarios")] List<Scenario>? Scenarios,
     [property: JsonPropertyName("baselineSha")] string? BaselineSha = null,
     [property: JsonPropertyName("comparisonPipeline")] string? ComparisonPipeline = null,
@@ -148,20 +148,20 @@ public sealed class Context
     public SubsetTarget Target => Plan.Target ?? throw new InvalidOperationException($"case {Plan.Case} declares no subset target — Protocol v2 scopes every mutation case to its smallest owning subset");
 
     /// <summary>🧫️ Absolute path of a declared fixture; an undeclared URI throws.</summary>
-    public string Fixture(string uri)
+    public string Input(string uri)
     {
-        var match = (Plan.Fixtures ?? new List<Fixture>()).FirstOrDefault(entry => entry.Uri == uri)
+        var match = (Plan.Inputs ?? new List<TestInput>()).FirstOrDefault(entry => entry.Uri == uri)
             ?? throw new KeyNotFoundException($"fixture {uri} is not part of this plan — declare it in the feature file");
         return System.IO.Path.Combine(RepoRoot, match.Path);
     }
 
     /// <summary>🧫️ Bytes of a declared fixture.</summary>
-    public byte[] FixtureBytes(string uri) => File.ReadAllBytes(Fixture(uri));
+    public byte[] InputBytes(string uri) => File.ReadAllBytes(Input(uri));
 
     /// <summary>🧫️ Copies an immutable fixture into the work directory and returns the mutable copy.</summary>
-    public string CopyFixture(string uri, string? asName = null)
+    public string CopyInput(string uri, string? asName = null)
     {
-        var source = Fixture(uri);
+        var source = Input(uri);
         Directory.CreateDirectory(WorkDir);
         var target = System.IO.Path.Combine(WorkDir, asName ?? System.IO.Path.GetFileName(source));
         File.Copy(source, target, overwrite: true);

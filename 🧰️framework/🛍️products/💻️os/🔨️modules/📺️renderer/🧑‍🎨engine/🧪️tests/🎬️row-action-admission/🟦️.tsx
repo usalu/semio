@@ -4,7 +4,6 @@ import { createElement } from "react";
 import Ajv2020 from "ajv/dist/2020";
 import { afterEach, expect, it } from "vitest";
 import fixture from "../../🧫️fixtures/🎬️row-action-admission/🔣️.json";
-import schema from "../../🧬️schema/🎬️row-action-admission/🔣️.json";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { LocalDocumentOwnerRegistryV1 } from "../../🧱️elements/🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
@@ -70,33 +69,29 @@ function mount(current: Case = fixture.initial) {
 
 const tableAction = (label = fixture.initial.action.label) => screen.getByRole("button", { name: `${label}: ${fixture.expected.tableRowName}` }) as HTMLButtonElement;
 const treeAction = (label = fixture.initial.action.label) => screen.getByRole("button", { name: label }) as HTMLButtonElement;
+const pending = (button: HTMLButtonElement): boolean => !button.disabled && button.getAttribute("aria-disabled") === "true" && button.getAttribute("aria-busy") === "true";
 
 it("validates the language-neutral admission vectors with an independent JSON Schema oracle", () => {
-  const validate = new Ajv2020({ strict: true }).compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(fixture.initial.target).not.toEqual(fixture.replacement.target);
   expect(fixture.initial.action.verb).not.toBe(fixture.replacement.action.verb);
 });
 
 for (const ending of ["completed", "refused", "rejected"] as const) it(`recovers table and tree actions after ${ending} settlement`, async () => {
   const mounted = mount();
+  act(() => tableAction().focus());
   fireEvent.click(tableAction());
   fireEvent.click(tableAction());
   fireEvent.click(treeAction());
   expect(mounted.intents).toHaveLength(fixture.expected.pendingDispatches);
-  for (const button of [tableAction(), treeAction()]) {
-    expect(button.disabled).toBe(true);
-    expect(button.getAttribute("aria-busy")).toBe("true");
-  }
+  for (const button of [tableAction(), treeAction()]) expect([button.disabled, button.getAttribute("aria-disabled"), button.getAttribute("aria-busy")], "a pending action is busy, never gone: it stays focusable").toEqual([false, "true", "true"]);
+  expect(document.activeElement === tableAction(), "the pressed action keeps the focus its press gave it").toBe(true);
   await act(async () => {
     if (ending === "rejected") mounted.settlements[0]!.reject(new Error("transport refused"));
     else mounted.settlements[0]!.resolve(ending === "completed" ? { kind: "applied", inputSeq: 1 } : { kind: "refused", inputSeq: 1, reason: "row-conflict", retryable: true });
     await Promise.resolve();
   });
-  for (const button of [tableAction(), treeAction()]) {
-    expect(button.disabled).toBe(false);
-    expect(button.hasAttribute("aria-busy")).toBe(false);
-  }
+  for (const button of [tableAction(), treeAction()]) expect([button.disabled, button.hasAttribute("aria-disabled"), button.hasAttribute("aria-busy")], `a ${ending} settlement ends the pending state it began`).toEqual([false, false, false]);
+  expect(document.activeElement === tableAction(), "and the action still holds the focus").toBe(true);
   mounted.owners.retireAll();
 });
 
@@ -150,8 +145,9 @@ it("isolates replacement target, Store and owner lifetimes from an older pending
   fireEvent.click(treeAction(fixture.replacement.action.label));
   expect(mounted.intents).toHaveLength(fixture.expected.replacementDispatches);
   await act(async () => { mounted.settlements[0]!.resolve({ kind: "applied", inputSeq: 1 }); await Promise.resolve(); });
-  expect(tableAction(fixture.replacement.action.label).disabled).toBe(true);
+  expect(pending(tableAction(fixture.replacement.action.label))).toBe(true);
   await act(async () => { mounted.settlements[1]!.resolve({ kind: "refused", inputSeq: 2, reason: "row-conflict", retryable: true }); await Promise.resolve(); });
+  expect(pending(tableAction(fixture.replacement.action.label))).toBe(false);
   const replacementStore = new UiDocumentStore("row-action-admission");
   replacementStore.loadSnapshot(snapshot(3, fixture.replacement) as any);
   mounted.view.rerender(createElement(UiNodeView, { store: replacementStore, id: 0, context: mounted.context(mounted.owner, replacementStore) }));

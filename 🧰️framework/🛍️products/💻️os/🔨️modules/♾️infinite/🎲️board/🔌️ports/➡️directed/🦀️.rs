@@ -2,7 +2,7 @@
 
 pub mod scene_json {
     // #region scene_json
-    //! 🧾️ Directed port graph scene descriptors and fixture JSON helpers.
+    //! 🧾️ Directed port graph scene descriptors and snapshot JSON helpers.
 
     use serde::{Deserialize, Serialize};
 
@@ -262,7 +262,7 @@ pub mod scene_json {
     /// `meta: Option<serde_json::Value>` have no `ToValue`/`FromValue` for `serde_json::Value` —
     /// same reason as `EdgeDescJson` above.
     #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct FixtureJson {
+    pub struct BoardSnapshotJson {
         pub schema: String,
         /// 🎥️ Absent in every document whose camera is session state the host owns (puzzle 2d
         /// since its `setCamera` became a View-kind verb): the parse keeps the camera it is looking
@@ -279,7 +279,7 @@ pub mod scene_json {
         pub meta: Option<serde_json::Value>,
     }
 
-    impl semio_framework_value::ToValue for FixtureJson {
+    impl semio_framework_value::ToValue for BoardSnapshotJson {
         fn to_value(&self) -> semio_framework_value::DslValue {
             semio_framework_value::DslValue::object([
                 ("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)),
@@ -304,10 +304,10 @@ pub mod scene_json {
         }
     }
 
-    impl semio_framework_value::FromValue for FixtureJson {
+    impl semio_framework_value::FromValue for BoardSnapshotJson {
         fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
             let semio_framework_value::DslValue::Object(fields) = value else {
-                return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for FixtureJson, found {value:?}")));
+                return Err(semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for BoardSnapshotJson, found {value:?}")));
             };
             let mut schema = None;
             let mut camera = None;
@@ -341,12 +341,12 @@ pub mod scene_json {
                     _ => {}
                 }
             }
-            Ok(FixtureJson { schema: schema.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "FixtureJson missing schema"))?, camera, nodes, edges, target_regions, meta })
+            Ok(BoardSnapshotJson { schema: schema.ok_or_else(|| semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, "BoardSnapshotJson missing schema"))?, camera, nodes, edges, target_regions, meta })
         }
     }
 
-    /// 🧾️ Reads fixture edge endpoint handle ids from `source` and `target` string fields only.
-    pub fn fixture_edge_handle_ids_from_object(eo: &serde_json::Map<String, serde_json::Value>) -> Option<(&str, &str)> {
+    /// 🧾️ Reads snapshot edge endpoint handle ids from `source` and `target` string fields only.
+    pub fn board_edge_handle_ids_from_object(eo: &serde_json::Map<String, serde_json::Value>) -> Option<(&str, &str)> {
         let source = eo.get("source").and_then(|v| v.as_str())?;
         let target = eo.get("target").and_then(|v| v.as_str())?;
         Some((source, target))
@@ -1261,7 +1261,7 @@ pub use crate::infinite::board::{
     SELECTION_CLICK_MAX_DISTANCE_PX, SELECTION_DRAG_DIRECTION_THRESHOLD_PX, SELECTION_LASSO_MIN_POINT_DISTANCE_PX, SELECTION_MARQUEE_DRAG_THRESHOLD_PX, TRANSFORM_RING_HIT_TOLERANCE_PX, TRANSFORM_ROTATE_SNAP_RADIANS,
 };
 pub use crate::infinite::canvas;
-pub use scene_json::{board_json_visible_option, board_json_visible_or_true, fixture_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, FixtureJson, RegionDescJson, SceneDescriptorJson, WireDescJson};
+pub use scene_json::{board_json_visible_option, board_json_visible_or_true, board_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, BoardSnapshotJson, RegionDescJson, SceneDescriptorJson, WireDescJson};
 pub use types::*;
 
 /// ➡️ Port graph engine with directed handle endpoints.
@@ -1324,10 +1324,10 @@ pub mod force_graph {
     }
 
     /// 🕸️ Ported force layout: resolves handle endpoints, then delegates to normal undirected physics.
-    pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
-        let nodes = fixture.as_object().and_then(|root| root.get("nodes")).and_then(|v| v.as_array()).cloned().unwrap_or_default();
+    pub fn apply_force_graph_layout_to_board_snapshot_value(snapshot: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
+        let nodes = snapshot.as_object().and_then(|root| root.get("nodes")).and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let handle_to_node = build_handle_to_node(&nodes);
-        infinite::board::normal::undirected::apply_force_graph_layout_to_fixture_v1_value_resolved(fixture, opts, |endpoint, id_to_index| {
+        infinite::board::normal::undirected::apply_force_graph_layout_to_board_snapshot_value_resolved(snapshot, opts, |endpoint, id_to_index| {
             let node_id = handle_to_node.get(endpoint).cloned().unwrap_or_else(|| endpoint.to_string());
             id_to_index.contains_key(&node_id).then_some(node_id)
         })
@@ -1335,11 +1335,11 @@ pub mod force_graph {
     }
 
     /// 🕸️ JSON entry for ported force layout (handle endpoints resolved before undirected physics).
-    pub fn apply_force_graph_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
-        let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+    pub fn apply_force_graph_layout_to_board_snapshot_json(snapshot_json: &str, options_json: &str) -> Result<String, String> {
+        let mut snapshot: Value = serde_json::from_str(snapshot_json).map_err(|e| e.to_string())?;
         let opts: ForceGraphLayoutOptions = if options_json.trim().is_empty() { ForceGraphLayoutOptions::default() } else { serde_json::from_str(options_json).map_err(|e| e.to_string())? };
-        apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &opts)?;
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+        apply_force_graph_layout_to_board_snapshot_value(&mut snapshot, &opts)?;
+        serde_json::to_string(&snapshot).map_err(|e| e.to_string())
     }
 }
 // #endregion 🕸️ForceGraphLayout
@@ -1351,7 +1351,7 @@ pub mod hierarchical_tree {
     use std::collections::{HashMap, HashSet};
 
     use super::board_json_visible_or_true;
-    use super::fixture_edge_handle_ids_from_object;
+    use super::board_edge_handle_ids_from_object;
 
     /// 🌳️ Buchheim tidy-tree knobs: rank gap, sibling breadth, growth-axis string, optional world anchor for the laid subtree.
     #[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -1373,7 +1373,7 @@ pub mod hierarchical_tree {
         #[serde(default)]
         #[value(default)]
         pub center_y: Option<f64>,
-        /// 📌️ Node ids whose incoming fixture centers are kept; Buchheim still runs for placement of unlocked nodes.
+        /// 📌️ Node ids whose incoming snapshot centers are kept; Buchheim still runs for placement of unlocked nodes.
         #[serde(default)]
         #[value(default)]
         pub locked_node_ids: Vec<String>,
@@ -1703,13 +1703,13 @@ pub mod hierarchical_tree {
     }
 
     /// 🌳️ Writes node centers: Buchheim tidy-tree on a spanning forest (min-depth parent tie-break id), synthetic multi-root; super-root not serialized.
-    pub fn apply_hierarchical_tree_layout_to_fixture_v1_value(fixture: &mut Value, opts: &HierarchicalTreeLayoutOptions) -> Result<(), String> {
+    pub fn apply_hierarchical_tree_layout_to_board_snapshot_value(snapshot: &mut Value, opts: &HierarchicalTreeLayoutOptions) -> Result<(), String> {
         let dir = TreeDirection::parse(&opts.direction)?;
-        let Some(root) = fixture.as_object_mut() else {
-            return Err("fixture root must be object".into());
+        let Some(root) = snapshot.as_object_mut() else {
+            return Err("snapshot root must be object".into());
         };
-        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture") {
-            return Err("schema must be puzzle.2d.fixture".into());
+        if root.get("schema").and_then(|v| v.as_str()) != Some("board.ports.directed.v1") {
+            return Err("schema must be board.ports.directed.v1".into());
         }
         let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
@@ -1758,7 +1758,7 @@ pub mod hierarchical_tree {
             if !board_json_visible_or_true(eo) {
                 continue;
             }
-            let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
+            let Some((src_h, tgt_h)) = board_edge_handle_ids_from_object(eo) else {
                 continue;
             };
             let source_node_id = super::resolve_endpoint_node_id(src_h, &handle_to_node);
@@ -1918,9 +1918,9 @@ pub mod redraw_layout {
     use std::collections::HashMap;
 
     use super::board_json_visible_or_true;
-    use super::fixture_edge_handle_ids_from_object;
-    use super::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
-    use super::hierarchical_tree::{apply_hierarchical_tree_layout_to_fixture_v1_value, HierarchicalTreeLayoutOptions};
+    use super::board_edge_handle_ids_from_object;
+    use super::force_graph::{apply_force_graph_layout_to_board_snapshot_value, ForceGraphLayoutOptions};
+    use super::hierarchical_tree::{apply_hierarchical_tree_layout_to_board_snapshot_value, HierarchicalTreeLayoutOptions};
     use super::{circle_handle_angle_toward, distance_between, rectangle_handle_angle_toward};
 
     #[derive(Debug, Clone, Copy)]
@@ -1962,12 +1962,12 @@ pub mod redraw_layout {
     }
 
     /// 🔗️ Sets each edge endpoint handle `angle` so the chord follows node centers; last edge wins on shared handles.
-    pub fn apply_edge_handle_snap_to_fixture_v1_value(fixture: &mut Value) -> Result<(), String> {
-        let Some(root) = fixture.as_object_mut() else {
-            return Err("fixture root must be object".into());
+    pub fn apply_edge_handle_snap_to_board_snapshot_value(snapshot: &mut Value) -> Result<(), String> {
+        let Some(root) = snapshot.as_object_mut() else {
+            return Err("snapshot root must be object".into());
         };
-        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture") {
-            return Err("schema must be puzzle.2d.fixture".into());
+        if root.get("schema").and_then(|v| v.as_str()) != Some("board.ports.directed.v1") {
+            return Err("schema must be board.ports.directed.v1".into());
         }
         let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
@@ -2008,7 +2008,7 @@ pub mod redraw_layout {
             if !board_json_visible_or_true(eo) {
                 continue;
             }
-            let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
+            let Some((src_h, tgt_h)) = board_edge_handle_ids_from_object(eo) else {
                 continue;
             };
             let Some(&(ni_a, hi_a)) = handle_loc.get(src_h) else {
@@ -2051,16 +2051,16 @@ pub mod redraw_layout {
         Ok(())
     }
 
-    pub fn apply_edge_handle_snap_to_fixture_v1_json(fixture_json: &str) -> Result<String, String> {
-        let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
-        apply_edge_handle_snap_to_fixture_v1_value(&mut fixture)?;
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+    pub fn apply_edge_handle_snap_to_board_snapshot_json(snapshot_json: &str) -> Result<String, String> {
+        let mut snapshot: Value = serde_json::from_str(snapshot_json).map_err(|e| e.to_string())?;
+        apply_edge_handle_snap_to_board_snapshot_value(&mut snapshot)?;
+        serde_json::to_string(&snapshot).map_err(|e| e.to_string())
     }
 
     #[derive(Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
-    struct RedrawFixtureOptions {
+    struct RedrawSnapshotOptions {
         mode: String,
         #[serde(default)]
         #[value(default)]
@@ -2085,9 +2085,9 @@ pub mod redraw_layout {
         hierarchical_tree: Option<HierarchicalTreeLayoutOptions>,
     }
 
-    pub fn apply_redraw_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
-        let opts: RedrawFixtureOptions = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
-        let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+    pub fn apply_redraw_layout_to_board_snapshot_json(snapshot_json: &str, options_json: &str) -> Result<String, String> {
+        let opts: RedrawSnapshotOptions = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+        let mut snapshot: Value = serde_json::from_str(snapshot_json).map_err(|e| e.to_string())?;
         match opts.mode.as_str() {
             "force-graph" => {
                 let mut fo = opts.force_graph.clone().unwrap_or_default();
@@ -2105,7 +2105,7 @@ pub mod redraw_layout {
                         fo.locked_node_ids.push(id.clone());
                     }
                 }
-                apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &fo)?;
+                apply_force_graph_layout_to_board_snapshot_value(&mut snapshot, &fo)?;
             }
             "hierarchical-tree" => {
                 let mut hierarchical_opts = opts.hierarchical_tree.clone().unwrap_or_default();
@@ -2120,14 +2120,14 @@ pub mod redraw_layout {
                         hierarchical_opts.locked_node_ids.push(id.clone());
                     }
                 }
-                apply_hierarchical_tree_layout_to_fixture_v1_value(&mut fixture, &hierarchical_opts)?;
+                apply_hierarchical_tree_layout_to_board_snapshot_value(&mut snapshot, &hierarchical_opts)?;
             }
             other => return Err(format!("unknown redraw mode: {other}")),
         }
         if opts.redraw_handles_after {
-            apply_edge_handle_snap_to_fixture_v1_value(&mut fixture)?;
+            apply_edge_handle_snap_to_board_snapshot_value(&mut snapshot)?;
         }
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+        serde_json::to_string(&snapshot).map_err(|e| e.to_string())
     }
 }
 // #endregion 🔁️RedrawLayout
@@ -2136,8 +2136,8 @@ pub mod redraw_layout {
 /// 🧩️ Extension hook for domain-specific graph behavior.
 pub trait GraphExtension: canvas::CanvasExtension {}
 
-pub use force_graph::{apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
-pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json};
+pub use force_graph::{apply_force_graph_layout_to_board_snapshot_json, apply_force_graph_layout_to_board_snapshot_value, ForceGraphLayoutOptions};
+pub use redraw_layout::{apply_edge_handle_snap_to_board_snapshot_json, apply_redraw_layout_to_board_snapshot_json};
 // #endregion 🔖️GraphExtension
 
 // #region 🔖️Tests

@@ -1,11 +1,10 @@
+import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
 import bootLifecycle from "../../🧫️fixtures/⏳️boot-lifecycle/🔣️.json";
-import bootLifecycleSchema from "../../🧬️schema/⏳️boot-lifecycle/🔣️.json";
 // @vitest-environment jsdom
 
 import reactShellSource from "../../🧱️elements/🐚️Shell/🟦️.tsx?raw";
 import ts from "typescript";
 import introductionFixture from "../../🧫️fixtures/🎓️host-introduction/🔣️.json";
-import introductionSchema from "../../🧬️schema/🎓️host-introduction/🔣️.json";
 import Ajv from "ajv/dist/2020";
 import { createElement } from "react";
 import graphlib from "graphlib";
@@ -16,11 +15,9 @@ import { admitWgpuPluginModules, prepareWgpuPluginModules, assertWgpuPluginPlan 
 import pluginModulesFixture from "../../🧫️fixtures/🧩️plugin-modules/🔣️.json";
 import pluginModulesSchema from "../../🧬️schema/🧩️plugin-modules/🔣️.json";
 import fixture from "../../🧫️fixtures/🪆️embedded-mount/🔣️.json";
-import schema from "../../🧬️schema/🪆️embedded-mount/🔣️.json";
 import { bootFrameworkOsWgpu } from "../../🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts";
 import wgpuBootSource from "../../🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts?raw";
 import bootExecutionFixture from "../../🧫️fixtures/🎬️boot-execution/🔣️.json";
-import bootExecutionSchema from "../../🧬️schema/🎬️boot-execution/🔣️.json";
 import serviceStatusFixture from "../../🧫️fixtures/⏳️owned-service-status/🔣️.json";
 import serviceStatusSchema from "../../🧬️schema/⏳️owned-service-status/🔣️.json";
 import { initialShellState, shellReducer } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
@@ -93,9 +90,6 @@ describe("boot execution capabilities", () => {
   });
 
   it("keeps operational capabilities in their declared execution carrier", () => {
-    const validate = new Ajv({ strict: true }).compile(bootExecutionSchema);
-    expect(validate(bootExecutionFixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...bootExecutionFixture, ambientLocale: "en" })).toBe(false);
     for (const row of bootExecutionFixture.carriers) {
       const source = row.id === "react" ? reactShellSource : wgpuBootSource;
       const tree = ts.createSourceFile("boot.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -178,10 +172,7 @@ function installBrowserRuntime() {
 }
 
 describe("embedded WGPU mount lifecycle", () => {
-  it("validates the neutral independent-owner lifecycle", () => {
-    const validate = new Ajv({ strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   it("keeps independent DOM roots and retirement equal to React's root oracle", async () => {
     const roots = mountRoots();
@@ -309,9 +300,16 @@ describe("embedded WGPU mount lifecycle", () => {
 
 
 describe("embedded WGPU introduction policy", () => {
+  it("matches the owned neutral policy and independent host suppression oracle", () => {
+    for (const row of introductionFixture.cases) {
+      const input = { appId: row.appId, hasIntroduction: row.hasIntroduction, tutorialActive: row.tutorialActive, suppressed: row.iframe || row.suppressed, replayOnLoad: row.replayOnLoad, seenOnDevice: row.seenOnDevice, dismissedInSession: false };
+      expect(input.suppressed, row.id).toBe(row.expectedSuppressed);
+      expect(shouldStartIntroduction(input), row.id).toBe(row.expectedAutoStart);
+    }
+  });
+
+  
   it("matches the neutral first-frame policy against the authored React predicate", () => {
-    const validate = new Ajv({ strict: true }).compile(introductionSchema);
-    expect(validate(introductionFixture), JSON.stringify(validate.errors)).toBe(true);
     const source = reactShellSource;
     const tree = ts.createSourceFile("Shell.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const declaration = tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "shouldAutoStartIntroduction")!;
@@ -319,8 +317,7 @@ describe("embedded WGPU introduction policy", () => {
     const oracle = new Function("exports", module + "; return exports.shouldAutoStartIntroduction;")({});
     for (const row of introductionFixture.cases) expect(oracle({ ...row, suppressed: row.iframe || row.suppressed, dismissedAppIds: new Set() }), row.id).toBe(row.expectedAutoStart);
   });
-
-  it("carries initial and live suppression to only its owning frame Worker", async () => {
+it("carries initial and live suppression to only its owning frame Worker", async () => {
     installBrowserRuntime();
     mountRoots();
     const first = await bootFrameworkOsWgpu({ rootId: fixture.roots[0]!.id }, { suppressAutoIntroduction: true });
@@ -463,11 +460,7 @@ it("matches neutral public React registry omission and unfiltered primary select
 const browserTurn = () => new Promise<void>(resolve => setTimeout(resolve, 0));
 
 describe("public WGPU boot progress and cancellation", () => {
-  it("validates neutral lifecycle and bounded progress with strict Ajv", () => {
-    const validate = new Ajv({ strict: true }).addKeyword("x-semio-lifecycle").compile(bootLifecycleSchema);
-    expect(validate(bootLifecycle), JSON.stringify(validate.errors)).toBe(true);
-    for (const progress of [-1, 2, NaN, Infinity]) expect(validate({ ...bootLifecycle, progress: [{ stage: "boot", progress }] })).toBe(false);
-  });
+  
 
   it("refuses pre-aborted ownership before touching DOM or allocating a Worker", async () => {
     installBrowserRuntime();

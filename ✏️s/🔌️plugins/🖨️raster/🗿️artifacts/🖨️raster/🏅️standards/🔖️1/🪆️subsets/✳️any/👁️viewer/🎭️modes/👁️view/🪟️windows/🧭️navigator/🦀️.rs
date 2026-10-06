@@ -27,6 +27,7 @@ pub const RASTER_VIEW_BODY_NAVIGATOR: &str = "raster.view.navigator";
 /// manifest) but the same `SurfaceKind::Canvas2d`/icon shape the kit itself declares.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: RASTER_VIEW_WINDOW_NAVIGATOR.into(),
         label: LocalizedLabel::native("Navigator", "Navigator"),
         body_key: RASTER_VIEW_BODY_NAVIGATOR.into(),

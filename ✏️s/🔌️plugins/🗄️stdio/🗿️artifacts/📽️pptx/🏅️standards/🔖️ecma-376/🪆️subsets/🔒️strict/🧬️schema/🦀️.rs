@@ -9,6 +9,33 @@
 //! conformance-class subset, same shared pattern as `📜️docx`/`📕️xlsx` ecma-376 🔒️strict.
 
 pub use crate::standards::v_ecma_376::subsets::base::schema::*;
+
+/// 🏛️ Authors the Strict presentation, master, layout, theme and their complete OPC relationships.
+pub fn blank_strict_pptx_snapshot()->crate::PptxSnapshot{
+ use crate::standards::v_ecma_376::subsets::base::io::{PRESENTATION_CONTENT_TYPE,SLIDE_MASTER_CONTENT_TYPE,SLIDE_LAYOUT_CONTENT_TYPE,THEME_CONTENT_TYPE};
+ use semio_s_artifact_stdio_zip::opc::{OpcPackage,RELS_CONTENT_TYPE};
+ use semio_framework_plugin::ArtifactBuilder;
+ let mut opc=OpcPackage::empty();
+ opc.content_types.set_default("rels",RELS_CONTENT_TYPE);
+ opc.content_types.set_default("xml","application/xml");
+ for(path,content_type,xml)in[
+  ("ppt/slideMasters/slideMaster1.xml",SLIDE_MASTER_CONTENT_TYPE,r#"<p:sldMaster xmlns:a="http://purl.oclc.org/ooxml/drawingml/main" xmlns:p="http://purl.oclc.org/ooxml/presentationml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst></p:sldMaster>"#),
+  ("ppt/slideLayouts/slideLayout1.xml",SLIDE_LAYOUT_CONTENT_TYPE,r#"<p:sldLayout xmlns:a="http://purl.oclc.org/ooxml/drawingml/main" xmlns:p="http://purl.oclc.org/ooxml/presentationml/main" type="blank" preserve="1"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr/></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>"#),
+  ("ppt/theme/theme1.xml",THEME_CONTENT_TYPE,r#"<a:theme xmlns:a="http://purl.oclc.org/ooxml/drawingml/main" name="Minimal"><a:themeElements><a:clrScheme name="Minimal"><a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="1F497D"/></a:dk2><a:lt2><a:srgbClr val="EEECE1"/></a:lt2><a:accent1><a:srgbClr val="4F81BD"/></a:accent1><a:accent2><a:srgbClr val="C0504D"/></a:accent2><a:accent3><a:srgbClr val="9BBB59"/></a:accent3><a:accent4><a:srgbClr val="8064A2"/></a:accent4><a:accent5><a:srgbClr val="4BACC6"/></a:accent5><a:accent6><a:srgbClr val="F79646"/></a:accent6><a:hlink><a:srgbClr val="0000FF"/></a:hlink><a:folHlink><a:srgbClr val="800080"/></a:folHlink></a:clrScheme><a:fontScheme name="Minimal"><a:majorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont></a:fontScheme><a:fmtScheme name="Minimal"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>"#),
+  ("ppt/presentation.xml",PRESENTATION_CONTENT_TYPE,r#"<p:presentation xmlns:a="http://purl.oclc.org/ooxml/drawingml/main" xmlns:p="http://purl.oclc.org/ooxml/presentationml/main" xmlns:r="http://purl.oclc.org/ooxml/officeDocument/relationships" conformance="strict"><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst><p:sldIdLst/></p:presentation>"#),
+ ]{opc.set_part(path,content_type,xml.as_bytes().to_vec());}
+ for(owner,id,kind,target)in[
+  ("ppt/slideMasters/slideMaster1.xml","rId1","http://purl.oclc.org/ooxml/officeDocument/relationships/slideLayout","../slideLayouts/slideLayout1.xml"),
+  ("ppt/slideMasters/slideMaster1.xml","rId2","http://purl.oclc.org/ooxml/officeDocument/relationships/theme","../theme/theme1.xml"),
+  ("ppt/slideLayouts/slideLayout1.xml","rId1","http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster","../slideMasters/slideMaster1.xml"),
+  ("ppt/presentation.xml","rId1","http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster","slideMasters/slideMaster1.xml"),
+  ("","rId1","http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument","ppt/presentation.xml"),
+ ]{opc.add_relationship(owner,id,kind,target);}
+ let bytes=semio_s_artifact_stdio_zip::opc::encode_opc_with_package_order(&opc).expect("authored Strict PPTX package");
+ let snapshot=crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(&bytes).expect("authored Strict PPTX owner");
+ PptxStrictBuilderConstruction::from_snapshot(snapshot).build().expect("valid authored Strict PPTX initial owner")
+}
+
 //#region 🧬️Mutations
 // 🧬️ This subset's OWN conformance-class vocabulary, mounted here rather than in the crate's shared
 // `🦀️.rs`: that file is one wiring file for every stdio artifact at once, and the rationale the
@@ -23,218 +50,13 @@ pub mod mutations;
 //#endregion 🧬️Mutations
 
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    #[cfg(test)]
-    use crate::schema::mutations::set_snapshot;
-    use crate::standards::v_ecma_376::subsets::base::schema::PptxBuilder as PptxAnyBuilder;
-    use crate::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
-    use crate::{PptxDiff, PptxMutation, PptxSnapshot};
-    use semio_framework_diagnostic::Diagnostic;
-    use semio_framework_diagnostic::Severity;
-    use semio_framework_plugin::ArtifactBuilder;
 
-    //#region 🔖️Builder
-    #[derive(Clone, Debug, Default)]
-    pub struct PptxStrictBuilderConstruction {
-        inner: PptxAnyBuilder,
-    }
-
-    impl ArtifactBuilder for PptxStrictBuilderConstruction {
-        type Snapshot = PptxSnapshot;
-        type Mutation = PptxMutation;
-        type Diff = PptxDiff;
-
-        fn empty() -> Self {
-            Self { inner: PptxAnyBuilder::empty() }
-        }
-
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { inner: PptxAnyBuilder::from_snapshot(snapshot) }
-        }
-
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { inner: PptxAnyBuilder::from_text(text)? })
-        }
-
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { inner: PptxAnyBuilder::from_binary(bytes)? })
-        }
-
-        fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.inner.mutate(mutation);
-            (Self { inner }, diff)
-        }
-
-        fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(Self { inner: self.inner.absorb(diff)? })
-        }
-
-        /// 🛡️ The real construction gate: however `self`'s inner snapshot got here, a hard
-        /// ISO/IEC 29500-1 Strict violation fails `build()` -- soft diagnostics (missing
-        /// `conformance="strict"`, `mc:AlternateContent`) pass through as advisory `Diagnostic`s;
-        /// the `Err` path is NOT taken for those, only hard ones block.
-        fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let snapshot = self.inner.build()?;
-            let hard: Vec<Diagnostic> = check_strict_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
-            if hard.is_empty() {
-                Ok(snapshot)
-            } else {
-                Err(hard)
-            }
-        }
-    }
-    //#endregion 🔖️Builder
-
-    #[cfg(test)]
-    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::standards::v_ecma_376::subsets::base::schema::{PptxAnalyzer as PptxAnyAnalyzer, PptxParts};
-    use crate::PptxSnapshot;
-    use semio_framework_diagnostic::Diagnostic;
-    use semio_framework_diagnostic::FaultCode;
-    use semio_framework_diagnostic::FaultScope;
-    use semio_framework_diagnostic::Severity;
-    use semio_framework_diagnostic::TextSpan;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-    use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
-    /// 🎯️ This subset's dialect coordinate.
-    pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
-
-    //#region 🔖️Namespaces
-    pub const STRICT_MAIN_NS: &str = "http://purl.oclc.org/ooxml/presentationml/main";
-    pub const TRANSITIONAL_MAIN_NS: &str = "http://schemas.openxmlformats.org/presentationml/2006/main";
-    pub const TRANSITIONAL_DRAWING_NS: &str = "http://schemas.openxmlformats.org/drawingml/2006/main";
-    pub const VML_NS: &str = "urn:schemas-microsoft-com:vml";
-    pub const STRICT_REL_BASE: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships";
-    pub const TRANSITIONAL_REL_BASE: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-    //#endregion 🔖️Namespaces
-
-    //#region 🔖️Conformance
-    pub const CODE_MAIN_NS: &str = "stdio.pptx.strict.main-ns-not-strict";
-    pub const CODE_TRANSITIONAL_NS_PRESENT: &str = "stdio.pptx.strict.transitional-ns-present";
-    pub const CODE_VML_PRESENT: &str = "stdio.pptx.strict.vml-present";
-    pub const CODE_REL_BASE: &str = "stdio.pptx.strict.relationship-base-not-strict";
-    pub const CODE_CONFORMANCE_ATTR: &str = "stdio.pptx.strict.conformance-attr-missing";
-    pub const CODE_ALTERNATE_CONTENT: &str = "stdio.pptx.strict.alternate-content-present";
-
-    /// 🧭️ Locates the root officeDocument part regardless of whether the package declares the
-    /// Transitional or Strict officeDocument relationship type.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn main_part_path(opc: &OpcPackage) -> Option<String> {
-        crate::standards::v_ecma_376::subsets::base::io::resolve_office_document_relationship(opc)
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn hard(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn soft(code: &'static str, message: String) -> Diagnostic {
-        Diagnostic { code: FaultCode::new(code), severity: Severity::Warning, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
-    }
-
-    /// 🛡️ Real ISO/IEC 29500-1:2016 Strict conformance checks against one already-decoded
-    /// `PptxSnapshot`. Shared single source of truth: `PptxStrictComposer::compose` hard-gates on
-    /// this (pre-serialization, authoritative), `PptxStrictBuilder::build` hard-gates on this too,
-    /// and the registered `SubsetValidator` re-runs it post-hoc against the wire payload.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn check_strict_conformance(snapshot: &PptxSnapshot) -> Vec<Diagnostic> {
-        let opc = &snapshot.opc;
-        let mut out = Vec::new();
-
-        match main_part_path(opc) {
-            Some(path) => match snapshot.part_text(&path) {
-                Some(text) => {
-                    if !text.contains(STRICT_MAIN_NS) {
-                        out.push(hard(CODE_MAIN_NS, format!("root officeDocument part {path} does not declare the Strict PresentationML main namespace ({STRICT_MAIN_NS})")));
-                    }
-                    if !text.contains("conformance=\"strict\"") {
-                        out.push(soft(CODE_CONFORMANCE_ATTR, format!("root officeDocument part {path}'s <p:presentation> does not declare conformance=\"strict\"")));
-                    }
-                }
-                None => out.push(hard(CODE_MAIN_NS, format!("root officeDocument part {path} is missing or not valid utf-8 -- cannot verify the Strict PresentationML main namespace"))),
-            },
-            None => out.push(hard(CODE_MAIN_NS, "package has no resolvable officeDocument relationship -- cannot verify the Strict PresentationML main namespace".into())),
-        }
-
-        for (path, text) in snapshot.part_texts() {
-            if text.contains(TRANSITIONAL_MAIN_NS) || text.contains(TRANSITIONAL_DRAWING_NS) {
-                out.push(hard(CODE_TRANSITIONAL_NS_PRESENT, format!("part {path} declares a Transitional OOXML main namespace -- ISO/IEC 29500-1 Strict forbids it")));
-            }
-            if text.contains(VML_NS) {
-                out.push(hard(CODE_VML_PRESENT, format!("part {path} contains VML markup ({VML_NS}) -- ISO/IEC 29500-1 Strict forbids VML")));
-            }
-            if text.contains("mc:AlternateContent") {
-                out.push(soft(CODE_ALTERNATE_CONTENT, format!("part {path} contains mc:AlternateContent markup-compatibility escape hatch")));
-            }
-        }
-
-        for (owner, relationships) in opc.relationships.groups() {
-            for rel in relationships {
-                if rel.rel_type.starts_with(TRANSITIONAL_REL_BASE) {
-                    out.push(hard(CODE_REL_BASE, format!("relationship {} owned by '{owner}' uses the Transitional officeDocument relationships base ({}) -- Strict requires {STRICT_REL_BASE}", rel.id, rel.rel_type)));
-                }
-            }
-        }
-
-        out
-    }
-    //#endregion 🔖️Conformance
-
-    //#region 🔖️Analyzer
-    /// 🧐️ Analyzes `stdio.pptx` (ecma-376/🔒️strict): delegates the real parse to the 🧱️base subset's
-    /// analyzer (same `PptxSnapshot`), then folds real ISO/IEC 29500-1 Strict conformance diagnostics
-    /// on top. `sniff` also delegates -- a subset-level sniff for `strict` is "is this recognizable
-    /// as a pptx at all", the same OPC-shaped probe every ecma-376 dialect shares; conformance is a
-    /// separate, heavier question answered by `analyze`/`check_strict_conformance`, not by `sniff`.
-    pub struct PptxStrictAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for PptxStrictAnalyzerAnalysis {
-        type Parts = PptxParts;
-        const DIALECT: Dialect = DIALECT;
-
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            PptxAnyAnalyzer::sniff(source)
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = PptxAnyAnalyzer::analyze(sources);
-            let mut diagnostics = inner.diagnostics.clone();
-            let mut confidence = inner.confidence;
-            if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_strict_conformance(snapshot);
-                if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                    confidence = IoConfidence::Low;
-                }
-                diagnostics.extend(checks);
-            }
-            Analysis { parts: inner.parts, dialect: DIALECT, confidence, diagnostics }
-        }
-    }
-    //#endregion 🔖️Analyzer
-
-    #[cfg(test)]
-    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec PptxStrictBuilderFacets {
-        construction: PptxStrictBuilderConstruction,
-        analysis: PptxStrictAnalyzerAnalysis,
-        composition: super::io::derived_composition::PptxStrictComposerComposition,
-    }
-    builder: PptxStrictBuilder,
-    analyzer: PptxStrictAnalyzer,
-    composer: PptxStrictComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets

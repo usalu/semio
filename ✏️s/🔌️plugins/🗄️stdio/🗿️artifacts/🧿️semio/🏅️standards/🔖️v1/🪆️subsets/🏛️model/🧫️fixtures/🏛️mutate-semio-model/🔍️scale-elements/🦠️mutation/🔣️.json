@@ -1,0 +1,11 @@
+{
+  "mutation": "scaleElements",
+  "targets": [
+    "wall-1"
+  ],
+  "factors": [
+    2.0,
+    1.0,
+    0.5
+  ]
+}

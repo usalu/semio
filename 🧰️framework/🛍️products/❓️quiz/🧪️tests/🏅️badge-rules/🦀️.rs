@@ -23,7 +23,7 @@ mod subject {
 
     /// 🗃️ The newly earned badges of every committed vector.
     pub fn awards(ctx: &Context) -> Result<Outcome, String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         let quizzes = decode!(vectors["quizzes"], Vec<Quiz>)?;
         let badges = decode!(vectors["badges"], Vec<Badge>)?;
         let mut projection = Map::new();

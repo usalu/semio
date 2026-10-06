@@ -11,7 +11,24 @@
     "id": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Quantization table",
+          "de": "Quantisierungstabelle"
+        },
+        "description": {
+          "en": "Destination id (Tq) of the table that is removed.",
+          "de": "Zielkennung (Tq) der Tabelle, die entfernt wird."
+        },
+        "ref": {
+          "kind": "quantizationTable"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

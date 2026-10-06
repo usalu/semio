@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::wires::unit_tests::context::{close, metabolism_app, WiresApp};
 use crate::editor::wires::ReasoningWiresPlayApp;
-use crate::schema::{fixture_nodes, node_position};
+use crate::schema::{board_snapshot_nodes, node_position};
 use semio_framework_graph_layout_run::testing::{layout_run_close, layout_run_drive, layout_run_fdg_layout, layout_run_hop_distances, layout_run_normalized_stress, LayoutRunOracleParameters};
 use semio_framework_graph_layout_run::{LayoutRunJob, LayoutRunReason, LayoutRunStop};
 use semio_framework_job::INTERACTIVE_LANE_FUEL;
@@ -42,7 +42,7 @@ fn dsl(value: &Value) -> DslValue {
 }
 
 fn node_positions(app: &WiresApp) -> BTreeMap<String, (f64, f64)> {
-    fixture_nodes(&crate::editor::wires::unit_tests::context::board(app)).iter().map(|node| (crate::schema::entity_id(node, "id").expect("node id").to_string(), node_position(node))).collect()
+    board_snapshot_nodes(&crate::editor::wires::unit_tests::context::board(app)).iter().map(|node| (crate::schema::entity_id(node, "id").expect("node id").to_string(), node_position(node))).collect()
 }
 
 /// ⏯️ The tool declares exactly the shared layout run, stands in the edit mode, injects the framework actions, and

@@ -1,0 +1,20 @@
+# Product WGPU Layout Diagnosis
+
+The original whole failed EngineSurfaceRegistry slot equality with actual86544 versus committed82656 (+3888), owner32/capacity256 unchanged. EngineSurfaceSlot embeds live and retiring surface owners; its actual full definition, all original assertions and bounded stack1048576 remain intact. Root Scene13 is unpublished and cannot be assigned as an actual cause.
+
+A separate system Rust compiler layout observer is staged at product-wgpu-layout-inputs/📜️script.ts. It requests Cargo rustc for the same owning package/default library and print-type-sizes, never the Product test selection. Closed four language-neutral layout controls first refused absent parser (red82024), then passed own parser; stronger independent lodash raw-field/padding parsing also passes exact4 controls (green81400). Full helper before/after/inverse journals retain both transitions. System layout execution is still pending independent finite admission and serialization after OS13. No budget/expected fixture change or duplicate Product rerun is authorized by this source evidence.
+
+Product physical source completeness remains unresolved for two allocation-return5391 compiled checks whose current source changed and whose receipt before is null. Three retained compiler/Pack paired plan inventories contain no leaf frame. Exact old full body must be associated from retained authority, otherwise the two unavailable compiled source identities remain explicitly unresolved; no reconstruction or equivalence claim is made.
+
+## Layout Observer Finite Source Admission
+
+Actual GREEN2 four closed field/padding/empty/cardinality cases independently bind current helper, fixture and schema hashes; owned parser/lodash observations all agree. Source review confirms captured current defining frames and process authority are guarded before import/dispatch, raw Buffer output is UTF8 roundtrip-conserved/fsynced and later source advances retain full current bodies. Actual observation command is separate Cargo rustc --lib -Zprint-type-sizes, not a test rerun or expected-data correction. Struct-layout scope only; enum variant layout is not certified. Actual current slot86544 equality remains a required future observation; historical82656 source/fields are not inferred. No Cargo was executed by auditor.
+
+## Actual System Layout Observation Admission
+
+Exact20144789 raw bytes/SHA verified. Independent raw block extraction confirms each of four selected structs exactly once; every field offset, byte size, padding and header total agrees. Slot86544 is29352 live+56920 retirement+8generation+260id+1exhausted+3padding, exactly the original failed runtime measurement. Registryowner32 remains distinct from per-slot86544. All immediate-pre full frame hashes verified; observer reports zero later current changes. Independent-layout-observation-1.json admits this current physical layout only, with no historical82656 field identity, +3888 causal attribution or expected-data update. No test was rerun by observer or auditor.
+
+
+System compiler observation67731 completed0 with55867 retained type presentations and four admitted struct layouts. The actual slot is86544/align8: value29352@0,retirement56920@29352,generation8@86272,id260@86280,exhausted1@86540,padding3. Registry32 remains heap-owned. Full current defining capture had zero advances during observation, and actual86544 equals the independent original runtime sizeof measurement. Current NodeGraphEngine uses FlowHost16704; retiring NodeGraphEngineRetirement is19504. Live/retiring inline host copies remain visible in the full field ledger. This proves current layout; historical+3888 causality is still unproved and no expected budget changes follow it.
+
+Exact raw/compiler field bodies are 🗑️generated/product-wgpu-layout/rustc-layout-1.log and observation-1.json. Independent helper proof binds6facdd3e738492206c3940644bc987886053c69b846f747bb1cbfd3bf3010f04 and codec. Own parser plus independent lodash raw-padding oracle validated four closed controls, preserved RED/earlyGREEN/strongerGREEN epochs.

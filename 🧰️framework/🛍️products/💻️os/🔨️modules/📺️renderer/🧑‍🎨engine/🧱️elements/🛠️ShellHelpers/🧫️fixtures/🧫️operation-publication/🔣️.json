@@ -1,0 +1,16 @@
+{
+  "$schema": "../../🧬️schema/🔣️operation-publication/🔣️.json",
+  "note": "What a shell owes each guest publication that answers no host call (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F11). A typed operation outlives the command that started it: its completion (`completed: true`, `AppFrame::OperationCompleted`) is the only carrier of its dirty scope and its command-log delta, and a long run pushes UI-progress frames (`completed: false`) meanwhile. `publication` is one entry exactly as a host queues it and hands it on; `queued` says whether it is worth queueing at all (a completion that dirtied nothing and patched nothing is bookkeeping — a retained operation completes on every drain poll); `refresh` is the dirty scope the shell owes it, with NO further dispatch; `told` says whether the person is told a notice. A history patch is always folded, whatever the refresh. A completion that patched history and dirtied nothing else owes the reserved History body (`historyBodyKey`) the row it minted; progress with a patch alone moves the band and re-renders nothing; `fault` is the host drain's own failure and is never silence; `resync` says a bounded queue (`capacity` entries) gave up entries, so the shell re-reads the whole history projection and refreshes everything.",
+  "capacity": 64,
+  "historyBodyKey": "framework.body.history",
+  "rows": [
+    { "name": "a-completion-refreshes-its-scope-and-publishes-its-rows", "publication": { "completed": true, "uiScope": { "kind": "full" }, "historyPatch": { "cursor": 7, "canUndo": true } }, "queued": true, "refresh": { "kind": "full" }, "told": false },
+    { "name": "a-completion-with-rows-and-no-scope-owes-the-history-body", "publication": { "completed": true, "uiScope": { "kind": "none" }, "historyPatch": { "cursor": 8, "canUndo": true } }, "queued": true, "refresh": { "kind": "partial", "panelBodies": ["framework.body.history"] }, "told": false },
+    { "name": "a-completion-that-dirtied-nothing-is-bookkeeping", "publication": { "completed": true, "uiScope": { "kind": "none" } }, "queued": false, "refresh": { "kind": "none" }, "told": false },
+    { "name": "progress-refreshes-the-bodies-it-names", "publication": { "completed": false, "uiScope": { "kind": "partial", "windowBodies": ["board"], "tools": true } }, "queued": true, "refresh": { "kind": "partial", "windowBodies": ["board"], "tools": true }, "told": false },
+    { "name": "progress-with-a-patch-alone-moves-the-band-and-renders-nothing", "publication": { "completed": false, "historyPatch": { "cursor": 9 } }, "queued": true, "refresh": { "kind": "none" }, "told": false },
+    { "name": "a-drain-fault-is-told-and-renders-nothing", "publication": { "completed": false, "fault": "browser-actor-publication: noncanonical bytes" }, "queued": true, "refresh": { "kind": "none" }, "told": true },
+    { "name": "a-lossy-queue-rereads-and-refreshes-everything", "publication": { "completed": true, "uiScope": { "kind": "full" }, "resync": true }, "queued": true, "refresh": { "kind": "full" }, "told": false },
+    { "name": "a-lossy-queue-keeps-its-newest-fault", "publication": { "completed": false, "uiScope": { "kind": "full" }, "resync": true, "fault": "wgpu-bridge typed-operation drain: no actor for instance 3" }, "queued": true, "refresh": { "kind": "full" }, "told": true }
+  ]
+}

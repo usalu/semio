@@ -1,6 +1,8 @@
 //! 🧪️ Export retains exact pixels, bounded output and cancellation without document edits.
 use super::*;
-use crate::standards::v1::subsets::any::schema::{create_pixel_layer,empty_raster_snapshot,snapshot::retire_raster_snapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::retire_raster_snapshot};
+use crate::standards::v1::subsets::any::io::text::snapshot::{create_pixel_layer};
+use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
 
 fn document(width:u32,height:u32,pixels:Vec<u8>)->RasterSnapshot {
     let mut encoder=PngEncodeJob::new(semio_framework_pixels::RasterImage {width,height,pixels}).unwrap();while !encoder.advance().unwrap().done {}
@@ -153,7 +155,7 @@ async fn png_progress_control_cancels_its_exact_visible_operation() {
 #[test]
 fn export_snapshot_disposal_obeys_grants_and_retires_the_last_shared_owner() {
     use semio_framework_plugin::{ArtifactEditor,PluginCloseStep};
-    let snapshot=std::sync::Arc::new(crate::standards::v1::subsets::any::schema::semio_fixture_snapshot());
+    let snapshot=std::sync::Arc::new(crate::standards::v1::subsets::any::schema::raster_image_test_snapshot());
     let mut aliases=[Some(snapshot.clone()),Some(snapshot)];
     let mut disposers=[RasterPlayApp::build_snapshot_disposer().unwrap(),RasterPlayApp::build_snapshot_disposer().unwrap()];
     for index in 0..2 {

@@ -32,14 +32,14 @@ export function newScaffoldIoTree(ioRel: string, taxonomy: ReturnType<typeof loa
   const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
   leaves.push({ path: `${ioRel}/${rustLeaf}`, content: newScaffoldRustLeaf("io root (io() -> IoDeclaration stub)") });
   leaves.push({ path: `${ioRel}/${typescriptLeaf}`, content: newScaffoldTsLeaf("io root (IoEntryDescriptor[] mirror)") });
-  for (const kind of taxonomy.ioSemanticCollectionDirNames ?? []) {
-    const kindRel = `${ioRel}/${kind}`;
-    if (kind === "🧬️mutations" || kind === "💡️inferences") {
-      leaves.push({ path: `${kindRel}/${emptyMarker}`, content: newScaffoldEmptyFacetMarkdown(kind) });
-      continue;
-    }
-    for (const rep of taxonomy.representationDirs ?? []) {
-      leaves.push({ path: `${kindRel}/${rep}/${rustLeaf}`, content: newScaffoldRustLeaf(`${kind}/${rep} native codec`) });
+  for (const rep of taxonomy.nativeRepresentationDirs) {
+    for (const kind of taxonomy.ioSemanticCollectionDirNames ?? []) {
+      const facetRel = `${ioRel}/${rep}/${kind}`;
+      if (kind === "🧬️mutations" || kind === "💡️inferences") {
+        leaves.push({ path: `${facetRel}/${emptyMarker}`, content: newScaffoldEmptyFacetMarkdown(kind) });
+      } else {
+        leaves.push({ path: `${facetRel}/${rustLeaf}`, content: newScaffoldRustLeaf(`${rep}/${kind} native codec`) });
+      }
     }
   }
 }

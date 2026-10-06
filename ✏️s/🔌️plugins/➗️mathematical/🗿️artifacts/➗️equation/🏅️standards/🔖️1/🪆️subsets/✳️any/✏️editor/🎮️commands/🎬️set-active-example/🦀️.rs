@@ -25,7 +25,7 @@ pub fn emit(example_id: &str) -> Result<Emit<EquationMutation, NoConfigMutation>
     if !example_id.is_empty() && example_id != crate::examples::demo::ID {
         return Ok(Emit::default());
     }
-    let document = crate::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::examples::demo::PRIMARY_TEXT)
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT)
         .map_err(|error| Fault::from(format!("equation example {} is not parsable: {error:?}", crate::examples::demo::ID)))?;
     Ok(Emit { effects: vec![reset_equation_document_effect(&document)], ..Default::default() })
 }

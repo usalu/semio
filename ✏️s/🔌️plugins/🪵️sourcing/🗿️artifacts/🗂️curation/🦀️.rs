@@ -480,10 +480,6 @@ mod tests;
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                                pub mod text;
                                 #[path = "."]
                                 pub mod create_curated_item {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🦀️.rs"]
@@ -493,13 +489,9 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/💾️binary/🦀️.rs"]
-                                    pub mod binary;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/🧪️tests/🧲️appends/🦀️.rs"]
                                     mod tests_appends_a_steel_plate_to_the_curation;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item/📝️text/🦀️.rs"]
-                                    pub mod text;
                                 }
                                 #[path = "."]
                                 pub mod delete_curated_item {
@@ -510,13 +502,9 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/💾️binary/🦀️.rs"]
-                                    pub mod binary;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_the_clt_panel_from_the_curation;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item/📝️text/🦀️.rs"]
-                                    pub mod text;
                                 }
                                 #[path = "."]
                                 pub mod change_curated_item_count {
@@ -527,13 +515,9 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item/💾️binary/🦀️.rs"]
-                                    pub mod binary;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item/🧪️tests/🔢️raises/🦀️.rs"]
                                     mod tests_raises_the_glulam_beam_count_to_20;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item/📝️text/🦀️.rs"]
-                                    pub mod text;
                                 }
                             }
                         }
@@ -544,33 +528,8 @@ mod tests;
                             pub use component::*;
                             #[path = "."]
                             pub mod snapshot {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/🔣️json/🦀️.rs"]
+                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🔣️json/🦀️.rs"]
                                 pub mod json;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                                pub mod text;
-                            }
-                            #[path = "."]
-                            pub mod diff {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                                pub mod text;
-                            }
-                            #[path = "."]
-                            pub mod mutations {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                                pub mod text;
-                            }
-                            #[path = "."]
-                            pub mod inferences {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                                pub mod text;
                             }
                             #[path = "."]
                             pub mod import {
@@ -672,62 +631,36 @@ mod tests;
         pub mod schema {
             pub use super::standards::v1::subsets::any::schema::*;
         }
-        pub mod io {
-            pub use super::standards::v1::subsets::any::io::*;
-        }
-        pub mod op {
-            pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-        }
-        pub mod document_dsl {
-            pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-        }
-        pub mod spr {
-            pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-        }
+
+
+
+
         pub mod diff {
             pub use crate::standards::v1::subsets::any::schema::diff::*;
             pub mod schema {
                 pub use crate::standards::v1::subsets::any::schema::diff::*;
             }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::io::diff::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::io::diff::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::io::diff::binary::*;
-            }
+
+
+
         }
         pub mod mutations {
             pub use crate::standards::v1::subsets::any::schema::mutations::*;
             pub mod schema {
                 pub use crate::standards::v1::subsets::any::schema::mutations::*;
             }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-            }
+
+
+
         }
         pub mod snapshot {
             pub use crate::standards::v1::subsets::any::schema::snapshot::*;
             pub mod schema {
                 pub use crate::standards::v1::subsets::any::schema::snapshot::*;
             }
-            pub mod text {
-                pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-            }
-            pub mod pack {
-                pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-            }
-            pub mod binary {
-                pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-            }
+
+
+
         }
 
         #[path = "."]

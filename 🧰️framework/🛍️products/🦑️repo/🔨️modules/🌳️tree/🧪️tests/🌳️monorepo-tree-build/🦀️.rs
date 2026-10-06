@@ -45,12 +45,12 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed record set every scenario projects.
     fn records(ctx: &Context) -> Result<tree::MemoryTreeSource, String> {
-        tree::MemoryTreeSource::from_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://🌳️tree-source.json")?))
+        tree::MemoryTreeSource::from_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🌳️tree-source.json")?))
     }
 
     /// 📥️ The committed expectations every scenario is held against.
     fn expected(ctx: &Context) -> Result<Json, String> {
-        parse_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://📤️tree-build-expectations.json")?))
+        parse_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://📤️tree-build-expectations.json")?))
     }
 
     /// 📃️ Reads a string list out of the expectations document.

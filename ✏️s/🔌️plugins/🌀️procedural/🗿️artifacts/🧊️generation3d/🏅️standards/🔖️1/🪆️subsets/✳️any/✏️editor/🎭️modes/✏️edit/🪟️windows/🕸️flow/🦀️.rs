@@ -46,6 +46,7 @@ const GENERATION_3D_GRAPH_GRANULARITY_EDGE: &str = "edge";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GENERATION_3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Flow", "Workflow"),
         body_key: GENERATION_3D_PLAY_BODY_MAIN.into(),

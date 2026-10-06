@@ -5,12 +5,8 @@ use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::CadReferenceIndex;
 
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;
+
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted cad document snapshot (persistent fields of the artifact). Ticket
@@ -62,72 +58,14 @@ pub struct CadSnapshot {
 }
 
 //#region 🔖️ExactChildren
-fn exact_child(target: &store::os_io::ArtifactRef, subset: &str) -> Result<(), String> {
-    if target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != subset {
-        return Err(format!("cad child must target s.stdio.semio@v1/{subset}"));
-    }
-    Ok(())
-}
 
-/// 🛡️ Every literal child handle retains its independent local identity and exact declared domain.
-fn require_exact_children(s: &CadSnapshot) -> Result<(), String> {
-    for child in [&s.shape_model, &s.building_model, &s.energy_model, &s.structure_classic_model].into_iter().flatten() {
-        exact_child(&child.target, "model")?;
-    }
-    for child in &s.drawings {
-        exact_child(&child.target, "drawing")?;
-    }
-    Ok(())
-}
+
+
 //#endregion 🔖️ExactChildren
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// ✉️ `ArtifactDsl` and `ArtifactPack` are the derived spec-driven text and pack of the one
-/// `dsl::DslRecord` spec; both re-check every composed child's exact identity on decode.
-impl store::ArtifactDsl for CadSnapshot {
-    const EXTENSION: &'static str = "cad";
-    fn envelope_id() -> &'static str {
-        "cad.cad"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        let snapshot = Self::__dsl_from_record(&record)?;
-        require_exact_children(&snapshot).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-        Ok(snapshot)
-    }
-    fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl store::ArtifactPack for CadSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        let snapshot = Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
-        require_exact_children(&snapshot).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
-        Ok(snapshot)
-    }
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
+
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 //#endregion 🔖️Snapshot

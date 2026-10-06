@@ -10,7 +10,19 @@
   ],
   "properties": {
     "at": {
-      "$ref": "#/$defs/NodePath"
+      "$ref": "#/$defs/NodePath",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Layer index and child indices of the node, each counted from 0.",
+          "de": "Ebenenindex und Kindindizes des Knotens, jeweils ab 0 gezählt."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "new_origin": {
       "$ref": "#/$defs/SemioPoint2",

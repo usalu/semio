@@ -4,7 +4,7 @@ use protocol::Mutation;
 use semio_framework_pixels::{RasterImage,png_encoding::PngEncodeJob};
 fn fixture()->serde_json::Value {serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn document(layers:&serde_json::Value,fixture:&serde_json::Value)->RasterSnapshot {
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     document.layers=semio_framework_pack_json::from_json_str(&layers.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (key,value) in fixture["images"].as_object().unwrap() {
         let image=RasterImage {width:value["width"].as_u64().unwrap() as u32,height:value["height"].as_u64().unwrap() as u32,pixels:value["pixels"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect()};
@@ -14,7 +14,7 @@ fn document(layers:&serde_json::Value,fixture:&serde_json::Value)->RasterSnapsho
     document
 }
 fn composite(document:&RasterSnapshot)->semio_framework_pixels::compositing::layers::RasterStackResult {
-    let mut job=crate::io::raster_composite_job(document).unwrap();while !job.advance(1).unwrap().done {}job.into_result().unwrap()
+    let mut job=crate::standards::v1::subsets::any::io::raster_composite_job(document).unwrap();while !job.advance(1).unwrap().done {}job.into_result().unwrap()
 }
 fn retire(document:RasterSnapshot) {crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);}
 #[test]

@@ -2,6 +2,7 @@
 package adapter
 
 import (
+	json "encoding/json"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,14 +11,34 @@ import (
 	host "semio.tech/repo/test"
 )
 
+type transcriptVector struct {
+	// 🏷️ID is the scenario-local id.
+	ID string `json:"id"`
+	// 🏭️testrunner.Runner is the runner that produced it.
+	testrunner.Runner testrunner.Runner `json:"runner"`
+	// 📤️Output is the recorded report.
+	Output testrunner.ProcessOutput `json:"output"`
+}
+
+type transcriptVectors struct {
+	// 📊️Vectors are the vectors.
+	Vectors []transcriptVector `json:"vectors"`
+}
+
+func parseTranscriptVectors(source []byte) (transcriptVectors, error) {
+	vectors := transcriptVectors{}
+	err := json.Unmarshal(source, &vectors)
+	return vectors, err
+}
+
 // region 🔖️Support
 
-func vectors(ctx *host.Context) (testrunner.TranscriptVectors, error) {
-	source, err := ctx.FixtureBytes("shared://📜️runner-transcripts.json")
+func vectors(ctx *host.Context) (transcriptVectors, error) {
+	source, err := ctx.InputBytes("shared://📜️runner-transcripts.json")
 	if err != nil {
-		return testrunner.TranscriptVectors{}, err
+		return transcriptVectors{}, err
 	}
-	return testrunner.ParseTranscriptVectors(source)
+	return parseTranscriptVectors(source)
 }
 
 func outcomeJSON(outcome testrunner.TestOutcome) (any, error) {

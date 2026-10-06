@@ -1,0 +1,21 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "nx",
+    "run",
+    "@semio-tech/framework-dsl-record-rs:test-native",
+    "--args=--lib --no-fail-fast",
+    "--skip-nx-cache",
+    "--outputStyle=stream",
+    "--excludeTaskDependencies"
+  ],
+  "env": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "SEMIO_TEST_LEVEL": "quick",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/dsl-four-tagged-owner-after-artifacts"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-dsl-four-tagged-owner-after.log",
+  "status": "whole genuine registered DSL owner unchanged quick grant"
+}

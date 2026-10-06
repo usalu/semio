@@ -68,7 +68,7 @@
     {
       "factoryId": "stdio.native.tsv.v1",
       "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📜️artifact-definition.json",
-      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseStlTriangle,parseStlCoordinateTuple,parseStlVertices}from"../🟦️.ts";
 /** 🔺️ StlDiff — handcrafted sparse diff. `solidName` plus an index-keyed `triangles` triple. */
 

@@ -1,0 +1,3 @@
+# Surface Browser17 Prepare Helper
+
+Frozen ace639 source parses without TypeScript diagnostics and binds Source4 cfg-only admission, actual native16 checkpoint and failedWASM16 observation. Ten closed correction laws/four defining laws and real non-null binary readback oracle agree with complete source/fixture/schema hashes. Clone copies actual native16 postcheck frames with exclusive copy and destination hash readbacks; only three exact held-predecessor UTF8 rows change, with full current unknowns/inverses and initial/final raw/held/corrected guards. Metadata executor is guarded before/after import, before each ordinary/locked phase and finally. No new native whole execution is claimed; sealed plan/provider/native-cfg bridge is still required before owning WASM17.

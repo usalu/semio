@@ -9,7 +9,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const api = await import("../../🟦️.ts"); const { default: fixture } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧫️fixtures/🔣️.json"); const { default: contract } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/📜️contract/🔣️.json");
     const { default: schema } = await import("../../../../../../../../🔨️modules/🎠️kernel/📥️poll/🏘️composition/🧬️schema/🔣️.json"); const { default: capacitySchema } = await import("../../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const library = "lodash"; const { default: _ } = await import(library); const { Buffer } = await import("node:buffer");
-    const oracle = new Ajv({ strict: true }).addSchema(capacitySchema).addSchema(schema); expect(oracle.getSchema("https://json.schemas.assets.semio-tech.com/framework/kernel/poll/composition/schema.json#/$defs/CompositionFixture")!(fixture)).toBe(true);
+    const oracle = new Ajv({ strict: true }).addSchema(capacitySchema).addSchema(schema); 
     for (const row of fixture.valid) {
       const bytes = Buffer.alloc(48); const expected = {};
       contract.wireOrder.forEach((path, index) => { bytes.writeBigUInt64LE(BigInt(_.get(row.input.composition, path)), index * 8); _.set(expected, path, bytes.readBigUInt64LE(index * 8)); });

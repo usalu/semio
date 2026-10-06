@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle
@@ -27,8 +27,8 @@ export default defineTestAdapter({
   scenarios: {
     "golden-documents-round-trip": {
       oracle: (ctx) => {
-        const schema = JSON.parse(readFileSync(ctx.fixture("schema://repo.model/Repo"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
-        const goldens = JSON.parse(readFileSync(ctx.fixture("shared://🔣️json-encoding-conformance/🔣️goldens.json"), "utf8")) as { goldens: { type: string; json: string }[] };
+        const schema = JSON.parse(readFileSync(ctx.input("schema://repo.model/Repo"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
+        const goldens = JSON.parse(readFileSync(ctx.input("shared://🔣️json-encoding-conformance/🔣️goldens.json"), "utf8")) as { goldens: { type: string; json: string }[] };
         const ajv = new Ajv2020({ strict: false, allErrors: true });
         const encoded = goldens.goldens.map((golden) => {
           const definition = (schema.$defs as Record<string, unknown>)[golden.type];

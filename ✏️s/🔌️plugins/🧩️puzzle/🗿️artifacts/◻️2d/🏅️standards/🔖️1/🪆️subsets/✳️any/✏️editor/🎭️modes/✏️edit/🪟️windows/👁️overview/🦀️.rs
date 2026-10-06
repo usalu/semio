@@ -20,6 +20,7 @@ pub const ZOOM_SCALE: f64 = 0.68;
 /// 🧱️ Preserve localized manifest labels; caller-resolved options come from `ArtifactApp::window_measures`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: puzzle2d_localized(|l| l.window_overview),
         body_key: BODY_KEY.into(),

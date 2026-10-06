@@ -22,7 +22,8 @@
         "description": {
           "en": "Zero-based row index.",
           "de": "Nullbasierter Zeilenindex."
-        }
+        },
+        "step": 1
       }
     },
     "column_name": {

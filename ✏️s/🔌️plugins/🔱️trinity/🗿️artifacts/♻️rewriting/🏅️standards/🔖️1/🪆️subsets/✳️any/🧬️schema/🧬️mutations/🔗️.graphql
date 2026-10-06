@@ -3,7 +3,7 @@
 # import JackSnapshotInput from "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql"
 # import PropertyValueInput from "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔗️.graphql"
 # import Binary64WordInput from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
-input EditBeforeFixtureInput { newWorkingGraph: JackSnapshotInput! }
+input EditWorkingGraphInput { newWorkingGraph: JackSnapshotInput! }
 input EditLhsInput { newLhs: LhsInput! }
 input EditRhsInput { newRhs: RhsInput! }
 input ChangeParameterBindingInput { key: String! newValue: PropertyValueInput! }
@@ -14,7 +14,7 @@ input DragRuleNodesInput { targets: [String!]! dx: Binary64WordInput! dy: Binary
 input SetRuleLayoutPointsInput { points: [RuleLayoutPlacementInput!]! cleared: [String!]! }
 input RuleLayoutPlacementInput { key: String! x: Binary64WordInput! y: Binary64WordInput! }
 input RewriteRuleMutationInput @oneOf {
- editBeforeFixture: EditBeforeFixtureInput
+ editWorkingGraph: EditWorkingGraphInput
  editLhs: EditLhsInput
  editRhs: EditRhsInput
  changeParameterBinding: ChangeParameterBindingInput

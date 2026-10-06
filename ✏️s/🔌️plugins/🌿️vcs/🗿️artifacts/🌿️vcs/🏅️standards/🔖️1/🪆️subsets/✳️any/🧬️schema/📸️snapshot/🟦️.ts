@@ -1,6 +1,4 @@
-/** 🧬️ VCS snapshot schema — artifact-lane fields only. */
 
-export {VCS_SQLITE_SCHEMA,vcsSnapshotToSqliteDatabase,vcsSnapshotFromSqliteDatabase,type VcsSqliteSnapshot} from "./🪶️sqlite/🟦️.ts";
 
 export interface VcsSnapshot {
   /** @state artifact */

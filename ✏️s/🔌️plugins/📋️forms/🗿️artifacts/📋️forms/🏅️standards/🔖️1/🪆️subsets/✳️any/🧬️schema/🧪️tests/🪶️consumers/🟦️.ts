@@ -1,6 +1,6 @@
 /** 🧪️ All owning Forms authoring and transport laws share the strict public package gate. */
 import{test}from"bun:test";
-import{testFormsDocumentContractOracle,testFormsDesignImport,testFormsMutationSchemas}from"./../🪪️document/🟦️.ts";
+import{testFormsDocumentContractOracle,testFormsDesignImport,testFormsMutationSchemas}from"../🪪️document/🟦️.ts";
 import{testFormsInspectionAuthoring}from"../../../✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️authoring/🟦️.ts";
 import{testFormsQuestionPatches}from"../../../✏️editor/❓️questions/🧪️tests/🔬️patches/🟦️.ts";
 import{testFormsQuestionPlacement}from"../../../✏️editor/❓️questions/📍️placement/🧪️tests/🟦️.ts";
@@ -9,7 +9,7 @@ import{testFormsVisibility}from"../../../✏️editor/❓️questions/🫥️vis
 import{testFormsPersistence}from"../💾️persistence/🟦️.ts";
 import{testFormsResponses,testFormsSubmission}from"../../📨️response/🧪️tests/🔬️events/🟦️.ts";
 import{testFormsValidation}from"../../✅️validation/🧪️tests/🟦️.ts";
-import{testFormsResponseExport}from"../../📨️response/📤️export/🧪️tests/🟦️.ts";
+import{testFormsResponseExport}from"../../../🚪️io/📝️text/📸️snapshot/📨️response/📤️export/🧪️tests/🟦️.ts";
 import"../🧪️change-block-field/🟦️.ts";
 test("testFormsDocumentContractOracle",testFormsDocumentContractOracle);
 test("testFormsDesignImport",testFormsDesignImport);

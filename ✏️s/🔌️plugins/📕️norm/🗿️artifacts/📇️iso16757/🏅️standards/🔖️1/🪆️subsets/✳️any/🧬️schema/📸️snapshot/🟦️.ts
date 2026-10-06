@@ -385,5 +385,3 @@ export const parseLifecycle: NormWireReader<Lifecycle> = normWireObject<Lifecycl
 export const parseIso16757EditionProfile: NormWireReader<Iso16757EditionProfile> = normWireLiteral("Part1_2015", "Part2_2016", "Part4_2025", "Part5_2025", "FullPublished");
 export const parseIso16757RelationshipKind: NormWireReader<Iso16757RelationshipKind> = normWireLiteral("IsSubtypeOf", "HasPart", "HasBlock", "IsDependentOn", "IsSubkindOf");
 export const parseIso16757ValueConstraint: NormWireReader<Iso16757ValueConstraint> = normWireObject<Iso16757ValueConstraint>({ min: normWireDefault(normWireNullable(normWireNumber), () => null), max: normWireDefault(normWireNullable(normWireNumber), () => null), allowedValues: normWireRequired(normWireArray(normWireString)) });
-
-export * from "./🪶️sqlite/🟦️.ts";

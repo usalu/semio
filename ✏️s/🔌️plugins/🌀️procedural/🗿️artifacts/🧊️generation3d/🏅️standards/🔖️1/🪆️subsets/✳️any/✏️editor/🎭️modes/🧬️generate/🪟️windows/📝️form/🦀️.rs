@@ -20,6 +20,7 @@ pub const GENERATION_3D_PLAY_BODY_GENERATE_FORM: &str = "procedural.play.generat
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GENERATION_3D_PLAY_WINDOW_GENERATE_FORM.into(),
         label: LocalizedLabel::native("Form", "Formular"),
         body_key: GENERATION_3D_PLAY_BODY_GENERATE_FORM.into(),

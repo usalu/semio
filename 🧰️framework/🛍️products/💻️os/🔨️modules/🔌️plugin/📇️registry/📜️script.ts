@@ -27,6 +27,15 @@ class LaunchPlacementContractTestScript extends BundleScript {
  }
 }
 
+/** 🧷️ Proves launch seed reconciliation on its neutral corpus and against the repository launch pair. */
+class LaunchSeedReconcileContractTestScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-launch-seed-reconcile accepts no arguments");
+    const { runBudgetedTestCommand } = await import("../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts");
+    await runBudgetedTestCommand(process.execPath, ["test", "./🚀️launch/🧪️tests/🧪️seed-reconcile/🟦️.ts"], { cwd: this.root, budgetMs: 60000, env: process.env, throwOnFailure: true });
+  }
+}
+
 /** 🗂️Verifies the owner-declared playground asset contract. */
 class AssetContractTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -65,6 +74,7 @@ const router = new ScriptRouter(import.meta.dir)
   .registerLazy("session", async () => (await import("./🎮️playground/🧭️session/🟦️.ts")).SessionScript)
   .registerLazy("preview-generated", async () => (await import("./📽️projection/🟦️.ts")).PreviewGeneratedScript)
   .registerLazy("check-generated", async () => (await import("./📽️projection/🟦️.ts")).CheckGeneratedScript)
+  .registerLazy("reconcile-launch-seed", async () => (await import("./📽️projection/🟦️.ts")).ReconcileLaunchSeedScript)
   .registerLazy("rust-taxonomy-mounts-check", async () => (await import("./🗿️taxonomy-validation/🟦️.ts")).RustTaxonomyMountsCheckScript)
   .registerLazy("plugin-root-ownership-check", async () => (await import("./🗿️taxonomy-validation/🟦️.ts")).PluginRootOwnershipCheckScript)
   .registerLazy("native-catalog-selection-check", async () => (await import("./✅️catalog-verification/🟦️.ts")).NativeCatalogSelectionCheckScript)
@@ -80,6 +90,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-component-owners", ComponentOwnerContractTestScript)
   .register("test-launch-name-contract", LaunchNameContractTestScript)
   .register("test-launch-placement-contract", LaunchPlacementContractTestScript)
+  .register("test-launch-seed-reconcile", LaunchSeedReconcileContractTestScript)
   .register("test-playground-default-contract", PlaygroundDefaultContractTestScript)
   .registerLazy("new", async () => (await import("./🌳️surface-scaffold/🟦️.ts")).NewScript)
   .registerLazy("surface-schema", async () => (await import("./🧬️surface-schema/🟦️.ts")).SurfaceSchemaScript);

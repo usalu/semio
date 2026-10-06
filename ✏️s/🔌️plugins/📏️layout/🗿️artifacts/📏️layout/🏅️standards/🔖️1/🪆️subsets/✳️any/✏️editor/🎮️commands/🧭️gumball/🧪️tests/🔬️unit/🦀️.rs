@@ -5,7 +5,7 @@ use crate::mutations::scale_frames::ScaleFrames;
 use semio_framework_plugin::HistoryView;
 
 fn views() -> (LayoutSnapshot, NoConfig) {
-    (crate::standards::v1::subsets::any::schema::default_document(), NoConfig::default())
+    (crate::standards::v1::subsets::any::io::text::snapshot::default_document(), NoConfig::default())
 }
 
 fn translate(ids: &[&str], dx: f64, dy: f64) -> TranslateSelection {

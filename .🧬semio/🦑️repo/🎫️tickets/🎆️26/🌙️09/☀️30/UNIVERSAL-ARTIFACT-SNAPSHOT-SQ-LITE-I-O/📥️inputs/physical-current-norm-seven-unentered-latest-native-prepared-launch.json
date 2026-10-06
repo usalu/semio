@@ -1,0 +1,19 @@
+{
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/norm-seven-unentered-latest-artifacts' bun run nx run-many --target=test-snapshot-sqlite-native --projects='@semio-tech/norm-vdi3805-rs,@semio-tech/norm-en1990-rs,@semio-tech/norm-en1994-rs,@semio-tech/norm-din16798-rs,@semio-tech/norm-din18599-rs,@semio-tech/norm-en1993-rs,@semio-tech/norm-en1997-rs' --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-norm-seven-unentered-latest-native.log' 2>&1",
+  "projects": [
+    "@semio-tech/norm-vdi3805-rs",
+    "@semio-tech/norm-en1990-rs",
+    "@semio-tech/norm-en1994-rs",
+    "@semio-tech/norm-din16798-rs",
+    "@semio-tech/norm-din18599-rs",
+    "@semio-tech/norm-en1993-rs",
+    "@semio-tech/norm-en1997-rs"
+  ],
+  "scope": "Seven authentic unentered Norm scopes after shared canonical import and owning module glue changes; VDI original20After plus new1Before, edge provider held; no duplicate Part21",
+  "expectedDeclared": 106,
+  "profile": "quick",
+  "state": "launching after7733 terminal and exact five invalid member manifests corrected by Immutable",
+  "at": "2026-10-06T01:08:09.531Z",
+  "launchedAt": "2026-10-06T01:16:15.886Z",
+  "changedAuthority": "Five support workspace members corrected to actual self \".\"; direct declared OpBinary/OpText imports and owning Norm module/test glue live"
+}

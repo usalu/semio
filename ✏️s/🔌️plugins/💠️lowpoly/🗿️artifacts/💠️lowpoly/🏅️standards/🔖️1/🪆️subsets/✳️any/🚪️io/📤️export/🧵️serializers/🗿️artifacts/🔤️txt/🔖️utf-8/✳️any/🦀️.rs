@@ -3,9 +3,9 @@
 //! 📜️ `s.stdio.txt@utf-8/*` is CARRIER_TEXT (its native `Text` payload IS the raw external file
 //! text, verbatim -- see `TxtSnapshot`'s own `store::ArtifactDsl` impl doc, "CARRIER LAW"). The
 //! honest lowpoly.txt representation is therefore lowpoly's OWN canonical `.lowpoly` DSL text
-//! (`store::ArtifactDsl for LowpolySnapshot`, `../../../../../../🧬️schema/📸️snapshot/📝️text/🦀️.rs`)
+//! (`store::ArtifactDsl for LowpolySnapshot`, `../../../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs`)
 //! carried verbatim as the txt body -- never a second bespoke grammar.
-use crate::schema::snapshot::text::print_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::print_dsl;
 use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_txt::TxtSnapshot;
 

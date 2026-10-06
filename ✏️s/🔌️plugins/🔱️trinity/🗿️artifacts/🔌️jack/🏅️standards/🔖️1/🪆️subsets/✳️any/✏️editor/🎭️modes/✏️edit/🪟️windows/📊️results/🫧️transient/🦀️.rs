@@ -61,10 +61,10 @@ impl JackResultsWindowTransientRetirement {
     fn new(execution_id: Option<String>, result: Option<crate::ast::QueryResult>, error: Option<String>) -> Self {
         let mut children = vec![semio_framework_value::retirement::owned_retirement((execution_id, error))];
         if let Some(result) = result {
-            let crate::ast::QueryResult { kind: _, columns, rows, graph_fixture } = result;
+            let crate::ast::QueryResult { kind: _, columns, rows, graph_snapshot } = result;
             children.push(semio_framework_value::retirement::owned_retirement((columns, rows)));
-            if let Some(snapshot) = graph_fixture {
-                children.push(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::standards::v1::subsets::any::schema::wire_runtime::JackSnapshotRetirementFactory, *snapshot));
+            if let Some(snapshot) = graph_snapshot {
+                children.push(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::host::JackSnapshotRetirementFactory, *snapshot));
             }
         }
         Self { children: std::mem::ManuallyDrop::new(children) }
@@ -143,7 +143,7 @@ fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> Result<usize
             bytes = bytes.saturating_add(property_value_retained_bytes(cell));
         }
     }
-    if let Some(fixture) = result.graph_fixture.as_deref() {
+    if let Some(fixture) = result.graph_snapshot.as_deref() {
         let scene = crate::jack_working_scene(fixture)?;
         bytes = bytes.saturating_add(std::mem::size_of::<crate::JackSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
         for node in &scene.nodes {
@@ -207,3 +207,6 @@ pub fn addressed(window_id: &str, view: &semio_framework_plugin::ViewModel, muta
     }
     Ok(WindowTransientMutation::of::<JackResultsWindowTransientOwner>(window_id, mutation))
 }
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

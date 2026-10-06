@@ -27,7 +27,7 @@ async fn projection_round_trips_paint_pixels_through_base64_json() {
     projection.objects[0].paint_layers[0].pixels = empty_paint_pixels();
     projection.objects[0].paint_layers[0].pixels[0] = 7;
     projection.objects[0].paint_layers[0].pixels[1] = 9;
-    let json = serde_json::to_string(&Into::<serde_json::Value>::into(semio_framework_value::ToValue::to_value(&projection))).unwrap();
+    let json = crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(&projection);
     let restored: crate::LowpolySnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(serde_json::from_str::<serde_json::Value>(&json).unwrap())).unwrap();
     assert_eq!(restored, projection);
 }

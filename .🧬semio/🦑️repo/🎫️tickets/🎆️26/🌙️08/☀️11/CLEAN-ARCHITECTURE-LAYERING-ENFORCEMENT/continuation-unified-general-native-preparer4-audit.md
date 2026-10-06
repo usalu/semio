@@ -1,0 +1,3 @@
+# Unified General Native Preparer 4 Audit
+
+The declaration inventory now treats undeclared and physically absent default libraries as null, while retaining explicit binary/build/test/example/bench paths. The actual bin-only package manifest and full binary body hashes match current bytes, no default library exists, and the retained actual metadata identity is exact. Seven owning route cases and helper/codec bindings agree. Capture preparation is admitted; the selected provider graph and actual snapshot targets require their sealed independent admission. No fake target or native execution is inferred.

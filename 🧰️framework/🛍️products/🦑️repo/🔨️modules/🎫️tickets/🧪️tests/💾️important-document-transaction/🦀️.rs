@@ -64,7 +64,7 @@ mod subject {
 
     /// ⚠️ A wrong bundle is refused before anything is removed.
     pub fn a_wrong_bundle_is_refused_before_anything_is_removed(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let mut projected: Vec<(String, Json)> = Vec::new();
         for mode in vectors.array("modes") {
             let mode = match mode {
@@ -95,7 +95,7 @@ mod subject {
 
     /// ↩️ A failed save rolls the creation back.
     pub fn a_failed_save_rolls_the_creation_back(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let world = world(&vectors);
         let opened = service(&world).open(&open_request()).map_err(|error| error.message)?;
         let id = TicketId::parse(&opened.id).map_err(|error| error.message)?;
@@ -115,7 +115,7 @@ mod subject {
 
     /// 🛡️ A preserved document is not rolled back.
     pub fn a_preserved_document_is_not_rolled_back(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let world = world(&vectors);
         let opened = service(&world).open(&open_request()).map_err(|error| error.message)?;
         let id = TicketId::parse(&opened.id).map_err(|error| error.message)?;
@@ -135,7 +135,7 @@ mod subject {
 
     /// 📓️ The journal records every step in order.
     pub fn the_journal_records_every_step_in_order(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let world = world(&vectors);
         let opened = service(&world).open(&open_request()).map_err(|error| error.message)?;
         let id = TicketId::parse(&opened.id).map_err(|error| error.message)?;

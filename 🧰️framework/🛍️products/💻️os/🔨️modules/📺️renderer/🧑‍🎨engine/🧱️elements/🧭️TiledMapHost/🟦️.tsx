@@ -152,9 +152,9 @@ function parseMapPositionScreen(raw: string): { x: number; y: number } | null {
   }
 }
 
-function parsePositionMeta(mapFixtureJson: string): Map<string, MapPositionMeta> {
+function parsePositionMeta(mapDescriptorJson: string): Map<string, MapPositionMeta> {
   try {
-    const descriptor = JSON.parse(mapFixtureJson) as {
+    const descriptor = JSON.parse(mapDescriptorJson) as {
       positions?: Array<{ id?: string; label?: string; name?: string; icon?: string; source_url?: string; sourceUrl?: string }>;
     };
     const out = new Map<string, MapPositionMeta>();
@@ -752,7 +752,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const sourceAvailableLabel = useLabel("ui.host.sourceAvailable");
 
-  const positionMetaById = useMemo(() => (scene ? parsePositionMeta(scene.mapFixtureJson) : new Map()), [scene?.mapFixtureJson]);
+  const positionMetaById = useMemo(() => (scene ? parsePositionMeta(scene.mapDescriptorJson) : new Map()), [scene?.mapDescriptorJson]);
   const hoveredFeature = useMemo(() => (scene ? parseMapHoveredFeature(scene.hoverJson) : null), [scene?.hoverJson]);
   const selectionMethod = (scene?.selectionMethod ?? "rectangle") as SelectionMarqueeMethod;
 
@@ -933,7 +933,7 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
             if (!isPhantomBootCamera) dispatchCameraRef.current(bootCamera);
           }
         }
-        renderer.syncDescriptor(scene.mapFixtureJson);
+        renderer.syncDescriptor(scene.mapDescriptorJson);
         renderer.syncInteraction(scene.selectionJson, scene.hoverJson);
         await renderer.refreshTiles();
         renderer.startLoop();
@@ -988,9 +988,9 @@ export function TiledMapHost({ node, onAction, requestContextMenu }: ComponentSc
 
   useEffect(() => {
     if (!scene) return;
-    rendererRef.current?.syncDescriptor(scene.mapFixtureJson);
+    rendererRef.current?.syncDescriptor(scene.mapDescriptorJson);
     rendererRef.current?.scheduleRefreshTiles();
-  }, [scene?.mapFixtureJson]);
+  }, [scene?.mapDescriptorJson]);
 
   useEffect(() => {
     if (!scene || !rendererRef.current) return;

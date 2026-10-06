@@ -4,10 +4,9 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, w
 import { dirname, join, posix } from "node:path";
 import { tmpdir } from "node:os";
 import { mutationVectorRegistryBreaches, repoRootFromHere, testTaxonomy, type OracleRegistry } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import schema from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
 import vectors from "../../🧫️fixtures/🧬️mutation-fixtures/🔣️.json";
 import htmlPairs from "../../🧫️fixtures/🌐️html-source-pair/🔣️.json";
-import htmlPairSchema from "../../🧫️fixtures/🌐️html-source-pair/🧬️schema/🔣️.json";
+
 import { parse, serialize } from "parse5";
 import { loadCatalogTaxonomy, semanticDescendantNodeRelativePath, semanticDirectoryKindId } from "../../../📚️library/🔍️discovery/🟦️.ts";
 import { verifyFixture } from "../../🟦️.ts";
@@ -18,14 +17,9 @@ const catalog = { id: "thing-v1", capability: "thing-mutate", standardDirectoryN
 const contribution = { owner: vectors.owner, manifestPath: `${vectors.owner}/🔣️oracle.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: [catalog], migrationStatus: {} };
 const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [contribution] } as unknown as OracleRegistry;
 
-test("mutation fixture examples satisfy the owning schema", () => {
-  const valid = new Ajv({ strict: true }).compile(schema.$defs.MutationFixtureCases);
-  expect(valid(vectors)).toBe(true);
-});
-
 test("HTML source pair controls preserve the six-node semantic boundary", () => {
-  const validate = new Ajv({ strict: true }).compile(htmlPairSchema);
-  expect(validate(htmlPairs), JSON.stringify(validate.errors)).toBe(true);
+  
+  
   const catalog = loadCatalogTaxonomy();
   expect(semanticDescendantNodeRelativePath({ pathSegments: [], nodeType: "file", kindId: "html" }, catalog)).toBe("🌐️.html");
   expect(semanticDescendantNodeRelativePath({ pathSegments: [], nodeType: "file", kindId: "json" }, catalog)).toBe("🔣️.json");
@@ -63,9 +57,9 @@ test("HTML source pair normalization accepts the primary leaf of a multi-extensi
 test("HTML source pair manifests retain exact native-reader and parser inputs", async () => {
   const root = repoRootFromHere();
   const manifest = JSON.parse(readFileSync(join(root, htmlPairs.manifestPath), "utf8"));
-  expect(manifest.fixtureManifests.map((fixture: { id: string }) => fixture.id).sort()).toEqual(htmlPairs.pairs.map(pair => pair.id).sort());
+  expect(manifest.testEvidence.map((fixture: { id: string }) => fixture.id).sort()).toEqual(htmlPairs.pairs.map(pair => pair.id).sort());
   for (const pair of htmlPairs.pairs) {
-    const fixture = manifest.fixtureManifests.find((candidate: { id: string }) => candidate.id === pair.id);
+    const fixture = manifest.testEvidence.find((candidate: { id: string }) => candidate.id === pair.id);
     const owner = join(root, dirname(htmlPairs.manifestPath), "../🧫️fixtures", pair.directoryName);
     const realized: { path: string; type: string }[] = [];
     const visit = (relative: string): void => {

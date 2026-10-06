@@ -1,0 +1,6 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": { "incremental": false, "types": ["bun-types"], "noEmit": true },
+  "include": ["/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/s5-tools/staged/slot-work/🟦️.ts", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🗑️generated/s5-tools/staged/slot-work/🧪️tests/🧪️gesture-drive-law/🟦️.ts"],
+  "exclude": []
+}

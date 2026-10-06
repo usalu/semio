@@ -2,6 +2,19 @@ use super::*;
 use std::cell::Cell;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+
+/// 📍️ The module's fixture directory, resolved relative to this crate's manifest.
+fn fixture_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..").join("🧫️fixtures")
+}
+
+/// 📥️ Reads and parses one fixture of this module.
+fn fixture<T: serde::de::DeserializeOwned>(name: &str) -> Result<T, String> {
+    let path = fixture_dir().join(name);
+    let data = fs::read(&path).map_err(|error| format!("{}: {error}", path.display()))?;
+    serde_json::from_slice(&data).map_err(|error| format!("{}: {error}", path.display()))
+}
+
 static COUNTER: AtomicU64 = AtomicU64::new(0);
 
 struct TempDir(PathBuf);

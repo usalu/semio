@@ -6,28 +6,28 @@
       "name": "reading a folder document",
       "verb": "read",
       "uri": "folder:///Users/ada/drawings",
-      "documentId": "puzzle.2d.fixture",
+      "documentId": "board.ports.directed.v1",
       "schema": null,
-      "json": { "op": "backbone-folder", "verb": "read", "uri": "folder:///Users/ada/drawings", "documentId": "puzzle.2d.fixture" },
-      "fetch": { "method": "GET", "url": "/semio-backbone?uri=folder%3A%2F%2F%2FUsers%2Fada%2Fdrawings&documentId=puzzle.2d.fixture", "body": false }
+      "json": { "op": "backbone-folder", "verb": "read", "uri": "folder:///Users/ada/drawings", "documentId": "board.ports.directed.v1" },
+      "fetch": { "method": "GET", "url": "/semio-backbone?uri=folder%3A%2F%2F%2FUsers%2Fada%2Fdrawings&documentId=board.ports.directed.v1", "body": false }
     },
     {
       "name": "writing a folder document carries its schema and its archive bytes",
       "verb": "write",
       "uri": "folder:///Users/ada/drawings",
-      "documentId": "puzzle.2d.fixture",
+      "documentId": "board.ports.directed.v1",
       "schema": "s.puzzle.2d",
-      "json": { "op": "backbone-folder", "verb": "write", "uri": "folder:///Users/ada/drawings", "documentId": "puzzle.2d.fixture", "schema": "s.puzzle.2d" },
-      "fetch": { "method": "PUT", "url": "/semio-backbone?uri=folder%3A%2F%2F%2FUsers%2Fada%2Fdrawings&documentId=puzzle.2d.fixture&schema=s.puzzle.2d", "body": true }
+      "json": { "op": "backbone-folder", "verb": "write", "uri": "folder:///Users/ada/drawings", "documentId": "board.ports.directed.v1", "schema": "s.puzzle.2d" },
+      "fetch": { "method": "PUT", "url": "/semio-backbone?uri=folder%3A%2F%2F%2FUsers%2Fada%2Fdrawings&documentId=board.ports.directed.v1&schema=s.puzzle.2d", "body": true }
     },
     {
       "name": "reading a file document",
       "verb": "read",
       "uri": "file:///Users/ada/drawings/board.spk",
-      "documentId": "puzzle.2d.fixture",
+      "documentId": "board.ports.directed.v1",
       "schema": null,
-      "json": { "op": "backbone-folder", "verb": "read", "uri": "file:///Users/ada/drawings/board.spk", "documentId": "puzzle.2d.fixture" },
-      "fetch": { "method": "GET", "url": "/semio-backbone?uri=file%3A%2F%2F%2FUsers%2Fada%2Fdrawings%2Fboard.spk&documentId=puzzle.2d.fixture", "body": false }
+      "json": { "op": "backbone-folder", "verb": "read", "uri": "file:///Users/ada/drawings/board.spk", "documentId": "board.ports.directed.v1" },
+      "fetch": { "method": "GET", "url": "/semio-backbone?uri=file%3A%2F%2F%2FUsers%2Fada%2Fdrawings%2Fboard.spk&documentId=board.ports.directed.v1", "body": false }
     }
   ],
   "answers": [

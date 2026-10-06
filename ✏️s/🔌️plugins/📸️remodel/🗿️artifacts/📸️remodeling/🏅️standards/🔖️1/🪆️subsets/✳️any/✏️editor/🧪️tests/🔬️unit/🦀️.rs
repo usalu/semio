@@ -458,7 +458,6 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
             document.content_revision_now(),
             "remodel-window-preparation-law".into(),
             vec![mutation],
-            Some("candidate transfer".into()),
             store::HistoryLane::Document,
             Some(&factory),
             None,
@@ -714,7 +713,7 @@ async fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
     };
     let emit = RemodelingPlayApp::import_media("photos:in", &media, &doc).expect("photos:in import");
     assert_eq!(emit.artifact_mutations.len(), 2, "one create-asset + one create-stream");
-    let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| crate::op::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
+    let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| crate::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
     assert_eq!(next.streams.len(), 1);
     assert_eq!(next.streams[0].id, REMODELING_WORKFLOW_PHOTOS_STREAM_ID);
     assert_eq!(next.streams[0].frames.len(), 1);
@@ -722,7 +721,7 @@ async fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
     let history2 = HistoryView::empty();
     let doc2 = ArtifactView::new(&next, &history2);
     let emit2 = RemodelingPlayApp::import_media("photos:in", &media, &doc2).expect("second photos:in import");
-    let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| crate::op::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
+    let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| crate::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
     assert_eq!(next2.streams.len(), 1, "still one workflow-photos stream");
     assert_eq!(next2.streams[0].frames.len(), 2, "second import appends a second frame");
 }

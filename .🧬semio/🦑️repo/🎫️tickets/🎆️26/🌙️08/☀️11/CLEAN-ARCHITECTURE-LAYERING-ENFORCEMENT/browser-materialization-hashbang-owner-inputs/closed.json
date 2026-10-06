@@ -1,0 +1,1 @@
+[{"input":"import { x } from './x';\n#!/usr/bin/env bun\nexport const value=x;\n","after":"#!/usr/bin/env bun\nimport { x } from './x';\nexport const value=x;\n"},{"input":"import './x';\n#!/usr/bin/env bun\nexport function value(){return 1;}\n","after":"#!/usr/bin/env bun\nimport './x';\nexport function value(){return 1;}\n"}]

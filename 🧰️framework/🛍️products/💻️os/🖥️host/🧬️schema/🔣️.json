@@ -21,8 +21,6 @@
         },
         "operations": {
           "const": {
-            "decodeWorkflowFixturePack": 1537,
-            "parseWorkflowFixtureDsl": 1538,
             "mediaAcceptFilterKinds": 1539,
             "normalizeStdioFormatKind": 1540
           }
@@ -30,8 +28,6 @@
         "errors": {
           "const": {
             "malformedRequest": 1,
-            "malformedPack": 2,
-            "malformedDsl": 3,
             "missingKindArray": 4,
             "unknownKind": 5,
             "invalidUtf8": 6,
@@ -45,19 +41,6 @@
             "metadataOrder": [
               "version:u8",
               "inputBytes:u32le"
-            ],
-            "workflowPackOrder": [
-              "magic:WFP1",
-              "version:u8",
-              "canonicalDslBytes:u32le",
-              "canonicalDslUtf8"
-            ],
-            "workflowDslCanonical": [
-              "name",
-              "graph",
-              "dirty-node-ids",
-              "expected-deliveries",
-              "terminal-newline"
             ],
             "filterOrder": [
               "version:u8",
@@ -89,7 +72,6 @@
               "bytes"
             ],
             "kinds": {
-              "workflowFixtureDsl": 1,
               "acceptFilterUtf8": 2,
               "normalizedKindUtf8": 3
             },

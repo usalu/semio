@@ -1,0 +1,9 @@
+# Repo Cache-Owned Test Command Direction
+
+Physical's actual fresh Nx exec Before refused project graph circularity: repo imports repo-lib shared tooling, and repo-lib imported two cache-owned exported law modules back into repo. The two reverse edges were in the repo-lib permanent router's graph revision and native dependencies routes. Neither implicit dependency declaration nor task dependsOn caused the fault.
+
+The existing registered repo-lib command routes now invoke the cache owner's permanent script through the existing firstparty owned test process interface. The original graph-revision command is reused. The native-dependencies cache command invokes the unchanged exported law with the caller-owned output directory. All original neutral vectors, independent Node/Bun, esbuild, JSON Schema, Cargo/Nx oracles, cancellation and internal assertion budgets remain. No graph cycle suppression, ignored dependency edge, or policy change is introduced. The two scripts are the only production changes; captured exact before/after authority is inputs/repo-cache-owned-test-command-direction/mounted-pairs.json. Existing registered external targets and launch entries remain their actual command authorities.
+
+After fresh Nx graph plus both owning existing router laws is pending. The graph-revision and native-dependency fixture laws themselves are unchanged.
+
+Original registered graph revision After passed exit0 with the unchanged Node/Bun neutral and thirdparty schema corpus (Nx22.9s). Original registered native dependencies After failed early: strict Cargo physical ownership reads fixture Cargo.toml before the existing fixture authors it; no later environment/Cargo/Nx oracle credit. Fresh Nx exec has exposed a separate legitimate Value/derive Cargo dev/test loop collapsed into project production edges, so no fresh exec success or graph suppression is claimed. These exact original logs and exit states are retained in the active coordination input.

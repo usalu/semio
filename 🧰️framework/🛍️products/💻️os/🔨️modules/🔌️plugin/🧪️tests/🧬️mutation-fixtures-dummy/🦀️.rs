@@ -1,4 +1,4 @@
-#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testing/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{DummyMutation, SetDummyCount};
 

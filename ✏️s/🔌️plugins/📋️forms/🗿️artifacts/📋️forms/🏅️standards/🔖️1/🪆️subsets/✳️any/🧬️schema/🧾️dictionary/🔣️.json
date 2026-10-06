@@ -5,7 +5,7 @@
  "type":"object",
  "additionalProperties":false,
  "required":["entries"],
- "properties":{"entries":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["questionId","value"],"properties":{"questionId":{"type":"string"},"value":{"$ref":"#/$defs/IntrinsicLiteral"}}}}},
+ "properties":{"entries":{"type":"array","x-semio-ui":{"label":{"en":"Entries","de":"Einträge"}},"items":{"type":"object","additionalProperties":false,"required":["questionId","value"],"properties":{"questionId":{"type":"string","x-semio-ui":{"widget":"text","label":{"en":"Question","de":"Frage"}}},"value":{"$ref":"#/$defs/IntrinsicLiteral"}}}}},
  "$defs":{
   "Word":{"type":"integer","minimum":0,"maximum":4294967295},
   "IntrinsicMember":{"type":"object","additionalProperties":false,"required":["name","value"],"properties":{"name":{"type":"string"},"value":{"$ref":"#/$defs/IntrinsicLiteral"}}},

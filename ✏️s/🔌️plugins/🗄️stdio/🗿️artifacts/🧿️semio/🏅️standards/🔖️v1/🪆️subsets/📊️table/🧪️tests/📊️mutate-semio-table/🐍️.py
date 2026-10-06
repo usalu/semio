@@ -620,12 +620,12 @@ def doc_string(ctx: Context) -> str:
 
 def survey(ctx: Context) -> dict:
     """📊️ The real complex table, read through this implementation's own DSL parser."""
-    return parse_dsl(ctx.fixture_bytes(SURVEY_DSL).decode("utf-8"))
+    return parse_dsl(ctx.input_bytes(SURVEY_DSL).decode("utf-8"))
 
 
-def fixture_json(ctx: Context, uri: str) -> dict:
+def snapshot_json(ctx: Context, uri: str) -> dict:
     """🧫️ One committed specification-vector file, decoded from the bytes the plan pinned."""
-    return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input
@@ -657,10 +657,10 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
-    before_uri, mutation_uri, after_uri = ctx.step_fixture_uris()[:3]
-    before = fixture_json(ctx, before_uri)
-    after = fixture_json(ctx, after_uri)
-    applied = apply_mutation(before, fixture_json(ctx, mutation_uri))
+    before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
+    before = snapshot_json(ctx, before_uri)
+    after = snapshot_json(ctx, after_uri)
+    applied = apply_mutation(before, snapshot_json(ctx, mutation_uri))
     if applied != after:
         raise AssertionError("%s: the applied table does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied, ensure_ascii=False), json.dumps(after, ensure_ascii=False)))
     return Outcome(applied)
@@ -669,7 +669,7 @@ def spec_vector(ctx: Context) -> Outcome:
 def payload_fidelity(ctx: Context) -> Outcome:
     """📊️ The derived fixture against the real CSV it was derived from, re-tokenized on every run by
     Python's own `csv` module — an RFC 4180 implementation with no connection to this repository."""
-    derived = derive_document_from_csv(ctx.fixture_bytes(SURVEY_CSV))
+    derived = derive_document_from_csv(ctx.input_bytes(SURVEY_CSV))
     committed = survey(ctx)
     if derived != committed:
         raise AssertionError("the committed survey document no longer matches the CSV it was derived from")
@@ -686,24 +686,24 @@ def identity_round_trip(ctx: Context) -> Outcome:
     implementation: this file reproducing them is a cross-language byte agreement. The survey table's
     bytes were written by THIS implementation, so the agreement runs the other way — the Rust subject
     has to read and reproduce a document a Python writer produced from the grammar."""
-    sheet_dsl = ctx.fixture_bytes(SHEET_DSL)
+    sheet_dsl = ctx.input_bytes(SHEET_DSL)
     sheet = parse_dsl(sheet_dsl.decode("utf-8"))
     printed = print_dsl(sheet).encode("utf-8")
     if printed != sheet_dsl:
         raise AssertionError("re-printing the demo sheet did not reproduce the committed DSL bytes (%d vs %d bytes)" % (len(printed), len(sheet_dsl)))
-    committed_pack = ctx.fixture_bytes(SHEET_PACK)
+    committed_pack = ctx.input_bytes(SHEET_PACK)
     unpacked = parse_pack(committed_pack)
     if unpacked != sheet:
         raise AssertionError("the committed binary twin decodes to a different sheet than the committed text\n     got: %s\nexpected: %s" % (json.dumps(unpacked, ensure_ascii=False), json.dumps(sheet, ensure_ascii=False)))
     repacked = pack_bytes(sheet)
     if repacked != committed_pack:
         raise AssertionError("re-encoding the demo sheet did not reproduce the committed pack bytes (%d vs %d bytes)" % (len(repacked), len(committed_pack)))
-    survey_dsl = ctx.fixture_bytes(SURVEY_DSL)
+    survey_dsl = ctx.input_bytes(SURVEY_DSL)
     document = parse_dsl(survey_dsl.decode("utf-8"))
     survey_printed = print_dsl(document).encode("utf-8")
     if survey_printed != survey_dsl:
         raise AssertionError("re-printing the survey table did not reproduce its committed DSL bytes (%d vs %d bytes)" % (len(survey_printed), len(survey_dsl)))
-    survey_pack = ctx.fixture_bytes(SURVEY_PACK)
+    survey_pack = ctx.input_bytes(SURVEY_PACK)
     if parse_pack(survey_pack) != document:
         raise AssertionError("the survey table's binary twin decodes to a different table than its text")
     survey_repacked = pack_bytes(document)

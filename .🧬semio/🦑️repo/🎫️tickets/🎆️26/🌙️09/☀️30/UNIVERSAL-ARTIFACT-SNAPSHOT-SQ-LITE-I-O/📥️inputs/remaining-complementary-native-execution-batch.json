@@ -1,0 +1,1833 @@
+{
+  "qualification": "Filename-index-first bounded remaining complementary plan. No gates. Scheduled Root/Physical owners excluded. Verify whole test target in actual project before executing. No universal denominator.",
+  "rows": [
+    {
+      "owner": "Wfc2dSnapshot",
+      "package": "semio-s-artifact-wfc-2d",
+      "coordinates": [
+        {
+          "kind": "s.wfc.wfc2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.wfc2d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/wfc-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/wfc-2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "wfc2d-owned-consumers-boundary-final.log",
+        "wfc2d-owned-consumers-red.log",
+        "wfc2d-native-red.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "package": "semio-s-artifact-wfc-grid2d",
+      "coordinates": [
+        {
+          "kind": "s.wfc.grid2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.grid2d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "wfc-grid2d-owned-consumers-final.log",
+        "wfc-grid2d-owned-consumers-red.log",
+        "wfc-grid2d-native-first.log",
+        "wfc-grid2d-native-red.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "package": "semio-s-artifact-wfc-bitmap",
+      "coordinates": [
+        {
+          "kind": "s.wfc.bitmap",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.bitmap",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/wfc-bitmap-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/wfc-bitmap-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "physical-bitmap-wfc3d-native-semantic-source-current.log",
+        "wfc-bitmap-source-owned-sparse-state-current.log",
+        "wfc-bitmap-source-owned-launch-current.log",
+        "wfc-bitmap-controlled-native-first.log",
+        "wfc-bitmap-controlled-native-red.log",
+        "wfc-bitmap-native-first.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "wfc-bitmap-controlled-native-first.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 2fd1d6a8-d31e-41d1-9a87-799344bce359 with nextest profile: fundamental",
+              "summary": "Summary [   1.178s] 8 tests run: 8 passed, 179 skipped",
+              "starting": "Starting 8 tests across 1 binary (179 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "wfc-bitmap-controlled-native-red.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 9a0a8cfd-2cf5-4220-a037-7b6bf62285a6 with nextest profile: fundamental",
+              "summary": "Summary [   0.160s] 7/8 tests run: 4 passed, 3 failed, 179 skipped",
+              "starting": "Starting 8 tests across 1 binary (179 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "package": "semio-s-artifact-wfc-3d",
+      "coordinates": [
+        {
+          "kind": "s.wfc.wfc3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.wfc3d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/wfc-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/wfc-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "physical-bitmap-wfc3d-native-semantic-source-current.log",
+        "wfc3d-native-first.log",
+        "wfc3d-native-red-current.log",
+        "wfc3d-native-red.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "package": "semio-s-artifact-procedural-generation2d",
+      "coordinates": [
+        {
+          "kind": "s.procedural.generation2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "generation.2d",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "procedural-generation2d-native-lean-first.log",
+        "procedural-generation2d-native-feature-red.log",
+        "procedural-generation2d-native-red.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "package": "semio-s-artifact-procedural-generation3d",
+      "coordinates": [
+        {
+          "kind": "s.procedural.generation3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "generation.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "package": "semio-s-artifact-gis-gisterrain",
+      "coordinates": [
+        {
+          "kind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "gis.terrain",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/gis-gisterrain-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/gis-gisterrain-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-canonical-schema-hash-registered-native-after.log",
+        "root-canonical-schema-storage-registered-native-after-fixture-path-repair.log",
+        "root-canonical-schema-storage-registered-native-after.log",
+        "root-canonical-schema-storage-registered-native-before.log",
+        "root-semio-native-cumulative-admission-registered-source-before.log",
+        "root-tsv-complete-logical-owner-registered-native-before.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "package": "semio-s-artifact-gis-gismap",
+      "coordinates": [
+        {
+          "kind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "gis.map",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/gis-gismap-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/gis-gismap-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-canonical-schema-hash-registered-native-after.log",
+        "root-canonical-schema-storage-registered-native-after-fixture-path-repair.log",
+        "root-canonical-schema-storage-registered-native-after.log",
+        "root-canonical-schema-storage-registered-native-before.log",
+        "root-semio-native-cumulative-admission-registered-source-before.log",
+        "root-tsv-complete-logical-owner-registered-native-before.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "VcsSnapshot",
+      "package": "semio-s-artifact-vcs-vcs",
+      "coordinates": [
+        {
+          "kind": "s.vcs.vcs",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "vcs.vcs",
+      "artifactRoot": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/vcs-vcs-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/vcs-vcs-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "vcs-owned-native-tree-fixed.log",
+        "vcs-owned-native-prerequisites-fixed.log",
+        "vcs-owned-native-implemented.log",
+        "vcs-native-capability-red.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "vcs-native-capability-red.log",
+          "runs": [
+            {
+              "run": "Nextest run ID b86d32d5-718e-4eba-8448-369601d23338 with nextest profile: quick",
+              "summary": "Summary [   0.017s] 2 tests run: 1 passed, 1 failed, 129 skipped",
+              "starting": "Starting 2 tests across 1 binary (129 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "package": "semio-s-artifact-animate-presentation",
+      "coordinates": [
+        {
+          "kind": "s.animate.presentation",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "animate.presentation",
+      "artifactRoot": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/animate-presentation-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/animate-presentation-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "pptx-owned-presentation-public-owner-types-current.log",
+        "pptx-owned-presentation-production-check-current.log",
+        "pptx-owned-presentation-public-syntax-current.log",
+        "pptx-owned-presentation-public-first-implementation.log",
+        "pptx-owned-presentation-native-first-implementation.log",
+        "pptx-owned-presentation-native-baseline-red.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "package": "semio-s-artifact-demonstrator-playground",
+      "coordinates": [
+        {
+          "kind": "s.demonstrator.playground",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "playground.playground",
+      "artifactRoot": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-playground-owning-whole-native-current.log",
+        "root-playground-native-mounted-controls-current.log",
+        "root-playground-raster-native-feature-baselines.log",
+        "root-playground-native-provider-rustfmt.log",
+        "root-playground-native-owning-callers-fixed-baseline.log",
+        "root-playground-native-raster-caller-fixed-baseline.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "root-playground-owning-whole-native-current.log",
+          "runs": [
+            {
+              "run": "@semio-tech/demonstrator-playground-rs:  Nextest run ID 88992fd7-6752-4133-a007-1fe87f70fe5a with nextest profile: quick",
+              "summary": "@semio-tech/demonstrator-playground-rs:      Summary [   0.069s] 28/53 tests run: 26 passed, 2 failed, 0 skipped",
+              "starting": "@semio-tech/demonstrator-playground-rs:     Starting 53 tests across 1 binary",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "root-playground-native-mounted-controls-current.log",
+          "runs": [
+            {
+              "run": "@semio-tech/demonstrator-playground-rs:  Nextest run ID d10da6a7-1c89-46c8-af40-8b484d795a21 with nextest profile: quick",
+              "summary": "@semio-tech/demonstrator-playground-rs:      Summary [   0.592s] 8 tests run: 6 passed, 2 failed, 45 skipped",
+              "starting": "@semio-tech/demonstrator-playground-rs:     Starting 8 tests across 1 binary (45 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "package": "semio-s-artifact-sequence-sequence",
+      "coordinates": [
+        {
+          "kind": "s.sequence.sequence",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "sequence.sequence",
+      "artifactRoot": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "sequence-native-after-space.log",
+        "sequence-native-implemented.log",
+        "sequence-native-step-prerequisite-fixed.log",
+        "sequence-native-capability-red.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "sequence-native-after-space.log",
+          "runs": [
+            {
+              "run": "Nextest run ID c8d551f2-9e01-4a9a-ae85-da2e14a80039 with nextest profile: quick",
+              "summary": "Summary [   0.750s] 11 tests run: 10 passed, 1 failed, 209 skipped",
+              "starting": "Starting 11 tests across 1 binary (209 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "sequence-native-step-prerequisite-fixed.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 07d2a945-3c44-4f7e-8740-ee2f985a768d with nextest profile: quick",
+              "summary": "Summary [   0.267s] 3 tests run: 1 passed, 2 failed, 209 skipped",
+              "starting": "Starting 3 tests across 1 binary (209 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "package": "semio-s-artifact-fem-2d",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.2d",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/fem-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/fem-2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "fem2d-flow-native-controlled-first-repair.log",
+        "fem2d-native-complete-first-implementation.log",
+        "wfc-grid3d-flow-fem2d-native-canonical-contract-current.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "fem2d-flow-native-controlled-first-repair.log",
+          "runs": [
+            {
+              "run": "@semio-tech/fem-2d-rs:  Nextest run ID 6fb5bc19-45b2-4ed9-ae96-209da2d4805c with nextest profile: quick",
+              "summary": "@semio-tech/fem-2d-rs:      Summary [   0.828s] 8 tests run: 8 passed, 1055 skipped",
+              "starting": "@semio-tech/fem-2d-rs:     Starting 8 tests across 1 binary (1055 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "package": "semio-s-artifact-fem-3d",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/fem-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/fem-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "package": "semio-s-artifact-architect-program",
+      "coordinates": [
+        {
+          "kind": "s.architect.program",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "architect.program",
+      "artifactRoot": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/architect-program-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/architect-program-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-wav-architect-remodeling-whole-native.log",
+        "root-architect-remodel-wav-ieee-current-value-imports-native.log",
+        "root-architect-remodel-wav-shared-ieee-canonical-consumer-native.log",
+        "root-architect-remodel-wav-stdio-locale-edge-native.log",
+        "root-architect-remodel-wav-private-label-repaired-native.log",
+        "root-architect-remodel-wav-explicit-host-native.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "root-wav-architect-remodeling-whole-native.log",
+          "runs": [
+            {
+              "run": "@semio-tech/architect-program-rs:  Nextest run ID 6d48c847-b574-4f69-9e86-b44a9df0c808 with nextest profile: quick",
+              "summary": "@semio-tech/architect-program-rs:      Summary [  48.331s] 25/2118 tests run: 20 passed, 5 failed, 0 skipped",
+              "starting": "@semio-tech/architect-program-rs:     Starting 2118 tests across 1 binary",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "root-architect-remodel-wav-ieee-current-value-imports-native.log",
+          "runs": [
+            {
+              "run": "@semio-tech/architect-program-rs:  Nextest run ID cfd45a0b-3d70-4107-9fcd-053bd30fea10 with nextest profile: quick",
+              "summary": "@semio-tech/architect-program-rs:      Summary [  13.615s] 22 tests run: 21 passed, 1 failed, 2096 skipped",
+              "starting": "@semio-tech/architect-program-rs:     Starting 22 tests across 1 binary (2096 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "package": "semio-s-artifact-process-process3d",
+      "coordinates": [
+        {
+          "kind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "process.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/process-process3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/process-process3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "package": "semio-s-artifact-lowpoly-lowpoly",
+      "coordinates": [
+        {
+          "kind": "s.lowpoly.lowpoly",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "lowpoly.document",
+      "artifactRoot": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/lowpoly-lowpoly-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/lowpoly-lowpoly-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-lowpoly-six-image-after-and-intermediate-three-native-before-replay.log",
+        "root-lowpoly-six-retry-semio-intermediate-three-native-before.log",
+        "root-lowpoly-managed-mesh-six-after-raster-binding-and-image-before-native.log",
+        "root-lowpoly-managed-mesh-six-native-before.log",
+        "lowpoly-native-six-table-provider-first-mounted.log",
+        "lowpoly-native-five-law-baseline-canonical-owner-consumers.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "root-lowpoly-managed-mesh-six-native-before.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 5855ab28-56d5-4772-985d-28e916c73236 with nextest profile: quick",
+              "summary": "Summary [   2.071s] 6 tests run: 5 passed, 1 failed, 369 skipped",
+              "starting": "Starting 6 tests across 1 binary (369 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "lowpoly-native-six-table-provider-first-mounted.log",
+          "runs": [
+            {
+              "run": "@semio-tech/lowpoly-lowpoly-rs:  Nextest run ID 4d8b2b7a-8b98-4feb-9af0-21bdadb1db52 with nextest profile: quick",
+              "summary": "@semio-tech/lowpoly-lowpoly-rs:      Summary [   1.502s] 5 tests run: 5 passed, 367 skipped",
+              "starting": "@semio-tech/lowpoly-lowpoly-rs:     Starting 5 tests across 1 binary (367 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "WiresSnapshot",
+      "package": "semio-s-artifact-reasoning-wires",
+      "coordinates": [
+        {
+          "kind": "s.reasoning.wires",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "reasoning.wires.fixture",
+      "artifactRoot": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "physical-process-wires-native-semantic-contract-source-paired.log",
+        "physical-process-wires-native-semantic-contract-source-before.log",
+        "wires-native-literal-child-grammar-repaired.log",
+        "wires-native-flat-controlled-output-bound.log",
+        "wires-native-flat-controlled-record-default-output-red.log",
+        "wires-native-flat-declaration-dispatch-repaired.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "wires-native-literal-child-grammar-repaired.log",
+          "runs": [
+            {
+              "run": "@semio-tech/reasoning-wires-rs:  Nextest run ID f6184af5-72d8-4b96-94ee-eb17aa805567 with nextest profile: quick",
+              "summary": "@semio-tech/reasoning-wires-rs:      Summary [   7.141s] 11 tests run: 11 passed, 201 skipped",
+              "starting": "@semio-tech/reasoning-wires-rs:     Starting 11 tests across 1 binary (201 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "wires-native-flat-controlled-output-bound.log",
+          "runs": [
+            {
+              "run": "@semio-tech/reasoning-wires-rs:  Nextest run ID 43904bc4-4ed8-48b3-a649-6d780ef839fc with nextest profile: quick",
+              "summary": "@semio-tech/reasoning-wires-rs:      Summary [   4.417s] 11 tests run: 10 passed, 1 failed, 201 skipped",
+              "starting": "@semio-tech/reasoning-wires-rs:     Starting 11 tests across 1 binary (201 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "FormsSnapshot",
+      "package": "semio-s-artifact-forms-forms",
+      "coordinates": [
+        {
+          "kind": "s.forms.forms",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "forms.form",
+      "artifactRoot": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/forms-forms-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/forms-forms-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-forms-thirteen-current-archive-children-pair-native-replay.log",
+        "root-forms-thirteen-current-seven-canonical-type-native-replay.log",
+        "root-forms-thirteen-office-current-native-replay.log",
+        "root-forms-thirteen-json-target-current-native-replay.log",
+        "root-forms-thirteen-semio-canonical-native-replay.log",
+        "root-forms-thirteen-current-canonical-native-replay.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "package": "semio-s-artifact-layout-layout",
+      "coordinates": [
+        {
+          "kind": "s.layout.layout",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "layout.layout",
+      "artifactRoot": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/layout-layout-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/layout-layout-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-layout-nine-pdf14-current-full-owned-native-baselines.log",
+        "root-cad-layout-rewriting-current-owning-native-baselines-after-canonical-prerequisites.log",
+        "layout-borrowed-native-neutral-preflight-source-pair.log",
+        "layout-borrowed-native-neutral-preflight-source-red.log",
+        "layout-typed-dictionary-change-declared-native-facet-pair.log",
+        "root-layout-full-owned-native-after-dxf-dwg-warning-red.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "root-layout-nine-pdf14-current-full-owned-native-baselines.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 15223591-bc2a-41f1-b3bc-893f1e536eea with nextest profile: quick",
+              "summary": "Summary [   1.185s] 9 tests run: 8 passed, 1 failed, 597 skipped",
+              "starting": "Starting 9 tests across 1 binary (597 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "root-cad-layout-rewriting-current-owning-native-baselines-after-canonical-prerequisites.log",
+          "runs": [
+            {
+              "run": "Nextest run ID fa8f7100-d290-49be-8b95-7eee01134711 with nextest profile: quick",
+              "summary": "Summary [   0.738s] 9 tests run: 8 passed, 1 failed, 597 skipped",
+              "starting": "Starting 9 tests across 1 binary (597 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "CadSnapshot",
+      "package": "semio-s-artifact-cad-cad",
+      "coordinates": [
+        {
+          "kind": "s.cad.cad",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "cad.scene",
+      "artifactRoot": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/cad-cad-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/cad-cad-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "physical-cad-live-owned-index-and-reconstruction-source-current.log",
+        "root-cad-intrinsic-media-one-after-fixture-parser-native-red.log",
+        "root-cad-intrinsic-media-one-authentic-native-red.log",
+        "root-space-fourteen-paid-repair-and-cad-fourteen-current-canonical-native-replay.log",
+        "root-cad-layout-rewriting-current-owning-native-baselines-after-canonical-prerequisites.log",
+        "root-cad-fourteen-current-complete-parent-native-baseline.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "En1990Snapshot",
+      "package": "semio-s-artifact-norm-en1990",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1990",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1990/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1990-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1990-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "physical-en1990-current-native-semantic-source.log",
+        "norm-en1990-paired-native-quick-retry-current.log",
+        "norm-en1990-paired-native-quick-current.log",
+        "norm-en1990-paired-native-current.log",
+        "norm-en1990-owned-intermediate-native-current.log",
+        "norm-en1990-full-owned-native-current.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "norm-en1990-paired-native-quick-retry-current.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 6f33c37a-ca2b-4403-8d8a-822ac3f34360 with nextest profile: quick",
+              "summary": "Summary [   0.513s] 9 tests run: 9 passed, 151 skipped",
+              "starting": "Starting 9 tests across 1 binary (151 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "package": "semio-s-artifact-norm-din18599",
+      "coordinates": [
+        {
+          "kind": "s.norm.din18599",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.din18599/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-din18599-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-din18599-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-din18599-native-census-source-after.log",
+        "norm-din18599-paired-native-first.log",
+        "norm-din18599-owned-parser-feature-red.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "package": "semio-s-artifact-norm-din16798",
+      "coordinates": [
+        {
+          "kind": "s.norm.din16798",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.din16798/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-din16798-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-din16798-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "norm-din16798-paired-native-current.log",
+        "norm-din16798-native-width-feature-red.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "En1991Snapshot",
+      "package": "semio-s-artifact-norm-en1991",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1991",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1991/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1991-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1991-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "norm-en1991-paired-native-oracle-current.log",
+        "norm-en1991-paired-native-retry-current.log",
+        "norm-en1991-paired-native-current.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "norm-en1991-paired-native-retry-current.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 8d311eb3-3749-4905-8ccf-838d1cefa7e0 with nextest profile: quick",
+              "summary": "Summary [   3.304s] 9 tests run: 8 passed, 1 failed, 160 skipped",
+              "starting": "Starting 9 tests across 1 binary (160 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "En1992Snapshot",
+      "package": "semio-s-artifact-norm-en1992",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1992",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1992/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1992-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1992-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "en1992-controlled-native-output-first-implementation.log",
+        "en1992-controlled-native-output-first-red.log",
+        "en1992-controlled-native-final.log",
+        "en1992-controlled-native-red.log",
+        "en1992-native-first.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "en1992-controlled-native-output-first-implementation.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 281dfb07-aa67-4189-b95a-36fbfacce8df with nextest profile: quick",
+              "summary": "Summary [   1.004s] 12 tests run: 9 passed, 3 failed, 217 skipped",
+              "starting": "Starting 12 tests across 1 binary (217 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "en1992-controlled-native-output-first-red.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 0384604a-cc13-497b-8354-f5dfa90984bc with nextest profile: quick",
+              "summary": "Summary [   1.632s] 12 tests run: 9 passed, 3 failed, 217 skipped",
+              "starting": "Starting 12 tests across 1 binary (217 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "package": "semio-s-artifact-norm-vdi3805",
+      "coordinates": [
+        {
+          "kind": "s.norm.vdi3805",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.vdi3805/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "norm-vdi3805-strengthened-domain-neutral-native.log",
+        "norm-vdi3805-controlled-width-native-implemented.log",
+        "norm-vdi3805-controlled-width-native-current-errors-fixed.log",
+        "norm-vdi3805-controlled-width-native-first-red.log",
+        "norm-vdi3805-quoted-key-native-compile-fixed.log",
+        "norm-vdi3805-quoted-key-native-current.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "norm-vdi3805-controlled-width-native-current-errors-fixed.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 0dca0c33-6d07-4c7f-b3da-47c5693a8ad5 with nextest profile: quick",
+              "summary": "Summary [   0.531s] 13/14 tests run: 11 passed, 2 failed, 227 skipped",
+              "starting": "Starting 14 tests across 1 binary (227 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "norm-vdi3805-quoted-key-native-compile-fixed.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 3edb7d07-b1ce-4e51-aaf2-73b4abe6945a with nextest profile: quick",
+              "summary": "Summary [   0.602s] 12 tests run: 11 passed, 1 failed, 227 skipped",
+              "starting": "Starting 12 tests across 1 binary (227 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "package": "semio-s-artifact-norm-iso16757",
+      "coordinates": [
+        {
+          "kind": "s.norm.iso16757",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.iso16757/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "iso16757-controlled-native-output-first-red.log",
+        "iso16757-controlled-native-admission-final.log",
+        "iso16757-controlled-native-value-current.log",
+        "iso16757-controlled-native-final.log",
+        "iso16757-controlled-native-first.log",
+        "iso16757-controlled-native-red.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "iso16757-controlled-native-output-first-red.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 4e13e50a-c650-4765-88e1-206804160af5 with nextest profile: quick",
+              "summary": "Summary [   0.706s] 16 tests run: 12 passed, 4 failed, 243 skipped",
+              "starting": "Starting 16 tests across 1 binary (243 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "iso16757-controlled-native-admission-final.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 665775ba-093d-4398-ae0b-d87a7a62b690 with nextest profile: fundamental",
+              "summary": "Summary [   3.357s] 15 tests run: 15 passed, 243 skipped",
+              "starting": "Starting 15 tests across 1 binary (243 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "En1993Snapshot",
+      "package": "semio-s-artifact-norm-en1993",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1993",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1993/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1993-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1993-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-en1993-native-census-source-after.log",
+        "en1993-controlled-native-output-first-red.log",
+        "en1993-controlled-native-final.log",
+        "en1993-native-first.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "en1993-controlled-native-output-first-red.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 635e9879-b310-44bb-bc7b-2f7eb8b90a31 with nextest profile: quick",
+              "summary": "Summary [   1.331s] 11 tests run: 8 passed, 3 failed, 353 skipped",
+              "starting": "Starting 11 tests across 1 binary (353 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "En1994Snapshot",
+      "package": "semio-s-artifact-norm-en1994",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1994",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1994/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1994-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1994-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "norm-en1994-paired-native-factory-current.log",
+        "norm-en1994-paired-native-current.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "package": "semio-s-artifact-norm-din4108",
+      "coordinates": [
+        {
+          "kind": "s.norm.din4108",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.din4108/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-din4108-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-din4108-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "norm-din4108-paired-native-current.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "norm-din4108-paired-native-current.log",
+          "runs": [
+            {
+              "run": "Nextest run ID f59d42f1-0c01-48c1-b092-17ab4899e0cb with nextest profile: quick",
+              "summary": "Summary [   0.271s] 9 tests run: 9 passed, 158 skipped",
+              "starting": "Starting 9 tests across 1 binary (158 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "En1996Snapshot",
+      "package": "semio-s-artifact-norm-en1996",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1996",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1996/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1996-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1996-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "norm-en1996-paired-native-factory-current.log",
+        "norm-en1996-paired-native-current.log",
+        "norm-en1996-full-source-owned-current.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "En1995Snapshot",
+      "package": "semio-s-artifact-norm-en1995",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1995",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1995/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1995-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1995-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "norm-en1995-paired-native-choice-current.log",
+        "norm-en1995-paired-native-current.log",
+        "norm-en1995-native-width-feature-red.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "norm-en1995-paired-native-current.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 22d15c74-b36d-4e17-b909-17a74d5aa4c8 with nextest profile: quick",
+              "summary": "Summary [   0.029s] 9 tests run: 1 passed, 8 failed, 376 skipped",
+              "starting": "Starting 9 tests across 1 binary (376 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "En1999Snapshot",
+      "package": "semio-s-artifact-norm-en1999",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1999",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1999/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1999-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1999-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "en1999-controlled-native-output-first-red.log",
+        "en1999-controlled-native-final.log",
+        "en1999-native-paired-first.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "en1999-controlled-native-output-first-red.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 3b3915f2-847c-4f6c-a04c-a56d8f918af4 with nextest profile: quick",
+              "summary": "Summary [   0.857s] 13 tests run: 10 passed, 3 failed, 152 skipped",
+              "starting": "Starting 13 tests across 1 binary (152 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "En1998Snapshot",
+      "package": "semio-s-artifact-norm-en1998",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1998",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1998/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1998-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1998-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "norm-en1998-controlled-native-current-errors-fixed.log",
+        "norm-en1998-controlled-native-owned-first.log",
+        "norm-en1998-controlled-native-first-red.log",
+        "norm-en1998-paired-native-first.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "norm-en1998-controlled-native-current-errors-fixed.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 519baa7d-b84a-4e5e-93b2-c9aa3131dde7 with nextest profile: quick",
+              "summary": "Summary [   0.526s] 10 tests run: 10 passed, 222 skipped",
+              "starting": "Starting 10 tests across 1 binary (222 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "norm-en1998-controlled-native-first-red.log",
+          "runs": [
+            {
+              "run": "Nextest run ID fceed6de-01d7-4a0f-aeaf-7132689ff568 with nextest profile: quick",
+              "summary": "Summary [   0.588s] 10 tests run: 9 passed, 1 failed, 222 skipped",
+              "starting": "Starting 10 tests across 1 binary (222 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "package": "semio-s-artifact-playbook-playbook",
+      "coordinates": [
+        {
+          "kind": "s.playbook.playbook",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "playbook.program",
+      "artifactRoot": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-procedure-playbook-puzzle5d-controlled-native-current.log",
+        "root-procedure-puzzle5d-playbook-current-native-baseline.log",
+        "root-puzzle5d-procedure-playbook-controlled-native-baseline.log",
+        "playbook-native-declaration-first.log",
+        "playbook-native-level-full-process-final.log",
+        "playbook-native-level-full-process.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log",
+          "runs": [
+            {
+              "run": "Nextest run ID b725e0d5-b530-4c31-b0ed-781763161e18 with nextest profile: quick",
+              "summary": "Summary [   0.123s] 11 tests run: 6 passed, 5 failed, 168 skipped",
+              "starting": "Starting 11 tests across 1 binary (168 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "root-puzzle5d-procedure-playbook-controlled-native-baseline.log",
+          "runs": [
+            {
+              "run": "@semio-tech/playbook-playbook-rs:  Nextest run ID 4704bfe6-fa47-4a32-bd77-07087691baf9 with nextest profile: quick",
+              "summary": "@semio-tech/playbook-playbook-rs:      Summary [   0.050s] 8 tests run: 6 passed, 2 failed, 168 skipped",
+              "starting": "@semio-tech/playbook-playbook-rs:     Starting 8 tests across 1 binary (168 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "package": "semio-s-artifact-imperative-procedure",
+      "coordinates": [
+        {
+          "kind": "s.imperative.procedure",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "procedure.document/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-procedure-playbook-puzzle5d-controlled-native-current.log",
+        "root-procedure-puzzle5d-playbook-current-native-baseline.log",
+        "root-procedure-puzzle5d-actual-project-controlled-native-followup.log",
+        "root-procedure-puzzle5d-controlled-native-followup.log",
+        "root-procedure-neural-construction-native-output-baseline.log",
+        "root-procedure-current-compile-neural-native-baseline.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 55be247a-5c29-42ef-bd6c-0f1dc3702bb6 with nextest profile: quick",
+              "summary": "Summary [   0.119s] 14 tests run: 10 passed, 4 failed, 153 skipped",
+              "starting": "Starting 14 tests across 1 binary (153 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "root-procedure-neural-construction-native-output-baseline.log",
+          "runs": [
+            {
+              "run": "Nextest run ID e588fea1-98a5-4002-aeb7-0745bc17d9a6 with nextest profile: quick",
+              "summary": "Summary [   0.478s] 11 tests run: 9 passed, 2 failed, 153 skipped",
+              "starting": "Starting 11 tests across 1 binary (153 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "package": "semio-s-artifact-remodel-remodeling",
+      "coordinates": [
+        {
+          "kind": "s.remodel.remodeling",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "remodeling.scene",
+      "artifactRoot": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-wav-architect-remodeling-whole-native.log",
+        "root-wav-remodeling-puzzle5d-native-owned.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "root-wav-architect-remodeling-whole-native.log",
+          "runs": [
+            {
+              "run": "@semio-tech/remodel-remodeling-rs:  Nextest run ID cb3ba72f-02f1-47d5-a38a-c546d70c3e97 with nextest profile: quick",
+              "summary": "@semio-tech/remodel-remodeling-rs:      Summary [   0.060s] 10/1326 tests run: 5 passed, 5 failed, 17 skipped",
+              "starting": "@semio-tech/remodel-remodeling-rs:     Starting 1326 tests across 1 binary (17 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "root-wav-remodeling-puzzle5d-native-owned.log",
+          "runs": [
+            {
+              "run": "@semio-tech/remodel-remodeling-rs:  Nextest run ID 2f075b0d-913d-4bcd-b4db-4cb9d9c3723f with nextest profile: quick",
+              "summary": "@semio-tech/remodel-remodeling-rs:      Summary [   1.553s] 16 tests run: 16 passed, 1327 skipped",
+              "starting": "@semio-tech/remodel-remodeling-rs:     Starting 16 tests across 1 binary (1327 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "package": "semio-s-artifact-energy-model",
+      "coordinates": [
+        {
+          "kind": "s.energy.model",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "energy.model",
+      "artifactRoot": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/energy-model-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/energy-model-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "energy-model-thirteen-native-nine-source-final.log",
+        "energy-model-public-owned-suite-types-current.log",
+        "energy-model-controlled-native-first-implementation.log",
+        "energy-model-typed-relational-and-native-hooks-first.log",
+        "energy-model-native-capability-current-red.log",
+        "energy-model-native-capability-first-red.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "energy-model-thirteen-native-nine-source-final.log",
+          "runs": [
+            {
+              "run": "Nextest run ID c0f2dce6-f402-4e46-a2bc-5526c89d0fdf with nextest profile: quick",
+              "summary": "Summary [   4.311s] 13 tests run: 13 passed, 6309 skipped",
+              "starting": "Starting 13 tests across 1 binary (6309 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "package": "semio-s-artifact-trinity-rewriting",
+      "coordinates": [
+        {
+          "kind": "s.trinity.rewriting",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "trinity.rewrite.rule",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-rewriting-twelve-current-identity-eighteen-after-authority-native.log",
+        "root-rewriting-twelve-current-identity-eighteen-after-native.log",
+        "root-cad-layout-rewriting-current-owning-native-baselines-after-canonical-prerequisites.log",
+        "root-rewriting-twelve-coherent-parent-native-and-initial-owner-native.log",
+        "worker-rewriting-current-owned-scenario-capsule-source.log",
+        "root-rewriting-twelve-current-editor-canonical-pair-native-replay.log"
+      ],
+      "boundedReceipts": [
+        {
+          "log": "root-cad-layout-rewriting-current-owning-native-baselines-after-canonical-prerequisites.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 4ee74af6-65ed-4f2e-9409-096129913b45 with nextest profile: quick",
+              "summary": "Summary [   0.212s] 12 tests run: 9 passed, 3 failed, 228 skipped",
+              "starting": "Starting 12 tests across 1 binary (228 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        },
+        {
+          "log": "root-rewriting-twelve-current-editor-canonical-pair-native-replay.log",
+          "runs": [
+            {
+              "run": "Nextest run ID 9c4702cc-cab5-48df-a535-f77b962d9776 with nextest profile: quick",
+              "summary": "Summary [   0.144s] 12 tests run: 5 passed, 7 failed, 228 skipped",
+              "starting": "Starting 12 tests across 1 binary (228 tests skipped)",
+              "publicDebug": []
+            }
+          ]
+        }
+      ],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "JackSnapshot",
+      "package": "semio-s-artifact-trinity-jack",
+      "coordinates": [
+        {
+          "kind": "s.trinity.jack",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.trinity.jack",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/trinity-jack-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/trinity-jack-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "DagSnapshot",
+      "package": "semio-s-artifact-dag-dag",
+      "coordinates": [
+        {
+          "kind": "s.dag.dag",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "dag.dag",
+      "artifactRoot": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/dag-dag-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/dag-dag-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "root-authentic-infinite-dag9-owned-null-and-actual-borrowed-preflight-paired-replay.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "package": "semio-s-artifact-draw-drawing",
+      "coordinates": [
+        {
+          "kind": "s.draw.drawing",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "drawing.document",
+      "artifactRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/draw-drawing-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/draw-drawing-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "drawing-borrowed-component-native-current.log",
+        "drawing-borrowed-component-native-first-implementation.log",
+        "drawing-borrowed-component-native-locale-current-red.log",
+        "drawing-borrowed-component-native-resumed-red.log",
+        "drawing-borrowed-component-native-red.log",
+        "lowpoly-native-five-law-baseline-canonical-drawing-dependency.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "package": "semio-s-artifact-puzzle-2d",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.2d.fixture",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/puzzle-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/puzzle-2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "package": "semio-s-artifact-puzzle-3d",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "puzzle3d-native-owned-dsl-current-red.log",
+        "puzzle3d-native-owned-current-red.log",
+        "puzzle3d-native-owned-registered-red.log",
+        "puzzle3d-native-owned-first-red.log",
+        "puzzle3d5d-source-owned-final.log",
+        "puzzle3d5d-source-owned-assets-and-counts.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "package": "semio-s-artifact-block-2d",
+      "coordinates": [
+        {
+          "kind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.2d",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/block-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/block-2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "package": "semio-s-artifact-block-5d",
+      "coordinates": [
+        {
+          "kind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.5d",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/block-5d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/block-5d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [
+        "block5d-source-canonical-native-unicode-red.log"
+      ],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "package": "semio-s-artifact-block-3d",
+      "coordinates": [
+        {
+          "kind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/block-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/block-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "indexedCandidates": [],
+      "boundedReceipts": [],
+      "wholeCommand": null,
+      "qualification": "Receipts historical; no fresh-source credit. Empty means bounded evidence unresolved, not absent capability.",
+      "wholeTargetVerified": false
+    }
+  ]
+}

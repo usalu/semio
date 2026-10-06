@@ -20,10 +20,10 @@ export async function registerOutcomeCodeTests(vitest: NonNullable<ImportMeta["v
   }
 
   describe("outcome code vocabulary", () => {
-    it("is one schema-valid table the TypeScript twin reproduces", async () => {
+    it("validates each actual outcome entry and reproduces the vocabulary", async () => {
       const { fixture, schema } = await load();
       const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      for (const row of fixture.codes as Json[]) expect(validate(row), JSON.stringify(validate.errors)).toBe(true);
       expect(OUTCOME_CODES.map(([code, level]) => ({ code, level }))).toEqual((fixture.codes as Json[]).map((row) => ({ code: row.code, level: row.level })));
       for (const row of fixture.codes as Json[]) expect(outcomeCodeLevel(row.code), row.code).toBe(row.level);
     });

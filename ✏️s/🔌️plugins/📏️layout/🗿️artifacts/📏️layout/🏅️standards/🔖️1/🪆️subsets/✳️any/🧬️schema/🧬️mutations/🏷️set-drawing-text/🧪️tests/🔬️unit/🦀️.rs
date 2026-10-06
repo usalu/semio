@@ -17,7 +17,7 @@ fn plan(text: &str) -> LayoutSnapshot {
             root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: text.into(), at: point(0.0, 0.0), style: None }] },
         }],
     };
-    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
     document
 }
@@ -55,7 +55,7 @@ fn set_drawing_text_replaces_a_later_label_and_leaves_the_first() {
             },
         }],
     };
-    let mut base = crate::standards::v1::subsets::any::schema::default_document();
+    let mut base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     base.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
     let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 1, text: "Caption".into() });
     let next = mutation.diff(&base).diff().apply(&base).expect("rename");

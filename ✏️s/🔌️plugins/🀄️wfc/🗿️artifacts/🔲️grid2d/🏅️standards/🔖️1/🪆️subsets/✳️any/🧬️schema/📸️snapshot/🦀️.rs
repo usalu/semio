@@ -262,57 +262,9 @@ pub fn cell_rect(snapshot: &Grid2dSnapshot, x: u32, y: u32) -> (f64, f64, f64, f
 //#region 🔖️PaletteStream
 const BASE64_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/// 🔤️ Encodes one palette index per pixel, row-major, as the base64 stream `Bitmap.pixels` carries.
-/// Dependency-free by repo rule — no runtime library is pulled in for a 24-character transform.
-pub fn encode_palette_indices(indices: &[u8]) -> String {
-    let mut out = String::with_capacity(indices.len().div_ceil(3) * 4);
-    for chunk in indices.chunks(3) {
-        let taken = chunk.len();
-        let mut block = 0u32;
-        for (offset, byte) in chunk.iter().enumerate() {
-            block |= u32::from(*byte) << (16 - 8 * offset);
-        }
-        for slot in 0..=taken {
-            out.push(char::from(BASE64_ALPHABET[((block >> (18 - 6 * slot)) & 0x3f) as usize]));
-        }
-        for _ in taken..3 {
-            out.push('=');
-        }
-    }
-    out
-}
 
-/// 🔤️ The exact inverse of [`encode_palette_indices`]. A malformed stream yields the prefix it
-/// could read, never a panic — a tile is media, not a protocol.
-pub fn decode_palette_indices(pixels: &str) -> Vec<u8> {
-    fn value(byte: u8) -> Option<u8> {
-        match byte {
-            b'A'..=b'Z' => Some(byte - b'A'),
-            b'a'..=b'z' => Some(byte - b'a' + 26),
-            b'0'..=b'9' => Some(byte - b'0' + 52),
-            b'+' => Some(62),
-            b'/' => Some(63),
-            _ => None,
-        }
-    }
-    let clean: Vec<u8> = pixels.bytes().filter(|byte| *byte != b'=' && !byte.is_ascii_whitespace()).collect();
-    let mut out = Vec::with_capacity(clean.len() * 3 / 4);
-    for chunk in clean.chunks(4) {
-        let Some(values) = chunk.iter().map(|byte| value(*byte)).collect::<Option<Vec<u8>>>() else {
-            return out;
-        };
-        let taken = values.len();
-        let combined = values.iter().fold(0u32, |accumulator, value| (accumulator << 6) | u32::from(*value)) << ((4 - taken) * 6);
-        out.push((combined >> 16) as u8);
-        if taken > 2 {
-            out.push((combined >> 8) as u8);
-        }
-        if taken > 3 {
-            out.push(combined as u8);
-        }
-    }
-    out
-}
+
+
 //#endregion 🔖️PaletteStream
 
 //#region 🧪️Tests
@@ -321,9 +273,5 @@ pub fn decode_palette_indices(pixels: &str) -> Vec<u8> {
 mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
 
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

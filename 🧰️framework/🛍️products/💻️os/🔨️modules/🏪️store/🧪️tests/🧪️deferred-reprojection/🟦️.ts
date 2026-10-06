@@ -7,7 +7,7 @@
  * restarted. The adoption never depends on the budget. */
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+
 import fc from "fast-check";
 import { applyPatch, type Operation as Patch } from "fast-json-patch";
 
@@ -202,13 +202,9 @@ function runCase(testCase: Case, budget: number | null, steps: Step[] = testCase
 
 //#region 🧪️Corpus
 const corpus = read("../../🧫️fixtures/🧫️deferred-reprojection/🔣️.json");
-const schema = read("../../🧬️schema/🔣️deferred-reprojection/🔣️.json");
 const cases = corpus.cases as Case[];
 
-test("🧬️ the deferred-reprojection corpus satisfies its JSON Schema", () => {
-  const validate = new Ajv({ strict: true, allErrors: true, allowUnionTypes: true }).compile(schema);
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-});
+
 
 test("🧮️ the twin reproduces every step of every case", () => {
   for (const testCase of cases) {

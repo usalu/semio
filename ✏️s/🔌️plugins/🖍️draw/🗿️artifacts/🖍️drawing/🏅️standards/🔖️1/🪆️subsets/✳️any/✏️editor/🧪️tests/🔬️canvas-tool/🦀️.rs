@@ -7,7 +7,7 @@ fn nested_curve_selection_fixture() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️selection/🔣️.json")).unwrap();
     let segments: Vec<PathSegment> = serde_json::from_value(fixture["segments"].clone()).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let mut path = create_drawing_path_layer("Curve", segments.clone());
+        let mut path = filled_path("Curve", segments.clone());
         crate::schema::layer_base_mut(&mut path).id = "curve".into();
         crate::schema::layer_base_mut(&mut path).attributes.fill=Some(crate::FillStyle::Solid {color:[1.0,0.0,0.0,1.0]});
         let mut group = crate::schema::create_drawing_group_layer("Parent");
@@ -20,28 +20,28 @@ fn nested_curve_selection_fixture() {
         let document = DrawingSnapshot { layers: vec![group], ..Default::default() };
         let point = serde_json::from_value(case["point"].clone()).unwrap();
         let mut query = TracePointerJob::new_query(&document, point, 0.0, case["includeControls"].as_bool().unwrap_or(false));
-        while !query.advance(&document) {}
+        finish_cached(&mut query,&document);
         assert_eq!(query.best.as_ref().map(|hit| hit.layer_id.as_str()), if case["selected"] == true { Some("curve") } else { None }, "{}", case["name"]);
     }
 }
 
 #[test]
 fn point_selection_keeps_the_frontmost_equal_candidate() {
-    let mut back = create_drawing_path_layer("Back", vec![PathSegment::Move { to: [0.0,0.0] },PathSegment::Line { to: [10.0,10.0] }]);
+    let mut back = stroked_path("Back", vec![PathSegment::Move { to: [0.0,0.0] },PathSegment::Line { to: [10.0,10.0] }]);
     let mut front = back.clone();
     crate::schema::layer_base_mut(&mut back).id = "back".into();
     crate::schema::layer_base_mut(&mut front).id = "front".into();
     let document = DrawingSnapshot { layers: vec![back,front], ..Default::default() };
     let mut query = TracePointerJob::new_query(&document,[5.0,5.0],0.0,false);
-    while !query.advance(&document) {}
+    finish_cached(&mut query,&document);
     assert_eq!(query.best.unwrap().layer_id,"front");
 }
 
 #[test]
 fn lasso_samples_yield_and_select_the_polygon_instead_of_its_rectangle() {
     use crate::editor::drawing::commands::canvas_pointer_move::CanvasPointerMove;
-    let inside=create_drawing_path_layer("Inside",vec![PathSegment::Move { to: [1.0,1.0] },PathSegment::Line { to: [2.0,2.0] }]);
-    let outside=create_drawing_path_layer("Outside",vec![PathSegment::Move { to: [6.0,6.0] },PathSegment::Line { to: [7.0,7.0] }]);
+    let inside=stroked_path("Inside",vec![PathSegment::Move { to: [1.0,1.0] },PathSegment::Line { to: [2.0,2.0] }]);
+    let outside=stroked_path("Outside",vec![PathSegment::Move { to: [6.0,6.0] },PathSegment::Line { to: [7.0,7.0] }]);
     let expected=layer_id(&inside).to_string();
     let document=DrawingSnapshot { layers: vec![inside,outside],..Default::default() };
     let mut session=DrawingSession::new("selectLasso","");
@@ -54,7 +54,7 @@ fn lasso_samples_yield_and_select_the_polygon_instead_of_its_rectangle() {
     assert_eq!(session.tool.context().points.iter().copied().collect::<Vec<_>>(),vec![[0.0,0.0],[10.0,0.0],[0.0,10.0]]);
     let polygon=LassoPolygon::from_points(&session.tool.context().points,[0.0,0.0]);
     let mut query=TracePointerJob::new_lasso(&document,polygon);
-    while !query.advance(&document) {}
+    finish_cached(&mut query,&document);
     assert_eq!(query.hits.iter().cloned().collect::<Vec<_>>(),vec![expected]);
     session.escape().unwrap();
     assert_eq!(session.preview().phase,DrawingGesturePreviewPhase::Idle);
@@ -102,20 +102,19 @@ fn shape_identity_is_replay_stable_and_scoped_to_the_durable_app_operation() {
 async fn trace_pointer_step_consumes_at_most_the_fixed_work_budget() {
     let mut document = crate::schema::default_drawing_document("bounded-trace", None);
     let mut segments = vec![PathSegment::Move { to: [0.0, 0.0] }];
-    segments.extend((0..256).map(|index| PathSegment::Line { to: [index as f64, index as f64] }));
-    document.layers = vec![create_drawing_path_layer("long-path", segments)];
+    segments.extend((0..256).map(|index| PathSegment::Line { to: [index as f64, (index%2)as f64*8.0] }));
+    document.layers = vec![filled_path("long-path", segments)];
     let mut job = TracePointerJob::new(7, &document, [4.0, 4.0]);
 
-    assert!(!job.advance(&document));
+    assert!(!advance_cached(&mut job,&document));
     assert_eq!(job.completed_work, TRACE_POINTER_WORK_PER_STEP);
     assert!(!job.work.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn continuation_work_helpers_have_synchronous_compile_shape() {
-    let _: fn(&mut TracePointerJob, &DrawingSnapshot) -> bool = TracePointerJob::advance;
+    let _: fn(&mut TracePointerJob, &DrawingSnapshot, &MountedSceneQuery) -> bool = TracePointerJob::advance;
     let _: fn(Result<ToolStep<DrawingMutation>, ToolRefusal>) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> = drawing_tool_emit;
-    let _: fn(&DrawingLayerNode) -> (f64, f64, f64, f64) = trace_layer_world_bounds;
 }
 
 #[test]
@@ -131,22 +130,22 @@ fn stale_generation_and_wrong_owner_cannot_take_retained_trace() {
 }
 
 #[test]
-fn wide_roots_and_groups_enqueue_at_most_two_items_per_work_unit() {
-    let leaf = create_drawing_path_layer("leaf", vec![PathSegment::Move { to: [0.0, 0.0] }]);
+fn wide_admitted_scene_roots_and_groups_keep_pointer_work_bounded() {
+    let leaf = filled_path("leaf", vec![PathSegment::Move { to: [0.0, 0.0] }]);
     let mut roots = crate::schema::default_drawing_document("wide-roots", None);
-    roots.layers = vec![leaf.clone(); 10_000];
+    roots.layers=(0..1024).map(|i|{let mut layer=leaf.clone();crate::schema::layer_base_mut(&mut layer).id=format!("root-{i}");layer}).collect();
     let mut roots_job = TracePointerJob::new(8, &roots, [0.0, 0.0]);
-    roots_job.advance(&roots);
+    advance_cached(&mut roots_job,&roots);
     assert_eq!(roots_job.completed_work, TRACE_POINTER_WORK_PER_STEP);
     assert!(roots_job.work.len() <= TRACE_POINTER_WORK_PER_STEP + 2);
 
     let mut group = crate::schema::create_drawing_group_layer("wide");
     let DrawingLayerNode::Group(body) = &mut group else { unreachable!() };
-    body.children = vec![leaf; 10_000];
+    body.children=(0..1023).map(|i|{let mut layer=leaf.clone();crate::schema::layer_base_mut(&mut layer).id=format!("child-{i}");layer}).collect();
     let mut document = crate::schema::default_drawing_document("wide-group", None);
     document.layers = vec![group];
     let mut job = TracePointerJob::new(9, &document, [0.0, 0.0]);
-    job.advance(&document);
+    advance_cached(&mut job,&document);
     assert_eq!(job.completed_work, TRACE_POINTER_WORK_PER_STEP);
     assert!(job.work.len() <= TRACE_POINTER_WORK_PER_STEP + 2);
 }
@@ -164,16 +163,13 @@ fn retained_trace_interruption_cancel_and_repeated_cancel_are_exact() {
 #[test]
 fn marquee_maximum_plus_one_faults_without_unbounded_growth() {
     let mut document = crate::schema::default_drawing_document("marquee-max", None);
-    document.layers = (0..=DRAWING_QUERY_HIT_CAPACITY).map(|index| create_drawing_path_layer(&format!("hit-{index}"), vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 1.0] }])).collect();
+    document.layers = (0..=DRAWING_QUERY_HIT_CAPACITY).map(|index| stroked_path(&format!("hit-{index}"), vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 1.0] }])).collect();
     let mut query = TracePointerJob::new_marquee(&document, [-128.0, -128.0], [128.0, 128.0], true);
     let mut turns = 0;
-    while !query.advance(&document) {
-        turns += 1;
-        assert!(turns < 10_000);
-    }
+    finish_cached_with(&mut query,&document,|_,done|{if !done{turns+=1;assert!(turns<10_000);}});
     assert!(turns > 1, "the adversarial tree must yield across turns");
     assert!(query.overflowed, "maximum plus one must fault rather than publish a partial selection");
-    assert_eq!(query.hits.len(), DRAWING_QUERY_HIT_CAPACITY);
+    assert!(query.hits.is_empty(),"failed cache query never exposes partial selection");
 }
 
 #[test]
@@ -209,7 +205,7 @@ async fn pointer_down_tool_inputs_settle_in_one_microstep() {
 
 #[test]
 fn direct_drag_previews_then_commits_one_parametric_drag_transaction() {
-    let path = create_drawing_path_layer("Moving",vec![PathSegment::Move { to:[0.0,0.0] },PathSegment::Line { to:[10.0,10.0] }]);
+    let path = stroked_path("Moving",vec![PathSegment::Move { to:[0.0,0.0] },PathSegment::Line { to:[10.0,10.0] }]);
     let id = layer_id(&path).to_string();
     let mut group = crate::schema::create_drawing_group_layer("Parent");
     let DrawingLayerNode::Group(body) = &mut group else { unreachable!() };
@@ -241,7 +237,8 @@ fn direct_drag_previews_then_commits_one_parametric_drag_transaction() {
 
 #[test]
 fn cancelled_direct_drag_and_subthreshold_click_do_not_mutate() {
-    let layer = crate::schema::create_drawing_shape_layer_rect("Moving");
+    let mut layer = crate::schema::create_drawing_shape_layer_rect("Moving");
+    crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});
     let document = DrawingSnapshot { layers:vec![layer],..Default::default() };
     for cancelled in [true,false] {
         let mut session = DrawingSession::new("selectDirect","");
@@ -315,7 +312,7 @@ fn selection_drag_leaf_moves_equal_world_displacements_under_distinct_parents() 
 fn prepare_drag(session: &mut DrawingSession, document: &DrawingSnapshot, start: [f64;2]) {
     session.press(pointer(&session.active_utility_id.clone(),start)).unwrap();
     let mut query=DrawingPointQuery::new("canvasPointerDown",TracePointerJob::new_query(document,start,0.0,false),false,"replace".into(),false);
-    while !query.cursor.advance(document) {}
+    finish_cached(&mut query.cursor,document);
     query.drag_start=Some(start);
     session.point_query=Some(query);
     for _ in 0..1000 {
@@ -345,7 +342,7 @@ fn repeated_pen_and_polygon_drafts_keep_distinct_layers_and_transactions() {
 
 #[test]
 fn selected_handle_previews_are_ephemeral_and_release_one_parametric_leaf() {
-    let layer=create_drawing_path_layer("Box",vec![PathSegment::Move {to:[10.0,20.0]},PathSegment::Line {to:[110.0,20.0]},PathSegment::Line {to:[110.0,100.0]},PathSegment::Line {to:[10.0,100.0]},PathSegment::Close]);
+    let layer=filled_path("Box",vec![PathSegment::Move {to:[10.0,20.0]},PathSegment::Line {to:[110.0,20.0]},PathSegment::Line {to:[110.0,100.0]},PathSegment::Line {to:[10.0,100.0]},PathSegment::Close]);
     let id=layer_id(&layer).to_string();
     let document=DrawingSnapshot {layers:vec![layer],..Default::default()};
     let before=document.clone();
@@ -353,7 +350,7 @@ fn selected_handle_previews_are_ephemeral_and_release_one_parametric_leaf() {
         for cancel in [false,true] {
             let mut cursor=TracePointerJob::new_query(&document,start,0.0,false);
             cursor.retain_selection_bounds(&[id.clone()]).unwrap();
-            while !cursor.advance(&document) {}
+            finish_cached(&mut cursor,&document);
             assert_eq!(cursor.selection_bounds,Some([10.0,20.0,100.0,80.0]));
             let mut query=DrawingPointQuery::new("canvasPointerDown",cursor,false,"replace".into(),false);
             query.drag_start=Some(start);
@@ -388,13 +385,13 @@ fn point_selection_reaches_the_painted_path_behind_a_concave_frame() {
     let points=[[0.0,0.0],[100.0,0.0],[100.0,100.0],[80.0,100.0],[80.0,20.0],[0.0,20.0]];
     let mut segments=points.into_iter().enumerate().map(|(i,to)|if i==0{PathSegment::Move {to}}else{PathSegment::Line {to}}).collect::<Vec<_>>();
     segments.push(PathSegment::Close);
-    let mut frame=create_drawing_path_layer("Red Frame",segments);
-    let mut back=create_drawing_path_layer("Orange",vec![PathSegment::Move {to:[10.0,30.0]},PathSegment::Line {to:[40.0,30.0]},PathSegment::Line {to:[40.0,80.0]},PathSegment::Line {to:[10.0,80.0]},PathSegment::Close]);
+    let mut frame=filled_path("Red Frame",segments);
+    let mut back=filled_path("Orange",vec![PathSegment::Move {to:[10.0,30.0]},PathSegment::Line {to:[40.0,30.0]},PathSegment::Line {to:[40.0,80.0]},PathSegment::Line {to:[10.0,80.0]},PathSegment::Close]);
     for layer in [&mut frame,&mut back]{crate::schema::layer_base_mut(layer).attributes.fill=Some(crate::FillStyle::Solid {color:[1.0,0.0,0.0,1.0]});}
     let expected=layer_id(&back).to_string();
     let document=DrawingSnapshot {layers:vec![back,frame],..Default::default()};
     let mut query=TracePointerJob::new_query(&document,[20.0,50.0],1.0,false);
-    while !query.advance(&document){}
+    finish_cached(&mut query,&document);
     assert_eq!(query.best.unwrap().layer_id,expected);
 }
 
@@ -415,10 +412,10 @@ fn primitive_picking_uses_painted_contours() {
             _=>unreachable!(),
         }
         shape.base.attributes.fill=sample["fill"].as_bool().unwrap().then_some(crate::FillStyle::Solid {color:[1.0,0.0,0.0,1.0]});
-        shape.base.attributes.stroke=None;
+        shape.base.attributes.stroke=if kind=="line"{Some(crate::StrokeStyle{color:[0.0,0.0,0.0,1.0],width:sample["radius"].as_f64().unwrap()*2.0,cap:crate::StrokeCap::Butt,join:crate::StrokeJoin::Miter,dash:None})}else{None};
         let document=DrawingSnapshot {layers:vec![DrawingLayerNode::Shape(shape)],..Default::default()};
         let mut query=TracePointerJob::new_query(&document,serde_json::from_value(sample["point"].clone()).unwrap(),sample["radius"].as_f64().unwrap(),false);
-        while !query.advance(&document) {}
+        finish_cached(&mut query,&document);
         assert_eq!(query.best.is_some(),sample["expected"].as_bool().unwrap(),"{}",sample["name"]);
         assert!(!query.overflowed);
     }
@@ -429,13 +426,13 @@ fn compound_path_picking_uses_the_authored_fill_rule() {
     let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🎨️fill/🌀️rule/🧫️fixtures/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let segments=crate::standards::v1::subsets::any::io::import::deserializers::artifacts::svg::v1_1::any::path::parse_editable_svg_path(row["path"].as_str().unwrap()).unwrap();
-        let mut layer=create_drawing_path_layer("Compound",segments);
+        let mut layer=filled_path("Compound",segments);
         let attributes=&mut crate::schema::layer_base_mut(&mut layer).attributes;
         attributes.fill=Some(crate::FillStyle::Solid {color:[0.0,0.0,0.0,1.0]});
         attributes.fill_rule=crate::FillRule::parse(row["rule"].as_str().unwrap()).unwrap();
         let document=DrawingSnapshot {layers:vec![layer],..Default::default()};
         let mut query=TracePointerJob::new_query(&document,[50.0,50.0],0.0,false);
-        while !query.advance(&document) {}
+        finish_cached(&mut query,&document);
         assert!(!query.overflowed);
         assert_eq!(query.best.is_some(),row["hit"].as_bool().unwrap(),"{}",row["name"]);
     }
@@ -446,23 +443,23 @@ fn node_marquee_collects_snapshot_bound_anchors_in_bounded_steps() {
     let mut segments=vec![PathSegment::Move {to:[0.0,0.0]}];
     for index in 1..5000 {segments.push(PathSegment::Line {to:[index as f64,0.0]});}
     let geometry=points::geometry_id(&segments).unwrap();
-    let mut path=create_drawing_path_layer("Path",segments);crate::schema::layer_base_mut(&mut path).id="path".into();
+    let mut path=filled_path("Path",segments);crate::schema::layer_base_mut(&mut path).id="path".into();
     let document=DrawingSnapshot {layers:vec![path],..Default::default()};
     let mut query=TracePointerJob::new_marquee(&document,[4.0,-1.0],[6.0,1.0],false);
     query.node_area=true;query.node_editing=true;query.selected_ids=vec!["path".into()];
     let mut steps=0;
-    loop {let before=query.completed_work;let done=query.advance(&document);assert!(query.completed_work-before<=TRACE_POINTER_WORK_PER_STEP);steps+=1;if done {break;}}
+    let mut work=query.completed_work;finish_cached_with(&mut query,&document,|query,_|{assert!(query.completed_work-work<=TRACE_POINTER_WORK_PER_STEP);work=query.completed_work;steps+=1;});
     assert!(steps>1);assert!(!query.overflowed);
     assert_eq!(query.hits.iter().cloned().collect::<Vec<_>>(),(4..=6).map(|index|points::point_id("path",&geometry,index,PathPoint::Anchor).unwrap()).collect::<Vec<_>>());
 }
 
 #[test]
 fn empty_node_press_starts_marquee_without_changing_point_selection() {
-    let path=create_drawing_path_layer("Path",vec![PathSegment::Move {to:[0.0,0.0]},PathSegment::Line {to:[10.0,0.0]}]);
+    let path=filled_path("Path",vec![PathSegment::Move {to:[0.0,0.0]},PathSegment::Line {to:[10.0,0.0]}]);
     let id=layer_id(&path).to_string();let document=DrawingSnapshot {layers:vec![path],..Default::default()};
     let mut session=DrawingSession::new("editNodes","");
     session.press(pointer("editNodes",[-20.0,-20.0])).unwrap();
-    let mut cursor=TracePointerJob::new_query(&document,[-20.0,-20.0],1.0,false);cursor.node_editing=true;cursor.selected_ids=vec![id.clone()];while !cursor.advance(&document) {}
+    let mut cursor=TracePointerJob::new_query(&document,[-20.0,-20.0],1.0,false);cursor.node_editing=true;cursor.selected_ids=vec![id.clone()];finish_cached(&mut cursor,&document);
     let mut query=DrawingPointQuery::new("canvasPointerDown",cursor,false,"replace".into(),false);query.drag_start=Some([-20.0,-20.0]);session.point_query=Some(query);
     assert!(session.prepare_grab(&document,&[id],&[]).unwrap());assert!(session.node_marquee.is_some());assert!(session.tool.matches("marqueeing"));assert!(session.point_query.as_ref().unwrap().node_selection.is_none());
     session.escape().unwrap();assert!(session.node_marquee.is_none());assert!(session.tool.at_rest());
@@ -490,18 +487,35 @@ fn node_publication_uses_merged_point_targets_and_actual_json_byte_limit() {
 #[test]
 fn node_marquee_rejects_overflow_and_excludes_hidden_or_locked_ancestors() {
     let segments=(0..=DRAWING_QUERY_HIT_CAPACITY).map(|index|if index==0 {PathSegment::Move {to:[0.0,0.0]}}else {PathSegment::Line {to:[index as f64,0.0]}}).collect();
-    let mut path=create_drawing_path_layer("Many",segments);crate::schema::layer_base_mut(&mut path).id="path".into();
+    let mut path=filled_path("Many",segments);crate::schema::layer_base_mut(&mut path).id="path".into();
     let document=DrawingSnapshot {layers:vec![path],..Default::default()};
     let mut query=TracePointerJob::new_marquee(&document,[-1.0,-1.0],[1000.0,1.0],false);query.node_area=true;query.node_editing=true;query.selected_ids=vec!["path".into()];
-    while !query.advance(&document) {}
+    finish_cached(&mut query,&document);
     assert!(query.overflowed);assert!(query.hits.is_empty());
     for (visible,locked) in [(false,false),(true,true),(true,false)] {
-        let mut path=create_drawing_path_layer("Child",vec![PathSegment::Move {to:[0.0,0.0]}]);crate::schema::layer_base_mut(&mut path).id="path".into();
+        let mut path=filled_path("Child",vec![PathSegment::Move {to:[0.0,0.0]}]);crate::schema::layer_base_mut(&mut path).id="path".into();
         let mut group=crate::schema::create_drawing_group_layer("Group");
         if let DrawingLayerNode::Group(group)=&mut group {group.base.visible=visible;group.base.locked=locked;group.children.push(path);}
         let document=DrawingSnapshot {layers:vec![group],..Default::default()};
         let mut query=TracePointerJob::new_marquee(&document,[-1.0,-1.0],[1.0,1.0],false);query.node_area=true;query.node_editing=true;query.selected_ids=vec!["path".into()];
-        while !query.advance(&document) {}
+        finish_cached(&mut query,&document);
         assert!(!query.overflowed);assert_eq!(query.hits.len(),usize::from(visible&&!locked));
     }
+}
+
+fn stroked_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=crate::schema::create_drawing_path_layer(name,segments);crate::schema::layer_base_mut(&mut layer).attributes.stroke=Some(crate::StrokeStyle{color:[0.0,0.0,0.0,1.0],width:1.0,cap:crate::StrokeCap::Butt,join:crate::StrokeJoin::Miter,dash:None});layer}
+fn filled_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=crate::schema::create_drawing_path_layer(name,segments);crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});layer}
+fn prepared(document:&DrawingSnapshot)->crate::schema::scene_paint::scene::PreparedScene{
+ let mut vector=crate::schema::scene_preparation::DocumentVectorJob::new(document,crate::editor::drawing::geometry_session::limits(),crate::editor::drawing::geometry_session::algorithms()).unwrap();while !vector.advance(4096).unwrap().done{}let(mut close,plan)=vector.into_retirement();while !close.advance(4096).unwrap().done{}
+ let mut paint=crate::schema::scene_paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,crate::editor::drawing::geometry_session::paint_limits());while !paint.advance(4096).unwrap().done{}let(mut close,scene)=paint.into_retirement();while !close.advance(4096).unwrap().done{}scene.unwrap()
+}
+fn advance_cached(job:&mut TracePointerJob,document:&DrawingSnapshot)->bool{
+ let scene=prepared(document);let borrowed=MountedSceneQuery{scene:&scene,source:crate::schema::scene_identity::SceneIdentity{instance:710034,base:11,generation:1,revision:[1;32]},build:1};let done=job.advance(document,&borrowed);
+ let mut close=crate::schema::scene_paint::scene::PreparedSceneCloseJob::new(scene);while !close.advance(4096).unwrap().done{}done
+}
+
+/// 🗂️ Query continuations borrow one genuinely prepared immutable scene until its owner closes.
+fn finish_cached(job:&mut TracePointerJob,document:&DrawingSnapshot){finish_cached_with(job,document,|_,_|{});}
+fn finish_cached_with(job:&mut TracePointerJob,document:&DrawingSnapshot,mut observe:impl FnMut(&TracePointerJob,bool)){
+ let scene=prepared(document);let borrowed=MountedSceneQuery{scene:&scene,source:crate::schema::scene_identity::SceneIdentity{instance:710034,base:11,generation:1,revision:[1;32]},build:1};loop{let done=job.advance(document,&borrowed);observe(job,done);if done{break;}}let mut close=crate::schema::scene_paint::scene::PreparedSceneCloseJob::new(scene);while !close.advance(4096).unwrap().done{}assert!(close.terminal_is_empty());
 }

@@ -183,7 +183,7 @@ fn debug_emit_example_assets() {
     for (directory, snapshot) in [("🧱️blocks", crate::examples::blocks::snapshot as fn() -> crate::Grid3dSnapshot), ("🪠️pipes-3d", crate::examples::pipes_3d::snapshot)] {
         let asset = root.join(directory).join("🖼️assets").join(directory).join("🗣️.dsl.semio");
         std::fs::create_dir_all(asset.parent().expect("asset directory")).expect("asset directory");
-        std::fs::write(asset, crate::schema::snapshot::text::print_dsl(&snapshot())).expect("write dsl");
+        std::fs::write(asset, crate::io::text::snapshot::print_dsl(&snapshot())).expect("write dsl");
     }
 }
 

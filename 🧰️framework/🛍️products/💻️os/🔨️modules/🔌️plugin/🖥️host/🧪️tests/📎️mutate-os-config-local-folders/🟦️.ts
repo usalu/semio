@@ -18,7 +18,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { applyLocalFoldersConfigMutation, inverseLocalFoldersConfigMutation, type LocalFolderBindings, type LocalFoldersConfigMutation } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -100,7 +100,7 @@ function unboundGuard(_ctx: AdapterContext): AdapterOutcome {
 /** 🔁️ Decode/re-encode round trip of the committed two-binding record. Mirrors `../🦀️.rs::subject::round_trip`. */
 function localFoldersRoundTrip(_ctx: AdapterContext): AdapterOutcome {
   const { before } = fixtures("detach-local-folder");
-  if (before.bindings.map((entry) => entry.documentId).join(",") !== "cad.drawing.fixture,puzzle.2d.fixture" || before.bindings[1]!.folder.path !== "/Users/ada/Documents/puzzles") throw new Error(`local-folders-round-trip: the committed bindings attach cad.drawing.fixture and puzzle.2d.fixture to /Users/ada/Documents/puzzles, but the decoded value holds ${JSON.stringify(before)}`);
+  if (before.bindings.map((entry) => entry.documentId).join(",") !== "cad.drawing.fixture,board.ports.directed.v1" || before.bindings[1]!.folder.path !== "/Users/ada/Documents/puzzles") throw new Error(`local-folders-round-trip: the committed bindings attach cad.drawing.fixture and board.ports.directed.v1 to /Users/ada/Documents/puzzles, but the decoded value holds ${JSON.stringify(before)}`);
   const reencoded = JSON.parse(JSON.stringify(before)) as LocalFolderBindings;
   if (JSON.stringify(reencoded) !== JSON.stringify(before)) throw new Error("local-folders-round-trip: decoding the re-encoded bindings did not reproduce the typed value");
   return projectionOf(reencoded, "detach-local-folder");

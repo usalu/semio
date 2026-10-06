@@ -7,8 +7,10 @@
     { "code": "mutation.no-op", "level": "warning", "meaning": "The mutation changes nothing." },
     { "code": "mutation.partial", "level": "warning", "meaning": "Only part of the mutation applied." },
     { "code": "mutation.clamped", "level": "warning", "meaning": "A value was clamped into its admissible range." },
+    { "code": "mutation.precondition-drifted", "level": "warning", "meaning": "The mutation applied, but a precondition it was recorded under no longer holds (state-dependent)." },
     { "code": "mutation.duplicate-id", "level": "fatal", "meaning": "The mutation would mint an identity that already exists." },
     { "code": "mutation.invariant", "level": "fatal", "meaning": "The payload violates an invariant its leaf schema states (bounds or x-semio-invariant)." },
+    { "code": "mutation.inverse-refused", "level": "fatal", "meaning": "The mutation cannot be reversed on the state it replays onto, so it is not applied (state-dependent)." },
     { "code": "mutation.cascade", "level": "info", "meaning": "The mutation also changed dependent content." }
   ],
   "apply": {

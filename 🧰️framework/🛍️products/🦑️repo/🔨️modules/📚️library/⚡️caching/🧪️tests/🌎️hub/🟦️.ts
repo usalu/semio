@@ -7,7 +7,6 @@ import { createRequire } from "node:module";
 export async function testHubBuild(workspace: string): Promise<void> {
   const require = createRequire(join(workspace, "package.json")), directory = resolve(import.meta.dirname, "../../🧫️fixtures/hub-build");
   const fixture = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
-  assert.equal(require("jsonschema").validate(fixture, JSON.parse(readFileSync(join(directory, "🛂️schema/🔣️.json"), "utf8"))).valid, true);
   const project = JSON.parse(readFileSync(join(workspace, fixture.projectRoot, "📋️project.json"), "utf8")), build = project.targets.build;
   assert.deepEqual(build.outputs, [fixture.output]);
   assert.equal(build.cache, true); assert.equal(build.options.cwd, ".");

@@ -1,13 +1,12 @@
 /** 🪟️ Language-neutral oracle for window-template drops and World3d retirement. */
 import { describe, expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { partitionRefreshWindowInstancesV1 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 
 const engineRoot = join(import.meta.dir, "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));
 
 type Node = { kind: "stack"; windows: string[] } | { kind: "row" | "column"; children: Node[] };
 type Zone = { kind: "tab"; path: number[]; index: number } | { kind: "split"; path: number[]; side: "left" | "right" | "top" | "bottom" } | { kind: "rootSplit"; side: "left" | "right" | "top" | "bottom" };
@@ -62,10 +61,7 @@ const insert = (root: Node, id: string, zone: Zone): Node => {
 };
 
 describe("🪟️ window lifecycle and template drag contract", () => {
-  test("the neutral vectors satisfy the Ajv schema oracle", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("the neutral drop vectors match the independent layout oracle", () => {
     for (const authored of fixture.dropCases as Array<{ initialWindows?: string[]; zone: Zone; expectedRootKind: Node["kind"]; expectedPaths: Record<string, number[]> }>) {

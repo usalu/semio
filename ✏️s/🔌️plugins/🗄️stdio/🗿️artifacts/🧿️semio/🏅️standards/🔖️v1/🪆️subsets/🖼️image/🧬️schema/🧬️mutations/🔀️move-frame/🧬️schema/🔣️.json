@@ -16,11 +16,41 @@
     },
     "from": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Frame",
+          "de": "Einzelbild"
+        },
+        "description": {
+          "en": "Index of the frame that moves, counted from 0.",
+          "de": "Index des Einzelbilds, das verschoben wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "to": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Destination",
+          "de": "Zielposition"
+        },
+        "description": {
+          "en": "Position the frame holds afterwards, counted from 0.",
+          "de": "Position, die das Einzelbild danach einnimmt, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

@@ -1,0 +1,344 @@
+[
+  {
+    "owner": "🖊️drawing",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 324,
+        "text": "#[path = \"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 325,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🎞️animation",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 268,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 269,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🌊️flow",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 176,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 177,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🔤️text",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 172,
+        "text": "#[path = \"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 173,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "📐️cad",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 233,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 234,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "📊️table",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 175,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 176,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🔺️mesh",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 255,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 256,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "📦️object",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 207,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 208,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "📽️presentation",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 277,
+        "text": "#[path = \"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 278,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🎬️video",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 178,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 179,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🕸️graph",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 299,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 300,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🧰️kit",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 300,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 301,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🧊️brep",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 532,
+        "text": "#[path = \"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 533,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🖼️image",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 185,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 186,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "✉️base",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 156,
+        "text": "#[path = \"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 157,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🔊️audio",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 171,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 172,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "📑️document",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 296,
+        "text": "#[path = \"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 297,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🏛️model",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 363,
+        "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 364,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  },
+  {
+    "owner": "🔢️value",
+    "schemaRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🦀️.rs",
+    "newSqlOwner": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "oldTestPathExists": false,
+    "newTestExists": true,
+    "newRegistersTests": true,
+    "stale": [
+      {
+        "line": 212,
+        "text": "#[path = \"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+      },
+      {
+        "line": 213,
+        "text": "mod sqlite_tests;"
+      }
+    ]
+  }
+]

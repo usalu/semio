@@ -67,9 +67,9 @@ fn default_window_ids() -> Vec<String> {
 }
 
 /// 🏷️ The example a freshly created document was seeded from. `ArtifactApp::initial_snapshot` builds
-/// that document out of [`crate::editor::puzzle3d::default_fixture`] — the Concrete Forest example —
+/// that document out of [`crate::editor::puzzle3d::default_scene_snapshot`] — the Concrete Forest example —
 /// so the config lane has to say so from the FIRST render. Defaulting it to `""` made a boot document
-/// claim it came from no example at all, which is `export_fixture`'s only input for the download name
+/// claim it came from no example at all, which is `export_snapshot`'s only input for the download name
 /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B30): Concrete Forest exported as the generic
 /// `puzzle-3d.json` until the user switched examples at least once. `set_active_example("")` still
 /// writes the empty id explicitly, so a deliberately blanked document keeps the generic name.
@@ -279,9 +279,9 @@ pub struct Puzzle3dConfig {
     pub vortex_kind_weights: HashMap<String, f64>,
     /// 🏷️ The example id the document was last loaded from — `concrete-forest`,
     /// `nakagin-capsule-tower`, or empty for a blank document. Document identity rather than a
-    /// preference, and the only thing `export_fixture` can name its download after: a
-    /// `Puzzle3dFixture` carries `schema`/`domain` only (both examples author the same pair), and
-    /// `set_active_example` replaces the fixture wholesale, so nothing downstream of it remembers
+    /// preference, and the only thing `export_snapshot` can name its download after: a
+    /// `Puzzle3dSceneSnapshot` carries `schema`/`domain` only (both examples author the same pair), and
+    /// `set_active_example` replaces the scene_snapshot wholesale, so nothing downstream of it remembers
     /// which example the user is looking at unless this field does. Defaults to
     /// [`default_active_example_id`] — the example `initial_snapshot` actually seeds the document
     /// from — never to the blank id.

@@ -1,18 +1,18 @@
 //! 🧩️ Puzzle 2d play app — the plugin's 2d play app: its `ArtifactApp` impl (dispatch-only), the
 //! transient `Puzzle2dScene` bundle its command/panel/window nodes mutate and render, the shared
-//! fixture helpers they build on, and the manifest that stitches those nodes together.
+//! snapshot helpers they build on, and the manifest that stitches those nodes together.
 //!
 //! 🧭️ Every behavioural arm lives in `🎮️commands/<group>/🦀️.rs`; every rendered surface in
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/<window>`. This file dispatches and stitches.
 //!
 //! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle2dPlaySnapshot` newtype over a bare
-//! `serde_json::Value` fixture (see `crate::standards::v1::subsets::any::schema::mutations::text`'s `🔖️ValueBridge`), not the typed
+//! `serde_json::Value` snapshot (see `crate::standards::v1::subsets::any::io::text::mutations`'s `🔖️ValueBridge`), not the typed
 //! `Puzzle2dSnapshot`. Ordinary commands derive granular typed deltas; the fill tool run appends its
 //! typed placement mutations to the framework tool run ledger and finalize publishes them as one edit.
 
 use crate::editor::puzzle2d::commands::{
     accept_suggestion, add_node, add_target_region, apply_board_events, close_handle_suggestions, create_edge, cycle_candidate, delete_edge, delete_selection, delete_target_region, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit,
-    export_fixture, focus_selection, force_layout, hover_suggestion, target_brush_suggestions, import_fixture, lod_scale_json, open_handle_suggestions, open_import_fixture, patch_inspector, proximity_connect, relocate_target_region, rotate_selection, scale_selection, select_same_kind, set_active_example,
+    export_snapshot, focus_selection, force_layout, hover_suggestion, target_brush_suggestions, import_snapshot, lod_scale_json, open_handle_suggestions, open_import_snapshot, patch_inspector, proximity_connect, relocate_target_region, rotate_selection, scale_selection, select_same_kind, set_active_example,
     set_area_brush_size, set_brush_kind_weights, set_brush_node_size, set_brush_placement_contact_tolerance, set_brush_placement_overlap_budget, set_camera, set_fill_count, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_lod_mode_for_pane, set_proximity_radius,
     set_selectable_kind, set_selection_flag, set_suggestion_offset, set_target_region_flag, set_transform_gumball_flag, translate_selection,
 };
@@ -22,8 +22,8 @@ use crate::editor::puzzle2d::engine::{handle_position_on_circle, handle_position
 use crate::editor::puzzle2d::modes::edit;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::precompute::fill as fill_run;
-pub use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::{puzzle2d_selection_pivot, Puzzle2dSelectPhase, Puzzle2dSelectTool, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord, SelectToolRequest};
-use semio_framework_tool_machine::{ToolAbortReason, ToolStep};
+pub use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::{puzzle2d_gesture_phase, puzzle2d_selection_pivot, Puzzle2dSelectionMotion, Puzzle2dSelectionRecord, SelectToolRequest};
+use semio_framework_tool_machine::{ChartGesture, GesturePhase};
 use crate::editor::puzzle2d::modes::edit::windows::overview::utilities::{area_brush as area_brush_utility, brush as brush_utility, select as select_utility};
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::panels::{artifact, catalogue, inspection, settings};
@@ -31,7 +31,9 @@ use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutati
 use crate::editor::puzzle2d::terminology::puzzle2d_labels;
 pub use crate::editor::puzzle2d::terminology::{puzzle2d_localized, puzzle2d_localized_phrase};
 use crate::editor::puzzle2d::window::{self, Puzzle2dWindowConfig, Puzzle2dWindowTransient};
-use crate::standards::v1::subsets::any::schema::mutations::text::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{puzzle2d_document_delta_operations};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PastePlacement};
 use semio_framework_plugin::ActionArgDef;
@@ -96,7 +98,7 @@ use semio_framework_2d::compute::EngineHandles;
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_CONTROLLER_ID: &str = "puzzle2d-play";
 pub const PUZZLE2D_PLAY_SURFACE_ID: &str = "puzzle2d.play.composite";
-pub const PUZZLE2D_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
+pub const PUZZLE2D_BOARD_SNAPSHOT_SCHEMA: &str = "board.ports.directed.v1";
 pub const PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID: &str = crate::examples::puzzle2d::concrete_forest::ID;
 pub const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = crate::examples::puzzle2d::nakagin_capsule_tower::ID;
 
@@ -167,12 +169,12 @@ pub fn nakagin_example_json() -> String {
 //#endregion 🔖️Constants
 
 //#region 🔖️Scene
-/// 🧾️ Transient render/mutation bundle pairing the persisted projection (the bare fixture json) with
-/// the app's view config. It is never persisted — the `VcsArtifactApp` store owns the fixture as its
+/// 🧾️ Transient render/mutation bundle pairing the persisted projection (the bare snapshot json) with
+/// the app's view config. It is never persisted — the `VcsArtifactApp` store owns the snapshot as its
 /// projection and `Puzzle2dConfig` owns the runtime — but rebuilding it per call lets the panel,
 /// canvas and engagement helpers keep one `&Puzzle2dScene` signature.
 pub struct Puzzle2dScene {
-    pub fixture: Value,
+    pub board_snapshot: Value,
     pub runtime: Puzzle2dPlayRuntime,
     /// 🧰️ The host-owned active utility for this render/mutation.
     pub active_utility: String,
@@ -238,10 +240,10 @@ impl Puzzle2dInteractionSnapshot {
 /// framework selection write whatever it picked. Ids the document does not carry are kept as nodes:
 /// the framework prunes them on the next document change, and dropping them here would silently
 /// unselect a just-created entity the engine already painted.
-pub fn puzzle2d_selection_targets(fixture: &Value, ids: &[String]) -> Vec<InteractionTarget> {
-    let nodes = fixture_nodes(fixture);
+pub fn puzzle2d_selection_targets(snapshot: &Value, ids: &[String]) -> Vec<InteractionTarget> {
+    let nodes = board_snapshot_nodes(snapshot);
     let node_ids: HashSet<&str> = nodes.iter().filter_map(|node| node.get("id").and_then(Value::as_str)).collect();
-    let edge_ids: HashSet<&str> = fixture_edges(fixture).iter().filter_map(|edge| edge.get("id").and_then(Value::as_str)).collect();
+    let edge_ids: HashSet<&str> = board_snapshot_edges(snapshot).iter().filter_map(|edge| edge.get("id").and_then(Value::as_str)).collect();
     let handle_ids: HashSet<&str> = nodes.iter().filter_map(|node| node.get("handles").and_then(Value::as_array)).flatten().filter_map(|handle| handle.get("id").and_then(Value::as_str)).collect();
     ids.iter()
         .map(|id| {
@@ -260,23 +262,23 @@ pub fn puzzle2d_selection_targets(fixture: &Value, ids: &[String]) -> Vec<Intera
 }
 
 /// 🕹️ The one selection write every 2d reducer expresses "select exactly these" through.
-pub fn puzzle2d_selection_write(fixture: &Value, ids: &[String]) -> semio_framework_plugin::InteractionWrite {
-    semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(fixture, ids), merge: MergeMode::Replace }
+pub fn puzzle2d_selection_write(snapshot: &Value, ids: &[String]) -> semio_framework_plugin::InteractionWrite {
+    semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(snapshot, ids), merge: MergeMode::Replace }
 }
 
 /// 🕹️ Empties the live selection: a SUBTRACTIVE write of exactly the ids that are selected (a `Replace`
-/// with no targets selects nothing and therefore changes nothing). `fixture` is the document BEFORE the
+/// with no targets selects nothing and therefore changes nothing). `snapshot` is the document BEFORE the
 /// deletion, so a just-deleted id still classifies to its granularity.
-pub fn puzzle2d_clear_selection_write(fixture: &Value, selected: &[String]) -> Option<semio_framework_plugin::InteractionWrite> {
+pub fn puzzle2d_clear_selection_write(snapshot: &Value, selected: &[String]) -> Option<semio_framework_plugin::InteractionWrite> {
     if selected.is_empty() {
         return None;
     }
-    Some(semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(fixture, selected), merge: MergeMode::Subtractive })
+    Some(semio_framework_plugin::InteractionWrite { domain: PUZZLE2D_INTERACTION_DOMAIN.into(), targets: puzzle2d_selection_targets(snapshot, selected), merge: MergeMode::Subtractive })
 }
 
-pub fn default_empty_fixture() -> Value {
+pub fn empty_board_snapshot() -> Value {
     json!({
-        "schema": PUZZLE2D_FIXTURE_SCHEMA,
+        "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA,
         "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [],
         "edges": []
@@ -297,7 +299,7 @@ pub fn puzzle2d_interaction_select(granularity: &str, id: &str) -> ActionDescrip
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain declaration —
 /// the deleted `Puzzle2dConfig::selected_ids` flat bag collapses into one framework-owned domain,
-/// `Flat` hierarchy (no parent/child structure was ever modeled for it).
+/// whose topology the app supplies (`interaction_topology`): nodes, their handles, edges and target regions.
 fn puzzle2d_interaction_definition() -> InteractionDefinition {
     InteractionDefinition {
         id: PUZZLE2D_INTERACTION_DOMAIN.into(),
@@ -307,7 +309,7 @@ fn puzzle2d_interaction_definition() -> InteractionDefinition {
             GranularityDefinition { id: PUZZLE2D_GRANULARITY_EDGE.into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "link".into() },
             GranularityDefinition { id: PUZZLE2D_GRANULARITY_HANDLE.into(), label: LocalizedLabel::native("Handle", "Anschluss"), icon_id: "target".into() },
         ],
-        hierarchy: HierarchyProvider::Flat,
+        hierarchy: HierarchyProvider::Topology,
         hover: HoverSpec { enabled: true, transitive: false, channels: vec![PUZZLE2D_HOVER_CHANNEL.into()], broadcast: true },
         selection: SelectionSpec {
             modes: vec![SelectionMode::Multiple, SelectionMode::Single],
@@ -324,21 +326,21 @@ pub fn puzzle2d_active_utility(view_state: Option<&semio_framework_plugin::ViewM
     view_state.and_then(|view| view.active_utility_id.as_deref()).filter(|utility| !utility.is_empty()).unwrap_or(select_utility::UTILITY_ID)
 }
 
-/// 🎥️ The camera lives on `Puzzle2dConfig` — session-only view state, never a fixture field.
+/// 🎥️ The camera lives on `Puzzle2dConfig` — session-only view state, never a snapshot field.
 pub fn runtime_camera(runtime: &Puzzle2dPlayRuntime) -> (f64, f64, f64) {
     (runtime.camera_x, runtime.camera_y, runtime.camera_zoom)
 }
 
-pub fn fixture_nodes(fixture: &Value) -> &[Value] {
-    fixture.get("nodes").and_then(|value| value.as_array()).map_or(&[][..], |values| values.as_slice())
+pub fn board_snapshot_nodes(snapshot: &Value) -> &[Value] {
+    snapshot.get("nodes").and_then(|value| value.as_array()).map_or(&[][..], |values| values.as_slice())
 }
 
-pub fn fixture_edges(fixture: &Value) -> &[Value] {
-    fixture.get("edges").and_then(|value| value.as_array()).map_or(&[][..], |values| values.as_slice())
+pub fn board_snapshot_edges(snapshot: &Value) -> &[Value] {
+    snapshot.get("edges").and_then(|value| value.as_array()).map_or(&[][..], |values| values.as_slice())
 }
 
-pub fn kind_catalog_entries<'a>(fixture: &'a Value, key: &str) -> Option<&'a [Value]> {
-    fixture.get("meta").and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get(key)).and_then(|value| value.as_array()).map(|values| values.as_slice())
+pub fn kind_catalog_entries<'a>(snapshot: &'a Value, key: &str) -> Option<&'a [Value]> {
+    snapshot.get("meta").and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get(key)).and_then(|value| value.as_array()).map(|values| values.as_slice())
 }
 
 fn manifest_catalog_rows(kinds: &[semio_framework_graph::manifest::KindDef]) -> Value {
@@ -409,8 +411,8 @@ fn catalog_rows_subset(catalogs: &Value, slice: &str, keys: &[&str]) -> Option<V
 /// Documents that carry no `meta.kindCatalogs` of their own — which is every shipped example, they
 /// name a `meta.manifestId` instead — resolve their catalogs from the compile-time manifest registry
 /// via [`manifest_board_kind_catalogs_json`].
-pub fn board_kind_catalogs_json(fixture: &Value) -> Option<String> {
-    let meta = fixture.get("meta");
+pub fn board_kind_catalogs_json(snapshot: &Value) -> Option<String> {
+    let meta = snapshot.get("meta");
     meta.and_then(|meta| meta.get("kindCatalogs")).and_then(document_board_kind_catalogs_json).or_else(|| meta.and_then(|meta| meta.get("manifestId")).and_then(Value::as_str).and_then(manifest_board_kind_catalogs_json))
 }
 
@@ -454,12 +456,12 @@ fn document_board_kind_catalogs_json(catalogs: &Value) -> Option<String> {
 /// implies ([`inferred_node_kind_rows`]), and a document resolving no catalog at all uses them outright.
 /// Without this the engine's usable `node_kinds` map stays empty and every candidate lookup silently
 /// yields nothing: a picker that opens on a free handle and lists nothing forever.
-pub fn board_kind_catalogs_json_or_inferred(fixture: &Value) -> Option<String> {
+pub fn board_kind_catalogs_json_or_inferred(snapshot: &Value) -> Option<String> {
     let inferred = || {
-        let rows = inferred_node_kind_rows(fixture);
+        let rows = inferred_node_kind_rows(snapshot);
         (!rows.is_empty()).then_some(rows)
     };
-    let Some(json) = board_kind_catalogs_json(fixture) else {
+    let Some(json) = board_kind_catalogs_json(snapshot) else {
         return inferred().map(|rows| json!({ "nodeKinds": Value::Array(rows) }).to_string());
     };
     let Some(mut catalogs) = serde_json::from_str::<Value>(&json).ok().filter(Value::is_object) else {
@@ -478,14 +480,14 @@ pub fn board_kind_catalogs_json_or_inferred(fixture: &Value) -> Option<String> {
     }
 }
 
-/// 🗂️ The kind ids present in the document itself, used whenever the fixture carries no explicit
+/// 🗂️ The kind ids present in the document itself, used whenever the snapshot carries no explicit
 /// `meta.kindCatalogs` slice.
-pub fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
+pub fn inferred_kind_entries(snapshot: &Value, field: &str) -> Vec<Value> {
     let mut ids = BTreeSet::new();
     match field {
-        "nodes" => return inferred_node_kind_rows(fixture),
+        "nodes" => return inferred_node_kind_rows(snapshot),
         "handles" => {
-            for node in fixture_nodes(fixture) {
+            for node in board_snapshot_nodes(snapshot) {
                 if let Some(handles) = node.get("handles").and_then(|value| value.as_array()) {
                     for handle in handles {
                         if let Some(kind) = handle.get("handleKind").and_then(|value| value.as_str()) {
@@ -496,7 +498,7 @@ pub fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
             }
         }
         "edges" => {
-            for edge in fixture_edges(fixture) {
+            for edge in board_snapshot_edges(snapshot) {
                 if let Some(kind) = edge.get("edgeKind").and_then(|value| value.as_str()) {
                     ids.insert(kind.to_string());
                 }
@@ -512,9 +514,9 @@ pub fn inferred_kind_entries(fixture: &Value, field: &str) -> Vec<Value> {
 /// icon and that node's handles as templates. A document that came from no manifest (Concrete Forest,
 /// or any board a user drew) has exactly the kinds it shows, so the catalogue panel offers them and
 /// the fill can place them; a document whose meta carries `kindCatalogs` never reaches this.
-pub fn inferred_node_kind_rows(fixture: &Value) -> Vec<Value> {
+pub fn inferred_node_kind_rows(snapshot: &Value) -> Vec<Value> {
     let mut rows: Vec<Value> = Vec::new();
-    for node in fixture_nodes(fixture) {
+    for node in board_snapshot_nodes(snapshot) {
         let Some(kind) = node.get("nodeKind").and_then(Value::as_str).filter(|kind| !kind.is_empty()) else { continue };
         if rows.iter().any(|row| row.get("id").and_then(Value::as_str) == Some(kind)) {
             continue;
@@ -554,11 +556,11 @@ pub fn inferred_node_kind_rows(fixture: &Value) -> Vec<Value> {
 /// declares them, else the rows its `meta.manifestId` declares, else the rows its own nodes imply.
 /// One seam so the catalogue panel, the `addNode` arg form and the Add Node dialog can never drift
 /// onto different kind sets.
-pub fn puzzle2d_node_kind_rows(fixture: &Value) -> Vec<Value> {
-    if let Some(rows) = kind_catalog_entries(fixture, "nodes").filter(|rows| !rows.is_empty()) {
+pub fn puzzle2d_node_kind_rows(snapshot: &Value) -> Vec<Value> {
+    if let Some(rows) = kind_catalog_entries(snapshot, "nodes").filter(|rows| !rows.is_empty()) {
         return rows.to_vec();
     }
-    let manifest_rows = fixture
+    let manifest_rows = snapshot
         .get("meta")
         .and_then(|meta| meta.get("manifestId"))
         .and_then(Value::as_str)
@@ -569,7 +571,7 @@ pub fn puzzle2d_node_kind_rows(fixture: &Value) -> Vec<Value> {
     if !manifest_rows.is_empty() {
         return manifest_rows;
     }
-    inferred_kind_entries(fixture, "nodes")
+    inferred_kind_entries(snapshot, "nodes")
 }
 
 /// 🗂️ The `kind` options the `addNode` arg form and the Add Node dialog offer. `AppDefinition` is
@@ -660,9 +662,9 @@ pub fn puzzle2d_absolute_or_delta(args: Option<&Value>, current: f64) -> Option<
 
 /// 🏷️ One node-kind catalog row's display name — the same `name` / `id` precedence the catalogue
 /// panel renders, resolved against the document's own `meta.kindCatalogs` else its inferred rows.
-pub fn puzzle2d_kind_catalog_label(fixture: &Value, kind_id: &str) -> String {
-    let inferred = inferred_kind_entries(fixture, "nodes");
-    let entries = kind_catalog_entries(fixture, "nodes").unwrap_or(inferred.as_slice());
+pub fn puzzle2d_kind_catalog_label(snapshot: &Value, kind_id: &str) -> String {
+    let inferred = inferred_kind_entries(snapshot, "nodes");
+    let entries = kind_catalog_entries(snapshot, "nodes").unwrap_or(inferred.as_slice());
     entries
         .iter()
         .find(|entry| entry.get("id").and_then(Value::as_str) == Some(kind_id))
@@ -674,7 +676,7 @@ pub fn puzzle2d_kind_catalog_label(fixture: &Value, kind_id: &str) -> String {
 /// 🏷️ What one outliner row and one board glyph should read — authored label (`label`, else the
 /// board's own `text`), else the kind's catalog name, else the raw id. Ported from puzzle3d's
 /// `puzzle3d_object_display_label` (ticket 26/09/15/PUZZLE3D-OBJECT-TREE-LABELS).
-pub fn puzzle2d_node_display_label(node: &Value, fixture: &Value) -> String {
+pub fn puzzle2d_node_display_label(node: &Value, snapshot: &Value) -> String {
     for key in ["label", "text"] {
         if let Some(label) = node.get(key).and_then(Value::as_str).filter(|label| !label.is_empty()) {
             return label.to_string();
@@ -682,30 +684,30 @@ pub fn puzzle2d_node_display_label(node: &Value, fixture: &Value) -> String {
     }
     node.get("nodeKind")
         .and_then(Value::as_str)
-        .map(|kind| puzzle2d_kind_catalog_label(fixture, kind))
+        .map(|kind| puzzle2d_kind_catalog_label(snapshot, kind))
         .filter(|label| !label.is_empty())
         .unwrap_or_else(|| node.get("id").and_then(Value::as_str).unwrap_or("node").to_string())
 }
 
 /// 🏷️ What a reference to the board entity `id` (one of `kinds`: `node`, `targetRegion`, `edge`, `handle`; every kind when
-/// none is declared) reads in `fixture` — a node its display label ([`puzzle2d_node_display_label`]), a target region its
+/// none is declared) reads in `snapshot` — a node its display label ([`puzzle2d_node_display_label`]), a target region its
 /// authored label, an edge its two endpoint nodes, a handle its node and handle kind. Authored and catalogued names are
 /// data, the same in every locale; `None` when only the raw id would name the entity.
-pub fn puzzle2d_entity_label(fixture: &Value, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+pub fn puzzle2d_entity_label(snapshot: &Value, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
     let wants = |kind: &str| kinds.is_empty() || kinds.iter().any(|declared| declared == kind);
     let by_id = |entities: &[Value]| entities.iter().find(|entity| entity.get("id").and_then(Value::as_str) == Some(id)).cloned();
-    let node_of = |node_id: &str| fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id)).map(|node| puzzle2d_node_display_label(node, fixture)).unwrap_or_else(|| node_id.to_string());
-    let label = if let Some(node) = wants(PUZZLE2D_GRANULARITY_NODE).then(|| by_id(fixture_nodes(fixture))).flatten() {
-        Some(puzzle2d_node_display_label(&node, fixture))
-    } else if let Some(region) = wants(PUZZLE2D_GRANULARITY_TARGET_REGION).then(|| by_id(fixture_target_regions(fixture))).flatten() {
+    let node_of = |node_id: &str| board_snapshot_nodes(snapshot).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id)).map(|node| puzzle2d_node_display_label(node, snapshot)).unwrap_or_else(|| node_id.to_string());
+    let label = if let Some(node) = wants(PUZZLE2D_GRANULARITY_NODE).then(|| by_id(board_snapshot_nodes(snapshot))).flatten() {
+        Some(puzzle2d_node_display_label(&node, snapshot))
+    } else if let Some(region) = wants(PUZZLE2D_GRANULARITY_TARGET_REGION).then(|| by_id(snapshot_target_regions(snapshot))).flatten() {
         region.get("label").and_then(Value::as_str).filter(|label| !label.is_empty()).map(str::to_string)
-    } else if let Some(edge) = wants(PUZZLE2D_GRANULARITY_EDGE).then(|| by_id(fixture_edges(fixture))).flatten() {
+    } else if let Some(edge) = wants(PUZZLE2D_GRANULARITY_EDGE).then(|| by_id(board_snapshot_edges(snapshot))).flatten() {
         let endpoint = |key: &str| edge.get(key).and_then(Value::as_str).map(|handle| node_of(handle.split_once(':').map_or(handle, |(node, _)| node)));
         endpoint("source").zip(endpoint("target")).map(|(source, target)| format!("{source} → {target}"))
     } else if wants(PUZZLE2D_GRANULARITY_HANDLE) {
-        fixture_nodes(fixture).iter().find_map(|node| {
+        board_snapshot_nodes(snapshot).iter().find_map(|node| {
             let handle = node.get("handles").and_then(Value::as_array)?.iter().find(|handle| handle.get("id").and_then(Value::as_str) == Some(id))?;
-            Some(format!("{} \u{b7} {}", puzzle2d_node_display_label(node, fixture), handle.get("handleKind").and_then(Value::as_str).unwrap_or(id)))
+            Some(format!("{} \u{b7} {}", puzzle2d_node_display_label(node, snapshot), handle.get("handleKind").and_then(Value::as_str).unwrap_or(id)))
         })
     } else {
         None
@@ -735,8 +737,8 @@ fn puzzle2d_label_number(label: &str, root: &str) -> Option<u32> {
 /// ones append ` 2`, ` 3`, … to the root taken from its peers. Every creation path (`addNode`, the
 /// brush commit, the fill placement, duplicate, paste) stamps this so a document never shows two rows
 /// reading the same word. Ported from `puzzle3d_next_object_label`.
-pub fn puzzle2d_next_node_label(nodes: &[Value], fixture: &Value, kind_id: &str) -> String {
-    let catalog_base = puzzle2d_kind_catalog_label(fixture, kind_id);
+pub fn puzzle2d_next_node_label(nodes: &[Value], snapshot: &Value, kind_id: &str) -> String {
+    let catalog_base = puzzle2d_kind_catalog_label(snapshot, kind_id);
     let peers: Vec<&Value> = nodes.iter().filter(|node| node.get("nodeKind").and_then(Value::as_str) == Some(kind_id)).collect();
     if peers.is_empty() {
         return catalog_base;
@@ -763,9 +765,9 @@ pub fn puzzle2d_next_node_label(nodes: &[Value], fixture: &Value, kind_id: &str)
     }
 }
 
-pub fn puzzle2d_kind_ids(fixture: &Value, field: &str) -> Vec<String> {
-    let inferred = inferred_kind_entries(fixture, field);
-    let entries = kind_catalog_entries(fixture, field).unwrap_or(inferred.as_slice());
+pub fn puzzle2d_kind_ids(snapshot: &Value, field: &str) -> Vec<String> {
+    let inferred = inferred_kind_entries(snapshot, field);
+    let entries = kind_catalog_entries(snapshot, field).unwrap_or(inferred.as_slice());
     entries.iter().filter_map(|entry| entry.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
 }
 
@@ -782,12 +784,12 @@ pub fn puzzle_extension_id() -> &'static str {
 //#endregion 🔖️Scene
 
 //#region 🔖️FixtureEdits
-pub fn add_node_to_host_snapshot(fixture: &mut Value, kind: Option<&str>, args: Option<&Value>) {
+pub fn add_node_to_host_snapshot(snapshot: &mut Value, kind: Option<&str>, args: Option<&Value>) {
     let node_kind = kind.unwrap_or("node");
     // 🏷️ Stamped BEFORE the borrow: the label reads the whole document (catalog rows plus every peer
     // of this kind) and must see the state the new node is about to join.
-    let label = puzzle2d_next_node_label(fixture_nodes(fixture), fixture, node_kind);
-    let Some(obj) = fixture.as_object_mut() else {
+    let label = puzzle2d_next_node_label(board_snapshot_nodes(snapshot), snapshot, node_kind);
+    let Some(obj) = snapshot.as_object_mut() else {
         return;
     };
     let nodes = obj.entry("nodes".to_string()).or_insert_with(|| json!([]));
@@ -820,19 +822,19 @@ pub fn add_node_to_host_snapshot(fixture: &mut Value, kind: Option<&str>, args: 
     nodes.push(node);
 }
 
-pub fn delete_selection_from_host_snapshot(fixture: &mut Value, selected: &[String]) {
+pub fn delete_selection_from_host_snapshot(snapshot: &mut Value, selected: &[String]) {
     if selected.is_empty() {
         return;
     }
     let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
-    let node_ids: HashSet<String> = fixture_nodes(fixture).iter().filter_map(|node| node.get("id").and_then(|value| value.as_str())).filter(|id| selected.contains(id)).map(str::to_string).collect();
-    let handle_ids: HashSet<String> = fixture_nodes(fixture)
+    let node_ids: HashSet<String> = board_snapshot_nodes(snapshot).iter().filter_map(|node| node.get("id").and_then(|value| value.as_str())).filter(|id| selected.contains(id)).map(str::to_string).collect();
+    let handle_ids: HashSet<String> = board_snapshot_nodes(snapshot)
         .iter()
         .flat_map(|node| node.get("handles").and_then(|value| value.as_array()).into_iter().flatten().filter_map(|handle| handle.get("id").and_then(|value| value.as_str())))
         .filter(|id| selected.contains(id))
         .map(str::to_string)
         .collect();
-    if let Some(nodes) = fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
+    if let Some(nodes) = snapshot.get_mut("nodes").and_then(|value| value.as_array_mut()) {
         *nodes = nodes
             .iter()
             .filter(|node| node.get("id").and_then(|value| value.as_str()).is_none_or(|id| !node_ids.contains(id)))
@@ -845,7 +847,7 @@ pub fn delete_selection_from_host_snapshot(fixture: &mut Value, selected: &[Stri
             })
             .collect();
     }
-    if let Some(edges) = fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
+    if let Some(edges) = snapshot.get_mut("edges").and_then(|value| value.as_array_mut()) {
         edges.retain(|edge| {
             let id_ok = edge.get("id").and_then(|value| value.as_str()).is_none_or(|id| !selected.contains(id));
             let source = edge.get("source").and_then(|value| value.as_str()).unwrap_or("");
@@ -855,7 +857,7 @@ pub fn delete_selection_from_host_snapshot(fixture: &mut Value, selected: &[Stri
     }
 }
 
-/// 🙈️ Patches `hidden`/`locked` onto every selected node, handle, and edge in the fixture.
+/// 🙈️ Patches `hidden`/`locked` onto every selected node, handle, and edge in the snapshot.
 /// 🙈️ Whether a node, handle or edge is hidden. The document stores the inverse, `visible` (absent = shown): a `hidden`
 /// key written onto one of them never reaches the typed model, so it would neither persist nor reach a peer.
 pub fn puzzle2d_entity_hidden(entity: &Value) -> bool {
@@ -872,13 +874,13 @@ fn puzzle2d_entity_flag_entry(flag: &str, value: bool) -> (&'static str, bool) {
     }
 }
 
-pub fn apply_selection_flag(fixture: &mut Value, selected: &[String], flag: &str, value: bool) {
+pub fn apply_selection_flag(snapshot: &mut Value, selected: &[String], flag: &str, value: bool) {
     if selected.is_empty() {
         return;
     }
     let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
     let (key, value) = puzzle2d_entity_flag_entry(flag, value);
-    if let Some(nodes) = fixture.get_mut("nodes").and_then(|entry| entry.as_array_mut()) {
+    if let Some(nodes) = snapshot.get_mut("nodes").and_then(|entry| entry.as_array_mut()) {
         for node in nodes.iter_mut() {
             let node_selected = node.get("id").and_then(|entry| entry.as_str()).is_some_and(|id| selected.contains(id));
             if let Some(handles) = node.get_mut("handles").and_then(|entry| entry.as_array_mut()) {
@@ -898,7 +900,7 @@ pub fn apply_selection_flag(fixture: &mut Value, selected: &[String], flag: &str
             }
         }
     }
-    if let Some(edges) = fixture.get_mut("edges").and_then(|entry| entry.as_array_mut()) {
+    if let Some(edges) = snapshot.get_mut("edges").and_then(|entry| entry.as_array_mut()) {
         for edge in edges.iter_mut() {
             let edge_selected = edge.get("id").and_then(|entry| entry.as_str()).is_some_and(|id| selected.contains(id));
             if edge_selected {
@@ -915,12 +917,12 @@ pub fn apply_selection_flag(fixture: &mut Value, selected: &[String], flag: &str
 /// calls so freshly minted nodes never inherit the word their source row already shows. Each node's
 /// own label is cleared before its turn, so it counts as one unlabeled peer and takes the next free
 /// number; nodes later in `ids` then see what the earlier ones were just given.
-pub fn puzzle2d_relabel_nodes(fixture: &mut Value, ids: &[String]) {
-    fn node_kind_of(fixture: &Value, id: &str) -> Option<String> {
-        fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id))?.get("nodeKind").and_then(Value::as_str).map(str::to_string)
+pub fn puzzle2d_relabel_nodes(snapshot: &mut Value, ids: &[String]) {
+    fn node_kind_of(snapshot: &Value, id: &str) -> Option<String> {
+        board_snapshot_nodes(snapshot).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id))?.get("nodeKind").and_then(Value::as_str).map(str::to_string)
     }
-    fn write_label(fixture: &mut Value, id: &str, label: Option<String>) {
-        let Some(nodes) = fixture.get_mut("nodes").and_then(Value::as_array_mut) else { return };
+    fn write_label(snapshot: &mut Value, id: &str, label: Option<String>) {
+        let Some(nodes) = snapshot.get_mut("nodes").and_then(Value::as_array_mut) else { return };
         let Some(node) = nodes.iter_mut().find(|node| node.get("id").and_then(Value::as_str) == Some(id)) else { return };
         let Some(object) = node.as_object_mut() else { return };
         object.remove("label");
@@ -934,15 +936,15 @@ pub fn puzzle2d_relabel_nodes(fixture: &mut Value, ids: &[String]) {
         }
     }
     for id in ids {
-        let Some(kind) = node_kind_of(fixture, id) else { continue };
-        write_label(fixture, id, None);
-        let label = puzzle2d_next_node_label(fixture_nodes(fixture), fixture, &kind);
-        write_label(fixture, id, Some(label));
+        let Some(kind) = node_kind_of(snapshot, id) else { continue };
+        write_label(snapshot, id, None);
+        let label = puzzle2d_next_node_label(board_snapshot_nodes(snapshot), snapshot, &kind);
+        write_label(snapshot, id, Some(label));
     }
 }
 
 /// 📋️ Clones every selected node (+24/+24 offset, fresh node+handle ids) and any edge whose both endpoints were cloned; returns the new node ids.
-pub fn duplicate_selection_in_fixture(fixture: &mut Value, selected: &[String]) -> Vec<String> {
+pub fn duplicate_selection_in_snapshot(snapshot: &mut Value, selected: &[String]) -> Vec<String> {
     if selected.is_empty() {
         return Vec::new();
     }
@@ -950,7 +952,7 @@ pub fn duplicate_selection_in_fixture(fixture: &mut Value, selected: &[String]) 
     let mut id_remap: HashMap<String, String> = HashMap::new();
     let mut new_ids: Vec<String> = Vec::new();
 
-    let source_nodes: Vec<Value> = fixture_nodes(fixture).iter().filter(|node| node.get("id").and_then(|value| value.as_str()).is_some_and(|id| selected_set.contains(id))).cloned().collect();
+    let source_nodes: Vec<Value> = board_snapshot_nodes(snapshot).iter().filter(|node| node.get("id").and_then(|value| value.as_str()).is_some_and(|id| selected_set.contains(id))).cloned().collect();
 
     let new_nodes: Vec<Value> = source_nodes
         .into_iter()
@@ -983,11 +985,11 @@ pub fn duplicate_selection_in_fixture(fixture: &mut Value, selected: &[String]) 
         })
         .collect();
 
-    if let Some(nodes) = fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
+    if let Some(nodes) = snapshot.get_mut("nodes").and_then(|value| value.as_array_mut()) {
         nodes.extend(new_nodes);
     }
 
-    let new_edges: Vec<Value> = fixture_edges(fixture)
+    let new_edges: Vec<Value> = board_snapshot_edges(snapshot)
         .iter()
         .filter_map(|edge| {
             let source = edge.get("source").and_then(|value| value.as_str()).unwrap_or("");
@@ -1003,7 +1005,7 @@ pub fn duplicate_selection_in_fixture(fixture: &mut Value, selected: &[String]) 
         })
         .collect();
     if !new_edges.is_empty() {
-        if let Some(edges) = fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
+        if let Some(edges) = snapshot.get_mut("edges").and_then(|value| value.as_array_mut()) {
             edges.extend(new_edges);
         }
     }
@@ -1012,11 +1014,11 @@ pub fn duplicate_selection_in_fixture(fixture: &mut Value, selected: &[String]) 
 }
 
 /// 🎯️ Every node/handle id sharing a `nodeKind`/`handleKind` with anything currently selected.
-pub fn select_same_kind_ids(fixture: &Value, selected: &[String]) -> Vec<String> {
+pub fn select_same_kind_ids(snapshot: &Value, selected: &[String]) -> Vec<String> {
     let selected_set: HashSet<&str> = selected.iter().map(String::as_str).collect();
     let mut node_kinds: HashSet<&str> = HashSet::new();
     let mut handle_kinds: HashSet<&str> = HashSet::new();
-    for node in fixture_nodes(fixture) {
+    for node in board_snapshot_nodes(snapshot) {
         if node.get("id").and_then(|value| value.as_str()).is_some_and(|id| selected_set.contains(id)) {
             if let Some(kind) = node.get("nodeKind").and_then(|value| value.as_str()) {
                 node_kinds.insert(kind);
@@ -1031,7 +1033,7 @@ pub fn select_same_kind_ids(fixture: &Value, selected: &[String]) -> Vec<String>
         }
     }
     let mut ids: Vec<String> = Vec::new();
-    for node in fixture_nodes(fixture) {
+    for node in board_snapshot_nodes(snapshot) {
         if node.get("nodeKind").and_then(|value| value.as_str()).is_some_and(|kind| node_kinds.contains(kind)) {
             if let Some(id) = node.get("id").and_then(|value| value.as_str()) {
                 ids.push(id.to_string());
@@ -1048,7 +1050,7 @@ pub fn select_same_kind_ids(fixture: &Value, selected: &[String]) -> Vec<String>
     ids
 }
 
-/// 🎥️ Writes an `{ x, y, zoom }` camera payload into the config — session-only view state, never the fixture.
+/// 🎥️ Writes an `{ x, y, zoom }` camera payload into the config — session-only view state, never the snapshot.
 pub fn set_runtime_camera(runtime: &mut Puzzle2dPlayRuntime, camera: &Value) {
     if let Some(x) = camera.get("x").and_then(Value::as_f64) {
         runtime.camera_x = x;
@@ -1075,10 +1077,10 @@ fn patched_field_value(entity: &Value, field: &str, value: Option<&Value>, delta
  * on that handle inside its node, so the inspector's handle rows (angle, radius) are editable through
  * the same one verb the node rows use. An empty `ids` addresses every node, the pre-existing
  * whole-selection behaviour. */
-pub fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) {
+pub fn patch_inspector_nodes(snapshot: &mut Value, ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) {
     let visible = (field == "hidden").then(|| value.and_then(Value::as_bool).map(|hidden| Value::Bool(!hidden))).flatten();
     let (field, value) = if field == "hidden" { ("visible", visible.as_ref()) } else { (field, value) };
-    let Some(nodes) = fixture.get_mut("nodes").and_then(|entry| entry.as_array_mut()) else { return };
+    let Some(nodes) = snapshot.get_mut("nodes").and_then(|entry| entry.as_array_mut()) else { return };
     for node in nodes {
         let node_id = node.get("id").and_then(|entry| entry.as_str()).map(str::to_string).unwrap_or_default();
         if let Some(handles) = node.get_mut("handles").and_then(Value::as_array_mut) {
@@ -1103,15 +1105,15 @@ pub fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, v
 
 //#region 🎯️TargetRegions
 /// 🎯️ The document's fill-constraining rectangles, or an empty slice when the board declares none.
-pub fn fixture_target_regions(fixture: &Value) -> &[Value] {
-    fixture.get("targetRegions").and_then(Value::as_array).map_or(&[], Vec::as_slice)
+pub fn snapshot_target_regions(snapshot: &Value) -> &[Value] {
+    snapshot.get("targetRegions").and_then(Value::as_array).map_or(&[], Vec::as_slice)
 }
 
 /// 🎯️ The region ids inside `selected` — the framework selection is one flat id list per domain, so a
 /// region is simply a selected id the document holds a region for.
-pub fn puzzle2d_selected_target_region_ids(fixture: &Value, selected: &[String]) -> Vec<String> {
+pub fn puzzle2d_selected_target_region_ids(snapshot: &Value, selected: &[String]) -> Vec<String> {
     let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
-    fixture_target_regions(fixture).iter().filter_map(|region| region.get("id").and_then(Value::as_str)).filter(|id| selected.contains(id)).map(str::to_string).collect()
+    snapshot_target_regions(snapshot).iter().filter_map(|region| region.get("id").and_then(Value::as_str)).filter(|id| selected.contains(id)).map(str::to_string).collect()
 }
 
 /// 📐️ Normalized `[min_x, min_y, max_x, max_y]` of one region entry — the `Value` twin of
@@ -1125,9 +1127,9 @@ pub fn puzzle2d_region_bounds(region: &Value) -> [f64; 4] {
 }
 
 /// 🎯️ Whether ANY visible region of this document contains the axis-aligned box — the fill rule, on
-/// the `Value` fixture. An empty visible set is unconstrained, exactly as in puzzle3d.
-pub fn puzzle2d_fixture_regions_admit(fixture: &Value, aabb: [f64; 4]) -> bool {
-    let visible: Vec<&Value> = fixture_target_regions(fixture).iter().filter(|region| region.get("hidden").and_then(Value::as_bool) != Some(true)).collect();
+/// the `Value` snapshot. An empty visible set is unconstrained, exactly as in puzzle3d.
+pub fn puzzle2d_snapshot_regions_admit(snapshot: &Value, aabb: [f64; 4]) -> bool {
+    let visible: Vec<&Value> = snapshot_target_regions(snapshot).iter().filter(|region| region.get("hidden").and_then(Value::as_bool) != Some(true)).collect();
     if visible.is_empty() {
         return true;
     }
@@ -1139,20 +1141,20 @@ pub fn puzzle2d_fixture_regions_admit(fixture: &Value, aabb: [f64; 4]) -> bool {
 
 /// 🖍️ Paints one grid-snapped region at `origin`, sized by the Area Brush's own width/height steppers
 /// in grid cells. Answers the id it minted so the caller can address it.
-pub fn puzzle2d_paint_target_region(fixture: &mut Value, origin: (f64, f64), size: (f64, f64), grid_factor: f64) -> String {
+pub fn puzzle2d_paint_target_region(snapshot: &mut Value, origin: (f64, f64), size: (f64, f64), grid_factor: f64) -> String {
     let grid = grid_factor.abs().max(0.1);
     let snapped = ((origin.0 / grid).round() * grid, (origin.1 / grid).round() * grid);
     let extent = (size.0.max(1.0) * grid, size.1.max(1.0) * grid);
-    puzzle2d_push_target_region(fixture, snapped.0, snapped.1, extent.0, extent.1)
+    puzzle2d_push_target_region(snapshot, snapped.0, snapped.1, extent.0, extent.1)
 }
 
 /// 🎯️ Mints ONE region row from an already-resolved world rectangle and answers its id. The single
 /// place a `targetRegions` entry is born: the palette verb reaches it through
 /// [`puzzle2d_paint_target_region`] (brush cells → world extent), the board engine's `regionCreate`
 /// reaches it with the rectangle the pointer released on, and both mint the same shape.
-pub fn puzzle2d_push_target_region(fixture: &mut Value, x: f64, y: f64, width: f64, height: f64) -> String {
+pub fn puzzle2d_push_target_region(snapshot: &mut Value, x: f64, y: f64, width: f64, height: f64) -> String {
     let id = new_node_id("target-region");
-    puzzle2d_push_entity(fixture, "targetRegions", json!({ "id": id, "x": x, "y": y, "width": width, "height": height, "hidden": false, "locked": false }));
+    puzzle2d_push_entity(snapshot, "targetRegions", json!({ "id": id, "x": x, "y": y, "width": width, "height": height, "hidden": false, "locked": false }));
     id
 }
 
@@ -1166,8 +1168,8 @@ pub fn puzzle2d_area_brush_extent_world(runtime: &Puzzle2dPlayRuntime) -> (f64, 
 
 /// 🚚️ Absolute pose push from the gumball for one unlocked region — the 2d twin of puzzle3d's
 /// `relocate-target-volume`, with `size` standing in for the oriented box's quaternion and scale.
-pub fn puzzle2d_relocate_target_region(fixture: &mut Value, id: &str, after: &Value) {
-    let Some(regions) = fixture.get_mut("targetRegions").and_then(Value::as_array_mut) else { return };
+pub fn puzzle2d_relocate_target_region(snapshot: &mut Value, id: &str, after: &Value) {
+    let Some(regions) = snapshot.get_mut("targetRegions").and_then(Value::as_array_mut) else { return };
     let Some(region) = regions.iter_mut().find(|region| region.get("id").and_then(Value::as_str) == Some(id)) else { return };
     if region.get("locked").and_then(Value::as_bool) == Some(true) {
         return;
@@ -1185,11 +1187,11 @@ pub fn puzzle2d_relocate_target_region(fixture: &mut Value, id: &str, after: &Va
 
 /// 🚩️ Writes one presentation flag on the addressed regions. A region's flags carry no
 /// default-omission, so `false` is written, never removed.
-pub fn apply_target_region_flag(fixture: &mut Value, ids: &[String], flag: &str, value: bool) {
+pub fn apply_target_region_flag(snapshot: &mut Value, ids: &[String], flag: &str, value: bool) {
     if !matches!(flag, "hidden" | "locked") {
         return;
     }
-    let Some(regions) = fixture.get_mut("targetRegions").and_then(Value::as_array_mut) else { return };
+    let Some(regions) = snapshot.get_mut("targetRegions").and_then(Value::as_array_mut) else { return };
     for region in regions.iter_mut() {
         if !region.get("id").and_then(Value::as_str).is_some_and(|id| ids.iter().any(|selected| selected == id)) {
             continue;
@@ -1202,8 +1204,8 @@ pub fn apply_target_region_flag(fixture: &mut Value, ids: &[String], flag: &str,
 
 /// 🗑️ Removes the addressed regions, dropping the whole collection once it empties so the wire form
 /// of a board whose last region was deleted matches one that never had any.
-pub fn delete_target_regions_from_fixture(fixture: &mut Value, ids: &[String]) {
-    let Some(object) = fixture.as_object_mut() else { return };
+pub fn delete_target_regions_from_snapshot(snapshot: &mut Value, ids: &[String]) {
+    let Some(object) = snapshot.as_object_mut() else { return };
     let Some(regions) = object.get_mut("targetRegions").and_then(Value::as_array_mut) else { return };
     regions.retain(|region| !region.get("id").and_then(Value::as_str).is_some_and(|id| ids.iter().any(|selected| selected == id)));
     if regions.is_empty() {
@@ -1214,16 +1216,16 @@ pub fn delete_target_regions_from_fixture(fixture: &mut Value, ids: &[String]) {
 //#endregion 🎯️TargetRegions
 
 /// 🎲️ Re-mints a node id when it collides with an existing one — client-side brush serials restart every session.
-fn unique_node_id(fixture: &Value, candidate: String) -> String {
-    if fixture_nodes(fixture).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
+fn unique_node_id(snapshot: &Value, candidate: String) -> String {
+    if board_snapshot_nodes(snapshot).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
         new_node_id("node")
     } else {
         candidate
     }
 }
 
-fn unique_edge_id(fixture: &Value, candidate: String) -> String {
-    if fixture_edges(fixture).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
+fn unique_edge_id(snapshot: &Value, candidate: String) -> String {
+    if board_snapshot_edges(snapshot).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
         new_node_id("edge")
     } else {
         candidate
@@ -1247,15 +1249,15 @@ fn puzzle2d_placed_handles(node_id: &str, handles: Option<&Value>) -> Value {
     Value::Array(rows)
 }
 
-/// 🖌️ Splices one brush placement (a node, plus the edge back to its source handle) into the fixture.
-pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
-    let node_id = unique_node_id(fixture, payload.get("nodeId").and_then(|value| value.as_str()).map_or_else(|| new_node_id("node"), str::to_string));
-    let edge_id = unique_edge_id(fixture, payload.get("edgeId").and_then(|value| value.as_str()).map_or_else(|| new_node_id("edge"), str::to_string));
+/// 🖌️ Splices one brush placement (a node, plus the edge back to its source handle) into the snapshot.
+pub fn apply_brush_place_payload(snapshot: &mut Value, payload: &Value) {
+    let node_id = unique_node_id(snapshot, payload.get("nodeId").and_then(|value| value.as_str()).map_or_else(|| new_node_id("node"), str::to_string));
+    let edge_id = unique_edge_id(snapshot, payload.get("edgeId").and_then(|value| value.as_str()).map_or_else(|| new_node_id("edge"), str::to_string));
     let node_kind = payload.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("node");
     let x = payload.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
     let y = payload.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
     let shape = payload.get("shape").and_then(|value| value.as_str()).unwrap_or("circle");
-    let label = puzzle2d_next_node_label(fixture_nodes(fixture), fixture, node_kind);
+    let label = puzzle2d_next_node_label(board_snapshot_nodes(snapshot), snapshot, node_kind);
     let mut node = json!({
         "id": node_id,
         "nodeKind": node_kind,
@@ -1274,12 +1276,12 @@ pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
     if let Some(icon) = payload.get("iconKind") {
         node["iconKind"] = icon.clone();
     }
-    if let Some(nodes) = fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
+    if let Some(nodes) = snapshot.get_mut("nodes").and_then(|value| value.as_array_mut()) {
         nodes.push(node);
     }
     let source = payload.get("sourceHandleId").and_then(|value| value.as_str()).unwrap_or("");
     if !source.is_empty() {
-        if let Some(edges) = fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
+        if let Some(edges) = snapshot.get_mut("edges").and_then(|value| value.as_array_mut()) {
             edges.push(json!({
                 "id": edge_id,
                 "edgeKind": "link",
@@ -1290,23 +1292,23 @@ pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
     }
 }
 
-/// ➡️ A fresh edge id no edge of `fixture` already carries.
-pub fn new_edge_id(fixture: &Value) -> String {
-    unique_edge_id(fixture, new_node_id("edge"))
+/// ➡️ A fresh edge id no edge of `snapshot` already carries.
+pub fn new_edge_id(snapshot: &Value) -> String {
+    unique_edge_id(snapshot, new_node_id("edge"))
 }
 
 /// ➡️ Appends one edge, creating the `edges` array when a hand-written document omitted it.
-pub fn puzzle2d_push_edge(fixture: &mut Value, edge: Value) {
-    puzzle2d_push_entity(fixture, "edges", edge);
+pub fn puzzle2d_push_edge(snapshot: &mut Value, edge: Value) {
+    puzzle2d_push_entity(snapshot, "edges", edge);
 }
 
 /// 🔵️ Appends one node, creating the `nodes` array when a hand-written document omitted it.
-pub fn puzzle2d_push_node(fixture: &mut Value, node: Value) {
-    puzzle2d_push_entity(fixture, "nodes", node);
+pub fn puzzle2d_push_node(snapshot: &mut Value, node: Value) {
+    puzzle2d_push_entity(snapshot, "nodes", node);
 }
 
-fn puzzle2d_push_entity(fixture: &mut Value, key: &str, entity: Value) {
-    let Some(object) = fixture.as_object_mut() else {
+fn puzzle2d_push_entity(snapshot: &mut Value, key: &str, entity: Value) {
+    let Some(object) = snapshot.as_object_mut() else {
         return;
     };
     if let Some(entities) = object.entry(key.to_string()).or_insert_with(|| json!([])).as_array_mut() {
@@ -1343,8 +1345,8 @@ pub fn puzzle2d_handle_world_position(node: &Value, handle: &Value) -> (f64, f64
 
 /// 🔌️ The `handleKind` of one handle id (empty string when the handle declares none), `None` when
 /// the document carries no such handle at all.
-pub fn puzzle2d_handle_kind(fixture: &Value, handle_id: &str) -> Option<String> {
-    fixture_nodes(fixture)
+pub fn puzzle2d_handle_kind(snapshot: &Value, handle_id: &str) -> Option<String> {
+    board_snapshot_nodes(snapshot)
         .iter()
         .flat_map(|node| node.get("handles").and_then(Value::as_array).into_iter().flatten())
         .find(|handle| handle.get("id").and_then(Value::as_str) == Some(handle_id))
@@ -1354,8 +1356,8 @@ pub fn puzzle2d_handle_kind(fixture: &Value, handle_id: &str) -> Option<String> 
 /// 🤝️ Whether `meta.kindCompatibility` admits a `source → target` handle-kind link. A document that
 /// declares no rules is permissive (the board engine's own linking gate behaves the same), and a
 /// handle carrying no kind is admitted by every rule set.
-pub fn puzzle2d_kinds_compatible(fixture: &Value, source_kind: &str, target_kind: &str) -> bool {
-    let rows = fixture.get("meta").and_then(|meta| meta.get("kindCompatibility")).or_else(|| fixture.get("kindCompatibility")).and_then(Value::as_array);
+pub fn puzzle2d_kinds_compatible(snapshot: &Value, source_kind: &str, target_kind: &str) -> bool {
+    let rows = snapshot.get("meta").and_then(|meta| meta.get("kindCompatibility")).or_else(|| snapshot.get("kindCompatibility")).and_then(Value::as_array);
     let Some(rows) = rows.filter(|rows| !rows.is_empty()) else {
         return true;
     };
@@ -1372,8 +1374,8 @@ pub fn puzzle2d_kinds_compatible(fixture: &Value, source_kind: &str, target_kind
 }
 
 /// 🔗️ Every handle id an edge already ends on — an occupied handle refuses a second connection.
-pub fn puzzle2d_occupied_handles(fixture: &Value) -> HashSet<String> {
-    fixture_edges(fixture)
+pub fn puzzle2d_occupied_handles(snapshot: &Value) -> HashSet<String> {
+    board_snapshot_edges(snapshot)
         .iter()
         .flat_map(|edge| [edge.get("source"), edge.get("target")])
         .flatten()
@@ -1397,9 +1399,9 @@ fn puzzle2d_clipboard_media_type() -> MediaType {
 /// 🕹️ The node ids one selection copies: selected node ids, plus the parent node of every selected
 /// handle id — a handle-granularity selection still copies the whole node it belongs to, exactly as
 /// puzzle3d's `puzzle3d_selected_objects_from` resolves a vortex selection to its object.
-pub fn puzzle2d_selected_node_ids(fixture: &Value, selected: &[String]) -> Vec<String> {
+pub fn puzzle2d_selected_node_ids(snapshot: &Value, selected: &[String]) -> Vec<String> {
     let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
-    fixture_nodes(fixture)
+    board_snapshot_nodes(snapshot)
         .iter()
         .filter(|node| {
             let own = node.get("id").and_then(Value::as_str).is_some_and(|id| selected.contains(id));
@@ -1414,41 +1416,41 @@ pub fn puzzle2d_selected_node_ids(fixture: &Value, selected: &[String]) -> Vec<S
 /// the same promise for `deleteSelection`, a board drag, the rotate ring, the three transform verbs
 /// and an inspector patch. Wider than [`puzzle2d_selection_is_locked`], which only answers for the
 /// node/handle pair the clipboard's cut fragment is built from.
-pub fn puzzle2d_addresses_locked_entity(fixture: &Value, ids: &[String]) -> bool {
+pub fn puzzle2d_addresses_locked_entity(snapshot: &Value, ids: &[String]) -> bool {
     if ids.is_empty() {
         return false;
     }
     let addressed: HashSet<&str> = ids.iter().map(String::as_str).collect();
     let locked = |entity: &Value| entity.get("locked").and_then(Value::as_bool) == Some(true);
     let hits = |entity: &Value| entity.get("id").and_then(Value::as_str).is_some_and(|id| addressed.contains(id));
-    let node_locked = fixture_nodes(fixture).iter().any(|node| {
+    let node_locked = board_snapshot_nodes(snapshot).iter().any(|node| {
         (hits(node) && locked(node)) || node.get("handles").and_then(Value::as_array).into_iter().flatten().any(|handle| hits(handle) && locked(handle))
     });
-    node_locked || fixture_edges(fixture).iter().any(|edge| hits(edge) && locked(edge)) || fixture_target_regions(fixture).iter().any(|region| hits(region) && locked(region))
+    node_locked || board_snapshot_edges(snapshot).iter().any(|edge| hits(edge) && locked(edge)) || snapshot_target_regions(snapshot).iter().any(|region| hits(region) && locked(region))
 }
 
 /// 🔒️ Whether any of these nodes (or one of their handles) refuses to be cut.
-pub fn puzzle2d_selection_is_locked(fixture: &Value, node_ids: &[String]) -> bool {
+pub fn puzzle2d_selection_is_locked(snapshot: &Value, node_ids: &[String]) -> bool {
     let ids: HashSet<&str> = node_ids.iter().map(String::as_str).collect();
-    fixture_nodes(fixture).iter().filter(|node| node.get("id").and_then(Value::as_str).is_some_and(|id| ids.contains(id))).any(|node| {
+    board_snapshot_nodes(snapshot).iter().filter(|node| node.get("id").and_then(Value::as_str).is_some_and(|id| ids.contains(id))).any(|node| {
         node.get("locked").and_then(Value::as_bool) == Some(true) || node.get("handles").and_then(Value::as_array).into_iter().flatten().any(|handle| handle.get("locked").and_then(Value::as_bool) == Some(true))
     })
 }
 
 /// 📋️ The copied nodes with their handles, plus every edge whose BOTH endpoints were copied, as a
-/// fixture-shaped fragment.
-pub fn puzzle2d_copy_fragment_from(fixture: &Value, node_ids: &[String]) -> Result<ClipboardFragment, ClipboardError> {
+/// snapshot-shaped fragment.
+pub fn puzzle2d_copy_fragment_from(snapshot: &Value, node_ids: &[String]) -> Result<ClipboardFragment, ClipboardError> {
     if node_ids.is_empty() {
         return Err(ClipboardError::EmptySelection);
     }
     let ids: HashSet<&str> = node_ids.iter().map(String::as_str).collect();
-    let nodes: Vec<Value> = fixture_nodes(fixture).iter().filter(|node| node.get("id").and_then(Value::as_str).is_some_and(|id| ids.contains(id))).cloned().collect();
+    let nodes: Vec<Value> = board_snapshot_nodes(snapshot).iter().filter(|node| node.get("id").and_then(Value::as_str).is_some_and(|id| ids.contains(id))).cloned().collect();
     if nodes.is_empty() {
         return Err(ClipboardError::EmptySelection);
     }
     let handle_ids: HashSet<&str> = nodes.iter().flat_map(|node| node.get("handles").and_then(Value::as_array).into_iter().flatten()).filter_map(|handle| handle.get("id").and_then(Value::as_str)).collect();
     let endpoint_copied = |endpoint: Option<&str>| endpoint.is_some_and(|id| handle_ids.contains(id) || ids.contains(id));
-    let edges: Vec<Value> = fixture_edges(fixture)
+    let edges: Vec<Value> = board_snapshot_edges(snapshot)
         .iter()
         .filter(|edge| endpoint_copied(edge.get("source").and_then(Value::as_str)) && endpoint_copied(edge.get("target").and_then(Value::as_str)))
         .cloned()
@@ -1460,30 +1462,30 @@ pub fn puzzle2d_copy_fragment_from(fixture: &Value, node_ids: &[String]) -> Resu
 
 /// ✂️ Copy-then-delete as ONE mutation list: the copied nodes, their handles, and every edge that
 /// touched them leave the document together, so a cut is a single history edit one undo restores.
-pub fn puzzle2d_cut_operations_from(fixture: &Value, node_ids: &[String]) -> Result<Vec<Puzzle2dMutation>, ClipboardError> {
+pub fn puzzle2d_cut_operations_from(snapshot: &Value, node_ids: &[String]) -> Result<Vec<Puzzle2dMutation>, ClipboardError> {
     if node_ids.is_empty() {
         return Err(ClipboardError::EmptySelection);
     }
-    let mut after = fixture.clone();
+    let mut after = snapshot.clone();
     delete_selection_from_host_snapshot(&mut after, node_ids);
-    puzzle2d_document_delta_operations(fixture, &after).map_err(ClipboardError::ParseFailed)
+    puzzle2d_document_delta_operations(snapshot, &after).map_err(ClipboardError::ParseFailed)
 }
 
 /// 📋️ Clones a copied fragment with fresh node, handle and edge ids: the edges between copied nodes
 /// come back rewired onto the clones, and every clone is offset so it never lands under its source.
 /// Returns the mutation list and the pasted node ids the caller re-selects.
-pub fn puzzle2d_paste_operations_on(fixture: &Value, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<(Vec<Puzzle2dMutation>, Vec<String>), ClipboardError> {
+pub fn puzzle2d_paste_operations_on(snapshot: &Value, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<(Vec<Puzzle2dMutation>, Vec<String>), ClipboardError> {
     let expected = puzzle2d_clipboard_media_type();
     if fragment.media_type != expected {
         return Err(ClipboardError::IncompatibleMediaType(fragment.media_type.clone()));
     }
     let clip: Value = serde_json::from_str(&fragment.dsl_text).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
-    let nodes = fixture_nodes(&clip);
+    let nodes = board_snapshot_nodes(&clip);
     if nodes.is_empty() {
         return Err(ClipboardError::EmptySelection);
     }
     let [offset_x, offset_y] = placement.position.map_or([PUZZLE2D_PASTE_OFFSET, PUZZLE2D_PASTE_OFFSET], |position| [position[0], position[1]]);
-    let mut after = fixture.clone();
+    let mut after = snapshot.clone();
     let mut remap: HashMap<String, String> = HashMap::new();
     let mut pasted: Vec<String> = Vec::new();
     for node in nodes {
@@ -1510,7 +1512,7 @@ pub fn puzzle2d_paste_operations_on(fixture: &Value, fragment: &ClipboardFragmen
         pasted.push(new_id);
         puzzle2d_push_node(&mut after, clone);
     }
-    for edge in fixture_edges(&clip) {
+    for edge in board_snapshot_edges(&clip) {
         let (Some(source), Some(target)) = (remap.get(edge.get("source").and_then(Value::as_str).unwrap_or_default()), remap.get(edge.get("target").and_then(Value::as_str).unwrap_or_default())) else {
             continue;
         };
@@ -1524,20 +1526,20 @@ pub fn puzzle2d_paste_operations_on(fixture: &Value, fragment: &ClipboardFragmen
         puzzle2d_push_edge(&mut after, clone);
     }
     puzzle2d_relabel_nodes(&mut after, &pasted);
-    Ok((puzzle2d_document_delta_operations(fixture, &after).map_err(ClipboardError::ParseFailed)?, pasted))
+    Ok((puzzle2d_document_delta_operations(snapshot, &after).map_err(ClipboardError::ParseFailed)?, pasted))
 }
 //#endregion 📋️Clipboard
 
 //#region 🔖️BoardHostSync
 /// 🧱️ The expensive half of syncing `host` from `envelope`: a full `clear_scene()` + rebuild of
-/// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when the fixture
+/// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when the snapshot
 /// content actually changed — gated by `last_synced_fixture` in `handle`.
 fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
-    let _ = host.parse_fixture_json(&envelope.fixture.to_string());
-    if let Some(json) = board_kind_catalogs_json_or_inferred(&envelope.fixture) {
+    let _ = host.load_board_snapshot_json(&envelope.board_snapshot.to_string());
+    if let Some(json) = board_kind_catalogs_json_or_inferred(&envelope.board_snapshot) {
         let _ = host.set_board_kind_catalogs_from_json(&json);
     }
-    if let Some(compat) = envelope.fixture.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| envelope.fixture.get("kindCompatibility")) {
+    if let Some(compat) = envelope.board_snapshot.get("meta").and_then(|value| value.get("kindCompatibility")).or_else(|| envelope.board_snapshot.get("kindCompatibility")) {
         if let Ok(json) = serde_json::to_string(compat) {
             let _ = host.set_handle_link_compat_from_json(&json);
         }
@@ -1545,7 +1547,7 @@ fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
 }
 
 /// 🪶️ The cheap half of syncing `host` from `envelope`: plain setters mirroring ephemeral view state
-/// (selection/utility/grid/LOD/…) — must run on every action regardless of whether the fixture
+/// (selection/utility/grid/LOD/…) — must run on every action regardless of whether the snapshot
 /// content changed, since this state itself changes every action.
 fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene, selected_ids: &[String]) {
     host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
@@ -1603,7 +1605,7 @@ pub fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
 /// 🖌️ Re-enters the board host's brush slot on the handle this window transient remembers. The guest
 /// host is rebuilt from the document on EVERY dispatch (`puzzle2d_dispatch_emit`), so the slot
 /// `openHandleSuggestions` opened is gone by the next verb — every candidate verb after it restores the
-/// slot before it reads an index. The rebuild is deterministic (same fixture, same kind catalogs, same
+/// slot before it reads an index. The rebuild is deterministic (same snapshot, same kind catalogs, same
 /// weights), so the candidate page is the one the client painted and the index the popup names is the
 /// candidate that gets placed. An open popup claims the slot's hover; the armed brush only targets it.
 /// `requested` is the handle the CALLER named — the popup's own rows carry it, so a client that still
@@ -1809,9 +1811,9 @@ puzzle2d_command_variants! {
     TranslateSelection = "translateSelection",
     RotateSelection = "rotateSelection",
     ScaleSelection = "scaleSelection",
-    ExportFixture = "exportFixture",
-    ImportFixture = "importFixture",
-    OpenImportFixture = "openImportFixture",
+    ExportSnapshot = "exportSnapshot",
+    ImportSnapshot = "importSnapshot",
+    OpenImportSnapshot = "openImportSnapshot",
 }
 
 impl protocol::OpBinary for Puzzle2dCommand {
@@ -1863,6 +1865,8 @@ pub struct Puzzle2dActionCtx<'a> {
     pub base_revision: &'a str,
     /// 🛠️ The tool transaction this action committed — stamped on every op it publishes.
     pub transaction: &'a mut Option<protocol::TransactionRef>,
+    /// 🖐️ The dispatching window's gesture slot: every tool of this action drives the window's ONE gesture through it.
+    pub gesture: &'a semio_framework_plugin::app::GestureSlot<Puzzle2dMutation>,
 }
 
 impl<'a> Puzzle2dActionCtx<'a> {
@@ -1875,66 +1879,58 @@ impl<'a> Puzzle2dActionCtx<'a> {
     /// every target is locked is refused at the tool with the one lock sentence and leaves zero trace; a request
     /// with a movable target is yielded whole, and its leaf reports the locked rest as `mutation.partial`.
     pub fn commit_selection(&mut self, verb: &str, records: Vec<Puzzle2dSelectionRecord>) {
-        self.transform_selection(verb, Puzzle2dSelectPhase::Once, records);
+        self.transform_selection(verb, GesturePhase::Once, records);
     }
 
-    /// 🛠️ Drives this window's select tool through ONE dispatch of a selection transform. `Once` commits the
-    /// records as one transaction; `Stream` upserts them into the window's open transaction — opening it on the
-    /// first tick — which the window transient persists and the window previews; `Commit` folds the final records
-    /// in and commits the whole gesture as ONE edit; `Abort` drops the open gesture with zero trace. An open
-    /// gesture another verb (or a one-shot) interrupts is aborted `captureLost`; one whose document moved under it
-    /// is aborted `baseMoved`, and a stream tick or commit that found it is dropped with it.
-    pub fn transform_selection(&mut self, verb: &str, phase: Puzzle2dSelectPhase, records: Vec<Puzzle2dSelectionRecord>) {
-        let open = self.scene.runtime.select_tool.take().and_then(|state| Puzzle2dSelectTool::resume(&state).ok());
-        let open = match (open, phase) {
-            (Some(mut tool), Puzzle2dSelectPhase::Abort(reason)) => {
-                tool.abort(reason);
-                return;
-            }
-            (None, Puzzle2dSelectPhase::Abort(_)) => {
-                *self.ui_scope = UiDirtyScope::None;
-                return;
-            }
-            (Some(mut tool), _) if tool.base_revision() != self.base_revision => {
-                tool.abort(ToolAbortReason::BaseMoved);
-                if !matches!(phase, Puzzle2dSelectPhase::Once) {
-                    return;
-                }
-                None
-            }
-            (Some(mut tool), _) if tool.verb() != verb || matches!(phase, Puzzle2dSelectPhase::Once) => {
-                tool.abort(ToolAbortReason::CaptureLost);
-                None
-            }
-            (open, _) => open,
-        };
-        let mut tool = match open {
-            Some(tool) => tool,
-            None => match Puzzle2dSelectTool::start(verb, self.authoring_seed, self.base_revision) {
-                Ok(tool) => tool,
-                Err(_) => return,
-            },
-        };
+    /// 🌊️ Drives this window's select tool through ONE dispatch of a selection transform on the window's gesture slot.
+    /// `Once` commits the records as one transaction; `Stream` upserts them into the window's open transaction —
+    /// opening it on the first tick — which the runtime keeps and overlays on the document every render reads; `Commit`
+    /// folds the final records in and commits the whole gesture as ONE edit; `Abort` drops the open gesture with zero
+    /// trace. Another verb, a one-shot, a moved base and every host fact (a blur, a lost capture, a utility switch, a
+    /// frozen document) end an open gesture in the slot — this action maps none of them.
+    pub fn transform_selection(&mut self, verb: &str, phase: GesturePhase, records: Vec<Puzzle2dSelectionRecord>) {
+        if matches!(phase, GesturePhase::Abort(_)) && self.gesture.open().is_none() {
+            *self.ui_scope = UiDirtyScope::None;
+            return;
+        }
         let base = self.base.typed();
         let refused = records.iter().any(|record| record.refused_as_locked(base));
-        let request = SelectToolRequest { base: std::sync::Arc::new(base.clone()), proximity_radius: self.scene.runtime.proximity_radius, records };
-        let event = match phase {
-            Puzzle2dSelectPhase::Stream => select_utility::select_tool::Event::Stream(request),
-            Puzzle2dSelectPhase::Commit if !tool.at_rest() => select_utility::select_tool::Event::Finish(request),
-            _ => select_utility::select_tool::Event::Records(request),
-        };
-        match tool.send(event) {
-            Ok(ToolStep::Committed(transaction, mutations)) => {
-                *self.transaction = (!self.authoring_seed.is_empty()).then_some(transaction);
-                self.artifact_mutations.extend(mutations);
-            }
-            Ok(ToolStep::Idle) if refused => {
+        let request = (!matches!(phase, GesturePhase::Abort(_))).then(|| SelectToolRequest { base: self.base.shared_typed(), proximity_radius: self.scene.runtime.proximity_radius, records });
+        let committed = self.gesture.drive::<ChartGesture<select_utility::select_tool::SelectTool>>(None, verb, phase, request, self.authoring_seed).ok().flatten();
+        match committed {
+            Some((transaction, mutations)) => self.publish_transaction(transaction, mutations),
+            None if refused && self.gesture.open().is_none() => {
                 self.notice(|labels| labels.selection_locked.as_str());
                 *self.ui_scope = UiDirtyScope::None;
             }
-            Ok(_) | Err(_) => {}
+            None => {}
         }
-        self.scene.runtime.select_tool = tool.persist();
+    }
+
+    /// 🧾️ Publishes one committed tool transaction of this action: its leaves join the action's ONE edit, which the
+    /// first transaction the action commits stamps.
+    fn publish_transaction(&mut self, transaction: protocol::TransactionRef, mutations: Vec<Puzzle2dMutation>) {
+        if self.transaction.is_none() && !self.authoring_seed.is_empty() {
+            *self.transaction = Some(transaction);
+        }
+        self.artifact_mutations.extend(mutations);
+    }
+
+    /// 🧱️ Commits the board-tool rows of ONE flush (`rows`: kind and payload, in board order): every run of one kind is
+    /// one release of that tool — ONE `ToolTransaction` of `<appId>#<kind>` on the window's gesture slot, folded on the
+    /// document the runs before it left. Answers the document after every release, `None` when no row changed it.
+    pub fn release_board(&mut self, rows: &[(&'static str, Value)]) -> Option<std::sync::Arc<Value>> {
+        let mut after: Option<std::sync::Arc<Value>> = None;
+        for run in rows.chunk_by(|left, right| left.0 == right.0) {
+            let base = after.clone().unwrap_or_else(|| self.base.shared_value());
+            let release = apply_board_events::BoardToolRelease::new(base, run[0].0, run.iter().map(|row| row.1.clone()).collect());
+            let committed = self.gesture.drive::<ChartGesture<apply_board_events::board_tool::BoardTool>>(None, run[0].0, GesturePhase::Once, Some(release.clone()), self.authoring_seed).ok().flatten();
+            if let Some((transaction, mutations)) = committed {
+                self.publish_transaction(transaction, mutations);
+                after = Some(std::sync::Arc::clone(&release.outcome().after));
+            }
+        }
+        after
     }
 
     /// 🎯️ The selected ids a selection transform may move: nodes and target regions of the base, in first-seen
@@ -1963,7 +1959,7 @@ impl<'a> Puzzle2dActionCtx<'a> {
     /// 2026-09-17 battery measured `deleteSelection` erasing 12 locked entities while the same node's
     /// drag was (silently) refused.
     pub fn refuse_when_locked(&mut self, ids: &[String]) -> bool {
-        if !puzzle2d_addresses_locked_entity(&self.scene.fixture, ids) {
+        if !puzzle2d_addresses_locked_entity(&self.scene.board_snapshot, ids) {
             return false;
         }
         self.notice(|labels| labels.selection_locked.as_str());
@@ -1985,7 +1981,7 @@ pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyRes
 /// destructive tail. `organize_context_menu` (applied automatically at the
 /// `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
 /// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed here.
-async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, fixture: &Value, selected: &[String], view_state: &semio_framework_plugin::ViewModel) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, snapshot: &Value, selected: &[String], view_state: &semio_framework_plugin::ViewModel) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu, SelectionKind};
     let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
     // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
@@ -2013,7 +2009,7 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
     let mut entities: Vec<&Value> = Vec::new();
     let mut has_selected_node = false;
     let mut selected_handle_ids: Vec<&str> = Vec::new();
-    if let Some(nodes) = fixture.get("nodes").and_then(|v| v.as_array()) {
+    if let Some(nodes) = snapshot.get("nodes").and_then(|v| v.as_array()) {
         for node in nodes {
             if node.get("id").and_then(|v| v.as_str()).is_some_and(|id| selected_set.contains(id)) {
                 entities.push(node);
@@ -2029,7 +2025,7 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
             }
         }
     }
-    if let Some(edges) = fixture.get("edges").and_then(|v| v.as_array()) {
+    if let Some(edges) = snapshot.get("edges").and_then(|v| v.as_array()) {
         for edge in edges {
             if edge.get("id").and_then(|v| v.as_str()).is_some_and(|id| selected_set.contains(id)) {
                 entities.push(edge);
@@ -2061,9 +2057,9 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
     // when either end is already connected or no compatibility rule admits the pair, so the menu says
     // what the document allows instead of offering a verb that would only raise a notice.
     if let [source, target] = selected_handle_ids.as_slice() {
-        let occupied = puzzle2d_occupied_handles(fixture);
-        let kinds = puzzle2d_handle_kind(fixture, source).zip(puzzle2d_handle_kind(fixture, target));
-        let connectable = !occupied.contains(*source) && !occupied.contains(*target) && kinds.is_some_and(|(source_kind, target_kind)| puzzle2d_kinds_compatible(fixture, &source_kind, &target_kind));
+        let occupied = puzzle2d_occupied_handles(snapshot);
+        let kinds = puzzle2d_handle_kind(snapshot, source).zip(puzzle2d_handle_kind(snapshot, target));
+        let connectable = !occupied.contains(*source) && !occupied.contains(*target) && kinds.is_some_and(|(source_kind, target_kind)| puzzle2d_kinds_compatible(snapshot, &source_kind, &target_kind));
         menu = menu.item(item("connectHandles", if is_de { "Verbinden" } else { "Connect" }, "link", "createEdge", Some(semio_framework::dsl_value!({ "source": source, "target": target })), false, !connectable));
     }
     menu.item(item("toggleHidden", hide_label, if any_visible { "eye-off" } else { "eye" }, "setSelectionFlag", Some(semio_framework::dsl_value!({ "flag": "hidden", "value": any_visible })), false, false))
@@ -2091,18 +2087,18 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
 //#endregion 🔖️ContextMenu
 
 //#region 🔖️PlayApp
-/// 🧩️ Puzzle-2d play app. Owns the `BoardHost` engine; the persisted document (the bare fixture json)
+/// 🧩️ Puzzle-2d play app. Owns the `BoardHost` engine; the persisted document (the bare snapshot json)
 /// lives in the wrapping `VcsArtifactApp`'s operation store and the view state in `Puzzle2dConfig`.
 #[derive(Default, Clone, Copy)]
 pub struct Puzzle2dPlayApp;
 
 impl Puzzle2dPlayApp {
-    fn scene_for(fixture: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str) -> Puzzle2dScene {
-        Puzzle2dScene { fixture, runtime, active_utility: active_utility.into(), interaction: Puzzle2dInteractionSnapshot::default() }
+    fn scene_for(snapshot: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str) -> Puzzle2dScene {
+        Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: active_utility.into(), interaction: Puzzle2dInteractionSnapshot::default() }
     }
 
-    fn scene_with(fixture: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str, interaction: Puzzle2dInteractionSnapshot) -> Puzzle2dScene {
-        Puzzle2dScene { fixture, runtime, active_utility: active_utility.into(), interaction }
+    fn scene_with(snapshot: Value, runtime: Puzzle2dPlayRuntime, active_utility: &str, interaction: Puzzle2dInteractionSnapshot) -> Puzzle2dScene {
+        Puzzle2dScene { board_snapshot: snapshot, runtime, active_utility: active_utility.into(), interaction }
     }
 
     /// 🖼️ ONE render body for both `render` entry points: the window transient and the live selection
@@ -2119,12 +2115,9 @@ impl Puzzle2dPlayApp {
         let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
         let runtime = window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind));
         let active_utility = puzzle2d_active_utility(Some(view_state));
-        let fixture = match runtime.select_tool.as_ref().filter(|_| active_utility == select_utility::UTILITY_ID) {
-            Some(gesture) => Value::from(semio_framework_value::ToValue::to_value(&select_utility::puzzle2d_select_tool_preview(doc.snapshot.typed(), gesture))),
-            None => doc.snapshot.value().clone(),
-        };
-        let document_json = fixture.to_string();
-        let envelope = Self::scene_with(fixture, runtime, active_utility, interaction);
+        let snapshot = doc.snapshot.value().clone();
+        let document_json = snapshot.to_string();
+        let envelope = Self::scene_with(snapshot, runtime, active_utility, interaction);
         let labels = puzzle2d_labels(view_state);
         // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
         // the body being rendered — every panel container below shares its first-paint row budget.
@@ -2187,9 +2180,9 @@ pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
     "translateSelection",
     "rotateSelection",
     "scaleSelection",
-    "exportFixture",
-    "importFixture",
-    "openImportFixture",
+    "exportSnapshot",
+    "importSnapshot",
+    "openImportSnapshot",
     "setSelectionFlag",
     "setSelectionHidden",
     "setSelectionLocked",
@@ -2213,7 +2206,7 @@ pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
 /// mutation, so they need a generated tool id — without which `validate_tool_job_rows` refuses
 /// [`Puzzle2dHostConfigurationProofs`]' generic bounded proofs and `dispatch_action` fails closed.
 /// They carry NO app-owned factory, so they stay out of [`PUZZLE2D_RETAINED_TOOL_IDS`], which is what
-/// keys [`Puzzle2dRetainedCommandJobFactory`] and what the retained-jobs fixture pins.
+/// keys [`Puzzle2dRetainedCommandJobFactory`] and what the retained-jobs snapshot pins.
 pub(crate) const PUZZLE2D_HOST_CONFIGURATION_TOOL_IDS: &[&str] = &["setActiveTool", "setActiveUtility"];
 
 /// 🗂️ Every generated tool id this app declares: the app-owned retained verbs plus the two
@@ -2233,7 +2226,7 @@ pub(crate) const PUZZLE2D_TOOL_JOB_IDS: [&str; PUZZLE2D_RETAINED_TOOL_IDS.len() 
     }
     ids
 };
-const PUZZLE2D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.2d.fixture.tool-command.v1";
+const PUZZLE2D_RETAINED_PAYLOAD_SCHEMA: &str = "board.ports.directed.v1.tool-command.v1";
 
 /// 🎬️ The retained verbs whose whole completion is [`puzzle2d_dispatch_emit`] — one `🎮️commands/*`
 /// arm run over a rebuilt scene/board host, then the same document delta and config snapshot
@@ -2284,8 +2277,8 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
     "translateSelection",
     "rotateSelection",
     "scaleSelection",
-    "importFixture",
-    "openImportFixture",
+    "importSnapshot",
+    "openImportSnapshot",
     "createEdge",
     "deleteEdge",
     "proximityConnect",
@@ -2297,7 +2290,7 @@ const PUZZLE2D_GENERIC_TOOL_IDS: &[&str] = &[
 /// through `NoopPuzzleCommandWork` under a solo `HostOnly` contract rather than the dispatch pipeline.
 const PUZZLE2D_HOST_ONLY_TOOL_IDS: &[&str] = &["lodScaleJson"];
 
-/// 📏️ Raw wire bytes ONE retained 2d command may carry — one whole `importFixture` file, escaped, plus its envelope
+/// 📏️ Raw wire bytes ONE retained 2d command may carry — one whole `importSnapshot` file, escaped, plus its envelope
 /// (`PUZZLE_IMPORT_RAW_BYTES`, the widest command this route admits; a whole-board `applyBoardEvents` select over
 /// Nakagin's 180 ids is far below it), the same figure the 3d factory admits.
 const PUZZLE2D_COMMAND_RAW_BYTES: usize = crate::retained_command::PUZZLE_IMPORT_RAW_BYTES;
@@ -2366,7 +2359,7 @@ impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCommandJobFactory {
     type Owner = EditorApp<Puzzle2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = PUZZLE2D_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_BOARD_SNAPSHOT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "forceLayout", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -2398,9 +2391,9 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCom
         ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
-        ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "importFixture", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "openImportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "exportSnapshot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "importSnapshot", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "openImportSnapshot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "setSuggestionOffset", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setTransformGumballFlag", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "addTargetRegion", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -2438,7 +2431,6 @@ const PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536;
 struct Puzzle2dConfigStorePreparation {
     base: Option<store::SnapshotRead<Puzzle2dConfig>>,
     mutation: Option<Puzzle2dConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(Puzzle2dConfig, Vec<Puzzle2dConfigMutation>, Puzzle2dConfigMutation, usize)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Puzzle2dConfig, Puzzle2dConfigMutation>>,
@@ -2531,7 +2523,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -2551,14 +2543,14 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparationFactory {
-    fn preflight(&self, mutation: &Puzzle2dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Puzzle2d Config preparation rejected its lane or description".into());
+    fn preflight(&self, mutation: &Puzzle2dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Puzzle2d Config preparation rejected its lane".into());
         }
         let retained_bytes = puzzle2d_config_store_mutation_bytes(mutation).ok_or_else(|| "Puzzle2d Config preparation rejected its exact mutation".to_string())?;
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
@@ -2579,7 +2571,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
         Ok(Box::new(Puzzle2dConfigStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             prepared: None,
@@ -2601,7 +2592,6 @@ struct Puzzle2dArtifactStorePreparationFactory;
 struct Puzzle2dArtifactStorePreparation {
     base: Option<store::SnapshotRead<Puzzle2dPlaySnapshot>>,
     mutation: Option<Puzzle2dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(Puzzle2dPlaySnapshot, Vec<Puzzle2dMutation>, Puzzle2dMutation)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Puzzle2dPlaySnapshot, Puzzle2dMutation>>,
@@ -2614,9 +2604,9 @@ struct Puzzle2dArtifactStorePreparation {
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory {
     /// 🧾️ The forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`): `delete-node`
     /// re-creates the node and re-connects every edge on its handles, a selection transform restores each target.
-    fn preflight(&self, mutation: &Puzzle2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Puzzle2d Artifact preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &Puzzle2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Puzzle2d Artifact preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle2dPlaySnapshot, _>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -2636,7 +2626,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2
         Ok(Box::new(Puzzle2dArtifactStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             prepared: None,
@@ -2705,7 +2694,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -2725,7 +2714,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation
@@ -2766,18 +2755,13 @@ struct Puzzle2dWindowCommandWork {
     window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
     window_transient: Option<semio_framework_plugin::WindowTransientSnapshot>,
     ephemeral: Option<EphemeralEmit<EditorApp<Puzzle2dPlayApp>>>,
+    context: Option<std::sync::Arc<semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>>,
 }
 
 impl Puzzle2dWindowCommandWork {
     fn new(tool_id: &'static str, extent: crate::retained_command::PuzzleCommandExtent<EditorApp<Puzzle2dPlayApp>>, authoring_seed: String, base_revision: String) -> Self {
-        Self { tool_id, extent, authoring_seed, base_revision, consumed: false, view_state: None, window_config: None, window_transient: None, ephemeral: None }
+        Self { tool_id, extent, authoring_seed, base_revision, consumed: false, view_state: None, window_config: None, window_transient: None, ephemeral: None, context: None }
     }
-}
-
-/// 🪟️ Whether `action` may publish its window's transient: a retained verb only when its exact publication contract
-/// names the lane, any other verb always.
-fn puzzle2d_publishes_window_transient(action: &str) -> bool {
-    <Puzzle2dRetainedCommandJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == action).is_none_or(|contract| contract.lanes.contains(&ArtifactToolPublicationLane::WindowTransient))
 }
 
 /// 📐️ A canonical document revision as lowercase hex — the identity a persisted select-tool gesture pins its base by.
@@ -2788,6 +2772,10 @@ fn puzzle2d_revision_hex(revision: &[u8; 32]) -> String {
 impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dWindowCommandWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
+    }
+
+    fn bind_job_context(&mut self, context: std::sync::Arc<semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle2dPlayApp>>>) {
+        self.context = Some(context);
     }
 
     fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) {
@@ -2822,14 +2810,16 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         let window_transient = window::transient_from_snapshot(self.window_transient.as_ref());
         let window_kind = self.window_config.as_ref().map(semio_framework_plugin::WindowConfigSnapshot::window_kind_id).or_else(|| self.view_state.as_ref().and_then(window::kind_for_view)).unwrap_or(overview::WINDOW_KIND_ID);
         let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, &self.authoring_seed, &self.base_revision, None)?;
+        let detached = semio_framework_plugin::app::GestureSlot::detached();
+        let gesture = self.context.as_ref().map_or(&detached, |context| context.gesture());
+        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?;
         self.consumed = true;
         self.ephemeral = Some(ephemeral);
         Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
     }
 }
 
-/// 📤 `exportFixture` reads the document and publishes a download; it owns no mutation, so it resolves
+/// 📤 `exportSnapshot` reads the document and publishes a download; it owns no mutation, so it resolves
 /// from the snapshot and picks its lane by payload size: one inline effect under the guest's contiguous
 /// request ceiling, the framework's segmented-download lane above it, a notice above what one segmented
 /// download may carry.
@@ -2840,7 +2830,7 @@ struct Puzzle2dExportWork {
 
 impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for Puzzle2dExportWork {
     fn tool_id(&self) -> &'static str {
-        "exportFixture"
+        "exportSnapshot"
     }
 
     fn extent(&self, _command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -2859,10 +2849,10 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             return Err(Fault::from("puzzle2d-export-work-repeated"));
         }
         self.consumed = true;
-        Ok(match export_fixture::puzzle2d_export_publication(snapshot.value())? {
-            export_fixture::Puzzle2dExportPublication::Inline(effect) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![effect], ui_scope: UiDirtyScope::None, ..Default::default() }),
-            export_fixture::Puzzle2dExportPublication::Segmented(download) => crate::retained_command::PuzzleCommandWorkStep::Download(download),
-            export_fixture::Puzzle2dExportPublication::Refused(message) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
+        Ok(match export_snapshot::puzzle2d_export_publication(snapshot.value())? {
+            export_snapshot::Puzzle2dExportPublication::Inline(effect) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![effect], ui_scope: UiDirtyScope::None, ..Default::default() }),
+            export_snapshot::Puzzle2dExportPublication::Segmented(download) => crate::retained_command::PuzzleCommandWorkStep::Download(download),
+            export_snapshot::Puzzle2dExportPublication::Refused(message) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
         })
     }
 }
@@ -2887,6 +2877,7 @@ fn puzzle2d_dispatch_emit(
     selection: &protocol::DomainSelection,
     authoring_seed: &str,
     base_revision: &str,
+    gesture: &semio_framework_plugin::app::GestureSlot<Puzzle2dMutation>,
     operation: Option<semio_framework_plugin::AppOperationContext>,
 ) -> Result<(Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, EphemeralEmit<EditorApp<Puzzle2dPlayApp>>), Fault> {
     let (action, args, window_id) = (command.action_id(), command.args(), command.window_id());
@@ -2895,9 +2886,6 @@ fn puzzle2d_dispatch_emit(
     let runtime = window::runtime(config, window_config, window_transient, Some(window_kind));
     let interaction = Puzzle2dInteractionSnapshot { granularity: selection.granularity.clone(), selected: selection.ids.clone(), ..Default::default() };
     let mut scene = Puzzle2dPlayApp::scene_with(before.clone(), runtime, &active_utility, interaction);
-    // 🛠️ A window that left the select utility retires the select tool: its in-flight gesture aborts with zero trace
-    // at the first verb that may publish the window transient.
-    let retired_gesture = active_utility != select_utility::UTILITY_ID && puzzle2d_publishes_window_transient(action) && scene.runtime.select_tool.take().is_some_and(|state| select_utility::puzzle2d_select_tool_abort(&state, ToolAbortReason::Retired));
     // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
     // each call. The previous last_synced_fixture cache lived on &self and cannot return.
     let host = RefCell::new(BoardHost::default());
@@ -2935,6 +2923,7 @@ fn puzzle2d_dispatch_emit(
             authoring_seed,
             base_revision,
             transaction: &mut transaction,
+            gesture,
         };
         match action {
             "selectSameKind" => select_same_kind::select_same_kind(ctx),
@@ -2960,8 +2949,8 @@ fn puzzle2d_dispatch_emit(
             "translateSelection" => translate_selection::translate_selection(ctx, args),
             "rotateSelection" => rotate_selection::rotate_selection(ctx, args),
             "scaleSelection" => scale_selection::scale_selection(ctx, args),
-            "importFixture" => import_fixture::import_fixture(ctx, args),
-            "openImportFixture" => open_import_fixture::open_import_fixture(ctx),
+            "importSnapshot" => import_snapshot::import_snapshot(ctx, args),
+            "openImportSnapshot" => open_import_snapshot::open_import_snapshot(ctx),
             "lodScaleJson" => lod_scale_json::lod_scale_json(ctx),
             "setGridSnapEnabled" => set_grid_snap_enabled::set_grid_snap_enabled(ctx, args),
             "setGridFactor" => set_grid_factor::set_grid_factor(ctx, args),
@@ -2998,12 +2987,11 @@ fn puzzle2d_dispatch_emit(
         }
     }
     apply_host_events(&mut host.borrow_mut(), &mut scene);
-    let mut operations = puzzle2d_document_delta_operations(before, &scene.fixture).map_err(Fault::from)?;
+    let mut operations = puzzle2d_document_delta_operations(before, &scene.board_snapshot).map_err(Fault::from)?;
     operations.append(&mut artifact_mutations);
     // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
-    // actual document mutation (would silently desync remote clients' UI from the committed operation), nor with a
-    // retired gesture whose preview must leave the window.
-    if (!operations.is_empty() || retired_gesture) && matches!(ui_scope, UiDirtyScope::None) {
+    // actual document mutation (would silently desync remote clients' UI from the committed operation).
+    if !operations.is_empty() && matches!(ui_scope, UiDirtyScope::None) {
         ui_scope = UiDirtyScope::Full;
     }
     // 🧮️ B1: only a REAL config change becomes a `Puzzle2dConfigMutation` — `PartialEq` (derived)
@@ -3012,8 +3000,8 @@ fn puzzle2d_dispatch_emit(
     let config_mutations = if &next_config != config { vec![Puzzle2dConfigMutation::Snapshot { config: next_config }] } else { Vec::new() };
     let window_config_mutations = if &next_window_config != window_config { vec![window::addressed_config(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_config)?] } else { Vec::new() };
     let window_transient = if &next_window_transient != window_transient { vec![window::addressed_transient(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_transient)?] } else { Vec::new() };
-    // 🛠️ A committed select-tool transaction stamps every op of this ONE edit — the yielded leaves and any
-    // scene delta the same batch carried — so history lists the gesture as one row whose inputs stay editable.
+    // 🛠️ The first tool transaction an action commits stamps every op of its ONE edit — the yielded leaves and any
+    // scene delta the same dispatch carried — so history lists the gesture as one row whose inputs stay editable.
     let transaction = transaction.filter(|_| !operations.is_empty());
     Ok((Emit { artifact_mutations: operations, config_mutations, window_config_mutations, transaction, effects, ui_scope, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() }))
 }
@@ -3036,7 +3024,7 @@ fn puzzle2d_generic_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySn
     if !PUZZLE2D_GENERIC_TOOL_IDS.contains(&action) {
         return None;
     }
-    if action == "importFixture" {
+    if action == "importSnapshot" {
         return Some(PUZZLE2D_IMPORT_FIXTURE_WORK_ITEMS);
     }
     if !matches!(action, "patchInspectorNodes" | "setSelectionFlag" | "setSelectionHidden" | "setSelectionLocked" | "setTargetRegionFlag" | "setTargetRegionHidden" | "setTargetRegionLocked" | "deleteSelection" | "duplicateSelection" | "translateSelection" | "rotateSelection" | "scaleSelection" | "proximityConnect") {
@@ -3093,9 +3081,9 @@ fn puzzle2d_retained_reduce(
     if command.action_id() != "addNode" {
         return Err(Fault::from("puzzle2d-retained-command-mismatch"));
     }
-    let mut fixture = json!({ "nodes": [] });
-    add_node_to_host_snapshot(&mut fixture, command.args().and_then(|args| args.get("kind")).and_then(Value::as_str), command.args());
-    let node = fixture.get_mut("nodes").and_then(Value::as_array_mut).and_then(Vec::pop).ok_or_else(|| Fault::from("puzzle2d-add-node-owner-lost"))?;
+    let mut snapshot = json!({ "nodes": [] });
+    add_node_to_host_snapshot(&mut snapshot, command.args().and_then(|args| args.get("kind")).and_then(Value::as_str), command.args());
+    let node = snapshot.get_mut("nodes").and_then(Value::as_array_mut).and_then(Vec::pop).ok_or_else(|| Fault::from("puzzle2d-add-node-owner-lost"))?;
     let node = <crate::Puzzle2dNode as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(&node)).map_err(|_| Fault::from("puzzle2d-add-node-malformed"))?;
     Ok(Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], ui_scope: UiDirtyScope::Full, ..Default::default() })
 }
@@ -3280,7 +3268,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
 }
 
 /// 🧲️ Admission ceilings for one force-layout run. `MAX_NODES` admits the real
-/// `🏗️nakagin-capsule-tower` fixture (180 nodes / 179 edges / 358 handles) with room to spare — the
+/// `🏗️nakagin-capsule-tower` snapshot (180 nodes / 179 edges / 358 handles) with room to spare — the
 /// former 64-node ceiling made `forceLayout` structurally dead on the only non-trivial example this
 /// artifact ships. `MAX_HANDLES` is checked by [`Puzzle2dForceLayoutWork::extent`] as well as by the
 /// `Handles` stage, so an over-wide document is refused at preflight instead of faulting mid-run.
@@ -3715,7 +3703,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     /// too, so a document that would trip `PUZZLE2D_FORCE_MAX_HANDLES` mid-run is refused at
     /// preflight instead.
     fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        if command.action_id() != self.tool_id || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_FIXTURE_SCHEMA) {
+        if command.action_id() != self.tool_id || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) {
             return None;
         }
         let nodes = snapshot.value().get("nodes")?.as_array()?;
@@ -3872,7 +3860,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
 }
 
 /// 🕸️ Admission ceilings and chunk size for one `redrawHandles` run. The legacy handler serialized
-/// the entire fixture and called `apply_edge_handle_snap_to_host_snapshot_v1_json` once, with no size
+/// the entire snapshot and called `apply_edge_handle_snap_to_host_snapshot_v1_json` once, with no size
 /// guard and no yield point; these bound the same three passes so a large board is refused at
 /// preflight rather than blocking a step.
 const PUZZLE2D_REDRAW_MAX_NODES: usize = 4_096;
@@ -3903,7 +3891,7 @@ struct Puzzle2dRedrawShape {
 /// 🕸️ `redrawHandles` as a bounded, resumable walk. `Nodes`/`Handles` index every visible handle to
 /// its owning node, `Edges` resolves each visible edge into one angle per endpoint (last edge wins
 /// on a shared handle, matching the engine), and `Emit` publishes one `replace-node-handle` per
-/// handle whose angle actually changed — the same delta the legacy whole-fixture call produced
+/// handle whose angle actually changed — the same delta the legacy whole-snapshot call produced
 /// through [`puzzle2d_document_delta_operations`], minus the unbounded step.
 struct Puzzle2dRedrawHandlesWork {
     stage: Puzzle2dRedrawStage,
@@ -3947,7 +3935,7 @@ impl Puzzle2dRedrawHandlesWork {
     }
 
     /// 🧭️ Delegates to the board engine's own conventions — east-zero for circles, north-zero for
-    /// rectangles — so a chunked redraw and the engine's whole-fixture snap agree numerically.
+    /// rectangles — so a chunked redraw and the engine's whole-snapshot snap agree numerically.
     fn angle_toward(from: Puzzle2dRedrawShape, toward: Puzzle2dRedrawShape) -> Option<f64> {
         let center = Point::new(from.center[0], from.center[1]);
         let target = Point::new(toward.center[0], toward.center[1]);
@@ -4026,7 +4014,7 @@ impl Puzzle2dRedrawHandlesWork {
         if !crate::editor::puzzle2d::engine::board_json_visible_or_true(object) {
             return Ok(());
         }
-        let Some((source, target)) = crate::editor::puzzle2d::engine::fixture_edge_handle_ids_from_object(object) else { return Ok(()) };
+        let Some((source, target)) = crate::editor::puzzle2d::engine::board_edge_handle_ids_from_object(object) else { return Ok(()) };
         let (Some(&source_location), Some(&target_location)) = (self.handle_locations.get(source), self.handle_locations.get(target)) else {
             return Ok(());
         };
@@ -4087,7 +4075,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     /// 📐️ One index chunk per [`PUZZLE2D_REDRAW_UNITS_PER_STEP`] node-or-handle records, one chunk
     /// per that many edges, one chunk per that many published handles, plus one stage handover each.
     fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        if command.action_id() != "redrawHandles" || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_FIXTURE_SCHEMA) {
+        if command.action_id() != "redrawHandles" || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA) {
             return None;
         }
         let nodes = snapshot.value().get("nodes")?.as_array()?;
@@ -4807,24 +4795,24 @@ impl Puzzle2dClipboardJob {
         let Some(ArtifactReservedToolInput::Action { args, interaction, hover }) = self.input.take() else {
             return Ok(Emit::default());
         };
-        let fixture = self.snapshot.value();
+        let snapshot = self.snapshot.value();
         let marks = Puzzle2dInteractionSnapshot::from_state(&interaction, &hover);
-        let selected = puzzle2d_selected_node_ids(fixture, marks.selected_ids());
+        let selected = puzzle2d_selected_node_ids(snapshot, marks.selected_ids());
         Ok(match self.tool_id.as_str() {
             // 🧾️ An unresolvable selection answers with ZERO effects — the same shape as "the hotkey
             // never reached the guest", exactly as puzzle3d's clipboard route answers it.
-            "copy" => match puzzle2d_copy_fragment_from(fixture, &selected) {
+            "copy" => match puzzle2d_copy_fragment_from(snapshot, &selected) {
                 Ok(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ui_scope: UiDirtyScope::None, ..Default::default() },
                 Err(_) => Emit::default(),
             },
             "cut" => {
-                let Ok(fragment) = puzzle2d_copy_fragment_from(fixture, &selected) else { return Ok(Emit::default()) };
-                if puzzle2d_selection_is_locked(fixture, &selected) {
+                let Ok(fragment) = puzzle2d_copy_fragment_from(snapshot, &selected) else { return Ok(Emit::default()) };
+                if puzzle2d_selection_is_locked(snapshot, &selected) {
                     let labels = self.labels.ok_or_else(|| Fault::from("puzzle2d clipboard notification requires the caller's explicit presentation axes"))?;
                     return Ok(Emit { effects: vec![Effect::Notify { message: labels.cut_locked.as_str().to_string() }], ui_scope: UiDirtyScope::None, ..Default::default() });
                 }
-                let mutations = puzzle2d_cut_operations_from(fixture, &selected).unwrap_or_default();
-                let clear = puzzle2d_clear_selection_write(fixture, &selected).into_iter().collect();
+                let mutations = puzzle2d_cut_operations_from(snapshot, &selected).unwrap_or_default();
+                let clear = puzzle2d_clear_selection_write(snapshot, &selected).into_iter().collect();
                 Emit { artifact_mutations: mutations, effects: vec![Effect::ClipboardWrite { fragment }], interaction_writes: clear, ..Default::default() }
             }
             "paste" => {
@@ -4832,8 +4820,8 @@ impl Puzzle2dClipboardJob {
                     return Ok(Emit::default());
                 };
                 let placement = PastePlacement::default();
-                match puzzle2d_paste_operations_on(fixture, &fragment, &placement) {
-                    Ok((mutations, pasted)) => Emit { artifact_mutations: mutations, interaction_writes: vec![puzzle2d_selection_write(fixture, &pasted)], ..Default::default() },
+                match puzzle2d_paste_operations_on(snapshot, &fragment, &placement) {
+                    Ok((mutations, pasted)) => Emit { artifact_mutations: mutations, interaction_writes: vec![puzzle2d_selection_write(snapshot, &pasted)], ..Default::default() },
                     Err(_) => Emit::default(),
                 }
             }
@@ -4909,7 +4897,7 @@ impl Puzzle2dRetainedCommandProofs {
         owner: EditorApp<Puzzle2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle2d@1/*#editor",
-        artifact_schema: "puzzle.2d.fixture",
+        artifact_schema: "board.ports.directed.v1",
         factory: "Puzzle2dRetainedCommandJobFactory",
         factory_type: Puzzle2dRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::resumable(PUZZLE2D_COMMAND_RAW_BYTES, PUZZLE2D_COMMAND_DECODED_ITEMS, 1, crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES, crate::retained_command::PUZZLE_COMMAND_STEP_MICROS, 1, 1),
@@ -4965,9 +4953,9 @@ impl Puzzle2dRetainedCommandProofs {
             "translateSelection",
             "rotateSelection",
             "scaleSelection",
-            "exportFixture",
-            "importFixture",
-            "openImportFixture",
+            "exportSnapshot",
+            "importSnapshot",
+            "openImportSnapshot",
             "createEdge",
             "deleteEdge",
             "proximityConnect",
@@ -4987,7 +4975,7 @@ impl Puzzle2dHostConfigurationProofs {
         owner: EditorApp<Puzzle2dPlayApp>,
         owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.puzzle.puzzle2d@1/*#editor",
-        artifact_schema: "puzzle.2d.fixture",
+        artifact_schema: "board.ports.directed.v1",
         factory: "BoundedFirstStepCommandJobFactory",
         contract: semio_framework::ToolExecutionContract::resumable(8_192, 8, 1, 8_192, 7_500, 1, 1),
         tools: ["setActiveTool", "setActiveUtility"]
@@ -4997,7 +4985,7 @@ impl Puzzle2dHostConfigurationProofs {
 
 impl ArtifactEditor for Puzzle2dPlayApp {
     const DIALECT: Dialect = crate::PUZZLE2D_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_BOARD_SNAPSHOT_SCHEMA;
     type Snapshot = Puzzle2dPlaySnapshot;
     type Mutation = Puzzle2dMutation;
     type Config = Puzzle2dConfig;
@@ -5026,20 +5014,21 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         })
     }
 
-    /// 📨️ Every host event ends the window's open select-tool gesture with zero trace under the reason the tool records:
-    /// a blur `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an opened
-    /// history edit `frozen` and a remote edit `baseMoved` — the typed `translateSelection{phase: "abort"}` of that window,
-    /// which no host sends itself.
-    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<Self::Command> {
-        use semio_framework_plugin::HostEvent;
-        let reason = match event {
-            HostEvent::WindowBlurred { .. } => ToolAbortReason::Blur,
-            HostEvent::PointerCaptureLost { .. } => ToolAbortReason::CaptureLost,
-            HostEvent::UtilityChanged { .. } | HostEvent::Retiring { .. } => ToolAbortReason::Retired,
-            HostEvent::TimeTravelFrozen { .. } => ToolAbortReason::Frozen,
-            HostEvent::BaseMoved { .. } => ToolAbortReason::BaseMoved,
-        };
-        Some(Puzzle2dCommand::TranslateSelection { window_id: Some(event.window_id().to_string()), args: Some(json!({ "phase": "abort", "reason": reason.as_str() })) })
+    /// 🗺️ The `vortex` domain's whole pickable universe, in board order: every node with its handles under it, every
+    /// edge and every target region (a region answers to the node granularity, as `puzzle2d_selection_targets`
+    /// classifies it) — what `selectAll` enumerates and what keeps a selection inside the document. A host fact never
+    /// reaches this editor: the window's gesture slot ends an open gesture on a blur, a lost capture, a utility switch,
+    /// a closing window, a frozen document and a moved base.
+    fn interaction_topology(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle2dConfig>) -> Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
+        let document = doc.snapshot.typed();
+        let mut ordered = Vec::new();
+        for node in &document.nodes {
+            ordered.push(semio_framework_plugin::TopologyNode { id: node.id.clone(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None });
+            ordered.extend(node.handles.iter().map(|handle| semio_framework_plugin::TopologyNode { id: handle.id.clone(), granularity: PUZZLE2D_GRANULARITY_HANDLE.into(), parent: Some(node.id.clone()) }));
+        }
+        ordered.extend(document.edges.iter().map(|edge| semio_framework_plugin::TopologyNode { id: edge.id.clone(), granularity: PUZZLE2D_GRANULARITY_EDGE.into(), parent: None }));
+        ordered.extend(document.target_regions.iter().map(|region| semio_framework_plugin::TopologyNode { id: region.id.clone(), granularity: PUZZLE2D_GRANULARITY_NODE.into(), parent: None }));
+        Ok(semio_framework_plugin::InteractionTopology { domains: std::collections::BTreeMap::from([(PUZZLE2D_INTERACTION_DOMAIN.to_string(), semio_framework_plugin::DomainTopology { ordered })]) })
     }
 
     /// 🪧️ A history-edit reference chip names its board entity as the outliner does ([`puzzle2d_entity_label`]).
@@ -5113,12 +5102,12 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Some(crate::editor::puzzle2d::config::schema::app_schema_descriptor())
     }
 
-    /// 🚀️ The empty fixture, nothing else. The example documents are `LazyLock`s the example load forces
+    /// 🚀️ The empty snapshot, nothing else. The example documents are `LazyLock`s the example load forces
     /// when it is actually switched to: warming them here parsed the Concrete Forest and Nakagin documents on
     /// every construction of this app — every mount, and every `codec` call of a hub creating or validating a
     /// document, where the interpreter paid for two documents the snapshot never reads.
     fn initial_snapshot() -> Puzzle2dPlaySnapshot {
-        Puzzle2dPlaySnapshot::new(serde_json::to_value(default_empty_fixture()).unwrap_or(Value::Null))
+        Puzzle2dPlaySnapshot::new(serde_json::to_value(empty_board_snapshot()).unwrap_or(Value::Null))
     }
 
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
@@ -5161,7 +5150,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         let window_kind = view_state.and_then(window::kind_for_view).unwrap_or(overview::WINDOW_KIND_ID);
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
         let base_revision = doc.operation_optional().map(|operation| puzzle2d_revision_hex(&operation.canonical_base_revision)).unwrap_or_default();
-        puzzle2d_dispatch_emit(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, doc.operation_optional().cloned())
+        puzzle2d_dispatch_emit(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, &semio_framework_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())
             .map(|(emit, _)| emit)
     }
 
@@ -5193,21 +5182,22 @@ impl ArtifactEditor for Puzzle2dPlayApp {
             return Ok(None);
         }
         if request.command.action_id() != request.tool_id {
-            return Err(Fault::from("puzzle2d-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "puzzle2d-command-tool-mismatch"));
         }
         let mut work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match request.command.action_id() {
             "setActiveExample" => Box::new(Puzzle2dActiveExampleWork::default()),
             "forceLayout" => Box::new(Puzzle2dForceLayoutWork::default()),
             "reorganize" => Box::new(Puzzle2dForceLayoutWork::new("reorganize")),
             "addNode" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("addNode", puzzle2d_retained_reduce, puzzle2d_retained_extent)),
-            "exportFixture" => Box::new(Puzzle2dExportWork::default()),
+            "exportSnapshot" => Box::new(Puzzle2dExportWork::default()),
             "applyBoardEvents" => Box::new(Puzzle2dWindowCommandWork::new("applyBoardEvents", puzzle2d_board_events_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
             generic if PUZZLE2D_GENERIC_TOOL_IDS.contains(&generic) => Box::new(Puzzle2dWindowCommandWork::new(generic, puzzle2d_generic_extent, request.authoring_seed.clone(), puzzle2d_revision_hex(&request.canonical_base_revision))),
             host_only if PUZZLE2D_HOST_ONLY_TOOL_IDS.contains(&host_only) => Box::new(crate::retained_command::NoopPuzzleCommandWork::new(host_only)),
             "redrawHandles" => Box::new(Puzzle2dRedrawHandlesWork::default()),
-            _ => return Err(Fault::from("puzzle2d-command-tool-unmapped")),
+            _ => return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), "puzzle2d-command-tool-unmapped")),
         };
         work.bind_view_state(request.context.view_state.clone());
+        work.bind_job_context(std::sync::Arc::clone(&request.context));
         let payload = crate::retained_command::RetainedPuzzleCommandPayload {
             command: *request.command,
             snapshot: request.snapshot,
@@ -5511,9 +5501,9 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("scaleSelection", puzzle2d_localized(|l| l.scale), ActionKind::Mutation).with_category("transform"))
             .keybinding("mod+d", "duplicateSelection")
             // 📤📥 Fixture round trip: a JSON download of the document and a file-picker import.
-            .action_with(ActionDefinition::bounded_catalog("exportFixture", puzzle2d_localized(|l| l.export), ActionKind::Shell).with_category("file"))
-            .action_with(ActionDefinition::bounded_catalog("openImportFixture", puzzle2d_localized(|l| l.import), ActionKind::Shell).with_category("file"))
-            .action_with(puzzle2d_internal_action("importFixture", LocalizedLabel::native("Import Fixture", "Fixture importieren"), ActionKind::Mutation))
+            .action_with(ActionDefinition::bounded_catalog("exportSnapshot", puzzle2d_localized(|l| l.export), ActionKind::Shell).with_category("file"))
+            .action_with(ActionDefinition::bounded_catalog("openImportSnapshot", puzzle2d_localized(|l| l.import), ActionKind::Shell).with_category("file"))
+            .action_with(puzzle2d_internal_action("importSnapshot", LocalizedLabel::native("Import Fixture", "Fixture importieren"), ActionKind::Mutation))
             // 🔗️ Edge CRUD over two handles — the host-dispatchable twin of the board engine's own
             // drag-connect gesture, and the drop-time auto-connect's programmatic entry point.
             .action_with(ActionDefinition::bounded_catalog("createEdge", puzzle2d_localized(|l| l.connect), ActionKind::Mutation).with_category("create"))
@@ -5645,10 +5635,10 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("exportFixture", InteractiveJobClassification::Migrated)
-            .action_destructive("exportFixture")
-            .action_interactive_job("importFixture", InteractiveJobClassification::Migrated)
-            .action_interactive_job("openImportFixture", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportSnapshot", InteractiveJobClassification::Migrated)
+            .action_destructive("exportSnapshot")
+            .action_interactive_job("importSnapshot", InteractiveJobClassification::Migrated)
+            .action_interactive_job("openImportSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectionFlag", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectionHidden", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectionLocked", InteractiveJobClassification::Migrated)
@@ -5690,9 +5680,9 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("translateSelection", LocalizedLabel::native("Moves the selected nodes by dx and dy.", "Verschiebt die ausgewählten Knoten um dx und dy."))
             .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected nodes by the given angle.", "Dreht die ausgewählten Knoten um den angegebenen Winkel."))
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected nodes by the given factor.", "Skaliert die ausgewählten Knoten um den angegebenen Faktor."))
-            .action_describe("exportFixture", LocalizedLabel::native("Writes the whole 2D puzzle as JSON to a downloaded file named after the active example on the user's machine.", "Schreibt das gesamte 2D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."))
-            .action_describe("openImportFixture", LocalizedLabel::native("Opens the host's file picker for a 2D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 2D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
-            .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 2D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 2D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
+            .action_describe("exportSnapshot", LocalizedLabel::native("Writes the whole 2D puzzle as JSON to a downloaded file named after the active example on the user's machine.", "Schreibt das gesamte 2D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."))
+            .action_describe("openImportSnapshot", LocalizedLabel::native("Opens the host's file picker for a 2D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 2D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
+            .action_describe("importSnapshot", LocalizedLabel::native("Replaces the whole 2D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 2D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
             .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected nodes.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Knoten."))
             .action_describe("setSelectionHidden", LocalizedLabel::native("Sets the given or selected nodes hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt die angegebenen oder ausgewählten Knoten oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
             .action_describe("setSelectionLocked", LocalizedLabel::native("Sets the given or selected nodes locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt die angegebenen oder ausgewählten Knoten oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
@@ -5714,7 +5704,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("relocateTargetRegion", LocalizedLabel::native("Moves or resizes one target region to the given rectangle.", "Verschiebt oder skaliert einen Zielbereich auf das angegebene Rechteck."))
             .action_describe("openAddNodeDialog", LocalizedLabel::native("Opens the Add Node dialog to pick a node kind to place.", "Öffnet den Dialog Knoten hinzufügen, um eine zu setzende Knotenart zu wählen."))
             .action_audience("applyBoardEvents", semio_framework_plugin::CapabilityAudience::Input)
-            .action_destructive("importFixture")
+            .action_destructive("importSnapshot")
             .action_destructive("forceLayout")
             .action_destructive("reorganize")
             .build_definition()
@@ -5756,6 +5746,12 @@ mod lock_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🧪️select-tool-transactions/🦀️.rs"]
 mod select_tool_transaction_tests;
+
+/// 🧱️ The board tools' laws — every board gesture that is not a selection transform is ONE tool transaction of its
+/// tool, a transient flush commits nothing, and the `vortex` topology names every board entity.
+#[cfg(test)]
+#[path = "🧪️tests/🧪️board-tools/🦀️.rs"]
+mod board_tool_tests;
 
 /// ⏪️ The select tool's leaves under time travel — the `🧫️select-tool-history` corpus through the app and a standalone
 /// store: every input editable, the preview and its highlight, blocking errors resolved by editing, warnings kept.

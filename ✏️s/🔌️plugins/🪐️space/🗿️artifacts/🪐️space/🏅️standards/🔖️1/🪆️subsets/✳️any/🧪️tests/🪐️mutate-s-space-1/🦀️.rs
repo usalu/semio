@@ -122,8 +122,8 @@ mod subject {
     use super::{canonical, vector, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_space_space::standards::v1::subsets::any::schema::mutations::s_space_mutation_report_json;
-    use semio_s_artifact_space_space::standards::v1::subsets::any::schema::snapshot::s_space_identity_report_json;
+    use semio_s_artifact_space_space::standards::v1::subsets::any::io::text::mutations::s_space_mutation_report_json;
+    use semio_s_artifact_space_space::standards::v1::subsets::any::io::text::snapshot::s_space_identity_report_json;
 
     //#region 🔖️Report
     /// 📋️ One member of the production bridge's report, named in the error when it is absent — never
@@ -248,7 +248,7 @@ mod subject {
     /// decoding is a separate binary codec, so agreeing on one snapshot cannot be reached by carrying
     /// text bytes across.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
         let report = parse_json(&s_space_identity_report_json(&text).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
         let parsed = member(&report, "parsed")?;
         law::round_trip_preserves(member(&report, "reparsed")?, parsed)?;

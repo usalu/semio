@@ -1,0 +1,15 @@
+{
+  "qualification": "HELD inverse precondition parity with actual two-object insertion; no runtime/compilation.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🦀️.rs",
+      "before": "        if support::admitted_first_page(base).is_none() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, \"DPartRoot requires a genuine reachable Page\")); }\n",
+      "after": "        if support::admitted_first_page(base).is_none() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, \"DPartRoot requires a genuine reachable Page\")); }\n        if base.objects.iter().map(|object| object.id.num).max().unwrap_or(0).checked_add(2).is_none() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, \"DPartRoot object identifiers are exhausted\")); }\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🟦️.ts",
+      "before": "export function inverseSetDpartRoot(base:PdfSnapshot):RestoreDpartGraphMutation {if(!admittedFirstPage(base))throw new Error('DPartRoot requires a genuine reachable Page');return inverseRestoreDpartGraph(base);}",
+      "after": "export function inverseSetDpartRoot(base:PdfSnapshot):RestoreDpartGraphMutation {if(!admittedFirstPage(base))throw new Error('DPartRoot requires a genuine reachable Page');if(base.objects.reduce((maximum,object)=>Math.max(maximum,object.id.num),0)>0xfffffffd)throw new Error('DPartRoot object identifiers are exhausted');return inverseRestoreDpartGraph(base);}"
+    }
+  ]
+}

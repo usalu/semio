@@ -1,5 +1,4 @@
 {
-  "$schema": "semio.puzzle.retained-command.fixture.v1",
   "owner": "puzzle5d",
   "documentSchema": "puzzle.5d",
   "payloadSchema": "puzzle.5d.tool-command.v1",
@@ -22,10 +21,10 @@
     "engagementInput",
     "engagementRepeatLast",
     "engagementSubmit",
-    "exportFixture",
-    "importFixture",
+    "exportSnapshot",
+    "importSnapshot",
     "openAddPartDialog",
-    "openImportFixture",
+    "openImportSnapshot",
     "selectSameKindSelection",
     "setFillCount",
     "setSelectionFlag",
@@ -105,12 +104,12 @@
     "engagementInput",
     "engagementRepeatLast",
     "engagementSubmit",
-    "exportFixture",
+    "exportSnapshot",
     "focusSelection",
     "hoverSuggestion",
-    "importFixture",
+    "importSnapshot",
     "openAddPartDialog",
-    "openImportFixture",
+    "openImportSnapshot",
     "openVortexSuggestions",
     "patchFastener",
     "patchGrip",
@@ -225,13 +224,13 @@
       "cameraPublish",
       "closeOwner"
     ],
-    "exportFixture": [
+    "exportSnapshot": [
       "documentRead",
       "budgetDecision",
       "publishDownload",
       "closeOwner"
     ],
-    "importFixture": [
+    "importSnapshot": [
       "chunkEnvelope",
       "chunkStage",
       "pagedRootParse",
@@ -239,7 +238,7 @@
       "publishMutation",
       "closeOwner"
     ],
-    "openImportFixture": [
+    "openImportSnapshot": [
       "boundedPickerBoundary",
       "publishEffect",
       "closeOwner"

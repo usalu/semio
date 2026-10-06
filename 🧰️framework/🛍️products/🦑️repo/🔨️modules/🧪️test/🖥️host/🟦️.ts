@@ -16,7 +16,7 @@
 //#region 🔌️Adapters
 import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
-import { type AdapterOutcome, type TestAdapter, type TestCasePlan } from "../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterOutcome, type TestAdapter, type TestCasePlan } from "../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type ResultArtifact, type TestResult, contentDigestOf, currentPlatform, digest, makeAdapterContext, projectionHash, registeredHandler, repoRootFromHere, setDigest, testId, validateRegistration } from "../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -72,7 +72,7 @@ export function resultFor(plan: TestCasePlan, scenarioId: string, level: TestRes
     durationMs,
     seed,
     featureHash: plan.featureHash,
-    fixtureHash: setDigest(plan.fixtures.map((fixture) => [fixture.name, fixture.digest] as const)),
+    fixtureHash: setDigest(plan.inputs.map((fixture) => [fixture.name, fixture.digest] as const)),
     artifacts,
     // 🏭️Only a handler that actually reached production dispatch carries this. Emitting it
     // unconditionally would make every replaying adapter look like a real subject.

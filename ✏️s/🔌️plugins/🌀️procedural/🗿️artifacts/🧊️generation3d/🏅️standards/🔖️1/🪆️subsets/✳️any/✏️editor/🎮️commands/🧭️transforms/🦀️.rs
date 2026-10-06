@@ -10,7 +10,8 @@ use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::ro
 use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::scale_transforms;
 use crate::standards::v1::subsets::any::schema::transforms::{compose_scale, AxisAngle};
 use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
-use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, ensure_gumball_node, gumball_identity, mutations::text::Generation3dMutation, record_input_leaves, with_host, GumballRefusal};
+use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, gumball_identity, crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation, record_input_leaves, with_host, GumballRefusal};
+use crate::standards::v1::subsets::any::io::text::snapshot::{ensure_gumball_node};
 use machine::Command;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_os_flow::FlowHost;
@@ -505,7 +506,8 @@ impl GumballGestures {
     /// whole gesture as ONE edit (the splice rows re-derived on the committed base, then the net relative leaf, every row
     /// stamped with the transaction); `Abort` drops the open gesture with zero trace. An open gesture another verb or a
     /// one-shot interrupts is aborted `captureLost`; one whose document moved under it is aborted `baseMoved`; a selection
-    /// the base no longer splices drops the gesture and refuses with the gumball's named code.
+    /// the base no longer splices drops the gesture and refuses with the gumball's named code; a refused start or tick
+    /// raises its tool-transaction fault and changes nothing.
     pub fn dispatch(&mut self, request: GumballDispatch<'_>, host_snapshot: &FlowHostSnapshot) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
         if let GesturePhase::Abort(reason) = request.phase {
             self.abort(request.window, reason);
@@ -524,7 +526,13 @@ impl GumballGestures {
             }
         };
         let tick = GumballTick { ids, record: GumballRecord { targets, motion: request.motion } };
-        let drive = drive_gesture::<Generation3dGumballTool>(self.open.get(request.window), request.verb, request.phase, Some(tick), request.authoring_seed, &base_revision);
+        let drive = match drive_gesture::<Generation3dGumballTool>(self.open.get(request.window), request.verb, request.phase, Some(tick), request.authoring_seed, &base_revision) {
+            Ok(drive) => drive,
+            Err(refusal) => {
+                retire_rows(splice);
+                return Err(Fault::new(FaultOrigin::App, refusal.code(), "the gumball tool refused the dispatch"));
+            }
+        };
         if let Some(next) = drive.next {
             match next {
                 Some(gesture) => self.open.insert(request.window.to_string(), gesture),

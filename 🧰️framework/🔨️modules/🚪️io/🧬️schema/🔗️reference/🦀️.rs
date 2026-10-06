@@ -19,6 +19,11 @@ fn project_record(reference:&ArtifactRef,control:&mut NativeEncodeControl<'_>)->
     }))
 }
 impl DslField for ArtifactRef{
+    fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,ValueError>{
+        use semio_framework_dsl_record::native_encoding::{FieldProjectionView as V,projection_path_error};
+        match path{[]=>Ok(V::Record(&[0,1,2,3])),[0]=>Ok(V::Text(&self.artifact_id)),[1]=>Ok(V::Text(&self.dialect.artifact_kind)),[2]=>Ok(V::Text(&self.dialect.standard)),[3]=>Ok(V::Text(&self.dialect.subset)),_=>Err(projection_path_error())}
+    }
+    fn projection_key(&self,_path:&[usize],_index:usize)->Result<&str,ValueError>{Err(semio_framework_dsl_record::native_encoding::projection_path_error())}
     fn shape()->Shape{Shape::Record(producer())}
     fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.checkpoint()?;Ok(Shape::Record(producer()))}
     fn to_value(&self)->FieldValue{

@@ -3,7 +3,7 @@
 
 use crate::editor::gis2d::modes::edit::windows::map::config;
 use crate::editor::gis2d::maphost::map_host_from;
-use crate::op::GisMapMutation;
+use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

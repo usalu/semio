@@ -8,7 +8,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 #[cfg(feature = "sut")]
 fn rewriting_a_line_and_reading_it_back_agrees(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_todos as todos;
-    let file = ctx.fixture_json("shared://📝️line-vectors.json")?;
+    let file = ctx.input_json("shared://📝️line-vectors.json")?;
     let markdown = file.str("markdown");
     let markdown_path = file.str("markdownPath");
     let markdown_parent = markdown_path.rsplit_once('/').map(|(parent, _)| parent.to_string()).unwrap_or_default();

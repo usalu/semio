@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-block-applied",
       "class": "third-party-generated",
       "target": {
@@ -58,7 +57,6 @@
       "notes": "A new BLOCK is inserted at a valid index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-block-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {
@@ -102,7 +100,6 @@
       "notes": "Index exceeds the evolving sequence length — invalid-add-index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-applied",
       "class": "third-party-generated",
       "target": {
@@ -153,7 +150,6 @@
       "notes": "The BLOCK at a valid index is removed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -197,7 +193,6 @@
       "notes": "Index does not exist — invalid-remove-index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-applied",
       "class": "third-party-generated",
       "target": {
@@ -248,7 +243,6 @@
       "notes": "The BLOCK at a present index has its base point and nested entities whole-value replaced."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {

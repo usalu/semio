@@ -24,7 +24,7 @@ pub mod derived_composition {
     #[cfg(feature = "conversion-video-mp4")]
     use crate::standards::v1::subsets::video::io::{mp4_deserializer::SemioVideoFromMp4, mp4_serializer::SemioVideoToMp4};
     use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
-    use crate::standards::v1::subsets::video::schema::SemioVideoAnalyzer;
+    use crate::standards::v1::subsets::video::io::SemioVideoAnalyzer;
     #[cfg(feature = "conversion-video")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -195,3 +195,128 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::v1::subsets::video::schema::diff::SemioVideoDiff;
+    use crate::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, SemioVideoMutation};
+    use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioVideoBuilderConstruction {
+        snapshot: SemioVideoSnapshot,
+    }
+
+    impl ArtifactBuilder for SemioVideoBuilderConstruction {
+        type Snapshot = SemioVideoSnapshot;
+        type Mutation = SemioVideoMutation;
+        type Diff = SemioVideoDiff;
+        fn empty() -> Self {
+            Self { snapshot: SemioVideoSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioVideoSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = apply_semio_video_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioVideoDiff as protocol::MutationDiff<SemioVideoSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            Ok(self.snapshot)
+        }
+    }
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioVideoParts {
+        pub snapshot: Option<SemioVideoSnapshot>,
+    }
+
+    pub struct SemioVideoAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SemioVideoAnalyzerAnalysis {
+        type Parts = SemioVideoParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    let marker = STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    if text.contains(STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SemioVideoParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SemioVideoBuilderFacets {
+        construction: SemioVideoBuilderConstruction,
+        analysis: SemioVideoAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::video::io::derived_composition::SemioVideoComposerComposition,
+    }
+    builder: SemioVideoBuilder,
+    analyzer: SemioVideoAnalyzer,
+    composer: SemioVideoComposer,
+);

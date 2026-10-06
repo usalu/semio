@@ -64,7 +64,6 @@ const manifests = (): void => {
     const dir = join(fixtures, directory);
     if (!existsSync(dir)) return [];
     return [{
-      schema: "semio.repository-test.fixture/v2",
       id: `json-base-${kind}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.json", standard: "rfc8259", subset: "base" },
@@ -101,13 +100,13 @@ const manifests = (): void => {
     }];
   });
   writeFileSync(join(fixtures, "🔣️.json"), `${JSON.stringify(entries, null, 2)}\n`);
-  // 🧾️The REGISTRY reads `fixtureManifests` off the contribution file itself (`loadOracleRegistry`
+  // 🧾️The REGISTRY reads `testEvidence` off the contribution file itself (`loadOracleRegistry`
   // parses it there, not from `🧫️fixtures/🔣️.json`), so the generated block is merged into
   // the catalog too — the standalone file stays as the generator's reviewable output.
   const catalogPath = join(subset, "🔮️oracles", "🔣️.json");
   const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
-  const keep = (catalog.fixtureManifests ?? []).filter((entry: { family?: string }) => entry.family !== "json-base-carrier");
-  catalog.fixtureManifests = [...keep, ...entries];
+  const keep = (catalog.testEvidence ?? []).filter((entry: { family?: string }) => entry.family !== "json-base-carrier");
+  catalog.testEvidence = [...keep, ...entries];
   writeFileSync(catalogPath, `${JSON.stringify(catalog, null, 2)}\n`);
   console.log(`${entries.length} fixture manifest(s) written and registered in 🔣️oracle.json`);
 };

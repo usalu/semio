@@ -21,7 +21,7 @@ fn dispatch(request: &str, ready: bool) -> Result<Json, String> {
 }
 
 fn vectors(ctx: &Context) -> Result<Vec<Json>, String> {
-    let raw = ctx.fixture_bytes("shared://2️⃣g2-contract.json")?;
+    let raw = ctx.input_bytes("shared://2️⃣g2-contract.json")?;
     Ok(parse_json(&String::from_utf8_lossy(&raw))?.array("vectors"))
 }
 

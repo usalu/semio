@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "rootFields": ["activeGranularity", "activeMode", "hover", "selection"],
+  "selectionFields": {"present": ["anchorId", "granularity", "ids"], "absent": ["granularity", "ids"]},
+  "limits": {"maximumBytes": 100000, "maximumNodes": 2000, "maximumDepth": 32, "chunk": 128},
+  "cases": [
+    {"id": "original-store-oracle", "source": "{\"activeGranularity\":{\"graph\":\"node\"},\"activeMode\":{\"graph\":\"multiple\"},\"hover\":{\"graph\":{\"channel\":\"pointer\",\"ids\":[\"n3\"]}},\"selection\":{\"graph\":{\"anchorId\":\"n1\",\"granularity\":\"node\",\"ids\":[\"n1\",\"n2\"]}}}"},
+    {"id": "no-anchor", "source": "{\"activeGranularity\":{\"graph\":\"node\"},\"activeMode\":{\"graph\":\"single\"},\"hover\":{},\"selection\":{\"graph\":{\"granularity\":\"node\",\"ids\":[\"n1\"]}}}"},
+    {"id": "empty-state", "source": "{\"activeGranularity\":{},\"activeMode\":{},\"hover\":{},\"selection\":{}}"},
+    {"id": "unicode-and-nul", "source": "{\"activeGranularity\":{\"a\":\"node\",\"ä\":\"face\"},\"activeMode\":{\"a\":\"single\",\"ä\":\"multiple\"},\"hover\":{\"ä\":{\"channel\":\"pen\\u0000😀\",\"ids\":[\"λ\"]}},\"selection\":{\"a\":{\"granularity\":\"node\",\"ids\":[]},\"ä\":{\"anchorId\":\"λ\\u0000😀\",\"granularity\":\"face\",\"ids\":[\"λ\\u0000😀\",\"β\"]}}}"}
+  ]
+}

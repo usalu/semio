@@ -1,6 +1,6 @@
 /** 🧬️ SemioFlowSnapshot schema — real facet mirror of `📸️snapshot/🦀️.rs`; that Rust
  * file is the source of truth. */
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export interface SemioPoint2 {
   x: Binary64;
   y: Binary64;

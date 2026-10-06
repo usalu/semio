@@ -13,6 +13,12 @@
 # region kinds and nothing else. This engine is not a replacement for them; it answers the question
 # they structurally cannot.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "drawing-1-any-json-engine"

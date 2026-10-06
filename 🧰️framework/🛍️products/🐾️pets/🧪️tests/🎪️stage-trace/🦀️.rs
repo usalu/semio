@@ -60,7 +60,7 @@ mod subject {
 
     /// 🧫️ The committed vectors: the menagerie and the scripts.
     fn vectors(ctx: &Context<'_>) -> Result<(Menagerie, Vec<Script>), String> {
-        let document: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))?;
+        let document: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))?;
         let menagerie: Menagerie = serde_json::from_value(document["menagerie"].clone()).map_err(|error| format!("menagerie: {error}"))?;
         let mut scripts = Vec::new();
         for script in document["scripts"].as_array().ok_or_else(|| format!("{VECTORS} carries no scripts"))? {

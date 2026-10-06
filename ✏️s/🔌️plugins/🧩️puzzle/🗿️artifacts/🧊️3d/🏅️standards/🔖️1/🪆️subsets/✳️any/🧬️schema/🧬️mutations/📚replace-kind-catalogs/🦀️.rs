@@ -1,4 +1,4 @@
-//! 📚 Puzzle3d mutation — `ReplaceKindCatalogs`: whole-value swap of the fixture-carried typed
+//! 📚 Puzzle3d mutation — `ReplaceKindCatalogs`: whole-value swap of the scene_snapshot-carried typed
 //! kind-catalog bundle (`objects`/`vortices`/`cables`/`attractions` catalogs together, one
 //! manifest-import gesture).
 use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;

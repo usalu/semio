@@ -674,7 +674,7 @@ def uri_in(ctx, needle):
 
 def json_fixture(ctx, needle):
     """🧫️ The declared JSON fixture this scenario names."""
-    return json.loads(ctx.fixture_bytes(uri_in(ctx, needle)).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri_in(ctx, needle)).decode("utf-8"))
 
 
 def addressed(ctx, kind):
@@ -770,7 +770,7 @@ def refuse_carrier(ctx):
         "seventy record `$defs` of `🧬️schema/📸️snapshot/🔣️.json` are `{\"type\": \"object\", \"additionalProperties\": true}` with no "
         "`properties`; and it writes `tags` and `notes` members that no committed snapshot vector carries on any record. Publishing a real "
         "grammar for this carrier closes it. Read %d bytes of the committed artifact and refused to guess their meaning."
-        % len(ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio")))
+        % len(ctx.input_bytes(uri_in(ctx, "🗣️.dsl.semio")))
     )
 # endregion 🔖️Handlers
 

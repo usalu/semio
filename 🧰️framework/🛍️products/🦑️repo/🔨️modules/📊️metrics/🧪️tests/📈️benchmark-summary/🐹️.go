@@ -13,7 +13,7 @@ import (
 
 // ⏱️ timings is the recorded stdout of every ecosystem, parsed in the report's column order.
 func timings(ctx *host.Context) ([]metrics.BenchmarkResult, error) {
-	raw, err := ctx.FixtureBytes("shared://⏱️benchmark-output.json")
+	raw, err := ctx.InputBytes("shared://⏱️benchmark-output.json")
 	if err != nil {
 		return nil, err
 	}

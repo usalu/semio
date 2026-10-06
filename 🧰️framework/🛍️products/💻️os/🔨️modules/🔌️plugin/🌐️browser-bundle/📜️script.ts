@@ -1,6 +1,5 @@
 import {captureOwnedProcess} from "../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
 import { exactExecutableFingerprint } from "../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { createBrowserBundleTests } from "../🧪️tests/🌐️browser-bundle/🟦️.ts";
 /** 🌐️ Build-time closure and isolation laws for browser component factories. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -892,16 +891,17 @@ export type BrowserBundleTestDependencies = Readonly<{
   readonly ts: typeof ts;
   readonly writeFileSync: typeof writeFileSync;
 }>;
-const createBrowserBundleTestsInstance = createBrowserBundleTests({ browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
-export const testClosedBrowserComponentFactory = createBrowserBundleTestsInstance.testClosedBrowserComponentFactory;
-const testBrowserCodegenCapsule = createBrowserBundleTestsInstance.testBrowserCodegenCapsule;
-const testBrowserCodegenSources = createBrowserBundleTestsInstance.testBrowserCodegenSources;
-const testBrowserCodegenPolicy = createBrowserBundleTestsInstance.testBrowserCodegenPolicy;
-const testBrowserActorCodegenManifest = createBrowserBundleTestsInstance.testBrowserActorCodegenManifest;
-const testClosedBrowserActorBundle = createBrowserBundleTestsInstance.testClosedBrowserActorBundle;
-const testBrowserHostActivation = createBrowserBundleTestsInstance.testBrowserHostActivation;
+/** 🧪️ Loads component isolation examples only for an explicit test invocation. */
+export async function testClosedBrowserComponentFactory(repoRoot: string): Promise<void> {
+  const { createBrowserBundleTests } = await import("../🧪️tests/🌐️browser-bundle/🟦️.ts");
+  await createBrowserBundleTests({ browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url }).testClosedBrowserComponentFactory(repoRoot);
+}
 
 if (import.meta.main) {
+  if (process.argv[2] === "test" && process.argv[3] === "descriptor-contract") {
+    const result = Bun.spawn([process.execPath, "test", join(import.meta.dir, "🛂️descriptor/🧪️tests/🟦️.ts")], { stdout: "inherit", stderr: "inherit" });
+    process.exit(await result.exited);
+  }
   const command = process.argv[2] ?? "runtime-check";
   assert(["runtime-check", "pending-host-close-check"].includes(command), `actor import test: unknown command ${command}`);
   const { testCanonicalActorAsyncImport } = await import("./🧪️tests/🌊️actor-import/🟦️.ts");

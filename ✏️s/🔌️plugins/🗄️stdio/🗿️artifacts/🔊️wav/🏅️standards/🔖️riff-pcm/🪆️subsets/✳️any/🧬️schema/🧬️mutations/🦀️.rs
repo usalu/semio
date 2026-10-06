@@ -64,35 +64,11 @@ pub fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) ->
 //#endregion 🔖️Mutation
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` via `pack::json` (one line of compact JSON per op) —
-/// deliberately NOT `#[derive(dsl::DslOps)]`: `WavData` is a data-carrying enum embedded in
-/// `SetData`'s payload, the same shape `f6-final-summary.md` §4.4 documents as structurally
-/// unbindable by the derive machinery today (no generic/enum-payload `DslField` bridge). This is
-/// a SEPARATE wire format from the subset's own `ArtifactDsl`/`ArtifactPack` envelope (which
-/// wraps real RIFF/WAVE bytes, see that file's doc comment) — an op is always plain JSON here.
-impl OpText for WavMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let parsed = semio_framework_pack_json::parse(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e.into_value_error(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self)))
-    }
-}
 
-//#region 🏷️WireTags
-/// 🏷️ `WavMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-//#endregion 🏷️WireTags
 
-impl OpBinary for WavMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
-    }
-}
+
+
+
 //#endregion OpCodecs
 
 //#region 🔖️MutationTrait

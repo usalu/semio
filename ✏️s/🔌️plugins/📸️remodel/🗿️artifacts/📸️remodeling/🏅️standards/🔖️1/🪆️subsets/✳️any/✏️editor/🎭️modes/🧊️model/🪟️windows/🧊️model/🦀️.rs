@@ -32,6 +32,7 @@ const REMODELING_MESH_ID: &str = "remodeling-result";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: REMODELING_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Model", "Modell"),
         body_key: REMODELING_PLAY_BODY_MAIN.into(),

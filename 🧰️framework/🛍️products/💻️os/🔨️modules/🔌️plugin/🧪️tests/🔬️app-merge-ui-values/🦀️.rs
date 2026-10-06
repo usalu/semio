@@ -27,7 +27,7 @@ mod merge_ui_values_tests {
         assert_eq!(ui_value_to_dsl_retained(&UiValue::Bool(true)).await.expect("retained bool"), DslValue::Bool(true));
         assert_eq!(ui_value_to_dsl_retained(&UiValue::Number(-2.5)).await.expect("retained number"), serde_json::json!(-2.5));
         assert_eq!(ui_value_to_dsl_retained(&UiValue::Text(ui_text("hi"))).await.expect("retained text"), DslValue::String("hi".into()));
-        assert_eq!(ui_value_to_dsl_retained(&UiValue::List(ui_list([UiValue::Number(1.0), UiValue::Bool(false)]))).await.expect("retained list"), serde_json::json!([1.0, false]));
+        assert_eq!(ui_value_to_dsl_retained(&UiValue::List(ui_list([UiValue::Number(1.0), UiValue::Bool(false)]))).await.expect("retained list"), DslValue::from(&serde_json::from_str::<serde_json::Value>("[1,false]").expect("independent JSON.stringify fixture")));
         let mut map = BTreeMap::new();
         map.insert("id".to_string(), UiValue::Text(ui_text("w1")));
         assert_eq!(ui_value_to_dsl_retained(&UiValue::Map(ui_map(map))).await.expect("retained map"), serde_json::json!({ "id": "w1" }));

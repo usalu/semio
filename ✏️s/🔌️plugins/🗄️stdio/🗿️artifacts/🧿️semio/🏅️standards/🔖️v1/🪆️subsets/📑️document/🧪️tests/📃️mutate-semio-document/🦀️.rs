@@ -37,10 +37,15 @@ mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, decode_semio_document_mutation_json, inverse_semio_document_mutation, set_snapshot, SemioDocumentMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{
-        decode_semio_document_pack, decode_semio_document_snapshot_json, encode_semio_document_pack, encode_semio_document_snapshot_json, parse_semio_document_dsl, print_semio_document_dsl, SemioDocumentSnapshot,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, inverse_semio_document_mutation, set_snapshot, SemioDocumentMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::mutations::{decode_semio_document_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{SemioDocumentSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::binary::snapshot::{encode_semio_document_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::binary::snapshot::{decode_semio_document_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::snapshot::{decode_semio_document_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::snapshot::{encode_semio_document_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::snapshot::{print_semio_document_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::snapshot::{parse_semio_document_dsl};
 
     const DSL_ASSET: &str = "asset://🗒️memo/🗣️.dsl.semio";
     const PACK_ASSET: &str = "asset://🗒️memo/🎒️.pack.semio";
@@ -49,7 +54,7 @@ mod subject {
     /// 🧫️ The SAME committed vector `../🦀️.rs::vector` reads, decoded into real values
     /// through this subset's own `serde_json` bridges rather than transcribed into Rust literals.
     fn vector(ctx: &Context, kind: &str) -> Result<Json, String> {
-        ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://📃️mutate-semio-document/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)
+        ctx.input_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://📃️mutate-semio-document/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)
     }
 
     fn snapshot_of(vector: &Json, name: &str) -> Result<SemioDocumentSnapshot, String> {
@@ -69,7 +74,7 @@ mod subject {
     //#region 🔖️Inputs
     /// 📄️ The real committed memo, parsed by this repository's own DSL codec.
     fn memo(ctx: &Context) -> Result<SemioDocumentSnapshot, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("the committed memo must be UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(DSL_ASSET)?).map_err(|error| format!("the committed memo must be UTF-8: {error}"))?;
         parse_semio_document_dsl(&text)
     }
 
@@ -163,7 +168,7 @@ mod subject {
     /// compared.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let expected = snapshot_of(&vector(ctx, "no-mutation")?, "before")?;
-        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
         let parsed = parse_semio_document_dsl(&text)?;
         if parsed != expected {
             return Err(disagreement("identity-round-trip: parse_dsl of the real artifact does not match the committed before-snapshot the specification vectors start from", &parsed, &expected));
@@ -174,7 +179,7 @@ mod subject {
         if reparsed != expected {
             return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &expected));
         }
-        let pack_bytes = ctx.fixture_bytes(PACK_ASSET)?;
+        let pack_bytes = ctx.input_bytes(PACK_ASSET)?;
         let unpacked = decode_semio_document_pack(&pack_bytes)?;
         if unpacked != expected {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different snapshot than the committed text artifact", &unpacked, &expected));

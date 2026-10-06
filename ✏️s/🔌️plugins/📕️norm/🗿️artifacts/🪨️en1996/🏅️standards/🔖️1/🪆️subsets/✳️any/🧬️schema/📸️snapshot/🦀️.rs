@@ -4,12 +4,6 @@ use crate::document::{AnnexChoice, DesignSituation};
 use crate::{MasonryClass, MasonryWall, MortarClass, MortarType, UnitGroup, UnitMaterial, WallLoadCase, WallType, ExposureClass};
 use framework_schema::ArtifactSchema;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
-
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1996 masonry-building document.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -33,7 +27,7 @@ pub struct En1996Snapshot {
 }
 //#endregion 🔖️Snapshot
 
-crate::impl_norm_artifact_record!(En1996Snapshot, extension = "en1996", envelope_id = "norm.en1996", sqlite = sqlite::sqlite_codec);
+crate::impl_norm_artifact_record!(En1996Snapshot, extension = "en1996", envelope_id = "norm.en1996", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
 
 impl Default for En1996Snapshot {
     fn default() -> Self {
@@ -230,22 +224,10 @@ impl En1996Snapshot {
 }
 
 //#region 🌉️ExternalCodecBridge
-pub fn encode_en1996_snapshot_json(snapshot: &En1996Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
-pub fn decode_en1996_snapshot_json(text: &str) -> Result<En1996Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
-pub fn decode_en1996_dsl(text: &str) -> Result<En1996Snapshot, String> {
-    <En1996Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
-pub fn encode_en1996_dsl(snapshot: &En1996Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
-pub fn decode_en1996_pack(bytes: &[u8]) -> Result<En1996Snapshot, String> {
-    <En1996Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
-pub fn encode_en1996_pack(snapshot: &En1996Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge

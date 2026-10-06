@@ -19,7 +19,7 @@
 // expectation it is measured against.
 //
 //   bun 📜️script.ts generate  [--only <fixture-id>]     # writes each handpicked fixture directory
-//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the fixtureManifests block (JSON)
+//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the testEvidence block (JSON)
 //
 // @see ../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🏭️generator/📜️script.ts — the sibling
 //      generator this file's CLI/recipe shape is mirrored from.
@@ -99,7 +99,6 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
   const files = [fileEntry("expected-before-jpg", dir, "⬅️before.jpg", recipe.directoryName), fileEntry("expected-after-jpg", dir, "➡️after.jpg", recipe.directoryName)];
 
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.jpg", standard: "jfif-1.01", subset: "document" },
@@ -226,7 +225,6 @@ async function main(argv: readonly string[]): Promise<number> {
           files.push({ role, path: `${FIXTURE_PATH_PREFIX}${directoryName}/${name}`, mediaType: "image/jpeg", sha256: contentDigest(bytes), bytes: bytes.length });
         }
         entries.push({
-          schema: "semio.repository-test.fixture/v2",
           id: `libjpeg-${kind}`,
           class: "third-party-generated",
           target: { artifact: "s.stdio.jpg", standard: "jfif-1.01", subset: "document" },
@@ -319,7 +317,6 @@ print(kind + ': written')
           files.push({ role, path: `${FIXTURE_PATH_PREFIX}${directoryName}/${name}`, mediaType: "image/jpeg", sha256: contentDigest(bytes), bytes: bytes.length });
         }
         entries.push({
-          schema: "semio.repository-test.fixture/v2",
           id: `marker-${kind}`,
           class: "third-party-generated",
           target: { artifact: "s.stdio.jpg", standard: "jfif-1.01", subset: "document" },

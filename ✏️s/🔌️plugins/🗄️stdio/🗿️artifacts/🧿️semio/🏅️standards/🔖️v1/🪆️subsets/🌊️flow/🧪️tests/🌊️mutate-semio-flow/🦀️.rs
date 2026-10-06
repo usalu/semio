@@ -34,10 +34,15 @@ use semio_repo_test_host::Adapter;
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{apply_semio_flow_mutation, decode_semio_flow_mutation_json, inverse_semio_flow_mutation, set_snapshot, SemioFlowMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{
-        decode_semio_flow_pack, decode_semio_flow_snapshot_json, encode_semio_flow_pack, encode_semio_flow_snapshot_json, parse_semio_flow_dsl, print_semio_flow_dsl, SemioFlowSnapshot,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{apply_semio_flow_mutation, inverse_semio_flow_mutation, set_snapshot, SemioFlowMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::text::mutations::{decode_semio_flow_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::binary::snapshot::{encode_semio_flow_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::binary::snapshot::{decode_semio_flow_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::text::snapshot::{decode_semio_flow_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::text::snapshot::{encode_semio_flow_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::text::snapshot::{print_semio_flow_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::text::snapshot::{parse_semio_flow_dsl};
     use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Input
@@ -56,7 +61,7 @@ mod subject {
 
     /// 🏗️ The real capsule network, parsed through this repository's own DSL codec.
     fn tower(ctx: &Context) -> Result<SemioFlowSnapshot, String> {
-        parse_semio_flow_dsl(&utf8(ctx.fixture_bytes(TOWER_DSL)?, "the committed capsule network")?)
+        parse_semio_flow_dsl(&utf8(ctx.input_bytes(TOWER_DSL)?, "the committed capsule network")?)
     }
 
     /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector. `base` is
@@ -88,7 +93,7 @@ mod subject {
             if let Some(at) = text.find("shared://🌊️mutate-semio-flow/") {
                 let tail = &text[at..];
                 let end = tail.find(char::is_whitespace).unwrap_or(tail.len());
-                return ctx.fixture_json(&tail[..end]);
+                return ctx.input_json(&tail[..end]);
             }
         }
         Err(format!("{}: the scenario names no shared://🌊️mutate-semio-flow/ specification vector", ctx.scenario.id))
@@ -181,18 +186,18 @@ mod subject {
     /// this codec has to reproduce THOSE — including 360 little-endian `f64` coordinates read from a
     /// real IFC model, which is the sharpest test of the pack frame in the case.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let pipeline_dsl = ctx.fixture_bytes(PIPELINE_DSL)?;
+        let pipeline_dsl = ctx.input_bytes(PIPELINE_DSL)?;
         let pipeline = parse_semio_flow_dsl(&utf8(pipeline_dsl.clone(), "the committed demo pipeline")?)?;
         let pipeline_printed = print_semio_flow_dsl(&pipeline);
         carrier_is_exact(pipeline_printed.as_bytes(), &pipeline_dsl)?;
-        let pipeline_pack = ctx.fixture_bytes(PIPELINE_PACK)?;
+        let pipeline_pack = ctx.input_bytes(PIPELINE_PACK)?;
         let pipeline_unpacked = decode_semio_flow_pack(&pipeline_pack)?;
         if pipeline_unpacked != pipeline {
             return Err(disagreement("identity-round-trip: the demo pipeline's binary twin decodes to a different flow than its text", &pipeline_unpacked, &pipeline));
         }
         let pipeline_repacked = encode_semio_flow_pack(&pipeline);
         carrier_is_exact(&pipeline_repacked, &pipeline_pack)?;
-        let tower_dsl = ctx.fixture_bytes(TOWER_DSL)?;
+        let tower_dsl = ctx.input_bytes(TOWER_DSL)?;
         let network = parse_semio_flow_dsl(&utf8(tower_dsl.clone(), "the committed capsule network")?)?;
         let tower_printed = print_semio_flow_dsl(&network);
         carrier_is_exact(tower_printed.as_bytes(), &tower_dsl)?;
@@ -200,7 +205,7 @@ mod subject {
         if reparsed != network {
             return Err(disagreement("identity-round-trip: printing the capsule network back to DSL and reparsing it lost content", &reparsed, &network));
         }
-        let tower_pack = ctx.fixture_bytes(TOWER_PACK)?;
+        let tower_pack = ctx.input_bytes(TOWER_PACK)?;
         let tower_unpacked = decode_semio_flow_pack(&tower_pack)?;
         if tower_unpacked != network {
             return Err(disagreement("identity-round-trip: the capsule network's binary twin decodes to a different flow than its text", &tower_unpacked, &network));

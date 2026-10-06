@@ -1,0 +1,3 @@
+# Catalog Taxonomy Publication 2 and Owning 2 Audit
+
+All four current after bodies, retained input identities, durable intent/written records and journal hash agree. The original conformance route exited zero with three passing tests and 37 expectations; all six captured owning frames remain exact. The earlier guessed test-portable route failed before tests and remains preserved. The ticket producer advanced only to correct the verification route after publication; historical publication body identity is retained, without claiming the current publisher is rerunnable under that old authority. No native or whole-root acceptance follows.

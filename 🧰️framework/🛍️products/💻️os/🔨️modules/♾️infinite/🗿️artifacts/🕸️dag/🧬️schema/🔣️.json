@@ -3,35 +3,24 @@
   "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/artifacts/dag/schema.json",
   "title": "Dag Artifact",
   "$defs": {
-    "PackageContractCases": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["cases"],
-      "properties": {
-        "cases": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": { "$ref": "#/$defs/PackageContractCase" }
-        }
-      }
-    },
-    "PackageContractCase": {
-      "type": "object",
-      "required": ["id", "snapshot"],
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "snapshot": { "$ref": "#/$defs/PackageContractSnapshot" }
-      }
-    },
     "PackageContractSnapshot": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "nodes", "edges"],
+      "required": [
+        "schema",
+        "nodes",
+        "edges"
+      ],
       "properties": {
-        "schema": { "const": "dag.hostDocument" },
-        "nodes": { "type": "array" },
-        "edges": { "type": "array" }
+        "schema": {
+          "const": "dag.hostDocument"
+        },
+        "nodes": {
+          "type": "array"
+        },
+        "edges": {
+          "type": "array"
+        }
       }
     }
   }

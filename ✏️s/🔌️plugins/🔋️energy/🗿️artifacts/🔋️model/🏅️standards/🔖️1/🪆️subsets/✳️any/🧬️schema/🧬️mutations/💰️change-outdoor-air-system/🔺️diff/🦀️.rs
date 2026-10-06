@@ -17,6 +17,6 @@ pub fn diff(payload: &super::ChangeOutdoorAirSystemEconomizerEnabled, base: &Ene
     if let Some(item) = model.outdoor_air_systems.iter_mut().find(|item| item.id == payload.id) {
         item.economizer_enabled = payload.new_economizer_enabled;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

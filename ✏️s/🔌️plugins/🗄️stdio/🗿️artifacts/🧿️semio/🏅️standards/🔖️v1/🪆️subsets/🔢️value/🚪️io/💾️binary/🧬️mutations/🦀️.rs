@@ -1,0 +1,216 @@
+//! 💾️ Binary representation codec surface for `stdio.semio.value` (mutations).
+
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
+
+#[allow(unused_imports)]
+mod mutations_codec {
+use super::*;
+use crate::standards::v1::subsets::value::schema::mutations::*;
+use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::value::schema::diff::diff_set_snapshot;
+use crate::standards::v1::subsets::value::schema::diff::{value_diff_between, NamedAdded, SemioValueDiff, SemioValueTreeDiff};
+use crate::value::io::text::diff::{dec_semio_value};
+use crate::value::io::text::diff::{enc_semio_value};
+use crate::value::io::binary::diff::{dec_semio_value_node_bin};
+use crate::value::io::binary::diff::{enc_semio_value_node_bin};
+use crate::value::io::binary::diff::{dec_semio_value_bin};
+use crate::value::io::binary::diff::{enc_semio_value_bin};
+use crate::standards::v1::subsets::drawing::io::binary::snapshot::{read_str_lp};
+use crate::standards::v1::subsets::drawing::io::binary::snapshot::{write_str_lp};
+use crate::value::io::text::diff::{dec_value_id};
+use crate::value::io::text::diff::{enc_value_id};
+use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
+use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
+use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
+use crate::standards::v1::subsets::value::io::text::snapshot::{dec_semio_value_snapshot};
+use crate::standards::v1::subsets::value::io::text::snapshot::{enc_semio_value_snapshot};
+#[cfg(test)]
+use protocol::command::DiffAlgebra;
+use protocol::{Mutation, OpText};
+
+/// 🧭️ Real recursive binary twin of [`enc_path`]/[`dec_path`] — a varint segment COUNT, then per
+/// segment a 1-byte kind tag (`0`=Key/`1`=Index) and its own real payload. Template copied from
+/// json's own `enc_json_path_bin`/`dec_json_path_bin`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_semio_path_bin(path: &[SemioValuePathSegment], out: &mut Vec<u8>) {
+    store::pack_rt::write_varint_u64(out, path.len() as u64);
+    for segment in path {
+        match segment {
+            SemioValuePathSegment::Key { key } => {
+                out.push(0);
+                write_str_lp(out, key);
+            }
+            SemioValuePathSegment::Index { index } => {
+                out.push(1);
+                store::pack_rt::write_varint_u64(out, *index as u64);
+            }
+        }
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_semio_path_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValuePath, String> {
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut path = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        let tag = reader.read_u8().map_err(|e| e.to_string())?;
+        match tag {
+            0 => path.push(SemioValuePathSegment::Key { key: read_str_lp(reader)? }),
+            1 => path.push(SemioValuePathSegment::Index { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
+            other => return Err(format!("semio value path binary: unknown segment tag {other}")),
+        }
+    }
+    Ok(path)
+}
+
+/// 🧭️ Real recursive binary twin of [`enc_semio_snapshot`]/[`dec_semio_snapshot`] — used ONLY by
+/// `SetSnapshot`'s own `OpBinary` payload (the sibling `📸️snapshot/🦀️.rs`'s own
+/// `ArtifactPack` stays text-native, matching `json`'s exact precedent — see that file's doc
+/// comment).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_semio_value_snapshot_bin(s: &SemioValueSnapshot, out: &mut Vec<u8>) {
+    write_str_lp(out, &s.schema);
+    enc_semio_value_bin(&s.root, out);
+    store::pack_rt::write_varint_u64(out, s.nodes.len() as u64);
+    for node in &s.nodes {
+        enc_semio_value_node_bin(node, out);
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueSnapshot, String> {
+    let schema = read_str_lp(reader)?;
+    let root = dec_semio_value_bin(reader)?;
+    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mut nodes = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        nodes.push(dec_semio_value_node_bin(reader)?);
+    }
+    Ok(SemioValueSnapshot { schema, root, nodes })
+}
+
+/// 🧪️ Real binary op frame (`format u8 | tag u8 | variant payload`), matching
+/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
+/// upgraded from the `print_op().into_bytes()` text-as-binary shortcut this facet started with.
+/// `tag` is the `SemioValueMutation` variant ordinal, in the same 0-7 order
+/// `print_value_mutation`'s own keyword match uses. Every variant's own path/key/value/id payload
+/// is real LEB128-varint-framed binary (never text-as-bytes) — same treatment json's own
+/// `JsonMutation::encode_op`/`decode_op` uses.
+impl protocol::OpBinary for SemioValueMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let tag: u8 = match self {
+            SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => TAG_SET_SNAPSHOT,
+            SemioValueMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
+            SemioValueMutation::SetValue(set_value::SetValue { .. }) => TAG_SET_VALUE,
+            SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { .. }) => TAG_SET_MAP_ENTRY,
+            SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { .. }) => TAG_REMOVE_MAP_ENTRY,
+            SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { .. }) => TAG_INSERT_LIST_ITEM,
+            SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { .. }) => TAG_REMOVE_LIST_ITEM,
+            SemioValueMutation::SetNode(set_node::SetNode { .. }) => TAG_SET_NODE,
+            SemioValueMutation::RemoveNode(remove_node::RemoveNode { .. }) => TAG_REMOVE_NODE,
+        };
+        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
+        match self {
+            SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_semio_value_snapshot_bin(snapshot, &mut out),
+            SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
+            SemioValueMutation::SetValue(set_value::SetValue { path, value }) => {
+                enc_semio_path_bin(path, &mut out);
+                enc_semio_value_bin(value, &mut out);
+            }
+            SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value }) => {
+                enc_semio_path_bin(path, &mut out);
+                write_str_lp(&mut out, key);
+                enc_semio_value_bin(value, &mut out);
+            }
+            SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path, key }) => {
+                enc_semio_path_bin(path, &mut out);
+                write_str_lp(&mut out, key);
+            }
+            SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path, index, value }) => {
+                enc_semio_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                enc_semio_value_bin(value, &mut out);
+            }
+            SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path, index }) => {
+                enc_semio_path_bin(path, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+            }
+            SemioValueMutation::SetNode(set_node::SetNode { id, value }) => {
+                write_str_lp(&mut out, &id.value);
+                enc_semio_value_bin(value, &mut out);
+            }
+            SemioValueMutation::RemoveNode(remove_node::RemoveNode { id }) => {
+                write_str_lp(&mut out, &id.value);
+            }
+        }
+        Ok(out)
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let mut reader = store::ByteReader::new(bytes);
+        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
+        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        match tag {
+            TAG_PATCH_SNAPSHOT => Ok(SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
+            TAG_SET_SNAPSHOT => {
+                let snapshot = dec_semio_value_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                Ok(SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+            }
+            TAG_SET_VALUE => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(SemioValueMutation::SetValue(set_value::SetValue { path, value }))
+            }
+            TAG_SET_MAP_ENTRY => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value }))
+            }
+            TAG_REMOVE_MAP_ENTRY => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                Ok(SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path, key }))
+            }
+            TAG_INSERT_LIST_ITEM => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path, index, value }))
+            }
+            TAG_REMOVE_LIST_ITEM => {
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                Ok(SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path, index }))
+            }
+            TAG_SET_NODE => {
+                let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                Ok(SemioValueMutation::SetNode(set_node::SetNode { id, value }))
+            }
+            TAG_REMOVE_NODE => {
+                let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);
+                Ok(SemioValueMutation::RemoveNode(remove_node::RemoveNode { id }))
+            }
+            other => Err(malformed("op tag", 1, format!("unknown op tag {other}"))),
+        }
+    }
+}
+}
+pub use mutations_codec::*;
+
+//#region 🏷️WireTags
+/// 🏷️ Op tags of `SemioValueMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
+const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
+const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
+const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
+const TAG_SET_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-value");
+const TAG_SET_MAP_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-map-entry");
+const TAG_REMOVE_MAP_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-map-entry");
+const TAG_INSERT_LIST_ITEM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-list-item");
+const TAG_REMOVE_LIST_ITEM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-list-item");
+const TAG_SET_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-node");
+const TAG_REMOVE_NODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-node");
+//#endregion 🏷️WireTags

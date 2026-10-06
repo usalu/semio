@@ -26,7 +26,7 @@ fn render(todo: &semio_framework_repo_todos::Todo) -> String {
 #[cfg(feature = "sut")]
 fn every_todo_in_the_tree_is_found(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_todos as todos;
-    let file = ctx.fixture_json("shared://🔍️scan-tree.json")?;
+    let file = ctx.input_json("shared://🔍️scan-tree.json")?;
     let tree = todos::MemoryTodoTree::seeded(tree_files(&file));
     let found: Vec<Json> = todos::scan_todos(&tree).iter().map(|todo| Json::String(render(todo))).collect();
     let searches: Vec<Json> = file
@@ -52,7 +52,7 @@ fn every_todo_in_the_tree_is_found(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 fn the_scan_refuses_three_kinds_of_directory(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_todos as todos;
-    let file = ctx.fixture_json("shared://🔍️scan-tree.json")?;
+    let file = ctx.input_json("shared://🔍️scan-tree.json")?;
     let root = ctx.work_dir.join("scan-tree");
     for (path, content) in tree_files(&file) {
         let target = path.split('/').fold(root.clone(), |current, segment| current.join(segment));

@@ -31,7 +31,7 @@ mod subject {
     /// 🗃️ Every committed answer judged against its sheet task; an answer the typed twin refuses (a non-numeric
     /// guess, guesses that are no object) is structurally invalid and judged `answer-invalid`.
     pub fn verdicts(ctx: &Context) -> Result<Outcome, String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         let tasks = decode!(vectors["sheetTasks"], Vec<SheetTask>)?;
         let mut projection = Map::new();
         for vector in vectors["vectors"].as_array().into_iter().chain(vectors["malformed"].as_array()).flatten() {

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/pixels/compositing.json",
   "title": "Pixel Compositing",
-  "description": "Straight RGBA8 sRGB, bottom-to-top isolated groups. Matrix [a,b,c,d,e,f] maps local pixel edges to parent coordinates. Masks multiply alpha after layer/group evaluation; adjustments preserve backdrop alpha. Output is unpublished until completion.",
+  "description": "Straight RGBA8 sRGB, bottom-to-top isolated groups. Matrix [a,b,c,d,e,f] maps local pixel edges to parent coordinates. Masks multiply alpha after layer/group evaluation; adjustments preserve backdrop alpha. Output is unpublished until completion. Logical cancellation retains private compiled commands, tile buffers and unpublished pixels for consuming work-granted retirement. Shared source/mask bytes and published pixels remain unchanged. Each retirement unit removes one fixed-shape command or numeric tile buffer owner; collection headers and final fixed state have separate units. This structural contract does not bound allocation bytes or allocator destruction latency.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -335,6 +335,35 @@
           }
         }
       ]
+    },
+    "RetirementGrant": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "Retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "work",
+        "done"
+      ],
+      "properties": {
+        "phase": {
+          "enum": [
+            "closing",
+            "complete"
+          ]
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "done": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

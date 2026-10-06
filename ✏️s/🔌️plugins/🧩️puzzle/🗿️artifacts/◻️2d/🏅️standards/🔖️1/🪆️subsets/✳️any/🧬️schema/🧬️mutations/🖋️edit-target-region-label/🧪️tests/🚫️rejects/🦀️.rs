@@ -1,4 +1,4 @@
-//! 🧪️ `edit-target-region-label` fixture — `🚫️rejects`.
+//! 🧪️ `edit-target-region-label` snapshot — `🚫️rejects`.
 //!
 //! Renaming a region the board never held is an Error-level `mutation.target-missing`.
 //!
@@ -54,7 +54,7 @@ fn the_refusal_is_the_declared_one() {
 /// ↩️ `edit-target-region-label`'s inverse is BASE-derived: with no entry to read there is no prior label to restore.
 #[test]
 fn inverse_of_a_refusal() {
-    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse snapshot");
     assert_eq!(inverse.len(), 0, "edit-target-region-label/rejects-renaming-a-region-the-board-never-held: got {inverse:?}");
 }
 

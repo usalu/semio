@@ -1,7 +1,7 @@
 {
   "mutation": "setPayload",
   "payload": {
-    "fixtureSlug": "hexagonal-mushroom-column",
+    "exampleId": "hexagonal-mushroom-column",
     "params": {
       "height": 2,
       "radius": 0.75,

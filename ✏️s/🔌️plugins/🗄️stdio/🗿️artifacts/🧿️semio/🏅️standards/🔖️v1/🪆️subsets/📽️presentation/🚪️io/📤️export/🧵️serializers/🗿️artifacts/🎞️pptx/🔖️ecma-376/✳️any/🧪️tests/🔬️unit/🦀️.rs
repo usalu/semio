@@ -28,8 +28,9 @@ fn sample_semio() -> SemioPresentationSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn maps_shapes_positions_and_placeholder_kind() {
     let pptx = ::semio_framework_async::poll::resolve_ready(SemioPresentationToPptx::serialize(&sample_semio())).expect("serialize");
-    assert_eq!(pptx.presentation.slides.len(), 1);
-    let shapes = &pptx.presentation.slides[0].shapes;
+    let presentation = pptx.presentation().expect("typed presentation view");
+    assert_eq!(presentation.slides.len(), 1);
+    let shapes = &presentation.slides[0].shapes;
     assert_eq!(shapes.len(), 3);
     assert!(matches!(&shapes[0], PptxShape::TextBox { text_frame, position } if text_frame[0].runs[0].text == "Hi" && text_frame[0].runs[0].bold && position.cx == 100));
     assert!(matches!(&shapes[1], PptxShape::Picture { blip_rel_id, .. } if blip_rel_id == "rId2"));

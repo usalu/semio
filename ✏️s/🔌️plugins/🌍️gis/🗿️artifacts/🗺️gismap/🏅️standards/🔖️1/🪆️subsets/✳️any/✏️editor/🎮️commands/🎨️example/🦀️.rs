@@ -1,6 +1,6 @@
 //! 🎨️ GIS 2D play app command — loading a bundled example map.
 
-use crate::op::GisMapMutation;
+use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::schema::{positions_operations, regions_operations, routes_operations};
 use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot};
 use semio_framework_plugin::{ActionArgOption, ArtifactView, ConfigView, Emit, ExampleSource, Fault, NoConfig, NoConfigMutation};

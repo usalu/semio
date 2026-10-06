@@ -7,10 +7,64 @@
   "required": ["revision", "x", "y", "width", "height", "paletteIndex"],
   "properties": {
     "revision": {"type": "string", "x-semio-ui": {"label": {"en": "Revision", "de": "Revision"}, "group": "target", "order": 10}},
-    "x": {"type": "integer", "minimum": 0, "x-semio-ui": {"label": {"en": "Left", "de": "Links"}, "group": "region", "order": 20}},
-    "y": {"type": "integer", "minimum": 0, "x-semio-ui": {"label": {"en": "Top", "de": "Oben"}, "group": "region", "order": 30}},
-    "width": {"type": "integer", "minimum": 1, "x-semio-ui": {"label": {"en": "Width", "de": "Breite"}, "group": "region", "order": 40}},
-    "height": {"type": "integer", "minimum": 1, "x-semio-ui": {"label": {"en": "Height", "de": "Höhe"}, "group": "region", "order": 50}},
-    "paletteIndex": {"type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": {"label": {"en": "Palette index", "de": "Palettenindex"}, "group": "paint", "order": 60}}
+    "x": {"type": "integer", "minimum": 0, "x-semio-ui": {
+      "widget": "stepper",
+      "label": {
+        "en": "Left",
+        "de": "Links"
+      },
+      "unit": "px",
+      "step": 1,
+      "precision": 0,
+      "group": "region",
+      "order": 20
+    }},
+    "y": {"type": "integer", "minimum": 0, "x-semio-ui": {
+      "widget": "stepper",
+      "label": {
+        "en": "Top",
+        "de": "Oben"
+      },
+      "unit": "px",
+      "step": 1,
+      "precision": 0,
+      "group": "region",
+      "order": 30
+    }},
+    "width": {"type": "integer", "minimum": 1, "x-semio-ui": {
+      "widget": "stepper",
+      "label": {
+        "en": "Width",
+        "de": "Breite"
+      },
+      "unit": "px",
+      "step": 1,
+      "precision": 0,
+      "group": "region",
+      "order": 40
+    }},
+    "height": {"type": "integer", "minimum": 1, "x-semio-ui": {
+      "widget": "stepper",
+      "label": {
+        "en": "Height",
+        "de": "Höhe"
+      },
+      "unit": "px",
+      "step": 1,
+      "precision": 0,
+      "group": "region",
+      "order": 50
+    }},
+    "paletteIndex": {"type": "integer", "minimum": 0, "maximum": 255, "x-semio-ui": {
+      "widget": "stepper",
+      "label": {
+        "en": "Palette index",
+        "de": "Palettenindex"
+      },
+      "step": 1,
+      "precision": 0,
+      "group": "paint",
+      "order": 60
+    }}
   }
 }

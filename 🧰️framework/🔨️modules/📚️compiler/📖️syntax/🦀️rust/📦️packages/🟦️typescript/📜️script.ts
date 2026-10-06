@@ -8,7 +8,7 @@ import { runOwnedCommand } from "../../../../../🏃️process/🎛️owned-exec
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("Expected test");
-    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🟦️.ts")], this.root, "compiler:syntax:rust", 30000);
+    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🟦️.ts"), resolve(this.root, "../../📁️paths/🧪️tests/🟦️.ts")], this.root, "compiler:syntax:rust", 60000);
   }
 }
 /** 🚮️ Checks all syntax laws with unrelated owners physically absent. */
@@ -18,4 +18,11 @@ class AbsenceScript extends BundleScript {
     await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🚮️absence/🟦️.ts")], this.root, "compiler:syntax:rust:absence", 30000);
   }
 }
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-absence", AbsenceScript), { defaultCommand: "test" });
+/** 📁️ Checks the closed neutral path argument contract with independent Rust grammar. */
+class PathLiteralsScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Expected test-path-literals");
+    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../📁️paths/🧪️tests/🟦️.ts")], this.root, "compiler:syntax:rust:paths", 30000);
+  }
+}
+await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-absence", AbsenceScript).register("test-path-literals", PathLiteralsScript), { defaultCommand: "test" });

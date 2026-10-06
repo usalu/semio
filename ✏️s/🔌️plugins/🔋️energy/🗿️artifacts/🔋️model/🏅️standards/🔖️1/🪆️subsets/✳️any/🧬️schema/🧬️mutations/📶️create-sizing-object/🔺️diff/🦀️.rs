@@ -14,6 +14,6 @@ pub fn diff(payload: &super::CreateSizingObject, base: &EnergyModelSnapshot) -> 
     }
     let mut model = base.model.clone();
     model.sizing_objects.push(crate::model::SizingObject { id: payload.id, zone_id: payload.zone_id, sizing_type: payload.sizing_type, design_day_type: payload.design_day_type });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

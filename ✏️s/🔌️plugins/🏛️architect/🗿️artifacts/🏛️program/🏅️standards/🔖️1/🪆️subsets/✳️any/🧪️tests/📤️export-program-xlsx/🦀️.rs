@@ -15,8 +15,8 @@ fn oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::PROGRAM;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_architect_program::io::export::serializers::artifacts::xlsx::v_ecma_376::any as export;
-    use semio_s_artifact_architect_program::standards::v1::subsets::any::schema::mutations::decode_program_snapshot_json;
+    use semio_s_artifact_architect_program::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::v_ecma_376::any as export;
+    use semio_s_artifact_architect_program::standards::v1::subsets::any::io::text::snapshot::decode_program_snapshot_json;
 
     fn block_on<F: std::future::Future>(future: F) -> F::Output {
         let mut future = std::pin::pin!(future);
@@ -62,7 +62,7 @@ mod subject {
     }
 
     pub fn export_xlsx(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(PROGRAM)?).map_err(|error| format!("program fixture is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(PROGRAM)?).map_err(|error| format!("program fixture is not UTF-8: {error}"))?;
         let program = decode_program_snapshot_json(&text)?;
         let snapshot = block_on(export::serialize(&program)).map_err(|error| error.to_string())?;
         let raw = block_on(export::serialize_raw_bytes(&program)).map_err(|error| error.to_string())?;

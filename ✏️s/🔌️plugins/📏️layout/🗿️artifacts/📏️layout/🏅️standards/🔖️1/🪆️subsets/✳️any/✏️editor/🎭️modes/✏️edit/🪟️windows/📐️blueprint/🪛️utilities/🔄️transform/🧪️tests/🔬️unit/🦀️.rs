@@ -5,7 +5,7 @@
 use super::*;
 
 fn document() -> LayoutSnapshot {
-    crate::standards::v1::subsets::any::schema::default_document()
+    crate::standards::v1::subsets::any::io::text::snapshot::default_document()
 }
 
 fn drag(dx: f64, dy: f64) -> LayoutFrameRecord {

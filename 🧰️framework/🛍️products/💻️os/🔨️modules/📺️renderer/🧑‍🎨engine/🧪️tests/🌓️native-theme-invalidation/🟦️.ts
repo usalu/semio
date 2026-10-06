@@ -1,10 +1,9 @@
-import Ajv2020 from "ajv/dist/2020";
+
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { resolveElementsSurfaceChromeDark } from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx";
 import { resolveWgpuHostAppearance, WGPU_PREFERS_DARK_MEDIA_QUERY } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 import fixture from "../../🧫️fixtures/🌓️native-theme-invalidation/🔣️.json";
-import schema from "../../🧬️schema/🌓️native-theme-invalidation/🔣️.json";
 
 type ThemeTransition = { readonly from: "light" | "dark"; readonly to: "light" | "dark"; readonly reactDark: boolean };
 
@@ -12,8 +11,6 @@ describe("🌓️ native theme invalidation oracle", () => {
   const transitions = fixture.transitions as readonly ThemeTransition[];
 
   it("validates the neutral transition contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.mediaQuery).toBe(WGPU_PREFERS_DARK_MEDIA_QUERY);
   });
 

@@ -1,29 +1,185 @@
 {
-  "schema": "semio.db.wal.committed-transactions/v1",
   "maximumRecords": 8193,
   "historyProjection": {
     "commands": [
-      { "id": "history-1", "path": "first", "value": "alpha" },
-      { "id": "history-2", "path": "second", "value": "beta" }
+      {
+        "id": "history-1",
+        "path": "first",
+        "value": "alpha"
+      },
+      {
+        "id": "history-2",
+        "path": "second",
+        "value": "beta"
+      }
     ],
-    "expected": { "entries": 1, "operationIds": ["history-1", "history-2"], "headSeq": 2, "commitSeq": 1 },
+    "expected": {
+      "entries": 1,
+      "operationIds": [
+        "history-1",
+        "history-2"
+      ],
+      "headSeq": 2,
+      "commitSeq": 1
+    },
     "rejections": [
-      { "name": "foreign-command-document", "records": [{ "kind": "command", "document": "foreign" }, { "kind": "frontier", "document": "current" }], "accepted": false },
-      { "name": "foreign-frontier-document", "records": [{ "kind": "command", "document": "current" }, { "kind": "frontier", "document": "foreign" }], "accepted": false },
-      { "name": "duplicate-frontier", "records": [{ "kind": "command", "document": "current" }, { "kind": "frontier", "document": "current" }, { "kind": "frontier", "document": "current" }], "accepted": false },
-      { "name": "frontier-before-command", "records": [{ "kind": "frontier", "document": "current" }, { "kind": "command", "document": "current" }], "accepted": false }
+      {
+        "name": "foreign-command-document",
+        "records": [
+          {
+            "kind": "command",
+            "document": "foreign"
+          },
+          {
+            "kind": "frontier",
+            "document": "current"
+          }
+        ],
+        "accepted": false
+      },
+      {
+        "name": "foreign-frontier-document",
+        "records": [
+          {
+            "kind": "command",
+            "document": "current"
+          },
+          {
+            "kind": "frontier",
+            "document": "foreign"
+          }
+        ],
+        "accepted": false
+      },
+      {
+        "name": "duplicate-frontier",
+        "records": [
+          {
+            "kind": "command",
+            "document": "current"
+          },
+          {
+            "kind": "frontier",
+            "document": "current"
+          },
+          {
+            "kind": "frontier",
+            "document": "current"
+          }
+        ],
+        "accepted": false
+      },
+      {
+        "name": "frontier-before-command",
+        "records": [
+          {
+            "kind": "frontier",
+            "document": "current"
+          },
+          {
+            "kind": "command",
+            "document": "current"
+          }
+        ],
+        "accepted": false
+      }
     ]
   },
   "cases": [
     {
       "name": "gap-after-committed-transaction-rejected",
-      "segments": [{ "state": "active", "frames": [{ "kind": "header" }, { "kind": "begin", "id": "1" }, { "kind": "commit", "id": "1", "count": 0 }, { "kind": "begin", "id": "3" }, { "kind": "commit", "id": "3", "count": 0 }], "physicalCommitsAfter": [0, 2, 4] }],
-      "expected": { "accepted": false, "transactions": [], "nextTxId": null, "recoverAbort": null, "error": "corrupt" }
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "commit",
+              "id": "1",
+              "count": 0
+            },
+            {
+              "kind": "begin",
+              "id": "3"
+            },
+            {
+              "kind": "commit",
+              "id": "3",
+              "count": 0
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2,
+            4
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "corrupt"
+      }
     },
     {
       "name": "compacted-first-id-continues-contiguously",
-      "segments": [{ "state": "active", "frames": [{ "kind": "header" }, { "kind": "begin", "id": "42" }, { "kind": "commit", "id": "42", "count": 0 }, { "kind": "begin", "id": "43" }, { "kind": "commit", "id": "43", "count": 0 }], "physicalCommitsAfter": [0, 2, 4] }],
-      "expected": { "accepted": true, "transactions": [{ "id": "42", "kinds": [] }, { "id": "43", "kinds": [] }], "nextTxId": "44", "recoverAbort": null, "error": null }
+      "segments": [
+        {
+          "state": "active",
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "42"
+            },
+            {
+              "kind": "commit",
+              "id": "42",
+              "count": 0
+            },
+            {
+              "kind": "begin",
+              "id": "43"
+            },
+            {
+              "kind": "commit",
+              "id": "43",
+              "count": 0
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            2,
+            4
+          ]
+        }
+      ],
+      "expected": {
+        "accepted": true,
+        "transactions": [
+          {
+            "id": "42",
+            "kinds": []
+          },
+          {
+            "id": "43",
+            "kinds": []
+          }
+        ],
+        "nextTxId": "44",
+        "recoverAbort": null,
+        "error": null
+      }
     },
     {
       "name": "header-only",
@@ -983,11 +1139,37 @@
       "segments": [
         {
           "state": "active",
-          "frames": [{ "kind": "header" }, { "kind": "begin", "id": "1" }, { "kind": "command", "repeat": 8194 }, { "kind": "commit", "id": "1", "count": 8194 }],
-          "physicalCommitsAfter": [0, 8196]
+          "frames": [
+            {
+              "kind": "header"
+            },
+            {
+              "kind": "begin",
+              "id": "1"
+            },
+            {
+              "kind": "command",
+              "repeat": 8194
+            },
+            {
+              "kind": "commit",
+              "id": "1",
+              "count": 8194
+            }
+          ],
+          "physicalCommitsAfter": [
+            0,
+            8196
+          ]
         }
       ],
-      "expected": { "accepted": false, "transactions": [], "nextTxId": null, "recoverAbort": null, "error": "capacity" }
+      "expected": {
+        "accepted": false,
+        "transactions": [],
+        "nextTxId": null,
+        "recoverAbort": null,
+        "error": "capacity"
+      }
     },
     {
       "name": "retained-high-water-id",

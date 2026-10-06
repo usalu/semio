@@ -64,7 +64,7 @@ fn keep_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_architect_program::editor::architect::presence::architect_presence_mutation_report_json;
+    use semio_s_artifact_architect_program::editor::architect::presence::component::io::text::mutations::architect_presence_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         architect_presence_mutation_report_json(committed.before, committed.mutation, committed.after)

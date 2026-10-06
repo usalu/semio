@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "rows": 122,
+  "tables": [
+    "generation_document",
+    "generation_host",
+    "generation_widget",
+    "generation_neuron_widget",
+    "generation_widget_port",
+    "generation_slider_widget",
+    "generation_note_widget",
+    "generation_image_widget",
+    "generation_variable_widget",
+    "generation_preview_widget",
+    "generation_widget_expanded",
+    "generation_action_widget",
+    "generation_export_widget",
+    "generation_cluster_widget",
+    "generation_host_synapse",
+    "generation_host_layout",
+    "generation_neural_dictionary",
+    "generation_neural_entry",
+    "generation_neural_value",
+    "generation_tree",
+    "generation_tree_neuron",
+    "generation_tree_synapse",
+    "generation_gui",
+    "generation_gui_node",
+    "generation_gui_plain",
+    "generation_gui_slider",
+    "generation_gui_note",
+    "generation_gui_image",
+    "generation_gui_variable",
+    "generation_gui_preview",
+    "generation_gui_expanded",
+    "generation_preset",
+    "generation_answer",
+    "generation_value",
+    "generation_array_element",
+    "generation_object_member"
+  ],
+  "cases": [
+    {
+      "name": "complete-owner",
+      "word": null,
+      "bytes": 4136
+    },
+    {
+      "name": "camera-positive-zero",
+      "word": "0000000000000000",
+      "bytes": 4136
+    },
+    {
+      "name": "camera-negative-zero",
+      "word": "8000000000000000",
+      "bytes": 4136
+    },
+    {
+      "name": "camera-minimum-subnormal",
+      "word": "0000000000000001",
+      "bytes": 4136
+    },
+    {
+      "name": "camera-minimum-normal",
+      "word": "0010000000000000",
+      "bytes": 4136
+    },
+    {
+      "name": "camera-maximum-finite",
+      "word": "7fefffffffffffff",
+      "bytes": 4136
+    },
+    {
+      "name": "camera-positive-infinity",
+      "word": "7ff0000000000000",
+      "bytes": 4146
+    },
+    {
+      "name": "camera-negative-infinity",
+      "word": "fff0000000000000",
+      "bytes": 4146
+    },
+    {
+      "name": "camera-quiet-nan",
+      "word": "7ff8000000000001",
+      "bytes": 4125
+    },
+    {
+      "name": "camera-signaling-nan",
+      "word": "7ff0000000000001",
+      "bytes": 4125
+    }
+  ]
+}

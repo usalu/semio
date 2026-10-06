@@ -15,10 +15,35 @@
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     },
     "path": {
-      "$ref": "#/$defs/DocBlockPath"
+      "$ref": "#/$defs/DocBlockPath",
+      "x-semio-ui": {
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Path of the new block: the steps into nested containers and the index it is inserted at, counted from 0.",
+          "de": "Pfad des neuen Blocks: die Schritte in verschachtelte Container und der Index, an dem eingefügt wird, ab 0 gezählt."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "block": {
-      "$ref": "#/$defs/DocBlock"
+      "$ref": "#/$defs/DocBlock",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block that is inserted: paragraph, heading, list, table, image or code.",
+          "de": "Der Block, der eingefügt wird: Absatz, Überschrift, Liste, Tabelle, Bild oder Code."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

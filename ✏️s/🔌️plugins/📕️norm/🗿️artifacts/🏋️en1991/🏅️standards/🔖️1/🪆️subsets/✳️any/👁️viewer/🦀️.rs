@@ -41,7 +41,7 @@ pub struct En1991Viewer;
 
 impl ArtifactViewer for En1991Viewer {
     type Snapshot = En1991Snapshot;
-    type Mutation = crate::op::En1991Mutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::En1991Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

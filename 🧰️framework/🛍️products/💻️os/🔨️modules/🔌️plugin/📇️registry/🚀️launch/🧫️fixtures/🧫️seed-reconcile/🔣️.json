@@ -1,0 +1,608 @@
+{
+  "format": 1,
+  "seedFormatting": ["commentless-lines", "pretty-json", "compact-json"],
+  "seed": [
+    "{",
+    "  \"version\": \"0.2.0\",",
+    "  \"configurations\": [",
+    "    {",
+    "      \"name\": \"⚖️gate-alpha\",",
+    "      \"type\": \"node-terminal\",",
+    "      \"request\": \"launch\",",
+    "      \"command\": \"bun nx run alpha:check-thing --skip-nx-cache\",",
+    "      \"cwd\": \"${workspaceFolder}\",",
+    "      \"presentation\": {",
+    "        \"group\": \"4_gate\",",
+    "        \"order\": 1",
+    "      }",
+    "    },",
+    "    { \"name\": \"🧪️one-line\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun nx run alpha:test-one --args=\\\"a b\\\"\", \"cwd\": \"${workspaceFolder}\" },",
+    "    {",
+    "      \"name\": \"▶️tool\",",
+    "      \"type\": \"node-terminal\",",
+    "      \"request\": \"launch\",",
+    "      \"command\": \"bun ./📜️script.ts tool\",",
+    "      \"cwd\": \"${workspaceFolder}\"",
+    "    }",
+    "  ],",
+    "  \"compounds\": [],",
+    "  \"inputs\": [",
+    "    {",
+    "      \"id\": \"level\",",
+    "      \"type\": \"pickString\",",
+    "      \"description\": \"Test level\",",
+    "      \"options\": [",
+    "        \"quick\",",
+    "        \"long\"",
+    "      ]",
+    "    }",
+    "  ],",
+    "",
+    "  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated",
+    "  // output); see 🚀️launch/🟦️.ts readSeed() for the exact split contract this marker line supports.",
+    "  \"devLaunchers\": {},",
+    "  \"projectLaunchers\": {",
+    "    \"familyMinimumProjects\": 3,",
+    "    \"familyEmoji\": \"📋️\",",
+    "    \"fallbackClass\": \"run\",",
+    "    \"classes\": [",
+    "      { \"id\": \"gate\", \"emoji\": \"⚖️\", \"group\": \"4_gate\", \"orderBase\": 900, \"tokens\": [\"test\", \"check\"] },",
+    "      { \"id\": \"run\", \"emoji\": \"▶️\", \"group\": \"3_dev\", \"orderBase\": 950, \"tokens\": [\"run\"] }",
+    "    ],",
+    "    \"languageSegments\": {},",
+    "    \"transparentSegments\": [],",
+    "    \"skipDirectories\": []",
+    "  }",
+    "}"
+  ],
+  "targets": [
+    {
+      "project": "alpha",
+      "path": "apps/alpha",
+      "targets": [
+        "check-thing",
+        "test-one",
+        "test-two"
+      ]
+    },
+    {
+      "project": "beta",
+      "path": "apps/beta",
+      "targets": [
+        "test-two"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "reconciled-launch-file-leaves-the-seed-untouched",
+      "launchEdits": [],
+      "adoptEdits": false,
+      "expect": {
+        "adopted": [],
+        "adoptedInputs": [],
+        "edited": [],
+        "drifted": [],
+        "renamed": [],
+        "stale": [],
+        "misplaced": 0,
+        "seedEdits": []
+      }
+    },
+    {
+      "id": "hand-added-rows-move-into-the-seed-as-written",
+      "launchEdits": [
+        {
+          "container": "configurations",
+          "after": null,
+          "text": [
+            "{",
+            "  \"name\": \"🧪️first\",",
+            "  \"type\": \"node-terminal\",",
+            "  \"request\": \"launch\",",
+            "  \"command\": \"bun ./📜️script.ts first\"",
+            "}"
+          ]
+        },
+        {
+          "container": "configurations",
+          "after": "⚖️gate-alpha",
+          "text": [
+            "{",
+            "      \"name\": \"⚖️hand-gate\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun ./📜️script.ts gate\",",
+            "      \"cwd\": \"${workspaceFolder}\"",
+            "    }"
+          ]
+        },
+        {
+          "container": "configurations",
+          "after": "⚖️test-twobeta",
+          "text": [
+            "{ \"name\": \"▶️hand-last\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun ./📜️script.ts last\" }"
+          ]
+        },
+        {
+          "container": "inputs",
+          "after": "level",
+          "text": [
+            "{",
+            "      \"id\": \"handPlan\",",
+            "      \"type\": \"promptString\",",
+            "      \"description\": \"Hand-added plan\"",
+            "    }"
+          ]
+        }
+      ],
+      "adoptEdits": false,
+      "expect": {
+        "adopted": [
+          "🧪️first",
+          "⚖️hand-gate",
+          "▶️hand-last"
+        ],
+        "adoptedInputs": [
+          "handPlan"
+        ],
+        "edited": [],
+        "drifted": [],
+        "renamed": [],
+        "stale": [],
+        "misplaced": 0,
+        "seedEdits": [
+          {
+            "at": 4,
+            "remove": 0,
+            "insert": [
+              "    {",
+              "  \"name\": \"🧪️first\",",
+              "  \"type\": \"node-terminal\",",
+              "  \"request\": \"launch\",",
+              "  \"command\": \"bun ./📜️script.ts first\"",
+              "},"
+            ]
+          },
+          {
+            "at": 15,
+            "remove": 0,
+            "insert": [
+              "    {",
+              "      \"name\": \"⚖️hand-gate\",",
+              "      \"type\": \"node-terminal\",",
+              "      \"request\": \"launch\",",
+              "      \"command\": \"bun ./📜️script.ts gate\",",
+              "      \"cwd\": \"${workspaceFolder}\"",
+              "    },"
+            ]
+          },
+          {
+            "at": 22,
+            "remove": 1,
+            "insert": [
+              "    },",
+              "    { \"name\": \"▶️hand-last\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun ./📜️script.ts last\" }"
+            ]
+          },
+          {
+            "at": 34,
+            "remove": 1,
+            "insert": [
+              "    },",
+              "    {",
+              "      \"id\": \"handPlan\",",
+              "      \"type\": \"promptString\",",
+              "      \"description\": \"Hand-added plan\"",
+              "    }"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "generator-rows-the-registry-stopped-producing-stay-out",
+      "launchEdits": [
+        {
+          "container": "configurations",
+          "replace": "⚖️test-twoalpha",
+          "text": [
+            "{",
+            "      \"name\": \"⚖️test-two-old\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun nx run alpha:test-two\",",
+            "      \"cwd\": \"${workspaceFolder}\",",
+            "      \"presentation\": {",
+            "        \"group\": \"4_gate\",",
+            "        \"order\": 899",
+            "      }",
+            "    }"
+          ]
+        },
+        {
+          "container": "configurations",
+          "after": "⚖️test-twobeta",
+          "text": [
+            "{",
+            "      \"name\": \"⚖️check-thingalpha\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun nx run alpha:check-thing\",",
+            "      \"cwd\": \"${workspaceFolder}\",",
+            "      \"presentation\": {",
+            "        \"group\": \"4_gate\",",
+            "        \"order\": 899",
+            "      }",
+            "    }"
+          ]
+        },
+        {
+          "container": "configurations",
+          "after": "⚖️check-thingalpha",
+          "text": [
+            "{",
+            "      \"name\": \"⚖️old📋️\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun nx run ${input:projectTarget.old}:old\",",
+            "      \"cwd\": \"${workspaceFolder}\",",
+            "      \"presentation\": {",
+            "        \"group\": \"4_gate\",",
+            "        \"order\": 899",
+            "      }",
+            "    }"
+          ]
+        },
+        {
+          "container": "configurations",
+          "after": "⚖️old📋️",
+          "text": [
+            "{",
+            "      \"name\": \"🛠️dev🧩️gone⚛️react\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun nx run workspace:dev -- gone\",",
+            "      \"cwd\": \"${workspaceFolder}\",",
+            "      \"env\": {",
+            "        \"S_OS_PORT\": \"6999\",",
+            "        \"SEMIO_PLUGIN\": \"gone\",",
+            "        \"SEMIO_RENDERER\": \"react\"",
+            "      },",
+            "      \"presentation\": {",
+            "        \"group\": \"3_dev\",",
+            "        \"order\": 1",
+            "      },",
+            "      \"serverReadyAction\": {",
+            "        \"action\": \"openExternally\",",
+            "        \"pattern\": \"(http://(?:127\\\\.0\\\\.0\\\\.1|localhost|0\\\\.0\\\\.0\\\\.0):6999)\",",
+            "        \"uriFormat\": \"%s\"",
+            "      }",
+            "    }"
+          ]
+        },
+        {
+          "container": "inputs",
+          "after": "level",
+          "text": [
+            "{",
+            "      \"id\": \"projectTarget.old\",",
+            "      \"type\": \"pickString\",",
+            "      \"description\": \"Project whose old target runs\",",
+            "      \"options\": []",
+            "    }"
+          ]
+        }
+      ],
+      "adoptEdits": false,
+      "expect": {
+        "adopted": [],
+        "adoptedInputs": [],
+        "edited": [],
+        "drifted": [],
+        "renamed": [
+          "⚖️test-two-old"
+        ],
+        "stale": [
+          "⚖️check-thingalpha",
+          "⚖️old📋️",
+          "🛠️dev🧩️gone⚛️react",
+          "projectTarget.old"
+        ],
+        "misplaced": 0,
+        "seedEdits": []
+      }
+    },
+    {
+      "id": "a-row-for-an-undeclared-target-is-hand-made",
+      "launchEdits": [
+        {
+          "container": "configurations",
+          "after": "▶️tool",
+          "text": [
+            "{",
+            "      \"name\": \"⚖️describealpha\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun nx run alpha:describe\",",
+            "      \"cwd\": \"${workspaceFolder}\",",
+            "      \"presentation\": {",
+            "        \"group\": \"4_gate\",",
+            "        \"order\": 899",
+            "      }",
+            "    }"
+          ]
+        }
+      ],
+      "adoptEdits": false,
+      "expect": {
+        "adopted": [
+          "⚖️describealpha"
+        ],
+        "adoptedInputs": [],
+        "edited": [],
+        "drifted": [],
+        "renamed": [],
+        "stale": [],
+        "misplaced": 0,
+        "seedEdits": [
+          {
+            "at": 22,
+            "remove": 1,
+            "insert": [
+              "    },",
+              "    {",
+              "      \"name\": \"⚖️describealpha\",",
+              "      \"type\": \"node-terminal\",",
+              "      \"request\": \"launch\",",
+              "      \"command\": \"bun nx run alpha:describe\",",
+              "      \"cwd\": \"${workspaceFolder}\",",
+              "      \"presentation\": {",
+              "        \"group\": \"4_gate\",",
+              "        \"order\": 899",
+              "      }",
+              "    }"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "edited-rows-are-reported-and-the-seed-keeps-its-content",
+      "launchEdits": [
+        {
+          "container": "configurations",
+          "replace": "🧪️one-line",
+          "text": [
+            "{ \"name\": \"🧪️one-line\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun nx run alpha:test-one --args=\\\"a b c\\\"\", \"cwd\": \"${workspaceFolder}\" }"
+          ]
+        },
+        {
+          "container": "configurations",
+          "replace": "⚖️test-twobeta",
+          "text": [
+            "{",
+            "      \"name\": \"⚖️test-twobeta\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun nx run beta:test-two\",",
+            "      \"cwd\": \"${workspaceFolder}\",",
+            "      \"env\": {",
+            "        \"SEMIO_TEST_LEVEL\": \"long\"",
+            "      },",
+            "      \"presentation\": {",
+            "        \"group\": \"4_gate\",",
+            "        \"order\": 900.0001",
+            "      }",
+            "    }"
+          ]
+        }
+      ],
+      "adoptEdits": false,
+      "expect": {
+        "adopted": [],
+        "adoptedInputs": [],
+        "edited": [
+          "🧪️one-line"
+        ],
+        "drifted": [
+          "⚖️test-twobeta"
+        ],
+        "renamed": [],
+        "stale": [],
+        "misplaced": 0,
+        "seedEdits": []
+      }
+    },
+    {
+      "id": "edited-seed-rows-take-the-launch-content-on-request",
+      "launchEdits": [
+        {
+          "container": "configurations",
+          "replace": "🧪️one-line",
+          "text": [
+            "{ \"name\": \"🧪️one-line\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun nx run alpha:test-one --args=\\\"a b c\\\"\", \"cwd\": \"${workspaceFolder}\" }"
+          ]
+        },
+        {
+          "container": "configurations",
+          "replace": "⚖️test-twobeta",
+          "text": [
+            "{",
+            "      \"name\": \"⚖️test-twobeta\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun nx run beta:test-two\",",
+            "      \"cwd\": \"${workspaceFolder}\",",
+            "      \"env\": {",
+            "        \"SEMIO_TEST_LEVEL\": \"long\"",
+            "      },",
+            "      \"presentation\": {",
+            "        \"group\": \"4_gate\",",
+            "        \"order\": 900.0001",
+            "      }",
+            "    }"
+          ]
+        }
+      ],
+      "adoptEdits": true,
+      "expect": {
+        "adopted": [],
+        "adoptedInputs": [],
+        "edited": [
+          "🧪️one-line"
+        ],
+        "drifted": [
+          "⚖️test-twobeta"
+        ],
+        "renamed": [],
+        "stale": [],
+        "misplaced": 0,
+        "seedEdits": [
+          {
+            "at": 15,
+            "remove": 1,
+            "insert": [
+              "    { \"name\": \"🧪️one-line\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun nx run alpha:test-one --args=\\\"a b c\\\"\", \"cwd\": \"${workspaceFolder}\" },"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "configuration-rows-in-the-seed-inputs-leave-when-configurations-keeps-a-twin",
+      "seedEdits": [
+        {
+          "at": 26,
+          "remove": 0,
+          "insert": [
+            "    {",
+            "      \"name\": \"⚖️gate-alpha\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun nx run alpha:check-thing --skip-nx-cache\",",
+            "      \"cwd\": \"${workspaceFolder}\",",
+            "      \"presentation\": {",
+            "        \"group\": \"4_gate\",",
+            "        \"order\": 1",
+            "      }",
+            "    },"
+          ]
+        },
+        {
+          "at": 34,
+          "remove": 1,
+          "insert": [
+            "    },",
+            "    {",
+            "      \"name\": \"▶️tool\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun ./📜️script.ts tool\",",
+            "      \"cwd\": \"${workspaceFolder}\"",
+            "    }"
+          ]
+        }
+      ],
+      "launchEdits": [],
+      "adoptEdits": false,
+      "expect": {
+        "adopted": [],
+        "adoptedInputs": [],
+        "edited": [],
+        "drifted": [],
+        "renamed": [],
+        "stale": [],
+        "misplaced": 2,
+        "seedEdits": []
+      }
+    },
+    {
+      "id": "a-configuration-row-in-the-seed-inputs-without-a-twin-is-refused",
+      "seedEdits": [
+        {
+          "at": 34,
+          "remove": 1,
+          "insert": [
+            "    },",
+            "    {",
+            "      \"name\": \"▶️stray\",",
+            "      \"type\": \"node-terminal\",",
+            "      \"request\": \"launch\",",
+            "      \"command\": \"bun ./📜️script.ts stray\"",
+            "    }"
+          ]
+        }
+      ],
+      "launchEdits": [],
+      "adoptEdits": false,
+      "expect": {
+        "error": "without a twin"
+      }
+    },
+    {
+      "id": "a-hand-added-row-written-twice-moves-once",
+      "launchEdits": [
+        {
+          "container": "configurations",
+          "after": "▶️tool",
+          "text": [
+            "{ \"name\": \"▶️twice\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun ./📜️script.ts twice\" }"
+          ]
+        },
+        {
+          "container": "configurations",
+          "after": "⚖️test-twobeta",
+          "text": [
+            "{ \"name\": \"▶️twice\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun ./📜️script.ts twice\" }"
+          ]
+        }
+      ],
+      "adoptEdits": false,
+      "expect": {
+        "adopted": [
+          "▶️twice"
+        ],
+        "adoptedInputs": [],
+        "edited": [],
+        "drifted": [],
+        "renamed": [],
+        "stale": [],
+        "misplaced": 0,
+        "seedEdits": [
+          {
+            "at": 22,
+            "remove": 1,
+            "insert": [
+              "    },",
+              "    { \"name\": \"▶️twice\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun ./📜️script.ts twice\" }"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "two-different-hand-added-rows-of-one-name-are-refused",
+      "launchEdits": [
+        {
+          "container": "configurations",
+          "after": "▶️tool",
+          "text": [
+            "{ \"name\": \"▶️twice\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun ./📜️script.ts twice\" }"
+          ]
+        },
+        {
+          "container": "configurations",
+          "after": "⚖️test-twobeta",
+          "text": [
+            "{ \"name\": \"▶️twice\", \"type\": \"node-terminal\", \"request\": \"launch\", \"command\": \"bun ./📜️script.ts thrice\" }"
+          ]
+        }
+      ],
+      "adoptEdits": false,
+      "expect": {
+        "error": "two different rows"
+      }
+    }
+  ]
+}

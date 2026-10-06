@@ -1,0 +1,5 @@
+# Native Snapshot Explicit Deletion Contract
+
+The current OS snapshot planner in `consumer-os-native-inputs/📜️script.ts` requires every integration index row to have a string `after` body. It explicitly refuses `after: null`; its authored map and recursive retain logic represent only source replacements and additions. This is a concrete interface gap for the separately admitted Record source proposal's five explicit file retirements. No deletion support is inferred from absence or empty source.
+
+The held OS9 policy snapshot and original whole request remain unchanged. A distinct schema-first continuation must represent replacement, addition, and deletion explicitly, preserve each full before/current/inverse frame, suppress the deleted file from both physical snapshot and all closure collection paths, and refuse any remaining manifest/module/include/runtime reference that requires it. Language-neutral cases and an existing third-party oracle must precede changing the planner. Current source admission for Record does not prove a deletions-capable native snapshot or runtime success.

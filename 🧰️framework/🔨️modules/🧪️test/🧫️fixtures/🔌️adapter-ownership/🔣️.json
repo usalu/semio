@@ -75,5 +75,128 @@
         "TEST_LEVEL_BUDGET_MS"
       ]
     }
+  ],
+  "evidence": {
+    "forbiddenDefinitions": [
+      "FixtureManifest",
+      "SchemaBoundFixture"
+    ],
+    "cases": [
+      {
+        "id": "plain-evidence",
+        "valid": true,
+        "data": {
+          "id": "simple-example",
+          "class": "handcrafted",
+          "target": {
+            "artifact": "test.artifact",
+            "standard": "1",
+            "subset": "small"
+          },
+          "units": {
+            "length": "unitless",
+            "angle": "unitless"
+          },
+          "files": [
+            {
+              "role": "before",
+              "path": "🧫️fixtures/example.json",
+              "mediaType": "application/json",
+              "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ],
+          "provenance": {
+            "source": "authored",
+            "license": "MIT"
+          },
+          "comparisonProfile": "ordered-json-v1",
+          "reproducible": true
+        }
+      },
+      {
+        "id": "fixture-schema-marker",
+        "valid": false,
+        "data": {
+          "id": "simple-example",
+          "class": "handcrafted",
+          "target": {
+            "artifact": "test.artifact",
+            "standard": "1",
+            "subset": "small"
+          },
+          "units": {
+            "length": "unitless",
+            "angle": "unitless"
+          },
+          "files": [
+            {
+              "role": "before",
+              "path": "🧫️fixtures/example.json",
+              "mediaType": "application/json",
+              "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ],
+          "provenance": {
+            "source": "authored",
+            "license": "MIT"
+          },
+          "comparisonProfile": "ordered-json-v1",
+          "reproducible": true,
+          "schema": "retired-fixture-schema"
+        }
+      },
+      {
+        "id": "missing-evidence-source",
+        "valid": false,
+        "data": {
+          "id": "simple-example",
+          "class": "handcrafted",
+          "target": {
+            "artifact": "test.artifact",
+            "standard": "1",
+            "subset": "small"
+          },
+          "units": {
+            "length": "unitless",
+            "angle": "unitless"
+          },
+          "files": [
+            {
+              "role": "before",
+              "path": "🧫️fixtures/example.json",
+              "mediaType": "application/json",
+              "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ],
+          "provenance": {
+            "license": "MIT"
+          },
+          "comparisonProfile": "ordered-json-v1",
+          "reproducible": true
+        }
+      }
+    ]
+  },
+  "runtimeBoundaries": [
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+      "staticTestImports": 0
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📜️script.ts",
+      "staticTestImports": 0
+    },
+    {
+      "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+      "staticTestImports": 0
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+      "staticTestImports": 0
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts",
+      "staticTestImports": 0
+    }
   ]
 }

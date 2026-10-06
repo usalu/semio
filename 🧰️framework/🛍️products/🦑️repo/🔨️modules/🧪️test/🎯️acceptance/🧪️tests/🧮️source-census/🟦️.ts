@@ -16,7 +16,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import Parser from "web-tree-sitter";
-import { debugTagHitsOfText, docstringEmojiReuseOfText, docstringHitsOfText, interactiveJobsOfText, interfaceImportHitsOfText, placeholderHitsOfText } from "../../📋️orchestration/🟦️.ts";
+import { FRAMEWORK_ARTIFACT_NAMES, TOOL_MACHINE_VOCABULARY, artifactNameHitsOfText, debugTagHitsOfText, docstringEmojiReuseOfText, docstringHitsOfText, interactiveJobsOfText, interfaceImportHitsOfText, placeholderHitsOfText, utilityArtifactsOfSources } from "../../📋️orchestration/🟦️.ts";
 //#endregion 🔌️Adapters
 
 const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫️fixtures", "🧮️source-census", "🔣️.json"), "utf8")) as {
@@ -26,6 +26,8 @@ const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫�
   docstringEmojiReuse: { name: string; path: string; text: string; expected: { emoji: string; lines: number[] }[] }[];
   debugTags: { name: string; path: string; text: string; expected: number[] }[];
   interfaceImports: { name: string; path: string; text: string; expected: number[] }[];
+  artifactNames: { name: string; path: string; text: string; expected: { line: number; name: string }[] }[];
+  utilityMachines: { name: string; sources: { path: string; text: string }[]; expected: { artifact: string; utilities: number; machine: string[] }[]; offenders: string[] }[];
 };
 const TEST_SEGMENT = /(^|\/)(🧪️tests|tests|🧫️fixtures|benches|examples)\//u;
 const MARKER = /^(?:\p{Extended_Pictographic}|\p{So}|\p{Sm}|\p{Regional_Indicator}|[0-9#*]️?⃣)/u;
@@ -129,4 +131,64 @@ describe("interface-owned imports", () => {
       expect(interfaceImportHitsOfText(entry.path, entry.text).map(({ line }) => line)).toEqual(entry.expected);
     });
   }
+});
+
+/** 🧽️ The independent oracle of the artifact-neutrality rule (design §22.31 c): every line of a source that carries an artifact
+ * name outside the doc comments tree-sitter finds — a comment node that opens `///`, `//!` or `/*!` (Rust) or `/**` (Rust and
+ * TypeScript; `////`, `/***` and `/**\/` are plain comments) is blanked, every other node, strings and plain comments included, is read. */
+function oracleArtifactNames(path: string, text: string): { line: number; name: string }[] {
+  const rust = path.endsWith(".rs");
+  const parser = parsers.get(rust ? "rust" : path.endsWith(".tsx") ? "tsx" : "typescript")!;
+  const documented = descendants(parser.parse(text).rootNode).filter((node) => /comment/u.test(node.type) && ((rust && (/^\/\/[/!](?!\/)/u.test(node.text) || node.text.startsWith("/*!"))) || (node.text.startsWith("/**") && !node.text.startsWith("/***") && !node.text.startsWith("/**/"))));
+  const units = text.split("");
+  for (const node of documented) for (let index = node.startIndex; index < node.endIndex; index += 1) if (units[index] !== "\n") units[index] = " ";
+  const pattern = new RegExp(FRAMEWORK_ARTIFACT_NAMES.join("|"), "iu");
+  return units.join("").split("\n").flatMap((line, index) => {
+    const found = pattern.exec(line);
+    return found === null ? [] : [{ line: index + 1, name: found[0].toLowerCase() }];
+  });
+}
+
+/** 🎻️ The independent oracle of the utility-machine rule (design §22.32 d): per artifact tree, how many identifier nodes of its
+ * production Rust sources (tree-sitter; test paths skipped, comments never hold identifiers) are `UtilityDefinition`, and which
+ * machine vocabulary words are among them. */
+function oracleUtilityArtifacts(sources: readonly { path: string; text: string }[]): { artifact: string; utilities: number; machine: string[] }[] {
+  const found = new Map<string, { utilities: number; machine: Set<string> }>();
+  for (const { path, text } of sources) {
+    const segments = path.split("/");
+    const at = segments.indexOf("🗿️artifacts");
+    if (at < 0 || at + 2 >= segments.length || TEST_SEGMENT.test(path)) continue;
+    const artifact = segments.slice(0, at + 2).join("/");
+    const row = found.get(artifact) ?? { utilities: 0, machine: new Set<string>() };
+    found.set(artifact, row);
+    for (const node of descendants(parsers.get("rust")!.parse(text).rootNode).filter((candidate) => candidate.type === "identifier" || candidate.type === "type_identifier")) {
+      if (node.text === "UtilityDefinition") row.utilities += 1;
+      if (TOOL_MACHINE_VOCABULARY.includes(node.text)) row.machine.add(node.text);
+    }
+  }
+  return [...found].filter(([, row]) => row.utilities > 0).map(([artifact, row]) => ({ artifact, utilities: row.utilities, machine: [...row.machine].sort() })).sort((left, right) => left.artifact.localeCompare(right.artifact));
+}
+
+describe("artifact names in framework code", () => {
+  for (const entry of fixture.artifactNames) {
+    test(entry.name, () => {
+      expect(artifactNameHitsOfText(entry.path, entry.text).map(({ line, name }) => ({ line, name }))).toEqual(entry.expected);
+      expect(oracleArtifactNames(entry.path, entry.text)).toEqual(entry.expected);
+    });
+  }
+});
+
+describe("utility artifacts and their machine vocabulary", () => {
+  for (const entry of fixture.utilityMachines) {
+    test(entry.name, () => {
+      const artifacts = utilityArtifactsOfSources(entry.sources);
+      expect(artifacts.map((artifact) => ({ ...artifact, machine: [...artifact.machine] }))).toEqual(entry.expected);
+      expect(oracleUtilityArtifacts(entry.sources)).toEqual(entry.expected);
+      expect(artifacts.filter((artifact) => artifact.machine.length === 0).map((artifact) => artifact.artifact)).toEqual(entry.offenders);
+    });
+  }
+  test("every machine vocabulary word is a public item of the framework tool-machine module", () => {
+    const module = readFileSync(join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "🔨️modules", "🛠️tool-machine", "🦀️.rs"), "utf8");
+    for (const word of TOOL_MACHINE_VOCABULARY) expect(new RegExp(`^pub (?:trait|struct|fn) ${word}\\b`, "mu").test(module), word).toBe(true);
+  });
 });

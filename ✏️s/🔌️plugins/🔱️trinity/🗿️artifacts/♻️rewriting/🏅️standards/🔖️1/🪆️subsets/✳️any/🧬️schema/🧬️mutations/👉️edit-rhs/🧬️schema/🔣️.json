@@ -13,7 +13,20 @@
       "const": "editRhs"
     },
     "newRhs": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Right-hand side",
+          "de": "Rechte Regelseite"
+        },
+        "description": {
+          "en": "Create, delete, set and merge clauses and the parameters the rule applies.",
+          "de": "Create-, Delete-, Set- und Merge-Klauseln sowie die Parameter, die die Regel anwendet."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

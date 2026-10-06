@@ -49,12 +49,12 @@ export type PathFlattenRetirement=WorkRetirement;
 /** ⏱️ Adaptive local contours with device-space error bounds and work-granted subdivision. */
 export class PathFlattenJob {
  private contours:FlatContour[]=[];private current:FlatContour|null=null;private stack:Curve[]=[];private pen:Vec2=[0,0];private start:Vec2=[0,0];
- private index=0;private count=0;private work=0;private done=false;private cancelled=false;private transferred=false;private failed:unknown=null;
+ private index=0;private count=0;private work=0;private done=false;private cancelled=false;private transferred=false;private outputExposed=false;private failed:unknown=null;
  constructor(private input:PathFlattenInput) {
   if(input.transform.length!==6||!input.transform.every(valid)||!Number.isFinite(input.tolerance)||input.tolerance<1e-6||input.tolerance>16||input.segments.length>MAX_POINTS)invalid("Invalid path preparation contract");
  }
  private append(p:Vec2):void {
-  point(p);transformed(p,this.input.transform);if(this.count>=MAX_POINTS)invalid("Path preparation exceeds point budget");this.current!.points.push(p);this.count++;
+  point(p);transformed(p,this.input.transform);if(this.count>=MAX_POINTS)invalid("Path preparation exceeds point budget");this.current!.points.push([p[0],p[1]]);this.count++;
  }
  private begin(p:Vec2):void {
   if(this.contours.length>=MAX_CONTOURS)invalid("Path preparation exceeds contour budget");
@@ -97,14 +97,14 @@ export class PathFlattenJob {
   return {phase:this.done?"complete":this.stack.length?"subdividing":"preparing",completed:this.index,total:this.input.segments.length,points:this.count,work:this.work,done:this.done};
  }
  result():FlatContour[] {
-  if(this.cancelled)throw new DOMException("Path preparation cancelled","AbortError");if(this.failed)throw this.failed;if(!this.done)throw Error("Path preparation is incomplete");return this.contours;
+  if(this.cancelled)throw new DOMException("Path preparation cancelled","AbortError");if(this.failed)throw this.failed;if(!this.done)throw Error("Path preparation is incomplete");this.outputExposed=true;return this.contours;
  }
  /** 🧹️ Transfers completed output unchanged and retains private contours for work-granted cleanup. */
  intoRetirement():{job:PathFlattenRetirement;output:FlatContour[]|null}{
   if(this.transferred)invalid("Path preparation ownership already transferred");this.transferred=true;const output=this.done&&!this.cancelled&&!this.failed?this.contours:null;if(output)this.contours=[];this.cancelled=true;this.current=null;let slot=0;
   const step=():boolean=>{let complete=true;switch(slot){case 0:this.input={...this.input,segments:[]};break;case 1:this.stack=[];break;case 2:if(this.contours.length){this.contours.pop();complete=false;}else this.contours=[];break;}if(complete)slot++;return slot===3;};return{job:new UnitRetirement(step),output};
  }
- cancel():void {this.cancelled=true;if(this.transferred)return;this.input={...this.input,segments:[]};this.contours=[];this.current=null;this.stack=[];}
+ cancel():void {this.cancelled=true;this.current=null;if(!this.transferred&&this.outputExposed)this.contours=[];}
 }
 
 export type PathFlattenOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:PathFlattenProgress)=>void};
@@ -117,5 +117,5 @@ export async function preparePath(input:PathFlattenInput,options:PathFlattenOpti
    abort();const progress=job.advance(options.workBudget??4096);options.onProgress?.(progress);abort();
    if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));
   }
- }catch(error){job.cancel();throw error;}
+ }catch(error){job.cancel();throw error;}finally{const retired=job.intoRetirement(),grant=Number.isSafeInteger(options.workBudget)&&options.workBudget!>0?options.workBudget!:4096;while(!retired.job.advance(grant).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
 }

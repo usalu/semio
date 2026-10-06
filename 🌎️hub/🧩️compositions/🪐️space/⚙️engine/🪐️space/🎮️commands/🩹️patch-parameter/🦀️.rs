@@ -1,13 +1,13 @@
 //! 🔢️ 🔢️ S Studio app command — `patch-parameter`.
 
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
-use semio_framework_pack_json::{self, Value};
+use semio_framework_pack_json::{self as json, Value};
 use semio_framework_os::{WorkflowMutation, WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 use crate::engine::space::engine::parameter_entity_id;
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "patch-parameter")]
 pub struct PatchParameter {
     pub parameter_id: String,
@@ -17,7 +17,7 @@ pub struct PatchParameter {
 
 pub fn handle(payload: &PatchParameter, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let projection = doc.snapshot;
-    let value_json: Value = json::parse(&payload.value).unwrap_or_else(|_| Value::String(payload.value.clone()));
+    let value_json: Value = json::parse(&payload.value, json::JsonMemberPolicy::Reject).unwrap_or_else(|_| Value::String(payload.value.clone()));
     let mut current = None;
     for entry in &projection.parameters {
         if crate::engine::space::engine::resolve_future(parameter_entity_id(entry)) == payload.parameter_id {

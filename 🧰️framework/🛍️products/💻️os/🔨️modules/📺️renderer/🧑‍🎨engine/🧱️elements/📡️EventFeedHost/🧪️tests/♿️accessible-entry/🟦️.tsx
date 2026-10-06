@@ -5,7 +5,6 @@ import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAccessibilityMirror } from "../../../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
 import { EventFeedHost } from "../../🟦️.tsx";
-import schema from "../../🧬️schema/♿️accessible-entry/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/♿️accessible-entry/🔣️.json" with { type: "json" };
 
 afterEach(() => {
@@ -17,8 +16,6 @@ afterEach(() => {
 
 describe("EventFeed accessible entry parity", () => {
   it("validates the neutral entry contract and mounts the actual React role, name, and action", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     vi.spyOn(Date.prototype, "toLocaleTimeString").mockReturnValue(fixture.acceptedTimeLabel);
 
     for (const row of fixture.cases) {

@@ -1,4 +1,4 @@
-//! 🧪️ `add-node-handle` fixture — `🧱️zero-radius-handle`.
+//! 🧪️ `add-node-handle` snapshot — `🧱️zero-radius-handle`.
 //!
 //! A handle of zero radius is what the handle record's `exclusiveMinimum: 0` forbids: a Fatal `mutation.invariant`, no handle is added.
 //!

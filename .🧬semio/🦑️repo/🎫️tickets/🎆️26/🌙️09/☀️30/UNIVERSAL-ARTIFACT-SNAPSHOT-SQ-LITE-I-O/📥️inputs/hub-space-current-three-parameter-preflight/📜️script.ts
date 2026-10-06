@@ -1,0 +1,10 @@
+import {readFileSync,writeFileSync} from "node:fs";
+import {resolve,join} from "node:path";
+const repo=resolve(import.meta.dir,"../../../../../../../../.."),trait="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",path="🌎️hub/🧩️compositions/🪐️space/🧪️tests/🔬️retained-store-footprint/🦀️.rs";
+const authority=readFileSync(join(repo,trait),"utf8"),signature="fn preflight(&self, mutation: &Mutation, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;";
+if(!authority.includes(signature))throw Error("actual required three-parameter preflight authority guard");
+const before=readFileSync(join(repo,path),"utf8"),old="factory.preflight(&mutation, None, store::HistoryLane::Document)",next="factory.preflight(&mutation, store::HistoryLane::Document)";
+if(before.split(old).length!==2)throw Error("exact original footprint caller guard");
+const after=before.replace(old,next);writeFileSync(join(import.meta.dir,"guarded-pair.json"),JSON.stringify({traitSignature:signature,path,before,after},null,2)+"\n");
+if(readFileSync(join(repo,path),"utf8")!==before||!readFileSync(join(repo,trait),"utf8").includes(signature))throw Error("concurrent source/caller epoch guard");
+writeFileSync(join(repo,path),after);console.log("[DEBUG] Hub original footprint caller actual three-parameter authority mounted paths=1 all_assertions_preserved=true");

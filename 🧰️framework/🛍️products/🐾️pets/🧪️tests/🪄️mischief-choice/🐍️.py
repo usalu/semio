@@ -201,7 +201,7 @@ def toss(vector):
 # region 🔖️Handlers
 def committed(ctx):
     """🧫️ The committed vectors."""
-    return json.loads(ctx.fixture_bytes(VECTORS))
+    return json.loads(ctx.input_bytes(VECTORS))
 
 
 def close(produced, expected):

@@ -1,0 +1,33 @@
+{
+  "schemaBytes": 10086,
+  "tableWidths": {
+    "en1999_bolt_group": 19,
+    "en1999_cold_formed_sheet": 15,
+    "en1999_connection": 7,
+    "en1999_connection_action": 28,
+    "en1999_document": 2,
+    "en1999_fatigue_detail": 21,
+    "en1999_fire_scenario": 11,
+    "en1999_material": 5,
+    "en1999_member": 26,
+    "en1999_member_action": 28,
+    "en1999_plate_element": 15,
+    "en1999_section": 20,
+    "en1999_sheet_action": 28,
+    "en1999_shell": 14,
+    "en1999_shell_action": 28,
+    "en1999_weld_group": 14
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 17,
+      "valueBytes": 2391
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 1,
+      "valueBytes": 10
+    }
+  ]
+}

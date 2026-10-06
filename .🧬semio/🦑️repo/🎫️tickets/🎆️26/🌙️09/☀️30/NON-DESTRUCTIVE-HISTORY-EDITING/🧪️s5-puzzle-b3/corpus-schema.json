@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:s.puzzle2d.board-tools.v1",
+  "title": "Puzzle2dBoardToolsCorpus",
+  "description": "🧱️ The board-tools corpus of puzzle 2d: flushes of board rows through `applyBoardEvents`, the edits each commits, the tool that authored the row and the document afterwards.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "description", "appTool", "board", "cases"],
+  "properties": {
+    "schema": { "const": "s.puzzle2d.board-tools.v1" },
+    "description": { "type": "string", "minLength": 1 },
+    "appTool": { "type": "string", "minLength": 1 },
+    "board": {
+      "type": "object",
+      "required": ["schema", "nodes", "edges"],
+      "properties": {
+        "schema": { "const": "puzzle.2d.fixture" },
+        "nodes": { "type": "array", "items": { "type": "object", "required": ["id", "handles"] } },
+        "edges": { "type": "array", "items": { "type": "object", "required": ["id", "source", "target"] } }
+      }
+    },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Case" } }
+  },
+  "definitions": {
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "payload"],
+      "properties": {
+        "name": { "enum": ["regionCreate", "regionResize", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", "hover", "preselectCancel", "select", "brushCandidates"] },
+        "payload": { "type": "object" }
+      }
+    },
+    "Flush": { "type": "array", "items": { "$ref": "#/definitions/Row" } },
+    "Rectangle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "setup", "rows", "expect"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "transient": { "const": true },
+        "setup": { "type": "array", "items": { "$ref": "#/definitions/Flush" } },
+        "rows": { "$ref": "#/definitions/Flush" },
+        "expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["edits", "tool", "nodes", "edges", "targetRegions"],
+          "properties": {
+            "edits": { "enum": [0, 1] },
+            "tool": { "enum": ["regionCreate", "regionResize", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete", null] },
+            "nodes": { "type": "integer", "minimum": 0 },
+            "edges": { "type": "integer", "minimum": 0 },
+            "targetRegions": { "type": "integer", "minimum": 0 },
+            "region": { "$ref": "#/definitions/Rectangle" }
+          }
+        }
+      }
+    }
+  }
+}

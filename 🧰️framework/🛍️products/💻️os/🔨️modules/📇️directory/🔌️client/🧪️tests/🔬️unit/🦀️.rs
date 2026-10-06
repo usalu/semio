@@ -763,7 +763,7 @@ async fn unauthorized_status_maps_to_unauthorized_error() {
 
 #[semio_framework_async_macros::async_test]
 async fn session_authority_client_preserves_canonical_binding_and_rejects_reordered_body() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
     let canonical = fixture["raw"][0]["source"].as_str().expect("canonical");
     let reordered = fixture["raw"][1]["source"].as_str().expect("reordered");
     let transport = FakeTransport::default();

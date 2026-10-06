@@ -3,7 +3,7 @@
 //! Geometry over the real `engine::decode_ply` (ascii and both binary encodings): the `vertex` element's `x`/`y`/`z` columns plus the `face` element's
 //!    `vertex_indices` (or `vertex_index`) list become ONE lowpoly object, n-gons kept. A file
 //!    without faces is rejected loudly.
-use crate::io::mesh_geometry::{compact_part, snapshot_from_parts, text_error};
+use crate::standards::v1::subsets::any::io::mesh_geometry::{compact_part, snapshot_from_parts, text_error};
 use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_ply::engine::decode_ply;
 use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyValue};

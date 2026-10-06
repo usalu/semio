@@ -15,7 +15,7 @@
 //! spec → model → seed → the example's own pins.
 
 use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel};
-use crate::schema::snapshot::{encode_base64, BitmapSnapshot};
+use crate::schema::snapshot::{BitmapSnapshot};
 use crate::BitmapMutation;
 use semio_framework_plugin::{ArtifactView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -84,7 +84,7 @@ pub fn replace_document_operations(current: &BitmapSnapshot, next: &BitmapSnapsh
     if let Some(indices) = next.input.indices() {
         let resized = current.input.width == next.input.width && current.input.height == next.input.height;
         if !resized || current.input.pixels != next.input.pixels {
-            mutations.push(set_input_pixels(0, 0, next.input.width, next.input.height, encode_base64(&indices)));
+            mutations.push(set_input_pixels(0, 0, next.input.width, next.input.height, (indices).to_vec()));
         }
     }
     for index in (next.input.palette.len()..current.input.palette.len()).rev() {

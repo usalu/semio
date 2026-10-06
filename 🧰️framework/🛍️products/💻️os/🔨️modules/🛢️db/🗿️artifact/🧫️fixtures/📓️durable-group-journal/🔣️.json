@@ -4,7 +4,7 @@
     "kind": "event",
     "durability": "fsync",
     "document": "map-a",
-    "decisionSha256": "477e038b974677cbfeefd04d1657f977fb76d67c4e0d8b8f1b12ad3a31423e8b",
+    "decisionSha256": "58742cc4e82392be05703bf27f97c0160e35eb7b2e19aee3a80da8c559f15b54",
     "anchorSha256": "8fa0d6568bd058b287a2969948d051c65b73028bc4065219422cc37b3aa7ec88"
   },
   "limits": {

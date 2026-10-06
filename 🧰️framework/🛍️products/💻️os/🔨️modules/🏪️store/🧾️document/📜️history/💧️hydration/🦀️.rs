@@ -293,11 +293,7 @@ where
                 if history.doc_id != expected.artifact_id || history.schema != *schema || !dialect_matches || history_owner.as_ref() != self.owner.as_ref() {
                     return self.reject(MemberOpenDiagnostic::Identity);
                 }
-                if let Some((dialect, codec)) = P::native_snapshot_registration() {
-                    if crate::os_io::register_native_snapshot_codec(dialect, codec).is_err() {
-                        return self.reject(MemberOpenDiagnostic::Initialization);
-                    }
-                }
+                if P::publish_native_snapshot().is_err() { return self.reject(MemberOpenDiagnostic::Initialization); }
                 let fold = match history.fold() {
                     Ok(fold) => fold,
                     Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
@@ -352,7 +348,6 @@ where
                     forwards,
                     inverse,
                     mutation_meta,
-                    description: source.description.clone(),
                     verb: source.verb.clone(),
                     sequence_number: self.edit_index as i32 + 1,
                     started_at: source.started_at.clone(),

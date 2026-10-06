@@ -1,3 +1,5 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules;
+use crate::standards::v1::subsets::any::io::text::snapshot::sourcing_json_envelope_is_bounded;
 
 use super::*;
 
@@ -148,12 +150,12 @@ async fn available_modules_tracks_contributed_modules() {
                 ("moduleId".to_string(), semio_framework::DslValue::String("salvage".to_string())),
                 ("label".to_string(), semio_framework::DslValue::String(beams.label().to_string())),
                 ("iconId".to_string(), semio_framework::DslValue::String("beam".to_string())),
-                ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&beams.typology()))),
-                ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&beams.demo_kinds()))),
+                ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&beams.typology()))),
+                ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&beams.demo_kinds()))),
             ]),
         )),
     };
-    let contributions_json = dsl::json::to_json_string(&vec![entry]);
+    let contributions_json = semio_framework_pack_json::to_json_string(&vec![entry]);
     let modules = available_modules(&contributions_json);
     assert_eq!(modules.len(), 5);
     assert_eq!(modules[0].module_id, "beams");
@@ -174,12 +176,12 @@ async fn sourcing_module_contributions_are_configuration_owned() {
                 ("moduleId".to_string(), semio_framework::DslValue::String("hot-test".to_string())),
                 ("label".to_string(), semio_framework::DslValue::String("Hot Test".to_string())),
                 ("iconId".to_string(), semio_framework::DslValue::String("box".to_string())),
-                ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&TypologyNode::new("hot-test", "Hot Test", vec![])))),
+                ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&TypologyNode::new("hot-test", "Hot Test", vec![])))),
                 ("kindsJson".to_string(), semio_framework::DslValue::String("[]".to_string())),
             ]),
         )),
     };
-    let json = dsl::json::to_json_string(&vec![entry]);
+    let json = semio_framework_pack_json::to_json_string(&vec![entry]);
     assert!(sourcing_modules(&json).iter().any(|module| module.module_id() == "hot-test"));
     assert!(!sourcing_modules("[]").iter().any(|module| module.module_id() == "hot-test"));
 }

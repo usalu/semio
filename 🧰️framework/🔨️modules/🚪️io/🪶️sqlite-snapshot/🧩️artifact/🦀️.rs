@@ -2,7 +2,7 @@
 use super::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind};
 
 /// 📏️ Accumulates an owner's explicit native allocation and encoded output upper bounds.
-pub struct NativeEncodingBound<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, bytes: usize, units: usize }
+pub struct NativeEncodingBound<'c, 'p> { control: &'c mut SqliteSnapshotControl<'p>, bytes: usize, units: usize, semantic:bool }
 
 impl<'c, 'p> NativeEncodingBound<'c, 'p> {
 
@@ -14,12 +14,14 @@ impl<'c, 'p> NativeEncodingBound<'c, 'p> {
     /// 🏁️ Checks cancellation before the owner starts its borrowed field walk.
     pub fn new(control: &'c mut SqliteSnapshotControl<'p>) -> Result<Self, ValueError> {
         control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0)?;
-        Ok(Self { control, bytes: 0, units: 0 })
+        Ok(Self { control, bytes: 0, units: 0, semantic:true })
     }
+    /// 📁️ Checks a separate file forecast after the owner admits its actual semantic cells.
+    pub fn file_only(control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{let mut bound=Self::new(control)?;bound.semantic=false;Ok(bound)}
     /// ➕️ Bounds an explicitly calculated allocation before any encoding ownership is created.
     pub fn add(&mut self, bytes: usize) -> Result<(), ValueError> {
         let total = self.bytes.checked_add(bytes).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native encoding byte bound overflow"))?;
-        self.control.check_value_bytes(total)?;
+        if self.semantic{self.control.check_value_bytes(total)?;}
         if total > self.control.limits().max_file_bytes { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "native encoding exceeds file byte limit")); }
         let units = self.units.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "native encoding work count overflow"))?;
         if units % 256 == 0 || bytes > 65_536 { self.control.checkpoint(SqliteSnapshotPhase::EncodeNative, units, 0)?; }
@@ -296,6 +298,17 @@ mod tests {
         let mut limits = super::super::SqliteDatabaseLimits::default(); limits.max_file_bytes = 16;
         let mut callback = |_| true; let mut control = SqliteSnapshotControl::new(&mut callback, limits);
         assert!(NativeEncodingBound::new(&mut control).unwrap().add(17).is_err());
+    }
+    #[test]
+    fn native_file_forecast_separates_exact_semantic_cells_and_preserves_file_refusals(){
+        let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📏️file-bound/🔣️.json")).unwrap();
+        let limits=super::super::SqliteDatabaseLimits{max_value_bytes:fixture["maxSemanticBytes"].as_u64().unwrap()as usize,max_file_bytes:fixture["maxFileBytes"].as_u64().unwrap()as usize,..super::super::SqliteDatabaseLimits::default()};
+        let mut accepted=|_|true;let mut control=SqliteSnapshotControl::new(&mut accepted,limits);let mut bound=NativeEncodingBound::file_only(&mut control).unwrap();
+        for chunk in fixture["chunks"].as_array().unwrap(){bound.add(chunk.as_u64().unwrap()as usize).unwrap();}
+        assert_eq!(bound.bytes,fixture["expectedBytes"].as_u64().unwrap()as usize);assert_eq!(bound.add(1).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(bound.bytes,limits.max_file_bytes);assert!(bound.repeated(usize::MAX,2).is_err());bound.finish().unwrap();
+        let mut control=SqliteSnapshotControl::new(&mut accepted,super::super::SqliteDatabaseLimits{max_file_bytes:limits.max_file_bytes-1,..limits});let mut short=NativeEncodingBound::file_only(&mut control).unwrap();assert!(short.add(limits.max_file_bytes).is_err());assert_eq!(short.bytes,0);
+        let mut denied=|_|false;let mut control=SqliteSnapshotControl::new(&mut denied,limits);assert!(NativeEncodingBound::file_only(&mut control).is_err());
+        let mut calls=0;let mut cancellation=|_|{calls+=1;calls==1};let mut control=SqliteSnapshotControl::new(&mut cancellation,super::super::SqliteDatabaseLimits::default());let mut canceled=NativeEncodingBound::file_only(&mut control).unwrap();assert!(canceled.add(65_537).is_err());assert_eq!(canceled.bytes,0);
     }
     #[test]
     fn reconstruction_bounds_repeated_foreign_key_copies_and_large_copy_cancellation() {

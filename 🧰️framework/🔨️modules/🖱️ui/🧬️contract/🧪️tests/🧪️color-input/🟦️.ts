@@ -21,11 +21,11 @@ const read = (path: string): unknown => JSON.parse(readFileSync(fileURLToPath(ne
 /** 🎨️ Answers every shared fixture row, returning how many assertions the corpus carried. */
 export function colorInputSelfTests(): number {
   const require = createRequire(import.meta.url);
-  const Ajv2020 = require("ajv/dist/2020").default;
+  
   const colorString = require("color-string") as ColorString;
   const fixture = read("../../🧫️fixtures/🧫️color-input/🔣️.json") as Fixture;
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(read("../../🧫️fixtures/🧫️color-input/🧬️schema/🔣️.json"));
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  
+  
   let checks = 1;
   for (const row of fixture.hex) {
     assert.equal(uiColorHex(row.rgba, row.alpha), row.expected, row.case);

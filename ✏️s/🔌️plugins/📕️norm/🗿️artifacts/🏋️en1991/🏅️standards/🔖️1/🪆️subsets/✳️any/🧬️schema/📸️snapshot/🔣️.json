@@ -443,7 +443,8 @@
             },
             "widget": "stepper",
             "unit": "m²",
-            "precision": 2
+            "precision": 2,
+            "step": 0.5
           }
         },
         "assumedQk": {
@@ -476,7 +477,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 500
           }
         },
         "assumedPartitions": {
@@ -490,7 +492,13 @@
             "unit": "Pa",
             "displayUnit": "kN/m²",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100,
+            "snaps": [
+              500,
+              800,
+              1200
+            ]
           }
         }
       },
@@ -527,7 +535,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "assumedGk": {
@@ -598,7 +607,16 @@
             },
             "widget": "stepper",
             "unit": "°",
-            "precision": 0
+            "precision": 0,
+            "step": 1,
+            "snaps": [
+              5,
+              15,
+              30,
+              45,
+              60,
+              75
+            ]
           }
         },
         "cE": {
@@ -609,7 +627,13 @@
               "de": "Umgebungskoeffizient C_e"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1,
+            "snaps": [
+              0.8,
+              1,
+              1.2
+            ]
           }
         },
         "cT": {
@@ -620,7 +644,8 @@
               "de": "Temperaturkoeffizient C_t"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "hasParapet": {
@@ -642,7 +667,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "driftObstructionHeight": {
@@ -654,7 +680,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "multiSpan": {
@@ -716,7 +743,17 @@
           "type": "string"
         },
         "z": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Reference height z",
+              "de": "Bezugshöhe z"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2,
+            "step": 0.5
+          }
         },
         "cPe10": {
           "type": "number",
@@ -726,7 +763,8 @@
               "de": "Außendruckbeiwert c_pe,10"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "cPe1": {
@@ -737,7 +775,8 @@
               "de": "Außendruckbeiwert c_pe,1"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "cPi": {
@@ -748,7 +787,8 @@
               "de": "Innendruckbeiwert c_pi"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "cS": {
@@ -759,7 +799,8 @@
               "de": "Größenbeiwert c_s"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.01
           }
         },
         "cD": {
@@ -770,7 +811,8 @@
               "de": "Dynamischer Beiwert c_d"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.01
           }
         },
         "loadedArea": {
@@ -782,7 +824,12 @@
             },
             "widget": "stepper",
             "unit": "m²",
-            "precision": 2
+            "precision": 2,
+            "step": 0.5,
+            "snaps": [
+              1,
+              10
+            ]
           }
         },
         "assumedWp": {
@@ -872,7 +919,8 @@
             },
             "widget": "stepper",
             "unit": "kg",
-            "precision": 0
+            "precision": 0,
+            "step": 100
           }
         },
         "vehicleSpeed": {
@@ -884,7 +932,8 @@
             },
             "widget": "stepper",
             "unit": "m/s",
-            "precision": 1
+            "precision": 1,
+            "step": 0.5
           }
         },
         "assumedForce": {
@@ -931,7 +980,8 @@
             },
             "widget": "stepper",
             "unit": "kg",
-            "precision": 1
+            "precision": 1,
+            "step": 0.5
           }
         },
         "standoff": {
@@ -943,7 +993,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 1
+            "precision": 1,
+            "step": 0.5
           }
         },
         "assumedPressure": {
@@ -957,7 +1008,8 @@
             "unit": "Pa",
             "displayUnit": "kN/m²",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 500
           }
         }
       },

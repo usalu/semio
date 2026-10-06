@@ -24,8 +24,8 @@ async fn quantizes_and_real_byte_round_trips_through_gif_codec() {
     assert_eq!(gif.loop_count, Some(0));
     assert_eq!(gif.comments, vec!["semio fixture".to_string()]);
 
-    let bytes = semio_s_artifact_stdio_gif::standards::v89a::engine::encode_gif(&gif).expect("encode real gif bytes");
-    let decoded = semio_s_artifact_stdio_gif::standards::v89a::engine::decode_gif(&bytes).expect("decode real gif bytes");
+    let bytes = semio_s_artifact_stdio_gif::subsets::any::io::encode_gif(&gif).expect("encode real gif bytes");
+    let decoded = semio_s_artifact_stdio_gif::subsets::any::io::decode_gif(&bytes).expect("decode real gif bytes");
     assert_eq!(decoded.width, semio.width);
     assert_eq!(decoded.height, semio.height);
     assert_eq!(decoded.frames.len(), 1);

@@ -1,0 +1,36 @@
+[
+  [
+    "import x from './one.ts';",
+    [
+      "./one.ts"
+    ]
+  ],
+  [
+    "export{x}from'../two.ts';",
+    [
+      "../two.ts"
+    ]
+  ],
+  [
+    "import './side.json';",
+    [
+      "./side.json"
+    ]
+  ],
+  [
+    "const x=import('./dynamic.ts');",
+    [
+      "./dynamic.ts"
+    ]
+  ],
+  [
+    "import type{X}from'./types.ts';",
+    [
+      "./types.ts"
+    ]
+  ],
+  [
+    "const s='import x from \"./fake.ts\"';",
+    []
+  ]
+]

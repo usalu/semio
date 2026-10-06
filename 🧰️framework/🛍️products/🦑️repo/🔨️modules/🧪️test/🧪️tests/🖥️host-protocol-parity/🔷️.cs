@@ -10,7 +10,7 @@ internal static class Scenarios
     /// <summary>#⃣ Projects the owned digest of the shared vector and of a fixed literal.</summary>
     internal static Outcome DigestAndFixtureResolution(Context ctx) => new(new Dictionary<string, object?>
     {
-        ["vectorDigest"] = TestHost.Digest(ctx.FixtureBytes("shared://📡️protocol-vector.txt")),
+        ["vectorDigest"] = TestHost.Digest(ctx.InputBytes("shared://📡️protocol-vector.txt")),
         ["literalDigest"] = TestHost.Digest(System.Text.Encoding.UTF8.GetBytes("semio")),
         ["fixtureName"] = "📡️protocol-vector.txt",
         ["seed"] = ctx.Seed,
@@ -24,7 +24,7 @@ internal static class Scenarios
         var reported = false;
         try
         {
-            ctx.Fixture("shared://this-fixture-is-not-declared");
+            ctx.Input("shared://this-fixture-is-not-declared");
         }
         catch (KeyNotFoundException)
         {

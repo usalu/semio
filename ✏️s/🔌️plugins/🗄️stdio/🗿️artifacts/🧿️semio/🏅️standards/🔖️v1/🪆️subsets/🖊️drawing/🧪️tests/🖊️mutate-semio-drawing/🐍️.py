@@ -1039,17 +1039,17 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 # region 🔖️Scenario input
 def step_uris(ctx: Context, prefix: str) -> list:
     """🧫️ The fixture URIs under one prefix the scenario's steps name, in step order (the host's one fixture-URI grammar)."""
-    return [uri for uri in ctx.step_fixture_uris() if uri.startswith(prefix)]
+    return [uri for uri in ctx.step_input_uris() if uri.startswith(prefix)]
 
 
-def fixture_json(ctx: Context, uri: str):
+def snapshot_json(ctx: Context, uri: str):
     """🧫️ A declared fixture read as JSON."""
-    return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
 def artifact(ctx: Context) -> dict:
     """🖍️ The real derived drawing, parsed through this implementation's own DSL reader."""
-    return parse_dsl(ctx.fixture_bytes(ARTIFACT_DSL).decode("utf-8"))
+    return parse_dsl(ctx.input_bytes(ARTIFACT_DSL).decode("utf-8"))
 
 
 def projection_of(document: dict) -> dict:
@@ -1105,7 +1105,7 @@ def shape_report(document: dict) -> dict:
 def mutate(ctx: Context) -> Outcome:
     """🎯️ One verb applied to the real derived drawing by this implementation alone."""
     document = artifact(ctx)
-    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "shared://🖊️mutate-semio-drawing/") if uri.endswith("/🦠️mutation/🔣️.json")))
+    mutation = snapshot_json(ctx, next(uri for uri in step_uris(ctx, "shared://🖊️mutate-semio-drawing/") if uri.endswith("/🦠️mutation/🔣️.json")))
     applied = apply_mutation(document, mutation)
     return Outcome({"document": projection_of(applied), "shape": shape_report(applied)})
 
@@ -1114,7 +1114,7 @@ def inverse(ctx: Context) -> Outcome:
     """↩️ The metamorphic inverse law on the real drawing: the verb followed by its OWN computed
     inverse must restore it exactly, scene-graph ORDER and nesting included."""
     document = artifact(ctx)
-    mutation = fixture_json(ctx, next(uri for uri in step_uris(ctx, "shared://🖊️mutate-semio-drawing/") if uri.endswith("/🦠️mutation/🔣️.json")))
+    mutation = snapshot_json(ctx, next(uri for uri in step_uris(ctx, "shared://🖊️mutate-semio-drawing/") if uri.endswith("/🦠️mutation/🔣️.json")))
     undo = inverse_mutation(document, mutation)
     mutated = apply_mutation(document, mutation)
     restored = mutated
@@ -1128,10 +1128,10 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector — a THIRD
     statement of what the verb means, independent of both implementations."""
-    uris = ctx.step_fixture_uris()
-    before = fixture_json(ctx, uris[0])
-    mutation = fixture_json(ctx, uris[1])
-    expected = fixture_json(ctx, uris[2])
+    uris = ctx.step_input_uris()
+    before = snapshot_json(ctx, uris[0])
+    mutation = snapshot_json(ctx, uris[1])
+    expected = snapshot_json(ctx, uris[2])
     applied = apply_mutation(before, mutation)
     if applied != expected:
         raise AssertionError("%s: the applied drawing is not the committed after-snapshot" % ctx.scenario["id"])
@@ -1148,12 +1148,12 @@ def identity_round_trip(ctx: Context) -> Outcome:
     agreeing with itself is that the Rust subject reproduces the same two files from its own reading
     of the same grammar, and the digests of what each side emitted are what the runner compares.
     """
-    dsl_bytes = ctx.fixture_bytes(ARTIFACT_DSL)
+    dsl_bytes = ctx.input_bytes(ARTIFACT_DSL)
     parsed = parse_dsl(dsl_bytes.decode("utf-8"))
     printed = print_dsl(parsed).encode("utf-8")
     if printed != dsl_bytes:
         raise AssertionError("identity-round-trip: re-printing the parsed drawing did not reproduce the committed DSL file")
-    pack = ctx.fixture_bytes(ARTIFACT_PACK)
+    pack = ctx.input_bytes(ARTIFACT_PACK)
     unpacked = parse_pack(pack)
     if unpacked != parsed:
         raise AssertionError("identity-round-trip: the committed binary twin decodes to a different drawing than the committed text artifact")

@@ -1,6 +1,7 @@
 //! 🧪️ Language-neutral chart replay vectors and real inference registry dispatch.
 use crate::*;
-use protocol::{DslValue, FromValue, ToValue, Mutation, MutationDiff, DiffAlgebra, Inference};
+use semio_framework_value::{DslValue,FromValue,ToValue};
+use protocol::{Mutation,MutationDiff,DiffAlgebra,Inference};
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧫️fixtures/🧬️chart-mutations/🔣️.json")).unwrap() }
 fn snapshot() -> ChartSnapshot { ChartSnapshot::from_value(DslValue::from(fixture()["snapshot"].clone())).unwrap() }
@@ -43,7 +44,7 @@ fn array_removal_inverse_restores_shifted_elements() {
     let diff = mutation.diff(&base).diff().clone();
     let next = diff.apply(&base).unwrap();
     assert_eq!(diff.inverse(&base).apply(&next).unwrap(), base);
-    assert_eq!(mutation.inverse(&base)[0].diff(&next).diff().apply(&next).unwrap(), base);
+    assert_eq!(mutation.inverse(&base).unwrap()[0].diff(&next).diff().apply(&next).unwrap(), base);
 }
 
 #[test]
@@ -63,7 +64,7 @@ fn native_registry_dispatch_is_deterministic_and_controlled() {
     let second = registry.infer(CHART_ARTIFACT_KIND, "framework.print.chart.inference", &request).unwrap();
     assert_eq!(first.canonical_payload, second.canonical_payload);
     let decoded = ChartInference::from_value(protocol::pack_rt::decode_wire_value(&first.canonical_payload).unwrap()).unwrap();
-    assert_eq!(decoded, ChartInference::infer(&base));
+    assert_eq!(decoded, ChartInference::infer(&base).unwrap());
     assert!(decoded.tikz.contains("\\SemioVizPlot[data=semio-print-layer-0,mark=point"));
     let mut progress = Vec::new();
     assert!(execute_chart_inference_controlled(&request, &mut |work| { progress.push(work); Ok(()) }).is_ok());
@@ -78,7 +79,7 @@ fn native_registry_dispatch_is_deterministic_and_controlled() {
 
 #[test]
 fn missing_language_is_diagnostic_data() {
-    let inferred = ChartInference::infer(&ChartSnapshot::default());
+    let inferred = ChartInference::infer(&ChartSnapshot::default()).unwrap();
     assert!(inferred.tikz.is_empty());
     assert_eq!(inferred.diagnostics.len(), 1);
     assert!(!inferred.complete);
@@ -87,7 +88,7 @@ fn missing_language_is_diagnostic_data() {
 #[test]
 fn shared_result_schema_accepts_valid_and_invalid_native_outputs(){
     let validator=semio_framework_schema_validator::OwnedJsonSchemaValidator::compile_with_documents(include_str!("../../🧬️schema/💡️inferences/🔣️.json"),&[]).unwrap();
-    for base in [snapshot(),ChartSnapshot::default()]{let result=ChartInference::infer(&base);validator.validate_json(&pack::json::to_json_string(&result)).unwrap();assert_eq!(ChartInference::from_value(result.to_value()).unwrap(),result);}
+    for base in [snapshot(),ChartSnapshot::default()]{let result=ChartInference::infer(&base).unwrap();validator.validate_json(&semio_framework_pack_json::to_json_string(&result)).unwrap();assert_eq!(ChartInference::from_value(result.to_value()).unwrap(),result);}
 }
 
 #[test]
@@ -100,7 +101,7 @@ fn css_paints_preserve_named_rgb_hsl_and_fractional_alpha(){
     let mut authored=crate::tests::fixture()["snapshot"].clone();
     authored["chart"]["layers"][0]["encodings"]["fill"]=serde_json::json!({"value":"rgba(255,0,0,0.125)"});
     authored["chart"]["annotations"]=serde_json::json!([{"kind":"text","x":1,"y":2,"text":{"en":"green","de":"grün"},"options":{"fill":"rgba(255,0,0,0.125)","opacity":0.5}}]);
-    let inferred=ChartInference::infer(&ChartSnapshot::from_value(DslValue::from(authored)).unwrap());
+    let inferred=ChartInference::infer(&ChartSnapshot::from_value(DslValue::from(authored)).unwrap()).unwrap();
     assert!(inferred.complete,"{:?}",inferred.diagnostics);
     assert!(inferred.tikz.contains("\\SemioVizPaintAlpha{semio-print-color-FF0000-A0p125}{0.125}"));
     assert!(inferred.tikz.contains("text opacity=0.0625"));
@@ -113,14 +114,14 @@ fn explicit_null_is_distinct_from_omitted_value_in_wire_mutations(){
     assert_eq!(ChangeChartValue::from_value(null.to_value()).unwrap(),null);
     assert_eq!(ChangeChartValue::from_value(deleted.to_value()).unwrap(),deleted);
     assert_ne!(null.to_value(),deleted.to_value());
-    assert_eq!(ChartInference::default(),ChartInference::infer(&ChartSnapshot::default()));
+    assert_eq!(ChartInference::default(),ChartInference::infer(&ChartSnapshot::default()).unwrap());
 }
 
 #[test]
 fn derived_names_do_not_overwrite_authored_tables_columns_or_text(){
     let source=fixture();
     let snapshot=ChartSnapshot::from_value(DslValue::from(source["collision"]["snapshot"].clone())).unwrap();
-    let inference=ChartInference::infer(&snapshot);
+    let inference=ChartInference::infer(&snapshot).unwrap();
     assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
     let table=source["collision"]["preparedTable"].as_str().unwrap();
     let column=source["collision"]["constantColumn"].as_str().unwrap();
@@ -136,7 +137,7 @@ fn every_catalogue_kind_is_reachable_through_snapshot_inference() {
     let kinds = inferences::catalog().unwrap()["kinds"].as_array().unwrap();
     assert!(kinds.len() > 1700);
     let chart = DslValue::object([("width".into(),DslValue::uint(80)),("height".into(),DslValue::uint(40)),("language".into(),DslValue::String("en".into())),("layers".into(),DslValue::Array(vec![])),("presets".into(),DslValue::Array(kinds.iter().map(|entry|DslValue::object([("kind".into(),entry["slug"].clone())])).collect()))]);
-    let inferred = ChartInference::infer(&ChartSnapshot{chart});
+    let inferred = ChartInference::infer(&ChartSnapshot{chart}).unwrap();
     assert!(inferred.diagnostics.is_empty(),"{:?}",inferred.diagnostics);
     assert_eq!(inferred.tikz.matches("\\SemioVizChart{").count(), kinds.len());
 }
@@ -145,16 +146,16 @@ fn every_catalogue_kind_is_reachable_through_snapshot_inference() {
 fn native_chart_source_can_be_compiled_by_the_print_toolchain(){
     let Some(path)=std::env::var_os("PRINT_NATIVE_CHART_TIKZ") else{return;};
     let authored=include_str!("../../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json");
-    let snapshot=pack::json::from_json_str::<ChartSnapshot>(authored).unwrap();
-    let inference=ChartInference::infer(&snapshot);
+    let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(authored,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let inference=ChartInference::infer(&snapshot).unwrap();
     assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
     std::fs::write(path,inference.tikz).unwrap();
 }
 
 #[test]
 fn typed_rows_preserve_null_strings_booleans_and_color_fallback_alpha(){
-    let snapshot=pack::json::from_json_str::<ChartSnapshot>(include_str!("../../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json")).unwrap();
-    let inference=ChartInference::infer(&snapshot);
+    let snapshot=semio_framework_pack_json::from_json_str::<ChartSnapshot>(include_str!("../../🧫️fixtures/🧬️chart-mutations/📊️native-grammar.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let inference=ChartInference::infer(&snapshot).unwrap();
     assert!(inference.diagnostics.is_empty(),"{:?}",inference.diagnostics);
     assert!(inference.tikz.contains("{\\SemioVizNull{}}"));
     assert!(inference.tikz.contains("{\\SemioVizBoolean{true}}"));
@@ -163,5 +164,52 @@ fn typed_rows_preserve_null_strings_booleans_and_color_fallback_alpha(){
     assert!(inference.tikz.contains("unknown={semio-print-color-0080FF-A0p35}"));
     assert!(inference.tikz.contains("\\SemioVizPaintAlpha{semio-print-color-0080FF-A0p35}{0.35}"));
 }
-#[path = "../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+#[path = "../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_snapshot_tests;
+
+#[test]
+fn paged_chart_original_operation_keeps_exact_variants_policy_and_source_owner(){
+    use protocol::os_spr::operation_bytes::{OwnedOperationBytes,OperationBytePreparation,OperationByteMeasurement,OperationByteCloseStep};
+    use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,Number};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧬️chart-mutations/📦️operation-pages.json")).unwrap();
+    let payload=fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize);
+    let operation=ChangeChartValue{path:serde_json::from_value(fixture["path"].clone()).unwrap(),value:Some(DslValue::Array(vec![DslValue::String(payload),DslValue::uint(u64::MAX),DslValue::int(i64::MIN),DslValue::float(-0.0)]))};
+    let expected=protocol::OpBinary::encode_op(&operation).unwrap();
+    let header:Vec<u8>=serde_json::from_value(fixture["header"].clone()).unwrap();assert!(expected.starts_with(&header));
+    let metadata=fixture["metadataBytes"].as_u64().unwrap()as usize;
+    let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;
+    let items=fixture["maximumCloseItems"].as_u64().unwrap()as usize;
+    let bytes=fixture["maximumCloseBytes"].as_u64().unwrap()as usize;
+    let close=|owner:&mut OwnedOperationBytes|{let mut released=0;for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){match owner.close_one(items,bytes).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=bytes);released+=released_bytes;}}}assert!(owner.terminal_is_empty());assert_eq!(owner.allocated_bytes(),0);released};
+    let mut options=protocol::codec::PackEncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
+    let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allow);
+    let mut measure=OperationByteMeasurement::new(options.limits.max_file_len);
+    encoding.scoped_maximum(metadata,|control|Ok::<_,semio_framework_value::ValueError>(operation.encode_op_into(&options,&mut measure,control))).unwrap().unwrap();
+    assert_eq!(measure.exact_length().unwrap(),expected.len());assert!(encoding.owned_bytes()<=metadata);
+    let mut preparation=OperationBytePreparation::try_new(expected.len(),allocation).unwrap();
+    for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){preparation.fund_one(items,bytes,&mut encoding).unwrap();if preparation.is_funded(){break;}}
+    assert!(preparation.is_funded());let paid=encoding.owned_bytes();let backing=preparation.allocated_bytes();
+    encoding.scoped_maximum(paid+metadata,|control|Ok::<_,semio_framework_value::ValueError>(operation.encode_op_into(&options,&mut preparation,control))).unwrap().unwrap();
+    assert_eq!(preparation.allocated_bytes(),backing);assert!(encoding.owned_bytes()-paid<=metadata);
+    let mut source=preparation.take_ready().unwrap();assert!(source.iter().eq(expected.iter().copied()));
+    assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
+    let mut allow=|_|true;let mut decoding=NativeDecodeControl::new(allocation,&mut allow);
+    let mut allow=|_|true;let mut canonical=NativeEncodeControl::new(metadata,&mut allow);
+    let decoded=ChangeChartValue::decode_op_span(protocol::ByteSpan::from_source(&source),&Default::default(),&options,&mut decoding,&mut canonical).unwrap();
+    assert_eq!(decoded,operation);
+    let Some(DslValue::Array(values))=decoded.value else{panic!("original Chart array lost")};
+    assert!(matches!(values[1],DslValue::Number(Number::UInt(u64::MAX))));assert!(matches!(values[2],DslValue::Number(Number::Int(i64::MIN))));
+    let DslValue::Number(Number::Float(number))=values[3] else{panic!("exact Chart float variant lost")};assert_eq!(number.to_bits(),(-0.0f64).to_bits());
+    assert_eq!(source.close_one(0,bytes).unwrap(),OperationByteCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!(source.len(),expected.len());assert!(close(&mut source)>=expected.len());
+    let kind=|error:protocol::ProtocolError|match error{protocol::ProtocolError::Pack(protocol::PackError::Refusal(refusal))=>refusal.kind(),error=>panic!("expected genuine typed Pack refusal, got {error:?}")};
+    let mut short=options.clone();short.limits.max_file_len-=1;
+    let mut prefix=OwnedOperationBytes::try_new(expected.len(),allocation).unwrap();
+    let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allow);
+    assert_eq!(kind(operation.encode_op_into(&short,&mut prefix,&mut encoding).unwrap_err()),semio_framework_value::ValueRefusalKind::OwnershipLimit);
+    assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix);
+    let mut prefix=OwnedOperationBytes::try_new(expected.len(),allocation).unwrap();
+    let mut cancel=|work:semio_framework_value::native_encoding::NativeEncodeProgress|work.completed<1024;let mut encoding=NativeEncodeControl::new(allocation,&mut cancel);
+    assert_eq!(kind(operation.encode_op_into(&options,&mut prefix,&mut encoding).unwrap_err()),semio_framework_value::ValueRefusalKind::Canceled);
+    assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix);
+    println!("[DEBUG] Original Chart8194 text source preserves [1,1], UInt/Int/-0float and whole-frame caller policy under512 metadata with exact refusal prefix and fixed4096 terminal page return");
+}

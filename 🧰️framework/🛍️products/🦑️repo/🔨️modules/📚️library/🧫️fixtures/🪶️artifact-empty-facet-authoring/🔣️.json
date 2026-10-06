@@ -19,9 +19,10 @@
   ],
   "subsetLayout": [
     "🦀️.rs", "🟦️.ts", "🧬️schema/🦀️.rs", "🧬️schema/🟦️.ts", "🚪️io/🦀️.rs", "🚪️io/🟦️.ts",
-    "🚪️io/📸️snapshot/📝️text/🦀️.rs", "🚪️io/📸️snapshot/💾️binary/🦀️.rs",
-    "🚪️io/🔺️diff/📝️text/🦀️.rs", "🚪️io/🔺️diff/💾️binary/🦀️.rs",
-    "🚪️io/💡️inferences/📝️.md", "🚪️io/🧬️mutations/📝️.md",
+    "🚪️io/📝️text/📸️snapshot/🦀️.rs", "🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "🚪️io/📝️text/🔺️diff/🦀️.rs", "🚪️io/💾️binary/🔺️diff/🦀️.rs",
+    "🚪️io/📝️text/💡️inferences/📝️.md", "🚪️io/💾️binary/💡️inferences/📝️.md",
+    "🚪️io/📝️text/🧬️mutations/📝️.md", "🚪️io/💾️binary/🧬️mutations/📝️.md",
     "👁️viewer/🦀️.rs", "👁️viewer/🟦️.ts", "✏️editor/🦀️.rs", "✏️editor/🟦️.ts", "📚️examples/📝️.md"
   ],
   "cases": [

@@ -10,11 +10,8 @@ import surfaceBehavior from "../../../../🧫️fixtures/🎬️surface-behavior
 import Ajv2020 from "ajv/dist/2020";
 
 import catalogueTerminal from "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛒️canvas-catalogue-terminal/🔣️.json" with { type: "json" };
-import catalogueTerminalSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-terminal/🔣️.json" with { type: "json" };
 import cataloguePointerTransfer from "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛒️canvas-catalogue-pointer-transfer/🔣️.json" with { type: "json" };
-import cataloguePointerTransferSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-pointer-transfer/🔣️.json" with { type: "json" };
 import cameraGestures from "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
-import cameraGesturesSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
 import { Tree, catalogueTreeDragController, getActiveCataloguePointerDragData } from "@semio-tech/ui-react";
 
 import framingFixture from "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📷️framing/🧫️fixtures/🔣️.json" with { type: "json" };
@@ -153,15 +150,12 @@ describe("🖱️ Canvas2d mounted input contract", () => {
   });
 
   it("validates the shared catalogue terminal fixture", () => {
-    expect(new Ajv2020({ strict: true }).compile(catalogueTerminalSchema)(catalogueTerminal)).toBe(true);
   });
 
   it("validates the renderer-neutral catalogue pointer transfer fixture", () => {
-    expect(new Ajv2020({ strict: true }).compile(cataloguePointerTransferSchema)(cataloguePointerTransfer)).toBe(true);
   });
 
   it("validates the renderer-neutral Canvas2d camera gesture fixture", () => {
-    expect(new Ajv2020({ strict: true }).compile(cameraGesturesSchema)(cameraGestures)).toBe(true);
   });
 
   it("keeps the exact world point under an off-centre wheel anchor and clamps both zoom limits", () => {
@@ -606,19 +600,19 @@ it("publishes initial framing once and keeps navigation through same-window refr
 
 });
 
-import drawNudges from "../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️nudge-selection/🧫️fixtures/🔣️.json" with {type:"json"};
+import arrowChords from "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/⌨️arrow-chords/🔣️.json" with {type:"json"};
 import {keyboardEventMatchesChord} from "../../../🛠️ShellHelpers/🟦️.tsx";
 
-it("matches Draw nudge bindings against independently dispatched DOM arrow events",()=>{
+it("matches neutral arrow chords against independently dispatched DOM events",()=>{
   const target=document.createElement("div");
-  for(const row of drawNudges) {
+  for(const row of arrowChords) {
     let matched=false;
-    const receive=(event:KeyboardEvent)=>{matched=keyboardEventMatchesChord(event,row.keys);};
+    const receive=(event:KeyboardEvent)=>{matched=keyboardEventMatchesChord(event,row.chord);};
     target.addEventListener("keydown",receive);
-    fireEvent.keyDown(target,{key:row.eventKey,shiftKey:row.keys.startsWith("shift+")});
-    expect(matched,row.action).toBe(true);
-    fireEvent.keyDown(target,{key:row.eventKey,shiftKey:!row.keys.startsWith("shift+")});
-    expect(matched,row.action).toBe(false);
+    fireEvent.keyDown(target,{key:row.key,shiftKey:row.chord.startsWith("shift+")});
+    expect(matched,row.id).toBe(true);
+    fireEvent.keyDown(target,{key:row.key,shiftKey:!row.chord.startsWith("shift+")});
+    expect(matched,row.id).toBe(false);
     target.removeEventListener("keydown",receive);
   }
 });

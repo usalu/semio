@@ -232,8 +232,8 @@ fn a_payload_outside_its_bounds_is_an_invariant_breach() {
 async fn the_store_folds_a_filter_like_the_leaf() {
     let filter = apply_filter("paint", "threshold", 64.0);
     let mut store = crate::mutations::RasterStore::new(store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "apply-filter", walled_base(), None)).await.expect("the store opens");
-    store.install_document_store_owners_exact(crate::spr::raster_document_store_owners());
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![filter.clone()], description: None, transaction: None }).await.expect("the filter applies");
+    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_owners());
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![filter.clone()], transaction: None }).await.expect("the filter applies");
     let before = walled_base();
     let expected = apply_raster_mutation(&before, &filter).expect("the leaf applies");
     let projected = store.snapshot().expect("the store projects");

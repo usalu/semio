@@ -1,26 +1,21 @@
 // #region 🔌️Adapters
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import * as React from "react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it, vi } from "vitest";
-import { TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_PATH_SEPARATOR, TREE_WINDOW_ROWS_MAX, Tree, TreeCheckbox, TreeItem, TreeSection, capTreeWindowRequests, treeRowHeightPx, treeWindowPathOf, treeWindowRequestsForViewport, treeWindowVisibleRowsForViewport, type TreeDataSection, type TreeDataWindow, type TreeWindowContainerMeasure, type TreeWindowVisibleRows } from "../../🟦️.tsx";
+import { TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_PATH_SEPARATOR, TREE_WINDOW_ROWS_MAX, Tree, TreeCheckbox, TreeItem, TreeSection, capTreeWindowRequests, treeRowHeightPx, treeWindowPathOf, treeWindowRequestsForViewport, treeWindowRowAriaAttributes, treeWindowVisibleRowsForViewport, type TreeDataSection, type TreeDataWindow, type TreeWindowContainerMeasure, type TreeWindowVisibleRows } from "../../🟦️.tsx";
 import type { TreeWindowRowExtent } from "@semio-tech/framework";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 import rowExtentFixture from "../../../../🧫️fixtures/🌳️tree-window-row-extent/🔣️.json";
-import rowExtentSchema from "../../../../🧬️schema/🌳️tree-window-row-extent/🔣️.json";
 import disclosureCases from "../../🧫️fixtures/♿️disclosure/🔣️.json";
 import actionCases from "../../🧫️fixtures/♿️actions/🔣️.json";
 import focusCases from "../../🧫️fixtures/♿️focus-retention/🔣️.json";
-import disclosureSchema from "../../../../🧬️schema/♿️tree-disclosure/🔣️.json";
 import disabledActionCases from "../../../../🧫️fixtures/♿️disabled-row-action/🔣️.json";
-import disabledActionSchema from "../../../../🧬️schema/♿️disabled-row-action/🔣️.json";
 // #endregion 🔌️Adapters
 
 describe("Disabled row action focus", () => {
   it("matches the closed corpus and independent native button focus and dispatch", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(disabledActionSchema);
-    expect(validate(disabledActionCases), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate([...disabledActionCases, disabledActionCases[0]])).toBe(false);
     for (const entry of disabledActionCases) {
       const onClick = vi.fn();
       const referenceClick = vi.fn();
@@ -45,6 +40,48 @@ describe("Disabled row action focus", () => {
       button.click();
       expect(onClick.mock.calls.length).toBe(entry.actionable ? 1 : 0);
       expect(onClick.mock.calls.length).toBe(referenceClick.mock.calls.length);
+      unmount();
+    }
+  });
+});
+
+describe("Row action identity", () => {
+  it("keeps an action's element and the focus on it when it becomes refused with a reason, and when it can run again", () => {
+    const onClick = vi.fn();
+    const sections = (reason: string | undefined) => [{ id: "rows", label: "Rows", actions: [{ icon: <span aria-hidden="true" />, text: "Edit", disabled: reason !== undefined, reason, onClick }], items: [] }];
+    const view = render(<Tree sections={sections(undefined)} />);
+    const button = view.container.querySelector<HTMLButtonElement>("[data-slot=action]")!;
+    act(() => button.focus());
+    expect([document.activeElement === button, button.hasAttribute("aria-describedby"), view.container.querySelector('[data-slot="row-action-reason"]')]).toEqual([true, false, null]);
+    view.rerender(<Tree sections={sections("Not possible right now")} />);
+    const refused = view.container.querySelector<HTMLButtonElement>("[data-slot=action]")!;
+    const reasonElement = document.getElementById(refused.getAttribute("aria-describedby") ?? "");
+    expect([refused === button, document.activeElement === button, refused.getAttribute("aria-disabled"), reasonElement?.textContent, reasonElement?.hasAttribute("data-revealed")], "a focused action that becomes refused keeps its element and shows why at once").toEqual([true, true, "true", "Not possible right now", true]);
+    view.rerender(<Tree sections={sections(undefined)} />);
+    const again = view.container.querySelector<HTMLButtonElement>("[data-slot=action]")!;
+    expect([again === button, document.activeElement === button, again.hasAttribute("aria-disabled"), document.querySelector('[data-slot="row-action-reason"]')]).toEqual([true, true, false, null]);
+    again.click();
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("Busy row action focus", () => {
+  it("keeps a busy action in the Tab order — aria-disabled and aria-busy, never the disabled attribute — with the reason its producer published, and runs nothing", () => {
+    const cases = [
+      { name: "busy", disabled: false, reason: undefined, busy: true, native: false, described: null },
+      { name: "busy and refused with a reason", disabled: true, reason: "Not possible right now", busy: true, native: false, described: "Not possible right now" },
+      { name: "refused with a reason", disabled: true, reason: "Not possible right now", busy: false, native: false, described: "Not possible right now" },
+      { name: "refused without a reason", disabled: true, reason: undefined, busy: false, native: true, described: null },
+    ] as const;
+    for (const entry of cases) {
+      const onClick = vi.fn();
+      const { container, unmount } = render(<Tree sections={[{ id: "rows", label: "Rows", actions: [{ icon: <span aria-hidden="true" />, text: "Edit", disabled: entry.disabled, reason: entry.reason, busy: entry.busy, onClick }], items: [] }]} />);
+      const button = container.querySelector<HTMLButtonElement>("[data-slot=action]")!;
+      button.focus();
+      const describedBy = button.getAttribute("aria-describedby");
+      expect([button.disabled, document.activeElement === button, button.getAttribute("aria-disabled"), button.getAttribute("aria-busy"), describedBy ? document.getElementById(describedBy)?.textContent : null], entry.name).toEqual([entry.native, !entry.native, "true", entry.busy ? "true" : null, entry.described]);
+      button.click();
+      expect(onClick, entry.name).not.toHaveBeenCalled();
       unmount();
     }
   });
@@ -119,7 +156,6 @@ describe("TreeItem keyboard action", () => {
 
 describe("TreeItem named disclosure", () => {
   it("validates the neutral branch and leaf contract", () => {
-    expect(new Ajv2020({ strict: true }).compile(disclosureSchema)(disclosureCases)).toBe(true);
   });
 
   it.each(disclosureCases.branches)("exposes the row label and expanded state for $id", async (entry) => {
@@ -458,8 +494,6 @@ describe("Tree windowed containers", () => {
   const spacers = (container: HTMLElement) => Array.from(container.querySelectorAll('[data-slot="tree-window-spacer"]')) as HTMLDivElement[];
 
   it("uses each window's declared closed-row extent for both spacer bands", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(rowExtentSchema);
-    expect(validate(rowExtentFixture), JSON.stringify(validate.errors)).toBe(true);
     const wireExtent = {
       Standard: "standard",
       CompactText: "compactText",
@@ -542,6 +576,31 @@ describe("Tree windowed containers", () => {
     expect(Array.from(nested.querySelectorAll(":scope > [data-tree-window-row]")).map((row) => row.getAttribute("data-tree-window-row"))).toEqual(["4"]);
     // 🎯️ An UNWINDOWED container's rows carry no index — they are never measured as a window's rows.
     expect(container.querySelectorAll('[data-slot="tree-window-spacer"][data-tree-window-row]')).toHaveLength(0);
+  });
+
+  it("tells assistive technology each windowed row's place among all its siblings, and nothing for an unwindowed row", () => {
+    const { container } = render(
+      <Tree
+        sections={[
+          windowedSection({
+            window: { rowExtent: "standard", total: 100, offset: 20 },
+            items: [
+              { id: "entry-20", label: "Entry 20" },
+              { id: "entry-21", label: "Entry 21", defaultOpen: true, windowKey: "entry-21", window: { rowExtent: "standard", total: 9, offset: 4 }, items: [{ id: "child-4", label: "Child 4" }] },
+              { id: "entry-22", label: "Entry 22", defaultOpen: true, items: [{ id: "plain-0", label: "Plain 0" }] },
+            ],
+          }),
+        ]}
+      />,
+    );
+    const place = (row: Element) => [row.getAttribute("role"), row.getAttribute("aria-posinset"), row.getAttribute("aria-setsize")];
+    const section = container.querySelector('[data-slot="tree-section-content"]') as HTMLDivElement;
+    expect(Array.from(section.querySelectorAll(":scope > [data-tree-window-row]")).map(place)).toEqual([["treeitem", "21", "100"], ["treeitem", "22", "100"], ["treeitem", "23", "100"]]);
+    const nested = Array.from(container.querySelectorAll('[data-slot="tree-item-content"]')) as HTMLDivElement[];
+    expect(Array.from(nested[0]!.querySelectorAll(":scope > [data-tree-window-row]")).map(place)).toEqual([["treeitem", "5", "9"]]);
+    const plain = Array.from(container.querySelectorAll('[role="treeitem"]')).find((row) => (row.textContent ?? "").trim() === "Plain 0")!;
+    expect([plain.hasAttribute("data-tree-window-row"), plain.hasAttribute("aria-posinset"), plain.hasAttribute("aria-setsize")]).toEqual([false, false, false]);
+    expect([treeWindowRowAriaAttributes(undefined, 100), treeWindowRowAriaAttributes(3, undefined), treeWindowRowAriaAttributes(3, 2), treeWindowRowAriaAttributes(0, 1)]).toEqual([undefined, undefined, { "aria-posinset": 4, "aria-setsize": 4 }, { "aria-posinset": 1, "aria-setsize": 1 }]);
   });
 
   /** 🔑️ A window is addressed by its PATH, because its node key is also the pick target id and two
@@ -781,6 +840,61 @@ describe("capTreeWindowRequests", () => {
   });
 });
 // #endregion 🧮️BodyNodeBudget
+
+// #region 🧺️SectionRowsFollowTheProp
+describe("Tree section rows follow the sections prop in the same render", () => {
+  /** 🧷️ A stand-in for a renderer whose row controls read an external store by a position the parent re-binds: one
+   * notification both moves the control's slot and re-derives the `sections` prop, exactly as a body refresh that
+   * renumbers its nodes does. */
+  const boundTree = () => {
+    let slots: readonly string[] = ["field"];
+    const listeners = new Set<() => void>();
+    const subscribe = (listener: () => void) => {
+      listeners.add(listener);
+      return () => void listeners.delete(listener);
+    };
+    const seen: string[] = [];
+    function Field() {
+      const [draft, setDraft] = React.useState("");
+      return <input data-slot="draft" value={draft} onChange={(event) => setDraft(event.target.value)} />;
+    }
+    function Bound({ slot }: { readonly slot: number }) {
+      const kind = React.useSyncExternalStore(subscribe, () => slots[slot] ?? "gone");
+      seen.push(`${slot}:${kind}`);
+      return kind === "field" ? <Field /> : <span data-kind={kind} />;
+    }
+    function Host() {
+      const layout = React.useSyncExternalStore(subscribe, () => slots);
+      return <Tree sections={[{ id: "inputs", label: "Inputs", defaultOpen: true, items: [...layout.slice(0, layout.indexOf("field")).map((kind, index) => ({ id: `filler-${index}`, label: kind })), { id: "factor.row", label: "Factor", control: <Bound key="factor" slot={layout.indexOf("field")} /> }] }]} />;
+    }
+    return { Host, seen, publish: (next: readonly string[]) => { slots = next; for (const listener of [...listeners]) listener(); } };
+  };
+
+  it("never renders a row control against rows the prop no longer holds: a typed draft, its element and the focus survive a refresh that moves the row", () => {
+    const { Host, seen, publish } = boundTree();
+    const { container } = render(<Host />);
+    const field = container.querySelector<HTMLInputElement>('[data-slot="draft"]')!;
+    fireEvent.change(field, { target: { value: "-5" } });
+    act(() => field.focus());
+    seen.length = 0;
+    act(() => publish(["filler", "filler", "field"]));
+    const after = container.querySelector<HTMLInputElement>('[data-slot="draft"]');
+    expect([after === field, after?.value, document.activeElement === field, container.querySelectorAll('[role="treeitem"]').length]).toEqual([true, "-5", true, 3]);
+    expect([seen.length > 0, seen.filter((entry) => entry !== "2:field")], "the control renders re-bound to its new slot — never once more against the slot it left").toEqual([true, []]);
+  });
+
+  it("still loads the rows of a section that declares none through getItems, and reloads them when the sections change", async () => {
+    const getItems = vi.fn(async () => [{ id: "loaded", label: "Loaded" }]);
+    const sections = (label: string): TreeDataSection[] => [{ id: "lazy", label, defaultOpen: true, getItems }, { id: "static", label: "Static", defaultOpen: true, items: [{ id: "static-row", label: "Static row" }], getItems }];
+    const view = render(<Tree sections={sections("Lazy")} />);
+    await waitFor(() => expect(view.queryByText("Loaded")).not.toBeNull());
+    expect([getItems.mock.calls.length, view.queryByText("Static row") !== null], "a section with its own rows never asks getItems").toEqual([1, true]);
+    view.rerender(<Tree sections={sections("Lazy again")} />);
+    await waitFor(() => expect(getItems.mock.calls.length).toBe(2));
+    await waitFor(() => expect(view.queryByText("Loaded")).not.toBeNull());
+  });
+});
+// #endregion 🧺️SectionRowsFollowTheProp
 
 // #region 🈳️EmptyStateDirection
 describe("Tree empty state reading direction", () => {

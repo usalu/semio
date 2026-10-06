@@ -2,7 +2,7 @@
 //!
 //! The board (nodes and edges) lives ONLY in the composed `s.stdio.semio@v1/graph` child `content` (ticket
 //! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §12, §20.15): every board edit is a child-lane graph leaf in that child's
-//! store, the parent owns no leaf (`WiresMutation` is uninhabited), and every reader composes the parent's `wires_fixture`
+//! store, the parent owns no leaf (`WiresMutation` is uninhabited), and every reader composes the parent's `wires_snapshot`
 //! (identities) with the child on read ([`wires_composed`]). A decoded, reloaded or remote parent therefore needs no
 //! materialization step.
 
@@ -34,11 +34,11 @@ pub use crate::schema::mutations::WiresMutation;
 
 pub use crate::schema::diff::WiresDiff;
 
-pub const MINDMAP_WIRES_SCHEMA: &str = "reasoning.wires.fixture";
+pub const MINDMAP_WIRES_SCHEMA: &str = "reasoning.wires.identity.snapshot";
 /// 🕸️ Mindmap's own board fixture schema — recognized by the neutral force-graph-layout crate
 /// (`infinite_board_normal_undirected`) as an undirected graph, distinct from puzzle's directed
-/// `puzzle.2d.fixture` board.
-pub const MINDMAP_BOARD_SCHEMA: &str = "reasoning.mindmap.fixture";
+/// `board.ports.directed.v1` board.
+pub const MINDMAP_BOARD_SCHEMA: &str = "board.normal.undirected.v1";
 /// 🧩️ The composed-child slot the board lives in.
 pub const WIRES_CONTENT_SLOT: &str = "content";
 /// 🔗️ The edge property carrying the wires relationship an edge expresses: its `kind` and the identities of its endpoints.
@@ -52,8 +52,8 @@ pub use crate::schema::WiresArtifact;
 //#endregion 🔖️Types
 
 //#region 🔖️EmptyFixtures
-/// 📭️ Empty `reasoning.wires.fixture` blob: the parent's identity layer, no identity yet.
-pub fn empty_wires_fixture() -> DslValue {
+/// 📭️ Empty `reasoning.wires.identity.snapshot` blob: the parent's identity layer, no identity yet.
+pub fn empty_wires_snapshot() -> DslValue {
     DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(vec![]))])
 }
 
@@ -69,7 +69,7 @@ pub fn empty_wires_content() -> SemioGraphSnapshot {
 
 /// 📭️ Fresh wires snapshot: no identity, the empty board child.
 pub fn empty_wires_snapshot() -> WiresSnapshot {
-    WiresSnapshot { wires_fixture: empty_wires_fixture(), content: wires_content_handle(&empty_wires_content()), meta: DslValue::Null }
+    WiresSnapshot { wires_snapshot: empty_wires_snapshot(), content: wires_content_handle(&empty_wires_content()), meta: DslValue::Null }
 }
 //#endregion 🔖️EmptyFixtures
 
@@ -233,7 +233,7 @@ pub fn canonical_board_value(value: &DslValue) -> DslValue {
 /// `edges`/`meta`?/`wires`) the canvases, panels and layout read.
 #[derive(Clone, Debug, PartialEq)]
 pub struct WiresComposed {
-    pub fixture: DslValue,
+    pub identity_snapshot: DslValue,
     pub board: DslValue,
 }
 
@@ -250,12 +250,12 @@ pub fn wires_composed(snapshot: &WiresSnapshot, content: &SemioGraphSnapshot) ->
             Some(canonical_board_value(&DslValue::Object(row)))
         })
         .collect();
-    let identities = schema::wires_identities(&snapshot.wires_fixture).to_vec();
+    let identities = schema::wires_identities(&snapshot.wires_snapshot).to_vec();
     let fixture = DslValue::object([("schema".into(), DslValue::String(MINDMAP_WIRES_SCHEMA.into())), ("identities".into(), DslValue::Array(identities)), ("relationships".into(), DslValue::Array(relationships))]);
     let mut board: Vec<(String, DslValue)> = vec![("schema".into(), DslValue::String(MINDMAP_BOARD_SCHEMA.into())), ("camera".into(), empty_camera()), ("nodes".into(), DslValue::Array(nodes)), ("edges".into(), DslValue::Array(edges))];
     board.extend((!matches!(snapshot.meta, DslValue::Null)).then(|| ("meta".to_string(), snapshot.meta.clone())));
     board.push(("wires".into(), DslValue::Array(vec![])));
-    WiresComposed { fixture, board: DslValue::Object(board) }
+    WiresComposed { identity_snapshot: fixture, board: DslValue::Object(board) }
 }
 
 /// 🔖️ A composed read that found no exact board child: named and localized through `ReasoningWiresPlayApp::fault_notices`.
@@ -280,11 +280,11 @@ pub fn wires_composed_from_children(snapshot: &WiresSnapshot, children: &semio_f
 }
 
 /// 🌱️ Publishes graph leaves as ONE edit of the exact composed board child; no leaf is the empty emission.
-pub fn wires_child_emit<C, D>(snapshot: &WiresSnapshot, leaves: &[SemioGraphMutation]) -> semio_framework_plugin::Emit<WiresMutation, C, D> {
+pub fn wires_child_emit<C, D>(snapshot: &WiresSnapshot, leaves: Vec<SemioGraphMutation>) -> semio_framework_plugin::Emit<WiresMutation, C, D> {
     if leaves.is_empty() {
         return semio_framework_plugin::Emit::default();
     }
-    semio_framework_plugin::Emit { child_emits: vec![semio_framework_plugin::app::ChildEmit::of::<SemioGraphSnapshot, _>(WIRES_CONTENT_SLOT, &snapshot.content.child_id, leaves)], ..semio_framework_plugin::Emit::default() }
+    semio_framework_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_framework_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot, _>(WIRES_CONTENT_SLOT, &snapshot.content.child_id, leaves)]), ..semio_framework_plugin::Emit::default() }
 }
 //#endregion 🔖️Composed
 
@@ -340,9 +340,9 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.codec.document")?, ArtifactCapabilityKind::codec())
-                .descriptor(b"reasoning.wires.fixture:wires")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "reasoning.wires.fixture")?)?
-                .claim(ArtifactIdentityClaim::codec_extension("reasoning.wires.fixture", "wires")?)?,
+                .descriptor(b"reasoning.wires.identity.snapshot:wires")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "reasoning.wires.identity.snapshot")?)?
+                .claim(ArtifactIdentityClaim::codec_extension("reasoning.wires.identity.snapshot", "wires")?)?,
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.reasoning.wires.localization.en")?, ArtifactCapabilityKind::localization())
@@ -446,20 +446,6 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -534,12 +520,8 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-}
+
+
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
 }
@@ -548,15 +530,9 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-    }
+
+
+
 }
 
 #[path = "."]
@@ -679,3 +655,5 @@ pub fn wires_child_restore_projection(snapshot: &crate::WiresSnapshot) -> Result
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wires.child.projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
+
+pub use crate::standards::v1::subsets::any::io::{WiresBuilderConstruction};

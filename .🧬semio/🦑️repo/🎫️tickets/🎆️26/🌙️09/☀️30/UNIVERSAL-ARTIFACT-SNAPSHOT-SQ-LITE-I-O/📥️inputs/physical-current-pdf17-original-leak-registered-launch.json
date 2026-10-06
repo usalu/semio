@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-05T18:25:15.030Z",
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/pdf17-leak-native-artifacts' bun run nx run @semio-tech/stdio-pdf-rs:test '--args=--lib --features component-app-assembly --no-fail-fast --status-level leak --final-status-level all' --skip-nx-cache --outputStyle=stream --excludeTaskDependencies >'/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-pdf17-original-whole-leak-identity.log' 2>&1",
+  "scope": "actual complete registered stdio-pdf-rs:test --lib component-app-assembly no filter, original quick budget unchanged",
+  "reporter": [
+    "--status-level",
+    "leak",
+    "--final-status-level",
+    "all"
+  ],
+  "authority": "Root qualified registered test-cargo-driver3/3 and installed Nextest help finalstatuslevel all; no execution-port rewrite"
+}

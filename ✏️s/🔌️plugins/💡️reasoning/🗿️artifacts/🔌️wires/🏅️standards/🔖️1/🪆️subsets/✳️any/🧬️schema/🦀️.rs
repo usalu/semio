@@ -14,7 +14,7 @@ pub mod retirement;
 #[artifact_schema(id = "s.reasoning.wires")]
 pub struct WiresArtifact {
     #[state(artifact)]
-    pub wires_fixture: DslValue,
+    pub wires_snapshot: DslValue,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub content: crate::WiresContentChild,
@@ -33,17 +33,17 @@ impl Default for WiresArtifact {
 impl WiresArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::WiresSnapshot {
-        crate::WiresSnapshot { wires_fixture: self.wires_fixture.clone(), content: self.content.clone(), meta: self.meta.clone() }
+        crate::WiresSnapshot { wires_snapshot: self.wires_snapshot.clone(), content: self.content.clone(), meta: self.meta.clone() }
     }
 
     /// 🧬️ Builds the shared artifact from its document snapshot.
     pub fn from_snapshot(snapshot: crate::WiresSnapshot) -> Self {
-        Self { wires_fixture: snapshot.wires_fixture, content: snapshot.content, meta: snapshot.meta }
+        Self { wires_snapshot: snapshot.wires_snapshot, content: snapshot.content, meta: snapshot.meta }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::WiresSnapshot) {
-        self.wires_fixture = snapshot.wires_fixture;
+        self.wires_snapshot = snapshot.wires_snapshot;
         self.content = snapshot.content;
         self.meta = snapshot.meta;
     }
@@ -94,57 +94,7 @@ pub fn wires_artifact_schema_descriptor() -> semio_framework_schema_registry::Ar
 /// real, correctly-typed SDK equipment matching the fan-out's established `Construction` convention,
 /// not dead API (mirrors how `SurfaceDeclaration.mutation_roster` is kept unread, per debt tracked in
 /// `📓️w1-c-report.md` openQuestion 3).
-pub mod derived_construction {
-    use crate::schema::diff::WiresDiff;
-    use crate::schema::mutations::WiresMutation;
-    use crate::schema::snapshot::WiresSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug)]
-    pub struct WiresBuilderConstruction {
-        snapshot: WiresSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for WiresBuilderConstruction {
-        type Snapshot = WiresSnapshot;
-        type Mutation = WiresMutation;
-        type Diff = WiresDiff;
-        fn empty() -> Self {
-            Self { snapshot: crate::empty_wires_snapshot(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<WiresSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<WiresSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <WiresDiff as protocol::MutationDiff<WiresSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️Construction
 
 //#region 🔖️DocumentHelpers
@@ -189,12 +139,12 @@ pub fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: Dsl
 
 /// 🔎️ The board node `node_id` of a composed `board`.
 pub fn board_node<'a>(board: &'a DslValue, node_id: &str) -> Option<&'a DslValue> {
-    fixture_nodes(board).iter().find(|node| entity_id(node, "id") == Some(node_id))
+    board_snapshot_nodes(board).iter().find(|node| entity_id(node, "id") == Some(node_id))
 }
 
 /// 🔎️ The board edge `edge_id` of a composed `board`.
 pub fn board_edge<'a>(board: &'a DslValue, edge_id: &str) -> Option<&'a DslValue> {
-    fixture_edges(board).iter().find(|edge| entity_id(edge, "id") == Some(edge_id))
+    board_snapshot_edges(board).iter().find(|edge| entity_id(edge, "id") == Some(edge_id))
 }
 
 pub fn entity_id<'a>(entity: &'a DslValue, key: &str) -> Option<&'a str> {
@@ -215,11 +165,9 @@ pub fn dsl_to_json(value: &DslValue) -> Value {
     semio_framework_pack_json::from_dsl_value(value)
 }
 
-pub fn fixture_json_string(fixture: &DslValue) -> String {
-    semio_framework_pack_json::to_json_string(fixture)
-}
 
-pub fn fixture_camera(fixture: &DslValue) -> (f64, f64, f64) {
+
+pub fn board_snapshot_camera(fixture: &DslValue) -> (f64, f64, f64) {
     let camera = fixture.get("camera");
     (
         camera.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0),
@@ -228,11 +176,11 @@ pub fn fixture_camera(fixture: &DslValue) -> (f64, f64, f64) {
     )
 }
 
-pub fn fixture_nodes(fixture: &DslValue) -> &[DslValue] {
+pub fn board_snapshot_nodes(fixture: &DslValue) -> &[DslValue] {
     fixture.get("nodes").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
-pub fn fixture_edges(fixture: &DslValue) -> &[DslValue] {
+pub fn board_snapshot_edges(fixture: &DslValue) -> &[DslValue] {
     fixture.get("edges").and_then(|value| value.as_array()).unwrap_or(&[])
 }
 
@@ -278,7 +226,7 @@ const CANVAS_LAYER_RESERVED_KEYS: &[&str] = &[
 /// shapes drawn). Every other board field rides along untouched, so hit ids and positions still read
 /// exactly as the document stores them; the node's `text` becomes the record's `name`.
 pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<Value> {
-    let nodes = fixture_nodes(board);
+    let nodes = board_snapshot_nodes(board);
     let centre = |id: &str| nodes.iter().find(|node| entity_id(node, "id") == Some(id)).map(|node| {
         let (x, y, width, height) = node_box(node);
         (x + width * 0.5, y + height * 0.5)
@@ -312,14 +260,14 @@ pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<Value> {
             dsl_to_json(&semio_framework_value::DslValue::Object(entries))
         })
         .collect();
-    for edge in fixture_edges(board) {
+    for edge in board_snapshot_edges(board) {
         let (Some(id), Some(source), Some(target)) = (entity_id(edge, "id"), entity_id(edge, "source").and_then(|id| centre(id)), entity_id(edge, "target").and_then(|id| centre(id))) else { continue };
         layers.push(line(id, source, target, relationship_kind(id)));
     }
     let identity_node = |identity: Option<u64>| wires_identities(wires).iter().find(|row| dsl_id(row.get("identityId")) == identity && identity.is_some()).and_then(|row| entity_id(row, "nodeId")).and_then(|id| centre(id));
     for relationship in wires_relationships(wires) {
         let Some(edge_id) = entity_id(relationship, "edgeId").filter(|id| !id.is_empty()) else { continue };
-        if fixture_edges(board).iter().any(|edge| entity_id(edge, "id") == Some(edge_id)) {
+        if board_snapshot_edges(board).iter().any(|edge| entity_id(edge, "id") == Some(edge_id)) {
             continue;
         }
         if let (Some(source), Some(target)) = (identity_node(dsl_id(relationship.get("sourceIdentityId"))), identity_node(dsl_id(relationship.get("targetIdentityId")))) {
@@ -331,16 +279,6 @@ pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<Value> {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️ExampleFixture
-/// 📄️ The `metabolism` example, parsed from `crate::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT`.
-/// The committed asset IS the example — the only content `setActiveExample`, the `.example` manifest
-/// registration and every metabolism test ever see. It used to be a stub envelope (an empty board
-/// plus one "Demo" node) that a hand-built in-code graph silently stood in for whenever the parse
-/// yielded fewer than seven nodes, so the play pane, which loads the asset itself, rendered an empty
-/// canvas while every unit test saw the seven-node graph. The fallback is gone and the asset carries
-/// the real graph (regenerated with this crate's own `ArtifactDsl::print_dsl`).
-pub fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResult<crate::WiresSnapshot> {
-    <crate::WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::document_dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT)
-        .map_err(|error| protocol::MutationApplyError::new("mutation.apply.unparsable-example", format!("the committed metabolism example must parse: {error:?}")))
-}
+
 
 //#endregion 🔖️ExampleFixture

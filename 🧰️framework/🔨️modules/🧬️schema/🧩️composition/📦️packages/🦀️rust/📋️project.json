@@ -9,8 +9,7 @@
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/../../**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧬️schema/🧱️neutrality/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
@@ -25,8 +24,7 @@
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/../../**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧬️schema/🧱️neutrality/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
@@ -41,8 +39,7 @@
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/../../**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧬️schema/🧱️neutrality/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",
@@ -57,8 +54,7 @@
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/../../**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧬️schema/🧱️neutrality/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧱️neutrality/🔣️.json"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust",

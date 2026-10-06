@@ -3,7 +3,7 @@
 pub mod node_graph_edit {
     use crate::editor::architect::catalog::{find_adjacency, new_adjacency};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::registers::AdjacencyKind;
     use crate::schema::mutations as leaves;
     use crate::{EntityId, ProgramSnapshot};
@@ -57,7 +57,7 @@ use semio_framework_value::ToValue;
 
 pub mod node_graph_viewport {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;

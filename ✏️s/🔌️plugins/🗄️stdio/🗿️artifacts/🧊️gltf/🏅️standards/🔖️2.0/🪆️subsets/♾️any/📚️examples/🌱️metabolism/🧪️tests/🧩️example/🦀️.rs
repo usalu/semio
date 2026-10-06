@@ -8,7 +8,7 @@
 use crate::engine::{decode_accessor, decode_glb, encode_glb, GltfAccessorType, GltfComponentType};
 use crate::examples::metabolism::{decoded_snapshot, BASE_GLB_BYTES};
 use crate::schema::snapshot::{GltfAlphaMode, GltfMesh, GltfNode, GltfScene};
-use crate::standards::v2_0::subsets::any::schema::GltfAnalyzer;
+use crate::standards::v2_0::subsets::any::io::GltfAnalyzer;
 use crate::standards::v2_0::subsets::any::schema::{GltfAccessorSpec, GltfBuilderConstruction as GltfBuilder};
 use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder};
 

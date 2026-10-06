@@ -22,7 +22,7 @@
  * visualization capabilities, so the promise a catalogue entry makes is the specification.
  */
 // #region 🔌️Adapters
-import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { compileVizProbe, roundProbeNumbers, type ProbeProjection, type ProbeRecord } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -92,7 +92,7 @@ export function showcaseProjection(records: readonly ProbeRecord[], families: re
  */
 async function subject(ctx: AdapterContext, fixture: string, families: readonly string[]): Promise<{ projection: ProbeProjection }> {
   const records = roundProbeNumbers(
-    await compileVizProbe(ctx.fixture(fixture), { workDir: ctx.workDir, caseName: CASE }),
+    await compileVizProbe(ctx.input(fixture), { workDir: ctx.workDir, caseName: CASE }),
     DECIMALS,
   );
   return { projection: showcaseProjection(records, families) };

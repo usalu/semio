@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Master",
+          "de": "Master"
+        },
+        "description": {
+          "en": "Id of the slide master.",
+          "de": "Kennung des Folienmasters."
+        },
+        "ref": {
+          "kind": "master"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -75,7 +75,7 @@ mod child_member_registry_tests {
         let mut collision = None;
         for index in 0..=CHILD_CONTENT_SLOTS {
             let key = ("slot".to_string(), format!("collision-{index}"));
-            let hash = ChildMemberRegistry::<usize>::hash(&key.0, &key.1).expect("bounded key hash");
+            let hash = ChildMemberRegistry::<usize>::hash(MemberKeyRef::root(&key.0, &key.1)).expect("bounded key hash");
             if let Some(first) = first_by_hash[hash].take() {
                 collision = Some((first, key));
                 break;

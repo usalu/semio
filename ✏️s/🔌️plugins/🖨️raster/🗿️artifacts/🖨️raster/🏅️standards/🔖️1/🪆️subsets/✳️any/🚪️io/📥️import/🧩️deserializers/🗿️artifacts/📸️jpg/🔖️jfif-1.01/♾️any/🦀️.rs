@@ -4,11 +4,11 @@
 //! are genuinely read — nothing is fabricated.
 //!
 //! 🧾️ JPEG is lossy by construction and carries no alpha; stdio's own codec forces alpha opaque on decode and re-quantizes on encode. Both are the FORMAT's losses, documented by that codec.
-use crate::io::{raster_document_from_semio_image, semio_image_from_format, JPG_DIALECT};
+use crate::standards::v1::subsets::any::io::{raster_document_from_semio_image, semio_image_from_format, JPG_DIALECT};
 use crate::RasterSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
-    let decoded = semio_s_artifact_stdio_jpg::io::decode_jpg(bytes).map_err(|error| format!("{error:?}"))?;
+    let decoded = semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::decode_jpg(bytes).map_err(|error| format!("{error:?}"))?;
     let image = semio_image_from_format(&decoded, JPG_DIALECT)?;
     raster_document_from_semio_image(&image, "jpg-import", "Imported jpg")
 }

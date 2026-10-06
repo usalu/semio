@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     },
     "entity": {
-      "$ref": "#/$defs/CadEntityRecord"
+      "$ref": "#/$defs/CadEntityRecord",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "Handle, layer and geometry of the entity that is added.",
+          "de": "Referenz (Handle), Layer und Geometrie der Entität, die hinzugefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

@@ -30,6 +30,7 @@ const TRINITY_JACK_VIEW_CONTROLLER_ID: &str = "trinity-jack-view";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::jack::create_trinity_jack_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Nakagin Graph", "Nakagin-Graph"),
         body_key: BODY_KEY.into(),

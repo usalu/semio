@@ -1,0 +1,296 @@
+{
+  "contract": "framework.surface.graph-scene/v1",
+  "cases": [
+    {
+      "id": "empty",
+      "accepted": true,
+      "input": {},
+      "expected": {}
+    },
+    {
+      "id": "unicode-node",
+      "accepted": true,
+      "input": {
+        "nodes": [
+          {
+            "id": "節点🧰",
+            "label": "Größe",
+            "inputs": [
+              {
+                "id": "in",
+                "label": "Eingang"
+              }
+            ],
+            "outputs": [
+              {
+                "id": "out"
+              }
+            ],
+            "x": 1,
+            "y": -2
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "節点🧰",
+            "label": "Größe",
+            "inputs": [
+              {
+                "id": "in",
+                "label": "Eingang"
+              }
+            ],
+            "outputs": [
+              {
+                "id": "out"
+              }
+            ],
+            "x": 1,
+            "y": -2
+          }
+        ]
+      }
+    },
+    {
+      "id": "complete",
+      "accepted": true,
+      "input": {
+        "nodes": [
+          {
+            "id": "a"
+          },
+          {
+            "id": "b"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e",
+            "sourceNodeId": "a",
+            "sourcePortId": "out",
+            "targetNodeId": "b",
+            "targetPortId": "in"
+          }
+        ],
+        "viewport": {
+          "x": 5,
+          "y": -3,
+          "zoom": 2.5
+        },
+        "previewOffJson": "opaque:previewOffJson",
+        "lodJson": "opaque:lodJson",
+        "controlsJson": "opaque:controlsJson",
+        "clustersJson": "opaque:clustersJson",
+        "statusJson": "opaque:statusJson",
+        "computingJson": "opaque:computingJson",
+        "capabilitiesJson": "opaque:capabilitiesJson",
+        "hostSnapshotJson": "opaque:hostSnapshotJson"
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "a"
+          },
+          {
+            "id": "b"
+          }
+        ],
+        "edges": [
+          {
+            "id": "e",
+            "sourceNodeId": "a",
+            "sourcePortId": "out",
+            "targetNodeId": "b",
+            "targetPortId": "in"
+          }
+        ],
+        "viewport": {
+          "x": 5,
+          "y": -3,
+          "zoom": 2.5
+        },
+        "previewOffJson": "opaque:previewOffJson",
+        "lodJson": "opaque:lodJson",
+        "controlsJson": "opaque:controlsJson",
+        "clustersJson": "opaque:clustersJson",
+        "statusJson": "opaque:statusJson",
+        "computingJson": "opaque:computingJson",
+        "capabilitiesJson": "opaque:capabilitiesJson",
+        "hostSnapshotJson": "opaque:hostSnapshotJson"
+      }
+    },
+    {
+      "id": "null-options",
+      "accepted": true,
+      "input": {
+        "nodes": [
+          {
+            "id": "a",
+            "inputs": null,
+            "label": null,
+            "x": null
+          }
+        ],
+        "viewport": null,
+        "previewOffJson": null,
+        "lodJson": null,
+        "controlsJson": null,
+        "clustersJson": null,
+        "statusJson": null,
+        "computingJson": null,
+        "capabilitiesJson": null,
+        "hostSnapshotJson": null
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "a",
+            "inputs": null,
+            "label": null,
+            "x": null
+          }
+        ],
+        "viewport": null,
+        "previewOffJson": null,
+        "lodJson": null,
+        "controlsJson": null,
+        "clustersJson": null,
+        "statusJson": null,
+        "computingJson": null,
+        "capabilitiesJson": null,
+        "hostSnapshotJson": null
+      }
+    },
+    {
+      "id": "fractional-position",
+      "accepted": true,
+      "input": {
+        "nodes": [
+          {
+            "id": "a",
+            "x": 0.5,
+            "y": -0.125,
+            "width": 1.5,
+            "height": 2.25
+          }
+        ]
+      },
+      "expected": {
+        "nodes": [
+          {
+            "id": "a",
+            "x": 0.5,
+            "y": -0.125,
+            "width": 1.5,
+            "height": 2.25
+          }
+        ]
+      }
+    },
+    {
+      "id": "unknown-root",
+      "accepted": false,
+      "input": {
+        "foreign": true
+      },
+      "expected": null
+    },
+    {
+      "id": "wrong-nodes",
+      "accepted": false,
+      "input": {
+        "nodes": "[]"
+      },
+      "expected": null
+    },
+    {
+      "id": "missing-node-id",
+      "accepted": false,
+      "input": {
+        "nodes": [
+          {}
+        ]
+      },
+      "expected": null
+    },
+    {
+      "id": "unknown-node",
+      "accepted": false,
+      "input": {
+        "nodes": [
+          {
+            "id": "a",
+            "foreign": true
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "id": "wrong-slot",
+      "accepted": false,
+      "input": {
+        "controlsJson": {
+          "value": true
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "incomplete-edge",
+      "accepted": false,
+      "input": {
+        "edges": [
+          {
+            "id": "e",
+            "sourceNodeId": "a"
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "id": "zero-zoom",
+      "accepted": false,
+      "input": {
+        "viewport": {
+          "x": 0,
+          "y": 0,
+          "zoom": 0
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "missing-camera-axis",
+      "accepted": false,
+      "input": {
+        "viewport": {
+          "x": 0,
+          "zoom": 1
+        }
+      },
+      "expected": null
+    },
+    {
+      "id": "unknown-port",
+      "accepted": false,
+      "input": {
+        "nodes": [
+          {
+            "id": "a",
+            "inputs": [
+              {
+                "id": "in",
+                "foreign": true
+              }
+            ]
+          }
+        ]
+      },
+      "expected": null
+    }
+  ]
+}

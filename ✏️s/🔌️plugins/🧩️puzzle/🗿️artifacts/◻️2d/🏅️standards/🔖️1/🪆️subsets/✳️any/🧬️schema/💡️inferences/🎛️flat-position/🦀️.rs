@@ -32,7 +32,7 @@ pub struct Puzzle2dFlatPosition {
 
 /// 📐️ Computes `flat-position` by running the existing `fastened_layout_snapshot` compose-parity
 /// BFS on a snapshot clone and reading back every node's resolved `(x, y)` — deterministic because
-/// `fastened_layout_snapshot` itself walks `nodes`/`edges` in fixture order with no randomness.
+/// `fastened_layout_snapshot` itself walks `nodes`/`edges` in snapshot order with no randomness.
 pub fn compute_flat_position(snapshot: &Puzzle2dSnapshot) -> Puzzle2dFlatPosition {
     let mut resolved = snapshot.clone();
     fastened_layout_snapshot(&mut resolved);

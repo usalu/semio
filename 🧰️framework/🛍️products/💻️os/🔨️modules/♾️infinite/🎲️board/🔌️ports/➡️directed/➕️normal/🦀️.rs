@@ -1,4 +1,4 @@
-//! 🧩️ Directed port graph normal leaf: `BoardHost`, puzzle.2d.fixture, WASM session paint.
+//! 🧩️ Directed port graph normal leaf: `BoardHost`, board.ports.directed.v1, WASM session paint.
 
 pub mod board_host {
     // #region board_host
@@ -12,13 +12,13 @@ pub mod board_host {
     use std::collections::{BTreeMap, BTreeSet};
 
     use super::{
-        board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
+        board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, board_edge_handle_ids_from_object,
         handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
         normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_value, rectangle_handle_angle_toward, region_bounds, region_grip_at, region_grip_drag, rotate_point_about, selection_drag_enclosing, selection_drag_shape,
         snap_region_scalar, snap_transform_angle, transform_pivot_of,
         transform_ring_angle_delta, transform_ring_hit, transform_ring_radius_world, ActiveUtility, BoardElementStyleKind, CachedIconBody, CachedIconPaintLease, CanvasPalette, CompatSpecificity, EdgeData, EdgeDescJson, EdgeKindDef,
         EdgeStrokePattern, EdgeTipDef, REGION_GRIP_PX, REGION_LABEL_INSET_PX, REGION_MIN_EXTENT_WORLD, TRANSFORM_RING_HIT_TOLERANCE_PX,
-        EdgeTipGeometry, FixtureJson, GestureStage, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, RegionData, RegionDescJson,
+        EdgeTipGeometry, BoardSnapshotJson, GestureStage, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, RegionData, RegionDescJson,
         RegionGrip, SceneDescriptorJson, SelectionOptions, TransformGumballFlags, WireData, WireKindDef,
     };
     use crate::infinite::canvas::camera::Camera;
@@ -42,7 +42,7 @@ pub mod board_host {
         Json(serde_json::Error),
         ExternalLinkPreviewJson(serde_json::Error),
         BrushSessionJson(serde_json::Error),
-        FixtureDropPreviewJson(serde_json::Error),
+        DropPreviewJson(serde_json::Error),
         Theme(String),
         GridFactorOutOfRange,
         CompatNotArray,
@@ -59,7 +59,7 @@ pub mod board_host {
         NodeKindHandleAngleMissing,
         EdgeTipRowInvalid(String),
         CatalogMissingKind(&'static str, String),
-        FixtureDropPreviewInvalid,
+        DropPreviewInvalid,
         InvalidHandleColor(String, String),
         EventCredits,
     }
@@ -70,7 +70,7 @@ pub mod board_host {
                 Self::Json(error) => write!(formatter, "{error}"),
                 Self::ExternalLinkPreviewJson(error) => write!(formatter, "setLinkSessionJson: {error}"),
                 Self::BrushSessionJson(error) => write!(formatter, "setBrushSessionJson: {error}"),
-                Self::FixtureDropPreviewJson(error) => write!(formatter, "setFixtureDropPreviewJson: {error}"),
+                Self::DropPreviewJson(error) => write!(formatter, "setDropPreviewJson: {error}"),
                 Self::Theme(message) => formatter.write_str(message),
                 Self::GridFactorOutOfRange => formatter.write_str("gridFactor must be finite and in (0, 1e6]"),
                 Self::CompatNotArray => formatter.write_str("expected JSON array of compatibility objects"),
@@ -87,7 +87,7 @@ pub mod board_host {
                 Self::NodeKindHandleAngleMissing => formatter.write_str("node kind handle angle missing"),
                 Self::EdgeTipRowInvalid(row) => write!(formatter, "edge tip row {row:?} invalid"),
                 Self::CatalogMissingKind(catalog, kind) => write!(formatter, "catalog missing {catalog} kind {kind:?}"),
-                Self::FixtureDropPreviewInvalid => formatter.write_str("setFixtureDropPreviewJson: preview payload missing nodeKind, screen/world point, or size"),
+                Self::DropPreviewInvalid => formatter.write_str("setDropPreviewJson: preview payload missing nodeKind, screen/world point, or size"),
                 Self::InvalidHandleColor(handle, color) => write!(formatter, "invalid color on handle {handle}: {color:?}"),
                 Self::EventCredits => formatter.write_str("board event credits exhausted before descriptor publication"),
             }
@@ -98,7 +98,7 @@ pub mod board_host {
         fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
             match self {
                 Self::Json(error) => std::error::Error::source(error),
-                Self::ExternalLinkPreviewJson(error) | Self::BrushSessionJson(error) | Self::FixtureDropPreviewJson(error) => Some(error),
+                Self::ExternalLinkPreviewJson(error) | Self::BrushSessionJson(error) | Self::DropPreviewJson(error) => Some(error),
                 _ => None,
             }
         }
@@ -1565,7 +1565,7 @@ pub mod board_host {
     }
 
     #[derive(Clone, Debug)]
-    struct FixtureDropPreviewSnapshot {
+    struct DropPreviewSnapshot {
         node_kind_id: String,
         x: f64,
         y: f64,
@@ -2594,7 +2594,7 @@ pub mod board_host {
         brush_candidates: BrushCandidatePage,
         brush_candidate_index: usize,
         brush_preview: Option<BrushPreviewSnapshot>,
-        fixture_drop_preview: Option<FixtureDropPreviewSnapshot>,
+        drop_preview: Option<DropPreviewSnapshot>,
         brush_candidates_emit_key: Option<String>,
         brush_preview_emit_key: Option<String>,
         brush_placement_serial: u64,
@@ -2703,7 +2703,7 @@ pub mod board_host {
 
     /// 🧮️ Entities (nodes + handles + edges + wires) one board descriptor, selection or gesture payload
     /// may carry. Sized for the largest shipped puzzle 2d example: Nakagin Capsule Tower is 180 nodes
-    /// + 358 handles + 179 edges = 717 entities — the old 256 refused it silently (`parse_fixture_json`
+    /// + 358 handles + 179 edges = 717 entities — the old 256 refused it silently (`load_board_snapshot_json`
     /// → `false`, three empty panes, 2026-09-16).
     pub const BOARD_POINTER_ITEM_CAPACITY: usize = 1_024;
     /// 🧮️ Entity-id bytes the same payloads may carry — Nakagin's UUID ids total ~29 KiB; kept under the
@@ -3530,9 +3530,22 @@ pub mod board_host {
             self.deltas[..usize::from(self.delta_len)].iter().flatten().map(|delta| self.id(delta.id))
         }
 
+        /// 🎥️ The camera this plan settles on the view lane: a finished pan's. A camera move is view state, so the host
+        /// publishes it as its view verb (`setCamera`) and never as a board event.
+        pub fn view_camera(&self) -> Option<[f64; 3]> {
+            match self.kind {
+                BoardPointerPlanKind::FinishPan { camera } => Some(camera),
+                _ => None,
+            }
+        }
+
+        /// 📮️ Whether committing this plan puts anything on the host's action queue: board events or a view camera.
+        pub fn publishes(&self) -> bool {
+            self.event_count() > 0 || self.view_camera().is_some()
+        }
+
         pub fn event_count(&self) -> usize {
             match self.kind {
-                BoardPointerPlanKind::FinishPan { .. } => 1,
                 BoardPointerPlanKind::FinishDrag => usize::from(self.output_len > 2),
                 BoardPointerPlanKind::SelectionPreview { .. } | BoardPointerPlanKind::SelectionCommit => 1,
                 BoardPointerPlanKind::LinkMove { .. } => usize::from(self.output_len > 2),
@@ -3548,12 +3561,11 @@ pub mod board_host {
             !matches!(self.kind, BoardPointerPlanKind::Idle)
         }
 
+        /// 🈳️ Seals the empty event page of a hand-built plan that publishes no board event.
+        #[cfg(test)]
         fn seal_events(&mut self) -> Result<(), BoardPointerPlanFault> {
-            let mut output = String::with_capacity(BOARD_POINTER_BYTE_CAPACITY);
-            self.write_events_json(&mut output)?;
-            self.output[..output.len()].copy_from_slice(output.as_bytes());
-            self.output_len = output.len() as u16;
-            Ok(())
+            self.output_len = 0;
+            self.output_raw("[]")
         }
 
         fn output_raw(&mut self, value: &str) -> Result<(), BoardPointerPlanFault> {
@@ -3594,27 +3606,6 @@ pub mod board_host {
 
         pub fn events_json(&self) -> &str {
             std::str::from_utf8(&self.output[..usize::from(self.output_len)]).expect("board event page is encoded from UTF-8 schema tokens")
-        }
-
-        pub fn write_events_json(&self, output: &mut String) -> Result<(), BoardPointerPlanFault> {
-            output.clear();
-            match self.kind {
-                BoardPointerPlanKind::FinishPan { camera } => {
-                    output.push_str("[{\"name\":\"camera\",\"payload\":{");
-                    output.push_str("\"x\":");
-                    output.push_str(&camera[0].to_string());
-                    output.push_str(",\"y\":");
-                    output.push_str(&camera[1].to_string());
-                    output.push_str(",\"zoom\":");
-                    output.push_str(&camera[2].to_string());
-                    output.push_str("}}]");
-                }
-                _ => output.push_str("[]"),
-            }
-            if output.len() > BOARD_POINTER_BYTE_CAPACITY {
-                return Err(BoardPointerPlanFault::ByteCredits);
-            }
-            Ok(())
         }
 
     }
@@ -3716,7 +3707,7 @@ pub mod board_host {
                 brush_candidates: BrushCandidatePage::default(),
                 brush_candidate_index: 0,
                 brush_preview: None,
-                fixture_drop_preview: None,
+                drop_preview: None,
                 brush_candidates_emit_key: None,
                 brush_preview_emit_key: None,
                 brush_placement_serial: 0,
@@ -4110,7 +4101,7 @@ pub mod board_host {
                         self.push_close_string(preview.node_kind_id);
                         self.push_close_optional_string(preview.icon_kind);
                         self.close_node_handles = Some(preview.handles);
-                    } else if let Some(preview) = self.fixture_drop_preview.take() {
+                    } else if let Some(preview) = self.drop_preview.take() {
                         self.push_close_string(preview.node_kind_id);
                         self.push_close_optional_string(preview.icon_kind);
                     } else if self
@@ -7868,7 +7859,7 @@ pub mod board_host {
             }
         }
 
-        fn fixture_drop_preview_effective_dims(&self, preview: &FixtureDropPreviewSnapshot) -> (NodeShape, f64, f64, f64) {
+        fn drop_preview_effective_dims(&self, preview: &DropPreviewSnapshot) -> (NodeShape, f64, f64, f64) {
             if let Some(kind) = self.node_kinds.get(preview.node_kind_id.as_str()) {
                 let radius = self.brush_node_size * 0.5 * kind.scale;
                 let (width, height) = if kind.shape == NodeShape::Rectangle { (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale) } else { (radius * 2.0, radius * 2.0) };
@@ -7877,7 +7868,7 @@ pub mod board_host {
             (preview.shape, preview.radius, preview.width, preview.height)
         }
 
-        fn fixture_drop_preview_from_json(&self, node: &serde_json::Value) -> Option<FixtureDropPreviewSnapshot> {
+        fn drop_preview_from_json(&self, node: &serde_json::Value) -> Option<DropPreviewSnapshot> {
             let node_kind_id = node.get("nodeKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
             let (x, y) = match (node.get("screenX").and_then(|v| v.as_f64()).filter(|v| v.is_finite()), node.get("screenY").and_then(|v| v.as_f64()).filter(|v| v.is_finite())) {
                 (Some(sx), Some(sy)) => {
@@ -7903,30 +7894,30 @@ pub mod board_host {
                 }
             };
             let icon_kind = node.get("iconKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-            Some(FixtureDropPreviewSnapshot { node_kind_id: node_kind_id.to_string(), x, y, shape, radius, width, height, icon_kind })
+            Some(DropPreviewSnapshot { node_kind_id: node_kind_id.to_string(), x, y, shape, radius, width, height, icon_kind })
         }
 
-        /// 👻️ Sets or clears the workbench palette fixture drop ghost node (independent of brush utility).
-        pub fn set_fixture_drop_preview_json(&mut self, json: &str) -> Result<(), NormalPortError> {
+        /// 👻️ Sets or clears the workbench palette snapshot drop ghost node (independent of brush utility).
+        pub fn set_drop_preview_json(&mut self, json: &str) -> Result<(), NormalPortError> {
             if json.trim().is_empty() {
-                self.fixture_drop_preview = None;
+                self.drop_preview = None;
                 self.bump_content_scene_generation();
                 return Ok(());
             }
-            let v: serde_json::Value = serde_json::from_str(json).map_err(NormalPortError::FixtureDropPreviewJson)?;
-            self.fixture_drop_preview = self.fixture_drop_preview_from_json(&v);
-            if self.fixture_drop_preview.is_none() {
-                return Err(NormalPortError::FixtureDropPreviewInvalid);
+            let v: serde_json::Value = serde_json::from_str(json).map_err(NormalPortError::DropPreviewJson)?;
+            self.drop_preview = self.drop_preview_from_json(&v);
+            if self.drop_preview.is_none() {
+                return Err(NormalPortError::DropPreviewInvalid);
             }
             self.bump_content_scene_generation();
             Ok(())
         }
 
-        fn append_fixture_drop_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod, world_space: bool) {
-            let Some(ref preview) = self.fixture_drop_preview else {
+        fn append_drop_preview_paint(&self, scene: &mut Scene, lod: BoardDrawLod, world_space: bool) {
+            let Some(ref preview) = self.drop_preview else {
                 return;
             };
-            let (shape, radius, width, height) = self.fixture_drop_preview_effective_dims(preview);
+            let (shape, radius, width, height) = self.drop_preview_effective_dims(preview);
             let icon_kind = preview.icon_kind.as_deref().filter(|s| !s.is_empty()).or_else(|| self.node_kinds.get(preview.node_kind_id.as_str()).and_then(|k| k.icon.as_deref()));
             self.paint_highlighted_node_preview(scene, lod, preview.x, preview.y, shape, radius, width, height, icon_kind, world_space);
         }
@@ -9986,7 +9977,7 @@ pub mod board_host {
 
         /// 🛂️ Every refusal a descriptor sync can raise BEFORE it touches the scene: the two fixed
         /// descriptor ceilings and the handle colours it would have to parse. A sync that fails halfway
-        /// leaves a half-built board, and a fixture parse that clears first leaves an EMPTY one (three
+        /// leaves a half-built board, and a snapshot parse that clears first leaves an EMPTY one (three
         /// blank panes, 2026-09-17), so both preflight through here and mutate only once it passes.
         fn descriptor_admission(desc: &SceneDescriptorJson) -> Result<(), NormalPortError> {
             let entity_count = desc
@@ -10022,7 +10013,7 @@ pub mod board_host {
         }
 
         /// 🚚️ One descriptor sync; `announce_new_edges` decides whether edges absent from the current
-        /// scene emit `edgeCreate`. A fixture parse passes `false`: it clears the scene first, so every
+        /// scene emit `edgeCreate`. A snapshot parse passes `false`: it clears the scene first, so every
         /// edge is "new" — announcing them echoed the WHOLE document back to the plugin as edge
         /// creations after each re-parse (fill placements re-committing themselves) and, undrained,
         /// they exhausted the event credits so the next parse of any edged document was refused
@@ -10287,22 +10278,22 @@ pub mod board_host {
         }
 
         /// 🎲️ Replaces the whole board with `json`, ALL OR NOTHING: the descriptor is built and admitted
-        /// first, and only a fixture that will really paint clears the live scene. Clearing before the
+        /// first, and only a snapshot that will really paint clears the live scene. Clearing before the
         /// refusal left the panes blank until the next parse — the refusal and "the board went empty"
         /// were the same event (2026-09-17 battery, `16-inspection/inspector-fresh-on-open`).
-        pub fn parse_fixture_json(&mut self, json: &str) -> bool {
-            let f: FixtureJson = match serde_json::from_str(json) {
+        pub fn load_board_snapshot_json(&mut self, json: &str) -> bool {
+            let f: BoardSnapshotJson = match serde_json::from_str(json) {
                 Ok(v) => v,
                 Err(_) => return false,
             };
             let port_mode = match f.schema.as_str() {
-                "reasoning.mindmap.fixture" => GraphPortMode::Normal,
-                "puzzle.2d.fixture" => GraphPortMode::Ported,
+                "board.normal.undirected.v1" => GraphPortMode::Normal,
+                "board.ports.directed.v1" => GraphPortMode::Ported,
                 _ => return false,
             };
             let has_ports = port_mode.has_ports();
             let camera = f.camera.as_ref().map(|camera| (camera.x, camera.y, camera.zoom));
-            let Some(desc) = Self::fixture_scene_descriptor(f, has_ports) else {
+            let Some(desc) = Self::board_snapshot_scene_descriptor(f, has_ports) else {
                 return false;
             };
             if Self::descriptor_admission(&desc).is_err() {
@@ -10319,13 +10310,13 @@ pub mod board_host {
             self.sync_descriptor_with(&desc, false).is_ok()
         }
 
-        /// 🧾️ The pure half of [`Self::parse_fixture_json`]: one fixture document into one scene
+        /// 🧾️ The pure half of [`Self::load_board_snapshot_json`]: one snapshot document into one scene
         /// descriptor, or `None` for a document this port refuses. Touches no board state.
         ///
         /// 🎯️ Target regions are optional by construction (the artifact omits an empty collection),
         /// so a malformed row is skipped rather than refusing the whole document: a board that
         /// cannot paint its constraint rectangles must still paint its graph.
-        fn fixture_scene_descriptor(f: FixtureJson, has_ports: bool) -> Option<SceneDescriptorJson> {
+        fn board_snapshot_scene_descriptor(f: BoardSnapshotJson, has_ports: bool) -> Option<SceneDescriptorJson> {
             let mut desc = SceneDescriptorJson::default();
             for entry in f.nodes {
                 let Some(obj) = entry.as_object() else {
@@ -10388,8 +10379,8 @@ pub mod board_host {
                     return None;
                 }
                 let shape_str = obj.get("shape").and_then(|v| v.as_str());
-                let fixture_node_kind = obj.get("nodeKind").or_else(|| obj.get("node_kind")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
-                let fixture_node_scale = obj.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
+                let snapshot_node_kind = obj.get("nodeKind").or_else(|| obj.get("node_kind")).and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
+                let snapshot_node_scale = obj.get("scale").and_then(|v| v.as_f64()).filter(|v| v.is_finite() && *v > 0.0);
                 if shape_str == Some("rectangle") {
                     let Some(width) = obj.get("width").and_then(|v| v.as_f64()) else {
                         return None;
@@ -10411,7 +10402,7 @@ pub mod board_host {
                         style: None,
                         text,
                         icon_kind,
-                        node_kind: fixture_node_kind.clone(),
+                        node_kind: snapshot_node_kind.clone(),
                         user_data: None,
                         visible: board_json_visible_option(obj),
                         locked: board_json_locked_option(obj),
@@ -10420,7 +10411,7 @@ pub mod board_host {
                         radius: None,
                         width: Some(width),
                         height: Some(height),
-                        scale: fixture_node_scale,
+                        scale: snapshot_node_scale,
                     });
                 } else {
                     let Some(radius) = obj.get("radius").and_then(|v| v.as_f64()) else {
@@ -10440,7 +10431,7 @@ pub mod board_host {
                         style: None,
                         text,
                         icon_kind,
-                        node_kind: fixture_node_kind.clone(),
+                        node_kind: snapshot_node_kind.clone(),
                         user_data: None,
                         visible: board_json_visible_option(obj),
                         locked: board_json_locked_option(obj),
@@ -10449,7 +10440,7 @@ pub mod board_host {
                         radius: Some(radius),
                         width: None,
                         height: None,
-                        scale: fixture_node_scale,
+                        scale: snapshot_node_scale,
                     });
                 }
             }
@@ -10460,7 +10451,7 @@ pub mod board_host {
                 let Some(id) = e.get("id").and_then(|v| v.as_str()) else {
                     return None;
                 };
-                let Some((source, target)) = fixture_edge_handle_ids_from_object(e) else {
+                let Some((source, target)) = board_edge_handle_ids_from_object(e) else {
                     return None;
                 };
                 if !has_ports {
@@ -11081,8 +11072,8 @@ pub mod board_host {
             let previews_in_world_space = matches!(lod, BoardDrawLod::Overview | BoardDrawLod::Compact | BoardDrawLod::Minimap);
             if previews_in_world_space {
                 let mut preview_layer = Scene::new();
-                if self.fixture_drop_preview.is_some() {
-                    self.append_fixture_drop_preview_paint(&mut preview_layer, lod, true);
+                if self.drop_preview.is_some() {
+                    self.append_drop_preview_paint(&mut preview_layer, lod, true);
                 }
                 if self.active_utility == ActiveUtility::Brush || self.brush_preview.is_some() {
                     self.append_brush_preview_paint(&mut preview_layer, lod, true);
@@ -11090,8 +11081,8 @@ pub mod board_host {
                 self.append_transform_gumball_paint(&mut preview_layer, true);
                 scene.append(&preview_layer, Some(cam_aff));
             } else {
-                if self.fixture_drop_preview.is_some() {
-                    self.append_fixture_drop_preview_paint(scene, lod, false);
+                if self.drop_preview.is_some() {
+                    self.append_drop_preview_paint(scene, lod, false);
                 }
                 if self.active_utility == ActiveUtility::Brush || self.brush_preview.is_some() {
                     self.append_brush_preview_paint(scene, lod, false);
@@ -12248,9 +12239,7 @@ pub mod board_host {
                 (BoardPointerPhase::Up, Interaction::Pan { origin, start_screen }) => {
                     let delta = screen - *start_screen;
                     let camera = [origin.x - delta.x / origin.zoom, origin.y - delta.y / origin.zoom, origin.zoom];
-                    let mut plan = BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::FinishPan { camera });
-                    plan.seal_events()?;
-                    Ok(plan)
+                    Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::FinishPan { camera }))
                 }
                 (BoardPointerPhase::Up, Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair, gesture, .. }) => self.plan_drag_pointer(world, (primary_id, *offset, start_positions), Some((gesture, proximity_pair.as_ref()))),
                 (BoardPointerPhase::Up, Interaction::None) => Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle)),
@@ -13855,8 +13844,8 @@ pub mod board_host {
 }
 
 pub use crate::infinite::board::normal::undirected::{
-    apply_force_graph_layout_to_fixture_v1_json as apply_undirected_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value as apply_undirected_force_graph_layout_to_fixture_v1_value,
-    apply_redraw_layout_to_fixture_v1_json as apply_normal_undirected_redraw_layout_to_fixture_v1_json, ForceGraphLayoutOptions as UndirectedForceGraphLayoutOptions,
+    apply_force_graph_layout_to_board_snapshot_json as apply_undirected_force_graph_layout_to_board_snapshot_json, apply_force_graph_layout_to_board_snapshot_value as apply_undirected_force_graph_layout_to_board_snapshot_value,
+    apply_redraw_layout_to_board_snapshot_json as apply_normal_undirected_redraw_layout_to_board_snapshot_json, ForceGraphLayoutOptions as UndirectedForceGraphLayoutOptions,
 };
 pub use crate::infinite::board::ports::directed::*;
 pub use crate::infinite::canvas;

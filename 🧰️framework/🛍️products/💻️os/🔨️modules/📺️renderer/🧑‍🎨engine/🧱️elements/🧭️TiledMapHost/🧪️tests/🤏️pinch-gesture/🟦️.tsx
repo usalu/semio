@@ -83,7 +83,7 @@ function tiledMapNode(): UiComponentSceneNode {
     surfaceId: "surface",
     componentKind: "tiled-map",
     tiledMap: {
-      mapFixtureJson: JSON.stringify({ positions: [], routes: [] }),
+      mapDescriptorJson: JSON.stringify({ positions: [], routes: [] }),
       cameraJson: JSON.stringify(surfacePinchFixture.gestures.spread.initialCamera),
       renderMode: "vector",
       vectorStyle: "colored",

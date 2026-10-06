@@ -2,6 +2,7 @@
 package adapter
 
 import (
+	json "encoding/json"
 	"encoding/json"
 	"fmt"
 
@@ -9,14 +10,35 @@ import (
 	host "semio.tech/repo/test"
 )
 
+type cancellationVectors struct {
+	// 🗺️Plan is the plan to run.
+	Plan testrunner.InvocationPlan `json:"plan"`
+	// 🎞️Transcripts are the transcripts that answer it.
+	Transcripts []testrunner.RecordedTranscript `json:"transcripts"`
+	// 🛑️CancelAfter says to cancel once this many invocations have completed.
+	CancelAfter int `json:"cancelAfter"`
+}
+
+func parseCancellationVectors(source []byte) (cancellationVectors, error) {
+	vectors := cancellationVectors{}
+	err := json.Unmarshal(source, &vectors)
+	if vectors.Plan.Invocations == nil {
+		vectors.Plan.Invocations = []testrunner.RunnerInvocation{}
+	}
+	if vectors.Plan.Problems == nil {
+		vectors.Plan.Problems = []string{}
+	}
+	return vectors, err
+}
+
 // region 🔖️Support
 
-func vectors(ctx *host.Context) (testrunner.CancellationVectors, error) {
-	source, err := ctx.FixtureBytes("shared://🛑️cancellation-vectors.json")
+func vectors(ctx *host.Context) (cancellationVectors, error) {
+	source, err := ctx.InputBytes("shared://🛑️cancellation-vectors.json")
 	if err != nil {
-		return testrunner.CancellationVectors{}, err
+		return cancellationVectors{}, err
 	}
-	return testrunner.ParseCancellationVectors(source)
+	return parseCancellationVectors(source)
 }
 
 func decode(text string) (any, error) {

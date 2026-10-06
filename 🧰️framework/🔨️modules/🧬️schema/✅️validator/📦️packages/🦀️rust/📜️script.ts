@@ -10,7 +10,7 @@ import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    const { proveSchemaValidatorOwnershipV1 } = await import("../../📏️ownership/🟦️.ts");
+    const { proveSchemaValidatorOwnershipV1 } = await import("../../🧪️tests/📏️ownership/🟦️.ts");
     proveSchemaValidatorOwnershipV1(this.repoRoot);
     const { proveJsonSchemaSubsetContractV1 } = await import("../../🧪️tests/🟦️.ts");
     console.log("schema-validator: " + await proveJsonSchemaSubsetContractV1() + " unchanged subset vectors passed");

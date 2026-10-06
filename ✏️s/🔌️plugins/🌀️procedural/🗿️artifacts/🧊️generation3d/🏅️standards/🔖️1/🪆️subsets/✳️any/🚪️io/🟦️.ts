@@ -2,7 +2,7 @@
 import { parsePolygonMesh, type MeshAttribute, type PolygonMesh } from "../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🟦️.ts";
 import type { ObjSnapshot } from "../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🟦️.ts";
 import type { PlySnapshot, PlyValue } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
-import { binary32Value, binary64, binary64Value } from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary32Value,binary64,binary64Value} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type { GltfDocument, GltfNode, GltfPrimitive, GltfJson } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🟦️.ts";
 import { parseGltfPbrMetallicRoughness, parseGltfMaterial, parseGltfSampler } from "../../../../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🟦️.ts";
 import type { FlowHostSnapshot, NeuralDictionary, Widget } from "../🧬️schema/📸️snapshot/🟦️.ts";

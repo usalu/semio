@@ -12,12 +12,12 @@ use semio_framework_plugin::ViewModel;
 /// 🎬️ The bundled `demo` fixture — the only built-in document carrying solids, supports and both
 /// load cases, so every law over `n20_l1`/`sol1`/`s_00`/`l2` is stated over it.
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
+    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 /// 🌲️ The document the app actually boots on (`concrete-forest`) — frames and member UDLs only.
 fn boot() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
+    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot()
 }
 
 fn selecting(ids: &[&str]) -> Fem3dInteractionSnapshot {

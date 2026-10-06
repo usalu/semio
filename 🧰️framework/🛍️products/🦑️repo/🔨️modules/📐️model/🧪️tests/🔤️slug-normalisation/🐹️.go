@@ -26,7 +26,7 @@ type vectors struct {
 }
 
 func readVectors(ctx *host.Context) (vectors, error) {
-	raw, err := ctx.FixtureBytes(vectorsURI)
+	raw, err := ctx.InputBytes(vectorsURI)
 	if err != nil {
 		return vectors{}, err
 	}

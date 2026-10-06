@@ -302,9 +302,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -355,7 +354,6 @@
       "notes": "A new entry file2.txt added to the archive."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -406,7 +404,6 @@
       "notes": "The entry file2.txt removed from the archive, inverse of add-entry."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "rename-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -457,7 +454,6 @@
       "notes": "The single entry's name changed old.txt -> new.txt, content untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-archive-comment-applied",
       "class": "third-party-generated",
       "target": {
@@ -508,7 +504,6 @@
       "notes": "The end-of-central-directory record's archive comment set."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entry-data-applied",
       "class": "third-party-generated",
       "target": {

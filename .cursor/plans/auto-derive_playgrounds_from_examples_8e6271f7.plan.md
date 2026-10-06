@@ -60,7 +60,7 @@ In [framework/product/playground/core/index.ts](framework/product/playground/cor
 - `PlaygroundFixtureCatalog` / `PlaygroundFixtureOption` → `PlaygroundExampleCatalog` / `PlaygroundExampleOption`
 - `PLAYGROUND_NO_FIXTURE_ID` / `PLAYGROUND_NO_FIXTURE_OPTION` → `PLAYGROUND_NO_EXAMPLE_ID` / `PLAYGROUND_NO_EXAMPLE_OPTION`
 - `eagerPlayFixtureGlob` → `eagerPlayExampleGlob`
-- `playgroundLockedFixtureId` / `isPlaygroundFixtureLocked` / `playgroundResolvedFixtureId` → `*ExampleId`/`isPlaygroundExampleLocked` (env var `PLAYGROUND_LOCKED_FIXTURE_ID` → `PLAYGROUND_LOCKED_EXAMPLE_ID`)
+- `playgroundLockedFixtureId` / `isPlaygroundFixtureLocked` / `playgroundResolvedTestInputId` → `*ExampleId`/`isPlaygroundExampleLocked` (env var `PLAYGROUND_LOCKED_FIXTURE_ID` → `PLAYGROUND_LOCKED_EXAMPLE_ID`)
 - `resolvePlaygroundFixtureCatalog` → `resolvePlaygroundExampleCatalog`
 - **New**: `loadPlaygroundExampleCatalog(globPattern, jsonSuffix, defaultId)` — does what every app currently hand-writes (`eagerPlayExampleGlob` → derive id from filename → Title-Case label → sort → build `{ defaultId, options, jsonById }`) in one call.
 

@@ -6,9 +6,11 @@
  *  fails loudly here rather than surviving into an apply.
  */
 
-export { RemodelingCodecError, decodeRecord, decodeRemodelingSnapshot, decodeValue, remodelingSnapshotFromJsonText } from "../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
-export { decodeRemodelingDiff } from "../../../../../../../🧬️schema/🔺️diff/🟦️.ts";
-export { decodeRemodelingMutation } from "../../../../../../../🧬️schema/🧬️mutations/🟦️.ts";
+export {RemodelingCodecError} from "../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+export {decodeRecord,decodeValue} from "../../../../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
+export {decodeRemodelingSnapshot, remodelingSnapshotFromJsonText} from "../../../../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
+export {decodeRemodelingDiff} from "../../../../../../📝️text/🔺️diff/🔣️json/🟦️.ts";
+export {decodeRemodelingMutation} from "../../../../../../📝️text/🧬️mutations/🔣️json/🟦️.ts";
 
 /** 🚫 Kept as the historical alias for this leaf's own refusal type. */
-export { RemodelingCodecError as RemodelingDecodeError } from "../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+export {RemodelingCodecError as RemodelingDecodeError} from "../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";

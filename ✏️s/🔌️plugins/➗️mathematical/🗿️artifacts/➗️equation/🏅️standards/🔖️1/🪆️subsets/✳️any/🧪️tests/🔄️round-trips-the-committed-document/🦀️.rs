@@ -17,7 +17,7 @@ mod subject {
     use super::DSL_ASSET;
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_mathematical_equation::standards::v1::subsets::any::schema::snapshot::equation_identity_report_json;
+    use semio_s_artifact_mathematical_equation::standards::v1::subsets::any::io::text::snapshot::equation_identity_report_json;
 
     fn member<'a>(report: &'a Json, key: &str) -> Result<&'a Json, String> {
         report.get(key).ok_or_else(|| format!("the report carries no {key:?} member"))
@@ -36,7 +36,7 @@ mod subject {
     /// a second printing IS byte identity. The pack decoding is a separate binary codec, so agreeing
     /// on one snapshot cannot be reached by carrying text bytes across.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let bytes = ctx.fixture_bytes(DSL_ASSET)?;
+        let bytes = ctx.input_bytes(DSL_ASSET)?;
         let dsl_text = String::from_utf8(bytes).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
         let report = parse_json(&equation_identity_report_json(&dsl_text).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
         let parsed = member(&report, "parsed")?;

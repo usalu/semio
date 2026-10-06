@@ -1,0 +1,919 @@
+{
+  "denominator": 57,
+  "actualRows": 57,
+  "receipt": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-stdio-primary-snapshot-census-complete-original-fleet-native-after-owned-xml-exports.log",
+  "rows": [
+    {
+      "kind": "s.stdio.avi",
+      "schema": "stdio.avi",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 5083,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Posttyped native_value_bytes; rough backing preflight",
+      "owningProject": "@semio-tech/stdio-avi-rs",
+      "nativeTarget": "@semio-tech/stdio-avi-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-avi-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.bcf",
+      "schema": "stdio.bcf",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3722,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Derived typed then native count (notfullSQL cells) admission",
+      "owningProject": "@semio-tech/stdio-bcf-rs",
+      "nativeTarget": "@semio-tech/stdio-bcf-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-bcf-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.binary",
+      "schema": "stdio.binary",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 320,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Exact raw/hexfile+rows/allocation; no complete semanticvalue/schema/table/column guards",
+      "owningProject": "@semio-tech/stdio-binary-rs",
+      "nativeTarget": "@semio-tech/stdio-binary-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-binary-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.bmp",
+      "schema": "stdio.bmp",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 4175,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Raw/hex borrowed layout validation; rows1/file/allocation prechecks then typed bytes/schema copy; no SQL semantic max_value admission",
+      "owningProject": "@semio-tech/stdio-bmp-rs",
+      "nativeTarget": "@semio-tech/stdio-bmp-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-bmp-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.csv",
+      "schema": "stdio.csv",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 546,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Derivedtypedconstructor then guarded posttyped forecast",
+      "owningProject": "@semio-tech/stdio-csv-rs",
+      "nativeTarget": "@semio-tech/stdio-csv-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-csv-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.deflate",
+      "schema": "stdio.deflate",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 658,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Exact zlib measurement rows/file/allocation; no fullsemanticcells",
+      "owningProject": "@semio-tech/stdio-deflate-rs",
+      "nativeTarget": "@semio-tech/stdio-deflate-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-deflate-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "schema": "stdio.docx",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 4241,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "OPC reader cumulative max_rows plus controlled typed octet/string/XML construction; no separate full SQL identity/scalar-cell census before construction",
+      "owningProject": "@semio-tech/stdio-docx-rs",
+      "nativeTarget": "@semio-tech/stdio-docx-rs:test-snapshot-sqlite",
+      "sourceTarget": "@semio-tech/stdio-docx-rs:test-snapshot-sqlite (combined route; no split Source target)",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.dwg",
+      "schema": "stdio.dwg",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 244538,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Pretyped complete structural row census only: native_admission::root copies max_rows, not semantic bytes/schema/table/columns",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/📋️project.json",
+      "owningProject": "@semio-tech/stdio-dwg-rs",
+      "nativeTarget": "@semio-tech/stdio-dwg-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-dwg-rs:test-snapshot-sqlite-source",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.dxf",
+      "schema": "stdio.dxf",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 6249,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Controlled custom typed construction precedes complete Projection::forecast SQL-cell check",
+      "owningProject": "@semio-tech/stdio-dxf-rs",
+      "nativeTarget": "@semio-tech/stdio-dxf-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-dxf-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.epw",
+      "schema": "stdio.epw",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 2322,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct derived typed construction without borrowed cell census",
+      "owningProject": "@semio-tech/stdio-epw-rs",
+      "nativeTarget": "@semio-tech/stdio-epw-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-epw-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.gif",
+      "schema": "stdio.gif",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 2119,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Derived typed construction precedes rough NativeEncodingBound preflight",
+      "owningProject": "@semio-tech/stdio-gif-rs",
+      "nativeTarget": "@semio-tech/stdio-gif-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-gif-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.gif",
+      "schema": "stdio.gif.89a",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 4616,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Derived typed construction precedes rough NativeEncodingBound preflight",
+      "owningProject": "@semio-tech/stdio-gif-rs",
+      "nativeTarget": "@semio-tech/stdio-gif-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-gif-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.gltf",
+      "schema": "stdio.gltf",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 27649,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Borrowed parsed record then typed owned_pack; guarded to_sqlite_database materializes SQL shadow after construction",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📋️project.json",
+      "owningProject": "@semio-tech/stdio-gltf-rs",
+      "nativeTarget": "@semio-tech/stdio-gltf-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-gltf-rs:test-snapshot-sqlite-source",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.html",
+      "schema": "stdio.html",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 1169,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Preconstruct normalized_domain admits domain rows and semantic UTF8/scalars; full schema/table/column copied limits absent from native callback",
+      "owningProject": "@semio-tech/stdio-html-rs",
+      "nativeTarget": "@semio-tech/stdio-html-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-html-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "schema": "stdio.ifc",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3089,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Custom frame max_rows only before typed reconstruction",
+      "owningProject": "@semio-tech/stdio-ifc-rs",
+      "nativeTarget": "@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "schema": "stdio.ifc.2x3",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3792,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Custom frame max_rows only before typed reconstruction",
+      "owningProject": "@semio-tech/stdio-ifc-rs",
+      "nativeTarget": "@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.jpg",
+      "schema": "stdio.jpg",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 4539,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Custom controlled typed constructor precedes rough NativeEncodingBound preflight",
+      "owningProject": "@semio-tech/stdio-jpg-rs",
+      "nativeTarget": "@semio-tech/stdio-jpg-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-jpg-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.json",
+      "schema": "stdio.json",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 1346,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Custom bind pretyped max_rows only, no copied SQL cell limit",
+      "owningProject": "@semio-tech/stdio-json-rs",
+      "nativeTarget": "@semio-tech/stdio-json-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-json-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.las",
+      "schema": "stdio.las",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 5794,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Borrowed max_rows only before custom owner",
+      "owningProject": "@semio-tech/stdio-las-rs",
+      "nativeTarget": "@semio-tech/stdio-las-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-las-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.md",
+      "schema": "stdio.md",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3625,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Borrowed census copies max_rows only; flat typed construction precedes reconstruction",
+      "owningProject": "@semio-tech/stdio-md-rs",
+      "nativeTarget": "@semio-tech/stdio-md-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-md-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.mp3",
+      "schema": "stdio.mp3",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 2231,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct derived typed construction without borrowed cell census",
+      "owningProject": "@semio-tech/stdio-mp3-rs",
+      "nativeTarget": "@semio-tech/stdio-mp3-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-mp3-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.mp4",
+      "schema": "stdio.mp4",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 8044,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Posttyped native_value_bytes",
+      "owningProject": "@semio-tech/stdio-mp4-rs",
+      "nativeTarget": "@semio-tech/stdio-mp4-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-mp4-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.obj",
+      "schema": "stdio.obj",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 6069,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Borrowed max_rows then posttyped admit_sqlite_values",
+      "owningProject": "@semio-tech/stdio-obj-rs",
+      "nativeTarget": "@semio-tech/stdio-obj-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-obj-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "schema": "stdio.pdf",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 543,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "PDF14 derived typed construction without borrowed SQL-cell census; encode rows-only",
+      "owningProject": "@semio-tech/stdio-pdf-rs",
+      "nativeTarget": "@semio-tech/stdio-pdf-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-pdf-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "schema": "stdio.pdf.1.7",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 57159,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Physical PDF17 complete semantic admission mounted; owning whole733 and Source54 qualified separately",
+      "owningProject": "@semio-tech/stdio-pdf-rs",
+      "nativeTarget": "@semio-tech/stdio-pdf-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-pdf-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Separately qualified owning provider"
+    },
+    {
+      "kind": "s.stdio.ply",
+      "schema": "stdio.ply",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3146,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Borrowed max_rows; posttyped semantic check",
+      "owningProject": "@semio-tech/stdio-ply-rs",
+      "nativeTarget": "@semio-tech/stdio-ply-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-ply-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.png",
+      "schema": "stdio.png",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 6944,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Derived typed then guarded posttyped sqlite admit",
+      "owningProject": "@semio-tech/stdio-png-rs",
+      "nativeTarget": "@semio-tech/stdio-png-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-png-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "schema": "stdio.pptx",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 4241,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "OPC reader cumulative max_rows plus controlled typed octet/string/XML construction; no separate full SQL identity/scalar-cell census before construction",
+      "owningProject": "@semio-tech/stdio-pptx-rs",
+      "nativeTarget": "@semio-tech/stdio-pptx-rs:test-snapshot-sqlite",
+      "sourceTarget": "@semio-tech/stdio-pptx-rs:test-snapshot-sqlite (combined route; no split Source target)",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "s.stdio.semio.animation",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 2045,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "s.stdio.semio.document",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3221,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "s.stdio.semio.graph",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 2859,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "s.stdio.semio.image",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 1138,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "s.stdio.semio.presentation",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 5022,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "s.stdio.semio.table",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 1566,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "s.stdio.semio.text",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 536,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 53327,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.audio",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 902,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.brep",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 9099,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.cad",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 5404,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.drawing",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 5644,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.flow",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 1094,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.kit",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3459,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.mesh",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3220,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.model",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3057,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.object",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 1748,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.value",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 1243,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "schema": "stdio.semio.video",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 815,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Direct literal typed constructors, cumulative entity max_rows and paid NativeDecodeControl(min(allocation,max_value)); no separate full SQL-cell census before construction",
+      "owningProject": "@semio-tech/stdio-semio-rs",
+      "nativeTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-semio-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.step",
+      "schema": "stdio.step",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3282,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Pretyped binding frame max_rows only before reconstruct",
+      "owningProject": "@semio-tech/stdio-step-rs",
+      "nativeTarget": "@semio-tech/stdio-step-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-step-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.stl",
+      "schema": "stdio.stl",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 1461,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Borrowed max_rows then posttyped admit_sqlite_values",
+      "owningProject": "@semio-tech/stdio-stl-rs",
+      "nativeTarget": "@semio-tech/stdio-stl-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-stl-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "schema": "stdio.svg",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 2503,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Delegates XML controlled tree decode then validates SVG root; inherited XML role/cost proof remains separate",
+      "owningProject": "@semio-tech/stdio-svg-rs",
+      "nativeTarget": "@semio-tech/stdio-svg-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-svg-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.tiff",
+      "schema": "stdio.tiff",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3652,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Posttyped check_sqlite_semantic_payload",
+      "owningProject": "@semio-tech/stdio-tiff-rs",
+      "nativeTarget": "@semio-tech/stdio-tiff-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-tiff-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.tsv",
+      "schema": "stdio.tsv",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 573,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Derivedtypedconstructor then guarded posttyped forecast",
+      "owningProject": "@semio-tech/stdio-tsv-rs",
+      "nativeTarget": "@semio-tech/stdio-tsv-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-tsv-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.txt",
+      "schema": "stdio.txt",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 419,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Exact raw line count before allocation; max_value_bytes governs native backing/body not complete SQL cells",
+      "owningProject": "@semio-tech/stdio-txt-rs",
+      "nativeTarget": "@semio-tech/stdio-txt-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-txt-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.wav",
+      "schema": "stdio.wav",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 4074,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Complete borrowed CST cells and shared typed visitor mounted; Root reported21Native/17Source",
+      "owningProject": "@semio-tech/stdio-wav-rs",
+      "nativeTarget": "@semio-tech/stdio-wav-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-wav-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Separately qualified owning provider"
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "schema": "stdio.xlsx",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 4241,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "OPC reader cumulative max_rows plus controlled typed octet/string/XML construction; no separate full SQL identity/scalar-cell census before construction",
+      "owningProject": "@semio-tech/stdio-xlsx-rs",
+      "nativeTarget": "@semio-tech/stdio-xlsx-rs:test-snapshot-sqlite",
+      "sourceTarget": "@semio-tech/stdio-xlsx-rs:test-snapshot-sqlite (combined route; no split Source target)",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.xml",
+      "schema": "stdio.xml",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 2503,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Iterative controlled typed XML construction under NativeDecodeControl(max_value); no independent pretyped full SQL-cell census",
+      "owningProject": "@semio-tech/stdio-xml-rs",
+      "nativeTarget": "@semio-tech/stdio-xml-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-xml-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    },
+    {
+      "kind": "s.stdio.zip",
+      "schema": "stdio.zip",
+      "registrationOwner": "stdio",
+      "receiptSqlBytes": 3736,
+      "candidates": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"
+      ],
+      "status": "Pretyped admit_record max_rows then posttyped complete admit_snapshot",
+      "owningProject": "@semio-tech/stdio-zip-rs",
+      "nativeTarget": "@semio-tech/stdio-zip-rs:test-snapshot-sqlite-native",
+      "sourceTarget": "@semio-tech/stdio-zip-rs:test-snapshot-sqlite-source",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust/📋️project.json",
+      "sqlProjectionAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "pretypedCompleteSemanticClaim": "Not qualified as complete by this read-only audit"
+    }
+  ]
+}

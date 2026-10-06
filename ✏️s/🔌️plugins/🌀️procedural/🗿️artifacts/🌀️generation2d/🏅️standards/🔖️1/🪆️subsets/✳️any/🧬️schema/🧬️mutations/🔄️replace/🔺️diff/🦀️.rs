@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff for `ReplaceSynapse`, built directly from `(payload, base)`.
 use super::ReplaceSynapse;
-use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::standards::v1::subsets::any::schema::mutations::synapse_index;
 use crate::{Generation2dDiff, Generation2dSnapshot};
 
@@ -9,6 +9,6 @@ pub fn diff(payload: &ReplaceSynapse, base: &Generation2dSnapshot) -> protocol::
     let Some(index) = synapse_index(&base.host_snapshot, &payload.synapse.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.synapse.id), [payload.synapse.id.clone()]);
     };
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(index, payload.synapse.clone())] }, &LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(index, payload.synapse.clone())] }, &LayoutDiff::default(), None, None))
 }
 //#endregion 🔖️Diff

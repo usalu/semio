@@ -8,7 +8,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("compose5d + prepareTopologyModel", () => {
     it("flattens a fixed root and derived child with fastener x/y", () => {
       const flat = {
-        schema: "puzzle.2d.fixture",
+        schema: "board.ports.directed.v1",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [
           {

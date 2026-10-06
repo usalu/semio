@@ -1,4 +1,4 @@
-//! 🧪️ `scale-selection` fixture — `⛔️negative-factor`.
+//! 🧪️ `scale-selection` snapshot — `⛔️negative-factor`.
 //!
 //! A negative factor would mirror the selection through the pivot; the schema's `exclusiveMinimum: 0` forbids it: a Fatal `mutation.invariant`.
 //!

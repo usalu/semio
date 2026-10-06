@@ -3025,19 +3025,19 @@ export interface SpatialInteraction {
   readonly key: string;
 }
 
-type ModelDefinitionInteractionFixture = InteractionSpec & { readonly key?: string };
+type ModelDefinitionInteractionRecord = InteractionSpec & { readonly key?: string };
 
-function shippedInteractionJsons(): readonly ModelDefinitionInteractionFixture[] {
-  return modelDefinitionInteractionCatalog() as readonly ModelDefinitionInteractionFixture[];
+function shippedInteractionJsons(): readonly ModelDefinitionInteractionRecord[] {
+  return modelDefinitionInteractionCatalog() as readonly ModelDefinitionInteractionRecord[];
 }
 
-function interactionFixtureRow(spec: ModelDefinitionInteractionFixture): SpatialInteraction {
+function interactionCatalogRow(spec: ModelDefinitionInteractionRecord): SpatialInteraction {
   return { id: spec.id, label: spec.label ?? spec.id, key: typeof spec.key === "string" ? spec.key : (spec.id[0] ?? "?") };
 }
 
 /** 🧭️ Interaction rows shipped from model-definition interaction assets (id/label/key catalog view). */
 function shippedSpatialInteractionCatalog(): readonly SpatialInteraction[] {
-  return shippedInteractionJsons().map(interactionFixtureRow);
+  return shippedInteractionJsons().map(interactionCatalogRow);
 }
 
 const COMPILED_INTERACTION_BY_ID = ephemeralMap<string, InteractionSpec>("s.spatial-kernel.geometry.COMPILED_INTERACTION_BY_ID");

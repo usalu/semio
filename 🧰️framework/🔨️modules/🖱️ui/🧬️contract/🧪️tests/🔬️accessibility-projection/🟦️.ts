@@ -29,6 +29,8 @@ type ExpectedRow = {
   readonly valueNow?: number | null;
   readonly valueText?: string | null;
   readonly busy?: boolean;
+  readonly valueStep?: number | null;
+  readonly tone?: string | null;
 };
 type ProgressCase = { readonly id: string; readonly component: Component; readonly fraction: number | null; readonly accessibility: { readonly role: string; readonly focusable: boolean; readonly valueMin: number | null; readonly valueMax: number | null; readonly valueNow: number | null; readonly valueText: string | null; readonly busy: boolean } };
 type Fixture = { readonly roles: readonly RoleRow[]; readonly document: { readonly nodes: readonly UiNodeRecord[] }; readonly expected: readonly ExpectedRow[]; readonly announced: readonly number[] };
@@ -89,7 +91,10 @@ export function accessibilityProjectionSelfTests(): number {
     assert.equal(node.valueNow, row.valueNow ?? null, `${row.key}: valueNow`);
     assert.equal(node.valueText, row.valueText ?? null, `${row.key}: valueText`);
     assert.equal(node.busy, row.busy ?? false, `${row.key}: busy`);
-    checks += 16;
+    assert.equal(node.valueStep, row.valueStep ?? null, `${row.key}: valueStep`);
+    assert.equal(node.tone, row.tone ?? null, `${row.key}: tone`);
+    assert.deepEqual([node.invalid, node.setSize, node.posInSet], [false, null, null], `${row.key}: a draft's refusal and a window place are a renderer's live state`);
+    checks += 19;
   }
   assert.deepEqual(
     uiAccessibilityAnnouncedV1(projection).map((node) => node.nodeId),
@@ -105,7 +110,7 @@ export function accessibilityProjectionSelfTests(): number {
     assert.equal(uiAccessibilityRoleV1(row.component, false), row.accessibility.role, `${row.id}: role`);
     assert.equal(uiAccessibilityIsFocusableV1(row.component, false), row.accessibility.focusable, `${row.id}: focusable`);
     const { role: _role, focusable: _focusable, ...value } = row.accessibility;
-    assert.deepEqual(uiAccessibilityValueV1(row.component), value, `${row.id}: announced value`);
+    assert.deepEqual(uiAccessibilityValueV1(row.component), { ...value, valueStep: null }, `${row.id}: announced value, and no step for a progress bar`);
     assert(row.component.type === "progress", `${row.id}: a progress component`);
     assert.equal(uiProgressFractionV1(row.component.completed, row.component.total), row.fraction, `${row.id}: filled fraction`);
     checks += 5;

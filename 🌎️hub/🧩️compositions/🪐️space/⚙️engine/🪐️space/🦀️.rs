@@ -38,9 +38,10 @@ use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, Artif
 use semio_framework_plugin::{
     app::InteractionView, app_commands, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, AppOperationContext, ArtifactApp, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
     ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Effect, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget,
-    InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, WindowLayout, CLEAR_SELECTION_ACTION_ID,
+    InteractionTopology, InteractiveJobClassification, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, WindowLayout, CLEAR_SELECTION_ACTION_ID,
     INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
 };
+use semio_framework_ui_locale::{Label, LocalizedLabel};
 use std::collections::HashMap;
 use semio_framework_2d::compute::EngineHandles;
 
@@ -165,7 +166,7 @@ pub(crate) async fn presence_peers_json(_app: &SpaceApp, _config: &SpaceConfig) 
 async fn space_workflow_context_menu_items(
     registry: &semio_framework_plugin::AppActionRegistry,
     labels: &SStudioLabels,
-    is_de: bool,
+    axes: &semio_framework_plugin::ViewModel,
     surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>,
     selected_node_ids: &[String],
 ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
@@ -174,7 +175,7 @@ async fn space_workflow_context_menu_items(
     let hits: &[semio_framework_plugin::ContextMenuHit] = surface.map_or(&[], |target| target.hits.as_slice());
     let (nodes, _) = selection_domains_from_surface(surface, selected_node_ids, &[]);
     let hit_node = hits.iter().find(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
-    let mut menu = Menu::of(registry);
+    let mut menu = Menu::of(registry, axes);
     if hits.is_empty() {
         // 🗂️ Empty-canvas menu: paste/select-all stay top-level (the two most frequent verbs here),
         // reorganize is a rarer layout action so it moves into its own taxonomy group.
@@ -207,8 +208,8 @@ async fn space_workflow_context_menu_items(
                 })
                 ;
         }
-        let phrase = selection_count_phrase(is_de, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })]);
-        let remove_label = if phrase.is_empty() { labels.context_remove.as_str().to_string() } else { format!("{} ({phrase})", labels.context_remove.as_str()) };
+        let phrase = selection_count_phrase(axes.locale, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), semio_framework_plugin::SelectionKind::Node)]);
+        let remove_label = phrase.map_or_else(|| labels.context_remove.as_str().to_string(), |phrase| format!("{} ({phrase})", labels.context_remove.as_str()));
         // 🎯️ Destructive tail always comes last — kept unconditionally after the "selection" group so
         // remove-instance is the final row regardless of whether clear-selection was appended above.
         let args = hit_node.map(|node_id| DslValue::object([("nodeId".to_string(), DslValue::String(node_id.into()))]));
@@ -495,7 +496,6 @@ struct SpaceConfigPreparationFactory;
 struct SpaceConfigPreparation {
     base: Option<store::SnapshotRead<SpaceConfig>>,
     mutation: Option<SpaceConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(SpaceConfig, SpaceConfigMutation, SpaceConfigMutation)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<SpaceConfig, SpaceConfigMutation>>,
@@ -602,9 +602,9 @@ fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Re
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<SpaceConfig, SpaceConfigMutation> for SpaceConfigPreparationFactory {
-    fn preflight(&self, mutation: &SpaceConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SPACE_CONFIG_METADATA_BYTES) {
-            return Err("Space Config preparation rejects its lane or description envelope".into());
+    fn preflight(&self, mutation: &SpaceConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Space Config preparation rejects its lane".into());
         }
         space_config_mutation_bytes(mutation)?;
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024))
@@ -614,7 +614,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<SpaceConfig, SpaceConfigMutat
         &self,
         request: store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>,
     ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<SpaceConfig, SpaceConfigMutation>> {
-        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+        if self.preflight(&request.mutation, request.lane).is_err()
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
@@ -625,7 +625,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<SpaceConfig, SpaceConfigMutat
         Ok(Box::new(SpaceConfigPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             prepared: None,
@@ -684,7 +683,7 @@ impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> fo
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         if !self.closing || !grant.permits_one() {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
@@ -698,24 +697,16 @@ impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> fo
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(mutation) = self.mutation.as_ref() {
-            let bytes = space_config_mutation_bytes(mutation)?;
+            let bytes = space_config_mutation_bytes(mutation).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,message))?;
             if grant.maximum_bytes < bytes {
                 return Ok(store::SnapshotRetirementStep::Blocked);
             }
             self.mutation = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
-        if let Some(description) = self.description.as_ref() {
-            let bytes = description.len();
-            if grant.maximum_bytes < bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.description = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
-                return Err("Space Config preparation could not return its exact base root".into());
+                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"Space Config preparation could not return its exact base root"));
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -731,7 +722,7 @@ impl store::ArtifactStoreOneItemPreparation<SpaceConfig, SpaceConfigMutation> fo
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ConfigStorePreparation
@@ -949,7 +940,7 @@ impl ArtifactApp for SpaceApp {
             "workflowEngagementInput" => Ok(SpaceCommand::WorkflowEngagementInput(workflow_engagement_input::WorkflowEngagementInput { value: str_field("value").unwrap_or_default() })),
             "compiledDagEngagementInput" => Ok(SpaceCommand::CompiledDagEngagementInput(compiled_dag_engagement_input::CompiledDagEngagementInput { value: str_field("value").unwrap_or_default() })),
             "setActiveExample" => Ok(SpaceCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_field("exampleId").or_else(|| str_field("example_id")).unwrap_or_default() })),
-            "exportMedia" => Ok(SpaceCommand::ExportMedia(export_media::ExportMedia { node_id: node_id().unwrap_or_default(), format: str_field("format").unwrap_or_default() })),
+            "exportMedia" => Ok(SpaceCommand::ExportMedia(export_media::ExportMedia { node_id: node_id().unwrap_or_default(), format: str_field("format").unwrap_or_default(), document_json: str_field("documentJson").unwrap_or_default() })),
             "importMedia" => Ok(SpaceCommand::ImportMedia(import_media::ImportMedia { node_id: node_id().unwrap_or_default(), format: str_field("format").unwrap_or_default() })),
             "importMediaPayload" => Ok(SpaceCommand::ImportMediaPayload(import_media_payload::ImportMediaPayload { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
             "exportStudioPack" => Ok(SpaceCommand::ExportStudioPack(export_studio_pack::ExportStudioPack {})),
@@ -1006,7 +997,7 @@ impl ArtifactApp for SpaceApp {
     /// `🔁️workflow` crate's `🔖️InstanceIdentity` doc) so `selectAll`/range-selection behave correctly
     /// under either granularity; no real parent/child structure exists in the node graph, so every
     /// node is a root.
-    async fn interaction_topology(doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> InteractionTopology {
+    async fn interaction_topology(doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
         let mut ordered = Vec::new();
         for node in &doc.snapshot.graph.nodes {
             ordered.push(TopologyNode { id: node.id.clone(), granularity: "instance".into(), parent: None });
@@ -1014,7 +1005,7 @@ impl ArtifactApp for SpaceApp {
         }
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(S_PLAY_INTERACTION_DOMAIN.to_string(), DomainTopology { ordered });
-        InteractionTopology { domains }
+        Ok(InteractionTopology { domains })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, WorkflowSnapshot>, cfg: &ConfigView<'_, SpaceConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -1058,8 +1049,7 @@ impl ArtifactApp for SpaceApp {
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(view_state);
-        let is_de = matches!(view_state.locale, semio_framework_plugin::Locale::De);
-        space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &[]).await
+        space_workflow_context_menu_items(registry, labels, view_state, request.surface.as_ref(), &[]).await
     }
 }
 //#endregion 🔖️SpaceApp
@@ -1184,7 +1174,12 @@ pub async fn create_space_app() -> App {
         .action_interactive_job("goHome", InteractiveJobClassification::Migrated).await
         .action_interactive_job("navigateVirtualFileSystemNode", InteractiveJobClassification::Migrated).await
         .action_interactive_job("setAppRegistrations", InteractiveJobClassification::Migrated).await
-        // 📝️ Staged argument form for parameter creation (spawnApp/exportMedia stay context/registry-driven).
+        // 📝️ Staged argument form for parameter creation (spawnApp stays context-driven; exportMedia requires an explicit artifact document).
+        .action_args("exportMedia", vec![
+            ActionArgDef::text("nodeId", LocalizedLabel::native("App Instance", "App-Instanz")),
+            ActionArgDef::text("format", LocalizedLabel::native("Format", "Format")),
+            ActionArgDef::text("documentJson", LocalizedLabel::native("Artifact Document", "Artefaktdokument")),
+        ]).await
         .action_args("addParameter", vec![
             ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value(&"Parameter"),
             ActionArgDef::select("type", LocalizedLabel::native("Type", "Typ"), vec![

@@ -23,7 +23,7 @@ fn render(checkpoint: &semio_framework_repo_contributors::Checkpoint) -> String 
 #[cfg(feature = "sut")]
 fn the_log_parses_into_checkpoints(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_contributors as contributors;
-    let file = ctx.fixture_json("shared://🏁️checkpoint-log.json")?;
+    let file = ctx.input_json("shared://🏁️checkpoint-log.json")?;
     let log = file.str("log");
     let source = contributors::MemoryCheckpointSource::new(&log);
     let checkpoints = contributors::list_checkpoints(&source, None);
@@ -54,7 +54,7 @@ fn the_log_parses_into_checkpoints(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 fn a_limit_is_a_prefix_of_the_listing(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_contributors as contributors;
-    let file = ctx.fixture_json("shared://🏁️checkpoint-log.json")?;
+    let file = ctx.input_json("shared://🏁️checkpoint-log.json")?;
     let source = contributors::MemoryCheckpointSource::new(&file.str("log"));
     let all: Vec<String> = contributors::list_checkpoints(&source, None).iter().map(render).collect();
     let prefixes: Vec<Json> = (0..=all.len())

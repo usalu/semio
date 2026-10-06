@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "writer.parent-allocation-return.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "slot", "childId", "faultCode", "faultMessage", "childItems", "childBytes", "parentBytes", "childTurns", "parentTurns"],
+  "properties": {
+    "schema": { "const": "writer.parent-allocation-return.v1" },
+    "slot": { "type": "string" },
+    "childId": { "type": "string" },
+    "faultCode": { "type": "string" },
+    "faultMessage": { "type": "string" },
+    "childItems": { "const": 1 },
+    "childBytes": { "const": 4 },
+    "parentBytes": { "const": 4096 },
+    "childTurns": { "const": 128 },
+    "parentTurns": { "const": 16 }
+  }
+}

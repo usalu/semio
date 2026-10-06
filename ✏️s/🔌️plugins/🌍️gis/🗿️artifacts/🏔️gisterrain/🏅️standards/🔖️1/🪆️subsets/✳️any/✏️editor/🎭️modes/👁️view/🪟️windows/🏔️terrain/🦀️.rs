@@ -7,7 +7,8 @@
 /// ⚠️ Fixed opportunistically (was a pre-existing, ticket-predating unresolved `crate::modules`
 /// import — see `💡️inferences/🦀️.rs`'s identical fix for the full story). Real home:
 /// `crate::schema`'s `🔖️TerrainDescriptor` region.
-use crate::schema::{build_terrain_scene_json, TerrainDescriptorJson};
+use crate::schema::{TerrainDescriptorJson};
+use crate::standards::v1::subsets::any::io::text::snapshot::{build_terrain_scene_json};
 use crate::standards::v1::subsets::any::schema::inferences::parse_descriptor;
 use crate::GisTerrainSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
@@ -35,6 +36,7 @@ const GIS3D_PLAY_SURFACE: &str = "gis3d.play.composite";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GIS3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Terrain", "Gelände"),
         body_key: GIS3D_PLAY_BODY_COMPOSITE.into(),

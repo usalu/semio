@@ -2,7 +2,7 @@
 //! pixel buffer and pin rows.
 
 use crate::diff::BitmapDiff;
-use crate::schema::snapshot::{encode_base64, used_palette_indices, BitmapSnapshot};
+use crate::schema::snapshot::{used_palette_indices, BitmapSnapshot};
 
 pub fn diff(payload: &super::RemovePaletteColor, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
     if payload.index >= base.input.palette.len() {
@@ -32,6 +32,6 @@ pub fn diff(payload: &super::RemovePaletteColor, base: &BitmapSnapshot) -> proto
             (at, moved)
         })
         .collect::<Vec<_>>();
-    let input_pixels = (renumbered != buffer).then(|| encode_base64(&renumbered));
+    let input_pixels = (renumbered != buffer).then(|| renumbered.to_vec());
     protocol::MutationOutcome::new(BitmapDiff { input_pixels, palette: Some(palette), pinned_upserted, ..Default::default() })
 }

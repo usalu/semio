@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::standards::v1_1::subsets::basic::schema::CODE_FILTER_PRIMITIVE;
-    use crate::standards::v1_1::subsets::basic::schema::SvgBasicBuilder;
+    use crate::standards::v1_1::subsets::basic::io::SvgBasicBuilder;
     use semio_framework_plugin::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;
 

@@ -1,4 +1,10 @@
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "semio-s-artifact-stdio-tsv-test-oracle"

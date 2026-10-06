@@ -12,12 +12,8 @@
 use crate::STDIO_TIFF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+
 
 //#region ByteOrder
 /// 🧭️ TIFF6 §2 byte-order mark (`II` little-endian / `MM` big-endian) — governs every
@@ -312,30 +308,6 @@ impl TiffSnapshot {
 //#endregion Snapshot
 
 //#region HandcraftedArtifactCodecs
-impl store::ArtifactDsl for TiffSnapshot {
- const EXTENSION:&'static str="tiff";
- fn envelope_id()->&'static str{"stdio.tiff"}
- fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
-  let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
-  if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"TIFF owned Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}
-  super::text::from_record(semio_framework_dsl_record::parse_exact(body,&super::text::spec(),&semio_framework_dsl_record::ParseOptions::default())?)
- }
- fn print_dsl(&self)->String{
-  let body=semio_framework_dsl_record::print(&super::text::to_record(self),&super::text::spec(),semio_framework_dsl_record::JoinMode::Document);
-  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared TIFF envelope");store::semio_format::wrap_text(&envelope,&body)
- }
-}
-impl store::ArtifactPack for TiffSnapshot {
- fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(super::text::spec())}
- fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
- fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
-  let body=store::pack_rt::encode_document(&super::text::spec(),&super::text::to_record(self),options)?;
-  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
- }
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{
-  let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;
-  if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TIFF owned Pack envelope mismatch")))}
-  super::text::from_record(store::pack_rt::decode_document(&body,&super::text::spec(),options)?.0).map_err(|error|store::PackError::from(error))
- }
-}
+
+
 //#endregion HandcraftedArtifactCodecs

@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🔺️ Grid2dDiff schema — real facet mirror of the Rust `🦀️.rs` sibling: a sparse, key-addressed
  * structural delta, never a whole-snapshot capture. Cell lanes are keyed `"<x>,<y>"`. */
 import type { Grid2dSnapshot, WfcAdjacencyRule2d, WfcCell2d, WfcPinnedCell2d, WfcTile2d } from "../📸️snapshot/🟦️.ts";

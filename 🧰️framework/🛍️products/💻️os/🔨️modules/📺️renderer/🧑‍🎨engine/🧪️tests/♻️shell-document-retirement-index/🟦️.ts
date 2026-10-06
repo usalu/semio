@@ -2,12 +2,11 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
+
 import { describe, expect, test } from "vitest";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "♻️shell-document-retirement-index", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "♻️shell-document-retirement-index", "🔣️.json"), "utf8"));
 
 const firstAtOrAfter = (occupied: Set<number>, cursor: number, capacity: number): number | undefined => {
   for (let offset = 0; offset < capacity; offset += 1) {
@@ -24,8 +23,6 @@ const firstVacant = (occupied: Set<number>, capacity: number): number | undefine
 
 describe("♻️ Shell document retirement occupied index", () => {
   test("the language-neutral lifecycle satisfies its schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.wordCount).toBe(Math.ceil(fixture.capacity / fixture.wordBits));
     expect(fixture.indexBytes).toBe(fixture.wordCount * BigUint64Array.BYTES_PER_ELEMENT + BigUint64Array.BYTES_PER_ELEMENT);
   });

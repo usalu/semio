@@ -5,10 +5,6 @@ use crate::schema::mutation_support::{native_lines_error, native_snapshot_error}
 use crate::schema::snapshot::LineEnding;
 use crate::TxtSnapshot;
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]

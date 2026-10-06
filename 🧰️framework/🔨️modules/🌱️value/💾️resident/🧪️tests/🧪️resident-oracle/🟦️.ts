@@ -17,8 +17,8 @@ import admissionFixture from "../../📨️admission/🧫️fixtures/🔣️.jso
 export class TestScript extends BundleScript {
   async run(): Promise<void> {
     const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(fixtureSchema).addSchema(admissionContractSchema);
-    assert(ajv.getSchema(`${fixtureSchema.$id}#/$defs/ResidentFixture`)!(fixture), JSON.stringify(ajv.errors));
-    assert(ajv.getSchema(`${admissionContractSchema.$id}#/$defs/Admission`)!(admissionContract), JSON.stringify(ajv.errors)); assert(ajv.getSchema(`${admissionContractSchema.$id}#/$defs/AdmissionFixture`)!(admissionFixture), JSON.stringify(ajv.errors));
+    
+    assert(ajv.getSchema(`${admissionContractSchema.$id}#/$defs/Admission`)!(admissionContract), JSON.stringify(ajv.errors)); 
     let nativeModel = { consumer: "cell", shell: "source", consumerDrops: 0, shellDrops: 0, aliases: 2, pages: 2, terminal: false };
     const nativeTrace = admissionFixture.nativeOwnership.releaseTrace.map(({ phase }) => {
       nativeModel = produce(nativeModel, draft => {

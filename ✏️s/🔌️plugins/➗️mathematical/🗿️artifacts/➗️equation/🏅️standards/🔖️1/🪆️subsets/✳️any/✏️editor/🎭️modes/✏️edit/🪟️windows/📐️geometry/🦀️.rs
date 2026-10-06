@@ -19,6 +19,7 @@ pub const MATH_PLAY_BODY_GEOMETRY: &str = "equation.play.geometry";
 /// 🧱️ Stitched into the app manifest by `crate::editor::equation::create_equation_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: MATH_PLAY_WINDOW_GEOMETRY.into(),
         label: LocalizedLabel::native("Geometry", "Geometrie"),
         body_key: MATH_PLAY_BODY_GEOMETRY.into(),

@@ -44,7 +44,7 @@
     "browserBundleSources": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**/*.ts",
       "!{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**/🧪️tests/**/*.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🛂️actor-exports/🔣️.json"
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit"
     ],
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.{ts,json}"

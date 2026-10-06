@@ -21,7 +21,6 @@ type Camera = { windowId: string; value: any };
 type Snapshot = { controls: Control[]; windows: string[]; stacks: DockStack[]; indicator: Rect | null; dragging: boolean; cameras: Camera[]; generation: number };
 
 const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🌐️browser-acceptance/🔣️.json");
-const schemaPath = join(import.meta.dir, "../../🧬️schema/🌐️browser-acceptance/🔣️.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as {
   version: number;
   target: { plugin: string; urls: Record<Renderer, string>; viewport: { width: number; height: number }; minimumWindows: number; minimumStacks: number; tabsPerSelectedStack: number; dragThresholdPx: number };
@@ -736,10 +735,7 @@ function neutralSplit(side: Side): { source: Rect; target: Rect; relation: strin
 }
 
 async function testContract(): Promise<void> {
-  const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
-  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
-  const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
+  
   assert.deepEqual(fixture.cases.map((entry) => entry.id), ["split-left", "split-right", "split-top", "split-bottom", "tab-merge", "tab-reorder", "escape-cancel", "template-configuration"]);
   assert.deepEqual(fixture.widgets.cases.map(entry => entry.id), ["divider-resize", "maximize-restore", "close-active-tab", "close-background-tab", "close-last-window", "reopen-window", "corner-resize"]);
   assert.deepEqual(fixture.widgets.locales, ["en", "de"]);

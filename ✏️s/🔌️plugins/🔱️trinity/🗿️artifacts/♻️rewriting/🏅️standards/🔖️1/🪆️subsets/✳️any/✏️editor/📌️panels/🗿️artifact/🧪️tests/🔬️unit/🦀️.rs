@@ -4,7 +4,7 @@ use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_R
 use semio_s_artifact_trinity_jack::{Camera, JackSnapshot, JackWorkingScene, Manifest, Node, PropertyBag};
 
 //#region 🪟️WindowLaws
-/// 🪟️ A before-fixture an order of magnitude past one viewport — the subject of every window law below.
+/// 🪟️ A working-graph an order of magnitude past one viewport — the subject of every window law below.
 fn oversized_state(nodes: usize) -> RewritingSnapshot {
     let nodes: Vec<Node> = (0..nodes)
         .map(|index| Node { id: format!("node-{index}"), kind: "Piece".into(), name: format!("Piece {index}"), x: index as f64, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: Vec::new() })

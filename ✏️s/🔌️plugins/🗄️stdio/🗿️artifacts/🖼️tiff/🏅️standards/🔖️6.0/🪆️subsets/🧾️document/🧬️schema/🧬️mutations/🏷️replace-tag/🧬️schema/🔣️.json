@@ -22,16 +22,47 @@
         "description": {
           "en": "Zero-based image file directory.",
           "de": "Nullbasiertes Bilddateiverzeichnis."
-        }
+        },
+        "step": 1
       }
     },
     "tag": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 65535
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tag",
+          "de": "Tag"
+        },
+        "description": {
+          "en": "Numeric TIFF tag whose values are replaced, for example 256 (ImageWidth) or 259 (Compression).",
+          "de": "Numerisches TIFF-Tag, dessen Werte ersetzt werden, zum Beispiel 256 (ImageWidth) oder 259 (Compression)."
+        },
+        "ref": {
+          "kind": "tag"
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "values": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffValues",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Values",
+          "de": "Werte"
+        },
+        "description": {
+          "en": "Field type and values the directory entry of the tag holds.",
+          "de": "Feldtyp und Werte, die der Verzeichniseintrag des Tags enthält."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

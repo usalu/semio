@@ -1,5 +1,5 @@
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 #[test]
 fn canonical_storage_diff_text_and_binary_round_trip() {

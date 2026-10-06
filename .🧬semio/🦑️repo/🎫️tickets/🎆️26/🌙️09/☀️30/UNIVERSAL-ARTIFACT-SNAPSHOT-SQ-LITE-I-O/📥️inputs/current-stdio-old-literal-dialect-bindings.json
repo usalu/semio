@@ -1,0 +1,1768 @@
+{
+  "rows": [
+    {
+      "artifact": "obj",
+      "bindings": [
+        {
+          "line": 89,
+          "types": "ObjSnapshot, ObjMutation",
+          "schemaExpression": "STDIO_OBJ_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.obj",
+            "standard": "3.0",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🦀️.rs",
+              "value": "stdio.obj"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "tsv",
+      "bindings": [
+        {
+          "line": 67,
+          "types": "TsvSnapshot, TsvMutation",
+          "schemaExpression": "STDIO_TSV_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.tsv",
+            "standard": "iana",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🦀️.rs",
+              "value": "stdio.tsv"
+            },
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.tsv"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "csv",
+      "bindings": [
+        {
+          "line": 93,
+          "types": "CsvSnapshot, CsvMutation",
+          "schemaExpression": "STDIO_CSV_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.csv",
+            "standard": "rfc4180",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🦀️.rs",
+              "value": "stdio.csv"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "gltf",
+      "bindings": [
+        {
+          "line": 114,
+          "types": "GltfSnapshot, GltfMutation",
+          "schemaExpression": "STDIO_GLTF_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.gltf",
+            "standard": "2.0",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs",
+              "value": "stdio.gltf"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "gif",
+      "bindings": [
+        {
+          "line": 87,
+          "types": "standards::v87a::subsets::any::schema::snapshot::GifSnapshot, standards::v87a::subsets::any::schema::mutations::GifMutation",
+          "schemaExpression": "STDIO_GIF_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.gif",
+            "standard": "87a",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs",
+              "value": "stdio.gif"
+            }
+          ]
+        },
+        {
+          "line": 88,
+          "types": "GifSnapshot, GifMutation",
+          "schemaExpression": "STDIO_GIF89A_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.gif",
+            "standard": "89a",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.gif.89a"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "las",
+      "bindings": [
+        {
+          "line": 87,
+          "types": "LasSnapshot, LasMutation",
+          "schemaExpression": "STDIO_LAS_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.las",
+            "standard": "1.0",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs",
+              "value": "stdio.las"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "pdf",
+      "bindings": [
+        {
+          "line": 186,
+          "types": "PdfSnapshot, PdfMutation",
+          "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.7",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.pdf.1.7"
+            }
+          ]
+        },
+        {
+          "line": 187,
+          "types": "standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation",
+          "schemaExpression": "STDIO_PDF_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.4",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+              "value": "stdio.pdf"
+            }
+          ]
+        },
+        {
+          "line": 188,
+          "types": "PdfSnapshot, PdfMutation",
+          "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.7",
+            "subset": "a"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.pdf.1.7"
+            }
+          ]
+        },
+        {
+          "line": 189,
+          "types": "PdfSnapshot, PdfMutation",
+          "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.7",
+            "subset": "x"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.pdf.1.7"
+            }
+          ]
+        },
+        {
+          "line": 190,
+          "types": "PdfSnapshot, PdfMutation",
+          "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.7",
+            "subset": "e"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.pdf.1.7"
+            }
+          ]
+        },
+        {
+          "line": 191,
+          "types": "PdfSnapshot, PdfMutation",
+          "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.7",
+            "subset": "ua"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.pdf.1.7"
+            }
+          ]
+        },
+        {
+          "line": 192,
+          "types": "PdfSnapshot, PdfMutation",
+          "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.7",
+            "subset": "vt"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.pdf.1.7"
+            }
+          ]
+        },
+        {
+          "line": 193,
+          "types": "PdfSnapshot, PdfMutation",
+          "schemaExpression": "STDIO_PDF17_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.7",
+            "subset": "h"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.pdf.1.7"
+            }
+          ]
+        },
+        {
+          "line": 194,
+          "types": "standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation",
+          "schemaExpression": "STDIO_PDF_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.4",
+            "subset": "a"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+              "value": "stdio.pdf"
+            }
+          ]
+        },
+        {
+          "line": 195,
+          "types": "standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation",
+          "schemaExpression": "STDIO_PDF_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pdf",
+            "standard": "1.4",
+            "subset": "x"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+              "value": "stdio.pdf"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "docx",
+      "bindings": [
+        {
+          "line": 90,
+          "types": "DocxSnapshot, DocxMutation",
+          "schemaExpression": "STDIO_DOCX_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.docx",
+            "standard": "ecma-376",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+              "value": "stdio.docx"
+            }
+          ]
+        },
+        {
+          "line": 91,
+          "types": "DocxSnapshot, DocxMutation",
+          "schemaExpression": "STDIO_DOCX_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.docx",
+            "standard": "ecma-376",
+            "subset": "strict"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+              "value": "stdio.docx"
+            }
+          ]
+        },
+        {
+          "line": 92,
+          "types": "DocxSnapshot, DocxMutation",
+          "schemaExpression": "STDIO_DOCX_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.docx",
+            "standard": "ecma-376",
+            "subset": "transitional"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+              "value": "stdio.docx"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "ply",
+      "bindings": [
+        {
+          "line": 83,
+          "types": "PlySnapshot, PlyMutation",
+          "schemaExpression": "STDIO_PLY_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.ply",
+            "standard": "1.0",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🦀️.rs",
+              "value": "stdio.ply"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "xlsx",
+      "bindings": [
+        {
+          "line": 92,
+          "types": "XlsxSnapshot, XlsxMutation",
+          "schemaExpression": "STDIO_XLSX_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.xlsx",
+            "standard": "ecma-376",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+              "value": "stdio.xlsx"
+            }
+          ]
+        },
+        {
+          "line": 93,
+          "types": "XlsxSnapshot, XlsxMutation",
+          "schemaExpression": "STDIO_XLSX_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.xlsx",
+            "standard": "ecma-376",
+            "subset": "strict"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+              "value": "stdio.xlsx"
+            }
+          ]
+        },
+        {
+          "line": 94,
+          "types": "XlsxSnapshot, XlsxMutation",
+          "schemaExpression": "STDIO_XLSX_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.xlsx",
+            "standard": "ecma-376",
+            "subset": "transitional"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+              "value": "stdio.xlsx"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "json",
+      "bindings": [
+        {
+          "line": 107,
+          "types": "JsonSnapshot, JsonMutation",
+          "schemaExpression": "STDIO_JSON_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.json",
+            "standard": "rfc8259",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+              "value": "stdio.json"
+            }
+          ]
+        },
+        {
+          "line": 108,
+          "types": "JsonSnapshot, JsonMutation",
+          "schemaExpression": "STDIO_JSON_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.json",
+            "standard": "rfc8259",
+            "subset": "i-json"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+              "value": "stdio.json"
+            }
+          ]
+        },
+        {
+          "line": 109,
+          "types": "JsonSnapshot, JsonMutation",
+          "schemaExpression": "STDIO_JSON_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.json",
+            "standard": "rfc8259",
+            "subset": "geojson"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+              "value": "stdio.json"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "dwg",
+      "bindings": [
+        {
+          "line": 114,
+          "types": "DwgSnapshot, DwgMutation",
+          "schemaExpression": "STDIO_DWG_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.dwg",
+            "standard": "ac1018",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+              "value": "stdio.dwg"
+            }
+          ]
+        },
+        {
+          "line": 115,
+          "types": "DwgSnapshot, DwgMutation",
+          "schemaExpression": "STDIO_DWG_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.dwg",
+            "standard": "ac1024",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+              "value": "stdio.dwg"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "png",
+      "bindings": [
+        {
+          "line": 118,
+          "types": "PngSnapshot, PngMutation",
+          "schemaExpression": "STDIO_PNG_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.png",
+            "standard": "1.2",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🦀️.rs",
+              "value": "stdio.png"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "binary",
+      "bindings": [
+        {
+          "line": 82,
+          "types": "BinarySnapshot, BinaryMutation",
+          "schemaExpression": "STDIO_BINARY_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.binary",
+            "standard": "raw",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs",
+              "value": "stdio.binary"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "txt",
+      "bindings": [
+        {
+          "line": 85,
+          "types": "TxtSnapshot, TxtMutation",
+          "schemaExpression": "STDIO_TXT_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.txt",
+            "standard": "utf-8",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs",
+              "value": "stdio.txt"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "tiff",
+      "bindings": [
+        {
+          "line": 120,
+          "types": "TiffSnapshot, TiffMutation",
+          "schemaExpression": "STDIO_TIFF_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.tiff",
+            "standard": "6.0",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+              "value": "stdio.tiff"
+            }
+          ]
+        },
+        {
+          "line": 121,
+          "types": "TiffSnapshot, TiffMutation",
+          "schemaExpression": "STDIO_TIFF_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.tiff",
+            "standard": "6.0",
+            "subset": "baseline"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+              "value": "stdio.tiff"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "md",
+      "bindings": [
+        {
+          "line": 117,
+          "types": "MdSnapshot, MdMutation",
+          "schemaExpression": "STDIO_MD_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.md",
+            "standard": "commonmark",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️.rs",
+              "value": "stdio.md"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "xml",
+      "bindings": [
+        {
+          "line": 116,
+          "types": "XmlSnapshot, XmlMutation",
+          "schemaExpression": "STDIO_XML_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.xml",
+            "standard": "1.0",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+              "value": "stdio.xml"
+            }
+          ]
+        },
+        {
+          "line": 117,
+          "types": "XmlSnapshot, XmlMutation",
+          "schemaExpression": "STDIO_XML_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.xml",
+            "standard": "1.0",
+            "subset": "valid"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+              "value": "stdio.xml"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "pptx",
+      "bindings": [
+        {
+          "line": 92,
+          "types": "PptxSnapshot, PptxMutation",
+          "schemaExpression": "STDIO_PPTX_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pptx",
+            "standard": "ecma-376",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+              "value": "stdio.pptx"
+            }
+          ]
+        },
+        {
+          "line": 93,
+          "types": "PptxSnapshot, PptxMutation",
+          "schemaExpression": "STDIO_PPTX_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pptx",
+            "standard": "ecma-376",
+            "subset": "strict"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+              "value": "stdio.pptx"
+            }
+          ]
+        },
+        {
+          "line": 94,
+          "types": "PptxSnapshot, PptxMutation",
+          "schemaExpression": "STDIO_PPTX_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.pptx",
+            "standard": "ecma-376",
+            "subset": "transitional"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+              "value": "stdio.pptx"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "step",
+      "bindings": [
+        {
+          "line": 98,
+          "types": "StepSnapshot, StepMutation",
+          "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.step",
+            "standard": "ap214",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+              "value": "stdio.step"
+            }
+          ]
+        },
+        {
+          "line": 99,
+          "types": "StepSnapshot, StepMutation",
+          "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.step",
+            "standard": "ap214",
+            "subset": "cc1"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+              "value": "stdio.step"
+            }
+          ]
+        },
+        {
+          "line": 100,
+          "types": "StepSnapshot, StepMutation",
+          "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.step",
+            "standard": "ap214",
+            "subset": "cc2"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+              "value": "stdio.step"
+            }
+          ]
+        },
+        {
+          "line": 101,
+          "types": "StepSnapshot, StepMutation",
+          "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.step",
+            "standard": "ap214",
+            "subset": "cc3"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+              "value": "stdio.step"
+            }
+          ]
+        },
+        {
+          "line": 102,
+          "types": "StepSnapshot, StepMutation",
+          "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.step",
+            "standard": "ap214",
+            "subset": "cc4"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+              "value": "stdio.step"
+            }
+          ]
+        },
+        {
+          "line": 103,
+          "types": "StepSnapshot, StepMutation",
+          "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.step",
+            "standard": "ap214",
+            "subset": "cc5"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+              "value": "stdio.step"
+            }
+          ]
+        },
+        {
+          "line": 104,
+          "types": "StepSnapshot, StepMutation",
+          "schemaExpression": "STDIO_STEP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.step",
+            "standard": "ap214",
+            "subset": "cc6"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+              "value": "stdio.step"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "zip",
+      "bindings": [
+        {
+          "line": 90,
+          "types": "ZipSnapshot, ZipMutation",
+          "schemaExpression": "STDIO_ZIP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.zip",
+            "standard": "2.0",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+              "value": "stdio.zip"
+            }
+          ]
+        },
+        {
+          "line": 91,
+          "types": "ZipSnapshot, ZipMutation",
+          "schemaExpression": "STDIO_ZIP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.zip",
+            "standard": "2.0",
+            "subset": "iso21320"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+              "value": "stdio.zip"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "deflate",
+      "bindings": [
+        {
+          "line": 93,
+          "types": "DeflateSnapshot, DeflateMutation",
+          "schemaExpression": "STDIO_DEFLATE_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.deflate",
+            "standard": "rfc1950",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🦀️.rs",
+              "value": "stdio.deflate"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "html",
+      "bindings": [
+        {
+          "line": 76,
+          "types": "HtmlSnapshot, HtmlMutation",
+          "schemaExpression": "STDIO_HTML_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.html",
+            "standard": "5",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🦀️.rs",
+              "value": "stdio.html"
+            },
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.html"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "semio",
+      "bindings": [
+        {
+          "line": 136,
+          "types": "SemioValueSnapshot, crate::standards::v1::subsets::value::schema::mutations::SemioValueMutation",
+          "schemaExpression": "crate::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "value"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.value"
+            }
+          ]
+        },
+        {
+          "line": 138,
+          "types": "SemioModelSnapshot, crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation",
+          "schemaExpression": "crate::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "model"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.model"
+            }
+          ]
+        },
+        {
+          "line": 203,
+          "types": "SemioDocumentSnapshot, crate::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation",
+          "schemaExpression": "crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "document"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "s.stdio.semio.document"
+            }
+          ]
+        },
+        {
+          "line": 159,
+          "types": "SemioAudioSnapshot, crate::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation",
+          "schemaExpression": "crate::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "audio"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.audio"
+            }
+          ]
+        },
+        {
+          "line": 146,
+          "types": "SemioSnapshot, crate::standards::v1::subsets::base::schema::mutations::SemioMutation",
+          "schemaExpression": "crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+              "value": "stdio.semio"
+            },
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio"
+            }
+          ]
+        },
+        {
+          "line": 144,
+          "types": "SemioImageSnapshot, crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation",
+          "schemaExpression": "crate::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "image"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "s.stdio.semio.image"
+            }
+          ]
+        },
+        {
+          "line": 156,
+          "types": "SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation",
+          "schemaExpression": "crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "brep"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.brep"
+            }
+          ]
+        },
+        {
+          "line": 127,
+          "types": "SemioKitSnapshot, crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation",
+          "schemaExpression": "crate::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "kit"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.kit"
+            }
+          ]
+        },
+        {
+          "line": 105,
+          "types": "SemioGraphSnapshot, crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation",
+          "schemaExpression": "crate::standards::v1::subsets::graph::schema::snapshot::STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "graph"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "s.stdio.semio.graph"
+            }
+          ]
+        },
+        {
+          "line": 152,
+          "types": "SemioVideoSnapshot, crate::standards::v1::subsets::video::schema::mutations::SemioVideoMutation",
+          "schemaExpression": "crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "video"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.video"
+            }
+          ]
+        },
+        {
+          "line": 144,
+          "types": "SemioPresentationSnapshot, crate::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation",
+          "schemaExpression": "crate::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "presentation"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "s.stdio.semio.presentation"
+            }
+          ]
+        },
+        {
+          "line": 129,
+          "types": "SemioObjectSnapshot, crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation",
+          "schemaExpression": "crate::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "object"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.object"
+            }
+          ]
+        },
+        {
+          "line": 164,
+          "types": "SemioMeshSnapshot, crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation",
+          "schemaExpression": "crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "mesh"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.mesh"
+            }
+          ]
+        },
+        {
+          "line": 107,
+          "types": "SemioTableSnapshot, crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation",
+          "schemaExpression": "crate::standards::v1::subsets::table::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "table"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "s.stdio.semio.table"
+            }
+          ]
+        },
+        {
+          "line": 161,
+          "types": "SemioCadSnapshot, crate::standards::v1::subsets::cad::schema::mutations::SemioCadMutation",
+          "schemaExpression": "crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "cad"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.cad"
+            }
+          ]
+        },
+        {
+          "line": 104,
+          "types": "SemioTextSnapshot, crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation",
+          "schemaExpression": "crate::standards::v1::subsets::text::schema::snapshot::STDIO_SEMIOTEXT_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "text"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "s.stdio.semio.text"
+            }
+          ]
+        },
+        {
+          "line": 136,
+          "types": "SemioFlowSnapshot, crate::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation",
+          "schemaExpression": "crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "flow"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.flow"
+            }
+          ]
+        },
+        {
+          "line": 144,
+          "types": "SemioAnimationSnapshot, crate::standards::v1::subsets::animation::schema::mutations::SemioAnimationMutation",
+          "schemaExpression": "crate::standards::v1::subsets::animation::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "animation"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "s.stdio.semio.animation"
+            }
+          ]
+        },
+        {
+          "line": 173,
+          "types": "SemioDrawingSnapshot, crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation",
+          "schemaExpression": "crate::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.semio.drawing"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "jpg",
+      "bindings": [
+        {
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+          "line": 123,
+          "types": "JpgSnapshot, JpgMutation",
+          "schemaExpression": "STDIO_JPG_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.jpg",
+            "standard": "jfif-1.01",
+            "subset": "*"
+          },
+          "qualification": "Directly read constant DIALECT62/63 and actual binding123/124",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+              "value": "stdio.jpg"
+            }
+          ]
+        },
+        {
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+          "line": 124,
+          "types": "JpgSnapshot, JpgMutation",
+          "schemaExpression": "STDIO_JPG_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.jpg",
+            "standard": "jfif-1.01",
+            "subset": "baseline"
+          },
+          "qualification": "Directly read constant DIALECT62/63 and actual binding123/124",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+              "value": "stdio.jpg"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "svg",
+      "bindings": [
+        {
+          "line": 123,
+          "types": "SvgSnapshot, SvgMutation",
+          "schemaExpression": "STDIO_SVG_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.svg",
+            "standard": "1.1",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+              "value": "stdio.svg"
+            }
+          ]
+        },
+        {
+          "line": 124,
+          "types": "SvgSnapshot, SvgMutation",
+          "schemaExpression": "STDIO_SVG_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.svg",
+            "standard": "1.1",
+            "subset": "tiny"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+              "value": "stdio.svg"
+            }
+          ]
+        },
+        {
+          "line": 125,
+          "types": "SvgSnapshot, SvgMutation",
+          "schemaExpression": "STDIO_SVG_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.svg",
+            "standard": "1.1",
+            "subset": "basic"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+              "value": "stdio.svg"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "mp3",
+      "bindings": [
+        {
+          "line": 109,
+          "types": "Mp3Snapshot, Mp3Mutation",
+          "schemaExpression": "STDIO_MP3_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.mp3",
+            "standard": "mpeg1-layer3",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🦀️.rs",
+              "value": "stdio.mp3"
+            },
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.mp3"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "bmp",
+      "bindings": [
+        {
+          "line": 73,
+          "types": "BmpSnapshot, BmpMutation",
+          "schemaExpression": "STDIO_BMP_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.bmp",
+            "standard": "v3",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🦀️.rs",
+              "value": "stdio.bmp"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "wav",
+      "bindings": [
+        {
+          "line": 71,
+          "types": "WavSnapshot, WavMutation",
+          "schemaExpression": "STDIO_WAV_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.wav",
+            "standard": "riff-pcm",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🦀️.rs",
+              "value": "stdio.wav"
+            },
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.wav"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "epw",
+      "bindings": [
+        {
+          "line": 72,
+          "types": "EpwSnapshot, EpwMutation",
+          "schemaExpression": "STDIO_EPW_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.epw",
+            "standard": "energyplus",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🦀️.rs",
+              "value": "stdio.epw"
+            },
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.epw"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "ifc",
+      "bindings": [
+        {
+          "line": 67,
+          "types": "IfcSnapshot, IfcMutation",
+          "schemaExpression": "STDIO_IFC_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.ifc",
+            "standard": "4",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+              "value": "stdio.ifc"
+            }
+          ]
+        },
+        {
+          "line": 68,
+          "types": "standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation",
+          "schemaExpression": "standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.ifc",
+            "standard": "2x3",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.ifc.2x3"
+            }
+          ]
+        },
+        {
+          "line": 69,
+          "types": "standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation",
+          "schemaExpression": "standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.ifc",
+            "standard": "2x3",
+            "subset": "cv20"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.ifc.2x3"
+            }
+          ]
+        },
+        {
+          "line": 70,
+          "types": "standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation",
+          "schemaExpression": "standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.ifc",
+            "standard": "2x3",
+            "subset": "sav"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.ifc.2x3"
+            }
+          ]
+        },
+        {
+          "line": 71,
+          "types": "standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation",
+          "schemaExpression": "standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.ifc",
+            "standard": "2x3",
+            "subset": "cobie"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.ifc.2x3"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "dxf",
+      "bindings": [
+        {
+          "line": 100,
+          "types": "DxfSnapshot, DxfMutation",
+          "schemaExpression": "STDIO_DXF_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.dxf",
+            "standard": "r12",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🦀️.rs",
+              "value": "stdio.dxf"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "avi",
+      "bindings": [
+        {
+          "line": 108,
+          "types": "AviSnapshot, AviMutation",
+          "schemaExpression": "STDIO_AVI_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.avi",
+            "standard": "1.0",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🦀️.rs",
+              "value": "stdio.avi"
+            },
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.avi"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "stl",
+      "bindings": [
+        {
+          "line": 83,
+          "types": "StlSnapshot, StlMutation",
+          "schemaExpression": "STDIO_STL_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.stl",
+            "standard": "ascii",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🦀️.rs",
+              "value": "stdio.stl"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "mp4",
+      "bindings": [
+        {
+          "line": 108,
+          "types": "Mp4Snapshot, Mp4Mutation",
+          "schemaExpression": "STDIO_MP4_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.mp4",
+            "standard": "isobmff",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🦀️.rs",
+              "value": "stdio.mp4"
+            },
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+              "value": "stdio.mp4"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    },
+    {
+      "artifact": "bcf",
+      "bindings": [
+        {
+          "line": 86,
+          "types": "BcfSnapshot, BcfMutation",
+          "schemaExpression": "STDIO_BCF_DOCUMENT_SCHEMA",
+          "dialect": {
+            "kind": "s.stdio.bcf",
+            "standard": "2.1",
+            "subset": "*"
+          },
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🦀️.rs",
+          "schemaLiteralCandidates": [
+            {
+              "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🦀️.rs",
+              "value": "stdio.bcf"
+            }
+          ]
+        }
+      ],
+      "qualification": "Actual literal declarations; repeated/cfg/loop source occurrences require reconciliation, no runtime"
+    }
+  ],
+  "qualification": "Source-only; no existing IO route inference"
+}

@@ -18,6 +18,15 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "shared-schema": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts shared-schema",
+        "forwardAllArgs": true
+      }
     }
   }
 }

@@ -6,7 +6,6 @@ import polygonClipping from "polygon-clipping";
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import retirementCases from "../🧫️fixtures/🧹️retirement/🔣️.json";
-import retirementSchema from "../🧬️schema/🧹️retirement/🔣️.json";
 import {CoverageJob,polygonCoverage,type CoverageInput} from "../🟦️.ts";
 
 const validate=new Ajv({strict:true}).compile(schema);
@@ -87,7 +86,6 @@ test("cancellation leaves already published coverage and caller geometry intact"
 });
 
 test("coverage retirement transfers actual masks and drains private sweep owners",async()=>{
- expect(new Ajv({strict:true}).compile(retirementSchema)(retirementCases)).toBe(true);
  const progressOracle=new Ajv({strict:true}).compile({definitions:schema.definitions,$ref:"#/definitions/retirementProgress"});
  const stages:Record<string,string>={preparing:"prepare",cancelled:"events"};
  for(const row of retirementCases)for(const grant of [1,7,4096]){

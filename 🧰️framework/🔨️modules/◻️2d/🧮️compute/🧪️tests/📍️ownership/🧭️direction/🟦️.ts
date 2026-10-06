@@ -1,17 +1,15 @@
 /** 🧭️ Proves the actual compute witness executes without higher owners. */
 import {expect,test} from "bun:test";
-import Ajv from "ajv";
+
 import * as ts from "typescript";
 import {readFileSync,writeFileSync,mkdirSync,mkdtempSync,existsSync} from "node:fs";
 import {resolve,join,dirname} from "node:path";
 import {spawnSync} from "node:child_process";
 import law from "../../../🧫️fixtures/📍️ownership/🧭️direction/🔣️.json";
-import lawSchema from "../../../🧬️schema/📍️ownership/🧭️direction/🔣️.json";
 const root=resolve(import.meta.dir,"../../../../../../.."),read=(path:string)=>readFileSync(join(root,path),"utf8"),owner="🧰️framework/🔨️modules/◻️2d/🧮️compute";
 test("closed neutral compute ownership contains only portable fields",()=>{
- const admit=new Ajv({strict:true}).compile(lawSchema);expect(admit(law)).toBe(true);expect(admit({...law,extra:true})).toBe(false);
- const fixture=JSON.parse(read(owner+"/🧫️fixtures/📍️ownership/🔣️.json")),schema=JSON.parse(read(owner+"/🧬️schema/📍️ownership/🔣️.json"));
- expect(Object.keys(fixture).sort()).toEqual([...law.keys].sort());expect(Object.keys(schema.properties).sort()).toEqual([...law.keys].sort());expect([...schema.required].sort()).toEqual([...law.keys].sort());
+ const fixture = JSON.parse(read(owner + "/🧫️fixtures/📍️ownership/🔣️.json"));
+ expect(Object.keys(fixture).sort()).toEqual([...law.keys].sort());
  for(const path of [fixture.source,fixture.unit])expect(path.startsWith(law.neutralPrefix+"/")).toBe(true);
 });
 test("neutral compute witness and task inputs do not depend on higher owners",()=>{

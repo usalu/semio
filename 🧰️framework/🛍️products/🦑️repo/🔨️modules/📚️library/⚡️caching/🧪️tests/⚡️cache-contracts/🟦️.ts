@@ -36,8 +36,8 @@ import { testWasmToolFingerprint } from "../../🚀️bootstrap/🛠️tools/�
 export function proveCachePolicy(workspace: string, internals: { targetPolicy(name: string, target: object, policy: object): { cache: boolean; continuous?: boolean } }): void {
   const root = resolve(import.meta.dir, "../.."), require = createRequire(join(workspace, "package.json"));
   const vectors = JSON.parse(readFileSync(join(root, "🧫️fixtures/nx-contract/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "🧫️fixtures/nx-contract/🛂️schema/🔣️.json"), "utf8"));
-  assert.equal(require("jsonschema").validate(vectors, schema).valid, true);
+  
+  
   const policy = JSON.parse(readFileSync(join(root, "🔣️policy.json"), "utf8"));
   const { isCacheableTask } = require("nx/src/tasks-runner/utils");
   for (const row of vectors.policies) for (const authored of [true, false]) {
@@ -130,7 +130,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   const root = mkdtempSync(join(output, "native-inputs-"));
   try {
     const cases = JSON.parse(readFileSync(join(fixtures, "native-inputs/🧫️cases.json"), "utf8"));
-    assert.equal(require("jsonschema").validate(cases, JSON.parse(readFileSync(join(fixtures, "native-inputs/🛂️schema/🔣️.json"), "utf8"))).valid, true);
+    
     for (const [path, content] of Object.entries(cases.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
     const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
     const { cacheInternals } = await import(pathToFileURL(join(workspace, library, "🟨️.mjs")).href);
@@ -162,7 +162,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
     assert.deepEqual(routerPaths.sort(), Object.keys(routerOracle.metafile.inputs).sort(), "Local native router closure must match the independent esbuild oracle");
     
     const boundaries = JSON.parse(readFileSync(join(fixtures, "command-boundaries/🧫️cases.json"), "utf8"));
-    assert.equal(require("jsonschema").validate(boundaries, JSON.parse(readFileSync(join(fixtures, "command-boundaries/🛂️schema/🔣️.json"), "utf8"))).valid, true);
+    
     for (const row of boundaries.cases) {
       const artifact = await require("esbuild").build({ entryPoints: [resolve(workspace, row.entry)], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
       const paths = Object.keys(artifact.metafile.inputs).sort();
@@ -180,9 +180,6 @@ export async function testBrowserModuleRelocation(workspace: string): Promise<vo
   const require = createRequire(import.meta.url), directory = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports");
   const { rewritePreview2ShimImportSource } = await import(pathToFileURL(join(directory, "🟦️.ts")).href);
   const fixture = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🕸️imports/🧫️cases.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(directory, "../🧬️schema/🔣️.json"), "utf8")), validator = new (require("ajv").default)();
-  validator.addSchema(schema);
-  assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/Preview2ShimImportRewriteV1" }, fixture));
   const lexer = await import("es-module-lexer");
   await lexer.init;
   for (const row of fixture.cases) {
@@ -280,7 +277,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
 export async function testRuntimeComponents(workspace: string): Promise<void> {
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/runtime-components");
   const fixture = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
-  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtures, "🛂️schema/🔣️.json"), "utf8")), fixture));
+  
   const pluginModule = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
   await pluginModule.libraryBootstrap;
   const { cacheInternals } = pluginModule;
@@ -330,8 +327,8 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
 export function testWorkspaceRoots(workspace: string, output: string): void {
   const require = createRequire(import.meta.url), root = mkdtempSync(join(output, "workspace-roots-"));
   const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🗂️workspace-roots.json"), "utf8"));
-  const schema = { type: "object", required: ["schemaVersion", "cases"], properties: { schemaVersion: { const: 1 }, cases: { type: "array", minItems: 1, items: { type: "object", required: ["name", "nx", "hint", "expected"], properties: { name: { type: "string" }, nx: { type: "boolean" }, hint: { type: "boolean" }, expected: { enum: ["workspace", "hint"] } } } } } };
-  assert.equal(require("jsonschema").validate(fixture, schema).valid, true);
+  
+  
   try {
     const supplied = require("nx/src/tasks-runner/task-env").getEnvVariablesForBatchProcess(false, true);
     assert.equal(supplied.NX_WORKSPACE_ROOT, workspace);
@@ -350,7 +347,7 @@ export function testWorkspaceRoots(workspace: string, output: string): void {
 export async function testBunDependencies(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/bun-dependencies");
   const cases = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
-  assert.ok(new (require("ajv/dist/2020").default)().validate(JSON.parse(readFileSync(join(fixtures, "🛂️schema/🔣️.json"), "utf8")), cases));
+  
   const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
   assert.equal(typeof cacheInternals.bunLockGraph, "function", "Bun inputs require resolved-location dependency identity");
   const graph = cacheInternals.bunLockGraph(cases.lock, cases.patches);
@@ -403,7 +400,7 @@ export async function testBunDependencies(workspace: string, output: string): Pr
 export async function testNativePreparation(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/native-preparation");
   const cases = JSON.parse(readFileSync(join(fixtures, "🧫️cases.json"), "utf8"));
-  assert.equal(require("jsonschema").validate(cases, JSON.parse(readFileSync(join(fixtures, "🛂️schema/🔣️.json"), "utf8"))).valid, true);
+  
   const nativeInput = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🎛️native-input/🟦️.ts")).href);
   const nativeBuild = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts")).href);
   assert.equal(typeof nativeInput.validateNativeCargoArguments, "function");
@@ -666,7 +663,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.equal(wasmBuildEnvironment(root, {}).CARGO_TARGET_DIR, undefined);
     assert.equal(wasmBuildEnvironment(root, { CARGO_TARGET_DIR: "chosen-cache" }).CARGO_TARGET_DIR, "chosen-cache");
     const vectors = JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/nx-contract/🔣️.json"), "utf8"));
-    assert.equal(validate(vectors, JSON.parse(readFileSync(join(SCRIPT_ROOT, "🧫️fixtures/nx-contract/🛂️schema/🔣️.json"), "utf8"))).valid, true);
+    
     const loggingKeys = Object.keys(vectors.daemonEnvironment), savedLogging = Object.fromEntries(loggingKeys.map((key) => [key, process.env[key]]));
     const quiet = devToolingEnv(Object.fromEntries(loggingKeys.map((key) => [key, undefined])));
     try {

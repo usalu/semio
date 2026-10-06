@@ -1,7 +1,7 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-support`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::{FemDof, FemSupport};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

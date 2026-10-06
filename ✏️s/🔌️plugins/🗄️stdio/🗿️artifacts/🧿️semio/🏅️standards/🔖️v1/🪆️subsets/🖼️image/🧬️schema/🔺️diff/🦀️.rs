@@ -9,7 +9,9 @@
 //! following the docx/gif precedent (`f6-docx-ecma-376-report.md`, `f6-final-summary.md` §4.4). No
 //! `snapshot: Option<SemioImageSnapshot>` full-replace slot anywhere.
 
-use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+
+
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -17,7 +19,7 @@ use protocol::command::DiffAlgebra;
 /// `encode_diff`/`decode_diff` via method syntax on `SemioImageDiff`, which needs `DiffCodec` in
 /// scope (the `impl protocol::DiffCodec for SemioImageDiff` block itself compiles fine unqualified,
 /// but callers using method syntax do not get the trait for free) (W2b closer fix).
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::MutationDiff;
 
 //#region 🔖️FrameDiff
@@ -539,331 +541,42 @@ pub fn diff_set_snapshot(base: &SemioImageSnapshot, snapshot: &SemioImageSnapsho
 /// lowercase hex — no external base64 dep, no escaping needed. `Option<T>` uses a uniform
 /// `[0]`=None / `[1,<T>]`=Some(T) tag.
 //#region 🔖️Primitives
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_encode_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_decode_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_u8(s: &str) -> Result<u8, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_u32(s: &str) -> Result<u32, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
-/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers this subset's own `📸️snapshot` facet's `ArtifactPack` uses)
-/// backing the real `DiffCodec::encode_diff`/`decode_diff` below.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    store::pack_rt::write_varint_u64(out, s.len() as u64);
-    out.extend_from_slice(s.as_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
-    String::from_utf8(bytes).map_err(|e| e.to_string())
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
-    match opt {
-        None => "[0]".to_string(),
-        Some(v) => format!("[1,{}]", enc(v)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
-        ["0"] => Ok(None),
-        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
-        other => Err(format!("option decode: bad shape {other:?}")),
-    }
-}
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_colorspace(c: SemioColorspace) -> char {
-    match c {
-        SemioColorspace::Rgb => 'r',
-        SemioColorspace::Rgba => 'a',
-        SemioColorspace::Grayscale => 'g',
-        SemioColorspace::GrayscaleAlpha => 'y',
-        SemioColorspace::Indexed => 'i',
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_colorspace(s: &str) -> Result<SemioColorspace, String> {
-    match s {
-        "r" => Ok(SemioColorspace::Rgb),
-        "a" => Ok(SemioColorspace::Rgba),
-        "g" => Ok(SemioColorspace::Grayscale),
-        "y" => Ok(SemioColorspace::GrayscaleAlpha),
-        "i" => Ok(SemioColorspace::Indexed),
-        other => Err(format!("bad colorspace {other:?}")),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_frame(f: &SemioImageFrame) -> String {
-    format!("[{},{}]", f.delay_ms, hex_encode(&f.rgba8))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_frame(s: &str) -> Result<SemioImageFrame, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [delay, rgba] = parts.as_slice() else { return Err(format!("frame: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioImageFrame { delay_ms: parse_u32(delay)?, rgba8: hex_decode(rgba)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_frame_diff(d: &SemioImageFrameDiff) -> String {
-    let mut parts = Vec::new();
-    if let Some(v) = d.delay_ms {
-        parts.push(format!("D:{v}"));
-    }
-    if let Some(v) = &d.rgba8 {
-        parts.push(format!("X:{}", hex_encode(v)));
-    }
-    format!("[{}]", parts.join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_frame_diff(s: &str) -> Result<SemioImageFrameDiff, String> {
-    let inner = strip_brackets(s)?;
-    let mut d = SemioImageFrameDiff::default();
-    for entry in split_top_level(inner, ',') {
-        if entry.is_empty() {
-            continue;
-        }
-        let (tag, val) = entry.split_once(':').ok_or_else(|| format!("frame diff: bad entry {entry:?}"))?;
-        match tag {
-            "D" => d.delay_ms = Some(parse_u32(val)?),
-            "X" => d.rgba8 = Some(hex_decode(val)?),
-            other => return Err(format!("frame diff: unknown tag {other:?}")),
-        }
-    }
-    Ok(d)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_metadata_entry(e: &SemioImageMetadataEntry) -> String {
-    format!("[{},{}]", hex_encode_str(&e.key), hex_encode_str(&e.value))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_metadata_entry(s: &str) -> Result<SemioImageMetadataEntry, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [key, value] = parts.as_slice() else { return Err(format!("metadata entry: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioImageMetadataEntry { key: hex_decode_str(key)?, value: hex_decode_str(value)? })
-}
+
+
+
+
+
+
+
+
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️CollectionCodecs
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_frames_diff(d: &SemioImageFramesDiff) -> String {
-    enc_indexed_triple(d, enc_frame_diff, enc_frame)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_frames_diff(s: &str) -> Result<SemioImageFramesDiff, String> {
-    dec_indexed_triple(s, dec_frame_diff, dec_frame)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_metadata_diff(d: &SemioImageMetadataDiff) -> String {
-    enc_named_triple(d, |k: &String| hex_encode_str(k), |v: &String| hex_encode_str(v), enc_metadata_entry)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_metadata_diff(s: &str) -> Result<SemioImageMetadataDiff, String> {
-    dec_named_triple(s, hex_decode_str, hex_decode_str, dec_metadata_entry)
-}
+
+
+
+
 //#endregion 🔖️CollectionCodecs
 
 //#region 🔖️TopLevel
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_image_diff(d: &SemioImageDiff) -> String {
-    let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = d.width {
-        tokens.push(format!("width={v}"));
-    }
-    if let Some(v) = d.height {
-        tokens.push(format!("height={v}"));
-    }
-    if let Some(v) = d.colorspace {
-        tokens.push(format!("colorspace={}", enc_colorspace(v)));
-    }
-    if let Some(v) = d.bit_depth {
-        tokens.push(format!("bitDepth={v}"));
-    }
-    if let Some(v) = &d.icc {
-        tokens.push(format!("icc={}", encode_option(v, |b| hex_encode(b))));
-    }
-    if let Some(v) = &d.frames {
-        tokens.push(format!("frames{{{}}}", enc_frames_diff(v)));
-    }
-    if let Some(v) = &d.metadata {
-        tokens.push(format!("metadata{{{}}}", enc_metadata_diff(v)));
-    }
-    tokens.join(" ")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_image_diff(line: &str) -> Result<SemioImageDiff, String> {
-    let mut d = SemioImageDiff::default();
-    if line.is_empty() {
-        return Ok(d);
-    }
-    for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("width=") {
-            d.width = Some(parse_u32(rest)?);
-        } else if let Some(rest) = token.strip_prefix("height=") {
-            d.height = Some(parse_u32(rest)?);
-        } else if let Some(rest) = token.strip_prefix("colorspace=") {
-            d.colorspace = Some(dec_colorspace(rest)?);
-        } else if let Some(rest) = token.strip_prefix("bitDepth=") {
-            d.bit_depth = Some(parse_u8(rest)?);
-        } else if let Some(rest) = token.strip_prefix("icc=") {
-            d.icc = Some(decode_option(rest, hex_decode)?);
-        } else if let Some(rest) = token.strip_prefix("frames{") {
-            d.frames = Some(dec_frames_diff(rest.strip_suffix('}').ok_or_else(|| "frames: missing closing brace".to_string())?)?);
-        } else if let Some(rest) = token.strip_prefix("metadata{") {
-            d.metadata = Some(dec_metadata_diff(rest.strip_suffix('}').ok_or_else(|| "metadata: missing closing brace".to_string())?)?);
-        } else {
-            return Err(format!("image diff: unknown token {token:?}"));
-        }
-    }
-    Ok(d)
-}
 
-impl DiffCodec for SemioImageDiff {
-    fn print_diff(&self) -> String {
-        print_image_diff(self)
-    }
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_image_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
-    /// shortcut. `format u8` + `presence u8` (bit0=`width` bit1=`height` bit2=`colorspace`
-    /// bit3=`bitDepth` bit4=`icc` bit5=`frames` bit6=`metadata`) are two REAL fixed fields; each
-    /// present field then follows as its own varint-length-prefixed opaque text blob (the same
-    /// per-field `enc_*`/`enc_frames_diff`/`enc_metadata_diff` text `print_diff` already produces)
-    /// — independently-delimited segments rather than one bare trailing `bytes` because there can
-    /// be 0-7 of them (chaining a `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a
-    /// second `if`-guard on a field that was itself only conditionally decoded hard-errors
-    /// `eval_cond` — see `🌊️flow`'s/`🔺️mesh`'s pilot reports).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        let mut presence = 0u8;
-        if self.width.is_some() {
-            presence |= 0b0000_0001;
-        }
-        if self.height.is_some() {
-            presence |= 0b0000_0010;
-        }
-        if self.colorspace.is_some() {
-            presence |= 0b0000_0100;
-        }
-        if self.bit_depth.is_some() {
-            presence |= 0b0000_1000;
-        }
-        if self.icc.is_some() {
-            presence |= 0b0001_0000;
-        }
-        if self.frames.is_some() {
-            presence |= 0b0010_0000;
-        }
-        if self.metadata.is_some() {
-            presence |= 0b0100_0000;
-        }
-        let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(v) = self.width {
-            write_str_lp(&mut out, &v.to_string());
-        }
-        if let Some(v) = self.height {
-            write_str_lp(&mut out, &v.to_string());
-        }
-        if let Some(v) = self.colorspace {
-            write_str_lp(&mut out, &enc_colorspace(v).to_string());
-        }
-        if let Some(v) = self.bit_depth {
-            write_str_lp(&mut out, &v.to_string());
-        }
-        if let Some(v) = &self.icc {
-            write_str_lp(&mut out, &encode_option(v, |b| hex_encode(b)));
-        }
-        if let Some(v) = &self.frames {
-            write_str_lp(&mut out, &enc_frames_diff(v));
-        }
-        if let Some(v) = &self.metadata {
-            write_str_lp(&mut out, &enc_metadata_diff(v));
-        }
-        Ok(out)
-    }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        if bytes.len() < 2 {
-            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
-        }
-        if bytes[0] != DIFF_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
-        }
-        let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
-        let width = if presence & 0b0000_0001 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff width blob", offset: 2, detail: e })?;
-            Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff width text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        let height = if presence & 0b0000_0010 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff height blob", offset: 2, detail: e })?;
-            Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff height text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        let colorspace = if presence & 0b0000_0100 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff colorspace blob", offset: 2, detail: e })?;
-            Some(dec_colorspace(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff colorspace text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        let bit_depth = if presence & 0b0000_1000 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff bit_depth blob", offset: 2, detail: e })?;
-            Some(parse_u8(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff bit_depth text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        let icc = if presence & 0b0001_0000 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff icc blob", offset: 2, detail: e })?;
-            Some(decode_option(&text, hex_decode).map_err(|e| protocol::ProtocolError::Malformed { what: "diff icc text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        let frames = if presence & 0b0010_0000 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff frames blob", offset: 2, detail: e })?;
-            Some(dec_frames_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff frames text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        let metadata = if presence & 0b0100_0000 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff metadata blob", offset: 2, detail: e })?;
-            Some(dec_metadata_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff metadata text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        Ok(SemioImageDiff { width, height, colorspace, bit_depth, icc, frames, metadata })
-    }
-}
+
+
+
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 

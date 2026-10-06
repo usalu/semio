@@ -1,0 +1,1314 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/🧬️schema/🔣️.json",
+    "before": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://json.schemas.assets.semio-tech.com/repo/yaml/1",
+      "title": "🧾️ Repo YAML codec fixtures and wire shapes",
+      "description": "🧾️ The vector file the `🔁️codec-roundtrip` case reads and the projection every implementation of the codec must produce for it.",
+      "type": "object",
+      "$defs": {
+        "CodecProjection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "decoded"
+          ],
+          "description": "🎯️ One canonical-JSON rendering per vector, in vector order. Canonical means: object members sorted by key, integers without a fractional part, no insignificant whitespace — so the projection carries no host-language number or ordering artefacts.",
+          "properties": {
+            "decoded": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "📥️ `<vector name>=<canonical JSON of the decoded value>`, or `<vector name>!<error text prefix>` when the decoder rejects the document."
+            }
+          }
+        },
+        "RoundTripProjection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reDecoded"
+          ],
+          "description": "🔁️ The value obtained by decoding, re-encoding with the owned encoder, and decoding the result again.",
+          "properties": {
+            "reDecoded": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "🔁️ `<vector name>=<canonical JSON of the re-decoded value>`."
+            }
+          }
+        }
+      }
+    },
+    "removed": [
+      "CodecVector",
+      "CodecVectorFile"
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧬️schema/🔣️.json",
+    "before": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://json.schemas.assets.semio-tech.com/repo/search/1",
+      "title": "🔎️ Repo search fixtures and wire shapes",
+      "description": "🔎️ The ranking vector file the `🔍️ranked-search` case reads, the persisted index event, and the projection every implementation must produce.",
+      "$defs": {
+        "MatchTerm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "term",
+            "fuzziness"
+          ],
+          "properties": {
+            "term": {
+              "type": "string"
+            },
+            "fuzziness": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "🎚️ The largest edit distance a word may be away from the term."
+            }
+          }
+        },
+        "IndexEvent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "seq",
+            "kind",
+            "id"
+          ],
+          "description": "📨️ One line of the persisted append-only index log.",
+          "properties": {
+            "schema": {
+              "const": "semio.search.event/1"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "🔢️ One-based, gapless; a gap is a corrupt index."
+            },
+            "kind": {
+              "enum": [
+                "indexed",
+                "deleted"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        "RankingProjection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rankings"
+          ],
+          "properties": {
+            "rankings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "🎯️ `<vector name>=<total>:<id>@<score>,<id>@<score>…` — the total counted before truncation, then the retained hits best first."
+            }
+          }
+        }
+      }
+    },
+    "removed": [
+      "RankingVector",
+      "RankingVectorFile"
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/🧬️schema/🔣️.json",
+    "before": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://json.schemas.assets.semio-tech.com/repo/codebase/1",
+      "title": "🗂️ Repo codebase fixtures and wire shapes",
+      "description": "🗂️ The three vector files the codebase cases read, and the projections every implementation of the repository walk, the technology and bundle detection, the artifact id builders and the ignore integration must produce.",
+      "$defs": {
+        "TreeEntry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "🛤️ Slash-separated path relative to the materialised repository root."
+            },
+            "content": {
+              "type": "string",
+              "description": "📄️ Exact file content; parent directories are created as needed."
+            }
+          }
+        },
+        "RepoTree": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "entries"
+          ],
+          "properties": {
+            "schema": {
+              "const": "semio.repo.codebase.repo-tree/1"
+            },
+            "comment": {
+              "type": "string"
+            },
+            "entries": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/TreeEntry"
+              }
+            }
+          }
+        },
+        "WalkProjection": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "description": "🚶️ What the workspace-walk case projects: the considered files in walk order, plus the bundle and folder aggregates keyed off them.",
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "bundles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "🧱️ One `id|folder|folders|files|lines` line per bundle, in aggregate order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "📁️ One `path|id|files|lines` line per folder, in aggregate order."
+            }
+          }
+        },
+        "IdProjection": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "description": "🪪️ What the artifact-id-builders case projects: one `name=id` entry per vector, in vector order.",
+          "properties": {
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "uris": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "DetectionProjection": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "description": "📦️ What the technology-bundle-detection case projects: one line per technology and one per bundle, in detection order.",
+          "properties": {
+            "technologies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "bundles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "IgnoreProjection": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "description": "🙈️ What the ignore-integration case projects: one `name=excluded,gitignored,generated` entry per vector, plus the kept and dropped halves of a filtered walk.",
+          "properties": {
+            "verdicts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "kept": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dropped": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/RepoTree"
+        }
+      ]
+    },
+    "removed": [
+      "ArtifactIdVector",
+      "ArtifactIdVectors",
+      "IgnoreVector",
+      "IgnoreVectors"
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧬️schema/🔣️.json",
+    "before": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json",
+      "title": "Job Budget Schema Module",
+      "definitions": {
+        "u64": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,19})$"
+        },
+        "unsigned": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      },
+      "$defs": {
+        "Budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "$schema",
+            "unit",
+            "cases"
+          ],
+          "properties": {
+            "$schema": {
+              "const": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json#/$defs/Budget"
+            },
+            "unit": {
+              "const": "microseconds"
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 9,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "start",
+                  "grant",
+                  "fuel",
+                  "deadline",
+                  "samples",
+                  "expired",
+                  "yielded"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "start": {
+                    "$ref": "#/definitions/u64"
+                  },
+                  "grant": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 7500
+                  },
+                  "fuel": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "deadline": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/u64"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "samples": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "$ref": "#/definitions/u64"
+                    }
+                  },
+                  "expired": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "boolean"
+                    }
+                  },
+                  "yielded": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Clock": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "$schema",
+            "browser",
+            "wasi",
+            "installation",
+            "watchdog"
+          ],
+          "properties": {
+            "$schema": {
+              "const": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json#/$defs/Clock"
+            },
+            "browser": {
+              "type": "array",
+              "minItems": 8,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "milliseconds",
+                  "microseconds"
+                ],
+                "properties": {
+                  "milliseconds": {
+                    "type": "string",
+                    "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+                  },
+                  "microseconds": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/unsigned"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "watchdog": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "elapsedMicroseconds",
+                  "violated"
+                ],
+                "properties": {
+                  "elapsedMicroseconds": {
+                    "$ref": "#/definitions/unsigned"
+                  },
+                  "violated": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "installation": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "current",
+                  "requested",
+                  "accepted",
+                  "retained"
+                ],
+                "properties": {
+                  "current": {
+                    "enum": [
+                      null,
+                      "browser",
+                      "foreign"
+                    ]
+                  },
+                  "requested": {
+                    "enum": [
+                      "browser",
+                      "foreign"
+                    ]
+                  },
+                  "accepted": {
+                    "type": "boolean"
+                  },
+                  "retained": {
+                    "enum": [
+                      "browser",
+                      "foreign"
+                    ]
+                  }
+                }
+              }
+            },
+            "wasi": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "nanoseconds",
+                  "accepted"
+                ],
+                "properties": {
+                  "nanoseconds": {
+                    "$ref": "#/definitions/unsigned"
+                  },
+                  "accepted": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "$schema",
+            "cases"
+          ],
+          "properties": {
+            "$schema": {
+              "const": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json#/$defs/Binding"
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 9,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "mutation",
+                  "admitted"
+                ],
+                "properties": {
+                  "mutation": {
+                    "enum": [
+                      "none",
+                      "wrong-helper",
+                      "divided-grant",
+                      "rounded-grant",
+                      "coarse-clock",
+                      "overflow-fallback",
+                      "expired-entry",
+                      "synthetic-clock",
+                      "missing-output-limit"
+                    ]
+                  },
+                  "admitted": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "removed": [
+      "Budget",
+      "Clock",
+      "Binding"
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️schema/🔣️.json",
+    "before": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retirement/typed/schema.json",
+      "title": "Ui Contract Retirement Typed Schema Module",
+      "$defs": {
+        "Components": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "cases"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 19,
+              "maxItems": 19,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "component",
+                  "bytes"
+                ],
+                "properties": {
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 32768
+                  },
+                  "component": {
+                    "oneOf": [
+                      {
+                        "const": {
+                          "type": "container",
+                          "role": "group",
+                          "label": "A",
+                          "description": "B",
+                          "error": "C",
+                          "dropOverlay": {
+                            "title": "D",
+                            "hint": "E",
+                            "accept": "F"
+                          }
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "text",
+                          "value": "A",
+                          "dataAttributes": {
+                            "x": "🌊"
+                          }
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "button",
+                          "icon": "I",
+                          "label": "L"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "separator"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "input",
+                          "kind": "number",
+                          "value": "1",
+                          "placeholder": "P",
+                          "commit": "C",
+                          "accept": "A"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "select",
+                          "value": "v",
+                          "items": [
+                            {
+                              "value": "a",
+                              "label": "L"
+                            }
+                          ],
+                          "placeholder": "P"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "toggle",
+                          "on": true,
+                          "icon": "I",
+                          "text": "T"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "keyValueList",
+                          "entries": [
+                            {
+                              "label": "L",
+                              "value": "V"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "slider",
+                          "value": 2,
+                          "min": 0,
+                          "max": 4,
+                          "step": 1,
+                          "unit": "mm"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "numberStepper",
+                          "value": 1,
+                          "step": 1,
+                          "uniform": false
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "ring",
+                          "orbId": "x",
+                          "t": 0
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "iconSelect",
+                          "value": "v",
+                          "uniform": false,
+                          "classifierKind": "k"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "progress",
+                          "completed": 1,
+                          "total": 2,
+                          "valueText": "V"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "tree",
+                          "interactionDomain": "d"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "treeSection",
+                          "label": "L"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "treeItem",
+                          "label": "L",
+                          "description": "D",
+                          "icon": "I",
+                          "dragData": {
+                            "x": "🌊"
+                          },
+                          "rowActions": [
+                            {
+                              "icon": "R",
+                              "label": "B",
+                              "verb": "n"
+                            }
+                          ],
+                          "target": {
+                            "scope": "s",
+                            "version": 1,
+                            "args": {
+                              "x": [
+                                "🌊"
+                              ]
+                            },
+                            "activation": "a"
+                          }
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "image",
+                          "src": "S",
+                          "alt": "A"
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "extension",
+                          "extension": "E",
+                          "props": {
+                            "x": [
+                              "🌊"
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "const": {
+                          "type": "surface",
+                          "kind": "canvas-2d",
+                          "docSchema": "wire",
+                          "doc": {
+                            "bytes": [
+                              0,
+                              1,
+                              2
+                            ]
+                          },
+                          "bindings": []
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "removed": [
+      "Components"
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧬️contention/🧬️schema/🔣️.json",
+    "before": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/framework/trace/clock/contention/schema.json",
+      "title": "Trace Clock Contention Schema Module",
+      "$defs": {
+        "Contention": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "sustainedOverrunSteps",
+            "cases",
+            "verdicts",
+            "overruns"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "verdicts": {
+              "type": "array",
+              "minItems": 5,
+              "maxItems": 5,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "start",
+                  "end",
+                  "fault",
+                  "clockFault",
+                  "sessionTerminal"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "start": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "end": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "fault": {
+                    "type": "boolean"
+                  },
+                  "clockFault": {
+                    "enum": [
+                      null,
+                      "Missing",
+                      "Backward"
+                    ]
+                  },
+                  "sessionTerminal": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "lock",
+                  "callback",
+                  "returnsWhileHeld",
+                  "violationRetained",
+                  "returnedEvent"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "lock": {
+                    "enum": [
+                      "site",
+                      "violation",
+                      "event"
+                    ]
+                  },
+                  "callback": {
+                    "enum": [
+                      "timer",
+                      "watchdog",
+                      "event"
+                    ]
+                  },
+                  "returnsWhileHeld": {
+                    "const": true
+                  },
+                  "violationRetained": {
+                    "type": "boolean"
+                  },
+                  "returnedEvent": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "sustainedOverrunSteps": {
+              "const": 4
+            },
+            "overruns": {
+              "type": "array",
+              "minItems": 6,
+              "maxItems": 6,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "elapsedUs",
+                  "terminalIndex",
+                  "consecutive",
+                  "longestRun",
+                  "total",
+                  "worstElapsedUs"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "elapsedUs": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 16,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "terminalIndex": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 3,
+                    "maximum": 15
+                  },
+                  "consecutive": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 16
+                  },
+                  "longestRun": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 16
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 16
+                  },
+                  "worstElapsedUs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/Contention"
+        }
+      ]
+    },
+    "removed": [
+      "Contention"
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧬️schema/🔣️.json",
+    "before": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/framework/async/cooperative/schema.json",
+      "title": "Async Cooperative Schema Module",
+      "$defs": {
+        "Cooperative": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "unitCost",
+            "cases"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "unitCost": {
+              "const": 8
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 6,
+              "maxItems": 6,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "lane",
+                  "weight",
+                  "deficits",
+                  "selected"
+                ],
+                "properties": {
+                  "lane": {
+                    "enum": [
+                      "Maintenance",
+                      "Background",
+                      "UserVisible",
+                      "Io",
+                      "Timer",
+                      "Interactive"
+                    ]
+                  },
+                  "weight": {
+                    "enum": [
+                      1,
+                      2,
+                      3,
+                      4,
+                      8
+                    ]
+                  },
+                  "deficits": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 7
+                    }
+                  },
+                  "selected": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "items": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/Cooperative"
+        }
+      ]
+    },
+    "removed": [
+      "Cooperative"
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧬️schema/🔣️.json",
+    "before": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/os/store/composition/open/schema.json",
+      "title": "Store Composition Open",
+      "$defs": {
+        "CompositionOpen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "limits",
+            "cases",
+            "framing",
+            "retention"
+          ],
+          "properties": {
+            "schema": {
+              "const": "semio.member.open-operation/v1"
+            },
+            "limits": {
+              "const": {
+                "pageBytes": 4096,
+                "maximumPages": 4096,
+                "identityBytes": 256
+              }
+            },
+            "retention": {
+              "type": "array",
+              "minItems": 6,
+              "maxItems": 6,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "stage",
+                  "snapshots",
+                  "mutations",
+                  "cancelled"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "stage": {
+                    "enum": [
+                      "input",
+                      "snapshot",
+                      "forward",
+                      "inverse",
+                      "envelope",
+                      "initialization"
+                    ]
+                  },
+                  "snapshots": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2
+                  },
+                  "mutations": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2
+                  },
+                  "cancelled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "framing": {
+              "type": "array",
+              "minItems": 8,
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "bytes",
+                  "snapshot",
+                  "history",
+                  "reason"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "bytes": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  },
+                  "snapshot": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": [
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "history": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": [
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "reason": {
+                    "enum": [
+                      null,
+                      "malformed"
+                    ]
+                  }
+                }
+              }
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 11,
+              "maxItems": 11,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "sealed",
+                  "bytes",
+                  "expiresAtUs",
+                  "nowUs",
+                  "artifactId",
+                  "ownerChildId",
+                  "admitted",
+                  "reason"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sealed": {
+                    "type": "boolean"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 16777216
+                  },
+                  "expiresAtUs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "nowUs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "artifactId": {
+                    "type": "string"
+                  },
+                  "ownerChildId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "admitted": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "enum": [
+                      null,
+                      "unsealed",
+                      "empty",
+                      "expired",
+                      "identity",
+                      "owner"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "removed": [
+      "CompositionOpen"
+    ]
+  }
+]

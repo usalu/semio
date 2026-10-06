@@ -4961,6 +4961,24 @@ pub(crate) fn window_measures_surface_id(window_id: &str) -> String {
     format!("{window_id}/{}", semio_framework::UiRefreshSection::Measures.body_key())
 }
 
+/// 🏁️ The refresh one guest publication owes — the wgpu half of the shared law
+/// `🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json` (React: `typedOperationCompletionRefreshV1` and the
+/// progress subscriber). Its own scope when it has one; a COMPLETION that patched history and dirtied nothing else still
+/// owes the reserved History body the row it minted; progress with a patch alone moves the band and re-renders nothing;
+/// a lossy lane (`resync`) owes everything.
+pub(crate) fn operation_publication_refresh(publication: &crate::program_bridge::OperationPublication) -> UiDirtyScope {
+    if publication.resync {
+        return UiDirtyScope::Full;
+    }
+    if !publication.ui_scope.asks_for_nothing() {
+        return publication.ui_scope.clone();
+    }
+    if publication.completed && publication.history_patch.is_some() {
+        return UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false };
+    }
+    UiDirtyScope::None
+}
+
 /// 🩺️ One refresh pass's scope, short enough to read in a console line — which surfaces a settle
 /// asked for is the only thing that separates "the guest re-rendered the previous document" from
 /// "this pass never looked at that surface".
@@ -5108,7 +5126,7 @@ impl WindowMeasuresProjection<'_> {
                     options.try_push(ui_contract::SelectItem { value: UiText::clipped(&item.value), label: measure_label(&item.label) }).map_err(|_| format!("measure '{id}' has more options than one select admits"))?;
                 }
                 let record = MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, None)?, label: label.as_deref().map(measure_label), ..MeasureRecord::default() };
-                self.control(id, label.as_deref(), ui_contract::Component::Select(ui_contract::SelectProps { value: UiText::clipped(value), items: options, placeholder: None }), record).map(Some)
+                self.control(id, label.as_deref(), ui_contract::Component::Select(ui_contract::SelectProps { value: UiText::clipped(value), items: options, placeholder: None, appearance: ui_contract::SelectAppearance::Menu }), record).map(Some)
             }
             WindowMeasure::Toggle { id, icon_id, label, pressed, text, on_change } => {
                 let toggle = ui_contract::ToggleProps { appearance: ui_contract::ToggleAppearance::Checkbox, on: *pressed, icon: UiText::clipped(icon_id.as_str()), text: text.as_deref().map(measure_label) };
@@ -5705,7 +5723,7 @@ impl PanelProjection<'_> {
                 for item in &select.items {
                     items.try_push(ui_contract::SelectItem { value: UiText::clipped(&item.value), label: measure_label(item.label.as_str()) }).map_err(|_| format!("panel select '{}' has more options than one select admits", select.id))?;
                 }
-                let props = ui_contract::SelectProps { value: UiText::clipped(&select.value), items, placeholder: select.placeholder.as_ref().map(|label| measure_label(label.as_str())) };
+                let props = ui_contract::SelectProps { value: UiText::clipped(&select.value), items, placeholder: select.placeholder.as_ref().map(|label| measure_label(label.as_str())), appearance: ui_contract::SelectAppearance::Menu };
                 let bindings = measure_bindings(ui_contract::Trigger::Change, &select.on_change, None)?;
                 self.place(id, key, ui_contract::Component::Select(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
             }
@@ -7917,7 +7935,7 @@ impl ShellState {
             self.identity_env = resolve_identity_env();
         }
         self.push_contributions().await?;
-        self.apply_boot_example().await?;
+        self.announce_session_example().await?;
         Self::declare_boot_subphase("shell-boot:refresh-ui", "enter", 0.0);
         let refresh_started = Self::instant_now_ms();
         self.refresh_ui(UiDirtyScope::Full).await?;
@@ -7926,38 +7944,21 @@ impl ShellState {
         Ok(())
     }
 
-    /// 📚️ Applies the boot-requested example (`?example=`) to the session the boot just opened: the id
-    /// becomes the picker's selection AND `setActiveExample` is dispatched, exactly as
-    /// `handle_control_command`'s `shell.example.*` arm does for a click, so the guest opens that
-    /// document rather than the dialect's first. It runs AFTER `push_contributions` and before the
-    /// first `refresh_ui`, so the guest's flow-extension registry is already armed when the document
-    /// changes — the ordering `settle_boot`'s own comment records. An id the open dialect does not
-    /// author is ignored (`boot_example_selection`), never a boot failure.
-    async fn apply_boot_example(&mut self) -> Result<(), String> {
-        let Some(requested) = crate::boot_app_example() else {
-            return Ok(());
-        };
-        let Some(example_id) = self.active_example_id.clone().filter(|resolved| *resolved == requested) else {
-            Self::debug_log(&format!("[TRACE] wgpu-shell boot example {requested:?} is not authored by the open dialect — keeping {:?}", self.active_example_id));
-            return Ok(());
-        };
-        let Some(controller_id) = self.session.as_ref().map(|session| session.app.controller_id.clone()) else {
-            return Ok(());
-        };
-        Self::debug_log(&format!("[TRACE] wgpu-shell boot example {}", serde_json::json!({ "exampleId": example_id, "controller": controller_id })));
-        self.dispatch_action(ActionDescriptor { controller_id, action: "setActiveExample".into(), args: crate::action_args_json!({ "exampleId": example_id }) }).await
-    }
-
     /// 📚️ Announces the RESOLVED example to a freshly mounted instance — the wgpu twin of React's
-    /// per-instance boot-example effect (`🏛️ShellHost/🟦️.tsx`'s `noExampleResetInstanceIdRef` guard),
-    /// which re-runs for EVERY new session instance, not only the boot one.
+    /// per-instance boot-example effect (`🏛️ShellHost/🟦️.tsx`), which runs for EVERY new session
+    /// instance: the boot one (from `settle_boot`, AFTER `push_contributions` armed the guest's
+    /// flow-extension registry and before the first `refresh_ui`) and every successor of a role switch.
+    /// `setActiveExample` is dispatched exactly as `handle_control_command`'s `shell.example.*` arm
+    /// does for a click, so the guest opens the document the navbar picker shows and journals it.
     ///
-    /// 🩸️ `apply_boot_example` covers the boot alone and only for `?example=`, so a role switch
-    /// mounted its successor on the dialect's first document and journalled nothing — where React's
-    /// own `role-viewer`/`role-editor` steps each journal `setActiveExample`
-    /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, packet W10b, `🗑️generated/parity-run-2/steps.json`).
-    /// `sync_session_chrome` has already run `resolve_boot_example_id` for the successor's dialect, so
-    /// the id announced here is exactly the one the navbar picker shows.
+    /// 🩸️ The boot used to announce only an example a `?example=` query named: without the query the
+    /// picker showed the dialect's first example while the guest still held its empty genesis document —
+    /// an empty board and a History with no row where React boots on "Set Active Example"
+    /// (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F11). Before that a role switch
+    /// journalled nothing (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, packet W10b).
+    /// `sync_session_chrome` has already run `resolve_boot_example_id` for the instance's dialect (a
+    /// query id the dialect does not author falls back, never a boot failure), so the id announced here
+    /// is exactly the one the navbar picker shows.
     async fn announce_session_example(&mut self) -> Result<(), String> {
         let Some(example_id) = self.active_example_id.clone().filter(|id| !id.is_empty()) else {
             return Ok(());
@@ -8948,14 +8949,14 @@ impl ShellState {
                         constructed.push(host_id);
                     }
                 }
-                crate::engine_canvas::EngineSurfaceKindDetail::Board2d { fixture_json } => {
+                crate::engine_canvas::EngineSurfaceKindDetail::Board2d { snapshot_json } => {
                     if let Some(surface) =
-                        board2d_states.get_or_insert_with(host_id.clone(), || Board2dSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), fixture_json: fixture_json.clone(), window_id: window_id.clone() })
+                        board2d_states.get_or_insert_with(host_id.clone(), || Board2dSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), snapshot_json: snapshot_json.clone(), window_id: window_id.clone() })
                     {
                         surface.surface_id = surface_id;
                         surface.bounds = bounds;
                         surface.controller_id = controller_id;
-                        surface.fixture_json = fixture_json;
+                        surface.snapshot_json = snapshot_json;
                         surface.window_id = window_id;
                     }
                     if created {
@@ -9122,7 +9123,7 @@ impl ShellState {
         for effect in effects {
             match effect {
                 semio_framework::kernel::Effect::SetActiveUtility { window_id, utility_id } => {
-                    self.apply_set_active_utility(&window_id, &utility_id);
+                    self.set_active_utility(&window_id, (!utility_id.is_empty()).then_some(utility_id.as_str()));
                 }
                 semio_framework::kernel::Effect::Navigate { uri } => {
                     self.push_uri(uri);
@@ -10897,7 +10898,7 @@ impl ShellState {
         let directory_changed = self.pump_directory_events().await || shell_io_changed;
         #[cfg(not(target_arch = "wasm32"))]
         let directory_changed = self.poll_time_travel_progress().await || directory_changed;
-        let directory_changed = self.drain_progress_history_patches().await || directory_changed;
+        let directory_changed = self.drain_operation_publications().await || directory_changed;
         let directory_changed = self.publish_peer_time_travel_notes() || directory_changed;
         let directory_changed = self.reattach_remembered_local_folder().await || directory_changed;
         #[cfg(target_arch = "wasm32")]
@@ -10992,7 +10993,7 @@ impl ShellState {
                     changed = true;
                 }
                 ArtifactEvent::Conflict(message) => {
-                    if let Some((code, text, severity)) = time_travel::history_refusal_notice(&message.code.0, self.active_locale()) {
+                    if let Some((code, text, severity)) = time_travel::history_refusal_notice(&message.code.0, self.active_locale()).filter(|(code, _, _)| !time_travel::history_refusal_is_silent(code)) {
                         self.show_transient_notice(text, severity, Some(code));
                     }
                     if let Some(terminal) = shell_sync_link_terminal(&message.code.0) {
@@ -11041,6 +11042,7 @@ impl ShellState {
                     changed = true;
                 }
                 ArtifactEvent::CommandOutcome { .. } => {}
+                ArtifactEvent::DocumentArchiveAbsent => {}
             }
             if self.sync_terminal_fault.is_some() {
                 break;
@@ -11180,15 +11182,13 @@ impl ShellState {
         self.seed_history_snapshot().await;
     }
 
-    /// 🧾️ The seeding half of [`Self::refresh_history_snapshot`]: the program's whole history projection, read through
-    /// the native exchange's `ReadHistory` or the browser bridge's `readHistory` alike, so a session start or a restored
-    /// archive shows its rows and head on both builds before the next `history_patch` folds in.
-    ///
-    /// ⚔️ A freshly attached document brings its own open conflicts with it — React seeds the
-    /// Conflicts panel on the same session-start/switch edge; the `ReadConflicts` exchange is native-only.
-    async fn seed_history_snapshot(&mut self) {
-        let Some(session) = self.session.as_ref() else { return };
-        let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) else { return };
+    /// 📖️ Reads the session program's whole history projection over the local one (`replace = true`): its rows, head,
+    /// history-edit session and waiting reprojection. `false` when no session's program could be asked. What a session
+    /// start seeds from ([`Self::seed_history_snapshot`]) and what a lossy publication lane falls back to
+    /// ([`Self::drain_operation_publications`]).
+    async fn reread_history_projection(&mut self) -> bool {
+        let Some(session) = self.session.as_ref() else { return false };
+        let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) else { return false };
         match plugin.read_history(session.instance_id).await {
             Ok(patch) => {
                 fold_history_patch(&mut self.history_entries, &mut self.history_cursor, &patch, true);
@@ -11197,6 +11197,19 @@ impl ShellState {
                 self.history_current_checkpoint_id = patch.current_checkpoint_id;
             }
             Err(error) => Self::debug_log(&format!("[TRACE] wgpu shell read_history failed: {error}")),
+        }
+        true
+    }
+
+    /// 🧾️ The seeding half of [`Self::refresh_history_snapshot`]: the program's whole history projection, read through
+    /// the native exchange's `ReadHistory` or the browser bridge's `readHistory` alike, so a session start or a restored
+    /// archive shows its rows and head on both builds before the next `history_patch` folds in.
+    ///
+    /// ⚔️ A freshly attached document brings its own open conflicts with it — React seeds the
+    /// Conflicts panel on the same session-start/switch edge; the `ReadConflicts` exchange is native-only.
+    async fn seed_history_snapshot(&mut self) {
+        if !self.reread_history_projection().await {
+            return;
         }
         self.conflicts_seeded = false;
         self.open_conflicts.clear();
@@ -12289,7 +12302,7 @@ impl ShellState {
                                 self.action_panel_expanded.insert(window_id.to_string(), action_id.to_string());
                             }
                         }
-                        return Ok(());
+                        return self.republish_window_action_panes();
                     }
                     IMPORT_TRANSFER_CANCEL_ACTION => {
                         if let Some(transfer) = action.args.as_ref().map(dsl_value_as_json).and_then(|args| args.get("transfer").and_then(Value::as_u64)) {
@@ -12304,7 +12317,7 @@ impl ShellState {
                             let value = staged_arg_value(&args, self.staged_map_for(&window_id, &action_id).get(&arg_id));
                             self.stage_arg(&window_id, &action_id, &arg_id, value);
                         }
-                        return Ok(());
+                        return self.republish_window_action_panes();
                     }
                     "resetActionArgs" => {
                         let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
@@ -12312,7 +12325,7 @@ impl ShellState {
                             let (window_id, action_id) = (window_id.to_string(), action_id.to_string());
                             self.reset_staged_args(&window_id, &action_id);
                         }
-                        return Ok(());
+                        return self.republish_window_action_panes();
                     }
                     "executeStagedAction" => {
                         let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
@@ -12336,7 +12349,7 @@ impl ShellState {
                             let open = self.search_possibles_open.get(window_id).copied().unwrap_or(false);
                             self.search_possibles_open.insert(window_id.to_string(), !open);
                         }
-                        return Ok(());
+                        return self.republish_window_action_panes();
                     }
                     "setWorldProjectionTemplate" => {
                         let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
@@ -12613,7 +12626,7 @@ impl ShellState {
                                 .map(String::from)
                                 .or_else(|| self.active_window_id.clone())
                                 .unwrap_or_else(|| self.active_utility_bar_window_kind(&session).id.clone());
-                            self.apply_set_active_utility(&window_id, utility_id);
+                            self.toggle_active_utility(&window_id, utility_id);
                         }
                     }
                 }
@@ -20907,49 +20920,40 @@ fn rects_overlap(a: Rect, b: Rect) -> bool {
     a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 }
 
-/// 🛟️ The safe area an affordance anchored inside `host` keeps from the chrome panels painted over it —
-/// the Rust twin of React's `chromePanelSafeArea` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`), answering the same
-/// `🛑️surface-controls/🔣️.json` `chromePanelSafeArea` rows.
-///
-/// A floating panel paints over the dock's whole body on this target (`render_panel_step` draws
-/// `floating_panel_rect` after `plan_dock_windows` laid the windows out across the same body), exactly as
-/// a `z-panel` chrome panel paints over `z-window` content in React — so a surface's own overlay row
-/// under an open panel takes no press at all. The affordance yields instead, by the least it can: only
-/// panels that actually cover it reserve anything, the displacement is measured off the union of those
-/// panels on the affordance's OWN anchor edges, `yield_axis` states which of the two its layout can give
-/// (`Either` takes the smaller, ties going to the block axis), and an axis that cannot clear inside
-/// `host` is not taken at all — moving an affordance without freeing it is pure harm.
+/// 🧭️ Sweep forbidden displacement intervals while preserving the axis gap and actual host bounds.
+fn chrome_panel_axis_reserve(affordance: Rect, host: Rect, panels: &[Rect], inline: bool, direction: f32, gap: f32) -> f32 {
+    if direction == 0.0 { return 0.0; }
+    let axes = |rect: Rect| if inline { [rect.x, rect.x + rect.w, rect.y, rect.y + rect.h] } else { [rect.y, rect.y + rect.h, rect.x, rect.x + rect.w] };
+    let a = axes(affordance);
+    let h = axes(host);
+    if a[2] < h[2] || a[3] > h[3] { return 0.0; }
+    let mut intervals: Vec<(f32, f32)> = panels.iter().filter_map(|panel| {
+        let p = axes(*panel);
+        if a[2] >= p[3] || a[3] <= p[2] { return None; }
+        Some(if direction > 0.0 { (p[0] - a[1] - gap, p[1] - a[0] + gap) } else { (a[0] - p[1] - gap, a[1] - p[0] + gap) })
+    }).collect();
+    intervals.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let mut offset = 0.0;
+    for (start, end) in intervals {
+        if start >= offset { break; }
+        if end > offset { offset = end.ceil(); }
+    }
+    if offset > 0.0 && a[0] + direction * offset >= h[0] && a[1] + direction * offset <= h[1] { offset } else { 0.0 }
+}
+
+/// 🛟️ Clear every shell panel along one authored anchor axis, including cascaded obstacles. Preserve the
+/// axis gap, round outward, and remain entirely inside the host. The least viable displacement wins;
+/// block wins ties. No overlap or no fit leaves placement unchanged. React consumes the same corpus.
 pub(crate) fn chrome_panel_safe_area(affordance: Rect, host: Rect, anchor: PanelAnchor, panels: &[Rect], yield_axis: SafeAreaYield, gap: f32) -> ChromePanelSafeArea {
-    let occluders: Vec<Rect> = panels.iter().copied().filter(|panel| rects_overlap(*panel, affordance)).collect();
-    if occluders.is_empty() {
-        return ChromePanelSafeArea::default();
-    }
-    let union_left = occluders.iter().fold(f32::INFINITY, |acc, panel| acc.min(panel.x));
-    let union_top = occluders.iter().fold(f32::INFINITY, |acc, panel| acc.min(panel.y));
-    let union_right = occluders.iter().fold(f32::NEG_INFINITY, |acc, panel| acc.max(panel.x + panel.w));
-    let union_bottom = occluders.iter().fold(f32::NEG_INFINITY, |acc, panel| acc.max(panel.y + panel.h));
-    let block_room = (host.h - affordance.h).max(0.0);
-    let inline_room = (host.w - affordance.w).max(0.0);
-    let block_push = match anchor.vertical() {
-        "top" => union_bottom + gap - affordance.y,
-        "bottom" => affordance.y + affordance.h + gap - union_top,
-        _ => 0.0,
+    if !panels.iter().any(|panel| rects_overlap(*panel, affordance)) { return ChromePanelSafeArea::default(); }
+    let block = if yield_axis == SafeAreaYield::Inline { 0.0 } else {
+        chrome_panel_axis_reserve(affordance, host, panels, false, match anchor.vertical() { "top" => 1.0, "bottom" => -1.0, _ => 0.0 }, gap)
     };
-    let inline_push = match anchor.horizontal() {
-        "right" => affordance.x + affordance.w + gap - union_left,
-        "left" => union_right + gap - affordance.x,
-        _ => 0.0,
+    let inline = if yield_axis == SafeAreaYield::Block { 0.0 } else {
+        chrome_panel_axis_reserve(affordance, host, panels, true, match anchor.horizontal() { "left" => 1.0, "right" => -1.0, _ => 0.0 }, gap)
     };
-    let block = if anchor.vertical() != "middle" && yield_axis != SafeAreaYield::Inline { block_push.ceil() } else { 0.0 };
-    let inline = if anchor.horizontal() != "middle" && yield_axis != SafeAreaYield::Block { inline_push.ceil() } else { 0.0 };
-    let block_viable = block > 0.0 && block <= block_room;
-    let inline_viable = inline > 0.0 && inline <= inline_room;
-    if block_viable && (!inline_viable || block <= inline) {
-        return ChromePanelSafeArea { inline: 0.0, block };
-    }
-    if inline_viable {
-        return ChromePanelSafeArea { inline, block: 0.0 };
-    }
+    if block > 0.0 && (inline == 0.0 || block <= inline) { return ChromePanelSafeArea { inline: 0.0, block }; }
+    if inline > 0.0 { return ChromePanelSafeArea { inline, block: 0.0 }; }
     ChromePanelSafeArea::default()
 }
 
@@ -21914,8 +21918,8 @@ const FRAMEWORK_RESERVED_ACTION_IDS: [&str; 22] = [
     "setActiveTool",
     semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID,
     semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID,
-    semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID,
     semio_framework::OPEN_ARTIFACT_FILE_ACTION_ID,
+    semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID,
     semio_framework::HOST_EVENT_ACTION_ID,
 ];
 
@@ -22566,6 +22570,22 @@ impl ShellState {
         Ok(())
     }
 
+    /// 🎭️ Republishes the Actions and Search pane documents after the shell's OWN pane state moved — the expanded action, a
+    /// staged argument, a reset, the possibles chevron — with no guest round trip and no refresh pass. Those presses used
+    /// to change the state and nothing else: a refresh pass republishes the panes, but nothing owed one, so an
+    /// arg-carrying row ("Move…") toggled its expansion and its staged form — the argument fields, Execute, Reset — never
+    /// reached the canvas or the mirror (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F17). The ingress is
+    /// revision-keyed, so an unchanged body costs nothing.
+    fn republish_window_action_panes(&mut self) -> Result<(), String> {
+        let windows: Vec<String> = self.dock.window_instances().into_iter().map(|(window_id, _)| window_id).collect();
+        let mut faults = Vec::new();
+        self.refresh_window_action_panes(&windows, &mut faults)?;
+        let visited: Vec<String> = windows.iter().flat_map(|window_id| [window_actions_surface_id(window_id), window_search_surface_id(window_id)]).collect();
+        self.settle_surface_faults(faults, &visited);
+        self.drain_retained_document_arenas();
+        Ok(())
+    }
+
     /// 📐️ The Actions pane's box inside a window body — React's `top-left` `anchorPositionStyle` at
     /// the pane inset, [`WINDOW_PANE_BODY_WIDTH_PX`] wide, growing DOWN from under its own chip row.
     pub(crate) fn window_actions_rect(theme: &Theme, body: Rect, height: f32) -> Rect {
@@ -23125,13 +23145,20 @@ impl ShellState {
     ///
     /// 🎓️ Advance-by-doing: only the activation branch counts as "the utility was activated" —
     /// see `chrome_tour_note_utility_performed`.
-    pub(crate) fn apply_set_active_utility(&mut self, window_id: &str, utility_id: &str) {
-        let already = self.active_utility_by_window.get(window_id).map(String::as_str) == Some(utility_id);
-        if already {
-            self.active_utility_by_window.remove(window_id);
-        } else {
-            self.active_utility_by_window.insert(window_id.to_string(), utility_id.to_string());
-            self.chrome_tour_note_utility_performed(utility_id);
+    pub(crate) fn toggle_active_utility(&mut self, window_id: &str, utility_id: &str) {
+        let next = (!utility_id.is_empty() && self.active_utility_for_window(window_id) != Some(utility_id)).then_some(utility_id);
+        self.set_active_utility(window_id, next);
+    }
+
+    /// 🎯️ An explicit guest arm is idempotent and only a changed activation advances its tutorial.
+    pub(crate) fn set_active_utility(&mut self, window_id: &str, utility_id: Option<&str>) {
+        if self.active_utility_for_window(window_id) == utility_id { return; }
+        match utility_id {
+            Some(utility_id) => {
+                self.active_utility_by_window.insert(window_id.into(), utility_id.into());
+                self.chrome_tour_note_utility_performed(utility_id);
+            }
+            None => { self.active_utility_by_window.remove(window_id); }
         }
     }
 
@@ -24491,6 +24518,9 @@ impl ShellState {
     pub fn note_dispatch_fault(&mut self, error: &str) {
         let refused = self.chrome_build.refused_guest_fault.take().filter(|refused| dispatch_fault_names_code(error, &refused.fault.code.0));
         let (message, severity, code) = classify_dispatch_fault_notice(error, refused.as_ref(), self.active_terminology(), self.active_locale());
+        if code.as_deref().is_some_and(time_travel::history_refusal_is_silent) {
+            return;
+        }
         self.show_transient_notice(message, severity, code.as_deref());
     }
 
@@ -27132,7 +27162,7 @@ impl ShellState {
             }
             ShellChromeFramePhase::Error => {
                 if let Some(error) = &self.error {
-                    match chrome_text_complete_step(draw, atlas, error, 12.0, h - theme.footer_height - 24.0, (w - 24.0).max(1.0), theme.font_size_small, theme.error, &mut cursor.child.glyph) {
+                    match chrome_text_complete_step(draw, atlas, error, 12.0, h - theme.footer_height - self.subfooter_height(theme) - 24.0, (w - 24.0).max(1.0), theme.font_size_small, theme.error, &mut cursor.child.glyph) {
                         Ok(false) => return false,
                         Ok(true) => {}
                         Err(()) => cursor.child.glyph.reset(),
@@ -27491,7 +27521,7 @@ impl ShellState {
 
     fn body_rect(&self, theme: &Theme) -> Rect {
         let top = theme.navbar_height + self.tutorial_bar_reserve(theme);
-        Rect::new(0.0, top, self.screen_w, self.screen_h - top - theme.footer_height)
+        Rect::new(0.0, top, self.screen_w, self.screen_h - top - theme.footer_height - self.subfooter_height(theme))
     }
 
     /// 🎬️ Extra vertical space the tutorial control bar reserves below the navbar while a tutorial is
@@ -29216,7 +29246,7 @@ impl ShellState {
     }
 
     fn render_footer_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
-        let y = height - theme.footer_height;
+        let y = height - theme.footer_height - self.subfooter_height(theme);
         let btn_h = theme.control_height;
         let btn_y = y + (theme.footer_height - btn_h) * 0.5;
         match cursor.phase {
@@ -31234,7 +31264,7 @@ impl ShellState {
     }
 
     /// 🎓️ Advance-by-doing (Part B) — called from the single funnel points a user/plugin action can take
-    /// (`dispatch_action`'s successful program forward, `apply_set_active_utility`'s activation branch) so
+    /// (`dispatch_action`'s successful program forward, [`Self::set_active_utility`]'s activation branch) so
     /// a step's matching `Action`/`Utility` interaction completes the instant the described behavior
     /// actually happens, mirroring the React shell's own advance-by-doing wiring. No-operations when no tour is
     /// active or nothing in the active step's `interactions` matches what was performed.
@@ -32762,6 +32792,12 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("taskManager.title", true) => "Task-Manager",
         ("panelToggle.taskManager", false) => "Tasks",
         ("panelToggle.taskManager", true) => "Aufgaben",
+        ("taskManager.documentImport", false) => "Document import",
+        ("taskManager.documentImport", true) => "Dokumentimport",
+        ("taskManager.videoFrames", false) => "Video frames",
+        ("taskManager.videoFrames", true) => "Videobilder",
+        ("taskManager.runningTasks", false) => "Running tasks",
+        ("taskManager.runningTasks", true) => "Laufende Aufgaben",
         ("taskManager.noRuntime", false) => "No actor runtime is attached to this shell.",
         ("taskManager.noRuntime", true) => "Mit dieser Shell ist keine Akteur-Laufzeit verbunden.",
         ("common.home", false) => "Home",
@@ -33103,15 +33139,24 @@ fn resolve_appearance_id(preferences: &UiPreferences) -> String {
 /// `locks?.locale ?? readUiPreferences(storage).locale ?? detectShellLocale(navigator.language)` term
 /// for term — a lock wins, then the persisted preference, then the host's own language read published
 /// through `semioWgpuSetHostLocale`, then the caller's already admitted locale when no preference source speaks.
-/// 🌐️ Admits the host selected language and terminology before shell construction.
+/// 🌐️ Admits the host selected language and terminology before shell construction ([`resolve_language_axes`] over the
+/// process's locks, its stored preferences and the host's language read).
 pub(crate) fn shell_language_axes() -> Result<(Locale, Terminology), String> {
-    let preferences = read_ui_preferences();
-    let locale_id = env_lock("SEMIO_LOCKED_LOCALE")
+    resolve_language_axes(env_lock("SEMIO_LOCKED_LOCALE"), env_lock("SEMIO_LOCKED_TERMINOLOGY"), &read_ui_preferences(), crate::host_locale())
+}
+
+/// 🌱️ The shell's two language axes from their sources, in React's order (`🏛️ShellHost/🟦️.tsx`: locks, then
+/// `resolveUiPreferences`, then its seeds): a lock wins, then the stored preference, then — on a first visit, with an empty
+/// profile — the seed. The locale's seed is the host's own language read (the page negotiates it from the browser's
+/// languages; no language is assumed here, so a locale nobody named refuses); the terminology's seed is React's
+/// `UI_TERMINOLOGY_NATIVE`, which is no language and always answers, so a fresh profile boots. A stored terminology this
+/// build does not know falls back to the seed; an unsupported lock is a configuration fault and refuses.
+pub(crate) fn resolve_language_axes(locked_locale: Option<String>, locked_terminology: Option<String>, preferences: &UiPreferences, host_locale: Option<&str>) -> Result<(Locale, Terminology), String> {
+    let locale_id = locked_locale
         .or_else(|| preferences.locale.map(|locale| match locale { OsUiLocale::En => "en".to_string(), OsUiLocale::De => "de".to_string() }))
-        .or_else(|| crate::host_locale().map(ToOwned::to_owned))
+        .or_else(|| host_locale.map(ToOwned::to_owned))
         .ok_or_else(|| "missing explicit shell locale authority".to_string())?;
-    let terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology)
-        .ok_or_else(|| "missing explicit shell terminology authority".to_string())?;
+    let terminology_id = locked_terminology.or_else(|| preferences.terminology.clone().filter(|stored| Terminology::parse(stored).is_some())).unwrap_or_else(|| Terminology::Native.as_str().to_string());
     let locale = Locale::parse(&locale_id).ok_or_else(|| "unsupported shell locale authority".to_string())?;
     let terminology = Terminology::parse(&terminology_id).ok_or_else(|| "unsupported shell terminology authority".to_string())?;
     Ok((locale, terminology))
@@ -33490,11 +33535,9 @@ pub(crate) enum TransferLane {
 impl TransferLane {
     /// 🏷️ The lane a Task Manager row names.
     fn label(self, de: bool) -> &'static str {
-        match (self, de) {
-            (Self::DocumentImport, false) => "Document import",
-            (Self::DocumentImport, true) => "Dokumentimport",
-            (Self::VideoFrames, false) => "Video frames",
-            (Self::VideoFrames, true) => "Videobilder",
+        match self {
+            Self::DocumentImport => shell_chrome_string("taskManager.documentImport", de),
+            Self::VideoFrames => shell_chrome_string("taskManager.videoFrames", de),
         }
     }
 }
@@ -33611,7 +33654,7 @@ impl ShellState {
     pub(crate) fn import_task_nodes(&self) -> UiNode {
         let is_de = self.locale_id == "de";
         let pick = |en: &str, de: &str| if is_de { de.to_string() } else { en.to_string() };
-        let mut children = vec![settings_text_row(&pick("Running tasks", "Laufende Aufgaben"))];
+        let mut children = vec![settings_text_row(shell_chrome_string("taskManager.runningTasks", is_de))];
         if self.import_transfers.is_empty() {
             children.push(settings_text_row(&pick("No task is running.", "Es läuft keine Aufgabe.")));
         }
@@ -35027,6 +35070,11 @@ impl ShellState {
         let input_rect = rect_for(kind.input_id());
         let list_rect = dialog_rect.zip(input_rect).map(|(dialog, input)| Rect::new(dialog.x, input.y + input.h, dialog.w, (dialog.y + dialog.h - input.y - input.h).max(0.0)));
         let basic = |key: String, role: &str, depth: usize, label: Option<String>, description: Option<String>, rect: Option<Rect>| ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
             node_id: 0,
             key,
             role: role.to_string(),
@@ -35168,6 +35216,11 @@ impl ShellState {
             if let Some(notice) = self.transient_notice_accessibility_node(nodes.iter().map(|node| node.node_id).max().unwrap_or(0) + 1) {
                 nodes.push(notice);
             }
+            for mut band in self.band_accessibility_nodes(nodes.iter().map(|node| node.node_id).max().unwrap_or(0) + 1) {
+                band.focusable = false;
+                band.focused = false;
+                nodes.push(band);
+            }
             return nodes;
         }
         let shortcuts = self.shortcut_table();
@@ -35191,6 +35244,11 @@ impl ShellState {
                     let selected = names.get(id).and_then(|name| name.selected).or_else(|| self.chrome_accessibility_selected(id, &hit.kind));
                     let focusable = !matches!(role, "tabpanel" | "note");
                     ui_contract::AccessibilityProjectionNode {
+                        value_step: None,
+                        invalid: false,
+                        set_size: None,
+                        pos_in_set: None,
+                        tone: None,
                         node_id: index as u64 + 1,
                         key: id.to_string(),
                         role: role.to_string(),
@@ -35242,6 +35300,11 @@ impl ShellState {
                             continue;
                         }
                         nodes.push(ui_contract::AccessibilityProjectionNode {
+                            value_step: None,
+                            invalid: false,
+                            set_size: None,
+                            pos_in_set: None,
+                            tone: None,
                             node_id: nodes.len() as u64 + 1,
                             key: tab.id.clone(),
                             role: "button".to_string(),
@@ -35292,11 +35355,10 @@ impl ShellState {
             if let Some(folder) = self.folder_reconnect_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
                 nodes.push(folder);
             }
-            if let Some(status) = self.time_travel_status_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
-                nodes.push(status);
-            }
-            if let Some(status) = self.history_reprojection_accessibility_node(nodes.len() as u64 + 1).filter(|_| nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY) {
-                nodes.push(status);
+            for band in self.band_accessibility_nodes(nodes.len() as u64 + 1) {
+                if nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY {
+                    nodes.push(band);
+                }
             }
             for (key, label) in self.footer_status_chips() {
                 if nodes.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY && !nodes.iter().any(|node| node.key == key) {
@@ -35334,6 +35396,11 @@ impl ShellState {
 /// 🔊️ One non-interactive chrome status node: named, politely live, never focusable nor actionable.
 fn chrome_status_accessibility_node(node_id: u64, key: &str, label: String) -> ui_contract::AccessibilityProjectionNode {
     ui_contract::AccessibilityProjectionNode {
+        value_step: None,
+        invalid: false,
+        set_size: None,
+        pos_in_set: None,
+        tone: None,
         node_id,
         key: key.to_string(),
         role: "status".to_string(),

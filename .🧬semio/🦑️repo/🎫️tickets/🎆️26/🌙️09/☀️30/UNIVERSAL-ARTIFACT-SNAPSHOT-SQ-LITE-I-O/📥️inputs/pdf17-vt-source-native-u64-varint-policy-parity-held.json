@@ -1,0 +1,15 @@
+{
+  "qualification": "HELD actual Native varint policy parity: Native ByteReader accepts bounded nonminimal encodings through10 bytes. Source was accidentally stricter at4 bytes. Original canonical encoder unchanged. No runtime.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🪢️restore-dpart-graph/🟦️.ts",
+      "before": "  if(bytes[0]!==1 || bytes[1]!==18)throw new Error('Expected PDF/VT Restore graph format/tag');let offset=2,length=0,multiplier=1,done=false;\n  for(let index=0;index<4;index++){const byte=bytes[offset++];if(byte===undefined)throw new Error('Truncated PDF/VT varint');length+=(byte&127)*multiplier;if(length>MAX_PAYLOAD_BYTES)throw new Error('PDF/VT mutation payload exceeds budget');if(!(byte&128)){done=true;break;}multiplier*=128;}\n  if(!done || offset+length!==bytes.length)throw new Error('Malformed PDF/VT payload length/trailing bytes');return decodePayload(bytes.subarray(offset),control);",
+      "after": "  if(bytes[0]!==1 || bytes[1]!==18)throw new Error('Expected PDF/VT Restore graph format/tag');let offset=2,length=0n,done=false;\n  for(let index=0;index<10;index++){const byte=bytes[offset++];if(byte===undefined)throw new Error('Truncated PDF/VT varint');const payload=byte&127;if(index===9&&((byte&128)!==0||payload>1))throw new Error('PDF/VT varint exceeds uint64');length|=BigInt(payload)<<BigInt(index*7);if(!(byte&128)){done=true;break;}}\n  if(!done)throw new Error('Malformed PDF/VT payload length');if(length>BigInt(MAX_PAYLOAD_BYTES))throw new Error('PDF/VT mutation payload exceeds budget');\n  if(offset+Number(length)!==bytes.length)throw new Error('Malformed PDF/VT payload length/trailing bytes');return decodePayload(bytes.subarray(offset),control);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/💾️binary/🔠️.abnf",
+      "before": "length = *3continuation final\ncontinuation = %x80-FF\nfinal = %x00-7F",
+      "after": "length = *8continuation final / 9continuation last64\ncontinuation = %x80-FF\nfinal = %x00-7F\nlast64 = %x00-01"
+    }
+  ]
+}

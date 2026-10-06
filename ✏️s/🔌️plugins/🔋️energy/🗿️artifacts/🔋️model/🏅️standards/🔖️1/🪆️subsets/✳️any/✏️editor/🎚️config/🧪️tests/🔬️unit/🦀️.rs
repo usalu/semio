@@ -7,8 +7,8 @@ const SCHEMA: &str = include_str!("../../🧬️schema/🔣️.json");
 fn language_neutral_settings_mutations_match_the_serde_oracle_and_restore_the_base() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️mutations.json")).unwrap();
     for vector in vectors.as_array().unwrap() {
-        let base: EnergyModelConfig = dsl::json::from_json_str(&vector["base"].to_string()).unwrap();
-        let mutation: EnergyModelConfigMutation = dsl::json::from_json_str(&vector["mutation"].to_string()).unwrap();
+        let base: EnergyModelConfig = semio_framework_pack_json::from_json_str(&vector["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let mutation: EnergyModelConfigMutation = semio_framework_pack_json::from_json_str(&vector["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(mutation, serde_json::from_value::<EnergyModelConfigMutation>(vector["mutation"].clone()).unwrap());
         assert_eq!(base, serde_json::from_value::<EnergyModelConfig>(vector["base"].clone()).unwrap());
         assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());

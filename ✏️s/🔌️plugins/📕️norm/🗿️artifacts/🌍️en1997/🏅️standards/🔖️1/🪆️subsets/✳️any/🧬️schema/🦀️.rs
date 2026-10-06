@@ -8,7 +8,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ EN 1997 document artifact state (mirrors snapshot).
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -101,104 +101,11 @@ impl En1997Artifact {
 
 
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{En1997Diff, En1997Mutation, En1997Snapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct En1997BuilderConstruction {
-        snapshot: En1997Snapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for En1997BuilderConstruction {
-        type Snapshot = En1997Snapshot;
-        type Mutation = En1997Mutation;
-        type Diff = En1997Diff;
-        fn empty() -> Self {
-            Self { snapshot: En1997Snapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<En1997Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<En1997Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <En1997Diff as protocol::MutationDiff<En1997Snapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::En1997Snapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct En1997Parts {
-        pub snapshot: Option<En1997Snapshot>,
-    }
-
-    pub struct En1997AnalyzerAnalysis;
-
-    impl ArtifactAnalysis for En1997AnalyzerAnalysis {
-        type Parts = En1997Parts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.norm.en1997", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = En1997Parts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <En1997Snapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <En1997Snapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️Descriptor
@@ -231,16 +138,7 @@ pub fn en1997_artifact_schema_descriptor() -> semio_framework_schema_registry::A
 }
 //#endregion 🔖️Descriptor
 
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec En1997BuilderFacets {
-        construction: En1997BuilderConstruction,
-        analysis: En1997AnalyzerAnalysis,
-        composition: super::super::io::derived_composition::En1997ComposerComposition,
-    }
-    builder: En1997Builder,
-    analyzer: En1997Analyzer,
-    composer: En1997Composer,
-);
+
 
 
 

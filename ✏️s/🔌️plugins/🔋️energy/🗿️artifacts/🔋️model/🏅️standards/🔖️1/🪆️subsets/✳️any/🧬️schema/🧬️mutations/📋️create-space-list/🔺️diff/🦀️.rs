@@ -17,6 +17,6 @@ pub fn diff(payload: &super::CreateSpaceList, base: &EnergyModelSnapshot) -> pro
     }
     let mut model = base.model.clone();
     model.space_lists.insert(payload.index as usize, crate::model::SpaceList { id: payload.id, name: payload.name.clone(), space_ids: payload.space_ids.clone() });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

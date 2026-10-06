@@ -30,6 +30,7 @@ mod tests {
             modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
             default_mode_id: "edit".into(),
             window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
+                initial_utility_id: None,
                 id: "draw".into(),
                 label: LocalizedLabel::data("Draw"),
                 body_key: "draw".into(),

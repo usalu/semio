@@ -13,6 +13,7 @@ const PLAYBOOK_PLAY_SURFACE_CHANGES: &str = "playbook.play.changes";
 
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: PLAYBOOK_PLAY_WINDOW_CHANGES.into(),
         label: LocalizedLabel::native("Changes", "Änderungen"),
         body_key: PLAYBOOK_PLAY_BODY_CHANGES.into(),

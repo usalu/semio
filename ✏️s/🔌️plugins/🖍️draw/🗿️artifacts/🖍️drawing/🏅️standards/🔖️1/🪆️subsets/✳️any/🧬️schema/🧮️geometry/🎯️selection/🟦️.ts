@@ -1,6 +1,6 @@
 /** 🎯 Polygon containment twin for lasso selection. */
 import type { Point } from "../🟦️.ts";
-export function polygonContainsPoint(polygon: readonly Point[],point: Point): boolean {
+export function polygonContainsPoint(polygon: readonly Readonly<Point>[],point: Point): boolean {
   if(polygon.length<3 || !point.every(Number.isFinite)) return false;
   let inside=false,previous=polygon[polygon.length-1]!;
   for(const current of polygon) {
@@ -11,7 +11,7 @@ export function polygonContainsPoint(polygon: readonly Point[],point: Point): bo
   }
   return inside;
 }
-export function polygonEnclosesBounds(polygon: readonly Point[],bounds: [number,number,number,number]): boolean {
+export function polygonEnclosesBounds(polygon: readonly Readonly<Point>[],bounds: [number,number,number,number]): boolean {
   const [x,y,width,height]=bounds;
   if(!bounds.every(Number.isFinite) || width<0 || height<0) return false;
   const corners: Point[]=[[x,y],[x+width,y],[x+width,y+height],[x,y+height]];
@@ -31,7 +31,7 @@ export function polygonEnclosesBounds(polygon: readonly Point[],bounds: [number,
   return true;
 }
 
-function polygonEnclosesSegment(polygon: readonly Point[],from: Point,to: Point): boolean {
+function polygonEnclosesSegment(polygon: readonly Readonly<Point>[],from: Point,to: Point): boolean {
   const direction: Point=[to[0]-from[0],to[1]-from[1]],length=direction[0]**2+direction[1]**2;
   if(length===0) return polygonContainsPoint(polygon,from);
   const cross=(a:Point,b:Point)=>a[0]*b[1]-a[1]*b[0],cuts=[0,1];

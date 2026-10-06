@@ -43,7 +43,7 @@ The source lane also owns these exact bodies from the corrected package-role cen
 
 - `🌎️hub/📦️packages/🟦️typescript/🟦️.ts`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/🦀️.rs`
-- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🧹️executable-source/🟦️.ts`
 
 Flow authored JavaScript is coupled to its persistent native binding producer and assigned to the metadata packet. Infinite's `build.rs` is a native tool authority case in the tooling packet. Neither is omitted from the goal.

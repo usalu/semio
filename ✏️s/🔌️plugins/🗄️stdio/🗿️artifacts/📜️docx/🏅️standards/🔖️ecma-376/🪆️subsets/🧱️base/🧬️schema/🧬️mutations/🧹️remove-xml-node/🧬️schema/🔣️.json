@@ -40,6 +40,7 @@
           "en": "Child position",
           "de": "Kindposition"
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 20

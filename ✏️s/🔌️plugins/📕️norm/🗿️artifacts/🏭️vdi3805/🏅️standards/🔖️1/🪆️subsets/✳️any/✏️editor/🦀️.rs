@@ -11,7 +11,7 @@ use crate::editor::vdi3805::commands::{apply_remedy, evaluate, insert_item, remo
 use crate::editor::vdi3805::modes::edit as edit_mode;
 use crate::editor::vdi3805::modes::edit::windows::{inputs, results};
 use crate::editor::vdi3805::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::op::Vdi3805Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Vdi3805Mutation;
 use crate::Vdi3805Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::InteractiveJobClassification;
@@ -163,7 +163,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
         command.command_id()
     }
 
-    semio_s_artifact_norm_contract::norm_command_from_action!(Vdi3805Command, crate::standards::v1::subsets::any::schema::snapshot::decode_vdi3805_snapshot_json);
+    semio_s_artifact_norm_contract::norm_command_from_action!(Vdi3805Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_vdi3805_snapshot_json);
 
     fn handle(
         command: &Vdi3805Command,

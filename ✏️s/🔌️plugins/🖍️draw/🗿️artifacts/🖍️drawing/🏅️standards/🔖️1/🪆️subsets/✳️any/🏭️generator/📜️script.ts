@@ -65,8 +65,8 @@ function generate(outRoot: string): number {
 async function manifests(): Promise<void> {
   let refreshed = 0;
   for (const catalogPath of CATALOGS) {
-    const catalog = JSON.parse(readFileSync(catalogPath, "utf8")) as { fixtureManifests?: { generator?: { oracle?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
-    for (const entry of (catalog.fixtureManifests ?? []).filter((candidate) => candidate.generator?.oracle === ORACLE_ID)) {
+    const catalog = JSON.parse(readFileSync(catalogPath, "utf8")) as { testEvidence?: { generator?: { oracle?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
+    for (const entry of (catalog.testEvidence ?? []).filter((candidate) => candidate.generator?.oracle === ORACLE_ID)) {
       for (const file of entry.files) {
         const path = join(dirname(catalogPath), file.path);
         file.sha256 = await sha256(path);

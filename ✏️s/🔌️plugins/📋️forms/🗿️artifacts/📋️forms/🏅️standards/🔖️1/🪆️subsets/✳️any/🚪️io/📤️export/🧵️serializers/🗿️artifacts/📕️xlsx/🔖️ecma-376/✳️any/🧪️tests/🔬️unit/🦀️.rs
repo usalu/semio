@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::onboarding_example_spec;
+use crate::standards::v1::subsets::any::io::text::snapshot::onboarding_example_spec;
 
 /// 🔮️ The third-party `calamine` reader (test-only) opens the exported workbook: one `Questions` sheet whose cells from
 /// column A are exactly the csv export's question grid.

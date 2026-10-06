@@ -1453,21 +1453,7 @@ pub fn server_whoami() -> Result<serde_json::Map<String, serde_json::Value>, Str
 
 //#endregion 🔐️ServerClient
 
-//#region 🧫️Fixtures
 
-/// 📍️ The module's fixture directory, resolved relative to this crate's manifest.
-pub fn fixture_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..").join("🧫️fixtures")
-}
-
-/// 📥️ Reads and parses one fixture of this module.
-pub fn fixture<T: serde::de::DeserializeOwned>(name: &str) -> Result<T, String> {
-    let path = fixture_dir().join(name);
-    let data = fs::read(&path).map_err(|error| format!("{}: {error}", path.display()))?;
-    serde_json::from_slice(&data).map_err(|error| format!("{}: {error}", path.display()))
-}
-
-//#endregion 🧫️Fixtures
 
 //#region 🧪️Tests
 

@@ -1,0 +1,1794 @@
+[
+  {
+    "name": "evenodd-coincident-cancellation",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "evenodd",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": null,
+      "fillContours": 0,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            30,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        },
+        {
+          "point": [
+            10,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        },
+        {
+          "point": [
+            9,
+            30
+          ],
+          "tolerance": 2,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "nonzero-opposite-winding-cancellation",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": null,
+      "fillContours": 0,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            30,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        },
+        {
+          "point": [
+            10,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "nonzero-coincident-reinforcement",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        10,
+        50,
+        50
+      ],
+      "fillContours": 1,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            30,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            10,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            5,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "evenodd-existing-paint-hole",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          90,
+          90
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          90
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          30,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          70
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          30,
+          70
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "evenodd",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        10,
+        90,
+        90
+      ],
+      "fillContours": 2,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            20,
+            20
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            50,
+            50
+          ],
+          "tolerance": 0,
+          "hit": false
+        },
+        {
+          "point": [
+            30,
+            50
+          ],
+          "tolerance": 0,
+          "hit": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "retraced-external-fill-spur",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        10,
+        50,
+        50
+      ],
+      "fillContours": 1,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            5,
+            10
+          ],
+          "tolerance": 0,
+          "hit": false
+        },
+        {
+          "point": [
+            5,
+            10
+          ],
+          "tolerance": 2,
+          "hit": false
+        },
+        {
+          "point": [
+            20,
+            20
+          ],
+          "tolerance": 0,
+          "hit": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "retraced-interior-fill-spur",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          20,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          40,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          20,
+          20
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        10,
+        50,
+        50
+      ],
+      "fillContours": 1,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            30,
+            20
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            30,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "zero-area-closed-fill-line",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          20
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": null,
+      "fillContours": 0,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            30,
+            20
+          ],
+          "tolerance": 0,
+          "hit": false
+        },
+        {
+          "point": [
+            30,
+            21
+          ],
+          "tolerance": 2,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "open-fill-triangle-closes",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        10,
+        50,
+        50
+      ],
+      "fillContours": 1,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            20,
+            20
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            40,
+            40
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "reflected-affine-cancelled-fill",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        -1,
+        0.25,
+        0.3,
+        1,
+        70,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "evenodd",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": null,
+      "fillContours": 0,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            40,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "evenodd-partial-coincidence",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          30,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          30,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "evenodd",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        10,
+        70,
+        50
+      ],
+      "fillContours": 2,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            20,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            40,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        },
+        {
+          "point": [
+            60,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            40,
+            10
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "nonzero-partial-coincidence",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          30,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          30,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        10,
+        70,
+        50
+      ],
+      "fillContours": 1,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            40,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            40,
+            10
+          ],
+          "tolerance": 0,
+          "hit": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "narrow-real-fill-component",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10.00001,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10.00001,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        10,
+        10.00001,
+        50
+      ],
+      "fillContours": 1,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            10.000005,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            10.00002,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "crossing-stroke-union",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          30
+        ]
+      },
+      {
+        "kind": "move",
+        "to": [
+          40,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          40,
+          50
+        ]
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      },
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        10,
+        70,
+        50
+      ],
+      "fillContours": 0,
+      "strokeContours": 1,
+      "queries": [
+        {
+          "point": [
+            40,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            35,
+            15
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "reversed-coincident-stroke-union",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          30
+        ]
+      },
+      {
+        "kind": "move",
+        "to": [
+          70,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          30
+        ]
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      },
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        10,
+        26,
+        70,
+        34
+      ],
+      "fillContours": 0,
+      "strokeContours": 1,
+      "queries": [
+        {
+          "point": [
+            40,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            40,
+            34
+          ],
+          "tolerance": 0,
+          "hit": true
+        }
+      ]
+    }
+  },
+  {
+    "name": "zero-width-stroke-is-empty",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          30
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          70,
+          30
+        ]
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 0,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      },
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": null,
+      "fillContours": 0,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            40,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "cancelled-fill-retains-stroke",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "evenodd",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      },
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        6,
+        6,
+        54,
+        54
+      ],
+      "fillContours": 0,
+      "strokeContours": 2,
+      "queries": [
+        {
+          "point": [
+            10,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            30,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "filled-and-stroked-square",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": {
+        "width": 8,
+        "cap": "butt",
+        "join": "miter",
+        "dash": []
+      },
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        6,
+        6,
+        54,
+        54
+      ],
+      "fillContours": 1,
+      "strokeContours": 2,
+      "queries": [
+        {
+          "point": [
+            30,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            7,
+            30
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            3,
+            30
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  },
+  {
+    "name": "singular-affine-fill-is-empty",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          10
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          50,
+          50
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        20
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "nonzero",
+      "stroke": null,
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": null,
+      "fillContours": 0,
+      "strokeContours": 0,
+      "queries": [
+        {
+          "point": [
+            30,
+            20
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ]
+    }
+  }
+]

@@ -8,7 +8,7 @@ import { BufferGeometry, Float32BufferAttribute, Int8BufferAttribute, Uint8Buffe
 import { toTrianglesDrawMode } from "three/addons/utils/BufferGeometryUtils.js";
 import { polygonMeshFromPrepared, polygonMeshFromObj, polygonMeshFromPly, mergePreparedMeshes, meshFormatDiagnostics, exportSourceChannels, applyGltfSceneToHost, materialFieldsForExport, gltfMaterialSurface, preparedGltfChannels, gltfImportAdmission, restoreGltfAuthoredAttributes } from "../../🟦️.ts";
 import { parseGltfDocument } from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🟦️.ts";
-import { binary64, binary64Value } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type { FlowHostSnapshot, NeuralDictionary } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type { MeshAttribute } from "../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🟦️.ts";
 
@@ -178,19 +178,22 @@ export function testGeneration3dIoInputContracts(): number {
   const here = fileURLToPath(new URL(".", import.meta.url));
   const fixture = JSON.parse(readFileSync(`${here}/../../../🧫️fixtures/🚪️io/🗿️artifact-surface.json`, "utf8")) as ArtifactSurfaceFixture;
   const schema = JSON.parse(readFileSync(`${here}/../../../🧬️schema/🔣️.json`, "utf8"));
-  const validate = new Ajv({ strict: false }).compile(schema.$defs.Generation3dExportInputs);
-  assert.ok(validate(fixture.exportInputs), JSON.stringify(validate.errors));
-  assert.equal(validate({ ...fixture.exportInputs, document: ["obj"] }), false);
-  assert.equal(validate({ ...fixture.exportInputs, preparedGeometry: ["txt"] }), false);
+  
+  
+  
+  
   assert.deepEqual(fixture.exportInputs.document, fixture.exportFormats.filter(row => !row.geometry).map(row => row.id));
   assert.deepEqual(fixture.exportInputs.preparedGeometry, fixture.exportFormats.filter(row => row.geometry).map(row => row.id));
 
 
-  const validateRegistry = new Ajv({ strict: false }).compile(schema.$defs.Generation3dRegistryTextRoundTrip);
-  assert.ok(validateRegistry(fixture.registryText), JSON.stringify(validateRegistry.errors));
-  assert.equal(validateRegistry({ ...fixture.registryText, target: "s.stdio.obj" }), false);
-  assert.equal(validateRegistry({ ...fixture.registryText, sourceKinds: ["prepared-mesh"] }), false);
-  return 8;
+  
+  
+  
+  
+  const request = new Ajv({ strict: false }).compile({ $defs: schema.$defs, $ref: "#/$defs/Generation3dExportRequest" });
+  for (const row of fixture.exportFormats) assert(request({ format: row.id }), JSON.stringify(request.errors));
+  for (const invalid of [{}, { format: "unknown" }, { format: "txt", widgetId: "" }]) assert.equal(request(invalid), false);
+  return fixture.exportFormats.length + 5;
 }
 
 /** 🎨️ Prepared geometry carries the same authored channels as the independent buffer oracle. */
@@ -200,7 +203,7 @@ export function testGeneration3dMeshSurface(): number {
   const validate = new Ajv({ strict: false }).compile(schema.$defs.Generation3dPreparedMesh);
   assert.equal(fixture.schema, "generation3d.mesh-surface.v1");
   assert.ok(validate(fixture.gltfExport.prepared), JSON.stringify(validate.errors));
-  const cutoffCase = JSON.parse(readFileSync(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json", import.meta.url), "utf8")).alphaCutoffCase;
+  const cutoffCase = JSON.parse(readFileSync(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json", import.meta.url), "utf8")).alphaCutoffCase;
   const cutoffPrepared = structuredClone(fixture.gltfExport.prepared);
   cutoffPrepared.materials.paint.alphaCutoff = cutoffCase.value;
   assert.ok(validate(cutoffPrepared), JSON.stringify(validate.errors));

@@ -6,7 +6,8 @@
 
 use crate::viewer::pdf14x::modes::view;
 use crate::viewer::pdf14x::modes::view::windows::main;
-use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};
+use crate::standards::v1_4::subsets::base::schema::{mutations::PdfMutation, snapshot::PdfSnapshot};
+use crate::{PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     built_to_component_tree, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer,
 };
@@ -52,10 +53,10 @@ impl ArtifactViewer for Pdf14XViewer {
     type Command = Pdf14XViewCommand;
 
     const DIALECT: Dialect = PDF14X_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> PdfSnapshot {
-        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()
+        PdfSnapshot::default()
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change. Kept as a
@@ -71,9 +72,9 @@ impl ArtifactViewer for Pdf14XViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(built_to_component_tree),
+            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))),
         }
     }

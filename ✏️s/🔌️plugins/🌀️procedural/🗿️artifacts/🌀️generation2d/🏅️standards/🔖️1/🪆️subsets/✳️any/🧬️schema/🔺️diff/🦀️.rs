@@ -90,3 +90,181 @@ pub struct Generation2dStringList {
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::standards::v1::subsets::any::schema::Generation2dArtifact;
 //#endregion 🔁️Re-exports
+
+
+use crate::widget_id;
+use crate::Generation2dSnapshot;
+use protocol::MutationDiff;
+use semio_framework_artifact_flow_flow::CameraJson;
+use semio_framework_artifact_flow_flow::SynapseSpec;
+use semio_framework_artifact_flow_flow::Widget;
+use semio_framework_artifact_flow_flow::WidgetLayout;
+use semio_framework_artifact_playbook_playbook::apply_generation_mutation;
+use semio_framework_artifact_playbook_playbook::GenerationMutation;
+use semio_framework_artifact_playbook_playbook::GenerationPlayState;
+
+/// 🧬️ Sparse id-keyed collection helper used when constructing a whole `fixture` replacement.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct WidgetsDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, Widget)>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct SynapsesDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, SynapseSpec)>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct LayoutDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(String, WidgetLayout)>,
+}
+
+pub(crate) fn apply_widgets_diff(widgets: &mut Vec<Widget>, diff: &WidgetsDiff) {
+    for id in &diff.removed {
+        widgets.retain(|widget| widget_id(widget) != id);
+    }
+    for (index, widget) in &diff.set {
+        if let Some(pos) = widgets.iter().position(|entry| widget_id(entry) == widget_id(widget)) {
+            widgets[pos] = widget.clone();
+        } else {
+            widgets.insert((*index).min(widgets.len()), widget.clone());
+        }
+    }
+}
+
+pub(crate) fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &SynapsesDiff) {
+    for id in &diff.removed {
+        synapses.retain(|synapse| synapse.id != *id);
+    }
+    for (index, synapse) in &diff.set {
+        if let Some(pos) = synapses.iter().position(|entry| entry.id == synapse.id) {
+            synapses[pos] = synapse.clone();
+        } else {
+            synapses.insert((*index).min(synapses.len()), synapse.clone());
+        }
+    }
+}
+
+fn apply_layout_diff(layout: &mut semio_framework_artifact_flow_flow::OrderedMap<WidgetLayout>, diff: &LayoutDiff) {
+    for id in &diff.removed {
+        layout.remove(id);
+    }
+    for (id, entry) in &diff.set {
+        layout.insert(id.clone(), entry.clone());
+    }
+}
+
+/// 🧩 Applies sparse fixture-collection helpers onto a cloned host_snapshot.
+pub fn apply_host_snapshot_helpers(host_snapshot: &FlowHostSnapshot, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> FlowHostSnapshot {
+    let mut next = host_snapshot.clone();
+    apply_widgets_diff(&mut next.widgets, widgets);
+    apply_synapses_diff(&mut next.synapses, synapses);
+    apply_layout_diff(&mut next.layout, layout);
+    if let Some(camera) = camera {
+        next.camera = camera.clone();
+    }
+    if let Some(schema) = schema {
+        next.schema = schema.to_string();
+    }
+    next
+}
+
+/// 🧩 Applies generation mutations onto a cloned play state.
+pub fn apply_generation_helpers(state: &GenerationPlayState, ops: &[GenerationMutation]) -> GenerationPlayState {
+    let mut next = state.clone();
+    for operation in ops {
+        apply_generation_mutation(&mut next, operation);
+    }
+    next
+}
+
+impl Generation2dDiff {
+    /// 🧬️ Applies sparse document changes to the artifact.
+    pub fn apply_to_artifact(&self, artifact: &Generation2dArtifact) -> protocol::MutationApplyResult<Generation2dArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(host_snapshot) = &self.host_snapshot {
+                std::mem::replace(&mut next.host_snapshot, host_snapshot.clone()).retire_cold();
+            }
+            if let Some(generation) = &self.generation {
+                std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
+            }
+            next
+        })
+    }
+}
+
+impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
+    fn apply(&self, snapshot: &Generation2dSnapshot) -> protocol::MutationApplyResult<Generation2dSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(host_snapshot) = &self.host_snapshot {
+                std::mem::replace(&mut next.host_snapshot, host_snapshot.clone()).retire_cold();
+            }
+            if let Some(generation) = &self.generation {
+                std::mem::replace(&mut next.generation, generation.clone()).retire_cold();
+            }
+            next
+        })
+    }
+    /// ➕️ Sequential coalesce. Every side this overwrites is RETIRED, never dropped: an inhabited
+    /// `fixture`/`generation` owns an `OrderedMap` root and a generation ladder that reject a bare
+    /// drop (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`).
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            std::mem::replace(self, other).retire_cold();
+            return;
+        }
+        let Self { artifact: _, host_snapshot, generation } = other;
+        if let Some(replacement) = host_snapshot {
+            if let Some(displaced) = self.host_snapshot.replace(replacement) {
+                displaced.retire_cold();
+            }
+        }
+        if let Some(generation) = generation {
+            if let Some(displaced) = self.generation.replace(generation) {
+                displaced.retire_cold();
+            }
+        }
+    }
+
+    /// 🧊️ The generic replay seams (`os_vcs::apply_mutation`, the store's history folds) build a
+    /// delta and throw it away; an inhabited `fixture` owns an `OrderedMap` root that aborts the
+    /// process on a bare drop, so the contract routes here.
+    fn retire_cold(self) {
+        Generation2dDiff::retire_cold(self);
+    }
+
+    /// 🧊️ Same law for the scratch projections a history fold displaces between steps.
+    fn retire_projection(projection: Generation2dSnapshot) {
+        projection.retire_cold();
+    }
+}
+
+/// 🏗️ Whole-fixture field delta after applying sparse collection helpers.
+pub fn diff_snapshot_from_helpers(base: &Generation2dSnapshot, widgets: &WidgetsDiff, synapses: &SynapsesDiff, layout: &LayoutDiff, camera: Option<&CameraJson>, schema: Option<&str>) -> Generation2dDiff {
+    let updated = apply_host_snapshot_helpers(&base.host_snapshot, widgets, synapses, layout, camera, schema);
+    Generation2dDiff { host_snapshot: Some(updated), ..Generation2dDiff::default() }
+}
+
+/// 🏗️ Generation field delta after applying ordered generation mutations.
+pub fn diff_generation_from_ops(base: &Generation2dSnapshot, ops: &[GenerationMutation]) -> Generation2dDiff {
+    let generation = apply_generation_helpers(&base.generation, ops);
+    Generation2dDiff { generation: Some(generation.into()), ..Generation2dDiff::default() }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

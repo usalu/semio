@@ -4,7 +4,7 @@ use super::*;
 /// 🧪️ A small in-memory LAS 1.0 buffer (2 VLRs, 3 points), built straight from `raw_doc::write`
 /// itself so these dispatch-logic unit tests need no committed file on disk — the real
 /// 8,448-point `🧫️fixtures/🧊️pattern-sphere.las` fixture is exercised by the gherkin-driven case
-/// at `../../../../../../🧪️tests/🎩️mutate-las-1-0/🦀️.rs` through `ctx.copy_fixture`.
+/// at `../../../../../../🧪️tests/🎩️mutate-las-1-0/🦀️.rs` through `ctx.copy_input`.
 fn fixture() -> Vec<u8> {
     let header = las::raw::Header {
         file_signature: las::raw::LASF,

@@ -1,0 +1,20 @@
+# SQLite Original Owning Native Verification
+
+The current registered owner is `@semio-tech/framework-sqlite-snapshot-rs:test-native`. Its original NativeScript consumes only an execution level and sends `--lib --no-fail-fast` with package `semio-framework-io-sqlite-snapshot`; default features remain unchanged. No additional selection filter is supplied.
+
+The ticket helper `sqlite-native-whole-inputs/📜️script.ts` captures complete source/provider bodies, both metadata phases with exact raw UTF-8 byte identity, and immediate dispatch associations. Low independently reviewed the helper source before execution. Capture session 34097 is active; no Cargo or runtime result has been observed yet. Research and generated receipts belong to this ticket. The eventual current live observation will retain complete unknown foreign advances and will not assert atomic snapshot equivalence.
+
+Capture completed with 1207 complete retained source frames and 12 defining provider manifests (27,419,234 bytes). Both actual ordinary and locked metadata phases completed with exit 0, zero provider gaps, no new external package identities, and unchanged live Cargo.lock. Independent exact preparation admission is pending before the unchanged owning whole run.
+
+Independent preparation admission is Ready at epoch-1/independent-source-provider-admission-1.json. Original owning session31872 completed exit1: official 40 tests run, 38 passed, 2 failed, 0 skipped. The two original component::artifact::shared_provider_allocation_tests laws failed allocation totals by 36 bytes: canceled IEEE payload/frontier actual100344 versus expected100380; text/blob interior actual100024 versus expected100060. The original raw log is generated/sqlite-native-whole/original-whole-1.log; the post-only physical observation session20606 is active. No law, assertion, feature or filter was changed, and this run does not prove whole readiness.
+
+The honest failed whole checkpoint is independently Ready at epoch-1/independent-failed-whole-source-checkpoint-1.json: official40/38/2/0,22compiledunits,235length+BLAKE/full-frame SHA checks, zero available predecessor/current gaps and211explicit unavailable predecessors. Ten exact bindings associate the original raw log with source, metadata, immediate pre, terminal, post and defining executor/hash authorities. Diagnosis is recorded separately in CURRENT-SQLITE-ALLOCATION-DELTA-DIAGNOSIS.md; no source or expectation correction has been published.
+
+
+Current SQLite epoch2 capture 88971 completed with 1210 full frames and 12 providers. Metadata 30828 completed ordinary and locked Cargo successfully, with provider gaps zero, external additions zero and unchanged live lock. A later foreign General Pack JSON test source advance is retained independently as a complete pair; this is a current live observation, not an atomic source snapshot. The unchanged forty-law dispatch waits exact independent source/provider admission.
+
+
+The unchanged epoch2 native run 14996 completed successfully: official 40 tests across one binary, all 40 PASS and zero skipped. Both original exact-allocation cancellation laws that previously failed by an unconstructed 36-byte diagnostic term now pass, preserving the complete original forty-law roster and all backing, refusal, equality and empty-database assertions. Original ANSI log `🗑️generated/sqlite-ledger-original-whole-2.log` is retained. Physical observation and exact independent predispatch foreign-source association are pending; no atomic source equivalence is inferred.
+
+
+Final independent whole checkpoint `🗑️generated/sqlite-native-whole/epoch-2/independent-whole-source-checkpoint-1.json` is Ready with fourteen exact bindings, including the old 38/2 failure, reviewed diagnostic ledger and actual publication, and three qualified predispatch foreign pairs. All forty indexed PASS laws match the official summary. Physical22/235 has available predecessor/current gaps zero; 211 unavailable predecessors remain explicit. The foreign frames did not produce compiled predecessor gaps but remain conserved; atomic source equivalence is false.

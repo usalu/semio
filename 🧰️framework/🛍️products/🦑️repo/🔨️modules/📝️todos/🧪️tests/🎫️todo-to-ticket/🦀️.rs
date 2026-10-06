@@ -20,7 +20,7 @@ fn optional(input: &Json, key: &str) -> Option<String> {
 #[cfg(feature = "sut")]
 fn the_script_produces_one_history(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_todos as todos;
-    let file = ctx.fixture_json("shared://🔓️lifecycle-script.json")?;
+    let file = ctx.input_json("shared://🔓️lifecycle-script.json")?;
     let seeds: Vec<(String, String)> = file.array("files").iter().map(|entry| (entry.str("path"), entry.str("content"))).collect();
     let tree = todos::MemoryTodoTree::seeded(seeds);
     let emitter = todos::MemoryEmitter::new();

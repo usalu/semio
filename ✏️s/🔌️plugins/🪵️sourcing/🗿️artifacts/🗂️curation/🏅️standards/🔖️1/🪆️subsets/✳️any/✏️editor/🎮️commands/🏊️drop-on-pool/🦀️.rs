@@ -1,6 +1,6 @@
 //! 🧺️ 🧺️ Sourcing curation app commands command — `drop-on-pool`.
 
-use crate::op::SourcingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::schema::{curation_decision_for_set, CurationDecision};
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};

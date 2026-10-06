@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by PlyMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "description": {
+          "en": "Name of the element that is removed, for example vertex or face.",
+          "de": "Name des Elements, das entfernt wird, zum Beispiel vertex oder face."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

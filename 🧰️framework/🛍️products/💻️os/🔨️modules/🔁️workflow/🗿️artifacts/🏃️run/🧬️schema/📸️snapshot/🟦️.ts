@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🏃️ Authored persisted run outcomes. */
 export type RunStatus="pending"|"running"|"succeeded"|"failed"|"canceled";
 /** 🚦️ Authored per-node run outcomes. */
@@ -15,4 +15,3 @@ export interface RunNodeRecord{nodeId:string;status:RunNodeStatus;documentFinger
 export interface RunLogLine{nodeId:string;level:string;message:string;at:string}
 /** 🧬️ Complete run snapshot source domain at its authored scalar widths. */
 export interface RunSnapshot{schema:string;workflowRef:string;workflowCheckpointId:string;inputCollectionRef:string;inputSnapshotId:string;parameterValues:{parameterId:string;value:string}[];outputCollectionRef:string;status:RunStatus;trigger:RunTrigger;nodeRecords:RunNodeRecord[];logs:RunLogLine[];startedAt:string;finishedAt?:string;sealed:boolean}
-export{RUN_SQLITE_SCHEMA,runSnapshotToSqliteDatabase,runSnapshotFromSqliteDatabase}from"./🪶️sqlite/🟦️.ts";

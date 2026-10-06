@@ -48,7 +48,7 @@ fn every_example_solve_terminates_with_a_verdict() {
         if commit.contradiction {
             assert!(commit.pixels.is_empty(), "{id}: a contradiction carries no pixels");
         } else {
-            let pixels = crate::schema::snapshot::decode_base64(&commit.pixels).unwrap_or_else(|| panic!("{id}: the output decodes"));
+            let pixels = commit.pixels.clone();
             assert_eq!(pixels.len(), cells, "{id}");
             assert!(pixels.iter().all(|index| usize::from(*index) < snapshot.input.palette.len()), "{id}: every solved pixel names a real palette entry");
             for pin in &snapshot.pinned {

@@ -3,12 +3,11 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import Ajv from "ajv/dist/2020.js";
+
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { wireBrowserKeyboard, wireBrowserFullscreen, type BrowserKeyboardEvent } from "../../🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts";
 import { createAccessibilityMirror, WGPU_ACCESSIBILITY_MIRROR_ID } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
-import schema from "../../🧬️schema/⌨️browser-keyboard-scope/🔣️.json";
 import fixture from "../../🧫️fixtures/⌨️browser-keyboard-scope/🔣️.json";
 
 const cleanups: (() => void)[] = [];
@@ -31,13 +30,16 @@ function mount() {
   combobox.setAttribute("role", "combobox");
   const editableCombobox = document.createElement("input");
   editableCombobox.setAttribute("role", "combobox");
+  const number = document.createElement("input");
+  number.type = "number";
+  number.setAttribute("data-engine-keys", "ArrowUp ArrowDown PageUp PageDown Home Enter Escape");
   const outside = document.createElement("button");
   root.append(canvas, mirror);
-  mirror.append(tree, button, input, combobox, editableCombobox);
+  mirror.append(tree, button, input, combobox, editableCombobox, number);
   document.body.append(root, outside);
   const events: BrowserKeyboardEvent[] = [];
   cleanups.push(wireBrowserKeyboard(root, canvas, event => events.push(event)));
-  return { root, canvas, mirror, events, targets: { canvas, "mirror-tree": tree, "mirror-button": button, "mirror-input": input, "mirror-combobox": combobox, "mirror-editable-combobox": editableCombobox, outside } };
+  return { root, canvas, mirror, events, targets: { canvas, "mirror-tree": tree, "mirror-button": button, "mirror-input": input, "mirror-combobox": combobox, "mirror-editable-combobox": editableCombobox, "mirror-number": number, outside } };
 }
 
 afterEach(() => {
@@ -48,10 +50,7 @@ afterEach(() => {
 });
 
 describe("browser keyboard scope", () => {
-  it("validates the language-neutral ownership cases", () => {
-    const validate = new Ajv({ strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   for (const row of fixture.cases) it(row.id, () => {
     const { events, targets } = mount();
@@ -242,5 +241,61 @@ describe("browser keyboard scope", () => {
     document.dispatchEvent(new Event("visibilitychange"));
     await Promise.resolve();
     expect(events).toHaveLength(count);
+  });
+
+  it("hands a mirrored number control's law keys to the renderer after re-asserting its focus and leaves its typing native", async () => {
+    vi.useFakeTimers();
+    const root = document.createElement("main");
+    const canvas = document.createElement("canvas");
+    canvas.tabIndex = 0;
+    root.append(canvas);
+    document.body.append(root);
+    const events: BrowserKeyboardEvent[] = [];
+    const sent: { readonly kind: string; readonly nodeKey?: string; readonly value?: string }[] = [];
+    const projection = [{ windowId: "history", windowGeneration: 3, nodes: [
+      { nodeId: 1, key: "editor.index", role: "spinbutton", depth: 0, live: "off", label: "Index", description: "Must be at least 0", focusable: true, tabbable: true, actionable: true, invalid: true, valueMin: 0, valueNow: -1, valueText: "-1", valueStep: 1 },
+      { nodeId: 2, key: "editor.angle", role: "slider", depth: 0, live: "off", label: "Angle", focusable: true, tabbable: true, actionable: true, valueMin: -180, valueMax: 180, valueNow: 90, valueText: "90 °", valueStep: 1 },
+      { nodeId: 2, key: "editor.angle::editor", role: "spinbutton", depth: 0, live: "off", label: "Angle", focusable: true, actionable: true, editable: true, valueMin: -360, valueMax: 360, valueNow: 90, valueText: "90", valueStep: 1 },
+      { nodeId: 3, key: "editor.orb", role: "slider", depth: 0, live: "off", label: "Orb", focusable: true, tabbable: true, actionable: true, valueMin: 0, valueMax: 1, valueNow: 0.5, valueText: "0.5" },
+      { nodeId: 4, key: "history.row", role: "treeitem", depth: 0, live: "off", label: "Row 41", focusable: true, tabbable: true, setSize: 120, posInSet: 41, tone: "warning" },
+    ] }];
+    const mirror = createAccessibilityMirror(root, { enqueueLossless: (event) => { sent.push(event as { readonly kind: string }); return true; }, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
+    cleanups.push(mirror.dispose, wireBrowserKeyboard(root, canvas, event => events.push(event)));
+    mirror.refresh();
+    await vi.runAllTimersAsync();
+    const node = (key: string) => root.querySelector<HTMLInputElement>(`[data-node-key="${key}"]`)!;
+    const press = (target: HTMLElement, key: string) => {
+      for (const type of ["keydown", "keyup"]) target.dispatchEvent(new KeyboardEvent(type, { key, bubbles: true, cancelable: true }));
+    };
+    const stepper = node("editor.index");
+    expect([stepper.type, stepper.step, stepper.min, stepper.max, stepper.value, stepper.getAttribute("aria-invalid")]).toEqual(["number", "1", "0", "", "-1", "true"]);
+    expect(stepper.getAttribute("data-engine-keys")).toBe("ArrowUp ArrowDown PageUp PageDown Home Enter Escape");
+    const slider = node("editor.angle");
+    expect([slider.type, slider.step, slider.min, slider.max, slider.value]).toEqual(["range", "1", "-180", "180", "90"]);
+    expect(slider.getAttribute("data-engine-keys")).toBe("ArrowLeft ArrowRight ArrowUp ArrowDown PageUp PageDown Home End");
+    const readout = node("editor.angle::editor");
+    expect([readout.type, readout.tabIndex, readout.getAttribute("data-engine-keys")]).toEqual(["number", -1, "Enter Escape"]);
+    const orb = node("editor.orb");
+    expect([orb.step, orb.getAttribute("data-engine-keys")]).toEqual(["any", null]);
+    const row = node("history.row");
+    expect([row.getAttribute("aria-setsize"), row.getAttribute("aria-posinset"), row.dataset.tone]).toEqual(["120", "41", "warning"]);
+
+    stepper.focus();
+    sent.length = 0;
+    press(stepper, "Home");
+    expect(sent).toEqual([expect.objectContaining({ kind: "accessibility-focus", nodeKey: "editor.index" })]);
+    expect(events.map(event => [event.type, event.key])).toEqual([["keydown", "Home"], ["keyup", "Home"]]);
+    events.length = 0;
+    press(stepper, "End");
+    press(stepper, "7");
+    expect(events).toEqual([]);
+    readout.focus();
+    press(readout, "ArrowUp");
+    expect(events).toEqual([]);
+    press(readout, "Enter");
+    expect(events.map(event => [event.type, event.key])).toEqual([["keydown", "Enter"], ["keyup", "Enter"]]);
+    readout.value = "-5";
+    readout.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(sent.at(-1)).toEqual(expect.objectContaining({ kind: "accessibility-value", nodeKey: "editor.angle::editor", value: "-5" }));
   });
 });

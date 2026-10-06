@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-idx1-present-applied",
       "class": "third-party-generated",
       "target": {

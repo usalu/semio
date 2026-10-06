@@ -3,7 +3,6 @@
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️.ts";
-import { PrintPipelineVerificationCommand } from "../../🎮️commands/🧪️print-pipeline-verification/🟦️.ts";
 import { PrintTokenPreviewScript } from "../../🔨️modules/🎨print-design-token-paints/📜️script.ts";
 import { generateVizArtifacts } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import {runArtifactTypeScriptPackageMain} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
@@ -24,6 +23,14 @@ class GenerateScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "measurement") {
+      if (segments.length !== 1) throw Error("Expected test measurement");
+      const { runRepositoryTestCommand } = await import("../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
+      const { repoTestArtifactEnvironment } = await import("../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts");
+      process.env.SEMIO_TEST_ARTIFACT_DIR ??= repoTestArtifactEnvironment(this.repoRoot, "print-measurement").SEMIO_TEST_ARTIFACT_DIR;
+      await runRepositoryTestCommand(process.execPath, ["test", "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🧪️tests/📏️ownership/🟦️.ts"], {cwd: this.root, budgetMs: 30000});
+      return;
+    }
     if (segments[0] === "native-grammar") {
       const { tmpdir } = await import("node:os");
       const { join } = await import("node:path");
@@ -37,11 +44,12 @@ class TestScript extends BundleScript {
       await compileNativeGrammar(this.repoRoot, workDir, !segments.includes("--grammar-only"));
       return;
     }
+    const { PrintPipelineVerificationCommand } = await import("../../🎮️commands/🧪️print-pipeline-verification/🟦️.ts");
     await new PrintPipelineVerificationCommand(this.root, this.repoRoot).run(segments);
   }
 }
 class CheckScript extends BundleScript{
- async run():Promise<void>{await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/print",{suites:["🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts"]});}
+ async run():Promise<void>{await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/print",{suites:["🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts","🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts"]});}
 }
 //#endregion 🖨️RouterAdapters
 

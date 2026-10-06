@@ -250,7 +250,7 @@ async fn report_out_exports_the_computed_check_report() {
 #[semio_framework_async_macros::async_test]
 async fn the_declared_snapshot_argument_carries_the_documents_json() {
     const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-net-floor-area-m2/✅apply/📸️snapshot/➡️after/🔣️.json");
-    let expected = crate::standards::v1::subsets::any::schema::snapshot::decode_din18599_snapshot_json(AFTER).expect("the committed after fixture decodes");
+    let expected = crate::standards::v1::subsets::any::io::text::snapshot::decode_din18599_snapshot_json(AFTER).expect("the committed after fixture decodes");
     let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&format!("{{\"snapshot\":{AFTER}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rail arguments");
     let command = <Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");
     let Din18599Command::ReplaceSnapshot(payload) = &command else { panic!("setSnapshot resolves to ReplaceSnapshot, got {command:?}") };

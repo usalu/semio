@@ -10,4 +10,4 @@ if(process.argv[2]==="verify"&&process.argv[3]==="snapshot-sqlite-source"){
  await runRepositoryCommand(process.execPath,["x","tsc",...files,"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck"],workspace,"trinity-jack:all-published-consumers",120000);
  console.log(`[trinity-jack] checked published consumers=${files.length}`);
 }else
-await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/trinity-jack",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🟦️.ts"]});
+await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/trinity-jack",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🟦️.ts"]});

@@ -36,12 +36,17 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::snapshot::decode_csv;
+    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::mutations::{apply_semio_table_mutation, decode_semio_table_mutation_json, inverse_semio_table_mutation, SemioTableMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{
-        decode_semio_table_pack, decode_semio_table_snapshot_json, encode_semio_table_pack, encode_semio_table_snapshot_json, parse_semio_table_dsl, print_semio_table_dsl, SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::mutations::{apply_semio_table_mutation, inverse_semio_table_mutation, SemioTableMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::mutations::{decode_semio_table_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::binary::snapshot::{decode_semio_table_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::binary::snapshot::{encode_semio_table_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::snapshot::{print_semio_table_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::snapshot::{parse_semio_table_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::snapshot::{decode_semio_table_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::snapshot::{encode_semio_table_snapshot_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     use semio_repo_test_host::law::carrier_is_exact;
 
@@ -62,7 +67,7 @@ mod subject {
 
     /// 📊️ The real survey table, parsed through this repository's own DSL codec.
     fn survey(ctx: &Context) -> Result<SemioTableSnapshot, String> {
-        parse_semio_table_dsl(&utf8(ctx.fixture_bytes(SURVEY_DSL)?, "the committed survey table")?)
+        parse_semio_table_dsl(&utf8(ctx.input_bytes(SURVEY_DSL)?, "the committed survey table")?)
     }
 
     /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector.
@@ -71,8 +76,8 @@ mod subject {
     }
 
     fn vector(ctx: &Context, position: usize, label: &str) -> Result<String, String> {
-        let uri = ctx.step_fixture_uris().into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
-        utf8(ctx.fixture_bytes(&uri)?, &uri)
+        let uri = ctx.step_input_uris().into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
+        utf8(ctx.input_bytes(&uri)?, &uri)
     }
 
     fn apply(current: &mut SemioTableSnapshot, step: &SemioTableMutation, what: &str) -> Result<(), String> {
@@ -140,7 +145,7 @@ mod subject {
     /// derivation is a faithful transcription: the header record names the columns, every column is
     /// `Str` because every source field is text, and every cell carries its field verbatim.
     pub fn payload_fidelity(ctx: &Context) -> Result<Outcome, String> {
-        let source = decode_csv(&utf8(ctx.fixture_bytes(SURVEY_CSV)?, "the committed survey source")?)?;
+        let source = decode_csv(&utf8(ctx.input_bytes(SURVEY_CSV)?, "the committed survey source")?)?;
         let (header, records) = source.records.split_first().ok_or_else(|| "payload-fidelity: the committed survey source carries no header record".to_string())?;
         let derived = SemioTableSnapshot {
             schema: survey(ctx)?.schema.clone(),
@@ -178,18 +183,18 @@ mod subject {
     /// the PYTHON implementation and this codec has to reproduce THOSE — each side is measured
     /// against bytes the other one emitted, and the runner compares the digests.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let sheet_dsl = ctx.fixture_bytes(SHEET_DSL)?;
+        let sheet_dsl = ctx.input_bytes(SHEET_DSL)?;
         let sheet = parse_semio_table_dsl(&utf8(sheet_dsl.clone(), "the committed demo sheet")?)?;
         let sheet_printed = print_semio_table_dsl(&sheet);
         carrier_is_exact(sheet_printed.as_bytes(), &sheet_dsl)?;
-        let sheet_pack = ctx.fixture_bytes(SHEET_PACK)?;
+        let sheet_pack = ctx.input_bytes(SHEET_PACK)?;
         let sheet_unpacked = decode_semio_table_pack(&sheet_pack)?;
         if sheet_unpacked != sheet {
             return Err(disagreement("identity-round-trip: the demo sheet's binary twin decodes to a different table than its text", &sheet_unpacked, &sheet));
         }
         let sheet_repacked = encode_semio_table_pack(&sheet);
         carrier_is_exact(&sheet_repacked, &sheet_pack)?;
-        let survey_dsl = ctx.fixture_bytes(SURVEY_DSL)?;
+        let survey_dsl = ctx.input_bytes(SURVEY_DSL)?;
         let table = parse_semio_table_dsl(&utf8(survey_dsl.clone(), "the committed survey table")?)?;
         let survey_printed = print_semio_table_dsl(&table);
         carrier_is_exact(survey_printed.as_bytes(), &survey_dsl)?;
@@ -197,7 +202,7 @@ mod subject {
         if reparsed != table {
             return Err(disagreement("identity-round-trip: printing the survey table back to DSL and reparsing it lost content", &reparsed, &table));
         }
-        let survey_pack = ctx.fixture_bytes(SURVEY_PACK)?;
+        let survey_pack = ctx.input_bytes(SURVEY_PACK)?;
         let survey_unpacked = decode_semio_table_pack(&survey_pack)?;
         if survey_unpacked != table {
             return Err(disagreement("identity-round-trip: the survey table's binary twin decodes to a different table than its text", &survey_unpacked, &table));

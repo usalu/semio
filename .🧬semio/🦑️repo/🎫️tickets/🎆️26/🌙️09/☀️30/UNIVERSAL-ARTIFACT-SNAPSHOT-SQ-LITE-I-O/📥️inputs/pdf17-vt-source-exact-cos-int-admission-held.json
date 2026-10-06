@@ -1,0 +1,10 @@
+{
+  "qualification": "HELD narrow existing first-party COS Int role; no global numeric/equality policy change",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪪️native-json/🟦️.ts",
+      "before": "case \"int\": return { kind, value: BigInt(integer(row.value)) };",
+      "after": "case \"int\": { const value = typeof row.value === \"bigint\" ? row.value : BigInt(integer(row.value)); if (value < -(1n << 63n) || value >= (1n << 63n)) throw new Error(\"PDF COS integer exceeds int64\"); return { kind, value }; }"
+    }
+  ]
+}

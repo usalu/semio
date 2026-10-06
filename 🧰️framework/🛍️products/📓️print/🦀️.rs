@@ -1,6 +1,8 @@
 //! 🖨️ Print chart artifact with canonical mutation and inference execution.
 extern crate semio_framework_os_kernel as protocol;
 
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;
 #[path = "🧬️schema/📸️snapshot/🦀️.rs"]
 pub mod snapshot;
 #[path = "🧬️schema/🔀️diff/🦀️.rs"]
@@ -15,12 +17,6 @@ pub use diff::{ChartDiff, ChartEdit};
 pub use mutations::ChangeChartValue;
 pub use inferences::ChartInference;
 pub const CHART_ARTIFACT_KIND:&str="s.print.chart";
-
-pub struct ChartBuilder;
-impl semio_framework_plugin::ArtifactInferrer for ChartBuilder {
-    type Snapshot=ChartSnapshot;
-    type Inference=ChartInference;
-}
 
 pub fn chart_artifact_schema_descriptor()->semio_framework_schema_registry::ArtifactSchemaDescriptor{
     use semio_framework_schema_registry::{ArtifactSchemaDescriptor,FacetLeaves};
@@ -46,7 +42,7 @@ pub fn chart_artifact_declaration()->Result<semio_framework_plugin::app::Artifac
     let definition=ArtifactDefinition::new(ArtifactIdentity::parse(CHART_ARTIFACT_KIND)?)
         .capability(capability("s.print.chart.schema",ArtifactCapabilityKind::schema(),"framework.print.chart",include_str!("🧬️schema/📸️snapshot/🔣️.json"))?)?
         .capability(capability("s.print.chart.inference",ArtifactCapabilityKind::inference(),"framework.print.chart.inference",include_str!("🧬️schema/💡️inferences/🔣️.json"))?)?
-        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.print.chart.codec")?,ArtifactCapabilityKind::codec()).descriptor(include_str!("🧬️schema/📸️snapshot/🔣️.json").as_bytes().to_vec())?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(),"print.chart")?).claim(ArtifactIdentityClaim::codec_extension("print.chart","chart")?))?;
+        .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.print.chart.codec")?,ArtifactCapabilityKind::codec()).descriptor(include_str!("🧬️schema/📸️snapshot/🔣️.json").as_bytes().to_vec())?.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(),"print.chart")?)?.claim(ArtifactIdentityClaim::codec_extension("print.chart","chart")?)?)?;
     let dialect=protocol::io_schema::Dialect{artifact_kind:CHART_ARTIFACT_KIND,standard:protocol::io_schema::StandardId("v1"),subset:protocol::io_schema::SubsetId("any")};
     ArtifactDeclaration::builder(definition).schema(chart_artifact_schema_descriptor()).inferences([chart_artifact_inference_descriptor()]).inference_services([chart_inference_service()]).document_codec_bare::<ChartSnapshot,ChangeChartValue>("print.chart",dialect).try_build()
 }
@@ -77,7 +73,7 @@ pub fn execute_chart_inference(request: &semio_framework_plugin::ArtifactInferen
 
 /// 🚦️ The controlled service binds progress, cancellation and allocation/work budgets.
 pub fn execute_chart_inference_controlled(request: &semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>, checkpoint: &mut dyn FnMut(u64) -> Result<(), semio_framework_plugin::ArtifactInferenceExecutionError>) -> Result<semio_framework_plugin::ArtifactInferenceExecution, semio_framework_plugin::ArtifactInferenceExecutionError> {
-    use protocol::{FromValue, ToValue};
+    use semio_framework_value::{FromValue, ToValue};
     use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError as Error, WireArtifactInferenceCacheMode};
     if request.cancellation_id.trim().is_empty() || request.budgets.work_units == 0 || request.budgets.recursion_depth == 0 || request.canonical_payload.len() as u64 > request.budgets.allocation_bytes {
         return Err(Error::new("print.chart.inference.admission", "cancellation identity and sufficient non-zero budgets are required"));
@@ -94,7 +90,7 @@ pub fn execute_chart_inference_controlled(request: &semio_framework_plugin::Arti
         decode_work+=1;
         if decode_work>request.budgets.work_units{return Err(Error::new("print.chart.inference.work","chart values exceed work budget"));}
         checkpoint(decode_work)?;
-        match value{protocol::DslValue::Array(items)=>stack.extend(items.iter().map(|value|(value,depth+1))),protocol::DslValue::Object(items)=>stack.extend(items.iter().map(|(_,value)|(value,depth+1))),_=>{}}
+        match value{semio_framework_value::DslValue::Array(items)=>stack.extend(items.iter().map(|value|(value,depth+1))),semio_framework_value::DslValue::Object(items)=>stack.extend(items.iter().map(|(_,value)|(value,depth+1))),_=>{}}
     }
     let snapshot = ChartSnapshot::from_value(value).map_err(|error| Error::new("print.chart.inference.snapshot", error.to_string()))?;
     let mut cancellation=None;

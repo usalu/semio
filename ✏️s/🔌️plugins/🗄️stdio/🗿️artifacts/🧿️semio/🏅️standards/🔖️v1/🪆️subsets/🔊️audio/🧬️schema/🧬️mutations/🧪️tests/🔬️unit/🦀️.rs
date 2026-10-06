@@ -1,3 +1,5 @@
+use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;
+use crate::standards::v1::subsets::audio::io::text::mutations::print_audio_mutation;
 use super::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

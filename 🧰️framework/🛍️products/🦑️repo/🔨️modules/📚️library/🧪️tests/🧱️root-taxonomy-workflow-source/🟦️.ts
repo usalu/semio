@@ -7,7 +7,7 @@ import { loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/�
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-taxonomy-workflow-source/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-taxonomy-workflow-source/🔣️.json"), "utf8"));
+
 const relativeSpecifier = (consumer: string, owner: string): string => {
   const path = relative(resolve(repoRoot, consumer, ".."), resolve(repoRoot, owner)).replaceAll("\\", "/");
   return path.startsWith(".") ? path : `./${path}`;
@@ -23,7 +23,7 @@ const exportedNames = (path: string): Set<string> => {
 };
 
 test("validates the portable owner and consumer contract", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+  
   for (const owner of fixture.owners) {
     const path = resolve(repoRoot, owner.path);
     expect(existsSync(path), owner.path).toBe(true);

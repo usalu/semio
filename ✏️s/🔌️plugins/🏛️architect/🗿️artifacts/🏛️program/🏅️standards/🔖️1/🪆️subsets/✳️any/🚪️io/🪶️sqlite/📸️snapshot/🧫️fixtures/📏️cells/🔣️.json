@@ -1,0 +1,60 @@
+{
+  "tableCount": 685,
+  "rowCount": 172,
+  "cases": [
+    {
+      "name": "base",
+      "semanticBytes": 11342
+    },
+    {
+      "name": "literalSchemaUnicode",
+      "schema": "世界\u0000__proto__",
+      "semanticBytes": 11341
+    },
+    {
+      "name": "subtitlePresentEmpty",
+      "subtitle": "",
+      "semanticBytes": 11342
+    },
+    {
+      "name": "subtitlePresentUnicode",
+      "subtitle": "世界\u0000",
+      "semanticBytes": 11349
+    },
+    {
+      "name": "benchmarkNegativeZero",
+      "word": "8000000000000000",
+      "semanticBytes": 11342
+    },
+    {
+      "name": "benchmarkPositiveInfinity",
+      "word": "7ff0000000000000",
+      "semanticBytes": 11352
+    },
+    {
+      "name": "benchmarkNegativeInfinity",
+      "word": "fff0000000000000",
+      "semanticBytes": 11352
+    },
+    {
+      "name": "benchmarkPayloadNaN",
+      "word": "7ff8000000000042",
+      "semanticBytes": 11331
+    },
+    {
+      "name": "fourFullWidthUnsigned",
+      "unsigned": "18446744073709551615",
+      "semanticBytes": 11427
+    },
+    {
+      "name": "issueOptionalTextAbsent",
+      "optionalText": "absent",
+      "semanticBytes": 11342
+    },
+    {
+      "name": "issueOptionalTextPresentEmpty",
+      "optionalText": "empty",
+      "semanticBytes": 11342
+    }
+  ]
+}

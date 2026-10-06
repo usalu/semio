@@ -33,7 +33,7 @@
     {
       "id": "semantic-stl-ascii-v1",
       "description": "ASCII STL documents compared by the resolved corner positions of every facet in order, PLUS the two fields a triangle-soup reading cannot carry: the `solid <name>` header and the EXPLICIT per-facet normal. STL states its normals rather than deriving them from winding, so set-triangle-normal is a real change to the document even when every corner stays put; and set-solid-name's whole payload is the header name. The shared semantic-mesh-v1 profile treats both as writer freedom -- correct for mesh CREATION, where a producer picks its own solid name and recomputes normals, but it would leave 2 of this subset's 7 declared kinds unobservable, so this profile makes them normative. Byte length and decimal precision stay producer freedom: `stl_io` resolves coordinates through f32 while the committed fixture carries f64 decimals.",
-      "tolerance": 1e-05,
+      "tolerance": 0.00001,
       "ignoreKeys": [
         "byteLength",
         "fileSize",
@@ -222,9 +222,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-triangle-applied",
       "class": "handcrafted",
       "target": {
@@ -267,7 +266,6 @@
       "notes": "InsertTriangle{index:1,triangle} inserts a real facet (unit normal + 3 real vertices) between the two existing facets."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-triangle-applied",
       "class": "handcrafted",
       "target": {
@@ -310,7 +308,6 @@
       "notes": "RemoveTriangle{index:0} drops the first facet."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-solid-name-applied",
       "class": "handcrafted",
       "target": {
@@ -353,7 +350,6 @@
       "notes": "SetSolidName{name:\"renamed-solid\"} overwrites the `solid <name>`/`endsolid <name>` header/footer name."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-triangle-vertices-applied",
       "class": "handcrafted",
       "target": {
@@ -396,7 +392,6 @@
       "notes": "SetTriangleVertices{index:1,vertices} overwrites a facet's 3 vertex coordinates in place, leaving its normal untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-triangle-normal-applied",
       "class": "handcrafted",
       "target": {

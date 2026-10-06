@@ -1,7 +1,7 @@
 use super::*;
 
 fn sample_document() -> LayoutSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
+    crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,7 +79,7 @@ async fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
 
 #[semio_framework_async_macros::async_test]
 async fn bounds_hit_test_finds_a_text_frame_without_shaping() {
-    let doc = crate::standards::v1::subsets::any::schema::default_document();
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let page = doc.pages.iter().find(|page| page.id == "page-1").expect("page");
     assert_eq!(hit_test_page_frames(&doc, page, 160.0, 230.0).as_deref(), Some("frame-text-1"));
     assert!(hit_test_page_frames(&doc, page, 1.0, 1.0).is_none());
@@ -87,7 +87,7 @@ async fn bounds_hit_test_finds_a_text_frame_without_shaping() {
 
 #[semio_framework_async_macros::async_test]
 async fn hit_test_uses_frame_rotation() {
-    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let frame = doc.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").expect("frame");
     let crate::Frame::Rect { bounds, .. } = frame else { panic!("rect") };
     *bounds = crate::LayoutBounds { x: 0.0, y: 0.0, width: 100.0, height: 20.0, rotation: std::f64::consts::FRAC_PI_2 };
@@ -98,7 +98,7 @@ async fn hit_test_uses_frame_rotation() {
 
 #[semio_framework_async_macros::async_test]
 async fn interactive_display_skips_frames_outside_the_view_and_keeps_the_selection() {
-    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     doc.pages[0].frames.push(crate::Frame::Rect {
         id: "far".into(),
         layer_id: "layer-1".into(),
@@ -118,7 +118,7 @@ async fn interactive_display_skips_frames_outside_the_view_and_keeps_the_selecti
 
 #[semio_framework_async_macros::async_test]
 async fn interactive_display_omits_the_baseline_lattice() {
-    let doc = crate::standards::v1::subsets::any::schema::default_document();
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let page = doc.pages.first().expect("page");
     let interactive = build_interactive_display_list(&doc, page, &page.id, &[], None, true, 0.0, 0.0, 1.0);
     assert!(interactive.guides.iter().all(|guide| guide.kind != "baseline"));
@@ -251,7 +251,7 @@ async fn package_zip_bundles_document_and_preflight() {
 
 #[semio_framework_async_macros::async_test]
 async fn svg_export_contains_path_and_wraps_a_valid_document() {
-    crate::io::ensure_stdio_semio_drawing_registered();
+    crate::standards::v1::subsets::any::io::ensure_stdio_semio_drawing_registered();
     let doc = sample_document();
     let svg = export_document_svg_headless_batch(&doc, "page-1").expect("svg export succeeds");
     assert!(svg.starts_with("<svg"));
@@ -288,7 +288,7 @@ async fn placed_drawing_shapes_its_kind_and_keeps_a_stroke_mark() {
 
 #[semio_framework_async_macros::async_test]
 async fn character_style_run_changes_glyph_size_and_color() {
-    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     doc.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: None });
     let story = doc.stories.iter_mut().find(|story| story.id == "story-1").unwrap();
     story.style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
@@ -303,7 +303,7 @@ async fn character_style_run_changes_glyph_size_and_color() {
 
 #[semio_framework_async_macros::async_test]
 async fn page_override_moves_and_hides_an_inherited_frame() {
-    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     doc.pages[0].overrides.push(crate::PageOverride { object_id: "frame-inherited".into(), bounds: Some(crate::LayoutBounds { x: 90.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 }), visible: None, locked: None });
     let page = doc.pages[0].clone();
     let mut engine = LayoutEngine::new();
@@ -318,7 +318,7 @@ async fn page_override_moves_and_hides_an_inherited_frame() {
 
 #[semio_framework_async_macros::async_test]
 async fn hidden_layer_drops_its_frames_and_keeps_the_master() {
-    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    let mut doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     doc.pages[0].layers[0].visible = false;
     let page = doc.pages[0].clone();
     let mut engine = LayoutEngine::new();
@@ -335,7 +335,7 @@ async fn moving_a_frame_onto_a_hidden_layer_drops_only_that_frame() {
     use crate::mutations::set_frame_layer::SetFrameLayer;
     use crate::mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
-    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let created = LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false }).diff(&base).diff().apply(&base).expect("layer");
     let mut doc = LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff().apply(&created).expect("move");
     doc.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
@@ -374,7 +374,7 @@ fn background_drawing_fits_an_offset_plan_onto_the_page() {
             },
         }],
     };
-    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     document.pages[0].width = 100.0;
     document.pages[0].height = 50.0;
     document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
@@ -424,7 +424,7 @@ fn unit_square_drawing() -> semio_s_artifact_stdio_semio::standards::v1::subsets
 
 #[test]
 fn a_placed_drawing_frame_fits_the_plan_inside_its_bounds() {
-    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
     document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &unit_square_drawing()));
@@ -468,7 +468,7 @@ fn drawing_text_lands_on_the_page_and_inside_the_placed_frame() {
             },
         }],
     };
-    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
     document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
@@ -482,11 +482,11 @@ fn drawing_text_lands_on_the_page_and_inside_the_placed_frame() {
 }
 
 fn red_png() -> Vec<u8> {
-    let mut encoded = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
+    let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;
     encoded.height = 1;
     encoded.pixels = vec![255, 0, 0, 255];
-    semio_s_artifact_stdio_png::io::author_png_projection(&encoded).expect("png")
+    semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&encoded).expect("png")
 }
 
 fn drawing_with_red_png() -> semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot {
@@ -523,7 +523,7 @@ fn drawing_with_red_png() -> semio_s_artifact_stdio_semio::standards::v1::subset
 
 #[test]
 fn an_embedded_drawing_png_fits_the_page_and_the_placed_frame() {
-    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
     document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &drawing_with_red_png()));
@@ -556,7 +556,7 @@ fn an_imported_arc_bulges_off_its_chord() {
             },
         }],
     };
-    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     document.pages[0].width = 200.0;
     document.pages[0].height = 100.0;
     document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
@@ -569,7 +569,7 @@ fn an_imported_arc_bulges_off_its_chord() {
 
 #[test]
 fn a_rotated_drawing_frame_turns_the_plan_and_keeps_its_png() {
-    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     document.links[0].artifact_kind = "s.draw.drawing".into();
     document.links[0].artifact_ref = "plan-1".into();
     let frame = document.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");

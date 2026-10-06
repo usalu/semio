@@ -6,14 +6,16 @@ const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/♻️ret
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/♻️retirement/🔣️.json", import.meta.url), "utf8"));
 const source = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
 test("closed recursive retirement wire corpus has independent AJV and owned schema parity", () => {
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(fixture)).toBe(true);
-  expect(validateJsonSchemaSubset(schema, fixture)).toEqual([]);
-  expect(new Set(fixture.cases.map((row: { id: string }) => row.id)).size).toBe(10);
-  for (const invalid of [{ ...fixture, extra: true }, { ...fixture, cases: fixture.cases.map((row: object) => ({ ...row, extra: true })) }]) {
-    expect(validate(invalid)).toBe(false);
-    expect(validateJsonSchemaSubset(schema, invalid).length).toBeGreaterThan(0);
+  const ajv = new Ajv({ strict: true }).addSchema(schema);
+  const validators = new Map(Object.keys(schema.$defs).map(owner => [owner, ajv.getSchema(`${schema.$id}#/$defs/${owner}`)!]));
+  for (const row of fixture.cases) {
+    const domain = { ...schema, oneOf: undefined, $ref: `#/$defs/${row.owner}` };
+    expect(validators.get(row.owner)!(row.wire)).toBe(true);
+    expect(validateJsonSchemaSubset(domain, row.wire)).toEqual([]);
+    expect(validators.get(row.owner)!({ ...row.wire, extra: true })).toBe(false);
+    expect(validateJsonSchemaSubset(domain, { ...row.wire, extra: true }).length).toBeGreaterThan(0);
   }
+  expect(new Set(fixture.cases.map((row: { id: string }) => row.id)).size).toBe(10);
 });
 test("actual recursive PDF owners explicitly own iterative child retirement", () => {
   for (const owner of ["color_space", "function", "action", "outline_item", "form_field"]) {

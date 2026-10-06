@@ -1,6 +1,6 @@
 {
   "base": {
-    "fixtureSlug": "hexagonal-mushroom-column",
+    "exampleId": "hexagonal-mushroom-column",
     "params": {
       "height": 6,
       "radius": 0.5,
@@ -15,7 +15,7 @@
     {
       "witness": "🎚️sets-params",
       "expected": {
-        "fixtureSlug": "hexagonal-mushroom-column",
+        "exampleId": "hexagonal-mushroom-column",
         "params": {
           "height": 2,
           "radius": 0.75,
@@ -30,7 +30,7 @@
     {
       "witness": "🫙️clears-params",
       "expected": {
-        "fixtureSlug": "ä",
+        "exampleId": "ä",
         "params": null,
         "questionId": "q",
         "controllerId": "forms-play",

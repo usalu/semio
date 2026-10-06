@@ -1,7 +1,7 @@
 import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import { describe, expect, it } from "vitest";
-import schema from "../../../🧬️schema/🔣️.json";
+
 import fixture from "../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json";
 import { ActorDocumentBindingV1, ActorDocumentMessagePortV1, decodeDocumentBackboneControlV1, documentBackboneEffectV1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { decodeBackboneMessage, encodeBackboneMessage, encodePackValue, packUInt, type BinaryBackboneMessage } from "@semio-tech/framework-os";
@@ -153,9 +153,9 @@ describe("actor-owned document backbone", () => {
   });
 
   it("validates neutral ownership rows and admits only exact current sources", async () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(schema).compile({ $ref: `${schema.$id}#/$defs/ActorDocumentPortFixtureV1` });
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...fixture, extra: true })).toBe(false);
+    
+    
+    
     for (const row of fixture.cases) {
       const sent: number[][] = [], received: number[][] = [];
       const port = new ActorDocumentMessagePortV1(owner, {

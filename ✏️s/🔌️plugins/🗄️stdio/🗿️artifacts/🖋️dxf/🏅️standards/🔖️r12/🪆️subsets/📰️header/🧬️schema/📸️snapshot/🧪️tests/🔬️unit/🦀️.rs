@@ -1,3 +1,5 @@
+use crate::standards::v_r12::subsets::any::io::text::snapshot::print_dxf_document;
+use crate::standards::v_r12::subsets::any::io::text::snapshot::parse_dxf_document;
 use super::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-06T01:21:05.832Z",
+  "session": 53978,
+  "exit": 0,
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-stdio-three-block-relocated-strict.log",
+  "budgetMsPerOwner": 30000,
+  "passes": [
+    "[DEBUG] strict owner pass /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts 8571.467292000001",
+    "[DEBUG] strict owner pass /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts 5331.665625",
+    "[DEBUG] strict owner pass /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts 4164.6065",
+    "[DEBUG] strict owner pass /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts 1150.6438750000016"
+  ],
+  "scope": "Four original isolated Source strict compilers only; no Native/runtime inference"
+}

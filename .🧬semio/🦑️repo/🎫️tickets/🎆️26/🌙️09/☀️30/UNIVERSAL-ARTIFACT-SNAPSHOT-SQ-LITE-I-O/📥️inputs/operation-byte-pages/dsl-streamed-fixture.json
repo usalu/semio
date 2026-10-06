@@ -1,0 +1,10 @@
+{
+  "schema": "paged-dsl-operation-v1",
+  "payloadBytes": 8194,
+  "word": "x",
+  "prefix": [1, 0, 0, 1, 1, 7, 130, 64],
+  "canceledKind": "canceled",
+  "maximumPhysicalPageBytes": 4096,
+  "maximumCloseSteps": 8322,
+  "terminalBackingBytes": 0
+}

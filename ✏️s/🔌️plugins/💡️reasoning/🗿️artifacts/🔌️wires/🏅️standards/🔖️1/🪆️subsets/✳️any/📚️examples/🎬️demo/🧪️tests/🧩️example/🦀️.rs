@@ -8,10 +8,10 @@ async fn the_assets_carry_the_whole_metabolism_graph() {
     let pack = crate::genesis_wires_child_pack(&snapshot, crate::WIRES_CONTENT_SLOT, &snapshot.content.child_id).expect("the demo names its bundled board");
     let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("board pack");
     let composed = crate::wires_composed(&snapshot, &content);
-    let nodes = crate::schema::fixture_nodes(&composed.board);
+    let nodes = crate::schema::board_snapshot_nodes(&composed.board);
     assert_eq!(nodes.len(), 7, "the demo board carries every metabolism topic");
-    assert_eq!(crate::schema::fixture_edges(&composed.board).len(), 9, "the demo board carries every relationship between those topics");
-    assert_eq!(crate::schema::wires_identities(&composed.fixture).len(), 7);
+    assert_eq!(crate::schema::board_snapshot_edges(&composed.board).len(), 9, "the demo board carries every relationship between those topics");
+    assert_eq!(crate::schema::wires_identities(&composed.identity_snapshot).len(), 7);
     assert_eq!(nodes[0].get("text").and_then(|value| value.as_str()), Some("Metabolism"), "the first topic names the example");
 }
 

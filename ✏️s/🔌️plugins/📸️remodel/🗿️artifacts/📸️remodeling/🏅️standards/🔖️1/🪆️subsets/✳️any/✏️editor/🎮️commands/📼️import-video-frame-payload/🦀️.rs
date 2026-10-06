@@ -15,7 +15,7 @@ use crate::editor::remodeling::engine::video as remodeling_video;
 use crate::editor::remodeling::payload_from_data_url;
 use crate::editor::remodeling::transient::{RemodelingImport, RemodelingWindowTransient};
 use crate::mutations::{add_stream_frame, create_asset, create_stream};
-use crate::op::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use crate::schema::mint_remodeling_id;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};

@@ -1,0 +1,15 @@
+> bun ./📜️script.ts tests 🌎️hub/🧩️compositions/🗄️stdio/🧩️composition/🧪️tests/🧱️production-preparation/🟦️.ts
+
+[DEBUG] isolated Nx verification tests
+bun test v1.3.14 (0d9b296a)
+
+🌎️hub/🧩️compositions/🗄️stdio/🧩️composition/🧪️tests/🧱️production-preparation/🟦️.ts:
+[DEBUG] production preparation case=examples-absent contributions=36 apps=176 receipts=30 example-writes=0
+(pass) production preparation isolates examples: examples-absent [453.69ms]
+[DEBUG] production preparation case=examples-retained contributions=36 apps=176 receipts=30 example-writes=0
+(pass) production preparation isolates examples: examples-retained [482.14ms]
+
+ 2 pass
+ 0 fail
+ 10 expect() calls
+Ran 2 tests across 1 file. [1064.00ms]

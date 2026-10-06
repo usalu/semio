@@ -20,7 +20,7 @@ mod subject {
         if root.exists() {
             std::fs::remove_dir_all(&root).map_err(|error| error.to_string())?;
         }
-        for entry in ctx.fixture_json(TREE)?.array("entries") {
+        for entry in ctx.input_json(TREE)?.array("entries") {
             let path = root.join(entry.str("path"));
             if let Some(parent) = path.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| error.to_string())?;
@@ -55,7 +55,7 @@ mod subject {
     pub fn ids_agree_for_every_vector(ctx: &Context) -> Result<Outcome, String> {
         let codebase = Codebase::new(materialize(ctx)?);
         let mut ids = Vec::new();
-        for vector in ctx.fixture_json(VECTORS)?.array("vectors") {
+        for vector in ctx.input_json(VECTORS)?.array("vectors") {
             let name = vector.str("name");
             let path = vector.str("path");
             let id = match vector.str("kind").as_str() {
@@ -73,7 +73,7 @@ mod subject {
     pub fn uris_agree_for_every_file_vector(ctx: &Context) -> Result<Outcome, String> {
         let codebase = Codebase::new(materialize(ctx)?);
         let uris = ctx
-            .fixture_json(VECTORS)?
+            .snapshot_json(VECTORS)?
             .array("vectors")
             .into_iter()
             .filter(|vector| vector.str("kind") == "file")

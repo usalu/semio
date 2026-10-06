@@ -5,7 +5,18 @@
   "type": "object",
   "properties": {
     "kind": {
-      "const": "set-editor-settings"
+      "const": "set-editor-settings",
+      "x-semio-ui": {
+        "role": "discriminator",
+        "label": {
+          "en": "Change",
+          "de": "Änderung"
+        },
+        "description": {
+          "en": "Names the window setting this change writes; fixed for the leaf.",
+          "de": "Benennt die Fenstereinstellung, die diese Änderung schreibt; für das Blatt fest."
+        }
+      }
     },
     "settings": {
       "type": "object",

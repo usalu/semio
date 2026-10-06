@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "runtimeExports": [
+    "parseBlockAttribute",
+    "parseBlockAuthor",
+    "parseBlockCamera2d",
+    "parseBlockCamera3d",
+    "parseBlockCompatibilityRule",
+    "parseBlockKindIdentity",
+    "parseBlockMeta",
+    "parseBlockRepresentation"
+  ],
+  "cases": [
+    {
+      "type": "BlockKindIdentity",
+      "input": {
+        "id": "kind",
+        "name": "cube",
+        "label": "Cube",
+        "variant": "solid",
+        "description": "Shared kind",
+        "icon": "cube",
+        "unit": "m"
+      }
+    },
+    {
+      "type": "BlockAttribute",
+      "input": {
+        "key": "material",
+        "value": "wood",
+        "definition": "material"
+      }
+    },
+    {
+      "type": "BlockAuthor",
+      "input": {
+        "id": "author",
+        "name": "Author",
+        "email": "author@example.test"
+      }
+    },
+    {
+      "type": "BlockCompatibilityRule",
+      "input": {
+        "id": "rule",
+        "source": "left",
+        "target": "right",
+        "bidirectional": true
+      }
+    },
+    {
+      "type": "BlockRepresentation",
+      "input": {
+        "id": "representation",
+        "name": "Body",
+        "meshUrl": "asset.glb",
+        "tags": [
+          "near",
+          "detailed"
+        ],
+        "lod": "high",
+        "description": "Shared mesh",
+        "attributes": [
+          {
+            "key": "material",
+            "value": "wood",
+            "definition": "material"
+          }
+        ]
+      }
+    },
+    {
+      "type": "BlockCamera2d",
+      "input": {
+        "x": 2.5,
+        "y": -4.0,
+        "zoom": 1.25
+      }
+    },
+    {
+      "type": "BlockCamera3d",
+      "input": {
+        "position": [
+          1.0,
+          2.0,
+          3.0
+        ],
+        "target": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "zoom": 1.5
+      }
+    },
+    {
+      "type": "BlockMeta",
+      "input": {
+        "description": "Shared document"
+      }
+    }
+  ]
+}

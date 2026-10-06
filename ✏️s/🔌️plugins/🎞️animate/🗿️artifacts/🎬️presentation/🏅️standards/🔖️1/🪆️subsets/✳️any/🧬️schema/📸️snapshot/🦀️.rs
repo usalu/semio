@@ -7,8 +7,6 @@
 use crate::{AnimationChild, PresentationChild};
 use schema::ArtifactSchema;
 
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted presentation document snapshot — a composed `presentation` deck (shared source figure +
@@ -66,9 +64,7 @@ pub fn demo_snapshot() -> PresentationSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

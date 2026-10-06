@@ -39,6 +39,6 @@ pub fn diff(payload: &super::CreateAirLoop, base: &EnergyModelSnapshot) -> proto
         design_supply_air_flow_m3_s: payload.design_supply_air_flow_m3_s,
         terminal_zone_ids: payload.terminal_zone_ids.clone(),
     });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

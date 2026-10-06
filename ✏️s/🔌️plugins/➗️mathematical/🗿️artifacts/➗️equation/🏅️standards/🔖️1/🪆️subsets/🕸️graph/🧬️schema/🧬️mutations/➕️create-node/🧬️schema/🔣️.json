@@ -12,21 +12,89 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Node Id",
+          "de": "Knoten-ID"
+        },
+        "description": {
+          "en": "Identity of the node; no other node may carry it.",
+          "de": "Identität des Knotens; kein anderer Knoten darf sie tragen."
+        },
+        "order": 10
+      }
     },
     "label": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label",
+          "de": "Beschriftung"
+        },
+        "description": {
+          "en": "Text shown on the node.",
+          "de": "Text, der am Knoten angezeigt wird."
+        },
+        "order": 20
+      }
     },
     "x": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position X",
+          "de": "Position X"
+        },
+        "description": {
+          "en": "Horizontal canvas position of the node.",
+          "de": "Horizontale Zeichenflächenposition des Knotens."
+        },
+        "step": 1,
+        "precision": 2,
+        "order": 30
+      }
     },
     "y": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position Y",
+          "de": "Position Y"
+        },
+        "description": {
+          "en": "Vertical canvas position of the node.",
+          "de": "Vertikale Zeichenflächenposition des Knotens."
+        },
+        "step": 1,
+        "precision": 2,
+        "order": 40
+      }
     },
     "index": {
       "type": "integer",
       "minimum": 0,
-      "description": "Roster position to insert at; absent appends. Inverses restore exact order with it."
+      "description": "Roster position to insert at; absent appends. Inverses restore exact order with it.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Position in set",
+          "de": "Position in der Menge"
+        },
+        "description": {
+          "en": "Index the node is inserted at; absent appends it. Undo of a delete names the removed index.",
+          "de": "Index, an dem der Knoten eingefügt wird; fehlt er, wird angehängt. Das Rückgängigmachen eines Löschens nennt den entfernten Index."
+        }
+      }
     }
   }
 }

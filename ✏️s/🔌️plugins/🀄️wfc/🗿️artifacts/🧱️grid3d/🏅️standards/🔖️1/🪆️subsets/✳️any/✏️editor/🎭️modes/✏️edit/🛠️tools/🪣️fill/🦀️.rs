@@ -4,7 +4,11 @@
 //! on completion stores the finished assignment in `Grid3dPreviewResidency`. Abort never stores it.
 
 use crate::editor::grid3d::modes::edit::windows::preview;
-use crate::schema::inferences::{solve_with_job, Grid3dAssignment, Grid3dInferenceCommit};
+use crate::schema::inferences::{Grid3dAssignment, Grid3dInferenceCommit};
+
+
+
+use crate::host::inferences::{solve_with_job};
 use crate::schema::snapshot::Grid3dSnapshot;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, Operation, StepContext, StepOutcome};
 use semio_framework_plugin::Fault;

@@ -42,6 +42,7 @@ const DRAWING_ARTBOARD_STROKE: [f64; 4] = [0.198, 0.223, 0.205, 0.55];
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::drawing::create_drawing_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Canvas", "Leinwand"),
         body_key: BODY_KEY.into(),

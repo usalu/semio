@@ -180,7 +180,7 @@ def verify(document):
 # region 🔖️Handlers
 def committed(ctx):
     """🧫️ The committed vectors, verified."""
-    return verify(json.loads(ctx.fixture_bytes(VECTORS)))
+    return verify(json.loads(ctx.input_bytes(VECTORS)))
 
 
 def traces(ctx):

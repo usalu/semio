@@ -7,15 +7,13 @@ import Ajv from "ajv/dist/2020.js";
 import { BundleScript } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { encodeBase64, decodeBase64, type IntrinsicBytesControl } from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with { type:"json" };
-import schema from "./🧬️schema/🔣️.json" with { type:"json" };
 
 /** 🧬️ The same neutral octets are independently encoded by Node's base64 implementation. */
 export class TestScript extends BundleScript {
   async run(): Promise<void> {
-    const ajv=new Ajv({strict:true});const check=ajv.compile(schema);const owned=ajv.addSchema(ownedSchema);
+    const ajv=new Ajv({strict:true});const owned=ajv.addSchema(ownedSchema);
     const source=join(import.meta.dir,"../../🟦️.ts");const program=ts.createProgram([source],{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,moduleResolution:ts.ModuleResolutionKind.Bundler,strict:true,allowImportingTsExtensions:true,noUncheckedIndexedAccess:true,types:[],skipLibCheck:true,noEmit:true});
     assert.deepEqual(ts.getPreEmitDiagnostics(program).map(item=>ts.flattenDiagnosticMessageText(item.messageText,"\n")),[]);
-    assert(check(fixture),JSON.stringify(check.errors));
     const control:IntrinsicBytesControl={maximumOutputBytes:256*1024,progress:()=>true};
     for(const item of fixture.cases){
       const bytes=Uint8Array.from(item.octets);

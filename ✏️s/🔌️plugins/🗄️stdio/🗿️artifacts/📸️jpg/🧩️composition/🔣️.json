@@ -116,7 +116,7 @@
     {
       "factoryId": "stdio.native.jpg.v1",
       "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📜️artifact-definition.json",
-      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
     }
   ]
 }

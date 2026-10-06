@@ -1,0 +1,3 @@
+# 📸️ Own14 structured page replacement.
+input Pdf14SnapshotInput { schema: String! pages: [Pdf14PageInput!]! }
+input SetSnapshotInput { snapshot: Pdf14SnapshotInput! }

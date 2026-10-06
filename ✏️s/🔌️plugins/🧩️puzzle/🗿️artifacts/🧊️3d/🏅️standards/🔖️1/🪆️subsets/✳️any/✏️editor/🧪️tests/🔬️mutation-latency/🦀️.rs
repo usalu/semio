@@ -23,22 +23,22 @@ async fn b44_measures_what_one_command_costs_per_document_size() {
 /// the objects that moved — and the delta's own byte size must be O(changed), not O(n).
 ///
 /// ⏱️ This is the shape the whole wave turns on. Before it, every publication rebuilt all 180 instance
-/// records (2 449 µs) behind a change key that `format!`-ed and hashed the whole fixture's JSON
+/// records (2 449 µs) behind a change key that `format!`-ed and hashed the whole scene_snapshot's JSON
 /// (20 716 µs), so moving one capsule cost the same as replacing the document.
 #[test]
 fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
-    let fixture = NAKAGIN_EXAMPLE_FIXTURE.clone();
-    assert!(fixture.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", fixture.objects.len());
+    let scene_snapshot = NAKAGIN_EXAMPLE_SNAPSHOT.clone();
+    assert!(scene_snapshot.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", scene_snapshot.objects.len());
     let mut residency = main::Puzzle3dInstanceResidency::default();
-    assert!(residency.refresh(&fixture, &std::collections::BTreeSet::new(), &[]), "the first refresh publishes the whole set");
-    assert_eq!(residency.rebuilt_records() as usize, fixture.objects.len(), "a cold residency serializes every record exactly once");
+    assert!(residency.refresh(&scene_snapshot, &std::collections::BTreeSet::new(), &[]), "the first refresh publishes the whole set");
+    assert_eq!(residency.rebuilt_records() as usize, scene_snapshot.objects.len(), "a cold residency serializes every record exactly once");
     assert!(residency.delta_json().is_none(), "a COLD publication carries no delta lane at all — a consumer with nothing retained must read the full set anyway, and the second copy is pure wire cost");
     let full_bytes = residency.instances_json().len();
 
-    assert!(!residency.refresh(&fixture, &std::collections::BTreeSet::new(), &[]), "an unchanged fixture republishes nothing at all");
-    assert_eq!(residency.rebuilt_records(), 0, "an unchanged fixture re-serializes no record");
+    assert!(!residency.refresh(&scene_snapshot, &std::collections::BTreeSet::new(), &[]), "an unchanged scene_snapshot republishes nothing at all");
+    assert_eq!(residency.rebuilt_records(), 0, "an unchanged scene_snapshot re-serializes no record");
 
-    let mut moved = fixture.clone();
+    let mut moved = scene_snapshot.clone();
     let victim = moved.objects[7].id.clone();
     moved.objects[7].origin[0] += 1.5;
     assert!(residency.refresh(&moved, &std::collections::BTreeSet::new(), &[]), "a moved object republishes");
@@ -55,7 +55,7 @@ fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
     let changed = parsed.get("changed").and_then(Value::as_array).expect("the delta declares a changed list");
     assert_eq!(changed.len(), 1, "one changed record rides the delta");
     assert_eq!(changed[0].get("id").and_then(Value::as_str), Some(victim.as_str()), "and it is the moved one");
-    assert_eq!(parsed.get("count").and_then(Value::as_u64), Some(fixture.objects.len() as u64), "the delta declares the resulting instance count so a consumer can prove its own set matches");
+    assert_eq!(parsed.get("count").and_then(Value::as_u64), Some(scene_snapshot.objects.len() as u64), "the delta declares the resulting instance count so a consumer can prove its own set matches");
     assert_eq!(parsed.get("base").and_then(Value::as_u64).map(|base| base + 1), parsed.get("revision").and_then(Value::as_u64), "the delta names the revision it applies to and the one it produces");
 }
 
@@ -64,11 +64,11 @@ fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
 /// every authored example, at every step of an edit sequence.
 #[test]
 fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode() {
-    for fixture in [CONCRETE_FOREST_EXAMPLE_FIXTURE.clone(), NAKAGIN_EXAMPLE_FIXTURE.clone()] {
+    for scene_snapshot in [CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone(), NAKAGIN_EXAMPLE_SNAPSHOT.clone()] {
         let mut residency = main::Puzzle3dInstanceResidency::default();
-        residency.refresh(&fixture, &std::collections::BTreeSet::new(), &[]);
-        assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&fixture), "a cold residency matches the whole-set encode");
-        let mut edited = fixture.clone();
+        residency.refresh(&scene_snapshot, &std::collections::BTreeSet::new(), &[]);
+        assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&scene_snapshot), "a cold residency matches the whole-set encode");
+        let mut edited = scene_snapshot.clone();
         if let Some(object) = edited.objects.first_mut() {
             object.origin[2] += 3.25;
             object.hidden = !object.hidden;
@@ -102,7 +102,7 @@ fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode(
 /// round trips and burn a 30-second interaction budget.
 #[test]
 fn a_mutation_emits_o_changed_operations_whatever_the_document_size() {
-    let large = &*NAKAGIN_EXAMPLE_FIXTURE;
+    let large = &*NAKAGIN_EXAMPLE_SNAPSHOT;
     assert!(large.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", large.objects.len());
     let before = crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(large);
 
@@ -194,20 +194,20 @@ async fn latency_census(app: &mut Puzzle3dApp, example: &'static str) -> Puzzle3
     let snapshot = app.snapshot().expect("projection");
     let typed = snapshot.typed().clone();
     let started = Instant::now();
-    let fixture = puzzle3d_fixture_from_snapshot(&typed);
+    let scene_snapshot = puzzle3d_scene_snapshot_from_document(&typed);
     let typed_decode_us = started.elapsed().as_micros();
     let started = Instant::now();
-    let instances = main::world_instances_geometry_json(&fixture);
+    let instances = main::world_instances_geometry_json(&scene_snapshot);
     let instances_json_us = started.elapsed().as_micros();
     let started = Instant::now();
-    let _ = main::fixture_geometry_fingerprint(&fixture);
+    let _ = main::scene_geometry_fingerprint(&scene_snapshot);
     let fingerprint_us = started.elapsed().as_micros();
     let started = Instant::now();
-    let _ = main::world_meshes_json(&fixture);
+    let _ = main::world_meshes_json(&scene_snapshot);
     let meshes_json_us = started.elapsed().as_micros();
     let runtime = Puzzle3dRuntime::default();
     let started = Instant::now();
-    let _ = main::world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "select");
+    let _ = main::world_vortices_json(&scene_snapshot, &runtime, &Puzzle3dInteractionSnapshot::default(), "select");
     let vortices_json_us = started.elapsed().as_micros();
     let started = Instant::now();
     let _ = render_body(app, main::BODY_KEY).await;
@@ -227,7 +227,7 @@ async fn latency_census(app: &mut Puzzle3dApp, example: &'static str) -> Puzzle3
     let delete_us = started.elapsed().as_micros();
     Puzzle3dLatencyCensus {
         example,
-        objects: fixture.objects.len(),
+        objects: scene_snapshot.objects.len(),
         typed_decode_us,
         instances_json_us,
         instances_bytes: instances.len(),
@@ -247,17 +247,17 @@ async fn latency_census(app: &mut Puzzle3dApp, example: &'static str) -> Puzzle3
 /// brush-painted condition the checkpoint battery fails under (161 `puzzle3d.brush.*` objects on top of
 /// the authored 180) without driving a brush stroke, so a native law can measure the same size.
 fn scaled_nakagin_scene(factor: usize) -> Puzzle3dScene {
-    let mut fixture = NAKAGIN_EXAMPLE_FIXTURE.clone();
-    let authored = fixture.objects.clone();
+    let mut scene_snapshot = NAKAGIN_EXAMPLE_SNAPSHOT.clone();
+    let authored = scene_snapshot.objects.clone();
     for copy in 1..factor {
         for object in &authored {
             let mut clone = object.clone();
             clone.id = format!("{}#b54-{copy}", object.id);
             clone.origin[0] += 120.0 * copy as f64;
-            fixture.objects.push(clone);
+            scene_snapshot.objects.push(clone);
         }
     }
-    Puzzle3dScene { fixture, runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() }
+    Puzzle3dScene { scene_snapshot, runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() }
 }
 
 /// 📊️ One document size's publication cost, as turns against the units those turns carried.
@@ -327,6 +327,7 @@ async fn b54_measures_the_turns_and_units_one_mutation_costs_per_document_size()
     let small = turn_census(&mut app, "concrete-forest").await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let nakagin = turn_census(&mut app, "nakagin").await;
+    println!("{small}\n{nakagin}");
     assert!(nakagin.objects > small.objects, "the two measurements must differ in document size: {} / {}", small.objects, nakagin.objects);
 }
 
@@ -387,26 +388,26 @@ async fn one_mutation_publishes_in_a_bounded_size_independent_number_of_host_tur
 #[test]
 fn a_pose_edit_invalidates_the_precompute_derivation_of_o_changed_objects() {
     let large = scaled_nakagin_scene(2);
-    assert!(large.fixture.objects.len() >= 340, "the law needs a document where O(changed) and O(n) differ; got {}", large.fixture.objects.len());
+    assert!(large.scene_snapshot.objects.len() >= 340, "the law needs a document where O(changed) and O(n) differ; got {}", large.scene_snapshot.objects.len());
     let base = scene_config(&large).expect("the authored document builds an engine scene");
 
     let mut moved_fixture = large.clone();
-    moved_fixture.fixture.objects[11].origin[1] += 2.25;
+    moved_fixture.scene_snapshot.objects[11].origin[1] += 2.25;
     let moved = scene_config(&moved_fixture).expect("the moved document builds an engine scene");
     let invalidation = crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &moved);
-    let vortices = large.fixture.objects[11].vortices.len();
+    let vortices = large.scene_snapshot.objects[11].vortices.len();
     assert!(!invalidation.plan, "a pose edit changes no fill-plan member, so it must not fall back to the whole-scene rebuild");
     assert!(!invalidation.topology, "a pose edit adds and removes no object, so the fill preparation must not restart");
     assert_eq!(invalidation.stale.len(), vortices, "a pose edit invalidates exactly the moved object's own brush targets");
     assert_eq!(invalidation.pending.len(), vortices, "and re-queues exactly those");
 
     let mut removed_fixture = large.clone();
-    let removed = removed_fixture.fixture.objects.remove(0);
+    let removed = removed_fixture.scene_snapshot.objects.remove(0);
     let shortened = scene_config(&removed_fixture).expect("the shortened document builds an engine scene");
     let invalidation = crate::editor::puzzle3d::precompute::Puzzle3dSceneInvalidation::between(&base, &shortened);
     assert!(invalidation.topology, "a removal moves the object topology, so the fill preparation restarts");
     assert!(!invalidation.plan, "a removal still changes no fill-plan member");
-    assert_eq!(invalidation.stale.len(), removed.vortices.len(), "deleting the FIRST of {} objects invalidates only its own targets — an index-addressed diff would invalidate the whole tail", large.fixture.objects.len());
+    assert_eq!(invalidation.stale.len(), removed.vortices.len(), "deleting the FIRST of {} objects invalidates only its own targets — an index-addressed diff would invalidate the whole tail", large.scene_snapshot.objects.len());
 
     let mut replanned_fixture = large.clone();
     replanned_fixture.runtime.contact_tolerance += 0.25;
@@ -429,9 +430,9 @@ fn a_pose_edit_keeps_the_brush_candidates_of_every_object_it_did_not_touch() {
     let warmed = session.brush_candidate_cache_len();
     assert!(warmed > 0, "the brush lane must resolve at least one candidate before the law can measure what a sync keeps");
     let mut moved = large.clone();
-    moved.fixture.objects[11].origin[1] += 2.25;
+    moved.scene_snapshot.objects[11].origin[1] += 2.25;
     sync_precompute_session(&mut session, &moved);
     let kept = session.brush_candidate_cache_len();
-    assert!(kept + large.fixture.objects[11].vortices.len() >= warmed, "a pose edit on one of {} objects must keep every other object's resolved candidates: {warmed} → {kept}", large.fixture.objects.len());
+    assert!(kept + large.scene_snapshot.objects[11].vortices.len() >= warmed, "a pose edit on one of {} objects must keep every other object's resolved candidates: {warmed} → {kept}", large.scene_snapshot.objects.len());
 }
 //#endregion 🔖️B54TurnCensus

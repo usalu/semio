@@ -49,7 +49,7 @@ pub struct Fem2dViewer;
 
 impl ArtifactViewer for Fem2dViewer {
     type Snapshot = Fem2dSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -65,7 +65,7 @@ impl ArtifactViewer for Fem2dViewer {
     /// example DSL, falling back to the empty document on a parse error) the sibling editor boots on
     /// too — no editor import, this is `crate::standards::v1::subsets::any::schema`.
     fn initial_snapshot() -> Fem2dSnapshot {
-        crate::standards::v1::subsets::any::schema::default_fem2d_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Fem2dViewCommand::Noop` variant never carries a config

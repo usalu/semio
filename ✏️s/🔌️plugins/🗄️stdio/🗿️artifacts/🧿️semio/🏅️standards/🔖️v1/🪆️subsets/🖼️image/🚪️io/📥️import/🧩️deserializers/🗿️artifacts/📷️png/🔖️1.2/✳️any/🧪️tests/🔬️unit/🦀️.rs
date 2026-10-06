@@ -10,8 +10,8 @@ fn sample_png() -> PngSnapshot {
         chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Text { index: 0 }, PngChunkMarker::Idat, PngChunkMarker::Iend],
         unknown_chunks: Vec::new(),
     };
-    let bytes = semio_s_artifact_stdio_png::io::author_png_projection(&projection).unwrap();
-    semio_s_artifact_stdio_png::io::decode_png(&bytes).unwrap()
+    let bytes = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&projection).unwrap();
+    semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(&bytes).unwrap()
 }
 
 #[semio_framework_async_macros::async_test]

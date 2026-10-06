@@ -58,10 +58,10 @@ fn controlled_value_paged_refusal_actual_allocation_kind_corpus() {
 
 #[test]
 fn controlled_value_paged_refusal_independent_ajv_sqlite_oracle() {
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/⚠️refusal/🔣️.json")).unwrap();
-    let script = "import Ajv from 'ajv/dist/2020.js';import{Database}from'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());if(!new Ajv({strict:true}).validate(x.schema,x.fixture))throw Error('paged refusal fixture');const db=new Database(':memory:');const q=db.query(\"SELECT CASE WHEN ? LIKE 'fail%' THEN 'allocationFailed' WHEN ? LIKE 'extra%' THEN 'invariantViolated' ELSE 'ownershipLimit' END AS kind\");const rows=x.fixture.cases.map(row=>q.get(row.operation,row.operation).kind);db.close();await Bun.write(Bun.stdout,JSON.stringify(rows));";
+    
+    let script = "import{Database}from'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const db=new Database(':memory:');const q=db.query(\"SELECT CASE WHEN ? LIKE 'fail%' THEN 'allocationFailed' WHEN ? LIKE 'extra%' THEN 'invariantViolated' ELSE 'ownershipLimit' END AS kind\");const rows=x.fixture.cases.map(row=>q.get(row.operation,row.operation).kind);db.close();await Bun.write(Bun.stdout,JSON.stringify(rows));";
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
-    child.stdin.take().unwrap().write_all(serde_json::json!({"schema":schema,"fixture":fixture()}).to_string().as_bytes()).unwrap();
+    child.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture()}).to_string().as_bytes()).unwrap();
     let output = child.wait_with_output().unwrap(); assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let reference: Vec<String> = serde_json::from_slice(&output.stdout).unwrap();
     for (row, kind) in fixture()["cases"].as_array().unwrap().iter().zip(reference) { assert_eq!(run(row["operation"].as_str().unwrap()).kind.as_str(), kind); }

@@ -5722,8 +5722,8 @@ fn inverse_oracle_for(id: &'static str) -> impl Fn(&Context) -> Result<Outcome, 
 mod subject {
     use super::{canonical, vector, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_energy_model::standards::v1::subsets::any::schema::mutations::energy_model_mutation_report_json;
-    use semio_s_artifact_energy_model::standards::v1::subsets::any::schema::snapshot::energy_model_identity_report_json;
+    use semio_s_artifact_energy_model::standards::v1::subsets::any::io::text::mutations::energy_model_mutation_report_json;
+    use semio_s_artifact_energy_model::standards::v1::subsets::any::io::text::snapshot::energy_model_identity_report_json;
     use semio_repo_test_host::law;
 
     //#region 🔖️Report
@@ -5834,7 +5834,7 @@ mod subject {
 
     /// 🔁️ The real committed document through this subset's own two codecs.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text_bytes = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
+        let text_bytes = String::from_utf8(ctx.input_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
         let report = parse_json(&energy_model_identity_report_json(&text_bytes).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
         let parsed = member(&report, "parsed")?;
         law::round_trip_preserves(member(&report, "reparsed")?, parsed)?;

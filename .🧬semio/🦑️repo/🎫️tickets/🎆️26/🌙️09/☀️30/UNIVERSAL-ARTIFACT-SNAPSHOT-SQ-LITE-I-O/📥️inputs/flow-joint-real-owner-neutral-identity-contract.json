@@ -1,0 +1,97 @@
+{
+  "qualification": "independently authored source-only demand input; no execution",
+  "owners": [
+    {
+      "type": "semio_s_artifact_flow_flow::FlowSnapshot",
+      "dialect": {
+        "artifactKind": "s.flow.flow",
+        "standard": "1",
+        "subset": "*"
+      },
+      "currentSchema": "flow.host_snapshot",
+      "requiredDistinctPersistedOwner": true,
+      "domainFields": [
+        "schema",
+        "content.childId",
+        "content.target.artifactId",
+        "content.target.dialect"
+      ]
+    },
+    {
+      "type": "semio_framework_artifact_flow_flow::FlowHostSnapshot",
+      "dialect": {
+        "artifactKind": "flow.host_snapshot",
+        "standard": "1",
+        "subset": "*"
+      },
+      "currentSchema": "flow.host_snapshot",
+      "requiredDistinctPersistedOwner": true,
+      "domainFields": [
+        "schema",
+        "camera",
+        "widgets",
+        "synapses",
+        "layout"
+      ]
+    }
+  ],
+  "requirement": {
+    "bothIndividuallyUsableInSameProcess": true,
+    "wireEncodings": [
+      "binary",
+      "text"
+    ],
+    "sameSchemaDeduplicationAllowed": false,
+    "constructorPolicyChangesAllowed": false
+  },
+  "currentPredictedPreflight": "DocumentCodecRegistryError::Conflict",
+  "pluginReferenceLocators": [
+    "🌎️hub/🧩️compositions/🌊️flow/🔣️.json:4000:            \"schema\": \"flow.host_snapshot\",",
+    "🌎️hub/🧩️compositions/🌊️flow/🔣️.json:4441:          \"artifactSchema\": \"flow.host_snapshot\",",
+    "🌎️hub/🧩️compositions/🌊️flow/🔣️.json:9232:          \"artifactSchema\": \"flow.host_snapshot\",",
+    "🌎️hub/🧩️compositions/🌊️flow/🔣️.json:9481:        \"artifactJson\": \"semio flow.flow.dsl v1\\nschema=flow.host_snapshot\\ncamera {\\n  x=0 y=0 zoom=1\\n}\\nwidgets {\\n  input-slider id=slider label=Number value=3 min=0 max=10 step=0.1\\n  neuron id=add neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]\\n  output-preview id=preview expanded=[ ]\\n}\\nlayout={\\n  add=x=120 y=-40 preview=x=240 y=-40 slider=x=40 y=-40\\n}\\nsynapses [id:TEXT link:WIRE] {\\n  s1 slider@number->add@a\\n  s2 add@sum->preview\\n}\\n\",",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🔬️unit/🦀️.rs:63:/// 🪪️ `artifact_kind().schema` IS `FLOW_DOCUMENT_SCHEMA`: a document kind has ONE schema identity — the hub's codec rows, document-open targets and genesis, the MCP workspace",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🔬️unit/🦀️.rs:68:    assert_eq!(artifact_kind().schema, FLOW_DOCUMENT_SCHEMA);",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🔬️unit/🦀️.rs:107:/// (`interactive-job.catalog-authority`, `schema='flow.snapshot' expected_schema='flow.host_snapshot'`),",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🔬️unit/🦀️.rs:120:        assert_eq!(*schema, FLOW_DOCUMENT_SCHEMA, \"a tool proof block declares a schema the artifact never carries\");",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs:30:use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs:39:pub use semio_framework_artifact_flow_flow::FLOW_DOCUMENT_SCHEMA;",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs:155:    SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs:352:        schema: FLOW_DOCUMENT_SCHEMA.into(),",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs:390:                .descriptor(b\"flow.host_snapshot:flow\")?",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs:391:                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), \"flow.host_snapshot\")?)?",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs:392:                .claim(ArtifactIdentityClaim::codec_extension(\"flow.host_snapshot\", \"flow\")?)?,",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:26:use crate::{FlowMutation, FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:465:    let spec = flow::forms_bridge::flow_host_snapshot_to_form_spec(&live);",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:969:        FLOW_DOCUMENT_SCHEMA",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1004:    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1167:        FLOW_DOCUMENT_SCHEMA",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1202:    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1379:        FLOW_DOCUMENT_SCHEMA",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1418:    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1624:        FLOW_DOCUMENT_SCHEMA",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1659:    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1676:        artifact_schema: \"flow.host_snapshot\",",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1692:        artifact_schema: \"flow.host_snapshot\",",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1728:        artifact_schema: \"flow.host_snapshot\",",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1749:        artifact_schema: \"flow.host_snapshot\",",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1887:    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1899:        artifact_schema: \"flow.host_snapshot\",",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1991:    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio:2:schema=flow.host_snapshot",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts:43:  assert(!/\\bflow_fixture_to_form_spec\\b/.test(source), \"forms bridge must use flow_host_snapshot_to_form_spec\");",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts:44:  assert(!/\\bflow_fixture_operations\\b/.test(source), \"flow diff helpers must use flow_host_snapshot_operations\");",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts:280:assert(demo.startsWith(\"semio flow.flow.dsl v1\\nschema=flow.host_snapshot\\n\"), \"the demo ships its content child's genesis scene in the host grammar, never a bare content reference\");",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:205:    assert_eq!(semio_framework::ToolJobFactory::payload_schema_id(&factory), FLOW_DOCUMENT_SCHEMA);",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌊️main/🦀️.rs:59:fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:8:#[test]fn sqlite_snapshot_flow_actual_bare_erased_encodings(){let s=fixture();let codec=store::ArtifactCodec::bare::<FlowSnapshot,crate::FlowMutation>(crate::FLOW_DOCUMENT_SCHEMA);let provider=codec.snapshot_sqlite.unwrap();let dialect=store::os_io::ArtifactDialect{artifact_kind:\"s.flow.flow\".into(),standard:\"1\".into(),subset:\"*\".into()};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<FlowSnapshot as store::ArtifactPack>::encode_pack(&s)),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<FlowSnapshot as store::ArtifactDsl>::print_dsl(&s))};let d=(provider.export)(crate::FLOW_DOCUMENT_SCHEMA,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(project(&restore(&d).unwrap()),project(&s));assert_eq!((provider.import)(crate::FLOW_DOCUMENT_SCHEMA,&dialect,d,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value,payload);}}",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs:9:use crate::{FlowMutation, FlowSnapshot, FLOW_DIALECT, FLOW_DOCUMENT_SCHEMA};",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs:73:    const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs:100:    let live = semio_framework_artifact_flow_flow::FlowHostSnapshot { schema: \"flow.host_snapshot\".into(), camera: config.camera.clone(), widgets, synapses, layout };",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/📝️text/🗣️.dsl.semio:2:schema=flow.host_snapshot content=childId=content target=artifactId=\"literal target!@/日本\" artifactKind=s.stdio.semio standard=v1 subset=flow",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️.rs:8:use flow::forms_bridge::flow_host_snapshot_to_form_spec;",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️.rs:66:/// `Input`/`Select`/`Slider` rows). `flow_host_snapshot_to_form_spec` only ever emits `\"slider\"`/`\"note\"`/",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🦀️.rs:136:    let spec = crate::editor::flow::with_live_host_snapshot(snapshot, flow_host_snapshot_to_form_spec);",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🦀️.rs:62:pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {"
+  ]
+}

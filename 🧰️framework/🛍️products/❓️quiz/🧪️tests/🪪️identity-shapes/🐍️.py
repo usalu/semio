@@ -141,7 +141,7 @@ def rejection(vector, handles):
 # region 🔖️Handlers
 def committed(ctx):
     """🧫️ The committed vectors."""
-    return json.loads(ctx.fixture_bytes(VECTORS))
+    return json.loads(ctx.input_bytes(VECTORS))
 
 
 def held_to(scenario, produced, expected):

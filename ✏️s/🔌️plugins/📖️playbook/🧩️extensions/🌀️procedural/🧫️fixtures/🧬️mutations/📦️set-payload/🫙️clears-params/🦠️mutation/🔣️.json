@@ -1,7 +1,7 @@
 {
   "mutation": "setPayload",
   "payload": {
-    "fixtureSlug": "ä",
+    "exampleId": "ä",
     "params": null,
     "questionId": "q",
     "controllerId": "forms-play",

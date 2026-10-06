@@ -448,22 +448,22 @@ async fn field_sweep_row_triple_both_directions() {
 mod conformance_laws {
     use super::*;
     use crate::schema::{diff, mutations, snapshot};
-    use protocol::{DiffCodec, OpBinary, OpText};
+    use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
-        for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
+        for (label, text) in [("snapshot grammar", crate::standards::v1_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", crate::standards::v1_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", crate::standards::v1_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
             let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
             assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
-        for (label, text) in [("snapshot protocol", snapshot::binary::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", mutations::binary::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", diff::binary::COMPONENT_PROTOCOL_SEMIO)] {
+        for (label, text) in [("snapshot protocol", crate::standards::v1_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", crate::standards::v1_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", crate::standards::v1_0::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
             semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         let mut intermediate=demo_ply_snapshot();intermediate.schema="independent PLY state".into();intermediate.elements[0].count=u64::MAX;intermediate.elements[0].rows[0].values=vec![PlyValue::List(vec![PlyValue::Double(f64::from_bits(0xfff0000000001234)),PlyValue::List(vec![])])];
         for snapshot in[demo_ply_snapshot(),PlySnapshot::default(),intermediate]{
@@ -474,7 +474,7 @@ mod conformance_laws {
 
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
@@ -484,7 +484,7 @@ mod conformance_laws {
 
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
@@ -494,7 +494,7 @@ mod conformance_laws {
 
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        let pack_spec = semio_framework_dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v1_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_ply_snapshot();
         let packed = store::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -511,14 +511,14 @@ mod conformance_laws {
             assert_eq!(restored,variant);
         }
 
-        let op_spec = semio_framework_dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let op_spec = semio_framework_dsl::parse_protocol(crate::standards::v1_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
             let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
         }
 
-        let diff_spec = semio_framework_dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_spec = semio_framework_dsl::parse_protocol(crate::standards::v1_0::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         for d in diff::demo_diff_cases() {
             let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));

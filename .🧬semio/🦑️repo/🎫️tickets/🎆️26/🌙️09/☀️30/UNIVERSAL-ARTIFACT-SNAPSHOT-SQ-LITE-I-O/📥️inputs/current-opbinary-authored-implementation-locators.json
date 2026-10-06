@@ -1,0 +1,3149 @@
+{
+  "qualification": "Lexical source locators excluding ticket/cache/generated/test/fixture directories; not compiled membership count",
+  "rows": [
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 79,
+      "type": "FlowMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "line": 11909,
+      "type": "NoConfigMutation",
+      "qualification": "Macro-emitted or inline cfg boundaries need owner classification"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "line": 11994,
+      "type": "NoPresenceMutation",
+      "qualification": "Macro-emitted or inline cfg boundaries need owner classification"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "line": 12084,
+      "type": "NoTransientMutation",
+      "qualification": "Macro-emitted or inline cfg boundaries need owner classification"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "line": 12145,
+      "type": "InteractionConfigMutation",
+      "qualification": "Macro-emitted or inline cfg boundaries need owner classification"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "line": 13623,
+      "type": "$Name",
+      "qualification": "Macro-emitted or inline cfg boundaries need owner classification"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "line": 13697,
+      "type": "$Name",
+      "qualification": "Macro-emitted or inline cfg boundaries need owner classification"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "line": 13772,
+      "type": "$Name",
+      "qualification": "Macro-emitted or inline cfg boundaries need owner classification"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "line": 13855,
+      "type": "$Name",
+      "qualification": "Macro-emitted or inline cfg boundaries need owner classification"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🦀️.rs",
+      "line": 507,
+      "type": "$mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "line": 219,
+      "type": "SpaceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs",
+      "line": 353,
+      "type": "CollectionMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 12647,
+      "type": "OpsHeaderLine",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 14306,
+      "type": "CommandHeaderLine",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 24630,
+      "type": "BackboneMessage",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "line": 26532,
+      "type": "SpaceHistoryMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🦀️.rs",
+      "line": 554,
+      "type": "DagMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "line": 373,
+      "type": "ProbeMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+      "line": 19187,
+      "type": "NativeSocketProbeMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 63,
+      "type": "RunMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+      "line": 1685,
+      "type": "WorkflowMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/📦️codec/🦀️.rs",
+      "line": 7,
+      "type": "ChangeChartValue",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛜️wire-runtime/🦀️.rs",
+      "line": 49,
+      "type": "TrinityGraphOperationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛜️wire-runtime/🦀️.rs",
+      "line": 85,
+      "type": "TrinityGraphMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 37,
+      "type": "TrinityJackViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 318,
+      "type": "TrinityJackCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 37,
+      "type": "JackEditorWindowTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 36,
+      "type": "JackResultsWindowTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 41,
+      "type": "JackGraphWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 81,
+      "type": "RewriteRuleMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 38,
+      "type": "TrinityRewritingViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 400,
+      "type": "TrinityRewritingCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 41,
+      "type": "RewritingWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 34,
+      "type": "RemodelingMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 39,
+      "type": "RemodelingViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🎚️config/🦀️.rs",
+      "line": 79,
+      "type": "RemodelingFramesWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🪟️windows/📊️report/🎚️config/🦀️.rs",
+      "line": 68,
+      "type": "RemodelingReportWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️config/🦀️.rs",
+      "line": 119,
+      "type": "RemodelingModelWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 200,
+      "type": "RasterMutationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 337,
+      "type": "RasterMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 37,
+      "type": "RasterViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 174,
+      "type": "RasterConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 161,
+      "type": "RasterPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 57,
+      "type": "FlowMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 37,
+      "type": "FlowViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 164,
+      "type": "FlowPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🦀️.rs",
+      "line": 101,
+      "type": "FlowMainWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 104,
+      "type": "Process3dMutationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 170,
+      "type": "Process3dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 36,
+      "type": "Process3dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 154,
+      "type": "Process3dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 166,
+      "type": "Process3dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 6,
+      "type": "NormResultsWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 21,
+      "type": "En1995Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1995ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 60,
+      "type": "En1999MutationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 132,
+      "type": "En1999Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1999ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 264,
+      "type": "Din4108MutationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 282,
+      "type": "Din4108Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "Din4108ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 207,
+      "type": "En1998Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1998ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 19,
+      "type": "En1991Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1991ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 194,
+      "type": "En1990Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1990ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 21,
+      "type": "En1996Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1996ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 21,
+      "type": "En1994Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1994ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 9,
+      "type": "En1992Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1992ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 286,
+      "type": "Din16798Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "Din16798ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 109,
+      "type": "Din18599MutationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 176,
+      "type": "Din18599Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "Din18599ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 61,
+      "type": "En1993Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1993ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 306,
+      "type": "Iso16757Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "Iso16757ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 249,
+      "type": "Vdi3805Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "Vdi3805ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 77,
+      "type": "En1997MutationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 153,
+      "type": "En1997Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 28,
+      "type": "En1997ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 34,
+      "type": "CadMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 36,
+      "type": "CadViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 191,
+      "type": "CadConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 173,
+      "type": "CadPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🦀️.rs",
+      "line": 90,
+      "type": "CadWorldWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/💾️binary/🦀️.rs",
+      "line": 21,
+      "type": "PlaygroundMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 44,
+      "type": "PlaygroundViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 32,
+      "type": "Block3dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 37,
+      "type": "Block3dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 181,
+      "type": "Block3dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 145,
+      "type": "Block3dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 37,
+      "type": "Block3dWorldWindowTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 32,
+      "type": "Block5dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 38,
+      "type": "Block5dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 103,
+      "type": "Block5dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 147,
+      "type": "Block5dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 32,
+      "type": "Block2dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 25,
+      "type": "Block2dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 106,
+      "type": "Block2dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 144,
+      "type": "Block2dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 61,
+      "type": "DagMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 38,
+      "type": "DagViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 42,
+      "type": "DagConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 38,
+      "type": "DagPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🦀️.rs",
+      "line": 91,
+      "type": "SnapshotEditingCommand<C>",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🦀️.rs",
+      "line": 180,
+      "type": "SnapshotEditEvent",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🦀️.rs",
+      "line": 184,
+      "type": "SnapshotPatch",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🦀️.rs",
+      "line": 1054,
+      "type": "$mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🦀️.rs",
+      "line": 1076,
+      "type": "$mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 445,
+      "type": "BcfMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "BcfAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/✏️editor/🦀️.rs",
+      "line": 74,
+      "type": "BcfAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 107,
+      "type": "Mp4Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "Mp4ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 58,
+      "type": "Mp4EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 254,
+      "type": "StlMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "StlAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "StlAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 176,
+      "type": "AviMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "AviViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/✏️editor/🦀️.rs",
+      "line": 58,
+      "type": "AviEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 461,
+      "type": "DxfMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "DxfAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "DxfAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 241,
+      "type": "IfcMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "Ifc4AnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "Ifc4AnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "Ifc2x3CobieViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "Ifc2x3CobieEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "Ifc2x3SavViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "Ifc2x3SavEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 227,
+      "type": "Ifc2x3Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "Ifc2x3AnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "Ifc2x3AnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "Ifc2x3Cv20ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "Ifc2x3Cv20EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 269,
+      "type": "EpwMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 44,
+      "type": "EpwViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 79,
+      "type": "EpwEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 88,
+      "type": "WavMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "WavViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "WavEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 19,
+      "type": "BmpMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "BmpViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "BmpNativeEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 102,
+      "type": "Mp3Mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 37,
+      "type": "Mp3ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 58,
+      "type": "Mp3EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 11,
+      "type": "SvgMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "SvgAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 59,
+      "type": "SvgAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "SvgBasicViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/✏️editor/🦀️.rs",
+      "line": 55,
+      "type": "SvgBasicEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "SvgTinyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/🦀️.rs",
+      "line": 55,
+      "type": "SvgTinyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 32,
+      "type": "JpgMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "JpgAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🦀️.rs",
+      "line": 61,
+      "type": "JpgAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "JpgBaselineViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/🦀️.rs",
+      "line": 61,
+      "type": "JpgBaselineEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 97,
+      "type": "SemioDrawingMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioDrawingViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioDrawingEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 422,
+      "type": "SemioAnimationMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioAnimationViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioAnimationEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 17,
+      "type": "SemioFlowMutation` block",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 372,
+      "type": "SemioFlowMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioFlowViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioFlowEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 67,
+      "type": "SemioTextMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioTextViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioTextEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 388,
+      "type": "SemioCadMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioCadViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioCadEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 70,
+      "type": "SemioTableMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioTableViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioTableEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 68,
+      "type": "SemioMeshMutation` block below",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 357,
+      "type": "SemioMeshMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioMeshViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/🦀️.rs",
+      "line": 71,
+      "type": "SemioMeshEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 69,
+      "type": "SemioObjectMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioObjectViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioObjectEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 15,
+      "type": "SemioPresentationMutation` below (production code) calls",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 358,
+      "type": "SemioPresentationMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioPresentationViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioPresentationEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 307,
+      "type": "SemioVideoMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioVideoViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioVideoEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 100,
+      "type": "SemioGraphMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioGraphViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioGraphEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 87,
+      "type": "SemioKitMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioKitViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioKitEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 269,
+      "type": "SemioBrepMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioBrepViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/🦀️.rs",
+      "line": 70,
+      "type": "SemioBrepEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 18,
+      "type": "SemioImageMutation` below calls",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 373,
+      "type": "SemioImageMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioImageViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioImageEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 497,
+      "type": "SemioMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 18,
+      "type": "SemioAudioMutation` below's `encode_op`/",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 275,
+      "type": "SemioAudioMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioAudioViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioAudioEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 23,
+      "type": "SemioDocumentMutation` block",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 731,
+      "type": "SemioDocumentMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioDocumentViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioDocumentEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 14,
+      "type": "SemioModelMutation` block below",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 344,
+      "type": "SemioModelMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioModelViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioModelEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 482,
+      "type": "SemioValueMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "SemioValueViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "SemioValueEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 285,
+      "type": "HtmlMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "HtmlViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 63,
+      "type": "HtmlEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 124,
+      "type": "DeflateMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 44,
+      "type": "DeflateViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 90,
+      "type": "DeflateEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 97,
+      "type": "ZipMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 44,
+      "type": "ZipAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 73,
+      "type": "ZipEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/👁️viewer/🦀️.rs",
+      "line": 44,
+      "type": "ZipIso21320ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🦀️.rs",
+      "line": 71,
+      "type": "ZipEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 264,
+      "type": "StepMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "StepAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "StepAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "StepCc1ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "StepCc1EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "StepCc5ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "StepCc5EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "StepCc4ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "StepCc4EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "StepCc3ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "StepCc3EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "StepCc6ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "StepCc6EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "StepCc2ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "StepCc2EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 237,
+      "type": "PptxMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 41,
+      "type": "PptxViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/👁️viewer/🦀️.rs",
+      "line": 42,
+      "type": "PptxStrictViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/🦀️.rs",
+      "line": 42,
+      "type": "PptxTransitionalViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/👁️viewer/🦀️.rs",
+      "line": 42,
+      "type": "XmlValidViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/✏️editor/🦀️.rs",
+      "line": 177,
+      "type": "XmlValidEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 11,
+      "type": "XmlMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 41,
+      "type": "XmlViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 173,
+      "type": "XmlAnyEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 316,
+      "type": "MdMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "MdViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 65,
+      "type": "MdEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 28,
+      "type": "TiffMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "TiffAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🎚️config/🦀️.rs",
+      "line": 89,
+      "type": "TiffEditorConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🦀️.rs",
+      "line": 61,
+      "type": "TiffAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "TiffBaselineViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🦀️.rs",
+      "line": 55,
+      "type": "TiffBaselineEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 39,
+      "type": "TxtMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 41,
+      "type": "TxtViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 138,
+      "type": "TxtEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 150,
+      "type": "BinaryMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 44,
+      "type": "BinaryViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 89,
+      "type": "BinaryEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 22,
+      "type": "PngMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "PngViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 63,
+      "type": "PngNativeEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "DwgAc1024ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "DwgAc1024EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "DwgAc1018ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "DwgAc1018EditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 11,
+      "type": "JsonMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 41,
+      "type": "JsonViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 156,
+      "type": "JsonAnyEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/👁️viewer/🦀️.rs",
+      "line": 41,
+      "type": "JsonIJsonViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/✏️editor/🦀️.rs",
+      "line": 156,
+      "type": "JsonIJsonIJsonEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 256,
+      "type": "XlsxMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 65,
+      "type": "XlsxViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 118,
+      "type": "XlsxEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/👁️viewer/🦀️.rs",
+      "line": 45,
+      "type": "XlsxStrictViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🦀️.rs",
+      "line": 61,
+      "type": "XlsxStrictEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/🦀️.rs",
+      "line": 45,
+      "type": "XlsxTransitionalViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🦀️.rs",
+      "line": 59,
+      "type": "XlsxTransitionalEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 301,
+      "type": "PlyMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "PlyAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "PlyAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/👁️viewer/🦀️.rs",
+      "line": 42,
+      "type": "DocxStrictViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 742,
+      "type": "DocxMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 41,
+      "type": "DocxViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/👁️viewer/🦀️.rs",
+      "line": 42,
+      "type": "DocxTransitionalViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 36,
+      "type": "PdfEMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf17EViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf17EEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 33,
+      "type": "PdfHMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf17HViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf17HEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 37,
+      "type": "PdfXMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf17XViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf17XEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 89,
+      "type": "PdfMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf17ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf17EditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 41,
+      "type": "PdfVtMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf17VtViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf17VtEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 34,
+      "type": "PdfUaMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf17UaViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf17UaEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf17AViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf17AEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf14XViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf14XEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 79,
+      "type": "PdfMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf14ViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf14EditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "Pdf14AViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🦀️.rs",
+      "line": 66,
+      "type": "Pdf14AEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 431,
+      "type": "LasMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "LasAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "LasAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 473,
+      "type": "GifMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "Gif89aViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "line": 55,
+      "type": "Gif89aEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 306,
+      "type": "GifMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "Gif87aViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 55,
+      "type": "Gif87aEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 15,
+      "type": "GltfMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "GltfAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/🦀️.rs",
+      "line": 62,
+      "type": "GltfAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 267,
+      "type": "CsvMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 43,
+      "type": "CsvViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 168,
+      "type": "CsvEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 180,
+      "type": "TsvMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 41,
+      "type": "TsvViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 188,
+      "type": "TsvEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 386,
+      "type": "ObjMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/👁️viewer/🦀️.rs",
+      "line": 46,
+      "type": "ObjAnyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🦀️.rs",
+      "line": 60,
+      "type": "ObjAnyEditCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 56,
+      "type": "WiresMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 40,
+      "type": "WiresViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 37,
+      "type": "WiresCanvasWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 33,
+      "type": "WiresCanvasTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 61,
+      "type": "SequenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 39,
+      "type": "SequenceViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🦀️.rs",
+      "line": 104,
+      "type": "SequenceMainWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📜️script/🫧️transient/🦀️.rs",
+      "line": 88,
+      "type": "SequenceScriptWindowTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs",
+      "line": 33,
+      "type": "WriterMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 35,
+      "type": "WriterViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 41,
+      "type": "WriterMainWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 45,
+      "type": "WriterMainWindowTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs",
+      "line": 37,
+      "type": "PresentationMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 38,
+      "type": "AnimateViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 34,
+      "type": "PresentationConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 33,
+      "type": "PresentationPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 34,
+      "type": "SHomeMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 78,
+      "type": "HomeViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 145,
+      "type": "HomeConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 120,
+      "type": "HomePresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 36,
+      "type": "HomeTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 39,
+      "type": "SSpaceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 25,
+      "type": "SpaceIndexViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 215,
+      "type": "SpaceIndexConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 126,
+      "type": "Generation3dOperationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 200,
+      "type": "Generation3dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 63,
+      "type": "Generation3dViewConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 46,
+      "type": "Generation3dViewPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 37,
+      "type": "Generation3dViewTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 76,
+      "type": "Generation3dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 174,
+      "type": "Generation3dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient/🦀️.rs",
+      "line": 70,
+      "type": "Generation3dPreviewWindowTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 36,
+      "type": "Generation3dTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 113,
+      "type": "Generation2dOperationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 184,
+      "type": "Generation2dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 36,
+      "type": "Generation2dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 125,
+      "type": "Generation2dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 172,
+      "type": "Generation2dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config/🦀️.rs",
+      "line": 66,
+      "type": "Generation2dGeneratePreviewWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🦀️.rs",
+      "line": 66,
+      "type": "Generation2dEditPreviewWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🦀️.rs",
+      "line": 69,
+      "type": "Generation2dMainWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 33,
+      "type": "Generation2dTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs",
+      "line": 33,
+      "type": "VcsDemoMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 40,
+      "type": "VcsViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 110,
+      "type": "VcsDemoConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 132,
+      "type": "VcsDemoPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 25,
+      "type": "GisMapMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 66,
+      "type": "GisMapViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 26,
+      "type": "GisMapViewerWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🦀️.rs",
+      "line": 194,
+      "type": "MapWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 23,
+      "type": "GisTerrainMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 24,
+      "type": "GisTerrainViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 180,
+      "type": "Gis3dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🦀️.rs",
+      "line": 136,
+      "type": "GisTerrainWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 18,
+      "type": "Wfc3dOperationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 28,
+      "type": "Wfc3dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 45,
+      "type": "Wfc3dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 44,
+      "type": "Wfc3dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 124,
+      "type": "Wfc3dEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 37,
+      "type": "Wfc3dTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 18,
+      "type": "Grid3dOperationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 28,
+      "type": "Grid3dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 32,
+      "type": "Grid3dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 104,
+      "type": "Grid3dEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+      "line": 144,
+      "type": "Grid3dWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 18,
+      "type": "BitmapOperationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 28,
+      "type": "BitmapMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 32,
+      "type": "BitmapViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 135,
+      "type": "BitmapEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧩️output/🎚️config/🦀️.rs",
+      "line": 109,
+      "type": "BitmapOutputWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️input/🎚️config/🦀️.rs",
+      "line": 110,
+      "type": "BitmapInputWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 37,
+      "type": "BitmapTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 18,
+      "type": "Wfc2dOperationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 28,
+      "type": "Wfc2dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 33,
+      "type": "Wfc2dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 46,
+      "type": "Wfc2dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 120,
+      "type": "Wfc2dEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 37,
+      "type": "Wfc2dTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 18,
+      "type": "Grid2dOperationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "line": 28,
+      "type": "Grid2dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 57,
+      "type": "Grid2dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 143,
+      "type": "Grid2dEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+      "line": 150,
+      "type": "$mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 56,
+      "type": "ProcedureMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 40,
+      "type": "ImperativeViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 43,
+      "type": "ImperativeConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs",
+      "line": 45,
+      "type": "SourcingMutationDsl",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs",
+      "line": 83,
+      "type": "SourcingMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 29,
+      "type": "SourcingViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 132,
+      "type": "SourcingCurationConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 154,
+      "type": "SourcingCurationPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔢️grid/🎚️config/🦀️.rs",
+      "line": 121,
+      "type": "GridWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs",
+      "line": 30,
+      "type": "NoteMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 39,
+      "type": "NoteViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 33,
+      "type": "NotePresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+      "line": 161,
+      "type": "$mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs",
+      "line": 233,
+      "type": "FormMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 40,
+      "type": "FormsViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 39,
+      "type": "FormsConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config/🦀️.rs",
+      "line": 100,
+      "type": "FormsTryWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 30,
+      "type": "ProgramMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 40,
+      "type": "ArchitectViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 33,
+      "type": "ArchitectConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 33,
+      "type": "ArchitectPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/↔️adjacency/🎚️config/🦀️.rs",
+      "line": 121,
+      "type": "ArchitectAdjacencyWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📓️report/🎚️config/🦀️.rs",
+      "line": 116,
+      "type": "ArchitectReportWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🦀️.rs",
+      "line": 117,
+      "type": "ArchitectGraphWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🎚️config/🦀️.rs",
+      "line": 131,
+      "type": "ArchitectRegisterWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 38,
+      "type": "ShootingMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 37,
+      "type": "ShootingViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 58,
+      "type": "ShootingConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 33,
+      "type": "ShootingPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs",
+      "line": 276,
+      "type": "EquationMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 42,
+      "type": "EquationViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 44,
+      "type": "EquationGraphWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 39,
+      "type": "LayoutMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 26,
+      "type": "LayoutViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🎚️config/🦀️.rs",
+      "line": 111,
+      "type": "LayoutWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+      "line": 973,
+      "type": "Puzzle3dEngineCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 32,
+      "type": "Puzzle3dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 38,
+      "type": "Puzzle3dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 363,
+      "type": "Puzzle3dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 167,
+      "type": "Puzzle3dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 2525,
+      "type": "Puzzle3dCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+      "line": 151,
+      "type": "$mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 32,
+      "type": "Puzzle5dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 43,
+      "type": "Puzzle5dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 368,
+      "type": "Puzzle5dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 152,
+      "type": "Puzzle5dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 4333,
+      "type": "Puzzle5dCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+      "line": 258,
+      "type": "$mutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 32,
+      "type": "Puzzle2dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 41,
+      "type": "Puzzle2dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 318,
+      "type": "Puzzle2dConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 160,
+      "type": "Puzzle2dPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1817,
+      "type": "Puzzle2dCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+      "line": 175,
+      "type": "Puzzle2dWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+      "line": 325,
+      "type": "Puzzle2dWindowTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 21,
+      "type": "Fem3dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🦀️.rs",
+      "line": 37,
+      "type": "Fem3dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🦀️.rs",
+      "line": 98,
+      "type": "Fem3dModelWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🦀️.rs",
+      "line": 69,
+      "type": "Fem3dResultsWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 21,
+      "type": "Fem2dMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🦀️.rs",
+      "line": 36,
+      "type": "Fem2dViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🦀️.rs",
+      "line": 69,
+      "type": "Fem2dModelWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🦀️.rs",
+      "line": 75,
+      "type": "Fem2dResultsWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 25,
+      "type": "FemResultsWindowTransientMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs",
+      "line": 34,
+      "type": "DrawingMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 57,
+      "type": "DrawingViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🦀️.rs",
+      "line": 114,
+      "type": "DrawingViewerCanvasWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 183,
+      "type": "DrawingPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🦀️.rs",
+      "line": 114,
+      "type": "DrawingCanvasWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 37,
+      "type": "PlaybookMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 39,
+      "type": "PlaybookViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 40,
+      "type": "PlaybookConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs",
+      "line": 764,
+      "type": "Command",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 39,
+      "type": "ModulePayloadMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 42,
+      "type": "LowpolyMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 34,
+      "type": "LowpolyViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+      "line": 219,
+      "type": "LowpolyConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+      "line": 162,
+      "type": "LowpolyPresenceMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "line": 24,
+      "type": "EnergyModelMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+      "line": 95,
+      "type": "EnergyModelViewCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 26,
+      "type": "EnergyModelViewerWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 34,
+      "type": "EnergyModelConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 425,
+      "type": "EnergyModelEditorCommand",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧬️schema/🧬️mutations/🦀️.rs",
+      "line": 26,
+      "type": "EnergyModelWindowConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🎚️config/🦀️.rs",
+      "line": 215,
+      "type": "SpaceConfigMutation",
+      "qualification": "Authored implementation source"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/👥️presence/🦀️.rs",
+      "line": 144,
+      "type": "SpacePresenceMutation",
+      "qualification": "Authored implementation source"
+    }
+  ]
+}

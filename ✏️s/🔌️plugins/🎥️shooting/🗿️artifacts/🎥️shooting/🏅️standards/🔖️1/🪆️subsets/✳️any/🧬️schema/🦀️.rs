@@ -6,7 +6,7 @@ use semio_framework_pack_json::Value;
 use schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml;
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
 use semio_s_artifact_stdio_svg::SvgSnapshot;
 
 //#region 🔖️Artifact
@@ -96,21 +96,9 @@ pub fn next_shooting_id(prefix: &str) -> String {
     format!("{prefix}-{next}")
 }
 
-/// 📄️ Parses the handcrafted DSL fixture once per call — used both for the in-plugin default document
-/// and to bridge into the framework's still-JSON-only `App::example` surface, so
-/// `crate::standards::v1::subsets::any::schema::snapshot::text::SHOOTING_EXAMPLE_TEXT` stays the single source of truth for the
-/// snapshot.
-pub fn default_snapshot() -> ShootingSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::SHOOTING_EXAMPLE_TEXT).unwrap_or_else(|_| crate::empty_shooting_snapshot())
-}
 
-/// 🌉️ JSON bridge for `semio_framework_plugin`'s `App::example` override, which hardcodes
-/// `serde_json::from_str` on its `document_json` parameter (shared framework machinery, out of scope
-/// for this migration) — derives the JSON from the DSL fixture rather than keeping a second, redundant
-/// JSON copy of it on disk.
-pub fn default_snapshot_json() -> String {
-    semio_framework_pack_json::to_json_string(&default_snapshot())
-}
+
+
 
 /// 📸️ The active shot — falls back to the first shot when `active_shot_id` names nothing (an empty
 /// document, or a stale id left over after a delete).
@@ -227,43 +215,9 @@ fn shooting_hex_color_to_rgba(hex: &str) -> Option<SemioRgba> {
     }
 }
 
-/// 🔌️ Runs the `s.stdio.semio/v1/drawing` composer registration exactly once per process —
-/// idempotent (`register_composer_entries`/`register_document_codec` both overwrite on
-/// re-registration, neither panics), so this is safe to call regardless of whether the hosting
-/// OS/plugin runtime already ran stdio's own boot-time `plugin()` registration first.
-fn shooting_ensure_semio_drawing_bridge_registered() {
-    static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::register);
-}
 
-/// 🌉️ `SemioDrawingSnapshot` → real SVG text, entirely through stdio's registered
-/// `s.stdio.semio/v1/drawing` → `s.stdio.svg/1.1/*` composer entry (`io_dispatch`) — never a
-/// hand-rolled SVG string. Returns the exporter's own `write_svg_xml` output (raw `<svg>…</svg>`
-/// markup, no semio envelope preamble) so callers can hand it straight to
-/// `rasterize_svg_to_png_base64`/embed it in an `<img>`, exactly like the old `wrap_svg` output did.
-fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Result<String, String> {
-    shooting_ensure_semio_drawing_bridge_registered();
-    let key = semio_framework_plugin::IoKey {
-        artifact_kind: "s.stdio.semio".into(),
-        standard: "v1".into(),
-        subset: "drawing".into(),
-        direction: semio_framework_plugin::IoDirection::Export,
-        format_kind: "s.stdio.svg".into(),
-        format_standard: "1.1".into(),
-        format_subset: "*".into(),
-    };
-    let source = semio_framework_plugin::ErasedComposeSource {
-        dialect: semio_framework_plugin::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_plugin::StandardId("v1"), subset: semio_framework_plugin::SubsetId("drawing") },
-        payload: semio_framework_plugin::IoPayload::Binary(<SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing)),
-    };
-    let composed = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::io_dispatch(&key, std::slice::from_ref(&source))).map_err(|error| error.message)?;
-    let bytes = match composed.payload {
-        semio_framework_plugin::IoPayload::Binary(bytes) => bytes,
-        semio_framework_plugin::IoPayload::Text(_) => return Err("s.stdio.semio/v1/drawing -> s.stdio.svg dispatch returned Text, expected Binary (ArtifactPack)".into()),
-    };
-    let svg_snapshot = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| error.to_string())?;
-    write_svg_xml(&svg_snapshot.doc)
-}
+
+
 
 /// 🖼️ Renders the active shot as a real SVG scene — shot shape as a filled background path, the
 /// emblem override (if any) as an embedded raster image, and the asset name as a text label — via
@@ -364,119 +318,15 @@ pub fn shooting_artifact_schema_descriptor() -> semio_framework_schema_registry:
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::standards::v1::subsets::any::schema::diff::ShootingDiff;
-    use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
-    use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct ShootingBuilderConstruction {
-        snapshot: ShootingSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for ShootingBuilderConstruction {
-        type Snapshot = ShootingSnapshot;
-        type Mutation = ShootingMutation;
-        type Diff = ShootingDiff;
-        fn empty() -> Self {
-            Self { snapshot: ShootingSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<ShootingSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <ShootingMutation as protocol::Mutation<ShootingSnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <ShootingDiff as protocol::MutationDiff<ShootingSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::ShootingSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct ShootingParts {
-        pub snapshot: Option<ShootingSnapshot>,
-    }
-
-    pub struct ShootingAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for ShootingAnalyzerAnalysis {
-        type Parts = ShootingParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.shooting.shooting", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = ShootingParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <ShootingSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec ShootingBuilderFacets {
-        construction: ShootingBuilderConstruction,
-        analysis: ShootingAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::ShootingComposerComposition,
-    }
-    builder: ShootingBuilder,
-    analyzer: ShootingAnalyzer,
-    composer: ShootingComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests

@@ -155,7 +155,7 @@ def close(produced, committed):
 
 def credits(ctx):
     """🗃️ Every committed classification vector, credited, corroborated and held to its committed result."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))
+    vectors = json.loads(ctx.input_bytes(VECTORS))
     tasks = {task["id"]: task for task in vectors["tasks"]}
     produced = {}
     for vector in vectors["vectors"]:
@@ -169,7 +169,7 @@ def credits(ctx):
 
 def timed(ctx):
     """⏳️ Every committed answer to a timed sheet task — complete, partial or absent — credited and held to its committed result: an unassigned item earns 0 and names no category, and the score is numpy's mean over every sheet item."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))
+    vectors = json.loads(ctx.input_bytes(VECTORS))
     tasks = {task["id"]: task for task in vectors["tasks"]}
     produced = {}
     for vector in vectors["timed"]:
@@ -191,7 +191,7 @@ def timed(ctx):
 def degraded(ctx):
     """🩹️ Every committed input that bypasses validation degrades to the committed result or to none — never a throw, never NaN."""
     produced = {}
-    for vector in json.loads(ctx.fixture_bytes(VECTORS))["degraded"]:
+    for vector in json.loads(ctx.input_bytes(VECTORS))["degraded"]:
         produced[vector["id"]] = classification_result(vector["task"], vector["sheetTask"], vector.get("answer"))
         if not close(produced[vector["id"]], vector["expected"]):
             raise AssertionError("degraded/%s: the reference result %r differs from the committed %r" % (vector["id"], produced[vector["id"]], vector["expected"]))

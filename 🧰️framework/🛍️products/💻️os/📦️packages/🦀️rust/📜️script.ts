@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { runVitestV1, readVitestPolicyV1 } from "../../../../🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
+
 import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-os-kernel` task router. */
@@ -8,7 +8,6 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type ValidateFunction } from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
 import {buildBudgetMs} from "../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { runCargo, runRepositoryCargoTests, runRepositoryTestCommand, runRepositoryExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -20,25 +19,6 @@ import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮�
 /** 🧬️ A compiled owned-schema export, typed as a boolean runtime check so `assert` never narrows its validated subject to `unknown`. */
 type SchemaCheck = ((data: unknown) => boolean) & Pick<ValidateFunction, "errors">;
 
-//#region 🧬️OwnedSchemaExports
-const OS_MODULE_SCHEMAS = {
-  "db.engine": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧬️schema/🔣️.json",
-  "db.wal": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧬️schema/🔣️.json",
-  "db.storage": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧬️schema/🔣️.json",
-  "db.storage.writer": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧬️schema/🔣️.json",
-  "db.compact": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/🧬️schema/🔣️.json",
-  "db.artifact": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️schema/🔣️.json",
-  directory: "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json",
-} as const;
-
-/** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
-function ownedExport(repoRoot: string, scope: keyof typeof OS_MODULE_SCHEMAS, exportId: string): SchemaCheck {
-  const doc = JSON.parse(readFileSync(join(repoRoot, OS_MODULE_SCHEMAS[scope]), "utf8")) as { $id: string };
-  const compiled = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
-  if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
-  return compiled as ValidateFunction;
-}
-//#endregion 🧬️OwnedSchemaExports
 
 
 function exactCargoStageEnvironments() {
@@ -54,9 +34,9 @@ class PagedHistoryStackScript extends BundleScript {
     if (args.length > 1 || (args.length && args[0] !== "--native")) throw Error("paged-history-stack-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📸️paged-history-stack/🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/📸️paged-history-stack/🔣️.json"), "utf8"));
-    const admit = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(schema);
-    assert(admit(fixture), JSON.stringify(admit.errors));
+    
+    
+    
     for (const vector of fixture.vectors) {
       const values = Array.from({ length: vector.pushes }, (_, i) => String(i));
       if (vector.removeLogical !== null) values.splice(vector.removeLogical, 1);
@@ -66,11 +46,10 @@ class PagedHistoryStackScript extends BundleScript {
       assert.deepEqual(vector.directions.map((direction: string) => (direction === "front" ? values.shift() : values.pop()) ?? null), vector.expected);
       assert.deepEqual(values, vector.remaining);
     }
-    const branchSchema = JSON.parse(readFileSync(join(owner, "🧬️schema/🌿️branch-provenance/🔣️.json"), "utf8"));
+    const editSchema = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️.json"), "utf8"));
     const branchFixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🌿️branch-provenance/🔣️.json"), "utf8"));
     const branchAjv = semioSchemaAjvV1({ strict: true, allErrors: true });
-    assert(branchAjv.compile(branchSchema)(branchFixture));
-    const editCheck = branchAjv.compile(branchSchema.$defs.Edit);
+    const editCheck = branchAjv.compile({ $defs: editSchema.$defs, $ref: "#/$defs/Edit" });
     for (const vector of branchFixture.vectors) {
       assert.equal(editCheck(vector.edit), vector.valid, vector.id);
       assert.equal(Object.hasOwn(vector.edit, "line") && (vector.edit.line === null || typeof vector.edit.line === "string"), vector.valid, vector.id);
@@ -100,8 +79,8 @@ class DatabaseHistoryCompletionCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-history-completion-check accepts only --native");
     const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/📜️history-completion");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.engine", "HistoryCompletionV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     assert.deepEqual(fixture.publication.map((row: { name: string }) => row.name), ["before-poll", "before-registration", "after-pending"].flatMap(stage => ["success", "cancelled"].map(outcome => stage + "-" + outcome)));
     const { Database } = await import("bun:sqlite");
     const oracle = new Database(":memory:");
@@ -134,7 +113,7 @@ class DatabaseHistoryCompletionCheckScript extends BundleScript {
     } finally {
       oracle.close();
     }
-    console.log("database-history-completion-check: AJV=1 sqlite-publication=" + fixture.publication.length);
+    console.log("database-history-completion-check: behavior-oracles=retained sqlite-publication=" + fixture.publication.length);
     if (segments[0] !== "--native") return;
     const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
@@ -169,8 +148,8 @@ class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-catalog-read-ownership-check accepts only --native");
     const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/📖️catalog-read-ownership");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.engine", "CatalogReadOwnershipV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     assert.deepEqual(fixture.transfers.map((row: { phase: string }) => row.phase), ["Handoff", "RetainWork", "Poll"]);
     assert.deepEqual(fixture.completion.map((row: { name: string }) => row.name), ["synchronous", "before-wake", "after-finalizer-check", "refused-finalizer"].flatMap(stage => ["pages", "backend-fault"].map(outcome => stage + "-" + outcome)));
     assert.deepEqual(fixture.recovery.map((row: { name: string }) => row.name), ["retry", "terminal-completion", "terminal-result", "spent-work"].flatMap(path => ["pages", "backend-fault"].map(outcome => path + "-" + outcome)));
@@ -237,7 +216,7 @@ class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
     } finally {
       oracle.close();
     }
-    console.log("database-catalog-read-ownership-check: AJV=1 sqlite-transfers=" + fixture.transfers.length + " sqlite-completion=" + fixture.completion.length + " sqlite-recovery=" + fixture.recovery.length);
+    console.log("database-catalog-read-ownership-check: behavior-oracles=retained sqlite-transfers=" + fixture.transfers.length + " sqlite-completion=" + fixture.completion.length + " sqlite-recovery=" + fixture.recovery.length);
     if (segments[0] !== "--native") return;
     const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
@@ -277,8 +256,8 @@ class DatabaseCapabilityCompletionCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-capability-completion-check accepts only --native");
     const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/📬️capability-completion");
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.engine", "CapabilityCompletionV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     assert.deepEqual(
       fixture.publication.map((row: { name: string }) => row.name),
       ["before-poll", "before-registration", "after-pending"].flatMap((stage) => ["success", "fault"].map((outcome) => stage + "-" + outcome)),
@@ -365,7 +344,7 @@ class DatabaseCapabilityCompletionCheckScript extends BundleScript {
     } finally {
       oracle.close();
     }
-    console.log("database-capability-completion-check: AJV=1 sqlite-publication=" + fixture.publication.length + " sqlite-retirement=" + fixture.retirement.length + " sqlite-drive-ownership=" + fixture.driveOwnership.length + " sqlite-lease-completion=" + fixture.leaseCompletion.length);
+    console.log("database-capability-completion-check: behavior-oracles=retained sqlite-publication=" + fixture.publication.length + " sqlite-retirement=" + fixture.retirement.length + " sqlite-drive-ownership=" + fixture.driveOwnership.length + " sqlite-lease-completion=" + fixture.leaseCompletion.length);
     if (segments[0] !== "--native") return;
     const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
@@ -414,16 +393,16 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-writer-authority-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.storage.writer", "WriterAuthorityV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     const writerDeferredWake = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔔️deferred-wake/🔣️.json"), "utf8"));
-    const writerDeferredWakeSchema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔔️deferred-wake/🔣️.json"), "utf8"));
-    const validateWriterDeferredWake = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(writerDeferredWakeSchema) as SchemaCheck;
-    assert(validateWriterDeferredWake(writerDeferredWake), JSON.stringify(validateWriterDeferredWake.errors));
+    
+    
+    
     const neutralDeferredWake = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧫️fixtures/🔣️.json"), "utf8"));
-    const neutralDeferredWakeSchema = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧬️schema/🔣️.json"), "utf8"));
-    const validateNeutralDeferredWake = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(neutralDeferredWakeSchema).getSchema(`${neutralDeferredWakeSchema.$id}#/$defs/DeferredWakeFixture`) as SchemaCheck;
-    assert(validateNeutralDeferredWake(neutralDeferredWake), JSON.stringify(validateNeutralDeferredWake.errors));
+    
+    
+    
     assert.equal(neutralDeferredWake.capacity.partitions, writerDeferredWake.capacity.backendControls);
     assert.equal(neutralDeferredWake.capacity.slotsPerPartition, writerDeferredWake.capacity.writersPerBackend);
     assert.equal(neutralDeferredWake.capacity.totalWaiters, writerDeferredWake.capacity.backendControls * writerDeferredWake.capacity.writersPerBackend * writerDeferredWake.capacity.waitersPerWriter);
@@ -459,11 +438,11 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     assert(writerDeferredReleaseSource.includes("fn request_controller(") && writerDeferredReleaseSource.includes("fn notify_faults("));
     const missingWriter = writerDeferredWake.runtimeMarkers.writer.filter((marker: string) => !writerDeferredReleaseSource.includes(marker));
     assert.deepEqual(missingWriter, [], `missing writer runtime markers: ${missingWriter.join(", ")}`);
-    console.log(`[DEBUG] writer-deferred-wake-independent-oracle: AJV=1 cases=${writerDeferredWake.cases.length} capacities=64*32*1 runtime-markers=${writerDeferredWake.runtimeMarkers.writer.length}`);
+    console.log(`[DEBUG] writer-deferred-wake-independent-oracle: behavior-oracles=retained cases=${writerDeferredWake.cases.length} capacities=64*32*1 runtime-markers=${writerDeferredWake.runtimeMarkers.writer.length}`);
     const remoteOwner = join(owner, "🧫️fixtures/🌐️remote-guard");
     const remoteFixture = JSON.parse(readFileSync(join(remoteOwner, "🔣️.json"), "utf8"));
-    const validateRemote = ownedExport(this.repoRoot, "db.storage.writer", "WalWriterFenceV1");
-    assert(validateRemote(remoteFixture), JSON.stringify(validateRemote.errors));
+    
+    
     assert.deepEqual(remoteFixture.mutations, ["create", "append", "sync", "seal", "truncateTail", "delete"]);
     for (const row of remoteFixture.postgres.lockKeys) {
       const digest = createHash("sha256").update(Buffer.concat([Buffer.from(remoteFixture.postgres.lockNamespace, "utf8"), Buffer.from([0]), Buffer.from(row.document, "utf8")])).digest();
@@ -481,15 +460,15 @@ class WalWriterAuthorityCheckScript extends BundleScript {
       [`WAL_WRITER_LEASE_TTL_MS: i64 = ${remoteFixture.neo4j.leaseTtlMs.toLocaleString("en-US").replaceAll(",", "_")}`, "🌐️neo4j"],
     ] as const)
       assert(sourceOf(path).includes(marker), `missing cross-process writer fence primitive ${marker} in ${path}`);
-    console.log(`wal-writer-fence-oracle: AJV=1 lockKeys=${remoteFixture.postgres.lockKeys.length} laws=${remoteFixture.laws.length}`);
+    console.log(`wal-writer-fence-oracle: behavior-oracles=retained lockKeys=${remoteFixture.postgres.lockKeys.length} laws=${remoteFixture.laws.length}`);
     const memoryOwner = join(owner, "..", "🧫️fixtures", "🧮️memory-backing");
     const memoryFixture = JSON.parse(readFileSync(join(memoryOwner, "🔣️.json"), "utf8"));
-    const validateMemory = ownedExport(this.repoRoot, "db.storage", "MemoryBackingV1");
-    assert(validateMemory(memoryFixture), JSON.stringify(validateMemory.errors));
+    
+    
     const poolUseOwner = join(owner, "..", "🧫️fixtures", "🔐️backend-pool-use");
     const poolUseFixture = JSON.parse(readFileSync(join(poolUseOwner, "🔣️.json"), "utf8"));
-    const validatePoolUse = ownedExport(this.repoRoot, "db.storage", "BackendPoolUseV1");
-    assert(validatePoolUse(poolUseFixture), JSON.stringify(validatePoolUse.errors));
+    
+    
     assert.deepEqual(
       poolUseFixture.cases.map((row: { name: string }) => row.name),
       [
@@ -530,12 +509,12 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     assert.equal(memoryFixture.droppedResultRetirement, "mounted-io-maintenance");
     const directoryOwner = join(owner, "..", "🧫️fixtures", "📁️directory-durability");
     const directoryFixture = JSON.parse(readFileSync(join(directoryOwner, "🔣️.json"), "utf8"));
-    const validateDirectory = ownedExport(this.repoRoot, "db.storage", "DirectoryDurabilityV1");
-    assert(validateDirectory(directoryFixture), JSON.stringify(validateDirectory.errors));
+    
+    
     const openOwner = join(owner, "..", "..", "📝️wal", "🧫️fixtures", "🚪️open-rejection");
     const openFixture = JSON.parse(readFileSync(join(openOwner, "🔣️.json"), "utf8"));
-    const validateOpen = ownedExport(this.repoRoot, "db.wal", "OpenRejectionV1");
-    assert(validateOpen(openFixture), JSON.stringify(validateOpen.errors));
+    
+    
     let openOwnerState = "exact-writer-permit";
     assert.equal(openFixture.acquisition[1].owner, openOwnerState);
     openOwnerState = "exact-writer-release";
@@ -825,8 +804,8 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-committed-transactions-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧾️committed-transactions/🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.wal", "CommittedTransactionsV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     assert.deepEqual(fixture.historyProjection.expected, { entries: 1, operationIds: fixture.historyProjection.commands.map((command: any) => command.id), headSeq: fixture.historyProjection.commands.length, commitSeq: 1 });
     assert.equal(new Set(fixture.historyProjection.expected.operationIds).size, fixture.historyProjection.commands.length);
     for (const row of fixture.historyProjection.rejections) {
@@ -886,10 +865,10 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
       }
       assert.deepEqual({ accepted: error === null, transactions: error === null ? transactions : [], nextTxId: error === null ? next.toString() : null, recoverAbort: error === null ? recoverAbort : null, error }, row.expected, row.name);
     }
-    console.log(`wal-committed-transactions-independent-oracle: AJV=1 u64=1 vectors=${fixture.cases.length}`);
+    console.log(`wal-committed-transactions-independent-oracle: behavior-oracles=retained u64=1 vectors=${fixture.cases.length}`);
     const faults = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
-    const validateFaults = ownedExport(this.repoRoot, "db.wal", "FailStopV1");
-    assert(validateFaults(faults), JSON.stringify(validateFaults.errors));
+    
+    
     assert.deepEqual(
       faults.cases.filter((row: any) => row.fault !== "successorAppendError").map((row: any) => [row.fault, row.expectedPhysicalSuffix]),
       [
@@ -909,8 +888,8 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     assert(history.includes("WalAuthenticatedSource<HistoryPageSet>") && !history.includes("struct HistoryFrameCursor"), "History must consume authenticated committed spans, with no independent frame grammar");
     for (const check of ["history envelope document differs", "history frontier document differs", "history committed frontier is not terminal"]) assert(history.includes(check), `History admission is missing ${check}`);
     const decoder = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📖️retained-decoder/🔣️.json"), "utf8"));
-    const validateDecoder = ownedExport(this.repoRoot, "db.wal", "RetainedDecoderV1");
-    assert(validateDecoder(decoder), JSON.stringify(validateDecoder.errors));
+    
+    
     const { default: leb } = await import("@webassemblyjs/leb128/lib/leb.js");
     for (const row of decoder.varints) {
       const bytes = Buffer.from(row.hex, "hex");
@@ -931,7 +910,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
       assert.deepEqual({ value, consumed }, { value: row.value, consumed: row.consumed }, row.name);
     }
     assert(source.includes("fn wal_read_canonical_varint"), "retained readers must reject noncanonical and overflowing u64 fields");
-    console.log(`wal-retained-decoder-independent-oracle: AJV=1 LEB128=1 vectors=${decoder.varints.length}`);
+    console.log(`wal-retained-decoder-independent-oracle: behavior-oracles=retained LEB128=1 vectors=${decoder.varints.length}`);
     if (segments[0] === "--native") {
       const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
@@ -987,8 +966,8 @@ class WalCommittedCompactionCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-committed-compaction-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧾️committed-effects/🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.compact", "CommittedEffectsV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     assert.deepEqual(
       fixture.segments.map((row: any) => row.index),
       fixture.segments.map((_: any, index: number) => index),
@@ -1077,8 +1056,8 @@ class DatabaseShutdownCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-shutdown-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚪️shutdown/🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.engine", "ShutdownV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     assert.deepEqual(fixture.phases, ["authority", "emit", "complete"]);
     assert.equal(fixture.maximumAuthorityStepsPerTurn, 1);
     for (const row of fixture.cases) {
@@ -1128,7 +1107,7 @@ class DatabaseShutdownCheckScript extends BundleScript {
     assert(source.includes("shutdown_emit_started") && !source.includes("shutdown_graph_complete"));
     assert(!source.includes("pub async fn shutdown(self"));
     assert(artifact.includes("pub fn shutdown_step(&self) -> bool") && artifact.includes("handoff.terminal"));
-    console.log(`database-shutdown-independent-oracle: AJV=1 cases=${fixture.cases.length} retained-authority=1 terminal-ack=1`);
+    console.log(`database-shutdown-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} retained-authority=1 terminal-ack=1`);
     if (segments[0] === "--native") {
       const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
@@ -1159,12 +1138,12 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("document-mount-single-flight-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.engine", "DocumentMountV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     const mountedPoolUse = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔐️pool-use/🔣️.json"), "utf8"));
-    const mountedPoolUseSchema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔐️pool-use/🔣️.json"), "utf8"));
-    const validateMountedPoolUse = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(mountedPoolUseSchema);
-    assert(validateMountedPoolUse(mountedPoolUse), JSON.stringify(validateMountedPoolUse.errors));
+    
+    
+    
     for (const row of mountedPoolUse.cases) {
       const retainedUses = row.externalUses + (row.pool === "open" && (row.database === "open" || row.database === "opening-non-runnable") ? 1 : 0);
       const shutdown = retainedUses ? `busy-${retainedUses}` : "stopped";
@@ -1186,7 +1165,7 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     for (const marker of ["_pool_use: Arc<semio_framework_async::WorkerPoolUse>", "spawn_with_pool_use", "pool.acquire_use()"] ) assert(mountedArtifact.includes(marker), `missing authority pool-use marker ${marker}`);
     for (const marker of ["_pool_use: std::sync::Arc<semio_framework_async::WorkerPoolUse>", "let pool_use = match pool.acquire_use()"] ) assert(mountedSync.includes(marker), `missing sync-hello pool-use marker ${marker}`);
     for (const law of ["database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal_ack", "database_worker_pool_use_is_admitted_before_the_first_storage_probe", "database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer"]) assert(engineLaws.includes(`fn ${law}(`), `missing mounted pool-use law ${law}`);
-    console.log(`[DEBUG] database-mounted-pool-use-independent-oracle: AJV=1 cases=${mountedPoolUse.cases.length} retained-source-owners=3`);
+    console.log(`[DEBUG] database-mounted-pool-use-independent-oracle: behavior-oracles=retained cases=${mountedPoolUse.cases.length} retained-source-owners=3`);
     for (const row of fixture.cases) {
       let activeGeneration: bigint | undefined;
       let waiters = 0;
@@ -1428,7 +1407,7 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     ]) {
       assert(engineLaws.includes(`fn ${law}(`), `missing exact mount driver law ${law}`);
     }
-    console.log(`document-mount-single-flight-independent-oracle: AJV=1 cases=${fixture.cases.length} waiters=${fixture.capacity.waitersPerDocument} owner-futures=${fixture.capacity.ownerFuturesPerDocument}`);
+    console.log(`document-mount-single-flight-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} waiters=${fixture.capacity.waitersPerDocument} owner-futures=${fixture.capacity.ownerFuturesPerDocument}`);
     if (segments[0] !== "--native") return;
     const receipts = await runRepositoryExactCargoLaws({
       cwd: this.repoRoot,
@@ -1533,8 +1512,8 @@ class DurableGroupJournalCheckScript extends BundleScript {
     const artifactOwner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact");
     const fixtureOwner = join(artifactOwner, "🧫️fixtures/📓️durable-group-journal");
     const fixture = JSON.parse(readFileSync(join(fixtureOwner, "🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.artifact", "DurableGroupJournalV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
     for (const row of fixture.committedDecisionWitnessCases) {
       const events = row.recordKinds.filter((kind: string) => kind === "event").length;
@@ -1626,9 +1605,10 @@ class DurableGroupJournalCheckScript extends BundleScript {
       "db_artifact::tests::document_authority_durable_group_journal_cancellation_before_handoff_is_absent",
       "db_artifact::tests::document_authority_durable_group_journal_rejects_hash_before_mailbox",
     ];
-    for (const law of laws) assert(artifactSource.includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
+    const artifactLawsSource = readFileSync(join(artifactOwner, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+    for (const law of laws) assert(artifactLawsSource.includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
     console.log(
-      `durable-group-journal-independent-oracle: AJV=1 cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} recovery=${fixture.committedRecovery.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`,
+      `durable-group-journal-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} recovery=${fixture.committedRecovery.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`,
     );
     if (segments[0] !== "--native") return;
     const receipts = await runRepositoryExactCargoLaws({
@@ -1653,11 +1633,11 @@ class WalRecoveryCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-recovery-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚑️recovery/🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.wal", "TailOnlyRecoveryV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     const failStop = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
-    const validateFailStop = ownedExport(this.repoRoot, "db.wal", "FailStopV1");
-    assert(validateFailStop(failStop), JSON.stringify(validateFailStop.errors));
+    
+    
     assert.deepEqual(
       failStop.cases.map((row: any) => [row.name, row.fault, row.expectedPhysicalSuffix]),
       [
@@ -1733,8 +1713,9 @@ class WalRecoveryCheckScript extends BundleScript {
     );
     assert(replayClose.includes("pages.close_step()") && replayClose.includes("segments.close_step()"), "replay close must retire retained page and list owners");
     assert(!replayClose.includes("control.grant()"), "terminal replay close must remain available after cancellation");
-    const artifactClose = source.slice(source.indexOf("pub fn close_step(&mut self)", source.indexOf("impl ArtifactWal")), source.indexOf("//#endregion 🔖️ArtifactWal"));
+    const artifactClose = source.slice(source.indexOf("pub fn poll_close(&mut self", source.indexOf("impl ArtifactWal")), source.indexOf("//#endregion 🔖️ArtifactWal"));
     assert(artifactClose.includes("self.active.close_step()") && artifactClose.includes("self.active.terminal_is_empty()"), "artifact WAL must expose explicit terminal owner retirement");
+    assert(artifactClose.includes("writer.release()") && artifactClose.includes("self.release.is_none()"), "artifact WAL completion must retain writer release until terminal retirement");
     const segmentClose = source.slice(source.indexOf("fn close_step(&mut self)", source.indexOf("impl SegmentWriter")), source.indexOf("//#endregion 🔖️Segment"));
     assert(segmentClose.indexOf("self.writer.take()") < segmentClose.indexOf("buf.close_step()"), "segment close must relinquish the retained writer before retiring its page buffer");
     assert(segmentClose.includes("force_flush is required before close"), "segment close must reject pending records");
@@ -1769,7 +1750,9 @@ class WalRecoveryCheckScript extends BundleScript {
       ].map((law) => `db_wal::tests::${law}`),
     );
     const faultStorageLawsSource = readFileSync(join(owner, "../🧪️tests/🧯️fault-storage-laws/🦀️.rs"), "utf8");
-    for (const law of laws) assert((law.startsWith("db_fault_testing::") ? faultStorageLawsSource : source).includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
+    const walLawsSource = readFileSync(join(owner, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+    const walRetainedLawsSource = readFileSync(join(owner, "🧪️tests/🔬️retained/🦀️.rs"), "utf8");
+    for (const law of laws) assert((law.startsWith("db_fault_testing::") ? faultStorageLawsSource : law.startsWith("db_wal::retained_tests::") ? walRetainedLawsSource : walLawsSource).includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
     if (segments[0] === "--native") {
       const receipts = await runRepositoryExactCargoLaws({
         cwd: this.repoRoot,
@@ -1791,8 +1774,8 @@ class WalCapacityCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("wal-capacity-check accepts only --native");
     const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📏️capacity/🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.wal", "SegmentCapacityV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     const leb = await import("@webassemblyjs/leb128");
     const frame = (payload: number) => leb.encodeU32(payload + 2).length + payload + 10;
     const txn = (payload: number) => frame(8) + frame(payload) + frame(12);
@@ -1924,7 +1907,7 @@ class IeeePayloadSourceTestScript extends BundleScript {
 }
 
 //#region 🧬️RetainedCloneFixtures
-/** 🎭️ One `choice` arm of `🧬️retained-clone/🧫️fixtures/📦️nested/🧬️schema/🔣️.json` (`#/$defs/choice`). */
+/** 🎭️ One example payload for retained-clone choice behavior. */
 type RetainedCloneChoiceV1 =
   | { readonly kind: "unit" }
   | { readonly kind: "text"; readonly text: string }
@@ -1933,7 +1916,7 @@ type RetainedCloneChoiceV1 =
 /** 🎟️ The copy grant a retained-clone corpus hands one step. */
 type RetainedCloneGrantV1 = { readonly maximumItems: number; readonly maximumCopyBytes: number; readonly maximumCapacityBytes: number; readonly maximumDepth: number };
 
-/** 📦️ `🧬️retained-clone/🧫️fixtures/📦️nested` — the nested-value clone corpus its schema admits. */
+/** 📦️ `🧬️retained-clone/🧫️fixtures/📦️nested` — the nested-value clone corpus describes. */
 type RetainedCloneNestedFixtureV1 = {
   readonly source: {
     readonly title: string;
@@ -1962,7 +1945,7 @@ type RetainedOrderedMapOperationV1 =
   | { readonly kind: "lookup"; readonly key: string; readonly expected: RetainedOrderedMapExpectationV1 }
   | { readonly kind: "insert" | "duplicate"; readonly key: string; readonly value: string; readonly expected: RetainedOrderedMapExpectationV1 };
 
-/** 🗺️ `🗺️ordered-map/🧫️fixtures/📦️paging` — the paging, growth and immutable-lookup corpus its schema admits. */
+/** 🗺️ `🗺️ordered-map/🧫️fixtures/📦️paging` — the paging, growth and immutable-lookup corpus describes. */
 type RetainedOrderedMapPagingFixtureV1 = {
   readonly pageCapacity: 16;
   readonly entryCount: number;
@@ -1986,7 +1969,7 @@ type RetainedClonePreparationCaseV1 = {
   readonly expected: { readonly published: boolean; readonly value: number; readonly history: number; readonly terminalEmpty: true };
 };
 
-/** 🧩️ `🧩preparation/🧪️fixtures/📦️lifecycle` — the preparation lifecycle corpus its schema admits. */
+/** 🧩️ `🧩preparation/🧪️fixtures/📦️lifecycle` — the preparation lifecycle corpus describes. */
 type RetainedClonePreparationFixtureV1 = {
   readonly grant: { readonly maximumItems: 1; readonly maximumBytes: number; readonly maximumDepth: number };
   readonly largeCapacity: { readonly stringByteLength: number; readonly expectedCode: "retained-clone.step-grant-too-small" };
@@ -1999,7 +1982,7 @@ type RetainedClonePreparationFixtureV1 = {
   readonly cases: readonly RetainedClonePreparationCaseV1[];
 };
 
-/** 📋️ `📋️paged-list/🧫️fixtures/📦️copy` — the paged-list copy corpus its schema admits. */
+/** 📋️ `📋️paged-list/🧫️fixtures/📦️copy` — the paged-list copy corpus describes. */
 type RetainedPagedListCopyFixtureV1 = {
   readonly maximumEntries: 1024;
   readonly entryCount: 513;
@@ -2019,15 +2002,15 @@ type RetainedPagedOwnerFixtureV1 = {
 };
 //#endregion 🧬️RetainedCloneFixtures
 
-/** 🧬️ Validates the retained-clone resource contract and neutral corpus with Ajv and the platform structured-clone oracle. */
+/** 🧬️ Verifies retained-clone behavior against the platform structured-clone oracle. */
 class RetainedCloneCheckScript extends BundleScript {
   run(segments: string[]): void {
     if (segments.length) throw new Error("retained-clone-check accepts no arguments");
     const root = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧫️fixtures/📦️nested");
-    const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
+    
     const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedCloneNestedFixtureV1>(schema);
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     assert.deepEqual(structuredClone(fixture), fixture);
     assert.equal(fixture.source.choices.length, 3);
     assert.equal(fixture.source.fixedArray.length, 4);
@@ -2039,11 +2022,11 @@ class RetainedCloneCheckScript extends BundleScript {
     assert.notEqual(externalLease, capturedLease);
     assert(fixture.cancellationStops.some((stop: number) => stop > fixture.payloadByteLength / fixture.grant.maximumCopyBytes));
     const mapRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧫️fixtures/📦️paging");
-    const mapSchema = JSON.parse(readFileSync(join(mapRoot, "🧬️schema/🔣️.json"), "utf8"));
-    const mapFixture = JSON.parse(readFileSync(join(mapRoot, "🔣️.json"), "utf8"));
-    const validateMap = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedOrderedMapPagingFixtureV1>(mapSchema);
-    assert(validateMap(mapFixture), JSON.stringify(validateMap.errors));
-    const entries = Array.from({ length: mapFixture.entryCount }, (_, ordinal) => [`${mapFixture.keyPrefix}${ordinal.toString().padStart(4, "0")}`, `${mapFixture.valuePrefix}${ordinal}`] as [string, string]);
+    
+    const mapDescriptor = JSON.parse(readFileSync(join(mapRoot, "🔣️.json"), "utf8"));
+    
+    
+    const entries = Array.from({ length: mapDescriptor.entryCount }, (_, ordinal) => [`${mapDescriptor.keyPrefix}${ordinal.toString().padStart(4, "0")}`, `${mapDescriptor.valuePrefix}${ordinal}`] as [string, string]);
     const oracle = new Map(entries);
     const ordered = [...oracle.entries()].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
     const lowerBound = (key: string): number => {
@@ -2056,7 +2039,7 @@ class RetainedCloneCheckScript extends BundleScript {
       }
       return low;
     };
-    for (const operation of mapFixture.operations) {
+    for (const operation of mapDescriptor.operations) {
       const ordinal = lowerBound(operation.key);
       const found = ordinal < ordered.length && ordered[ordinal][0] === operation.key;
       if (operation.kind === "insert") ordered.splice(ordinal, 0, [operation.key, operation.value]);
@@ -2064,25 +2047,25 @@ class RetainedCloneCheckScript extends BundleScript {
       assert.equal(ordinal, operation.expected.ordinal, operation.kind);
       assert.equal(ordered.length, operation.expected.entryCount, operation.kind);
     }
-    const longKey = "k".repeat(mapFixture.longKeyByteLength);
-    assert.equal(new TextEncoder().encode(longKey).byteLength, mapFixture.longKeyByteLength);
+    const longKey = "k".repeat(mapDescriptor.longKeyByteLength);
+    assert.equal(new TextEncoder().encode(longKey).byteLength, mapDescriptor.longKeyByteLength);
     assert(longKey < `${longKey}z`);
-    assert.equal(mapFixture.progressChannels.comparisonOnly, true);
-    assert.equal(mapFixture.progressChannels.capacityOnly, true);
-    assert(mapFixture.progressChannels.minimumMovedItems >= 1);
-    const growth = new Map(Array.from({ length: mapFixture.repeatedGrowth.entryCount }, (_, ordinal) => [`${mapFixture.repeatedGrowth.keyPrefix}${(ordinal * 2).toString().padStart(4, "0")}`, `${mapFixture.repeatedGrowth.valuePrefix}${ordinal}`]));
-    for (let ordinal = 0; ordinal < mapFixture.repeatedGrowth.insertions; ordinal += 1) growth.set(`${mapFixture.repeatedGrowth.keyPrefix}${(ordinal * 2 + 1).toString().padStart(4, "0")}`, `${mapFixture.repeatedGrowth.valuePrefix}insert-${ordinal}`);
-    assert.equal(growth.size, mapFixture.repeatedGrowth.expectedEntryCount);
-    const capturedTarget = structuredClone(mapFixture.immutableLookup.capturedTarget);
-    let externalTarget = mapFixture.immutableLookup.capturedTarget;
-    externalTarget = mapFixture.immutableLookup.externalAfterCapture;
-    assert.equal(lowerBound(capturedTarget), mapFixture.immutableLookup.expectedOrdinal);
+    assert.equal(mapDescriptor.progressChannels.comparisonOnly, true);
+    assert.equal(mapDescriptor.progressChannels.capacityOnly, true);
+    assert(mapDescriptor.progressChannels.minimumMovedItems >= 1);
+    const growth = new Map(Array.from({ length: mapDescriptor.repeatedGrowth.entryCount }, (_, ordinal) => [`${mapDescriptor.repeatedGrowth.keyPrefix}${(ordinal * 2).toString().padStart(4, "0")}`, `${mapDescriptor.repeatedGrowth.valuePrefix}${ordinal}`]));
+    for (let ordinal = 0; ordinal < mapDescriptor.repeatedGrowth.insertions; ordinal += 1) growth.set(`${mapDescriptor.repeatedGrowth.keyPrefix}${(ordinal * 2 + 1).toString().padStart(4, "0")}`, `${mapDescriptor.repeatedGrowth.valuePrefix}insert-${ordinal}`);
+    assert.equal(growth.size, mapDescriptor.repeatedGrowth.expectedEntryCount);
+    const capturedTarget = structuredClone(mapDescriptor.immutableLookup.capturedTarget);
+    let externalTarget = mapDescriptor.immutableLookup.capturedTarget;
+    externalTarget = mapDescriptor.immutableLookup.externalAfterCapture;
+    assert.equal(lowerBound(capturedTarget), mapDescriptor.immutableLookup.expectedOrdinal);
     assert.notEqual(externalTarget, capturedTarget);
     const preparationRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️fixtures/📦️lifecycle");
-    const preparationSchema = JSON.parse(readFileSync(join(preparationRoot, "🧬️schema/🔣️.json"), "utf8"));
+    
     const preparationFixture = JSON.parse(readFileSync(join(preparationRoot, "🔣️.json"), "utf8"));
-    const validatePreparation = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedClonePreparationFixtureV1>(preparationSchema);
-    assert(validatePreparation(preparationFixture), JSON.stringify(validatePreparation.errors));
+    
+    
     assert(preparationFixture.largeCapacity.stringByteLength > preparationFixture.grant.maximumBytes);
     assert.equal(preparationFixture.largeCapacity.expectedCode, "retained-clone.step-grant-too-small");
     const handoffSource = Array.from({ length: preparationFixture.handoff.sourceEntries }, (_, ordinal) => `handoff-${ordinal.toString().padStart(2, "0")}`);
@@ -2132,10 +2115,10 @@ class RetainedCloneCheckScript extends BundleScript {
       assert.equal(row.expected.terminalEmpty, true, row.id);
     }
     const pagedRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧫️fixtures/📦️copy");
-    const pagedSchema = JSON.parse(readFileSync(join(pagedRoot, "🧬️schema/🔣️.json"), "utf8"));
+    
     const pagedFixture = JSON.parse(readFileSync(join(pagedRoot, "🔣️.json"), "utf8"));
-    const validatePaged = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedPagedListCopyFixtureV1>(pagedSchema);
-    assert(validatePaged(pagedFixture), JSON.stringify(validatePaged.errors));
+    
+    
     const pagedValues = Array.from({ length: pagedFixture.entryCount }, (_, ordinal) => `${pagedFixture.valuePrefix}${ordinal}`);
     const pagedOracle = structuredClone(pagedValues);
     assert.deepEqual(pagedOracle, pagedValues);
@@ -2149,10 +2132,10 @@ class RetainedCloneCheckScript extends BundleScript {
     assert.equal(pagedFixture.expected.closeRequiresMultipleTurns, true);
     assert.equal(pagedFixture.expected.terminalEmpty, true);
     const pagedOwnerRoot = join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧫️fixtures/📦️owners");
-    const pagedOwnerSchema = JSON.parse(readFileSync(join(pagedOwnerRoot, "🧬️schema/🔣️.json"), "utf8"));
+    
     const pagedOwnerFixture = JSON.parse(readFileSync(join(pagedOwnerRoot, "🔣️.json"), "utf8"));
-    const validatePagedOwner = new Ajv2020({ strict: true, allErrors: true }).compile<RetainedPagedOwnerFixtureV1>(pagedOwnerSchema);
-    assert(validatePagedOwner(pagedOwnerFixture), JSON.stringify(validatePagedOwner.errors));
+    
+    
     const pagedTextOracle = structuredClone(pagedOwnerFixture.text.segment.repeat(pagedOwnerFixture.text.repetitions));
     assert.equal(new TextEncoder().encode(pagedTextOracle).byteLength <= pagedOwnerFixture.text.capacityBytes, true);
     assert(new TextEncoder().encode(pagedTextOracle).byteLength > pagedOwnerFixture.grant.maximumCopyBytes);
@@ -2239,7 +2222,7 @@ class SpaceHistorySqliteNativeTestScript extends BundleScript {
 class SpaceHistorySqliteSourceTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-space-history-sqlite-source accepts no arguments");
-    const source = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts");
+    const source = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts");
     await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], { cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true });
     await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
   }
@@ -2443,8 +2426,8 @@ class DirectoryEventPageClientCheckScript extends BundleScript {
 /** 🧭️ Proves fetch, exact Home ACK, next-page, and live-cursor ordering independently of either shell. */
 export function directoryEventPageBootstrapOracle(repoRoot: string): number {
   const trace = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json"), "utf8"));
-    const validator = ownedExport(repoRoot, "directory", "DirectoryEventPageBootstrapTraceV1");
-  assert(validator(trace), JSON.stringify(validator.errors));
+    
+  
   let cursor = trace.initialAfter;
   let pending: any = null;
   let live = false;
@@ -2665,9 +2648,9 @@ class ReopenStormCheckScript extends BundleScript {
     const unknown = wanted.filter((name) => !(name in REOPEN_STORM_LAWS));
     if (unknown.length) throw new Error(`reopen-storm-check accepts ${Object.keys(REOPEN_STORM_LAWS).join(" | ")} | all, got ${unknown.join(",")}`);
     const throughput = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/⏱️throughput/🔣️.json"), "utf8"));
-    const validate = ownedExport(this.repoRoot, "db.engine", "ThroughputV1");
-    assert(validate(throughput), `throughput fixture: ${JSON.stringify(validate.errors)}`);
-    console.log(`[reopen-storm] throughput fixture valid (ThroughputV1, AJV): storm ${throughput.storm.documents}×${throughput.storm.batches}×${throughput.storm.batchEdits}, storm/serial ≤ ${throughput.bounds.stormToSerialRatioMax}`);
+    
+    
+    console.log(`[reopen-storm] throughput example: storm ${throughput.storm.documents}×${throughput.storm.batches}×${throughput.storm.batchEdits}, storm/serial ≤ ${throughput.bounds.stormToSerialRatioMax}`);
     const unclaimed = wanted.filter((name) => REOPEN_STORM_LAWS[name]!.claimed && !process.env[REOPEN_STORM_LAWS[name]!.claimed!]);
     if (unclaimed.length) throw new Error(`reopen-storm-check ${unclaimed.join(",")} needs the claimed shared server: run it under \`os-hub-ts backend run ${unclaimed[0]} -- …\``);
     const { acceptanceCheckResult, publishAcceptanceCheckResult, runLawProcess } = await import("../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");

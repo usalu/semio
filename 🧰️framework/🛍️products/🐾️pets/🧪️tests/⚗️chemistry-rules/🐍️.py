@@ -371,7 +371,7 @@ def rehearsal(menagerie):
 # region 🔖️Handlers
 def committed(ctx):
     """📥️ The committed vectors."""
-    return json.loads(ctx.fixture_bytes(VECTORS))
+    return json.loads(ctx.input_bytes(VECTORS))
 
 
 def kind_of(document, name):
@@ -489,7 +489,7 @@ def reactions(ctx):
 
 def sample(ctx):
     """🧸️ The sample menagerie of the product judged as it is committed right now: ladders, reachability and every reaction staged."""
-    return Outcome({"sample": rehearsal(json.loads(ctx.fixture_bytes(SAMPLE))["menagerie"])})
+    return Outcome({"sample": rehearsal(json.loads(ctx.input_bytes(SAMPLE))["menagerie"])})
 
 
 # endregion 🔖️Handlers

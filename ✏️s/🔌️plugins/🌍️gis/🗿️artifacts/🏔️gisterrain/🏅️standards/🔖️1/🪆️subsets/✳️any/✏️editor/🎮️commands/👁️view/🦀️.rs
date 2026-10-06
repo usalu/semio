@@ -1,7 +1,7 @@
 //! 👁️ GIS 3D play app command — the free/live viewport camera. Config-only: it emits
 //! `window_config_mutations`, never document operations.
 
-use crate::op::GisTerrainMutation;
+use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -94,10 +94,20 @@ pub struct FemGumballDrive<M> {
 }
 
 /// 🛠️ Drives `window`'s gumball tool through ONE dispatch of a transform verb on the shared streamed-gesture runner
-/// ([`semio_framework_tool_machine::drive_gesture`]) against the gesture this transient holds for that window.
-pub fn fem_gumball_drive<T: GestureTool<Gesture = FemGumballGesture>>(transient: &FemGumballTransient, window: &str, verb: &str, phase: GesturePhase, tick: Option<T::Tick>, authoring_seed: &str, base_revision: &str) -> FemGumballDrive<T::Mutation> {
-    let drive = semio_framework_tool_machine::drive_gesture::<T>(transient.gestures.get(window), verb, phase, tick, authoring_seed, base_revision);
-    FemGumballDrive { committed: drive.committed, transient: drive.next.map(|gesture| transient.with_gesture(window, gesture)) }
+/// ([`semio_framework_tool_machine::drive_gesture`]) against the gesture this transient holds for that window; a refused
+/// start or tick raises its tool-transaction fault (`toolTransaction.closed` | `toolTransaction.unclosed`).
+pub fn fem_gumball_drive<T: GestureTool<Gesture = FemGumballGesture>>(
+    transient: &FemGumballTransient,
+    window: &str,
+    verb: &str,
+    phase: GesturePhase,
+    tick: Option<T::Tick>,
+    authoring_seed: &str,
+    base_revision: &str,
+) -> Result<FemGumballDrive<T::Mutation>, semio_framework_plugin::Fault> {
+    let drive = semio_framework_tool_machine::drive_gesture::<T>(transient.gestures.get(window), verb, phase, tick, authoring_seed, base_revision)
+        .map_err(|refusal| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, refusal.code(), "the gumball tool refused the dispatch"))?;
+    Ok(FemGumballDrive { committed: drive.committed, transient: drive.next.map(|gesture| transient.with_gesture(window, gesture)) })
 }
 //#endregion 🛠️Drive
 

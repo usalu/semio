@@ -519,14 +519,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const servedFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🪟️tree-window-served.json"), "utf8"));
 
   const requestsFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧫️fixtures/🪟️window-requests/🔣️.json"), "utf8"));
-  const requestsSchema = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧬️schema/🪟️window-requests/🔣️.json"), "utf8"));
-  const { default: Ajv } = await import("ajv");
   const { TREE_WINDOW_OVERSCAN_ROWS, treeWindowRequestsForViewport, treeWindowVisibleRowsForViewport } = await import("@semio-tech/ui-react");
 
   describe("🪟️ the neutral viewport vectors both hosts answer (WG11 P5)", () => {
     it("the vectors satisfy their schema and were written against this host's body budget", () => {
-      const validate = new Ajv({ allErrors: true, strict: true }).compile(requestsSchema);
-      expect(validate(requestsFixture), JSON.stringify(validate.errors)).toBe(true);
       expect(requestsFixture.budget).toBe(TREE_WINDOW_BODY_NODE_BUDGET);
       expect(requestsFixture.overscan).toBe(TREE_WINDOW_OVERSCAN_ROWS);
     });

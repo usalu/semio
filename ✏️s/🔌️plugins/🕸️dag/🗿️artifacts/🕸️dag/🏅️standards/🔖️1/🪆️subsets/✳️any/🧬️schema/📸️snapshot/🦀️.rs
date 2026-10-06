@@ -92,35 +92,15 @@ pub fn empty_snapshot() -> DagSnapshot {
 
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ Renders a [`DagSnapshot`] as this facet's own camelCase JSON projection; it carries `content` as a HANDLE, never as a
-/// graph (a thin first-party JSON codec wrapper behind this interface).
-pub fn encode_dag_snapshot_json(snapshot: &DagSnapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ The inverse of [`encode_dag_snapshot_json`].
-pub fn decode_dag_snapshot_json(text: &str) -> Result<DagSnapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📝️ Parses `.dag.dsl.semio` text into a [`DagSnapshot`] — a named, non-async pass-through of this type's own
-/// `store::ArtifactDsl` impl, whose trait and error type are both unnameable outside this crate.
-pub fn parse_dag_dsl(text: &str) -> Result<DagSnapshot, String> {
-    <DagSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-/// 📝️ Renders a [`DagSnapshot`] back as `.dag.dsl.semio` text — the inverse of [`parse_dag_dsl`],
-/// preamble included, which is what makes a printed document comparable to the committed one byte
-/// for byte.
-pub fn print_dag_dsl(snapshot: &DagSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
+
+
+
+
 
 //#endregion 🌉️ExternalCodecBridge
 
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;
+

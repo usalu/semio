@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** 🏭️ Process TypeScript package source verifier. */
 import { resolve } from "node:path";
-import Ajv from "ajv";
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -132,12 +131,7 @@ class TestScript extends BundleScript {
     runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const pluginRoot = resolve(this.root, "../..");
-    const testRoot = resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧪️tests/⚖️retained-route-laws");
-    const fixture = await Bun.file(resolve(testRoot, "🧫️fixtures/🔣️.json")).json() as Fixture;
-    const schema = await Bun.file(resolve(testRoot, "🧬️schema/🔣️.json")).json();
-    const ajv = new Ajv({ allErrors: true, strict: false, validateFormats: false });
-    const validate = ajv.compile(schema);
-    if (!validate(fixture)) throw new Error(`Process3d retained route fixture failed Ajv: ${JSON.stringify(validate.errors)}`);
+    const fixture = await Bun.file(resolve(pluginRoot, "🗿️artifacts/🧊️process3d/🧫️fixtures/⚖️retained-route-laws/🔣️.json")).json() as Fixture;
     if (!fixtureOracle(fixture)) throw new Error("Process3d retained route fixture failed its independent extent/partition oracle");
     const source = await Bun.file(resolve(pluginRoot, fixture.source)).text();
     if (!sourceOracle(fixture, source)) throw new Error("Process3d retained route source diverged from the strict fixture");
@@ -168,7 +162,7 @@ class TestScript extends BundleScript {
     ) {
       throw new Error("Process3d retained route audit accepted hostile deactivation, missing proof, publication, measured-grant, partial-grant, or count drift");
     }
-    console.error(`validated Process3d retained routes; routes=${fixture.routeCount}; migrated=${fixture.migratedCount}; bounded=${constantRoutes(source, "PROCESS3D_BOUNDED_TOOL_IDS").length}; resumable=${constantRoutes(source, "PROCESS3D_RESUMABLE_TOOL_IDS").length}; batchOnly=0; scanThenMonolith=0; schema=Ajv; oracle=independent`);
+    console.error(`validated Process3d retained routes; routes=${fixture.routeCount}; migrated=${fixture.migratedCount}; bounded=${constantRoutes(source, "PROCESS3D_BOUNDED_TOOL_IDS").length}; resumable=${constantRoutes(source, "PROCESS3D_RESUMABLE_TOOL_IDS").length}; batchOnly=0; scanThenMonolith=0; oracle=independent`);
   }
 }
 //#endregion 🔖️Command

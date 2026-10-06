@@ -1,0 +1,20 @@
+{
+  "qualification": "HELD admission corrections after new Rust leaf and Base-owned Source parser follow-up; rejects invalid candidate Page graph before mutation; no execution.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🪢️restore-dpart-graph/🦀️.rs",
+      "before": "    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> { MutationOutcome::new(PdfDiff { raw_graph: Some(self.graph.clone()), ..Default::default() }) }",
+      "after": "    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {\n        let mut candidate = base.clone();\n        candidate.objects = self.graph.objects.clone();\n        candidate.catalog_extra = self.graph.catalog_extra.clone();\n        if crate::standards::v1_7::subsets::base::schema::conformance_support::admitted_first_page(&candidate).is_none() { return MutationOutcome::refuse(\"mutation.target-missing\", \"Restored DPart graph requires the retained genuine Page tree\", [\"DPartRoot\"]); }\n        MutationOutcome::new(PdfDiff { raw_graph: Some(self.graph.clone()), ..Default::default() })\n    }"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🪢️restore-dpart-graph/🟦️.ts",
+      "before": "export function applyRestoreDpartGraph(base: PdfSnapshot, mutation: RestoreDpartGraphMutation): PdfSnapshot { return {...base,objects:structuredClone(mutation.graph.objects),catalogExtra:structuredClone(mutation.graph.catalogExtra)}; }",
+      "after": "export function applyRestoreDpartGraph(base: PdfSnapshot, mutation: RestoreDpartGraphMutation): PdfSnapshot {\n  const candidate = {...base,objects:structuredClone(mutation.graph.objects),catalogExtra:structuredClone(mutation.graph.catalogExtra)};\n  if (!admittedFirstPage(candidate)) throw new Error('Restored DPart graph requires the retained genuine Page tree');\n  return candidate;\n}"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🪢️restore-dpart-graph/🟦️.ts",
+      "before": "import type { PdfSnapshot } from '../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts';",
+      "after": "import type { PdfSnapshot } from '../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts';\nimport { admittedFirstPage } from '../../../../🧱️base/🧬️schema/🏅️conformance-support/🟦️.ts';"
+    }
+  ]
+}

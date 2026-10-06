@@ -18,5 +18,5 @@ pub struct PatchDagNodes {
 /// gesture and the same dispatch serves a one-shot (MCP, keyboard) unchanged.
 pub fn handle(payload: &PatchDagNodes, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let leaves: Vec<_> = crate::dag_scene(doc)?.nodes.iter().filter(|node| payload.node_ids.contains(&node.id)).flat_map(|node| crate::schema::node_field_leaves(node, &payload.field, &payload.value)).collect();
-    Ok(crate::dag_child_emit(doc.snapshot, &leaves))
+    Ok(crate::dag_child_emit(doc.snapshot, leaves))
 }

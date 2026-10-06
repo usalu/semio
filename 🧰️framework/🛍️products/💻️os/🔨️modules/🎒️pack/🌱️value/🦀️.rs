@@ -565,10 +565,8 @@ fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Ve
         }
         DslValue::Object(entries) => {
             out.push(TAG_MAP);
-            let mut sorted: Vec<&(String, DslValue)> = entries.iter().collect();
-            sorted.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
-            write_varint_u64(out, sorted.len() as u64);
-            for (k, val) in sorted {
+            write_varint_u64(out, entries.len() as u64);
+            for (k, val) in entries {
                 encode_string_inline(k, out);
                 encode_dsl_value(ctx, val, depth + 1, out)?;
             }
@@ -3002,40 +3000,8 @@ pub fn schema_hash_controlled<C:semio_framework_dsl_record::NativeSchemaControl>
 //#endregion 🔖️SchemaHash
 
 //#region 🔖️Document
-/// ⚙️ Knobs for [`encode_document`]. `canonical` gates only the `OPTIONAL_CANONICAL`
-/// header bit — the sorted-fields/omitted-Absent/sorted-map-keys/minimal-varint/exact-f64/
-/// interning/packed-numeric rules are applied unconditionally (the purity LAW demands determinism
-/// regardless of `HashMap` iteration order, so there is no looser "non-canonical" code path).
-#[derive(Clone, Debug)]
-pub struct EncodeOptions {
-    pub canonical: bool,
-    pub codec: CodecId,
-    pub chunk_threshold: u64,
-    pub chunk_size: u64,
-    pub frame_size: u64,
-    pub preserve_unknown: bool,
-    pub limits: PackLimits,
-}
-
-impl Default for EncodeOptions {
-    fn default() -> Self {
-        Self { canonical: true, codec: CodecId(1), chunk_threshold: 256 * 1024, chunk_size: 1024 * 1024, frame_size: 1024 * 1024, preserve_unknown: true, limits: PackLimits::default() }
-    }
-}
-
-/// ⚙️ Knobs for [`decode_document`].
-#[derive(Clone, Debug)]
-pub struct DecodeOptions {
-    pub verification: crate::os_pack::format::VerificationLevel,
-    pub preserve_unknown: bool,
-    pub limits: PackLimits,
-}
-
-impl Default for DecodeOptions {
-    fn default() -> Self {
-        Self { verification: crate::os_pack::format::VerificationLevel::Standard, preserve_unknown: true, limits: PackLimits::default() }
-    }
-}
+/// 🎛️ The OS uses the same first-party transport-owned Pack policy.
+pub use protocol::codec::{PackEncodeOptions as EncodeOptions,PackDecodeOptions as DecodeOptions};
 
 /// 🩺️ What [`decode_document`] observed beyond the plain `RecordValue`: field ids present
 /// on the wire but absent from the caller's `RecordSpec`, any unrecognized segment kinds,

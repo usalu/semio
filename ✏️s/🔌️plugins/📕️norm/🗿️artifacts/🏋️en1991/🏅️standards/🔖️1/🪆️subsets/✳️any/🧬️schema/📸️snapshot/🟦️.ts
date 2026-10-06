@@ -205,5 +205,3 @@ export const parseEn1991StructureKind: NormWireReader<En1991StructureKind> = nor
 export const parseEn1991AnnexChoice: NormWireReader<En1991AnnexChoice> = normWireLiteral("En", "De");
 export const parseEn1991FireCurve: NormWireReader<En1991FireCurve> = normWireLiteral("standard", "external", "hydrocarbon", "parametric");
 export const parseEn1991FireMode: NormWireReader<En1991FireMode> = normWireLiteral("none", "nominal", "parametric");
-
-export * from "./🪶️sqlite/🟦️.ts";

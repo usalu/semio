@@ -1,142 +1,642 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "note": "✏️ How every replica classifies a document's Supersede history transitions (design §2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). An input's effective supersession in the view of a scope is the last one (by `(at, id)`) naming it whose scope is null or that scope; an undo restores, in the view of the undone edit's scope, every input the edit still owns to the input before it (the original when there was none); a redo re-authors the edit's inputs while the state its undo left still stands. `applied` lists the history edits owning an input the final alternative folds with; an undo row reads applied while the edit it undid is not redone.",
   "cases": [
     {
       "id": "an-undo-restores-the-original-and-a-redo-reauthors",
       "finalAlternative": null,
-      "originals": { "m1": "a" },
+      "originals": {
+        "m1": "a"
+      },
       "transitions": [
-        { "id": "t1", "actor": "alice", "at": 10, "scope": null, "inputs": [{ "target": "m1", "input": "b" }] },
-        { "id": "t2", "actor": "alice", "at": 20, "scope": null, "inputs": [{ "target": "m1", "input": "a" }] },
-        { "id": "t3", "actor": "alice", "at": 30, "scope": null, "inputs": [{ "target": "m1", "input": "b" }] }
+        {
+          "id": "t1",
+          "actor": "alice",
+          "at": 10,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "b"
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "actor": "alice",
+          "at": 20,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "a"
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "actor": "alice",
+          "at": 30,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "b"
+            }
+          ]
+        }
       ],
       "records": [
-        { "id": "t1", "role": "edit", "entry": "t1" },
-        { "id": "t2", "role": "undo", "entry": "t1" },
-        { "id": "t3", "role": "redo", "entry": "t1" }
+        {
+          "id": "t1",
+          "role": "edit",
+          "entry": "t1"
+        },
+        {
+          "id": "t2",
+          "role": "undo",
+          "entry": "t1"
+        },
+        {
+          "id": "t3",
+          "role": "redo",
+          "entry": "t1"
+        }
       ],
-      "applied": ["t1"],
-      "rowsApplied": { "t1": true, "t2": false, "t3": true },
-      "undo": [{ "actor": "alice", "entry": "t1", "restore": { "scope": null, "inputs": [{ "target": "m1", "input": "a" }] } }],
-      "redo": { "alice": null }
+      "applied": [
+        "t1"
+      ],
+      "rowsApplied": {
+        "t1": true,
+        "t2": false,
+        "t3": true
+      },
+      "undo": [
+        {
+          "actor": "alice",
+          "entry": "t1",
+          "restore": {
+            "scope": null,
+            "inputs": [
+              {
+                "target": "m1",
+                "input": "a"
+              }
+            ]
+          }
+        }
+      ],
+      "redo": {
+        "alice": null
+      }
     },
     {
       "id": "undo-and-redo-walk-back-and-forth-through-two-history-edits",
       "finalAlternative": null,
-      "originals": { "m1": "a" },
+      "originals": {
+        "m1": "a"
+      },
       "transitions": [
-        { "id": "t1", "actor": "alice", "at": 10, "scope": null, "inputs": [{ "target": "m1", "input": "b" }] },
-        { "id": "t2", "actor": "alice", "at": 20, "scope": null, "inputs": [{ "target": "m1", "input": "c" }] },
-        { "id": "t3", "actor": "alice", "at": 30, "scope": null, "inputs": [{ "target": "m1", "input": "b" }] },
-        { "id": "t4", "actor": "alice", "at": 40, "scope": null, "inputs": [{ "target": "m1", "input": "a" }] },
-        { "id": "t5", "actor": "alice", "at": 50, "scope": null, "inputs": [{ "target": "m1", "input": "b" }] },
-        { "id": "t6", "actor": "alice", "at": 60, "scope": null, "inputs": [{ "target": "m1", "input": "c" }] }
+        {
+          "id": "t1",
+          "actor": "alice",
+          "at": 10,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "b"
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "actor": "alice",
+          "at": 20,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "c"
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "actor": "alice",
+          "at": 30,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "b"
+            }
+          ]
+        },
+        {
+          "id": "t4",
+          "actor": "alice",
+          "at": 40,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "a"
+            }
+          ]
+        },
+        {
+          "id": "t5",
+          "actor": "alice",
+          "at": 50,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "b"
+            }
+          ]
+        },
+        {
+          "id": "t6",
+          "actor": "alice",
+          "at": 60,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "c"
+            }
+          ]
+        }
       ],
       "records": [
-        { "id": "t1", "role": "edit", "entry": "t1" },
-        { "id": "t2", "role": "edit", "entry": "t2" },
-        { "id": "t3", "role": "undo", "entry": "t2" },
-        { "id": "t4", "role": "undo", "entry": "t1" },
-        { "id": "t5", "role": "redo", "entry": "t1" },
-        { "id": "t6", "role": "redo", "entry": "t2" }
+        {
+          "id": "t1",
+          "role": "edit",
+          "entry": "t1"
+        },
+        {
+          "id": "t2",
+          "role": "edit",
+          "entry": "t2"
+        },
+        {
+          "id": "t3",
+          "role": "undo",
+          "entry": "t2"
+        },
+        {
+          "id": "t4",
+          "role": "undo",
+          "entry": "t1"
+        },
+        {
+          "id": "t5",
+          "role": "redo",
+          "entry": "t1"
+        },
+        {
+          "id": "t6",
+          "role": "redo",
+          "entry": "t2"
+        }
       ],
-      "applied": ["t2"],
-      "rowsApplied": { "t1": false, "t2": true, "t3": false, "t4": false, "t5": false, "t6": true },
-      "undo": [{ "actor": "alice", "entry": "t2", "restore": { "scope": null, "inputs": [{ "target": "m1", "input": "b" }] } }],
-      "redo": { "alice": null }
+      "applied": [
+        "t2"
+      ],
+      "rowsApplied": {
+        "t1": false,
+        "t2": true,
+        "t3": false,
+        "t4": false,
+        "t5": false,
+        "t6": true
+      },
+      "undo": [
+        {
+          "actor": "alice",
+          "entry": "t2",
+          "restore": {
+            "scope": null,
+            "inputs": [
+              {
+                "target": "m1",
+                "input": "b"
+              }
+            ]
+          }
+        }
+      ],
+      "redo": {
+        "alice": null
+      }
     },
     {
       "id": "another-authors-supersession-blocks-the-redo",
       "finalAlternative": null,
-      "originals": { "m1": "a" },
+      "originals": {
+        "m1": "a"
+      },
       "transitions": [
-        { "id": "t3", "actor": "bob", "at": 30, "scope": null, "inputs": [{ "target": "m1", "input": "z" }] },
-        { "id": "t1", "actor": "alice", "at": 10, "scope": null, "inputs": [{ "target": "m1", "input": "b" }] },
-        { "id": "t2", "actor": "alice", "at": 20, "scope": null, "inputs": [{ "target": "m1", "input": "a" }] }
+        {
+          "id": "t3",
+          "actor": "bob",
+          "at": 30,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "z"
+            }
+          ]
+        },
+        {
+          "id": "t1",
+          "actor": "alice",
+          "at": 10,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "b"
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "actor": "alice",
+          "at": 20,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "a"
+            }
+          ]
+        }
       ],
       "records": [
-        { "id": "t1", "role": "edit", "entry": "t1" },
-        { "id": "t2", "role": "undo", "entry": "t1" },
-        { "id": "t3", "role": "edit", "entry": "t3" }
+        {
+          "id": "t1",
+          "role": "edit",
+          "entry": "t1"
+        },
+        {
+          "id": "t2",
+          "role": "undo",
+          "entry": "t1"
+        },
+        {
+          "id": "t3",
+          "role": "edit",
+          "entry": "t3"
+        }
       ],
-      "applied": ["t3"],
-      "rowsApplied": { "t1": false, "t2": true, "t3": true },
-      "undo": [{ "actor": "bob", "entry": "t3", "restore": { "scope": null, "inputs": [{ "target": "m1", "input": "a" }] } }],
-      "redo": { "alice": null, "bob": null }
+      "applied": [
+        "t3"
+      ],
+      "rowsApplied": {
+        "t1": false,
+        "t2": true,
+        "t3": true
+      },
+      "undo": [
+        {
+          "actor": "bob",
+          "entry": "t3",
+          "restore": {
+            "scope": null,
+            "inputs": [
+              {
+                "target": "m1",
+                "input": "a"
+              }
+            ]
+          }
+        }
+      ],
+      "redo": {
+        "alice": null,
+        "bob": null
+      }
     },
     {
       "id": "an-alternative-history-edit-undoes-and-redoes-in-its-alternative",
       "finalAlternative": "alt",
-      "originals": { "m1": "a", "m2": "x" },
+      "originals": {
+        "m1": "a",
+        "m2": "x"
+      },
       "transitions": [
-        { "id": "t1", "actor": "alice", "at": 10, "scope": "alt", "inputs": [{ "target": "m1", "input": "b" }, { "target": "m2", "input": "y" }] },
-        { "id": "t2", "actor": "alice", "at": 20, "scope": "alt", "inputs": [{ "target": "m1", "input": "a" }, { "target": "m2", "input": "x" }] }
+        {
+          "id": "t1",
+          "actor": "alice",
+          "at": 10,
+          "scope": "alt",
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "b"
+            },
+            {
+              "target": "m2",
+              "input": "y"
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "actor": "alice",
+          "at": 20,
+          "scope": "alt",
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "a"
+            },
+            {
+              "target": "m2",
+              "input": "x"
+            }
+          ]
+        }
       ],
       "records": [
-        { "id": "t1", "role": "edit", "entry": "t1" },
-        { "id": "t2", "role": "undo", "entry": "t1" }
+        {
+          "id": "t1",
+          "role": "edit",
+          "entry": "t1"
+        },
+        {
+          "id": "t2",
+          "role": "undo",
+          "entry": "t1"
+        }
       ],
       "applied": [],
-      "rowsApplied": { "t1": false, "t2": true },
+      "rowsApplied": {
+        "t1": false,
+        "t2": true
+      },
       "undo": [],
-      "redo": { "alice": { "entry": "t1", "undo": "t2", "redo": { "scope": "alt", "inputs": [{ "target": "m1", "input": "b" }, { "target": "m2", "input": "y" }] } } }
+      "redo": {
+        "alice": {
+          "entry": "t1",
+          "undo": "t2",
+          "redo": {
+            "scope": "alt",
+            "inputs": [
+              {
+                "target": "m1",
+                "input": "b"
+              },
+              {
+                "target": "m2",
+                "input": "y"
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "id": "a-withdrawal-undoes-to-the-original",
       "finalAlternative": null,
-      "originals": { "m1": "a" },
+      "originals": {
+        "m1": "a"
+      },
       "transitions": [
-        { "id": "t1", "actor": "alice", "at": 10, "scope": null, "inputs": [{ "target": "m1", "input": null }] },
-        { "id": "t2", "actor": "alice", "at": 20, "scope": null, "inputs": [{ "target": "m1", "input": "a" }] }
+        {
+          "id": "t1",
+          "actor": "alice",
+          "at": 10,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": null
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "actor": "alice",
+          "at": 20,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "a"
+            }
+          ]
+        }
       ],
       "records": [
-        { "id": "t1", "role": "edit", "entry": "t1" },
-        { "id": "t2", "role": "undo", "entry": "t1" }
+        {
+          "id": "t1",
+          "role": "edit",
+          "entry": "t1"
+        },
+        {
+          "id": "t2",
+          "role": "undo",
+          "entry": "t1"
+        }
       ],
       "applied": [],
-      "rowsApplied": { "t1": false, "t2": true },
+      "rowsApplied": {
+        "t1": false,
+        "t2": true
+      },
       "undo": [],
-      "redo": { "alice": { "entry": "t1", "undo": "t2", "redo": { "scope": null, "inputs": [{ "target": "m1", "input": null }] } } }
+      "redo": {
+        "alice": {
+          "entry": "t1",
+          "undo": "t2",
+          "redo": {
+            "scope": null,
+            "inputs": [
+              {
+                "target": "m1",
+                "input": null
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "id": "a-partial-restore-is-a-new-history-edit",
       "finalAlternative": null,
-      "originals": { "m1": "a", "m2": "x" },
+      "originals": {
+        "m1": "a",
+        "m2": "x"
+      },
       "transitions": [
-        { "id": "t1", "actor": "alice", "at": 10, "scope": null, "inputs": [{ "target": "m1", "input": "b" }, { "target": "m2", "input": "y" }] },
-        { "id": "t2", "actor": "alice", "at": 20, "scope": null, "inputs": [{ "target": "m1", "input": "a" }] }
+        {
+          "id": "t1",
+          "actor": "alice",
+          "at": 10,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "b"
+            },
+            {
+              "target": "m2",
+              "input": "y"
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "actor": "alice",
+          "at": 20,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "a"
+            }
+          ]
+        }
       ],
       "records": [
-        { "id": "t1", "role": "edit", "entry": "t1" },
-        { "id": "t2", "role": "edit", "entry": "t2" }
+        {
+          "id": "t1",
+          "role": "edit",
+          "entry": "t1"
+        },
+        {
+          "id": "t2",
+          "role": "edit",
+          "entry": "t2"
+        }
       ],
-      "applied": ["t1", "t2"],
-      "rowsApplied": { "t1": true, "t2": true },
+      "applied": [
+        "t1",
+        "t2"
+      ],
+      "rowsApplied": {
+        "t1": true,
+        "t2": true
+      },
       "undo": [
-        { "actor": "alice", "entry": "t1", "restore": { "scope": null, "inputs": [{ "target": "m2", "input": "x" }] } },
-        { "actor": "alice", "entry": "t2", "restore": { "scope": null, "inputs": [{ "target": "m1", "input": "b" }] } }
+        {
+          "actor": "alice",
+          "entry": "t1",
+          "restore": {
+            "scope": null,
+            "inputs": [
+              {
+                "target": "m2",
+                "input": "x"
+              }
+            ]
+          }
+        },
+        {
+          "actor": "alice",
+          "entry": "t2",
+          "restore": {
+            "scope": null,
+            "inputs": [
+              {
+                "target": "m1",
+                "input": "b"
+              }
+            ]
+          }
+        }
       ],
-      "redo": { "alice": null }
+      "redo": {
+        "alice": null
+      }
     },
     {
       "id": "a-document-wide-undo-restores-in-the-document-view",
       "finalAlternative": "alt",
-      "originals": { "m1": "a" },
+      "originals": {
+        "m1": "a"
+      },
       "transitions": [
-        { "id": "t1", "actor": "alice", "at": 10, "scope": "alt", "inputs": [{ "target": "m1", "input": "b" }] },
-        { "id": "t2", "actor": "alice", "at": 20, "scope": null, "inputs": [{ "target": "m1", "input": "c" }] },
-        { "id": "t3", "actor": "alice", "at": 30, "scope": null, "inputs": [{ "target": "m1", "input": "a" }] }
+        {
+          "id": "t1",
+          "actor": "alice",
+          "at": 10,
+          "scope": "alt",
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "b"
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "actor": "alice",
+          "at": 20,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "c"
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "actor": "alice",
+          "at": 30,
+          "scope": null,
+          "inputs": [
+            {
+              "target": "m1",
+              "input": "a"
+            }
+          ]
+        }
       ],
       "records": [
-        { "id": "t1", "role": "edit", "entry": "t1" },
-        { "id": "t2", "role": "edit", "entry": "t2" },
-        { "id": "t3", "role": "undo", "entry": "t2" }
+        {
+          "id": "t1",
+          "role": "edit",
+          "entry": "t1"
+        },
+        {
+          "id": "t2",
+          "role": "edit",
+          "entry": "t2"
+        },
+        {
+          "id": "t3",
+          "role": "undo",
+          "entry": "t2"
+        }
       ],
       "applied": [],
-      "rowsApplied": { "t1": false, "t2": false, "t3": true },
+      "rowsApplied": {
+        "t1": false,
+        "t2": false,
+        "t3": true
+      },
       "undo": [],
-      "redo": { "alice": { "entry": "t2", "undo": "t3", "redo": { "scope": null, "inputs": [{ "target": "m1", "input": "c" }] } } }
+      "redo": {
+        "alice": {
+          "entry": "t2",
+          "undo": "t3",
+          "redo": {
+            "scope": null,
+            "inputs": [
+              {
+                "target": "m1",
+                "input": "c"
+              }
+            ]
+          }
+        }
+      }
     }
   ]
 }

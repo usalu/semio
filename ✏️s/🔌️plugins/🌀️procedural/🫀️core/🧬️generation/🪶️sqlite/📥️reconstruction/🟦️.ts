@@ -1,7 +1,8 @@
 import{compareProceduralText as compare}from"../🛡️validation/🟦️.ts";
 /** 📥️ Explicit owned procedural graph reconstruction with single-use relational ownership. */
 import{artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteTextBytes,artifactSqliteValueBudget,type ArtifactSqliteOptions}from"../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import{readBinary64,ieee754IsNull,type Binary64}from"../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {readBinary64,ieee754IsNull} from "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type{SqliteDatabase,SqliteRow}from"../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import type{ProceduralSnapshot,NeuralDictionary,NeuralValue,GenerationValue,FlowTree,FlowNeuron,FlowUi,NodeChrome,Widget,SynapseSpec,WidgetLayout}from"../🧬️model/🟦️.ts";
 function columns(t:string):readonly{index:number;width:64}[]{switch(t){case"generation_host":return[{index:2,width:64},{index:3,width:64},{index:4,width:64}];case"generation_slider_widget":case"generation_gui_slider":return[{index:2,width:64},{index:3,width:64},{index:4,width:64},{index:5,width:64}];case"generation_host_layout":case"generation_gui_node":return[{index:4,width:64},{index:5,width:64}];case"generation_neural_value":return[{index:4,width:64}];case"generation_gui":return[{index:1,width:64},{index:2,width:64},{index:3,width:64}];case"generation_gui_preview":return[{index:8,width:64},{index:9,width:64}];case"generation_value":return[{index:5,width:64}];default:return[];}}

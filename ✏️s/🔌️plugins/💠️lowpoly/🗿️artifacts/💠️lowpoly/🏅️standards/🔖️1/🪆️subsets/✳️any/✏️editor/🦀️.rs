@@ -18,7 +18,7 @@ use crate::editor::lowpoly::panels::{catalogue as catalogue_panel, document as d
 use crate::editor::lowpoly::session::{LowpolyScratch, LowpolyTransient, LowpolyTransientMutation};
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{resolve_active_object_id, selection_from_interaction, selection_from_state, utility_param_f64, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
-use crate::op::LowpolyMutation;
+use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::{artifact_kind, LowpolyObject, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
 use protocol::{Mutation, MutationDiff};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -1224,7 +1224,7 @@ fn lowpoly_artifact_mutation_retained_bytes(mutation: &LowpolyMutation) -> Resul
         LowpolyMutation::ChangePaintLayerOpacity(payload) => Ok(payload.object_id.len()),
         LowpolyMutation::ChangePaintLayerBlendMode(payload) => Ok(payload.object_id.len().saturating_add(payload.new_blend_mode.len())),
         LowpolyMutation::EditPaintLayer(payload) if payload.runs.len() <= LOWPOLY_RETAINED_PAINT_RUNS => {
-            Ok(payload.object_id.len().saturating_add(payload.runs.len().saturating_mul(size_of::<crate::mutations::PixelRun>())).saturating_add(payload.runs.iter().fold(0_usize, |bytes, run| bytes.saturating_add(run.bytes.len()))))
+            Ok(payload.object_id.len().saturating_add(payload.runs.len().saturating_mul(size_of::<crate::schema::PixelRun>())).saturating_add(payload.runs.iter().fold(0_usize, |bytes, run| bytes.saturating_add(run.bytes.len()))))
         }
         LowpolyMutation::EditPaintLayer(_) => Err("Lowpoly paint edit exceeds its fixed run envelope".into()),
         LowpolyMutation::ApplyPaintStroke(payload) => Ok(payload.object_id.len().saturating_add(payload.points.len().saturating_mul(size_of::<[f32; 2]>())).saturating_add(16)),
@@ -1305,7 +1305,6 @@ struct LowpolyArtifactStorePreparationFactory;
 struct LowpolyArtifactStorePreparation {
     base: Option<store::SnapshotRead<LowpolySnapshot>>,
     mutation: Option<LowpolyMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<LowpolySnapshot, LowpolyMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -1316,9 +1315,9 @@ struct LowpolyArtifactStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<LowpolySnapshot, LowpolyMutation> for LowpolyArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &LowpolyMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Lowpoly Artifact preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &LowpolyMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Lowpoly Artifact preparation rejected its lane".into());
         }
         admit_lowpoly_artifact_mutation(mutation)
     }
@@ -1341,7 +1340,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<LowpolySnapshot, LowpolyMutat
         Ok(Box::new(LowpolyArtifactStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -1418,14 +1416,6 @@ impl store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> fo
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
         }
-        if let Some(description) = self.description.as_ref() {
-            if grant.maximum_bytes < description.len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            let released_bytes = description.len();
-            self.description = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Lowpoly Artifact preparation could not return its exact base root"));
@@ -1444,7 +1434,7 @@ impl store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> fo
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 
@@ -1453,7 +1443,6 @@ struct LowpolyConfigStorePreparationFactory;
 struct LowpolyConfigStorePreparation {
     base: Option<store::SnapshotRead<LowpolyConfig>>,
     mutation: Option<LowpolyConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<LowpolyConfig, LowpolyConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -1464,9 +1453,9 @@ struct LowpolyConfigStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<LowpolyConfig, LowpolyConfigMutation> for LowpolyConfigStorePreparationFactory {
-    fn preflight(&self, mutation: &LowpolyConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Lowpoly config preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &LowpolyConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Lowpoly config preparation rejected its lane".into());
         }
         admit_lowpoly_config_mutation(mutation)
     }
@@ -1489,7 +1478,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<LowpolyConfig, LowpolyConfigM
         Ok(Box::new(LowpolyConfigStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -1563,14 +1551,6 @@ impl store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation
             }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
         }
-        if let Some(description) = self.description.as_ref() {
-            if grant.maximum_bytes < description.len() {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            let released_bytes = description.len();
-            self.description = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Lowpoly config preparation could not return its exact base root"));
@@ -1589,7 +1569,7 @@ impl store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation
@@ -1598,8 +1578,8 @@ fn lowpoly_export_media(port: &str, doc: &ArtifactView<'_, LowpolySnapshot>, scr
     match port {
         "mesh:out" => {
             let mesh = crate::editor::lowpoly::engine::lowpoly_mesh_from_document(doc.snapshot, &scratch.mesh_workspace_map()).map_err(|error| MediaError::Payload(port.into(), error))?;
-            let mesh_document = crate::schema::mesh_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
-            let json = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::from(&mesh_document));
+            let mesh_document = crate::schema::mesh_document_value(&mesh);
+            let json = semio_framework_pack_json::to_json_string(&mesh_document);
             Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } })
         }
         "artifact:out" => {
@@ -1923,10 +1903,9 @@ impl ArtifactEditor for LowpolyPlayApp {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.into(), "mesh:in importer only accepts a Structured payload".into()));
                 };
-                let mesh_document: serde_json::Value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| (&value).into()).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-                let mesh = crate::schema::mesh_from_mesh_document(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
-                let projection_json = crate::schema::lowpoly_document_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
-                let snapshot: LowpolySnapshot = semio_framework_pack_json::from_json_str(&projection_json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                let mesh_document = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                let mesh = crate::schema::mesh_from_document_value(&mesh_document).map_err(|error| MediaError::Payload(port.into(), error))?;
+                let snapshot = crate::schema::lowpoly_snapshot_from_mesh(&mesh).map_err(|error| MediaError::Payload(port.into(), error))?;
                 Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
             "artifact:in" => {

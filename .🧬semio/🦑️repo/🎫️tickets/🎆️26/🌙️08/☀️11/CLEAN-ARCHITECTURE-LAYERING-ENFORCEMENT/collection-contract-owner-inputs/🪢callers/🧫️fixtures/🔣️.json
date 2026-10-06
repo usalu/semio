@@ -1,0 +1,45 @@
+{
+  "contract": "direct-collection-trait-binding/v1",
+  "cases": [
+    {
+      "id": "mixed-import",
+      "input": "use protocol::{Identified,Other,Patchable}; fn f<T: Identified<String>+Patchable<i64>>() {}",
+      "accepted": true
+    },
+    {
+      "id": "public-retirement",
+      "input": "pub use crate::os_vcs::{Other,Identified,Patchable};",
+      "accepted": true
+    },
+    {
+      "id": "qualified-bound",
+      "input": "fn f<T: protocol::Identified<String>>() {}",
+      "accepted": true
+    },
+    {
+      "id": "literal-untouched",
+      "input": "fn f(){let text=\"protocol::Identified\";} // protocol::Patchable",
+      "accepted": true
+    },
+    {
+      "id": "existing-alias-refused",
+      "input": "use protocol::Identified as LocalId;",
+      "accepted": false
+    },
+    {
+      "id": "wildcard-bare-bound",
+      "input": "use protocol::*; fn f<T: Identified<String>>() {}",
+      "accepted": true
+    },
+    {
+      "id": "cfg-mixed-one-declaration",
+      "input": "#[cfg(test)] use protocol::{Identified,Other,Third}; fn f<T: Identified<String>>() {}",
+      "accepted": true
+    },
+    {
+      "id": "cfg-retired-binding",
+      "input": "#[cfg(test)] pub use protocol::Identified; fn f(){}",
+      "accepted": true
+    }
+  ]
+}

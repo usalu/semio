@@ -5,7 +5,7 @@
  */
 import { rgb } from "d3-color";
 import { interpolateArray, interpolateHcl, interpolateLab, interpolateNumber, interpolateRgb, interpolateRound } from "d3-interpolate";
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type ProbeProjection, compileVizProbe, probeProjection, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
 //#region 🔖️Vectors
@@ -41,7 +41,7 @@ const SPACES: Readonly<Record<string, (a: string, b: string) => (t: number) => s
 
 /** 🎯️ Compiles the committed fixture and projects the records of one scenario. */
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbe(ctx.fixture(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileVizProbe(ctx.input(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS), ctx.scenario.id) };
 }
 //#endregion 🔖️Vectors

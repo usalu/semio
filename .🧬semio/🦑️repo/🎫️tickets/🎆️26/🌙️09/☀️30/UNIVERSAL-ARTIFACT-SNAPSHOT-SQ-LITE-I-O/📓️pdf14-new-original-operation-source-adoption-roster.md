@@ -1,0 +1,15 @@
+# PDF 1.4 Original Operation Source Adoption Roster
+
+The parent shorthand `own14` refers here to the actual PDF 1.4 domain, not a Semio subset. The independent agent supplied the exact Root capsules, and current source readback establishes the real owner paths. No provider edits or gates were performed for this census.
+
+The Root source capsules are `📥️inputs/pdf14-own-set-patch-exact-domain-provider-root-held.json` and `📥️inputs/pdf14-own-domain-public-family-provider-held.json`. The compact actual path/hash/function census is `📥️inputs/current-pdf14-new-operation-source-adoption-roster.json`. It includes neighboring Snapshot/SQLite/Diff locators as contextual rows; those are not extra OpBinary implementations.
+
+Required future original operation adoption includes the PDF 1.4 base `PdfMutation` aggregate and its two newly registered direct leaf encoders, SetSnapshot and PatchSnapshot. SetSnapshot emits schema as length-prefixed UTF8, page count, two exact little-endian binary64 words per page, and length-prefixed page text. Its decoder reconstructs those raw words without JSON numeric normalization. PatchSnapshot delegates the original SnapshotPatch operation bytes. The aggregate registry includes both new leaves alongside the original five page mutations.
+
+The current base/A/X editor command types also each implement the original OpBinary interface: `Pdf14EditorCommand`, `Pdf14AEditorCommand`, and `Pdf14XEditorCommand`. The same Root public family contains three concrete viewer command implementations (`Pdf14ViewCommand`, `Pdf14AViewCommand`, `Pdf14XViewCommand`), which must also be classified when activating required trait methods rather than omitted from a schema-only census.
+
+These sources currently use original contiguous Vec encoders and slice decoders. Their genuine ordinary domain receipts belong to Root. The readback gives no caller options/control, paged sink/source, cancellation, candidate ownership, publication or physical retirement credit. The shared required source trait remains held until exhaustive producer and caller closure; no default Vec adapter or compatibility contract is introduced by this roster.
+
+## Exact Current Original Binary Recipes
+
+Actual 📡️protocol.semio fixes format1 and u8 tags: insert0,remove1,move2,resize3,replace-text4,SetSnapshot5,PatchSnapshot6. Each old index/text-length word is little-endianu64; text payload is original UTF8. Insert carries index,width,height,text; remove index; move from,to; resize index,width,height; replace text index,text. Insert/resize retain their original non-finite geometry refusal. SetSnapshot carries schema LP, page-countu64, then each width/height raw binary64 word and text LP; its original new replacement semantics preserve NaN and signed zero. Patch delegates original six-kind SnapshotPatch bytes. These are exact authored producer reads only, not source/control/decoder adoption or runtime credit. No generic Record framing may replace this domain wire recipe merely because the shared generic DSL route exists.

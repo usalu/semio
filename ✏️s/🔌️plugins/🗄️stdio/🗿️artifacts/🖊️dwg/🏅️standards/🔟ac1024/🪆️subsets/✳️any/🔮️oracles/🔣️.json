@@ -154,9 +154,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-version-info-applied",
       "class": "handcrafted",
       "target": {

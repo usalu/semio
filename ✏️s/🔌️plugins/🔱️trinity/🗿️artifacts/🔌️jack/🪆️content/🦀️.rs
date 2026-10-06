@@ -71,6 +71,22 @@ pub fn jack_working_scene_for_handle(handle:&JackContentChild)->Result<JackWorki
 pub fn jack_working_scene(snapshot:&JackSnapshot)->Result<JackWorkingScene,ValueError>{jack_working_scene_for_handle(&snapshot.content)}
 pub fn genesis_jack_child_pack(snapshot:&JackSnapshot,slot:&str,child_id:&str)->Result<Option<Vec<u8>>,ValueError>{use store::ArtifactPack;if slot!="content"||child_id!=snapshot.content.child_id{return Ok(None)}let owner=jack_content_for_handle(&snapshot.content)?;Ok(Some(SemioGraphSnapshot::encode_pack(owner.snapshot())))}
 
+/// 📎️ The content child that ships with the plugin under `child_id`: the empty graph every fresh document starts from.
+fn bundled_jack_content(child_id: &str) -> Option<SemioGraphSnapshot> {
+    static EMPTY_CHILD_ID: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| jack_content_handle(&jack_content_snapshot_from_working(&[], &[])).child_id);
+    (child_id == EMPTY_CHILD_ID.as_str()).then(|| jack_content_snapshot_from_working(&[], &[]))
+}
+
+/// 🧲️ Gives a freshly decoded document the content child its handle names when that child ships with the plugin; every
+/// other handle stays an address the host's composed boundary materializes (design §20.15).
+pub fn attach_bundled_content(snapshot: &mut JackSnapshot) {
+    if snapshot.content.local_owner::<JackContentOwner>().is_none() {
+        if let Some(content) = bundled_jack_content(&snapshot.content.child_id) {
+            materialize_jack_snapshot(&mut snapshot.content, content);
+        }
+    }
+}
+
 //#region 🔖️ChildLane
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{
     add_edge_property::AddEdgeProperty, add_node_property::AddNodeProperty, change_node_label::ChangeNodeLabel, create_edge::CreateEdge, create_node::CreateNode, delete_edge::DeleteEdge, delete_node::DeleteNode, move_node::MoveNode,
@@ -115,11 +131,11 @@ pub fn jack_scene_from_children(snapshot: &JackSnapshot, children: &semio_framew
 }
 
 /// 🧬️ Publishes child `leaves` as ONE edit of the exact composed `content` child; no leaf is the empty emit.
-pub fn jack_child_emit<C, D>(snapshot: &JackSnapshot, leaves: &[SemioGraphMutation]) -> semio_framework_plugin::Emit<crate::TrinityGraphMutation, C, D> {
+pub fn jack_child_emit<C, D>(snapshot: &JackSnapshot, leaves: Vec<SemioGraphMutation>) -> semio_framework_plugin::Emit<crate::TrinityGraphMutation, C, D> {
     if leaves.is_empty() {
         return semio_framework_plugin::Emit::default();
     }
-    semio_framework_plugin::Emit { child_emits: vec![semio_framework_plugin::app::ChildEmit::of::<SemioGraphSnapshot, _>("content", &snapshot.content.child_id, leaves)], ..Default::default() }
+    semio_framework_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_framework_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot, _>("content", &snapshot.content.child_id, leaves)]), ..Default::default() }
 }
 
 /// 🔌️ Splits a `node@port` endpoint into the graph's node and port fields.

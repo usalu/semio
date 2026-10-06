@@ -14,7 +14,21 @@
       "description": "Aggregate discriminator spliced in by PdfXMutation; absent when the payload stands alone."
     },
     "identifier": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Output condition identifier",
+          "de": "Kennung der Ausgabebedingung"
+        },
+        "description": {
+          "en": "OutputConditionIdentifier of the output intent, for example FOGRA39 or CGATS TR 001.",
+          "de": "OutputConditionIdentifier der Ausgabebedingung, zum Beispiel FOGRA39 oder CGATS TR 001."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

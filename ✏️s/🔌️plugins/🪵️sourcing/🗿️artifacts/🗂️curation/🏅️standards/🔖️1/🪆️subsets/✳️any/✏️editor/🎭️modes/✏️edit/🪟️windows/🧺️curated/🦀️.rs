@@ -22,6 +22,7 @@ pub const SOURCING_CURATION_BODY_CURATED: &str = "sourcing.curated";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SOURCING_CURATION_WINDOW_CURATED.into(),
         label: LocalizedLabel::native("Curated", "Kuratiert"),
         body_key: SOURCING_CURATION_BODY_CURATED.into(),

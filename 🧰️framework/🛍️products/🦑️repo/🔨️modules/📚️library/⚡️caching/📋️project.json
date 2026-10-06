@@ -227,7 +227,7 @@
       "{projectRoot}/📦️artifacts/📇️registry/🟦️.ts",
       "{projectRoot}/📦️artifacts/🧭️package-inventory/🟦️.ts",
       "{projectRoot}/📦️artifacts/🏃️contract-capture/🟦️.ts",
-      "{projectRoot}/📦️artifacts/📋️package-orchestration/🟦️.ts",
+      "{projectRoot}/🧪️tests/📦️artifact-packages/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🔒️leases/**/*",
       "{projectRoot}/🟦️.ts",
       "{projectRoot}/🦀️cargo/🟦️.ts",

@@ -3,6 +3,7 @@ import Ajv from "ajv";
 import ts from "typescript";
 import glob from "fast-glob";
 import { dirname, resolve } from "node:path";
+import { POLICY_SOURCE_OPERATIONS } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import fixture from "../../🧫️fixtures/🪪️field-parity/🔣️.json" with { type: "json" };
 import { policyExtractRustSchemaFields } from "../../../🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
 import { policyExtractTypescriptSchemaFields } from "../../../🧬️schema/🔍️field-discovery/🟦️typescript/🟦️.ts";
@@ -114,7 +115,7 @@ export function testArtifactFieldParityOracle(): void {
   }
   const root = resolve(import.meta.dir, "../../../../../../../..");
   const owners = glob.sync(fixture.discovery.pattern, { cwd: root, onlyDirectories: true, ignore: fixture.discovery.ignore }).sort();
-  const discovery = policyDiscoverArtifactSchemaOwners(root);
+  const discovery = policyDiscoverArtifactSchemaOwners(root, { ...POLICY_SOURCE_OPERATIONS, readdir: (path) => { assert(!fixture.runtimeOwnership.forbiddenSegments.some(segment => path.split(/[\\/]/).includes(segment)), "production schema discovery entered examples: " + path); return POLICY_SOURCE_OPERATIONS.readdir(path); } });
   assert.deepEqual(discovery.owners, owners);
   assert.deepEqual(discovery.issues, []);
   const breaches = policyArtifactSchemaBreaches(root);
@@ -123,8 +124,8 @@ export function testArtifactFieldParityOracle(): void {
     false,
   );
   for (const breach of breaches) assert(owners.includes(breach.scope), `schema policy inspected misplaced owner ${breach.scope}`);
-  assert.deepEqual(
-    policyArtifactOwnershipFieldParity(root).filter((breach) => breach.path.endsWith("/🟦️.ts") && breach.missing.some((field) => field.startsWith("declaration:"))),
-    [],
-  );
+  for (const breach of policyArtifactOwnershipFieldParity(root, { ...POLICY_SOURCE_OPERATIONS, readFile: (path) => { assert(!fixture.runtimeOwnership.forbiddenSegments.some(segment => path.split(/[\\/]/).includes(segment)), "production parity read example: " + path); return POLICY_SOURCE_OPERATIONS.readFile(path); } })) {
+    assert(owners.some(owner => breach.path.startsWith(owner + "/🧬️schema/")));
+    assert(!fixture.runtimeOwnership.forbiddenSegments.some(segment => breach.path.split("/").includes(segment)));
+  }
 }

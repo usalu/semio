@@ -1,0 +1,126 @@
+//! 🫳️ Exact canonical Pack output from original immutable ordinal fields.
+use super::*;
+use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView as V};
+
+fn mismatch()->PackRefusal{ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed Pack source disagrees with declared field").into()}
+fn child(path:&mut[usize;64],depth:usize,index:usize,_maximum:u16)->Result<usize,PackRefusal>{
+    if depth>=path.len(){return Err(ValueError::new(ValueRefusalKind::DepthLimit,"borrowed Pack source exceeds declared path depth").into())}
+    path[depth]=index;Ok(depth+1)
+}
+fn level_limit(level:u16,maximum:u16)->Result<(),PackRefusal>{if level>maximum{return Err(ValueError::new(ValueRefusalKind::DepthLimit,"borrowed Pack canonical depth exceeds caller limit").into())}Ok(())}
+fn record_ids<T:FieldProjectionSource>(source:&T,path:&[usize])->Result<&'static[u16],PackRefusal>{match source.projection_view(path)?{V::Record(ids)=>Ok(ids),_=>Err(mismatch())}}
+fn inner(shape:Option<&Shape>)->Option<&Shape>{elem_shape_of(shape)}
+
+impl<'a> Symbols<'a>{
+    fn projected<T:FieldProjectionSource>(&mut self,source:&'a T,shape:Option<&Shape>,path:&mut[usize;64],depth:usize,level:u16,maximum:u16,forced:bool,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{
+        level_limit(level,maximum.min(64))?;
+        control.checkpoint()?;control.step()?;
+        match source.projection_view(&path[..depth])?{
+            V::Text(text)=>self.note(text,forced,control)?,
+            V::Record(ids)=>{let spec=nested(shape,control)?;self.projected_fields(source,spec.as_ref(),ids,path,depth,level+1,maximum,control)?;},
+            V::List(length)|V::Tuple(length)=>{
+                let table=table_spec_of(shape).map(|producer|producer.encode(control)).transpose()?;
+                for index in 0..length{let next=child(path,depth,index,maximum)?;if let Some(spec)=&table{let ids=record_ids(source,&path[..next])?;for(field_index,id)in ids.iter().enumerate(){if let Some(field)=spec.fields.iter().find(|field|field.id==*id){let at=child(path,next,field_index,maximum)?;self.projected(source,Some(&field.shape),path,at,level+1,maximum,matches!(field.shape,Shape::Text),control)?;}}}else{self.projected(source,inner(shape),path,next,level+1,maximum,false,control)?;}}
+            },
+            V::Block=>{let next=child(path,depth,0,maximum)?;self.projected(source,block_inner_shape(shape),path,next,level+1,maximum,false,control)?;},
+            V::Map(length)=>{for index in 0..length{self.note(source.projection_key(&path[..depth],index)?,false,control)?;let next=child(path,depth,index,maximum)?;self.projected(source,map_inner_shape(shape),path,next,level+1,maximum,false,control)?;}},
+            V::Statements(length)=>{for index in 0..length{let keyword=source.projection_key(&path[..depth],index)?;self.note(keyword,true,control)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(key,_)|key==keyword)).map(|(_,producer)|producer.encode(control)).transpose()?;let next=child(path,depth,index,maximum)?;let ids=record_ids(source,&path[..next])?;self.projected_fields(source,spec.as_ref(),ids,path,next,level+1,maximum,control)?;}},
+            V::Wire(_)=>{for index in 0..6{let next=child(path,depth,index,maximum)?;match source.projection_view(&path[..next])?{V::Text(text)=>self.note(text,false,control)?,V::Absent=>{},_=>return Err(mismatch())}}let next=child(path,depth,8,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;},
+            V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)=>self.projected_dynamic(source,path,depth,level+1,maximum,control)?,
+            V::Absent|V::Bool(_)|V::Int(_)|V::UInt(_)|V::Float(_)|V::Enum(_)|V::Bytes(_)=>{},
+        }Ok(())
+    }
+    fn projected_fields<T:FieldProjectionSource>(&mut self,source:&'a T,spec:Option<&RecordSpec>,ids:&[u16],path:&mut[usize;64],depth:usize,level:u16,maximum:u16,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{
+        level_limit(level,maximum.min(64))?;
+        for(index,id)in ids.iter().enumerate(){let next=child(path,depth,index,maximum)?;let shape=spec.and_then(|spec|spec.fields.iter().find(|field|field.id==*id)).map(|field|&field.shape);self.projected(source,shape,path,next,level+1,maximum,false,control)?;}Ok(())
+    }
+    fn projected_dynamic<T:FieldProjectionSource>(&mut self,source:&'a T,path:&mut[usize;64],depth:usize,level:u16,maximum:u16,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{
+        level_limit(level,maximum)?;control.checkpoint()?;control.step()?;
+        match source.projection_view(&path[..depth])?{V::IntrinsicText(text)=>self.note(text,false,control)?,V::IntrinsicArray(length)|V::IntrinsicObject(length)=>{for index in 0..length{let next=child(path,depth,index,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;}},V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicBytes(_)=>{},_=>return Err(mismatch())}Ok(())
+    }
+}
+
+impl Encoder<'_,'_,'_,'_>{
+    fn projected_fields<T:FieldProjectionSource>(&mut self,source:&T,spec:Option<&RecordSpec>,path:&mut[usize;64],depth:usize,level:u16,output:&mut Output)->Result<(),PackRefusal>{
+        level_limit(level,self.options.limits.max_depth.min(64))?;
+        let ids=record_ids(source,&path[..depth])?;let mut fields=self.control.allocate_vec(ids.len())?;
+        for(index,id)in ids.iter().enumerate(){self.control.checkpoint()?;if ids[..index].contains(id){return Err(mismatch())}let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;if !matches!(source.projection_view(&path[..next])?,V::Absent)&&(self.options.preserve_unknown||spec.is_some_and(|spec|spec.fields.iter().any(|field|field.id==*id))){fields.push((*id,index));}}
+        controlled_schema::sort(&mut fields,|a,b,_|Ok(a.0.cmp(&b.0)),self.control)?;output.varint(fields.len()as u64,self.control)?;
+        self.control.begin_stage(0)?;
+        for(id,index)in fields{let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;let shape=spec.and_then(|spec|spec.fields.iter().find(|field|field.id==id)).map(|field|&field.shape);output.varint(u64::from(id),self.control)?;self.projected(source,shape,path,next,level+1,output)?;}Ok(())
+    }
+    fn projected<T:FieldProjectionSource>(&mut self,source:&T,shape:Option<&Shape>,path:&mut[usize;64],depth:usize,level:u16,output:&mut Output)->Result<(),PackRefusal>{
+        level_limit(level,self.options.limits.max_depth.min(64))?;
+        self.control.checkpoint()?;
+        let view=source.projection_view(&path[..depth])?;
+        if matches!(view,V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)){output.byte(TAG_VALUE,self.control)?;return self.projected_dynamic(source,path,depth,level+1,output)}
+        match view{
+            V::Absent=>output.byte(TAG_ABSENT,self.control),V::Bool(value)=>output.byte(if value{TAG_TRUE}else{TAG_FALSE},self.control),
+            V::Int(value)=>{output.byte(TAG_INT,self.control)?;output.signed(value,self.control)},V::UInt(value)=>{output.byte(TAG_UINT,self.control)?;output.varint(value,self.control)},V::Float(value)=>{output.byte(TAG_F64,self.control)?;output.bytes(&value.to_le_bytes(),self.control)},V::Enum(value)=>{output.byte(TAG_ENUM,self.control)?;output.varint(u64::from(value),self.control)},
+            V::Text(text)=>self.text(text,false,output),V::Bytes(bytes)=>self.bytes(bytes,output),
+            V::Record(_)=>{let spec=nested(shape,self.control)?;output.byte(TAG_RECORD,self.control)?;self.projected_fields(source,spec.as_ref(),path,depth,level+1,output)},
+            V::List(length)|V::Tuple(length)=>{if let Some(producer)=table_spec_of(shape){self.projected_table(source,producer,length,path,depth,level,output)}else{self.projected_sequence(source,inner(shape),length,matches!(view,V::Tuple(_)),path,depth,level,output)}},
+            V::Block=>{output.byte(TAG_BLOCK,self.control)?;let next=child(path,depth,0,self.options.limits.max_depth.min(64))?;self.projected(source,block_inner_shape(shape),path,next,level+1,output)},
+            V::Map(length)=>{
+                let mut items=self.control.allocate_vec(length)?;
+                for index in 0..length{self.control.checkpoint()?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;if !matches!(source.projection_view(&path[..next])?,V::Absent){items.push((index,source.projection_key(&path[..depth],index)?));}}
+                controlled_schema::sort(&mut items,|a,b,control|{let order=controlled_schema::compare_text(a.1,b.1,control)?;Ok(if order==Ordering::Equal{a.0.cmp(&b.0)}else{order})},self.control)?;
+                output.byte(TAG_MAP,self.control)?;output.varint(items.len()as u64,self.control)?;for(index,key)in items{self.text(key,false,output)?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected(source,map_inner_shape(shape),path,next,level+1,output)?;}Ok(())
+            },
+            V::Statements(length)=>{output.byte(TAG_STATEMENTS,self.control)?;output.varint(length as u64,self.control)?;for index in 0..length{self.control.checkpoint()?;let key=source.projection_key(&path[..depth],index)?;self.forced(key,output)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(keyword,_)|keyword==key)).map(|(_,producer)|producer.encode(self.control)).transpose()?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected_fields(source,spec.as_ref(),path,next,level+1,output)?;}Ok(())},
+            V::Wire(directed)=>{output.byte(TAG_WIRE,self.control)?;self.projected_wire(source,directed,path,depth,level,output)},
+            _=>Err(mismatch()),
+        }
+    }
+    fn projected_sequence<T:FieldProjectionSource>(&mut self,source:&T,shape:Option<&Shape>,length:usize,tuple:bool,path:&mut[usize;64],depth:usize,level:u16,output:&mut Output)->Result<(),PackRefusal>{
+        let(mut floats,mut ints,mut enums,mut uints)=(length>0,length>0,length>0,length>0);
+        for index in 0..length{self.control.step()?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;let value=source.projection_view(&path[..next])?;floats&=matches!(value,V::Float(_));ints&=matches!(value,V::Int(_));enums&=matches!(value,V::Enum(_));uints&=matches!(value,V::UInt(value)if value<=i64::MAX as u64);}
+        let kind=if floats{Some(NumKind::F64)}else if ints||enums||uints{Some(NumKind::Varint)}else{None};
+        output.byte(match &kind{Some(NumKind::F64)=>TAG_PACKED_F64,Some(NumKind::Varint)=>TAG_PACKED_VARINT,None=>if tuple{TAG_TUPLE}else{TAG_LIST}},self.control)?;output.varint(length as u64,self.control)?;
+        for index in 0..length{self.control.checkpoint()?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;match(kind.as_ref(),source.projection_view(&path[..next])?){(Some(NumKind::F64),V::Float(value))=>output.bytes(&value.to_le_bytes(),self.control)?,(Some(NumKind::Varint),V::Int(value))=>output.signed(value,self.control)?,(Some(NumKind::Varint),V::UInt(value))if value<=i64::MAX as u64=>output.signed(value as i64,self.control)?,(Some(NumKind::Varint),V::Enum(value))=>output.signed(i64::from(value),self.control)?,(None,_)=>self.projected(source,shape,path,next,level+1,output)?,_=>return Err(mismatch())}}Ok(())
+    }
+    fn projected_dynamic<T:FieldProjectionSource>(&mut self,source:&T,path:&mut[usize;64],depth:usize,level:u16,output:&mut Output)->Result<(),PackRefusal>{
+        level_limit(level,self.options.limits.max_depth)?;
+        self.control.checkpoint()?;
+        match source.projection_view(&path[..depth])?{
+            V::IntrinsicNull=>output.byte(TAG_NULL,self.control),V::IntrinsicBool(value)=>output.byte(if value{TAG_TRUE}else{TAG_FALSE},self.control),
+            V::IntrinsicNumber(Number::UInt(value))=>{output.byte(TAG_UINT,self.control)?;output.varint(value,self.control)},V::IntrinsicNumber(Number::Int(value))=>{output.byte(TAG_INT,self.control)?;output.signed(value,self.control)},V::IntrinsicNumber(Number::Float(value))=>{output.byte(TAG_F64,self.control)?;output.bytes(&value.to_le_bytes(),self.control)},
+            V::IntrinsicText(text)=>self.text(text,false,output),V::IntrinsicBytes(bytes)=>self.bytes(bytes,output),
+            V::IntrinsicArray(length)=>{output.byte(TAG_LIST,self.control)?;output.varint(length as u64,self.control)?;for index in 0..length{let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected_dynamic(source,path,next,level+1,output)?;}Ok(())},
+            V::IntrinsicObject(length)=>{output.byte(TAG_MAP,self.control)?;output.varint(length as u64,self.control)?;for index in 0..length{let key=source.projection_key(&path[..depth],index)?;self.text(key,true,output)?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected_dynamic(source,path,next,level+1,output)?;}Ok(())},
+            _=>Err(mismatch()),
+        }
+    }
+    fn projected_text<'source,T:FieldProjectionSource>(&mut self,source:&'source T,path:&mut[usize;64],depth:usize,index:usize)->Result<Option<&'source str>,PackRefusal>{
+        self.control.checkpoint()?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;match source.projection_view(&path[..next])?{V::Absent=>Ok(None),V::Text(text)=>Ok(Some(text)),_=>Err(mismatch())}
+    }
+    fn projected_node<T:FieldProjectionSource>(&mut self,source:&T,path:&mut[usize;64],depth:usize,index:usize,output:&mut Output)->Result<(),PackRefusal>{
+        let id=self.projected_text(source,path,depth,index)?.ok_or_else(mismatch)?;let kind=self.projected_text(source,path,depth,index+1)?;let port=self.projected_text(source,path,depth,index+2)?;output.byte(u8::from(kind.is_some())|(u8::from(port.is_some())<<1),self.control)?;self.text(id,false,output)?;if let Some(kind)=kind{self.text(kind,false,output)?;}if let Some(port)=port{self.text(port,false,output)?;}Ok(())
+    }
+    fn projected_wire<T:FieldProjectionSource>(&mut self,source:&T,directed:Option<bool>,path:&mut[usize;64],depth:usize,level:u16,output:&mut Output)->Result<(),PackRefusal>{
+        let id=self.projected_text(source,path,depth,6)?;let kind=self.projected_text(source,path,depth,7)?;let label=id.is_some()||kind.is_some();let presence=u8::from(directed.is_some())|(u8::from(directed==Some(true))<<1)|(u8::from(label)<<2);output.byte(presence,self.control)?;self.projected_node(source,path,depth,0,output)?;if directed.is_some(){self.projected_node(source,path,depth,3,output)?;}if label{output.byte(u8::from(id.is_some())|(u8::from(kind.is_some())<<1),self.control)?;if let Some(id)=id{self.text(id,false,output)?;}if let Some(kind)=kind{self.text(kind,false,output)?;}}let next=child(path,depth,8,self.options.limits.max_depth.min(64))?;self.projected_dynamic(source,path,next,level+1,output)
+    }
+    fn projected_cell<T:FieldProjectionSource>(&mut self,source:&T,path:&mut[usize;64],depth:usize,row:usize,id:u16)->Result<Option<usize>,PackRefusal>{
+        self.control.checkpoint()?;let next=child(path,depth,row,self.options.limits.max_depth.min(64))?;let ids=record_ids(source,&path[..next])?;let Some(column)=ids.iter().position(|actual|*actual==id)else{return Ok(None)};let cell=child(path,next,column,self.options.limits.max_depth.min(64))?;Ok((!matches!(source.projection_view(&path[..cell])?,V::Absent)).then_some(cell))
+    }
+    fn projected_table<T:FieldProjectionSource>(&mut self,source:&T,producer:RecordSpecProducer,length:usize,path:&mut[usize;64],depth:usize,level:u16,output:&mut Output)->Result<(),PackRefusal>{
+        let spec=producer.encode(self.control)?;let mut columns=self.control.allocate_vec(spec.fields.len())?;for(index,field)in spec.fields.iter().enumerate(){self.control.checkpoint()?;columns.push((index,field));}controlled_schema::sort(&mut columns,|a,b,_|Ok((a.1.id,a.0).cmp(&(b.1.id,b.0))),self.control)?;output.byte(TAG_TABLE_SOA,self.control)?;output.varint(length as u64,self.control)?;output.varint(columns.len()as u64,self.control)?;
+        for(_,field)in columns{let mut dense=true;for row in 0..length{dense&=self.projected_cell(source,path,depth,row,field.id)?.is_some();}output.varint(u64::from(field.id),self.control)?;output.byte(u8::from(!dense),self.control)?;
+            if !dense{for start in (0..length).step_by(8){let mut byte=0;for(row,bit)in(start..length.min(start+8)).zip(0..8){if self.projected_cell(source,path,depth,row,field.id)?.is_some(){byte|=1<<bit;}}output.byte(byte,self.control)?;}}
+            let tag=elem_tag_for_shape(&field.shape);output.byte(tag,self.control)?;
+            if tag==ELEM_BOOL{for start in(0..length).step_by(8){let mut byte=0;for(row,bit)in(start..length.min(start+8)).zip(0..8){if let Some(cell)=self.projected_cell(source,path,depth,row,field.id)?{if matches!(source.projection_view(&path[..cell])?,V::Bool(true)){byte|=1<<bit;}}}output.byte(byte,self.control)?;}continue}
+            for row in 0..length{let Some(cell)=self.projected_cell(source,path,depth,row,field.id)?else{continue};match(tag,source.projection_view(&path[..cell])?){(ELEM_F64,V::Float(value))=>output.bytes(&value.to_le_bytes(),self.control)?,(ELEM_INT,V::Int(value))=>output.signed(value,self.control)?,(ELEM_UINT,V::UInt(value))=>output.varint(value,self.control)?,(ELEM_ENUM,V::Enum(value))=>output.varint(u64::from(value),self.control)?,(ELEM_STR,V::Text(text))=>self.forced(text,output)?,(ELEM_F64|ELEM_INT|ELEM_UINT|ELEM_ENUM|ELEM_STR,_)=>{},_=>self.projected(source,Some(&field.shape),path,cell,level+1,output)?,}}
+        }Ok(())
+    }
+    fn projected_body<T:FieldProjectionSource>(&mut self,source:&T,spec:&RecordSpec,output:&mut Output)->Result<(),PackRefusal>{self.symbols(output)?;self.projected_fields(source,Some(spec),&mut[0;64],0,0,output)}
+}
+
+pub(crate) fn projected_record_body_into<T:FieldProjectionSource>(spec:&RecordSpec,source:&T,options:&EncodeOptions,output:&mut dyn protocol::mutation::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
+    let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
+    control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{
+        control.begin_stage(0)?;let ids=record_ids(source,&[])?;let mut symbols=Symbols{entries:Vec::new()};symbols.projected_fields(source,Some(spec),ids,&mut[0;64],0,0,options.limits.max_depth,control)?;symbols.finish(control)?;
+        let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:false,next_chunk:0};let mut measured=Output::measure();encoder.projected_body(source,spec,&mut measured)?;
+        if measured.length as u64>options.limits.max_file_len{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"borrowed Record exceeds max_file_len").into())}
+        let mut emitted=Output{bytes:None,external:Some(output),length:0};encoder.projected_body(source,spec,&mut emitted)?;if emitted.length!=measured.length{return Err(mismatch())}Ok(emitted.length)
+    }))
+}

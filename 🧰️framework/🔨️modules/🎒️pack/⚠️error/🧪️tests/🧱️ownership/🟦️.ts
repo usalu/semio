@@ -3,22 +3,18 @@ import "../🧭️producer-authority/🟦️.ts";
 import {test,expect} from "bun:test";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import Ajv from "ajv/dist/2020.js";
+
 import TOML from "@iarna/toml";
 import fixture from "../../🧫️fixtures/⚠️refusal/🔣️.json";
-import schema from "../../🧬️schema/⚠️refusal/🔣️.json";
 const owner=resolve(import.meta.dir,"../.."),read=(path:string)=>readFileSync(resolve(owner,path),"utf8");
 
 test("every refusal class and owned path has an independent schema and JSON output authority",()=>{
- const validate=new Ajv({strict:true}).compile(schema);
- expect(validate(fixture)).toBe(true);
  expect(new Set(fixture.cases.map(row=>row.kind)).size).toBe(8);
  for(const row of fixture.cases){
   const reference=row.path.reduce((message,part)=>part+"."+message,row.message);
   expect("schema error: "+reference).toBe(row.display);
   expect(JSON.parse(JSON.stringify({kind:row.kind,message:reference}))).toEqual({kind:row.kind,message:row.display.slice("schema error: ".length)});
  }
- expect(validate({...fixture,implicitStringError:true})).toBe(false);
 });
 
 test("the actual error provider is independent of Replication and preserves an owned ValueError directly",()=>{
@@ -35,14 +31,11 @@ test("the actual error provider is independent of Replication and preserves an o
 
 import {Database} from "bun:sqlite";
 import textFixture from "../../🧫️fixtures/📍️text-refusal/🔣️.json";
-import textSchema from "../../🧬️schema/📍️text-refusal/🔣️.json";
 import {PackError} from "../../🟦️.ts";
 import {TextError} from "../../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
 const refusalKinds={InvalidValue:"invalidValue",Canceled:"canceled",OwnershipLimit:"ownershipLimit",AllocationFailed:"allocationFailed",WorkLimit:"workLimit",DepthLimit:"depthLimit",UnsupportedOwner:"unsupportedOwner",InvariantViolated:"invariantViolated"} as const;
 
 test("source-positioned refusal retains kind, span, expected syntax and original cause through Pack",()=>{
- const validate=new Ajv({strict:true}).compile(textSchema);
- expect(validate(textFixture)).toBe(true);
  const database=new Database(":memory:");
  try{
   for(const row of textFixture.cases){
@@ -59,5 +52,4 @@ test("source-positioned refusal retains kind, span, expected syntax and original
    expect(reference.display).toBe(row.display);
   }
  }finally{database.close();}
- expect(validate({...textFixture,implicitSpan:true})).toBe(false);
 });

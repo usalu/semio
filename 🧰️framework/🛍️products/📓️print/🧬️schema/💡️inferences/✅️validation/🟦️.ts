@@ -8,8 +8,8 @@ export function validateVizChartSpecification(chart: unknown): readonly VizChart
   catch (error) { return [{ code: "print.chart.schema", path: "chart", message: error instanceof Error ? error.message : String(error) }]; }
 }
 
-/** 🪪️ Admits canonical wire output against every owned inference result variant. */
+/** 🪪️ Admits each owned semantic inference result against its declared variants. */
 export function validateVizChartInference(value: unknown): readonly VizChartDiagnostic[] {
-  try { const wire = JSON.parse(JSON.stringify(value)); return validateJsonSchemaSubset(resultDocument, wire).map(message => ({ code: "print.chart.inference-schema", path: "inference", message })); }
+  try { return validateJsonSchemaSubset(resultDocument, value).map(message => ({ code: "print.chart.inference-schema", path: "inference", message })); }
   catch (error) { return [{ code: "print.chart.inference-schema", path: "inference", message: error instanceof Error ? error.message : String(error) }]; }
 }

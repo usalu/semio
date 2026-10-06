@@ -1,17 +1,34 @@
 {
-  "$schema": "🧬️schema/🔣️.json",
   "schemaVersion": 1,
   "cases": [
     {
       "id": "sparse-sheet",
       "sheetName": "Sparse",
       "cells": [
-        {"row": 1, "column": 0, "value": {"kind": "inlineString", "value": "first"}},
-        {"row": 3, "column": 2, "value": {"kind": "number", "value": 7}}
+        {
+          "row": 1,
+          "column": 0,
+          "value": {
+            "kind": "inlineString",
+            "value": "first"
+          }
+        },
+        {
+          "row": 3,
+          "column": 2,
+          "value": {
+            "kind": "number",
+            "value": 7
+          }
+        }
       ],
       "expectedRows": 4,
       "expectedColumns": 4,
-      "vacancy": {"row": 2, "column": 1, "draft": "created"}
+      "vacancy": {
+        "row": 2,
+        "column": 1,
+        "draft": "created"
+      }
     },
     {
       "id": "blank-sheet",
@@ -19,18 +36,37 @@
       "cells": [],
       "expectedRows": 1,
       "expectedColumns": 1,
-      "vacancy": {"row": 1, "column": 0, "draft": "42"}
+      "vacancy": {
+        "row": 1,
+        "column": 0,
+        "draft": "42"
+      }
     },
     {
       "id": "formula-sheet",
       "sheetName": "Formula",
       "cells": [
-        {"row": 1, "column": 0, "value": {"kind": "formula", "expr": "2+3", "cached": {"kind": "number", "value": 5}}}
+        {
+          "row": 1,
+          "column": 0,
+          "value": {
+            "kind": "formula",
+            "expr": "2+3",
+            "cached": {
+              "kind": "number",
+              "value": 5
+            }
+          }
+        }
       ],
       "expectedRows": 2,
       "expectedColumns": 2,
       "formulaDraft": "=2+3",
-      "vacancy": {"row": 2, "column": 1, "draft": "9"}
+      "vacancy": {
+        "row": 2,
+        "column": 1,
+        "draft": "9"
+      }
     }
   ]
 }

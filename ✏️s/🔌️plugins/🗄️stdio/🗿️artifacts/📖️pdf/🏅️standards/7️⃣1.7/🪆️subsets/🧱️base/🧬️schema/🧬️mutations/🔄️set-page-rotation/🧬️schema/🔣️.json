@@ -16,11 +16,51 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "description": {
+          "en": "Index of the page, counted from 0.",
+          "de": "Index der Seite, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "rotation": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Rotation",
+          "de": "Drehung"
+        },
+        "description": {
+          "en": "Clockwise rotation of the page when it is displayed, a multiple of 90°.",
+          "de": "Drehung der Seite im Uhrzeigersinn bei der Anzeige, ein Vielfaches von 90°."
+        },
+        "unit": "°",
+        "step": 90,
+        "precision": 0,
+        "softMin": 0,
+        "softMax": 270,
+        "snaps": [
+          0,
+          90,
+          180,
+          270
+        ],
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

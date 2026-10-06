@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "image": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfImage"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfImage",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Image",
+          "de": "Bild"
+        },
+        "description": {
+          "en": "Resource name, dimensions, colour space and samples of the image XObject.",
+          "de": "Ressourcenname, Abmessungen, Farbraum und Abtastwerte des Bild-XObjects."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

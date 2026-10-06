@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Color space",
+          "de": "Farbraum"
+        },
+        "description": {
+          "en": "Resource name of the color space that is removed.",
+          "de": "Ressourcenname des Farbraums, die entfernt wird."
+        },
+        "ref": {
+          "kind": "colorSpace"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

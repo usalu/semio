@@ -773,7 +773,7 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     let mut mesh = semio_framework_plugin::MeshData::from_value(semio_framework_pack_json::to_dsl_value(&value)).unwrap();
     mesh.component_references = serde_json::from_value(row["componentReferences"].clone()).unwrap();
     mesh.validate_component_references().unwrap();
-    let cutoff_case: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    let cutoff_case: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let cutoff = cutoff_case["alphaCutoffCase"]["value"].as_f64().unwrap();
     let mut mask = mesh.clone();
     let semio_framework_value::DslValue::Object(fields) = mask.materials.get_mut("paint").unwrap() else { panic!("owned material fields") };

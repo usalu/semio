@@ -1,0 +1,76 @@
+{
+  "cases": [
+    {
+      "id": "replace",
+      "row": {
+        "path": "owned/🦀️.rs",
+        "before": "old",
+        "after": "new",
+        "beforeHash": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+        "afterHash": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+      },
+      "held": "old",
+      "refused": false
+    },
+    {
+      "id": "create",
+      "row": {
+        "path": "owned/🔣️.json",
+        "before": null,
+        "after": "{}",
+        "beforeHash": null,
+        "afterHash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+      },
+      "held": null,
+      "refused": false
+    },
+    {
+      "id": "delete",
+      "row": {
+        "path": "owned/🦀️.rs",
+        "before": "dead",
+        "after": null,
+        "beforeHash": "28a3a5e81d1e89f0efc70b63bf717b921373fc7fac70bc1b7e4d466799c0c6b0",
+        "afterHash": null
+      },
+      "held": "dead",
+      "refused": false
+    },
+    {
+      "id": "foreign",
+      "row": {
+        "path": "owned/🦀️.rs",
+        "before": "old",
+        "after": "new",
+        "beforeHash": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+        "afterHash": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+      },
+      "held": "foreign",
+      "refused": true
+    },
+    {
+      "id": "wronghash",
+      "row": {
+        "path": "owned/🦀️.rs",
+        "before": "old",
+        "after": "new",
+        "beforeHash": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+        "afterHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "held": "old",
+      "refused": true
+    },
+    {
+      "id": "escape",
+      "row": {
+        "path": "../owned",
+        "before": "old",
+        "after": "new",
+        "beforeHash": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+        "afterHash": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+      },
+      "held": "old",
+      "refused": true
+    }
+  ]
+}

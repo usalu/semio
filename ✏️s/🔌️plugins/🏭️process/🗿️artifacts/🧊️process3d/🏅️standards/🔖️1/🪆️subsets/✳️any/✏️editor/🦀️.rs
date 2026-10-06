@@ -19,7 +19,7 @@ use crate::editor::process3d::modes::edit::windows::workpiece;
 use crate::editor::process3d::panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
 use crate::editor::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::editor::process3d::terminology::process3d_labels;
-use crate::op::Process3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::{Capability, CapabilityRule, MachineCatalog, MachineCatalogs, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, WorkingSolid, WorkshopMachine};
 use semio_framework::kernel::Effect;
 use semio_framework::{DslValue, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -759,7 +759,6 @@ struct Process3dConfigStorePreparationFactory;
 struct Process3dConfigStorePreparation {
     base: Option<store::SnapshotRead<Process3dConfig>>,
     mutation: Option<Process3dConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -829,9 +828,9 @@ fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMut
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparationFactory {
-    fn preflight(&self, mutation: &Process3dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Process3d config preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &Process3dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Process3d config preparation rejected its lane".into());
         }
         admit_process3d_config_mutation(mutation)
     }
@@ -851,7 +850,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Process3dConfig, Process3dCon
         Ok(Box::new(Process3dConfigStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -904,7 +902,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMuta
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -924,7 +922,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMuta
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ConfigStorePreparation
@@ -952,7 +950,6 @@ struct Process3dArtifactPreparationFactory;
 struct Process3dArtifactPreparation {
     base: Option<store::SnapshotRead<Process3dSnapshot>>,
     mutation: Option<Process3dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(Process3dSnapshot, Vec<Process3dMutation>, Process3dMutation)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>>,
@@ -1138,9 +1135,9 @@ fn prepare_process3d_document(base: &Process3dSnapshot, mutation: Process3dMutat
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparationFactory {
-    fn preflight(&self, mutation: &Process3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Process3d document preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &Process3dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Process3d document preparation rejected its lane".into());
         }
         process3d_mutation_retained_bytes(mutation).map_err(semio_framework_value::ValueError::into_message)?;
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, PROCESS3D_DOCUMENT_GRANT_BYTES))
@@ -1150,7 +1147,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dM
         &self,
         request: store::ArtifactStoreOneItemPreparationRequest<Process3dSnapshot, Process3dMutation>,
     ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation>>, store::ArtifactStoreOneItemPreparationRequest<Process3dSnapshot, Process3dMutation>> {
-        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+        if self.preflight(&request.mutation, request.lane).is_err()
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
@@ -1161,7 +1158,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dM
         Ok(Box::new(Process3dArtifactPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             prepared: None,
@@ -1250,14 +1246,6 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
             self.mutation = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
-        if let Some(description) = self.description.as_ref() {
-            let bytes = description.len();
-            if grant.maximum_bytes < bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.description = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d document preparation could not return its exact base root"));
@@ -1275,7 +1263,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ArtifactStorePreparation
@@ -1462,11 +1450,11 @@ impl ArtifactEditor for Process3dPlayApp {
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::process3d_envelope_decode_owner_bundle())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::process3d_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::process3d_document_store_owners())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::process3d_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1478,15 +1466,15 @@ impl ArtifactEditor for Process3dPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::spr::process3d_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::standards::v1::subsets::any::io::binary::mutations::process3d_document_store_initialization_job(envelope, operation, generation))
     }
 
     /// 🔐️ The exact publication gate the host consults once, right before its non-rejecting commit
     /// — so a lease the app admitted for itself (`process3d_admit_app_publication_authority`, every
     /// host-begun `Effect::LoadDocument`) is consumed here; a host-admitted lease stays the host's.
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::spr::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))?;
-        crate::spr::process3d_release_app_publication_authority(operation);
+        crate::standards::v1::subsets::any::io::binary::mutations::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))?;
+        crate::standards::v1::subsets::any::io::binary::mutations::process3d_release_app_publication_authority(operation);
         Ok(())
     }
 
@@ -1555,7 +1543,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, Process3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
         match port {
-            "brep:out" => match crate::io::export_process3d_model(&crate::process_working_scene_from_snapshot(doc.snapshot), None, "step").map_err(|error| MediaError::Payload("brep:out".into(), error))? {
+            "brep:out" => match crate::standards::v1::subsets::any::io::export_process3d_model(&crate::process_working_scene_from_snapshot(doc.snapshot), None, "step").map_err(|error| MediaError::Payload("brep:out".into(), error))? {
                 Some(export) => {
                     let text = match export.data {
                         DslValue::String(text) => text,
@@ -1597,7 +1585,7 @@ impl ArtifactEditor for Process3dPlayApp {
                 // "stdio.step" format is not binary — so this re-encodes it as base64 to satisfy
                 // `import_process3d_model`'s `data:...,<base64>` expectation.
                 let data_url = format!("data:application/octet-stream;base64,{}", base64_codec::base64_standard_encode(json.as_bytes()));
-                match crate::io::import_process3d_model("geometry-in.step", &data_url) {
+                match crate::standards::v1::subsets::any::io::import_process3d_model("geometry-in.step", &data_url) {
                     Some(snapshot) => Ok(Emit { effects: vec![reset_process3d_document_effect(&snapshot)], ..Default::default() }),
                     None => Err(MediaError::Payload("geometry:in".into(), "STEP import failed".into())),
                 }

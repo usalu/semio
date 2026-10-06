@@ -18,10 +18,35 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/JsonPathSegment"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Path",
+          "de": "Pfad"
+        },
+        "description": {
+          "en": "Member names and array indices leading from the root to the object or array that changes; empty for the root.",
+          "de": "Eigenschaftsnamen und Array-Indizes von der Wurzel bis zum Objekt oder Array, das sich ändert; leer für die Wurzel."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Member name",
+          "de": "Name der Eigenschaft"
+        },
+        "description": {
+          "en": "Name of the object member that is removed.",
+          "de": "Name der Objekteigenschaft, die entfernt wird."
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   },
   "$defs": {

@@ -23,7 +23,7 @@ fn delete_selected(doc: &ArtifactView<'_, WiresSnapshot>, selected: &[String]) -
     if leaves.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("wires.selection.empty"), "deleteSelection needs at least one selected node or relationship on the board"));
     }
-    Ok(crate::wires_child_emit(doc.snapshot, &leaves))
+    Ok(crate::wires_child_emit(doc.snapshot, leaves))
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg)` is framework-fixed at this exact 3-arg shape

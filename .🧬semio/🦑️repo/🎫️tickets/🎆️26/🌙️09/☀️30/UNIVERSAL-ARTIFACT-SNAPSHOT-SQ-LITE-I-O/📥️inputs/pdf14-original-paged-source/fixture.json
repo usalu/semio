@@ -1,0 +1,17 @@
+{
+  "schema": "pdf14.operation-source/v1",
+  "maximumCloseItems": 1,
+  "maximumCloseBytes": 4096,
+  "allocationBytes": 131072,
+  "payloadBytes": 8194,
+  "cancelAt": 256,
+  "cases": [
+    {"kind":"insert-page","tag":0,"index":0,"widthBits":"4607182418800017408","heightBits":"4611686018427387904","text":"Ω","frameHex":"01000000000000000000000000000000f03f00000000000000400200000000000000cea9"},
+    {"kind":"remove-page","tag":1,"index":3,"frameHex":"01010300000000000000"},
+    {"kind":"move-page","tag":2,"from":1,"to":2,"frameHex":"010201000000000000000200000000000000"},
+    {"kind":"resize-page","tag":3,"index":0,"widthBits":"4607182418800017408","heightBits":"9223372036854775808","frameHex":"01030000000000000000000000000000f03f0000000000000080"},
+    {"kind":"replace-page-text","tag":4,"index":2,"text":"AΩ","frameHex":"01040200000000000000030000000000000041cea9"},
+    {"kind":"set-snapshot","tag":5,"identity":"pdf","pages":[{"widthBits":"9221120237041090626","heightBits":"9223372036854775808","text":"x"}],"frameHex":"010503000000000000007064660100000000000000420000000000f87f0000000000000080010000000000000078"},
+    {"kind":"patch-snapshot","tag":6,"patch":{"operation":"remove","path":"/pages/0"},"frameHex":"01067b226f7065726174696f6e223a2272656d6f7665222c2270617468223a222f70616765732f30227d"}
+  ]
+}

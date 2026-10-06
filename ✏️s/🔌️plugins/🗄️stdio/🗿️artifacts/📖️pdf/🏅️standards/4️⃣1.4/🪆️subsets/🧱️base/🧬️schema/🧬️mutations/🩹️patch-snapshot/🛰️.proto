@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.stdio.pdf.v1_4.mutations;
+// 🩹️ Original SnapshotPatch operation bytes, never a whole snapshot encoding.
+message PatchSnapshot { bytes patch = 1; }

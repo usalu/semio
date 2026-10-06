@@ -98,7 +98,7 @@ fn canvas_camera_gesture_fixture() -> Value {
     serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).expect("shared Canvas2d camera gesture fixture")
 }
 
-fn fixture_camera(value: &Value) -> Viewport {
+fn board_snapshot_camera(value: &Value) -> Viewport {
     Viewport { x: value["x"].as_f64().unwrap() as f32, y: value["y"].as_f64().unwrap() as f32, zoom: value["zoom"].as_f64().unwrap() as f32 }
 }
 
@@ -267,7 +267,7 @@ fn canvas2d_wheel_uses_the_react_factors_limits_and_exact_cursor_anchor() {
     let bounds = Rect::new(0.0, 0.0, surface["width"].as_f64().unwrap() as f32, surface["height"].as_f64().unwrap() as f32);
     let anchor_x = wheel["anchor"]["x"].as_f64().unwrap() as f32;
     let anchor_y = wheel["anchor"]["y"].as_f64().unwrap() as f32;
-    let initial = fixture_camera(&wheel["initialCamera"]);
+    let initial = board_snapshot_camera(&wheel["initialCamera"]);
     let world_x = (anchor_x - bounds.w * 0.5) / initial.zoom + initial.x;
     let world_y = (anchor_y - bounds.h * 0.5) / initial.zoom + initial.y;
     mutate_scene_state(surface_id, |state| state.viewport = initial);
@@ -298,7 +298,7 @@ fn assert_canvas_pan_case(case_id: &str) {
     let layers = json!([{ "role": "meta", "utility": row["activeUtility"] }]);
     let node = canvas_scene(&surface_id, layers.to_string());
     let bounds = Rect::new(0.0, 0.0, surface["width"].as_f64().unwrap() as f32, surface["height"].as_f64().unwrap() as f32);
-    let initial = fixture_camera(&fixture["wheel"]["initialCamera"]);
+    let initial = board_snapshot_camera(&fixture["wheel"]["initialCamera"]);
     mutate_scene_state(&surface_id, |state| state.viewport = initial);
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().clear());
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
@@ -317,7 +317,7 @@ fn assert_canvas_pan_case(case_id: &str) {
         row["expectedActions"].as_array().unwrap().iter().map(|action| action.as_str().unwrap()).collect::<Vec<_>>(),
         "{case_id} publishes exactly React's document-action sequence"
     );
-    let expected = fixture_camera(&row["expectedCamera"]);
+    let expected = board_snapshot_camera(&row["expectedCamera"]);
     let actual = scene_state(&surface_id).viewport;
     assert_eq!((actual.x, actual.y, actual.zoom), (expected.x, expected.y, expected.zoom), "{case_id} owns React's exact camera");
     let camera_actions = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);

@@ -27,8 +27,8 @@ pub mod node_graph_edit {
     /// 🧾️ Decodes one host row through the ONE shared node-graph row decoder of `🛠️tool-machine`; the `setSlider` and
     /// `insertPort` rows a sequence has no widget for are refused by name, so the whole batch is refused.
     pub(crate) fn sequence_node_graph_row(row: &semio_framework_value::DslValue) -> Result<NodeGraphEditRow, Fault> {
-        match NodeGraphEditRow::from_row(row).map_err(|reason| Fault::from(format!("sequence nodeGraphEdit refusal: {reason}")))? {
-            NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => Err(Fault::from("sequence nodeGraphEdit refusal: a sequence has no sliders and no variadic ports")),
+        match NodeGraphEditRow::from_row(row).map_err(|reason| crate::editor::sequence::sequence_fault("sequence.node-graph.malformed", format!("sequence nodeGraphEdit refusal: {reason}")))? {
+            NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => Err(crate::editor::sequence::sequence_fault("sequence.node-graph.unsupported", "sequence nodeGraphEdit refusal: a sequence has no sliders and no variadic ports")),
             row => Ok(row),
         }
     }
@@ -41,7 +41,7 @@ pub mod node_graph_edit {
     pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
         let rows: Vec<NodeGraphEditRow> = match json::parse(&payload.operations_json, json::JsonMemberPolicy::Reject) {
             Ok(Value::Array(rows)) => rows.iter().map(|row| sequence_node_graph_row(&json::to_dsl_value(row))).collect::<Result<_, _>>()?,
-            _ => return Err(Fault::from("sequence nodeGraphEdit operations must be a JSON array")),
+            _ => return Err(crate::editor::sequence::sequence_fault("sequence.node-graph.malformed", "sequence nodeGraphEdit operations must be a JSON array")),
         };
         let records: Vec<NodeDragRecord> = rows.iter().filter_map(|row| if let NodeGraphEditRow::Move(record) = row { Some(record.clone()) } else { None }).filter(NodeDragRecord::moves).collect();
         let leaves = sequence_child_leaves_from_host_mutation(doc, |host| {
@@ -80,9 +80,9 @@ pub mod node_graph_edit {
         let dragged = leaves.iter().any(|leaf| matches!(leaf, SemioFlowMutation::DragNodes(_)));
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
         if !dragged || authoring_seed.is_empty() {
-            return Ok(sequence_child_leaves_emit(doc.snapshot, &leaves));
+            return Ok(sequence_child_leaves_emit(doc.snapshot, leaves));
         }
-        let Some(gesture) = records.first().map(|record| record.gesture_id.as_str()) else { return Ok(sequence_child_leaves_emit(doc.snapshot, &leaves)) };
+        let Some(gesture) = records.first().map(|record| record.gesture_id.as_str()) else { return Ok(sequence_child_leaves_emit(doc.snapshot, leaves)) };
         let drag = node_drag_emit(SEQUENCE_PLAY_APP_ID, NODE_GRAPH_EDIT_VERB, authoring_seed, gesture, leaves);
         Ok(Emit { ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Emit::node_drag_child::<SemioFlowSnapshot, _>(drag, "content", &doc.snapshot.content.child_id) })
     }

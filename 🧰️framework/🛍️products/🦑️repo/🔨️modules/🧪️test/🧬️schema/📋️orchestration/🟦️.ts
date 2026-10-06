@@ -1,8 +1,8 @@
-import { type FeatureStep } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type FeatureStep } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type SchemaDiagnostic, type SchemaFixtureReport, discoverSchemaFixtures, readSchemaCatalog, runSchemaFixture, schemaContractDiagnostics } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { type FaultNoticeDefinition, type InputSchemaAudit, inputNumericTransport, inputShape, isFaultNoticeCode, mutationInputAudit, mutationInputInstance, validateFaultNotices } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { type ActionArgDef, type FaultNoticeDefinition, type InputSchemaAudit, SHELL_LOCALES, SHELL_TERMINOLOGIES, argControl, inputLabelGlossary, inputNumericTransport, inputShape, isFaultNoticeCode, isShellLocale, isShellTerminology, mutationInputAudit, mutationInputInstance, validateFaultNotices } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { parseSchemaInvariants } from "../../../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
 import { type Dirent, existsSync, readdirSync, readFileSync } from "node:fs";
 import { Validator } from "jsonschema";
@@ -68,12 +68,44 @@ function resolveReferencedSchemaDocuments(repoRoot: string, documents: Map<strin
 }
 
 //#region 🎛️MutationInputUi
-/** 📊️ One plugin's share of the mutation-input census: leaves read, top-level inputs, those whose whole subtree reads clean
- * (`declared`), every finding at every nested pointer, and the findings per error class. */
-export type MutationInputCensusRow = { readonly owner: string; leaves: number; inputs: number; declared: number; findings: number; readonly refused: Record<string, number> };
+/** 📊️ One plugin's share of the mutation-input census: leaves read, those their descriptor declares withdraw-only
+ * (`withdrawOnly`: `"editable": false`, their inputs are not judged), top-level inputs of the editable leaves, those whose whole
+ * subtree states its UI facts itself (`declared`), those that read into a valid
+ * descriptor only by inference somewhere in their subtree (`inferred`: a glossary label, or a number without declared step or
+ * snapping points), the leaf inputs at every depth whose label comes from the glossary in some locale (`labelInferred` — a count,
+ * the glossary is a legitimate label source, design §6), every finding at every nested pointer, and the findings per error class.
+ * The remaining `inputs - declared - inferred` are refused: unreadable, unlabelled, or outside the vocabulary. */
+export type MutationInputCensusRow = { readonly owner: string; leaves: number; withdrawOnly: number; inputs: number; declared: number; inferred: number; labelInferred: number; findings: number; readonly refused: Record<string, number> };
 
-/** 🎛️ The `schema-mutation-input-ui` lint and its census, over every catalogued mutation leaf under `scope`. */
-export type MutationInputUiReport = { readonly diagnostics: readonly SchemaDiagnostic[]; readonly census: readonly MutationInputCensusRow[] };
+/** 🪞️ Where one UI fact of an input comes from: its `x-semio-ui` annotation (`declared`), the reader's inference from the
+ * field name or the JSON type (`inferred`), or nowhere (`absent`). */
+export type MutationInputSource = "declared" | "inferred" | "absent";
+
+/** 🔬️ One leaf input as its payload schema states it (design §22.8): the RFC 6901 `pointer` in the payload (`/-` an array item),
+ * its property `key`, settled JSON `type`, the `widget` and `role` its `x-semio-ui` declares (own annotation first, then its `$ref`
+ * targets'), the source of its `label` per locale (`null` where no label shows: a hidden input, an array item), and for a number
+ * that is no reference the source of its `step` (`inferred` is the integer step 1) and whether it declares `snaps` or `snapSource`. */
+export type MutationInputDeclaration = Readonly<{ pointer: string; key: string; type: string | null; widget: string | null; role: string | null; label: Readonly<Record<string, MutationInputSource>> | null; step: MutationInputSource | null; snaps: boolean | null }>;
+
+/** 🚨️ The class of a declaration finding: an interactive number with neither step nor snapping points (`numericUndeclared`), a
+ * shown label that neither `x-semio-ui.label` nor the glossary supplies in some locale (`labelAbsent`), a widget outside the strict
+ * vocabulary fixture (`widgetUndeclared`), a `multiline` input the reader hands no multi-line control (`multilineUncontrolled`),
+ * and an editable leaf that shows no input at all — none, or every one hidden (`inputless`, design §22.20: a leaf is either
+ * editable with at least one input row, or its descriptor declares it withdraw-only). */
+export type MutationInputDeclarationCode = "numericUndeclared" | "labelAbsent" | "widgetUndeclared" | "multilineUncontrolled" | "inputless";
+
+/** 🧯️ One declaration finding at the `pointer` of the input it refuses. */
+export type MutationInputDeclarationFinding = Readonly<{ code: MutationInputDeclarationCode; pointer: string; detail: string }>;
+
+/** 🎓️ One leaf input of the report: its declaration under its owner, catalogued scope and schema path, and its verdict — `refused`
+ * when a reader, label or vocabulary finding sits at its pointer, `inferred` when its number facets are undeclared or its label
+ * comes from the glossary in some locale, else `declared`. */
+export type MutationInputVerdict = MutationInputDeclaration & Readonly<{ owner: string; scope: string; path: string; verdict: "declared" | "inferred" | "refused" }>;
+
+/** 📓️ The `schema-mutation-input-ui` lint, its census and every leaf input's verdict, over every catalogued mutation leaf under
+ * `scope`; `multiline` says whether the reader maps the `multiline` presentation to a control (the rule `multilineUncontrolled` is
+ * armed by that live predicate) and how many inputs declare the widget. */
+export type MutationInputUiReport = { readonly diagnostics: readonly SchemaDiagnostic[]; readonly census: readonly MutationInputCensusRow[]; readonly inputs: readonly MutationInputVerdict[]; readonly multiline: Readonly<{ armed: boolean; declared: number }> };
 
 /** 🗂️ The owner a scope id is counted under: the plugin of an `s.`/`app.` scope, else the scope's first segment. */
 const mutationInputCensusOwner = (scope: string): string => {
@@ -81,7 +113,7 @@ const mutationInputCensusOwner = (scope: string): string => {
   return (head === "s" || head === "app") && second !== undefined ? second : (head ?? scope);
 };
 
-/** 🗂️ The owner an uncatalogued leaf directory is counted under: its plugin (`✏️s/🔌️plugins/<plugin>/…`), else its product or
+/** 🏠️ The owner an uncatalogued leaf directory is counted under: its plugin (`✏️s/🔌️plugins/<plugin>/…`), else its product or
  * framework module — the name with its taxonomy emoji stripped. */
 const mutationLeafDirectoryOwner = (path: string): string => (path.split("/")[2] ?? path).replace(/^[^\p{L}\p{N}]+/u, "");
 
@@ -189,25 +221,229 @@ export function wordOnlyFloatTwinLines(source: string): number[] {
   return lines;
 }
 
+const MUTATION_INPUT_TYPES = new Set(["string", "integer", "number", "boolean", "object", "array"]);
+const MUTATION_INPUT_ANNOTATIONS = new Set(["title", "description", "$comment", "examples", "default", "format"]);
+const MUTATION_INPUT_NUMBER_WIDGETS = new Set(["slider", "stepper", "dial"]);
+const MUTATION_INPUT_ITEM_FACETS = new Set(["unit", "step", "precision", "snaps", "snapSource", "displayUnit", "displayFactor"]);
+const MUTATION_INPUT_INFERENCE_CODES: ReadonlySet<string> = new Set(["numericUndeclared"]);
+const MUTATION_INPUT_LABEL_REFUSALS: ReadonlySet<string> = new Set(["labelMissing", "localeMissing"]);
+const MUTATION_INPUT_VOCABULARY = "🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/🧬️vendor-annotation-vocabulary/🔣️.json";
+
+/**
+ * 🎚️ Every leaf input of the mutation payload schema `root` with the source of each UI fact — the gate's own walk of the schema,
+ * independent of the reader's inference, so a fact the reader infers is never counted as stated. It follows the reader's shape rules
+ * (`manifest::mutation_input_defs`): an outer `x-semio-ui` overrides its `$ref` target's key by key, a `null` branch beside one value
+ * branch is that value, `allOf` members compose, a root union reads its discriminator as the selector input and every variant's
+ * fields, a discriminator or `const` is no input, a hidden input and a reference are not read into, a fixed array of 2 to 4 numbers
+ * is one vector, and the numbers of any other array inherit the array's number facets. Rows come in reading order, each distinct row once.
+ */
+export function mutationInputDeclarations(root: Record<string, unknown>, resolve: (id: string) => Record<string, unknown> | undefined): MutationInputDeclaration[] {
+  type Settled = Readonly<{ owner: Record<string, unknown>; node: Record<string, unknown>; ui: ReadonlyMap<string, unknown> }>;
+  const glossary = inputLabelGlossary();
+  const { word, number } = inputNumericTransport();
+  const rows = new Map<string, MutationInputDeclaration>();
+  const text = (value: unknown): string | null => (typeof value === "string" ? value : null);
+  const union = (node: Record<string, unknown>): unknown[] | undefined => (Array.isArray(node.oneOf) ? node.oneOf : Array.isArray(node.anyOf) ? node.anyOf : undefined);
+  const target = (owner: Record<string, unknown>, reference: string): [Record<string, unknown>, unknown] | undefined => {
+    const hash = reference.indexOf("#");
+    const document = hash === 0 ? owner : resolve(hash < 0 ? reference : reference.slice(0, hash));
+    let current: unknown = document;
+    for (const segment of (hash < 0 ? "" : reference.slice(hash + 1)).split("/").slice(1).map(unescapePointer)) current = isRecord(current) ? current[segment] : Array.isArray(current) && /^\d+$/u.test(segment) ? current[Number(segment)] : undefined;
+    return document === undefined || current === undefined ? undefined : [document, current];
+  };
+  const settle = (start: Record<string, unknown>, from: unknown): Settled | null => {
+    let [owner, node] = [start, from];
+    const ui = new Map<string, unknown>();
+    for (let hop = 0; hop < 32; hop += 1) {
+      if (!isRecord(node)) return null;
+      const annotation = node["x-semio-ui"];
+      for (const [key, value] of isRecord(annotation) ? Object.entries(annotation) : []) if (!ui.has(key)) ui.set(key, value);
+      if (typeof node.$ref === "string") {
+        const next = target(owner, node.$ref);
+        if (next === undefined) return null;
+        [owner, node] = next;
+        continue;
+      }
+      const branches = union(node) ?? [];
+      const concrete = branches.filter((branch) => !(isRecord(branch) && branch.type === "null" && Object.keys(branch).length === 1));
+      if (concrete.length !== 1 || concrete.length === branches.length) return { owner, node, ui };
+      node = concrete[0];
+    }
+    return null;
+  };
+  const shape = (owner: Record<string, unknown>, branch: unknown): string => {
+    let [document, current] = [owner, branch];
+    for (let hop = 0; hop < 32 && isRecord(current) && typeof current.$ref === "string"; hop += 1) {
+      const next = target(document, current.$ref);
+      if (next === undefined) return "null";
+      [document, current] = next;
+    }
+    return inputShape(current as never);
+  };
+  const type = ({ owner, node }: Settled): string | null => {
+    const branches = union(node);
+    const shapes = branches?.length === 2 && Object.keys(node).every((key) => key === "anyOf" || key === "oneOf" || key.startsWith("x-") || MUTATION_INPUT_ANNOTATIONS.has(key)) ? branches.map((branch) => shape(owner, branch)) : [];
+    if (inputShape(node as never) === word || (shapes.includes(word) && shapes.includes(number))) return "number";
+    const named: unknown[] = typeof node.type === "string" ? [node.type] : Array.isArray(node.type) ? node.type.filter((name) => name !== "null") : node.properties !== undefined ? ["object"] : node.items !== undefined ? ["array"] : Array.isArray(node.enum) && node.enum.length > 0 && node.enum.every((value) => typeof value === "string") ? ["string"] : [];
+    return named.length === 1 && typeof named[0] === "string" && MUTATION_INPUT_TYPES.has(named[0]) ? named[0] : null;
+  };
+  const label = (key: string, stated: unknown): Record<string, MutationInputSource> => {
+    const cell = (map: unknown, locale: string): boolean => isRecord(map) && typeof map[locale] === "string" && map[locale] !== "";
+    const names = isRecord(stated) ? Object.keys(stated) : [];
+    const declares = (locale: string): boolean => names.length > 0 && (names.every(isShellLocale) ? cell(stated, locale) : names.every(isShellTerminology) && SHELL_TERMINOLOGIES.every((terminology) => cell((stated as Record<string, unknown>)[terminology], locale)));
+    return Object.fromEntries(SHELL_LOCALES.map((locale) => [locale, declares(locale) ? "declared" : glossary.has(key) ? "inferred" : "absent"]));
+  };
+  const referenced = ({ ui }: Settled): boolean => ui.has("ref") || ui.get("widget") === "reference" || ui.get("role") === "target";
+  const emit = (pointer: string, key: string, settled: Settled, kind: string | null, labelled: boolean): void => {
+    const widget = text(settled.ui.get("widget"));
+    const numeric = (kind === "integer" || kind === "number") && !referenced(settled);
+    const snaps = settled.ui.get("snaps");
+    const row: MutationInputDeclaration = { pointer, key, type: kind, widget, role: text(settled.ui.get("role")), label: labelled && widget !== "hidden" ? label(key, settled.ui.get("label")) : null, step: numeric ? (settled.ui.has("step") ? "declared" : kind === "integer" ? "inferred" : "absent") : null, snaps: numeric ? (Array.isArray(snaps) && snaps.length > 0) || settled.ui.has("snapSource") : null };
+    rows.set(JSON.stringify(row), row);
+  };
+  const properties = (object: Settled): Map<string, Settled> => {
+    const found = new Map<string, Settled>();
+    const compose = (member: Settled, depth: number): void => {
+      for (const [key, child] of Object.entries(isRecord(member.node.properties) ? member.node.properties : {})) {
+        const settled = found.has(key) ? null : settle(member.owner, child);
+        if (settled !== null) found.set(key, settled);
+      }
+      for (const part of depth < 32 && Array.isArray(member.node.allOf) ? member.node.allOf : []) {
+        const next = settle(member.owner, part);
+        if (next !== null) compose(next, depth + 1);
+      }
+    };
+    compose(object, 0);
+    return found;
+  };
+  const fields = (object: Settled, pointer: string, active: readonly unknown[]): void => {
+    for (const [key, settled] of properties(object)) {
+      if (settled.ui.get("role") === "discriminator" || settled.node.const !== undefined) continue;
+      const kind = type(settled);
+      emit(`${pointer}/${escapePointer(key)}`, key, settled, kind, true);
+      if (settled.ui.get("widget") !== "hidden" && !referenced(settled)) value(settled, kind, `${pointer}/${escapePointer(key)}`, active);
+    }
+  };
+  const value = (settled: Settled, kind: string | null, pointer: string, active: readonly unknown[]): void => {
+    const { owner, node, ui } = settled;
+    if (active.includes(node) || active.length >= 32) return;
+    if (kind === "object") return fields(settled, pointer, [...active, node]);
+    const items = kind === "array" ? settle(owner, node.items) : null;
+    if (items === null || items.node.const !== undefined) return;
+    const itemKind = type(items);
+    const numeric = itemKind === "integer" || itemKind === "number";
+    if (ui.get("widget") === "vector" || ui.get("widget") === "color" || (numeric && typeof node.minItems === "number" && node.minItems === node.maxItems && node.minItems >= 2 && node.minItems <= 4)) return;
+    const merged: Settled = { ...items, ui: new Map([...items.ui, ...(numeric ? [...ui].filter(([name]) => MUTATION_INPUT_ITEM_FACETS.has(name) && !items.ui.has(name)) : [])]) };
+    if (numeric || (itemKind !== "object" && itemKind !== "array" && merged.ui.has("widget"))) emit(`${pointer}/-`, "-", merged, itemKind, false);
+    value(merged, itemKind, `${pointer}/-`, [...active, node]);
+  };
+  const payload = settle(root, root);
+  if (payload === null) return [];
+  if (payload.node.properties !== undefined || payload.node.allOf !== undefined) fields(payload, "", [payload.node]);
+  else {
+    const variants = (union(payload.node) ?? []).flatMap((branch) => settle(payload.owner, branch) ?? []);
+    const pins = variants.map(properties);
+    const selector = [...(pins[0]?.keys() ?? [])].find((name) => {
+      const values = pins.map((found) => found.get(name)?.node.const);
+      return values.every((pinned, index) => typeof pinned === "string" && !values.slice(0, index).includes(pinned));
+    });
+    if (selector !== undefined) emit(`/${escapePointer(selector)}`, selector, pins[0]!.get(selector)!, "string", true);
+    for (const variant of variants) fields(variant, "", [payload.node, variant.node]);
+  }
+  return [...rows.values()];
+}
+
+/**
+ * 🧨️ The declaration findings of one leaf's `rows` (design §22.8, §22.20), each distinct one once. A withdraw-only leaf (`editable`
+ * false: its descriptor says `"editable": false`) is not judged at all. An editable leaf is `inputless` (at the payload root `""`)
+ * when no top-level input of it is shown — it has none, or every one is hidden. Per input: `widgetUndeclared` for a widget outside `widgets`
+ * (the strict vocabulary); `numericUndeclared` for an interactive number — role `value` or none, widget slider, stepper, dial or
+ * none — that declares neither `step` nor `snaps`/`snapSource`; `labelAbsent` for a shown label that neither its `x-semio-ui.label`
+ * nor the glossary supplies in some locale (a label the glossary supplies is counted, never refused: design §6); and, when
+ * `controls` (pointer → control kind of the reader's descriptors, {@link mutationInputControls}) is given, `multilineUncontrolled`
+ * for a `multiline` input whose control is not the multi-line one.
+ */
+export function mutationInputDeclarationFindings(rows: readonly MutationInputDeclaration[], widgets: ReadonlySet<string>, controls: ReadonlyMap<string, string> | null, editable = true): MutationInputDeclarationFinding[] {
+  const found = new Map<string, MutationInputDeclarationFinding>();
+  const refuse = (code: MutationInputDeclarationCode, pointer: string, detail: string): void => void found.set(`${code}\n${pointer}\n${detail}`, { code, pointer, detail });
+  if (!editable) return [];
+  if (!rows.some((row) => row.pointer.lastIndexOf("/") === 0 && row.widget !== "hidden")) refuse("inputless", "", `an editable leaf shows no input (${rows.some((row) => row.pointer.lastIndexOf("/") === 0) ? "every one is hidden" : "it has none"}): give it an input its editor can show, or declare the leaf withdraw-only with "editable": false in its descriptor`);
+  for (const row of rows) {
+    const absent = Object.entries(row.label ?? {}).filter(([, source]) => source === "absent").map(([locale]) => locale);
+    if (row.widget !== null && !widgets.has(row.widget)) refuse("widgetUndeclared", row.pointer, `widget ${JSON.stringify(row.widget)} is outside the strict x-semio-ui vocabulary (${[...widgets].join(", ")})`);
+    if (row.step !== null && row.step !== "declared" && row.snaps !== true && (row.widget === null || MUTATION_INPUT_NUMBER_WIDGETS.has(row.widget)) && (row.role === null || row.role === "value")) refuse("numericUndeclared", row.pointer, `an interactive ${row.type} declares neither x-semio-ui.step nor snaps/snapSource (${row.step === "inferred" ? "its step is the inferred integer step 1" : "it has no step"}): declare the step or the snapping points its control offers`);
+    if (absent.length > 0) refuse("labelAbsent", row.pointer, `the label of ${row.key} resolves to nothing in ${absent.join(", ")}: neither x-semio-ui.label nor the input-label glossary names it there`);
+    if (controls !== null && row.widget === "multiline" && controls.get(row.pointer) !== "multiline") refuse("multilineUncontrolled", row.pointer, `widget multiline reaches ${controls.has(row.pointer) ? `the ${controls.get(row.pointer)} control` : "no control"}, never the multi-line text control`);
+  }
+  return [...found.values()];
+}
+
+/** 🎹️ The control kind ({@link argControl}) of every input the reader read, keyed by its payload pointer: nested object fields
+ * under their parent's pointer, the fields of an array's object items under `<pointer>/-`. A scalar array item has no descriptor of
+ * its own, so it has no entry. */
+export function mutationInputControls(inputs: readonly ActionArgDef[], parent = ""): Map<string, string> {
+  const found = new Map<string, string>();
+  const nested = (schema: ActionArgDef["schema"], pointer: string): void => {
+    if (schema.kind === "object") for (const [inner, kind] of mutationInputControls(schema.fields, pointer)) found.set(inner, kind);
+    if (schema.kind === "array") nested(schema.items, `${pointer}/-`);
+  };
+  for (const input of inputs) {
+    found.set(`${parent}${input.id}`, argControl(input).kind);
+    nested(input.schema, `${parent}${input.id}`);
+  }
+  return found;
+}
+
+/** 💡️ Whether the reader maps the `multiline` presentation of a string input to a multi-line control — the live predicate that
+ * arms `multilineUncontrolled` (design §22.7): until it holds, every `multiline` input is edited in a one-line field. */
+export function mutationInputMultilineArmed(): boolean {
+  const probe: ActionArgDef = { id: "/probe", label: null, schema: { kind: "string", options: [] }, presentation: { kind: "multiline" }, required: false };
+  return (argControl(probe).kind as string) === "multiline";
+}
+
+/** 🗝️ The widgets of the strict vocabulary: the `widget` enum of the `x-semio-ui` meta-schema the vendor-annotation vocabulary
+ * fixture registers, its `$ref` followed through `resolve`. Throws when the fixture states none — the gate never falls back to a list of its own. */
+export function mutationInputWidgetVocabulary(repoRoot: string, resolve: (id: string) => Record<string, unknown> | undefined): ReadonlySet<string> {
+  const keywords = readJsonObject(repoRoot, MUTATION_INPUT_VOCABULARY)?.keywords;
+  let node: unknown = isRecord(keywords) ? keywords["x-semio-ui"] : undefined;
+  for (let hop = 0; hop < 32 && isRecord(node) && typeof node.$ref === "string"; hop += 1) {
+    const [id = "", pointer = ""] = node.$ref.split("#");
+    node = pointer.split("/").slice(1).map(unescapePointer).reduce<unknown>((current, segment) => (isRecord(current) ? current[segment] : undefined), resolve(id));
+  }
+  const widget = isRecord(node) && isRecord(node.properties) ? node.properties.widget : undefined;
+  const names = isRecord(widget) && Array.isArray(widget.enum) ? widget.enum.filter((name): name is string => typeof name === "string") : [];
+  if (names.length === 0) throw new Error(`[schema mutation-inputs] ${MUTATION_INPUT_VOCABULARY} states no x-semio-ui widget vocabulary`);
+  return new Set(names);
+}
+
 /**
  * 🎛️ Audits every catalogued mutation leaf's payload schema with the framework's collecting reader `mutationInputAudit`
  * (the TypeScript twin of `manifest::mutation_input_audit`), resolving cross-document `$ref`s through the catalog's own
  * documents: every finding at every nested pointer is one `schema-mutation-input-ui` diagnostic naming the reader's error
  * class and the input pointer; a reader fault (any throw that is not an `InputSchemaError`) is the finding `readerFault`
- * for that leaf, never a crash of the lint. A top-level input counts as declared when no finding lies in its subtree.
+ * for that leaf, never a crash of the lint. On top of the reader it measures declarations (design §22.8): every leaf input is
+ * walked by {@link mutationInputDeclarations} and judged by {@link mutationInputDeclarationFindings} against the strict widget
+ * vocabulary, so a number whose step the reader only infers fails as `numericUndeclared`; a label the glossary supplies is counted
+ * (`labelInferred`), and `labelAbsent` is reported only where the reader does not already refuse that label (`labelMissing`,
+ * `localeMissing`). A top-level input counts as `declared` when nothing in its subtree is refused or inferred, as `inferred` when
+ * its subtree is read but rests on inference. A leaf whose descriptor (`<leaf>/🔣️.json` beside its `🧬️schema`) says
+ * `"editable": false` is withdraw-only (design §22.20): it is counted and none of its inputs is read or judged.
  */
 export function mutationInputUiReport(repoRoot: string, under = ""): MutationInputUiReport {
   const { catalog } = readSchemaCatalog(repoRoot);
   const documents = catalogSchemaDocuments(repoRoot);
   const read = (path: string): Record<string, unknown> | null => readJsonObject(repoRoot, path);
+  const widgets = mutationInputWidgetVocabulary(repoRoot, (id) => documents.get(id));
+  const armed = mutationInputMultilineArmed();
   const diagnostics: SchemaDiagnostic[] = [];
   const census = new Map<string, MutationInputCensusRow>();
+  const inputs: MutationInputVerdict[] = [];
   for (const [scopeId, scope] of Object.entries(catalog?.scopes ?? {}).sort(([left], [right]) => left.localeCompare(right))) {
     if (!isMutationLeafScope(scope) || !scope.path.startsWith(under)) continue;
     const path = `${scope.path}/${scope.formats["🔣️jsonschema"] ?? "🔣️.json"}`;
     const leaf = read(path);
     const owner = mutationInputCensusOwner(scopeId);
-    const row = census.get(owner) ?? { owner, leaves: 0, inputs: 0, declared: 0, findings: 0, refused: {} };
+    const row = census.get(owner) ?? { owner, leaves: 0, withdrawOnly: 0, inputs: 0, declared: 0, inferred: 0, labelInferred: 0, findings: 0, refused: {} };
     census.set(owner, row);
     row.leaves += 1;
     const refuse = (code: string, pointer: string, detail: string): void => {
@@ -219,6 +455,10 @@ export function mutationInputUiReport(repoRoot: string, under = ""): MutationInp
       refuse("malformed", "", `${path} is not JSON`);
       continue;
     }
+    if (read(`${scope.path.slice(0, scope.path.lastIndexOf("/"))}/🔣️.json`)?.editable === false) {
+      row.withdrawOnly += 1;
+      continue;
+    }
     let audit: InputSchemaAudit;
     try {
       audit = mutationInputAudit(leaf, (id) => documents.get(id));
@@ -226,12 +466,26 @@ export function mutationInputUiReport(repoRoot: string, under = ""): MutationInp
       refuse("readerFault", "", error instanceof Error ? `${error.name}: ${error.message}` : String(error));
       continue;
     }
+    const declarations = mutationInputDeclarations(leaf, (id) => documents.get(id));
+    const stated = mutationInputDeclarationFindings(declarations, widgets, armed ? mutationInputControls(audit.inputs) : null);
+    const outside = new Set(stated.filter((finding) => finding.code === "widgetUndeclared").map((finding) => finding.pointer));
+    const unlabelled = new Set(audit.findings.filter((finding) => MUTATION_INPUT_LABEL_REFUSALS.has(finding.code)).map((finding) => finding.pointer));
+    const glossed = new Set(declarations.filter((declaration) => Object.values(declaration.label ?? {}).includes("inferred")).map((declaration) => declaration.pointer));
+    const findings = [...audit.findings.filter((finding) => !(finding.code === "uiInvalid" && outside.has(finding.pointer) && finding.message.includes("widget is not a declared widget"))).map(({ code, pointer, message }) => ({ code: code as string, pointer, detail: message })), ...stated.filter((finding) => !(finding.code === "labelAbsent" && unlabelled.has(finding.pointer)))];
     const top = (pointer: string): string | undefined => (pointer === "" ? undefined : pointer.slice(1).split("/")[0]);
-    const refusedTops = new Set(audit.findings.map((finding) => top(finding.pointer)).filter((key): key is string => key !== undefined));
-    const tops = new Set([...audit.inputs.map((input) => top(input.id)).filter((key): key is string => key !== undefined), ...refusedTops]);
-    row.inputs += tops.size;
-    row.declared += [...tops].filter((key) => !refusedTops.has(key)).length;
-    for (const finding of audit.findings) refuse(finding.code, finding.pointer, finding.message);
+    const tops = (pointers: readonly string[]): Set<string> => new Set(pointers.map(top).filter((key): key is string => key !== undefined));
+    const refusedTops = tops(findings.filter((finding) => !MUTATION_INPUT_INFERENCE_CODES.has(finding.code)).map((finding) => finding.pointer));
+    const inferredTops = new Set([...tops([...findings.filter((finding) => MUTATION_INPUT_INFERENCE_CODES.has(finding.code)).map((finding) => finding.pointer), ...glossed])].filter((key) => !refusedTops.has(key)));
+    const allTops = new Set([...tops(audit.inputs.map((input) => input.id)), ...tops(declarations.map((declaration) => declaration.pointer)), ...refusedTops, ...inferredTops]);
+    row.inputs += allTops.size;
+    row.inferred += inferredTops.size;
+    row.labelInferred += glossed.size;
+    row.declared += allTops.size - refusedTops.size - inferredTops.size;
+    for (const finding of findings) refuse(finding.code, finding.pointer, finding.detail);
+    for (const declaration of declarations) {
+      const here = findings.filter((finding) => finding.pointer === declaration.pointer);
+      inputs.push({ ...declaration, owner, scope: scopeId, path, verdict: here.some((finding) => !MUTATION_INPUT_INFERENCE_CODES.has(finding.code)) ? "refused" : here.length > 0 || glossed.has(declaration.pointer) ? "inferred" : "declared" });
+    }
     const readWords = new Set(audit.findings.filter((finding) => finding.code === "wordOnlyFloat").map((finding) => finding.pointer));
     for (const pointer of wordOnlyFloatPointers(leaf, (id) => documents.get(id))) {
       if (!readWords.has(pointer)) refuse("wordOnlyFloat", pointer, "a payload value accepts only the exact binary64 word, never the plain number the payload and every history-edit draft carry; reference framework/value/schema.json#/$defs/Binary64Transport");
@@ -240,7 +494,7 @@ export function mutationInputUiReport(repoRoot: string, under = ""): MutationInp
   const twins = repositorySources(repoRoot, under, "🟦️.ts", (text) => /\bparseBinary(?:64|32)\(/.test(text)).filter(({ path }) => path.includes("🗿️artifacts/") && !path.includes("🪶️sqlite") && !path.includes("🧪️tests"));
   for (const { path, source } of twins) {
     const owner = mutationLeafDirectoryOwner(path);
-    const row = census.get(owner) ?? { owner, leaves: 0, inputs: 0, declared: 0, findings: 0, refused: {} };
+    const row = census.get(owner) ?? { owner, leaves: 0, withdrawOnly: 0, inputs: 0, declared: 0, inferred: 0, labelInferred: 0, findings: 0, refused: {} };
     census.set(owner, row);
     for (const line of wordOnlyFloatTwinLines(source)) {
       row.findings += 1;
@@ -252,7 +506,7 @@ export function mutationInputUiReport(repoRoot: string, under = ""): MutationInp
   for (const directory of mutationLeafSchemaDirectories(repoRoot, under)) {
     if (catalogued.has(directory)) continue;
     const owner = mutationLeafDirectoryOwner(directory);
-    const row = census.get(owner) ?? { owner, leaves: 0, inputs: 0, declared: 0, findings: 0, refused: {} };
+    const row = census.get(owner) ?? { owner, leaves: 0, withdrawOnly: 0, inputs: 0, declared: 0, inferred: 0, labelInferred: 0, findings: 0, refused: {} };
     census.set(owner, row);
     row.leaves += 1;
     row.findings += 1;
@@ -261,31 +515,43 @@ export function mutationInputUiReport(repoRoot: string, under = ""): MutationInp
     const id = read(path)?.$id;
     diagnostics.push({ code: "schema-mutation-input-ui", scope: null, export: null, format: "🔣️jsonschema", path, detail: `leafUncatalogued at "": $id ${JSON.stringify(id ?? null)} names no catalogued mutation-leaf scope, so neither the reader nor this census reads ${directory}` });
   }
-  return { diagnostics, census: [...census.values()].sort((left, right) => right.inputs - right.declared - (left.inputs - left.declared) || left.owner.localeCompare(right.owner)) };
+  return { diagnostics, census: [...census.values()].sort((left, right) => right.inputs - right.declared - (left.inputs - left.declared) || left.owner.localeCompare(right.owner)), inputs, multiline: { armed, declared: inputs.filter((input) => input.widget === "multiline").length } };
 }
 
 /**
- * 🎛️ `test schema mutation-inputs` — the `schema-mutation-input-ui` gate: every mutation input carries a UI descriptor
- * (label in every locale, valid `x-semio-ui`, a widget its value can take). `--census` prints the per-plugin table and
- * always exits 0 — the rollout tracker; without it any finding fails.
+ * 🚦️ `test schema mutation-inputs` — the `schema-mutation-input-ui` gate: every mutation input carries its UI descriptor (a label
+ * in every locale from `x-semio-ui.label` or the glossary, valid `x-semio-ui` inside the strict vocabulary, a widget its value can
+ * take), an interactive number DECLARES its step or snapping points, and an editable leaf shows at least one input (a leaf whose
+ * descriptor says `"editable": false` is withdraw-only and not judged); what the reader only infers is counted apart. `--census`
+ * prints the per-plugin table (withdraw-only leaves, declared, inferred, refused, glossary labels) and always exits 0 — the
+ * rollout tracker; `--inputs` prints one row per leaf input with its verdict and the source of each fact; without `--census` any
+ * finding fails.
  *
- *   bun 📜️script.ts schema mutation-inputs [--census] [--under <path>] [--json]
+ *   bun 📜️script.ts schema mutation-inputs [--census] [--inputs] [--under <path>] [--json]
  */
 function runMutationInputUi(repoRoot: string, segments: string[]): never {
   const under = segments.includes("--under") ? (segments[segments.indexOf("--under") + 1] ?? "") : "";
   const report = mutationInputUiReport(repoRoot, under);
+  if (under !== "" && report.census.every((row) => row.leaves === 0)) {
+    console.error(`[schema mutation-inputs] --under ${JSON.stringify(under)} holds no mutation leaf: pass a repository-relative path such as ✏️s/🔌️plugins/<plugin>`);
+    process.exit(2);
+  }
   const census = segments.includes("--census");
+  const listed = segments.includes("--inputs");
   if (segments.includes("--json")) {
-    console.log(JSON.stringify(census ? report.census : report, null, 2));
+    console.log(JSON.stringify(census ? report.census : listed ? report.inputs : { diagnostics: report.diagnostics, census: report.census, multiline: report.multiline }, null, 2));
     process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
   }
-  const total = report.census.reduce((sum, row) => ({ leaves: sum.leaves + row.leaves, inputs: sum.inputs + row.inputs, declared: sum.declared + row.declared }), { leaves: 0, inputs: 0, declared: 0 });
+  const total = report.census.reduce((sum, row) => ({ leaves: sum.leaves + row.leaves, withdrawOnly: sum.withdrawOnly + row.withdrawOnly, inputs: sum.inputs + row.inputs, declared: sum.declared + row.declared, inferred: sum.inferred + row.inferred, labelInferred: sum.labelInferred + row.labelInferred }), { leaves: 0, withdrawOnly: 0, inputs: 0, declared: 0, inferred: 0, labelInferred: 0 });
   if (census) {
     const codes = [...new Set(report.census.flatMap((row) => Object.keys(row.refused)))].sort();
-    console.log(["owner", "leaves", "inputs", "declared", "missing", "findings", ...codes].join("\t"));
-    for (const row of report.census) console.log([row.owner, row.leaves, row.inputs, row.declared, row.inputs - row.declared, row.findings, ...codes.map((code) => row.refused[code] ?? 0)].join("\t"));
+    console.log(["owner", "leaves", "withdrawOnly", "inputs", "declared", "inferred", "refused", "labelInferred", "findings", ...codes].join("\t"));
+    for (const row of report.census) console.log([row.owner, row.leaves, row.withdrawOnly, row.inputs, row.declared, row.inferred, row.inputs - row.declared - row.inferred, row.labelInferred, row.findings, ...codes.map((code) => row.refused[code] ?? 0)].join("\t"));
+  } else if (listed) {
+    console.log(["owner", "verdict", "pointer", "type", "widget", "role", "label", "step", "snaps", "path"].join("\t"));
+    for (const input of report.inputs) console.log([input.owner, input.verdict, input.pointer, input.type ?? "", input.widget ?? "", input.role ?? "", input.label === null ? "" : Object.entries(input.label).map(([locale, source]) => `${locale}:${source}`).join(","), input.step ?? "", input.snaps ?? "", input.path].join("\t"));
   } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema mutation-inputs]   ${entry.scope} — ${entry.detail}`);
-  console.log(`[schema mutation-inputs] ${total.declared}/${total.inputs} input(s) of ${total.leaves} leaves carry a UI descriptor; ${report.diagnostics.length} schema-mutation-input-ui finding(s)${under === "" ? "" : ` under ${under}`}`);
+  console.log(`[schema mutation-inputs] ${total.declared} declared + ${total.inferred} inferred of ${total.inputs} input(s) of ${total.leaves} leaves (${total.inputs - total.declared - total.inferred} refused, ${total.withdrawOnly} leaves withdraw-only); ${total.labelInferred} glossary label(s) at every depth; ${report.multiline.declared} multiline input(s), multilineUncontrolled ${report.multiline.armed ? "armed" : "pending (the reader maps multiline to no control yet)"}; ${report.diagnostics.length} schema-mutation-input-ui finding(s)${under === "" ? "" : ` under ${under}`}`);
   process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
 }
 //#endregion 🎛️MutationInputUi
@@ -1100,6 +1366,62 @@ function runMutationPayloadParity(repoRoot: string, segments: string[]): never {
 }
 //#endregion ⚖️MutationPayloadParity
 
+//#region 🐘️MutationCaps
+/** 🐘️ One mutation leaf whose payload schema caps its inverse rows (`x-semio-inverse-rows.bounded`): its directory, the aggregate
+ * variant its descriptor names and the cap. */
+export type MutationCapLeaf = Readonly<{ directory: string; variant: string; bounded: number }>;
+
+/** 🎩️ One `#[derive(Mutations)]` aggregate as the cap rule reads it: its source path, name, variants and whether it is generic. The
+ * derive emits the `#[cfg(test)]` payload law (`semio_payload_law_<aggregate>`: every operation answers its schema-declared inverse
+ * rows, every fixture case's inverse fits them, and a leaf past the store ceiling is refused `mutation.too-large`) only for a
+ * non-generic aggregate. */
+export type MutationCapAggregate = Readonly<{ path: string; name: string; variants: readonly string[]; generic: boolean }>;
+
+/** 🪤️ A bounded leaf the derived cap law never runs over. */
+export type MutationCapFinding = Readonly<{ code: "capLawMissing"; directory: string; detail: string }>;
+
+/** 🧢️ The cap `x-semio-inverse-rows.bounded` of a leaf payload schema, or `null` when it declares none. */
+export function mutationLeafBound(schema: Record<string, unknown>): number | null {
+  const rows = schema["x-semio-inverse-rows"];
+  return isRecord(rows) && typeof rows.bounded === "number" && Number.isInteger(rows.bounded) && rows.bounded > 0 ? rows.bounded : null;
+}
+
+/** 🧗️ Whether the enum `name` of a Rust source declares generic parameters. */
+export function mutationAggregateGeneric(source: string, name: string): boolean {
+  return new RegExp(`\\benum\\s+${name}\\s*<`, "u").test(source);
+}
+
+/** 🏔️ The structural cap rule (audit F3, coordinator decision 2026-10-05): every `bounded` leaf is wrapped by a `#[derive(Mutations)]`
+ * aggregate that is not generic — the nearest one of its own artifact that names its variant, never a foreign artifact's — so the
+ * derived payload law holds its declared rows. The per-leaf oracle is that Rust law; this rule only proves the law exists. */
+export function mutationCapFindings(leaves: readonly MutationCapLeaf[], aggregates: readonly MutationCapAggregate[]): MutationCapFinding[] {
+  return leaves.flatMap((leaf): MutationCapFinding[] => {
+    const scope = mutationArtifactScope(leaf.directory);
+    const scored = aggregates.filter((aggregate) => aggregate.variants.includes(leaf.variant) && mutationArtifactScope(aggregate.path) === scope).map((aggregate) => [sharedSegments(aggregate.path, leaf.directory), aggregate] as const);
+    const best = Math.max(0, ...scored.map(([score]) => score));
+    const nearest = scored.filter(([score]) => score === best && best > 0).map(([, aggregate]) => aggregate);
+    if (nearest.length === 0) return [{ code: "capLawMissing", directory: leaf.directory, detail: `the leaf caps its inverse at ${leaf.bounded} row(s) but no #[derive(Mutations)] aggregate of its artifact wraps ${leaf.variant}: a hand-written aggregate runs no derived cap law` }];
+    return nearest.every((aggregate) => aggregate.generic) ? [{ code: "capLawMissing", directory: leaf.directory, detail: `the leaf caps its inverse at ${leaf.bounded} row(s) but its aggregate ${nearest[0]!.name} is generic: the derive emits no payload law for a generic aggregate` }] : [];
+  });
+}
+
+/** 📐️ The cap rule over every mutation leaf under `under`: the bounded leaves and those without the derived cap law. */
+export function mutationCapReport(repoRoot: string, under = ""): { readonly leaves: readonly MutationCapLeaf[]; readonly findings: readonly MutationCapFinding[] } {
+  const tree = mutationTree(repoRoot);
+  const leaves = tree.leaves.filter((leaf) => leaf.directory.startsWith(under)).flatMap((leaf) => {
+    const schema = readJsonObject(repoRoot, leaf.schemaPath);
+    const bounded = schema === null ? null : mutationLeafBound(schema);
+    return bounded === null ? [] : [{ directory: leaf.directory, variant: leaf.variant, bounded }];
+  });
+  const sources = new Map<string, string>();
+  const aggregates = tree.aggregates.map((aggregate) => {
+    if (!sources.has(aggregate.path)) sources.set(aggregate.path, readFileSync(join(repoRoot, aggregate.path), "utf8"));
+    return { path: aggregate.path, name: aggregate.name, variants: [...aggregate.variants.keys()], generic: mutationAggregateGeneric(sources.get(aggregate.path)!, aggregate.name) };
+  });
+  return { leaves, findings: mutationCapFindings(leaves, aggregates) };
+}
+//#endregion 🐘️MutationCaps
+
 //#region 🦀️RustSources
 /** 🗂️ The roots the history gates read Rust from: the mutation roots plus the hub compositions. */
 const RUST_SOURCE_ROOTS = [...MUTATION_TREE_ROOTS, "🌎️hub"];
@@ -1852,12 +2174,13 @@ function runFaultNotices(repoRoot: string, segments: string[]): never {
 
 //#region ✏️MutationEditability
 /** ✏️ The history-edit verdict of one operation shape: `editable` (an input schema and no foreign-step capability), `inert` (no input
- * schema — a non-payload phase of a `#[mutation_leaf(payload = …)]` leaf) or `foreign` (a composite that may emit foreign steps). */
+ * schema — a leaf whose descriptor declares `"editable": false`, withdraw-only by declaration (design §22.20), or a non-payload phase of
+ * a `#[mutation_leaf(payload = …)]` leaf) or `foreign` (a composite that may emit foreign steps). */
 export type MutationEditabilityVerdict = "editable" | "inert" | "foreign";
 
-/** ✏️ One leaf of a `#[derive(Mutations)]` aggregate: its verdict and, for a payload-marked leaf, the inert phase variants beside its
- * editable payload. */
-export type MutationLeafEditability = Readonly<{ owner: string; aggregate: string; path: string; kind: string; variant: string; verdict: "editable" | "foreign"; inert: readonly string[] }>;
+/** ✏️ One leaf of a `#[derive(Mutations)]` aggregate: its verdict (`inert` when its descriptor declares it withdraw-only) and, for a
+ * payload-marked leaf, the inert phase variants beside its editable payload. */
+export type MutationLeafEditability = Readonly<{ owner: string; aggregate: string; path: string; kind: string; variant: string; verdict: MutationEditabilityVerdict; inert: readonly string[] }>;
 
 /** 🖐️ One hand-written `impl Mutation<S> for T`: the declared reason it is outside the generic history editor — it forwards every
  * payload accessor of a derived aggregate (`forwarding`), it is a config/presence/transient/window/draft lane (`lane`), a test fixture
@@ -1865,8 +2188,9 @@ export type MutationLeafEditability = Readonly<{ owner: string; aggregate: strin
  * (`unexposed`) — or the finding `aggregateHandwritten`. */
 export type MutationHandwrittenAggregate = Readonly<{ owner: string; path: string; name: string; snapshot: string; reason: "forwarding" | "lane" | "fixture" | "empty" | "unexposed" | "aggregateHandwritten" }>;
 
-/** 📊️ One plugin's share of the editability census. */
-export type MutationEditabilityCensusRow = { readonly owner: string; aggregates: number; leaves: number; editable: number; foreign: number; inert: number; handwritten: number; findings: number; readonly refused: Record<string, number> };
+/** 📊️ One plugin's share of the editability census: `withdrawOnly` counts the leaves declared `"editable": false`, `inert` those plus
+ * every inert phase of a payload-marked leaf. */
+export type MutationEditabilityCensusRow = { readonly owner: string; aggregates: number; leaves: number; editable: number; foreign: number; inert: number; withdrawOnly: number; handwritten: number; findings: number; readonly refused: Record<string, number> };
 
 /** ✏️ The `schema-mutation-editability` lint, its census, every leaf verdict and every hand-written aggregate. */
 export type MutationEditabilityReport = { readonly diagnostics: readonly SchemaDiagnostic[]; readonly census: readonly MutationEditabilityCensusRow[]; readonly leaves: readonly MutationLeafEditability[]; readonly handwritten: readonly MutationHandwrittenAggregate[] };
@@ -2094,8 +2418,9 @@ export function composedLeafChildReads(sources: readonly { readonly path: string
 
 /**
  * ✏️ Enumerates every mutation aggregate under `under` (design §16.3) and decides, from source alone, which history mutations the
- * generic editor can edit: each leaf of a `#[derive(Mutations)]` aggregate is `editable` unless its descriptor composes a plan
- * (`foreign`, the `may_emit_foreign_steps` capability), a payload-marked leaf adds its inert phases; a generic aggregate gets no emitted
+ * generic editor can edit: each leaf of a `#[derive(Mutations)]` aggregate is `editable` unless its descriptor declares
+ * `"editable": false` (`inert`: withdraw-only by declaration, design §22.20 — counted, never the subject of an editability finding) or
+ * composes a plan (`foreign`, the `may_emit_foreign_steps` capability), a payload-marked leaf adds its inert phases; a generic aggregate gets no emitted
  * payload law (`aggregateGeneric`), a variant without a leaf descriptor is `leafUnresolved`, and a hand-written `impl Mutation` must
  * declare its reason (`mutationHandwrittenReason`) or is `aggregateHandwritten`. `roots` bounds the tree read (the source roots by
  * default); a narrower root also bounds the app-document scan to `under`.
@@ -2105,7 +2430,7 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
   const diagnostics: SchemaDiagnostic[] = [];
   const census = new Map<string, MutationEditabilityCensusRow>();
   const rowOf = (owner: string): MutationEditabilityCensusRow => {
-    const row = census.get(owner) ?? { owner, aggregates: 0, leaves: 0, editable: 0, foreign: 0, inert: 0, handwritten: 0, findings: 0, refused: {} };
+    const row = census.get(owner) ?? { owner, aggregates: 0, leaves: 0, editable: 0, foreign: 0, inert: 0, withdrawOnly: 0, handwritten: 0, findings: 0, refused: {} };
     census.set(owner, row);
     return row;
   };
@@ -2134,10 +2459,19 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
         refuse(row, "leafUnresolved", aggregate.path, `${aggregate.name}::${variant} names no leaf descriptor near ${root}`);
         continue;
       }
-      const composite = readJsonObject(repoRoot, `${leaf.directory}/🔣️.json`)?.composition === "composite";
+      const descriptor = readJsonObject(repoRoot, `${leaf.directory}/🔣️.json`);
+      const composite = descriptor?.composition === "composite";
+      const withdrawOnly = descriptor?.editable === false;
       const wrapper = tree.wrappers.get(leaf.directory)?.find((candidate) => candidate.name === aggregate.payloadTypes.get(variant));
       const inert = wrapper === undefined ? [] : [...wrapper.variants.keys()].filter((phase) => phase !== wrapper.payloadVariant);
-      leaves.push({ owner, aggregate: aggregate.name, path: leaf.directory, kind: leaf.kind, variant, verdict: composite ? "foreign" : "editable", inert });
+      leaves.push({ owner, aggregate: aggregate.name, path: leaf.directory, kind: leaf.kind, variant, verdict: withdrawOnly ? "inert" : composite ? "foreign" : "editable", inert });
+      row.leaves += 1;
+      row.inert += inert.length;
+      if (withdrawOnly) {
+        row.withdrawOnly += 1;
+        row.inert += 1;
+        continue;
+      }
       const rootIndex = new Map<string, string>();
       for (const searchRoot of mutationSchemaSearchRoots(repoRoot, leaf.schemaPath)) {
         const index = rootIndexes.get(searchRoot) ?? mutationSchemaDocumentIndex(repoRoot, searchRoot);
@@ -2147,8 +2481,6 @@ export function mutationEditabilityReport(repoRoot: string, under = "", roots: r
       frameworkIndex ??= new Map(["🧰️framework", "🌎️hub"].flatMap((root) => [...mutationSchemaDocumentIndex(repoRoot, root)]));
       const unpublished = mutationLeafUnpublishedReferences(repoRoot, leaf.schemaPath, rootIndex, frameworkIndex);
       if (unpublished.length > 0) refuse(row, "leafReferenceUnpublished", leaf.schemaPath, `${leaf.kind}'s payload schema references ${unpublished.join(", ")}, which neither its own tree nor a plugin its crate depends on (published beside the leaf) nor a framework scope holds, so the history editor cannot resolve it`);
-      row.leaves += 1;
-      row.inert += inert.length;
       if (composite) row.foreign += 1;
       else row.editable += 1;
     }
@@ -2206,13 +2538,13 @@ function runMutationEditability(repoRoot: string, segments: string[]): never {
     console.log(JSON.stringify(census ? report.census : report, null, 2));
     process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
   }
-  const total = report.census.reduce((sum, row) => ({ aggregates: sum.aggregates + row.aggregates, leaves: sum.leaves + row.leaves, editable: sum.editable + row.editable, foreign: sum.foreign + row.foreign, inert: sum.inert + row.inert, handwritten: sum.handwritten + row.handwritten }), { aggregates: 0, leaves: 0, editable: 0, foreign: 0, inert: 0, handwritten: 0 });
+  const total = report.census.reduce((sum, row) => ({ aggregates: sum.aggregates + row.aggregates, leaves: sum.leaves + row.leaves, editable: sum.editable + row.editable, foreign: sum.foreign + row.foreign, inert: sum.inert + row.inert, withdrawOnly: sum.withdrawOnly + row.withdrawOnly, handwritten: sum.handwritten + row.handwritten }), { aggregates: 0, leaves: 0, editable: 0, foreign: 0, inert: 0, withdrawOnly: 0, handwritten: 0 });
   if (census) {
     const classes = [...new Set(report.census.flatMap((row) => Object.keys(row.refused)))].sort();
-    console.log(["owner", "aggregates", "leaves", "editable", "foreign", "inert", "handwritten", "findings", ...classes].join("\t"));
-    for (const row of report.census) console.log([row.owner, row.aggregates, row.leaves, row.editable, row.foreign, row.inert, row.handwritten, row.findings, ...classes.map((name) => row.refused[name] ?? 0)].join("\t"));
+    console.log(["owner", "aggregates", "leaves", "editable", "foreign", "inert", "withdrawOnly", "handwritten", "findings", ...classes].join("\t"));
+    for (const row of report.census) console.log([row.owner, row.aggregates, row.leaves, row.editable, row.foreign, row.inert, row.withdrawOnly, row.handwritten, row.findings, ...classes.map((name) => row.refused[name] ?? 0)].join("\t"));
   } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema mutation-editability]   ${entry.path} — ${entry.detail}`);
-  console.log(`[schema mutation-editability] ${total.editable}/${total.leaves} leaves of ${total.aggregates} aggregates editable (${total.foreign} composite with foreign-step capability, ${total.inert} inert phase(s)); ${total.handwritten} hand-written aggregate(s); ${report.diagnostics.length} schema-mutation-editability finding(s)${under === "" ? "" : ` under ${under}`}`);
+  console.log(`[schema mutation-editability] ${total.editable}/${total.leaves} leaves of ${total.aggregates} aggregates editable (${total.foreign} composite with foreign-step capability, ${total.withdrawOnly} withdraw-only by declaration, ${total.inert - total.withdrawOnly} inert phase(s)); ${total.handwritten} hand-written aggregate(s); ${report.diagnostics.length} schema-mutation-editability finding(s)${under === "" ? "" : ` under ${under}`}`);
   process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
 }
 //#endregion ✏️MutationEditability

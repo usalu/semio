@@ -246,14 +246,14 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         bounded_ids: bounded_ids.clone(),
         host_only_ids: host_only_ids.clone(),
     };
-    assert_eq!(oracle, ShootingRetainedCatalogSummary { routes: 37, bounded: 36, resumable: 1, migrated: 36, fail_closed: 1, unique: true, route_ids: command_ids, bounded_ids, host_only_ids });
+    assert_eq!(oracle, ShootingRetainedCatalogSummary { routes: 36, bounded: 35, resumable: 1, migrated: 35, fail_closed: 1, unique: true, route_ids: command_ids, bounded_ids, host_only_ids });
     assert_eq!(subject, oracle);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
     let fixture = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
-    let expected = ["importSnapshotJson", "setActiveExample", "resetFixture", "worldPointerDown", "worldPointerMove", "saveDownload", "importAssetRequest", "exportActiveShot", "exportAllShots"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+    let expected = ["importSnapshotJson", "setActiveExample", "resetSnapshot", "worldPointerDown", "worldPointerMove", "saveDownload", "importAssetRequest", "exportActiveShot", "exportAllShots"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(SerdeJsonShootingRetainedCatalogOracle.summarize(fixture).host_only_ids, expected);
     let wrong_lane = fixture.replacen("\"HostOnly\"", "\"Artifact\"", 1);
     let wrong_tool = fixture.replacen("\"importAssetRequest\"", "\"forgedRequest\"", 1);
@@ -273,7 +273,7 @@ async fn command_ids_are_unique_across_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 36, "every ShootingCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 35, "every ShootingCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -422,7 +422,7 @@ async fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
     let scene = definition.window_kinds.iter().find(|window| window.id == SHOOTING_PLAY_WINDOW_SCENE).expect("scene window");
     let scoped: Vec<&str> = scene.utilities.iter().map(|utility| utility.as_str()).collect();
     assert_eq!(scoped, ["move", "rotate", "scale"], "utilities scoped to the scene window kind");
-    for command in ["importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
+    for command in ["importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetSnapshot", "saveCamera"] {
         assert!(
             definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).any(|action| action.id == command),
             "registry declares {command}"
@@ -583,7 +583,7 @@ async fn shooting_io_declares_the_photos_out_port() {
 /// 🖼️ `shooting_photo_media` renders the same scene as `exportActiveShot`'s PNG (base64, non-empty).
 #[semio_framework_async_macros::async_test]
 async fn shooting_photo_media_exports_a_raster_2d_image() {
-    let snapshot = crate::standards::v1::subsets::any::schema::default_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let media = shooting_photo_media(&snapshot).expect("photo export succeeds");
     assert_eq!(media.media_type.class, MediaClass::TwoD);
     assert_eq!(media.media_type.form, MediaForm::Raster);

@@ -10,7 +10,7 @@ const SESSION: u64 = 810_041;
 
 /// ⚖️ The scale fixture's registered component, materialized by
 /// `@semio-tech/framework-os-scale-fixture:build-wasm` (`⚖️scale/📦️packages/🦀️rust/📜️script.ts`).
-const SCALE_COMPONENT: &str = "../../../../../🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
+const SCALE_COMPONENT: &str = "../../../../../🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 
 fn fixture_bytes() -> Vec<u8> {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(SCALE_COMPONENT);

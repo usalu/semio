@@ -383,7 +383,7 @@ fn field_sweep_every_field_present_in_diff() {
 /// array/object collection triples, and the empty (`None`) diff.
 #[test]
 fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::DiffCodec;
+    use protocol::{DiffBinary,DiffCodec,DiffText};
 
     for d in demo_diff_cases() {
         let printed = d.print_diff();

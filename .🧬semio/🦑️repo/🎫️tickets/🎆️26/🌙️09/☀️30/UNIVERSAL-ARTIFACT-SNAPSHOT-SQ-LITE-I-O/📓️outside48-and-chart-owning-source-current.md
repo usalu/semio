@@ -1,0 +1,7 @@
+# Outside48 And Chart Owning Source Current
+
+The actual outside48 ten-project Source aggregate had nine owners green and Equation8/9. Root corrected its independent primary-key renumbering witness, then actual registered Equation9/9 and Chart8/8 completed with exit0. Note has an existing TypeScript owning route, @semio-tech/note-note-js:test-snapshot-sqlite, separate from its Rust Native guest. It has now completed exit0; actual six law summary is retained in generated/root-note-actual-typescript-owning-source-current.log. No new command, provider, fixture value, or policy was added for Note.
+
+Curation's fresh49/49 Source receipt is retained in Physical's actual six-owner cohort134/134. Accordingly each of the twelve distinct outside48 domain Source owners now has a fresh successful owning receipt, with Equation qualified by its corrected replay. This does not turn the original ten-project aggregate exit1 into a passing aggregate, and does not confer Native qualification. Chart is separately qualified by its actual8/8 Source route.
+
+Evidence: generated/root-outside48-ten-domain-owning-source-current-after-schema-reuse.log; generated/root-equation-source-actual-primary-keys-after-and-chart-source-current.log; generated/root-note-actual-typescript-owning-source-current.log; generated/physical-current-six-owning-source-after-public.log. Existing registered test corpus and command policies were preserved.

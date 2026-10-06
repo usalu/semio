@@ -154,9 +154,7 @@ impl Din16798Mutation {
     }
 }
 
-pub fn decode_din16798_mutation_json(text: &str) -> Result<Din16798Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
-}
+
 pub fn apply_din16798_mutation(base: &Din16798Snapshot, mutation: &Din16798Mutation) -> Result<(Din16798Snapshot, Vec<String>), String> {
     let raised = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|m| format!("{:?}:{}", m.level, m.code.0)).collect();

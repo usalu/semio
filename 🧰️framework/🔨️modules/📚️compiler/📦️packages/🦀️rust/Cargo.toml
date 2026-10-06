@@ -35,3 +35,6 @@ semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️r
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 rustybuzz = "0.20.1"
 base64 = "0.22.1"
+
+[dev-dependencies]
+semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }

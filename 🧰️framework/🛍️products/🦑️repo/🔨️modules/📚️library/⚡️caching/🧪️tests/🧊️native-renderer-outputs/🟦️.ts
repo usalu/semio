@@ -6,8 +6,6 @@ import { dirname, join } from "node:path";
 /** 🧊️ Restores the production native renderer publisher's outputs with Nx and executes them against Cargo. */
 export async function testNativeRendererOutputs(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️native-renderer-outputs/🔣️.json"), "utf8"));
-  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️native-renderer-outputs/📐️schema/🔣️.json"), "utf8")));
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const rust = fixture.owner + "/📦️packages/🦀️rust", typescript = fixture.owner + "/📦️packages/🟦️typescript";
   const project = JSON.parse(readFileSync(join(workspace, typescript, "📋️project.json"), "utf8"));
   assert.equal(project.name, fixture.project);

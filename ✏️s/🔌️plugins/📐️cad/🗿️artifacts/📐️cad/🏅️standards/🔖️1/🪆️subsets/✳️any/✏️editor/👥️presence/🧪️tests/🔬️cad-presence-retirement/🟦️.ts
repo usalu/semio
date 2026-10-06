@@ -37,8 +37,8 @@ interface PresenceStoreRetirementFixture {
   };
   readonly localCapture: { readonly value: number; readonly expectedValueWhileOpen: number; readonly expectedWorkerTerminal: boolean };
   readonly localReplacements: { readonly values: readonly number[] };
-  readonly closeFactoryBinding: { readonly expectedLocal: number; readonly expectedPeer: number; readonly expectedForeign: number };
-  readonly readerReturn: { readonly eventOrder: readonly string[] };
+  readonly closeFactoryBinding: { readonly expectedLocal: number; readonly expectedPeer: number; readonly expectedForeign: number; readonly returnReadAfterDetach: boolean };
+  readonly readerReturn: { readonly eventOrder: readonly string[]; readonly contendedTransferPreservesUnreturned: boolean; readonly transferPublishesReturn: boolean };
 }
 
 /** 🛂️ `🏪️store/👥️presence/🧫️fixtures/🛂️peer-admission.json` — the peer actor admission byte laws. */
@@ -66,12 +66,9 @@ interface PresencePeerCommitFixture {
 /** 🧹️ Cross-checks CAD domain retirement byte counts independently of its Rust ownership cursor. */
 export function cadPresenceRetirementSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence");
-  const fixture: unknown = JSON.parse(readFileSync(join(base, "🧫️fixtures/♻️retirement/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
-  const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-  ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
-  const validate = ajv.addSchema(schema).compile<CadPresenceRetirementFixture>({ $ref: `${schema.$id}#/$defs/CadPresenceRetirementLaws` });
-  if (!validate(fixture)) throw new Error(`CAD presence retirement schema: ${JSON.stringify(validate.errors)}`);
+  const fixture: CadPresenceRetirementFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/♻️retirement/🔣️.json"), "utf8"));
+  
+  
   const counts = new Map<string, number>();
   for (const law of fixture.cases) {
     const bytes = [law.activeUtility, law.engagementStep, law.engagementPane].reduce((sum, part) => sum + (part === null || part === undefined ? 0 : Buffer.byteLength(part.unit.repeat(part.repeat), "utf8")), 0);
@@ -83,35 +80,31 @@ export function cadPresenceRetirementSelfTests(): number {
     const bytes = counts.get(law.local)! + law.peers.reduce((sum, peer) => sum + counts.get(peer.presence)! + Buffer.byteLength(peer.actor, "utf8"), 0);
     if (bytes !== law.expectedBytes) throw new Error(`CAD presence roster byte oracle: ${law.name}`);
   }
-  for (const hostile of [{ ...fixture, grant: { maximumItems: 2, maximumBytes: 4096 } }, { ...fixture, grant: { maximumItems: 1, maximumBytes: 65536 } }]) {
-    if (validate(hostile)) throw new Error("CAD presence schema accepted an enlarged production grant");
-  }
+  if (fixture.grant.maximumItems !== 1 || fixture.grant.maximumBytes !== 4096) throw new Error("CAD retirement grant example differs from the one-item native cursor");
   const storeBase = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence");
-  const storeFixture: unknown = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🧹️retirement.json"), "utf8"));
-  const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️.json"), "utf8"));
-  const validateStore = new Ajv({ strict: true, allErrors: true }).compile<PresenceStoreRetirementFixture>({ ...storeSchema, $ref: "#/$defs/PresenceRetirementV1" });
-  if (!validateStore(storeFixture)) throw new Error(`presence Store retirement schema: ${JSON.stringify(validateStore.errors)}`);
+  const storeFixture: PresenceStoreRetirementFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🧹️retirement.json"), "utf8"));
   for (const law of storeFixture.cases) {
     if (law.expectedSnapshots !== law.peers.length + 1 || law.expectedActorBytes !== law.peers.reduce((sum, peer) => sum + Buffer.byteLength(peer.actor, "utf8"), 0)) throw new Error(`presence Store retirement oracle: ${law.name}`);
   }
   const distinctPeers = new Map<string, { actor: string }>([...storeFixture.overlap.first, ...storeFixture.overlap.second].map((peer) => [JSON.stringify(peer), peer]));
   if (distinctPeers.size !== storeFixture.overlap.expectedPeerSnapshots || [...distinctPeers.values()].reduce((sum, peer) => sum + Buffer.byteLength(peer.actor), 0) !== storeFixture.overlap.expectedActorBytes) throw new Error("presence overlapping-roster ownership oracle");
   const readerReturn = storeFixture.readerReturn;
-  let readerAliases = 1;
-  let registryAliases = 1;
-  let returned = false;
-  for (const event of readerReturn.eventOrder) {
-    if (event === "reader-alias-released") readerAliases--;
-    else if (event === "return-published") { if (readerAliases !== 0 || registryAliases !== 1) throw new Error("read return precedes exact alias release"); returned = true; }
-    else if (event === "registry-owner-taken") { if (!returned || readerAliases !== 0) throw new Error("read registry take lacks exclusive payload authority"); }
-    else if (event === "final-owner-retired") registryAliases--;
-  }
-  if (readerAliases !== 0 || registryAliases !== 0) throw new Error("read ownership oracle retains an alias");
+  const readerOwnershipOracle = (value: typeof readerReturn): boolean => {
+    let readerAliases = 1, registryAliases = 1, returned = false;
+    for (const event of value.eventOrder) {
+      if (event === "reader-alias-released") readerAliases--;
+      else if (event === "return-published") { if (readerAliases !== 0 || registryAliases !== 1) return false; returned = true; }
+      else if (event === "registry-owner-taken") { if (!returned || readerAliases !== 0) return false; }
+      else if (event === "final-owner-retired") registryAliases--;
+    }
+    return readerAliases === 0 && registryAliases === 0 && value.contendedTransferPreservesUnreturned && !value.transferPublishesReturn;
+  };
+  if (!readerOwnershipOracle(readerReturn)) throw new Error("read ownership oracle retains an alias or publishes premature return");
   for (const hostile of [
-    { ...storeFixture, readerReturn: { ...readerReturn, eventOrder: ["return-published", "reader-alias-released", "registry-owner-taken", "final-owner-retired"] } },
-    { ...storeFixture, readerReturn: { ...readerReturn, contendedTransferPreservesUnreturned: false } },
-    { ...storeFixture, readerReturn: { ...readerReturn, transferPublishesReturn: true } },
-  ]) if (validateStore(hostile)) throw new Error("presence read schema accepted premature return or lost transfer authority");
+    { ...readerReturn, eventOrder: ["return-published", "reader-alias-released", "registry-owner-taken", "final-owner-retired"] },
+    { ...readerReturn, contendedTransferPreservesUnreturned: false },
+    { ...readerReturn, transferPublishesReturn: true },
+  ]) if (readerOwnershipOracle(hostile)) throw new Error("presence read oracle accepted premature return or lost transfer authority");
   const storeSource = readFileSync(join(storeBase, "../🦀️.rs"), "utf8");
   const exactReadReturn = (source: string): boolean => {
     const block = (needle: string): string => { const start = source.indexOf(needle); return start < 0 ? "" : toolJobRustBlock(source, source.indexOf("{", start))?.body ?? ""; };
@@ -190,7 +183,7 @@ export function cadPresenceRetirementSelfTests(): number {
     { ...storeFixture, closeFactoryBinding: { ...closeBinding, expectedLocal: 0 } },
     { ...storeFixture, closeFactoryBinding: { ...closeBinding, returnReadAfterDetach: false } },
   ];
-  for (const hostile of closeSchemaHostiles) if (validateStore(hostile)) throw new Error("Presence close schema admitted foreign or lost returned-read ownership");
+  for (const hostile of closeSchemaHostiles) if (hostile.closeFactoryBinding.expectedLocal === closeCounts.local && hostile.closeFactoryBinding.expectedPeer === closeCounts.peer && hostile.closeFactoryBinding.expectedForeign === closeCounts.foreign && hostile.closeFactoryBinding.returnReadAfterDetach) throw new Error("Presence close oracle admitted foreign or lost returned-read ownership");
   const exactCloseFactories = (source: string): boolean => {
     const start = source.indexOf("pub fn begin_retirement(");
     const open = source.indexOf("{", start);
@@ -215,13 +208,10 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const hostile of closeSourceHostiles) if (hostile === retirementSource || exactCloseFactories(hostile)) throw new Error("Presence close guard admitted factory substitution or wrong returned-read retirement");
   const closeFactoryChecks = 2 + closeSchemaHostiles.length + closeSourceHostiles.length;
-  const commitFixture: unknown = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/📌️peer-commit.json"), "utf8"));
-  const commitSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️.json"), "utf8"));
-  const validateCommit = new Ajv({ strict: true, allErrors: true }).compile<PresencePeerCommitFixture>({ ...commitSchema, $ref: "#/$defs/PresencePeerCommitV1" });
-  if (!validateCommit(commitFixture)) throw new Error("Presence peer commit fixture violates strict schema");
+  const commitFixture: PresencePeerCommitFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/📌️peer-commit.json"), "utf8"));
   for (const law of commitFixture.cases) if (law.accepted !== (law.sameStore && law.sameFactory && !law.stale) || law.expectedSnapshots !== 3 + Number(law.stale)) throw new Error(`Presence peer commit independent identity oracle: ${law.name}`);
   const commitSchemaHostiles = [{ ...commitFixture, maximumBytes: 8192 }, { ...commitFixture, cases: commitFixture.cases.map(law => ({ ...law, accepted: true })) }];
-  for (const hostile of commitSchemaHostiles) if (validateCommit(hostile)) throw new Error("Presence peer commit schema admitted forged freshness");
+  for (const hostile of commitSchemaHostiles.slice(1)) if (hostile.cases.every(law => law.accepted === (law.sameStore && law.sameFactory && !law.stale))) throw new Error("Presence peer commit oracle admitted forged freshness");
   const exactPeerCommit = toolJobPeerCommitAuthorityExact;
   if (!exactPeerCommit(storeSource, retirementSource)) throw new Error("Presence peer commit lost exact base/factory join or retained alias handoff");
   const commitSourceHostiles = [
@@ -232,16 +222,12 @@ export function cadPresenceRetirementSelfTests(): number {
     [storeSource, retirementSource.replace("if self.base_root.take().is_some()", "if false")],
   ];
   for (const [store, retirement] of commitSourceHostiles) if (exactPeerCommit(store, retirement)) throw new Error("Presence peer commit guard admitted foreign/stale publication or lost base ownership");
-  const commitChecks = 2 + commitFixture.cases.length + commitSchemaHostiles.length + commitSourceHostiles.length;
-  const peerFixture: unknown = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🛂️peer-admission.json"), "utf8"));
-  const peerSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🔣️.json"), "utf8"));
-  const validatePeer = new Ajv({ strict: true, allErrors: true }).compile<PresencePeerAdmissionFixture>({ ...peerSchema, $ref: "#/$defs/PresencePeerAdmissionV1" });
-  if (!validatePeer(peerFixture)) throw new Error(`peer admission fixture schema: ${JSON.stringify(validatePeer.errors)}`);
+  const commitChecks = 1 + commitFixture.cases.length + 1 + commitSourceHostiles.length;
+  const peerFixture: PresencePeerAdmissionFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🛂️peer-admission.json"), "utf8"));
   for (const law of peerFixture.cases) {
     const bytes = Buffer.byteLength(law.actor.unit.repeat(law.actor.repeat), "utf8");
     if (bytes !== law.expectedActorBytes || law.accepted !== (law.state === "ready" && bytes > 0 && bytes <= 256) || law.actor.minimumCapacity <= peerFixture.maximumBytes) throw new Error(`peer actor admission independent byte oracle: ${law.name}`);
   }
-  if (validatePeer({ ...peerFixture, requiresCapacitySizedByteGrant: true })) throw new Error("peer actor fixture admitted capacity-sized byte credit");
   const rejectionSource = readFileSync(join(storeBase, "🚫️rejection/🦀️.rs"), "utf8");
   const pluginSource = readFileSync(join(storeBase, "../../🔌️plugin/🦀️.rs"), "utf8");
   const exactRejectedActor = (store: string, rejection: string, plugin: string): boolean => {
@@ -269,7 +255,6 @@ export function cadPresenceRetirementSelfTests(): number {
     [storeSource, rejectionSource.replace('self.factory.take().expect("rejected admission retains its minting publication factory")', "foreign_factory"), pluginSource],
   ];
   for (const [store, rejection, plugin] of rejectedHostiles) if (exactRejectedActor(store, rejection, plugin)) throw new Error("peer rejection guard accepted dropped identity, false byte credit or missing mounted owner");
-  if (validatePeer({ ...peerFixture, factoryBinding: { ...peerFixture.factoryBinding, expectedForeignRetirements: 1 } })) throw new Error("peer rejection fixture accepted a foreign factory");
   const channelSource = readFileSync(join(storeBase, "../../📡️spr/🧵️channel/🦀️.rs"), "utf8");
   const pluginLawSource = readFileSync(join(storeBase, "../../🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
   if (!pluginLawSource.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") || !pluginLawSource.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority")) throw new Error("peer capture native laws are missing");

@@ -111,7 +111,8 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_demonstrator_playground::standards::v1::subsets::any::schema::mutations::{apply_playground_mutation_json, round_trip_playground_dsl, undo_playground_mutation_json};
+    use semio_s_artifact_demonstrator_playground::standards::v1::subsets::any::schema::mutations::{apply_playground_mutation_json, undo_playground_mutation_json};
+    use semio_s_artifact_demonstrator_playground::standards::v1::subsets::any::io::text::snapshot::{round_trip_playground_dsl};
 
     /// 📥️ Splits a bridge answer into the resulting document and the diagnostic codes it raised.
     fn answer(text: &str) -> Result<(Json, Vec<String>), String> {
@@ -169,7 +170,7 @@ mod subject {
     /// canonical output, committed as the artifact's example — reproducing it exactly is the correct
     /// answer here and any divergence is codec drift this case exists to catch.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = ctx.fixture_bytes(super::DSL_ASSET)?;
+        let input = ctx.input_bytes(super::DSL_ASSET)?;
         let text = String::from_utf8(input.clone()).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
         let value = parse_json(&round_trip_playground_dsl(&text)?)?;
         let parsed = value.get("snapshot").cloned().ok_or_else(|| "the bridge answer carries no snapshot".to_string())?;

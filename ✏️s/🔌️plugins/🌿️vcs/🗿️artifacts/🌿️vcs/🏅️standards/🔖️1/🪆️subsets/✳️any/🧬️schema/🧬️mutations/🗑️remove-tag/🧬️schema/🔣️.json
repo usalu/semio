@@ -13,7 +13,24 @@
       "const": "removeTag"
     },
     "tag": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tag",
+          "de": "Tag"
+        },
+        "description": {
+          "en": "Name of the tag that is removed.",
+          "de": "Name des Tags, das entfernt wird."
+        },
+        "ref": {
+          "kind": "tag"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

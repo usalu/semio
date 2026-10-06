@@ -15,7 +15,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-animation/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line timelines-line` grammar in both directions — `timeline`, `option-name`, `channel`, `target`, `property = t|r|s|w|c:<hex>`, `interpolation = l|s|c`, `keyframe` and `value = S|V|Q|W` included — and all thirteen verbs of this subset's vocabulary together with their inverses, written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`, importing nothing from and transliterating nothing of the Rust it judges. Two leaves the grammar states by reference were settled from its own notes and pinned by byte-exact re-emission: `hex` is the framework macro, so `77616c6b` is `walk` and `6f706163697479` is `opacity`, and `number = INT | FLOAT` prints through Rust's `{v}` Display, which drops the fractional part of an integral value — the committed walk cycle carries both spellings. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The interchange-reader route was surveyed again and still rejected on the merits rather than for absence — `gif` 0.13 exposes per-frame delays alone, and `pygltflib`/`gltf-transform` judge glTF's `channel` + `sampler` accessor indirection while this snapshot resolves that model into owned keyframes, so nine of the thirteen kinds would have had nothing to compare against.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-animation-mutate`'s external-oracle requirement for its 13-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-animation/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line timelines-line` grammar in both directions — `timeline`, `option-name`, `channel`, `target`, `property = t|r|s|w|c:<hex>`, `interpolation = l|s|c`, `keyframe` and `value = S|V|Q|W` included — and all thirteen verbs of this subset's vocabulary together with their inverses, written in Python from `../🚪️io/📝️text/📸️snapshot/📖️.grammar.semio`, `../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`, importing nothing from and transliterating nothing of the Rust it judges. Two leaves the grammar states by reference were settled from its own notes and pinned by byte-exact re-emission: `hex` is the framework macro, so `77616c6b` is `walk` and `6f706163697479` is `opacity`, and `number = INT | FLOAT` prints through Rust's `{v}` Display, which drops the fractional part of an integral value — the committed walk cycle carries both spellings. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The interchange-reader route was surveyed again and still rejected on the merits rather than for absence — `gif` 0.13 exposes per-frame delays alone, and `pygltflib`/`gltf-transform` judge glTF's `channel` + `sampler` accessor indirection while this snapshot resolves that model into owned keyframes, so nine of the thirteen kinds would have had nothing to compare against.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-animation-mutate`'s external-oracle requirement for its 13-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 1 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -39,7 +39,7 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": ".dsl.semio; ../🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs; 🔒️dependencies.json",
+        "specificationSource": ".dsl.semio; ../🚪️io/📝️text/📸️snapshot/📖️.grammar.semio; ../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio; 🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs; 🔒️dependencies.json",
         "fixtureCoverage": {
           "vectors": 12,
           "capabilitiesCovered": [
@@ -369,9 +369,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-channel-applied",
       "class": "third-party-generated",
       "target": {
@@ -422,7 +421,6 @@
       "notes": "Applied insert-channel (payload {\"kind\": \"insert-channel\", \"params\": {\"timelineIndex\": 0, \"index\": 4, \"channel\": {\"target\": {\"node\": \"rig\", \"property\": {\"kind\": \"custom\", \"name\": \"opacity\"}}, \"interpolation\": \"linear\", \"keyframes\": [{\"t\": 0.0, \"value\": {\"kind\": \"scalar\", \"value\": 1.0}}]}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-keyframe-applied",
       "class": "third-party-generated",
       "target": {
@@ -473,7 +471,6 @@
       "notes": "Applied insert-keyframe (payload {\"kind\": \"insert-keyframe\", \"params\": {\"timelineIndex\": 0, \"channelIndex\": 0, \"index\": 2, \"keyframe\": {\"t\": 11.0, \"value\": {\"kind\": \"vec3\", \"value\": {\"x\": 1.0, \"y\": 0.0, \"z\": 0.0}}}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-timeline-applied",
       "class": "third-party-generated",
       "target": {
@@ -524,7 +521,6 @@
       "notes": "Applied insert-timeline (payload {\"kind\": \"insert-timeline\", \"params\": {\"index\": 1, \"timeline\": {\"name\": \"inserted-timeline\", \"channels\": [{\"target\": {\"node\": \"hip\", \"property\": {\"kind\": \"translation\"}}, \"interpolation\": \"linear\", \"keyframes\": [{\"t\": 0.0, \"value\": {\"kind\": \"vec3\", \"value\": {\"x\": 0.0, \"y\": 0.0, \"z\": 0.0}}}, {\"t\": 1.0, \"value\": {\"kind\": \"vec3\", \"value\": {\"x\": 1.0, \"y\": 0.0, \"z\": 0.0}}}]}, {\"target\": {\"node\": \"spine\", \"property\": {\"kind\": \"rotation\"}}, \"interpolation\": \"cubicSpline\", \"keyframes\": [{\"t\": 0.5, \"value\": {\"kind\": \"quat\", \"value\": {\"x\": 0.0, \"y\": 0.0, \"z\": 0.0, \"w\": 1.0}}}]}, {\"target\": {\"node\": \"face\", \"property\": {\"kind\": \"weights\"}}, \"interpolation\": \"step\", \"keyframes\": [{\"t\": 0.0, \"value\": {\"kind\": \"weights\", \"values\": [0.0, 1.0, 0.5]}}]}, {\"target\": {\"node\": \"rig\", \"property\": {\"kind\": \"custom\", \"name\": \"opacity\"}}, \"interpolation\": \"linear\", \"keyframes\": [{\"t\": 0.0, \"value\": {\"kind\": \"scalar\", \"value\": 1.0}}]}]}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-channel-applied",
       "class": "third-party-generated",
       "target": {
@@ -575,7 +571,6 @@
       "notes": "Applied remove-channel (payload {\"kind\": \"remove-channel\", \"params\": {\"timelineIndex\": 0, \"index\": 3}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-keyframe-applied",
       "class": "third-party-generated",
       "target": {
@@ -626,7 +621,6 @@
       "notes": "Applied remove-keyframe (payload {\"kind\": \"remove-keyframe\", \"params\": {\"timelineIndex\": 0, \"channelIndex\": 0, \"index\": 1}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-timeline-applied",
       "class": "third-party-generated",
       "target": {
@@ -677,7 +671,6 @@
       "notes": "Applied remove-timeline (payload {\"kind\": \"remove-timeline\", \"params\": {\"index\": 0}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-channel-interpolation-applied",
       "class": "third-party-generated",
       "target": {
@@ -728,7 +721,6 @@
       "notes": "Applied set-channel-interpolation (payload {\"kind\": \"set-channel-interpolation\", \"params\": {\"timelineIndex\": 0, \"index\": 0, \"interpolation\": \"step\"}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-channel-target-applied",
       "class": "third-party-generated",
       "target": {
@@ -779,7 +771,6 @@
       "notes": "Applied set-channel-target (payload {\"kind\": \"set-channel-target\", \"params\": {\"timelineIndex\": 0, \"index\": 0, \"target\": {\"node\": \"inserted-node\", \"property\": {\"kind\": \"translation\"}}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-keyframe-time-applied",
       "class": "third-party-generated",
       "target": {
@@ -830,7 +821,6 @@
       "notes": "Applied set-keyframe-time (payload {\"kind\": \"set-keyframe-time\", \"params\": {\"timelineIndex\": 0, \"channelIndex\": 0, \"index\": 0, \"t\": 42}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-keyframe-value-applied",
       "class": "third-party-generated",
       "target": {
@@ -881,7 +871,6 @@
       "notes": "Applied set-keyframe-value (payload {\"kind\": \"set-keyframe-value\", \"params\": {\"timelineIndex\": 0, \"channelIndex\": 0, \"index\": 0, \"value\": {\"kind\": \"vec3\", \"value\": {\"x\": 9.0, \"y\": 9.0, \"z\": 9.0}}}}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-timeline-name-applied",
       "class": "third-party-generated",
       "target": {

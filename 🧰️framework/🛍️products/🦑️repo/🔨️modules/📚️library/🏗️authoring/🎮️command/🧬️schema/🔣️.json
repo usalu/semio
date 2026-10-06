@@ -1,52 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "semio.framework.repo.scaffold-owner/v1",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema",
-    "vectors"
-  ],
-  "properties": {
-    "schema": {
-      "const": "semio.framework.repo.scaffold-owner/v1"
-    },
-    "vectors": {
-      "type": "array",
-      "minItems": 14,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "kind",
-          "owner",
-          "newDirectory",
-          "valid"
-        ],
-        "properties": {
-          "kind": {
-            "enum": [
-              "artifact",
-              "standard",
-              "subset"
-            ]
-          },
-          "owner": {
-            "type": "string"
-          },
-          "newDirectory": {
-            "type": "string"
-          },
-          "valid": {
-            "type": "boolean"
-          },
-          "destination": {
-            "type": "string"
-          }
-        }
-      }
-    }
-  },
+  "$id": "semio.repo.authoring-command/v1",
+  "$ref": "#/$defs/request",
   "$defs": {
     "request": {
       "type": "object",

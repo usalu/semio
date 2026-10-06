@@ -1,6 +1,5 @@
 [
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-cube-blind-bore",
     "class": "third-party-generated",
     "target": {
@@ -95,7 +94,6 @@
     "notes": "A box with a BLIND bore — a cylindrical pocket that does not reach the far face. The cavity opens to the outside on one end only, so the topology stays genus 0 despite the removed volume; the direct contrast case for `boolean-difference-cube-single-bore`."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-cube-countersink",
     "class": "third-party-generated",
     "target": {
@@ -190,7 +188,6 @@
     "notes": "A box with a countersunk through-hole — a cone fused onto a cylinder as ONE cutting tool, then subtracted in a single pass, rather than two separate cuts. Genus 1, and the case that exercises a compound cutter built from two different primitive families."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-cube-groove",
     "class": "third-party-generated",
     "target": {
@@ -285,7 +282,6 @@
     "notes": "A box with an open channel cut straight across its top face. A groove open on two sides is still genus 0 — removing a trench does not add a handle the way a fully enclosed tunnel does."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-cube-single-bore",
     "class": "third-party-generated",
     "target": {
@@ -380,7 +376,6 @@
     "notes": "A box with one cylindrical through-bore — the canonical genus-1 difference, and the direct cross-check for `topology-genus1-single-bore` and `primitives-torus-32` (three different constructions of the same topological invariant)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-cube-slot-through",
     "class": "third-party-generated",
     "target": {
@@ -475,7 +470,6 @@
     "notes": "A box with a rectangular slot cut all the way through — a through-hole built from planar faces instead of a cylinder, genus 1, and the rectangular-cutter cross-check for the round-bore fixtures."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-cube-three-bores",
     "class": "third-party-generated",
     "target": {
@@ -563,7 +557,6 @@
     "notes": "A box with three parallel, non-intersecting through-bores — MEASURED genus 3 (each independent through-hole adds one handle), and the boolean-family cross-check for `topology-genus3-three-bores`."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-cube-two-crossing-bores",
     "class": "third-party-generated",
     "target": {
@@ -651,7 +644,6 @@
     "notes": "A box with two through-bores on perpendicular axes that CROSS each other inside the material, merging into one combined internal cavity rather than two separate tunnels. MEASURED genus 3, not the 2 a naive per-hole count would predict — the crossing junction itself adds a third handle beyond the one each bore would contribute independently, which is exactly why this fixture exists rather than trusting the naive count."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-nested-cavity-box",
     "class": "third-party-generated",
     "target": {
@@ -746,7 +738,6 @@
     "notes": "A box with a concentric box-shaped cavity fully inside it — the same nested-void topology as `boolean-difference-nested-cavity-sphere`, built from planar rather than doubly-curved faces."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-nested-cavity-sphere",
     "class": "third-party-generated",
     "target": {
@@ -841,7 +832,6 @@
     "notes": "A sphere with a concentric spherical cavity fully inside it — a hollow shell. MEASURED (this generator's own qualification probe): `decompose().length === 2`, because the outer and inner boundary surfaces are two disjoint closed surfaces even though the solid material between them is one connected region — `genus()` on the whole shape returns manifold-3d's own sentinel `-1` for exactly this reason, which is why `../📜️script.ts`'s `topology()` helper decomposes before asking for genus."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-sphere-crescent",
     "class": "third-party-generated",
     "target": {
@@ -936,7 +926,6 @@
     "notes": "A sphere with a second, off-center sphere subtracted so the cutter pokes through the outer surface — the removed cavity opens to the outside rather than staying enclosed, leaving a single-solid crescent/dent rather than a nested void. The direct contrast case for `boolean-difference-nested-cavity-sphere`, where the same operation with the cutter fully enclosed produces two disjoint boundary components instead of one."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-difference-torus-minus-cube",
     "class": "third-party-generated",
     "target": {
@@ -1024,7 +1013,6 @@
     "notes": "A genus-1 torus with an external notch cut by a box that does not reach the torus's own hole — the topology stays genus 1, the cross-check that an unrelated external cut does not disturb a shape's existing handle."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-intersection-cube-sphere",
     "class": "third-party-generated",
     "target": {
@@ -1119,7 +1107,6 @@
     "notes": "The intersection of a cube and a sphere whose radius exceeds the cube's half-diagonal on the faces but not the corners — a rounded-cube result with six flat faces and eight spherical corners, genus 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-intersection-cylinder-cylinder",
     "class": "third-party-generated",
     "target": {
@@ -1214,7 +1201,6 @@
     "notes": "Two equal-radius cylinders on perpendicular axes, intersected — the classic Steinmetz solid (a bicylinder), whose closed-form volume 16r³/3 makes this fixture independently checkable against the tessellated measurement."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-intersection-sphere-sphere-lens",
     "class": "third-party-generated",
     "target": {
@@ -1309,7 +1295,6 @@
     "notes": "The intersection of two equal, heavily overlapping spheres — a lens (vesica) solid, convex, genus 0, and the intersection-family counterpart to `boolean-union-overlapping-spheres`'s union of the same two operands."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-union-cube-cylinder-boss",
     "class": "third-party-generated",
     "target": {
@@ -1404,7 +1389,6 @@
     "notes": "A box with a cylindrical boss fused onto one face — the additive counterpart to a bore, and a shape whose result has a genuinely mixed planar/curved boundary."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-union-cube-sphere-tangent-contact",
     "class": "third-party-generated",
     "target": {
@@ -1499,7 +1483,6 @@
     "notes": "A sphere placed so it touches one face of a box at exactly one point without overlapping it. Like the tangent-spheres fixture, tessellated tangency does not fuse into one solid — declared and measured as a 2-component result, not assumed."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-union-disjoint-spheres",
     "class": "third-party-generated",
     "target": {
@@ -1594,7 +1577,6 @@
     "notes": "Two spheres far enough apart that they never touch. `add()` on non-overlapping input is still a valid manifold — MEASURED as `decompose().length === 2` — so this is the corpus's plainest disjoint-result fixture, distinct from a fused blob only in solid count."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-union-overlapping-spheres",
     "class": "third-party-generated",
     "target": {
@@ -1689,7 +1671,6 @@
     "notes": "Two spheres overlapping by half a radius, fused into one connected blob — the simplest non-trivial union: one solid, genus 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-union-tangent-spheres",
     "class": "third-party-generated",
     "target": {
@@ -1784,7 +1765,6 @@
     "notes": "Two spheres placed exactly `radiusA + radiusB` apart — touching at a single point in the ideal continuous geometry. MEASURED at 32-segment tessellation: manifold-3d still reports `decompose().length === 2`, because the tessellated surfaces meet, if at all, at an isolated vertex rather than sharing a coincident face the boolean engine merges. A single-point contact declares itself as still-disjoint rather than silently fusing."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "boolean-union-three-spheres-chain",
     "class": "third-party-generated",
     "target": {
@@ -1879,7 +1859,6 @@
     "notes": "Three overlapping spheres fused in a row — each pair overlaps by half a radius, so the union is one connected blob (genus 0), the multi-operand counterpart to the two-sphere union case."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-coplanar-faces-union",
     "class": "third-party-generated",
     "target": {
@@ -1974,7 +1953,6 @@
     "notes": "Two 20mm cubes placed edge-to-edge so one whole face of each is EXACTLY coplanar with the other's, then unioned — the classic coincident-face boolean edge case, distinct from `degenerate-near-coincident-union`'s epsilon-offset overlap because here the shared face is mathematically identical between the two operands rather than merely close."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-hairline-groove",
     "class": "third-party-generated",
     "target": {
@@ -2062,7 +2040,6 @@
     "notes": "A 50×50×10mm block with a groove only 0.0002mm wide cut across its top face — a subtractive feature narrow enough that its two opposing walls sit closer together than many fixed weld grids would resolve as distinct, the groove counterpart to `degenerate-tiny-bore-below-tolerance`'s round hole."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-high-tessellation-sphere",
     "class": "third-party-generated",
     "target": {
@@ -2143,7 +2120,6 @@
     "notes": "A 10mm-radius sphere at 128 circular segments — an edge length around 0.5mm on an object with a ~20mm bounding-box diagonal, densely tessellated enough (double `primitives-sphere-64`'s densest rung) to be a real stress test of the weld grid's ability to keep genuinely distinct neighbouring vertices apart rather than merging fine tessellation into itself, without the ASCII-text export ballooning into tens of megabytes the way a further doubling would."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-near-coincident-union",
     "class": "third-party-generated",
     "target": {
@@ -2238,7 +2214,6 @@
     "notes": "Two 20mm boxes overlapping by only 0.0001mm along one axis — as close to merely touching as this generator could place them while still guaranteeing genuine volumetric overlap. Tests whether the boolean and the subsequent weld agree on a single connected solid rather than one of them treating the near-coincident seam as two separate pieces."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-needle-cone",
     "class": "third-party-generated",
     "target": {
@@ -2319,7 +2294,6 @@
     "notes": "A cone with a 0.05mm base radius and a 60mm height — a needle whose tessellated side wall is almost entirely sliver triangles (each far longer than it is wide), the opposite failure mode from a thin slab's flat near-coincident faces."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-sliver-thin-slab",
     "class": "third-party-generated",
     "target": {
@@ -2400,7 +2374,6 @@
     "notes": "A 50×50mm plate 0.001mm thick — a 50,000:1 aspect ratio, thin enough that the two large faces sit closer together than the weld grid many fixed-tolerance pipelines would choose, and a real test of whether this generator's own bounding-box-diagonal-relative weld keeps the top and bottom faces distinct rather than collapsing the slab to a single sheet."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-thin-fin",
     "class": "third-party-generated",
     "target": {
@@ -2488,7 +2461,6 @@
     "notes": "A 50×50×5mm plate with a single fin 0.002mm thick fused onto its top face — a protruding thin feature rather than a shell wall, testing the same near-coincident-face weld risk as `topology-thin-shell-box` but on an ADDITIVE feature instead of a subtractive cavity."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-tiny-bore-below-tolerance",
     "class": "third-party-generated",
     "target": {
@@ -2569,7 +2541,6 @@
     "notes": "A 100mm cube with a through-bore only 0.0005mm in radius — a feature roughly seven orders of magnitude smaller than the block's own bounding-box diagonal. This is the direct probe for whether a bounding-box-diagonal-relative weld grid (this generator's own tolerance rule) is itself capable of destroying a feature that is legitimately present but far smaller than the WHOLE shape, which a purely scale-relative rule cannot distinguish from noise the way an absolute floor tuned to the feature itself could."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-tiny-boss-on-large-plate",
     "class": "third-party-generated",
     "target": {
@@ -2657,7 +2628,6 @@
     "notes": "A 300×300×10mm plate carrying one boss 0.01mm in radius — a single shape spanning six orders of magnitude between its overall footprint and its smallest feature, the WITHIN-ONE-SHAPE counterpart to the `scale` family's whole-shape rescaling and to `topology-disconnected-mixed-sizes`'s two-separate-components version of the same size disparity."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-cone-16",
     "class": "third-party-generated",
     "target": {
@@ -2738,7 +2708,6 @@
     "notes": "Same cone, 16 segments."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-cone-32",
     "class": "third-party-generated",
     "target": {
@@ -2819,7 +2788,6 @@
     "notes": "Same cone, 32 segments — the smooth end of the cone ladder. The apex is a single degenerate ring of coincident vertices before welding, which is exactly the case `weldToManifold` has to collapse back down correctly."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-cone-8",
     "class": "third-party-generated",
     "target": {
@@ -2900,7 +2868,6 @@
     "notes": "`Manifold.cylinder`'s two-radius form with the top radius at zero gives an exact cone — 8 segments, the coarse end of the cone ladder."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-cube-rectangular",
     "class": "third-party-generated",
     "target": {
@@ -2981,7 +2948,6 @@
     "notes": "A non-cubic box with three distinct edge lengths — catches an axis-swap bug a perfect cube can hide."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-cube-unit",
     "class": "third-party-generated",
     "target": {
@@ -3062,7 +3028,6 @@
     "notes": "A unit cube, centered at the origin — the simplest possible closed-form check: volume 1000, 6 quad faces triangulated as 12 triangles, genus 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-cylinder-16",
     "class": "third-party-generated",
     "target": {
@@ -3143,7 +3108,6 @@
     "notes": "Same cylinder, 16 segments."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-cylinder-32",
     "class": "third-party-generated",
     "target": {
@@ -3224,7 +3188,6 @@
     "notes": "Same cylinder, 32 segments — a resolution dense enough to read as round."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-cylinder-64",
     "class": "third-party-generated",
     "target": {
@@ -3305,7 +3268,6 @@
     "notes": "Same cylinder, 64 segments — the high end of this family's cylinder ladder."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-cylinder-8",
     "class": "third-party-generated",
     "target": {
@@ -3386,7 +3348,6 @@
     "notes": "An octagonal-approximation cylinder (8 circular segments) — coarse enough that its side faces are visibly flat facets rather than a smooth barrel."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-sphere-16",
     "class": "third-party-generated",
     "target": {
@@ -3467,7 +3428,6 @@
     "notes": "Same sphere as `primitives-sphere-8`, doubled tessellation — the pair exists to make the volume converge toward 4/3πr³ measurably as segment count rises."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-sphere-32",
     "class": "third-party-generated",
     "target": {
@@ -3548,7 +3508,6 @@
     "notes": "Same sphere, 32 segments — a resolution dense enough that most downstream consumers would treat it as visually smooth."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-sphere-64",
     "class": "third-party-generated",
     "target": {
@@ -3629,7 +3588,6 @@
     "notes": "Same sphere, 64 segments — the high end of the ladder, and the densest primitive mesh in this family before `degenerate` takes tessellation density to the point of stressing the weld itself."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-sphere-8",
     "class": "third-party-generated",
     "target": {
@@ -3710,7 +3668,6 @@
     "notes": "A coarse geodesic sphere (8 circular segments, rounded up to the nearest factor of four by manifold-3d) — the low end of the tessellation ladder this family sweeps."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-torus-16",
     "class": "third-party-generated",
     "target": {
@@ -3791,7 +3748,6 @@
     "notes": "A genus-1 torus — `CrossSection.circle(tubeRadius).translate(majorRadius, 0).revolve(segments, 360)`, manifold-3d's real revolve-of-a-2D-profile constructor rather than a hand-built ring of quads. 16 segments in both the tube circle and the revolve sweep."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-torus-32",
     "class": "third-party-generated",
     "target": {
@@ -3872,7 +3828,6 @@
     "notes": "Same torus, 32 segments."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "primitives-torus-64",
     "class": "third-party-generated",
     "target": {
@@ -3953,7 +3908,6 @@
     "notes": "Same torus, 64 segments — the densest genus-1 primitive in this family, and a direct cross-check for the `topology` family's genus-1 fixtures built by drilling a bore instead of revolving a profile."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-bore-boss-1",
     "class": "third-party-generated",
     "target": {
@@ -4034,7 +3988,6 @@
     "notes": "The bore-boss reference shape at 1× its natural 20mm size (built once, then `Manifold.scale(1)`d — never rebuilt with different absolute dimensions). Volume and surface area must scale by 1³ and 1² respectively relative to `scale-bore-boss-1`; the weld grid this generator applies before re-measuring is bounding-box-diagonal-relative specifically so it neither over-merges this fixture at 1e-3 nor runs away in cost or memory at 1e6, the exact failure mode a fixed absolute tolerance produced in the sibling BRep pilot."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-bore-boss-1e-3",
     "class": "third-party-generated",
     "target": {
@@ -4115,7 +4068,6 @@
     "notes": "The bore-boss reference shape at 0.001× its natural 20mm size (built once, then `Manifold.scale(0.001)`d — never rebuilt with different absolute dimensions). Volume and surface area must scale by 0.001³ and 0.001² respectively relative to `scale-bore-boss-1`; the weld grid this generator applies before re-measuring is bounding-box-diagonal-relative specifically so it neither over-merges this fixture at 1e-3 nor runs away in cost or memory at 1e6, the exact failure mode a fixed absolute tolerance produced in the sibling BRep pilot."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-bore-boss-1e3",
     "class": "third-party-generated",
     "target": {
@@ -4196,7 +4148,6 @@
     "notes": "The bore-boss reference shape at 1000× its natural 20mm size (built once, then `Manifold.scale(1000)`d — never rebuilt with different absolute dimensions). Volume and surface area must scale by 1000³ and 1000² respectively relative to `scale-bore-boss-1`; the weld grid this generator applies before re-measuring is bounding-box-diagonal-relative specifically so it neither over-merges this fixture at 1e-3 nor runs away in cost or memory at 1e6, the exact failure mode a fixed absolute tolerance produced in the sibling BRep pilot."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-bore-boss-1e6",
     "class": "third-party-generated",
     "target": {
@@ -4277,7 +4228,6 @@
     "notes": "The bore-boss reference shape at 1000000× its natural 20mm size (built once, then `Manifold.scale(1000000)`d — never rebuilt with different absolute dimensions). Volume and surface area must scale by 1000000³ and 1000000² respectively relative to `scale-bore-boss-1`; the weld grid this generator applies before re-measuring is bounding-box-diagonal-relative specifically so it neither over-merges this fixture at 1e-3 nor runs away in cost or memory at 1e6, the exact failure mode a fixed absolute tolerance produced in the sibling BRep pilot."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-torus-1",
     "class": "third-party-generated",
     "target": {
@@ -4358,7 +4308,6 @@
     "notes": "The reference torus at 1× its natural size (major radius 14mm) — the doubly-curved half of this family's scale sweep, exercising the same scale-relative weld tolerance on a genus-1 shape rather than the bore-boss's genus-1-by-subtraction construction."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-torus-1e-3",
     "class": "third-party-generated",
     "target": {
@@ -4439,7 +4388,6 @@
     "notes": "The reference torus at 0.001× its natural size (major radius 14mm) — the doubly-curved half of this family's scale sweep, exercising the same scale-relative weld tolerance on a genus-1 shape rather than the bore-boss's genus-1-by-subtraction construction."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-torus-1e3",
     "class": "third-party-generated",
     "target": {
@@ -4520,7 +4468,6 @@
     "notes": "The reference torus at 1000× its natural size (major radius 14mm) — the doubly-curved half of this family's scale sweep, exercising the same scale-relative weld tolerance on a genus-1 shape rather than the bore-boss's genus-1-by-subtraction construction."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-torus-1e6",
     "class": "third-party-generated",
     "target": {
@@ -4601,7 +4548,6 @@
     "notes": "The reference torus at 1000000× its natural size (major radius 14mm) — the doubly-curved half of this family's scale sweep, exercising the same scale-relative weld tolerance on a genus-1 shape rather than the bore-boss's genus-1-by-subtraction construction."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-disconnected-mixed-sizes",
     "class": "third-party-generated",
     "target": {
@@ -4682,7 +4628,6 @@
     "notes": "One large cube and one small cube — two orders of magnitude apart in edge length — placed far apart and unioned into a single 2-component result. Exercises whether a consumer's bounding-box-diagonal-relative tolerance stays correct when the two components it spans are wildly different sizes, distinct from the `scale` family's whole-shape rescaling."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-disconnected-three-components",
     "class": "third-party-generated",
     "target": {
@@ -4763,7 +4708,6 @@
     "notes": "Three spheres placed far apart, unioned — `decompose()` recovers 3 components."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-disconnected-two-components",
     "class": "third-party-generated",
     "target": {
@@ -4844,7 +4788,6 @@
     "notes": "Two cubes placed far apart, unioned — `decompose()` recovers 2 components, each genus 0. The `topology`-family counterpart to the disjoint-spheres boolean fixture, built from planar rather than curved primitives."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-genus0-sphere",
     "class": "third-party-generated",
     "target": {
@@ -4925,7 +4868,6 @@
     "notes": "A plain sphere — genus 0, the baseline every other genus fixture in this family is measured against."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-genus1-single-bore",
     "class": "third-party-generated",
     "target": {
@@ -5006,7 +4948,6 @@
     "notes": "A box with one through-bore — genus 1. The `topology`-family twin of `boolean-difference-cube-single-bore`, built to be picked out by genus rather than by which operation produced it."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-genus2-two-bores",
     "class": "third-party-generated",
     "target": {
@@ -5087,7 +5028,6 @@
     "notes": "A box with two parallel, non-intersecting through-bores — genus 2."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-genus3-three-bores",
     "class": "third-party-generated",
     "target": {
@@ -5168,7 +5108,6 @@
     "notes": "A box with three parallel, non-intersecting through-bores — genus 3, the top of this family's genus ladder and the direct cross-check for `boolean-difference-cube-three-bores`."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-high-aspect-ratio-plate",
     "class": "third-party-generated",
     "target": {
@@ -5249,7 +5188,6 @@
     "notes": "A plate 400 times wider than it is thick (200×200mm, 0.5mm thick) — the planar high-aspect-ratio case, and close to the thinnest a single-digit-millimetre real part's web or fin ever gets."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-high-aspect-ratio-rod",
     "class": "third-party-generated",
     "target": {
@@ -5330,7 +5268,6 @@
     "notes": "A cylindrical rod 100 times longer than it is wide (radius 1, length 100) — the high-aspect-ratio counterpart of the thin-shell fixtures: instead of one dimension being thin relative to the whole, one dimension is LONG relative to the other two, which stresses a bounding-box-diagonal-relative tolerance from the opposite direction."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-thin-shell-box",
     "class": "third-party-generated",
     "target": {
@@ -5411,7 +5348,6 @@
     "notes": "A box shelled to a wall 1/30th of its own edge length (30mm outer, 1mm wall) by subtracting a slightly smaller box — thin enough that a weld grid sized wrong relative to the shape would merge the outer and inner surfaces into one degenerate sheet instead of keeping them the two disjoint boundary components they are."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-thin-shell-sphere",
     "class": "third-party-generated",
     "target": {
@@ -5492,7 +5428,6 @@
     "notes": "The same thin-wall-shell stress as `topology-thin-shell-box`, on doubly-curved rather than planar faces — a sphere shelled to a wall 1/20th of its own radius."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-thin-wall-partition",
     "class": "third-party-generated",
     "target": {

@@ -13,7 +13,21 @@
       "const": "renameWriter"
     },
     "newId": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "Name the document carries afterwards.",
+          "de": "Name, den das Dokument danach trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

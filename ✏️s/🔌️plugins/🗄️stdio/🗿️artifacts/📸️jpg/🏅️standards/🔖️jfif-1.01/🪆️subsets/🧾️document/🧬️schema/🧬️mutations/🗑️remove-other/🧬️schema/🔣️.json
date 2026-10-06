@@ -10,7 +10,22 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Segment",
+          "de": "Segment"
+        },
+        "description": {
+          "en": "Index of the other segment, counted from 0.",
+          "de": "Index des sonstigen Segments, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

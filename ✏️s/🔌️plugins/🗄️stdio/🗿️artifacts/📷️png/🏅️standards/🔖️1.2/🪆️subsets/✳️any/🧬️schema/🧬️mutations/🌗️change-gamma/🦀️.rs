@@ -13,16 +13,12 @@ pub struct ChangeGammaMutation {
     pub gama: Option<u32>,
 }
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "gamma", kind: "change-gamma", record: "ChangeGamma" };
 
     fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
-        match crate::io::set_gamma_chunk_controlled(base, &self.revision, self.gama, &mut |_, _| true) {
+        match crate::standards::v1_2::subsets::any::io::set_gamma_chunk_controlled(base, &self.revision, self.gama, &mut |_, _| true) {
             Ok(next) => protocol::MutationOutcome::new(PngDiff::between(base, &next)),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["gAMA"]),
         }
@@ -44,5 +40,5 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
     let base = PngSnapshot::default();
-    PngMutation::ChangeGamma(ChangeGammaMutation { revision: crate::io::png_revision(&base), gama: Some(45_455) })
+    PngMutation::ChangeGamma(ChangeGammaMutation { revision: crate::standards::v1_2::subsets::any::io::png_revision(&base), gama: Some(45_455) })
 }

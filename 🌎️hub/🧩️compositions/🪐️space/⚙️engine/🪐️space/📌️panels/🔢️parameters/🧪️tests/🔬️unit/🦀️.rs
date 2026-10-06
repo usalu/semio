@@ -22,7 +22,7 @@ async fn oversized_workflow(count: usize) -> WorkflowSnapshot {
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(projection: &WorkflowSnapshot, requests: Vec<TreeWindowRequest>) -> String {
-    let view = ViewModel { tree_windows: requests, ..Default::default() };
+    let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     project(render(projection, labels(), &TreeWindows::for_body(&view, S_PLAY_PARAMETERS_BODY_KEY)).expect("render"))
 }
 

@@ -40,7 +40,7 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
         .package_id("semio:gis")
         .depends_on(dependency.plugin_id, dependency.version)
         .contributes_topic(catalog)
-        .contributes_topic(semio_framework::TopicContribution::new(protocol::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC, protocol::ToValue::to_value(&semio_s_artifact_gis_gismap::inference_client::declaration())))
+        .contributes_topic(semio_framework::TopicContribution::new(protocol::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC, semio_framework_value::ToValue::to_value(&semio_s_artifact_gis_gismap::inference_client::declaration())))
         .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
         .artifact_kind(semio_s_artifact_gis_gisterrain::artifact_kind())
         .artifact(semio_s_artifact_gis_gismap::declaration().map_err(PluginAssemblyError::definition)?)

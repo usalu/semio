@@ -1,0 +1,3 @@
+# General Conformance Source Three
+
+All 36 full pairs and twenty retained fixture/helper origins are hash-checked. The 23 sequential owning include cuts reconstruct both complete consumer after bodies exactly, conserving 179 and 513 assertion macros. Fourteen authored schema/fixture pairs independently validate with Ajv; model3 retains SQLite admissions and closed refusals. Some identical include expressions intentionally occur repeatedly: ordered replacement, rather than a unique-text assumption, reconstructs their exact after bodies. No native execution, physical ticket deletion or whole repository acceptance is inferred.

@@ -1,0 +1,7 @@
+# Source Negative Zero Companion Readback
+
+An initial inferred gap was incorrect. Exact current Source numberCells already emits Object.is(n,-0) ? "-0" : String(n). Reconstruction reads Number("-0") and returns that negative-zero word when its readable SQLite projection agrees with zero. No current sign-loss failure or genuine assertion RED is claimed. JSON.stringify remains unsuitable as the sole sign oracle because it emits zero for negative zero.
+
+The language-neutral demand should supply finite numeric spellings and exact IEEE words, including negative zero, minimum positive subnormal, minimum normal and positive/negative maximum finite. Source can admit these via Number(spelling) and compare reconstructed values with Object.is or DataView bits; Native can admit matching exact Number::Float words. Physical third-party SQLite must read the same REAL and query its companion, and both implementations should reconstruct the exact Float word from the valid companion when its readable projection agrees.
+
+The natural Source producer already emits "-0" explicitly, while other finite JS values use their ordinary bounded roundtrip spelling. A separate native shortest scientific formatter candidate stays within its 32-byte stack frontier; its actual demand remains pending the shared compiler prerequisites. No production repair was needed or mounted for the withdrawn Source sign-loss inference.

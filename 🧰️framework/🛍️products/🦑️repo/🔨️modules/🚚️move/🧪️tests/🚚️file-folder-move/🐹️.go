@@ -47,7 +47,7 @@ type fileFolderMoveVectors struct {
 
 // 📥️ vectors decodes the shared vector set of this case.
 func vectors(ctx *host.Context) (*fileFolderMoveVectors, error) {
-	raw, err := ctx.FixtureBytes("shared://🚚️file-folder-move-trees.json")
+	raw, err := ctx.InputBytes("shared://🚚️file-folder-move-trees.json")
 	if err != nil {
 		return nil, err
 	}

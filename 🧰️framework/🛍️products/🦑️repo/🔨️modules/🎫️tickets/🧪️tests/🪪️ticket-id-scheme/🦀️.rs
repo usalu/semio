@@ -42,7 +42,7 @@ mod subject {
 
     /// 🔁️ Both spellings name the same identity.
     pub fn both_spellings_name_the_same_identity(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let mut projected: Vec<(String, Json)> = Vec::new();
         for raw in strings(&vectors, "ids") {
             let id = TicketId::parse(&raw).map_err(|error| error.message)?;
@@ -63,7 +63,7 @@ mod subject {
 
     /// ⚠️ A malformed id is refused.
     pub fn a_malformed_id_is_refused(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let projected: Vec<(String, Json)> = strings(&vectors, "invalidIds")
             .into_iter()
             .map(|raw| {
@@ -79,7 +79,7 @@ mod subject {
 
     /// 🔤️ A title becomes one slug, idempotently.
     pub fn a_title_becomes_one_slug(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let projected: Vec<(String, Json)> = strings(&vectors, "titles")
             .into_iter()
             .map(|title| {
@@ -93,7 +93,7 @@ mod subject {
 
     /// 🎫️ An emoji and title pair is validated together.
     pub fn an_emoji_and_title_pair_is_validated_together(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let projected: Vec<(String, Json)> = pairs(&vectors, "emojiTitles")
             .into_iter()
             .map(|(emoji, title)| {
@@ -109,7 +109,7 @@ mod subject {
 
     /// 🗺️ Every owned path hangs off the folder.
     pub fn every_owned_path_hangs_off_the_folder(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let layout = TicketLayout::new(vectors.str("repoMetaDir"));
         let mut projected: Vec<(String, Json)> = vec![("ticketsDir".to_string(), Json::String(layout.tickets_dir()))];
         for raw in strings(&vectors, "ids") {

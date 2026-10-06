@@ -18,7 +18,8 @@ async fn set_app_registrations_command_registers_app_and_surfaces_empty_document
     use crate::engine::space::SpaceCommand;
     use crate::engine::space::unit_tests::context::studio_emit;
     use semio_framework_os::{ArtifactPresentation, MediaClass, MediaForm, MediaType, empty_workflow_snapshot, os_app_registration, workflow_palette};
-    use semio_framework_plugin::{App, AppIo, LocalizedLabel};
+    use semio_framework_ui_locale::{LocalizedLabel};
+use semio_framework_plugin::{App, AppIo};
     // 🌉️ `AppBuilder::build_definition` itself hard-asserts a non-empty `document` — so the
     // empty-breadcrumb case can only ever reach `register_app_io` via a wire-decoded `AppDefinition`
     // that bypassed the builder entirely. Simulate that faithfully: build a normal, valid
@@ -60,7 +61,7 @@ async fn set_app_registrations_command_registers_app_and_surfaces_empty_document
     assert!(os_app_registration("root", &root_tool_id).is_some(), "SetAppRegistrations must populate this wasm instance's own registry");
     assert!(workflow_palette().iter().any(|entry| entry.plugin_id == "root" && entry.app_id == root_tool_id), "workflow_palette must surface the pushed app");
     let labels = semio_framework_plugin::resolve_labels::<crate::engine::space::terminology::SStudioLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let tree = crate::engine::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).await.expect("catalogue tree");
+    let tree = crate::engine::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_ui_locale::Locale::En, &semio_framework_plugin::TreeWindows::unhosted()).await.expect("catalogue tree");
     let json_tree = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).expect("catalogue projection");
     assert!(json_tree.contains(&format!("s-play-catalogue.document.{root_tool_id}")), "an empty-document app must still surface as a top-level catalogue leaf, json={json_tree}");
 }

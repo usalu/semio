@@ -14,7 +14,7 @@
       "runtime_capability_id": "s.stdio.avi.standard.1-0.codec.codec-stdio-avi-extension-semio.v1",
       "descriptor_codec_id": "s.stdio.avi.standard.1-0.codec.native-document.v1",
       "protocol_source_sha256": "eefb4af45d9e8b52391906c37aa22f4b96569ed277167233a7be4d0806c0bcc4",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📜️artifact-definition.json"
     },
     {
@@ -27,7 +27,7 @@
       "runtime_capability_id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-semio.v1",
       "descriptor_codec_id": "s.stdio.bcf.standard.2-1.codec.native-document.v1",
       "protocol_source_sha256": "0bbdaddd4fc8c6cb6735daac4bacdb23f48289904231f262ffa1e33cb572419d",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📜️artifact-definition.json"
     },
     {
@@ -40,7 +40,7 @@
       "runtime_capability_id": "s.stdio.csv.standard.rfc4180.codec.codec-stdio-csv-extension-csv.v1",
       "descriptor_codec_id": "s.stdio.csv.standard.rfc4180.codec.native-document.v1",
       "protocol_source_sha256": "727db1f2208f12f119c7066ecb2a499f79ad1701420b11ab69ed942aab941b13",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📜️artifact-definition.json"
     },
     {
@@ -52,8 +52,8 @@
       "pack_schema_hash": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
       "runtime_capability_id": "s.stdio.deflate.standard.rfc1950.codec.codec-stdio-deflate-extension-zz.v1",
       "descriptor_codec_id": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1",
-      "protocol_source_sha256": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_source_sha256": "8fb3ab47840a0b86ee612f4dae7b1922f080bb881d24fd691b1cb08b2bcd8035",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📜️artifact-definition.json"
     },
     {
@@ -66,7 +66,7 @@
       "runtime_capability_id": "s.stdio.docx.standard.ecma-376.codec.codec-stdio-docx-extension-docx.v1",
       "descriptor_codec_id": "s.stdio.docx.standard.ecma-376.codec.native-document.v1",
       "protocol_source_sha256": "8ab98ce506ac2e5d6b432dc20a85507f723dafe79071b08bdb0a74e18ebd070c",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📜️artifact-definition.json"
     },
     {
@@ -79,7 +79,7 @@
       "runtime_capability_id": "s.stdio.dwg.standard.ac1018.codec.codec-stdio-dwg-extension-dwg.v1",
       "descriptor_codec_id": "s.stdio.dwg.standard.ac1024.codec.native-document.v1",
       "protocol_source_sha256": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📜️artifact-definition.json"
     },
     {
@@ -92,7 +92,7 @@
       "runtime_capability_id": "s.stdio.dxf.standard.r12.codec.codec-stdio-dxf-extension-dxf.v1",
       "descriptor_codec_id": "s.stdio.dxf.standard.r12.codec.native-document.v1",
       "protocol_source_sha256": "98ff52f1ffaf96838cdcda77eedc89259313d940b1cd3a4529d5175eb290020d",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📜️artifact-definition.json"
     },
     {
@@ -105,7 +105,7 @@
       "runtime_capability_id": "s.stdio.gltf.standard.2-0.codec.codec-stdio-gltf-extension-gltf.v1",
       "descriptor_codec_id": "s.stdio.gltf.standard.2-0.codec.native-document.v1",
       "protocol_source_sha256": "61c5bbfcfc6428c9a2032ed51b3137d916b8b28375ee1e7e6f0300ce9ea2a6fb",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📜️artifact-definition.json"
     },
     {
@@ -118,7 +118,7 @@
       "runtime_capability_id": "s.stdio.html.standard.5.codec.codec-stdio-html-extension-html.v1",
       "descriptor_codec_id": "s.stdio.html.standard.5.codec.native-document.v1",
       "protocol_source_sha256": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📜️artifact-definition.json"
     },
     {
@@ -131,7 +131,7 @@
       "runtime_capability_id": "s.stdio.jpg.standard.jfif-1-01.codec.codec-stdio-jpg-extension-jpg.v1",
       "descriptor_codec_id": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
       "protocol_source_sha256": "d58d4a9cc547b33f3ca1f99cec2328cff0eb25db98c72da4d8e90584c5f3dc22",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📜️artifact-definition.json"
     },
     {
@@ -144,7 +144,7 @@
       "runtime_capability_id": "s.stdio.json.standard.rfc8259.codec.codec-stdio-json-extension-json.v1",
       "descriptor_codec_id": "s.stdio.json.standard.rfc8259.codec.native-document.v1",
       "protocol_source_sha256": "6882b4def7703800898fd56b237591148e901da200174ac102682d63f647c0b5",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📜️artifact-definition.json"
     },
     {
@@ -157,7 +157,7 @@
       "runtime_capability_id": "s.stdio.las.standard.1-0.codec.codec-stdio-las-extension-las.v1",
       "descriptor_codec_id": "s.stdio.las.standard.1-0.codec.native-document.v1",
       "protocol_source_sha256": "3d07b09db063f9f6d96d9692f22272214e6540197e98c11bebc8d54000094195",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📜️artifact-definition.json"
     },
     {
@@ -170,7 +170,7 @@
       "runtime_capability_id": "s.stdio.md.standard.commonmark.codec.codec-stdio-md-extension-md.v1",
       "descriptor_codec_id": "s.stdio.md.standard.commonmark.codec.native-document.v1",
       "protocol_source_sha256": "2abff1e8d39aeeeb1067c166667790ec13740f25310e455c55faac3f743e0a05",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📜️artifact-definition.json"
     },
     {
@@ -183,7 +183,7 @@
       "runtime_capability_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.codec-stdio-mp3-extension-semio.v1",
       "descriptor_codec_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
       "protocol_source_sha256": "3e0e4f0f7a7a5f4c49e4e8fde430e147871218245700eaab0107b4958c24e9e0",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📜️artifact-definition.json"
     },
     {
@@ -196,7 +196,7 @@
       "runtime_capability_id": "s.stdio.mp4.standard.isobmff.codec.codec-stdio-mp4-extension-semio.v1",
       "descriptor_codec_id": "s.stdio.mp4.standard.isobmff.codec.native-document.v1",
       "protocol_source_sha256": "abb0d207fb6351f6a77ea1ca6ba7ecbb8cfce88d449ab4ba5dfd9a23ba4f8c9c",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📜️artifact-definition.json"
     },
     {
@@ -209,7 +209,7 @@
       "runtime_capability_id": "s.stdio.obj.standard.3-0.codec.codec-stdio-obj-extension-obj.v1",
       "descriptor_codec_id": "s.stdio.obj.standard.3-0.codec.native-document.v1",
       "protocol_source_sha256": "bfa9231eaeabb552ef0c359bdbd671ff917e62bc95d2dd7c5e92564e2646a130",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📜️artifact-definition.json"
     },
     {
@@ -222,7 +222,7 @@
       "runtime_capability_id": "s.stdio.pdf.standard.1-4.codec.codec-stdio-pdf-extension-pdf.v1",
       "descriptor_codec_id": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
       "protocol_source_sha256": "5b8b94d26a497072be460cc1083c95ac59a6a12e6381df3dc538597f24b21fb6",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json"
     },
     {
@@ -235,7 +235,7 @@
       "runtime_capability_id": "s.stdio.pdf.standard.1-7.codec.codec-stdio-pdf-1-7-extension-pdf.v1",
       "descriptor_codec_id": "s.stdio.pdf.standard.1-7.codec.native-document.v1",
       "protocol_source_sha256": "b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json"
     },
     {
@@ -248,7 +248,7 @@
       "runtime_capability_id": "s.stdio.ply.standard.1-0.codec.codec-stdio-ply-extension-ply.v1",
       "descriptor_codec_id": "s.stdio.ply.standard.1-0.codec.native-document.v1",
       "protocol_source_sha256": "d819de2699732fcc95c03a0a84b79f60b96f1c9ae3d61f8830bb3d0b93cb35c8",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📜️artifact-definition.json"
     },
     {
@@ -261,7 +261,7 @@
       "runtime_capability_id": "s.stdio.png.standard.1-2.codec.codec-stdio-png-extension-png.v1",
       "descriptor_codec_id": "s.stdio.png.standard.1-2.codec.native-document.v1",
       "protocol_source_sha256": "94abe1a4afafee64bc8d4b2fa7ff405cfc4def66ce3a81582988888b030622cf",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📜️artifact-definition.json"
     },
     {
@@ -274,7 +274,7 @@
       "runtime_capability_id": "s.stdio.pptx.standard.ecma-376.codec.codec-stdio-pptx-extension-pptx.v1",
       "descriptor_codec_id": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
       "protocol_source_sha256": "324cd57d07e717ff5db917cbbc716e84ffcc10df177e630980a66142f4bc67b2",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📜️artifact-definition.json"
     },
     {
@@ -287,7 +287,7 @@
       "runtime_capability_id": "s.stdio.step.standard.ap214.codec.codec-stdio-step-extension-step.v1",
       "descriptor_codec_id": "s.stdio.step.standard.ap214.codec.native-document.v1",
       "protocol_source_sha256": "d0e5d4700932cb916d6b1a5bdb6674fa53cd5691e142f8d6314dd79677c3df92",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📜️artifact-definition.json"
     },
     {
@@ -300,7 +300,7 @@
       "runtime_capability_id": "s.stdio.stl.standard.ascii.codec.codec-stdio-stl-extension-stl.v1",
       "descriptor_codec_id": "s.stdio.stl.standard.ascii.codec.native-document.v1",
       "protocol_source_sha256": "cd915d9935b7678c3459b5df0dee0948392af76092d74215e00a425d591213f7",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📜️artifact-definition.json"
     },
     {
@@ -312,8 +312,8 @@
       "pack_schema_hash": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
       "runtime_capability_id": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1",
       "descriptor_codec_id": "s.stdio.svg.standard.1-1.codec.native-document.v1",
-      "protocol_source_sha256": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_source_sha256": "ce3f048645a3b7b1ce7910c2d2145528ab1e3e4178c8472116e06bb3d16240a8",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📜️artifact-definition.json"
     },
     {
@@ -322,11 +322,11 @@
       "artifact_kind": "s.stdio.tiff",
       "artifact_schema": "stdio.tiff",
       "extension": "tiff",
-      "pack_schema_hash": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
+      "pack_schema_hash": "6f62cced77a5af979af1adc1a98c71c008d7223bc49a7e0551c5ed02ea298b09",
       "runtime_capability_id": "s.stdio.tiff.standard.6-0.codec.codec-stdio-tiff-extension-tiff.v1",
       "descriptor_codec_id": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
       "protocol_source_sha256": "6f62cced77a5af979af1adc1a98c71c008d7223bc49a7e0551c5ed02ea298b09",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📜️artifact-definition.json"
     },
     {
@@ -339,7 +339,7 @@
       "runtime_capability_id": "s.stdio.tsv.standard.iana.codec.codec-stdio-tsv-extension-tsv.v1",
       "descriptor_codec_id": "s.stdio.tsv.standard.iana.codec.native-document.v1",
       "protocol_source_sha256": "7692b1e4f162744e632330a42270ac6f89ac6fe0438f4961cb265bdcb81266e7",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📜️artifact-definition.json"
     },
     {
@@ -352,7 +352,7 @@
       "runtime_capability_id": "s.stdio.txt.standard.utf-8.codec.codec-stdio-txt-extension-txt.v1",
       "descriptor_codec_id": "s.stdio.txt.standard.utf-8.codec.native-document.v1",
       "protocol_source_sha256": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📜️artifact-definition.json"
     },
     {
@@ -365,7 +365,7 @@
       "runtime_capability_id": "s.stdio.xlsx.standard.ecma-376.codec.codec-stdio-xlsx-extension-xlsx.v1",
       "descriptor_codec_id": "s.stdio.xlsx.standard.ecma-376.codec.native-document.v1",
       "protocol_source_sha256": "b81858b598a8d0bdcbcc36b48291e9d3a3f638adf4cac479e5ebce714c9a1a17",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📜️artifact-definition.json"
     },
     {
@@ -377,8 +377,8 @@
       "pack_schema_hash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
       "runtime_capability_id": "s.stdio.xml.standard.1-0.codec.codec-stdio-xml-extension-xml.v1",
       "descriptor_codec_id": "s.stdio.xml.standard.1-0.codec.native-document.v1",
-      "protocol_source_sha256": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_source_sha256": "f49c2064c8186e50901760fc7be69d1ae1ad52978c53a084bceb38975809ceb5",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📜️artifact-definition.json"
     },
     {
@@ -391,7 +391,7 @@
       "runtime_capability_id": "s.stdio.zip.standard.2-0.codec.codec-stdio-zip-extension-zip.v1",
       "descriptor_codec_id": "s.stdio.zip.standard.2-0.codec.native-document.v1",
       "protocol_source_sha256": "451102004b6a9f904fafbd8b936523ea1cb83a38cc632fc0b507ee9ad706b63e",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📜️artifact-definition.json"
     }
   ]

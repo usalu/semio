@@ -14,7 +14,7 @@ import (
 // region 🔖️Scenarios
 
 func digestAndFixtureResolution(ctx *host.Context) (host.Outcome, error) {
-	vector, err := ctx.FixtureBytes("shared://📡️protocol-vector.txt")
+	vector, err := ctx.InputBytes("shared://📡️protocol-vector.txt")
 	if err != nil {
 		return host.Outcome{}, err
 	}
@@ -29,7 +29,7 @@ func digestAndFixtureResolution(ctx *host.Context) (host.Outcome, error) {
 }
 
 func fixtureNotInPlanIsAnError(ctx *host.Context) (host.Outcome, error) {
-	_, err := ctx.Fixture("shared://this-fixture-is-not-declared")
+	_, err := ctx.Input("shared://this-fixture-is-not-declared")
 	return host.Outcome{Projection: map[string]any{"resolverReportedFailure": err != nil}}, nil
 }
 

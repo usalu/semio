@@ -42,7 +42,7 @@ type sectionExtractVectors struct {
 
 // 📥️ vectors decodes the shared vector set of this case.
 func vectors(ctx *host.Context) (*sectionExtractVectors, error) {
-	raw, err := ctx.FixtureBytes("shared://🧲️section-extract-trees.json")
+	raw, err := ctx.InputBytes("shared://🧲️section-extract-trees.json")
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scalar",
+    "byteOrder",
+    "alignment",
+    "stride",
+    "lanes",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scalar": {
+      "const": "float32"
+    },
+    "byteOrder": {
+      "const": "little"
+    },
+    "alignment": {
+      "const": 4
+    },
+    "stride": {
+      "const": 128
+    },
+    "lanes": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "offset",
+            "scalarCount",
+            "shaderLocation"
+          ],
+          "properties": {
+            "field": {
+              "const": "model0"
+            },
+            "offset": {
+              "const": 0
+            },
+            "scalarCount": {
+              "const": 4
+            },
+            "shaderLocation": {
+              "const": 3
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "offset",
+            "scalarCount",
+            "shaderLocation"
+          ],
+          "properties": {
+            "field": {
+              "const": "model1"
+            },
+            "offset": {
+              "const": 16
+            },
+            "scalarCount": {
+              "const": 4
+            },
+            "shaderLocation": {
+              "const": 4
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "offset",
+            "scalarCount",
+            "shaderLocation"
+          ],
+          "properties": {
+            "field": {
+              "const": "model2"
+            },
+            "offset": {
+              "const": 32
+            },
+            "scalarCount": {
+              "const": 4
+            },
+            "shaderLocation": {
+              "const": 5
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "offset",
+            "scalarCount",
+            "shaderLocation"
+          ],
+          "properties": {
+            "field": {
+              "const": "model3"
+            },
+            "offset": {
+              "const": 48
+            },
+            "scalarCount": {
+              "const": 4
+            },
+            "shaderLocation": {
+              "const": 6
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "offset",
+            "scalarCount",
+            "shaderLocation"
+          ],
+          "properties": {
+            "field": {
+              "const": "color"
+            },
+            "offset": {
+              "const": 64
+            },
+            "scalarCount": {
+              "const": 4
+            },
+            "shaderLocation": {
+              "const": 7
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "offset",
+            "scalarCount",
+            "shaderLocation"
+          ],
+          "properties": {
+            "field": {
+              "const": "flags"
+            },
+            "offset": {
+              "const": 80
+            },
+            "scalarCount": {
+              "const": 4
+            },
+            "shaderLocation": {
+              "const": 8
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "offset",
+            "scalarCount",
+            "shaderLocation"
+          ],
+          "properties": {
+            "field": {
+              "const": "emissive_cutoff"
+            },
+            "offset": {
+              "const": 96
+            },
+            "scalarCount": {
+              "const": 4
+            },
+            "shaderLocation": {
+              "const": 10
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "field",
+            "offset",
+            "scalarCount",
+            "shaderLocation"
+          ],
+          "properties": {
+            "field": {
+              "const": "surface_parameters"
+            },
+            "offset": {
+              "const": 112
+            },
+            "scalarCount": {
+              "const": 4
+            },
+            "shaderLocation": {
+              "const": 15
+            }
+          }
+        }
+      ],
+      "items": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "model",
+          "color",
+          "preserveVertexColor",
+          "emissiveIntensity",
+          "metalness",
+          "roughness",
+          "receivesShadow",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "model": {
+            "type": "array",
+            "minItems": 16,
+            "maxItems": 16,
+            "items": {
+              "type": "number"
+            }
+          },
+          "color": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          },
+          "preserveVertexColor": {
+            "type": "boolean"
+          },
+          "emissiveIntensity": {
+            "type": "number"
+          },
+          "metalness": {
+            "type": "number"
+          },
+          "roughness": {
+            "type": "number"
+          },
+          "receivesShadow": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "array",
+            "minItems": 32,
+            "maxItems": 32,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

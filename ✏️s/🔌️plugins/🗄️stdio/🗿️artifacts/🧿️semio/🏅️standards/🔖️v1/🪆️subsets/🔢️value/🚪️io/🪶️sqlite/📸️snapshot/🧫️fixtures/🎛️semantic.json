@@ -1,0 +1,128 @@
+{
+  "schemaBytes": 1331,
+  "tableWidths": {
+    "semio_value_document": 3,
+    "semio_value_value": 8,
+    "semio_value_node": 5,
+    "semio_value_list_element": 4,
+    "semio_value_map_entry": 5
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 22,
+      "valueBytes": 594,
+      "sourceSnapshot": {
+        "schema": "stdio.semio.value",
+        "root": {
+          "kind": "list",
+          "items": [
+            {
+              "kind": "null"
+            },
+            {
+              "kind": "bool",
+              "value": true
+            },
+            {
+              "kind": "bool",
+              "value": false
+            },
+            {
+              "kind": "str",
+              "value": "Grüße\u0000世界"
+            },
+            {
+              "kind": "bytes",
+              "value": [
+                0,
+                1,
+                127,
+                255
+              ]
+            },
+            {
+              "kind": "map",
+              "entries": [
+                {
+                  "key": "same",
+                  "value": {
+                    "kind": "int",
+                    "lexeme": "-184467440737095516160001"
+                  }
+                },
+                {
+                  "key": "same",
+                  "value": {
+                    "kind": "float",
+                    "lexeme": "1.234567890123456789e-99"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "ref",
+              "id": {
+                "value": "cycle"
+              }
+            }
+          ]
+        },
+        "nodes": [
+          {
+            "id": {
+              "value": "cycle"
+            },
+            "value": {
+              "kind": "ref",
+              "id": {
+                "value": "cycle"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "metadataRetainingEmpty",
+      "rows": 2,
+      "valueBytes": 45,
+      "sourceSnapshot": {
+        "schema": "stdio.semio.value",
+        "root": {
+          "kind": "null"
+        },
+        "nodes": []
+      }
+    }
+  ],
+  "publicIo": {
+    "schemaBytes": 1624,
+    "tableWidths": {
+      "semio_value_document": 3,
+      "semio_value_value": 8,
+      "semio_value_node": 5,
+      "semio_value_list_element": 4,
+      "semio_value_map_entry": 5,
+      "semio_snapshot": 6
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 23,
+        "valueBytes": {
+          "binary": 636,
+          "text": 634
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 3,
+        "valueBytes": {
+          "binary": 87,
+          "text": 85
+        }
+      }
+    ]
+  }
+}

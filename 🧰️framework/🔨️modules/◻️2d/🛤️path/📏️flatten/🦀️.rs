@@ -113,7 +113,7 @@ impl PathFlattenJob {
   for _ in 0..budget {if self.done {break;}if let Err(error)=self.step() {self.failed=Some(error.clone());return Err(error);}self.work+=1;}
   Ok(PathFlattenProgress {phase:if self.done {PathFlattenPhase::Complete} else if self.stack.is_empty() {PathFlattenPhase::Preparing} else {PathFlattenPhase::Subdividing},completed:self.index,total:self.input.segments.len(),points:self.count,work:self.work,done:self.done})
  }
- pub fn cancel(&mut self) {self.cancelled=true;self.input.segments=Vec::new();self.contours=Vec::new();self.stack=Vec::new();self.current=None;}
+ pub fn cancel(&mut self) {self.cancelled=true;self.current=None;}
  pub fn result(&self)->Result<&[FlatContour],PathFlattenError> {
   if self.cancelled {return Err(PathFlattenError::Cancelled);}if let Some(error)=&self.failed {return Err(error.clone());}if !self.done {return Err(PathFlattenError::Incomplete);}Ok(&self.contours)
  }

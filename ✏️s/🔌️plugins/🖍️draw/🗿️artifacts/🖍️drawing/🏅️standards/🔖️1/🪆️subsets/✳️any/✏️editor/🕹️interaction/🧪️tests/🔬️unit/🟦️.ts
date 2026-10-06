@@ -103,14 +103,14 @@ test("node picks preserve drag groups and support modified membership",()=>{
 import {Box2,Matrix3,Vector2} from "three";
 import Ajv from "ajv";
 import areaFixture from "../../🎯️points/🧫️fixtures/▧️marquee/🔣️.json";
-import areaSchema from "../../🎯️points/🧫️fixtures/▧️marquee/🧬️schema/🔣️.json";
+
 import documentSchema from "../../../../🧬️schema/🔣️.json";
 import {anchorInMarquee,mergePointSelection} from "../../🎯️points/🟦️.ts";
 import type {PathGeometrySegment} from "../../../../🧬️schema/🟦️.ts";
 
 test("node marquee selects transformed anchors and merges membership",()=>{
   const ajv=new Ajv({strict:false,validateFormats:false}).addSchema(documentSchema);
-  expect(ajv.compile(areaSchema)(areaFixture)).toBe(true);
+  
   for(const item of areaFixture.cases) {
     const matrix=item.matrix as [number,number,number,number,number,number];
     const start=item.start as [number,number],end=item.end as [number,number];

@@ -1,0 +1,120 @@
+[
+  {
+    "source": "rectangle",
+    "expected": [
+      {
+        "id": "a",
+        "kind": "path"
+      }
+    ]
+  },
+  {
+    "source": "shared asset geometry",
+    "expected": [
+      {
+        "id": "a",
+        "kind": "image"
+      },
+      {
+        "id": "b",
+        "kind": "image"
+      }
+    ]
+  },
+  {
+    "source": "text stays explicit",
+    "expected": [
+      {
+        "id": "a",
+        "kind": "textFallback"
+      }
+    ]
+  },
+  {
+    "source": "group full affine",
+    "expected": [
+      {
+        "id": "group",
+        "kind": "empty"
+      },
+      {
+        "id": "child",
+        "kind": "path"
+      }
+    ]
+  },
+  {
+    "source": "hidden ancestor retains child",
+    "expected": [
+      {
+        "id": "group",
+        "kind": "empty"
+      },
+      {
+        "id": "child",
+        "kind": "empty"
+      }
+    ]
+  },
+  {
+    "source": "linearGradient",
+    "expected": [
+      {
+        "id": "a",
+        "kind": "path"
+      }
+    ]
+  },
+  {
+    "source": "radialGradient",
+    "expected": [
+      {
+        "id": "a",
+        "kind": "path"
+      }
+    ]
+  },
+  {
+    "source": "complete referenced difference",
+    "expected": [
+      {
+        "id": "a",
+        "kind": "empty"
+      },
+      {
+        "id": "b",
+        "kind": "empty"
+      },
+      {
+        "id": "result",
+        "kind": "path"
+      }
+    ]
+  },
+  {
+    "source": "native pixel cell hole",
+    "expected": [
+      {
+        "id": "result",
+        "kind": "path"
+      }
+    ]
+  },
+  {
+    "source": "actual traced geometry is a Boolean operand",
+    "expected": [
+      {
+        "id": "traced",
+        "kind": "empty"
+      },
+      {
+        "id": "cut",
+        "kind": "empty"
+      },
+      {
+        "id": "result",
+        "kind": "path"
+      }
+    ]
+  }
+]

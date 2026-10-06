@@ -481,7 +481,21 @@ fn mesh_instances_without_lines_are_valid_world_pass() {
 /// emissive-free with its cutoff disabled.
 fn world_mesh_instance_packs_policy_and_standard_material_into_one_fixed_stride() {
     let gpu = super::World3dGpuInstance::from_instance([0.0; 16], [1.0; 4], true, 0.2, 0.63, 0.27, true);
-    assert_eq!(std::mem::size_of::<super::World3dGpuInstance>(), 112);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️world-instance-layout/🔣️.json")).unwrap();
+    assert_eq!(std::mem::size_of::<super::World3dGpuInstance>(), fixture["stride"].as_u64().unwrap() as usize);
+    assert_eq!(std::mem::align_of::<super::World3dGpuInstance>(), fixture["alignment"].as_u64().unwrap() as usize);
+    let offsets = [std::mem::offset_of!(super::World3dGpuInstance, model0), std::mem::offset_of!(super::World3dGpuInstance, model1), std::mem::offset_of!(super::World3dGpuInstance, model2), std::mem::offset_of!(super::World3dGpuInstance, model3), std::mem::offset_of!(super::World3dGpuInstance, color), std::mem::offset_of!(super::World3dGpuInstance, flags), std::mem::offset_of!(super::World3dGpuInstance, emissive_cutoff), std::mem::offset_of!(super::World3dGpuInstance, surface_parameters)];
+    for (index, offset) in offsets.into_iter().enumerate() {
+        assert_eq!(offset, fixture["lanes"][index]["offset"].as_u64().unwrap() as usize);
+    }
+    for case in fixture["cases"].as_array().unwrap() {
+        let model: [f32; 16] = serde_json::from_value(case["model"].clone()).unwrap();
+        let color: [f32; 4] = serde_json::from_value(case["color"].clone()).unwrap();
+        let expected: Vec<f32> = serde_json::from_value(case["expected"].clone()).unwrap();
+        let packed = super::World3dGpuInstance::from_instance(model, color, case["preserveVertexColor"].as_bool().unwrap(), case["emissiveIntensity"].as_f64().unwrap() as f32, case["metalness"].as_f64().unwrap() as f32, case["roughness"].as_f64().unwrap() as f32, case["receivesShadow"].as_bool().unwrap());
+        assert_eq!(bytemuck::cast_slice::<super::World3dGpuInstance, f32>(std::slice::from_ref(&packed)), expected.as_slice());
+    }
+    assert_eq!(gpu.surface_parameters, [1.0, 1.0, 1.0, 0.0]);
     assert_eq!(gpu.flags, [3.0, 0.2, 0.63, 0.27]);
     assert_eq!(gpu.emissive_cutoff, [0.0, 0.0, 0.0, -1.0]);
 }

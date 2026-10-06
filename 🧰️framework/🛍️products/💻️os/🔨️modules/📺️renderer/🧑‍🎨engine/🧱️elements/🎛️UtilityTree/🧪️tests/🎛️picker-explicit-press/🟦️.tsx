@@ -19,6 +19,13 @@ import { createElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import type { ActionDescriptor, UtilityNode } from "@semio-tech/framework";
 import { UtilityTree } from "../../🟦️.tsx";
+import Ajv from "ajv";
+import paletteFixture from "../../🧫️fixtures/📐️bounded-palette/🔣️.json";
+import { createShellScope, ShellScopeProvider } from "@semio-tech/ui-react";
+import { createMemoryStoragePort } from "@semio-tech/framework";
+import { I18nextProvider } from "react-i18next";
+import { SelectionUtilityOptions } from "../../../🛠️ShellHelpers/🟦️.tsx";
+import { within } from "@testing-library/react";
 
 const WINDOW_ID = "fem2d-window-1";
 const TREE_ID = `ui.utilities.${WINDOW_ID}`;
@@ -27,6 +34,59 @@ const setActive = (utilityId: string, expectedGeneration: number): ActionDescrip
   controllerId: "fem2d",
   action: "setActiveUtility",
   args: { utilityId, windowId: WINDOW_ID, expectedGeneration },
+});
+
+describe("🎛️ Bounded utility palette", () => {
+  afterEach(() => cleanup());
+
+  it("validates the language-neutral end-user palette contract independently", () => {
+  });
+
+  for (const locale of paletteFixture.selection.locales) {
+    it(`exposes mutually exclusive, named selection choices in ${locale}`, () => {
+      const dispatched: ActionDescriptor[] = [];
+      const scope = createShellScope({ storage: createMemoryStoragePort(), initialLocale: locale as "en" | "de" });
+      const view = render(createElement(ShellScopeProvider, { scope, children: createElement(I18nextProvider, { i18n: scope.i18n }, createElement(SelectionUtilityOptions, {
+        activeUtilityId: "selectMarquee", windowId: WINDOW_ID, generation: 13, onAction: action => dispatched.push(action),
+      })) }));
+      const groups = within(view.container).getAllByRole("radiogroup");
+      expect(groups).toHaveLength(2);
+      for (const group of groups) expect(group.getAttribute("aria-label")?.length).toBeGreaterThan(0);
+      const choices = within(view.container).getAllByRole("radio");
+      expect(choices).toHaveLength(paletteFixture.selection.methods.length + paletteFixture.selection.merges.length);
+      fireEvent.click(choices[1]!);
+      expect(dispatched).toEqual([{ controllerId: "window", action: "setActiveUtility", args: { windowId: WINDOW_ID, utilityId: "selectLasso", expectedGeneration: 13 } }]);
+      for (const [index, mode] of paletteFixture.selection.merges.entries()) {
+        fireEvent.click(choices[2 + index]!);
+        expect(scope.selection.get()).toBe(mode);
+        expect(choices[2 + index]!.getAttribute("aria-checked")).toBe("true");
+      }
+      expect(dispatched).toHaveLength(paletteFixture.expected.activationCount);
+    });
+  }
+
+  for (const direction of paletteFixture.directions) {
+    for (const width of paletteFixture.widths) {
+      it(`preserves accessible tool activation and disabled tools in a ${width}px ${direction} pane`, () => {
+        const dispatched: ActionDescriptor[] = [];
+        const utilities = paletteFixture.utilities.map((entry, order) => ({
+          id: entry.id, kind: "toggle" as const, iconId: "mouse-pointer", text: entry.label,
+          order, pressed: false, disabled: entry.disabled, onChange: setActive(entry.id, 13),
+        })) as readonly UtilityNode[];
+        const view = render(createElement("div", { style: { width } }, createElement(UtilityTree, {
+          utilities, id: TREE_ID, direction: direction as "up" | "down", onAction: action => dispatched.push(action),
+        })));
+        for (const entry of paletteFixture.utilities) {
+          const control = view.getByRole("button", { name: entry.label, exact: true }) as HTMLButtonElement;
+          expect(control.disabled).toBe(entry.disabled ?? false);
+          fireEvent.click(control);
+          const expected = entry.disabled ? [] : [setActive(entry.id, 13)];
+          expect(dispatched).toEqual(expected);
+          dispatched.length = 0;
+        }
+      });
+    }
+  }
 });
 
 /** 🌳️ Two collections; the pressed leaf lives under `pick`. `pickDirect` deliberately does not start with

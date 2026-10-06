@@ -7,7 +7,7 @@
 import { rgb } from "d3-color";
 import { interpolateHcl, interpolateLab, piecewise } from "d3-interpolate";
 import { scaleOrdinal } from "d3-scale";
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type ProbeProjection, compileVizProbe, probeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
 //#region 🔖️Vectors
@@ -45,7 +45,7 @@ function slots(count: number): number[] {
 
 /** 🎯️ Compiles the committed fixture and projects the records of one scenario. */
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbe(ctx.fixture(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileVizProbe(ctx.input(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(records, ctx.scenario.id) };
 }
 

@@ -128,7 +128,7 @@ mod oracle {
     use semio_s_artifact_stdio_semio_test_oracle::standards::v1::subsets::base::{read_carrier, restore, route, Routed};
 
     fn carrier(ctx: &Context, uri: &str) -> Result<Json, String> {
-        read_carrier(&ctx.fixture_bytes(uri)?)
+        read_carrier(&ctx.input_bytes(uri)?)
     }
 
     fn reported(routed: &Routed, before: &Json) -> Outcome {
@@ -209,12 +209,19 @@ mod oracle {
 mod subject {
     use super::{kind_vector, outcome_of, patches, reasserts, refuses, replaces, retypes, Vector, DSL_ASSET, PACK_ASSET};
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, decode_semio_mutation_json, inverse_semio_mutation, semio_mutation_refusal_codes, set_snapshot, SemioMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::{decode_semio_envelope_pack, decode_semio_snapshot_json, encode_semio_envelope_pack, encode_semio_snapshot_json, parse_semio_envelope_dsl, print_semio_envelope_dsl, SemioSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, inverse_semio_mutation, semio_mutation_refusal_codes, set_snapshot, SemioMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::mutations::{decode_semio_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::binary::snapshot::{encode_semio_envelope_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::binary::snapshot::{decode_semio_envelope_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{decode_semio_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{encode_semio_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{print_semio_envelope_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{parse_semio_envelope_dsl};
     use semio_repo_test_host::law::carrier_is_exact;
 
     fn text(ctx: &Context, uri: &str) -> Result<String, String> {
-        String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
     }
 
     fn envelope(ctx: &Context, uri: &str) -> Result<SemioSnapshot, String> {
@@ -301,7 +308,7 @@ mod subject {
         let dsl = text(ctx, DSL_ASSET)?;
         let parsed = parse_semio_envelope_dsl(&dsl)?;
         carrier_is_exact(print_semio_envelope_dsl(&parsed).as_bytes(), dsl.as_bytes())?;
-        let pack = ctx.fixture_bytes(PACK_ASSET)?;
+        let pack = ctx.input_bytes(PACK_ASSET)?;
         if decode_semio_envelope_pack(&pack)? != parsed {
             return Err("identity-round-trip: the committed binary twin decodes to a different envelope than the committed text artifact".to_string());
         }

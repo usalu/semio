@@ -1,0 +1,17 @@
+{
+  "qualification": "Read-only exact source readback only; no parser/runtime execution",
+  "paths": [
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio",
+      "exactMountedAfter": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️dag-example/🗣️.dsl.semio",
+      "exactMountedAfter": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs",
+      "exactMountedAfter": true
+    }
+  ]
+}

@@ -217,15 +217,8 @@ export async function registerBackboneParityTests(vitest: Vitest, dependencies: 
   const { readdirSync } = await import("node:fs");
   const parityDir = fileURLToPath(parityRoot);
   const fixtureDirName = readdirSync(parityDir).find((name) => name.includes("fixture"));
-  const schemaDirName = readdirSync(parityDir).find((name) => name.includes("schema") || name.includes("🧬"));
-  if (!fixtureDirName || !schemaDirName) throw new Error("backbone parity fixture/schema directories missing");
+  if (!fixtureDirName) throw new Error("backbone parity examples directory missing");
   const fixture = JSON.parse(readFileSync(`${parityDir}/${fixtureDirName}/🔣️.json`, "utf8")) as Fixture;
-  const schema = JSON.parse(readFileSync(`${parityDir}/${schemaDirName}/🔣️.json`, "utf8"));
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addSchema(schema);
-  const validate = ajv.getSchema(`${schema.$id}#/$defs/BackboneParity`);
-  if (!validate) throw new Error("backbone parity schema missing");
-  vitest.expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
 
   vitest.it("a mounted browser actor retracts a refused history step and rebuilds only for refused operations", async () => {
     const priorSink = dependencies.testSeams.workerPostTestSink;

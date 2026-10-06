@@ -41,7 +41,7 @@ pub(crate) struct FillBuilder {
 impl FillBuilder {
     fn prepare(&mut self) -> StepOutcome {
         match self.stage {
-            FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => {
+            FillJobStage::PrepareScene | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => {
                 self.prepare_one();
                 StepOutcome::Yield
             }

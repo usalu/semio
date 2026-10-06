@@ -1,0 +1,79 @@
+[
+  {
+    "id": "full",
+    "input": {
+      "schema": "vcs.vcs",
+      "title": "Review 世界\u0000",
+      "counter": "-42",
+      "notes": "First\nSecond \"\\ ; 😀",
+      "status": "custom status",
+      "tags": [
+        "review",
+        "",
+        "review",
+        "a;b",
+        "NUL\u0000世界",
+        "__proto__"
+      ]
+    },
+    "rows": 7,
+    "valueBytes": 250,
+    "schemaBytes": 420,
+    "rawSqlBytes": 406,
+    "tables": [
+      {
+        "table": "vcs_document",
+        "width": 6,
+        "rows": 1,
+        "semanticBytes": 72
+      },
+      {
+        "table": "vcs_tag",
+        "width": 4,
+        "rows": 6,
+        "semanticBytes": 178
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "id": "emptyTags",
+    "input": {
+      "schema": "vcs.vcs",
+      "title": "Review 世界\u0000",
+      "counter": "-42",
+      "notes": "First\nSecond \"\\ ; 😀",
+      "status": "custom status",
+      "tags": []
+    },
+    "rows": 1,
+    "valueBytes": 72,
+    "schemaBytes": 420,
+    "rawSqlBytes": 406,
+    "tables": [
+      {
+        "table": "vcs_document",
+        "width": 6,
+        "rows": 1,
+        "semanticBytes": 72
+      },
+      {
+        "table": "vcs_tag",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  }
+]

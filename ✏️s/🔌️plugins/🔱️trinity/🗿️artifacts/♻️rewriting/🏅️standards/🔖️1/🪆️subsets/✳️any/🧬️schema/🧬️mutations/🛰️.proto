@@ -4,7 +4,7 @@ import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/�
 import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
 import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
 import "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🛰️.proto";
-message EditBeforeFixture { semio.s.trinity.jack.snapshot.JackSnapshot new_working_graph = 1; }
+message EditWorkingGraph { semio.s.trinity.jack.snapshot.JackSnapshot new_working_graph = 1; }
 message EditLhs { semio.s.trinity.rewriting.artifact.Lhs new_lhs = 1; }
 message EditRhs { semio.s.trinity.rewriting.artifact.Rhs new_rhs = 1; }
 message ChangeParameterBinding { string key = 1; semio.framework.graph.manifest.PropertyValue new_value = 2; }
@@ -16,7 +16,7 @@ message SetRuleLayoutPoints { repeated RuleLayoutPlacement points = 1; repeated 
 message RuleLayoutPlacement { string key = 1; semio.framework.value.Binary64Word x = 2; semio.framework.value.Binary64Word y = 3; }
 message RewriteRuleMutation {
  oneof mutation {
-  EditBeforeFixture edit_before_fixture = 1;
+  EditWorkingGraph edit_working_graph = 1;
   EditLhs edit_lhs = 2;
   EditRhs edit_rhs = 3;
   ChangeParameterBinding change_parameter_binding = 4;

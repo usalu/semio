@@ -7,7 +7,7 @@ rust-version.workspace = true
 description = "Semio framework OS kernel — wasm-safe store/spr/dsl/pack document model"
 
 [package.metadata.semio]
-channel-version-consumers = "🧫️fixtures/📡️channel/📇️consumers.json"
+channel-version-consumers = "🔨️modules/🧑‍💻dev/🔖️channel-version/📇️consumers/🔣️.json"
 role = "framework"
 id = "os-kernel"
 
@@ -54,6 +54,7 @@ typegen = []
 native-bin = []
 
 [dependencies]
+semio-framework-io-sqlite-snapshot = { path = "../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }

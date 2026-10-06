@@ -1,11 +1,13 @@
 //! 🦀️ Rust side of the cancellation case: partial outcomes, a progress stream, and refusals.
 
 use semio_framework_repo_test_runner as subject;
+#[path = "../../🧪️testing/🦀️.rs"]
+mod examples;
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Support
-fn vectors(ctx: &Context) -> Result<subject::CancellationVectors, String> {
-    subject::parse_cancellation_vectors(&ctx.fixture_bytes("shared://🛑️cancellation-vectors.json")?)
+fn vectors(ctx: &Context) -> Result<examples::CancellationVectors, String> {
+    examples::parse_cancellation_vectors(&ctx.input_bytes("shared://🛑️cancellation-vectors.json")?)
 }
 
 fn report_json(report: &subject::ExecutionReport) -> Result<Json, String> {

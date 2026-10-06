@@ -1,0 +1,40 @@
+{
+  "qualification": "HELD strengthening of existing-API third demand only. Original Before2 unchanged. Apply after third-demand append and before provider; both canonical/custom schemas and genuine old branch/leaf retained graph. No compile/runtime credit.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "        support::set_dpart_root(&mut base, \"old retained Job\");",
+      "after": "        support::set_dpart_root(&mut base, \"old retained Job\");\n        let old_root = support::catalog_entry(&base, \"DPartRoot\").and_then(|value| value.as_ref()).unwrap();\n        let old_node = support::object(&base, old_root).unwrap().dict_get(\"DPartRootNode\").and_then(|value| value.as_ref()).unwrap();\n        support::set_entry(&mut base, old_node, \"Parent\", PdfObject::Ref(old_root));\n        support::set_entry(&mut base, old_node, \"Start\", PdfObject::Ref(page));\n        let old_leaf = support::insert_object(&mut base, support::dict(vec![(\"Type\", PdfObject::Name(\"DPart\".into())), (\"Parent\", PdfObject::Ref(old_node)), (\"Start\", PdfObject::Ref(page)), (\"DPM\", support::dict(vec![(\"Job\", PdfObject::Str(b\"old retained leaf Job\".to_vec()))]))]));\n        support::set_entry(&mut base, old_node, \"DParts\", PdfObject::Array(vec![PdfObject::Ref(old_leaf)]));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "    for word in words {",
+      "after": "    for schema in [PdfSnapshot::default().schema, \"neutral-custom-frozen-owner\".into()] {\n    for word in words {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "        base.schema = \"neutral-custom-frozen-owner\".into();",
+      "after": "        base.schema = schema.clone();"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "        assert_eq!(store::pack_rt::encode_wire_value(&next.to_value()), original, \"complete ordered owner and every raw IEEE word must restore exactly\");\n    }\n}\n",
+      "after": "        assert_eq!(store::pack_rt::encode_wire_value(&next.to_value()), original, \"complete ordered owner and every raw IEEE word must restore exactly\");\n    }\n    }\n}\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "        let original = store::pack_rt::encode_wire_value(&base.to_value());",
+      "after": "        if let Some(entry) = base.catalog_extra.iter_mut().find(|entry| entry.key == \"DPartRoot\") { entry.value = PdfObject::Ref(old_root); }\n        else { base.catalog_extra.push(PdfDictEntry::new(\"DPartRoot\", PdfObject::Ref(old_root))); }\n        let original = store::pack_rt::encode_wire_value(&base.to_value());"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "        assert!(support::object(&base, extra).is_some());",
+      "after": "        assert!(support::object(&base, extra).is_some());\n        let duplicate = base.objects.iter().find(|object| object.id == extra).unwrap().clone();\n        base.objects.push(duplicate);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "        base.schema = schema.clone();",
+      "after": "        base.schema = schema.clone();\n        if schema == \"neutral-custom-frozen-owner\" { support::remove_entry(&mut base, page, \"MediaBox\"); support::set_entry(&mut base, pages, \"MediaBox\", PdfObject::numbers(&[0.0, 0.0, 100.0, 100.0])); }"
+    }
+  ]
+}

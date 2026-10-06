@@ -14,7 +14,21 @@
       "description": "Aggregate discriminator spliced in by PdfHMutation; absent when the payload stands alone."
     },
     "author": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Author",
+          "de": "Autor"
+        },
+        "description": {
+          "en": "Author written to the Info dictionary.",
+          "de": "Autor, der in das Info-Wörterbuch geschrieben wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

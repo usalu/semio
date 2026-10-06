@@ -28,7 +28,7 @@ type emojiVectorFile struct {
 }
 
 func loadEmojiVectors(ctx *host.Context) (emojiVectorFile, error) {
-	data, err := ctx.FixtureBytes("shared://📡️emoji-vectors.json")
+	data, err := ctx.InputBytes("shared://📡️emoji-vectors.json")
 	if err != nil {
 		return emojiVectorFile{}, err
 	}

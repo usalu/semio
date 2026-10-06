@@ -28,7 +28,7 @@ fn oversized(identities: usize, relationships: usize) -> crate::WiresComposed {
         (0..identities).map(|index| semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String(format!("identity-{index}"))), ("label".into(), semio_framework_value::DslValue::String(format!("Identity {index}")))])).collect();
     let edges: Vec<DslValue> = (0..relationships).map(|index| semio_framework_value::DslValue::object([("id".into(), semio_framework_value::DslValue::String(format!("edge-{index}")))])).collect();
     let mut document = crate::empty_wires_snapshot();
-    document.wires_fixture = semio_framework_value::DslValue::object([
+    document.wires_snapshot = semio_framework_value::DslValue::object([
         ("schema".into(), semio_framework_value::DslValue::String(crate::MINDMAP_WIRES_SCHEMA.into())),
         ("identities".into(), semio_framework_value::DslValue::Array(rows)),
     ]);

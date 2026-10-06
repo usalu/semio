@@ -436,7 +436,7 @@ fn board2d_scene_splits_into_the_declared_lanes_and_merges_back() {
     let idle = Board2dScene::base("{}".into(), "{}".into(), false);
     let idle_lanes = idle.split_lanes().1;
     assert_eq!(idle_lanes.len(), 1, "an idle board publishes its fixture carrier and no trace carrier");
-    assert_eq!(idle_lanes[0].key, Board2dSceneLane::Fixture.body_key());
+    assert_eq!(idle_lanes[0].key, Board2dSceneLane::Snapshot.body_key());
 }
 //#endregion 🚚️Board2dSceneLanes
 
@@ -464,7 +464,7 @@ fn tiledmap_scene_lanes_mirror_the_language_neutral_declaration() {
         assert_eq!(TiledMapSceneLane::from_body_key(lane.body_key()), Some(lane));
         assert_eq!(TiledMapSceneLane::from_name(lane.name()), Some(lane));
     }
-    assert_eq!(TiledMapSceneLane::from_body_key(Board2dSceneLane::Fixture.body_key()), None);
+    assert_eq!(TiledMapSceneLane::from_body_key(Board2dSceneLane::Snapshot.body_key()), None);
     let spine_fields: Vec<&str> = contract["spineFields"].as_array().expect("spineFields").iter().map(|field| field.as_str().expect("spine field")).collect();
     let mut probe = TiledMapScene::base("{}".into(), "{}".into());
     probe.lanes = vec![SceneLaneRef::default()];
@@ -494,7 +494,7 @@ fn tiledmap_scene_splits_into_the_declared_lanes_and_merges_back() {
     for lane in &lanes {
         assert!(merged.merge_lane(lane.key, lane.payload.clone()));
     }
-    assert!(!merged.merge_lane(Board2dSceneLane::Fixture.body_key(), String::new()));
+    assert!(!merged.merge_lane(Board2dSceneLane::Snapshot.body_key(), String::new()));
     merged.lanes = Vec::new();
     assert_eq!(merged, assembled);
     let huge = TiledMapScene::base("x".repeat(ui_contract::UI_FIXED_BYTES * 2), "{}".into());

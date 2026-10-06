@@ -18,7 +18,7 @@ if (segments[0] === "sequence-window-ownership") {
       const configRoot = join(windowsRoot, "📽️main/🎚️config");
       const { testSequenceWindowOwnershipOracle } = await import(`${configRoot}/🧪️tests/🔬️window/🟦️.ts`);
       testSequenceWindowOwnershipOracle();
-      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(windowsRoot, "📜️script/🫧️transient/🧬️schema/🟦️.ts"), join(configRoot, "🧪️tests/🔬️window/🟦️.ts")], { cwd: this.repoRoot });
+      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(windowsRoot, "📜️script/🫧️transient/🧬️schema/🟦️.ts"), join(configRoot, "🧪️tests/🔬️window/🟦️.ts"), join(this.repoRoot, "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-sequence-sequence", "--lib", "sequence_window_ownership_", "--", "--nocapture"], this.repoRoot);
@@ -38,5 +38,5 @@ if (segments[0] === "test" && segments[1] === "io-descriptor-parity") {
   }
 } else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sequence-sequence", { ...{
   twins: [{ name: "sequence-snapshot-fixture-asset", run: sequenceSnapshotFixtureAssetSelfTests }, { name: "artifact-io-descriptor-parity", run: testArtifactIoDescriptorParity }],
-  snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"],
+  snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],
 }, commands: { verify: OwnedVerifyScript } });

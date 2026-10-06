@@ -386,11 +386,17 @@ fn every_page_door_hands_the_census_across() {
     assert!(worker.contains("message.kind === \"host-storage\""), "and re-applied when another tab rewrites a key");
 
     let boot = wgpu_target_source("🚀️browser-boot/🟦️.ts");
-    assert!(boot.contains("storage: hostStorage()"), "the trunk page reads the census into the boot message");
-    assert!(boot.contains("const republishHostStorage = () => transport.setHostStorage(hostStorage());") && boot.contains("\"storage\", republishHostStorage"), "and re-reads it on a `storage` event, the only way a page hears another tab");
+    assert!(boot.contains("import { mountWgpuBrowserHost } from \"../🌐️browser-host/🟦️.ts\";"), "the trunk page mounts the canonical browser host");
+    assert!(boot.contains("await mountWgpuBrowserHost(root, { descriptor, locale, mountId: \"root\", pageBindings: true });"), "the page admits bindings through the same host");
+    let host = wgpu_target_source("🌐️browser-host/🟦️.ts");
+    assert!(host.contains("return readWgpuHostStorageSnapshot(window);"), "the canonical host reads the page census");
+    assert!(host.contains("storage: hostStorage()"), "the trunk page reads the census into the boot message");
+    assert!(host.contains("const republishHostStorage = () => transport.setHostStorage(hostStorage());") && host.contains("\"storage\", republishHostStorage"), "and re-reads it on a `storage` event, the only way a page hears another tab");
 
     let embedded = wgpu_target_source("🎬️renderer-boot/🟦️.ts");
-    assert!(embedded.contains("semioWgpuSetHostStorage?.(JSON.stringify(readWgpuHostStorageSnapshot(window)))"), "the embeddable door runs ON the page and seeds the same store itself");
+    assert!(embedded.contains("import { mountWgpuBrowserHost, type WgpuBrowserMount, type WgpuBootProgress } from \"../🌐️browser-host/🟦️.ts\";"), "the embeddable door imports the same canonical page host");
+    assert!(embedded.contains("return mountWgpuBrowserHost(root, { descriptor, locale, mountId: rootId,"), "the embeddable door hands its actual mount and descriptor to that host");
+    assert!(host.contains("storage: hostStorage()"), "the shared host seeds the embeddable worker from the same page census");
 }
 //#endregion 🚪️Wiring
 

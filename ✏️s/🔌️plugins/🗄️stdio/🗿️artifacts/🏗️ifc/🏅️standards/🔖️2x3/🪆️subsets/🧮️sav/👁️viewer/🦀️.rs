@@ -72,7 +72,7 @@ impl ArtifactViewer for Ifc2x3SavViewer {
     const DOCUMENT_SCHEMA: &'static str = IFC2X3_SAV_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> Ifc2x3Snapshot {
-        Ifc2x3Snapshot::default()
+        <crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction::new()).expect("valid authored IFC2x3 sav initial owner")
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

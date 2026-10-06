@@ -6,5 +6,5 @@ import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬
  * SetViewpointComponents, SetViewpointSnapshot) have no TS payload types to mirror against yet;
  * see `🦀️.rs` in this directory. */
 export type BcfMutation =
-  | { mutation: 'setSnapshot'; snapshot: import('../📸️snapshot/🟦️.ts').BcfSnapshot };
+  | { mutation: 'setSnapshot'; snapshot: import('../📸️snapshot/🟦️.ts').BcfSnapshot }
   | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }

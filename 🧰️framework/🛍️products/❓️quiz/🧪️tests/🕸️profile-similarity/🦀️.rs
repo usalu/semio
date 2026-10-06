@@ -22,7 +22,7 @@ mod subject {
 
     /// 🗃️ Every committed answer of one vector group — or its absence on a timed sheet task — credited against its task and sheet task.
     fn credited(ctx: &Context, group: &str) -> Result<Outcome, String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         let tasks = decode!(vectors["tasks"], Vec<Task>)?;
         let mut projection = Map::new();
         for vector in vectors[group].as_array().ok_or_else(|| format!("the vectors carry no {group}"))? {
@@ -46,7 +46,7 @@ mod subject {
 
     /// 🩹️ Every committed input that bypasses validation, scored — `null` where the core scores none.
     pub fn degraded(ctx: &Context) -> Result<Outcome, String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         let mut projection = Map::new();
         for vector in vectors["degraded"].as_array().ok_or("the vectors carry no degraded group")? {
             let result = score_task(&decode!(vector["task"], Task)?, &decode!(vector["sheetTask"], SheetTask)?, vector.get("answer").map(|answer| decode!(answer, Answer)).transpose()?.as_ref());

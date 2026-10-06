@@ -27,7 +27,7 @@ describe("channel version authority", () => {
   });
 
   it("writes through the supplied port while preserving hostile, arbitrary and owner-derived values", () => {
-    const consumers = admitChannelVersionContributionsV1([{ ownerRoot: "future", document: { schema: "semio.os.channel-version-consumers/v1", consumers: [{ path: "current.json", occurrences: 1 }, { path: "hostile.json", occurrences: 1, hostileValues: [13] }, { path: "guest.json", occurrences: 1, guest: true }, { path: "derived.json", occurrences: 1, derived: "Owner digest" }, { path: "arbitrary.json", occurrences: 1, arbitrary: true }] } }]);
+    const consumers = admitChannelVersionContributionsV1([{ ownerRoot: "future", document: { schema: "semio.os.channel-version-consumers/v1", consumers: [{ path: "current.json", occurrences: 1 }, { path: "hostile.json", occurrences: 1, hostileValues: [13], hostileOccurrences: 1 }, { path: "guest.json", occurrences: 1, guest: true }, { path: "derived.json", occurrences: 1, derived: "Owner digest" }, { path: "arbitrary.json", occurrences: 1, arbitrary: true }] } }]);
     const files = new Map(consumers.map(row => [row.path, JSON.stringify({ appChannelVersion: row.hostileValues?.[0] ?? 20 })]));
     const source = { pin: 21, consumers, candidates: [...files.keys()], readText: (path: string) => files.get(path)! };
     const writeText = (path: string, text: string) => { files.set(path, text); };

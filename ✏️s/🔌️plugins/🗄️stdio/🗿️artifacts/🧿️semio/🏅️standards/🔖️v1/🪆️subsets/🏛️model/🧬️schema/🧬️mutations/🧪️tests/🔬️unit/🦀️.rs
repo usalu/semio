@@ -98,3 +98,30 @@ async fn op_text_binary_roundtrip_law() {
         assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
     }
 }
+
+/// ⚖️ LAW (design §12, §17.6, §20.15): the relative placement leaves move, turn and scale every addressed element off its BASE
+/// placement, round trip through their exact absolute inverse, skip a missing target as `mutation.partial`, refuse a model
+/// without any addressed element as `mutation.target-missing`, an identity motion as `mutation.no-op`, and an invalid payload
+/// as a Fatal `mutation.invariant`.
+#[semio_framework_async_macros::async_test]
+async fn relative_placement_leaves_derive_from_the_base_and_undo_exactly() {
+    let mut base = fixture();
+    base.elements.push(SemioModelElement { id: "e2".into(), class: ElementClass::Beam, placement: sample_transform(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
+    let both = || vec!["e1".to_string(), "e2".to_string()];
+    let drag = SemioModelMutation::DragElements(drag_elements::DragElements { targets: both(), offset: [1.5, -2.0, 0.25] });
+    let turn = SemioModelMutation::RotateElements(rotate_elements::RotateElements { targets: both(), axis: [0.0, 0.0, 2.0], angle: std::f64::consts::PI });
+    let scale = SemioModelMutation::ScaleElements(scale_elements::ScaleElements { targets: both(), factors: [2.0, 3.0, 0.5] });
+    for leaf in [drag.clone(), turn, scale] {
+        assert_round_trips(&base, leaf);
+    }
+    let mut moved = base.clone();
+    let _ = apply_semio_model_mutation(&mut moved, &drag);
+    assert_eq!((moved.elements[1].placement.translation.x, moved.elements[1].placement.translation.y, moved.elements[1].placement.translation.z), (6.5, 4.0, 7.25));
+    let level = |mutation: &SemioModelMutation| <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, &base).messages().iter().map(|message| message.code.0.clone()).collect::<Vec<_>>();
+    assert_eq!(level(&SemioModelMutation::DragElements(drag_elements::DragElements { targets: vec!["e1".into(), "ghost".into()], offset: [1.0, 0.0, 0.0] })), vec!["mutation.partial".to_string()]);
+    assert_eq!(level(&SemioModelMutation::DragElements(drag_elements::DragElements { targets: vec!["ghost".into()], offset: [1.0, 0.0, 0.0] })), vec!["mutation.target-missing".to_string()]);
+    assert_eq!(level(&SemioModelMutation::ScaleElements(scale_elements::ScaleElements { targets: both(), factors: [1.0; 3] })), vec!["mutation.no-op".to_string()]);
+    assert_eq!(level(&SemioModelMutation::RotateElements(rotate_elements::RotateElements { targets: both(), axis: [0.0; 3], angle: 1.0 })), vec!["mutation.invariant".to_string()]);
+    assert_eq!(level(&SemioModelMutation::ScaleElements(scale_elements::ScaleElements { targets: both(), factors: [0.0, 1.0, 1.0] })), vec!["mutation.invariant".to_string()]);
+    assert_eq!(level(&SemioModelMutation::DragElements(drag_elements::DragElements { targets: vec!["e1".into(), "e1".into()], offset: [1.0, 0.0, 0.0] })), vec!["mutation.invariant".to_string()]);
+}

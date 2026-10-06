@@ -42,25 +42,9 @@ impl protocol::SemanticMutation<WiresSnapshot> for WiresMutation {
     }
 }
 
-/// 📝️ No parent operation line exists.
-impl protocol::OpText for WiresMutation {
-    fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "a wires board has no parent-lane mutation; board edits are child-lane graph leaves", semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        match *self {}
-    }
-}
 
-/// 💾️ No parent operation record exists.
-impl protocol::OpBinary for WiresMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        match *self {}
-    }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Err(protocol::ProtocolError::Malformed { what: "wires-mutation", offset: 0, detail: "a wires board has no parent-lane mutation; board edits are child-lane graph leaves".into() })
-    }
-}
+
+
 //#endregion 🔖️Aggregate
 
 //#region 🧪️Tests

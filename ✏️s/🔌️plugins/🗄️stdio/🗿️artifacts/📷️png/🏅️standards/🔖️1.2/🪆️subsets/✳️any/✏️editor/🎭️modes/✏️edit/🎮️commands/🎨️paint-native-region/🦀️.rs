@@ -1,7 +1,7 @@
 //! 🎨️ Checked, cancellable native PNG sample painting.
 
 use super::{PngEditCommand, PngEditor, PngNativeEditCommand};
-use crate::io::{png_revision, validate_native_paint, PngNativePaint, PngNativePaintWorkOperation, PngNativePaintWorkStep, PngNativeProfile, PngRegion, MAXIMUM_NATIVE_PAINT_OWNED_BYTES};
+use crate::standards::v1_2::subsets::any::io::{png_revision, validate_native_paint, PngNativePaint, PngNativePaintWorkOperation, PngNativePaintWorkStep, PngNativeProfile, PngRegion, MAXIMUM_NATIVE_PAINT_OWNED_BYTES};
 use crate::schema::mutations::{PaintNativeSamplesMutation, PngMutation};
 use crate::schema::snapshot::PngSnapshot;
 use semio_framework_job::InteractiveJobCloseStep;
@@ -148,9 +148,9 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
         match operation.advance(input.snapshot, cx).map_err(|message| fault("stdio.png.native-region.work", message))? {
             PngNativePaintWorkStep::Yield(progress) => {
                 let (stage, preview) = match progress.phase {
-                    crate::io::PngNativePaintPhase::Address | crate::io::PngNativePaintPhase::Decode => ("png-native-region-decode", &br#"{"en":"Decoding native PNG samples","de":"Native PNG-Abtastwerte werden dekodiert"}"#[..]),
-                    crate::io::PngNativePaintPhase::Paint => ("png-native-region-paint", &br#"{"en":"Painting native PNG samples","de":"Native PNG-Abtastwerte werden gemalt"}"#[..]),
-                    crate::io::PngNativePaintPhase::Filter | crate::io::PngNativePaintPhase::Encode | crate::io::PngNativePaintPhase::Assemble => ("png-native-region-encode", &br#"{"en":"Encoding native PNG samples","de":"Native PNG-Abtastwerte werden kodiert"}"#[..]),
+                    crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Address | crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Decode => ("png-native-region-decode", &br#"{"en":"Decoding native PNG samples","de":"Native PNG-Abtastwerte werden dekodiert"}"#[..]),
+                    crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Paint => ("png-native-region-paint", &br#"{"en":"Painting native PNG samples","de":"Native PNG-Abtastwerte werden gemalt"}"#[..]),
+                    crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Filter | crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Encode | crate::standards::v1_2::subsets::any::io::PngNativePaintPhase::Assemble => ("png-native-region-encode", &br#"{"en":"Encoding native PNG samples","de":"Native PNG-Abtastwerte werden kodiert"}"#[..]),
                 };
                 Ok(ArtifactCommandWorkStep::Progress { stage, preview })
             }

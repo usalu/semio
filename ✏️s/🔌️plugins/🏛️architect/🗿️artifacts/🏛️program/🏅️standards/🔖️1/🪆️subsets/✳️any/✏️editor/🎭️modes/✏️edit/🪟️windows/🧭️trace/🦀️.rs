@@ -23,6 +23,7 @@ const ARCHITECT_SURFACE_TRACE: &str = "architect.trace";
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: ARCHITECT_WINDOW_TRACE.into(),
         label: LocalizedLabel::native("Trace", "Nachverfolgung"),
         body_key: ARCHITECT_BODY_TRACE.into(),

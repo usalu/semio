@@ -66,7 +66,7 @@ fn repulsion_radius(node: &DslValue) -> f64 {
 /// pinned), one unit spring per distinct node pair whose visible edge endpoints resolve through handles or node ids.
 pub fn layout_graph(board: &DslValue) -> WiresLayoutGraph {
     let (mut layout, mut index, mut handles) = (WiresLayoutGraph::default(), HashMap::new(), HashMap::new());
-    for node in crate::schema::fixture_nodes(board).iter().filter(|node| visible(node)) {
+    for node in crate::schema::board_snapshot_nodes(board).iter().filter(|node| visible(node)) {
         let Some(id) = node.get("id").and_then(semio_framework_value::DslValue::as_str) else { continue };
         if index.contains_key(id) {
             continue;
@@ -85,7 +85,7 @@ pub fn layout_graph(board: &DslValue) -> WiresLayoutGraph {
     }
     let resolve = |endpoint: Option<&str>| endpoint.and_then(|endpoint| handles.get(endpoint).or_else(|| index.get(endpoint)).copied());
     let mut seen = BTreeSet::new();
-    for edge in crate::schema::fixture_edges(board).iter().filter(|edge| visible(edge)) {
+    for edge in crate::schema::board_snapshot_edges(board).iter().filter(|edge| visible(edge)) {
         let (Some(source), Some(target)) = (resolve(edge.get("source").and_then(semio_framework_value::DslValue::as_str)), resolve(edge.get("target").and_then(semio_framework_value::DslValue::as_str))) else { continue };
         if source != target && seen.insert((source.min(target), source.max(target))) {
             layout.graph.edges.push(LayoutRunEdge { source: source.min(target), target: source.max(target), weight: 1.0 });

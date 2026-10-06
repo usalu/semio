@@ -18,6 +18,9 @@ pub mod paged;
 #[path = "🧬️bytes/🦀️.rs"]
 pub mod bytes;
 
+#[path = "🧬️schema/🔗️graphql/🔢️int64/🦀️.rs"]
+pub mod graphql_int64;
+
 #[path = "🧬️clone/🦀️.rs"]
 pub mod bounded_clone;
 
@@ -437,3 +440,6 @@ mod refusal_tests;
 
 #[path="🧬️schema/🌳️intrinsic/🔣️json/🦀️.rs"]
 pub mod intrinsic_json;
+
+#[path="📝️text/📦️paged/🦀️.rs"]
+pub mod paged_text;

@@ -8,7 +8,7 @@ async fn primary_asset_is_nonempty() {
 /// steps in chain order (the `sequence` edges, not the node vector, are the order).
 #[semio_framework_async_macros::async_test]
 async fn the_demo_flow_child_holds_its_steps_in_chain_order() {
-    let snapshot = crate::schema::snapshot::parse_playbook_dsl(crate::examples::demo::PRIMARY_TEXT).expect("demo parent parses");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_playbook_dsl(crate::examples::demo::PRIMARY_TEXT).expect("demo parent parses");
     assert_eq!(snapshot.flow.child_id, crate::examples::demo::FLOW_ID);
     let content = crate::playbook_genesis_flow(&snapshot.flow.child_id).expect("the catalogue answers the demo flow child");
     let steps = crate::steps_from_flow_content(&content).expect("decodable demo steps");
@@ -22,7 +22,7 @@ async fn inference_determinism_law() {
     use crate::standards::v1::subsets::any::schema::inferences::PlaybookInference;
     use protocol::Inference;
 
-    let snapshot = crate::schema::snapshot::parse_playbook_dsl(crate::examples::demo::PRIMARY_TEXT).expect("demo parent parses");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_playbook_dsl(crate::examples::demo::PRIMARY_TEXT).expect("demo parent parses");
     assert_eq!(PlaybookInference::infer(&snapshot).expect("pure inference"), PlaybookInference::infer(&snapshot).expect("pure inference"));
 }
 

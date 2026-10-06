@@ -10,10 +10,12 @@
   ],
   "eventKeys": [
     "begin",
+    "beginWithdrawn",
     "draft",
     "withdraw",
     "accept",
     "discard",
+    "restore",
     "replayProgressed",
     "replayCompleted",
     "replayCancelled",
@@ -67,7 +69,10 @@
     "validCode",
     "invalidCode",
     "validName",
-    "invalidName"
+    "invalidName",
+    "restoreKeepsDrafts",
+    "restoreLastDraft",
+    "restoreUnaccepted"
   ],
   "reviewKinds": [
     "noChanges",
@@ -85,7 +90,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "inactive",
@@ -99,7 +103,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 11,
         "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
       },
       "stage": "inactive",
@@ -113,7 +116,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "editing",
@@ -149,7 +151,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "editing",
@@ -185,7 +186,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "editing",
@@ -279,7 +279,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "editing",
@@ -373,7 +372,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "editing",
@@ -424,7 +422,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "editing",
@@ -518,7 +515,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 11,
         "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
       },
       "stage": "editing",
@@ -554,7 +550,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "replaying",
@@ -600,7 +595,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 11,
         "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
       },
       "stage": "replaying",
@@ -643,7 +637,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "reviewing",
@@ -729,7 +722,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "reviewing",
@@ -811,7 +803,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "reviewing",
@@ -854,7 +845,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "reviewing",
@@ -864,11 +854,81 @@
       "progress": null,
       "fault": null
     },
+    "reviewing.single": {
+      "id": 3,
+      "generation": 5,
+      "base": {
+        "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "stage": "reviewing",
+      "accepted": [
+        {
+          "target": {
+            "mutation": "a",
+            "position": 2
+          },
+          "replacement": {
+            "kind": "input",
+            "schema": "s.demo.op",
+            "payload": [
+              10,
+              2
+            ]
+          }
+        }
+      ],
+      "pending": null,
+      "report": {
+        "fromPosition": 2,
+        "outcomes": [
+          {
+            "mutationId": "a",
+            "editId": "edit-a",
+            "opIndex": 0,
+            "worst": null,
+            "messages": [],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "mutationId": "b",
+            "editId": "edit-b",
+            "opIndex": 0,
+            "worst": "warning",
+            "messages": [
+              {
+                "level": "warning",
+                "code": "mutation.partial",
+                "message": "1 of 2 targets is missing",
+                "target": [
+                  "node",
+                  "7"
+                ],
+                "opIndex": 0
+              }
+            ],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "mutationId": "c",
+            "editId": "edit-c",
+            "opIndex": 0,
+            "worst": null,
+            "messages": [],
+            "superseded": false,
+            "withdrawn": false
+          }
+        ],
+        "worst": "warning"
+      },
+      "progress": null,
+      "fault": null
+    },
     "reviewing.atNextBase": {
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 11,
         "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
       },
       "stage": "reviewing",
@@ -954,7 +1014,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "reviewing",
@@ -997,7 +1056,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "reviewing",
@@ -1083,7 +1141,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "choosing",
@@ -1169,7 +1226,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 11,
         "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
       },
       "stage": "choosing",
@@ -1255,7 +1311,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 10,
         "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
       },
       "stage": "finalizing",
@@ -1341,7 +1396,6 @@
       "id": 3,
       "generation": 5,
       "base": {
-        "storeGeneration": 11,
         "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
       },
       "stage": "finalizing",
@@ -1440,6 +1494,21 @@
         ]
       }
     },
+    "beginWithdrawn": {
+      "type": "beginWithdrawn",
+      "target": {
+        "mutation": "c",
+        "position": 9
+      },
+      "original": {
+        "kind": "input",
+        "schema": "s.demo.op",
+        "payload": [
+          12,
+          1
+        ]
+      }
+    },
     "draft": {
       "type": "draft",
       "generation": 5,
@@ -1463,6 +1532,11 @@
     "discard": {
       "type": "discard",
       "generation": 5
+    },
+    "restore": {
+      "type": "restore",
+      "generation": 5,
+      "target": "a"
     },
     "replayProgressed": {
       "type": "replayProgressed",
@@ -1566,7 +1640,6 @@
     "baseMoved": {
       "type": "baseMoved",
       "base": {
-        "storeGeneration": 11,
         "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
       },
       "positions": [
@@ -1650,6 +1723,10 @@
       "review": "noChanges"
     },
     {
+      "context": "reviewing.single",
+      "review": "ready"
+    },
+    {
       "context": "reviewing.atNextBase",
       "review": "ready"
     },
@@ -1693,6 +1770,18 @@
     },
     {
       "from": "inactive",
+      "event": "beginWithdrawn",
+      "when": "always",
+      "context": "inactive",
+      "to": "editing",
+      "effects": [
+        "showPreview"
+      ],
+      "generation": "increment",
+      "session": "next"
+    },
+    {
+      "from": "inactive",
       "event": "draft",
       "when": "always",
       "context": "inactive",
@@ -1715,6 +1804,13 @@
     {
       "from": "inactive",
       "event": "discard",
+      "when": "always",
+      "context": "inactive",
+      "rejection": "timeTravel.illegal"
+    },
+    {
+      "from": "inactive",
+      "event": "restore",
       "when": "always",
       "context": "inactive",
       "rejection": "timeTravel.illegal"
@@ -1841,6 +1937,25 @@
     },
     {
       "from": "editing",
+      "event": "beginWithdrawn",
+      "when": "pendingUnchanged",
+      "context": "editing.fromReviewing.unchanged",
+      "to": "editing",
+      "effects": [
+        "showPreview"
+      ],
+      "generation": "increment",
+      "session": "keep"
+    },
+    {
+      "from": "editing",
+      "event": "beginWithdrawn",
+      "when": "pendingChanged",
+      "context": "editing.fromReviewing.changed",
+      "rejection": "timeTravel.blocked"
+    },
+    {
+      "from": "editing",
       "event": "draft",
       "when": "always",
       "context": "editing.fromInactive.unchanged",
@@ -1952,6 +2067,13 @@
       ],
       "generation": "increment",
       "session": "keep"
+    },
+    {
+      "from": "editing",
+      "event": "restore",
+      "when": "always",
+      "context": "editing.fromReviewing.changed",
+      "rejection": "timeTravel.illegal"
     },
     {
       "from": "editing",
@@ -2070,6 +2192,13 @@
     },
     {
       "from": "replaying",
+      "event": "beginWithdrawn",
+      "when": "always",
+      "context": "replaying",
+      "rejection": "timeTravel.illegal"
+    },
+    {
+      "from": "replaying",
       "event": "draft",
       "when": "always",
       "context": "replaying",
@@ -2092,6 +2221,13 @@
     {
       "from": "replaying",
       "event": "discard",
+      "when": "always",
+      "context": "replaying",
+      "rejection": "timeTravel.illegal"
+    },
+    {
+      "from": "replaying",
+      "event": "restore",
       "when": "always",
       "context": "replaying",
       "rejection": "timeTravel.illegal"
@@ -2243,6 +2379,18 @@
     },
     {
       "from": "reviewing",
+      "event": "beginWithdrawn",
+      "when": "always",
+      "context": "reviewing.blocking",
+      "to": "editing",
+      "effects": [
+        "showPreview"
+      ],
+      "generation": "increment",
+      "session": "keep"
+    },
+    {
+      "from": "reviewing",
       "event": "draft",
       "when": "always",
       "context": "reviewing.ready",
@@ -2267,6 +2415,42 @@
       "event": "discard",
       "when": "always",
       "context": "reviewing.ready",
+      "rejection": "timeTravel.illegal"
+    },
+    {
+      "from": "reviewing",
+      "event": "restore",
+      "when": "restoreKeepsDrafts",
+      "context": "reviewing.ready",
+      "to": "replaying",
+      "effects": [
+        "startReplay"
+      ],
+      "generation": "increment",
+      "session": "keep"
+    },
+    {
+      "from": "reviewing",
+      "event": "restore",
+      "when": "restoreLastDraft",
+      "context": "reviewing.single",
+      "to": "inactive",
+      "effects": [
+        "close"
+      ],
+      "generation": "increment",
+      "session": "keep"
+    },
+    {
+      "from": "reviewing",
+      "event": "restore",
+      "when": "restoreUnaccepted",
+      "context": "reviewing.ready",
+      "input": {
+        "type": "restore",
+        "generation": 5,
+        "target": "c"
+      },
       "rejection": "timeTravel.illegal"
     },
     {
@@ -2441,6 +2625,13 @@
     },
     {
       "from": "choosing",
+      "event": "beginWithdrawn",
+      "when": "always",
+      "context": "choosing",
+      "rejection": "timeTravel.illegal"
+    },
+    {
+      "from": "choosing",
       "event": "draft",
       "when": "always",
       "context": "choosing",
@@ -2463,6 +2654,13 @@
     {
       "from": "choosing",
       "event": "discard",
+      "when": "always",
+      "context": "choosing",
+      "rejection": "timeTravel.illegal"
+    },
+    {
+      "from": "choosing",
+      "event": "restore",
       "when": "always",
       "context": "choosing",
       "rejection": "timeTravel.illegal"
@@ -2612,6 +2810,13 @@
     },
     {
       "from": "finalizing",
+      "event": "beginWithdrawn",
+      "when": "always",
+      "context": "finalizing",
+      "rejection": "timeTravel.illegal"
+    },
+    {
+      "from": "finalizing",
       "event": "draft",
       "when": "always",
       "context": "finalizing",
@@ -2634,6 +2839,13 @@
     {
       "from": "finalizing",
       "event": "discard",
+      "when": "always",
+      "context": "finalizing",
+      "rejection": "timeTravel.illegal"
+    },
+    {
+      "from": "finalizing",
+      "event": "restore",
       "when": "always",
       "context": "finalizing",
       "rejection": "timeTravel.illegal"
@@ -2769,7 +2981,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -2800,7 +3011,6 @@
             "id": 4,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "editing",
@@ -2855,7 +3065,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "reviewing",
@@ -2958,7 +3167,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "editing",
@@ -3085,7 +3293,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -3138,7 +3345,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "editing",
@@ -3193,7 +3399,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -3245,12 +3450,674 @@
       }
     },
     {
+      "name": "begin withdrawn from inactive opens the next session on a withdrawn draft",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "inactive",
+        "accepted": [],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "beginWithdrawn",
+        "target": {
+          "mutation": "c",
+          "position": 9
+        },
+        "original": {
+          "kind": "input",
+          "schema": "s.demo.op",
+          "payload": [
+            12,
+            1
+          ]
+        }
+      },
+      "expect": {
+        "transition": {
+          "session": {
+            "id": 4,
+            "generation": 6,
+            "base": {
+              "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "stage": "editing",
+            "accepted": [],
+            "pending": {
+              "target": {
+                "mutation": "c",
+                "position": 9
+              },
+              "original": {
+                "kind": "input",
+                "schema": "s.demo.op",
+                "payload": [
+                  12,
+                  1
+                ]
+              },
+              "replacement": {
+                "kind": "withdrawn"
+              },
+              "returnStage": "inactive"
+            },
+            "report": null,
+            "progress": null,
+            "fault": null
+          },
+          "effects": [
+            {
+              "type": "showPreview",
+              "target": "c",
+              "replacement": {
+                "kind": "withdrawn"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "begin withdrawn from a blocked review stacks a withdrawn draft on the failing mutation and keeps the report",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "reviewing",
+        "accepted": [
+          {
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          },
+          {
+            "target": {
+              "mutation": "b",
+              "position": 5
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                11,
+                2
+              ]
+            }
+          }
+        ],
+        "pending": null,
+        "report": {
+          "fromPosition": 2,
+          "outcomes": [
+            {
+              "mutationId": "a",
+              "editId": "edit-a",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": true,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "b",
+              "editId": "edit-b",
+              "opIndex": 0,
+              "worst": "error",
+              "messages": [
+                {
+                  "level": "error",
+                  "code": "mutation.target-missing",
+                  "message": "every target is missing",
+                  "opIndex": 0
+                }
+              ],
+              "superseded": false,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "c",
+              "editId": "edit-c",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": false,
+              "withdrawn": false
+            }
+          ],
+          "worst": "error"
+        },
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "beginWithdrawn",
+        "target": {
+          "mutation": "b",
+          "position": 5
+        },
+        "original": {
+          "kind": "input",
+          "schema": "s.demo.op",
+          "payload": [
+            11,
+            1
+          ]
+        }
+      },
+      "expect": {
+        "transition": {
+          "session": {
+            "id": 3,
+            "generation": 6,
+            "base": {
+              "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "stage": "editing",
+            "accepted": [
+              {
+                "target": {
+                  "mutation": "a",
+                  "position": 2
+                },
+                "replacement": {
+                  "kind": "input",
+                  "schema": "s.demo.op",
+                  "payload": [
+                    10,
+                    2
+                  ]
+                }
+              },
+              {
+                "target": {
+                  "mutation": "b",
+                  "position": 5
+                },
+                "replacement": {
+                  "kind": "input",
+                  "schema": "s.demo.op",
+                  "payload": [
+                    11,
+                    2
+                  ]
+                }
+              }
+            ],
+            "pending": {
+              "target": {
+                "mutation": "b",
+                "position": 5
+              },
+              "original": {
+                "kind": "input",
+                "schema": "s.demo.op",
+                "payload": [
+                  11,
+                  1
+                ]
+              },
+              "replacement": {
+                "kind": "withdrawn"
+              },
+              "returnStage": "reviewing"
+            },
+            "report": {
+              "fromPosition": 2,
+              "outcomes": [
+                {
+                  "mutationId": "a",
+                  "editId": "edit-a",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": true,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "b",
+                  "editId": "edit-b",
+                  "opIndex": 0,
+                  "worst": "error",
+                  "messages": [
+                    {
+                      "level": "error",
+                      "code": "mutation.target-missing",
+                      "message": "every target is missing",
+                      "opIndex": 0
+                    }
+                  ],
+                  "superseded": false,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "c",
+                  "editId": "edit-c",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": false,
+                  "withdrawn": false
+                }
+              ],
+              "worst": "error"
+            },
+            "progress": null,
+            "fault": null
+          },
+          "effects": [
+            {
+              "type": "showPreview",
+              "target": "b",
+              "replacement": {
+                "kind": "withdrawn"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "begin withdrawn while the draft is unchanged switches target and keeps the return stage",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "editing",
+        "accepted": [],
+        "pending": {
+          "target": {
+            "mutation": "a",
+            "position": 2
+          },
+          "original": {
+            "kind": "input",
+            "schema": "s.demo.op",
+            "payload": [
+              10,
+              1
+            ]
+          },
+          "replacement": {
+            "kind": "input",
+            "schema": "s.demo.op",
+            "payload": [
+              10,
+              1
+            ]
+          },
+          "returnStage": "inactive"
+        },
+        "report": null,
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "beginWithdrawn",
+        "target": {
+          "mutation": "c",
+          "position": 9
+        },
+        "original": {
+          "kind": "input",
+          "schema": "s.demo.op",
+          "payload": [
+            12,
+            1
+          ]
+        }
+      },
+      "expect": {
+        "transition": {
+          "session": {
+            "id": 3,
+            "generation": 6,
+            "base": {
+              "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "stage": "editing",
+            "accepted": [],
+            "pending": {
+              "target": {
+                "mutation": "c",
+                "position": 9
+              },
+              "original": {
+                "kind": "input",
+                "schema": "s.demo.op",
+                "payload": [
+                  12,
+                  1
+                ]
+              },
+              "replacement": {
+                "kind": "withdrawn"
+              },
+              "returnStage": "inactive"
+            },
+            "report": null,
+            "progress": null,
+            "fault": null
+          },
+          "effects": [
+            {
+              "type": "showPreview",
+              "target": "c",
+              "replacement": {
+                "kind": "withdrawn"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "begin withdrawn with a changed draft is blocked",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "editing",
+        "accepted": [],
+        "pending": {
+          "target": {
+            "mutation": "a",
+            "position": 2
+          },
+          "original": {
+            "kind": "input",
+            "schema": "s.demo.op",
+            "payload": [
+              10,
+              1
+            ]
+          },
+          "replacement": {
+            "kind": "input",
+            "schema": "s.demo.op",
+            "payload": [
+              10,
+              2
+            ]
+          },
+          "returnStage": "inactive"
+        },
+        "report": null,
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "beginWithdrawn",
+        "target": {
+          "mutation": "c",
+          "position": 9
+        },
+        "original": {
+          "kind": "input",
+          "schema": "s.demo.op",
+          "payload": [
+            12,
+            1
+          ]
+        }
+      },
+      "expect": {
+        "rejection": "timeTravel.blocked"
+      }
+    },
+    {
+      "name": "begin withdrawn while replaying is illegal",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "replaying",
+        "accepted": [
+          {
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          },
+          {
+            "target": {
+              "mutation": "b",
+              "position": 5
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                11,
+                2
+              ]
+            }
+          }
+        ],
+        "pending": null,
+        "report": null,
+        "progress": {
+          "done": 1,
+          "total": 3
+        },
+        "fault": null
+      },
+      "event": {
+        "type": "beginWithdrawn",
+        "target": {
+          "mutation": "c",
+          "position": 9
+        },
+        "original": {
+          "kind": "input",
+          "schema": "s.demo.op",
+          "payload": [
+            12,
+            1
+          ]
+        }
+      },
+      "expect": {
+        "rejection": "timeTravel.illegal"
+      }
+    },
+    {
+      "name": "accepting a withdrawal begun on an already accepted withdrawal changes nothing",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "editing",
+        "accepted": [
+          {
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "replacement": {
+              "kind": "withdrawn"
+            }
+          }
+        ],
+        "pending": {
+          "target": {
+            "mutation": "a",
+            "position": 2
+          },
+          "original": {
+            "kind": "input",
+            "schema": "s.demo.op",
+            "payload": [
+              10,
+              1
+            ]
+          },
+          "replacement": {
+            "kind": "withdrawn"
+          },
+          "returnStage": "reviewing"
+        },
+        "report": {
+          "fromPosition": 2,
+          "outcomes": [
+            {
+              "mutationId": "a",
+              "editId": "edit-a",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": true,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "b",
+              "editId": "edit-b",
+              "opIndex": 0,
+              "worst": "warning",
+              "messages": [
+                {
+                  "level": "warning",
+                  "code": "mutation.partial",
+                  "message": "1 of 2 targets is missing",
+                  "target": [
+                    "node",
+                    "7"
+                  ],
+                  "opIndex": 0
+                }
+              ],
+              "superseded": false,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "c",
+              "editId": "edit-c",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": false,
+              "withdrawn": false
+            }
+          ],
+          "worst": "warning"
+        },
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "accept",
+        "generation": 5
+      },
+      "expect": {
+        "transition": {
+          "session": {
+            "id": 3,
+            "generation": 5,
+            "base": {
+              "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "stage": "reviewing",
+            "accepted": [
+              {
+                "target": {
+                  "mutation": "a",
+                  "position": 2
+                },
+                "replacement": {
+                  "kind": "withdrawn"
+                }
+              }
+            ],
+            "pending": null,
+            "report": {
+              "fromPosition": 2,
+              "outcomes": [
+                {
+                  "mutationId": "a",
+                  "editId": "edit-a",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": true,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "b",
+                  "editId": "edit-b",
+                  "opIndex": 0,
+                  "worst": "warning",
+                  "messages": [
+                    {
+                      "level": "warning",
+                      "code": "mutation.partial",
+                      "message": "1 of 2 targets is missing",
+                      "target": [
+                        "node",
+                        "7"
+                      ],
+                      "opIndex": 0
+                    }
+                  ],
+                  "superseded": false,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "c",
+                  "editId": "edit-c",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": false,
+                  "withdrawn": false
+                }
+              ],
+              "worst": "warning"
+            },
+            "progress": null,
+            "fault": null
+          },
+          "effects": []
+        }
+      }
+    },
+    {
       "name": "a draft replaces the pending replacement and previews it",
       "session": {
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -3300,7 +4167,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "editing",
@@ -3355,7 +4221,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -3397,7 +4262,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "editing",
@@ -3442,7 +4306,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -3542,7 +4405,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "replaying",
@@ -3620,7 +4482,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -3657,7 +4518,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "replaying",
@@ -3700,7 +4560,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -3800,7 +4659,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "reviewing",
@@ -3820,7 +4678,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -3934,7 +4791,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "replaying",
@@ -3987,7 +4843,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -4087,7 +4942,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "reviewing",
@@ -4165,7 +5019,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -4222,7 +5075,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "replaying",
@@ -4270,12 +5122,649 @@
       }
     },
     {
+      "name": "restore takes one accepted draft back and replays the rest",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "reviewing",
+        "accepted": [
+          {
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          },
+          {
+            "target": {
+              "mutation": "b",
+              "position": 5
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                11,
+                2
+              ]
+            }
+          }
+        ],
+        "pending": null,
+        "report": {
+          "fromPosition": 2,
+          "outcomes": [
+            {
+              "mutationId": "a",
+              "editId": "edit-a",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": true,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "b",
+              "editId": "edit-b",
+              "opIndex": 0,
+              "worst": "error",
+              "messages": [
+                {
+                  "level": "error",
+                  "code": "mutation.target-missing",
+                  "message": "every target is missing",
+                  "opIndex": 0
+                }
+              ],
+              "superseded": false,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "c",
+              "editId": "edit-c",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": false,
+              "withdrawn": false
+            }
+          ],
+          "worst": "error"
+        },
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "restore",
+        "generation": 5,
+        "target": "b"
+      },
+      "expect": {
+        "transition": {
+          "session": {
+            "id": 3,
+            "generation": 6,
+            "base": {
+              "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "stage": "replaying",
+            "accepted": [
+              {
+                "target": {
+                  "mutation": "a",
+                  "position": 2
+                },
+                "replacement": {
+                  "kind": "input",
+                  "schema": "s.demo.op",
+                  "payload": [
+                    10,
+                    2
+                  ]
+                }
+              }
+            ],
+            "pending": null,
+            "report": null,
+            "progress": null,
+            "fault": null
+          },
+          "effects": [
+            {
+              "type": "startReplay",
+              "drafts": [
+                {
+                  "target": "a",
+                  "replacement": {
+                    "kind": "input",
+                    "schema": "s.demo.op",
+                    "payload": [
+                      10,
+                      2
+                    ]
+                  }
+                }
+              ],
+              "from": "a"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "restore of the only accepted draft leaves time travel with zero trace",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "reviewing",
+        "accepted": [
+          {
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          }
+        ],
+        "pending": null,
+        "report": {
+          "fromPosition": 2,
+          "outcomes": [
+            {
+              "mutationId": "a",
+              "editId": "edit-a",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": true,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "b",
+              "editId": "edit-b",
+              "opIndex": 0,
+              "worst": "warning",
+              "messages": [
+                {
+                  "level": "warning",
+                  "code": "mutation.partial",
+                  "message": "1 of 2 targets is missing",
+                  "target": [
+                    "node",
+                    "7"
+                  ],
+                  "opIndex": 0
+                }
+              ],
+              "superseded": false,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "c",
+              "editId": "edit-c",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": false,
+              "withdrawn": false
+            }
+          ],
+          "worst": "warning"
+        },
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "restore",
+        "generation": 5,
+        "target": "a"
+      },
+      "expect": {
+        "transition": {
+          "session": {
+            "id": 3,
+            "generation": 6,
+            "base": {
+              "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "stage": "inactive",
+            "accepted": [],
+            "pending": null,
+            "report": null,
+            "progress": null,
+            "fault": null
+          },
+          "effects": [
+            {
+              "type": "close"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "restore after a cancelled replay replays the remaining drafts and clears the fault",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "reviewing",
+        "accepted": [
+          {
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          },
+          {
+            "target": {
+              "mutation": "b",
+              "position": 5
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                11,
+                2
+              ]
+            }
+          }
+        ],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": "timeTravel.cancelled"
+      },
+      "event": {
+        "type": "restore",
+        "generation": 5,
+        "target": "a"
+      },
+      "expect": {
+        "transition": {
+          "session": {
+            "id": 3,
+            "generation": 6,
+            "base": {
+              "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "stage": "replaying",
+            "accepted": [
+              {
+                "target": {
+                  "mutation": "b",
+                  "position": 5
+                },
+                "replacement": {
+                  "kind": "input",
+                  "schema": "s.demo.op",
+                  "payload": [
+                    11,
+                    2
+                  ]
+                }
+              }
+            ],
+            "pending": null,
+            "report": null,
+            "progress": null,
+            "fault": null
+          },
+          "effects": [
+            {
+              "type": "startReplay",
+              "drafts": [
+                {
+                  "target": "b",
+                  "replacement": {
+                    "kind": "input",
+                    "schema": "s.demo.op",
+                    "payload": [
+                      11,
+                      2
+                    ]
+                  }
+                }
+              ],
+              "from": "b"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "restore of a mutation without an accepted draft is illegal",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "reviewing",
+        "accepted": [
+          {
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          },
+          {
+            "target": {
+              "mutation": "b",
+              "position": 5
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                11,
+                2
+              ]
+            }
+          }
+        ],
+        "pending": null,
+        "report": {
+          "fromPosition": 2,
+          "outcomes": [
+            {
+              "mutationId": "a",
+              "editId": "edit-a",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": true,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "b",
+              "editId": "edit-b",
+              "opIndex": 0,
+              "worst": "warning",
+              "messages": [
+                {
+                  "level": "warning",
+                  "code": "mutation.partial",
+                  "message": "1 of 2 targets is missing",
+                  "target": [
+                    "node",
+                    "7"
+                  ],
+                  "opIndex": 0
+                }
+              ],
+              "superseded": false,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "c",
+              "editId": "edit-c",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": false,
+              "withdrawn": false
+            }
+          ],
+          "worst": "warning"
+        },
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "restore",
+        "generation": 5,
+        "target": "c"
+      },
+      "expect": {
+        "rejection": "timeTravel.illegal"
+      }
+    },
+    {
+      "name": "restore while a draft is being edited is illegal",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "editing",
+        "accepted": [
+          {
+            "target": {
+              "mutation": "b",
+              "position": 5
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                11,
+                2
+              ]
+            }
+          }
+        ],
+        "pending": {
+          "target": {
+            "mutation": "a",
+            "position": 2
+          },
+          "original": {
+            "kind": "input",
+            "schema": "s.demo.op",
+            "payload": [
+              10,
+              1
+            ]
+          },
+          "replacement": {
+            "kind": "input",
+            "schema": "s.demo.op",
+            "payload": [
+              10,
+              1
+            ]
+          },
+          "returnStage": "reviewing"
+        },
+        "report": {
+          "fromPosition": 2,
+          "outcomes": [
+            {
+              "mutationId": "a",
+              "editId": "edit-a",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": true,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "b",
+              "editId": "edit-b",
+              "opIndex": 0,
+              "worst": "warning",
+              "messages": [
+                {
+                  "level": "warning",
+                  "code": "mutation.partial",
+                  "message": "1 of 2 targets is missing",
+                  "target": [
+                    "node",
+                    "7"
+                  ],
+                  "opIndex": 0
+                }
+              ],
+              "superseded": false,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "c",
+              "editId": "edit-c",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": false,
+              "withdrawn": false
+            }
+          ],
+          "worst": "warning"
+        },
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "restore",
+        "generation": 5,
+        "target": "b"
+      },
+      "expect": {
+        "rejection": "timeTravel.illegal"
+      }
+    },
+    {
+      "name": "a stale restore is a silent no-op",
+      "session": {
+        "id": 3,
+        "generation": 5,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "reviewing",
+        "accepted": [
+          {
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          },
+          {
+            "target": {
+              "mutation": "b",
+              "position": 5
+            },
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                11,
+                2
+              ]
+            }
+          }
+        ],
+        "pending": null,
+        "report": {
+          "fromPosition": 2,
+          "outcomes": [
+            {
+              "mutationId": "a",
+              "editId": "edit-a",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": true,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "b",
+              "editId": "edit-b",
+              "opIndex": 0,
+              "worst": "warning",
+              "messages": [
+                {
+                  "level": "warning",
+                  "code": "mutation.partial",
+                  "message": "1 of 2 targets is missing",
+                  "target": [
+                    "node",
+                    "7"
+                  ],
+                  "opIndex": 0
+                }
+              ],
+              "superseded": false,
+              "withdrawn": false
+            },
+            {
+              "mutationId": "c",
+              "editId": "edit-c",
+              "opIndex": 0,
+              "worst": null,
+              "messages": [],
+              "superseded": false,
+              "withdrawn": false
+            }
+          ],
+          "worst": "warning"
+        },
+        "progress": null,
+        "fault": null
+      },
+      "event": {
+        "type": "restore",
+        "generation": 4,
+        "target": "a"
+      },
+      "expect": {
+        "rejection": "timeTravel.stale"
+      }
+    },
+    {
       "name": "a stale draft is a silent no-op",
       "session": {
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -4329,7 +5818,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -4429,7 +5917,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -4453,7 +5940,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -4507,7 +5993,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "replaying",
@@ -4559,7 +6044,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -4655,7 +6139,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "reviewing",
@@ -4747,7 +6230,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -4800,7 +6282,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "reviewing",
@@ -4849,7 +6330,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "reviewing",
@@ -4941,7 +6421,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "choosing",
@@ -5037,7 +6516,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "choosing",
@@ -5132,7 +6610,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "finalizing",
@@ -5252,7 +6729,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "choosing",
@@ -5348,7 +6824,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "finalizing",
@@ -5469,7 +6944,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "finalizing",
@@ -5562,7 +7036,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "replaying",
@@ -5640,7 +7113,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "finalizing",
@@ -5732,7 +7204,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "inactive",
@@ -5756,7 +7227,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "reviewing",
@@ -5841,7 +7311,6 @@
       "event": {
         "type": "baseMoved",
         "base": {
-          "storeGeneration": 11,
           "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
         },
         "positions": [
@@ -5861,7 +7330,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 11,
               "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
             },
             "stage": "replaying",
@@ -5939,7 +7407,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -6032,7 +7499,6 @@
       "event": {
         "type": "baseMoved",
         "base": {
-          "storeGeneration": 11,
           "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
         },
         "positions": [
@@ -6056,7 +7522,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 11,
               "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
             },
             "stage": "editing",
@@ -6126,7 +7591,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -6139,7 +7603,6 @@
       "event": {
         "type": "baseMoved",
         "base": {
-          "storeGeneration": 11,
           "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
         },
         "positions": [
@@ -6163,7 +7626,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 11,
               "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
             },
             "stage": "inactive",
@@ -6183,7 +7645,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "finalizing",
@@ -6268,7 +7729,6 @@
       "event": {
         "type": "baseMoved",
         "base": {
-          "storeGeneration": 11,
           "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
         },
         "positions": [
@@ -6292,7 +7752,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 11,
               "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
             },
             "stage": "finalizing",
@@ -6384,7 +7843,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 11,
           "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
         },
         "stage": "reviewing",
@@ -6469,7 +7927,6 @@
       "event": {
         "type": "baseMoved",
         "base": {
-          "storeGeneration": 11,
           "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
         },
         "positions": [
@@ -6497,7 +7954,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -6548,7 +8004,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "inactive",
@@ -6575,7 +8030,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "finalizing",
@@ -6670,7 +8124,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -6722,7 +8175,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "reviewing",
@@ -6771,7 +8223,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "reviewing",
@@ -6820,7 +8271,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "replaying",
@@ -6898,7 +8348,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "reviewing",
@@ -6990,7 +8439,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "replaying",
@@ -7068,7 +8516,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -7124,7 +8571,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -7181,7 +8627,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "reviewing",
@@ -7201,7 +8646,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -7258,7 +8702,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "finalizing",
@@ -7355,7 +8798,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -7412,7 +8854,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -7465,7 +8906,6 @@
             "id": 3,
             "generation": 5,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "reviewing",
@@ -7514,7 +8954,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -7539,7 +8978,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "choosing",
@@ -7639,7 +9077,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "choosing",
@@ -7739,7 +9176,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "choosing",
@@ -7839,7 +9275,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "choosing",
@@ -7935,7 +9370,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "finalizing",
@@ -8056,7 +9490,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "choosing",
@@ -8152,7 +9585,6 @@
             "id": 3,
             "generation": 6,
             "base": {
-              "storeGeneration": 10,
               "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
             },
             "stage": "finalizing",
@@ -8275,7 +9707,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -8451,7 +9882,6 @@
         "id": 1,
         "generation": 4,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -8468,7 +9898,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -8761,7 +10190,854 @@
         "id": 1,
         "generation": 6,
         "base": {
-          "storeGeneration": 10,
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "inactive",
+        "accepted": [],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": null
+      }
+    },
+    {
+      "name": "a blocking mutation is withdrawn from its history row, the review becomes ready and finalizes as overwrite",
+      "initial": {
+        "id": 0,
+        "generation": 0,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "inactive",
+        "accepted": [],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "begin",
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "original": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                1
+              ]
+            }
+          },
+          "expect": {
+            "stage": "editing",
+            "effects": [
+              "showPreview"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "draft",
+            "generation": 1,
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          },
+          "expect": {
+            "stage": "editing",
+            "effects": [
+              "showPreview"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "accept",
+            "generation": 1
+          },
+          "expect": {
+            "stage": "replaying",
+            "effects": [
+              "startReplay"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "replayCompleted",
+            "generation": 2,
+            "report": {
+              "fromPosition": 2,
+              "outcomes": [
+                {
+                  "mutationId": "a",
+                  "editId": "edit-a",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": true,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "b",
+                  "editId": "edit-b",
+                  "opIndex": 0,
+                  "worst": "error",
+                  "messages": [
+                    {
+                      "level": "error",
+                      "code": "mutation.target-missing",
+                      "message": "every target is missing",
+                      "opIndex": 0
+                    }
+                  ],
+                  "superseded": false,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "c",
+                  "editId": "edit-c",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": false,
+                  "withdrawn": false
+                }
+              ],
+              "worst": "error"
+            }
+          },
+          "expect": {
+            "stage": "reviewing",
+            "effects": []
+          }
+        },
+        {
+          "event": {
+            "type": "requestFinalize",
+            "generation": 2
+          },
+          "expect": {
+            "rejection": "timeTravel.blocked"
+          }
+        },
+        {
+          "event": {
+            "type": "beginWithdrawn",
+            "target": {
+              "mutation": "b",
+              "position": 5
+            },
+            "original": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                11,
+                1
+              ]
+            }
+          },
+          "expect": {
+            "stage": "editing",
+            "effects": [
+              "showPreview"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "accept",
+            "generation": 3
+          },
+          "expect": {
+            "stage": "replaying",
+            "effects": [
+              "startReplay"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "replayCompleted",
+            "generation": 4,
+            "report": {
+              "fromPosition": 2,
+              "outcomes": [
+                {
+                  "mutationId": "a",
+                  "editId": "edit-a",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": true,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "b",
+                  "editId": "edit-b",
+                  "opIndex": 0,
+                  "worst": "warning",
+                  "messages": [
+                    {
+                      "level": "warning",
+                      "code": "mutation.partial",
+                      "message": "1 of 2 targets is missing",
+                      "target": [
+                        "node",
+                        "7"
+                      ],
+                      "opIndex": 0
+                    }
+                  ],
+                  "superseded": false,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "c",
+                  "editId": "edit-c",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": false,
+                  "withdrawn": false
+                }
+              ],
+              "worst": "warning"
+            }
+          },
+          "expect": {
+            "stage": "reviewing",
+            "effects": []
+          }
+        },
+        {
+          "event": {
+            "type": "requestFinalize",
+            "generation": 4
+          },
+          "expect": {
+            "stage": "choosing",
+            "effects": [
+              "openFinalizePrompt"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "choose",
+            "generation": 4,
+            "choice": {
+              "kind": "overwrite"
+            }
+          },
+          "expect": {
+            "stage": "finalizing",
+            "effects": [
+              "commitOverwrite"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "finalized",
+            "generation": 5
+          },
+          "expect": {
+            "stage": "inactive",
+            "effects": [
+              "close"
+            ]
+          }
+        }
+      ],
+      "final": {
+        "id": 1,
+        "generation": 6,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "inactive",
+        "accepted": [],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": null
+      }
+    },
+    {
+      "name": "a mutation withdrawn from its row with no session open is discarded and leaves time travel",
+      "initial": {
+        "id": 0,
+        "generation": 0,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "inactive",
+        "accepted": [],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "beginWithdrawn",
+            "target": {
+              "mutation": "c",
+              "position": 9
+            },
+            "original": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                12,
+                1
+              ]
+            }
+          },
+          "expect": {
+            "stage": "editing",
+            "effects": [
+              "showPreview"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "begin",
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "original": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                1
+              ]
+            }
+          },
+          "expect": {
+            "rejection": "timeTravel.blocked"
+          }
+        },
+        {
+          "event": {
+            "type": "discard",
+            "generation": 1
+          },
+          "expect": {
+            "stage": "inactive",
+            "effects": [
+              "close"
+            ]
+          }
+        }
+      ],
+      "final": {
+        "id": 1,
+        "generation": 2,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "inactive",
+        "accepted": [],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": null
+      }
+    },
+    {
+      "name": "an accepted withdrawal is restored from its row and the review blocks again",
+      "initial": {
+        "id": 0,
+        "generation": 0,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "inactive",
+        "accepted": [],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "begin",
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "original": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                1
+              ]
+            }
+          },
+          "expect": {
+            "stage": "editing",
+            "effects": [
+              "showPreview"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "draft",
+            "generation": 1,
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          },
+          "expect": {
+            "stage": "editing",
+            "effects": [
+              "showPreview"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "accept",
+            "generation": 1
+          },
+          "expect": {
+            "stage": "replaying",
+            "effects": [
+              "startReplay"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "replayCompleted",
+            "generation": 2,
+            "report": {
+              "fromPosition": 2,
+              "outcomes": [
+                {
+                  "mutationId": "a",
+                  "editId": "edit-a",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": true,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "b",
+                  "editId": "edit-b",
+                  "opIndex": 0,
+                  "worst": "error",
+                  "messages": [
+                    {
+                      "level": "error",
+                      "code": "mutation.target-missing",
+                      "message": "every target is missing",
+                      "opIndex": 0
+                    }
+                  ],
+                  "superseded": false,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "c",
+                  "editId": "edit-c",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": false,
+                  "withdrawn": false
+                }
+              ],
+              "worst": "error"
+            }
+          },
+          "expect": {
+            "stage": "reviewing",
+            "effects": []
+          }
+        },
+        {
+          "event": {
+            "type": "beginWithdrawn",
+            "target": {
+              "mutation": "b",
+              "position": 5
+            },
+            "original": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                11,
+                1
+              ]
+            }
+          },
+          "expect": {
+            "stage": "editing",
+            "effects": [
+              "showPreview"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "restore",
+            "generation": 3,
+            "target": "a"
+          },
+          "expect": {
+            "rejection": "timeTravel.illegal"
+          }
+        },
+        {
+          "event": {
+            "type": "accept",
+            "generation": 3
+          },
+          "expect": {
+            "stage": "replaying",
+            "effects": [
+              "startReplay"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "replayCompleted",
+            "generation": 4,
+            "report": {
+              "fromPosition": 2,
+              "outcomes": [
+                {
+                  "mutationId": "a",
+                  "editId": "edit-a",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": true,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "b",
+                  "editId": "edit-b",
+                  "opIndex": 0,
+                  "worst": "warning",
+                  "messages": [
+                    {
+                      "level": "warning",
+                      "code": "mutation.partial",
+                      "message": "1 of 2 targets is missing",
+                      "target": [
+                        "node",
+                        "7"
+                      ],
+                      "opIndex": 0
+                    }
+                  ],
+                  "superseded": false,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "c",
+                  "editId": "edit-c",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": false,
+                  "withdrawn": false
+                }
+              ],
+              "worst": "warning"
+            }
+          },
+          "expect": {
+            "stage": "reviewing",
+            "effects": []
+          }
+        },
+        {
+          "event": {
+            "type": "restore",
+            "generation": 4,
+            "target": "b"
+          },
+          "expect": {
+            "stage": "replaying",
+            "effects": [
+              "startReplay"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "replayCompleted",
+            "generation": 5,
+            "report": {
+              "fromPosition": 2,
+              "outcomes": [
+                {
+                  "mutationId": "a",
+                  "editId": "edit-a",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": true,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "b",
+                  "editId": "edit-b",
+                  "opIndex": 0,
+                  "worst": "error",
+                  "messages": [
+                    {
+                      "level": "error",
+                      "code": "mutation.target-missing",
+                      "message": "every target is missing",
+                      "opIndex": 0
+                    }
+                  ],
+                  "superseded": false,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "c",
+                  "editId": "edit-c",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": false,
+                  "withdrawn": false
+                }
+              ],
+              "worst": "error"
+            }
+          },
+          "expect": {
+            "stage": "reviewing",
+            "effects": []
+          }
+        },
+        {
+          "event": {
+            "type": "requestFinalize",
+            "generation": 5
+          },
+          "expect": {
+            "rejection": "timeTravel.blocked"
+          }
+        },
+        {
+          "event": {
+            "type": "restore",
+            "generation": 5,
+            "target": "b"
+          },
+          "expect": {
+            "rejection": "timeTravel.illegal"
+          }
+        },
+        {
+          "event": {
+            "type": "exit"
+          },
+          "expect": {
+            "stage": "inactive",
+            "effects": [
+              "close"
+            ]
+          }
+        }
+      ],
+      "final": {
+        "id": 1,
+        "generation": 6,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "inactive",
+        "accepted": [],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": null
+      }
+    },
+    {
+      "name": "restoring the only accepted draft leaves time travel",
+      "initial": {
+        "id": 0,
+        "generation": 0,
+        "base": {
+          "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "stage": "inactive",
+        "accepted": [],
+        "pending": null,
+        "report": null,
+        "progress": null,
+        "fault": null
+      },
+      "steps": [
+        {
+          "event": {
+            "type": "begin",
+            "target": {
+              "mutation": "a",
+              "position": 2
+            },
+            "original": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                1
+              ]
+            }
+          },
+          "expect": {
+            "stage": "editing",
+            "effects": [
+              "showPreview"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "draft",
+            "generation": 1,
+            "replacement": {
+              "kind": "input",
+              "schema": "s.demo.op",
+              "payload": [
+                10,
+                2
+              ]
+            }
+          },
+          "expect": {
+            "stage": "editing",
+            "effects": [
+              "showPreview"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "accept",
+            "generation": 1
+          },
+          "expect": {
+            "stage": "replaying",
+            "effects": [
+              "startReplay"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "replayCompleted",
+            "generation": 2,
+            "report": {
+              "fromPosition": 2,
+              "outcomes": [
+                {
+                  "mutationId": "a",
+                  "editId": "edit-a",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": true,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "b",
+                  "editId": "edit-b",
+                  "opIndex": 0,
+                  "worst": "warning",
+                  "messages": [
+                    {
+                      "level": "warning",
+                      "code": "mutation.partial",
+                      "message": "1 of 2 targets is missing",
+                      "target": [
+                        "node",
+                        "7"
+                      ],
+                      "opIndex": 0
+                    }
+                  ],
+                  "superseded": false,
+                  "withdrawn": false
+                },
+                {
+                  "mutationId": "c",
+                  "editId": "edit-c",
+                  "opIndex": 0,
+                  "worst": null,
+                  "messages": [],
+                  "superseded": false,
+                  "withdrawn": false
+                }
+              ],
+              "worst": "warning"
+            }
+          },
+          "expect": {
+            "stage": "reviewing",
+            "effects": []
+          }
+        },
+        {
+          "event": {
+            "type": "restore",
+            "generation": 2,
+            "target": "a"
+          },
+          "expect": {
+            "stage": "inactive",
+            "effects": [
+              "close"
+            ]
+          }
+        },
+        {
+          "event": {
+            "type": "exit"
+          },
+          "expect": {
+            "rejection": "timeTravel.illegal"
+          }
+        }
+      ],
+      "final": {
+        "id": 1,
+        "generation": 3,
+        "base": {
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -8778,7 +11054,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -8860,7 +11135,6 @@
           "event": {
             "type": "baseMoved",
             "base": {
-              "storeGeneration": 11,
               "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
             },
             "positions": [
@@ -8945,7 +11219,6 @@
           "event": {
             "type": "baseMoved",
             "base": {
-              "storeGeneration": 11,
               "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
             },
             "positions": [
@@ -9029,7 +11302,6 @@
         "id": 1,
         "generation": 4,
         "base": {
-          "storeGeneration": 11,
           "contentRevision": "2222222222222222222222222222222222222222222222222222222222222222"
         },
         "stage": "inactive",
@@ -9046,7 +11318,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -9125,7 +11396,6 @@
         "id": 1,
         "generation": 2,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -9142,7 +11412,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -9276,7 +11545,6 @@
         "id": 1,
         "generation": 3,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -9293,7 +11561,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -9491,7 +11758,6 @@
         "id": 1,
         "generation": 4,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -9508,7 +11774,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -9774,7 +12039,6 @@
         "id": 1,
         "generation": 6,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -9791,7 +12055,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -9982,7 +12245,6 @@
         "id": 1,
         "generation": 4,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "choosing",
@@ -10057,7 +12319,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -10252,7 +12513,6 @@
         "id": 1,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -10269,7 +12529,6 @@
         "id": 0,
         "generation": 0,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -10446,7 +12705,6 @@
         "id": 1,
         "generation": 4,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -10466,7 +12724,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -10484,7 +12741,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -10524,7 +12780,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "editing",
@@ -10579,7 +12834,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "inactive",
@@ -10612,7 +12866,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -10630,7 +12883,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "reviewing",
@@ -10709,7 +12961,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "replaying",
@@ -10785,7 +13036,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "choosing",
@@ -10857,7 +13107,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "reviewing",
@@ -10904,7 +13153,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "reviewing",
@@ -10951,7 +13199,6 @@
         "id": 3,
         "generation": 5,
         "base": {
-          "storeGeneration": 10,
           "contentRevision": "1111111111111111111111111111111111111111111111111111111111111111"
         },
         "stage": "reviewing",
@@ -11148,6 +13395,21 @@
       "key": "memberEdited",
       "en": "History of a composed part edited",
       "de": "Verlauf eines eingebetteten Teils bearbeitet"
+    },
+    {
+      "key": "refusalNotWithdrawable",
+      "en": "This mutation cannot be withdrawn here",
+      "de": "Diese Mutation kann hier nicht zurückgezogen werden"
+    },
+    {
+      "key": "refusalEditorClosed",
+      "en": "The draft editor is closed: open the mutation again",
+      "de": "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen"
+    },
+    {
+      "key": "refusalReadOnly",
+      "en": "History cannot be edited in a read-only view",
+      "de": "Der Verlauf kann in einer schreibgeschützten Ansicht nicht bearbeitet werden"
     }
   ],
   "codeLabels": [
@@ -11222,6 +13484,14 @@
     {
       "code": "timeTravel.member-gone",
       "key": "refusalMemberGone"
+    },
+    {
+      "code": "timeTravel.not-withdrawable",
+      "key": "refusalNotWithdrawable"
+    },
+    {
+      "code": "timeTravel.editor-closed",
+      "key": "refusalEditorClosed"
     }
   ]
 }

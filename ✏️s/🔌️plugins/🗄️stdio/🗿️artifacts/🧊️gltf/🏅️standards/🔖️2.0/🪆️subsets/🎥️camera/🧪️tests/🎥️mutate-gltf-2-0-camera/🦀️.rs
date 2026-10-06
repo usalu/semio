@@ -28,7 +28,7 @@ fn mutable_input(ctx: &Context, kind: &str) -> Result<Vec<u8>, String> {
         "reorder-cameras" => "shared://🔀️reorder-cameras-applied/⬅️before.gltf",
         other => return Err(format!("unknown camera fixture kind: {other}")),
     };
-    let copy = ctx.copy_fixture(uri, Some("input.gltf"))?;
+    let copy = ctx.copy_input(uri, Some("input.gltf"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

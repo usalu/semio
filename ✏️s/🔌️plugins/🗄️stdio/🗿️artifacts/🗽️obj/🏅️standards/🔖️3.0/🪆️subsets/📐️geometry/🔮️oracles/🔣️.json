@@ -115,7 +115,7 @@
     {
       "id": "semantic-obj-3-0-v1",
       "description": "Wavefront OBJ documents compared by the `tobj` triangle mesh (vertex set, face topology, counts) AND by the document surface a mesh reader cannot see: declared v/vt/vn row counts with their per-component extent and totals, the mtllib reference, the g/o membership spans, the usemtl/s run starts and the retained comment lines. Unlike the shared semantic-mesh-v1 profile, none of those are writer freedom here -- ObjMutation's set-mtllib/set-usemtl/set-smoothing-groups/set-unknown-statements and the four name-keyed g/o kinds mutate exactly that surface, so ignoring it would leave 14 of the 22 declared kinds unobservable. Only byte length and decimal precision remain producer freedom; per-component extents and totals are compared under the mesh tolerance so the two producers' differing decimal formatting never registers as a divergence.",
-      "tolerance": 1e-05,
+      "tolerance": 0.00001,
       "ignoreKeys": [
         "byteLength",
         "fileSize",
@@ -887,9 +887,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "pattern-shell",
       "class": "third-party-generated",
       "target": {
@@ -928,7 +927,6 @@
       "notes": "One base input document exercising all 22 declared obj@3.0 mutation kinds: 6 v rows (one with an explicit w, one referenced by no face), 6 vt and 4 vn rows (likewise one unreferenced each), 5 f rows across 2 g bands and 2 o objects, an mtllib, two usemtl runs and two s runs starting at different face indices (one of them `s off`), and 2 retained comment lines. The unreferenced rows are deliberate: tobj re-indexes per model and drops every row no face references, so those kinds move the document projection and NOTHING in the mesh projection — measured, 14 of the 22 kinds move only the document half and set-face moves only the mesh half. OBJ declares no physical length or angle unit, so `unitless`/`degree` are the schema-required placeholders, not claims. OBJ has no reference WRITER in the Rust ecosystem, so the bytes are written by the generator's own grammar emitter and ADMITTED by the registered tobj 4 reader before being written to disk (3 models, 13 referenced positions, 15 triangulated indices) — the same already-recorded precedent this subset's oracle and the shared mesh::oracle_create_obj rest on."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "no-mutation-no-op",
       "class": "third-party-generated",
       "target": {
@@ -974,7 +972,6 @@
       "notes": "Identity — NoMutation's diff is empty; before and after bytes are byte-identical. tobj must witness zero difference."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -1022,7 +1019,6 @@
       "notes": "Whole-document replace: a materially different 1-triangle document (fewer vertices, different positions, no shared face) — tobj sees a different vertexCount/triangleCount/positions."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-vertex-applied",
       "class": "third-party-generated",
       "target": {
@@ -1070,7 +1066,6 @@
       "notes": "SetVertex{index:1,...} on a vertex BOTH faces reference (in-place replace, no index shift) — tobj's resolved position for that corner moves from (1,0,0) to (1,0,5)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-vertex-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {
@@ -1111,7 +1106,6 @@
       "notes": "SetVertex{index:9,...} — base.vertices.len() is 4; validate_indexed_targets's invalid-modify-index rejects (../../🧬️schema/🔺️diff/🦀️.rs)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-texcoord-applied",
       "class": "third-party-generated",
       "target": {
@@ -1159,7 +1153,6 @@
       "notes": "SetTexcoord{index:1,...} on a texcoord a face references — tobj's per-corner texcoords array moves."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-texcoord-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {
@@ -1200,7 +1193,6 @@
       "notes": "SetTexcoord{index:9,...} — base.texcoords.len() is 4; invalid-modify-index rejects."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-normal-applied",
       "class": "third-party-generated",
       "target": {
@@ -1248,7 +1240,6 @@
       "notes": "SetNormal{index:0,...} (the sole declared normal, referenced by both faces) — tobj's per-corner normals array flips."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-normal-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {
@@ -1289,7 +1280,6 @@
       "notes": "SetNormal{index:9,...} — base.normals.len() is 1; invalid-modify-index rejects."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-face-applied",
       "class": "third-party-generated",
       "target": {
@@ -1337,7 +1327,6 @@
       "notes": "InsertFace{index:1,...} between the two declared faces — tobj's triangleCount goes 2 -> 3."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-face-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {
@@ -1378,7 +1367,6 @@
       "notes": "InsertFace{index:9,...} — base.faces.len() is 2 (evolving length 2); invalid-add-index rejects (index > length)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-face-applied",
       "class": "third-party-generated",
       "target": {
@@ -1426,7 +1414,6 @@
       "notes": "RemoveFace{index:0} — tobj's triangleCount goes 2 -> 1."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-face-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -1467,7 +1454,6 @@
       "notes": "RemoveFace{index:9} — base.faces.len() is 2; invalid-remove-index rejects."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-face-applied",
       "class": "third-party-generated",
       "target": {
@@ -1515,7 +1501,6 @@
       "notes": "SetFace{index:0,...} — same 3 corners, reversed winding; tobj's triangles[0] index order changes even though vertexCount/triangleCount hold."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-face-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {
@@ -1556,7 +1541,6 @@
       "notes": "SetFace{index:9,...} — base.faces.len() is 2; invalid-modify-index rejects."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-group-applied",
       "class": "third-party-generated",
       "target": {
@@ -1604,7 +1588,6 @@
       "notes": "SetGroup{name:\"alpha\",faces:[0,1]} — face 1 was ungrouped (bare `g` reset, tobj's own \"unnamed_object\" fallback); after, both faces fall continuously under `g alpha`, so tobj merges 2 models into 1 named \"alpha\" with 2 triangles."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-group-applied",
       "class": "third-party-generated",
       "target": {
@@ -1652,7 +1635,6 @@
       "notes": "RemoveGroup{name:\"beta\"} — face 1 falls back to no group; tobj's second model's NAME changes from \"beta\" to its own \"unnamed_object\" fallback."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-group-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -1693,7 +1675,6 @@
       "notes": "RemoveGroup{name:\"gamma\"} — \"gamma\" is not in base.groups; validate_named_targets's invalid-remove-target rejects."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-object-applied",
       "class": "third-party-generated",
       "target": {
@@ -1741,7 +1722,6 @@
       "notes": "SetObject{name:\"beta\",faces:[1]} — face 1 was under \"alpha\" (1 merged model, 2 triangles); \"beta\" is appended after \"alpha\" in the objects list so it wins face 1 on render, and tobj now reports 2 models, \"alpha\" (1 tri) and \"beta\" (1 tri)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-object-applied",
       "class": "third-party-generated",
       "target": {
@@ -1789,7 +1769,6 @@
       "notes": "RemoveObject{name:\"beta\"} — face 1 falls back to no object; tobj's second model's NAME changes from \"beta\" to its own \"unnamed_object\" fallback."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-object-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -1830,7 +1809,6 @@
       "notes": "RemoveObject{name:\"gamma\"} — \"gamma\" is not in base.objects; validate_named_targets's invalid-remove-target rejects."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-set-smoothing-groups",
       "class": "handcrafted",
       "target": {
@@ -1879,7 +1857,6 @@
       "comparisonPipeline": "obj-3-0-document-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-insert-vertex",
       "class": "handcrafted",
       "target": {
@@ -1928,7 +1905,6 @@
       "comparisonPipeline": "obj-3-0-document-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-remove-vertex",
       "class": "handcrafted",
       "target": {
@@ -1977,7 +1953,6 @@
       "comparisonPipeline": "obj-3-0-document-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-insert-texcoord",
       "class": "handcrafted",
       "target": {
@@ -2026,7 +2001,6 @@
       "comparisonPipeline": "obj-3-0-document-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-remove-texcoord",
       "class": "handcrafted",
       "target": {
@@ -2075,7 +2049,6 @@
       "comparisonPipeline": "obj-3-0-document-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-insert-normal",
       "class": "handcrafted",
       "target": {
@@ -2124,7 +2097,6 @@
       "comparisonPipeline": "obj-3-0-document-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-remove-normal",
       "class": "handcrafted",
       "target": {
@@ -2173,7 +2145,6 @@
       "comparisonPipeline": "obj-3-0-document-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-set-unknown-statements",
       "class": "handcrafted",
       "target": {

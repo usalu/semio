@@ -12,14 +12,6 @@
 
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::Part21Document;
-#[path="🚦️native/🦀️.rs"]
-mod native;
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite_snapshot;
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;
-
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id — distinct from `4`'s `"stdio.ifc"` so the two
 /// standards' document codecs never collide in the shared `store::document_codec_registry`.
@@ -96,15 +88,6 @@ pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String>
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Codec
-impl store::ArtifactDsl for Ifc2x3Snapshot {
-    const EXTENSION: &'static str = "ifc";
-    fn envelope_id() -> &'static str { STDIO_IFC2X3_DOCUMENT_SCHEMA }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { native::parse_text(text) }
-    fn print_dsl(&self) -> String { native::print_text(self) }
-}
-impl store::ArtifactPack for Ifc2x3Snapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as semio_framework_os_kernel::ArtifactSqliteSnapshot>::sqlite_codec()) }
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { native::encode_pack(self, options) }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { native::decode_pack(bytes, options) }
-}
+
+
 //#endregion 🔖️Codec

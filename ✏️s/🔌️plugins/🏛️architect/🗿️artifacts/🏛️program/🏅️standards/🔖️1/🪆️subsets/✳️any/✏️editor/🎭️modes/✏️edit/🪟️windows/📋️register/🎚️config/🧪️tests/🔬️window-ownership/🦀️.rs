@@ -103,10 +103,10 @@ fn architect_window_ownership_interactive_classification_matches_retained_owners
 #[test]
 fn architect_window_ownership_report_handler_preserves_exact_invocation_identity() {
     use crate::editor::architect::commands::analysis::run_report;
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use semio_framework_plugin::{ArtifactView, HistoryView, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-    fn authored_id(emit: &semio_framework_plugin::Emit<crate::op::ProgramMutation, crate::editor::architect::config::ArchitectConfigMutation>) -> crate::EntityId {
+    fn authored_id(emit: &semio_framework_plugin::Emit<crate::standards::v1::subsets::any::schema::mutations::ProgramMutation, crate::editor::architect::config::ArchitectConfigMutation>) -> crate::EntityId {
         let Some(ProgramMutation::CreateReportRecord(payload)) = emit.artifact_mutations.first() else { panic!("one authored ReportRecord") };
         assert_eq!(emit.artifact_mutations.len(), 1);
         payload.report_record.header.id.clone()

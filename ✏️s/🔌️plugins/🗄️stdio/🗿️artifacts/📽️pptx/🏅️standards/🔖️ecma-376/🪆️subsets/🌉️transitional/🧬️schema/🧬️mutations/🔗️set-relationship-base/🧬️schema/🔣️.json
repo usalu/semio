@@ -9,7 +9,21 @@
   ],
   "properties": {
     "base": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Relationship base",
+          "de": "Beziehungsbasis"
+        },
+        "description": {
+          "en": "Base URI of the relationship types of the conformance class.",
+          "de": "Basis-URI der Beziehungstypen der Konformitätsklasse."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

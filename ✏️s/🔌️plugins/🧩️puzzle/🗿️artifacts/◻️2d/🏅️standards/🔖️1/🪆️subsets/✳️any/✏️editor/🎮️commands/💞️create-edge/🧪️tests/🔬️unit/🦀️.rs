@@ -2,7 +2,7 @@
 //! engagement line that drives the same arm.
 
 use crate::editor::puzzle2d::unit_tests::context::*;
-use crate::editor::puzzle2d::{fixture_edges, fixture_nodes};
+use crate::editor::puzzle2d::{board_snapshot_edges, board_snapshot_nodes};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::InvocationResult;
 use serde_json::{json, Value};
@@ -24,7 +24,7 @@ fn two_seed_app() -> (Puzzle2dApp, String, String) {
     let source = first_node_id(&app);
     select_id(&mut app, crate::editor::puzzle2d::PUZZLE2D_GRANULARITY_NODE, &source).expect("select seed");
     dispatch(&mut app, "duplicateSelection", None, None).expect("duplicate");
-    let clone = fixture_nodes(&fixture_of(&app))
+    let clone = board_snapshot_nodes(&fixture_of(&app))
         .iter()
         .filter_map(|node| node.get("id").and_then(Value::as_str))
         .find(|id| *id != source)
@@ -37,14 +37,14 @@ fn two_seed_app() -> (Puzzle2dApp, String, String) {
 #[test]
 fn create_edge_connects_two_compatible_open_handles() {
     let (mut app, source, clone) = two_seed_app();
-    let before = fixture_edges(&fixture_of(&app)).len();
+    let before = board_snapshot_edges(&fixture_of(&app)).len();
     let result = dispatch(&mut app, "createEdge", Some(&json!({ "source": format!("{source}:v0"), "target": format!("{clone}:v0") })), None).expect("createEdge");
     assert!(notices(&result).is_empty(), "a legal connect raises no notice: {:?}", result.requested_effects);
-    let edges = fixture_edges(&fixture_of(&app)).to_vec();
+    let edges = board_snapshot_edges(&fixture_of(&app)).to_vec();
     assert_eq!(edges.len(), before + 1, "createEdge splices exactly one edge");
     assert_eq!(edges.last().and_then(|edge| edge.get("source")).and_then(Value::as_str), Some(format!("{source}:v0").as_str()), "the edge keeps the requested direction");
     dispatch(&mut app, "undo", None, None).expect("undo");
-    assert_eq!(fixture_edges(&fixture_of(&app)).len(), before, "ONE undo takes the connect back");
+    assert_eq!(board_snapshot_edges(&fixture_of(&app)).len(), before, "ONE undo takes the connect back");
     close_app(&mut app);
 }
 
@@ -78,9 +78,9 @@ fn create_edge_refuses_an_occupied_handle() {
 fn delete_edge_drops_the_named_edge() {
     let (mut app, source, clone) = two_seed_app();
     dispatch(&mut app, "createEdge", Some(&json!({ "source": format!("{source}:v0"), "target": format!("{clone}:v0") })), None).expect("connect");
-    let id = fixture_edges(&fixture_of(&app)).last().and_then(|edge| edge.get("id")).and_then(Value::as_str).expect("edge id").to_string();
+    let id = board_snapshot_edges(&fixture_of(&app)).last().and_then(|edge| edge.get("id")).and_then(Value::as_str).expect("edge id").to_string();
     dispatch(&mut app, "deleteEdge", Some(&json!({ "id": id })), None).expect("deleteEdge");
-    assert!(fixture_edges(&fixture_of(&app)).is_empty(), "deleteEdge removes the named edge");
+    assert!(board_snapshot_edges(&fixture_of(&app)).is_empty(), "deleteEdge removes the named edge");
     close_app(&mut app);
 }
 
@@ -90,6 +90,6 @@ fn delete_edge_drops_the_named_edge() {
 fn engagement_connect_line_creates_the_same_edge() {
     let (mut app, source, clone) = two_seed_app();
     dispatch(&mut app, "engagementSubmit", Some(&json!({ "value": format!("connect {source}:v0 {clone}:v0") })), None).expect("engagement connect");
-    assert_eq!(fixture_edges(&fixture_of(&app)).len(), 1, "the engagement line connects the named handles");
+    assert_eq!(board_snapshot_edges(&fixture_of(&app)).len(), 1, "the engagement line connects the named handles");
     close_app(&mut app);
 }

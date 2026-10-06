@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "general-intrinsic-bytes-fixture",
+      "sourcePath": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧬️intrinsic-bytes/🦀️.rs",
+      "targetPath": "🧰️framework/🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json",
+      "beforeLiteral": "../../../../../../../🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json",
+      "afterLiteral": "../../../../🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json",
+      "occurrences": 2
+    },
+    {
+      "id": "general-intrinsic-bytes-schema",
+      "sourcePath": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🧬️intrinsic-bytes/🦀️.rs",
+      "targetPath": "🧰️framework/🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧬️schema/🔣️.json",
+      "beforeLiteral": "../../../../../../../🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧬️schema/🔣️.json",
+      "afterLiteral": "../../../../🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧬️schema/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "id": "flow-mesh-component-picking",
+      "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🎒️mesh-pack-wire/🦀️.rs",
+      "targetPath": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json",
+      "beforeLiteral": "../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json",
+      "afterLiteral": "../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️component-picking/🔣️.json",
+      "occurrences": 1
+    }
+  ]
+}

@@ -1,0 +1,2342 @@
+[
+  {
+    "name": "flow",
+    "cap": "Flow",
+    "tables": 4,
+    "maxColumns": 12,
+    "schema": 1155,
+    "widths": {
+      "semio_flow_document": 2,
+      "semio_flow_node": 12,
+      "semio_flow_parameter": 5,
+      "semio_flow_edge": 9
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 6,
+        "valueBytes": 320,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "c004000000000000"
+                },
+                "y": {
+                  "bits": "400a000000000000"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 1,
+        "valueBytes": 24,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-0000000000000000",
+        "word": "0000000000000000",
+        "rows": 6,
+        "valueBytes": 320,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-0000000000000000",
+        "word": "0000000000000000",
+        "rows": 2,
+        "valueBytes": 117,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "0000000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-8000000000000000",
+        "word": "8000000000000000",
+        "rows": 6,
+        "valueBytes": 320,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "8000000000000000"
+                },
+                "y": {
+                  "bits": "8000000000000000"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-8000000000000000",
+        "word": "8000000000000000",
+        "rows": 2,
+        "valueBytes": 117,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "8000000000000000"
+                },
+                "y": {
+                  "bits": "8000000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-0000000000000001",
+        "word": "0000000000000001",
+        "rows": 6,
+        "valueBytes": 320,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "0000000000000001"
+                },
+                "y": {
+                  "bits": "0000000000000001"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-0000000000000001",
+        "word": "0000000000000001",
+        "rows": 2,
+        "valueBytes": 117,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "0000000000000001"
+                },
+                "y": {
+                  "bits": "0000000000000001"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-000fffffffffffff",
+        "word": "000fffffffffffff",
+        "rows": 6,
+        "valueBytes": 320,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "000fffffffffffff"
+                },
+                "y": {
+                  "bits": "000fffffffffffff"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-000fffffffffffff",
+        "word": "000fffffffffffff",
+        "rows": 2,
+        "valueBytes": 117,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "000fffffffffffff"
+                },
+                "y": {
+                  "bits": "000fffffffffffff"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-7ff0000000000000",
+        "word": "7ff0000000000000",
+        "rows": 6,
+        "valueBytes": 340,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "7ff0000000000000"
+                },
+                "y": {
+                  "bits": "7ff0000000000000"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-7ff0000000000000",
+        "word": "7ff0000000000000",
+        "rows": 2,
+        "valueBytes": 137,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "7ff0000000000000"
+                },
+                "y": {
+                  "bits": "7ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-fff0000000000000",
+        "word": "fff0000000000000",
+        "rows": 6,
+        "valueBytes": 340,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "fff0000000000000"
+                },
+                "y": {
+                  "bits": "fff0000000000000"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-fff0000000000000",
+        "word": "fff0000000000000",
+        "rows": 2,
+        "valueBytes": 137,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "fff0000000000000"
+                },
+                "y": {
+                  "bits": "fff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-7ff8000000000011",
+        "word": "7ff8000000000011",
+        "rows": 6,
+        "valueBytes": 298,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "7ff8000000000011"
+                },
+                "y": {
+                  "bits": "7ff8000000000011"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-7ff8000000000011",
+        "word": "7ff8000000000011",
+        "rows": 2,
+        "valueBytes": 95,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "7ff8000000000011"
+                },
+                "y": {
+                  "bits": "7ff8000000000011"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-7ff0000000000007",
+        "word": "7ff0000000000007",
+        "rows": 6,
+        "valueBytes": 298,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "7ff0000000000007"
+                },
+                "y": {
+                  "bits": "7ff0000000000007"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-7ff0000000000007",
+        "word": "7ff0000000000007",
+        "rows": 2,
+        "valueBytes": 95,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "7ff0000000000007"
+                },
+                "y": {
+                  "bits": "7ff0000000000007"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-fff8000000000011",
+        "word": "fff8000000000011",
+        "rows": 6,
+        "valueBytes": 298,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "fff8000000000011"
+                },
+                "y": {
+                  "bits": "fff8000000000011"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-fff8000000000011",
+        "word": "fff8000000000011",
+        "rows": 2,
+        "valueBytes": 95,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "fff8000000000011"
+                },
+                "y": {
+                  "bits": "fff8000000000011"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      },
+      {
+        "id": "full-fff0000000000007",
+        "word": "fff0000000000007",
+        "rows": 6,
+        "valueBytes": 298,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "fff0000000000007"
+                },
+                "y": {
+                  "bits": "fff0000000000007"
+                }
+              },
+              "params": [
+                {
+                  "key": "same",
+                  "value": "first"
+                },
+                {
+                  "key": "same",
+                  "value": "second"
+                }
+              ]
+            },
+            {
+              "id": "target",
+              "kind": "output",
+              "label": "end",
+              "position": {
+                "x": {
+                  "bits": "0000000000000000"
+                },
+                "y": {
+                  "bits": "3ff0000000000000"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": [
+            {
+              "id": "edge",
+              "kind": "data",
+              "from": {
+                "node": "source",
+                "port": "out"
+              },
+              "to": {
+                "node": "target",
+                "port": "in"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "singleNodeEmptyRelations-fff0000000000007",
+        "word": "fff0000000000007",
+        "rows": 2,
+        "valueBytes": 95,
+        "sourceSnapshot": {
+          "schema": "stdio.semio.flow",
+          "nodes": [
+            {
+              "id": "source",
+              "kind": "input",
+              "label": "Grüße\u0000世界",
+              "position": {
+                "x": {
+                  "bits": "fff0000000000007"
+                },
+                "y": {
+                  "bits": "fff0000000000007"
+                }
+              },
+              "params": []
+            }
+          ],
+          "edges": []
+        }
+      }
+    ],
+    "rustBody": "let mut source=fixture();if case[\"id\"]==\"metadataRetainingEmpty\"{source.nodes.clear();source.edges.clear();}else if let Some(word)=case[\"word\"].as_str(){let value=f64::from_bits(u64::from_str_radix(word,16).unwrap());source.nodes[0].position=SemioPoint2{x:value,y:value};if case[\"id\"].as_str().unwrap().starts_with(\"singleNodeEmptyRelations-\"){source.nodes.truncate(1);source.nodes[0].params.clear();source.edges.clear();}}source",
+    "hydrate": "for(const node of source.nodes){node.position.x={bits:BigInt(\"0x\"+(node.position.x as unknown as {bits:string}).bits)};node.position.y={bits:BigInt(\"0x\"+(node.position.y as unknown as {bits:string}).bits)}",
+    "contract": {
+      "schemaBytes": 1155,
+      "tableWidths": {
+        "semio_flow_document": 2,
+        "semio_flow_node": 12,
+        "semio_flow_parameter": 5,
+        "semio_flow_edge": 9
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 6,
+          "valueBytes": 320,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "c004000000000000"
+                  },
+                  "y": {
+                    "bits": "400a000000000000"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "metadataRetainingEmpty",
+          "rows": 1,
+          "valueBytes": 24,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-0000000000000000",
+          "word": "0000000000000000",
+          "rows": 6,
+          "valueBytes": 320,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-0000000000000000",
+          "word": "0000000000000000",
+          "rows": 2,
+          "valueBytes": 117,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "0000000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-8000000000000000",
+          "word": "8000000000000000",
+          "rows": 6,
+          "valueBytes": 320,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "8000000000000000"
+                  },
+                  "y": {
+                    "bits": "8000000000000000"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-8000000000000000",
+          "word": "8000000000000000",
+          "rows": 2,
+          "valueBytes": 117,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "8000000000000000"
+                  },
+                  "y": {
+                    "bits": "8000000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-0000000000000001",
+          "word": "0000000000000001",
+          "rows": 6,
+          "valueBytes": 320,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000001"
+                  },
+                  "y": {
+                    "bits": "0000000000000001"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-0000000000000001",
+          "word": "0000000000000001",
+          "rows": 2,
+          "valueBytes": 117,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000001"
+                  },
+                  "y": {
+                    "bits": "0000000000000001"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-000fffffffffffff",
+          "word": "000fffffffffffff",
+          "rows": 6,
+          "valueBytes": 320,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "000fffffffffffff"
+                  },
+                  "y": {
+                    "bits": "000fffffffffffff"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-000fffffffffffff",
+          "word": "000fffffffffffff",
+          "rows": 2,
+          "valueBytes": 117,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "000fffffffffffff"
+                  },
+                  "y": {
+                    "bits": "000fffffffffffff"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-7ff0000000000000",
+          "word": "7ff0000000000000",
+          "rows": 6,
+          "valueBytes": 340,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "7ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "7ff0000000000000"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-7ff0000000000000",
+          "word": "7ff0000000000000",
+          "rows": 2,
+          "valueBytes": 137,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "7ff0000000000000"
+                  },
+                  "y": {
+                    "bits": "7ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-fff0000000000000",
+          "word": "fff0000000000000",
+          "rows": 6,
+          "valueBytes": 340,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "fff0000000000000"
+                  },
+                  "y": {
+                    "bits": "fff0000000000000"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-fff0000000000000",
+          "word": "fff0000000000000",
+          "rows": 2,
+          "valueBytes": 137,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "fff0000000000000"
+                  },
+                  "y": {
+                    "bits": "fff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-7ff8000000000011",
+          "word": "7ff8000000000011",
+          "rows": 6,
+          "valueBytes": 298,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "7ff8000000000011"
+                  },
+                  "y": {
+                    "bits": "7ff8000000000011"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-7ff8000000000011",
+          "word": "7ff8000000000011",
+          "rows": 2,
+          "valueBytes": 95,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "7ff8000000000011"
+                  },
+                  "y": {
+                    "bits": "7ff8000000000011"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-7ff0000000000007",
+          "word": "7ff0000000000007",
+          "rows": 6,
+          "valueBytes": 298,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "7ff0000000000007"
+                  },
+                  "y": {
+                    "bits": "7ff0000000000007"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-7ff0000000000007",
+          "word": "7ff0000000000007",
+          "rows": 2,
+          "valueBytes": 95,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "7ff0000000000007"
+                  },
+                  "y": {
+                    "bits": "7ff0000000000007"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-fff8000000000011",
+          "word": "fff8000000000011",
+          "rows": 6,
+          "valueBytes": 298,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "fff8000000000011"
+                  },
+                  "y": {
+                    "bits": "fff8000000000011"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-fff8000000000011",
+          "word": "fff8000000000011",
+          "rows": 2,
+          "valueBytes": 95,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "fff8000000000011"
+                  },
+                  "y": {
+                    "bits": "fff8000000000011"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        },
+        {
+          "id": "full-fff0000000000007",
+          "word": "fff0000000000007",
+          "rows": 6,
+          "valueBytes": 298,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "fff0000000000007"
+                  },
+                  "y": {
+                    "bits": "fff0000000000007"
+                  }
+                },
+                "params": [
+                  {
+                    "key": "same",
+                    "value": "first"
+                  },
+                  {
+                    "key": "same",
+                    "value": "second"
+                  }
+                ]
+              },
+              {
+                "id": "target",
+                "kind": "output",
+                "label": "end",
+                "position": {
+                  "x": {
+                    "bits": "0000000000000000"
+                  },
+                  "y": {
+                    "bits": "3ff0000000000000"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": [
+              {
+                "id": "edge",
+                "kind": "data",
+                "from": {
+                  "node": "source",
+                  "port": "out"
+                },
+                "to": {
+                  "node": "target",
+                  "port": "in"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "singleNodeEmptyRelations-fff0000000000007",
+          "word": "fff0000000000007",
+          "rows": 2,
+          "valueBytes": 95,
+          "sourceSnapshot": {
+            "schema": "stdio.semio.flow",
+            "nodes": [
+              {
+                "id": "source",
+                "kind": "input",
+                "label": "Grüße\u0000世界",
+                "position": {
+                  "x": {
+                    "bits": "fff0000000000007"
+                  },
+                  "y": {
+                    "bits": "fff0000000000007"
+                  }
+                },
+                "params": []
+              }
+            ],
+            "edges": []
+          }
+        }
+      ],
+      "publicIo": {
+        "schemaBytes": 1448,
+        "tableWidths": {
+          "semio_flow_document": 2,
+          "semio_flow_node": 12,
+          "semio_flow_parameter": 5,
+          "semio_flow_edge": 9,
+          "semio_snapshot": 6
+        },
+        "cases": [
+          {
+            "id": "full",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 361,
+              "text": 359
+            }
+          },
+          {
+            "id": "metadataRetainingEmpty",
+            "rows": 2,
+            "valueBytes": {
+              "binary": 65,
+              "text": 63
+            }
+          },
+          {
+            "id": "full-0000000000000000",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 361,
+              "text": 359
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-0000000000000000",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 158,
+              "text": 156
+            }
+          },
+          {
+            "id": "full-8000000000000000",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 361,
+              "text": 359
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-8000000000000000",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 158,
+              "text": 156
+            }
+          },
+          {
+            "id": "full-0000000000000001",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 361,
+              "text": 359
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-0000000000000001",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 158,
+              "text": 156
+            }
+          },
+          {
+            "id": "full-000fffffffffffff",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 361,
+              "text": 359
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-000fffffffffffff",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 158,
+              "text": 156
+            }
+          },
+          {
+            "id": "full-7ff0000000000000",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 381,
+              "text": 379
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-7ff0000000000000",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 178,
+              "text": 176
+            }
+          },
+          {
+            "id": "full-fff0000000000000",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 381,
+              "text": 379
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-fff0000000000000",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 178,
+              "text": 176
+            }
+          },
+          {
+            "id": "full-7ff8000000000011",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 339,
+              "text": 337
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-7ff8000000000011",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 136,
+              "text": 134
+            }
+          },
+          {
+            "id": "full-7ff0000000000007",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 339,
+              "text": 337
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-7ff0000000000007",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 136,
+              "text": 134
+            }
+          },
+          {
+            "id": "full-fff8000000000011",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 339,
+              "text": 337
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-fff8000000000011",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 136,
+              "text": 134
+            }
+          },
+          {
+            "id": "full-fff0000000000007",
+            "rows": 7,
+            "valueBytes": {
+              "binary": 339,
+              "text": 337
+            }
+          },
+          {
+            "id": "singleNodeEmptyRelations-fff0000000000007",
+            "rows": 3,
+            "valueBytes": {
+              "binary": 136,
+              "text": 134
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "image",
+    "cap": "Image",
+    "tables": 4,
+    "maxColumns": 7,
+    "schema": 1205,
+    "widths": {
+      "semio_image_document": 7,
+      "semio_image_frame": 4,
+      "semio_image_sample": 5,
+      "semio_image_metadata": 5
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 21,
+        "valueBytes": 835,
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.image",
+          "width": 2,
+          "height": 1,
+          "colorspace": "indexed",
+          "bitDepth": 255,
+          "frames": [
+            {
+              "delayMs": 0,
+              "rgba8": [
+                0,
+                0,
+                0,
+                0,
+                255,
+                255,
+                255,
+                255
+              ]
+            },
+            {
+              "delayMs": 4294967295,
+              "rgba8": [
+                255,
+                0,
+                0,
+                255,
+                0,
+                255,
+                0,
+                127
+              ]
+            }
+          ],
+          "icc": [
+            0,
+            1,
+            255
+          ],
+          "metadata": [
+            {
+              "key": "same",
+              "value": "Grüße\u0000世界"
+            },
+            {
+              "key": "same",
+              "value": ""
+            }
+          ]
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 3,
+        "valueBytes": 131,
+        "sourceSnapshot": {
+          "schema": "s.stdio.semio.image",
+          "width": 2,
+          "height": 1,
+          "colorspace": "indexed",
+          "bitDepth": 255,
+          "frames": [],
+          "icc": [
+            0,
+            1,
+            255
+          ],
+          "metadata": [
+            {
+              "key": "same",
+              "value": "Grüße\u0000世界"
+            },
+            {
+              "key": "same",
+              "value": ""
+            }
+          ]
+        }
+      }
+    ],
+    "rustBody": "let mut source=fixture();if case[\"id\"]==\"metadataRetainingEmpty\"{source.frames.clear();}source",
+    "hydrate": "",
+    "contract": {
+      "schemaBytes": 1205,
+      "tableWidths": {
+        "semio_image_document": 7,
+        "semio_image_frame": 4,
+        "semio_image_sample": 5,
+        "semio_image_metadata": 5
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 21,
+          "valueBytes": 835,
+          "sourceSnapshot": {
+            "schema": "s.stdio.semio.image",
+            "width": 2,
+            "height": 1,
+            "colorspace": "indexed",
+            "bitDepth": 255,
+            "frames": [
+              {
+                "delayMs": 0,
+                "rgba8": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  255,
+                  255,
+                  255,
+                  255
+                ]
+              },
+              {
+                "delayMs": 4294967295,
+                "rgba8": [
+                  255,
+                  0,
+                  0,
+                  255,
+                  0,
+                  255,
+                  0,
+                  127
+                ]
+              }
+            ],
+            "icc": [
+              0,
+              1,
+              255
+            ],
+            "metadata": [
+              {
+                "key": "same",
+                "value": "Grüße\u0000世界"
+              },
+              {
+                "key": "same",
+                "value": ""
+              }
+            ]
+          }
+        },
+        {
+          "id": "metadataRetainingEmpty",
+          "rows": 3,
+          "valueBytes": 131,
+          "sourceSnapshot": {
+            "schema": "s.stdio.semio.image",
+            "width": 2,
+            "height": 1,
+            "colorspace": "indexed",
+            "bitDepth": 255,
+            "frames": [],
+            "icc": [
+              0,
+              1,
+              255
+            ],
+            "metadata": [
+              {
+                "key": "same",
+                "value": "Grüße\u0000世界"
+              },
+              {
+                "key": "same",
+                "value": ""
+              }
+            ]
+          }
+        }
+      ],
+      "publicIo": {
+        "schemaBytes": 1498,
+        "tableWidths": {
+          "semio_image_document": 7,
+          "semio_image_frame": 4,
+          "semio_image_sample": 5,
+          "semio_image_metadata": 5,
+          "semio_snapshot": 6
+        },
+        "cases": [
+          {
+            "id": "full",
+            "rows": 22,
+            "valueBytes": {
+              "binary": 877,
+              "text": 875
+            }
+          },
+          {
+            "id": "metadataRetainingEmpty",
+            "rows": 4,
+            "valueBytes": {
+              "binary": 173,
+              "text": 171
+            }
+          }
+        ]
+      }
+    }
+  }
+]

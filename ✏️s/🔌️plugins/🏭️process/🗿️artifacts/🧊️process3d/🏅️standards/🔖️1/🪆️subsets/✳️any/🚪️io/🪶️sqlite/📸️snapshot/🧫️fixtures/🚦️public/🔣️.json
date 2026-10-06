@@ -1,0 +1,42 @@
+{
+  "dialect": {
+    "artifactKind": "s.process.process3d",
+    "standard": "1",
+    "subset": "*"
+  },
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "applicationId": 1397576526,
+  "userVersion": 1,
+  "domainTables": 32,
+  "domainRows": 173,
+  "metadataRows": 1,
+  "routeHops": 1,
+  "fidelity": "exact",
+  "exportPhases": [
+    "DecodeNative",
+    "ProjectSnapshot",
+    "WritePages"
+  ],
+  "importPhases": [
+    "ReadPages",
+    "ReconstructSnapshot",
+    "EncodeNative"
+  ],
+  "independentEdit": {
+    "table": "process3_stock_payload",
+    "column": "label",
+    "value": "independent public payload 文🌠"
+  },
+  "metadataColumns": [
+    "id",
+    "artifact_kind",
+    "standard",
+    "subset",
+    "schema_version",
+    "native_encoding"
+  ],
+  "retirement": "explicit"
+}

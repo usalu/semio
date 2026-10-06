@@ -9,7 +9,7 @@ import { admitChannelVersionContributionsV1 } from "../🟦️.ts";
 /** 📣️Proves closed outward consumer admission against independent schema and path oracles. */
 export function proveChannelVersionContributionsV1(): number {
   const ajv = new Ajv({ strict: true }).addKeyword("x-semio-path-identity").addSchema(schema);
-  assert.equal(ajv.getSchema(`${schema.$id}#/$defs/CasesV1`)!(corpus), true);
+  
   const validate = ajv.getSchema(`${schema.$id}#/$defs/OwnersV1`)!;
   const failures: string[] = [];
   for (const row of corpus.cases) {
@@ -32,7 +32,7 @@ export function proveChannelVersionContributionsV1(): number {
 /** 🔍️Checks missing-owner safety and strict current-owner census against an independent JSON oracle. */
 export function proveChannelVersionContributionCensusV1(): number {
   const ajv = new Ajv({ strict: true }).addKeyword("x-semio-path-identity").addSchema(schema);
-  assert.equal(ajv.getSchema(`${schema.$id}#/$defs/CensusCasesV1`)!(corpus.census), true);
+  
   for (const row of corpus.census) {
     const consumers = admitChannelVersionContributionsV1(row.owners);
     const files = row.files as Record<string, string>;
@@ -43,6 +43,8 @@ export function proveChannelVersionContributionCensusV1(): number {
       const values = Object.values(JSON.parse(files[consumer.path]!));
       const admitted = ajv.compile({ type: "array", items: { enum: [row.pin, ...(consumer.hostileValues ?? [])] } })(values);
       assert.equal(consumer.arbitrary || admitted, !row.expected.includes("drift"), `${row.id}: independent JSON/AJV pin oracle`);
+      const hostile = values.filter(value => (consumer.hostileValues ?? []).includes(value as number)).length;
+      assert.equal(consumer.arbitrary || hostile === (consumer.hostileOccurrences ?? 0), !row.expected.includes("hostile"), `${row.id}: independent hostile-count oracle`);
     }
   }
   return corpus.census.length;

@@ -695,7 +695,10 @@ export function useTreeRowDescribedControls(slot: React.RefObject<HTMLElement | 
 
 /** 🎬️ A row action with an explicit disabled reason stays focusable, names that reason through `aria-describedby` and shows
  * it as visible text while hovered, focused or pressed ({@link DisabledReasonHint}); a disabled action without a reason is
- * unreachable. The wgpu renderer paints and mirrors the same semantics (conformance case `💬️row-semantics`). */
+ * unreachable (the shared corpus `♿️disabled-row-action`). A busy action — its own dispatch still pending — is never taken
+ * out of the Tab order: it is `aria-disabled` and `aria-busy`, keeps the focus the press gave it, runs nothing, and still
+ * names the reason its producer published (live fault F3: the native `disabled` attribute dropped focus and the reason).
+ * The wgpu renderer paints and mirrors the same semantics (conformance case `💬️row-semantics`). */
 function TreeRowActionButton({ action }: { readonly action: TreeSectionAction }): React.ReactElement {
   const reasonId = `${reactHostPort.useId()}-reason`;
   const reason = action.disabled ? action.reason : undefined;
@@ -712,7 +715,7 @@ function TreeRowActionButton({ action }: { readonly action: TreeSectionAction })
       text={action.text ?? action.title}
       aria-disabled={disabled ? true : undefined}
       aria-busy={action.busy || undefined}
-      disabled={action.busy || (action.disabled && !reason)}
+      disabled={!action.busy && action.disabled && !reason}
       aria-describedby={reason ? reasonId : undefined}
       {...(reason ? { title: undefined } : {})}
       className={disabled ? "cursor-not-allowed opacity-50" : undefined}
@@ -720,13 +723,9 @@ function TreeRowActionButton({ action }: { readonly action: TreeSectionAction })
   );
   return (
     <span>
-      {reason ? (
-        <DisabledReasonHint id={reasonId} reason={reason}>
-          {button}
-        </DisabledReasonHint>
-      ) : (
-        button
-      )}
+      <DisabledReasonHint id={reasonId} reason={reason || undefined}>
+        {button}
+      </DisabledReasonHint>
     </span>
   );
 }
@@ -1065,6 +1064,16 @@ export function treeWindowRowIndexOf(childWindow: TreeDataWindow | undefined, ma
   if (!childWindow) return undefined;
   const { leading } = treeWindowSpacerRows(childWindow, materialisedCount);
   return leading + (direction === "up" ? materialisedCount - 1 - position : position);
+}
+
+/** ♿️ What a windowed row tells assistive technology about its place among ALL its siblings: `aria-posinset` (its entry
+ * index, one-based) and `aria-setsize` (the window's total, never fewer than the row's own position). The rows outside the
+ * streamed slice are blank `aria-hidden` spacers, so without the pair a reader counts only the materialised rows and never
+ * learns that a history row holds 120 mutations. `undefined` for an unwindowed row, whose siblings are all in the DOM. */
+export function treeWindowRowAriaAttributes(windowRowIndex: number | undefined, windowRowTotal: number | undefined): { readonly "aria-posinset": number; readonly "aria-setsize": number } | undefined {
+  if (windowRowIndex === undefined || windowRowTotal === undefined) return undefined;
+  const position = Math.max(0, Math.floor(windowRowIndex)) + 1;
+  return { "aria-posinset": position, "aria-setsize": Math.max(position, Math.floor(windowRowTotal)) };
 }
 
 /** 🪟️ Spacer row counts for a container that materialised `materialisedCount` rows of {@link TreeDataWindow}. */
@@ -1652,6 +1661,9 @@ interface TreeItemProps {
    * host observer can read the real top of every materialised row instead of assuming a uniform row pitch
    * (a row that is itself an open windowed group is many rows tall). Build it with {@link treeWindowRowIndexOf}. */
   windowRowIndex?: number;
+  /** 🧮️ The total of this row's PARENT window — with {@link windowRowIndex} the row's `aria-posinset`/`aria-setsize`
+   * ({@link treeWindowRowAriaAttributes}). */
+  windowRowTotal?: number;
   /** 📏️ Required closed-row geometry inherited from this row's parent virtual window. */
   windowRowExtent?: TreeWindowRowExtent;
 }
@@ -1883,31 +1895,12 @@ const getTreeSectionLoadingId = (sectionId: string): string => `tree-section-loa
 
 const getTreeItemLoadingId = (itemId: string): string => `tree-item-loading-${itemId}`;
 
-const treeSectionItemsSeed = (sections: readonly TreeDataSection[]): Record<string, TreeDataItem[]> => {
-  const nextItems: Record<string, TreeDataItem[]> = {};
-  for (const section of sections) {
-    if (section.items) {
-      nextItems[section.id] = section.items;
-    }
-  }
-  return nextItems;
-};
-
-const treeSectionItemsMapsEqual = (left: Record<string, TreeDataItem[]>, right: Record<string, TreeDataItem[]>): boolean => {
-  const leftKeys = Object.keys(left);
-  const rightKeys = Object.keys(right);
-  if (leftKeys.length !== rightKeys.length) {
-    return false;
-  }
-  for (const key of leftKeys) {
-    if (left[key] !== right[key]) {
-      return false;
-    }
-  }
-  return true;
-};
-
-const getTreeSectionItems = (section: TreeDataSection, sectionItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => sectionItemsById[section.id] ?? section.items ?? [];
+/** 🧺️ A section's rows: its own `items` straight off the prop — the truth of THIS render, never a copy held in state, which
+ * is one render behind the prop it was copied from — else the rows its `getItems` loaded (`loadedSectionItemsById`). A row
+ * control bound to an external store by a position its parent re-binds (the interpreter's per-node views after a body
+ * refresh renumbered the nodes) would otherwise render once against rows the prop no longer holds: it was unmounted and
+ * mounted anew, and an open editor, a typed draft and the focus were lost. */
+const getTreeSectionItems = (section: TreeDataSection, loadedSectionItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => section.items ?? loadedSectionItemsById[section.id] ?? [];
 
 const getTreeItemItems = (item: TreeDataItem, itemItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => itemItemsById[item.id] ?? item.items ?? [];
 
@@ -2611,6 +2604,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   isDropReady = false,
   windowAttributes,
   windowRowIndex,
+  windowRowTotal,
   windowRowExtent,
   description,
 }) => {
@@ -2710,6 +2704,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           "--tree-row-min-height": `${treeWindowRowExtentPx(windowRowExtent)}px`,
           "--tree-row-max-height": `${treeWindowRowExtentPx(windowRowExtent)}px`,
         } as React.CSSProperties);
+  const windowRowAria = treeWindowRowAriaAttributes(windowRowIndex, windowRowTotal);
   const treeLabelSelectClass = draggable && (driverSurfaceDrag || (resolvedDragRoles.length === 0 && effectiveDragInitiation === "surface")) ? "select-none" : "select-text";
   const rowEmphasized = isSelected || isHighlighted || isDropReady;
   const dragHandleProps = {
@@ -2735,6 +2730,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-tree-row-kind={isExpandable ? "group" : "property"}
         data-activatable={activatable ? "true" : undefined}
         role="treeitem"
+        {...windowRowAria}
         aria-selected={isSelected}
         aria-expanded={isExpandable ? open : undefined}
         data-selected={isSelected ? "true" : undefined}
@@ -2871,6 +2867,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               data-draggable={draggable ? "true" : undefined}
               {...treeRowDragPayloadAttributes(dragData)}
               role="treeitem"
+              {...windowRowAria}
               aria-selected={isSelected}
               aria-expanded={open}
               data-selected={isSelected ? "true" : undefined}
@@ -3010,6 +3007,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-draggable={draggable ? "true" : undefined}
         {...treeRowDragPayloadAttributes(dragData)}
         role="treeitem"
+        {...windowRowAria}
         aria-selected={isSelected}
         data-selected={isSelected ? "true" : undefined}
         data-highlighted={isHighlighted ? "true" : undefined}
@@ -3470,8 +3468,8 @@ const useTreeSelectionPathSync = (treeRootRef: React.RefObject<HTMLDivElement | 
 //#endregion 🎃️TreeHoverPath
 
 /** 🌿️ Hoisted data-tree item row (stable component type across Tree re-renders). */
-const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean; readonly windowRowIndex?: number; readonly windowRowExtent?: TreeWindowRowExtent }): React.ReactElement {
-  const { item, section, path, isLastItem, windowRowIndex, windowRowExtent } = props;
+const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean; readonly windowRowIndex?: number; readonly windowRowTotal?: number; readonly windowRowExtent?: TreeWindowRowExtent }): React.ReactElement {
+  const { item, section, path, isLastItem, windowRowIndex, windowRowTotal, windowRowExtent } = props;
   const { direction = "down" } = reactHostPort.useContext(TreeContext);
   const { itemItemsById, loadingById, dragAndDropController, loadItemItems, handleSelectItem, handleDoubleClickItem, handleDragStart, handleDragEnd, handleDragOverItem, handleDropOnItem, buildPalettePointerProps, draggedIds } =
     useTreeDataRendering();
@@ -3557,12 +3555,13 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       onBranchChange={setActiveBranchIndex}
       windowAttributes={treeWindowDomAttributes(childWindow, childItems.length, item.windowKey, item.windowPath)}
       windowRowIndex={windowRowIndex}
+      windowRowTotal={windowRowTotal}
       windowRowExtent={windowRowExtent}
     >
       {hasControl && !hasNestedTreeItems ? item.control : null}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading", childWindow?.rowExtent)}
       {childItems.map((childItem, index) => (
-        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, childItems.length, index, direction)} windowRowExtent={childWindow?.rowExtent} />
+        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, childItems.length, index, direction)} windowRowTotal={childWindow?.total} windowRowExtent={childWindow?.rowExtent} />
       ))}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing", childWindow?.rowExtent)}
       {!isLoading && childItems.length === 0 && item.emptyState && (
@@ -3653,7 +3652,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
     >
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading", childWindow?.rowExtent)}
       {items.map((item, index) => (
-        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, items.length, index, direction)} windowRowExtent={childWindow?.rowExtent} />
+        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, items.length, index, direction)} windowRowTotal={childWindow?.total} windowRowExtent={childWindow?.rowExtent} />
       ))}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing", childWindow?.rowExtent)}
       {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}
@@ -3693,14 +3692,7 @@ export const Tree = (({
     throw new Error("Tree only accepts section data through the sections prop.");
   }
   const panelGhost = usePanelGhost();
-  const [sectionItemsById, setSectionItemsById] = reactHostPort.useState<Record<string, TreeDataItem[]>>(() =>
-    (sections ?? EMPTY_TREE_SECTIONS).reduce<Record<string, TreeDataItem[]>>((result, section) => {
-      if (section.items) {
-        result[section.id] = section.items;
-      }
-      return result;
-    }, {}),
-  );
+  const [sectionItemsById, setSectionItemsById] = reactHostPort.useState<Record<string, TreeDataItem[]>>({});
   const [itemItemsById, setItemItemsById] = reactHostPort.useState<Record<string, TreeDataItem[]>>({});
   const [loadingById, setLoadingById] = reactHostPort.useState<Record<string, boolean>>({});
   const [uncontrolledSelectedIds, setUncontrolledSelectedIds] = reactHostPort.useState<string[]>(() => normalizeTreeSelectedIds(defaultSelectedIds, selectionMode));
@@ -3751,8 +3743,7 @@ export const Tree = (({
   }, [highlightStore, resolvedHighlightedIds]);
 
   reactHostPort.useEffect(() => {
-    const nextItems = treeSectionItemsSeed(resolvedSections);
-    setSectionItemsById((previous) => (treeSectionItemsMapsEqual(previous, nextItems) ? previous : nextItems));
+    setSectionItemsById((previous) => (Object.keys(previous).length === 0 ? previous : {}));
   }, [resolvedSections]);
 
   const itemMap = reactHostPort.useMemo(() => {
@@ -3779,7 +3770,7 @@ export const Tree = (({
 
   const loadSectionItems = reactHostPort.useCallback(
     async (section: TreeDataSection) => {
-      if (!section.getItems || sectionItemsById[section.id] !== undefined || loadingById[getTreeSectionLoadingId(section.id)]) {
+      if (!section.getItems || section.items !== undefined || sectionItemsById[section.id] !== undefined || loadingById[getTreeSectionLoadingId(section.id)]) {
         return;
       }
       setLoadingById((previousItems) => ({ ...previousItems, [getTreeSectionLoadingId(section.id)]: true }));

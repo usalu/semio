@@ -7,7 +7,7 @@
  *  `shared://🧩️mount-contract/🔣️.json` the Rust and Python halves read and checks its canonical forms, so a drift in any
  *  surface id, window roster or example row fails in every language at once. SUBJECT role: a second reading of the
  *  statement, never a reference for the Rust half, which measures the real surfaces. */
-import { defineTestAdapter } from "../../../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 
 //#region 🧬️Statement
 type MountContract = {
@@ -37,7 +37,7 @@ export default defineTestAdapter({
   scenarios: {
     "surface-ids": {
       subject: (ctx) => {
-        const contract = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(STATEMENT))) as MountContract;
+        const contract = JSON.parse(new TextDecoder().decode(ctx.inputBytes(STATEMENT))) as MountContract;
         for (const [field, value] of Object.entries(CANONICAL_IDS)) if (contract[field as keyof typeof CANONICAL_IDS] !== value) throw new Error(`surface-ids: ${field} is ${contract[field as keyof typeof CANONICAL_IDS]}`);
         if (contract.dialect !== "s.wfc.bitmap@1/*") throw new Error(`surface-ids: dialect is ${contract.dialect}`);
         return { projection: { ...CANONICAL_IDS } };
@@ -45,21 +45,21 @@ export default defineTestAdapter({
     },
     "window-kinds": {
       subject: (ctx) => {
-        const contract = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(STATEMENT))) as MountContract;
+        const contract = JSON.parse(new TextDecoder().decode(ctx.inputBytes(STATEMENT))) as MountContract;
         if (!sameSequence(contract.windowKindIds, CANONICAL_WINDOWS)) throw new Error(`window-kinds: ${contract.windowKindIds.join(", ")}`);
         return { projection: { editor: [...contract.windowKindIds], viewer: [...contract.windowKindIds] } };
       },
     },
     "mutation-vocabulary": {
       subject: (ctx) => {
-        const contract = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(STATEMENT))) as MountContract;
+        const contract = JSON.parse(new TextDecoder().decode(ctx.inputBytes(STATEMENT))) as MountContract;
         if (new Set(contract.mutationKinds).size !== contract.mutationKinds.length) throw new Error("mutation-vocabulary: the roster names a kind twice");
         return { projection: { mutationKinds: [...contract.mutationKinds] } };
       },
     },
     examples: {
       subject: (ctx) => {
-        const contract = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(STATEMENT))) as MountContract;
+        const contract = JSON.parse(new TextDecoder().decode(ctx.inputBytes(STATEMENT))) as MountContract;
         for (const row of contract.examples) if (row.inputWidth <= 0 || row.inputHeight <= 0 || row.paletteSize < 2 || !row.label.en || !row.label.de) throw new Error(`examples: ${row.id} is degenerate, single-coloured or not localized`);
         return { projection: { examples: contract.examples.map(({ id, inputWidth, inputHeight, paletteSize }) => ({ id, inputWidth, inputHeight, paletteSize })) } };
       },

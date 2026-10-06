@@ -1,0 +1,118 @@
+{
+  "qualification": "Source-only exact semantic SQL cell extent blueprint; no execution or implementation. No schema text/native spec/backing/wire estimate mixed into max_value_bytes.",
+  "actualReceipt": {
+    "log": "root-en1997-complete-independent-nested-native-first.log",
+    "counts": "11run9pass2fail189outside",
+    "newComplete210CellLaw": "passed per Root receipt; not rerun here"
+  },
+  "ownerRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+  "regions": [
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "line": 31,
+      "purpose": "Decode capture finite limits; borrowed exact RecordValue semantic admission inside construct before __dsl_from_record_controlled."
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "line": 35,
+      "purpose": "Encode borrowed Self semantic admission before __dsl_to_record_controlled; retain existing row/cancellation/native allocation."
+    }
+  ],
+  "semanticRows": [
+    {
+      "family": "document",
+      "fixedIntegerBytes": 16,
+      "literalTextFields": [
+        "structure_id",
+        "design_situation",
+        "design_approach",
+        "annex"
+      ],
+      "binary64Count": 2
+    },
+    {
+      "family": "layer",
+      "fixedIntegerBytes": 24,
+      "literalTextFields": [
+        "id",
+        "soil_type"
+      ],
+      "binary64Count": 11
+    },
+    {
+      "family": "footing",
+      "fixedIntegerBytes": 24,
+      "literalTextFields": [
+        "id"
+      ],
+      "binary64Count": 5
+    },
+    {
+      "family": "load",
+      "fixedIntegerBytes": 24,
+      "literalTextFields": [
+        "id",
+        "design_situation"
+      ],
+      "binary64Count": 6
+    },
+    {
+      "family": "pile",
+      "fixedIntegerBytes": 32,
+      "literalTextFields": [
+        "id",
+        "pile_type"
+      ],
+      "binary64Count": 9
+    },
+    {
+      "family": "test",
+      "fixedIntegerBytes": 24,
+      "literalTextFields": [
+        "id"
+      ],
+      "binary64Count": 2
+    },
+    {
+      "family": "wall",
+      "fixedIntegerBytes": 24,
+      "literalTextFields": [
+        "id",
+        "earth_pressure_mode",
+        "wall_movement"
+      ],
+      "binary64Count": 12
+    },
+    {
+      "family": "slope",
+      "fixedIntegerBytes": 24,
+      "literalTextFields": [
+        "id",
+        "governing_layer_id"
+      ],
+      "binary64Count": 3
+    },
+    {
+      "family": "uplift",
+      "fixedIntegerBytes": 24,
+      "literalTextFields": [
+        "id"
+      ],
+      "binary64Count": 5
+    }
+  ],
+  "floatExtent": {
+    "finiteIncludingNegativeZero": 22,
+    "nan": 11,
+    "positiveInfinity": 32,
+    "negativeInfinity": 32
+  },
+  "constraints": [
+    "Count nested load/test entities under actual parents; checked total and per-row frontier; no Vec/BTreeMap/rowforest/projector allocation.",
+    "All strings count UTF8 len; only annex literal En/De included; genuine Snapshot has no schema field.",
+    "Use existing borrowed Literal Record field APIs and exact declared shape validation; not serialized body length or whole Value clone.",
+    "Decode shared helper closure receives RecordValue and NativeDecodeControl, not mutable SqliteSnapshotControl. Capture max_value_bytes before call; use original native checkpoint/cancellation and typed OwnershipLimit errors. Do not borrow c simultaneously into closure.",
+    "check_value_bytes is stateless ceiling; allocation_stage retains cumulative actual paid backing. Never debit semantic extent as allocator bytes or fabricate prior debt.",
+    "NativeEncodingBound preflight is broad wire/workload estimate and should not be reused as exact logical cell measure."
+  ]
+}

@@ -20,7 +20,7 @@ fn binary(payload: &IoPayload) -> &[u8] {
 #[semio_framework_async_macros::async_test]
 async fn csv_round_trips_and_a_third_party_reader_agrees() {
     let payload = VcsIntoCsv::serialize(&sample(), &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("csv").value;
-    let text = semio_s_artifact_stdio_csv::schema::snapshot::encode_csv(&<semio_s_artifact_stdio_csv::CsvSnapshot as store::ArtifactPack>::decode_pack(binary(&payload)).expect("pack"));
+    let text = semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::encode_csv(&<semio_s_artifact_stdio_csv::CsvSnapshot as store::ArtifactPack>::decode_pack(binary(&payload)).expect("pack"));
     let mut reader = csv::Reader::from_reader(text.as_bytes());
     let row = reader.records().next().expect("a value row").expect("row");
     assert_eq!((&row[1], &row[2], &row[3], &row[5]), ("Release, final", "42", "line one\nline two", "a;b"));
@@ -48,10 +48,10 @@ async fn xlsx_round_trips_and_a_third_party_reader_agrees() {
 #[semio_framework_async_macros::async_test]
 async fn zip_is_a_real_archive_of_the_exact_document() {
     let payload = VcsIntoZip::serialize(&sample(), &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("zip").value;
-    let bytes = semio_s_artifact_stdio_zip::io::encode_zip(&<semio_s_artifact_stdio_zip::ZipSnapshot as store::ArtifactPack>::decode_pack(binary(&payload)).expect("pack")).expect("zip bytes");
+    let bytes = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&<semio_s_artifact_stdio_zip::ZipSnapshot as store::ArtifactPack>::decode_pack(binary(&payload)).expect("pack")).expect("zip bytes");
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("the zip crate opens the archive");
     let mut member = String::new();
-    archive.by_name(&semio_s_artifact_stdio_zip::io::document_archive_member::<VcsSnapshot>()).expect("dsl member").read_to_string(&mut member).expect("utf-8");
+    archive.by_name(&semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::document_archive_member::<VcsSnapshot>()).expect("dsl member").read_to_string(&mut member).expect("utf-8");
     assert_eq!(member, <VcsSnapshot as store::ArtifactDsl>::print_dsl(&sample()));
     assert_eq!(ZipIntoVcs::deserialize(&payload).await.expect("zip back").value, sample());
 }

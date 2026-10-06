@@ -12,6 +12,19 @@
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Schema identifiers",
+          "de": "Schemakennungen"
+        },
+        "description": {
+          "en": "Entries of FILE_SCHEMA in the header, for example AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }.",
+          "de": "Einträge von FILE_SCHEMA im Kopfteil, zum Beispiel AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }."
+        },
+        "group": "value",
+        "order": 10
       }
     }
   }

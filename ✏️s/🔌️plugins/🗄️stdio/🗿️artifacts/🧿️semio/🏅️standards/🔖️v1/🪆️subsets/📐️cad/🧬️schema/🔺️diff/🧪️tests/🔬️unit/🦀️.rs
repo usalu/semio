@@ -1,5 +1,5 @@
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 //#region Fixtures
 /// 🧪️ Every field/collection mutable, incl. a nested `blocks[].entities` add/remove/modify and

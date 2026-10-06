@@ -71,8 +71,11 @@ const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 mod subject {
     use super::{BASE_SNAPSHOT, DSL_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, print_dsl};
-    use semio_s_artifact_shooting_shooting::mutations::{apply_shooting_mutation, decode_shooting_mutation_json, decode_shooting_snapshot_json, encode_shooting_projection_json, inverse_shooting_mutation, ShootingMutation};
+    use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
+    use semio_s_artifact_shooting_shooting::mutations::{apply_shooting_mutation, inverse_shooting_mutation, ShootingMutation};
+    use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::io::text::snapshot::{decode_shooting_snapshot_json};
+    use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::io::text::mutations::{encode_shooting_projection_json};
+    use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::io::text::mutations::{decode_shooting_mutation_json};
     use semio_s_artifact_shooting_shooting::ShootingSnapshot;
     use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
@@ -80,7 +83,7 @@ mod subject {
     /// 📸️ The committed render scene, decoded by production's own reader. Nothing about it is
     /// authored here — it is the very document the thirty-one leaf fixtures were written against.
     fn base(ctx: &Context) -> Result<ShootingSnapshot, String> {
-        let bytes = ctx.fixture_bytes(BASE_SNAPSHOT)?;
+        let bytes = ctx.input_bytes(BASE_SNAPSHOT)?;
         let committed = String::from_utf8(bytes).map_err(|error| format!("the committed before-snapshot is not UTF-8: {error}"))?;
         decode_shooting_snapshot_json(&committed)
     }
@@ -138,7 +141,7 @@ mod subject {
     /// anything else is codec or fixture drift. That is why `carrier_is_exact` stands here in place
     /// of the wave's usual "output must differ from input" tripwire.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = ctx.fixture_bytes(DSL_ASSET)?;
+        let input = ctx.input_bytes(DSL_ASSET)?;
         let committed = String::from_utf8(input.clone()).map_err(|error| format!("the committed shooting artifact is not UTF-8: {error}"))?;
         let decoded = parse_dsl(&committed).map_err(|error| format!("identity-round-trip: the committed shooting artifact does not parse: {error:?}"))?;
         let printed = print_dsl(&decoded);

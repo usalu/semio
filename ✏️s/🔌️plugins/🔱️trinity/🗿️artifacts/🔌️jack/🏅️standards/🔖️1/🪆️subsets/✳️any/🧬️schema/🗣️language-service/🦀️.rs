@@ -70,8 +70,8 @@ pub mod queryable {
             trinity_queryable_edges(self.0)
         }
 
-        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
-            self.0.subgraph_fixture(node_ids, edge_ids).to_json().ok()
+        fn subgraph_snapshot_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
+            self.0.subgraph_snapshot(node_ids, edge_ids).to_json().ok()
         }
     }
 
@@ -109,8 +109,8 @@ pub mod queryable {
             trinity_queryable_edges(&self.0)
         }
 
-        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
-            self.0.subgraph_fixture(node_ids, edge_ids).to_json().ok()
+        fn subgraph_snapshot_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
+            self.0.subgraph_snapshot(node_ids, edge_ids).to_json().ok()
         }
     }
 }
@@ -495,44 +495,14 @@ pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
     semio_framework_graph::dsl::semantic_tokens(source)
 }
 // #endregion 🔖️LanguageService
-/// 🧩️ Demo `Piece`/`Connection` fixture shared by the jack language server default session
-/// and playgrounds that need a non-empty graph for completions, hover and lint.
-pub fn example_graph_fixture() -> JackSnapshot {
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "jack-example".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
-            Node {
-                id: "root".into(),
-                kind: "Piece".into(),
-                name: "core".into(),
-                x: 0.0,
-                y: 0.0,
-                width: 80.0,
-                height: 40.0,
-                properties: PropertyBag::new(),
-                ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
-            },
-            Node {
-                id: "child".into(),
-                kind: "Piece".into(),
-                name: "leaf".into(),
-                x: 160.0,
-                y: 0.0,
-                width: 80.0,
-                height: 40.0,
-                properties: PropertyBag::new(),
-                ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
-            },
-        ], edges: vec![Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out".into(), target: "child@in".into(), properties: PropertyBag::new() }] }, Some("root".into()))
-}
 
-/// 🧩️ [`example_graph_fixture`] as a resolved in-memory [`Graph`].
+
+/// 🧩️ [`example_graph_snapshot`] as a resolved in-memory [`Graph`].
 pub fn example_graph() -> Graph {
-    Graph::from_snapshot(example_graph_fixture()).expect("jack example fixture")
+    Graph::from_snapshot(example_graph_snapshot()).expect("jack example fixture")
 }
 
-/// 🧩️ [`example_graph_fixture`] serialized as fixture JSON.
-pub fn example_graph_fixture_json() -> String {
-    semio_framework_pack_json::to_json_string(&example_graph_fixture())
-}
+
 // #endregion 🔖️ExampleFixture
 struct Parser {
     tokens: Vec<Token>,
@@ -1031,3 +1001,35 @@ pub fn parse_spanned(source: &str) -> SpannedNode {
     }
 }
 // #endregion 🔖️SpannedAst
+
+#[path = "../../🚪️io/🦀️.rs"]
+pub mod io;
+
+
+/// 🧩️ Typed example graph for language service and playground consumers.
+pub fn example_graph_snapshot() -> JackSnapshot {
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "jack-example".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+            Node {
+                id: "root".into(),
+                kind: "Piece".into(),
+                name: "core".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 80.0,
+                height: 40.0,
+                properties: PropertyBag::new(),
+                ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+            },
+            Node {
+                id: "child".into(),
+                kind: "Piece".into(),
+                name: "leaf".into(),
+                x: 160.0,
+                y: 0.0,
+                width: 80.0,
+                height: 40.0,
+                properties: PropertyBag::new(),
+                ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
+            },
+        ], edges: vec![Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out".into(), target: "child@in".into(), properties: PropertyBag::new() }] }, Some("root".into()))
+}

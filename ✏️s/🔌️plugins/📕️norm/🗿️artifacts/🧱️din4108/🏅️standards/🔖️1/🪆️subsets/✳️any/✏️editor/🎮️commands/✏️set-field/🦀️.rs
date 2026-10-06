@@ -1,6 +1,6 @@
 //! Norm command — `set-field`.
 
-use crate::op::Din4108Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Din4108Mutation;
 use crate::Din4108Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

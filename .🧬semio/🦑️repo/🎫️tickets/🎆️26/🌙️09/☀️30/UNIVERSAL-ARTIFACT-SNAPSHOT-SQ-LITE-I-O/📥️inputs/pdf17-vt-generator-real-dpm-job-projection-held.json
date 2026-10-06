@@ -1,0 +1,10 @@
+{
+  "qualification": "HELD projection correction only, chained with real DPM authoring fixture/provider; no alternate XML Metadata fallback. Requires genuine regenerated/handcrafted fixture closure before family promotion; no runtime.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/🦀️.rs",
+      "before": "                .and_then(|node| node.get(b\"Metadata\").and_then(Object::as_reference).ok())\n                .and_then(|id| document.get_object(id).ok())\n                .and_then(|o| o.as_stream().ok())\n                .map(|stream| String::from_utf8_lossy(&stream.content).to_string());",
+      "after": "                .and_then(|node| node.get(b\"DPM\").and_then(Object::as_dict).ok())\n                .and_then(|metadata| metadata.get(b\"Job\").and_then(Object::as_str).ok())\n                .map(|job| String::from_utf8_lossy(job).to_string());"
+    }
+  ]
+}

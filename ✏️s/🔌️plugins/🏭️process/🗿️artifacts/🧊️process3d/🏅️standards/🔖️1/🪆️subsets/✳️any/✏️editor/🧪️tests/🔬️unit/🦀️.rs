@@ -288,9 +288,9 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     let snapshot = production_initial_snapshot(label);
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    let mutations = crate::spr::process3d_all_retained_mutation_fixtures_for_test();
+    let mutations = crate::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
     assert_eq!(mutations.len(), 16, "production ingress carries every Process3d mutation variant");
-    let mutation_hex: Vec<String> = mutations.iter().map(|mutation| crate::spr::encode_op(mutation).expect("deep Process3d mutation encoding").iter().map(|byte| format!("{byte:02x}")).collect()).collect();
+    let mutation_hex: Vec<String> = mutations.iter().map(|mutation| crate::standards::v1::subsets::any::io::binary::mutations::encode_op(mutation).expect("deep Process3d mutation encoding").iter().map(|byte| format!("{byte:02x}")).collect()).collect();
     // 🪪️ Every workshop mutation addresses a machine by ID, so the expectation must locate the same
     // machine the replay does. It used to edit `machines.first_mut()` — the initial workshop already
     // carries the three generic machines (saw, drill, attacher) BEFORE the one this law appends, so a
@@ -345,7 +345,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     }))
     .expect("schema-first Process3d production fixture envelope");
     let envelope = store::create_document_envelope(crate::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
-    let mut retirement = crate::spr::process3d_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::process3d_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {
@@ -366,13 +366,13 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
 fn admit_production_envelope(app: &mut crate::editor::process3d::unit_tests::context::Process3dRawApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Process3d production ingress credits");
-    crate::spr::process3d_admit_publication_authority(
+    crate::standards::v1::subsets::any::io::binary::mutations::process3d_admit_publication_authority(
         handle.operation,
         handle.generation,
         handle.generation.0,
         handle.generation.0,
         handle.generation.0,
-        crate::spr::Process3dPublicationLimits { maximum_items: 8_192, maximum_output_pages: crate::spr::PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::spr::PROCESS3D_MOUNTED_CONTROL_CREDITS },
+        crate::standards::v1::subsets::any::io::binary::mutations::Process3dPublicationLimits { maximum_items: 8_192, maximum_output_pages: crate::standards::v1::subsets::any::io::binary::mutations::PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::standards::v1::subsets::any::io::binary::mutations::PROCESS3D_MOUNTED_CONTROL_CREDITS },
     )
     .expect("Process3d production publication authority");
     for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -387,7 +387,7 @@ fn admit_production_envelope(app: &mut crate::editor::process3d::unit_tests::con
 
 fn drive_production_envelope(app: &mut crate::editor::process3d::unit_tests::context::Process3dRawApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..200_000 {
-        crate::spr::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
+        crate::standards::v1::subsets::any::io::binary::mutations::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Process3d production maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("Process3d production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -405,7 +405,7 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     // 🛣️ The publication lease table is a process-global four-slot DIRECT-MAPPED registry shared by the
     // whole test binary; two laws admitting concurrently collide on a slot and report
     // `process3d-publication.saturated`, which is scheduling, never the property under test.
-    let _lane = crate::spr::process3d_publication_authority_lane();
+    let _lane = crate::standards::v1::subsets::any::io::binary::mutations::process3d_publication_authority_lane();
     let accepted_label = "accepted-production-swap";
     let mut accepted = crate::editor::process3d::unit_tests::context::unseeded_app_with_registry();
     let base_generation = accepted.artifact_generation_now();
@@ -420,7 +420,7 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     // workshop declares three generic machines (saw, drill, attacher) BEFORE the one this law renames,
     // so `machines.first()` reads `saw` — a machine the replay never touches — and the literal
     // `("machine", "Renamed Machine", "drill")` was a positional accident, not the published state.
-    let fixtures = crate::spr::process3d_all_retained_mutation_fixtures_for_test();
+    let fixtures = crate::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
     let (renamed_id, renamed_label) = match &fixtures[9] {
         Process3dMutation::RenameMachine(value) => (value.id.clone(), value.new_label.clone()),
         _ => unreachable!("fixed all-variant fixture order"),
@@ -435,9 +435,9 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     assert!(matches!(&capability.recipe, MeasureRecipe::BoxAttach { width, depth, height } if (width.as_str(), depth.as_str(), height.as_str()) == ("width", "depth", "height")));
     assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str()), (3, 2, "Beam"));
     assert!(accepted.acknowledge_artifact_store_replacement(accepted_handle).expect("accepted Process3d terminal ACK"));
-    assert!(crate::spr::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
+    assert!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
 
-    use crate::spr::Process3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+    use crate::standards::v1::subsets::any::io::binary::mutations::Process3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
     for (hostile, expected_code) in [
         (Missing, "process3d-publication.authority-missing"),
         (WrongOperation, "process3d-publication.wrong-operation"),
@@ -452,15 +452,15 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
         let (hostile_wire, hostile_snapshot, hostile_digest) = production_envelope_wire("rejected-production-candidate");
         assert_eq!(production_semantic_digest(&hostile_snapshot), hostile_digest);
         let handle = admit_production_envelope(&mut app, &hostile_wire);
-        crate::spr::process3d_arm_publication_hostile(handle.operation, hostile);
+        crate::standards::v1::subsets::any::io::binary::mutations::process3d_arm_publication_hostile(handle.operation, hostile);
         assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(crate::spr::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
+        assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
         assert_eq!(app.artifact_generation_now(), base_generation);
         let retained = app.snapshot().expect("last-valid snapshot after rejected candidate");
         assert_eq!(retained, last_valid);
         assert_eq!(production_semantic_digest(&retained), last_valid_digest, "hostile candidate must not change the last-valid digest");
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected Process3d terminal ACK after candidate retirement"));
-        assert!(crate::spr::process3d_release_publication_authority(handle.operation, handle.generation));
+        assert!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_release_publication_authority(handle.operation, handle.generation));
     }
 }
 
@@ -1474,7 +1474,7 @@ fn published_example_load(app: &mut context::Process3dRawApp, example: &str) -> 
 /// `Incomplete` (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
 #[test]
 fn every_example_loads_through_the_member_less_archive_door() {
-    let _lane = crate::spr::process3d_publication_authority_lane();
+    let _lane = crate::standards::v1::subsets::any::io::binary::mutations::process3d_publication_authority_lane();
     for (operation, example) in [(71_u64, PROCESS3D_EXAMPLE_TIMBER), (72, PROCESS3D_EXAMPLE_PLATE), (73, PROCESS3D_EXAMPLE_CONCRETE_FOREST)] {
         let mut app = context::unseeded_app_with_registry();
         let (pack, spr) = published_example_load(&mut app, example);

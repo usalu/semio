@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fileName",
+    "source",
+    "expected"
+  ],
+  "properties": {
+    "fileName": {
+      "const": "control.tsx"
+    },
+    "source": {
+      "const": "import item from \"./icon\"; export const view=<div>{item}</div>;"
+    },
+    "expected": {
+      "const": [
+        "./icon"
+      ]
+    }
+  }
+}

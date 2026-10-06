@@ -14,6 +14,7 @@ const PLAYBOOK_PLAY_SURFACE_STEPS: &str = "playbook.play.steps";
 
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: PLAYBOOK_PLAY_WINDOW_STEPS.into(),
         label: LocalizedLabel::native("Steps", "Schritte"),
         body_key: PLAYBOOK_PLAY_BODY_STEPS.into(),

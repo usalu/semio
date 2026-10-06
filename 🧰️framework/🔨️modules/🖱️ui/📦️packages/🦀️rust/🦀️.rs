@@ -11,3 +11,6 @@ pub mod tui;
 #[cfg(feature = "wgpu")]
 #[path = "../../🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod wgpu;
+
+#[path = "../../🎓️introduction/🦀️.rs"]
+pub mod introduction;

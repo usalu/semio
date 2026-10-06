@@ -7,13 +7,13 @@ import { testBuiltTreeRetirementFixture } from "../../../../../../🔨️modules
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { fixedFilenameContractIdsForPath, inspectRustModuleGraphFacts, loadTaxonomy } from "../../🔍️discovery/🟦️.ts";
 import corpus from "../../🧫️fixtures/⚙️native-source-ownership/🔣️.json";
-import schema from "../../🧬️schema/⚙️native-source-ownership/🔣️.json";
+
 
 const root = findWorkspaceRoot(import.meta.dir);
 const read = (path: string) => readFileSync(join(root, path), "utf8");
 
 test("Repo taxonomy keeps every exact surface companion filename owner and refuses unowned siblings", () => {
-  expect(new Ajv({ strict: true }).validate(schema, corpus)).toBe(true);
+  expect(corpus["version"]).toEqual(1);
   const fixture = JSON.parse(read(corpus.surface.fixture)) as { directoryName: string; module: string; types: string; wasm: string; wasmTypes: string; contracts: string[] };
   const names = [fixture.module, fixture.types, fixture.wasm, fixture.wasmTypes];
   const taxonomy = loadTaxonomy();

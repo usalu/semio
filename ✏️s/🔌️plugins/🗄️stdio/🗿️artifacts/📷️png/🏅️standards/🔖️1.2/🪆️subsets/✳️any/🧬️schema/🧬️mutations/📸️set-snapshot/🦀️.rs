@@ -11,10 +11,6 @@ pub struct SetSnapshot {
     pub snapshot: PngSnapshot,
 }
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 impl protocol::MutationKind<PngSnapshot, PngMutation> for SetSnapshot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "snapshot", kind: "set-snapshot", record: "SetSnapshot" };

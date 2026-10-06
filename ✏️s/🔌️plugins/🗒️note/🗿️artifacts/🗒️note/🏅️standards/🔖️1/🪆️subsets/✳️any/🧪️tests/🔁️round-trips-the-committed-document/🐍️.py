@@ -53,7 +53,7 @@ def refuse_carrier(ctx):
     Every mutation subset's adjudicated scenarios rest on committed JSON vectors and are unaffected.
     What is missing here is a grammar that covers the six block kinds this vocabulary actually has.
     """
-    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio"))
+    committed = ctx.input_bytes(uri_in(ctx, "🗣️.dsl.semio"))
     raise AssertionError(
         "identity-round-trip: this subset's `.dsl.semio` carrier cannot be read by a second implementation. Unlike its `✒️writer`, `🌿️vcs` and "
         "`🔌️wires` siblings this subset commits a REAL grammar rather than the `payload = OCTET+` placeholder, and the grammar and the artifact "

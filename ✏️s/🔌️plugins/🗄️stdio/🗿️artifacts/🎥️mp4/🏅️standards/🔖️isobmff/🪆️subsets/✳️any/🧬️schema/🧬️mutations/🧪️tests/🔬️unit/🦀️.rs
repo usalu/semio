@@ -124,7 +124,7 @@ async fn text_descriptor_recognizes_patch_snapshot_printer_output() {
     let base = base_snapshot().await;
     let patch = semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: semio_framework_value::DslValue::String("Edited".into()) }).unwrap();
     let mutation = Mp4Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch });
-    let grammar = semio_framework_dsl::parse_grammar(crate::standards::isobmff::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse MP4 mutation grammar");
+    let grammar = semio_framework_dsl::parse_grammar(crate::standards::isobmff::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse MP4 mutation grammar");
     let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     let printed = mutation.print_op();
     assert!(recognizer.recognize(&printed).unwrap_or(false), "MP4 mutation grammar did not recognize {printed:?}");

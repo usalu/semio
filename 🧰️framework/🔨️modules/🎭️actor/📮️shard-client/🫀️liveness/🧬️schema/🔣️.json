@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/liveness/schema.json",
+  "title": "Shard Liveness Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "heartbeatTimeoutMs",
+    "missedLimit",
+    "progressIntervalMs",
+    "firstTurnTimeoutMs",
+    "pluginLoadIdleTimeoutMs",
+    "pluginLoadCeilingMs"
+  ],
+  "properties": {
+    "heartbeatTimeoutMs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "missedLimit": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "progressIntervalMs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "firstTurnTimeoutMs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pluginLoadIdleTimeoutMs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pluginLoadCeilingMs": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

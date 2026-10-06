@@ -48,4 +48,4 @@ class OwnedVerifyScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-remodel-remodeling", { commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-remodel-remodeling", { commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

@@ -50,7 +50,7 @@ pub struct Fem3dViewer;
 
 impl ArtifactViewer for Fem3dViewer {
     type Snapshot = Fem3dSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -80,9 +80,9 @@ impl ArtifactViewer for Fem3dViewer {
 
     /// 👁️ Real, non-empty default scene: the artifact's own shared boot document (the bundled `default`
     /// example DSL), the very same one `Fem3dPlayApp::initial_snapshot` boots — see
-    /// `crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot`.
+    /// `crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
-        let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
+        let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot();
         eprintln!("[TRACE] fem3d viewer boot snapshot: nodes={} elements={} solids={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len());
         snapshot
     }

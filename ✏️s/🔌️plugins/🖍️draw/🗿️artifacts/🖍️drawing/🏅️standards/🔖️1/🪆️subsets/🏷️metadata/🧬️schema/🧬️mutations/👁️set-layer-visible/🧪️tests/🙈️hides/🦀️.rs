@@ -90,14 +90,14 @@ async fn declared_outcome_holds() {
     assert_eq!(delta.patched.len(), 1, "set-layer-visible patches exactly one layer");
     assert_eq!(delta.patched[0].id, "shape-a", "the patch is addressed to the payload's layer_id");
     assert_eq!(delta.patched[0].patch.visible, Some(false), "the patch pins the visible field");
-    assert_eq!(delta.patched[0].patch.layer_json, None, "a visibility flip must never fall back to a whole-layer JSON replacement");
+    assert_eq!(delta.patched[0].patch.layer, None, "a visibility flip must never fall back to a whole-layer JSON replacement");
     assert!(delta.added.is_empty() && delta.removed.is_empty(), "set-layer-visible is structurally inert");
 }
 
 /// 🔺️ The produced diff is EXACTLY the committed one: a single `patched` entry whose `DrawingLayerPatch`
 /// sets `visible` and leaves its other ten fields `null`. `DrawingLayerPatch` has no
 /// `skip_serializing_if`, so those nulls are committed explicitly — that is what proves a hide never
-/// degrades into a whole-layer `layerJson` replacement.
+/// degrades into a whole-layer `layer` replacement.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
@@ -108,7 +108,7 @@ async fn produces_committed_diff() {
     let patch = &delta.patched[0].patch;
     assert_eq!(patch.visible, Some(false), "the visible lane carries the new flag");
     assert!(patch.locked.is_none() && patch.opacity.is_none() && patch.blend_mode.is_none(), "the sibling base-field lanes stay empty");
-    assert!(patch.layer_json.is_none(), "a visibility flip must never fall back to a whole-layer replacement");
+    assert!(patch.layer.is_none(), "a visibility flip must never fall back to a whole-layer replacement");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

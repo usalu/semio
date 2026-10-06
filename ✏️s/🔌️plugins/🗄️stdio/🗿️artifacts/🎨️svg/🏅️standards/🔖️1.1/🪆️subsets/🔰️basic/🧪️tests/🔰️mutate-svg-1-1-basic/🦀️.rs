@@ -28,13 +28,13 @@ const MOUSE_INPUT: &str = "shared://🐁️mouse.svg";
 
 /// 🧫️ Copies the immutable real asset into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("brand-and-onboarding.svg"))?;
+    let copy = ctx.copy_input(INPUT, Some("brand-and-onboarding.svg"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
 /// 🧫️ The same, for the mouse drawing the round-trip scenario additionally reads.
 fn mutable_mouse_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(MOUSE_INPUT, Some("mouse.svg"))?;
+    let copy = ctx.copy_input(MOUSE_INPUT, Some("mouse.svg"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

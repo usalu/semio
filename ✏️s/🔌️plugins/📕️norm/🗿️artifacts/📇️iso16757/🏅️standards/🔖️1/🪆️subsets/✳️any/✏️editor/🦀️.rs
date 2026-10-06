@@ -11,7 +11,7 @@ use crate::editor::iso16757::commands::{apply_remedy, evaluate, insert_item, rem
 use crate::editor::iso16757::modes::edit as edit_mode;
 use crate::editor::iso16757::modes::edit::windows::{inputs, results};
 use crate::editor::iso16757::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::op::Iso16757Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Iso16757Mutation;
 use crate::Iso16757Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::InteractiveJobClassification;
@@ -140,7 +140,7 @@ impl ArtifactEditor for Iso16757PlayApp {
         command.command_id()
     }
 
-    semio_s_artifact_norm_contract::norm_command_from_action!(Iso16757Command, crate::standards::v1::subsets::any::schema::snapshot::decode_iso16757_snapshot_json);
+    semio_s_artifact_norm_contract::norm_command_from_action!(Iso16757Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_iso16757_snapshot_json);
 
     fn handle(
         command: &Iso16757Command,

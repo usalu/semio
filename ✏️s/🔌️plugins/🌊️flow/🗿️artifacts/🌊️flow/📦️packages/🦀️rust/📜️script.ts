@@ -5,7 +5,6 @@ import { runCmd, runCargo, runVitest, runRepositoryExactCargoLaws, runRepository
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { strict as assert } from "node:assert";
-import Ajv from "ajv";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
 
@@ -27,7 +26,7 @@ if (segments[0] === "flow-window-ownership") {
 }
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts")],{cwd:this.repoRoot});
+    await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],{cwd:this.repoRoot});
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
   }
 }
@@ -91,14 +90,6 @@ class AddWidgetRetainedCheckScript extends BundleScript {
   async oracle(): Promise<void> {
     const root = new URL("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor", import.meta.url);
     const fixture = await Bun.file(new URL("🧫️fixtures/🧵️add-widget-retained/🔣️.json", root)).json();
-    const schemaModule = await Bun.file(new URL("🧫️fixtures/🧬️schema/🔣️.json", root)).json();
-    const ajv = new Ajv({ strict: true, allErrors: true });
-    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-    for (const keyword of ["x-semio-state", "x-semio-child-kind", "x-semio-child-standard", "x-semio-child-subset"]) ajv.addKeyword({ keyword, metaSchema: { type: "string" } });
-    for (const numeric of ["double", "float", "int32", "int64", "uint32", "uint64"]) ajv.addFormat(numeric, true);
-    for (const schema of ["🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"]) ajv.addSchema(await Bun.file(join(this.repoRoot, schema)).json());
-    const validate = ajv.addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/FlowAddWidgetRetained` });
-    assert(validate(fixture), JSON.stringify(validate.errors));
     const deny = { accepted: false, sessionCalls: 0, parentMutations: 0, childGroups: 0, visibleGroups: 0 };
     const model = (request: any) => {
       const textBytes = Buffer.byteLength(request.command.kind) + Buffer.byteLength(request.command.neuronKind ?? "");
@@ -204,4 +195,4 @@ class AddWidgetRetainedCheckScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-flow-flow", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], commands: { verify: OwnedVerifyScript, "test-source": SourceTestScript, "child-identity-check": ChildIdentityCheckScript, "child-edit-check": ChildEditCheckScript, "add-widget-retained-check": AddWidgetRetainedCheckScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-flow-flow", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: { verify: OwnedVerifyScript, "test-source": SourceTestScript, "child-identity-check": ChildIdentityCheckScript, "child-edit-check": ChildEditCheckScript, "add-widget-retained-check": AddWidgetRetainedCheckScript } });

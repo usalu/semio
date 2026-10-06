@@ -235,18 +235,18 @@ async fn the_artifact_publication_lane_has_a_preparation_factory() {
 /// one-item envelope, measured on the boot document (the largest fixture this app ships).
 #[semio_framework_async_macros::async_test]
 async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
-    let boot = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
+    let boot = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot();
     let factory = Fem3dArtifactPreparationFactory;
     for solid in &boot.solids {
         let mutation = Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid: solid.clone() });
-        assert!(factory.preflight(&mutation, None, store::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
+        assert!(factory.preflight(&mutation, store::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
     }
     for node in &boot.nodes {
         let mutation = Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: node.clone() });
-        assert!(factory.preflight(&mutation, None, store::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
+        assert!(factory.preflight(&mutation, store::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
     }
     assert!(factory
-        .preflight(&Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), None, store::HistoryLane::Interaction)
+        .preflight(&Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), store::HistoryLane::Interaction)
         .is_err());
 }
 
@@ -255,7 +255,7 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
 #[semio_framework_async_macros::async_test]
 async fn initial_snapshot_is_the_bundled_example_not_empty() {
     let snapshot = <Fem3dPlayApp as ArtifactEditor>::initial_snapshot();
-    let expected = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete-forest example parses");
+    let expected = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete-forest example parses");
     assert_eq!(snapshot.nodes.len(), expected.nodes.len(), "expected the bundled concrete-forest example's nodes");
     assert_eq!(snapshot.elements.len(), expected.elements.len(), "expected the bundled concrete-forest example's elements");
 }

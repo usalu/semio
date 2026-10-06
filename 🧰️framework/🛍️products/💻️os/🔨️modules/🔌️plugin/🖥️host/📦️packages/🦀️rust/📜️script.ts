@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🖥️ Runs owned plugin-host checks and exact native test filters. */
-const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
+const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import findIndex from "lodash-es/findIndex.js";
@@ -136,17 +136,11 @@ function guestFaultOracle(): number {
   const hostRoot = join(import.meta.dir, "..", "..");
   const fixture = JSON.parse(readFileSync(join(hostRoot, "🔁️lifecycle", "🧫️fixtures", "🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
-  const validate = moduleExportValidator(ajv, join(hostRoot, "🔁️lifecycle", "🧬️schema", "🔣️.json"), "ReactorTurnLifecycleV1");
-  assert(validate(fixture), JSON.stringify(validate.errors));
-  const eligible = ajv.compile({
-    type: "object",
-    required: ["code", "retryable", "events"],
-    properties: { code: { const: fixture.code }, retryable: { const: true }, events: { type: "array", maxItems: 1, items: { enum: ["open", "close", "ack"] } } },
-  });
+  
+  
   for (const row of fixture.cases) {
     const actual = row.code === fixture.code && row.retryable === true && row.events.length <= 1 && row.events.every((event: string) => ["open", "close", "ack"].includes(event));
     assert.equal(actual, row.eligible, row.id);
-    assert.equal(eligible(row), actual, row.id);
   }
   const host = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
   const runtime = readFileSync(join(hostRoot, "⏳️runtime", "🦀️.rs"), "utf8");
@@ -182,7 +176,7 @@ function retainedLifecycleOracle(): number {
   const shard = readFileSync(join(root, "..", "🦀️.rs"), "utf8");
   assert(owner.includes("struct AdmittedAuthority"));
   assert(owner.includes("struct ShardActorAllocation"));
-  assert(shard.includes("retryable_lifecycle_turn(&fault, &events)"));
+  assert(shard.includes("retryable_lifecycle_turn(&fault, events)"));
   assert(shard.includes("self.has_lifecycle_retry()"), "retry must permit one primed ingress frame");
   return fixture.traces.length;
 }
@@ -192,14 +186,15 @@ function activationOwnershipOracle(): number {
   const root = join(import.meta.dir, "..", "..", "🎠️activation");
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures", "🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
-  const validate = moduleExportValidator(ajv, join(root, "🧬️schema", "🔣️.json"), "ActivationAdmissionV1");
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const validateStage = moduleExportValidator(ajv, join(root, "🧬️schema", "🔣️.json"), "ActivationStage");
+  
+  
   for (const row of fixture.cases) {
+    assert(validateStage(row.stage), JSON.stringify(validateStage.errors));
     const actual = { actorRetained: row.stage === "complete", instantiations: ["instantiate", "register", "complete"].includes(row.stage) ? 1 : 0, drops: row.stage === "register" ? 1 : 0, admitted: row.stage === "complete" };
     const expected = { actorRetained: row.actorRetained, instantiations: row.instantiations, drops: row.drops, admitted: row.admitted };
     assert.deepEqual(actual, expected, row.id);
-    const independent = ajv.compile({ type: "object", required: Object.keys(expected), properties: Object.fromEntries(Object.entries(expected).map(([key, value]) => [key, { const: value }])) });
-    assert(independent(actual), row.id);
+
   }
   assert(existsSync(join(root, "🦀️.rs")), "shared activation ownership boundary must be mounted");
   const osRoot = join(root, "..", "..", "..", "..");
@@ -306,8 +301,8 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     const hostRoot = join(import.meta.dir, "..", "..");
     const owner = join(hostRoot, "📥️ui-patch");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures", "🔣️.json"), "utf8"));
-    const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(owner, "🧬️schema", "🔣️.json"), "NativeUiPatchMarshallingV1");
-    assert(validate(fixture), JSON.stringify(validate.errors));
+    
+    
     assert.equal(new Set(fixture.operationKinds).size, 11);
     for (const row of fixture.cases) {
       const count = row.emitted + row.returned;

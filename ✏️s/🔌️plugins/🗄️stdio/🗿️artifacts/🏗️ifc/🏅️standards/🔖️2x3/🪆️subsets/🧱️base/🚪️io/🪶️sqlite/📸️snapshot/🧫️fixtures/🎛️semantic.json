@@ -1,0 +1,29 @@
+{
+  "schemaBytes": 4006,
+  "tableWidths": {
+    "ifc2x3_document": 4,
+    "ifc2x3_edm_preamble": 17,
+    "ifc2x3_entity_argument": 4,
+    "ifc2x3_entity_type": 4,
+    "ifc2x3_file_description_argument": 4,
+    "ifc2x3_file_name_argument": 4,
+    "ifc2x3_file_schema_argument": 4,
+    "ifc2x3_header": 1,
+    "ifc2x3_instance": 4,
+    "ifc2x3_list_element": 4,
+    "ifc2x3_typed_argument": 4,
+    "ifc2x3_value": 12
+  },
+  "cases": [
+    {
+      "id": "originalSourceFull",
+      "rows": 58,
+      "valueBytes": 1847
+    },
+    {
+      "id": "emptyEntitiesRetainHeader",
+      "rows": 17,
+      "valueBytes": 587
+    }
+  ]
+}

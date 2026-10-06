@@ -60,7 +60,7 @@ import {
   type SessionAppSwitchStepV1,
   type SessionWorkKindV1,
 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
-import fixtureJson from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json";
+import snapshotJson from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json";
 import sessionLaneFixtureJson from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🧭️session-lane/🔣️.json";
 import pLimit from "p-limit";
 import { match } from "path-to-regexp";
@@ -138,7 +138,7 @@ type SurfaceSwitchFixture = {
   readonly keybindingOverride: { readonly controlId: string; readonly keys: string; readonly aria: string; readonly ariaApple: string; readonly badge: string; readonly badgeApple: string };
 };
 
-const fixture = fixtureJson as unknown as SurfaceSwitchFixture;
+const fixture = snapshotJson as unknown as SurfaceSwitchFixture;
 
 const FIXTURE_SCHEMA: Record<string, unknown> = {
   type: "object",

@@ -1,0 +1,15 @@
+{
+  "status": "HELD/after before assertions only",
+  "qualification": "One existing provider intrinsic Object case must preserve exact occurrences consistently with genuine Core; schema Map canonical sorting unchanged. No compatibility adapter/new runtime dependency/grant/predicate change. Full OS authority retirement remains separately owned.",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs",
+      "regions": [
+        {
+          "before": "        DslValue::Object(entries) => {\n            out.push(TAG_MAP);\n            let mut sorted: Vec<&(String, DslValue)> = entries.iter().collect();\n            sorted.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));\n            write_varint_u64(out, sorted.len() as u64);\n            for (k, val) in sorted {\n                encode_string_inline(k, out);\n                encode_dsl_value(ctx, val, depth + 1, out)?;\n            }\n        }",
+          "after": "        DslValue::Object(entries) => {\n            out.push(TAG_MAP);\n            write_varint_u64(out, entries.len() as u64);\n            for (k, val) in entries {\n                encode_string_inline(k, out);\n                encode_dsl_value(ctx, val, depth + 1, out)?;\n            }\n        }"
+        }
+      ]
+    }
+  ]
+}

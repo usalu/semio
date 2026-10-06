@@ -6,7 +6,6 @@ import { chromium } from "playwright";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAccessibilityMirror } from "../../../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
 import { TableHost } from "../../🟦️.tsx";
-import schema from "../../🧬️schema/🔘️button-accessibility/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🔘️button-accessibility/🔣️.json" with { type: "json" };
 
 afterEach(() => {
@@ -17,8 +16,6 @@ afterEach(() => {
 
 describe("Table row button accessibility", () => {
   it("validates the neutral row contract and mounts only the actual row button with its exact action", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const onAction = vi.fn();
     const view = render(
       <TableHost

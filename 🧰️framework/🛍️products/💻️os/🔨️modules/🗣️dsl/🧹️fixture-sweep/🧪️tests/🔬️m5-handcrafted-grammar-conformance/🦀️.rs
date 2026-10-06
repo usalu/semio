@@ -32,7 +32,7 @@ async fn check_grammar_recognizes(grammar_semio: &str, fixture_semio: &str) -> R
 #[semio_framework_async_macros::async_test]
 async fn all_discovered_snapshot_grammars_recognize_their_shipped_fixtures() {
     let facets = m5_auto_discovery::discover_grammar_snapshot_facets().await;
-    assert!(!facets.is_empty(), "auto-discovery found zero 🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio files under ✏️s/🔌️plugins — discovery walk is broken");
+    assert!(!facets.is_empty(), "auto-discovery found zero 🚪️io/📝️text/📸️snapshot/📖️.grammar.semio files under ✏️s/🔌️plugins — discovery walk is broken");
 
     let mut hard_failures: Vec<String> = Vec::new();
     let mut soft_failures: Vec<String> = Vec::new();

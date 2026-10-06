@@ -21,6 +21,7 @@
           "en": "STEP instance id of the IfcProject.",
           "de": "STEP-Instanz-ID des IfcProject."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -46,6 +47,7 @@
           "en": "STEP instance id of the IfcUnitAssignment; empty clears it.",
           "de": "STEP-Instanz-ID der IfcUnitAssignment; leer löscht sie."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 20

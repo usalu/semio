@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/🔍️scale-elements",
+  "semanticKind": "scale-elements",
+  "displayName": "Scale Elements",
+  "emoji": "🔍️",
+  "aggregateVariant": "ScaleElements",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "scale-elements",
+  "binaryTag": 13,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

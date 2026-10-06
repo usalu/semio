@@ -15,16 +15,32 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "transformJson": null,
-          "fillJson": null,
-          "strokeJson": "{\"color\":[0.0,0.0,0.0,1.0],\"width\":2.0,\"cap\":\"round\",\"join\":\"bevel\",\"dash\":[4.0,2.0]}",
           "booleanOperation": null,
-          "traceParamsJson": null,
-          "layerJson": null,
           "pathSegments": null,
           "textContent": null,
           "textSize": null,
-          "fillRule": null
+          "fillRule": null,
+          "transform": null,
+          "fill": null,
+          "stroke": {
+            "value": {
+              "color": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "width": 2,
+              "cap": "round",
+              "join": "bevel",
+              "dash": [
+                4,
+                2
+              ]
+            }
+          },
+          "traceParams": null,
+          "layer": null
         }
       }
     ],

@@ -26,6 +26,7 @@
           "en": "Index of the image, counted from 0.",
           "de": "Index des Bildes, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10

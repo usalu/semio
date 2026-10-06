@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeAirLoopSupplyNode, base: &EnergyModelSnapshot
     if let Some(item) = model.air_loops.iter_mut().find(|item| item.id == payload.id) {
         item.supply_node_id = payload.new_supply_node_id;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

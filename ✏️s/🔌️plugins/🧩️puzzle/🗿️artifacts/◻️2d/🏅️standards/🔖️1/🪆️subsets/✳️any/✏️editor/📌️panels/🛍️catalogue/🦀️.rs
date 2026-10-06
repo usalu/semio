@@ -1,5 +1,5 @@
 //! 🛍️ Puzzle 2d play app panel — the kind catalogue: node/handle/edge kind rows read from the
-//! fixture's `meta.kindCatalogs` (falling back to the kinds actually present in the document). Node
+//! snapshot's `meta.kindCatalogs` (falling back to the kinds actually present in the document). Node
 //! rows are drag sources for the canvas; every row also adds a node on click — a catalogue row owns
 //! its own `addNode` binding, so it stays an ordinary interactive row.
 //!
@@ -100,13 +100,13 @@ fn kind_catalog_item(section_id: &str, slice: &str, entry: &Value) -> semio_fram
 }
 
 pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let fixture = &envelope.fixture;
-    let inferred_nodes = inferred_kind_entries(fixture, "nodes");
-    let inferred_handles = inferred_kind_entries(fixture, "handles");
-    let inferred_edges = inferred_kind_entries(fixture, "edges");
-    let node_entries = kind_catalog_entries(fixture, "nodes").unwrap_or(inferred_nodes.as_slice());
-    let handle_entries = kind_catalog_entries(fixture, "handles").unwrap_or(inferred_handles.as_slice());
-    let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
+    let snapshot = &envelope.board_snapshot;
+    let inferred_nodes = inferred_kind_entries(snapshot, "nodes");
+    let inferred_handles = inferred_kind_entries(snapshot, "handles");
+    let inferred_edges = inferred_kind_entries(snapshot, "edges");
+    let node_entries = kind_catalog_entries(snapshot, "nodes").unwrap_or(inferred_nodes.as_slice());
+    let handle_entries = kind_catalog_entries(snapshot, "handles").unwrap_or(inferred_handles.as_slice());
+    let edge_entries = kind_catalog_entries(snapshot, "edges").unwrap_or(inferred_edges.as_slice());
     PanelTreeBuilder::new(ROOT)?
         .window_section_or_placeholder(windows, NODES_SECTION, Some(ui_label(labels.nodes.as_str())?), true, node_entries, |entry| kind_catalog_item(NODES_SECTION, "nodes", entry), ui_label(labels.none.as_str())?)?
         .window_section_or_placeholder(windows, HANDLES_SECTION, Some(ui_label(labels.handles.as_str())?), false, handle_entries, |entry| kind_catalog_item(HANDLES_SECTION, "handles", entry), ui_label(labels.none.as_str())?)?

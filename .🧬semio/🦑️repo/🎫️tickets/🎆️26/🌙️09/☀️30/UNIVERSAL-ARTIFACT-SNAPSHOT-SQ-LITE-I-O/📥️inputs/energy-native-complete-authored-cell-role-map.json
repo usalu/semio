@@ -1,0 +1,4884 @@
+{
+  "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+  "qualification": "Independent Bun SQLite DDL interpretation only; no specimen extent or runtime gate credit",
+  "tables": [
+    {
+      "table": "energy_document",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "schema",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "version",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "latitude_deg",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "longitude_deg",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "elevation_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "time_zone_hours",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "north_axis_deg",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "deep_ground_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "start_month",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "start_day",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "end_month",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "end_day",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "year",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "latitude_deg_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "latitude_deg_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "longitude_deg_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "longitude_deg_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "elevation_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "elevation_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "time_zone_hours_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "time_zone_hours_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "north_axis_deg_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "north_axis_deg_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "deep_ground_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "deep_ground_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 27
+    },
+    {
+      "table": "energy_structure_child",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "child_id",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "artifact_id",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "artifact_kind",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "standard",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "subset",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 6
+    },
+    {
+      "table": "energy_zones_child",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "child_id",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "artifact_id",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "artifact_kind",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "standard",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "subset",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 6
+    },
+    {
+      "table": "energy_referenced_model_link",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "artifact_id",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "artifact_kind",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "standard",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "subset",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "role",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "pin_kind",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "checkpoint_id",
+          "type": "TEXT",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "blob_hash",
+          "type": "TEXT",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "blob_size_high",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "blob_size_low",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "blob_media_type",
+          "type": "TEXT",
+          "notNull": false,
+          "primaryKey": false
+        }
+      ],
+      "width": 12
+    },
+    {
+      "table": "energy_weather_link",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "artifact_id",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "artifact_kind",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "standard",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "subset",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "role",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "pin_kind",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "checkpoint_id",
+          "type": "TEXT",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "blob_hash",
+          "type": "TEXT",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "blob_size_high",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "blob_size_low",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "blob_media_type",
+          "type": "TEXT",
+          "notNull": false,
+          "primaryKey": false
+        }
+      ],
+      "width": 12
+    },
+    {
+      "table": "energy_ground_month",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "building_surface_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "shallow_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "building_surface_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "building_surface_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "shallow_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "shallow_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 9
+    },
+    {
+      "table": "energy_zone",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "volume_m3",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "multiplier",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "conditioned",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "part_of_total_floor_area",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "volume_m3_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "volume_m3_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 11
+    },
+    {
+      "table": "energy_space",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "floor_area_m2",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "floor_area_m2_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "floor_area_m2_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 9
+    },
+    {
+      "table": "energy_surface",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "construction_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "outside_boundary_kind",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "interzone_partner",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "sun_exposed",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "wind_exposed",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "multiplier",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 13
+    },
+    {
+      "table": "energy_surface_vertex",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "surface_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "x_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "y_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "z_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "x_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "x_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "y_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "y_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "z_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "z_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 12
+    },
+    {
+      "table": "energy_fenestration",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "surface_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "u_value_w_m2k",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "shgc",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "vlt",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "area_m2",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "height_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "sill_height_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "frame_conductance_w_k",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "divider_conductance_w_k",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "overhang_depth_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "overhang_offset_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "fin_depth_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "fin_offset_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "glazing_construction_id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "u_value_w_m2k_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "u_value_w_m2k_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "shgc_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "shgc_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "vlt_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "vlt_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "area_m2_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "area_m2_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "height_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "height_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "sill_height_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "sill_height_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "frame_conductance_w_k_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "frame_conductance_w_k_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "divider_conductance_w_k_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "divider_conductance_w_k_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "overhang_depth_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "overhang_depth_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "overhang_offset_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "overhang_offset_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fin_depth_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fin_depth_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fin_offset_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fin_offset_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 43
+    },
+    {
+      "table": "energy_fenestration_vertex",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "fenestration_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "x_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "y_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "z_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "x_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "x_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "y_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "y_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "z_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "z_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 12
+    },
+    {
+      "table": "energy_material",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "roughness",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "thickness_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "conductivity_w_m_k",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "density_kg_m3",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "specific_heat_j_kg_k",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "thermal_absorptance",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_absorptance",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_absorptance",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "thickness_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "thickness_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "conductivity_w_m_k_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "conductivity_w_m_k_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "density_kg_m3_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "density_kg_m3_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "specific_heat_j_kg_k_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "specific_heat_j_kg_k_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "thermal_absorptance_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "thermal_absorptance_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_absorptance_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_absorptance_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_absorptance_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_absorptance_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 27
+    },
+    {
+      "table": "energy_glazing_material",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "thickness_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "conductivity_w_m_k",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_transmittance",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_reflectance_front",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_reflectance_back",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_transmittance",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_reflectance_front",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_reflectance_back",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "infrared_transmittance",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "infrared_emissivity_front",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "infrared_emissivity_back",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "thickness_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "thickness_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "conductivity_w_m_k_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "conductivity_w_m_k_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_transmittance_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_transmittance_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_reflectance_front_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_reflectance_front_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_reflectance_back_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "solar_reflectance_back_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_transmittance_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_transmittance_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_reflectance_front_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_reflectance_front_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_reflectance_back_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_reflectance_back_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "infrared_transmittance_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "infrared_transmittance_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "infrared_emissivity_front_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "infrared_emissivity_front_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "infrared_emissivity_back_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "infrared_emissivity_back_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 38
+    },
+    {
+      "table": "energy_gas_material",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "thickness_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "gas",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "thickness_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "thickness_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 9
+    },
+    {
+      "table": "energy_construction",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 5
+    },
+    {
+      "table": "energy_construction_layer",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "construction_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "material_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_people",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "activity_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "people_per_area",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "sensible_fraction",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "latent_fraction",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "radiant_fraction",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "people_per_area_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "people_per_area_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "sensible_fraction_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "sensible_fraction_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "latent_fraction_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "latent_fraction_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "radiant_fraction_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "radiant_fraction_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 19
+    },
+    {
+      "table": "energy_lighting",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "watts_per_area",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "radiant_fraction",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_fraction",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "return_air_fraction",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "watts_per_area_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "watts_per_area_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "radiant_fraction_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "radiant_fraction_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_fraction_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "visible_fraction_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "return_air_fraction_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "return_air_fraction_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 18
+    },
+    {
+      "table": "energy_equipment",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "watts_per_area",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "radiant_fraction",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "latent_fraction",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "watts_per_area_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "watts_per_area_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "radiant_fraction_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "radiant_fraction_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "latent_fraction_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "latent_fraction_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 15
+    },
+    {
+      "table": "energy_thermostat",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "heating_setpoint_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "cooling_setpoint_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "heating_throttle_range_k",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "cooling_throttle_range_k",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "heating_throttle_range_k_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "heating_throttle_range_k_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "cooling_throttle_range_k_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "cooling_throttle_range_k_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 13
+    },
+    {
+      "table": "energy_humidistat",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "humidifying_setpoint_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "dehumidifying_setpoint_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "humidifying_throttle_range",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "dehumidifying_throttle_range",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "humidifying_throttle_range_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "humidifying_throttle_range_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "dehumidifying_throttle_range_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "dehumidifying_throttle_range_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 13
+    },
+    {
+      "table": "energy_setpoint_manager",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "kind",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        }
+      ],
+      "width": 7
+    },
+    {
+      "table": "energy_setpoint_outdoor_reset",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "low_outdoor_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "high_outdoor_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "low_setpoint_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "high_setpoint_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "low_outdoor_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "low_outdoor_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "high_outdoor_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "high_outdoor_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "low_setpoint_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "low_setpoint_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "high_setpoint_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "high_setpoint_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 13
+    },
+    {
+      "table": "energy_ideal_loads",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "max_heating_supply_air_temp_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "min_cooling_supply_air_temp_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "max_heating_capacity_w",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "max_cooling_capacity_w",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "outdoor_air_per_person_m3_s",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "outdoor_air_per_area_m3_s_m2",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "max_heating_supply_air_temp_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "max_heating_supply_air_temp_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "min_cooling_supply_air_temp_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "min_cooling_supply_air_temp_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "max_heating_capacity_w_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "max_heating_capacity_w_ieee754_class",
+          "type": "TEXT",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "max_cooling_capacity_w_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "max_cooling_capacity_w_ieee754_class",
+          "type": "TEXT",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "outdoor_air_per_person_m3_s_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "outdoor_air_per_person_m3_s_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "outdoor_air_per_area_m3_s_m2_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "outdoor_air_per_area_m3_s_m2_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 23
+    },
+    {
+      "table": "energy_zone_equipment",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "equipment_type",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "priority",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "heating_capacity_w",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "cooling_capacity_w",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "heating_capacity_w_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "heating_capacity_w_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "cooling_capacity_w_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "cooling_capacity_w_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 13
+    },
+    {
+      "table": "energy_air_loop",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "supply_node_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "return_node_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_supply_air_flow_m3_s",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "design_supply_air_flow_m3_s_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_supply_air_flow_m3_s_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 10
+    },
+    {
+      "table": "energy_air_loop_terminal",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "air_loop_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_plant_loop",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "loop_type",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "supply_temperature_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "return_temperature_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "design_flow_kg_s",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "supply_temperature_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "supply_temperature_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "return_temperature_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "return_temperature_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_flow_kg_s_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_flow_kg_s_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 15
+    },
+    {
+      "table": "energy_plant_loop_equipment",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "plant_loop_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "equipment_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_outdoor_air_system",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "air_loop_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "min_oa_flow_m3_s",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "economizer_enabled",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "min_oa_flow_m3_s_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "min_oa_flow_m3_s_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 9
+    },
+    {
+      "table": "energy_infiltration",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "method",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_flow_ach",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "flow_per_exterior_area_m3_s_m2",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "effective_leakage_area_m2",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "discharge_coefficient",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "stack_height_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "constant_term_coefficient",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "temperature_term_coefficient",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "velocity_term_coefficient",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "velocity_squared_term_coefficient",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "design_flow_ach_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_flow_ach_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "flow_per_exterior_area_m3_s_m2_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "flow_per_exterior_area_m3_s_m2_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "effective_leakage_area_m2_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "effective_leakage_area_m2_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "discharge_coefficient_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "discharge_coefficient_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "stack_height_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "stack_height_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "constant_term_coefficient_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "constant_term_coefficient_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "temperature_term_coefficient_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "temperature_term_coefficient_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "velocity_term_coefficient_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "velocity_term_coefficient_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "velocity_squared_term_coefficient_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "velocity_squared_term_coefficient_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 34
+    },
+    {
+      "table": "energy_mechanical_ventilation",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_flow_m3_s",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "fan_total_efficiency",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "fan_delta_pressure_pa",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "design_flow_m3_s_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_flow_m3_s_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fan_total_efficiency_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fan_total_efficiency_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fan_delta_pressure_pa_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fan_delta_pressure_pa_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 15
+    },
+    {
+      "table": "energy_shading_surface",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "transmittance_schedule_id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        }
+      ],
+      "width": 6
+    },
+    {
+      "table": "energy_shading_vertex",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "shading_surface_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "x_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "y_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "z_m",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "x_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "x_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "y_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "y_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "z_m_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "z_m_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 12
+    },
+    {
+      "table": "energy_space_list",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 5
+    },
+    {
+      "table": "energy_space_list_member",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "space_list_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "space_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_thermal_enclosure",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 5
+    },
+    {
+      "table": "energy_thermal_enclosure_zone",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "thermal_enclosure_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_adjacency_pair",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "surface_a_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "surface_b_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 5
+    },
+    {
+      "table": "energy_airflow_network",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "outdoor_node_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 2
+    },
+    {
+      "table": "energy_airflow_zone_node",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "network_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "node_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 5
+    },
+    {
+      "table": "energy_airflow_link",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "network_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "link_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_electrical_load_center",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 5
+    },
+    {
+      "table": "energy_electrical_generator",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "load_center_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "generator_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_electrical_pv",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "load_center_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "pv_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_electrical_battery",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "load_center_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "battery_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_pv_system",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "dc_capacity_w",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "area_m2",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "tilt_deg",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "azimuth_deg",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "module_efficiency",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "inverter_efficiency",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "dc_capacity_w_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "dc_capacity_w_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "area_m2_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "area_m2_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "tilt_deg_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "tilt_deg_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "azimuth_deg_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "azimuth_deg_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "module_efficiency_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "module_efficiency_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "inverter_efficiency_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "inverter_efficiency_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 22
+    },
+    {
+      "table": "energy_battery",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "capacity_kwh",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "max_charge_w",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "max_discharge_w",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "round_trip_efficiency",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "capacity_kwh_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "capacity_kwh_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "max_charge_w_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "max_charge_w_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "max_discharge_w_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "max_discharge_w_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "round_trip_efficiency_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "round_trip_efficiency_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 16
+    },
+    {
+      "table": "energy_shw_system",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "heater_capacity_w",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "storage_volume_m3",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "setpoint_c",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "heater_capacity_w_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "heater_capacity_w_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "storage_volume_m3_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "storage_volume_m3_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "setpoint_c_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "setpoint_c_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 14
+    },
+    {
+      "table": "energy_solar_thermal",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "collector_area_m2",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "efficiency",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "storage_volume_m3",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "tilt_deg",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "azimuth_deg",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "collector_area_m2_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "collector_area_m2_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "efficiency_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "efficiency_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "storage_volume_m3_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "storage_volume_m3_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "tilt_deg_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "tilt_deg_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "azimuth_deg_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "azimuth_deg_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 19
+    },
+    {
+      "table": "energy_refrigeration",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "case_count",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_load_w",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "defrost_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_load_w_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_load_w_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 9
+    },
+    {
+      "table": "energy_water_system",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fixture_count",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "peak_flow_l_s",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "peak_flow_l_s_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "peak_flow_l_s_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 9
+    },
+    {
+      "table": "energy_fault",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "target_equipment_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "fault_type",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "severity",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "start_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "severity_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "severity_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 10
+    },
+    {
+      "table": "energy_output_variable",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "key",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "reporting_frequency",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 6
+    },
+    {
+      "table": "energy_sizing_object",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "sizing_type",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "design_day_type",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 7
+    },
+    {
+      "table": "energy_daylight_zone",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "entity_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "illuminance_target_lux",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "glare_limit",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "window_transmittance",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "illuminance_target_lux_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "illuminance_target_lux_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "glare_limit_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "glare_limit_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "window_transmittance_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "window_transmittance_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 14
+    },
+    {
+      "table": "energy_room_air_model",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "zone_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "model",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 5
+    },
+    {
+      "table": "energy_constant_schedule",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "value",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "value_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "value_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 7
+    },
+    {
+      "table": "energy_daily_schedule",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "interpolation",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 5
+    },
+    {
+      "table": "energy_daily_hour",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "value",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "value_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "value_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 6
+    },
+    {
+      "table": "energy_daily_limits",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "min",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "max",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "min_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "min_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "max_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "max_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 7
+    },
+    {
+      "table": "energy_weekly_schedule",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_weekly_day",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "daily_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 4
+    },
+    {
+      "table": "energy_annual_schedule",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "default_daily_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "holiday_daily_schedule_id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": false
+        }
+      ],
+      "width": 6
+    },
+    {
+      "table": "energy_annual_rule",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "start_month",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "start_day",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "end_month",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "end_day",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "daily_schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 8
+    },
+    {
+      "table": "energy_annual_holiday",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "year",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "month",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "day",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 6
+    },
+    {
+      "table": "energy_time_series_schedule",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "document_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "timestep_seconds",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 5
+    },
+    {
+      "table": "energy_time_series_value",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "primaryKey": true
+        },
+        {
+          "name": "schedule_id",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "ordinal",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "value",
+          "type": "REAL",
+          "notNull": false,
+          "primaryKey": false
+        },
+        {
+          "name": "value_ieee754_bits",
+          "type": "INTEGER",
+          "notNull": true,
+          "primaryKey": false
+        },
+        {
+          "name": "value_ieee754_class",
+          "type": "TEXT",
+          "notNull": true,
+          "primaryKey": false
+        }
+      ],
+      "width": 6
+    }
+  ]
+}

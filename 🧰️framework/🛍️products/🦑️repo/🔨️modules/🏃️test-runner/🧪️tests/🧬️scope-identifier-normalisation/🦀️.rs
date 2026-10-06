@@ -1,11 +1,13 @@
 //! 🦀️ Rust side of the scope-identifier case: flattening and URI path decoding.
 
 use semio_framework_repo_test_runner as subject;
+#[path = "../../🧪️testing/🦀️.rs"]
+mod examples;
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
 //#region 🔖️Support
 fn selectors(ctx: &Context) -> Result<Vec<String>, String> {
-    Ok(subject::parse_selector_vectors(&ctx.fixture_bytes("shared://🧬️scope-selectors.json")?)?.selectors)
+    Ok(examples::parse_selector_vectors(&ctx.input_bytes("shared://🧬️scope-selectors.json")?)?.selectors)
 }
 
 fn strings(values: Vec<String>) -> Json {

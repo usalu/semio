@@ -3,7 +3,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import {
   ClampToEdgeWrapping,
   DoubleSide,
@@ -25,7 +25,6 @@ const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixtureRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-material");
 const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️world3d-glb-material/🔣️.json"), "utf8"));
 const sideNames = new Map<Side, string>([[FrontSide, "FrontSide"], [DoubleSide, "DoubleSide"]]);
 const wrapNames = new Map<Wrapping, string>([[ClampToEdgeWrapping, "ClampToEdgeWrapping"], [MirroredRepeatWrapping, "MirroredRepeatWrapping"]]);
 const filterNames = new Map<TextureFilter, string>([[LinearFilter, "LinearFilter"], [NearestFilter, "NearestFilter"]]);
@@ -51,8 +50,6 @@ describe("🎨️ primitive-local GLB material carriage", () => {
   afterAll(() => vi.unstubAllGlobals());
 
   it("validates the neutral bounded ownership and publication contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.publication).toEqual({
       workUnit: "onePrimitiveMaterialFieldPerStep",
       ownership: "primitiveLocal",

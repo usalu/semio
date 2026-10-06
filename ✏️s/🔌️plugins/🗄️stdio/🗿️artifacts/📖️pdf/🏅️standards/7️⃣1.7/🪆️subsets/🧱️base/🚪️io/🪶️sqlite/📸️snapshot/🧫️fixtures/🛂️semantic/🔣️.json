@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "id": "empty-domain",
+      "schema": "Σ\u0000domain",
+      "declaredVersion": "1.7",
+      "rows": 5,
+      "valueBytes": 114,
+      "counts": {
+        "pdf_cos_value": 3,
+        "pdf_document_info": 1,
+        "pdf_document": 1
+      }
+    },
+    {
+      "id": "long-root-text",
+      "schema": "owned PDF 世界\u0000",
+      "repeat": 16384,
+      "declaredVersion": "1.7",
+      "rows": 5,
+      "valueBytes": 278633,
+      "counts": {
+        "pdf_cos_value": 3,
+        "pdf_document_info": 1,
+        "pdf_document": 1
+      }
+    }
+  ],
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "metadata": "excluded from direct domain"
+}

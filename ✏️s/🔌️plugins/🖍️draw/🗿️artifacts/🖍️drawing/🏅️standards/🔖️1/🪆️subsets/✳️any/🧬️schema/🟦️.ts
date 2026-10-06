@@ -1,4 +1,5 @@
-import {binary64,type Binary64,parseBinary64Transport} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { binary64, type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseFillRule,type FillRule} from "./🎨️fill/🌀️rule/🟦️.ts";
 /** 🧬️ Drawing artifact schema — every field with its state class. */
 
@@ -118,7 +119,7 @@ export function parseDrawingArtifact(value: unknown, at = "$"): DrawingArtifact 
   };
 }
 
-const ownedWord=(value:unknown,at:string):Binary64=>{try{return parseBinary64Transport(value);}catch{return drawingDrawingArtifactGuardReject(at,"expected a Binary64 word or number");}};
+const ownedWord=(value:unknown,at:string):Binary64=>{try{return parseBinary64(value);}catch{return drawingDrawingArtifactGuardReject(at,"expected a Binary64 word or number");}};
 const ownedRecord=drawingDrawingArtifactGuardObject,ownedArray=drawingDrawingArtifactGuardArray,ownedText=drawingDrawingArtifactGuardString,ownedBool=drawingDrawingArtifactGuardBoolean;
 function ownedPoint(value:unknown,at:string):DrawingPoint{const v=ownedArray(value,at,{minItems:2,maxItems:2});return[ownedWord(v[0],at+'[0]'),ownedWord(v[1],at+'[1]')];}
 function ownedColor(value:unknown,at:string):DrawingColor{const v=ownedArray(value,at,{minItems:4,maxItems:4});return[ownedWord(v[0],at+'[0]'),ownedWord(v[1],at+'[1]'),ownedWord(v[2],at+'[2]'),ownedWord(v[3],at+'[3]')];}
@@ -200,3 +201,14 @@ export function parsePathGeometrySegment(value: unknown, at = "$"): PathGeometry
     case "close": return { kind };
   }
 }
+
+/** 📐 Validate a decoded transform value. */
+export function parseDrawingTransform(value:unknown,at="$"):DrawingTransform {const row=ownedRecord(value,at);return {x:ownedWord(row.x,at+".x"),y:ownedWord(row.y,at+".y"),scaleX:ownedWord(row.scaleX,at+".scaleX"),scaleY:ownedWord(row.scaleY,at+".scaleY"),shear:ownedWord(row.shear,at+".shear"),rotation:ownedWord(row.rotation,at+".rotation")};}
+/** 🎨 Validate a decoded fill value. */
+export function parseDrawingFill(value:unknown,at="$"):DrawingFill {return ownedAttributes({fill:value},at).fill!;}
+/** 🖊️ Validate a decoded stroke value. */
+export function parseDrawingStroke(value:unknown,at="$"):DrawingStroke {return ownedAttributes({stroke:value},at).stroke!;}
+/** 🖼️ Decoded trace settings. */
+export interface DrawingTraceParams {threshold:Binary64;simplifyEpsilon:Binary64}
+/** 🖼️ Validate decoded trace settings. */
+export function parseDrawingTraceParams(value:unknown,at="$"):DrawingTraceParams {const row=ownedRecord(value,at);return {threshold:ownedWord(row.threshold,at+".threshold"),simplifyEpsilon:ownedWord(row.simplifyEpsilon,at+".simplifyEpsilon")};}

@@ -1,0 +1,8 @@
+{
+  "$ref": "#/$defs/output",
+  "$defs": {
+    "output": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/compiler/syntax/rust/generated-token-output"
+    }
+  }
+}

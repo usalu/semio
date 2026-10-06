@@ -4,6 +4,9 @@ use super::*;
 use semio_framework_value::native_encoding::NativeEncodeControl;
 use semio_framework_dsl_record::NativeSchemaControl;
 use std::{cmp::Ordering,mem::size_of};
+#[path = "🫳️borrowed/🦀️.rs"]
+mod borrowed;
+pub(super) use borrowed::projected_record_body_into;
 
 
 fn push<T>(values:&mut Vec<T>,value:T,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{if values.len()==values.capacity(){let capacity=if values.capacity()==0{1}else{values.capacity().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Pack output frontier capacity overflow"))?};control.charge(capacity.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Pack output frontier size overflow"))?)?;control.checkpoint()?;values.try_reserve_exact(capacity-values.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Pack output frontier allocation"))?;}values.push(value);Ok(())}
@@ -27,7 +30,7 @@ impl<'a> Symbols<'a>{
         if depth>maximum.min(64){return Err(ValueError::new(ValueRefusalKind::DepthLimit,"Pack symbol discovery depth exceeds limit").into())}control.scoped_stage(|control|{control.begin_stage(0)?;control.step()?;match value{
             FieldValue::Text(text)=>self.note(text,false,control)?,
             FieldValue::Tuple(items)=>{control.begin_stage(items.len())?;for item in items{self.value(elem_shape_of(shape),item,depth+1,maximum,control)?;control.step()?;}},
-            FieldValue::List(items)=>{let table=table_spec_of(shape).map(|producer|producer.encode(control)).transpose()?;control.begin_stage(items.len())?;for item in items{if let(Some(spec),FieldValue::Record(row))=(&table,item){for field in &spec.fields{if let Some(value)=row.fields.get(&field.id){if matches!(field.shape,Shape::Text){if let FieldValue::Text(text)=value{self.note(text,true,control)?;}}else{self.value(Some(&field.shape),value,depth+1,maximum,control)?;}}}}else{self.value(elem_shape_of(shape),item,depth+1,maximum,control)?;}control.step()?;}},
+            FieldValue::List(items)=>{let table=table_spec_of(shape).map(|producer|producer.encode(control)).transpose()?;control.begin_stage(items.len())?;for item in items{if let(Some(spec),FieldValue::Record(row))=(&table,item){for field in &spec.fields{if let Some(value)=row.fields.get(&field.id){if matches!(field.shape,Shape::Text|Shape::Ref(_)){if let FieldValue::Text(text)=value{self.note(text,true,control)?;}}else{self.value(Some(&field.shape),value,depth+1,maximum,control)?;}}}}else{self.value(elem_shape_of(shape),item,depth+1,maximum,control)?;}control.step()?;}},
             FieldValue::Record(record)=>{let spec=nested(shape,control)?;self.record(spec.as_ref(),record,depth+1,maximum,control)?;},
             FieldValue::Block(value)=>self.value(block_inner_shape(shape),value,depth+1,maximum,control)?,
             FieldValue::Statements(items)=>{control.begin_stage(items.len())?;for(keyword,record)in items{self.note(keyword,true,control)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(key,_)|key==keyword)).map(|(_,producer)|producer.encode(control)).transpose()?;self.record(spec.as_ref(),record,depth+1,maximum,control)?;control.step()?;}},
@@ -62,11 +65,11 @@ impl<'a> Symbols<'a>{
 
 fn table_value(row:&FieldValue,id:u16)->Option<&FieldValue>{match row{FieldValue::Record(record)=>record.fields.get(&id).filter(|value|!matches!(value,FieldValue::Absent)),_=>None}}
 
-struct Output{bytes:Option<Vec<u8>>,length:usize}
-impl Output{
-    fn measure()->Self{Self{bytes:None,length:0}}
-    fn allocated(length:usize,control:&mut NativeEncodeControl<'_>)->Result<Self,PackRefusal>{Ok(Self{bytes:Some(control.allocate_vec(length)?),length:0})}
-    fn bytes(&mut self,bytes:&[u8],control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{self.length=self.length.checked_add(bytes.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Pack output length overflow"))?;if let Some(output)=&mut self.bytes{if bytes.len()>output.capacity()-output.len(){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Pack output exceeded admitted length").into())}control.scoped_stage(|control| -> ::core::result::Result<(),PackRefusal> {control.begin_stage(bytes.len())?;for fragment in bytes.chunks(65536){output.extend_from_slice(fragment);control.advance(fragment.len())?;}Ok::<_,PackRefusal>(())})?;}Ok(())}
+struct Output<'a>{bytes:Option<Vec<u8>>,external:Option<&'a mut dyn protocol::io::binary::operation_bytes::OperationByteOutput>,length:usize}
+impl<'a> Output<'a>{
+    fn measure()->Self{Self{bytes:None,external:None,length:0}}
+    fn allocated(length:usize,control:&mut NativeEncodeControl<'_>)->Result<Self,PackRefusal>{Ok(Self{bytes:Some(control.allocate_vec(length)?),external:None,length:0})}
+    fn bytes(&mut self,bytes:&[u8],control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{self.length=self.length.checked_add(bytes.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Pack output length overflow"))?;if let Some(output)=&mut self.external{output.write_bytes(bytes,control)?;}if let Some(output)=&mut self.bytes{if bytes.len()>output.capacity()-output.len(){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Pack output exceeded admitted length").into())}control.scoped_stage(|control| -> ::core::result::Result<(),PackRefusal> {control.begin_stage(bytes.len())?;for fragment in bytes.chunks(65536){output.extend_from_slice(fragment);control.advance(fragment.len())?;}Ok::<_,PackRefusal>(())})?;}Ok(())}
     fn byte(&mut self,byte:u8,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{self.bytes(&[byte],control)}
     fn varint(&mut self,mut value:u64,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{let mut bytes=[0;10];let mut length=0;loop{bytes[length]=(value as u8)&127;value>>=7;if value!=0{bytes[length]|=128;}length+=1;if value==0{break;}}self.bytes(&bytes[..length],control)}
     fn signed(&mut self,value:i64,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{self.varint(((value as u64)<<1)^((value>>63)as u64),control)}
@@ -137,10 +140,34 @@ pub(super) fn record_body(spec:&RecordSpec,record:&RecordValue,options:&EncodeOp
 }
 
 
+pub(super) fn record_body_into(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
+    let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
+    control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{
+        control.begin_stage(0)?;
+        let mut symbols=Symbols{entries:Vec::new()};
+        symbols.record(Some(spec),record,0,options.limits.max_depth,control)?;
+        symbols.finish(control)?;
+        let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:false,next_chunk:0};
+        let mut measure=Output::measure();
+        encoder.body(spec,record,&mut measure)?;
+        if measure.length as u64>options.limits.max_file_len{return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"operation Record exceeds max_file_len"})}
+        if measure.length>maximum.saturating_sub(encoder.control.owned_bytes()){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"operation Record exceeds caller allocation allowance").into())}
+        let mut output=Output{bytes:None,external:Some(output),length:0};
+        encoder.body(spec,record,&mut output)?;
+        if output.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"operation Record length changed between admission and emission").into())}
+        Ok(output.length)
+    }))
+}
+
 /// 🎞️ Borrows one complete intrinsic owner through symbol admission and exact byte emission.
 pub(super) fn value_record_body(field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{
     let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
     control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{control.begin_stage(0)?;let mut symbols=Symbols{entries:Vec::new()};symbols.dynamic(value,0,options.limits.max_depth,control)?;symbols.finish(control)?;let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:false,next_chunk:0};let mut measure=Output::measure();encoder.value_body(field_id,value,&mut measure)?;if measure.length as u64>options.limits.max_file_len{return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::WorkLimit, "intrinsic wire exceeds max_file_len")))}if measure.length>maximum.saturating_sub(encoder.control.owned_bytes()){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"intrinsic wire exceeds caller allocation allowance").into())}let mut output=Output::allocated(measure.length,encoder.control)?;encoder.value_body(field_id,value,&mut output)?;if output.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"intrinsic wire changed after byte admission").into())}Ok(output.bytes.unwrap())}))
+}
+
+pub(super) fn value_record_body_into(field_id:u16,value:&DslValue,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut NativeEncodeControl<'_>)->Result<usize,PackRefusal>{
+    let maximum=usize::try_from(options.limits.max_total_alloc).unwrap_or(usize::MAX).min(control.maximum_bytes());
+    control.scoped_maximum(maximum,|control|control.scoped_stage(|control|{control.begin_stage(0)?;let mut symbols=Symbols{entries:Vec::new()};symbols.dynamic(value,0,options.limits.max_depth,control)?;symbols.finish(control)?;let mut encoder=Encoder{symbols:&symbols,options,control,writer:None,chunking:false,next_chunk:0};let mut measure=Output::measure();encoder.value_body(field_id,value,&mut measure)?;if measure.length as u64>options.limits.max_file_len{return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::WorkLimit, "intrinsic wire exceeds max_file_len")))}if measure.length>maximum.saturating_sub(encoder.control.owned_bytes()){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"intrinsic wire exceeds caller allocation allowance").into())}let mut output=Output{bytes:None,external:Some(output),length:0};encoder.value_body(field_id,value,&mut output)?;if output.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"intrinsic wire changed after byte admission").into())}Ok(output.length)}))
 }
 
 enum DocumentSource<'a>{Record{spec:&'a RecordSpec,record:&'a RecordValue},Intrinsic{spec:&'a RecordSpec,field_id:u16,value:&'a DslValue}}

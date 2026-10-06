@@ -5,6 +5,8 @@
     "includedScripts": []
   },
   "scripts": {
+    "test-source-projection": "nx run @semio-tech/framework-rs:test-source-projection",
+    "test-directory-discovery": "nx run @semio-tech/framework-rs:test-directory-discovery",
     "test-command-ingress-consumer": "nx run @semio-tech/framework-rs:test-command-ingress-consumer"
   }
 }

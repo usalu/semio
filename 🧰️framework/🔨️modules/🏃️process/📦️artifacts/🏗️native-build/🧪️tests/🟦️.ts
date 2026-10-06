@@ -9,7 +9,6 @@ import { buildCargoArtifacts, readCargoArtifactBuildPolicyV1 } from "../🟦️.
 
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-test("portable compiler corpus is admitted by independent Ajv",()=>{ const oracle=new Ajv({strict:true}).addSchema(schema);expect(oracle.getSchema(schema.$id+"#/$defs/Fixture")!(fixture)).toBe(true); });
 test("native artifact policy is explicit and schema-first", () => {
   const validate = new Ajv({strict:true}).compile(schema);
   expect(validate(fixture.policy)).toBe(true);
@@ -39,8 +38,8 @@ test("actual Cargo artifact capture executes the compiler's retained executable 
  await buildCargoArtifacts(manifest,["--bin",fixture.cargo.name],policy,{sourcesRecord:"sources.json"});
  const binary=join(source,"dist/build",fixture.cargo.name+(process.platform==="win32"?".exe":"")),result=spawnSync(binary,[],{encoding:"utf8"});expect(result.status).toBe(0);expect(result.stdout).toBe(fixture.cargo.stdout);
  const record=JSON.parse(readFileSync(join(source,"dist/build/sources.json"),"utf8"));expect(record.sources).toContain(main);
- const independent=spawnSync("cargo",["run","--manifest-path",manifest,"--quiet","--target-dir",join(root,"oracle")],{cwd:source,encoding:"utf8",env:{...process.env,CARGO_BUILD_BUILD_DIR:join(root,"oracle-build")},timeout:10000});expect(independent.status).toBe(0);expect(independent.stdout).toBe(result.stdout);
+ const independent=spawnSync("cargo",["run","--offline","--manifest-path",manifest,"--quiet","--target-dir",join(root,"oracle")],{cwd:source,encoding:"utf8",env:{...process.env,CARGO_BUILD_BUILD_DIR:join(root,"oracle-build")},timeout:10000});expect(independent.status).toBe(0);expect(independent.stdout).toBe(result.stdout);
  expect(readdirSync(policy.captureDirectory)).toEqual([]);
-});
+}, 30_000);
 
 test("original Cargo publication oracle preserves private final outputs and shared intermediates",async()=>{ const {testCargoArtifactPublication}=await import("./📦️publication/🟦️.ts");await testCargoArtifactPublication(process.env.SEMIO_TEST_ARTIFACT_DIR!); });

@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::object::schema::{SemioObjectArtifact, diff::SemioObjectDiff, snapshot::SemioObjectSnapshot};
-use protocol::{DiffCodec, MutationDiff};
+use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
 use store::{ArtifactDsl, ArtifactPack};
 
 #[semio_framework_async_macros::async_test]

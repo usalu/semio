@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/model/mutation/scale-elements/schema.json",
+  "title": "ScaleElements",
+  "description": "The `scale-elements` mutation record — internally tagged `\"mutation\": \"scaleElements\"`: a set of model elements scaled in place by one relative factor per axis.",
+  "x-semio-inverse-rows": {
+    "perTarget": {
+      "targets": 1
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "factors"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "scaleElements",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Elements",
+          "de": "Elemente"
+        },
+        "description": {
+          "en": "Elements to scale; ones the model lacks are skipped.",
+          "de": "Zu skalierende Elemente; im Modell fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "cad",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "factors": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Factors",
+          "de": "Faktoren"
+        },
+        "description": {
+          "en": "Factor per axis each element's scale is multiplied by.",
+          "de": "Faktor je Achse, mit dem die Skalierung jedes Elements multipliziert wird."
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "scale",
+        "order": 20
+      }
+    }
+  }
+}

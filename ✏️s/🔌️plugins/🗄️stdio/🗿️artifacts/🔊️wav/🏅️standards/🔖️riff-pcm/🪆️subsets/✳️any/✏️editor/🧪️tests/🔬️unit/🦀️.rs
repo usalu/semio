@@ -129,7 +129,7 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     let generation = store.generation_now();
     let root = store.snapshot_root();
     let mut cancelled = store
-        .begin_apply_batch(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "wav-large-sample-cancel".into(), vec![mutation.clone()], None, store::HistoryLane::Document, Some(&factory), None)
+        .begin_apply_batch(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "wav-large-sample-cancel".into(), vec![mutation.clone()], store::HistoryLane::Document, Some(&factory), None)
         .expect("bounded patch cancellation candidate admits");
     let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
     for _ in 0..64 {
@@ -158,7 +158,6 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
             store.content_revision_now(),
             "wav-large-sample-publication".into(),
             vec![mutation.clone()],
-            Some("Edit WAV sample".into()),
             store::HistoryLane::Document,
             Some(&factory),
             None,
@@ -208,7 +207,6 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
             store.content_revision_now(),
             "wav-large-metadata-publication".into(),
             vec![fmt_mutation.clone()],
-            Some("Edit WAV metadata".into()),
             store::HistoryLane::Document,
             Some(&factory),
             None,

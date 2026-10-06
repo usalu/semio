@@ -80,7 +80,6 @@ fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_rev
             origin: Default::default(),
             transaction: None,
         }],
-        description: Some(format!("prepared {role} outcome")),
         verb: None,
         sequence_number: ordinal as i32 + 10,
         started_at: format!("2026-09-05T00:00:0{ordinal}Z"),
@@ -162,7 +161,6 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
             origin: Default::default(),
             transaction: None,
         }],
-        description: Some(format!("durable map member {ordinal}")),
         verb: None,
         sequence_number: store.edit_sequence + 1,
         started_at: format!("2026-09-05T00:01:0{ordinal}Z"),
@@ -326,7 +324,6 @@ fn map_member_admission(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordin
         store.content_revision_now(),
         format!("map-owner-{ordinal}"),
         DemoMutation::SetN(SetN { n: next }),
-        Some(format!("durable Map member {ordinal}")),
     )
 }
 

@@ -54,10 +54,6 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemovePage {
 //#endregion 🔖️Behavior
 
 //#region 🔖️Codecs
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion 🔖️Codecs
 
 //#region 🧪️Tests

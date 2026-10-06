@@ -1,0 +1,5 @@
+# Value Dispatch and Product Declaring Preparation
+
+Value dispatcher2 conserves the admitted original test/long/empty-rest execution and cancellation protocol, with only new immutable plan/provider/pre/terminal paths and the exact Rust supplement/raw tool ancestry guards. Its separate dispatch gate binds provider2 and all supplemental authority.
+
+Product declaring helper3 is preparation-only admitted. Six system Base64 closed cases and Bun/Iarna workspace parity are bound. It captures only the existing source path set plus explicitly present Root member manifests, records full old/current/null inverse observations, requires unchanged selected73 manifests and causal browser/native publication inputs, and applies final cancellable full endpoint guards. Original registered script/project identity is required. It explicitly refuses inherited metadata acceptance; prepared overlay must be separately checked before fresh ordinary/locked owning metadata. Complete schema corpus, prior publication current identity and runtime success remain false.

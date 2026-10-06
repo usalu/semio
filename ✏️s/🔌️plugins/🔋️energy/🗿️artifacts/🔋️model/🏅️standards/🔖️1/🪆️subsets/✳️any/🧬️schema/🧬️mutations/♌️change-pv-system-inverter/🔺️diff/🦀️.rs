@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangePvSystemInverterEfficiency, base: &EnergyMode
     if let Some(item) = model.pv_systems.iter_mut().find(|item| item.id == payload.id) {
         item.inverter_efficiency = payload.new_inverter_efficiency;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

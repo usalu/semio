@@ -1,0 +1,19 @@
+{
+  "schema": "owned-operation-byte-pages/v1",
+  "source": {
+    "prefixUtf8": "17",
+    "paddingByte": 32,
+    "paddingCount": 8192
+  },
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "maximumPayloadBytes": 8194,
+  "maximumAllocationBytes": 65536,
+  "maximumCloseSteps": 8322,
+  "expected": {
+    "payloadBytes": 8194,
+    "overflowByteReturned": 255,
+    "terminalAllocatedBytes": 0
+  },
+  "emptyOperationLength": 0
+}

@@ -318,9 +318,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-component-sampling-applied",
       "class": "third-party-generated",
       "target": {
@@ -371,7 +370,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-frame-component-applied",
       "class": "third-party-generated",
       "target": {
@@ -422,7 +420,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-frame-component-applied",
       "class": "third-party-generated",
       "target": {
@@ -473,7 +470,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-sof-marker-applied",
       "class": "third-party-generated",
       "target": {
@@ -524,7 +520,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -575,7 +570,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-huffman-table-applied",
       "class": "third-party-generated",
       "target": {
@@ -626,7 +620,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-huffman-table-applied",
       "class": "third-party-generated",
       "target": {
@@ -677,7 +670,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-sample-precision-applied",
       "class": "handcrafted",
       "target": {
@@ -720,7 +712,6 @@
       "notes": "SOF0 sample-precision byte hand-patched 8 -> 12. HANDCRAFTED: Pillow 12.2.0's save() always writes baseline 8-bit precision and exposes no parameter for it, so no real-library path reaches this mutation (same limit E2's own registry rationale records for this reader). The entropy-coded scan data is left byte-identical to the genuine Pillow 8-bit encoding, so this file is explicitly NOT a spec-conformant 12-bit bitstream -- it exercises only the SOF marker-field mutation this subset's own vocabulary names, and is not claimed to be more than that."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-arithmetic-applied",
       "class": "handcrafted",
       "target": {

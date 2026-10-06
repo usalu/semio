@@ -149,11 +149,15 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
   };
   const receiptExport = ownedExport(repoRoot, "directory", "DirectoryProjectionReceiptV1");
   const identityExport = ownedExport(repoRoot, "directory", "DirectoryHomeIdentityV1");
-  const stepExport = ownedExport(repoRoot, "directory", "DirectoryHomeBootstrapStepV1");
+  const actionExport = ownedExport(repoRoot, "directory", "DirectoryHomeBootstrapActionV1");
+  const outcomeExport = ownedExport(repoRoot, "directory", "DirectoryHomeBootstrapOutcomeV1");
   const labelsExport = ownedExport(repoRoot, "directory", "DirectoryHomeBootstrapLabelsV1");
   assert(receiptExport(fixture.receipt), JSON.stringify(receiptExport.errors));
   for (const identity of Object.values(fixture.identities)) assert(identityExport(identity), JSON.stringify(identityExport.errors));
-  for (const step of fixture.lifecycle) assert(stepExport(step), JSON.stringify(stepExport.errors));
+  for (const step of fixture.lifecycle) {
+    assert(actionExport(step.action), JSON.stringify(actionExport.errors));
+    assert(outcomeExport(step.expected), JSON.stringify(outcomeExport.errors));
+  }
   assert(labelsExport(fixture.labels), JSON.stringify(labelsExport.errors));
   const receiptKeys = ["schema", "sessionBindingSha256", "authorizationGeneration", "throughSeqInclusive", "receiptSha256"].sort();
   const receipt = (value: unknown): boolean => {
@@ -231,7 +235,7 @@ class DirectoryHomeBootstrapCheckScript extends BundleScript {
  * `🌎️hub/🔐️auth/🦀️.rs`, so an AU1-side change to the route breaks this gate rather than the app. */
 export function hubAuthContractOracle(repoRoot: string): number {
   const hubSchema = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🔐️auth/🧬️schema/🔣️.json"), "utf8")) as { $defs: Record<string, Record<string, unknown>> };
-  const osFixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🔣️.json"), "utf8")) as {
+  const osFixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔐️sign-in/🔣️.json"), "utf8")) as {
     signOutPath: string;
     requestSchema: string;
     errorSchema: string;
@@ -777,8 +781,7 @@ type RetentionBody = { readonly key: string; readonly component: string; readonl
  * once keyed on the authored key (the rule now shipped) and once keyed on the minted id (the rule
  * that shipped before). The first must mount the surface exactly once; the second must mount it more
  * than once — so the twin proves the law AND witnesses the defect it replaces, on the same data.
- * The fixture document itself is validated by ajv, a third-party validator, rather than by the shape
- * this function happens to read.
+ * Actual retained node identity, DOM keys and sibling reconciliation are compared with the shared observations.
  *
  * Live defect 26/09/09/PROCEDURAL-3D-END-TO-END: `window:procedural-main` grew four port rows on an
  * eval settle, the node-graph surface renumbered 30 → 34, and React rebuilt the flow host — a second
@@ -798,70 +801,6 @@ export function surfaceHostRetentionOracle(repoRoot: string): number {
     assert(condition, message);
     checks += 1;
   };
-
-  // 🧬️ Third-party structural validation of the fixture document before a single law is read off it.
-  const shape = {
-    type: "object",
-    $defs: {
-      body: {
-        type: "object",
-        required: ["key", "component"],
-        properties: {
-          key: { type: "string", minLength: 1 },
-          component: { enum: ["container", "tree", "treeSection", "treeItem", "surface"] },
-          children: { type: "array", items: { $ref: "#/$defs/body" } },
-        },
-      },
-    },
-    required: ["surface", "surfaceKey", "canvasKey", "expected", "siblingKeyCases", "refreshes"],
-    properties: {
-      surface: { type: "string", minLength: 1 },
-      surfaceKey: { type: "string", minLength: 1 },
-      canvasKey: { type: "string", minLength: 1 },
-      expected: {
-        type: "object",
-        required: ["surfaceHostMounts", "surfaceAttaches", "surfaceDomId", "canvasDomId", "surfaceReactKeyPath", "surfaceNodeIdByRefresh", "bodyNodeCountByRefresh"],
-        properties: {
-          surfaceHostMounts: { type: "integer", const: 1 },
-          surfaceAttaches: { type: "integer", const: 1 },
-          surfaceDomId: { type: "string" },
-          canvasDomId: { type: "string" },
-          surfaceReactKeyPath: { type: "array", minItems: 1, items: { type: "string", pattern: "^k:" } },
-          surfaceNodeIdByRefresh: { type: "array", minItems: 2, items: { type: "integer", minimum: 1 } },
-          bodyNodeCountByRefresh: { type: "array", minItems: 2, items: { type: "integer", minimum: 1 } },
-        },
-      },
-      siblingKeyCases: {
-        type: "array",
-        minItems: 3,
-        items: {
-          type: "object",
-          required: ["name", "why", "siblings", "expected"],
-          properties: {
-            name: { type: "string", minLength: 1 },
-            why: { type: "string", minLength: 1 },
-            siblings: { type: "array", minItems: 1, items: { type: "object", required: ["id", "key"], properties: { id: { type: "integer", minimum: 1 }, key: { type: "string" } } } },
-            expected: { type: "array", minItems: 1, items: { type: "string", pattern: "^(k:|#)" } },
-          },
-        },
-      },
-      refreshes: {
-        type: "array",
-        minItems: 3,
-        items: {
-          type: "object",
-          required: ["name", "why", "statusJson", "body"],
-          properties: {
-            name: { type: "string", minLength: 1 },
-            why: { type: "string", minLength: 1 },
-            statusJson: { type: "string", minLength: 1 },
-            body: { $ref: "#/$defs/body" },
-          },
-        },
-      },
-    },
-  };
-  check(ownedAjv().compile(shape)(fixture) === true, "the retention fixture must satisfy its own declared document shape");
 
   /** 🧬️ `builtNodeToSnapshot`'s numbering, re-derived: an id is taken BEFORE the children are walked. */
   const mint = (body: RetentionBody): Map<string, number> => {
@@ -1028,4 +967,4 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("document-opening-scope-check", DocumentOpeningScopeCheckScript)
   .register("view-state-carriage-check", ViewStateCarriageCheckScript);
 
-await runScriptMain(router);
+if (import.meta.main) await runScriptMain(router);

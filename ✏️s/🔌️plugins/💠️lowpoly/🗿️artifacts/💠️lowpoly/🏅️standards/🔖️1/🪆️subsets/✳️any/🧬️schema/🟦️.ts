@@ -1,6 +1,7 @@
 /** 🧬️ Lowpoly artifact schema — every field with its state class. */
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import {type Binary32,parseBinary32Transport} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { type Binary32 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary32 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseLowpolyMeshState,type LowpolyMeshState}from"./🕸️mesh/🟦️.ts";
 export *from"./🕸️mesh/🟦️.ts";
 
@@ -123,7 +124,7 @@ export function parseLowpolyObject(value: unknown, at = "$"): LowpolyObject {
 }
 
 /** 📐️ Exact three-component native binary32 vector. */
-export function parseLowpolyVector(value:unknown,at="$"):[Binary32,Binary32,Binary32]{const row=lowpolyLowpolyArtifactGuardArray(value,at,{minItems:3,maxItems:3});return[parseBinary32Transport(row[0]),parseBinary32Transport(row[1]),parseBinary32Transport(row[2])];}
+export function parseLowpolyVector(value:unknown,at="$"):[Binary32,Binary32,Binary32]{const row=lowpolyLowpolyArtifactGuardArray(value,at,{minItems:3,maxItems:3});return[parseBinary32(row[0]),parseBinary32(row[1]),parseBinary32(row[2])];}
 /** 🎨️ Intrinsic persisted pixel octets, independent of any wire encoding. */
 export function parseLowpolyPixels(value:unknown):Uint8Array{if(!(value instanceof Uint8Array))throw Error("Lowpoly pixels require owned octets");return value.slice();}
 export function parseLowpolyTransform(value: unknown, at = "$"): LowpolyTransform {
@@ -140,7 +141,7 @@ export function parseLowpolyPaintLayer(value: unknown, at = "$"): LowpolyPaintLa
   return {
     name: lowpolyLowpolyArtifactGuardString(row["name"], `${at}.name`),
     visible: lowpolyLowpolyArtifactGuardBoolean(row["visible"], `${at}.visible`),
-    opacity: parseBinary32Transport(row["opacity"]),
+    opacity: parseBinary32(row["opacity"]),
     blendMode: lowpolyLowpolyArtifactGuardString(row["blendMode"], `${at}.blendMode`),
     pixels: parseLowpolyPixels(row["pixels"]),
   };

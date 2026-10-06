@@ -183,5 +183,3 @@ export const parseMemberKind: NormWireReader<MemberKind> = normWireLiteral("Beam
 export const parseSupportCondition: NormWireReader<SupportCondition> = normWireLiteral("SimplySupported", "Continuous", "Cantilever", "Fixed");
 export const parseTightnessClass: NormWireReader<TightnessClass> = normWireLiteral("Tc0", "Tc1", "Tc2");
 export const parseDuctilityClass: NormWireReader<DuctilityClass> = normWireLiteral("a", "b", "c");
-
-export * from "./🪶️sqlite/🟦️.ts";

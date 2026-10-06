@@ -1,0 +1,11 @@
+# IFC Current Ordinary Plugin And Public Typed Route Law Readback
+
+Read-only current source evidence, no execution. IFC root definition parses the schema through contract::definition_from_schema (root lines 33–34); native_codecs returns Vec::new (41–43). This empty external executable-factory list must not be confused with absent native typed document codecs: declaration lines 67–71 registers document_codec_bare for IFC4 wildcard and IFC2x3 wildcard/cv20/sav/cobie using their concrete schema/snapshot/mutation types.
+
+Two actual async laws exercise that ordinary installation. IFC4 snapshot SQLite tests line 4, sqlite_snapshot_ifc4_actual_declaration_preserves_every_ieee_word_in_owned_encodings, builds Plugin<NoPluginApp> with crate::declaration(crate::definition()), then calls public io_export_sqlite_snapshot and io_import_sqlite_snapshot for both Binary and Text at dialect s.stdio.ifc/4/*. Equality projects the semantic database containing every IEEE word. It explicitly checks typed routes do not fall through EncodeNative/DecodeNative intermediates.
+
+IFC2x3 tests line 5, sqlite_snapshot_ifc2x3_all_four_actual_declaration_routes_preserve_decimals_and_warnings, builds the same normal Plugin and loops all four declared subsets, both encodings, public typed export/import, exact snapshot equality and exact expected subset diagnostics. The adjacent erased encoding laws separately exercise actual provider import/export Native phases and finite literal payload equality.
+
+These two named laws match the actual sqlite_snapshot_ selector lexically. This audit does not assert they passed in the current 27-test receipt; compare the named receipt entries before granting execution coverage. Historical 25/162 receipts predate the current reference closure and remain historical evidence only.
+
+Fresh receipt independently read: 🗑️generated/nx-root-native-fresh-cache-2306/terminalOutputs/6492758335790076618, Nextest 06dc48cc-d5db-44e9-a5a8-5c2f90238084. Lines 18049 and 18126 explicitly mark the two named ordinary Plugin/public typed route laws `ok`; summary 18177 reports 27 passed, 137 skipped, 1.318 seconds. This is genuine current owning Native coverage supplied by the parent's run and independently read here, not an execution performed by this lane. No additional ordinary Plugin demand is needed for these five concrete dialects and two encodings.

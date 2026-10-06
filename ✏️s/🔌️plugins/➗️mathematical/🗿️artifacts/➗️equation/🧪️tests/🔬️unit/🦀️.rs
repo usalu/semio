@@ -33,7 +33,7 @@ fn moved_geometry() -> EquationGeometry {
 #[semio_framework_async_macros::async_test]
 async fn the_carrier_is_the_parent_state_and_the_value_wire_keeps_it() {
     let snapshot = EquationSnapshot::default();
-    let fixture = equation_fixture(&snapshot);
+    let fixture = equation_carrier_snapshot(&snapshot);
     assert_eq!((fixture.graph.clone(), fixture.geometry.clone(), fixture.equation.clone()), (snapshot.graph.clone(), snapshot.geometry.clone(), snapshot.equation.clone()));
     assert_eq!(equation_snapshot_from_host_snapshot(fixture), snapshot, "the carrier rebuilds the snapshot with its derived handles");
     assert_eq!(EquationSnapshot::from_value(snapshot.to_value()).expect("the value wire decodes"), snapshot);

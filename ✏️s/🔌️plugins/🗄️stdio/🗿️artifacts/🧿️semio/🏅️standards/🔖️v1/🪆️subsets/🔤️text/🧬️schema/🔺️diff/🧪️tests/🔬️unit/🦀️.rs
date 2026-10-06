@@ -1,6 +1,7 @@
+use crate::text::io::text::diff::dec_mark_kind;
 use super::*;
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 #[semio_framework_async_macros::async_test]
 async fn apply_replaces_runs_wholesale() {

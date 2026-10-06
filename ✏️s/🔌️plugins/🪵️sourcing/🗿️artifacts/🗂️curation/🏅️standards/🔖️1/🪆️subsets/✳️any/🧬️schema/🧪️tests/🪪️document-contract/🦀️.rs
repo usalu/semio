@@ -6,38 +6,38 @@ use protocol::MutationDiff;
 #[test]
 fn curation_document_contract_exact_children_and_native_transports() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).unwrap();
-    let snapshot: CurationSnapshot = dsl::json::from_json_str(&vectors["document"].to_string()).unwrap();
-    let artifact: CurationArtifact = dsl::json::from_json_str(&vectors["document"].to_string()).unwrap();
+    let snapshot: CurationSnapshot = semio_framework_pack_json::from_json_str(&vectors["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let artifact: CurationArtifact = semio_framework_pack_json::from_json_str(&vectors["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(artifact.to_snapshot(), snapshot);
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&snapshot)).unwrap(), vectors["document"]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap(), vectors["document"]);
     assert_eq!(CurationSnapshot::parse_dsl(&snapshot.print_dsl()).unwrap(), snapshot);
     assert_eq!(CurationSnapshot::decode_pack(&snapshot.encode_pack()).unwrap(), snapshot);
     for document in vectors["geometryDocuments"].as_array().unwrap() {
-        let snapshot: CurationSnapshot = dsl::json::from_json_str(&document.to_string()).unwrap();
+        let snapshot: CurationSnapshot = semio_framework_pack_json::from_json_str(&document.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(CurationSnapshot::parse_dsl(&snapshot.print_dsl()).unwrap(), snapshot);
         assert_eq!(CurationSnapshot::decode_pack(&snapshot.encode_pack()).unwrap(), snapshot);
-        let actual: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&snapshot)).unwrap();
+        let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap();
         assert!(store::pack_rt::json_values_equal(&actual, document), "{actual} != {document}");
     }
     for child in vectors["validChildren"].as_array().unwrap() {
         let mut document = vectors["document"].clone();
         document["catalog"] = child.clone();
-        let restored: CurationSnapshot = dsl::json::from_json_str(&document.to_string()).unwrap();
-        let artifact: CurationArtifact = dsl::json::from_json_str(&document.to_string()).unwrap();
+        let restored: CurationSnapshot = semio_framework_pack_json::from_json_str(&document.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let artifact: CurationArtifact = semio_framework_pack_json::from_json_str(&document.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(artifact.to_snapshot(), restored);
         assert_eq!(CurationSnapshot::parse_dsl(&restored.print_dsl()).unwrap(), restored);
         assert_eq!(CurationSnapshot::decode_pack(&restored.encode_pack()).unwrap(), restored);
-        let actual: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&restored)).unwrap();
+        let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&restored)).unwrap();
         assert_eq!(actual, document);
     }
     for child in vectors["invalidChildren"].as_array().unwrap() {
         let mut document = vectors["document"].clone();
         document["catalog"] = child.clone();
-        assert!(dsl::json::from_json_str::<CurationSnapshot>(&document.to_string()).is_err(), "{document}");
-        assert!(dsl::json::from_json_str::<CurationArtifact>(&document.to_string()).is_err(), "{document}");
+        assert!(semio_framework_pack_json::from_json_str::<CurationSnapshot>(&document.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{document}");
+        assert!(semio_framework_pack_json::from_json_str::<CurationArtifact>(&document.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{document}");
     }
-    for diff in vectors["invalidDiffs"].as_array().unwrap() { assert!(dsl::json::from_json_str::<CurationDiff>(&diff.to_string()).is_err(), "{diff}"); }
-    for diff in vectors["validDiffs"].as_array().unwrap() { dsl::json::from_json_str::<CurationDiff>(&diff.to_string()).unwrap(); }
+    for diff in vectors["invalidDiffs"].as_array().unwrap() { assert!(semio_framework_pack_json::from_json_str::<CurationDiff>(&diff.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{diff}"); }
+    for diff in vectors["validDiffs"].as_array().unwrap() { semio_framework_pack_json::from_json_str::<CurationDiff>(&diff.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(); }
     let mut catalog = snapshot.catalog.clone();
     catalog.child_id = "foreign-child".into();
     let expected = catalog.clone();

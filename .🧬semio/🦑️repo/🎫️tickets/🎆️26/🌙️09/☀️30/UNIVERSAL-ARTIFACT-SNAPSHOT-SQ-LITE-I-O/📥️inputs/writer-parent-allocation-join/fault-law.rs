@@ -1,0 +1,7 @@
+use super::*;
+#[test]
+fn known_fault_close_retains_original_scope_under_small_grant_and_releases_every_declared_owner(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️parent-return.json")).unwrap();let mut fault=Fault::new(crate::FaultOrigin::Framework,crate::FaultCode::new(fixture["faultCode"].as_str().unwrap()),fixture["faultMessage"].as_str().unwrap());fault.scope.plugin_id=Some("writer".into());fault.causes.push(crate::FaultCause{message:"cause".into(),code:Some(crate::FaultCode::new("cause.code"))});fault.params=Some(Box::new(crate::FaultParams(vec![("name".into(),"value".into())])));let pointer=fault.scope.as_ref()as*const _;let message=fault.message.as_ptr();let mut owner=FaultCloseOwner::new(fault);assert_eq!(owner.close_step(0,4096),pending_blocked());assert_eq!(owner.close_step(1,4),pending_blocked());assert_eq!(owner.fault().unwrap().scope.as_ref()as*const _,pointer);assert_eq!(owner.fault().unwrap().message.as_ptr(),message);assert!(!owner.terminal_is_empty());
+    for _ in 0..64{if owner.terminal_is_empty(){break;}let step=owner.close_step(1,4096);if let FaultCloseStep::Pending{released_items,released_bytes}=step{assert!(released_items<=1&&released_bytes<=4096);}}
+    assert!(owner.terminal_is_empty());eprintln!("[DEBUG] concrete Fault declared text/cause/params/vector/box allocations released only after whole physical grants");
+}

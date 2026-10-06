@@ -1,14 +1,37 @@
 /** 🧫️ Neutral scene RGBA, independent SVG groups and exact uncropped path equivalence. */
-import {test,expect} from "bun:test";
+import {test,expect,spyOn} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
 import cases from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
+import pathHandoffCases from "../../🧫️fixtures/🧹️path/🔣️.json";
+import pathHandoffSchema from "../../🧬️schema/🧹️path/🔣️.json";
+import imageHandoffCases from "../../🧫️fixtures/🧹️image/🔣️.json";
+import imageHandoffSchema from "../../🧬️schema/🧹️image/🔣️.json";
+import imageSources from "../../🧫️fixtures/🖼️images/🔣️.json";
+import {AffineImageJob} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts";
 import pathSchema from "../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
 import compositingCases from "../../../🧩️compositing/🧫️fixtures/🔣️.json";
 import {RasterSceneJob,rasterizeScene,type RasterSceneInput,type RasterSceneNode} from "../../🟦️.ts";
 import {PathRasterJob,type PathRasterInput} from "../../../../🧮️geometry/📷️raster/🟦️.ts";
 const ajv=new Ajv({strict:true});ajv.addSchema(pathSchema);const validate=ajv.compile(schema);
+test("scene path pixels wait for the actual whole parent retirement before compositing",async()=>{
+ expect(new Ajv({strict:true}).compile(pathHandoffSchema)(pathHandoffCases)).toBe(true);
+ const original=PathRasterJob.prototype.intoRetirement;
+ for(const handoff of pathHandoffCases)for(const grant of [1,7,4096]){const name=handoff.source,row=cases.find(c=>c.name===name)!,value=input(row.input),before=structuredClone(value),job=new RasterSceneJob(value),state=job as any,records:{job:any;output:any;work:number}[]=[];
+  const spy=spyOn(PathRasterJob.prototype,"intoRetirement").mockImplementation(function(this:PathRasterJob){const result=original.call(this),record={...result,work:0};records.push(record);expect(result.output).not.toBeNull();const nodes=state.nodes,advance=result.job.advance.bind(result.job);result.job.advance=unit=>{expect(unit).toBe(1);expect(state.phase).toBe("pathCleanup");expect(state.painter).toBeNull();expect(state.painted).toBe(result.output);expect(state.nodes).toBe(nodes);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return result;});
+  try{let done=false;for(let at=0;at<2000000;at++){const p=job.advance(grant);if(p.done){done=true;break;}}expect(done).toBe(true);}finally{spy.mockRestore();}expect(records.length).toBe(handoff.parents);records.forEach(record=>{expect(record.job.terminalIsEmpty()).toBe(true);expect(record.work).toBeGreaterThanOrEqual(16);});expect(state.painterRetirement).toBeNull();expect(state.painted).toBeNull();expect([...job.result().pixels]).toEqual(row.expected);const reference=await sharp(Buffer.from(await svg(value))).ensureAlpha().raw().toBuffer();for(let at=0;at<reference.length;at++)expect(Math.abs(reference[at]!-job.result().pixels[at]!)).toBeLessThanOrEqual(2);expect(value).toEqual(before);process.stderr.write(`[DEBUG] Actual scene whole-path handoff ${name}: grant=${grant}, children=${records.length}, RGBA matched SVG\n`);
+ }
+});
+test("scene sampled pixels wait for actual affine retirement before layer publication",async()=>{
+ expect(new Ajv({strict:true}).compile(imageHandoffSchema)(imageHandoffCases)).toBe(true);const original=AffineImageJob.prototype.intoRetirement;
+ for(const handoff of imageHandoffCases)for(const grant of [1,7,4096]){
+  const row=imageSources.find(c=>c.name===handoff.source)!,value=input(row.input),before=structuredClone(value),job=new RasterSceneJob(value),state=job as any,records:{job:any;output:any;work:number}[]=[];
+  const spy=spyOn(AffineImageJob.prototype,"intoRetirement").mockImplementation(function(this:AffineImageJob){const retired=original.call(this),record={...retired,work:0};records.push(record);expect(retired.output).not.toBeNull();const nodes=state.nodes,advance=retired.job.advance.bind(retired.job);retired.job.advance=unit=>{expect(unit).toBe(1);expect(state.phase).toBe("imageCleanup");expect(state.sampler).toBeNull();expect(state.sampled).toBe(retired.output);expect(state.nodes).toBe(nodes);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return retired;});
+  try{let done=false;for(let at=0;at<2000000;at++){if(job.advance(grant).done){done=true;break;}}expect(done).toBe(true);}finally{spy.mockRestore();}
+  expect(records.length).toBe(handoff.parents);for(const record of records){expect(record.job.terminalIsEmpty()).toBe(true);expect(record.work).toBeGreaterThanOrEqual(11);}expect(state.samplerRetirement).toBeNull();expect(state.sampled).toBeNull();expect([...job.result().pixels]).toEqual(row.expected);expect(value).toEqual(before);const reference=await sharp(Buffer.from(await svg(value))).ensureAlpha().raw().toBuffer();expect(delta(job.result().pixels,reference)).toBeLessThanOrEqual(2);console.error(`[DEBUG] Actual scene affine handoff ${handoff.source}: grant=${grant}, children=${records.length}, RGBA matched independent SVG`);
+ }
+});
 function input(value:any):RasterSceneInput {return {...value,nodes:value.nodes.map((n:any)=>({...n,content:n.content.kind==="pixels"?{kind:"pixels",image:{...n.content.image,pixels:new Uint8Array(n.content.image.pixels)}}:n.content}))};}
 function complete(value:RasterSceneInput,budget=4096) {const job=new RasterSceneJob(value);let work=0;for(let steps=0;steps<2000000;steps++){const p=job.advance(budget);expect(p.work-work).toBeLessThanOrEqual(budget);work=p.work;if(p.done)return job.result();}throw Error("Scene did not terminate");}
 function d(segments:PathRasterInput["segments"]):string {return segments.map((s:any)=>s.kind==="close"?"Z":s.kind==="move"?`M${s.to}`:s.kind==="line"?`L${s.to}`:s.kind==="quad"?`Q${s.ctrl} ${s.to}`:s.kind==="cubic"?`C${s.ctrl1} ${s.ctrl2} ${s.to}`:`A${s.rx} ${s.ry} ${s.rotation} ${Number(s.largeArc)} ${Number(s.sweep)} ${s.to}`).join(" ");}
@@ -77,4 +100,16 @@ test("conservative ellipse bounds do not reject a visible short arc with large r
  const value:RasterSceneInput={width:16,height:8,origin:[0,0],tolerance:.001,maxPixels:128,maxSourceBytes:268439552,maxBytes:67108864,maxChunks:65536,assets:[],nodes:[{id:"short-arc",groups:[],transform:[1,0,0,1,0,0],opacity:1,blendMode:"normal",visible:true,content}]};
  const full=new PathRasterJob({...value,...content,transform:value.nodes[0]!.transform});while(!full.advance(4096).done){}
  expect([...complete(value).pixels]).toEqual([...full.result().pixels]);
+});
+
+
+test("scene waits for actual compositor retirement before completing output",async()=>{
+ const rows=(await import("../../🧫️fixtures/🧹️compositing/🔣️.json")).default;
+ 
+ const {CompositeJob}=await import("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts"),original=CompositeJob.prototype.intoRetirement;
+ for(const handoff of rows)for(const grant of [1,7,4096]){
+  const row=cases.find(v=>v.name===handoff.source)!,value=input(row.input),before=structuredClone(value),job=new RasterSceneJob(value),state=job as any;let closed:any=null,adopted=0,work=0;
+  const spy=spyOn(CompositeJob.prototype,"intoRetirement").mockImplementation(function(this:CompositeJob){adopted++;closed=original.call(this);expect(closed.output).not.toBeNull();const advance=closed.job.advance.bind(closed.job);closed.job.advance=(unit:number)=>{expect(unit).toBe(1);expect(state.phase).toBe("compositingCleanup");expect(state.compositor).toBeNull();expect(state.output).toBe(closed.output);expect(()=>job.result()).toThrow(/incomplete/);const p=advance(unit);expect(p.work-work).toBe(1);work=p.work;return p;};return closed;});
+  try{let done=false;for(let at=0;at<2000000;at++){const p=job.advance(grant);if(p.done){done=true;break;}}expect(done).toBe(true);expect(adopted).toBe(1);expect(work).toBeGreaterThanOrEqual(6);expect(closed.job.terminalIsEmpty()).toBe(true);expect(state.compositorRetirement).toBeNull();expect(job.result()).toBe(closed.output);expect([...job.result().pixels]).toEqual(row.expected);expect(value).toEqual(before);const reference=await sharp(Buffer.from(await svg(value))).ensureAlpha().raw().toBuffer();expect(delta(job.result().pixels,reference)).toBeLessThanOrEqual(2);console.error(`[DEBUG] Actual scene compositor handoff ${row.name}: grant=${grant} work=${work} RGBA matched independent SVG`);}finally{spy.mockRestore();}
+ }
 });

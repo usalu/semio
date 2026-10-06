@@ -26,4 +26,4 @@ class OwnedVerifyScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir,"semio-s-artifact-block-5d",{commands:{verify:OwnedVerifyScript},snapshotSqliteTestFeatures:[],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts","../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts","../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts"]});
+await runArtifactRustPackageMain(import.meta.dir,"semio-s-artifact-block-5d",{commands:{verify:OwnedVerifyScript},snapshotSqliteTestFeatures:["component-app-assembly"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts","../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts"]});

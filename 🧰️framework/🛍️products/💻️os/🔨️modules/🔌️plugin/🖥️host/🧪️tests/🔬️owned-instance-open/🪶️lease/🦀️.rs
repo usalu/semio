@@ -22,7 +22,7 @@ async fn count_component_full_i32_both_native_encodings_use_real_wasm_and_indepe
  let component=std::fs::read(fixture_component()).expect("required staged real component");let runtime=OwnedRuntime::new();
  let compiled=runtime.compile(&package_ref("semio:neutral-host-fixture",&component),&component).await.expect("actual component compile");
  let fixture=corpus();let dialect=fixture["owner"].as_str().unwrap();
- assert_eq!(runtime.codec_sqlite_schema(&compiled,dialect,codec_budget()).await.expect("guest own SQL declaration").trim(),include_str!("../../../🧫️fixtures/🧩️component/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql").trim());
+ assert_eq!(runtime.codec_sqlite_schema(&compiled,dialect,codec_budget()).await.expect("guest own SQL declaration").trim(),include_str!("../../../🧪️testing/🧩️component/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql").trim());
  let hash=runtime.codec_pack_schema_hash(&compiled,FIXTURE_DOCUMENT_SCHEMA,codec_budget()).await.expect("actual guest record identity");assert_ne!(hash,[0;32]);
  let genesis=runtime.codec_genesis(&compiled,FIXTURE_DOCUMENT_SCHEMA,MINTED_DOCUMENT_ID,codec_budget()).await.expect("actual Count document context");
  for count in fixture["counts"].as_array().unwrap(){

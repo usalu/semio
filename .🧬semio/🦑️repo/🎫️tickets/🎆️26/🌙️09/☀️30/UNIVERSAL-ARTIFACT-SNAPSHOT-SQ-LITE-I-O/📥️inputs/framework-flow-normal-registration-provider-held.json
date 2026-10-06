@@ -1,0 +1,14 @@
+{
+  "qualification": "HELD narrow owner hook only; no production writes or gates; mount after existing API demand BEFORE",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🦀️.rs",
+      "regions": [
+        {
+          "before": "impl crate::os_store::ArtifactPack for FlowHostSnapshot {\n",
+          "after": "impl crate::os_store::ArtifactPack for FlowHostSnapshot {\n    /// 🌊️ Publishes the actual persisted Flow owner when its Store opens or hydrates.\n    fn native_snapshot_registration() -> Option<(store::io::Dialect, crate::os_store::ArtifactCodec)> {\n        Some((store::io::Dialect { artifact_kind: \"flow.host_snapshot\", standard: store::io::StandardId(\"1\"), subset: store::io::SubsetId(\"*\") }, crate::os_store::ArtifactCodec::bare::<Self, FlowMutation>(FLOW_DOCUMENT_SCHEMA)))\n    }\n"
+        }
+      ]
+    }
+  ]
+}

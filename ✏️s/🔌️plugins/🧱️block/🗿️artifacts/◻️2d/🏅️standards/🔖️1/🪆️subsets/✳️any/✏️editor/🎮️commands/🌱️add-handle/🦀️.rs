@@ -1,6 +1,6 @@
 //! 🌱️ 🌱️ Block 2D play app commands command — `add-handle`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 use crate::{Block2dHandleTemplate, Block2dSnapshot};
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

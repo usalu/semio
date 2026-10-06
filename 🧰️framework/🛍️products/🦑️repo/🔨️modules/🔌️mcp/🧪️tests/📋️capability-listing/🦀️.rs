@@ -48,7 +48,7 @@ fn generic_profile_surface(_ctx: &Context) -> Result<Outcome, String> {
 }
 
 fn ide_profile_surface(ctx: &Context) -> Result<Outcome, String> {
-    let raw = ctx.fixture_bytes("shared://📋️surface.json")?;
+    let raw = ctx.input_bytes("shared://📋️surface.json")?;
     let surface = parse_json(&String::from_utf8_lossy(&raw))?;
     let ticket_tools: Vec<String> = surface.array("ticketTools").iter().map(|value| if let Json::String(name) = value { name.clone() } else { String::new() }).collect();
     let mut rows = Vec::new();

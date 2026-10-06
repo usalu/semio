@@ -1,0 +1,7 @@
+# Child Emission Mounted Member Prefix And Close Readback
+
+Read-only current mounted ToolRun source audit; no Native assertion credit. Actual OS Plugin tool-run root2459–2474 keeps the accepted ChildEmit local across awaited dispatch, then moves it into member.retired_emits and transfers the actual emission_owner into retired_emission_owners before processing publication failure. A normal returned dispatch refusal therefore preserves both owners for the closing lane.
+
+Current tool_run_member_retire_step2493 onward closes an already queued owner or an active retired-member owner directly, then queued/active prefix, then queued/active raw operation backing. It no longer extends recipient queues during closure. Children identity lookup uses borrowed entries comparison rather than allocating cloned slot/child identity strings. Terminal erased owner-cell size and raw Vec/full queue capacity grants remain checked. The earlier held-input close findings are repaired in this mounted region.
+
+Publication/rebase still use queue push/extend and publication lookup still clones identities. These occur outside the repaired close path; no allocator/control credit for those lanes is inferred. The awaited dispatch future's cancellation/unwind ownership law and preview non-child residual disposal remain separate physical-retirement evidence. A parser receipt does not establish those runtime behaviors.

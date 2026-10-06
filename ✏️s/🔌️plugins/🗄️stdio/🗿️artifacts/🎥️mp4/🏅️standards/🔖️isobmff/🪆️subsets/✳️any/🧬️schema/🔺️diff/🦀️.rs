@@ -442,7 +442,7 @@ impl semio_framework_dsl_record::DslField for Mp4TracksDiff {
         })
     }
 }
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslDiff)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Mp4Diff {
     #[value(default, skip_serializing_if = "Option::is_none")]

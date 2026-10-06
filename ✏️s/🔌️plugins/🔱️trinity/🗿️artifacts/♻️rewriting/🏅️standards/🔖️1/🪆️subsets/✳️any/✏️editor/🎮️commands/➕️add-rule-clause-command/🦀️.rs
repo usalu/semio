@@ -1,6 +1,6 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `add-rule-clause-command`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding, edit_lhs, edit_rhs};
 use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
 use crate::RewritingSnapshot;

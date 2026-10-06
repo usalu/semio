@@ -1,0 +1,5 @@
+# Unified Board Caller Source7 Finite Audit
+
+Fifteen complete before/current/proposed/inverse rows, five full raw origins, four held provider frames, 1,293 function associations and 394 assertion witnesses independently join their hashes and source bodies. New functions are explicitly null predecessor owners. Existing assertions are byte exact or explicitly bound scene-ingress cuts. Twelve syntax observations bind the actual proposed body hashes. Eight grammar outcomes independently agree with SQLite JSON1 and the system JSON parser.
+
+All three Root serializer replacements match the retained stage1 cuts exactly, before the three declared neutral naming substitutions. Root native2 is separately admitted finite encoder evidence; it is not a full Board execution. Full native47, external required-capability caller joins, browser theme forwarding, controlled picking geometry and production publication remain held. The source association gate does not assert all 25 string cuts exhaust every other function/data change; complete function and assertion witnesses remain the finite reviewed authority.

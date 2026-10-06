@@ -1,0 +1,623 @@
+{
+  "version": 1,
+  "extent": "./Complete domain SQL INTEGER/REAL=8, NULL=0, TEXT=UTF8; includes every surrogate/parent/ordinal and duration query/word/class",
+  "tables": 7,
+  "rows": 13,
+  "cases": [
+    {
+      "name": "base",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 547
+    },
+    {
+      "name": "0000000000000000",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 547
+    },
+    {
+      "name": "8000000000000000",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 547
+    },
+    {
+      "name": "0000000000000001",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 547
+    },
+    {
+      "name": "3ff0000000000000",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 547
+    },
+    {
+      "name": "7fefffffffffffff",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 547
+    },
+    {
+      "name": "7ff0000000000000",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 207
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 577
+    },
+    {
+      "name": "fff0000000000000",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 207
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 577
+    },
+    {
+      "name": "7ff8000000000011",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 144
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 514
+    },
+    {
+      "name": "fff8000000000077",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 144
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 514
+    },
+    {
+      "name": "manual-absent",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 27
+        }
+      ],
+      "bytes": 543
+    },
+    {
+      "name": "manual-empty",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 27
+        }
+      ],
+      "bytes": 543
+    },
+    {
+      "name": "manual-unicode",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 49
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 27
+        }
+      ],
+      "bytes": 548
+    },
+    {
+      "name": "automation-absent",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 44
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 547
+    },
+    {
+      "name": "automation-unicode",
+      "tables": [
+        {
+          "table": "run_document",
+          "rows": 1,
+          "bytes": 49
+        },
+        {
+          "table": "run_log",
+          "rows": 2,
+          "bytes": 82
+        },
+        {
+          "table": "run_node",
+          "rows": 3,
+          "bytes": 177
+        },
+        {
+          "table": "run_output_artifact",
+          "rows": 1,
+          "bytes": 42
+        },
+        {
+          "table": "run_parameter_value",
+          "rows": 2,
+          "bytes": 77
+        },
+        {
+          "table": "run_port_fingerprint",
+          "rows": 3,
+          "bytes": 94
+        },
+        {
+          "table": "run_trigger",
+          "rows": 1,
+          "bytes": 31
+        }
+      ],
+      "bytes": 552
+    }
+  ]
+}

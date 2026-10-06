@@ -1,0 +1,11 @@
+# Current Fixture Conformance Controlled Recipes
+
+Schema-first contributed Cargo target recipes are closed records under package metadata, with explicit schema version, target kind/name, laws, feature selection and default-feature selection. Fourteen portable cases reject arbitrary arguments, skip selectors, policy exemptions, missing fields and duplicate laws/features. They remain disjoint from Root's workspace repository metadata owner.
+
+The original actual owner-absent RED executed through Bun/Nx with exit1 at the expected missing General controlled recipe owner, after all fourteen AJV cases agreed. The source candidate then executed six Bun laws against the neutral admission and recipe peers, including SQLite JSON1 exact Cargo group projections, every admission/group cancellation callback, bounded continuation and zero-budget refusal. `recipes-source-1.json` retains the actual log and full source rows; no native result is inferred.
+
+The TS admission API requires caller cancellation/progress, continuation units and an owned-memory admission ceiling. It retains all partial target/list/index/group owners in a caller workspace on refusal. The Rust peer admits borrowed first-party record views without allocations, calls the caller at every key/character/duplicate comparison/target publication, and emits only validated targets. Its input-view mapping and genuine original General DSL native laws remain separate obligations. These implementations do not claim measured runtime heap ceilings or controlled disposal of JS backing storage.
+
+All original General DSL script cohorts remain mounted; only the new owning conformance law paths are appended. The existing Specific fixture test package and all 54 original typed registry bindings remain unchanged in physical source. Current producer-local law authorship, withdrawal discovery, Generic envelope-only ownership, static dependency retirement, placeholder defect closure and real deletion/native/publication gates remain pending. The candidate explicitly retains these gaps.
+
+Authority: `🗑️generated/fixture-conformance-owner/recipes-source-1.json`. Historical owner-absent RED and source execution logs are retained separately. Generated output remains inside the covering ticket.

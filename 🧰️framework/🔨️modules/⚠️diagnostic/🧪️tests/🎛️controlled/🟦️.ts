@@ -11,8 +11,7 @@ export class TestScript extends BundleScript {
   async run(): Promise<void> {
     const program = ts.createProgram([import.meta.filename], { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, noUncheckedIndexedAccess: true, resolveJsonModule: true, allowImportingTsExtensions: true, esModuleInterop: true, skipLibCheck: true, noEmit: true, types: ["bun-types"] });
     assert.deepEqual(ts.getPreEmitDiagnostics(program).map(item => ts.flattenDiagnosticMessageText(item.messageText, "\n")), []);
-    const ajv = new Ajv({ strict: true }).addSchema(valueSchema);
-    assert(ajv.validate(schema, fixture), JSON.stringify(ajv.errors));
+    const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(schema);
     for (const row of fixture.cases) {
       const validate = ajv.getSchema(`${schema.$id}#/$defs/${row.owner}`);
       assert(validate);

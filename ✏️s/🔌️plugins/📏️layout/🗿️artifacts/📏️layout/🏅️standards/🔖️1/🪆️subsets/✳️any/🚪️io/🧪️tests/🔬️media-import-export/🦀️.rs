@@ -63,7 +63,7 @@ async fn svg_export_merges_owned_background_drawing_behind_pages() {
 #[semio_framework_async_macros::async_test]
 async fn svg_export_composes_through_semio_drawing_bridge() {
     ensure_stdio_semio_drawing_registered();
-    let doc = crate::standards::v1::subsets::any::schema::default_document();
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let value = doc.to_value();
     let (svg, width, height) = layout_document_json_to_svg(&value).expect("svg export succeeds");
     assert!(svg.starts_with("<svg"), "{svg}");
@@ -83,8 +83,8 @@ async fn svg_export_rejects_invalid_document_json() {
 /// real raster of the same spreads.
 #[semio_framework_async_macros::async_test]
 async fn svg_dxf_and_png_exports_are_real_files_that_frame_the_pages_again() {
-    use crate::io::export::serializers::artifacts::{dxf::v_r12::any as dxf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out};
-    use crate::io::import::deserializers::artifacts::{dxf::v_r12::any as dxf_in, svg::v1_1::any as svg_in};
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{dxf::v_r12::any as dxf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out};
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{dxf::v_r12::any as dxf_in, svg::v1_1::any as svg_in};
     let mut dwg = DwgDrawing::default();
     dwg.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [210.0, 0.0], [210.0, 297.0], [0.0, 297.0]], bulges: vec![0.0; 4] } });
     let document = LayoutSnapshot::from_value(layout_document_json_from_dwg(&dwg).expect("dwg import")).expect("layout");
@@ -95,6 +95,6 @@ async fn svg_dxf_and_png_exports_are_real_files_that_frame_the_pages_again() {
     let dxf = String::from_utf8(dxf_out::serialize_bytes(&document).expect("dxf export")).expect("dxf text");
     assert!(dxf.contains("POLYLINE"), "{dxf}");
     assert!(!dxf_in::deserialize_text(&dxf).expect("dxf import").pages.is_empty());
-    let png = semio_s_artifact_stdio_png::io::project_png(&png_out::serialize_bytes(&document).expect("png export")).expect("decodes as png");
+    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&png_out::serialize_bytes(&document).expect("png export")).expect("decodes as png");
     assert!(png.width >= 210 && png.height >= 297);
 }

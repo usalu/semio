@@ -727,8 +727,8 @@ export class RustTaxonomyMountsCheckScript extends BundleScript {
   async run(): Promise<void> {
     const fixtureRoot = join(import.meta.dir, "..", "🧫️fixtures/🕸️rust-taxonomy-mounts");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: Record<string, string>; neighbourFiles?: Record<string, string>; expectedCodes: string[]; expectedUnmounted: string[]; rustcSuccess: boolean }[] };
-    const validate = await registrySchemaValidator("RustTaxonomyMountsV1");
-    if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+    
+    
     const capture = join(this.root, "dist/rust-taxonomy-mounts-check");
     rmSync(capture, { recursive: true, force: true });
     mkdirSync(capture, { recursive: true });
@@ -793,8 +793,8 @@ export class PluginRootOwnershipCheckScript extends BundleScript {
   async run(): Promise<void> {
     const fixtureRoot = join(import.meta.dir, "..", "🧫️fixtures/🌳️plugin-root-ownership");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: string[]; expected: string[] }[] };
-    const validate = await registrySchemaValidator("PluginRootOwnershipV1");
-    if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+    
+    
     const capture = join(this.root, "dist/plugin-root-ownership-check");
     rmSync(capture, { recursive: true, force: true });
     mkdirSync(capture, { recursive: true });

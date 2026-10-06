@@ -65,7 +65,7 @@ mod subject {
 
     /// 🔤️ Normalises every input, then normalises the result again.
     pub fn normalisation_is_canonical_and_idempotent(ctx: &Context) -> Result<Outcome, String> {
-        let root = ctx.fixture_json(VECTORS)?;
+        let root = ctx.input_json(VECTORS)?;
         Ok(Outcome::projection(pairs(vec![
             ("llm".to_string(), normalised(&root, "llm", model::normalize_llm_slug)),
             ("effort".to_string(), normalised(&root, "effort", model::normalize_effort_slug)),
@@ -75,7 +75,7 @@ mod subject {
 
     /// 🎯️ Resolves every input against the allowed table.
     pub fn resolution_picks_the_longest_allowed_match(ctx: &Context) -> Result<Outcome, String> {
-        let root = ctx.fixture_json(VECTORS)?;
+        let root = ctx.input_json(VECTORS)?;
         Ok(Outcome::projection(pairs(vec![
             ("llm".to_string(), resolved(&root, "llm", model::resolve_allowed_llm)),
             ("effort".to_string(), resolved(&root, "effort", model::resolve_allowed_effort)),
@@ -85,7 +85,7 @@ mod subject {
 
     /// 🚫️ Reports the error class of every input the vocabulary does not cover.
     pub fn unresolvable_input_is_an_error_class(ctx: &Context) -> Result<Outcome, String> {
-        let root = ctx.fixture_json(VECTORS)?;
+        let root = ctx.input_json(VECTORS)?;
         Ok(Outcome::projection(pairs(vec![
             ("llm".to_string(), rejected(&root, "llm", model::resolve_allowed_llm)),
             ("effort".to_string(), rejected(&root, "effort", model::resolve_allowed_effort)),

@@ -27,7 +27,7 @@ func renderCheckpoint(checkpoint contributors.Checkpoint) string {
 }
 
 func loadCheckpointLog(ctx *host.Context) (checkpointLogFile, error) {
-	data, err := ctx.FixtureBytes("shared://🏁️checkpoint-log.json")
+	data, err := ctx.InputBytes("shared://🏁️checkpoint-log.json")
 	if err != nil {
 		return checkpointLogFile{}, err
 	}

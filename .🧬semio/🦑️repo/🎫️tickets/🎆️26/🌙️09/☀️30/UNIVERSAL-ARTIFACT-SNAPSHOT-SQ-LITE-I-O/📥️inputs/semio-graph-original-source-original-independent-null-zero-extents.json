@@ -1,0 +1,156 @@
+[
+  {
+    "name": "graph",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 15,
+        "valueBytes": 767,
+        "schemaBytes": 3039,
+        "tableCount": 10,
+        "maxColumns": 18,
+        "tables": [
+          {
+            "table": "semio_graph_document",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 27
+          },
+          {
+            "table": "semio_graph_edge",
+            "width": 10,
+            "rows": 3,
+            "semanticBytes": 158
+          },
+          {
+            "table": "semio_graph_edge_property",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_list_element",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_map_entry",
+            "width": 5,
+            "rows": 1,
+            "semanticBytes": 40
+          },
+          {
+            "table": "semio_graph_node",
+            "width": 18,
+            "rows": 2,
+            "semanticBytes": 261
+          },
+          {
+            "table": "semio_graph_port",
+            "width": 6,
+            "rows": 3,
+            "semanticBytes": 144
+          },
+          {
+            "table": "semio_graph_port_property",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_property",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 72
+          },
+          {
+            "table": "semio_graph_value",
+            "width": 8,
+            "rows": 3,
+            "semanticBytes": 65
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 1,
+        "valueBytes": 27,
+        "schemaBytes": 3039,
+        "tableCount": 10,
+        "maxColumns": 18,
+        "tables": [
+          {
+            "table": "semio_graph_document",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 27
+          },
+          {
+            "table": "semio_graph_edge",
+            "width": 10,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_edge_property",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_list_element",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_map_entry",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_node",
+            "width": 18,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_port",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_port_property",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_property",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_graph_value",
+            "width": 8,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  }
+]

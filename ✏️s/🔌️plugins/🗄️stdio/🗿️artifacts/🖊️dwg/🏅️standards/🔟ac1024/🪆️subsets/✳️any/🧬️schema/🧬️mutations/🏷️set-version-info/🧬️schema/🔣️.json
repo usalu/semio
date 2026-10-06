@@ -51,6 +51,7 @@
           "en": "Maintenance version",
           "de": "Wartungsversion"
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 20
@@ -70,6 +71,7 @@
           "en": "Windows code page number of the drawing text.",
           "de": "Windows-Codepage des Zeichnungstexts."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 30

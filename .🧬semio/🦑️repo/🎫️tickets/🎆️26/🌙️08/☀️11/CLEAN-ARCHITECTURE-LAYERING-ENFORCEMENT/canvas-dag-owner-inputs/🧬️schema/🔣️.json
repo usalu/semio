@@ -1,0 +1,12 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,"required":["version","installationDirectories","derivedDirectories","canvas","dag","controls"],
+  "properties":{
+    "version":{"const":1},
+    "installationDirectories":{"const":["node_modules"]},
+    "derivedDirectories":{"type":"array","minItems":1,"maxItems":1,"items":{"type":"object","additionalProperties":false,"required":["directory","manifest","owner","files"],"properties":{"directory":{"type":"string","minLength":1},"manifest":{"const":"build/.nx-artifact.json"},"owner":{"type":"string","minLength":1},"files":{"const":["dump-guestslim-typst-fonts"]}}}},
+    "canvas":{"type":"object","additionalProperties":false,"required":["previousDirectory","directory","package"],"properties":{"previousDirectory":{"type":"string","minLength":1},"directory":{"type":"string","minLength":1},"package":{"const":"semio-framework-ui-canvas"}}},
+    "dag":{"type":"object","additionalProperties":false,"required":["engine","snapshot","artifactRoot"],"properties":{"engine":{"type":"string","minLength":1},"snapshot":{"type":"string","minLength":1},"artifactRoot":{"type":"string","minLength":1}}},
+    "controls":{"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["directory","file","literal","target"],"properties":{"directory":{"type":"string","minLength":1},"file":{"type":"string","minLength":1},"literal":{"type":"string","minLength":1},"target":{"type":"string","minLength":1}}}}
+  }
+}

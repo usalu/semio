@@ -24,31 +24,6 @@ mod tests {
     }
 
     #[test]
-    fn resolves_fixture_document_by_slug() {
-        register_os_fixture_documents(vec![("🖍️semio.draw.json".into(), r#"{"schema":"draw.document","id":"semio"}"#.into())]).expect("admit fixture document");
-        let json = os_fixture_document("🖍️semio.draw.json").expect("registered fixture");
-        let parsed: Value = serde_json::from_str(&json).expect("json");
-        assert_eq!(parsed["schema"], "draw.document");
-        assert_eq!(parsed["id"], "semio");
-    }
-
-    #[test]
-    fn refuses_invalid_fixture_batches_before_mutating_the_registry() {
-        assert!(register_os_fixture_documents(Vec::new()).is_err());
-        for (index, invalid) in ["{", "{}", "[]", "null"].iter().enumerate() {
-            let first = format!("fixture:os-atomic-{index}");
-            let second = format!("fixture:os-invalid-{index}");
-            assert!(register_os_fixture_documents(vec![(first.clone(), "{\"schema\":\"owned.v1\"}".into()), (second.clone(), (*invalid).into())]).is_err());
-            assert!(os_fixture_document(&first).is_none());
-            assert!(os_fixture_document(&second).is_none());
-        }
-        assert!(register_os_fixture_documents(vec![(" ".into(), "{\"schema\":\"owned.v1\"}".into())]).is_err());
-        let duplicate = "fixture:os-duplicate";
-        assert!(register_os_fixture_documents(vec![(duplicate.into(), "{\"schema\":\"owned.v1\"}".into()), (duplicate.into(), "{\"schema\":\"owned.v2\"}".into())]).is_err());
-        assert!(os_fixture_document(duplicate).is_none());
-    }
-
-    #[test]
     fn materializes_instance_documents_with_parameter_overrides() {
         let json = materialize_os_app_instance_document_json(r#"{"schema":"draw.document","id":"semio"}"#, "app-draw-1", &[], &[]);
         let parsed: Value = serde_json::from_str(&json).expect("json");

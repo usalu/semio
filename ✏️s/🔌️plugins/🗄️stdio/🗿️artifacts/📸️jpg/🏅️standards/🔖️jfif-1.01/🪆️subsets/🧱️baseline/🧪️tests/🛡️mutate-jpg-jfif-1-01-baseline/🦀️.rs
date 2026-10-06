@@ -25,7 +25,7 @@ const SCAN: &str = "shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.
 //#region 🔖️Oracle
 /// 📖️ The scan's axes as libjpeg-turbo reads them from a copy in the work directory.
 fn scan_axes(ctx: &Context) -> Result<Axes, String> {
-    read_axes(&ctx.copy_fixture(SCAN, Some("scan.jpg"))?)
+    read_axes(&ctx.copy_input(SCAN, Some("scan.jpg"))?)
 }
 
 /// 🎯️ The reference answer for one row: the axes after the kind, which must have moved.
@@ -58,10 +58,11 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_jpg::io::decode_jpg;
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::decode_jpg;
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_jpg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, encode_jpg_baseline_projection_json, jpg_baseline_conformance_codes, JpgBaselineMutation};
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, jpg_baseline_conformance_codes, JpgBaselineMutation};
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::io::text::mutations::{encode_jpg_baseline_projection_json};
     use semio_s_artifact_stdio_jpg::JpgSnapshot;
     use semio_repo_test_host::law;
 
@@ -79,7 +80,7 @@ mod subject {
     /// `stdio.jpg.baseline.no-frame` and certifies nothing without one, so a case that let a
     /// frameless snapshot through would be measuring the absence of the document.
     fn decoded(ctx: &Context) -> Result<JpgSnapshot, String> {
-        let snapshot = decode_jpg(&ctx.fixture_bytes(super::SCAN)?).map_err(|error| format!("mutate-jpg-jfif-1-01-baseline: the committed scan must decode: {error:?}"))?;
+        let snapshot = decode_jpg(&ctx.input_bytes(super::SCAN)?).map_err(|error| format!("mutate-jpg-jfif-1-01-baseline: the committed scan must decode: {error:?}"))?;
         let frame = snapshot.frame.as_ref().ok_or("mutate-jpg-jfif-1-01-baseline: the decode retained no SOF0 frame header, so no conformance axis exists to move")?;
         if frame.components.len() != 3 || snapshot.huffman_tables.len() != 4 {
             return Err(format!(

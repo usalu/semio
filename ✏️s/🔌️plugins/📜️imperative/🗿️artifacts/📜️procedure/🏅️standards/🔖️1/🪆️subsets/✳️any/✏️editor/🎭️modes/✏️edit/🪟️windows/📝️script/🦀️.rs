@@ -17,6 +17,7 @@ pub const IMPERATIVE_PLAY_BODY_SCRIPT: &str = "imperative.play.script";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: IMPERATIVE_PLAY_WINDOW_SCRIPT.into(),
         label: LocalizedLabel::native("Script", "Skript"),
         body_key: IMPERATIVE_PLAY_BODY_SCRIPT.into(),

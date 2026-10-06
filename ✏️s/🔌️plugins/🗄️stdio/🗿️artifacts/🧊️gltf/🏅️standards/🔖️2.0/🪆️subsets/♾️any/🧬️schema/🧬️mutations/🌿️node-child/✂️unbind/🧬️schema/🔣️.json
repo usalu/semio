@@ -22,6 +22,7 @@
           "en": "Index of the parent node, counted from 0.",
           "de": "Index des Elternknotens, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -40,6 +41,7 @@
           "en": "Index of the child node, counted from 0.",
           "de": "Index des Kindknotens, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 20

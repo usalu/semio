@@ -369,7 +369,7 @@ fn fixtures_produce_expected_output() {
     use std::path::PathBuf;
 
     #[derive(Deserialize)]
-    struct FixtureFile {
+    struct EvidenceFile {
         name: String,
         state: ShellState,
         command: ShellCommand,
@@ -383,7 +383,7 @@ fn fixtures_produce_expected_output() {
     let mut checked = 0usize;
     for path in entries {
         let raw = fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
-        let fixture: FixtureFile = serde_json::from_str(&raw).unwrap_or_else(|e| panic!("parse {}: {e}", path.display()));
+        let fixture: EvidenceFile = serde_json::from_str(&raw).unwrap_or_else(|e| panic!("parse {}: {e}", path.display()));
         let encoded = dsl_core::ToValue::to_value(&fixture.command);
         let oracle = serde_json::to_value(&fixture.command).expect("independent command projection");
         assert_eq!(serde_json::Value::from(encoded.clone()), oracle, "fixture {} command projection mismatch", fixture.name);

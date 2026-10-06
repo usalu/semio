@@ -1,17 +1,21 @@
-//! 🧭️ CAD edit-mode tool — Transform: the `🔄️machine` statechart (effects `ToolYield<CadMutation>`, driven by the
+//! 🧭️ CAD edit-mode tool — Transform: the `🔄️machine` statechart (effects `ToolYield<CadToolLeaf>`, driven by the
 //! `🛠️tool-machine` runner) every object gesture commits through. A gumball translate / rotate / scale and the commit of
 //! every `spatial.interaction` that lands objects (a construction, `transform.move`/`copy`/`rotate`/`scale*`, a mirror)
-//! enter as [`CadToolEntry`]s and leave as ONE `ToolTransaction`: one parametric `drag-`/`rotate-`/`scale-selection` leaf
-//! per touched pane plus the `create-object`s a construction or copy lands. Tool state is never history; the yielded
-//! mutations are (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
+//! enter as [`CadToolEntry`]s and leave as ONE `ToolTransaction` of child-lane leaves on the panes' composed
+//! `s.stdio.semio@v1/model` children: one relative `drag-`/`rotate-`/`scale-elements` per touched pane plus the
+//! `insert-element`s a construction or copy lands (design §12, §20.15). Tool state is never history; the yielded leaves are
+//! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 #![allow(unexpected_cfgs)]
 
 use crate::editor::cad::config::CadConfigMutation;
-use crate::mutations::{drag_selection::DragSelection, rotate_selection::RotateSelection, scale_selection::ScaleSelection, CadMutation};
-use crate::{CadPaneId, CadSnapshot};
+use crate::{cad_pane_model, cad_pane_model_slot, CadMutation, CadPaneId, CadSnapshot};
 use machine::Command;
-use semio_framework_plugin::{ArtifactView, Emit};
+use semio_framework_plugin::app::ChildEmitPreparation;
+use semio_framework_plugin::{ArtifactView, ChildContentView, Emit};
+use std::collections::VecDeque;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::{drag_elements::DragElements, insert_element::InsertElement, rotate_elements::RotateElements, scale_elements::ScaleElements, SemioModelMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{SemioModelElement, SemioModelSnapshot};
 use std::sync::Arc;
 
 /// 🪪️ The editor app id every transform-tool transaction's `tool` is scoped by: `<appId>#<verb>`.
@@ -59,39 +63,29 @@ impl CadTransformRecord {
         }
     }
 
-    /// 🧮️ The leaf this record yields for `pane` over `targets` — the pane's own share of the record.
-    pub fn leaf(&self, pane: CadPaneId, targets: Vec<String>) -> CadMutation {
+    /// 🧮️ The child leaf this record yields over one pane's share of its targets.
+    pub fn leaf(&self, targets: Vec<String>) -> SemioModelMutation {
         match self.motion {
-            CadTransformMotion::Drag { offset } => CadMutation::DragSelection(DragSelection { pane, targets, offset }),
-            CadTransformMotion::Rotate { axis, angle } => CadMutation::RotateSelection(RotateSelection { pane, targets, axis, angle }),
-            CadTransformMotion::Scale { factors } => CadMutation::ScaleSelection(ScaleSelection { pane, targets, factors }),
+            CadTransformMotion::Drag { offset } => SemioModelMutation::DragElements(DragElements { targets, offset }),
+            CadTransformMotion::Rotate { axis, angle } => SemioModelMutation::RotateElements(RotateElements { targets, axis, angle }),
+            CadTransformMotion::Scale { factors } => SemioModelMutation::ScaleElements(ScaleElements { targets, factors }),
         }
-    }
-
-    /// 🗂️ One leaf per pane that materializes at least one target, in pane order, each over that pane's targets in
-    /// record order — a target no pane owns is not the tool's to move.
-    pub fn leaves(&self, base: &CadSnapshot) -> Vec<(CadPaneId, CadMutation)> {
-        if !self.moves() {
-            return Vec::new();
-        }
-        CadPaneId::all()
-            .into_iter()
-            .filter_map(|pane| {
-                let scene = crate::cad_pane_local_scene(base, pane)?;
-                let objects = crate::cad_scene_pane_objects(&scene, pane);
-                let owned: Vec<String> = self.targets.iter().filter(|id| objects.iter().any(|object| &object.id == *id)).cloned().collect();
-                (!owned.is_empty()).then(|| (pane, self.leaf(pane, owned)))
-            })
-            .collect()
     }
 }
 
-/// 🧱️ One entry of a transform-tool request: an object transform, or a leaf its caller already built (the
-/// `create-object` a construction or a copy lands).
+/// 🧱️ One entry of a transform-tool request: an object transform, or one element a construction or a copy lands in a
+/// pane's model child.
 #[derive(Clone, Debug, PartialEq)]
 pub enum CadToolEntry {
     Transform(CadTransformRecord),
-    Leaf(CadMutation),
+    Create { pane: CadPaneId, element: SemioModelElement },
+}
+
+/// 🧱️ One leaf the transform tool yields: a child-lane leaf on `pane`'s composed model child.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CadToolLeaf {
+    pub pane: CadPaneId,
+    pub leaf: SemioModelMutation,
 }
 
 /// 🧹️ `targets` without repeats, in first-seen order — the one target list every leaf the tool yields carries.
@@ -101,12 +95,72 @@ pub fn cad_unique_targets(targets: impl IntoIterator<Item = String>) -> Vec<Stri
 }
 //#endregion 🎬️Record
 
+//#region 🪆️PaneModels
+/// 🪆️ The composed model child of every pane that has one, in pane order: the pane, its child id and its content now —
+/// what every object edit is decided against and lands in (design §20.15).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct CadPaneModels(pub Vec<(CadPaneId, String, SemioModelSnapshot)>);
+
+impl CadPaneModels {
+    /// 🔎️ The pane whose model holds `element_id` — element ids are the `"cad"` domain's own object ids, unique across panes.
+    pub fn pane_of(&self, element_id: &str) -> Option<CadPaneId> {
+        self.0.iter().find(|(_, _, model)| model.elements.iter().any(|element| element.id == element_id)).map(|(pane, _, _)| *pane)
+    }
+
+    /// 🔎️ `pane`'s model content.
+    pub fn model(&self, pane: CadPaneId) -> Option<&SemioModelSnapshot> {
+        self.0.iter().find(|(candidate, _, _)| *candidate == pane).map(|(_, _, model)| model)
+    }
+}
+
+/// 🪆️ Reads every pane's composed `s.stdio.semio@v1/model` child out of `children`; a pane without a handle, or whose
+/// child is not composed as that dialect, contributes nothing.
+pub fn cad_pane_models(snapshot: &CadSnapshot, children: &ChildContentView) -> CadPaneModels {
+    CadPaneModels(
+        CadPaneId::all()
+            .into_iter()
+            .filter_map(|pane| {
+                let child_id = cad_pane_model(snapshot, pane)?.child_id.clone();
+                let slot = cad_pane_model_slot(pane);
+                let dialect = children.dialect(slot, &child_id)?;
+                if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "model" {
+                    return None;
+                }
+                let model = children.typed_read::<SemioModelSnapshot>(slot, &child_id).ok()?.clone();
+                Some((pane, child_id, model))
+            })
+            .collect(),
+    )
+}
+
+/// 📮️ `leaves` as one edit per touched pane child, in pane order, each pane's leaves in their own order — stamped with
+/// `transaction` (ONE composite group, one history row, design §12) when a committed tool transaction yielded them, a
+/// plain child edit otherwise; nothing touched is the empty emit.
+pub fn cad_child_leaves_emit(models: &CadPaneModels, transaction: Option<protocol::TransactionRef>, leaves: Vec<CadToolLeaf>) -> Emit<CadMutation, CadConfigMutation> {
+    let mut remaining = leaves;
+    let child_preparations: VecDeque<ChildEmitPreparation> = models
+        .0
+        .iter()
+        .filter_map(|(pane, child_id, _)| {
+            let (owned, rest): (Vec<CadToolLeaf>, Vec<CadToolLeaf>) = std::mem::take(&mut remaining).into_iter().partition(|leaf| leaf.pane == *pane);
+            remaining = rest;
+            let ops: Vec<SemioModelMutation> = owned.into_iter().map(|leaf| leaf.leaf).collect();
+            (!ops.is_empty()).then(|| ChildEmitPreparation::of::<SemioModelSnapshot, SemioModelMutation>(cad_pane_model_slot(*pane), child_id.clone(), ops))
+        })
+        .collect();
+    match child_preparations.is_empty() {
+        true => Emit::default(),
+        false => Emit { child_preparations, transaction, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() },
+    }
+}
+//#endregion 🪆️PaneModels
+
 //#region 🛠️TransformTool
-/// 📨️ What one transform-tool event carries: the committed document it yields against and the entries — dispatch
+/// 📨️ What one transform-tool event carries: the composed pane models it yields against and the entries — dispatch
 /// inputs, never tool state.
 #[derive(Clone, Debug)]
 pub struct CadToolRequest {
-    pub base: Arc<CadSnapshot>,
+    pub models: Arc<CadPaneModels>,
     pub entries: Vec<CadToolEntry>,
 }
 
@@ -120,12 +174,12 @@ fn cad_transform_tool_context(input: CadTransformToolContext) -> CadTransformToo
 }
 
 fn entries_apply(_context: &CadTransformToolContext, event: Option<&cad_transform_tool::Event>) -> bool {
-    matches!(event, Some(cad_transform_tool::Event::Records(request)) if !cad_tool_yields(&request.base, &request.entries).is_empty())
+    matches!(event, Some(cad_transform_tool::Event::Records(request)) if !cad_tool_yields(&request.models, &request.entries).is_empty())
 }
 
 fn yield_entries(_context: &mut CadTransformToolContext, event: Option<&cad_transform_tool::Event>, sink: &mut Vec<Command<cad_transform_tool::CadTransformTool>>) {
     let Some(cad_transform_tool::Event::Records(request)) = event else { return };
-    sink.extend(cad_tool_yields(&request.base, &request.entries).into_iter().map(|(key, mutation)| Command::Effect(ToolYield::upsert(key, mutation))));
+    sink.extend(cad_tool_yields(&request.models, &request.entries).into_iter().map(|(key, leaf)| Command::Effect(ToolYield::upsert(key, leaf))));
     sink.push(Command::Effect(ToolYield::Commit));
 }
 
@@ -135,7 +189,7 @@ machine::statechart! {
         event Event { Records(CadToolRequest) }
         input: CadTransformToolContext;
         output: ();
-        effect: ToolYield<CadMutation>;
+        effect: ToolYield<CadToolLeaf>;
         context_from_input: cad_transform_tool_context;
         initial: idle;
         state idle {
@@ -148,7 +202,7 @@ machine::statechart! {
 pub struct CadTransformToolHost;
 
 impl machine::Host<cad_transform_tool::CadTransformTool> for CadTransformToolHost {
-    fn execute_effect(&mut self, _actor: machine::ActorId, _effect: ToolYield<CadMutation>) {}
+    fn execute_effect(&mut self, _actor: machine::ActorId, _effect: ToolYield<CadToolLeaf>) {}
     fn schedule(&mut self, _actor: machine::ActorId, _timer: machine::TimerId, _delay_ms: u64) {}
     fn cancel_timer(&mut self, _actor: machine::ActorId, _timer: machine::TimerId) {}
     fn start_task(&mut self, _actor: machine::ActorId, _invoke: machine::InvokeId) {}
@@ -158,49 +212,59 @@ impl machine::Host<cad_transform_tool::CadTransformTool> for CadTransformToolHos
     }
 }
 
-/// 🧮️ What the tool yields for `entries` on `base`, keyed and in order: each transform's leaf per touched pane, then
-/// each prepared leaf — every one folded onto a running state, so a later entry sees the earlier ones. A leaf whose
-/// outcome is a no-op, an Error or a Fatal on that state is not yielded: the tool never commits an edit it knows fails.
-pub fn cad_tool_yields(base: &CadSnapshot, entries: &[CadToolEntry]) -> Vec<(String, CadMutation)> {
-    let mut state = base.clone();
+/// 🧮️ What the tool yields for `entries` on `models`, keyed and in order: each transform's leaf per touched pane, then
+/// each created element — every one folded onto its pane's running model, so a later entry sees the earlier ones. A
+/// leaf whose outcome is a no-op, an Error or a Fatal on that model is not yielded (the tool never commits an edit it
+/// knows fails), and an entry for a pane without a model child lands nothing.
+pub fn cad_tool_yields(models: &CadPaneModels, entries: &[CadToolEntry]) -> Vec<(String, CadToolLeaf)> {
+    let mut states: Vec<(CadPaneId, SemioModelSnapshot)> = models.0.iter().map(|(pane, _, model)| (*pane, model.clone())).collect();
     let mut yields = Vec::new();
     for (index, entry) in entries.iter().enumerate() {
-        let leaves = match entry {
-            CadToolEntry::Transform(record) => record.leaves(&state).into_iter().map(|(pane, leaf)| (format!("transform:{index}:{}", pane.model_definition_id()), leaf)).collect(),
-            CadToolEntry::Leaf(leaf) => vec![(format!("leaf:{index}"), leaf.clone())],
+        let leaves: Vec<(String, CadPaneId, SemioModelMutation)> = match entry {
+            CadToolEntry::Transform(record) if record.moves() => states
+                .iter()
+                .filter_map(|(pane, state)| {
+                    let owned: Vec<String> = record.targets.iter().filter(|id| state.elements.iter().any(|element| element.id == **id)).cloned().collect();
+                    (!owned.is_empty()).then(|| (format!("transform:{index}:{}", pane.model_definition_id()), *pane, record.leaf(owned)))
+                })
+                .collect(),
+            CadToolEntry::Transform(_) => Vec::new(),
+            CadToolEntry::Create { pane, element } => vec![(format!("create:{index}"), *pane, SemioModelMutation::InsertElement(InsertElement { element: element.clone() }))],
         };
-        for (key, leaf) in leaves {
-            let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&leaf, &state);
+        for (key, pane, leaf) in leaves {
+            let Some((_, state)) = states.iter_mut().find(|(candidate, _)| *candidate == pane) else { continue };
+            let outcome = <SemioModelMutation as protocol::Mutation<SemioModelSnapshot>>::diff(&leaf, state);
             if outcome.messages().iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error || message.code.0 == "mutation.no-op") {
                 continue;
             }
-            let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), &state) else { continue };
-            state = next;
-            yields.push((key, leaf));
+            let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), state) else { continue };
+            *state = next;
+            yields.push((key, CadToolLeaf { pane, leaf }));
         }
     }
     yields
 }
 
 /// 🛠️ Runs `entries` through a transform tool at rest as ONE one-shot transaction — the ref minted from the admission's
-/// `authoring_seed`, the host clock and `<appId>#<verb>`, and the yielded mutations in order. `None` when nothing moves
-/// or lands: a stranger id, an identity motion or an empty request leaves zero trace.
-pub fn cad_transform_tool_commit(verb: &str, authoring_seed: &str, base: &CadSnapshot, entries: Vec<CadToolEntry>) -> Option<(protocol::TransactionRef, Vec<CadMutation>)> {
+/// `authoring_seed`, the host clock and `<appId>#<verb>`, and the yielded leaves in order. `None` when nothing moves or
+/// lands: a stranger id, an identity motion or an empty request leaves zero trace.
+pub fn cad_transform_tool_commit(verb: &str, authoring_seed: &str, models: &CadPaneModels, entries: Vec<CadToolEntry>) -> Option<(protocol::TransactionRef, Vec<CadToolLeaf>)> {
     let mut runner = ToolMachineRunner::<cad_transform_tool::CadTransformTool, CadTransformToolHost>::start(format!("{CAD_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), CadTransformToolContext, CadTransformToolHost).ok()?;
-    match runner.send(cad_transform_tool::Event::Records(CadToolRequest { base: Arc::new(base.clone()), entries }), semio_framework_tool_machine::authoring_clock(0)).ok()? {
-        ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
+    match runner.send(cad_transform_tool::Event::Records(CadToolRequest { models: Arc::new(models.clone()), entries }), semio_framework_tool_machine::authoring_clock(0)).ok()? {
+        ToolStep::Committed(transaction, leaves) => Some((transaction, leaves)),
         ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,
     }
 }
 
-/// 🧾️ The emit one committed transform-tool transaction publishes: ONE document edit stamped with its ref, labelled
-/// from its leaves. A view without command authority (no authoring seed) publishes the yielded leaves plainly; nothing
-/// yielded is the empty emit.
+/// 🧾️ The emit one committed transform-tool transaction publishes on the panes' model children: ONE composite group
+/// whose member edits carry its ref, labelled from their leaves. A view without command authority (no authoring seed)
+/// publishes the yielded leaves plainly; nothing yielded is the empty emit.
 pub fn cad_transform_tool_emit(doc: &ArtifactView<'_, CadSnapshot>, verb: &str, entries: Vec<CadToolEntry>) -> Emit<CadMutation, CadConfigMutation> {
     let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
-    match cad_transform_tool_commit(verb, authoring_seed, doc.snapshot, entries) {
-        Some((transaction, mutations)) if !authoring_seed.is_empty() => Emit::commit_transaction(transaction, mutations),
-        Some((_, mutations)) => Emit::mutations(mutations),
+    let models = cad_pane_models(doc.snapshot, &doc.children);
+    match cad_transform_tool_commit(verb, authoring_seed, &models, entries) {
+        Some((transaction, leaves)) if !authoring_seed.is_empty() => cad_child_leaves_emit(&models, Some(transaction), leaves),
+        Some((_, leaves)) => cad_child_leaves_emit(&models, None, leaves),
         None => Emit::default(),
     }
 }

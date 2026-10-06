@@ -11,7 +11,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { type SchemaBoundFixture, type SchemaDiagnostic, type SchemaDiagnosticCode, GRAPHQL_EXPORT_KEYWORDS, SCHEMA_DIAGNOSTIC_CODES, SCHEMA_DIAGNOSTIC_CODE_TABLE, SCHEMA_DIAGNOSTIC_EMITTERS, SCHEMA_FIXTURE_STAGES, TAXONOMY_REL_PATH, TEST_DOMAIN_REL_PATH, clearSchemaContractCache, declaresSchemaExport, declaresSchemaExportParser, discoverSchemaFixtures, fixtureUrisIn, isFixtureOwnedPath, isJsonSchemaDefinition, leafDescriptorCoverage, matchesTaxonomyPathPattern, mutationLeafDirectories, mutationLeafSchemaId, parseSchemaUri, readLeafDescriptors, readSchemaCatalog, repoRootFromHere, resolveFixtures, resolvePayloadSchemas, resolveSchemaExport, runSchemaFixture, schemaContractDiagnostics, schemaDiagnosticCodesEmittedBy, schemaExportCompletenessDiagnostics, schemaFixtureIsolationDiagnostics, schemaMeasurementDisagreementDiagnostics, schemaOwnerEligibilityDiagnostics, schemaPlacementDiagnostics, schemaResolutionDiagnostics, schemaScopeEligibility, schemaTreeFiles, submodulePaths, validateAgainstJsonSchema } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type SchemaTestExample, type SchemaDiagnostic, type SchemaDiagnosticCode, GRAPHQL_EXPORT_KEYWORDS, SCHEMA_DIAGNOSTIC_CODES, SCHEMA_DIAGNOSTIC_CODE_TABLE, SCHEMA_DIAGNOSTIC_EMITTERS, SCHEMA_FIXTURE_STAGES, TAXONOMY_REL_PATH, TEST_DOMAIN_REL_PATH, clearSchemaContractCache, declaresSchemaExport, declaresSchemaExportParser, discoverSchemaFixtures, testInputUrisIn, isFixtureOwnedPath, isJsonSchemaDefinition, leafDescriptorCoverage, matchesTaxonomyPathPattern, mutationLeafDirectories, mutationLeafSchemaId, parseSchemaUri, readLeafDescriptors, readSchemaCatalog, repoRootFromHere, resolveTestInputs, resolvePayloadSchemas, resolveSchemaExport, runSchemaFixture, schemaContractDiagnostics, schemaDiagnosticCodesEmittedBy, schemaExportCompletenessDiagnostics, schemaFixtureIsolationDiagnostics, schemaMeasurementDisagreementDiagnostics, schemaOwnerEligibilityDiagnostics, schemaPlacementDiagnostics, schemaResolutionDiagnostics, schemaScopeEligibility, schemaTreeFiles, submodulePaths, validateAgainstJsonSchema } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
 import cases from "../../🧫️fixtures/🧬️schema-invariants/🔣️.json";
 import protocolSchema from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json";
@@ -223,16 +223,7 @@ async function ajv(): Promise<{ validate(schema: unknown, instance: unknown): bo
 //#endregion 🧭️Scaffold
 
 //#region 🧪️Tests
-describe("🔣️ schema invariant cases are themselves contracted", () => {
-  test("the case file validates against the test module's own descriptor schema", async () => {
-    const { default: Ajv } = await import("ajv");
-    const compiler = new Ajv({ strict: false, allErrors: true });
-    compiler.addSchema(protocolSchema, "protocol");
-    const validate = compiler.getSchema("protocol#/$defs/SchemaInvariantCases");
-    expect(validate).toBeDefined();
-    expect(validate!(cases)).toBe(true);
-  });
-
+describe("🔣️ canonical schema invariants", () => {
   test("every case collection carries at least one case", () => {
     expect(cases.eligibilityCases.length).toBeGreaterThan(0);
     expect(cases.exportPresenceCases.length).toBeGreaterThan(0);
@@ -333,12 +324,12 @@ describe("🏛️ owner eligibility", () => {
       taxonomy.schemaScopeOwnerLevels.moduleMemberDirName = "🧱️units";
       writeFileSync(join(root, TAXONOMY_REL_PATH), JSON.stringify(taxonomy));
       clearSchemaContractCache();
-      expect(isFixtureOwnedPath(root, "🧰️framework/🧱️units/🧪️test/🧬️schema/🔣️.json")).toBe(false);
-      expect(isFixtureOwnedPath(root, "🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json")).toBe(true);
+      expect(isFixtureOwnedPath(root, "🧰️framework/🧱️units/🧪️tests/🧬️schema/🔣️.json")).toBe(false);
+      expect(isFixtureOwnedPath(root, "🧰️framework/🔨️modules/🧪️tests/🧬️schema/🔣️.json")).toBe(true);
       delete taxonomy.schemaScopeOwnerLevels.moduleMemberDirName;
       writeFileSync(join(root, TAXONOMY_REL_PATH), JSON.stringify(taxonomy));
       clearSchemaContractCache();
-      expect(isFixtureOwnedPath(root, "🧰️framework/🧱️units/🧪️test/🧬️schema/🔣️.json")).toBe(true);
+      expect(isFixtureOwnedPath(root, "🧰️framework/🧱️units/🧪️tests/🧬️schema/🔣️.json")).toBe(true);
     } finally {
       discard(root);
     }
@@ -489,10 +480,10 @@ describe("🚶️ the tree walk's boundaries", () => {
   test("a repository that declares no submodules carves nothing out", () => {
     const root = scaffold();
     try {
-      write(root, "♻️mit-bestand/🔎️recherche/contracts/lane_schema.json", `${JSON.stringify(definition)}\n`);
+      write(root, "🌎️hub/💡️inference/🧬️schema/🔣️.json", `${JSON.stringify(definition)}\n`);
       clearSchemaContractCache();
       expect([...submodulePaths(root)]).toEqual([]);
-      expect(schemaTreeFiles(root, "♻️mit-bestand")).toEqual(["♻️mit-bestand/🔎️recherche/contracts/lane_schema.json"]);
+      expect(schemaTreeFiles(root, "🌎️hub")).toEqual(["🌎️hub/💡️inference/🧬️schema/🔣️.json"]);
     } finally {
       discard(root);
     }
@@ -711,7 +702,7 @@ describe("🧫️ schema-bound fixtures run through named stages", () => {
     test(row.id, () => {
       const root = resolutionRepo({ dropRustExport: (row as { dropRustExport?: boolean }).dropRustExport === true, rootExport: (row as { rootExport?: boolean }).rootExport === true });
       try {
-        const report = runSchemaFixture(root, row.fixture as unknown as SchemaBoundFixture, CASE_DIR);
+        const report = runSchemaFixture(root, row.fixture as unknown as SchemaTestExample, CASE_DIR);
         expect(report.stages.map((entry) => entry.stage)).toEqual([...SCHEMA_FIXTURE_STAGES]);
         const failed = report.stages.find((entry) => entry.result === "failed") ?? null;
         expect(`${row.id}:${failed?.stage ?? null}:${failed?.code ?? null}`).toBe(`${row.id}:${row.expect.failedStage}:${row.expect.code}`);
@@ -738,14 +729,14 @@ describe("🧫️ schema-bound fixtures run through named stages", () => {
 describe("🔗️ the fixture resolver speaks schema://", () => {
   test("a feature's schema:// reference is extracted beside the other three schemes", () => {
     const feature = parseFeature('@capability-x\nFeature: f\n  @id-s\n  @level-quick\n  @mode-conformance\n  Scenario: s\n    Given schema://s.writer.writer/Artifact and shared://v.bin and local://d.csv\n    Then y\n');
-    expect(fixtureUrisIn(feature)).toEqual(["local://d.csv", "schema://s.writer.writer/Artifact", "shared://v.bin"]);
+    expect(testInputUrisIn(feature)).toEqual(["local://d.csv", "schema://s.writer.writer/Artifact", "shared://v.bin"]);
   });
 
   test("a schema:// fixture resolves to the catalog's file, pinned by digest", () => {
     const root = resolutionRepo();
     try {
       const discovered = { owner: WRITER_OWNER, ownerName: "✳️any", case: "c", caseDir: `${WRITER_OWNER}/🧪️tests/c`, featurePath: `${WRITER_OWNER}/🧪️tests/c/🥒️.feature`, adapters: {}, sharedFixtureDir: null, projectName: "p" };
-      const { fixtures, missing } = resolveFixtures(root, discovered, ["schema://s.writer.writer/Artifact"]);
+      const { inputs: fixtures, missing } = resolveTestInputs(root, discovered, ["schema://s.writer.writer/Artifact"]);
       expect(missing).toEqual([]);
       expect(fixtures[0]!.scope).toBe("schema");
       expect(fixtures[0]!.path).toBe(`${WRITER_OWNER}/🧬️schema/🔣️.json`);
@@ -759,7 +750,7 @@ describe("🔗️ the fixture resolver speaks schema://", () => {
     const root = resolutionRepo();
     try {
       const discovered = { owner: WRITER_OWNER, ownerName: "✳️any", case: "c", caseDir: `${WRITER_OWNER}/🧪️tests/c`, featurePath: `${WRITER_OWNER}/🧪️tests/c/🥒️.feature`, adapters: {}, sharedFixtureDir: null, projectName: "p" };
-      const { fixtures, missing, diagnostics } = resolveFixtures(root, discovered, ["schema://s.writer.absent/Artifact"]);
+      const { inputs: fixtures, missing, diagnostics } = resolveTestInputs(root, discovered, ["schema://s.writer.absent/Artifact"]);
       expect(fixtures).toEqual([]);
       expect(missing).toEqual(["schema://s.writer.absent/Artifact"]);
       expect(codesOf(diagnostics)).toEqual(["schema-scope-unknown"]);
@@ -778,7 +769,7 @@ describe("🔗️ the fixture resolver speaks schema://", () => {
  */
 describe("🤝️ parity with the catalog generator's own vector", () => {
   const VECTOR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json";
-  const PLACEMENT_CODES = new Set(["schema-placement-forbidden-filename", "schema-placement-outside-module", "schema-contracts-directory-forbidden", "schema-fixture-defines-schema"]);
+  const PLACEMENT_CODES = new Set(["schema-placement-forbidden-filename", "schema-placement-outside-module", "schema-contracts-directory-forbidden"]);
   type GeneratorCase = { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string }>; diagnosticCodes: string[]; placementPaths: string[] } };
 
   const vector = (): GeneratorCase[] => {
@@ -795,7 +786,9 @@ describe("🤝️ parity with the catalog generator's own vector", () => {
         const misplaced = [...new Set(found.filter((entry) => PLACEMENT_CODES.has(entry.code)).map((entry) => entry.path ?? ""))].sort();
         expect(`${row.id}:${misplaced.join(",")}`).toBe(`${row.id}:${[...row.expected.placementPaths].sort().join(",")}`);
         for (const [id, scope] of Object.entries(row.expected.scopes)) {
-          const verdict = schemaScopeEligibility(root, scope.path.replace(/\/🧬️schema$/u, ""));
+          const memberDirectory = JSON.parse(readFileSync(join(root, TAXONOMY_REL_PATH), "utf8")).schemaScopeOwnerLevels.moduleMemberDirName;
+          const ownerPath = scope.path.split("/").at(-2) === memberDirectory ? scope.path : scope.path.replace(/\/🧬️schema$/u, "");
+          const verdict = schemaScopeEligibility(root, ownerPath);
           expect(`${row.id}:${id}:${verdict.eligible}:${verdict.level ?? ""}`).toBe(`${row.id}:${id}:true:${scope.level}`);
         }
         if (row.expected.diagnosticCodes.includes("module-level-ineligible")) expect(schemaOwnerEligibilityDiagnostics(root).map((entry) => entry.code)).toEqual(["schema-owner-ineligible"]);

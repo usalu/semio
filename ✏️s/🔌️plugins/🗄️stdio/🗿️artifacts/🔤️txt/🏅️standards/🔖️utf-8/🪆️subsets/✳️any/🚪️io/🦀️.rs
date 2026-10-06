@@ -2,7 +2,7 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_utf_8::subsets::any::schema::TxtAnalyzer;
+    use crate::standards::v_utf_8::subsets::any::io::TxtAnalyzer;
     use crate::TxtSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -92,30 +92,30 @@ pub fn register_pilot_languages() {
         id: "stdio.txt",
         extension: Some("txt"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v_utf_8::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v_utf_8::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.txt.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v_utf_8::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v_utf_8::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.txt.diff",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::schema::diff::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v_utf_8::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v_utf_8::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.diff"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -124,8 +124,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.pack"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -134,8 +134,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.spr"),
     });
 }
@@ -157,7 +157,7 @@ pub fn register_artifact_inferences() {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_utf_8::subsets::any::schema::TxtComposer as TxtRawAnyComposer;
+    use crate::standards::v_utf_8::subsets::any::io::TxtComposer as TxtRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -199,3 +199,148 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 #[path = "🧪️tests/🔬️carrier-law/🦀️.rs"]
 mod carrier_law;
 //#endregion 🧪️CarrierLaw
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{TxtDiff, TxtMutation, TxtSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.txt` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct TxtBuilderConstruction {
+        snapshot: TxtSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for TxtBuilderConstruction {
+        type Snapshot = TxtSnapshot;
+        type Mutation = TxtMutation;
+        type Diff = TxtDiff;
+        fn empty() -> Self {
+            Self { snapshot: TxtSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<TxtSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::schema::mutations::apply_txt_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <TxtDiff as protocol::MutationDiff<TxtSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::TxtSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.txt` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct TxtParts {
+        pub snapshot: Option<TxtSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.txt` (utf-8/✳️any) sources.
+    pub struct TxtAnalyzerAnalysis;
+
+    /// 🔍 `stdio.txt` accepts anything that is real, valid UTF-8 — a `Text` source is
+    /// trivially valid by construction (`High`); a `Binary` source is inspected for actual
+    /// UTF-8 validity and the presence of NUL bytes (the standard "probably not text"
+    /// signal binary sniffers use).
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn classify_bytes(bytes: &[u8]) -> IoConfidence {
+        match std::str::from_utf8(bytes) {
+            Ok(_) if !bytes.contains(&0) => IoConfidence::High,
+            Ok(_) => IoConfidence::Medium,
+            Err(_) => IoConfidence::Low,
+        }
+    }
+
+    impl ArtifactAnalysis for TxtAnalyzerAnalysis {
+        type Parts = TxtParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Text(_) => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
+                    Ok((_, inner)) => classify_bytes(&inner),
+                    Err(_) => classify_bytes(bytes),
+                },
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = TxtParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <TxtSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <TxtSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+
+    //#region 🧪️Tests
+    #[cfg(test)]
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    //#endregion 🧪️Tests
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec TxtBuilderFacets {
+        construction: TxtBuilderConstruction,
+        analysis: TxtAnalyzerAnalysis,
+        composition: crate::standards::v_utf_8::subsets::any::io::derived_composition::TxtComposerComposition,
+    }
+    builder: TxtBuilder,
+    analyzer: TxtAnalyzer,
+    composer: TxtComposer,
+);

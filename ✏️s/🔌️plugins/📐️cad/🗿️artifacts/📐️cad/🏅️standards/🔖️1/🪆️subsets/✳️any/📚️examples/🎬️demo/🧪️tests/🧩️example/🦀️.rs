@@ -5,16 +5,24 @@ async fn primary_asset_is_nonempty() {
 }
 
 /// 🌲️ The registered `demo` example (the one the shell's picker offers and announces at boot) is the
-/// Concrete Forest document, and every pane handle its asset spells resolves the bundled content its
-/// content-addressed `child_id` names — a stale asset (fixture or conversion drift re-hashes the
-/// children) would otherwise load four silently empty panes.
+/// Concrete Forest document, and every pane handle its asset spells names a genesis scene of the bundled catalogue by
+/// its content-addressed `child_id` and derives a non-empty genesis pack from it — a stale asset (fixture or conversion
+/// drift re-hashes the children) would otherwise load four silently empty panes.
 #[test]
 fn demo_asset_is_the_concrete_forest_and_every_pane_resolves() {
     let snapshot = <crate::CadSnapshot as store::ArtifactDsl>::parse_dsl(include_str!("../../🖼️assets/🗣️.dsl.semio")).expect("demo asset parses");
-    assert_eq!(snapshot, crate::standards::v1::subsets::any::schema::inferences::forest_play_scene());
+    let forest = crate::standards::v1::subsets::any::schema::inferences::forest_play_scene();
     for pane in crate::CadPaneId::all() {
-        let scene = crate::cad_pane_local_scene(&snapshot, pane).unwrap_or_else(|| panic!("{pane:?} pane resolves its bundled materialization"));
+        assert_eq!(crate::cad_pane_model(&snapshot, pane).map(|child| child.child_id.as_str()), crate::cad_pane_model(&forest, pane).map(|child| child.child_id.as_str()), "{pane:?} pane child id");
+    }
+    assert_eq!(snapshot, forest);
+    for pane in crate::CadPaneId::all() {
+        let child = crate::cad_pane_model(&snapshot, pane).unwrap_or_else(|| panic!("{pane:?} pane composes a model child"));
+        let scene = crate::cad_bundled_pane_scene(&child.child_id).unwrap_or_else(|| panic!("{pane:?} pane resolves its bundled genesis scene"));
         assert!(!crate::cad_scene_pane_objects(&scene, pane).is_empty(), "{pane:?} pane carries objects");
+        let pack = crate::cad_genesis_child_pack(&snapshot, crate::cad_pane_model_slot(pane), &child.child_id).unwrap_or_else(|| panic!("{pane:?} pane derives its genesis pack"));
+        let model = <semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("genesis pack decodes");
+        assert_eq!(crate::standards::v1::subsets::any::io::geometry_import::objects_from_model_snapshot(&model), crate::cad_scene_pane_objects(&scene, pane), "{pane:?} pane genesis objects survive the model bridge exactly");
     }
 }
 
@@ -59,7 +67,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
 
     async fn parse_native(asset: &ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
         let text = asset.text.ok_or_else(|| "cad demo requires dsl text".to_string())?;
-        crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).map_err(|e| e.to_string())
+        crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).map_err(|e| e.to_string())
     }
 
     async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
@@ -90,7 +98,7 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
     }
 
     async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
-        std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).map_err(|e| vec![e.to_string()])).map(|_| ())
+        std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()]).and_then(|text| crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).map_err(|e| vec![e.to_string()])).map(|_| ())
     }
 
     async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {

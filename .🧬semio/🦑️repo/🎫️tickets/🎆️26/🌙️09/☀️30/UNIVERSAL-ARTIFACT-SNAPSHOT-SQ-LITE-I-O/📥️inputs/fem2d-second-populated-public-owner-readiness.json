@@ -1,0 +1,40 @@
+{
+  "qualification": "Source-only second-owner readiness after DAG; no capability absence claim, no executable capsule/typecheck/runtime.",
+  "owner": "Fem2dSnapshot",
+  "coordinates": [
+    {
+      "kind": "s.fem.fem2d",
+      "standard": "1",
+      "subset": "*"
+    }
+  ],
+  "owningTest": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+  "selectedCommand": "bun nx run @semio-tech/fem-2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+  "constructor": "state() consumes independently authored document fixture, populated nodes/elements/regions/materials/sections/supports/loadCases/combinations/analysis",
+  "literalFixture": {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+    "exists": true
+  },
+  "primaryComposition": "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🏗️fem/🦀️.rs",
+  "realAppMembers": [
+    "VcsArtifactApp<EditorApp<crate::editor::fem2d::Fem2dPlayApp>>",
+    "VcsArtifactApp<ViewerApp<crate::viewer::fem2d::Fem2dViewer>>"
+  ],
+  "registration": "actual crate::artifact::<PA>() under component-app-assembly; PA must implement both real From member bounds. Publish through real Plugin::builder().declare_artifact(...).try_build(). No NoPluginApp stand-in.",
+  "requiredDemand": [
+    "two independently authored real app wrappers in owning test enum using existing dispatch dependency",
+    "exact native-schema and snapshot TypeId binding; both directions onehopExact",
+    "typed public SQLite Binary/Text export/import from genuine state()",
+    "Bun physical query/edit against literal fixture, not project(state()) expected",
+    "full exact scalar word/variant/cardinality/optional and literal identifier comparison including every persisted family",
+    "retain original physical oracle/malformed/rowlimit/cancellation laws; do not replace them with public wrapper presence"
+  ],
+  "unresolved": [
+    "Complete exact-field comparator must be authored; project(state()) equality is not an independent full field oracle",
+    "Actual standalone dev dependencies/features and launch changed phase need guard verification before capsule",
+    "Current nonfinite raw words may be valid native domain but no external FEM consumer model claim"
+  ],
+  "manifest": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+  "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+  "featurePrerequisite": "Current default=[]; artifact::<PA>() is cfg(component-app-assembly). Current router has no snapshotSqliteTestFeatures; existing selected native command will not compile/select an ungated app law. Coherent held demand must add snapshotSqliteTestFeatures:[component-app-assembly] to the owning registered router and preserve selected filter/launch, not remove feature gate."
+}

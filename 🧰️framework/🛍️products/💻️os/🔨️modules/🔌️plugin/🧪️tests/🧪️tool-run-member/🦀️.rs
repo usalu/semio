@@ -109,10 +109,10 @@ async fn member_store() -> ToolRunMembers {
 /// 🏗️ The toy app over the member roster with the parent declaring and owning its one member, run target `target`.
 async fn member_app(target: u64) -> MemberApp {
     let mut app = artifact_app_laws::new_registered_app_with_members::<ToyRunApp, ToolRunMembers, _>(toy_manifest()).await;
-    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], description: None, transaction: None }).await.expect("the member target config applies");
+    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }).await.expect("the member target config applies");
     let (slot, child_id) = member_key();
     let declared = ArtifactRef { artifact_id: child_id.clone(), dialect: member_dialect() }.to_uri();
-    app.store.dispatch(ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })], description: None, transaction: None }).await.expect("the parent declares its member");
+    app.store.dispatch(ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })], transaction: None }).await.expect("the parent declares its member");
     app.refresh_cache().await.expect("the parent view follows its declaration");
     app.register_child(slot, child_id, member_dialect(), member_store().await).await.expect("the owned member registers");
     app
@@ -168,7 +168,9 @@ async fn member_pump_until(app: &mut MemberApp, what: &str, done: impl Fn(&Membe
         }
         app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
     }
-    panic!("{what} never settled; state {:?}", app.tool_runs.state());
+    let reasons: Vec<u16> = app.tool_runs.steps().map(|steps| steps.iter().map(|step| step.reason).collect()).unwrap_or_default();
+    let admission = app.admit_child_content_publication().err().map(|fault| fault.code.0);
+    panic!("{what} never settled; state {:?}; member ops {}; ledger work {}; step reasons {reasons:?}; child-content admission refusal {admission:?}", app.tool_runs.state(), app.tool_runs.member_ops().len(), app.tool_runs.has_pending_work());
 }
 
 /// 🧾️ The applied history rows a tool transaction of the member tool keys.

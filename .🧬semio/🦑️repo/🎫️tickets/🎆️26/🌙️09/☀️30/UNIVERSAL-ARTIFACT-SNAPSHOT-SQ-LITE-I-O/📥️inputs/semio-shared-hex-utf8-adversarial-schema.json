@@ -1,0 +1,9 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object","additionalProperties":false,"required":["role","positive","negative"],
+  "properties":{
+    "role":{"const":"borrowedHexUtf8LiteralAuthority"},
+    "positive":{"type":"array","minItems":13,"maxItems":13,"uniqueItems":true,"items":{"type":"object","additionalProperties":false,"required":["id","hex","text"],"properties":{"id":{"enum":["empty","nul","asciiBoundary","twoByteMinimum","twoByteMaximumUppercase","threeByteMinimum","beforeSurrogate","afterSurrogate","threeByteMaximum","fourByteMinimum","maximumScalar","bomRetained","unicodeNul"]},"hex":{"type":"string","maxLength":64,"pattern":"^[0-9a-fA-F]*$"},"text":{"type":"string","maxLength":32}}}},
+    "negative":{"type":"array","minItems":16,"maxItems":16,"uniqueItems":true,"items":{"type":"object","additionalProperties":false,"required":["id","hex","kind"],"properties":{"id":{"enum":["loneContinuation","overlongTwo","invalidLeadC1","overlongThree","surrogate","overlongFour","aboveMaximum","invalidLeadF5","invalidLeadFF","asciiInsteadOfContinuation","truncatedTwo","truncatedThree","truncatedFour","oddHex","nonDigit","interiorWhitespace"]},"hex":{"type":"string","maxLength":32},"kind":{"enum":["utf8","hex"]}}}}
+  }
+}

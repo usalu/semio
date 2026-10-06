@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle
@@ -54,9 +54,9 @@ export default defineTestAdapter({
   scenarios: {
     "author-lines-resolve-to-aliases": {
       oracle: (ctx) => {
-        const schema = JSON.parse(readFileSync(ctx.fixture("schema://repo.contributors/ContributorDocument"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
-        const fixture = JSON.parse(readFileSync(ctx.fixture("shared://🧑️‍💻️contributor-documents.json"), "utf8")) as { documents: { directory: string; json: string }[] };
-        const log = JSON.parse(readFileSync(ctx.fixture("shared://🏁️checkpoint-log.json"), "utf8")) as { identities: string[]; malformed: string[] };
+        const schema = JSON.parse(readFileSync(ctx.input("schema://repo.contributors/ContributorDocument"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
+        const fixture = JSON.parse(readFileSync(ctx.input("shared://🧑️‍💻️contributor-documents.json"), "utf8")) as { documents: { directory: string; json: string }[] };
+        const log = JSON.parse(readFileSync(ctx.input("shared://🏁️checkpoint-log.json"), "utf8")) as { identities: string[]; malformed: string[] };
         const ajv = new Ajv2020({ strict: false, allErrors: true });
         const validate = ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/ContributorDocument" });
 

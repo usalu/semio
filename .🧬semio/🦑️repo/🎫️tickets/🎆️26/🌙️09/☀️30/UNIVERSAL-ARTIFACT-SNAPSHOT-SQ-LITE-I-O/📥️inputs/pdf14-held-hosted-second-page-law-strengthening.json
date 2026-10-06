@@ -1,0 +1,36 @@
+{
+  "qualification": "HELD regions to held after fields only, no provider overwrite or production mount; same existing law denominator",
+  "providerInput": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/pdf14-own-domain-public-family-provider-held.json",
+  "rows": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "field": "after",
+      "regions": [
+        {
+          "before": "    assert!(projection.contains(\"page-dimensions\"));\n",
+          "after": "    assert!(projection.contains(\"page-dimensions\"));\n    let state=semio_framework_plugin::ViewModel{tree_windows:vec![\n        semio_framework_plugin::TreeWindowRequest{body_key:BODY_KEY.into(),node_key:WINDOW_KIND_ID.into(),open:Some(true),offset:1,rows:1},\n        semio_framework_plugin::TreeWindowRequest{body_key:BODY_KEY.into(),node_key:format!(\"{}{}page-1-item-0\",WINDOW_KIND_ID,semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR),open:Some(true),offset:0,rows:1},\n    ],..semio_framework_plugin::ViewModel::new(Locale::De,semio_framework_ui_locale::Terminology::Native)};\n    let node=render_windowed(&document,UiPublicationRevision(55),&TreeWindows::for_body(&state,BODY_KEY),state.locale).unwrap();\n    let projection=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();\n    let scene:semio_framework_ui_scene::TextEditorScene=semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).unwrap();\n    assert_eq!(scene.buffer,document.pages[1].text);\n    let settings:serde_json::Value=serde_json::from_str(scene.settings_json.as_deref().unwrap()).unwrap();\n    assert_eq!(settings[\"readOnly\"],false);assert_eq!(settings[\"publicationRevision\"],\"55\");assert_eq!(settings[\"applyLabel\"],\"Anwenden\");assert_eq!(settings[\"editArguments\"][\"page\"],1);assert_eq!(settings[\"editArguments\"][\"item\"],0);assert_eq!(settings[\"editArguments\"][\"revision\"],semio_framework_plugin::app::DocumentWindowKit::text_revision(&document.pages[1].text));\n"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "field": "after",
+      "regions": [
+        {
+          "before": "    assert!(projection.contains(\"page-dimensions\"));\n",
+          "after": "    assert!(projection.contains(\"page-dimensions\"));\n    let state=semio_framework_plugin::ViewModel{tree_windows:vec![\n        semio_framework_plugin::TreeWindowRequest{body_key:BODY_KEY.into(),node_key:WINDOW_KIND_ID.into(),open:Some(true),offset:1,rows:1},\n        semio_framework_plugin::TreeWindowRequest{body_key:BODY_KEY.into(),node_key:format!(\"{}{}page-1-item-0\",WINDOW_KIND_ID,semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR),open:Some(true),offset:0,rows:1},\n    ],..semio_framework_plugin::ViewModel::new(Locale::De,semio_framework_ui_locale::Terminology::Native)};\n    let node=render_windowed(&document,UiPublicationRevision(55),&TreeWindows::for_body(&state,BODY_KEY),state.locale).unwrap();\n    let projection=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();\n    let scene:semio_framework_ui_scene::TextEditorScene=semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).unwrap();\n    assert_eq!(scene.buffer,document.pages[1].text);\n    let settings:serde_json::Value=serde_json::from_str(scene.settings_json.as_deref().unwrap()).unwrap();\n    assert_eq!(settings[\"readOnly\"],false);assert_eq!(settings[\"publicationRevision\"],\"55\");assert_eq!(settings[\"applyLabel\"],\"Anwenden\");assert_eq!(settings[\"editArguments\"][\"page\"],1);assert_eq!(settings[\"editArguments\"][\"item\"],0);assert_eq!(settings[\"editArguments\"][\"revision\"],semio_framework_plugin::app::DocumentWindowKit::text_revision(&document.pages[1].text));\n"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "field": "after",
+      "regions": [
+        {
+          "before": "    assert!(projection.contains(\"page-dimensions\"));\n",
+          "after": "    assert!(projection.contains(\"page-dimensions\"));\n    let state=semio_framework_plugin::ViewModel{tree_windows:vec![\n        semio_framework_plugin::TreeWindowRequest{body_key:BODY_KEY.into(),node_key:WINDOW_KIND_ID.into(),open:Some(true),offset:1,rows:1},\n        semio_framework_plugin::TreeWindowRequest{body_key:BODY_KEY.into(),node_key:format!(\"{}{}page-1-item-0\",WINDOW_KIND_ID,semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR),open:Some(true),offset:0,rows:1},\n    ],..semio_framework_plugin::ViewModel::new(Locale::De,semio_framework_ui_locale::Terminology::Native)};\n    let node=render_windowed(&document,UiPublicationRevision(55),&TreeWindows::for_body(&state,BODY_KEY),state.locale).unwrap();\n    let projection=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();\n    let scene:semio_framework_ui_scene::TextEditorScene=semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).unwrap();\n    assert_eq!(scene.buffer,document.pages[1].text);\n    let settings:serde_json::Value=serde_json::from_str(scene.settings_json.as_deref().unwrap()).unwrap();\n    assert_eq!(settings[\"readOnly\"],false);assert_eq!(settings[\"publicationRevision\"],\"55\");assert_eq!(settings[\"applyLabel\"],\"Anwenden\");assert_eq!(settings[\"editArguments\"][\"page\"],1);assert_eq!(settings[\"editArguments\"][\"item\"],0);assert_eq!(settings[\"editArguments\"][\"revision\"],semio_framework_plugin::app::DocumentWindowKit::text_revision(&document.pages[1].text));\n"
+        }
+      ]
+    }
+  ]
+}

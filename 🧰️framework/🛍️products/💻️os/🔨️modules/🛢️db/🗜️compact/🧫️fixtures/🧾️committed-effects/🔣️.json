@@ -1,5 +1,4 @@
 {
-  "schema": "semio.db.compaction.committed-effects/v1",
   "floorHeadSeq": 10,
   "segments": [
     {
@@ -10,33 +9,58 @@
           "id": 1,
           "outcome": "abort",
           "records": [
-            { "kind": "snapshot", "headSeq": 100 },
-            { "kind": "payload", "payload": "aborted" }
+            {
+              "kind": "snapshot",
+              "headSeq": 100
+            },
+            {
+              "kind": "payload",
+              "payload": "aborted"
+            }
           ]
         },
         {
           "id": 2,
           "outcome": "commit",
           "records": [
-            { "kind": "frontier", "headSeq": 1 },
-            { "kind": "payload", "payload": "committed" }
+            {
+              "kind": "frontier",
+              "headSeq": 1
+            },
+            {
+              "kind": "payload",
+              "payload": "committed"
+            }
           ]
         }
       ]
     },
-    { "index": 1, "state": "active", "transactions": [] }
+    {
+      "index": 1,
+      "state": "active",
+      "transactions": []
+    }
   ],
   "expected": {
     "deletedSegments": 1,
     "deletedPayloads": 0,
-    "remainingSegments": [1],
-    "retainedPayloads": ["aborted", "committed"]
+    "remainingSegments": [
+      1
+    ],
+    "retainedPayloads": [
+      "aborted",
+      "committed"
+    ]
   },
   "actor": {
     "priority": "command",
     "writerAuthority": "retained-artifact-wal",
     "activeSegmentAuthority": "artifact-wal",
-    "leaseBefore": ["snapshot-floor", "wal-horizon", "wal-delete"],
+    "leaseBefore": [
+      "snapshot-floor",
+      "wal-horizon",
+      "wal-delete"
+    ],
     "indexBudgetContinuation": "same-owned-future-cooperative-yield",
     "payloadReclamation": "deferred-global-reference-authority",
     "queuedSubmitDuring": "pending",

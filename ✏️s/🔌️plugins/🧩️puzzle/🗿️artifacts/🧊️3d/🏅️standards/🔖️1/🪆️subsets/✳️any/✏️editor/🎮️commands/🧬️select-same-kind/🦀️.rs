@@ -19,10 +19,10 @@ pub fn select_same_kind(ctx: &mut Puzzle3dActionCtx<'_>) {
         ctx.abort = true;
         return;
     };
-    let Some(kind) = ctx.scene.fixture.objects.iter().find(|object| object.id == first_id).and_then(|object| object.object_kind.clone()).filter(|kind| !kind.is_empty()) else {
+    let Some(kind) = ctx.scene.scene_snapshot.objects.iter().find(|object| object.id == first_id).and_then(|object| object.object_kind.clone()).filter(|kind| !kind.is_empty()) else {
         ctx.abort = true;
         return;
     };
-    let ids: Vec<String> = ctx.scene.fixture.objects.iter().filter(|object| object.object_kind.as_deref() == Some(kind.as_str())).map(|object| object.id.clone()).collect();
+    let ids: Vec<String> = ctx.scene.scene_snapshot.objects.iter().filter(|object| object.object_kind.as_deref() == Some(kind.as_str())).map(|object| object.id.clone()).collect();
     ctx.replace_selection(PUZZLE3D_GRANULARITY_OBJECT, ids);
 }

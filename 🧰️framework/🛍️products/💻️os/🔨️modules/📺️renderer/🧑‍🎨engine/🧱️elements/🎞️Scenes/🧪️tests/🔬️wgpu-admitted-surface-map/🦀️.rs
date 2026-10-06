@@ -110,7 +110,7 @@ fn a_surface_map_cannot_report_terminal_while_an_exact_owner_is_still_retiring()
 /// pair is the correct response; widening the guard or dropping the table from the fixture is not.
 #[test]
 fn admitted_surface_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/⏳️async/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")

@@ -645,6 +645,9 @@ pub enum ArtifactEvent {
     DocumentBackbone { message: Vec<u8> },
     /// 🗃️ The whole root plus recursive owned-member closure was replaced atomically.
     DocumentArchiveReplaced { archive: Vec<u8> },
+    /// 🫙️ The bound folder holds no archive of this document: answered once per open, by the first answered folder read alone,
+    /// and never after an archive was read or written.
+    DocumentArchiveAbsent,
     /// 📈️ Monotonic, bounded progress for one descriptor-bound artifact bootstrap.
     /// A new transfer starts at zero after reconnect; no progress event implies a committed frontier.
     BootstrapProgress { received_bytes: u64, total_bytes: u64, received_chunks: u32, total_chunks: u32 },
@@ -1042,8 +1045,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
         id: envelope.mutation_id.0.clone(),
         actor: Some(envelope.actor.0.clone()),
         started_at: now_ms().await.to_string(),
-        finished_at: None,
-        description: None, verb: envelope.verb.clone(), line: envelope.line.clone(),
+        finished_at: None, verb: envelope.verb.clone(), line: envelope.line.clone(),
         ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.clone()) }],
         inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
         meta: Some(vec![crate::os_spr::HistoryOpMeta {
@@ -2290,6 +2292,14 @@ mod native_actor {
         /// 🔁️ Every operation id this replica authored or applied — the echo filter ([`admit_remote_envelopes`]).
         applied_op_ids: HashSet<String>,
         last_written_hash: Option<String>,
+        /// 🪞️ The hash of the archive the folder is known to hold — the last one read or written, none after a read that found
+        /// the folder empty: an archive with these bytes is not written again.
+        folder_held_hash: Option<String>,
+        /// 🪹️ Whether this open's first folder read was answered, or an archive was read or written: no later read announces an
+        /// absent archive ([`ArtifactEvent::DocumentArchiveAbsent`]).
+        folder_bootstrapped: bool,
+        #[cfg(test)]
+        folder_writes: usize,
         remote_state: RemoteState,
         last_status: Option<ArtifactSyncStatus>,
         watcher: Option<semio_framework_os_services::OwnedFileChangeWatcher>,
@@ -2389,6 +2399,10 @@ mod native_actor {
                 known_op_ids: HashSet::new(),
                 applied_op_ids: HashSet::new(),
                 last_written_hash: None,
+                folder_held_hash: None,
+                folder_bootstrapped: false,
+                #[cfg(test)]
+                folder_writes: 0,
                 remote_state: RemoteState::Detached,
                 last_status: None,
                 watcher: None,
@@ -2610,12 +2624,19 @@ mod native_actor {
             }
         }
 
-        /// 🌱️ Seeds persistence state from any already-stored recursive archive and installs the file watcher.
+        /// 🌱️ Seeds persistence state from any already-stored recursive archive and installs the file watcher. A bound folder
+        /// whose bootstrap read finds no archive is announced once ([`ArtifactEvent::DocumentArchiveAbsent`]).
         async fn setup(&mut self) {
-            let seeded = match self.folder.as_ref().filter(|_| self.current_pack.is_none()) {
-                Some(folder) => folder.read_archive().await.ok().flatten(),
+            let read = match self.folder.as_ref().filter(|_| self.current_pack.is_none()) {
+                Some(folder) => Some(folder.read_archive().await),
                 None => None,
             };
+            if matches!(read, Some(Ok(None))) && !self.folder_bootstrapped {
+                self.emit(ArtifactEvent::DocumentArchiveAbsent);
+            }
+            self.folder_bootstrapped |= matches!(read, Some(Ok(_)));
+            let seeded = read.and_then(|read| read.ok().flatten());
+            self.folder_held_hash = seeded.as_deref().map(document_archive_hash).or(self.folder_held_hash.take());
             if let Some(bytes) = seeded {
                 if let Ok(archive) = crate::os_spr::decode_document_archive_bytes(&bytes).await {
                     let pack = archive.parent_pack;
@@ -2731,10 +2752,22 @@ mod native_actor {
         /// deliberately does NOT record `last_written_hash` on failure — a false "persisted" mark
         /// would make `handle_external_change` mistake the still-stale on-disk content for a
         /// self-write and ignore a real external change.
+        ///
+        /// Bytes the folder is known to hold already — the last archive read or written — are not written again.
         async fn persist_write_archive(&mut self, archive: &[u8]) {
             let Some(folder) = self.folder.as_ref() else { return };
+            let hash = document_archive_hash(archive);
+            if self.folder_held_hash.as_deref() == Some(hash.as_str()) {
+                return;
+            }
             if folder.write_archive(archive).await.is_ok() {
-                self.last_written_hash = Some(document_archive_hash(archive));
+                self.last_written_hash = Some(hash.clone());
+                self.folder_held_hash = Some(hash);
+                self.folder_bootstrapped = true;
+                #[cfg(test)]
+                {
+                    self.folder_writes += 1;
+                }
             }
         }
 
@@ -2831,16 +2864,32 @@ mod native_actor {
         /// Append-only spr events decoded without HistoryOpMeta carry HLT(0,0). Ingest merges
         /// by HLC, so a zero stamp would reorder under already-applied local edits and leave
         /// the live snapshot at the older head. Stamp each new envelope with this actor clock.
+        ///
+        /// The first answered read of an open that finds no archive, with none read or written before, announces
+        /// [`ArtifactEvent::DocumentArchiveAbsent`] once; a later empty answer only forgets the archive the folder held.
         async fn handle_external_change(&mut self) {
-            let seeded = match self.folder.as_ref() {
-                Some(folder) => folder.read_archive().await.ok().flatten(),
-                None => None,
+            let read = match self.folder.as_ref() {
+                Some(folder) => folder.read_archive().await,
+                None => return,
             };
-            let Some(bytes) = seeded else { return };
+            let bytes = match read {
+                Ok(Some(bytes)) => bytes,
+                Ok(None) => {
+                    if !self.folder_bootstrapped {
+                        self.emit(ArtifactEvent::DocumentArchiveAbsent);
+                    }
+                    self.folder_bootstrapped = true;
+                    self.folder_held_hash = None;
+                    return;
+                }
+                Err(_) => return,
+            };
+            self.folder_bootstrapped = true;
             let Ok(archive) = crate::os_spr::decode_document_archive_bytes(&bytes).await else { return };
             let pack = archive.parent_pack.clone();
             let spr = archive.parent_spr.clone();
             let hash = document_archive_hash(&bytes);
+            self.folder_held_hash = Some(hash.clone());
             if self.last_written_hash.as_deref() == Some(hash.as_str()) {
                 return;
             }
@@ -3335,6 +3384,16 @@ mod native_actor {
         #[cfg(test)]
         pub(super) fn current_archive_test(&self) -> Option<Vec<u8>> {
             self.current_archive.clone()
+        }
+
+        #[cfg(test)]
+        pub(super) async fn setup_test(&mut self) {
+            self.setup().await;
+        }
+
+        #[cfg(test)]
+        pub(super) fn folder_writes_test(&self) -> usize {
+            self.folder_writes
         }
 
         #[cfg(test)]
@@ -5230,6 +5289,9 @@ mod wasm_actor {
 use wasm_actor::spawn_actor;
 //#endregion 🔖️WasmActor
 
+#[cfg(test)]
+mod fixtures {
+    use super::*;
 //#region 🔖️Fixtures
 /// 🎬️ A scripted actor test vector shared by cargo test (here) and vitest (WS-E's TS twin).
 /// Each fixture drives inbound events at a document actor and asserts the resulting `ArtifactEvent`
@@ -5280,7 +5342,7 @@ enum RawFixtureInbound {
 
 #[derive(Clone, Debug, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
-struct FixtureManifest {
+struct TestEvidence {
     name: String,
     schema: String,
     document_id: String,
@@ -5290,7 +5352,7 @@ struct FixtureManifest {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn parse_fixture_dsl_manifest(text: &str) -> Option<FixtureManifest> {
+async fn parse_fixture_dsl_manifest(text: &str) -> Option<TestEvidence> {
     use std::collections::BTreeMap;
 
     let mut name = None;
@@ -5349,7 +5411,7 @@ async fn parse_fixture_dsl_manifest(text: &str) -> Option<FixtureManifest> {
         inbound.push(raw);
     }
 
-    Some(FixtureManifest { name: name?, schema: schema?, document_id: document_id?, inbound, expected_events, expected_edit_ids })
+    Some(TestEvidence { name: name?, schema: schema?, document_id: document_id?, inbound, expected_events, expected_edit_ids })
 }
 
 /// 📂️ Loads every `<name>/🔣️fixture.dsl` manifest directory under `dir`, resolving each
@@ -5390,6 +5452,10 @@ pub async fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
     }
     fixtures
 }
+
+}
+#[cfg(test)]
+use fixtures::*;
 //#endregion 🔖️Fixtures
 
 //#region 🔖️FolderStorage

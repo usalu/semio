@@ -1,6 +1,6 @@
 /** 🧪️ Map document facets preserve every durable handle and dynamic feature value. */
 import {test} from "bun:test";
-import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type {GisMapValue} from "../../📍️feature/🟦️.ts";
 import assert from "node:assert/strict";
 import { testSchemaRecordOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🧪️tests/🔬️unit/🟦️.ts";

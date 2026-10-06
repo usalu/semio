@@ -1,0 +1,58 @@
+{
+  "dialect": {
+    "artifactKind": "s.stdio.pdf",
+    "standard": "1.4",
+    "subset": "*"
+  },
+  "schema": "stdio.pdf",
+  "pages": [
+    {
+      "width": 200,
+      "height": 300,
+      "text": "Semio page one"
+    },
+    {
+      "width": 400,
+      "height": 500,
+      "text": "Seite zwei"
+    }
+  ],
+  "setPage": {
+    "page": 0,
+    "item": 0,
+    "text": "Edited own14 text"
+  },
+  "geometryEdit": {
+    "index": 1,
+    "width": 8,
+    "height": 9
+  },
+  "invalidAddress": {
+    "page": 2,
+    "item": 0
+  },
+  "invalidItem": 1,
+  "nativeHeader": "%PDF-1.4",
+  "forbiddenOwnFields": [
+    "mediaBox",
+    "cropBox",
+    "rotate",
+    "objects",
+    "trailer"
+  ],
+  "requiredActionVocabulary": [
+    "set-page",
+    "insert-page",
+    "remove-page",
+    "move-page",
+    "set-page-size",
+    "replace-page-text"
+  ],
+  "artifactSchemaId": "s.stdio.pdf",
+  "sqlEdit": {
+    "page": 1,
+    "width": 8,
+    "height": 9,
+    "text": "Independent page edit"
+  }
+}

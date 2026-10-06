@@ -11,7 +11,7 @@ pub fn register() {}
 /// 📥 Parse csv text into a CsvSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &TxtSnapshot) -> Result<CsvSnapshot, semio_framework_diagnostic::TextError> {
-    Ok(crate::schema::snapshot::decode_csv_with(&from.to_body(), true))
+    Ok(crate::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv_with(&from.to_body(), true))
 }
 
 /// 📥 Parse DSL/text bytes via txt then csv.

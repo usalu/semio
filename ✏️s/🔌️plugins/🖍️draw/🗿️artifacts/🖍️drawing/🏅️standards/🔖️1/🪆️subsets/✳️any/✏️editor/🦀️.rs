@@ -11,7 +11,7 @@ use crate::editor::drawing::commands::nudge_selection::{nudge_selection_left,nud
 use crate::editor::drawing::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
 use crate::editor::drawing::commands::{
     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input,
-    engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
+    engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, load_document_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
 use crate::editor::drawing::modes::edit;
 use crate::editor::drawing::modes::edit::windows::canvas as canvas_window;
@@ -73,6 +73,8 @@ pub use properties_panel::DRAWING_PLAY_BODY_PROPERTIES;
 
 #[path = "🕹️interaction/🦀️.rs"]
 pub(crate) mod interaction;
+#[path = "🧮️status/🦀️.rs"]
+mod status;
 
 //#region 🔖️Constants
 pub const DRAWING_PLAY_CONTROLLER_ID: &str = "drawing-play";
@@ -251,7 +253,7 @@ fn drawing_layer_value_arg() -> semio_framework_plugin::ActionArgDef {
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
 fn drawing_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
-    UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
+    UtilityDefinition { group: Some(group.into()), category: Some(category), allows_actions_while_active: true, ..UtilityDefinition::new(id, label, icon) }
 }
 //#endregion 🔖️Constants
 
@@ -263,7 +265,7 @@ semio_framework_plugin::app_commands! {
     pub enum DrawingCommand for DrawingSnapshot, DrawingMutation, NoConfig, NoConfigMutation, ctx = DrawingSession {
         "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
         "commitDocument" as "commit-document" => commit_document::CommitDocument,
-        "setFixtureJson" as "fixture-json" => set_fixture_json::SetFixtureJson,
+        "loadDocumentJson" as "document-json" => load_document_json::LoadDocumentJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "setSelectedOpacity" as "selected-opacity" => set_selected_opacity::SetSelectedOpacity,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
@@ -366,7 +368,7 @@ mod args_bridge {
 
     /// 🔁️ Every key under both spellings (`FromValue` ignores keys it does not know), `aliases`
     /// applied on the snake_case key, and each `json` key printed to JSON text when the host sent a
-    /// structured value for a `String` wire field (`patchLayer.value`, `setFixtureJson.json`).
+    /// structured value for a `String` wire field (`patchLayer.value`, `loadDocumentJson.json`).
     fn fold(args: Option<&semio_framework_value::DslValue>, aliases: &[(&str, &str)], json: &[&str]) -> semio_framework_value::DslValue {
         let mut entries: Vec<(String, semio_framework_value::DslValue)> = Vec::new();
         if let Some(semio_framework_value::DslValue::Object(object)) = args {
@@ -407,7 +409,7 @@ mod args_bridge {
         Ok(match action {
             "setSnapshot" => DrawingCommand::SetSnapshot(decode(action, plain())?),
             "commitDocument" => DrawingCommand::CommitDocument(decode(action, plain())?),
-            "setFixtureJson" => DrawingCommand::SetFixtureJson(decode(action, fold(args, &[], &["json"]))?),
+            "loadDocumentJson" => DrawingCommand::LoadDocumentJson(decode(action, fold(args, &[], &["json"]))?),
             "setActiveExample" => DrawingCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("example", "example_id")], &[]))?),
             "setSelectedOpacity" => DrawingCommand::SetSelectedOpacity(decode(action, plain())?),
             "engagementSubmit" => DrawingCommand::EngagementSubmit(decode(action, plain())?),
@@ -620,6 +622,7 @@ impl DrawingInstanceOperationOwner {
         }
         let retained = self.operations.get_mut(live_key).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the exact Drawing gesture owner changed before its bounded reducer step"))?;
         let session = retained.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.owner"), "the Drawing gesture session is already closing"))?;
+        session.source_identity=Some(source_identity);
         session.window_config = payload.window_config.clone();
         session.window_transient = payload.window_transient.clone();
         session.base = Some(canvas_pointer_down::DrawingToolBase { document: payload.snapshot.clone(), operation: Some(operation.clone()) });
@@ -632,15 +635,28 @@ impl DrawingInstanceOperationOwner {
             if query.command_id != command.command_id() {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.query-owner"), "a retained Drawing point query rejects a different command owner"));
             }
+            geometry_session::prepare_query(source_identity,snapshot);
+            let admitted=geometry_session::with_query(source_identity,|status,borrowed|match status {
+                crate::schema::scene_identity::admission::SceneAdmissionStatus::Pending=>Ok(None),
+                crate::schema::scene_identity::admission::SceneAdmissionStatus::Ready=>{
+                    let borrowed=borrowed.unwrap();
+                    if query.traversal_complete{query.cursor.validate_cache(&borrowed)?;Ok(Some(true))}
+                    else{Ok(Some(query.cursor.advance(snapshot,&borrowed)))}
+                },
+                _=>Err(Fault::from("Drawing pointer geometry is unavailable or changed")),
+            });
+            let admitted=match admitted{Ok(admitted)=>admitted,Err(fault)=>{self.operations.cancel(live_key);self.active=None;return Err(fault)}};
+            let Some(complete)=admitted else{return Ok(None)};
             if !query.traversal_complete {
-                if !query.cursor.advance(snapshot) {
+                if !complete {
                     return Ok(None);
                 }
                 if query.cursor.overflowed {
+                    let error=query.cursor.failure.clone().unwrap_or_else(||"Drawing query exceeds result capacity".into());
                     session.point_query = None;
                     self.operations.cancel(live_key);
                     self.active = None;
-                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.query-capacity"), "the fixed Drawing query result capacity was exceeded"));
+                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.query"), error));
                 }
                 query.traversal_complete = true;
                 return Ok(None);
@@ -1106,7 +1122,7 @@ const DRAWING_BOUNDED_TOOL_IDS: &[&str] = &[
     "nudgeSelectionDownFast",
     "setSnapshot",
     "commitDocument",
-    "setFixtureJson",
+    "loadDocumentJson",
     "setActiveExample",
     "setSelectedOpacity",
     "engagementSubmit",
@@ -1147,7 +1163,7 @@ const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactT
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nudgeSelectionDownFast", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "exportDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSelectedOpacity", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -1361,7 +1377,6 @@ struct DrawingArtifactStorePreparationFactory;
 struct DrawingArtifactStorePreparation {
     base: Option<store::SnapshotRead<DrawingSnapshot>>,
     mutation: Option<DrawingMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<DrawingSnapshot, DrawingMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -1370,9 +1385,9 @@ struct DrawingArtifactStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutation> for DrawingArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &DrawingMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("drawing-artifact-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &DrawingMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("drawing-artifact-lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -1394,7 +1409,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutat
         Ok(Box::new(DrawingArtifactStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -1449,7 +1463,7 @@ impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> fo
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -1469,7 +1483,7 @@ impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> fo
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 
@@ -1504,7 +1518,7 @@ impl DrawingBoundedProofs {
         factory_type: DrawingBoundedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
-            "setSnapshot", "commitDocument", "setFixtureJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
+            "setSnapshot", "commitDocument", "loadDocumentJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
             "addLayer", "dropLayerKind", "moveLayer", "deleteLayer", "duplicateLayer", "toggleLayerVisible", "combineBoolean",
             "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput", "exportDocument", "editSelection", "editPath", "editFill",
             "deleteSelection",
@@ -1766,7 +1780,7 @@ impl ArtifactEditor for DrawingPlayApp {
     // 🖼️ No override: whole-document replacement has no `Mutation` vehicle any more (banned
     // vocabulary — see `🧬️mutations/🦀️.rs`'s module doc). The default `None` disables the
     // generic `import_media("artifact:in")` port for drawing; explicit whole-document load/replace
-    // stays reachable through the `set_snapshot`/`commit_document`/`set_fixture_json`/
+    // stays reachable through the `set_snapshot`/`commit_document`/`load_document_json`/
     // `set_active_example` commands, which now emit `Effect::LoadDocument` (the sanctioned
     // non-history reset path) instead.
 
@@ -1842,46 +1856,17 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn window_engagements(doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
-        let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
-        // 🧮️ The status row reports the LIVE top-level layer count (selection is framework-owned and not
-        // visible from this view, so it stays at the framework's interaction domain); it used to be a
-        // hard-coded "0 layers · 0 selected" that no load or edit ever moved.
-        let layer_count = doc.snapshot.layers.len();
-        let engagement = WindowEngagement {
-            session_active: Some(false),
-            options: None,
-            input: Some(WindowEngagementInput {
-                id: Some("drawing-canvas-engagement".into()),
-                value: Some(String::new()),
-                placeholder: Some("Layer name".into()),
-                on_change: Some(drawing_manifest_action("engagementInput")),
-                on_submit: Some(drawing_manifest_action("engagementSubmit")),
-                disabled: None,
-                on_repeat_last: None,
-                on_abort: None,
-            }),
-            control: None,
-            controls: None,
-            status: Some(vec![WindowEngagementStatus { id: "drawing-layer-count".into(), text: format!("{layer_count} layer{} · 0 selected", if layer_count == 1 { "" } else { "s" }) }]),
-            possible_engagements: None,
-        };
-        HashMap::from([(window_id, engagement)])
+        status::engagements(doc.snapshot.layers.len(),0,String::new(),view_state)
     }
 
     fn window_engagements_with_request_context(
         doc: &ArtifactView<'_, DrawingSnapshot>,
-        cfg: &ConfigView<'_, NoConfig>,
+        _cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
-        let mut engagements = Self::window_engagements(doc, cfg, view_state);
-        let Some(window_id) = view_state.window_id.as_ref() else { return HashMap::new() };
-        let current = canvas_window::transient::current(transient);
-        if let Some(input) = engagements.get_mut(window_id).and_then(|engagement| engagement.input.as_mut()) {
-            input.value = Some(current.engagement_input);
-        }
-        engagements
+        status::engagements(doc.snapshot.layers.len(),interaction.selection(DRAWING_INTERACTION_DOMAIN).ids.len(),canvas_window::transient::current(transient).engagement_input,view_state)
     }
 }
 //#endregion 🔖️DrawingPlayApp
@@ -1936,10 +1921,10 @@ pub fn drawing_vector_out_port() -> semio_framework::MediaPortSpec {
 }
 
 /// 🖼️ Exports the current drawing document as an SVG `Media` payload for the `vector:out` port —
-/// reuses `crate::io::drawing_document_to_svg` (the same semio/drawing↔svg bridge the
+/// reuses `crate::standards::v1::subsets::any::io::drawing_document_to_svg` (the same semio/drawing↔svg bridge the
 /// export-svg shell path uses), so there is exactly one SVG renderer.
 pub fn drawing_vector_media(doc: &DrawingSnapshot) -> Result<Media, MediaError> {
-    let (svg, _width, _height) = crate::io::drawing_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
+    let (svg, _width, _height) = crate::standards::v1::subsets::any::io::drawing_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: svg } })
 }
 //#endregion 🔖️Io
@@ -2120,12 +2105,12 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             )
             .action_interactive_job("commitDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(
-                drawing_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation)
+                drawing_internal_action("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native("Loads a whole drawing document from JSON text.", "Lädt ein vollständiges Zeichnungsdokument aus JSON-Text."))
                     .use_when(["load this drawing from json"])
                     .with_args([semio_framework_plugin::ActionArgDef::json_text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()]),
             )
-            .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("loadDocumentJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(
                 drawing_internal_action("setSelectedOpacity", LocalizedLabel::native("Set Selected Opacity", "Deckkraft der Auswahl festlegen"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native("Sets the opacity of every currently selected layer, from 0 (invisible) to 1 (opaque).", "Setzt die Deckkraft aller ausgewählten Ebenen, von 0 (unsichtbar) bis 1 (deckend)."))
@@ -2218,7 +2203,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
             .action_destructive("deleteLayer")
             .action_destructive("setSnapshot")
-            .action_destructive("setFixtureJson")
+            .action_destructive("loadDocumentJson")
             .action_destructive("setActiveExample")
             .action_destructive("commitDocument")
             .action_destructive("exportDocument")
@@ -2240,6 +2225,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                 "pen".into(), "shapeRect".into(), "shapeEllipse".into(), "shapeLine".into(), "shapePolygon".into(),
                 "booleanCombine".into(), "trace".into(), "transformMove".into(),
             ])
+            .window_kind_initial_utility(DRAWING_PLAY_WINDOW_CANVAS, "selectDirect")
             // 🕹️ The framework-owned "strokes" interaction domain (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the layers panel tree
             // (`.interaction_domain("strokes")?`) and the canvas's pick/marquee/lasso layer selection;

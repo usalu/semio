@@ -39,8 +39,7 @@ async fn sample_log() -> HistoryLog {
                 id: "edit-1".to_string(),
                 actor: Some("alice".to_string()),
                 started_at: "2024-01-15T10:30:00Z".to_string(),
-                finished_at: Some("2024-01-15T10:30:05Z".to_string()),
-                description: Some("first edit".to_string()), verb: Some("typeText".to_string()),
+                finished_at: Some("2024-01-15T10:30:05Z".to_string()), verb: Some("typeText".to_string()),
                 ops: vec![OpPayload { text: Some("set foo=1".to_string()), binary: None }, OpPayload { text: Some("set bar=2".to_string()), binary: None }],
                 inverse: Vec::new(),
                 meta: None, lane: None,
@@ -49,8 +48,7 @@ async fn sample_log() -> HistoryLog {
                 id: "edit-2".to_string(),
                 actor: None,
                 started_at: "not-a-canonical-timestamp".to_string(),
-                finished_at: None,
-                description: None, verb: None,
+                finished_at: None, verb: None,
                 ops: vec![OpPayload { text: Some("set baz=3".to_string()), binary: None }],
                 inverse: Vec::new(),
                 meta: Some(vec![HistoryOpMeta {
@@ -314,8 +312,7 @@ async fn op_meta_messages_round_trip_every_severity_and_target_shape() {
         id: "edit-m".to_string(),
         actor: None,
         started_at: "2024-01-01T00:00:00Z".to_string(),
-        finished_at: None,
-        description: None, verb: None,
+        finished_at: None, verb: None,
         ops: vec![OpPayload { text: Some("noop".to_string()), binary: None }],
         inverse: Vec::new(),
         meta: Some(vec![meta.clone()]), lane: None,
@@ -517,7 +514,7 @@ async fn edit_payload_round_trips_with_all_optionals_and_meta() {
 
 #[semio_framework_async_macros::async_test]
 async fn edit_payload_round_trips_minimal_edit() {
-    let edit = HistoryEdit { line: None, id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, description: None, verb: None, ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None };
+    let edit = HistoryEdit { line: None, id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, verb: None, ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None };
     let mut dict = DictBuilder::new();
     let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
     let mut reader = DictReader::new();
@@ -596,8 +593,7 @@ async fn edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_pay
         id: "edit-y".to_string(),
         actor: Some("bob".to_string()),
         started_at: "2024-02-01T00:00:00Z".to_string(),
-        finished_at: Some("2024-02-01T00:00:01Z".to_string()),
-        description: None, verb: None,
+        finished_at: Some("2024-02-01T00:00:01Z".to_string()), verb: None,
         ops: vec![OpPayload { text: Some("set n=1".to_string()), binary: Some(vec![1, 2, 3]) }, OpPayload { text: Some("set n=2".to_string()), binary: None }],
         inverse: vec![OpPayload { text: Some("set n=0".to_string()), binary: Some(vec![0]) }, OpPayload { text: Some("set n=1".to_string()), binary: None }],
         meta: None, lane: None,
@@ -618,8 +614,7 @@ async fn edit_payload_with_empty_backwards_omits_the_section_and_decodes_empty()
         id: "edit-z".to_string(),
         actor: None,
         started_at: "2024-02-01T00:00:00Z".to_string(),
-        finished_at: None,
-        description: None, verb: None,
+        finished_at: None, verb: None,
         ops: vec![OpPayload { text: Some("noop".to_string()), binary: None }],
         inverse: Vec::new(),
         meta: None, lane: None,
@@ -767,8 +762,7 @@ fn fold_edit(id: &str, op_id: &str, physical_ms: i64) -> HistoryEdit {
         id: id.to_string(),
         actor: Some("alice".to_string()),
         started_at: "2024-01-15T10:30:00Z".to_string(),
-        finished_at: None,
-        description: None, verb: None,
+        finished_at: None, verb: None,
         ops: vec![OpPayload { text: Some(format!("set {id}=1")), binary: None }],
         inverse: Vec::new(),
         meta: Some(vec![HistoryOpMeta { op_id: Some(op_id.to_string()), hlt: Some((1, physical_ms, 0)), ..HistoryOpMeta::default() }]),

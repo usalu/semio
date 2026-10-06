@@ -12,11 +12,41 @@
   "properties": {
     "run_index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Run",
+          "de": "Textlauf"
+        },
+        "description": {
+          "en": "Index of the run, counted from 0.",
+          "de": "Index des Textlaufs, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the marks of the run at which it is inserted, counted from 0.",
+          "de": "Position unter den Auszeichnungen des Textlaufs, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "mark": {
       "$ref": "#/$defs/SemioTextMark",

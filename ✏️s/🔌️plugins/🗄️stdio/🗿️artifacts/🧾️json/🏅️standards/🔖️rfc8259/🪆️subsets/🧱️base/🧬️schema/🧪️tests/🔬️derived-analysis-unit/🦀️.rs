@@ -4,7 +4,7 @@ mod tests {
     #[test]
     fn sniff_owned_logical_json_object_is_high() {
         let text = "{\"a\": 1, \"b\": [1, 2, 3]}";
-        let snapshot=JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::schema::snapshot::parse_json_text(text).unwrap()};let text=store::ArtifactDsl::print_dsl(&snapshot);assert_eq!(JsonAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), IoConfidence::High);
+        let snapshot=JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(text).unwrap()};let text=store::ArtifactDsl::print_dsl(&snapshot);assert_eq!(JsonAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), IoConfidence::High);
     }
 
     #[test]

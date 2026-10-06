@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::empty_block5d_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_block5d_snapshot;
 use crate::{Block5dGripKind, Block5dGripTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;

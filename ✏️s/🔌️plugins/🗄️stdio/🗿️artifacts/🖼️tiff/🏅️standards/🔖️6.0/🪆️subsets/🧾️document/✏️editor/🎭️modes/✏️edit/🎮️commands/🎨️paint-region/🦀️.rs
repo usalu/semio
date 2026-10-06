@@ -2,7 +2,7 @@
 
 use super::{TiffAnyEditCommand, TiffAnyEditor};
 use crate::editor::tiff_any::component::config::selected_ifd;
-use crate::io::{tiff_revision, validate_tiff_region_paint, TiffRegion, TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS};
+use crate::standards::v6_0::subsets::document::io::{tiff_revision, validate_tiff_region_paint, TiffRegion, TIFF_MAXIMUM_INTERACTIVE_PAINT_ROWS};
 use crate::schema::mutations::{PaintRegionMutation, TiffMutation};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};

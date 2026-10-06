@@ -6,7 +6,7 @@
 //! (`policyViewerPurityBreaches` forbids it outright).
 
 use crate::op::NoteMutation;
-use crate::schema::empty_note_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
 use crate::viewer::note::modes::view;
 use crate::viewer::note::modes::view::windows::composite;
 use crate::{NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};

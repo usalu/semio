@@ -10,4 +10,4 @@ if(process.argv[2]==="verify"&&process.argv[3]==="snapshot-sqlite-source"){
  await runRepositoryCommand(process.execPath,["x","tsc",...files,"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck"],workspace,"generation-source:all-published-consumers",120000);
  console.log(`[generation-source] checked published consumers=${files.length}`);
 }else
-await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/procedural-generation2d",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"]});
+await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/procedural-generation2d",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

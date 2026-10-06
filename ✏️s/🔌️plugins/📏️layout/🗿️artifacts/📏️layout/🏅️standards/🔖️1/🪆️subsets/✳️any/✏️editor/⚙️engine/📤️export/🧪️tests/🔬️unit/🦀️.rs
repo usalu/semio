@@ -101,7 +101,7 @@ fn layout_retained_publication_zero_grant_and_exact_writer_close_are_exact() {
 }
 
 fn request(kind: LayoutExportKind) -> LayoutExportRequest {
-    let snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let page_id = (!matches!(kind, LayoutExportKind::Package)).then(|| snapshot.pages[0].id.clone());
     LayoutExportRequest { kind, page_id, snapshot: Arc::new(snapshot), preflight_json: None, parent_document_id: "layout-test-document".into(), canonical_base_revision_hex: "09".repeat(32) }
 }
@@ -158,7 +158,7 @@ fn assert_pdf_structure(bytes: &[u8]) -> usize {
 
 #[test]
 fn pdf_export_carries_every_page_with_the_embedded_font_and_shaped_glyphs() {
-    let snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, None, None).expect("document pdf");
     assert_eq!(all.filename, "Demo.pdf");
     assert_eq!(all.mime_type, "application/pdf");
@@ -193,7 +193,7 @@ fn pdf_export_carries_every_page_with_the_embedded_font_and_shaped_glyphs() {
 
 #[test]
 fn pdf_export_prints_a_placed_drawing_mark_and_its_kind() {
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.links[0].artifact_kind = "drawing".into();
     snapshot.links[0].artifact_ref = "drawing-1".into();
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
@@ -606,7 +606,7 @@ fn owned_crc32_is_standard_and_incremental() {
 
 #[test]
 fn typed_document_json_matches_serde_and_every_write_is_credit_bounded() {
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.name = "\u{1f642}\n".repeat(MAX_LAYOUT_EXPORT_STRING_BYTES / 5);
     snapshot.background_drawing =
         Some(crate::LayoutDrawingChild { handle: store::ArtifactChild::new("drawing-child".into(), store::os_io::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")), content: Default::default() });
@@ -672,7 +672,7 @@ fn terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes() {
 
 #[test]
 fn supplied_preflight_array_is_preserved_byte_for_byte_in_package_entry() {
-    let snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let supplied = r#"[{"kind":"custom","severity":"warning"}]"#;
     let json = semio_framework_pack_json::to_json_string(&snapshot);
     let package = export_package_zip_headless_batch(&json, supplied).expect("package");
@@ -775,13 +775,13 @@ fn the_reserved_close_ladder_leaves_the_publication_stage_in_bounded_slices() {
 
 #[test]
 fn pdf_export_prints_proxy_png_pixels() {
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
-    let mut image = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut image = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     image.width = 2;
     image.height = 2;
     image.pixels = vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255];
-    let png = semio_s_artifact_stdio_png::io::author_png_projection(&image).expect("png");
-    let decoded = semio_s_artifact_stdio_png::io::project_png(&png).expect("png round trip");
+    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&image).expect("png");
+    let decoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&png).expect("png round trip");
     assert_eq!(decoded.pixels, image.pixels, "the png codec keeps the placed pixels");
     snapshot.links[0].state = Some("ready".into());
     snapshot.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
@@ -811,12 +811,12 @@ fn base64_encode(bytes: &[u8]) -> String {
 
 #[test]
 fn pdf_export_rotates_a_proxy_with_its_frame() {
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
-    let mut image = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut image = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     image.width = 2;
     image.height = 2;
     image.pixels = vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255];
-    let png = semio_s_artifact_stdio_png::io::author_png_projection(&image).expect("png");
+    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&image).expect("png");
     snapshot.links[0].state = Some("ready".into());
     snapshot.links[0].proxy_data_url = Some(format!("data:image/png;base64,{}", base64_encode(&png)));
     let frame = snapshot.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
@@ -835,7 +835,7 @@ fn pdf_export_rotates_a_proxy_with_its_frame() {
 
 #[test]
 fn pdf_export_prints_a_character_style_run() {
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: Some(24.0), font_weight: None, italic: None, color: Some([1.0, 0.0, 0.0, 1.0]), tracking: None });
     snapshot.stories[0].style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
@@ -850,7 +850,7 @@ fn pdf_export_prints_a_character_style_run() {
 
 #[test]
 fn pdf_export_obliques_and_tracks_a_character_span() {
-    let mut tracked = crate::standards::v1::subsets::any::schema::default_document();
+    let mut tracked = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     tracked.character_styles.push(crate::CharacterStyle { id: "character-1".into(), name: Some("Emphasis".into()), font_family: None, font_size: None, font_weight: Some(700), italic: Some(true), color: None, tracking: Some(10.0) });
     tracked.stories[0].style_runs.push(crate::TextStyleRun { start: 0, end: 5, paragraph_style_id: None, character_style_id: Some("character-1".into()) });
     let mut plain = tracked.clone();
@@ -876,7 +876,7 @@ fn pdf_export_obliques_and_tracks_a_character_span() {
 
 #[test]
 fn pdf_export_prints_a_page_override() {
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.pages[0].overrides.push(crate::PageOverride { object_id: "frame-inherited".into(), bounds: Some(crate::LayoutBounds { x: 90.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 }), visible: None, locked: None });
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
@@ -888,7 +888,7 @@ fn pdf_export_prints_a_page_override() {
 
 #[test]
 fn pdf_export_omits_a_hidden_layer() {
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.pages[0].layers[0].visible = false;
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
@@ -905,7 +905,7 @@ fn pdf_export_omits_a_frame_on_a_hidden_layer() {
     use crate::mutations::set_frame_layer::SetFrameLayer;
     use crate::mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
-    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let created = LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false }).diff(&base).diff().apply(&base).expect("layer");
     let mut snapshot = LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff().apply(&created).expect("move");
     snapshot.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
@@ -945,7 +945,7 @@ fn pdf_export_prints_the_background_drawing() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.pages[0].width = 100.0;
     snapshot.pages[0].height = 50.0;
     snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
@@ -984,7 +984,7 @@ fn pdf_export_prints_a_styled_plan_stroke() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.pages[0].width = 100.0;
     snapshot.pages[0].height = 50.0;
     snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
@@ -1035,7 +1035,7 @@ fn pdf_export_prints_a_filled_plan_path() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.pages[0].width = 100.0;
     snapshot.pages[0].height = 50.0;
     snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
@@ -1084,7 +1084,7 @@ fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
     snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
@@ -1126,7 +1126,7 @@ fn pdf_export_prints_drawing_text() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
     snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
@@ -1146,11 +1146,11 @@ fn pdf_export_prints_an_embedded_drawing_png() {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let mut encoded = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
+    let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;
     encoded.height = 1;
     encoded.pixels = vec![255, 0, 0, 255];
-    let bytes = semio_s_artifact_stdio_png::io::author_png_projection(&encoded).expect("png");
+    let bytes = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&encoded).expect("png");
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
         canvas: Default::default(),
@@ -1171,7 +1171,7 @@ fn pdf_export_prints_an_embedded_drawing_png() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
     snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
@@ -1188,11 +1188,11 @@ fn pdf_export_prints_a_rotated_drawing_png() {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
-    let mut encoded = semio_s_artifact_stdio_png::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
+    let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;
     encoded.height = 1;
     encoded.pixels = vec![255, 0, 0, 255];
-    let bytes = semio_s_artifact_stdio_png::io::author_png_projection(&encoded).expect("png");
+    let bytes = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&encoded).expect("png");
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
         canvas: Default::default(),
@@ -1213,7 +1213,7 @@ fn pdf_export_prints_a_rotated_drawing_png() {
             },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.links[0].artifact_kind = "s.draw.drawing".into();
     snapshot.links[0].artifact_ref = "plan-1".into();
     let frame = snapshot.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-image-1").expect("image");
@@ -1246,7 +1246,7 @@ fn pdf_export_prints_edited_drawing_text() {
             root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] },
         }],
     };
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
     let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 0, text: "Title".into() });
     let edited = mutation.diff(&snapshot).diff().apply(&snapshot).expect("rename");
@@ -1274,7 +1274,7 @@ fn pdf_export_prints_a_front_rect_after_the_image() {
     use crate::mutations::reorder_frame::ReorderFrame;
     use crate::mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
-    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     for _ in 0..8 {
         let mutation = LayoutMutation::ReorderFrame(ReorderFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), forward: true });
         let outcome = mutation.diff(&snapshot);

@@ -1,0 +1,28 @@
+{
+  "schemaBytes": 8227,
+  "tableWidths": {
+    "en1994_beam": 39,
+    "en1994_beam_action": 19,
+    "en1994_beam_sheeting": 13,
+    "en1994_beam_steel": 27,
+    "en1994_beam_studs": 16,
+    "en1994_column": 36,
+    "en1994_column_action": 13,
+    "en1994_document": 11,
+    "en1994_slab": 23,
+    "en1994_slab_action": 19,
+    "en1994_slab_sheeting": 13
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 12,
+      "valueBytes": 1763
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 1,
+      "valueBytes": 71
+    }
+  ]
+}

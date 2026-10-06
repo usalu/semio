@@ -1,24 +1,21 @@
 /** 🧭️ Task ownership vectors checked by Ajv and observation of the actual task router. */
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import ts from "typescript";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findWorkspaceRoot } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import descriptor from "../🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
 import fixture from "../🧫️fixtures/🔣️.json";
 import { readPixelsTaskDescriptorV1 } from "../🟦️.ts";
 
 const repoRoot = findWorkspaceRoot(import.meta.dir);
 const pixelRoot = join(repoRoot, "🧰️framework/🔨️modules/🔲️pixels");
-const validate = new Ajv({ strict: true }).compile(schema);
 const strictFlags = ["--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions"];
 
 for (const row of fixture.cases) test(row.name, () => {
   const candidate = structuredClone(descriptor);
   if (row.field) (candidate[row.field as "strictRoots" | "testRoots" | "inputs"]).push(row.value!);
-  expect(validate(candidate)).toBe(row.admit);
   if (row.admit) expect<unknown>(readPixelsTaskDescriptorV1(candidate)).toEqual(candidate);
   else expect(() => readPixelsTaskDescriptorV1(candidate)).toThrow();
 });

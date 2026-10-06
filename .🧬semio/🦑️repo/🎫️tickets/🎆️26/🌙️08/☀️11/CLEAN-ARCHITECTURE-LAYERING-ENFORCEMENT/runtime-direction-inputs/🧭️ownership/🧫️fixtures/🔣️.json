@@ -1,0 +1,71 @@
+{
+  "contract": "neutral-fixture-ownership/v1",
+  "moves": [
+    {
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️world3d-inline-surface/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema/🎨️world3d-inline-surface/🔣️.json"
+    }
+  ],
+  "bindings": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🖼️raster-residency/🦀️.rs",
+      "oldLiteral": "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "occurrences": 1,
+      "mode": "relative"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-inline-surface/🟦️.ts",
+      "oldLiteral": "../../🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "occurrences": 1,
+      "mode": "relative"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-inline-surface/🟦️.ts",
+      "oldLiteral": "../../🧬️schema/🎨️world3d-inline-surface/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema/🎨️world3d-inline-surface/🔣️.json",
+      "occurrences": 1,
+      "mode": "relative"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧪️tests/🔬️unit/🦀️.rs",
+      "oldLiteral": "../../../../📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "occurrences": 2,
+      "mode": "relative"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+      "oldLiteral": "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "occurrences": 1,
+      "mode": "relative"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🦀️.rs",
+      "oldLiteral": "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "occurrences": 1,
+      "mode": "relative"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📜️script.ts",
+      "oldLiteral": "join(engine, \"🧫️fixtures/🎨️world3d-inline-surface/🔣️.json\")",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json",
+      "occurrences": 1,
+      "mode": "root-expression"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📜️script.ts",
+      "oldLiteral": "join(engine, \"🧬️schema/🎨️world3d-inline-surface/🔣️.json\")",
+      "target": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema/🎨️world3d-inline-surface/🔣️.json",
+      "occurrences": 1,
+      "mode": "root-expression"
+    }
+  ]
+}

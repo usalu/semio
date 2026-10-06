@@ -9,7 +9,21 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Solid id",
+          "de": "Körper-ID"
+        },
+        "description": {
+          "en": "Id the new solid carries.",
+          "de": "Kennung, die der neue Körper trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "shells": {
       "type": "array",

@@ -25,7 +25,7 @@ pub const IMPORT_NEURON_KIND: &str = "brep.io.importDwg";
 pub fn register() {}
 
 pub fn mesh_from_bytes(bytes: &[u8]) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
-    mesh_from_snapshot(&semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg(bytes).map_err(|error| io_error(format!("generation3d←dwg: {error}")))?)
+    mesh_from_snapshot(&semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg(bytes).map_err(|error| io_error(format!("generation3d←dwg: {error}")))?)
 }
 
 pub fn mesh_from_snapshot(from: &DwgSnapshot) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
@@ -38,7 +38,7 @@ pub fn mesh_from_snapshot(from: &DwgSnapshot) -> Result<SemioMeshSnapshot, semio
 
 pub fn deserialize(from: &DwgSnapshot) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
     mesh_from_snapshot(from)?;
-    let bytes = semio_s_artifact_stdio_dwg::schema::snapshot::encode_dwg(from).map_err(|error| io_error(format!("generation3d←dwg: {error}")))?;
+    let bytes = semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::encode_dwg(from).map_err(|error| io_error(format!("generation3d←dwg: {error}")))?;
     Ok(import_document(IMPORT_NEURON_KIND, base64_encode(&bytes)))
 }
 

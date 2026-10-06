@@ -1936,7 +1936,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
     store.install_document_store_owners_exact(<FlowHostSnapshot as crate::os_store::MemberStoreOwner<FlowMutation>>::member_store_owners());
     let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None, transaction: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<FlowMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     crate::os_store::test_support::assert_command_envelope_round_trip::<FlowHostSnapshot, FlowMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone()));

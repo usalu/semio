@@ -24,7 +24,7 @@ mod subject {
 
     /// 📥️ Reads one JSON fixture into the crate's own JSON vocabulary.
     fn fixture(ctx: &Context, uri: &str) -> Result<SerdeJson, String> {
-        let bytes = ctx.fixture_bytes(uri)?;
+        let bytes = ctx.input_bytes(uri)?;
         let text = String::from_utf8(bytes).map_err(|error| error.to_string())?;
         semio_framework_repo_graphql::serde_json::from_str(&text).map_err(|error| error.to_string())
     }

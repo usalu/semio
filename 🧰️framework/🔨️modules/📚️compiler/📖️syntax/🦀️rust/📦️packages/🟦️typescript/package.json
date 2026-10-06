@@ -3,10 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "test": "nx run @semio-tech/compiler-syntax-rust-ts:test"
+    "test": "nx run @semio-tech/compiler-syntax-rust-ts:test",
+    "test-path-literals": "nx run @semio-tech/compiler-syntax-rust-ts:test-path-literals"
   },
   "nx": {
     "includedScripts": []
   }
 }
-

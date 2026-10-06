@@ -21,7 +21,7 @@ const INPUT: &str = "shared://🔣️.json";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.json"))?;
+    let copy = ctx.copy_input(INPUT, Some("input.json"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input
@@ -158,7 +158,9 @@ mod subject {
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::{apply_json_mutation, JsonMutation};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_json::{mutation_from_payload_json, mutation_payload_json};
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonSnapshot};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonSnapshot};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{write_json_text};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
     use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
     use semio_s_artifact_stdio_json_test_oracle::standards::v_rfc8259::subsets::base::project_json_value;
 

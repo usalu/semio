@@ -1,4 +1,4 @@
-//! 🧪️ `disconnect-kind-compatibility` fixture — `🚫️rejects`.
+//! 🧪️ `disconnect-kind-compatibility` snapshot — `🚫️rejects`.
 //!
 //! The diagnostic addresses the pair, so its path carries BOTH kind ids.
 //!
@@ -61,7 +61,7 @@ fn the_refusal_is_the_declared_one() {
 /// ↩️ A verb that could not find its target has nothing to undo, so its inverse is empty.
 #[test]
 fn inverse_of_a_refusal() {
-    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse snapshot");
     assert_eq!(inverse.len(), 0, "disconnect-kind-compatibility/rejects-withdrawing-a-pair-the-relation-never-held: got {inverse:?}");
 }
 

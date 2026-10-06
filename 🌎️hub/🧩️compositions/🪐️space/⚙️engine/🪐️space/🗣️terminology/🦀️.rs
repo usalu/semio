@@ -1,6 +1,6 @@
 //! 🗣️ S Studio app — locale × terminology label set (constitutional: ui/Terminology).
 
-use semio_framework_plugin::app_labels;
+use semio_framework_ui_locale::app_labels;
 
 //#region 🔖️Terminology
 // 🗣️ Every operation/view-action/shell-action's German translation lives directly at its

@@ -7,6 +7,8 @@
 //! so it still compiles — as an effectively-empty crate — for a `wasm32-unknown-unknown` target
 //! check, mirroring `pack_io`'s pattern exactly.
 
+pub use protocol::io::{binary, text};
+
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
     use std::collections::HashMap;

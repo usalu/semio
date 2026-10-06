@@ -439,9 +439,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-insert-javascript-action",
       "class": "third-party-generated",
       "target": {
@@ -490,7 +489,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-remove-javascript-action",
       "class": "third-party-generated",
       "target": {
@@ -539,7 +537,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-insert-launch-action",
       "class": "third-party-generated",
       "target": {
@@ -588,7 +585,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-remove-launch-action",
       "class": "third-party-generated",
       "target": {
@@ -637,7 +633,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-insert-embedded-file",
       "class": "third-party-generated",
       "target": {
@@ -686,7 +681,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-remove-embedded-file",
       "class": "third-party-generated",
       "target": {
@@ -735,7 +729,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-set-af-relationship",
       "class": "third-party-generated",
       "target": {
@@ -784,7 +777,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-remove-af-relationship",
       "class": "third-party-generated",
       "target": {
@@ -833,7 +825,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-set-output-intent",
       "class": "third-party-generated",
       "target": {
@@ -882,7 +873,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-remove-output-intent",
       "class": "third-party-generated",
       "target": {
@@ -931,7 +921,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-embed-font-file",
       "class": "third-party-generated",
       "target": {
@@ -980,7 +969,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "a-remove-font-file",
       "class": "third-party-generated",
       "target": {
@@ -1029,7 +1017,6 @@
       "comparisonPipeline": "pdf-1-7-a-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "encryption-insert-encryption-dictionary",
       "class": "third-party-generated",
       "target": {
@@ -1078,7 +1065,6 @@
       "comparisonPipeline": "pdf-1-7-a-encryption-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "encryption-remove-encryption-dictionary",
       "class": "third-party-generated",
       "target": {

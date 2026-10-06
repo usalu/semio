@@ -60,7 +60,7 @@
           ]
         },
         {
-          "id": "setFixtureJson",
+          "id": "loadDocumentJson",
           "lanes": [
             "host-only"
           ]

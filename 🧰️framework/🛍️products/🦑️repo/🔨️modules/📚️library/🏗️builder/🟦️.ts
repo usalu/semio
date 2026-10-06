@@ -70,7 +70,7 @@ function scaffoldLeafOwner(path: string, authority: { path: string; kind: string
   for (const name of path.slice(authority.path.length + 1).split("/").slice(0, -1)) {
     const childKind = scaffoldKind(name, kind, taxonomy);
     const capture = state === "modes" ? contract.directoryCaptures.mode : state === "windows" ? contract.directoryCaptures.window : null;
-    const allowed = state === "subset" ? taxonomy.subsetChildDirs : state === "surface" ? taxonomy.surfaceRequiredChildDirs : state === "mode" ? taxonomy.modeRequiredChildDirs : state === "window" ? taxonomy.windowRequiredChildDirs : state === "io" ? taxonomy.ioSemanticCollectionDirNames : state === "collection" ? taxonomy.representationDirs : [];
+    const allowed = state === "subset" ? taxonomy.subsetChildDirs : state === "surface" ? taxonomy.surfaceRequiredChildDirs : state === "mode" ? taxonomy.modeRequiredChildDirs : state === "window" ? taxonomy.windowRequiredChildDirs : state === "io" ? taxonomy.representationDirs : state === "representation" ? taxonomy.ioSemanticCollectionDirNames : [];
     if (capture ? !capture.kindIds.includes(childKind) || capture.names && !capture.names.includes(name) : !allowed.includes(name)) throw new Error(`Unpermitted authoring child: ${name}`);
     if (state === "subset") state = taxonomy.subsetSurfaceDirs.includes(name) ? "surface" : taxonomy.subsetComponentDirs.includes(name) ? childKind === "io" ? "io" : "component" : "facet";
     else if (state === "surface") state = name === taxonomy.modesDirName ? "modes" : "facet";
@@ -78,8 +78,8 @@ function scaffoldLeafOwner(path: string, authority: { path: string; kind: string
     else if (state === "mode") state = name === taxonomy.windowsDirName ? "windows" : "facet";
     else if (state === "windows") state = "window";
     else if (state === "window") state = "facet";
-    else if (state === "io") state = "collection";
-    else if (state === "collection") state = "component";
+    else if (state === "io") state = "representation";
+    else if (state === "representation") state = name === "🧬️mutations" || name === "💡️inferences" ? "collection" : "component";
     kind = childKind;
   }
   const markdown = basename(path) === canonicalPrimaryFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);

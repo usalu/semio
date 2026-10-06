@@ -60,5 +60,5 @@ export type SemioTableMutation =
   | { RemoveRow: RemoveRow }
   | { ReorderRows: ReorderRows }
   | { EditCell: EditCell }
-  | { SetSnapshot: SetSnapshot };
+  | { SetSnapshot: SetSnapshot }
   | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }

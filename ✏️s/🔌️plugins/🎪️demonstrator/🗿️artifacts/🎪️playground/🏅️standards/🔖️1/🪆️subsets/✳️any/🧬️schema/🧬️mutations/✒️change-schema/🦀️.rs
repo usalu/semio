@@ -77,15 +77,7 @@ pub fn undo_playground_mutation_json(snapshot_json: &str, mutation_json: &str) -
     Ok(bridge_render(&current, messages))
 }
 
-/// 🔁️ Parses, prints, and reparses one language-neutral playground document.
-pub fn round_trip_playground_dsl(text: &str) -> Result<String, String> {
-    use store::ArtifactDsl;
-    let parsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed playground example does not parse: {error:?}"))?;
-    let printed = <PlaygroundSnapshot as ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <PlaygroundSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted playground document does not parse: {error:?}"))?;
-    let value = object([("printed".to_string(), Value::String(printed)), ("snapshot".to_string(), from_dsl_value(&semio_framework_value::ToValue::to_value(&parsed))), ("reparsed".to_string(), from_dsl_value(&semio_framework_value::ToValue::to_value(&reparsed)))]);
-    Ok(to_string(&value))
-}
+
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🧪️Behavior

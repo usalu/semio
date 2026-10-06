@@ -1,7 +1,8 @@
 //! ✏️ `html` edit (any) — Main window: real `TextWindowKit`
 //! render of the current document (editable variant).
 
-use crate::standards::v5::subsets::any::schema::snapshot::{write_html_document, HtmlSnapshot};
+use crate::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot};
+use crate::standards::v5::subsets::any::io::text::snapshot::{write_html_document};
 use semio_framework_plugin::app::{TextEditView, TextWindowKit};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::WindowKindDefinition;

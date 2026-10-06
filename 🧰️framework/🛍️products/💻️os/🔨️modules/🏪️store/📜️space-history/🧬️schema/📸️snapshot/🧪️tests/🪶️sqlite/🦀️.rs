@@ -483,3 +483,50 @@ fn sqlite_snapshot_framework_space_history_public_borrowed_native_preflight_admi
  let mut long=short.clone();long.checkpoints[0].message=facet["textUnit"].as_str().unwrap().repeat(usize::try_from(facet["repeat"].as_u64().unwrap()).unwrap());
  public_preflight::verify(&short,&long,SQL,usize::try_from(facet["rows"].as_u64().unwrap()).unwrap(),long.checkpoints[0].message.len(),usize::try_from(facet["cancelAt"].as_u64().unwrap()).unwrap(),|operation|crate::test_allocation::observe(operation));
 }
+
+fn semantic_role_source(index:usize,text:&str)->SpaceHistorySnapshot{let mut source=fixture();match index{0=>{source.active_alternative_id=Some(text.into());},1=>{source.checkpoints[0].id=text.into();},2=>{source.checkpoints[0].parent_id=Some(text.into());},3=>{source.checkpoints[0].message=text.into();},4=>{source.checkpoints[0].authors[0].id=text.into();},5=>{source.checkpoints[0].authors[0].name=text.into();},6=>{source.checkpoints[0].authors[1].avatar=Some(text.into());},7=>{source.checkpoints[0].members[0].document_id=text.into();},8=>{source.checkpoints[0].members[0].checkpoint_id=text.into();},9=>{source.checkpoints[0].members[0].alternative_id=text.into();},10=>{source.alternatives[0].id=text.into();},11=>{source.alternatives[0].name=text.into();},12=>{source.alternatives[0].checkpoint_ids[0]=text.into();},_=>panic!("closed thirteen authored text roles")}source}
+
+#[test]
+fn sqlite_snapshot_framework_space_history_complete_native_semantic_text_roles_and_columns(){
+ use store::ArtifactSqliteSnapshot;use std::io::Write;use std::process::{Command,Stdio};
+ let plan:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🛂️semantic/🔣️.json")).unwrap();
+ 
+ let defaults=SqliteDatabaseLimits::default();let text=plan["text"].as_str().unwrap();assert_eq!(text.len(),plan["textBytes"].as_u64().unwrap()as usize);
+ for(index,sample)in plan["cases"].as_array().unwrap().iter().enumerate(){
+  let source=semantic_role_source(index,text);let bytes=sample["semanticBytes"].as_u64().unwrap()as usize;
+  let database=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,defaults)).unwrap();
+  let file=export_sqlite_database(&database,defaults,&mut |_|true).unwrap();
+  let script=r###"import{Database}from "bun:sqlite";const plan=JSON.parse(process.argv[1]),sample=JSON.parse(process.argv[2]);if(Buffer.byteLength(plan.text,"utf8")!==plan.textBytes)throw Error("independent UTF8 extent");const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));const quote=v=>'"'+v.replaceAll('"','""')+'"';try{if(db.query("PRAGMA integrity_check").get().integrity_check!=="ok"||db.query("PRAGMA foreign_key_check").all().length)throw Error("independent physical integrity");let rows=0,bytes=0;for(const[table,count]of Object.entries(plan.tableRows)){const fields=db.query("PRAGMA table_info("+quote(table)+")").all().map(v=>v.name);const cells=fields.map(v=>{const f=quote(v);return "CASE typeof("+f+") WHEN 'integer' THEN 8 WHEN 'real' THEN 8 WHEN 'text' THEN length(CAST("+f+" AS BLOB)) WHEN 'blob' THEN length("+f+") ELSE 0 END";}).join("+");const actual=db.query("SELECT COUNT(*) AS rows,COALESCE(SUM("+cells+"),0) AS bytes FROM "+quote(table)).get();if(actual.rows!==count)throw Error("authored row extent "+table);rows+=actual.rows;bytes+=actual.bytes;}if(rows!==plan.rows||bytes!==sample.semanticBytes)throw Error("independent complete cell extent "+JSON.stringify({rows,bytes}));}finally{db.close();}"###;
+  let mut child=Command::new("bun").args(["-e",script]).arg(plan.to_string()).arg(sample.to_string()).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+  child.stdin.take().unwrap().write_all(&file).unwrap();let result=child.wait_with_output().unwrap();assert!(result.status.success(),"{}: {}",sample["id"],String::from_utf8_lossy(&result.stderr));
+  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+   let input=payload(&source,encoding);
+   let retained=SpaceHistorySnapshot::decode_sqlite_snapshot_native(&input,&mut SqliteSnapshotControl::new(&mut |_|true,defaults)).unwrap();assert_eq!(retained,source);retained.retire_sqlite_snapshot();
+   let short=SqliteDatabaseLimits{max_columns:7-1,..defaults};
+   assert!(SpaceHistorySnapshot::decode_sqlite_snapshot_native(&input,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"{} borrowed complete native columns must refuse before typed materialization",sample["id"]);
+   for maximum in[bytes-1,bytes]{
+    let limits=SqliteDatabaseLimits{max_value_bytes:maximum,..defaults};
+    let output=source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits));
+    assert_eq!(output.is_ok(),maximum==bytes,"{} complete typed semantic output cells",sample["id"]);
+    let preflight=source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits));
+    assert_eq!(preflight.is_ok(),maximum==bytes,"{} complete borrowed semantic preflight cells",sample["id"]);
+   }
+  }
+  source.retire_sqlite_snapshot();
+ }
+}
+
+#[test]
+fn sqlite_snapshot_framework_space_history_borrowed_semantic_gate_uses_closed_exact_cells_before_typed_construction(){
+ use store::ArtifactSqliteSnapshot;
+ let plan:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🛂️semantic/🔣️.json")).unwrap();let defaults=SqliteDatabaseLimits::default();
+ for(index,sample)in plan["cases"].as_array().unwrap().iter().enumerate(){
+  let source=semantic_role_source(index,plan["text"].as_str().unwrap());let bytes=sample["semanticBytes"].as_u64().unwrap()as usize;let rows=plan["rows"].as_u64().unwrap()as usize;let schema=SpaceHistorySnapshot::SQLITE_SCHEMA.len();
+  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=payload(&source,encoding);
+   for(field,maximum,success)in[("bytes",bytes,true),("bytes",bytes-1,false),("rows",rows,true),("rows",rows-1,false),("columns",7,true),("columns",6,false),("schema",schema,true),("schema",schema-1,false)]{
+    let limits=match field{"bytes"=>SqliteDatabaseLimits{max_value_bytes:maximum,..defaults},"rows"=>SqliteDatabaseLimits{max_rows:maximum,..defaults},"columns"=>SqliteDatabaseLimits{max_columns:maximum,..defaults},"schema"=>SqliteDatabaseLimits{max_schema_bytes:maximum,..defaults},_=>unreachable!()};
+    let mut callback=|_|true;let mut caller=SqliteSnapshotControl::new(&mut callback,defaults);let admitted=store::space_history_sqlite::decode_native_cst(&input,&mut caller,|value,native|store::space_history_sqlite::admission::intrinsic(value,native,limits));assert_eq!(admitted.is_ok(),success,"{} isolated borrowed {} grant before typed construction",sample["id"],field);
+   }
+  }source.retire_sqlite_snapshot();
+ }
+}

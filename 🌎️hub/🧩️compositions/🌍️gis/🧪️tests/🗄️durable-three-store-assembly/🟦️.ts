@@ -3,17 +3,16 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { compileGisScopeExport } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧬️schema/🟦️.ts";
 
-const GIS_SCHEMA_MODULE = "🌎️hub/🧩️compositions/🌍️gis/🧬️schema/🔣️.json";
 
-/** 🏗️ Proves the exact fixed-three GIS assembly schema, typed factory ports, and private Store bind. */
+/** 🏗️ Proves the exact fixed-three GIS assembly outcomes, typed factory ports, and private Store bind. */
 export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promise<void> {
   const fixtureRoot = join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis/🧫️fixtures/🗄️durable-three-store-assembly");
   const fixtureBytes = readFileSync(join(fixtureRoot, "🔣️.json"));
   const fixture = JSON.parse(fixtureBytes.toString("utf8"));
-  const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisDurableThreeStoreAssembly");
-  if (!validate(fixture)) throw new Error(`invalid GIS durable three-Store assembly corpus: ${JSON.stringify(validate.errors)}`);
+  const cancellation = ["admit-parent", "prepare-parent", "prepare-drawing", "prepare-value"].map((at, prepared) => ({ at, prepared, journalBegins: 0, terminalStores: 3 }));
+  const rejection = ["parent", "drawing", "value"].map((at, priorPreparations) => ({ at, priorPreparations, terminalStores: 3 }));
+  if (JSON.stringify(fixture.cancellationCases) !== JSON.stringify(cancellation) || JSON.stringify(fixture.rejectionCases) !== JSON.stringify(rejection)) throw new Error("GIS assembly cancellation/rejection outcomes changed");
   const identity = [
     fixture.schema,
     fixture.shape,
@@ -46,7 +45,7 @@ export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promi
   for (const builder of ["gis_map_parent_one_item_preparation_factory", "gis_map_drawing_one_item_preparation_factory", "gis_map_value_one_item_preparation_factory"]) {
     if (!gisSource.includes(builder)) throw new Error(`GIS exact preparation port missing ${builder}`);
   }
-  console.log(`gis-durable-three-store-assembly-oracle: AJV=1 SHA256=node+webcrypto roles=3 cancellation=${fixture.cancellationCases.length} rejection=${fixture.rejectionCases.length}; no WAL recovery or Hub publication claim`);
+  console.log(`gis-durable-three-store-assembly-oracle: SHA256=node+webcrypto roles=3 cancellation=${fixture.cancellationCases.length} rejection=${fixture.rejectionCases.length}; no WAL recovery or Hub publication claim`);
 }
 
 

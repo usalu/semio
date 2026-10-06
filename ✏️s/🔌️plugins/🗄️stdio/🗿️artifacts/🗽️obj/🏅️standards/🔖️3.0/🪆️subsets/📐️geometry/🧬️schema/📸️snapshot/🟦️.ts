@@ -1,4 +1,4 @@
-import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ ObjSnapshot schema facet — mirrors 🦀️.rs field-for-field. Complete per the
  * Wavefront OBJ 3.0 spec's real, commonly-implemented grammar. */
 

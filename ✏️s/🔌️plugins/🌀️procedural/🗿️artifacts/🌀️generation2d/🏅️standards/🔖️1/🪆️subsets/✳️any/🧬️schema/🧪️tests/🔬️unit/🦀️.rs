@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead;
 

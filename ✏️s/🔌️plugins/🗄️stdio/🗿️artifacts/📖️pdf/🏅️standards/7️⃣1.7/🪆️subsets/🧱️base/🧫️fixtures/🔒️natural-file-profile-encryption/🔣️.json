@@ -1,13 +1,24 @@
 {
-  "$schema": "semio.stdio.pdf-natural-file-profile-encryption.v1",
   "input": "../✏️edit-existing-pdf/2️⃣two-pages.pdf",
   "algorithm": "rc4-128",
   "password": "fixture-only-password",
   "encrypted": true,
   "profiles": [
-    { "id": "a", "code": "stdio.pdf.a.encrypt-present" },
-    { "id": "x", "code": "stdio.pdf.x.encrypt-present" },
-    { "id": "e", "code": "stdio.pdf.e.encrypt-present" },
-    { "id": "vt", "code": "stdio.pdf.x.encrypt-present" }
+    {
+      "id": "a",
+      "code": "stdio.pdf.a.encrypt-present"
+    },
+    {
+      "id": "x",
+      "code": "stdio.pdf.x.encrypt-present"
+    },
+    {
+      "id": "e",
+      "code": "stdio.pdf.e.encrypt-present"
+    },
+    {
+      "id": "vt",
+      "code": "stdio.pdf.x.encrypt-present"
+    }
   ]
 }

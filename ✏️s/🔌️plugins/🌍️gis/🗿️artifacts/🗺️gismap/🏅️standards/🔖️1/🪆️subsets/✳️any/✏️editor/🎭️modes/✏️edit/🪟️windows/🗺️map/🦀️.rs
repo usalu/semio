@@ -27,6 +27,7 @@ const GIS2D_PLAY_SURFACE: &str = "gis2d.play.composite";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GIS2D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Map", "Karte"),
         body_key: GIS2D_PLAY_BODY_COMPOSITE.into(),

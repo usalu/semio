@@ -1,0 +1,22 @@
+> bun ./📜️script.ts tests 🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧪️tests/🟦️.ts 🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/💰️reconstruction/🟦️.ts
+
+[DEBUG] isolated Nx verification tests
+bun test v1.3.14 (0d9b296a)
+
+🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧪️tests/🟦️.ts:
+(pass) authored policy uses the same closed admission as AJV [42.03ms]
+(pass) real owned captures equal installed execa and SQLite corpus [1153.06ms]
+[DEBUG] execution refusal kind=capture reason=capture-budget process-started=true process-closed=true
+[DEBUG] execution refusal kind=deadline reason=deadline process-started=true process-closed=true
+[DEBUG] execution refusal kind=cancel reason=cancelled process-started=false process-closed=true
+(pass) real refusal conserves exact partial capture and stopped process owners [768.71ms]
+(pass) real compiler lease stays owned until shutdown and cancels in the queue [3606.88ms]
+(pass) compiler paths are admitted before physical storage or process work [1.68ms]
+
+🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/💰️reconstruction/🟦️.ts:
+(pass) full owned SQL reconstruction has a closed exact allocation contract and independent literal bytes [155.68ms]
+
+ 6 pass
+ 0 fail
+ 125 expect() calls
+Ran 6 tests across 2 files. [6.53s]

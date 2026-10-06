@@ -18,7 +18,7 @@ use protocol::os_spr::command::DiffAlgebra;
 /// the same diff -- see [`apply`](BinaryDiff::apply)'s normative processing order).
 ///
 /// 🧪️ F6-PILOT: `semio_framework_dsl_record_derive::DslRecord` — gives this `DslField` so `Vec<ByteSplice>` can sit inside a
-/// `#[derive(dsl::DslDiff)]` struct's list field (`BinaryDiff::splices` below).
+/// `#[derive(dsl::)]` struct's list field (`BinaryDiff::splices` below).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct ByteSplice {
@@ -39,11 +39,11 @@ pub struct ByteSplice {
 /// `offset`/`remove_len` are never re-interpreted against a partially-mutated buffer.
 /// Out-of-range offsets/lengths are rejected by `MutationDiff::apply`; the unchecked helper is
 /// reserved for the algebra's total absorb/inverse machinery after a valid diff is established.
-/// 🧪️ F6-PILOT: `dsl::DslDiff` derive added — emits `protocol::DiffCodec` (print_diff/parse_diff/
+/// 🧪️ F6-PILOT: `dsl::` derive added — emits `protocol::DiffCodec` (print_diff/parse_diff/
 /// encode_diff/decode_diff) from the same `RecordSpec` machinery `DslRecord` uses. `BinaryDiff`
 /// is a plain struct with one `Vec<ByteSplice>` field (`ByteSplice` itself `DslRecord`-derived
 /// above) — the derive's struct-only restriction is satisfied trivially here.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslDiff)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary.diff")]
 pub struct BinaryDiff {

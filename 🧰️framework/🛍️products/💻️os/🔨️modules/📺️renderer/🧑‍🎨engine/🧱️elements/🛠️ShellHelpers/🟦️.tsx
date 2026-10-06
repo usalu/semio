@@ -1,3 +1,4 @@
+import { TIME_TRAVEL_CODE_LABELS } from "../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/ShellHelpers/component.tsx
 /** 🧰️ `ShellHelpers` — shared plumbing behind the framework OS shell orchestrator
@@ -163,6 +164,7 @@ import {
     Slider,
     staticTreePanelDefinition,
     Stepper,
+    Textarea,
     Toggle,
     ToggleGroup,
     Tree,
@@ -315,6 +317,26 @@ export function shellHistoryProjectionAfterPatchV1(current: ShellHistoryProjecti
   const entries: Record<string, HistoryEntry> = replace ? {} : { ...current.entries };
   for (const entry of patch.upserts ?? []) entries[historyEntryKey(entry)] = entry;
   return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId), timeTravel: patch.timeTravel ?? null, reprojection: patch.reprojection ?? null, editCount: patch.editCount ?? 0 };
+}
+
+/** 🚛️ One program's projection while its document loads in steps: the host's own polled progress as the `load`
+ * reprojection, every other field kept — the shell status outside the History panel then shows a load like any other
+ * replay (`HistoryReprojectionStatus`). `null` ends it: a settled, failed or cancelled load leaves no `load` reprojection
+ * behind, and a replay of another kind is never touched. The same object when nothing changes. */
+export function shellHistoryProjectionWithLoadV1(current: ShellHistoryProjectionV1, load: { readonly completed: number; readonly total: number } | null): ShellHistoryProjectionV1 {
+  const shown = current.reprojection;
+  if (load === null) return shown?.kind === "load" ? { ...current, reprojection: null } : current;
+  if (shown?.kind === "load" && shown.done === load.completed && shown.total === load.total) return current;
+  return { ...current, reprojection: { kind: "load", done: load.completed, total: load.total } };
+}
+
+/** 🧳️ Every program's projection after one polled step of `key`'s stepped document load
+ * ({@link shellHistoryProjectionWithLoadV1}) — the same map when nothing changes, so the history store wakes no reader. */
+export function programHistoryProjectionsWithLoadV1(projections: Readonly<Record<string, ShellHistoryProjectionV1>>, key: string, load: { readonly completed: number; readonly total: number } | null): Readonly<Record<string, ShellHistoryProjectionV1>> {
+  if (key === "") return projections;
+  const current = projections[key] ?? EMPTY_SHELL_HISTORY_PROJECTION_V1;
+  const next = shellHistoryProjectionWithLoadV1(current, load);
+  return next === current ? projections : { ...projections, [key]: next };
 }
 
 /** 🎞️ One unsolicited mid-operation frame (`AppFrame::Invocation`, `in_reply_to` 0): the dirty scope a running
@@ -1194,7 +1216,7 @@ export function makeEffectDispatchOne(
  * name every renderer call site already imports, and one slicing rule is the whole point.
  *
  * 📏️ It is also the host half of `PUZZLE3D_IMPORT_CHUNK_BYTES`
- * (`✏️s/🔌️plugins/🧩️puzzle/…/🎮️commands/📥️import-fixture/🦀️.rs`), held equal to it by the engine
+ * (`✏️s/🔌️plugins/🧩️puzzle/…/🎮️commands/📥️import-snapshot/🦀️.rs`), held equal to it by the engine
  * contract's own law. */
 export { IMPORT_CHUNK_BYTES, importChunkArguments, importPayloadChunks };
 export type { ImportChunk };
@@ -2460,28 +2482,17 @@ export type BrowserActorPanelHostV1 = Readonly<{
  * @see ../../../../../../../../🔨️modules/🛢️db/🗿️artifact/🦀️.rs
  * @see ../../../../🔌️plugin/⏪️time-travel/🦀️.rs
  * @see ../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts */
+type RefusalLabelId<Code extends string> = Code extends `timeTravel.${infer Name}` ? RefusalCamelCase<Name> : never;
+type RefusalCamelCase<Name extends string> = Name extends `${infer Head}-${infer Tail}` ? `${Head}${Capitalize<RefusalCamelCase<Tail>>}` : Name;
+type TimeTravelCode = typeof TIME_TRAVEL_CODE_LABELS[number][0];
+
+const timeTravelRefusalLabelKeys = Object.fromEntries(TIME_TRAVEL_CODE_LABELS.map(([code]) => [code, `ui.timeTravel.refusal.${code.slice("timeTravel.".length).replace(/-([a-z])/gu, (_, letter: string) => letter.toUpperCase())}`])) as { readonly [Code in TimeTravelCode]: `ui.timeTravel.refusal.${RefusalLabelId<Code>}` };
+
 export const HISTORY_REFUSAL_LABEL_KEYS = {
   "history.malformed-transition": "ui.history.refusal.malformedTransition",
   "history.unknown-target": "ui.history.refusal.unknownTarget",
   "history.transition-refused": "ui.history.refusal.transitionRefused",
-  "timeTravel.frozen": "ui.timeTravel.refusal.frozen",
-  "timeTravel.illegal": "ui.timeTravel.refusal.illegal",
-  "timeTravel.stale": "ui.timeTravel.refusal.stale",
-  "timeTravel.blocked": "ui.timeTravel.refusal.blocked",
-  "timeTravel.empty": "ui.timeTravel.refusal.empty",
-  "timeTravel.cancelled": "ui.timeTravel.refusal.cancelled",
-  "timeTravel.name-invalid": "ui.timeTravel.refusal.nameInvalid",
-  "timeTravel.busy": "ui.timeTravel.refusal.busy",
-  "timeTravel.unknown-mutation": "ui.timeTravel.refusal.unknownMutation",
-  "timeTravel.not-editable": "ui.timeTravel.refusal.notEditable",
-  "timeTravel.unknown-input": "ui.timeTravel.refusal.unknownInput",
-  "timeTravel.invalid-input": "ui.timeTravel.refusal.invalidInput",
-  "timeTravel.no-selection": "ui.timeTravel.refusal.noSelection",
-  "timeTravel.name-required": "ui.timeTravel.refusal.nameRequired",
-  "timeTravel.schema-unavailable": "ui.timeTravel.refusal.schemaUnavailable",
-  "timeTravel.replay-faulted": "ui.timeTravel.refusal.replayFaulted",
-  "timeTravel.commit-failed": "ui.timeTravel.refusal.commitFailed",
-  "timeTravel.member-gone": "ui.timeTravel.refusal.memberGone",
+  ...timeTravelRefusalLabelKeys,
 } as const satisfies Readonly<Record<string, UiTranslationKey>>;
 
 /** 🛟️ One code of {@link HISTORY_REFUSAL_LABEL_KEYS}. */
@@ -2500,6 +2511,23 @@ export function historyRefusalOfFaultV1(fault: { readonly code: string; readonly
 /** 🔎️ The history-edit refusal a reserved verb answered with its silent `{rejected: <code>}` result, else `null`. */
 export function historyRefusalOfOutputV1(output: unknown): HistoryRefusalCodeV1 | null {
   return typeof output === "object" && output !== null ? historyRefusalCodeV1((output as { readonly rejected?: unknown }).rejected) : null;
+}
+
+/** 🤫️ The history-edit refusals no shell tells the human (the band corpus' `refusals[].silent`): an event that names an
+ * older session generation — a blur-commit arriving after Discard — is a silent no-op (design §4). Nothing the human did
+ * is wrong and nothing is asked of them, so it earns no notice; its code stays in the dispatch trace. */
+export const HISTORY_SILENT_REFUSALS_V1: ReadonlySet<HistoryRefusalCodeV1> = new Set<HistoryRefusalCodeV1>(["timeTravel.stale"]);
+
+/** 🔇️ The silent history-edit refusal a dispatch fault carries ({@link HISTORY_SILENT_REFUSALS_V1}), else `null`. */
+export function historySilentRefusalOfFaultV1(fault: { readonly code: string; readonly causes?: readonly { readonly code?: string }[] }): HistoryRefusalCodeV1 | null {
+  const refusal = historyRefusalOfFaultV1(fault);
+  return refusal !== null && HISTORY_SILENT_REFUSALS_V1.has(refusal) ? refusal : null;
+}
+
+/** 🔈️ The silent history-edit refusal a reserved verb's `{rejected: <code>}` result names, else `null`. */
+export function historySilentRefusalOfOutputV1(output: unknown): HistoryRefusalCodeV1 | null {
+  const refusal = historyRefusalOfOutputV1(output);
+  return refusal !== null && HISTORY_SILENT_REFUSALS_V1.has(refusal) ? refusal : null;
 }
 
 /** 📣️ One transient notice: its localized text, severity and the machine code `data-notice-code` publishes. */
@@ -2522,10 +2550,12 @@ export function historyLaneNoticeV1(fault: { readonly code?: string; readonly ca
 }
 
 /** 🔕️ The notice a refused dispatch earns: a history-edit refusal ({@link historyRefusalNoticeV1}, keeping the fault's
- * severity) or a history-lane refusal ({@link historyLaneNoticeV1}); `null` for any other fault — never a raw code. */
+ * severity) or a history-lane refusal ({@link historyLaneNoticeV1}); `null` for a silent refusal
+ * ({@link HISTORY_SILENT_REFUSALS_V1}) and for any other fault — never a raw code. */
 export function historyFaultNoticeV1(fault: { readonly code: string; readonly severity?: Severity; readonly causes?: readonly { readonly code?: string }[] }, editCount: number): ShellNoticeV1 | null {
   const refusal = historyRefusalOfFaultV1(fault);
-  return refusal !== null ? historyRefusalNoticeV1(refusal, fault.severity ?? "warning") : historyLaneNoticeV1(fault, editCount);
+  if (refusal !== null) return HISTORY_SILENT_REFUSALS_V1.has(refusal) ? null : historyRefusalNoticeV1(refusal, fault.severity ?? "warning");
+  return historyLaneNoticeV1(fault, editCount);
 }
 
 /** 📣️ The notice of a refused dispatch an app declared (design §20.12): the kernel's `faultNotice` over the framework table and the
@@ -2536,10 +2566,11 @@ export function appFaultNoticeV1(fault: { readonly code: string; readonly severi
   return notice === null ? null : { text: notice.text, kind: fault.severity ?? "error", code: notice.code };
 }
 
-/** 🔊️ The notice of a reserved verb's silent `{rejected: <code>}` result: a history-edit or a history-lane refusal, else `null`. */
+/** 🔊️ The notice of a reserved verb's silent `{rejected: <code>}` result: a history-edit or a history-lane refusal, else `null` —
+ * and `null` for a silent refusal ({@link HISTORY_SILENT_REFUSALS_V1}). */
 export function historyOutputNoticeV1(output: unknown, editCount: number): ShellNoticeV1 | null {
   const refusal = historyRefusalOfOutputV1(output);
-  if (refusal !== null) return historyRefusalNoticeV1(refusal);
+  if (refusal !== null) return HISTORY_SILENT_REFUSALS_V1.has(refusal) ? null : historyRefusalNoticeV1(refusal);
   const rejected = typeof output === "object" && output !== null ? (output as { readonly rejected?: unknown }).rejected : undefined;
   return typeof rejected === "string" ? historyLaneNoticeV1({ code: rejected }, editCount) : null;
 }
@@ -3420,7 +3451,8 @@ export type DocumentTransferNoticeV1 =
   | "import-cancelled"
   | "imported"
   | "load-cancelled"
-  | "load-failed";
+  | "load-failed"
+  | "folder-detached";
 
 /** 🗣️ Notice text per outcome, authored beside the code like `📣️replay-refusal`; `{file}` is the file name. */
 export const DOCUMENT_TRANSFER_NOTICE_LABELS_V1: Readonly<Record<DocumentTransferNoticeV1, { readonly en: string; readonly de: string }>> = {
@@ -3437,6 +3469,10 @@ export const DOCUMENT_TRANSFER_NOTICE_LABELS_V1: Readonly<Record<DocumentTransfe
   imported: { en: "Opened “{file}” as a new document.", de: "„{file}“ als neues Dokument geöffnet." },
   "load-cancelled": { en: "Loading “{file}” was cancelled; the previous document is unchanged.", de: "Laden von „{file}“ abgebrochen; das bisherige Dokument ist unverändert." },
   "load-failed": { en: "“{file}” could not be loaded; the previous document is unchanged.", de: "„{file}“ konnte nicht geladen werden; das bisherige Dokument ist unverändert." },
+  "folder-detached": {
+    en: "The folder was detached because its document was not loaded; nothing is saved to it. Reconnect the folder to load its document.",
+    de: "Der Ordner wurde getrennt, weil sein Dokument nicht geladen wurde; es wird nichts darin gespeichert. Verbinde den Ordner erneut, um sein Dokument zu laden.",
+  },
 };
 
 /** ⏹️ Whether a whole-document load ended by a cancel: the caller's `signal`, or the guest's own (a person's Cancel in the
@@ -3547,6 +3583,19 @@ export class AutoCheckinScheduler {
       return;
     }
     this.cancel();
+    this.arm();
+  }
+
+  /** ⏳️ The checkpoint just asked for cannot be dispatched now — its document is loading, its port is not bound, its
+   * history is under edit: the latch is released and the idle period starts again, so the check-in is asked for again
+   * instead of being lost or told to a person who pressed nothing (live finding O4). */
+  defer(): void {
+    this.cancel();
+    this.pending = false;
+    this.arm();
+  }
+
+  private arm(): void {
     this.timer = setTimeout(() => {
       this.timer = null;
       this.pending = true;
@@ -3560,6 +3609,14 @@ export class AutoCheckinScheduler {
       this.timer = null;
     }
   }
+}
+
+/** ⏳️ Whether an AUTOMATIC check-in waits (live finding O4): an automatic action never surfaces a refusal, so it is not
+ * dispatched into a document that cannot take a checkpoint now — one that is loading (the guest would answer
+ * `document.loading`), or one that is attached while its port is not bound (what it published would reach no folder and
+ * no hub). Corpus `🧫️fixtures/🧫️automatic-checkin/🔣️.json`. */
+export function automaticCheckinWaitsV1(document: Readonly<{ loading: boolean; attached: boolean; bound: boolean }>): boolean {
+  return document.loading || (document.attached && !document.bound);
 }
 
 /** 📌️ The framework-reserved controller of the history body's explicit `#s-checkin` button (`🔌️plugin/🦀️.rs`
@@ -4740,11 +4797,14 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction, g
   };
 
   return (
-    <div className="flex items-center gap-double">
-      <div className="flex items-center gap-single">
+    <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-double">
+      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-single">
         <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">{methodLabel}</span>
         <ToggleGroup
           kind="single"
+          semantics="radio"
+          aria-label={methodLabel}
+          className="h-auto max-w-full flex-wrap"
           value={selectionMethod}
           onValueChange={(val) => {
             if (val === "rectangle" || val === "lasso") {
@@ -4758,10 +4818,13 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction, g
         />
       </div>
       <RibbonDivider />
-      <div className="flex items-center gap-single">
+      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-single">
         <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">{modeLabel}</span>
         <ToggleGroup
           kind="single"
+          semantics="radio"
+          aria-label={modeLabel}
+          className="h-auto max-w-full flex-wrap"
           value={selectionMode}
           onValueChange={(val) => {
             if (val === "replace" || val === "additive" || val === "subtractive" || val === "invertive") {
@@ -5081,8 +5144,9 @@ function StagedNumberField({ id, label, labelledBy, unit, stored, facets, disabl
  * 🎛️ Renders one {@link ActionArgControl} into a STAGED form field — the crucial difference from
  * `renderUiControl` in `ui-interpreter.tsx` is that this dispatches NOTHING globally; `onChange` only
  * writes to the caller's local staged buffer. `value` is the already-resolved effective value
- * (staged ?? default ?? unset). Stepper, dial (a detented slider read in display units), segmented choice, vector
- * axes and reference chips follow the W1-E contract recipes.
+ * (staged ?? default ?? unset). Stepper, dial (a detented slider read in display units), segmented choice (a radio group),
+ * multi-line text (a textarea: Enter is its line break, the form's own submit commits), vector axes and reference chips
+ * follow the W1-E contract recipes.
  */
 export function renderStagedArgControl(def: ResolvedActionArgDef, value: unknown, onChange: (value: unknown) => void, disabled?: boolean, field?: UIDialogFieldBinding, context: StagedArgContextV1 = {}): ReactElement {
   const control = renderStagedArgValueControl(def, value, onChange, disabled, field, context);
@@ -5106,6 +5170,8 @@ function renderStagedArgValueControl(def: ResolvedActionArgDef, value: unknown, 
   switch (control.kind) {
     case "text":
       return <Input id={fieldId} aria-labelledby={labelledBy} required={field?.required} type="text" className="h-medium w-full min-w-0" value={typeof value === "string" ? value : ""} placeholder={control.placeholder} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
+    case "multiline":
+      return <Textarea id={fieldId} aria-labelledby={labelledBy} required={field?.required} data-staged-control="multiline" className="min-h-[4.5rem] w-full min-w-0" value={typeof value === "string" ? value : ""} disabled={disabled} onChange={(event) => onChange(event.target.value)} />;
     case "stepper": {
       const facets = stagedNumberFacetsV1(def);
       const numeric = typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -5130,6 +5196,7 @@ function renderStagedArgValueControl(def: ResolvedActionArgDef, value: unknown, 
         <ToggleGroup
           id={fieldId}
           kind="single"
+          semantics="radio"
           aria-labelledby={labelledBy}
           data-staged-control="segmented"
           disabled={disabled || options.length === 0}
@@ -6579,9 +6646,9 @@ export function introductionTargetsWindow(
   return false;
 }
 
-/** 🧰️ Materializes the shell's per-window utility map for batched `refresh-ui` — omits null entries. */
-export function buildActiveUtilityByWindowId(activeUtilityByWindowId: Readonly<Record<string, string | null>>): Record<string, string> {
-  return Object.fromEntries(Object.entries(activeUtilityByWindowId).flatMap(([windowId, utilityId]) => (utilityId ? [[windowId, utilityId]] : [])));
+/** 🧰️ Projects resolved window arms, preserving an explicit clear as null. */
+export function buildActiveUtilityByWindowId(activeUtilityByWindowId: Readonly<Record<string, string | null>>): Record<string, string | null> {
+  return { ...activeUtilityByWindowId };
 }
 
 /**

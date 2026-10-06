@@ -58,16 +58,16 @@ interface ArgumentCase {
   readonly arguments: Record<string, string | number>;
 }
 
-interface FileOpenImportFixture {
+interface FileOpenImportSnapshot {
   readonly importChunkBytes: number;
   readonly wireCases: readonly WireCase[];
   readonly chunkCases: readonly ChunkCase[];
   readonly argumentCases: readonly ArgumentCase[];
 }
 
-function loadFixture(): FileOpenImportFixture {
+function loadFixture(): FileOpenImportSnapshot {
   const here = dirname(fileURLToPath(import.meta.url));
-  return JSON.parse(readFileSync(join(here, "../../🧫️fixtures/📤️file-open-import/🔣️.json"), "utf8")) as FileOpenImportFixture;
+  return JSON.parse(readFileSync(join(here, "../../🧫️fixtures/📤️file-open-import/🔣️.json"), "utf8")) as FileOpenImportSnapshot;
 }
 
 function payloadOf(row: ChunkCase): string {

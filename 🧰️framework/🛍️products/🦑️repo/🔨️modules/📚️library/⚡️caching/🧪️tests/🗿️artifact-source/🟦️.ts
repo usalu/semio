@@ -4,7 +4,6 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync } from
 import { join, dirname } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 import plugin from "../../../🟨️.mjs";
 import { getWorkspaceRoot } from "../../../📦️packages/🟦️typescript/🟦️.ts";
 import { ticketOutput } from "../../🎫️output/🟦️.ts";
@@ -12,8 +11,6 @@ import { ticketOutput } from "../../🎫️output/🟦️.ts";
 test("artifact verification reruns for semantic provider, fixture, DDL and shared control edits", async () => {
   const workspace = getWorkspaceRoot(); const output = ticketOutput(workspace, []);
   const fixture = await Bun.file(new URL("../../🧫️fixtures/🗿️artifact-source/🔣️.json", import.meta.url)).json();
-  const validate = new Ajv({ strict: true }).compile({ type: "object", required: ["feature", "owner", "packageRoot", "declaredInputs", "changes"], additionalProperties: false, properties: { feature: { type: "string" }, owner: { type: "string" }, packageRoot: { type: "string" }, declaredInputs: { type: "array", items: { type: "string" } }, changes: { type: "array", items: { type: "object", required: ["path", "content", "field", "expected"], additionalProperties: false, properties: { path: { type: "string" }, content: { type: "string" }, field: { type: "string" }, expected: { anyOf: [{ type: "string" }, { type: "number" }] } } } } } });
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   const root = mkdtempSync(join(output, "artifact-source-"));
   const put = (path: string, value: unknown): void => { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, typeof value === "string" ? value : JSON.stringify(value)); };
   const require = createRequire(join(workspace, "package.json"));

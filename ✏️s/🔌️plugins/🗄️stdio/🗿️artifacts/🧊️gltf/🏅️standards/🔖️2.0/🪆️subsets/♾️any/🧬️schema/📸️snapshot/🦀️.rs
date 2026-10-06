@@ -21,25 +21,20 @@
 //! keeps the read direction lenient, so an encoder that does spell `"children": []` still decodes.
 
 pub use crate::engine::GltfAccessorType;
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+
 pub use crate::engine::GltfComponentType;
 use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use serde::de::{MapAccess, SeqAccess, Visitor};
-use serde::ser::{SerializeMap, SerializeSeq};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
+#[cfg(test)]
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️SourceForm
 /// 🧵 Which wire dialect a snapshot was last parsed from -- drives [`serialize_gltf_document`]'s
 /// choice of whether a no-`uri` buffer needs re-embedding as a data uri (a `.glb`-sourced buffer
 /// serialized back out as plain `.gltf` JSON text has no BIN chunk to lean on).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfSourceForm {
@@ -74,89 +69,6 @@ pub enum GltfJson {
 /// doc comment) because some other production call site outside this module still serializes it —
 /// gating it broke the `wasm32-wasip2` component build. This `GltfJson` leaf needs the same pair for
 /// that outer derive to keep compiling.
-impl Serialize for GltfJson {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        match self {
-            GltfJson::Null => serializer.serialize_unit(),
-            GltfJson::Bool(b) => serializer.serialize_bool(*b),
-            GltfJson::Number(n) => serializer.serialize_f64(*n),
-            GltfJson::String(s) => serializer.serialize_str(s),
-            GltfJson::Array(items) => {
-                let mut seq = serializer.serialize_seq(Some(items.len()))?;
-                for item in items {
-                    seq.serialize_element(item)?;
-                }
-                seq.end()
-            }
-            GltfJson::Object(members) => {
-                let mut map = serializer.serialize_map(Some(members.len()))?;
-                for (k, v) in members {
-                    map.serialize_entry(k, v)?;
-                }
-                map.end()
-            }
-        }
-    }
-}
-
-struct GltfJsonVisitor;
-impl<'de> Visitor<'de> for GltfJsonVisitor {
-    type Value = GltfJson;
-    fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("a JSON value (glTF extras/extensions)")
-    }
-    fn visit_unit<E>(self) -> Result<Self::Value, E> {
-        Ok(GltfJson::Null)
-    }
-    fn visit_none<E>(self) -> Result<Self::Value, E> {
-        Ok(GltfJson::Null)
-    }
-    fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E> {
-        Ok(GltfJson::Bool(v))
-    }
-    fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E> {
-        Ok(GltfJson::Number(v as f64))
-    }
-    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E> {
-        Ok(GltfJson::Number(v as f64))
-    }
-    fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E> {
-        Ok(GltfJson::Number(v))
-    }
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> {
-        Ok(GltfJson::String(v.to_string()))
-    }
-    fn visit_string<E>(self, v: String) -> Result<Self::Value, E> {
-        Ok(GltfJson::String(v))
-    }
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: SeqAccess<'de>,
-    {
-        let mut items = Vec::new();
-        while let Some(v) = seq.next_element()? {
-            items.push(v);
-        }
-        Ok(GltfJson::Array(items))
-    }
-    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-    where
-        A: MapAccess<'de>,
-    {
-        let mut members = Vec::new();
-        while let Some((k, v)) = map.next_entry::<String, GltfJson>()? {
-            members.push((k, v));
-        }
-        Ok(GltfJson::Object(members))
-    }
-}
-
-impl<'de> Deserialize<'de> for GltfJson {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        deserializer.deserialize_any(GltfJsonVisitor)
-    }
-}
-
 /// 🌉️ `ToValue`/`FromValue` — structurally identical to the `#[cfg(test)]`-only `Serialize`/
 /// `Deserialize` pair above (unit -> `Null`, same scalar/array/object mapping): this is now the
 /// REAL runtime mapping — `🚪️io/🦀️.rs`'s `.gltf`/`.glb` codec parses/serializes `GltfDocument`
@@ -246,40 +158,9 @@ pub mod present_json {
 /// Additive alongside `ordered_attr_map_to_value`/`ordered_attr_map_from_value` below (same
 /// object-shaped mapping for [`dsl::ToValue`]/[`dsl::FromValue`]) — kept unconditional since
 /// [`GltfSnapshot`]'s own `serde` derive is (see its doc comment).
-mod ordered_attr_map {
-    use super::*;
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn serialize<S: Serializer>(attrs: &[(String, usize)], serializer: S) -> Result<S::Ok, S::Error> {
-        let mut map = serializer.serialize_map(Some(attrs.len()))?;
-        for (k, v) in attrs {
-            map.serialize_entry(k, v)?;
-        }
-        map.end()
-    }
 
-    struct AttrVisitor;
-    impl<'de> Visitor<'de> for AttrVisitor {
-        type Value = Vec<(String, usize)>;
-        fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.write_str("a JSON object mapping attribute semantic to accessor index")
-        }
-        fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
-            let mut out = Vec::new();
-            while let Some((k, v)) = map.next_entry::<String, usize>()? {
-                out.push((k, v));
-            }
-            Ok(out)
-        }
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<(String, usize)>, D::Error> {
-        deserializer.deserialize_map(AttrVisitor)
-    }
-}
-
-/// 🧩️ `ToValue`/`FromValue` analogs of `ordered_attr_map::{serialize,deserialize}` above — same
+/// 🧩️ `ToValue`/`FromValue` analogs of `crate::standards::v2_0::subsets::any::io::text::snapshot::ordered_attr_map::{serialize,deserialize}` above — same
 /// object-shaped (never array-of-tuples) wire mapping, referenced via `#[value(serialize_with =
 /// "ordered_attr_map_to_value", deserialize_with = "ordered_attr_map_from_value")]` on
 /// [`GltfPrimitive::attributes`] and by [`GltfMorphTarget`]'s hand-written impls above.
@@ -374,25 +255,26 @@ fn is_false(v: &bool) -> bool {
 //#region 🔖️Asset
 /// 📛 `asset` (§3.9) — the one universally mandatory glTF object; `version` is the one mandatory
 /// field on it.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfAsset {
     pub version: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub generator: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub copyright: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none", rename = "minVersion")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none", rename = "minVersion"))]
     #[value(default, skip_serializing_if = "Option::is_none", rename = "minVersion")]
     pub min_version: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -406,21 +288,22 @@ impl Default for GltfAsset {
 
 //#region 🔖️Scene
 /// 🎬 `scenes[i]` (§5.26).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfScene {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub nodes: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -432,45 +315,46 @@ pub struct GltfScene {
 /// (incorrectly) carries both should still round-trip losslessly, and this shape keeps the diff
 /// symmetric with every other nullable field instead of needing a `Replace`-only whole-transform
 /// diff.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfNode {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub children: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mesh: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub camera: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub skin: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub matrix: Option<[f64; 16]>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub translation: Option<[f64; 3]>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub rotation: Option<[f64; 4]>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub scale: Option<[f64; 3]>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub weights: Vec<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -482,9 +366,10 @@ pub struct GltfNode {
 /// forwards straight to the raw `Vec<(String, usize)>` field's OWN `ToValue`/`FromValue` (a
 /// 2-element-array-per-entry encoding), bypassing the `ordered_attr_map` object-shaped encoding
 /// this type actually needs — same wire shape [`GltfPrimitive::attributes`] uses below.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct GltfMorphTarget(#[serde(with = "ordered_attr_map")] pub Vec<(String, usize)>);
+#[derive(Clone, Debug, Default, PartialEq)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(transparent))]
+pub struct GltfMorphTarget(#[cfg_attr(test, serde(with = "ordered_attr_map"))] pub Vec<(String, usize)>);
 
 impl semio_framework_value::ToValue for GltfMorphTarget {
     fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { ordered_attr_map_to_value_controlled(&self.0, control) }
@@ -499,52 +384,54 @@ impl semio_framework_value::FromValue for GltfMorphTarget {
 }
 
 /// 🔺 `meshes[i].primitives[j]` (§5.19.4).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct GltfPrimitive {
-    #[serde(default, with = "ordered_attr_map")]
+    #[cfg_attr(test, serde(default, with = "ordered_attr_map"))]
     #[value(default, serialize_with = "ordered_attr_map_to_value", deserialize_with = "ordered_attr_map_from_value", serialize_controlled_with = "ordered_attr_map_to_value_controlled")]
     pub attributes: Vec<(String, usize)>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub indices: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub material: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mode: Option<u64>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub targets: Vec<GltfMorphTarget>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 🕸️ `meshes[i]` (§5.19).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfMesh {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub primitives: Vec<GltfPrimitive>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub weights: Vec<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -552,34 +439,37 @@ pub struct GltfMesh {
 
 //#region 🔖️Accessor
 /// 🧩️ `accessors[i].sparse.indices` (§5.1.3).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfSparseIndices {
     pub buffer_view: usize,
-    #[serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
+    #[cfg_attr(test, serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize"))]
     #[value(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
     pub byte_offset: usize,
     pub component_type: GltfComponentType,
 }
 
 /// 🧩️ `accessors[i].sparse.values` (§5.1.3).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfSparseValues {
     pub buffer_view: usize,
-    #[serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
+    #[cfg_attr(test, serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize"))]
     #[value(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
     pub byte_offset: usize,
 }
 
 /// 🧩️ `accessors[i].sparse` (§5.1.3) -- sparse-storage substitution over a (possibly absent, then
 /// zero-filled) dense base.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfSparseAccessor {
@@ -589,41 +479,42 @@ pub struct GltfSparseAccessor {
 }
 
 /// 🔢️ `accessors[i]` (§5.1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfAccessor {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub buffer_view: Option<usize>,
-    #[serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
+    #[cfg_attr(test, serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize"))]
     #[value(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
     pub byte_offset: usize,
     pub component_type: GltfComponentType,
-    #[serde(default, skip_serializing_if = "is_false")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "is_false"))]
     #[value(default, skip_serializing_if = "is_false")]
     pub normalized: bool,
     pub count: usize,
-    #[serde(rename = "type")]
+    #[cfg_attr(test, serde(rename = "type"))]
     #[value(rename = "type")]
     pub kind: GltfAccessorType,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub max: Option<Vec<f64>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub min: Option<Vec<f64>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub sparse: Option<GltfSparseAccessor>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -631,29 +522,30 @@ pub struct GltfAccessor {
 
 //#region 🔖️BufferView
 /// 🪟️ `bufferViews[i]` (§5.7).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfBufferView {
     pub buffer: usize,
-    #[serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
+    #[cfg_attr(test, serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize"))]
     #[value(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
     pub byte_offset: usize,
     pub byte_length: usize,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub byte_stride: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub target: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -662,22 +554,23 @@ pub struct GltfBufferView {
 //#region 🔖️Buffer
 /// 📦️ `buffers[i]` (§5.6) -- JSON-level metadata only; the resolved raw bytes live index-aligned
 /// in `GltfSnapshot::buffers` (the legitimate bytes-payload exception).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfBuffer {
     pub byte_length: usize,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub uri: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -686,90 +579,94 @@ pub struct GltfBuffer {
 //#region 🔖️Material
 /// 🖼️ A texture reference (§5.20 `textureInfo`) shared by `baseColorTexture` /
 /// `metallicRoughnessTexture` / `emissiveTexture`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfTextureInfo {
     pub index: usize,
-    #[serde(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
+    #[cfg_attr(test, serde(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord"))]
     #[value(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
     pub tex_coord: u64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 🖼️ `material.normalTexture` (§5.21) -- adds `scale` (default 1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfNormalTextureInfo {
     pub index: usize,
-    #[serde(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
+    #[cfg_attr(test, serde(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord"))]
     #[value(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
     pub tex_coord: u64,
-    #[serde(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
+    #[cfg_attr(test, serde(default = "default_one_f64", skip_serializing_if = "is_one_f64"))]
     #[value(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
     pub scale: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 🖼️ `material.occlusionTexture` (§5.22) -- adds `strength` (default 1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfOcclusionTextureInfo {
     pub index: usize,
-    #[serde(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
+    #[cfg_attr(test, serde(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord"))]
     #[value(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
     pub tex_coord: u64,
-    #[serde(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
+    #[cfg_attr(test, serde(default = "default_one_f64", skip_serializing_if = "is_one_f64"))]
     #[value(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
     pub strength: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 🎨️ `material.pbrMetallicRoughness` (§5.23).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfPbrMetallicRoughness {
-    #[serde(default = "default_vec4_one", skip_serializing_if = "is_vec4_one")]
+    #[cfg_attr(test, serde(default = "default_vec4_one", skip_serializing_if = "is_vec4_one"))]
     #[value(default = "default_vec4_one", skip_serializing_if = "is_vec4_one")]
     pub base_color_factor: [f64; 4],
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub base_color_texture: Option<GltfTextureInfo>,
-    #[serde(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
+    #[cfg_attr(test, serde(default = "default_one_f64", skip_serializing_if = "is_one_f64"))]
     #[value(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
     pub metallic_factor: f64,
-    #[serde(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
+    #[cfg_attr(test, serde(default = "default_one_f64", skip_serializing_if = "is_one_f64"))]
     #[value(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
     pub roughness_factor: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub metallic_roughness_texture: Option<GltfTextureInfo>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -781,17 +678,18 @@ impl Default for GltfPbrMetallicRoughness {
 }
 
 /// 🔀️ `material.alphaMode` (§5.23.1).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfAlphaMode {
     #[default]
-    #[serde(rename = "OPAQUE")]
+    #[cfg_attr(test, serde(rename = "OPAQUE"))]
     #[value(rename = "OPAQUE")]
     Opaque,
-    #[serde(rename = "MASK")]
+    #[cfg_attr(test, serde(rename = "MASK"))]
     #[value(rename = "MASK")]
     Mask,
-    #[serde(rename = "BLEND")]
+    #[cfg_attr(test, serde(rename = "BLEND"))]
     #[value(rename = "BLEND")]
     Blend,
 }
@@ -802,42 +700,43 @@ fn is_opaque(v: &GltfAlphaMode) -> bool {
 }
 
 /// 🎨️ `materials[i]` (§5.23).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfMaterial {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub pbr_metallic_roughness: Option<GltfPbrMetallicRoughness>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub normal_texture: Option<GltfNormalTextureInfo>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub occlusion_texture: Option<GltfOcclusionTextureInfo>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub emissive_texture: Option<GltfTextureInfo>,
-    #[serde(default = "default_vec3_zero", skip_serializing_if = "is_vec3_zero")]
+    #[cfg_attr(test, serde(default = "default_vec3_zero", skip_serializing_if = "is_vec3_zero"))]
     #[value(default = "default_vec3_zero", skip_serializing_if = "is_vec3_zero")]
     pub emissive_factor: [f64; 3],
-    #[serde(default, skip_serializing_if = "is_opaque", rename = "alphaMode")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "is_opaque", rename = "alphaMode"))]
     #[value(default, skip_serializing_if = "is_opaque", rename = "alphaMode")]
     pub alpha_mode: GltfAlphaMode,
-    #[serde(default = "default_alpha_cutoff", skip_serializing_if = "is_default_alpha_cutoff")]
+    #[cfg_attr(test, serde(default = "default_alpha_cutoff", skip_serializing_if = "is_default_alpha_cutoff"))]
     #[value(default = "default_alpha_cutoff", skip_serializing_if = "is_default_alpha_cutoff")]
     pub alpha_cutoff: f64,
-    #[serde(default, skip_serializing_if = "is_false")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "is_false"))]
     #[value(default, skip_serializing_if = "is_false")]
     pub double_sided: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -863,78 +762,81 @@ impl Default for GltfMaterial {
 
 //#region 🔖️TextureImageSampler
 /// 🧵️ `textures[i]` (§5.30).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct GltfTexture {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub sampler: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 🖼️ `images[i]` (§5.15) -- image bytes are addressed EITHER by `uri` (external/data-uri) OR by
 /// `bufferView` (embedded), never both.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct GltfImage {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub uri: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none", rename = "mimeType")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none", rename = "mimeType"))]
     #[value(default, skip_serializing_if = "Option::is_none", rename = "mimeType")]
     pub mime_type: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub buffer_view: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 🧲️ `samplers[i]` (§5.27) -- `wrapS`/`wrapT` both default to `10497` (`REPEAT`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfSampler {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mag_filter: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub min_filter: Option<u64>,
-    #[serde(default = "default_wrap", skip_serializing_if = "is_default_wrap")]
+    #[cfg_attr(test, serde(default = "default_wrap", skip_serializing_if = "is_default_wrap"))]
     #[value(default = "default_wrap", skip_serializing_if = "is_default_wrap")]
     pub wrap_s: u64,
-    #[serde(default = "default_wrap", skip_serializing_if = "is_default_wrap")]
+    #[cfg_attr(test, serde(default = "default_wrap", skip_serializing_if = "is_default_wrap"))]
     #[value(default = "default_wrap", skip_serializing_if = "is_default_wrap")]
     pub wrap_t: u64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -948,27 +850,28 @@ impl Default for GltfSampler {
 
 //#region 🔖️Skin
 /// 🦴️ `skins[i]` (§5.28).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfSkin {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub inverse_bind_matrices: Option<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub skeleton: Option<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub joints: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -977,69 +880,73 @@ pub struct GltfSkin {
 //#region 🔖️Animation
 /// 🎞️ `animations[i].channels[j].target.path` (§5.5.2) -- the 4 spec-defined animatable
 /// properties.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfAnimationPath {
-    #[serde(rename = "translation")]
+    #[cfg_attr(test, serde(rename = "translation"))]
     #[value(rename = "translation")]
     Translation,
-    #[serde(rename = "rotation")]
+    #[cfg_attr(test, serde(rename = "rotation"))]
     #[value(rename = "rotation")]
     Rotation,
-    #[serde(rename = "scale")]
+    #[cfg_attr(test, serde(rename = "scale"))]
     #[value(rename = "scale")]
     Scale,
-    #[serde(rename = "weights")]
+    #[cfg_attr(test, serde(rename = "weights"))]
     #[value(rename = "weights")]
     Weights,
 }
 
 /// 🎯️ `animations[i].channels[j].target` (§5.5.2).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfAnimationChannelTarget {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub node: Option<usize>,
     pub path: GltfAnimationPath,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 🔗️ `animations[i].channels[j]` (§5.5.1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfAnimationChannel {
     pub sampler: usize,
     pub target: GltfAnimationChannelTarget,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 📈️ `animations[i].samplers[j].interpolation` (§5.5.3), default `LINEAR`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[derive(semio_framework_dsl_record_derive::DslScalar)]
 pub enum GltfInterpolation {
     #[default]
-    #[serde(rename = "LINEAR")]
+    #[cfg_attr(test, serde(rename = "LINEAR"))]
     #[value(rename = "LINEAR")]
     Linear,
-    #[serde(rename = "STEP")]
+    #[cfg_attr(test, serde(rename = "STEP"))]
     #[value(rename = "STEP")]
     Step,
-    #[serde(rename = "CUBICSPLINE")]
+    #[cfg_attr(test, serde(rename = "CUBICSPLINE"))]
     #[value(rename = "CUBICSPLINE")]
     CubicSpline,
 }
@@ -1050,43 +957,45 @@ fn is_linear(v: &GltfInterpolation) -> bool {
 }
 
 /// 📈️ `animations[i].samplers[j]` (§5.5.3).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfAnimationSampler {
     pub input: usize,
-    #[serde(default, skip_serializing_if = "is_linear")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "is_linear"))]
     #[value(default, skip_serializing_if = "is_linear")]
     pub interpolation: GltfInterpolation,
     pub output: usize,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 🎬️ `animations[i]` (§5.5).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfAnimation {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub channels: Vec<GltfAnimationChannel>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub samplers: Vec<GltfAnimationSampler>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -1094,8 +1003,9 @@ pub struct GltfAnimation {
 
 //#region 🔖️Camera
 /// 📷️ `cameras[i].orthographic` (§5.10.1).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfOrthographic {
@@ -1103,32 +1013,33 @@ pub struct GltfOrthographic {
     pub ymag: f64,
     pub zfar: f64,
     pub znear: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
 
 /// 📷️ `cameras[i].perspective` (§5.10.2).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfPerspective {
-    #[serde(default, skip_serializing_if = "Option::is_none", rename = "aspectRatio")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none", rename = "aspectRatio"))]
     #[value(default, skip_serializing_if = "Option::is_none", rename = "aspectRatio")]
     pub aspect_ratio: Option<f64>,
     pub yfov: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub zfar: Option<f64>,
     pub znear: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -1147,8 +1058,9 @@ pub enum GltfCameraProjection {
 /// recursively contains this type.
 impl Serialize for GltfCameraProjection {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        #[derive(Serialize)]
-        #[serde(tag = "type", rename_all = "lowercase")]
+        #[derive()]
+#[cfg_attr(test, derive(Serialize))]
+        #[cfg_attr(test, serde(tag = "type", rename_all = "lowercase"))]
         enum Wire<'a> {
             Perspective { perspective: &'a GltfPerspective },
             Orthographic { orthographic: &'a GltfOrthographic },
@@ -1160,20 +1072,7 @@ impl Serialize for GltfCameraProjection {
     }
 }
 
-impl<'de> Deserialize<'de> for GltfCameraProjection {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        #[derive(Deserialize)]
-        #[serde(tag = "type", rename_all = "lowercase")]
-        enum Wire {
-            Perspective { perspective: GltfPerspective },
-            Orthographic { orthographic: GltfOrthographic },
-        }
-        Ok(match Wire::deserialize(deserializer)? {
-            Wire::Perspective { perspective } => Self::Perspective(perspective),
-            Wire::Orthographic { orthographic } => Self::Orthographic(orthographic),
-        })
-    }
-}
+
 
 /// 📷️ `cameras[i]` (§5.10).
 #[derive(Clone, Debug, PartialEq)]
@@ -1185,62 +1084,9 @@ pub struct GltfCamera {
     pub extras: Option<GltfJson>,
 }
 
-/// 🌱️ See the identical note on `GltfCameraProjection`'s `Serialize`/`Deserialize` impls above —
-/// additive alongside [`dsl::ToValue`]/[`dsl::FromValue`] below, kept unconditional for the same
-/// reason.
-impl Serialize for GltfCamera {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        #[derive(Serialize)]
-        #[serde(rename_all = "camelCase")]
-        struct Wire<'a> {
-            #[serde(rename = "type")]
-            kind: &'static str,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            perspective: Option<&'a GltfPerspective>,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            orthographic: Option<&'a GltfOrthographic>,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            name: Option<&'a String>,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            extensions: Option<&'a GltfJson>,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            extras: Option<&'a GltfJson>,
-        }
-        let (kind, perspective, orthographic) = match &self.projection {
-            GltfCameraProjection::Perspective(p) => ("perspective", Some(p), None),
-            GltfCameraProjection::Orthographic(o) => ("orthographic", None, Some(o)),
-        };
-        Wire { kind, perspective, orthographic, name: self.name.as_ref(), extensions: self.extensions.as_ref(), extras: self.extras.as_ref() }.serialize(serializer)
-    }
-}
 
-impl<'de> Deserialize<'de> for GltfCamera {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        #[derive(Deserialize)]
-        #[serde(rename_all = "camelCase")]
-        struct Wire {
-            #[serde(rename = "type")]
-            kind: String,
-            #[serde(default)]
-            perspective: Option<GltfPerspective>,
-            #[serde(default)]
-            orthographic: Option<GltfOrthographic>,
-            #[serde(default)]
-            name: Option<String>,
-            #[serde(default)]
-            extensions: Option<GltfJson>,
-            #[serde(default)]
-            extras: Option<GltfJson>,
-        }
-        let wire = Wire::deserialize(deserializer)?;
-        let projection = match wire.kind.as_str() {
-            "perspective" => GltfCameraProjection::Perspective(wire.perspective.ok_or_else(|| serde::de::Error::missing_field("perspective"))?),
-            "orthographic" => GltfCameraProjection::Orthographic(wire.orthographic.ok_or_else(|| serde::de::Error::missing_field("orthographic"))?),
-            other => return Err(serde::de::Error::custom(format!("camera.type must be 'perspective' or 'orthographic', got {other:?}"))),
-        };
-        Ok(GltfCamera { projection, name: wire.name, extensions: wire.extensions, extras: wire.extras })
-    }
-}
+
+
 
 /// 🌉️ Hand-written `ToValue`/`FromValue` for the tagged-union `type`+sibling-key wire shape —
 /// mirrors the two hand-rolled `Serialize`/`Deserialize` impls above exactly (`{"type":
@@ -1322,65 +1168,66 @@ impl semio_framework_value::FromValue for GltfCamera {
 //#region 🔖️Document
 /// 🌍 The full glTF 2.0 JSON document (§5), fully typed -- one field per spec top-level array/
 /// object, `extras`/`extensions` typed via [`GltfJson`], never `serde_json::Value`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[derive(Default)]
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct GltfDocument {
     pub asset: GltfAsset,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub scene: Option<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub scenes: Vec<GltfScene>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub nodes: Vec<GltfNode>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub meshes: Vec<GltfMesh>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub accessors: Vec<GltfAccessor>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub buffer_views: Vec<GltfBufferView>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub buffers: Vec<GltfBuffer>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub materials: Vec<GltfMaterial>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub textures: Vec<GltfTexture>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub images: Vec<GltfImage>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub samplers: Vec<GltfSampler>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub skins: Vec<GltfSkin>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub animations: Vec<GltfAnimation>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub cameras: Vec<GltfCamera>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "extensionsUsed")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty", rename = "extensionsUsed"))]
     #[value(default, skip_serializing_if = "Vec::is_empty", rename = "extensionsUsed")]
     pub extensions_used: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "extensionsRequired")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty", rename = "extensionsRequired"))]
     #[value(default, skip_serializing_if = "Vec::is_empty", rename = "extensionsRequired")]
     pub extensions_required: Vec<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extensions: Option<GltfJson>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none", with = "present_json", serialize_controlled_with = "present_json::to_value_controlled")]
     pub extras: Option<GltfJson>,
 }
@@ -1395,23 +1242,24 @@ pub struct GltfDocument {
 /// 🌱️ serde is UNCONDITIONAL, not `#[cfg_attr(test, …)]`: production call sites still serialize this
 /// snapshot, so gating it breaks the `s` plugin's `wasm32-wasip2` build. Re-gate once those move to
 /// `ToValue`/`FromValue`.
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive()]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gltf")]
 pub struct GltfSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub document: GltfDocument,
     #[state(artifact)]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub buffers: Vec<Vec<u8>>,
     #[state(artifact)]
-    #[serde(default)]
+    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub source_form: GltfSourceForm,
 }
@@ -1423,5 +1271,4 @@ impl Default for GltfSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-#[path="📦️pack/🦀️.rs"]
-mod owned_pack;
+

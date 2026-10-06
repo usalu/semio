@@ -62,8 +62,15 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::mutations::{apply_semio_kit_mutation, decode_kit_mutation_json, inverse_semio_kit_mutation, SemioKitMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{decode_kit_snapshot_json, decode_semio_kit_pack, encode_kit_snapshot_json, encode_semio_kit_pack, parse_semio_kit_dsl, print_semio_kit_dsl, SemioKitSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::mutations::{apply_semio_kit_mutation, inverse_semio_kit_mutation, SemioKitMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::mutations::{decode_kit_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::binary::snapshot::{decode_semio_kit_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::binary::snapshot::{encode_semio_kit_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::snapshot::{print_semio_kit_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::snapshot::{parse_semio_kit_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::snapshot::{encode_kit_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::snapshot::{decode_kit_snapshot_json};
     use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Bridges
@@ -86,7 +93,7 @@ mod subject {
     /// the doc string's own `prepare` list.
     fn prepared(ctx: &Context) -> Result<(SemioKitSnapshot, SemioKitMutation), String> {
         let (prepare, mutation) = super::plan_mutations(ctx)?;
-        let text = String::from_utf8(ctx.fixture_bytes(super::TOWER_DSL)?).map_err(|error| format!("the capsule tower kit artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(super::TOWER_DSL)?).map_err(|error| format!("the capsule tower kit artifact is not UTF-8: {error}"))?;
         let mut snapshot = parse_semio_kit_dsl(&text)?;
         for step in &prepare {
             let step = mutation_of(step, &ctx.scenario.id)?;
@@ -141,13 +148,13 @@ mod subject {
     /// checked against the committed after-snapshot in role — a THIRD statement of what the verb
     /// means, independent of both implementations, kept from the case this one replaces.
     pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
-        let assets = ctx.step_fixture_uris();
+        let assets = ctx.step_input_uris();
         if assets.len() < 3 {
             return Err(format!("{}: expected three committed vector assets, found {}", ctx.scenario.id, assets.len()));
         }
-        let before = String::from_utf8(ctx.fixture_bytes(&assets[0])?).map_err(|error| error.to_string())?;
-        let payload = String::from_utf8(ctx.fixture_bytes(&assets[1])?).map_err(|error| error.to_string())?;
-        let after = String::from_utf8(ctx.fixture_bytes(&assets[2])?).map_err(|error| error.to_string())?;
+        let before = String::from_utf8(ctx.input_bytes(&assets[0])?).map_err(|error| error.to_string())?;
+        let payload = String::from_utf8(ctx.input_bytes(&assets[1])?).map_err(|error| error.to_string())?;
+        let after = String::from_utf8(ctx.input_bytes(&assets[2])?).map_err(|error| error.to_string())?;
         let mut current = decode_kit_snapshot_json(&before).map_err(|error| format!("{}: the committed before-snapshot must decode: {error}", ctx.scenario.id))?;
         let expected = decode_kit_snapshot_json(&after).map_err(|error| format!("{}: the committed after-snapshot must decode: {error}", ctx.scenario.id))?;
         let mutation = decode_kit_mutation_json(&payload).map_err(|error| format!("{}: the committed mutation payload must decode: {error}", ctx.scenario.id))?;
@@ -166,7 +173,7 @@ mod subject {
     /// with itself is the oracle: the Python implementation reproduces the same two files from the
     /// grammar and the protocol alone, and the digests of both sides' emitted bytes are compared.
     fn carrier_pair(ctx: &Context, dsl_uri: &str, pack_uri: &str, what: &str) -> Result<(SemioKitSnapshot, Json), String> {
-        let dsl_bytes = ctx.fixture_bytes(dsl_uri)?;
+        let dsl_bytes = ctx.input_bytes(dsl_uri)?;
         let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: {what} is not UTF-8: {error}"))?;
         let parsed = parse_semio_kit_dsl(&text)?;
         let printed = print_semio_kit_dsl(&parsed);
@@ -175,7 +182,7 @@ mod subject {
         if reparsed != parsed {
             return Err(disagreement(&format!("identity-round-trip: printing {what} back to DSL and reparsing it lost content"), &reparsed, &parsed));
         }
-        let pack_bytes = ctx.fixture_bytes(pack_uri)?;
+        let pack_bytes = ctx.input_bytes(pack_uri)?;
         let unpacked = decode_semio_kit_pack(&pack_bytes)?;
         if unpacked != parsed {
             return Err(disagreement(&format!("identity-round-trip: the binary twin of {what} decodes to a different kit than its text"), &unpacked, &parsed));

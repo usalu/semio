@@ -1,5 +1,5 @@
 use crate::schema::{diff::PptxDiff, mutations::set_snapshot::SetSnapshot, snapshot::{PptxShape, PptxTransform}};
-use protocol::{command::{DiffAlgebra, MutationKind}, DiffCodec, MutationDiff};
+use protocol::{command::{DiffAlgebra, MutationKind}, DiffBinary,DiffCodec,DiffText, MutationDiff};
 
 #[test]
 fn set_snapshot_diff_replaces_only_canonical_authority_and_inverts_exactly() {

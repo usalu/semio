@@ -14,11 +14,41 @@
       "description": "Aggregate discriminator spliced in by ZipMutation; absent when the payload stands alone."
     },
     "entry": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/snapshot.json#/$defs/ZipEntry"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/snapshot.json#/$defs/ZipEntry",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Entry",
+          "de": "Eintrag"
+        },
+        "description": {
+          "en": "Name, content and metadata of the archive member that is added.",
+          "de": "Name, Inhalt und Metadaten des Archivmitglieds, das hinzugefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "before": {
       "type": "string",
-      "description": "Existing member before which the new entry is inserted; omitted to append."
+      "description": "Existing member before which the new entry is inserted; omitted to append.",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Insert before",
+          "de": "Einfügen vor"
+        },
+        "description": {
+          "en": "Existing member the new entry is placed before; left out, the entry is appended.",
+          "de": "Vorhandenes Mitglied, vor dem der neue Eintrag platziert wird; ohne Angabe wird er angehängt."
+        },
+        "ref": {
+          "kind": "entry"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

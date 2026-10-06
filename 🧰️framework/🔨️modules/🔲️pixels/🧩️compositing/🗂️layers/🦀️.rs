@@ -87,7 +87,7 @@ impl Planner<'_> {
     }
 }
 /// 🧵️ Converts unique mask buffers within bounded grants before publishing a composite.
-pub struct RasterStackJob {pending:Option<CompositeInput>,composite:Option<CompositeJob>,preparations:Vec<Preparation>,mask_slots:Vec<usize>,preparation:usize,prepared:usize,total:usize,origin:[f64;2],empty:bool,cancelled:bool}
+pub struct RasterStackJob {pending:Option<CompositeInput>,composite:Option<CompositeJob>,composite_retirement:Option<CompositeRetirement>,output:Option<RasterImage>,completed:usize,done:bool,preparations:Vec<Preparation>,mask_slots:Vec<usize>,preparation:usize,prepared:usize,total:usize,origin:[f64;2],empty:bool,cancelled:bool}
 impl RasterStackJob {
     pub fn new(input:RasterStackInput)->Result<Self,PixelEditError>{
         if input.images.len()>1024{return Err(PixelEditError::Invalid("Image count exceeds compositor budget"));}
@@ -99,7 +99,7 @@ impl RasterStackJob {
         if !origin.iter().all(|v|v.is_finite())||!extents.iter().all(|v|v.is_finite()&&*v<=16384.0){return Err(PixelEditError::Invalid("Raster stack bounds exceed allowed extents"));}
         let width=extents[0] as u32;let height=extents[1] as u32;let count=validate_extent(width,height)?;
         let total=plan.commands.checked_mul(count).and_then(|n|n.checked_add(plan.coverage_total)).ok_or(PixelEditError::Invalid("Compositing work exceeds numeric limits"))?;
-        Ok(Self {pending:Some(CompositeInput {width,height,origin,images:plan.images,layers}),composite:None,preparations:plan.preparations,mask_slots:plan.mask_slots,preparation:0,prepared:0,total,origin,empty,cancelled:false})
+        Ok(Self {pending:Some(CompositeInput {width,height,origin,images:plan.images,layers}),composite:None,composite_retirement:None,output:None,completed:0,done:false,preparations:plan.preparations,mask_slots:plan.mask_slots,preparation:0,prepared:0,total,origin,empty,cancelled:false})
     }
     pub fn advance(&mut self,mut budget:usize)->Result<PixelProgress,PixelEditError>{
         if self.cancelled{return Err(PixelEditError::Cancelled);}
@@ -110,22 +110,23 @@ impl RasterStackJob {
             for (offset,value) in coverage.iter_mut().enumerate().take(end).skip(prep.offset){let at=offset*4;let bytes=&prep.image.pixels;*value=mask_coverage([bytes[at],bytes[at+1],bytes[at+2],bytes[at+3]]);}
             prep.offset=end;if end==coverage.len(){self.preparation+=1;}
         }
-        if self.preparation==self.preparations.len()&&self.composite.is_none(){
+        if self.preparation==self.preparations.len()&&self.pending.is_some(){
             fn attach(layers:&mut [CompositeLayer],slots:&mut impl Iterator<Item=usize>,preparations:&[Preparation]){
                 for layer in layers{if let Some(mask)=&mut layer.mask{mask.coverage=Arc::clone(&preparations[slots.next().unwrap()].coverage);}if let CompositeContent::Group(children)=&mut layer.content{attach(children,slots,preparations);}}
             }
             let mut input=self.pending.take().unwrap();attach(&mut input.layers,&mut self.mask_slots.iter().copied(),&self.preparations);
             self.composite=Some(CompositeJob::new(input)?);self.preparations.clear();self.mask_slots.clear();
         }
-        let progress=if let Some(job)=&mut self.composite{if budget>0{job.advance(budget)?}else{PixelProgress {completed:job.completed,total:job.total,done:job.completed==job.total}}}else{PixelProgress {completed:0,total:0,done:false}};
-        Ok(PixelProgress {completed:self.prepared+progress.completed,total:self.total,done:progress.done})
+        if budget>0{if let Some(job)=&mut self.composite{let progress=job.advance(budget)?;budget-=progress.completed-self.completed;self.completed=progress.completed;if progress.done{let(retired,image)=self.composite.take().unwrap().into_retirement();self.composite_retirement=Some(retired);self.output=image;}}}
+        while budget>0&&self.composite_retirement.is_some(){budget-=1;if !self.composite_retirement.as_ref().unwrap().terminal_is_empty(){self.composite_retirement.as_mut().unwrap().advance(1)?;}else{self.composite_retirement=None;self.done=true;}}
+        Ok(PixelProgress {completed:self.prepared+self.completed,total:self.total,done:self.done})
     }
     pub fn into_result(mut self)->Result<RasterStackResult,PixelEditError>{
         if self.cancelled{return Err(PixelEditError::Cancelled);}
-        let image=self.composite.take().ok_or(PixelEditError::Incomplete)?.into_result()?;
+        if !self.done{return Err(PixelEditError::Incomplete);}let image=self.output.take().unwrap();
         Ok(RasterStackResult {image,origin:self.origin,empty:self.empty})
     }
-    pub fn cancel(&mut self){self.cancelled=true;self.pending=None;self.composite=None;self.preparations.clear();self.mask_slots.clear();}
+    pub fn cancel(&mut self){self.cancelled=true;self.pending=None;self.composite=None;self.composite_retirement=None;self.output=None;self.preparations.clear();self.mask_slots.clear();}
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

@@ -30,6 +30,6 @@ pub fn diff(payload: &super::CreateAnnualSchedule, base: &EnergyModelSnapshot) -
         payload.index as usize,
         crate::schedule::AnnualSchedule { id: payload.id, rules: Vec::new(), default_daily_schedule_id: payload.default_daily_schedule_id, holiday_daily_schedule_id: payload.holiday_daily_schedule_id, holiday_dates: Vec::new() },
     );
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

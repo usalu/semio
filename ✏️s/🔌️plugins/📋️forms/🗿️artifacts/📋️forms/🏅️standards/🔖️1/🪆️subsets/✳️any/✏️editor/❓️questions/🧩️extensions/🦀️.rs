@@ -12,7 +12,7 @@ pub enum ExtensionSurface<'a> {
 /// 🎨️ Carries the selected fixture and preserves explicit answers, including null.
 pub fn render_payload(question: &FormQuestion, values: &Object, controller_id: &str, surface: ExtensionSurface<'_>, interactive: bool) -> Value {
     let mut payload = Object::new();
-    if let Some(fixture) = &question.fixture_slug { payload.insert("fixtureSlug", Value::from(fixture.clone())); }
+    if let Some(fixture) = &question.example_id { payload.insert("exampleId", Value::from(fixture.clone())); }
     payload.insert("params", values.get(&question.id).cloned().or_else(|| question.params.as_ref().map(crate::schema::dsl_to_value)).unwrap_or_else(|| Value::Object(Object::new())));
     payload.insert("questionId", Value::from(question.id.clone()));
     payload.insert("controllerId", Value::from(controller_id));

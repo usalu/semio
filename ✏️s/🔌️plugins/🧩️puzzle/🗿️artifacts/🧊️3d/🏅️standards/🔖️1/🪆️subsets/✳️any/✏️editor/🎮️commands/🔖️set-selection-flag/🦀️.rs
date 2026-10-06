@@ -27,15 +27,15 @@ fn apply(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>, flag: &str, valu
     let explicit_ids: Option<Vec<String>> = args.and_then(|value| value.get("ids")).and_then(|value| semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(value)).ok());
     match (entity, explicit_ids) {
         (Some(entity), Some(ids)) => {
-            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, entity, &ids, flag, value);
+            apply_puzzle3d_selection_flag(&mut ctx.scene.scene_snapshot, entity, &ids, flag, value);
         }
         _ => {
             let object_ids = ctx.selected_object_ids();
             let vortex_ids = ctx.selected_vortex_ids();
             let target_volume_ids = ctx.selected_target_volume_ids();
-            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, "object", &object_ids, flag, value);
-            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, "vortex", &vortex_ids, flag, value);
-            apply_puzzle3d_selection_flag(&mut ctx.scene.fixture, "targetVolume", &target_volume_ids, flag, value);
+            apply_puzzle3d_selection_flag(&mut ctx.scene.scene_snapshot, "object", &object_ids, flag, value);
+            apply_puzzle3d_selection_flag(&mut ctx.scene.scene_snapshot, "vortex", &vortex_ids, flag, value);
+            apply_puzzle3d_selection_flag(&mut ctx.scene.scene_snapshot, "targetVolume", &target_volume_ids, flag, value);
         }
     }
 }

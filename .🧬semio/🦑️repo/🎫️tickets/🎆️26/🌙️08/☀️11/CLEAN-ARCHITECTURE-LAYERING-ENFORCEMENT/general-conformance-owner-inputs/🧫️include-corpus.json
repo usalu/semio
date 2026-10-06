@@ -1,0 +1,100 @@
+{
+  "cases": [
+    {
+      "id": "direct",
+      "source": "include!(\".🧬semio/unknown.rs\");",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "spaced-concat",
+      "source": "include! ( concat! ( env! ( \"CARGO_MANIFEST_DIR\" ), \"/.🧬semio/unknown.rs\" ) );",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "raw-string",
+      "source": "include!(r##\".🧬semio/unknown.rs\"##);",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "split-concat",
+      "source": "include_str!(concat!(\".🧬\", \"semio\", \"/unknown.rs\"));",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "bytes",
+      "source": "include_bytes!(\".🧬semio/unknown.rs\");",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "brace",
+      "source": "include! { \".🧬semio/unknown.rs\" };",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "bracket",
+      "source": "include! [ \".🧬semio/unknown.rs\" ];",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "raw-identifier",
+      "source": "r#include!(\".🧬semio/unknown.rs\");",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "escaped-unicode",
+      "source": "include!(\".\\u{1f9ec}semio/unknown.rs\");",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "escaped-ascii",
+      "source": "include!(\".🧬\\x73emio/unknown.rs\");",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "windows-separators",
+      "source": "include!(\".🧬semio\\\\unknown.rs\");",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "outer-trailing-comma",
+      "source": "include!(\".🧬semio/unknown.rs\",);",
+      "includes": 1,
+      "ticket": true
+    },
+    {
+      "id": "ordinary-owner",
+      "source": "include!(\"owner.rs\");",
+      "includes": 1,
+      "ticket": false
+    },
+    {
+      "id": "line-comment",
+      "source": "// include!(concat!(env!(\"CARGO_MANIFEST_DIR\"),\"/.🧬semio/unknown.rs\"));",
+      "includes": 0,
+      "ticket": false
+    },
+    {
+      "id": "nested-comment",
+      "source": "/* outer /* include!(\".🧬semio/unknown.rs\"); */ end */",
+      "includes": 0,
+      "ticket": false
+    },
+    {
+      "id": "string-decoy",
+      "source": "const DECOY: &str = r##\"include!(concat!(env!(\"CARGO_MANIFEST_DIR\"),\"/.🧬semio/unknown.rs\"))\"##;",
+      "includes": 0,
+      "ticket": false
+    }
+  ]
+}

@@ -282,7 +282,7 @@ async fn retained_routes_cover_every_command_exactly_once() {
 /// refuses a completion whose emitted lane is absent from the contract.
 #[semio_framework_async_macros::async_test]
 async fn every_route_declares_the_lane_its_handler_emits() {
-    let snapshot = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();
@@ -457,7 +457,7 @@ async fn the_editor_boots_on_the_bundled_example_document() {
     let boot = <Fem2dPlayApp as ArtifactEditor>::initial_snapshot();
     assert!(!boot.nodes.is_empty(), "expected the bundled example fixture's nodes");
     assert!(!boot.elements.is_empty(), "expected the bundled example fixture's elements");
-    assert_ne!(boot, crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot());
+    assert_ne!(boot, crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
     assert_eq!(boot, Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).expect("the bundled example parses"));
     let app = fem2d_app();
     assert!(!app.snapshot().expect("snapshot").nodes.is_empty(), "a booted app renders a non-empty document");
@@ -513,7 +513,7 @@ async fn export_media_document_out_round_trips_via_import_media_document_in() {
     let media = Fem2dPlayApp::export_media("artifact:out", &doc).expect("document:out exports");
     assert_eq!(media.media_type.class, MediaClass::TwoD);
     assert_eq!(media.media_type.form, MediaForm::Vector);
-    let empty_projection = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
+    let empty_projection = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let empty_history = semio_framework_plugin::HistoryView::empty();
     let empty_doc = ArtifactView::new(&empty_projection, &empty_history);
     let emit = Fem2dPlayApp::import_media("artifact:in", &media, &empty_doc).expect("document:in imports");
@@ -552,7 +552,7 @@ async fn export_media_results_out_returns_json_with_every_case_and_combination()
 #[semio_framework_async_macros::async_test]
 async fn export_media_results_out_errors_when_no_load_cases_are_defined() {
     let _app = Fem2dPlayApp;
-    let snapshot = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let error = Fem2dPlayApp::export_media("results:out", &doc).expect_err("no load cases means no results to export");
@@ -565,7 +565,7 @@ async fn export_media_results_out_errors_when_no_load_cases_are_defined() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_unknown_port_is_not_implemented() {
     let _app = Fem2dPlayApp;
-    let snapshot = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     assert!(matches!(Fem2dPlayApp::export_media("bogus:out", &doc), Err(MediaError::NotImplemented)));
@@ -574,7 +574,7 @@ async fn export_media_unknown_port_is_not_implemented() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() {
     let _app = Fem2dPlayApp;
-    let mut snapshot = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     snapshot.materials.push(crate::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
@@ -595,7 +595,7 @@ async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() 
 #[semio_framework_async_macros::async_test]
 async fn import_media_geometry_in_falls_back_to_unassigned_material_when_none_exists() {
     let _app = Fem2dPlayApp;
-    let snapshot = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let payload = semio_framework_pack_json::to_string(&semio_framework_pack_json::json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }));

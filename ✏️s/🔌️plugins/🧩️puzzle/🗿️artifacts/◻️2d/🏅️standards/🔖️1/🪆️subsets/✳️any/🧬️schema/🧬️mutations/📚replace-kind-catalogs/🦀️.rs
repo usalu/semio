@@ -1,4 +1,4 @@
-//! 📚 Puzzle2d mutation — `ReplaceKindCatalogs`: whole-value swap of the fixture-carried typed
+//! 📚 Puzzle2d mutation — `ReplaceKindCatalogs`: whole-value swap of the snapshot-carried typed
 //! kind-catalog bundle (`nodes`/`🐙️handles`/`edges`/`wires` catalogs together, one manifest-import
 //! gesture).
 

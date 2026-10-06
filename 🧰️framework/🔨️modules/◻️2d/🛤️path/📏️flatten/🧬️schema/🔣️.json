@@ -164,7 +164,7 @@
         "work",
         "done"
       ],
-      "description": "Complete valid contours transfer unchanged to the caller; partial or failed contours remain private. Each grant consumes one flat source/subdivision buffer or one private contour, then the empty contour container. Structural work does not report freed allocator bytes.",
+      "description": "Complete valid contours transfer unchanged to the caller; partial, failed or cancelled unpublished contours remain private until retirement. JavaScript output points own copies of source coordinates. Cancellation preserves previously published output. Each grant consumes one flat source/subdivision buffer or one private contour, then the empty contour container. Structural work does not report freed allocator bytes.",
       "properties": {
         "phase": {
           "enum": [

@@ -19,14 +19,54 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/MdPathStep"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Container path",
+          "de": "Containerpfad"
+        },
+        "description": {
+          "en": "Steps from the document into the nested block container (a block quote or a list item); empty for the top level.",
+          "de": "Schritte vom Dokument in den verschachtelten Blockcontainer (Blockzitat oder Listenelement); leer für die oberste Ebene."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "Index of the block within its container, counted from 0.",
+          "de": "Index des Blocks in seinem Container, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "block": {
-      "$ref": "#/$defs/MdBlock"
+      "$ref": "#/$defs/MdBlock",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block that takes the place of the addressed one.",
+          "de": "Der Block, der an die Stelle des adressierten tritt."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

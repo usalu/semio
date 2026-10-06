@@ -1,0 +1,123 @@
+{
+  "qualification": "independent Python field recipe arithmetic only; no provider/compiler/gates executed",
+  "baseBytes": 1329,
+  "rows": 34,
+  "binary64Fields": 11,
+  "binary32Fields": 6,
+  "cases": [
+    {
+      "id": "base",
+      "literal": 1329,
+      "independent": 1329,
+      "matches": true
+    },
+    {
+      "id": "binary64-0000000000000000",
+      "literal": 1329,
+      "independent": 1329,
+      "matches": true
+    },
+    {
+      "id": "binary64-8000000000000000",
+      "literal": 1329,
+      "independent": 1329,
+      "matches": true
+    },
+    {
+      "id": "binary64-0000000000000001",
+      "literal": 1329,
+      "independent": 1329,
+      "matches": true
+    },
+    {
+      "id": "binary64-3ff0000000000000",
+      "literal": 1329,
+      "independent": 1329,
+      "matches": true
+    },
+    {
+      "id": "binary64-7ff0000000000000",
+      "literal": 1439,
+      "independent": 1439,
+      "matches": true
+    },
+    {
+      "id": "binary64-fff0000000000000",
+      "literal": 1439,
+      "independent": 1439,
+      "matches": true
+    },
+    {
+      "id": "binary64-7ff0000000000001",
+      "literal": 1208,
+      "independent": 1208,
+      "matches": true
+    },
+    {
+      "id": "binary64-7ff8123456789abc",
+      "literal": 1208,
+      "independent": 1208,
+      "matches": true
+    },
+    {
+      "id": "binary64-fff8fedcba987654",
+      "literal": 1208,
+      "independent": 1208,
+      "matches": true
+    },
+    {
+      "id": "binary32-00000000",
+      "literal": 1329,
+      "independent": 1329,
+      "matches": true
+    },
+    {
+      "id": "binary32-80000000",
+      "literal": 1329,
+      "independent": 1329,
+      "matches": true
+    },
+    {
+      "id": "binary32-00000001",
+      "literal": 1329,
+      "independent": 1329,
+      "matches": true
+    },
+    {
+      "id": "binary32-3f800000",
+      "literal": 1329,
+      "independent": 1329,
+      "matches": true
+    },
+    {
+      "id": "binary32-7f800000",
+      "literal": 1389,
+      "independent": 1389,
+      "matches": true
+    },
+    {
+      "id": "binary32-ff800000",
+      "literal": 1389,
+      "independent": 1389,
+      "matches": true
+    },
+    {
+      "id": "binary32-7f800001",
+      "literal": 1263,
+      "independent": 1263,
+      "matches": true
+    },
+    {
+      "id": "binary32-7fc12345",
+      "literal": 1263,
+      "independent": 1263,
+      "matches": true
+    },
+    {
+      "id": "binary32-ffc54321",
+      "literal": 1263,
+      "independent": 1263,
+      "matches": true
+    }
+  ]
+}

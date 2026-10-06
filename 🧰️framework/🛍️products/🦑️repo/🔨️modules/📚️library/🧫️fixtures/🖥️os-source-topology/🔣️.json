@@ -224,12 +224,12 @@
       "sourceDisposition": "removed"
     },
     {
-      "source": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🖥️host-shim.js",
-      "owner": "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🟨️.js",
+      "source": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-host/🖥️host-shim.js",
+      "owner": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-host/🟨️.js",
       "kind": "javascript",
       "anchor": "slowEcho",
       "consumers": [
-        "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🌐️.html"
+        "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-host/🌐️.html"
       ],
       "sourceDisposition": "removed"
     },
@@ -284,12 +284,12 @@
       "sourceDisposition": "removed"
     },
     {
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
-      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/🦀️.rs",
       "kind": "rust",
       "anchor": "link_roundtrip",
       "consumers": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml"
       ],
       "sourceDisposition": "removed"
     },

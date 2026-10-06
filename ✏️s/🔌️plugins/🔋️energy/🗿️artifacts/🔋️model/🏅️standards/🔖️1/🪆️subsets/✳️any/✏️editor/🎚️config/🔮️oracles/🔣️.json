@@ -100,9 +100,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-simulation-settings-applied",
       "class": "handcrafted",
       "target": {
@@ -167,7 +166,6 @@
       "notes": "The owner's committed contract vector for `change-simulation-settings` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-result-field-applied",
       "class": "handcrafted",
       "target": {

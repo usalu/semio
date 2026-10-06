@@ -19,7 +19,7 @@ pub const PUZZLE_COMMAND_CHECKPOINT_BYTES: usize = 120;
 pub const PUZZLE_IMPORT_TOTAL_BYTES: usize = PUZZLE_COMMAND_OUTPUT_BYTES;
 
 /// 📏️ Raw wire bytes of the largest command a puzzle route carries: one WHOLE import (the framework reassembles the
-/// picked file before `importFixture` runs, `semio_framework::kernel::ImportStaging`) as a JSON string — at most two
+/// picked file before `importSnapshot` runs, `semio_framework::kernel::ImportStaging`) as a JSON string — at most two
 /// wire bytes per text byte once escaped (`"`, `\` and the JSON whitespace escapes) — plus one command envelope.
 pub const PUZZLE_IMPORT_RAW_BYTES: usize = 2 * PUZZLE_IMPORT_TOTAL_BYTES + PUZZLE_COMMAND_RAW_BYTES;
 
@@ -29,7 +29,7 @@ pub const PUZZLE_IMPORT_RAW_BYTES: usize = 2 * PUZZLE_IMPORT_TOTAL_BYTES + PUZZL
 /// never a literal, because the ladder exists to make the scan RESUMABLE at the granularity the pages
 /// arrived in — not to spend a host turn per byte. Before ticket 26/09/02/PUZZLE-3D-END-TO-END wave B59
 /// the stride was one byte AND every one of those steps published a checkpoint whose `input_hash`
-/// re-folded the whole buffer, so the ladder cost O(bytes²): a 160 314-byte `importFixture` (the browser's
+/// re-folded the whole buffer, so the ladder cost O(bytes²): a 160 314-byte `importSnapshot` (the browser's
 /// 145 924-byte Nakagin payload) reached scan cursor ≈28 000 in 60 s and the import never reached
 /// `Decode` at all — no document edit, no history row and no notice, which is exactly the silent
 /// `paneObjects=180→180` the live `import-distinct` verdict read.
@@ -75,6 +75,9 @@ pub trait PuzzleCommandWork<A: ArtifactApp>: Send {
     /// construction. Default no-op: a work object that reads no instance-retained state ignores it.
     fn bind_instance_owner(&mut self, _owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) {}
     fn bind_view_state(&mut self, _view_state: Option<ViewModel>) {}
+    /// 🖐️ The admission's job context, bound once per construction — a work object that drives its window's gesture
+    /// reads the gesture slot from it. Default no-op.
+    fn bind_job_context(&mut self, _context: Arc<semio_framework_plugin::app::ArtifactOwnedToolJobContext<A>>) {}
     fn bind_window_owners(&mut self, _config: Option<WindowConfigSnapshot>, _transient: Option<WindowTransientSnapshot>) {}
     fn take_ephemeral(&mut self) -> EphemeralEmit<A> {
         EphemeralEmit::default()

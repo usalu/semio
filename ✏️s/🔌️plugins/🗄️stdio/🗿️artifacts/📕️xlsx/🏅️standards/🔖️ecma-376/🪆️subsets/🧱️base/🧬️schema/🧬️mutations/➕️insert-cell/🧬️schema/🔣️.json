@@ -11,10 +11,35 @@
   ],
   "properties": {
     "address": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-vacancy-address.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-vacancy-address.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cell",
+          "de": "Zelle"
+        },
+        "description": {
+          "en": "Worksheet and reference of the vacant cell that is filled.",
+          "de": "Arbeitsblatt und Bezug der leeren Zelle, die gefüllt wird."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "value": {
-      "$ref": "#/$defs/XlsxCellValue"
+      "$ref": "#/$defs/XlsxCellValue",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cell value",
+          "de": "Zellwert"
+        },
+        "description": {
+          "en": "Typed content of the cell: number, shared string, inline string, boolean, error, formula or empty.",
+          "de": "Typisierter Inhalt der Zelle: Zahl, gemeinsame Zeichenfolge, Inline-Zeichenfolge, Wahrheitswert, Fehler, Formel oder leer."
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "mutation": {
       "const": "insertCell",

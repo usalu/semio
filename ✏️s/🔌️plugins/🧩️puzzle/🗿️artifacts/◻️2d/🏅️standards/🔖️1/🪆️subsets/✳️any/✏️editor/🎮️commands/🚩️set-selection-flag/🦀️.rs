@@ -28,5 +28,5 @@ fn apply(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>, flag: &str, valu
         .map(|ids| ids.iter().filter_map(|id| id.as_str().map(str::to_string)).collect::<Vec<String>>())
         .filter(|ids| !ids.is_empty());
     let ids = explicit.unwrap_or_else(|| ctx.selected_ids());
-    apply_selection_flag(&mut ctx.scene.fixture, &ids, flag, value);
+    apply_selection_flag(&mut ctx.scene.board_snapshot, &ids, flag, value);
 }

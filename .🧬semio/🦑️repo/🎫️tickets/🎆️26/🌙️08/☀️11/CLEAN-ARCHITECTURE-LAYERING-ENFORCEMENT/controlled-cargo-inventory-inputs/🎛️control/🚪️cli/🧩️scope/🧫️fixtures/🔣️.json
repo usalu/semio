@@ -1,0 +1,34 @@
+{
+  "observations": [
+    {
+      "id": "unbound",
+      "scope": null,
+      "expected": "refused"
+    },
+    {
+      "id": "outer",
+      "scope": "A",
+      "expected": "A"
+    },
+    {
+      "id": "inner",
+      "scope": "B",
+      "expected": "B"
+    },
+    {
+      "id": "outer-resumed",
+      "scope": "A",
+      "expected": "A"
+    },
+    {
+      "id": "concurrent",
+      "scope": "C",
+      "expected": "C"
+    },
+    {
+      "id": "settled",
+      "scope": null,
+      "expected": "refused"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "discovery": { "maximumUnits": 750000000, "maximumOwnedBytes": 2147483648, "maximumDepth": 256 },
+  "retirement": { "maximumUnits": 20000000, "maximumOwnedBytes": 134217728, "maximumDepth": 256 },
+  "progressIntervalMilliseconds": 1000
+}

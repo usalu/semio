@@ -6,5 +6,3 @@ export interface GifColorTable { sorted: boolean; colors: GifRgb[] }
 export interface GifImage { left: number; top: number; width: number; height: number; interlace: boolean; lct: GifColorTable | null; indices: number[] }
 /** 📸️ Complete GIF87a owned semantic snapshot. */
 export interface GifSnapshot { schema: string; width: number; height: number; gct: GifColorTable | null; backgroundColorIndex: number; pixelAspectRatio: number; images: GifImage[] }
-
-export * from "./🪶️sqlite/🟦️.ts";

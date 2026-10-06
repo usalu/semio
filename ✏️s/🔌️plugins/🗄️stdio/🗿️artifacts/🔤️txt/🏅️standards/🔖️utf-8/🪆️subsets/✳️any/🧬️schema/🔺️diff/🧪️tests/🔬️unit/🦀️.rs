@@ -127,7 +127,7 @@ async fn inverse_diff_level_roundtrip() {
 /// all three sections at once, plus a genuine `between()` result for good measure).
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::DiffCodec;
+    use protocol::{DiffBinary,DiffCodec,DiffText};
     let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
     let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
     let cases = vec![
@@ -163,8 +163,8 @@ async fn diff_codec_text_binary_roundtrip_law() {
 /// already uses).
 #[semio_framework_async_macros::async_test]
 async fn diff_grammar_conformance_law() {
-    use protocol::DiffCodec;
-    let grammar_text = crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO;
+    use protocol::{DiffBinary,DiffCodec,DiffText};
+    let grammar_text = crate::standards::v_utf_8::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO;
     let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse diff grammar");
     let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
 

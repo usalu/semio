@@ -4,6 +4,9 @@ import { decodeBackboneMessage, encodePackValue, packUInt } from "@semio-tech/fr
 export const DOCUMENT_BACKBONE_BINDING_SCHEMA_V1 = "semio.plugin.document-backbone-binding.v1";
 export const DOCUMENT_BACKBONE_RECEIPT_SCHEMA_V1 = "semio.plugin.document-backbone-binding-receipt.v1";
 export const DOCUMENT_BACKBONE_CONTROL_MAXIMUM_BYTES = 4096;
+/** 🚫️ The program's refusal of a control for a generation it holds no binding of (Rust `decide_document_backbone_binding_v1`). */
+export const DOCUMENT_BACKBONE_STALE_GENERATION_CODE = "plugin.document-backbone.stale-generation";
+const DOCUMENT_BACKBONE_RECEIPT_SCHEMA_BYTES_V1 = new TextEncoder().encode(DOCUMENT_BACKBONE_RECEIPT_SCHEMA_V1);
 
 /** 📬️ Guest Ack terminates at Shell as an ingest receipt, never as Hub command completion. */
 export function documentBackboneEffectV1(bytes: Uint8Array): "mutations" | "remote-ingest-receipt" {
@@ -110,6 +113,32 @@ function readDocumentBackboneReceiptV1(bytes: Uint8Array, command: DocumentBackb
   return receipt;
 }
 
+/** 🧾️ One control turn's shell frames, split in their order into its document-port receipts and the frames the turn
+ * carried beside them. A control turn is a turn like any other: the program may answer it with frames of its own — the
+ * status of an open history edit whose base the rebinding moved, an operation's result page — and those are routed by the
+ * host like any other turn's, never counted as receipts (live fault F4: such a frame made a bind or a retire fail
+ * `actor-document-control.receipt-count`, after which the document stayed listed as attached with a dead port). A frame is a
+ * receipt exactly when it names the receipt schema; whether it is a sound one is its reader's to say, so a damaged receipt
+ * fails the control turn under its own code and is never routed on as a frame of the program's. */
+export function splitDocumentBackboneControlTurnV1(frames: readonly Uint8Array[]): Readonly<{ receipts: readonly Uint8Array[]; unsolicited: readonly Uint8Array[] }> {
+  const receipts: Uint8Array[] = [];
+  const unsolicited: Uint8Array[] = [];
+  const schema = DOCUMENT_BACKBONE_RECEIPT_SCHEMA_BYTES_V1;
+  for (const frame of frames) {
+    let named = false;
+    for (let start = 0; !named && start + schema.length <= frame.length; start++) named = schema.every((byte, index) => frame[start + index] === byte);
+    (named ? receipts : unsolicited).push(frame);
+  }
+  return { receipts, unsolicited };
+}
+
+/** 🧾️ The one receipt a control turn owes. A turn that carried none or several fails with how many it carried (live fault on
+ * build B1: a bare `receipt-count` could not say whether the program had answered nothing or twice). */
+export function soleDocumentBackboneReceiptV1(receipts: readonly Uint8Array[]): Uint8Array {
+  if (receipts.length !== 1) throw new Error(`actor-document-control.receipt-count:${receipts.length}`);
+  return receipts[0]!;
+}
+
 /** 🧾️ Accepts an exact successful receipt and surfaces a verified refusal code. */
 export function requireDocumentBackboneReceiptV1(bytes: Uint8Array, command: DocumentBackboneControlV1): void {
   const receipt = readDocumentBackboneReceiptV1(bytes, command);
@@ -152,6 +181,7 @@ export class ActorDocumentBindingV1 {
   #binding: Promise<void> | null = null;
   #bound = false;
   #remote: "unsent" | "refused" | "possibly-bound" | "bound" | "retired" = "unsent";
+  #retiring: Promise<void> | null = null;
 
   constructor(owner: ActorDocumentOwnerV1, bindingGeneration: bigint, ports: ActorDocumentBindingPortsV1) {
     this.#ports = ports;
@@ -167,23 +197,32 @@ export class ActorDocumentBindingV1 {
         ports.assertActive();
         await ports.deliver(payload);
       },
-      retire: async () => {
-        if (this.#binding === null) return;
-        await this.#binding.catch(() => {});
-        if (this.#remote === "unsent" || this.#remote === "refused") return;
-        await this.#exchange({ ...this.#command, operation: "retire" });
-        this.#remote = "retired";
-        this.#bound = false;
-      },
+      retire: () => this.retire(),
     });
   }
 
-  async #exchange(command: DocumentBackboneControlV1): Promise<void> {
-    const receipts = await this.#ports.exchange(command);
-    if (receipts.length !== 1) throw new Error("actor-document-control.receipt-count");
-    const receipt = readDocumentBackboneReceiptV1(receipts[0]!, command);
-    if (command.operation === "bind") this.#remote = receipt.operation === "refused" ? "refused" : "bound";
-    if (receipt.operation === "refused") throw new Error(receipt.code);
+  /** 🚪️ Makes the program let go of this binding. A no-op for a binding the program never held or already let go of, one
+   * attempt at a time, and askable again after an attempt whose control turn failed — the port's own retirement asks once
+   * and keeps that answer, so a successor asks here ({@link releaseActorDocumentBindingV1}). The program's `retired`
+   * receipt and its stale-generation refusal both say what retiring is for: it holds no binding of this generation.
+   * Admission is closed before the turn, whatever the turn answers. */
+  retire(): Promise<void> {
+    this.#retiring ??= this.#retire().finally(() => { this.#retiring = null; });
+    return this.#retiring;
+  }
+
+  async #retire(): Promise<void> {
+    if (this.#binding === null) return;
+    await this.#binding.catch(() => {});
+    if (this.#remote === "unsent" || this.#remote === "refused" || this.#remote === "retired") return;
+    this.#bound = false;
+    const receipt = await this.#exchange({ ...this.#command, operation: "retire" });
+    if (receipt.operation === "refused" && receipt.code !== DOCUMENT_BACKBONE_STALE_GENERATION_CODE) throw new Error(receipt.code);
+    this.#remote = "retired";
+  }
+
+  async #exchange(command: DocumentBackboneControlV1): Promise<DocumentBackboneControlV1> {
+    return readDocumentBackboneReceiptV1(soleDocumentBackboneReceiptV1(await this.#ports.exchange(command)), command);
   }
 
   bind(): Promise<void> {
@@ -193,12 +232,38 @@ export class ActorDocumentBindingV1 {
       if (!this.#ports.current()) throw new Error("actor-document-control.stale");
       this.#ports.assertActive();
       this.#remote = "possibly-bound";
-      await this.#exchange(this.#command);
+      const receipt = await this.#exchange(this.#command);
+      this.#remote = receipt.operation === "refused" ? "refused" : "bound";
+      if (receipt.operation === "refused") throw new Error(receipt.code);
       if (!this.#ports.current()) throw new Error("actor-document-control.stale");
       this.#ports.assertActive();
       this.#bound = true;
     });
     return this.#binding;
+  }
+}
+
+/** 🚪️ Lets a predecessor go before its successor binds. Its port's retirement is awaited whatever it answered — whoever
+ * asked for it was told — and the program is asked again when it did not let go, so one failed control turn never fails
+ * every later bind of the program. Rejects when the program still does not let go. */
+export async function releaseActorDocumentBindingV1(previous: ActorDocumentBindingV1): Promise<void> {
+  await previous.port.retire().catch(() => {});
+  await previous.retire();
+}
+
+/** 🔗️ Binds a fresh binding and answers its port. A bind that fails closes the port, makes the program let go of what it
+ * may have bound and rejects with the BIND's own failure: a retirement that fails too is handed to `settled` beside it and
+ * never thrown in its place (live fault on build B1: the retirement's `receipt-count` hid why the bind had failed, went
+ * unhandled, and was kept as the answer to every later bind). `settled(null)` says the program let go, so the binding can
+ * be forgotten; one it did not let go of is the caller's to keep for {@link releaseActorDocumentBindingV1}. */
+export async function bindActorDocumentV1(binding: ActorDocumentBindingV1, prepared: ((port: ActorDocumentMessagePortV1) => void) | undefined, settled: (retirement: Readonly<{ error: unknown }> | null) => void): Promise<ActorDocumentMessagePortV1> {
+  try {
+    prepared?.(binding.port);
+    await binding.bind();
+    return binding.port;
+  } catch (error) {
+    settled(await binding.port.retire().then(() => null, (retirement: unknown) => ({ error: retirement })));
+    throw error;
   }
 }
 

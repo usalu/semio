@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::update_ingest_params;
-use crate::op::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use crate::{IngestParams, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

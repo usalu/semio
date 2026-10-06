@@ -45,6 +45,10 @@ interface ToggleGroupBaseProps extends Omit<React.HTMLAttributes<HTMLDivElement>
 
 interface ToggleGroupSingleProps extends ToggleGroupBaseProps {
   kind?: "single";
+  /** 📻️ `toggle` (the default): pressed buttons, the pressed one presses off. `radio`: one choice among mutually exclusive
+   * options — a `radiogroup` of `radio` items whose arrow keys move the choice with the focus, whose chosen option is the
+   * group's one Tab stop and cannot be pressed off (a segmented choice). */
+  semantics?: "toggle" | "radio";
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
@@ -61,6 +65,7 @@ type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
 
 interface ToggleGroupContextValue {
   level: Level;
+  radio: boolean;
   disabled: boolean;
   orientation: ToggleGroupOrientation;
   dir: ToggleGroupDirection;
@@ -83,6 +88,7 @@ function ToggleGroup(props: ToggleGroupProps) {
   const { className, id, showLabel, items, kind = "single", disabled = false, orientation = "horizontal", dir = "ltr", loop = true, rovingFocus = true, ref, ...rootProps } = props;
   const level = useLevel();
   const isMultiple = kind === "multiple";
+  const radio = !isMultiple && (props as ToggleGroupSingleProps).semantics === "radio";
   const controlled = props.value !== undefined;
   const [uncontrolledSingle, setUncontrolledSingle] = React.useState<string | undefined>(() => (kind === "single" ? (props as ToggleGroupSingleProps).defaultValue : undefined));
   const [uncontrolledMultiple, setUncontrolledMultiple] = React.useState<string[]>(() => (kind === "multiple" ? ((props as ToggleGroupMultipleProps).defaultValue ?? []) : []));
@@ -106,11 +112,12 @@ function ToggleGroup(props: ToggleGroupProps) {
         (props as ToggleGroupMultipleProps).onValueChange?.(next);
         return;
       }
+      if (radio && singleValue === itemValue) return;
       const next = singleValue === itemValue ? "" : itemValue;
       if (!controlled) setUncontrolledSingle(next);
       (props as ToggleGroupSingleProps).onValueChange?.(next);
     },
-    [controlled, disabled, isMultiple, multipleValue, props, selected, singleValue],
+    [controlled, disabled, isMultiple, multipleValue, props, radio, selected, singleValue],
   );
   const moveFocus = React.useCallback(
     (event: React.KeyboardEvent<HTMLButtonElement>, itemValue: string) => {
@@ -130,21 +137,22 @@ function ToggleGroup(props: ToggleGroupProps) {
       const next = Array.from(root?.querySelectorAll<HTMLButtonElement>('[data-slot="toggle-group-item"]') ?? []).find((item) => item.dataset.toggleValue === nextValue);
       next?.focus();
       setFocusValue(nextValue);
+      if (radio) activate(nextValue);
     },
-    [dir, enabledItems, loop, orientation, rovingFocus],
+    [activate, dir, enabledItems, loop, orientation, radio, rovingFocus],
   );
   const context = React.useMemo<ToggleGroupContextValue>(
-    () => ({ level, disabled, orientation, dir, loop, rovingFocus, focusValue, selected, activate, moveFocus, setFocusValue }),
-    [activate, dir, disabled, focusValue, level, loop, moveFocus, orientation, rovingFocus, selected],
+    () => ({ level, radio, disabled, orientation, dir, loop, rovingFocus, focusValue: (radio ? enabledItems.find((item) => selected.has(item.value))?.value : undefined) ?? focusValue, selected, activate, moveFocus, setFocusValue }),
+    [activate, dir, disabled, enabledItems, focusValue, level, loop, moveFocus, orientation, radio, rovingFocus, selected],
   );
   const rootDataState = selected.size > 0 ? "on" : "off";
-  const { value: _value, defaultValue: _defaultValue, onValueChange: _onValueChange, ...htmlProps } = rootProps as ToggleGroupBaseProps & { value?: unknown; defaultValue?: unknown; onValueChange?: unknown };
+  const { value: _value, defaultValue: _defaultValue, onValueChange: _onValueChange, semantics: _semantics, ...htmlProps } = rootProps as ToggleGroupBaseProps & { value?: unknown; defaultValue?: unknown; onValueChange?: unknown; semantics?: unknown };
   const element = (
     <div
       {...htmlProps}
       ref={ref}
       id={id}
-      role="group"
+      role={radio ? "radiogroup" : "group"}
       dir={dir}
       aria-disabled={disabled || undefined}
       data-slot="toggle-group"
@@ -191,7 +199,9 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
         id={id}
         disabled={itemDisabled}
         aria-label={ariaLabel}
-        aria-pressed={pressed}
+        role={context.radio ? "radio" : undefined}
+        aria-checked={context.radio ? pressed : undefined}
+        aria-pressed={context.radio ? undefined : pressed}
         title={title}
         tabIndex={itemDisabled ? -1 : context.rovingFocus ? (context.focusValue === value ? 0 : -1) : props.tabIndex}
         data-slot="toggle-group-item"

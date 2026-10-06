@@ -1,14 +1,14 @@
 //! 🔄️ CAD play app commands — rigid transforms on the current selection plus the declarative model-definition transformations.
 //!
 //! 🧭️ Each gesture is ONE transform-tool transaction (`crate::editor::cad::modes::edit::tools::transform`): the
-//! parametric `drag-`/`rotate-`/`scale-selection` leaf per touched pane, whose diff re-mints that pane's content-addressed
-//! composed model child from the transformed working scene, so the gumball drag persists, both world windows re-render,
-//! and history edits the drag's own inputs.
+//! relative `drag-`/`rotate-`/`scale-elements` child leaf per touched pane, landed on that pane's composed
+//! `s.stdio.semio@v1/model` child (design §20.15), so the gumball drag persists, both world windows re-render, and history
+//! edits the drag's own inputs.
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::modes::edit::tools::transform::{cad_transform_tool_emit, CadToolEntry, CadTransformRecord};
-use crate::editor::cad::{apply_transformation_mutations, ids_or_selection};
+use crate::editor::cad::modes::edit::tools::transform::{cad_pane_models, cad_transform_tool_emit, CadToolEntry, CadTransformRecord};
+use crate::editor::cad::{apply_transformation_entries, ids_or_selection};
 use crate::op::CadMutation;
 use crate::CadSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
@@ -94,14 +94,14 @@ pub mod apply_transformation {
         pub qid: String,
     }
 
-    /// 🔄️ Refused by name while baking into composed pane models is unimplemented (`apply_transformation_mutations`
-    /// has nothing to bake into since the composable-artifact migration) — never an empty success.
+    /// 🔄️ Refused by name while the derivation rules that bake a transformation into the target pane's model child are
+    /// unwritten (`apply_transformation_entries` yields nothing) — never an empty success.
     pub fn handle(payload: &ApplyTransformation, doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let mutations = apply_transformation_mutations(doc.snapshot, &payload.qid);
-        if mutations.is_empty() {
-            return Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.apply-transformation-unavailable"), format!("applyTransformation cannot bake \"{}\": composed pane models accept no baked transformation yet", payload.qid)));
+        let entries = apply_transformation_entries(&cad_pane_models(doc.snapshot, &doc.children), &payload.qid);
+        if entries.is_empty() {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("cad.apply-transformation-unavailable"), format!("applyTransformation cannot bake \"{}\": no derivation rule bakes this transformation into a pane model yet", payload.qid)));
         }
-        Ok(Emit::mutations(mutations))
+        Ok(cad_transform_tool_emit(doc, "applyTransformation", entries))
     }
 }
 //#endregion 🔖️ApplyTransformation

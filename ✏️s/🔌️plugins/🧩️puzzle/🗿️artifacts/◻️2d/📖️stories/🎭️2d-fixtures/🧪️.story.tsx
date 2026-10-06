@@ -186,7 +186,7 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
     controllerId: "puzzle2d-fixtures-story",
     componentKind: "board-2d",
     board2d: {
-      fixtureJson: JSON.stringify(fixture),
+      snapshotJson: JSON.stringify(fixture),
       cameraJson: JSON.stringify(fixture.camera),
       glyphCatalogsJson: JSON.stringify(fixture.meta?.kindCatalogs ?? {}),
       selectionJson: JSON.stringify(runtime.selectedIds),

@@ -59,7 +59,7 @@ fn sample_steps() -> Vec<PlaybookStep> {
                 schema: None,
                 src: None,
                 accept: None,
-                fixture_slug: None,
+                example_id: None,
                 params: None,
                 condition: Some(PlaybookExpr::Truthy { expr: Box::new(PlaybookExpr::Var { name: "enabled".into() }) }),
             }],

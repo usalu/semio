@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/✅️validation/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { ensembleIssues, menagerieIssues, speciesIssues, type Issue } from "../../🔨️modules/✅️validation/🟦️.ts";
 
 const VECTORS = "shared://🧬️schema-conformance/🔣️.json";
@@ -13,7 +13,7 @@ type Vectors = { readonly accepted: readonly Vector[]; readonly structural: read
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** 🔎️ The document of a vector: inline, or the value its JSON pointer reaches in the vectors. */

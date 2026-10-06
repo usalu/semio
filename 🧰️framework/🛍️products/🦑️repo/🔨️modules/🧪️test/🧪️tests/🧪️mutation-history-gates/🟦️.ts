@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, posix, resolve } from "node:path";
 import Parser from "web-tree-sitter";
@@ -225,6 +225,26 @@ describe("schema-mutation-editability", () => {
     expect(verdicts).toEqual(Object.fromEntries(editability.cases.map((entry) => [entry.kind, entry.verdict])));
     expect(report.diagnostics).toEqual([]);
   }, 60_000);
+  test("a leaf whose descriptor declares editable false is inert, counted withdraw-only and never a finding (independent descriptor walk)", () => {
+    const under = "✏️s/🔌️plugins/📸️remodel";
+    const declared: string[] = [];
+    const walk = (directory: string): void => {
+      for (const entry of readdirSync(join(repoRoot, directory), { withFileTypes: true })) {
+        if (!entry.isDirectory() || ["node_modules", "target", "dist", "🧫️fixtures", "🧪️tests"].includes(entry.name)) continue;
+        const path = `${directory}/${entry.name}`;
+        const descriptor = existsSync(join(repoRoot, path, "🔣️.json")) ? (JSON.parse(readFileSync(join(repoRoot, path, "🔣️.json"), "utf8")) as Record<string, unknown>) : null;
+        if (descriptor !== null && typeof descriptor.semanticKind === "string" && descriptor.editable === false) declared.push(path);
+        walk(path);
+      }
+    };
+    walk(under);
+    const report = mutationEditabilityReport(repoRoot, under, [under]);
+    const inert = report.leaves.filter((leaf) => leaf.verdict === "inert").map((leaf) => leaf.path);
+    expect(declared.length).toBeGreaterThan(0);
+    expect(inert.sort()).toEqual(declared.sort());
+    expect(report.census.reduce((sum, row) => sum + row.withdrawOnly, 0)).toBe(declared.length);
+    expect(report.diagnostics.filter((entry) => declared.some((path) => entry.path.startsWith(`${path}/`) || entry.path === path))).toEqual([]);
+  }, 120_000);
   test("a hand-written aggregate declares why it is not edited, or is a finding", () => {
     const body = (source: string) => [...source.matchAll(/[\p{L}_][\p{L}\p{N}_]*/gu)].map(([text]) => ({ kind: "ident" as const, text }));
     const forwarding = "impl Mutation<PlaySnapshot> for M { const INPUT_SCHEMAS = X; fn input_schema() {} fn payload_value() {} fn with_payload_value() {} fn from_payload_value() {} }";

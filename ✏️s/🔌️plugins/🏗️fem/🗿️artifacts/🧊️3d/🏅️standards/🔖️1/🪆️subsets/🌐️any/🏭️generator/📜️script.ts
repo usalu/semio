@@ -23,7 +23,7 @@
 // it is committed.
 //
 //   bun 📜️script.ts generate [--out <dir>] [--only <fixture-id>]
-//   bun 📜️script.ts manifests                      # emit the fixtureManifests block for 🔮️oracles
+//   bun 📜️script.ts manifests                      # emit the testEvidence block for 🔮️oracles
 //
 // @see ../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts
 //      — the pilot this file mirrors in CLI shape, bundle layout and manifest fields.
@@ -362,7 +362,6 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
   files.push({ role: "expected-measurements", path: `${FIXTURE_PATH_PREFIX}${directoryName}/📊️expected.metrics.json`, mediaType: "application/json", sha256: await contentDigest(metricsBody), bytes: Buffer.byteLength(metricsBody) });
 
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.fem.fem3d", standard: "1", subset: "any" },
@@ -464,7 +463,6 @@ async function main(argv: readonly string[]): Promise<number> {
         files.push({ role, path: `../../${fixture.path}/${name}`, mediaType: "application/json", sha256: await contentDigest(bytes), bytes: bytes.length });
       }
       entries.push({
-        schema: "semio.repository-test.fixture/v2",
         id: `carrier-${kind}`,
         class: "third-party-generated",
         target: { artifact: "s.fem.fem3d", standard: "1", subset: fixture.subset },

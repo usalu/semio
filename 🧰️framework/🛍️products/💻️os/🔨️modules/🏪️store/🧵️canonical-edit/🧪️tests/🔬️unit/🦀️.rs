@@ -87,7 +87,7 @@ fn fixture() -> (Edit<FixtureMutation>, serde_json::Value) {
 #[test]
 fn canonical_edit_large_unicode_bytes_match_serde_and_language_neutral_oracle() {
     let (edit, fixture) = fixture();
-    let oracle = serde_json::to_vec(&test_support::SerdeValue(&edit.to_value())).unwrap();
+    let oracle = serde_json::to_vec(&test_support::SerdeValue(&CursorRevisionAccumulator::revision_value(&edit))).unwrap();
     assert_eq!(oracle, fixture["expectedJson"].as_str().unwrap().as_bytes());
     for maximum in [1, 2, 7, 256, 4096] {
         let mut encoder = ArtifactCanonicalJsonCursor::default();
@@ -342,7 +342,7 @@ fn canonical_sealer_preserves_large_domains_and_all_wire_metadata_origins() {
             edit.mutation_meta[0].origin = crate::os_spr::MutationOrigin::from_value(origin.clone().into()).unwrap();
             edit.mutation_meta[0].payload_hash = Some(crate::os_spr::PayloadHash([23; 32]));
             edit.mutation_meta[0].semantic_kind = Some(SchemaId("fixture#replace".into()));
-            let expected = serde_json::to_vec(&test_support::SerdeValue(&edit.to_value())).unwrap();
+            let expected = serde_json::to_vec(&test_support::SerdeValue(&CursorRevisionAccumulator::revision_value(&edit))).unwrap();
             let mut actual = Vec::new();
             let mut encoder = ArtifactCanonicalJsonCursor::default();
             let mut chunk = [0; 256];

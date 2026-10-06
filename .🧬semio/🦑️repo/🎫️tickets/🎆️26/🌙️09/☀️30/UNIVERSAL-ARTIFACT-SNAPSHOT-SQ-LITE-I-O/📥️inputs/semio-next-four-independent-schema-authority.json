@@ -1,0 +1,60 @@
+[
+  {
+    "owner": "🕸️graph",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+    "schemaBytes": 3039,
+    "rawBytes": 2859,
+    "widths": {
+      "semio_graph_document": 2,
+      "semio_graph_edge": 10,
+      "semio_graph_edge_property": 5,
+      "semio_graph_list_element": 4,
+      "semio_graph_map_entry": 5,
+      "semio_graph_node": 18,
+      "semio_graph_port": 6,
+      "semio_graph_port_property": 5,
+      "semio_graph_property": 5,
+      "semio_graph_value": 8
+    }
+  },
+  {
+    "owner": "🌊️flow",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+    "schemaBytes": 1155,
+    "rawBytes": 1094,
+    "widths": {
+      "semio_flow_document": 2,
+      "semio_flow_edge": 9,
+      "semio_flow_node": 12,
+      "semio_flow_parameter": 5
+    }
+  },
+  {
+    "owner": "🖼️image",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+    "schemaBytes": 1205,
+    "rawBytes": 1138,
+    "widths": {
+      "semio_image_document": 7,
+      "semio_image_frame": 4,
+      "semio_image_metadata": 5,
+      "semio_image_sample": 5
+    }
+  },
+  {
+    "owner": "🎞️animation",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+    "schemaBytes": 2217,
+    "rawBytes": 2045,
+    "widths": {
+      "semio_animation_channel": 7,
+      "semio_animation_document": 2,
+      "semio_animation_keyframe": 7,
+      "semio_animation_quaternion": 13,
+      "semio_animation_scalar": 4,
+      "semio_animation_timeline": 4,
+      "semio_animation_vector3": 10,
+      "semio_animation_weight": 6
+    }
+  }
+]

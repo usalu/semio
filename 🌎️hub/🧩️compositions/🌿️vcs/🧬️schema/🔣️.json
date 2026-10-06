@@ -58,70 +58,6 @@
         }
       }
     },
-    "VcsNativeOpenableIdentity": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema",
-        "snapshotProtocolSha256",
-        "authority",
-        "hostileCases"
-      ],
-      "properties": {
-        "schema": {
-          "const": "semio.vcs.native-openable-identity/v1"
-        },
-        "snapshotProtocolSha256": {
-          "const": "e16083d1e963d571b44c3cc4eac8d5d3992aeecf606cd4a4a6b1095c101605d3"
-        },
-        "authority": {
-          "$ref": "#/$defs/VcsNativeOpenableIdentityAuthority"
-        },
-        "hostileCases": {
-          "type": "array",
-          "minItems": 11,
-          "maxItems": 11,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "name",
-              "field",
-              "value"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 64
-              },
-              "field": {
-                "enum": [
-                  "pluginId",
-                  "packageId",
-                  "artifactKind",
-                  "artifactSchema",
-                  "dialectKind",
-                  "viewerApp",
-                  "editorApp",
-                  "execution",
-                  "viewerWindowKindId",
-                  "rendererTarget"
-                ]
-              },
-              "value": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "maxLength": 128
-              }
-            }
-          }
-        }
-      },
-      "title": "VcsNativeOpenableIdentity"
-    },
     "VcsNativeCodecsReceipt": {
       "type": "object",
       "additionalProperties": false,
@@ -152,7 +88,7 @@
           "const": "s.vcs.vcs.codec.document"
         },
         "protocolPath": {
-          "const": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/📡️.protocol.semio"
+          "const": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
         },
         "protocolBytes": {
           "type": "integer",
@@ -165,7 +101,7 @@
         }
       }
     },
-    "VcsNativeCodecs": {
+    "VcsNativeCodecManifestV1": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -173,8 +109,7 @@
         "pluginId",
         "packageId",
         "packageVersion",
-        "receipts",
-        "hostile"
+        "receipts"
       ],
       "properties": {
         "schema": {
@@ -197,29 +132,11 @@
           "items": {
             "$ref": "#/$defs/VcsNativeCodecsReceipt"
           }
-        },
-        "hostile": {
-          "type": "array",
-          "minItems": 9,
-          "maxItems": 9,
-          "items": {
-            "enum": [
-              "missing",
-              "duplicate",
-              "foreign-package",
-              "wrong-version",
-              "bare-kind",
-              "legacy-schema",
-              "legacy-kind",
-              "wrong-extension",
-              "zero-hash"
-            ]
-          },
-          "uniqueItems": true
         }
       },
-      "title": "VcsNativeCodecs",
+      "title": "VcsNativeCodecManifestV1",
       "description": "🌿️ The native-openable codec receipt projection VCS publishes to the hub: provider identity plus one receipt per artifact codec."
     }
-  }
+  },
+  "$ref": "#/$defs/VcsNativeCodecManifestV1"
 }

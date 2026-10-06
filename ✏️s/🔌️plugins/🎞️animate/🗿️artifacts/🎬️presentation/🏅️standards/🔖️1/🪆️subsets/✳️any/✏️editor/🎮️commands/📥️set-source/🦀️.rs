@@ -6,7 +6,7 @@ use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutat
 use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
 use crate::mutations::replace_source::ReplaceSource;
 use crate::mutations::replace_tiles::ReplaceTiles;
-use crate::op::PresentationMutation;
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::{FigureTileSource, PresentationSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

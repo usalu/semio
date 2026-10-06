@@ -3,13 +3,13 @@
 
 use super::*;
 use crate::{BitmapMutation, BitmapSnapshot};
-use crate::schema::snapshot::encode_base64;
+use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
 
 fn commands() -> Vec<(BitmapEditorCommand, &'static str)> {
     vec![
         (BitmapEditorCommand::ChangeSeed { seed: 99 }, "change-seed"),
         (BitmapEditorCommand::ResizeInput { width: 6, height: 4 }, "resize-input"),
-        (BitmapEditorCommand::SetInputPixels { x: 0, y: 0, width: 1, height: 1, pixels: encode_base64(&[1]) }, "set-input-pixels"),
+        (BitmapEditorCommand::SetInputPixels { x: 0, y: 0, width: 1, height: 1, pixels: ([1]).to_vec() }, "set-input-pixels"),
         (BitmapEditorCommand::AddPaletteColor { index: 2, r: 1, g: 2, b: 3, a: 255 }, "add-palette-color"),
         (BitmapEditorCommand::ChangePaletteColor { index: 0, r: 9, g: 9, b: 9, a: 255 }, "change-palette-color"),
         (BitmapEditorCommand::RemovePaletteColor { index: 1 }, "remove-palette-color"),
@@ -84,7 +84,7 @@ fn every_typed_command_dispatches_to_the_mutation_it_names() {
 fn every_dispatched_mutation_either_moves_the_boot_example_or_says_why_not() {
     let base = <BitmapEditor as ArtifactEditor>::initial_snapshot();
     for (command, kind) in commands() {
-        let Some((mutation, _)) = BitmapEditor::command_mutation(&command) else { continue };
+        let Some(mutation) = BitmapEditor::command_mutation(&command) else { continue };
         let outcome = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation, &base);
         let mut snapshot = base.clone();
         crate::mutations::apply_bitmap_mutation(&mut snapshot, &mutation).unwrap_or_else(|error| panic!("'{kind}' applies to the boot example: {error}"));
@@ -103,7 +103,7 @@ fn the_dialect_is_shared_with_the_document_schema() {
 //#region 🖌️Gesture
 /// 🖌️ The brush verb the input window advertises is answered by a typed command, `Migrated` (an unclassified verb is
 /// dispatch-dead in the shell), and the window declares the brush utility it belongs to. The window config holds
-/// no stroke scratch any more: a stroke in flight is window-transient tool state.
+/// no stroke scratch: a stroke in flight lives in the window's gesture slot of the runtime.
 #[test]
 fn the_brush_verb_and_utility_are_declared_and_answered() {
     let definition = create_bitmap_editor();
@@ -115,7 +115,7 @@ fn the_brush_verb_and_utility_are_declared_and_answered() {
     for retired in ["stroke-begin", "stroke-extend", "stroke-commit"] {
         assert!(!BITMAP_TOOL_IDS.contains(&retired), "'{retired}' was replaced by the brush tool");
     }
-    let config = semio_framework_pack_json::to_json_string(&input::config::BitmapInputWindowConfig::default());
+    let config = crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&input::config::BitmapInputWindowConfig::default());
     assert!(!config.contains("stroke"), "the window config carries no stroke scratch: {config}");
 }
 
@@ -157,7 +157,7 @@ fn the_solve_command_publishes_a_real_collapse_on_the_transient_lane() {
     let BitmapTransientMutation::SetSolve(solve) = BitmapEditor::solve_transient(&snapshot).expect("the boot example's solve runs");
     assert!(!solve.contradiction, "the boot example must collapse");
     assert_eq!((solve.output_width, solve.output_height), (snapshot.output.width, snapshot.output.height));
-    let pixels = crate::schema::snapshot::decode_base64(solve.output_pixels.as_deref().expect("a solved output")).expect("the commit decodes");
+    let pixels = crate::standards::v1::subsets::any::io::text::snapshot::decode_base64(solve.output_pixels.as_deref().expect("a solved output")).expect("the commit decodes");
     assert_eq!(pixels.len(), (snapshot.output.width as usize) * (snapshot.output.height as usize));
     assert!(pixels.iter().any(|index| *index != pixels[0]), "a uniform square is not a collapse");
 }

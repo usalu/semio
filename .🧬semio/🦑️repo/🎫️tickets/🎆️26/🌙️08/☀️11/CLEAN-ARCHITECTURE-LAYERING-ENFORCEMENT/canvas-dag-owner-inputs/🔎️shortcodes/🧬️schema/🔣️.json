@@ -1,0 +1,5 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","tables","cases"],
+ "properties":{"version":{"const":1},"tables":{"type":"object","additionalProperties":false,"required":["emoji","themed","catalog"],"properties":{"emoji":{"$ref":"#/definitions/table"},"themed":{"$ref":"#/definitions/table"},"catalog":{"$ref":"#/definitions/table"}}},"cases":{"type":"array","minItems":12,"items":{"type":"object","additionalProperties":false,"required":["id","code","expected"],"properties":{"id":{"type":"string","minLength":1},"code":{"type":"string"},"expected":{"anyOf":[{"type":"null"},{"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"enum":["emoji","themed","catalog"]},"value":{"type":"string"}}}]}}}}},
+ "definitions":{"table":{"type":"object","additionalProperties":{"type":"string"}}}
+}

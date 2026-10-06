@@ -10,7 +10,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 🎞️ The recorded transcript every scenario reads.
     fn transcript(ctx: &Context) -> Result<metrics::GitTranscript, String> {
-        metrics::GitTranscript::from_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://🎞️git-transcript.json")?))
+        metrics::GitTranscript::from_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🎞️git-transcript.json")?))
     }
 
     /// 📊️ The snapshot report the last two scenarios both start from.

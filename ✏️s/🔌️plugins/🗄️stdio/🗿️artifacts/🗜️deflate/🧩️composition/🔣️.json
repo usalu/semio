@@ -69,7 +69,7 @@
     {
       "factoryId": "stdio.native.deflate.v1",
       "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📜️artifact-definition.json",
-      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
     }
   ]
 }

@@ -44,7 +44,7 @@ test("family inspection cancellation and closed contract rejection",()=>{
 test("captured portable contract agrees with independent closed JSON schema",()=>{
  const root=resolve(import.meta.dir,"../../../../../../../../../..");
  const value=JSON.parse(readFileSync(join(root,COMPUTE_OWNERSHIP_CONTRACT_PATH),"utf8"));
- const validate=new Draft7Ajv({strict:true}).compile(JSON.parse(readFileSync(join(root,COMPUTE_OWNERSHIP_CONTRACT_PATH.replace("🧫️fixtures","🧬️schema")),"utf8")));
+ const validate=new Draft7Ajv({strict:true}).compile(JSON.parse(readFileSync(join(root,COMPUTE_OWNERSHIP_CONTRACT_PATH.replace("📏️ownership/🔣️.json","🧬️schema/📍️binding-origin/🔣️.json")),"utf8")));
  expect(validate(value),JSON.stringify(validate.errors)).toBe(true);expect(readRustFamilyOwnershipContract(value)).toEqual(value);
  for(const row of [{...value,foreign:true},{...value,ownerRoot:"provider/../lib.rs"},{...value,ownerRoot:"/provider/lib.rs"}]){expect(validate(row)).toBe(false);expect(()=>readRustFamilyOwnershipContract(row)).toThrow();}
 });

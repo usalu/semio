@@ -20,6 +20,6 @@ pub fn diff(payload: &super::AddPlantLoopEquipment, base: &EnergyModelSnapshot) 
         let position = item.equipment_ids.iter().position(|entry| entry.0 > payload.equipment_id.0).unwrap_or(item.equipment_ids.len());
         item.equipment_ids.insert(position, payload.equipment_id);
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

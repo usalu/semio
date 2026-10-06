@@ -8,7 +8,8 @@
 use crate::editor::grid2d::modes::edit::tools::fill::{self, Grid2dFillPayload};
 use crate::editor::grid2d::window::Grid2dWindowConfig;
 use crate::schema::inferences::Grid2dInferenceCommit;
-use crate::schema::snapshot::{decode_palette_indices, Grid2dSnapshot, WfcColor, WfcPathSegment, WfcTile2d, WfcTileMedia2d};
+use crate::schema::snapshot::{Grid2dSnapshot, WfcColor, WfcPathSegment, WfcTile2d, WfcTileMedia2d};
+use crate::standards::v1::subsets::any::io::binary::snapshot::{decode_palette_indices};
 use semio_framework_plugin::ActionDefinition;
 use semio_framework_plugin::ActionKind;
 use semio_framework_plugin::BuiltNode;
@@ -52,6 +53,7 @@ pub fn definition() -> WindowKindDefinition {
         action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
     }
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: BODY_KEY.into(),

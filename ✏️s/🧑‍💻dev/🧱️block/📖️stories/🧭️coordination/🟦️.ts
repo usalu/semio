@@ -11,7 +11,7 @@
 // WASM *component*, not a `wasm-bindgen` module, so there is no free function to call from the browser), hence
 // this small TypeScript reader of the same text grammar. It is deliberately a READER only: it never re-emits
 // DSL, so it can never drift into a second authority for the format.
-// Grammar (as emitted by `🧬️schema/📸️snapshot/📝️text/🦀️.rs`): a `semio <dialect> v<n>` banner, top-level
+// Grammar (as emitted by `🚪️io/📝️text/📸️snapshot/🦀️.rs`): a `semio <dialect> v<n>` banner, top-level
 // `key=value` lines, `name { key=value … }` blocks, and `name [col:TYPE …] { row … }` tables whose rows are
 // whitespace-separated tokens — quoted strings, `[ … ]` groups, `_` (absent), `@x,y,z` coordinates,
 // `^x,y,z` directions and `<n>rad`/`<n>deg` angles.
@@ -536,7 +536,7 @@ export function buildBlock2dSceneNode(snapshot: Block2dSnapshot, interactive: bo
     controllerId,
     componentKind: "board-2d",
     board2d: {
-      fixtureJson: JSON.stringify(fixture),
+      snapshotJson: JSON.stringify(fixture),
       cameraJson: JSON.stringify(snapshot.camera2d),
       glyphCatalogsJson: block2dGlyphCatalogsJson(snapshot),
       selectionJson: "[]",
@@ -756,7 +756,7 @@ export function buildBlock5dBoardSceneNode(snapshot: Block5dSnapshot, interactiv
     controllerId: "block5d-story",
     componentKind: "board-2d",
     board2d: {
-      fixtureJson: JSON.stringify(fixture),
+      snapshotJson: JSON.stringify(fixture),
       cameraJson: JSON.stringify(snapshot.camera2d),
       glyphCatalogsJson: JSON.stringify({
         handleKinds: snapshot.gripKinds.map((kind) => ({ id: kind.id, name: kind.name, color: kind.color, defaultWireKind: kind.defaultRopeKind })),

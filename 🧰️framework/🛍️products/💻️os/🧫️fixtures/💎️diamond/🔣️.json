@@ -1,0 +1,175 @@
+{
+  "name": "diamond",
+  "graph": {
+    "schema": "workflow.graph",
+    "nodes": [
+      {
+        "id": "node-a",
+        "pluginId": "draw",
+        "appId": "draw",
+        "label": "node-a",
+        "yields": "2d.drawing",
+        "artifactRef": "documents/node-a",
+        "configRef": "config/node-a",
+        "x": 0,
+        "y": 0,
+        "width": 160,
+        "height": 72,
+        "inputs": [],
+        "outputs": []
+      },
+      {
+        "id": "node-b",
+        "pluginId": "draw",
+        "appId": "draw",
+        "label": "node-b",
+        "yields": "2d.drawing",
+        "artifactRef": "documents/node-b",
+        "configRef": "config/node-b",
+        "x": 200,
+        "y": 0,
+        "width": 160,
+        "height": 72,
+        "inputs": [],
+        "outputs": []
+      },
+      {
+        "id": "node-c",
+        "pluginId": "draw",
+        "appId": "draw",
+        "label": "node-c",
+        "yields": "2d.drawing",
+        "artifactRef": "documents/node-c",
+        "configRef": "config/node-c",
+        "x": 400,
+        "y": 0,
+        "width": 160,
+        "height": 72,
+        "inputs": [],
+        "outputs": []
+      },
+      {
+        "id": "node-d",
+        "pluginId": "draw",
+        "appId": "draw",
+        "label": "node-d",
+        "yields": "2d.drawing",
+        "artifactRef": "documents/node-d",
+        "configRef": "config/node-d",
+        "x": 600,
+        "y": 0,
+        "width": 160,
+        "height": 72,
+        "inputs": [],
+        "outputs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge-ab",
+        "sourceNodeId": "node-a",
+        "sourcePortId": "node-a:out",
+        "targetNodeId": "node-b",
+        "targetPortId": "node-b:in",
+        "contract": {
+          "kindId": "2d.drawing",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "wire": {
+            "kind": "document",
+            "schema": "2d.drawing"
+          }
+        }
+      },
+      {
+        "id": "edge-ac",
+        "sourceNodeId": "node-a",
+        "sourcePortId": "node-a:out",
+        "targetNodeId": "node-c",
+        "targetPortId": "node-c:in",
+        "contract": {
+          "kindId": "2d.drawing",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "wire": {
+            "kind": "document",
+            "schema": "2d.drawing"
+          }
+        }
+      },
+      {
+        "id": "edge-bd",
+        "sourceNodeId": "node-b",
+        "sourcePortId": "node-b:out",
+        "targetNodeId": "node-d",
+        "targetPortId": "node-d:in",
+        "contract": {
+          "kindId": "2d.drawing",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "wire": {
+            "kind": "document",
+            "schema": "2d.drawing"
+          }
+        }
+      },
+      {
+        "id": "edge-cd",
+        "sourceNodeId": "node-c",
+        "sourcePortId": "node-c:out",
+        "targetNodeId": "node-d",
+        "targetPortId": "node-d:in",
+        "contract": {
+          "kindId": "2d.drawing",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "wire": {
+            "kind": "document",
+            "schema": "2d.drawing"
+          }
+        }
+      }
+    ]
+  },
+  "dirtyNodeIds": [
+    "node-a"
+  ],
+  "expectedDeliveries": [
+    {
+      "edgeId": "edge-ab",
+      "producerNodeId": "node-a",
+      "producerPortId": "node-a:out",
+      "consumerNodeId": "node-b",
+      "consumerPortId": "node-b:in"
+    },
+    {
+      "edgeId": "edge-ac",
+      "producerNodeId": "node-a",
+      "producerPortId": "node-a:out",
+      "consumerNodeId": "node-c",
+      "consumerPortId": "node-c:in"
+    },
+    {
+      "edgeId": "edge-cd",
+      "producerNodeId": "node-c",
+      "producerPortId": "node-c:out",
+      "consumerNodeId": "node-d",
+      "consumerPortId": "node-d:in"
+    },
+    {
+      "edgeId": "edge-bd",
+      "producerNodeId": "node-b",
+      "producerPortId": "node-b:out",
+      "consumerNodeId": "node-d",
+      "consumerPortId": "node-d:in"
+    }
+  ]
+}

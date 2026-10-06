@@ -1,0 +1,114 @@
+{
+  "cases": [
+    {
+      "id": "json-syntax",
+      "kind": "json",
+      "message": "syntax failure",
+      "expected": {
+        "kind": "json",
+        "display": "json: syntax failure",
+        "cause": "syntax failure"
+      }
+    },
+    {
+      "id": "pack-refusal",
+      "kind": "pack",
+      "message": "refused field",
+      "expected": {
+        "kind": "pack",
+        "display": "pack: refused field",
+        "cause": "refused field"
+      }
+    },
+    {
+      "id": "json-empty",
+      "kind": "json",
+      "message": "",
+      "expected": {
+        "kind": "json",
+        "display": "json: ",
+        "cause": ""
+      }
+    },
+    {
+      "id": "pack-empty",
+      "kind": "pack",
+      "message": "",
+      "expected": {
+        "kind": "pack",
+        "display": "pack: ",
+        "cause": ""
+      }
+    },
+    {
+      "id": "json-unicode",
+      "kind": "json",
+      "message": "ungültig 🧬️",
+      "expected": {
+        "kind": "json",
+        "display": "json: ungültig 🧬️",
+        "cause": "ungültig 🧬️"
+      }
+    },
+    {
+      "id": "pack-unicode",
+      "kind": "pack",
+      "message": "kaputt 📦️",
+      "expected": {
+        "kind": "pack",
+        "display": "pack: kaputt 📦️",
+        "cause": "kaputt 📦️"
+      }
+    },
+    {
+      "id": "json-multiline",
+      "kind": "json",
+      "message": "first\nsecond",
+      "expected": {
+        "kind": "json",
+        "display": "json: first\nsecond",
+        "cause": "first\nsecond"
+      }
+    },
+    {
+      "id": "pack-colon",
+      "kind": "pack",
+      "message": "body: field",
+      "expected": {
+        "kind": "pack",
+        "display": "pack: body: field",
+        "cause": "body: field"
+      }
+    },
+    {
+      "id": "scene-refusal",
+      "kind": "scene",
+      "message": "invalid typed adornment",
+      "expected": {
+        "kind": "scene",
+        "display": "scene: invalid typed adornment",
+        "cause": "invalid typed adornment"
+      }
+    },
+    {
+      "id": "scene-empty",
+      "kind": "scene",
+      "message": "",
+      "expected": {
+        "kind": "scene",
+        "display": "scene: ",
+        "cause": ""
+      }
+    },
+    {
+      "id": "scene-unicode",
+      "kind": "scene",
+      "message": "ungültig 🎬️",
+      "expected": {
+        "kind": "scene",
+        "display": "scene: ungültig 🎬️",
+        "cause": "ungültig 🎬️"
+      }
+    }
+  ]
+}

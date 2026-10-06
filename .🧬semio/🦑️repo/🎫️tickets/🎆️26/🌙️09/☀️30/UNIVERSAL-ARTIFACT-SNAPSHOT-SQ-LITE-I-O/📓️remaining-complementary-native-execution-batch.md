@@ -1,0 +1,56 @@
+# Remaining Complementary Native Execution Batch
+
+Bounded filename-index-first reconciliation; no gates run. Each row keeps actual source/package/selected registered target and up to two package/project-identified receipts in the closed input `📥️inputs/remaining-complementary-native-execution-batch.json`. Historical green is not current-source or full public-owner proof; no denominator asserted. Root eight and Physical Flow/HubSpace/Writer/Curation/Chart are excluded.
+
+|Owner|Retained actual receipt frontier|Registered selected target|
+|---|---|---|
+|Wfc2dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/wfc-2d-rs:test-snapshot-sqlite-native|
+|Grid2dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native|
+|BitmapSnapshot|wfc-bitmap-controlled-native-first.log: Summary [   1.178s] 8 tests run: 8 passed, 179 skipped; wfc-bitmap-controlled-native-red.log: Summary [   0.160s] 7/8 tests run: 4 passed, 3 failed, 179 skipped|@semio-tech/wfc-bitmap-rs:test-snapshot-sqlite-native|
+|Wfc3dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/wfc-3d-rs:test-snapshot-sqlite-native|
+|Generation2dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native|
+|Generation3dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native|
+|GisTerrainSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/gis-gisterrain-rs:test-snapshot-sqlite-native|
+|GisMapSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/gis-gismap-rs:test-snapshot-sqlite-native|
+|VcsSnapshot|vcs-native-capability-red.log: Summary [   0.017s] 2 tests run: 1 passed, 1 failed, 129 skipped|@semio-tech/vcs-vcs-rs:test-snapshot-sqlite-native|
+|PresentationSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/animate-presentation-rs:test-snapshot-sqlite-native|
+|PlaygroundSnapshot|root-playground-owning-whole-native-current.log: @semio-tech/demonstrator-playground-rs:      Summary [   0.069s] 28/53 tests run: 26 passed, 2 failed, 0 skipped; root-playground-native-mounted-controls-current.log: @semio-tech/demonstrator-playground-rs:      Summary [   0.592s] 8 tests run: 6 passed, 2 failed, 45 skipped|@semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native|
+|SequenceSnapshot|sequence-native-after-space.log: Summary [   0.750s] 11 tests run: 10 passed, 1 failed, 209 skipped; sequence-native-step-prerequisite-fixed.log: Summary [   0.267s] 3 tests run: 1 passed, 2 failed, 209 skipped|@semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native|
+|Fem2dSnapshot|fem2d-flow-native-controlled-first-repair.log: @semio-tech/fem-2d-rs:      Summary [   0.828s] 8 tests run: 8 passed, 1055 skipped|@semio-tech/fem-2d-rs:test-snapshot-sqlite-native|
+|Fem3dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/fem-3d-rs:test-snapshot-sqlite-native|
+|ProgramSnapshot|root-wav-architect-remodeling-whole-native.log: @semio-tech/architect-program-rs:      Summary [  48.331s] 25/2118 tests run: 20 passed, 5 failed, 0 skipped; root-architect-remodel-wav-ieee-current-value-imports-native.log: @semio-tech/architect-program-rs:      Summary [  13.615s] 22 tests run: 21 passed, 1 failed, 2096 skipped|@semio-tech/architect-program-rs:test-snapshot-sqlite-native|
+|Process3dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/process-process3d-rs:test-snapshot-sqlite-native|
+|LowpolySnapshot|root-lowpoly-managed-mesh-six-native-before.log: Summary [   2.071s] 6 tests run: 5 passed, 1 failed, 369 skipped; lowpoly-native-six-table-provider-first-mounted.log: @semio-tech/lowpoly-lowpoly-rs:      Summary [   1.502s] 5 tests run: 5 passed, 367 skipped|@semio-tech/lowpoly-lowpoly-rs:test-snapshot-sqlite-native|
+|WiresSnapshot|wires-native-literal-child-grammar-repaired.log: @semio-tech/reasoning-wires-rs:      Summary [   7.141s] 11 tests run: 11 passed, 201 skipped; wires-native-flat-controlled-output-bound.log: @semio-tech/reasoning-wires-rs:      Summary [   4.417s] 11 tests run: 10 passed, 1 failed, 201 skipped|@semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native|
+|FormsSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/forms-forms-rs:test-snapshot-sqlite-native|
+|LayoutSnapshot|root-layout-nine-pdf14-current-full-owned-native-baselines.log: Summary [   1.185s] 9 tests run: 8 passed, 1 failed, 597 skipped; root-cad-layout-rewriting-current-owning-native-baselines-after-canonical-prerequisites.log: Summary [   0.738s] 9 tests run: 8 passed, 1 failed, 597 skipped|@semio-tech/layout-layout-rs:test-snapshot-sqlite-native|
+|CadSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/cad-cad-rs:test-snapshot-sqlite-native|
+|En1990Snapshot|norm-en1990-paired-native-quick-retry-current.log: Summary [   0.513s] 9 tests run: 9 passed, 151 skipped|@semio-tech/norm-en1990-rs:test-snapshot-sqlite-native|
+|Din18599Snapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/norm-din18599-rs:test-snapshot-sqlite-native|
+|Din16798Snapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/norm-din16798-rs:test-snapshot-sqlite-native|
+|En1991Snapshot|norm-en1991-paired-native-retry-current.log: Summary [   3.304s] 9 tests run: 8 passed, 1 failed, 160 skipped|@semio-tech/norm-en1991-rs:test-snapshot-sqlite-native|
+|En1992Snapshot|en1992-controlled-native-output-first-implementation.log: Summary [   1.004s] 12 tests run: 9 passed, 3 failed, 217 skipped; en1992-controlled-native-output-first-red.log: Summary [   1.632s] 12 tests run: 9 passed, 3 failed, 217 skipped|@semio-tech/norm-en1992-rs:test-snapshot-sqlite-native|
+|Vdi3805Snapshot|norm-vdi3805-controlled-width-native-current-errors-fixed.log: Summary [   0.531s] 13/14 tests run: 11 passed, 2 failed, 227 skipped; norm-vdi3805-quoted-key-native-compile-fixed.log: Summary [   0.602s] 12 tests run: 11 passed, 1 failed, 227 skipped|@semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native|
+|Iso16757Snapshot|iso16757-controlled-native-output-first-red.log: Summary [   0.706s] 16 tests run: 12 passed, 4 failed, 243 skipped; iso16757-controlled-native-admission-final.log: Summary [   3.357s] 15 tests run: 15 passed, 243 skipped|@semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native|
+|En1993Snapshot|en1993-controlled-native-output-first-red.log: Summary [   1.331s] 11 tests run: 8 passed, 3 failed, 353 skipped|@semio-tech/norm-en1993-rs:test-snapshot-sqlite-native|
+|En1994Snapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/norm-en1994-rs:test-snapshot-sqlite-native|
+|Din4108Snapshot|norm-din4108-paired-native-current.log: Summary [   0.271s] 9 tests run: 9 passed, 158 skipped|@semio-tech/norm-din4108-rs:test-snapshot-sqlite-native|
+|En1996Snapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/norm-en1996-rs:test-snapshot-sqlite-native|
+|En1995Snapshot|norm-en1995-paired-native-current.log: Summary [   0.029s] 9 tests run: 1 passed, 8 failed, 376 skipped|@semio-tech/norm-en1995-rs:test-snapshot-sqlite-native|
+|En1999Snapshot|en1999-controlled-native-output-first-red.log: Summary [   0.857s] 13 tests run: 10 passed, 3 failed, 152 skipped|@semio-tech/norm-en1999-rs:test-snapshot-sqlite-native|
+|En1998Snapshot|norm-en1998-controlled-native-current-errors-fixed.log: Summary [   0.526s] 10 tests run: 10 passed, 222 skipped; norm-en1998-controlled-native-first-red.log: Summary [   0.588s] 10 tests run: 9 passed, 1 failed, 222 skipped|@semio-tech/norm-en1998-rs:test-snapshot-sqlite-native|
+|PlaybookSnapshot|root-procedure-puzzle5d-playbook-current-native-baseline.log: Summary [   0.123s] 11 tests run: 6 passed, 5 failed, 168 skipped; root-puzzle5d-procedure-playbook-controlled-native-baseline.log: @semio-tech/playbook-playbook-rs:      Summary [   0.050s] 8 tests run: 6 passed, 2 failed, 168 skipped|@semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native|
+|ProcedureSnapshot|root-procedure-puzzle5d-playbook-current-native-baseline.log: Summary [   0.119s] 14 tests run: 10 passed, 4 failed, 153 skipped; root-procedure-neural-construction-native-output-baseline.log: Summary [   0.478s] 11 tests run: 9 passed, 2 failed, 153 skipped|@semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native|
+|RemodelingSnapshot|root-wav-architect-remodeling-whole-native.log: @semio-tech/remodel-remodeling-rs:      Summary [   0.060s] 10/1326 tests run: 5 passed, 5 failed, 17 skipped; root-wav-remodeling-puzzle5d-native-owned.log: @semio-tech/remodel-remodeling-rs:      Summary [   1.553s] 16 tests run: 16 passed, 1327 skipped|@semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native|
+|EnergyModelSnapshot|energy-model-thirteen-native-nine-source-final.log: Summary [   4.311s] 13 tests run: 13 passed, 6309 skipped|@semio-tech/energy-model-rs:test-snapshot-sqlite-native|
+|RewritingSnapshot|root-cad-layout-rewriting-current-owning-native-baselines-after-canonical-prerequisites.log: Summary [   0.212s] 12 tests run: 9 passed, 3 failed, 228 skipped; root-rewriting-twelve-current-editor-canonical-pair-native-replay.log: Summary [   0.144s] 12 tests run: 5 passed, 7 failed, 228 skipped|@semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native|
+|JackSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/trinity-jack-rs:test-snapshot-sqlite-native|
+|DagSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/dag-dag-rs:test-snapshot-sqlite-native|
+|DrawingSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/draw-drawing-rs:test-snapshot-sqlite-native|
+|Puzzle2dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/puzzle-2d-rs:test-snapshot-sqlite-native|
+|Puzzle3dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native|
+|Block2dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/block-2d-rs:test-snapshot-sqlite-native|
+|Block5dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/block-5d-rs:test-snapshot-sqlite-native|
+|Block3dSnapshot|No unambiguous completed receipt in bounded filename frontier|@semio-tech/block-3d-rs:test-snapshot-sqlite-native|
+
+Execution handoff: first resolve no-receipt concrete authorities Generation3d, GIS Terrain/Map, Process3d, Jack and any table row without an unambiguous receipt. Replay retained failing package selections before claiming repair. Positive public DEBUG is separately retained when captured; green summaries without captured named public laws do not establish semantic-public coverage. Use selected package scripts unchanged, then genuine project test whole target after checking project.json; avoid mixing package prefixes in multi-owner logs. Definitions-only classification and exact coordinates stay unchanged.

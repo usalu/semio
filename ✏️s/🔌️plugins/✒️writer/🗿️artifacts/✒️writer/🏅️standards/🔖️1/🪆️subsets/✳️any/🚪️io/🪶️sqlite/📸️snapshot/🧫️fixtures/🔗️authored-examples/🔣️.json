@@ -1,0 +1,46 @@
+{
+  "examples": [
+    {
+      "asset": "🖼️assets/🎬️demo/🗣️.dsl.semio",
+      "snapshot": {
+        "schema": "writer.document",
+        "id": "jack",
+        "languageId": "jack",
+        "uri": "writer://jack",
+        "text": "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name",
+        "document": {
+          "childId": "document-1ce1990e85292c68",
+          "target": {
+            "artifactId": "document-1ce1990e85292c68",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "document"
+            }
+          }
+        }
+      }
+    },
+    {
+      "asset": "📚️examples/🎬️demo/🖼️assets/🧪️dag-example/🗣️.dsl.semio",
+      "snapshot": {
+        "schema": "writer.document",
+        "id": "dag-jack",
+        "languageId": "jack",
+        "uri": "writer://dag-jack",
+        "text": "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a, b",
+        "document": {
+          "childId": "document-21ed2f21032d3ec2",
+          "target": {
+            "artifactId": "document-21ed2f21032d3ec2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "document"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

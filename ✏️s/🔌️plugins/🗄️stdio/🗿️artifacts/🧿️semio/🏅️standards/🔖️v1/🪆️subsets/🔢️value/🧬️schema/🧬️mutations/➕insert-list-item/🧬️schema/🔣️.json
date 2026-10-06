@@ -19,14 +19,54 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/SemioValuePathSegment"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Path",
+          "de": "Pfad"
+        },
+        "description": {
+          "en": "Map keys and list indices leading from the root to the list; empty for the root.",
+          "de": "Zuordnungsschlüssel und Listenindizes von der Wurzel bis zur Liste; leer für die Wurzel."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the items of the list at which it is inserted, counted from 0.",
+          "de": "Position unter den Elementen der Liste, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "value": {
-      "$ref": "#/$defs/SemioValue"
+      "$ref": "#/$defs/SemioValue",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "The typed value written: null, boolean, integer, number, text, bytes, list, map or reference.",
+          "de": "Der geschriebene typisierte Wert: null, Wahrheitswert, Ganzzahl, Zahl, Text, Bytes, Liste, Zuordnung oder Referenz."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

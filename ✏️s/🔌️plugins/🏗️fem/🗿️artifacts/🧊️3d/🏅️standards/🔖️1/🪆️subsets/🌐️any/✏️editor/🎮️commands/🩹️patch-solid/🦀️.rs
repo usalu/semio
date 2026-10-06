@@ -2,7 +2,7 @@
 //! `layers`, `meshSize`, `materialId`, `axis`) → `ReplaceSolid`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_solid;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::FemAxis;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

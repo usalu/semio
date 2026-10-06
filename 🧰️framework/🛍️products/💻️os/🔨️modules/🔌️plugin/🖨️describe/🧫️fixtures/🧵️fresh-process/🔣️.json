@@ -1,5 +1,4 @@
 {
-  "schema": "semio.plugin.fresh-process-laws/v1",
   "maxOutputBytes": 67108864,
   "diagnosticChars": 6000,
   "cases": [

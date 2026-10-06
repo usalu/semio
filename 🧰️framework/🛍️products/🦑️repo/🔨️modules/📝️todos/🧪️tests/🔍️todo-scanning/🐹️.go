@@ -27,7 +27,7 @@ type scanTreeVectors struct {
 }
 
 func loadScanTree(ctx *host.Context) (scanTreeVectors, error) {
-	data, err := ctx.FixtureBytes("shared://🔍️scan-tree.json")
+	data, err := ctx.InputBytes("shared://🔍️scan-tree.json")
 	if err != nil {
 		return scanTreeVectors{}, err
 	}

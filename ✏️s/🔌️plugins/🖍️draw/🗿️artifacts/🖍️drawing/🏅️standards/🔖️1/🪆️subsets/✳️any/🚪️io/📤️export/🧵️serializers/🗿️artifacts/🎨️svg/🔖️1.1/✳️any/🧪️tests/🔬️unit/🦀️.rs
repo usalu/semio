@@ -1,5 +1,6 @@
 use super::*;
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{parse_svg_xml, svg_document_to_typed};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{svg_document_to_typed};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_svg_xml};
 
 #[test]
 fn svg_scene_fixture_preserves_paint_geometry_and_text() {

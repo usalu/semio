@@ -10,35 +10,11 @@
 //! never hand-written.
 
 use crate::{LowpolyDiff, LowpolySnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Shared
-/// 🩸 A contiguous run of RGBA bytes written into a paint-layer buffer at `offset` —
-/// `edit-paint-layer`'s payload field; its inverse holds the bytes overwritten (read from base).
-/// Kept here (not re-derived per triad) because `✏️editor/🖌️session/🦀️.rs`
-/// (plugin-shared, out of this facet's boundary) constructs values of this exact type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct PixelRun {
-    pub offset: u32,
-    #[serde(with = "run_bytes_base64")]
-    #[value(with = "crate::bytes_base64")]
-    pub bytes: Vec<u8>,
-}
 
-mod run_bytes_base64 {
-    use serde::{Deserialize, Deserializer, Serializer};
 
-    pub fn serialize<S: Serializer>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&base64_codec::base64_standard_encode(bytes))
-    }
 
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
-        let encoded = String::deserialize(deserializer)?;
-        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
-    }
-}
 //#endregion 🔖️Shared
 
 //#region 🧲️SelectionMotion
@@ -166,12 +142,11 @@ pub mod laws {
     use crate::{LowpolyDiff, LowpolyMutation, LowpolySnapshot};
 
     fn from_json<T: semio_framework_value::FromValue>(text: &str) -> T {
-        let parsed: serde_json::Value = serde_json::from_str(text).expect("fixture json parses");
-        semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(parsed)).expect("fixture json decodes")
+        crate::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).expect("fixture json decodes")
     }
 
     fn to_json<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
-        semio_framework_value::ToValue::to_value(value).into()
+        serde_json::from_str(&crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(value)).expect("physical fixture JSON")
     }
 
     fn produced(mutation: &LowpolyMutation, before: &LowpolySnapshot) -> Vec<(String, String)> {
@@ -301,3 +276,5 @@ pub const KINDS: &[&str] = &[
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+use crate::schema::PixelRun;

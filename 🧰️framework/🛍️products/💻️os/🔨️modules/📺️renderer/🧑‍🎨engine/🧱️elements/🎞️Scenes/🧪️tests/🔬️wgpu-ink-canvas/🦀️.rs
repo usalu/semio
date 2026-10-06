@@ -173,7 +173,7 @@ fn ink_canvas_domain_marquee_uses_scoped_topology_ids() {
 }
 
 #[test]
-fn shared_clipboard_fixture_copies_order_and_publishes_text_svg_and_recursive_blocks() {
+fn shared_clipboard_snapshot_copies_order_and_publishes_text_svg_and_recursive_blocks() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-clipboard/🔣️.json")).expect("shared clipboard fixture");
     let scene = clipboard_scene(&fixture, &fixture["copy"]["selectedIds"]);
     let copied = ink_clipboard_copy_text(&scene).expect("bounded copy").expect("selected copy");

@@ -441,6 +441,29 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
     assert!(runtime.close_quarantine.borrow().get(7).is_none());
 }
 
+/// 🧲️ `MergeDocumentArchive` reaches its handler on the encoded and on the decoded route (design §22.22): the program admits
+/// the read-back under the command's own sequence and answers `Done`, never an error frame and never a decode fault. What
+/// the merge then does is the folder route law's (`🧪️tests/🧪️folder-reload-route`); closing the program cancels what it admitted.
+#[semio_framework_async_macros::async_test]
+async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_routes() {
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
+    runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
+    let merge = |seq| protocol::AppCommand::MergeDocumentArchive { seq, archive: protocol::DocumentArchivePack { parent_pack: vec![1, 2], parent_spr: vec![3], members: Vec::new() } };
+    for (seq, frames) in [(0, wire_command(&runtime, 0, merge(0)).await), (1, cold_decoded_command(&runtime, 1, merge(1)).await)] {
+        assert!(frames.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == seq)), "the merge is admitted under its own sequence: {frames:?}");
+        assert!(!frames.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "an admitted merge answers no error frame: {frames:?}");
+    }
+    drop(cell);
+    crate::plugin_runtime::plugin_destroy_app(&runtime, 7).await.unwrap();
+    for _ in 0..200_000 {
+        crate::plugin_runtime::plugin_step_close_cleanup(&runtime).unwrap();
+        if runtime.close_quarantine.borrow().get(7).is_none() { break; }
+        std::thread::yield_now();
+    }
+    assert!(runtime.close_quarantine.borrow().get(7).is_none());
+}
+
 async fn query_app() -> VcsArtifactApp<TestApp> {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap();
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
@@ -518,5 +541,42 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
         std::thread::yield_now();
     }
     assert!(runtime.close_quarantine.borrow().get(7).is_none());
+}
+
+/// 🔡️ A typed value whose declaration order is not its key-byte order, at two depths.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::FromValue, semio_framework_value::ToValue)]
+#[value(rename_all = "camelCase")]
+struct DeclaredOrderWitness {
+    cursor: u64,
+    can_undo: bool,
+    inner: Vec<DeclaredOrderInner>,
+}
+
+/// 🪜️ The nested half of [`DeclaredOrderWitness`].
+#[derive(Clone, Debug, PartialEq, semio_framework_value::FromValue, semio_framework_value::ToValue)]
+#[value(rename_all = "camelCase")]
+struct DeclaredOrderInner {
+    zulu: u32,
+    alpha: u32,
+}
+
+/// 🔡️ LAW (live fault F9 class, build B1): every typed value the program sends leaves with its object members in key-byte order
+/// at every depth — the order a host reader that re-encodes what it decoded reproduces — whatever order its type declares.
+#[test]
+fn typed_wire_values_leave_in_key_byte_order_whatever_their_types_declare() {
+    fn ordered(value: &semio_framework_value::DslValue) -> bool {
+        use semio_framework_value::DslValue;
+        match value {
+            DslValue::Array(items) => items.iter().all(ordered),
+            DslValue::Object(members) => members.windows(2).all(|pair| pair[0].0.as_bytes() < pair[1].0.as_bytes()) && members.iter().all(|(_, member)| ordered(member)),
+            _ => true,
+        }
+    }
+    let witness = DeclaredOrderWitness { cursor: 7, can_undo: true, inner: vec![DeclaredOrderInner { zulu: 1, alpha: 2 }] };
+    assert!(!ordered(&semio_framework_value::ToValue::to_value(&witness)), "the witness declares `cursor` before `canUndo`: its own order is not the wire order");
+    let sent = super::super::encode_wire_serialized(&witness);
+    let read = semio_framework_os_kernel::pack_rt::decode_wire_value(&sent).expect("the sent value decodes");
+    assert!(ordered(&read), "members leave in key-byte order at every depth: {read:?}");
+    assert_eq!(<DeclaredOrderWitness as semio_framework_value::FromValue>::from_value(read).expect("the witness reads back"), witness);
 }
 //#endregion 📡️RegisteredQueryDispatch

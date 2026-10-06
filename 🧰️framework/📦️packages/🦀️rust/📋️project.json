@@ -2,6 +2,34 @@
   "name": "@semio-tech/framework-rs",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "test-source-projection": {
+     "executor": "nx:run-commands",
+     "cache": false,
+     "options": {
+       "cwd": "🧰️framework/📦️packages/🦀️rust",
+       "command": "bun ./📜️script.ts test-source-projection",
+       "forwardAllArgs": true
+     },
+     "inputs": [
+       "default",
+       "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/📷️snapshot/**/*",
+       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+     ]
+   },
+    "test-directory-discovery": {
+     "executor": "nx:run-commands",
+     "cache": false,
+     "options": {
+       "cwd": "🧰️framework/📦️packages/🦀️rust",
+       "command": "bun ./📜️script.ts test-directory-discovery",
+       "forwardAllArgs": true
+     },
+     "inputs": [
+       "default",
+       "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🔎️discovery/**/*",
+       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+     ]
+   },
     "test-action-choices": {
       "executor": "nx:run-commands",
       "options": {

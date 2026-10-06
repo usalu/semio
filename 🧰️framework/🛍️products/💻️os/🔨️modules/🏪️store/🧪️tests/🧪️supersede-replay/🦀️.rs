@@ -9,7 +9,7 @@ async fn demo_store(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, Dem
 }
 
 async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, mutations: Vec<DemoMutation>) {
-    store.dispatch(ArtifactCommand::Apply { mutations, description: None, transaction: None }).await.expect("a clean edit applies");
+    store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }).await.expect("a clean edit applies");
 }
 
 fn set(n: i32) -> DemoMutation {
@@ -217,7 +217,7 @@ async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
 async fn downstream_warning_error_and_fatal_outcomes_are_reported_per_mutation() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "severity", DemoSnapshot { n: Some(0) }, None)).await;
     for operation in [SeverityMutation::SetN(SeveritySetN { n: 1 }), SeverityMutation::SetN(SeveritySetN { n: 2 }), SeverityMutation::SetN(SeveritySetN { n: 3 })] {
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None, transaction: None }).await.expect("clean severity edit");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("clean severity edit");
     }
     let ids: Vec<MutationId> = store.mutation_ops().unwrap().into_iter().map(|operation| operation.mutation_id).collect();
     let severity_draft = |operation: SeverityMutation| protocol::InputReplacement::Input { schema: "demo/v1".into(), payload: operation.encode_op().unwrap() };
@@ -500,7 +500,7 @@ async fn prefix_ring_evictions_retire_through_the_snapshot_factory() {
 async fn operations_carry_semantic_kind_label_and_transaction_everywhere() {
     let transaction = protocol::TransactionRef::mint(&ActorId("author".into()), &HybridLogicalTimestamp::new(1, 1), "demo#drag");
     let mut store = demo_store("metadata", Some(0)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![set(3), add(1)], description: None, transaction: Some(transaction.clone()) }).await.expect("apply in a transaction");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![set(3), add(1)], transaction: Some(transaction.clone()) }).await.expect("apply in a transaction");
     let expect = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| {
         let operations = store.mutation_ops().expect("operations");
         assert_eq!(operations.len(), 2);
@@ -532,8 +532,8 @@ async fn supersede_commands_round_trip_every_codec() {
         ArtifactCommand::Supersede { scope: Some("alternative-1".into()), inputs: vec![input(&MutationId("m-1".into()), Some(set(3))), input(&MutationId("m-2".into()), None)] },
         ArtifactCommand::Supersede { scope: None, inputs: vec![input(&MutationId("m-3".into()), None)] },
         ArtifactCommand::CreateAlternativeWithSupersede { name: "variant".into(), inputs: vec![input(&MutationId("m-1".into()), Some(add(2)))] },
-        ArtifactCommand::Apply { mutations: vec![set(1)], description: Some("drag".into()), transaction: Some(transaction.clone()) },
-        ArtifactCommand::ApplyInLane { mutations: vec![add(1)], description: None, lane: HistoryLane::Interaction, transaction: Some(transaction) },
+        ArtifactCommand::Apply { mutations: vec![set(1)], transaction: Some(transaction.clone()) },
+        ArtifactCommand::ApplyInLane { mutations: vec![add(1)], lane: HistoryLane::Interaction, transaction: Some(transaction) },
     ];
     for command in commands {
         let text = print_command(&command).await.expect("prints");
@@ -1081,7 +1081,7 @@ async fn a_refused_command_decode_retires_every_operation_it_decoded() {
         bytes
     };
     let decode = |bytes: &[u8]| ArtifactCommand::<WitnessOp>::decode_command::<DemoSnapshot>(bytes);
-    let apply = |mutations: Vec<DemoMutation>| ArtifactCommand::Apply { mutations, description: None, transaction: None };
+    let apply = |mutations: Vec<DemoMutation>| ArtifactCommand::Apply { mutations, transaction: None };
     let start = WitnessOp::tally();
     let cases: Vec<(Vec<u8>, usize, Option<usize>)> = vec![
         (garbled(apply(vec![set(1), add(2), set(3)]), set(3)), 2, Some(2)),

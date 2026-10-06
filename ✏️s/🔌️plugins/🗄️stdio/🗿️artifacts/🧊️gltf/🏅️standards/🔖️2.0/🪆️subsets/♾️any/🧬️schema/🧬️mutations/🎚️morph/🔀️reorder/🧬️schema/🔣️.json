@@ -24,6 +24,7 @@
           "en": "Index of the mesh, counted from 0.",
           "de": "Index des Netzes, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -42,6 +43,7 @@
           "en": "Index of the primitive within the mesh, counted from 0.",
           "de": "Index des Primitivs im Netz, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 20
@@ -60,6 +62,7 @@
           "en": "Index of the morph target within the primitive, counted from 0.",
           "de": "Index des Morph-Ziels im Primitiv, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 30

@@ -16,7 +16,7 @@ pub mod derived_composition {
     #[cfg(feature = "conversion-cad")]
     use crate::standards::v1::subsets::cad::io::import::deserializers::artifacts::step::v_ap214::any::SemioCadFromStep;
     use crate::standards::v1::subsets::cad::schema::snapshot::{CadEntity, SemioCadSnapshot};
-    use crate::standards::v1::subsets::cad::schema::SemioCadAnalyzer;
+    use crate::standards::v1::subsets::cad::io::SemioCadAnalyzer;
     #[cfg(feature = "conversion-cad")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -185,3 +185,128 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::v1::subsets::cad::schema::diff::SemioCadDiff;
+    use crate::standards::v1::subsets::cad::schema::mutations::{apply_semio_cad_mutation, SemioCadMutation};
+    use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioCadBuilderConstruction {
+        snapshot: SemioCadSnapshot,
+    }
+
+    impl ArtifactBuilder for SemioCadBuilderConstruction {
+        type Snapshot = SemioCadSnapshot;
+        type Mutation = SemioCadMutation;
+        type Diff = SemioCadDiff;
+        fn empty() -> Self {
+            Self { snapshot: SemioCadSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = apply_semio_cad_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioCadDiff as protocol::MutationDiff<SemioCadSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            Ok(self.snapshot)
+        }
+    }
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioCadParts {
+        pub snapshot: Option<SemioCadSnapshot>,
+    }
+
+    pub struct SemioCadAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SemioCadAnalyzerAnalysis {
+        type Parts = SemioCadParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("cad") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    let marker = STDIO_SEMIOCAD_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    if text.contains(STDIO_SEMIOCAD_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SemioCadParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SemioCadSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SemioCadBuilderFacets {
+        construction: SemioCadBuilderConstruction,
+        analysis: SemioCadAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::cad::io::derived_composition::SemioCadComposerComposition,
+    }
+    builder: SemioCadBuilder,
+    analyzer: SemioCadAnalyzer,
+    composer: SemioCadComposer,
+);

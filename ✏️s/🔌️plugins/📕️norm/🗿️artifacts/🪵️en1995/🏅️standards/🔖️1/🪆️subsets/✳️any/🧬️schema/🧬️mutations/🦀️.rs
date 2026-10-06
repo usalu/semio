@@ -474,14 +474,8 @@ impl En1995Mutation {
 //#endregion 🔖️FromSnapshot
 
 //#region 🌉️ExternalCodecBridge
-/// 🌉️ Decodes one mutation from the production JSON codec (the committed `🦠️mutation` vectors).
-pub fn decode_en1995_mutation_json(text: &str) -> Result<En1995Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
-/// 🌉️ Encodes one mutation through the production JSON codec.
-pub fn encode_en1995_mutation_json(mutation: &En1995Mutation) -> String {
-    semio_framework_pack_json::to_json_string(mutation)
-}
+
+
 /// 🧮️ Applies `mutation` to `base`, returning the next snapshot and every diagnostic the mutation raised.
 pub fn apply_en1995_mutation(base: &En1995Snapshot, mutation: &En1995Mutation) -> Result<(En1995Snapshot, Vec<String>), String> {
     let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(mutation, base);

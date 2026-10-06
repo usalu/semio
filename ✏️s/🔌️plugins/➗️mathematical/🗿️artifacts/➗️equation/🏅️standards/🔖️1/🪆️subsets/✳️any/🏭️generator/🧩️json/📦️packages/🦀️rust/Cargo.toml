@@ -6,6 +6,12 @@
 # independently writes and reads the complete `{graph, geometry, equation}` foreign carrier without
 # linking production code.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "equation-1-any-json-engine"

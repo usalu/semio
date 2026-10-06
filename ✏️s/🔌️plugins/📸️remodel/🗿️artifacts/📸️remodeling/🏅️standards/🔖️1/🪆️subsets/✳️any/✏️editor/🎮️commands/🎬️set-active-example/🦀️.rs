@@ -13,7 +13,7 @@ use crate::mutations::{
     create_asset, create_camera_calibration, create_gcp, create_stream, delete_camera_calibration, delete_gcp, delete_stream, update_dense_params, update_feature_params, update_geo_params, update_ingest_params, update_match_params,
     update_mesh_params, update_motion_params, update_sfm_params,
 };
-use crate::op::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use crate::{ImageAsset, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -33,7 +33,7 @@ pub struct SetActiveExample {
 /// affordance, not a destructive verb.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let Some(text) = example_text(&payload.example_id) else { return Ok(Emit::default()) };
-    let Ok(next) = crate::snapshot::text::parse_dsl(text) else { return Ok(Emit::default()) };
+    let Ok(next) = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text) else { return Ok(Emit::default()) };
     let mut mutations = example_media_operations(&payload.example_id, doc.snapshot);
     mutations.extend(replace_document_operations(doc.snapshot, &next));
     match mutations.is_empty() {

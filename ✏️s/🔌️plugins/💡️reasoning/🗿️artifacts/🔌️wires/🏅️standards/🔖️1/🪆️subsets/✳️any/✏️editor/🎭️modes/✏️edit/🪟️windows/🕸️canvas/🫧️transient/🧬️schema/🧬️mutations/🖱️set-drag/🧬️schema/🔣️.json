@@ -97,7 +97,31 @@
     },
     "zoom": {
       "type": "number",
-      "exclusiveMinimum": 0
+      "exclusiveMinimum": 0,
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Zoom",
+          "de": "Zoom"
+        },
+        "description": {
+          "en": "Zoom factor of the view while the drag runs; pointer offsets are divided by it.",
+          "de": "Zoomfaktor der Ansicht während des Ziehens; Zeigerversätze werden durch ihn geteilt."
+        },
+        "step": 0.05,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 8,
+        "scale": "log",
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ]
+      }
     }
   },
   "required": [

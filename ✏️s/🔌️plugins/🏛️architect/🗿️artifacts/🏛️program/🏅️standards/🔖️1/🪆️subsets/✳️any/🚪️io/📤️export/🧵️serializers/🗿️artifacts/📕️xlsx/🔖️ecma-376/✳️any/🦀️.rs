@@ -23,7 +23,7 @@ fn cell_value(value: &semio_framework_value::DslValue) -> Result<XlsxCellValue, 
 }
 
 pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, semio_framework_diagnostic::TextError> {
-    let tables = crate::io::program_export_tables(snapshot).map_err(export_error)?;
+    let tables = crate::standards::v1::subsets::any::io::program_export_tables(snapshot).map_err(export_error)?;
     let mut sheets = Vec::with_capacity(tables.len());
     for table in tables {
         let columns: Vec<String> = table.rows.iter().flat_map(|row| row.iter().map(|(key, _)| key.clone())).collect::<BTreeSet<_>>().into_iter().collect();

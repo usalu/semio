@@ -25,6 +25,7 @@
           "de": "Breite des logischen Bildschirms"
         },
         "unit": "px",
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 10
@@ -41,6 +42,7 @@
           "de": "Höhe des logischen Bildschirms"
         },
         "unit": "px",
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 20

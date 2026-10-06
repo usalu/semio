@@ -13,7 +13,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Product identity",
+          "de": "Produktidentität"
+        },
+        "description": {
+          "en": "Ids and names of PRODUCT, PRODUCT_DEFINITION_FORMATION and PRODUCT_DEFINITION; cleared, the chain is removed.",
+          "de": "Kennungen und Namen von PRODUCT, PRODUCT_DEFINITION_FORMATION und PRODUCT_DEFINITION; geleert wird die Kette entfernt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

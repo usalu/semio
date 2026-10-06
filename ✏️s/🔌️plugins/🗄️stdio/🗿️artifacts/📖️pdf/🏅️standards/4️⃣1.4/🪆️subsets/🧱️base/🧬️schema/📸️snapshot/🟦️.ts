@@ -1,7 +1,7 @@
 /** 🧬️ PdfSnapshot (1.4) schema — the document's real page tree, mirroring the Rust
  *  `PdfSnapshot` shape 1:1. `width`/`height` are the page's /MediaBox extent; `text` is its shown
  *  text (the operand bytes of the text-showing operators, not font-decoded). */
-import { binary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export interface PageDoc {
   width: Binary64;
   height: Binary64;

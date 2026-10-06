@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Initial Window Utility Contract Cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "$ref": "#/$defs/Case"
+      }
+    }
+  },
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "NullableUtility": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Identifier"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "windowId",
+        "utilityIds",
+        "initialUtilityId",
+        "activeUtilityByWindowId",
+        "activeToolId",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "windowId": {
+          "$ref": "#/$defs/Identifier"
+        },
+        "utilityIds": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          }
+        },
+        "initialUtilityId": {
+          "$ref": "#/$defs/NullableUtility"
+        },
+        "activeUtilityByWindowId": {
+          "type": "object",
+          "maxProperties": 64,
+          "propertyNames": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/NullableUtility"
+          }
+        },
+        "activeToolId": {
+          "$ref": "#/$defs/NullableUtility"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "write",
+            "utilityId"
+          ],
+          "properties": {
+            "write": {
+              "type": "boolean"
+            },
+            "utilityId": {
+              "$ref": "#/$defs/NullableUtility"
+            }
+          }
+        }
+      }
+    }
+  }
+}

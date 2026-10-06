@@ -2,7 +2,7 @@
 //! `term:<caseId>` factor, `addTerm` with the case id as value, `removeTerm`) → `ReplaceCombination`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_combination;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

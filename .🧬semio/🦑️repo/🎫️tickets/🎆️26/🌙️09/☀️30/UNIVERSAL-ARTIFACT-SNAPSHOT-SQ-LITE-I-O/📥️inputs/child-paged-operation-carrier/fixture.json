@@ -1,0 +1,24 @@
+{
+  "schema": "child-paged-operation-carrier/v1",
+  "wire": "17",
+  "paddingByte": 32,
+  "paddingBytes": 8192,
+  "wireBytes": 8194,
+  "maximumPayloadBytes": 8194,
+  "maximumAllocationBytes": 65536,
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "parentSlots": 1,
+  "maximumTurns": 8322,
+  "laws": [
+    "original8194-octets",
+    "same-borrowed-source-references",
+    "zero-grants-unchanged",
+    "logical-pop-zero-physical-credit",
+    "actual-parent-page-transfer-zero-physical-credit",
+    "full-parent-retains-page",
+    "actual-global-allocation-release-only-under-full4096",
+    "outer-operation-collection-metadata-owned"
+  ]
+}
+

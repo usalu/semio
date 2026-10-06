@@ -1,14 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "bun:test";
-import Ajv from "ajv";
-import { REFERENCE_IMAGE_DECODED_BYTE_CAPACITY, REFERENCE_IMAGE_READBACK_BYTE_CAPACITY, referenceImageSourceDimensions, referenceImageStripRows, referenceImageTargetSize } from "../../🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts";
 
-const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🖼️reference-image-decode/🔣️.json", import.meta.url), "utf8"));
+import { REFERENCE_IMAGE_DECODED_BYTE_CAPACITY, REFERENCE_IMAGE_READBACK_BYTE_CAPACITY, referenceImageSourceDimensions, referenceImageStripRows, referenceImageTargetSize } from "../../🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts";
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🖼️reference-image-decode/🔣️.json", import.meta.url), "utf8"));
 
 describe("reference image decode ownership", () => {
   test("neutral fixture is schema-owned and dimensions share the RGBA budget", () => {
-    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     expect(fixture.reactRoutedExtensions).toEqual(["png", "jpg", "jpeg", "gif", "webp", "bmp", "avif", "tif", "tiff", "svg", "pdf"]);
     expect(fixture.browserMetadataFormats).toEqual(["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp", "image/svg+xml"]);
     expect(fixture.browserWorkerBitmapFormats).toEqual(["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp"]);

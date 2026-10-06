@@ -1,0 +1,11 @@
+semio print.chart.dsl v1
+chart={
+  annotations=[ ] coordinate={
+    kind="cartesian" options={
+    }
+  }
+  guides=[ ] height=40 language="de" layers=[ ] presets=[ ] scales=[ ] tables=[ ] theme={
+    palette=[ ]
+  }
+  width=80
+}

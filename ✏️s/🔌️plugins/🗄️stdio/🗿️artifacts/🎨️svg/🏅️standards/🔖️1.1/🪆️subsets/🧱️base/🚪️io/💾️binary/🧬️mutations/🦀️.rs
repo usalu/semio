@@ -1,0 +1,48 @@
+//! 💾️ Generic framing and descriptor roster for the transparent SvgMutation.
+use crate::schema::mutations::SvgMutation;
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
+pub const BINARY_TAGS: &[(&str, u32)] = &[("set-declaration", 1), ("set-doctype", 2), ("insert-element", 3), ("remove-element", 4), ("set-element-name", 5), ("set-attribute", 6), ("set-text", 7), ("set-view-box", 8), ("set-transform", 9), ("set-snapshot", 10), ("patch-snapshot", 11)];
+//#region 🏷️WireTags
+/// 🏷️ `SvgMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
+const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+//#endregion 🏷️WireTags
+
+impl protocol::OpBinary for SvgMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
+    }
+}
+
+#[path = "📥️insert-element/🦀️.rs"]
+pub mod insert_element;
+
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
+
+#[path = "🗑️remove-element/🦀️.rs"]
+pub mod remove_element;
+
+#[path = "🔤️set-element-name/🦀️.rs"]
+pub mod set_element_name;
+
+#[path = "📜️set-doctype/🦀️.rs"]
+pub mod set_doctype;
+
+#[path = "🖼️set-view-box/🦀️.rs"]
+pub mod set_view_box;
+
+#[path = "🔄️set-transform/🦀️.rs"]
+pub mod set_transform;
+
+#[path = "✍️set-text/🦀️.rs"]
+pub mod set_text;
+
+#[path = "🏷️set-attribute/🦀️.rs"]
+pub mod set_attribute;
+
+#[path = "📣️set-declaration/🦀️.rs"]
+pub mod set_declaration;

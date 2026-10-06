@@ -1135,9 +1135,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-block-appends-a-paragraph-docx",
       "class": "third-party-generated",
       "target": {
@@ -1190,7 +1189,6 @@
       "notes": "A new paragraph between the body and the closing paragraph. Both carriers count one more block. A PageBreak insert would be invisible in BOTH (each serializer maps it to nothing), which is why this recipe inserts a paragraph and the page-break case is recorded as uncarried rather than faked. Witnessed through the block-count property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-block-appends-a-paragraph-md",
       "class": "third-party-generated",
       "target": {
@@ -1243,7 +1241,6 @@
       "notes": "A new paragraph between the body and the closing paragraph. Both carriers count one more block. A PageBreak insert would be invisible in BOTH (each serializer maps it to nothing), which is why this recipe inserts a paragraph and the page-break case is recorded as uncarried rather than faked. Witnessed through the block-count property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-style-adds-a-named-style-docx",
       "class": "third-party-generated",
       "target": {
@@ -1296,7 +1293,6 @@
       "notes": "A new row in the named-style table, carrying an id, a display name and a basedOn parent. Its diff arm is unconditional, so `applied` is its only reachable outcome. Witnessed through the style-table property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "no-mutation-leaves-the-document-untouched-docx",
       "class": "third-party-generated",
       "target": {
@@ -1347,7 +1343,6 @@
       "notes": "The identity element. Its diff arm is `SemioDocumentMutation::NoMutation => SemioDocumentDiff::default()`, so its only reachable outcome is a no-op, and the evidence for it is that two independent readers recover exactly the same block-text sequence from the before and the after carrier. Witnessed through the block-text property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "no-mutation-leaves-the-document-untouched-md",
       "class": "third-party-generated",
       "target": {
@@ -1398,7 +1393,6 @@
       "notes": "The identity element. Its diff arm is `SemioDocumentMutation::NoMutation => SemioDocumentDiff::default()`, so its only reachable outcome is a no-op, and the evidence for it is that two independent readers recover exactly the same block-text sequence from the before and the after carrier. Witnessed through the block-text property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-drops-a-paragraph-docx",
       "class": "third-party-generated",
       "target": {
@@ -1451,7 +1445,6 @@
       "notes": "The body paragraph is removed; both carriers count one fewer block and the surviving text entries shift by one. Witnessed through the block-count property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-drops-a-paragraph-md",
       "class": "third-party-generated",
       "target": {
@@ -1504,7 +1497,6 @@
       "notes": "The body paragraph is removed; both carriers count one fewer block and the surviving text entries shift by one. Witnessed through the block-count property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-style-drops-a-named-style-docx",
       "class": "third-party-generated",
       "target": {
@@ -1557,7 +1549,6 @@
       "notes": "A named style removed from the table. Also unconditional in its diff arm, hence `applied` only. Witnessed through the style-table property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-content-replaces-a-paragraph-docx",
       "class": "third-party-generated",
       "target": {
@@ -1610,7 +1601,6 @@
       "notes": "One block's whole content replaced in place: the block count must not move and exactly one text entry must. Witnessed through the block-text property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-content-replaces-a-paragraph-md",
       "class": "third-party-generated",
       "target": {
@@ -1663,7 +1653,6 @@
       "notes": "One block's whole content replaced in place: the block count must not move and exactly one text entry must. Witnessed through the block-text property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-heading-level-demotes-the-title-docx",
       "class": "third-party-generated",
       "target": {
@@ -1716,7 +1705,6 @@
       "notes": "A heading demoted from level 1 to level 3. md carries the level directly; docx carries it only through the HeadingN style-id convention its serializer writes when no explicit style_id was set, so this recipe deliberately leaves the heading unstyled. Witnessed through the heading-level property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-heading-level-demotes-the-title-md",
       "class": "third-party-generated",
       "target": {
@@ -1769,7 +1757,6 @@
       "notes": "A heading demoted from level 1 to level 3. md carries the level directly; docx carries it only through the HeadingN style-id convention its serializer writes when no explicit style_id was set, so this recipe deliberately leaves the heading unstyled. Witnessed through the heading-level property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-image-block-corrects-the-caption-docx",
       "class": "third-party-generated",
       "target": {
@@ -1822,7 +1809,6 @@
       "notes": "An image block's alt text. md keeps a real image node carrying both the alt and the image id as its URL; docx keeps the alt as ordinary paragraph text, which still witnesses the change even though the carrier cannot say that it IS an alt. Neither carries width or height. Witnessed through the image-alt property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-image-block-corrects-the-caption-md",
       "class": "third-party-generated",
       "target": {
@@ -1875,7 +1861,6 @@
       "notes": "An image block's alt text. md keeps a real image node carrying both the alt and the image id as its URL; docx keeps the alt as ordinary paragraph text, which still witnesses the change even though the carrier cannot say that it IS an alt. Neither carries width or height. Witnessed through the image-alt property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-list-ordered-numbers-the-list-md",
       "class": "third-party-generated",
       "target": {
@@ -1928,7 +1913,6 @@
       "notes": "A bullet list becomes an ordered list. CommonMark is the ONLY carrier: docx flattens lists into bare paragraphs and drops the flag entirely, so no docx fixture is generated for this kind at all. Witnessed through the list-ordered property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-paragraph-style-names-the-body-style-docx",
       "class": "third-party-generated",
       "target": {
@@ -1981,7 +1965,6 @@
       "notes": "A named paragraph style set on the body paragraph, read back out of w:pStyle. CommonMark drops style_id on export, so WordprocessingML is the only witness. Witnessed through the paragraph-style property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-style-emphasises-a-run-docx",
       "class": "third-party-generated",
       "target": {
@@ -2034,7 +2017,6 @@
       "notes": "Bold and italic on one run. docx witnesses w:b/w:i/w:u and md witnesses Strong/Emphasis/Link, so the two carriers cover different halves of RunStyle; neither witnesses size, font or colour, and both serializers say so in their own headers. Witnessed through the run-emphasis property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-style-emphasises-a-run-md",
       "class": "third-party-generated",
       "target": {
@@ -2087,7 +2069,6 @@
       "notes": "Bold and italic on one run. docx witnesses w:b/w:i/w:u and md witnesses Strong/Emphasis/Link, so the two carriers cover different halves of RunStyle; neither witnesses size, font or colour, and both serializers say so in their own headers. Witnessed through the run-emphasis property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-text-rewrites-the-body-copy-docx",
       "class": "third-party-generated",
       "target": {
@@ -2147,7 +2128,6 @@
       "notes": "One run's literal text. THE GATE RECIPE: the committed counterexample is a single-character corruption of the correct after (`revised` → `rev1sed`), close enough that only a reader that genuinely decoded the text can tell them apart, so accepting the good pair and rejecting the bad one is a real measurement rather than a formality. Witnessed through the block-text property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-text-rewrites-the-body-copy-md",
       "class": "third-party-generated",
       "target": {
@@ -2207,7 +2187,6 @@
       "notes": "One run's literal text. THE GATE RECIPE: the committed counterexample is a single-character corruption of the correct after (`revised` → `rev1sed`), close enough that only a reader that genuinely decoded the text can tell them apart, so accepting the good pair and rejecting the bad one is a real measurement rather than a formality. Witnessed through the block-text property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-replaces-the-whole-document-docx",
       "class": "third-party-generated",
       "target": {
@@ -2260,7 +2239,6 @@
       "notes": "The generic entry point this subset actually dispatches today: a whole-snapshot replacement that rewrites a heading and a paragraph, adds a named style, and leaves the fenced code block alone — so the reading must show movement in exactly two text entries and none in the third. Witnessed through the block-text property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-replaces-the-whole-document-md",
       "class": "third-party-generated",
       "target": {
@@ -2313,7 +2291,6 @@
       "notes": "The generic entry point this subset actually dispatches today: a whole-snapshot replacement that rewrites a heading and a paragraph, adds a named style, and leaves the fenced code block alone — so the reading must show movement in exactly two text entries and none in the third. Witnessed through the block-text property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-based-on-reparents-a-style-docx",
       "class": "third-party-generated",
       "target": {
@@ -2366,7 +2343,6 @@
       "notes": "A style's w:basedOn parent set. Only WordprocessingML carries style inheritance at all. Witnessed through the style-table property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-name-renames-a-style-docx",
       "class": "third-party-generated",
       "target": {
@@ -2419,7 +2395,6 @@
       "notes": "A style's display name changed while its id stays put — visible in w:name and nowhere else in this subset's carriers. The id column must not move, which is what separates a rename from a replace. Witnessed through the style-table property."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "carrier-insert-image",
       "class": "third-party-generated",
       "target": {
@@ -2468,7 +2443,6 @@
       "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "carrier-remove-image",
       "class": "third-party-generated",
       "target": {
@@ -2517,7 +2491,6 @@
       "comparisonPipeline": "semio-v1-document-carrier-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "carrier-set-image-bytes",
       "class": "third-party-generated",
       "target": {

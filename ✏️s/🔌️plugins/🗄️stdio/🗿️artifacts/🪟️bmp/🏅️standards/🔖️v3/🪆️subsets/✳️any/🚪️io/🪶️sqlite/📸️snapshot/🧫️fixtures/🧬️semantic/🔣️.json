@@ -1,0 +1,118 @@
+{
+  "contractId": "bmp-byte-owner-semantic-sql",
+  "tables": [
+    "bmp_document",
+    "bmp_file_header",
+    "bmp_info_header",
+    "bmp_channel_mask",
+    "bmp_palette_entry",
+    "bmp_pixel_index",
+    "bmp_pixel_sample",
+    "bmp_row_tail_bits",
+    "bmp_row_padding_octet",
+    "bmp_gap_octet",
+    "bmp_trailer_octet",
+    "bmp_literal_octet"
+  ],
+  "profiles": [
+    "indexedRgb1",
+    "indexedRgb4",
+    "indexedRgb8",
+    "directRgb16",
+    "directRgb24",
+    "directRgb32",
+    "directBitfields16",
+    "directBitfields32"
+  ],
+  "accepted": [
+    "direct-rgb24-padding-gap-trailer",
+    "indexed-rgb1-duplicate-palette",
+    "indexed-rgb4-duplicate-palette",
+    "indexed-rgb8-duplicate-palette",
+    "direct-rgb16-555",
+    "direct-rgb32-reserved-sample",
+    "direct-bitfields16-565",
+    "direct-bitfields32",
+    "direct-rgb24-top-down"
+  ],
+  "literalCases": [
+    {
+      "id": "empty",
+      "schema": "literal.\u0000引用😀",
+      "bytes": [],
+      "diagnostic": "bmp: truncated signature"
+    },
+    {
+      "id": "truncated",
+      "schema": "stdio.bmp",
+      "bytes": [
+        66,
+        77
+      ],
+      "diagnostic": "bmp: truncated file size"
+    },
+    {
+      "id": "bad-signature",
+      "schema": "arbitrary.bmp",
+      "bytes": [
+        0,
+        255
+      ],
+      "diagnostic": "bmp: bad signature"
+    }
+  ],
+  "nativeRejected": [
+    "reject-dib-12",
+    "reject-dib-52",
+    "reject-dib-56",
+    "reject-dib-108",
+    "reject-dib-124"
+  ],
+  "edits": [
+    {
+      "case": "direct-rgb24-padding-gap-trailer",
+      "table": "bmp_info_header",
+      "column": "x_pixels_per_meter",
+      "value": -2147483648,
+      "byteOffset": 38,
+      "byteWidth": 4
+    },
+    {
+      "case": "direct-rgb24-padding-gap-trailer",
+      "table": "bmp_pixel_sample",
+      "column": "red",
+      "value": 7,
+      "x": 1,
+      "y": 0,
+      "byteOffset": 74,
+      "byteWidth": 1
+    },
+    {
+      "case": "indexed-rgb4-duplicate-palette",
+      "table": "bmp_palette_entry",
+      "column": "reserved",
+      "value": 99,
+      "ordinal": 0,
+      "byteOffset": 57,
+      "byteWidth": 1
+    }
+  ],
+  "ownership": {
+    "role": "cumulativeOwnedBacking",
+    "retirementRefund": false
+  },
+  "projectionCapture": {
+    "input": "actualSnapshotBytes",
+    "buffer": "immutableOctets",
+    "before": "asyncSemanticRows",
+    "retirementRefund": false
+  },
+  "rowTailProgress": {
+    "width": 1,
+    "height": 257,
+    "bitsPerPixel": 1,
+    "cancelAfterOccurrences": 64,
+    "checkpointCadence": 256,
+    "preserveCancellationKind": true
+  }
+}

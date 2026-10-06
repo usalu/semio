@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn reorder_frame_brings_a_frame_forward_and_inverse_sends_it_back() {
-    let mut base = crate::standards::v1::subsets::any::schema::default_document();
+    let mut base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let mut extra = base.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap().clone();
     let crate::Frame::Rect { id, .. } = &mut extra else { panic!("rect") };
     *id = "frame-2".into();
@@ -27,7 +27,7 @@ fn reorder_frame_brings_a_frame_forward_and_inverse_sends_it_back() {
 
 #[test]
 fn a_rect_brought_to_the_front_paints_after_the_image() {
-    let mut base = crate::standards::v1::subsets::any::schema::default_document();
+    let mut base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     for _ in 0..8 {
         let mutation = LayoutMutation::ReorderFrame(ReorderFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), forward: true });
         let outcome = mutation.diff(&base);
@@ -47,7 +47,7 @@ fn a_rect_brought_to_the_front_paints_after_the_image() {
 
 #[test]
 fn reorder_frame_refuses_the_front_of_the_stack() {
-    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let front = base.pages[0].frames.last().unwrap().id().to_string();
     let mutation = LayoutMutation::ReorderFrame(ReorderFrame { page_id: "page-1".into(), frame_id: front, forward: true });
     assert!(mutation.diff(&base).diff().pages.is_none());

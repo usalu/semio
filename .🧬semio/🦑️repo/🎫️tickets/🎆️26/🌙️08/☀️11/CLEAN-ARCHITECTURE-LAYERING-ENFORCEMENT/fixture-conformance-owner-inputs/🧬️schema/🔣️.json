@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/dsl/conformance-inputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "cases"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/case"}}
+  },
+  "$defs": {
+    "status": {"enum": ["ready", "missing", "empty", "stub", "invalid"]},
+    "input": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "ownerPresent", "facet", "specimen", "specificationStatus", "specimenStatus"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "ownerPresent": {"type": "boolean"},
+        "facet": {"enum": ["grammar", "protocol"]},
+        "specimen": {"enum": ["text", "binary"]},
+        "specificationStatus": {"$ref": "#/$defs/status"},
+        "specimenStatus": {"$ref": "#/$defs/status"}
+      }
+    },
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "input", "expected"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "input": {"$ref": "#/$defs/input"},
+        "expected": {"enum": ["ready", "owner-absent", "kind-mismatch", "specification-missing", "specification-empty", "specification-stub", "specification-invalid", "specimen-missing", "specimen-empty", "specimen-stub", "specimen-invalid"]}
+      }
+    }
+  }
+}

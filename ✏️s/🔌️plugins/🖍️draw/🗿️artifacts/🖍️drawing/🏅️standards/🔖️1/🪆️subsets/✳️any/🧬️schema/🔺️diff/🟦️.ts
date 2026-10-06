@@ -10,6 +10,8 @@ import {parseFillRule,type FillRule} from "../🎨️fill/🌀️rule/🟦️.ts
  * `DrawingArtboard`/`DrawingArtifact`. */
 import {
   parsePathGeometrySegment,
+  parseDrawingTransform, parseDrawingFill, parseDrawingStroke, parseDrawingTraceParams,
+  type DrawingTransform, type DrawingFill, type DrawingStroke, type DrawingTraceParams,
   parseBlendMode,
   type BlendMode,
   type PathGeometrySegment,
@@ -74,9 +76,7 @@ export interface DrawingLayerPatchEntry {
   patch: DrawingLayerPatch;
 }
 
-/** 🩹 Mirrors Rust `DrawingLayerPatch` — sparse layer field patch (JSON blobs for complex nested
- * values: transform/fill/stroke/trace params are re-serialized rather than typed directly, matching
- * the Rust struct's own `*_json: Option<String>` fields). */
+/** 🩹 Sparse changes over decoded domain values. */
 export interface DrawingLayerPatch {
   visible?: boolean;
   locked?: boolean;
@@ -85,12 +85,12 @@ export interface DrawingLayerPatch {
   blendMode?: BlendMode;
   fillRule?:FillRule;
   isolation?:boolean;
-  transformJson?: string;
-  fillJson?: string;
-  strokeJson?: string;
+  transform?: DrawingTransform;
+  fill?: {value:DrawingFill|null};
+  stroke?: {value:DrawingStroke|null};
   booleanOperation?: string;
-  traceParamsJson?: string;
-  layerJson?: string;
+  traceParams?: DrawingTraceParams;
+  layer?: DrawingLayerNode;
   pathSegments?: PathGeometrySegment[];
   textContent?: string;
   textSize?: number;
@@ -169,9 +169,9 @@ export function parseDrawingAssetsDelta(value: unknown, at = "$"): DrawingAssets
 export function parseDrawingLayersDelta(value: unknown, at = "$"): DrawingLayersDelta {
   const row = drawingDrawingDiffGuardObject(value, at);
   return {
-    added: drawingDrawingDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseDrawingLayerAddition(item, `${at}.added[${index}]`)),
-    removed: drawingDrawingDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => drawingDrawingDiffGuardString(item, `${at}.removed[${index}]`)),
-    patched: drawingDrawingDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseDrawingLayerPatchEntry(item, `${at}.patched[${index}]`)),
+    added: drawingDrawingDiffGuardArray(row["added"] ?? [], `${at}.added`).map((item, index) => parseDrawingLayerAddition(item, `${at}.added[${index}]`)),
+    removed: drawingDrawingDiffGuardArray(row["removed"] ?? [], `${at}.removed`).map((item, index) => drawingDrawingDiffGuardString(item, `${at}.removed[${index}]`)),
+    patched: drawingDrawingDiffGuardArray(row["patched"] ?? [], `${at}.patched`).map((item, index) => parseDrawingLayerPatchEntry(item, `${at}.patched[${index}]`)),
     reordered: row["reordered"] == null ? undefined : drawingDrawingDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => drawingDrawingDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }
@@ -204,12 +204,12 @@ export function parseDrawingLayerPatch(value: unknown, at = "$"): DrawingLayerPa
     blendMode: row.blendMode == null ? undefined : parseBlendMode(row.blendMode,`${at}.blendMode`),
     fillRule:row.fillRule==null?undefined:parseFillRule(row.fillRule),
     isolation:row.isolation==null?undefined:drawingDrawingDiffGuardBoolean(row.isolation,`${at}.isolation`),
-    transformJson: text("transformJson"),
-    fillJson: text("fillJson"),
-    strokeJson: text("strokeJson"),
+    transform: row["transform"] == null ? undefined : parseDrawingTransform(row["transform"], at+".transform"),
+    fill: row["fill"] == null ? undefined : {value: drawingDrawingDiffGuardObject(row["fill"],at+".fill").value == null ? null : parseDrawingFill(drawingDrawingDiffGuardObject(row["fill"],at+".fill").value,at+".fill.value")},
+    stroke: row["stroke"] == null ? undefined : {value: drawingDrawingDiffGuardObject(row["stroke"],at+".stroke").value == null ? null : parseDrawingStroke(drawingDrawingDiffGuardObject(row["stroke"],at+".stroke").value,at+".stroke.value")},
     booleanOperation: text("booleanOperation"),
-    traceParamsJson: text("traceParamsJson"),
-    layerJson: text("layerJson"),
+    traceParams: row["traceParams"] == null ? undefined : parseDrawingTraceParams(row["traceParams"], at+".traceParams"),
+    layer: row["layer"] == null ? undefined : parseDrawingLayerNode(row["layer"], at+".layer"),
     textContent: text("textContent"),
     textSize: row["textSize"] == null ? undefined : drawingDrawingDiffGuardNumber(row["textSize"], `${at}.textSize`),
     pathSegments: row["pathSegments"] == null ? undefined : drawingDrawingDiffGuardArray(row["pathSegments"], `${at}.pathSegments`).map((item, index) => parsePathGeometrySegment(item, `${at}.pathSegments[${index}]`)),

@@ -46,6 +46,7 @@ const SHOOTING_VIEW_FALLBACK_MESH_KIND: &str = "box";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::shooting::create_shooting_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Scene", "Szene"),
         body_key: BODY_KEY.into(),

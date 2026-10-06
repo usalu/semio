@@ -1,5 +1,7 @@
 use super::*;
-use crate::standards::iana::subsets::any::schema::snapshot::{decode_tsv, encode_tsv, TsvSnapshot};
+use crate::standards::iana::subsets::any::schema::snapshot::{TsvSnapshot};
+use crate::standards::iana::subsets::any::io::text::snapshot::{encode_tsv};
+use crate::standards::iana::subsets::any::io::text::snapshot::{decode_tsv};
 
 #[semio_framework_async_macros::async_test]
 async fn demo_source_nonempty() {

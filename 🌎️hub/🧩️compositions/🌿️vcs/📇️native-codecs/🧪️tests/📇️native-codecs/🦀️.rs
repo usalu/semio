@@ -69,13 +69,14 @@ async fn vcs_native_receipts_bind_literal_one_codec_closure_without_identity_or_
 
 #[test]
 fn vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_document_kind() {
+    let hostile_vectors: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📇️native-codecs/🔣️.json")).unwrap();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔣️.json")).unwrap();
     let identity = native_codec_factory_receipts().expect("complete inert VCS closure")[0].identity();
     let exact = projection(&identity);
     let admits = |package: &str, version: &str, rows: &[serde_json::Value]| package == identity.package_id && version == identity.package_version && rows.len() == 1 && rows.iter().all(|row| *row == exact && row["protocolSha256"] != "00".repeat(32));
     assert!(admits(identity.package_id, identity.package_version, std::slice::from_ref(&exact)), "the literal VCS closure must be admitted");
     let mut denied = 0;
-    for hostile in fixture["hostile"].as_array().unwrap() {
+    for hostile in hostile_vectors["hostile"].as_array().unwrap() {
         let mut package = identity.package_id.to_owned();
         let mut version = identity.package_version.to_owned();
         let mut rows = vec![exact.clone()];
@@ -94,7 +95,7 @@ fn vcs_native_receipt_closure_denies_every_hostile_row_including_the_retired_doc
         assert!(!admits(&package, &version, &rows), "hostile VCS row admitted: {hostile}");
         denied += 1;
     }
-    assert_eq!(denied, fixture["hostile"].as_array().unwrap().len());
+    assert_eq!(denied, hostile_vectors["hostile"].as_array().unwrap().len());
     assert_ne!(identity.artifact_kind, "vcs.document");
     assert_ne!(identity.schema, "vcs.document");
     println!("vcs-native-codec-laws: exact=1 hostile-denied={denied}; no hub catalog activation or client mount");

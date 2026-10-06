@@ -15,7 +15,23 @@
   "additionalProperties": false,
   "required": ["child_id", "target"],
   "properties": {
-    "child_id": { "type": "string" },
+    "child_id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Child id",
+          "de": "Kind-ID"
+        },
+        "description": {
+          "en": "Id the new composed child is registered under.",
+          "de": "Kennung, unter der das neue zusammengesetzte Kind registriert wird."
+        },
+        "group": "value",
+        "order": 10
+      }
+    },
     "target": {
       "allOf": [
         { "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef" },
@@ -32,7 +48,20 @@
             }
           }
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Artifact",
+          "de": "Artefakt"
+        },
+        "description": {
+          "en": "The artifact that backs the child: kind, standard, subset and location.",
+          "de": "Das Artefakt hinter dem Kind: Art, Standard, Teilmenge und Speicherort."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

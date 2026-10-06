@@ -17,6 +17,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-io-sqlite-snapshot = { path = "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 replication = { package = "semio-framework-replication", path = "../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

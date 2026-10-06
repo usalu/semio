@@ -1,13 +1,13 @@
 //! 🧪️ Unmounted host capture law belongs inside the existing plugin builder contract module.
 #[semio_framework_async_macros::async_test]
 async fn child_read_capture_retains_exact_existing_lease_across_publication_and_release(){
- let contract:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪆️child/👁️capture/🔣️.json")).expect("closed capture contract");
+ let contract:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪆️child/👁️capture/🔣️.json")).expect("closed capture contract");
  let slot=contract["slot"].as_str().expect("slot");let id=contract["childId"].as_str().expect("child");
  let mut app=contract_composed_app_raw().await;
  app.register_child(slot,id,test_child_dialect().await,new_test_child(id).await.expect("actual child")).await.expect("register exact child");
  let old_label=format!("{}{}",contract["owners"][0]["label"].as_str().expect("old label"),"x".repeat(contract["retainedTailBytes"].as_u64().expect("tail")as usize));
  let TestMembers::Child(child)=&mut app.children.get_mut(&(slot.to_owned(),id.to_owned())).expect("child entry").member;
- child.dispatch(store::ArtifactCommand::Apply{mutations:vec![TestMutation::SetLabel(SetLabel{value:old_label.clone()})],description:None,transaction:None}).await.expect("publish old full owner");
+ child.dispatch(store::ArtifactCommand::Apply{mutations:vec![TestMutation::SetLabel(SetLabel{value:old_label.clone()})],transaction:None}).await.expect("publish old full owner");
  let generation=app.admit_child_content_publication().expect("old publication");
  app.publish_child_content_member(generation,slot,id).await.expect("old entry lease");
  let view=ChildContentView::clone(&app.child_content_root);
@@ -34,7 +34,7 @@ async fn child_read_capture_retains_exact_existing_lease_across_publication_and_
  drop(view);
  let new_label=contract["owners"][1]["label"].as_str().expect("new label");
  let TestMembers::Child(child)=&mut app.children.get_mut(&(slot.to_owned(),id.to_owned())).expect("child entry").member;
- child.dispatch(store::ArtifactCommand::Apply{mutations:vec![TestMutation::SetLabel(SetLabel{value:new_label.to_owned()})],description:None,transaction:None}).await.expect("publish new full owner");
+ child.dispatch(store::ArtifactCommand::Apply{mutations:vec![TestMutation::SetLabel(SetLabel{value:new_label.to_owned()})],transaction:None}).await.expect("publish new full owner");
  let generation=app.admit_child_content_publication().expect("new publication");
  app.publish_child_content_member(generation,slot,id).await.expect("new entry lease");
  assert_eq!(capture.snapshot().expect("old retained lease")as *const TestSnapshot,pointer);

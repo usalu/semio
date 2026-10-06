@@ -92,7 +92,7 @@ def fixture_documents(ctx):
     """🧫️ Every typed document of the committed vectors must conform; quizzes and catalogs are projected."""
     produced = {}
     for row in rows(ctx):
-        documents = matches(json.loads(ctx.fixture_bytes(row["fixture"])), row["pointer"])
+        documents = matches(json.loads(ctx.input_bytes(row["fixture"])), row["pointer"])
         if not documents:
             raise AssertionError("fixture-documents/%s: %s reaches nothing in %s" % (row["id"], row["pointer"], row["fixture"]))
         for path, document in documents:
@@ -119,7 +119,7 @@ def repository_quizzes(ctx):
 
 def rejected_quizzes(ctx):
     """🚫️ Every committed rejected document must break the schema at the rule its vector names; the unbroken bases conform."""
-    vectors = json.loads(ctx.fixture_bytes(REJECTED))
+    vectors = json.loads(ctx.input_bytes(REJECTED))
     produced = {}
     for vector in vectors["accepted"]:
         broken = violations(vector["definition"], vector["document"])

@@ -7,6 +7,12 @@
 # bufferViews at all. `gltf` 1.4 preserves all six arrays as the specification defines them, which is
 # what lets `create-image` be told apart from `create-texture`.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "gltf-2-0-any-resource-reader"

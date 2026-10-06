@@ -14,7 +14,7 @@ use crate::Block3dSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_zip::io::decode_zip;
+use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip;
 
 /// 🎯️ The foreign dialect this leaf reads.
 pub const ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId::ANY };
@@ -24,15 +24,15 @@ pub const ZIP_MAGIC: &[u8] = b"PK\x03\x04";
 
 /// 🎒️ Rebuilds this subset's snapshot from real zip 2.0 container bytes.
 pub fn from_zip_bytes(bytes: &[u8]) -> Result<Block3dSnapshot, IoError> {
-    let archive = decode_zip(bytes).map_err(|error| IoError { message: format!("zip→block3d: {error}"), diagnostics: Vec::new() })?;
+    let archive = decode_zip(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("zip→block3d: {error}"))))?;
     for (name, parse) in [(ZIP_DSL_ENTRY, from_dsl_text as fn(&str) -> Result<Block3dSnapshot, IoError>), (ZIP_JSON_ENTRY, from_json_text as fn(&str) -> Result<Block3dSnapshot, IoError>)] {
         let Some(entry) = archive.entries.iter().find(|entry| entry.name == name) else {
             continue;
         };
-        let text = std::str::from_utf8(&entry.data).map_err(|error| IoError { message: format!("zip→block3d: `{name}` is not utf-8: {error}"), diagnostics: Vec::new() })?;
+        let text = std::str::from_utf8(&entry.data).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("zip→block3d: `{name}` is not utf-8: {error}"))))?;
         return parse(text);
     }
-    Err(IoError { message: format!("zip→block3d: archive carries neither `{ZIP_DSL_ENTRY}` nor `{ZIP_JSON_ENTRY}`"), diagnostics: Vec::new() })
+    Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("zip→block3d: archive carries neither `{ZIP_DSL_ENTRY}` nor `{ZIP_JSON_ENTRY}`"))))
 }
 
 /// 🧩️ `s.stdio.zip@2.0/*` → `s.block.block3d@1/*`.
@@ -49,7 +49,7 @@ impl Deserializer<Block3dSnapshot> for ZipIntoBlock3d {
     }
     async fn deserialize(payload: &IoPayload) -> IoResult<Block3dSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
-            return Err(IoError { message: "zip→block3d: expected a binary zip payload".to_string(), diagnostics: Vec::new() });
+            return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "zip→block3d: expected a binary zip payload".to_string())));
         };
         Ok(IoOutcome::clean(from_zip_bytes(bytes)?))
     }

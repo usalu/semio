@@ -48,7 +48,7 @@ fn target(value: &Value) -> TimeTravelTarget {
 }
 
 fn base(value: &Value) -> TimeTravelBase {
-    TimeTravelBase { store_generation: value["storeGeneration"].as_u64().expect("u64"), content_revision: bytes(&value["contentRevision"]).try_into().expect("32 bytes") }
+    TimeTravelBase { content_revision: bytes(&value["contentRevision"]).try_into().expect("32 bytes") }
 }
 
 fn severity(value: &Value) -> Severity {
@@ -114,10 +114,12 @@ fn event(value: &Value) -> TimeTravelEvent {
     let generation = || u32_of(&value["generation"]);
     match text(&value["type"]) {
         "begin" => TimeTravelEvent::Begin { target: target(&value["target"]), original: replacement(&value["original"]) },
+        "beginWithdrawn" => TimeTravelEvent::BeginWithdrawn { target: target(&value["target"]), original: replacement(&value["original"]) },
         "draft" => TimeTravelEvent::Draft { generation: generation(), replacement: replacement(&value["replacement"]) },
         "withdraw" => TimeTravelEvent::Withdraw { generation: generation() },
         "accept" => TimeTravelEvent::Accept { generation: generation() },
         "discard" => TimeTravelEvent::Discard { generation: generation() },
+        "restore" => TimeTravelEvent::Restore { generation: generation(), target: mutation(&value["target"]) },
         "replayProgressed" => TimeTravelEvent::ReplayProgressed { generation: generation(), done: u32_of(&value["done"]), total: u32_of(&value["total"]) },
         "replayCompleted" => TimeTravelEvent::ReplayCompleted { generation: generation(), report: report(&value["report"]) },
         "replayCancelled" => TimeTravelEvent::ReplayCancelled { generation: generation() },
@@ -207,7 +209,7 @@ fn every_stage_event_pair_is_covered_once_per_guard() {
             assert_eq!(branches.len(), branches.iter().collect::<std::collections::BTreeSet<_>>().len(), "{} × {} repeats a guard", stage.as_str(), key.as_str());
         }
     }
-    assert_eq!(rows.len(), 130);
+    assert_eq!(rows.len(), 145);
 }
 
 #[test]
@@ -330,15 +332,58 @@ fn every_context_reviews_as_the_fixture_says() {
     }
 }
 
-/// ✏️ `begin_refusal` answers, in every fixture context, exactly what applying the canonical `Begin` answers — the query a
-/// host disables its Edit control by never disagrees with the reducer.
+/// ✏️ `begin_refusal` answers, in every fixture context, exactly what applying the canonical `Begin` and the canonical
+/// `BeginWithdrawn` answer — the query a host disables a row's Edit and Withdraw controls by never disagrees with the
+/// reducer.
 #[test]
 fn begin_is_refused_exactly_where_the_reducer_refuses_it() {
     let law = law();
     for (name, context) in law["contexts"].as_object().expect("contexts") {
-        let mut applied = session(context);
-        let refusal = applied.begin_refusal();
-        assert_eq!(refusal, applied.apply(event(&law["events"]["begin"])).err(), "{name}");
+        for key in ["begin", "beginWithdrawn"] {
+            let mut applied = session(context);
+            let refusal = applied.begin_refusal();
+            assert_eq!(refusal, applied.apply(event(&law["events"][key])).err(), "{name} × {key}");
+        }
+    }
+}
+
+/// 🚫️ A row's Withdraw opens the session exactly as `Begin` does, with the pending draft withdrawn: same stage, generation,
+/// session id, return stage, target and original in every context that admits it.
+#[test]
+fn begin_withdrawn_is_begin_with_a_withdrawn_draft() {
+    let law = law();
+    for (name, context) in law["contexts"].as_object().expect("contexts") {
+        let (mut begun, mut withdrawn) = (session(context), session(context));
+        if begun.apply(event(&law["events"]["begin"])).is_err() {
+            continue;
+        }
+        let effects = withdrawn.apply(event(&law["events"]["beginWithdrawn"])).unwrap_or_else(|refusal| panic!("{name}: refused {refusal}"));
+        let target = withdrawn.pending.as_ref().expect("a pending draft").target.mutation.clone();
+        assert_eq!(effects, vec![TimeTravelEffect::ShowPreview { target, replacement: InputReplacement::Withdrawn }], "{name}: the preview is the withdrawal");
+        begun.pending.as_mut().expect("a pending draft").replacement = InputReplacement::Withdrawn;
+        assert_eq!(withdrawn, begun, "{name}");
+    }
+}
+
+/// 🔙️ `restore_refusal` answers, in every fixture context and for every mutation, exactly what applying `Restore` of that
+/// mutation answers — the query a host disables a row's Restore control by never disagrees with the reducer; an admitted
+/// restore leaves exactly the other accepted drafts.
+#[test]
+fn restore_is_refused_exactly_where_the_reducer_refuses_it() {
+    let law = law();
+    for (name, context) in law["contexts"].as_object().expect("contexts") {
+        for id in ["a", "b", "c"] {
+            let before = session(context);
+            let mut applied = before.clone();
+            let target = MutationId(id.to_string());
+            let refusal = before.restore_refusal(&target);
+            assert_eq!(refusal, applied.apply(TimeTravelEvent::Restore { generation: before.generation, target: target.clone() }).err(), "{name} × {id}");
+            if refusal.is_none() {
+                let kept: Vec<&MutationId> = before.accepted.iter().map(|draft| &draft.target.mutation).filter(|mutation| **mutation != target).collect();
+                assert_eq!(applied.accepted.iter().map(|draft| &draft.target.mutation).collect::<Vec<_>>(), kept, "{name} × {id}: the other drafts stay");
+                assert_eq!(applied.stage, if kept.is_empty() { TimeTravelStage::Inactive } else { TimeTravelStage::Replaying }, "{name} × {id}");
+            }
+        }
     }
 }
 
@@ -408,7 +453,7 @@ fn stage_and_review_values_round_trip_as_bare_camel_case_strings() {
 
 #[test]
 fn a_new_session_is_inactive_and_coherent() {
-    let base = TimeTravelBase { store_generation: 7, content_revision: [3; 32] };
+    let base = TimeTravelBase { content_revision: [3; 32] };
     let fresh = TimeTravelSession::new(base);
     assert_eq!((fresh.id, fresh.generation, fresh.base, fresh.stage), (0, 0, base, TimeTravelStage::Inactive));
     assert_eq!(fresh.invariant_violation(), None);

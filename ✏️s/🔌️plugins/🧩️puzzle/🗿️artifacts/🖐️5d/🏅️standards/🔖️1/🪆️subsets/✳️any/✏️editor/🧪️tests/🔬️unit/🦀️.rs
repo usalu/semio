@@ -766,14 +766,15 @@ async fn patch_fastener_updates_transform_offsets_and_undoes() {
 /// impl (not its `Mutation<Value>` bridge impl) is what the CW7 law is about.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::standards::v1::subsets::any::schema::mutations::binary::{close_puzzle5d_store, puzzle5d_store};
+    use crate::standards::v1::subsets::any::io::binary::mutations::{close_puzzle5d_store, puzzle5d_store};
+
     use crate::{PUZZLE_5D_SCHEMA, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::create_document_envelope;
 
     let mut store = puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None)).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-    ::semio_framework_async::poll::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], description: None, transaction: None })).expect("apply");
+    ::semio_framework_async::poll::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None })).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
@@ -913,9 +914,9 @@ async fn window_engagements_cover_both_windows() {
 #[semio_framework_async_macros::async_test]
 async fn every_dispatched_action_bridges_to_a_command() {
     for action in [
-        "exportFixture",
-        "importFixture",
-        "openImportFixture",
+        "exportSnapshot",
+        "importSnapshot",
+        "openImportSnapshot",
         "openAddPartDialog",
         "setActiveExample",
         "selectSameKindSelection",
@@ -2233,10 +2234,10 @@ fn export_import_round_trips_every_shipped_example_byte_for_byte() {
         // 🚦️ Non-vacuity: an EMPTY document round-trips trivially, so this law would pass while proving
         // nothing the moment the shipped examples regress (see the diagnosis law above).
         assert!(!document.parts.is_empty(), "a round trip over an empty document proves nothing");
-        let exported = export_fixture::puzzle5d_export_json(&document);
-        let root = import_fixture::puzzle5d_decode_document(&exported).expect("the whole export decodes as a puzzle 5d document");
+        let exported = export_snapshot::puzzle5d_export_json(&document);
+        let root = import_snapshot::puzzle5d_decode_document(&exported).expect("the whole export decodes as a puzzle 5d document");
         let reimported: Puzzle5dDocument = serde_json::from_value(root).expect("the decoded root is a puzzle 5d document");
-        assert_eq!(export_fixture::puzzle5d_export_json(&reimported), exported, "{} did not round-trip byte-for-byte", document.label.clone().unwrap_or_default());
+        assert_eq!(export_snapshot::puzzle5d_export_json(&reimported), exported, "{} did not round-trip byte-for-byte", document.label.clone().unwrap_or_default());
     }
 }
 
@@ -2245,16 +2246,16 @@ fn export_import_round_trips_every_shipped_example_byte_for_byte() {
 /// shipped examples are deliberately one case each.
 #[test]
 fn export_publication_picks_its_lane_by_payload_size() {
-    let inline_budget = export_fixture::puzzle5d_export_inline_budget_bytes();
-    let segmented_budget = export_fixture::puzzle5d_export_segmented_budget_bytes().expect("segmented budget");
+    let inline_budget = export_snapshot::puzzle5d_export_inline_budget_bytes();
+    let segmented_budget = export_snapshot::puzzle5d_export_segmented_budget_bytes().expect("segmented budget");
     assert!(inline_budget < segmented_budget, "the inline page must be the narrower of the two budgets");
     for document in [concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()] {
-        let bytes = export_fixture::puzzle5d_export_json(&document).len();
-        let publication = export_fixture::puzzle5d_export_publication(&document).expect("publication resolves");
+        let bytes = export_snapshot::puzzle5d_export_json(&document).len();
+        let publication = export_snapshot::puzzle5d_export_publication(&document).expect("publication resolves");
         let arm = match publication {
-            export_fixture::Puzzle5dExportPublication::Inline(_) => "inline",
-            export_fixture::Puzzle5dExportPublication::Segmented(_) => "segmented",
-            export_fixture::Puzzle5dExportPublication::Refused(_) => "refused",
+            export_snapshot::Puzzle5dExportPublication::Inline(_) => "inline",
+            export_snapshot::Puzzle5dExportPublication::Segmented(_) => "segmented",
+            export_snapshot::Puzzle5dExportPublication::Refused(_) => "refused",
         };
         let expected = if bytes <= inline_budget {
             "inline"
@@ -2267,23 +2268,23 @@ fn export_publication_picks_its_lane_by_payload_size() {
     }
     // 🗂️ Concrete Forest is the inline case and Capsule Dream the refusal case; if either stopped being
     // so the budgets moved, and this law would otherwise pass while proving nothing.
-    assert!(export_fixture::puzzle5d_export_json(&concrete_forest_example_document()).len() <= inline_budget, "Concrete Forest is the inline case");
-    assert!(export_fixture::puzzle5d_export_json(&capsule_dream_example_document()).len() > segmented_budget, "Capsule Dream is the refusal case");
+    assert!(export_snapshot::puzzle5d_export_json(&concrete_forest_example_document()).len() <= inline_budget, "Concrete Forest is the inline case");
+    assert!(export_snapshot::puzzle5d_export_json(&capsule_dream_example_document()).len() > segmented_budget, "Capsule Dream is the refusal case");
 }
 
 /// 📤️ LAW: the download filename is the document's own label as a slug, so exporting two examples
 /// never lands as two files with one name; a document with no label keeps the app-generic name.
 #[test]
 fn export_filename_follows_the_document_label() {
-    assert_eq!(export_fixture::puzzle5d_export_filename(&concrete_forest_example_document()), "concrete-forest.json");
-    assert_eq!(export_fixture::puzzle5d_export_filename(&nakagin_example_document()), "nakagin-capsule-tower.json");
-    assert_eq!(export_fixture::puzzle5d_export_filename(&capsule_dream_example_document()), "capsule-dream.json");
-    assert_eq!(export_fixture::puzzle5d_export_filename(&empty_document()), "puzzle-5d.json");
+    assert_eq!(export_snapshot::puzzle5d_export_filename(&concrete_forest_example_document()), "concrete-forest.json");
+    assert_eq!(export_snapshot::puzzle5d_export_filename(&nakagin_example_document()), "nakagin-capsule-tower.json");
+    assert_eq!(export_snapshot::puzzle5d_export_filename(&capsule_dream_example_document()), "capsule-dream.json");
+    assert_eq!(export_snapshot::puzzle5d_export_filename(&empty_document()), "puzzle-5d.json");
 }
 
 /// 📥️ LAW: a chunked pick goes through the SDK's own action dispatch: every chunk but the last is staged by
 /// the framework (`semio_framework::kernel::ImportStaging`) and edits nothing, and the closing chunk hands
-/// `importFixture` the whole file, which lands as ONE undoable edit.
+/// `importSnapshot` the whole file, which lands as ONE undoable edit.
 #[semio_framework_async_macros::async_test]
 async fn a_chunked_pick_lands_as_one_undoable_edit_through_the_framework_staging() {
     let mut app = app_with_registry();
@@ -2294,12 +2295,12 @@ async fn a_chunked_pick_lands_as_one_undoable_edit_through_the_framework_staging
     let (target, chunks) = [concrete_forest_example_document(), nakagin_example_document()]
         .into_iter()
         .find_map(|document| {
-            let chunks = semio_framework::kernel::import_payload_chunks(&export_fixture::puzzle5d_export_json(&document));
+            let chunks = semio_framework::kernel::import_payload_chunks(&export_snapshot::puzzle5d_export_json(&document));
             (chunks.len() > 1).then_some((document, chunks))
         })
         .expect("a shipped document whose export spans more than one host chunk");
     for chunk in &chunks {
-        let result = dispatch_through_action(&mut app, "importFixture", &semio_framework::kernel::import_chunk_arguments("chunked.json", chunk, None)).expect("import chunk");
+        let result = dispatch_through_action(&mut app, "importSnapshot", &semio_framework::kernel::import_chunk_arguments("chunked.json", chunk, None)).expect("import chunk");
         if chunk.chunk + 1 < chunk.chunk_count {
             assert!(result.mutations.is_empty(), "chunk {} of {} staged and must edit nothing", chunk.chunk, chunk.chunk_count);
             assert_eq!(part_count(&app), 0, "chunk {} of {} must leave the document untouched", chunk.chunk, chunk.chunk_count);
@@ -2326,7 +2327,7 @@ async fn every_refused_import_publishes_a_notice_and_changes_nothing() {
         ("payload", semio_framework_pack_json::json!({ "payload": "{\"schema\":\"note.v1\",\"body\":\"\"}", "name": "note.json" })),
     ];
     for (case, args) in cases {
-        let result = dispatch(&mut app, "importFixture", Some(&args), None).expect("a refused import answers, it never faults");
+        let result = dispatch(&mut app, "importSnapshot", Some(&args), None).expect("a refused import answers, it never faults");
         assert!(result.mutations.is_empty(), "the {case} refusal emits no mutation");
         assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::Notify { .. })), "the {case} refusal is visible: {:?}", result.requested_effects);
         assert_eq!(projection_of(&app), before, "the {case} refusal leaves the document alone");
@@ -2342,19 +2343,19 @@ async fn a_gap_in_a_chunked_pick_is_a_typed_framework_refusal() {
     let mut app = app_with_registry();
     let before = projection_of(&app);
     let chunk = semio_framework::kernel::ImportChunk { payload: "\"parts\":[],".into(), chunk: 1, chunk_count: 3 };
-    let fault = dispatch_through_action(&mut app, "importFixture", &semio_framework::kernel::import_chunk_arguments("gap.json", &chunk, None)).expect_err("a chunk past the cursor of no open run is refused");
+    let fault = dispatch_through_action(&mut app, "importSnapshot", &semio_framework::kernel::import_chunk_arguments("gap.json", &chunk, None)).expect_err("a chunk past the cursor of no open run is refused");
     assert_eq!(fault.code.0, semio_framework::kernel::ImportStagingRefusal::Gap.code(), "the refusal is the framework's typed gap code: {fault:?}");
     assert_eq!(projection_of(&app), before, "a refused chunk leaves the document alone");
     close_app(&mut app);
 }
 
-/// 🗂️ LAW: `openImportFixture` asks the HOST for a file and edits nothing — the picker re-dispatches
-/// `importFixture`, which is the verb that owns the edit.
+/// 🗂️ LAW: `openImportSnapshot` asks the HOST for a file and edits nothing — the picker re-dispatches
+/// `importSnapshot`, which is the verb that owns the edit.
 #[semio_framework_async_macros::async_test]
-async fn open_import_fixture_requests_a_file_and_edits_nothing() {
+async fn open_import_snapshot_requests_a_file_and_edits_nothing() {
     let mut app = app_with_registry();
     let before = projection_of(&app);
-    let result = dispatch(&mut app, "openImportFixture", None, None).expect("openImportFixture");
+    let result = dispatch(&mut app, "openImportSnapshot", None, None).expect("openImportSnapshot");
     assert!(result.mutations.is_empty(), "a file picker is not a document edit");
     assert_eq!(projection_of(&app), before);
     let requested = result
@@ -2364,8 +2365,8 @@ async fn open_import_fixture_requests_a_file_and_edits_nothing() {
             Effect::RequestFileOpen { import_action, accept, multiple, .. } => Some((import_action.clone(), accept.clone(), *multiple)),
             _ => None,
         })
-        .expect("openImportFixture requests a file open");
-    assert_eq!(requested.0, "importFixture", "the picker re-dispatches the import verb");
+        .expect("openImportSnapshot requests a file open");
+    assert_eq!(requested.0, "importSnapshot", "the picker re-dispatches the import verb");
     assert!(requested.1.contains("json"));
     assert!(!requested.2, "one document at a time");
     close_app(&mut app);
@@ -2724,7 +2725,7 @@ async fn shipped_part_kinds_are_the_two_named_examples_own_catalog_rows() {
 /// and leaves target volumes, undeclared kinds and unknown ids to the framework's generic `<Kind> <short id>`.
 #[test]
 fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
-    let mut snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::examples::puzzle5d::concrete_forest::DSL_TEXT).expect("the example parses");
+    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::puzzle5d::concrete_forest::DSL_TEXT).expect("the example parses");
     let part = snapshot.parts[0].id.clone();
     let grip = puzzle5d_grip_full_id(&part, &snapshot.parts[0].grips[0].id);
     let grip_kind = snapshot.parts[0].grips[0].grip_kind.clone().expect("the example names its grip kinds");

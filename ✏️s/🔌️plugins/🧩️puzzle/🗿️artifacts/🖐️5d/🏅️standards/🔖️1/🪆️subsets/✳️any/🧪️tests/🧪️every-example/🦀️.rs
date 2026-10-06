@@ -4,7 +4,7 @@
 //! `◻️2d/…/🧪️tests/🧪️every-example`, `🧊️3d/…/🧪️tests/🧪️every-example`.
 
 use super::examples;
-use crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
 use crate::Puzzle5dSnapshot;
 use semio_framework_plugin::ExampleSourceBody;
 

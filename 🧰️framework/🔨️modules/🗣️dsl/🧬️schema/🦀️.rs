@@ -10,10 +10,10 @@ extern crate self as semio_framework_dsl_record;
 use semio_framework_dsl::format_f64;
 use semio_framework_dsl::lex;
 use semio_framework_dsl::parse_f64;
-use semio_framework_diagnostic::Limits;
+pub use semio_framework_diagnostic::{Limits, TextError, TextSpan};
 use semio_framework_dsl::SpannedToken;
-use semio_framework_diagnostic::TextError;
-use semio_framework_diagnostic::TextSpan;
+
+
 use semio_framework_dsl::TokenClass;
 use semio_framework_dsl::TokenKind;
 use std::collections::{HashMap, HashSet};

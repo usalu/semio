@@ -25,7 +25,6 @@ impl Default for Generation3dSnapshot {
     }
 }
 
-#[path="🪶️sqlite/🦀️.rs"]pub mod sqlite;
 
 impl Generation3dSnapshot {
     /// 🧊️ Explicit cold-only disposal of a detached projection. Both fields reject a bare drop —
@@ -103,4 +102,4 @@ impl std::fmt::Debug for Generation3dSnapshotRead {
     }
 }
 
-#[cfg(test)]#[path="🧪️tests/🪶️sqlite/🦀️.rs"]mod sqlite_tests;
+

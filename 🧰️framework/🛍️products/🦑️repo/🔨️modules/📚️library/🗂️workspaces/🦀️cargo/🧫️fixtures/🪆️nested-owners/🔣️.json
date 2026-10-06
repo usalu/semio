@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "admitted-nested-owner",
+      "admitted": true,
+      "removed": "none",
+      "expectedOwnerDirectories": [
+        ".",
+        "owners/application",
+        "owners/application/extension/artifact/oracle/native"
+      ],
+      "applicationMetadataValid": true
+    },
+    {
+      "id": "unadmitted-native-owner",
+      "admitted": false,
+      "removed": "none",
+      "expectedOwnerDirectories": [
+        ".",
+        "owners/application"
+      ],
+      "applicationMetadataValid": true
+    },
+    {
+      "id": "removed-artifact-retains-consumer-error",
+      "admitted": true,
+      "removed": "artifact",
+      "expectedOwnerDirectories": [
+        ".",
+        "owners/application"
+      ],
+      "applicationMetadataValid": false
+    },
+    {
+      "id": "removed-application-retains-general",
+      "admitted": true,
+      "removed": "application",
+      "expectedOwnerDirectories": [
+        "."
+      ],
+      "applicationMetadataValid": true
+    }
+  ]
+}

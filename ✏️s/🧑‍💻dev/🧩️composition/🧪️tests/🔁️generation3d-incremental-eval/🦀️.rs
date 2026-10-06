@@ -24,7 +24,7 @@ use semio_framework_os_flow::{flow_neuron_kind_info_map, install_flow_extension,
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::{preview_payload, PreviewInteractionMarks};
 use semio_s_artifact_procedural_generation3d::preview_eval;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::snapshot::text::parse_dsl;
+use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
 use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
 use serde::Deserialize;
 

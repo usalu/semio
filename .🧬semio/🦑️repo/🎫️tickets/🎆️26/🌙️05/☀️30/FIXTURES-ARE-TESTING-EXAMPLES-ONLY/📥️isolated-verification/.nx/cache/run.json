@@ -1,0 +1,21 @@
+{
+  "run": {
+    "command": "nx run ticket-fixture-verification:hub-broker --skip-nx-cache --outputStyle=static",
+    "startTime": "2026-10-06T01:33:47.704Z",
+    "endTime": "2026-10-06T01:34:57.302Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "ticket-fixture-verification:hub-broker",
+      "target": "hub-broker",
+      "projectName": "ticket-fixture-verification",
+      "hash": "13664090756028768446",
+      "startTime": "2026-10-06T01:33:47.774Z",
+      "endTime": "2026-10-06T01:34:57.299Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 1
+    }
+  ]
+}

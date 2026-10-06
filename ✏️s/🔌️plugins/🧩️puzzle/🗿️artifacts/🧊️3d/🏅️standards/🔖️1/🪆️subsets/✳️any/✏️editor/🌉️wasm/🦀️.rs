@@ -139,7 +139,7 @@ impl Puzzle3dArtifactVcs {
 }
 
 /// 🔤️ Parses `.puzzle3d` DSL text (`Puzzle3dSnapshot`'s `dsl::DslArtifact` grammar) into the same
-/// camelCase JSON shape callers previously got from a hand-authored `*.3d.json` fixture — lets
+/// camelCase JSON shape callers previously got from a hand-authored `*.3d.json` scene_snapshot — lets
 /// non-Rust consumers load the real example fixtures without duplicating the DSL grammar.
 #[wasm_bindgen(js_name = puzzle3dParseDslJson)]
 pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {

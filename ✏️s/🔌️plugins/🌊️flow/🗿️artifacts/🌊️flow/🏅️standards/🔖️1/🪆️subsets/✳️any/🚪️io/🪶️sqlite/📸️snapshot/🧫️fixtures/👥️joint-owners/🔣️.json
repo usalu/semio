@@ -1,0 +1,35 @@
+{
+  "schema": "semio.flow.sqlite.distinct-persisted-owners.v1",
+  "owners": [
+    {
+      "type": "semio_s_artifact_flow_flow::FlowSnapshot",
+      "schema": "s.flow.flow",
+      "dialect": {
+        "artifactKind": "s.flow.flow",
+        "standard": "1",
+        "subset": "*"
+      }
+    },
+    {
+      "type": "semio_framework_artifact_flow_flow::FlowHostSnapshot",
+      "schema": "flow.host_snapshot",
+      "dialect": {
+        "artifactKind": "flow.host_snapshot",
+        "standard": "1",
+        "subset": "*"
+      }
+    }
+  ],
+  "encodings": [
+    "binary",
+    "text"
+  ],
+  "publication": [
+    "actualDeclaration",
+    "explicitNativeRegistration"
+  ],
+  "jointPreflight": true,
+  "distinctConcreteTypes": true,
+  "exactRoutes": true,
+  "preserveFirstOwner": true
+}

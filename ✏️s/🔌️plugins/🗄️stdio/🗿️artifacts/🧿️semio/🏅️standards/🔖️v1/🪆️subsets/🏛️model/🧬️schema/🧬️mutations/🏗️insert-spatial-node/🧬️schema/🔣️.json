@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
     },
     "node": {
-      "$ref": "#/$defs/SpatialNode"
+      "$ref": "#/$defs/SpatialNode",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Spatial node",
+          "de": "Raumknoten"
+        },
+        "description": {
+          "en": "Id, kind, name, parent and placement of the spatial node that is inserted.",
+          "de": "Kennung, Art, Name, übergeordneter Knoten und Platzierung des Raumknotens, der eingefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

@@ -66,14 +66,14 @@ describe("parseAgentBridgeOffer / isAdmissibleBridgeUrl", () => {
 /** 🛰️ LAW over the language-neutral answer rows (`🧫️fixtures/🛰️offer-answers/🔣️.json`): the supervisor always answers
  * 200 with a typed answer — the encoder produces exactly the fixture's answers, the shell's parser dials exactly the
  * fixture's configs, and Ajv (third-party oracle) agrees with the fixture on which bodies are well-formed answers of
- * `🧬️schema.json`. Ticket 26/09/23 U5: "no gateway" used to be a 404, a console error on every canonical session. */
+ * the canonical renderer contract. Ticket 26/09/23 U5: "no gateway" used to be a 404, a console error on every canonical session. */
 describe("agent-bridge offer answers", () => {
   it("encode and decode every fixture row, and agree with the JSON-schema oracle on the answer shape", () => {
     const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🛰️offer-answers/🔣️.json"), "utf8")) as {
       readonly encode: readonly { readonly id: string; readonly offer: AgentBridgeConfig | null; readonly answer: unknown }[];
       readonly decode: readonly { readonly id: string; readonly body: unknown; readonly shape: boolean; readonly expected: AgentBridgeConfig | null }[];
     };
-    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🛰️offer-answers/🧬️schema.json"), "utf8")) as object);
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(here, "../../../../../🧬️schema/🔣️.json"), "utf8")).$defs.AgentBridgeOfferAnswerV1);
     expect(fixture.encode.length).toBeGreaterThanOrEqual(2);
     for (const row of fixture.encode) {
       expect(agentBridgeOfferAnswerV1(row.offer), row.id).toEqual(row.answer);
@@ -104,8 +104,7 @@ describe("agent-bridge offer selection", () => {
       };
     };
     const ajv = new Ajv({ strict: true });
-    ajv.addSchema(JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🛰️offer-answers/🧬️schema.json"), "utf8")) as object);
-    const validRecord = ajv.getSchema("semio.os.agent-bridge-offer/v1#/definitions/AgentBridgeOfferRecordV2")!;
+    const validRecord = ajv.compile(JSON.parse(readFileSync(join(here, "../../../../../🧬️schema/🔣️.json"), "utf8")).$defs.AgentBridgeOfferRecordV2);
     const records = fixture.select.records.map((record) => {
       expect(validRecord(record), JSON.stringify(validRecord.errors)).toBe(true);
       const parsed = parseAgentBridgeOfferRecordV2(record);

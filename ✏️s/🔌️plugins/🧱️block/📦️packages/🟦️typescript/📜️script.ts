@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {runOwnedCommand} from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🧱️ Block source, schema, and publication-authority laws. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
@@ -101,5 +102,8 @@ class TestScript extends BundleScript {
     console.error(`validated Block publication authority; apps=${fixture.apps.map((app) => `${app.owner}:${app.routes.length}`).join(",")}; schema=Ajv; oracle=owned; hostile=${hostile}`);
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", TestScript);
+class SharedSchemaScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{if(segments.length)throw Error("shared-schema accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🧬️schema/🧱️shared/🧪️tests/🟦️.ts")],this.repoRoot,"block-shared-schema",45000,{env:process.env});}
+}
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", TestScript).register("shared-schema",SharedSchemaScript);
 await runScriptMain(router, { defaultCommand: "test" });

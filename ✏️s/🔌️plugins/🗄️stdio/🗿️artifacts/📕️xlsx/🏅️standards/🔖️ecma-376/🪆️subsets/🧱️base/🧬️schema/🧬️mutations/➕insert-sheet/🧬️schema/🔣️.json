@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
     },
     "sheet": {
-      "$ref": "#/$defs/XlsxSheet"
+      "$ref": "#/$defs/XlsxSheet",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Sheet",
+          "de": "Arbeitsblatt"
+        },
+        "description": {
+          "en": "Name and cells of the worksheet that is inserted.",
+          "de": "Name und Zellen des Arbeitsblatts, das eingefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

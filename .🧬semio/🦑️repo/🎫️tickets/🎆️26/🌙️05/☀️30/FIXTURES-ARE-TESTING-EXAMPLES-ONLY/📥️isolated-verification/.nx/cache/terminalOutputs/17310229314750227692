@@ -1,0 +1,37 @@
+> bun ./📜️script.ts owner-command "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts" test os_store::tests:: -- --nocapture
+
+[DEBUG] isolated Nx verification owner-command
+12 | 
+13 | /** 🧬️ Admits the language-neutral physical membership contract without optional owner identities. */
+14 | export function parseCargoWorkspaceContribution(value: unknown): CargoWorkspaceContributionV1 {
+15 |   const row = object(value);
+16 |   if (Object.keys(row).some(k => !["schemaVersion", "members", "exclude"].includes(k)) || row.schemaVersion !== 1 || !Array.isArray(row.members) || !row.members.length || !Array.isArray(row.exclude)) throw new Error("Invalid Cargo workspace contribution");
+17 |   for (const values of [row.members, row.exclude]) if (values.some(v => !pathPattern(v)) || new Set(values).size !== values.length) throw new Error("Invalid Cargo workspace member patterns");
+                                                                                                                                                   ^
+error: Invalid Cargo workspace member patterns
+      at parseCargoWorkspaceContribution (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts:17:143)
+      at scope (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts:37:116)
+      at discoverCargoWorkspaces (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts:63:108)
+      at prepareCargoOwners (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts:196:15)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts:16:63)
+
+Bun v1.3.14 (macOS arm64)
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 8 queued owner(s): cbe3b0b7-8421-4a04-b63d-f9a4d37f6afb, 915c6234-98ab-4bc0-8062-f76ad17c2233, 6d3e64bf-1470-43c7-8d35-dcba580ff1fb, 49d6dc10-f958-484f-a3bd-fd48ecfbf4b7, 94d500d9-be1f-459e-b810-d77591a33aa7, b48790aa-9159-4b26-8ca5-e91622248a01, 9d0d9179-b2c0-4e63-a068-9745532947f7, 40b235fd-82a0-41b7-a867-5d2db94b4e1b
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 6 queued owner(s): 6d3e64bf-1470-43c7-8d35-dcba580ff1fb, 49d6dc10-f958-484f-a3bd-fd48ecfbf4b7, 94d500d9-be1f-459e-b810-d77591a33aa7, b48790aa-9159-4b26-8ca5-e91622248a01, 9d0d9179-b2c0-4e63-a068-9745532947f7, 40b235fd-82a0-41b7-a867-5d2db94b4e1b
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 5 queued owner(s): 49d6dc10-f958-484f-a3bd-fd48ecfbf4b7, 94d500d9-be1f-459e-b810-d77591a33aa7, b48790aa-9159-4b26-8ca5-e91622248a01, 9d0d9179-b2c0-4e63-a068-9745532947f7, 40b235fd-82a0-41b7-a867-5d2db94b4e1b
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 4 queued owner(s): 94d500d9-be1f-459e-b810-d77591a33aa7, b48790aa-9159-4b26-8ca5-e91622248a01, 9d0d9179-b2c0-4e63-a068-9745532947f7, 40b235fd-82a0-41b7-a867-5d2db94b4e1b
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 2 queued owner(s): 9d0d9179-b2c0-4e63-a068-9745532947f7, 40b235fd-82a0-41b7-a867-5d2db94b4e1b
+218 |   if (environment.SEMIO_CARGO_PREPARATION_ACTIVE) throw new Error(`Cargo recursion in owner preparation: ${environment.SEMIO_CARGO_PREPARATION_ACTIVE}`);
+219 |   const owner = cargoWorkspaceForManifest(root, slash(relative(root, path))), source = read(root, owner.manifest);
+220 |   if (source.workspace?.metadata?.semio?.repository !== undefined) {
+221 |     const result=Bun.spawnSync([process.execPath,fileURLToPath(new URL("./🛠️preparation/📜️script.ts",import.meta.url)),"prepare","--manifest",owner.manifest],{cwd:root,env:{...environment,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"inherit"});
+222 |     if (result.stdout.byteLength) process.stderr.write(result.stdout);
+223 |     if(result.exitCode!==0)throw new Error(`Selected Cargo preparation failed: ${owner.manifest} (${result.exitCode})`);
+                                           ^
+error: Selected Cargo preparation failed: Cargo.toml (1)
+      at prepareCargoWorkspaceInvocation (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts:223:38)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts:44:7)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts:74:71)
+
+Bun v1.3.14 (macOS arm64)
+Warning: command "bun ./📜️script.ts owner-command "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts" test os_store::tests:: -- --nocapture" exited with non-zero status code

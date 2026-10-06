@@ -14,7 +14,7 @@
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{
-    puzzle3d_object_display_label, puzzle3d_vortex_full_id, ui_label, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION,
+    puzzle3d_object_display_label, puzzle3d_vortex_full_id, ui_label, Puzzle3dAttraction, Puzzle3dSceneSnapshot, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION,
     PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
@@ -131,8 +131,8 @@ fn with_hide_lock_actions(item: ui::TreeItemBuilder, hidden: bool, locked: bool,
     item
 }
 
-fn object_row(object: &Puzzle3dObject, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let item = pick_item(&object.id, puzzle3d_object_display_label(object, fixture), "box", PUZZLE3D_GRANULARITY_OBJECT)?.dimmed(object.hidden);
+fn object_row(object: &Puzzle3dObject, scene_snapshot: &Puzzle3dSceneSnapshot, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    let item = pick_item(&object.id, puzzle3d_object_display_label(object, scene_snapshot), "box", PUZZLE3D_GRANULARITY_OBJECT)?.dimmed(object.hidden);
     let item = with_hide_lock_actions(item, object.hidden, object.locked, labels, "object", &object.id);
     tree_window_item(windows, item, &object.id, false, &object.vortices, |vortex| vortex_row(&object.id, vortex))
 }
@@ -165,13 +165,13 @@ fn attraction_row(attraction: &Puzzle3dAttraction) -> UiAssemblyResult<BuiltNode
 
 //#region 🔖️Render
 /// 🌳️ The four document sections, each windowed against the host's own open/scroll state for this body.
-pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+pub fn render(scene_snapshot: &Puzzle3dSceneSnapshot, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     PanelTreeBuilder::new(ROOT)?
         .interaction_domain(PUZZLE3D_PLAY_CONTROLLER_ID, PUZZLE3D_INTERACTION_DOMAIN)?
-        .window_section(windows, &format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, &fixture.objects, |object| object_row(object, fixture, labels, windows))?
-        .window_section(windows, &format!("{ROOT}.references"), Some(ui_label(labels.references.as_str())?), false, &fixture.references, |reference| reference_row(reference, labels))?
-        .window_section(windows, &format!("{ROOT}.target-volumes"), Some(ui_label(labels.target_volumes.as_str())?), false, &fixture.target_volumes, |volume| target_volume_row(volume, labels))?
-        .window_section(windows, &format!("{ROOT}.attractions"), Some(ui_label(labels.attractions.as_str())?), false, &fixture.attractions, attraction_row)?
+        .window_section(windows, &format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, &scene_snapshot.objects, |object| object_row(object, scene_snapshot, labels, windows))?
+        .window_section(windows, &format!("{ROOT}.references"), Some(ui_label(labels.references.as_str())?), false, &scene_snapshot.references, |reference| reference_row(reference, labels))?
+        .window_section(windows, &format!("{ROOT}.target-volumes"), Some(ui_label(labels.target_volumes.as_str())?), false, &scene_snapshot.target_volumes, |volume| target_volume_row(volume, labels))?
+        .window_section(windows, &format!("{ROOT}.attractions"), Some(ui_label(labels.attractions.as_str())?), false, &scene_snapshot.attractions, attraction_row)?
         .build()
 }
 //#endregion 🔖️Render

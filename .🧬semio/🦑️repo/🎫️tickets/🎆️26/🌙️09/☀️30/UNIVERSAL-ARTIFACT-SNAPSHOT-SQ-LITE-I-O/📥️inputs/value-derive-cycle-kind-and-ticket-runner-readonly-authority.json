@@ -1,0 +1,29 @@
+{
+  "qualification": "Read-only dependency-kind classification; no Cargo or graph gate",
+  "productionEdge": {
+    "from": "@semio-tech/value-rs",
+    "to": "@semio-tech/value-derive-rs",
+    "kind": "dependencies",
+    "authority": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml"
+  },
+  "testOnlyEdge": {
+    "from": "@semio-tech/value-derive-rs",
+    "to": "@semio-tech/value-rs",
+    "kind": "dev-dependencies",
+    "authority": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml"
+  },
+  "nxCollapseAuthority": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs:1544",
+  "genericRegisteredTicketScriptTarget": null,
+  "absenceScope": [
+    "current Nx graph repo/workspace/process project target names",
+    "root workspace project",
+    "repo cache project",
+    "repo library TS project",
+    "repo CLI router"
+  ],
+  "actualExistingNxMechanism": {
+    "command": "bun nx exec -- bun ABSOLUTE_TICKET_SCRIPT args",
+    "type": "Nx CLI exec, not registered project target",
+    "qualification": "Currently globally refuses cyclic collapsed project graph"
+  }
+}

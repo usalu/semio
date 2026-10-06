@@ -8,7 +8,7 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 /// 🤝️ Initializes a generic-profile session with the fixture's client members and parses the reply.
 fn handshake(ctx: &Context) -> Result<(Json, String), String> {
-    let raw = ctx.fixture_bytes("shared://🤝️initialize-lenient.json")?;
+    let raw = ctx.input_bytes("shared://🤝️initialize-lenient.json")?;
     let fixture = parse_json(&String::from_utf8_lossy(&raw))?;
     let requested = fixture.str("requestedProtocolVersion");
     let client_info = fixture.get("clientInfo").cloned().unwrap_or(Json::Null).to_string();
@@ -23,7 +23,7 @@ fn handshake(ctx: &Context) -> Result<(Json, String), String> {
 /// 🔁️ Delivers the initialized notification while the session is still `Connected` — the exact window
 /// a pipelining client opens — then initializes and pings, and reports whether the ping was answered.
 fn pipelined_handshake(ctx: &Context) -> Result<Json, String> {
-    let raw = ctx.fixture_bytes("shared://🤝️initialize-lenient.json")?;
+    let raw = ctx.input_bytes("shared://🤝️initialize-lenient.json")?;
     let fixture = parse_json(&String::from_utf8_lossy(&raw))?;
     let requested = fixture.str("requestedProtocolVersion");
     let client_info = fixture.get("clientInfo").cloned().unwrap_or(Json::Null).to_string();
@@ -58,7 +58,7 @@ impl std::io::Write for Capture {
 /// 🚰️ Serves one burst whose reader ends the moment the last request was delivered — the shape a
 /// client that writes everything and closes its input produces — and returns every reply written.
 fn burst_then_eof(ctx: &Context) -> Result<Vec<Json>, String> {
-    let raw = ctx.fixture_bytes("shared://🤝️initialize-lenient.json")?;
+    let raw = ctx.input_bytes("shared://🤝️initialize-lenient.json")?;
     let fixture = parse_json(&String::from_utf8_lossy(&raw))?;
     let requested = fixture.str("requestedProtocolVersion");
     let client_info = fixture.get("clientInfo").cloned().unwrap_or(Json::Null).to_string();

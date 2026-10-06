@@ -191,9 +191,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -244,7 +243,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-conformance-attribute-applied",
       "class": "handcrafted",
       "target": {
@@ -287,7 +285,6 @@
       "notes": "The root <w:document>'s conformance attribute set, absent -> \"transitional\"."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-conformance-attribute-applied",
       "class": "handcrafted",
       "target": {
@@ -330,7 +327,6 @@
       "notes": "The root <w:document>'s conformance attribute removed, \"transitional\" -> absent."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-main-namespace-applied",
       "class": "handcrafted",
       "target": {
@@ -373,7 +369,6 @@
       "notes": "The root <w:document>'s main xmlns:w namespace URI changed, Transitional (http://schemas.openxmlformats.org/wordprocessingml/2006/main) -> Strict (http://purl.oclc.org/ooxml/wordprocessingml/main)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-relationship-base-applied",
       "class": "handcrafted",
       "target": {

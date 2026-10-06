@@ -616,10 +616,10 @@ fn constrain_stepper_value(value: f64, stepper: &UiNumberStepperNode) -> f64 {
     }
 }
 
-/// 🦉️ A stepper's live stored value: its edit buffer read back from display units (a candidate keeping its exact stored
-/// value), else its declared value.
+/// 🦉️ A stepper's live stored value: its admitted edit buffer read back from display units (a candidate keeping its exact
+/// stored value), else its declared value — a refused draft is never a value.
 fn number_stepper_live_value(node: &Node, stepper: &UiNumberStepperNode) -> f64 {
-    node.state.edit.as_ref().and_then(|edit| edit.text.trim().parse::<f64>().ok()).filter(|value| value.is_finite()).map(|typed| ui_contract::ui_number_typed_value(typed, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()))).unwrap_or(stepper.value)
+    node.state.edit.as_ref().and_then(|edit| typed_number(&edit.text, stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()).ok()).unwrap_or(stepper.value)
 }
 
 fn slider_live_value(node: &Node, slider: &UiSliderNode) -> f64 {
@@ -746,6 +746,60 @@ fn slider_key_value_from(slider: &UiSliderNode, current: f64, key: &str, shift: 
 
 fn slider_key_value(slider: &UiSliderNode, key: &str, shift: bool) -> Option<f64> {
     slider_key_value_from(slider, slider.value, key, shift)
+}
+
+/// 🧬️ The contract kind a retained input's kind name spells (`reconcile::input_kind`).
+fn text_input_kind(kind: &str) -> ui_contract::InputKind {
+    match kind {
+        "longText" => ui_contract::InputKind::LongText,
+        "number" => ui_contract::InputKind::Number,
+        "date" => ui_contract::InputKind::Date,
+        "color" => ui_contract::InputKind::Color,
+        "file" => ui_contract::InputKind::File,
+        _ => ui_contract::InputKind::Text,
+    }
+}
+
+/// 🖊️ What the shared text keyboard law (`ui_contract::text_input_key`, pinned by `🧫️text-controls`) makes of `key` on a
+/// retained text field of `kind`: `primary` is Ctrl or ⌘. `None` for a key that is not the field's.
+pub(crate) fn text_field_key(kind: &str, key: &str, modifiers: EventModifiers) -> Option<ui_contract::TextInputKeyAction> {
+    let key = match key {
+        "Enter" | "NumpadEnter" => ui_contract::TextInputKey::Enter,
+        "Escape" => ui_contract::TextInputKey::Escape,
+        _ => return None,
+    };
+    ui_contract::text_input_key(text_input_kind(kind), key, ui_contract::TextInputModifiers { primary: modifiers.ctrl || modifiers.meta, shift: modifiers.shift, alt: modifiers.alt })
+}
+
+/// 🎹️ The law key a physical key names on a stepper or a number field (design §18; the twin of `uiNumberFieldKey`, pinned by
+/// the `fieldKeys` rows of `🧫️number-controls`): `ArrowUp`/`ArrowDown` one step (`Shift`: large), `PageUp`/`PageDown` the
+/// adjacent detent, `Home`/`End` the hard bound — only toward a bound the field has, so the caret keeps them otherwise — and
+/// `None` for every other key, the inline arrows included.
+pub(crate) fn number_field_key(key: &str, shift: bool, min: Option<f64>, max: Option<f64>) -> Option<(ui_contract::SliderKey, bool)> {
+    match key {
+        "ArrowUp" => Some((ui_contract::SliderKey::Increment, shift)),
+        "ArrowDown" => Some((ui_contract::SliderKey::Decrement, shift)),
+        "PageUp" => Some((ui_contract::SliderKey::PageUp, false)),
+        "PageDown" => Some((ui_contract::SliderKey::PageDown, false)),
+        "Home" => min.filter(|min| min.is_finite()).map(|_| (ui_contract::SliderKey::Home, false)),
+        "End" => max.filter(|max| max.is_finite()).map(|_| (ui_contract::SliderKey::End, false)),
+        _ => None,
+    }
+}
+
+/// 🔘️ Whether the retained select `id` is published segmented — every option visible at once as a radio group, chosen
+/// without a popup.
+fn select_is_segmented(tree: &UiTree, id: NodeId) -> bool {
+    tree.document_id(id).and_then(|document_id| tree.document().and_then(|document| document.record(document_id))).is_some_and(|record| matches!(&record.component, ui_contract::Component::Select(select) if select.appearance == ui_contract::SelectAppearance::Segmented))
+}
+
+/// 🪞️ What a value an assistive technology wrote into a control's mirror means: the control's own typed buffer (the path
+/// a keystroke takes), a slider's typed readout (the path its double-clicked readout takes), or a ready dispatch for a
+/// control that keeps no draft.
+enum MirroredValue {
+    Buffer,
+    Readout,
+    Fired(Option<FiredAction>),
 }
 
 /// ➕️➖️ One `NumberStepper` increment/decrement of `sign`, taking the relative `Delta` path only for
@@ -2161,6 +2215,44 @@ impl EventRouter {
         let text = crate::wgpu::stepper::stepper_value_text(value, stepper.precision, stepper.display_factor);
         let caret = text.len();
         node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+        node.state.number_refusal = None;
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    }
+
+    /// 🧷️ Shows a stepper's law-resolved `value` in its edit buffer, the caret at its end and any earlier refusal gone.
+    fn apply_stepper_local_value(&mut self, tree: &mut UiTree, id: NodeId, value: f64) {
+        let Some(node) = tree.node_mut(id) else { return };
+        let UiNode::NumberStepper(stepper) = &node.spec.0 else { return };
+        let text = crate::wgpu::stepper::stepper_value_text(value, stepper.precision, stepper.display_factor);
+        let caret = text.len();
+        node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+        node.state.number_refusal = None;
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    }
+
+    /// ⏮️ Escape on a text field that holds a draft (the shared text keyboard law's `Revert`): the draft is dropped and the
+    /// field shows its published value again, the caret at its end; nothing is dispatched and the field keeps focus.
+    fn revert_text_draft(&mut self, tree: &mut UiTree, id: NodeId, modifiers: EventModifiers) {
+        let Some(node) = tree.node_mut(id) else { return };
+        let UiNode::Input(input) = &node.spec.0 else { return };
+        if !commits_on_blur(&node.spec.0) || text_field_key(&input.input_kind, "Escape", modifiers) != Some(ui_contract::TextInputKeyAction::Revert) {
+            return;
+        }
+        let Some(text) = editable_value(&node.spec.0) else { return };
+        let caret = text.len();
+        node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
+        node.state.number_refusal = None;
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    }
+
+    /// 🖋️ Replaces `id`'s edit buffer with `text` exactly as typed (never clamped), the caret at its end; a stepper earns
+    /// its refusal at once, every other control at its commit.
+    fn write_edit_buffer(&mut self, tree: &mut UiTree, id: NodeId, text: &str) {
+        if let Some(node) = tree.node_mut(id) {
+            let caret = text.len();
+            node.state.edit = Some(EditState { text: text.to_string(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
+        }
+        self.normalize_stepper_edit(tree, id);
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
     }
 
@@ -2389,6 +2481,22 @@ impl EventRouter {
                 self.push_app_command(tree, id, fired, &mut out);
                 return out;
             }
+            let law = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Input(input) => Some(text_field_key(&input.input_kind, key, modifiers)),
+                _ => None,
+            });
+            match law {
+                Some(Some(ui_contract::TextInputKeyAction::Newline)) => {
+                    if let Some(edit) = tree.node_mut(id).and_then(|node| node.state.edit.as_mut()) {
+                        insert_at_caret(edit, "\n");
+                    }
+                    tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+                    self.push_buffer_change(tree, &mut out);
+                    return out;
+                }
+                Some(None) => return out,
+                _ => {}
+            }
             let fired = tree.node(id).filter(|node| commits_on_blur(&node.spec.0)).and_then(|node| node.state.edit.as_ref().and_then(|edit| edit_commit_action(node, &edit.text)));
             if let Some(node) = tree.node_mut(id) {
                 let refusal = edit_refusal(node);
@@ -2404,7 +2512,21 @@ impl EventRouter {
         let Some(edit) = node.state.edit.as_mut() else { return out };
         let has_selection = edit.anchor != edit.caret;
         let mut mutated = false;
+        let law = match &node.spec.0 {
+            UiNode::Input(input) if input.input_kind == "number" => number_field_key(key, modifiers.shift, input.min, input.max).map(|(law_key, large)| (input, law_key, large)),
+            _ => None,
+        };
         match key {
+            _ if law.is_some() => {
+                let Some((input, law_key, large)) = law else { return out };
+                let Some(current) = edit.text.trim().parse::<f64>().ok().filter(|value| value.is_finite()) else { return out };
+                let current = typed_number(&edit.text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).unwrap_or(current);
+                let next = ui_contract::ui_number_key_value(current, input.min, input.max, input.step.unwrap_or(0.0), input.precision, input.display_factor, input.snaps.iter().copied(), law_key, large);
+                edit.text = number_field_text(input, next);
+                edit.caret = edit.text.len();
+                edit.anchor = edit.caret;
+                mutated = true;
+            }
             "ArrowLeft" => {
                 edit.caret = if has_selection && !modifiers.shift { selection_bounds(edit.anchor, edit.caret).0 } else { prev_char_boundary(&edit.text, edit.caret) };
                 if !modifiers.shift {
@@ -2456,17 +2578,6 @@ impl EventRouter {
                     edit.text.replace_range(edit.caret..end, "");
                     mutated = true;
                 }
-            }
-            "PageUp" | "PageDown" => {
-                let UiNode::Input(input) = &node.spec.0 else { return out };
-                let Some(current) = edit.text.trim().parse::<f64>().ok().filter(|value| value.is_finite() && input.input_kind == "number") else { return out };
-                let key = if key == "PageUp" { ui_contract::SliderKey::PageUp } else { ui_contract::SliderKey::PageDown };
-                let current = typed_number(&edit.text, input.display_factor, input.precision, current_stored(input), input.min, input.max, input.limits.as_ref()).unwrap_or(current);
-                let next = ui_contract::ui_number_key_value(current, input.min, input.max, input.step.unwrap_or(0.0), input.precision, input.display_factor, input.snaps.iter().copied(), key, false);
-                edit.text = number_field_text(input, next);
-                edit.caret = edit.text.len();
-                edit.anchor = edit.caret;
-                mutated = true;
             }
             "a" | "A" if modifiers.ctrl || modifiers.meta => {
                 edit.anchor = 0;
@@ -2606,58 +2717,27 @@ impl EventRouter {
                 }
             }
             AccessibilityUiEvent::Value(value) => {
-                let fired = match tree.node(target).map(|node| &node.spec.0) {
-                    Some(UiNode::Input(input)) => {
-                        let commit_now = input.commit.as_deref() != Some("blur");
-                        if let Some(node) = tree.node_mut(target) {
-                            let caret = value.len();
-                            node.state.edit = Some(EditState { text: value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
-                        }
-                        tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
-                        commit_now.then(|| tree.node(target).and_then(|node| edit_commit_action(node, value))).flatten()
-                    }
-                    Some(UiNode::IconSelect(_)) => {
-                        if let Some(node) = tree.node_mut(target) {
-                            let caret = value.len();
-                            node.state.edit = Some(EditState { text: value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
-                        }
-                        tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
-                        tree.node(target).and_then(|node| edit_commit_action(node, value))
-                    }
-                    Some(UiNode::Select(select)) => fired_action(&select.on_change, Trigger::Change, DslValue::String(value.clone())),
-                    Some(UiNode::Toggle(toggle)) => value.parse::<bool>().ok().and_then(|value| fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(value))),
-                    Some(UiNode::Slider(slider)) => {
-                        let action = slider.on_change.clone();
-                        let bounded = value.parse::<f64>().ok().filter(|value| value.is_finite()).map(|value| constrain_slider_value(value, slider));
-                        let live = tree.node(target).and_then(|node| match &node.spec.0 {
-                            UiNode::Slider(slider) => Some(slider_live_value(node, slider)),
-                            _ => None,
-                        });
-                        let changed = bounded.filter(|value| live.is_none_or(|live| (*value - live).abs() > slider.step.max(f64::EPSILON) * 0.25));
-                        if let Some(value) = changed {
-                            self.apply_slider_local_value(tree, target, value);
-                        }
-                        changed.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value)))
-                    }
-                    Some(UiNode::NumberStepper(stepper)) => {
-                        let action = stepper.on_absolute.clone();
-                        let bounded = value.parse::<f64>().ok().filter(|value| value.is_finite()).map(|value| value.max(stepper.min.unwrap_or(f64::NEG_INFINITY)).min(stepper.max.unwrap_or(f64::INFINITY)));
-                        let fired = bounded.and_then(|value| fired_action(&action, Trigger::Change, DslValue::float(value)));
-                        if let Some(value) = bounded {
-                            if let Some(node) = tree.node_mut(target) {
-                                let text = ui_contract::format_ui_number(value);
-                                let caret = text.len();
-                                node.state.edit = Some(EditState { text, caret, anchor: caret, composition: None, scroll_x: 0.0 });
-                            }
-                            tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
-                        }
-                        fired
-                    }
-                    Some(UiNode::Ring(ring)) => value.parse::<f64>().ok().map(|value| value.clamp(0.0, 1.0)).and_then(|value| fired_action(&ring.on_change, Trigger::Change, DslValue::float(value))),
-                    _ => None,
+                let mirrored = match tree.node(target).map(|node| &node.spec.0) {
+                    Some(UiNode::Input(_) | UiNode::IconSelect(_) | UiNode::NumberStepper(_)) => MirroredValue::Buffer,
+                    Some(UiNode::Slider(_)) => MirroredValue::Readout,
+                    Some(UiNode::Select(select)) => MirroredValue::Fired(fired_action(&select.on_change, Trigger::Change, DslValue::String(value.clone()))),
+                    Some(UiNode::Toggle(toggle)) => MirroredValue::Fired(value.parse::<bool>().ok().and_then(|value| fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(value)))),
+                    Some(UiNode::Ring(ring)) => MirroredValue::Fired(value.parse::<f64>().ok().map(|value| value.clamp(0.0, 1.0)).and_then(|value| fired_action(&ring.on_change, Trigger::Change, DslValue::float(value)))),
+                    _ => MirroredValue::Fired(None),
                 };
-                if let Some(fired) = fired {
-                    self.push_app_command(tree, target, fired, &mut commands);
+                match mirrored {
+                    MirroredValue::Buffer => {
+                        self.write_edit_buffer(tree, target, value);
+                        self.push_buffer_change(tree, &mut commands);
+                    }
+                    MirroredValue::Readout => {
+                        self.write_edit_buffer(tree, target, value);
+                        if let Some(fired) = self.finish_slider_readout_edit(tree, target) {
+                            self.push_app_command(tree, target, fired, &mut commands);
+                        }
+                    }
+                    MirroredValue::Fired(Some(fired)) => self.push_app_command(tree, target, fired, &mut commands),
+                    MirroredValue::Fired(None) => {}
                 }
             }
         }
@@ -2667,7 +2747,7 @@ impl EventRouter {
     pub(crate) fn dispatch_accessibility_select_option(&mut self, tree: &mut UiTree, target: NodeId, value: &str, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
         let Some(node) = tree.node(target) else { return Vec::new() };
         let UiNode::Select(select) = &node.spec.0 else { return Vec::new() };
-        if select.presence.state == UiState::Disabled || !node.state.open || !select.items.iter().any(|item| item.value == value) || !matches!(event, AccessibilityUiEvent::Activate) {
+        if select.presence.state == UiState::Disabled || (!node.state.open && !select_is_segmented(tree, target)) || !select.items.iter().any(|item| item.value == value) || !matches!(event, AccessibilityUiEvent::Activate) {
             return Vec::new();
         }
         let on_change = select.on_change.clone();
@@ -2713,17 +2793,28 @@ impl EventRouter {
         Some(Rect::new(band.x + icon.x, band.y + icon.y, icon.w, icon.h))
     }
 
+    /// 🎛️ The mirror's `<key>::editor` spinbutton of an enabled slider — its typed readout, which a canvas user opens by a
+    /// double-click: a focus opens the readout draft on the shown value, a value replaces the draft as typed (never clamped,
+    /// never committed), a blur drops an unrefused draft; `Enter` commits or refuses and `Escape` reverts through the same key
+    /// route the canvas takes ([`Self::finish_slider_readout_edit`]).
     pub(crate) fn dispatch_accessibility_slider_editor(&mut self, tree: &mut UiTree, target: NodeId, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
         let mut commands = Vec::new();
-        if !tree.node(target).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some() && node.spec.0.presence().state != UiState::Disabled) {
-            return commands;
+        let readout = tree.node(target).and_then(|node| match &node.spec.0 {
+            UiNode::Slider(slider) if node.spec.0.presence().state != UiState::Disabled => Some(slider.readout(slider_live_value(node, slider))),
+            _ => None,
+        });
+        let Some(readout) = readout else { return commands };
+        if matches!(event, AccessibilityUiEvent::Focus | AccessibilityUiEvent::Value(_)) {
+            if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(target), true) {
+                self.push_app_command(tree, blurred, fired, &mut commands);
+            }
+            commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(target) });
         }
         match event {
             AccessibilityUiEvent::Focus => {
-                if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(target), true) {
-                    self.push_app_command(tree, blurred, fired, &mut commands);
+                if tree.node(target).is_some_and(|node| node.state.edit.is_none()) {
+                    self.write_edit_buffer(tree, target, &readout);
                 }
-                commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(target) });
             }
             AccessibilityUiEvent::Blur => {
                 if self.focus.focused == Some(target) {
@@ -2731,13 +2822,7 @@ impl EventRouter {
                     commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                 }
             }
-            AccessibilityUiEvent::Value(value) => {
-                if let Some(node) = tree.node_mut(target) {
-                    let caret = value.len();
-                    node.state.edit = Some(EditState { text: value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
-                }
-                tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
-            }
+            AccessibilityUiEvent::Value(value) => self.write_edit_buffer(tree, target, value),
             AccessibilityUiEvent::Activate => {}
         }
         commands
@@ -3004,6 +3089,8 @@ impl EventRouter {
                             let aborted = self.focus.focused.and_then(|id| tree.node(id).and_then(|node| search_line_action(node, Trigger::Abort, "")).map(|fired| (id, fired)));
                             if let Some((id, fired)) = aborted {
                                 self.push_app_command(tree, id, fired, &mut commands);
+                            } else if let Some(id) = self.focus.focused {
+                                self.revert_text_draft(tree, id, *modifiers);
                             }
                         }
                     }
@@ -3111,6 +3198,21 @@ impl EventRouter {
         if select.presence.state == UiState::Disabled {
             return false;
         }
+        if select_is_segmented(tree, id) {
+            let step = match self.mirrored_inline_key(key) {
+                "ArrowRight" | "ArrowDown" => 1,
+                "ArrowLeft" | "ArrowUp" => select.items.len().saturating_sub(1),
+                _ => return false,
+            };
+            if select.items.is_empty() {
+                return true;
+            }
+            let next = select.items.iter().position(|item| item.value == select.value).map_or(0, |current| (current + step) % select.items.len());
+            if let Some(fired) = fired_action(&select.on_change, Trigger::Change, DslValue::String(select.items[next].value.clone())) {
+                self.push_app_command(tree, id, fired, out);
+            }
+            return true;
+        }
         let open = node.state.open;
         let highlighted = node.state.highlighted;
         let labels: Vec<String> = select.items.iter().map(|item| item.label.as_str().to_string()).collect();
@@ -3190,45 +3292,50 @@ impl EventRouter {
     /// ⌨️ The value-committing keyboard gestures the other focusable controls answer, which a plain
     /// `<button>`'s Enter/Space (see `focused_button_activation`) does not cover: a `Toggle` flips
     /// (React renders it as a button, so Enter/Space click it), a `Slider` steps
-    /// (`slider_key_value`), and a `NumberStepper`'s `ArrowUp`/`ArrowDown` are its +/− segments —
-    /// the same binding-gated choice `pointer_commit_action` makes for a click on them.
+    /// (`slider_key_value`), and a `NumberStepper` answers the field-key law ([`number_field_key`]) through
+    /// `ui_number_key_value` exactly as React's `Stepper` does: every press reports — an absolute stepper the law's value (its
+    /// bound again at the bound), a relative one its step as a delta (an arrow, ten rungs with `Shift`) or the move (a page key,
+    /// `Home`, `End`) — and shows the law's value with any earlier refusal gone.
     fn focused_value_key_activation(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Option<(NodeId, FiredAction)> {
         let id = self.focus.focused?;
         let node = tree.node(id)?;
         if node.spec.0.presence().state == UiState::Disabled {
             return None;
         }
-        let (fired, local_delta, local_slider) = match &node.spec.0 {
+        let (fired, local_stepper, local_slider) = match &node.spec.0 {
             UiNode::Toggle(toggle) if matches!(key, "Enter" | "NumpadEnter" | " ") => (fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(!toggle.presence.selected)), None, None),
             UiNode::Slider(slider) if node.state.edit.is_none() => {
                 let value = slider_key_value_from(slider, slider_live_value(node, slider), key, modifiers.shift)?;
                 (fired_action(&slider.on_change, Trigger::Change, DslValue::float(value)), None, Some(value))
             }
-            UiNode::NumberStepper(stepper) if matches!(key, "PageUp" | "PageDown") => {
-                let live = number_stepper_live_value(node, stepper);
-                let next = ui_contract::ui_number_key_value(live, stepper.min, stepper.max, stepper.step, stepper.precision, stepper.display_factor, stepper.snaps.iter().copied(), if key == "PageUp" { ui_contract::SliderKey::PageUp } else { ui_contract::SliderKey::PageDown }, false);
-                let binds_delta = node.intent.as_ref().map_or_else(|| !stepper.on_delta.action.is_empty(), |intent| intent.binds(Trigger::Delta));
-                let fired = if binds_delta { fired_action(&stepper.on_delta, Trigger::Delta, DslValue::float(next - live)) } else { fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(next)) };
-                ((next != live).then_some(fired).flatten(), Some(next - live).filter(|delta| *delta != 0.0), None)
-            }
             UiNode::NumberStepper(stepper) => {
-                let sign = match key {
-                    "ArrowUp" => 1.0,
-                    "ArrowDown" => -1.0,
-                    _ => return None,
+                let (law_key, large) = number_field_key(key, modifiers.shift, stepper.min, stepper.max)?;
+                let live = number_stepper_live_value(node, stepper);
+                let next = ui_contract::ui_number_key_value(live, stepper.min, stepper.max, stepper.step, stepper.precision, stepper.display_factor, stepper.snaps.iter().copied(), law_key, large);
+                let binds_delta = node.intent.as_ref().map_or_else(|| !stepper.on_delta.action.is_empty(), |intent| intent.binds(Trigger::Delta));
+                let fired = if binds_delta {
+                    let rungs = if large { ui_contract::SLIDER_PAGE_STEPS } else { 1.0 };
+                    let delta = match law_key {
+                        ui_contract::SliderKey::Increment => stepper.step * rungs,
+                        ui_contract::SliderKey::Decrement => -stepper.step * rungs,
+                        _ => next - live,
+                    };
+                    fired_action(&stepper.on_delta, Trigger::Delta, DslValue::float(delta))
+                } else {
+                    fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(next))
                 };
-                (number_stepper_fired(node, stepper, sign), Some(sign * stepper.step), None)
+                (fired, Some(next), None)
             }
             _ => (None, None, None),
         };
         if let Some(value) = local_slider {
             self.apply_slider_local_value(tree, id, value);
         }
-        if let Some(delta) = local_delta {
-            self.apply_stepper_local_delta(tree, id, delta);
+        if let Some(value) = local_stepper {
+            self.apply_stepper_local_value(tree, id, value);
         }
         let fired = fired?;
-        let continuous = fired.trigger == Trigger::Change && (local_slider.is_some() || local_delta.is_some());
+        let continuous = fired.trigger == Trigger::Change && (local_slider.is_some() || local_stepper.is_some());
         Some((id, if continuous { pressed(tree, &self.window_id, id, fired, true) } else { fired }))
     }
     //#endregion 🔖️WidgetKeyboard

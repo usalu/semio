@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeZoneMultiplier, base: &EnergyModelSnapshot) -
     if let Some(zone) = model.zones.iter_mut().find(|zone| zone.id == payload.id) {
         zone.multiplier = payload.new_multiplier;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

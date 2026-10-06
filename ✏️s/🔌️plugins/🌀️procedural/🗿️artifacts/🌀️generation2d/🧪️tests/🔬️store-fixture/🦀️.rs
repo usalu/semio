@@ -9,7 +9,7 @@
 //! does both. 2d twin of `🧊️generation3d/🧪️tests/🔬️store-fixture/🦀️.rs`
 //! (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
-use crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_document_store_owners;
+use crate::standards::v1::subsets::any::io::binary::mutations::generation2d_document_store_owners;
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use semio_framework_plugin::ArtifactOwnedDisposer;

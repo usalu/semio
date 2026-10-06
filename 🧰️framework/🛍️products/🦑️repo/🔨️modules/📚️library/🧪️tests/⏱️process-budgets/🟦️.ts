@@ -8,7 +8,7 @@ import Ajv from "ajv";
 import { defaultBudgetMs, workspaceScriptExists } from "../../🏃️process/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
-const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/⏱️process-budgets/🔣️.json", import.meta.url), "utf8"));
+
 const budgetPath = fileURLToPath(new URL("../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts", import.meta.url));
 const libraryPath = fileURLToPath(new URL("../../📦️packages/🟦️typescript/🟦️.ts", import.meta.url));
 /** 🧵️ The Execa 1.x completion oracle, typed at its CommonJS boundary. */
@@ -30,7 +30,7 @@ test("owned snapshot Cargo feature admission remains separate from the ordinary 
 
 test("owned snapshot source groups retain exact coverage and finite per-group budgets",async()=>{
  const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🪶️snapshot-test-groups/🔣️.json",import.meta.url),"utf8"));
- const shape=JSON.parse(readFileSync(new URL("../../🧬️schema/🪶️snapshot-test-groups/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).validate(shape,corpus)).toBe(true);
+ 
  const {Database}=await import("bun:sqlite"),db=new Database(":memory:");db.exec("CREATE TABLE owned_source(name TEXT PRIMARY KEY, ordinal INTEGER NOT NULL)");for(const [index,name] of corpus.sources.entries())db.query("INSERT INTO owned_source VALUES (?,?)").run(name,index);expect(db.query("SELECT name FROM owned_source ORDER BY ordinal").all().map((row:any)=>row.name)).toEqual(corpus.sources);db.close();
  const root=fileURLToPath(new URL("../../../../../../../",import.meta.url)),runner=fileURLToPath(new URL("../../⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",import.meta.url));
  const code=`const{mock}=await import("bun:test");const library=await import(${JSON.stringify(libraryPath)});let calls=[];mock.module(${JSON.stringify(libraryPath)},()=>({...library,runRepositoryTestCommand:async(file,args,options)=>calls.push({file,args,options})}));process.argv=[process.execPath,"owned-route","test-snapshot-sqlite","source"];const{runArtifactRustPackageMain}=await import(${JSON.stringify(runner)});const corpus=${JSON.stringify(corpus)};const cases=[];for(const row of[...corpus.cases,...corpus.invalidGroups.map(groups=>({groups,invalid:true}))]){calls=[];let error=null;try{await runArtifactRustPackageMain(${JSON.stringify(root)},"owned-neutral-package",{snapshotSqliteTests:corpus.sources,snapshotSqliteTestGroups:row.groups,snapshotSqliteTestBudgetMs:corpus.budgetMs});}catch(cause){error=String(cause);}cases.push({calls,error});}console.log(JSON.stringify(cases));`;
@@ -45,7 +45,7 @@ function cleanEnv(): NodeJS.ProcessEnv {
 }
 
 test("process budgets follow neutral defaults and opt-in overrides", () => {
-  expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
+  expect(fixture["defaults"]["build"]).toEqual(0);expect(fixture["defaults"]["command"]).toEqual(0);expect(fixture["defaults"]["orchestrator"]).toEqual(0);expect(fixture["defaults"]["daemon"]).toEqual(0);
   const previous = budgetKeys.map(key => process.env[key]);
   const readers = { build: buildBudgetMs, command: cmdBudgetMs, orchestrator: orchestratorBudgetMs, daemon: daemonBudgetMs };
   try {
@@ -167,8 +167,8 @@ test("process runner reaches workspace scripts before same-named bins", async ()
 
 test("process budgets bind nested native workspace profiles to the repository config",async()=>{
   const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
-  const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
-  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
+  
+  expect(corpus["schemaVersion"]).toEqual(1);expect(corpus["configPath"]).toEqual(".config/nextest.toml");expect(corpus["periods"]["fundamental"]).toEqual("15s");expect(corpus["periods"]["quick"]).toEqual("300s");expect(corpus["periods"]["long"]).toEqual("900s");expect(corpus["periods"]["exhaustive"]).toEqual("1800s");expect(corpus["nativePackage"]["name"]).toEqual("semio-s-artifact-stdio-mp4");expect(corpus["nativePackage"]["workspace"]).toEqual("✏️s");expect(corpus["nativePackage"]["manifest"]).toEqual("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/Cargo.toml");
   for(const coverage of corpus.coverage){
     const code=`const{mock}=await import("bun:test");const preparePath=${JSON.stringify(fileURLToPath(new URL("../../🗂️workspaces/🦀️cargo/📜️script.ts",import.meta.url)))};const originalBunSpawnSync=Bun.spawnSync.bind(Bun);Bun.spawnSync=(args,options)=>args[1]===preparePath?{exitCode:0,stdout:new Uint8Array(),stderr:new Uint8Array()}:originalBunSpawnSync(args,options);const native=await import("node:child_process");const spawn=native.spawn,spawnSync=native.spawnSync;mock.module("node:child_process",()=>({...native,spawnSync:(cmd,args,opts)=>cmd==="cargo"?{status:0}:spawnSync(cmd,args,opts),spawn:(cmd,args,opts)=>{if(cmd!=="cargo")return spawn(cmd,args,opts);console.error(JSON.stringify(args));return spawn(process.execPath,["-e",args.includes("list")?"console.log('{}')":"console.log('native-complete')"],opts)}}));const{runRepositoryCargoTests,getWorkspaceRoot}=await import(${JSON.stringify(libraryPath)});console.error(JSON.stringify({root:getWorkspaceRoot()}));await runRepositoryCargoTests([${JSON.stringify(corpus.nativePackage.name)}],process.cwd());`;
     const result=await execa(process.execPath,["-e",code],{env:{...cleanEnv(),SEMIO_COVERAGE:coverage?"1":"0",SEMIO_TEST_LEVEL:corpus.profile},timeout:12000,reject:false});

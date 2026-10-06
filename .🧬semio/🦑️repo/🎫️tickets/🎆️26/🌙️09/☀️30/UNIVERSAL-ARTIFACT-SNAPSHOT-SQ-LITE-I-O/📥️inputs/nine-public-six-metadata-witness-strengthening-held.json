@@ -1,0 +1,86 @@
+{
+  "qualification": "Strengthens unchanged nineexisting completeactualowner public laws against authored neutral metadataDDL with allsixfields and no added/weakenedpubliclaw identities; existingfourbyname/fullowner/words/edit/retirement stay",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "const m=d.query('SELECT artifact_kind,standard,subset,native_encoding FROM semio_snapshot').get();",
+          "after": "const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "const m=d.query('SELECT artifact_kind,standard,subset,native_encoding FROM semio_snapshot').get();",
+          "after": "const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "const m=d.query('SELECT artifact_kind,standard,subset,native_encoding FROM semio_snapshot').get();",
+          "after": "const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "const m=d.query('SELECT artifact_kind,standard,subset,native_encoding FROM semio_snapshot').get();",
+          "after": "const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "const m=d.query('SELECT artifact_kind,standard,subset,native_encoding FROM semio_snapshot').get();",
+          "after": "const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "const m=d.query('SELECT artifact_kind,standard,subset,native_encoding FROM semio_snapshot').get();",
+          "after": "const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "const m=d.query('SELECT artifact_kind,standard,subset,native_encoding FROM semio_snapshot').get();",
+          "after": "const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "const m=d.query('SELECT artifact_kind,standard,subset,native_encoding FROM semio_snapshot').get();",
+          "after": "const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "const m=d.query('SELECT artifact_kind,standard,subset,native_encoding FROM semio_snapshot').get();",
+          "after": "const m=d.query('SELECT * FROM semio_snapshot').get();if(JSON.stringify(Object.keys(m))!==JSON.stringify(['id','artifact_kind','standard','subset','schema_version','native_encoding'])||m.id!==1n||m.schema_version!==1n)throw Error('completePublicMetadata');"
+        }
+      ]
+    }
+  ]
+}

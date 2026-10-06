@@ -1,0 +1,285 @@
+{
+  "schemaBytes": 3039,
+  "tableCount": 10,
+  "maxColumns": 18,
+  "cases": [
+    {
+      "key": "nativeMatchedFull",
+      "snapshot": {
+        "schema": "s.stdio.semio.graph",
+        "nodes": [
+          {
+            "id": {
+              "value": "first"
+            },
+            "kind": "typed",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "c004000000000000"
+              },
+              "y": {
+                "bits": "400a000000000000"
+              }
+            },
+            "width": {
+              "bits": "0000000000000000"
+            },
+            "height": {
+              "bits": "0000000000000000"
+            },
+            "ports": [
+              {
+                "name": "read",
+                "kind": "in",
+                "category": "",
+                "properties": []
+              },
+              {
+                "name": "write",
+                "kind": "out",
+                "category": "",
+                "properties": []
+              },
+              {
+                "name": "both",
+                "kind": "inOut",
+                "category": "",
+                "properties": []
+              }
+            ],
+            "properties": [
+              {
+                "key": "same",
+                "value": {
+                  "kind": "map",
+                  "entries": [
+                    {
+                      "key": "nested",
+                      "value": {
+                        "kind": "list",
+                        "items": [
+                          {
+                            "kind": "str",
+                            "value": "payload"
+                          },
+                          {
+                            "kind": "ref",
+                            "id": {
+                              "value": "external-domain-id"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "key": "same",
+                "value": {
+                  "kind": "bytes",
+                  "value": [
+                    0,
+                    255
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": {
+              "value": "second"
+            },
+            "kind": "",
+            "label": "",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "0000000000000000"
+              }
+            },
+            "width": {
+              "bits": "0000000000000000"
+            },
+            "height": {
+              "bits": "0000000000000000"
+            },
+            "ports": [],
+            "properties": []
+          }
+        ],
+        "edges": [
+          {
+            "id": {
+              "value": "forward"
+            },
+            "source": {
+              "value": "first"
+            },
+            "target": {
+              "value": "second"
+            },
+            "kind": "data",
+            "label": "one",
+            "properties": []
+          },
+          {
+            "id": {
+              "value": "backward"
+            },
+            "source": {
+              "value": "second"
+            },
+            "target": {
+              "value": "first"
+            },
+            "kind": "data",
+            "label": "two",
+            "properties": []
+          },
+          {
+            "id": {
+              "value": "self"
+            },
+            "source": {
+              "value": "first"
+            },
+            "target": {
+              "value": "first"
+            },
+            "kind": "self",
+            "label": "three",
+            "properties": []
+          }
+        ]
+      },
+      "rows": 19,
+      "semanticBytes": 798,
+      "tables": [
+        {
+          "table": "semio_graph_document",
+          "rows": 1,
+          "semanticBytes": 27
+        },
+        {
+          "table": "semio_graph_edge",
+          "rows": 3,
+          "semanticBytes": 162
+        },
+        {
+          "table": "semio_graph_edge_property",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_list_element",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "semio_graph_map_entry",
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "semio_graph_node",
+          "rows": 2,
+          "semanticBytes": 254
+        },
+        {
+          "table": "semio_graph_port",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "semio_graph_port_property",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_property",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "semio_graph_value",
+          "rows": 5,
+          "semanticBytes": 85
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "nodesEdgesEmpty",
+      "snapshot": {
+        "schema": "s.stdio.semio.graph",
+        "nodes": [],
+        "edges": []
+      },
+      "rows": 1,
+      "semanticBytes": 27,
+      "tables": [
+        {
+          "table": "semio_graph_document",
+          "rows": 1,
+          "semanticBytes": 27
+        },
+        {
+          "table": "semio_graph_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_edge_property",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_list_element",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_map_entry",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_node",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_port",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_port_property",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_property",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_graph_value",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    }
+  ]
+}

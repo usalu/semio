@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-async", "dep:semio-framework-geometry", "dep:semio-framework-os-infinite", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-async", "dep:semio-framework-os-infinite", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen"]
 
 [dependencies]
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -33,7 +33,7 @@ semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modu
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 wasm-bindgen = { workspace = true, optional = true }
 semio-framework = { workspace = true }
-semio-framework-geometry = { workspace = true, optional = true }
+semio-framework-geometry = { workspace = true }
 semio-framework-graph = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }

@@ -146,7 +146,8 @@
             },
             "widget": "stepper",
             "unit": "kg/m³",
-            "precision": 0
+            "precision": 0,
+            "step": 10
           }
         },
         "applicationType": {
@@ -718,7 +719,8 @@
             "unit": "1",
             "displayUnit": "%",
             "displayFactor": 100,
-            "precision": 0
+            "precision": 0,
+            "step": 0.01
           }
         },
         "lambda": {
@@ -755,7 +757,8 @@
             },
             "widget": "stepper",
             "unit": "kg/m³",
-            "precision": 0
+            "precision": 0,
+            "step": 10
           }
         }
       },

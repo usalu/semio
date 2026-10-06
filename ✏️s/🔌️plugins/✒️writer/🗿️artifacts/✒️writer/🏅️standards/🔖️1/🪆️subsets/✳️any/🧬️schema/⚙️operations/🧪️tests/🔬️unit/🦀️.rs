@@ -5,21 +5,21 @@ use crate::schema;
 /// `reserve_edit_history_slot` then refuses every `Apply` with
 /// `edit history insertion requires its exact mutation retirement factory` — the fixture could be
 /// read but never mutated or undone (fleet-brief stale-test bucket 2).
-async fn seeded_store() -> crate::spr::OwnedWriterStore {
-    crate::spr::new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture")
+async fn seeded_store() -> crate::standards::v1::subsets::any::io::binary::mutations::OwnedWriterStore {
+    crate::standards::v1::subsets::any::io::binary::mutations::new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture")
 }
 
 #[semio_framework_async_macros::async_test]
 async fn writer_document_vcs_replays_text_mutations() {
     let mut store = seeded_store().await;
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None, transaction: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], transaction: None }).await.expect("apply");
     assert_eq!(crate::writer_text(&store.snapshot().expect("snapshot")), "hello");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn writer_document_vcs_undoes_text_mutation() {
     let mut store = seeded_store().await;
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None, transaction: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], transaction: None }).await.expect("apply");
     store.dispatch(store::ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(crate::writer_text(&store.snapshot().expect("snapshot")), "");
 }

@@ -22,6 +22,7 @@
           "en": "Index of the item to move, counted from 0.",
           "de": "Index des zu verschiebenden Eintrags, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -40,6 +41,7 @@
           "en": "Target index in the list, counted from 0.",
           "de": "Zielindex in der Liste, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 20

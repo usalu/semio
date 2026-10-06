@@ -2,7 +2,7 @@ use super::*;
 use crate::schema::mutations::{apply_deflate_mutation, set_compression_params, set_payload, set_preset_dictionary, set_snapshot, DeflateMutation};
 use crate::standards::v_rfc1950::subsets::any::io::{decode_deflate_snapshot, encode_deflate_snapshot};
 use crate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
-use protocol::{DiffCodec, Mutation};
+use protocol::{DiffBinary,DiffCodec,DiffText, Mutation};
 
 //#region Fixtures
 /// 🌱 A real RFC1950 zlib stream (CMF=0x78 CINFO=7/CM=8, FLG=0x9c FLEVEL=Default/FDICT=0,
@@ -200,7 +200,7 @@ async fn codec_retention_law_real_fixture_normal_form() {
 //#endregion codec_retention_law
 
 //#region diff_codec_text_binary_roundtrip_law
-/// 🧪️ F6: `DiffCodec::print_diff`/`parse_diff`/`encode_diff`/`decode_diff` round-trip law —
+/// 🧪️ F6: `DiffText::print_diff`/`parse_diff`/`encode_diff`/`decode_diff` round-trip law —
 /// exercises real `between()` results covering every field AND both `dict_id` tri-state
 /// transitions (`Some(None)` = cleared, `Some(Some(_))` = set/changed), plus the empty diff.
 #[semio_framework_async_macros::async_test]

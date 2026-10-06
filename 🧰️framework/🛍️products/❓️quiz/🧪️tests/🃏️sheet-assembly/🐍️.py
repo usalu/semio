@@ -202,7 +202,7 @@ def corroborate(vector, quiz, sheet, sheets):
 # region 🔖️Handlers
 def sheets(ctx):
     """🗃️ Every committed (quiz, seed, challenge) triple, rebuilt, corroborated and held to its committed sheet."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))
+    vectors = json.loads(ctx.input_bytes(VECTORS))
     quizzes = {quiz["id"]: quiz for quiz in vectors["quizzes"]}
     produced = {}
     for vector in vectors["sheets"]:

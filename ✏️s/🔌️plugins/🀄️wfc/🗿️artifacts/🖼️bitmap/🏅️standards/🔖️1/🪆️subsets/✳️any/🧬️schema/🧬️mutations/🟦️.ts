@@ -4,7 +4,7 @@ import type { BitmapColor } from "../📸️snapshot/🟦️";
 
 export interface ChangeSeed { seed: bigint }
 export interface ResizeInput { width: number; height: number }
-export interface SetInputPixels { x: number; y: number; width: number; height: number; pixels: string }
+export interface SetInputPixels { x: number; y: number; width: number; height: number; pixels: Uint8Array }
 export interface AddPaletteColor { index: number; color: BitmapColor }
 export interface ChangePaletteColor { index: number; color: BitmapColor }
 export interface RemovePaletteColor { index: number }

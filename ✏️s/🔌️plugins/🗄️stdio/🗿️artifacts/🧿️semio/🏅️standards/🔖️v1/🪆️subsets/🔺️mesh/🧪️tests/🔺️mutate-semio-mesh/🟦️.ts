@@ -26,7 +26,7 @@
  * - the envelope — `semio <schema>.dsl v<version>` for text, `0x89 'S' 'E' 'M' 0D 0A 1A 0A` plus a
  *   little-endian u32 token length and the token for binary — from
  *   `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs`'s envelope section;
- * - the DSL body from `../../🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
+ * - the DSL body from `../../🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📝️text/📸️snapshot/📖️.grammar.semio`
  *   (`document = artifact-mark schema-line meshes-line materials-line textures-line`, the six
  *   `topology` letters, `option-hex`, and plain bracketed number lists for the geometry buffers);
  * - the pack frame from `…/📸️snapshot/💾️binary/📡️.protocol.semio` and its Kaitai mirror,
@@ -37,7 +37,7 @@
  *   `📚️examples/🧊️cube` bytes, whose DSL twin pins every field against a readable spelling, and the
  *   derivation is pinned by re-encoding that committed file byte for byte;
  * - the eighteen verbs, their argument lists and their JSON wire form from
- *   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed proto and JSON schema
+ *   `…/🚪️io/📝️text/🧬️mutations/📖️.grammar.semio`, the committed proto and JSON schema
  *   mirrors, and the committed per-kind `(before, mutation, after)` specification vectors.
  *
  * Nothing here imports, links, wraps or transliterates the Rust subject. Where the two disagree the
@@ -46,7 +46,7 @@
 
 // #region 🔌️Adapters
 import * as THREE from "three";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { digest } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -986,12 +986,12 @@ function docString(ctx: AdapterContext): string {
   return found;
 }
 
-function fixtureJson(ctx: AdapterContext, uri: string): unknown {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(uri)));
+function snapshotJson(ctx: AdapterContext, uri: string): unknown {
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(uri)));
 }
 
 function artifact(ctx: AdapterContext): Snapshot {
-  return parseDsl(new TextDecoder().decode(ctx.fixtureBytes(ARTIFACT_DSL)));
+  return parseDsl(new TextDecoder().decode(ctx.inputBytes(ARTIFACT_DSL)));
 }
 
 function assertion(message: string): Error {
@@ -1004,14 +1004,14 @@ function assertion(message: string): Error {
 // #region 🎯️Handlers
 function mutate(ctx: AdapterContext): AdapterOutcome {
   const document = artifact(ctx);
-  const mutation = fixtureJson(ctx, stepUris(ctx, "shared://🔺️mutate-semio-mesh/").find((uri) => uri.endsWith("/🦠️mutation/🔣️.json"))!) as Mutation;
+  const mutation = snapshotJson(ctx, stepUris(ctx, "shared://🔺️mutate-semio-mesh/").find((uri) => uri.endsWith("/🦠️mutation/🔣️.json"))!) as Mutation;
   const applied = applyMutation(document, mutation);
   return { projection: { document: projectionOf(applied), geometry: threeReport(applied) } };
 }
 
 function inverse(ctx: AdapterContext): AdapterOutcome {
   const document = artifact(ctx);
-  const mutation = fixtureJson(ctx, stepUris(ctx, "shared://🔺️mutate-semio-mesh/").find((uri) => uri.endsWith("/🦠️mutation/🔣️.json"))!) as Mutation;
+  const mutation = snapshotJson(ctx, stepUris(ctx, "shared://🔺️mutate-semio-mesh/").find((uri) => uri.endsWith("/🦠️mutation/🔣️.json"))!) as Mutation;
   const undo = inverseMutation(document, mutation);
   const mutated = applyMutation(document, mutation);
   let restored = mutated;
@@ -1022,20 +1022,20 @@ function inverse(ctx: AdapterContext): AdapterOutcome {
 
 function specVector(ctx: AdapterContext): AdapterOutcome {
   const uris = stepUris(ctx, "shared://🧬️mutations/");
-  const before = fixtureJson(ctx, uris[0]!) as Snapshot;
-  const mutation = fixtureJson(ctx, uris[1]!) as Mutation;
-  const expected = fixtureJson(ctx, uris[2]!) as Snapshot;
+  const before = snapshotJson(ctx, uris[0]!) as Snapshot;
+  const mutation = snapshotJson(ctx, uris[1]!) as Mutation;
+  const expected = snapshotJson(ctx, uris[2]!) as Snapshot;
   const applied = applyMutation(before, mutation);
   if (JSON.stringify(applied) !== JSON.stringify(expected)) throw assertion(`${ctx.scenario.id}: the applied snapshot is not the committed after-snapshot`);
   return { projection: projectionOf(applied) };
 }
 
 function identityRoundTrip(ctx: AdapterContext): AdapterOutcome {
-  const dslBytes = ctx.fixtureBytes(ARTIFACT_DSL);
+  const dslBytes = ctx.inputBytes(ARTIFACT_DSL);
   const parsed = parseDsl(new TextDecoder().decode(dslBytes));
   const printed = new TextEncoder().encode(printDsl(parsed));
   if (digest(printed) !== digest(dslBytes)) throw assertion("identity-round-trip: re-printing the parsed model did not reproduce the committed DSL file");
-  const packBuffer = ctx.fixtureBytes(ARTIFACT_PACK);
+  const packBuffer = ctx.inputBytes(ARTIFACT_PACK);
   const unpacked = parsePack(packBuffer);
   if (JSON.stringify(unpacked) !== JSON.stringify(parsed)) throw assertion("identity-round-trip: the committed binary twin decodes to a different model than the committed text artifact");
   const repacked = packBytes(parsed);

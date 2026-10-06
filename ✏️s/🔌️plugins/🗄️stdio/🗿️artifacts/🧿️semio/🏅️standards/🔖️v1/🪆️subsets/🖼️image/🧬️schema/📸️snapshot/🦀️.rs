@@ -8,7 +8,8 @@
 //! NEUTRAL semio type, not itself an on-disk file format — real per-format bytes for png/gif/bmp/
 //! jpg/tiff are produced by the semio↔format `🚪️io` leaves, W4).
 
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
@@ -98,388 +99,58 @@ impl Default for SemioImageSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️TextPrimitives
-/// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
-/// style as this subset's own `🔺️diff`/`🧬️mutations` facets (`GifDiff`/`SvgDiff`/`DocxDiff`'s
-/// established hand-rolled convention), duplicated here (not imported from `schema::diff`) to keep
-/// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
-/// either sibling facet (same rationale `🌊️flow`'s/`🔺️mesh`'s own pilots document).
-///
-/// 🧩️ The `#[derive(dsl::DslArtifact)]` path was tried first per this ticket's brief. It is
-/// blocked here: `SemioImageSnapshot.icc: Option<Vec<u8>>` is a BARE `Option<T>` field directly on
-/// the snapshot struct — `dsl` has no blanket `Option<T>: DslField` impl (the exact same shape
-/// this subset's own `🔺️diff`/`🧬️mutations` facets already document as blocking their derive path,
-/// matching gif's/docx's established precedent — `f6-final-summary.md` §4.3/§4.4). Hand-rolled
-/// instead, same boundary this ticket's other semio pilots hit for their own bare-`Option`/nested-
-/// buffer collection shapes.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_bytes(b: &[u8]) -> String {
-    hex_encode(b)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
-    hex_decode(s)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_u8(s: &str) -> Result<u8, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_u32(s: &str) -> Result<u32, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
-    match opt {
-        None => "[0]".to_string(),
-        Some(v) => format!("[1,{}]", enc(v)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
-        ["0"] => Ok(None),
-        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
-        other => Err(format!("option decode: bad shape {other:?}")),
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_colorspace(c: SemioColorspace) -> char {
-    match c {
-        SemioColorspace::Rgb => 'r',
-        SemioColorspace::Rgba => 'a',
-        SemioColorspace::Grayscale => 'g',
-        SemioColorspace::GrayscaleAlpha => 'y',
-        SemioColorspace::Indexed => 'i',
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_colorspace(s: &str) -> Result<SemioColorspace, String> {
-    match s {
-        "r" => Ok(SemioColorspace::Rgb),
-        "a" => Ok(SemioColorspace::Rgba),
-        "g" => Ok(SemioColorspace::Grayscale),
-        "y" => Ok(SemioColorspace::GrayscaleAlpha),
-        "i" => Ok(SemioColorspace::Indexed),
-        other => Err(format!("bad colorspace {other:?}")),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_frame(f: &SemioImageFrame) -> String {
-    format!("[{},{}]", f.delay_ms, hex_encode(&f.rgba8))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_frame(s: &str) -> Result<SemioImageFrame, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [delay, rgba] = parts.as_slice() else { return Err(format!("frame: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioImageFrame { delay_ms: parse_u32(delay)?, rgba8: hex_decode(rgba)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_metadata_entry(e: &SemioImageMetadataEntry) -> String {
-    format!("[{},{}]", enc_str(&e.key), enc_str(&e.value))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_metadata_entry(s: &str) -> Result<SemioImageMetadataEntry, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [key, value] = parts.as_slice() else { return Err(format!("metadata entry: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioImageMetadataEntry { key: dec_str(key)?, value: dec_str(value)? })
-}
 
-/// 📄️ The real structured text body: eight lines — `schema=<hex>`, `width=<N>`, `height=<N>`,
-/// `colorspace=<c>`, `bitDepth=<N>`, `icc=<option-hex>`, `frames=[<frame>,...]`,
-/// `metadata=[<entry>,...]` — matching the grammar's `document = artifact-mark schema-line
-/// width-line height-line colorspace-line bit-depth-line icc-line frames-line metadata-line`.
-/// Newlines are pure lexer trivia in the shared dialect, so this is genuinely recognizable by
-/// `dsl::Recognizer`, not merely readable.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_image_snapshot_body(s: &SemioImageSnapshot) -> String {
-    format!(
-        "schema={}\nwidth={}\nheight={}\ncolorspace={}\nbitDepth={}\nicc={}\nframes={}\nmetadata={}",
-        enc_str(&s.schema),
-        s.width,
-        s.height,
-        enc_colorspace(s.colorspace),
-        s.bit_depth,
-        encode_option(&s.icc, |b| enc_bytes(b)),
-        enc_list(&s.frames, enc_frame),
-        enc_list(&s.metadata, enc_metadata_entry),
-    )
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_image_snapshot_body(body: &str) -> Result<SemioImageSnapshot, String> {
-    let mut schema = None;
-    let mut width = None;
-    let mut height = None;
-    let mut colorspace = None;
-    let mut bit_depth = None;
-    let mut icc = None;
-    let mut frames = Vec::new();
-    let mut metadata = Vec::new();
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("width=") {
-            width = Some(parse_u32(rest)?);
-        } else if let Some(rest) = line.strip_prefix("height=") {
-            height = Some(parse_u32(rest)?);
-        } else if let Some(rest) = line.strip_prefix("colorspace=") {
-            colorspace = Some(dec_colorspace(rest)?);
-        } else if let Some(rest) = line.strip_prefix("bitDepth=") {
-            bit_depth = Some(parse_u8(rest)?);
-        } else if let Some(rest) = line.strip_prefix("icc=") {
-            icc = Some(decode_option(rest, dec_bytes)?);
-        } else if let Some(rest) = line.strip_prefix("frames=") {
-            frames = dec_list(rest, dec_frame)?;
-        } else if let Some(rest) = line.strip_prefix("metadata=") {
-            metadata = dec_list(rest, dec_metadata_entry)?;
-        } else {
-            return Err(format!("semio image snapshot: unknown line {line:?}"));
-        }
-    }
-    Ok(SemioImageSnapshot {
-        schema: schema.ok_or_else(|| "semio image snapshot: missing schema line".to_string())?,
-        width: width.ok_or_else(|| "semio image snapshot: missing width line".to_string())?,
-        height: height.ok_or_else(|| "semio image snapshot: missing height line".to_string())?,
-        colorspace: colorspace.unwrap_or_default(),
-        bit_depth: bit_depth.unwrap_or(0),
-        icc: icc.unwrap_or(None),
-        frames,
-        metadata,
-    })
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `🌊️flow`'s/`🔺️mesh`'s own upgraded `ArtifactPack` uses)
-/// backing the real `ArtifactPack` below — replaces the old `serde_json::to_vec`-in-envelope
-/// shortcut.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn colorspace_tag(c: SemioColorspace) -> u8 {
-    match c {
-        SemioColorspace::Rgb => 0,
-        SemioColorspace::Rgba => 1,
-        SemioColorspace::Grayscale => 2,
-        SemioColorspace::GrayscaleAlpha => 3,
-        SemioColorspace::Indexed => 4,
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn colorspace_from_tag(tag: u8) -> Result<SemioColorspace, String> {
-    match tag {
-        0 => Ok(SemioColorspace::Rgb),
-        1 => Ok(SemioColorspace::Rgba),
-        2 => Ok(SemioColorspace::Grayscale),
-        3 => Ok(SemioColorspace::GrayscaleAlpha),
-        4 => Ok(SemioColorspace::Indexed),
-        other => Err(format!("unsupported colorspace tag {other}")),
-    }
-}
 
-/// 🎁 `format u8` + varint-length-prefixed `schema` UTF-8 + real fixed-width `width`/`height`
-/// (`u32` LE) + `colorspace` (`u8` tag) + `bit_depth` (`u8`) — all genuinely, individually
-/// protocol-walkable, matching the real `📡️.protocol.semio` header/segment fields
-/// exactly — then `icc` (presence `u8` + optional varint-length-prefixed bytes), `frames`
-/// (varint count + per-frame `delay_ms`/`rgba8`), and `metadata` (varint count + per-entry
-/// `key`/`value`) as the honest opaque `payload` tail (`protocol-array-of-records` gap — `frames`/
-/// `metadata` are homogeneous variable-length repeated records).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_image_snapshot_binary(s: &SemioImageSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut out = Vec::new();
-    out.push(PACK_BINARY_FORMAT);
-    write_str_lp(&mut out, &s.schema);
-    out.extend_from_slice(&s.width.to_le_bytes());
-    out.extend_from_slice(&s.height.to_le_bytes());
-    out.push(colorspace_tag(s.colorspace));
-    out.push(s.bit_depth);
-    match &s.icc {
-        Some(bytes) => {
-            out.push(1);
-            write_bytes_lp(&mut out, bytes);
-        }
-        None => out.push(0),
-    }
-    store::pack_rt::write_varint_u64(&mut out, s.frames.len() as u64);
-    for f in &s.frames {
-        out.extend_from_slice(&f.delay_ms.to_le_bytes());
-        write_bytes_lp(&mut out, &f.rgba8);
-    }
-    store::pack_rt::write_varint_u64(&mut out, s.metadata.len() as u64);
-    for entry in &s.metadata {
-        write_str_lp(&mut out, &entry.key);
-        write_str_lp(&mut out, &entry.value);
-    }
-    out
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_image_snapshot_binary(bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
-    if format != PACK_BINARY_FORMAT {
-        return Err(format!("unsupported pack format {format}"));
-    }
-    let schema = read_str_lp(&mut reader)?;
-    let width = reader.read_u32_le().map_err(|e| e.to_string())?;
-    let height = reader.read_u32_le().map_err(|e| e.to_string())?;
-    let colorspace = colorspace_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
-    let bit_depth = reader.read_u8().map_err(|e| e.to_string())?;
-    let icc = match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => None,
-        1 => Some(read_bytes_lp(&mut reader)?),
-        other => return Err(format!("unsupported icc presence tag {other}")),
-    };
-    let frame_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut frames = Vec::with_capacity(frame_count as usize);
-    for _ in 0..frame_count {
-        let delay_ms = reader.read_u32_le().map_err(|e| e.to_string())?;
-        let rgba8 = read_bytes_lp(&mut reader)?;
-        frames.push(SemioImageFrame { delay_ms, rgba8 });
-    }
-    let metadata_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut metadata = Vec::with_capacity(metadata_count as usize);
-    for _ in 0..metadata_count {
-        let key = read_str_lp(&mut reader)?;
-        let value = read_str_lp(&mut reader)?;
-        metadata.push(SemioImageMetadataEntry { key, value });
-    }
-    Ok(SemioImageSnapshot { schema, width, height, colorspace, bit_depth, icc, frames, metadata })
-}
+
+
+
+
+
+
+
+
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🎁 Real structured text/binary codecs — replaces the old hex-dump-of-`serde_json` shortcut.
-/// Wrapped in the repo-wide `store::semio_format` envelope, unchanged.
-impl store::ArtifactDsl for SemioImageSnapshot {
-    const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
-        STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA
-    }
 
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        parse_image_snapshot_body(body).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
 
-    fn print_dsl(&self) -> String {
-        let body = print_image_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl store::ArtifactPack for SemioImageSnapshot {
-
-    /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
-
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = encode_image_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-        }
-        let _ = options;
-        decode_image_snapshot_binary(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
-    }
-}
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioImageSnapshot`] — a
-/// thin wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
-/// crate's private `store` extern-crate item (the `🖼️mutate-semio-image` test adapter, whose
-/// `identity-round-trip` scenario reads the REAL committed `📚️examples/🖼️swatch` artifact rather than
-/// a JSON transcription of it) can still drive the same codec production does. Same shape and same
-/// rationale as `🌊️flow`'s own bridge.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn parse_semio_image_dsl(text: &str) -> Result<SemioImageSnapshot, String> {
-    <SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
-}
 
-/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_image_dsl`] — same rationale.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn print_semio_image_dsl(snapshot: &SemioImageSnapshot) -> String {
-    <SemioImageSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
-}
 
-/// 📥️ Decodes this subset's own committed `.pack.semio` bytes into a real [`SemioImageSnapshot`] —
-/// the binary half of the same bridge, so a caller outside this crate can check the two codecs
-/// against each other on the two real committed artifacts instead of against itself.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_image_pack(bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
-    <SemioImageSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
-}
 
-/// 📤️ The `store::ArtifactPack::encode_pack` inverse of [`decode_semio_image_pack`].
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_semio_image_pack(snapshot: &SemioImageSnapshot) -> Vec<u8> {
-    <SemioImageSnapshot as store::ArtifactPack>::encode_pack(snapshot)
-}
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Demo
@@ -510,15 +181,9 @@ pub(crate) fn demo_image_snapshot() -> SemioImageSnapshot {
 mod tests;
 //#endregion 🔖️Tests
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
 
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
 
-#[path="🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
 
-#[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+
+
+

@@ -1,6 +1,6 @@
 step	input	state	output
 1	open	empty	session
-2	loadFixtureJson	admitted	progress
+2	loadSnapshotJson	admitted	progress
 3	poll	inspect	checkpoint
 4	poll	execute	reply
 5	attachSurface	admitted	surface

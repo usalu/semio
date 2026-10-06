@@ -162,9 +162,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "thickens-the-sketch-stroke",
       "class": "third-party-generated",
       "target": {
@@ -218,7 +217,6 @@
       "notes": "Witnesses change-block-ink-width via the svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "redraws-the-sketch-polyline",
       "class": "third-party-generated",
       "target": {

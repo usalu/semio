@@ -144,5 +144,8 @@
       ],
       "accepted": false
     }
+  ],
+  "inertSchemaData": [
+    "🧾️schema-input.json"
   ]
 }

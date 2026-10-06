@@ -1,0 +1,380 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "retiredParentFiles",
+    "requiredFlags",
+    "host"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.artifact-mutation-producers/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "crate",
+            "dimension",
+            "owner",
+            "snapshot",
+            "mutation",
+            "transient",
+            "artifact",
+            "standard",
+            "subset",
+            "excludedSegments",
+            "feature",
+            "provider"
+          ],
+          "properties": {
+            "crate": {
+              "const": "semio-s-artifact-block-2d"
+            },
+            "dimension": {
+              "const": "2d"
+            },
+            "owner": {
+              "const": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+            },
+            "snapshot": {
+              "const": "standards::v1::subsets::any::schema::snapshot::Block2dSnapshot"
+            },
+            "mutation": {
+              "const": "standards::v1::subsets::any::schema::mutations::Block2dMutation"
+            },
+            "transient": {
+              "const": false
+            },
+            "artifact": {
+              "const": "s.block.2d"
+            },
+            "standard": {
+              "const": "1"
+            },
+            "subset": {
+              "const": "any"
+            },
+            "excludedSegments": {
+              "type": "array",
+              "items": [
+                {
+                  "const": "👁️viewer"
+                },
+                {
+                  "const": "✏️editor"
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "feature": {
+              "const": "mutation-inventory"
+            },
+            "provider": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "script",
+                "roots"
+              ],
+              "properties": {
+                "script": {
+                  "const": "../../🏭️bridge/📜️script.ts"
+                },
+                "roots": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "const": "../.."
+                    }
+                  ],
+                  "additionalItems": false,
+                  "minItems": 1,
+                  "maxItems": 1
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "crate",
+            "dimension",
+            "owner",
+            "snapshot",
+            "mutation",
+            "transient",
+            "artifact",
+            "standard",
+            "subset",
+            "excludedSegments",
+            "feature",
+            "provider"
+          ],
+          "properties": {
+            "crate": {
+              "const": "semio-s-artifact-block-3d"
+            },
+            "dimension": {
+              "const": "3d"
+            },
+            "owner": {
+              "const": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+            },
+            "snapshot": {
+              "const": "standards::v1::subsets::any::schema::snapshot::Block3dSnapshot"
+            },
+            "mutation": {
+              "const": "standards::v1::subsets::any::schema::mutations::Block3dMutation"
+            },
+            "transient": {
+              "const": true
+            },
+            "artifact": {
+              "const": "s.block.3d"
+            },
+            "standard": {
+              "const": "1"
+            },
+            "subset": {
+              "const": "any"
+            },
+            "excludedSegments": {
+              "type": "array",
+              "items": [
+                {
+                  "const": "👁️viewer"
+                },
+                {
+                  "const": "✏️editor"
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "feature": {
+              "const": "mutation-inventory"
+            },
+            "provider": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "script",
+                "roots"
+              ],
+              "properties": {
+                "script": {
+                  "const": "../../🏭️bridge/📜️script.ts"
+                },
+                "roots": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "const": "../.."
+                    }
+                  ],
+                  "additionalItems": false,
+                  "minItems": 1,
+                  "maxItems": 1
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "crate",
+            "dimension",
+            "owner",
+            "snapshot",
+            "mutation",
+            "transient",
+            "artifact",
+            "standard",
+            "subset",
+            "excludedSegments",
+            "feature",
+            "provider"
+          ],
+          "properties": {
+            "crate": {
+              "const": "semio-s-artifact-block-5d"
+            },
+            "dimension": {
+              "const": "5d"
+            },
+            "owner": {
+              "const": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+            },
+            "snapshot": {
+              "const": "standards::v1::subsets::any::schema::snapshot::Block5dSnapshot"
+            },
+            "mutation": {
+              "const": "standards::v1::subsets::any::schema::mutations::Block5dMutation"
+            },
+            "transient": {
+              "const": false
+            },
+            "artifact": {
+              "const": "s.block.5d"
+            },
+            "standard": {
+              "const": "1"
+            },
+            "subset": {
+              "const": "any"
+            },
+            "excludedSegments": {
+              "type": "array",
+              "items": [
+                {
+                  "const": "👁️viewer"
+                },
+                {
+                  "const": "✏️editor"
+                }
+              ],
+              "additionalItems": false,
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "feature": {
+              "const": "mutation-inventory"
+            },
+            "provider": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "script",
+                "roots"
+              ],
+              "properties": {
+                "script": {
+                  "const": "../../🏭️bridge/📜️script.ts"
+                },
+                "roots": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "const": "../.."
+                    }
+                  ],
+                  "additionalItems": false,
+                  "minItems": 1,
+                  "maxItems": 1
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalItems": false
+    },
+    "retiredParentFiles": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": [
+        {
+          "const": "Cargo.toml"
+        },
+        {
+          "const": "Cargo.lock"
+        },
+        {
+          "const": "🦀️.rs"
+        },
+        {
+          "const": "📜️script.ts"
+        }
+      ],
+      "additionalItems": false
+    },
+    "requiredFlags": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": [
+        {
+          "const": "--maximum-units"
+        },
+        {
+          "const": "--maximum-owned-bytes"
+        },
+        {
+          "const": "--budget-ms"
+        }
+      ],
+      "additionalItems": false
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nativeSource",
+        "removeDimension",
+        "expectedSurvivors",
+        "assertions"
+      ],
+      "properties": {
+        "nativeSource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "removeDimension": {
+          "const": "2d"
+        },
+        "expectedSurvivors": {
+          "type": "array",
+          "items": [
+            {
+              "const": "3d"
+            },
+            {
+              "const": "5d"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "assertions": {
+          "type": "array",
+          "items": [
+            {
+              "const": "general-import-without-specific"
+            },
+            {
+              "const": "strict-entrypoint-types"
+            },
+            {
+              "const": "selected-own-manifest-binary-arguments"
+            },
+            {
+              "const": "remaining-entrypoints-after-leaf-deletion"
+            }
+          ],
+          "additionalItems": false,
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    }
+  }
+}

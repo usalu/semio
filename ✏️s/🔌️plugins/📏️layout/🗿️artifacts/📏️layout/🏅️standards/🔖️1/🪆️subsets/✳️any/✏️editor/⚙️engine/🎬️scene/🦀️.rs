@@ -11,8 +11,9 @@
 //! `compose_svg_from_drawing`/`rect_path_segments`/`LayoutError` (io/codec-dispatch territory) stayed
 //! at `🚪️io` — this file reaches both by qualified path, which is the normal app→artifact direction.
 
-use crate::io::LayoutError;
-use crate::standards::v1::subsets::any::schema::{parse_layout_document, resolve_page};
+use crate::standards::v1::subsets::any::io::LayoutError;
+use crate::standards::v1::subsets::any::schema::{resolve_page};
+use crate::standards::v1::subsets::any::io::text::snapshot::{parse_layout_document};
 use crate::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
 use infinite_canvas::camera::{self, Camera, Viewport};
 use infinite_canvas::{Affine, BezPath, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
@@ -422,7 +423,7 @@ fn png_data_url(bytes: &[u8]) -> Option<String> {
     if bytes.len() < 8 || bytes.len() > 8192 {
         return None;
     }
-    semio_s_artifact_stdio_png::io::decode_png(bytes).ok()?;
+    semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(bytes).ok()?;
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut encoded = String::new();
     for chunk in bytes.chunks(3) {

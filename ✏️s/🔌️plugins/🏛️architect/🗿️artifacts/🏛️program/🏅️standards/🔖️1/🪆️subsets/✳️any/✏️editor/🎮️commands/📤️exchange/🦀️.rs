@@ -3,7 +3,7 @@
 
 pub mod export_registers_csv {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::inferences::export_registers_csv;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
@@ -24,7 +24,7 @@ use semio_framework_value::ToValue;
 pub mod import_registers_csv {
     use crate::editor::architect::behavior::{import_registers_csv, MergeStrategy};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -52,7 +52,7 @@ use semio_framework_value::ToValue;
 
 pub mod import_registers_csv_request {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -80,7 +80,7 @@ use semio_framework_value::ToValue;
 
 pub mod export_program {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -92,14 +92,14 @@ use semio_framework_value::ToValue;
 
     pub fn handle(_payload: &ExportProgram, doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let program = doc.snapshot;
-        let dsl_text = crate::document_dsl::print(program);
+        let dsl_text = crate::standards::v1::subsets::any::io::text::snapshot::print(program);
         Ok(Emit::effect(Effect::DownloadMediaExport { filename: format!("{}.architect.dsl", program.meta.document_id), mime_type: "text/plain".into(), data: dsl_text, encoding: None }))
     }
 }
 
 pub mod import_program_request {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -122,7 +122,7 @@ use semio_framework_value::ToValue;
 
 pub mod import_program {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -135,7 +135,7 @@ use semio_framework_value::ToValue;
     }
 
     pub fn handle(payload: &ImportProgram, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
-        let next_program = crate::document_dsl::parse(&payload.payload).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-program-invalid"), format!("importProgram cannot read the ProgramSnapshot DSL starting {:?}: {error:?}", payload.payload.chars().take(48).collect::<String>())))?;
+        let next_program = crate::standards::v1::subsets::any::io::text::snapshot::parse(&payload.payload).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("architect.import-program-invalid"), format!("importProgram cannot read the ProgramSnapshot DSL starting {:?}: {error:?}", payload.payload.chars().take(48).collect::<String>())))?;
         Ok(Emit { effects: vec![crate::editor::architect::reset_document_effect(&next_program)], ..Default::default() })
     }
 }

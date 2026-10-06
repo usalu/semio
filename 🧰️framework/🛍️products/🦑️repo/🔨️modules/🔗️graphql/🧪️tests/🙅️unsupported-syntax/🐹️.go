@@ -23,7 +23,7 @@ type corpus struct {
 // region 🔖️Scenarios
 
 func subsetBoundaryIsIdentical(ctx *host.Context) (host.Outcome, error) {
-	bytes, err := ctx.FixtureBytes("shared://🙅️unsupported-syntax/🔣️divergences.json")
+	bytes, err := ctx.InputBytes("shared://🙅️unsupported-syntax/🔣️divergences.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

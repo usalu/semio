@@ -1,5 +1,5 @@
 /** 📋️ Complete authored documents become private typed preparation plans under work grants. */
-import {binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type {DrawingArtifact,DrawingLayerNode,DrawingPathSegment} from "../../🟦️.ts";
 import {DRAWING_BLEND_MODES,drawingDrawingArtifactGuardRefusal} from "../../🟦️.ts";
 import {drawingTransformToMatrix} from "../../🧮️geometry/↗️affine/🟦️.ts";

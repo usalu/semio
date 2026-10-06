@@ -1,4 +1,4 @@
-//! 🧪️ `edit-target-region-label` fixture — `🖋️renames`.
+//! 🧪️ `edit-target-region-label` snapshot — `🖋️renames`.
 //!
 //! Names the board's region. A label is the one optional member of a region, so this is the only verb that can bring the `label` key into existence on the wire.
 //!
@@ -44,7 +44,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

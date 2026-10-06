@@ -14,7 +14,7 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
     let view = ViewModel { window_instances: ["left", "right"].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let result: Result<(), String> = async {
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
-        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let declared_content = app.snapshot().map_err(|error| format!("{error:?}"))?.content.clone();
         let config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
         for row in vectors["steps"].as_array().ok_or("missing gesture steps")? {
@@ -141,7 +141,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
-        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial.clone()], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial.clone()], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let snapshot = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
         let mut envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
@@ -158,7 +158,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         let config_generation = app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))?.ok_or("window config generation absent")?;
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left).await?;
         dispatch_gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: Vec::new() }), &left).await?;
-        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial.clone()], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial.clone()], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("cleared transient absent")?;
         if cleared.get::<WiresCanvasTransientOwner>() != Some(&WiresCanvasTransient::default()) {
             return Err("identical archive reload preserved an old drag preview".into());
@@ -181,7 +181,7 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         {
             return Err("rejected pack changed preview or camera ownership".into());
         }
-        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("re-cleared transient absent")?;
         if cleared.get::<WiresCanvasTransientOwner>() != Some(&WiresCanvasTransient::default()) || app.window_config_generation(&left).await.map_err(|error| format!("{error:?}"))? != Some(config_generation) {
             return Err("a reload after a rejected one did not clear the preview while preserving the camera".into());
@@ -211,7 +211,7 @@ async fn wires_pointer_move_pending_release_cancels_and_retires_with_small_or_ze
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
-        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 0.0, y: 0.0 }), WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 11.0, y: 13.0, samples: Vec::new() })] {
             app.dispatch_typed(command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("cancel-release") }).await.map_err(|error| format!("{error:?}"))?;
             artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
@@ -345,7 +345,7 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
     let left = view.for_window_instance("left").unwrap();
     let result: Result<(), String> = async {
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
-        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
 
         // 🧵️ Three separate moves ...
         gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left).await?;

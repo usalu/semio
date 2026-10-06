@@ -69,127 +69,13 @@ pub fn html_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
     }
 }
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::standards::v5::subsets::any::schema::diff::HtmlDiff;
-    use crate::standards::v5::subsets::any::schema::mutations::{apply_html_mutation, HtmlMutation};
-    use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct HtmlBuilderConstruction {
-        snapshot: HtmlSnapshot,
-    }
-
-    impl ArtifactBuilder for HtmlBuilderConstruction {
-        type Snapshot = HtmlSnapshot;
-        type Mutation = HtmlMutation;
-        type Diff = HtmlDiff;
-        fn empty() -> Self {
-            Self { snapshot: HtmlSnapshot::default() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<HtmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_html_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <HtmlDiff as protocol::MutationDiff<HtmlSnapshot>>::apply(&diff, &self.snapshot)?;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            Ok(self.snapshot)
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::standards::v5::subsets::any::io::import::deserializers as engine;
-    use crate::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot, STDIO_HTML_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct HtmlParts {
-        pub snapshot: Option<HtmlSnapshot>,
-    }
-
-    pub struct HtmlAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for HtmlAnalyzerAnalysis {
-        type Parts = HtmlParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") };
-
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            match source {
-                AnalyzeSource::Binary(bytes) => {
-                    if engine::sniff_real_bytes(bytes) {
-                        return IoConfidence::High;
-                    }
-                    let marker = STDIO_HTML_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
-                        IoConfidence::High
-                    } else {
-                        IoConfidence::Low
-                    }
-                }
-                AnalyzeSource::Text(text) => {
-                    if engine::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_HTML_DOCUMENT_SCHEMA) {
-                        IoConfidence::High
-                    } else {
-                        IoConfidence::Low
-                    }
-                }
-            }
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = HtmlParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <HtmlSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec HtmlBuilderFacets {
-        construction: HtmlBuilderConstruction,
-        analysis: HtmlAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::HtmlComposerComposition,
-    }
-    builder: HtmlBuilder,
-    analyzer: HtmlAnalyzer,
-    composer: HtmlComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets

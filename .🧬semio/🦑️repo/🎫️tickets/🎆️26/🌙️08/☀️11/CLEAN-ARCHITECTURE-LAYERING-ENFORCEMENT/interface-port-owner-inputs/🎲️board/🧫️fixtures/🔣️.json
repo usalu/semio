@@ -1,0 +1,1 @@
+{"cases":[{"edges":[],"source":"a","target":"a","cycle":true},{"edges":[],"source":"a","target":"b","cycle":false},{"edges":[["a","b"],["b","c"]],"source":"c","target":"a","cycle":true},{"edges":[["a","b"],["b","c"]],"source":"a","target":"c","cycle":false},{"edges":[["α","β"],["β","γ"]],"source":"γ","target":"α","cycle":true}]}

@@ -89,6 +89,15 @@ pub fn project_conformance(input: &[u8]) -> Result<Json, String> {
 pub fn project_conformance(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
+/// 🌈️ Reads the actual resolved profile streams through the existing independent PDF authority.
+#[cfg(feature = "oracles")]
+pub fn output_profiles(input: &[u8]) -> Result<Vec<(i64, Vec<u8>)>, String> {
+    semio_s_plugin_stdio_document_test_oracle::pdf_conformance::output_profiles(input)
+}
+#[cfg(not(feature = "oracles"))]
+pub fn output_profiles(_input: &[u8]) -> Result<Vec<(i64, Vec<u8>)>, String> {
+    Err("the independent profile authority requires the oracles feature".into())
+}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Bridge

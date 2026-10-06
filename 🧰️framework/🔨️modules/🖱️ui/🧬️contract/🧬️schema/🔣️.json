@@ -6,13 +6,19 @@
     "treePresentation": {
       "description": "The inherited row presentation of a tree; a nested tree establishes its own scope.",
       "type": "string",
-      "enum": ["standard", "compact"],
+      "enum": [
+        "standard",
+        "compact"
+      ],
       "default": "standard"
     },
     "toggleAppearance": {
       "description": "The visual and accessibility presentation of a binary control.",
       "type": "string",
-      "enum": ["button", "checkbox"],
+      "enum": [
+        "button",
+        "checkbox"
+      ],
       "default": "button"
     },
     "presenceOwnMarks": {
@@ -72,166 +78,6 @@
     }
   },
   "$defs": {
-    "ConformanceCatalogFixture": {
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🦀️rust"
-      ],
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "version",
-        "roles",
-        "groups"
-      ],
-      "properties": {
-        "version": {
-          "const": 1
-        },
-        "roles": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "snapshot",
-            "expect",
-            "patch"
-          ],
-          "properties": {
-            "snapshot": {
-              "const": "📸️snapshot.json"
-            },
-            "expect": {
-              "const": "🎯️expect.json"
-            },
-            "patch": {
-              "const": "🩹️patch.json"
-            }
-          }
-        },
-        "groups": {
-          "type": "object",
-          "minProperties": 6,
-          "maxProperties": 6,
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "patch",
-              "cases"
-            ],
-            "properties": {
-              "patch": {
-                "type": "boolean"
-              },
-              "cases": {
-                "type": "object",
-                "minProperties": 1,
-                "propertyNames": {
-                  "pattern": "^[a-z][a-z0-9-]*$"
-                },
-                "additionalProperties": {
-                  "type": "string",
-                  "minLength": 2,
-                  "pattern": "^[^/\\\\.]+$"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "ContractFixture": {
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🦀️rust"
-      ],
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "cases"
-      ],
-      "properties": {
-        "cases": {
-          "type": "array",
-          "minItems": 4,
-          "maxItems": 4,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "name",
-              "update",
-              "expected"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1
-              },
-              "update": {
-                "$comment": "One owner for this shape: the scope's own PresenceUpdate export. The overlay only narrows (📋️execution-contract.md §D) — each fixture case sets exactly one own flag and carries a live ttl.",
-                "allOf": [
-                  {
-                    "$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/schema.json#/$defs/PresenceUpdate"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "surface": {
-                        "type": "string",
-                        "minLength": 1
-                      },
-                      "nodeKey": {
-                        "type": "string",
-                        "minLength": 1
-                      },
-                      "own": {
-                        "type": "object",
-                        "properties": {
-                          "selected": {
-                            "const": true
-                          },
-                          "hovered": {
-                            "const": true
-                          },
-                          "previewed": {
-                            "const": true
-                          }
-                        }
-                      },
-                      "ttlMs": {
-                        "type": "integer",
-                        "minimum": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              "expected": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "selected",
-                  "hovered",
-                  "previewed"
-                ],
-                "properties": {
-                  "selected": {
-                    "type": "boolean"
-                  },
-                  "hovered": {
-                    "type": "boolean"
-                  },
-                  "previewed": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "PresenceUpdate": {
       "$comment": "The wire shape of semio_framework_ui_contract::PresenceUpdate, this scope's own coalesced TTL-scoped presence message, keyed (surface, nodeKey). Exactly as wide as the Rust struct: 'surface' is a SurfaceId (UiText, UI_TEXT_MAX_BYTES = 512), 'peers' is omitted when empty, and every struct on this branch is deny_unknown_fields. Consumers narrow with const/minimum per 📋️execution-contract.md §D; they never restate the shape.",
       "x-semio-formats": [

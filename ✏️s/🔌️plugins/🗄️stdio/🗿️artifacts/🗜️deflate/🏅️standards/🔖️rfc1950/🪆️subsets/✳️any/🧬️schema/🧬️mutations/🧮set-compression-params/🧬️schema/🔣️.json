@@ -29,6 +29,7 @@
           "en": "8 is deflate.",
           "de": "8 ist Deflate."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 10
@@ -49,6 +50,7 @@
           "de": "Zweierlogarithmus des LZ77-Fensters, 8 bis 15."
         },
         "unit": "bit",
+        "step": 1,
         "precision": 0,
         "softMin": 8,
         "softMax": 15,

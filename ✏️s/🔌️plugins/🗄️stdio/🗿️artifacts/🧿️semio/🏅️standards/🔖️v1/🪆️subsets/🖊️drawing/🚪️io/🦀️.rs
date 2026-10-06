@@ -19,7 +19,7 @@ pub mod derived_composition {
     #[cfg(feature = "conversion-drawing")]
     use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::svg::v1_1::any::SemioDrawingFromSvg;
     use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
-    use crate::standards::v1::subsets::drawing::schema::SemioDrawingAnalyzer;
+    use crate::standards::v1::subsets::drawing::io::SemioDrawingAnalyzer;
     #[cfg(feature = "conversion-drawing")]
     use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
     use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
@@ -219,14 +219,14 @@ pub fn encode_drawing(drawing: &crate::standards::v1::subsets::drawing::schema::
     use semio_framework_plugin::{ ArtifactSerializer};
     match format {
         SemioDrawingFormat::Svg => ::semio_framework_async::poll::resolve_ready(SemioDrawingToSvg::serialize(drawing)).map_err(|e| e.to_string())?.export_utf8(),
-        SemioDrawingFormat::Dxf => Ok(semio_s_artifact_stdio_dxf::schema::snapshot::print_dxf_document(&::semio_framework_async::poll::resolve_ready(SemioDrawingToDxf::serialize(drawing)).map_err(|e| e.to_string())?).into_bytes()),
+        SemioDrawingFormat::Dxf => Ok(semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::print_dxf_document(&::semio_framework_async::poll::resolve_ready(SemioDrawingToDxf::serialize(drawing)).map_err(|e| e.to_string())?).into_bytes()),
         SemioDrawingFormat::Dwg => semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&::semio_framework_async::poll::resolve_ready(SemioDrawingToDwg::serialize(drawing)).map_err(|e| e.to_string())?.drawing.to_native()?),
         SemioDrawingFormat::Pdf { version } => {
             let mut pdf = drawing_to_pdf(drawing)?;
             pdf.declared_version = version.to_string();
-            semio_s_artifact_stdio_pdf::io::encode_pdf(&pdf).map_err(|e| e.to_string())
+            semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::encode_pdf(&pdf).map_err(|e| e.to_string())
         }
-        SemioDrawingFormat::Png => semio_s_artifact_stdio_png::io::encode_png(&::semio_framework_async::poll::resolve_ready(SemioDrawingToPng::serialize(drawing)).map_err(|e| e.to_string())?),
+        SemioDrawingFormat::Png => semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&::semio_framework_async::poll::resolve_ready(SemioDrawingToPng::serialize(drawing)).map_err(|e| e.to_string())?),
     }
 }
 
@@ -240,9 +240,9 @@ pub fn decode_drawing(bytes: &[u8], format: SemioDrawingFormat) -> Result<crate:
     let text = || std::str::from_utf8(bytes).map_err(|e| e.to_string());
     match format {
         SemioDrawingFormat::Svg => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromSvg::deserialize(&semio_s_artifact_stdio_svg::SvgSnapshot::import_utf8(bytes)?)).map_err(|e| e.to_string()),
-        SemioDrawingFormat::Dxf => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromDxf::deserialize(&semio_s_artifact_stdio_dxf::schema::snapshot::parse_dxf_document(text()?)?)).map_err(|e| e.to_string()),
-        SemioDrawingFormat::Dwg => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromDwg::deserialize(&semio_s_artifact_stdio_dwg::schema::snapshot::decode_dwg(bytes)?)).map_err(|e| e.to_string()),
-        SemioDrawingFormat::Pdf { .. } => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromPdf::deserialize(&semio_s_artifact_stdio_pdf::io::decode_pdf(bytes).map_err(|e| e.to_string())?)).map_err(|e| e.to_string()),
+        SemioDrawingFormat::Dxf => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromDxf::deserialize(&semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::parse_dxf_document(text()?)?)).map_err(|e| e.to_string()),
+        SemioDrawingFormat::Dwg => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromDwg::deserialize(&semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg(bytes)?)).map_err(|e| e.to_string()),
+        SemioDrawingFormat::Pdf { .. } => ::semio_framework_async::poll::resolve_ready(SemioDrawingFromPdf::deserialize(&semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::decode_pdf(bytes).map_err(|e| e.to_string())?)).map_err(|e| e.to_string()),
         SemioDrawingFormat::Png => Err("semio/drawing←png: a raster carries no vector geometry".into()),
     }
 }
@@ -393,3 +393,128 @@ pub fn diagram_drawing(diagram: &SemioDiagram) -> crate::standards::v1::subsets:
 #[path = "🧪️tests/🔬️diagram-unit/🦀️.rs"]
 mod diagram_tests;
 //#endregion 🧪️Tests
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
+    use crate::standards::v1::subsets::drawing::schema::mutations::{apply_semio_drawing_mutation, SemioDrawingMutation};
+    use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioDrawingBuilderConstruction {
+        snapshot: SemioDrawingSnapshot,
+    }
+
+    impl ArtifactBuilder for SemioDrawingBuilderConstruction {
+        type Snapshot = SemioDrawingSnapshot;
+        type Mutation = SemioDrawingMutation;
+        type Diff = SemioDrawingDiff;
+        fn empty() -> Self {
+            Self { snapshot: SemioDrawingSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = apply_semio_drawing_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioDrawingDiff as protocol::MutationDiff<SemioDrawingSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            Ok(self.snapshot)
+        }
+    }
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::v1::subsets::drawing::schema::snapshot::{SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioDrawingParts {
+        pub snapshot: Option<SemioDrawingSnapshot>,
+    }
+
+    pub struct SemioDrawingAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SemioDrawingAnalyzerAnalysis {
+        type Parts = SemioDrawingParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    let marker = STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    if text.contains(STDIO_SEMIODRAWING_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SemioDrawingParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SemioDrawingBuilderFacets {
+        construction: SemioDrawingBuilderConstruction,
+        analysis: SemioDrawingAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::drawing::io::derived_composition::SemioDrawingComposerComposition,
+    }
+    builder: SemioDrawingBuilder,
+    analyzer: SemioDrawingAnalyzer,
+    composer: SemioDrawingComposer,
+);

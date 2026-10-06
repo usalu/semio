@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "value",
+          "chunkBytes",
+          "mode"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {},
+          "chunkBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "partialBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "mode": {
+            "enum": [
+              "success",
+              "zero",
+              "pre",
+              "mid",
+              "close",
+              "foreign"
+            ]
+          },
+          "foreign": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

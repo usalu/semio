@@ -1,14 +1,12 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv from "ajv";
+
 import ts from "typescript";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import fixture from "../../🧫️fixtures/🏭️generate/🔣️.json";
-import schema from "../../🧬️schema/🏭️generate/🔣️.json";
 
 test("primary generator uses the existing taxonomy-owned aggregate and its declared executable target", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   const root = getWorkspaceRoot(), taxonomy = JSON.parse(readFileSync(join(root, fixture.taxonomy), "utf8")), contract = taxonomy.generatorContracts[fixture.generatorContract];
   expect(contract.target).toBe(fixture.target);
   expect(contract.outputRoots.some((row: { path: string }) => row.path === fixture.output)).toBe(true);

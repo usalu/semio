@@ -1,0 +1,13 @@
+{
+  "$schema": "../../🧬️schema/🔣️replay-retirement/🔣️.json",
+  "schema": "semio.store.replay-retirement.v1",
+  "cases": [
+    { "name": "an-encode-failure-at-the-first-operation", "operations": 3, "fault": "encode", "at": 0, "refusal": "validation-failed", "applied": 0 },
+    { "name": "an-encode-failure-at-the-last-operation", "operations": 3, "fault": "encode", "at": 2, "refusal": "validation-failed", "applied": 2 },
+    { "name": "a-refused-inverse-in-the-middle", "operations": 3, "fault": "inverse", "at": 1, "refusal": "inverse-refused", "applied": 1 },
+    { "name": "a-failing-diff-at-the-first-operation", "operations": 3, "fault": "apply", "at": 0, "refusal": "mutation-apply", "applied": 0 },
+    { "name": "a-failing-diff-at-the-last-operation", "operations": 3, "fault": "apply", "at": 2, "refusal": "mutation-apply", "applied": 2 },
+    { "name": "an-error-the-merge-policy-rejects", "operations": 3, "fault": "message", "at": 1, "refusal": "rejected", "applied": 3 },
+    { "name": "a-single-operation-the-merge-policy-rejects", "operations": 1, "fault": "message", "at": 0, "refusal": "rejected", "applied": 1 }
+  ]
+}

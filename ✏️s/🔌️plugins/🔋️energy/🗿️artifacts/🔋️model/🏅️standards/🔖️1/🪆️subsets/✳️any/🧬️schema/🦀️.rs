@@ -150,117 +150,15 @@ pub fn energy_model_artifact_schema_descriptor() -> semio_framework_schema_regis
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{EnergyModelDiff, EnergyModelMutation, EnergyModelSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct ModelBuilderConstruction {
-        snapshot: EnergyModelSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for ModelBuilderConstruction {
-        type Snapshot = EnergyModelSnapshot;
-        type Mutation = EnergyModelMutation;
-        type Diff = EnergyModelDiff;
-        fn empty() -> Self {
-            Self { snapshot: EnergyModelSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <EnergyModelDiff as protocol::MutationDiff<EnergyModelSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::EnergyModelSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct EnergyModelParts {
-        pub snapshot: Option<EnergyModelSnapshot>,
-    }
-
-    pub struct EnergyModelAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for EnergyModelAnalyzerAnalysis {
-        type Parts = EnergyModelParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.energy.model", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = EnergyModelParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <EnergyModelSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec ModelBuilderFacets {
-        construction: ModelBuilderConstruction,
-        analysis: EnergyModelAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::EnergyModelComposerComposition,
-    }
-    builder: ModelBuilder,
-    analyzer: EnergyModelAnalyzer,
-    composer: EnergyModelComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests

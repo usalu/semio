@@ -1,0 +1,672 @@
+{
+  "qualification": "Actual panic blocks after Starting; multi-owner prefix matched exact project. Historical failure not current failure; no gates run.",
+  "rows": [
+    {
+      "owner": "PlaygroundSnapshot",
+      "package": "semio-s-artifact-demonstrator-playground",
+      "artifactRoot": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native",
+      "command": "bun nx run @semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "wholeCommand": null,
+      "failures": [
+        {
+          "law": "editor::playground::modes::edit::windows::main::tests::definition_declares_an_editable_text_window",
+          "panicLocation": "🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs:8:5:",
+          "reason": [
+            "editable text window must carry the replace-text catalog action"
+          ],
+          "log": "root-playground-owning-whole-native-current.log"
+        },
+        {
+          "law": "editor::playground::component::unit_tests::command_from_action_covers_the_declared_action_and_rejects_unknown_ones",
+          "panicLocation": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:7952:110:",
+          "reason": [
+            "action textEdit failed to bridge: action 'textEdit' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+          ],
+          "log": "root-playground-owning-whole-native-current.log"
+        }
+      ],
+      "currentLawAnchors": [
+        {
+          "law": "editor::playground::component::unit_tests::command_from_action_covers_the_declared_action_and_rejects_unknown_ones",
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 80,
+          "currentBodyExcerpt": [
+            "async fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {",
+            "    semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;",
+            "    assert!(PlaygroundEditor::command_from_action(\"noSuchAction\", None).is_err());",
+            "}",
+            "",
+            "#[test]",
+            "fn set_active_example_loads_the_demo_schema() {",
+            "    let document = empty_playground_snapshot();",
+            "    let history = HistoryView::empty();",
+            "    let doc = ArtifactView::new(&document, &history);",
+            "    let config = NoConfig::default();",
+            "    let cfg = ConfigView { snapshot: &config, window: None };"
+          ]
+        },
+        {
+          "law": "editor::playground::modes::edit::windows::main::tests::definition_declares_an_editable_text_window",
+          "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 4,
+          "currentBodyExcerpt": [
+            "fn definition_declares_an_editable_text_window() {",
+            "    let def = definition();",
+            "    assert_eq!(def.id, WINDOW_KIND_ID);",
+            "    assert_eq!(def.body_key, BODY_KEY);",
+            "    assert!(def.actions.iter().any(|action| action.id == TextWindowKit::EDIT_ACTION_ID), \"editable text window must carry the text kit's catalog action\");",
+            "}",
+            "",
+            "#[test]",
+            "fn render_carries_the_schema_field_as_editable_text() {",
+            "    let document = PlaygroundSnapshot { schema: \"playground.custom\".into() };",
+            "    let node = render(&document, semio_framework_ui_locale::Locale::En,semio_framework_ui_contract::UiPublicationRevision(37)).expect(\"render\");",
+            "    let scene: semio_framework_ui_scene::TextEditorScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect(\"decode the text scene with its lanes\");"
+          ]
+        }
+      ],
+      "currentReadiness": "Current text-window test now requires TextWindowKit::EDIT_ACTION_ID (old panic said replace-text catalog action); bridge law still invokes assert_declared_actions_bridge_to_commands while current editor rejects app actions through generic command_from_action. Needs exact typed-lane/window replay, not SQLite provider rewrite."
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "package": "semio-s-artifact-sequence-sequence",
+      "artifactRoot": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native",
+      "command": "bun nx run @semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "wholeCommand": null,
+      "failures": [
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_sequence_demo_matches_the_actual_parent_native_printer",
+          "panicLocation": "🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:7:2:",
+          "reason": [
+            "assertion `left == right` failed",
+            "left: \"semio sequence.sequence.dsl v1\\nschema=sequence.sequence content=child_id=sequence-content-13e3545f6a91fe1f target=artifact-id=sequence-content-13e3545f6a91fe1f artifact-kind=s.stdio.semio standard=v1 subset=flow\\n\"",
+            "right: \"semio sequence.sequence.dsl v1\\nschema=sequence.sequence content=child_id=sequence-content-13e3545f6a91fe1f target=\\\"sequence-content-13e3545f6a91fe1f!s.stdio.semio@v1/flow\\\"\\n\""
+          ],
+          "log": "sequence-native-after-space.log"
+        }
+      ],
+      "currentLawAnchors": [
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_sequence_demo_matches_the_actual_parent_native_printer",
+          "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 5,
+          "currentBodyExcerpt": [
+            "fn sqlite_snapshot_sequence_demo_matches_the_actual_parent_native_printer(){",
+            " let expected=super::default_persisted_snapshot();",
+            " assert_eq!(store::ArtifactDsl::print_dsl(&expected),include_str!(\"../../../../🖼️assets/🎬️demo/🗣️.dsl.semio\"));",
+            "}",
+            "",
+            "use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};",
+            "use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};",
+            "semio_framework_dispatch_macros::dyn_enum_close!{",
+            " /// 🎬️ The real Sequence editor and viewer declaration closure.",
+            " enum SqliteApps:PluginApp{",
+            "  Editor(VcsArtifactApp<EditorApp<crate::editor::sequence::SequencePlayApp>,semio_s_artifact_stdio_semio::SemioMembers>),",
+            "  Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sequence::SequenceViewer>,semio_s_artifact_stdio_semio::SemioMembers>),"
+          ]
+        }
+      ],
+      "currentReadiness": "Current original demo law remains exact parent print_dsl == authored demo asset. Retained failure is structured target fields vs quoted compact reference. Read current asset/printer together and replay original equality; no legacy grammar fallback."
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "package": "semio-s-artifact-architect-program",
+      "artifactRoot": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/architect-program-rs:test-snapshot-sqlite-native",
+      "command": "bun nx run @semio-tech/architect-program-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "wholeCommand": null,
+      "failures": [
+        {
+          "law": "editor::architect::component::behavior::tests::csv_round_trip_preserves_adjacency_endpoints",
+          "panicLocation": "🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️behavior-unit/🦀️.rs:142:74:",
+          "reason": [
+            "csv import: Csv(\"unsupported register import: audit_events\")"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        },
+        {
+          "law": "editor::architect::component::behavior::tests::csv_round_trip_preserves_knowledge_and_benchmark_names",
+          "panicLocation": "🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️behavior-unit/🦀️.rs:159:74:",
+          "reason": [
+            "csv import: Csv(\"unsupported register import: audit_events\")"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        },
+        {
+          "law": "editor::architect::component::behavior::tests::csv_round_trip_preserves_element_names",
+          "panicLocation": "🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️behavior-unit/🦀️.rs:93:74:",
+          "reason": [
+            "csv import: Csv(\"unsupported register import: audit_events\")"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        },
+        {
+          "law": "editor::architect::component::behavior::tests::tsv_round_trip_preserves_element_names",
+          "panicLocation": "🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️behavior-unit/🦀️.rs:118:74:",
+          "reason": [
+            "tsv import: Csv(\"unsupported register import: audit_events\")"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        },
+        {
+          "law": "editor::architect::component::declared_verb_laws::every_declared_architect_verb_honours_its_declaration",
+          "panicLocation": "🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️declared-verbs/🦀️.rs:20:5:",
+          "reason": [
+            "assertion `left == right` failed: agent-lane divergences",
+            "left: [\"addElement\", \"runValidation\", \"search\", \"setActiveExample\", \"exportProgram\", \"exportRegistersCsv\", \"importProgramRequest\", \"importRegistersCsvRequest\"]",
+            "right: [\"setActiveExample\", \"exportProgram\", \"exportRegistersCsv\", \"importProgramRequest\", \"importRegistersCsvRequest\"]"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        }
+      ],
+      "currentLawAnchors": [
+        {
+          "law": "editor::architect::component::declared_verb_laws::every_declared_architect_verb_honours_its_declaration",
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️declared-verbs/🦀️.rs",
+          "line": 14,
+          "currentBodyExcerpt": [
+            "async fn every_declared_architect_verb_honours_its_declaration() {",
+            "    let probes = assert_declared_verbs_honour_their_declarations::<semio_framework_plugin::EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_architect_app, None).await;",
+            "    assert_eq!(probes.len(), 23, \"the architect editor declares twenty-three verbs\");",
+            "    for verb in [\"runAnalysis\", \"runReport\"] {",
+            "        assert!(declared_verb_ever_wrote_document(declared_verb_probe(&probes, verb)), \"{verb} stores its record in the program\");",
+            "    }",
+            "    assert_eq!(declared_verb_agent_divergences(&probes), [\"setActiveExample\", \"exportProgram\", \"exportRegistersCsv\", \"importProgramRequest\", \"importRegistersCsvRequest\"], \"agent-lane divergences\");",
+            "}"
+          ]
+        },
+        {
+          "law": "editor::architect::component::behavior::tests::csv_round_trip_preserves_adjacency_endpoints",
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️behavior-unit/🦀️.rs",
+          "line": 134,
+          "currentBodyExcerpt": [
+            "    async fn csv_round_trip_preserves_adjacency_endpoints() {",
+            "        let program = sample_plugin();",
+            "        assert!(!program.adjacencies.is_empty(), \"sample_plugin must carry adjacencies for this fidelity case\");",
+            "        let csv = export_registers_csv(&program).expect(\"csv export\");",
+            "        let mut reloaded = crate::empty_plugin();",
+            "        for element in &program.elements {",
+            "            reloaded.elements.push(element.clone());",
+            "        }",
+            "        import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect(\"csv import\");",
+            "        assert_eq!(reloaded.adjacencies.len(), program.adjacencies.len());",
+            "        for expected in &program.adjacencies {",
+            "            let got = reloaded.adjacencies.iter().find(|a| a.header.id == expected.header.id).expect(\"adjacency id\");"
+          ]
+        },
+        {
+          "law": "editor::architect::component::behavior::tests::csv_round_trip_preserves_knowledge_and_benchmark_names",
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️behavior-unit/🦀️.rs",
+          "line": 153,
+          "currentBodyExcerpt": [
+            "    async fn csv_round_trip_preserves_knowledge_and_benchmark_names() {",
+            "        let program = sample_plugin();",
+            "        assert!(!program.knowledge_payload.is_empty());",
+            "        assert!(!program.benchmarks_payload.is_empty());",
+            "        let csv = export_registers_csv(&program).expect(\"csv export\");",
+            "        let mut reloaded = crate::empty_plugin();",
+            "        import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect(\"csv import\");",
+            "        assert_eq!(reloaded.knowledge_payload.len(), program.knowledge_payload.len());",
+            "        assert_eq!(reloaded.benchmarks_payload.len(), program.benchmarks_payload.len());",
+            "        assert_eq!(reloaded.knowledge_payload[0].header.name, program.knowledge_payload[0].header.name);",
+            "        assert_eq!(reloaded.benchmarks_payload[0].header.name, program.benchmarks_payload[0].header.name);",
+            "    }"
+          ]
+        },
+        {
+          "law": "editor::architect::component::behavior::tests::csv_round_trip_preserves_element_names",
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️behavior-unit/🦀️.rs",
+          "line": 89,
+          "currentBodyExcerpt": [
+            "    async fn csv_round_trip_preserves_element_names() {",
+            "        let program = sample_plugin();",
+            "        let csv = export_registers_csv(&program).expect(\"csv export\");",
+            "        let mut reloaded = crate::empty_plugin();",
+            "        import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect(\"csv import\");",
+            "        assert_eq!(reloaded.elements.len(), program.elements.len());",
+            "    }",
+            "",
+            "    #[semio_framework_async_macros::async_test]",
+            "    async fn quoted_csv_parses_commas_in_name() {",
+            "        let csv = \"register,id,name,status,priority,tags,source\\nelements,e1,\\\"Room, A\\\",Draft,Preferred,,src\\n\";",
+            "        let snapshot = stdio_csv::schema::snapshot::decode_csv_with(csv, true);"
+          ]
+        },
+        {
+          "law": "editor::architect::component::behavior::tests::tsv_round_trip_preserves_element_names",
+          "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️behavior-unit/🦀️.rs",
+          "line": 114,
+          "currentBodyExcerpt": [
+            "    async fn tsv_round_trip_preserves_element_names() {",
+            "        let program = sample_plugin();",
+            "        let tsv = export_registers_tsv(&program).expect(\"tsv export\");",
+            "        let mut reloaded = crate::empty_plugin();",
+            "        import_registers_tsv(&mut reloaded, &tsv, MergeStrategy::Upsert).expect(\"tsv import\");",
+            "        assert_eq!(reloaded.elements.len(), program.elements.len());",
+            "    }",
+            "",
+            "    #[semio_framework_async_macros::async_test]",
+            "    async fn trace_chain_follows_links() {",
+            "        let mut program = sample_plugin();",
+            "        let a = program.elements[0].header.id.clone();"
+          ]
+        }
+      ],
+      "currentReadiness": "Four actual CSV/TSV imports refuse audit_events; fifth declared verb law differs on addElement/runValidation/search agent lanes. Current audit_events remains real persisted Snapshot field and register SQL family. Failures are import/editor boundaries rather than absent semantic SQL. Preserve all five original laws."
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "package": "semio-s-artifact-layout-layout",
+      "artifactRoot": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/layout-layout-rs:test-snapshot-sqlite-native",
+      "command": "bun nx run @semio-tech/layout-layout-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "wholeCommand": null,
+      "failures": [
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::backing::sqlite_snapshot_layout_full_concrete_requests_preserve_every_owned_field",
+          "panicLocation": "🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs:150:9:",
+          "reason": [
+            "assertion `left == right` failed: ReconstructSnapshot must settle full concrete allocator requests",
+            "left: 2481",
+            "right: 6913581"
+          ],
+          "log": "root-layout-nine-pdf14-current-full-owned-native-baselines.log"
+        }
+      ],
+      "currentLawAnchors": [
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::backing::sqlite_snapshot_layout_full_concrete_requests_preserve_every_owned_field",
+          "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/🦀️.rs",
+          "line": 8,
+          "currentBodyExcerpt": [
+            "fn sqlite_snapshot_layout_full_concrete_requests_preserve_every_owned_field(){",
+            " let plan:serde_json::Value=serde_json::from_str(include_str!(\"../../../🧫️fixtures/🪶️sqlite/🧾️dictionary/🔣️.json\")).unwrap();assert_eq!(plan[\"allocation\"],\"fullConcreteRequests\");assert_eq!(plan[\"retirementRefund\"],false);",
+            " let words:serde_json::Value=serde_json::from_str(include_str!(\"../../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap();",
+            " for(index,hex)in words[\"float64Bits\"].as_array().unwrap().iter().enumerate(){",
+            "  let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let color=u32::from_str_radix(words[\"float32Bits\"][index].as_str().unwrap(),16).unwrap();",
+            "  let expected=complete_fixture(f64::from_bits(bits),f32::from_bits(color));let mut accepted=|_|true;let mut control=store::sqlite_snapshot::SqliteSnapshotControl::new(&mut accepted,store::sqlite_snapshot::SqliteDatabaseLimits::default());",
+            "  let database=expected.to_sqlite_database(&mut control).unwrap();observed::verify_snapshot_backing_by(&expected,&database,literal_equal);expected.retire_sqlite_snapshot();",
+            " }",
+            "}",
+            ""
+          ]
+        }
+      ],
+      "currentReadiness": "Actual Layout-only reconstruction allocator ledger 2481 vs6913581. Foreign PDF14/17 panic blocks excluded by actual FAIL package identity. Current controlled drawing-child codec and paid Reader present, but no proof that they close full backing gap; run original backing law."
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "package": "semio-s-artifact-playbook-playbook",
+      "artifactRoot": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native",
+      "command": "bun nx run @semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "wholeCommand": null,
+      "failures": [
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_playbook_canonical_json_controls_preserve_order_and_independent_values",
+          "panicLocation": "🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:37:459:",
+          "reason": [
+            "called `Result::unwrap()` on an `Err` value: ValueError(\"JSON owner has no controlled native decoding implementation\")"
+          ],
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log"
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_playbook_actual_declared_erased_encodings_and_coordinate_refusals",
+          "panicLocation": "🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:15:494:",
+          "reason": [
+            "called `Result::unwrap()` on an `Err` value: IoError { message: \"snapshot owner has no controlled native decoding implementation\", diagnostics: [] }"
+          ],
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log"
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_playbook_controlled_native_decode_honors_owned_fields_and_admission",
+          "panicLocation": "🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:27:553:",
+          "reason": [
+            "called `Result::unwrap()` on an `Err` value: \"snapshot owner has no controlled native decoding implementation\""
+          ],
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log"
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_playbook_canonical_block_options_follow_the_owned_value_schema",
+          "panicLocation": "🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:52:475:",
+          "reason": [
+            "called `Result::unwrap()` on an `Err` value: ValueError(\"value owner has no controlled native construction implementation\")"
+          ],
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log"
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_playbook_controlled_native_output_and_local_scenes_preserve_literal_fields",
+          "panicLocation": "🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:47:646:",
+          "reason": [
+            "called `Result::unwrap()` on an `Err` value: \"snapshot owner has no controlled native encoding implementation\""
+          ],
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log"
+        }
+      ],
+      "currentLawAnchors": [
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_playbook_canonical_json_controls_preserve_order_and_independent_values",
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 32,
+          "currentBodyExcerpt": [
+            "fn sqlite_snapshot_playbook_canonical_json_controls_preserve_order_and_independent_values(){",
+            " let fixture:serde_json::Value=serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🎛️native-scenes.json\")).unwrap();let text=serde_json::to_string(&fixture[\"steps\"]).unwrap();let ordinary:Vec<crate::PlaybookStep>=semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(2_000_000,&mut accepted);let actual:Vec<crate::PlaybookStep>=semio_framework_pack_json::from_json_str_controlled(&text, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).unwrap();assert_eq!(actual,ordinary);",
+            " let mut accepted=|_|true;let mut encode=semio_framework_value::NativeEncodeControl::new(2_000_000,&mut accepted);let written=semio_framework_pack_json::to_json_string_controlled(&actual,&mut encode).unwrap();assert_eq!(written,semio_framework_pack_json::to_json_string(&ordinary));assert_eq!(serde_json::from_str::<serde_json::Value>(&written).unwrap(),fixture[\"steps\"]);",
+            " let duplicate=fixture[\"duplicateKeyText\"].as_str().unwrap();let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(2_000_000,&mut accepted);let actual:semio_framework_value::DslValue=semio_framework_pack_json::from_json_str_controlled(duplicate, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).unwrap();assert_eq!(actual,semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(duplicate, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&actual)).unwrap(),serde_json::from_str::<serde_json::Value>(duplicate).unwrap());",
+            " for text in fixture[\"invalidTexts\"].as_array().unwrap(){let text=text.as_str().unwrap();assert!(serde_json::from_str::<serde_json::Value>(text).is_err());let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(2_000_000,&mut accepted);assert!(semio_framework_pack_json::from_json_str_controlled::<semio_framework_value::DslValue>(text, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).is_err());}",
+            " let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(fixture[\"ownedByteLimit\"].as_u64().unwrap() as usize,&mut accepted);assert!(semio_framework_pack_json::from_json_str_controlled::<Vec<crate::PlaybookStep>>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).is_err());let mut stopped=|_|false;let mut decode=semio_framework_value::NativeDecodeControl::new(2_000_000,&mut stopped);assert!(semio_framework_pack_json::from_json_str_controlled::<Vec<crate::PlaybookStep>>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).is_err());",
+            "}",
+            "",
+            "#[test]",
+            "fn sqlite_snapshot_playbook_controlled_native_output_is_the_ordinary_pack_and_text(){",
+            " let source=fixture();",
+            " for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let expected=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<PlaybookSnapshot as store::ArtifactPack>::encode_pack(&source)),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<PlaybookSnapshot as store::ArtifactDsl>::print_dsl(&source))};let length=match &expected{store::os_io::IoPayload::Binary(bytes)=>bytes.len(),store::os_io::IoPayload::Text(text)=>text.len()};let payload=source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length,..SqliteDatabaseLimits::default()})).unwrap();assert_eq!(payload,expected);let decoded=PlaybookSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert_eq!(decoded,source);decoded.retire_sqlite_snapshot();assert!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length-1,..SqliteDatabaseLimits::default()})).is_err());assert!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:16,..SqliteDatabaseLimits::default()})).is_err());}"
+          ]
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_playbook_actual_declared_erased_encodings_and_coordinate_refusals",
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 14,
+          "currentBodyExcerpt": [
+            "fn sqlite_snapshot_playbook_actual_declared_erased_encodings_and_coordinate_refusals(){",
+            " let source=fixture();let codec=crate::standards::v1::subsets::any::io_declaration().native.codec;let provider=codec.snapshot_sqlite.unwrap();assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<PlaybookSnapshot>()));let dialect=store::os_io::ArtifactDialect{artifact_kind:\"s.playbook.playbook\".into(),standard:\"1\".into(),subset:\"*\".into()};",
+            " for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<PlaybookSnapshot as store::ArtifactPack>::encode_pack(&source)),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<PlaybookSnapshot as store::ArtifactDsl>::print_dsl(&source))};let database=(provider.export)(crate::PLAYBOOK_DOCUMENT_SCHEMA,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(restore(&database).unwrap(),source);let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let imported=import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!((provider.import)(crate::PLAYBOOK_DOCUMENT_SCHEMA,&dialect,imported,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value,payload);assert!((provider.import)(crate::PLAYBOOK_DOCUMENT_SCHEMA,&dialect,database,encoding,&mut SqliteSnapshotControl::new(&mut |p|p.phase!=SqliteSnapshotPhase::EncodeNative,SqliteDatabaseLimits::default())).is_err());}",
+            " let database=project(&source);for(artifact_kind,standard,subset)in[(\"s.playbook.other\",\"1\",\"*\"),(\"s.playbook.playbook\",\"v1\",\"*\"),(\"s.playbook.playbook\",\"1\",\"other\")]{let wrong=store::os_io::ArtifactDialect{artifact_kind:artifact_kind.into(),standard:standard.into(),subset:subset.into()};assert!(source.validate_sqlite_snapshot_subset(&wrong,&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());}",
+            "}",
+            "#[semio_framework_async_macros::async_test]",
+            "async fn sqlite_snapshot_playbook_actual_declared_typed_io_and_final_metadata_rows(){",
+            " use semio_framework_os_kernel::io::{register_native_snapshot_codec,io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot}};",
+            " register_native_snapshot_codec(crate::PLAYBOOK_DIALECT,crate::standards::v1::subsets::any::io_declaration().native.codec).unwrap();let source=fixture();let dialect=store::os_io::ArtifactDialect{artifact_kind:\"s.playbook.playbook\".into(),standard:\"1\".into(),subset:\"*\".into()};",
+            " for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut phases=Vec::new();let bytes=io_export_sqlite_snapshot(&dialect,&source,encoding,SqliteDatabaseLimits{max_rows:3,..SqliteDatabaseLimits::default()},&mut |p|{phases.push(p.phase);true}).await.unwrap().value;let database=import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!(database.tables.iter().map(|t|t.rows.len()).sum::<usize>(),3);let restored=io_import_sqlite_snapshot::<PlaybookSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert_eq!(restored,source);assert!(!phases.iter().any(|p|matches!(p,SqliteSnapshotPhase::DecodeNative|SqliteSnapshotPhase::EncodeNative)));assert!(io_export_sqlite_snapshot(&dialect,&source,encoding,SqliteDatabaseLimits{max_rows:2,..SqliteDatabaseLimits::default()},&mut |_|true).await.is_err());}",
+            "}",
+            ""
+          ]
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_playbook_controlled_native_decode_honors_owned_fields_and_admission",
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 27,
+          "currentBodyExcerpt": [
+            "fn sqlite_snapshot_playbook_controlled_native_decode_honors_owned_fields_and_admission(){",
+            " let source=fixture();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<PlaybookSnapshot as store::ArtifactPack>::encode_pack(&source)),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<PlaybookSnapshot as store::ArtifactDsl>::print_dsl(&source))};let mut phases=Vec::new();let restored=PlaybookSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |p|{phases.push(p.phase);true},SqliteDatabaseLimits::default())).unwrap();assert_eq!(restored,source);assert!(phases.contains(&SqliteSnapshotPhase::DecodeNative));restored.retire_sqlite_snapshot();assert!(PlaybookSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());assert!(PlaybookSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:16,..SqliteDatabaseLimits::default()})).is_err());}",
+            "}",
+            "",
+            "#[test]",
+            "fn sqlite_snapshot_playbook_canonical_json_controls_preserve_order_and_independent_values(){",
+            " let fixture:serde_json::Value=serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🎛️native-scenes.json\")).unwrap();let text=serde_json::to_string(&fixture[\"steps\"]).unwrap();let ordinary:Vec<crate::PlaybookStep>=semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(2_000_000,&mut accepted);let actual:Vec<crate::PlaybookStep>=semio_framework_pack_json::from_json_str_controlled(&text, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).unwrap();assert_eq!(actual,ordinary);",
+            " let mut accepted=|_|true;let mut encode=semio_framework_value::NativeEncodeControl::new(2_000_000,&mut accepted);let written=semio_framework_pack_json::to_json_string_controlled(&actual,&mut encode).unwrap();assert_eq!(written,semio_framework_pack_json::to_json_string(&ordinary));assert_eq!(serde_json::from_str::<serde_json::Value>(&written).unwrap(),fixture[\"steps\"]);",
+            " let duplicate=fixture[\"duplicateKeyText\"].as_str().unwrap();let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(2_000_000,&mut accepted);let actual:semio_framework_value::DslValue=semio_framework_pack_json::from_json_str_controlled(duplicate, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).unwrap();assert_eq!(actual,semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(duplicate, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&actual)).unwrap(),serde_json::from_str::<serde_json::Value>(duplicate).unwrap());",
+            " for text in fixture[\"invalidTexts\"].as_array().unwrap(){let text=text.as_str().unwrap();assert!(serde_json::from_str::<serde_json::Value>(text).is_err());let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(2_000_000,&mut accepted);assert!(semio_framework_pack_json::from_json_str_controlled::<semio_framework_value::DslValue>(text, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).is_err());}",
+            " let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(fixture[\"ownedByteLimit\"].as_u64().unwrap() as usize,&mut accepted);assert!(semio_framework_pack_json::from_json_str_controlled::<Vec<crate::PlaybookStep>>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).is_err());let mut stopped=|_|false;let mut decode=semio_framework_value::NativeDecodeControl::new(2_000_000,&mut stopped);assert!(semio_framework_pack_json::from_json_str_controlled::<Vec<crate::PlaybookStep>>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).is_err());",
+            "}"
+          ]
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_playbook_canonical_block_options_follow_the_owned_value_schema",
+          "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 47,
+          "currentBodyExcerpt": [
+            "fn sqlite_snapshot_playbook_canonical_block_options_follow_the_owned_value_schema(){",
+            " let fixture:serde_json::Value=serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🎛️native-scenes.json\")).unwrap();let value:semio_framework_value::DslValue=semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture[\"steps\"][0][\"blocks\"][0][\"options\"][0]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(200_000,&mut accepted);let decoded=<crate::playbook::PlaybookBlockOption as semio_framework_value::FromValue>::from_value_controlled(&value,&mut decode).unwrap();assert_eq!(decoded.value,\"owned_β\");assert_eq!(decoded.label,\"Choice 日本\");let mut accepted=|_|true;let mut encode=semio_framework_value::NativeEncodeControl::new(200_000,&mut accepted);let encoded=semio_framework_value::ToValue::to_value_controlled(&decoded,&mut encode).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&encoded)).unwrap(),fixture[\"steps\"][0][\"blocks\"][0][\"options\"][0]);",
+            "}",
+            "",
+            "#[test]",
+            "fn sqlite_snapshot_playbook_native_rows_and_schema_refuse_before_physical_ownership(){",
+            " let source=fixture();let schema_bytes=PlaybookSnapshot::SQLITE_SCHEMA.len();",
+            " for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<PlaybookSnapshot as store::ArtifactPack>::encode_pack(&source)),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<PlaybookSnapshot as store::ArtifactDsl>::print_dsl(&source))};let exact=SqliteDatabaseLimits{max_rows:2,max_schema_bytes:schema_bytes,..SqliteDatabaseLimits::default()};let decoded=PlaybookSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,exact)).unwrap();assert_eq!(decoded,source);decoded.retire_sqlite_snapshot();assert_eq!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,exact)).unwrap(),payload);",
+            "  for limits in[SqliteDatabaseLimits{max_rows:1,..exact},SqliteDatabaseLimits{max_schema_bytes:schema_bytes-1,..exact}]{for phase in[SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::EncodeNative]{let mut constructed=false;let mut progress=|p:SqliteSnapshotProgress|{constructed|=p.phase==phase;true};let mut control=SqliteSnapshotControl::new(&mut progress,limits);let refused=match phase{SqliteSnapshotPhase::DecodeNative=>PlaybookSnapshot::decode_sqlite_snapshot_native(&payload,&mut control).is_err(),_=>source.encode_sqlite_snapshot_native(encoding,&mut control).is_err()};assert!(refused);assert!(!constructed);}}",
+            " }",
+            "}"
+          ]
+        }
+      ],
+      "currentReadiness": "Five original controlled JSON/native/Value construction failures. Current SQLite trait overrides decode/encode at9/10 now present; prior default-refusal reasons do not establish current failure. Controlled nested PlaybookStep JSON/value coverage needs original selected replay, not permissive defaults."
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "package": "semio-s-artifact-imperative-procedure",
+      "artifactRoot": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native",
+      "command": "bun nx run @semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "wholeCommand": null,
+      "failures": [
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedure_controlled_native_output_preserves_literal_fields_and_exact_file_length",
+          "panicLocation": "🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:61:185:",
+          "reason": [
+            "called `Result::unwrap()` on an `Err` value: \"native encoding exceeds declared workload\""
+          ],
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log"
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedure_controlled_native_local_scenes_preserve_cold_ownership_and_cancel_inside_copies",
+          "panicLocation": "🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:80:204:",
+          "reason": [
+            "called `Result::unwrap()` on an `Err` value: \"native encoding exceeds declared workload\""
+          ],
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log"
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedure_bare_erased_encodings_and_coordinate_refusals",
+          "panicLocation": "🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:15:923:",
+          "reason": [
+            "called `Result::unwrap()` on an `Err` value: IoError { message: \"native encoding exceeds declared workload\", diagnostics: [] }"
+          ],
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log"
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedure_native_rows_and_schema_refuse_before_physical_ownership",
+          "panicLocation": "🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:89:745:",
+          "reason": [
+            "called `Result::unwrap()` on an `Err` value: \"native encoding exceeds declared workload\""
+          ],
+          "log": "root-procedure-puzzle5d-playbook-current-native-baseline.log"
+        }
+      ],
+      "currentLawAnchors": [
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedure_controlled_native_output_preserves_literal_fields_and_exact_file_length",
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 31,
+          "currentBodyExcerpt": [
+            "fn sqlite_snapshot_procedure_controlled_native_output_preserves_literal_fields_and_exact_file_length(){",
+            " let source=fixture();",
+            " for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{",
+            "  let expected=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<ProcedureSnapshot as store::ArtifactPack>::encode_pack(&source)),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<ProcedureSnapshot as store::ArtifactDsl>::print_dsl(&source))};",
+            "  let length=match &expected{store::os_io::IoPayload::Binary(bytes)=>bytes.len(),store::os_io::IoPayload::Text(text)=>text.len()};",
+            "  let actual=source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length,..SqliteDatabaseLimits::default()})).unwrap();assert_eq!(actual,expected);",
+            "  assert!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length-1,..SqliteDatabaseLimits::default()})).is_err());",
+            "  assert!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,SqliteDatabaseLimits::default())).is_err());",
+            "  assert!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:16,..SqliteDatabaseLimits::default()})).is_err());",
+            " }",
+            "}",
+            ""
+          ]
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedure_bare_erased_encodings_and_coordinate_refusals",
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 13,
+          "currentBodyExcerpt": [
+            "fn sqlite_snapshot_procedure_bare_erased_encodings_and_coordinate_refusals(){",
+            " let source=fixture();let provider=store::ArtifactCodec::bare::<ProcedureSnapshot,crate::ProcedureMutation>(crate::PROCEDURE_DOCUMENT_SCHEMA).snapshot_sqlite.unwrap();assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<ProcedureSnapshot>()));let dialect=store::os_io::ArtifactDialect{artifact_kind:\"s.imperative.procedure\".into(),standard:\"1\".into(),subset:\"*\".into()};",
+            " for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<ProcedureSnapshot as store::ArtifactPack>::encode_pack(&source)),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<ProcedureSnapshot as store::ArtifactDsl>::print_dsl(&source))};let database=(provider.export)(crate::PROCEDURE_DOCUMENT_SCHEMA,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(restore(&database).unwrap(),source);let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let imported=import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!((provider.import)(crate::PROCEDURE_DOCUMENT_SCHEMA,&dialect,imported,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value,payload);assert!((provider.import)(crate::PROCEDURE_DOCUMENT_SCHEMA,&dialect,database,encoding,&mut SqliteSnapshotControl::new(&mut |p|p.phase!=SqliteSnapshotPhase::EncodeNative,SqliteDatabaseLimits::default())).is_err());}",
+            " let database=project(&source);for(artifact_kind,standard,subset)in[(\"s.imperative.other\",\"1\",\"*\"),(\"s.imperative.procedure\",\"v1\",\"*\"),(\"s.imperative.procedure\",\"1\",\"other\")]{let wrong=store::os_io::ArtifactDialect{artifact_kind:artifact_kind.into(),standard:standard.into(),subset:subset.into()};assert!(source.validate_sqlite_snapshot_subset(&wrong,&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());}",
+            "}",
+            "#[semio_framework_async_macros::async_test]",
+            "async fn sqlite_snapshot_procedure_actual_declaration_typed_io_and_final_metadata_rows(){",
+            " use semio_framework_os_kernel::io::io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot};",
+            " semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder(\"imperative\").label(\"Procedure SQLite declaration\").version(\"0.0.1\").package_id(\"semio:imperative\").artifact(crate::declaration().unwrap()).try_build().unwrap();let source=fixture();let dialect=store::os_io::ArtifactDialect{artifact_kind:\"s.imperative.procedure\".into(),standard:\"1\".into(),subset:\"*\".into()};",
+            " for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut phases=Vec::new();let bytes=io_export_sqlite_snapshot(&dialect,&source,encoding,SqliteDatabaseLimits{max_rows:4,..SqliteDatabaseLimits::default()},&mut |p|{phases.push(p.phase);true}).await.unwrap().value;let database=import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!(database.tables.iter().map(|t|t.rows.len()).sum::<usize>(),4);let restored=io_import_sqlite_snapshot::<ProcedureSnapshot>(&dialect,&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert_eq!(restored,source);assert!(!phases.iter().any(|p|matches!(p,SqliteSnapshotPhase::DecodeNative|SqliteSnapshotPhase::EncodeNative)));assert!(io_export_sqlite_snapshot(&dialect,&source,encoding,SqliteDatabaseLimits{max_rows:3,..SqliteDatabaseLimits::default()},&mut |_|true).await.is_err());}",
+            "}",
+            ""
+          ]
+        },
+        {
+          "law": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedure_native_rows_and_schema_refuse_before_physical_ownership",
+          "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 44,
+          "currentBodyExcerpt": [
+            "fn sqlite_snapshot_procedure_native_rows_and_schema_refuse_before_physical_ownership(){",
+            " let source=fixture();let schema_bytes=ProcedureSnapshot::SQLITE_SCHEMA.len();",
+            " for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(<ProcedureSnapshot as store::ArtifactPack>::encode_pack(&source)),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(<ProcedureSnapshot as store::ArtifactDsl>::print_dsl(&source))};let exact=SqliteDatabaseLimits{max_rows:3,max_schema_bytes:schema_bytes,..SqliteDatabaseLimits::default()};let decoded=ProcedureSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,exact)).unwrap();assert_eq!(decoded,source);decoded.retire_sqlite_snapshot();assert_eq!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,exact)).unwrap(),payload);",
+            "  for limits in[SqliteDatabaseLimits{max_rows:2,..exact},SqliteDatabaseLimits{max_schema_bytes:schema_bytes-1,..exact}]{for phase in[SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::EncodeNative]{let mut constructed=false;let mut progress=|p:SqliteSnapshotProgress|{constructed|=p.phase==phase;true};let mut control=SqliteSnapshotControl::new(&mut progress,limits);let refused=match phase{SqliteSnapshotPhase::DecodeNative=>ProcedureSnapshot::decode_sqlite_snapshot_native(&payload,&mut control).is_err(),_=>source.encode_sqlite_snapshot_native(encoding,&mut control).is_err()};assert!(refused);assert!(!constructed);}}",
+            " }",
+            "}"
+          ]
+        }
+      ],
+      "currentReadiness": "Four original native workload refusals. Current root snapshot_record_controlled47 and into_snapshot_controlled57 plus SQLite decode/encode9/10 exist; need genuine current exact-length/row/schema/local-scene selected replay. No unchanged-workload assertion weakened."
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "package": "semio-s-artifact-remodel-remodeling",
+      "artifactRoot": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native",
+      "command": "bun nx run @semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "wholeCommand": null,
+      "failures": [
+        {
+          "law": "editor::remodeling::commands::import_frames::tests::export_qc_report_is_a_no_op_without_a_report",
+          "panicLocation": "🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:115:125:",
+          "reason": [
+            "exportQcReport: settle: Fault { origin: Plugin, code: FaultCode(\"remodeling.qc-report.missing\"), severity: Error, message: \"registered fixture typed operation fault: Run the quality check before exporting its report.\", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: None, causes: [], retryable: false }"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        },
+        {
+          "law": "editor::remodeling::commands::add_stream::tests::an_unknown_camera_is_refused_before_the_publication",
+          "panicLocation": "🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/../.././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️add-stream/🧪️tests/🔬️unit/🦀️.rs:37:5:",
+          "reason": [
+            "Fault { origin: Plugin, code: FaultCode(\"remodeling.stream.unknown-camera\"), severity: Error, message: \"registered fixture typed operation fault: no calibrated camera \\\"cam-0\\\" to bind the new stream to\", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: None, causes: [], retryable: false }"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        },
+        {
+          "law": "editor::remodeling::commands::import_video_frame_payload::tests::a_video_import_streams_its_frames_and_commits_one_edit",
+          "panicLocation": "🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:115:125:",
+          "reason": [
+            "importVideoFramePayload: settle: Fault { origin: Plugin, code: FaultCode(\"toolTransaction.shape\"), severity: Error, message: \"registered fixture typed operation fault: verb \\\"importVideoFramePayload\\\" streamed or aborted no tool transaction\", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: None, causes: [], retryable: false }"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        },
+        {
+          "law": "editor::remodeling::commands::import_video_frame_payload::tests::a_still_import_is_one_edit_one_undo_and_one_redo",
+          "panicLocation": "🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:115:125:",
+          "reason": [
+            "importFramePayload: settle: Fault { origin: Plugin, code: FaultCode(\"toolTransaction.shape\"), severity: Error, message: \"registered fixture typed operation fault: verb \\\"importFramePayload\\\" streamed or aborted no tool transaction\", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: None, causes: [], retryable: false }"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        },
+        {
+          "law": "editor::remodeling::commands::import_video_frame_payload::tests::a_pick_whose_first_file_does_not_decode_mints_its_own_stream",
+          "panicLocation": "🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:115:125:",
+          "reason": [
+            "importFramePayload: settle: Fault { origin: Plugin, code: FaultCode(\"toolTransaction.shape\"), severity: Error, message: \"registered fixture typed operation fault: verb \\\"importFramePayload\\\" streamed or aborted no tool transaction\", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: None, causes: [], retryable: false }"
+          ],
+          "log": "root-wav-architect-remodeling-whole-native.log"
+        }
+      ],
+      "currentLawAnchors": [
+        {
+          "law": "editor::remodeling::commands::add_stream::tests::an_unknown_camera_is_refused_before_the_publication",
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌱️add-stream/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 29,
+          "currentBodyExcerpt": [
+            "async fn an_unknown_camera_is_refused_before_the_publication() {",
+            "    let mut app = app_with_registry().await;",
+            "    let instance = artifact_app_laws::meta(\"local\").instance_id;",
+            "    app.dispatch_typed(RemodelingCommand::AddStream(AddStream { name: \"Stream\".into(), kind: \"image-sequence\".into(), camera_id: \"cam-0\".into() }), &artifact_app_laws::meta(\"local\")).await.expect(\"the bounded route admits the command; the handler faults inside the publication\");",
+            "    let fault = match artifact_app_laws::settle_registered_typed_operation(&mut *app, instance).await {",
+            "        Err(fault) => fault,",
+            "        Ok(receipt) => panic!(\"an unknown camera is a lane fault, never a phantom edit: {:?}\", receipt.lanes),",
+            "    };",
+            "    assert!(fault.message.contains(\"remodeling.stream.unknown-camera\"), \"{fault:?}\");",
+            "    assert_eq!(app.snapshot().expect(\"snapshot after\").streams.len(), 0);",
+            "}"
+          ]
+        },
+        {
+          "law": "editor::remodeling::commands::import_frames::tests::export_qc_report_is_a_no_op_without_a_report",
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎞️import-frames/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 18,
+          "currentBodyExcerpt": [
+            "async fn export_qc_report_is_a_no_op_without_a_report() {",
+            "    let mut app = app().await;",
+            "    let result = dispatch(&mut app, RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {})).await;",
+            "    assert!(!result.edited_document(), \"{:?}\", result.lanes);",
+            "    assert!(result.requested_effects.is_empty());",
+            "}"
+          ]
+        },
+        {
+          "law": "editor::remodeling::commands::import_video_frame_payload::tests::a_video_import_streams_its_frames_and_commits_one_edit",
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📼️import-video-frame-payload/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 103,
+          "currentBodyExcerpt": [
+            "async fn a_video_import_streams_its_frames_and_commits_one_edit() {",
+            "    let mut app = app().await;",
+            "    for index in 0..3u32 {",
+            "        video_tick(&mut app, index).await;",
+            "        assert_eq!(shape(&app).1, index as usize + 1, \"the open edit shows frame {index} at once\");",
+            "    }",
+            "    video_done(&mut app).await;",
+            "    assert!(app.snapshot().expect(\"projection\").streams[0].source.is_some());",
+            "    settle_history_verb(&mut *app, \"undo\", meta(\"local\").instance_id).await;",
+            "    assert_eq!(shape(&app), (0, 0, 0), \"one undo reverts the whole video import\");",
+            "}",
+            ""
+          ]
+        },
+        {
+          "law": "editor::remodeling::commands::import_video_frame_payload::tests::a_still_import_is_one_edit_one_undo_and_one_redo",
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📼️import-video-frame-payload/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 90,
+          "currentBodyExcerpt": [
+            "async fn a_still_import_is_one_edit_one_undo_and_one_redo() {",
+            "    let mut app = app().await;",
+            "    verify_import_checker_stream(&mut app, 3).await;",
+            "    assert_eq!(shape(&app), (1, 3, 3));",
+            "    settle_history_verb(&mut *app, \"undo\", meta(\"local\").instance_id).await;",
+            "    assert_eq!(shape(&app), (0, 0, 0), \"one undo reverts the whole import\");",
+            "    settle_history_verb(&mut *app, \"redo\", meta(\"local\").instance_id).await;",
+            "    assert_eq!(shape(&app), (1, 3, 3), \"one redo restores the whole import\");",
+            "}",
+            "",
+            "/// 🎞️ A host-decoded video import shows every streamed frame at once, and its done commits frames plus provenance as",
+            "/// ONE edit: one undo removes all of it."
+          ]
+        },
+        {
+          "law": "editor::remodeling::commands::import_video_frame_payload::tests::a_pick_whose_first_file_does_not_decode_mints_its_own_stream",
+          "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📼️import-video-frame-payload/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 204,
+          "currentBodyExcerpt": [
+            "async fn a_pick_whose_first_file_does_not_decode_mints_its_own_stream() {",
+            "    let mut app = app().await;",
+            "    dispatch(&mut app, RemodelingCommand::AddStream(add_stream::AddStream { name: \"Front\".into(), kind: \"video\".into(), camera_id: String::new() })).await;",
+            "    let still = |payload: String, index: u32| RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload, name: format!(\"frame-{index}.png\"), index, total: 3 });",
+            "    dispatch(&mut app, still(\"not-a-data-url\".into(), 0)).await;",
+            "    dispatch(&mut app, still(import_frame_payload::checker_data_url(24, 24, 3).await, 1)).await;",
+            "    dispatch(&mut app, still(import_frame_payload::checker_data_url(24, 24, 3).await, 2)).await;",
+            "    let scene = app.snapshot().expect(\"projection\");",
+            "    assert_eq!(scene.streams.len(), 2);",
+            "    assert!(scene.streams[0].frames.is_empty(), \"the earlier stream is untouched\");",
+            "    assert_eq!(scene.streams[1].frames.len(), 2);",
+            "    settle_history_verb(&mut *app, \"undo\", meta(\"local\").instance_id).await;"
+          ]
+        }
+      ],
+      "currentReadiness": "Current unknown-camera test already expects fault-before-publication but checks code text in fault.message, while retained typed Fault carries code separately. Missing-report no-op expectation conflicts retained typed fault. Three import tests hit toolTransaction.shape at fixture settle. Inspect exact handler/registered fixture lane and preserve original ownership/publication assertions; no claim that current patch passes."
+    }
+  ]
+}

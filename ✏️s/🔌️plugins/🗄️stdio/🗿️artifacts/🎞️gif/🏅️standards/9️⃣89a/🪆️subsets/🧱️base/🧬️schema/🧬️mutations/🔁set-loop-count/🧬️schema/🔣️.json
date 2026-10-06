@@ -33,6 +33,7 @@
           "en": "NETSCAPE2.0 loop count; 0 loops forever, empty removes the loop extension.",
           "de": "NETSCAPE2.0-Wiederholungen; 0 wiederholt endlos, leer entfernt die Schleifenerweiterung."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 10

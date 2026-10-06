@@ -1,0 +1,31 @@
+{
+  "metadataColumns": [
+    "id",
+    "artifact_kind",
+    "standard",
+    "subset",
+    "schema_version",
+    "native_encoding"
+  ],
+  "metadata": {
+    "id": 1,
+    "artifact_kind": "s.sequence.sequence",
+    "standard": "1",
+    "subset": "*",
+    "schema_version": 1
+  },
+  "nativeEncodings": [
+    "binary",
+    "text"
+  ],
+  "domainTables": [
+    "sequence_document",
+    "sequence_content"
+  ],
+  "entityIdentity": "positive-rowid",
+  "independentEdit": {
+    "sql": "UPDATE sequence_document SET schema=?",
+    "value": "Public SQLite 日本\u0000literal €"
+  },
+  "retirement": "explicit"
+}

@@ -2,7 +2,7 @@ use super::*;
 use protocol::{Mutation, MutationDiff};
 
 fn every_mutation() -> Vec<En1998Mutation> {
-    crate::mutations::text::demo_mutation_cases()
+    crate::standards::v1::subsets::any::io::text::mutations::demo_mutation_cases()
 }
 
 #[semio_framework_async_macros::async_test]

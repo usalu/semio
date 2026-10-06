@@ -6,7 +6,6 @@
 
 use super::ApplyPaintStroke;
 use crate::diff::diff_paint_stroke;
-use crate::diff::schema::PixelRun as SchemaPixelRun;
 use crate::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
@@ -26,6 +25,6 @@ pub fn diff(payload: &ApplyPaintStroke, base: &LowpolySnapshot) -> protocol::Mut
     if runs.is_empty() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The stroke changes no pixel of layer {} of object \"{}\".", payload.layer_index, payload.object_id));
     }
-    protocol::MutationOutcome::new(diff_paint_stroke(payload.object_id.clone(), payload.layer_index, runs.into_iter().map(|run| SchemaPixelRun { offset: run.offset, bytes: run.bytes }).collect()))
+    protocol::MutationOutcome::new(diff_paint_stroke(payload.object_id.clone(), payload.layer_index, runs))
 }
 //#endregion 🔖️Diff

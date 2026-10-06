@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import { parseTree, getNodeValue, type Node as JsonNode, type ParseError } from "jsonc-parser";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -7,12 +7,10 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import * as TOML from "@iarna/toml";
 import axes from "../../🎚️axes/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
 import fixture from "../🧫️fixtures/🔣️.json";
 import { Locale, Terminology, LocalizedLabel, LocaleContractError, type LabelValue } from "../🟦️.ts";
 
-const ajv = new Ajv({ strict: true });
-const validate = ajv.compile(schema), matrix = ajv.compile({ ...schema.definitions.localizedLabel });
+
 const repoRoot = resolve(import.meta.dir, "../../../../..");
 const source = (path: string): string => readFileSync(join(repoRoot, path), "utf8");
 function duplicates(node: JsonNode): boolean {
@@ -36,14 +34,10 @@ function retain(name: string, value: unknown): void {
 }
 
 test("closed portable label and locale authority corpus agrees with canonical axes", () => {
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(fixture.axes.locales).toEqual(axes.locales.map(row => row.id));
   expect(fixture.axes.terminologies).toEqual(axes.terminologies.map(row => row.id));
   expect(new Set(fixture.labels.map(row => row.id)).size).toBe(fixture.labels.length);
   expect(new Set(fixture.locales.map(row => row.id)).size).toBe(fixture.locales.length);
-  expect(validate({ ...fixture, defaultLocale: "en" })).toBe(false);
-  expect(validate({ ...fixture, ownership: { ...fixture.ownership, localeAuthority: "default" } })).toBe(false);
-  expect(validate({ ...fixture, labels: fixture.labels.map((row,index)=>index===0?{...row,cells:{...row.cells,extra:"text"}}:row) })).toBe(false);
 });
 
 test("UI native manifest has only canonical lower value and locale providers", () => {

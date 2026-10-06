@@ -425,7 +425,7 @@ async fn history_branch_provenance_follows_portable_required_wire_vectors() {
         log.schema = "neutral.counter.v1".into();
         log.edits.push(crate::os_spr::HistoryEdit {
             id: edit.id.clone(), actor: None, line: edit.line.clone(), started_at: edit.started_at,
-            finished_at: None, description: None, verb: None,
+            finished_at: None, verb: None,
             ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None,
         });
         let text = crate::os_spr::history::print_ops_text(&log).unwrap();

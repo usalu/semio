@@ -6364,8 +6364,7 @@ export interface ChromePanelOccupancy {
   readonly box: SafeAreaBox;
 }
 
-/** @emoji 🛟️ Which axis an in-window affordance is free to yield on. Window pane toggles do not yield —
- * they stay behind anchored chrome panels. Floating content overlays (e.g. a world view rail) take
+/** @emoji 🛟️ Which axis an in-window affordance is free to yield on. Floating panes and content overlays take
  * `"either"`, i.e. whichever single axis clears the chrome panel with the smaller displacement. */
 export type SafeAreaYield = "inline" | "block" | "either";
 
@@ -6446,45 +6445,39 @@ export function useShellChromePanelBoxes(root?: HTMLElement): readonly ChromePan
   );
 }
 
-/**
- * @emoji 🛟️ The safe area an affordance anchored inside `host` keeps from the chrome panels painted
- * over it — the ONE rule both renderers obey (its wgpu twin is `chrome_panel_safe_area`, and both answer
- * `🐚️Shell/🧫️fixtures/🛑️surface-controls/🔣️.json`'s `chromePanelSafeArea` rows).
- *
- * A docked panel body (`z-panel`, app root) and window content (`z-window`) are different stacking
- * contexts, so an overlay rail under an anchored panel can never win the corner back by restacking, and
- * making the panel click-through would only bury its own rows. The affordance yields instead, by the
- * least it can:
- * - only panels that actually cover `affordance` reserve anything, so a closed or distant panel costs
- *   nothing and the flush inset stays exactly as authored;
- * - the displacement is measured off the union of those panels, on the affordance's OWN anchor edges —
- *   a top anchor drops below the union, a right anchor moves in past its left edge;
- * - `yieldAxis` states which of the two the affordance's layout can actually give, and `"either"` takes
- *   the smaller of the two (ties go to the block axis, which keeps the affordance on its own column);
- * - an axis that cannot clear within `host` is not taken at all — moving an affordance without freeing
- *   it is pure harm, and the answer there is a re-anchoring, not a half-step.
- */
+/** 🧭️ Sweep sorted forbidden displacement intervals, preserving the requested axis gap and host bounds. */
+function chromePanelAxisReserve(affordance: SafeAreaBox, host: SafeAreaBox, panels: readonly SafeAreaBox[], inline: boolean, direction: number, gap: number): number {
+  if (!direction) return 0;
+  const a = inline ? [affordance.left, affordance.right, affordance.top, affordance.bottom] : [affordance.top, affordance.bottom, affordance.left, affordance.right];
+  const h = inline ? [host.left, host.right, host.top, host.bottom] : [host.top, host.bottom, host.left, host.right];
+  if (a[2]! < h[2]! || a[3]! > h[3]!) return 0;
+  const intervals = panels.flatMap((panel) => {
+    const p = inline ? [panel.left, panel.right, panel.top, panel.bottom] : [panel.top, panel.bottom, panel.left, panel.right];
+    if (a[2]! >= p[3]! || a[3]! <= p[2]!) return [];
+    return [direction > 0 ? [p[0]! - a[1]! - gap, p[1]! - a[0]! + gap] : [a[0]! - p[1]! - gap, a[1]! - p[0]! + gap]];
+  }).sort((a,b) => a[0]! - b[0]!);
+  let offset = 0;
+  for (const interval of intervals) {
+    if (interval[0]! >= offset) break;
+    if (interval[1]! > offset) offset = Math.ceil(interval[1]!);
+  }
+  const start = a[0]! + direction * offset;
+  const end = a[1]! + direction * offset;
+  return offset > 0 && start >= h[0]! && end <= h[1]! ? offset : 0;
+}
+
+/** 🛟️ Clear every overlapping shell panel along one authored anchor axis, including panels reached after
+ * moving. Preserve the axis gap, round outward, and stay entirely inside the actual host. The smallest
+ * viable displacement wins; block wins ties. No overlap or no fit leaves placement unchanged.
+ * {@link chromePanelSafeAreaStyle} applies this reserve; the native twin consumes the same Shell corpus. */
 export function chromePanelSafeArea(affordance: SafeAreaBox, host: SafeAreaBox, anchor: Anchor, panels: readonly SafeAreaBox[], yieldAxis: SafeAreaYield, gapPx: number): ChromePanelSafeArea {
-  const occluders = panels.filter((panel) => safeAreaBoxesOverlap(panel, affordance));
-  if (occluders.length === 0) return CHROME_PANEL_SAFE_AREA_CLEAR;
-  const union: SafeAreaBox = {
-    left: Math.min(...occluders.map((panel) => panel.left)),
-    top: Math.min(...occluders.map((panel) => panel.top)),
-    right: Math.max(...occluders.map((panel) => panel.right)),
-    bottom: Math.max(...occluders.map((panel) => panel.bottom)),
-  };
+  if (!panels.some((panel) => safeAreaBoxesOverlap(panel, affordance))) return CHROME_PANEL_SAFE_AREA_CLEAR;
   const vertical = anchorVertical(anchor);
   const horizontal = anchorHorizontal(anchor);
-  const blockRoom = Math.max(0, host.bottom - host.top - (affordance.bottom - affordance.top));
-  const inlineRoom = Math.max(0, host.right - host.left - (affordance.right - affordance.left));
-  const blockPush = vertical === "top" ? union.bottom + gapPx - affordance.top : vertical === "bottom" ? affordance.bottom + gapPx - union.top : 0;
-  const inlinePush = horizontal === "right" ? affordance.right + gapPx - union.left : horizontal === "left" ? union.right + gapPx - affordance.left : 0;
-  const block = vertical !== "middle" && yieldAxis !== "inline" ? Math.ceil(blockPush) : 0;
-  const inline = horizontal !== "middle" && yieldAxis !== "block" ? Math.ceil(inlinePush) : 0;
-  const blockViable = block > 0 && block <= blockRoom;
-  const inlineViable = inline > 0 && inline <= inlineRoom;
-  if (blockViable && (!inlineViable || block <= inline)) return { inlinePx: 0, blockPx: block };
-  if (inlineViable) return { inlinePx: inline, blockPx: 0 };
+  const block = yieldAxis === "inline" ? 0 : chromePanelAxisReserve(affordance, host, panels, false, vertical === "top" ? 1 : vertical === "bottom" ? -1 : 0, gapPx);
+  const inline = yieldAxis === "block" ? 0 : chromePanelAxisReserve(affordance, host, panels, true, horizontal === "left" ? 1 : horizontal === "right" ? -1 : 0, gapPx);
+  if (block > 0 && (inline === 0 || block <= inline)) return { inlinePx: 0, blockPx: block };
+  if (inline > 0) return { inlinePx: inline, blockPx: 0 };
   return CHROME_PANEL_SAFE_AREA_CLEAR;
 }
 
@@ -7122,6 +7115,10 @@ export interface PaneProps {
   readonly order?: number;
   /** @emoji 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
   readonly inlineEdgeReservePx?: number;
+  /** 🪟️ Explicit bounds for panes mounted beside, rather than inside, their host context. */
+  readonly hostRef?: React.RefObject<HTMLElement | null>;
+  /** 🛟️ Minimum displacement-axis clearance from shell panels in CSS pixels. */
+  readonly chromePanelGapPx?: number;
   readonly zIndex?: 10 | 20 | 30 | 40;
   readonly className?: string;
   readonly children?: React.ReactNode;
@@ -7165,6 +7162,8 @@ export const Pane: React.FC<PaneProps> = ({
   onResizeActiveChange,
   order = 0,
   inlineEdgeReservePx = 0,
+  hostRef,
+  chromePanelGapPx = uiSpacingPx(1),
   zIndex,
   className = "",
   children,
@@ -7172,6 +7171,9 @@ export const Pane: React.FC<PaneProps> = ({
   const host = usePaneHostContext();
   const mobile = useUiMobile();
   const paneRootRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const fallbackHostRef = reactHostPort.useRef<HTMLElement | null>(null);
+  const paneHostRef = hostRef ?? host?.containerRef ?? fallbackHostRef;
+  const safeArea = useChromePanelSafeArea({ hostRef: paneHostRef, affordanceRef: paneRootRef, anchor, yieldAxis: "either", gapPx: chromePanelGapPx, enabled: !expanded && !mobile });
   const setPaneRootRef = reactHostPort.useCallback(
     (element: HTMLDivElement | null) => {
       paneRootRef.current = element;
@@ -7197,7 +7199,7 @@ export const Pane: React.FC<PaneProps> = ({
     },
     onMove: (event) => {
       if (!onAnchorChange) return;
-      const hostRect = host?.containerRef.current?.getBoundingClientRect();
+      const hostRect = paneHostRef.current?.getBoundingClientRect();
       if (!hostRect) return;
       const next = nearestAnchor(event.clientX, event.clientY, hostRect);
       if (next !== lastAnchorRef.current) {
@@ -7217,7 +7219,7 @@ export const Pane: React.FC<PaneProps> = ({
         ...(zIndex !== undefined ? { zIndex } : {}),
         width: !mobile && !effectiveFolded ? `${size}px` : undefined,
         maxWidth: !mobile && !effectiveFolded ? `min(100% - (var(--spacing-single) * 2)${inlineEdgeReservePx > 0 ? ` - ${inlineEdgeReservePx}px` : ""}, ${size}px)` : undefined,
-        ...chromePanelSafeAreaStyle(anchor, { inlinePx: inlineEdgeReservePx, blockPx: 0 }),
+        ...chromePanelSafeAreaStyle(anchor, { inlinePx: inlineEdgeReservePx + safeArea.inlinePx, blockPx: safeArea.blockPx }),
       };
   const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];
   const resizeDeltaFactor = horizontal === "middle" ? 2 : 1;
@@ -7232,6 +7234,8 @@ export const Pane: React.FC<PaneProps> = ({
         data-slot={overlaySlot ?? "pane"}
         data-level="pane"
         data-anchor={anchor}
+        data-safe-area-inline={safeArea.inlinePx || undefined}
+        data-safe-area-block={safeArea.blockPx || undefined}
         data-folded={effectiveFolded ? "true" : undefined}
         data-expanded={expanded ? "true" : undefined}
         data-dragging={dragging ? "true" : undefined}
@@ -8198,7 +8202,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
           <EngagementControlView key={row.id ?? row.label ?? row.kind} control={row} />
         ))}
         {secondaryStatus?.length ? (
-          <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
+          <div data-slot="engagement-status" role="status" aria-live="polite" aria-atomic="true" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
             {secondaryStatus.map((item) => (
               <span key={item.id} data-slot="engagement-status-item">
                 {item.content}

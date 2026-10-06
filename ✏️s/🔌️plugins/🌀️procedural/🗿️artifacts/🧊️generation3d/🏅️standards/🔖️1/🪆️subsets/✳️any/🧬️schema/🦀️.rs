@@ -3,10 +3,7 @@
 #[path = "🧭️transforms/🦀️.rs"]
 pub mod transforms;
 
-use crate::standards::v1::subsets::any::schema::snapshot::text::{
-    GENERATION3D_EXAMPLE_MESH_WORKBENCH_TEXT, GENERATION3D_EXAMPLE_BOX_FILLET_TEXT, GENERATION3D_EXAMPLE_BOX_SHELL_TEXT, GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT, GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT, GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT, GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT,
-    GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT, GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT,
-};
+
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
 use crate::widget_id;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
@@ -17,7 +14,6 @@ use ::semio_framework_schema::ArtifactSchema;
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::ArtifactDsl;
 
 //#region 🔖️Generation3dArtifact
 /// 🧬️ Generation3dArtifact facet type.
@@ -110,117 +106,15 @@ pub fn generation3d_artifact_schema_descriptor() -> ::semio_framework_schema_reg
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{Generation3dDiff, Generation3dMutation, Generation3dSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Generation3dBuilderConstruction {
-        snapshot: Generation3dSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for Generation3dBuilderConstruction {
-        type Snapshot = Generation3dSnapshot;
-        type Mutation = Generation3dMutation;
-        type Diff = Generation3dDiff;
-        fn empty() -> Self {
-            Self { snapshot: Generation3dSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Generation3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <Generation3dDiff as protocol::MutationDiff<Generation3dSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::Generation3dSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Generation3dParts {
-        pub snapshot: Option<Generation3dSnapshot>,
-    }
-
-    pub struct Generation3dAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for Generation3dAnalyzerAnalysis {
-        type Parts = Generation3dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation3d", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = Generation3dParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <Generation3dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec Generation3dBuilderFacets {
-        construction: Generation3dBuilderConstruction,
-        analysis: Generation3dAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::Generation3dComposerComposition,
-    }
-    builder: Generation3dBuilder,
-    analyzer: Generation3dAnalyzer,
-    composer: Generation3dComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
@@ -238,11 +132,7 @@ pub const PROCEDURAL_EXAMPLE_RECTANGLE_WIRE: &str = "rectangle-wire-preview";
 pub const PROCEDURAL_EXAMPLE_MESH_WORKBENCH: &str = "mesh-workbench";
 pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
 
-/// 📄️ The `procedural3d-play` "default" document — parsed from the bundled "hexagonal mushroom
-/// column" example host_snapshot.
-pub fn default_snapshot() -> Generation3dSnapshot {
-    Generation3dSnapshot::parse_dsl(GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).unwrap_or_default()
-}
+
 
 /// 📄️ The artifact's `Default` projection. NOT empty: `FlowHostSnapshot::default()`
 /// (`🧰️framework/…/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs`) is the three-widget
@@ -279,38 +169,11 @@ pub fn is_generation3d_example_id(example_id: &str) -> bool {
     )
 }
 
-/// 🧾️ Builds the projection for a named bundled example; unknown ids return `None`.
-pub fn example_snapshot(example_id: &str) -> Option<Generation3dSnapshot> {
-    let dsl = match example_id {
-        PROCEDURAL_EXAMPLE_HEX_COLUMN | "demo" => Some(GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT),
-        PROCEDURAL_EXAMPLE_RECT_EXTRUDE => Some(GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT),
-        PROCEDURAL_EXAMPLE_SPHERE_TORUS => Some(GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT),
-        PROCEDURAL_EXAMPLE_BOX_FILLET => Some(GENERATION3D_EXAMPLE_BOX_FILLET_TEXT),
-        PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE => Some(GENERATION3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT),
-        PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE => Some(GENERATION3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT),
-        PROCEDURAL_EXAMPLE_RECTANGLE_WIRE => Some(GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT),
-        PROCEDURAL_EXAMPLE_MESH_WORKBENCH => Some(GENERATION3D_EXAMPLE_MESH_WORKBENCH_TEXT),
-        PROCEDURAL_EXAMPLE_BOX_SHELL => Some(GENERATION3D_EXAMPLE_BOX_SHELL_TEXT),
-        _ => None,
-    };
-    dsl.and_then(|text| Generation3dSnapshot::parse_dsl(text).ok())
-}
 
-/// 🧾️ Serializes an example's bare projection for registration via `App::example`.
-pub fn example_document_json(example_id: &str) -> String {
-    let snapshot = example_snapshot(example_id).unwrap_or_default();
-    let json = semio_framework_pack_json::to_json_string(&snapshot);
-    snapshot.retire_cold();
-    json
-}
 
-/// 🌉️ Bridges a `FormGeneration.values` map (`semio_framework_artifact_playbook_playbook::PlaybookValues`, see `FormGeneration`
-/// in `📖️playbook/🦀️.rs`) into the `pack::json::Object` that `forms_bridge::apply_generation_values_to_host_snapshot`
-/// actually takes.
-#[cfg(feature = "component-app-assembly")]
-fn generation_values_to_pack_object(values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> semio_framework_pack_json::Object {
-    values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect()
-}
+
+
+
 
 /// 🎯️ The roster entry `selected_id` names — the ONE lookup every generate-mode surface resolves its
 /// "current generation" through.
@@ -394,8 +257,8 @@ pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut Flow
 /// 🔀️ Rebuilds the fixture the flow host would normalize `before` to, then diffs `target` against
 /// that baseline.
 #[cfg(feature = "component-app-assembly")]
-pub fn commit_host_snapshot(before: &FlowHostSnapshot, target: &FlowHostSnapshot) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation> {
-    with_host(before, |host| crate::standards::v1::subsets::any::schema::mutations::text::generation3d_host_snapshot_operations(&host.host_snapshot, target))
+pub fn commit_host_snapshot(before: &FlowHostSnapshot, target: &FlowHostSnapshot) -> Vec<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation> {
+    with_host(before, |host| crate::standards::v1::subsets::any::schema::mutations::generation3d_host_snapshot_operations(&host.host_snapshot, target))
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -431,41 +294,15 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_artifact_in
     (nodes, edges)
 }
 
-/// 🔌️ The widget id behind a preview instance id. Instance ids are channel-qualified
-/// (`{widgetId}@{channel}#{index}`) so both suffixes have to come off; a bare widget id, a port id
-/// and an instance id therefore all resolve to the same widget.
-pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
-    let base = instance_id.split('#').next().unwrap_or(instance_id);
-    base.split('@').next().unwrap_or(base)
-}
 
-#[cfg(feature = "component-app-assembly")]
-pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
-    let fixture_json = semio_framework_pack_json::to_json_string(host_snapshot);
-    let patched = apply_generation_values_to_host_snapshot_json(&fixture_json, &generation_values_to_pack_object(values));
-    let patched_fixture = FlowHost::parse_host_snapshot_json(&patched).unwrap_or_else(|_| host_snapshot.clone());
-    let mut host = FlowHost::from_host_snapshot(patched_fixture);
-    host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
-    let evaluated = host.evaluate().unwrap_or_default();
-    host.retire_cold();
-    evaluated
-}
+
+
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️GumballTransforms
-/// 🧭️ Maps a gumball drag operation to the flow-graph transform neuron kind that persists it.
-pub fn gumball_xform_kind(operation: &str) -> &'static str {
-    match operation {
-        "rotate" => "brep.xform.rotate",
-        "scale" => "brep.xform.scale",
-        _ => "brep.xform.translate",
-    }
-}
 
-/// 🪪️ Deterministic id for the transform neuron generated by dragging `source_id`'s gumball for `operation`.
-pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
-    format!("{source_id}__gumball_{operation}")
-}
+
+
 
 #[cfg(feature = "component-app-assembly")]
 pub fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<semio_framework_value::DslValue> {
@@ -527,43 +364,7 @@ impl GumballRefusal {
     }
 }
 
-/// 🔀️ Finds (or splices in) the transform neuron that persists `selected_id`'s gumball drag for
-/// `operation` into the flow graph, rewiring downstream consumers so the transformed geometry is what
-/// actually evaluates and exports.
-#[cfg(feature = "component-app-assembly")]
-pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &str) -> Result<String, GumballRefusal> {
-    if !matches!(operation, "translate" | "rotate" | "scale") { return Err(GumballRefusal::UnknownOperation); }
-    let selected_port = selected_id.split_once('@').map(|(_, channel)| channel.split('#').next().unwrap_or(channel));
-    let selected_id = widget_id_from_instance_id(selected_id);
-    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
-    let source_kind = host.host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, neuron_kind, .. } if id == selected_id => Some(neuron_kind), _ => None }).ok_or(GumballRefusal::NoShapeSource)?;
-    let source_info = infos.get(source_kind).ok_or_else(|| GumballRefusal::KindUnavailable(source_kind.clone()))?;
-    let source_port = source_info.outputs.iter().find(|port| selected_port.is_none_or(|selected| port.name == selected) && port.value_types.iter().any(|kind| kind == "mesh" || kind == "geometry")).ok_or(GumballRefusal::NoShapeOutput)?;
-    let mesh = source_port.value_types.iter().any(|kind| kind == "mesh");
-    let transform_kind = if mesh { format!("brep.mesh.{operation}") } else { gumball_xform_kind(operation).to_string() };
-    if source_port.cardinality.is_collection() { return Err(GumballRefusal::ListOutput); }
-    let own_suffix = format!("__gumball_{operation}");
-    if selected_id.ends_with(&own_suffix) && source_kind == &transform_kind { return Ok(selected_id.to_string()); }
-    let transform_id = gumball_widget_id(selected_id, operation);
-    if let Some(widget) = host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == transform_id) {
-        if matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind == &transform_kind) && host.host_snapshot.synapses.iter().any(|wire| wire.from == selected_id && wire.from_port == source_port.name && wire.to == transform_id) { return Ok(transform_id); }
-        return Err(GumballRefusal::IdentifierOccupied);
-    }
-    let transform_output = infos.get(&transform_kind).and_then(|info| info.outputs.first()).ok_or_else(|| GumballRefusal::TransformUnavailable(transform_kind.clone()))?;
-    let (source_x, source_y) = host.host_snapshot.layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
-    let descriptor = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
-        ("kind".to_string(), semio_framework_value::DslValue::String("neuron".into())),
-        ("id".to_string(), semio_framework_value::DslValue::String(transform_id.clone())),
-        ("neuronKind".to_string(), semio_framework_value::DslValue::String(transform_kind)),
-    ]));
-    host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| GumballRefusal::HostEdit(err.to_string()))?;
-    host.insert_between(selected_id, &source_port.name, &transform_id, if mesh { "mesh" } else { "geometry" }, &transform_output.name).map_err(|err| GumballRefusal::HostEdit(err.to_string()))?;
-    if let Some(Widget::Neuron { preview, .. }) = host.host_snapshot.widgets.iter_mut().find(|widget| widget_id(widget) == transform_id) { *preview = true; }
-    if let Some(Widget::Neuron { preview, .. }) = host.host_snapshot.widgets.iter_mut().find(|widget| widget_id(widget) == selected_id) {
-        *preview = false;
-    }
-    Ok(transform_id)
-}
+
 /// 🎚️ The literals a gumball composes from on an operator it inserts: a translate's zero offset, a rotate's zero turn about
 /// +z, a scale's unit factors — the inserted record holds its kind's declared defaults (design §20.9), which need not be the
 /// identity, so the gesture's relative leaf only composes correctly after these land.
@@ -580,7 +381,7 @@ pub fn gumball_identity(operation: &str) -> Vec<(&'static str, crate::standards:
 /// 🧾️ The `change-widget-input` leaves an inserted operator's record needs to hold `wanted` (design §19.4): one per wanted
 /// channel the record holds with another literal, typed like the record's own literal (a point stays a point); a channel
 /// the record does not hold is not one of its inputs and is skipped.
-pub fn record_input_leaves(record: &Widget, wanted: &[(&str, crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue)]) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation> {
+pub fn record_input_leaves(record: &Widget, wanted: &[(&str, crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue)]) -> Vec<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation> {
     use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{change_widget_input, WidgetInputValue};
     let Widget::Neuron { id, params, .. } = record else { return Vec::new() };
     wanted

@@ -1,0 +1,11 @@
+{
+  "traits": [
+    {"name": "OpText", "owner": "🚪️io/📝️text/🦀️.rs"},
+    {"name": "OpBinary", "owner": "🚪️io/💾️binary/🦀️.rs"},
+    {"name": "DiffText", "owner": "🚪️io/📝️text/🦀️.rs"},
+    {"name": "DiffBinary", "owner": "🚪️io/💾️binary/🦀️.rs"},
+    {"name": "DiffCodec", "owner": "🚪️io/🦀️.rs"}
+  ],
+  "binaryOwner": "🚪️io/💾️binary/📦️bytes/🦀️.rs",
+  "semanticOwner": "🎮️mutation/🦀️.rs"
+}

@@ -25,8 +25,8 @@ mod subject {
     /// re-encodes, and answers the document as the `actual-obj` artifact the pipeline reads. A forward row must not hand
     /// back its input bytes; a restored document may — the committed pairs are this encoder's canonical form.
     fn run(ctx: &Context, undo: bool) -> Result<Outcome, String> {
-        let uri = ctx.step_fixture_uris().into_iter().find(|uri| uri.ends_with("/⬅️before.obj")).ok_or_else(|| "the row names no committed ⬅️before.obj".to_string())?;
-        let input = ctx.fixture_bytes(&uri)?;
+        let uri = ctx.step_input_uris().into_iter().find(|uri| uri.ends_with("/⬅️before.obj")).ok_or_else(|| "the row names no committed ⬅️before.obj".to_string())?;
+        let input = ctx.input_bytes(&uri)?;
         let mut snapshot = decode_obj(std::str::from_utf8(&input).map_err(|error| error.to_string())?).map_err(|error| format!("decode_obj failed: {error}"))?;
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");

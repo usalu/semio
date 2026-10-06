@@ -1,5 +1,6 @@
 /** 🧫️ Shared path preparation vectors and independent SVG raster accuracy. */
-import {expect,test} from "vitest";
+import {expect,test,vi} from "vitest";
+import {Vector2} from "three";
 import Ajv from "ajv";
 import sharp from "sharp";
 import fixture from "../🧫️fixtures/🔣️.json";
@@ -68,6 +69,23 @@ test("async preparation yields and cancels without changing caller geometry or p
 /** 🧹️ Neutral private cleanup and owned completed-contour handoff. */
 import retirementRows from "../🧫️fixtures/🧹️retirement/🔣️.json";
 const retirementValid=new Ajv({strict:true}).compile(schema.definitions.retirementProgress);
+test("completed contours own coordinate copies independently of authored points",()=>{
+ for(const row of fixture){const input=structuredClone(row.input) as PathFlattenInput,job=new PathFlattenJob(input);while(!job.advance(4096).done){}const output=job.result(),expected=structuredClone(output),sourcePoints=input.segments.flatMap(segment=>Object.values(segment).filter(Array.isArray)) as number[][];
+  for(const contour of output)for(const p of contour.points){expect(sourcePoints.includes(p)).toBe(false);expect(new Vector2(...p).clone().toArray()).toEqual(p);}
+  for(const p of sourcePoints){p[0]=123;p[1]=456;}expect(output).toEqual(expected);job.cancel();const state=job as any;expect(state.contours).not.toBe(output);const retired=job.intoRetirement();expect(retired.output).toBe(null);let progress;do{progress=retired.job.advance(1);}while(!progress.done);expect(progress.work).toBe(3);expect(output).toEqual(expected);
+ }
+ process.stderr.write("[DEBUG] Published flattened points own coordinate copies and survive source mutation and cancellation\n");
+});
+test("async flattening retires actual private owners after completion cancellation or callback failure",async()=>{
+ const original=PathFlattenJob.prototype.intoRetirement;
+ for(const mode of ["success","abort","callback"] as const){const input=structuredClone(retirementRows[3]!.input) as PathFlattenInput,before=structuredClone(input),controller=new AbortController(),progresses:{work:number;done:boolean}[]=[];let output:unknown,adopted=0;
+  const spy=vi.spyOn(PathFlattenJob.prototype,"intoRetirement").mockImplementation(function(this:PathFlattenJob){adopted++;const retired=original.call(this);output=retired.output;const advance=retired.job.advance.bind(retired.job);retired.job.advance=(grant:number)=>{expect(grant).toBe(1);const p=advance(grant);progresses.push(p);return p;};return retired;});
+  try{const pending=preparePath(input,{signal:controller.signal,workBudget:1,onProgress:p=>{if(p.done){if(mode==="abort")controller.abort();if(mode==="callback")throw Error("completion callback failed");}}});if(mode==="success")expect(await pending).toEqual(retirementRows[3]!.output);else await expect(pending).rejects.toThrow(mode==="abort"?/cancelled/:/completion callback failed/);
+   expect(adopted).toBe(1);expect(output).toEqual(mode==="success"?retirementRows[3]!.output:null);expect(progresses.length).toBe(mode==="success"?3:4);progresses.forEach((p,at)=>expect(p).toMatchObject({work:at+1,done:at===progresses.length-1}));expect(input).toEqual(before);
+  }finally{spy.mockRestore();}
+ }
+ process.stderr.write("[DEBUG] Async flattening handed off once and drained real completion or cancellation owners with unit grants\n");
+});
 test("path retirement preserves published contours and drains private curves under grants",()=>{
  for(const row of retirementRows)for(const grant of [1,7,4096]){
   const source=structuredClone(row.input) as PathFlattenInput,before=structuredClone(source),job=new PathFlattenJob(source);

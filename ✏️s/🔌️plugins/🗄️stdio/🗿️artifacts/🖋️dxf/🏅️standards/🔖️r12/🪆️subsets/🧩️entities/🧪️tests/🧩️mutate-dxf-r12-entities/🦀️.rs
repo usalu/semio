@@ -22,7 +22,7 @@ const INPUT: &str = "asset://🚏️bus-shelter/🖊️.dxf";
 
 /// 🧫️ Copies the immutable real asset into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("bus-shelter-r12.dxf"))?;
+    let copy = ctx.copy_input(INPUT, Some("bus-shelter-r12.dxf"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
@@ -138,7 +138,8 @@ mod subject {
     use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::mutations::{apply_dxf_mutation, DxfMutation};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_dxf::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::schema::snapshot::{parse_dxf_document, print_dxf_document};
+    use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::{print_dxf_document};
+    use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::{parse_dxf_document};
     use semio_s_artifact_stdio_dxf::DxfSnapshot;
     use semio_s_plugin_stdio_drawing_test_oracle::project_dxf_r12;
 

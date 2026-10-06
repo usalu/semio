@@ -84,17 +84,17 @@ const router = new ScriptRouter(import.meta.dir)
         const { PlaygroundSessionPreviewScript, PlaygroundSessionGenerateScript } = await import("../../🎮️playground-session/🏃️execution/🟦️.ts");
         return segments[1] === "preview" ? new PlaygroundSessionPreviewScript(this.root).run() : new PlaygroundSessionGenerateScript(this.root).run(segments.slice(1));
       }
-      if (segments[0] === "scale-fixture") return new (await import("../../../../🧫️fixtures/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureGenerateScript(this.root, this.repoRoot).run(segments.slice(1));
+      if (segments[0] === "scale-fixture") return new (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureGenerateScript(this.root, this.repoRoot).run(segments.slice(1));
       throw new Error(`unknown generate subcommand: ${segments[0]} (expected playground-session|scale-fixture)`);
     }
   })
   .register("scale-fixture", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] === "check") return new (await import("../../../../🧫️fixtures/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureCheckScript(this.root, this.repoRoot).run();
+      if (segments[0] === "check") return new (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixtureCheckScript(this.root, this.repoRoot).run();
       throw new Error(`unknown scale-fixture subcommand: ${segments[0]} (expected check)`);
     }
   })
-  .registerLazy("preview-generated", async () => (await import("../../../../🧫️fixtures/⚖️scale/📤️publication/🟦️.ts")).ScaleFixturePreviewGeneratedScript)
+  .registerLazy("preview-generated", async () => (await import("../../../../🧪️testing/⚖️scale/📤️publication/🟦️.ts")).ScaleFixturePreviewGeneratedScript)
   .register("distribution", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       const { DistributionBundleScript } = await import("../../🚚️distribution/🏃️execution/🟦️.ts");
@@ -108,7 +108,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("parity", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       if (segments[0] === "journey") {
-        const { runShellInteractionJourney } = await import("../../⚖️parity/🚶️journey/🟦️.ts");
+        const { runShellInteractionJourney } = await import("../../🧪️testing/🚶️journey/🟦️.ts");
         return runShellInteractionJourney(segments.slice(1));
       }
       const { ParitySmokeScript, ParityTriageScript, ParityProbeScript, ParityVerifyScript, ParitySweepScript } = await import("../../⚖️parity/🏃️execution/🟦️.ts");

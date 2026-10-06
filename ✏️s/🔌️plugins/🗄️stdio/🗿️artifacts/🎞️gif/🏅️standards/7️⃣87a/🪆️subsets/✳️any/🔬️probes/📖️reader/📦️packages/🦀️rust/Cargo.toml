@@ -6,6 +6,12 @@
 # version itself (`decoder.rs:558` maps `b"GIF87a"` to `Version::V87a`; `version()` is public at
 # `decoder.rs:501`). So it judges; something else writes.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "gif-87a-any-reader"

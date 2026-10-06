@@ -30,5 +30,5 @@ if (segments[0] === "generation2d-window-camera-ownership") {
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-procedural-generation2d", { ...{
   testFeatures: ["component-app-assembly"],
   twins: [{ name: "generation2d-snapshot-fixture-asset", run: generation2dSnapshotFixtureAssetSelfTests }, { name: "generation2d-gesture-leaves", run: generation2dGestureLeafTwinSelfTests }],
-}, snapshotSqliteTestFeatures: [], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], snapshotSqliteTestBudgetMs: 120000, commands: { verify: OwnedVerifyScript } });
+}, snapshotSqliteTestFeatures: ["component-app-assembly"], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], snapshotSqliteTestBudgetMs: 120000, commands: { verify: OwnedVerifyScript } });
 

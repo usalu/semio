@@ -466,7 +466,7 @@ def committed(ctx: Any) -> dict:
     spec = ctx.doc_json()
     if spec["kind"] != ctx.row():
         raise AssertionError(f"scenario {ctx.scenario['id']}: the doc string names {spec['kind']!r}")
-    return {leaf: json.loads(ctx.fixture_bytes(spec[leaf]).decode("utf-8")) for leaf in LEAVES}
+    return {leaf: json.loads(ctx.input_bytes(spec[leaf]).decode("utf-8")) for leaf in LEAVES}
 
 
 def adapter() -> Any:

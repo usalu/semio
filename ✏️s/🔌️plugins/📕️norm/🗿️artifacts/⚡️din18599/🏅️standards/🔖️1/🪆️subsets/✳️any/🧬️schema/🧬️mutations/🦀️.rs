@@ -177,9 +177,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🌉️ExternalCodecBridge
-pub fn decode_din18599_mutation_json(text: &str) -> Result<Din18599Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 
 pub fn apply_din18599_mutation(base: &Din18599Snapshot, mutation: &Din18599Mutation) -> Result<(Din18599Snapshot, Vec<String>), String> {
     let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(mutation, base);

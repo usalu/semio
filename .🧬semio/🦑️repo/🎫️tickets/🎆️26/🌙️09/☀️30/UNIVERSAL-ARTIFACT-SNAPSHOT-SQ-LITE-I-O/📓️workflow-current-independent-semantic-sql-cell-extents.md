@@ -1,0 +1,7 @@
+# Workflow Independent Semantic SQL Cell Extents
+
+The actual Source owner projection was exported through the real shared physical SQLite writer, then independently reopened by Bun SQLite with safe integers. Complete `SELECT *` values across all 16 authored tables were counted using INTEGER/REAL eight bytes, TEXT standard UTF8 bytes and NULL zero. Integrity and foreign-key checks passed. No Native semantic admission behavior is claimed by this observation.
+
+The base full owner is 1348 semantic cell bytes. With all four optional parameter numeric values present, finite IEEE words `0000000000000000`, `8000000000000000`, `0000000000000001`, `000fffffffffffff` and `7fefffffffffffff` each yield 1370. Positive and negative infinity yield 1490; quiet and signaling NaN yield 1238, because readable REAL cells become NULL while exact word/class companions remain.
+
+Exact per-table observations are retained in `🗑️generated/workflow-independent-semantic-cell-extents.json`, produced by the input `📥️inputs/workflow-run-semantic-cell-admission/📜️script.ts`. Command output: `🗑️generated/physical-workflow-independent-semantic-cell-extents-observe.log`, actual independent DEBUG confirmations for all ten owners: the base plus nine IEEE words. The original prose count of nine owners was incorrect; the complete retained machine roster has ten. This supplies the third-party physical boundary oracle for subsequent exact-limit and one-byte-short demand; native allocation backing and semantic SQL extent remain separate authorities.

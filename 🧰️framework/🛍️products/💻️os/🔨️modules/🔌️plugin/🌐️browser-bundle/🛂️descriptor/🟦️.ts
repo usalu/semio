@@ -5,7 +5,34 @@ import { fileURLToPath } from "node:url";
 import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "@semio-tech/framework-os";
 
 const DESCRIPTOR_ROOT = dirname(fileURLToPath(import.meta.url));
-export const ACTOR_COMPONENT_EXPORTS = JSON.parse(readFileSync(join(DESCRIPTOR_ROOT, "../../🧫️fixtures/🛂️actor-exports/🔣️.json"), "utf8")) as Record<string, string[]>;
+
+/** 📜️ Projects the actor world's exported functions from its authored WIT contract. */
+export function parseActorComponentExports(wit: string): Record<string, string[]> {
+  const source = wit.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+  const body = (kind: string, name: string) => {
+    const matches = [...source.matchAll(new RegExp(`\\b${kind}\\s+${name}\\s*\\{`, "g"))];
+    if (matches.length !== 1) throw new Error(`Expected one WIT ${kind} ${name}`);
+    let depth = 1, text = "";
+    for (let index = matches[0]!.index! + matches[0]![0].length; index < source.length; index++) {
+      const char = source[index]!;
+      if (char === "{") depth++;
+      else if (char === "}" && --depth === 0) return text;
+      else if (depth === 1) text += char;
+    }
+    throw new Error(`Unclosed WIT ${kind} ${name}`);
+  };
+  const result: Record<string, string[]> = {};
+  for (const match of body("world", "actor").matchAll(/\bexport\s+([a-z][a-z0-9-]*)\s*;/g)) {
+    const name = match[1]!;
+    if (Object.hasOwn(result, name)) throw new Error(`Duplicate actor export ${name}`);
+    result[name] = [...body("interface", name).matchAll(/\b([a-z][a-z0-9-]*)\s*:\s*(?:async\s+)?func\s*\(/g)].map((method) => method[1]!.replace(/-([a-z])/g, (_match, char: string) => char.toUpperCase()));
+    if (!result[name]!.length) throw new Error(`Actor export ${name} has no functions`);
+  }
+  if (!Object.keys(result).length) throw new Error("Actor world has no exports");
+  return result;
+}
+
+export const ACTOR_COMPONENT_EXPORTS = parseActorComponentExports(readFileSync(join(DESCRIPTOR_ROOT, "../../🧬️schema/📜️.wit"), "utf8"));
 
 /** 🛂️ Both package roles must expose the complete actor world before publication. */
 export function assertActorComponentExports(component: Record<string, unknown>, required: Record<string, string[]>): void {

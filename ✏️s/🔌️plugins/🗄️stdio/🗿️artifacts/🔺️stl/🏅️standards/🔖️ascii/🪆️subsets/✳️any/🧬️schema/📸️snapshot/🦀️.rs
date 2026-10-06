@@ -81,12 +81,7 @@ impl Default for StlSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 // 🔗 Real ASCII/binary grammar lives in `⚙️engine::encode_stl_ascii`/`decode_stl_ascii` and
 // `encode_stl_binary`/`decode_stl_binary` (https://en.wikipedia.org/wiki/STL_(file_format)).
-#[path="📦️pack/🦀️.rs"]
-mod native_pack;
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+

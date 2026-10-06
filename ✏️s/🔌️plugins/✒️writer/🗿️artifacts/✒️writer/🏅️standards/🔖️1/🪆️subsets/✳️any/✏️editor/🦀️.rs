@@ -11,7 +11,7 @@
 
 use crate::editor::writer::commands::set_camera;
 use crate::editor::writer::commands::set_editor_selection;
-use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, set_fixture_json, set_snapshot, set_snapshot_json, set_text, text_edit, text_splice};
+use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, load_document_json, set_snapshot, set_snapshot_json, set_text, text_edit, text_splice};
 use crate::editor::writer::commands::{engagement_input, engagement_submit};
 use crate::editor::writer::commands::{lint_document, request_completions};
 use crate::editor::writer::commands::{set_font_px, set_line_height, set_tab_size, toggle_line_numbers};
@@ -257,7 +257,7 @@ semio_framework_plugin::app_commands! {
         "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
         "openDocument" as "open-document" => open_document::OpenDocument,
         "setSnapshotJson" as "document-json" => set_snapshot_json::SetSnapshotJson,
-        "setFixtureJson" as "fixture-json" => set_fixture_json::SetFixtureJson,
+        "loadDocumentJson" as "document-json" => load_document_json::LoadDocumentJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
         "formatDocument" as "format-document" => format_document::FormatDocument,
         "commitRename" as "commit-rename" => commit_rename::CommitRename,
@@ -340,7 +340,7 @@ const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
     "setSnapshot",
     "openDocument",
     "setSnapshotJson",
-    "setFixtureJson",
+    "loadDocumentJson",
     "formatDocument",
     "commitRename",
     "setCamera",
@@ -359,6 +359,9 @@ const MAX_WRITER_COMMAND_DECODED_ITEMS: usize = 4_096;
 const MAX_WRITER_COMMAND_TEXT_BYTES: usize = 4_096;
 const MAX_WRITER_COMMAND_URI_BYTES: usize = 1_024;
 const MAX_WRITER_EXAMPLE_ID_BYTES: usize = 64;
+
+/// 📏️ Zero-sized lanes own no physical backing even when Vec reports its sentinel capacity.
+fn writer_empty_vec_backing_bytes<T>(owner:&Vec<T>)->usize{owner.capacity().checked_mul(std::mem::size_of::<T>()).expect("actual Writer empty vector layout")}
 
 struct WriterCommandToolPayload {
     command: WriterCommand,
@@ -379,6 +382,9 @@ struct WriterCommandToolJob {
     window_transient: Option<WriterMainWindowTransient>,
     completion: Option<ArtifactToolCompletion<EditorApp<WriterPlayApp>>>,
     pending_completion_rejection: Option<ArtifactToolCompletionRejection<EditorApp<WriterPlayApp>>>,
+    returned_allocations: semio_framework_value::retirement::allocation_return::ParentAllocationReturn<16>,
+    returned_fault: semio_framework_plugin::__diagnostic::FaultCloseOwner,
+    return_refusal: Option<semio_framework_value::ValueError>,
     raw_input: Option<RetainedToolWireInput>,
     raw_bytes: Vec<u8>,
     raw_page_cursor: usize,
@@ -419,7 +425,7 @@ impl WriterCommandToolJob {
         }
         if matches!(command, WriterCommand::SetSnapshot(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
             || matches!(command, WriterCommand::SetSnapshotJson(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
-            || matches!(command, WriterCommand::SetFixtureJson(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
+            || matches!(command, WriterCommand::LoadDocumentJson(payload) if payload.json.len() > MAX_WRITER_COMMAND_TEXT_BYTES)
         {
             return false;
         }
@@ -524,7 +530,7 @@ impl WriterCommandToolJob {
                     emit.effects.push(reset_document_effect_now(&document));
                 }
             }
-            WriterCommand::SetFixtureJson(payload) => {
+            WriterCommand::LoadDocumentJson(payload) => {
                 if let Ok(document) = semio_framework_pack_json::from_json_str::<WriterSnapshot>(&payload.json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
                     emit.effects.push(reset_document_effect_now(&document));
                 }
@@ -702,22 +708,26 @@ impl InteractiveJob for WriterCommandToolJob {
                 other => other,
             };
         }
-        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
-            if let Ok(emit) = rejected.emit.as_mut() {
-                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
-                    return match step {
-                        semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                        semio_framework_plugin::PluginCloseStep::Blocked { .. } | semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } => InteractiveJobCloseStep::Blocked,
-                        semio_framework_plugin::PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
-                    };
-                }
+        if !self.returned_allocations.terminal_is_empty()&&self.returned_allocations.next_close_byte_demand()<=maximum_bytes{return match self.returned_allocations.close_step(maximum_items,maximum_bytes){semio_framework_value::retirement::allocation_return::AllocationReturnStep::Pending{released_items,released_bytes}=>InteractiveJobCloseStep::Pending{released_items,released_bytes},semio_framework_value::retirement::allocation_return::AllocationReturnStep::Complete=>InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0}};}
+        if self.return_refusal.is_some(){return InteractiveJobCloseStep::Blocked;}
+        if let Some(rejected)=self.pending_completion_rejection.as_mut(){
+            if maximum_items==0||maximum_bytes==0{return InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0};}
+            let Ok(emit)=rejected.emit.as_mut()else{return InteractiveJobCloseStep::Blocked};
+            match emit.return_child_one(&mut self.returned_allocations,maximum_items,maximum_bytes){
+                Ok(Some(semio_framework_plugin::PluginCloseStep::Pending{released_items,released_bytes}))=>return InteractiveJobCloseStep::Pending{released_items,released_bytes},
+                Ok(Some(_))=>return InteractiveJobCloseStep::Blocked,
+                Err(error)=>{self.return_refusal=Some(error);return InteractiveJobCloseStep::Blocked;},
+                Ok(None)=>{},
             }
-            if maximum_items == 0 {
-                return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
-            self.pending_completion_rejection = None;
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            macro_rules! return_empty{($owner:expr)=>{if !$owner.is_empty(){return InteractiveJobCloseStep::Blocked;}if writer_empty_vec_backing_bytes(&$owner)!=0{return match self.returned_allocations.return_empty_vec(&mut $owner,1){Ok(accepted)=>InteractiveJobCloseStep::Pending{released_items:usize::from(accepted),released_bytes:0},Err(error)=>{self.return_refusal=Some(error);InteractiveJobCloseStep::Blocked}};}};}
+            return_empty!(emit.artifact_mutations);return_empty!(emit.config_mutations);return_empty!(emit.window_config_mutations);return_empty!(emit.draft_mutations);return_empty!(emit.effects);return_empty!(emit.extension_invocations);return_empty!(emit.events);return_empty!(emit.interaction_writes);return_empty!(emit.tasks);
+            return_empty!(rejected.ephemeral.presence);return_empty!(rejected.ephemeral.transient);return_empty!(rejected.ephemeral.window_transient);
+            if emit.transaction.is_some()||!matches!(emit.ui_scope,semio_framework::kernel::UiDirtyScope::Full|semio_framework::kernel::UiDirtyScope::None){return InteractiveJobCloseStep::Blocked;}
+            if !self.returned_fault.terminal_is_empty(){return InteractiveJobCloseStep::Blocked;}
+            let rejected=self.pending_completion_rejection.take().unwrap();self.returned_fault=semio_framework_plugin::__diagnostic::FaultCloseOwner::new(rejected.fault);
+            return InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0};
         }
+        if !self.returned_fault.terminal_is_empty(){return match self.returned_fault.close_step(maximum_items,maximum_bytes){semio_framework_plugin::__diagnostic::FaultCloseStep::Pending{released_items,released_bytes}=>InteractiveJobCloseStep::Pending{released_items,released_bytes},semio_framework_plugin::__diagnostic::FaultCloseStep::Complete=>InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0}};}
         if self.command.is_some() {
             if maximum_items == 0 || maximum_bytes < MAX_WRITER_COMMAND_RAW_BYTES {
                 return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
@@ -776,6 +786,9 @@ impl InteractiveJob for WriterCommandToolJob {
     fn terminal_is_empty(&self) -> bool {
         self.closing
             && self.pending_completion_rejection.is_none()
+            && self.returned_allocations.terminal_is_empty()
+            && self.returned_fault.terminal_is_empty()
+            && self.return_refusal.is_none()
             && self.command.is_none()
             && self.snapshot.is_none()
             && self.text.is_none()
@@ -829,6 +842,9 @@ impl ToolJobFactory for WriterCommandJobFactory {
             window_transient: payload.window_transient,
             completion: payload.completion,
             pending_completion_rejection: None,
+            returned_allocations: semio_framework_value::retirement::allocation_return::ParentAllocationReturn::try_new(MAX_WRITER_COMMAND_RAW_BYTES,MAX_WRITER_COMMAND_RAW_BYTES*16).expect("fixed Writer parent allocation authority"),
+            returned_fault: semio_framework_plugin::__diagnostic::FaultCloseOwner::empty(),
+            return_refusal: None,
             raw_input: None,
             raw_bytes: Vec::new(),
             raw_page_cursor: 0,
@@ -879,7 +895,7 @@ impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "openDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setSnapshotJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setFixtureJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "loadDocumentJson", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "formatDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "commitRename", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
@@ -905,7 +921,6 @@ struct WriterArtifactStorePreparationFactory;
 struct WriterArtifactStorePreparation {
     base: Option<store::SnapshotRead<WriterSnapshot>>,
     mutation: Option<WriterMutation>,
-    description: Option<String>,
     authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<WriterSnapshot, WriterMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -941,9 +956,9 @@ fn prepare_writer_artifact(base: &WriterSnapshot, mutation: WriterMutation) -> R
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation> for WriterArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &WriterMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Writer Artifact preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &WriterMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Writer Artifact preparation rejected its lane".into());
         }
         admit_writer_artifact_mutation(mutation)
     }
@@ -963,7 +978,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutatio
         Ok(Box::new(WriterArtifactStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -1016,7 +1030,7 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -1036,7 +1050,7 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ArtifactStorePreparation
@@ -1159,7 +1173,7 @@ impl ArtifactEditor for WriterPlayApp {
             "setSnapshot",
             "openDocument",
             "setSnapshotJson",
-            "setFixtureJson",
+            "loadDocumentJson",
             "formatDocument",
             "commitRename",
             "setCamera",
@@ -1175,11 +1189,11 @@ impl ArtifactEditor for WriterPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::writer_envelope_decode_owner_bundle())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::writer_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::writer_document_store_owners())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::writer_document_store_owners())
     }
 
     fn build_document_store_initialization_job(
@@ -1187,7 +1201,7 @@ impl ArtifactEditor for WriterPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::spr::writer_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::standards::v1::subsets::any::io::binary::mutations::writer_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1230,7 +1244,7 @@ impl ArtifactEditor for WriterPlayApp {
             "setSnapshot" => Ok(WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: text_arg(&["json", "value"]).unwrap_or_default() })),
             "openDocument" => Ok(WriterCommand::OpenDocument(open_document::OpenDocument { uri: text_arg(&["uri"]).unwrap_or_default(), text: text_arg(&["text"]).unwrap_or_default() })),
             "setSnapshotJson" => Ok(WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: text_arg(&["json", "value"]).unwrap_or_default() })),
-            "setFixtureJson" => Ok(WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: text_arg(&["json", "value"]).unwrap_or_default() })),
+            "loadDocumentJson" => Ok(WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: text_arg(&["json", "value"]).unwrap_or_default() })),
             "setActiveExample" => Ok(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_arg(&["exampleId", "example_id", "id", "value"]).unwrap_or_else(|| "jack".into()) })),
             "formatDocument" => Ok(WriterCommand::FormatDocument(format_document::FormatDocument {})),
             "commitRename" => Ok(WriterCommand::CommitRename(commit_rename::CommitRename { text: text_arg(&["text", "value"]).unwrap_or_default() })),
@@ -1471,8 +1485,8 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_with(writer_hidden_operation("openDocument", LocalizedLabel::native("Open Document", "Dokument öffnen"), "folder-open"))
             .action_with(writer_hidden_operation("setSnapshotJson", LocalizedLabel::native("Set Document JSON", "Dokument-JSON festlegen"), "sparkles"))
             .action_destructive("setSnapshotJson")
-            .action_with(writer_hidden_operation("setFixtureJson", LocalizedLabel::native("Set Fixture JSON", "Fixture-JSON festlegen"), "sparkles"))
-            .action_destructive("setFixtureJson")
+            .action_with(writer_hidden_operation("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), "sparkles"))
+            .action_destructive("loadDocumentJson")
             // 🙈️ Internal View measures — editor caret/range, completions, editor settings. AST
             // selection/hover no longer declared here: the framework auto-injects
             // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
@@ -1503,7 +1517,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("openDocument", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSnapshotJson", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFixtureJson", InteractiveJobClassification::Migrated)
+            .action_interactive_job("loadDocumentJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("formatDocument", InteractiveJobClassification::Migrated)
             .action_interactive_job("commitRename", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
@@ -1516,7 +1530,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             ])
             .action_args("setText", vec![ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()])
             .action_args("setSnapshotJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON"))])
-            .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Fixture JSON", "Fixture-JSON"))])
+            .action_args("loadDocumentJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Fixture JSON", "Fixture-JSON"))])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🕹️ THE TRANSITIVE TEMPLATE (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -1552,7 +1566,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setSnapshot", LocalizedLabel::native("Replaces the whole writer document, its text, language and metadata, with the supplied document; nothing of the previous one is kept.", "Ersetzt das gesamte Writer-Dokument mit Text, Sprache und Metadaten durch das übergebene; vom bisherigen Dokument bleibt nichts erhalten."))
             .action_describe("openDocument", LocalizedLabel::native("Opens the given text under a URI as the writer document, detecting its language from the content or extension; the current document is replaced.", "Öffnet den angegebenen Text unter einer URI als Writer-Dokument und erkennt die Sprache aus Inhalt oder Dateiendung; das aktuelle Dokument wird ersetzt."))
             .action_describe("setSnapshotJson", LocalizedLabel::native("Replaces the whole writer document with one parsed from the given document JSON; invalid JSON changes nothing.", "Ersetzt das gesamte Writer-Dokument durch eines, das aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."))
-            .action_describe("setFixtureJson", LocalizedLabel::native("Loads a test fixture given as JSON as the whole writer document, replacing the current one; invalid JSON changes nothing.", "Lädt eine als JSON übergebene Test-Fixture als gesamtes Writer-Dokument und ersetzt das aktuelle; ungültiges JSON ändert nichts."))
+            .action_describe("loadDocumentJson", LocalizedLabel::native("Loads a test fixture given as JSON as the whole writer document, replacing the current one; invalid JSON changes nothing.", "Lädt eine als JSON übergebene Test-Fixture als gesamtes Writer-Dokument und ersetzt das aktuelle; ungültiges JSON ändert nichts."))
             .action_audience("textEdit", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("textSplice", semio_framework_plugin::CapabilityAudience::Input)
             .action_describe("textSplice", LocalizedLabel::native("Replaces one range of the text as its author saw it; the change lands between the text its author saw around it, even when others edited the text meanwhile.", "Ersetzt einen Textbereich so, wie ihn sein Autor sah; die Änderung landet zwischen dem Text, den der Autor darum herum sah, auch wenn andere den Text inzwischen bearbeitet haben."))

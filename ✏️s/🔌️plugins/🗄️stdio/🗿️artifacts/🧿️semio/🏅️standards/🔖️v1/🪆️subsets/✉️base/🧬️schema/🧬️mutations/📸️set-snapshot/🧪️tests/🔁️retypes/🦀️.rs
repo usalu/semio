@@ -4,8 +4,11 @@
 //! `../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/`, read through this subset's
 //! schema-derived JSON bridge.
 
-use crate::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, decode_semio_mutation_json, inverse_semio_mutation, SemioMutation};
-use crate::standards::v1::subsets::base::schema::snapshot::{decode_semio_snapshot_json, encode_semio_snapshot_json, SemioSnapshot};
+use crate::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, inverse_semio_mutation, SemioMutation};
+use crate::standards::v1::subsets::base::io::text::mutations::{decode_semio_mutation_json};
+use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot};
+use crate::standards::v1::subsets::base::io::text::snapshot::{decode_semio_snapshot_json};
+use crate::standards::v1::subsets::base::io::text::snapshot::{encode_semio_snapshot_json};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/📸️snapshot/➡️after/🔣️.json");

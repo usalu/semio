@@ -24,8 +24,8 @@ use semio_repo_test_host::law;
 /// mutable copy's bytes — the committed 250 KB, 2334x2560, 8-bit COLORMAP architectural floor plan
 /// (`rathaus-ahlen-grundriss.png`), the small COLORMAP document, or the small RGBA swatch. None is ever written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
-    let copy = ctx.copy_fixture(&input, Some("input.png"))?;
+    let input = ctx.step_input_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
+    let copy = ctx.copy_input(&input, Some("input.png"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

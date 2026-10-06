@@ -568,34 +568,6 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -1162,7 +1134,10 @@ pub mod standards {
                         }
                     }
                 }
-            }
+            
+#[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🚪️io/🦀️.rs"]
+pub mod io;
+}
             #[path = "."]
             pub mod canvas {
                 #[path = "."]
@@ -1280,27 +1255,18 @@ pub mod standards {
 }
 
 pub use crate::standards::v1::subsets::any::schema;
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
+
 pub mod op {
-    pub use crate::standards::v1::subsets::any::io::mutations::text::*;
     pub use crate::standards::v1::subsets::any::schema::mutations::NoteMutation;
 }
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-}
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::diff::text::*;
-    }
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
@@ -1309,9 +1275,7 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-    }
+
 }
 pub mod examples {
     pub use super::standards::v1::subsets::any::examples::*;
@@ -1410,8 +1374,8 @@ pub mod editor {
             pub mod set_camera_zoom;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧽️set-eraser-radius/🦀️.rs"]
             pub mod set_eraser_radius;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️set-fixture-json/🦀️.rs"]
-            pub mod set_fixture_json;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️load-document-json/🦀️.rs"]
+            pub mod load_document_json;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔲️set-grid-opacity/🦀️.rs"]
             pub mod set_grid_opacity;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️set-grid-spacing/🦀️.rs"]

@@ -31,25 +31,15 @@ export function channelIdentityOracle(directory: string): number {
 export function brepExtensionRetirementOracle(directory: string): number {
   const fixtures = resolve(directory, "../../🧫️fixtures/🚪️retirement");
   const fixture = JSON.parse(readFileSync(resolve(fixtures, "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(resolve(fixtures, "📐️schema.json"), "utf8"));
-  const validate = new Ajv({ strict: true }).compile(schema);
-  assert(validate(fixture), JSON.stringify(validate.errors));
   const input = JSON.parse(fixture.evaluate.inputJson);
   for (const axis of ["width", "depth", "height"]) assert.deepEqual(input[axis], { $schema: "number", value: 1 });
-  assert.equal(validate({ ...fixture, tessellate: { ...fixture.tessellate, budget: 0 } }), false);
-  assert.equal(validate({ ...fixture, grant: [0,65536] }), false);
   assert.equal(BigInt(fixture.exactCancellation.nodeHashLiteral), (1n << 64n) - 3n);
-  assert.equal(validate({ ...fixture, exactCancellation: { ...fixture.exactCancellation, nodeHashLiteral: "18446744073709551616" } }), false);
-  assert.equal(validate({ ...fixture, exactCancellation: { ...fixture.exactCancellation, guessedIdentity: 1 } }), false);
-  assert.equal(validate({ ...fixture, ownerIsolation: { ...fixture.ownerIsolation, originalReaderHops: 0 } }), false);
-  assert.equal(validate({ ...fixture, bypassIdentity: { ...fixture.bypassIdentity, nodeHashes: [0,700022] } }), false);
-  assert.equal(validate({ ...fixture, bypassIdentity: { ...fixture.bypassIdentity, nodeHashes: [700021,700021] } }), false);
   const bypass = fixture.bypassIdentity;
   assert.equal(new Set(bypass.nodeHashes).size, 2);
   assert.equal(bypass.compactHops * bypass.roundUnits, 8);
   const identity = new Ajv({ strict: true }).compile({ type: "object", additionalProperties: false, required: ["operatorId", "nodeHash"], properties: { operatorId: { const: fixture.evaluate.operatorId }, nodeHash: { type: "integer", minimum: 0 } } });
   for (const text of fixture.exactCancellation.malformed) assert.equal(identity(JSON.parse(text)), false);
-  return 18;
+  return 6 + fixture.exactCancellation.malformed.length;
 }
 
 

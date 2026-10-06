@@ -3,11 +3,10 @@ import {join} from "node:path";
 
 /** 🧮️ Checks closed wire grammar and copied UTF-8 independently of native allocation widths. */
 export async function proveWireValueMaterializationFixture(repoRoot:string):Promise<void>{
-    const assert=(await import("node:assert/strict")).default,Ajv=(await import("ajv")).default,equal=(await import("fast-deep-equal")).default;
+    const assert=(await import("node:assert/strict")).default,equal=(await import("fast-deep-equal")).default;
     const {Database}=await import("bun:sqlite"),root=join(repoRoot,"🧰️framework/🔨️modules/🎒️pack/🌱️value");
-    const fixture=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧮️wire-materialization/🔣️.json"),"utf8")),contract=JSON.parse(readFileSync(join(root,"🧬️schema/🔣️.json"),"utf8"));
-    const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(contract);const validate=ajv.getSchema(`${contract.$id}#/$defs/WireValueMaterialization`)!;
-    assert(validate(fixture),JSON.stringify(validate.errors));assert.deepEqual(fixture.cases.map((row:{id:string})=>row.id),contract.$defs.WireValueMaterializationCase.properties.id.enum);assert.deepEqual(fixture.bridge,{fieldId:1,rootTag:"11",exact:true});
+    const fixture=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧮️wire-materialization/🔣️.json"),"utf8"));
+    assert.deepEqual(fixture.bridge,{fieldId:1,rootTag:"11",exact:true});
     const {decodePackValue,packValueToExactJson}=await import(join(repoRoot,"🧰️framework/🛍️products/💻️os/🟦️.ts")),database=new Database(":memory:");
     try{
         const utf8=database.query<{bytes:number},[string]>("SELECT length(CAST(? AS BLOB)) AS bytes");
@@ -37,6 +36,6 @@ export async function proveWireValueMaterializationFixture(repoRoot:string):Prom
             if(actual.result.outcome==="accepted"){assert(equal(actual.result.value,row.grammar.value),row.id+" independent output");assert(equal(packValueToExactJson(decodePackValue(Buffer.from(row.rawHex,"hex"))),row.grammar.value),row.id+" first-party semantic output");assert.deepEqual(JSON.parse(JSON.stringify(actual.result.value)),row.grammar.value,row.id+" JSON oracle");}
             if(row.allowanceProbeHex){const probe=grammar(row.allowanceProbeHex,{...row.limits,maxFileLen:Buffer.from(row.allowanceProbeHex,"hex").length});assert.deepEqual(probe.result,{outcome:"accepted",value:null});assert.equal(probe.owned,actual.owned);assert.equal(packValueToExactJson(decodePackValue(Buffer.from(row.allowanceProbeHex,"hex"))),null);}
         }
-        console.log(`[DEBUG] wire materialization: AJV=1 independent-grammar=${fixture.cases.length} SQLite-UTF8=${fixture.cases.length} first-party-semantic=1; native backing requires owning allocator execution`);
+        console.log(`[DEBUG] wire materialization: independent-grammar=${fixture.cases.length} SQLite-UTF8=${fixture.cases.length} first-party-semantic=1; native backing requires owning allocator execution`);
     }finally{database.close();}
 }

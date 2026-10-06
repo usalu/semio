@@ -21,7 +21,7 @@ pub mod derived_composition {
     #[cfg(feature = "conversion-audio")]
     use crate::standards::v1::subsets::audio::io::{mp3_deserializer::SemioAudioFromMp3, mp3_serializer::SemioAudioToMp3, wav_deserializer::SemioAudioFromWav, wav_serializer::SemioAudioToWav};
     use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
-    use crate::standards::v1::subsets::audio::schema::SemioAudioAnalyzer;
+    use crate::standards::v1::subsets::audio::io::SemioAudioAnalyzer;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
@@ -192,3 +192,180 @@ use semio_framework_diagnostic::TextSpan;
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::v1::subsets::audio::schema::diff::SemioAudioDiff;
+    use crate::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, SemioAudioMutation};
+    #[cfg(test)]
+    use crate::standards::v1::subsets::audio::schema::mutations::{insert_channel, set_format, set_sample_rate};
+    use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioAudioBuilderConstruction {
+        snapshot: SemioAudioSnapshot,
+    }
+
+    //#region 🔖️TypedConstructors
+    impl SemioAudioBuilderConstruction {
+        /// 🏗️ Starts a fresh document at the given sample rate/format.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(sample_rate: u32, format: SemioAudioFormat) -> Self {
+            Self { snapshot: SemioAudioSnapshot { sample_rate, format, ..SemioAudioSnapshot::default() } }
+        }
+        /// 🏗️ Appends one channel's decoded samples, in channel order.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_channel(mut self, channel: SemioAudioChannel) -> Self {
+            self.snapshot.channels.push(channel);
+            self
+        }
+        /// 🏗️ Appends one metadata key/value pair.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_tag(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+            self.snapshot.tags.push(SemioAudioTag { key: key.into(), value: value.into() });
+            self
+        }
+        /// 🏗️ Sets the sample rate.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_sample_rate(mut self, sample_rate: u32) -> Self {
+            self.snapshot.sample_rate = sample_rate;
+            self
+        }
+        /// 🏗️ Sets the original-encoding sample format.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_format(mut self, format: SemioAudioFormat) -> Self {
+            self.snapshot.format = format;
+            self
+        }
+    }
+    //#endregion 🔖️TypedConstructors
+
+    impl ArtifactBuilder for SemioAudioBuilderConstruction {
+        type Snapshot = SemioAudioSnapshot;
+        type Mutation = SemioAudioMutation;
+        type Diff = SemioAudioDiff;
+        fn empty() -> Self {
+            Self { snapshot: SemioAudioSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = apply_semio_audio_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            Ok(self.snapshot)
+        }
+    }
+    //#endregion 🔖️Builder
+
+    //#region 🔖️Tests
+    #[cfg(test)]
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    //#endregion 🔖️Tests
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioSnapshot, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioAudioParts {
+        pub snapshot: Option<SemioAudioSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    pub struct SemioAudioAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SemioAudioAnalyzerAnalysis {
+        type Parts = SemioAudioParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    let marker = STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    if text.contains(STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SemioAudioParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+
+    //#region 🔖️Tests
+    #[cfg(test)]
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    //#endregion 🔖️Tests
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SemioAudioBuilderFacets {
+        construction: SemioAudioBuilderConstruction,
+        analysis: SemioAudioAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::audio::io::derived_composition::SemioAudioComposerComposition,
+    }
+    builder: SemioAudioBuilder,
+    analyzer: SemioAudioAnalyzer,
+    composer: SemioAudioComposer,
+);

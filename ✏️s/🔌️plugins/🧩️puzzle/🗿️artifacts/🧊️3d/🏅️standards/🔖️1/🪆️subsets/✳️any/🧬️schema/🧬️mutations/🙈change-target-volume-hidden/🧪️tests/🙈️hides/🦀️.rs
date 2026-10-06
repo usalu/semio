@@ -1,4 +1,4 @@
-//! 🧪️ `change-target-volume-hidden` fixture — `🙈️hides`.
+//! 🧪️ `change-target-volume-hidden` scene_snapshot — `🙈️hides`.
 //!
 //! Sets `volume-1`'s `hidden` flag so the fill constraint stops drawing while still constraining.
 //! The flag is a plain `bool`, always present on the wire.
@@ -45,7 +45,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -88,7 +88,7 @@ fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `change-target-volume-hidden` produces is exactly the committed diff — the single most
-/// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
+/// load-bearing assertion in the scene_snapshot: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {

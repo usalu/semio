@@ -24,6 +24,6 @@ pub fn diff(payload: &super::CreateShwSystem, base: &EnergyModelSnapshot) -> pro
     model
         .shw_systems
         .insert(payload.index as usize, crate::model::ShwSystemConfig { id: payload.id, heater_capacity_w: payload.heater_capacity_w, storage_volume_m3: payload.storage_volume_m3, setpoint_c: payload.setpoint_c, schedule_id: payload.schedule_id });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

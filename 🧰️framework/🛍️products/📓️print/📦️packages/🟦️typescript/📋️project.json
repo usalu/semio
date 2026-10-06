@@ -346,6 +346,17 @@
         "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts metrics"
       },
       "cache": false
+    },
+    "test-measurement": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test measurement",
+        "forwardAllArgs": false
+      }
     }
   },
   "metadata": {

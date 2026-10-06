@@ -18,7 +18,7 @@ import (
 
 // 📥️ fixture decodes the committed filter fixture.
 func fixture(ctx *host.Context) (map[string]any, error) {
-	raw, err := ctx.FixtureBytes("shared://🔎️filter-vectors.json")
+	raw, err := ctx.InputBytes("shared://🔎️filter-vectors.json")
 	if err != nil {
 		return nil, err
 	}

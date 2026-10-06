@@ -17,7 +17,7 @@
 
 use crate::editor::rewriting as editor;
 use crate::standards::v1::subsets::any::schema;
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::viewer::rewriting as viewer;
 use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
@@ -64,5 +64,5 @@ pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
 }
 
 #[cfg(test)]
-#[path = "🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚪️io/🦀️.rs"]
+#[path = "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚪️io/🦀️.rs"]
 mod sqlite_snapshot_declaration_tests;

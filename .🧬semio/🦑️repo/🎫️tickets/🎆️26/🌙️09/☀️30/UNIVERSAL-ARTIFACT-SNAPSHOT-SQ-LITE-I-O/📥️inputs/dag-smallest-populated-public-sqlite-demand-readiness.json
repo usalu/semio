@@ -1,0 +1,24 @@
+{
+  "qualification": "HELD blueprint only, no production/test edits or execution. Smallest real populated parent from remaining11, not a Default stand-in.",
+  "owningTestSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+  "standaloneNeutralFixture": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+  "constructor": "Owned::new(full(2)); full is literal fixture nativeCases[2], schema+childId+artifactId+3 dialect cells; assert_full covers every Snapshot field.",
+  "originalSelectedCommand": "bun nx run @semio-tech/dag-dag-rs:test-snapshot-sqlite-native --skip-nx-cache",
+  "genuineBuilder": "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🕸️dag/🦀️.rs",
+  "genuineAppMembers": [
+    "VcsArtifactApp<EditorApp<crate::editor::dag::DagPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>",
+    "VcsArtifactApp<ViewerApp<crate::viewer::dag::DagViewer>,semio_s_artifact_stdio_semio::SemioMembers>"
+  ],
+  "owningAppClosure": "Existing DAG own Cargo has dispatch-macros and real plugin artifact-app-testing. Add a test-local dyn_enum_close enum using precisely those actual two members, matching real Hub DagApps; call crate::artifact::<DagSqliteApps>(). No NoPluginApp or hub dependency cycle.",
+  "publisher": "Plugin::<DagSqliteApps>::builder(\"dag\").label(\"DAG owning SQLite\").version(\"0.1.0\").package_id(\"semio:dag\").declare_artifact(crate::artifact::<DagSqliteApps>()).try_build()",
+  "requiredLawSteps": [
+    "retain ordinary full(2) Text/Pack assertions; publish genuine app declaration once",
+    "require both existing public one-hop Exact routes; typed io_export_sqlite_snapshot for Binary and Text of full(2)",
+    "Bun physical integrity/FK and exact3 table set including semio_snapshot; query all2/7 domain columns plus6 metadata columns; normalize surrogate id by actual single FK without guessing generic graph ids",
+    "apply exact meaningful literal childId/artifactId edit independently in Bun; keep metadata nativeEncoding supplied sameform",
+    "typed io_import_sqlite_snapshot<DagSnapshot> assert_full against independently authored edited literal owner",
+    "erased io_run_with_snapshot_control both routes; decode resulting original Text/Pack and assert_full; compare ordinary exact payload to genuine edited owner encoding",
+    "use existing Owned retirement guard, preserve all domain validation and child-refusal predicates; no global frame/captured child publication credit"
+  ],
+  "closedContract": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/dag-complete-populated-public-sqlite-neutral-contract.json"
+}

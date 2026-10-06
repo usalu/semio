@@ -1,0 +1,27 @@
+{
+  "qualification": "Held authored fixture proposal; current root-member enumeration gap prevents fixture-only qualification",
+  "fixtureAuthority": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📦️native-dependencies/🔣️.json",
+  "proposedCargoManifest": "[package]\nname=\"native-dependency-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n[workspace]\nmembers = [\".\"]\nexclude = []\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = []\nmember-manifests = [\"Cargo.toml\"]\n",
+  "proposedFilesSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "🦀️.rs"
+    ],
+    "properties": {
+      "Cargo.toml": {
+        "const": "[package]\nname=\"native-dependency-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n[workspace]\nmembers = [\".\"]\nexclude = []\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = []\nmember-manifests = [\"Cargo.toml\"]\n"
+      },
+      "Cargo.lock": {
+        "const": "version = 4\n\n[[package]]\nname = \"native-dependency-fixture\"\nversion = \"0.1.0\"\n"
+      },
+      "🦀️.rs": {
+        "const": "pub fn answer() -> u32 { 42 }\n"
+      }
+    }
+  },
+  "blockingSource": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts:74",
+  "preserveOriginalSingleRootPackage": true
+}

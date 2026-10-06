@@ -39,7 +39,7 @@ function stubSession<Session>(): Session & StubSession {
     attach_canvas: async () => undefined,
     attachCanvas: async () => undefined,
     gpuReady: () => true,
-    parseFixtureJson: () => true,
+    loadBoardSnapshotJson: () => true,
     drainEventsJson: () => "[]",
     cameraJson: () => CAMERA_JSON,
     navigatorFitCameraJson: () => CAMERA_JSON,
@@ -59,7 +59,7 @@ function board2dNode(gridVisible: boolean): UiComponentSceneNode {
     controllerId: "controller",
     surfaceId: "surface",
     board2d: {
-      fixtureJson: JSON.stringify({ nodes: [], edges: [] }),
+      snapshotJson: JSON.stringify({ nodes: [], edges: [] }),
       cameraJson: CAMERA_JSON,
       glyphCatalogsJson: "{}",
       selectionJson: "[]",

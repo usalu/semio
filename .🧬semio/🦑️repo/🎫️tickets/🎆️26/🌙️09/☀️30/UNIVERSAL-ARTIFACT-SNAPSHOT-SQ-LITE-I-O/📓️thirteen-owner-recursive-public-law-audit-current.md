@@ -1,0 +1,9 @@
+# Recursive Public Law Audit Current
+
+Source-only correction of the earlier parent-file token audit. Explicit `#[path] mod` children were resolved from each actual owning test file before examining public route tokens; no gate was executed.
+
+Process3d already owns a `🚦️public/🦀️.rs` child with genuine SqliteProcessApps publication, both one-hop Exact routes and both Binary/Text forms, complete independent edited import reconstruction, raw-word checking and actual phase callbacks. The previous parent-only Some/capability readiness description was incomplete and is superseded. Root's new parent full-word law remains separate and was not modified.
+
+Wires owns nested semantic tests with real independent Bun integrity/FK, ordered duplicate keys, UInt words and IEEE companions, physical edits/refusals and controlled native reconstruction. Presence of these semantic child laws must not be erased by a parent-only classification. Its actual nested declaration law `sqlite_snapshot_wires_actual_declaration_typed_public_and_erased_routes` uses genuine WiresSqliteApps (real editor/viewer VcsArtifactApp members), `declare_artifact(crate::artifact::<WiresSqliteApps>())`, typed public export/import and erased route execution for both forms. It compares content and both intrinsic forests. Thus Wires also supersedes the earlier parent-only absent-public classification; no new dummy app or law is needed to establish source readiness.
+
+The closed locator index `📥️inputs/thirteen-owner-recursive-public-law-source-index.json` retains every recursively resolved explicit path, named function and exact public/declaration call line. It records source evidence only; it does not assert runtime success or missing capability from no token. Conventional/inline module trees and per-owner declaration publication remain additional authorities where present. Existing generic app obligations are preserved.

@@ -11,7 +11,7 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "fixtureSlug": {
+    "exampleId": {
       "type": "string"
     },
     "params": {},

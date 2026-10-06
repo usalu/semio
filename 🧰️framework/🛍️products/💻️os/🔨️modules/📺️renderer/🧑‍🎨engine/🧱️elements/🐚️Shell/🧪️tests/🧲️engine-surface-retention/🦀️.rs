@@ -46,7 +46,7 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
                 scene.selection_method = row["selectionMethod"].as_str().unwrap_or("rectangle").into();
                 ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TiledMap, &scene).expect("bounded TiledMap scene encodes")
             }
-            "board2d" => ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Board2d, &ui_wgpu::wgpu::Board2dScene::base(row["fixtureJson"].as_str().unwrap_or("{}").into(), "{}".into(), true)).expect("bounded Board2d scene encodes"),
+            "board2d" => ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Board2d, &ui_wgpu::wgpu::Board2dScene::base(row["snapshotJson"].as_str().unwrap_or("{}").into(), "{}".into(), true)).expect("bounded Board2d scene encodes"),
             kind => panic!("unsupported retained surface kind {kind}"),
         };
         let records = vec![super::shell_input_tests::tree_pointer_record(1, surface, ui_contract::Component::Surface(surface_doc), &[], None)];
@@ -94,7 +94,7 @@ fn registration(value: &Value) -> crate::engine_canvas::EngineSurfaceRegistratio
     let detail = match kind {
         "nodeGraph" => crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph,
         "tiledMap" => crate::engine_canvas::EngineSurfaceKindDetail::TiledMap { selection_method: value["selectionMethod"].as_str().unwrap_or("rectangle").to_string() },
-        "board2d" => crate::engine_canvas::EngineSurfaceKindDetail::Board2d { fixture_json: value["fixtureJson"].as_str().unwrap_or_default().to_string() },
+        "board2d" => crate::engine_canvas::EngineSurfaceKindDetail::Board2d { snapshot_json: value["snapshotJson"].as_str().unwrap_or_default().to_string() },
         "world3d" => crate::engine_canvas::EngineSurfaceKindDetail::World3d { status_json: value["statusJson"].as_str().map(str::to_owned) },
         other => panic!("unknown surface kind {other}"),
     };

@@ -2,14 +2,14 @@
 //!
 //! Every variant wraps the payload owned by its direct `<mutation>/🦀️.rs` leaf. The working graph lives in the composed
 //! `workingGraph` child (`s.stdio.semio@v1/graph`); every relative working-graph edit is a child-lane leaf of that shared
-//! vocabulary (design §20.15), so no parent leaf reads the child — `edit-before-fixture` replaces the whole child handle.
+//! vocabulary (design §20.15), so no parent leaf reads the child — `edit-working-graph` replaces the whole child handle.
 
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
 use crate::RewritingSnapshot;
 
 pub use super::change_parameter_binding::{change_parameter_binding, ChangeParameterBinding};
 pub use super::change_rule_layout_point::{change_rule_layout_point, ChangeRuleLayoutPoint};
-pub use super::edit_before_fixture::{edit_before_fixture, EditBeforeFixture};
+pub use super::edit_working_graph::{edit_working_graph, EditWorkingGraph};
 pub use super::edit_lhs::{edit_lhs, EditLhs};
 pub use super::edit_rhs::{edit_rhs, EditRhs};
 pub use super::remove_parameter_binding::{remove_parameter_binding, RemoveParameterBinding};
@@ -23,7 +23,7 @@ pub use super::set_rule_layout_points::{set_rule_layout_points, RuleLayoutPlacem
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = RewritingSnapshot, diff = RewritingDiff, schema = "s.trinity.rewriting")]
 pub enum RewriteRuleMutation {
-    EditBeforeFixture(EditBeforeFixture),
+    EditWorkingGraph(EditWorkingGraph),
     EditLhs(EditLhs),
     EditRhs(EditRhs),
     ChangeParameterBinding(ChangeParameterBinding),

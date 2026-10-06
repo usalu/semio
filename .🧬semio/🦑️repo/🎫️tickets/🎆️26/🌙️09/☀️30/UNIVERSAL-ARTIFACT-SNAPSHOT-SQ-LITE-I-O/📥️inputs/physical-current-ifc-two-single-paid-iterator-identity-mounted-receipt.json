@@ -1,0 +1,15 @@
+{
+  "mountedAt": "2026-10-06T00:17:28.640Z",
+  "paths": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/📏️encoding/💰️backing/🦀️.rs",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/📏️encoding/💰️backing/🦀️.rs"
+  ],
+  "review": "📓️semantic-independent-part21-single-paid-frontier-regression-design.md",
+  "rootActiveOwningFrontier": [
+    " Nextest run ID 39ca967c-11e7-486e-8d5f-28a0836f36f5 with nextest profile: quick",
+    "    Starting 15 tests across 1 binary (155 tests skipped)",
+    "     Summary [   1.091s] 15 tests run: 14 passed, 1 failed, 155 skipped"
+  ],
+  "afterRuntimeQualified": false,
+  "allocationAuthority": "One real sorted u64 identity frontier per owner paid through existing NativeEncodingBound; original Iter forecast frontiers remain charged"
+}

@@ -1,4 +1,4 @@
-//! 🧪️ `rotate-selection` fixture — `🎯️skips-the-region`.
+//! 🧪️ `rotate-selection` snapshot — `🎯️skips-the-region`.
 //!
 //! A quarter turn over `node-b` and `region-1`: the node orbits the pivot, the axis-aligned target region is skipped with a Warning-level `mutation.partial`.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     assert!(!inverse.is_empty(), "rotate-selection/skips-the-region: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");

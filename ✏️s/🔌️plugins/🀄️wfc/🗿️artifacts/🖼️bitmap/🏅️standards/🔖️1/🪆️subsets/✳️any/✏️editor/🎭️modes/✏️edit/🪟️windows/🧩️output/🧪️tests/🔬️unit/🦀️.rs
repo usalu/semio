@@ -2,8 +2,8 @@
 
 use super::*;
 use crate::editor::bitmap::modes::edit::windows::output::config::BitmapOutputWindowConfig;
-use crate::schema::snapshot::decode_base64;
-use crate::schema::snapshot::encode_base64;
+use crate::standards::v1::subsets::any::io::text::snapshot::decode_base64;
+use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
 
 #[test]
 fn the_window_kind_is_a_canvas_with_a_migrated_action_roster() {

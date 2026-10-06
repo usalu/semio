@@ -1,13 +1,19 @@
 import { hostContinuations } from "../../../⏳️async/🪃️continuation/🟦️.ts";
+import {NativeDecodeControl} from "../../../🌱️value/🛬️decode/🟦️.ts";
 /** 🧩️ Owned helpers for handcrafted semantic artifact projections. */
 import {ArtifactSqliteTableIndex} from "./🗂️table/🟦️.ts";
 export {ArtifactSqliteRowIndex} from "./🗂️row/🟦️.ts";
-import { ValueError, sqliteOperation, sqliteIdentifierKeyControlled, parseSqliteDatabaseSchemaControlled, validateSqliteDatabaseSchemaControlled, sqliteValueByteLength, type SqliteOperation, type SqliteDatabase, type SqliteDatabaseOptions, type SqliteDatabaseProgress, type SqliteRow, type SqliteValue } from "../🟦️.ts";
+import { ValueError, sqliteOperation, parseSqliteDatabaseSchemaControlled, validateSqliteDatabaseSchemaControlled, sqliteValueByteLength, type SqliteOperation, type SqliteDatabase, type SqliteDatabaseOptions, type SqliteDatabaseProgress, type SqliteRow, type SqliteValue } from "../🟦️.ts";
 
 /** 🚦️ Semantic entity progress plus physical page progress. */
 export interface ArtifactSqliteProgress { readonly phase: SqliteDatabaseProgress["phase"] | "projectSnapshot" | "reconstructSnapshot"; readonly completed: number; readonly total: number }
 /** 🛑️ Shared cancellation, bounds and progress for typed snapshot projections. */
 export interface ArtifactSqliteOptions extends Omit<SqliteDatabaseOptions, "onProgress"> { readonly onProgress?: (progress: ArtifactSqliteProgress) => void }
+
+/** 🧭️ Binds neutral semantic work to the caller's relational projection progress. */
+export function artifactSqliteValueControl(options:ArtifactSqliteOptions,phase:"projectSnapshot"|"reconstructSnapshot",completed:number,total:number):NativeDecodeControl{
+  return new NativeDecodeControl(0,()=>{options.onProgress?.({phase,completed,total});return true;},options.signal);
+}
 
 /** 🏗️ Bounds explicit domain cells before copying them into authored relational rows. */
 export class ArtifactSqliteProjection {
@@ -70,7 +76,7 @@ export class ArtifactSqliteProjection {
     const work = { units: 0 };
     for (const rows of this.rows) await orderProjectionRows(rows, this.options, work);
     await artifactSqliteCheckpoint(this.options, "projectSnapshot", work.units, work.units);
-    const database=await artifactSqliteDatabase(this.sql,this.rows,this.options);
+    const database=await artifactSqliteDatabaseWithSchema(this.schema,this.sql,this.rows,this.options);
     this.completed = true;
     return database;
   }
@@ -201,6 +207,9 @@ async function projectionCells(key: bigint, cells: readonly SqliteValue[], optio
 /** 🗂️ Populate each handcrafted table in schema order. */
 export async function artifactSqliteDatabase(sql:string,rows:readonly(readonly SqliteRow[])[],options:ArtifactSqliteOptions):Promise<SqliteDatabase>{
  const operation=sqliteOperation(options),schema=await parseSqliteDatabaseSchemaControlled(sql,operation);
+ return artifactSqliteDatabaseWithSchema(schema,sql,rows,operation);
+}
+async function artifactSqliteDatabaseWithSchema(schema:SqliteDatabase,sql:string,rows:readonly(readonly SqliteRow[])[],operation:SqliteOperation):Promise<SqliteDatabase>{
  if(schema.tables.length!==rows.length)throw new ValueError("invalidValue","Artifact SQLite table count mismatch");
  const tables:SqliteDatabase["tables"][number][]=[];for(let index=0;index<schema.tables.length;index++){tables.push({...schema.tables[index]!,rows:rows[index]!});if((index+1)%256===0)await artifactSqliteCheckpoint(operation,"projectSnapshot",index+1,schema.tables.length);}
  const database={tables};await validateSqliteDatabaseSchemaControlled(database,sql,operation);return database;
@@ -220,9 +229,9 @@ export async function artifactSqliteTables(database: SqliteDatabase, sql: string
     }
   }
   artifactSqliteValueBudget(bytes, options);
-  await validateSqliteDatabaseSchemaControlled(database, sql, options);
+  const schema=await validateSqliteDatabaseSchemaControlled(database, sql, options);
   await artifactSqliteCheckpoint(options, "reconstructSnapshot", rows, total);
-  const schema=await parseSqliteDatabaseSchemaControlled(sql,operation),index=await ArtifactSqliteTableIndex.create(database.tables,operation);
+  const index=await ArtifactSqliteTableIndex.create(database.tables,operation);
   const ordered:(readonly SqliteRow[])[]=[];
   for(let at=0;at<schema.tables.length;at++){const found=await index.find(schema.tables[at]!.name);if(found<0)throw new ValueError("invariantViolated","Validated artifact SQLite table is absent");ordered.push(database.tables[found]!.rows);if((at+1)%256===0)await artifactSqliteCheckpoint(operation,"indexTables",at+1,schema.tables.length);}
   return ordered;

@@ -259,7 +259,7 @@ fn solid_area_load_matches_pressure_times_footprint_area() {
 /// `fem3d_nodal_von_mises` (`mesh_preview.rs`) and `fem3d_buckling` (`modal_buckling.rs`) together.
 #[test]
 fn example_fixture_parses() {
-    let doc: Fem3dSnapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
+    let doc: Fem3dSnapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT).expect("example fixture parses");
     assert_eq!(doc.nodes.len(), 16);
     assert_eq!(doc.elements.len(), 16);
     assert_eq!(doc.solids.len(), 1);

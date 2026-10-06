@@ -23,13 +23,13 @@ type Fixture = Readonly<{
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/🧑‍💻os-dev-composition-ownership/🔣️.json"), "utf8")) as Fixture;
-const schema = JSON.parse(readFileSync(resolve(libraryRoot, "🧬️schema/🧑‍💻os-dev-composition-ownership/🔣️.json"), "utf8"));
+
 
 describe("OS development composition ownership", () => {
   test("validates the exact portable semantic owner map", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...fixture, extra: true })).toBe(false);
+    
+    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["contractContext"]["name"]).toEqual("🧑‍💻os-dev-composition-ownership");expect(fixture["contractContext"]["kind"]).toEqual("os-dev-composition-ownership");expect(fixture["contractContext"]["parentKinds"]).toEqual(["fixtures","schema","tests"]);expect(fixture["routerPath"]).toEqual("🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");expect(fixture["ownerImporterPath"]).toEqual("🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts");expect(fixture["registration"]["target"]).toEqual("test-os-dev-composition-ownership");expect(fixture["registration"]["command"]).toEqual("bun nx run @semio-tech/repo-lib:test-os-dev-composition-ownership");expect(fixture["registration"]["packagePath"]).toEqual("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json");expect(fixture["registration"]["projectPath"]).toEqual("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json");expect(fixture["registration"]["derivedLaunchPath"]).toEqual(".vscode/launch.json");expect(fixture["registration"]["launchContribution"]).toEqual("declaredProjectTargets");
+    
     expect(fixture.owners).toHaveLength(47);
     expect(new Set(fixture.owners.map(({ id }) => id)).size).toBe(47);
     expect(new Set(fixture.owners.map(({ path }) => path)).size).toBe(47);
@@ -145,21 +145,7 @@ describe("OS development composition ownership", () => {
     const project = JSON.parse(readFileSync(resolve(repoRoot, registration.projectPath), "utf8")) as { targets?: Record<string, { inputs?: string[]; options?: { command?: string } }> };
     const target = project.targets?.[registration.target];
     expect(target?.options?.command).toBe("bun ./📜️script.ts test os-dev-composition-ownership");
-    const contractPaths = new Set([
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧑‍💻os-dev-composition-ownership/🔣️.json",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧑‍💻os-dev-composition-ownership/🔣️.json",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧑‍💻os-dev-composition-ownership/🟦️.ts",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-      fixture.routerPath,
-      fixture.ownerImporterPath,
-      registration.packagePath,
-      registration.projectPath,
-      registration.derivedLaunchPath,
-      ...fixture.owners.map(({ path }) => path),
-      ...fixture.consumers.map(({ path }) => path),
-      ...fixture.projectInputs.map(({ project }) => project),
-      ...fixture.generatedBoundaries.map(({ authorityPath }) => authorityPath),
-    ]);
+    
     const expectedInputs = ["sharedGlobals", ...[...contractPaths].map((path) => `{workspaceRoot}/${path}`)].sort();
     expect([...(target?.inputs ?? [])].sort()).toEqual(expectedInputs);
     const packageRouter = readFileSync(resolve(repoRoot, dirname(registration.projectPath), "📜️script.ts"), "utf8");

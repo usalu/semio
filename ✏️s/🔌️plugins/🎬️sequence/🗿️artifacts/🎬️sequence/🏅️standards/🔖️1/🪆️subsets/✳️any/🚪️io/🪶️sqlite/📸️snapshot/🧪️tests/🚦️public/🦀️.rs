@@ -1,0 +1,13 @@
+use super::*;
+use std::{io::Write,process::{Command,Stdio}};
+pub(super) fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🚦️public/🔣️.json")).unwrap()}
+pub(super) fn verify_and_edit(bytes:&[u8],encoding:SnapshotEncoding)->Vec<u8>{
+ let fixture=corpus();assert_eq!(fixture["retirement"],"explicit");
+ let script=r#"import{Database}from'bun:sqlite';const c=JSON.parse(process.argv[1]),encoding=process.argv[2];const d=Database.deserialize(await Bun.stdin.bytes(),{safeIntegers:true});const meta=d.query('SELECT * FROM semio_snapshot').all();if(meta.length!==1||JSON.stringify(Object.keys(meta[0]))!==JSON.stringify(c.metadataColumns))throw Error('complete metadata shape');for(const[k,v]of Object.entries({...c.metadata,native_encoding:encoding}))if(meta[0][k]!==((k==='id'||k==='schema_version')?BigInt(v):v))throw Error('metadata '+k);const names=d.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all().map(r=>r.name);if(JSON.stringify(names)!==JSON.stringify([...c.domainTables,'semio_snapshot'].sort()))throw Error('complete domain tables');for(const name of c.domainTables){const q='"'+name.replaceAll('"','""')+'"';const rows=d.query('SELECT rowid AS owner_identity,* FROM '+q).all();for(const row of rows)if(row.id<=0n||row.id!==row.owner_identity)throw Error('entity ownership '+name);}if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('public integrity');const changes=d.query(c.independentEdit.sql).run(c.independentEdit.value).changes;if(changes!==1)throw Error('exact authored edit '+changes);if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('edited integrity');await Bun.write(Bun.stdout,d.serialize());d.close();"#;
+ let mut child=Command::new("bun").args(["-e",script,&fixture.to_string(),encoding.as_str()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(bytes).unwrap();let result=child.wait_with_output().unwrap();assert!(result.status.success(),"{}",String::from_utf8_lossy(&result.stderr));result.stdout
+}
+pub(super) struct Owned(Option<SequenceSnapshot>);
+impl Owned{pub(super) fn new(value:SequenceSnapshot)->Self{Self(Some(value))}}
+impl std::ops::Deref for Owned{type Target=SequenceSnapshot;fn deref(&self)->&Self::Target{self.0.as_ref().unwrap()}}
+impl std::ops::DerefMut for Owned{fn deref_mut(&mut self)->&mut Self::Target{self.0.as_mut().unwrap()}}
+impl Drop for Owned{fn drop(&mut self){if let Some(value)=self.0.take(){store::ArtifactSqliteSnapshot::retire_sqlite_snapshot(value);}}}

@@ -831,7 +831,7 @@ pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzl
 
 //#region 🔖️ValueBridge
 // 🌉️ The play app's scene-mutation helpers predate this typed projection and stay on a bare
-// `serde_json::Value` scratch fixture. Bridging `Puzzle3dMutation`/`Puzzle3dDiff` onto that `Value`
+// `serde_json::Value` scratch scene_snapshot. Bridging `Puzzle3dMutation`/`Puzzle3dDiff` onto that `Value`
 // boundary round-trips through the typed `Puzzle3dSnapshot` (`serde_json::from_value`/`to_value`)
 // rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`/`puzzle5d`'s bridge exactly.
 impl MutationDiff<Value> for Puzzle3dDiff {
@@ -918,7 +918,7 @@ pub fn puzzle3d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 
 //#region 🔖️PlaySnapshot
 /// 🌱️ The play app's `Puzzle3dPlayApp` predates the typed `Puzzle3dSnapshot` above and stays on
-/// this ad-hoc `serde_json::Value` fixture shape for its scene-mutation helpers. This newtype exists
+/// this ad-hoc `serde_json::Value` scene_snapshot shape for its scene-mutation helpers. This newtype exists
 /// only to satisfy `ArtifactApp::Snapshot: store::ArtifactDsl + store::ArtifactPack`;
 /// `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip straight through the
 /// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
@@ -994,17 +994,9 @@ impl Clone for Puzzle3dPlaySnapshot {
     }
 }
 
-impl Serialize for Puzzle3dPlaySnapshot {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.value().serialize(serializer)
-    }
-}
 
-impl<'de> Deserialize<'de> for Puzzle3dPlaySnapshot {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        Value::deserialize(deserializer).map(Self::new)
-    }
-}
+
+
 
 impl PartialEq for Puzzle3dPlaySnapshot {
     fn eq(&self, other: &Self) -> bool {
@@ -1012,13 +1004,7 @@ impl PartialEq for Puzzle3dPlaySnapshot {
     }
 }
 
-impl store::ArtifactDsl for Puzzle3dPlaySnapshot {
-    const EXTENSION: &'static str = "puzzle3d-play";
 
-    fn envelope_id() -> &'static str { <Puzzle3dSnapshot as store::ArtifactDsl>::envelope_id() }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(text).map(Self::from_typed) }
-    fn print_dsl(&self) -> String { <Puzzle3dSnapshot as store::ArtifactDsl>::print_dsl(self.typed()) }
-}
 
 /// 🧒️ Composition view of the play snapshot: a puzzle document owns no child artifacts, so the
 /// typed snapshot's own (empty) composition is the whole answer.
@@ -1034,22 +1020,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle3dP
     }
 }
 
-/// 📦️ Packs through the typed authority, so the play kind shares `Puzzle3dSnapshot`'s derived record
-/// layout and pack-schema identity.
-impl store::ArtifactPack for Puzzle3dPlaySnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        self.typed().encode_pack_with(options)
-    }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
-    }
-
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Puzzle3dSnapshot as store::ArtifactPack>::record_spec()
-    }
-}
 
 impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
     fn apply(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {

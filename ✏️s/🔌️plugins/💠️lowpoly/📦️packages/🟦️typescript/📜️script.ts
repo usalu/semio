@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-//#region 🔖️InteractiveJobFixture
+//#region 🔖️InteractiveJobExamples
 /** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
 
@@ -30,42 +30,18 @@ type Fixture = {
   routes: Route[];
 };
 
-const ownKeys = (value: object, expected: string[]): boolean =>
-  Object.keys(value).sort().join("\u0000") === [...expected].sort().join("\u0000");
-
-/** 🧮️ Every classified lowpoly verb; gestures carry tool-machine phases, so no gesture bracket verb exists. The
- * source's `.action_interactive_job` count is checked against the fixture below, so this literal only pins the
- * fixture's own shape. */
-const LOWPOLY_CLASSIFIED_ROUTES = 48;
-
-const validateOwnedFixture = (value: unknown): value is Fixture => {
-  if (typeof value !== "object" || value === null || !ownKeys(value, ["version", "owner", "maximumPollMicros", "maximumRawBytes", "maximumWorkItems", "artifactStoreMaximumBytes", "configStoreMaximumBytes", "routes"])) return false;
-  const fixture = value as Fixture;
-  if (fixture.version !== 1 || fixture.owner !== "LowpolyPlayApp" || fixture.maximumRawBytes !== 16_384 || fixture.maximumWorkItems !== 258 || fixture.artifactStoreMaximumBytes !== 16_777_216 || fixture.configStoreMaximumBytes !== 16_384 || !Number.isInteger(fixture.maximumPollMicros) || fixture.maximumPollMicros < 1 || fixture.maximumPollMicros > 8_000 || !Array.isArray(fixture.routes) || fixture.routes.length !== LOWPOLY_CLASSIFIED_ROUTES) return false;
-  const ids = new Set<string>();
-  let migrated = 0;
-  let batch = 0;
-  for (const route of fixture.routes) {
-    if (typeof route !== "object" || route === null || !ownKeys(route, ["toolId", "classification", "lanes", "preparation", "blocker"]) || typeof route.toolId !== "string" || route.toolId.length === 0 || ids.has(route.toolId) || !Array.isArray(route.lanes) || !Array.isArray(route.preparation)) return false;
-    ids.add(route.toolId);
-    if (route.classification === "migrated") {
-      migrated += 1;
-      const signature = `${route.lanes.join("+")}|${route.preparation.join("+")}`;
-      if (!["artifact|Artifact", "config|Config", "host-only|", "transient|", "config+transient|Config", "artifact+transient|Artifact", "artifact+config|Artifact+Config", "artifact+config+transient|Artifact+Config"].includes(signature) || route.blocker !== null) return false;
-    } else if (route.classification === "batch-only-pending-rewrite") {
-      batch += 1;
-      if (route.lanes.length !== 0 || route.preparation.length !== 0 || typeof route.blocker !== "string" || route.blocker.length === 0) return false;
-    } else {
-      return false;
-    }
-  }
-  return migrated === LOWPOLY_CLASSIFIED_ROUTES && batch === 0;
+const publicationPolicyAccepted = (lanes: Route["lanes"], preparation: Route["preparation"]): boolean => {
+  if (!lanes.length || new Set(lanes).size !== lanes.length || lanes.some(lane => !["host-only", "artifact", "config", "transient"].includes(lane))) return false;
+  if (lanes.includes("host-only")) return lanes.length === 1 && preparation.length === 0;
+  const order = ["artifact", "config", "transient"];
+  if (lanes.join("+") !== [...lanes].sort((left, right) => order.indexOf(left) - order.indexOf(right)).join("+")) return false;
+  return preparation.join("+") === lanes.filter(lane => lane === "artifact" || lane === "config").map(variant).join("+");
 };
 
 const reject = (condition: boolean, message: string): void => {
   if (!condition) throw new Error(message);
 };
-//#endregion 🔖️InteractiveJobFixture
+//#endregion 🔖️InteractiveJobExamples
 
 //#region 🧪️InteractiveJobSourceTest
 class TestScript extends BundleScript {
@@ -73,15 +49,15 @@ class TestScript extends BundleScript {
     runCmd(process.execPath, ["test", ...["✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts","✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts"].map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
 
     const root = resolve(import.meta.dir, "../..");
-    const module = JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")) as { $id: string };
+    const policySchema = JSON.parse(readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json"), "utf8")).$defs.LowpolyPublicationPolicyV1;
     const fixture = JSON.parse(readFileSync(resolve(root, "🧫️fixtures/🧪️interactive-job/🔣️.json"), "utf8")) as Fixture;
     const source = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), "utf8");
     const schemaSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"), "utf8");
     const sessionSource = readFileSync(resolve(root, "🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs"), "utf8");
-    reject(validateOwnedFixture(fixture), "owned Lowpoly fixture validation failed");
     const sourceCollapsed = source.replace(/\s+/g, " ").replace(/,\s*\}/g, " }");
     const registered = [...source.matchAll(/\.action_interactive_job\("([^"]+)", InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => ({ toolId: match[1]!, classification: match[2]! }));
     reject(registered.length === fixture.routes.length, `Lowpoly source must register exactly ${fixture.routes.length} classified actions (found ${registered.length})`);
+    reject([...registered.map(route => route.toolId)].sort().join("\0") === [...fixture.routes.map(route => route.toolId)].sort().join("\0"), "Lowpoly source must declare every expected action exactly once");
     for (const route of fixture.routes) {
       reject(registered.some((row) => row.toolId === route.toolId && row.classification === variant(route.classification)), `Lowpoly source classification drift: ${route.toolId}`);
       if (route.classification === "migrated") {
@@ -115,26 +91,21 @@ class TestScript extends BundleScript {
     reject(schemaSource.includes("pub fn default_owned_document() -> LowpolyOwnedDefaultDocument"), "Lowpoly schema lacks caller-owned default child payload construction");
     reject(sessionSource.includes("pub fn lowpoly_paint_drive("), "Lowpoly session lacks the paint tool drive");
     reject(sessionSource.includes("pub fn paint_preview(&self"), "Lowpoly session lacks the paint gesture preview");
-    console.log(`lowpoly interactive-job owned source/fixture ok: ${fixture.routes.length} Migrated, 0 BatchOnlyPendingRewrite`);
+    console.log(`lowpoly interactive-job actual source actions agree with examples: ${fixture.routes.length} Migrated, 0 BatchOnlyPendingRewrite`);
 
-    const ajv = new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
+    const ajv = new Ajv({ allErrors: true, strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-    ajv.addSchema(module);
-    const validateOracle = ajv.compile({ $ref: `${module.$id}#/$defs/LowpolyInteractiveJobPartition` });
-    reject(validateOracle(fixture), `Ajv oracle rejected canonical fixture: ${ajv.errorsText(validateOracle.errors)}`);
-    const hostiles: Fixture[] = [
-      { ...structuredClone(fixture), routes: fixture.routes.map((route, index) => index === 1 ? structuredClone(fixture.routes[0]!) : route) },
-      { ...structuredClone(fixture), routes: fixture.routes.map((route) => route.classification === "migrated" ? { ...route, lanes: [] } : route) },
-      // 🧬️ Every route is now Migrated (0 BatchOnlyPendingRewrite) — a non-null blocker on a Migrated
-      // route is the equivalent hostile mutation the old "empty blocker on BatchOnly" case exercised.
-      { ...structuredClone(fixture), routes: fixture.routes.map((route, index) => index === 0 ? { ...route, blocker: "unexpected" } : route) },
-      { ...structuredClone(fixture), routes: fixture.routes.map((route) => route.toolId === "paintAt" ? { ...route, preparation: ["Config"] as ("Artifact" | "Config")[] } : route) },
-    ];
-    for (const hostile of hostiles) {
-      reject(!validateOwnedFixture(hostile), "owned validator accepted hostile fixture");
-      reject(!validateOracle(hostile), "Ajv oracle accepted hostile fixture");
+    const validatePolicy = ajv.compile(policySchema);
+    for (const route of fixture.routes) {
+      const policy = { lanes: route.lanes, preparation: route.preparation };
+      reject(publicationPolicyAccepted(policy.lanes, policy.preparation), `Invalid actual Lowpoly publication policy: ${route.toolId}`);
+      reject(validatePolicy(policy), `Ajv rejected actual publication policy: ${route.toolId}`);
     }
-    console.log("lowpoly interactive-job Ajv hostile oracle ok: duplicate, missing lane, non-null blocker on migrated, lane/preparation mismatch rejected");
+    for (const policy of [{ lanes: [], preparation: [] }, { lanes: ["artifact", "artifact"], preparation: ["Artifact"] }, { lanes: ["artifact"], preparation: ["Config"] }, { lanes: ["host-only", "config"], preparation: ["Config"] }]) {
+      reject(!publicationPolicyAccepted(policy.lanes as Route["lanes"], policy.preparation as Route["preparation"]), "Owned domain policy accepted invalid lanes or preparation");
+      reject(!validatePolicy(policy), "Ajv domain policy accepted invalid lanes or preparation");
+    }
+    console.log(`Lowpoly actual publication policies agree with Ajv: ${fixture.routes.length} source actions, four invalid domain policies`);
   }
 }
 //#endregion 🧪️InteractiveJobSourceTest

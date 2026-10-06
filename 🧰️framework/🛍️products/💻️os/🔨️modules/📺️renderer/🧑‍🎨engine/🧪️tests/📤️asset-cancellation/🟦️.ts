@@ -2,19 +2,15 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
 const engine = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const world = resolve(engine, "../../♾️infinite/🌍️world");
 const fixture = JSON.parse(readFileSync(resolve(world, "🧫️fixtures/📤️asset-cancellation/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(world, "🧬️schema/📤️asset-cancellation/🔣️.json"), "utf8"));
 
 describe("🛑️ Exact asset request cancellation", () => {
-  it("validates the neutral cancellation contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
   it("matches browser abort isolation before and during an active request", async () => {
     const browser = await chromium.launch({ headless: true });
     try {

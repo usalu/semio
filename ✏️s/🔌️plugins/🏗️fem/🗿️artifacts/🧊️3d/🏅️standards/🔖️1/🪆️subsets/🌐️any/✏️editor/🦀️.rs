@@ -22,7 +22,7 @@ use crate::editor::fem3d::modes::edit::windows::{model as window_model, results 
 use crate::editor::fem3d::panels::{artifact as artifact_panel, inspection as inspection_panel, results as results_panel};
 use crate::editor::fem3d::terminology::fem3d_labels;
 use crate::model::{Dof, ElementResult};
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::Fem3dSnapshot;
 use semio_framework_pack_json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -453,7 +453,6 @@ struct Fem3dArtifactPreparationFactory;
 struct Fem3dArtifactPreparation {
     base: Option<store::SnapshotRead<Fem3dSnapshot>>,
     mutation: Option<Fem3dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Fem3dSnapshot, Fem3dMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -465,9 +464,9 @@ struct Fem3dArtifactPreparation {
 impl store::ArtifactStoreOneItemPreparationFactory<Fem3dSnapshot, Fem3dMutation> for Fem3dArtifactPreparationFactory {
     /// 🧺️ One forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`: one per node
     /// and solid a `move-selection` restores, one for every other kind).
-    fn preflight(&self, mutation: &Fem3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("fem3d-artifact-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &Fem3dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("fem3d-artifact-lane".into());
         }
         admit_fem3d_artifact_mutation(mutation)
     }
@@ -489,7 +488,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem3dSnapshot, Fem3dMutation>
         Ok(Box::new(Fem3dArtifactPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -544,9 +542,6 @@ impl store::ArtifactStoreOneItemPreparation<Fem3dSnapshot, Fem3dMutation> for Fe
         if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        if self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "fem3d-artifact-base-retirement-rejected"));
@@ -560,7 +555,7 @@ impl store::ArtifactStoreOneItemPreparation<Fem3dSnapshot, Fem3dMutation> for Fe
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ArtifactStorePreparation
@@ -896,9 +891,9 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// `World3d` surface fed by `live_visual`, and an empty boot document meshes to nothing, so the very
     /// first paint was a blank scene until a client dispatched `setActiveExample`. Mirrors the sibling
     /// `Fem3dViewer::initial_snapshot` (and block3d's `block3d_boot_snapshot`) so editor and viewer boot
-    /// the same geometry. See `crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot`.
+    /// the same geometry. See `crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot`.
     fn initial_snapshot() -> Fem3dSnapshot {
-        let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
+        let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot();
         eprintln!("[TRACE] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len(), snapshot.materials.len(), snapshot.load_cases.len());
         snapshot
     }
@@ -1307,7 +1302,7 @@ pub fn reset_document_effect(scene: &Fem3dSnapshot) -> semio_framework::kernel::
 /// 🚧️ SDK GAP (contract §2.4, `App { definition, examples }` split): `EditorBuilder` has no
 /// `.example(...)`/`.workflow(...)` methods — the pre-migration chain's trailing
 /// `.example(examples::demo::ID, LocalizedLabel::native("Family House", "Einfamilienhaus"),
-/// crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT, "file")` and `.workflow("fem3d", "FEM 3D",
+/// crate::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT, "file")` and `.workflow("fem3d", "FEM 3D",
 /// "structure")` calls are dropped here, not ported. `setActiveExample`'s handler loads the same
 /// `FEM3D_EXAMPLE_TEXT` fixture directly.
 /// 🩹️ One inspector patch action — internal (not in the palette; its arguments are authored by the

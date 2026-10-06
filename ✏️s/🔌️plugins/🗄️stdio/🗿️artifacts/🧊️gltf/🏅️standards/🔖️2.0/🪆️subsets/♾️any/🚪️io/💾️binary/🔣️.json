@@ -1,0 +1,27 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "🧬️mutations",
+        "id": "s.stdio.gltf.io.mutation.binary",
+        "kind": "io",
+        "responsibility": "Frozen-tag glTF mutation binary transport.",
+        "io": {
+          "format": "s.stdio.gltf.mutation.binary",
+          "direction": "transport"
+        }
+      },
+      {
+        "directory": "💡️inferences",
+        "id": "s.stdio.gltf.inference.io.binary",
+        "kind": "io",
+        "responsibility": "Deterministic glTF inference binary codec.",
+        "io": {
+          "format": "s.stdio.gltf.inference.binary",
+          "direction": "export"
+        }
+      }
+    ]
+  }
+}

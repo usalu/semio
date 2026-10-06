@@ -1,0 +1,334 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/architecture/specific-conformance/component.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "target",
+    "moved",
+    "helpers",
+    "retainedGrammar",
+    "retainedEnvelope"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.architecture.specific-conformance/v2"
+    },
+    "target": {
+      "const": "specific-dsl-conformance"
+    },
+    "moved": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "module",
+          "directory",
+          "source",
+          "laws",
+          "previousModule",
+          "previousDirectory"
+        ],
+        "properties": {
+          "module": {
+            "type": "string",
+            "minLength": 1
+          },
+          "directory": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "enum": [
+              "grammar-unit",
+              "sweep"
+            ]
+          },
+          "laws": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "previousModule": {
+            "type": "string",
+            "minLength": 1
+          },
+          "previousDirectory": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "previousModule",
+              "previousDirectory",
+              "module",
+              "directory"
+            ],
+            "properties": {
+              "previousModule": {
+                "const": "full_grammar"
+              },
+              "previousDirectory": {
+                "const": "📖️grammar"
+              },
+              "module": {
+                "const": "shipped_grammar"
+              },
+              "directory": {
+                "const": "📖️grammar"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "previousModule",
+              "previousDirectory",
+              "module",
+              "directory"
+            ],
+            "properties": {
+              "previousModule": {
+                "const": "m5_handcrafted_grammar_conformance"
+              },
+              "previousDirectory": {
+                "const": "🔬️m5-handcrafted-grammar-conformance"
+              },
+              "module": {
+                "const": "grammar_conformance"
+              },
+              "directory": {
+                "const": "📖️grammar/✅️conformance"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "previousModule",
+              "previousDirectory",
+              "module",
+              "directory"
+            ],
+            "properties": {
+              "previousModule": {
+                "const": "m5_handcrafted_protocol_conformance"
+              },
+              "previousDirectory": {
+                "const": "🔬️m5-handcrafted-protocol-conformance"
+              },
+              "module": {
+                "const": "protocol_conformance"
+              },
+              "directory": {
+                "const": "📡️protocol/✅️conformance"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "previousModule",
+              "previousDirectory",
+              "module",
+              "directory"
+            ],
+            "properties": {
+              "previousModule": {
+                "const": "m5_cross_artifact_rejection"
+              },
+              "previousDirectory": {
+                "const": "🔬️m5-cross-artifact-rejection"
+              },
+              "module": {
+                "const": "grammar_rejection"
+              },
+              "directory": {
+                "const": "📖️grammar/⛔️rejection"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "previousModule",
+              "previousDirectory",
+              "module",
+              "directory"
+            ],
+            "properties": {
+              "previousModule": {
+                "const": "m5_production_coverage"
+              },
+              "previousDirectory": {
+                "const": "🔬️m5-production-coverage"
+              },
+              "module": {
+                "const": "grammar_coverage"
+              },
+              "directory": {
+                "const": "📖️grammar/📊️coverage"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "helpers": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "module",
+          "directory",
+          "previousModule",
+          "previousDirectory"
+        ],
+        "properties": {
+          "module": {
+            "type": "string",
+            "minLength": 1
+          },
+          "directory": {
+            "type": "string",
+            "minLength": 1
+          },
+          "previousModule": {
+            "type": "string",
+            "minLength": 1
+          },
+          "previousDirectory": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "previousModule",
+              "previousDirectory",
+              "module",
+              "directory"
+            ],
+            "properties": {
+              "previousModule": {
+                "const": "example_asset_discovery"
+              },
+              "previousDirectory": {
+                "const": "🔬️example-asset-discovery"
+              },
+              "module": {
+                "const": "example_discovery"
+              },
+              "directory": {
+                "const": "📚️examples/🔎️discovery"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "previousModule",
+              "previousDirectory",
+              "module",
+              "directory"
+            ],
+            "properties": {
+              "previousModule": {
+                "const": "pilot_resolve"
+              },
+              "previousDirectory": {
+                "const": "🔬️pilot-resolve"
+              },
+              "module": {
+                "const": "example_resolution"
+              },
+              "directory": {
+                "const": "📚️examples/🔍️resolution"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "previousModule",
+              "previousDirectory",
+              "module",
+              "directory"
+            ],
+            "properties": {
+              "previousModule": {
+                "const": "m5_auto_discovery"
+              },
+              "previousDirectory": {
+                "const": "🔬️m5-auto-discovery"
+              },
+              "module": {
+                "const": "facet_discovery"
+              },
+              "directory": {
+                "const": "🔎️discovery"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "previousModule",
+              "previousDirectory",
+              "module",
+              "directory"
+            ],
+            "properties": {
+              "previousModule": {
+                "const": "m5_soft_skip"
+              },
+              "previousDirectory": {
+                "const": "🔬️m5-soft-skip"
+              },
+              "module": {
+                "const": "fixture_refusals"
+              },
+              "directory": {
+                "const": "🛟️refusals"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "retainedGrammar": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "retainedEnvelope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

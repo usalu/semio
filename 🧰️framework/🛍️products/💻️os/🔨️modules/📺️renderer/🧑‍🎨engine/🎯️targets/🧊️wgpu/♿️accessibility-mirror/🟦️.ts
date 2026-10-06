@@ -32,7 +32,42 @@ export type AccessibilityProjectionNode = {
   readonly valueNow?: number;
   readonly valueText?: string;
   readonly busy?: boolean;
+  readonly valueStep?: number;
+  readonly invalid?: boolean;
+  readonly setSize?: number;
+  readonly posInSet?: number;
+  readonly tone?: string;
 };
+
+/** 🗝️ The attribute a mirrored control lists its engine-owned keys in, space separated. */
+export const WGPU_ACCESSIBILITY_ENGINE_KEYS_ATTRIBUTE = "data-engine-keys";
+
+/** 🎹️ The keys the renderer answers for one mirrored control, so the browser's own handling of them never runs: a slider's
+ * and a stepper's number-law keys (design §18: arrows, page keys, Home/End toward a bound the control has) with Enter (commit)
+ * and Escape (revert) on a typed field, and Enter/Escape alone on a slider's typed readout (`<key>::editor`), whose arrows stay
+ * the native draft stepping. Only a control that publishes its step follows the law; every other control keeps its keys. */
+export function accessibilityMirrorEngineKeys(node: Pick<AccessibilityProjectionNode, "role" | "key" | "disabled" | "valueMin" | "valueMax" | "valueStep">): readonly string[] {
+  if (node.disabled === true || node.valueStep === undefined) return [];
+  if (node.role === "slider") return ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"];
+  if (node.role !== "spinbutton") return [];
+  if (node.key.endsWith("::editor")) return ["Enter", "Escape"];
+  return ["ArrowUp", "ArrowDown", "PageUp", "PageDown", ...(node.valueMin === undefined ? [] : ["Home"]), ...(node.valueMax === undefined ? [] : ["End"]), "Enter", "Escape"];
+}
+
+/** ⏎️ Whether Enter and Space on a focused mirrored control become its activation HERE: a native button, a text field and a
+ * textarea answer their keys themselves, a tab and a radio own them in their own key handlers — every other actionable
+ * element (a tree row, a pressable group) is a plain element the browser activates on no key at all, so the Actions rail was
+ * pointer-only (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F18). */
+export function accessibilityMirrorActivatesByKey(element: HTMLElement, role: string): boolean {
+  return !(element instanceof HTMLButtonElement) && !(element instanceof HTMLInputElement) && !(element instanceof HTMLTextAreaElement) && role !== "tab" && role !== "radio";
+}
+
+/** 🚪️ Whether the mirrored control `target` hands `event`'s key to the renderer ({@link accessibilityMirrorEngineKeys}); a
+ * chord with Ctrl, Meta or Alt is never a number-law key. */
+export function accessibilityMirrorOwnsKey(target: HTMLElement, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey">): boolean {
+  if (event.ctrlKey || event.metaKey || event.altKey) return false;
+  return (target.getAttribute(WGPU_ACCESSIBILITY_ENGINE_KEYS_ATTRIBUTE) ?? "").split(" ").includes(event.key);
+}
 
 export type AccessibilityProjectionWindow = { readonly windowId: string; readonly windowGeneration: number; readonly nodes: readonly AccessibilityProjectionNode[] };
 export type AccessibilityMirrorTransport = Pick<BrowserFrameTransport, "enqueueLossless" | "introspect">;
@@ -104,6 +139,10 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     if (node.valueNow !== undefined) element.setAttribute("aria-valuenow", String(node.valueNow));
     if (node.valueText !== undefined) element.setAttribute("aria-valuetext", node.valueText);
     if (node.busy === true) element.setAttribute("aria-busy", "true");
+    if (node.invalid === true) element.setAttribute("aria-invalid", "true");
+    if (node.setSize !== undefined) element.setAttribute("aria-setsize", String(node.setSize));
+    if (node.posInSet !== undefined) element.setAttribute("aria-posinset", String(node.posInSet));
+    if (node.tone !== undefined) element.dataset.tone = node.tone;
     if (node.focused === true) element.dataset.focused = "true";
     if (node.focusable === true) element.dataset.focusable = "true";
     if (node.actionable === true) element.dataset.actionable = "true";
@@ -111,6 +150,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
       if (node.valueText !== undefined) element.value = node.valueText;
       if (element instanceof HTMLInputElement && node.valueMin !== undefined) element.min = String(node.valueMin);
       if (element instanceof HTMLInputElement && node.valueMax !== undefined) element.max = String(node.valueMax);
+      if (element instanceof HTMLInputElement && (node.role === "slider" || node.role === "spinbutton")) element.step = node.valueStep === undefined ? "any" : String(node.valueStep);
       if (element instanceof HTMLInputElement && node.valueNow !== undefined && node.role !== "textbox" && node.role !== "combobox") element.value = String(node.valueNow);
       element.disabled = node.disabled === true;
     }
@@ -124,6 +164,12 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
       if (!restoringFocus) transport.enqueueLossless({ kind: "accessibility-blur", ...address });
     });
     if (node.actionable === true && !(element instanceof HTMLInputElement) && !(element instanceof HTMLTextAreaElement)) element.addEventListener("click", (event) => {
+      event.stopPropagation();
+      transport.enqueueLossless({ kind: "accessibility-activate", ...address });
+    });
+    if (node.actionable === true && node.focusable === true && accessibilityMirrorActivatesByKey(element, node.role)) element.addEventListener("keydown", (event) => {
+      if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey || (event.key !== "Enter" && event.key !== " ")) return;
+      event.preventDefault();
       event.stopPropagation();
       transport.enqueueLossless({ kind: "accessibility-activate", ...address });
     });
@@ -148,10 +194,29 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
           : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
       next?.focus({ preventScroll: true });
     });
+    if (node.role === "radio" && node.focusable === true) element.addEventListener("keydown", (event) => {
+      const radios = Array.from(element.parentElement?.querySelectorAll<HTMLElement>(':scope > [role="radio"]') ?? []);
+      const index = radios.indexOf(element);
+      const step = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+      const next = event.key === "Enter" || event.key === " " ? element : step === 0 || index < 0 ? undefined : radios[(index + step + radios.length) % radios.length];
+      if (next === undefined) return;
+      event.preventDefault();
+      event.stopPropagation();
+      next.focus({ preventScroll: true });
+      next.click();
+    });
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) element.addEventListener("input", (event) => {
       event.stopPropagation();
       transport.enqueueLossless({ kind: "accessibility-value", ...address, value: element.value });
     });
+    const engineKeys = accessibilityMirrorEngineKeys(node);
+    if (engineKeys.length > 0) {
+      element.setAttribute(WGPU_ACCESSIBILITY_ENGINE_KEYS_ATTRIBUTE, engineKeys.join(" "));
+      element.addEventListener("keydown", (event) => {
+        if (event.defaultPrevented || event.isComposing || !accessibilityMirrorOwnsKey(element, event)) return;
+        transport.enqueueLossless({ kind: "accessibility-focus", ...address });
+      });
+    }
     if (node.description === undefined) return { element };
     const description = document.createElement("span");
     description.id = `${WGPU_ACCESSIBILITY_MIRROR_ID}-${encodeURIComponent(surface.windowId)}-${surface.windowGeneration}-${node.nodeId}-desc`;
@@ -227,18 +292,31 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     published = signature;
   };
 
-  const refresh = (): void => {
-    if (disposed) return;
-    if (domOwns) for (const candidate of mirror.querySelectorAll<HTMLElement>("[data-node-id]")) {
+  /** 🧹️ Drops every mirrored node a DOM host took over (`domOwns`) — one walk of the mirror. */
+  const retireOwned = (): void => {
+    if (!domOwns) return;
+    for (const candidate of mirror.querySelectorAll<HTMLElement>("[data-node-id]")) {
       const surface = { windowId: candidate.dataset.window!, windowGeneration: Number(candidate.dataset.windowGeneration), nodes: [] };
       const node = { nodeId: Number(candidate.dataset.nodeId), key: candidate.dataset.nodeKey!, role: candidate.getAttribute("role") ?? "region", depth: 0, live: "off" };
       if (domOwns(surface, node)) { candidate.remove(); published = ""; }
     }
-    if (pending) return;
+  };
+
+  /** 🔁️ Asks for a fresh projection. The frame worker posts one `frame` message per frame STEP — measured at about
+   * 12 000 a second on a live board — and the host calls this for every one of them, so a call costs nothing while a
+   * pull is already owed: the ownership walk ({@link retireOwned}) runs at once on the first call of a burst and again
+   * when the owed pull starts, never per call. It used to run on EVERY call, ahead of the throttle: half of the main
+   * thread at 115 mirrored nodes, more with each History row, until the page's task queue no longer drained and a
+   * plain DOM read waited 27 s (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F22). */
+  const refresh = (): void => {
+    if (disposed || pending) return;
+    retireOwned();
     pending = true;
     window.setTimeout(() => {
       pending = false;
-      if (!disposed) void pull();
+      if (disposed) return;
+      retireOwned();
+      void pull();
     }, Math.max(0, ACCESSIBILITY_REFRESH_FLOOR_MS - (performance.now() - lastAt)));
   };
 

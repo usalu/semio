@@ -17,7 +17,8 @@ use semio_repo_test_host::Adapter;
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_repo_test_host::law::{self, vector::{self, Leaves}};
-    use semio_s_artifact_wfc_3d::standards::v1::subsets::any::schema::mutations::{wfc3d_mutation_report_json, wfc3d_snapshot_json_round_trip};
+    use semio_s_artifact_wfc_3d::standards::v1::subsets::any::io::text::snapshot::{wfc3d_snapshot_json_round_trip};
+    use semio_s_artifact_wfc_3d::standards::v1::subsets::any::io::text::mutations::{wfc3d_mutation_report_json};
 
     fn report(leaves: &Leaves) -> Result<String, String> {
         wfc3d_mutation_report_json(&leaves.before, &leaves.mutation, &leaves.after)
@@ -36,8 +37,8 @@ mod subject {
     }
 
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let uri = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| "the round-trip scenario names no committed snapshot".to_string())?;
-        let text = String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("{uri}: {error}"))?;
+        let uri = ctx.step_input_uris().into_iter().next().ok_or_else(|| "the round-trip scenario names no committed snapshot".to_string())?;
+        let text = String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("{uri}: {error}"))?;
         let reencoded = wfc3d_snapshot_json_round_trip(&text)?;
         let reparsed = parse_json(&reencoded)?;
         law::round_trip_preserves(&reparsed, &parse_json(&text)?)?;

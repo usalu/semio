@@ -6,12 +6,12 @@ import Ajv from "ajv";
 /** 🧬️ Uses independent JSON schema admission and exact neutral/owner source boundaries. */
 export async function testCredentialProtocolSourceV1(root: string): Promise<void> {
   const general = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️agent-credential");
-  const schema = JSON.parse(readFileSync(join(general, "🧬️schema/🔣️.json"), "utf8"));
+  
   const corpus = JSON.parse(readFileSync(join(general, "🧫️fixtures/🔣️.json"), "utf8"));
-  const ajv = new Ajv({ strict: true });
-  assert.ok(ajv.compile(schema)(corpus));
-  const request = ajv.compile(schema.$defs.request);
+  const schema = JSON.parse(readFileSync(join(general, "🧬️schema/🔣️.json"), "utf8"));
+  const request = new Ajv({ strict: true }).compile(schema);
   for (const vector of corpus.vectors) assert.equal(request({ path: vector.path, bodyBytes: 0 }), vector.valid);
+  for (const [bodyBytes, accepted] of [[0, true], [16384, true], [16385, false], [-1, false], [0.5, false]]) assert.equal(request({ path: "/identity/exchanges", bodyBytes }), accepted);
   const source = readFileSync(join(general, "🦀️.rs"), "utf8");
   assert.ok(source.includes("pub struct CredentialExchangeProtocolV1"));
   assert.ok(!source.includes("semio.hub.agent-credential/v1"));

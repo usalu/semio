@@ -5,22 +5,42 @@
     {
       "id": "simple-description-path",
       "source": "Feature: Demo\n  See `a/b/c.svg` here.\n\n  Scenario: s\n    Given x\n",
-      "expected": [{ "start": 21, "end": 30, "value": "a/b/c.svg" }],
+      "expected": [
+        {
+          "start": 21,
+          "end": 30,
+          "value": "a/b/c.svg"
+        }
+      ],
       "oracle": true
     },
     {
       "id": "two-spans-one-line",
       "source": "Feature: Demo\n  Compare `x/y.svg` against `z/w.svg` today.\n\n  Scenario: s\n    Given x\n",
       "expected": [
-        { "start": 25, "end": 32, "value": "x/y.svg" },
-        { "start": 43, "end": 50, "value": "z/w.svg" }
+        {
+          "start": 25,
+          "end": 32,
+          "value": "x/y.svg"
+        },
+        {
+          "start": 43,
+          "end": 50,
+          "value": "z/w.svg"
+        }
       ],
       "oracle": true
     },
     {
       "id": "escaped-backtick-not-open",
       "source": "Feature: Demo\n  A literal \\` mark, then `a/b.svg` real.\n\n  Scenario: s\n    Given x\n",
-      "expected": [{ "start": 41, "end": 48, "value": "a/b.svg" }],
+      "expected": [
+        {
+          "start": 41,
+          "end": 48,
+          "value": "a/b.svg"
+        }
+      ],
       "oracle": false
     },
     {
@@ -38,7 +58,13 @@
     {
       "id": "blank-line-resets-open-run",
       "source": "Feature: Demo\n  Open ` never closes.\n\n  New paragraph has `e/f.svg` complete.\n\n  Scenario: s\n    Given x\n",
-      "expected": [{ "start": 59, "end": 66, "value": "e/f.svg" }],
+      "expected": [
+        {
+          "start": 59,
+          "end": 66,
+          "value": "e/f.svg"
+        }
+      ],
       "oracle": false
     },
     {
@@ -56,19 +82,37 @@
     {
       "id": "boundary-tag-excludes",
       "source": "Feature: Demo\n  Real prose `a/b.svg` here.\n\n  @tag\n  Scenario: s\n    Given `c/d.svg`\n",
-      "expected": [{ "start": 28, "end": 35, "value": "a/b.svg" }],
+      "expected": [
+        {
+          "start": 28,
+          "end": 35,
+          "value": "a/b.svg"
+        }
+      ],
       "oracle": false
     },
     {
       "id": "background-is-a-boundary",
       "source": "Feature: Demo\n  Real prose `a/b.svg` here.\n\n  Background:\n    Given `c/d.svg`\n",
-      "expected": [{ "start": 28, "end": 35, "value": "a/b.svg" }],
+      "expected": [
+        {
+          "start": 28,
+          "end": 35,
+          "value": "a/b.svg"
+        }
+      ],
       "oracle": false
     },
     {
       "id": "tags-before-feature-ignored",
       "source": "@tag1\n@tag2\nFeature: Demo\n  Real prose `a/b.svg` here.\n\n  Scenario: s\n    Given x\n",
-      "expected": [{ "start": 40, "end": 47, "value": "a/b.svg" }],
+      "expected": [
+        {
+          "start": 40,
+          "end": 47,
+          "value": "a/b.svg"
+        }
+      ],
       "oracle": false
     },
     {
@@ -80,28 +124,41 @@
   ],
   "corpus": [
     {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-basic/🥒️.feature",
-      "values": ["🧰️framework/🔨️modules/🖼️assets/👋️introduction/🔣️mouse.svg", "🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️logo_dark.svg"]
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧪️tests/🔰️mutate-svg-1-1-basic/🥒️.feature",
+      "values": [
+        "🧰️framework/🔨️modules/🖼️assets/👋️introduction/🔣️mouse.svg",
+        "🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️logo_dark.svg"
+      ]
     },
     {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1-tiny/🥒️.feature",
-      "values": ["🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️qr-code.svg"]
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/🧪️tests/🔬️mutate-svg-1-1-tiny/🥒️.feature",
+      "values": [
+        "🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️qr-code.svg"
+      ]
     },
     {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧪️tests/mutate-svg-1-1/🥒️.feature",
-      "values": ["🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️qr-code.svg"]
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧪️tests/🎨️mutate-svg-1-1/🥒️.feature",
+      "values": [
+        "🧰️framework/🔨️modules/🖼️assets/🪧️logos/🔣️qr-code.svg"
+      ]
     },
     {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️tests/🧱️mutate-ply-1-0/🥒️.feature",
-      "values": ["🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb"]
+      "values": [
+        "🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb"
+      ]
     },
     {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🧪️tests/mutate-obj-3-0/🥒️.feature",
-      "values": ["🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb"]
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧪️tests/📐️mutate-obj-3-0/🥒️.feature",
+      "values": [
+        "🧰️framework/🔨️modules/🖼️assets/🖼️images/🧊️pattern-sphere.glb"
+      ]
     },
     {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/mutate-semio-image/🥒️.feature",
-      "values": ["🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️color-animated-text.gif"]
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧪️tests/🖼️mutate-semio-image/🥒️.feature",
+      "values": [
+        "🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️color-animated-text.gif"
+      ]
     }
   ]
 }

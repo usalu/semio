@@ -8,7 +8,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
 /// 🧫️ Reads `(name, source)` for every vector of the shared vector file.
 fn load_vectors(ctx: &Context) -> Result<Vec<(String, String)>, String> {
-    let file = ctx.fixture_json("shared://📡️codec-vectors.json")?;
+    let file = ctx.input_json("shared://📡️codec-vectors.json")?;
     Ok(file.array("vectors").iter().chain(file.array("edgeVectors").iter()).map(|vector| (vector.str("name"), vector.str("source"))).collect())
 }
 

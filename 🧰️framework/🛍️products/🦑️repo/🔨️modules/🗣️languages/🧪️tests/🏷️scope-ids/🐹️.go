@@ -46,7 +46,7 @@ func scopeIDGrammar(_ *host.Context) (host.Outcome, error) {
 func scopesOfASourceFile(ctx *host.Context) (host.Outcome, error) {
 	projection := map[string]any{}
 	for _, name := range sources {
-		path, err := ctx.Fixture("shared://" + name)
+		path, err := ctx.Input("shared://" + name)
 		if err != nil {
 			return host.Outcome{}, err
 		}

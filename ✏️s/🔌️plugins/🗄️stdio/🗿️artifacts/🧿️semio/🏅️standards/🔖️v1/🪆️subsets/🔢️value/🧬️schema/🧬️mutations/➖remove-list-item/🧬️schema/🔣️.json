@@ -18,11 +18,38 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/SemioValuePathSegment"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Path",
+          "de": "Pfad"
+        },
+        "description": {
+          "en": "Map keys and list indices leading from the root to the list; empty for the root.",
+          "de": "Zuordnungsschlüssel und Listenindizes von der Wurzel bis zur Liste; leer für die Wurzel."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Item",
+          "de": "Element"
+        },
+        "description": {
+          "en": "Index of the list item, counted from 0.",
+          "de": "Index des Listenelements, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   },
   "$defs": {

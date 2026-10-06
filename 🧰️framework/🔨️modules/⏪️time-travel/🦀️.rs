@@ -9,11 +9,16 @@
 //!
 //! Driver contract (the host owning a [`TimeTravelSession`]):
 //! - [`TimeTravelEvent::Begin`] carries the target's applied `position` resolved at the session base.
-//! - Every store generation change is forwarded as [`TimeTravelEvent::BaseMoved`], in every stage
-//!   (also `Inactive`), with the re-resolved positions of every session target; an unchanged base is
-//!   `timeTravel.stale`.
-//! - Every event except `Begin`, `BaseMoved` and `Exit` carries the session `generation` the host
-//!   last observed; any other generation is `timeTravel.stale` (a silent no-op).
+//! - Every change of the store's content revision is forwarded as [`TimeTravelEvent::BaseMoved`], in every
+//!   stage (also `Inactive`), with the re-resolved positions of every session target; an unchanged base is
+//!   `timeTravel.stale`. The store's local generation is no part of the base.
+//! - [`TimeTravelEvent::BeginWithdrawn`] is a history row's Withdraw: `Begin` whose pending draft starts as
+//!   `Withdrawn`, legal exactly where `Begin` is; the host sends [`TimeTravelEvent::Withdraw`] instead for the
+//!   mutation already being edited.
+//! - [`TimeTravelEvent::Restore`] is a history row's Restore: it takes the accepted draft of one mutation back while
+//!   `Reviewing` and replays the rest; taking the only one back leaves time travel with zero trace.
+//! - Every event except `Begin`, `BeginWithdrawn`, `BaseMoved` and `Exit` carries the session `generation` the
+//!   host last observed; any other generation is `timeTravel.stale` (a silent no-op).
 //! - [`TimeTravelSession::review`] classifies `Reviewing`: nothing accepted is "no changes" (the
 //!   preview is the committed head); accepted drafts without a report (a cancelled or faulted replay)
 //!   "need a replay", which [`TimeTravelEvent::Rerun`] starts; otherwise the report blocks or allows
@@ -71,6 +76,12 @@ pub const TIME_TRAVEL_COMMIT_FAILED_CODE: &str = "timeTravel.commit-failed";
 /// 🧩️ Driver fault: the composed member store the session edits was closed mid-session.
 pub const TIME_TRAVEL_MEMBER_GONE_CODE: &str = "timeTravel.member-gone";
 
+/// 🪨️ Host refusal: the store's supersede law does not admit withdrawing the mutation.
+pub const TIME_TRAVEL_NOT_WITHDRAWABLE_CODE: &str = "timeTravel.not-withdrawable";
+
+/// 🥅️ Host refusal: a draft verb arrived while no draft editor is open on the session's mutation.
+pub const TIME_TRAVEL_EDITOR_CLOSED_CODE: &str = "timeTravel.editor-closed";
+
 /// 🔣️ A fault code is non-empty, whitespace-free and at most [`TIME_TRAVEL_TEXT_MAX_BYTES`].
 pub fn is_time_travel_fault_code(code: &str) -> bool {
     !code.is_empty() && code.len() <= TIME_TRAVEL_TEXT_MAX_BYTES && !code.chars().any(char::is_whitespace)
@@ -83,10 +94,11 @@ pub fn is_time_travel_alternative_name(name: &str) -> bool {
 //#endregion 🔖️Limits
 
 //#region 🔖️Identity
-/// 🧭️ The store state a session last observed: store generation and 32-byte content revision.
+/// 🧭️ The store state a session last observed: the 32-byte content revision of its history. The store's local
+/// generation is no part of it — a document port attaching or detaching moves that generation without changing an
+/// event, and never moves the base.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct TimeTravelBase {
-    pub store_generation: u64,
     pub content_revision: [u8; 32],
 }
 
@@ -241,10 +253,12 @@ pub enum TimeTravelChoice {
 #[derive(Clone, Debug, PartialEq)]
 pub enum TimeTravelEvent {
     Begin { target: TimeTravelTarget, original: InputReplacement },
+    BeginWithdrawn { target: TimeTravelTarget, original: InputReplacement },
     Draft { generation: u32, replacement: InputReplacement },
     Withdraw { generation: u32 },
     Accept { generation: u32 },
     Discard { generation: u32 },
+    Restore { generation: u32, target: MutationId },
     ReplayProgressed { generation: u32, done: u32, total: u32 },
     ReplayCompleted { generation: u32, report: ReplayReport },
     ReplayCancelled { generation: u32 },
@@ -265,10 +279,12 @@ impl TimeTravelEvent {
         use TimeTravelEventKey as K;
         match self {
             Self::Begin { .. } => K::Begin,
+            Self::BeginWithdrawn { .. } => K::BeginWithdrawn,
             Self::Draft { .. } => K::Draft,
             Self::Withdraw { .. } => K::Withdraw,
             Self::Accept { .. } => K::Accept,
             Self::Discard { .. } => K::Discard,
+            Self::Restore { .. } => K::Restore,
             Self::ReplayProgressed { .. } => K::ReplayProgressed,
             Self::ReplayCompleted { .. } => K::ReplayCompleted,
             Self::ReplayCancelled { .. } => K::ReplayCancelled,
@@ -285,14 +301,15 @@ impl TimeTravelEvent {
         }
     }
 
-    /// 🧿️ The session generation the event is addressed to; `None` for `Begin`, `BaseMoved`, `Exit`.
+    /// 🧿️ The session generation the event is addressed to; `None` for `Begin`, `BeginWithdrawn`, `BaseMoved`, `Exit`.
     pub fn generation(&self) -> Option<u32> {
         match self {
-            Self::Begin { .. } | Self::BaseMoved { .. } | Self::Exit => None,
+            Self::Begin { .. } | Self::BeginWithdrawn { .. } | Self::BaseMoved { .. } | Self::Exit => None,
             Self::Draft { generation, .. }
             | Self::Withdraw { generation }
             | Self::Accept { generation }
             | Self::Discard { generation }
+            | Self::Restore { generation, .. }
             | Self::ReplayProgressed { generation, .. }
             | Self::ReplayCompleted { generation, .. }
             | Self::ReplayCancelled { generation }
@@ -320,10 +337,12 @@ impl TimeTravelEvent {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum TimeTravelEventKey {
     Begin,
+    BeginWithdrawn,
     Draft,
     Withdraw,
     Accept,
     Discard,
+    Restore,
     ReplayProgressed,
     ReplayCompleted,
     ReplayCancelled,
@@ -340,12 +359,14 @@ pub enum TimeTravelEventKey {
 }
 
 impl TimeTravelEventKey {
-    pub const ALL: [Self; 18] = [
+    pub const ALL: [Self; 20] = [
         Self::Begin,
+        Self::BeginWithdrawn,
         Self::Draft,
         Self::Withdraw,
         Self::Accept,
         Self::Discard,
+        Self::Restore,
         Self::ReplayProgressed,
         Self::ReplayCompleted,
         Self::ReplayCancelled,
@@ -364,10 +385,12 @@ impl TimeTravelEventKey {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Begin => "begin",
+            Self::BeginWithdrawn => "beginWithdrawn",
             Self::Draft => "draft",
             Self::Withdraw => "withdraw",
             Self::Accept => "accept",
             Self::Discard => "discard",
+            Self::Restore => "restore",
             Self::ReplayProgressed => "replayProgressed",
             Self::ReplayCompleted => "replayCompleted",
             Self::ReplayCancelled => "replayCancelled",
@@ -526,19 +549,8 @@ impl TimeTravelSession {
             return Err(TimeTravelRefusal::Illegal);
         }
         match (self.stage, event) {
-            (S::Inactive, E::Begin { target, original }) => {
-                self.id = self.id.wrapping_add(1);
-                Ok(self.begin(target, original, S::Inactive))
-            }
-            (S::Reviewing, E::Begin { target, original }) => Ok(self.begin(target, original, S::Reviewing)),
-            (S::Editing, E::Begin { target, original }) => {
-                let pending = self.pending.as_ref().ok_or(TimeTravelRefusal::Illegal)?;
-                if !self.unchanged(pending) {
-                    return Err(TimeTravelRefusal::Blocked);
-                }
-                let return_stage = pending.return_stage;
-                Ok(self.begin(target, original, return_stage))
-            }
+            (_, E::Begin { target, original }) => self.open(target, original, None),
+            (_, E::BeginWithdrawn { target, original }) => self.open(target, original, Some(InputReplacement::Withdrawn)),
             (S::Editing, E::Draft { replacement, .. }) => self.redraft(replacement),
             (S::Editing, E::Withdraw { .. }) => self.redraft(InputReplacement::Withdrawn),
             (S::Editing, E::Accept { .. }) => {
@@ -549,6 +561,13 @@ impl TimeTravelSession {
                 let pending = self.pending.take().ok_or(TimeTravelRefusal::Illegal)?;
                 Ok(self.resume(pending.return_stage))
             }
+            (_, E::Restore { target, .. }) => match self.restore_refusal(&target) {
+                Some(refusal) => Err(refusal),
+                None => {
+                    self.accepted.retain(|draft| draft.target.mutation != target);
+                    Ok(if self.accepted.is_empty() { self.close(Vec::new()) } else { self.settle() })
+                }
+            },
             (S::Replaying, E::ReplayProgressed { done, total, .. }) => {
                 self.progress = Some(TimeTravelProgress { done, total });
                 Ok(Vec::new())
@@ -657,9 +676,10 @@ impl TimeTravelSession {
         }
     }
 
-    /// ✏️ Why `Begin` would be refused, `None` when it would open (or switch) the draft editor: it is legal from `Inactive`
-    /// and `Reviewing`, from `Editing` only while the pending draft still equals its start (`Blocked` otherwise), and
-    /// `Illegal` while replaying, choosing or finalizing — what a host disables an Edit control by.
+    /// ✏️ Why `Begin` (and `BeginWithdrawn`) would be refused, `None` when it would open (or switch) the draft editor: it is
+    /// legal from `Inactive` and `Reviewing`, from `Editing` only while the pending draft still equals its start (`Blocked`
+    /// otherwise), and `Illegal` while replaying, choosing or finalizing — what a host disables a row's Edit and Withdraw
+    /// controls by.
     pub fn begin_refusal(&self) -> Option<TimeTravelRefusal> {
         match (self.stage, self.pending.as_ref()) {
             (TimeTravelStage::Inactive | TimeTravelStage::Reviewing, _) => None,
@@ -667,6 +687,13 @@ impl TimeTravelSession {
             (TimeTravelStage::Editing, Some(_)) => Some(TimeTravelRefusal::Blocked),
             _ => Some(TimeTravelRefusal::Illegal),
         }
+    }
+
+    /// 🔙️ Why `Restore` of `mutation` would be refused, `None` when it would take the mutation's accepted draft back: it
+    /// needs `Reviewing` and an accepted draft of that mutation (`Illegal` otherwise) — what a host disables a row's
+    /// Restore control by.
+    pub fn restore_refusal(&self, mutation: &MutationId) -> Option<TimeTravelRefusal> {
+        (self.stage != TimeTravelStage::Reviewing || self.accepted_draft(mutation).is_none()).then_some(TimeTravelRefusal::Illegal)
     }
 
     /// 🔁️ Why `Rerun` would be refused, `None` when it would start a replay: it needs `Reviewing`,
@@ -732,13 +759,23 @@ impl TimeTravelSession {
         None
     }
 
-    fn begin(&mut self, target: TimeTravelTarget, original: InputReplacement, return_stage: TimeTravelStage) -> Vec<TimeTravelEffect> {
-        let replacement = self.accepted_draft(&target.mutation).map_or_else(|| original.clone(), |draft| draft.replacement.clone());
+    /// 🔦️ Opens (or retargets) the draft editor on `target` where [`Self::begin_refusal`] admits it: the pending draft starts
+    /// as `draft`, else as the target's accepted draft, else as `original`, and returns to the stage the session was opened
+    /// from; a session opened from `Inactive` is the next one.
+    fn open(&mut self, target: TimeTravelTarget, original: InputReplacement, draft: Option<InputReplacement>) -> Result<Vec<TimeTravelEffect>, TimeTravelRefusal> {
+        if let Some(refusal) = self.begin_refusal() {
+            return Err(refusal);
+        }
+        let return_stage = self.pending.as_ref().map_or(self.stage, |pending| pending.return_stage);
+        if self.stage == TimeTravelStage::Inactive {
+            self.id = self.id.wrapping_add(1);
+        }
+        let replacement = draft.or_else(|| self.accepted_draft(&target.mutation).map(|accepted| accepted.replacement.clone())).unwrap_or_else(|| original.clone());
         let effect = TimeTravelEffect::ShowPreview { target: target.mutation.clone(), replacement: replacement.clone() };
         self.stage = TimeTravelStage::Editing;
         self.generation = self.generation.wrapping_add(1);
         self.pending = Some(TimeTravelPending { target, original, replacement, return_stage });
-        vec![effect]
+        Ok(vec![effect])
     }
 
     fn redraft(&mut self, replacement: InputReplacement) -> Result<Vec<TimeTravelEffect>, TimeTravelRefusal> {
@@ -813,7 +850,7 @@ impl TimeTravelSession {
 
 //#region 🔖️Labels
 /// 🗂️ Every `timeTravel.*` code a history-edit verb or driver answers, with the label a host shows for it.
-pub const TIME_TRAVEL_CODE_LABELS: [(&str, TimeTravelLabel); 18] = [
+pub const TIME_TRAVEL_CODE_LABELS: [(&str, TimeTravelLabel); 20] = [
     (TIME_TRAVEL_FROZEN_CODE, TimeTravelLabel::Frozen),
     ("timeTravel.illegal", TimeTravelLabel::RefusalIllegal),
     ("timeTravel.stale", TimeTravelLabel::RefusalStale),
@@ -832,6 +869,8 @@ pub const TIME_TRAVEL_CODE_LABELS: [(&str, TimeTravelLabel); 18] = [
     (TIME_TRAVEL_REPLAY_FAULTED_CODE, TimeTravelLabel::ReplayFaulted),
     (TIME_TRAVEL_COMMIT_FAILED_CODE, TimeTravelLabel::CommitFailed),
     (TIME_TRAVEL_MEMBER_GONE_CODE, TimeTravelLabel::RefusalMemberGone),
+    (TIME_TRAVEL_NOT_WITHDRAWABLE_CODE, TimeTravelLabel::RefusalNotWithdrawable),
+    (TIME_TRAVEL_EDITOR_CLOSED_CODE, TimeTravelLabel::RefusalEditorClosed),
 ];
 
 /// 💬️ Framework-owned EN/DE text of history editing, no default locale.
@@ -874,10 +913,13 @@ pub enum TimeTravelLabel {
     OutcomeIntroduced,
     RefusalMemberGone,
     MemberEdited,
+    RefusalNotWithdrawable,
+    RefusalEditorClosed,
+    RefusalReadOnly,
 }
 
 impl TimeTravelLabel {
-    pub const ALL: [Self; 37] = [
+    pub const ALL: [Self; 40] = [
         Self::StageInactive,
         Self::StageEditing,
         Self::StageReplaying,
@@ -915,6 +957,9 @@ impl TimeTravelLabel {
         Self::OutcomeIntroduced,
         Self::RefusalMemberGone,
         Self::MemberEdited,
+        Self::RefusalNotWithdrawable,
+        Self::RefusalEditorClosed,
+        Self::RefusalReadOnly,
     ];
 
     /// 🔑️ `(key, en, de)` row of this label.
@@ -957,6 +1002,9 @@ impl TimeTravelLabel {
             Self::OutcomeIntroduced => ("outcomeIntroduced", "New since this edit", "Neu durch diese Bearbeitung"),
             Self::RefusalMemberGone => ("refusalMemberGone", "The part this history edit targets was closed", "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"),
             Self::MemberEdited => ("memberEdited", "History of a composed part edited", "Verlauf eines eingebetteten Teils bearbeitet"),
+            Self::RefusalNotWithdrawable => ("refusalNotWithdrawable", "This mutation cannot be withdrawn here", "Diese Mutation kann hier nicht zurückgezogen werden"),
+            Self::RefusalEditorClosed => ("refusalEditorClosed", "The draft editor is closed: open the mutation again", "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen"),
+            Self::RefusalReadOnly => ("refusalReadOnly", "History cannot be edited in a read-only view", "Der Verlauf kann in einer schreibgeschützten Ansicht nicht bearbeitet werden"),
         }
     }
 

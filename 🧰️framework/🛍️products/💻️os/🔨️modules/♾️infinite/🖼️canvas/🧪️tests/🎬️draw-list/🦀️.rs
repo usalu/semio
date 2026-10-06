@@ -76,7 +76,7 @@ fn paint_fixture_scene(fixture: &Value) -> Scene {
 }
 
 #[test]
-fn the_node_graph_fixture_encodes_to_the_shared_draw_list() {
+fn the_node_graph_snapshot_encodes_to_the_shared_draw_list() {
     let fixture: Value = serde_json::from_str(DRAW_LIST_FIXTURE).expect("draw-list fixture");
     let expected: Value = serde_json::from_str(DRAW_LIST_EXPECTATION).expect("draw-list expectation");
     let encoded: Value = serde_json::from_str(&scene_draw_list_json(&paint_fixture_scene(&fixture), DrawListOptions::default())).expect("encoded draw list");

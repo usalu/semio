@@ -101,9 +101,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-directory-page-applied",
       "class": "handcrafted",
       "target": {
@@ -168,7 +167,6 @@
       "notes": "The origin page of a signed-in human's directory lists the one space it creates, joined with its author's member row and the user it names."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-directory-page-no-op",
       "class": "handcrafted",
       "target": {
@@ -233,7 +231,6 @@
       "notes": "Replaying the page whose frontier the projection already holds folds nothing and answers the same receipt."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-directory-page-rejected",
       "class": "handcrafted",
       "target": {

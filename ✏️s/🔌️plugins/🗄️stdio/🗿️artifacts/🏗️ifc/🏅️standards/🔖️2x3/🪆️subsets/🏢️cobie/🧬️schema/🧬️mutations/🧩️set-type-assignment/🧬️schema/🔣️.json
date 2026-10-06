@@ -21,6 +21,7 @@
           "en": "STEP instance id of the IfcRelDefinesByType.",
           "de": "STEP-Instanz-ID der IfcRelDefinesByType."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10

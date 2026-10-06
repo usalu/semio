@@ -4,7 +4,7 @@ use crate::BmpSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationApplyResult, MutationDiff};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_os_kernel::DslDiff)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp.diff")]
 pub struct BmpDiff {
@@ -16,7 +16,7 @@ pub struct BmpDiff {
 impl MutationDiff<BmpSnapshot> for BmpDiff {
     fn apply(&self, base: &BmpSnapshot) -> MutationApplyResult<BmpSnapshot> {
         let next = BmpSnapshot { schema: base.schema.clone(), bytes: self.bytes.clone().unwrap_or_else(|| base.bytes.clone()) };
-        crate::io::bmp_layout(&next).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-bytes", message).at(["bytes"]))?;
+        crate::standards::v_v3::subsets::any::io::bmp_layout(&next).map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-bytes", message).at(["bytes"]))?;
         Ok(next)
     }
 
@@ -55,5 +55,5 @@ pub(crate) fn demo_snap_a() -> BmpSnapshot {
 
 #[cfg(test)]
 pub(crate) fn demo_diff_cases() -> Vec<BmpDiff> {
-    vec![BmpDiff::default(), BmpDiff { bytes: Some(crate::io::empty_bmp_bytes()) }]
+    vec![BmpDiff::default(), BmpDiff { bytes: Some(crate::standards::v_v3::subsets::any::io::empty_bmp_bytes()) }]
 }

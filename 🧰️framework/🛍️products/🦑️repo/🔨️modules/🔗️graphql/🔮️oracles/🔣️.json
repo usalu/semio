@@ -89,5 +89,5 @@
   "toleranceProfiles": [],
   "mutationCatalogs": [],
   "mutationManifests": [],
-  "fixtureManifests": []
+  "testEvidence": []
 }

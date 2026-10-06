@@ -1,5 +1,6 @@
 //! 🖼️ Affine sampling with premultiplied bilinear and per-cell area filtering.
-use crate::{RasterImage,editing::{validate_extent,validate_image},coverage::{CoverageJob,CoverageInput,CoverageRule,CoverageMask}};
+use crate::{RasterImage,editing::{validate_extent,validate_image},coverage::{CoverageJob,CoverageInput,CoverageRule,CoverageMask,CoverageRetirement}};
+use semio_framework_2d::retirement::{WorkRetirementCounter,WorkRetirementProgress};
 use std::sync::Arc;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum AffineSampling{Nearest,Bilinear,Area,Auto}
@@ -19,6 +20,7 @@ pub struct AffineImageJob{
  source:Option<Arc<RasterImage>>,output:RasterImage,coverage:Option<CoverageJob>,mask:Option<CoverageMask>,inverse:Option<[f64;6]>,determinant:f64,filter:AffineSampling,
  phase:&'static str,at:usize,work:u64,cancelled:bool,failed:Option<AffineImageError>,sampled:usize,sample_total:usize,active:bool,x:usize,y:usize,left:usize,right:usize,bottom:usize,
  quad:[[f64;2];4],scratch_a:[[f64;2];12],scratch_b:[[f64;2];12],sums:[f64;4],
+ coverage_retirement:Option<CoverageRetirement>,
 }
 impl AffineImageJob{
  pub fn new(input:AffineImageInput)->Result<Self,AffineImageError>{
@@ -28,7 +30,7 @@ impl AffineImageJob{
   let [a,b,c,d,e,f]=m;let det=a*d-b*c;let mut filter=input.sampling;
   let inverse=if det!=0.0{let inverse=[d/det,-b/det,-c/det,a/det,(c*f-d*e)/det,(b*e-a*f)/det];if !inverse.into_iter().all(f64::is_finite){return Err(invalid("Affine inverse exceeds numeric limits"));}if filter==AffineSampling::Auto{let u=inverse[0]*inverse[0]+inverse[1]*inverse[1];let v=inverse[2]*inverse[2]+inverse[3]*inverse[3];let cross=inverse[0]*inverse[2]+inverse[1]*inverse[3];filter=if (u+v+(u-v).hypot(2.0*cross))/2.0>1.0+1e-12{AffineSampling::Area}else{AffineSampling::Bilinear};}Some(inverse)}else{None};
   let coverage=if inverse.is_some(){let w=f64::from(input.source.width);let h=f64::from(input.source.height);Some(CoverageJob::new(CoverageInput{width:input.width,height:input.height,transform:m,rule:CoverageRule::NonZero,contours:vec![vec![[0.0,0.0],[w,0.0],[w,h],[0.0,h]]]}).map_err(invalid)?)}else{None};
-  Ok(Self{source:Some(input.source),output:RasterImage{width:input.width,height:input.height,pixels:vec![0;count*4]},coverage,mask:None,inverse,determinant:det.abs(),filter,phase:if inverse.is_some(){"coverage"}else{"sampling"},at:0,work:0,cancelled:false,failed:None,sampled:0,sample_total:0,active:false,x:0,y:0,left:0,right:0,bottom:0,quad:[[0.0;2];4],scratch_a:[[0.0;2];12],scratch_b:[[0.0;2];12],sums:[0.0;4]})
+  Ok(Self{source:Some(input.source),output:RasterImage{width:input.width,height:input.height,pixels:vec![0;count*4]},coverage,coverage_retirement:None,mask:None,inverse,determinant:det.abs(),filter,phase:if inverse.is_some(){"coverage"}else{"sampling"},at:0,work:0,cancelled:false,failed:None,sampled:0,sample_total:0,active:false,x:0,y:0,left:0,right:0,bottom:0,quad:[[0.0;2];4],scratch_a:[[0.0;2];12],scratch_b:[[0.0;2];12],sums:[0.0;4]})
  }
  fn point(&self,x:f64,y:f64)->Result<[f64;2],AffineImageError>{let m=self.inverse.unwrap();let p=[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];if !p.into_iter().all(f64::is_finite){return Err(invalid("Sample footprint exceeds numeric limits"));}Ok(p)}
  fn write(&mut self,alpha:f64){let at=self.at*4;let a=byte(alpha);if a>0&&self.sums[3]>0.0{for c in 0..3{self.output.pixels[at+c]=byte(self.sums[c]/self.sums[3]);}self.output.pixels[at+3]=a;}self.at+=1;self.active=false;if self.at==self.output.width as usize*self.output.height as usize{self.phase="complete";}}
@@ -44,7 +46,8 @@ impl AffineImageJob{
   let mut area=0.0;for i in 1..count.saturating_sub(1){let a=self.scratch_a[0];let p=self.scratch_a[i];let q=self.scratch_a[i+1];area+=(p[0]-a[0])*(q[1]-a[1])-(p[1]-a[1])*(q[0]-a[0]);}area.abs()/2.0
  }
  fn step(&mut self)->Result<(),AffineImageError>{
-  if self.phase=="coverage"{if self.coverage.as_mut().unwrap().advance(1).map_err(invalid)?.done{self.mask=Some(self.coverage.take().unwrap().into_result().map_err(invalid)?);self.phase="sampling";}return Ok(());}
+  if self.phase=="coverage"{if self.coverage.as_mut().unwrap().advance(1).map_err(invalid)?.done{let(retired,mask)=self.coverage.take().unwrap().into_retirement();self.coverage_retirement=Some(retired);self.mask=mask;self.phase="coverageCleanup";}return Ok(());}
+  if self.phase=="coverageCleanup"{if let Some(owner)=&mut self.coverage_retirement{if !owner.terminal_is_empty(){owner.advance(1).map_err(invalid)?;}else{self.coverage_retirement=None;}}else{self.phase="sampling";}return Ok(());}
   if self.active{let area=self.area(self.x,self.y);self.accumulate(self.x,self.y,area);self.sampled+=1;self.x+=1;if self.x>=self.right{self.x=self.left;self.y+=1;}if self.y>=self.bottom{self.write(self.sums[3]*self.determinant);}return Ok(());}
   let coverage=self.mask.as_ref().map(|m|m.coverage[self.at]).unwrap_or(0);self.sums=[0.0;4];if self.inverse.is_none()||coverage==0{self.write(0.0);return Ok(());}
   let source=self.source.as_ref().unwrap();let sw=source.width as usize;let sh=source.height as usize;let x=(self.at%self.output.width as usize)as f64;let y=(self.at/self.output.width as usize)as f64;
@@ -57,15 +60,42 @@ impl AffineImageJob{
   self.write(self.sums[3]*f64::from(coverage)/255.0);Ok(())
  }
  fn check(&self)->Result<(),AffineImageError>{if self.cancelled{return Err(AffineImageError::Cancelled);}if let Some(e)=&self.failed{return Err(e.clone());}Ok(())}
- fn release(&mut self){if let Some(c)=&mut self.coverage{c.cancel();}self.coverage=None;self.mask=None;self.source=None;self.output.pixels=Vec::new();}
  pub fn advance(&mut self,budget:usize)->Result<AffineImageProgress,AffineImageError>{
-  if budget==0{return Err(invalid("Affine sample work grant must be a positive integer"));}self.check()?;
-  for _ in 0..budget{if self.phase=="complete"{break;}if let Err(e)=self.step(){self.failed=Some(e.clone());self.release();return Err(e);}self.work+=1;}
+  if budget==0||budget as u64>9_007_199_254_740_991{return Err(invalid("Affine sample work grant must be a positive integer"));}self.check()?;
+  for _ in 0..budget{if self.phase=="complete"{break;}if let Err(e)=self.step(){self.failed=Some(e.clone());return Err(e);}self.work+=1;}
   Ok(AffineImageProgress{phase:self.phase,completed:self.at,total:self.output.width as usize*self.output.height as usize,sampled:self.sampled,sample_total:self.sample_total,work:self.work,done:self.phase=="complete"})
  }
- pub fn cancel(&mut self){self.cancelled=true;self.release();}
+ pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&self)->Result<&RasterImage,AffineImageError>{self.check()?;if self.phase!="complete"{return Err(AffineImageError::Incomplete);}Ok(&self.output)}
- pub fn into_result(self)->Result<RasterImage,AffineImageError>{self.check()?;if self.phase!="complete"{return Err(AffineImageError::Incomplete);}Ok(self.output)}
+ /// 🧹️ Moves complete pixels and schedules the genuine coverage and sampling owners.
+ pub fn into_retirement(mut self)->(AffineImageRetirement,Option<RasterImage>){
+  let output=if !self.cancelled&&self.failed.is_none()&&self.phase=="complete"{Some(RasterImage{width:self.output.width,height:self.output.height,pixels:std::mem::take(&mut self.output.pixels)})}else{None};self.cancelled=true;
+  if let Some(mut child)=self.coverage.take(){child.cancel();self.coverage_retirement=Some(child.into_retirement().0);}
+  (AffineImageRetirement{job:Some(self),slot:0,counter:WorkRetirementCounter::default()},output)
+ }
+}
+/// 🧺️ Owns the actual sampling job until its borrowed children and private buffers are empty.
+pub struct AffineImageRetirement{job:Option<AffineImageJob>,slot:u8,counter:WorkRetirementCounter}
+impl AffineImageRetirement{
+ pub fn terminal_is_empty(&self)->bool{self.job.is_none()}
+ fn step(&mut self){
+  let job=self.job.as_mut().unwrap();
+  match self.slot{
+   0=>if let Some(owner)=&mut job.coverage_retirement{if !owner.terminal_is_empty(){owner.advance(1).expect("valid coverage retirement unit");return;}job.coverage_retirement=None;},
+   1=>job.mask=None,
+   2=>job.source=None,
+   3=>job.output.pixels=Vec::new(),
+   4=>job.inverse=None,
+   5=>job.quad=[[0.0;2];4],
+   6=>job.scratch_a=[[0.0;2];12],
+   7=>job.scratch_b=[[0.0;2];12],
+   8=>job.sums=[0.0;4],
+   9=>{job.failed=None;job.active=false;},
+   _=>unreachable!(),
+  }
+  self.slot+=1;if self.slot==10{self.job=None;}
+ }
+ pub fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,AffineImageError>{let mut counter=self.counter;let p=counter.advance(grant,||{self.step();self.terminal_is_empty()});self.counter=counter;p.map_err(invalid)}
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

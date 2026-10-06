@@ -1,4 +1,5 @@
-import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🔺️ Sparse Terrain changes preserve the complete replacement artifact. */
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import { parseGisTerrainArtifact,parseImportedMap,type ImportedMap, type GisTerrainArtifact } from "../🟦️.ts";
@@ -25,7 +26,7 @@ export function parseGisTerrainDiff(value: unknown, at = "$"): GisTerrainDiff {
   if(row.importedMap!=null){const change=parseSchemaRecord(row.importedMap,["value"]);importedMap=change.value===undefined?{}:{value:parseImportedMap(change.value)};}
   return {
     artifact: row.artifact == null ? null : parseGisTerrainArtifact(row.artifact, `${at}.artifact`),
-    exaggeration: row.exaggeration == null ? null : parseBinary64Transport(row.exaggeration),
+    exaggeration: row.exaggeration == null ? null : parseBinary64(row.exaggeration),
     importedMap,
   };
 }

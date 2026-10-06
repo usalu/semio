@@ -22,6 +22,7 @@ pub const ARCHITECT_BODY_REGISTER: &str = "architect.register";
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: ARCHITECT_WINDOW_REGISTER.into(),
         label: LocalizedLabel::native("Register", "Register"),
         body_key: ARCHITECT_BODY_REGISTER.into(),

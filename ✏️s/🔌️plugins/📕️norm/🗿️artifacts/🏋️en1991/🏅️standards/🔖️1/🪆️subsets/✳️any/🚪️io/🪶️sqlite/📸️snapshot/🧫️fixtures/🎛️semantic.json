@@ -1,0 +1,25 @@
+{
+  "schemaBytes": 10368,
+  "tableWidths": {
+    "en1991_accidental_case": 4,
+    "en1991_document": 152,
+    "en1991_explosion": 12,
+    "en1991_floor": 17,
+    "en1991_impact": 12,
+    "en1991_roof": 25,
+    "en1991_self_weight": 11,
+    "en1991_wind_face": 29
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 17,
+      "valueBytes": 2930
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 1,
+      "valueBytes": 1140
+    }
+  ]
+}

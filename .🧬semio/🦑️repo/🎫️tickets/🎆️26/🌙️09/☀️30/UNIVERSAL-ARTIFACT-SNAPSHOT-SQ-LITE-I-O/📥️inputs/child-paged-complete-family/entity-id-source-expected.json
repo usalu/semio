@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "independentOracle": "@noble/hashes/blake3.js",
+  "children": [
+    {
+      "order": [],
+      "id": "child-14f466bcd529fdef"
+    },
+    {
+      "order": [
+        0
+      ],
+      "id": "child-0e29c84986bf5d1a"
+    },
+    {
+      "order": [
+        0,
+        1
+      ],
+      "id": "child-78ad1c8db194cb02"
+    },
+    {
+      "order": [
+        1,
+        0
+      ],
+      "id": "child-09d631ba33d8abf0"
+    }
+  ],
+  "invocations": [
+    {
+      "order": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "sorted": [
+        2,
+        3,
+        0,
+        1
+      ],
+      "id": "invocation-b91ae154cd5ba5b7",
+      "preimageBytes": 32912
+    },
+    {
+      "order": [
+        1,
+        0,
+        2,
+        3
+      ],
+      "sorted": [
+        2,
+        3,
+        0,
+        1
+      ],
+      "id": "invocation-b91ae154cd5ba5b7",
+      "preimageBytes": 32912
+    },
+    {
+      "order": [
+        1,
+        3,
+        0,
+        2
+      ],
+      "sorted": [
+        3,
+        2,
+        0,
+        1
+      ],
+      "id": "invocation-1c5ee2b8fe755cf7",
+      "preimageBytes": 32912
+    },
+    {
+      "order": [
+        3,
+        2,
+        1,
+        0
+      ],
+      "sorted": [
+        3,
+        2,
+        0,
+        1
+      ],
+      "id": "invocation-1c5ee2b8fe755cf7",
+      "preimageBytes": 32912
+    }
+  ]
+}

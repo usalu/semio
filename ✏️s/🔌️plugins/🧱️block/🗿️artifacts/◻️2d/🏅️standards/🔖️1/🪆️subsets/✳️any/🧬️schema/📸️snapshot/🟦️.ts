@@ -1,8 +1,8 @@
 /** ◻️ Complete Block2d persisted fields with one canonical shared Block authority. */
-import * as shared from "../../../../../../🧬️schema/🧱️shared/🟦️.ts";
-import * as p from "../../../../../../🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-export * from "../../../../../../🧬️schema/🧱️shared/🟦️.ts";
+import * as shared from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
+import * as p from "../../../../../../../../🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+export * from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
 export interface Block2dPresentation{shape:string|null;radius:Binary64|null;width:Binary64|null;height:Binary64|null;color:string|null;iconKind:string|null}
 export interface Block2dHandleKind{id:string;name:string;label:string;color:string;defaultWireKind:string}
 export interface Block2dHandleTemplate{id:string;handleKind:string;angle:Binary64;radius:Binary64}
@@ -26,5 +26,3 @@ export function parseBlock2dHandleKind(v:unknown):Block2dHandleKind{const r=p.ro
 export function parseBlock2dHandleTemplate(v:unknown):Block2dHandleTemplate{const r=p.row(v);return{id:p.text(r.id),handleKind:p.text(r.handleKind),angle:p.word(r.angle),radius:p.word(r.radius)}}
 /** 📸️ Admit the complete canonical persisted parent without file defaults. */
 export function parseBlock2dSnapshot(v:unknown):Block2dSnapshot{const r=p.row(v);return{schema:p.text(r.schema),nodeKind:shared.parseBlockKindIdentity(r.nodeKind),presentation:parseBlock2dPresentation(r.presentation),handleKinds:p.list(r.handleKinds,parseBlock2dHandleKind),handles:p.list(r.handles,parseBlock2dHandleTemplate),compatibility:p.list(r.compatibility,shared.parseBlockCompatibilityRule),attributes:p.list(r.attributes,shared.parseBlockAttribute),authors:p.list(r.authors,shared.parseBlockAuthor),camera2d:shared.parseBlockCamera2d(r.camera2d),meta:shared.parseBlockMeta(r.meta)}}
-
-export {block2dSnapshotToSqliteDatabase,block2dSnapshotFromSqliteDatabase} from "./🪶️sqlite/🟦️.ts";

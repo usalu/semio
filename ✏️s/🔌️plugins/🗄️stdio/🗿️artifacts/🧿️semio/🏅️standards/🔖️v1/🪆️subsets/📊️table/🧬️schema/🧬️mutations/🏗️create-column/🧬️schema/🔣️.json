@@ -10,7 +10,21 @@
   ],
   "properties": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Column name",
+          "de": "Spaltenname"
+        },
+        "description": {
+          "en": "Name the new column carries.",
+          "de": "Name, den die neue Spalte trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "kind": {
       "$ref": "#/$defs/SemioTableCellKind",
@@ -52,7 +66,22 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the columns at which it is inserted, counted from 0; cleared, the column is appended.",
+          "de": "Position unter den Spalten, an der eingefügt wird, ab 0 gezählt; geleert wird die Spalte angehängt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 30
+      }
     }
   },
   "$defs": {

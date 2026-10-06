@@ -1,7 +1,7 @@
 //! 🩹️ Fem2d play app command — `patch-element`: one-field edit of an element (`kind`, `start`, `end`, `materialId`, `sectionId`) → `ReplaceElement`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_element;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::{element_id, FemElement};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

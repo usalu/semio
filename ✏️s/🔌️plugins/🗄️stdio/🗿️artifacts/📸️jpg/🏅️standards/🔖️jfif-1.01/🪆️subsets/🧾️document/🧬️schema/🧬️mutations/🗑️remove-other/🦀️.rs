@@ -13,10 +13,6 @@ pub struct RemoveOtherSegmentMutation {
 //#endregion Payload
 
 //#region Facets
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion Facets
 
 //#region Semantics
@@ -55,10 +51,7 @@ pub fn contribute(base: &JpgSnapshot, index: usize) -> JpgDiff {
 }
 //#endregion Semantics
 
-#[cfg(test)]
-pub(crate) fn test_case() -> JpgMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-other/🎯️direct/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-other-segment payload")
-}
+
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

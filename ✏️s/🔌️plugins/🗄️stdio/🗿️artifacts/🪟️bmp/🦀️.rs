@@ -94,7 +94,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_v3::engine::io_registry as v_v3;
+    use crate::subsets::any::io::io_registry as v_v3;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -128,9 +128,7 @@ pub mod standards {
         // `engine::register()` plugin-root calls) and `subsets::any::schema` (document
         // helpers); this stays an inline barrel so every existing
         // `standards::v_v3::engine::*`/root `engine::*` path still resolves.
-        pub mod engine {
-            pub use super::subsets::any::io::*;
-        }
+
         #[path = "."]
         pub mod subsets {
             #[path = "."]
@@ -145,20 +143,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod dimensions {
                             #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
@@ -171,18 +161,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod top_level;
                         pub use top_level::*;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️paint-indexed-region/🦀️.rs"]
                         pub mod paint_indexed_region;
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️paint-direct-region/🦀️.rs"]
@@ -191,8 +175,6 @@ pub mod standards {
                         pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[cfg(test)]
                     #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧬️mutation-regressions/🦀️.rs"]
@@ -260,9 +242,7 @@ pub mod schema {
 pub mod engine {
     pub use super::standards::v_v3::engine::*;
 }
-pub mod io {
-    pub use super::standards::v_v3::subsets::any::io::*;
-}
+
 
 #[path = "."]
 pub mod examples {
@@ -351,3 +331,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v_v3::subsets::any::io::{BmpBuilderConstruction, BmpParts, BmpAnalyzerAnalysis, BmpBuilderFacets, BmpBuilder, BmpAnalyzer, BmpComposer};

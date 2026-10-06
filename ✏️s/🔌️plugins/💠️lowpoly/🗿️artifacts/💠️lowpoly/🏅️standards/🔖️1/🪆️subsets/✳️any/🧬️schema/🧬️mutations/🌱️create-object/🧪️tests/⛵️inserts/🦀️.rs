@@ -20,13 +20,12 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 /// 🔓️ Decodes committed fixture JSON through the artifact's own value codec — these types carry
 /// `ToValue`/`FromValue`, never `serde`, because `LowpolyObject.mesh` is an `ArtifactChild` handle.
 fn from_json<T: semio_framework_value::FromValue>(text: &str) -> T {
-    let parsed: serde_json::Value = serde_json::from_str(text).expect("fixture json parses");
-    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(parsed)).expect("fixture json decodes")
+    crate::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).expect("fixture json decodes")
 }
 
 /// 🔒️ Re-encodes through the same codec so canonicality assertions compare like with like.
 fn to_json<T: semio_framework_value::ToValue>(value: &T) -> serde_json::Value {
-    semio_framework_value::ToValue::to_value(value).into()
+    serde_json::from_str(&crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(value)).expect("physical fixture JSON")
 }
 
 fn before() -> LowpolySnapshot {

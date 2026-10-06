@@ -20,7 +20,7 @@ mod subject {
         if root.exists() {
             std::fs::remove_dir_all(&root).map_err(|error| error.to_string())?;
         }
-        for entry in ctx.fixture_json(TREE)?.array("entries") {
+        for entry in ctx.input_json(TREE)?.array("entries") {
             let path = root.join(entry.str("path"));
             if let Some(parent) = path.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| error.to_string())?;
@@ -33,7 +33,7 @@ mod subject {
     pub fn every_vector_gets_the_same_three_verdicts(ctx: &Context) -> Result<Outcome, String> {
         let codebase = Codebase::new(materialize(ctx)?);
         let verdicts = ctx
-            .fixture_json(VECTORS)?
+            .snapshot_json(VECTORS)?
             .array("vectors")
             .into_iter()
             .map(|vector| {

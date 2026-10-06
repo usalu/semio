@@ -1,0 +1,53 @@
+{
+  "routes": [
+    {
+      "argv": [
+        "test-native"
+      ],
+      "extra": [
+        "--lib",
+        "--features",
+        "sync,ureq"
+      ]
+    }
+  ],
+  "rootWorkspace": {
+    "before": "root",
+    "after": "held"
+  },
+  "scope": "whole",
+  "sourceProjection": {
+    "changes": [
+      {
+        "path": "unit.rs",
+        "before": "old",
+        "after": "new"
+      }
+    ]
+  },
+  "owningExecutor": {
+    "source": "held helper"
+  },
+  "jsonCodec": {
+    "source": "held codec"
+  },
+  "snapshotAssets": [
+    {
+      "path": "unit.rs",
+      "source": "discarded full body",
+      "sha256": "abc",
+      "byteCount": 4
+    }
+  ],
+  "actualRetainedSources": [
+    {
+      "path": "unit.rs",
+      "source": "discarded full predecessor",
+      "sha256": "def",
+      "byteCount": 3
+    }
+  ],
+  "unselected": {
+    "source": "discarded"
+  }
+}

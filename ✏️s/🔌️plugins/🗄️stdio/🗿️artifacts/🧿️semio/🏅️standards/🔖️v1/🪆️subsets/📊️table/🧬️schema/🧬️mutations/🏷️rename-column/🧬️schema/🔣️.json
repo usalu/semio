@@ -10,10 +10,41 @@
   ],
   "properties": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Column",
+          "de": "Spalte"
+        },
+        "description": {
+          "en": "Name of the column.",
+          "de": "Name der Spalte."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "new_name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "Name the column carries afterwards.",
+          "de": "Name, den die Spalte danach trägt."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

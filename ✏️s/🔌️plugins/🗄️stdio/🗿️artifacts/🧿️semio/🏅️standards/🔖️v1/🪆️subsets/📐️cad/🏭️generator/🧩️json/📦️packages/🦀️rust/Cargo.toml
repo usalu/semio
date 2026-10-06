@@ -8,6 +8,12 @@
 # third-party JSON implementation can witness in full, the identical discriminator
 # `📑️document/🏭️generator/🧩️json/📦️packages/🦀️rust` already establishes for `insert-image`.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "semio-cad-json-engine"

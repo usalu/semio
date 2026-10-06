@@ -12,7 +12,8 @@ use super::select_tool_transaction_tests::{dispatched_rows, english, flush, germ
 use super::*;
 use crate::editor::puzzle2d::engine::board_host::unit_tests::context::close_board_host;
 use crate::editor::puzzle2d::unit_tests::context::*;
-use crate::standards::v1::subsets::any::schema::mutations::binary::{close_puzzle2d_store, puzzle2d_store};
+use crate::standards::v1::subsets::any::io::binary::mutations::{close_puzzle2d_store, puzzle2d_store};
+
 use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, Puzzle2dMutation};
 use crate::Puzzle2dSnapshot;
 use protocol::{OpBinary, OpText};
@@ -32,7 +33,7 @@ pub(super) fn corpus() -> Value {
 /// 🧱️ A registered app holding `board` as its one seed edit.
 pub(super) fn seeded_app(board: &Value) -> Puzzle2dApp {
     let mut app = app_with_registry();
-    dispatch(&mut app, "importFixture", Some(&json!({ "json": board })), None).expect("seed the board");
+    dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": board })), None).expect("seed the board");
     app
 }
 
@@ -90,11 +91,11 @@ fn board_scene(app: &mut Puzzle2dApp) -> Value {
 
 /// 🎨️ The document the overview paints — the time-travel preview while a session is open.
 fn painted(app: &mut Puzzle2dApp) -> Value {
-    serde_json::from_str(board_scene(app)["fixtureJson"].as_str().expect("painted fixture lane")).expect("painted fixture parses")
+    serde_json::from_str(board_scene(app)["snapshotJson"].as_str().expect("painted snapshot lane")).expect("painted snapshot parses")
 }
 
-fn node_position(fixture: &Value, id: &str) -> Option<(f64, f64)> {
-    fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).map(|node| (node["x"].as_f64().expect("x"), node["y"].as_f64().expect("y")))
+fn node_position(snapshot: &Value, id: &str) -> Option<(f64, f64)> {
+    board_snapshot_nodes(snapshot).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).map(|node| (node["x"].as_f64().expect("x"), node["y"].as_f64().expect("y")))
 }
 
 /// 🌲️ The node keyed `key` in a projected tree.
@@ -184,10 +185,10 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
             close_board_host(host);
         }
         "pick" => {
-            let fixture = painted(app);
+            let snapshot = painted(app);
             let id = spec.as_str().expect("picked id");
-            let (x, y) = node_position(&fixture, id).unwrap_or_else(|| panic!("{what}: {id} is painted"));
-            let mut host = painted_host_of(&fixture);
+            let (x, y) = node_position(&snapshot, id).unwrap_or_else(|| panic!("{what}: {id} is painted"));
+            let mut host = painted_host_of(&snapshot);
             press(&mut host, x, y);
             release(&mut host, x, y);
             let result = flush(app, &dispatched_rows(&mut host));
@@ -320,9 +321,9 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
         }
     }
     if let Some(preview) = expect["preview"].as_object() {
-        let fixture = painted(app);
+        let snapshot = painted(app);
         for (id, point) in preview {
-            let painted = node_position(&fixture, id).unwrap_or_else(|| panic!("{what}: the preview paints {id}"));
+            let painted = node_position(&snapshot, id).unwrap_or_else(|| panic!("{what}: the preview paints {id}"));
             assert!(same(&json!([painted.0, painted.1]), point), "{what}: the preview paints {id} at {painted:?}, the corpus says {point}");
         }
     }
@@ -337,7 +338,7 @@ fn check(app: &mut Puzzle2dApp, seed: usize, expect: &Value, what: &str) {
     if let Some(chips) = expect["chips"].as_object() {
         let history: Value = serde_json::from_str(&render_body_with_view(app, FRAMEWORK_HISTORY_BODY_KEY, &focused_view())).expect("history body");
         for (pointer, labels) in chips {
-            let key = format!("framework.history.editor.input{}", pointer.replace('/', "."));
+            let key = format!("framework.history.editor.input{}.row", pointer.replace('/', "."));
             let control = find_node(&history, &key).unwrap_or_else(|| panic!("{what}: the history body renders {key}"));
             let shown = texts(control);
             for label in labels.as_array().expect("chip labels") {
@@ -377,14 +378,14 @@ fn every_corpus_scenario_edits_its_leaves_in_history_and_overwrites_to_a_fresh_f
         }
         let head = fixture_of(&app);
         for (node, expected) in scenario["head"].as_object().expect("head") {
-            let record = fixture_nodes(&head).iter().find(|record| record["id"] == node.as_str()).unwrap_or_else(|| panic!("{id}: {node} is in the head"));
+            let record = board_snapshot_nodes(&head).iter().find(|record| record["id"] == node.as_str()).unwrap_or_else(|| panic!("{id}: {node} is in the head"));
             assert_eq!((record["x"].as_f64(), record["y"].as_f64(), record["locked"].as_bool().unwrap_or(false)), (expected["x"].as_f64(), expected["y"].as_f64(), expected["locked"].as_bool().unwrap_or(false)), "{id}: {node} in the overwritten head");
         }
         let mut fresh = seeded_app(&corpus["board"]);
         for leaf_value in edited_log(scenario) {
             block_on(fresh.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(&leaf_value)))).expect("the edited log folds");
         }
-        assert_eq!(fixture_nodes(&head), fixture_nodes(&fixture_of(&fresh)), "{id}: the overwrite equals a fresh fold of the edited log");
+        assert_eq!(board_snapshot_nodes(&head), board_snapshot_nodes(&fixture_of(&fresh)), "{id}: the overwrite equals a fresh fold of the edited log");
         close_app(&mut app);
         close_app(&mut fresh);
     }
@@ -395,7 +396,7 @@ fn every_corpus_scenario_edits_its_leaves_in_history_and_overwrites_to_a_fresh_f
 /// data in every locale; an entity only its id would name, or one the document lacks, reads `None` and shows its id.
 #[test]
 fn reference_chips_name_board_entities_like_the_outliner() {
-    let fixture = json!({
+    let snapshot = json!({
         "nodes": [
             { "id": "a", "x": 0.0, "y": 0.0, "text": "Alpha", "handles": [{ "id": "a:h", "handleKind": "door" }] },
             { "id": "b", "x": 0.0, "y": 0.0, "handles": [{ "id": "b:h", "handleKind": "door" }] }
@@ -405,7 +406,7 @@ fn reference_chips_name_board_entities_like_the_outliner() {
     });
     let label = |kinds: &[&str], id: &str| {
         let kinds: Vec<String> = kinds.iter().map(|kind| kind.to_string()).collect();
-        puzzle2d_entity_label(&fixture, &kinds, id).map(|label| (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()))
+        puzzle2d_entity_label(&snapshot, &kinds, id).map(|label| (label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string(), label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).to_string()))
     };
     let both = |text: &str| Some((text.to_string(), text.to_string()));
     assert_eq!(label(&["node", "targetRegion"], "a"), both("Alpha"));
@@ -440,7 +441,7 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
         let id = scenario["id"].as_str().expect("scenario id");
         let mut store = puzzle2d_store(store::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::PUZZLE_2D_SCHEMA, id, board.clone(), None)).await.expect("the store opens");
         for logged in scenario["log"].as_array().expect("log") {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![leaf(logged)], description: None, transaction: None }).await.expect("a logged leaf applies");
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }).await.expect("a logged leaf applies");
         }
         let mutation_ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = scenario["drafts"]

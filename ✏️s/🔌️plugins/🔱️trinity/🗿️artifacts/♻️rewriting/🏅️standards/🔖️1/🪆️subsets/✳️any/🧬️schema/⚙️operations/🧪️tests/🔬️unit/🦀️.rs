@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding, change_rule_layout_point, edit_before_fixture, edit_lhs, edit_rhs, remove_parameter_binding, remove_rule_layout_point};
+use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding, change_rule_layout_point, edit_working_graph, edit_lhs, edit_rhs, remove_parameter_binding, remove_rule_layout_point};
 use crate::LayoutPoint;
 use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
@@ -7,7 +7,7 @@ use semio_framework_graph::manifest::PropertyValue;
 
 
 fn sample_rule_state() -> RewritingSnapshot {
-    let mut state = crate::editor::rewriting::default_rule_state();
+    let mut state = crate::editor::rewriting::fixture_rule_state();
     state.working_graph.name = "x \"quoted\"\nline".into();
     state.parameter_bindings.insert("count".into(), PropertyValue::Number(3.0));
     state.rule_layout.insert("a".into(), LayoutPoint::from((10.5, -20.25)));
@@ -61,7 +61,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 #[semio_framework_async_macros::async_test]
 async fn edit_mutations_inverse_law() {
     let base = sample_rule_state();
-    assert_mutation_inverse_law(&base, &edit_before_fixture({ let mut graph = base.working_graph.clone(); graph.name = "replacement 世界".into(); graph })).await;
+    assert_mutation_inverse_law(&base, &edit_working_graph({ let mut graph = base.working_graph.clone(); graph.name = "replacement 世界".into(); graph })).await;
     assert_mutation_inverse_law(&base, &edit_lhs(crate::standards::v1::subsets::any::schema::Lhs::default())).await;
     assert_mutation_inverse_law(&base, &edit_rhs(crate::standards::v1::subsets::any::schema::Rhs::default())).await;
 }
@@ -99,12 +99,12 @@ async fn dispatch_registers_semantic_descriptors() {
     for kind in <RewriteRuleMutation as protocol::SemanticMutation<RewritingSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(<RewriteRuleMutation as protocol::SemanticMutation<RewritingSnapshot>>::kinds().len(), 7);
+    assert_eq!(<RewriteRuleMutation as protocol::SemanticMutation<RewritingSnapshot>>::kinds().len(), 9);
 }
 //#endregion 🔖️MutationLaws
 
 // 🧪️OutcomeLaws — no `assert_missing_target_is_error`/`assert_fatal_never_applies` cases apply to
-// this facet: every leaf here is a root-scoped scalar edit (edit-rhs/edit-lhs/edit-before-fixture,
+// this facet: every leaf here is a root-scoped scalar edit (edit-rhs/edit-lhs/edit-working-graph,
 // no addressable target to be missing) or a key-addressed map upsert/remove
 // (change/remove-parameter-binding, change/remove-rule-layout-point) mapped to the `clear` family
 // (`mutation.no-op` on an already-absent key, per this lane's report) rather than `target-missing`

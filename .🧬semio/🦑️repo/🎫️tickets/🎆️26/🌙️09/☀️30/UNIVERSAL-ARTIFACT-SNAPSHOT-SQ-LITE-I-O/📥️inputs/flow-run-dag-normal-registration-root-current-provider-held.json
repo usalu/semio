@@ -1,0 +1,32 @@
+{
+  "qualification": "Three concrete current owner hook headers; unchanged codec/semantic body and same existing native registration interface",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🦀️.rs",
+      "regions": [
+        {
+          "before": "impl crate::os_store::ArtifactPack for FlowHostSnapshot {\n",
+          "after": "impl crate::os_store::ArtifactPack for FlowHostSnapshot {\n    /// 🌊️ Publishes the actual persisted Flow owner when its Store opens or hydrates.\n    fn native_snapshot_registration() -> Option<(store::io::Dialect, crate::os_store::ArtifactCodec)> {\n        Some((store::io::Dialect { artifact_kind: \"flow.host_snapshot\", standard: store::io::StandardId(\"1\"), subset: store::io::SubsetId(\"*\") }, crate::os_store::ArtifactCodec::bare::<Self, FlowMutation>(FLOW_DOCUMENT_SCHEMA)))\n    }\n"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🦀️.rs",
+      "regions": [
+        {
+          "before": "impl store::ArtifactPack for RunArtifact {\n",
+          "after": "impl store::ArtifactPack for RunArtifact {\n    /// 📣️ Publishes this actual owner through ordinary Store construction and hydration.\n    fn native_snapshot_registration() -> Option<(store::io_schema::Dialect, store::ArtifactCodec)> {\n        Some((store::io_schema::Dialect { artifact_kind: \"os.run\", standard: store::io_schema::StandardId(\"1\"), subset: store::io_schema::SubsetId(\"*\") }, store::ArtifactCodec::bare::<Self, crate::RunMutation>(S_RUN_SCHEMA)))\n    }\n"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🦀️.rs",
+      "regions": [
+        {
+          "before": "impl crate::os_store::ArtifactPack for DagSnapshot {\n",
+          "after": "impl crate::os_store::ArtifactPack for DagSnapshot {\n /// 📣️ Publishes this actual owner through ordinary Store construction and hydration.\n fn native_snapshot_registration() -> Option<(semio_framework_os_kernel::io::Dialect, crate::os_store::ArtifactCodec)> {\n     Some((semio_framework_os_kernel::io::Dialect { artifact_kind: \"dag.host_snapshot\", standard: semio_framework_os_kernel::io::StandardId(\"1\"), subset: semio_framework_os_kernel::io::SubsetId(\"*\") }, crate::os_store::ArtifactCodec::bare::<Self, DagMutation>(DAG_DOCUMENT_SCHEMA)))\n }\n"
+        }
+      ]
+    }
+  ]
+}

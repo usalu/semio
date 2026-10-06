@@ -1,18 +1,20 @@
-import { inspectRustCompileReferences } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustCompileReferences, type RustGeneratedTokenOutput } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustPathLiterals } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🟦️.ts";
+import { rustRuntimePathDirectionEdges, type RustRuntimePathDirectionEdge } from "../📁️runtime/🟦️.ts";
 import { dirname, join, posix, resolve } from "node:path";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { mkdir, stat as followedStat, writeFile } from "node:fs/promises";
 import { rustSourceDirectionEdges, rustSourceTargets, rustSourceTargetProblem, type RustSourceDirectionEdge, type RustSourceInputNode, type RustSourceInputProblem, type RustSourceTarget } from "../🟦️.ts";
 import type { DependencyDirectionRule } from "../../🟦️.ts";
-import { inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraph, inspectRustModuleGraphFacts, projectCargoProviderManifest } from "../../../../🔍️discovery/🟦️.ts";
 import { type RustCompileExpansion } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { loadDependencyDirectionPolicy } from "../../🚀️bootstrap/🟦️.ts";
 import { rustCompilerAttributeOriginsClosed } from "../🔗️binding/🟦️.ts";
 import { COMPUTE_OWNERSHIP_CONTRACT_PATH, rustFamilyOwnershipActive, inspectRustFamilyOwnership, readRustFamilyOwnershipContract, type RustFamilyOwnershipProblem } from "../📍️ownership/🟦️.ts";
 
 export type RustSourceInputFailure = Readonly<{ code: RustSourceInputProblem; to: string; kind: RustSourceTarget["reference"]["kind"]; line: number }>;
-export type RustSourceDirectionProblem = Readonly<{ code: RustFamilyOwnershipProblem["code"] | RustSourceInputProblem | "unsupported-expression" | "unresolved-target" | "unresolved-template-scope"; from: string; detail: string; to?: string; kind?: RustSourceTarget["reference"]["kind"]; line?: number; expansion?: RustCompileExpansion }>;
-export type RustSourceDirectionReport = Readonly<{ schemaVersion: 1; files: number; references: number; violations: readonly RustSourceDirectionEdge[]; problems: readonly RustSourceDirectionProblem[] }>;
+export type RustSourceDirectionProblem = Readonly<{ code: RustFamilyOwnershipProblem["code"] | RustSourceInputProblem | "unsupported-expression" | "unresolved-target" | "unresolved-template-scope" | "unresolved-generator-origin"; from: string; detail: string; to?: string; kind?: RustSourceTarget["reference"]["kind"]; line?: number; expansion?: RustCompileExpansion }>;
+export type RustSourceDirectionReport = Readonly<{ schemaVersion: 1; generatedTokens: readonly Readonly<{ from: string; output: RustGeneratedTokenOutput; manifests: readonly string[] }>[]; files: number; references: number; violations: readonly RustSourceDirectionEdge[]; problems: readonly RustSourceDirectionProblem[]; runtime: Readonly<{ scope: "owner-qualified-literal-first-arguments"; references: number; violations: readonly RustRuntimePathDirectionEdge[] }> }>;
 
 /** 🪪️ Inspects every authored input component with lstat so links cannot conceal another owner. */
 export async function inspectRustSourceInputs(root: string, targets: readonly RustSourceTarget[], sources: ReadonlySet<string>, checkCancellation: () => void = () => {}): Promise<readonly RustSourceInputFailure[]> {
@@ -91,6 +93,8 @@ export async function inspectRustSourceDirection(root: string): Promise<RustSour
   const ignore: string[] = taxonomy.implementationLeafPolicy.ignoredPathPatterns.map((path: string) => path.replace(/^\*\*\//u, ""));
   const excluded: string[] = Object.values(taxonomy.pathExclusions).map((value) => value.path.replace(/\/$/u, ""));
   const edges: RustSourceDirectionEdge[] = [];
+  const runtime = { scope: "owner-qualified-literal-first-arguments" as const, references: 0, violations: [] as RustRuntimePathDirectionEdge[] };
+  const ownerRoots = Object.keys(taxonomy.areaLayers);
   let sources = new Map<string, string>();
   const inventory = new Map<string, RustSourceInputNode["kind"]>();
   const rootInput = lstatSync(root);
@@ -136,11 +140,12 @@ export async function inspectRustSourceDirection(root: string): Promise<RustSour
       pending = children.flat();
     }
     sources = new Map([...sources].sort(([left], [right]) => Buffer.from(left).compare(Buffer.from(right))));
-    const compileReferences = new Map<string, ReturnType<typeof inspectRustCompileReferences>>();
+    const compileReferences = new Map<string, ReturnType<typeof inspectRustCompileReferences>>(), deferred = new Map<string, RustGeneratedTokenOutput[]>();
+    const generatedTokens: { from: string; output: RustGeneratedTokenOutput; manifests: string[] }[] = [];
     for (const [path, source] of sources) {
       await checkpoint();
       if (!path.endsWith(".rs")) continue;
-      try { compileReferences.set(path, inspectRustCompileReferences(source)); } catch (error) { problems.push({ code: "unsupported-expression", from: path, detail: (error as Error).message }); }
+      try { const outputs: RustGeneratedTokenOutput[] = []; compileReferences.set(path, inspectRustCompileReferences(source, output => outputs.push(output))); if (outputs.length) deferred.set(path, outputs); } catch (error) { problems.push({ code: "unsupported-expression", from: path, detail: (error as Error).message }); }
     }
     const graph = inspectRustModuleGraph([...sources.keys()], (path) => sources.get(path), { checkCancellation: check, compileReferences, strictManifests: true });
     if (rustFamilyOwnershipActive({ sources, graph, inventory, checkCancellation: check })) try {
@@ -153,8 +158,21 @@ export async function inspectRustSourceDirection(root: string): Promise<RustSour
       await checkpoint();
       if (!path.endsWith(".rs")) continue;
       const refs = compileReferences.get(path) ?? [];
+      const pathLiterals = inspectRustPathLiterals(sources.get(path)!, ownerRoots);
+      runtime.references += pathLiterals.length;
+      runtime.violations.push(...rustRuntimePathDirectionEdges(path, pathLiterals, rules));
       references += refs.length; files++;
       const contexts = graph.contexts.get(path), manifestPaths: string[] = [];
+      for (const output of deferred.get(path) ?? []) {
+        const owners = contexts?.filter(context => context.sourceScope.length === 0) ?? [], manifests = [...new Set(owners.flatMap(context => context.manifestPath ? [context.manifestPath] : []))];
+        const sealed = owners.length > 0 && owners.every(context => context.manifestPath && !graph.invalidManifests.has(context.manifestPath) && context.sourceChain.at(-1) === path && context.mount.kind !== "include") && manifests.every(locator => {
+          const source = sources.get(locator); if (source === undefined) return false;
+          const projection = projectCargoProviderManifest({ locator, source }), candidates = projection.dependencies.filter(binding => binding.key === "quote");
+          return candidates.length === 1 && candidates[0]!.source === "version" && typeof candidates[0]!.version === "string" && !candidates[0]!.targetCondition && !candidates[0]!.workspaceInherited && !candidates[0]!.localPath && !candidates[0]!.packageOverride && Object.keys(candidates[0]!.unsupported).length === 0;
+        });
+        generatedTokens.push({ from: path, output, manifests });
+        if (!sealed) problems.push({ code: "unresolved-generator-origin", from: path, line: output.line, detail: "Token generator requires a captured direct normal quote provider and exclusive lexical scope: " + output.macro });
+      }
       const checkedTemplates = new Set<number>();
       let uses: ReturnType<typeof inspectRustModuleGraphFacts>["uses"] | undefined;
       for (const reference of refs) {
@@ -190,16 +208,17 @@ export async function inspectRustSourceDirection(root: string): Promise<RustSour
       if (files % 250 === 0) console.log(`[rust-source-direction] progress; files=${files}; references=${references}`);
     }
     if (!files) throw new Error("Rust source direction requires a nonempty authored Rust source inventory");
-    return { schemaVersion: 1, files, references, violations: edges, problems };
+    return { schemaVersion: 1, files, references, violations: edges, problems, runtime, generatedTokens };
   } finally { process.off("SIGINT", stop); process.off("SIGTERM", stop); }
 }
 
-/** 🛡️ Rejects every compile-time direction or physical census failure without reducing the report. */
+/** 🛡️ Rejects compile-time, declared runtime path and physical census boundary failures. */
 export async function verifyRustSourceDirection(root: string, reportPath?: string): Promise<void> {
   const report = await inspectRustSourceDirection(root);
   if (reportPath) { await mkdir(join(reportPath, ".."), { recursive: true }); await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`); }
   for (const edge of report.violations) console.error(`[rust-source-direction] ${edge.rule}: ${edge.from}:${edge.line} → ${edge.to}; kind=${edge.kind}`);
+  for (const edge of report.runtime.violations) console.error(`[rust-source-direction] ${edge.rule}: ${edge.from}:${edge.line} → ${edge.to}; runtime path literal=${edge.call}; context=${edge.context}`);
   for (const problem of report.problems) console.error(`[rust-source-direction] ${problem.code}: ${problem.from}${problem.line ? `:${problem.line}` : ""}: ${problem.detail}`);
-  if (report.violations.length || report.problems.length) throw new Error(`Rust source direction failed: ${report.violations.length} strict compile-time boundary violations and ${report.problems.length} source census problems across ${report.files} files and ${report.references} authored references`);
-  console.log(`[rust-source-direction] passed; files=${report.files}; authoredReferences=${report.references}; scope=all-configurations-and-macro-templates`);
+  if (report.violations.length || report.runtime.violations.length || report.problems.length) throw new Error(`Rust source direction failed: ${report.violations.length} strict compile-time boundary violations, ${report.runtime.violations.length} strict runtime path boundary violations and ${report.problems.length} source census problems across ${report.files} files and ${report.references} compile-time references`);
+  console.log(`[rust-source-direction] passed; files=${report.files}; authoredReferences=${report.references}; scope=all-configurations-and-macro-templates; runtimeReferences=${report.runtime.references}; runtimeScope=${report.runtime.scope}`);
 }

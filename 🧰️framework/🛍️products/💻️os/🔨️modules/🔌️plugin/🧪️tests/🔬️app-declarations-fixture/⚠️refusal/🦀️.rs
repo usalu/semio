@@ -61,7 +61,7 @@ async fn sqlite_snapshot_guest_refusal_runtime_export_import_preserves_all_eight
         registrations.push(NativeSnapshotRegistration { dialect: dialect.clone(), codec });
         dialects.push(dialect);
     }
-    let assembly = store::begin_artifact_assembly().unwrap();
+    let assembly = semio_framework_schema_registry::assembly::begin().unwrap();
     commit_artifact_assembly_registry_plan(&assembly, ArtifactAssemblyRegistryPlan { document_codecs: codecs, native_snapshots: registrations, ..Default::default() }).unwrap();
     drop(assembly);
     for dialect in dialects {

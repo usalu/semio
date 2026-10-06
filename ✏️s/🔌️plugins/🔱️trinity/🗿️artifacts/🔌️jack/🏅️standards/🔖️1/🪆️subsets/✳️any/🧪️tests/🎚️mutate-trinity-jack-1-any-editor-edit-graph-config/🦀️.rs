@@ -53,7 +53,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_trinity_jack::editor::jack::window_config::jack_graph_window_config_mutation_report_json;
+    use semio_s_artifact_trinity_jack::editor::jack::window_config::io::text::mutations::jack_graph_window_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         jack_graph_window_config_mutation_report_json(committed.before, committed.mutation, committed.after)

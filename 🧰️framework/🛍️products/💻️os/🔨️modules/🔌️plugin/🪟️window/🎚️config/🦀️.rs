@@ -36,7 +36,6 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
 struct BoundedWindowConfigPreparation<O: WindowConfigOwner> {
     base: Option<store::SnapshotRead<O::State>>,
     mutation: Option<O::Mutation>,
-    description: Option<String>,
     authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<O::State, O::Mutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -56,8 +55,8 @@ impl<O: WindowConfigOwner> Default for BoundedWindowConfigPreparationFactory<O> 
 impl<O: WindowConfigOwner> BoundedWindowConfigPreparationFactory<O> {
     /// 📏️ ONE item's exact encoded cost — the same quantity `preflight` bounds and the preparation
     /// gates its own turn on.
-    fn item_retained_bytes(mutation: &O::Mutation, description: Option<&str>) -> Result<usize, String> {
-        let retained_bytes = protocol::OpBinary::encode_op(mutation).map_err(|error| error.to_string())?.len().saturating_add(description.map_or(0, str::len));
+    fn item_retained_bytes(mutation: &O::Mutation) -> Result<usize, String> {
+        let retained_bytes = protocol::OpBinary::encode_op(mutation).map_err(|error| error.to_string())?.len();
         if retained_bytes > O::MAXIMUM_PUBLICATION_BYTES {
             return Err("window config mutation exceeds its owner-declared publication bound".into());
         }
@@ -66,11 +65,11 @@ impl<O: WindowConfigOwner> BoundedWindowConfigPreparationFactory<O> {
 }
 
 impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparationFactory<O::State, O::Mutation> for BoundedWindowConfigPreparationFactory<O> {
-    fn preflight(&self, mutation: &O::Mutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &O::Mutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || O::MAXIMUM_PUBLICATION_BYTES == 0 || O::MAXIMUM_PUBLICATION_BYTES > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
             return Err("window config publication has an invalid lane or byte bound".into());
         }
-        let retained_bytes = Self::item_retained_bytes(mutation, description)?;
+        let retained_bytes = Self::item_retained_bytes(mutation)?;
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<O::State, O::Mutation>(mutation, retained_bytes))
     }
 
@@ -81,14 +80,13 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparationFactory<O::Stat
         if request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() {
             return Err(request);
         }
-        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err() {
+        if self.preflight(&request.mutation, request.lane).is_err() {
             return Err(request);
         }
-        let Ok(retained_bytes) = Self::item_retained_bytes(&request.mutation, request.description.as_deref()) else { return Err(request) };
+        let Ok(retained_bytes) = Self::item_retained_bytes(&request.mutation) else { return Err(request) };
         Ok(Box::new(BoundedWindowConfigPreparation::<O> {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -121,8 +119,7 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::M
         let encoded_bytes = store::ArtifactPack::encode_pack(&next)
             .len()
             .saturating_add(protocol::OpBinary::encode_op(mutation).map_err(|error| error.to_string())?.len())
-            .saturating_add(inverse.iter().try_fold(0usize, |total, item| protocol::OpBinary::encode_op(item).map(|bytes| total.saturating_add(bytes.len())).map_err(|error| error.to_string()))?)
-            .saturating_add(self.description.as_ref().map_or(0, String::len));
+            .saturating_add(inverse.iter().try_fold(0usize, |total, item| protocol::OpBinary::encode_op(item).map(|bytes| total.saturating_add(bytes.len())).map_err(|error| error.to_string()))?);
         if encoded_bytes > O::MAXIMUM_PUBLICATION_BYTES {
             return Err("window config prepared state or inverse exceeds its owner-declared publication bound".into());
         }
@@ -158,7 +155,7 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::M
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes.min(grant.maximum_bytes) });
         }
         if let Some(base) = self.base.take() {
@@ -174,7 +171,7 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::M
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 
@@ -441,7 +438,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             let typed = mutation.mutation.into_any().downcast::<O::Mutation>().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.mutation-type"), "window config mutation did not match its registered window owner"))?;
             let partition = self.partition(&window_id).await?;
             partition.store.set_local_actor_id(Some(actor.to_string())).map_err(|error| error.into_fault())?;
-            let command = store::ArtifactCommand::Apply { mutations: vec![*typed], description: None, transaction: None };
+            let command = store::ArtifactCommand::Apply { mutations: vec![*typed], transaction: None };
             partition.store.dispatch(command).await.map_err(|error| error.into_fault())?;
             Ok(())
         })
@@ -466,10 +463,10 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             return Err(reject(typed, "window-config.partition", "captured window config partition is absent"));
         };
         let factory = O::build_one_item_preparation_factory();
-        let mut publication = match partition.store.begin_apply_batch(operation, authority.generation, authority.revision, actor, vec![*typed], None, store::HistoryLane::Document, Some(&factory), None) {
+        let mut publication = match partition.store.begin_apply_batch(operation, authority.generation, authority.revision, actor, vec![*typed], store::HistoryLane::Document, Some(&factory), None) {
             Ok(publication) => publication,
             Err(rejected) => {
-                let (reason, mut mutations, _) = rejected.into_owners();
+                let (reason, mut mutations) = rejected.into_owners();
                 let typed = Box::new(mutations.pop().expect("refused window config batch returns its exact mutation"));
                 return Err(reject(typed, "window-config.admission", &reason));
             }

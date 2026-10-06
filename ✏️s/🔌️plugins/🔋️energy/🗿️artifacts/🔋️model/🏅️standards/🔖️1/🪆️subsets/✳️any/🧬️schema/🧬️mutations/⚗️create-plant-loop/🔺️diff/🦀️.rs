@@ -40,6 +40,6 @@ pub fn diff(payload: &super::CreatePlantLoop, base: &EnergyModelSnapshot) -> pro
         design_flow_kg_s: payload.design_flow_kg_s,
         equipment_ids: payload.equipment_ids.clone(),
     });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

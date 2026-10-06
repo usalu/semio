@@ -8,7 +8,7 @@ use std::fs;
 
 //#region 🔖️Vectors
 fn entities(ctx: &Context) -> Result<Vec<events::ExportEntity>, String> {
-    let bytes = ctx.fixture_bytes("shared://📤️export-vectors.json")?;
+    let bytes = ctx.input_bytes("shared://📤️export-vectors.json")?;
     let parsed: SerdeJson = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
     parsed
         .get("entities")

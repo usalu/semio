@@ -20,7 +20,7 @@
 // before it is committed.
 //
 //   bun 📜️script.ts generate [--out <dir>] [--only <fixture-id>]
-//   bun 📜️script.ts manifests                      # emit the fixtureManifests block for 🔮️oracles
+//   bun 📜️script.ts manifests                      # emit the testEvidence block for 🔮️oracles
 //
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/🔬️mesh-spike/📜️script.ts
 //      — the spike that proved this exact chain closes: build → export → re-import → weld → re-measure.
@@ -437,7 +437,6 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
 
   const outcome = empty ? "empty" : (measurements.solids as number) > 1 ? "disjoint" : "applied";
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.semio", standard: "v1", subset: "mesh" },

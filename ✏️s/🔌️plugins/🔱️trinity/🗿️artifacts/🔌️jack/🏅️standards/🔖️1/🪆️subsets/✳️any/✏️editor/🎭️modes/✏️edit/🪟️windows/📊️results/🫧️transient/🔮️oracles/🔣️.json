@@ -80,9 +80,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-query-result-applied",
       "class": "handcrafted",
       "target": {

@@ -14,7 +14,20 @@
       "const": "changeParameterBinding"
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Parameter",
+          "de": "Parameter"
+        },
+        "description": {
+          "en": "Name of the parameter whose binding changes.",
+          "de": "Name des Parameters, dessen Bindung sich ändert."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newValue": {
       "$ref": "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/property-value.json",

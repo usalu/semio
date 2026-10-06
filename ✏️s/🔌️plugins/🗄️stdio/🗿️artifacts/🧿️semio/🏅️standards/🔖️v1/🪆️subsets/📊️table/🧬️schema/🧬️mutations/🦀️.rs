@@ -86,15 +86,7 @@ pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioT
     })
 }
 
-/// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
-/// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
-/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors
-/// carry — into a real [`SemioTableMutation`]. `reorder-columns`/`reorder-rows` address positions (`to_index`) while the rename/edit kinds
-/// address names — decoding keeps those two addressing modes exactly as the vector states them.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_table_mutation_json(text: &str) -> Result<SemioTableMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests

@@ -4,7 +4,7 @@
 //! stroke replays onto whatever the layer holds by then and every brush parameter stays editable in history
 //! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
 
-use crate::mutations::PixelRun;
+use crate::schema::PixelRun;
 use crate::{LowpolyMutation, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

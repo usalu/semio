@@ -1,0 +1,29 @@
+{
+  "schema": "s.space.home.sqlite.semantic-admission/v1",
+  "rows": 1,
+  "columns": 4,
+  "scalarBytes": 24,
+  "cases": [
+    {
+      "schema": "",
+      "catalogGeneration": "0",
+      "high": 0,
+      "low": 0,
+      "valueBytes": 24
+    },
+    {
+      "schema": "Home 世界\u0000 intermediary",
+      "catalogGeneration": "9007199254740993",
+      "high": 2097152,
+      "low": 1,
+      "valueBytes": 49
+    },
+    {
+      "schema": "owned Home state",
+      "catalogGeneration": "18446744073709551615",
+      "high": 4294967295,
+      "low": 4294967295,
+      "valueBytes": 40
+    }
+  ]
+}

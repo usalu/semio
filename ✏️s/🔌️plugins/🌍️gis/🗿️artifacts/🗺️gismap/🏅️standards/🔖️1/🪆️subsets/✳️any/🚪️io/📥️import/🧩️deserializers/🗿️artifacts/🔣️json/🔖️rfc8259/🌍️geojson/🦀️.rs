@@ -10,8 +10,8 @@
 //! 🔖 `IoFidelity::Lossy`: features with `null` geometry carry no map feature and are dropped, as are
 //! foreign members, `bbox`, the type of numeric ids, multi-part grouping, and property members named
 //! like a geometry member.
-use crate::io::export::serializers::artifacts::json::v_rfc8259::geojson::GEOMETRY_MEMBERS;
-use crate::standards::v1::subsets::any::schema::value_to_dsl;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::geojson::GEOMETRY_MEMBERS;
+use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::schema::{read_geojson_text, GeoJsonFeature, GeoJsonGeometry, GeoJsonId, GeoJsonPosition};
 use serde_json::{json, Map, Value};

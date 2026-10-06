@@ -582,8 +582,7 @@ pub mod standards {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️.rs"]
-                    pub mod owned;
+                    
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
@@ -623,34 +622,6 @@ pub mod standards {
                     // 🚪️ Native codec facets (design.md §1 CORRECTION: unsplit, one `impl
                     // ArtifactDsl`/`ArtifactPack` per type, sits directly under `🚪️io/<facet>/
                     // <representation>/`, relocated from `🧬️schema/<facet>/<representation>/`).
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
@@ -1071,28 +1042,20 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
+
 pub mod op {
-    pub use crate::standards::v1::subsets::any::io::mutations::text::*;
     pub use crate::standards::v1::subsets::any::schema::mutations::{drawing_op_for_layer_field, patch_layer_field, DrawingMutation};
 }
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-}
+
 pub mod spr {
-    pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-    pub use crate::standards::v1::subsets::any::schema::owned::*;
+    pub use crate::host::owned::*;
 }
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::diff::text::*;
-    }
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
@@ -1101,9 +1064,7 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-    }
+
 }
 
 #[path = "."]
@@ -1197,8 +1158,8 @@ pub mod editor {
             pub mod set_camera;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️set-camera-zoom/🦀️.rs"]
             pub mod set_camera_zoom;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️set-fixture-json/🦀️.rs"]
-            pub mod set_fixture_json;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️load-document-json/🦀️.rs"]
+            pub mod load_document_json;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌫️set-selected-opacity/🦀️.rs"]
             pub mod set_selected_opacity;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📸️set-snapshot/🦀️.rs"]
@@ -1274,3 +1235,9 @@ pub mod viewer {
 //#region 📚️Examples
 pub use standards::v1::subsets::any::examples;
 //#endregion 📚️Examples
+
+#[path = "."]
+pub mod host {
+#[path = "🔨️modules/🏠️host/🧰️owned/🦀️.rs"]
+pub mod owned;
+}

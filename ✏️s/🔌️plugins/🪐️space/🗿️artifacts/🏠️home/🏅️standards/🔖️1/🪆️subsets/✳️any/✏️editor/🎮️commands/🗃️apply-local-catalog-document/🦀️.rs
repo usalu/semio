@@ -16,7 +16,7 @@
 
 use crate::editor::home::config::{local_studio_id_is_admissible, HomeConfig, HomeConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::change_catalog_generation;
-use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultOrigin};
 

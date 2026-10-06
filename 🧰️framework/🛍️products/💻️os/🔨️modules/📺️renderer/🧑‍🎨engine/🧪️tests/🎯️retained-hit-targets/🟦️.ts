@@ -24,10 +24,10 @@ const uiRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui");
 type ActionBinding = { readonly controller: string; readonly action: string };
 type FixtureItem = { readonly id: string; readonly label?: string; readonly action?: ActionBinding | null };
 type FixtureSection = { readonly id: string; readonly label?: string | null; readonly items?: readonly FixtureItem[] };
-type FixtureNode =
+type SnapshotNode =
   | { readonly kind: "tree"; readonly sections: readonly FixtureSection[] }
   | { readonly kind: "surface"; readonly surfaceId: string; readonly surfaceKind: string }
-  | { readonly kind: "stack"; readonly id?: string; readonly activate?: ActionBinding | null; readonly children?: readonly FixtureNode[] }
+  | { readonly kind: "stack"; readonly id?: string; readonly activate?: ActionBinding | null; readonly children?: readonly SnapshotNode[] }
   | { readonly kind: "text"; readonly value?: string };
 type FixtureEntry = { readonly controlId: string; readonly kind: string; readonly action: string | null; readonly rect: readonly [number, number, number, number] };
 type FixtureProbe = { readonly x: number; readonly y: number; readonly controlId: string; readonly kind: string; readonly action: string | null; readonly wheelPropagatesToScene?: boolean };
@@ -45,7 +45,7 @@ type FixtureCase = {
   readonly name: string;
   readonly windowId: string;
   readonly body: { readonly x: number; readonly y: number; readonly w: number; readonly h: number };
-  readonly tree: FixtureNode;
+  readonly tree: SnapshotNode;
   readonly expected: readonly FixtureEntry[];
   readonly probes: readonly FixtureProbe[];
 };

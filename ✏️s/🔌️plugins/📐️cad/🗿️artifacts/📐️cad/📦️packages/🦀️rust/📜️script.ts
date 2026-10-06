@@ -39,4 +39,4 @@ if (segments[0] === "cad-document-contract") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-cad-cad", { ...{ twins: [{ name: "cad-presence-retirement", run: cadPresenceRetirementSelfTests }] }, commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-cad-cad", { ...{ twins: [{ name: "cad-presence-retirement", run: cadPresenceRetirementSelfTests }] }, commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

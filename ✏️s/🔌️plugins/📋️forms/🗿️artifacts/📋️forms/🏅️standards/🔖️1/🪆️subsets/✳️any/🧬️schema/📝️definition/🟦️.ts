@@ -34,10 +34,10 @@ export function parseFormsDefinition(value: unknown): FormsDefinition {
     unique(step.id, stepIds);
     if (typeof step.title !== "string" || step.description !== undefined && typeof step.description !== "string" || !Array.isArray(step.blocks)) throw new Error("invalid step");
     const blocks = step.blocks.map(value => {
-      const question = {...parseSchemaRecord(value, ["id", "label", "kind", "description", "required", "placeholder", "default", "min", "max", "step", "unit", "text", "options", "fields", "schema", "src", "accept", "fixtureSlug", "params", "condition"])};
+      const question = {...parseSchemaRecord(value, ["id", "label", "kind", "description", "required", "placeholder", "default", "min", "max", "step", "unit", "text", "options", "fields", "schema", "src", "accept", "exampleId", "params", "condition"])};
       unique(question.id, questionIds);
       if (typeof question.kind !== "string" || !question.kind.trim() || typeof question.label !== "string") throw new Error("invalid question");
-      for (const key of ["description", "placeholder", "unit", "text", "schema", "src", "accept", "fixtureSlug"]) if (question[key] !== undefined && typeof question[key] !== "string") throw new Error("invalid question text");
+      for (const key of ["description", "placeholder", "unit", "text", "schema", "src", "accept", "exampleId"]) if (question[key] !== undefined && typeof question[key] !== "string") throw new Error("invalid question text");
       if (question.required !== undefined && typeof question.required !== "boolean") throw new Error("invalid required flag");
       for (const key of ["min", "max", "step"]) if (question[key] !== undefined && (typeof question[key] !== "number" || !Number.isFinite(question[key]))) throw new Error("invalid question range");
       if (typeof question.min === "number" && typeof question.max === "number" && question.min > question.max || typeof question.step === "number" && question.step <= 0) throw new Error("invalid question range");

@@ -31,6 +31,7 @@ const AVATAR_PLACEHOLDER_PNG_BASE64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAY
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: FORMS_PLAY_WINDOW_TRY.into(),
         label: LocalizedLabel::native("Fill Form", "Formular ausfüllen"),
         body_key: FORMS_PLAY_BODY_TRY.into(),

@@ -17,7 +17,8 @@ const SCAN: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::baseline::schema::mutations::{encode_tiff_baseline_projection_json, tiff_baseline_conformance_codes};
+    use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::baseline::schema::mutations::{tiff_baseline_conformance_codes};
+    use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::baseline::io::text::mutations::{encode_tiff_baseline_projection_json};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::io::{decode_tiff, encode_tiff};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
     use semio_s_artifact_stdio_tiff_test_oracle::standards::v6_0::subsets::document::project_tiff;
@@ -68,7 +69,7 @@ mod subject {
     ///    result is required to differ from the input. A codec that smuggled bytes would return the
     ///    input again and fail here.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = ctx.fixture_bytes(super::SCAN)?;
+        let input = ctx.input_bytes(super::SCAN)?;
         let base = decode_tiff(&input).map_err(|error| format!("identity-round-trip: the committed scan must decode: {error:?}"))?;
         let bytes = encode_tiff(&base).map_err(|error| format!("identity-round-trip: re-serializing the decoded scan failed: {error:?}"))?;
         law::carrier_is_exact(&bytes, &input)?;

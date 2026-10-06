@@ -3,7 +3,7 @@ import { writerSnapshotToSqliteDatabase,writerSnapshotFromSqliteDatabase,validat
 import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework";
 import { Database } from "bun:sqlite";
 import { expect,test } from "bun:test";
-import fixture from "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json";
+import fixture from "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json";
 test("Writer public package exposes the complete typed snapshot and independently editable relationships",async()=>{
  const snapshot:WriterSnapshot=fixture.snapshot;
  const database=await writerSnapshotToSqliteDatabase(snapshot);

@@ -17,11 +17,41 @@
     },
     "streamIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Stream",
+          "de": "Datenstrom"
+        },
+        "description": {
+          "en": "Index of the stream, counted from 0.",
+          "de": "Index des Datenstroms, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the samples of the stream at which it is inserted, counted from 0.",
+          "de": "Position unter den Samples des Datenstroms, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "sample": {
       "$ref": "#/$defs/SemioVideoSample",

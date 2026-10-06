@@ -23,6 +23,7 @@
           "en": "From position",
           "de": "Von Position"
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 10
@@ -37,6 +38,7 @@
           "en": "To position",
           "de": "Nach Position"
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 20

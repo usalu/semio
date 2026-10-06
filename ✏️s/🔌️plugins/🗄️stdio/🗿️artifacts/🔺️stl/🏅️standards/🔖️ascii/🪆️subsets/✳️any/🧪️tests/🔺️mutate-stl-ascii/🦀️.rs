@@ -50,7 +50,7 @@ const INPUT: &str = "shared://🏛️hexagonal-cut-concrete-forest-left/🧊️.
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("📥️input.stl"))?;
+    let copy = ctx.copy_input(INPUT, Some("📥️input.stl"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

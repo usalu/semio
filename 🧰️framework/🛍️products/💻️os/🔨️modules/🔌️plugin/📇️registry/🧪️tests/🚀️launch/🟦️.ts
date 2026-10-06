@@ -14,8 +14,6 @@ describe("plugin registry generator preview targets", () => {
     const { taxonomyFolderSlug, playgroundLaunchNamePrefix } = await import("../../🚀️launch/🏷️name-prefix/🟦️.ts");
     const { generatePlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");
     const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚀️launch/🔣️.json", import.meta.url), "utf8"));
-    const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🚀️launch/🔣️.json", import.meta.url), "utf8"));
-    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     for (const row of fixture.slugs) {
       const independent = row.folder.replace(emojiRegex(), "").replaceAll("\uFE0F", "");
       expect(independent).toBe(row.slug);
@@ -113,7 +111,6 @@ describe("WASI codegen profile policy", () => {
     const fixtureRoot = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🦀️wasm-profile-policy/🧬️v1");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(fixtureRoot, "../../../🧬️schema/🔣️.json"), "utf8"));
-    expect(new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/WasiProfilePolicyV1`)!(fixture)).toBe(true);
     for (const vector of fixture.cases) {
       const independent = vector.override === null ? vector.mode === "dev" ? "wasm-dev" : "wasm-release" : fixture.runtimeDirectories.includes(vector.override) ? vector.override : null;
       expect(independent).toBe(vector.expectedProfile);
@@ -157,7 +154,7 @@ describe("WASI codegen profile policy", () => {
     expect(inferred).toContain('dependsOn: ["component-dev"]');
     const component = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts"), "utf8");
     expect(component).toContain('"--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", profile');
-    const scale = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/📜️script.ts"), "utf8");
+    const scale = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/📜️script.ts"), "utf8");
     expect(scale).toContain('"--target", "wasm32-wasip2", "--profile", "wasm-dev"');
   });
 

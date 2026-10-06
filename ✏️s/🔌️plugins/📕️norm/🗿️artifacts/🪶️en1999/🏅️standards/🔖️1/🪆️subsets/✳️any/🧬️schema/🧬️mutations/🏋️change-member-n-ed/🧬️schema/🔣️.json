@@ -48,7 +48,8 @@
         "unit": "N",
         "displayUnit": "kN",
         "displayFactor": 0.001,
-        "precision": 2
+        "precision": 2,
+        "step": 100
       }
     }
   }

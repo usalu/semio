@@ -2,7 +2,8 @@
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::editor::generation2d::Generation2dCommand;
-use crate::standards::v1::subsets::any::schema::mutations::text::{generation_mutation_to_generation2d, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{generation_mutation_to_generation2d};
 use crate::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, select_generation, selected_generation, PlaybookValues};
 use semio_framework_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;

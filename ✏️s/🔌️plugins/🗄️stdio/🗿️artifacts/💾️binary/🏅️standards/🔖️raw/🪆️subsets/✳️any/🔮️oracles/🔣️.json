@@ -157,9 +157,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "append-bytes-applied",
       "class": "handcrafted",
       "target": {
@@ -202,7 +201,6 @@
       "notes": "AppendBytes{data:[8,9]} appends real bytes to the end of the buffer."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-byte-range-applied",
       "class": "handcrafted",
       "target": {
@@ -245,7 +243,6 @@
       "notes": "ReplaceByteRange{offset:2,removeLen:2,insert:[99,99]} replaces bytes [2,4) in place with 2 new bytes, leaving the buffer length unchanged."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "truncate-at-applied",
       "class": "handcrafted",
       "target": {

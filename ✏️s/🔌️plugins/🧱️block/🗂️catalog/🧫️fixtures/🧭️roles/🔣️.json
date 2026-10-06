@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "owner": "✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust",
+      "role": "plugin",
+      "accepted": true
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🧱️block/🗂️catalog/📦️packages/🦀️rust",
+      "role": "library",
+      "accepted": true
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🧱️block/🗂️catalog/📦️packages/🦀️rust",
+      "role": "plugin",
+      "accepted": false
+    }
+  ]
+}

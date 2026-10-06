@@ -23,7 +23,7 @@ DOCUMENT = "asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf"
 
 def reader(ctx: Context) -> pypdf.PdfReader:
     """📄️ The committed document, read through the reference implementation without copying it."""
-    return pypdf.PdfReader(io.BytesIO(ctx.fixture_bytes(DOCUMENT)))
+    return pypdf.PdfReader(io.BytesIO(ctx.input_bytes(DOCUMENT)))
 
 
 def claims(ctx: Context) -> list[dict[str, str]]:

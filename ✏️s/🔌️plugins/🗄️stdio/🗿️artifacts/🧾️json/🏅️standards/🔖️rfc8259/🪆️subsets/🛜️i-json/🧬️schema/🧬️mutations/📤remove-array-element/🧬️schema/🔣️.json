@@ -18,11 +18,38 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/JsonPathSegment"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Path",
+          "de": "Pfad"
+        },
+        "description": {
+          "en": "Member names and array indices leading from the root to the object or array that changes; empty for the root.",
+          "de": "Eigenschaftsnamen und Array-Indizes von der Wurzel bis zum Objekt oder Array, das sich ändert; leer für die Wurzel."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "description": {
+          "en": "Index of the array element, counted from 0.",
+          "de": "Index des Array-Elements, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   },
   "$defs": {

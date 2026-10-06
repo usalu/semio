@@ -93,7 +93,7 @@
           "drain": [
             { "surfaceId": "procedural-main-graph", "windowId": "procedural-main", "kind": "nodeGraph", "controllerId": "procedural", "bounds": [3, 54, 975, 814], "created": true },
             { "surfaceId": "atlas-map", "windowId": "procedural-preview", "kind": "tiledMap", "controllerId": "procedural", "bounds": [990, 54, 440, 400], "created": true, "selectionMethod": "lasso" },
-            { "surfaceId": "puzzle-board", "windowId": "framework.section.artifact", "kind": "board2d", "controllerId": "puzzle", "bounds": [990, 470, 440, 398], "created": true, "fixtureJson": "{\"schema\":\"board.fixture\"}" }
+            { "surfaceId": "puzzle-board", "windowId": "framework.section.artifact", "kind": "board2d", "controllerId": "puzzle", "bounds": [990, 470, 440, 398], "created": true, "snapshotJson": "{\"schema\":\"board.fixture\"}" }
           ],
           "liveWindows": ["procedural-main", "procedural-preview", "framework.section.artifact"]
         },

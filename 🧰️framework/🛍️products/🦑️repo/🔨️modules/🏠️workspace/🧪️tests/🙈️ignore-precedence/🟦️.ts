@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import ignoreFactory from "ignore";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Adapter
@@ -22,7 +22,7 @@ export default defineTestAdapter({
   scenarios: {
     "vectors-are-ignored-the-same-way": {
       oracle: (ctx) => {
-        const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://📡️ignore-vectors.json"))) as { vectors: { name: string; rules: string[]; path: string }[] };
+        const file = JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://📡️ignore-vectors.json"))) as { vectors: { name: string; rules: string[]; path: string }[] };
         return { projection: { verdicts: file.vectors.map((vector) => `${vector.name}=${ignoreFactory().add(vector.rules).ignores(vector.path)}`) } };
       },
     },

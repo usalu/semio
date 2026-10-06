@@ -1,0 +1,3 @@
+# Controlled Cargo Parser 18 and Model 4 Partial Audit
+
+Full recorded document and frozen-input hashes/byte counts agree. The 434 current admitted documents agree with the recorded external parser. Portable admitted outputs agree; five owned-scope refusals differ from Iarna acceptance, so universal parser parity is not claimed. Model 4 has 393 directory/manifest/name/workspace tuples equal to its retained original inventory, plus owned metadata; 433 same-read manifest frames and fourteen frozen inputs remain exact. The 26 portable cases, 36 cancellation observations and zero diagnostics are retained finite observations. Full authority/caller migration, generic completeness, native and Root publication admission remain unsealed and false.

@@ -6,8 +6,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[path="🗂️expanded/🦀️.rs"]
 mod expanded;
 pub use expanded::DagExpandedPaths;
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
 #[path="🪆️binding/🦀️.rs"]
 mod native_binding;
 

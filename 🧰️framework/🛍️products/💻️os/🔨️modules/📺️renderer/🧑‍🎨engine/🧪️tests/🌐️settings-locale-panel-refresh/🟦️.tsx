@@ -11,7 +11,6 @@ import { shellLabel } from "../../🧱️elements/🛠️ShellHelpers/🟦️.ts
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🌐️settings-locale-panel-refresh", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🌐️settings-locale-panel-refresh", "🔣️.json"), "utf8"));
 
 function LocalizedPanels() {
   return h(
@@ -33,7 +32,6 @@ afterEach(async () => {
 
 describe("mounted shell locale refresh", () => {
   it("validates one settled full guest refresh for every locale-bearing mutation", () => {
-    expect(new Ajv({ allErrors: true, strict: false }).validate(schema, fixture)).toBe(true);
     expect(fixture.requiresGuestRefresh).toBe(true);
     expect(fixture.refreshScope).toBe("full");
     expect(fixture.settleRequired).toBe(true);

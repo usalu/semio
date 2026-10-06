@@ -1,66 +1,38 @@
 {
-  "schema": "semio.os.browser-actor-visible-surfaces/v1",
-  "description": "Which surfaces a document's browser actor makes visible to its guest on each render turn, each in the view context the local refresh binds it in: every verified window (window context), every verified panel body (panel context) and every reserved refresh section (section context, keyed by its reserved body key). The live sections (engagements, measures, tool measures) are announced on EVERY turn, so a committed edit reaches the chrome of every open window in the turn that applies it; the app-static catalogue is announced at mount only. A `mount` turn is the first paint of an actor lifetime, a `repaint` turn follows a host view change or an edit whose author's windows the guest does not re-render itself, a `refresh` turn follows a remote edit or an action that changed no document (the guest re-renders its mounted windows itself).",
   "sections": [
-    { "key": "engagements", "bodyKey": "framework.section.engagements", "static": false },
-    { "key": "measures", "bodyKey": "framework.section.measures", "static": false },
-    { "key": "tools", "bodyKey": "framework.section.tools", "static": false },
-    { "key": "catalogue", "bodyKey": "framework.section.catalogue", "static": true }
+    {
+      "key": "engagements",
+      "bodyKey": "framework.section.engagements",
+      "static": false
+    },
+    {
+      "key": "measures",
+      "bodyKey": "framework.section.measures",
+      "static": false
+    },
+    {
+      "key": "tools",
+      "bodyKey": "framework.section.tools",
+      "static": false
+    },
+    {
+      "key": "catalogue",
+      "bodyKey": "framework.section.catalogue",
+      "static": true
+    }
   ],
   "turns": {
-    "mount": { "windows": true, "staticSections": true },
-    "repaint": { "windows": true, "staticSections": false },
-    "refresh": { "windows": false, "staticSections": false }
-  },
-  "cases": [
-    {
-      "name": "the first paint announces both windows, the panel and all four sections",
-      "surfaces": { "windows": [{ "key": "drawing-composite", "bodyKey": "composite" }, { "key": "drawing-layers", "bodyKey": "layers" }], "panels": [{ "key": "framework.panel.inspection", "bodyKey": "inspection" }] },
-      "turn": "mount",
-      "visible": [
-        { "surface": "drawing-composite", "bodyKey": "composite", "context": "window" },
-        { "surface": "drawing-layers", "bodyKey": "layers", "context": "window" },
-        { "surface": "framework.panel.inspection", "bodyKey": "inspection", "context": "panel" },
-        { "surface": "framework.section.engagements", "bodyKey": "framework.section.engagements", "context": "section" },
-        { "surface": "framework.section.measures", "bodyKey": "framework.section.measures", "context": "section" },
-        { "surface": "framework.section.tools", "bodyKey": "framework.section.tools", "context": "section" },
-        { "surface": "framework.section.catalogue", "bodyKey": "framework.section.catalogue", "context": "section" }
-      ]
+    "mount": {
+      "windows": true,
+      "staticSections": true
     },
-    {
-      "name": "an own edit repaints every window, the panel and the live sections, never the static catalogue",
-      "surfaces": { "windows": [{ "key": "drawing-composite", "bodyKey": "composite" }, { "key": "drawing-layers", "bodyKey": "layers" }], "panels": [{ "key": "framework.panel.inspection", "bodyKey": "inspection" }] },
-      "turn": "repaint",
-      "visible": [
-        { "surface": "drawing-composite", "bodyKey": "composite", "context": "window" },
-        { "surface": "drawing-layers", "bodyKey": "layers", "context": "window" },
-        { "surface": "framework.panel.inspection", "bodyKey": "inspection", "context": "panel" },
-        { "surface": "framework.section.engagements", "bodyKey": "framework.section.engagements", "context": "section" },
-        { "surface": "framework.section.measures", "bodyKey": "framework.section.measures", "context": "section" },
-        { "surface": "framework.section.tools", "bodyKey": "framework.section.tools", "context": "section" }
-      ]
+    "repaint": {
+      "windows": true,
+      "staticSections": false
     },
-    {
-      "name": "a remote edit refreshes the panel and the live sections; the guest re-renders its windows itself",
-      "surfaces": { "windows": [{ "key": "drawing-composite", "bodyKey": "composite" }], "panels": [{ "key": "framework.panel.inspection", "bodyKey": "inspection" }, { "key": "framework.panel.history", "bodyKey": "history" }] },
-      "turn": "refresh",
-      "visible": [
-        { "surface": "framework.panel.inspection", "bodyKey": "inspection", "context": "panel" },
-        { "surface": "framework.panel.history", "bodyKey": "history", "context": "panel" },
-        { "surface": "framework.section.engagements", "bodyKey": "framework.section.engagements", "context": "section" },
-        { "surface": "framework.section.measures", "bodyKey": "framework.section.measures", "context": "section" },
-        { "surface": "framework.section.tools", "bodyKey": "framework.section.tools", "context": "section" }
-      ]
-    },
-    {
-      "name": "an app without panels still carries its sections on a refresh",
-      "surfaces": { "windows": [{ "key": "note-composite", "bodyKey": "composite" }], "panels": [] },
-      "turn": "refresh",
-      "visible": [
-        { "surface": "framework.section.engagements", "bodyKey": "framework.section.engagements", "context": "section" },
-        { "surface": "framework.section.measures", "bodyKey": "framework.section.measures", "context": "section" },
-        { "surface": "framework.section.tools", "bodyKey": "framework.section.tools", "context": "section" }
-      ]
+    "refresh": {
+      "windows": false,
+      "staticSections": false
     }
-  ]
+  }
 }

@@ -23,10 +23,10 @@ const features = await createSequenceFeatures(createSequenceHost({ exports: brid
 
 equal(features.lifetime.session.slot, 1, "open-session");
 equal(await result(features.editing.addStepDropped("math.add", 1, 2, undefined)), "step-101", "missing-optional-payload");
-await result(features.document.loadFixtureJson('{"schema":"sequence.sequence","steps":[],"edges":[]}'));
-equal(await result(features.document.fixtureJson()), '{"schema":"sequence.sequence","steps":[],"edges":[]}', "fixture-json-roundtrip");
+await result(features.document.loadSnapshotJson('{"schema":"sequence.sequence","steps":[],"edges":[]}'));
+equal(await result(features.document.snapshotJson()), '{"schema":"sequence.sequence","steps":[],"edges":[]}', "document-json-roundtrip");
 let malformedJson = false;
-try { await result(features.document.loadFixtureJson("[]")); } catch { malformedJson = true; }
+try { await result(features.document.loadSnapshotJson("[]")); } catch { malformedJson = true; }
 equal(malformedJson, true, "malformed-json-owned-rejection");
 
 let canvasMissing = false;
@@ -251,11 +251,11 @@ function MockBridge(targetMemory, options = {}) {
           const session = new Reader(body); const slot = session.u32(); const handleGeneration = session.u32(); const payload = body.subarray(8);
           if ((slot !== 1 || handleGeneration !== 1) && options.rejectInvalidHandle) return -1;
           if (slot !== 1 || handleGeneration !== 1) queue.push(reply(id, generation, 3, new Uint8Array(), 7, "handle"));
-          else if (operation === SequenceOperation.loadFixtureJson) {
+          else if (operation === SequenceOperation.loadSnapshotJson) {
             const text = new TextDecoder().decode(payload);
             if (!text.startsWith("{")) queue.push(reply(id, generation, 3, new Uint8Array(), 1, "json"));
             else { fixture = text; queue.push(reply(id, generation, 0, new Uint8Array())); }
-          } else if (operation === SequenceOperation.fixtureJson) queue.push(reply(id, generation, 0, new TextEncoder().encode(fixture)));
+          } else if (operation === SequenceOperation.snapshotJson) queue.push(reply(id, generation, 0, new TextEncoder().encode(fixture)));
           else if (operation === SequenceOperation.addStepDropped) queue.push(reply(id, generation, 0, new TextEncoder().encode("step-101")));
           else if (operation === SequenceOperation.attachSurface || operation === SequenceOperation.setSize || operation >= SequenceOperation.play && operation <= SequenceOperation.stop) queue.push(reply(id, generation, 0, new Uint8Array()));
           else if (operation === SequenceOperation.gpuReady) queue.push(reply(id, generation, 0, Uint8Array.of(1)));

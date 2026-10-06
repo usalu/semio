@@ -1,0 +1,3 @@
+# Surface16 Original Whole Source Checkpoint
+
+Actual original Bun then Cargo test/default/empty-rest route exits zero. Raw log independently yields all272 unique PASS names and ordinals across two binaries, plus the original one skipped test outside the selected roster. Original Bun law passes with10 expectations. All18,897 actual pre/post hashes join the admitted prepared floor and independently rehashed physical endpoints. Complete raw helper/proof/plan/metadata/origin guards and terminal Root full unknown pair agree. The checkpoint releases the exact owning WASM route separately; no generated ABI, publication or atomic compiler-source identity is inferred.

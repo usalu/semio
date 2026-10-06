@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapsho
 pub(crate) const WORKING_CHILD_SLOT: &str = "workingGraph";
 
 fn refused(message: impl Into<String>) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("rewriting.child-refused"), message)
+    Fault::new(FaultOrigin::App, FaultCode::new("trinity.rewriting.child-refused"), message)
 }
 
 pub(crate) fn read<'a>(parent: &crate::RewritingSnapshot, children: &'a ChildContentView) -> Result<store::SnapshotReadRef<'a, SemioGraphSnapshot>, Fault> {

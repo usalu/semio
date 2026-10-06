@@ -1,5 +1,4 @@
 {
-  "schema": "semio.store.edit-digest-chains.v1",
   "cases": [
     {
       "name": "single-operation",
@@ -38,13 +37,12 @@
             "group_id": "group-typing"
           }
         ],
-        "description": "typing 🧵",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
         "finishedAt": "2026-09-29T11:00:09Z",
         "line": null
       },
-      "expectedDigest": "4e0ace9a924712af23834dcde7501516feeb57c14da12e0586caf80cc50be60c"
+      "expectedDigest": "f5a11f633fa923f564b07a57bb5e24bc072e4d42d60da3f0a2d33df77f554b69"
     },
     {
       "name": "grown-to-two",
@@ -109,27 +107,25 @@
             "group_id": "group-typing"
           }
         ],
-        "description": "typing 🧵",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
         "finishedAt": "2026-09-29T11:00:09Z",
         "line": null
       },
-      "expectedDigest": "2e341668d75c204951ae35b42d0201f1269ab473605ca3f1632bd51bb42937dc"
+      "expectedDigest": "91d3a5f96aab2b08c91158924daa1428eafeba05ba26c5cf040d90077e0bffd9"
     },
     {
       "name": "grown-to-ten-thousand",
       "header": {
         "id": "edit-typing",
         "actor": "actor-1",
-        "description": "typing 🧵",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
         "finishedAt": "2026-09-29T11:00:09Z",
         "line": null
       },
       "generatedOperations": 10000,
-      "expectedDigest": "b1a3e0fb439c585c224c99cfbcb95200765dbf6b7e41c6f919a1da42ae19aa0f"
+      "expectedDigest": "21535640610e3ff2a12cd694f5a8319f2c84e1b876f095e9ef4622932c9057f3"
     },
     {
       "name": "single-operation-with-verb",
@@ -168,14 +164,13 @@
             "group_id": "group-typing"
           }
         ],
-        "description": "typing 🧵",
         "verb": "typeText",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
         "finishedAt": "2026-09-29T11:00:09Z",
         "line": null
       },
-      "expectedDigest": "b6bd88d7d8879f06b70af7e7ee7315c33ddf5a19b0499d864a5d2120354e2842"
+      "expectedDigest": "0b6a5d7e0a6ee1c431e687b060d9f5605fb5f113a9dbb70359845b3446f27f8d"
     },
     {
       "name": "grown-to-two-with-verb",
@@ -240,14 +235,13 @@
             "group_id": "group-typing"
           }
         ],
-        "description": "typing 🧵",
         "verb": "typeText",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
         "finishedAt": "2026-09-29T11:00:09Z",
         "line": null
       },
-      "expectedDigest": "cc69bbdef420af3aa44b17a9c3f80c9f13fe544f76a42eff2628bc7f4e8c9fe0"
+      "expectedDigest": "54749fe0109a0b712655e031072ae371717e1976d1f2bfe834f6a4f00f31d876"
     },
     {
       "name": "single-operation-authored-line",
@@ -286,13 +280,12 @@
             "group_id": "group-typing"
           }
         ],
-        "description": "typing 🧵",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
         "finishedAt": "2026-09-29T11:00:09Z",
         "line": "alternative-1"
       },
-      "expectedDigest": "a2e7867f8820b195d7d87826e3616b2734de32b82c80f49d3ea26393c6a20fd5"
+      "expectedDigest": "333c53585df436d77516e8907f7b12a7c4334491752d11dad8766eb76dd0340e"
     },
     {
       "name": "grown-to-two-authored-line",
@@ -357,13 +350,12 @@
             "group_id": "group-typing"
           }
         ],
-        "description": "typing 🧵",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
         "finishedAt": "2026-09-29T11:00:09Z",
         "line": "alternative-🌿"
       },
-      "expectedDigest": "42ff4bbb34287a49096050a6060d9c0cd893166c76951bf761c7acb336d45056"
+      "expectedDigest": "55869c92af716983f0a5fdc99405b4ecb327f76b147ea88600a5cd1bc4541282"
     }
   ]
 }

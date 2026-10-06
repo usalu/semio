@@ -6,7 +6,7 @@ pub type QuantizedImage = (Vec<Rgb>, Vec<u8>, Option<u8>);
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
-    use crate::standards::v87a::subsets::any::schema::GifAnalyzer;
+    use crate::standards::v87a::subsets::any::io::GifAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
@@ -703,28 +703,28 @@ pub fn register_pilot_languages() {
         id: "stdio.gif",
         extension: Some("gif"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(crate::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v87a::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v87a::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v87a::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v87a::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v87a::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.gif.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(crate::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v87a::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v87a::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v87a::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v87a::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v87a::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.gif.diff",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(crate::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v87a::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::standards::v87a::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v87a::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.diff"),
@@ -735,8 +735,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v87a::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v87a::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v87a::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.pack"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -745,8 +745,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v87a::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v87a::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v87a::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.spr"),
     });
 }
@@ -780,7 +780,7 @@ mod tests;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v87a::subsets::any::schema::GifComposer as GifRawAnyComposer;
+    use crate::standards::v87a::subsets::any::io::GifComposer as GifRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -792,3 +792,124 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::v87a::subsets::any::schema::{diff::GifDiff, mutations::GifMutation, snapshot::GifSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.gif` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct GifBuilderConstruction {
+        snapshot: GifSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for GifBuilderConstruction {
+        type Snapshot = GifSnapshot;
+        type Mutation = GifMutation;
+        type Diff = GifDiff;
+        fn empty() -> Self {
+            Self { snapshot: GifSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::standards::v87a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <GifDiff as protocol::MutationDiff<GifSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.gif` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct GifParts {
+        pub snapshot: Option<GifSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.gif` (87a/✳️any) sources.
+    pub struct GifAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for GifAnalyzerAnalysis {
+        type Parts = GifParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            crate::subsets::any::io::sniff_magic(source, b"GIF87a")
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = GifParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <GifSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <GifSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec GifBuilderFacets {
+        construction: GifBuilderConstruction,
+        analysis: GifAnalyzerAnalysis,
+        composition: crate::standards::v87a::subsets::any::io::derived_composition::GifComposerComposition,
+    }
+    builder: GifBuilder,
+    analyzer: GifAnalyzer,
+    composer: GifComposer,
+);

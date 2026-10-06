@@ -6,7 +6,7 @@ todos:
    content: Add exported flowTreeDirtyNeuronIds helper (canonicalize + signature + incoming-edge diff + downstream BFS) in flow/react/index.tsx
    status: completed
  - id: evaluate-wire
-   content: "Wire dirty set into evaluate(): lastEvalFixtureRef, skip on empty/presentational, setComputingWidgetIds(dirty) instead of all, reset ref on fixture load"
+   content: "Wire dirty set into evaluate(): lastEvalTestInput, skip on empty/presentational, setComputingWidgetIds(dirty) instead of all, reset ref on fixture load"
    status: completed
  - id: rust-gate
    content: Add last_tree_signature + tree_signature() and early-return gate in FlowHost::evaluate_internal
@@ -48,11 +48,11 @@ Add exported, testable `flowTreeDirtyNeuronIds(prevFixtureJson, currFixtureJson)
 
 ### 2. Use it in `evaluate()` - [flow/react/index.tsx](flow/react/index.tsx) (around line 2651-2702)
 
-- Add `lastEvalFixtureRef = useRef<string|null>(null)`.
-- At top of the debounced body: `const dirty = flowTreeDirtyNeuronIds(lastEvalFixtureRef.current, fixture)`.
-- If `!dirty.structural && dirty.ids.length === 0`: presentational change -> set `lastEvalFixtureRef.current = fixture`, `renderFrame()`, and return (no `setComputingWidgetIds`, no worker call, no `onEvalOutputs`).
-- Otherwise: `session.setComputingWidgetIds(JSON.stringify(dirty.structural ? neuronWidgetIdsFromFixtureJson(fixture) : dirty.ids))` (replaces the all-neurons call), run the existing orchestrator/vitest eval, and set `lastEvalFixtureRef.current = fixture` on success. `applyEvalOutputsJson` still clears computing as today.
-- Reset `lastEvalFixtureRef.current = null` in the fixture-prop load effect (line ~2704) so an external fixture load recomputes fully.
+- Add `lastEvalTestInput = useRef<string|null>(null)`.
+- At top of the debounced body: `const dirty = flowTreeDirtyNeuronIds(lastEvalTestInput.current, fixture)`.
+- If `!dirty.structural && dirty.ids.length === 0`: presentational change -> set `lastEvalTestInput.current = fixture`, `renderFrame()`, and return (no `setComputingWidgetIds`, no worker call, no `onEvalOutputs`).
+- Otherwise: `session.setComputingWidgetIds(JSON.stringify(dirty.structural ? neuronWidgetIdsFromFixtureJson(fixture) : dirty.ids))` (replaces the all-neurons call), run the existing orchestrator/vitest eval, and set `lastEvalTestInput.current = fixture` on success. `applyEvalOutputsJson` still clears computing as today.
+- Reset `lastEvalTestInput.current = null` in the fixture-prop load effect (line ~2704) so an external fixture load recomputes fully.
 
 ### 3. Authoritative tree-change gate (safeguard) - [flow/core/lib.rs](flow/core/lib.rs)
 

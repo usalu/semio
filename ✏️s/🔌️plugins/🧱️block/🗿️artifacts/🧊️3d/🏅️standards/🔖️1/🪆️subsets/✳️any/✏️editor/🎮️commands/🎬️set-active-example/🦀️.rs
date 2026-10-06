@@ -195,7 +195,7 @@ fn replace_document_operations(current: &Block3dSnapshot, next: &Block3dSnapshot
 }
 //#endregion 🔖️ReplaceDocument
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
 use crate::Block3dSnapshot;
 use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -209,8 +209,8 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
-        BLOCK3D_EXAMPLE_CAPSULE => crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
-        BLOCK3D_EXAMPLE_FOREST_LEFT => crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
+        BLOCK3D_EXAMPLE_CAPSULE => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
+        BLOCK3D_EXAMPLE_FOREST_LEFT => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
         _ => None,
     };
     match example {

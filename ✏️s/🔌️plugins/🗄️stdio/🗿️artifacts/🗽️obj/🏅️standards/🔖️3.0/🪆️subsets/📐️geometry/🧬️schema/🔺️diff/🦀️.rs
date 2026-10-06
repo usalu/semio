@@ -28,6 +28,8 @@
 //! (`hex_encode`/`split_top_level`/`encode_option`/…) verbatim per artifact convention; `f64` fields
 //! use Rust's own round-trippable `Display`/`FromStr` (no external float-formatting dep needed).
 
+use crate::standards::v3_0::subsets::any::io::binary::diff::dec_unknown_bin;
+use crate::standards::v3_0::subsets::any::io::binary::diff::enc_unknown_bin;
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
 
@@ -38,7 +40,7 @@ use crate::schema::snapshot::{ObjFace, ObjGroup, ObjNormal, ObjObject, ObjTexCoo
 use crate::ObjSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
@@ -1157,715 +1159,116 @@ pub fn diff_set_snapshot(base: &ObjSnapshot, next: &ObjSnapshot) -> ObjDiff {
 /// `ObjGroupDiff`) print as single-uppercase-letter `TAG:value` pairs inside their own `[...]`,
 /// same convention as gif89a's `GifFrameDiff`.
 //#region 🔖️Primitives
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_encode_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_decode_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn fmt_f64(v: f64) -> String {
-    v.to_string()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_u32(s: &str) -> Result<u32, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_usize(s: &str) -> Result<usize, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
 
-/// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
-/// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    if s.is_empty() {
-        return Vec::new();
-    }
-    let mut out = Vec::new();
-    let mut depth = 0i32;
-    let mut start = 0usize;
-    for (i, c) in s.char_indices() {
-        match c {
-            '[' => depth += 1,
-            ']' => depth -= 1,
-            c if c == sep && depth == 0 => {
-                out.push(&s[start..i]);
-                start = i + c.len_utf8();
-            }
-            _ => {}
-        }
-    }
-    out.push(&s[start..]);
-    out
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn strip_brackets(s: &str) -> Result<&str, String> {
-    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
-    match opt {
-        None => "[0]".to_string(),
-        Some(v) => format!("[1,{}]", enc(v)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
-        ["0"] => Ok(None),
-        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
-        other => Err(format!("option decode: bad shape {other:?}")),
-    }
-}
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_vertex(v: &ObjVertex) -> String {
-    format!("[{},{},{},{}]", fmt_f64(v.x), fmt_f64(v.y), fmt_f64(v.z), encode_option(&v.w, |w| fmt_f64(*w)))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_vertex(s: &str) -> Result<ObjVertex, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [x, y, z, w] = parts.as_slice() else { return Err(format!("vertex: expected 4 fields, got {}", parts.len())) };
-    Ok(ObjVertex { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)?, w: decode_option(w, parse_f64)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_texcoord(t: &ObjTexCoord) -> String {
-    format!("[{},{},{}]", fmt_f64(t.u), fmt_f64(t.v), encode_option(&t.w, |w| fmt_f64(*w)))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_texcoord(s: &str) -> Result<ObjTexCoord, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [u, v, w] = parts.as_slice() else { return Err(format!("texcoord: expected 3 fields, got {}", parts.len())) };
-    Ok(ObjTexCoord { u: parse_f64(u)?, v: parse_f64(v)?, w: decode_option(w, parse_f64)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_normal(n: &ObjNormal) -> String {
-    format!("[{},{},{}]", fmt_f64(n.x), fmt_f64(n.y), fmt_f64(n.z))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_normal(s: &str) -> Result<ObjNormal, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [x, y, z] = parts.as_slice() else { return Err(format!("normal: expected 3 fields, got {}", parts.len())) };
-    Ok(ObjNormal { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_face_vertex(fv: &ObjFaceVertex) -> String {
-    format!("[{},{},{}]", fv.vertex, encode_option(&fv.texcoord, |v| v.to_string()), encode_option(&fv.normal, |v| v.to_string()))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_face_vertex(s: &str) -> Result<ObjFaceVertex, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [vertex, texcoord, normal] = parts.as_slice() else { return Err(format!("face vertex: expected 3 fields, got {}", parts.len())) };
-    Ok(ObjFaceVertex { vertex: parse_u32(vertex)?, texcoord: decode_option(texcoord, parse_u32)?, normal: decode_option(normal, parse_u32)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_face(f: &ObjFace) -> String {
-    format!("[{}]", f.vertices.iter().map(enc_face_vertex).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_face(s: &str) -> Result<ObjFace, String> {
-    let inner = strip_brackets(s)?;
-    let vertices = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_face_vertex).collect::<Result<Vec<_>, String>>()?;
-    Ok(ObjFace { vertices })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_group(g: &ObjGroup) -> String {
-    format!("[{},[{}]]", hex_encode_str(&g.name), g.faces.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_group(s: &str) -> Result<ObjGroup, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [name_hex, faces_s] = parts.as_slice() else { return Err(format!("group: expected 2 fields, got {}", parts.len())) };
-    let faces = split_top_level(strip_brackets(faces_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
-    Ok(ObjGroup { name: hex_decode_str(name_hex)?, faces })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_object(o: &ObjObject) -> String {
-    format!("[{},[{}]]", hex_encode_str(&o.name), o.faces.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_object(s: &str) -> Result<ObjObject, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [name_hex, faces_s] = parts.as_slice() else { return Err(format!("object: expected 2 fields, got {}", parts.len())) };
-    let faces = split_top_level(strip_brackets(faces_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
-    Ok(ObjObject { name: hex_decode_str(name_hex)?, faces })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_usemtl(u: &ObjUsemtlRange) -> String {
-    format!("[{},{}]", u.face_index_from, hex_encode_str(&u.material))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_usemtl(s: &str) -> Result<ObjUsemtlRange, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [idx, mat] = parts.as_slice() else { return Err(format!("usemtl: expected 2 fields, got {}", parts.len())) };
-    Ok(ObjUsemtlRange { face_index_from: parse_u64(idx)?, material: hex_decode_str(mat)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_smoothing(sg: &ObjSmoothingRange) -> String {
-    format!("[{},{}]", sg.face_index_from, encode_option(&sg.group, |g| g.to_string()))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_smoothing(s: &str) -> Result<ObjSmoothingRange, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [idx, grp] = parts.as_slice() else { return Err(format!("smoothing: expected 2 fields, got {}", parts.len())) };
-    Ok(ObjSmoothingRange { face_index_from: parse_u64(idx)?, group: decode_option(grp, parse_u32)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_unknown(u: &ObjUnknownStatement) -> String {
-    format!("[{},{}]", u.line_index, hex_encode_str(&u.raw))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_unknown(s: &str) -> Result<ObjUnknownStatement, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [idx, raw] = parts.as_slice() else { return Err(format!("unknown: expected 2 fields, got {}", parts.len())) };
-    Ok(ObjUnknownStatement { line_index: idx.parse::<u64>().map_err(|error| error.to_string())?, raw: hex_decode_str(raw)? })
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_vertex_diff(d: &ObjVertexDiff) -> String {
-    let mut parts = Vec::new();
-    if let Some(v) = d.x {
-        parts.push(format!("X:{}", fmt_f64(v)));
-    }
-    if let Some(v) = d.y {
-        parts.push(format!("Y:{}", fmt_f64(v)));
-    }
-    if let Some(v) = d.z {
-        parts.push(format!("Z:{}", fmt_f64(v)));
-    }
-    if let Some(v) = d.w {
-        parts.push(format!("W:{}", encode_option(&v, |w| fmt_f64(*w))));
-    }
-    format!("[{}]", parts.join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_vertex_diff(s: &str) -> Result<ObjVertexDiff, String> {
-    let inner = strip_brackets(s)?;
-    let mut d = ObjVertexDiff::default();
-    for entry in split_top_level(inner, ',') {
-        if entry.is_empty() {
-            continue;
-        }
-        let (tag, val) = entry.split_once(':').ok_or_else(|| format!("vertex diff: bad entry {entry:?}"))?;
-        match tag {
-            "X" => d.x = Some(parse_f64(val)?),
-            "Y" => d.y = Some(parse_f64(val)?),
-            "Z" => d.z = Some(parse_f64(val)?),
-            "W" => d.w = Some(decode_option(val, parse_f64)?),
-            other => return Err(format!("vertex diff: unknown tag {other:?}")),
-        }
-    }
-    Ok(d)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_texcoord_diff(d: &ObjTexCoordDiff) -> String {
-    let mut parts = Vec::new();
-    if let Some(v) = d.u {
-        parts.push(format!("U:{}", fmt_f64(v)));
-    }
-    if let Some(v) = d.v {
-        parts.push(format!("V:{}", fmt_f64(v)));
-    }
-    if let Some(v) = d.w {
-        parts.push(format!("W:{}", encode_option(&v, |w| fmt_f64(*w))));
-    }
-    format!("[{}]", parts.join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_texcoord_diff(s: &str) -> Result<ObjTexCoordDiff, String> {
-    let inner = strip_brackets(s)?;
-    let mut d = ObjTexCoordDiff::default();
-    for entry in split_top_level(inner, ',') {
-        if entry.is_empty() {
-            continue;
-        }
-        let (tag, val) = entry.split_once(':').ok_or_else(|| format!("texcoord diff: bad entry {entry:?}"))?;
-        match tag {
-            "U" => d.u = Some(parse_f64(val)?),
-            "V" => d.v = Some(parse_f64(val)?),
-            "W" => d.w = Some(decode_option(val, parse_f64)?),
-            other => return Err(format!("texcoord diff: unknown tag {other:?}")),
-        }
-    }
-    Ok(d)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_normal_diff(d: &ObjNormalDiff) -> String {
-    let mut parts = Vec::new();
-    if let Some(v) = d.x {
-        parts.push(format!("X:{}", fmt_f64(v)));
-    }
-    if let Some(v) = d.y {
-        parts.push(format!("Y:{}", fmt_f64(v)));
-    }
-    if let Some(v) = d.z {
-        parts.push(format!("Z:{}", fmt_f64(v)));
-    }
-    format!("[{}]", parts.join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_normal_diff(s: &str) -> Result<ObjNormalDiff, String> {
-    let inner = strip_brackets(s)?;
-    let mut d = ObjNormalDiff::default();
-    for entry in split_top_level(inner, ',') {
-        if entry.is_empty() {
-            continue;
-        }
-        let (tag, val) = entry.split_once(':').ok_or_else(|| format!("normal diff: bad entry {entry:?}"))?;
-        match tag {
-            "X" => d.x = Some(parse_f64(val)?),
-            "Y" => d.y = Some(parse_f64(val)?),
-            "Z" => d.z = Some(parse_f64(val)?),
-            other => return Err(format!("normal diff: unknown tag {other:?}")),
-        }
-    }
-    Ok(d)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_face_diff(d: &ObjFaceDiff) -> String {
-    let mut parts = Vec::new();
-    if let Some(v) = &d.vertices {
-        parts.push(format!("V:[{}]", v.iter().map(enc_face_vertex).collect::<Vec<_>>().join(",")));
-    }
-    format!("[{}]", parts.join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_face_diff(s: &str) -> Result<ObjFaceDiff, String> {
-    let inner = strip_brackets(s)?;
-    let mut d = ObjFaceDiff::default();
-    for entry in split_top_level(inner, ',') {
-        if entry.is_empty() {
-            continue;
-        }
-        let (tag, val) = entry.split_once(':').ok_or_else(|| format!("face diff: bad entry {entry:?}"))?;
-        match tag {
-            "V" => {
-                let items = split_top_level(strip_brackets(val)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_face_vertex).collect::<Result<Vec<_>, String>>()?;
-                d.vertices = Some(items);
-            }
-            other => return Err(format!("face diff: unknown tag {other:?}")),
-        }
-    }
-    Ok(d)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_group_diff(d: &ObjGroupDiff) -> String {
-    let mut parts = Vec::new();
-    if let Some(v) = &d.faces {
-        parts.push(format!("F:[{}]", v.iter().map(|f| f.to_string()).collect::<Vec<_>>().join(",")));
-    }
-    format!("[{}]", parts.join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_group_diff(s: &str) -> Result<ObjGroupDiff, String> {
-    let inner = strip_brackets(s)?;
-    let mut d = ObjGroupDiff::default();
-    for entry in split_top_level(inner, ',') {
-        if entry.is_empty() {
-            continue;
-        }
-        let (tag, val) = entry.split_once(':').ok_or_else(|| format!("group diff: bad entry {entry:?}"))?;
-        match tag {
-            "F" => {
-                let faces = split_top_level(strip_brackets(val)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
-                d.faces = Some(faces);
-            }
-            other => return Err(format!("group diff: unknown tag {other:?}")),
-        }
-    }
-    Ok(d)
-}
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️CollectionCodecs
-/// 🧭️ Generic-shaped 3-section `[removed];[modified];[added]` index-keyed collection-triple
-/// printer/parser (mirrors gif89a's `enc_collection_triple`/`dec_collection_triple`), hand-
-/// instantiated per item type below.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_index_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
-    let removed = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
-    let modified = modified.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
-    let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
-    format!("{name}{{[{removed}];[{modified}];[{added}]}}")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_index_triple(body: &str) -> Result<IndexedDiffParts<String, String>, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
-        split_top_level(strip_brackets(s)?, ',')
-            .into_iter()
-            .filter(|s| !s.is_empty())
-            .map(|entry| {
-                let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
-                Ok((parse_usize(idx)?, rest.to_string()))
-            })
-            .collect()
-    };
-    Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
-}
 
-/// 🧭️ Same shape, name-keyed (`removed: Vec<String>`) — for `groups`/`objects`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_named_triple(name: &str, removed: &[String], modified: &[(String, String)], added: &[(usize, String)]) -> String {
-    let removed = removed.iter().map(|n| hex_encode_str(n)).collect::<Vec<_>>().join(",");
-    let modified = modified.iter().map(|(n, v)| format!("{}:{v}", hex_encode_str(n))).collect::<Vec<_>>().join(",");
-    let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
-    format!("{name}{{[{removed}];[{modified}];[{added}]}}")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_named_triple(body: &str) -> Result<NamedDiffParts<String, String>, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named collection: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(hex_decode_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (name_hex, rest) = entry.split_once(':').ok_or_else(|| format!("named collection modified: bad entry {entry:?}"))?;
-            Ok((hex_decode_str(name_hex)?, rest.to_string()))
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("named collection added: bad entry {entry:?}"))?;
-            Ok((parse_usize(idx)?, rest.to_string()))
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    Ok((removed, modified, added))
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_vertices_diff(d: &ObjVerticesDiff) -> String {
-    enc_index_triple("vertices", &d.removed, &d.modified.iter().map(|m| (m.index, enc_vertex_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_vertex(&a.vertex))).collect::<Vec<_>>())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_vertices_diff(body: &str) -> Result<ObjVerticesDiff, String> {
-    let (removed, modified, added) = dec_index_triple(body)?;
-    Ok(ObjVerticesDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, enc)| Ok(ObjVertexModified { index, diff: dec_vertex_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-        added: added.into_iter().map(|(index, enc)| Ok(ObjVertexAdded { index, vertex: dec_vertex(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-    })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_texcoords_diff(d: &ObjTexCoordsDiff) -> String {
-    enc_index_triple("texcoords", &d.removed, &d.modified.iter().map(|m| (m.index, enc_texcoord_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_texcoord(&a.texcoord))).collect::<Vec<_>>())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_texcoords_diff(body: &str) -> Result<ObjTexCoordsDiff, String> {
-    let (removed, modified, added) = dec_index_triple(body)?;
-    Ok(ObjTexCoordsDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, enc)| Ok(ObjTexCoordModified { index, diff: dec_texcoord_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-        added: added.into_iter().map(|(index, enc)| Ok(ObjTexCoordAdded { index, texcoord: dec_texcoord(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-    })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_normals_diff(d: &ObjNormalsDiff) -> String {
-    enc_index_triple("normals", &d.removed, &d.modified.iter().map(|m| (m.index, enc_normal_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_normal(&a.normal))).collect::<Vec<_>>())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_normals_diff(body: &str) -> Result<ObjNormalsDiff, String> {
-    let (removed, modified, added) = dec_index_triple(body)?;
-    Ok(ObjNormalsDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, enc)| Ok(ObjNormalModified { index, diff: dec_normal_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-        added: added.into_iter().map(|(index, enc)| Ok(ObjNormalAdded { index, normal: dec_normal(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-    })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_faces_diff(d: &ObjFacesDiff) -> String {
-    enc_index_triple("faces", &d.removed, &d.modified.iter().map(|m| (m.index, enc_face_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_face(&a.face))).collect::<Vec<_>>())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_faces_diff(body: &str) -> Result<ObjFacesDiff, String> {
-    let (removed, modified, added) = dec_index_triple(body)?;
-    Ok(ObjFacesDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, enc)| Ok(ObjFaceModified { index, diff: dec_face_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-        added: added.into_iter().map(|(index, enc)| Ok(ObjFaceAdded { index, face: dec_face(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-    })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_groups_diff(d: &ObjGroupsDiff) -> String {
-    enc_named_triple("groups", &d.removed, &d.modified.iter().map(|m| (m.name.clone(), enc_group_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_group(&a.group))).collect::<Vec<_>>())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_groups_diff(body: &str) -> Result<ObjGroupsDiff, String> {
-    let (removed, modified, added) = dec_named_triple(body)?;
-    Ok(ObjGroupsDiff {
-        removed,
-        modified: modified.into_iter().map(|(name, enc)| Ok(ObjGroupModified { name, diff: dec_group_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-        added: added.into_iter().map(|(index, enc)| Ok(ObjGroupAdded { index, group: dec_group(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-    })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_objects_diff(d: &ObjObjectsDiff) -> String {
-    enc_named_triple("objects", &d.removed, &d.modified.iter().map(|m| (m.name.clone(), enc_group_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_object(&a.object))).collect::<Vec<_>>())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_objects_diff(body: &str) -> Result<ObjObjectsDiff, String> {
-    let (removed, modified, added) = dec_named_triple(body)?;
-    Ok(ObjObjectsDiff {
-        removed,
-        modified: modified.into_iter().map(|(name, enc)| Ok(ObjGroupModified { name, diff: dec_group_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-        added: added.into_iter().map(|(index, enc)| Ok(ObjObjectAdded { index, object: dec_object(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-    })
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️CollectionCodecs
 
 //#region 🔖️BinaryPrimitives
-/// 🧪️ P2-FG1: real LEB128-varint-framed binary primitives (length-prefixed strings, fixed-8-byte
-/// `f64` little-endian, varint-encoded `u32`/`usize`, tag-byte `Option<T>`/tri-state
-/// `Option<Option<T>>` wrappers) backing the upgraded `DiffCodec::encode_diff`/`decode_diff` frame
-/// below — mirrors dxf/md's own `#region 🔖️BinaryPrimitives`, reusing
-/// `store::pack_rt::write_varint_u64`/`store::ByteReader` rather than reinventing varint encode/
-/// decode. `obj`'s whole diff tree is flat structs/`Vec`/`Option<T>` (module doc comment, §3b) — no
-/// `Prim::Ref`-recursion gap applies to any SINGLE value here, only to the collection-triple SHAPE
-/// itself (see the `.protocol.semio` sibling's comment), so every value below gets a full,
-/// genuinely field-by-field binary frame, never an opaque byte-chain.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
-    out.extend_from_slice(&v.to_le_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_str_bin(out: &mut Vec<u8>, s: &str) {
-    store::pack_rt::write_varint_u64(out, s.len() as u64);
-    out.extend_from_slice(s.as_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_u32_bin(out: &mut Vec<u8>, v: u32) {
-    store::pack_rt::write_varint_u64(out, v as u64);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_u32_bin(reader: &mut store::ByteReader<'_>) -> Result<u32, String> {
-    Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as u32)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_usize_bin(out: &mut Vec<u8>, v: usize) {
-    store::pack_rt::write_varint_u64(out, v as u64);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<usize, String> {
-    Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut Vec<u8>)) {
-    match opt {
-        None => out.push(0),
-        Some(v) => {
-            out.push(1);
-            enc(v, out);
-        }
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(None),
-        1 => Ok(Some(dec(reader)?)),
-        other => Err(format!("option binary: unknown tag {other}")),
-    }
-}
-/// 🏳️ Tri-state `Option<Option<T>>` binary wrapper (`ObjVertexDiff::w`/`ObjTexCoordDiff::w`'s own
-/// diff field, NOT `ObjDiff::mtllib` — that top-level field's OUTER `Option` layer is already
-/// carried by `encode_diff`'s presence flags, so its payload only needs [`write_option_bin`] over
-/// the remaining `Option<String>`) — `0`=unchanged (`None`), `1`=cleared (`Some(None)`),
-/// `2`=set (`Some(Some(v))`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl Fn(&T, &mut Vec<u8>)) {
-    match opt {
-        None => out.push(0),
-        Some(None) => out.push(1),
-        Some(Some(v)) => {
-            out.push(2);
-            enc(v, out);
-        }
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(None),
-        1 => Ok(Some(None)),
-        2 => Ok(Some(Some(dec(reader)?))),
-        other => Err(format!("tristate binary: unknown tag {other}")),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_vec_bin<T>(out: &mut Vec<u8>, items: &[T], enc: impl Fn(&T, &mut Vec<u8>)) {
-    store::pack_rt::write_varint_u64(out, items.len() as u64);
-    for item in items {
-        enc(item, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_vec_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Vec<T>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        out.push(dec(reader)?);
-    }
-    Ok(out)
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️ValueBinaryCodecs
-/// 🧪️ P2-FG1: real field-by-field binary twins of `#region 🔖️ValueCodecs` above.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_vertex_bin(v: &ObjVertex, out: &mut Vec<u8>) {
-    write_f64_bin(out, v.x);
-    write_f64_bin(out, v.y);
-    write_f64_bin(out, v.z);
-    write_option_bin(out, &v.w, |w, o| write_f64_bin(o, *w));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVertex, String> {
-    let x = read_f64_bin(reader)?;
-    let y = read_f64_bin(reader)?;
-    let z = read_f64_bin(reader)?;
-    let w = read_option_bin(reader, read_f64_bin)?;
-    Ok(ObjVertex { x, y, z, w })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_texcoord_bin(t: &ObjTexCoord, out: &mut Vec<u8>) {
-    write_f64_bin(out, t.u);
-    write_f64_bin(out, t.v);
-    write_option_bin(out, &t.w, |w, o| write_f64_bin(o, *w));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_texcoord_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoord, String> {
-    let u = read_f64_bin(reader)?;
-    let v = read_f64_bin(reader)?;
-    let w = read_option_bin(reader, read_f64_bin)?;
-    Ok(ObjTexCoord { u, v, w })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_normal_bin(n: &ObjNormal, out: &mut Vec<u8>) {
-    write_f64_bin(out, n.x);
-    write_f64_bin(out, n.y);
-    write_f64_bin(out, n.z);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_normal_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormal, String> {
-    let x = read_f64_bin(reader)?;
-    let y = read_f64_bin(reader)?;
-    let z = read_f64_bin(reader)?;
-    Ok(ObjNormal { x, y, z })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_face_vertex_bin(fv: &ObjFaceVertex, out: &mut Vec<u8>) {
-    write_u32_bin(out, fv.vertex);
-    write_option_bin(out, &fv.texcoord, |v, o| write_u32_bin(o, *v));
-    write_option_bin(out, &fv.normal, |v, o| write_u32_bin(o, *v));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_face_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFaceVertex, String> {
-    let vertex = read_u32_bin(reader)?;
-    let texcoord = read_option_bin(reader, read_u32_bin)?;
-    let normal = read_option_bin(reader, read_u32_bin)?;
-    Ok(ObjFaceVertex { vertex, texcoord, normal })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_face_bin(f: &ObjFace, out: &mut Vec<u8>) {
-    write_vec_bin(out, &f.vertices, enc_face_vertex_bin);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_face_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFace, String> {
-    Ok(ObjFace { vertices: read_vec_bin(reader, dec_face_vertex_bin)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_group_bin(g: &ObjGroup, out: &mut Vec<u8>) {
-    write_str_bin(out, &g.name);
-    write_vec_bin(out, &g.faces, |f, o| write_u64_bin(o, *f));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_group_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroup, String> {
-    let name = read_str_bin(reader)?;
-    let faces = read_vec_bin(reader, read_u64_bin)?;
-    Ok(ObjGroup { name, faces })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_object_bin(o: &ObjObject, out: &mut Vec<u8>) {
-    write_str_bin(out, &o.name);
-    write_vec_bin(out, &o.faces, |f, out| write_u64_bin(out, *f));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_object_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjObject, String> {
-    let name = read_str_bin(reader)?;
-    let faces = read_vec_bin(reader, read_u64_bin)?;
-    Ok(ObjObject { name, faces })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_usemtl_bin(u: &ObjUsemtlRange, out: &mut Vec<u8>) {
-    write_u64_bin(out, u.face_index_from);
-    write_str_bin(out, &u.material);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_usemtl_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjUsemtlRange, String> {
-    let face_index_from = read_u64_bin(reader)?;
-    let material = read_str_bin(reader)?;
-    Ok(ObjUsemtlRange { face_index_from, material })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_smoothing_bin(sg: &ObjSmoothingRange, out: &mut Vec<u8>) {
-    write_u64_bin(out, sg.face_index_from);
-    write_option_bin(out, &sg.group, |g, o| write_u32_bin(o, *g));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_smoothing_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjSmoothingRange, String> {
-    let face_index_from = read_u64_bin(reader)?;
-    let group = read_option_bin(reader, read_u32_bin)?;
-    Ok(ObjSmoothingRange { face_index_from, group })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_unknown_bin(u: &ObjUnknownStatement, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, u.line_index);
-    write_str_bin(out, &u.raw);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_unknown_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjUnknownStatement, String> {
-    let line_index = reader.read_varint_u64().map_err(|error| error.to_string())?;
-    let raw = read_str_bin(reader)?;
-    Ok(ObjUnknownStatement { line_index, raw })
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #[cfg(test)]
 #[test]
@@ -1879,392 +1282,43 @@ fn sqlite_snapshot_obj_unsigned_source_positions_have_lossless_diff_twins() {
 //#endregion 🔖️ValueBinaryCodecs
 
 //#region 🔖️DiffValueBinaryCodecs
-/// 🧪️ P2-FG1: real field-by-field binary twins of `#region 🔖️DiffValueCodecs` above — each
-/// per-item sparse patch encodes its fields in fixed declaration order via
-/// [`write_option_bin`]/[`write_tristate_bin`] (no tag byte needed per field, unlike an enum
-/// variant: the field ORDER itself is the schema, exactly [`enc_vertex_diff_bin`]'s shape
-/// mirroring md's own `MdBlockDiff::Heading` arm).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_vertex_diff_bin(d: &ObjVertexDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.x, |v, o| write_f64_bin(o, *v));
-    write_option_bin(out, &d.y, |v, o| write_f64_bin(o, *v));
-    write_option_bin(out, &d.z, |v, o| write_f64_bin(o, *v));
-    write_tristate_bin(out, &d.w, |v, o| write_f64_bin(o, *v));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_vertex_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVertexDiff, String> {
-    let x = read_option_bin(reader, read_f64_bin)?;
-    let y = read_option_bin(reader, read_f64_bin)?;
-    let z = read_option_bin(reader, read_f64_bin)?;
-    let w = read_tristate_bin(reader, read_f64_bin)?;
-    Ok(ObjVertexDiff { x, y, z, w })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_texcoord_diff_bin(d: &ObjTexCoordDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.u, |v, o| write_f64_bin(o, *v));
-    write_option_bin(out, &d.v, |v, o| write_f64_bin(o, *v));
-    write_tristate_bin(out, &d.w, |v, o| write_f64_bin(o, *v));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_texcoord_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoordDiff, String> {
-    let u = read_option_bin(reader, read_f64_bin)?;
-    let v = read_option_bin(reader, read_f64_bin)?;
-    let w = read_tristate_bin(reader, read_f64_bin)?;
-    Ok(ObjTexCoordDiff { u, v, w })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_normal_diff_bin(d: &ObjNormalDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.x, |v, o| write_f64_bin(o, *v));
-    write_option_bin(out, &d.y, |v, o| write_f64_bin(o, *v));
-    write_option_bin(out, &d.z, |v, o| write_f64_bin(o, *v));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_normal_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormalDiff, String> {
-    let x = read_option_bin(reader, read_f64_bin)?;
-    let y = read_option_bin(reader, read_f64_bin)?;
-    let z = read_option_bin(reader, read_f64_bin)?;
-    Ok(ObjNormalDiff { x, y, z })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_face_diff_bin(d: &ObjFaceDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.vertices, |v, o| write_vec_bin(o, v, enc_face_vertex_bin));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_face_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFaceDiff, String> {
-    let vertices = read_option_bin(reader, |r| read_vec_bin(r, dec_face_vertex_bin))?;
-    Ok(ObjFaceDiff { vertices })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_group_diff_bin(d: &ObjGroupDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.faces, |v, o| write_vec_bin(o, v, |f, oo| write_u64_bin(oo, *f)));
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_group_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupDiff, String> {
-    let faces = read_option_bin(reader, |r| read_vec_bin(r, read_u64_bin))?;
-    Ok(ObjGroupDiff { faces })
-}
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️DiffValueBinaryCodecs
 
 //#region 🔖️CollectionBinaryCodecs
-/// 🧭️ Generic-shaped 3-section index-keyed/name-keyed collection-triple binary
-/// encoder/decoder (mirrors dxf's own `enc_index_triple_bin`/`enc_name_triple_bin`), hand-
-/// instantiated per collection below.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_index_triple_bin<T, D>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], out: &mut Vec<u8>, enc_diff: impl Fn(&D, &mut Vec<u8>), enc_item: impl Fn(&T, &mut Vec<u8>)) {
-    write_vec_bin(out, removed, |idx, o| write_usize_bin(o, *idx));
-    store::pack_rt::write_varint_u64(out, modified.len() as u64);
-    for (idx, d) in modified {
-        write_usize_bin(out, *idx);
-        enc_diff(d, out);
-    }
-    store::pack_rt::write_varint_u64(out, added.len() as u64);
-    for (idx, item) in added {
-        write_usize_bin(out, *idx);
-        enc_item(item, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_index_triple_bin<T, D>(reader: &mut store::ByteReader<'_>, dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<IndexedDiffParts<D, T>, String> {
-    let removed = read_vec_bin(reader, read_usize_bin)?;
-    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut modified = Vec::with_capacity(mc as usize);
-    for _ in 0..mc {
-        let idx = read_usize_bin(reader)?;
-        let d = dec_diff(reader)?;
-        modified.push((idx, d));
-    }
-    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut added = Vec::with_capacity(ac as usize);
-    for _ in 0..ac {
-        let idx = read_usize_bin(reader)?;
-        let item = dec_item(reader)?;
-        added.push((idx, item));
-    }
-    Ok((removed, modified, added))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_named_triple_bin<T, D>(removed: &[String], modified: &[(String, D)], added: &[(usize, T)], out: &mut Vec<u8>, enc_diff: impl Fn(&D, &mut Vec<u8>), enc_item: impl Fn(&T, &mut Vec<u8>)) {
-    write_vec_bin(out, removed, |name, o| write_str_bin(o, name));
-    store::pack_rt::write_varint_u64(out, modified.len() as u64);
-    for (name, d) in modified {
-        write_str_bin(out, name);
-        enc_diff(d, out);
-    }
-    store::pack_rt::write_varint_u64(out, added.len() as u64);
-    for (idx, item) in added {
-        write_usize_bin(out, *idx);
-        enc_item(item, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_named_triple_bin<T, D>(reader: &mut store::ByteReader<'_>, dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>, dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<NamedDiffParts<D, T>, String> {
-    let removed = read_vec_bin(reader, read_str_bin)?;
-    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut modified = Vec::with_capacity(mc as usize);
-    for _ in 0..mc {
-        let name = read_str_bin(reader)?;
-        let d = dec_diff(reader)?;
-        modified.push((name, d));
-    }
-    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut added = Vec::with_capacity(ac as usize);
-    for _ in 0..ac {
-        let idx = read_usize_bin(reader)?;
-        let item = dec_item(reader)?;
-        added.push((idx, item));
-    }
-    Ok((removed, modified, added))
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_vertices_diff_bin(d: &ObjVerticesDiff, out: &mut Vec<u8>) {
-    let modified: Vec<(usize, ObjVertexDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
-    let added: Vec<(usize, ObjVertex)> = d.added.iter().map(|a| (a.index, a.vertex.clone())).collect();
-    enc_index_triple_bin(&d.removed, &modified, &added, out, enc_vertex_diff_bin, enc_vertex_bin);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_vertices_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjVerticesDiff, String> {
-    let (removed, modified, added) = dec_index_triple_bin(reader, dec_vertex_diff_bin, dec_vertex_bin)?;
-    Ok(ObjVerticesDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(), added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect() })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_texcoords_diff_bin(d: &ObjTexCoordsDiff, out: &mut Vec<u8>) {
-    let modified: Vec<(usize, ObjTexCoordDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
-    let added: Vec<(usize, ObjTexCoord)> = d.added.iter().map(|a| (a.index, a.texcoord.clone())).collect();
-    enc_index_triple_bin(&d.removed, &modified, &added, out, enc_texcoord_diff_bin, enc_texcoord_bin);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_texcoords_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjTexCoordsDiff, String> {
-    let (removed, modified, added) = dec_index_triple_bin(reader, dec_texcoord_diff_bin, dec_texcoord_bin)?;
-    Ok(ObjTexCoordsDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(), added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect() })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_normals_diff_bin(d: &ObjNormalsDiff, out: &mut Vec<u8>) {
-    let modified: Vec<(usize, ObjNormalDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
-    let added: Vec<(usize, ObjNormal)> = d.added.iter().map(|a| (a.index, a.normal.clone())).collect();
-    enc_index_triple_bin(&d.removed, &modified, &added, out, enc_normal_diff_bin, enc_normal_bin);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_normals_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjNormalsDiff, String> {
-    let (removed, modified, added) = dec_index_triple_bin(reader, dec_normal_diff_bin, dec_normal_bin)?;
-    Ok(ObjNormalsDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(), added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect() })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_faces_diff_bin(d: &ObjFacesDiff, out: &mut Vec<u8>) {
-    let modified: Vec<(usize, ObjFaceDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
-    let added: Vec<(usize, ObjFace)> = d.added.iter().map(|a| (a.index, a.face.clone())).collect();
-    enc_index_triple_bin(&d.removed, &modified, &added, out, enc_face_diff_bin, enc_face_bin);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_faces_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjFacesDiff, String> {
-    let (removed, modified, added) = dec_index_triple_bin(reader, dec_face_diff_bin, dec_face_bin)?;
-    Ok(ObjFacesDiff { removed, modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(), added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect() })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_groups_diff_bin(d: &ObjGroupsDiff, out: &mut Vec<u8>) {
-    let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
-    let added: Vec<(usize, ObjGroup)> = d.added.iter().map(|a| (a.index, a.group.clone())).collect();
-    enc_named_triple_bin(&d.removed, &modified, &added, out, enc_group_diff_bin, enc_group_bin);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_groups_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjGroupsDiff, String> {
-    let (removed, modified, added) = dec_named_triple_bin(reader, dec_group_diff_bin, dec_group_bin)?;
-    Ok(ObjGroupsDiff { removed, modified: modified.into_iter().map(|(name, diff)| ObjGroupModified { name, diff }).collect(), added: added.into_iter().map(|(index, group)| ObjGroupAdded { index, group }).collect() })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_objects_diff_bin(d: &ObjObjectsDiff, out: &mut Vec<u8>) {
-    let modified: Vec<(String, ObjGroupDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
-    let added: Vec<(usize, ObjObject)> = d.added.iter().map(|a| (a.index, a.object.clone())).collect();
-    enc_named_triple_bin(&d.removed, &modified, &added, out, enc_group_diff_bin, enc_object_bin);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_objects_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjObjectsDiff, String> {
-    let (removed, modified, added) = dec_named_triple_bin(reader, dec_group_diff_bin, dec_object_bin)?;
-    Ok(ObjObjectsDiff { removed, modified: modified.into_iter().map(|(name, diff)| ObjGroupModified { name, diff }).collect(), added: added.into_iter().map(|(index, object)| ObjObjectAdded { index, object }).collect() })
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️CollectionBinaryCodecs
 
 //#region 🔖️TopLevel
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_obj_diff(d: &ObjDiff) -> String {
-    let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.vertices {
-        tokens.push(enc_vertices_diff(v));
-    }
-    if let Some(v) = &d.texcoords {
-        tokens.push(enc_texcoords_diff(v));
-    }
-    if let Some(v) = &d.normals {
-        tokens.push(enc_normals_diff(v));
-    }
-    if let Some(v) = &d.faces {
-        tokens.push(enc_faces_diff(v));
-    }
-    if let Some(v) = &d.groups {
-        tokens.push(enc_groups_diff(v));
-    }
-    if let Some(v) = &d.objects {
-        tokens.push(enc_objects_diff(v));
-    }
-    if let Some(v) = &d.mtllib {
-        tokens.push(format!("mtllib={}", encode_option(v, |s| hex_encode_str(s))));
-    }
-    if let Some(v) = &d.usemtl {
-        tokens.push(format!("usemtl=[{}]", v.iter().map(enc_usemtl).collect::<Vec<_>>().join(",")));
-    }
-    if let Some(v) = &d.smoothing_groups {
-        tokens.push(format!("smoothing=[{}]", v.iter().map(enc_smoothing).collect::<Vec<_>>().join(",")));
-    }
-    if let Some(v) = &d.unknown_statements {
-        tokens.push(format!("unknown=[{}]", v.iter().map(enc_unknown).collect::<Vec<_>>().join(",")));
-    }
-    tokens.join(" ")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_obj_diff(line: &str) -> Result<ObjDiff, String> {
-    let mut d = ObjDiff::default();
-    if line.is_empty() {
-        return Ok(d);
-    }
-    for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("vertices{") {
-            d.vertices = Some(dec_vertices_diff(rest.strip_suffix('}').ok_or_else(|| "vertices: missing closing brace".to_string())?)?);
-        } else if let Some(rest) = token.strip_prefix("texcoords{") {
-            d.texcoords = Some(dec_texcoords_diff(rest.strip_suffix('}').ok_or_else(|| "texcoords: missing closing brace".to_string())?)?);
-        } else if let Some(rest) = token.strip_prefix("normals{") {
-            d.normals = Some(dec_normals_diff(rest.strip_suffix('}').ok_or_else(|| "normals: missing closing brace".to_string())?)?);
-        } else if let Some(rest) = token.strip_prefix("faces{") {
-            d.faces = Some(dec_faces_diff(rest.strip_suffix('}').ok_or_else(|| "faces: missing closing brace".to_string())?)?);
-        } else if let Some(rest) = token.strip_prefix("groups{") {
-            d.groups = Some(dec_groups_diff(rest.strip_suffix('}').ok_or_else(|| "groups: missing closing brace".to_string())?)?);
-        } else if let Some(rest) = token.strip_prefix("objects{") {
-            d.objects = Some(dec_objects_diff(rest.strip_suffix('}').ok_or_else(|| "objects: missing closing brace".to_string())?)?);
-        } else if let Some(rest) = token.strip_prefix("mtllib=") {
-            d.mtllib = Some(decode_option(rest, hex_decode_str)?);
-        } else if let Some(rest) = token.strip_prefix("usemtl=") {
-            d.usemtl = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_usemtl).collect::<Result<Vec<_>, String>>()?);
-        } else if let Some(rest) = token.strip_prefix("smoothing=") {
-            d.smoothing_groups = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_smoothing).collect::<Result<Vec<_>, String>>()?);
-        } else if let Some(rest) = token.strip_prefix("unknown=") {
-            d.unknown_statements = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_unknown).collect::<Result<Vec<_>, String>>()?);
-        } else {
-            return Err(format!("obj diff: unknown token {token:?}"));
-        }
-    }
-    Ok(d)
-}
 
-impl DiffCodec for ObjDiff {
-    fn print_diff(&self) -> String {
-        print_obj_diff(self)
-    }
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_obj_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags_lo u8 | flags_hi u8 | per-present-field
-    /// payload`), matching `../💾️binary/📡️.protocol.semio`'s `header fixed 3` + `chain
-    /// payload bytes` shape — upgraded from F6's `print_diff().into_bytes()` text-as-binary
-    /// shortcut (the FG1 fixup wave's own finding: `obj` was one of 4 stdio standards left on that
-    /// shortcut this same wave, despite md/xml/dxf's equally-recursive/flat types already proving
-    /// the real upgrade achievable). `ObjDiff` has TEN independently optional top-level fields
-    /// (`vertices`/`texcoords`/`normals`/`faces`/`groups`/`objects`/`mtllib`/`usemtl`/
-    /// `smoothing_groups`/`unknown_statements`) — one more bit than a single `u8` flags byte can
-    /// hold, so two flags bytes carry the presence mask (`flags_lo` bits 0-7 = vertices..usemtl,
-    /// `flags_hi` bit 0 = smoothing_groups, bit 1 = unknown_statements) — same bitmask-over-`u8`
-    /// device dxf's own `DxfDiff` (4 fields, one `flags` byte) upgrade introduced, just needing a
-    /// second byte here. Every PRESENT field's own real, field-by-field binary payload follows
-    /// (`#region 🔖️CollectionBinaryCodecs`/`#region 🔖️BinaryPrimitives` above) — `obj`'s whole diff
-    /// tree is flat structs/`Vec`/`Option<T>` (module doc comment), so unlike md/dxf's recursive
-    /// node types, NOTHING here falls back to an opaque byte-chain at the value layer; the ONLY
-    /// thing still described as an opaque `chain` in the sibling `.protocol.semio` file is the
-    /// collection-triple SHAPE itself (`Prim::Ref` cannot express a `Vec<Modified{index,diff}>`
-    /// record-array in the protocol grammar — the same wall every collection-triple diff in this
-    /// wave hit, documented in that file), never any individual scalar/struct value.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut flags_lo: u8 = 0;
-        let mut flags_hi: u8 = 0;
-        if self.vertices.is_some() {
-            flags_lo |= 0b0000_0001;
-        }
-        if self.texcoords.is_some() {
-            flags_lo |= 0b0000_0010;
-        }
-        if self.normals.is_some() {
-            flags_lo |= 0b0000_0100;
-        }
-        if self.faces.is_some() {
-            flags_lo |= 0b0000_1000;
-        }
-        if self.groups.is_some() {
-            flags_lo |= 0b0001_0000;
-        }
-        if self.objects.is_some() {
-            flags_lo |= 0b0010_0000;
-        }
-        if self.mtllib.is_some() {
-            flags_lo |= 0b0100_0000;
-        }
-        if self.usemtl.is_some() {
-            flags_lo |= 0b1000_0000;
-        }
-        if self.smoothing_groups.is_some() {
-            flags_hi |= 0b0000_0001;
-        }
-        if self.unknown_statements.is_some() {
-            flags_hi |= 0b0000_0010;
-        }
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags_lo, flags_hi];
-        if let Some(v) = &self.vertices {
-            enc_vertices_diff_bin(v, &mut out);
-        }
-        if let Some(v) = &self.texcoords {
-            enc_texcoords_diff_bin(v, &mut out);
-        }
-        if let Some(v) = &self.normals {
-            enc_normals_diff_bin(v, &mut out);
-        }
-        if let Some(v) = &self.faces {
-            enc_faces_diff_bin(v, &mut out);
-        }
-        if let Some(v) = &self.groups {
-            enc_groups_diff_bin(v, &mut out);
-        }
-        if let Some(v) = &self.objects {
-            enc_objects_diff_bin(v, &mut out);
-        }
-        if let Some(v) = &self.mtllib {
-            write_option_bin(&mut out, v, |s, o| write_str_bin(o, s));
-        }
-        if let Some(v) = &self.usemtl {
-            write_vec_bin(&mut out, v, enc_usemtl_bin);
-        }
-        if let Some(v) = &self.smoothing_groups {
-            write_vec_bin(&mut out, v, enc_smoothing_bin);
-        }
-        if let Some(v) = &self.unknown_statements {
-            write_vec_bin(&mut out, v, enc_unknown_bin);
-        }
-        Ok(out)
-    }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags_lo = reader.read_u8().map_err(|e| malformed("diff flags_lo", 1, e.to_string()))?;
-        let flags_hi = reader.read_u8().map_err(|e| malformed("diff flags_hi", 2, e.to_string()))?;
-        let vertices = if flags_lo & 0b0000_0001 != 0 { Some(dec_vertices_diff_bin(&mut reader).map_err(|e| malformed("diff vertices", reader.position(), e))?) } else { None };
-        let texcoords = if flags_lo & 0b0000_0010 != 0 { Some(dec_texcoords_diff_bin(&mut reader).map_err(|e| malformed("diff texcoords", reader.position(), e))?) } else { None };
-        let normals = if flags_lo & 0b0000_0100 != 0 { Some(dec_normals_diff_bin(&mut reader).map_err(|e| malformed("diff normals", reader.position(), e))?) } else { None };
-        let faces = if flags_lo & 0b0000_1000 != 0 { Some(dec_faces_diff_bin(&mut reader).map_err(|e| malformed("diff faces", reader.position(), e))?) } else { None };
-        let groups = if flags_lo & 0b0001_0000 != 0 { Some(dec_groups_diff_bin(&mut reader).map_err(|e| malformed("diff groups", reader.position(), e))?) } else { None };
-        let objects = if flags_lo & 0b0010_0000 != 0 { Some(dec_objects_diff_bin(&mut reader).map_err(|e| malformed("diff objects", reader.position(), e))?) } else { None };
-        let mtllib = if flags_lo & 0b0100_0000 != 0 { Some(read_option_bin(&mut reader, read_str_bin).map_err(|e| malformed("diff mtllib", reader.position(), e))?) } else { None };
-        let usemtl = if flags_lo & 0b1000_0000 != 0 { Some(read_vec_bin(&mut reader, dec_usemtl_bin).map_err(|e| malformed("diff usemtl", reader.position(), e))?) } else { None };
-        let smoothing_groups = if flags_hi & 0b0000_0001 != 0 { Some(read_vec_bin(&mut reader, dec_smoothing_bin).map_err(|e| malformed("diff smoothing_groups", reader.position(), e))?) } else { None };
-        let unknown_statements = if flags_hi & 0b0000_0010 != 0 { Some(read_vec_bin(&mut reader, dec_unknown_bin).map_err(|e| malformed("diff unknown_statements", reader.position(), e))?) } else { None };
-        Ok(ObjDiff { vertices, texcoords, normals, faces, groups, objects, mtllib, usemtl, smoothing_groups, unknown_statements })
-    }
-}
+
+
+
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 
@@ -2459,6 +1513,6 @@ pub use crate::schema::snapshot::ObjUnknownStatement;
 pub use crate::schema::snapshot::ObjUsemtlRange;
 //#endregion 🔁️Re-exports
 
-fn parse_u64(value:&str)->Result<u64,String>{value.parse::<u64>().map_err(|error|error.to_string())}
-fn write_u64_bin(output:&mut Vec<u8>,value:u64){store::pack_rt::write_varint_u64(output,value)}
-fn read_u64_bin(reader:&mut store::ByteReader<'_>)->Result<u64,String>{reader.read_varint_u64().map_err(|error|error.to_string())}
+
+
+

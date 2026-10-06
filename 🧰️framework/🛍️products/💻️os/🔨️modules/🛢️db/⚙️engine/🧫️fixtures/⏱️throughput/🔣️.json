@@ -1,5 +1,4 @@
 {
-  "schema": "semio.db.throughput/v1",
   "workers": 10,
   "payloadBytes": 256,
   "costModel": {
@@ -13,12 +12,12 @@
   },
   "bounds": {
     "commitTasksMax": 10,
-    "commitTasksMeanMax": 4.0,
+    "commitTasksMeanMax": 4,
     "commitIndexReadsMax": 0,
     "commitTurnsPerTaskMax": 2,
     "helloTasksMax": 8,
-    "ackLateToEarlyRatioMax": 2.0,
-    "ackToDurableAppendRatioMax": 6.0,
+    "ackLateToEarlyRatioMax": 2,
+    "ackToDurableAppendRatioMax": 6,
     "stormToSerialTasksRatioMax": 1.25,
     "stormToSerialRatioMax": 0.5
   },

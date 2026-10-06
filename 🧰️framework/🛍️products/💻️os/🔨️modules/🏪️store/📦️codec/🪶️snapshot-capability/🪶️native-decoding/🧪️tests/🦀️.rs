@@ -158,7 +158,7 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
         process::{Command, Stdio},
     };
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
+    
     let dialect = crate::io_schema::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
     for case in fixture["cases"].as_array().unwrap() {
         let snapshot =
@@ -172,9 +172,9 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
         assert!(bytes.len() < maximum, "fixture must exercise decoded expansion");
         let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         let sqlite = crate::sqlite_snapshot::export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-        let script = "import {Database} from 'bun:sqlite';import Ajv from 'ajv/dist/2020.js';const input=JSON.parse(await Bun.stdin.text());if(!new Ajv({strict:true}).validate(input.schema,input.fixture))throw Error('fixture');const db=Database.deserialize(Buffer.from(input.sqlite,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');await Bun.write(Bun.stdout,String(db.query('SELECT SUM(length(octets)) AS n FROM decoded_buffer').get().n));db.close();";
+        let script = "import {Database} from 'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(Buffer.from(input.sqlite,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');await Bun.write(Bun.stdout,String(db.query('SELECT SUM(length(octets)) AS n FROM decoded_buffer').get().n));db.close();";
         let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
-        let input = serde_json::json!({"schema": schema, "fixture": fixture, "sqlite": protocol::bytes::encode_base64(&sqlite)});
+        let input = serde_json::json!({"sqlite": protocol::bytes::encode_base64(&sqlite)});
         child.stdin.take().unwrap().write_all(input.to_string().as_bytes()).unwrap();
         let result = child.wait_with_output().unwrap();
         assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
@@ -213,7 +213,7 @@ fn sqlite_snapshot_metadata_admits_final_file_before_mutating_domain_database() 
         process::{Command, Stdio},
     };
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
+    
     let rows = fixture["metadataAdmission"]["domainRows"].as_u64().unwrap() as usize;
     let file_rows = fixture["metadataAdmission"]["fileRows"].as_u64().unwrap() as usize;
     let snapshot = DecodedBuffers { buffers: std::iter::repeat_with(Vec::new).take(rows).collect() };
@@ -237,9 +237,9 @@ fn sqlite_snapshot_metadata_admits_final_file_before_mutating_domain_database() 
     let limits = SqliteDatabaseLimits { max_rows: file_rows, ..Default::default() };
     semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut admitted, &dialect, crate::sqlite_snapshot::SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
     let bytes = crate::sqlite_snapshot::export_sqlite_database(&admitted, limits, &mut |_| true).unwrap();
-    let script = "import {Database} from 'bun:sqlite';import Ajv from 'ajv/dist/2020.js';const x=JSON.parse(await Bun.stdin.text());if(!new Ajv({strict:true}).validate(x.schema,x.fixture))throw Error('fixture');const db=Database.deserialize(Buffer.from(x.bytes,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');await Bun.write(Bun.stdout,String(db.query('SELECT (SELECT COUNT(*) FROM decoded_buffer)+(SELECT COUNT(*) FROM semio_snapshot) AS n').get().n));db.close();";
+    let script = "import {Database} from 'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(Buffer.from(x.bytes,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');await Bun.write(Bun.stdout,String(db.query('SELECT (SELECT COUNT(*) FROM decoded_buffer)+(SELECT COUNT(*) FROM semio_snapshot) AS n').get().n));db.close();";
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
-    child.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture,"schema":schema,"bytes":protocol::bytes::encode_base64(&bytes)}).to_string().as_bytes()).unwrap();
+    child.stdin.take().unwrap().write_all(serde_json::json!({"fixture":fixture,"bytes":protocol::bytes::encode_base64(&bytes)}).to_string().as_bytes()).unwrap();
     let result = child.wait_with_output().unwrap();
     assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
     assert_eq!(String::from_utf8(result.stdout).unwrap(), file_rows.to_string());

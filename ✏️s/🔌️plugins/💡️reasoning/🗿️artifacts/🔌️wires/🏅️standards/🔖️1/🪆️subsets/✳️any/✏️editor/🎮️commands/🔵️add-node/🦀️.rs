@@ -31,7 +31,7 @@ pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, WiresSnapshot>, _cfg: &C
     let composed = crate::wires_composed_from_children(doc.snapshot, &doc.children)?;
     let kind = if payload.kind.is_empty() { "identity" } else { payload.kind.as_str() };
     let id = (1..).map(|ordinal| format!("node-{ordinal}")).find(|candidate| crate::schema::board_node(&composed.board, candidate).is_none()).unwrap_or_default();
-    let mut emit = crate::wires_child_emit(doc.snapshot, &[create_board_node(&id, kind)]);
+    let mut emit = crate::wires_child_emit(doc.snapshot, vec![create_board_node(&id, kind)]);
     emit.effects.push(wires_select_effect(&[id], WIRES_GRANULARITY_NODE, "replace"));
     Ok(emit)
 }

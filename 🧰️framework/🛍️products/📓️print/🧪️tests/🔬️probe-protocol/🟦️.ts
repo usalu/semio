@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { scaleLinear, scalePow } from "d3-scale";
-import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { compileVizProbe, compileVizProbeDocument, probeProjection, roundProbeNumbers, type ProbeProjection, type VizProbeStatement } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -50,7 +50,7 @@ async function affineSubject(ctx: AdapterContext): Promise<{ projection: ProbePr
 }
 
 async function powerSubject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbe(ctx.fixture("shared://🔬️probe-protocol/power-mapping.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileVizProbe(ctx.input("shared://🔬️probe-protocol/power-mapping.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
 }
 // #endregion 🧪️Probes

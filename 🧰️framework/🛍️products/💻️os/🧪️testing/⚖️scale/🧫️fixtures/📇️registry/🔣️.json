@@ -1,0 +1,16 @@
+[
+  {
+    "name": "single-plugin",
+    "plugins": 1,
+    "extensions": 0,
+    "seed": 1,
+    "records": 1
+  },
+  {
+    "name": "nested-extensions",
+    "plugins": 2,
+    "extensions": 3,
+    "seed": 42,
+    "records": 8
+  }
+]

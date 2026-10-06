@@ -6,7 +6,7 @@ export function boardTestSession(): flowSessionLoader.Board2dWasmSession {
     attach_canvas: vi.fn(async () => {}),
     setSize: vi.fn(),
     renderFrame: vi.fn(),
-    parseFixtureJson: () => true,
+    loadBoardSnapshotJson: () => true,
     syncDescriptorJson: vi.fn(),
     setKindCatalogsJson: vi.fn(),
     setCamera: vi.fn(),
@@ -22,6 +22,6 @@ export function boardTestSession(): flowSessionLoader.Board2dWasmSession {
     gpuReady: () => true,
     free: vi.fn(),
     setSelectionIdsJsonSilent: vi.fn(),
-    setFixtureDropPreviewJson: vi.fn(),
+    setDropPreviewJson: vi.fn(),
   };
 }

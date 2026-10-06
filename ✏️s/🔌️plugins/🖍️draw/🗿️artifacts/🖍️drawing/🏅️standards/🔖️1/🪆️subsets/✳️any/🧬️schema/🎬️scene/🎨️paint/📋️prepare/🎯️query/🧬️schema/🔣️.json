@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Prepared Scene Picking",
+  "$defs": {
+    "query": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "point",
+            "tolerance",
+            "requiredFlatness"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "point"
+            },
+            "point": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": -1000000000.0,
+                "maximum": 1000000000.0
+              }
+            },
+            "tolerance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000000.0
+            },
+            "requiredFlatness": {
+              "type": "number",
+              "minimum": 1e-06,
+              "maximum": 16
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "start",
+            "end",
+            "crossing"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "rectangle"
+            },
+            "start": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": -1000000000.0,
+                "maximum": 1000000000.0
+              }
+            },
+            "end": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": -1000000000.0,
+                "maximum": 1000000000.0
+              }
+            },
+            "crossing": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "points"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "lasso"
+            },
+            "points": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 256,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number",
+                  "minimum": -1000000000.0,
+                  "maximum": 1000000000.0
+                }
+              }
+            }
+          },
+          "description": "Closed even-odd lasso encloses cached painted boundaries and rejects internal excluded lasso regions intersecting painted interiors. Retraced lasso segments do not create an exclusion. Transformed image and text fallback quadrilaterals use the same rule; touching remains enclosed. All boundary and interior work stays private, cancellable and bound to cache authority."
+        }
+      ]
+    },
+    "progress": {
+      "type": "object",
+      "required": [
+        "phase",
+        "work",
+        "done"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "enum": [
+            "nodes",
+            "paint",
+            "complete"
+          ]
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "done": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$ref": "#/$defs/query"
+}

@@ -25,7 +25,7 @@ function boardTestHost(factory: flowSessionLoader.ScopedBoardSessionFactory, sur
         controllerId: boardSessionFixture.isolation.controllerId,
         componentKind: "board-2d",
         board2d: {
-          fixtureJson: '{"nodes":[],"edges":[]}',
+          snapshotJson: '{"nodes":[],"edges":[]}',
           cameraJson: '{"x":0,"y":0,"zoom":1}',
           glyphCatalogsJson: "{}",
           selectionJson: "[]",
@@ -141,7 +141,7 @@ describe("app-owned surface session factories", () => {
       attach_canvas: vi.fn(() => attached.promise),
       setSize: vi.fn(),
       renderFrame: vi.fn(),
-      parseFixtureJson: () => true,
+      loadBoardSnapshotJson: () => true,
       syncDescriptorJson: vi.fn(),
       setKindCatalogsJson: vi.fn(),
       setCamera: vi.fn(),
@@ -169,7 +169,7 @@ describe("app-owned surface session factories", () => {
             controllerId: "board",
             componentKind: "board-2d",
             board2d: {
-              fixtureJson: '{"nodes":[],"edges":[]}',
+              snapshotJson: '{"nodes":[],"edges":[]}',
               cameraJson: '{"x":0,"y":0,"zoom":1}',
               glyphCatalogsJson: "{}",
               selectionJson: "[]",

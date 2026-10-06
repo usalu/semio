@@ -1,0 +1,143 @@
+{
+  "at": "2026-10-06T01:15:24.705Z",
+  "session": 7733,
+  "exit": 1,
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-vdi-duplicate-before-other-norm-after.log",
+  "declared": 164,
+  "selectedRuntime": 44,
+  "passed": 44,
+  "owningRuntimeProjects": 3,
+  "unenteredProjects": 8,
+  "owners": [
+    {
+      "project": "@semio-tech/norm-vdi3805-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "compiler/preparation-only",
+      "runtime": null,
+      "diagnostics": [
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied",
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied",
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied",
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied",
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied",
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied",
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied",
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied",
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied",
+        "@semio-tech/norm-vdi3805-rs: error[E0277]: the trait bound `SetInteractionState: MutationLeaf` is not satisfied"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1999-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "runtime",
+      "runtime": {
+        "run": 16,
+        "passed": 16,
+        "failed": 0,
+        "summary": "@semio-tech/norm-en1999-rs:      Summary [   4.686s] 16 tests run: 16 passed, 157 skipped"
+      },
+      "diagnostics": []
+    },
+    {
+      "project": "@semio-tech/norm-din4108-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "runtime",
+      "runtime": {
+        "run": 14,
+        "passed": 14,
+        "failed": 0,
+        "summary": "@semio-tech/norm-din4108-rs:      Summary [   1.508s] 14 tests run: 14 passed, 161 skipped"
+      },
+      "diagnostics": []
+    },
+    {
+      "project": "@semio-tech/norm-en1991-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "runtime",
+      "runtime": {
+        "run": 14,
+        "passed": 14,
+        "failed": 0,
+        "summary": "@semio-tech/norm-en1991-rs:      Summary [   3.818s] 14 tests run: 14 passed, 163 skipped"
+      },
+      "diagnostics": []
+    },
+    {
+      "project": "@semio-tech/norm-en1990-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "compiler/preparation-only",
+      "runtime": null,
+      "diagnostics": [
+        "@semio-tech/norm-en1990-rs: error[E0432]: unresolved imports `crate::os_spr::command::DiffCodec`, `crate::os_spr::command::OpBinary`, `crate::os_spr::command::OpText`",
+        "@semio-tech/norm-en1990-rs: error[E0432]: unresolved imports `super::OpBinary`, `super::OpText`",
+        "@semio-tech/norm-en1990-rs: error[E0433]: cannot find `binary` in `io`",
+        "@semio-tech/norm-en1990-rs: error[E0433]: cannot find `binary` in `io`",
+        "@semio-tech/norm-en1990-rs: error[E0433]: cannot find `binary` in `io`",
+        "@semio-tech/norm-en1990-rs: error[E0433]: cannot find `binary` in `io`",
+        "@semio-tech/norm-en1990-rs: error[E0433]: cannot find `binary` in `io`",
+        "@semio-tech/norm-en1990-rs: error[E0433]: cannot find `binary` in `io`",
+        "@semio-tech/norm-en1990-rs: error[E0433]: cannot find `binary` in `io`",
+        "@semio-tech/norm-en1990-rs: error[E0433]: cannot find `binary` in `io`",
+        "@semio-tech/norm-en1990-rs: error[E0433]: cannot find `binary` in `io`"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1996-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "compiler/preparation-only",
+      "runtime": null,
+      "diagnostics": [
+        "@semio-tech/norm-en1996-rs: ENOENT: no such file or directory, scandir '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text'"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1994-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "compiler/preparation-only",
+      "runtime": null,
+      "diagnostics": [
+        "@semio-tech/norm-en1994-rs: error: couldn't read `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs`: No such file or directory (os error 2)"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-din16798-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "compiler/preparation-only",
+      "runtime": null,
+      "diagnostics": [
+        "@semio-tech/norm-din16798-rs: error: couldn't read `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs`: No such file or directory (os error 2)"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-din18599-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "compiler/preparation-only",
+      "runtime": null,
+      "diagnostics": [
+        "@semio-tech/norm-din18599-rs: error[E0433]: cannot find `protocol` in `os_spr`",
+        "@semio-tech/norm-din18599-rs: error[E0433]: cannot find `protocol` in `os_spr`"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1993-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "compiler/preparation-only",
+      "runtime": null,
+      "diagnostics": [
+        "@semio-tech/norm-en1993-rs: error[E0432]: unresolved imports `crate::os_spr::io::OpBinary`, `crate::os_spr::io::OpText`"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1997-rs",
+      "target": "test-snapshot-sqlite-native",
+      "status": "compiler/preparation-only",
+      "runtime": null,
+      "diagnostics": [
+        "@semio-tech/norm-en1997-rs: error: Invalid Cargo workspace member patterns"
+      ]
+    }
+  ],
+  "priorSeparate": "EN1995 14/14",
+  "preparedReplay": "Seven106 declared original laws only; held until actual invalid member authority repaired"
+}

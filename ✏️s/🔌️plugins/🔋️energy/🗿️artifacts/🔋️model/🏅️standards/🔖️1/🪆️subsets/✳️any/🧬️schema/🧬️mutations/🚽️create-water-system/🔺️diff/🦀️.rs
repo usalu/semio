@@ -22,6 +22,6 @@ pub fn diff(payload: &super::CreateWaterSystem, base: &EnergyModelSnapshot) -> p
     }
     let mut model = base.model.clone();
     model.water_systems.insert(payload.index as usize, crate::model::WaterSystemConfig { id: payload.id, fixture_count: payload.fixture_count, peak_flow_l_s: payload.peak_flow_l_s, schedule_id: payload.schedule_id });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

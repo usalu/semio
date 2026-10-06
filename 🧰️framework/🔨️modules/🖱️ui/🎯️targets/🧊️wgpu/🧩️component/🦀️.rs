@@ -2614,6 +2614,11 @@ pub mod ui {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[value(default, skip_serializing_if = "Option::is_none")]
         pub granularity: Option<String>,
+        /// 🚦️ The semantic tone this row's label and icon paint (`Theme::tone_ink`) — a history row's outcome, a refused
+        /// input: one of the four outcome roles, never the only cue of the state it colours.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub tone: Option<ui_contract::Tone>,
     }
 
     impl UiTreeItemNode {
@@ -2639,6 +2644,7 @@ pub mod ui {
                 menu: None,
                 window: None,
                 granularity: None,
+                tone: None,
             }
         }
 
@@ -2918,6 +2924,7 @@ pub mod ui {
                     default_open: None,
                     presence: UiPresence::default(),
                     items: vec![UiTreeItemNode {
+                        tone: None,
                         window: None,
                         granularity: None,
                         id: "empty".into(),
@@ -2951,6 +2958,7 @@ pub mod ui {
     fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTreeItemNode {
         match node {
             UiNode::Text(text) => UiTreeItemNode {
+                tone: None,
                 window: None,
                 granularity: None,
                 menu: None,
@@ -2974,6 +2982,7 @@ pub mod ui {
             UiNode::Field(field) => {
                 let description = if let UiNode::Input(input) = field.child.as_ref() { input.placeholder.clone().map(Label::into_string).or_else(|| if input.value.is_empty() { None } else { Some(input.value.clone()) }) } else { None };
                 UiTreeItemNode {
+                    tone: None,
                     window: None,
                     granularity: None,
                     menu: None,
@@ -2996,6 +3005,7 @@ pub mod ui {
                 }
             }
             UiNode::Button(button) => UiTreeItemNode {
+                tone: None,
                 window: None,
                 granularity: None,
                 menu: None,
@@ -3025,6 +3035,7 @@ pub mod ui {
                     items.push(ui_declarative_child_to_tree_item(child, format!("{}.{}", group.id, index)));
                 }
                 UiTreeItemNode {
+                    tone: None,
                     window: None,
                     granularity: None,
                     menu: None,
@@ -3052,6 +3063,7 @@ pub mod ui {
             UiNode::Ring(ring) => tree_control_item(ring.id.clone(), UiControlNode::Ring(ring.clone())),
             UiNode::IconSelect(icon_select) => tree_control_item(icon_select.id.clone(), UiControlNode::IconSelect(icon_select.clone())),
             UiNode::Separator(_) => UiTreeItemNode {
+                tone: None,
                 window: None,
                 granularity: None,
                 menu: None,
@@ -3073,6 +3085,7 @@ pub mod ui {
                 dimmed: None,
             },
             other => UiTreeItemNode {
+                tone: None,
                 window: None,
                 granularity: None,
                 menu: None,
@@ -3098,6 +3111,7 @@ pub mod ui {
 
     fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
         UiTreeItemNode {
+            tone: None,
             window: None,
             granularity: None,
             menu: None,

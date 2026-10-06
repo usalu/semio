@@ -20,7 +20,7 @@ import { BENCH_BUDGETS, benchFlag, benchOutDir, benchRegistryRow } from "../📋
 
 import { benchNativeRows } from "../🖥️host/🟦️.ts";
 
-import { renderScaleFixtureArtifacts } from "../../../../../🧫️fixtures/⚖️scale/📽️projection/🟦️.ts";
+import { renderScaleFixtureArtifacts } from "../../../../../🧪️testing/⚖️scale/📽️projection/🟦️.ts";
 
 
 

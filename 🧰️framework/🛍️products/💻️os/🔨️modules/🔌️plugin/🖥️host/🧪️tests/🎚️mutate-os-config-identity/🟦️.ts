@@ -24,7 +24,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { applyIdentityConfigMutation, inverseIdentityConfigMutation, type Identity, type IdentityConfigMutation } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 // #endregion 🔌️Adapters
 

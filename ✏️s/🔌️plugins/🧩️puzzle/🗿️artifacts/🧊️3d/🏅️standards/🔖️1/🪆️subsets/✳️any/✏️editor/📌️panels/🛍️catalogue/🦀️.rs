@@ -1,6 +1,6 @@
 //! 🛍️ Puzzle 3d play app panel — the kind catalogue: the object kinds available to place (draggable
 //! into the viewport, with their rim-vortex templates nested) plus the vortex/cable/attraction kind
-//! rows the fixture's `meta.kindCatalogs` declares.
+//! rows the scene_snapshot's `meta.kindCatalogs` declares.
 //!
 //! 🪟️ Virtualised on the same window contract as the outliner: each section stamps the catalog's full
 //! `total` and materialises only the host's requested row window, and each object kind's nested vortex
@@ -145,7 +145,7 @@ fn catalog_kind_item(entry: &semio_framework_value::DslValue, icon_id: &str) -> 
 /// which is inside the navbar, and is why ticket 26/09/02 read this as "the navbar covers the catalogue"
 /// for three waves (wave B26 §5, corrected in wave B27 §1).
 pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let entries = |section: &str| crate::editor::puzzle3d::puzzle3d_catalog_entries(&envelope.fixture, section);
+    let entries = |section: &str| crate::editor::puzzle3d::puzzle3d_catalog_entries(&envelope.scene_snapshot, section);
     PanelTreeBuilder::new(ROOT)?
         .window_section(windows, &format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, entries("objects"), |entry| object_kind_item(entry, windows))?
         .window_section(windows, &format!("{ROOT}.vortices"), Some(ui_label(labels.vortices.as_str())?), false, entries("vortices"), |entry| catalog_kind_item(entry, "circle-dot"))?

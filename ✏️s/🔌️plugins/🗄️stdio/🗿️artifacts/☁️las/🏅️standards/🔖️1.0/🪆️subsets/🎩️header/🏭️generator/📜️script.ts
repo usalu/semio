@@ -18,7 +18,7 @@
 // that writes into `../🧫️fixtures/`, and its output is reviewed and committed before any test reads it.
 //
 //   bun 📜️script.ts generate [--out <dir>]   # (re)builds the engine, writes the fixture, prints its sha256
-//   bun 📜️script.ts manifests                 # prints the fixtureManifests entry for the committed fixture
+//   bun 📜️script.ts manifests                 # prints the testEvidence entry for the committed fixture
 //
 // @see ../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️gif-las-pdf17-findings.md
 
@@ -35,7 +35,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
+const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const RECIPE = "survey-strip";
@@ -73,7 +73,6 @@ async function manifests(): Promise<void> {
   if (!existsSync(outPath)) throw new Error(`${outPath} does not exist — run "generate" first`);
   const digest = await sha256(outPath);
   const entry = {
-    schema: "semio.repository-test.fixture/v2",
     id: RECIPE,
     class: "third-party-generated",
     family: "mechanical",

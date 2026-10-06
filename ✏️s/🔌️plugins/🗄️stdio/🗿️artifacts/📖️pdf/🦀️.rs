@@ -236,28 +236,28 @@ fn pilot_languages_1_7() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.pdf.1.7",
                     extension: Some("pdf"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1_7::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_7::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_7::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_7::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_7::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1_7::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_7::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_7::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_7::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_7::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.1.7.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1_7::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1_7::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_7::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7.diff"),
@@ -268,8 +268,8 @@ fn pilot_languages_1_7() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_7::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_7::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_7::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -278,8 +278,8 @@ fn pilot_languages_1_7() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_7::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_7::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_7::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.1.7.spr"),
                 },
             ]
@@ -299,28 +299,28 @@ fn pilot_languages_1_4() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.pdf",
                     extension: Some("pdf"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1_4::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_4::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_4::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_4::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_4::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1_4::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_4::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_4::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_4::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_4::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.pdf.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1_4::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1_4::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_4::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.diff"),
@@ -331,8 +331,8 @@ fn pilot_languages_1_4() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_4::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_4::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_4::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -341,8 +341,8 @@ fn pilot_languages_1_4() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_4::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_4::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_4::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.pdf.spr"),
                 },
             ]
@@ -417,20 +417,12 @@ pub mod standards {
                         #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod outline {
                             #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
@@ -443,10 +435,6 @@ pub mod standards {
                         #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
@@ -592,20 +580,12 @@ pub mod standards {
                         #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod outline {
                             #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
@@ -618,20 +598,12 @@ pub mod standards {
                         #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -784,9 +756,7 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1_7::subsets::base::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1_7::subsets::base::io::*;
-}
+
 
 #[path = "."]
 pub mod examples {
@@ -848,6 +818,8 @@ pub mod editor {
     }
     #[path = "."]
     pub mod pdf14 {
+        #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🖼️page/🦀️.rs"]
+        pub mod page;
         #[path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
@@ -1523,8 +1495,8 @@ fn sqlite_snapshot_pdf_owned_assets_describe_each_exact_record() {
     let snapshot14 = standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot { schema: "owned-fields".into(), pages: vec![standards::v1_4::subsets::base::schema::snapshot::PageDoc { width: f64::INFINITY, height: f64::from_bits(0x7ff0000000000001), text: "a\"b\nUnicode 🗄️".into() }] };
     let snapshot17 = PdfSnapshot { schema: "owned-fields".into(), declared_version: "1.7-extension".into(), ..Default::default() };
     let cases = [
-        (snapshot14.print_dsl(), <standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot as ArtifactPack>::record_spec().unwrap(), include_str!("🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio"), include_str!("🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio")),
-        (snapshot17.print_dsl(), <PdfSnapshot as ArtifactPack>::record_spec().unwrap(), include_str!("🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio"), include_str!("🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio")),
+        (snapshot14.print_dsl(), <standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot as ArtifactPack>::record_spec().unwrap(), include_str!("🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/📖️.grammar.semio"), include_str!("🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio")),
+        (snapshot17.print_dsl(), <PdfSnapshot as ArtifactPack>::record_spec().unwrap(), include_str!("🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/📖️.grammar.semio"), include_str!("🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio")),
     ];
     for (text, record, grammar, protocol) in cases {
         let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
@@ -1538,3 +1510,23 @@ fn sqlite_snapshot_pdf_owned_assets_describe_each_exact_record() {
     let text = snapshot17.print_dsl(); let (_, body) = store::semio_format::split_text_preamble(&text).unwrap();
     assert!(<PdfSnapshot as ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&wrong, body)).is_err());
 }
+
+pub use crate::standards::v1_4::subsets::a::io::{PdfABuilderConstruction, PdfAAnalyzerAnalysis, PdfABuilderFacets, PdfABuilder, PdfAAnalyzer, PdfAComposer};
+
+pub use crate::standards::v1_4::subsets::base::io::{PdfBuilderConstruction, PdfParts, PdfAnalyzerAnalysis, PdfBuilderFacets, PdfBuilder, PdfAnalyzer, PdfComposer};
+
+pub use crate::standards::v1_4::subsets::x::io::{PdfXBuilderConstruction, PdfXAnalyzerAnalysis, PdfXBuilderFacets, PdfXBuilder, PdfXAnalyzer, PdfXComposer};
+
+pub use crate::standards::v1_7::subsets::a::io::{PdfABuilderConstruction, PdfAAnalyzerAnalysis, PdfABuilderFacets, PdfABuilder, PdfAAnalyzer, PdfAComposer};
+
+pub use crate::standards::v1_7::subsets::ua::io::{PdfUaBuilderConstruction, PdfUaAnalyzerAnalysis, PdfUaBuilderFacets, PdfUaBuilder, PdfUaAnalyzer, PdfUaComposer};
+
+pub use crate::standards::v1_7::subsets::vt::io::{PdfVtBuilderConstruction, PdfVtAnalyzerAnalysis, PdfVtBuilderFacets, PdfVtBuilder, PdfVtAnalyzer, PdfVtComposer};
+
+pub use crate::standards::v1_7::subsets::base::io::{PdfBuilderConstruction, PdfParts, PdfAnalyzerAnalysis, PdfBuilderFacets, PdfBuilder, PdfAnalyzer, PdfComposer};
+
+pub use crate::standards::v1_7::subsets::x::io::{PdfXBuilderConstruction, PdfXAnalyzerAnalysis, PdfXBuilderFacets, PdfXBuilder, PdfXAnalyzer, PdfXComposer};
+
+pub use crate::standards::v1_7::subsets::h::io::{PdfHBuilderConstruction, PdfHAnalyzerAnalysis, PdfHBuilderFacets, PdfHBuilder, PdfHAnalyzer, PdfHComposer};
+
+pub use crate::standards::v1_7::subsets::e::io::{PdfEBuilderConstruction, PdfEAnalyzerAnalysis, PdfEBuilderFacets, PdfEBuilder, PdfEAnalyzer, PdfEComposer};

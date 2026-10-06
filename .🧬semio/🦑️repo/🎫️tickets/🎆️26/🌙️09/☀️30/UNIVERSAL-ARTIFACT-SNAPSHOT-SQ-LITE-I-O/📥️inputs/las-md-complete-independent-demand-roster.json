@@ -1,0 +1,93 @@
+[
+  {
+    "name": "las",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot",
+    "type": "LasSnapshot",
+    "factory": "snapshot()",
+    "sourceFactory": "structuredClone(snapshot)",
+    "sourceEmpty": "source.vlrs=[];source.points=[];",
+    "nativeEmpty": "source.vlrs.clear();source.points.clear();",
+    "tables": 8,
+    "columns": 50,
+    "contract": {
+      "schemaBytes": 5875,
+      "tableWidths": {
+        "las_document": 2,
+        "las_header": 50,
+        "las_point": 21,
+        "las_point_gps": 4,
+        "las_point_rgb": 4,
+        "las_return_histogram": 4,
+        "las_vlr": 6,
+        "las_vlr_octet": 4
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 21,
+          "valueBytes": 1509
+        },
+        {
+          "id": "metadataRetainingEmpty",
+          "rows": 7,
+          "valueBytes": 520
+        }
+      ]
+    }
+  },
+  {
+    "name": "md",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "type": "MdSnapshot",
+    "factory": "fixture()",
+    "sourceFactory": "structuredClone(fixture) as import(\"../../🟦️.ts\").MdSnapshot",
+    "sourceEmpty": "source.blocks=[];",
+    "nativeEmpty": "source.blocks.clear();",
+    "tables": 27,
+    "columns": 4,
+    "contract": {
+      "schemaBytes": 3901,
+      "tableWidths": {
+        "md_block": 2,
+        "md_block_inline": 4,
+        "md_block_quote": 1,
+        "md_code_block": 3,
+        "md_code_span": 2,
+        "md_document": 2,
+        "md_document_block": 4,
+        "md_emphasis": 1,
+        "md_emphasis_inline": 4,
+        "md_hard_break": 1,
+        "md_heading": 2,
+        "md_html_block": 2,
+        "md_html_inline": 2,
+        "md_image": 4,
+        "md_inline": 2,
+        "md_link": 3,
+        "md_link_text": 4,
+        "md_list": 4,
+        "md_list_item": 3,
+        "md_list_item_block": 4,
+        "md_paragraph": 1,
+        "md_quote_block": 4,
+        "md_soft_break": 1,
+        "md_strong": 1,
+        "md_strong_inline": 4,
+        "md_text": 2,
+        "md_thematic_break": 1
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 88,
+          "valueBytes": 1879
+        },
+        {
+          "id": "metadataRetainingEmpty",
+          "rows": 1,
+          "valueBytes": 37
+        }
+      ]
+    }
+  }
+]

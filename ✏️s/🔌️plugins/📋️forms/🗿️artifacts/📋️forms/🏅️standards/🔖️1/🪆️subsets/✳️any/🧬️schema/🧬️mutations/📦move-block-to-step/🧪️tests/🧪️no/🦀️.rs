@@ -53,7 +53,7 @@ fn block(id: &str, label: &str) -> FormQuestion {
         schema: None,
         src: None,
         accept: None,
-        fixture_slug: None,
+        example_id: None,
         params: None,
         condition: None,
     }

@@ -11,7 +11,7 @@ use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
 use crate::editor::fem2d::modes::edit::windows::model::{fem2d_element_endpoints, find_node_2d, screen_2d, ORIGIN_2D, SCALE_2D};
 use crate::editor::fem2d::transient::FemGumballGesture;
 use crate::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::{element_id, Fem2dSnapshot, FemLoad};
 use machine::Command;
 use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};

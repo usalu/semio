@@ -217,8 +217,8 @@ pub fn genesis_playbook_child_pack(snapshot: &PlaybookSnapshot, slot: &str, chil
 
 //#region 🔖️ChildLane
 /// 🧬️ The `ChildEmit` that publishes `leaves` on `snapshot`'s `flow` child — the ONE lane every content edit takes.
-pub fn playbook_flow_emit(snapshot: &PlaybookSnapshot, leaves: &[SemioFlowMutation]) -> semio_framework_plugin::app::ChildEmit {
-    semio_framework_plugin::app::ChildEmit::of::<SemioFlowSnapshot, _>(PLAYBOOK_FLOW_SLOT, snapshot.flow.child_id.as_str(), leaves)
+pub fn playbook_flow_emit(snapshot: &PlaybookSnapshot, leaves: Vec<SemioFlowMutation>) -> semio_framework_plugin::app::ChildEmitPreparation {
+    semio_framework_plugin::app::ChildEmitPreparation::of::<SemioFlowSnapshot, _>(PLAYBOOK_FLOW_SLOT, snapshot.flow.child_id.as_str(), leaves)
 }
 
 /// 🪢️ The leaves that make `content`'s step chain read `order`: every `sequence` edge the new chain drops is removed first, every
@@ -422,8 +422,8 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "playbook.playbook.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("playbook.playbook.diff"),
@@ -507,20 +507,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod topology {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
@@ -533,21 +525,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod change_title {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-title/🦀️.rs"]
@@ -644,27 +627,18 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
+
 pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
     pub use crate::standards::v1::subsets::any::schema::mutations::{apply_playbook_mutation, PlaybookMutation};
 }
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-}
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-    }
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
@@ -673,9 +647,7 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-    }
+
 }
 
 #[path = "."]
@@ -825,3 +797,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v1::subsets::any::io::{PlaybookBuilderConstruction, PlaybookParts, PlaybookAnalyzerAnalysis, PlaybookBuilderFacets, PlaybookBuilder, PlaybookAnalyzer, PlaybookComposer};

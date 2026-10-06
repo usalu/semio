@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.semio.dev/framework/pack/json/decode",
+  "$defs": {
+    "errorCode": {"enum":["byte-budget","cancelled","depth-budget","duplicate-member","invalid-control","invalid-policy","invalid-source","invalid-unicode","malformed-json","node-budget"]},
+    "node": {
+      "oneOf": [
+        {"type":"object","additionalProperties":false,"required":["kind"],"properties":{"kind":{"const":"null"}}},
+        {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"boolean"},"value":{"type":"boolean"}}},
+        {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"string"},"value":{"type":"string"}}},
+        {"type":"object","additionalProperties":false,"required":["kind","text"],"properties":{"kind":{"const":"number"},"text":{"type":"string","pattern":"^-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?$"}}},
+        {"type":"object","additionalProperties":false,"required":["kind","items"],"properties":{"kind":{"const":"array"},"items":{"type":"array","items":{"$ref":"#/$defs/node"}}}},
+        {"type":"object","additionalProperties":false,"required":["kind","members"],"properties":{"kind":{"const":"object"},"members":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["name","value"],"properties":{"name":{"type":"string"},"value":{"$ref":"#/$defs/node"}}}}}}
+      ]
+    }
+  },
+  "$ref": "#/$defs/node"
+}

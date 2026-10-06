@@ -1,0 +1,4148 @@
+{
+  "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/composition/schema.json",
+    "title": "Actor Composition Schema Module",
+    "$defs": {
+      "Composition": {
+        "title": "Exact Actor Resident Composition Binding",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "capacity",
+          "binding",
+          "refusals",
+          "boundaries",
+          "poolPreparation",
+          "poolLifecycle",
+          "rejectedPreparation",
+          "parentClose",
+          "parentFault",
+          "observationFault",
+          "unusedClose",
+          "admissionWrappers",
+          "aliasRetirement",
+          "cancelledPreparation",
+          "controllerCharge",
+          "activationBinding"
+        ],
+        "properties": {
+          "capacity": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident"
+          },
+          "poolLifecycle": {
+            "const": {
+              "publicCapabilityKeys": [],
+              "releaseBytes": [
+                64,
+                64,
+                64,
+                264,
+                64,
+                64,
+                296,
+                64
+              ],
+              "releaseKinds": [
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "complete"
+              ],
+              "replay": "rejected",
+              "premature": "rejected",
+              "foreign": "rejected",
+              "structural": "rejected",
+              "postConstructionRepeat": "rejected",
+              "originalFaultRetained": true,
+              "refundWithUnknownFault": false
+            }
+          },
+          "poolPreparation": {
+            "const": {
+              "controllerModel": {
+                "recordBytes": 64,
+                "fieldBytes": 16
+              },
+              "controllerFields": [
+                "uiResidentControllerCell",
+                "uiResidentControllerRecord",
+                "uiResidentCell",
+                "uiResidentRecord",
+                "uiResidentPool",
+                "uiResidentPhase",
+                "uiResidentWitness",
+                "uiResidentFault",
+                "uiResidentClosing",
+                "clientAdmissionPurpose"
+              ],
+              "controllerEnvelope": {
+                "bytes": 224,
+                "slots": 1,
+                "owners": 1
+              },
+              "uiEnvelope": {
+                "bytes": 264,
+                "slots": 5,
+                "owners": 5
+              },
+              "intrinsicEnvelope": {
+                "bytes": 264,
+                "slots": 3,
+                "owners": 3
+              },
+              "cellEnvelope": {
+                "bytes": 296,
+                "slots": 6,
+                "owners": 6
+              },
+              "total": {
+                "bytes": 1608,
+                "slots": 24,
+                "owners": 24
+              },
+              "prepareBytes": [
+                296,
+                64,
+                64,
+                64,
+                264,
+                64,
+                64,
+                64,
+                296,
+                64,
+                64,
+                64,
+                264,
+                64
+              ],
+              "samePreparedBytes": 0,
+              "secondRecord": false,
+              "foreignLedgerBeforeAllocation": true,
+              "controllerTotal": {
+                "bytes": 784,
+                "slots": 10,
+                "owners": 10
+              },
+              "poolTotal": {
+                "bytes": 824,
+                "slots": 14,
+                "owners": 14
+              },
+              "poolPrepareBytes": [
+                296,
+                64,
+                64,
+                64,
+                264,
+                64
+              ],
+              "controllerPrepareBytes": [
+                296,
+                64,
+                64,
+                64,
+                264,
+                64,
+                64,
+                64
+              ]
+            }
+          },
+          "rejectedPreparation": {
+            "const": {
+              "finalizerFault": "null",
+              "step": "rejected",
+              "retry": "rejected",
+              "pool": null,
+              "recordsAfterRefusal": 2,
+              "releaseBytes": [
+                64,
+                264,
+                64,
+                64,
+                0
+              ],
+              "releaseKinds": [
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "rejected"
+              ],
+              "retained": {
+                "bytes": 1080,
+                "slots": 16,
+                "owners": 16
+              },
+              "resourceEmptyAfterIntrinsic": false,
+              "resourceEmptyAfterAlias": true,
+              "ledgerStillOpen": true,
+              "arbitraryExceptionRetirement": false,
+              "outerWrapperRecovery": true,
+              "survivingControllersWithFault": {
+                "bytes": 1864,
+                "slots": 26,
+                "owners": 26
+              }
+            }
+          },
+          "parentClose": {
+            "const": {
+              "releaseBytes": [
+                64,
+                64,
+                64,
+                64,
+                64,
+                64,
+                264,
+                64,
+                64,
+                296,
+                64
+              ],
+              "releaseKinds": [
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "complete"
+              ],
+              "maxChildCallsPerTurn": 1,
+              "observeAfterChild": true,
+              "retryBytes": 0,
+              "poolCallerRequired": false
+            }
+          },
+          "parentFault": {
+            "const": {
+              "values": [
+                "null",
+                "undefined",
+                "false",
+                "zero",
+                "object"
+              ],
+              "afterActualBeginClose": true,
+              "first": "rejected",
+              "retry": "pending",
+              "phase": "resident-admission-fault-handoff",
+              "getterReads": 0,
+              "refund": false,
+              "independentPeer": true,
+              "arbitraryFaultRetirement": false,
+              "handoffBytes": 64,
+              "intrinsicRetirement": true,
+              "cellRetirement": false
+            }
+          },
+          "observationFault": {
+            "const": {
+              "afterActualDetachmentRead": true,
+              "escapes": false,
+              "first": "rejected",
+              "recoveredObservation": "pending",
+              "afterRecovery": "pending",
+              "poolStillOwned": true,
+              "refund": false,
+              "faultHandoff": "pending",
+              "final": "rejected",
+              "retained": {
+                "bytes": 1080,
+                "slots": 16,
+                "owners": 16
+              }
+            }
+          },
+          "activationBinding": {
+            "const": {
+              "actorId": "shared-composition-actor",
+              "metadata": {
+                "className": "CapturedShardActivation",
+                "recordBytes": 64,
+                "fieldBytes": 16,
+                "fields": [
+                  "#client",
+                  "actorId",
+                  "activationGeneration",
+                  "assertActive",
+                  "turn"
+                ],
+                "facadeBytes": 144,
+                "facadesPerCapture": 1,
+                "replacedPlainObjects": 1,
+                "existingClosuresPerCapture": 2,
+                "addedPrivateReferences": 1,
+                "moduleSupport": [
+                  "class-constructor",
+                  "class-prototype",
+                  "private-mint-symbol",
+                  "mint-function",
+                  "ownership-checker"
+                ],
+                "allocationAdmitted": false,
+                "controllerFundsActivation": false
+              },
+              "publicKeys": [
+                "actorId",
+                "activationGeneration",
+                "assertActive",
+                "turn"
+              ],
+              "sameLedger": true,
+              "sameActor": true,
+              "sameGeneration": true,
+              "own": true,
+              "foreign": false,
+              "trapReads": 0,
+              "refusals": [
+                "null",
+                "undefined",
+                "structural",
+                "prototype",
+                "proxy",
+                "revoked-proxy"
+              ],
+              "clientRefusals": [
+                "null",
+                "undefined",
+                "structural",
+                "prototype",
+                "proxy"
+              ],
+              "transitions": [
+                {
+                  "action": "reassign-route",
+                  "expected": {
+                    "ownBefore": true,
+                    "foreignBefore": false,
+                    "activeBefore": true,
+                    "ownAfter": true,
+                    "foreignAfter": false,
+                    "activeAfter": false,
+                    "newTurns": 0
+                  }
+                },
+                {
+                  "action": "reactivate-name",
+                  "expected": {
+                    "ownBefore": true,
+                    "foreignBefore": false,
+                    "activeBefore": true,
+                    "ownAfter": true,
+                    "foreignAfter": false,
+                    "activeAfter": false,
+                    "newTurns": 0
+                  }
+                },
+                {
+                  "action": "replace-worker",
+                  "expected": {
+                    "ownBefore": true,
+                    "foreignBefore": false,
+                    "activeBefore": true,
+                    "ownAfter": true,
+                    "foreignAfter": false,
+                    "activeAfter": false,
+                    "newTurns": 0
+                  }
+                },
+                {
+                  "action": "dispose-all",
+                  "expected": {
+                    "ownBefore": true,
+                    "foreignBefore": false,
+                    "activeBefore": true,
+                    "ownAfter": true,
+                    "foreignAfter": false,
+                    "activeAfter": false,
+                    "newTurns": 0
+                  }
+                }
+              ]
+            }
+          },
+          "binding": {
+            "const": {
+              "requiredOption": "residentLedger",
+              "sameLedger": true,
+              "foreignLedger": false,
+              "structuralClient": false,
+              "publicLedgerProperty": false
+            }
+          },
+          "refusals": {
+            "const": [
+              "missing-ledger",
+              "structural-ledger",
+              "prototype-ledger",
+              "proxy-ledger"
+            ]
+          },
+          "boundaries": {
+            "const": {
+              "workersBeforeValidLedger": 0,
+              "createdLedgers": 0,
+              "constructorFallback": false,
+              "liveResponseAdmission": false,
+              "uiPoolInstalled": false
+            }
+          },
+          "unusedClose": {
+            "const": {
+              "releaseBytes": [
+                64,
+                264,
+                64,
+                64,
+                296,
+                64
+              ],
+              "releaseKinds": [
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "pending",
+                "complete"
+              ]
+            }
+          },
+          "admissionWrappers": {
+            "const": {
+              "stages": [
+                "bootstrap",
+                "claim",
+                "record"
+              ],
+              "values": [
+                "null",
+                "undefined",
+                "false",
+                "zero",
+                "object"
+              ],
+              "sameOriginal": true,
+              "resourceCalls": 1,
+              "first": "rejected",
+              "faultsInspected": 0,
+              "cellWitness": false,
+              "peerCloses": true,
+              "resourceReleaseSeparate": true,
+              "rawFaultRetirement": false,
+              "scopes": [
+                "controller",
+                "pool"
+              ],
+              "controllerCellFault": {
+                "bytes": 296,
+                "slots": 6,
+                "owners": 6
+              }
+            }
+          },
+          "aliasRetirement": {
+            "const": {
+              "intrinsicWork": 264,
+              "detachWork": 64,
+              "cellWork": 296,
+              "observeWork": 64,
+              "linkBytes": 8,
+              "rootBeforeDetach": false,
+              "rootAfterDetach": true,
+              "cellBeforeRefund": false,
+              "finalOwnerReleaseSeparate": true
+            }
+          },
+          "cancelledPreparation": {
+            "const": {
+              "preparationFrontiers": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14
+              ],
+              "closedLedgerFirst": "rejected",
+              "closedLedgerRelease": [
+                "pending",
+                "complete"
+              ],
+              "ownerAfterClose": "rejected",
+              "healthyFinal": {
+                "bytes": 784,
+                "slots": 10,
+                "owners": 10
+              },
+              "allocationAfterClose": false,
+              "unstartedFinal": {
+                "bytes": 0,
+                "slots": 0,
+                "owners": 0
+              }
+            }
+          },
+          "controllerCharge": {
+            "const": {
+              "controllerAliveAfterPoolRecord": true,
+              "cellFundsConsumer": false,
+              "minimumAtIntrinsic": [
+                "controllerEnvelope",
+                "cellEnvelope"
+              ],
+              "domainChargeReleasedOnlyAfterExactTerminal": true,
+              "controllerBeforePool": {
+                "bytes": 784,
+                "slots": 10,
+                "owners": 10
+              },
+              "wholeControllerTerminal": false,
+              "ordinaryDisposeReleases": false,
+              "installExactOriginalShard": true
+            }
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Composition"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/composition/bootstrap/schema.json",
+    "title": "Actor Composition Bootstrap Schema Module",
+    "$defs": {
+      "Bootstrap": {
+        "title": "Original Client Worker Metadata Preparation",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "scope",
+          "methods",
+          "capacity",
+          "shared",
+          "worker",
+          "ui",
+          "closing",
+          "closingPrefixes",
+          "closingKinds",
+          "cancelFrontiers",
+          "interleavings",
+          "gateCases",
+          "faults",
+          "nonclaims"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "scope": {
+            "const": "original-client-metadata-preparation-only"
+          },
+          "methods": {
+            "const": {
+              "prepare": "prepareWorkerBootstrap",
+              "close": "closeWorkerBootstrapStep"
+            }
+          },
+          "capacity": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/resident/schema.json#/$defs/Resident"
+          },
+          "shared": {
+            "const": {
+              "fields": [
+                "uiResidentControllerCell",
+                "uiResidentControllerRecord",
+                "uiResidentCell",
+                "uiResidentRecord",
+                "uiResidentPool",
+                "uiResidentPhase",
+                "uiResidentWitness",
+                "uiResidentFault",
+                "uiResidentClosing",
+                "clientAdmissionPurpose"
+              ],
+              "previousEnvelope": {
+                "bytes": 208,
+                "slots": 1,
+                "owners": 1
+              },
+              "envelope": {
+                "bytes": 224,
+                "slots": 1,
+                "owners": 1
+              },
+              "retained": {
+                "bytes": 784,
+                "slots": 10,
+                "owners": 10
+              },
+              "phases": [
+                [
+                  "prepare-cell",
+                  296
+                ],
+                [
+                  "capture-cell",
+                  64
+                ],
+                [
+                  "claim-cell",
+                  64
+                ],
+                [
+                  "observe-claim",
+                  64
+                ],
+                [
+                  "reserve-record",
+                  264
+                ],
+                [
+                  "capture-record",
+                  64
+                ],
+                [
+                  "install-original-client",
+                  64
+                ],
+                [
+                  "observe-live-shell",
+                  64
+                ]
+              ]
+            }
+          },
+          "worker": {
+            "const": {
+              "fields": [
+                "workerBootstrapCell",
+                "workerBootstrapRecord",
+                "workerBootstrapPhase",
+                "workerBootstrapFault",
+                "workerAdmissionCell",
+                "workerAdmissionRecord",
+                "workerAdmissionIndex",
+                "workerAdmissionShell"
+              ],
+              "envelope": {
+                "bytes": 128,
+                "slots": 0,
+                "owners": 0
+              },
+              "retained": {
+                "bytes": 688,
+                "slots": 9,
+                "owners": 9
+              },
+              "phases": [
+                [
+                  "prepare-cell",
+                  296
+                ],
+                [
+                  "capture-cell",
+                  64
+                ],
+                [
+                  "claim-cell",
+                  64
+                ],
+                [
+                  "observe-claim",
+                  64
+                ],
+                [
+                  "reserve-record",
+                  264
+                ],
+                [
+                  "capture-record",
+                  64
+                ],
+                [
+                  "install-original-client",
+                  64
+                ],
+                [
+                  "observe-live-shell",
+                  64
+                ]
+              ],
+              "combined": {
+                "bytes": 1472,
+                "slots": 19,
+                "owners": 19
+              },
+              "newWorkers": 0,
+              "newPosts": 0,
+              "newHandlers": 0,
+              "newSab": 0,
+              "readyProbeBytes": 64
+            }
+          },
+          "ui": {
+            "const": {
+              "poolRetained": {
+                "bytes": 824,
+                "slots": 14,
+                "owners": 14
+              },
+              "sharedAndPool": {
+                "bytes": 1608,
+                "slots": 24,
+                "owners": 24
+              },
+              "withWorkerController": {
+                "bytes": 2296,
+                "slots": 33,
+                "owners": 33
+              },
+              "afterCloseSharedRoot": {
+                "bytes": 784,
+                "slots": 10,
+                "owners": 10
+              }
+            }
+          },
+          "closing": {
+            "const": {
+              "api": "closeWorkerBootstrapStep(grant: ResidentGrant): ResidentStep",
+              "target": "exact original client's worker metadata only",
+              "beforeSharedRoot": "Stop this worker preparation without closing a shared root that UI may still use.",
+              "beforeWorkerRecord": "Retire only the exact unused worker cell on separately granted turns; verify its private retirement before final unlink.",
+              "withWorkerRecord": "Keep original cell, record, first fault and controller fields charged, installed or not; return blocked without a whole-controller witness.",
+              "knownPendingRelease": "Observe the exact retained cell after a returned canonical pending-release step; fault-held cell remains charged.",
+              "ambiguousPendingRelease": "A wrapper throw followed by null is not pending-release authority; preserve purpose and original fault.",
+              "reentry": "A cancelled or retained-closing worker preparation never reopens.",
+              "recordRefund": false,
+              "sharedRootRefund": false,
+              "usesUiCloseAsWorkerProof": false,
+              "unusedRecordRefusal": "A canonical reserveRecord refusal with no original cell result keeps an unused-cell close path; a thrown or ambiguous absence remains retained."
+            }
+          },
+          "closingPrefixes": {
+            "const": [
+              7,
+              8
+            ]
+          },
+          "closingKinds": {
+            "const": [
+              "ledger",
+              "record",
+              "cell",
+              "fault"
+            ]
+          },
+          "cancelFrontiers": {
+            "const": [
+              {
+                "prefix": 0,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 1,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 2,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 3,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 4,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 5,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 6,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 7,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 8,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 9,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 10,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 11,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 12,
+                "recordHeld": false,
+                "workerRetained": 0,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 13,
+                "recordHeld": true,
+                "workerRetained": 688,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 14,
+                "recordHeld": true,
+                "workerRetained": 688,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 15,
+                "recordHeld": true,
+                "workerRetained": 688,
+                "workerRestart": "rejected"
+              },
+              {
+                "prefix": 16,
+                "recordHeld": true,
+                "workerRetained": 688,
+                "workerRestart": "rejected"
+              }
+            ]
+          },
+          "interleavings": {
+            "const": [
+              "ui-close-then-worker-first",
+              "unstarted-ui-close-then-worker-first",
+              "worker-partial-cancel-then-ui",
+              "ui-purpose-held-worker-refusal",
+              "worker-purpose-held-ui-refusal",
+              "shared-prefix-interleaving"
+            ]
+          },
+          "gateCases": {
+            "const": [
+              {
+                "id": "short-prepare-no-call",
+                "ending": "short",
+                "evidence": "not-called",
+                "cell": "none",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "none",
+                  "cell": "none",
+                  "construct": false
+                }
+              },
+              {
+                "id": "capacity-blocked-before-observation",
+                "ending": "blocked",
+                "evidence": "unobserved",
+                "cell": "none",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "none",
+                  "construct": false
+                }
+              },
+              {
+                "id": "capacity-blocked-known-no-cell",
+                "ending": "blocked",
+                "evidence": "returned-and-observed-empty",
+                "cell": "none",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "none",
+                  "cell": "none",
+                  "construct": false
+                }
+              },
+              {
+                "id": "closed-ledger-known-no-cell",
+                "ending": "known-refusal",
+                "evidence": "returned-and-observed-empty",
+                "cell": "none",
+                "live": false,
+                "fault": false,
+                "expected": {
+                  "purpose": "none",
+                  "cell": "none",
+                  "construct": false
+                }
+              },
+              {
+                "id": "foreign-purpose-never-clears-original",
+                "ending": "foreign",
+                "evidence": "none",
+                "cell": "pending",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "pending",
+                  "construct": false
+                }
+              },
+              {
+                "id": "prepare-success-awaits-capture",
+                "ending": "prepared",
+                "evidence": "unobserved",
+                "cell": "pending",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "pending",
+                  "construct": false
+                }
+              },
+              {
+                "id": "prepare-after-fault-recovers-original",
+                "ending": "prepare-fault",
+                "evidence": "original-cell-captured",
+                "cell": "pending",
+                "live": true,
+                "fault": true,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "pending",
+                  "construct": false
+                }
+              },
+              {
+                "id": "prepare-after-fault-null-not-empty-proof",
+                "ending": "prepare-fault",
+                "evidence": "absence-only",
+                "cell": "none",
+                "live": true,
+                "fault": true,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "none",
+                  "construct": false
+                }
+              },
+              {
+                "id": "claim-short-retains-captured-cell",
+                "ending": "claim-blocked",
+                "evidence": "original-cell-captured",
+                "cell": "pending",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "pending",
+                  "construct": false
+                }
+              },
+              {
+                "id": "claim-known-refusal-needs-cancel",
+                "ending": "claim-refused",
+                "evidence": "original-cell-captured",
+                "cell": "pending",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "pending",
+                  "construct": false
+                }
+              },
+              {
+                "id": "claim-return-without-observation",
+                "ending": "claimed",
+                "evidence": "unobserved",
+                "cell": "claimed",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "claimed",
+                  "construct": false
+                }
+              },
+              {
+                "id": "claim-observed-private-handoff",
+                "ending": "claimed",
+                "evidence": "original-claimed-and-pending-empty",
+                "cell": "claimed",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "none",
+                  "cell": "claimed",
+                  "construct": true
+                }
+              },
+              {
+                "id": "claim-after-fault-before-observation",
+                "ending": "claim-fault",
+                "evidence": "unobserved",
+                "cell": "claimed",
+                "live": true,
+                "fault": true,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "claimed",
+                  "construct": false
+                }
+              },
+              {
+                "id": "claim-after-fault-observed-but-fenced",
+                "ending": "claim-fault",
+                "evidence": "original-claimed-and-pending-empty",
+                "cell": "claimed",
+                "live": true,
+                "fault": true,
+                "expected": {
+                  "purpose": "none",
+                  "cell": "claimed",
+                  "construct": false
+                }
+              },
+              {
+                "id": "cancel-before-pending-release",
+                "ending": "cancel",
+                "evidence": "original-cell-captured",
+                "cell": "pending",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "pending",
+                  "construct": false
+                }
+              },
+              {
+                "id": "cancel-after-pending-release-not-terminal",
+                "ending": "cancel",
+                "evidence": "pending-release-observed",
+                "cell": "closing",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "closing",
+                  "construct": false
+                }
+              },
+              {
+                "id": "cancel-original-terminal-observation",
+                "ending": "cancel",
+                "evidence": "original-retirement",
+                "cell": "terminal",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "none",
+                  "cell": "terminal",
+                  "construct": false
+                }
+              },
+              {
+                "id": "cancel-fault-cell-pending-released",
+                "ending": "fault-close",
+                "evidence": "pending-release-observed",
+                "cell": "fault-held",
+                "live": true,
+                "fault": true,
+                "expected": {
+                  "purpose": "none",
+                  "cell": "fault-held",
+                  "construct": false
+                }
+              },
+              {
+                "id": "cancel-fault-cell-unobserved",
+                "ending": "fault-close",
+                "evidence": "unobserved",
+                "cell": "fault-held",
+                "live": true,
+                "fault": true,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "fault-held",
+                  "construct": false
+                }
+              },
+              {
+                "id": "public-phase-is-not-claimed-proof",
+                "ending": "claimed",
+                "evidence": "public-phase-only",
+                "cell": "claimed",
+                "live": true,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "claimed",
+                  "construct": false
+                }
+              },
+              {
+                "id": "live-root-lost-after-claim",
+                "ending": "claimed",
+                "evidence": "original-claimed-and-pending-empty",
+                "cell": "claimed",
+                "live": false,
+                "fault": false,
+                "expected": {
+                  "purpose": "none",
+                  "cell": "claimed",
+                  "construct": false
+                }
+              },
+              {
+                "id": "identity-recovery-cannot-open-descendant",
+                "ending": "recover",
+                "evidence": "identity-only",
+                "cell": "claimed",
+                "live": false,
+                "fault": false,
+                "expected": {
+                  "purpose": "held",
+                  "cell": "claimed",
+                  "construct": false
+                }
+              }
+            ]
+          },
+          "faults": {
+            "const": {
+              "values": [
+                "null",
+                "undefined",
+                "false",
+                "zero",
+                "object"
+              ],
+              "stages": [
+                "prepare",
+                "claim",
+                "reserve",
+                "install"
+              ],
+              "afterActualCall": true,
+              "firstPreserved": true,
+              "distinctCallerOwned": true,
+              "getterReads": 0
+            }
+          },
+          "nonclaims": {
+            "const": [
+              "eager-constructor-admission",
+              "worker-bootstrap-runtime",
+              "handlers-or-sab",
+              "receiver-or-request",
+              "factory-cutover",
+              "controller-terminal-witness",
+              "raw-input-ack",
+              "browser-or-native"
+            ]
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Bootstrap"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🏘️admission/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/activation/instance/output/admission/schema.json",
+    "title": "Actor Activation Instance Output Admission Schema Module",
+    "$defs": {
+      "Admission": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "scope",
+          "model",
+          "rosterFields",
+          "slotFields",
+          "facadeFields",
+          "outcomeFields",
+          "parentRoster",
+          "enclosingReturn",
+          "domain",
+          "intrinsicRecord",
+          "admissionCell",
+          "retained",
+          "callables",
+          "phases",
+          "grants",
+          "shell",
+          "constructionOrder",
+          "faultBoundaries",
+          "forbiddenRefunds",
+          "excluded",
+          "boundaries"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "const": 1
+          },
+          "scope": {
+            "type": "string",
+            "const": "fixed per-output metadata under original captured return roster"
+          },
+          "model": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "recordBytes",
+              "fieldBytes",
+              "slotsPerRecord",
+              "ownersPerRecord"
+            ],
+            "properties": {
+              "recordBytes": {
+                "type": "integer",
+                "const": 64
+              },
+              "fieldBytes": {
+                "type": "integer",
+                "const": 16
+              },
+              "slotsPerRecord": {
+                "type": "integer",
+                "const": 1
+              },
+              "ownersPerRecord": {
+                "type": "integer",
+                "const": 1
+              }
+            }
+          },
+          "rosterFields": {
+            "type": "array",
+            "const": [
+              "owner",
+              "capacity",
+              "sequence",
+              "head",
+              "tail",
+              "pending",
+              "closed",
+              "ledger",
+              "admissionCell",
+              "admissionRecord",
+              "admissionPhase",
+              "admissionFault"
+            ]
+          },
+          "slotFields": {
+            "type": "array",
+            "const": [
+              "owner",
+              "capacity",
+              "sequence",
+              "queue",
+              "handle",
+              "phase",
+              "response",
+              "outcome",
+              "fault",
+              "previous",
+              "next",
+              "cell",
+              "record"
+            ]
+          },
+          "facadeFields": {
+            "type": "array",
+            "const": [
+              "slot"
+            ]
+          },
+          "outcomeFields": {
+            "type": "array",
+            "const": [
+              "kind",
+              "value"
+            ]
+          },
+          "parentRoster": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bytes",
+              "slots",
+              "owners"
+            ],
+            "properties": {
+              "bytes": {
+                "type": "integer",
+                "const": 256
+              },
+              "slots": {
+                "type": "integer",
+                "const": 1
+              },
+              "owners": {
+                "type": "integer",
+                "const": 1
+              }
+            }
+          },
+          "enclosingReturn": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bytes",
+              "slots",
+              "owners"
+            ],
+            "properties": {
+              "bytes": {
+                "type": "integer",
+                "const": 1360
+              },
+              "slots": {
+                "type": "integer",
+                "const": 13
+              },
+              "owners": {
+                "type": "integer",
+                "const": 13
+              }
+            }
+          },
+          "domain": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bytes",
+              "slots",
+              "owners"
+            ],
+            "properties": {
+              "bytes": {
+                "type": "integer",
+                "const": 448
+              },
+              "slots": {
+                "type": "integer",
+                "const": 3
+              },
+              "owners": {
+                "type": "integer",
+                "const": 3
+              }
+            }
+          },
+          "intrinsicRecord": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bytes",
+              "slots",
+              "owners"
+            ],
+            "properties": {
+              "bytes": {
+                "type": "integer",
+                "const": 264
+              },
+              "slots": {
+                "type": "integer",
+                "const": 3
+              },
+              "owners": {
+                "type": "integer",
+                "const": 3
+              }
+            }
+          },
+          "admissionCell": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bytes",
+              "slots",
+              "owners"
+            ],
+            "properties": {
+              "bytes": {
+                "type": "integer",
+                "const": 296
+              },
+              "slots": {
+                "type": "integer",
+                "const": 6
+              },
+              "owners": {
+                "type": "integer",
+                "const": 6
+              }
+            }
+          },
+          "retained": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bytes",
+              "slots",
+              "owners"
+            ],
+            "properties": {
+              "bytes": {
+                "type": "integer",
+                "const": 1008
+              },
+              "slots": {
+                "type": "integer",
+                "const": 12
+              },
+              "owners": {
+                "type": "integer",
+                "const": 12
+              }
+            }
+          },
+          "callables": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "roster",
+              "source"
+            ],
+            "properties": {
+              "roster": {
+                "type": "string",
+                "const": "reserve(grant)"
+              },
+              "source": {
+                "type": "string",
+                "const": "reserveResponse(grant)"
+              }
+            }
+          },
+          "phases": {
+            "type": "array",
+            "const": [
+              "preparing",
+              "cell-held",
+              "claiming",
+              "claimed",
+              "record-admitting",
+              "record-held",
+              "installing",
+              "installed",
+              "slot-held",
+              "facade-held",
+              "published"
+            ]
+          },
+          "grants": {
+            "type": "array",
+            "const": [
+              296,
+              64,
+              64,
+              64,
+              264,
+              64,
+              64,
+              64,
+              272,
+              80,
+              64
+            ]
+          },
+          "shell": {
+            "type": "string",
+            "const": "exact original roster"
+          },
+          "constructionOrder": {
+            "type": "array",
+            "const": [
+              "prepare-roster-cell",
+              "capture-cell",
+              "claim-cell",
+              "observe-claim",
+              "reserve-record",
+              "capture-record",
+              "install-original-roster",
+              "observe-live-record",
+              "link-slot-with-original-cell-record",
+              "install-facade-before-finalizer",
+              "publish-original-output"
+            ]
+          },
+          "faultBoundaries": {
+            "type": "array",
+            "const": [
+              "prepare-after-return",
+              "claim-after-return",
+              "record-after-return",
+              "install-after-call",
+              "facade-before-freeze",
+              "facade-after-freeze"
+            ]
+          },
+          "forbiddenRefunds": {
+            "type": "array",
+            "const": [
+              "empty-output",
+              "cancel-empty",
+              "dispose",
+              "fault",
+              "lost-return",
+              "source-revocation"
+            ]
+          },
+          "excluded": {
+            "type": "array",
+            "const": [
+              "PendingEntry",
+              "Promise",
+              "callbacks",
+              "request-message",
+              "raw-backing",
+              "parser",
+              "projection",
+              "input",
+              "ui-destination",
+              "arbitrary-fault-payload"
+            ]
+          },
+          "boundaries": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "newWire",
+              "newLedger",
+              "publicRecord",
+              "publicCell",
+              "liveDispatch",
+              "receiverAdmission",
+              "finalRetirement"
+            ],
+            "properties": {
+              "newWire": {
+                "type": "boolean",
+                "const": false
+              },
+              "newLedger": {
+                "type": "boolean",
+                "const": false
+              },
+              "publicRecord": {
+                "type": "boolean",
+                "const": false
+              },
+              "publicCell": {
+                "type": "boolean",
+                "const": false
+              },
+              "liveDispatch": {
+                "type": "boolean",
+                "const": false
+              },
+              "receiverAdmission": {
+                "type": "boolean",
+                "const": false
+              },
+              "finalRetirement": {
+                "type": "boolean",
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/activation/instance/output/fault/schema.json",
+    "title": "Actor Activation Instance Output Fault Schema Module",
+    "$defs": {
+      "Fault": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "boundaries",
+          "values",
+          "outcomes",
+          "unknownBytes",
+          "constructor",
+          "outcome",
+          "parent",
+          "metadata",
+          "rawPageAcknowledged",
+          "arbitraryFaultRetired"
+        ],
+        "properties": {
+          "parent": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "faulted",
+              "dispatchCalls",
+              "retainedResponses",
+              "secondOutcome"
+            ],
+            "properties": {
+              "faulted": {
+                "const": true
+              },
+              "dispatchCalls": {
+                "const": 0
+              },
+              "retainedResponses": {
+                "const": 1
+              },
+              "secondOutcome": {
+                "const": "actor-return.owner-fault"
+              }
+            }
+          },
+          "version": {
+            "const": 1
+          },
+          "boundaries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "const": [
+              "before-finalize",
+              "after-finalize"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "const": [
+              "null",
+              "undefined",
+              "false",
+              "zero",
+              "opaque"
+            ]
+          },
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "const": [
+              "returned",
+              "refused"
+            ]
+          },
+          "unknownBytes": {
+            "const": 8193
+          },
+          "constructor": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "originalHandleRetained",
+              "originalFaultRetained",
+              "cancelEmpty",
+              "runAllowed",
+              "retainedSlots"
+            ],
+            "properties": {
+              "originalHandleRetained": {
+                "const": true
+              },
+              "originalFaultRetained": {
+                "const": true
+              },
+              "cancelEmpty": {
+                "const": false
+              },
+              "runAllowed": {
+                "const": false
+              },
+              "retainedSlots": {
+                "const": 1
+              }
+            }
+          },
+          "outcome": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "installBeforeFinalizer",
+              "originalOutcomeRetained",
+              "originalFaultRetained",
+              "replaceOutcome",
+              "cancelEmpty"
+            ],
+            "properties": {
+              "installBeforeFinalizer": {
+                "const": true
+              },
+              "originalOutcomeRetained": {
+                "const": true
+              },
+              "originalFaultRetained": {
+                "const": true
+              },
+              "replaceOutcome": {
+                "const": false
+              },
+              "cancelEmpty": {
+                "const": false
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "priorSlotFields",
+              "slotFields",
+              "recordBytes",
+              "fieldBytes",
+              "additionalBytes",
+              "sourceAdmitted"
+            ],
+            "properties": {
+              "priorSlotFields": {
+                "const": 10
+              },
+              "slotFields": {
+                "const": 11
+              },
+              "recordBytes": {
+                "const": 64
+              },
+              "fieldBytes": {
+                "const": 16
+              },
+              "additionalBytes": {
+                "const": 16
+              },
+              "sourceAdmitted": {
+                "const": false
+              }
+            }
+          },
+          "rawPageAcknowledged": {
+            "const": false
+          },
+          "arbitraryFaultRetired": {
+            "const": false
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Fault"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/activation/return/admission/schema.json",
+    "title": "Actor Activation Return Admission Schema Module",
+    "$defs": {
+      "Admission": {
+        "title": "Captured Return Parent Admission",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "scope",
+          "model",
+          "parentFields",
+          "stateFields",
+          "rosterFields",
+          "facadeFields",
+          "domain",
+          "intrinsicRecord",
+          "admissionCell",
+          "retained",
+          "callable",
+          "phases",
+          "grants",
+          "shell",
+          "constructionOrder",
+          "forbiddenRefunds",
+          "excluded",
+          "boundaries"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "scope": {
+            "const": "original captured return parent and fixed roster only"
+          },
+          "model": {
+            "const": {
+              "recordBytes": 64,
+              "fieldBytes": 16,
+              "slotsPerRecord": 1,
+              "ownersPerRecord": 1
+            }
+          },
+          "parentFields": {
+            "const": [
+              "returnCell",
+              "returnRecord",
+              "returnPhase",
+              "returnFault",
+              "returnCapacity"
+            ]
+          },
+          "stateFields": {
+            "const": [
+              "instance",
+              "outputs",
+              "client",
+              "facade",
+              "origin",
+              "identity",
+              "events",
+              "latest",
+              "page",
+              "content",
+              "inFlight",
+              "retry",
+              "failed",
+              "fault",
+              "cancelled",
+              "retired"
+            ]
+          },
+          "rosterFields": {
+            "const": [
+              "owner",
+              "capacity",
+              "sequence",
+              "head",
+              "tail",
+              "pending",
+              "closed",
+              "ledger",
+              "admissionCell",
+              "admissionRecord",
+              "admissionPhase",
+              "admissionFault"
+            ]
+          },
+          "facadeFields": {
+            "const": [
+              "state"
+            ]
+          },
+          "domain": {
+            "const": {
+              "bytes": 800,
+              "slots": 4,
+              "owners": 4
+            }
+          },
+          "intrinsicRecord": {
+            "const": {
+              "bytes": 264,
+              "slots": 3,
+              "owners": 3
+            }
+          },
+          "admissionCell": {
+            "const": {
+              "bytes": 296,
+              "slots": 6,
+              "owners": 6
+            }
+          },
+          "retained": {
+            "const": {
+              "bytes": 1360,
+              "slots": 13,
+              "owners": 13
+            }
+          },
+          "callable": {
+            "const": "instance.reserveReturn(maximumResponses,grant)"
+          },
+          "phases": {
+            "const": [
+              "preparing",
+              "cell-held",
+              "claiming",
+              "claimed",
+              "record-admitting",
+              "record-held",
+              "installing",
+              "installed",
+              "state-held",
+              "roster-held",
+              "facade-held",
+              "published"
+            ]
+          },
+          "grants": {
+            "const": [
+              296,
+              64,
+              64,
+              64,
+              264,
+              64,
+              64,
+              64,
+              320,
+              256,
+              80,
+              64
+            ]
+          },
+          "shell": {
+            "const": "exact original instance"
+          },
+          "constructionOrder": {
+            "const": [
+              "prepare-original-cell",
+              "capture-cell",
+              "claim-cell",
+              "observe-claim",
+              "reserve-record",
+              "capture-record",
+              "install-original-instance",
+              "observe-installed-record",
+              "install-state-before-seal",
+              "install-roster-before-freeze",
+              "install-facade-before-freeze",
+              "publish-original-facade"
+            ]
+          },
+          "forbiddenRefunds": {
+            "const": [
+              "empty-roster",
+              "cancel-empty-output",
+              "dispose-post",
+              "route-removal",
+              "lost-facade",
+              "arbitrary-fault"
+            ]
+          },
+          "excluded": {
+            "const": [
+              "pre-open-instance",
+              "activation",
+              "output-slots",
+              "request-promises",
+              "raw-backing",
+              "parser",
+              "projection",
+              "content",
+              "field",
+              "ui-destination",
+              "arbitrary-fault-payload"
+            ]
+          },
+          "boundaries": {
+            "const": {
+              "newWire": false,
+              "publicRecord": false,
+              "publicLedger": false,
+              "wholeConstructorAdmission": false,
+              "perRequestAdmission": false,
+              "liveDispatch": false,
+              "wholeReturnRetirement": false
+            }
+          }
+        }
+      }
+    }
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🩹️patch/📨️pending/📦️whole/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retirement/patch/pending/whole/schema.json",
+    "title": "Ui Contract Retirement Patch Pending Whole Schema Module",
+    "$defs": {
+      "Whole": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "surface",
+          "surfaceBytes",
+          "baseRevision",
+          "revision",
+          "componentCount",
+          "grants",
+          "frontiers",
+          "allocatesDuringClose",
+          "readableAfterCloseStarts",
+          "zeroGrantMutates",
+          "includesEmptyBacking"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "surface": {
+            "const": "éé"
+          },
+          "surfaceBytes": {
+            "const": 4
+          },
+          "baseRevision": {
+            "const": 7
+          },
+          "revision": {
+            "const": 8
+          },
+          "componentCount": {
+            "const": 19
+          },
+          "grants": {
+            "const": [
+              1,
+              64,
+              4096
+            ]
+          },
+          "frontiers": {
+            "const": [
+              0,
+              1,
+              2,
+              5,
+              16,
+              64
+            ]
+          },
+          "allocatesDuringClose": {
+            "const": false
+          },
+          "readableAfterCloseStarts": {
+            "const": false
+          },
+          "zeroGrantMutates": {
+            "const": false
+          },
+          "includesEmptyBacking": {
+            "const": true
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Whole"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪞️copy/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/copy/schema.json",
+    "title": "Ui Contract Copy Schema Module",
+    "$defs": {
+      "Copy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "allocationGrant",
+          "workGrant",
+          "runtimeWorkGrant",
+          "separateAllocationAndRootTransfers",
+          "byteCancelFrontiers",
+          "allocatorMultiplier",
+          "componentCount",
+          "listItems",
+          "text",
+          "textRepeats",
+          "closeGrants",
+          "cancelFrontiers",
+          "partialCandidateReadable",
+          "sourceUnchanged"
+        ],
+        "properties": {
+          "runtimeWorkGrant": {
+            "const": 4096
+          },
+          "separateAllocationAndRootTransfers": {
+            "const": true
+          },
+          "byteCancelFrontiers": {
+            "const": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              8,
+              12,
+              16,
+              32
+            ]
+          },
+          "allocatorMultiplier": {
+            "const": 2
+          },
+          "version": {
+            "const": 1
+          },
+          "allocationGrant": {
+            "const": 32768
+          },
+          "workGrant": {
+            "const": 32768
+          },
+          "componentCount": {
+            "const": 21
+          },
+          "listItems": {
+            "const": 32
+          },
+          "text": {
+            "const": "é"
+          },
+          "textRepeats": {
+            "const": 256
+          },
+          "closeGrants": {
+            "const": [
+              1,
+              64,
+              4096
+            ]
+          },
+          "cancelFrontiers": {
+            "const": [
+              0,
+              1,
+              2,
+              5,
+              16,
+              64,
+              128,
+              256
+            ]
+          },
+          "partialCandidateReadable": {
+            "const": false
+          },
+          "sourceUnchanged": {
+            "const": true
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Copy"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📋️list/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/list/schema.json",
+    "title": "Ui Contract List Schema Module",
+    "$defs": {
+      "List": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "maximumPageBytes",
+          "maximumGrantBytes",
+          "fanout",
+          "edgeCases",
+          "counter",
+          "ordered",
+          "binding",
+          "oversized",
+          "retirement"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "maximumPageBytes": {
+            "const": 4096
+          },
+          "maximumGrantBytes": {
+            "const": 32768
+          },
+          "fanout": {
+            "const": 16
+          },
+          "edgeCases": {
+            "const": {
+              "zeroCapacity": 0,
+              "zeroSizedCount": 7,
+              "tailCount": 600,
+              "retainedPrefix": 512,
+              "reuseValue": 900
+            }
+          },
+          "counter": {
+            "const": {
+              "preflightAddressable": true,
+              "allocatorMultiplier": 2,
+              "failedAllocationOwnerRetained": true
+            }
+          },
+          "ordered": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "count",
+              "first",
+              "last",
+              "sum"
+            ],
+            "properties": {
+              "count": {
+                "const": 600
+              },
+              "first": {
+                "const": 0
+              },
+              "last": {
+                "const": 599
+              },
+              "sum": {
+                "const": 179700
+              }
+            }
+          },
+          "binding": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "count",
+              "elementBytes",
+              "smallGrantBytes"
+            ],
+            "properties": {
+              "count": {
+                "const": 32
+              },
+              "elementBytes": {
+                "const": 2072
+              },
+              "smallGrantBytes": {
+                "const": 2048
+              }
+            }
+          },
+          "oversized": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "elementBytes",
+              "placed"
+            ],
+            "properties": {
+              "elementBytes": {
+                "const": 32769
+              },
+              "placed": {
+                "const": false
+              }
+            }
+          },
+          "retirement": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "allocates",
+              "releasesLivePayload"
+            ],
+            "properties": {
+              "allocates": {
+                "const": false
+              },
+              "releasesLivePayload": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/List"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🧾️evidence/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/retained/resident/evidence/schema.json",
+    "title": "Ui Contract Retained Resident Evidence Schema Module",
+    "$defs": {
+      "Evidence": {
+        "title": "UI Resident Input Evidence",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "owner",
+          "domain",
+          "observation",
+          "detachment",
+          "proof",
+          "construction",
+          "slot",
+          "grants",
+          "retirement"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "owner": {
+            "const": "original-builder-and-source-fragment-under-original-payload-ledger"
+          },
+          "domain": {
+            "const": {
+              "bytes": 192,
+              "slots": 4,
+              "owners": 4
+            }
+          },
+          "observation": {
+            "const": "existing-source-release-private-issued-match-before-original-capsule-install"
+          },
+          "detachment": {
+            "const": "source-variable-roots-first-ui-fragment-field-builder-next-source-settlement-next-ui-observation-last"
+          },
+          "proof": {
+            "const": "one-original-copied-or-cancelled-token-no-replacement-on-copied-close"
+          },
+          "construction": {
+            "const": "original-token-proof-word-holds-builder-until-parent-install-before-capsule-construction"
+          },
+          "slot": {
+            "const": "same-seven-field-payload-slot-original-builder-request-no-extra-controller"
+          },
+          "grants": {
+            "const": [
+              296,
+              64,
+              64,
+              64,
+              264,
+              64,
+              56,
+              168,
+              32,
+              64,
+              64
+            ]
+          },
+          "retirement": {
+            "const": "source-settlement-and-empty-ui-capsule-before-original-record-and-admission-refund"
+          }
+        }
+      }
+    }
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🔗️bindings/📋️copy/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/bindings/copy/schema.json",
+    "title": "Ui Contract Bindings Copy Schema Module",
+    "$defs": {
+      "Copy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "count",
+          "grantBytes",
+          "smallGrantBytes",
+          "elementBytes",
+          "scope",
+          "names",
+          "cancelFrontiers",
+          "closeGrants",
+          "returnOrders",
+          "heldReaderSurvives",
+          "contendedCopyProgresses"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "count": {
+            "const": 32
+          },
+          "grantBytes": {
+            "const": 4096
+          },
+          "smallGrantBytes": {
+            "const": 2048
+          },
+          "elementBytes": {
+            "const": 2072
+          },
+          "scope": {
+            "const": "hostSnapshot"
+          },
+          "names": {
+            "const": [
+              "action-0",
+              "action-1",
+              "action-2"
+            ]
+          },
+          "cancelFrontiers": {
+            "const": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ]
+          },
+          "closeGrants": {
+            "const": [
+              1,
+              64,
+              4096
+            ]
+          },
+          "heldReaderSurvives": {
+            "const": true
+          },
+          "contendedCopyProgresses": {
+            "const": false
+          },
+          "returnOrders": {
+            "const": [
+              [
+                "source",
+                "candidate"
+              ],
+              [
+                "candidate",
+                "source"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Copy"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🌳️root/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/resident/root/schema.json",
+    "title": "Ui Contract Resident Root Schema Module",
+    "$defs": {
+      "Root": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "surfaces",
+          "reservationBytes",
+          "physicalGrant",
+          "closeGrants",
+          "surface",
+          "surfaceUtf8",
+          "rootId",
+          "wireHex",
+          "readerAliases",
+          "creditBeforeFinalReader",
+          "creditAfterFinalReader",
+          "payload",
+          "payloadUtf8Bytes",
+          "separateLedger",
+          "reusesBeforeFinalReader",
+          "dropWaits",
+          "pressureRoots",
+          "pressureReservationBytes",
+          "pressureAggregateBytes",
+          "slotReuseRequiresTypedTerminal",
+          "sealedBytes",
+          "outputOrders",
+          "shrinkAfterSplit"
+        ],
+        "properties": {
+          "version": {
+            "const": 2
+          },
+          "surfaces": {
+            "const": 9
+          },
+          "reservationBytes": {
+            "const": 65536
+          },
+          "physicalGrant": {
+            "const": 32768
+          },
+          "closeGrants": {
+            "const": [
+              1,
+              64,
+              4096
+            ]
+          },
+          "surface": {
+            "const": "é"
+          },
+          "surfaceUtf8": {
+            "const": "c3a9"
+          },
+          "rootId": {
+            "const": 41
+          },
+          "wireHex": {
+            "const": "2900000000000000"
+          },
+          "readerAliases": {
+            "const": 1
+          },
+          "creditBeforeFinalReader": {
+            "const": 65536
+          },
+          "creditAfterFinalReader": {
+            "const": 0
+          },
+          "payload": {
+            "const": "Grüße"
+          },
+          "payloadUtf8Bytes": {
+            "const": 7
+          },
+          "separateLedger": {
+            "const": false
+          },
+          "reusesBeforeFinalReader": {
+            "const": false
+          },
+          "dropWaits": {
+            "const": false
+          },
+          "pressureRoots": {
+            "const": 7
+          },
+          "pressureReservationBytes": {
+            "const": 8388608
+          },
+          "pressureAggregateBytes": {
+            "const": 58064896
+          },
+          "slotReuseRequiresTypedTerminal": {
+            "const": true
+          },
+          "sealedBytes": {
+            "const": 32768
+          },
+          "outputOrders": {
+            "const": [
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                1
+              ]
+            ]
+          },
+          "shrinkAfterSplit": {
+            "const": false
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Root"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🎟️assembly/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/document/assembly/schema.json",
+    "title": "Ui Contract Document Assembly Schema Module",
+    "$defs": {
+      "Assembly": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "generation",
+          "surface",
+          "revision",
+          "nodeIds",
+          "wireHex",
+          "physicalGrant",
+          "closeGrants",
+          "comparisonBytesPerIdentity",
+          "zeroGrantAllocates",
+          "copyOldRoot",
+          "duplicateRetainsInput",
+          "contentionWaits"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "generation": {
+            "const": 117
+          },
+          "surface": {
+            "const": "文档"
+          },
+          "revision": {
+            "const": 4
+          },
+          "nodeIds": {
+            "const": [
+              41,
+              9
+            ]
+          },
+          "wireHex": {
+            "const": "29000000000000000900000000000000"
+          },
+          "physicalGrant": {
+            "const": 32768
+          },
+          "closeGrants": {
+            "const": [
+              1,
+              64,
+              4096
+            ]
+          },
+          "comparisonBytesPerIdentity": {
+            "const": 16
+          },
+          "zeroGrantAllocates": {
+            "const": false
+          },
+          "copyOldRoot": {
+            "const": false
+          },
+          "duplicateRetainsInput": {
+            "const": true
+          },
+          "contentionWaits": {
+            "const": false
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Assembly"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/📃️document/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/compare/document/schema.json",
+    "title": "Ui Contract Compare Document Schema Module",
+    "$defs": {
+      "Document": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "admissionGrant",
+          "smallGrant",
+          "frames",
+          "componentCount",
+          "grants",
+          "cancelFrontiers",
+          "finalReadModes",
+          "documentGeneration",
+          "revision",
+          "nodeIds",
+          "wireOrder",
+          "text",
+          "textRepeats",
+          "copiesOldComponent",
+          "waitsForLiveDocumentOnCancel",
+          "contendedProgress",
+          "rejectedOwnerReturned"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "admissionGrant": {
+            "const": 32768
+          },
+          "smallGrant": {
+            "const": 4096
+          },
+          "frames": {
+            "const": 256
+          },
+          "componentCount": {
+            "const": 21
+          },
+          "grants": {
+            "const": [
+              1,
+              64,
+              4096
+            ]
+          },
+          "cancelFrontiers": {
+            "const": [
+              0,
+              1,
+              2,
+              5,
+              16,
+              64,
+              128
+            ]
+          },
+          "finalReadModes": {
+            "const": [
+              "sole",
+              "concurrent-pair",
+              "queued-alias"
+            ]
+          },
+          "documentGeneration": {
+            "const": 93
+          },
+          "revision": {
+            "const": 7
+          },
+          "nodeIds": {
+            "const": [
+              41,
+              9
+            ]
+          },
+          "wireOrder": {
+            "const": [
+              41,
+              9
+            ]
+          },
+          "text": {
+            "const": "é"
+          },
+          "textRepeats": {
+            "const": 256
+          },
+          "copiesOldComponent": {
+            "const": false
+          },
+          "waitsForLiveDocumentOnCancel": {
+            "const": false
+          },
+          "contendedProgress": {
+            "const": false
+          },
+          "rejectedOwnerReturned": {
+            "const": true
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Document"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/⚖️compare/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/compare/schema.json",
+    "title": "Ui Contract Compare Schema Module",
+    "$defs": {
+      "Compare": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "componentCount",
+          "grants",
+          "closeGrant",
+          "text",
+          "textRepeats",
+          "nestedItems",
+          "cancelFrontiers",
+          "differentBackingMayBeEqual",
+          "contendedProgress",
+          "frame",
+          "cases"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "componentCount": {
+            "const": 21
+          },
+          "grants": {
+            "const": [
+              1,
+              64,
+              4096
+            ]
+          },
+          "closeGrant": {
+            "const": 64
+          },
+          "text": {
+            "const": "é"
+          },
+          "textRepeats": {
+            "const": 256
+          },
+          "nestedItems": {
+            "const": 32
+          },
+          "cancelFrontiers": {
+            "const": [
+              0,
+              1,
+              2,
+              5,
+              16,
+              64,
+              128
+            ]
+          },
+          "differentBackingMayBeEqual": {
+            "const": true
+          },
+          "contendedProgress": {
+            "const": false
+          },
+          "frame": {
+            "const": {
+              "logicalDepth": 256,
+              "pageCount": 1792,
+              "maximumTextBytes": 512,
+              "maximumPosition": 1024,
+              "none": 65535,
+              "bytes": 8,
+              "maximumCursorBytes": 4096,
+              "littleEndian": "ff06000000040000"
+            }
+          },
+          "cases": {
+            "type": "array",
+            "minItems": 8,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "left",
+                "right",
+                "equal"
+              ],
+              "properties": {
+                "left": {
+                  "type": "object"
+                },
+                "right": {
+                  "type": "object"
+                },
+                "equal": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "allOf": [
+      {
+        "$ref": "#/$defs/Compare"
+      }
+    ]
+  },
+  "🧰️framework/🔨️modules/🎒️pack/🌱️value/🔎️scalar-witness/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/os/pack/scalar-witness/schema.json",
+    "title": "Pack Scalar Witness",
+    "$defs": {
+      "ScalarRecordWire": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "grants",
+          "cancelAfterSteps",
+          "terminalEmpty",
+          "capture",
+          "cases"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "grants": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "cancelAfterSteps": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "terminalEmpty": {
+            "const": true
+          },
+          "capture": {
+            "$ref": "#/$defs/ScalarRecordCapture"
+          },
+          "cases": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/$defs/ScalarRecordCase"
+            }
+          }
+        }
+      },
+      "ScalarRecordCapture": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ordinal",
+          "value",
+          "laterOrdinal",
+          "laterValue",
+          "projections",
+          "wire"
+        ],
+        "properties": {
+          "ordinal": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "laterOrdinal": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "laterValue": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "projections": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "wire": {
+            "type": "array",
+            "minItems": 4,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        }
+      },
+      "ScalarRecordCase": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "ordinal",
+          "fields",
+          "wireBytes",
+          "symbols"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ordinal": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "wireBytes": {
+            "type": "integer",
+            "minimum": 4
+          },
+          "symbols": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "fields": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/ScalarRecordText"
+                },
+                {
+                  "$ref": "#/$defs/ScalarRecordU64"
+                },
+                {
+                  "$ref": "#/$defs/ScalarRecordF64"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "ScalarRecordText": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "unit",
+          "repeat",
+          "suffix"
+        ],
+        "properties": {
+          "type": {
+            "const": "text"
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "repeat": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16384
+          },
+          "suffix": {
+            "type": "string"
+          }
+        }
+      },
+      "ScalarRecordU64": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "value"
+        ],
+        "properties": {
+          "type": {
+            "const": "u64"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,19})$"
+          }
+        }
+      },
+      "ScalarRecordF64": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "value"
+        ],
+        "properties": {
+          "type": {
+            "const": "f64"
+          },
+          "value": {
+            "type": "string",
+            "enum": [
+              "-0",
+              "1.25",
+              "2",
+              "NaN"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🆚️diff-view-presentation/🔣️.json": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "semio.ui.diff-view-presentation.v1",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schema",
+      "host",
+      "typography",
+      "colors",
+      "unified",
+      "split",
+      "preWrap"
+    ],
+    "properties": {
+      "schema": {
+        "const": "semio.ui.diff-view-presentation.v1"
+      },
+      "host": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "width",
+          "height",
+          "inset"
+        ],
+        "properties": {
+          "width": {
+            "const": 400
+          },
+          "height": {
+            "const": 160
+          },
+          "inset": {
+            "const": 3.2
+          }
+        }
+      },
+      "typography": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "family",
+          "size",
+          "lineHeight",
+          "gap"
+        ],
+        "properties": {
+          "family": {
+            "const": "Share Tech Mono"
+          },
+          "size": {
+            "const": 11.2
+          },
+          "lineHeight": {
+            "const": 16
+          },
+          "gap": {
+            "const": 3.2
+          }
+        }
+      },
+      "colors": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "equal",
+          "added",
+          "removed"
+        ],
+        "properties": {
+          "equal": {
+            "$ref": "#/$defs/rgba"
+          },
+          "added": {
+            "$ref": "#/$defs/rgba"
+          },
+          "removed": {
+            "$ref": "#/$defs/rgba"
+          }
+        }
+      },
+      "unified": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contentWidth",
+          "rowHeight",
+          "textX"
+        ],
+        "properties": {
+          "contentWidth": {
+            "const": 393.625
+          },
+          "rowHeight": {
+            "const": 16
+          },
+          "textX": {
+            "const": 107.9375
+          }
+        }
+      },
+      "split": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "paneWidth",
+          "rightX",
+          "leftTextX",
+          "rightTextX"
+        ],
+        "properties": {
+          "paneWidth": {
+            "const": 193.125
+          },
+          "rightX": {
+            "const": 203.6875
+          },
+          "leftTextX": {
+            "const": 49.5625
+          },
+          "rightTextX": {
+            "const": 250.0625
+          }
+        }
+      },
+      "preWrap": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hostWidth",
+          "text",
+          "expectedLines"
+        ],
+        "properties": {
+          "hostWidth": {
+            "const": 160
+          },
+          "text": {
+            "const": "a  b  c  d"
+          },
+          "expectedLines": {
+            "const": [
+              "a  b  c  ",
+              "d"
+            ]
+          }
+        }
+      }
+    },
+    "$defs": {
+      "rgba": {
+        "type": "array",
+        "minItems": 4,
+        "maxItems": 4,
+        "prefixItems": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          {
+            "const": 255
+          }
+        ],
+        "items": false
+      }
+    }
+  },
+  "🧰️framework/🔨️modules/🧬️schema/✅️validator/🧬️schema/🧩️shape/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schemaVersion",
+      "json",
+      "runtime"
+    ],
+    "properties": {
+      "schemaVersion": {
+        "const": 1
+      },
+      "json": {
+        "type": "array",
+        "minItems": 28,
+        "maxItems": 28,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "guard",
+            "value",
+            "label",
+            "expected"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "guard": {
+              "enum": [
+                "record",
+                "array",
+                "string",
+                "literal",
+                "keys"
+              ]
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "allowed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "expected": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "admitted",
+                "diagnostic"
+              ],
+              "properties": {
+                "admitted": {
+                  "type": "boolean"
+                },
+                "diagnostic": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "value": {}
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "guard": {
+                    "const": "literal"
+                  }
+                },
+                "required": [
+                  "guard"
+                ]
+              },
+              "then": {
+                "required": [
+                  "allowed"
+                ],
+                "properties": {
+                  "allowed": {}
+                }
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "allowed"
+                  ],
+                  "properties": {
+                    "allowed": {}
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "guard": {
+                    "const": "keys"
+                  }
+                },
+                "required": [
+                  "guard"
+                ]
+              },
+              "then": {
+                "required": [
+                  "keys"
+                ],
+                "properties": {
+                  "keys": {}
+                }
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "keys"
+                  ],
+                  "properties": {
+                    "keys": {}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "runtime": {
+        "type": "array",
+        "minItems": 13,
+        "maxItems": 13,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "guard",
+            "mode",
+            "label",
+            "expected"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "guard": {
+              "enum": [
+                "record",
+                "array",
+                "string",
+                "literal",
+                "keys"
+              ]
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "allowed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "expected": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "admitted",
+                "diagnostic"
+              ],
+              "properties": {
+                "admitted": {
+                  "type": "boolean"
+                },
+                "diagnostic": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "mode": {
+              "enum": [
+                "date",
+                "inherited",
+                "inherited-number",
+                "inherited-string",
+                "map",
+                "nonenumerable",
+                "null-prototype",
+                "sparse",
+                "symbol",
+                "undefined"
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "guard": {
+                    "const": "literal"
+                  }
+                },
+                "required": [
+                  "guard"
+                ]
+              },
+              "then": {
+                "required": [
+                  "allowed"
+                ],
+                "properties": {
+                  "allowed": {}
+                }
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "allowed"
+                  ],
+                  "properties": {
+                    "allowed": {}
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "guard": {
+                    "const": "keys"
+                  }
+                },
+                "required": [
+                  "guard"
+                ]
+              },
+              "then": {
+                "required": [
+                  "keys"
+                ],
+                "properties": {
+                  "keys": {}
+                }
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "keys"
+                  ],
+                  "properties": {
+                    "keys": {}
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "🧰️framework/🔨️modules/🧬️schema/📇️registry/🧬️schema/🧷️assembly/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "contract",
+      "scenarios"
+    ],
+    "properties": {
+      "contract": {
+        "const": "registry-assembly-v1"
+      },
+      "scenarios": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "operations",
+            "expected"
+          ],
+          "properties": {
+            "id": {
+              "enum": [
+                "exclude-held",
+                "release-reacquire"
+              ]
+            },
+            "operations": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "enum": [
+                  "try",
+                  "release"
+                ]
+              }
+            },
+            "expected": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🧬️schema/🧫️cases/🔣️.json": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "array",
+    "minItems": 18,
+    "maxItems": 18,
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "operation",
+        "kind",
+        "message",
+        "span",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "operation": {
+          "enum": [
+            "value",
+            "text",
+            "textCanceled",
+            "textOwnership"
+          ]
+        },
+        "kind": {
+          "$ref": "https://semio.tech/schema/value/refusal#/$defs/kind"
+        },
+        "message": {
+          "type": "string"
+        },
+        "span": {
+          "$ref": "https://semio.tech/schema/diagnostic/controlled#/$defs/TextSpan"
+        },
+        "expected": {
+          "type": "string"
+        },
+        "expectedWire": {
+          "$ref": "https://semio.tech/schema/io/refusal"
+        },
+        "expectedKind": {
+          "$ref": "https://semio.tech/schema/value/refusal#/$defs/kind"
+        }
+      }
+    }
+  },
+  "🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🧬️schema/🔁️wire/🔣️.json": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "array",
+    "minItems": 7,
+    "maxItems": 7,
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "members",
+        "operation",
+        "accept",
+        "maximumBytes",
+        "expectedKind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {}
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "operation": {
+          "enum": [
+            "encode",
+            "decode"
+          ]
+        },
+        "accept": {
+          "type": "boolean"
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedKind": {
+          "$ref": "https://semio.tech/schema/value/refusal#/$defs/kind"
+        }
+      }
+    }
+  },
+  "🧰️framework/🔨️modules/🚪️io/🧬️schema/⚠️refusal/🧬️schema/🧵️stress/🔣️.json": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "array",
+    "minItems": 3,
+    "maxItems": 3,
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "unit",
+        "repeat",
+        "maximumBytes",
+        "cancelAfterCompleted",
+        "expectedKind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 20000
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cancelAfterCompleted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedKind": {
+          "enum": [
+            "success",
+            "canceled",
+            "ownershipLimit"
+          ]
+        }
+      }
+    }
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️mutation-wire-witness/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "MutationWireWitnessVectors",
+    "description": "Language-agnostic vectors for the payload-only mutation wire witness case directory: its one taxonomy kind, its bounded parent scopes, its bundle shape and its two real placements in a mutation leaf's fixture scope.",
+    "type": "object",
+    "required": [
+      "contract",
+      "kindId",
+      "directoryName",
+      "parentKindIds",
+      "witnessNodes",
+      "witnessLeaves",
+      "resolutions",
+      "placements"
+    ],
+    "additionalProperties": false,
+    "definitions": {
+      "kindId": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$"
+      },
+      "repositoryPath": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$"
+      }
+    },
+    "properties": {
+      "contract": {
+        "type": "string",
+        "const": "mutation-wire-witness-v1"
+      },
+      "kindId": {
+        "type": "string",
+        "const": "mutation-wire-witness"
+      },
+      "directoryName": {
+        "type": "string",
+        "const": "🧾️wire-witness"
+      },
+      "parentKindIds": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "$ref": "#/definitions/kindId"
+        }
+      },
+      "witnessNodes": {
+        "type": "integer",
+        "const": 3
+      },
+      "witnessLeaves": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 1,
+        "items": {
+          "type": "string",
+          "const": "🦠️mutation/🔣️.json"
+        }
+      },
+      "resolutions": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "name",
+            "parentKindId",
+            "expectedKindId"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "parentKindId": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/kindId"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expectedKindId": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/kindId"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "placements": {
+        "type": "array",
+        "minItems": 2,
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "scope",
+            "leafRoots",
+            "witnessRoot",
+            "parentKindId"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            },
+            "scope": {
+              "$ref": "#/definitions/repositoryPath"
+            },
+            "leafRoots": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/repositoryPath"
+              }
+            },
+            "witnessRoot": {
+              "type": "string",
+              "pattern": "(?:^|/)🧬️mutations/[^/]+/(?:🧫️fixtures/)?🧾️wire-witness$"
+            },
+            "parentKindId": {
+              "$ref": "#/definitions/kindId"
+            }
+          }
+        }
+      }
+    }
+  },
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/repo/library/caching/vite/schema.json",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "server",
+      "hmr",
+      "storage"
+    ],
+    "properties": {
+      "hmr": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "clientPath",
+          "protocol",
+          "connected",
+          "update",
+          "changedFile",
+          "contents"
+        ],
+        "properties": {
+          "clientPath": {
+            "const": "/@vite/client"
+          },
+          "protocol": {
+            "const": "vite-hmr"
+          },
+          "connected": {
+            "const": "connected"
+          },
+          "update": {
+            "const": "full-reload"
+          },
+          "changedFile": {
+            "const": "index.html"
+          },
+          "contents": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "server": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "host",
+          "path",
+          "expected"
+        ],
+        "properties": {
+          "host": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "storage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "package",
+          "modules",
+          "config",
+          "optimizer"
+        ],
+        "properties": {
+          "package": {
+            "const": {
+              "private": true,
+              "type": "module"
+            }
+          },
+          "modules": {
+            "const": "node_modules"
+          },
+          "config": {
+            "const": "node_modules/.vite-temp"
+          },
+          "optimizer": {
+            "const": "node_modules/.vite"
+          }
+        }
+      }
+    }
+  },
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/component.json",
+    "title": "Workflow",
+    "$defs": {
+      "PackageContractV1": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "package",
+          "expected"
+        ],
+        "properties": {
+          "package": {
+            "const": "semio-framework-artifact-workflow-workflow"
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "schema",
+              "graph",
+              "parameters",
+              "parameter_bindings",
+              "inputs",
+              "input_bindings",
+              "output_bindings"
+            ],
+            "properties": {
+              "schema": {
+                "const": "os.workflow"
+              },
+              "graph": {
+                "type": "object",
+                "required": [
+                  "schema",
+                  "nodes",
+                  "edges"
+                ],
+                "properties": {
+                  "schema": {
+                    "const": "workflow.graph"
+                  },
+                  "nodes": {
+                    "type": "array"
+                  },
+                  "edges": {
+                    "type": "array"
+                  }
+                }
+              },
+              "parameters": {
+                "type": "array"
+              },
+              "parameter_bindings": {
+                "type": "array"
+              },
+              "inputs": {
+                "type": "array"
+              },
+              "input_bindings": {
+                "type": "array"
+              },
+              "output_bindings": {
+                "type": "array"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

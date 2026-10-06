@@ -1,4 +1,4 @@
-//! 🧪️ `replace-node-handle` fixture — `🧱️negative-scale`.
+//! 🧪️ `replace-node-handle` snapshot — `🧱️negative-scale`.
 //!
 //! A negative handle scale is what the handle record's `exclusiveMinimum: 0` forbids: a Fatal `mutation.invariant`, the handle stays.
 //!

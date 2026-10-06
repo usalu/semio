@@ -1,4 +1,5 @@
-import { resolve } from "node:path";
+import { resolve,dirname } from "node:path";
+import { mkdir } from "node:fs/promises";
 
 const ticket = resolve(import.meta.dir, "../..");
 const plugin = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs";
@@ -77,7 +78,7 @@ for (const path of new TextDecoder().decode(scan.stdout).trim().split("\n")) {
     if (after.includes("playbook_flow_emit") && after.includes("-> semio_framework_plugin::app::ChildEmit")) after = after.replace("-> semio_framework_plugin::app::ChildEmit", "-> semio_framework_plugin::app::ChildEmitPreparation");
     if (after.includes("child_emits: vec![playbook_flow_emit")) after = after.replace("child_emits: vec![", "child_preparations: std::collections::VecDeque::from([").replace(/\], ui_scope:/, "]), ui_scope:");
     if (after.includes("child_preparations:")) after = after.replace(/\](,\s*$)/, "\])$1");
-    if (/^\s*(?:pub )?use /.test(after)) after = after.replace(/\bChildEmit\b/g, "ChildEmitPreparation");
+    if (/^\s*(?:pub )?use /.test(after)) after = after.includes("::ChildEmit;")?after.replace("::ChildEmit;","::{ChildEmit,ChildEmitPreparation};"):after.replace(/\bChildEmit\b/g,"ChildEmit,ChildEmitPreparation");
     if (before !== after) await region(path, `owning-child-emission-line-${index + 1}`, before, after, text.split(before).length - 1);
   }
 }
@@ -123,6 +124,7 @@ await region(toolRun,"member-finalize-actual-retirement-issuer-caller","ops: &me
 await region(toolRun,"member-close-keeps-exact-byte-grant","    fn tool_run_member_retire_step(&mut self) -> Result<Option<PluginCloseStep>, Fault> {", "    fn tool_run_member_retire_step(&mut self,maximum_items:usize,maximum_bytes:usize) -> Result<Option<PluginCloseStep>, Fault> {");
 await region(toolRun,"member-close-actual-owned-emission-cursors","        for (member, everything) in live.chain(retired) {", "        for (member, everything) in live.chain(retired) {\n"+await Bun.file(resolve(import.meta.dir,"tool-run-close.rs")).text());
 await region(toolRun,"member-retirement-actual-budget-caller","        match self.tool_run_member_retire_step()? {", "        match self.tool_run_member_retire_step(maximum_items,maximum_bytes)? {");
+await region(toolRun,"borrowed-member-retirement-identity-lookup","            let Some(child) = children.get(&(member.slot.clone(), member.child_id.clone())) else {", "            let Some(child)=children.entries().find(|child|child.owner.slot==member.slot&&child.owner.child_id==member.child_id)else{");
 const storePath="🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs";
 await region(storePath,"borrowed-installed-mutation-retirement-issuer","    pub fn install_snapshot_retirement_factory(&mut self, factory:",`    /// ♻️ Hands an exact mutation owner to the installed issuer after checking admission while it remains in its caller slot.
     pub fn retire_owned_mutation(&self,owner:&mut Option<Mutation>)->Result<Option<Box<dyn ErasedSnapshotRetirement>>,VcsError>{
@@ -167,6 +169,37 @@ await region(plugin,"preview-captured-job-and-child-preparation-authority",previ
                         _=>Err(plugin_sdk_fault("preview child preparation lost its complete owning emission")),
                     }
                 },`);
+const sequenceEditor="✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs";
+await region(sequenceEditor,"retained-sequence-import-prepares-before-owning-completion","        cx.set_stage(\"sequence-import-publish\");",`        cx.set_stage("sequence-import-publish");
+        if let Some(emit)=self.emit.as_mut(){
+            let bytes=emit.next_child_preparation_byte_demand().max(1);
+            match emit.prepare_child_one(1,bytes){
+                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Ready)=>{},
+                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Pending)=>{cx.consume_fuel(1);return semio_framework_job::StepOutcome::Yield;},
+                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault))|Err(fault)=>return sequence_job_fault(cx,&fault.message),
+            }
+        }`);
+const boundedFixturePump=(name:string)=>`
+    let mut prepared=false;
+    for _ in 0..4096{
+        match ${name}.prepare_child_one(1,65536).expect("bounded real child preparation"){
+            semio_framework_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
+            semio_framework_plugin::app::ChildEmitPreparationStep::Pending=>{},
+            semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
+        }
+    }
+    assert!(prepared,"closed fixture child prefix must complete within its authored bound");`;
+const playbookLaw="✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs";
+const playbookLine=(await Bun.file(playbookLaw).text()).split("\n").find(line=>line.includes("let emit = PlaybookPlayApp::import_media(\"chapters:in\""));
+if(!playbookLine)throw Error("Real media chapter test caller guard refused");
+await region(playbookLaw,"original-media-import-law-through-stepped-real-child-source",playbookLine,playbookLine.replace("let emit =","let mut emit =")+boundedFixturePump("emit"));
+const flowDragLaw="✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/✋️drag/🧪️tests/🔬️unit/🦀️.rs";
+const flowDragSource=await Bun.file(flowDragLaw).text();
+for(const name of ["emit","plain","nothing"]){
+    const line=flowDragSource.split("\n").find(line=>line.includes(`let ${name} = flow_drag_tool_emit(`));
+    if(!line)throw Error(`Original drag semantic law source guard refused ${name}`);
+    await region(flowDragLaw,`original-${name}-drag-law-through-owned-source`,line,line.replace(`let ${name} =`,`let mut ${name} =`)+boundedFixturePump(name));
+}
 const builderTest="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs";
 const builderSource=await Bun.file(builderTest).text();
 await region(builderTest,"checked-real-test-child-wire-projection","    fn label_in(label:",`    fn test_child_emit(slot:impl Into<String>,child_id:impl Into<String>,operations:&[TestMutation])->ChildEmit{
@@ -207,6 +240,35 @@ for(const filename of ["label-held-pair.json","borrowed-fault-projection-held-pa
 }
 const modulePath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/📦️preparation/🦀️.rs";
 pairs.set(modulePath, { path: modulePath, before: "", after: await Bun.file(resolve(import.meta.dir, "🦀️.rs")).text(), regions: [] });
-const output = { state: "HeldOwnedEmissionProducerAndOwnedHelperInvocationDraft", pairs: [...pairs.values()], required: ["all explicit constructor imports", "ToolRun decoded owned mutation handoff using actual Store factory", "actual retained job and mounted publication/preview pumps", "closed owner demand and tests", "typed close refusal ownership", "known builtin versus provider factory cell return"], limitations: ["Not mounted", "Not parsed or compiled", "No runtime credit", "Opaque custom transport source remains retained awaiting genuine provider handoff"] };
+const output = { state: "HeldCoherentOwnedEmissionCodecAndRequiredCallerFamily", pairs: [...pairs.values()], required: ["actual owning Native encoder, original caller and accepted-owner-retirement refusal laws"], limitations: ["Not mounted", "Rust syntax only until owning compiler/runtime", "No runtime or Native allocation-ledger credit", "Existing non-child Emit and ephemeral retirement remains excluded", "Opaque custom transport source remains retained awaiting genuine provider handoff"] };
 await Bun.write(resolve(ticket, "📥️inputs/child-emission-owned-capsule/producer-and-helpers-held-pairs.json"), JSON.stringify(output, null, 2) + "\n");
 console.log(JSON.stringify({ paths: pairs.size, regions: [...pairs.values()].reduce((n, pair) => n + pair.regions.length, 0), state: output.state }));
+if(process.argv.includes("--parse")||process.argv.includes("--mount")){
+    const receipts=[];
+    for(const pair of pairs.values()){
+        if(!pair.path.endsWith(".rs"))continue;
+        const parsed=Bun.spawnSync(["rustfmt","--edition","2021","--config","skip_children=true","--emit","stdout"],{stdin:new TextEncoder().encode(pair.after),stdout:"ignore",stderr:"pipe"});
+        receipts.push({path:pair.path,exitCode:parsed.exitCode,stderr:new TextDecoder().decode(parsed.stderr)});
+    }
+    const receiptPath=resolve(ticket,"🗑️generated/child-emission-current-owned-parser/receipt.json");
+    await mkdir(dirname(receiptPath),{recursive:true});
+    await Bun.write(receiptPath,JSON.stringify({scope:"Rust syntax only; no types or runtime",receipts},null,2)+"\n");
+    if(receipts.some(receipt=>receipt.exitCode!==0))throw Error("Current held Rust syntax guard refused");
+    console.log(JSON.stringify({parsed:receipts.length,errors:0,scope:"Rust syntax only"}));
+}
+if(process.argv.includes("--mount")){
+    for(const pair of pairs.values()){
+        const file=Bun.file(pair.path);const current=await file.exists()?await file.text():"";
+        if(current!==pair.before)throw Error(`Current whole family mount guard refused ${pair.path}`);
+    }
+    const readback=[];
+    for(const pair of pairs.values()){
+        const file=Bun.file(pair.path);const current=await file.exists()?await file.text():"";
+        if(current!==pair.before)throw Error(`Immediate path mount guard refused ${pair.path}`);
+        await mkdir(dirname(pair.path),{recursive:true});await Bun.write(pair.path,pair.after);
+        readback.push({path:pair.path,exact:(await Bun.file(pair.path).text())===pair.after});
+    }
+    const receiptPath=resolve(ticket,"🗑️generated/child-emission-current-owned-mount-readback.json");
+    await Bun.write(receiptPath,JSON.stringify({scope:"Guarded source mount; no runtime",readback},null,2)+"\n");
+    console.log(JSON.stringify({mounted:readback.length,exact:readback.every(item=>item.exact)}));
+}

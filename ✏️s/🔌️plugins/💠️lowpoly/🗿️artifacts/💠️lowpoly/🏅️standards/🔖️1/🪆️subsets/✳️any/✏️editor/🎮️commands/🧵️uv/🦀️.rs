@@ -2,7 +2,7 @@
 
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
-use crate::op::LowpolyMutation;
+use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::LowpolySnapshot;
 use semio_framework_3d::mesh::EdgeId;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

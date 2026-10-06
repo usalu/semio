@@ -9,7 +9,20 @@
   ],
   "properties": {
     "scale": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/geometry.json#/$defs/SemioPoint3"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/geometry.json#/$defs/SemioPoint3",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Scale",
+          "de": "Skalierung"
+        },
+        "description": {
+          "en": "Scale factors along x, y and z.",
+          "de": "Skalierungsfaktoren entlang x, y und z."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

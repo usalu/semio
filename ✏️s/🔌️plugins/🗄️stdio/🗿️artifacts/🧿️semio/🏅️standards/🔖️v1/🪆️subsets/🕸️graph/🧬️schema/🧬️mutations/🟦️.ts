@@ -10,7 +10,7 @@
  * structs carry `#[serde(rename_all = ...)]` (confirmed by this artifact's own `🦀️.rs` doc
  * comment), so every leaf's own field names are the literal Rust snake_case names verbatim. */
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
-import type { GraphNodeId, GraphEdgeId, SemioGraphPort, SemioGraphNode } from "../📸️snapshot/🟦️.ts";
+import type {GraphNodeId, GraphEdgeId, SemioGraphPort, SemioGraphNode} from "../📸️snapshot/🟦️.ts";
 import type {SemioValueEntry} from "../../../🔢️value/🧬️schema/📸️snapshot/🟦️.ts";
 import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export type {SemioValueEntry} from "../../../🔢️value/🧬️schema/📸️snapshot/🟦️.ts";

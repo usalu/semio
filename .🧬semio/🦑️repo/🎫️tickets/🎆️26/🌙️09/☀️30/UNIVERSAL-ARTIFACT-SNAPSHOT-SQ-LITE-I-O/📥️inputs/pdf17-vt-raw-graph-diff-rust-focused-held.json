@@ -1,0 +1,40 @@
+{
+  "qualification": "HELD SOURCE ONLY; requires complete facet/initializer readback and actual composition law tests; not mount-ready",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "pub struct PdfDiff {\n",
+      "after": "pub struct PdfDiff {\n    #[state(artifact)]\n    #[value(default, skip_serializing_if = \"Option::is_none\")]\n    pub raw_graph: Option<PdfRawGraph>,\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "impl DiffAlgebra<PdfSnapshot> for PdfDiff {",
+      "after": "/// 🪢️ Exact ordered retained frontier; unrelated typed lanes and schema stay frozen.\n#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]\n#[value(rename_all = \"camelCase\")]\npub struct PdfRawGraph {\n    pub objects: Vec<PdfIndirectObject>,\n    pub catalog_extra: Vec<PdfDictEntry>,\n}\n\nimpl DiffAlgebra<PdfSnapshot> for PdfDiff {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "fn validate_pdf_diff(diff: &PdfDiff, base: &PdfSnapshot) -> MutationApplyResult<()> {",
+      "after": "fn validate_pdf_diff(diff: &PdfDiff, base: &PdfSnapshot) -> MutationApplyResult<()> {\n    let graph_base;\n    let base = if let Some(graph) = &diff.raw_graph {\n        graph_base = PdfSnapshot { objects: graph.objects.clone(), catalog_extra: graph.catalog_extra.clone(), ..base.clone() };\n        &graph_base\n    } else { base };\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "fn apply_pdf_diff_unchecked(diff: &PdfDiff, base: &PdfSnapshot) -> PdfSnapshot {",
+      "after": "fn apply_pdf_diff_unchecked(diff: &PdfDiff, base: &PdfSnapshot) -> PdfSnapshot {\n    let graph_base;\n    let base = if let Some(graph) = &diff.raw_graph {\n        graph_base = PdfSnapshot { objects: graph.objects.clone(), catalog_extra: graph.catalog_extra.clone(), ..base.clone() };\n        &graph_base\n    } else { base };\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "    fn inverse(&self, base: &PdfSnapshot) -> Self {\n        let mid = apply_pdf_diff_unchecked(self, base);\n        Self::between(&mid, base)\n    }",
+      "after": "    fn inverse(&self, base: &PdfSnapshot) -> Self {\n        if self.raw_graph.is_some() {\n            let mut typed = self.clone();\n            typed.raw_graph = None;\n            typed.objects = None;\n            typed.catalog_extra = None;\n            if typed.is_empty() { return Self { raw_graph: Some(PdfRawGraph { objects: base.objects.clone(), catalog_extra: base.catalog_extra.clone() }), ..Default::default() }; }\n        }\n        let mid = apply_pdf_diff_unchecked(self, base);\n        let mut inverse = Self::between(&mid, base);\n        if self.raw_graph.is_some() {\n            inverse.raw_graph = Some(PdfRawGraph { objects: base.objects.clone(), catalog_extra: base.catalog_extra.clone() });\n            inverse.objects = None;\n            inverse.catalog_extra = None;\n        }\n        inverse\n    }"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "        PdfDiff {\n            declared_version: (base.declared_version",
+      "after": "        PdfDiff {\n            raw_graph: None,\n            declared_version: (base.declared_version"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "    fn absorb(&mut self, other: Self) {\n        if other.declared_version.is_some() {",
+      "after": "    fn absorb(&mut self, mut other: Self) {\n        if let Some(graph) = other.raw_graph.take() {\n            self.raw_graph = Some(graph);\n            self.objects = None;\n            self.catalog_extra = None;\n        }\n        if let Some(graph) = &mut self.raw_graph {\n            if let Some(objects) = self.objects.take() { graph.objects = apply_objects_diff(&objects, &graph.objects); }\n            if let Some(extra) = self.catalog_extra.take() { graph.catalog_extra = apply_dict_diff(&extra, &graph.catalog_extra); }\n            if let Some(objects) = other.objects.take() { graph.objects = apply_objects_diff(&objects, &graph.objects); }\n            if let Some(extra) = other.catalog_extra.take() { graph.catalog_extra = apply_dict_diff(&extra, &graph.catalog_extra); }\n        }\n        if other.declared_version.is_some() {"
+    }
+  ]
+}

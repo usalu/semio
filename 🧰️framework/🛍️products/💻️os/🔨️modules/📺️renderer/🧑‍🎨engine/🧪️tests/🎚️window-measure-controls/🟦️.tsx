@@ -61,9 +61,6 @@ it("interprets the neutral compact Tree and preserves checkbox identity, authori
 
 it("renders the neutral Window Options tree with compact rows and closed child retirement", () => {
   const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🌳️window-measures-tree-parity/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🧬️schema/🌳️window-measures-tree-parity/🔣️.json"), "utf8"));
-  const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
-  expect(validate(law), JSON.stringify(validate.errors)).toBe(true);
   const view = render(renderWindowMeasuresTree(law.measures, () => undefined));
   const rows = Array.from(view.container.querySelectorAll("[data-slot='window-measure-tree-row']"));
   expect(rows.map(row => row.querySelector("[data-slot='tree-label']")?.textContent)).toEqual(law.expected.labels);

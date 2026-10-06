@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "tables": [
+    "sequence_document",
+    "sequence_content"
+  ],
+  "cases": [
+    {
+      "name": "complete-owner",
+      "field": null,
+      "text": null,
+      "bytes": 97,
+      "rows": 2
+    },
+    {
+      "name": "empty-all",
+      "field": "all",
+      "text": "",
+      "bytes": 24,
+      "rows": 2
+    },
+    {
+      "name": "unicode-all",
+      "field": "all",
+      "text": "世界\u0000😀; id!kind@standard/subset%",
+      "bytes": 246,
+      "rows": 2
+    },
+    {
+      "name": "long-schema",
+      "field": "schema",
+      "text": "😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000",
+      "bytes": 217,
+      "rows": 2
+    },
+    {
+      "name": "long-childId",
+      "field": "childId",
+      "text": "😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000",
+      "bytes": 211,
+      "rows": 2
+    },
+    {
+      "name": "long-artifactId",
+      "field": "artifactId",
+      "text": "😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000",
+      "bytes": 217,
+      "rows": 2
+    },
+    {
+      "name": "long-artifactKind",
+      "field": "artifactKind",
+      "text": "😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000",
+      "bytes": 220,
+      "rows": 2
+    },
+    {
+      "name": "long-standard",
+      "field": "standard",
+      "text": "😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000",
+      "bytes": 231,
+      "rows": 2
+    },
+    {
+      "name": "long-subset",
+      "field": "subset",
+      "text": "😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000😀界\u0000",
+      "bytes": 229,
+      "rows": 2
+    }
+  ]
+}

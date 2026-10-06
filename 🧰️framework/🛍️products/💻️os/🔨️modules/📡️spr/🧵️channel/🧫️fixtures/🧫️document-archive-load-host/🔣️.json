@@ -1,166 +1,665 @@
 {
-  "$schema": "../../🧬️schema/🔣️document-archive-load-host/🔣️.json",
-  "law": "A host loads a whole document only through the stepped archive load: it admits once, polls until a terminal status, and acknowledges that terminal. A cancel before admission sends nothing; after admission it is sent once and polling goes on until the guest says whether it restored the previous document (cancelled) or the load won the race (ready). A cancelled terminal whose acknowledgement is refused is polled again. A load the guest admitted itself under the host's command sequence (a media import of a whole document of the app's own schema) is driven the same way from its first poll. A refused admission, poll or acknowledgement of a ready or faulted load is the guest's own fault, and a frame that answers another command is no answer.",
+  "law": "A host loads a whole document only through the stepped archive load: it admits once, polls until a terminal status, and acknowledges that terminal. A cancel before admission sends nothing; after admission it is sent once and polling goes on until the guest says whether it restored the previous document (cancelled) or the load won the race (ready). A cancelled terminal whose acknowledgement is refused is polled again. A load the guest admitted itself under the host's command sequence (a media import of a whole document of the app's own schema) is driven the same way from its first poll. A refused admission, poll or acknowledgement of a ready or faulted load is the guest's own fault, and a frame that answers another command is no answer. A read-back of the document the program already shows is a merge: it admits with its own command, is polled, cancelled and acknowledged like a load, and its ready terminal says how many events the program is ahead of the archive.",
   "firstSequence": 9,
   "cases": [
     {
       "name": "a-browser-reload-admits-as-operation-nine-polls-on-sequence-ten-and-acknowledges-on-sequence-eleven",
       "cancel": null,
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "ready", "completed": 1, "total": 1 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "ready",
+            "completed": 1,
+            "total": 1
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "ready" }
+      "outcome": {
+        "kind": "ready"
+      }
     },
     {
       "name": "a-long-history-loads-through-polls-then-one-acknowledgement",
       "cancel": null,
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "pending", "completed": 0, "total": 241 } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "running", "completed": 112, "total": 241 } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "running", "completed": 224, "total": 241 } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "ready", "completed": 241, "total": 241 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "pending",
+            "completed": 0,
+            "total": 241
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 112,
+            "total": 241
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 224,
+            "total": 241
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "ready",
+            "completed": 241,
+            "total": 241
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "ready" }
+      "outcome": {
+        "kind": "ready"
+      }
     },
     {
       "name": "a-cancel-after-the-first-poll-is-sent-once-and-polled-to-its-restore",
-      "cancel": { "beforeStep": 2 },
+      "cancel": {
+        "beforeStep": 2
+      },
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "running", "completed": 16, "total": 241 } },
-        { "sends": "cancelDocumentArchiveLoad", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "running", "completed": 16, "total": 241 } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "cancelled", "completed": 16, "total": 241 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 16,
+            "total": 241
+          }
+        },
+        {
+          "sends": "cancelDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 16,
+            "total": 241
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "cancelled",
+            "completed": 16,
+            "total": 241
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "cancelled" }
+      "outcome": {
+        "kind": "cancelled"
+      }
     },
     {
       "name": "a-cancel-before-admission-sends-nothing",
-      "cancel": { "beforeStep": 0 },
+      "cancel": {
+        "beforeStep": 0
+      },
       "exchanges": [],
-      "outcome": { "kind": "cancelled" }
+      "outcome": {
+        "kind": "cancelled"
+      }
     },
     {
       "name": "a-cancel-while-the-admission-is-in-flight-is-sent-right-after-it",
-      "cancel": { "whileStepInFlight": 0 },
+      "cancel": {
+        "whileStepInFlight": 0
+      },
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "cancelDocumentArchiveLoad", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "cancelled", "completed": 0, "total": 241 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "cancelDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "cancelled",
+            "completed": 0,
+            "total": 241
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "cancelled" }
+      "outcome": {
+        "kind": "cancelled"
+      }
     },
     {
       "name": "a-cancelled-terminal-still-cleaning-up-is-polled-before-it-is-acknowledged-again",
-      "cancel": { "beforeStep": 2 },
+      "cancel": {
+        "beforeStep": 2
+      },
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "running", "completed": 32, "total": 241 } },
-        { "sends": "cancelDocumentArchiveLoad", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "cancelled", "completed": 32, "total": 241 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "error", "fault": "plugin.sdk" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "cancelled", "completed": 32, "total": 241 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 32,
+            "total": 241
+          }
+        },
+        {
+          "sends": "cancelDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "cancelled",
+            "completed": 32,
+            "total": 241
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "error",
+            "fault": "plugin.sdk"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "cancelled",
+            "completed": 32,
+            "total": 241
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "cancelled" }
+      "outcome": {
+        "kind": "cancelled"
+      }
     },
     {
       "name": "a-cancel-that-loses-the-race-ends-ready",
-      "cancel": { "beforeStep": 2 },
+      "cancel": {
+        "beforeStep": 2
+      },
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "running", "completed": 200, "total": 241 } },
-        { "sends": "cancelDocumentArchiveLoad", "answer": { "kind": "error", "fault": "plugin.sdk" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "ready", "completed": 241, "total": 241 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 200,
+            "total": 241
+          }
+        },
+        {
+          "sends": "cancelDocumentArchiveLoad",
+          "answer": {
+            "kind": "error",
+            "fault": "plugin.sdk"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "ready",
+            "completed": 241,
+            "total": 241
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "ready" }
+      "outcome": {
+        "kind": "ready"
+      }
     },
     {
       "name": "a-cancel-from-the-history-body-ends-cancelled-without-a-host-cancel",
       "cancel": null,
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "running", "completed": 48, "total": 241 } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "cancelled", "completed": 48, "total": 241 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 48,
+            "total": 241
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "cancelled",
+            "completed": 48,
+            "total": 241
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "cancelled" }
+      "outcome": {
+        "kind": "cancelled"
+      }
     },
     {
       "name": "a-guest-fault-restores-and-carries-its-own-code",
       "cancel": null,
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "running", "completed": 8, "total": 241 } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "fault", "completed": 8, "total": 241, "fault": "document.archive-rejected" } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 8,
+            "total": 241
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "fault",
+            "completed": 8,
+            "total": 241,
+            "fault": "document.archive-rejected"
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "fault", "fault": "document.archive-rejected" }
+      "outcome": {
+        "kind": "fault",
+        "fault": "document.archive-rejected"
+      }
     },
     {
       "name": "a-refused-admission-is-the-guests-own-fault",
       "cancel": null,
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "error", "fault": "document.loading" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "error",
+            "fault": "document.loading"
+          }
+        }
       ],
-      "outcome": { "kind": "refused", "fault": "document.loading" }
+      "outcome": {
+        "kind": "refused",
+        "fault": "document.loading"
+      }
     },
     {
       "name": "a-refused-poll-is-the-guests-own-fault",
       "cancel": null,
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "error", "fault": "plugin.sdk" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "error",
+            "fault": "plugin.sdk"
+          }
+        }
       ],
-      "outcome": { "kind": "refused", "fault": "plugin.sdk" }
+      "outcome": {
+        "kind": "refused",
+        "fault": "plugin.sdk"
+      }
     },
     {
       "name": "a-refused-acknowledgement-of-a-ready-load-is-not-retried",
       "cancel": null,
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "ready", "completed": 1, "total": 1 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "error", "fault": "plugin.sdk" } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "ready",
+            "completed": 1,
+            "total": 1
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "error",
+            "fault": "plugin.sdk"
+          }
+        }
       ],
-      "outcome": { "kind": "refused", "fault": "plugin.sdk" }
+      "outcome": {
+        "kind": "refused",
+        "fault": "plugin.sdk"
+      }
     },
     {
       "name": "a-status-of-another-operation-is-no-answer",
       "cancel": null,
       "exchanges": [
-        { "sends": "loadDocumentArchive", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "foreignStatus", "state": "running", "completed": 0, "total": 1 } }
+        {
+          "sends": "loadDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "foreignStatus",
+            "state": "running",
+            "completed": 0,
+            "total": 1
+          }
+        }
       ],
-      "outcome": { "kind": "unanswered" }
+      "outcome": {
+        "kind": "unanswered"
+      }
     },
     {
       "name": "a-whole-document-media-import-is-polled-from-its-guest-admission-to-ready",
       "admittedByGuest": true,
       "cancel": null,
       "exchanges": [
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "running", "completed": 120, "total": 241 } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "ready", "completed": 241, "total": 241 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 120,
+            "total": 241
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "ready",
+            "completed": 241,
+            "total": 241
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "ready" }
+      "outcome": {
+        "kind": "ready"
+      }
     },
     {
       "name": "a-cancel-of-a-guest-admitted-load-is-sent-first-and-polled-to-its-restore",
       "admittedByGuest": true,
-      "cancel": { "beforeStep": 0 },
+      "cancel": {
+        "beforeStep": 0
+      },
       "exchanges": [
-        { "sends": "cancelDocumentArchiveLoad", "answer": { "kind": "done" } },
-        { "sends": "pollDocumentArchiveLoad", "answer": { "kind": "status", "state": "cancelled", "completed": 0, "total": 241 } },
-        { "sends": "acknowledgeDocumentArchiveLoad", "answer": { "kind": "done" } }
+        {
+          "sends": "cancelDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "cancelled",
+            "completed": 0,
+            "total": 241
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
       ],
-      "outcome": { "kind": "cancelled" }
+      "outcome": {
+        "kind": "cancelled"
+      }
+    },
+    {
+      "name": "a-read-back-merge-admits-with-its-own-command-and-ends-ready-with-what-the-program-is-ahead-by",
+      "merging": true,
+      "cancel": null,
+      "exchanges": [
+        {
+          "sends": "mergeDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "running",
+            "completed": 0,
+            "total": 3
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "ready",
+            "completed": 3,
+            "total": 3,
+            "ahead": 2
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
+      ],
+      "outcome": {
+        "kind": "ready",
+        "ahead": 2
+      }
+    },
+    {
+      "name": "a-read-back-merge-of-another-document-ends-in-the-guests-own-fault",
+      "merging": true,
+      "cancel": null,
+      "exchanges": [
+        {
+          "sends": "mergeDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "fault",
+            "completed": 0,
+            "total": 1,
+            "fault": "plugin.document-load.other-document"
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
+      ],
+      "outcome": {
+        "kind": "fault",
+        "fault": "plugin.document-load.other-document"
+      }
+    },
+    {
+      "name": "a-cancelled-read-back-merge-is-polled-to-its-cancelled-terminal",
+      "merging": true,
+      "cancel": {
+        "beforeStep": 1
+      },
+      "exchanges": [
+        {
+          "sends": "mergeDocumentArchive",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "cancelDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        },
+        {
+          "sends": "pollDocumentArchiveLoad",
+          "answer": {
+            "kind": "status",
+            "state": "cancelled",
+            "completed": 0,
+            "total": 1
+          }
+        },
+        {
+          "sends": "acknowledgeDocumentArchiveLoad",
+          "answer": {
+            "kind": "done"
+          }
+        }
+      ],
+      "outcome": {
+        "kind": "cancelled"
+      }
     }
   ]
 }

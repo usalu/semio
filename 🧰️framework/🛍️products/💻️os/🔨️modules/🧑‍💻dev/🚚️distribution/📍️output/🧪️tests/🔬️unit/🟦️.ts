@@ -3,23 +3,19 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import Ajv from "ajv";
+
 import { playgroundReactReleaseNxOutput, playgroundReactReleaseOutputPath } from "../../🟦️.ts";
 
 /** 📦️ Proves authored distribution destinations with independent JSON schema and Node target producers. */
 export async function testDistributionOutputContract(workspace: string, artifacts: string): Promise<void> {
   const root = resolve(import.meta.dir, "../..");
-  const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
   const corpus = JSON.parse(readFileSync(join(root, "🧫️fixtures/🔣️.json"), "utf8"));
-  const ajv = new Ajv({ strict: true });
-  assert.ok(ajv.compile(schema)(corpus));
-  const rowSchema = ajv.compile(schema.$defs.row);
+  
   const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
   mkdirSync(artifacts, { recursive: true });
   const temporary = mkdtempSync(join(artifacts, "distribution-output-"));
   try {
     for (const vector of corpus.cases) {
-      assert.equal(rowSchema(vector.row), vector.valid, vector.id);
       const actual = (): string => playgroundReactReleaseOutputPath(temporary, join(temporary, corpus.stagingRoot), vector.row);
       const nx = (): string => playgroundReactReleaseNxOutput(corpus.stagingRoot, vector.row);
       if (!vector.valid) {

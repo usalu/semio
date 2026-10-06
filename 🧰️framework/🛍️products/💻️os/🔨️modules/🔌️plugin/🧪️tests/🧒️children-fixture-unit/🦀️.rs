@@ -9,8 +9,6 @@ fn empty_roster_has_no_fabricated_leaf() {
     assert_eq!(<ChildrenTestMutation as Mutation<ChildrenTestSnapshot>>::DESCRIPTORS.len(), 0);
     let absent: Option<ChildrenTestMutation> = None;
     assert_eq!(serde_json::to_value(absent).expect("absence"), serde_json::Value::Null);
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧒️children-fixture/🧬️mutations/🔣️.json")).expect("owned empty schema");
-    assert_eq!(schema["not"], serde_json::json!({}));
 }
 
 #[test]

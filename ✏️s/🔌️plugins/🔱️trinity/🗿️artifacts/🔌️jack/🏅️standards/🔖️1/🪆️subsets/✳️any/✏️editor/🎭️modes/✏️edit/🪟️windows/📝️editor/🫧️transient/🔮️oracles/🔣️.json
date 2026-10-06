@@ -80,9 +80,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-editor-selection-applied",
       "class": "handcrafted",
       "target": {

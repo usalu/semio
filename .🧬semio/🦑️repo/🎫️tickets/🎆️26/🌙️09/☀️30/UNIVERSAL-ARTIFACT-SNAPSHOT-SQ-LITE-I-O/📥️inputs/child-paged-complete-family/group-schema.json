@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "maximumItems",
+    "maximumBytes",
+    "sourceBytes",
+    "wire",
+    "paddingBytes",
+    "groups",
+    "binary",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "child-complete-group-source/v1"
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "const": 4096
+    },
+    "sourceBytes": {
+      "const": 8194
+    },
+    "wire": {
+      "const": "17"
+    },
+    "paddingBytes": {
+      "const": 8192
+    },
+    "groups": {
+      "const": [
+        {
+          "owner": "root/components/Ω/children",
+          "slot": "slot",
+          "childId": "child",
+          "schema": "demo.member.json-number",
+          "operation": "padded",
+          "labels": {
+            "native": {
+              "en": "ä🧩",
+              "de": "ß🎯"
+            },
+            "reuse": {
+              "en": "ä🧩",
+              "de": "ß🎯"
+            }
+          }
+        },
+        {
+          "owner": "root/components/Ω/children",
+          "slot": "slot",
+          "childId": "child-two",
+          "schema": "demo.member.json-number",
+          "operation": "binary",
+          "labels": {
+            "native": {
+              "en": "0/127/128/255",
+              "de": "0/127/128/255"
+            },
+            "reuse": {
+              "en": "0/127/128/255",
+              "de": "0/127/128/255"
+            }
+          }
+        }
+      ]
+    },
+    "binary": {
+      "const": [
+        0,
+        127,
+        128,
+        255
+      ]
+    },
+    "cases": {
+      "const": [
+        "original8194-same-source",
+        "complete-declared-field-order",
+        "all-declared-label-axes",
+        "binary-octets128and255",
+        "nested-owner",
+        "empty-group-no-output",
+        "small-total-allocation-refusal",
+        "interior-cancellation-retains-output",
+        "same-source-canonical-comparison"
+      ]
+    }
+  }
+}

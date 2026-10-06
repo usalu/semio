@@ -35,6 +35,7 @@ pub const FLOW_PLAY_BODY_GENERATIONS: &str = "flow.play.generations";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: FLOW_PLAY_WINDOW_GENERATIONS.into(),
         label: LocalizedLabel::native("Generations", "Generationen"),
         body_key: FLOW_PLAY_BODY_GENERATIONS.into(),

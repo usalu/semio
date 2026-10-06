@@ -1,0 +1,40 @@
+dialect grammar
+grammar stdio.xlsx.mutations
+extension xlsx
+start document
+comment none
+
+# Real one-line `OpText::print_op`/`parse_op` shape of `../../../🧬️schema/🦀️.rs` (`print_xlsx_mutation`/
+# `parse_xlsx_mutation`, `🔖️MutationCodec` region): `keyword arg=value arg=value ...`, one alternative
+# per `XlsxMutation` variant, every keyword/arg-name token copied from the real `format!(...)` call sites.
+#
+# `set-snapshot`'s `snapshot` and cell commands' `address` carry the lowercase hex of the
+# value's RFC 8259 JSON (`enc_xlsx_snapshot`/`enc_cell_address`: `enc_str(dsl::json::to_json_string(..))`),
+# so both are the framework's built-in `hex` MACRO (bare `hex`, deliberately not defined as a production --
+# `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2). `[0]`/`[1,x]` is `encode_option`'s tri-state shape (§1.4).
+document = set-snapshot | patch-snapshot | insert-sheet | remove-sheet | rename-sheet | set-cell | insert-cell | remove-cell | insert-shared-string | remove-shared-string | set-shared-string
+
+patch-snapshot = "patch-snapshot" "patch" "=" hex
+set-snapshot = "set-snapshot" "snapshot" "=" hex
+insert-sheet = "insert-sheet" "sheet" "=" sheet
+remove-sheet = "remove-sheet" "name" "=" hex
+rename-sheet = "rename-sheet" "name" "=" hex "new-name" "=" hex
+set-cell = "set-cell" "address" "=" hex "value" "=" cell-value
+insert-cell = "insert-cell" "address" "=" hex "value" "=" cell-value
+remove-cell = "remove-cell" "address" "=" hex
+insert-shared-string = "insert-shared-string" "value" "=" hex
+remove-shared-string = "remove-shared-string" "index" "=" INT
+set-shared-string = "set-shared-string" "index" "=" INT "value" "=" hex
+
+# ── `XlsxSheet` -- `[name,[cells]]` (`enc_sheet`) ────────────────────────────────────────────────
+sheet = "[" hex "," "[" cell-list? "]" "]"
+cell-list = cell {"," cell}*
+cell = "[" INT "," INT "," cell-value "]"
+
+# ── `XlsxCellValue` (`enc_cell_value`) -- single-letter tag immediately followed by the bracketed
+# positional payload: `N`umber, `S`hared-string index, `I`nline string, `B`oolean, e`R`ror, `F`ormula
+# with its optional cached value, `E`mpty. ────────────────────────────────────────────────────────────
+cell-value = "N" "[" number "]" | "S" "[" INT "]" | "I" "[" hex "]" | "B" "[" bool-lit "]" | "R" "[" hex "]" | "F" "[" hex "," opt-cell-value "]" | "E" "[" "]"
+opt-cell-value = "[" "0" "]" | "[" "1" "," cell-value "]"
+bool-lit = "0" | "1"
+number = INT | FLOAT

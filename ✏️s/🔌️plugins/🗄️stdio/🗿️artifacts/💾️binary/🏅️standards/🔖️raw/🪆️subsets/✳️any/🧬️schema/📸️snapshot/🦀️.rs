@@ -3,13 +3,7 @@
 use crate::STDIO_BINARY_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;
-#[path = "🚦️native/🦀️.rs"]
-mod sqlite_native;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.binary` snapshot.
@@ -38,58 +32,7 @@ impl Default for BinarySnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-impl store::ArtifactDsl for BinarySnapshot {
-    const EXTENSION: &'static str = "bin";
-    fn envelope_id() -> &'static str {
-        "stdio.binary"
-    }
 
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "odd hex length", semio_framework_diagnostic::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        let mut i = 0usize;
-        while i < hex.len() {
-            let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("invalid hex: {e}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-            bytes.push(byte);
-            i += 2;
-        }
-        Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
-    }
-    fn print_dsl(&self) -> String {
-        let body: String = self.bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-/// 🧬️ CARRIER LAW (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3):
-/// `s.stdio.binary@raw/*` is `CARRIER_BINARY` — its native `Binary` `IoPayload` IS the raw
-/// external file content, byte-for-byte. The previous impl wrapped `self.bytes` in a
-/// `SemioEnvelope` (`BINARY_MAGIC` header + token), which made every exported `.bin` file an
-/// unopenable `.semio` pack container instead of the honest raw bytes — exactly the
-/// `registry_export_media` class of bug the ticket exists to remove. Fixed here (the codec, not
-/// the test): `encode_pack_with`/`decode_pack_with` are now the identity function on `bytes`.
-/// Proven by `carrier_native_is_raw` in `🚪️io/🦀️.rs`.
-impl store::ArtifactPack for BinarySnapshot {
-    /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
 
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        Ok(self.bytes.clone())
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let _ = options;
-        Ok(Self { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: bytes.to_vec() })
-    }
-}
 //#endregion 🔖️HandcraftedArtifactCodecs

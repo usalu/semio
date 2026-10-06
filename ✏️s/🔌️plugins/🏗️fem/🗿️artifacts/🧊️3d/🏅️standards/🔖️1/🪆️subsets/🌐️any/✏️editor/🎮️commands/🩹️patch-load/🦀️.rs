@@ -3,7 +3,7 @@
 
 use crate::editor::fem3d::interaction::fem3d_load_owner;
 use crate::standards::v1::subsets::any::schema::mutations::replace_load;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::{FemDof, FemLoad};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

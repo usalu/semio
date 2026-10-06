@@ -23,6 +23,6 @@ pub fn diff(payload: &super::ChangeInfiltrationTemperatureTermCoefficient, base:
     if let Some(item) = model.infiltrations.iter_mut().find(|item| item.id == payload.id) {
         item.temperature_term_coefficient = payload.new_temperature_term_coefficient;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

@@ -21,8 +21,6 @@ use crate::CurationSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("../🧬️mutations/📖️.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
 /// 🏷️ Kebab-case spelling of every [`SourcingMutation`] variant, in declaration order — the
@@ -37,15 +35,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 pub const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "change-curated-item-count"];
 
 //#region 🌉️ExternalCodecBridge
-/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "createCuratedItem", …}`, camelCase
-/// payload fields) JSON projection — exactly the shape the committed
-/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification vectors carry — into a real
-/// [`SourcingMutation`]. The test adapter cannot reach `serde_json` (the generated host links only
-/// `semio-repo-test-host` and this crate) and cannot name this crate's private `protocol`/`store`
-/// extern-crate aliases either, so the bridge belongs here rather than there.
-pub fn decode_sourcing_mutation_json(text: &str) -> Result<SourcingMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 
 /// ▶️ Applies `mutation` in place and returns every diagnostic it raised as `(code, severity)`
 /// pairs, so the committed `🎯️outcome/🔣️.json`'s claim is checkable from outside this

@@ -1,0 +1,7 @@
+# VDI Held Proposal Review
+
+Read-only [proposal](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/physical-current-norm-vdi3805-borrowed-complete-role-proposal.json). Actual exceptional roles align: root8,32tables/max27; SheetAttributes FieldValue::Value taggedObject; all five SQL attribute branches; mandatory two unit axes; actual map<String,String> extensions; diameter absent flag8 plus fullfinite0IEEE; primitive widths and quantity/edition enum ordinal→canonicalSQL strings. No runtime credit.
+
+Actionable shared helper gap: check_schema only schema.len() omits canonical table-name aggregate, separate from separator-overcount discovered in Root otherhelpers. Derive-record optional helper accepting None orAbsent is broader than actual required entry authority: Configurationgeometry_ref, Indexdn and Connectiondiameter should first n::field require slot, then allowAbsent. Likewise strict record count/undeclared ID validation should match actual root/nested derived binding before any typed creation. Intrinsic SheetAttributes optional qhCurveRef/unit explicitly may be missing/null; generic missingentries explicitly empty, preserve those positives. These two omission authorities must not be conflated.
+
+All borrowed write cell roles otherwise match existing typed singlevisitor. Retain original Native control scoped traversal and cumulative ownership, no allocating SheetAttributes/Configuration merely to obtain costs. Existing source defaults and old tests/grants remain.

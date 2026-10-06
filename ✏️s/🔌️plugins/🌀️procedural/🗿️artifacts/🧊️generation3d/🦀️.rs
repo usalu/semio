@@ -155,6 +155,10 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 //#endregion 🔖️Declaration
 
 //#region 🧪️Tests
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "🧪️tests/📈️guest-memory/🦀️.rs"]
+mod guest_memory_tests;
+
 #[cfg(all(test, feature = "component-app-assembly"))]
 #[path = "🧪️tests/🔬️app-fixture/🦀️.rs"]
 pub(crate) mod app_fixture;
@@ -202,20 +206,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod topology {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
@@ -228,21 +224,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod delete_widget_position {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget/🦀️.rs"]
@@ -881,3 +868,8 @@ pub mod viewer {
         }
     }
 }
+
+#[path = "🔨️modules/🏠️host/🦀️.rs"]
+pub mod host;
+
+pub use crate::standards::v1::subsets::any::io::{Generation3dBuilderConstruction, Generation3dParts, Generation3dAnalyzerAnalysis, Generation3dBuilderFacets, Generation3dBuilder, Generation3dAnalyzer, Generation3dComposer};

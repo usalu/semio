@@ -3,7 +3,7 @@
 //! The staged form sends the typed triple; a persistent `input(Number)` in the results panel sends
 //! `{field, value}`, because the host merges a control's own scalar under the single key `value`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use crate::FemAnalysisSettings;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

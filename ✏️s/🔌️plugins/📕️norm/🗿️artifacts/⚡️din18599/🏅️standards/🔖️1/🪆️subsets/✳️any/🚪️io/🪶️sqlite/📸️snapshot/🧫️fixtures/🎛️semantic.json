@@ -1,0 +1,29 @@
+{
+  "schemaBytes": 6819,
+  "tableWidths": {
+    "din18599_climate_child": 7,
+    "din18599_climate_month": 8,
+    "din18599_cooling": 2,
+    "din18599_cooling_plant": 6,
+    "din18599_dhw": 12,
+    "din18599_document": 18,
+    "din18599_element": 27,
+    "din18599_heating": 15,
+    "din18599_lighting": 5,
+    "din18599_renewables": 11,
+    "din18599_ventilation": 11,
+    "din18599_zone": 26
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 25,
+      "valueBytes": 2213
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 21,
+      "valueBytes": 1405
+    }
+  ]
+}

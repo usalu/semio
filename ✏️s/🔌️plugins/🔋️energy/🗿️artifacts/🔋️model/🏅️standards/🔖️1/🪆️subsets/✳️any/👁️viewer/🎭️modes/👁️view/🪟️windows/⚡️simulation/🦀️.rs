@@ -18,6 +18,7 @@ pub const BODY_KEY: &str = "energy.simulation.viewer";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Energy results", "Energieergebnisse"),
         body_key: BODY_KEY.into(),

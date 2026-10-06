@@ -1,0 +1,5 @@
+# JSON Syntax and Runtime Receiver Inputs
+
+Eight syntax-owner pairs and four runtime-receiver pairs passed complete hash/inverse and TypeScript syntax checks. Every proposed endpoint matches its actual executed fixture frame. All complete frame bytes/hashes agree. The actual Bun runs retain 18 passing syntax/closure laws with 4,318 expectations and four passing receiver laws with 27,550 expectations. All 22 and 12 actual input/snapshot postchecks are true. Syntax input origins still match; one runtime schema origin subsequently advanced and is retained as a complete unknown before/current/inverse observation. This does not change the historical executed frame identity.
+
+Finite historical source input is admitted. Complete production callers, native counterparts, parser/schema closure and payload retirement, and physical publication remain held. Conservative retained payload schedules are not exact JavaScript allocator or VM heap measurements. No broader concurrency or whole-protocol acceptance is inferred from callback-prefix tests.

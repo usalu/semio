@@ -5,7 +5,7 @@
 //!
 //! 🧾️ Only the FIRST image of a multi-image GIF87a reaches the document: a raster document has no
 //! frame/animation concept, so the semio/image hub's own frame list collapses to its first frame.
-use crate::io::{gif87a, raster_document_from_semio_image, semio_image_from_format, GIF89A_DIALECT};
+use crate::standards::v1::subsets::any::io::{gif87a, raster_document_from_semio_image, semio_image_from_format, GIF89A_DIALECT};
 use crate::RasterSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {

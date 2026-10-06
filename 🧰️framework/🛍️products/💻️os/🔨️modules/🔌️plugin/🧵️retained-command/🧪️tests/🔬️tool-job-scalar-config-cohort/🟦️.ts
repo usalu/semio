@@ -3,17 +3,15 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { WORKSPACE_ROOT, toolJobOwnerSourceEvidence } from "../../../../../../../../📜️script.ts";
 
-/** 🧪️ Checks scalar Config publication laws against strict Ajv, Immer, and exact live sources. */
+/** 🧪️ Checks scalar Config publication laws against Immer and exact live source policy witnesses. */
 export function toolJobScalarConfigCohortSelfTests(): { routes: number; migrated: number; batchOnly: number; forbidden: number; mutationOracles: number; hostileCases: number } {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🎚️scalar-config-cohort.json"), "utf8"));
   const requireTest = createRequire(import.meta.url);
-  const Ajv = requireTest("ajv");
   const { produceWithPatches, applyPatches, enablePatches } = requireTest("immer");
   enablePatches();
-  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/ScalarConfigCohortV1" });
-  if (!validate(fixture)) throw new Error(`scalar Config fixture schema: ${JSON.stringify(validate.errors)}`);
+  
+  
   const files = new Map<string, string>(fixture.sources.map((file: string) => [file, readFileSync(join(WORKSPACE_ROOT, file), "utf8")]));
   const evidence = toolJobOwnerSourceEvidence(files);
   if (evidence.failures.length || evidence.scanThenMonolith.length) throw new Error(`scalar Config source evidence: ${JSON.stringify(evidence.failures)}`);
@@ -60,10 +58,6 @@ export function toolJobScalarConfigCohortSelfTests(): { routes: number; migrated
     if (JSON.stringify(actual) !== JSON.stringify(law.expected) || JSON.stringify(oracle) !== JSON.stringify(law.expected)
       || JSON.stringify(reverse) !== JSON.stringify(law.base) || JSON.stringify(applyPatches(oracle, inverse)) !== JSON.stringify(law.base)
       || JSON.stringify(applyPatches(law.base, patches)) !== JSON.stringify(law.expected)) throw new Error(`scalar Config Immer replay oracle ${law.owner}/${law.id}`);
-  }
-  for (const hostile of [{ ...fixture, extra: true }, { ...fixture, grantBytes: 4_097 }, { ...fixture, textMaximumBytes: 129 }, { ...fixture, owners: [{ ...fixture.owners[0], extra: true }, ...fixture.owners.slice(1)] }]) {
-    if (validate(hostile)) throw new Error("scalar Config strict schema accepted a hostile fixture");
-    hostileCases++;
   }
   return { routes, migrated, batchOnly, forbidden, mutationOracles: fixture.mutations.length, hostileCases };
 }

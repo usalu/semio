@@ -97,7 +97,7 @@ fn document_backbone_mailbox_and_retention_are_exact_bounded_and_terminal() {
     assert!(matches!(receiver.try_recv(), Some(ArtifactActorMsg::DocumentBackbone { message: actual }) if actual == message));
     let ack = BackboneMessage::Ack { op_ids: Vec::new() }.encode_op().expect("ack encodes");
     assert!(matches!(sender.send(ArtifactActorMsg::DocumentBackbone { message: ack }), Err(ArtifactMailboxSendError::Bytes { .. })), "host ingress refuses a Store acknowledgment");
-    let member = BackboneMessage::Member { slot: "content".into(), child_id: "child-a".into(), envelopes: encode_envelopes(std::slice::from_ref(&envelope)) }.encode_op().expect("member message encodes");
+    let member = BackboneMessage::Member { owner: String::new(), slot: "content".into(), child_id: "child-a".into(), envelopes: encode_envelopes(std::slice::from_ref(&envelope)) }.encode_op().expect("member message encodes");
     let rejected = sender.send(ArtifactActorMsg::DocumentBackbone { message: member.clone() }).expect_err("a root document actor cannot flatten a member lane");
     assert!(matches!(rejected.into_message(), ArtifactActorMsg::DocumentBackbone { message: returned } if returned == member), "member refusal returns the exact encoded message to its caller");
     assert!(receiver.try_recv().is_none(), "member refusal leaves root document ingress empty");
@@ -871,8 +871,7 @@ async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
         actor: None,
         forwards: vec![DemoMutation::SetN { n }],
         inverse: vec![DemoMutation::SetN { n: 0 }],
-        mutation_meta: Vec::new(),
-        description: None, verb: None,
+        mutation_meta: Vec::new(), verb: None,
         sequence_number: 1,
         started_at: "0".into(),
         finished_at: None,
@@ -1351,8 +1350,7 @@ async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
         id: "ext-1".into(),
         actor: Some("peer".into()),
         started_at: "0".into(),
-        finished_at: None,
-        description: None, verb: None,
+        finished_at: None, verb: None,
         ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
         inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
         meta: None, lane: None,
@@ -1467,7 +1465,7 @@ mod actor_tests {
         let mut store = crate::os_store::test_support::plain_test_store(demo_envelope("doc-a").await).await;
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply");
         channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
         let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
@@ -1486,8 +1484,7 @@ mod actor_tests {
             id: "external-1".into(),
             actor: Some("peer".into()),
             started_at: "0".into(),
-            finished_at: None,
-            description: None, verb: None,
+            finished_at: None, verb: None,
             ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
             inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
             meta: None, lane: None,
@@ -1855,8 +1852,8 @@ mod actor_tests {
         let position = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| (store.snapshot().expect("snapshot"), store.applied_edit_ids().len(), store.redo_edit_ids().len(), store.current_checkpoint_id().map(str::to_string));
 
         let steps: Vec<ArtifactCommand<DemoMutation>> = vec![
-            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None, transaction: None },
-            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], description: None, transaction: None },
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], transaction: None },
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], transaction: None },
             ArtifactCommand::Undo,
             ArtifactCommand::CommitCheckpoint { message: Some("hub checkpoint".into()), authors: Vec::new() },
             ArtifactCommand::Redo,
@@ -1990,7 +1987,7 @@ mod actor_tests {
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
         for n in [3, 4] {
-            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], description: None, transaction: None }).await.expect("apply on a");
+            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], transaction: None }).await.expect("apply on a");
             channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
             tokio::time::sleep(Duration::from_millis(80)).await;
         }
@@ -2054,7 +2051,7 @@ mod actor_tests {
         store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
         wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
-        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], description: None, transaction: None }).await.expect("apply on a");
+        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], transaction: None }).await.expect("apply on a");
         host_a.close_key(&key_a);
 
         let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
@@ -2082,7 +2079,7 @@ mod actor_tests {
         store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
         wait_for_mock_hub_event("A Session", &hub, &mut events, |event| matches!(event, ArtifactEvent::Session { .. })).await;
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply");
         channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
         let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await;
@@ -2221,6 +2218,7 @@ mod actor_tests {
             ArtifactEvent::RemoteMutations { .. } => "remoteMutations",
             ArtifactEvent::DocumentBackbone { .. } => "documentBackbone",
             ArtifactEvent::DocumentArchiveReplaced { .. } => "documentArchiveReplaced",
+            ArtifactEvent::DocumentArchiveAbsent => "documentArchiveAbsent",
             ArtifactEvent::BootstrapProgress { .. } => "bootstrapProgress",
             ArtifactEvent::Status(_) => "status",
             ArtifactEvent::Presence { .. } => "presence",
@@ -2375,9 +2373,9 @@ async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply e1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply e1");
     let post_e1 = store.snapshot().expect("post-e1");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None, transaction: None }).await.expect("apply e2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }).await.expect("apply e2");
     store.dispatch(ArtifactCommand::Undo).await.expect("undo e2");
     assert_eq!(store.snapshot().expect("live"), post_e1, "precondition: live store is back at post-e1");
 
@@ -2414,11 +2412,11 @@ async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
     storage.write("demo", "demo", &files).await.expect("write");
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply 1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None, transaction: None }).await.expect("apply 2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }).await.expect("apply 2");
     let second_edit = store.envelope().vcs.edits.last().expect("second edit");
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
@@ -2464,11 +2462,11 @@ async fn folder_text_storage_round_trips_pack() {
     storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
 
     let mut store = crate::os_store::test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None)).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None, transaction: None }).await.expect("apply 1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }).await.expect("apply 1");
     let first_edit = store.envelope().vcs.edits.last().expect("first edit");
     storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], description: None, transaction: None }).await.expect("apply 2");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }).await.expect("apply 2");
     let second_edit = store.envelope().vcs.edits.last().expect("second edit");
     storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
 
@@ -2665,4 +2663,82 @@ async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
     assert!(!std::iter::from_fn(|| event_rx.try_recv().ok()).any(|event| matches!(event, ArtifactEvent::RebootstrapRequired { .. })), "a refusal asks for no rebuild");
     let (_, _, _, _, _, _, _, outbox, rebootstrap) = actor.bootstrap_test_state();
     assert_eq!((outbox, rebootstrap), (Vec::<String>::new(), false), "the refused batch is never requeued and nothing rebuilds");
+}
+
+/// 🫙️ Every case of the folder-archive-presence corpus an append-only folder log can stage (its folder never returns to
+/// absent after holding an archive), through the native actor over a real folder: the bootstrap read of an empty folder
+/// announces `DocumentArchiveAbsent` exactly once, no later read does, and an archive whose bytes the folder is known to hold
+/// is not written again. The TypeScript worker runs the whole corpus (`💻️os/🧪️tests/🧪️folder-archive-restore`).
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn the_folder_archive_presence_corpus_matches_the_native_actor() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️folder-archive-presence/🔣️.json")).expect("the corpus parses");
+    let (document, schema) = ("presence-1", "s.test.root/1/*");
+    let mut archives: std::collections::HashMap<&str, Vec<u8>> = std::collections::HashMap::new();
+    for name in ["a", "b"] {
+        let archive = crate::os_spr::DocumentArchivePack { parent_pack: name.as_bytes().to_vec(), parent_spr: crate::os_store::empty_document_spr(document, schema).await, members: Vec::new() };
+        archives.insert(name, crate::os_spr::encode_document_archive_bytes(&archive).expect("encode the archive"));
+    }
+    let content = |value: &serde_json::Value| value.as_str().filter(|content| *content != "absent").map(|content| archives[content].clone());
+    let mut staged = 0;
+    for case in corpus["cases"].as_array().expect("cases") {
+        let name = case["name"].as_str().expect("a case name");
+        let steps = case["steps"].as_array().expect("steps");
+        let mut holds = content(&case["bootstrap"]).is_some();
+        let mut stageable = true;
+        for step in steps {
+            match step.get("read") {
+                Some(read) if content(read).is_none() && holds => stageable = false,
+                Some(read) => holds = content(read).is_some(),
+                None => holds = true,
+            }
+        }
+        if !stageable {
+            continue;
+        }
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
+        let other_writer = FolderEventLogStorage::new(dir.path().to_path_buf());
+        if let Some(archive) = content(&case["bootstrap"]) {
+            other_writer.write_archive(document, schema, &archive).await.expect("the folder holds an archive at the open");
+        }
+        let (_, remote) = ChannelBackbone::pair(name).await;
+        let (_, receiver) = artifact_mailbox_pair();
+        let (events, mut observed) = broadcast::channel(64);
+        let mut actor = native_actor::ArtifactActor::new(
+            test_pool(),
+            ArtifactActorConfig { document_id: document.into(), schema: schema.into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: false, actor: "local".into() },
+            remote,
+            receiver,
+            events,
+            Arc::new(std::sync::RwLock::new(None)),
+            Arc::new(std::sync::RwLock::new(None)),
+            None,
+            semio_framework_async::CancelToken::root_now(),
+        )
+        .await;
+        actor.setup_test().await;
+        for step in steps {
+            match (step.get("read"), step.get("write")) {
+                (Some(read), _) => {
+                    if let Some(wanted) = content(read) {
+                        if other_writer.read_archive(document).await.expect("the folder reads").as_ref() != Some(&wanted) {
+                            other_writer.write_archive(document, schema, &wanted).await.expect("another writer's archive");
+                        }
+                    }
+                    actor.handle_test_cmd(ArtifactActorMsg::ExternalChanged).await;
+                }
+                (None, Some(write)) => actor.handle_test_document_archive(content(write).expect("a write names an archive")).await,
+                (None, None) => panic!("{name}: a step reads or writes"),
+            }
+        }
+        let mut absent = 0;
+        while let Ok(event) = observed.try_recv() {
+            if matches!(event, ArtifactEvent::DocumentArchiveAbsent) {
+                absent += 1;
+            }
+        }
+        assert_eq!((absent, actor.folder_writes_test() as u64), (case["expected"]["absent"].as_u64().expect("absent"), case["expected"]["puts"].as_u64().expect("puts")), "{name}");
+        staged += 1;
+    }
+    assert_eq!(staged, 7, "every case that never empties a held folder is staged");
 }

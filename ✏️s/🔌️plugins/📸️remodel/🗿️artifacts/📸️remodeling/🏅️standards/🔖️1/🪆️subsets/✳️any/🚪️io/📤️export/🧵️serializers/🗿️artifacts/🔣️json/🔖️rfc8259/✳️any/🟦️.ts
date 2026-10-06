@@ -7,5 +7,5 @@
  *  echoed from Rust output.
  */
 
-export { encodeRemodelingSnapshot, floatLexeme, remodelingSnapshotToJsonText, writeRecordJson, writeValueJson } from "../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
-export { encodeRemodelingDiff, remodelingDiffToJsonText } from "../../../../../../../🧬️schema/🔺️diff/🟦️.ts";
+export {encodeRemodelingSnapshot, floatLexeme, remodelingSnapshotToJsonText, writeRecordJson, writeValueJson} from "../../../../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
+export {encodeRemodelingDiff, remodelingDiffToJsonText} from "../../../../../../📝️text/🔺️diff/🔣️json/🟦️.ts";

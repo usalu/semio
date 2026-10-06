@@ -12,10 +12,10 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "set-step-params")]
 pub struct SetStepParams {
     pub id: String,
-    pub params: std::collections::BTreeMap<String, crate::document_dsl::ValueDsl>,
+    pub params: std::collections::BTreeMap<String, crate::standards::v1::subsets::any::io::text::snapshot::ValueDsl>,
 }
 
 /// 🎚️ One flow-child edit of the step's changed params; an unknown id or unchanged params is no edit.
 pub fn handle(payload: &SetStepParams, doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation>, Fault> {
-    crate::procedure_edit_emit(doc, |path| set_step_params(path, &Default::default(), &payload.id, crate::document_dsl::value_dsl_map_to_dictionary(&payload.params)))
+    crate::procedure_edit_emit(doc, |path| set_step_params(path, &Default::default(), &payload.id, crate::standards::v1::subsets::any::io::text::snapshot::value_dsl_map_to_dictionary(&payload.params)))
 }

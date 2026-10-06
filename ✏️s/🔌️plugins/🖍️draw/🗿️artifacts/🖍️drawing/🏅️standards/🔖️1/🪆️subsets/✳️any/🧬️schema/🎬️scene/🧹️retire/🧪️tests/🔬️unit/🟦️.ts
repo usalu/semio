@@ -6,7 +6,7 @@ import sources from "../../../📋️prepare/🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {DocumentSceneJob,type DocumentScenePlan} from "../../../📋️prepare/🟦️.ts";
 import {ScenePlanCloseJob} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 function lift(value:any):any{return typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,lift(v)])):value;}
 const validate=new Ajv({strict:true}).compile(schema);
 const paint=(c:any):number=>(c.fill?1+(c.fill.stops?1:0):0)+(c.stroke?1+(c.stroke.dash?1:0):0);

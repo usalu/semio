@@ -22,7 +22,7 @@ const INPUT: &str = "shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's
 /// bytes; the committed asset itself is never written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.bin"))?;
+    let copy = ctx.copy_input(INPUT, Some("input.bin"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::puzzle3d::terminology::puzzle3d_labels;
-use crate::editor::puzzle3d::{empty_fixture, nakagin_fixture};
+use crate::editor::puzzle3d::{empty_scene_snapshot, nakagin_scene_snapshot};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 const RETIREMENT_DRAIN_STEPS: usize = 4096;
@@ -48,9 +48,9 @@ fn nested_key(section: &str, node_key: &str) -> String {
 
 /// ♻️ Every built row is projected AND RETIRED: an argument map dropped without retirement never
 /// returns its credit, which would starve the panels assembled by the tests running beside this one.
-fn panel(fixture: &Puzzle3dFixture, view: &ViewModel) -> String {
+fn panel(scene_snapshot: &Puzzle3dSceneSnapshot, view: &ViewModel) -> String {
     drain_retired_ui_owners();
-    let built = render(fixture, native(), &TreeWindows::for_body(view, BODY_KEY)).expect("puzzle3d artifact tree assembly");
+    let built = render(scene_snapshot, native(), &TreeWindows::for_body(view, BODY_KEY)).expect("puzzle3d artifact tree assembly");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("puzzle3d artifact tree projection");
     drain_retired_ui_owners();
     json
@@ -58,9 +58,9 @@ fn panel(fixture: &Puzzle3dFixture, view: &ViewModel) -> String {
 
 /// 🏠️ The first paint: no host state at all, so every container opens at its author default and the
 /// shared first-paint budget decides how much of each is materialised.
-fn first_paint(fixture: &Puzzle3dFixture) -> String {
+fn first_paint(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
     drain_retired_ui_owners();
-    let built = render(fixture, native(), &TreeWindows::unhosted()).expect("puzzle3d artifact tree assembly");
+    let built = render(scene_snapshot, native(), &TreeWindows::unhosted()).expect("puzzle3d artifact tree assembly");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("puzzle3d artifact tree projection");
     drain_retired_ui_owners();
     json
@@ -91,11 +91,11 @@ fn window_of(node: &serde_json::Value) -> (usize, usize) {
 }
 
 /// 🏗️ A synthetic document of `objects` objects carrying `vortices` vortices each — the shape the flagship
-/// Nakagin fixture has (180 objects, ≈2 vortices per object) and the shape a `DOCUMENT_OBJECT_SLOTS`-scale
+/// Nakagin scene_snapshot has (180 objects, ≈2 vortices per object) and the shape a `DOCUMENT_OBJECT_SLOTS`-scale
 /// document has, without depending on either asset's contents.
-fn scaled_fixture(objects: usize, vortices: usize) -> Puzzle3dFixture {
-    let mut fixture = empty_fixture();
-    fixture.objects = (0..objects)
+fn scaled_fixture(objects: usize, vortices: usize) -> Puzzle3dSceneSnapshot {
+    let mut scene_snapshot = empty_scene_snapshot();
+    scene_snapshot.objects = (0..objects)
         .map(|index| Puzzle3dObject {
             id: format!("object-{index}"),
             label: None,
@@ -109,7 +109,7 @@ fn scaled_fixture(objects: usize, vortices: usize) -> Puzzle3dFixture {
             locked: false,
         })
         .collect();
-    fixture
+    scene_snapshot
 }
 
 #[test]
@@ -123,7 +123,7 @@ fn the_panel_tab_declares_the_framework_artifact_slot_and_this_body_key() {
 /// 🌳️ The four document sections are always assembled, whatever the host asked for.
 #[test]
 fn the_outliner_assembles_its_four_document_sections() {
-    let tree = tree_of(&first_paint(&nakagin_fixture()));
+    let tree = tree_of(&first_paint(&nakagin_scene_snapshot()));
     assert_eq!(tree["children"].as_array().map(Vec::len), Some(4), "the outliner keeps its four document sections: {tree}");
     for suffix in ["objects", "references", "target-volumes", "attractions"] {
         assert!(node_at(&tree, &section_key(suffix)).is_some(), "section {suffix} missing from {tree}");
@@ -136,18 +136,18 @@ fn the_outliner_assembles_its_four_document_sections() {
 /// truncated, no `+N` row is invented, and the scrollbar the host paints spans the whole document.
 #[test]
 fn an_oversized_document_stamps_every_containers_total_and_materialises_only_its_window() {
-    let fixture = nakagin_fixture();
-    assert!(fixture.objects.len() >= 100, "the Nakagin fixture must be the large document: {} objects", fixture.objects.len());
-    let nested = fixture.objects.iter().find(|object| !object.vortices.is_empty()).expect("Nakagin objects carry vortices").clone();
+    let scene_snapshot = nakagin_scene_snapshot();
+    assert!(scene_snapshot.objects.len() >= 100, "the Nakagin scene_snapshot must be the large document: {} objects", scene_snapshot.objects.len());
+    let nested = scene_snapshot.objects.iter().find(|object| !object.vortices.is_empty()).expect("Nakagin objects carry vortices").clone();
     let view = hosted(vec![request(&section_key("objects"), Some(true), 0, 10), request(&nested_key("objects", &nested.id), Some(true), 0, 8)]);
-    let json = panel(&fixture, &view);
+    let json = panel(&scene_snapshot, &view);
     let tree = tree_of(&json);
 
     let section = node_at(&tree, &section_key("objects")).expect("the objects section");
-    assert_eq!(window_of(section), (fixture.objects.len(), 0), "the section reports the WHOLE document, however little of it is built: {section}");
+    assert_eq!(window_of(section), (scene_snapshot.objects.len(), 0), "the section reports the WHOLE document, however little of it is built: {section}");
     let built = child_keys(section);
     assert_eq!(built.len(), 10, "exactly the ten rows the host asked for: {built:?}");
-    let expected: Vec<String> = fixture.objects.iter().take(10).map(|object| object.id.clone()).collect();
+    let expected: Vec<String> = scene_snapshot.objects.iter().take(10).map(|object| object.id.clone()).collect();
     assert_eq!(built, expected, "keyed by the raw object id, in document order");
 
     let group = node_at(&tree, &nested.id).expect("the opened object row");
@@ -156,18 +156,18 @@ fn an_oversized_document_stamps_every_containers_total_and_materialises_only_its
 
     for suffix in ["references", "target-volumes", "attractions"] {
         let closed = node_at(&tree, &section_key(suffix)).expect("every section is assembled");
-        assert!(closed["component"]["window"]["total"].as_u64().is_some() || fixture_section_len(&fixture, suffix) == 0, "section {suffix} publishes its extent: {closed}");
+        assert!(closed["component"]["window"]["total"].as_u64().is_some() || fixture_section_len(&scene_snapshot, suffix) == 0, "section {suffix} publishes its extent: {closed}");
     }
 
     assert!(!json.contains(".more"), "no continuation row survives anywhere: {json}");
     assert!(!json.contains("\"+"), "and no `+N` label either: {json}");
 }
 
-fn fixture_section_len(fixture: &Puzzle3dFixture, suffix: &str) -> usize {
+fn fixture_section_len(scene_snapshot: &Puzzle3dSceneSnapshot, suffix: &str) -> usize {
     match suffix {
-        "references" => fixture.references.len(),
-        "target-volumes" => fixture.target_volumes.len(),
-        _ => fixture.attractions.len(),
+        "references" => scene_snapshot.references.len(),
+        "target-volumes" => scene_snapshot.target_volumes.len(),
+        _ => scene_snapshot.attractions.len(),
     }
 }
 
@@ -175,16 +175,16 @@ fn fixture_section_len(fixture: &Puzzle3dFixture, suffix: &str) -> usize {
 /// with thousands of entities cheap to paint, and what the host's expand arrow reads.
 #[test]
 fn a_closed_container_stamps_its_total_and_materialises_no_child() {
-    let fixture = scaled_fixture(40, 3);
+    let scene_snapshot = scaled_fixture(40, 3);
     let view = hosted(vec![request(&section_key("objects"), Some(false), 0, 64)]);
-    let tree = tree_of(&panel(&fixture, &view));
+    let tree = tree_of(&panel(&scene_snapshot, &view));
     let section = node_at(&tree, &section_key("objects")).expect("the objects section");
     assert_eq!(window_of(section), (40, 0), "a closed section still reports everything it owns: {section}");
     assert!(child_keys(section).is_empty(), "and materialises none of it: {section}");
 
     // 🧾️ An object row is closed by AUTHOR default, so its vortices cost one stamp and no row at all.
     let open = hosted(vec![request(&section_key("objects"), Some(true), 0, 4)]);
-    let tree = tree_of(&panel(&fixture, &open));
+    let tree = tree_of(&panel(&scene_snapshot, &open));
     let row = node_at(&tree, "object-0").expect("the first object row");
     assert_eq!(window_of(row), (3, 0), "a folded object row still reports its vortices: {row}");
     assert!(child_keys(row).is_empty(), "and builds none of them: {row}");
@@ -194,9 +194,9 @@ fn a_closed_container_stamps_its_total_and_materialises_no_child() {
 /// keyed by the raw entity id, never renumbered by the offset.
 #[test]
 fn a_tree_window_request_materialises_exactly_its_slice() {
-    let fixture = scaled_fixture(200, 4);
+    let scene_snapshot = scaled_fixture(200, 4);
     let view = hosted(vec![request(&section_key("objects"), Some(true), 120, 6)]);
-    let tree = tree_of(&panel(&fixture, &view));
+    let tree = tree_of(&panel(&scene_snapshot, &view));
     let section = node_at(&tree, &section_key("objects")).expect("the objects section");
     assert_eq!(window_of(section), (200, 120), "the section reports all 200 objects and that the slice starts at 120: {section}");
     let expected: Vec<String> = (120..126).map(|index| format!("object-{index}")).collect();
@@ -204,7 +204,7 @@ fn a_tree_window_request_materialises_exactly_its_slice() {
 
     // 🪺️ A nested group scrolls the same way, independently of its parent.
     let nested = hosted(vec![request(&section_key("objects"), Some(true), 0, 2), request(&nested_key("objects", "object-1"), Some(true), 2, 2)]);
-    let tree = tree_of(&panel(&fixture, &nested));
+    let tree = tree_of(&panel(&scene_snapshot, &nested));
     let row = node_at(&tree, "object-1").expect("the second object row");
     assert_eq!(window_of(row), (4, 2), "the object reports all four vortices and the slice start: {row}");
     assert_eq!(child_keys(row), vec!["object-1:vortex-2".to_string(), "object-1:vortex-3".to_string()], "exactly entries [2, 4) are built: {row}");
@@ -216,14 +216,14 @@ fn a_tree_window_request_materialises_exactly_its_slice() {
 /// argument maps refused at the eleventh object (wave B44 §6.2, `outliner entityRows=0`).
 #[test]
 fn every_row_is_a_domain_pick_target_and_only_the_tree_binds_the_pick() {
-    let mut fixture = scaled_fixture(2, 2);
-    fixture.references.push(Puzzle3dReference {
+    let mut scene_snapshot = scaled_fixture(2, 2);
+    scene_snapshot.references.push(Puzzle3dReference {
         id: "reference-1".into(),
         source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: "/reference/plan.png".into(), media_kind: Some("image".into()) },
         ..Default::default()
     });
-    fixture.target_volumes.push(Puzzle3dTargetVolume { id: "volume-1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false });
-    fixture.attractions.push(Puzzle3dAttraction { id: "attraction-1".into(), attracting: "object-0".into(), attracted: "object-1".into(), ..Default::default() });
+    scene_snapshot.target_volumes.push(Puzzle3dTargetVolume { id: "volume-1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false });
+    scene_snapshot.attractions.push(Puzzle3dAttraction { id: "attraction-1".into(), attracting: "object-0".into(), attracted: "object-1".into(), ..Default::default() });
     let view = hosted(vec![
         request(&section_key("objects"), Some(true), 0, 8),
         request(&nested_key("objects", "object-0"), Some(true), 0, 8),
@@ -231,7 +231,7 @@ fn every_row_is_a_domain_pick_target_and_only_the_tree_binds_the_pick() {
         request(&section_key("target-volumes"), Some(true), 0, 8),
         request(&section_key("attractions"), Some(true), 0, 8),
     ]);
-    let json = panel(&fixture, &view);
+    let json = panel(&scene_snapshot, &view);
     let tree = tree_of(&json);
 
     let root_bindings = tree["bindings"].to_string();
@@ -263,11 +263,11 @@ fn every_row_is_a_domain_pick_target_and_only_the_tree_binds_the_pick() {
 /// viewport of rows and stops — without ever truncating what the sections REPORT.
 #[test]
 fn the_first_paint_draws_one_viewport_and_still_reports_the_whole_document() {
-    let fixture = nakagin_fixture();
-    let json = first_paint(&fixture);
+    let scene_snapshot = nakagin_scene_snapshot();
+    let json = first_paint(&scene_snapshot);
     let tree = tree_of(&json);
     let section = node_at(&tree, &section_key("objects")).expect("the objects section");
-    assert_eq!(window_of(section).0, fixture.objects.len(), "the cold section still reports every object: {section}");
+    assert_eq!(window_of(section).0, scene_snapshot.objects.len(), "the cold section still reports every object: {section}");
     let built = child_keys(section).len();
     assert!(built > 0, "the objects section opens by author default and must build rows: {section}");
     assert!(built <= semio_framework_plugin::TREE_WINDOW_DEFAULT_ROWS as usize, "the cold paint stays inside one viewport budget, built {built}");
@@ -305,17 +305,17 @@ fn node_keys(node: &serde_json::Value, keys: &mut Vec<String>) {
 /// closed off with a `+N`.
 #[test]
 fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceiling() {
-    let mut fixture = scaled_fixture(ui::UI_DOCUMENT_NODES + 72, 6);
+    let mut scene_snapshot = scaled_fixture(ui::UI_DOCUMENT_NODES + 72, 6);
     for index in 0..40 {
-        fixture.references.push(Puzzle3dReference {
+        scene_snapshot.references.push(Puzzle3dReference {
             id: format!("reference-{index}"),
             source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: format!("/reference/plan-{index}.png"), media_kind: Some("image".into()) },
             ..Default::default()
         });
-        fixture.target_volumes.push(Puzzle3dTargetVolume { id: format!("volume-{index}"), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false });
-        fixture.attractions.push(Puzzle3dAttraction { id: format!("attraction-{index}"), attracting: "object-0".into(), attracted: "object-1".into(), ..Default::default() });
+        scene_snapshot.target_volumes.push(Puzzle3dTargetVolume { id: format!("volume-{index}"), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false });
+        scene_snapshot.attractions.push(Puzzle3dAttraction { id: format!("attraction-{index}"), attracting: "object-0".into(), attracted: "object-1".into(), ..Default::default() });
     }
-    assert!(fixture.objects.len() > ui::UI_DOCUMENT_NODES, "one container must hold more than the whole node arena: {}", fixture.objects.len());
+    assert!(scene_snapshot.objects.len() > ui::UI_DOCUMENT_NODES, "one container must hold more than the whole node arena: {}", scene_snapshot.objects.len());
 
     // 🪟️ Everything the host could possibly have open at once, each asking for far more than fits.
     let mut requests = vec![
@@ -326,14 +326,14 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
     ];
     // 🔑️ A nested container is addressed by its window PATH: the objects section, then the object row.
     requests.extend((0..24).map(|index| request(&nested_key("objects", &format!("object-{index}")), Some(true), 0, 512)));
-    let json = panel(&fixture, &hosted(requests));
+    let json = panel(&scene_snapshot, &hosted(requests));
     let tree = tree_of(&json);
 
     for (suffix, total) in [
-        ("objects", fixture.objects.len()),
-        ("references", fixture.references.len()),
-        ("target-volumes", fixture.target_volumes.len()),
-        ("attractions", fixture.attractions.len()),
+        ("objects", scene_snapshot.objects.len()),
+        ("references", scene_snapshot.references.len()),
+        ("target-volumes", scene_snapshot.target_volumes.len()),
+        ("attractions", scene_snapshot.attractions.len()),
     ] {
         let section = node_at(&tree, &section_key(suffix)).unwrap_or_else(|| panic!("section {suffix} is assembled: {tree}"));
         assert_eq!(window_of(section).0, total, "section {suffix} stamps its FULL total however few rows it could afford: {section}");
@@ -407,8 +407,8 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
     let view = opened_everywhere();
     for flagged in [false, true] {
         drain_retired_ui_owners();
-        let mut fixture = empty_fixture();
-        fixture.objects.push(Puzzle3dObject {
+        let mut scene_snapshot = empty_scene_snapshot();
+        scene_snapshot.objects.push(Puzzle3dObject {
             id: "object-1".into(),
             label: None,
             object_kind: Some("Object".into()),
@@ -420,15 +420,15 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
             hidden: flagged,
             locked: flagged,
         });
-        fixture.references.push(Puzzle3dReference {
+        scene_snapshot.references.push(Puzzle3dReference {
             id: "reference-1".into(),
             source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: "/reference/plan.png".into(), media_kind: Some("image".into()) },
             hidden: flagged,
             locked: flagged,
             ..Default::default()
         });
-        fixture.target_volumes.push(Puzzle3dTargetVolume { id: "volume-1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: flagged, locked: flagged });
-        let page = render(&fixture, native(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a three-row outliner tree must be admitted");
+        scene_snapshot.target_volumes.push(Puzzle3dTargetVolume { id: "volume-1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: flagged, locked: flagged });
+        let page = render(&scene_snapshot, native(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a three-row outliner tree must be admitted");
         let mut rows = Vec::new();
         flag_bindings(&page, &mut rows);
         assert_eq!(rows.len(), 6, "one hide plus one lock row action per object/reference/target-volume row: {rows:?}");
@@ -455,8 +455,8 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
 #[test]
 fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
     let view = opened_everywhere();
-    let mut fixture = empty_fixture();
-    fixture.objects.push(Puzzle3dObject {
+    let mut scene_snapshot = empty_scene_snapshot();
+    scene_snapshot.objects.push(Puzzle3dObject {
         id: "object-1".into(),
         label: None,
         object_kind: Some("Object".into()),
@@ -468,17 +468,17 @@ fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
         hidden: false,
         locked: false,
     });
-    let requested = |fixture: &Puzzle3dFixture, flag: &str| {
+    let requested = |scene_snapshot: &Puzzle3dSceneSnapshot, flag: &str| {
         drain_retired_ui_owners();
-        let page = render(fixture, native(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a one-row outliner tree must be admitted");
+        let page = render(scene_snapshot, native(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a one-row outliner tree must be admitted");
         let mut rows = Vec::new();
         flag_bindings(&page, &mut rows);
         let value = rows.iter().find(|(key, rendered, _)| key == "object-1" && rendered == flag).map(|(_, _, value)| *value).unwrap_or_else(|| panic!("the outliner row must offer a {flag} toggle: {rows:?}"));
         drop(page);
         value
     };
-    let state = |fixture: &Puzzle3dFixture, flag: &str| {
-        let object = fixture.objects.first().expect("the one object survives every flag write");
+    let state = |scene_snapshot: &Puzzle3dSceneSnapshot, flag: &str| {
+        let object = scene_snapshot.objects.first().expect("the one object survives every flag write");
         if flag == "locked" {
             object.locked
         } else {
@@ -487,10 +487,10 @@ fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
     };
     for flag in ["hidden", "locked"] {
         for expected in [true, false] {
-            let asked = requested(&fixture, flag);
+            let asked = requested(&scene_snapshot, flag);
             assert_eq!(asked, expected, "the outliner's {flag} row must ask for {expected} while the object is {}", !expected);
-            crate::editor::puzzle3d::apply_puzzle3d_selection_flag(&mut fixture, "object", &["object-1".to_string()], flag, asked);
-            assert_eq!(state(&fixture, flag), expected, "clicking the outliner's own {flag} row must reach {expected}");
+            crate::editor::puzzle3d::apply_puzzle3d_selection_flag(&mut scene_snapshot, "object", &["object-1".to_string()], flag, asked);
+            assert_eq!(state(&scene_snapshot, flag), expected, "clicking the outliner's own {flag} row must reach {expected}");
         }
     }
     drain_retired_ui_owners();

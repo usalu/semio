@@ -1,0 +1,18 @@
+# Rust IO Final Audit
+
+Read-only source audit performed on 2026-10-06. No compiler/runtime claim is made. Concurrent edits may supersede these findings; recheck before ticket closure.
+
+## Actionable Findings
+
+1. Duplicate module mounts cause Rust name collisions: `✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs:127–131` contains two identical `pub mod io` definitions. Presence sibling `👥️presence/🦀️.rs:95–99` repeats the same mount. Independently confirmed source, not a compilation result.
+2. Semantic application remains under live IO. `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs:26` implements `EnergyModelDiff::apply_to_artifact`; line 58 implements `MutationDiff<EnergyModelSnapshot>` including apply/absorb. The text IO parent mounts this file. These are actual semantic transforms, not codec helper mirrors. Equivalent MutationDiff application blocks were found in text diff modules for procedure, writer, layout, lowpoly, cad, sequence, playbook, equation, en1997, en1992, vdi3805, iso16757, en1994, fem2d, shooting, gisterrain, en1993, en1996, gismap, din18599, vcs, en1990, generation2d, fem3d. Restore these semantic impls and their private helpers to schema; retain codec impls in IO.
+3. Remaining artifact schema SQLite mount: `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs:32` mounts `🪶️sqlite/🦀️.rs` as sqlite_snapshot. AVI hdrl snapshot has same mount at line14. Confirm codec relocation and remove schema mounts.
+4. Remaining physical JSON output in Writer: `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs:240,244,251,257` uses serde_json::to_string for completion payloads; `🧬️schema/💡️inferences/🦀️.rs:82,97,103` serializes tokens/errors. Keep semantic values in schema and physical output in inference IO.
+5. VDI native text serializer remains in `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs:319` (`serialize_native_text`). Gisterrain imported-map schema exposes `to_json` at line25 (`✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗺️imported-map/🦀️.rs`). Runtime extraction agent may already own these.
+6. Lowpoly schema diff line90/94 and mutations line33/37 have serde byte serialize/deserialize helpers. Inspect whether these remain genuinely required physical serde integration; if physical output belongs to this task scope, move helpers behind IO rather than leave schema format ownership.
+
+## Scope And Closure Risks
+
+Neutral FromValue/to_value binders and the glTF/BCF double-option value helpers are semantic and were not classified as physical IO. Tests, fixture paths and oracles were excluded from the targeted scan. General framework DSL parsing/printing and OS directory canonical JSON were observed outside artifact schema roots; they need a scope decision rather than blindly moving all functions named parse/encode. In particular space-history snapshot schema still owns SQLite native codecs, and plugin schema sqlite still encodes diagnostics, if the task covers these framework semantic roots.
+
+The scan was source based and not a complete Rust module resolver. Old duplicate representation trees are a particular risk: the production text parent directly mounts old diff files, so merely adding new representation-first codecs does not remove old semantic ownership. Native compiler checks are required after all concurrent extraction finishes, especially for private sibling helper visibility and duplicate impls.

@@ -20,6 +20,7 @@ const SEQUENCE_PLAY_SURFACE_SCRIPT: &str = "sequence.play.script";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SEQUENCE_PLAY_WINDOW_SCRIPT.into(),
         label: LocalizedLabel::native("Script", "Skript"),
         body_key: SEQUENCE_PLAY_BODY_SCRIPT.into(),

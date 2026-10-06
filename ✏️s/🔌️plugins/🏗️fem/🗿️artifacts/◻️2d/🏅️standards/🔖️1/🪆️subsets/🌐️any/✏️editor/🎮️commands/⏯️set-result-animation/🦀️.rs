@@ -16,7 +16,7 @@
 use crate::app_surface::{FemLoopMode, FemResultsAnimation, FemWaveform, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM, ANIMATION_TICK_MS};
 use crate::editor::fem2d::modes::edit::windows::results;
 use crate::editor::fem2d::modes::edit::windows::results::transient::{addressed_to, FemPlaybackClock, FemResultsWindowTransientOwner};
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowConfigMutation, WindowTransientMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

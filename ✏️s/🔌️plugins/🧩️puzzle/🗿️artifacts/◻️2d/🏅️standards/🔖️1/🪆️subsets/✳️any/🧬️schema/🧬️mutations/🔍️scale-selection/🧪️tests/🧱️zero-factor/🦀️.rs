@@ -1,4 +1,4 @@
-//! 🧪️ `scale-selection` fixture — `🧱️zero-factor`.
+//! 🧪️ `scale-selection` snapshot — `🧱️zero-factor`.
 //!
 //! A zero factor would collapse the selection onto the pivot; the schema's `exclusiveMinimum: 0` forbids it: a Fatal `mutation.invariant`.
 //!

@@ -37,7 +37,7 @@ pub fn patch_question(question: &FormQuestion, field: &str, value: &Value) -> Re
         "schema" => next.schema = optional_text()?,
         "src" => next.src = optional_text()?,
         "accept" => next.accept = optional_text()?,
-        "fixtureSlug" => next.fixture_slug = optional_text()?,
+        "exampleId" => next.example_id = optional_text()?,
         "required" => next.required = Some(value.as_bool().ok_or("invalid-value")?),
         "min" => next.min = number()?,
         "max" => next.max = number()?,
@@ -90,7 +90,7 @@ pub fn question_shell(id: String, label: String, kind: String) -> FormQuestion {
         schema: None,
         src: None,
         accept: None,
-        fixture_slug: None,
+        example_id: None,
         params: None,
         condition: None,
     }

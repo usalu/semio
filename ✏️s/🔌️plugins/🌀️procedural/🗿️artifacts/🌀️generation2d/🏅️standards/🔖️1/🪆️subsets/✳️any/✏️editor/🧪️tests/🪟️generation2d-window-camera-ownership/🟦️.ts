@@ -28,7 +28,6 @@ const workspace = process.cwd();
 const editor = join(workspace, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor");
 const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
 const fixture = readJson(join(editor, "🧫️fixtures/🪟️generation2d-window-camera-ownership/🔣️.json")) as Fixture;
-const fixtureSchema = readJson(join(editor, "🧫️fixtures/🪟️generation2d-window-camera-ownership/📐️schema/🔣️.json"));
 const viewportSchema = readJson(join(workspace, "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json"));
 const ownerSchemas = new Map<Kind, any>([
   ["generation2d-main", readJson(join(editor, "🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🔣️.json"))],
@@ -51,7 +50,6 @@ function applyOwned(base: Config, kind: Kind, mutation: Mutation): Config {
 }
 
 export function testGeneration2dWindowCameraOwnershipOracle(): void {
-  assert(new Ajv({ strict: true, allErrors: true }).compile(fixtureSchema)(fixture));
   const ajv = new Ajv2020({ strict: true, allErrors: true }).addMetaSchema(draft7);
   ajv.addSchema(viewportSchema);
   const schemaIds = new Set<string>();

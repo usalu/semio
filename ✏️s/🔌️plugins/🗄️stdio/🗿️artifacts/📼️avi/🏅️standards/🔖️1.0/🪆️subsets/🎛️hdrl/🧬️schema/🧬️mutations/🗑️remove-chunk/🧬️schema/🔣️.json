@@ -27,6 +27,7 @@
           "en": "Index of the stream, counted from 0.",
           "de": "Index des Datenstroms, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -45,6 +46,7 @@
           "en": "Index of the chunk within the stream, counted from 0.",
           "de": "Index des Chunks im Datenstrom, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 20

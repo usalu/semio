@@ -1,0 +1,120 @@
+{
+  "schema": "s.puzzle2d.board-tools.v1",
+  "description": "The board tools of puzzle 2d (design §22.32 a): a board gesture that is not a selection transform reaches the app as its release — rows of ONE kind — and is ONE tool transaction of `<appTool>#<kind>` holding exactly its leaves. `setup` flushes run first (one edit each); `rows` is the flush under test; `expect` states the edits it commits, the tool of the row, and what the document holds afterwards. A row id `$region` addresses the board's first target region. `transient: true` marks a flush of transient kinds alone, which upserts no history row at all (F24). Read by the Rust law `🧪️tests/🧪️board-tools/🦀️.rs` through the registered app and re-derived independently by `🧪️tests/🧪️board-tools/🐍️.py`.",
+  "appTool": "s.puzzle.puzzle2d@1/*#editor",
+  "board": {
+    "schema": "puzzle.2d.fixture",
+    "meta": { "kindCompatibility": [{ "source": "a", "target": "a", "bidirectional": true, "important": false, "specificity": "handle" }] },
+    "nodes": [
+      { "id": "left", "shape": "circle", "x": -200.0, "y": 0.0, "radius": 24.0, "text": "Left", "handles": [{ "id": "left:v0", "handleKind": "a", "angle": 0.0 }] },
+      { "id": "mid", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Middle", "handles": [{ "id": "mid:v0", "handleKind": "a", "angle": 3.141592653589793 }] },
+      { "id": "pin", "shape": "circle", "x": 200.0, "y": 0.0, "radius": 24.0, "text": "Pin", "locked": true, "handles": [] }
+    ],
+    "edges": []
+  },
+  "cases": [
+    {
+      "name": "an-area-painted-is-one-region",
+      "setup": [],
+      "rows": [{ "name": "regionCreate", "payload": { "x": -20.5, "y": -10.5, "width": 60.5, "height": 40.5 } }],
+      "expect": { "edits": 1, "tool": "regionCreate", "nodes": 3, "edges": 0, "targetRegions": 1, "region": { "x": -20.5, "y": -10.5, "width": 60.5, "height": 40.5 } }
+    },
+    {
+      "name": "an-area-without-extent-leaves-zero-trace",
+      "setup": [],
+      "rows": [{ "name": "regionCreate", "payload": { "x": 0.5, "y": 0.5, "width": 0.0, "height": 40.5 } }],
+      "expect": { "edits": 0, "tool": null, "nodes": 3, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "a-region-grip-dragged-is-one-resize",
+      "setup": [[{ "name": "regionCreate", "payload": { "x": -20.5, "y": -10.5, "width": 60.5, "height": 40.5 } }]],
+      "rows": [{ "name": "regionResize", "payload": { "id": "$region", "x": 100.5, "y": 200.5, "width": 12.5, "height": 8.5 } }],
+      "expect": { "edits": 1, "tool": "regionResize", "nodes": 3, "edges": 0, "targetRegions": 1, "region": { "x": 100.5, "y": 200.5, "width": 12.5, "height": 8.5 } }
+    },
+    {
+      "name": "a-resize-of-an-unknown-region-leaves-zero-trace",
+      "setup": [],
+      "rows": [{ "name": "regionResize", "payload": { "id": "never-painted", "x": 1.5, "y": 2.5, "width": 3.5, "height": 4.5 } }],
+      "expect": { "edits": 0, "tool": null, "nodes": 3, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "a-brush-stamped-is-one-node-and-its-wire",
+      "setup": [],
+      "rows": [{ "name": "brushPlace", "payload": { "nodeId": "placed", "edgeId": "edge-placed", "nodeKind": "node", "shape": "circle", "x": -200.0, "y": 120.0, "radius": 24.0, "handles": [{ "handleKind": "a", "angle": 4.71238898038469 }], "sourceHandleId": "left:v0", "targetHandleIndex": 0 } }],
+      "expect": { "edits": 1, "tool": "brushPlace", "nodes": 4, "edges": 1, "targetRegions": 0 }
+    },
+    {
+      "name": "a-wire-dropped-on-a-handle-is-one-edge",
+      "setup": [],
+      "rows": [{ "name": "edgeCreate", "payload": { "id": "edge-left-mid", "edgeKind": "link", "source": "left:v0", "target": "mid:v0" } }],
+      "expect": { "edits": 1, "tool": "edgeCreate", "nodes": 3, "edges": 1, "targetRegions": 0 }
+    },
+    {
+      "name": "a-wire-cut-is-one-removed-edge",
+      "setup": [[{ "name": "edgeCreate", "payload": { "id": "edge-left-mid", "edgeKind": "link", "source": "left:v0", "target": "mid:v0" } }]],
+      "rows": [{ "name": "edgeDelete", "payload": { "id": "edge-left-mid" } }],
+      "expect": { "edits": 1, "tool": "edgeDelete", "nodes": 3, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "a-cut-of-an-unknown-wire-leaves-zero-trace",
+      "setup": [],
+      "rows": [{ "name": "edgeDelete", "payload": { "id": "never-wired" } }],
+      "expect": { "edits": 0, "tool": null, "nodes": 3, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "a-delete-takes-the-node-and-its-wires",
+      "setup": [[{ "name": "edgeCreate", "payload": { "id": "edge-left-mid", "edgeKind": "link", "source": "left:v0", "target": "mid:v0" } }]],
+      "rows": [{ "name": "nodeDelete", "payload": { "id": "mid" } }],
+      "expect": { "edits": 1, "tool": "nodeDelete", "nodes": 2, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "a-delete-of-two-is-one-release",
+      "setup": [],
+      "rows": [{ "name": "nodeDelete", "payload": { "id": "left" } }, { "name": "nodeDelete", "payload": { "id": "mid" } }],
+      "expect": { "edits": 1, "tool": "nodeDelete", "nodes": 1, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "a-delete-of-an-unknown-id-leaves-zero-trace",
+      "setup": [],
+      "rows": [{ "name": "nodeDelete", "payload": { "id": "never-placed" } }],
+      "expect": { "edits": 0, "tool": null, "nodes": 3, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "two-tools-in-one-flush-are-one-edit-of-the-first",
+      "setup": [],
+      "rows": [
+        { "name": "edgeCreate", "payload": { "id": "edge-left-mid", "edgeKind": "link", "source": "left:v0", "target": "mid:v0" } },
+        { "name": "nodeDelete", "payload": { "id": "mid" } }
+      ],
+      "expect": { "edits": 1, "tool": "edgeCreate", "nodes": 2, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "a-hover-alone-is-no-row",
+      "transient": true,
+      "setup": [],
+      "rows": [{ "name": "hover", "payload": { "id": "left" } }, { "name": "preselectCancel", "payload": {} }],
+      "expect": { "edits": 0, "tool": null, "nodes": 3, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "a-selection-alone-is-no-row",
+      "transient": true,
+      "setup": [],
+      "rows": [{ "name": "select", "payload": { "ids": ["left"], "exitHighlightIds": [] } }],
+      "expect": { "edits": 0, "tool": null, "nodes": 3, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "a-candidate-page-alone-is-no-row",
+      "transient": true,
+      "setup": [],
+      "rows": [{ "name": "brushCandidates", "payload": { "candidates": [], "sourceHandleId": "left:v0", "index": 0 } }],
+      "expect": { "edits": 0, "tool": null, "nodes": 3, "edges": 0, "targetRegions": 0 }
+    },
+    {
+      "name": "an-empty-flush-is-no-row",
+      "transient": true,
+      "setup": [],
+      "rows": [],
+      "expect": { "edits": 0, "tool": null, "nodes": 3, "edges": 0, "targetRegions": 0 }
+    }
+  ]
+}

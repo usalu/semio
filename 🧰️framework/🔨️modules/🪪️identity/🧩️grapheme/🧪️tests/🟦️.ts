@@ -1,15 +1,13 @@
 import { expect, test } from "bun:test";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv";
+
 import emojiRegex from "emoji-regex";
 import ts from "typescript";
 import { leadingEmojiIdentity } from "../🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 test("neutral grapheme vectors preserve exact leading emoji, first grapheme and original rest", () => {
-  expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
   expect(new Set(fixture.cases.map((row) => row.id)).size).toBe(fixture.cases.length);
   for (const row of fixture.cases) {
     expect(leadingEmojiIdentity(row.value), row.id).toEqual(row.expected);

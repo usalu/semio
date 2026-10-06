@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio-tech.com/value/retirement/allocation-return/schema.json",
+  "title": "Parent Allocation Return",
+  "$defs": {
+    "Authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumAllocationBytes",
+        "maximumTotalBytes",
+        "maximumAllocations"
+      ],
+      "properties": {
+        "maximumAllocationBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumTotalBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumAllocations": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "OwnedState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retainedBytes",
+        "pendingAllocations",
+        "terminal"
+      ],
+      "properties": {
+        "retainedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pendingAllocations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "terminal": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

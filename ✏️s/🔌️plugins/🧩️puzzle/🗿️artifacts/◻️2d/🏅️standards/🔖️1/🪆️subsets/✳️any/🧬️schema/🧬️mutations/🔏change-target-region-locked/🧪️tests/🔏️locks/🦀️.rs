@@ -1,4 +1,4 @@
-//! 🧪️ `change-target-region-locked` fixture — `🔏️locks`.
+//! 🧪️ `change-target-region-locked` snapshot — `🔏️locks`.
 //!
 //! Locking a region keeps it constraining fill but takes it out of the gumball's reach — the flag is presentation-independent, so the fill rule below must not change.
 //!
@@ -45,7 +45,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

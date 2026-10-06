@@ -1,0 +1,39 @@
+{
+  "qualification": "source blueprint only, no provider pairs mounted",
+  "regions": [
+    {
+      "owner": "derived_construction::seeded_snapshot",
+      "sourceLines": [
+        34,
+        61
+      ],
+      "invariant": "real Root1/Pages4/ICCStream3 and typed intent share caller identifier; DPartRoot10 has only indirect DPartRootNode11. new retains zero typed pages pending actual add_page; no fabricated terminal Page Start."
+    },
+    {
+      "owner": "derived_construction::add_page",
+      "sourceLines": [
+        80,
+        85
+      ],
+      "invariant": "existing actual InsertPage owns typed page; publish matching real Page5 first and further real page IDs safely without colliding10/11; Pages Kids/Count match all typed pages; leaf Start points actual first Page, Parent10. Keep original new(...).add_page(...).pages.len()==1."
+    },
+    {
+      "owner": "ArtifactBuilder::empty",
+      "sourceLines": [
+        97,
+        99
+      ],
+      "invariant": "explicit new(sRGB2014) plus one authored612×792 blank TrimBox page; no UI locale. Caller new(FOGRA39) preserved."
+    },
+    {
+      "owner": "derived_analysis::check_vt_conformance + graph walk",
+      "sourceLines": [
+        183,
+        238
+      ],
+      "invariant": "require genuine indirect RootNode TypeDPart; follow each node children recursively with Parent agreement/unique ids/cycle refusal; leaf Start resolves TypePage belonging real Pages; DPM optional warning policy remains separate, no dual-key compatibility. Original missingroot hard diagnostic retained."
+    }
+  ],
+  "originalConstructionLaw": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs",
+  "originalAnalysisLaw": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs"
+}

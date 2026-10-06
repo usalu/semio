@@ -9,7 +9,7 @@
 //! `Din16798Mutation::from_snapshot`, bundled into a single atomic edit.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::op::Din16798Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Din16798Mutation;
 use crate::Din16798Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -21,7 +21,7 @@ export interface DagViewMainNode {
   outputs: DagViewMainPort[];
 }
 
-/** 🕸️ One read-only node-graph edge, projected off `DagFixtureEdge` via `document_to_workflow`. */
+/** 🕸️ One read-only node-graph edge, projected off `DagSnapshotEdge` via `document_to_workflow`. */
 export interface DagViewMainEdge {
   id: string;
   sourceNodeId: string;

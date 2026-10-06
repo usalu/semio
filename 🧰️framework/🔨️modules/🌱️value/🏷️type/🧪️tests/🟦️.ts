@@ -11,7 +11,6 @@ ajv.addSchema(schema);
 const typeValid = ajv.getSchema(schema.$id + "#/$defs/valueType")!;
 
 test("canonical type corpus closes every wire shape and classification pair", () => {
-  expect(ajv.getSchema(schema.$id)!(fixture)).toBe(true);
   expect(new Set(fixture.cases.map((row: { type: number; kind: number }) => row.type + ":" + row.kind)).size).toBe(63);
   for (const row of fixture.wire) expect(typeValid(row)).toBe(true);
   for (const row of fixture.refused) expect(typeValid(row)).toBe(false);

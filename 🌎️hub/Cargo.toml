@@ -49,9 +49,15 @@ members = [
     "🧩️compositions/🪐️space/📦️packages/🦀️rust",
     "🧩️compositions/🪵️sourcing/📦️packages/🦀️rust",
 ]
-exclude = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽️guest/**"]
+exclude = [
+    "**/🏅️standards/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+    "🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
+]
 
 [workspace.metadata.semio.repository]
+exclude-patterns = ["**/🏅️standards/**","**/🔮️oracles/**","**/👽️guest/**"]
 schema-version = 1
 member-manifests = ["**/📦️packages/🦀️rust/Cargo.toml"]
 
@@ -126,6 +132,8 @@ semio-framework-tool-run = { path = "../🧰️framework/🔨️modules/⏯️to
 semio-framework-dispatch-macros = { path = "../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-schema = { path = "../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { path = "../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust" }

@@ -1,0 +1,15 @@
+{
+  "role":"originalNativeMatchedVideoCells",
+  "schemaBytes":865,
+  "tableWidths":{"semio_video_document":2,"semio_video_sample":6,"semio_video_stream":9},
+  "cases":[
+    {"id":"full","rows":10,"valueBytes":511,"snapshot":{"schema":"stdio.semio.video","streams":[
+      {"kind":"video","codec":"typed/世界","width":4294967295,"height":4294967295,"rate":{"num":"-9223372036854775808","den":"9223372036854775807"},"samples":[{"pts":"18446744073709551615","key":true,"data":[0,1,255]},{"pts":"0","key":false,"data":[]}]},
+      {"kind":"audio","codec":"typed/世界","width":4294967295,"height":4294967295,"rate":{"num":"-9223372036854775808","den":"9223372036854775807"},"samples":[{"pts":"18446744073709551615","key":true,"data":[0,1,255]},{"pts":"0","key":false,"data":[]}]},
+      {"kind":"subtitle","codec":"typed/世界","width":4294967295,"height":4294967295,"rate":{"num":"-9223372036854775808","den":"9223372036854775807"},"samples":[{"pts":"18446744073709551615","key":true,"data":[0,1,255]},{"pts":"0","key":false,"data":[]}]}
+    ]}},
+    {"id":"metadataRetainingEmpty","rows":1,"valueBytes":25,"snapshot":{"schema":"stdio.semio.video","streams":[]}},
+    {"id":"existingZeroDenominatorIntermediate","rows":2,"valueBytes":91,"snapshot":{"schema":"video\u0000世界","streams":[{"kind":"video","codec":"literal\u0000Ä","width":0,"height":0,"rate":{"num":"1","den":"0"},"samples":[]}]}}
+  ],
+  "publicIo":{"coordinate":{"artifactKind":"s.stdio.semio","standard":"v1","subset":"video"},"schemaBytes":1158,"tableWidths":{"semio_snapshot":6,"semio_video_document":2,"semio_video_sample":6,"semio_video_stream":9},"metadataValueBytes":{"binary":42,"text":40},"cases":[{"id":"full","rows":11,"valueBytes":{"binary":553,"text":551}},{"id":"metadataRetainingEmpty","rows":2,"valueBytes":{"binary":67,"text":65}},{"id":"existingZeroDenominatorIntermediate","rows":3,"valueBytes":{"binary":133,"text":131}}]}
+}

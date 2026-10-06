@@ -1,4 +1,4 @@
-import{parseFormsJsonQuestion,parseFormsJsonValue,formsValueJsonProjection}from"../../../../🧬️schema/🌱️value/🔣️json/🟦️.ts";
+import {parseFormsJsonQuestion,parseFormsJsonValue,formsValueJsonProjection} from "../../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import vectors from "../🧫️fixtures/🔣️.json";

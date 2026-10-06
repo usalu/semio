@@ -1,5 +1,5 @@
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_a() -> WavSnapshot {
@@ -109,7 +109,7 @@ async fn inverse_law_diff_level() {
 //#endregion inverse_law
 
 //#region diff_codec_text_binary_roundtrip_law
-/// 🧪️ `DiffCodec::print_diff`/`parse_diff`/`encode_diff`/`decode_diff` round-trip — exercises
+/// 🧪️ `DiffText::print_diff`/`parse_diff`/`encode_diff`/`decode_diff` round-trip — exercises
 /// every field, `ext: None` AND `ext: Some(_)`, every `WavData` variant, and multi-chunk
 /// `other_chunks`, plus the empty diff.
 #[semio_framework_async_macros::async_test]

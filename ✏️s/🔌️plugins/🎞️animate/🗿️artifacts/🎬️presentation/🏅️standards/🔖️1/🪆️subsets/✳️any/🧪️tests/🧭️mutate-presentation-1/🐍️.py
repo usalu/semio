@@ -47,7 +47,7 @@ SOURCE_SCOPED = {"resize-source-frame", "replace-source"}
 
 
 def _read_base(ctx: Context):
-    tiles = json.loads(ctx.fixture_bytes(BASE_URI))["tiles"]
+    tiles = json.loads(ctx.input_bytes(BASE_URI))["tiles"]
     return {"source": "BASE", "tiles": tiles}
 # endregion 🔖️Fixtures
 

@@ -24,7 +24,7 @@ mod subject {
 
     /// 🪝️ Every editor formats every fixture result.
     pub fn every_editor_formats_the_same_result(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let editors = strings(&vectors, "editors");
         let mut projected = Vec::new();
         for record in vectors.array("records") {
@@ -45,7 +45,7 @@ mod subject {
 
     /// 🔤️ Every editor names every neutral hook event.
     pub fn native_event_names_are_derived_the_same_way(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let editors = strings(&vectors, "editors");
         let parents = strings(&vectors, "parents");
         let mut projected = Vec::new();
@@ -65,7 +65,7 @@ mod subject {
 
     /// ⚠️ An unknown native event is refused rather than defaulted.
     pub fn an_unknown_native_event_is_rejected(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let editors = strings(&vectors, "editors");
         let mut projected = Vec::new();
         for editor in &editors {

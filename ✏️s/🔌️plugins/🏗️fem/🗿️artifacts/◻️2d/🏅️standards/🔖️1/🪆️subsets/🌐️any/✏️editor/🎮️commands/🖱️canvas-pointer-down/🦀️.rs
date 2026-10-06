@@ -2,7 +2,7 @@
 
 use crate::editor::fem2d::interaction::canvas_gesture;
 use crate::editor::fem2d::interaction::{fem2d_addressed_camera, selection_merge_mode};
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

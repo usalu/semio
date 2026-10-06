@@ -35,7 +35,3 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetSnapshot {
     }
 }
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;

@@ -46,13 +46,13 @@ async fn mesh_preview_renders_region_edges() {
 
 #[semio_framework_async_macros::async_test]
 async fn fem2d_model_extent_degenerate_model_returns_one() {
-    assert_eq!(fem2d_model_extent(&crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot()), 1.0);
+    assert_eq!(fem2d_model_extent(&crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()), 1.0);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn live_visual_language_distinguishes_every_progress_state() {
     use store::ArtifactDsl;
-    let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM2D_EXAMPLE_TEXT).expect("parse example");
+    let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let region_id = doc.regions.first().expect("example region").id.clone();
     let element_id = element_id(doc.elements.first().expect("example element")).to_string();
     let node_id = doc.nodes.first().expect("example node").id.clone();
@@ -81,7 +81,7 @@ async fn live_visual_language_distinguishes_every_progress_state() {
 #[semio_framework_async_macros::async_test]
 async fn model_visual_language_includes_load_and_support_glyphs() {
     use store::ArtifactDsl;
-    let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM2D_EXAMPLE_TEXT).expect("parse example");
+    let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let encoded = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
     assert!(encoded.contains("support-"));
     assert!(encoded.contains("load-"));
@@ -92,7 +92,7 @@ async fn live_visual_replay_is_deterministic_and_bounded() {
     use std::time::Instant;
     use store::ArtifactDsl;
 
-    let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM2D_EXAMPLE_TEXT).expect("parse example");
+    let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let node_id = doc.nodes.first().expect("example node").id.clone();
     let visual = Fem2dLiveVisual {
         region_quality: doc.regions.iter().rev().enumerate().map(|(index, region)| (region.id.clone(), if index % 2 == 0 { RegionVisualQuality::Coarse } else { RegionVisualQuality::Refined })).collect(),

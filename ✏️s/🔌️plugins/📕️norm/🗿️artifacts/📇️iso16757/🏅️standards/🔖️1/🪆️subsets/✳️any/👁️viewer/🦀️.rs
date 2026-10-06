@@ -41,7 +41,7 @@ pub struct Iso16757Viewer;
 
 impl ArtifactViewer for Iso16757Viewer {
     type Snapshot = Iso16757Snapshot;
-    type Mutation = crate::op::Iso16757Mutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Iso16757Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

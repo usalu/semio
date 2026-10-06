@@ -15,7 +15,7 @@ use crate::EnergyModelSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-use super::entries::compute_energy_model_entries;
+
 
 pub use super::entries::EnergyModelEntries;
 
@@ -30,26 +30,9 @@ pub struct EnergyModelInference {
     pub entries: EnergyModelEntries,
 }
 
-impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
-    fn infer(snapshot: &EnergyModelSnapshot) -> Result<Self, semio_framework_value::ValueError> {
-        Ok({
-        Self { entries: compute_energy_model_entries(snapshot) }
-    
-        })
-    }
-}
 
-/// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
-/// `EnergyModelSnapshot::default()`'s `model_json` ever stops being `"{}"`. Same "match `infer` of
-/// the real default, don't derive structurally" trick `AddInference` uses in
-/// `📡️spr/🎮️command/🦀️.rs`.
-impl Default for EnergyModelInference {
-    fn default() -> Self {
-        let snapshot = &EnergyModelSnapshot::default();
 
-        Self { entries: compute_energy_model_entries(snapshot) }
-    }
-}
+
 
 impl protocol::InferenceSpec<EnergyModelSnapshot> for EnergyModelInference {
     fn inference_schema_id() -> &'static str {

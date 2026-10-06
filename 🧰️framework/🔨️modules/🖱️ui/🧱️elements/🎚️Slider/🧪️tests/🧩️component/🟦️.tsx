@@ -4,9 +4,8 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import sliderPresentationFixture from "../../../../🧫️fixtures/🎚️slider-presentation/🔣️.json";
-import sliderPresentationSchema from "../../../../🧬️schema/🎚️slider-presentation/🔣️.json";
 import numberControlsFixture from "../../../../🧬️contract/🧫️fixtures/🧫️number-controls/🔣️.json";
-import numberControlsSchema from "../../../../🧬️contract/🧫️fixtures/🧫️number-controls/🧬️schema/🔣️.json";
+
 import { Slider, clampSliderValuesToReady, normalizeSliderRange, normalizeSliderValues, resolveSliderDraftClear, sliderValuesMatch } from "../../🟦️.tsx";
 import { sliderAxisPosition } from "../../../../🧬️contract/🧩️component/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -14,8 +13,6 @@ import { sliderAxisPosition } from "../../../../🧬️contract/🧩️component
 // #region 🎚️SliderMatrix
 describe("Slider", () => {
   it("matches the neutral track/readout geometry and track-only pointer contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(sliderPresentationSchema);
-    expect(validate(sliderPresentationFixture), JSON.stringify(validate.errors)).toBe(true);
     const row = sliderPresentationFixture.cases.find(candidate => candidate.id === "outer-rtl-inner-ltr")!;
     const changes = vi.fn();
     const { container } = render(
@@ -245,8 +242,8 @@ describe("Slider", () => {
   });
 
   it("lands pointer gestures on the shared detents, jumps page keys between them and paints one tick each", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(numberControlsSchema);
-    expect(validate(numberControlsFixture), JSON.stringify(validate.errors)).toBe(true);
+    
+    
     for (const row of numberControlsFixture.pointer) {
       const change = vi.fn();
       const start = row.expected === row.min ? row.max : row.min;

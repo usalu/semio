@@ -5,7 +5,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use std::fmt::Debug;
 
 fn cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🛰️declaration-channels/🔣️.json")).expect("declaration fixture cases")
+    serde_json::from_str(include_str!("../../🧪️testing/🛰️declaration-channels/🔣️.json")).expect("declaration fixture cases")
 }
 fn i32_value(value: &serde_json::Value) -> i32 {
     i32::try_from(value.as_i64().expect("integer")).expect("i32")
@@ -186,7 +186,7 @@ fn strict_profile_is_an_io_rule_not_a_mutation_constraint() {
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<super::std1_any::Std1AnyMutation>(include_str!("../../🧫️fixtures/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/📝️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<super::std1_strict::Std1StrictMutation>(include_str!("../../🧫️fixtures/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<super::std2_any::Std2AnyMutation>(include_str!("../../🧫️fixtures/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<super::std1_any::Std1AnyMutation>(include_str!("../../🧪️testing/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/📝️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<super::std1_strict::Std1StrictMutation>(include_str!("../../🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/📝️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<super::std2_any::Std2AnyMutation>(include_str!("../../🧪️testing/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }

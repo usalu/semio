@@ -1,0 +1,21 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "nx",
+    "run",
+    "@semio-tech/framework-os-kernel:test-space-history-sqlite-native",
+    "--skip-nx-cache",
+    "--outputStyle=stream",
+    "--excludeTaskDependencies"
+  ],
+  "env": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "SEMIO_TEST_LEVEL": "quick",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/framework-history-complete-native-after-artifacts"
+  },
+  "expectedTests": 18,
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-framework-history-complete-native-after-original-row-kind.log",
+  "status": "whole18 after genuine17/1 original row kind correction; unchanged original assertions and grants"
+}

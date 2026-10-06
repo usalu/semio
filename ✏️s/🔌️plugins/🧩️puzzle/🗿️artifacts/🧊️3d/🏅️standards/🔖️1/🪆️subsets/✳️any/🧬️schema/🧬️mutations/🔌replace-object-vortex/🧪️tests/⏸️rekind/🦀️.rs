@@ -1,8 +1,8 @@
-//! 🧪️ `replace-object-vortex` fixture — `⏸️rekind`.
+//! 🧪️ `replace-object-vortex` scene_snapshot — `⏸️rekind`.
 //!
 //! The builder clones the owner object and compares the clone against the original BEFORE writing
 //! the new vortex, so its `next == *object` guard always fires: every `replace-object-vortex` is a
-//! warned no-op with an empty diff. This fixture pins that actual behaviour, not the intent.
+//! warned no-op with an empty diff. This scene_snapshot pins that actual behaviour, not the intent.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -46,7 +46,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -95,7 +95,7 @@ fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `replace-object-vortex` produces is exactly the committed diff — the single most
-/// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
+/// load-bearing assertion in the scene_snapshot: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {

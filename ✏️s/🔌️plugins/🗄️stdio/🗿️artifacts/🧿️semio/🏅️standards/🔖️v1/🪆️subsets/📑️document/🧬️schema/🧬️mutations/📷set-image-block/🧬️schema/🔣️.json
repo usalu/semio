@@ -16,7 +16,19 @@
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     },
     "path": {
-      "$ref": "#/$defs/DocBlockPath"
+      "$ref": "#/$defs/DocBlockPath",
+      "x-semio-ui": {
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "Path of the block: the steps into nested containers and its index there, counted from 0.",
+          "de": "Pfad des Blocks: die Schritte in verschachtelte Container und sein Index dort, ab 0 gezählt."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "image_id": {
       "type": "string",
@@ -50,7 +62,24 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "Display width of the image; cleared, the image keeps its own width.",
+          "de": "Anzeigebreite des Bildes; geleert behält das Bild seine eigene Breite."
+        },
+        "step": 1,
+        "precision": 2,
+        "softMin": 0,
+        "group": "value",
+        "order": 40
+      }
     },
     "height": {
       "anyOf": [
@@ -60,7 +89,24 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "description": {
+          "en": "Display height of the image; cleared, the image keeps its own height.",
+          "de": "Anzeigehöhe des Bildes; geleert behält das Bild seine eigene Höhe."
+        },
+        "step": 1,
+        "precision": 2,
+        "softMin": 0,
+        "group": "value",
+        "order": 50
+      }
     }
   },
   "$defs": {

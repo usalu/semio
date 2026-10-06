@@ -1,7 +1,7 @@
 //! 🔺️ `delete-widget` sparse diff construction.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::standards::v1::subsets::any::schema::mutations::delete_widget::DeleteWidget;
 use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::Generation3dSnapshot;
@@ -11,5 +11,5 @@ pub fn diff(payload: &DeleteWidget, base: &Generation3dSnapshot) -> protocol::Mu
     if widget_index(&base.host_snapshot, &payload.id).is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Widget \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff { removed: vec![payload.id.clone()], set: vec![] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff { removed: vec![payload.id.clone()], set: vec![] }, &SynapsesDiff::default(), &LayoutDiff::default(), None, None))
 }

@@ -9,8 +9,8 @@ pub struct ExportResponses { pub format: String }
 
 pub fn handle(payload: &ExportResponses, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
     let data = match payload.format.as_str() {
-        "json" => crate::schema::response::export::export_responses_json(&doc.snapshot.responses),
-        "csv" => crate::schema::response::export::export_responses_csv(&doc.snapshot.responses),
+        "json" => crate::standards::v1::subsets::any::io::text::snapshot::response::export::export_responses_json(&doc.snapshot.responses),
+        "csv" => crate::standards::v1::subsets::any::io::text::snapshot::response::export::export_responses_csv(&doc.snapshot.responses),
         _ => return Err(Fault::from("forms-export-format-invalid")),
     };
     download(payload, doc.snapshot, data)

@@ -1,3 +1,5 @@
+use crate::standards::v1::subsets::object::io::text::snapshot::decode_semio_object_snapshot_json;
+use crate::standards::v1::subsets::drawing::io::text::snapshot::enc_str;
 use super::*;
 
 #[semio_framework_async_macros::async_test]

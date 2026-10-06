@@ -13,7 +13,21 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Face id",
+          "de": "Flächen-ID"
+        },
+        "description": {
+          "en": "Id the new face carries.",
+          "de": "Kennung, die die neue Fläche trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "outer_loop": {
       "type": "string",
@@ -74,7 +88,37 @@
       }
     },
     "tol": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Tolerance",
+          "de": "Toleranz"
+        },
+        "description": {
+          "en": "Geometric tolerance of the face: the distance within which it coincides with the geometry it bounds.",
+          "de": "Geometrische Toleranz der Fläche: der Abstand, innerhalb dessen sie mit der begrenzten Geometrie zusammenfällt."
+        },
+        "step": 1e-09,
+        "precision": 9,
+        "softMin": 1e-09,
+        "softMax": 0.1,
+        "scale": "log",
+        "snaps": [
+          1e-09,
+          1e-08,
+          1e-07,
+          1e-06,
+          1e-05,
+          0.0001,
+          0.001,
+          0.01,
+          0.1
+        ],
+        "group": "value",
+        "order": 60
+      }
     }
   },
   "$defs": {

@@ -1,0 +1,34 @@
+{
+  "qualification": "HELD source-only generator joins; not complete restore family",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/🦀️.rs",
+      "before": "        \"remove-dpart-root\" | \"remove-dpart-metadata\" => {\n            let metadata = document.add_object(Stream::new(dictionary! { \"Type\" => \"Metadata\", \"Subtype\" => \"XML\" }, b\"<dpart job=\\\"run 4711, recipient block A\\\"/>\".to_vec()));\n            let part = document.add_object(dictionary! { \"Type\" => \"DPart\", \"Metadata\" => metadata });\n            let root = document.add_object(dictionary! { \"Type\" => \"DPartRoot\", \"DPartRootNode\" => part });\n            set_catalog(&mut document, \"DPartRoot\", Object::Reference(root));",
+      "after": "        \"remove-dpart-root\" | \"remove-dpart-metadata\" => {\n            let page = *page_ids(&document).first().expect(\"authored fixture has a real reachable page\");\n            let part = document.add_object(dictionary! { \"Type\" => \"DPart\", \"Start\" => page, \"DPM\" => dictionary! { \"Job\" => Object::string_literal(\"run 4711, recipient block A\") } });\n            let root = document.add_object(dictionary! { \"Type\" => \"DPartRoot\", \"DPartRootNode\" => part });\n            document.get_object_mut(part).and_then(Object::as_dict_mut).expect(\"authored partition node\").set(\"Parent\", root);\n            set_catalog(&mut document, \"DPartRoot\", Object::Reference(root));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/🦀️.rs",
+      "before": "        \"set-dpart-root\" => {\n            let metadata = document.add_object(Stream::new(dictionary! { \"Type\" => \"Metadata\", \"Subtype\" => \"XML\" }, b\"<dpart job=\\\"run 4711, recipient block A\\\"/>\".to_vec()));\n            let part = document.add_object(dictionary! { \"Type\" => \"DPart\", \"Metadata\" => metadata });\n            let root = document.add_object(dictionary! { \"Type\" => \"DPartRoot\", \"DPartRootNode\" => part });\n            set_catalog(&mut document, \"DPartRoot\", Object::Reference(root));",
+      "after": "        \"set-dpart-root\" => {\n            let page = *page_ids(&document).first().expect(\"authored fixture has a real reachable page\");\n            let part = document.add_object(dictionary! { \"Type\" => \"DPart\", \"Start\" => page, \"DPM\" => dictionary! { \"Job\" => Object::string_literal(\"run 4711, recipient block A\") } });\n            let root = document.add_object(dictionary! { \"Type\" => \"DPartRoot\", \"DPartRootNode\" => part });\n            document.get_object_mut(part).and_then(Object::as_dict_mut).expect(\"authored partition node\").set(\"Parent\", root);\n            set_catalog(&mut document, \"DPartRoot\", Object::Reference(root));"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/🦀️.rs",
+      "before": "            let metadata = document.add_object(Stream::new(dictionary! { \"Type\" => \"Metadata\", \"Subtype\" => \"XML\" }, b\"<dpart job=\\\"run 4712, recipient block B\\\"/>\".to_vec()));\n            let part = document.add_object(dictionary! { \"Type\" => \"DPart\", \"Metadata\" => metadata });\n            let root = document.add_object(dictionary! { \"Type\" => \"DPartRoot\", \"DPartRootNode\" => part });\n            set_catalog(&mut document, \"DPartRoot\", Object::Reference(root));",
+      "after": "            let root = document.get_object(catalog_id(&document)).and_then(Object::as_dict).map_err(|error| error.to_string())?.get(b\"DPartRoot\").and_then(Object::as_reference).map_err(|error| error.to_string())?;\n            let part = document.get_object(root).and_then(Object::as_dict).map_err(|error| error.to_string())?.get(b\"DPartRootNode\").and_then(Object::as_reference).map_err(|error| error.to_string())?;\n            document.get_object_mut(part).and_then(Object::as_dict_mut).map_err(|error| error.to_string())?.set(\"DPM\", dictionary! { \"Job\" => Object::string_literal(\"run 4712, recipient block B\") });",
+      "occurrences": 1,
+      "qualification": "authentic generator dictionaries only; qualification vectors require actual generation/readback"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/🦀️.rs",
+      "before": "\"remove-dpart-root\" | \"remove-dpart-metadata\" => {",
+      "after": "\"remove-dpart-root\" | \"remove-dpart-metadata\" | \"set-dpart-metadata\" => {",
+      "occurrences": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/🦀️.rs",
+      "before": "dict.remove(b\"Metadata\");",
+      "after": "dict.remove(b\"DPM\");",
+      "occurrences": 1
+    }
+  ]
+}

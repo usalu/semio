@@ -90,7 +90,7 @@ fn vector(ctx: &Context) -> Result<Vector, String> {
     if !KINDS.contains(&kind.as_str()) {
         return Err(format!("scenario doc string names {kind:?}, which is not a declared LowpolyMutation kind"));
     }
-    Ok(Vector { kind, before: ctx.fixture_json(&spec.str("before"))?, mutation: ctx.fixture_json(&spec.str("mutation"))?, diff: ctx.fixture_json(&spec.str("diff"))?, after: ctx.fixture_json(&spec.str("after"))?, outcome: ctx.fixture_json(&spec.str("outcome"))? })
+    Ok(Vector { kind, before: ctx.input_json(&spec.str("before"))?, mutation: ctx.input_json(&spec.str("mutation"))?, diff: ctx.input_json(&spec.str("diff"))?, after: ctx.input_json(&spec.str("after"))?, outcome: ctx.input_json(&spec.str("outcome"))? })
 }
 
 /// 🐫️ `create-object` → `CreateObject`, the Rust variant name this subset's EXTERNALLY tagged enum writes as the
@@ -252,8 +252,8 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
 /// input unread would be caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
     const SNAPSHOT: &str = "shared://🧬️mutations/➖️remove-paint-layer/drops-the-detail-layer-at-index-1/📸️snapshot/⬅️before/🔣️.json";
-    let committed = ctx.fixture_bytes(SNAPSHOT)?;
-    let parsed = ctx.fixture_json(SNAPSHOT)?;
+    let committed = ctx.input_bytes(SNAPSHOT)?;
+    let parsed = ctx.input_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();
     law::reparsed_not_copied(reserialized.as_bytes(), &committed)?;
     let reparsed = semio_repo_test_host::parse_json(&reserialized)?;

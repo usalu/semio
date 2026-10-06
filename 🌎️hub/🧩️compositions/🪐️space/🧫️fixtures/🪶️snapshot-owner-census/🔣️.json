@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "plugin": "space",
+  "package": "semio-hub-space",
+  "metadataOnlyDefinitions": [],
+  "owners": [
+    {
+      "assembly": "Runtime",
+      "package": "semio-s-artifact-space-home",
+      "snapshot": "SHomeSnapshot",
+      "kind": "s.space.home",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.home",
+      "sqlPath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "tables": [
+        "home_document"
+      ]
+    },
+    {
+      "assembly": "Runtime",
+      "package": "semio-s-artifact-space-space",
+      "snapshot": "SSpaceSnapshot",
+      "kind": "s.space.space",
+      "standard": "1",
+      "subset": "*",
+      "schema": "s.space",
+      "sqlPath": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "tables": [
+        "space_artifact",
+        "space_artifact_dialect",
+        "space_document"
+      ]
+    }
+  ],
+  "requirements": {
+    "concreteSnapshotType": true,
+    "nonemptyAuthoredSql": true,
+    "identicalDeclaredInstalledProvider": true,
+    "exactNativeSqlLookup": true,
+    "directExactRoutesBothDirections": true
+  },
+  "hostedArtifactKinds": []
+}

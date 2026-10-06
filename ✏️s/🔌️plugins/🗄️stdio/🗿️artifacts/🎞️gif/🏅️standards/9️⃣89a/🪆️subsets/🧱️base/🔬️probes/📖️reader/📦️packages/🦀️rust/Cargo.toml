@@ -9,6 +9,12 @@
 # `Decoded::SubBlockFinished(AnyExtension)` and exposes `last_ext()` -> (label, payload, is_end), so
 # every extension block is observable by label and payload. Still the library's own reading, not ours.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "gif-89a-extension-reader"

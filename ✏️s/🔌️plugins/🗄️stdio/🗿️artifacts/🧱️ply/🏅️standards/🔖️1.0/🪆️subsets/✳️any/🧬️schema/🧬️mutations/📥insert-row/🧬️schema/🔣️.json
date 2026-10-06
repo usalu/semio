@@ -31,10 +31,38 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the rows of the element at which it is inserted, counted from 0.",
+          "de": "Position unter den Zeilen des Elements, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "row": {
-      "$ref": "#/$defs/PlyRow"
+      "$ref": "#/$defs/PlyRow",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "description": {
+          "en": "Property values of the inserted row, in property order.",
+          "de": "Eigenschaftswerte der eingefügten Zeile in der Reihenfolge der Eigenschaften."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

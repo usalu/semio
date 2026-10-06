@@ -104,9 +104,7 @@ impl En1999Mutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-pub fn decode_en1999_mutation_json(text: &str) -> Result<En1999Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 
 pub fn apply_en1999_mutation(base: &En1999Snapshot, mutation: &En1999Mutation) -> Result<(En1999Snapshot, Vec<String>), String> {
     let raised = <En1999Mutation as protocol::Mutation<En1999Snapshot>>::diff(mutation, base);

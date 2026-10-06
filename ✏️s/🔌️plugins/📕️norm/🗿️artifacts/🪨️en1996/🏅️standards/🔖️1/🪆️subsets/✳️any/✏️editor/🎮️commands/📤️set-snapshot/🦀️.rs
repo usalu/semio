@@ -1,7 +1,7 @@
 //! 📤️ EN 1996 play app command — replace the whole compliance document.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::op::En1996Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::En1996Mutation;
 use crate::En1996Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

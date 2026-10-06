@@ -1,0 +1,14 @@
+dialect grammar
+grammar stdio.pdf.1.7.diff
+start diff
+comment none
+
+# 🔺️ One-line derive-owned diff record (`../../../🧬️schema/🦀️.rs` `🔖️DiffCodec`): the sparse `PdfDiff`
+# value printed by the shared DSL value printer. Every lane (pages, fonts, images, forms,
+# graphics states, shadings, patterns, colour spaces, property lists, embedded files, outlines,
+# named destinations, page labels, output intents, interactive form, optional content, viewer
+# settings, metadata, identity, encryption, catalog extras, retained objects and trailer) is an
+# optional field of that value; collection lanes carry `removed;modified;added` triples keyed by
+# index or id, tri-state lanes carry `clear` / `set` records. The same value is what
+# `💾️binary/📡️.protocol.semio` frames as a container-less pack record body.
+diff = "value" "=" REST

@@ -10,6 +10,12 @@
 # precedent — OBJ has no reference WRITER in the Rust ecosystem) and projects real bytes back out
 # through `tobj`'s own reading — the mechanism `../../🔬️probes/📜️script.ts` shells out to.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "tobj-obj-reader"

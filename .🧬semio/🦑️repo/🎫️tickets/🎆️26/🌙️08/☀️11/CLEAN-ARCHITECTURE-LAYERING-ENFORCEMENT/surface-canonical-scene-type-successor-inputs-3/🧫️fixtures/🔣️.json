@@ -1,0 +1,96 @@
+{
+  "cases": [
+    {
+      "id": "replace",
+      "rows": [
+        {
+          "path": "own",
+          "proposedPredecessor": "old",
+          "proposedPredecessorHash": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+          "after": "new",
+          "afterHash": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+          "encoding": "utf8"
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "create",
+      "rows": [
+        {
+          "path": "new",
+          "proposedPredecessor": null,
+          "proposedPredecessorHash": null,
+          "after": "body",
+          "afterHash": "230d8358dc8e8890b4c58deeb62912ee2f20357ae92a5cc861b98e68fe31acb5",
+          "encoding": "utf8"
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "delete",
+      "rows": [
+        {
+          "path": "old",
+          "proposedPredecessor": "body",
+          "proposedPredecessorHash": "230d8358dc8e8890b4c58deeb62912ee2f20357ae92a5cc861b98e68fe31acb5",
+          "after": null,
+          "afterHash": null,
+          "encoding": "utf8"
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "duplicate",
+      "rows": [
+        {
+          "path": "own",
+          "proposedPredecessor": "old",
+          "proposedPredecessorHash": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+          "after": "new",
+          "afterHash": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+          "encoding": "utf8"
+        },
+        {
+          "path": "own",
+          "proposedPredecessor": "old",
+          "proposedPredecessorHash": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+          "after": "new",
+          "afterHash": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+          "encoding": "utf8"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "escape",
+      "rows": [
+        {
+          "path": "../foreign",
+          "proposedPredecessor": "x",
+          "proposedPredecessorHash": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+          "after": "y",
+          "afterHash": "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa",
+          "encoding": "utf8"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "hash",
+      "rows": [
+        {
+          "path": "own",
+          "proposedPredecessor": "old",
+          "proposedPredecessorHash": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+          "after": "new",
+          "afterHash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "encoding": "utf8"
+        }
+      ],
+      "refused": true
+    }
+  ]
+}

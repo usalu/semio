@@ -89,7 +89,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: pageSchema } = await import("../../../📃️page/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema);
-    expect(ajv.getSchema(`${schema.$id}#/$defs/ReturnFixture`)!(fixture)).toBe(true);
     expect(ACTOR_RETURN_ORIGIN_MAXIMUM_BYTES).toBe(fixture.maximumOriginBytes);
     expect(ACTOR_RETURN_IDENTITY_MAXIMUM_BYTES).toBe(fixture.maximumIdentityBytes);
     expect(ACTOR_RETURN_PAGE_RECEIPT_MAXIMUM_BYTES).toBe(fixture.maximumPageReceiptBytes);

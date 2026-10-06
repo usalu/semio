@@ -6,9 +6,8 @@
 //!
 //! Honest lossy points (documented):
 //! - Only the FIRST frame is exported (TIFF baseline single-IFD encode here is not animated).
-//! - `encode_tiff` drops alpha (`rgba_to_rgb`) and always writes 8-bit/sample RGB — `colorspace`/
-//!   `bit_depth` are not fed back beyond the required width/length tags (matching the codec's own
-//!   real encode scope, documented in its module header).
+//! - The frame is written as ONE uncompressed strip of 8-bit RGBA with unassociated alpha (`ExtraSamples` = 2) —
+//!   `colorspace`/`bit_depth` are not fed back beyond that.
 //! - Metadata entries round-trip back as `Ascii` tags (best-effort — numeric-looking values that
 //!   came from a non-Ascii source type on import re-emit as text, a real, honest normalization,
 //!   not a byte-exact inverse of every possible TIFF field type).
@@ -22,6 +21,9 @@ use semio_s_artifact_stdio_tiff::{
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("image") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId::ANY };
+
+/// 🫥️ TIFF6 §18 `ExtraSamples`: what the fourth sample of a pixel means (2 = unassociated alpha).
+const TAG_EXTRA_SAMPLES: u16 = 338;
 
 //#region 🔖️Serializer
 pub struct SemioImageToTiff;
@@ -45,6 +47,7 @@ impl ArtifactSerializer for SemioImageToTiff {
             TiffTag { tag: TAG_PHOTOMETRIC, values: TiffValues::Short(vec![2]) },
             TiffTag { tag: TAG_SAMPLES_PER_PIXEL, values: TiffValues::Short(vec![4]) },
             TiffTag { tag: TAG_ROWS_PER_STRIP, values: TiffValues::Long(vec![from.height]) },
+            TiffTag { tag: TAG_EXTRA_SAMPLES, values: TiffValues::Short(vec![2]) },
         ];
         for m in &from.metadata {
             if let Ok(tag) = m.key.parse::<u16>() {

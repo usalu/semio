@@ -703,479 +703,59 @@ fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff 
 /// `SvgDiff`'s (`f6-recon-report.md` §5), self-contained (own copies of the small primitive set,
 /// no shared "hand-roll helpers" module exists yet — same rationale `SvgDiff`'s file documents).
 //#region 🔖️Primitives
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    if s.is_empty() {
-        return Vec::new();
-    }
-    let mut out = Vec::new();
-    let mut depth = 0i32;
-    let mut start = 0usize;
-    for (i, c) in s.char_indices() {
-        match c {
-            '[' => depth += 1,
-            ']' => depth -= 1,
-            c if c == sep && depth == 0 => {
-                out.push(&s[start..i]);
-                start = i + c.len_utf8();
-            }
-            _ => {}
-        }
-    }
-    out.push(&s[start..]);
-    out
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
-    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
-}
+
+
+
+
+
+
+
 
 //#region 🔖️BinaryPrimitives
-/// 🧪️ P2-P1: real LEB128-varint-framed binary primitives (length-prefixed bytes/utf8) backing the
-/// upgraded `OpBinary`/`DiffCodec` frames (see `../🧬️mutations/🦀️.rs`'s `#region OpCodecs`
-/// and `#region 🔖️HandcraftedDiffCodec` below) — reuses `store::pack_rt::write_varint_u64` /
-/// `store::ByteReader` rather than reinventing varint encode/decode.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
+
+
+
+
 //#endregion 🔖️BinaryPrimitives
 //#endregion 🔖️Primitives
 
 //#region 🔖️JsonValueCodecs
-/// 🌳 Tag-prefixed like `SvgDiff`'s `enc_xml_node`: `Z` (null, no payload, no brackets) / `B[0|1]`
-/// / `N[hex(lexeme)]` / `S[hex(value)]` / `A[v1,v2,...]` / `O[hexkey1:v1,hexkey2:v2,...]` — member
-/// insertion order preserved by construction (a list, never re-sorted).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_json_value(v: &JsonValue) -> String {
-    match v {
-        JsonValue::Null => "Z".to_string(),
-        JsonValue::Bool { value } => format!("B[{}]", if *value { "1" } else { "0" }),
-        JsonValue::Number { lexeme } => format!("N[{}]", enc_str(lexeme)),
-        JsonValue::String { value } => format!("S[{}]", enc_str(value)),
-        JsonValue::Array { items } => format!("A[{}]", items.iter().map(enc_json_value).collect::<Vec<_>>().join(",")),
-        JsonValue::Object { members } => format!("O[{}]", members.iter().map(|m| format!("{}:{}", enc_str(&m.key), enc_json_value(&m.value))).collect::<Vec<_>>().join(",")),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_json_value(s: &str) -> Result<JsonValue, String> {
-    if s == "Z" {
-        return Ok(JsonValue::Null);
-    }
-    let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    match tag {
-        "B" => Ok(JsonValue::Bool { value: inner == "1" }),
-        "N" => Ok(JsonValue::Number { lexeme: dec_str(inner)? }),
-        "S" => Ok(JsonValue::String { value: dec_str(inner)? }),
-        "A" => Ok(JsonValue::Array { items: split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json_value).collect::<Result<Vec<_>, String>>()? }),
-        "O" => {
-            let members = split_top_level(inner, ',')
-                .into_iter()
-                .filter(|s| !s.is_empty())
-                .map(|entry| {
-                    let (key, value) = entry.split_once(':').ok_or_else(|| format!("object member: bad entry {entry:?}"))?;
-                    Ok(JsonMember { key: dec_str(key)?, value: dec_json_value(value)? })
-                })
-                .collect::<Result<Vec<_>, String>>()?;
-            Ok(JsonValue::Object { members })
-        }
-        other => Err(format!("json value: unknown tag {other:?}")),
-    }
-}
+
+
 
 //#region 🔖️JsonValueBinaryCodecs
-/// 🧪️ P2-P1: real recursive binary twin of [`enc_json_value`]/[`dec_json_value`] above — a 1-byte
-/// kind tag (`0`=Null/`1`=Bool/`2`=Number/`3`=String/`4`=Array/`5`=Object, distinct numbering from
-/// the text codec's letter tags, chosen to read cleanly as a match arm) followed by the real payload
-/// (length-prefixed bytes for scalars, a varint COUNT then that many recursively-encoded elements
-/// for `Array`/`Object` — genuinely recursive, not text-as-bytes). Backs the upgraded `OpBinary`
-/// frame (`../🧬️mutations/🦀️.rs`) and the `Replace`/added-item payloads inside
-/// [`enc_value_diff_bin`] below.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_json_value_bin(value: &JsonValue, out: &mut Vec<u8>) {
-    match value {
-        JsonValue::Null => out.push(0),
-        JsonValue::Bool { value } => {
-            out.push(1);
-            out.push(if *value { 1 } else { 0 });
-        }
-        JsonValue::Number { lexeme } => {
-            out.push(2);
-            write_str_lp(out, lexeme);
-        }
-        JsonValue::String { value } => {
-            out.push(3);
-            write_str_lp(out, value);
-        }
-        JsonValue::Array { items } => {
-            out.push(4);
-            store::pack_rt::write_varint_u64(out, items.len() as u64);
-            for item in items {
-                enc_json_value_bin(item, out);
-            }
-        }
-        JsonValue::Object { members } => {
-            out.push(5);
-            store::pack_rt::write_varint_u64(out, members.len() as u64);
-            for member in members {
-                write_str_lp(out, &member.key);
-                enc_json_value_bin(&member.value, out);
-            }
-        }
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_json_value_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValue, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
-    match tag {
-        0 => Ok(JsonValue::Null),
-        1 => Ok(JsonValue::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
-        2 => Ok(JsonValue::Number { lexeme: read_str_lp(reader)? }),
-        3 => Ok(JsonValue::String { value: read_str_lp(reader)? }),
-        4 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-            let mut items = Vec::with_capacity(count as usize);
-            for _ in 0..count {
-                items.push(dec_json_value_bin(reader)?);
-            }
-            Ok(JsonValue::Array { items })
-        }
-        5 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-            let mut members = Vec::with_capacity(count as usize);
-            for _ in 0..count {
-                let key = read_str_lp(reader)?;
-                let value = dec_json_value_bin(reader)?;
-                members.push(JsonMember { key, value });
-            }
-            Ok(JsonValue::Object { members })
-        }
-        other => Err(format!("json value binary: unknown tag {other}")),
-    }
-}
+
+
 //#endregion 🔖️JsonValueBinaryCodecs
 //#endregion 🔖️JsonValueCodecs
 
 //#region 🔖️DiffValueCodecs
-/// 🌳 `JsonValueDiff` itself needs a tag (`R`=Replace, `B`=Bool, `N`=Number, `S`=String, `A`=Array,
-/// `O`=Object) since, unlike a plain [`JsonValue`], it appears standalone (not always inside a
-/// bracketed container) at the top-level `value=` token position.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_value_diff(d: &JsonValueDiff) -> String {
-    match d {
-        JsonValueDiff::Replace { value } => format!("R[{}]", enc_json_value(value)),
-        JsonValueDiff::Bool { value } => format!("B[{}]", if *value { "1" } else { "0" }),
-        JsonValueDiff::Number { lexeme } => format!("N[{}]", enc_str(lexeme)),
-        JsonValueDiff::String { value } => format!("S[{}]", enc_str(value)),
-        JsonValueDiff::Array { diff } => format!("A[{}]", enc_array_diff(diff)),
-        JsonValueDiff::Object { diff } => format!("O[{}]", enc_object_diff(diff)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_value_diff(s: &str) -> Result<JsonValueDiff, String> {
-    let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    match tag {
-        "R" => Ok(JsonValueDiff::Replace { value: dec_json_value(inner)? }),
-        "B" => Ok(JsonValueDiff::Bool { value: inner == "1" }),
-        "N" => Ok(JsonValueDiff::Number { lexeme: dec_str(inner)? }),
-        "S" => Ok(JsonValueDiff::String { value: dec_str(inner)? }),
-        "A" => Ok(JsonValueDiff::Array { diff: dec_array_diff(inner)? }),
-        "O" => Ok(JsonValueDiff::Object { diff: dec_object_diff(inner)? }),
-        other => Err(format!("json value diff: unknown tag {other:?}")),
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_array_diff(d: &JsonArrayDiff) -> String {
-    let removed = d.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
-    let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_value_diff(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_json_value(&a.item))).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_array_diff(body: &str) -> Result<JsonArrayDiff, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("array diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("array modified: bad entry {entry:?}"))?;
-            Ok(JsonArrayModified { index: parse_usize(idx)?, diff: dec_value_diff(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("array added: bad entry {entry:?}"))?;
-            Ok(JsonArrayAdded { index: parse_usize(idx)?, item: dec_json_value(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    Ok(JsonArrayDiff { removed, modified, added })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_object_diff(d: &JsonObjectDiff) -> String {
-    let removed = d.removed.iter().map(|k| enc_str(k)).collect::<Vec<_>>().join(",");
-    let modified = d.modified.iter().map(|m| format!("{}:{}", enc_str(&m.key), enc_value_diff(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = d.added.iter().map(|a| format!("{}:{}:{}", a.index, enc_str(&a.key), enc_json_value(&a.item))).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_object_diff(body: &str) -> Result<JsonObjectDiff, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("object diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (key, rest) = entry.split_once(':').ok_or_else(|| format!("object modified: bad entry {entry:?}"))?;
-            Ok(JsonObjectModified { key: dec_str(key)?, diff: dec_value_diff(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("object added: bad entry {entry:?}"))?;
-            let (key, item) = rest.split_once(':').ok_or_else(|| format!("object added: bad entry {entry:?}"))?;
-            Ok(JsonObjectAdded { index: parse_usize(idx)?, key: dec_str(key)?, item: dec_json_value(item)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    Ok(JsonObjectDiff { removed, modified, added })
-}
+
+
+
+
+
+
 
 //#region 🔖️DiffValueBinaryCodecs
-/// 🧪️ P2-P1: real recursive binary twin of [`enc_value_diff`]/[`dec_value_diff`] — same 1-byte tag
-/// numbering scheme as [`enc_json_value_bin`] plus `6`=`Replace` (needs its own arm since `Replace`
-/// wraps a whole [`JsonValue`], not a bare scalar payload). `Array`/`Object` collection triples
-/// encode as three varint-counted, recursively-encoded lists (removed/modified/added) — genuinely
-/// structured binary, backing the upgraded `DiffCodec::encode_diff`/`decode_diff` below.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_value_diff_bin(diff: &JsonValueDiff, out: &mut Vec<u8>) {
-    match diff {
-        JsonValueDiff::Replace { value } => {
-            out.push(6);
-            enc_json_value_bin(value, out);
-        }
-        JsonValueDiff::Bool { value } => {
-            out.push(1);
-            out.push(if *value { 1 } else { 0 });
-        }
-        JsonValueDiff::Number { lexeme } => {
-            out.push(2);
-            write_str_lp(out, lexeme);
-        }
-        JsonValueDiff::String { value } => {
-            out.push(3);
-            write_str_lp(out, value);
-        }
-        JsonValueDiff::Array { diff } => {
-            out.push(4);
-            enc_array_diff_bin(diff, out);
-        }
-        JsonValueDiff::Object { diff } => {
-            out.push(5);
-            enc_object_diff_bin(diff, out);
-        }
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValueDiff, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
-    match tag {
-        6 => Ok(JsonValueDiff::Replace { value: dec_json_value_bin(reader)? }),
-        1 => Ok(JsonValueDiff::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
-        2 => Ok(JsonValueDiff::Number { lexeme: read_str_lp(reader)? }),
-        3 => Ok(JsonValueDiff::String { value: read_str_lp(reader)? }),
-        4 => Ok(JsonValueDiff::Array { diff: dec_array_diff_bin(reader)? }),
-        5 => Ok(JsonValueDiff::Object { diff: dec_object_diff_bin(reader)? }),
-        other => Err(format!("json value diff binary: unknown tag {other}")),
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_array_diff_bin(diff: &JsonArrayDiff, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
-    for index in &diff.removed {
-        store::pack_rt::write_varint_u64(out, *index as u64);
-    }
-    store::pack_rt::write_varint_u64(out, diff.modified.len() as u64);
-    for entry in &diff.modified {
-        store::pack_rt::write_varint_u64(out, entry.index as u64);
-        enc_value_diff_bin(&entry.diff, out);
-    }
-    store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
-    for entry in &diff.added {
-        store::pack_rt::write_varint_u64(out, entry.index as u64);
-        enc_json_value_bin(&entry.item, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonArrayDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut removed = Vec::with_capacity(removed_count as usize);
-    for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
-    }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut modified = Vec::with_capacity(modified_count as usize);
-    for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_value_diff_bin(reader)?;
-        modified.push(JsonArrayModified { index, diff });
-    }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut added = Vec::with_capacity(added_count as usize);
-    for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let item = dec_json_value_bin(reader)?;
-        added.push(JsonArrayAdded { index, item });
-    }
-    Ok(JsonArrayDiff { removed, modified, added })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_object_diff_bin(diff: &JsonObjectDiff, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
-    for key in &diff.removed {
-        write_str_lp(out, key);
-    }
-    store::pack_rt::write_varint_u64(out, diff.modified.len() as u64);
-    for entry in &diff.modified {
-        write_str_lp(out, &entry.key);
-        enc_value_diff_bin(&entry.diff, out);
-    }
-    store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
-    for entry in &diff.added {
-        store::pack_rt::write_varint_u64(out, entry.index as u64);
-        write_str_lp(out, &entry.key);
-        enc_json_value_bin(&entry.item, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_object_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonObjectDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut removed = Vec::with_capacity(removed_count as usize);
-    for _ in 0..removed_count {
-        removed.push(read_str_lp(reader)?);
-    }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut modified = Vec::with_capacity(modified_count as usize);
-    for _ in 0..modified_count {
-        let key = read_str_lp(reader)?;
-        let diff = dec_value_diff_bin(reader)?;
-        modified.push(JsonObjectModified { key, diff });
-    }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut added = Vec::with_capacity(added_count as usize);
-    for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let key = read_str_lp(reader)?;
-        let item = dec_json_value_bin(reader)?;
-        added.push(JsonObjectAdded { index, key, item });
-    }
-    Ok(JsonObjectDiff { removed, modified, added })
-}
+
+
+
+
+
+
 //#endregion 🔖️DiffValueBinaryCodecs
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
-/// 🧭️ Single-field top level (`value=<enc>`, absent = unchanged) — `JsonDiff` has exactly one
-/// diffable field (`schema` is identity-only, never diffed), so there is only ever zero or one
-/// space-separated token, unlike `SvgDiff`'s multi-field line.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_json_diff(d: &JsonDiff) -> String {
-    match &d.value {
-        Some(v) => format!("value={}", enc_value_diff(v)),
-        None => String::new(),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_json_diff(line: &str) -> Result<JsonDiff, String> {
-    let mut d = JsonDiff::default();
-    if line.is_empty() {
-        return Ok(d);
-    }
-    for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("value=") {
-            d.value = Some(dec_value_diff(rest)?);
-        } else {
-            return Err(format!("json diff: unknown token {token:?}"));
-        }
-    }
-    Ok(d)
-}
 
-impl protocol::DiffCodec for JsonDiff {
-    fn print_diff(&self) -> String {
-        print_json_diff(self)
-    }
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_json_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    /// 🧪️ P2-P1: REAL binary frame (`format u8 | has_value u8 | value-diff payload`), matching
-    /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
-    /// upgraded from F6's `print_diff().into_bytes()` text-as-binary shortcut (100% of stdio's
-    /// `DiffCodec` impls were still on that shortcut per the P2-W0 census; this is the first real
-    /// upgrade, per the ticket's own "be the good example" framing).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, if self.value.is_some() { 1 } else { 0 }];
-        if let Some(value) = &self.value {
-            enc_value_diff_bin(value, &mut out);
-        }
-        Ok(out)
-    }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
-        let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
-        let value = if has_value != 0 { Some(dec_value_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff value", offset: reader.position() as u64, detail: e })?) } else { None };
-        Ok(JsonDiff { value })
-    }
-}
+
+
+
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 
@@ -1237,3 +817,37 @@ mod tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::schema::snapshot::JsonValue;
 //#endregion 🔁️Re-exports
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

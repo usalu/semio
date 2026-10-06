@@ -7,7 +7,7 @@
 //! document itself is, and a resize is not a per-frame gesture.
 
 use crate::diff::BitmapDiff;
-use crate::schema::snapshot::{encode_base64, resized_buffer, BitmapSnapshot, BITMAP_MAX_EDGE};
+use crate::schema::snapshot::{resized_buffer, BitmapSnapshot, BITMAP_MAX_EDGE};
 
 pub fn diff(payload: &super::ResizeInput, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
     if payload.width == 0 || payload.height == 0 {
@@ -23,5 +23,5 @@ pub fn diff(payload: &super::ResizeInput, base: &BitmapSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", "The base input pixel buffer does not decode.".to_string(), ["input".to_string()]);
     };
     let resized = resized_buffer(&buffer, base.input.width, base.input.height, payload.width, payload.height);
-    protocol::MutationOutcome::new(BitmapDiff { input_width: Some(payload.width), input_height: Some(payload.height), input_pixels: Some(encode_base64(&resized)), ..Default::default() })
+    protocol::MutationOutcome::new(BitmapDiff { input_width: Some(payload.width), input_height: Some(payload.height), input_pixels: Some(resized.to_vec()), ..Default::default() })
 }

@@ -197,9 +197,7 @@ impl Din4108Mutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-pub fn decode_din4108_mutation_json(text: &str) -> Result<Din4108Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 
 pub fn apply_din4108_mutation(base: &Din4108Snapshot, mutation: &Din4108Mutation) -> Result<(Din4108Snapshot, Vec<String>), String> {
     let raised = <Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::diff(mutation, base);

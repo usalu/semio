@@ -12,17 +12,17 @@
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { canonicalEventLine, canonicalJson, eventChecksum } from "../../📦️packages/🟦️typescript/📡️events.ts";
-import { defineTestAdapter } from "../../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle
 type Envelope = { stream: string; sequence: number; id: string; generation: number; type: string; payload: unknown; checksum: string };
 
-const readGolden = (ctx: { fixtureBytes(uri: string): Uint8Array }): Envelope =>
-  JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://📜️g3-event-log.jsonl")).trimEnd());
+const readGolden = (ctx: { inputBytes(uri: string): Uint8Array }): Envelope =>
+  JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://📜️g3-event-log.jsonl")).trimEnd());
 
-const readSchema = (ctx: { fixtureBytes(uri: string): Uint8Array }): Record<string, unknown> =>
-  Object.fromEntries(Object.entries((JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("schema://repo.server.coordinator/G3EventLogContract"))) as { $defs: { G3EventLogContract: { properties: Record<string, { const: unknown }> } } }).$defs.G3EventLogContract.properties).map(([key, property]) => [key, property.const]));
+const readSchema = (ctx: { inputBytes(uri: string): Uint8Array }): Record<string, unknown> =>
+  Object.fromEntries(Object.entries((JSON.parse(new TextDecoder().decode(ctx.inputBytes("schema://repo.server.coordinator/G3EventLogContract"))) as { $defs: { G3EventLogContract: { properties: Record<string, { const: unknown }> } } }).$defs.G3EventLogContract.properties).map(([key, property]) => [key, property.const]));
 
 /** ♻️ The payload as the store persists it: object keys sorted, no insignificant whitespace. */
 const canonical = (value: unknown): string => {

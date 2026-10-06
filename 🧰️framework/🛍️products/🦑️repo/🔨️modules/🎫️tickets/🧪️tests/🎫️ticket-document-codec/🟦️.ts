@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 📄️Codec
@@ -34,12 +34,12 @@ const VECTORS = "shared://📄️ticket-document-codec/📄️documents.json";
 const SCHEMA = "schema://repo.tickets/TicketDocument";
 
 function vectors(ctx: AdapterContext): { documents: Document[]; refused: string[] } {
-  return JSON.parse(readFileSync(ctx.fixture(VECTORS), "utf8")) as { documents: Document[]; refused: string[] };
+  return JSON.parse(readFileSync(ctx.input(VECTORS), "utf8")) as { documents: Document[]; refused: string[] };
 }
 
 /** 🔮️ Judges one document against `🧬️schema/🔣️.json` with a real draft 2020-12 validator. */
 function validator(ctx: AdapterContext): (value: unknown, source: string) => void {
-  const schema = JSON.parse(readFileSync(ctx.fixture(SCHEMA), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
+  const schema = JSON.parse(readFileSync(ctx.input(SCHEMA), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
   const ajv = new Ajv2020({ strict: false, allErrors: true });
   const compiled = ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/TicketDocument" });
   return (value, source) => {

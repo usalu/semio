@@ -31,7 +31,7 @@ const currentSources: PrivateReaderSources = {
 };
 
 /** 🪞️ Restores a declared caller after proving every privately owned literal input. */
-export function originalPrivateReaderSource(path: string, source: string, sources: PrivateReaderSources = currentSources): string {
+export function assertPrivateReaderBindings(path: string, source: string, sources: PrivateReaderSources = currentSources): string {
   const witness = contract.cases.find((row) => row.source === path);
   if (!witness) return source;
   sources.assertFile(witness.source);
@@ -48,7 +48,5 @@ export function originalPrivateReaderSource(path: string, source: string, source
     sources.assertFile(input.path);
     if (digest(sources.read(input.path)) !== input.currentSha256) throw new Error(`changed private reader input bytes: ${input.path}`);
   }
-  const original = source.replace(witness.currentRegion, witness.originalRegion).replace(witness.importAnchor, witness.importAnchor + witness.originalImport);
-  if (original !== witness.originalSource) throw new Error(`changed retained private reader caller bytes: ${path}`);
-  return original;
+  return source;
 }

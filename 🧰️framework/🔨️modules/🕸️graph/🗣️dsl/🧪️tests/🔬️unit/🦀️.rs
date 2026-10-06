@@ -426,12 +426,12 @@ fn manifest_helpers_merge_graph_and_manifest_kinds() {
 }
 
 #[test]
-fn subgraph_fixture_json_filters_to_requested_ids() {
+fn subgraph_snapshot_json_filters_to_requested_ids() {
     block_on_test(async {
         let graph = BoardQueryableGraph::from_host_snapshot_json(split_endpoint_fixture(), None).unwrap();
         let node_ids = BTreeSet::from(["a".to_string(), "b".to_string()]);
         let edge_ids = BTreeSet::from(["e1".to_string()]);
-        let json = graph.subgraph_fixture_json(&node_ids, &edge_ids).unwrap();
+        let json = graph.subgraph_snapshot_json(&node_ids, &edge_ids).unwrap();
         let value: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&json,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(value["nodes"].as_array().unwrap().len(), 2);
         assert_eq!(value["edges"].as_array().unwrap().len(), 1);
@@ -970,7 +970,7 @@ fn execute_returns_graph_kind_when_returning_bound_entities() {
         let graph = BoardQueryableGraph::from_host_snapshot_json(split_endpoint_fixture(), None).unwrap();
         let result = run_query(&graph, "MATCH (a:computation)--[e:wire]--(b:slider) RETURN a, e, b").unwrap();
         assert_eq!(result.kind, QueryResultKind::Graph);
-        assert!(result.graph_fixture_json.is_some());
+        assert!(result.graph_snapshot_json.is_some());
     });
 }
 

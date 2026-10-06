@@ -1,5 +1,6 @@
 use super::{HomeTransient, HomeTransientRetirementFactory};
-use super::mutations::{home_transient_mutation_report_json, ApplyDirectoryPage, HomeTransientMutation};
+use super::mutations::{ApplyDirectoryPage, HomeTransientMutation};
+use crate::editor::home::transient::component::io::text::mutations::{home_transient_mutation_report_json};
 use protocol::Mutation as _;
 use std::sync::Arc;
 

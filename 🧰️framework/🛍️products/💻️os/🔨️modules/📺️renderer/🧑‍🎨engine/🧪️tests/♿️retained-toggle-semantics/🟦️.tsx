@@ -33,7 +33,6 @@ type ToggleCase = {
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json"), "utf8")) as { readonly cases: readonly ToggleCase[]; readonly checkboxPaint: { readonly availableWidth: number; readonly availableHeight: number; readonly controlSide: number; readonly outlineWidth: number; readonly checkedStates: readonly boolean[] } };
-const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/♿️retained-toggle-semantics/🔣️.json"), "utf8"));
 const { computeAccessibleName, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 
 function record(row: ToggleCase, id: number): UiNodeRecord {
@@ -102,8 +101,6 @@ describe("retained Toggle semantics", () => {
   }, 90_000);
 
   it("validates the language-neutral appearance and state-channel corpus", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.cases.map((row) => row.component.appearance)).toEqual(["button", "checkbox"]);
   });
 

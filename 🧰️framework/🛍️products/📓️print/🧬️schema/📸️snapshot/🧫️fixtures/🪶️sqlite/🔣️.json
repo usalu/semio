@@ -662,5 +662,146 @@
         ]
       }
     }
+  ],
+  "companionCases": {
+    "baseCase": "full-domain",
+    "table": "chart_document",
+    "norm": "ChartSpecification.width is a finite JSON number strictly greater than zero",
+    "baseline": {
+      "width": 120,
+      "width_kind": "uint",
+      "width_exact": "120"
+    },
+    "cases": [
+      {
+        "id": "unchanged-uint",
+        "sql": "UPDATE chart_document SET width=120,width_kind='uint',width_exact='120';",
+        "accept": true,
+        "nativeKind": "UInt",
+        "value": 120
+      },
+      {
+        "id": "real-only-authored-edit",
+        "sql": "UPDATE chart_document SET width=125;",
+        "accept": true,
+        "nativeKind": "Float",
+        "value": 125
+      },
+      {
+        "id": "exact-uint-edit",
+        "sql": "UPDATE chart_document SET width=125,width_kind='uint',width_exact='125';",
+        "accept": true,
+        "nativeKind": "UInt",
+        "value": 125
+      },
+      {
+        "id": "exact-int-edit",
+        "sql": "UPDATE chart_document SET width=125,width_kind='int',width_exact='125';",
+        "accept": true,
+        "nativeKind": "Int",
+        "value": 125
+      },
+      {
+        "id": "unknown-kind",
+        "sql": "UPDATE chart_document SET width_kind='decimal';",
+        "accept": false
+      },
+      {
+        "id": "float-leading-plus",
+        "sql": "UPDATE chart_document SET width_kind='float',width_exact='+1';",
+        "accept": false
+      },
+      {
+        "id": "float-leading-space",
+        "sql": "UPDATE chart_document SET width_kind='float',width_exact=' 1';",
+        "accept": false
+      },
+      {
+        "id": "float-trailing-space",
+        "sql": "UPDATE chart_document SET width_kind='float',width_exact='1 ';",
+        "accept": false
+      },
+      {
+        "id": "float-hex",
+        "sql": "UPDATE chart_document SET width_kind='float',width_exact='0x10';",
+        "accept": false
+      },
+      {
+        "id": "float-leading-zero",
+        "sql": "UPDATE chart_document SET width_kind='float',width_exact='01';",
+        "accept": false
+      },
+      {
+        "id": "int-leading-plus",
+        "sql": "UPDATE chart_document SET width_kind='int',width_exact='+1';",
+        "accept": false
+      },
+      {
+        "id": "int-leading-zero",
+        "sql": "UPDATE chart_document SET width_kind='int',width_exact='01';",
+        "accept": false
+      },
+      {
+        "id": "uint-negative-zero",
+        "sql": "UPDATE chart_document SET width_kind='uint',width_exact='-0';",
+        "accept": false
+      },
+      {
+        "id": "uint-out-of-width",
+        "sql": "UPDATE chart_document SET width_kind='uint',width_exact='18446744073709551616';",
+        "accept": false
+      },
+      {
+        "id": "int-positive-out-of-width",
+        "sql": "UPDATE chart_document SET width_kind='int',width_exact='9223372036854775808';",
+        "accept": false
+      },
+      {
+        "id": "int-negative-out-of-width",
+        "sql": "UPDATE chart_document SET width_kind='int',width_exact='-9223372036854775809';",
+        "accept": false
+      },
+      {
+        "id": "float-infinity",
+        "sql": "UPDATE chart_document SET width_kind='float',width_exact='Infinity';",
+        "accept": false
+      },
+      {
+        "id": "float-nan",
+        "sql": "UPDATE chart_document SET width_kind='float',width_exact='NaN';",
+        "accept": false
+      },
+      {
+        "id": "float-overflow",
+        "sql": "UPDATE chart_document SET width_kind='float',width_exact='1e309';",
+        "accept": false
+      }
+    ],
+    "scientificPreservation": {
+      "status": "requires agreed canonical formatter spelling before a literal SQL companion is pinned",
+      "demand": "Take the producer-emitted finite scientific Float companion unchanged; reconstruct same IEEE word, reproject same canonical companion. Source must preserve its representable number; Native must preserve Float variant and to_bits. Do not use default Display versus JS String as an implicit shared spelling contract."
+    }
+  },
+  "numericWords": [
+    {
+      "id": "negative_zero",
+      "bits": "8000000000000000"
+    },
+    {
+      "id": "minimum_subnormal",
+      "bits": "0000000000000001"
+    },
+    {
+      "id": "minimum_normal",
+      "bits": "0010000000000000"
+    },
+    {
+      "id": "maximum_finite",
+      "bits": "7fefffffffffffff"
+    },
+    {
+      "id": "negative_finite",
+      "bits": "ffefffffffffffff"
+    }
   ]
 }

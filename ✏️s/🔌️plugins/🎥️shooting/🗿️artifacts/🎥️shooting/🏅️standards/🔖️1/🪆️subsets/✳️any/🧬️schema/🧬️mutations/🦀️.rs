@@ -116,45 +116,11 @@ pub fn inverse_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &Shootin
 //#endregion 🔖️Apply
 
 //#region 🔖️CaseBridges
-/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "createAsset", …}`) JSON projection
-/// — the shape the `🎥️mutate-shooting-1` case's `Examples` rows carry, and the shape every committed
-/// per-kind leaf fixture under `<kind>/🧪️tests/*/🦠️mutation/🔣️.json` already is — into a real
-/// [`ShootingMutation`], via this crate's own `dsl::os_pack::json` parser/bridge (no `serde_json`).
-pub fn decode_shooting_mutation_json(text: &str) -> Result<ShootingMutation, String> {
-    let json_value = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let dsl_value = semio_framework_pack_json::to_dsl_value(&json_value);
-    semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
-}
 
-/// 📥️ Decodes a committed snapshot document — the `📸️snapshot/⬅️before/🔣️.json` every leaf
-/// fixture of this vocabulary shares — into a real [`ShootingSnapshot`].
-pub fn decode_shooting_snapshot_json(text: &str) -> Result<ShootingSnapshot, String> {
-    let json_value = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let dsl_value = semio_framework_pack_json::to_dsl_value(&json_value);
-    semio_framework_value::FromValue::from_value(dsl_value).map_err(|error| error.to_string())
-}
 
-/// ⚖️ The SEMANTIC PROJECTION this subset is compared through. It belongs to the subset rather than
-/// to a test adapter, because what counts as this document's meaning is this subset's ruling, not a
-/// case's. Every inline artifact-lane field is present; the composed `emblem` child handle is not,
-/// because it is a content address for an `s.stdio.semio.image` child that no kind of this
-/// vocabulary addresses.
-pub fn encode_shooting_projection_json(snapshot: &ShootingSnapshot) -> String {
-    let assets = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot.assets));
-    let saved_cameras = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot.saved_cameras));
-    let scene = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot.scene));
-    let shots = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&snapshot.shots));
-    semio_framework_pack_json::json!({
-        "schema": snapshot.schema.as_str(),
-        "assets": assets,
-        "savedCameras": saved_cameras,
-        "scene": scene,
-        "shots": shots,
-        "activeShotId": snapshot.active_shot_id.as_str(),
-        "activeAssetId": snapshot.active_asset_id.as_str()
-    })
-    .to_string()
-}
+
+
+
 //#endregion 🔖️CaseBridges
 
 //#region 🧪️Tests

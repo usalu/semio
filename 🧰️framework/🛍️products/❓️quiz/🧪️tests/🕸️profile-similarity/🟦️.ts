@@ -14,7 +14,7 @@ type Vectors = { readonly tasks: readonly Task[]; readonly vectors: readonly Vec
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** 🗃️ Every committed answer of one vector group — or its absence on a timed sheet task — credited against its task and sheet task. */

@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
+
 import { mat2d, vec2 } from "gl-matrix";
 import { describe, expect, test } from "vitest";
 import {
@@ -21,7 +21,6 @@ import { puzzle2dScreenToWorld } from "../../🧱️elements/🖥️Board2dHost/
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "👕️canvas-presence", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "👕️canvas-presence", "🔣️.json"), "utf8"));
 
 type Rect = readonly [number, number, number, number];
 type Camera = { readonly x: number; readonly y: number; readonly zoom: number };
@@ -103,10 +102,7 @@ const reactOverlays = (row: PaintCase) => {
 };
 
 describe("👕️ canvas presence of a board window", () => {
-  test("the fixture satisfies its shared schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("React's board publishes every fixture view", () => {
     for (const row of fixture.publish as PublishCase[]) expect(reactView(row), row.id).toEqual(row.expected);

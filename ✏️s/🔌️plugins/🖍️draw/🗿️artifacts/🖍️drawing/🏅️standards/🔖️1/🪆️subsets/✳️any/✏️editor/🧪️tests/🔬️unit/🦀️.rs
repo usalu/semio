@@ -53,7 +53,9 @@ pub(crate) mod context {
 }
 
 use super::*;
-use crate::schema::{default_drawing_document, layer_id, semio_drawing_example_json};
+use crate::schema::{layer_id};
+use crate::standards::v1::subsets::any::io::text::snapshot::{default_drawing_document};
+use crate::standards::v1::subsets::any::io::text::snapshot::{semio_drawing_example_json};
 use crate::DrawingLayerNode;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{artifact_app_laws as artifact_laws, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
@@ -68,13 +70,17 @@ fn canvas_scene(tree: semio_framework_plugin::ComponentTree) -> semio_framework_
     decoded.expect("typed canvas")
 }
 
-async fn rendered_drawing_canvas(app:&mut DrawingApp,fixture:Option<&str>,view:&ViewModel)->Result<semio_framework_plugin::ComponentTree,semio_framework_plugin::Fault>{
+async fn settle_drawing_geometry(app:&mut DrawingApp,view:Option<&ViewModel>){
     use semio_framework_plugin::reactor::jobs::{start_job,step_job,cancel_job,JobBudget,JobStep};
-    for effect in app.pending_effects(Some(view)).await{match effect{
+    for effect in app.pending_effects(view).await{match effect{
         Effect::CancelJob{job}=>cancel_job(job).await,
         Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{start_job(job,&kind,&input).await;let mut complete=false;for _ in 0..100000{match step_job(job,JobBudget{fuel:65536,deadline_ms:8}).await{JobStep::Running(_)=>{},JobStep::Done(_)=>{complete=true;break;},JobStep::Failed(error)=>panic!("registered Drawing geometry failed: {}",String::from_utf8_lossy(&error))}}assert!(complete,"registered Drawing geometry must settle before its canvas witness");eprintln!("[DEBUG] Actual Drawing app pending effects drove registered reactor geometry job {job} to complete before canvas inspection");},
         _=>{},
     }}
+}
+
+async fn rendered_drawing_canvas(app:&mut DrawingApp,fixture:Option<&str>,view:&ViewModel)->Result<semio_framework_plugin::ComponentTree,semio_framework_plugin::Fault>{
+    settle_drawing_geometry(app,Some(view)).await;
     app.render(DRAWING_PLAY_BODY_COMPOSITE,fixture,view).await
 }
 
@@ -95,7 +101,7 @@ fn drawing_envelope_wire() -> Vec<u8> {
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let mutation = DrawingMutation::RenameLayer(crate::mutations::RenameLayer { layer_id: retained_target.clone(), new_name: "Retained Path".into() });
-    let mutation_hex = crate::spr::encode_op(&mutation).expect("Drawing fixture mutation pack").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let mutation_hex = crate::standards::v1::subsets::any::io::binary::mutations::encode_op(&mutation).expect("Drawing fixture mutation pack").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": DRAWING_DOCUMENT_SCHEMA,
         "id": "drawing-retained-load",
@@ -580,6 +586,7 @@ async fn inline_selection_app() -> (DrawingAppFixture, semio_framework_plugin::A
 /// 🔁️ One dispatch settled the way the plugin host settles it; the receipt's `effects` are exactly
 /// what the host would have been handed.
 async fn settled(app: &mut DrawingApp, command: DrawingCommand, meta: &semio_framework_plugin::ActionMeta) -> (semio_framework_plugin::InvocationResult, artifact_laws::TypedOperationFixtureReceipt) {
+    settle_drawing_geometry(app,meta.view_state.as_ref()).await;
     let command_id = command.command_id();
     let result = app.dispatch_typed(command, meta).await.unwrap_or_else(|fault| panic!("dispatch {command_id}: {fault:?}"));
     let receipt = artifact_laws::settle_registered_typed_operation(app, meta.instance_id).await.unwrap_or_else(|fault| panic!("retained publication of {command_id} settles: {fault:?}"));
@@ -616,7 +623,8 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
     for cancelled in [true, false] {
         let (mut app, mut meta) = inline_selection_app().await;
         meta.view_state.as_mut().unwrap().active_utility_id = Some("selectDirect".into());
-        let layer = crate::schema::create_drawing_shape_layer_rect("Drag target");
+        let mut layer = crate::schema::create_drawing_shape_layer_rect("Drag target");
+        crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});
         let id = layer_id(&layer).to_string();
         let snapshot = DrawingSnapshot { id: "direct-drag".into(), layers: vec![layer], ..Default::default() };
         load_drawing_fixture(&mut app, &snapshot);
@@ -653,14 +661,14 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
             assert_one_artifact_publication(&fresh);
             let after = app.snapshot().unwrap();
             let transform = &crate::schema::layer_base(&after.layers[0]).transform;
-            assert_eq!((transform.x, transform.y), (30.0, 20.0));
+            assert!((transform.x-30.0).abs()<1e-10&&(transform.y-20.0).abs()<1e-10);
         } else {
             assert_one_artifact_publication(&released);
             assert_eq!(law["freshGestureResult"], "one-artifact-publication");
             let after = app.snapshot().unwrap();
             let transform = &crate::schema::layer_base(&after.layers[0]).transform;
-            assert_eq!(transform.x, 30.0);
-            assert_eq!(transform.y, 20.0);
+            assert!((transform.x-30.0).abs()<1e-10);
+            assert!((transform.y-20.0).abs()<1e-10);
         }
     }
 }
@@ -976,6 +984,59 @@ async fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
     assert!(!scene.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "app action stays canonical instead of being copied into the canvas window");
 }
 
+/// 🧰️ Owned guest decoding agrees with independent serde on nullable addressed arms.
+#[test]
+fn initial_utility_maps_preserve_clears_in_owned_and_serde_guest_contexts() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧫️fixtures/🔣️.json"))).unwrap();
+    for locale in ["en", "de"] {
+        for row in fixture["cases"].as_array().unwrap() {
+            let input = serde_json::json!({"locale":locale,"terminology":"native","activeUtilityByWindowId":row["activeUtilityByWindowId"]});
+            let owned = semio_framework_pack_json::from_json_str::<semio_framework::ViewModel>(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject);
+            let oracle = serde_json::from_value::<semio_framework::ViewModel>(input);
+            assert!(owned.is_ok(), "{}: {:?}", row["id"], owned.err());
+            assert!(oracle.is_ok(), "{}: {:?}", row["id"], oracle.err());
+            let owned = owned.unwrap();
+            assert_eq!(owned, oracle.unwrap());
+            assert_eq!(serde_json::to_value(&owned.active_utility_by_window_id).unwrap(), row["activeUtilityByWindowId"]);
+        }
+    }
+    eprintln!("[DEBUG] Owned and independent serde guest decoders preserve twelve addressed utility maps in both explicit locales");
+}
+
+/// 🌅️ The window declares its actual initial arm without inferring the first utility reference.
+#[test]
+fn initial_window_utility_decisions_follow_the_neutral_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧫️fixtures/🔣️.json"))).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let utilities: Vec<semio_framework::UtilityRef> = serde_json::from_value(row["utilityIds"].clone()).unwrap();
+        let initial: Option<semio_framework::UtilityRef> = serde_json::from_value(row["initialUtilityId"].clone()).unwrap();
+        let current = serde_json::from_value(row["activeUtilityByWindowId"].clone()).unwrap();
+        let input = semio_framework::InitialWindowUtilityInput {
+            window_id: row["windowId"].as_str().unwrap(),
+            utility_ids: &utilities,
+            initial_utility_id: initial.as_ref(),
+            active_utility_by_window_id: &current,
+            active_tool_id: row["activeToolId"].as_str(),
+        };
+        let actual = semio_framework::resolve_initial_window_utility(input).unwrap();
+        assert_eq!(serde_json::json!({"write":actual.write,"utilityId":actual.utility_id}), row["expected"], "{}", row["id"]);
+    }
+    eprintln!("[DEBUG] Native initial utility decisions match all twelve neutral outputs including clears and scoped windows");
+}
+
+/// 🌄️ The actual producer declares an accepted arm independently of toolbar ordering.
+#[semio_framework_async_macros::async_test]
+async fn initial_canvas_utility_is_explicit_in_the_manifest() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧫️fixtures/🔣️.json"))).unwrap();
+    let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "fresh-draw-does-not-infer-first-reference").unwrap();
+    let definition = create_drawing_app();
+    let canvas = definition.window_kinds.iter().find(|window| window.id == DRAWING_PLAY_WINDOW_CANVAS).unwrap();
+    assert_ne!(canvas.utilities[0].as_str(), row["initialUtilityId"].as_str().unwrap());
+    assert_eq!(serde_json::to_value(canvas).unwrap()["initialUtilityId"], row["initialUtilityId"]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(canvas)).unwrap(), serde_json::to_value(canvas).unwrap());
+    eprintln!("[DEBUG] Actual Draw canvas declares selectDirect initially despite marquee being first in the utility references");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn strokes_interaction_domain_enumerates_document_layers_on_the_canvas_window() {
     let definition = create_drawing_app();
@@ -985,6 +1046,80 @@ async fn strokes_interaction_domain_enumerates_document_layers_on_the_canvas_win
     let canvas_window = definition.window_kinds.iter().find(|window| window.id == DRAWING_PLAY_WINDOW_CANVAS).expect("canvas window");
     assert!(canvas_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == DRAWING_INTERACTION_DOMAIN));
 }
+
+/// 🧰️ Armed tools preserve palette actions; genuine operation authority owns mutation exclusion.
+#[semio_framework_async_macros::async_test]
+async fn armed_canvas_utilities_keep_declared_document_actions_available() {
+    let policy: serde_json::Value = serde_json::from_str(include_str!("../../🪛️utilities/🎬️actions/🧫️fixtures/🔣️.json")).unwrap();
+    let definition = create_drawing_app();
+    let canvas = definition.window_kinds.iter().find(|window| window.id == policy["windowKind"].as_str().unwrap()).unwrap();
+    let actions = semio_framework::window_kind_actions(&definition, canvas);
+    for id in policy["actions"].as_array().unwrap() {
+        assert!(actions.iter().any(|action| action.id == id.as_str().unwrap() && action.in_palette));
+    }
+    let actual: Vec<_> = definition.utilities.iter().map(|utility| serde_json::json!({"id": utility.id, "allowsActionsWhileActive": utility.allows_actions_while_active})).collect();
+    assert_eq!(serde_json::Value::Array(actual), policy["utilities"]);
+    eprintln!("[DEBUG] Native Draw declares all twelve armed utility action policies and five palette commands");
+}
+
+
+/// 🛑️ Document publication retires armed-tool previews before a stale pointer release.
+#[semio_framework_async_macros::async_test]
+async fn armed_canvas_utilities_retire_gestures_after_document_actions() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪛️utilities/🎬️actions/🧫️fixtures/🛑️interruption/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let utility = row["utility"].as_str().unwrap();
+        let (mut app, mut meta) = inline_selection_app().await;
+        meta.view_state.as_mut().unwrap().active_utility_id = Some(utility.into());
+        let mut layer = crate::schema::create_drawing_shape_layer_rect("Source");
+        crate::schema::layer_base_mut(&mut layer).id = "source".into();
+        crate::schema::layer_base_mut(&mut layer).attributes.fill = Some(crate::FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] });
+        let before = DrawingSnapshot { id: "action-interruption".into(), layers: vec![layer], ..Default::default() };
+        load_drawing_fixture(&mut app, &before);
+        settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
+        let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": "source" })]).unwrap();
+        let admission = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admission).await.unwrap();
+        let press = &row["press"];
+        let movement = &row["move"];
+        settled(&mut app, DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: press[0].as_f64().unwrap(), y: press[1].as_f64().unwrap(), width: 800.0, height: 600.0, ..Default::default() }), &meta).await;
+        settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: movement[0].as_f64().unwrap(), y: movement[1].as_f64().unwrap(), width: 800.0, height: 600.0, shift: false, alt: false, samples: vec![] }), &meta).await;
+        assert_eq!(app.snapshot().unwrap(), before, "{utility}: live gesture has no document edit");
+        assert_eq!(app.history_snapshot().await.unwrap().edit_count, 0, "{utility}: live preview publishes no document edit");
+        let scene = canvas_scene(rendered_drawing_canvas(&mut app, None, meta.view_state.as_ref().unwrap()).await.unwrap());
+        let records: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).unwrap();
+        if row["preview"] == "transform" {
+            assert_eq!(records.iter().find(|record| record["id"] == "source").unwrap()["transform"], serde_json::json!([1.0, 0.0, 0.0, 1.0, 30.0, 20.0]));
+        } else {
+            assert!(records.iter().any(|record| record["id"] == row["preview"]), "{utility}: actual live preview is present");
+        }
+        let (_, publication) = settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: fixture["layerKind"].as_str().unwrap().into() }), &meta).await;
+        assert_one_artifact_publication(&publication);
+        let after = app.snapshot().unwrap();
+        assert_eq!(after.layers.len(), 2);
+        let scene = canvas_scene(rendered_drawing_canvas(&mut app, None, meta.view_state.as_ref().unwrap()).await.unwrap());
+        let records: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).unwrap();
+        assert!(!records.iter().any(|record| record["id"] == "overlay:preview" || record["id"] == "overlay:marquee"), "{utility}: stale overlay is retired");
+        assert_eq!(records.iter().find(|record| record["id"] == "source").unwrap()["transform"], serde_json::json!([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]));
+        settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: movement[0].as_f64().unwrap(), y: movement[1].as_f64().unwrap(), width: 800.0, height: 600.0, shift: false, alt: false, ctrl: false, meta: false, cancelled: false }), &meta).await;
+        assert_eq!(app.snapshot().unwrap(), after, "{utility}: stale release cannot publish old geometry");
+        let history = app.history_snapshot().await.unwrap();
+        assert_eq!(history.edit_count, 1, "{utility}: only the palette action publishes a document edit");
+        let edits: Vec<_> = history.upserts.iter().filter(|row| row.edit_id.is_some()).collect();
+        assert_eq!(edits.len(), 1, "{utility}: one document edit row among the session commands: {:?}", history.upserts);
+        assert_eq!(edits[0].op_count, 1);
+        assert_eq!(edits[0].op_lines.len(), 1);
+        assert!(edits[0].op_lines[0].starts_with("create-layer"));
+        artifact_laws::settle_history_verb(&mut *app, "undo", meta.instance_id).await;
+        assert_eq!(app.snapshot().unwrap(), before);
+        artifact_laws::settle_history_verb(&mut *app, "redo", meta.instance_id).await;
+        assert_eq!(app.snapshot().unwrap(), after);
+        artifact_laws::close_registered_fixture_app(&mut *app);
+        assert!(app.close_terminal_is_empty(), "{utility}: interrupted gesture and document owners retire completely");
+    }
+    eprintln!("[DEBUG] Eight actual Draw gesture previews retire on document publication and stale release preserves one undoable palette edit");
+}
+
 
 #[semio_framework_async_macros::async_test]
 async fn canvas_pointer_up_direct_pick_selects_inline() {
@@ -1043,6 +1178,41 @@ async fn drawing_labels_translate_panels_in_german() {
     let catalogue_json = artifact_laws::project_and_retire_fixture_tree(catalogue_node).expect("retire catalogue tree");
     assert!(catalogue_json.contains("\"Ellipse\""));
     assert!(catalogue_json.contains("Nachzeichnung"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn drawing_window_status_tracks_live_selection_in_both_explicit_locales() {
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧮️status/🧫️fixtures/🔣️.json")).unwrap();
+    let mut witnesses=0;
+    for locale in [semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Locale::De] {
+        let language=if locale==semio_framework_ui_locale::Locale::En {"en"} else {"de"};
+        let labels=law["labels"].as_array().unwrap().iter().find(|row|row["locale"]==language).unwrap();
+        for terminology in [semio_framework_ui_locale::Terminology::Native,semio_framework_ui_locale::Terminology::Reuse] {
+            for row in law["cases"].as_array().unwrap() {
+                let (mut app,mut meta)=inline_selection_app().await;
+                let view=meta.view_state.as_mut().unwrap();view.locale=locale;view.terminology=terminology;
+                let layers=(0..row["layers"].as_u64().unwrap()).map(|index|{let mut layer=crate::schema::create_drawing_shape_layer_rect("Status");crate::schema::layer_base_mut(&mut layer).id=format!("layer-{index}");layer}).collect::<Vec<_>>();
+                let snapshot=DrawingSnapshot{id:"selection-status".into(),layers,..Default::default()};load_drawing_fixture(&mut app,&snapshot);
+                for (step,selection) in row["selections"].as_array().unwrap().iter().enumerate() {
+                    let targets=selection.as_array().unwrap().iter().map(|index|serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":format!("layer-{}",index.as_u64().unwrap())})).collect::<Vec<_>>();
+                    let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":serde_json::to_string(&targets).unwrap(),"merge":"replace","method":"pick"}));
+                    let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&args),&meta).await.unwrap();
+                    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+                    assert_eq!(selected_strokes(&app).await.len(),selection.as_array().unwrap().len());
+                    let engagements=app.window_engagements(meta.view_state.as_ref().unwrap()).await;
+                    let engagement=engagements.get("drawing-canvas").expect("addressed canvas chrome");
+                    assert_eq!(engagement.status.as_ref().unwrap()[0].text,row["expected"][language][step].as_str().unwrap(),"{}:{language}:{step}",row["id"]);
+                    assert_eq!(engagement.input.as_ref().unwrap().placeholder.as_deref(),labels["layerName"].as_str());
+                    assert_eq!(app.snapshot().unwrap(),snapshot);
+                    witnesses+=1;
+                }
+                let unaddressed=ViewModel::new(locale,terminology);
+                assert!(app.window_engagements(&unaddressed).await.is_empty());
+                artifact_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());
+            }
+        }
+    }
+    eprintln!("[DEBUG] Registered Draw window chrome matched {witnesses} bilingual selection-status transitions without document edits");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1235,7 +1405,7 @@ fn every_command() -> Vec<DrawingCommand> {
     vec![
         DrawingCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: default_drawing_document("cmd-doc", None) }),
         DrawingCommand::CommitDocument(commit_document::CommitDocument { snapshot: default_drawing_document("cmd-doc-2", None) }),
-        DrawingCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
+        DrawingCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "{}".into() }),
         DrawingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
         DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.5 }),
         DrawingCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("Renamed \"layer\"".into()) }),
@@ -1325,7 +1495,7 @@ async fn every_command_row_prints_starting_with_its_wire_keyword() {
     let expected_keywords = [
         "set-snapshot",
         "commit-document",
-        "fixture-json",
+        "document-json",
         "active-example",
         "selected-opacity",
         "engagement-submit",
@@ -1522,6 +1692,11 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     while !producer.advance(4096).unwrap().done{}
     let plan=producer.result().unwrap();
     drop(producer);
+    let mut paint=crate::schema::scene_paint::scene::ScenePaintJob::new(plan,0.001,geometry_session::paint_limits());
+    while !paint.advance(4096).unwrap().done{}
+    let(mut close,prepared)=paint.into_retirement();
+    while !close.advance(4096).unwrap().done{}
+    let plan=prepared.unwrap();
     let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,80.0,70.0]);
     document.artboard = Some(crate::schema::DrawingArtboard { width: 1024.0,height: 1024.0 });
@@ -1532,6 +1707,8 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert!(scene.framing.is_none());
     assert_eq!((scene.camera_x,scene.camera_y,scene.zoom),(777.0,-333.0,2.0));
+    let mut close=crate::schema::scene_paint::scene::PreparedSceneCloseJob::new(plan);
+    while !close.advance(4096).unwrap().done{}
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1599,7 +1776,12 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
             let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,meta.view_state.as_ref().unwrap()).await.unwrap());
             let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
             assert_eq!(records.iter().filter(|row|row["id"].as_str().is_some_and(|id|id.starts_with("overlay:transform-handle:"))).count(),9);
-            let bounds=canvas_pointer_down::selected_transform_bounds(&before,&["child".into()]).unwrap();
+            let mut producer=crate::schema::scene_preparation::DocumentVectorJob::new(&before,crate::editor::drawing::geometry_session::limits(),crate::editor::drawing::geometry_session::algorithms()).unwrap();
+            while !producer.advance(4096).unwrap().done{}let(mut cleanup,plan)=producer.into_retirement();while !cleanup.advance(4096).unwrap().done{}
+            let mut producer=crate::schema::scene_paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,crate::schema::scene_paint::scene::PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000});
+            while !producer.advance(4096).unwrap().done{}let(mut cleanup,prepared)=producer.into_retirement();while !cleanup.advance(4096).unwrap().done{}let prepared=prepared.unwrap();
+            let [x,y,r,b]=crate::schema::scene_paint::scene::query::prepared_selection_bounds(&prepared,&["child".into()]).unwrap().unwrap();let bounds=[x,y,r-x,b-y];
+            let mut cleanup=crate::schema::scene_paint::scene::PreparedSceneCloseJob::new(prepared);while !cleanup.advance(4096).unwrap().done{}
             let start=crate::schema::geometry::handles::handle_points(bounds,1.0)[handle];
             let center=[bounds[0]+bounds[2]*0.5,bounds[1]+bounds[3]*0.5];
             let end=if handle==8 {[center[0]-(start[1]-center[1]),center[1]+start[0]-center[0]]} else {[start[0]+30.0,start[1]+20.0]};
@@ -1956,3 +2138,18 @@ async fn node_marquee_preserves_layers_and_supports_merge_and_cancellation() {
 
 #[semio_framework_async_macros::async_test]
 async fn mounted_vector_editor_closes_its_registered_read_without_a_live_maintenance_tick(){let mut app=drawing_app().await;let layer=crate::schema::create_drawing_shape_layer_rect("Registered geometry");let snapshot=DrawingSnapshot{id:"mounted-read-close".into(),layers:vec![layer],..Default::default()};load_drawing_fixture(&mut app,&snapshot);let view=ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,&view).await.unwrap());let records:serde_json::Value=serde_json::from_str(&scene.layers_json).unwrap();assert!(records.as_array().unwrap().iter().any(|record|record["id"]==layer_id(&snapshot.layers[0])));semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Actual registered Drawing app returned and acknowledged its mounted source read and closed without relying on a live maintenance tick");}
+
+#[semio_framework_async_macros::async_test]
+async fn registered_pointer_yields_while_real_scene_job_is_pending_and_then_selects_once(){
+    use semio_framework_plugin::reactor::jobs::{start_job,step_job,cancel_job,JobBudget,JobStep};
+    let(mut app,mut meta)=inline_selection_app().await;meta.view_state.as_mut().unwrap().active_utility_id=Some("selectDirect".into());
+    let mut layer=crate::schema::create_drawing_shape_layer_rect("Pending paint");crate::schema::layer_base_mut(&mut layer).attributes.fill=Some(crate::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});let selected=layer_id(&layer).to_string();
+    let before=DrawingSnapshot{id:"pending-pointer".into(),layers:vec![layer],..Default::default()};load_drawing_fixture(&mut app,&before);
+    let mut geometry=None;for effect in app.pending_effects(meta.view_state.as_ref()).await{match effect{Effect::CancelJob{job}=>cancel_job(job).await,Effect::SpawnJob{job,kind,input,..}if kind=="semio.draw.mounted-vector"=>{assert!(geometry.replace(job).is_none());start_job(job,&kind,&input).await;},_=>{}}}let geometry=geometry.unwrap();
+    assert!(matches!(step_job(geometry,JobBudget{fuel:1,deadline_ms:8}).await,JobStep::Running(_)));
+    app.dispatch_typed(DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown{x:400.0,y:300.0,width:800.0,height:600.0,..Default::default()}),&meta).await.unwrap();
+    for _ in 0..8{app.maintenance_step(1,4096).unwrap();app.advance_typed_operation_publication().await.unwrap();assert!(app.has_pending_typed_operations());assert!(app.take_typed_operation_result_page(meta.instance_id).is_none());assert!(app.take_typed_operation_completion().await.unwrap().is_none());assert!(app.interaction_state().await.selection.get(DRAWING_INTERACTION_DOMAIN).is_none_or(|selection|selection.ids.is_empty()));assert_eq!(app.snapshot().unwrap(),before);}
+    let(mut units,mut done)=(0,false);for _ in 0..1000000{units+=1;match step_job(geometry,JobBudget{fuel:1,deadline_ms:8}).await{JobStep::Running(_)=>{if units%32==0{app.advance_typed_operation_publication().await.unwrap();}},JobStep::Done(_)=>{done=true;break;},JobStep::Failed(error)=>panic!("{}",String::from_utf8_lossy(&error))}}assert!(done&&units>1);
+    let receipt=artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id).await.unwrap();assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));assert_eq!(receipt.completions,1);assert_eq!(app.interaction_state().await.selection[DRAWING_INTERACTION_DOMAIN].ids.clone(),vec![selected]);assert_eq!(app.snapshot().unwrap(),before);
+    settled(&mut app,DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape{}),&meta).await;artifact_laws::close_registered_fixture_app(&mut *app);assert!(app.close_terminal_is_empty());eprintln!("[DEBUG] Registered InteractiveJob pointer yielded eight pending turns beside {units} genuine fuel-one geometry units, selected once after complete cache publication and closed source/gesture owners");
+}

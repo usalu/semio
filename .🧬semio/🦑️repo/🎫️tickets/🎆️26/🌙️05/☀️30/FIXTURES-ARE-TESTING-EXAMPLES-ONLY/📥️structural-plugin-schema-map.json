@@ -1,0 +1,4159 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/⚙️engine/🏗️construction/🧬️schema/🧱️linear-prism/🔣️.json",
+    "schema": {
+      "type": "object",
+      "required": [
+        "schema",
+        "cases",
+        "refusals"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "s.cad.linear-prism/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "pointA",
+              "pointB",
+              "thickness",
+              "height",
+              "volume"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "pointA": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "pointB": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "thickness": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "volume": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        },
+        "refusals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "pointA",
+              "pointB",
+              "thickness",
+              "height"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "pointA": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "pointB": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "thickness": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧱️block/🗂️catalog/🧬️schema/🧭️roles/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "owner",
+              "role",
+              "accepted"
+            ],
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1
+              },
+              "role": {
+                "enum": [
+                  "plugin",
+                  "library"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🧬️schema/📦️assembly/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.authored-assembly/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "selected",
+              "remove",
+              "accepted",
+              "remaining"
+            ],
+            "properties": {
+              "selected": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "remove": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "remaining": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "id": {
+                "type": "string"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧬️schema/🪜️definition-hierarchy/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "owner",
+        "cases",
+        "runtimeCases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.definition-hierarchy/v1"
+        },
+        "owner": {
+          "const": "s.stdio.ifc"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "identity",
+              "category",
+              "accepted"
+            ],
+            "properties": {
+              "identity": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "runtimeCases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "standards",
+              "identity",
+              "category",
+              "accepted"
+            ],
+            "properties": {
+              "standards": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^s\\.stdio\\.[a-z]+\\.standard\\.[a-z0-9-]+$"
+                }
+              },
+              "identity": {
+                "type": "string"
+              },
+              "category": {
+                "enum": [
+                  "codec",
+                  "representation"
+                ]
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧩️composition/🔗️conversions/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "semio.stdio.semio.conversion-definition-selection/v1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.semio.conversion-definition-selection/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "packages",
+              "exports",
+              "accepted",
+              "dependencies"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "packages": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "exports": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "package",
+                    "identity"
+                  ],
+                  "properties": {
+                    "package": {
+                      "type": "string"
+                    },
+                    "identity": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "dependencies": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🔣️net-leaves/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/html/5/any/net-leaves/schema.json",
+      "title": "HtmlNetLeavesFixture",
+      "description": "Language-neutral corpus of the net node leaves one explicit Apply of the HTML window means.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "note",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.html.net-leaves.v1"
+        },
+        "note": {
+          "type": "string"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "before",
+              "after",
+              "leaves"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "before": {
+                "type": "string"
+              },
+              "after": {
+                "type": "string"
+              },
+              "leaves": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "at"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "set-snapshot",
+                        "set-doctype",
+                        "insert-node",
+                        "remove-node",
+                        "set-element-name",
+                        "set-attribute",
+                        "set-text",
+                        "set-comment",
+                        "set-raw-text"
+                      ]
+                    },
+                    "at": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🔣️net-leaves/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/md/commonmark/any/net-leaves/schema.json",
+      "title": "MdNetLeavesFixture",
+      "description": "Language-neutral corpus of the net block leaves one explicit Apply of the markdown window means.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "note",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.md.net-leaves.v1"
+        },
+        "note": {
+          "type": "string"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "before",
+              "after",
+              "leaves"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "before": {
+                "type": "string"
+              },
+              "after": {
+                "type": "string"
+              },
+              "leaves": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "path",
+                    "index"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "set-snapshot",
+                        "insert-block",
+                        "remove-block",
+                        "replace-block",
+                        "set-inlines"
+                      ]
+                    },
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^(quote:[0-9]+|item:[0-9]+:[0-9]+)$"
+                      }
+                    },
+                    "index": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧬️schema/🪶️sqlite/🚦️cohort/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "dialect",
+        "literalSchemas",
+        "domainRows",
+        "tableRowCounts",
+        "float32Words",
+        "float64Words",
+        "largeAscii",
+        "largePixels",
+        "sqliteSignature",
+        "externalRaster",
+        "laws",
+        "controlAudit",
+        "constructionAudit",
+        "allocationBridge"
+      ],
+      "properties": {
+        "format": {
+          "const": "tiff-6.0-owned-snapshot-sqlite"
+        },
+        "dialect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "artifactKind": {
+              "const": "s.stdio.tiff"
+            },
+            "standard": {
+              "const": "6.0"
+            },
+            "subset": {
+              "const": "*"
+            }
+          }
+        },
+        "literalSchemas": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "domainRows": {
+          "const": 52
+        },
+        "tableRowCounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tiff_document",
+            "tiff_ifd",
+            "tiff_tag",
+            "tiff_byte_value",
+            "tiff_ascii_value",
+            "tiff_short_value",
+            "tiff_long_value",
+            "tiff_rational_value",
+            "tiff_signed_byte_value",
+            "tiff_undefined_value",
+            "tiff_signed_short_value",
+            "tiff_signed_long_value",
+            "tiff_signed_rational_value",
+            "tiff_float_value",
+            "tiff_double_value",
+            "tiff_document_pixels",
+            "tiff_ifd_pixels"
+          ],
+          "properties": {
+            "tiff_document": {
+              "const": 1
+            },
+            "tiff_ifd": {
+              "const": 2
+            },
+            "tiff_tag": {
+              "const": 13
+            },
+            "tiff_byte_value": {
+              "const": 2
+            },
+            "tiff_ascii_value": {
+              "const": 1
+            },
+            "tiff_short_value": {
+              "const": 2
+            },
+            "tiff_long_value": {
+              "const": 2
+            },
+            "tiff_rational_value": {
+              "const": 2
+            },
+            "tiff_signed_byte_value": {
+              "const": 2
+            },
+            "tiff_undefined_value": {
+              "const": 2
+            },
+            "tiff_signed_short_value": {
+              "const": 2
+            },
+            "tiff_signed_long_value": {
+              "const": 2
+            },
+            "tiff_signed_rational_value": {
+              "const": 2
+            },
+            "tiff_float_value": {
+              "const": 7
+            },
+            "tiff_double_value": {
+              "const": 7
+            },
+            "tiff_document_pixels": {
+              "const": 1
+            },
+            "tiff_ifd_pixels": {
+              "const": 2
+            }
+          }
+        },
+        "float32Words": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}$"
+          }
+        },
+        "float64Words": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          }
+        },
+        "largeAscii": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unit",
+            "repeat"
+          ],
+          "properties": {
+            "unit": {
+              "const": "文🌠"
+            },
+            "repeat": {
+              "const": 20000
+            }
+          }
+        },
+        "largePixels": {
+          "const": 100000
+        },
+        "sqliteSignature": {
+          "const": "53514c69746520666f726d6174203300"
+        },
+        "externalRaster": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "width",
+            "height",
+            "rgba",
+            "byteOrders",
+            "envelopeId",
+            "wireHex"
+          ],
+          "properties": {
+            "width": {
+              "const": 1
+            },
+            "height": {
+              "const": 1
+            },
+            "rgba": {
+              "const": [
+                1,
+                2,
+                3,
+                255
+              ]
+            },
+            "byteOrders": {
+              "const": [
+                "littleEndian",
+                "bigEndian"
+              ]
+            },
+            "envelopeId": {
+              "const": "stdio.tiff"
+            },
+            "wireHex": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{262}$"
+              }
+            }
+          }
+        },
+        "laws": {
+          "const": [
+            "semantic-file",
+            "exact-domain-row-bound",
+            "native-input-owner",
+            "native-input-controls",
+            "native-output-owner",
+            "native-output-controls"
+          ]
+        },
+        "controlAudit": {
+          "const": {
+            "reverseTags": 1024,
+            "firstMetadataTag": 40000,
+            "duplicateCount": 2,
+            "sortWorkFactor": 8,
+            "secondaryPixels": [
+              21,
+              22,
+              23
+            ],
+            "secondaryLength": 1
+          }
+        },
+        "constructionAudit": {
+          "const": {
+            "schema": "",
+            "byteOrder": "littleEndian",
+            "tag": 40000,
+            "values": [
+              0,
+              1,
+              2,
+              4294967295
+            ],
+            "ifdCount": 1,
+            "tagCount": 1,
+            "valueCount": 4,
+            "domainRows": 9,
+            "retainedPixelBytes": 0,
+            "minimumValueBackingBytes": 16,
+            "refusedBackingBytes": 1
+          }
+        },
+        "allocationBridge": {
+          "const": {
+            "maximumBytes": 16777216,
+            "refusedBytes": 1,
+            "copyBytes": 100000,
+            "cancelAt": 65536,
+            "passes": 2,
+            "textDecodeStages": {
+              "borrowedHexValidation": {
+                "start": 1,
+                "admittedByteCopies": 0
+              },
+              "ownedHexMaterialization": {
+                "start": 2,
+                "admittedByteCopies": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🔣️net-leaves/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/txt/utf-8/any/net-leaves/schema.json",
+      "title": "TxtNetLeavesFixture",
+      "description": "Language-neutral corpus of the net line leaves one explicit Apply of the plain-text window means; `null` is the whole-buffer lowering of an Apply that changes the line ending or the terminator.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "note",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.txt.net-leaves.v1"
+        },
+        "note": {
+          "type": "string"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "before",
+              "after",
+              "leaves"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "before": {
+                "type": "string"
+              },
+              "after": {
+                "type": "string"
+              },
+              "leaves": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "kind",
+                            "index",
+                            "text"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "enum": [
+                                "set-line",
+                                "insert-line"
+                              ]
+                            },
+                            "index": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "text": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "kind",
+                            "index"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "remove-line"
+                            },
+                            "index": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🔣️net-leaves/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/binary/raw/any/net-leaves/schema.json",
+      "title": "BinaryNetLeavesFixture",
+      "description": "Language-neutral corpus of the ONE net byte-range replacement one explicit Apply of the hex window means; `null` when the Apply changes no byte.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "note",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.binary.net-leaves.v1"
+        },
+        "note": {
+          "type": "string"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "before",
+              "after",
+              "leaf"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              },
+              "before": {
+                "type": "string",
+                "pattern": "^([0-9a-f]{2})*$"
+              },
+              "after": {
+                "type": "string",
+                "pattern": "^([0-9a-f]{2})*$"
+              },
+              "leaf": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "offset",
+                      "removeLen",
+                      "insert"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "replace-byte-range"
+                      },
+                      "offset": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "removeLen": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "insert": {
+                        "type": "string",
+                        "pattern": "^([0-9a-f]{2})*$"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧬️schema/🎛️metadata/🔣️.json",
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "cases",
+        "genericWitnesses"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 11,
+          "maxItems": 11,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "factory",
+              "owner",
+              "keyword",
+              "layout",
+              "fields"
+            ],
+            "properties": {
+              "factory": {
+                "enum": [
+                  "dwg_xrecord_value_spec",
+                  "dwg_table_control_entry_spec",
+                  "table_control_body_spec",
+                  "dwg_complex_color_value_spec",
+                  "table_record_body_spec",
+                  "dwg_evaluation_variant_spec",
+                  "dwg_evaluation_expression_value_spec",
+                  "dwg_visual_style_property_spec",
+                  "dwg_constraint_node_spec",
+                  "dwg_entity_body_spec",
+                  "dwg_logical_object_body_spec"
+                ]
+              },
+              "owner": {
+                "enum": [
+                  "DwgXRecordValue",
+                  "DwgTableControlEntry",
+                  "DwgTableControlBody",
+                  "DwgComplexColorValue",
+                  "DwgTableRecordBody",
+                  "DwgEvaluationVariant",
+                  "DwgEvaluationExpressionValue",
+                  "DwgVisualStyleProperty",
+                  "DwgConstraintNode",
+                  "DwgEntityBody",
+                  "DwgLogicalObjectBody"
+                ]
+              },
+              "keyword": {
+                "type": "null"
+              },
+              "layout": {
+                "const": "inline"
+              },
+              "fields": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 44,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "key",
+                    "optional",
+                    "labels"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535
+                    },
+                    "key": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "optional": {
+                      "type": "boolean"
+                    },
+                    "labels": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "label",
+                          "ordinal"
+                        ],
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "ordinal": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "genericWitnesses": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "valueShape"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "u32",
+                  "DwgTableControlEntry"
+                ]
+              },
+              "valueShape": {
+                "enum": [
+                  "UInt",
+                  "Record"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🧬️schema/🏗️grammar/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "semio://stdio/dwg/snapshot/text/empty-record/v1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "record",
+        "cases"
+      ],
+      "properties": {
+        "contract": {
+          "const": "dwg.snapshot.text.empty-record.v1"
+        },
+        "record": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "fieldCount",
+            "fieldKey"
+          ],
+          "properties": {
+            "name": {
+              "const": "DwgPlaceholder"
+            },
+            "fieldCount": {
+              "const": 0
+            },
+            "fieldKey": {
+              "const": "placeholder"
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "text",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🌱️value/🧬️octets/🧬️schema/🛫️cos-output.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "semio.pdf.cos-owned-output/v1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "maximumBytes",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.pdf.cos-owned-output/v1"
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "wire"
+            ],
+            "properties": {
+              "wire": {
+                "$ref": "#/$defs/Cos"
+              }
+            }
+          }
+        }
+      },
+      "$defs": {
+        "Cos": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "null"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "bool"
+                },
+                "value": {
+                  "type": "boolean"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "int"
+                },
+                "value": {
+                  "type": "integer"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "negative",
+                "coefficient",
+                "scale"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "real"
+                },
+                "negative": {
+                  "type": "boolean"
+                },
+                "coefficient": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                },
+                "scale": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "str"
+                },
+                "value": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "name"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "array"
+                },
+                "value": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Cos"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "dict"
+                },
+                "value": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Entry"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "num",
+                "gen"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "ref"
+                },
+                "num": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295
+                },
+                "gen": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "dict",
+                "data",
+                "filters"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "stream"
+                },
+                "dict": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Entry"
+                  }
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                },
+                "filters": {
+                  "type": "array",
+                  "maxItems": 0
+                }
+              }
+            }
+          ]
+        },
+        "Entry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key",
+            "value"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/Cos"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧬️schema/♻️retirement/🔣️.json",
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "owner",
+                  "wire"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "owner": {
+                    "const": "color"
+                  },
+                  "wire": {
+                    "$ref": "#/$defs/color"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "owner",
+                  "wire"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "owner": {
+                    "const": "function"
+                  },
+                  "wire": {
+                    "$ref": "#/$defs/function"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "owner": {
+                    "const": "action"
+                  },
+                  "wire": {
+                    "$ref": "#/$defs/action"
+                  }
+                },
+                "required": [
+                  "id",
+                  "owner",
+                  "wire"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "owner": {
+                    "const": "outline"
+                  },
+                  "wire": {
+                    "$ref": "#/$defs/outline"
+                  }
+                },
+                "required": [
+                  "id",
+                  "owner",
+                  "wire"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "owner": {
+                    "const": "form"
+                  },
+                  "wire": {
+                    "$ref": "#/$defs/form"
+                  }
+                },
+                "required": [
+                  "id",
+                  "owner",
+                  "wire"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "owner": {
+                    "const": "date"
+                  },
+                  "wire": {
+                    "$ref": "#/$defs/date"
+                  }
+                },
+                "required": [
+                  "id",
+                  "owner",
+                  "wire"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$defs": {
+        "color": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "deviceGray",
+                    "deviceRgb"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "base"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "pattern"
+                },
+                "base": {
+                  "$ref": "#/$defs/color"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "name",
+                "alternate",
+                "tintTransform"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "separation"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "alternate": {
+                  "$ref": "#/$defs/color"
+                },
+                "tintTransform": {
+                  "$ref": "#/$defs/function"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "names",
+                "alternate",
+                "tintTransform",
+                "attributes"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "deviceN"
+                },
+                "names": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "alternate": {
+                  "$ref": "#/$defs/color"
+                },
+                "tintTransform": {
+                  "$ref": "#/$defs/function"
+                },
+                "attributes": {
+                  "type": "null"
+                }
+              }
+            }
+          ]
+        },
+        "function": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "domain",
+                "range",
+                "c0",
+                "c1",
+                "n"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "exponential"
+                },
+                "domain": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "range": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "c0": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "c1": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "n": {
+                  "type": "number"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "functions"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "array"
+                },
+                "functions": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/function"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "action": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "const": "uri"
+                    },
+                    "uri": {
+                      "type": "string"
+                    },
+                    "isMap": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "uri",
+                    "isMap"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "const": "named"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "name"
+                  ]
+                }
+              ]
+            },
+            "next": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/action"
+              }
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        "outline": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "italic": {
+              "type": "boolean"
+            },
+            "bold": {
+              "type": "boolean"
+            },
+            "open": {
+              "type": "boolean"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/outline"
+              }
+            }
+          },
+          "required": [
+            "title",
+            "italic",
+            "bold",
+            "open"
+          ]
+        },
+        "form": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "container"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "flags": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/form"
+              }
+            }
+          },
+          "required": [
+            "name",
+            "kind",
+            "flags"
+          ]
+        },
+        "date": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "year": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            "month": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "day": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "hour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "minute": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "second": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          },
+          "required": [
+            "year",
+            "month",
+            "day",
+            "hour",
+            "minute",
+            "second"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🧬️schema/🧬️semantic-wire/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/semantic-wire.json",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.procedural.generation3d.semantic-wire/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "keyword",
+              "tag",
+              "source",
+              "mutation",
+              "expected"
+            ],
+            "properties": {
+              "keyword": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tag": {
+                "type": "integer",
+                "minimum": 14,
+                "maximum": 19
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mutation": {
+                "type": "object"
+              },
+              "expected": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "angle": {
+                    "type": "number"
+                  },
+                  "axis": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "offset": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "factor": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "layout": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "input": {
+                    "type": "object",
+                    "required": [
+                      "$schema"
+                    ],
+                    "properties": {
+                      "$schema": {
+                        "enum": [
+                          "number",
+                          "text",
+                          "boolean",
+                          "point",
+                          "vector",
+                          "list"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🀄️wfc/🪶️sqlite/🎨️bitmap/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractId",
+        "version",
+        "branches",
+        "edit",
+        "cases"
+      ],
+      "properties": {
+        "contractId": {
+          "const": "wfc-indexed-bitmap-sql"
+        },
+        "version": {
+          "const": 1
+        },
+        "branches": {
+          "const": [
+            "indices",
+            "literal"
+          ]
+        },
+        "edit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ordinal",
+            "paletteIndex"
+          ],
+          "properties": {
+            "ordinal": {
+              "const": 1
+            },
+            "paletteIndex": {
+              "const": 255
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 14,
+          "maxItems": 14,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "mode",
+              "width",
+              "height",
+              "text",
+              "indices",
+              "gridPrefix"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "mode": {
+                "enum": [
+                  "indices",
+                  "literal"
+                ]
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "text": {
+                "type": "string"
+              },
+              "indices": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              "gridPrefix": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🧬️schema/🛍️canvas-catalogue/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://semio.tech/schema/layout-canvas-catalogue",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mime",
+        "kindMimePrefix",
+        "cases"
+      ],
+      "properties": {
+        "mime": {
+          "const": "application/x-semio-catalogue-item"
+        },
+        "kindMimePrefix": {
+          "const": "application/x-semio-catalogue-kind."
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 15,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "action",
+              "args",
+              "kind"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "enum": [
+                  "canvasDragOver",
+                  "canvasDrop"
+                ]
+              },
+              "kind": {
+                "enum": [
+                  "page",
+                  "rect",
+                  "text",
+                  "image",
+                  null
+                ]
+              },
+              "args": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "surfaceId",
+                  "x",
+                  "y",
+                  "width",
+                  "height"
+                ],
+                "properties": {
+                  "surfaceId": {
+                    "const": "layout.play.blueprint"
+                  },
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "width": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "height": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "dragData": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🔨️modules/🎲️board/🎬️scene/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "cases"
+      ],
+      "properties": {
+        "contract": {
+          "const": "s.puzzle.board.scene-projection/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 20,
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "mode",
+              "input",
+              "accepted",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "mode": {
+                "enum": [
+                  "normal",
+                  "ported"
+                ]
+              },
+              "input": {
+                "type": "object"
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "expected": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧬️schema/🔣️board-tools/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "semio:s.puzzle2d.board-tools.v1",
+      "title": "Puzzle2dBoardToolsCorpus",
+      "description": "🧱️ The board-tools corpus of puzzle 2d: flushes of board rows through `applyBoardEvents`, the edits each commits, the tool that authored the row and the document afterwards.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "description",
+        "appTool",
+        "board",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "s.puzzle2d.board-tools.v1"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appTool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "board": {
+          "type": "object",
+          "required": [
+            "schema",
+            "nodes",
+            "edges"
+          ],
+          "properties": {
+            "schema": {
+              "const": "board.ports.directed.v1"
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "handles"
+                ]
+              }
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "source",
+                  "target"
+                ]
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Case"
+          }
+        }
+      },
+      "definitions": {
+        "Row": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "payload"
+          ],
+          "properties": {
+            "name": {
+              "enum": [
+                "regionCreate",
+                "regionResize",
+                "brushPlace",
+                "edgeCreate",
+                "edgeDelete",
+                "nodeDelete",
+                "hover",
+                "preselectCancel",
+                "select",
+                "brushCandidates"
+              ]
+            },
+            "payload": {
+              "type": "object"
+            }
+          }
+        },
+        "Flush": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        },
+        "Rectangle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "height": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "Case": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "setup",
+            "rows",
+            "expect"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
+            },
+            "transient": {
+              "const": true
+            },
+            "setup": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Flush"
+              }
+            },
+            "rows": {
+              "$ref": "#/definitions/Flush"
+            },
+            "expect": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "edits",
+                "tool",
+                "nodes",
+                "edges",
+                "targetRegions"
+              ],
+              "properties": {
+                "edits": {
+                  "enum": [
+                    0,
+                    1
+                  ]
+                },
+                "tool": {
+                  "enum": [
+                    "regionCreate",
+                    "regionResize",
+                    "brushPlace",
+                    "edgeCreate",
+                    "edgeDelete",
+                    "nodeDelete",
+                    null
+                  ]
+                },
+                "nodes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "edges": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "targetRegions": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "region": {
+                  "$ref": "#/definitions/Rectangle"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️framing/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "required": [
+        "cases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "nodes",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "artboard": {
+                "type": "object",
+                "required": [
+                  "width",
+                  "height"
+                ],
+                "properties": {
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  }
+                }
+              },
+              "nodes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "transform",
+                    "segments",
+                    "opacity",
+                    "blendMode",
+                    "visible"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "transform": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "minItems": 6,
+                      "maxItems": 6
+                    },
+                    "segments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "kind"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "opacity": {
+                      "type": "number"
+                    },
+                    "blendMode": {
+                      "type": "string"
+                    },
+                    "visible": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "expected": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 4,
+                "maxItems": 4
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧮️status/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "required": [
+        "schema",
+        "counting",
+        "labels",
+        "cases"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "drawing.selection-status/v1"
+        },
+        "counting": {
+          "const": "top-level-layers-and-framework-layer-selection"
+        },
+        "labels": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "locale",
+              "layerOne",
+              "layerMany",
+              "selected",
+              "layerName"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "locale": {
+                "enum": [
+                  "en",
+                  "de"
+                ]
+              },
+              "layerOne": {
+                "type": "string"
+              },
+              "layerMany": {
+                "type": "string"
+              },
+              "selected": {
+                "type": "string"
+              },
+              "layerName": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "layers",
+              "selections",
+              "expected"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "layers": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1024
+              },
+              "selections": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "array",
+                  "maxItems": 256,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1023
+                  }
+                }
+              },
+              "expected": {
+                "type": "object",
+                "required": [
+                  "en",
+                  "de"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "en": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "de": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧬️schema/🛑️interruption/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "urn:semio:draw:utility-action-interruption",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentAction",
+        "layerKind",
+        "cases"
+      ],
+      "properties": {
+        "documentAction": {
+          "const": "addLayer"
+        },
+        "layerKind": {
+          "const": "shape:ellipse"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "utility",
+              "press",
+              "move",
+              "preview"
+            ],
+            "properties": {
+              "utility": {
+                "enum": [
+                  "selectDirect",
+                  "selectMarquee",
+                  "selectLasso",
+                  "pen",
+                  "shapeRect",
+                  "shapeEllipse",
+                  "shapeLine",
+                  "shapePolygon"
+                ]
+              },
+              "press": {
+                "$ref": "#/$defs/point"
+              },
+              "move": {
+                "$ref": "#/$defs/point"
+              },
+              "preview": {
+                "enum": [
+                  "transform",
+                  "overlay:marquee",
+                  "overlay:preview"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "$defs": {
+        "point": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔋️energy/🧩️extensions/🌦️epw/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/energy/extensions/epw/weather/schema.json",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.energy.epw-weather/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "input",
+              "accepted",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "input": {
+                "type": "string"
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "expected": {
+                "anyOf": [
+                  {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/simulation/site/weather/schema.json"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/💡️services/🧬️schema/🌉️mcp-composition/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "semio.s.services.mcp-composition-ownership/v1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "project",
+        "packageRoot",
+        "genericProject",
+        "genericPackageRoot",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "project": {
+          "const": "@semio-tech/s-services-native"
+        },
+        "packageRoot": {
+          "const": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust"
+        },
+        "genericProject": {
+          "const": "@semio-tech/framework-os-mcp-rs"
+        },
+        "genericPackageRoot": {
+          "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "target",
+              "source",
+              "removedSource",
+              "command"
+            ],
+            "properties": {
+              "target": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "removedSource": {
+                "type": "string",
+                "minLength": 1
+              },
+              "command": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/🧬️schema/🗂️subset-directory-wiring/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "artifact",
+        "standard",
+        "subset",
+        "schema",
+        "canonicalDirectory",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "artifact": {
+          "const": "semio"
+        },
+        "standard": {
+          "const": "v1"
+        },
+        "subset": {
+          "const": "mesh"
+        },
+        "schema": {
+          "const": "s.stdio.semio.mesh"
+        },
+        "canonicalDirectory": {
+          "const": "🔺️mesh"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "directories",
+              "reference",
+              "outcome"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "directories": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 2,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "reference": {
+                "type": "string",
+                "minLength": 1
+              },
+              "outcome": {
+                "enum": [
+                  "accepted",
+                  "rewritten",
+                  "missing-directory",
+                  "ambiguous-directory"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧬️schema/🔣️select-tool-history/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/editor/select-tool-history/schema.json",
+      "title": "Puzzle2dSelectToolHistoryFixture",
+      "description": "🛠️⏪️ Scenarios that author a log through the puzzle 2d select tool, edit it in a time-travel session and finalize it as an overwrite (`🧫️fixtures/🧫️select-tool-history/🔣️.json`).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "description",
+        "board",
+        "scenarios"
+      ],
+      "properties": {
+        "schema": {
+          "const": "s.puzzle2d.select-tool-history.v1"
+        },
+        "description": {
+          "type": "string"
+        },
+        "board": {
+          "type": "object",
+          "required": [
+            "schema",
+            "nodes",
+            "edges"
+          ],
+          "properties": {
+            "schema": {
+              "const": "board.ports.directed.v1"
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "locked": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "edges": {
+              "type": "array"
+            }
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Scenario"
+          }
+        }
+      },
+      "definitions": {
+        "Point": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "Ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "Leaf": {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "enum": [
+                "dragSelection",
+                "rotateSelection",
+                "scaleSelection",
+                "createNode",
+                "changeNodeLocked"
+              ]
+            }
+          }
+        },
+        "Severity": {
+          "enum": [
+            "info",
+            "warning",
+            "error",
+            "fatal"
+          ]
+        },
+        "Outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "worst",
+            "code",
+            "target"
+          ],
+          "properties": {
+            "row": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "worst": {
+              "$ref": "#/definitions/Severity"
+            },
+            "code": {
+              "type": "string"
+            },
+            "target": {
+              "$ref": "#/definitions/Ids"
+            },
+            "introduced": {
+              "type": "boolean"
+            }
+          }
+        },
+        "Input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "control"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^/"
+            },
+            "control": {
+              "enum": [
+                "reference",
+                "stepper",
+                "dial",
+                "slider"
+              ]
+            },
+            "domain": {
+              "type": "string"
+            },
+            "granularity": {
+              "type": "string"
+            },
+            "many": {
+              "type": "boolean"
+            },
+            "snapSource": {
+              "type": "string"
+            },
+            "step": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "scale": {
+              "enum": [
+                "linear",
+                "log"
+              ]
+            },
+            "snaps": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "component": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "description": "A subset of the UI contract component the history editor renders for the input (every facet the descriptor carries: appearance, scale, travel, step, detents, units, display factor, precision, hard limits with their refusals)."
+            }
+          }
+        },
+        "Expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "row": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "index",
+                "leaf"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "leaf": {
+                  "$ref": "#/definitions/Leaf"
+                },
+                "label": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "en",
+                    "de"
+                  ],
+                  "properties": {
+                    "en": {
+                      "type": "string"
+                    },
+                    "de": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "tool": {
+                  "type": "string"
+                }
+              }
+            },
+            "stage": {
+              "enum": [
+                "editing",
+                "replaying",
+                "reviewing",
+                "choosing",
+                "finalizing",
+                null
+              ]
+            },
+            "review": {
+              "enum": [
+                "noChanges",
+                "needsReplay",
+                "blocked",
+                "ready"
+              ]
+            },
+            "blocking": {
+              "type": "boolean"
+            },
+            "worst": {
+              "$ref": "#/definitions/Severity"
+            },
+            "outcomes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Outcome"
+              }
+            },
+            "nextProblem": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "row"
+              ],
+              "properties": {
+                "row": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "inputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Input"
+              }
+            },
+            "preview": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/definitions/Point"
+              }
+            },
+            "absent": {
+              "$ref": "#/definitions/Ids"
+            },
+            "highlighted": {
+              "$ref": "#/definitions/Ids"
+            },
+            "chips": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "draft": {
+              "type": "object"
+            }
+          }
+        },
+        "Step": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 2,
+          "properties": {
+            "drag": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "selection",
+                "from",
+                "path",
+                "to"
+              ],
+              "properties": {
+                "selection": {
+                  "$ref": "#/definitions/Ids"
+                },
+                "from": {
+                  "$ref": "#/definitions/Point"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Point"
+                  }
+                },
+                "to": {
+                  "$ref": "#/definitions/Point"
+                }
+              }
+            },
+            "pick": {
+              "type": "string"
+            },
+            "select": {
+              "$ref": "#/definitions/Ids"
+            },
+            "translate": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "dx",
+                "dy"
+              ],
+              "properties": {
+                "dx": {
+                  "type": "number"
+                },
+                "dy": {
+                  "type": "number"
+                },
+                "step": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              }
+            },
+            "rotate": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "angle"
+              ],
+              "properties": {
+                "angle": {
+                  "type": "number"
+                }
+              }
+            },
+            "scale": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "factor"
+              ],
+              "properties": {
+                "factor": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              }
+            },
+            "ingest": {
+              "$ref": "#/definitions/Leaf"
+            },
+            "gridFactor": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "begin": {
+              "oneOf": [
+                {
+                  "const": "nextProblem"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "row"
+                  ],
+                  "properties": {
+                    "row": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "input": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "value"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "pattern": "^/"
+                },
+                "value": {}
+              }
+            },
+            "useSelection": {
+              "type": "string",
+              "pattern": "^/"
+            },
+            "withdraw": {
+              "type": "null"
+            },
+            "accept": {
+              "type": "null"
+            },
+            "finalize": {
+              "const": "overwrite"
+            },
+            "expect": {
+              "$ref": "#/definitions/Expect"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Scenario": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "description",
+            "steps",
+            "log",
+            "drafts",
+            "head"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "description": {
+              "type": "string"
+            },
+            "steps": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/Step"
+              }
+            },
+            "log": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/Leaf"
+              }
+            },
+            "drafts": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "leaf": {
+                    "$ref": "#/definitions/Leaf"
+                  },
+                  "withdrawn": {
+                    "const": true
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": [
+                      "leaf"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "withdrawn"
+                    ]
+                  }
+                ]
+              }
+            },
+            "head": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "locked": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "report": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Outcome"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧬️schema/🔣️history-edit-runtime/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/editor/history-edit-runtime/schema.json",
+      "title": "Puzzle2dHistoryEditRuntimeFixture",
+      "description": "⏪️ Scenarios that prove the history-edit runtime on puzzle 2d: authored logs, history-session steps through the reserved `historyEdit*` verbs, undo/redo and reloads, with the expected session, outcomes, history-edit rows and named heads (`🧫️fixtures/🧫️history-edit-runtime/🔣️.json`).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "description",
+        "board",
+        "scenarios"
+      ],
+      "properties": {
+        "schema": {
+          "const": "s.puzzle2d.history-edit-runtime.v1"
+        },
+        "description": {
+          "type": "string"
+        },
+        "board": {
+          "type": "object",
+          "required": [
+            "schema",
+            "nodes",
+            "edges"
+          ],
+          "properties": {
+            "schema": {
+              "const": "board.ports.directed.v1"
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "locked": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "edges": {
+              "type": "array"
+            }
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Scenario"
+          }
+        }
+      },
+      "definitions": {
+        "Ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "Leaf": {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "enum": [
+                "dragSelection",
+                "createNode",
+                "changeNodeLocked",
+                "connectHandles"
+              ]
+            }
+          }
+        },
+        "Severity": {
+          "enum": [
+            "info",
+            "warning",
+            "error",
+            "fatal"
+          ]
+        },
+        "Label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "Point": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "locked": {
+              "type": "boolean"
+            }
+          }
+        },
+        "Edit": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "index",
+                "leaf"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "leaf": {
+                  "$ref": "#/definitions/Leaf"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "index",
+                "withdrawn"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "withdrawn": {
+                  "const": true
+                }
+              }
+            }
+          ]
+        },
+        "Head": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edits",
+            "nodes"
+          ],
+          "properties": {
+            "edits": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Edit"
+              }
+            },
+            "nodes": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "$ref": "#/definitions/Point"
+              }
+            },
+            "absent": {
+              "$ref": "#/definitions/Ids"
+            },
+            "edges": {
+              "$ref": "#/definitions/Ids"
+            },
+            "outcomes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Folded"
+              }
+            }
+          }
+        },
+        "Folded": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "index",
+            "code",
+            "target"
+          ],
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "code": {
+              "type": "string",
+              "pattern": "^mutation\\."
+            },
+            "target": {
+              "$ref": "#/definitions/Ids"
+            }
+          }
+        },
+        "Outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "worst",
+            "code"
+          ],
+          "properties": {
+            "row": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "mutation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "worst": {
+              "$ref": "#/definitions/Severity"
+            },
+            "code": {
+              "type": "string",
+              "pattern": "^mutation\\."
+            },
+            "target": {
+              "$ref": "#/definitions/Ids"
+            },
+            "introduced": {
+              "type": "boolean"
+            }
+          }
+        },
+        "Expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "stage": {
+              "enum": [
+                null,
+                "editing",
+                "replaying",
+                "reviewing",
+                "choosing",
+                "finalizing"
+              ]
+            },
+            "review": {
+              "enum": [
+                "noChanges",
+                "needsReplay",
+                "blocked",
+                "ready"
+              ]
+            },
+            "blocking": {
+              "type": "boolean"
+            },
+            "worst": {
+              "$ref": "#/definitions/Severity"
+            },
+            "acceptedCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fault": {
+              "type": "string"
+            },
+            "rerunnable": {
+              "type": "boolean"
+            },
+            "nextProblem": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "row"
+              ],
+              "properties": {
+                "row": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "outcomes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Outcome"
+              }
+            },
+            "draft": {
+              "type": "object"
+            },
+            "head": {
+              "type": "string"
+            },
+            "preview": {
+              "type": "string"
+            },
+            "historyEdits": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Label"
+              }
+            },
+            "alternative": {
+              "type": "string",
+              "minLength": 1
+            },
+            "words": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "row",
+                "en",
+                "de"
+              ],
+              "properties": {
+                "row": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "en": {
+                  "type": "string"
+                },
+                "de": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "Step": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 2,
+          "properties": {
+            "translate": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "select",
+                "dx",
+                "dy",
+                "step"
+              ],
+              "properties": {
+                "select": {
+                  "$ref": "#/definitions/Ids"
+                },
+                "dx": {
+                  "type": "number"
+                },
+                "dy": {
+                  "type": "number"
+                },
+                "step": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              }
+            },
+            "ingest": {
+              "$ref": "#/definitions/Leaf"
+            },
+            "select": {
+              "$ref": "#/definitions/Ids"
+            },
+            "begin": {
+              "oneOf": [
+                {
+                  "const": "nextProblem"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "row"
+                  ],
+                  "properties": {
+                    "row": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "mutation": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "input": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "value"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "pattern": "^/"
+                },
+                "value": {}
+              }
+            },
+            "useSelection": {
+              "type": "string",
+              "pattern": "^/"
+            },
+            "withdraw": {
+              "type": "null"
+            },
+            "accept": {
+              "type": "null"
+            },
+            "acceptPending": {
+              "type": "null"
+            },
+            "cancelReplay": {
+              "type": "null"
+            },
+            "rerun": {
+              "type": "null"
+            },
+            "exit": {
+              "type": "null"
+            },
+            "finalize": {
+              "oneOf": [
+                {
+                  "const": "overwrite"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "alternative"
+                  ],
+                  "properties": {
+                    "alternative": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              ]
+            },
+            "undo": {
+              "type": "null"
+            },
+            "redo": {
+              "type": "null"
+            },
+            "reload": {
+              "enum": [
+                "text",
+                "pack"
+              ]
+            },
+            "expect": {
+              "$ref": "#/definitions/Expect"
+            }
+          },
+          "additionalProperties": false
+        },
+        "Scenario": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "log",
+            "heads",
+            "steps"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
+            },
+            "board": {
+              "$ref": "#/properties/board"
+            },
+            "log": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/Leaf"
+              }
+            },
+            "heads": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "$ref": "#/definitions/Head"
+              }
+            },
+            "steps": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/Step"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]

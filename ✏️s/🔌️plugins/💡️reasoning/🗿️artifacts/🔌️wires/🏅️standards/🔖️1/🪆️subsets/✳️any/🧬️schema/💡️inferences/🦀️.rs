@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a wires snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir, read off the
-/// `board_fixture`'s `nodes`/`edges` — the actual graph a wires board renders).
+/// `board_snapshot`'s `nodes`/`edges` — the actual graph a wires board renders).
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.reasoning.wires.inference")]

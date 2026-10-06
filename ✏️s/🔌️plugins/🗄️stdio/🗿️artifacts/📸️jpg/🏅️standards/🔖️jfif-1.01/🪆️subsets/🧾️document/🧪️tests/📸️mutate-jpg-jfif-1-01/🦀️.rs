@@ -25,8 +25,8 @@ use semio_repo_test_host::law;
 /// mutable copy's bytes — the real scan, or for the raster outlines the small document a whole-raster wire payload
 /// fits in.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
-    let copy = ctx.copy_fixture(&input, Some("input.jpg"))?;
+    let input = ctx.step_input_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
+    let copy = ctx.copy_input(&input, Some("input.jpg"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input
@@ -141,7 +141,7 @@ mod subject {
     use semio_s_artifact_stdio_jpg::schema::mutations::{apply_jpg_mutation, JpgMutation};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_jpg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_jpg::io::{decode_jpg, encode_jpg};
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::{decode_jpg, encode_jpg};
     use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
 
     //#region 🔖️MutationFromSpec

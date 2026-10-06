@@ -75,26 +75,7 @@ pub fn inverse_presentation_mutation(snapshot: &PresentationSnapshot, mutation: 
     })
 }
 
-/// 📥️ Decodes one mutation of leaf `kind` (the descriptor `semanticKind`) from its leaf wire payload — the leaf's
-/// `payload_value()`, exactly what the leaf schema describes and what the `🧭️mutate-presentation-1` case's `Examples`
-/// `params` cells carry — through the derive-generated `Mutation::from_payload_value`. No per-kind mapping.
-pub fn decode_presentation_mutation_json(kind: &str, text: &str) -> Result<PresentationMutation, String> {
-    let json = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    PresentationMutation::from_payload_value(kind, semio_framework_pack_json::to_dsl_value(&json)).map_err(|error| error.to_string())
-}
 
-/// ⚖️ The SEMANTIC PROJECTION this subset is compared through — `(schema, source, tiles)` read back
-/// off the composed presentation child's working scene. It belongs to the subset rather than to a
-/// test adapter, because what counts as this document's meaning is this subset's ruling, not a
-/// case's. The two child handles are deliberately absent: `presentation_child_handle`
-/// content-addresses exactly this `(source, tiles)` pair through `std`'s deliberately unspecified
-/// `DefaultHasher`, so projecting one would compare the same content twice and pin a value the
-/// standard library does not promise. `animation` carries no content at all today.
-pub fn encode_presentation_projection_json(snapshot: &PresentationSnapshot) -> String {
-    let (source, tiles) = crate::presentation_working_scene(snapshot);
-    let source_json = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&source));
-    let tiles_json = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&tiles));
-    let value = semio_framework_pack_json::object([("schema".to_string(), semio_framework_pack_json::Value::from(snapshot.schema.clone())), ("source".to_string(), source_json), ("tiles".to_string(), tiles_json)]);
-    semio_framework_pack_json::to_string(&value)
-}
+
+
 //#endregion 🔖️Apply

@@ -18,7 +18,7 @@ use std::sync::{Mutex, MutexGuard, OnceLock};
 use semio_framework_os_flow::neural::Registry;
 use semio_framework_job::{allocate_operation_id, CancelToken, Generation, StepBudget, StepContext};
 use semio_framework_os_flow::{flow_neuron_kind_info_map, install_flow_extension, FlowExtensionSpec, FlowHost, FlowHostRetirement};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::snapshot::text::parse_dsl;
+use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
 use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
 use serde::Deserialize;
 
@@ -574,9 +574,9 @@ fn retire_host(host: FlowHost) {
 }
 
 /// ✅️ Holds one run to its committed expectations, then to the `parry3d` oracle.
-fn assert_example(dsl: &str, fixture_json: &str) {
+fn assert_example(dsl: &str, snapshot_json: &str) {
     let _guard = exclusive();
-    let fixture: ExampleGeometryFixture = serde_json::from_str(fixture_json).expect("expected-stats fixture parses");
+    let fixture: ExampleGeometryFixture = serde_json::from_str(snapshot_json).expect("expected-stats fixture parses");
     assert_eq!(fixture.schema, FIXTURE_SCHEMA, "{} fixture schema", fixture.example);
     assert_budget_contract(&fixture);
     for kind in &fixture.op_chain {
@@ -1020,9 +1020,9 @@ fn assert_selection_round_trip(fixture: &ExampleGeometryFixture, run: &DeliveryR
 }
 
 /// ✅️ Holds one example's delivery to its committed `delivery` row.
-fn assert_delivery(dsl: &str, fixture_json: &str) {
+fn assert_delivery(dsl: &str, snapshot_json: &str) {
     let _guard = exclusive();
-    let fixture: ExampleGeometryFixture = serde_json::from_str(fixture_json).expect("expected-stats fixture parses");
+    let fixture: ExampleGeometryFixture = serde_json::from_str(snapshot_json).expect("expected-stats fixture parses");
     assert_budget_contract(&fixture);
     let run = run_delivery(dsl, &fixture, &fixture.delivery.lod_mode.clone());
     println!("[DELIVERY-BOUNDS] {} editPayload={:?} viewPayload={:?}", fixture.example, run.payload_bounds, run.view_payload_bounds);

@@ -25,6 +25,7 @@ const WFC_2D_VIEW_SURFACE: &str = "wfc.wfc2d.board";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WFC_2D_VIEW_WINDOW.into(),
         label: LocalizedLabel::native("Board", "Tafel"),
         body_key: WFC_2D_VIEW_BODY.into(),
@@ -126,7 +127,7 @@ fn slot_layers(slot: &Wfc2dSlot, tile: Option<&Wfc2dTile>, layers: &mut Vec<Stri
         slot.height
     ));
     let Some(tile) = tile else { return };
-    if let Some(data_url) = crate::standards::v1::subsets::any::io::snapshot::binary::tile_media_png_data_url(&tile.media) {
+    if let Some(data_url) = crate::standards::v1::subsets::any::io::binary::snapshot::tile_media_png_data_url(&tile.media) {
         layers.push(format!(
             "{{\"id\":\"tile-{}-{}-bitmap\",\"kind\":\"image\",\"dataUrl\":{},\"x\":{:.6},\"y\":{:.6},\"width\":{:.6},\"height\":{:.6}}}",
             slot.id,

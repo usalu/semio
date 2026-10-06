@@ -1,6 +1,6 @@
 /** 🎛️ Flattened positions use actual endpoint components and typed numeric offsets. */
 import type {JackArtifact} from "../../🟦️.ts";
-import type {SemioGraphSnapshot,SemioGraphEdge} from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🟦️.ts";
+import type {SemioGraphSnapshot, SemioGraphEdge} from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🟦️.ts";
 import {ValueError} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts";
 import {inferJackTopology} from "../🧭topology/🟦️.ts";
 export interface JackFlatPositionUv {u:number;v:number}

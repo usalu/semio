@@ -15,7 +15,7 @@
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{
-    object_scale_json, puzzle3d_vortex_full_id, target_volume_scale_json, ui_label, Puzzle3dAttraction, Puzzle3dFixture, Puzzle3dInteractionSnapshot, Puzzle3dObject, Puzzle3dReference, Puzzle3dScene, Puzzle3dTargetVolume,
+    object_scale_json, puzzle3d_vortex_full_id, target_volume_scale_json, ui_label, Puzzle3dAttraction, Puzzle3dSceneSnapshot, Puzzle3dInteractionSnapshot, Puzzle3dObject, Puzzle3dReference, Puzzle3dScene, Puzzle3dTargetVolume,
     Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_PLAY_CONTROLLER_ID,
 };
 use semio_framework_plugin::tree_item_desc;
@@ -187,25 +187,25 @@ fn entity_tree(id: &str, label: &str, ids: &[String], fields: UiAssemblyResult<U
 }
 
 /// 🈳️ The document summary — what an empty (or unresolvable) selection shows.
-fn summary(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
+fn summary(scene_snapshot: &Puzzle3dSceneSnapshot, labels: &Puzzle3dLabels) -> UiAssemblyResult<BuiltNode> {
     let rows = ui_node_list([
-        tree_item_desc(format!("{ROOT}.schema"), ui_label(labels.schema.as_str())?, Some(fixture.schema.clone())),
-        tree_item_desc(format!("{ROOT}.domain"), ui_label(labels.domain.as_str())?, Some(fixture.domain.clone())),
-        tree_item_desc(format!("{ROOT}.objects"), ui_label(labels.objects.as_str())?, Some(fixture.objects.len().to_string())),
+        tree_item_desc(format!("{ROOT}.schema"), ui_label(labels.schema.as_str())?, Some(scene_snapshot.schema.clone())),
+        tree_item_desc(format!("{ROOT}.domain"), ui_label(labels.domain.as_str())?, Some(scene_snapshot.domain.clone())),
+        tree_item_desc(format!("{ROOT}.objects"), ui_label(labels.objects.as_str())?, Some(scene_snapshot.objects.len().to_string())),
     ])?;
     PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.empty"), Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
 }
 
 /// 🔍️ The selected entity's own field group, or `None` when the selection resolves to nothing in this
 /// document (a just-deleted id, or a granularity with no inspectable body such as `kind`).
-fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteractionSnapshot, windows: &TreeWindows<'_>, labels: &Puzzle3dLabels) -> Option<UiAssemblyResult<BuiltNode>> {
+fn selected_section(scene_snapshot: &Puzzle3dSceneSnapshot, interaction: &Puzzle3dInteractionSnapshot, windows: &TreeWindows<'_>, labels: &Puzzle3dLabels) -> Option<UiAssemblyResult<BuiltNode>> {
     match interaction.granularity.as_str() {
         PUZZLE3D_GRANULARITY_OBJECT => {
             let ids = interaction.selected_object_ids();
-            fixture.objects.iter().find(|object| Some(&object.id) == ids.first()).map(|object| entity_tree("object", labels.object.as_str(), ids, object_fields(object, ids, labels), windows, labels))
+            scene_snapshot.objects.iter().find(|object| Some(&object.id) == ids.first()).map(|object| entity_tree("object", labels.object.as_str(), ids, object_fields(object, ids, labels), windows, labels))
         }
         PUZZLE3D_GRANULARITY_VORTEX => interaction.selected_vortex_ids().first().and_then(|full_id| {
-            fixture
+            scene_snapshot
                 .objects
                 .iter()
                 .find_map(|object| object.vortices.iter().find(|vortex| &puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).map(|vortex| (object, vortex)))
@@ -213,12 +213,12 @@ fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteraction
         }),
         PUZZLE3D_GRANULARITY_ATTRACTION => {
             let id = interaction.selected_attraction_ids().first();
-            id.and_then(|id| fixture.attractions.iter().find(|attraction| &attraction.id == id))
+            id.and_then(|id| scene_snapshot.attractions.iter().find(|attraction| &attraction.id == id))
                 .map(|attraction| entity_tree("attraction", labels.attraction.as_str(), &[], attraction_fields(attraction, labels), windows, labels))
         }
         PUZZLE3D_GRANULARITY_TARGET_VOLUME => {
             let ids = interaction.selected_target_volume_ids();
-            fixture
+            scene_snapshot
                 .target_volumes
                 .iter()
                 .find(|volume| Some(&volume.id) == ids.first())
@@ -226,7 +226,7 @@ fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteraction
         }
         PUZZLE3D_GRANULARITY_REFERENCE => {
             let ids = interaction.selected_reference_ids();
-            fixture
+            scene_snapshot
                 .references
                 .iter()
                 .find(|reference| Some(&reference.id) == ids.first())
@@ -236,11 +236,11 @@ fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteraction
     }
     .or_else(|| {
         let ids = &interaction.selected;
-        fixture.objects.iter().find(|object| ids.iter().any(|id| id == &object.id)).map(|object| entity_tree("object", labels.object.as_str(), ids, object_fields(object, ids, labels), windows, labels))
+        scene_snapshot.objects.iter().find(|object| ids.iter().any(|id| id == &object.id)).map(|object| entity_tree("object", labels.object.as_str(), ids, object_fields(object, ids, labels), windows, labels))
     })
     .or_else(|| {
         let ids = &interaction.selected;
-        fixture
+        scene_snapshot
             .objects
             .iter()
             .find(|object| object.vortices.iter().any(|vortex| ids.iter().any(|id| id == &vortex.id || id == &puzzle3d_vortex_full_id(&object.id, &vortex.id))))
@@ -251,9 +251,9 @@ fn selected_section(fixture: &Puzzle3dFixture, interaction: &Puzzle3dInteraction
 
 //#region 🔖️Render
 pub fn render(envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot, term_labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    match selected_section(&envelope.fixture, interaction, windows, term_labels) {
+    match selected_section(&envelope.scene_snapshot, interaction, windows, term_labels) {
         Some(section) => section,
-        None => summary(&envelope.fixture, term_labels),
+        None => summary(&envelope.scene_snapshot, term_labels),
     }
 }
 //#endregion 🔖️Render

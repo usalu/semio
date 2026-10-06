@@ -1,4 +1,4 @@
-# 🧬️ Assemble this schema with the five direct input definitions.
+# 🧬️ Assemble this schema with the seven direct input definitions.
 # import InsertPageInput from "./📥️insert-page/🔗️.graphql"
 # import RemovePageInput from "./🗑️remove-page/🔗️.graphql"
 # import MovePageInput from "./🔀️move-page/🔗️.graphql"
@@ -11,3 +11,8 @@ input PdfMutation @oneOf {
   movePage: MovePageInput
   resizePage: ResizePageInput
   replacePageText: ReplacePageTextInput
+# import SetSnapshotInput from "./📸️set-snapshot/🔗️.graphql"
+# import PatchSnapshotInput from "./🩹️patch-snapshot/🔗️.graphql"
+  setSnapshot: SetSnapshotInput
+  patchSnapshot: PatchSnapshotInput
+}

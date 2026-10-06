@@ -41,7 +41,7 @@ type sessionVectorFile struct {
 
 func loadSessionVectors(ctx *host.Context) (sessionVectorFile, error) {
 	var file sessionVectorFile
-	raw, err := ctx.FixtureBytes(sessionVectors)
+	raw, err := ctx.InputBytes(sessionVectors)
 	if err != nil {
 		return file, err
 	}

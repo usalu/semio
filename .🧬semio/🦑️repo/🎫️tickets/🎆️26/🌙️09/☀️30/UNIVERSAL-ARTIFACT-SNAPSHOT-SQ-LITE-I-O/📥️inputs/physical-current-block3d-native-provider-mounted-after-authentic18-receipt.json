@@ -1,0 +1,89 @@
+{
+  "before": {
+    "runId": "57f8556a-7c1e-4239-b51f-47f39384505b",
+    "tests": 18,
+    "passed": 11,
+    "failed": 7,
+    "seconds": 4.482,
+    "outside": 356
+  },
+  "receipt": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔢️transport/🦀️.rs",
+      "input": "physical-current-block3d-json-exact-role-provider-held-pairs.json",
+      "beforeLength": 0,
+      "afterLength": 2048
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "input": "physical-current-block3d-json-exact-role-provider-held-pairs.json",
+      "beforeLength": 5594,
+      "afterLength": 5658
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs",
+      "input": "physical-current-block3d-json-exact-role-provider-held-pairs.json",
+      "beforeLength": 1617,
+      "afterLength": 1785
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs",
+      "input": "physical-current-block3d-json-exact-role-provider-held-pairs.json",
+      "beforeLength": 2936,
+      "afterLength": 3075
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+      "input": "physical-current-block3d-typed-catalog-and-complete-entry-provider-held-pairs.json",
+      "beforeLength": 45427,
+      "afterLength": 45687
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "input": "physical-current-block3d-typed-catalog-and-complete-entry-provider-held-pairs.json",
+      "beforeLength": 22703,
+      "afterLength": 22692
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "input": "physical-current-block3d-typed-catalog-and-complete-entry-provider-held-pairs.json",
+      "beforeLength": 22293,
+      "afterLength": 22348
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "input": "physical-current-block3d-typed-catalog-and-complete-entry-provider-held-pairs.json",
+      "beforeLength": 33849,
+      "afterLength": 33856
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "input": "physical-current-block3d-complete-borrowed-cst-provider-held-pair.json",
+      "beforeLength": 0,
+      "afterLength": 6271
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/📏️preflight/🦀️.rs",
+      "input": "physical-current-block3d-canonical-wire-provider-held-pair.json",
+      "beforeLength": 0,
+      "afterLength": 1740
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🦀️.rs",
+      "input": "physical-current-block3d-canonical-child-reference-projection-held-pairs.json",
+      "beforeLength": 4392,
+      "afterLength": 5040
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "input": "physical-current-block3d-canonical-child-reference-projection-held-pairs.json",
+      "beforeLength": 1591255,
+      "afterLength": 1592121
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "input": "isolated complete copied gate law",
+      "afterLength": 35682
+    }
+  ]
+}

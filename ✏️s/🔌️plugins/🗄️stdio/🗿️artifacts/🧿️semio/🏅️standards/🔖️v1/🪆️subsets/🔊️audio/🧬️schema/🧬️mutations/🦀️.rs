@@ -10,9 +10,21 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use crate::standards::v1::subsets::audio::schema::diff::{
-    self, dec_channel, dec_f32_list, dec_format, dec_snapshot, dec_tag, enc_channel, enc_f32_list, enc_format, enc_snapshot, enc_tag, hex_decode_string, hex_encode, parse_u32, parse_usize, SemioAudioChannelDiff, SemioAudioDiff,
-};
+use crate::standards::v1::subsets::audio::schema::diff::{self, SemioAudioChannelDiff, SemioAudioDiff};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
@@ -89,14 +101,7 @@ pub fn inverse_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioA
     })
 }
 
-/// 📥️ Decodes this subset's internally tagged (`{"mutation": "<camelCaseVariant>", ...}`) wire value — the shape
-/// `🔊️mutate-semio-audio`'s committed specification vectors and doc strings carry — into a real [`SemioAudioMutation`]. A thin
-/// `pack::from_json_str` wrapper over `ToValue`/`FromValue`, so the test adapter reads the committed wire value instead of
-/// re-declaring it field by field beside it.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_audio_mutation_json(text: &str) -> Result<SemioAudioMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 //#endregion 🔖️Apply
 
 //#region 🔖️MutationTrait
@@ -163,145 +168,18 @@ pub(crate) fn agg_inverse(this: &SemioAudioMutation, base: &SemioAudioSnapshot) 
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🎙️ Hand-rolled `OpText`/`OpBinary` per the ticket's blanket instruction — real one-line
-/// `keyword payload...` grammar (not `serde_json`), reusing the diff module's own bracket value
-/// codecs (`enc_channel`/`enc_tag`/`enc_format`/`enc_snapshot`/…) so a mutation's embedded payload
-/// (e.g. `SetSnapshot`'s whole snapshot, `InsertChannel`'s channel) prints identically to how the
-/// same value would print inside a diff's `added` triple. Binary = the text bytes verbatim, same
-/// simplification `SemioAudioDiff::encode_diff`/gif 89a's `GifDiff::encode_diff` both use.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_audio_mutation(m: &SemioAudioMutation) -> String {
-    match m {
-        SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot {}", enc_snapshot(snapshot)),
-        SemioAudioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
-        SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate }) => format!("set-sample-rate {sample_rate}"),
-        SemioAudioMutation::SetFormat(set_format::SetFormat { format }) => format!("set-format {}", enc_format(*format)),
-        SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index, channel }) => format!("insert-channel {index} {}", enc_channel(channel)),
-        SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index }) => format!("remove-channel {index}"),
-        SemioAudioMutation::SetChannelSamples(set_channel_samples::SetChannelSamples { index, samples }) => format!("set-channel-samples {index} {}", enc_f32_list(samples)),
-        SemioAudioMutation::InsertTag(insert_tag::InsertTag { index, tag }) => format!("insert-tag {index} {}", enc_tag(tag)),
-        SemioAudioMutation::RemoveTag(remove_tag::RemoveTag { index }) => format!("remove-tag {index}"),
-        SemioAudioMutation::SetTagValue(set_tag_value::SetTagValue { index, value }) => format!("set-tag-value {index} {}", hex_encode(value.as_bytes())),
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioAudioMutation::PatchSnapshot(crate::standards::v1::subsets::audio::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
-    let (keyword, rest) = line.split_once(' ').ok_or_else(|| format!("audio mutation: missing payload in {line:?}"))?;
-    match keyword {
-        "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(rest)? })),
-        "set-sample-rate" => Ok(SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: parse_u32(rest)? })),
-        "set-format" => Ok(SemioAudioMutation::SetFormat(set_format::SetFormat { format: dec_format(rest)? })),
-        "insert-channel" => {
-            let (idx, enc) = rest.split_once(' ').ok_or_else(|| "insert-channel: missing channel payload".to_string())?;
-            Ok(SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index: parse_usize(idx)?, channel: dec_channel(enc)? }))
-        }
-        "remove-channel" => Ok(SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index: parse_usize(rest)? })),
-        "set-channel-samples" => {
-            let (idx, enc) = rest.split_once(' ').ok_or_else(|| "set-channel-samples: missing payload".to_string())?;
-            Ok(SemioAudioMutation::SetChannelSamples(set_channel_samples::SetChannelSamples { index: parse_usize(idx)?, samples: dec_f32_list(enc)? }))
-        }
-        "insert-tag" => {
-            let (idx, enc) = rest.split_once(' ').ok_or_else(|| "insert-tag: missing payload".to_string())?;
-            Ok(SemioAudioMutation::InsertTag(insert_tag::InsertTag { index: parse_usize(idx)?, tag: dec_tag(enc)? }))
-        }
-        "remove-tag" => Ok(SemioAudioMutation::RemoveTag(remove_tag::RemoveTag { index: parse_usize(rest)? })),
-        "set-tag-value" => {
-            let (idx, enc) = rest.split_once(' ').ok_or_else(|| "set-tag-value: missing payload".to_string())?;
-            Ok(SemioAudioMutation::SetTagValue(set_tag_value::SetTagValue { index: parse_usize(idx)?, value: hex_decode_string(enc)? }))
-        }
-        other => Err(format!("audio mutation: unknown keyword {other:?}")),
-    }
-}
 
-impl OpText for SemioAudioMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_audio_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        print_audio_mutation(self)
-    }
-}
 
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `SemioAudioMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
-const TAG_SET_SAMPLE_RATE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-sample-rate");
-const TAG_SET_FORMAT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-format");
-const TAG_INSERT_CHANNEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-channel");
-const TAG_REMOVE_CHANNEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-channel");
-const TAG_SET_CHANNEL_SAMPLES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-channel-samples");
-const TAG_INSERT_TAG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-tag");
-const TAG_REMOVE_TAG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-tag");
-const TAG_SET_TAG_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-tag-value");
-//#endregion 🏷️WireTags
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn wire_tag(m: &SemioAudioMutation) -> u8 {
-    match m {
-        SemioAudioMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioAudioMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
-        SemioAudioMutation::SetSampleRate(_) => TAG_SET_SAMPLE_RATE,
-        SemioAudioMutation::SetFormat(_) => TAG_SET_FORMAT,
-        SemioAudioMutation::InsertChannel(_) => TAG_INSERT_CHANNEL,
-        SemioAudioMutation::RemoveChannel(_) => TAG_REMOVE_CHANNEL,
-        SemioAudioMutation::SetChannelSamples(_) => TAG_SET_CHANNEL_SAMPLES,
-        SemioAudioMutation::InsertTag(_) => TAG_INSERT_TAG,
-        SemioAudioMutation::RemoveTag(_) => TAG_REMOVE_TAG,
-        SemioAudioMutation::SetTagValue(_) => TAG_SET_TAG_VALUE,
-    }
-}
-/// ✂️ Just the argument tail of `print_audio_mutation` — the binary frame's `tag` byte already
-/// carries the keyword, so the text keyword itself (and its separating space) is redundant in the
-/// binary payload.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
-    match print_audio_mutation(m).split_once(' ') {
-        Some((_, rest)) => rest.to_string(),
-        None => String::new(),
-    }
-}
 
-/// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut.
-/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two REAL fixed fields; the variant's own argument payload follows as one
-/// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_audio_mutation`/
-/// `parse_audio_mutation` text codec rather than re-deriving a second independent encoding.
-impl OpBinary for SemioAudioMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
-        out.extend_from_slice(print_audio_mutation_args(self).as_bytes());
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        if bytes.len() < 2 {
-            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
-        }
-        if bytes[0] != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
-        }
-        if bytes[1] == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::audio::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
-        }
-        let tag = bytes[1];
-        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
-        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
-        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
-    }
-}
+
+
+
+
+
+
+
 //#endregion OpCodecs
 
 //#region 🔖️Demo

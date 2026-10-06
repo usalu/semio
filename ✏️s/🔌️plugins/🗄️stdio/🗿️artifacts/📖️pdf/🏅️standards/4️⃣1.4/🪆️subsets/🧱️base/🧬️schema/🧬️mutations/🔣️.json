@@ -83,6 +83,38 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/base/mutation/replace-page-text/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "set-snapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/base/mutation/set-snapshot/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "patch-snapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.4/base/mutation/patch-snapshot/schema.json"
+        }
+      }
     }
   ]
 }

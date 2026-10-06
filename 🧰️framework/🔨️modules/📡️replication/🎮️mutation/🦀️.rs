@@ -1,6 +1,6 @@
 //! 🎞️ Mutation contract: the `Mutation`/`MutationDiff` trait family, per-operation
-//! diagnostics (`MutationMessage`/`MutationOutcome`), and the `OpText`/`OpBinary`/`DiffCodec`
-//! grammar seams. Product-neutral — both the optimistic client replica and the authority
+//! diagnostics (`MutationMessage`/`MutationOutcome`), and semantic transformation laws.
+//! Product-neutral — both the optimistic client replica and the authority
 //! rerun the same deciders against these types. Op payloads stay schema-opaque: this module
 //! never parses an `Op`, it only threads it through the trait seams a technology implements.
 //!
@@ -1029,14 +1029,16 @@ pub enum OutcomeCode {
     NoOp,
     Partial,
     Clamped,
+    PreconditionDrifted,
     DuplicateId,
     Invariant,
+    InverseRefused,
     Cascade,
 }
 
 impl OutcomeCode {
     /// 📚️ Every vocabulary code, in the document's order.
-    pub const ALL: [OutcomeCode; 9] = [Self::TargetMissing, Self::TargetReferenced, Self::TargetMismatch, Self::NoOp, Self::Partial, Self::Clamped, Self::DuplicateId, Self::Invariant, Self::Cascade];
+    pub const ALL: [OutcomeCode; 11] = [Self::TargetMissing, Self::TargetReferenced, Self::TargetMismatch, Self::NoOp, Self::Partial, Self::Clamped, Self::PreconditionDrifted, Self::DuplicateId, Self::Invariant, Self::InverseRefused, Self::Cascade];
 
     /// 🔤️ The wire spelling of the code.
     pub const fn as_str(self) -> &'static str {
@@ -1047,8 +1049,10 @@ impl OutcomeCode {
             Self::NoOp => "mutation.no-op",
             Self::Partial => "mutation.partial",
             Self::Clamped => "mutation.clamped",
+            Self::PreconditionDrifted => "mutation.precondition-drifted",
             Self::DuplicateId => "mutation.duplicate-id",
             Self::Invariant => "mutation.invariant",
+            Self::InverseRefused => "mutation.inverse-refused",
             Self::Cascade => "mutation.cascade",
         }
     }
@@ -1057,8 +1061,8 @@ impl OutcomeCode {
     pub const fn level(self) -> semio_framework_diagnostic::Severity {
         match self {
             Self::TargetMissing | Self::TargetReferenced | Self::TargetMismatch => semio_framework_diagnostic::Severity::Error,
-            Self::NoOp | Self::Partial | Self::Clamped => semio_framework_diagnostic::Severity::Warning,
-            Self::DuplicateId | Self::Invariant => semio_framework_diagnostic::Severity::Fatal,
+            Self::NoOp | Self::Partial | Self::Clamped | Self::PreconditionDrifted => semio_framework_diagnostic::Severity::Warning,
+            Self::DuplicateId | Self::Invariant | Self::InverseRefused => semio_framework_diagnostic::Severity::Fatal,
             Self::Cascade => semio_framework_diagnostic::Severity::Info,
         }
     }
@@ -1080,8 +1084,8 @@ impl From<OutcomeCode> for semio_framework_diagnostic::FaultCode {
 
 /// 📖️ The frozen outcome-code vocabulary and the one level each code fixes, derived from [`OutcomeCode`] — the table
 /// persistence validates against (`🏪️store` `expected_mutation_message_level`). Closed: no per-plugin codes.
-pub const OUTCOME_CODES: [(&str, semio_framework_diagnostic::Severity); 9] = {
-    let mut table = [("", semio_framework_diagnostic::Severity::Info); 9];
+pub const OUTCOME_CODES: [(&str, semio_framework_diagnostic::Severity); 11] = {
+    let mut table = [("", semio_framework_diagnostic::Severity::Info); 11];
     let mut index = 0;
     while index < OutcomeCode::ALL.len() {
         table[index] = (OutcomeCode::ALL[index].as_str(), OutcomeCode::ALL[index].level());
@@ -1104,10 +1108,11 @@ pub fn outcome_code_level(code: &str) -> Option<semio_framework_diagnostic::Seve
 
 /// 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — the level
 /// vocabulary is [`crate::diagnostic::Severity`] (`Info < Warning < Error < Fatal`, that declaration
-/// order IS the level order via `derive(Ord)`); `code` is one of the frozen nine `mutation.*`
+/// order IS the level order via `derive(Ord)`); `code` is one of the frozen `mutation.*`
 /// codes (`.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
 /// 📋️contract-freeze.md` §C2, extended 2026-09-30 by the state-dependent `Error` codes `mutation.target-referenced` and
-/// `mutation.target-mismatch` — closed set, no per-plugin codes, ever); `message` is English prose
+/// `mutation.target-mismatch`, 2026-10-05 by the `Warning` `mutation.precondition-drifted` and the `Fatal`
+/// `mutation.inverse-refused` — closed set, no per-plugin codes, ever); `message` is English prose
 /// (UI localizes by `code`, never by parsing `message`); `target` is the address of the offending
 /// element (outermost segment first, matching [`MutationKind::target`]'s convention); `op_index` is
 /// stamped by a batch replay ([`MutationOutcome::stamp_op_index`]) once this message's originating
@@ -1374,54 +1379,11 @@ impl<D> MutationOutcome<D> {
 }
 //#endregion 🔖️Message
 
-//#region 🔖️OpText
-/// ⚡️ Handcrafted ONE-LINE textual representation of an operation, implemented once per
-/// technology next to its `Mutation` enum. Moved verbatim from `os_store::OpText` (method order
-/// flipped to match the frozen contract; behavior unchanged). LAWS: `print_op` output never
-/// contains `\n`; `Op::parse_op` recovers an equal operation from `op.print_op().await`.
-pub trait OpText: Sized {
-    fn print_op(&self) -> String;
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError>;
-}
-//#endregion 🔖️OpText
 
-//#region 🔖️OpBinary
-/// 🎞️ Binary twin of [`OpText`]: the maximum-token-efficient one-line grammar and this
-/// byte encoding are two renderings of the same operation, implemented per technology next to its
-/// `Mutation` enum (in practice emitted by `#[derive(os_dsl::DslOps)]` through `os_dsl::op_rt`, the
-/// exact mirror of the `ArtifactDsl`/`ArtifactPack` pairing). Layout (owned by the runtime, not
-/// by implementors): `format u8 (=1) | variant ordinal varint | record body`. LAWS:
-/// `Op::decode_op(op.encode_op().await).await == op == Op::parse_op(op.print_op().await).await`, and encoding is
-/// deterministic — byte-identical output for equal operations.
-pub trait OpBinary: Sized {
-    /// 🎯️ Typed tool ids generated by `app_commands!`; non-command binary types keep one fallback key.
-    const TOOL_JOB_IDS: &'static [&'static str] = &["typed-command"];
-    fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError>;
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
-}
-//#endregion 🔖️OpBinary
 
-//#region 🔖️DiffCodec
-/// 🧬️ Grammared twin of [`OpText`]/[`OpBinary`], but for a technology's `MutationDiff::Diff`
-/// value rather than its `Mutation`: the W1 foundation of the `handcrafted-grammar-for-every-artifact`
-/// program's diff track (design ruling B-R4 at `.claude/plans/the-final-goal-for-jolly-spindle.md`) —
-/// today every `*Diff` type is serde-only, this trait promotes a diff to a first-class grammared value
-/// exactly like `OpText`/`OpBinary` already did for operations. In practice emitted by
-/// `#[derive(os_dsl::DslDiff)]` through the same `RecordSpec`-generation machinery `DslRecord`/
-/// `DslArtifact` already use (a diff is structurally just another record). Schema id convention:
-/// `"<doc-schema>#diff"`. Deliberately NOT (yet) a supertrait bound of [`MutationDiff`] — W1 only
-/// proves the mechanism on a handful of real diff types (tracked in `script.ts`'s
-/// `POLICY_DIFF_COMPLETENESS_ALLOWLIST`); wiring it as a hard bound across all diff types is deferred
-/// to wave 6 (`## Master wave plan` `W6 — Lane C (B5)`), once every type is covered.
-/// LAWS: `Diff::parse_diff(&d.print_diff().await).await == d`, `Diff::decode_diff(&d.encode_diff().await?).await? == d`,
-/// `print_diff` output never contains `\n`, and `encode_diff` is deterministic.
-pub trait DiffCodec: Sized {
-    fn print_diff(&self) -> String;
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError>;
-    fn encode_diff(&self) -> Result<Vec<u8>, crate::ProtocolError>;
-    fn decode_diff(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
-}
-//#endregion 🔖️DiffCodec
+
+
+
 
 //#region 🔖️Foreign
 /// 🌉️ A mutation step aimed at an artifact OTHER than the one being mutated. Cross-boundary
@@ -1727,7 +1689,6 @@ pub struct Edit<Op> {
     pub forwards: Vec<Op>,
     pub inverse: Vec<Op>,
     pub mutation_meta: Vec<MutationMeta>,
-    pub description: Option<String>,
     /// 🏷️ The id of the action or command that authored this edit — never display text: history resolves it through
     /// the authoring app's registry to its label in every locale at projection time, so a reload or a peer keeps it.
     pub verb: Option<String>,
@@ -1741,7 +1702,7 @@ pub struct Edit<Op> {
 /// `reconcile_stack` already bound `Mutation: ToValue` and hash via `to_json_string`, which needs
 /// `Edit<Mutation>: ToValue` itself, not just its generic parameter). Mirrors
 /// `#[serde(rename_all = "camelCase")]` field naming and every `skip_serializing_if`; `Option<T>`
-/// fields with no explicit `#[serde(default)]` (`description`/`finished_at`) still default to
+/// fields with no explicit `#[serde(default)]` (`finished_at`) still default to
 /// `None` when absent — serde's built-in behavior for `Option<T>` fields, mirrored here too.
 impl<Op: crate::value::ToValue> crate::value::ToValue for Edit<Op> {
     fn to_value(&self) -> crate::value::DslValue {
@@ -1753,9 +1714,6 @@ impl<Op: crate::value::ToValue> crate::value::ToValue for Edit<Op> {
         entries.push(("inverse".to_string(), crate::value::ToValue::to_value(&self.inverse)));
         if !self.mutation_meta.is_empty() {
             entries.push(("mutationMeta".to_string(), crate::value::ToValue::to_value(&self.mutation_meta)));
-        }
-        if self.description.is_some() {
-            entries.push(("description".to_string(), crate::value::ToValue::to_value(&self.description)));
         }
         if self.verb.is_some() {
             entries.push(("verb".to_string(), crate::value::ToValue::to_value(&self.verb)));
@@ -1780,7 +1738,6 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
         let mut forwards = None;
         let mut inverse = None;
         let mut mutation_meta = Vec::new();
-        let mut description = None;
         let mut verb = None;
         let mut sequence_number = None;
         let mut started_at = None;
@@ -1796,7 +1753,6 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
                 "forwards" => forwards = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("forwards"))?),
                 "inverse" => inverse = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
                 "mutationMeta" => mutation_meta = <Vec<MutationMeta> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutationMeta"))?,
-                "description" => description = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("description"))?,
                 "verb" => verb = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("verb"))?,
                 "sequenceNumber" => sequence_number = Some(<i32 as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("sequenceNumber"))?),
                 "startedAt" => started_at = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("startedAt"))?),
@@ -1811,7 +1767,6 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
             forwards: forwards.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing forwards"))?,
             inverse: inverse.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing inverse"))?,
             mutation_meta,
-            description,
             verb,
             sequence_number: sequence_number.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing sequenceNumber"))?,
             started_at: started_at.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "Edit missing startedAt"))?,

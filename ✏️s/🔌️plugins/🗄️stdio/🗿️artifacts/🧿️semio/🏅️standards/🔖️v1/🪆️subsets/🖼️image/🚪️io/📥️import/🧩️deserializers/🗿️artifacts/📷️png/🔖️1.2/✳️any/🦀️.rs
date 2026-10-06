@@ -26,7 +26,7 @@ impl ArtifactDeserializer for SemioImageFromPng {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let projection = semio_s_artifact_stdio_png::io::project_png(&from.bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        let projection = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&from.bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
         let expected = usize::try_from(projection.width).ok().and_then(|width| usize::try_from(projection.height).ok().and_then(|height| width.checked_mul(height))).and_then(|pixels| pixels.checked_mul(4)).ok_or_else(|| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "png→semio/image: raster extent overflow")))?;
         if projection.pixels.len() != expected { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "png→semio/image: decoded RGBA8 length does not match IHDR"))); }
         let metadata = projection.text_chunks.iter().map(|text| SemioImageMetadataEntry { key: text.keyword.clone(), value: text.value.clone() }).collect();

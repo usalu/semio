@@ -1,0 +1,19 @@
+# Semio Text Original Allocation Stage Join
+
+Recommend an owner-specific SemioText decode wrapper, rather than changing shared native::decode for the other custom owners. The current wrapper is small and its envelope/parser functions are already pub(crate). The new Text boundary should perform explicit full borrowed semantic admission and then call its existing binary/document constructors, preserving original controls. This is not a compatibility adapter or a second budget.
+
+Actual [SqliteSnapshotControl::allocation_stage](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs:149) gives remaining=allocation_remaining_bytes, based solely on cumulative max_allocation_bytes. It creates the original DecodeNative progress callback and always settles the returned child owned_bytes, including refusal/cancellation. Retirement never refunds this ledger. max_value_bytes is separately checked by full SQL semantic admission. The shared native::decode currently adds min(max_value_bytes) to this physical backing grant; removing that extra cap only for the fully admitted Text route follows the control's authored separation.
+
+Concrete sequence:
+
+1. Copy all original SqliteDatabaseLimits and check actual input length against max_file_bytes with the existing refusal kind. Admit Text's static578/3/max5 layout.
+2. Enter the same outer allocation_stage(DecodeNative). Create exactly one NativeDecodeControl from its real remaining allocation grant, forwarding NativeDecodeProgress completed/total through the provided callback. Do not reset or recreate it between envelope, census and construction.
+3. Use the original controlled envelope unwrap/split with the actual Text envelope ID. Perform binary/document full census on the resulting borrowed body through that same native control under scoped_stage; no native text copy, typed owner or SQL mirror.
+4. Call the existing text binary/document constructor with the same control and full limits. Those functions retain original real Vec/String charges, entity grants, bounded progress, tag validation and trailing-body rules.
+5. Wrap the successful typed result in existing native::Owned::new, checkpoint the same control, then take the owner. Return (result,native.owned_bytes()) on every outcome so the original outer stage settles cumulative physical admission.
+
+Existing [Owned guard](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛬️native/🦀️.rs:52) and controlled envelope APIs are accessible to the sibling Text module. Their existing explicit retirement behavior remains original authority; this new copied-admission gate does not claim to repair all intermediate partial-owner Drop paths. Preserve that scope in runtime reporting.
+
+This route makes independently exact SQL257 admissible while actual run/mark Vec backing exceeds257, provided the original cumulative allocation grant permits it. max_allocation_bytes one-short still rejects the physical request; max_file_bytes still checks input and actual producer output; max_value_bytes256 rejects before typed construction via actual semantic roles. Other custom owners keep their existing native::decode laws unchanged. Shared helper extraction can follow genuine qualification if more owners adopt the exact same explicit policy; no global flag or implicit bypass is needed now.
+
+Typed encode/preflight similarly requires the complete owner RowWriter visitor before its original custom writer/Bound. Do not change the shared writer's physical/file enforcement merely to satisfy copied semantic positives without a separate genuine Before. Original Text public/declaration, arbitrary schema, Unicode/long-text, cumulative ownership and cancellation laws remain mandatory alongside new exact/one-short copied limits.

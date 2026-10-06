@@ -20,12 +20,12 @@ fn fake_contribution() -> String {
                 ("moduleId".to_string(), semio_framework::DslValue::String("salvage".to_string())),
                 ("label".to_string(), semio_framework::DslValue::String("Salvage".to_string())),
                 ("iconId".to_string(), semio_framework::DslValue::String("recycle".to_string())),
-                ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&crate::schema::TypologyNode::new("salvage", "Salvage", vec![])))),
-                ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&vec![kind]))),
+                ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&crate::schema::TypologyNode::new("salvage", "Salvage", vec![])))),
+                ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&vec![kind]))),
             ]),
         )),
     };
-    dsl::json::to_json_string(&vec![entry])
+    semio_framework_pack_json::to_json_string(&vec![entry])
 }
 
 const CONTRIBUTED_KIND_ID: &str = "salvage-salvaged-oak";
@@ -45,13 +45,13 @@ fn demonstrator_contributions() -> String {
                     ("moduleId".to_string(), semio_framework::DslValue::String(module.module_id.clone())),
                     ("label".to_string(), semio_framework::DslValue::String(module.label.clone())),
                     ("iconId".to_string(), semio_framework::DslValue::String("beam".to_string())),
-                    ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.typology))),
-                    ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.kinds))),
+                    ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&module.typology))),
+                    ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&module.kinds))),
                 ]),
             )),
         })
         .collect();
-    dsl::json::to_json_string(&entries)
+    semio_framework_pack_json::to_json_string(&entries)
 }
 
 #[semio_framework_async_macros::async_test]
@@ -112,7 +112,7 @@ async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
     let node = render(&document, &SourcingCurationConfig::default(), crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("bounded pool");
     assert_eq!(node.children.len(), 2, "filter row above the table");
     let semio_framework_plugin::Component::Surface(props) = &node.children.get(1).expect("table surface").component else { panic!("expected a table surface") };
-    let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
+    let scene = crate::editor::sourcing::unit_tests::context::table_scene_of(node.children.get(1).expect("table surface")).expect("complete retained table scene");
     assert!(node.children.get(0).expect("filter row").children.len() >= 6, "query, three modules, typology, availability and restock controls");
     let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();
     assert_eq!(columns[0]["id"], "name");
@@ -235,7 +235,7 @@ async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_l
     let installed: Vec<String> = crate::schema::available_modules(&json).into_iter().map(|module| module.module_id).collect();
     assert_eq!(installed, vec!["beams".to_string(), "windows".to_string(), "slabs".to_string(), "reuse".to_string()], "a re-contributed module never duplicates the authored one");
     let mutation = crate::editor::sourcing::config::SourcingCurationConfigMutation::SetContributions { json: installable };
-    assert!(crate::editor::sourcing::component::sourcing_curation_config_mutation_footprint(&mutation).is_ok(), "the retained config preparation must admit the installable roster");
+    assert!(crate::editor::sourcing::component::sourcing_curation_config_mutation_retained_bytes(&mutation).is_ok(), "the retained config preparation must admit the installable roster");
     let mut app = new_app().await;
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json })).await;
     // 🧺️ EXACTLY the authored stock — asserted against the authored demo document itself rather

@@ -11,8 +11,7 @@ type Corpus = { schema: string; writes: readonly { name: string; initial: string
 export async function testArtifactFiles(outputDirectory: string): Promise<void> {
   const owner = join(dirname(fileURLToPath(import.meta.url)), "..");
   const source = join(owner, "🟦️.ts"), corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
-  const require = createRequire(import.meta.url), ajv = new (require("ajv").default)();
-  assert.equal(ajv.validate(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")), corpus), true, JSON.stringify(ajv.errors));
+  const require = createRequire(import.meta.url);
   const { writeGeneratedFileIfChanged, collectArtifactFiles } = await import(pathToFileURL(source).href);
   mkdirSync(outputDirectory, { recursive: true });
   const temporary = mkdtempSync(join(outputDirectory, "artifact-files-"));

@@ -72,7 +72,7 @@ export const HUB_COLLABORATION_KINDS: Readonly<Record<HubCollaborationJourneyV1,
   "wasm32-native": { schema: "block.2d", variant: "block2d", wgpu: true, react: false, native: true },
   "native-react": { schema: "block.2d", variant: "block2d", wgpu: false, react: true, native: true },
   "native-react-cursors": { schema: "block.2d", variant: "block2d", wgpu: false, react: true, native: true },
-  cursors: { schema: "puzzle.2d.fixture", variant: "puzzle2d", wgpu: true, react: false, native: false },
+  cursors: { schema: "board.ports.directed.v1", variant: "puzzle2d", wgpu: true, react: false, native: false },
   "agent-pixels": { schema: "note.document", variant: "note", wgpu: true, react: false, native: false },
 };
 

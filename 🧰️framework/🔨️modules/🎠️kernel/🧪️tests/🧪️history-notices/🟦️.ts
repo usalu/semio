@@ -10,11 +10,11 @@ import { HISTORY_NOTICE_LABELS, historyNotice } from "../../🟦️.ts";
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
 
 describe("history notices", () => {
-  it("the fixture satisfies its schema and refuses hostile rows", () => {
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  it("the notice catalog projection satisfies its domain schema and refuses hostile rows", () => {
+    expect(validate({ notices: fixture.notices }), JSON.stringify(validate.errors)).toBe(true);
     const first = fixture.notices[0]!;
-    expect(validate({ ...fixture, notices: [{ code: first.code, en: first.en }] })).toBe(false);
-    expect(validate({ ...fixture, notices: [{ ...first, code: "tool transaction open" }] })).toBe(false);
+    expect(validate({ notices: [{ code: first.code, en: first.en }] })).toBe(false);
+    expect(validate({ notices: [{ ...first, code: "tool transaction open" }] })).toBe(false);
   });
 
   it("the twin carries exactly the fixture rows and answers nothing for other codes", () => {

@@ -1,7 +1,7 @@
 /** 🔣️ Declared JSON transport of exact Block5d canonical fields. */
 import * as m from "../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary64,parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {row,text,defaultText as string,optionalText,list,word,floating,optionalWord,xyz,kind,attribute,author,compatible,representation,camera2d,camera3d,out,optionalOut,xyzOut,reject as fail} from "../../../../../../../◻️2d/🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
+import {binary64,parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {row,text,defaultText as string,optionalText,list,word,floating,optionalWord,xyz,kind,attribute,author,compatible,representation,camera2d,camera3d,out,optionalOut,xyzOut,reject as fail} from "../../../../../../../../🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
 function quaternion(v:unknown):[Binary64,Binary64,Binary64,Binary64]|null{if(v===null||v===undefined)return null;if(!Array.isArray(v)||v.length!==4)return fail("vector4 required");return[word(v[0]),word(v[1]),word(v[2]),word(v[3])]}
 function part2d(v:unknown):m.Block5dPart2d{const r=v===undefined?{}:row(v);return{shape:optionalText(r.shape),radius:optionalWord(r.radius),width:optionalWord(r.width),height:optionalWord(r.height),color:optionalText(r.color),iconKind:optionalText(r.iconKind)}}
 function part3d(v:unknown):m.Block5dPart3d{const r=v===undefined?{}:row(v);return{orientation:quaternion(r.orientation),scale:r.scale===null||r.scale===undefined?null:xyz(r.scale)}}

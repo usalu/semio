@@ -635,7 +635,7 @@ VECTOR_ROOTS = {
 
 def _read_json(ctx: Context, uri: str):
     """🧫️ One declared fixture, parsed."""
-    return json.loads(ctx.fixture_bytes(uri))
+    return json.loads(ctx.input_bytes(uri))
 
 
 def _vector(ctx: Context, scenario: str):
@@ -7788,10 +7788,10 @@ def identity_handler(ctx: Context) -> Outcome:
     holds. In role it also requires this printer to round-trip it (print, read back, print again is a fixpoint), to
     reproduce the committed carrier's token stream, and the document to carry zones and surfaces, so the record, list,
     nested-list and child-handle grammar are all exercised."""
-    uri = next((uri for uri in ctx.step_fixture_uris() if uri.endswith("🗣️.dsl.semio")), None)
+    uri = next((uri for uri in ctx.step_input_uris() if uri.endswith("🗣️.dsl.semio")), None)
     if uri is None:
         raise AssertionError("identity-round-trip: the scenario names no committed .dsl.semio document")
-    committed = ctx.fixture_bytes(uri).decode("utf-8")
+    committed = ctx.input_bytes(uri).decode("utf-8")
     document = read_carrier(committed)
     printed = print_carrier(document)
     if read_carrier(printed) != document or print_carrier(read_carrier(printed)) != printed:

@@ -46,7 +46,7 @@ var cleanTree = []string{
 func tree(ctx *host.Context, uris []string) (*statutes.SourceSet, error) {
 	files := make([]statutes.SourceFile, 0, len(uris))
 	for _, uri := range uris {
-		path, err := ctx.Fixture(uri)
+		path, err := ctx.Input(uri)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +84,7 @@ func theGoldenTreeBreaches(ctx *host.Context) (host.Outcome, error) {
 		return host.Outcome{}, err
 	}
 	rendered := renderAll(statutes.Analyze(sources))
-	data, err := ctx.FixtureBytes("shared://🔍️analyze-breaches/🔣️breaches.json")
+	data, err := ctx.InputBytes("shared://🔍️analyze-breaches/🔣️breaches.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

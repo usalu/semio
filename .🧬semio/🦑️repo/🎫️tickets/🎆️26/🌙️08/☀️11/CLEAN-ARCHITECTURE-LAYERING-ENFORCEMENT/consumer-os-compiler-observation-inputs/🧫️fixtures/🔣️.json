@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "coded-build-failure",
+      "input": {
+        "terminal": 1,
+        "compiled": false,
+        "starts": 0,
+        "summaries": 0,
+        "rows": 0,
+        "coded": 9
+      },
+      "expected": "compiler-red"
+    },
+    {
+      "name": "single-coded-failure",
+      "input": {
+        "terminal": 1,
+        "compiled": false,
+        "starts": 0,
+        "summaries": 0,
+        "rows": 0,
+        "coded": 1
+      },
+      "expected": "compiler-red"
+    },
+    {
+      "name": "successful-terminal",
+      "input": {
+        "terminal": 0,
+        "compiled": false,
+        "starts": 0,
+        "summaries": 0,
+        "rows": 0,
+        "coded": 9
+      },
+      "expected": "refusal"
+    },
+    {
+      "name": "noncompiler-terminal",
+      "input": {
+        "terminal": 2,
+        "compiled": false,
+        "starts": 0,
+        "summaries": 0,
+        "rows": 0,
+        "coded": 9
+      },
+      "expected": "refusal"
+    },
+    {
+      "name": "completed-build",
+      "input": {
+        "terminal": 1,
+        "compiled": true,
+        "starts": 0,
+        "summaries": 0,
+        "rows": 0,
+        "coded": 9
+      },
+      "expected": "refusal"
+    },
+    {
+      "name": "started-runtime",
+      "input": {
+        "terminal": 1,
+        "compiled": false,
+        "starts": 1,
+        "summaries": 0,
+        "rows": 0,
+        "coded": 9
+      },
+      "expected": "refusal"
+    },
+    {
+      "name": "runtime-summary",
+      "input": {
+        "terminal": 1,
+        "compiled": false,
+        "starts": 0,
+        "summaries": 1,
+        "rows": 0,
+        "coded": 9
+      },
+      "expected": "refusal"
+    },
+    {
+      "name": "actual-completion",
+      "input": {
+        "terminal": 1,
+        "compiled": false,
+        "starts": 0,
+        "summaries": 0,
+        "rows": 1,
+        "coded": 9
+      },
+      "expected": "refusal"
+    },
+    {
+      "name": "uncoded-failure",
+      "input": {
+        "terminal": 1,
+        "compiled": false,
+        "starts": 0,
+        "summaries": 0,
+        "rows": 0,
+        "coded": 0
+      },
+      "expected": "refusal"
+    }
+  ]
+}

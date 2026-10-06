@@ -42,7 +42,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::of::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA);
     codec.extension = "xml";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
 }
 
@@ -109,6 +109,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(schema::xml_artifact_schema_descriptor())
         .formats(formats)
+        .schema_documents(schema::XML_SHARED_SCHEMA_DOCUMENTS)
         .inferences([standards::v1_0::subsets::base::schema::inferences::xml_artifact_inference_descriptor()])
         .composers(standards::v1_0::subsets::base::io::io_registry::entries())
         .subset_validators(pilot_subset_validators())
@@ -141,28 +142,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.xml",
                     extension: Some("xml"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xml"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.xml.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xml.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.xml.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xml.diff"),
@@ -173,8 +174,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xml.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -183,8 +184,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.xml.spr"),
                 },
             ]
@@ -260,20 +261,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod outline {
                             #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
@@ -286,18 +279,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📥️insert-element/🦀️.rs"]
                         pub mod insert_element;
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗑️remove-element/🦀️.rs"]
@@ -310,8 +297,6 @@ pub mod standards {
                         pub mod set_doctype;
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/✍️set-text/🦀️.rs"]
                         pub mod set_text;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -401,9 +386,7 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1_0::subsets::base::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1_0::subsets::base::io::*;
-}
+
 
 pub use standards::v1_0::subsets::base::examples;
 
@@ -552,3 +535,7 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v1_0::subsets::base::io::{XmlBuilderConstruction, XmlParts, XmlAnalyzerAnalysis, XmlBuilderFacets, XmlBuilder, XmlAnalyzer, XmlComposer};
+
+pub use crate::standards::v1_0::subsets::valid::io::{this, XmlValidBuilderConstruction, XmlValidAnalyzerAnalysis, XmlValidBuilderFacets, XmlValidBuilder, XmlValidAnalyzer, XmlValidComposer};

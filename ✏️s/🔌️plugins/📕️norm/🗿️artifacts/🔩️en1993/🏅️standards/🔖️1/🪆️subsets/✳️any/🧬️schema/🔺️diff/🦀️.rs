@@ -8,7 +8,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the En1993 artifact.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -54,7 +54,7 @@ pub struct En1993Diff {
 
 macro_rules! list_wrap {
     ($name:ident, $ty:ty) => {
-        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
         #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
         #[cfg_attr(test, serde(rename_all = "camelCase", default))]
         #[value(rename_all = "camelCase", default)]
@@ -82,3 +82,161 @@ list_wrap!(En1993PileList, SteelPile);
 list_wrap!(En1993CraneList, CraneRunway);
 
 //#endregion 🔖️Diff
+
+use crate::artifact_schema::diff::*;
+use crate::artifact_schema::En1993Artifact;
+use crate::En1993Snapshot;
+use protocol::MutationDiff;
+
+impl En1993Diff {
+    pub fn apply_to_artifact(&self, artifact: &En1993Artifact) -> protocol::MutationApplyResult<En1993Artifact> {
+        if let Some(replacement) = &self.artifact {
+            return Ok((**replacement).clone());
+        }
+        let mut next = artifact.clone();
+        if let Some(value) = &self.annex {
+            next.annex = *value;
+        }
+        if let Some(list) = &self.materials {
+            next.materials = list.values.clone();
+        }
+        if let Some(list) = &self.sections {
+            next.sections = list.values.clone();
+        }
+        if let Some(list) = &self.members {
+            next.members = list.values.clone();
+        }
+        if let Some(list) = &self.load_cases {
+            next.load_cases = list.values.clone();
+        }
+        if let Some(list) = &self.member_actions {
+            next.member_actions = list.values.clone();
+        }
+        if let Some(list) = &self.joints {
+            next.joints = list.values.clone();
+        }
+        if let Some(list) = &self.fatigue_details {
+            next.fatigue_details = list.values.clone();
+        }
+        if let Some(list) = &self.fire_exposures {
+            next.fire_exposures = list.values.clone();
+        }
+        if let Some(list) = &self.cold_formed_members {
+            next.cold_formed_members = list.values.clone();
+        }
+        if let Some(list) = &self.plated_panels {
+            next.plated_panels = list.values.clone();
+        }
+        if let Some(list) = &self.silo_shells {
+            next.silo_shells = list.values.clone();
+        }
+        if let Some(list) = &self.tension_components {
+            next.tension_components = list.values.clone();
+        }
+        if let Some(list) = &self.bridge_fatigue {
+            next.bridge_fatigue = list.values.clone();
+        }
+        if let Some(list) = &self.tower_legs {
+            next.tower_legs = list.values.clone();
+        }
+        if let Some(list) = &self.piles {
+            next.piles = list.values.clone();
+        }
+        if let Some(list) = &self.crane_runways {
+            next.crane_runways = list.values.clone();
+        }
+        Ok(next)
+    }
+}
+
+impl MutationDiff<En1993Snapshot> for En1993Diff {
+    fn apply(&self, snapshot: &En1993Snapshot) -> protocol::MutationApplyResult<En1993Snapshot> {
+        if let Some(replacement) = &self.artifact {
+            return Ok(replacement.to_snapshot());
+        }
+        let mut next = snapshot.clone();
+        if let Some(value) = &self.annex {
+            next.annex = *value;
+        }
+        if let Some(list) = &self.materials {
+            next.materials = list.values.clone();
+        }
+        if let Some(list) = &self.sections {
+            next.sections = list.values.clone();
+        }
+        if let Some(list) = &self.members {
+            next.members = list.values.clone();
+        }
+        if let Some(list) = &self.load_cases {
+            next.load_cases = list.values.clone();
+        }
+        if let Some(list) = &self.member_actions {
+            next.member_actions = list.values.clone();
+        }
+        if let Some(list) = &self.joints {
+            next.joints = list.values.clone();
+        }
+        if let Some(list) = &self.fatigue_details {
+            next.fatigue_details = list.values.clone();
+        }
+        if let Some(list) = &self.fire_exposures {
+            next.fire_exposures = list.values.clone();
+        }
+        if let Some(list) = &self.cold_formed_members {
+            next.cold_formed_members = list.values.clone();
+        }
+        if let Some(list) = &self.plated_panels {
+            next.plated_panels = list.values.clone();
+        }
+        if let Some(list) = &self.silo_shells {
+            next.silo_shells = list.values.clone();
+        }
+        if let Some(list) = &self.tension_components {
+            next.tension_components = list.values.clone();
+        }
+        if let Some(list) = &self.bridge_fatigue {
+            next.bridge_fatigue = list.values.clone();
+        }
+        if let Some(list) = &self.tower_legs {
+            next.tower_legs = list.values.clone();
+        }
+        if let Some(list) = &self.piles {
+            next.piles = list.values.clone();
+        }
+        if let Some(list) = &self.crane_runways {
+            next.crane_runways = list.values.clone();
+        }
+        Ok(next)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(annex);
+        take!(materials);
+        take!(sections);
+        take!(members);
+        take!(load_cases);
+        take!(member_actions);
+        take!(joints);
+        take!(fatigue_details);
+        take!(fire_exposures);
+        take!(cold_formed_members);
+        take!(plated_panels);
+        take!(silo_shells);
+        take!(tension_components);
+        take!(bridge_fatigue);
+        take!(tower_legs);
+        take!(piles);
+        take!(crane_runways);
+    }
+}

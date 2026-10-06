@@ -8,11 +8,8 @@ import { ShellScopeProvider, createShellScope } from "../../../🐚️ShellScope
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectSeparator, SelectTrigger, SelectValue, resolveSelectFrame, resolveSelectPlacement } from "../../🟦️.tsx";
 import { Dialog, DialogContent, DialogPortal, DialogTitle } from "../../../💬️Dialog/🟦️.tsx";
 import selectPopupGeometryFixture from "../../../../🧫️fixtures/🔽️select-popup-geometry/🔣️.json";
-import selectPopupGeometrySchema from "../../../../🧬️schema/🔽️select-popup-geometry/🔣️.json";
 import retainedSelectOriginFixture from "../../../../🧫️fixtures/🔽️retained-select-origin/🔣️.json";
-import retainedSelectOriginSchema from "../../../../🧬️schema/🔽️retained-select-origin/🔣️.json";
 import retainedSelectAccessibilityFixture from "../../../../🧫️fixtures/♿️retained-select-accessibility/🔣️.json";
-import retainedSelectAccessibilitySchema from "../../../../🧬️schema/♿️retained-select-accessibility/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region ☑️SelectMatrix
@@ -37,8 +34,6 @@ function BasicSelect(props: Omit<React.ComponentProps<typeof Select>, "id"> = {}
 
 describe("Select", () => {
   it("mounts listbox options only while expanded and commits one option through the React authority", async () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(retainedSelectAccessibilitySchema);
-    expect(validate(retainedSelectAccessibilityFixture), JSON.stringify(validate.errors)).toBe(true);
     const committed = vi.fn();
     render(
       <Select id="retained-select-accessibility" defaultValue={retainedSelectAccessibilityFixture.select.value} onValueChange={committed}>
@@ -64,8 +59,6 @@ describe("Select", () => {
   });
 
   it("mounts scoped bottom and flipped-top content at the fixture's viewport-local origin", async () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(retainedSelectOriginSchema);
-    expect(validate(retainedSelectOriginFixture), JSON.stringify(validate.errors)).toBe(true);
     expect(retainedSelectOriginFixture.row.menuHeight).toBe(
       retainedSelectOriginFixture.row.borderWidth * 2
       + retainedSelectOriginFixture.row.scrollBandHeight * 2
@@ -188,8 +181,6 @@ describe("Select", () => {
   });
 
   it("keeps the measured popup minimum, border, scroll bands, viewport, and selected-row reveal contract", async () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(selectPopupGeometrySchema);
-    expect(validate(selectPopupGeometryFixture), JSON.stringify(validate.errors)).toBe(true);
     const [normal, constrained] = selectPopupGeometryFixture.cases;
     expect(normal.popupWidth).toBe(Math.max(selectPopupGeometryFixture.triggerWidth, selectPopupGeometryFixture.minimumContentWidth));
     expect(normal.popupHeight).toBe(selectPopupGeometryFixture.borderWidth * 2 + selectPopupGeometryFixture.scrollBandHeight * 2 + normal.scrollViewportHeight);

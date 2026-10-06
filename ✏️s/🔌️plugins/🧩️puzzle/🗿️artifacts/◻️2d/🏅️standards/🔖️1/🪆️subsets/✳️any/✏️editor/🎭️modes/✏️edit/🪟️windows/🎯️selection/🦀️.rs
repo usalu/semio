@@ -1,5 +1,5 @@
 //! 🎯️ Puzzle 2d play app — the Selection window: a non-interactive canvas pane framing the
-//! fixture's lower-left quadrant, framed by `🎭️modes/✏️edit`'s triptych camera.
+//! snapshot's lower-left quadrant, framed by `🎭️modes/✏️edit`'s triptych camera.
 
 use crate::editor::puzzle2d::engine::BoardHost;
 use crate::editor::puzzle2d::modes::edit;
@@ -18,6 +18,7 @@ pub const ZOOM_SCALE: f64 = 0.36;
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle2d::create_puzzle2d_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: puzzle2d_localized(|l| l.window_selection),
         body_key: BODY_KEY.into(),

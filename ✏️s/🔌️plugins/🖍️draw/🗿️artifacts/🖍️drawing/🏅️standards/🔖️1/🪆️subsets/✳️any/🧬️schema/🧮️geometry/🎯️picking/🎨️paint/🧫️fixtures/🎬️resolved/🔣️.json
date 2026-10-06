@@ -1,0 +1,50 @@
+[
+  {
+    "source": "complete referenced difference",
+    "point": [
+      0.5,
+      0.5
+    ],
+    "expected": true
+  },
+  {
+    "source": "complete referenced difference",
+    "point": [
+      3.5,
+      3.5
+    ],
+    "expected": false
+  },
+  {
+    "source": "native pixel cell hole",
+    "point": [
+      0.5,
+      0.5
+    ],
+    "expected": true
+  },
+  {
+    "source": "native pixel cell hole",
+    "point": [
+      1.5,
+      1.5
+    ],
+    "expected": false
+  },
+  {
+    "source": "actual traced geometry is a Boolean operand",
+    "point": [
+      10.5,
+      4.5
+    ],
+    "expected": true
+  },
+  {
+    "source": "actual traced geometry is a Boolean operand",
+    "point": [
+      9.5,
+      5.5
+    ],
+    "expected": false
+  }
+]

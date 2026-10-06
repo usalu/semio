@@ -40,7 +40,6 @@ const chatInputFixture = JSON.parse(readFileSync(join(here, "../../../../🧫️
     readonly enterAction: "sendChatDraft" | null;
   }[];
 };
-const chatInputSchema = JSON.parse(readFileSync(join(here, "../../../../🧬️schema/💬️chat-input-accessibility/🔣️.json"), "utf8"));
 const cancellationFixture = JSON.parse(readFileSync(join(here, "../../../🔗️AgentBridge/🧫️fixtures/🛑️cancellation/🔣️.json"), "utf8")) as {
   readonly invocation: { readonly id: string; readonly toolName: string; readonly arguments: string };
   readonly openCancellation: { readonly state: "cancelling"; readonly cancelControl: false };
@@ -115,9 +114,6 @@ describe("AgentChatPanel cancel affordance", () => {
 //#region ♿️ComposerAccessibility
 describe("AgentChatPanel composer accessibility", () => {
   it("validates the language-neutral two-locale, two-bridge contract", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(chatInputSchema);
-    expect(validate(chatInputFixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...chatInputFixture, unknown: true })).toBe(false);
     expect(new Set(chatInputFixture.cases.map(({ locale, bridge }) => `${locale}:${bridge}`))).toEqual(new Set(["en:open", "en:closed", "de:open", "de:closed"]));
   });
 

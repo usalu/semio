@@ -3,7 +3,7 @@ import {gisMapSnapshotToSqliteDatabase,gisMapSnapshotFromSqliteDatabase,validate
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import fixture from "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json";
+import fixture from "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json";
 test("GIS map public package preserves full intrinsic words and independent target identities",async()=>{
  const maximum=fixture.value.members[2]!.value.value,word=fixture.value.members[4]!.value.bits;
  if(typeof maximum!=="string"||typeof word!=="string")throw Error("Neutral intrinsic fixture differs");

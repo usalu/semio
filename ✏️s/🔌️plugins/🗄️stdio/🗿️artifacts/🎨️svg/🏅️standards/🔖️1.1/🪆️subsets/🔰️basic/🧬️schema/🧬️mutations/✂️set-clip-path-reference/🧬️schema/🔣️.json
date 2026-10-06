@@ -13,6 +13,20 @@
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Element path",
+          "de": "Elementpfad"
+        },
+        "description": {
+          "en": "Child indices leading from the root element to the element, each counted from 0.",
+          "de": "Kindindizes vom Wurzelelement bis zum Element, jeweils ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
       }
     },
     "clipPathId": {

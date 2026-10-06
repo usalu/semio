@@ -1,9 +1,9 @@
 //! 🧭 `topology` — one named inference: graph-shape stats derived from the wires board's own
 //! `nodes`/`edges` arrays (node count, edge count, connected-component count, cycle-freedom).
-//! `WiresSnapshot`'s `board_fixture` stays an opaque `dsl::DslValue` by this artifact's own design
+//! `WiresSnapshot`'s `board_snapshot` stays an opaque `dsl::DslValue` by this artifact's own design
 //! (see `crate`'s module doc), so this leaf reads it generically via
 //! `DslValue::get`/`as_array`/`as_str` rather than through the `BoardFixtureDsl` typed mirror,
-//! matching how the artifact's own tests already probe `board_fixture` (`empty_snapshot_has_empty_fixtures`).
+//! matching how the artifact's own tests already probe `board_snapshot` (`empty_snapshot_has_empty_fixtures`).
 
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
@@ -44,10 +44,10 @@ fn find(parent: &BTreeMap<String, String>, id: &str) -> String {
 /// board connects node ids directly, no ports) and folds them through a union-find — an edge
 /// whose endpoints already share a root closes a cycle; `component_count` is the final number of
 /// distinct roots among every counted node.
-pub fn compute_wires_topology(board_fixture: &DslValue) -> WiresTopology {
-    let ids: BTreeSet<String> = board_fixture.get("nodes").and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(|item| item.get("id").and_then(semio_framework_value::DslValue::as_str)).map(str::to_string).collect()).unwrap_or_default();
+pub fn compute_wires_topology(board_snapshot: &DslValue) -> WiresTopology {
+    let ids: BTreeSet<String> = board_snapshot.get("nodes").and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(|item| item.get("id").and_then(semio_framework_value::DslValue::as_str)).map(str::to_string).collect()).unwrap_or_default();
 
-    let edges: Vec<(String, String)> = board_fixture
+    let edges: Vec<(String, String)> = board_snapshot
         .get("edges")
         .and_then(semio_framework_value::DslValue::as_array)
         .map(|items| {

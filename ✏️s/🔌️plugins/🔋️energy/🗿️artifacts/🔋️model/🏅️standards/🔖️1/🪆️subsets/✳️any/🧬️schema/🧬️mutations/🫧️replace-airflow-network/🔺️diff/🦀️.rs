@@ -22,6 +22,6 @@ pub fn diff(payload: &super::ReplaceAirflowNetwork, base: &EnergyModelSnapshot) 
     }
     let mut model = base.model.clone();
     model.airflow_network = network;
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

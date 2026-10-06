@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schema://s.draw.drawing.1.any.geometry.point",
+  "title": "DrawingPoint",
+  "type": "array",
+  "minItems": 2,
+  "maxItems": 2,
+  "items": {
+    "type": "number"
+  }
+}

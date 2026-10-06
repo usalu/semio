@@ -1,60 +1,27 @@
-//! ✍️ Text editor engine on the infinite canvas.
-//!
-//! `EditorHost` mirrors projection text and LSP adornments for WASM play surfaces only; authoritative
-//! packs and edits belong in the OS `ArtifactStore` (see `sync_from_scene_json` / pack apply paths).
+//! ✍️ Editor owns projection text and typed adornments; application document authority stays
+//! with the composing application.
 
 use canvas::camera::Viewport;
 use canvas::text as canvas_text;
 pub use infinite_canvas::{self as canvas, *};
 use serde::Deserialize;
-use semio_framework_value_derive::FromValue;
+use semio_framework_value_derive::{FromValue, ToValue};
 
-// #region ⚠️ Errors
-/// 🧯️ Errors from `EditorHost`'s own JSON-boundary parsing (theme/scene sync). The
-/// `#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))] #[wasm_bindgen]` methods on `EditorSession` stay
-/// `Result<_, JsValue>` — that shape is dictated by the `wasm_bindgen` ABI, not this crate's own
-/// error handling, so it is not migrated here.
-// 🧬️ ToValue/FromValue coverage deliberately SKIPPED (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
-// 26/09/01): both variants wrap a genuinely foreign, non-data error type — `serde_json::Error`
-// (opaque parser diagnostic state, not `ToValue`/`FromValue` anywhere) and `store::PackError`
-// (another owner's module) — and `EditorError` itself never crosses a wire (an internal
-// `Result<_, EditorError>`; the actual WASM boundary returns `JsValue` per the docstring above).
-#[derive(Debug)]
-pub enum EditorError {
-    Json(serde_json::Error),
-    Pack(store::PackError),
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+pub use js_sys::Function;
+
+#[path = "🧬️scene/🦀️.rs"]
+pub mod scene;
+pub use scene::EditorScene;
+
+#[path = "⚠️error/🦀️.rs"]
+mod editor_error;
+pub use editor_error::{EditorError, EditorErrorKind};
+
+fn parse_editor_json(text: &str) -> Result<serde_json::Value, EditorError> {
+    serde_json::from_str(text).map_err(|error| EditorError::from_cause(EditorErrorKind::Json, error))
 }
 
-impl std::fmt::Display for EditorError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Json(error) => write!(formatter, "json: {error}"),
-            Self::Pack(error) => write!(formatter, "pack: {error}"),
-        }
-    }
-}
-
-impl std::error::Error for EditorError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Json(error) => Some(error),
-            Self::Pack(error) => Some(error),
-        }
-    }
-}
-
-impl From<serde_json::Error> for EditorError {
-    fn from(error: serde_json::Error) -> Self {
-        Self::Json(error)
-    }
-}
-
-impl From<store::PackError> for EditorError {
-    fn from(error: store::PackError) -> Self {
-        Self::Pack(error)
-    }
-}
-// #endregion ⚠️ Errors
 
 // #region 🔖️Theme
 /// 🌉️ `Color` bridge — `Color` (`♾️infinite`, a different owner's module) has no `ToValue`/
@@ -113,7 +80,7 @@ impl EditorCanvasTheme {
     }
 
     fn merge_from_json(&mut self, json: &str) -> Result<(), EditorError> {
-        let v: serde_json::Value = serde_json::from_str(json)?;
+        let v: serde_json::Value = parse_editor_json(json)?;
         let mut next = *self;
         Self::merge_color_field(&mut next.raster_clear, &v, "rasterClear");
         Self::merge_color_field(&mut next.grid_minor_stroke, &v, "gridMinorStroke");
@@ -151,21 +118,21 @@ fn editor_content_affine(camera: &Camera) -> Affine {
 
 // #region 🔖️EditorState
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 struct EditorSettingsJson {
     #[serde(default = "default_font_px")]
-    #[value(default = "default_font_px")]
+    #[value(default = "default_font_px", default_controlled = "default_font_px_controlled")]
     font_px: f64,
     #[serde(default = "default_line_height")]
-    #[value(default = "default_line_height")]
+    #[value(default = "default_line_height", default_controlled = "default_line_height_controlled")]
     line_height: f64,
     #[serde(default = "default_show_line_numbers")]
-    #[value(default = "default_show_line_numbers")]
+    #[value(default = "default_show_line_numbers", default_controlled = "default_show_line_numbers_controlled")]
     show_line_numbers: bool,
     #[serde(default = "default_tab_size")]
-    #[value(default = "default_tab_size")]
+    #[value(default = "default_tab_size", default_controlled = "default_tab_size_controlled")]
     tab_size: usize,
 }
 
@@ -185,52 +152,69 @@ fn default_tab_size() -> usize {
     DEFAULT_TAB_SIZE
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+fn default_font_px_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<f64, semio_framework_value::ValueError> {
+ control.scoped_stage(|control| {control.begin_stage(1)?;control.step()?;Ok(default_font_px())})
+}
+
+fn default_line_height_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<f64, semio_framework_value::ValueError> {
+ control.scoped_stage(|control| {control.begin_stage(1)?;control.step()?;Ok(default_line_height())})
+}
+
+fn default_show_line_numbers_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<bool, semio_framework_value::ValueError> {
+ control.scoped_stage(|control| {control.begin_stage(1)?;control.step()?;Ok(default_show_line_numbers())})
+}
+
+fn default_tab_size_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<usize, semio_framework_value::ValueError> {
+ control.scoped_stage(|control| {control.begin_stage(1)?;control.step()?;Ok(default_tab_size())})
+}
+
+#[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 struct SemanticTokenJson {
     start: usize,
     end: usize,
     class: String,
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 struct SelectableSpanJson {
     start: usize,
     end: usize,
     kind: String,
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 struct ByteRangeJson {
     start: usize,
     end: usize,
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 struct PlaceholderJson {
     offset: usize,
     label: String,
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
 #[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 struct DiagnosticJson {
     start: usize,
     end: usize,
+    #[value(skip_serializing_if = "Option::is_none")]
     severity: Option<String>,
     #[allow(dead_code)]
     message: String,
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
 struct TextEditJson {
     range: TextRangeJson,
     #[serde(rename = "newText")]
@@ -238,13 +222,13 @@ struct TextEditJson {
     new_text: String,
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
 struct TextRangeJson {
     start: TextPosJson,
     end: TextPosJson,
 }
 
-#[derive(Clone, Debug, Deserialize, FromValue)]
+#[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
 struct TextPosJson {
     line: u32,
     character: u32,
@@ -681,91 +665,30 @@ impl EditorHost {
         self.clamp_camera();
     }
 
-    pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), EditorError> {
-        let value: serde_json::Value = serde_json::from_str(json)?;
-        self.sync_from_scene_value(&value);
-        Ok(())
-    }
-
-    pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), EditorError> {
-        // 📦️ Host TS `encodePackValue` is the wire-body twin of `encode_wire_value` (no SPK shell);
-        // accept that first, then fall back to `decode_pack_value` for native pack-shell callers/tests.
-        let dsl = store::pack_rt::decode_wire_value(bytes).or_else(|_| store::pack_rt::decode_pack_value(bytes))?;
-        let value = store::pack_rt::dsl_value_to_json(dsl);
-        self.sync_from_scene_value(&value);
-        Ok(())
-    }
-
-    fn expand_scene_json_field(raw: &str) -> String {
-        store::pack_rt::scene_field_json_text(raw).unwrap_or_else(|_| raw.to_string())
-    }
-
-    fn sync_from_scene_value(&mut self, value: &serde_json::Value) {
-        if let Some(buffer) = value.get("buffer").and_then(|v| v.as_str()) {
-            self.set_text(buffer.to_string());
+    /// 🎬️ Commits one completely decoded typed update without transport inference.
+    pub fn synchronize_scene(&mut self, scene: EditorScene) {
+        if let Some(buffer)=scene.buffer { self.set_text(buffer); }
+        if let Some(range)=scene.selection { self.set_selection_range(range.start,range.end); }
+        if let Some(tokens)=scene.tokens { self.semantic_tokens=tokens; }
+        if let Some(diagnostics)=scene.diagnostics { self.diagnostics=diagnostics; }
+        if let Some(placeholders)=scene.placeholders { self.placeholders=placeholders; }
+        if let Some(occurrences)=scene.occurrences {
+            if let Some(hover)=occurrences.hover { self.hover_occurrences=hover; }
+            if let Some(selection)=occurrences.selection { self.selection_occurrences=selection; }
         }
-        if let Some(json) = value.get("selectionJson").and_then(|v| v.as_str()) {
-            let json = Self::expand_scene_json_field(json);
-            if let Ok(range) = serde_json::from_str::<serde_json::Value>(&json) {
-                let start = range.get("start").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-                let end = range.get("end").and_then(|v| v.as_u64()).unwrap_or(start as u64) as usize;
-                self.set_selection_range(start, end);
-            }
+        if let Some(carets)=scene.extra_carets { self.extra_carets=carets; }
+        if let Some(spans)=scene.selectable_spans { self.selectable_spans=spans; }
+        if let Some(settings)=scene.settings {
+            self.font_px=settings.font_px.clamp(10.0,28.0);
+            self.line_height=settings.line_height.clamp(16.0,48.0);
+            self.show_line_numbers=settings.show_line_numbers;
+            self.tab_size=settings.tab_size.clamp(1,8);
+            self.clamp_camera();
         }
-        if let Some(json) = value.get("tokensJson").and_then(|v| v.as_str()) {
-            self.set_semantic_tokens_json(&Self::expand_scene_json_field(json));
-        }
-        if let Some(json) = value.get("diagnosticsJson").and_then(|v| v.as_str()) {
-            self.set_diagnostics_json(&Self::expand_scene_json_field(json));
-        }
-        if let Some(json) = value.get("placeholdersJson").and_then(|v| v.as_str()) {
-            self.set_placeholders_json(&Self::expand_scene_json_field(json));
-        }
-        if let Some(json) = value.get("occurrencesJson").and_then(|v| v.as_str()) {
-            let json = Self::expand_scene_json_field(json);
-            if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json) {
-                if let Some(hover) = value.get("hover").and_then(|v| v.as_str()) {
-                    self.set_hover_occurrences_json(hover);
-                }
-                if let Some(selection) = value.get("selection").and_then(|v| v.as_str()) {
-                    self.set_selection_occurrences_json(selection);
-                }
-            }
-        }
-        if let Some(json) = value.get("extraCaretsJson").and_then(|v| v.as_str()) {
-            self.set_extra_carets_json(&Self::expand_scene_json_field(json));
-        }
-        if let Some(json) = value.get("selectableSpansJson").and_then(|v| v.as_str()) {
-            self.set_selectable_spans_json(&Self::expand_scene_json_field(json));
-        }
-        if let Some(json) = value.get("settingsJson").and_then(|v| v.as_str()) {
-            self.set_editor_settings_json(&Self::expand_scene_json_field(json));
-        }
-        if let Some(json) = value.get("cameraJson").and_then(|v| v.as_str()) {
-            let json = Self::expand_scene_json_field(json);
-            if let Ok(camera) = serde_json::from_str::<serde_json::Value>(&json) {
-                let y = camera.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                self.set_camera(0.0, y, 1.0);
-            }
-        }
-        if let Some(json) = value.get("overlaysJson").and_then(|v| v.as_str()) {
-            let json = Self::expand_scene_json_field(json);
-            if let Ok(overlays) = serde_json::from_str::<serde_json::Value>(&json) {
-                if let Some(y) = overlays.get("deadLineY").and_then(|v| v.as_f64()) {
-                    self.set_dead_line_y(y);
-                }
-            }
-        }
-        if let Some(json) = value.get("hoverJson").and_then(|v| v.as_str()) {
-            let json = Self::expand_scene_json_field(json);
-            match serde_json::from_str::<serde_json::Value>(&json) {
-                Ok(serde_json::Value::Object(range)) => {
-                    let start = range.get("start").and_then(|v| v.as_u64()).map(|v| v as usize);
-                    let end = range.get("end").and_then(|v| v.as_u64()).map(|v| v as usize);
-                    self.set_hover_range(start, end);
-                }
-                _ => self.set_hover_range(None, None),
-            }
+        if let Some(camera)=scene.camera { self.set_camera(0.0,camera.y,1.0); }
+        if let Some(overlays)=scene.overlays { if let Some(y)=overlays.dead_line_y { self.set_dead_line_y(y); } }
+        if let Some(hover)=scene.hover {
+            match hover { scene::Hover::Clear=>self.set_hover_range(None,None),scene::Hover::Range{start,end}=>self.set_hover_range(Some(start),Some(end)) }
         }
     }
 
@@ -1402,14 +1325,17 @@ impl EditorSession {
         self.state.borrow_mut().host.set_text(text);
     }
 
-    #[wasm_bindgen(js_name = syncFromSceneJson)]
-    pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.sync_from_scene_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = syncFromScenePack)]
-    pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.sync_from_scene_pack(bytes).map_err(|e| JsValue::from_str(&e.to_string()))
+    #[wasm_bindgen(js_name = synchronizeScene)]
+    pub fn synchronize_scene(&mut self, bytes: &[u8], format: u8, maximum_input_bytes: u32, maximum_owned_bytes: u32, progress: Function) -> Result<(), JsValue> {
+        let format=match format { 0=>scene::IntrinsicFormat::Body,1=>scene::IntrinsicFormat::Document,_=>return Err(JsValue::from_str("unknown Editor scene frame")) };
+        if bytes.len()>maximum_input_bytes as usize { return Err(JsValue::from_str("Editor scene exceeds caller input limit")); }
+        let mut options=scene::DecodeOptions::default();options.preserve_unknown=false;
+        options.limits.max_file_len=u64::from(maximum_input_bytes);options.limits.max_total_alloc=u64::from(maximum_owned_bytes);
+        let mut report=|step:semio_framework_value::native_decoding::NativeDecodeProgress|progress.call3(&JsValue::NULL,&JsValue::from_f64(step.completed as f64),&JsValue::from_f64(step.total as f64),&JsValue::from_f64(step.owned_bytes as f64)).ok().and_then(|value|value.as_bool())==Some(true);
+        let mut control=semio_framework_value::NativeDecodeControl::new(maximum_owned_bytes as usize,&mut report);
+        let decoded=scene::decode(bytes,format,&options,&mut control).map_err(|error|JsValue::from_str(&error.to_string()))?;
+        control.checkpoint().map_err(|error|JsValue::from_str(&error.to_string()))?;
+        self.state.borrow_mut().host.synchronize_scene(decoded);Ok(())
     }
 
     #[wasm_bindgen(js_name = text)]

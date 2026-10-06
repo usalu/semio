@@ -1,0 +1,153 @@
+{
+  "qualification": "Proposed closed neutral scalar authority; no implementation or oracle execution",
+  "scalar": "Int64",
+  "semanticOwner": "signed64",
+  "wireRepresentation": "canonicalDecimalString",
+  "valid": [
+    {
+      "variable": "-9223372036854775808",
+      "ast": {
+        "kind": "IntValue",
+        "value": "-9223372036854775808"
+      },
+      "stringAst": {
+        "kind": "StringValue",
+        "value": "-9223372036854775808"
+      },
+      "output": "-9223372036854775808"
+    },
+    {
+      "variable": "-9007199254740993",
+      "ast": {
+        "kind": "IntValue",
+        "value": "-9007199254740993"
+      },
+      "stringAst": {
+        "kind": "StringValue",
+        "value": "-9007199254740993"
+      },
+      "output": "-9007199254740993"
+    },
+    {
+      "variable": "-2147483649",
+      "ast": {
+        "kind": "IntValue",
+        "value": "-2147483649"
+      },
+      "stringAst": {
+        "kind": "StringValue",
+        "value": "-2147483649"
+      },
+      "output": "-2147483649"
+    },
+    {
+      "variable": "-1",
+      "ast": {
+        "kind": "IntValue",
+        "value": "-1"
+      },
+      "stringAst": {
+        "kind": "StringValue",
+        "value": "-1"
+      },
+      "output": "-1"
+    },
+    {
+      "variable": "0",
+      "ast": {
+        "kind": "IntValue",
+        "value": "0"
+      },
+      "stringAst": {
+        "kind": "StringValue",
+        "value": "0"
+      },
+      "output": "0"
+    },
+    {
+      "variable": "1",
+      "ast": {
+        "kind": "IntValue",
+        "value": "1"
+      },
+      "stringAst": {
+        "kind": "StringValue",
+        "value": "1"
+      },
+      "output": "1"
+    },
+    {
+      "variable": "2147483648",
+      "ast": {
+        "kind": "IntValue",
+        "value": "2147483648"
+      },
+      "stringAst": {
+        "kind": "StringValue",
+        "value": "2147483648"
+      },
+      "output": "2147483648"
+    },
+    {
+      "variable": "9007199254740993",
+      "ast": {
+        "kind": "IntValue",
+        "value": "9007199254740993"
+      },
+      "stringAst": {
+        "kind": "StringValue",
+        "value": "9007199254740993"
+      },
+      "output": "9007199254740993"
+    },
+    {
+      "variable": "9223372036854775807",
+      "ast": {
+        "kind": "IntValue",
+        "value": "9223372036854775807"
+      },
+      "stringAst": {
+        "kind": "StringValue",
+        "value": "9223372036854775807"
+      },
+      "output": "9223372036854775807"
+    }
+  ],
+  "invalidDecimal": [
+    "-9223372036854775809",
+    "9223372036854775808",
+    "-0",
+    "+1",
+    "01",
+    "-01",
+    "1.0",
+    "1e3",
+    "",
+    " 1",
+    "1 ",
+    "١"
+  ],
+  "invalidVariableKinds": [
+    null,
+    true,
+    1,
+    1.5,
+    [],
+    {}
+  ],
+  "invalidAstKinds": [
+    "FloatValue",
+    "BooleanValue",
+    "NullValue",
+    "EnumValue"
+  ],
+  "requiredLaws": [
+    "exact variable input coercion",
+    "exact AST IntValue/StringValue literal coercion",
+    "canonical output serialization",
+    "overflow and noncanonical refusal",
+    "real graphql-js query variable/literal/output integration",
+    "Rust and Source identical neutral outcomes"
+  ],
+  "externalTypesInPublicApi": false
+}

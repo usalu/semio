@@ -16,7 +16,7 @@ pub fn label() -> LocalizedLabel {
 /// 🖼️ Icon id.
 pub const ICON: &str = "play";
 
-/// 🎮️ Command-script fixture text.
+/// 🎮️ Command-script scene_snapshot text.
 pub const CMD_TEXT: &str = include_str!("🖼️assets/🎮️.cmd.semio");
 
 /// 📚️ Canonical example source for `App::example_source`.

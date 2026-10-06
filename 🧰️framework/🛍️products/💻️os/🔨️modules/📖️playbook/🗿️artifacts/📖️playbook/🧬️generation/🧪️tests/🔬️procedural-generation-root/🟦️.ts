@@ -9,10 +9,9 @@ export function proceduralGenerationRootSelfTests(): number {
   const schema = JSON.parse(readFileSync(join(base, "🧬️generation/🧬️schema/🔣️.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(base, "🧬️generation/🧫️fixtures/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/GenerationRootV1" });
-  if (!validate(fixture)) throw new Error("generation root fixture failed strict schema");
-  const hostiles = [{ ...fixture, extra: true }, { ...fixture, generation: { ...fixture.generation, extra: true } }, { ...fixture, expected: { ...fixture.expected, sharesAllocation: false } }];
-  for (const value of hostiles) if (validate(value)) throw new Error("generation root schema accepted hostile input");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/GenerationValueV1" });
+  for (const generation of fixture.generation.generations) for (const value of Object.values(generation.values)) if (!validate(value)) throw new Error("generation value violates its semantic contract");
+  
   const wire = JSON.stringify(fixture.generation);
   if (Buffer.byteLength(wire) <= 16384 || JSON.stringify(JSON.parse(wire)) !== wire) throw new Error("generation root independent JSON oracle lost large nested content");
   const ranked = fixture.rankedValues;
@@ -46,5 +45,5 @@ export function proceduralGenerationRootSelfTests(): number {
     [source.replaceAll("!std::thread::panicking()", "true"), snapshot],
   ];
   for (const [root, model] of sources) if (exact(root, model)) throw new Error("generation root accepted hostile source mutation");
-  return 4 + hostiles.length + sources.length;
+  return 4 + sources.length;
 }

@@ -38,7 +38,7 @@ type draftScript struct {
 // region 🔖️Scenarios
 
 func theDraftScriptProducesOneHistory(ctx *host.Context) (host.Outcome, error) {
-	data, err := ctx.FixtureBytes("shared://✏️draft-script.json")
+	data, err := ctx.InputBytes("shared://✏️draft-script.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

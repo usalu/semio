@@ -36,7 +36,8 @@ use std::sync::Arc;
 pub mod retirement;
 
 //#region 🔖️Types
-pub use semio_framework_artifact_flow_flow::FLOW_DOCUMENT_SCHEMA;
+/// 🌊️ Owns the composed Flow document codec independently from its framework host.
+pub const FLOW_DOCUMENT_SCHEMA: &str = "s.flow.flow";
 //#endregion 🔖️Types
 
 //#region 🔖️Dialect
@@ -387,9 +388,9 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         )?
         .capability(
             ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.codec.document")?, ArtifactCapabilityKind::codec())
-                .descriptor(b"flow.host_snapshot:flow")?
-                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "flow.host_snapshot")?)?
-                .claim(ArtifactIdentityClaim::codec_extension("flow.host_snapshot", "flow")?)?,
+                .descriptor(b"s.flow.flow:flow")?
+                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), "s.flow.flow")?)?
+                .claim(ArtifactIdentityClaim::codec_extension("s.flow.flow", "flow")?)?,
         )?
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.localization.en")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("en")?, "Flow")?)?)?
         .capability(ArtifactCapability::new(ArtifactIdentity::parse("s.flow.flow.localization.de")?, ArtifactCapabilityKind::localization()).descriptor(b"Flow")?.localization(ArtifactLocalization::new(ArtifactLocale::parse("de")?, "Flow")?)?)
@@ -424,20 +425,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod topology {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
@@ -450,11 +443,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
                     #[path = "."]
                     pub mod mutations {
@@ -544,23 +532,15 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-}
-pub mod pack {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-}
+
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-    }
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
@@ -569,9 +549,7 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-    }
+
 }
 pub use crate::standards::v1::subsets::any::schema::diff::FlowDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::FlowMutation;
@@ -797,3 +775,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v1::subsets::any::io::{FlowBuilderConstruction, FlowParts, FlowAnalyzerAnalysis, FlowBuilderFacets, FlowBuilder, FlowAnalyzer, FlowComposer};

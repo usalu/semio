@@ -46,8 +46,8 @@ fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMa
 /// ⚖️ The per-kind node and handle weight trees the brush AND the fill tool share — one distribution,
 /// two entry points (`Puzzle2dConfig::{node_kind_weights, handle_kind_weights}`).
 pub fn puzzle2d_distribution_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
-    let node_ids = puzzle2d_kind_ids(&envelope.fixture, "nodes");
-    let handle_ids = puzzle2d_kind_ids(&envelope.fixture, "handles");
+    let node_ids = puzzle2d_kind_ids(&envelope.board_snapshot, "nodes");
+    let handle_ids = puzzle2d_kind_ids(&envelope.board_snapshot, "handles");
     vec![
         WindowMeasure::Group {
             id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-nodes"),

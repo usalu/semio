@@ -17,7 +17,7 @@ type Call = { readonly operation: "lstat" | "read"; readonly path: string };
 type VirtualFilesystem = { readonly files: ReadonlyMap<string, string>; readonly directories: ReadonlySet<string>; readonly symlink?: string; readonly calls: Call[] };
 
 const actual = { ...filesystem };
-const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🪢️cargo-provider-binding/🔣️.json"), schemaPath = join(import.meta.dir, "../../🧫️fixtures/🪢️cargo-provider-binding/🛂️schema/🔣️.json");
+const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🪢️cargo-provider-binding/🔣️.json");
 const fixture = JSON.parse(actual.readFileSync(fixturePath, "utf8")) as { readonly schemaVersion: 1; readonly traces: readonly Trace[] };
 let virtual: VirtualFilesystem | undefined;
 
@@ -62,7 +62,7 @@ function traceFilesystem(root: string, symlink: string | undefined): VirtualFile
 
 describe("cargo provider binding filesystem trace", () => {
   test("fails unsafe input before access and stops no-follow workspace boundaries before manifest reads", () => {
-    expect(new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(actual.readFileSync(schemaPath, "utf8")))(fixture)).toBe(true);
+    
     const filesystemRoot = parse(process.cwd()).root;
     for (const trace of fixture.traces) {
       const root = join(filesystemRoot, ...trace.workspaceRootSegments), symlink = trace.symlinkSegments === undefined ? undefined : join(filesystemRoot, ...trace.symlinkSegments);

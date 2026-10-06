@@ -33,6 +33,7 @@ const SEQUENCE_VIEW_DEFAULT_HEIGHT: f64 = 56.0;
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SEQUENCE_VIEW_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Sequence", "Sequenz"),
         body_key: SEQUENCE_VIEW_BODY_MAIN.into(),

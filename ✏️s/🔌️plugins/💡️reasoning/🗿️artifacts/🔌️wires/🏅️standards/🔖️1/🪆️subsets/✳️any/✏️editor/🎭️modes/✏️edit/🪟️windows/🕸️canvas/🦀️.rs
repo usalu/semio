@@ -23,6 +23,7 @@ const WIRES_PLAY_SURFACE_ID: &str = "reasoning.wires.composite";
 /// 🧱️ Stitched into the app manifest by `crate::editor::wires::create_wires_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WIRES_PLAY_WINDOW_CANVAS.into(),
         label: LocalizedLabel::native("Canvas", "Leinwand"),
         body_key: WIRES_PLAY_BODY_COMPOSITE.into(),

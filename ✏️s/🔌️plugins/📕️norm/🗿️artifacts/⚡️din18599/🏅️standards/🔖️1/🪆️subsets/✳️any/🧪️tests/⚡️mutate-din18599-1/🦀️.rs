@@ -14,8 +14,15 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::mutations::{apply_din18599_mutation, decode_din18599_mutation_json, inverse_din18599_mutation, Din18599Mutation};
-    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::snapshot::{decode_din18599_dsl, decode_din18599_pack, decode_din18599_snapshot_json, encode_din18599_dsl, encode_din18599_pack, encode_din18599_snapshot_json, Din18599Snapshot};
+    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::mutations::{apply_din18599_mutation, inverse_din18599_mutation, Din18599Mutation};
+    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::mutations::{decode_din18599_mutation_json};
+    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::schema::snapshot::{Din18599Snapshot};
+    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::binary::snapshot::{encode_din18599_pack};
+    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::binary::snapshot::{decode_din18599_pack};
+    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::snapshot::{encode_din18599_dsl};
+    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::snapshot::{decode_din18599_dsl};
+    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::snapshot::{decode_din18599_snapshot_json};
+    use semio_s_artifact_norm_din18599::standards::v1::subsets::any::io::text::snapshot::{encode_din18599_snapshot_json};
     use semio_repo_test_host::law;
 
     /// 🗣️ The real committed DIN V 18599 document, read where the domain already keeps it.
@@ -23,10 +30,10 @@ mod subject {
 
     /// 🧫️ The committed `(before, mutation, after, outcome)` texts this scenario's steps name, in that role order.
     fn vector(ctx: &Context) -> Result<[String; 4], String> {
-        let uris = ctx.step_fixture_uris();
+        let uris = ctx.step_input_uris();
         let text = |suffix: &str| -> Result<String, String> {
             let uri = uris.iter().find(|uri| uri.ends_with(suffix)).ok_or_else(|| format!("the scenario names no committed …{suffix}"))?;
-            String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("{uri}: {error}"))
+            String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("{uri}: {error}"))
         };
         Ok([text("⬅️before/🔣️.json")?, text("🦠️mutation/🔣️.json")?, text("➡️after/🔣️.json")?, text("🎯️outcome/🔣️.json")?])
     }
@@ -121,7 +128,7 @@ mod subject {
     /// 🔁️ The real committed document through every encoding it has: the DSL carrier re-emits byte for byte, and the
     /// pack and JSON codecs reproduce the parsed document, so a shortcut that handed back its input could not pass.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
         let parsed = decode_din18599_dsl(&text)?;
         let reprinted = encode_din18599_dsl(&parsed);
         law::carrier_is_exact(reprinted.as_bytes(), text.as_bytes())?;

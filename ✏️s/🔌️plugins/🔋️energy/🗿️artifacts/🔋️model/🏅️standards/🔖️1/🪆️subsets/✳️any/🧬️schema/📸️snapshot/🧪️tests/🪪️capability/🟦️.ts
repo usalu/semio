@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import * as owner from "../../../../../../../../🟦️.ts";
-import corpus from "../../🧫️fixtures/🪶️sqlite/🔣️.json";
+import corpus from "../../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json";
 test("Energy owning source facade exposes its explicit relational capability",()=>{
   for(const name of corpus.capabilityExports)expect(Object.hasOwn(owner,name)).toBe(true);
 });

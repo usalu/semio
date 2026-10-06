@@ -22,7 +22,7 @@ use crate::editor::fem2d::modes::edit;
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
 use crate::model::{Dof, ElementResult};
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::Fem2dSnapshot;
 use semio_framework_pack_json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -77,7 +77,7 @@ pub const FEM2D_PLAY_CONTROLLER_ID: &str = FEM2D_APP_ID;
 /// 📦️ The `fem2d-play` "default" example — read directly by the `setActiveExample` handler
 /// (`crate::editor::fem2d::commands::set_active_example`) and every test fixture (`EditorBuilder` has
 /// no `.example(...)` registration — see the SDK-gap doc comment on `create_fem2d_app` below).
-pub const FEM2D_EXAMPLE_DSL: &str = crate::standards::v1::subsets::any::schema::snapshot::text::FEM2D_EXAMPLE_TEXT;
+pub const FEM2D_EXAMPLE_DSL: &str = crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT;
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
@@ -393,7 +393,6 @@ struct Fem2dArtifactPreparationFactory;
 struct Fem2dArtifactPreparation {
     base: Option<store::SnapshotRead<Fem2dSnapshot>>,
     mutation: Option<Fem2dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -404,9 +403,9 @@ struct Fem2dArtifactPreparation {
 impl store::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparationFactory {
     /// 🧺️ One forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`: one per node
     /// and region a `move-selection` restores, one for every other kind).
-    fn preflight(&self, mutation: &Fem2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("fem2d-artifact-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &Fem2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("fem2d-artifact-lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -422,14 +421,13 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation>
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-            || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+            || self.preflight(&request.mutation, request.lane).is_err()
         {
             return Err(request);
         }
         Ok(Box::new(Fem2dArtifactPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -480,7 +478,7 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -500,7 +498,7 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 
@@ -842,7 +840,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// 🌱️ Boots on the bundled `📚️examples/🎬️demo` document so the playground paints a real structure
     /// at first frame instead of an empty canvas — the same snapshot `Fem2dViewer` already booted on.
     fn initial_snapshot() -> Fem2dSnapshot {
-        crate::standards::v1::subsets::any::schema::default_fem2d_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
     }
 
     fn io() -> Option<AppIo> {

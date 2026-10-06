@@ -4,6 +4,12 @@
 # independent evidence. Same pattern, same stated reason, as `…✳️cad/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml`
 # and `…📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️bridge/Cargo.toml`.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "note-oracle-codec"

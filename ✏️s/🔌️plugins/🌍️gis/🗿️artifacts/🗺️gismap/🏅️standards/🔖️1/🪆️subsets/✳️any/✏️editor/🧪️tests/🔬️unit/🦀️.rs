@@ -161,7 +161,7 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
     let mut store = store::ArtifactStore::new(envelope)
         .await
         .expect("GIS Map preparation-law Store opens");
-    store.install_document_store_owners_exact(crate::spr::gis_map_document_store_owners());
+    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::gis_map_document_store_owners());
     let factory = gis_map_parent_one_item_preparation_factory();
     let mutation = GisMapMutation::CreatePosition(crate::mutations::create_position::CreatePosition {
         index: 0,
@@ -174,7 +174,6 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
             store.content_revision_now(),
             "gis-map-preparation-law".into(),
             vec![mutation],
-            Some("candidate transfer".into()),
             store::HistoryLane::Document,
             Some(&factory),
             None,
@@ -260,7 +259,7 @@ fn gis_map_envelope_wire() -> Vec<u8> {
     }))
     .expect("schema-first GIS fixture envelope");
     let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None);
-    let mut retirement = crate::spr::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {

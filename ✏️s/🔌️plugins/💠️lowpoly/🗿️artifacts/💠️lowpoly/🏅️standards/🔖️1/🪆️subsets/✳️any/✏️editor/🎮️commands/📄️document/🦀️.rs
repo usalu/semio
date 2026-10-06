@@ -5,14 +5,14 @@
 
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::op::LowpolyMutation;
+use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::LowpolySnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {
-    match semio_framework_pack_json::from_json_str::<LowpolySnapshot>(json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
+    match crate::standards::v1::subsets::any::io::text::lowpoly_json_decode::<LowpolySnapshot>(json) {
         Ok(parsed) => Emit { effects: vec![crate::editor::lowpoly::reset_document_effect(&parsed)], ..Default::default() },
         Err(_) => Emit::default(),
     }

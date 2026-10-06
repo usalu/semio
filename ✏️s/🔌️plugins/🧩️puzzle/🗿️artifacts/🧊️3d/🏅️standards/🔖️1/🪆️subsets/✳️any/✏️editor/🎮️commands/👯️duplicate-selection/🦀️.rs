@@ -18,7 +18,7 @@ pub fn duplicate_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     }
     let clones: Vec<Puzzle3dObject> = ctx
         .scene
-        .fixture
+        .scene_snapshot
         .objects
         .iter()
         .filter(|object| ids.contains(&object.id))
@@ -28,13 +28,13 @@ pub fn duplicate_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
             clone.origin[0] += 0.5;
             clone.origin[1] += 0.5;
             if let Some(kind) = clone.object_kind.as_deref() {
-                clone.label = Some(puzzle3d_next_object_label(&ctx.scene.fixture.objects, &ctx.scene.fixture, kind));
+                clone.label = Some(puzzle3d_next_object_label(&ctx.scene.scene_snapshot.objects, &ctx.scene.scene_snapshot, kind));
             }
             clone
         })
         .collect();
     let clone_ids: Vec<String> = clones.iter().map(|clone| clone.id.clone()).collect();
-    ctx.scene.fixture.objects.extend(clones);
-    resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
+    ctx.scene.scene_snapshot.objects.extend(clones);
+    resolve_puzzle3d_attractions(&mut ctx.scene.scene_snapshot);
     ctx.replace_selection(PUZZLE3D_GRANULARITY_OBJECT, clone_ids);
 }

@@ -17,6 +17,6 @@ pub fn diff(payload: &super::CreateOutdoorAirSystem, base: &EnergyModelSnapshot)
     }
     let mut model = base.model.clone();
     model.outdoor_air_systems.push(crate::model::OutdoorAirSystem { id: payload.id, air_loop_id: payload.air_loop_id, min_oa_flow_m3_s: payload.min_oa_flow_m3_s, economizer_enabled: payload.economizer_enabled });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

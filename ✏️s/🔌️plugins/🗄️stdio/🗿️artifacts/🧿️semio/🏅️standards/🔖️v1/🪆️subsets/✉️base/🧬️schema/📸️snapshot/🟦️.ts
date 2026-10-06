@@ -16,7 +16,7 @@ import type { SemioPresentationSnapshot } from "../../../📽️presentation/�
 import type { SemioFlowSnapshot } from "../../../🌊️flow/🧬️schema/📸️snapshot/🟦️.ts";
 import type { SemioTextSnapshot } from "../../../🔤️text/🧬️schema/📸️snapshot/🟦️.ts";
 import type { SemioTableSnapshot } from "../../../📊️table/🧬️schema/📸️snapshot/🟦️.ts";
-import type { SemioGraphSnapshot } from "../../../🕸️graph/🧬️schema/📸️snapshot/🟦️.ts";
+import type {SemioGraphSnapshot} from "../../../🕸️graph/🧬️schema/📸️snapshot/🟦️.ts";
 import type { SemioObjectSnapshot } from "../../../📦️object/🧬️schema/📸️snapshot/🟦️.ts";
 import type { SemioKitSnapshot } from "../../../🧰️kit/🧬️schema/📸️snapshot/🟦️.ts";
 

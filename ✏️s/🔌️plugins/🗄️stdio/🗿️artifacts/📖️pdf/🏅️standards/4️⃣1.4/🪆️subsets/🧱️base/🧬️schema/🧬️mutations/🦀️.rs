@@ -18,6 +18,12 @@ pub use resize_page::ResizePage;
 #[path = "♻️replace-page-text/🦀️.rs"]
 pub mod replace_page_text;
 pub use replace_page_text::ReplacePageText;
+#[path = "📸️set-snapshot/🦀️.rs"]
+pub mod set_snapshot;
+pub use set_snapshot::SetSnapshot;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
+pub use patch_snapshot::PatchSnapshot;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
@@ -30,6 +36,8 @@ pub enum PdfMutation {
     MovePage(MovePage),
     ResizePage(ResizePage),
     ReplacePageText(ReplacePageText),
+    SetSnapshot(SetSnapshot),
+    PatchSnapshot(PatchSnapshot),
 }
 
 //#endregion 🔖️Aggregate
@@ -44,10 +52,6 @@ pub fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) ->
 //#endregion 🔖️Delegation
 
 //#region 🔖️Codecs
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion 🔖️Codecs
 
 //#region 🧪️Structure

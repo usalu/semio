@@ -124,29 +124,17 @@ export function rendererExportIds(): readonly string[] {
 export interface ShellScopeV1 { readonly spaceId: string; readonly documentId: string }
 export interface ShellDialogDocumentV1 { readonly runtimeKey: string; readonly clientInstanceId: string; readonly scope: ShellScopeV1 | null }
 export interface ShellDialogOriginV1 { readonly pluginId: string; readonly appId: string; readonly controllerId: string; readonly sessionInstanceId: number; readonly document: ShellDialogDocumentV1 | null }
-export interface AdmittedShellInstanceTransitionV1 { readonly id: string; readonly before: boolean; readonly after: boolean; readonly creates: number; readonly retires: number; readonly accepted: boolean }
 export type DocumentOpeningStepV1 = "socket" | "attach" | "close" | "detach" | "commit" | "retire";
-export interface DocumentOpeningTransitionV1 { readonly id: string; readonly fail: "none" | "socket" | "attach" | "deadline"; readonly replace: "none" | "socket" | "attach"; readonly outcome: "failed" | "retired" | "ready"; readonly sequence: readonly DocumentOpeningStepV1[]; readonly timers: number }
-export interface DocumentOpeningAdmissionV1 { readonly background: boolean; readonly runtimeKey: string; readonly instanceId: number; readonly admitted: boolean; readonly closed: readonly string[] }
-export type DocumentOpeningBackgroundSequenceV1 = readonly ("create-1" | "create-2" | "create-failed" | "visit-1" | "visit-2" | "release-1" | "release-2")[];
 export type DocumentOpeningAttachmentStepV1 = "attach-a" | "attached-a" | "detach" | "attach-b";
-export interface DocumentOpeningCloseFailureV1 { readonly attached: boolean; readonly sequence: readonly ("socket" | "attach" | "close" | "detach" | "retire")[] }
 export interface DocumentOpeningRefV1 { readonly documentId: string; readonly schema: string; readonly spaceId?: string }
 export interface DocumentOpeningContextV1 { readonly currentSpaceId: string | null; readonly identity: { readonly hubBaseUrl: string } | null; readonly dataDir?: string; readonly surface?: string }
 export type DocumentOpeningTargetV1 = { readonly kind: "hub"; readonly dataClass: "persistedShared"; readonly baseUrl: string; readonly spaceId: string; readonly requestedSurfaceId: string } | { readonly kind: "folder"; readonly dataClass: "persistedLocalOnly"; readonly path: string };
 export type DocumentOpeningErrorCodeV1 = "opening.identity-required" | "opening.surface-required";
-export interface DocumentOpeningScopeResolutionV1 { readonly id: string; readonly ref: DocumentOpeningRefV1; readonly context: DocumentOpeningContextV1; readonly expected?: readonly DocumentOpeningTargetV1[]; readonly error?: DocumentOpeningErrorCodeV1 }
 export type DocumentOpeningRequestStageV1 = "open-plan" | "manifest" | "component" | "descriptor" | "socket-grants";
-export interface DocumentFirstOpenV1 { readonly requestedSurfaceOnly: boolean; readonly requestStages: readonly DocumentOpeningRequestStageV1[]; readonly socketCount: number; readonly localSocketFailures: number; readonly unselectedSocketFailures: number; readonly hostile: readonly { readonly id: string; readonly requestStages: readonly DocumentOpeningRequestStageV1[]; readonly sessionKept: boolean }[] }
 export type TutorialRunEventV1 = "resolve" | "stop" | "switch" | "replace";
-export interface TutorialRunTransitionV1 { readonly id: string; readonly events: readonly TutorialRunEventV1[]; readonly started: boolean; readonly restores: number }
 export type TutorialDriveEventV1 = "claimA" | "claimB" | "releaseA" | "releaseB" | "retire";
-export interface TutorialDriveTransitionV1 { readonly id: string; readonly events: readonly TutorialDriveEventV1[]; readonly active: readonly boolean[] }
-export interface PausedTutorialSeekTransitionV1 { readonly id: string; readonly playing: boolean; readonly requested: boolean; readonly interrupt: "none" | "pause" | "close" | "play"; readonly mutations: number; readonly playhead: number; readonly resumed: boolean }
-export interface SerialTutorialDriveTransitionV1 { readonly id: string; readonly close: boolean; readonly replace: boolean; readonly writes: readonly ("M" | "inverse-M")[]; readonly cursor: number }
 export interface HostAppAliasesV1 { readonly landingAppId: string; readonly hostAppId: string }
 export interface HostAppV1 { readonly id: string; readonly role: "editor" | "viewer"; readonly dialect: { readonly artifactKind: string } }
-export interface HostIdentityResolutionV1 { readonly aliases: HostAppAliasesV1; readonly apps: readonly HostAppV1[]; readonly expected: { readonly landingAppId: string; readonly hostAppId: string } }
 export interface ArtifactBootstrapProgressV1 { readonly kind: "artifact-bootstrap-progress"; readonly documentId: string; readonly receivedBytes: number; readonly totalBytes: number; readonly receivedChunks: number; readonly totalChunks: number }
 export interface ArtifactBootstrapFailedV1 { readonly kind: "artifact-bootstrap-failed"; readonly documentId: string; readonly code: "cancelled" | "deadline-exceeded" | "invalid-bootstrap" | "transport-failure" | "recovery-exhausted"; readonly message: string; readonly retryable: boolean }
 export interface ArtifactRebootstrapRequiredV1 { readonly kind: "artifact-rebootstrap-required"; readonly documentId: string; readonly message: string; readonly retryable: boolean }
@@ -160,18 +148,18 @@ export interface ExtensionInvocationFaultV1 { readonly origin: "extension" | "pl
 export interface MountedArtifactFrontierV1 { readonly documentId: string; readonly headEditOrdinal: number; readonly headEditId: string; readonly lastCommitSeq: number; readonly chainHash: readonly number[] }
 
 export const parseShellDialogOriginV1 = (value: unknown): ShellDialogOriginV1 => parseRendererExport("ShellDialogOriginV1", value);
-export const parseAdmittedShellInstanceTransitionV1 = (value: unknown): AdmittedShellInstanceTransitionV1 => parseRendererExport("AdmittedShellInstanceTransitionV1", value);
-export const parseDocumentOpeningTransitionV1 = (value: unknown): DocumentOpeningTransitionV1 => parseRendererExport("DocumentOpeningTransitionV1", value);
-export const parseDocumentOpeningAdmissionV1 = (value: unknown): DocumentOpeningAdmissionV1 => parseRendererExport("DocumentOpeningAdmissionV1", value);
-export const parseDocumentOpeningBackgroundSequenceV1 = (value: unknown): DocumentOpeningBackgroundSequenceV1 => parseRendererExport("DocumentOpeningBackgroundSequenceV1", value);
-export const parseDocumentOpeningCloseFailureV1 = (value: unknown): DocumentOpeningCloseFailureV1 => parseRendererExport("DocumentOpeningCloseFailureV1", value);
-export const parseDocumentOpeningScopeResolutionV1 = (value: unknown): DocumentOpeningScopeResolutionV1 => parseRendererExport("DocumentOpeningScopeResolutionV1", value);
-export const parseDocumentFirstOpenV1 = (value: unknown): DocumentFirstOpenV1 => parseRendererExport("DocumentFirstOpenV1", value);
-export const parseTutorialRunTransitionV1 = (value: unknown): TutorialRunTransitionV1 => parseRendererExport("TutorialRunTransitionV1", value);
-export const parseTutorialDriveTransitionV1 = (value: unknown): TutorialDriveTransitionV1 => parseRendererExport("TutorialDriveTransitionV1", value);
-export const parsePausedTutorialSeekTransitionV1 = (value: unknown): PausedTutorialSeekTransitionV1 => parseRendererExport("PausedTutorialSeekTransitionV1", value);
-export const parseSerialTutorialDriveTransitionV1 = (value: unknown): SerialTutorialDriveTransitionV1 => parseRendererExport("SerialTutorialDriveTransitionV1", value);
-export const parseHostIdentityResolutionV1 = (value: unknown): HostIdentityResolutionV1 => parseRendererExport("HostIdentityResolutionV1", value);
+
+
+
+
+
+
+
+
+
+
+
+
 export const parseBootstrapStatusV1 = (value: unknown): BootstrapStatusV1 => parseRendererExport("BootstrapStatusV1", value);
 export const parseLocalizedNoticeTextV1 = (value: unknown): LocalizedNoticeTextV1 => parseRendererExport("LocalizedNoticeTextV1", value);
 export const parseExtensionInvocationRequestV1 = (value: unknown): ExtensionInvocationRequestV1 => parseRendererExport("ExtensionInvocationRequestV1", value);

@@ -1,0 +1,9 @@
+import {PaintedPathPrepareJob,PaintedRegionsCloseJob} from "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🟦️.ts";
+const segments=[{kind:"move",to:[0,-48]},...[ [64,0],[0,48],[-64,0],[0,-48] ].map(to=>({kind:"arc",rx:64,ry:48,rotation:0,largeArc:false,sweep:true,to})),{kind:"close"}];
+const transforms=Array.from({length:12},(_,at)=>{const a=at*Math.PI/6,c=Math.cos(a),s=Math.sin(a);return [c,s,-s,c];}).flatMap(m=>[0,200,1e6].map(t=>[...m,t,t]));transforms.push([1,.4,.3,.8,200,200],[-1,0,0,1,200,200],[.15625,0,0,.208333,10,10]);
+for(const transform of transforms){
+const j:any=new PaintedPathPrepareJob({transform,flatness:.001,fill:true,fillRule:"evenodd",stroke:{width:2,cap:"round",join:"round",dash:[]},limits:{maxSegments:65536,maxPoints:262144,maxContours:65536,maxWork:1e9}});
+try {while(!j.advance(4096,i=>segments[i] as any).done){}console.log("[DEBUG]",transform,j.result().bounds);}
+catch(e){const c=j.canonical??j.strokeCanonical?.child;const degrees=new Map<number,number>();for(const b of c.boundary){degrees.set(b.from,(degrees.get(b.from)??0)+1);degrees.set(b.to,(degrees.get(b.to)??0)-1);}console.log("[DEBUG]",transform,String(e),j.phase,c.phase,JSON.stringify({epsilon:c.input.epsilon,source:c.source.length,atomic:c.atomic.length,boundary:c.boundary.length,imbalanced:[...degrees].filter(([i,n])=>n).map(([i,n])=>({i,n,point:c.nodes[i],edges:c.boundary.filter(b=>b.from===i||b.to===i).map(b=>({from:c.nodes[b.from],to:c.nodes[b.to]}))})),sourceEdges:c.source.map(s=>({a:s.a,b:s.b}))}));}
+const moved=j.intoRetirement();while(!moved.job.advance(4096).done){}if(moved.output){const close=new PaintedRegionsCloseJob(moved.output);while(!close.advance(4096).done){}console.log("[DEBUG] Closed cached affine ellipse terminal_empty",close.terminalIsEmpty());}}
+

@@ -1,7 +1,7 @@
 //! 🧪️ Example round trip, plus the raster laws only this example can prove.
 
 use crate::schema::snapshot::Wfc2dTileMedia;
-use crate::standards::v1::subsets::any::io::snapshot::binary::tile_media_png_data_url;
+use crate::standards::v1::subsets::any::io::binary::snapshot::tile_media_png_data_url;
 
 #[test]
 fn printed_text_parses_back_to_the_authored_document() {
@@ -54,7 +54,7 @@ fn a_malformed_bitmap_refuses_rather_than_panicking() {
 /// ⬡️ The raster ring still solves — the media kind is orthogonal to the propagation.
 #[test]
 fn the_terrain_ring_solves() {
-    let commit = crate::schema::inferences::solve_with_clock(&crate::examples::terrain_ring::document(), semio_framework_job::logical_now_us).expect("the terrain ring solves");
+    let commit = crate::host::inferences::solve_with_clock(&crate::examples::terrain_ring::document(), semio_framework_job::logical_now_us).expect("the terrain ring solves");
     assert!(!commit.contradiction);
     assert_eq!(commit.assignments.len(), 6);
 }

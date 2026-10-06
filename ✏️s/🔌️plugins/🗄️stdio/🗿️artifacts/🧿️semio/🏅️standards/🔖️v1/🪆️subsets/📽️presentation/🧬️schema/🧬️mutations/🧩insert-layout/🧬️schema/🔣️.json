@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioPresentationMutation; absent when the payload stands alone."
     },
     "layout": {
-      "$ref": "#/$defs/SlideLayout"
+      "$ref": "#/$defs/SlideLayout",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Layout",
+          "de": "Layout"
+        },
+        "description": {
+          "en": "Id, name, master and placeholders of the layout that is inserted.",
+          "de": "Kennung, Name, Master und Platzhalter des Layouts, das eingefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

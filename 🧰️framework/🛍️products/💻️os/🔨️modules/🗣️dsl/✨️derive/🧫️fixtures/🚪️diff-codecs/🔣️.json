@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "representations": [
+    {
+      "name": "text",
+      "contract": "DiffText",
+      "generator": "diff_text_tokens",
+      "methods": [
+        "print_diff",
+        "parse_diff"
+      ],
+      "forbidden": [
+        "encode_diff",
+        "decode_diff"
+      ]
+    },
+    {
+      "name": "binary",
+      "contract": "DiffBinary",
+      "generator": "diff_binary_tokens",
+      "methods": [
+        "encode_diff",
+        "decode_diff"
+      ],
+      "forbidden": [
+        "print_diff",
+        "parse_diff"
+      ]
+    }
+  ]
+}

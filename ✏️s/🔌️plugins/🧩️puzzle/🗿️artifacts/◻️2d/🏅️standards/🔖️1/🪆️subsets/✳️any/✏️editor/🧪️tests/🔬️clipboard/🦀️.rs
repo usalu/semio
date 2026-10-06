@@ -6,11 +6,11 @@ use crate::editor::puzzle2d::unit_tests::context::*;
 use semio_framework_plugin::InvocationResult;
 
 fn node_ids(app: &Puzzle2dApp) -> Vec<String> {
-    fixture_nodes(&fixture_of(app)).iter().filter_map(|node| node.get("id").and_then(Value::as_str).map(str::to_string)).collect()
+    board_snapshot_nodes(&fixture_of(app)).iter().filter_map(|node| node.get("id").and_then(Value::as_str).map(str::to_string)).collect()
 }
 
 fn edge_count(app: &Puzzle2dApp) -> usize {
-    fixture_edges(&fixture_of(app)).len()
+    board_snapshot_edges(&fixture_of(app)).len()
 }
 
 /// 🕹️ Selects exactly these ids at node granularity — the multi-select `select_id` has no shape for.
@@ -53,14 +53,14 @@ fn copy_then_paste_round_trips_the_concrete_forest_seed() {
     let mut app = concrete_forest_app();
     let source_id = first_node_id(&app);
     let before = fixture_of(&app);
-    let source_node = fixture_nodes(&before)[0].clone();
+    let source_node = board_snapshot_nodes(&before)[0].clone();
     select_ids(&mut app, &[source_id.clone()]);
     let fragment = clipboard_fragment(&dispatch(&mut app, "copy", None, None).expect("copy"));
     assert_eq!(fragment.schema, PUZZLE2D_CLIPBOARD_SCHEMA, "the fragment must carry this artifact's own clipboard schema");
     let pasted = dispatch(&mut app, "paste", Some(&paste_args(&fragment)), None).expect("paste");
     assert!(committed_edits(&pasted) > 0, "paste must commit one document edit");
     let after = fixture_of(&app);
-    let nodes = fixture_nodes(&after);
+    let nodes = board_snapshot_nodes(&after);
     assert_eq!(nodes.len(), 2, "paste clones the copied node");
     let clone = nodes.iter().find(|node| node.get("id").and_then(Value::as_str) != Some(source_id.as_str())).expect("clone node");
     let clone_id = clone.get("id").and_then(Value::as_str).expect("clone id");
@@ -79,10 +79,10 @@ fn copy_then_paste_round_trips_the_concrete_forest_seed() {
 fn copy_then_paste_restores_a_twelve_node_nakagin_subgraph() {
     let mut app = app();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID);
-    let fixture = fixture_of(&app);
+    let snapshot = fixture_of(&app);
     // 🔎️ A connected dozen: walk the edge list and take the first twelve distinct endpoint owners, so
     // the subset is guaranteed to carry internal edges rather than twelve isolated nodes.
-    let owner_of: HashMap<String, String> = fixture_nodes(&fixture)
+    let owner_of: HashMap<String, String> = board_snapshot_nodes(&snapshot)
         .iter()
         .flat_map(|node| {
             let node_id = node.get("id").and_then(Value::as_str).unwrap_or_default().to_string();
@@ -90,7 +90,7 @@ fn copy_then_paste_restores_a_twelve_node_nakagin_subgraph() {
         })
         .collect();
     let mut subset: Vec<String> = Vec::new();
-    for edge in fixture_edges(&fixture) {
+    for edge in board_snapshot_edges(&snapshot) {
         for key in ["source", "target"] {
             let Some(owner) = edge.get(key).and_then(Value::as_str).and_then(|id| owner_of.get(id)) else { continue };
             if subset.len() < 12 && !subset.contains(owner) {
@@ -100,7 +100,7 @@ fn copy_then_paste_restores_a_twelve_node_nakagin_subgraph() {
     }
     assert_eq!(subset.len(), 12, "nakagin must offer twelve connected nodes to copy");
     let subset_handles: HashSet<&str> = owner_of.iter().filter(|(_, owner)| subset.contains(owner)).map(|(handle, _)| handle.as_str()).collect();
-    let internal_edges = fixture_edges(&fixture)
+    let internal_edges = board_snapshot_edges(&snapshot)
         .iter()
         .filter(|edge| {
             let endpoint = |key: &str| edge.get(key).and_then(Value::as_str).is_some_and(|id| subset_handles.contains(id));
@@ -108,13 +108,13 @@ fn copy_then_paste_restores_a_twelve_node_nakagin_subgraph() {
         })
         .count();
     assert!(internal_edges > 0, "the copied dozen must carry internal edges");
-    let (nodes_before, edges_before) = (fixture_nodes(&fixture).len(), fixture_edges(&fixture).len());
+    let (nodes_before, edges_before) = (board_snapshot_nodes(&snapshot).len(), board_snapshot_edges(&snapshot).len());
     select_ids(&mut app, &subset);
     let fragment = clipboard_fragment(&dispatch(&mut app, "copy", None, None).expect("copy"));
     dispatch(&mut app, "paste", Some(&paste_args(&fragment)), None).expect("paste");
     let after = fixture_of(&app);
-    assert_eq!(fixture_nodes(&after).len(), nodes_before + 12, "paste restores every copied node");
-    assert_eq!(fixture_edges(&after).len(), edges_before + internal_edges, "paste restores exactly the edges between the copied nodes");
+    assert_eq!(board_snapshot_nodes(&after).len(), nodes_before + 12, "paste restores every copied node");
+    assert_eq!(board_snapshot_edges(&after).len(), edges_before + internal_edges, "paste restores exactly the edges between the copied nodes");
     close_app(&mut app);
 }
 
@@ -131,12 +131,12 @@ fn cut_removes_and_one_undo_restores_the_topology() {
     let cut = dispatch(&mut app, "cut", None, None).expect("cut");
     assert!(!clipboard_fragment(&cut).dsl_text.is_empty(), "cut writes the clipboard before it deletes");
     let after_cut = fixture_of(&app);
-    assert_eq!(fixture_nodes(&after_cut).len(), nodes_before - 1, "cut removes the selected node");
-    assert!(fixture_edges(&after_cut).len() <= edges_before, "cut removes the incident edges too");
+    assert_eq!(board_snapshot_nodes(&after_cut).len(), nodes_before - 1, "cut removes the selected node");
+    assert!(board_snapshot_edges(&after_cut).len() <= edges_before, "cut removes the incident edges too");
     dispatch(&mut app, "undo", None, None).expect("undo");
     let restored = fixture_of(&app);
-    assert_eq!(fixture_nodes(&restored).len(), nodes_before, "ONE undo restores every cut node");
-    assert_eq!(fixture_edges(&restored).len(), edges_before, "ONE undo restores every cut edge");
+    assert_eq!(board_snapshot_nodes(&restored).len(), nodes_before, "ONE undo restores every cut node");
+    assert_eq!(board_snapshot_edges(&restored).len(), edges_before, "ONE undo restores every cut edge");
     close_app(&mut app);
 }
 
@@ -158,7 +158,7 @@ fn cut_refuses_a_locked_node_with_a_notice() {
 /// 🚪️ A fragment from another app's media class is refused rather than pasted.
 #[test]
 fn paste_refuses_a_foreign_media_type() {
-    let fixture = json!({ "schema": PUZZLE2D_FIXTURE_SCHEMA, "nodes": [], "edges": [] });
+    let snapshot = json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [], "edges": [] });
     let foreign = semio_framework_plugin::kernel::ClipboardFragment {
         schema: PUZZLE2D_CLIPBOARD_SCHEMA.into(),
         media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
@@ -167,5 +167,5 @@ fn paste_refuses_a_foreign_media_type() {
         source_app: PUZZLE2D_PLAY_CONTROLLER_ID.into(),
         label: "1 nodes".into(),
     };
-    assert!(puzzle2d_paste_operations_on(&fixture, &foreign, &PastePlacement::default()).is_err(), "a 3d fragment must never paste into a 2d board");
+    assert!(puzzle2d_paste_operations_on(&snapshot, &foreign, &PastePlacement::default()).is_err(), "a 3d fragment must never paste into a 2d board");
 }

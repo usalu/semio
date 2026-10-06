@@ -1,0 +1,86 @@
+//! ⚡️ Complete handwritten building, system, monthly climate and derived climate-table identity entities.
+use crate::standards::v1::subsets::any::schema::snapshot::Din18599Snapshot;
+use crate::{Adjacency,Attachment,AutomationClass,BuildingCategory,CalculationMethod,CoolingPlant,CoolingSystem,DhwSystem,Din18599ClimateChild,ElementKind,EnvelopeElement,HeatingSystem,LightingSystem,MonthlyClimate,Renewables,ThermalZone,UsageProfile,UseClass,VentilationSystem};
+use std::collections::BTreeMap;
+use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
+
+
+const DOCUMENT_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8)];
+const ZONE_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(12),FloatColumn::Binary64(13)];
+const ELEMENT_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13)];
+const HEATING_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5)];
+const DHW_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4)];
+const VENTILATION_FLOATS:&[FloatColumn]=DHW_FLOATS;
+const PLANT_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(2)];
+const LIGHTING_FLOATS:&[FloatColumn]=PLANT_FLOATS;
+const RENEWABLES_FLOATS:&[FloatColumn]=DHW_FLOATS;
+const CLIMATE_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3)];
+type Entities<'a>=BTreeMap<i64,FloatRow<'a>>;
+
+macro_rules! choice_codec{($encode:ident,$decode:ident,$ty:ident,[$($variant:ident),+])=>{fn $encode(value:$ty)-> &'static str{match value{$($ty::$variant=>stringify!($variant)),+}}fn $decode(value:&str)->Result<$ty, ValueError>{match value{$(stringify!($variant)=>Ok($ty::$variant)),+,_=>Err(invalid(concat!("DIN18599 unsupported ",stringify!($ty))))}}};}
+choice_codec!(category,read_category,BuildingCategory,[Residential,NonResidential]);
+choice_codec!(attachment,read_attachment,Attachment,[Detached,SemiDetached,EndTerrace,MidTerrace]);
+choice_codec!(use_class,read_use_class,UseClass,[Residential,Office,School]);
+choice_codec!(method,read_method,CalculationMethod,[DetailedMonthly,Tabular]);
+choice_codec!(automation,read_automation,AutomationClass,[A,B,C,D]);
+choice_codec!(profile,read_profile,UsageProfile,[WFH,Office,School]);
+choice_codec!(kind,read_kind,ElementKind,[Wall,Roof,Floor,Door,Window]);
+choice_codec!(adjacency,read_adjacency,Adjacency,[Outdoor,Ground,Unheated,Heated]);
+
+fn ordinal(value:usize)->Result<Cell<'static>, ValueError>{Ok(Cell::Integer(i64::try_from(value).map_err(|error| invalid(error.to_string()))?))}
+fn checkpoint(control:&mut SqliteSnapshotControl<'_>,position:usize,total:usize)->Result<(), ValueError>{if position%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,position,total)?;}Ok(())}
+fn entities<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,floats:&'static[FloatColumn],control:&mut SqliteSnapshotControl<'_>)->Result<Entities<'a>, ValueError>{let rows=&database.table(table)?.rows;let mut result=Entities::new();for(position,row)in rows.iter().enumerate(){checkpoint(control,position,rows.len())?;let row=FloatRow::new(row,floats)?;if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid||result.insert(row.rowid,row).is_some(){return Err(invalid(format!("{table} requires exact fields and unique positive aliased identities")));}}Ok(result)}
+fn one<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,floats:&'static[FloatColumn],document:bool,control:&mut SqliteSnapshotControl<'_>)->Result<FloatRow<'a>, ValueError>{let rows=entities(database,table,columns,floats,control)?;if rows.len()!=1||!rows.contains_key(&1){return Err(invalid(format!("{table} mandatory singleton identity must be one")));}let row=rows[&1];if document&&row.integer(1)?!=1{return Err(invalid(format!("{table} singleton has a foreign parent")));}Ok(row)}
+fn ordered<'a>(rows:impl Iterator<Item=FloatRow<'a>>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<FloatRow<'a>>, ValueError>{let mut result=BTreeMap::new();for(position,row)in rows.enumerate(){checkpoint(control,position,0)?;let ordinal=usize::try_from(row.integer(2)?).map_err(|error| invalid(error.to_string()))?;if row.integer(1)?!=1||result.insert(ordinal,row).is_some(){return Err(invalid("DIN18599 entity has a foreign document or duplicate ordinal"));}}for(position,ordinal)in result.keys().copied().enumerate(){checkpoint(control,position,result.len())?;if position!=ordinal{return Err(invalid("DIN18599 ordinals must be dense"));}}Ok(result.into_values().collect())}
+
+
+impl Din18599Snapshot {
+    fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {
+        out.insert_key_float("din18599_document",1,&[Cell::Text(category(self.building_category)),Cell::Text(attachment(self.attachment)),Cell::Text(use_class(self.use_class)),Cell::Text(method(self.method)),Cell::Real(self.net_floor_area_m2),Cell::Real(self.heated_volume_m3),Cell::Real(self.geg_qp_factor),Cell::Real(self.delta_u_wb_w_m2k),Cell::Text(automation(self.automation_class))],DOCUMENT_FLOATS)?;
+        for(month,(theta,g))in(1i64..).zip(self.climate.theta_e_c.iter().zip(self.climate.g_h_w_m2.iter())){out.insert_key_float("din18599_climate_month",month,&[Cell::Integer(1),Cell::Real(*theta),Cell::Real(*g)],CLIMATE_FLOATS)?;}
+        let c=&self.climate_table;out.insert_key_float("din18599_climate_child",1,&[Cell::Integer(1),Cell::Text(&c.child_id),Cell::Text(&c.target.artifact_id),Cell::Text(&c.target.dialect.artifact_kind),Cell::Text(&c.target.dialect.standard),Cell::Text(&c.target.dialect.subset)],&[])?;
+        for(position,z)in self.zones.iter().enumerate(){out.insert_float("din18599_zone",&[Cell::Integer(1),ordinal(position)?,Cell::Text(&z.id),Cell::Text(&z.label_en),Cell::Text(&z.label_de),Cell::Text(profile(z.usage_profile)),Cell::Real(z.area_m2),Cell::Real(z.volume_m3),Cell::Real(z.theta_i_heat_c),Cell::Real(z.theta_i_cool_c),Cell::Integer(i64::from(z.occupants)),Cell::Real(z.internal_gains_w_m2),Cell::Real(z.lighting_power_w_m2)],ZONE_FLOATS)?;}
+        for(position,e)in self.elements.iter().enumerate(){out.insert_float("din18599_element",&[Cell::Integer(1),ordinal(position)?,Cell::Text(&e.id),Cell::Text(&e.label_en),Cell::Text(&e.label_de),Cell::Text(kind(e.kind)),Cell::Text(&e.zone_id),Cell::Real(e.area_m2),Cell::Real(e.u_value_w_m2k),Cell::Real(e.orientation_deg),Cell::Real(e.tilt_deg),Cell::Real(e.g_value),Cell::Real(e.fc),Cell::Text(adjacency(e.adjacency))],ELEMENT_FLOATS)?;}
+        let h=&self.heating;out.insert_key_float("din18599_heating",1,&[Cell::Integer(1),Cell::Real(h.generation_efficiency),Cell::Real(h.distribution_efficiency),Cell::Real(h.storage_efficiency),Cell::Real(h.transfer_efficiency),Cell::Text(&h.energy_carrier)],HEATING_FLOATS)?;let d=&self.dhw;out.insert_key_float("din18599_dhw",1,&[Cell::Integer(1),Cell::Real(d.specific_demand_kwh_person_a),Cell::Real(d.storage_loss_kwh_a),Cell::Real(d.distribution_loss_kwh_a),Cell::Text(&d.energy_carrier)],DHW_FLOATS)?;let v=&self.ventilation;out.insert_key_float("din18599_ventilation",1,&[Cell::Integer(1),Cell::Real(v.airflow_m3_h),Cell::Real(v.heat_recovery_eta),Cell::Real(v.fan_power_w)],VENTILATION_FLOATS)?;
+        out.insert_key_float("din18599_cooling",1,&[Cell::Integer(1)],&[])?;if let Some(p)=&self.cooling.plant{out.insert_key_float("din18599_cooling_plant",1,&[Cell::Integer(1),Cell::Real(p.eer),Cell::Text(&p.energy_carrier)],PLANT_FLOATS)?;}out.insert_key_float("din18599_lighting",1,&[Cell::Integer(1),Cell::Real(self.lighting.control_factor)],LIGHTING_FLOATS)?;let r=&self.renewables;out.insert_key_float("din18599_renewables",1,&[Cell::Integer(1),Cell::Real(r.pv_area_m2),Cell::Real(r.pv_efficiency),Cell::Real(r.solar_thermal_kwh_a)],RENEWABLES_FLOATS)?;
+        Ok(())
+    }
+    fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {semio_s_artifact_norm_contract::sqlite_native::schema(Din18599Snapshot::SQLITE_SCHEMA,12,27,control)?; let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
+}
+impl ArtifactSqliteSnapshot for Din18599Snapshot{
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)},control)}
+    const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload, ValueError>{
+  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;let add=|count:usize,size:usize|count.checked_add(size).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "Native semantic row count overflow"));let rows=add(add(add(20,self.zones.len())?,self.elements.len())?,usize::from(self.cooling.plant.is_some()))?;control.check_rows(rows)?;
+  self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
+ }
+
+ fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;
+        let mut bound=NativeEncodingBound::file_only(control)?;bound.repeated(16384,20)?;for text in [&self.heating.energy_carrier,&self.dhw.energy_carrier,&self.climate_table.child_id,&self.climate_table.target.artifact_id,&self.climate_table.target.dialect.artifact_kind,&self.climate_table.target.dialect.standard,&self.climate_table.target.dialect.subset]{bound.repeated(text.len(),24)?;}
+        for zone in &self.zones{bound.add(16384)?;for text in [&zone.id,&zone.label_en,&zone.label_de]{bound.repeated(text.len(),24)?;}}
+        for element in &self.elements{bound.add(16384)?;for text in [&element.id,&element.label_en,&element.label_de,&element.zone_id]{bound.repeated(text.len(),24)?;}}
+        if let Some(plant)=&self.cooling.plant{bound.add(16384)?;bound.repeated(plant.energy_carrier.len(),24)?;}bound.finish()
+    }
+
+    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
+    fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
+        validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
+        let d=one(database,"din18599_document",10,DOCUMENT_FLOATS,false,control)?;let c=one(database,"din18599_climate_child",7,&[],true,control)?;let months=entities(database,"din18599_climate_month",4,CLIMATE_FLOATS,control)?;if months.len()!=12||(1..=12).any(|month|!months.contains_key(&month)){return Err(invalid("DIN18599 climate requires exactly the twelve calendar months"));}let mut climate=MonthlyClimate{theta_e_c:[0.0;12],g_h_w_m2:[0.0;12]};for(month,row)in&months{if row.integer(1)?!=1{return Err(invalid("DIN18599 climate month has a foreign document"));}let index=usize::try_from(month-1).map_err(|error| invalid(error.to_string()))?;climate.theta_e_c[index]=row.real(2)?;climate.g_h_w_m2[index]=row.real(3)?;}let h=one(database,"din18599_heating",7,HEATING_FLOATS,true,control)?;let w=one(database,"din18599_dhw",6,DHW_FLOATS,true,control)?;let v=one(database,"din18599_ventilation",5,VENTILATION_FLOATS,true,control)?;one(database,"din18599_cooling",2,&[],true,control)?;let plants=entities(database,"din18599_cooling_plant",4,PLANT_FLOATS,control)?;if plants.len()>1||!plants.is_empty()&&!plants.contains_key(&1){return Err(invalid("DIN18599 optional plant must have identity one"));}let plant=plants.get(&1).copied();if let Some(p)=plant{if p.integer(1)?!=1{return Err(invalid("DIN18599 plant has a foreign cooling system"));}}let l=one(database,"din18599_lighting",3,LIGHTING_FLOATS,true,control)?;let r=one(database,"din18599_renewables",5,RENEWABLES_FLOATS,true,control)?;
+        let mut zones=Vec::new();for z in ordered(entities(database,"din18599_zone",14,ZONE_FLOATS,control)?.into_values(),control)?{checkpoint(control,zones.len(),0)?;zones.push(ThermalZone{id:reconstruct_text(control,z.text(3)?)?,label_en:reconstruct_text(control,z.text(4)?)?,label_de:reconstruct_text(control,z.text(5)?)?,usage_profile:read_profile(z.text(6)?)?,area_m2:z.real(7)?,volume_m3:z.real(8)?,theta_i_heat_c:z.real(9)?,theta_i_cool_c:z.real(10)?,occupants:u32::try_from(z.integer(11)?).map_err(|error| invalid(error.to_string()))?,internal_gains_w_m2:z.real(12)?,lighting_power_w_m2:z.real(13)?});}
+        let mut elements=Vec::new();for e in ordered(entities(database,"din18599_element",15,ELEMENT_FLOATS,control)?.into_values(),control)?{checkpoint(control,elements.len(),0)?;elements.push(EnvelopeElement{id:reconstruct_text(control,e.text(3)?)?,label_en:reconstruct_text(control,e.text(4)?)?,label_de:reconstruct_text(control,e.text(5)?)?,kind:read_kind(e.text(6)?)?,zone_id:reconstruct_text(control,e.text(7)?)?,area_m2:e.real(8)?,u_value_w_m2k:e.real(9)?,orientation_deg:e.real(10)?,tilt_deg:e.real(11)?,g_value:e.real(12)?,fc:e.real(13)?,adjacency:read_adjacency(e.text(14)?)?});}
+        let snapshot=Self{building_category:read_category(d.text(1)?)?,attachment:read_attachment(d.text(2)?)?,use_class:read_use_class(d.text(3)?)?,method:read_method(d.text(4)?)?,net_floor_area_m2:d.real(5)?,heated_volume_m3:d.real(6)?,geg_qp_factor:d.real(7)?,delta_u_wb_w_m2k:d.real(8)?,automation_class:read_automation(d.text(9)?)?,zones,elements,heating:HeatingSystem{generation_efficiency:h.real(2)?,distribution_efficiency:h.real(3)?,storage_efficiency:h.real(4)?,transfer_efficiency:h.real(5)?,energy_carrier:reconstruct_text(control,h.text(6)?)?},dhw:DhwSystem{specific_demand_kwh_person_a:w.real(2)?,storage_loss_kwh_a:w.real(3)?,distribution_loss_kwh_a:w.real(4)?,energy_carrier:reconstruct_text(control,w.text(5)?)?},ventilation:VentilationSystem{airflow_m3_h:v.real(2)?,heat_recovery_eta:v.real(3)?,fan_power_w:v.real(4)?},cooling:CoolingSystem{plant:plant.map(|p|Ok::<_, ValueError>(CoolingPlant{eer:p.real(2)?,energy_carrier:reconstruct_text(control,p.text(3)?)?})).transpose()?},lighting:LightingSystem{control_factor:l.real(2)?},renewables:Renewables{pv_area_m2:r.real(2)?,pv_efficiency:r.real(3)?,solar_thermal_kwh_a:r.real(4)?},climate,climate_table:Din18599ClimateChild::new(reconstruct_text(control,c.text(2)?)?,store::io::ArtifactRef{artifact_id:reconstruct_text(control,c.text(3)?)?,dialect:store::io::ArtifactDialect{artifact_kind:reconstruct_text(control,c.text(4)?)?,standard:reconstruct_text(control,c.text(5)?)?,subset:reconstruct_text(control,c.text(6)?)?}})};control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot)
+    }
+}
+
+pub fn sqlite_codec()->store::ArtifactSqliteSnapshotCodec{<Din18599Snapshot as store::ArtifactSqliteSnapshot>::sqlite_codec()}
+
+#[path="🛂️admission/🦀️.rs"]
+pub(in crate::standards::v1::subsets::any)mod admission;
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
+

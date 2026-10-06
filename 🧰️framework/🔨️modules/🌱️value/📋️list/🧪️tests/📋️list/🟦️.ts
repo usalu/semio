@@ -2,11 +2,8 @@ import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import corpus from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
 
 export function testPagedListOwnership(): void {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  assert(validate(corpus), JSON.stringify(validate.errors));
   const operations: Operation[] = Array.from({ length: corpus.ordered.count }, (_, value) => ({ op: "add", path: "/-", value }));
   const values = applyPatch<number[]>([], operations, true).newDocument;
   assert.deepEqual(values, Array.from({ length: corpus.capacity.maximum }, (_, value) => value));

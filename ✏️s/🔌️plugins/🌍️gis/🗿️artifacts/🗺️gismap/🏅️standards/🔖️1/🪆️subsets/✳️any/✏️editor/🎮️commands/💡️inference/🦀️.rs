@@ -8,7 +8,7 @@
 //! is host-owned. The proposal itself only ever reaches this artifact through the hub's
 //! server-stamped approval command, never through this effect.
 
-use crate::op::GisMapMutation;
+use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

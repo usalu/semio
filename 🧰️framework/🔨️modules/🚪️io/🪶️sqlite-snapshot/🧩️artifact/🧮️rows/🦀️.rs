@@ -11,6 +11,8 @@ impl<'c,'p> RowWriter<'c,'p>{
     pub fn check_rows(&self,count:usize)->Result<(),ValueError>{match self{Self::Owned(value)=>value.check_rows(count),Self::Borrowed{control,..}=>control.check_rows(count)}}
     /// ⏱️ Checks cancellation at the current authored row boundary.
     pub fn checkpoint(&mut self)->Result<(),ValueError>{match self{Self::Owned(value)=>value.checkpoint(),Self::Borrowed{control,phase,rows,..}=>control.checkpoint(*phase,*rows,0)}}
+    /// 🧾️ Publishes the owner's actual row boundary with its complete known workload.
+    pub fn checkpoint_total(&mut self,total:usize)->Result<(),ValueError>{match self{Self::Owned(value)=>value.checkpoint_total(total),Self::Borrowed{control,phase,rows,..}=>{if *rows>total{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"artifact projection exceeded its predicted row count"))}control.checkpoint(*phase,*rows,total)}}}
     /// 🧵️ Admits concrete borrowed traversal storage through the same caller ledger.
     pub fn allocate_frontier<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{match self{Self::Owned(value)=>value.allocate_frontier(count),Self::Borrowed{control,phase,..}=>{control.checkpoint(*phase,0,count)?;super::super::transfer::reserve(count,control)}}}
     /// 🪜️ Pays complete replacement backing before a traversal frontier grows.

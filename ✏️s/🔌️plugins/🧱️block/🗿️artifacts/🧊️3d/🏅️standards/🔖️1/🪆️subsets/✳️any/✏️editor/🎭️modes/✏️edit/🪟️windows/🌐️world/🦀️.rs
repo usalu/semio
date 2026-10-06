@@ -33,6 +33,7 @@ pub const BLOCK3D_BODY_WORLD: &str = "block3d.play.world";
 /// [`window_measures`], not frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: BLOCK3D_WINDOW_WORLD.into(),
         label: LocalizedLabel::native("Object Kind", "Objektart"),
         body_key: BLOCK3D_BODY_WORLD.into(),

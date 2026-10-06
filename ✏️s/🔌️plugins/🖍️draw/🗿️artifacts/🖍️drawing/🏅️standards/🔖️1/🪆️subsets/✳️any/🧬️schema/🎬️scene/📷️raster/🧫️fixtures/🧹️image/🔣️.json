@@ -1,0 +1,18 @@
+[
+  {
+    "source": "scene image: half pixel translation",
+    "parents": 1
+  },
+  {
+    "source": "scene image: nine pixel area mean",
+    "parents": 1
+  },
+  {
+    "source": "scene image: isolated filtered overlap applies group opacity once",
+    "parents": 2
+  },
+  {
+    "source": "scene image: premultiplied sampling precedes layer opacity",
+    "parents": 1
+  }
+]

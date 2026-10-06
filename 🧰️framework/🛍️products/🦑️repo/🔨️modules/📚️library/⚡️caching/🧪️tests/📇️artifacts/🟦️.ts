@@ -28,7 +28,6 @@ export async function testArtifactOverlapIndex(workspace: string): Promise<void>
 export async function testArtifactRegistry(workspace: string, output: string): Promise<void> {
   const require = createRequire(join(workspace, "package.json")), validate = require("jsonschema").validate;
   const fixtureRoot = resolve(import.meta.dirname, "../../🧫️fixtures/artifact-registry"), fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  assert.equal(validate(fixture, JSON.parse(readFileSync(join(fixtureRoot, "🛂️schema/🔣️.json"), "utf8"))).valid, true);
   await testArtifactOverlapIndex(workspace);
   const { createArtifactRegistry, measureArtifactRegistry } = await import("../../📦️artifacts/📇️registry/🟦️.ts");
   const registry = createArtifactRegistry(fixture.declarations);

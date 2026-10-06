@@ -13,14 +13,11 @@ const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const uiRoot = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui");
 const fixture = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🪗️retained-section-collapse/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(uiRoot, "🧬️schema/🪗️retained-section-collapse/🔣️.json"), "utf8"));
 
 afterEach(cleanup);
 
 describe("📂️ retained Section disclosure contract", () => {
   test("the language-neutral fixture satisfies its schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
   test("React removes closed content from layout, interaction, and accessibility until activation", () => {

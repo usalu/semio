@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Key",
+          "de": "Schlüssel"
+        },
+        "description": {
+          "en": "Name of the entry in the document catalog.",
+          "de": "Name des Eintrags im Dokumentkatalog."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

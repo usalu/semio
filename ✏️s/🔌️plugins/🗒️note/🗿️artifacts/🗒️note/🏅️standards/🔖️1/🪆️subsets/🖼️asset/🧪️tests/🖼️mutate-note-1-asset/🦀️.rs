@@ -42,7 +42,10 @@ const VECTORS: &str = "shared://🧬️mutations";
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_note_note::standards::v1::subsets::any::schema::mutations::{apply_note_mutation_outcome, decode_note_mutation_json, decode_note_snapshot_json, encode_note_snapshot_json, inverse_note_mutation_steps, NoteMutation};
+    use semio_s_artifact_note_note::standards::v1::subsets::any::schema::mutations::{apply_note_mutation_outcome, inverse_note_mutation_steps, NoteMutation};
+    use semio_s_artifact_note_note::standards::v1::subsets::any::io::text::snapshot::{encode_note_snapshot_json};
+    use semio_s_artifact_note_note::standards::v1::subsets::any::io::text::snapshot::{decode_note_snapshot_json};
+    use semio_s_artifact_note_note::standards::v1::subsets::any::io::text::mutations::{decode_note_mutation_json};
     use semio_s_artifact_note_note::NoteSnapshot;
 
     //#region 🔖️VectorReading
@@ -60,7 +63,7 @@ mod subject {
 
     fn text_at(ctx: &Context, vector: &str, leaf: &str) -> Result<String, String> {
         let uri = format!("{}/{vector}/{leaf}", super::VECTORS);
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("the committed vector {uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the committed vector {uri} is not UTF-8: {error}"))
     }
 
     fn snapshot_at(ctx: &Context, vector: &str, leaf: &str, kind: &str) -> Result<NoteSnapshot, String> {

@@ -1,5 +1,4 @@
 {
-  "$schema": "../🧬️schema/🔣️.json#/$defs/InferenceServiceLawV1",
   "law": "Every declared inference service is reachable through one job model. Selection resolves the one service a request names on an artifact kind and executes it on the hub only when the bound hub publishes it; a guest result offers the proposal its declared commit action would commit, digested over service, document, capability and exactly the action's declared arguments; a job's journal folds into the same page for either site, and an approval is consumed at most once.",
   "declared": [
     {

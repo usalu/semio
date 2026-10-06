@@ -149,12 +149,11 @@ pub fn artifact_references_section(builder: PanelTreeBuilder, windows: &TreeWind
     )
 }
 
+/// 🌳️ The document tree. Each pane lists the objects its composed `s.stdio.semio@v1/model` child holds now — the same
+/// composed panes the world scenes read (`envelope.panes`, design §20.15); a pane without a handle lists nothing rather
+/// than a fabricated placeholder.
 pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    // 🪆️ Each pane's objects come from its composed `s.stdio.semio.model` child's local owner — the
-    // same resolver the world scenes read (`edit::cad_pane_working_scene`); a handle with no local
-    // owner lists nothing rather than a fabricated placeholder.
-    let scenes: Vec<_> = CadPaneId::all().into_iter().map(|pane| (pane, edit::cad_pane_working_scene(&envelope.document, pane))).collect();
-    let objects_of = |wanted: CadPaneId| -> &[CadObject] { scenes.iter().find(|(pane, _)| *pane == wanted).and_then(|(pane, scene)| scene.as_deref().map(|scene| edit::cad_pane_working_objects(scene, *pane).0)).unwrap_or(&[]) };
+    let objects_of = |wanted: CadPaneId| -> &[CadObject] { envelope.panes.pane(wanted).objects.as_slice() };
     let document = &envelope.document;
 
     // 🕹️ ONE tree-level `interactionSelect` binding for every pane object row (the pick rows below

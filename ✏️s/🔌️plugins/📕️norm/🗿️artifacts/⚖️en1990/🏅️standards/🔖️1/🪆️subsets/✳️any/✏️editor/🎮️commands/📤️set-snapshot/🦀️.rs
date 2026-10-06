@@ -1,7 +1,7 @@
 //! 📤️ En1990 play app command — replace the whole compliance document via `from_snapshot`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::op::En1990Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::En1990Mutation;
 use crate::En1990Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

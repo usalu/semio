@@ -42,7 +42,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::of::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA);
     codec.extension = "zz";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
 }
 
@@ -110,28 +110,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.deflate",
                     extension: Some("zz"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.deflate.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.deflate.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate.diff"),
@@ -142,8 +142,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -152,8 +152,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.deflate.spr"),
                 },
             ]
@@ -238,20 +238,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod window {
                             #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪟window/🦀️.rs"]
@@ -264,20 +256,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -337,9 +321,7 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v_rfc1950::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v_rfc1950::subsets::any::io::*;
-}
+
 
 #[path = "."]
 pub mod examples {
@@ -428,3 +410,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v_rfc1950::subsets::any::io::{DeflateBuilderConstruction, DeflateParts, DeflateAnalyzerAnalysis, DeflateBuilderFacets, DeflateBuilder, DeflateAnalyzer, DeflateComposer};

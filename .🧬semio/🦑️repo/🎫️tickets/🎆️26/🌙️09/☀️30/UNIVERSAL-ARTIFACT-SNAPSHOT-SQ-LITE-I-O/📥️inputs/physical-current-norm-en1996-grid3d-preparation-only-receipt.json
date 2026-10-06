@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-10-06T00:38:23.314Z",
+  "project": "@semio-tech/norm-en1996-rs",
+  "target": "test-snapshot-sqlite-native",
+  "session": 7733,
+  "classification": "Preparation-only; no runtime Before/After credit",
+  "diagnostics": [
+    "@semio-tech/norm-en1996-rs: ENOENT: no such file or directory, scandir '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text'",
+    "@semio-tech/norm-en1996-rs:     path: \"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text\",",
+    "@semio-tech/norm-en1996-rs:  syscall: \"scandir\",",
+    "@semio-tech/norm-en1996-rs:     code: \"ENOENT\"",
+    "@semio-tech/norm-en1996-rs: 223 |     if(result.exitCode!==0)throw new Error(`Selected Cargo preparation failed: ${owner.manifest} (${result.exitCode})`);",
+    "@semio-tech/norm-en1996-rs: error: Selected Cargo preparation failed: ✏️s/Cargo.toml (1)"
+  ],
+  "nextOwner": "@semio-tech/norm-en1994-rs",
+  "log": "🗑️generated/physical-current-vdi-duplicate-before-other-norm-after.log"
+}

@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by PdfVtMutation; absent when the payload stands alone."
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Launch target",
+          "de": "Startziel"
+        },
+        "description": {
+          "en": "Target of the Launch action that is removed; it identifies the action.",
+          "de": "Ziel der Launch-Aktion, die entfernt wird; es identifiziert die Aktion."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

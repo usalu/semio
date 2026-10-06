@@ -1,0 +1,210 @@
+{
+  "qualification": "read-only exact current direct builder roots; lexical discovery is not universal membership",
+  "matches": [
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+      "coveredRoot": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "coveredRoot": true
+    }
+  ],
+  "unresolved": []
+}

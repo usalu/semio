@@ -3,7 +3,7 @@
 //! Geometry over the real STL codecs: ASCII (`engine::decode_stl_ascii`) or binary (`engine::decode_stl_binary`), picked
 //!    by content. Triangles are welded on bit-identical vertex positions and become ONE lowpoly
 //!    object. Degenerate triangles are dropped; a file with no usable triangle is rejected loudly.
-use crate::io::mesh_geometry::{snapshot_from_parts, text_error, PolygonPart};
+use crate::standards::v1::subsets::any::io::mesh_geometry::{snapshot_from_parts, text_error, PolygonPart};
 use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_stl::engine::{decode_stl_ascii, decode_stl_binary};
 use semio_s_artifact_stdio_stl::StlSnapshot;

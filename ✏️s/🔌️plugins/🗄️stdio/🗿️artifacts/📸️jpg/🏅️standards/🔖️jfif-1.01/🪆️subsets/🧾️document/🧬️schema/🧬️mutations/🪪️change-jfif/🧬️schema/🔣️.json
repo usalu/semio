@@ -27,7 +27,20 @@
       ],
       "additionalItems": false,
       "minItems": 2,
-      "maxItems": 2
+      "maxItems": 2,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "JFIF version",
+          "de": "JFIF-Version"
+        },
+        "description": {
+          "en": "Major and minor version of the JFIF header, for example 1 and 2 for 1.02.",
+          "de": "Haupt- und Nebenversion des JFIF-Headers, zum Beispiel 1 und 2 für 1.02."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "densityUnits": {
       "$ref": "#/$defs/JfifDensityUnits",
@@ -62,7 +75,8 @@
         "label": {
           "en": "Horizontal pixel density",
           "de": "Horizontale Pixeldichte"
-        }
+        },
+        "step": 1
       }
     },
     "yDensity": {
@@ -74,7 +88,8 @@
         "label": {
           "en": "Vertical pixel density",
           "de": "Vertikale Pixeldichte"
-        }
+        },
+        "step": 1
       }
     },
     "thumbnail": {

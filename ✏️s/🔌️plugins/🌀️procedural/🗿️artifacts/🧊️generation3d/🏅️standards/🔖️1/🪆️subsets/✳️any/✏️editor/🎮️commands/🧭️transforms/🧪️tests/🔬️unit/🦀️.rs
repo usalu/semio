@@ -93,21 +93,25 @@ fn the_motion_algebra_composes_within_one_family() {
 #[test]
 fn the_gumball_rides_the_shared_gesture_runner() {
     let tick = |ids: &str, offset: [f64; 3]| GumballTick { ids: vec![ids.to_string()], record: translate(&["t"], offset) };
-    let first = drive_gesture::<Generation3dGumballTool>(None, "translateSelection", GesturePhase::Stream, Some(tick("a", [1.0, 0.0, 0.0])), "seed", "base");
+    let first = drive_gesture::<Generation3dGumballTool>(None, "translateSelection", GesturePhase::Stream, Some(tick("a", [1.0, 0.0, 0.0])), "seed", "base").expect("the gumball accepts the dispatch");
     assert!(first.committed.is_none());
     let open = first.next.flatten().expect("the stream opens a persisted gesture");
     assert_eq!(open.ids, vec!["a".to_string()]);
     assert!(open.continues("translateSelection", GesturePhase::Commit, "base") && open.continues("translateSelection", GesturePhase::Stream, "base"));
     assert!(!open.continues("translateSelection", GesturePhase::Once, "base") && !open.continues("rotateSelection", GesturePhase::Stream, "base") && !open.continues("translateSelection", GesturePhase::Stream, "moved"));
-    let open = drive_gesture::<Generation3dGumballTool>(Some(&open), "translateSelection", GesturePhase::Stream, Some(tick("b", [0.5, 2.0, 0.0])), "seed", "base").next.flatten().expect("the tick keeps the gesture open");
+    let open = drive_gesture::<Generation3dGumballTool>(Some(&open), "translateSelection", GesturePhase::Stream, Some(tick("b", [0.5, 2.0, 0.0])), "seed", "base")
+        .expect("the gumball accepts the dispatch")
+        .next
+        .flatten()
+        .expect("the tick keeps the gesture open");
     assert_eq!(open.ids, vec!["a".to_string()], "a resumed gesture keeps the selection it opened on");
     assert_eq!(open.leaf(), Some(&Generation3dMutation::DragTransforms(DragTransforms { targets: vec!["t".into()], dx: 1.5, dy: 2.0, dz: 0.0 })), "ONE net entry");
-    let release = drive_gesture::<Generation3dGumballTool>(Some(&open), "translateSelection", GesturePhase::Commit, Some(tick("a", [0.5, 0.0, -1.0])), "seed", "base");
+    let release = drive_gesture::<Generation3dGumballTool>(Some(&open), "translateSelection", GesturePhase::Commit, Some(tick("a", [0.5, 0.0, -1.0])), "seed", "base").expect("the gumball accepts the dispatch");
     let (reference, leaves) = release.committed.expect("the release commits");
     assert_eq!(reference, open.transaction, "the ref is the one minted at the first tick");
     assert_eq!(leaves, vec![Generation3dMutation::DragTransforms(DragTransforms { targets: vec!["t".into()], dx: 2.0, dy: 2.0, dz: -1.0 })]);
     assert_eq!(release.next, Some(None), "the committed gesture is cleared");
-    let moved = drive_gesture::<Generation3dGumballTool>(Some(&open), "translateSelection", GesturePhase::Commit, Some(tick("a", [0.5, 0.0, 0.0])), "seed", "moved");
+    let moved = drive_gesture::<Generation3dGumballTool>(Some(&open), "translateSelection", GesturePhase::Commit, Some(tick("a", [0.5, 0.0, 0.0])), "seed", "moved").expect("the gumball accepts the dispatch");
     assert!(moved.committed.is_none(), "a base moved under the gesture commits nothing");
     assert_eq!(moved.next, Some(None), "and drops the gesture with zero trace");
 }

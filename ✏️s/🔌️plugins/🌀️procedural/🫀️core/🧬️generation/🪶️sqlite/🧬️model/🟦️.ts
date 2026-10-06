@@ -1,5 +1,5 @@
 /** 🌀️ Exact owned procedural host/generation fields shared by the actual 2d and 3d models. */
-import type{Binary64}from"../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type{Binary64} from "../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type NeuralValue={kind:"null"}|{kind:"boolean";value:boolean}|{kind:"integer";value:bigint}|{kind:"decimal";value:Binary64}|{kind:"string";value:string}|{kind:"dictionary";value:NeuralDictionary};
 export type NeuralDictionary=Readonly<Record<string,NeuralValue>>;
 export type GenerationValue={kind:"null"}|{kind:"boolean";value:boolean}|{kind:"unsigned";value:bigint}|{kind:"integer";value:bigint}|{kind:"float";value:Binary64}|{kind:"string";value:string}|{kind:"bytes";value:Uint8Array}|{kind:"array";values:readonly GenerationValue[]}|{kind:"object";members:readonly(readonly[string,GenerationValue])[]};

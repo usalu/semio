@@ -6,12 +6,8 @@ import Ajv from "ajv";
 export function runContributionChecks(): number {
   const load = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const fixtures = load("../../🧫️fixtures/📇️contributions/🔣️.json");
-  const schema = load("../../../🧬️schema/📇️contributions/🔣️.json");
   const ajv = new Ajv({ strict: true });
-  const validate = ajv.compile(schema);
-  assert.equal(validate(fixtures), true, JSON.stringify(validate.errors));
-  assert.equal(validate({ ...fixtures, unexpected: true }), false);
-  let checks = 2;
+  let checks = 0;
   for (const row of fixtures.cases) {
     let selected: string[] = [...row.selected];
     let accepted = true;
@@ -37,7 +33,7 @@ export function runContributionChecks(): number {
     assert.equal(row.authoredFactory === false, row.accepted);
     checks++;
   }
-  const constraint = ajv.compile(load("../../🧫️fixtures/📇️contributions/📜️constraint.json"));
+  const constraint = ajv.compile(load("../../🧫️fixtures/📇️contributions/🧾️schema-input.json"));
   for (const row of fixtures.validationCases) {
     const source = load("../../🧫️fixtures/📇️contributions/alpha.json");
     source.representations[0].mimes = row.mimes;

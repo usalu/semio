@@ -5,12 +5,10 @@ import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, existsSync } from 
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import Ajv from "ajv";
+import schema from "../🧬️schema/🔣️.json";
 import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../🟦️.ts";
 const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
-const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));
-test("portable compiler corpus is admitted by independent Ajv",()=>{ const oracle=new Ajv({strict:true}).addSchema(schema);expect(oracle.getSchema(schema.$id+"#/$defs/Fixture")!(fixture)).toBe(true); });
-test("WASM compiler policy is explicit and agrees with independent schema admission",()=>{
- const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture.policy)).toBe(true);expect(readWasmBuildPolicyV1({SEMIO_WASM_BUILD_POLICY:JSON.stringify(fixture.policy)},fixture.policy.cwd)).toEqual(fixture.policy);
+test("WASM compiler policy is explicit and agrees with independent schema admission",()=>{const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture.policy)).toBe(true);expect(readWasmBuildPolicyV1({SEMIO_WASM_BUILD_POLICY:JSON.stringify(fixture.policy)},fixture.policy.cwd)).toEqual(fixture.policy);
  for(const row of [{...fixture.policy,mode:"guess"},{...fixture.policy,budgetMs:-1},{...fixture.policy,extra:true},{...fixture.policy,artifactDirectory:"relative"}]){expect(validate(row)).toBe(false);expect(()=>readWasmBuildPolicyV1({SEMIO_WASM_BUILD_POLICY:JSON.stringify(row)},fixture.policy.cwd)).toThrow();}
  expect(()=>readWasmBuildPolicyV1({},fixture.policy.cwd)).toThrow();expect(()=>readWasmBuildPolicyV1({SEMIO_WASM_BUILD_POLICY:JSON.stringify(fixture.policy)},"/foreign")).toThrow();
 });

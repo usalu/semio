@@ -1,293 +1,50 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/dev/fixture-sweep/component.json",
-  "title": "SFixtureSweepContracts",
+  "$id": "schema://s.dev.fixture-sweep",
+  "$ref": "#/$defs/SweepEvidence",
   "$defs": {
-    "SFixtureSweepOwnershipV1": {
-      "title": "S Fixture Sweep Ownership",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema",
-        "package",
-        "target",
-        "targetPath",
-        "moduleSha256",
-        "mounts",
-        "laws",
-        "workspaceDependencies",
-        "pathDependencies",
-        "kernelDependencies",
-        "cases",
-        "rendererBoundary"
-      ],
-      "properties": {
-        "schema": {
-          "const": "semio.test.s-fixture-sweep-ownership/v1"
-        },
-        "package": {
-          "const": "semio-s-fixture-sweep"
-        },
-        "target": {
-          "const": "fixture_sweep"
-        },
-        "targetPath": {
-          "const": "✏️s/🧑‍💻dev/🧹️fixture-sweep/🧪️tests/🔬️fleet-example-sweep/🦀️.rs"
-        },
-        "moduleSha256": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "mounts": {
-          "type": "array",
-          "minItems": 0,
-          "maxItems": 0,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "name",
-              "path"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "pattern": "^[a-z0-9_]+$"
-              },
-              "path": {
-                "type": "string",
-                "pattern": "^\\.\\./.+/🦀️\\.rs$"
-              }
-            }
-          }
-        },
-        "laws": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "pattern": "^[a-z0-9_]+::[a-z0-9_]+$"
-          }
-        },
-        "workspaceDependencies": {
-          "type": "array",
-          "minItems": 54,
-          "maxItems": 54,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "pattern": "^semio-[a-z0-9-]+$"
-          }
-        },
-        "pathDependencies": {
-          "type": "array",
-          "minItems": 0,
-          "maxItems": 0,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "alias",
-              "package",
-              "path",
-              "features",
-              "defaultFeatures"
-            ],
-            "properties": {
-              "alias": {
-                "type": "string",
-                "minLength": 1
-              },
-              "package": {
-                "type": "string",
-                "minLength": 1
-              },
-              "path": {
-                "type": "string",
-                "minLength": 1
-              },
-              "features": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "defaultFeatures": {
-                "type": "boolean"
-              }
-            }
-          }
-        },
-        "kernelDependencies": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 12,
-          "maxItems": 12,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "pattern": "^[a-z0-9-]+$"
-          }
-        },
-        "rendererBoundary": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "package",
-            "owner",
-            "implementationEdges",
-            "puzzleGuestEdges"
-          ],
-          "properties": {
-            "package": {
-              "const": "semio-framework-os-renderer-wgpu"
-            },
-            "owner": {
-              "const": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
-            },
-            "implementationEdges": {
-              "const": 0
-            },
-            "puzzleGuestEdges": {
-              "const": 0
-            }
-          }
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
-    "SFixtureSweepReportCase": {
+    "SweepEvidence": {
       "type": "object",
       "required": [
-        "id",
-        "assertions",
-        "output"
+        "directories",
+        "fixtures",
+        "checks",
+        "registered",
+        "unmapped",
+        "covered",
+        "skipped"
       ],
       "additionalProperties": false,
       "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
+        "directories": {
+          "type": "integer",
+          "minimum": 1
         },
-        "assertions": {
+        "fixtures": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "checks": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "registered": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unmapped": {
           "type": "integer",
           "minimum": 0
         },
-        "output": {
-          "type": "string"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
-    "SFixtureSweepReportCaseWithExpected": {
-      "type": "object",
-      "required": [
-        "id",
-        "assertions",
-        "output",
-        "expected"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "assertions": {
+        "covered": {
           "type": "integer",
           "minimum": 0
         },
-        "output": {
-          "type": "string"
-        },
-        "expected": {
-          "type": "object",
-          "required": [
-            "directories",
-            "fixtures",
-            "checks",
-            "registered",
-            "unmapped",
-            "covered",
-            "skipped"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "directories": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "fixtures": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "checks": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "registered": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "unmapped": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "covered": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "skipped": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
+        "skipped": {
+          "type": "integer",
+          "minimum": 0
         }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
-    "SFixtureSweepReportV1": {
-      "type": "object",
-      "required": [
-        "schemaVersion",
-        "valid",
-        "hostile"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "schemaVersion": {
-          "const": 1
-        },
-        "valid": {
-          "$ref": "#/$defs/SFixtureSweepReportCaseWithExpected"
-        },
-        "hostile": {
-          "type": "array",
-          "minItems": 8,
-          "items": {
-            "$ref": "#/$defs/SFixtureSweepReportCase"
-          }
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
+      }
     }
   }
 }

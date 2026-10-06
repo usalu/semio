@@ -1,0 +1,1700 @@
+[
+  {
+    "name": "docx",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot",
+    "input": {
+      "schema": "Docx owned literal 世界\\u0000",
+      "opc": {
+        "parts": [
+          {
+            "path": "",
+            "contentType": "",
+            "bytes": [
+              0,
+              255,
+              7
+            ]
+          },
+          {
+            "path": "",
+            "contentType": "unknown\u0000",
+            "bytes": []
+          }
+        ],
+        "contentTypes": {
+          "defaults": [
+            {
+              "name": "xml",
+              "contentType": "a"
+            },
+            {
+              "name": "XML",
+              "contentType": "b"
+            }
+          ],
+          "overrides": [
+            {
+              "name": "/duplicate",
+              "contentType": "x"
+            },
+            {
+              "name": "/duplicate",
+              "contentType": ""
+            }
+          ]
+        },
+        "relationships": {
+          "": [],
+          "__proto__": [
+            {
+              "id": "",
+              "relType": "type\u0000",
+              "target": "../世界",
+              "targetMode": "external"
+            }
+          ],
+          "world/世界": [
+            {
+              "id": "duplicate",
+              "relType": "",
+              "target": "",
+              "targetMode": "internal"
+            },
+            {
+              "id": "duplicate",
+              "relType": "different",
+              "target": "!@/",
+              "targetMode": "external"
+            }
+          ]
+        },
+        "comment": "literal comment 世界\u0000"
+      },
+      "xmlParts": [
+        {
+          "path": "",
+          "contentType": "application/xml",
+          "document": {
+            "nodes": [
+              {
+                "nextSibling": null,
+                "value": {
+                  "kind": "text",
+                  "text": "intermediate"
+                }
+              },
+              {
+                "nextSibling": 2,
+                "value": {
+                  "kind": "text",
+                  "text": "shared 世界\u0000"
+                }
+              },
+              {
+                "nextSibling": 3,
+                "value": {
+                  "kind": "cData",
+                  "text": "raw <>"
+                }
+              },
+              {
+                "nextSibling": 4,
+                "value": {
+                  "kind": "comment",
+                  "text": "middle"
+                }
+              },
+              {
+                "nextSibling": null,
+                "value": {
+                  "kind": "processingInstruction",
+                  "target": "render",
+                  "data": "now"
+                }
+              },
+              {
+                "nextSibling": null,
+                "value": {
+                  "kind": "element",
+                  "name": "book",
+                  "first_attribute": 0,
+                  "attribute_count": 2,
+                  "first_child": 1
+                }
+              }
+            ],
+            "attributes": [
+              {
+                "name": "z",
+                "value": "last"
+              },
+              {
+                "name": "z",
+                "value": "duplicate"
+              }
+            ],
+            "prolog": [
+              0
+            ],
+            "epilog": [],
+            "root": 5,
+            "declaration": {
+              "version": "arbitrary",
+              "encoding": "custom",
+              "standalone": false,
+              "quote": "single"
+            },
+            "doctype": {
+              "prologPosition": "18446744073709551615",
+              "name": "type",
+              "externalId": {
+                "kind": "public",
+                "publicId": "public",
+                "systemId": "system"
+              },
+              "declarations": [
+                {
+                  "kind": "entity",
+                  "parameter": true,
+                  "name": "entity",
+                  "value": "literal"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "path": "",
+          "contentType": "",
+          "document": {
+            "nodes": [],
+            "attributes": [],
+            "prolog": [],
+            "epilog": [],
+            "root": null,
+            "doctype": null,
+            "declaration": null
+          }
+        }
+      ]
+    },
+    "emptyRecipe": "clear opc.parts and xmlParts only; preserve contentTypes, relationships, comment and schema",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 40,
+        "valueBytes": 1147,
+        "schemaBytes": 4569,
+        "tableCount": 21,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "docx_binary_part",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 59
+          },
+          {
+            "table": "docx_default_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 56
+          },
+          {
+            "table": "docx_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 47
+          },
+          {
+            "table": "docx_override_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 69
+          },
+          {
+            "table": "docx_package",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 31
+          },
+          {
+            "table": "docx_relationship",
+            "width": 7,
+            "rows": 3,
+            "semanticBytes": 140
+          },
+          {
+            "table": "docx_relationship_owner",
+            "width": 3,
+            "rows": 3,
+            "semanticBytes": 69
+          },
+          {
+            "table": "docx_xml_attribute",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 63
+          },
+          {
+            "table": "docx_xml_cdata",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 14
+          },
+          {
+            "table": "docx_xml_child",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          },
+          {
+            "table": "docx_xml_comment",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 14
+          },
+          {
+            "table": "docx_xml_declaration",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 45
+          },
+          {
+            "table": "docx_xml_doctype",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 58
+          },
+          {
+            "table": "docx_xml_document",
+            "width": 3,
+            "rows": 2,
+            "semanticBytes": 24
+          },
+          {
+            "table": "docx_xml_document_misc",
+            "width": 5,
+            "rows": 1,
+            "semanticBytes": 38
+          },
+          {
+            "table": "docx_xml_element",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 12
+          },
+          {
+            "table": "docx_xml_entity",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 45
+          },
+          {
+            "table": "docx_xml_node",
+            "width": 2,
+            "rows": 6,
+            "semanticBytes": 97
+          },
+          {
+            "table": "docx_xml_part",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 79
+          },
+          {
+            "table": "docx_xml_processing_instruction",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 17
+          },
+          {
+            "table": "docx_xml_text",
+            "width": 2,
+            "rows": 2,
+            "semanticBytes": 42
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 12,
+        "valueBytes": 412,
+        "schemaBytes": 4569,
+        "tableCount": 21,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "docx_binary_part",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_default_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 56
+          },
+          {
+            "table": "docx_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 47
+          },
+          {
+            "table": "docx_override_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 69
+          },
+          {
+            "table": "docx_package",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 31
+          },
+          {
+            "table": "docx_relationship",
+            "width": 7,
+            "rows": 3,
+            "semanticBytes": 140
+          },
+          {
+            "table": "docx_relationship_owner",
+            "width": 3,
+            "rows": 3,
+            "semanticBytes": 69
+          },
+          {
+            "table": "docx_xml_attribute",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_cdata",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_child",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_comment",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_declaration",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_doctype",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_document",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_document_misc",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_element",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_entity",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_node",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_part",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_processing_instruction",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "docx_xml_text",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "pptx",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot",
+    "input": {
+      "schema": "arbitrary PPTX\u0000世界",
+      "opc": {
+        "parts": [
+          {
+            "path": "",
+            "contentType": "",
+            "bytes": [
+              0,
+              255,
+              7
+            ]
+          },
+          {
+            "path": "",
+            "contentType": "unknown\u0000",
+            "bytes": []
+          }
+        ],
+        "contentTypes": {
+          "defaults": [
+            [
+              "xml",
+              "a"
+            ],
+            [
+              "XML",
+              "b"
+            ]
+          ],
+          "overrides": [
+            [
+              "/duplicate",
+              "x"
+            ],
+            [
+              "/duplicate",
+              ""
+            ]
+          ]
+        },
+        "relationships": {
+          "": [],
+          "__proto__": [
+            {
+              "id": "",
+              "relType": "type\u0000",
+              "target": "../世界",
+              "targetMode": "external"
+            }
+          ],
+          "world/世界": [
+            {
+              "id": "duplicate",
+              "relType": "",
+              "target": "",
+              "targetMode": "internal"
+            },
+            {
+              "id": "duplicate",
+              "relType": "different",
+              "target": "!@/",
+              "targetMode": "external"
+            }
+          ]
+        },
+        "comment": "literal comment 世界\u0000"
+      },
+      "xmlParts": [
+        {
+          "path": "",
+          "contentType": "application/xml",
+          "document": {
+            "root": {
+              "kind": "element",
+              "name": "book",
+              "attrs": [
+                {
+                  "name": "z",
+                  "value": "last"
+                },
+                {
+                  "name": "z",
+                  "value": "duplicate"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "shared 世界\u0000"
+                },
+                {
+                  "kind": "cData",
+                  "text": "raw <>"
+                },
+                {
+                  "kind": "comment",
+                  "text": "middle"
+                },
+                {
+                  "kind": "processingInstruction",
+                  "target": "render",
+                  "data": "now"
+                }
+              ]
+            },
+            "prolog": [
+              {
+                "kind": "text",
+                "text": "intermediate"
+              }
+            ],
+            "epilog": [],
+            "declaration": {
+              "version": "arbitrary",
+              "encoding": "custom",
+              "standalone": false,
+              "quote": "single"
+            },
+            "doctype": {
+              "prologPosition": "18446744073709551615",
+              "name": "type",
+              "externalId": {
+                "kind": "public",
+                "publicId": "public",
+                "systemId": "system"
+              },
+              "declarations": [
+                {
+                  "kind": "entity",
+                  "parameter": true,
+                  "name": "entity",
+                  "value": "literal"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "path": "",
+          "contentType": "",
+          "document": {
+            "prolog": [],
+            "epilog": []
+          }
+        },
+        {
+          "path": "ppt/slides/slide1.xml",
+          "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
+          "document": {
+            "root": {
+              "kind": "element",
+              "name": "p:sld",
+              "attrs": [],
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "p:cSld",
+                  "attrs": [],
+                  "children": [
+                    {
+                      "kind": "element",
+                      "name": "p:spTree",
+                      "attrs": [],
+                      "children": [
+                        {
+                          "kind": "element",
+                          "name": "p:sp",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "p:spPr",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "a:xfrm",
+                                  "attrs": [],
+                                  "children": [
+                                    {
+                                      "kind": "element",
+                                      "name": "a:off",
+                                      "attrs": [
+                                        {
+                                          "name": "x",
+                                          "value": "-9223372036854775808"
+                                        },
+                                        {
+                                          "name": "y",
+                                          "value": "9223372036854775807"
+                                        }
+                                      ],
+                                      "children": []
+                                    },
+                                    {
+                                      "kind": "element",
+                                      "name": "a:ext",
+                                      "attrs": [
+                                        {
+                                          "name": "cx",
+                                          "value": "9007199254740993"
+                                        },
+                                        {
+                                          "name": "cy",
+                                          "value": "-9007199254740993"
+                                        }
+                                      ],
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "element",
+                              "name": "p:txBody",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "a:p",
+                                  "attrs": [],
+                                  "children": []
+                                },
+                                {
+                                  "kind": "element",
+                                  "name": "a:p",
+                                  "attrs": [],
+                                  "children": [
+                                    {
+                                      "kind": "element",
+                                      "name": "a:r",
+                                      "attrs": [],
+                                      "children": [
+                                        {
+                                          "kind": "element",
+                                          "name": "a:rPr",
+                                          "attrs": [
+                                            {
+                                              "name": "b",
+                                              "value": "1"
+                                            },
+                                            {
+                                              "name": "i",
+                                              "value": "0"
+                                            }
+                                          ],
+                                          "children": []
+                                        },
+                                        {
+                                          "kind": "element",
+                                          "name": "a:t",
+                                          "attrs": [],
+                                          "children": [
+                                            {
+                                              "kind": "text",
+                                              "text": "run\u0000世界"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "kind": "element",
+                                      "name": "a:r",
+                                      "attrs": [],
+                                      "children": [
+                                        {
+                                          "kind": "element",
+                                          "name": "a:rPr",
+                                          "attrs": [
+                                            {
+                                              "name": "b",
+                                              "value": "0"
+                                            },
+                                            {
+                                              "name": "i",
+                                              "value": "1"
+                                            },
+                                            {
+                                              "name": "sz",
+                                              "value": "4294967295"
+                                            }
+                                          ],
+                                          "children": []
+                                        },
+                                        {
+                                          "kind": "element",
+                                          "name": "a:t",
+                                          "attrs": [],
+                                          "children": [
+                                            {
+                                              "kind": "text",
+                                              "text": ""
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "element",
+                          "name": "p:pic",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "p:blipFill",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "a:blip",
+                                  "attrs": [
+                                    {
+                                      "name": "r:embed",
+                                      "value": ""
+                                    }
+                                  ],
+                                  "children": []
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "element",
+                              "name": "p:spPr",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "a:xfrm",
+                                  "attrs": [],
+                                  "children": [
+                                    {
+                                      "kind": "element",
+                                      "name": "a:off",
+                                      "attrs": [
+                                        {
+                                          "name": "x",
+                                          "value": "1"
+                                        },
+                                        {
+                                          "name": "y",
+                                          "value": "2"
+                                        }
+                                      ],
+                                      "children": []
+                                    },
+                                    {
+                                      "kind": "element",
+                                      "name": "a:ext",
+                                      "attrs": [
+                                        {
+                                          "name": "cx",
+                                          "value": "3"
+                                        },
+                                        {
+                                          "name": "cy",
+                                          "value": "4"
+                                        }
+                                      ],
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "element",
+                          "name": "p:sp",
+                          "attrs": [],
+                          "children": [
+                            {
+                              "kind": "element",
+                              "name": "p:nvSpPr",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "p:nvPr",
+                                  "attrs": [],
+                                  "children": [
+                                    {
+                                      "kind": "element",
+                                      "name": "p:ph",
+                                      "attrs": [
+                                        {
+                                          "name": "type",
+                                          "value": ""
+                                        }
+                                      ],
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "element",
+                              "name": "p:spPr",
+                              "attrs": [],
+                              "children": [
+                                {
+                                  "kind": "element",
+                                  "name": "a:xfrm",
+                                  "attrs": [],
+                                  "children": [
+                                    {
+                                      "kind": "element",
+                                      "name": "a:off",
+                                      "attrs": [
+                                        {
+                                          "name": "x",
+                                          "value": "-1"
+                                        },
+                                        {
+                                          "name": "y",
+                                          "value": "-2"
+                                        }
+                                      ],
+                                      "children": []
+                                    },
+                                    {
+                                      "kind": "element",
+                                      "name": "a:ext",
+                                      "attrs": [
+                                        {
+                                          "name": "cx",
+                                          "value": "-3"
+                                        },
+                                        {
+                                          "name": "cy",
+                                          "value": "-4"
+                                        }
+                                      ],
+                                      "children": []
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "element",
+                              "name": "p:txBody",
+                              "attrs": [],
+                              "children": []
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "element",
+                          "name": "arbitrary",
+                          "attrs": [
+                            {
+                              "name": "",
+                              "value": ""
+                            }
+                          ],
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "owned XML"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "prolog": [],
+            "epilog": []
+          }
+        },
+        {
+          "path": "ppt/slides/slide2.xml",
+          "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
+          "document": {
+            "root": {
+              "kind": "element",
+              "name": "p:sld",
+              "attrs": [],
+              "children": [
+                {
+                  "kind": "element",
+                  "name": "p:cSld",
+                  "attrs": [],
+                  "children": [
+                    {
+                      "kind": "element",
+                      "name": "p:spTree",
+                      "attrs": [],
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            "prolog": [],
+            "epilog": []
+          }
+        }
+      ]
+    },
+    "emptyRecipe": "clear opc.parts and xmlParts only; preserve contentTypes, relationships, comment and schema",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 182,
+        "valueBytes": 4378,
+        "schemaBytes": 4569,
+        "tableCount": 21,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "pptx_binary_part",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 59
+          },
+          {
+            "table": "pptx_default_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 56
+          },
+          {
+            "table": "pptx_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 37
+          },
+          {
+            "table": "pptx_override_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 69
+          },
+          {
+            "table": "pptx_package",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 31
+          },
+          {
+            "table": "pptx_relationship",
+            "width": 7,
+            "rows": 3,
+            "semanticBytes": 140
+          },
+          {
+            "table": "pptx_relationship_owner",
+            "width": 3,
+            "rows": 3,
+            "semanticBytes": 69
+          },
+          {
+            "table": "pptx_xml_attribute",
+            "width": 5,
+            "rows": 22,
+            "semanticBytes": 676
+          },
+          {
+            "table": "pptx_xml_cdata",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 14
+          },
+          {
+            "table": "pptx_xml_child",
+            "width": 4,
+            "rows": 42,
+            "semanticBytes": 1344
+          },
+          {
+            "table": "pptx_xml_comment",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 14
+          },
+          {
+            "table": "pptx_xml_declaration",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 45
+          },
+          {
+            "table": "pptx_xml_doctype",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 58
+          },
+          {
+            "table": "pptx_xml_document",
+            "width": 3,
+            "rows": 4,
+            "semanticBytes": 98
+          },
+          {
+            "table": "pptx_xml_document_misc",
+            "width": 5,
+            "rows": 1,
+            "semanticBytes": 38
+          },
+          {
+            "table": "pptx_xml_element",
+            "width": 2,
+            "rows": 38,
+            "semanticBytes": 512
+          },
+          {
+            "table": "pptx_xml_entity",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 45
+          },
+          {
+            "table": "pptx_xml_node",
+            "width": 2,
+            "rows": 46,
+            "semanticBytes": 688
+          },
+          {
+            "table": "pptx_xml_part",
+            "width": 5,
+            "rows": 4,
+            "semanticBytes": 283
+          },
+          {
+            "table": "pptx_xml_processing_instruction",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 17
+          },
+          {
+            "table": "pptx_xml_text",
+            "width": 2,
+            "rows": 5,
+            "semanticBytes": 85
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 12,
+        "valueBytes": 402,
+        "schemaBytes": 4569,
+        "tableCount": 21,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "pptx_binary_part",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_default_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 56
+          },
+          {
+            "table": "pptx_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 37
+          },
+          {
+            "table": "pptx_override_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 69
+          },
+          {
+            "table": "pptx_package",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 31
+          },
+          {
+            "table": "pptx_relationship",
+            "width": 7,
+            "rows": 3,
+            "semanticBytes": 140
+          },
+          {
+            "table": "pptx_relationship_owner",
+            "width": 3,
+            "rows": 3,
+            "semanticBytes": 69
+          },
+          {
+            "table": "pptx_xml_attribute",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_cdata",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_child",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_comment",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_declaration",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_doctype",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_document",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_document_misc",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_element",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_entity",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_node",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_part",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_processing_instruction",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "pptx_xml_text",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "xlsx",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot",
+    "input": {
+      "schema": "owned XLSX 世界\u0000",
+      "opc": {
+        "parts": [
+          {
+            "path": "",
+            "contentType": "",
+            "bytes": [
+              0,
+              255,
+              7
+            ]
+          },
+          {
+            "path": "",
+            "contentType": "unknown\u0000",
+            "bytes": []
+          }
+        ],
+        "contentTypes": {
+          "defaults": [
+            [
+              "xml",
+              "a"
+            ],
+            [
+              "XML",
+              "b"
+            ]
+          ],
+          "overrides": [
+            [
+              "/duplicate",
+              "x"
+            ],
+            [
+              "/duplicate",
+              ""
+            ]
+          ]
+        },
+        "relationships": {
+          "": [],
+          "__proto__": [
+            {
+              "id": "",
+              "relType": "type\u0000",
+              "target": "../世界",
+              "targetMode": "external"
+            }
+          ],
+          "world/世界": [
+            {
+              "id": "duplicate",
+              "relType": "",
+              "target": "",
+              "targetMode": "internal"
+            },
+            {
+              "id": "duplicate",
+              "relType": "different",
+              "target": "!@/",
+              "targetMode": "external"
+            }
+          ]
+        },
+        "comment": "literal comment 世界\u0000"
+      },
+      "xmlParts": [
+        {
+          "path": "",
+          "contentType": "application/xml",
+          "document": {
+            "root": {
+              "kind": "element",
+              "name": "book",
+              "attrs": [
+                {
+                  "name": "z",
+                  "value": "last"
+                },
+                {
+                  "name": "z",
+                  "value": "duplicate"
+                }
+              ],
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "shared 世界\u0000"
+                },
+                {
+                  "kind": "cData",
+                  "text": "raw <>"
+                },
+                {
+                  "kind": "comment",
+                  "text": "middle"
+                },
+                {
+                  "kind": "processingInstruction",
+                  "target": "render",
+                  "data": "now"
+                }
+              ]
+            },
+            "prolog": [
+              {
+                "kind": "text",
+                "text": "intermediate"
+              }
+            ],
+            "epilog": [],
+            "declaration": {
+              "version": "arbitrary",
+              "encoding": "custom",
+              "standalone": false,
+              "quote": "single"
+            },
+            "doctype": {
+              "prologPosition": "99",
+              "name": "type",
+              "externalId": {
+                "kind": "public",
+                "publicId": "public",
+                "systemId": "system"
+              },
+              "declarations": [
+                {
+                  "kind": "entity",
+                  "parameter": true,
+                  "name": "entity",
+                  "value": "literal"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "path": "",
+          "contentType": "",
+          "document": {
+            "prolog": [],
+            "epilog": []
+          }
+        }
+      ]
+    },
+    "emptyRecipe": "clear opc.parts and xmlParts only; preserve contentTypes, relationships, comment and schema",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 40,
+        "valueBytes": 1116,
+        "schemaBytes": 4569,
+        "tableCount": 21,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "xlsx_binary_part",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 59
+          },
+          {
+            "table": "xlsx_default_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 56
+          },
+          {
+            "table": "xlsx_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 34
+          },
+          {
+            "table": "xlsx_override_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 69
+          },
+          {
+            "table": "xlsx_package",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 31
+          },
+          {
+            "table": "xlsx_relationship",
+            "width": 7,
+            "rows": 3,
+            "semanticBytes": 140
+          },
+          {
+            "table": "xlsx_relationship_owner",
+            "width": 3,
+            "rows": 3,
+            "semanticBytes": 69
+          },
+          {
+            "table": "xlsx_xml_attribute",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 63
+          },
+          {
+            "table": "xlsx_xml_cdata",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 14
+          },
+          {
+            "table": "xlsx_xml_child",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          },
+          {
+            "table": "xlsx_xml_comment",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 14
+          },
+          {
+            "table": "xlsx_xml_declaration",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 45
+          },
+          {
+            "table": "xlsx_xml_doctype",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 40
+          },
+          {
+            "table": "xlsx_xml_document",
+            "width": 3,
+            "rows": 2,
+            "semanticBytes": 24
+          },
+          {
+            "table": "xlsx_xml_document_misc",
+            "width": 5,
+            "rows": 1,
+            "semanticBytes": 38
+          },
+          {
+            "table": "xlsx_xml_element",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 12
+          },
+          {
+            "table": "xlsx_xml_entity",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 45
+          },
+          {
+            "table": "xlsx_xml_node",
+            "width": 2,
+            "rows": 6,
+            "semanticBytes": 97
+          },
+          {
+            "table": "xlsx_xml_part",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 79
+          },
+          {
+            "table": "xlsx_xml_processing_instruction",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 17
+          },
+          {
+            "table": "xlsx_xml_text",
+            "width": 2,
+            "rows": 2,
+            "semanticBytes": 42
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 12,
+        "valueBytes": 399,
+        "schemaBytes": 4569,
+        "tableCount": 21,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "xlsx_binary_part",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_default_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 56
+          },
+          {
+            "table": "xlsx_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 34
+          },
+          {
+            "table": "xlsx_override_content_type",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 69
+          },
+          {
+            "table": "xlsx_package",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 31
+          },
+          {
+            "table": "xlsx_relationship",
+            "width": 7,
+            "rows": 3,
+            "semanticBytes": 140
+          },
+          {
+            "table": "xlsx_relationship_owner",
+            "width": 3,
+            "rows": 3,
+            "semanticBytes": 69
+          },
+          {
+            "table": "xlsx_xml_attribute",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_cdata",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_child",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_comment",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_declaration",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_doctype",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_document",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_document_misc",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_element",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_entity",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_node",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_part",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_processing_instruction",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xlsx_xml_text",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  }
+]

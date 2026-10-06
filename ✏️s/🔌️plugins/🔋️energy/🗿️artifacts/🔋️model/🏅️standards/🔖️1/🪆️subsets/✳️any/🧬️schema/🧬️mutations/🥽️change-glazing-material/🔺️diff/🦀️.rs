@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeGlazingMaterialVisibleTransmittance, base: &E
     if let Some(item) = model.glazing_materials.iter_mut().find(|item| item.id == payload.id) {
         item.visible_transmittance = payload.new_visible_transmittance;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

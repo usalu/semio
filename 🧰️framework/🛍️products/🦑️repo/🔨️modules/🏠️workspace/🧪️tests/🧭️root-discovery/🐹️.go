@@ -36,7 +36,7 @@ type discoveryFile struct {
 }
 
 func loadDiscoveryFile(ctx *host.Context) (discoveryFile, error) {
-	data, err := ctx.FixtureBytes("shared://📡️root-discovery-trees.json")
+	data, err := ctx.InputBytes("shared://📡️root-discovery-trees.json")
 	if err != nil {
 		return discoveryFile{}, err
 	}

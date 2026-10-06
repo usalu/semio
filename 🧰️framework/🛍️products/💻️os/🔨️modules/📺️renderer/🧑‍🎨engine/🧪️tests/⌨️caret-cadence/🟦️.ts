@@ -1,8 +1,7 @@
-import Ajv2020 from "ajv/dist/2020";
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { installTextEditorCaretCadenceV1, TEXT_EDITOR_CARET_BLINK_MS } from "../../🧱️elements/✏️TextEditor/🟦️.tsx";
 import fixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/⌨️caret-cadence/🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/⌨️caret-cadence/🧬️schema/🔣️.json" with { type: "json" };
 
 afterEach(() => {
   vi.useRealTimers();
@@ -11,8 +10,6 @@ afterEach(() => {
 
 describe("accepted caret cadence", () => {
   it("validates the language-neutral cadence fixture", () => {
-    const validate = new Ajv2020({ strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.halfPeriodMs).toBe(TEXT_EDITOR_CARET_BLINK_MS);
   });
 

@@ -1,0 +1,15 @@
+# EN1992 Held Complete Family Review
+
+Read-only review of both held Rust paths; no compiler or owning-runtime credit. No concrete syntax/type blocker was found. All thirteen handwritten physical widths equal the independent Bun SQLite PRAGMA authority already retained in the complete admission plan.
+
+[Borrowed census](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/en1992-complete-native-semantic/borrowed-census-held.rs), [typed visitor](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/en1992-complete-native-semantic/typed-visitor-held.rs).
+
+Actual compact DSL tables retain FieldValue::List of FieldValue::Record. The derive explicitly shares VecTable and VecList value representation; the controlled parser expands table columns into records and inserts missing declared fields as Absent. Thus the candidate's List/Record borrowed traversal and complete contiguous ID checks are compatible with genuine compact table CST. [Derive authority](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs:469), [controlled table parser](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️decoding/🦀️.rs:164).
+
+All root, grade, member, bar, optional member entity, action and anchor roles match actual declarations and original SQL insertions. Generated ordered entities account 24 identity/parent/ordinal bytes; optional keyed entities account 8. UInt validates u32, bool validates Bool, Float validates f64 through original controlled primitive interfaces. Float costs 22 finite, 32 infinite and 11 NaN match query/word/class storage cells. Optional tightness Absent costs zero, present uses controlled declared scalar plus actual SQL spelling. All enum costs call existing SQL helpers after controlled scalar validation, including ductility a/b/c.
+
+The candidate reuses the actual insertion body for borrowed and owned RowWriter and checks authored schema/table/physical width before visiting. Direct encode and public preflight share that admission. Decode captures the complete caller limits, applies the complete borrowed census before derived typed construction, and leaves original native file/backing enforcement intact. Traversal uses borrowed slices with bounded declaration nesting and scalar steps; it constructs no typed snapshot, native record clone or SQL proof database.
+
+Qualification still requires Root's genuine owning compilation and exact/one-short independent populated corpus. In particular, only those executed laws can establish all eight IEEE words, present optional entities and interior cancellation behavior. The historical Root48 EN1992 10/12 remains the genuine Before receipt until an actual After closes it.
+
+Fresh bounded Root48 read adds Remodeling 16 run / 15 pass / 1 fail at log line 885592. The original large Unicode copy/budget/cancellation law fails its direct native encode budget refusal at owned test line 51:323. This is a separate remaining owner failure; full48 terminal outcome is still pending.

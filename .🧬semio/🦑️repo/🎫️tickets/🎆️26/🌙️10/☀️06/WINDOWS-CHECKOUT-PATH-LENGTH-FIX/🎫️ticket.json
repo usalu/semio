@@ -1,0 +1,13 @@
+{
+  "title": "Windows Checkout Path Length Fix",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Fix Windows checkout failures caused by paths exceeding MAX_PATH (260 chars). git pull fails with 'Filename too long' on deeply nested ticket fixture paths under .🧬semio/🦑️repo/🎫️tickets/, especially controlled-cargo-caller-inputs/📸️predecessors/🧰️framework/... mirroring full repo structure. Deliver: all tracked paths fit under Windows MAX_PATH at C:\\git\\semio, verification gate, and documentation in ticket folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2768"
+  },
+  "goal": "🎯zerotouchdevcontainer",
+  "sessions": [
+    "⚪caed5c6415c445f093d5c57617762d9a"
+  ]
+}

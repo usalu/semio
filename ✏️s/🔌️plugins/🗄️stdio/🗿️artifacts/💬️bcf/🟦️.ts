@@ -7,4 +7,4 @@ export type {BcfSnapshot,BcfTopic,BcfViewpoint,BcfCamera,BcfPoint3,BcfComponents
 export {parseBcfSnapshot,parseBcfSnapshotJson,parseBcfTopic,parseBcfViewpoint,parseBcfCamera,parseBcfPoint3,parseBcfComponents,parseBcfVisibility,parseBcfColoring,parseBcfComment,parseBcfRawPart} from "./🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🟦️.ts";
 export type {BcfArtifact} from "./🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🟦️.ts";
 export {parseBcfArtifact} from "./🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/🟦️.ts";
-export {BCF_SQLITE_SCHEMA,bcfSnapshotToSqliteDatabase,bcfSnapshotFromSqliteDatabase} from "./🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts";
+export {BCF_SQLITE_SCHEMA,bcfSnapshotToSqliteDatabase,bcfSnapshotFromSqliteDatabase} from "./🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";

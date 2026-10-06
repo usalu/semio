@@ -1,3 +1,6 @@
+use crate::standards::v1::subsets::any::io::binary::snapshot::parameter;
+use crate::standards::v1::subsets::any::io::text::snapshot::plate_document;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 use super::*;
 
 //#region 🔖️ExampleFixtures
@@ -332,7 +335,7 @@ fn new_step() -> ProcessStep {
 /// which the step the user just added is the one that becomes visible. The document carries no cursor at all.
 #[semio_framework_async_macros::async_test]
 async fn inserting_a_step_at_the_cursor_makes_that_step_the_newly_resolved_one() {
-    use crate::op::Process3dMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
     let fixture = timeline_fixture();
     let operations = insert_step_mutations(&fixture, new_step(), Some(2));
     assert_eq!(operations.len(), 1, "the cursor is view state: inserting a step is ONE document mutation");
@@ -346,7 +349,7 @@ async fn inserting_a_step_at_the_cursor_makes_that_step_the_newly_resolved_one()
 
 #[semio_framework_async_macros::async_test]
 async fn inserting_a_step_with_no_cursor_appends_and_leaves_the_cursor_unset() {
-    use crate::op::Process3dMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
     let fixture = timeline_fixture();
     let operations = insert_step_mutations(&fixture, new_step(), None);
     match &operations[..] {

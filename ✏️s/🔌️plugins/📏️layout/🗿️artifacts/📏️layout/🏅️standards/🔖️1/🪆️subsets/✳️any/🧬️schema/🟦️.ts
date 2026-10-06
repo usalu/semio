@@ -3,7 +3,7 @@ import { parseSchemaRecord } from "../../../../../../../../../../🧰️framewor
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 export type { ArtifactChild, ArtifactLink };
-import {type Binary64,type Binary32,parseBinary64Transport,parseBinary32Transport} from '../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts';
+import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseSemioDrawingSnapshot,type SemioDrawingSnapshot} from '../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts';
 import{parseFormDictionary,type FormDictionary}from"../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️dictionary/🟦️.ts";
 export{parseFormDictionary,type FormDictionary};
@@ -86,10 +86,10 @@ const array = (value: unknown, at: string): unknown[] => {
 };
 const strings = (value: unknown, at: string): string[] => array(value, at).map((item, index) => string(item, `${at}[${index}]`));
 const nullable = <T>(value: unknown, parse: (value: unknown, at: string) => T, at: string): T | null => value === null ? null : parse(value, at);
-const word = (value: unknown, _at: string): Binary64 => parseBinary64Transport(value);
+const word = (value: unknown, _at: string): Binary64 => parseBinary64(value);
 const unsigned64 = (value: unknown, at: string): bigint => { if(typeof value !== "bigint" || value < 0n || value > 0xffffffffffffffffn) throw new Error(`${at}: unsigned64 bigint required`); return value; };
 const rgba = (value: unknown, at: string): [Binary32, Binary32, Binary32, Binary32] => {
-  const items = array(value, at).map((item, index) => parseBinary32Transport(item));
+  const items = array(value, at).map((item, index) => parseBinary32(item));
   if (items.length !== 4) throw new Error(`${at}: four numbers required`);
   return items as [Binary32, Binary32, Binary32, Binary32];
 };
@@ -202,6 +202,3 @@ export function parseLayoutStringList(value: unknown, at = "$" ): LayoutStringLi
   const keys = ["values"], row = record(value, keys, keys, at);
   return { values: strings(row.values, `${at}.values`) };
 }
-
-export {LAYOUT_SQLITE_SCHEMA,layoutSnapshotToSqliteDatabase,layoutSnapshotFromSqliteDatabase} from "./📸️snapshot/🪶️sqlite/🟦️.ts";
-export {layoutArtifactFromNativeJson,layoutArtifactNativeJson,layoutDiffFromNativeJson,layoutDiffNativeJson} from "./🪪️native-json/🟦️.ts";

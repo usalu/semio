@@ -114,7 +114,7 @@ async fn op_text_binary_roundtrip_law() {
 #[semio_framework_async_macros::async_test]
 async fn text_descriptor_recognizes_every_printer_variant() {
     let base = base_snapshot();
-    let grammar = semio_framework_dsl::parse_grammar(crate::standards::riff_pcm::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse WAV mutation grammar");
+    let grammar = semio_framework_dsl::parse_grammar(crate::standards::riff_pcm::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse WAV mutation grammar");
     let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     for mutation in variants(&base) {
         let printed = mutation.print_op();

@@ -12,7 +12,7 @@
 
 //#region 🔌️Adapters
 import { Kind, parse, type ASTNode, type OperationDefinitionNode, type SelectionNode, type ValueNode } from "graphql";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🖼️Projection
@@ -80,13 +80,13 @@ export default defineTestAdapter({
   scenarios: {
     "corpus-projects-identically": {
       oracle: (ctx) => {
-        const corpus = JSON.parse(Buffer.from(ctx.fixtureBytes("shared://📃️document-parsing/🔣️documents.json")).toString("utf8")) as Corpus;
+        const corpus = JSON.parse(Buffer.from(ctx.inputBytes("shared://📃️document-parsing/🔣️documents.json")).toString("utf8")) as Corpus;
         return { projection: { documents: corpus.documents.map((entry) => ({ id: entry.id, document: projectDocument(entry.source) })) } };
       },
     },
     "operation-kind-is-recovered": {
       oracle: (ctx) => {
-        const corpus = JSON.parse(Buffer.from(ctx.fixtureBytes("shared://📃️document-parsing/🔣️documents.json")).toString("utf8")) as Corpus;
+        const corpus = JSON.parse(Buffer.from(ctx.inputBytes("shared://📃️document-parsing/🔣️documents.json")).toString("utf8")) as Corpus;
         return { projection: { documents: corpus.documents.map((entry) => ({ id: entry.id, operation: operationOf(entry.source).operation })) } };
       },
     },

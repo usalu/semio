@@ -5,7 +5,7 @@ use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn set_frame_layer_moves_a_frame_and_inverse_restores_it() {
-    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let created = LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false }).diff(&base).diff().apply(&base).expect("layer");
     let mutation = LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() });
     let next = mutation.diff(&created).diff().apply(&created).expect("move");

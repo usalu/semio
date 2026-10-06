@@ -5,7 +5,7 @@ use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "navigate-vfs-node")]
 pub struct NavigateVirtualFileSystemNode {
     pub space_id: String,

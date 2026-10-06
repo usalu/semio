@@ -995,7 +995,7 @@ fn world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degener
     let cases = [[[min_x - 2.0, min_y - 2.0], [max_x + 2.0, max_y + 2.0]], [[(min_x + max_x) * 0.5, min_y - 2.0], [min_x - 2.0, (min_y + max_y) * 0.5]], [[0.0, 0.0], [2.0, 2.0]], [[3.0, 3.0], [3.0, 3.0]]];
     for points in cases {
         let crossing = marquee_is_crossing_from_path(&points, false);
-        let (meshes, draws) = legacy_geometry_fixture(&state);
+        let (meshes, draws) = scene_geometry(&state);
         let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), viewport.w, viewport.h, &points, true, crossing);
         let retained = world_marquee_cursor_ids(&state, &points);
         assert_eq!(retained, legacy, "points={points:?}");
@@ -1007,7 +1007,7 @@ fn world_marquee_mesh_cursor_preserves_legacy_multi_page_draw_order() {
     let state = world_marquee_geometry_fixture(WORLD_MARQUEE_RESULT_PAGE_CAPACITY + 1);
     let points = [[0.0, 0.0], [400.0, 400.0]];
     let view_projection = state.orbit.to_camera().view_proj(800.0, 800.0);
-    let (meshes, draws) = legacy_geometry_fixture(&state);
+    let (meshes, draws) = scene_geometry(&state);
     let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), 400.0, 400.0, &points, true, false);
     let retained = world_marquee_cursor_ids(&state, &points);
     assert_eq!(retained, legacy);
@@ -1021,7 +1021,7 @@ fn world_marquee_lasso_edge_cursor_matches_legacy_and_rejects_object_aba() {
     let viewport = render_pick_viewport(&state);
     let view_projection = state.orbit.to_camera().view_proj(800.0, 800.0);
     let points = [[0.0, 0.0], [400.0, 0.0], [400.0, 400.0], [0.0, 400.0]];
-    let (meshes, draws) = legacy_geometry_fixture(&state);
+    let (meshes, draws) = scene_geometry(&state);
     let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), viewport.w, viewport.h, &points, false, marquee_is_crossing_from_path(&points, true));
     assert_eq!(world_marquee_cursor_ids(&state, &points), legacy);
 
@@ -1081,7 +1081,7 @@ fn world_component_marquee_cursor_matches_legacy_vertex_edge_face_geometry() {
     let points = [[0.0, 0.0], [400.0, 400.0]];
     for granularity in ["vertex", "edge", "face"] {
         state.granularity = granularity.into();
-        let (meshes, draws) = legacy_geometry_fixture(&state);
+        let (meshes, draws) = scene_geometry(&state);
         let mut legacy: Vec<u32> = screen_select_components(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), viewport.w, viewport.h, &points, true, granularity, None, false).into_iter().map(|id| id.parse().expect("numeric component id")).collect();
         legacy.sort_unstable();
         assert!(!legacy.is_empty(), "the oracle must answer a component census, not an empty one: granularity={granularity}");
@@ -4955,7 +4955,7 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
 #[test]
 fn world_interaction_object_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/⏳️async/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
@@ -5750,7 +5750,7 @@ fn reference_decode_applies_exif_orientation_before_publication() {
 /// 🎨️ Native publication consumes the same indexed surface fixture as installed Three.js.
 #[test]
 fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancellation() {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let text=law["mesh"].to_string();
     let mesh=semio_framework_pack_json::from_json_str::<WorldMeshBuffers>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut cursor=WorldPlaceholderMeshCursor::inline("authored",mesh.clone(),817,1).unwrap();
@@ -5797,7 +5797,7 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
 /// 🖼️ JPEG authored textures use the same image, role raster, publication and retirement owners.
 #[test]
 fn authored_inline_jpeg_surface_publishes_owned_role_rasters() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json")).unwrap();
     let row = &law["jpegPublication"];
     let mut mesh = semio_framework_pack_json::from_json_str::<WorldMeshBuffers>(&law["mesh"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let bytes: Vec<u8> = row["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();

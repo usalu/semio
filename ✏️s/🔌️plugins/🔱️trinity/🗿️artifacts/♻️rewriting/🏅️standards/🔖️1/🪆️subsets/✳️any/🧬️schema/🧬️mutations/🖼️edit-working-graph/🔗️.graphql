@@ -1,0 +1,2 @@
+# 🧬️ EditWorkingGraphInput owns its declared typed payload.
+input EditWorkingGraphInput { newWorkingGraph: JackSnapshotInput! }

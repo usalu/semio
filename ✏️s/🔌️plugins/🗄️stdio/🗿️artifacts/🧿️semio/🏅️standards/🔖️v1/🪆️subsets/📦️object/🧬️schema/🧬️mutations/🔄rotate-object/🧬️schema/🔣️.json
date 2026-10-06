@@ -9,7 +9,20 @@
   ],
   "properties": {
     "rotation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/geometry.json#/$defs/SemioQuaternion"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/geometry.json#/$defs/SemioQuaternion",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Rotation",
+          "de": "Drehung"
+        },
+        "description": {
+          "en": "Orientation as a unit quaternion (x, y, z, w).",
+          "de": "Ausrichtung als Einheitsquaternion (x, y, z, w)."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle
@@ -29,8 +29,8 @@ export default defineTestAdapter({
   scenarios: {
     "stored-documents-round-trip": {
       oracle: (ctx) => {
-        const schema = JSON.parse(readFileSync(ctx.fixture("schema://repo.goals/GoalDocument"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
-        const fixture = JSON.parse(readFileSync(ctx.fixture("shared://🎯️goal-documents.json"), "utf8")) as { documents: { id: string; json: string }[] };
+        const schema = JSON.parse(readFileSync(ctx.input("schema://repo.goals/GoalDocument"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
+        const fixture = JSON.parse(readFileSync(ctx.input("shared://🎯️goal-documents.json"), "utf8")) as { documents: { id: string; json: string }[] };
         const ajv = new Ajv2020({ strict: false, allErrors: true });
         const validate = ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/GoalDocument" });
         const documents: string[] = [];

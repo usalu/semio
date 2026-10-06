@@ -1,0 +1,1053 @@
+{
+  "selectedSource": "🌎️hub/🧩️compositions/🗄️stdio/🤖️generated/🧩️composition/🦀️.rs",
+  "selectedFeature": "full-artifact-catalog",
+  "selectedIdentities": [
+    "binary",
+    "txt",
+    "xml",
+    "deflate",
+    "zip",
+    "json",
+    "csv",
+    "md",
+    "gltf",
+    "obj",
+    "stl",
+    "ply",
+    "las",
+    "step",
+    "ifc",
+    "dwg",
+    "dxf",
+    "svg",
+    "png",
+    "jpg",
+    "gif",
+    "bmp",
+    "tiff",
+    "pdf",
+    "docx",
+    "pptx",
+    "xlsx",
+    "bcf",
+    "semio",
+    "mp4",
+    "avi",
+    "mp3",
+    "wav",
+    "epw",
+    "tsv",
+    "html"
+  ],
+  "rows": [
+    {
+      "artifact": "obj",
+      "kind": "s.stdio.obj",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 59,
+          "text": "/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for"
+        },
+        {
+          "line": 60,
+          "text": "/// `store::register_document_codec(store::ArtifactCodec::of::<ObjSnapshot, ObjMutation>(...))`."
+        },
+        {
+          "line": 77,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"obj\", definition()?, declaration)"
+        },
+        {
+          "line": 89,
+          "text": "        .document_codec_bare::<ObjSnapshot, ObjMutation>(STDIO_OBJ_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.obj\", standard: semio_framework_plugin::StandardId(\"3.0\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "3-0"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "tsv",
+      "kind": "s.stdio.tsv",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 59,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"tsv\", definition()?, declaration)"
+        },
+        {
+          "line": 67,
+          "text": "    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TsvSnapshot, TsvMutation>(STDIO_TSV_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.tsv\", standard: semio_framework_plugin::StandardId(\"iana\"), subset: semio_framework_plugin::SubsetId(\"*\") }).try_build()"
+        }
+      ],
+      "declaredStandards": [
+        "iana"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "csv",
+      "kind": "s.stdio.csv",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 81,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"csv\", definition()?, declaration)"
+        },
+        {
+          "line": 93,
+          "text": "        .document_codec_bare::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.csv\", standard: semio_framework_plugin::StandardId(\"rfc4180\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "rfc4180"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "gltf",
+      "kind": "s.stdio.gltf",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 89,
+          "text": "/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for"
+        },
+        {
+          "line": 90,
+          "text": "/// `store::register_document_codec(store::ArtifactCodec::bare::<GltfSnapshot, GltfMutation>(...))`."
+        },
+        {
+          "line": 101,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"gltf\", definition()?, declaration)"
+        },
+        {
+          "line": 114,
+          "text": "        .document_codec_bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.gltf\", standard: semio_framework_plugin::StandardId(\"2.0\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "2-0"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "gif",
+      "kind": "s.stdio.gif",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 72,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"gif\", definition()?, declaration)"
+        },
+        {
+          "line": 87,
+          "text": "        .document_codec_bare::<standards::v87a::subsets::any::schema::snapshot::GifSnapshot, standards::v87a::subsets::any::schema::mutations::GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.gif\", standard: semio_framework_plugin::StandardId(\"87a\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 88,
+          "text": "        .document_codec_bare::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.gif\", standard: semio_framework_plugin::StandardId(\"89a\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "87a",
+        "89a"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "las",
+      "kind": "s.stdio.las",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 57,
+          "text": "/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for"
+        },
+        {
+          "line": 58,
+          "text": "/// `store::register_document_codec(store::ArtifactCodec::bare::<LasSnapshot, LasMutation>(...))`."
+        },
+        {
+          "line": 75,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"las\", definition()?, declaration)"
+        },
+        {
+          "line": 87,
+          "text": "        .document_codec_bare::<LasSnapshot, LasMutation>(STDIO_LAS_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.las\", standard: semio_framework_plugin::StandardId(\"1.0\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "1-0"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "pdf",
+      "kind": "s.stdio.pdf",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 169,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"pdf\", definition()?, declaration)"
+        },
+        {
+          "line": 186,
+          "text": "    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.7\"), subset: semio_framework_plugin::SubsetId(\"*\") });"
+        },
+        {
+          "line": 187,
+          "text": "    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.4\"), subset: semio_framework_plugin::SubsetId(\"*\") });"
+        },
+        {
+          "line": 188,
+          "text": "    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.7\"), subset: semio_framework_plugin::SubsetId(\"a\") });"
+        },
+        {
+          "line": 189,
+          "text": "    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.7\"), subset: semio_framework_plugin::SubsetId(\"x\") });"
+        },
+        {
+          "line": 190,
+          "text": "    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.7\"), subset: semio_framework_plugin::SubsetId(\"e\") });"
+        },
+        {
+          "line": 191,
+          "text": "    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.7\"), subset: semio_framework_plugin::SubsetId(\"ua\") });"
+        },
+        {
+          "line": 192,
+          "text": "    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.7\"), subset: semio_framework_plugin::SubsetId(\"vt\") });"
+        },
+        {
+          "line": 193,
+          "text": "    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.7\"), subset: semio_framework_plugin::SubsetId(\"h\") });"
+        },
+        {
+          "line": 194,
+          "text": "    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.4\"), subset: semio_framework_plugin::SubsetId(\"a\") });"
+        },
+        {
+          "line": 195,
+          "text": "    let builder = builder.document_codec_bare::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pdf\", standard: semio_framework_plugin::StandardId(\"1.4\"), subset: semio_framework_plugin::SubsetId(\"x\") });"
+        }
+      ],
+      "declaredStandards": [
+        "1-4",
+        "1-7"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "docx",
+      "kind": "s.stdio.docx",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 58,
+          "text": "/// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`"
+        },
+        {
+          "line": 59,
+          "text": "/// stands in for the old `store::register_document_codec(store::ArtifactCodec::bare::<DocxSnapshot,"
+        },
+        {
+          "line": 77,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"docx\", definition()?, declaration)"
+        },
+        {
+          "line": 90,
+          "text": "        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.docx\", standard: semio_framework_plugin::StandardId(\"ecma-376\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 91,
+          "text": "        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.docx\", standard: semio_framework_plugin::StandardId(\"ecma-376\"), subset: semio_framework_plugin::SubsetId(\"strict\") })"
+        },
+        {
+          "line": 92,
+          "text": "        .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.docx\", standard: semio_framework_plugin::StandardId(\"ecma-376\"), subset: semio_framework_plugin::SubsetId(\"transitional\") })"
+        }
+      ],
+      "declaredStandards": [
+        "ecma-376"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "ply",
+      "kind": "s.stdio.ply",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 59,
+          "text": "/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for"
+        },
+        {
+          "line": 60,
+          "text": "/// `store::register_document_codec(store::ArtifactCodec::of::<PlySnapshot, PlyMutation>(...))`."
+        },
+        {
+          "line": 71,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"ply\", definition()?, declaration)"
+        },
+        {
+          "line": 83,
+          "text": "        .document_codec_bare::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.ply\", standard: semio_framework_plugin::StandardId(\"1.0\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "1-0"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "xlsx",
+      "kind": "s.stdio.xlsx",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 60,
+          "text": "/// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`"
+        },
+        {
+          "line": 61,
+          "text": "/// stands in for the old `store::register_document_codec(store::ArtifactCodec::bare::<XlsxSnapshot,"
+        },
+        {
+          "line": 79,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"xlsx\", definition()?, declaration)"
+        },
+        {
+          "line": 92,
+          "text": "        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.xlsx\", standard: semio_framework_plugin::StandardId(\"ecma-376\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 93,
+          "text": "        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.xlsx\", standard: semio_framework_plugin::StandardId(\"ecma-376\"), subset: semio_framework_plugin::SubsetId(\"strict\") })"
+        },
+        {
+          "line": 94,
+          "text": "        .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.xlsx\", standard: semio_framework_plugin::StandardId(\"ecma-376\"), subset: semio_framework_plugin::SubsetId(\"transitional\") })"
+        }
+      ],
+      "declaredStandards": [
+        "ecma-376"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "json",
+      "kind": "s.stdio.json",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 85,
+          "text": "/// `.document_codec_bare::<JsonSnapshot, JsonMutation>(...)`; and"
+        },
+        {
+          "line": 94,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"json\", definition()?, declaration)"
+        },
+        {
+          "line": 107,
+          "text": "        .document_codec_bare::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.json\", standard: semio_framework_plugin::StandardId(\"rfc8259\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 108,
+          "text": "        .document_codec_bare::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.json\", standard: semio_framework_plugin::StandardId(\"rfc8259\"), subset: semio_framework_plugin::SubsetId(\"i-json\") })"
+        },
+        {
+          "line": 109,
+          "text": "        .document_codec_bare::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.json\", standard: semio_framework_plugin::StandardId(\"rfc8259\"), subset: semio_framework_plugin::SubsetId(\"geojson\") })"
+        }
+      ],
+      "declaredStandards": [
+        "rfc8259"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "dwg",
+      "kind": "s.stdio.dwg",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 102,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"dwg\", definition()?, declaration)"
+        },
+        {
+          "line": 114,
+          "text": "        .document_codec_bare::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.dwg\", standard: semio_framework_plugin::StandardId(\"ac1018\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 115,
+          "text": "        .document_codec_bare::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.dwg\", standard: semio_framework_plugin::StandardId(\"ac1024\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "ac1018",
+        "ac1024"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "png",
+      "kind": "s.stdio.png",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 106,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"png\", definition()?, declaration)"
+        },
+        {
+          "line": 118,
+          "text": "        .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.png\", standard: semio_framework_plugin::StandardId(\"1.2\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "1-2"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "binary",
+      "kind": "s.stdio.binary",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 70,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"binary\", definition()?, declaration)"
+        },
+        {
+          "line": 82,
+          "text": "        .document_codec_bare::<BinarySnapshot, BinaryMutation>(STDIO_BINARY_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.binary\", standard: semio_framework_plugin::StandardId(\"raw\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "raw"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "txt",
+      "kind": "s.stdio.txt",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 77,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"txt\", definition()?, declaration)"
+        },
+        {
+          "line": 85,
+          "text": "    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::v_utf_8::subsets::any::schema::txt_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.txt\", standard: semio_framework_plugin::StandardId(\"utf-8\"), subset: semio_framework_plugin::SubsetId(\"*\") }).try_build()"
+        }
+      ],
+      "declaredStandards": [
+        "utf-8"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "tiff",
+      "kind": "s.stdio.tiff",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 107,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"tiff\", definition()?, declaration)"
+        },
+        {
+          "line": 120,
+          "text": "        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.tiff\", standard: semio_framework_plugin::StandardId(\"6.0\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 121,
+          "text": "        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.tiff\", standard: semio_framework_plugin::StandardId(\"6.0\"), subset: semio_framework_plugin::SubsetId(\"baseline\") })"
+        }
+      ],
+      "declaredStandards": [
+        "6-0"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "md",
+      "kind": "s.stdio.md",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 97,
+          "text": "/// fn`-constructible); `register_document_codec` → `.document_codec_bare::<MdSnapshot,"
+        },
+        {
+          "line": 105,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"md\", definition()?, declaration)"
+        },
+        {
+          "line": 117,
+          "text": "        .document_codec_bare::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.md\", standard: semio_framework_plugin::StandardId(\"commonmark\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "commonmark"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "xml",
+      "kind": "s.stdio.xml",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 92,
+          "text": "/// `register_document_codec` → `.document_codec_bare::<XmlSnapshot, XmlMutation>(...)`; and"
+        },
+        {
+          "line": 103,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"xml\", definition()?, declaration)"
+        },
+        {
+          "line": 116,
+          "text": "        .document_codec_bare::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.xml\", standard: semio_framework_plugin::StandardId(\"1.0\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 117,
+          "text": "        .document_codec_bare::<XmlSnapshot, XmlMutation>(STDIO_XML_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.xml\", standard: semio_framework_plugin::StandardId(\"1.0\"), subset: semio_framework_plugin::SubsetId(\"valid\") })"
+        }
+      ],
+      "declaredStandards": [
+        "1-0"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "pptx",
+      "kind": "s.stdio.pptx",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 60,
+          "text": "/// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`"
+        },
+        {
+          "line": 61,
+          "text": "/// stands in for the old `store::register_document_codec(store::ArtifactCodec::bare::<PptxSnapshot,"
+        },
+        {
+          "line": 79,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"pptx\", definition()?, declaration)"
+        },
+        {
+          "line": 92,
+          "text": "        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pptx\", standard: semio_framework_plugin::StandardId(\"ecma-376\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 93,
+          "text": "        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pptx\", standard: semio_framework_plugin::StandardId(\"ecma-376\"), subset: semio_framework_plugin::SubsetId(\"strict\") })"
+        },
+        {
+          "line": 94,
+          "text": "        .document_codec_bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.pptx\", standard: semio_framework_plugin::StandardId(\"ecma-376\"), subset: semio_framework_plugin::SubsetId(\"transitional\") })"
+        }
+      ],
+      "declaredStandards": [
+        "ecma-376"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "step",
+      "kind": "s.stdio.step",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 62,
+          "text": "/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for"
+        },
+        {
+          "line": 63,
+          "text": "/// `store::register_document_codec(store::ArtifactCodec::bare::<StepSnapshot, StepMutation>(...))`."
+        },
+        {
+          "line": 85,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"step\", definition()?, declaration)"
+        },
+        {
+          "line": 98,
+          "text": "        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.step\", standard: semio_framework_plugin::StandardId(\"ap214\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 99,
+          "text": "        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.step\", standard: semio_framework_plugin::StandardId(\"ap214\"), subset: semio_framework_plugin::SubsetId(\"cc1\") })"
+        },
+        {
+          "line": 100,
+          "text": "        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.step\", standard: semio_framework_plugin::StandardId(\"ap214\"), subset: semio_framework_plugin::SubsetId(\"cc2\") })"
+        },
+        {
+          "line": 101,
+          "text": "        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.step\", standard: semio_framework_plugin::StandardId(\"ap214\"), subset: semio_framework_plugin::SubsetId(\"cc3\") })"
+        },
+        {
+          "line": 102,
+          "text": "        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.step\", standard: semio_framework_plugin::StandardId(\"ap214\"), subset: semio_framework_plugin::SubsetId(\"cc4\") })"
+        },
+        {
+          "line": 103,
+          "text": "        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.step\", standard: semio_framework_plugin::StandardId(\"ap214\"), subset: semio_framework_plugin::SubsetId(\"cc5\") })"
+        },
+        {
+          "line": 104,
+          "text": "        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.step\", standard: semio_framework_plugin::StandardId(\"ap214\"), subset: semio_framework_plugin::SubsetId(\"cc6\") })"
+        }
+      ],
+      "declaredStandards": [
+        "ap214"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "zip",
+      "kind": "s.stdio.zip",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 55,
+          "text": "/// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`"
+        },
+        {
+          "line": 56,
+          "text": "/// stands in for the old `store::register_document_codec(store::ArtifactCodec::of::<ZipSnapshot,"
+        },
+        {
+          "line": 77,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"zip\", definition()?, declaration)"
+        },
+        {
+          "line": 90,
+          "text": "        .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.zip\", standard: semio_framework_plugin::StandardId(\"2.0\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 91,
+          "text": "        .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.zip\", standard: semio_framework_plugin::StandardId(\"2.0\"), subset: semio_framework_plugin::SubsetId(\"iso21320\") })"
+        }
+      ],
+      "declaredStandards": [
+        "2-0"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "deflate",
+      "kind": "s.stdio.deflate",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 62,
+          "text": "/// so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for"
+        },
+        {
+          "line": 63,
+          "text": "/// `store::register_document_codec(store::ArtifactCodec::of::<DeflateSnapshot,"
+        },
+        {
+          "line": 81,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"deflate\", definition()?, declaration)"
+        },
+        {
+          "line": 93,
+          "text": "        .document_codec_bare::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.deflate\", standard: semio_framework_plugin::StandardId(\"rfc1950\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "rfc1950"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "html",
+      "kind": "s.stdio.html",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 68,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"html\", definition()?, declaration)"
+        },
+        {
+          "line": 76,
+          "text": "    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).formats(formats).document_codec_bare::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.html\", standard: semio_framework_plugin::StandardId(\"5\"), subset: semio_framework_plugin::SubsetId(\"*\") }).try_build()"
+        }
+      ],
+      "declaredStandards": [
+        "5"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "semio",
+      "kind": "s.stdio.semio",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 54,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"semio\", definition()?, declaration)"
+        }
+      ],
+      "declaredStandards": [
+        "v1"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "jpg",
+      "kind": "s.stdio.jpg",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 110,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"jpg\", definition()?, declaration)"
+        },
+        {
+          "line": 123,
+          "text": "        .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA, JPG_ANY_DIALECT)"
+        },
+        {
+          "line": 124,
+          "text": "        .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA, JPG_BASELINE_DIALECT)"
+        }
+      ],
+      "declaredStandards": [
+        "jfif-1-01"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "svg",
+      "kind": "s.stdio.svg",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 110,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"svg\", definition()?, declaration)"
+        },
+        {
+          "line": 123,
+          "text": "        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.svg\", standard: semio_framework_plugin::StandardId(\"1.1\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 124,
+          "text": "        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.svg\", standard: semio_framework_plugin::StandardId(\"1.1\"), subset: semio_framework_plugin::SubsetId(\"tiny\") })"
+        },
+        {
+          "line": 125,
+          "text": "        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.svg\", standard: semio_framework_plugin::StandardId(\"1.1\"), subset: semio_framework_plugin::SubsetId(\"basic\") })"
+        }
+      ],
+      "declaredStandards": [
+        "1-1"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "mp3",
+      "kind": "s.stdio.mp3",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 91,
+          "text": "/// ticket calls out. `.document_codec_bare::<Mp3Snapshot, Mp3Mutation>(...)` folds in what"
+        },
+        {
+          "line": 92,
+          "text": "/// `subsets::any::io::register()`'s `store::register_document_codec(store::ArtifactCodec::of::<..>())`"
+        },
+        {
+          "line": 93,
+          "text": "/// call did — mp3 is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`"
+        },
+        {
+          "line": 98,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"mp3\", definition()?, declaration)"
+        },
+        {
+          "line": 109,
+          "text": "        .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.mp3\", standard: semio_framework_plugin::StandardId(\"mpeg1-layer3\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "mpeg1-layer3"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "bmp",
+      "kind": "s.stdio.bmp",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 61,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"bmp\", definition()?, declaration)"
+        },
+        {
+          "line": 73,
+          "text": "        .document_codec_bare::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.bmp\", standard: semio_framework_plugin::StandardId(\"v3\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "v3"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "wav",
+      "kind": "s.stdio.wav",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 59,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"wav\", definition()?, declaration)"
+        },
+        {
+          "line": 71,
+          "text": "        .document_codec_bare::<WavSnapshot, WavMutation>(STDIO_WAV_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.wav\", standard: semio_framework_plugin::StandardId(\"riff-pcm\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "riff-pcm"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "epw",
+      "kind": "s.stdio.epw",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 60,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"epw\", definition()?, declaration)"
+        },
+        {
+          "line": 72,
+          "text": "        .document_codec_bare::<EpwSnapshot, EpwMutation>("
+        }
+      ],
+      "declaredStandards": [
+        "energyplus"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "ifc",
+      "kind": "s.stdio.ifc",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 53,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"ifc\", definition()?, declaration)"
+        },
+        {
+          "line": 67,
+          "text": "        .document_codec_bare::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.ifc\", standard: semio_framework_plugin::StandardId(\"4\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 68,
+          "text": "        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.ifc\", standard: semio_framework_plugin::StandardId(\"2x3\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        },
+        {
+          "line": 69,
+          "text": "        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.ifc\", standard: semio_framework_plugin::StandardId(\"2x3\"), subset: semio_framework_plugin::SubsetId(\"cv20\") })"
+        },
+        {
+          "line": 70,
+          "text": "        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.ifc\", standard: semio_framework_plugin::StandardId(\"2x3\"), subset: semio_framework_plugin::SubsetId(\"sav\") })"
+        },
+        {
+          "line": 71,
+          "text": "        .document_codec_bare::<standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot, standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.ifc\", standard: semio_framework_plugin::StandardId(\"2x3\"), subset: semio_framework_plugin::SubsetId(\"cobie\") });"
+        }
+      ],
+      "declaredStandards": [
+        "2x3",
+        "4"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "dxf",
+      "kind": "s.stdio.dxf",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 75,
+          "text": "/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for"
+        },
+        {
+          "line": 76,
+          "text": "/// `store::register_document_codec(store::ArtifactCodec::of::<DxfSnapshot, DxfMutation>(...))`."
+        },
+        {
+          "line": 88,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"dxf\", definition()?, declaration)"
+        },
+        {
+          "line": 100,
+          "text": "        .document_codec_bare::<DxfSnapshot, DxfMutation>(STDIO_DXF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.dxf\", standard: semio_framework_plugin::StandardId(\"r12\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "r12"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "avi",
+      "kind": "s.stdio.avi",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 90,
+          "text": "/// calls out. `.document_codec_bare::<AviSnapshot, AviMutation>(...)` folds in what"
+        },
+        {
+          "line": 91,
+          "text": "/// `subsets::any::io::register()`'s `store::register_document_codec(store::ArtifactCodec::of::<..>())`"
+        },
+        {
+          "line": 92,
+          "text": "/// call did — avi is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`"
+        },
+        {
+          "line": 97,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"avi\", definition()?, declaration)"
+        },
+        {
+          "line": 108,
+          "text": "        .document_codec_bare::<AviSnapshot, AviMutation>(STDIO_AVI_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.avi\", standard: semio_framework_plugin::StandardId(\"1.0\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "1-0"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "stl",
+      "kind": "s.stdio.stl",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 59,
+          "text": "/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for"
+        },
+        {
+          "line": 60,
+          "text": "/// `store::register_document_codec(store::ArtifactCodec::of::<StlSnapshot, StlMutation>(...))`."
+        },
+        {
+          "line": 71,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"stl\", definition()?, declaration)"
+        },
+        {
+          "line": 83,
+          "text": "        .document_codec_bare::<StlSnapshot, StlMutation>(STDIO_STL_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.stl\", standard: semio_framework_plugin::StandardId(\"ascii\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "ascii"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "mp4",
+      "kind": "s.stdio.mp4",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 90,
+          "text": "/// calls out. `.document_codec_bare::<Mp4Snapshot, Mp4Mutation>(...)` folds in what"
+        },
+        {
+          "line": 91,
+          "text": "/// `subsets::any::io::register()`'s `store::register_document_codec(store::ArtifactCodec::of::<..>())`"
+        },
+        {
+          "line": 92,
+          "text": "/// call did — mp4 is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`"
+        },
+        {
+          "line": 97,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"mp4\", definition()?, declaration)"
+        },
+        {
+          "line": 108,
+          "text": "        .document_codec_bare::<Mp4Snapshot, Mp4Mutation>(STDIO_MP4_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.mp4\", standard: semio_framework_plugin::StandardId(\"isobmff\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "isobmff"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    },
+    {
+      "artifact": "bcf",
+      "kind": "s.stdio.bcf",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📜️artifact-definition.json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🦀️.rs",
+      "assemblySourceLines": [
+        {
+          "line": 59,
+          "text": "/// `.document_codec_bare` stands in for the old `store::register_document_codec(store::"
+        },
+        {
+          "line": 74,
+          "text": "    semio_s_artifact_stdio_contract::runtime_assembly(\"bcf\", definition()?, declaration)"
+        },
+        {
+          "line": 86,
+          "text": "        .document_codec_bare::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.bcf\", standard: semio_framework_plugin::StandardId(\"2.1\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "declaredStandards": [
+        "2-1"
+      ],
+      "qualification": "Static literal source locators; no runtime assembly or inferred dialect/TypeId"
+    }
+  ],
+  "unresolvedSelected": []
+}

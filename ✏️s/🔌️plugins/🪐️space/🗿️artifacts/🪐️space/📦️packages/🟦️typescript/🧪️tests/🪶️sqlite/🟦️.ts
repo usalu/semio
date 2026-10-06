@@ -3,7 +3,7 @@ import{spaceSnapshotToSqliteDatabase,spaceSnapshotFromSqliteDatabase,validateSpa
 import{exportSqliteDatabase,importSqliteDatabase}from"@semio-tech/framework";
 import{Database}from"bun:sqlite";
 import{expect,test}from"bun:test";
-import fixture from"../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json";
+import fixture from"../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json";
 test("Space public package retains both full timestamp words, duplicate IDs and aliases",async()=>{
  const snapshot:SSpaceSnapshot={...fixture.snapshot,artifacts:fixture.snapshot.artifacts.map(row=>({...row,createdAtMs:BigInt(row.createdAtMs),updatedAtMs:BigInt(row.updatedAtMs)}))},database=await spaceSnapshotToSqliteDatabase(snapshot),oracle=Database.deserialize(await exportSqliteDatabase(database));try{
   expect(oracle.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(oracle.query("SELECT artifact_id,created_at_ms_high AS high,created_at_ms_low AS low FROM space_artifact ORDER BY ordinal").all()).toEqual([{artifact_id:"duplicate",high:4294967295,low:4294967295},{artifact_id:"duplicate",high:0,low:0}]);

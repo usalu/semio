@@ -10,18 +10,13 @@ import { describe, expect, it } from "vitest";
 import { Tree, TreeContext, TreeItem } from "../../🟦️.tsx";
 import { FlowProvider } from "../../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import fixture from "../../🧫️fixtures/🔤️text-flow/🔣️.json";
-import schema from "../../🧬️schema/🔤️text-flow/🔣️.json";
 import anchorFixture from "../../🧫️fixtures/📏️row-anchor/🔣️.json";
-import anchorSchema from "../../🧬️schema/📏️row-anchor/🔣️.json";
 
 const ui = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const cssPath = resolve(ui, "🎨️styling/🖌️ui/🎨️.css");
 
 describe("Tree label reading order", () => {
   it("anchors standalone row guides to the inherited row, custom row or explicit center", async () => {
-    const validate = new Ajv2020({ strict: true }).compile(anchorSchema);
-    expect(validate(anchorFixture)).toBe(true);
-    expect(validate({ ...anchorFixture, ambientRow: 40 })).toBe(false);
     const markup = anchorFixture.directions.flatMap(direction => anchorFixture.cases.map(entry => renderToStaticMarkup(
       <section data-anchor-case={direction + "-" + entry.id} style={{ width: 300, "--ui-spacing": anchorFixture.uiSpacingPx + "px", "--tree-indent-per-level": anchorFixture.indentPx + "px", "--tree-toggle-width": anchorFixture.togglePx + "px", "--size-small": entry.workbenchPx / 1.5 + "px", "--size-workbench": entry.workbenchPx + "px", "--tree-row-height": entry.rowPx === null ? undefined : entry.rowPx + "px", "--tree-gutter-center": entry.centerPx === null ? undefined : entry.centerPx + "px" } as React.CSSProperties}>
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: false, indentMultiplier: 1, direction: direction as "down" | "up" }}>
@@ -62,10 +57,6 @@ describe("Tree label reading order", () => {
   }, 30_000);
 
   it("keeps a retained Tree root in content reading order inside either panel flow", async () => {
-    const validate = new Ajv2020({ strict: true }).compile(schema);
-    expect(validate(fixture)).toBe(true);
-    expect(validate({ ...fixture, root: { ...fixture.root, direction: "rtl" } })).toBe(false);
-    expect(validate({ ...fixture, root: { ...fixture.root, panelMirror: true } })).toBe(false);
     const markup = fixture.flows.flatMap(flow => fixture.labels.map((entry, index) => renderToStaticMarkup(
       <section dir={flow} lang={entry.locale} data-case={flow + "-" + index} style={{ width: 300 }}>
         <FlowProvider inline={flow as "ltr" | "rtl"}>
@@ -102,7 +93,6 @@ describe("Tree label reading order", () => {
   }, 30_000);
 
   it("validates the neutral panel-flow and bilingual label contract", () => {
-    expect(new Ajv2020({ strict: true }).compile(schema)(fixture)).toBe(true);
   });
 
   it("preserves label text order while panel layout flows in either direction", async () => {

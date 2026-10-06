@@ -51,7 +51,7 @@ fn apply_page_diff(page: &mut PageDoc, diff: &PdfPageDiff) {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn page_diff_between(a: &PageDoc, b: &PageDoc) -> PdfPageDiff {
-    PdfPageDiff { width: (a.width != b.width).then_some(b.width), height: (a.height != b.height).then_some(b.height), text: (a.text != b.text).then(|| b.text.clone()) }
+    PdfPageDiff { width: (a.width.to_bits() != b.width.to_bits()).then_some(b.width), height: (a.height.to_bits() != b.height.to_bits()).then_some(b.height), text: (a.text != b.text).then(|| b.text.clone()) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -358,292 +358,41 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️TextCodec
-/// 🔤️ Hex, so a page's text can carry any byte (including the separators this grammar uses)
-/// without an escape layer. Same primitive the sibling 1.7 diff codec uses.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(text: &str) -> String {
-    text.bytes().map(|byte| format!("{byte:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(text: &str) -> Result<String, String> {
-    if !text.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {text:?}"));
-    }
-    let bytes: Result<Vec<u8>, String> = (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).map_err(|error| error.to_string())).collect();
-    String::from_utf8(bytes?).map_err(|error| error.to_string())
-}
 
-/// 🧭️ Bracket-depth-aware split: a top-level `separator` inside nested brackets is never mistaken
-/// for a field separator.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(text: &str, separator: char) -> Vec<&str> {
-    if text.is_empty() {
-        return Vec::new();
-    }
-    let mut out = Vec::new();
-    let mut depth = 0i32;
-    let mut start = 0usize;
-    for (index, character) in text.char_indices() {
-        match character {
-            '[' => depth += 1,
-            ']' => depth -= 1,
-            other if other == separator && depth == 0 => {
-                out.push(&text[start..index]);
-                start = index + other.len_utf8();
-            }
-            _ => {}
-        }
-    }
-    out.push(&text[start..]);
-    out
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(text: &str) -> Result<&str, String> {
-    text.strip_prefix('[').and_then(|inner| inner.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {text:?}"))
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_usize(text: &str) -> Result<usize, String> {
-    text.parse().map_err(|error: std::num::ParseIntError| error.to_string())
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_f64(text: &str) -> Result<f64, String> {
-    text.parse().map_err(|error: std::num::ParseFloatError| error.to_string())
-}
 
-/// 📄️ A whole `PageDoc` literal: `[width,height,hex-text]`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_page(page: &PageDoc) -> String {
-    format!("[{},{},{}]", page.width, page.height, enc_str(&page.text))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_page(text: &str) -> Result<PageDoc, String> {
-    let parts = split_top_level(strip_brackets(text)?, ',');
-    let [width, height, body] = parts.as_slice() else { return Err(format!("page: expected 3 fields, got {}", parts.len())) };
-    Ok(PageDoc { width: parse_f64(width)?, height: parse_f64(height)?, text: dec_str(body)? })
-}
 
-/// 🏷️ `PdfPageDiff`'s sparse fields as single-letter `tag:value` pairs: `W`=width, `H`=height,
-/// `X`=text.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_page_diff(diff: &PdfPageDiff) -> String {
-    let mut parts = Vec::new();
-    if let Some(value) = diff.width {
-        parts.push(format!("W:{value}"));
-    }
-    if let Some(value) = diff.height {
-        parts.push(format!("H:{value}"));
-    }
-    if let Some(value) = &diff.text {
-        parts.push(format!("X:{}", enc_str(value)));
-    }
-    format!("[{}]", parts.join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_page_diff(text: &str) -> Result<PdfPageDiff, String> {
-    let mut diff = PdfPageDiff::default();
-    for entry in split_top_level(strip_brackets(text)?, ',') {
-        if entry.is_empty() {
-            continue;
-        }
-        let (tag, value) = entry.split_once(':').ok_or_else(|| format!("page diff: bad entry {entry:?}"))?;
-        match tag {
-            "W" => diff.width = Some(parse_f64(value)?),
-            "H" => diff.height = Some(parse_f64(value)?),
-            "X" => diff.text = Some(dec_str(value)?),
-            other => return Err(format!("page diff: unknown tag {other:?}")),
-        }
-    }
-    Ok(diff)
-}
 
-/// 📦️ The triple: `[removed];[modified];[added]`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_pages_diff(diff: &PdfPagesDiff) -> String {
-    let removed = diff.removed.iter().map(|index| index.to_string()).collect::<Vec<_>>().join(",");
-    let modified = diff.modified.iter().map(|item| format!("{}:{}", item.index, enc_page_diff(&item.diff))).collect::<Vec<_>>().join(",");
-    let added = diff.added.iter().map(|item| format!("{}:{}", item.index, enc_page(&item.page))).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_pages_diff(body: &str) -> Result<PdfPagesDiff, String> {
-    let three = split_top_level(body, ';');
-    let [removed_section, modified_section, added_section] = three.as_slice() else { return Err(format!("pages diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_section)?, ',').into_iter().filter(|entry| !entry.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_section)?, ',')
-        .into_iter()
-        .filter(|entry| !entry.is_empty())
-        .map(|entry| {
-            let (index, rest) = entry.split_once(':').ok_or_else(|| format!("pages modified: bad entry {entry:?}"))?;
-            Ok(PdfPageModified { index: parse_usize(index)?, diff: dec_page_diff(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_section)?, ',')
-        .into_iter()
-        .filter(|entry| !entry.is_empty())
-        .map(|entry| {
-            let (index, rest) = entry.split_once(':').ok_or_else(|| format!("pages added: bad entry {entry:?}"))?;
-            Ok(PdfPageAdded { index: parse_usize(index)?, page: dec_page(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    Ok(PdfPagesDiff { removed, modified, added })
-}
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️TextCodec
 
 //#region 🔖️BinaryCodec
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, text: &str) {
-    store::pack_rt::write_varint_u64(out, text.len() as u64);
-    out.extend_from_slice(text.as_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let length = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(length).map_err(|error| error.to_string())?.to_vec()).map_err(|error| error.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_page_bin(page: &PageDoc, out: &mut Vec<u8>) {
-    out.extend_from_slice(&page.width.to_le_bytes());
-    out.extend_from_slice(&page.height.to_le_bytes());
-    write_str_lp(out, &page.text);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_page_bin(reader: &mut store::ByteReader<'_>) -> Result<PageDoc, String> {
-    let width = reader.read_f64_le().map_err(|error| error.to_string())?;
-    let height = reader.read_f64_le().map_err(|error| error.to_string())?;
-    Ok(PageDoc { width, height, text: read_str_lp(reader)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_page_diff_bin(diff: &PdfPageDiff, out: &mut Vec<u8>) {
-    out.push(u8::from(diff.width.is_some()));
-    if let Some(value) = diff.width {
-        out.extend_from_slice(&value.to_le_bytes());
-    }
-    out.push(u8::from(diff.height.is_some()));
-    if let Some(value) = diff.height {
-        out.extend_from_slice(&value.to_le_bytes());
-    }
-    out.push(u8::from(diff.text.is_some()));
-    if let Some(value) = &diff.text {
-        write_str_lp(out, value);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_page_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPageDiff, String> {
-    let mut diff = PdfPageDiff::default();
-    if reader.read_u8().map_err(|error| error.to_string())? != 0 {
-        diff.width = Some(reader.read_f64_le().map_err(|error| error.to_string())?);
-    }
-    if reader.read_u8().map_err(|error| error.to_string())? != 0 {
-        diff.height = Some(reader.read_f64_le().map_err(|error| error.to_string())?);
-    }
-    if reader.read_u8().map_err(|error| error.to_string())? != 0 {
-        diff.text = Some(read_str_lp(reader)?);
-    }
-    Ok(diff)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_pages_diff_bin(diff: &PdfPagesDiff, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, diff.removed.len() as u64);
-    for index in &diff.removed {
-        store::pack_rt::write_varint_u64(out, *index as u64);
-    }
-    store::pack_rt::write_varint_u64(out, diff.modified.len() as u64);
-    for item in &diff.modified {
-        store::pack_rt::write_varint_u64(out, item.index as u64);
-        enc_page_diff_bin(&item.diff, out);
-    }
-    store::pack_rt::write_varint_u64(out, diff.added.len() as u64);
-    for item in &diff.added {
-        store::pack_rt::write_varint_u64(out, item.index as u64);
-        enc_page_bin(&item.page, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_pages_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPagesDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|error| error.to_string())?;
-    let mut removed = Vec::with_capacity(removed_count as usize);
-    for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|error| error.to_string())? as usize);
-    }
-    let modified_count = reader.read_varint_u64().map_err(|error| error.to_string())?;
-    let mut modified = Vec::with_capacity(modified_count as usize);
-    for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
-        modified.push(PdfPageModified { index, diff: dec_page_diff_bin(reader)? });
-    }
-    let added_count = reader.read_varint_u64().map_err(|error| error.to_string())?;
-    let mut added = Vec::with_capacity(added_count as usize);
-    for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
-        added.push(PdfPageAdded { index, page: dec_page_bin(reader)? });
-    }
-    Ok(PdfPagesDiff { removed, modified, added })
-}
+
+
+
+
+
+
+
+
 //#endregion 🔖️BinaryCodec
 
 //#region 🔖️DiffCodec
-impl protocol::DiffCodec for PdfDiff {
-    /// **Grammar**: `pages=<triple>` when the page lane moved, the empty string when nothing did —
-    /// one space-separated `name=value` token per changed top-level field, exactly the convention
-    /// the sibling 1.7 diff prints in.
-    fn print_diff(&self) -> String {
-        match &self.pages {
-            Some(pages) => format!("pages={}", enc_pages_diff(pages)),
-            None => String::new(),
-        }
-    }
 
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let parse = |line: &str| -> Result<Self, String> {
-            let mut diff = PdfDiff::default();
-            if line.is_empty() {
-                return Ok(diff);
-            }
-            for token in line.split(' ') {
-                match token.strip_prefix("pages=") {
-                    Some(rest) => diff.pages = Some(dec_pages_diff(rest)?),
-                    None => return Err(format!("pdf 1.4 diff: unknown token {token:?}")),
-                }
-            }
-            Ok(diff)
-        };
-        parse(line).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-
-    /// 🧪️ Real binary frame (`format u8 | flags u8 | [pages]`), matching
-    /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
-    /// varint-counted, length-prefixed, genuinely structured, never `print_diff().into_bytes()`.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let flags: u8 = u8::from(self.pages.is_some());
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
-        if let Some(pages) = &self.pages {
-            enc_pages_diff_bin(pages, &mut out);
-        }
-        Ok(out)
-    }
-
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let format = reader.read_u8().map_err(|error| malformed("diff format", 0, error.to_string()))?;
-        if format != store::pack_rt::OP_BINARY_FORMAT {
-            return Err(malformed("diff format", 0, format!("expected {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)));
-        }
-        let flags = reader.read_u8().map_err(|error| malformed("diff flags", 1, error.to_string()))?;
-        if flags & !0b0000_0001 != 0 {
-            return Err(malformed("diff flags", 1, format!("unknown flag bits {:#010b}", flags & !0b0000_0001)));
-        }
-        let pages = if flags & 0b0000_0001 != 0 { Some(dec_pages_diff_bin(&mut reader).map_err(|error| malformed("diff pages", reader.position(), error))?) } else { None };
-        if reader.remaining() != 0 {
-            return Err(malformed("diff trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
-        }
-        Ok(PdfDiff { pages })
-    }
-}
 //#endregion 🔖️DiffCodec
 
 //#region 🧪️Tests

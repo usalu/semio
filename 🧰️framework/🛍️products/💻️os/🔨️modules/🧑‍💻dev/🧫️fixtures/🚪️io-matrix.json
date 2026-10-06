@@ -52,8 +52,8 @@
       "reach": []
     },
     "demonstrator/puzzle3d": {
-      "exports": [{ "id": "json", "verb": "exportFixture", "format": "json" }],
-      "imports": [{ "id": "json", "verb": "openImportFixture", "via": "picker", "from": "json" }],
+      "exports": [{ "id": "json", "verb": "exportSnapshot", "format": "json" }],
+      "imports": [{ "id": "json", "verb": "openImportSnapshot", "via": "picker", "from": "json" }],
       "reach": []
     },
     "draw/drawing": {
@@ -65,7 +65,7 @@
       "reach": []
     },
     "forms/forms": {
-      "exports": [{ "id": "dsl", "verb": "exportFixture", "format": "text" }],
+      "exports": [{ "id": "dsl", "verb": "exportSnapshot", "format": "text" }],
       "imports": [],
       "reach": []
     },
@@ -114,18 +114,18 @@
       "reach": []
     },
     "puzzle/puzzle2d": {
-      "exports": [{ "id": "json", "verb": "exportFixture", "format": "json" }],
-      "imports": [{ "id": "json", "verb": "openImportFixture", "via": "picker", "from": "json" }],
+      "exports": [{ "id": "json", "verb": "exportSnapshot", "format": "json" }],
+      "imports": [{ "id": "json", "verb": "openImportSnapshot", "via": "picker", "from": "json" }],
       "reach": []
     },
     "puzzle/puzzle3d": {
-      "exports": [{ "id": "json", "verb": "exportFixture", "format": "json" }],
-      "imports": [{ "id": "json", "verb": "openImportFixture", "via": "picker", "from": "json" }],
+      "exports": [{ "id": "json", "verb": "exportSnapshot", "format": "json" }],
+      "imports": [{ "id": "json", "verb": "openImportSnapshot", "via": "picker", "from": "json" }],
       "reach": []
     },
     "puzzle/puzzle5d": {
-      "exports": [{ "id": "json", "verb": "exportFixture", "format": "json" }],
-      "imports": [{ "id": "json", "verb": "openImportFixture", "via": "picker", "from": "json" }],
+      "exports": [{ "id": "json", "verb": "exportSnapshot", "format": "json" }],
+      "imports": [{ "id": "json", "verb": "openImportSnapshot", "via": "picker", "from": "json" }],
       "reach": []
     },
     "remodel/remodeling": {

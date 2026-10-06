@@ -2,7 +2,8 @@
 
 use crate::editor::generation2d::config::Generation2dConfig;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::schema::{collect_drawing_handles_from_eval, scene_layers_from_drawing_handle};
+use crate::standards::v1::subsets::any::io::text::snapshot::{scene_layers_from_drawing_handle};
+use crate::standards::v1::subsets::any::io::text::snapshot::{collect_drawing_handles_from_eval};
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::BuiltNode;
@@ -24,6 +25,7 @@ const GENERATION2D_PLAY_SURFACE_PREVIEW: &str = "generation2d.play.preview";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GENERATION2D_PLAY_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: GENERATION2D_PLAY_BODY_PREVIEW.into(),

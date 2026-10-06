@@ -11,7 +11,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { digest } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -212,8 +212,8 @@ function parseNumstat(stdout: string): CommitRow[] {
 /** 🎞️ Recording the repository is the expensive half, so one run serves every scenario. */
 let recorded: { noMerges: string; withMerges: string; tracked: string[] } | null = null;
 
-function live(ctx: { fixtureBytes(uri: string): Uint8Array }): { noMerges: string; withMerges: string; tracked: string[] } {
-  if (recorded === null) recorded = record(JSON.parse(Buffer.from(ctx.fixtureBytes("shared://🌱️repository-recipe.json")).toString("utf8")) as Recipe);
+function live(ctx: { inputBytes(uri: string): Uint8Array }): { noMerges: string; withMerges: string; tracked: string[] } {
+  if (recorded === null) recorded = record(JSON.parse(Buffer.from(ctx.inputBytes("shared://🌱️repository-recipe.json")).toString("utf8")) as Recipe);
   return recorded;
 }
 

@@ -1,4 +1,4 @@
-import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 // 🧱️ Example `wall-roof-facade-strip` — the TypeScript twin of `🦀️.rs`'s builder.
 
 import type { Wfc2dSnapshot } from "../../🧬️schema/📸️snapshot/🟦️.ts";

@@ -43,7 +43,7 @@ fn inspector_projects_selected_properties_and_foreground_in_both_languages() {
             if !ids.is_empty(){for mode in fixture["blendModes"].as_array().unwrap(){assert!(text.contains(mode.as_str().unwrap()),"missing blend option {mode}: {text}");}}
         }
     }
-    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
+    crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -54,7 +54,7 @@ async fn inspector_mask_dimensions_resolve_the_attached_image() {
     let mut encoder=semio_framework_pixels::png_encoding::PngEncodeJob::new(semio_framework_pixels::RasterImage::new(width,height)).unwrap();
     while !encoder.advance().unwrap().done {}
     let bytes=encoder.into_result().unwrap().data;
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     document.assets.insert("mask".into(),crate::mint_raster_asset_child("mask",&crate::RasterImageAsset {mime:"image/png".into(),data:bytes})).unwrap();
     let mut layer=crate::standards::v1::subsets::any::schema::create_layer_of_kind("pixel");
     if let RasterLayerNode::Pixel {mask,..}=&mut layer {*mask=Some(crate::RasterLayerMask {enabled:true,linked:true,invert:false,width:None,height:None,image_key:Some("mask".into()),transform:crate::RasterTransform::default()});}
@@ -67,7 +67,7 @@ async fn inspector_mask_dimensions_resolve_the_attached_image() {
 #[test]
 fn inspector_adjustment_parameters_are_localized_bounded_commit_controls() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎛️change-layer/🧪️tests/🔣️.json")).unwrap();
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     let layer=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
     let id=layer_node_id(&layer).to_owned();document.layers.push(layer);
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
@@ -89,7 +89,7 @@ fn inspector_adjustment_parameters_are_localized_bounded_commit_controls() {
 #[test]
 fn inspector_offers_localized_merge_only_for_supported_sibling_selection() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/🫳️merge-down/🧫️fixtures/🔣️.json")).unwrap();
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["cases"][0]["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["cases"][0]["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         for ids in [vec!["upper".to_owned()],vec!["outside".to_owned()],vec!["lower".to_owned(),"upper".to_owned()],vec![]] {
             let tree=render(&document,&RasterConfig::default(),&ids,labels).unwrap();
@@ -109,7 +109,7 @@ fn inspector_offers_localized_merge_only_for_supported_sibling_selection() {
 #[test]
 fn inspector_protection_controls_follow_the_neutral_capabilities() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for labels in [&RasterPlayLabels::NATIVE_EN,&RasterPlayLabels::NATIVE_DE] {
         for case in fixture["cases"].as_array().unwrap() {
             let tree=render(&document,&RasterConfig::default(),&[case["id"].as_str().unwrap().into()],labels).unwrap();
@@ -137,7 +137,7 @@ fn inspector_protection_controls_follow_the_neutral_capabilities() {
 fn inspector_layer_actions_are_localized_and_protection_aware() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let protection:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&protection["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&protection["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
         for case in protection["cases"].as_array().unwrap() {
             let id=case["id"].as_str().unwrap();
@@ -168,7 +168,7 @@ fn inspector_layer_actions_are_localized_and_protection_aware() {
 fn inspector_layer_transform_controls_use_localized_commit_bindings(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🔣️.json")).unwrap();
     for kind in ["pixel","group"] {
-        let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers.push(crate::standards::v1::subsets::any::schema::create_layer_of_kind(kind));let id=layer_node_id(&document.layers[0]).to_owned();
+        let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers.push(crate::standards::v1::subsets::any::schema::create_layer_of_kind(kind));let id=layer_node_id(&document.layers[0]).to_owned();
         for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
             let tree=render(&document,&RasterConfig::default(),&[id.clone()],labels).unwrap();
             let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();

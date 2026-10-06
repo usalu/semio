@@ -129,13 +129,13 @@ async fn composite_refuses_an_unknown_blend_mode_with_a_reason() {
 
 #[semio_framework_async_macros::async_test]
 async fn composite_refuses_a_document_with_nothing_to_flatten() {
-    let error = raster_composite_image(&crate::standards::v1::subsets::any::schema::empty_raster_snapshot()).expect_err("an empty document has no composite");
+    let error = raster_composite_image(&crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot()).expect_err("an empty document has no composite");
     assert!(error.contains("nothing to flatten"), "{error}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn composite_exports_a_blank_pixel_layer_as_transparent() {
-    let document=crate::standards::v1::subsets::any::schema::empty_raster_document();
+    let document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document();
     let result=raster_composite_image(&document);
     retire(document);
     let image=result.unwrap();
@@ -150,9 +150,9 @@ async fn composite_exports_a_blank_pixel_layer_as_transparent() {
 #[semio_framework_async_macros::async_test]
 async fn bmp_export_writes_real_bytes_that_import_reads_back() {
     let document = document_with_solid_layer(200, 100, 50, 255, 3, 2);
-    let bytes = crate::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
+    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
     assert_eq!(&bytes[..2], b"BM", "real BITMAPFILEHEADER magic, not DSL text");
-    let reimported = crate::io::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes).expect("bmp import");
+    let reimported = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes).expect("bmp import");
     let composite = raster_composite_image(&reimported).expect("composite of the reimported document");
     assert_eq!((composite.width, composite.height), (3, 2));
     assert_eq!(&composite.frames[0].rgba8[..3], &[200, 100, 50]);
@@ -165,7 +165,7 @@ async fn bmp_export_writes_real_bytes_that_import_reads_back() {
 #[semio_framework_async_macros::async_test]
 async fn png_export_writes_a_real_png_signature() {
     let document = document_with_solid_layer(0, 128, 255, 255, 2, 2);
-    let bytes = crate::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&document).expect("png export");
+    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&document).expect("png export");
     assert_eq!(&bytes[..8], &[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]);
     retire(document);
 }
@@ -178,7 +178,8 @@ async fn png_export_writes_a_real_png_signature() {
 const BMP_PARITY_FIXTURES: &[&str] = &[include_str!("../../🧫️fixtures/🪟️solid-3x2.json"), include_str!("../../🧫️fixtures/🌈️gradient-5x3.json")];
 
 fn parity_fixture(text: &str) -> (u32, u32, Vec<u8>, String) {
-    use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonValue};
+    use semio_s_artifact_stdio_json::schema::snapshot::{JsonValue};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
     let JsonValue::Object { members } = parse_json_text(text).expect("parity fixture is valid json") else { panic!("parity fixture root must be an object") };
     let member = |key: &str| members.iter().find(|entry| entry.key == key).map(|entry| entry.value.clone()).unwrap_or_else(|| panic!("parity fixture has no {key:?} member"));
     let number = |value: &JsonValue| match value {
@@ -215,7 +216,7 @@ async fn bmp_export_matches_the_typescript_parity_fixture() {
     for text in BMP_PARITY_FIXTURES {
         let (width, height, rgba8, bmp_hex) = parity_fixture(text);
         let document = parity_document(width, height, rgba8);
-        let bytes = crate::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
+        let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
         assert_eq!(hex_of(&bytes), bmp_hex, "the Rust bmp writer drifted from the TypeScript twin");
         retire(document);
     }
@@ -226,7 +227,7 @@ async fn bmp_export_matches_the_typescript_parity_fixture() {
 async fn bmp_import_matches_the_typescript_parity_fixture() {
     for text in BMP_PARITY_FIXTURES {
         let (width, height, rgba8, bmp_hex) = parity_fixture(text);
-        let document = crate::io::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes_of(&bmp_hex)).expect("bmp import");
+        let document = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::bmp::v_v3::any::deserialize_bytes(&bytes_of(&bmp_hex)).expect("bmp import");
         let composite = raster_composite_image(&document).expect("composite of the imported document");
         assert_eq!((composite.width, composite.height), (width, height));
         assert_eq!(composite.frames[0].rgba8, rgba8, "the Rust bmp reader drifted from the TypeScript twin");

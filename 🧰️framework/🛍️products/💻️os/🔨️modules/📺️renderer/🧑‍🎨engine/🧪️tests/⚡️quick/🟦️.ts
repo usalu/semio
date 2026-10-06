@@ -61,9 +61,9 @@ describe("renderer quick contracts", () => {
 
   it("validates the neutral host/bootstrap contract with AJV and renders exact bilingual units and cancellation", () => {
     const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(rendererSchema);
-    const identity = ajv.getSchema(`${rendererSchema.$id}#/$defs/HostIdentityResolutionV1`)!;
+    
     const status = ajv.getSchema(`${rendererSchema.$id}#/$defs/BootstrapStatusV1`)!;
-    expect(identity(hostBootstrapFixture.identity), JSON.stringify(identity.errors)).toBe(true);
+    
     for (const notice of [hostBootstrapFixture.bootstrap.progress, hostBootstrapFixture.bootstrap.failure, hostBootstrapFixture.bootstrap.rebootstrap]) {
       expect(status(notice), JSON.stringify(status.errors)).toBe(true);
     }

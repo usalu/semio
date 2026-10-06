@@ -1,4 +1,4 @@
-import type{Binary64}from"../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type{Binary64} from "../../../../../../../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🎛️ Authored media classes in their native declaration order. */
 export type WorkflowMediaClass="twoD"|"threeD"|"text"|"data"|"graph"|"kit"|"computation"|"presentation";
 /** 🧩️ Authored media forms in their native declaration order. */
@@ -15,4 +15,3 @@ export interface WorkflowEdge{id:string;sourceNodeId:string;sourcePortId:string;
 export type WorkflowParameter={type:"numeric";id:string;name:string;value:Binary64;min:Binary64|null;max:Binary64|null;step:Binary64|null}|{type:"categorical";id:string;name:string;value:string;options:string[]}|{type:"toggle";id:string;name:string;value:boolean}|{type:"text";id:string;name:string;value:string};
 /** 📸️ Complete root at the existing native Value field spellings. */
 export interface WorkflowSnapshot{schema:string;graph:{schema:string;nodes:WorkflowNode[];edges:WorkflowEdge[]};parameters:WorkflowParameter[];parameter_bindings:{parameterId:string;nodeId:string;fieldPath:string}[];inputs:{id:string;kindId:string;selector:string;required:boolean;multiplicity:"one"|"many"}[];input_bindings:{inputId:string;nodeId:string;portId:string}[];output_bindings:{nodeId:string;portId:string;pathTemplate:string}[]}
-export{WORKFLOW_SQLITE_SCHEMA,workflowSnapshotToSqliteDatabase,workflowSnapshotFromSqliteDatabase}from"./🪶️sqlite/🟦️.ts";

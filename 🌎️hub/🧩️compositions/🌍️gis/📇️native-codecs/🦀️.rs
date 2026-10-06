@@ -33,14 +33,14 @@ impl NativeGisCodecReceiptV1 {
     /// 🧾 Returns identity data without exposing executable construction authority.
     pub fn identity(&self) -> NativeGisCodecIdentityV1 {
         let (factory_id, artifact_kind, schema, extension, capability, protocol) = match self.artifact {
-            GisCodecV1::Map => ("gis.gismap.v1", "s.gis.gismap", "gis.map", "gismap", "s.gis.gismap.codec.document", include_bytes!("../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio").as_slice()),
+            GisCodecV1::Map => ("gis.gismap.v1", "s.gis.gismap", "gis.map", "gismap", "s.gis.gismap.codec.document", include_bytes!("../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio").as_slice()),
             GisCodecV1::Terrain => (
                 "gis.gisterrain.v1",
                 "s.gis.gisterrain",
                 "gis.terrain",
                 "gisterrain",
                 "s.gis.gisterrain.codec.document",
-                include_bytes!("../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio").as_slice(),
+                include_bytes!("../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio").as_slice(),
             ),
         };
         NativeGisCodecIdentityV1 {

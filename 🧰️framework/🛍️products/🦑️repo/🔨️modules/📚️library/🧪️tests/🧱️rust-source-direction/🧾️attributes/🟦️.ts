@@ -1,4 +1,5 @@
 import { inspectRustCompileReferences, type RustCompileReference } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import referenceSchema from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🔣️.json";
 import { expect, test } from "bun:test";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -13,8 +14,14 @@ const library = resolve(import.meta.dir, "../../.."), read = (path: string): unk
 const corpus = read("🧫️fixtures/🧱️rust-source-direction/🧾️attributes/🔣️.json") as { readonly schemaVersion: 1; readonly featureCases:readonly Readonly<{id:string;source:string;modulePath:readonly string[];resolved:boolean;files:Readonly<Record<string,string>>;mountPath:readonly string[];mountResolved:boolean;native:boolean;diagnostic:string}>[]; readonly cases: readonly Case[] };
 
 test("attribute input corpus follows its closed portable schema", () => {
-  const validate = new Ajv({ strict: true }).compile(read("🧬️schema/🧱️rust-source-direction/🧾️attributes/🔣️.json") as object);
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+  const schema = read("🧬️schema/🧱️rust-source-direction/🧾️attributes/🔣️.json") as { $schema: string; $defs: Record<string, unknown> };
+  const ajv = new Ajv({ strict: true, validateSchema: false }).addSchema(referenceSchema);
+  const validate = ajv.compile(schema), validateInputs = ajv.compile(schema.$defs.inputs as object);
+  for (const row of corpus.cases) {
+    expect(validate(row.result), JSON.stringify(validate.errors)).toBe(true);
+    expect(validateInputs(row.nativeInputs), JSON.stringify(validateInputs.errors)).toBe(true);
+    if (row.result.state === "resolved") expect(validate({ state: "resolved", references: inspectRustCompileReferences(row.source) }), JSON.stringify(validate.errors)).toBe(true);
+  }
   expect(new Set(corpus.cases.map((row) => row.id)).size).toBe(corpus.cases.length);
   const graphSchema=read("🧬️schema/🧱️rust-source-direction/🔣️.json") as {$schema:string;$defs:Record<string,unknown>};
   const scopeValid=new Ajv({strict:true}).compile({$schema:graphSchema.$schema,$defs:graphSchema.$defs,$ref:"#/$defs/moduleScopeFact"});

@@ -101,5 +101,3 @@ export const parseCharacteristicAction: NormWireReader<CharacteristicAction> = n
 export const parseAnnexChoice: NormWireReader<AnnexChoice> = normWireLiteral("En", "De");
 export const parseMemberRole: NormWireReader<MemberRole> = normWireLiteral("beam", "column", "floor", "bridge");
 export const parseSupportType: NormWireReader<SupportType> = normWireLiteral("simplySupported", "cantilever", "continuousTwoSpan");
-
-export * from "./🪶️sqlite/🟦️.ts";

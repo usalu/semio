@@ -3336,15 +3336,13 @@ impl Ui {
             let record = tree.document()?.record(document_id)?;
             let virtual_select_value = (record.key.as_str() != node_key).then(|| crate::wgpu::accessibility::select_accessibility_option_value(record, node_key)).flatten();
             let virtual_slider_editor = record.key.as_str() != node_key && crate::wgpu::accessibility::is_slider_accessibility_editor(record, node_key);
+            let segmented_select = matches!(&record.component, ui_contract::Component::Select(select) if select.appearance == ui_contract::SelectAppearance::Segmented);
             let virtual_row_action = (record.key.as_str() != node_key).then(|| crate::wgpu::accessibility::row_accessibility_action(record, node_key)).flatten();
             if record.key.as_str() != node_key && virtual_select_value.is_none() && !virtual_slider_editor && virtual_row_action.is_none() {
                 return None;
             }
             let target = tree.document_node(document_id)?;
-            if virtual_select_value.is_some() && !tree.node(target).is_some_and(|node| node.state.open) {
-                return None;
-            }
-            if virtual_slider_editor && !tree.node(target).is_some_and(|node| node.state.edit.is_some()) {
+            if virtual_select_value.is_some() && !segmented_select && !tree.node(target).is_some_and(|node| node.state.open) {
                 return None;
             }
             let inline = router.flow().inline;

@@ -5,7 +5,19 @@
   "type": "object",
   "properties": {
     "json": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Run Output",
+          "de": "Ausführungsausgabe"
+        },
+        "description": {
+          "en": "Output of the last run as JSON text.",
+          "de": "Ausgabe des letzten Laufs als JSON-Text."
+        }
+      }
     }
   },
   "required": [

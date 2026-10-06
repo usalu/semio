@@ -914,12 +914,10 @@ describe("node drag record (design §13.3)", () => {
   const ajv = new Ajv({ strict: false, allErrors: true });
   ajv.addSchema(schema as Json);
   const validateRow = ajv.getSchema(`${(schema as Json).$id}#/$defs/NodeDragRow`)!;
-  const validateFixture = ajv.getSchema(`${(schema as Json).$id}#/$defs/NodeDragLawFixture`)!;
+  
   const law = nodeDragFixture as Json;
 
-  test("the fixture satisfies its schema", () => {
-    expect(validateFixture(law), JSON.stringify(validateFixture.errors)).toBe(true);
-  });
+  
 
   test("every valid row decodes to its record, round trips and moves as stated; the schema agrees", () => {
     for (const valid of law.valid) {

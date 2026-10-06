@@ -1,0 +1,10 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,"required":["version","from","to","cases"],
+  "properties":{
+    "version":{"const":1},
+    "from":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"string"}},
+    "to":{"type":"string"},
+    "cases":{"type":"array","minItems":8,"maxItems":8,"items":{"type":"object","additionalProperties":false,"required":["id","source","after","cuts"],"properties":{"id":{"type":"string"},"source":{"type":"string"},"after":{"type":"string"},"cuts":{"type":"integer","minimum":0}}}}
+  }
+}

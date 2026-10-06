@@ -181,5 +181,27 @@
         "appId": "s.procedural.generation3d@1/*#editor"
       }
     }
-  ]
+  ],
+  "catalog": {
+    "plugins": [
+      {
+        "pluginId": "procedural",
+        "dependsOn": [
+          "flow"
+        ]
+      },
+      {
+        "pluginId": "flow",
+        "dependsOn": []
+      }
+    ],
+    "playgrounds": [
+      {
+        "variant": "generation3d",
+        "pluginId": "procedural",
+        "app": "s.procedural.generation3d@1/*#editor",
+        "aliases": []
+      }
+    ]
+  }
 }

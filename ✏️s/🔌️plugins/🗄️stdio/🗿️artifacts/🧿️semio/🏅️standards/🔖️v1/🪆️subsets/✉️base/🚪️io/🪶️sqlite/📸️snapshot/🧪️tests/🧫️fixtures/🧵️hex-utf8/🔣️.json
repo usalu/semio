@@ -1,0 +1,36 @@
+{
+  "role": "borrowedHexUtf8LiteralAuthority",
+  "positive": [
+    {"id":"empty","hex":"","text":""},
+    {"id":"nul","hex":"00","text":"\u0000"},
+    {"id":"asciiBoundary","hex":"417f","text":"A\u007f"},
+    {"id":"twoByteMinimum","hex":"c280","text":"\u0080"},
+    {"id":"twoByteMaximumUppercase","hex":"DFBF","text":"\u07ff"},
+    {"id":"threeByteMinimum","hex":"e0a080","text":"\u0800"},
+    {"id":"beforeSurrogate","hex":"ed9fbf","text":"\ud7ff"},
+    {"id":"afterSurrogate","hex":"ee8080","text":"\ue000"},
+    {"id":"threeByteMaximum","hex":"efbfbf","text":"\uffff"},
+    {"id":"fourByteMinimum","hex":"f0908080","text":"\ud800\udc00"},
+    {"id":"maximumScalar","hex":"F48FBFBF","text":"\udbff\udfff"},
+    {"id":"bomRetained","hex":"efbbbf","text":"\ufeff"},
+    {"id":"unicodeNul","hex":"4772c3bcc39f6500e4b896e7958c","text":"Grüße\u0000世界"}
+  ],
+  "negative": [
+    {"id":"loneContinuation","hex":"80","kind":"utf8"},
+    {"id":"overlongTwo","hex":"c0af","kind":"utf8"},
+    {"id":"invalidLeadC1","hex":"c180","kind":"utf8"},
+    {"id":"overlongThree","hex":"e08080","kind":"utf8"},
+    {"id":"surrogate","hex":"eda080","kind":"utf8"},
+    {"id":"overlongFour","hex":"f0808080","kind":"utf8"},
+    {"id":"aboveMaximum","hex":"f4908080","kind":"utf8"},
+    {"id":"invalidLeadF5","hex":"f5808080","kind":"utf8"},
+    {"id":"invalidLeadFF","hex":"ff","kind":"utf8"},
+    {"id":"asciiInsteadOfContinuation","hex":"c241","kind":"utf8"},
+    {"id":"truncatedTwo","hex":"c2","kind":"utf8"},
+    {"id":"truncatedThree","hex":"e282","kind":"utf8"},
+    {"id":"truncatedFour","hex":"f09080","kind":"utf8"},
+    {"id":"oddHex","hex":"0","kind":"hex"},
+    {"id":"nonDigit","hex":"g0","kind":"hex"},
+    {"id":"interiorWhitespace","hex":"00 41","kind":"hex"}
+  ]
+}

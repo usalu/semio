@@ -25,10 +25,10 @@ fn apply(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>, flag: &str, valu
     let explicit = args.and_then(|args| args.get("id")).and_then(Value::as_str).map(|id| vec![id.to_string()]);
     let ids = explicit.unwrap_or_else(|| {
         let selected = ctx.selected_ids();
-        puzzle2d_selected_target_region_ids(&ctx.scene.fixture, &selected)
+        puzzle2d_selected_target_region_ids(&ctx.scene.board_snapshot, &selected)
     });
     if ids.is_empty() {
         return;
     }
-    apply_target_region_flag(&mut ctx.scene.fixture, &ids, flag, value);
+    apply_target_region_flag(&mut ctx.scene.board_snapshot, &ids, flag, value);
 }

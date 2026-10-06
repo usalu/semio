@@ -5,17 +5,87 @@
   "type": "object",
   "properties": {
     "kind": {
-      "const": "set-camera"
+      "const": "set-camera",
+      "x-semio-ui": {
+        "role": "discriminator",
+        "label": {
+          "en": "Change",
+          "de": "Änderung"
+        },
+        "description": {
+          "en": "Names the window setting this change writes; fixed for the leaf.",
+          "de": "Benennt die Fenstereinstellung, die diese Änderung schreibt; für das Blatt fest."
+        }
+      }
     },
     "camera": {
       "type": "object",
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "zoom": { "type": "number" }
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Pan X",
+              "de": "Verschiebung X"
+            },
+            "step": 1,
+            "precision": 1
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Pan Y",
+              "de": "Verschiebung Y"
+            },
+            "step": 1,
+            "precision": 1
+          }
+        },
+        "zoom": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Zoom",
+              "de": "Zoom"
+            },
+            "step": 0.05,
+            "precision": 2,
+            "softMin": 0.1,
+            "softMax": 8,
+            "scale": "log",
+            "snaps": [
+              0.25,
+              0.5,
+              1,
+              2,
+              4
+            ]
+          }
+        }
       },
       "required": ["x", "y", "zoom"],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Camera",
+          "de": "Kamera"
+        },
+        "description": {
+          "en": "Pan offset and zoom factor of the document view.",
+          "de": "Verschiebung und Zoomfaktor der Dokumentansicht."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "required": ["kind","camera"],

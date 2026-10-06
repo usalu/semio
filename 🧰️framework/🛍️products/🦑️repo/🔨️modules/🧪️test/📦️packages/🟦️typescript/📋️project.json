@@ -4,6 +4,21 @@
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
   "projectType": "library",
   "targets": {
+    "test-fixture-isolation": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test fixture-isolation"
+      }
+    },
     "test-discovery-boundaries": {
       "executor": "nx:run-commands",
       "cache": true,

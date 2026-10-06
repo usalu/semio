@@ -9,7 +9,7 @@ use semio_framework_plugin::NoConfigMutation;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::{app::ChildEmit, ArtifactView, ConfigView, Emit, Fault};
+use semio_framework_plugin::{app::ChildEmitPreparation, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{set_node_param::SetNodeParam, SemioFlowMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
@@ -40,15 +40,15 @@ pub fn patch_flow_widgets_leaves(content: &SemioFlowSnapshot, payload: &PatchFlo
 }
 
 /// 📮️ ONE plain edit of `leaves` on the content child `child_id`; nothing changed is the empty emit (zero trace).
-pub fn widget_leaves_emit(child_id: &str, leaves: &[SemioFlowMutation]) -> Emit<FlowMutation, NoConfigMutation> {
+pub fn widget_leaves_emit(child_id: &str, leaves: Vec<SemioFlowMutation>) -> Emit<FlowMutation, NoConfigMutation> {
     if leaves.is_empty() {
         return Emit::default();
     }
-    Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, leaves)], ui_scope: UiDirtyScope::Full, ..Default::default() }
+    Emit { child_preparations: std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content", child_id, leaves)]), ui_scope: UiDirtyScope::Full, ..Default::default() }
 }
 
 pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let child_id = &doc.snapshot.content.child_id;
     let content = doc.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
-    Ok(widget_leaves_emit(child_id, &patch_flow_widgets_leaves(&content, payload)))
+    Ok(widget_leaves_emit(child_id, patch_flow_widgets_leaves(&content, payload)))
 }

@@ -10,7 +10,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Face",
+          "de": "Fläche"
+        },
+        "description": {
+          "en": "Id of the face that is deleted.",
+          "de": "Kennung der Fläche, die gelöscht wird."
+        },
+        "ref": {
+          "kind": "face"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

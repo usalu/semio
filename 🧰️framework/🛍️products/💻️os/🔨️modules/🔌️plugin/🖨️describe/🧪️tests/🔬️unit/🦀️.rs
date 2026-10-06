@@ -202,3 +202,47 @@ async fn owned_core_exports_are_defined_once_and_invoked_by_both_owners() {
 async fn unowned_codec_schema_fault_is_the_plugin_crates_own_text() {
     assert!(PLUGIN_SDK_SOURCE.contains(&format!("plugin_internal_fault(\"{UNOWNED_ARTIFACT_CODEC_SCHEMA}\")")), "the plugin crate no longer faults with UNOWNED_ARTIFACT_CODEC_SCHEMA");
 }
+
+//#region 🔖️CanonicalDescriptorPackLaw
+/// 🔁️ `value` with the members of every object in reverse order, at every depth.
+fn reversed_members(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
+    use semio_framework_value::DslValue;
+    match value {
+        DslValue::Array(items) => DslValue::Array(items.into_iter().map(reversed_members).collect()),
+        DslValue::Object(entries) => DslValue::Object(entries.into_iter().rev().map(|(key, entry)| (key, reversed_members(entry))).collect()),
+        scalar => scalar,
+    }
+}
+
+/// 🔤️ LAW (design §22.19): a descriptor packs to the bytes the TypeScript pack encoder sealed in the language-neutral fixture
+/// (`🧫️fixtures/🧫️canonical-descriptor-pack`), whatever order its members were authored in — the members of every object
+/// in UTF-8 key-byte order at every depth, with either order policy of the value encoder underneath.
+#[semio_framework_async_macros::async_test]
+async fn a_descriptor_pack_is_canonical_whatever_order_its_members_were_authored_in() {
+    let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧫️canonical-descriptor-pack/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("canonical descriptor pack fixture");
+    let cases = fixture.get("cases").and_then(|cases| cases.as_array()).expect("cases");
+    assert!(!cases.is_empty());
+    for case in cases {
+        let id = case.get("id").and_then(|id| id.as_str()).expect("id");
+        let authored = semio_framework_pack_json::to_dsl_value(case.get("authored").expect("authored"));
+        let canonical = semio_framework_pack_json::to_dsl_value(case.get("canonical").expect("canonical"));
+        let expected = case.get("expectedPackHex").and_then(|hex| hex.as_str()).expect("expectedPackHex");
+        assert_ne!(authored, canonical, "{id}: the fixture authors its members out of canonical order");
+        assert_eq!(CanonicalDescriptorValue::new(authored.clone()).value(), &canonical, "{id}: members in key-byte order at every depth");
+        assert_eq!(CanonicalDescriptorValue::new(canonical.clone()).value(), &canonical, "{id}: canonical order is a fixed point");
+        for (form, value) in [("authored", authored), ("canonical", canonical.clone()), ("reversed", reversed_members(canonical))] {
+            let packed: String = descriptor_pack(&CanonicalDescriptorValue::new(value)).iter().map(|byte| format!("{byte:02x}")).collect();
+            assert_eq!(packed, expected, "{id}: the {form} member order packs to the bytes the TypeScript encoder sealed");
+        }
+    }
+}
+
+/// 🚧️ Every descriptor byte leaves through [`descriptor_pack`]: the emitter names the wire value encoder exactly once, on the
+/// canonical value.
+#[semio_framework_async_macros::async_test]
+async fn the_emitter_encodes_descriptors_only_through_the_canonical_pack() {
+    let source = include_str!("../../🛂️descriptor-emission/🦀️.rs");
+    assert_eq!(source.matches("encode_wire_value(").count(), 1, "a descriptor is encoded outside `descriptor_pack`");
+    assert!(source.contains("pub fn descriptor_pack(value: &CanonicalDescriptorValue) -> Vec<u8> {\n    store::pack_rt::encode_wire_value(value.value())\n}"), "`descriptor_pack` encodes anything but the canonical value");
+}
+//#endregion 🔖️CanonicalDescriptorPackLaw

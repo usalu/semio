@@ -1,14 +1,25 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "rowTotal": 1000,
   "columnTotal": 1000,
   "rowOffset": 400,
   "rowCount": 2,
   "columnOffset": 700,
   "columnCount": 3,
-  "headers": ["Column 701", "Column 702", "Column 703"],
+  "headers": [
+    "Column 701",
+    "Column 702",
+    "Column 703"
+  ],
   "cells": [
-    ["r400c700", "r400c701", "r400c702"],
-    ["r401c700", "r401c701", "r401c702"]
+    [
+      "r400c700",
+      "r400c701",
+      "r400c702"
+    ],
+    [
+      "r401c700",
+      "r401c701",
+      "r401c702"
+    ]
   ]
 }

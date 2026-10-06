@@ -4,7 +4,7 @@ use crate::VcsSnapshot;
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_zip::io::{decode_zip, encode_document_archive};
+use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{decode_zip, encode_document_archive};
 
 pub const ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId::ANY };
 

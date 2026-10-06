@@ -1,6 +1,6 @@
 //! imperative <- json
 use crate::ProcedureSnapshot;
-use semio_s_artifact_stdio_json::schema::snapshot::parse_json_text;
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}

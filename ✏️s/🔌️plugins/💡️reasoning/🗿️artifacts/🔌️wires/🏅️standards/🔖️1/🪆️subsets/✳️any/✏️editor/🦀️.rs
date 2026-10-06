@@ -334,7 +334,7 @@ impl WiresWindowDragWork {
         if self.node_ids.is_none() {
             let children = input.context.map(|context| context.children.as_ref()).ok_or_else(|| crate::wires_content_fault("wires.content.unavailable", "a canvas gesture needs the composed board child".into()))?;
             let composed = crate::wires_composed_from_children(input.snapshot, children)?;
-            self.node_ids = Some(crate::schema::fixture_nodes(&composed.board).iter().filter_map(|node| crate::schema::entity_id(node, "id").map(str::to_string)).collect());
+            self.node_ids = Some(crate::schema::board_snapshot_nodes(&composed.board).iter().filter_map(|node| crate::schema::entity_id(node, "id").map(str::to_string)).collect());
         }
         Ok(self.node_ids.as_deref().unwrap_or_default())
     }
@@ -604,7 +604,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         owner: EditorApp<ReasoningWiresPlayApp>,
         owner_file: "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.reasoning.wires@1/*#editor",
-        artifact_schema: "reasoning.wires.fixture",
+        artifact_schema: "reasoning.wires.identity.snapshot",
         factory: "WiresRetainedCommandJobFactory",
         factory_type: WiresRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 16, 1_048_576, 16_384, 7_500),
@@ -734,10 +734,10 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             WIRES_PLAY_BODY_COMPOSITE => {
                 let window = edit::windows::canvas::config::current(cfg).cloned().unwrap_or_default();
                 let composed = wires_render_composed(doc)?;
-                edit::windows::canvas::render(&composed.board, &composed.fixture, &window)
+                edit::windows::canvas::render(&composed.board, &composed.identity_snapshot, &window)
             }
             WIRES_PLAY_BODY_ARTIFACT => document_panel::render(&wires_render_composed(doc)?, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_ARTIFACT)),
-            WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_CATALOGUE)),
+            WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, WIRES_PLAY_BODY_CATALOGUE)),
             WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(&wires_render_composed(doc)?, labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),
         }
@@ -756,7 +756,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         if body_key == WIRES_PLAY_BODY_COMPOSITE {
             let window = edit::windows::canvas::config::current(cfg).cloned().unwrap_or_default();
             let gesture = transient.window::<window_transient::WiresCanvasTransientOwner>().cloned().unwrap_or_default();
-            let WiresComposed { fixture, mut board } = wires_render_composed(doc)?;
+            let WiresComposed { identity_snapshot: fixture, mut board } = wires_render_composed(doc)?;
             if let Some(node_id) = gesture.drag_node_id.as_deref() {
                 if gesture.drag_zoom.is_finite() && gesture.drag_zoom > 0.0 {
                     if let Some((current_x, current_y)) = crate::schema::board_node(&board, node_id).map(crate::schema::node_position) {

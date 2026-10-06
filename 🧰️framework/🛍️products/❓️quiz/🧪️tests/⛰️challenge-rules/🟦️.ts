@@ -23,7 +23,7 @@ type HintVector = { readonly id: string; readonly task: string; readonly sheetTa
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** 💡️ The hints of every committed task, sheet task and answer of one vector group. */

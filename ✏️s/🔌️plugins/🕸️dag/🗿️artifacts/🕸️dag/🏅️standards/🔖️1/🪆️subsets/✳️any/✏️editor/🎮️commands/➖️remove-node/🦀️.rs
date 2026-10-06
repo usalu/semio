@@ -15,5 +15,5 @@ pub struct RemoveNode {
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so no config mutation is needed here at all.
 pub fn handle(payload: &RemoveNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let leaves = crate::schema::remove_nodes_leaves(&crate::dag_scene(doc)?, std::slice::from_ref(&payload.node_id));
-    Ok(crate::dag_child_emit(doc.snapshot, &leaves))
+    Ok(crate::dag_child_emit(doc.snapshot, leaves))
 }

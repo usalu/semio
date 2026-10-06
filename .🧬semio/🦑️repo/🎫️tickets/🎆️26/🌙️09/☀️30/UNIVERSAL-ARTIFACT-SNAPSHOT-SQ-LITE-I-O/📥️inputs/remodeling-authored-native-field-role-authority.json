@@ -1,0 +1,1378 @@
+{
+  "qualification": "Read-only declared source authority, not executable schema or runtime receipt",
+  "types": {
+    "RemodelingSnapshot": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "line": 36,
+      "totalFieldCount": 9,
+      "fieldNameToId": {
+        "schema": 0,
+        "id": 1,
+        "streams": 2,
+        "assets": 3,
+        "durable_artifacts": 4,
+        "calibration": 5,
+        "params": 6,
+        "gcps": 7,
+        "results": 8
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "schema",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "streams",
+          "type": "Vec<MediaStream>"
+        },
+        {
+          "id": 3,
+          "name": "assets",
+          "type": "BTreeMap<String, RemodelingAssetChild>"
+        },
+        {
+          "id": 4,
+          "name": "durable_artifacts",
+          "type": "RemodelingDurableArtifactStore"
+        },
+        {
+          "id": 5,
+          "name": "calibration",
+          "type": "CalibrationState"
+        },
+        {
+          "id": 6,
+          "name": "params",
+          "type": "ReconstructionParams"
+        },
+        {
+          "id": 7,
+          "name": "gcps",
+          "type": "Vec<GroundControlPoint>"
+        },
+        {
+          "id": 8,
+          "name": "results",
+          "type": "ReconstructionResults"
+        }
+      ]
+    },
+    "FrameRef": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 759,
+      "totalFieldCount": 3,
+      "fieldNameToId": {
+        "index": 0,
+        "timestamp_ms": 1,
+        "asset_id": 2
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "id": 1,
+          "name": "timestamp_ms",
+          "type": "f64"
+        },
+        {
+          "id": 2,
+          "name": "asset_id",
+          "type": "String"
+        }
+      ]
+    },
+    "VideoSource": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 746,
+      "totalFieldCount": 7,
+      "fieldNameToId": {
+        "name": 0,
+        "container": 1,
+        "codec": 2,
+        "duration_ms": 3,
+        "frame_count": 4,
+        "width": 5,
+        "height": 6
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "container",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "codec",
+          "type": "VideoCodec"
+        },
+        {
+          "id": 3,
+          "name": "duration_ms",
+          "type": "f64"
+        },
+        {
+          "id": 4,
+          "name": "frame_count",
+          "type": "u32"
+        },
+        {
+          "id": 5,
+          "name": "width",
+          "type": "u32"
+        },
+        {
+          "id": 6,
+          "name": "height",
+          "type": "u32"
+        }
+      ]
+    },
+    "RigExtrinsic": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 813,
+      "totalFieldCount": 3,
+      "fieldNameToId": {
+        "camera_id": 0,
+        "rotation_wxyz": 1,
+        "translation_m": 2
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "camera_id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "rotation_wxyz",
+          "type": "[f32; 4]"
+        },
+        {
+          "id": 2,
+          "name": "translation_m",
+          "type": "[f32; 3]"
+        }
+      ]
+    },
+    "GcpObservation": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 840,
+      "totalFieldCount": 3,
+      "fieldNameToId": {
+        "stream_id": 0,
+        "frame_index": 1,
+        "pixel": 2
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "stream_id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "frame_index",
+          "type": "u32"
+        },
+        {
+          "id": 2,
+          "name": "pixel",
+          "type": "[f32; 2]"
+        }
+      ]
+    },
+    "IngestParams": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 865,
+      "totalFieldCount": 4,
+      "fieldNameToId": {
+        "frame_sample_stride": 0,
+        "max_frames": 1,
+        "downscale_long_edge_px": 2,
+        "min_sharpness": 3
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "frame_sample_stride",
+          "type": "u32"
+        },
+        {
+          "id": 1,
+          "name": "max_frames",
+          "type": "u32"
+        },
+        {
+          "id": 2,
+          "name": "downscale_long_edge_px",
+          "type": "u32"
+        },
+        {
+          "id": 3,
+          "name": "min_sharpness",
+          "type": "f32"
+        }
+      ]
+    },
+    "FeatureParams": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 891,
+      "totalFieldCount": 4,
+      "fieldNameToId": {
+        "detector": 0,
+        "target_count": 1,
+        "octaves": 2,
+        "edge_threshold": 3
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "detector",
+          "type": "FeatureDetector"
+        },
+        {
+          "id": 1,
+          "name": "target_count",
+          "type": "u32"
+        },
+        {
+          "id": 2,
+          "name": "octaves",
+          "type": "u32"
+        },
+        {
+          "id": 3,
+          "name": "edge_threshold",
+          "type": "f32"
+        }
+      ]
+    },
+    "MatchParams": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 916,
+      "totalFieldCount": 6,
+      "fieldNameToId": {
+        "matcher": 0,
+        "ratio_test": 1,
+        "cross_check": 2,
+        "sequential_window": 3,
+        "max_pairs_per_frame": 4,
+        "loop_closure": 5
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "matcher",
+          "type": "MatcherKind"
+        },
+        {
+          "id": 1,
+          "name": "ratio_test",
+          "type": "f32"
+        },
+        {
+          "id": 2,
+          "name": "cross_check",
+          "type": "bool"
+        },
+        {
+          "id": 3,
+          "name": "sequential_window",
+          "type": "u32"
+        },
+        {
+          "id": 4,
+          "name": "max_pairs_per_frame",
+          "type": "u32"
+        },
+        {
+          "id": 5,
+          "name": "loop_closure",
+          "type": "bool"
+        }
+      ]
+    },
+    "SfmParams": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 944,
+      "totalFieldCount": 6,
+      "fieldNameToId": {
+        "ransac_iterations": 0,
+        "ransac_threshold_px": 1,
+        "min_track_length": 2,
+        "ba_max_iterations": 3,
+        "robust_loss": 4,
+        "huber_delta_px": 5
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "ransac_iterations",
+          "type": "u32"
+        },
+        {
+          "id": 1,
+          "name": "ransac_threshold_px",
+          "type": "f32"
+        },
+        {
+          "id": 2,
+          "name": "min_track_length",
+          "type": "u32"
+        },
+        {
+          "id": 3,
+          "name": "ba_max_iterations",
+          "type": "u32"
+        },
+        {
+          "id": 4,
+          "name": "robust_loss",
+          "type": "RobustLossKind"
+        },
+        {
+          "id": 5,
+          "name": "huber_delta_px",
+          "type": "f32"
+        }
+      ]
+    },
+    "DenseParams": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 972,
+      "totalFieldCount": 5,
+      "fieldNameToId": {
+        "resolution": 0,
+        "window_radius_px": 1,
+        "min_view_consistency": 2,
+        "confidence_threshold": 3,
+        "max_points": 4
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "resolution",
+          "type": "DenseResolution"
+        },
+        {
+          "id": 1,
+          "name": "window_radius_px",
+          "type": "u32"
+        },
+        {
+          "id": 2,
+          "name": "min_view_consistency",
+          "type": "u32"
+        },
+        {
+          "id": 3,
+          "name": "confidence_threshold",
+          "type": "f32"
+        },
+        {
+          "id": 4,
+          "name": "max_points",
+          "type": "u32"
+        }
+      ]
+    },
+    "MeshParams": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 995,
+      "totalFieldCount": 9,
+      "fieldNameToId": {
+        "tsdf_voxel_size_mm": 0,
+        "tsdf_truncation_mm": 1,
+        "decimate_target_triangles": 2,
+        "smoothing_iterations": 3,
+        "texture_enabled": 4,
+        "texture_size": 5,
+        "guarantee_watertight": 6,
+        "hole_fill_max_boundary_verts": 7,
+        "self_intersection_check": 8
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "tsdf_voxel_size_mm",
+          "type": "f32"
+        },
+        {
+          "id": 1,
+          "name": "tsdf_truncation_mm",
+          "type": "f32"
+        },
+        {
+          "id": 2,
+          "name": "decimate_target_triangles",
+          "type": "u32"
+        },
+        {
+          "id": 3,
+          "name": "smoothing_iterations",
+          "type": "u32"
+        },
+        {
+          "id": 4,
+          "name": "texture_enabled",
+          "type": "bool"
+        },
+        {
+          "id": 5,
+          "name": "texture_size",
+          "type": "u32"
+        },
+        {
+          "id": 6,
+          "name": "guarantee_watertight",
+          "type": "bool"
+        },
+        {
+          "id": 7,
+          "name": "hole_fill_max_boundary_verts",
+          "type": "u32"
+        },
+        {
+          "id": 8,
+          "name": "self_intersection_check",
+          "type": "bool"
+        }
+      ]
+    },
+    "MotionParams": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1028,
+      "totalFieldCount": 5,
+      "fieldNameToId": {
+        "enabled": 0,
+        "max_tracks": 1,
+        "track_window_px": 2,
+        "min_track_quality": 3,
+        "min_track_length_frames": 4
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "enabled",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "name": "max_tracks",
+          "type": "u32"
+        },
+        {
+          "id": 2,
+          "name": "track_window_px",
+          "type": "u32"
+        },
+        {
+          "id": 3,
+          "name": "min_track_quality",
+          "type": "f32"
+        },
+        {
+          "id": 4,
+          "name": "min_track_length_frames",
+          "type": "u32"
+        }
+      ]
+    },
+    "GeoParams": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1045,
+      "totalFieldCount": 8,
+      "fieldNameToId": {
+        "enabled": 0,
+        "origin_lon": 1,
+        "origin_lat": 2,
+        "origin_alt": 3,
+        "gsd_m": 4,
+        "dsm_cell_m": 5,
+        "dtm_filter_radius_m": 6,
+        "ortho_max_px": 7
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "enabled",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "name": "origin_lon",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 2,
+          "name": "origin_lat",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 3,
+          "name": "origin_alt",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 4,
+          "name": "gsd_m",
+          "type": "f32"
+        },
+        {
+          "id": 5,
+          "name": "dsm_cell_m",
+          "type": "f32"
+        },
+        {
+          "id": 6,
+          "name": "dtm_filter_radius_m",
+          "type": "f32"
+        },
+        {
+          "id": 7,
+          "name": "ortho_max_px",
+          "type": "u32"
+        }
+      ]
+    },
+    "CameraPosePreview": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1096,
+      "totalFieldCount": 3,
+      "fieldNameToId": {
+        "camera_id": 0,
+        "rotation_wxyz": 1,
+        "translation": 2
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "camera_id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "rotation_wxyz",
+          "type": "[f32; 4]"
+        },
+        {
+          "id": 2,
+          "name": "translation",
+          "type": "[f32; 3]"
+        }
+      ]
+    },
+    "MotionTrackSummary": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1225,
+      "totalFieldCount": 4,
+      "fieldNameToId": {
+        "id": 0,
+        "length": 1,
+        "class": 2,
+        "mean_speed_m_s": 3
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "length",
+          "type": "u32"
+        },
+        {
+          "id": 2,
+          "name": "class",
+          "type": "TrackClass"
+        },
+        {
+          "id": 3,
+          "name": "mean_speed_m_s",
+          "type": "f32"
+        }
+      ]
+    },
+    "GeoProducts": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1240,
+      "totalFieldCount": 3,
+      "fieldNameToId": {
+        "dsm_asset_id": 0,
+        "dtm_asset_id": 1,
+        "ortho_asset_id": 2
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "dsm_asset_id",
+          "type": "Option<String>"
+        },
+        {
+          "id": 1,
+          "name": "dtm_asset_id",
+          "type": "Option<String>"
+        },
+        {
+          "id": 2,
+          "name": "ortho_asset_id",
+          "type": "Option<String>"
+        }
+      ]
+    },
+    "WatertightReportSnapshot": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1125,
+      "totalFieldCount": 16,
+      "fieldNameToId": {
+        "vertex_count": 0,
+        "triangle_count": 1,
+        "boundary_edge_count": 2,
+        "boundary_loop_count": 3,
+        "non_manifold_edge_count": 4,
+        "non_manifold_vertex_count": 5,
+        "connected_components": 6,
+        "consistently_oriented": 7,
+        "euler_characteristic": 8,
+        "genus": 9,
+        "signed_volume": 10,
+        "self_intersection_pairs": 11,
+        "closed_fallback_used": 12,
+        "is_closed": 13,
+        "is_two_manifold": 14,
+        "is_watertight": 15
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "vertex_count",
+          "type": "u32"
+        },
+        {
+          "id": 1,
+          "name": "triangle_count",
+          "type": "u32"
+        },
+        {
+          "id": 2,
+          "name": "boundary_edge_count",
+          "type": "u32"
+        },
+        {
+          "id": 3,
+          "name": "boundary_loop_count",
+          "type": "u32"
+        },
+        {
+          "id": 4,
+          "name": "non_manifold_edge_count",
+          "type": "u32"
+        },
+        {
+          "id": 5,
+          "name": "non_manifold_vertex_count",
+          "type": "u32"
+        },
+        {
+          "id": 6,
+          "name": "connected_components",
+          "type": "u32"
+        },
+        {
+          "id": 7,
+          "name": "consistently_oriented",
+          "type": "bool"
+        },
+        {
+          "id": 8,
+          "name": "euler_characteristic",
+          "type": "i64"
+        },
+        {
+          "id": 9,
+          "name": "genus",
+          "type": "Option<i64>"
+        },
+        {
+          "id": 10,
+          "name": "signed_volume",
+          "type": "f64"
+        },
+        {
+          "id": 11,
+          "name": "self_intersection_pairs",
+          "type": "Option<u32>"
+        },
+        {
+          "id": 12,
+          "name": "closed_fallback_used",
+          "type": "bool"
+        },
+        {
+          "id": 13,
+          "name": "is_closed",
+          "type": "bool"
+        },
+        {
+          "id": 14,
+          "name": "is_two_manifold",
+          "type": "bool"
+        },
+        {
+          "id": 15,
+          "name": "is_watertight",
+          "type": "bool"
+        }
+      ]
+    },
+    "MediaStream": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 770,
+      "totalFieldCount": 8,
+      "fieldNameToId": {
+        "id": 0,
+        "name": 1,
+        "kind": 2,
+        "camera_id": 3,
+        "sync_offset_ms": 4,
+        "fps_hint": 5,
+        "frames": 6,
+        "source": 7
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "kind",
+          "type": "MediaKind"
+        },
+        {
+          "id": 3,
+          "name": "camera_id",
+          "type": "Option<String>"
+        },
+        {
+          "id": 4,
+          "name": "sync_offset_ms",
+          "type": "f64"
+        },
+        {
+          "id": 5,
+          "name": "fps_hint",
+          "type": "f64"
+        },
+        {
+          "id": 6,
+          "name": "frames",
+          "type": "Vec<FrameRef>"
+        },
+        {
+          "id": 7,
+          "name": "source",
+          "type": "Option<VideoSource>"
+        }
+      ]
+    },
+    "CameraCalibration": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 792,
+      "totalFieldCount": 11,
+      "fieldNameToId": {
+        "id": 0,
+        "label": 1,
+        "model": 2,
+        "fx": 3,
+        "fy": 4,
+        "cx": 5,
+        "cy": 6,
+        "skew": 7,
+        "distortion": 8,
+        "rms_reprojection_px": 9,
+        "locked": 10
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "model",
+          "type": "String"
+        },
+        {
+          "id": 3,
+          "name": "fx",
+          "type": "f64"
+        },
+        {
+          "id": 4,
+          "name": "fy",
+          "type": "f64"
+        },
+        {
+          "id": 5,
+          "name": "cx",
+          "type": "f64"
+        },
+        {
+          "id": 6,
+          "name": "cy",
+          "type": "f64"
+        },
+        {
+          "id": 7,
+          "name": "skew",
+          "type": "f64"
+        },
+        {
+          "id": 8,
+          "name": "distortion",
+          "type": "[f32; 5]"
+        },
+        {
+          "id": 9,
+          "name": "rms_reprojection_px",
+          "type": "Option<f32>"
+        },
+        {
+          "id": 10,
+          "name": "locked",
+          "type": "bool"
+        }
+      ]
+    },
+    "GroundControlPoint": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 850,
+      "totalFieldCount": 4,
+      "fieldNameToId": {
+        "id": 0,
+        "name": 1,
+        "world_position": 2,
+        "observations": 3
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "id": 2,
+          "name": "world_position",
+          "type": "[f64; 3]"
+        },
+        {
+          "id": 3,
+          "name": "observations",
+          "type": "Vec<GcpObservation>"
+        }
+      ]
+    },
+    "RemodelingDurableArtifact": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 188,
+      "totalFieldCount": 5,
+      "fieldNameToId": {
+        "kind": 0,
+        "mime": 1,
+        "width": 2,
+        "height": 3,
+        "chunks": 4
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "id": 1,
+          "name": "mime",
+          "type": "Option<String>"
+        },
+        {
+          "id": 2,
+          "name": "width",
+          "type": "u32"
+        },
+        {
+          "id": 3,
+          "name": "height",
+          "type": "u32"
+        },
+        {
+          "id": 4,
+          "name": "chunks",
+          "type": "Vec<ByteBuffer>"
+        }
+      ]
+    },
+    "QcReportSnapshot": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1253,
+      "totalFieldCount": 7,
+      "fieldNameToId": {
+        "reprojection_rms_px": 0,
+        "gcp_checkpoint_rmse": 1,
+        "watertight": 2,
+        "mean_track_length": 3,
+        "registered_frame_ratio": 4,
+        "dense_coverage_ratio": 5,
+        "warnings": 6
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "reprojection_rms_px",
+          "type": "f64"
+        },
+        {
+          "id": 1,
+          "name": "gcp_checkpoint_rmse",
+          "type": "Option<f64>"
+        },
+        {
+          "id": 2,
+          "name": "watertight",
+          "type": "Option<WatertightReportSnapshot>"
+        },
+        {
+          "id": 3,
+          "name": "mean_track_length",
+          "type": "f32"
+        },
+        {
+          "id": 4,
+          "name": "registered_frame_ratio",
+          "type": "f32"
+        },
+        {
+          "id": 5,
+          "name": "dense_coverage_ratio",
+          "type": "f32"
+        },
+        {
+          "id": 6,
+          "name": "warnings",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    "CalibrationState": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 830,
+      "totalFieldCount": 2,
+      "fieldNameToId": {
+        "cameras": 0,
+        "rig": 1
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "cameras",
+          "type": "Vec<CameraCalibration>"
+        },
+        {
+          "id": 1,
+          "name": "rig",
+          "type": "Vec<RigExtrinsic>"
+        }
+      ]
+    },
+    "ReconstructionParams": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1072,
+      "totalFieldCount": 8,
+      "fieldNameToId": {
+        "ingest": 0,
+        "feature": 1,
+        "matching": 2,
+        "sfm": 3,
+        "dense": 4,
+        "mesh": 5,
+        "motion": 6,
+        "geo": 7
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "ingest",
+          "type": "IngestParams"
+        },
+        {
+          "id": 1,
+          "name": "feature",
+          "type": "FeatureParams"
+        },
+        {
+          "id": 2,
+          "name": "matching",
+          "type": "MatchParams"
+        },
+        {
+          "id": 3,
+          "name": "sfm",
+          "type": "SfmParams"
+        },
+        {
+          "id": 4,
+          "name": "dense",
+          "type": "DenseParams"
+        },
+        {
+          "id": 5,
+          "name": "mesh",
+          "type": "MeshParams"
+        },
+        {
+          "id": 6,
+          "name": "motion",
+          "type": "MotionParams"
+        },
+        {
+          "id": 7,
+          "name": "geo",
+          "type": "GeoParams"
+        }
+      ]
+    },
+    "RemodelingMesh": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1163,
+      "totalFieldCount": 4,
+      "fieldNameToId": {
+        "mesh": 0,
+        "source": 1,
+        "texture_asset_id": 2,
+        "watertight": 3
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "mesh",
+          "type": "RemodelingMeshChild"
+        },
+        {
+          "id": 1,
+          "name": "source",
+          "type": "MeshSource"
+        },
+        {
+          "id": 2,
+          "name": "texture_asset_id",
+          "type": "Option<String>"
+        },
+        {
+          "id": 3,
+          "name": "watertight",
+          "type": "Option<WatertightReportSnapshot>"
+        }
+      ]
+    },
+    "SparseCloud": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1183,
+      "totalFieldCount": 2,
+      "fieldNameToId": {
+        "points": 0,
+        "colors": 1
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "points",
+          "type": "Float32Buffer"
+        },
+        {
+          "id": 1,
+          "name": "colors",
+          "type": "Option<ByteBuffer>"
+        }
+      ]
+    },
+    "DenseCloud": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1194,
+      "totalFieldCount": 4,
+      "fieldNameToId": {
+        "positions": 0,
+        "colors": 1,
+        "confidence": 2,
+        "classification": 3
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "positions",
+          "type": "Float32Buffer"
+        },
+        {
+          "id": 1,
+          "name": "colors",
+          "type": "Option<ByteBuffer>"
+        },
+        {
+          "id": 2,
+          "name": "confidence",
+          "type": "Option<Float32Buffer>"
+        },
+        {
+          "id": 3,
+          "name": "classification",
+          "type": "Option<ByteBuffer>"
+        }
+      ]
+    },
+    "CameraTrajectory": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1205,
+      "totalFieldCount": 1,
+      "fieldNameToId": {
+        "poses": 0
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "poses",
+          "type": "Vec<CameraPosePreview>"
+        }
+      ]
+    },
+    "ReconstructionResults": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1267,
+      "totalFieldCount": 7,
+      "fieldNameToId": {
+        "sparse": 0,
+        "dense": 1,
+        "mesh": 2,
+        "trajectory": 3,
+        "tracks": 4,
+        "geo": 5,
+        "qc": 6
+      },
+      "fields": [
+        {
+          "id": 0,
+          "name": "sparse",
+          "type": "Option<SparseCloud>"
+        },
+        {
+          "id": 1,
+          "name": "dense",
+          "type": "Option<DenseCloud>"
+        },
+        {
+          "id": 2,
+          "name": "mesh",
+          "type": "RemodelingMesh"
+        },
+        {
+          "id": 3,
+          "name": "trajectory",
+          "type": "Option<CameraTrajectory>"
+        },
+        {
+          "id": 4,
+          "name": "tracks",
+          "type": "Vec<MotionTrackSummary>"
+        },
+        {
+          "id": 5,
+          "name": "geo",
+          "type": "Option<GeoProducts>"
+        },
+        {
+          "id": 6,
+          "name": "qc",
+          "type": "Option<QcReportSnapshot>"
+        }
+      ]
+    }
+  },
+  "enums": {
+    "MediaKind": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 716,
+      "variants": [
+        {
+          "ordinal": 0,
+          "variant": "ImageSequence"
+        },
+        {
+          "ordinal": 1,
+          "variant": "Video"
+        }
+      ]
+    },
+    "VideoCodec": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 728,
+      "variants": [
+        {
+          "ordinal": 0,
+          "variant": "Avc"
+        },
+        {
+          "ordinal": 1,
+          "variant": "Hevc"
+        },
+        {
+          "ordinal": 2,
+          "variant": "Vp9"
+        },
+        {
+          "ordinal": 3,
+          "variant": "Av1"
+        },
+        {
+          "ordinal": 4,
+          "variant": "Mjpeg"
+        },
+        {
+          "ordinal": 5,
+          "variant": "Unknown"
+        }
+      ]
+    },
+    "FeatureDetector": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 881,
+      "variants": [
+        {
+          "ordinal": 0,
+          "variant": "Orb"
+        },
+        {
+          "ordinal": 1,
+          "variant": "Akaze"
+        },
+        {
+          "ordinal": 2,
+          "variant": "Harris"
+        }
+      ]
+    },
+    "MatcherKind": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 907,
+      "variants": [
+        {
+          "ordinal": 0,
+          "variant": "BruteForce"
+        },
+        {
+          "ordinal": 1,
+          "variant": "KdTree"
+        }
+      ]
+    },
+    "RobustLossKind": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 934,
+      "variants": [
+        {
+          "ordinal": 0,
+          "variant": "L2"
+        },
+        {
+          "ordinal": 1,
+          "variant": "Huber"
+        },
+        {
+          "ordinal": 2,
+          "variant": "Cauchy"
+        }
+      ]
+    },
+    "DenseResolution": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 962,
+      "variants": [
+        {
+          "ordinal": 0,
+          "variant": "Low"
+        },
+        {
+          "ordinal": 1,
+          "variant": "Medium"
+        },
+        {
+          "ordinal": 2,
+          "variant": "High"
+        }
+      ]
+    },
+    "MeshSource": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1112,
+      "variants": [
+        {
+          "ordinal": 0,
+          "variant": "Placeholder"
+        },
+        {
+          "ordinal": 1,
+          "variant": "Reconstructed"
+        },
+        {
+          "ordinal": 2,
+          "variant": "Imported"
+        }
+      ]
+    },
+    "TrackClass": {
+      "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "line": 1213,
+      "variants": [
+        {
+          "ordinal": 0,
+          "variant": "Static"
+        },
+        {
+          "ordinal": 1,
+          "variant": "Moving"
+        }
+      ]
+    }
+  }
+}

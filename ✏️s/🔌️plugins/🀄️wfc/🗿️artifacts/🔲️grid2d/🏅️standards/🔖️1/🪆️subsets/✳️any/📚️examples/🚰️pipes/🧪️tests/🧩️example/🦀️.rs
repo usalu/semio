@@ -51,9 +51,9 @@ fn the_example_source_prints_the_document_it_states() {
 
 #[test]
 fn the_example_solves_deterministically() {
-    let commit = crate::schema::inferences::solve_with_clock(&document(), semio_framework_job::logical_now_us).expect("the bundled example solves");
+    let commit = crate::host::inferences::solve_with_clock(&document(), semio_framework_job::logical_now_us).expect("the bundled example solves");
     assert!(!commit.contradiction, "a bundled example must be satisfiable");
     assert_eq!(commit.assignments.len(), 35, "every unmasked cell of the 6×6 grid is assigned");
-    let again = crate::schema::inferences::solve_with_clock(&document(), semio_framework_job::logical_now_us).expect("the solve repeats");
+    let again = crate::host::inferences::solve_with_clock(&document(), semio_framework_job::logical_now_us).expect("the solve repeats");
     assert_eq!(commit.assignments, again.assignments);
 }

@@ -11,7 +11,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(schema);
-    expect(ajv.getSchema(`${schema.$id}#/$defs/PageFixture`)!(fixture)).toBe(true);
     const validate = ajv.getSchema(`${schema.$id}#/$defs/Page`)!;
     expect(ACTOR_BYTE_PAGE_BYTES).toBe(fixture.maximumBytes);
     for (const row of fixture.vectors) {

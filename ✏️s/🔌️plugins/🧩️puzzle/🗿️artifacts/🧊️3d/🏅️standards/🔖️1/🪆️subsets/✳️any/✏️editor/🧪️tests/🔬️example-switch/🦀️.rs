@@ -2,9 +2,9 @@ use super::unit_tests::context::*;
 use super::*;
 
 /// 🏷️ Wave B30: the ACTIVE EXAMPLE must be known from the first render, not only after the user
-/// switches. `ArtifactApp::initial_snapshot` seeds a fresh document from `default_fixture()` — the
+/// switches. `ArtifactApp::initial_snapshot` seeds a fresh document from `default_scene_snapshot()` — the
 /// Concrete Forest example — while `Puzzle3dConfig::active_example_id` defaulted to `""`, i.e. "this
-/// document came from no example at all". Everything downstream reads that one field: `export_fixture`
+/// document came from no example at all". Everything downstream reads that one field: `export_snapshot`
 /// names its download after it (Concrete Forest downloaded as the generic `puzzle-3d.json`), and the
 /// shell's navbar picker has nothing else to agree with. The law pins the two together — the seeded
 /// DOCUMENT and the seeded CONFIG must name the same example — on all three ways a config comes into
@@ -20,22 +20,22 @@ async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from()
     let mut app = app().await;
     let seeded = object_count(&app);
     assert!(seeded > 0, "a fresh session boots on a real example document");
-    let object_ids = |fixture: &Puzzle3dFixture| fixture.objects.iter().map(|object| object.id.clone()).collect::<Vec<_>>();
+    let object_ids = |scene_snapshot: &Puzzle3dSceneSnapshot| scene_snapshot.objects.iter().map(|object| object.id.clone()).collect::<Vec<_>>();
     assert_eq!(
-        object_ids(&puzzle3d_fixture_from_projection(&projection_of(&app))),
-        object_ids(&default_fixture()),
+        object_ids(&puzzle3d_scene_snapshot_from_projection(&projection_of(&app))),
+        object_ids(&default_scene_snapshot()),
         "the document a fresh session boots with must BE the example the config names"
     );
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     assert_ne!(object_count(&app), seeded, "the switch must actually replace the document it was measured against");
 }
 
-/// 🎵️ Wave W-X: a whole-fixture switch must stay cursorized (hostile law) but land as ONE
+/// 🎵️ Wave W-X: a whole-scene_snapshot switch must stay cursorized (hostile law) but land as ONE
 /// document-replacement emit with no coalesce key — chunked by mutation kind, not one ingress per item.
 #[test]
 fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -57,17 +57,17 @@ fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
         + document.target_volumes.len()
         + document.references.len()
         + document.meta.kind_compatibility.len()
-        + NAKAGIN_EXAMPLE_FIXTURE.objects.len()
-        + NAKAGIN_EXAMPLE_FIXTURE.attractions.len()
-        + NAKAGIN_EXAMPLE_FIXTURE.target_volumes.len()
-        + NAKAGIN_EXAMPLE_FIXTURE.references.len()
-        + Puzzle3dSetActiveExampleWork::compatibility_rows(&NAKAGIN_EXAMPLE_FIXTURE).len()
+        + NAKAGIN_EXAMPLE_SNAPSHOT.objects.len()
+        + NAKAGIN_EXAMPLE_SNAPSHOT.attractions.len()
+        + NAKAGIN_EXAMPLE_SNAPSHOT.target_volumes.len()
+        + NAKAGIN_EXAMPLE_SNAPSHOT.references.len()
+        + Puzzle3dSetActiveExampleWork::compatibility_rows(&NAKAGIN_EXAMPLE_SNAPSHOT).len()
         + 2;
     assert!(emit.artifact_mutations.len() > 1, "the completed emit still carries one mutation per deleted/created item; observed {}", emit.artifact_mutations.len());
     assert_eq!(emit.artifact_mutations.len(), items, "chunking must not drop or fuse mutation kinds (items plus domain and catalogs)");
-    assert!(emit.window_config_mutations.is_empty(), "a fixture switch must not emit a separate window-resize undo step");
+    assert!(emit.window_config_mutations.is_empty(), "a scene_snapshot switch must not emit a separate window-resize undo step");
     assert_eq!(emit.ui_scope, puzzle3d_scope(Puzzle3dScopeClass::Chrome));
-    assert!(progress_steps < items, "a whole-fixture switch must not take one ingress per document item; observed {progress_steps} steps for {items} items");
+    assert!(progress_steps < items, "a whole-scene_snapshot switch must not take one ingress per document item; observed {progress_steps} steps for {items} items");
     assert!(
         progress_steps <= PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS + items.div_ceil(PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK) + 10,
         "per-stage ceil(len/chunk) plus transitions must stay a bounded handful; observed {progress_steps} for {items} items"
@@ -75,20 +75,20 @@ fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
 }
 
 /// 🎵️ Wave W-X: the migrated tool-job path publishes that one emit as one history entry.
-/// One undo restores the previous fixture, and the play window's world-3d surface republishes
+/// One undo restores the previous scene_snapshot, and the play window's world-3d surface republishes
 /// Nakagin's instance lane — the same guest encode `refreshUi` of `puzzle3d.play.composite` runs.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_lands_as_one_edit_and_republishes_the_world_scene() {
     let mut app = app().await;
     let before = object_count(&app);
-    assert!(before > 0, "the fixture boots on Concrete Forest");
+    assert!(before > 0, "the scene_snapshot boots on Concrete Forest");
     let forest = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
     let forest_instances = forest.assembled.instances_json.clone();
     let forest_hash = forest.lane("framework.scene.world3d.instances").map(|lane| lane.declared_hash.clone()).unwrap_or_default();
     assert!(!forest_instances.is_empty(), "Concrete Forest must publish an instance lane: {}", forest.report());
 
     let result = dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
-    assert_eq!(object_count(&app), NAKAGIN_EXAMPLE_FIXTURE.objects.len(), "the document must swap through the tool-job path");
+    assert_eq!(object_count(&app), NAKAGIN_EXAMPLE_SNAPSHOT.objects.len(), "the document must swap through the tool-job path");
     assert_ne!(object_count(&app), before);
     assert_eq!(result.ui_scope, puzzle3d_scope(Puzzle3dScopeClass::Chrome));
 
@@ -96,15 +96,15 @@ async fn set_active_example_lands_as_one_edit_and_republishes_the_world_scene() 
     let nakagin_instances = nakagin.assembled.instances_json.clone();
     let nakagin_hash = nakagin.lane("framework.scene.world3d.instances").map(|lane| lane.declared_hash.clone()).unwrap_or_default();
     assert!(!nakagin_instances.is_empty(), "Nakagin must republish its instance lane on the composite window body: {}", nakagin.report());
-    assert_ne!(nakagin_hash, forest_hash, "a whole-document swap must republish a new instance-lane hash, not reuse the previous fixture's carrier");
-    assert_ne!(nakagin_instances, forest_instances, "assembled world-3d instances must leave the previous fixture");
+    assert_ne!(nakagin_hash, forest_hash, "a whole-document swap must republish a new instance-lane hash, not reuse the previous scene_snapshot's carrier");
+    assert_ne!(nakagin_instances, forest_instances, "assembled world-3d instances must leave the previous scene_snapshot");
     let parsed: Vec<serde_json::Value> = serde_json::from_str(&nakagin_instances).expect("instance lane is JSON");
-    assert_eq!(parsed.len(), NAKAGIN_EXAMPLE_FIXTURE.objects.len(), "the republished instance lane must carry every Nakagin object");
+    assert_eq!(parsed.len(), NAKAGIN_EXAMPLE_SNAPSHOT.objects.len(), "the republished instance lane must carry every Nakagin object");
 
     dispatch(&mut app, "undo", None, None).await.expect("undo");
-    assert_eq!(object_count(&app), before, "one undo restores the previous fixture — the switch is one history entry");
+    assert_eq!(object_count(&app), before, "one undo restores the previous scene_snapshot — the switch is one history entry");
     dispatch(&mut app, "redo", None, None).await.expect("redo");
-    assert_eq!(object_count(&app), NAKAGIN_EXAMPLE_FIXTURE.objects.len());
+    assert_eq!(object_count(&app), NAKAGIN_EXAMPLE_SNAPSHOT.objects.len());
 }
 
 
@@ -136,7 +136,7 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
     let census = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
 
     let instances: Vec<serde_json::Value> = serde_json::from_str(&census.assembled.instances_json).expect("the assembled instances lane is json");
-    assert_eq!(instances.len(), NAKAGIN_EXAMPLE_FIXTURE.objects.len(), "the assembled scene must carry one instance per Nakagin object: {}", census.report());
+    assert_eq!(instances.len(), NAKAGIN_EXAMPLE_SNAPSHOT.objects.len(), "the assembled scene must carry one instance per Nakagin object: {}", census.report());
     assert!(instances.len() >= 180, "the Nakagin catalog is the widest document this editor publishes; observed {} objects", instances.len());
 
     let meshes: Vec<serde_json::Value> = serde_json::from_str(&census.assembled.meshes_json).expect("the assembled meshes lane is json");
@@ -158,7 +158,7 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
 #[test]
 fn set_active_example_history_is_one_set_active_example_row() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -171,13 +171,13 @@ fn set_active_example_history_is_one_set_active_example_row() {
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),
         }
     };
-    assert!(emit.window_config_mutations.is_empty(), "a fixture switch must not emit a separate window-resize undo step");
+    assert!(emit.window_config_mutations.is_empty(), "a scene_snapshot switch must not emit a separate window-resize undo step");
 }
 
 /// 🎯️ Wave W-S2: a document swap must hand the render host a NEW camera-fit revision, and an
 /// ordinary edit must not. `WorldAutoFit` (`🌐️World3dHost`) refits once per `${revision}:${meshes}`
 /// key: with no `fit` lane at all — the state of this editor until this wave — the camera after a
-/// fixture switch stays wherever the previous document left it, so a fixture centred elsewhere is
+/// scene_snapshot switch stays wherever the previous document left it, so a scene_snapshot centred elsewhere is
 /// simply off-screen (W-P5 §7); with a revision derived from GEOMETRY instead of identity it would
 /// yank the camera on every object move. The law therefore pins both directions, and pins them on
 /// the lane the host actually reads (the reassembled scene), not on the helper alone.

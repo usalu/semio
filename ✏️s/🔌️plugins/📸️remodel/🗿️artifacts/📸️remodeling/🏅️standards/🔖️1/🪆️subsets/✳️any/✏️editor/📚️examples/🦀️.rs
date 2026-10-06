@@ -66,7 +66,7 @@ pub fn example_sources() -> Vec<ExampleSource> {
 /// 🚀️ The boot document: the registered boot example's text parsed as a scene, or the artifact's own
 /// default scene when that text is absent or no longer parses.
 pub fn boot_snapshot() -> crate::RemodelingSnapshot {
-    example_text(REMODELING_EXAMPLE_BOOT_ID).and_then(|text| crate::snapshot::text::parse_dsl(text).ok()).unwrap_or_else(crate::default_remodeling_scene)
+    example_text(REMODELING_EXAMPLE_BOOT_ID).and_then(|text| crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).ok()).unwrap_or_else(crate::default_remodeling_scene)
 }
 //#endregion 🔖️Registry
 

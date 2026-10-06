@@ -209,6 +209,161 @@
           "type": "boolean"
         }
       }
+    },
+    "LowpolyPublicationPolicyV1": {
+      "title": "LowpolyPublicationPolicyV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lanes",
+        "preparation"
+      ],
+      "properties": {
+        "lanes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "host-only",
+              "artifact",
+              "config",
+              "transient"
+            ]
+          },
+          "maxItems": 3
+        },
+        "preparation": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "Artifact",
+              "Config"
+            ]
+          },
+          "maxItems": 2
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "lanes": {
+              "const": [
+                "artifact"
+              ]
+            },
+            "preparation": {
+              "const": [
+                "Artifact"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "lanes": {
+              "const": [
+                "config"
+              ]
+            },
+            "preparation": {
+              "const": [
+                "Config"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "lanes": {
+              "const": [
+                "host-only"
+              ]
+            },
+            "preparation": {
+              "const": []
+            }
+          }
+        },
+        {
+          "properties": {
+            "lanes": {
+              "const": [
+                "transient"
+              ]
+            },
+            "preparation": {
+              "const": []
+            }
+          }
+        },
+        {
+          "properties": {
+            "lanes": {
+              "const": [
+                "config",
+                "transient"
+              ]
+            },
+            "preparation": {
+              "const": [
+                "Config"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "lanes": {
+              "const": [
+                "artifact",
+                "transient"
+              ]
+            },
+            "preparation": {
+              "const": [
+                "Artifact"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "lanes": {
+              "const": [
+                "artifact",
+                "config"
+              ]
+            },
+            "preparation": {
+              "const": [
+                "Artifact",
+                "Config"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "lanes": {
+              "const": [
+                "artifact",
+                "config",
+                "transient"
+              ]
+            },
+            "preparation": {
+              "const": [
+                "Artifact",
+                "Config"
+              ]
+            }
+          }
+        }
+      ],
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ]
     }
   }
 }

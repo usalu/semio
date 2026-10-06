@@ -13,7 +13,24 @@
     "id": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 255
+      "maximum": 255,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Component",
+          "de": "Komponente"
+        },
+        "description": {
+          "en": "Component identifier (Ci) in the frame header.",
+          "de": "Komponentenkennung (Ci) im Frame-Header."
+        },
+        "ref": {
+          "kind": "component"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "hSampling": {
       "type": "integer",
@@ -24,7 +41,8 @@
         "label": {
           "en": "Horizontal sampling factor",
           "de": "Horizontaler Abtastfaktor"
-        }
+        },
+        "step": 1
       }
     },
     "vSampling": {
@@ -36,7 +54,8 @@
         "label": {
           "en": "Vertical sampling factor",
           "de": "Vertikaler Abtastfaktor"
-        }
+        },
+        "step": 1
       }
     }
   }

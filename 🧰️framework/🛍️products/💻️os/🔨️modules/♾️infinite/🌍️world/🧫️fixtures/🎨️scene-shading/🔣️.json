@@ -1,5 +1,4 @@
 {
-  "$schema": "../../🧬️schema/🎨️scene-shading/🔣️.json",
   "schema": "framework.world3d.scene-shading/v1",
   "reference": {
     "threeRevision": "182",
@@ -407,8 +406,15 @@
       {
         "id": "mixed-scope-inline-default",
         "geometryKind": "inline",
-        "position": [-0.8, 0, 0],
-        "samplePosition": [16, 32],
+        "position": [
+          -0.8,
+          0,
+          0
+        ],
+        "samplePosition": [
+          16,
+          32
+        ],
         "expected": {
           "metalness": 0,
           "roughness": 1
@@ -417,8 +423,15 @@
       {
         "id": "mixed-scope-glb-environment",
         "geometryKind": "glb",
-        "position": [0.8, 0, 0],
-        "samplePosition": [48, 32],
+        "position": [
+          0.8,
+          0,
+          0
+        ],
+        "samplePosition": [
+          48,
+          32
+        ],
         "expected": {
           "metalness": 0.35,
           "roughness": 0.58
@@ -429,11 +442,26 @@
   "textureCases": [
     {
       "id": "paint-texture-neutral-vertex",
-      "texelRgba8": [96, 176, 224, 255],
+      "texelRgba8": [
+        96,
+        176,
+        224,
+        255
+      ],
       "mapColorSpace": "none",
       "styleKind": "neutral",
-      "baseColor": [1, 1, 1, 1],
-      "vertexColor": [0.25, 0.5, 0.75, 1],
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "vertexColor": [
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
       "preserveVertexColor": true,
       "emissiveIntensity": 0,
       "opacity": 1,
@@ -441,11 +469,26 @@
     },
     {
       "id": "paint-texture-selected-solid",
-      "texelRgba8": [96, 176, 224, 255],
+      "texelRgba8": [
+        96,
+        176,
+        224,
+        255
+      ],
       "mapColorSpace": "none",
       "styleKind": "selected",
-      "baseColor": [1, 0.0343398068, 0.0781874218, 1],
-      "vertexColor": [0.25, 0.5, 0.75, 1],
+      "baseColor": [
+        1,
+        0.0343398068,
+        0.0781874218,
+        1
+      ],
+      "vertexColor": [
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
       "preserveVertexColor": false,
       "emissiveIntensity": 0.35,
       "opacity": 1,
@@ -453,11 +496,26 @@
     },
     {
       "id": "paint-texture-disabled-vertex",
-      "texelRgba8": [96, 176, 224, 255],
+      "texelRgba8": [
+        96,
+        176,
+        224,
+        255
+      ],
       "mapColorSpace": "none",
       "styleKind": "disabled",
-      "baseColor": [1, 1, 1, 0.45],
-      "vertexColor": [0.25, 0.5, 0.75, 1],
+      "baseColor": [
+        1,
+        1,
+        1,
+        0.45
+      ],
+      "vertexColor": [
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
       "preserveVertexColor": true,
       "emissiveIntensity": 0,
       "opacity": 0.45,
@@ -469,22 +527,38 @@
     "stops": [
       {
         "hex": "#ff344f",
-        "linear": [1, 0.0343398068, 0.0781874218]
+        "linear": [
+          1,
+          0.0343398068,
+          0.0781874218
+        ]
       },
       {
         "hex": "#34d1bf",
-        "linear": [0.0343398068, 0.637596874, 0.5209955732]
+        "linear": [
+          0.0343398068,
+          0.637596874,
+          0.5209955732
+        ]
       },
       {
         "hex": "#fa9500",
-        "linear": [0.9559733532, 0.3005437944, 0]
+        "linear": [
+          0.9559733532,
+          0.3005437944,
+          0
+        ]
       }
     ],
     "cases": [
       {
         "id": "celebrated-phase-0",
         "phaseSeconds": 0,
-        "localPosition": [1, 0, 0],
+        "localPosition": [
+          1,
+          0,
+          0
+        ],
         "opacity": 1,
         "side": "double",
         "depthWrite": true
@@ -492,7 +566,11 @@
       {
         "id": "celebrated-phase-quarter",
         "phaseSeconds": 0.3,
-        "localPosition": [1, 0, 0],
+        "localPosition": [
+          1,
+          0,
+          0
+        ],
         "opacity": 1,
         "side": "double",
         "depthWrite": true
@@ -500,7 +578,11 @@
       {
         "id": "celebrated-phase-half",
         "phaseSeconds": 0.6,
-        "localPosition": [1, 0, 0],
+        "localPosition": [
+          1,
+          0,
+          0
+        ],
         "opacity": 1,
         "side": "double",
         "depthWrite": true
@@ -508,7 +590,11 @@
       {
         "id": "celebrated-phase-three-quarter-transparent",
         "phaseSeconds": 0.9,
-        "localPosition": [1, 0, 0],
+        "localPosition": [
+          1,
+          0,
+          0
+        ],
         "opacity": 0.62,
         "side": "double",
         "depthWrite": false
@@ -525,17 +611,43 @@
       "layers": [
         {
           "id": "near-blue-inserted-first",
-          "position": [1, 0, 0],
-          "localCenter": [-1, 0, 0.5],
-          "color": [0.08, 0.18, 0.92, 0.55],
+          "position": [
+            1,
+            0,
+            0
+          ],
+          "localCenter": [
+            -1,
+            0,
+            0.5
+          ],
+          "color": [
+            0.08,
+            0.18,
+            0.92,
+            0.55
+          ],
           "opacity": 0.55,
           "depthWrite": true
         },
         {
           "id": "far-red-inserted-second",
-          "position": [-1, 0, 0],
-          "localCenter": [1, 0, -0.5],
-          "color": [0.92, 0.08, 0.12, 0.5],
+          "position": [
+            -1,
+            0,
+            0
+          ],
+          "localCenter": [
+            1,
+            0,
+            -0.5
+          ],
+          "color": [
+            0.92,
+            0.08,
+            0.12,
+            0.5
+          ],
           "opacity": 0.5,
           "depthWrite": true
         }
@@ -550,17 +662,43 @@
       "layers": [
         {
           "id": "red-stable-first",
-          "position": [-1, 0, 0.5],
-          "localCenter": [1, 0, -0.5],
-          "color": [0.92, 0.08, 0.12, 0.5],
+          "position": [
+            -1,
+            0,
+            0.5
+          ],
+          "localCenter": [
+            1,
+            0,
+            -0.5
+          ],
+          "color": [
+            0.92,
+            0.08,
+            0.12,
+            0.5
+          ],
           "opacity": 0.5,
           "depthWrite": true
         },
         {
           "id": "blue-stable-second",
-          "position": [1, 0, -0.5],
-          "localCenter": [-1, 0, 0.5],
-          "color": [0.08, 0.18, 0.92, 0.55],
+          "position": [
+            1,
+            0,
+            -0.5
+          ],
+          "localCenter": [
+            -1,
+            0,
+            0.5
+          ],
+          "color": [
+            0.08,
+            0.18,
+            0.92,
+            0.55
+          ],
           "opacity": 0.55,
           "depthWrite": true
         }
@@ -575,17 +713,43 @@
       "layers": [
         {
           "id": "blue-stable-first",
-          "position": [1, 0, -0.5],
-          "localCenter": [-1, 0, 0.5],
-          "color": [0.08, 0.18, 0.92, 0.55],
+          "position": [
+            1,
+            0,
+            -0.5
+          ],
+          "localCenter": [
+            -1,
+            0,
+            0.5
+          ],
+          "color": [
+            0.08,
+            0.18,
+            0.92,
+            0.55
+          ],
           "opacity": 0.55,
           "depthWrite": true
         },
         {
           "id": "red-stable-second",
-          "position": [-1, 0, 0.5],
-          "localCenter": [1, 0, -0.5],
-          "color": [0.92, 0.08, 0.12, 0.5],
+          "position": [
+            -1,
+            0,
+            0.5
+          ],
+          "localCenter": [
+            1,
+            0,
+            -0.5
+          ],
+          "color": [
+            0.92,
+            0.08,
+            0.12,
+            0.5
+          ],
           "opacity": 0.5,
           "depthWrite": true
         }
@@ -945,28 +1109,156 @@
     "status": "recorded",
     "producer": "Installed Three r182 WebGLRenderer in Chromium readPixels",
     "profile": {
-      "samplePosition": [32, 32],
-      "clearRgba": [0, 0, 0, 0],
+      "samplePosition": [
+        32,
+        32
+      ],
+      "clearRgba": [
+        0,
+        0,
+        0,
+        0
+      ],
       "antialias": false,
       "premultipliedAlpha": false,
       "maximumRgbError": 1
     },
     "rows": [
-      { "id": "inline-standard-default", "rgba8": [215, 215, 210, 255] },
-      { "id": "glb-source-material-replaced", "rgba8": [215, 215, 210, 255] },
-      { "id": "glb-environment-material", "rgba8": [199, 198, 192, 255] },
-      { "id": "mixed-scope-inline-default", "rgba8": [215, 215, 210, 255] },
-      { "id": "mixed-scope-glb-environment", "rgba8": [199, 199, 192, 255] },
-      { "id": "paint-texture-neutral-vertex", "rgba8": [130, 189, 218, 255] },
-      { "id": "paint-texture-selected-solid", "rgba8": [237, 68, 104, 255] },
-      { "id": "paint-texture-disabled-vertex", "rgba8": [59, 85, 98, 115] },
-      { "id": "celebrated-phase-0", "rgba8": [252, 11, 21, 255] },
-      { "id": "celebrated-phase-quarter", "rgba8": [67, 126, 106, 255] },
-      { "id": "celebrated-phase-half", "rgba8": [129, 119, 65, 255] },
-      { "id": "celebrated-phase-three-quarter-transparent", "rgba8": [153, 36, 3, 158] },
-      { "id": "standard-transparent-projected-depth", "rgba8": [121, 107, 155, 198] },
-      { "id": "standard-transparent-equal-depth-red-first", "rgba8": [121, 107, 155, 198] },
-      { "id": "standard-transparent-equal-depth-blue-first", "rgba8": [157, 99, 126, 197] }
+      {
+        "id": "inline-standard-default",
+        "rgba8": [
+          215,
+          215,
+          210,
+          255
+        ]
+      },
+      {
+        "id": "glb-source-material-replaced",
+        "rgba8": [
+          215,
+          215,
+          210,
+          255
+        ]
+      },
+      {
+        "id": "glb-environment-material",
+        "rgba8": [
+          199,
+          198,
+          192,
+          255
+        ]
+      },
+      {
+        "id": "mixed-scope-inline-default",
+        "rgba8": [
+          215,
+          215,
+          210,
+          255
+        ]
+      },
+      {
+        "id": "mixed-scope-glb-environment",
+        "rgba8": [
+          199,
+          199,
+          192,
+          255
+        ]
+      },
+      {
+        "id": "paint-texture-neutral-vertex",
+        "rgba8": [
+          130,
+          189,
+          218,
+          255
+        ]
+      },
+      {
+        "id": "paint-texture-selected-solid",
+        "rgba8": [
+          237,
+          68,
+          104,
+          255
+        ]
+      },
+      {
+        "id": "paint-texture-disabled-vertex",
+        "rgba8": [
+          59,
+          85,
+          98,
+          115
+        ]
+      },
+      {
+        "id": "celebrated-phase-0",
+        "rgba8": [
+          252,
+          11,
+          21,
+          255
+        ]
+      },
+      {
+        "id": "celebrated-phase-quarter",
+        "rgba8": [
+          67,
+          126,
+          106,
+          255
+        ]
+      },
+      {
+        "id": "celebrated-phase-half",
+        "rgba8": [
+          129,
+          119,
+          65,
+          255
+        ]
+      },
+      {
+        "id": "celebrated-phase-three-quarter-transparent",
+        "rgba8": [
+          153,
+          36,
+          3,
+          158
+        ]
+      },
+      {
+        "id": "standard-transparent-projected-depth",
+        "rgba8": [
+          121,
+          107,
+          155,
+          198
+        ]
+      },
+      {
+        "id": "standard-transparent-equal-depth-red-first",
+        "rgba8": [
+          121,
+          107,
+          155,
+          198
+        ]
+      },
+      {
+        "id": "standard-transparent-equal-depth-blue-first",
+        "rgba8": [
+          157,
+          99,
+          126,
+          197
+        ]
+      }
     ]
   },
   "compositingCases": [

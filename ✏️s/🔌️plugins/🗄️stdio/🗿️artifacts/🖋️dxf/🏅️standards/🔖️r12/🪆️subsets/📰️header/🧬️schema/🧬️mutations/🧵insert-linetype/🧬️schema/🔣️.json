@@ -23,6 +23,7 @@
           "en": "Insert position",
           "de": "Einfügeposition"
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10

@@ -1,0 +1,3 @@
+import{readFileSync,writeFileSync}from"node:fs";import{join}from"node:path";import assert from"node:assert/strict";
+const path="/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",before=readFileSync(path,"utf8");assert.equal((before.match(/\\uFE0F/g)||[]).length,4);const after=before.replaceAll("\\uFE0F","\\u{fe0f}");writeFileSync(join(import.meta.dir,"guarded-pairs.json"),JSON.stringify([{path,before,after}],null,2)+"\n");assert.equal(readFileSync(path,"utf8"),before);writeFileSync(path,after);console.log("[DEBUG] Run new native fixture exact four braced variation-selector paths fixed paths=1");
+

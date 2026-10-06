@@ -45,7 +45,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_dag_dag::editor::dag::presence::mutations::dag_presence_mutation_report_json;
+    use semio_s_artifact_dag_dag::editor::dag::presence::component::io::text::mutations::dag_presence_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         dag_presence_mutation_report_json(committed.before, committed.mutation, committed.after)

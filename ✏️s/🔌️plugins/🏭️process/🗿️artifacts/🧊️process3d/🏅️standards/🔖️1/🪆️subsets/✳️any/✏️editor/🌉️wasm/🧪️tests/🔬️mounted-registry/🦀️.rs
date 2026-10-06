@@ -262,7 +262,7 @@ impl Process3dMountedRegistry {
         }
         let operation_id = operation.operation;
         let generation = operation.generation;
-        let _ = crate::spr::process3d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
+        let _ = crate::standards::v1::subsets::any::io::binary::mutations::process3d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
         let slot = self.operations.iter_mut().find(|slot| slot.as_ref().is_some_and(|entry| entry.matches(operation_id, generation))).expect("Process3d close operation remains retained");
         *slot = None;
         self.operations.iter().all(Option::is_none)
@@ -409,14 +409,14 @@ mod mounted_laws {
     fn authoritative_publication_rejects_stale_generation_aba_and_parent() {
         use semio_framework_job::{Generation, OperationId};
 
-        let _lane = crate::spr::process3d_publication_authority_lane();
+        let _lane = crate::standards::v1::subsets::any::io::binary::mutations::process3d_publication_authority_lane();
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
-            crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, crate::spr::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }),
+            crate::standards::v1::subsets::any::io::binary::mutations::process3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, crate::standards::v1::subsets::any::io::binary::mutations::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }),
             Err("process3d-publication.initial-freshness")
         );
-        assert!(crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, crate::spr::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }).is_ok());
-        assert_eq!(crate::spr::process3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
+        assert!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, crate::standards::v1::subsets::any::io::binary::mutations::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }).is_ok());
+        assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
         // 🪪️ The authority is looked up BY OPERATION (`FixedOperationRegistry::get_operation` matches
         // `entry.key.operation` exactly), so a FOREIGN operation can never borrow another operation's
         // lease — it simply has none, and the honest rejection is `authority-missing`. The
@@ -424,16 +424,16 @@ mod mounted_laws {
         // hostile injection (`Process3dPublicationHostile::WrongOperation`), which the fail-closed law
         // in `🧬️mutations/💾️binary/🧪️tests/🔬️retained-laws` already drives; asserting it here pinned an
         // outcome the lookup cannot produce.
-        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("process3d-publication.authority-missing"));
-        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("process3d-publication.wrong-generation"));
-        crate::spr::process3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
-        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("process3d-publication.wrong-base"));
-        assert!(crate::spr::process3d_release_publication_authority(operation, Generation(41)));
+        assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("process3d-publication.authority-missing"));
+        assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("process3d-publication.wrong-generation"));
+        crate::standards::v1::subsets::any::io::binary::mutations::process3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
+        assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("process3d-publication.wrong-base"));
+        assert!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_release_publication_authority(operation, Generation(41)));
 
-        assert!(crate::spr::process3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, crate::spr::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }).is_ok());
-        assert!(crate::spr::process3d_validate_publication_authority(operation, Generation(41)).is_err());
-        assert_eq!(crate::spr::process3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
-        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
-        assert!(crate::spr::process3d_release_publication_authority(operation, Generation(42)));
+        assert!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, crate::standards::v1::subsets::any::io::binary::mutations::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }).is_ok());
+        assert!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_validate_publication_authority(operation, Generation(41)).is_err());
+        assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
+        assert_eq!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
+        assert!(crate::standards::v1::subsets::any::io::binary::mutations::process3d_release_publication_authority(operation, Generation(42)));
     }
 }

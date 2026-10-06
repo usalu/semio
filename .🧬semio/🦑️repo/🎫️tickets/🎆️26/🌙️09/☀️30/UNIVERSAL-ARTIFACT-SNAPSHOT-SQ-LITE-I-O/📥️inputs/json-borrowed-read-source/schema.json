@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["source", "duplicate", "invalidUtf8", "largeStringBytes", "decodeAllocationBytes", "stepUnits"],
+  "properties": {
+    "source": {"type": "string", "minLength": 1},
+    "duplicate": {"type": "string", "minLength": 1},
+    "invalidUtf8": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0, "maximum": 255}},
+    "largeStringBytes": {"const": 8194},
+    "decodeAllocationBytes": {"const": 131072},
+    "stepUnits": {"type": "integer", "minimum": 1}
+  },
+  "additionalProperties": false
+}

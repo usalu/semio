@@ -69,7 +69,7 @@ fn every_variant_registers_an_approved_semantic_descriptor() {
 #[semio_framework_async_macros::async_test]
 async fn store_applies_widget_create() {
     let mut store = crate::store_fixture::document_store(default_generation3d_snapshot()).await;
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], description: None, transaction: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], transaction: None }).await.expect("apply");
     assert!(store.snapshot().expect("snapshot").host_snapshot.widgets.iter().any(|w| widget_id(w) == "note-9"));
     crate::store_fixture::close(store);
 }

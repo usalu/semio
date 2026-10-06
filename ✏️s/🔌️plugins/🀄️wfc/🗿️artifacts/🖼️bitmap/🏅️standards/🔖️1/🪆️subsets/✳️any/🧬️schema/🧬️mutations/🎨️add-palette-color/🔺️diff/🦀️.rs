@@ -2,7 +2,7 @@
 //! and pin rows ONLY when the insert actually renumbers something (an append never does).
 
 use crate::diff::BitmapDiff;
-use crate::schema::snapshot::{encode_base64, BitmapSnapshot, BITMAP_MAX_PALETTE};
+use crate::schema::snapshot::{BitmapSnapshot, BITMAP_MAX_PALETTE};
 
 pub fn diff(payload: &super::AddPaletteColor, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
     if payload.index > base.input.palette.len() {
@@ -29,6 +29,6 @@ pub fn diff(payload: &super::AddPaletteColor, base: &BitmapSnapshot) -> protocol
             (at, moved)
         })
         .collect::<Vec<_>>();
-    let input_pixels = (renumbered != buffer).then(|| encode_base64(&renumbered));
+    let input_pixels = (renumbered != buffer).then(|| renumbered.to_vec());
     protocol::MutationOutcome::new(BitmapDiff { input_pixels, palette: Some(palette), pinned_upserted, ..Default::default() })
 }

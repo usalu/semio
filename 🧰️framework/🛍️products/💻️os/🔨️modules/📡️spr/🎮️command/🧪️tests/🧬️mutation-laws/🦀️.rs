@@ -29,7 +29,7 @@ impl DiffRegions for CounterDiff {
     }
 }
 
-#[path = "../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testing/🧬️mutation-laws/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
 
@@ -53,15 +53,15 @@ mod tests {
     use crate::os_spr::{fold_plan_diff, fold_plan_inverse, Mutation, OpBinary, OpText};
 
     fn cases() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mutation-laws/🔣️.json")).unwrap()
+        serde_json::from_str(include_str!("../../🧪️testing/🧬️mutation-laws/🔣️.json")).unwrap()
     }
 
     const WITNESSES: [&str; 5] = [
-        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/➕️add-counter/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/4️⃣add-counter-four-times/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/🔢️add-counter-sequence/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/➕️add-counter/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/4️⃣add-counter-four-times/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧪️testing/🧬️mutation-laws/🧬️mutations/🔢️add-counter-sequence/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ];
 
     #[test]

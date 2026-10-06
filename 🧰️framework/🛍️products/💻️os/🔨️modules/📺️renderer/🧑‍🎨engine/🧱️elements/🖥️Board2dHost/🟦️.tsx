@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🖥️Board2dHost/component.tsx
-/** 🧩️ `🖥️Board2dHost` — board-2d `ComponentSceneHost`: drives the board wasm session (fixture
- * sync, coalesced event drain/flush, marquee/pick pointer routing, catalogue fixture-drop preview),
+/** 🧩️ `🖥️Board2dHost` — board-2d `ComponentSceneHost`: drives the board wasm session (snapshot
+ * sync, coalesced event drain/flush, marquee/pick pointer routing, catalogue catalogue-drop preview),
  * plus the cross-pane live-mirror peer registry that keeps a triptych of panes on the same
  * `controllerId` in sync during a gesture without a plugin round trip. Reuses `World3dHost`'s
  * window-instance context and `🟦️Interpreter`'s surface context-menu plumbing. */
@@ -44,7 +44,7 @@ import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1
 //#region Types
 type BoardCamera = { readonly x: number; readonly y: number; readonly zoom: number };
 type BoardEventRow = { readonly name: string; readonly payload?: unknown };
-type Puzzle2dFixtureDropPayload = {
+type Puzzle2dDropPayload = {
   readonly kindId: string;
   readonly catalogSlice: string;
   readonly shape?: string;
@@ -59,16 +59,16 @@ type Puzzle2dFixtureDropPayload = {
 /** 🩺️ The document vitals this host publishes as `data-board-*` attributes on its container — node/edge counts
  * and every node's world position — so a headless probe (and the shell's own tests) can read what the guest last
  * painted without a guest round trip, the board twin of `World3dHost`'s `data-instances-json`. */
-function board2dVitals(fixtureJson: string): { readonly nodes: number; readonly edges: number; readonly handles: number; readonly positionsJson: string } {
+function board2dVitals(snapshotJson: string): { readonly nodes: number; readonly edges: number; readonly handles: number; readonly positionsJson: string } {
   try {
-    const fixture = JSON.parse(fixtureJson) as { nodes?: { id?: string; x?: number; y?: number; handles?: unknown[] }[]; edges?: unknown[] };
+    const snapshot = JSON.parse(snapshotJson) as { nodes?: { id?: string; x?: number; y?: number; handles?: unknown[] }[]; edges?: unknown[] };
     const positions: Record<string, [number, number]> = {};
     let handles = 0;
-    for (const node of fixture.nodes ?? []) {
+    for (const node of snapshot.nodes ?? []) {
       if (typeof node.id === "string" && typeof node.x === "number" && typeof node.y === "number") positions[node.id] = [node.x, node.y];
       handles += node.handles?.length ?? 0;
     }
-    return { nodes: fixture.nodes?.length ?? 0, edges: fixture.edges?.length ?? 0, handles, positionsJson: JSON.stringify(positions) };
+    return { nodes: snapshot.nodes?.length ?? 0, edges: snapshot.edges?.length ?? 0, handles, positionsJson: JSON.stringify(positions) };
   } catch {
     return { nodes: -1, edges: -1, handles: -1, positionsJson: "{}" };
   }
@@ -116,12 +116,12 @@ export function board2dKindHoverFromElementId(elementId: string | null | undefin
   return null;
 }
 
-/** 🩺️ The board's boot/sync verdict as one probe row — whether the last fixture parsed, how big it
+/** 🩺️ The board's boot/sync verdict as one probe row — whether the last snapshot parsed, how big it
  * was, why it was refused, how many drained rows are still waiting for a flush, and which guest scene
  * revision this pane last applied. The board twin of `World3dHost`'s `data-status-json`. */
 export type Board2dStatus = {
-  fixtureParsed: boolean | null;
-  fixtureChars: number;
+  snapshotParsed: boolean | null;
+  snapshotChars: number;
   refusalReason: string;
   pendingEvents: number;
   guestRevision: number;
@@ -159,10 +159,10 @@ export function board2dCameraActionArgs(cameraJson: string): { readonly camera: 
   return camera ? { camera } : null;
 }
 
-export function parsePuzzle2dCatalogueDragPayload(encoded: string | null | undefined): Puzzle2dFixtureDropPayload | null {
+export function parsePuzzle2dCatalogueDragPayload(encoded: string | null | undefined): Puzzle2dDropPayload | null {
   if (!encoded) return null;
   try {
-    const parsed = JSON.parse(encoded) as Partial<Puzzle2dFixtureDropPayload>;
+    const parsed = JSON.parse(encoded) as Partial<Puzzle2dDropPayload>;
     if (typeof parsed.kindId !== "string") return null;
     return {
       kindId: parsed.kindId,
@@ -200,22 +200,22 @@ export function parseBoard2dAreaBrushSize(encoded: string | null | undefined): {
     return { width: 0, height: 0 };
   }
 }
-/** 🐁️ Classifies every entity id the fixture carries into the `vortex`-domain granularity a
+/** 🐁️ Classifies every entity id the snapshot carries into the `vortex`-domain granularity a
  * pick or hover reports it under — the client twin of the guest's `puzzle2d_selection_targets`. A
  * `node:handle` id nested under a node is a `handle`, an id in `edges` is an `edge`, everything else
  * (including an id the document does not carry yet) is a `node`, so a just-painted entity is never
  * dropped on the way to the framework. */
-export function board2dGranularityById(fixtureJson: string): ReadonlyMap<string, string> {
+export function board2dGranularityById(snapshotJson: string): ReadonlyMap<string, string> {
   const byId = new Map<string, string>();
   try {
-    const fixture = JSON.parse(fixtureJson) as { nodes?: { id?: unknown; handles?: { id?: unknown }[] }[]; edges?: { id?: unknown }[] };
-    for (const node of fixture.nodes ?? []) {
+    const snapshot = JSON.parse(snapshotJson) as { nodes?: { id?: unknown; handles?: { id?: unknown }[] }[]; edges?: { id?: unknown }[] };
+    for (const node of snapshot.nodes ?? []) {
       if (typeof node.id === "string") byId.set(node.id, "node");
       for (const handle of node.handles ?? []) if (typeof handle.id === "string") byId.set(handle.id, "handle");
     }
-    for (const edge of fixture.edges ?? []) if (typeof edge.id === "string") byId.set(edge.id, "edge");
+    for (const edge of snapshot.edges ?? []) if (typeof edge.id === "string") byId.set(edge.id, "edge");
   } catch {
-    /* a refused fixture classifies nothing — every id then reports as a node */
+    /* a refused snapshot classifies nothing — every id then reports as a node */
   }
   return byId;
 }
@@ -330,29 +330,36 @@ function board2dGestureId(row: BoardEventRow): string | undefined {
   return typeof id === "string" ? id : undefined;
 }
 
+/** 🎥️ The camera a `camera` row carries; `null` for a row that carries none. */
+function board2dRowCamera(row: BoardEventRow): BoardCamera | null {
+  const payload = row.payload as Partial<BoardCamera> | undefined;
+  return typeof payload?.x === "number" && typeof payload.y === "number" && typeof payload.zoom === "number" ? { x: payload.x, y: payload.y, zoom: payload.zoom } : null;
+}
+
 /**
- * 📬️ Drops transient rows, keeps only the latest `camera` (first), keeps every other row in order, and flags
+ * 📬️ Drops transient rows, takes the latest `camera` out of the batch, keeps every other row in order, and flags
  * whether the buffer should flush now: any terminal row does, except a `select` tagged with a `gestureId`
  * whose `gesture` record the batch does not carry — an open gesture's selection leaves with its record, never
- * mid-gesture. The wgpu twin `coalesce_owned_board_events` is pinned to this one by the shared corpus
- * `🧫️fixtures/🧫️board-event-coalescing/🔣️.json`.
+ * mid-gesture. The camera is view state: it leaves on the view lane (`setCamera`) and never inside
+ * `applyBoardEvents`, so a pan is never a command row. The shared corpus
+ * `🧫️fixtures/🧫️board-event-coalescing/🔣️.json` pins this and the wgpu twin `coalesce_owned_board_events`.
  */
-export function coalesceBoard2dEvents(rows: readonly BoardEventRow[]): { readonly flushNow: boolean; readonly eventsJson: string } {
+export function coalesceBoard2dEvents(rows: readonly BoardEventRow[]): { readonly flushNow: boolean; readonly eventsJson: string; readonly camera: BoardCamera | null } {
   const recorded = new Set(rows.filter((row) => row.name === "gesture").map(board2dGestureId));
   let flushNow = false;
-  let lastCamera: BoardEventRow | null = null;
+  let camera: BoardCamera | null = null;
   const rest: BoardEventRow[] = [];
   for (const row of rows) {
     if (PUZZLE2D_TRANSIENT_EVENT_NAMES.has(row.name)) continue;
     if (row.name === "camera") {
-      lastCamera = row;
+      camera = board2dRowCamera(row) ?? camera;
       continue;
     }
     const gestureId = row.name === "select" ? board2dGestureId(row) : undefined;
     if (PUZZLE2D_FLUSH_NOW_EVENT_NAMES.has(row.name) && (gestureId === undefined || recorded.has(gestureId))) flushNow = true;
     rest.push(row);
   }
-  return { flushNow, eventsJson: JSON.stringify(lastCamera ? [lastCamera, ...rest] : rest) };
+  return { flushNow, eventsJson: JSON.stringify(rest), camera };
 }
 
 /** 🐢️ Live cross-pane mirror payload extracted from a batch of freshly-drained rows — positions/selection/preselect only, everything else (camera, brush/link chrome, hover) stays pane-local. */
@@ -436,7 +443,7 @@ function puzzle2dEntityFlag(entity: Record<string, unknown> | undefined, key: "h
 /** 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors the premigration canvas context menu. */
 //#endregion SelectionMenu
 
-//#region FixtureDrop
+//#region DropPreview
 const BOARD_CATALOGUE_DROP_FALLBACK_RADIUS = 20;
 const BOARD_CATALOGUE_DROP_FALLBACK_EXTENT = 40;
 
@@ -444,8 +451,8 @@ function finitePositive(value: number | undefined): number | undefined {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
-/** 👻️ Builds a world-space fixture-drop preview so every peer pane shares the same ghost (screen coords would desync under different cameras). A part row that names only its kind still paints: a circle falls back to the 5d default radius and a rectangle to that diameter. */
-export function puzzle2dFixtureDropPreviewJson(payload: Puzzle2dFixtureDropPayload, worldX: number, worldY: number): string {
+/** 👻️ Builds a world-space catalogue-drop preview so every peer pane shares the same ghost (screen coords would desync under different cameras). A part row that names only its kind still paints: a circle falls back to the 5d default radius and a rectangle to that diameter. */
+export function puzzle2dDropPreviewJson(payload: Puzzle2dDropPayload, worldX: number, worldY: number): string {
   const rectangle = payload.shape === "rectangle";
   return JSON.stringify({
     nodeKind: payload.kindId,
@@ -524,7 +531,7 @@ export function board2dPinchCamera(cameraJson: string, step: Parameters<typeof a
   if (!camera) return null;
   return applyPinchToCamera(camera, step, containerSize, BOARD_2D_ZOOM_BOUNDS);
 }
-//#endregion FixtureDrop
+//#endregion DropPreview
 
 //#region Sync
 /** 🔁️ Applies one scene sync through the demand handle: its calls invalidate the canvas, so every sync of one React
@@ -541,17 +548,17 @@ function applyToSession(session: Board2dWasmSession | null, action: (session: Bo
 
 /** 🔗️ Forwards what an open time-travel draft references (`Board2dScene.highlightedIdsJson`) to the board session — `[]`
  * when the scene carries none — exactly as the wgpu board sync does (`sync_board_engine`, `⚙️EngineCanvas/🎯️targets/🧊️wgpu`).
- * A fixture re-parse keeps the engine's highlight, so only a changed id list is forwarded again. */
+ * A snapshot re-parse keeps the engine's highlight, so only a changed id list is forwarded again. */
 export function applyBoard2dHighlightedIds(session: Board2dWasmSession | null, scene: Pick<Board2dScene, "highlightedIdsJson">): void {
   applyToSession(session, (live) => live.setHighlightedIdsJson?.(scene.highlightedIdsJson ?? "[]"));
 }
 
-/** 🔁️ Re-parses the fixture and silently re-applies selection/camera, since `parseFixtureJson` resets both to the fixture's own defaults. */
-function applyFixtureToSession(session: Board2dWasmSession, scene: Board2dScene): boolean {
-  const parsed = session.parseFixtureJson(scene.fixtureJson);
+/** 🔁️ Re-parses the snapshot and silently re-applies selection/camera, since `loadBoardSnapshotJson` resets both to the snapshot's own defaults. */
+function applySnapshotToSession(session: Board2dWasmSession, scene: Board2dScene): boolean {
+  const parsed = session.loadBoardSnapshotJson(scene.snapshotJson);
   if (!parsed) {
-    console.error(`[board-2d] engine refused the fixture (${scene.fixtureJson.length} chars) — nothing is painted until a fixture parses`);
-    (globalThis as { __semioBoard2dRefusedFixture?: string }).__semioBoard2dRefusedFixture = scene.fixtureJson;
+    console.error(`[board-2d] engine refused the snapshot (${scene.snapshotJson.length} chars) — nothing is painted until a snapshot parses`);
+    (globalThis as { __semioBoard2dRefusedSnapshot?: string }).__semioBoard2dRefusedSnapshot = scene.snapshotJson;
   }
   session.setSelectionOptions?.(scene.selectionMethod, "replace", true, true, true);
   if (session.setSelectionIdsJsonSilent) session.setSelectionIdsJsonSilent(scene.selectionJson);
@@ -634,14 +641,14 @@ export function notifyPuzzle2dPeersGestureEnded(scope: BoardPeerScope, controlle
   }
 }
 
-/** 👻️ Pushes a world-space catalogue fixture-drop ghost into every pane of `controllerId` (including the source). */
-export function pushPuzzle2dFixtureDropPreview(scope: BoardPeerScope, controllerId: string, previewJson: string | null): void {
+/** 👻️ Pushes a world-space catalogue catalogue-drop ghost into every pane of `controllerId` (including the source). */
+export function pushPuzzle2dDropPreview(scope: BoardPeerScope, controllerId: string, previewJson: string | null): void {
   const peers = scope.peers.get(controllerId);
   if (!peers) return;
   for (const peer of peers.values()) {
     try {
-      if (previewJson) peer.session.setFixtureDropPreviewJson?.(previewJson);
-      else peer.session.clearFixtureDropPreview?.();
+      if (previewJson) peer.session.setDropPreviewJson?.(previewJson);
+      else peer.session.clearDropPreview?.();
       peer.session.renderFrame?.();
     } catch {
       /* peer session not ready */
@@ -668,7 +675,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const rawSessionRef = useRef<Board2dWasmSession | null>(null);
   const schedulerRef = useRef<DemandFrameSchedulerV1 | null>(null);
   const bootSyncedRef = useRef(false);
-  const pendingFixtureSceneRef = useRef<Board2dScene | null>(null);
+  const pendingSnapshotSceneRef = useRef<Board2dScene | null>(null);
   const pendingEventRowsRef = useRef<BoardEventRow[]>([]);
   const hoverActiveRef = useRef(false);
   const cameraInteractionActiveRef = useRef(false);
@@ -678,7 +685,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const [gestureRecognizer] = useState(() => new GestureRecognizer());
   const pendingSelectionJsonRef = useRef<string | null>(null);
   const onPeerGestureEndedRef = useRef<(flushed: boolean) => void>(() => {});
-  const boardStatusRef = useRef<Board2dStatus>({ fixtureParsed: null, fixtureChars: 0, refusalReason: "", pendingEvents: 0, guestRevision: 0 });
+  const boardStatusRef = useRef<Board2dStatus>({ snapshotParsed: null, snapshotChars: 0, refusalReason: "", pendingEvents: 0, guestRevision: 0 });
   const [localSelectionJson, setLocalSelectionJson] = useState<string | null>(null);
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const [sessionError, setSessionError] = useState<Error | null>(null);
@@ -721,7 +728,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const shellContextMenuFallback = useShellContextMenuFallback();
 
   /** 🩺️ Republishes the live probe vitals straight onto the container, the way
-   * `data-board-fixture-parsed` already is: a gumball drag and a marquee update these every frame, and
+   * `data-board-snapshot-parsed` already is: a gumball drag and a marquee update these every frame, and
    * routing that through React state would re-render the whole pane on each pointer move. */
   const publishBoardVitals = useCallback((): void => {
     const container = containerRef.current;
@@ -766,7 +773,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), {
       // 🎯️ `entity` targeting (board nodes/edges/handles by id) needs an id→screen API the board-2d wasm
       // engine doesn't expose yet (mirroring the dag engine's `entity_screen_json` would be the fix) — a
-      // known gap, not a silent guess: `scene.fixtureJson`'s node schema isn't a framework-owned shape
+      // known gap, not a silent guess: `scene.snapshotJson`'s node schema isn't a framework-owned shape
       // this file can safely parse. `canvasPoint` (world coordinates) is fully supported.
       canvasPoint: (x, y) => {
         const cameraJson = sceneRef.current?.cameraJson;
@@ -830,7 +837,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   //#endregion SuggestionMenu
 
   //#region Hover
-  const granularityById = useMemo(() => board2dGranularityById(scene?.fixtureJson ?? ""), [scene?.fixtureJson]);
+  const granularityById = useMemo(() => board2dGranularityById(scene?.snapshotJson ?? ""), [scene?.snapshotJson]);
   const granularityByIdRef = useRef(granularityById);
   granularityByIdRef.current = granularityById;
   const interactionDomainId = scene?.domainId;
@@ -920,11 +927,12 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const dispatchBufferedEvents = useCallback((): void => {
     if (pendingEventRowsRef.current.length === 0) return;
-    const { eventsJson } = coalesceBoard2dEvents(pendingEventRowsRef.current);
+    const { eventsJson, camera } = coalesceBoard2dEvents(pendingEventRowsRef.current);
     pendingEventRowsRef.current = [];
     boardStatusRef.current.pendingEvents = 0;
     publishBoardVitals();
-    if (eventsJson && eventsJson !== "[]") dispatch("applyBoardEvents", { eventsJson });
+    if (camera) dispatch("setCamera", { camera });
+    if (eventsJson !== "[]") dispatch("applyBoardEvents", { eventsJson });
   }, [dispatch, publishBoardVitals]);
 
   const drainAndMaybeFlush = useCallback((): void => {
@@ -939,32 +947,32 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     dispatchBufferedEvents();
   }, [drainIntoBuffer, dispatchBufferedEvents]);
 
-  /** 🩺️ Records one fixture-apply verdict into the status vitals and republishes them, so a
-   * refused fixture names itself in the DOM instead of only in the console. */
-  const recordFixtureVerdict = useCallback(
+  /** 🩺️ Records one snapshot-apply verdict into the status vitals and republishes them, so a
+   * refused snapshot names itself in the DOM instead of only in the console. */
+  const recordSnapshotVerdict = useCallback(
     (applied: Board2dScene, parsed: boolean): void => {
-      boardStatusRef.current.fixtureParsed = parsed;
-      boardStatusRef.current.fixtureChars = applied.fixtureJson.length;
-      boardStatusRef.current.refusalReason = parsed ? "" : "engine refused the fixture";
+      boardStatusRef.current.snapshotParsed = parsed;
+      boardStatusRef.current.snapshotChars = applied.snapshotJson.length;
+      boardStatusRef.current.refusalReason = parsed ? "" : "engine refused the snapshot";
       boardStatusRef.current.guestRevision += 1;
-      containerRef.current?.setAttribute("data-board-fixture-parsed", String(parsed));
+      containerRef.current?.setAttribute("data-board-snapshot-parsed", String(parsed));
       publishBoardVitals();
     },
     [publishBoardVitals],
   );
 
-  const applyPendingFixtureIfReady = useCallback(
+  const applyPendingSnapshotIfReady = useCallback(
     (session: Board2dWasmSession): void => {
-      const pendingScene = pendingFixtureSceneRef.current;
+      const pendingScene = pendingSnapshotSceneRef.current;
       if (!pendingScene) return;
       if (session.defersDescriptorSyncFromJs?.() || cameraInteractionActiveRef.current || puzzle2dPeerOwnsGesture(peerScope, node.controllerId, node.surfaceId)) return;
-      pendingFixtureSceneRef.current = null;
-      applyToSession(session, (s) => recordFixtureVerdict(pendingScene, applyFixtureToSession(s, pendingScene)));
+      pendingSnapshotSceneRef.current = null;
+      applyToSession(session, (s) => recordSnapshotVerdict(pendingScene, applySnapshotToSession(s, pendingScene)));
     },
-    [peerScope, node.controllerId, node.surfaceId, recordFixtureVerdict],
+    [peerScope, node.controllerId, node.surfaceId, recordSnapshotVerdict],
   );
 
-  /** 🐢️ Mirror of `applyPendingFixtureIfReady` for the selection-only echo — a peer-owned gesture defers the plugin's `selectionJson` so it doesn't clobber a mirrored preselect highlight mid-marquee. */
+  /** 🐢️ Mirror of `applyPendingSnapshotIfReady` for the selection-only echo — a peer-owned gesture defers the plugin's `selectionJson` so it doesn't clobber a mirrored preselect highlight mid-marquee. */
   const applyPendingSelectionIfReady = useCallback(
     (session: Board2dWasmSession): void => {
       const pendingSelectionJson = pendingSelectionJsonRef.current;
@@ -983,17 +991,17 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     const session = sessionRef.current;
     if (!session) return;
     if (flushed) {
-      pendingFixtureSceneRef.current = null;
+      pendingSnapshotSceneRef.current = null;
       pendingSelectionJsonRef.current = null;
       return;
     }
-    applyPendingFixtureIfReady(session);
+    applyPendingSnapshotIfReady(session);
     applyPendingSelectionIfReady(session);
   };
 
   /**
    * 🫧️ Call when a gesture on this pane ends, right before flushing. Drains first so we know
-   * whether a commit is about to go out; if so, drops any pending fixture/selection stashed mid-gesture
+   * whether a commit is about to go out; if so, drops any pending snapshot/selection stashed mid-gesture
    * instead of applying it — that stashed snapshot is stale (a guest echo that landed while the gesture was
    * live) and the flush response due back in a moment will supersede it anyway, so applying it here would
    * flicker: correct live state -> stale snapshot -> correct committed state. Returns whether a flush is
@@ -1004,15 +1012,15 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       drainIntoBuffer();
       const flushed = pendingEventRowsRef.current.length > 0;
       if (flushed) {
-        pendingFixtureSceneRef.current = null;
+        pendingSnapshotSceneRef.current = null;
         pendingSelectionJsonRef.current = null;
       } else {
-        applyPendingFixtureIfReady(session);
+        applyPendingSnapshotIfReady(session);
         applyPendingSelectionIfReady(session);
       }
       return flushed;
     },
-    [applyPendingFixtureIfReady, applyPendingSelectionIfReady, drainIntoBuffer],
+    [applyPendingSnapshotIfReady, applyPendingSelectionIfReady, drainIntoBuffer],
   );
 
   /** 🐁️ Marks a wheel-zoom gesture in flight so scene-driven camera echoes (which lag several ticks behind during a fast scroll) don't fight the live local zoom — mirrors `defersDescriptorSyncFromJs` for pan/drag, which the engine doesn't track for wheel. */
@@ -1023,14 +1031,14 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       cameraInteractionActiveRef.current = false;
       cameraSettleTimeoutRef.current = null;
       const session = sessionRef.current;
-      if (session) applyPendingFixtureIfReady(session);
+      if (session) applyPendingSnapshotIfReady(session);
       const pendingCamera = pendingCameraDispatchRef.current;
       if (pendingCamera) {
         pendingCameraDispatchRef.current = null;
         dispatch("setCamera", pendingCamera);
       }
     }, 350);
-  }, [applyPendingFixtureIfReady, dispatch]);
+  }, [applyPendingSnapshotIfReady, dispatch]);
 
   useEffect(
     () => () => {
@@ -1153,10 +1161,10 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     const session = sessionRef.current;
     if (!session) return;
     if (session.defersDescriptorSyncFromJs?.() || cameraInteractionActiveRef.current || puzzle2dPeerOwnsGesture(peerScope, node.controllerId, node.surfaceId)) {
-      pendingFixtureSceneRef.current = scene;
+      pendingSnapshotSceneRef.current = scene;
       return;
     }
-    applyToSession(session, (s) => recordFixtureVerdict(scene, applyFixtureToSession(s, scene)));
+    applyToSession(session, (s) => recordSnapshotVerdict(scene, applySnapshotToSession(s, scene)));
     if (!bootSyncedRef.current) {
       bootSyncedRef.current = true;
       try {
@@ -1165,7 +1173,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
         /* session not ready */
       }
     }
-  }, [peerScope, recordFixtureVerdict, sessionEpoch, scene?.fixtureJson, node.controllerId, node.surfaceId]);
+  }, [peerScope, recordSnapshotVerdict, sessionEpoch, scene?.snapshotJson, node.controllerId, node.surfaceId]);
 
   useEffect(() => {
     if (!scene) return;
@@ -1426,7 +1434,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       pendingEventRowsRef.current = [];
       boardStatusRef.current.pendingEvents = 0;
       setLocalSelectionJson(null);
-      applyPendingFixtureIfReady(session);
+      applyPendingSnapshotIfReady(session);
       applyPendingSelectionIfReady(session);
       publishBoardVitals();
       scheduleRender();
@@ -1481,7 +1489,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       window.removeEventListener("pointercancel", onPointerCancel);
       container.removeEventListener("wheel", onWheel);
     };
-  }, [peerScope, applyPendingFixtureIfReady, applyPendingSelectionIfReady, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, publishBoardVitals, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd, publishBoardPresenceView]);
+  }, [peerScope, applyPendingSnapshotIfReady, applyPendingSelectionIfReady, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, publishBoardVitals, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd, publishBoardPresenceView]);
   //#endregion Pointer
 
   //#region Keyboard
@@ -1602,13 +1610,13 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   );
   //#endregion ContextMenu
 
-  //#region FixtureDropHandlers
+  //#region DropPreviewHandlers
   const clearCatalogueDropPreview = useCallback(() => {
-    pushPuzzle2dFixtureDropPreview(peerScope, node.controllerId, null);
+    pushPuzzle2dDropPreview(peerScope, node.controllerId, null);
   }, [peerScope, node.controllerId]);
 
   const placeCatalogueDrop = useCallback(
-    (payload: Puzzle2dFixtureDropPayload, clientX: number, clientY: number, rect: BoardCatalogueDropRect) => {
+    (payload: Puzzle2dDropPayload, clientX: number, clientY: number, rect: BoardCatalogueDropRect) => {
       const session = sessionRef.current;
       if (!session) return;
       const world = puzzle2dScreenToWorld(session.cameraJson(), readContainerSize(), { x: clientX - rect.left, y: clientY - rect.top });
@@ -1630,7 +1638,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     (clientX: number, clientY: number): boolean => {
       const host = containerRef.current;
       const session = sessionRef.current;
-      if (!sceneRef.current?.interactive || !host || !session?.setFixtureDropPreviewJson) return false;
+      if (!sceneRef.current?.interactive || !host || !session?.setDropPreviewJson) return false;
       const rect = host.getBoundingClientRect();
       if (!boardCatalogueDropPointOverRect(clientX, clientY, rect)) {
         if (!boardCatalogueDropHostContainsPoint(node.controllerId, clientX, clientY)) clearCatalogueDropPreview();
@@ -1640,7 +1648,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       if (!payload) return false;
       const world = puzzle2dScreenToWorld(session.cameraJson(), readContainerSize(), { x: clientX - rect.left, y: clientY - rect.top });
       if (!world) return false;
-      pushPuzzle2dFixtureDropPreview(peerScope, node.controllerId, puzzle2dFixtureDropPreviewJson(payload, world.x, world.y));
+      pushPuzzle2dDropPreview(peerScope, node.controllerId, puzzle2dDropPreviewJson(payload, world.x, world.y));
       return true;
     },
     [clearCatalogueDropPreview, node.controllerId, peerScope, readContainerSize],
@@ -1650,7 +1658,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     (event: DragEvent<HTMLDivElement>): void => {
       if (!scene?.interactive) return;
       if (!event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME) && !getActiveCatalogueDragPayload()) return;
-      if (!sessionRef.current?.setFixtureDropPreviewJson) return;
+      if (!sessionRef.current?.setDropPreviewJson) return;
       if (!parsePuzzle2dCatalogueDragPayload(getActiveCatalogueDragPayload()) && !event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) return;
       event.preventDefault();
       previewCatalogueDropAt(event.clientX, event.clientY);
@@ -1719,7 +1727,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       window.removeEventListener("dragend", onDragEnd);
     };
   }, [clearCatalogueDropPreview, node.controllerId, placeCatalogueDrop, previewCatalogueDropAt]);
-  //#endregion FixtureDropHandlers
+  //#endregion DropPreviewHandlers
 
 
 
@@ -1728,7 +1736,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [scene?.activeUtility]);
 
   const toolRunTraceCamera = useMemo(() => parseBoardCamera(scene?.cameraJson ?? "") ?? { x: 0, y: 0, zoom: 1 }, [scene?.cameraJson]);
-  const boardVitals = useMemo(() => board2dVitals(scene?.fixtureJson ?? ""), [scene?.fixtureJson]);
+  const boardVitals = useMemo(() => board2dVitals(scene?.snapshotJson ?? ""), [scene?.snapshotJson]);
   const toolRunTracePathForShape = useMemo(() => board2dToolRunTracePathForShape(board2dToolRunTraceShapes(scene?.glyphCatalogsJson ?? "")), [scene?.glyphCatalogsJson]);
   const onToolRunTraceCursor = useToolRunTraceCursorEcho(windowInstanceId);
 

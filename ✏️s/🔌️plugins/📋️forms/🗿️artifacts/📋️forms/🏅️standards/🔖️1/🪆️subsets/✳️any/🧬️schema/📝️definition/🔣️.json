@@ -509,7 +509,7 @@
             "order": 140
           }
         },
-        "fixtureSlug": {
+        "exampleId": {
           "type": "string",
           "x-semio-ui": {
             "widget": "text",

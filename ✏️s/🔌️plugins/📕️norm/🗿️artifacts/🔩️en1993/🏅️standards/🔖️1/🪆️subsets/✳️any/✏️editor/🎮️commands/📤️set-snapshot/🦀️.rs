@@ -9,7 +9,7 @@
 //! `En1993Mutation::from_snapshot`, bundled into a single atomic edit.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::op::En1993Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::En1993Mutation;
 use crate::En1993Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

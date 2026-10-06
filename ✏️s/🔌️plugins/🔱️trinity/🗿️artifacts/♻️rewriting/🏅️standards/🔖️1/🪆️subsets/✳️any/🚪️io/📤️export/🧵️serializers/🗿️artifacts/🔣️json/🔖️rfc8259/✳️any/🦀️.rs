@@ -1,6 +1,6 @@
 //! rewriting -> json
 use crate::RewritingSnapshot;
-use semio_s_artifact_stdio_json::schema::snapshot::write_json_pretty;
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_pretty;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 /// 🌉 Bridges via json's own RFC8259 text codec (`JsonSnapshot::value` is `JsonValue`, json's

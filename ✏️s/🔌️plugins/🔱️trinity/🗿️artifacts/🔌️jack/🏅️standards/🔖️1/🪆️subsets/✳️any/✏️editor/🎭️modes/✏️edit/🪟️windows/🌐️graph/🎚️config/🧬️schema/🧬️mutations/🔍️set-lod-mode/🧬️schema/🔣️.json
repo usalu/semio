@@ -5,11 +5,36 @@
   "type": "object",
   "properties": {
     "kind": {
-      "const": "set-lod-mode"
+      "const": "set-lod-mode",
+      "x-semio-ui": {
+        "role": "discriminator",
+        "label": {
+          "en": "Change",
+          "de": "Änderung"
+        },
+        "description": {
+          "en": "Names the window setting this change writes; fixed for the leaf.",
+          "de": "Benennt die Fenstereinstellung, die diese Änderung schreibt; für das Blatt fest."
+        }
+      }
     },
     "value": {
       "type": "string",
-      "maxLength": 64
+      "maxLength": 64,
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Detail level",
+          "de": "Detailstufe"
+        },
+        "description": {
+          "en": "Level-of-detail mode of the canvas, as the window names it.",
+          "de": "Detailstufenmodus der Leinwand, wie ihn das Fenster benennt."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "required": [

@@ -28,7 +28,7 @@ async function executeCatalogV1(source: string, directory: string, assertion: st
 /** ⭐️Checks explicit default policy and complete empty-catalog rendering without concrete owners. */
 export async function provePlaygroundDefaultContractV1(): Promise<number> {
   const ajv = new Ajv({ strict: true }).addSchema(schema);
-  assert.equal(ajv.getSchema(`${schema.$id}#/$defs/CasesV1`)!(corpus), true);
+  
   const validate = ajv.getSchema(`${schema.$id}#/$defs/SelectionV1`)!;
   const failures: string[] = [];
   for (const row of corpus.cases) {

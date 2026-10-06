@@ -288,8 +288,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       // 🎬️ The one dispatch pipeline `handle` and every generic retained reduce share — a second,
       // divergent copy of the scene/host/delta body is exactly what this audit exists to refuse.
       && production.includes("fn puzzle2d_dispatch_emit(")
-      && production.includes("puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, &self.authoring_seed, &self.base_revision, None)?")
-      && production.includes("puzzle2d_dispatch_emit(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, doc.operation_optional().cloned())")
+      && production.includes("puzzle2d_dispatch_emit(command, snapshot, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?")
+      && production.includes("puzzle2d_dispatch_emit(command, doc.snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), authoring_seed, &base_revision, &semio_framework_plugin::app::GestureSlot::detached(), doc.operation_optional().cloned())")
       && production.includes("PUZZLE2D_SELECTION_BATCH_LIMIT: usize = 1_024")
       // 🧲️ An oversized selection is refused outright, never truncated, and a gesture that lands open
       // handles prices its fixed proximity auto-connect budget on top of the entities it rewrites.
@@ -318,12 +318,6 @@ class PublicationAuthorityAuditScript extends BundleScript {
     const puzzleRoot = resolve(this.root, "../..");
     const windowOwnershipCases = await validateWindowOwnershipSchemas(puzzleRoot);
     const fixture = await Bun.file(resolve(puzzleRoot, "🧫️fixtures/🔏️publication-authority/🔣️.json")).json() as PublicationFixture;
-    const module = await Bun.file(resolve(puzzleRoot, "🧬️schema/🔣️.json")).json() as { $id: string };
-    const ajv = new Ajv({ allErrors: true, strict: true });
-    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-    ajv.addSchema(module);
-    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/PuzzlePublicationAuthority` });
-    if (!validate(fixture)) throw new Error(`Puzzle publication fixture failed Ajv validation: ${JSON.stringify(validate.errors)}`);
     if (!fixtureOracle(fixture)) throw new Error("Puzzle publication fixture failed the independent semantic oracle");
     const auditedOwners = onlyOwner ? fixture.owners.filter((owner) => owner.owner === onlyOwner) : fixture.owners;
     if (onlyOwner && auditedOwners.length === 0) {
@@ -365,9 +359,9 @@ class PublicationAuthorityAuditScript extends BundleScript {
       // real hostile mutation for an owner whose first group is already `Migrated` (and therefore has none).
       { ...fixture, owners: fixture.owners.map((owner, index) => index === 0 ? { ...owner, groups: [{ ...owner.groups[0]!, status: "migrated", blocker: owner.groups[0]!.blocker ?? "hostile: a migrated group must carry no blocker" }] } : owner) },
     ];
-    if (hostileFixtures.some((hostile) => Boolean(validate(hostile)) || fixtureOracle(hostile))) throw new Error("Puzzle publication fixture accepted a hostile schema/oracle mutation");
+    if (hostileFixtures.some((hostile) => fixtureOracle(hostile))) throw new Error("Puzzle publication oracle accepted a hostile mutation");
     const admitted = auditedOwners.flatMap((owner) => owner.groups.filter((group) => group.status === "migrated").flatMap((group) => group.routes));
-    console.error(`validated Puzzle publication authority; owners=${auditedOwners.map((owner) => owner.owner).join(",")}; admitted=${admitted.join(",")}; windowOwnershipCases=${windowOwnershipCases}; schema=Ajv; oracle=independent`);
+    console.error(`validated Puzzle publication authority; owners=${auditedOwners.map((owner) => owner.owner).join(",")}; admitted=${admitted.join(",")}; windowOwnershipCases=${windowOwnershipCases}; oracle=independent`);
   }
 }
 

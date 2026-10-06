@@ -41,7 +41,7 @@ enum NodeGraphEngine {
 
 #[derive(Default)]
 struct NodeGraphSyncCache {
-    fixture_json: Option<String>,
+    snapshot_json: Option<String>,
     selection: Option<Vec<String>>,
     preview_off_json: Option<String>,
     computing_json: Option<String>,
@@ -517,7 +517,7 @@ impl EngineSurfaceRetirement {
     }
 
     fn close_node_graph_sync(cache: &mut NodeGraphSyncCache) -> bool {
-        if Self::close_string(&mut cache.fixture_json)
+        if Self::close_string(&mut cache.snapshot_json)
             || cache.selection.as_mut().is_some_and(|ids| ids.last_mut().is_some_and(retire_string_page))
             || cache.selection.as_mut().is_some_and(|ids| ids.pop().is_some())
             || Self::close_string(&mut cache.preview_off_json)
@@ -548,7 +548,7 @@ impl EngineSurfaceRetirement {
             cache.raster_tiles_revision = None;
             cache.vector_tiles_revision = None;
         }
-        if Self::close_string(&mut cache.map_fixture_json)
+        if Self::close_string(&mut cache.map_descriptor_json)
             || Self::close_string(&mut cache.camera_json)
             || Self::close_string(&mut cache.render_mode)
             || Self::close_string(&mut cache.vector_style)
@@ -587,7 +587,7 @@ impl EngineSurfaceRetirement {
     }
 
     fn close_board_sync(cache: &mut BoardSyncCache) -> bool {
-        if Self::close_string(&mut cache.fixture_json)
+        if Self::close_string(&mut cache.snapshot_json)
             || Self::close_string(&mut cache.glyph_catalogs_json)
             || Self::close_string(&mut cache.placement_compatibility_json)
             || Self::close_string(&mut cache.selection_json)
@@ -1596,7 +1596,7 @@ impl Drop for EngineCanvasPresenter {
 
 #[derive(Default)]
 struct MapSyncCache {
-    map_fixture_json: Option<String>,
+    map_descriptor_json: Option<String>,
     camera_json: Option<String>,
     render_mode: Option<String>,
     vector_style: Option<String>,
@@ -1625,11 +1625,11 @@ struct BoardSyncCache {
     /// `if (!interactionDomainId) return undefined` (`🖥️Board2dHost/🟦️.tsx:777`). Carried here
     /// because the pointer seams are addressed by surface id, not by scene.
     domain_id: Option<String>,
-    /// 🎯️ Every entity id the fixture carries, classified into the granularity a hover reports it
+    /// 🎯️ Every entity id the snapshot carries, classified into the granularity a hover reports it
     /// under — the port of React's `board2dGranularityById` (`🖥️Board2dHost/🟦️.tsx:190`). Rebuilt
-    /// only when the fixture changes.
+    /// only when the snapshot changes.
     granularity_by_id: HashMap<String, String>,
-    fixture_json: Option<String>,
+    snapshot_json: Option<String>,
     glyph_catalogs_json: Option<String>,
     placement_compatibility_json: Option<String>,
     selection_json: Option<String>,
@@ -1681,6 +1681,246 @@ struct EditorSyncCache {
     theme_json: Option<String>,
     size_key: Option<String>,
 }
+
+//#region ✍️EditorSceneDocument
+/// 📏️ The bytes one decoded editor scene may own — the authority React's twin grants the same decode
+/// (`session.synchronizeScene(pack, 0, 16_777_216, 16_777_216, …)`, `🧱️elements/✏️TextEditor/🟦️.tsx`).
+const TEXT_EDITOR_SCENE_OWNED_BYTES: usize = 16_777_216;
+
+/// ↔️ One byte range of the canonical scene: the selection, an occurrence.
+#[derive(Clone, Copy, serde::Deserialize, serde::Serialize)]
+struct EditorSceneRange {
+    start: usize,
+    end: usize,
+}
+
+/// 🎨️ One semantic token of the canonical scene.
+#[derive(serde::Deserialize, serde::Serialize)]
+struct EditorSceneToken {
+    start: usize,
+    end: usize,
+    class: String,
+}
+
+/// 🩺️ One diagnostic of the canonical scene.
+#[derive(serde::Deserialize, serde::Serialize)]
+struct EditorSceneDiagnostic {
+    start: usize,
+    end: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    severity: Option<String>,
+    message: String,
+}
+
+/// 🪧️ One placeholder of the canonical scene.
+#[derive(serde::Deserialize, serde::Serialize)]
+struct EditorScenePlaceholder {
+    offset: usize,
+    label: String,
+}
+
+/// 🎯️ One selectable span of the canonical scene.
+#[derive(serde::Deserialize, serde::Serialize)]
+struct EditorSceneSpan {
+    start: usize,
+    end: usize,
+    kind: String,
+}
+
+/// ⚙️ The editor ENGINE's settings — the four members the canonical scene declares. The contract's `settingsJson` also
+/// carries the host's own members (`readOnly`, `commit`, the explicit-draft labels, read by
+/// [`text_editor_explicit_draft_settings`]); the canonical scene refuses a member it does not declare, so only these four
+/// cross, and an absent one takes the engine's default.
+#[derive(serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct EditorSceneSettings {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    font_px: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    line_height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    show_line_numbers: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    tab_size: Option<usize>,
+}
+
+/// 🔦️ The hover and selection occurrence lists of the canonical scene.
+#[derive(serde::Serialize)]
+struct EditorSceneOccurrences {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hover: Option<Vec<EditorSceneRange>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    selection: Option<Vec<EditorSceneRange>>,
+}
+
+/// 📷️ The canonical scene's camera: one scrolling axis.
+#[derive(serde::Serialize)]
+struct EditorSceneCamera {
+    y: f64,
+}
+
+/// 🚧️ The canonical scene's overlays.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct EditorSceneOverlays {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dead_line_y: Option<f64>,
+}
+
+/// 🐁️ The canonical scene's hover: cleared, or one range.
+#[derive(serde::Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum EditorSceneHover {
+    Clear,
+    Range { start: usize, end: usize },
+}
+
+/// 🧾️ The editor engine's canonical scene document (`framework.editor.canonical-scene/v1`) as this host writes it. A
+/// member left out leaves the engine's own value unchanged.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct EditorSceneDocument {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    buffer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    selection: Option<EditorSceneRange>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tokens: Option<Vec<EditorSceneToken>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    diagnostics: Option<Vec<EditorSceneDiagnostic>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    placeholders: Option<Vec<EditorScenePlaceholder>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    occurrences: Option<EditorSceneOccurrences>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    extra_carets: Option<Vec<usize>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    selectable_spans: Option<Vec<EditorSceneSpan>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    settings: Option<EditorSceneSettings>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    camera: Option<EditorSceneCamera>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    overlays: Option<EditorSceneOverlays>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hover: Option<EditorSceneHover>,
+}
+
+/// 🧷️ The contract's `selectionJson`: a caret alone is a collapsed range.
+#[derive(serde::Deserialize)]
+struct EditorSceneSelectionField {
+    #[serde(default)]
+    start: usize,
+    #[serde(default)]
+    end: Option<usize>,
+}
+
+/// 🗂️ The contract's `occurrencesJson`: each list is itself an encoded scene field.
+#[derive(serde::Deserialize)]
+struct EditorSceneOccurrenceFields {
+    #[serde(default)]
+    hover: Option<String>,
+    #[serde(default)]
+    selection: Option<String>,
+}
+
+/// 🎥️ The contract's `cameraJson`: a whole camera, of which the editor scrolls one axis.
+#[derive(serde::Deserialize)]
+struct EditorSceneCameraField {
+    #[serde(default)]
+    y: f64,
+}
+
+/// 🧱️ The contract's `overlaysJson`.
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct EditorSceneOverlaysField {
+    #[serde(default)]
+    dead_line_y: Option<f64>,
+}
+
+/// 🫥️ The contract's `hoverJson`: a range hovers, anything short of one clears.
+#[derive(serde::Deserialize)]
+struct EditorSceneHoverField {
+    #[serde(default)]
+    start: Option<usize>,
+    #[serde(default)]
+    end: Option<usize>,
+}
+
+/// 🔎️ One `*Json` member of the contract's scene in its typed form: the encoded field expanded
+/// (`store::pack_rt::scene_field_json_text`, React's `parseSceneJsonField`) and read; a JSON `null` is no value.
+fn text_editor_scene_member<T: serde::de::DeserializeOwned>(member: &str, raw: &str) -> Result<Option<T>, String> {
+    let json = store::pack_rt::scene_field_json_text(raw).map_err(|error| format!("{member}: {error}"))?;
+    serde_json::from_str::<Option<T>>(&json).map_err(|error| format!("{member}: {error}"))
+}
+
+/// 📥️ [`text_editor_scene_member`] for a member that may be absent; one it cannot read is named in `faults` and left out.
+fn text_editor_scene_field<T: serde::de::DeserializeOwned>(member: &str, raw: Option<&str>, faults: &mut Vec<String>) -> Option<T> {
+    match text_editor_scene_member(member, raw?) {
+        Ok(value) => value,
+        Err(fault) => {
+            faults.push(fault);
+            None
+        }
+    }
+}
+
+/// 🏗️ Builds the editor engine's canonical scene document from the UI contract's text-editor scene — the ONE place this
+/// host turns the contract's `*Json` string members into the typed members `EditorHost::synchronize_scene` takes, the
+/// wgpu twin of React's `textEditorScenePacket` (`🧱️elements/✏️TextEditor/🟦️.tsx`).
+///
+/// `carries_text` is whether the scene's buffer and selection are news to the host: a scene that only echoes the host's
+/// own edit leaves both out, so the local draft and its caret stay (React's `sceneWithoutEchoedTextV1`). A member this
+/// host cannot read is left out — unchanged in the engine, by the document's own rule — and named in the second answer;
+/// it is never guessed.
+fn text_editor_scene_document(editor: &ui_wgpu::wgpu::TextEditorScene, carries_text: bool) -> (String, Vec<String>) {
+    let mut faults = Vec::new();
+    let selection = if carries_text { text_editor_scene_field::<EditorSceneSelectionField>("selectionJson", editor.selection_json.as_deref(), &mut faults) } else { None };
+    let occurrences = text_editor_scene_field::<EditorSceneOccurrenceFields>("occurrencesJson", editor.occurrences_json.as_deref(), &mut faults);
+    let hover = editor.hover_json.as_deref().and_then(|raw| match text_editor_scene_member::<EditorSceneHoverField>("hoverJson", raw) {
+        Ok(Some(EditorSceneHoverField { start: Some(start), end: Some(end) })) => Some(EditorSceneHover::Range { start, end }),
+        Ok(_) => Some(EditorSceneHover::Clear),
+        Err(fault) => {
+            faults.push(fault);
+            None
+        }
+    });
+    let document = EditorSceneDocument {
+        buffer: carries_text.then(|| editor.buffer.clone()),
+        selection: selection.map(|field| EditorSceneRange { start: field.start, end: field.end.unwrap_or(field.start) }),
+        tokens: text_editor_scene_field("tokensJson", editor.tokens_json.as_deref(), &mut faults),
+        diagnostics: text_editor_scene_field("diagnosticsJson", editor.diagnostics_json.as_deref(), &mut faults),
+        placeholders: text_editor_scene_field("placeholdersJson", editor.placeholders_json.as_deref(), &mut faults),
+        occurrences: occurrences.map(|fields| EditorSceneOccurrences {
+            hover: text_editor_scene_field("occurrencesJson.hover", fields.hover.as_deref(), &mut faults),
+            selection: text_editor_scene_field("occurrencesJson.selection", fields.selection.as_deref(), &mut faults),
+        }),
+        extra_carets: text_editor_scene_field("extraCaretsJson", editor.extra_carets_json.as_deref(), &mut faults),
+        selectable_spans: text_editor_scene_field("selectableSpansJson", editor.selectable_spans_json.as_deref(), &mut faults),
+        settings: text_editor_scene_field("settingsJson", editor.settings_json.as_deref(), &mut faults),
+        camera: text_editor_scene_field::<EditorSceneCameraField>("cameraJson", editor.camera_json.as_deref(), &mut faults).map(|field| EditorSceneCamera { y: field.y }),
+        overlays: text_editor_scene_field::<EditorSceneOverlaysField>("overlaysJson", editor.overlays_json.as_deref(), &mut faults).map(|field| EditorSceneOverlays { dead_line_y: field.dead_line_y }),
+        hover,
+    };
+    (serde_json::to_string(&document).unwrap_or_else(|_| "{}".to_string()), faults)
+}
+
+/// 🎬️ Commits one contract scene into its editor host: the canonical document ([`text_editor_scene_document`]) decoded
+/// under a bounded authority ([`TEXT_EDITOR_SCENE_OWNED_BYTES`]) and handed to `EditorHost::synchronize_scene`. A member
+/// the builder left out is told on the console; a document the engine refuses is the caller's `Err` — never silence.
+fn synchronize_text_editor_host(host: &mut EditorHost, editor: &ui_wgpu::wgpu::TextEditorScene, carries_text: bool) -> Result<(), String> {
+    let (document, faults) = text_editor_scene_document(editor, carries_text);
+    for fault in &faults {
+        engine_canvas_fault_log(&format!("[text-editor] scene member left unchanged — {fault}"));
+    }
+    let mut admitted = |_| true;
+    let mut control = semio_framework_value::NativeDecodeControl::new(TEXT_EDITOR_SCENE_OWNED_BYTES, &mut admitted);
+    let scene = framework_editor::scene::from_json(&document, &mut control).map_err(|error| error.to_string())?;
+    host.synchronize_scene(scene);
+    Ok(())
+}
+//#endregion ✍️EditorSceneDocument
 
 const TEXT_EDITOR_PENDING_ECHO_CAPACITY: usize = 256;
 
@@ -1933,7 +2173,7 @@ fn editor_sync_terminal(cache: &EditorSyncCache) -> bool {
 }
 
 fn node_graph_sync_terminal(cache: &NodeGraphSyncCache) -> bool {
-    cache.fixture_json.is_none()
+    cache.snapshot_json.is_none()
         && cache.selection.is_none()
         && cache.preview_off_json.is_none()
         && cache.computing_json.is_none()
@@ -1949,7 +2189,7 @@ fn node_graph_sync_terminal(cache: &NodeGraphSyncCache) -> bool {
 }
 
 fn map_sync_terminal(cache: &MapSyncCache) -> bool {
-    cache.map_fixture_json.is_none()
+    cache.map_descriptor_json.is_none()
         && cache.camera_json.is_none()
         && cache.render_mode.is_none()
         && cache.vector_style.is_none()
@@ -1963,7 +2203,7 @@ fn map_sync_terminal(cache: &MapSyncCache) -> bool {
 }
 
 fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
-    cache.fixture_json.is_none()
+    cache.snapshot_json.is_none()
         && cache.glyph_catalogs_json.is_none()
         && cache.placement_compatibility_json.is_none()
         && cache.selection_json.is_none()
@@ -2340,7 +2580,7 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu
 pub enum EngineSurfaceKindDetail {
     NodeGraph,
     TiledMap { selection_method: String },
-    Board2d { fixture_json: String },
+    Board2d { snapshot_json: String },
     World3d { status_json: Option<String> },
 }
 
@@ -2420,7 +2660,7 @@ pub fn take_engine_surface_registrations() -> Vec<EngineSurfaceRegistration> {
 }
 
 /// 🕸️ Which engine a scene selects — the wgpu twin of React's
-/// `isFlowGraphScene(capabilitiesJson) || Boolean(fixtureJson)`.
+/// `isFlowGraphScene(capabilitiesJson) || Boolean(snapshotJson)`.
 ///
 /// @see `🧱️elements/🕸️NodeGraph/🟦️.tsx` — `NodeGraphHost`
 /// @see `🧱️elements/🪪️WasmSessionLoader/🟦️.tsx` — `isFlowGraphScene`
@@ -2439,8 +2679,8 @@ fn node_graph_scene_uses_flow_engine(graph: &ui_wgpu::wgpu::NodeGraphScene) -> b
 
 fn node_graph_engine_from_scene(graph: &ui_wgpu::wgpu::NodeGraphScene, dark: bool) -> NodeGraphEngine {
     if node_graph_scene_uses_flow_engine(graph) {
-        let fixture = graph.host_snapshot_json.as_deref().and_then(|json| FlowHost::parse_host_snapshot_json(json).ok()).unwrap_or_default();
-        let mut host = FlowHost::from_host_snapshot(fixture);
+        let snapshot = graph.host_snapshot_json.as_deref().and_then(|json| FlowHost::parse_host_snapshot_json(json).ok()).unwrap_or_default();
+        let mut host = FlowHost::from_host_snapshot(snapshot);
         host.set_canvas_theme_dark(dark);
         return NodeGraphEngine::Flow(host);
     }
@@ -2513,7 +2753,7 @@ fn node_graph_frames_content(dag: &flow::dag::DagHost) -> bool {
 /// the camera the viewer set re-fitted (`CONTENT_REFIT_MAX_COVERAGE`).
 fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyncCache, graph: &ui_wgpu::wgpu::NodeGraphScene) -> bool {
     let mut changed = false;
-    let mut fixture_changed = false;
+    let mut snapshot_changed = false;
     if cache.interaction_domain.as_deref() != graph.interaction_domain.as_ref() {
         cache.interaction_domain = graph.interaction_domain.clone().map(Arc::new);
         changed = true;
@@ -2525,12 +2765,12 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
             cache.operator_ids = Some(operator_ids);
             changed = true;
         }
-        if cache.fixture_json.as_deref() != graph.host_snapshot_json.as_deref() {
-            if let Some(fixture) = graph.host_snapshot_json.as_deref().and_then(|json| FlowHost::parse_host_snapshot_json(json).ok()) {
-                host.resync_host_snapshot_from_scene(fixture);
+        if cache.snapshot_json.as_deref() != graph.host_snapshot_json.as_deref() {
+            if let Some(snapshot) = graph.host_snapshot_json.as_deref().and_then(|json| FlowHost::parse_host_snapshot_json(json).ok()) {
+                host.resync_host_snapshot_from_scene(snapshot);
             }
-            cache.fixture_json = graph.host_snapshot_json.clone();
-            fixture_changed = true;
+            cache.snapshot_json = graph.host_snapshot_json.clone();
+            snapshot_changed = true;
             changed = true;
         }
     }
@@ -2541,7 +2781,7 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
                 let _ = host.sync_from_scene_json(json);
             }
             cache.scene_pack = Some(payload);
-            fixture_changed = true;
+            snapshot_changed = true;
             changed = true;
         }
     }
@@ -2603,7 +2843,7 @@ fn sync_node_graph_engine(engine: &mut NodeGraphEngine, cache: &mut NodeGraphSyn
             cache.viewport = graph.viewport.clone();
         }
         changed = true;
-    } else if fixture_changed {
+    } else if snapshot_changed {
         let refitted = match engine {
             NodeGraphEngine::Flow(host) => host.refit_camera_if_content_left_view(),
             NodeGraphEngine::Dag(host) => host.dag.refit_camera_if_content_left_view(),
@@ -2776,9 +3016,9 @@ fn sync_map_engine(host: &mut MapHost, cache: &mut MapSyncCache, map: &ui_wgpu::
         cache.theme_json = Some(theme_json);
         changed = true;
     }
-    if cache.map_fixture_json.as_deref() != Some(map.map_fixture_json.as_str()) {
-        let _ = host.sync_map_json(&map.map_fixture_json);
-        cache.map_fixture_json = Some(map.map_fixture_json.clone());
+    if cache.map_descriptor_json.as_deref() != Some(map.map_descriptor_json.as_str()) {
+        let _ = host.sync_map_json(&map.map_descriptor_json);
+        cache.map_descriptor_json = Some(map.map_descriptor_json.clone());
         changed = true;
     }
     if cache.render_mode.as_deref() != Some(map.render_mode.as_str()) {
@@ -2856,10 +3096,10 @@ pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, window_id: &str, bound
 }
 
 /// 🎲️ Feeds one `Board2dScene` into a live `BoardHost`, field by field, applying only what changed.
-/// `parse_fixture_json` resets selection AND camera to the fixture's own defaults, so a fixture pass
-/// re-applies both silently right after — the rule React's `applyFixtureToSession` states explicitly.
+/// `load_board_snapshot_json` resets selection AND camera to the snapshot's own defaults, so a snapshot pass
+/// re-applies both silently right after — the rule React's `applySnapshotToSession` states explicitly.
 ///
-/// @see `🧱️elements/🖥️Board2dHost/🟦️.tsx` — `applyFixtureToSession`
+/// @see `🧱️elements/🖥️Board2dHost/🟦️.tsx` — `applySnapshotToSession`
 ///
 /// 🎯️ Argument order on the normal port is `(nodes, edges, handles)`; the owning app's own
 /// selectable-kind filter decides which granularity a pick may reach at all.
@@ -2871,11 +3111,11 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
         cache.size_key = Some(size_key);
         changed = true;
     }
-    let fixture_applied = cache.fixture_json.as_deref() != Some(board.fixture_json.as_str());
-    if fixture_applied {
-        host.parse_fixture_json(&board.fixture_json);
-        cache.granularity_by_id = board2d_granularity_by_id(&board.fixture_json);
-        cache.fixture_json = Some(board.fixture_json.clone());
+    let snapshot_applied = cache.snapshot_json.as_deref() != Some(board.snapshot_json.as_str());
+    if snapshot_applied {
+        host.load_board_snapshot_json(&board.snapshot_json);
+        cache.granularity_by_id = board2d_granularity_by_id(&board.snapshot_json);
+        cache.snapshot_json = Some(board.snapshot_json.clone());
         changed = true;
     }
     if cache.domain_id != board.domain_id {
@@ -2893,7 +3133,7 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
         changed = true;
     }
     let selectable_kinds = (board.selectable_nodes, board.selectable_edges, board.selectable_handles);
-    if fixture_applied || cache.selection_method.as_deref() != Some(board.selection_method.as_str()) || cache.selectable_kinds != Some(selectable_kinds) {
+    if snapshot_applied || cache.selection_method.as_deref() != Some(board.selection_method.as_str()) || cache.selectable_kinds != Some(selectable_kinds) {
         host.set_selection_options(&board.selection_method, "replace", selectable_kinds.0, selectable_kinds.1, selectable_kinds.2);
         cache.selection_method = Some(board.selection_method.clone());
         cache.selectable_kinds = Some(selectable_kinds);
@@ -2904,18 +3144,18 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
         cache.grid_visible = Some(board.grid_visible);
         changed = true;
     }
-    if fixture_applied || cache.selection_json.as_deref() != Some(board.selection_json.as_str()) {
+    if snapshot_applied || cache.selection_json.as_deref() != Some(board.selection_json.as_str()) {
         let ids = serde_json::from_str::<Vec<String>>(&board.selection_json).unwrap_or_default();
         host.set_selection_ids_silent(&ids);
         cache.selection_json = Some(board.selection_json.clone());
         changed = true;
     }
-    if fixture_applied || cache.highlighted_ids_json.as_deref() != Some(board.highlighted_ids_json.as_str()) {
+    if snapshot_applied || cache.highlighted_ids_json.as_deref() != Some(board.highlighted_ids_json.as_str()) {
         host.set_highlighted_ids(serde_json::from_str::<Vec<String>>(&board.highlighted_ids_json).unwrap_or_default());
         cache.highlighted_ids_json = Some(board.highlighted_ids_json.clone());
         changed = true;
     }
-    if fixture_applied || cache.camera_json.as_deref() != Some(board.camera_json.as_str()) {
+    if snapshot_applied || cache.camera_json.as_deref() != Some(board.camera_json.as_str()) {
         if let Some((x, y, zoom)) = engine_camera_from_json(&board.camera_json) {
             host.set_camera_silent(x, y, zoom);
         }
@@ -3101,7 +3341,7 @@ pub fn sync_board2d_scene(scene: &UiComponentSceneNode, window_id: &str, bounds:
     let Some(created) = created else {
         return false;
     };
-    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::Board2d { fixture_json: board.fixture_json.clone() }, created, Some(snapshot.identity.token));
+    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::Board2d { snapshot_json: board.snapshot_json.clone() }, created, Some(snapshot.identity.token));
     true
 }
 
@@ -3308,15 +3548,9 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
             } else {
                 entry.editor_delivery.reconcile_buffer(&editor.buffer)
             };
-            let applied_scene_json = if external {
-                scene_json.clone()
-            } else {
-                let mut local = editor.clone();
-                local.buffer = host.text().to_owned();
-                local.selection_json = Some(json!({ "start": host.anchor(), "end": host.caret() }).to_string());
-                serde_json::to_string(&local).unwrap_or_else(|_| scene_json.clone())
-            };
-            let _ = host.sync_from_scene_json(&applied_scene_json);
+            if let Err(fault) = synchronize_text_editor_host(host, editor, external) {
+                engine_canvas_fault_log(&format!("[text-editor] surface {} refused its scene — {fault}", scene.host_id));
+            }
             entry.editor_sync_cache.scene_json = Some(scene_json);
             changed = true;
         }
@@ -4006,9 +4240,18 @@ pub fn node_graph_connection_cursor_active(surface_id: &str, sx: f64, sy: f64) -
 // is in flight — through the screen entry, and dispatches what the host did afterwards: the same
 // `interactionSelect`/`interactionHover`/`nodeGraphViewport` triple the bounded path publishes, plus
 // a `nodeGraphEdit` carrying the wire edits the gesture actually made. React reaches the same end by
-// re-publishing the WHOLE fixture after every gesture (`commitFixture`); a fixture JSON does not fit
+// re-publishing the WHOLE snapshot after every gesture (`commitFixture`); a snapshot JSON does not fit
 // a 16 KiB bounded action, and it does not have to — `FlowNodeGraphEditOp` already declares the
 // narrow `connect` operation, four ids wide.
+
+/// 🚨️ Console ERROR line for a refusal at the engine edge — a scene the editor engine would not take, a member this
+/// host could not read. `eprintln!` is a no-op inside a `wasm32-unknown-unknown` Worker.
+fn engine_canvas_fault_log(line: &str) {
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::error_1(&wasm_bindgen::JsValue::from_str(line));
+    #[cfg(not(target_arch = "wasm32"))]
+    eprintln!("{line}");
+}
 
 /// 🩺️ Console line for a screen-path gesture. `eprintln!` is a no-op inside a
 /// `wasm32-unknown-unknown` Worker, so a wire drawn there would otherwise leave no trace at all.
@@ -5047,9 +5290,19 @@ pub fn tiled_map_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, 
 //#endregion TiledMap
 
 //#region Board2d
+/// 📬️ One coalesced board batch: the board rows for `applyBoardEvents`, the latest camera for the view lane (`setCamera`)
+/// and whether the buffer flushes now.
 pub struct CoalescedBoardEvents {
     pub flush_now: bool,
     pub events_json: String,
+    pub camera: Option<[f64; 3]>,
+}
+
+impl CoalescedBoardEvents {
+    /// 📬️ Whether any board row remains for `applyBoardEvents`.
+    pub fn has_rows(&self) -> bool {
+        self.events_json != "[]"
+    }
 }
 
 pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut infinite_canvas::BoardHost) -> R) -> Option<R> {
@@ -5101,13 +5354,15 @@ pub fn puzzle_board_publish_camera_into(surface_id: &str, controller_id: &str, i
     Ok(true)
 }
 
-/// 🔀️ Ends the board's single-pointer lane exactly once when a second touch acquires the surface.
-pub fn puzzle_board_yield_to_pinch(surface_id: &str, sx: f64, sy: f64) -> bool {
-    with_board_host_mut(surface_id, |host| {
+/// 🔀️ Ends the board's single-pointer lane exactly once when a second touch acquires the surface — after the lane's
+/// pending commit reached its terminal ([`settle_board_pointer_authority_into`]).
+pub fn puzzle_board_yield_to_pinch_into(surface_id: &str, sx: f64, sy: f64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    settle_board_pointer_authority_into(surface_id, input)?;
+    Ok(with_board_host_mut(surface_id, |host| {
         host.cancel_area_select();
         host.pointer_up_screen(sx, sy, false, false, false);
     })
-    .is_some()
+    .is_some())
 }
 
 /// 🎯️ Most-specific pick target at a screen point, mirroring `pickMostSpecificCanvasTarget`.
@@ -5152,14 +5407,14 @@ fn board_event_gesture_id(event: &infinite_canvas::BoardOwnedEvent) -> Option<St
     serde_json::from_str::<Value>(event.payload_json()).ok()?.get("gestureId")?.as_str().map(str::to_string)
 }
 
-/// 🎯️ Classifies every entity id a board fixture carries into the granularity a pick or hover
+/// 🎯️ Classifies every entity id a board snapshot carries into the granularity a pick or hover
 /// reports it under — the Rust twin of React's `board2dGranularityById`
 /// (`🖥️Board2dHost/🟦️.tsx:190`), including its rule that an id the document does not carry reads as
-/// a `node` rather than being dropped. A refused fixture classifies nothing.
-fn board2d_granularity_by_id(fixture_json: &str) -> HashMap<String, String> {
+/// a `node` rather than being dropped. A refused snapshot classifies nothing.
+fn board2d_granularity_by_id(snapshot_json: &str) -> HashMap<String, String> {
     let mut by_id = HashMap::new();
-    let Ok(fixture) = serde_json::from_str::<Value>(fixture_json) else { return by_id };
-    for node in fixture.get("nodes").and_then(Value::as_array).into_iter().flatten() {
+    let Ok(snapshot) = serde_json::from_str::<Value>(snapshot_json) else { return by_id };
+    for node in snapshot.get("nodes").and_then(Value::as_array).into_iter().flatten() {
         if let Some(id) = node.get("id").and_then(Value::as_str) {
             by_id.insert(id.to_string(), "node".to_string());
         }
@@ -5169,7 +5424,7 @@ fn board2d_granularity_by_id(fixture_json: &str) -> HashMap<String, String> {
             }
         }
     }
-    for edge in fixture.get("edges").and_then(Value::as_array).into_iter().flatten() {
+    for edge in snapshot.get("edges").and_then(Value::as_array).into_iter().flatten() {
         if let Some(id) = edge.get("id").and_then(Value::as_str) {
             by_id.insert(id.to_string(), "edge".to_string());
         }
@@ -5190,8 +5445,8 @@ fn append_board_owned_event(output: &mut String, first: &mut bool, event: &infin
 }
 
 /// 📬️ The Rust twin of React's `coalesceBoard2dEvents` (`🖥️Board2dHost/🟦️.tsx`); the shared corpus
-/// `🖥️Board2dHost/🧫️fixtures/🧫️board-event-coalescing/🔣️.json` pins both. Drops every transient row, keeps
-/// only the latest `camera` (first), keeps every other row in order, and flushes now for a terminal row —
+/// `🖥️Board2dHost/🧫️fixtures/🧫️board-event-coalescing/🔣️.json` pins both. Drops every transient row, takes the
+/// latest `camera` out for the view lane, keeps every other row in order, and flushes now for a terminal row —
 /// except a `select` tagged with a `gestureId` whose record the batch does not yet carry: an open gesture's
 /// selection leaves together with its record, never mid-gesture.
 fn coalesce_owned_board_events(queue: &infinite_canvas::BoardEventQueue) -> Result<CoalescedBoardEvents, ui_wgpu::wgpu::BoundedActionFault> {
@@ -5200,9 +5455,7 @@ fn coalesce_owned_board_events(queue: &infinite_canvas::BoardEventQueue) -> Resu
     let mut output = String::from("[");
     let mut first = true;
     let mut flush_now = false;
-    if let Some(camera) = queue.iter().filter(|event| event.kind() == BoardEventKind::Camera).last() {
-        append_board_owned_event(&mut output, &mut first, camera)?;
-    }
+    let camera = queue.iter().filter(|event| event.kind() == BoardEventKind::Camera).filter_map(|event| engine_camera_from_json(event.payload_json())).last().map(|(x, y, zoom)| [x, y, zoom]);
     for event in queue.iter() {
         let kind = event.kind();
         if kind == BoardEventKind::Camera || board_event_transient(kind) {
@@ -5214,7 +5467,87 @@ fn coalesce_owned_board_events(queue: &infinite_canvas::BoardEventQueue) -> Resu
         append_board_owned_event(&mut output, &mut first, event)?;
     }
     output.push(']');
-    Ok(CoalescedBoardEvents { flush_now, events_json: output })
+    Ok(CoalescedBoardEvents { flush_now, events_json: output, camera })
+}
+
+/// 📬️ The rows of one sealed pointer page that reach `applyBoardEvents` — in order and byte for byte, every transient row
+/// and every `camera` row left out by the table the buffered lanes coalesce by ([`board_event_transient`]); `None` when
+/// nothing is left to dispatch.
+///
+/// ⚖️ A retained pointer plan seals its events as one page and the host published that page as it stood. Every idle move
+/// is such a plan and its page is one `hover` row, so every hover was its own `applyBoardEvents` — a guest round trip that
+/// changes nothing and one "Apply Board Events" row in History each; an area select's `preselect` frames, the brush
+/// preview and the link rings went the same way (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F24).
+/// React's host never dispatches those rows (`coalesceBoard2dEvents`); the shared corpus
+/// `🖥️Board2dHost/🧫️fixtures/🧫️board-event-coalescing/🔣️.json` names what each batch leaves.
+fn board_page_dispatch_rows(events_json: &str) -> Result<Option<String>, ui_wgpu::wgpu::BoundedActionFault> {
+    let page = events_json.trim();
+    if page.is_empty() {
+        return Ok(None);
+    }
+    let body = page.strip_prefix('[').and_then(|rest| rest.strip_suffix(']')).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let mut output = String::from("[");
+    let (mut depth, mut in_string, mut escaped, mut start) = (0usize, false, false, 0usize);
+    for (index, byte) in body.bytes().enumerate() {
+        if in_string {
+            if escaped {
+                escaped = false;
+            } else if byte == b'\\' {
+                escaped = true;
+            } else if byte == b'"' {
+                in_string = false;
+            }
+            continue;
+        }
+        match byte {
+            b'"' => in_string = true,
+            b'{' | b'[' => {
+                if depth == 0 {
+                    start = index;
+                }
+                depth += 1;
+            }
+            b'}' | b']' => {
+                depth = depth.checked_sub(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+                if depth == 0 {
+                    let row = &body[start..=index];
+                    let name = row.strip_prefix("{\"name\":\"").and_then(|rest| rest.split('"').next()).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+                    let kind = infinite_canvas::BoardEventKind::parse(name).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+                    if kind != infinite_canvas::BoardEventKind::Camera && !board_event_transient(kind) {
+                        if output.len() > 1 {
+                            output.push(',');
+                        }
+                        output.push_str(row);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    if depth != 0 || in_string {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+    }
+    output.push(']');
+    Ok((output.len() > 2).then_some(output))
+}
+
+/// 🧮️ Reserves exactly the actions one coalesced board batch publishes: `setCamera` for its camera, `applyBoardEvents`
+/// for its rows.
+fn reserve_board_coalesced<'input>(input: &'input mut ui_wgpu::wgpu::InputState<ActionDescriptor>, controller_id: &str, coalesced: &CoalescedBoardEvents) -> Result<ui_wgpu::wgpu::BoundedActionBatchReservation<'input>, ui_wgpu::wgpu::BoundedActionFault> {
+    let camera_bytes = if coalesced.camera.is_some() { ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "setCamera", "camera", "x", "y", "zoom"])? } else { 0 };
+    let rows_bytes = if coalesced.has_rows() { ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", &coalesced.events_json])? } else { 0 };
+    input.reserve_actions(usize::from(coalesced.camera.is_some()) + usize::from(coalesced.has_rows()), camera_bytes + rows_bytes)
+}
+
+/// 📤️ Writes one coalesced board batch: its camera on the view lane first, then its board rows.
+fn write_board_coalesced_flat(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, coalesced: &CoalescedBoardEvents) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    if let Some(camera) = coalesced.camera {
+        write_board_camera_flat(batch, controller_id, camera)?;
+    }
+    if coalesced.has_rows() {
+        write_board_events_flat(batch, controller_id, &coalesced.events_json)?;
+    }
+    Ok(())
 }
 
 fn board_retirement_step(entry: &mut EngineSurface) -> bool {
@@ -5251,7 +5584,7 @@ fn board_drain_into_buffer(surface_id: &str) -> bool {
     })
 }
 
-fn board_peek_buffer_coalesced(surface_id: &str) -> Option<String> {
+fn board_peek_buffer_coalesced(surface_id: &str) -> Option<CoalescedBoardEvents> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let entry = map.get(surface_id)?;
@@ -5263,7 +5596,7 @@ fn board_peek_buffer_coalesced(surface_id: &str) -> Option<String> {
             return None;
         }
         let coalesced = coalesce_owned_board_events(queue).ok()?;
-        (coalesced.events_json != "[]").then_some(coalesced.events_json)
+        (coalesced.has_rows() || coalesced.camera.is_some()).then_some(coalesced)
     })
 }
 
@@ -5340,13 +5673,44 @@ fn commit_board_pointer(surface_id: &str, plan: &infinite_canvas::BoardPointerPl
     })
 }
 
-fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infinite_canvas::BoardPointerPlan, pointer_inside: Option<bool>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let emits = plan.event_count() > 0;
-    let claim = if emits {
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", plan.events_json()])?;
-        Some(input.claim_action(bytes)?)
-    } else {
-        None
+/// 🚦️ Begins one retained pointer commit and answers whether it dispatches anything: a view camera (`setCamera`, at once)
+/// or the board rows its page leaves after the delivery table ([`board_page_dispatch_rows`]) — claimed here, published
+/// when the commit reached its terminal ([`publish_board_pointer_step`]).
+fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infinite_canvas::BoardPointerPlan, pointer_inside: Option<bool>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    if let Some(camera) = plan.view_camera() {
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "setCamera", "camera", "x", "y", "zoom"])?;
+        let mut reservation = input.reserve_actions(1, bytes)?;
+        write_board_camera_flat(&mut reservation, controller_id, camera)?;
+        let mut admitted = None;
+        let published = reservation.publish_with_checked(|| {
+            let result = ENGINE_SURFACES.with(|cell| {
+                let mut map = cell.borrow_mut();
+                let Some(entry) = map.get_mut(surface_id) else {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+                };
+                if entry.board_pointer_claim.is_some() || entry.board_pointer_controller_id.is_some() {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                }
+                let Some(host) = entry.board_host.as_mut() else {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+                };
+                host.begin_pointer_commit(plan).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
+                if let Some(pointer_inside) = pointer_inside {
+                    entry.board_pointer_inside = pointer_inside;
+                }
+                Ok(())
+            });
+            let ok = result.is_ok();
+            admitted = Some(result);
+            ok
+        });
+        return admitted.unwrap_or(Ok(())).and(published).map(|()| true);
+    }
+    let dispatch = board_page_dispatch_rows(plan.events_json())?;
+    let emits = dispatch.is_some();
+    let claim = match dispatch.as_deref() {
+        Some(rows) => Some(input.claim_action(ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", rows])?)?),
+        None => None,
     };
     let admitted = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -5372,7 +5736,59 @@ fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infin
             input.release_action_claim(claim)?;
         }
     }
-    admitted
+    admitted.map(|()| emits)
+}
+
+/// 📏️ Steps one settle may spend. A pending commit and the drag frame queued behind it each walk one step per delta, per
+/// world, screen and overlay point and a few phases, over at most [`infinite_canvas::BOARD_POINTER_ITEM_CAPACITY`] items;
+/// an authority still busy past this is stuck, and that is a fault.
+const BOARD_POINTER_SETTLE_STEPS: u64 = 8 * infinite_canvas::BOARD_POINTER_ITEM_CAPACITY as u64 + 64;
+
+/// 🚦️ Brings one board's retained pointer authority to its terminal BEFORE the next input touches the board.
+///
+/// ⚖️ A retained pointer commit owns the board from `begin_pointer_commit` to its terminal: the engine pins it to the
+/// `interaction_revision` it was planned at, and every direct handler — `pointer_down_screen`, `commit_wheel`,
+/// `commit_pointer`, a key chord — bumps that revision. The frame steps the authority only in its `BoardAuthority`
+/// phase, AFTER the whole input drain was dispatched, so a second input of the same drain met a commit that had not
+/// taken one step, bumped the revision under it, and the phase answered `BoardAuthorityStep::Fault`: "board retained
+/// authority faulted", the surface quarantined. Every idle move is such a commit (`Hover`), so the first ordinary click
+/// — move, press, release in one drain — killed the renderer (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live
+/// fault F14); a wheel after a move did the same, and the release of an area select or a pan that shared a drain with
+/// its last move was refused (`begin_pointer_commit` chains drag frames only) and lost.
+///
+/// This is the frame phase's own ladder, stepped in place: the commit runs to `Complete` and its events are published
+/// through the claim it reserved when it began — so they leave BEFORE the new input's — and a cancelled commit returns
+/// its claim. Nothing is dropped and nothing overtakes; an idle authority costs one borrow.
+pub fn settle_board_pointer_authority_into(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    if with_board_host(surface_id, infinite_canvas::BoardHost::pointer_authority_terminal_is_empty).unwrap_or(true) {
+        return Ok(());
+    }
+    let mut sequence = 0;
+    let mut context = semio_framework_job::StepContext::new(
+        semio_framework_job::OperationId(1),
+        semio_framework_job::Generation(1),
+        semio_framework_job::StepBudget::new(BOARD_POINTER_SETTLE_STEPS, u64::MAX),
+        semio_framework_job::root_cancel_token(),
+        semio_framework_job::default_now_us,
+        &mut sequence,
+    );
+    for _ in 0..BOARD_POINTER_SETTLE_STEPS {
+        match drive_board_authority_step(surface_id, &mut context) {
+            infinite_canvas::BoardAuthorityStep::Pending => {}
+            infinite_canvas::BoardAuthorityStep::Cancelled => release_board_pointer_claim(surface_id, input)?,
+            infinite_canvas::BoardAuthorityStep::Fault => {
+                release_board_pointer_claim(surface_id, input)?;
+                return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+            }
+            infinite_canvas::BoardAuthorityStep::Complete => {
+                publish_board_pointer_step(surface_id, input)?;
+            }
+        }
+        if with_board_host(surface_id, infinite_canvas::BoardHost::pointer_authority_terminal_is_empty).unwrap_or(true) {
+            return Ok(());
+        }
+    }
+    Err(ui_wgpu::wgpu::BoundedActionFault::Structure)
 }
 
 pub fn drive_board_authority_step(surface_id: &str, context: &mut semio_framework_job::StepContext<'_>) -> infinite_canvas::BoardAuthorityStep {
@@ -5419,12 +5835,15 @@ pub fn publish_board_pointer_step(surface_id: &str, input: &mut ui_wgpu::wgpu::I
         let Some(publication) = host.pointer_publication() else {
             return Ok(false);
         };
+        let Some(events_json) = board_page_dispatch_rows(publication.events_json())? else {
+            let retired = host.take_pointer_publication().is_some_and(|mut publication| publication.close_step() && publication.terminal_is_empty());
+            return if retired { Ok(false) } else { Err(ui_wgpu::wgpu::BoundedActionFault::Structure) };
+        };
         let claim = entry.board_pointer_claim.ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
         let controller_id = entry.board_pointer_controller_id.as_deref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-        let events_json = publication.events_json();
         let mut reservation = input.reserve_claimed_action(claim, controller_id, "applyBoardEvents")?;
         reservation.builder().begin_object(None)?;
-        reservation.builder().string(Some("eventsJson"), events_json)?;
+        reservation.builder().string(Some("eventsJson"), &events_json)?;
         reservation.builder().end_container()?;
         reservation.publish_with_checked(|| {
             let Some(mut publication) = host.take_pointer_publication() else {
@@ -5451,25 +5870,28 @@ pub fn release_board_pointer_claim(surface_id: &str, input: &mut ui_wgpu::wgpu::
     }
 }
 
+/// 📤️ Publishes what the board's engine queued, the way React's `flushBoardEvents` does: EVERY queued event into the buffer,
+/// coalesced by the shared corpus rules into at most ONE `applyBoardEvents` — the transient rows dropped, a gesture's
+/// `select` riding with its record — and the latest `camera` on the view lane (`setCamera`); the buffer is retired either
+/// way. The frame's `BoardAuthority` phase calls this for every board, and the direct lane after its handler.
+///
+/// ⚖️ The frame phase used to publish each queued event by itself and as it stood — one raw `applyBoardEvents` per step, a
+/// `hover` the press queued included (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F24). One flush, one
+/// table, for every lane.
 pub fn publish_board_event_step(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(host) = map.get_mut(surface_id).and_then(|entry| entry.board_host.as_mut()) else {
-            return Ok(false);
-        };
-        let Some(event) = host.peek_owned_event() else {
-            return Ok(false);
-        };
-        let mut events_json = String::with_capacity(event.owned_bytes().saturating_add(32));
-        events_json.push('[');
-        event.write_json(&mut events_json);
-        events_json.push(']');
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", &events_json])?;
-        let mut reservation = input.reserve_actions(1, bytes)?;
-        write_board_events_flat(&mut reservation, controller_id, &events_json)?;
-        reservation.publish_with_checked(|| host.pop_owned_event().is_some())?;
-        Ok(true)
-    })
+    for _ in 0..2 * infinite_canvas::BOARD_EVENT_ITEM_CAPACITY + 2 {
+        if !board_drain_into_buffer(surface_id) {
+            break;
+        }
+    }
+    if let Some(coalesced) = board_peek_buffer_coalesced(surface_id) {
+        let mut reservation = reserve_board_coalesced(input, controller_id, &coalesced)?;
+        write_board_coalesced_flat(&mut reservation, controller_id, &coalesced)?;
+        reservation.publish_with_checked(|| board_retire_pending_events(surface_id))?;
+        return Ok(true);
+    }
+    board_retire_pending_events(surface_id);
+    Ok(false)
 }
 
 /// 📤️ Unconditional drain + coalesce + dispatch of the board's own event buffer — the wgpu twin of
@@ -5477,12 +5899,11 @@ pub fn publish_board_event_step(surface_id: &str, controller_id: &str, input: &m
 /// must ride the camera action's reservation; this is the standalone form the keyboard chords use.
 fn puzzle_board_flush_events_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     board_drain_into_buffer(surface_id);
-    let Some(events_json) = board_peek_buffer_coalesced(surface_id) else {
+    let Some(coalesced) = board_peek_buffer_coalesced(surface_id) else {
         return Ok(false);
     };
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", &events_json])?;
-    let mut reservation = input.reserve_actions(1, bytes)?;
-    write_board_events_flat(&mut reservation, controller_id, &events_json)?;
+    let mut reservation = reserve_board_coalesced(input, controller_id, &coalesced)?;
+    write_board_coalesced_flat(&mut reservation, controller_id, &coalesced)?;
     reservation.publish_with_checked(|| {
         ENGINE_SURFACES.with(|cell| {
             let mut map = cell.borrow_mut();
@@ -5497,24 +5918,10 @@ fn puzzle_board_flush_events_into(surface_id: &str, controller_id: &str, input: 
 
 /// 🎛️ Drives one move or release of a lane the retained plan does not model (`BoardHost::pointer_lane_is_direct`: the rotate
 /// ring, a target-region drag, the area brush) the way React's Board2dHost drives every pointer: the engine's direct handler,
-/// then EVERY queued event into the buffer, coalesced by the shared corpus rules into at most ONE `applyBoardEvents` — the
-/// transient previews dropped, a gesture's `select` riding with its record — and the buffer retired either way.
+/// then the one coalesced flush ([`publish_board_event_step`]).
 fn puzzle_board_direct_pointer_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, drive: impl FnOnce(&mut infinite_canvas::BoardHost)) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     with_board_host_mut(surface_id, drive).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-    for _ in 0..2 * infinite_canvas::BOARD_EVENT_ITEM_CAPACITY + 2 {
-        if !board_drain_into_buffer(surface_id) {
-            break;
-        }
-    }
-    if let Some(events_json) = board_peek_buffer_coalesced(surface_id) {
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", &events_json])?;
-        let mut reservation = input.reserve_actions(1, bytes)?;
-        write_board_events_flat(&mut reservation, controller_id, &events_json)?;
-        reservation.publish_with_checked(|| board_retire_pending_events(surface_id))?;
-        return Ok(true);
-    }
-    board_retire_pending_events(surface_id);
-    Ok(false)
+    publish_board_event_step(surface_id, controller_id, input)
 }
 
 /// 🧹️ Hands the surface's pending board events to the bounded retirement; false while a previous batch still retires.
@@ -5535,7 +5942,7 @@ fn board_retire_pending_events(surface_id: &str) -> bool {
 /// `Board2dScene.domain_id` the app declared — the wgpu twin of React's `dispatchBoardHover`
 /// (`🖥️Board2dHost/🟦️.tsx:774-781`), including its two refusals: an app that declares NO domain
 /// publishes nothing at all, and an unchanged target costs no round trip. The granularity comes from
-/// the fixture's own classification, defaulting to `"node"` exactly as React's
+/// the snapshot's own classification, defaulting to `"node"` exactly as React's
 /// `granularityByIdRef.current.get(id) || "node"` does.
 ///
 /// 🎯️ `domain_id` used to be carried on `Board2dScene` and read NOWHERE in this target, so every
@@ -5594,6 +6001,7 @@ pub fn puzzle_board_key_into(surface_id: &str, controller_id: &str, key: &KeyAct
     let Some(active_utility) = armed else {
         return Ok(false);
     };
+    settle_board_pointer_authority_into(surface_id, input)?;
     let acted = match key {
         KeyAction::Escape => with_board_host_mut(surface_id, |host| host.cancel_area_select()).unwrap_or(false),
         KeyAction::Tab => {
@@ -5615,10 +6023,14 @@ pub fn puzzle_board_key_into(surface_id: &str, controller_id: &str, key: &KeyAct
     Ok(true)
 }
 
-pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
+/// 🖱️ Presses the board — the engine's direct handler, so the authority is settled first
+/// ([`settle_board_pointer_authority_into`]): a press never lands under the pending commit of the move before it.
+pub fn puzzle_board_pointer_down_into(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    settle_board_pointer_authority_into(surface_id, input)?;
     let (sx, sy) = board_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, button.max(0) as u8, shift, ctrl_or_meta));
     board_set_pointer_inside(surface_id, true);
+    Ok(())
 }
 
 pub fn puzzle_board_pointer_move_into(
@@ -5632,6 +6044,7 @@ pub fn puzzle_board_pointer_move_into(
     alt: bool,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    settle_board_pointer_authority_into(surface_id, input)?;
     let (sx, sy) = board_local_pointer(inner, x, y);
     if with_board_host(surface_id, infinite_canvas::BoardHost::pointer_lane_is_direct).unwrap_or(false) {
         board_set_pointer_inside(surface_id, true);
@@ -5642,23 +6055,12 @@ pub fn puzzle_board_pointer_move_into(
         return Ok(false);
     };
     if plan.requires_retained_commit() {
-        let emits = plan.event_count() > 0;
-        begin_board_pointer_commit(surface_id, controller_id, plan, Some(true), input)?;
-        return Ok(emits);
+        return begin_board_pointer_commit(surface_id, controller_id, plan, Some(true), input);
     }
-    if plan.event_count() == 0 {
-        if !commit_board_pointer(surface_id, &plan, Some(true)) {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
-        }
-        return Ok(false);
+    if !commit_board_pointer(surface_id, &plan, Some(true)) {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
     }
-    let events_json = plan.events_json();
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", events_json])?;
-    let mut reservation = input.reserve_actions(1, bytes)?;
-    write_board_events_flat(&mut reservation, controller_id, events_json)?;
-    reservation.publish_with_checked(|| commit_board_pointer(surface_id, &plan, Some(true)))?;
-    let hovered = puzzle_board_hover_into(surface_id, controller_id, input)?;
-    Ok(true | hovered)
+    Ok(false)
 }
 
 pub fn puzzle_board_pointer_up_into(
@@ -5672,6 +6074,7 @@ pub fn puzzle_board_pointer_up_into(
     alt: bool,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    settle_board_pointer_authority_into(surface_id, input)?;
     let (sx, sy) = board_local_pointer(inner, x, y);
     if with_board_host(surface_id, infinite_canvas::BoardHost::pointer_lane_is_direct).unwrap_or(false) {
         return puzzle_board_direct_pointer_into(surface_id, controller_id, input, |host| host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt));
@@ -5681,22 +6084,12 @@ pub fn puzzle_board_pointer_up_into(
         return Ok(false);
     };
     if plan.requires_retained_commit() {
-        let emits = plan.event_count() > 0;
-        begin_board_pointer_commit(surface_id, controller_id, plan, None, input)?;
-        return Ok(emits);
+        return begin_board_pointer_commit(surface_id, controller_id, plan, None, input);
     }
-    if plan.event_count() == 0 {
-        if !commit_board_pointer(surface_id, &plan, None) {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
-        }
-        return Ok(false);
+    if !commit_board_pointer(surface_id, &plan, None) {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
     }
-    let events_json = plan.events_json();
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", events_json])?;
-    let mut reservation = input.reserve_actions(1, bytes)?;
-    write_board_events_flat(&mut reservation, controller_id, events_json)?;
-    reservation.publish_with_checked(|| commit_board_pointer(surface_id, &plan, None))?;
-    Ok(true)
+    Ok(false)
 }
 
 /// 🐁️ The leave clears the domain's hover before the board events go out — React's
@@ -5707,6 +6100,7 @@ pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, al
     if !was_inside {
         return Ok(false);
     }
+    settle_board_pointer_authority_into(surface_id, input)?;
     let cleared = puzzle_board_hover_into(surface_id, controller_id, input)?;
     let _ = cleared;
     let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Leave, x: 0.0, y: 0.0, shift: false, ctrl_or_meta: false, alt })?;
@@ -5714,22 +6108,12 @@ pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, al
         return Ok(false);
     };
     if plan.requires_retained_commit() {
-        let emits = plan.event_count() > 0;
-        begin_board_pointer_commit(surface_id, controller_id, plan, Some(false), input)?;
-        return Ok(emits);
+        return begin_board_pointer_commit(surface_id, controller_id, plan, Some(false), input);
     }
-    if plan.event_count() == 0 {
-        if !commit_board_pointer(surface_id, &plan, Some(false)) {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
-        }
-        return Ok(false);
+    if !commit_board_pointer(surface_id, &plan, Some(false)) {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
     }
-    let events_json = plan.events_json();
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", events_json])?;
-    let mut reservation = input.reserve_actions(1, bytes)?;
-    write_board_events_flat(&mut reservation, controller_id, events_json)?;
-    reservation.publish_with_checked(|| commit_board_pointer(surface_id, &plan, Some(false)))?;
-    Ok(true)
+    Ok(false)
 }
 
 /// 🖐️ True from the press that opens a board pointer lane (a pending area select included) until its release, so pointer-up
@@ -5739,13 +6123,15 @@ pub fn board_drag_active(surface_id: &str) -> bool {
 }
 
 pub fn puzzle_board_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    settle_board_pointer_authority_into(surface_id, input)?;
     let mut reservation = input.reserve_actions(2, 2 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let (sx, sy) = board_local_pointer(inner, x, y);
     let plan = with_board_host(surface_id, |host| host.plan_wheel(sx, sy, delta as f64)).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
     let camera = plan.camera();
     board_drain_into_buffer(surface_id);
-    let events_json = board_peek_buffer_coalesced(surface_id);
-    let retire_events = events_json.is_some();
+    let buffered = board_peek_buffer_coalesced(surface_id);
+    let retire_events = buffered.is_some();
+    let events_json = buffered.filter(CoalescedBoardEvents::has_rows).map(|coalesced| coalesced.events_json);
     write_board_camera_flat(&mut reservation, controller_id, camera)?;
     if let Some(events_json) = events_json.as_deref() {
         write_board_events_flat(&mut reservation, controller_id, events_json)?;
@@ -6726,7 +7112,10 @@ pub(crate) fn settle_text_editor_action_receipt(receipt: ui_wgpu::wgpu::ActionQu
         }
         if resync {
             if let (Some(host), Some(scene_json)) = (surface.editor.as_mut(), surface.editor_sync_cache.scene_json.as_deref()) {
-                let _ = host.sync_from_scene_json(scene_json);
+                let restored = serde_json::from_str::<ui_wgpu::wgpu::TextEditorScene>(scene_json).map_err(|error| error.to_string()).and_then(|editor| synchronize_text_editor_host(host, &editor, true));
+                if let Err(fault) = restored {
+                    engine_canvas_fault_log(&format!("[text-editor] the scene behind a refused edit could not be restored — {fault}"));
+                }
             }
         }
     });
@@ -6931,7 +7320,6 @@ pub(crate) fn text_editor_explicit_draft_status(scene: &UiComponentSceneNode) ->
 /// 🗑️ Restores the persisted scene buffer and clears the native local draft.
 pub(crate) fn text_editor_discard_explicit_draft(scene: &UiComponentSceneNode) -> bool {
     let Some(editor) = scene.text_editor.as_ref() else { return false };
-    let Ok(scene_json) = serde_json::to_string(editor) else { return false };
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let Some(entry) = registry.get_mut(&scene.host_id) else { return false };
@@ -6940,7 +7328,8 @@ pub(crate) fn text_editor_discard_explicit_draft(scene: &UiComponentSceneNode) -
             return false;
         }
         entry.editor_delivery.explicit_publication = None;
-        if host.sync_from_scene_json(&scene_json).is_err() {
+        if let Err(fault) = synchronize_text_editor_host(host, editor, true) {
+            engine_canvas_fault_log(&format!("[text-editor] surface {} refused its persisted scene — {fault}", scene.host_id));
             return false;
         }
         entry.editor_delivery.explicit_dirty = false;

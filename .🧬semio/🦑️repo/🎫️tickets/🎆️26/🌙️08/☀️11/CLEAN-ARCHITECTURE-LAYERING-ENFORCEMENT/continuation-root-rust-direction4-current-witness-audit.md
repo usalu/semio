@@ -1,0 +1,5 @@
+# Root Rust Direction 4 and Current General Witnesses
+
+The original live scanner exited 1 after 24,768 files and 62,887 references: zero strict compile or runtime direction violations, with ten missing-input census problems. This is a failed original execution, not whole acceptance. Six problems belong to Specific Semio fixture directories.
+
+The four General source bodies are retained separately with hashes and current literal include target inventories. Both intrinsic-byte sources now reference the existing base64 fixture rather than the missing schema reported by the historical scanner. The current borrowed-object body has no schema include matching that historical diagnostic. The SPR pin include now uses four parent segments and resolves to the existing module-owned pin, versus five in the earlier diagnostic. These are unknown concurrent source advances; historical source bodies were not captured by this live scanner, so neither exact historical inversion nor authorship is claimed. No schema was invented or source edited. A fresh owning scan is required for current acceptance.

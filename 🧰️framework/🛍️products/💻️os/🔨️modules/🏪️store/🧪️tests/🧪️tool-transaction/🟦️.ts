@@ -5,7 +5,7 @@
  * where an abort always restores the state and persisted value of before the transaction and a commit adds exactly one edit. */
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+
 import fc from "fast-check";
 import { applyPatch, type Operation as Patch } from "fast-json-patch";
 import { initialTransition, setup, transition, assign, type AnyMachineSnapshot } from "xstate";
@@ -167,13 +167,9 @@ function lifecycleRun(steps: readonly Step[]): { refused: Refusal | null; open: 
 
 //#region 🧪️Corpus
 const corpus = read("../../🧫️fixtures/🧫️tool-transaction/🔣️.json");
-const schema = read("../../🧬️schema/🔣️tool-transaction/🔣️.json");
 const cases = corpus.cases as Case[];
 
-test("🧬️ the tool-transaction corpus satisfies its JSON Schema", () => {
-  const validate = new Ajv({ strict: true, allErrors: true, allowUnionTypes: true }).compile(schema);
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-});
+
 
 test("🧺️ the TS twin reproduces every step of every case", () => {
   for (const testCase of cases) {

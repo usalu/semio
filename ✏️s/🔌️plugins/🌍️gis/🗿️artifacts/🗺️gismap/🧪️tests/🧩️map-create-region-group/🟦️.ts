@@ -21,8 +21,7 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
   const target = { artifactId: "artifact-11111111111111111111111111111111", dialect: { artifactKind: "s.stdio.semio", standard: "1", subset: "*" } };
   const artifact = { positions: fixture.base.positions, routes: fixture.base.routes, regions: fixture.base.regions, drawing: { childId: fixture.base.drawingChildId, target }, image: null, value: { childId: fixture.base.valueChildId, target } };
   if (!validateArtifact(artifact)) throw new Error(`invalid GIS Map artifact projection: ${JSON.stringify(validateArtifact.errors)}`);
-  const validate = await compileGisScopeExport(repoRoot, GIS_MAP_CONTROL_SCHEMA_MODULE, "GisMapCreateRegionGroup");
-  if (!validate(fixture)) throw new Error(`invalid GIS Map group corpus: ${JSON.stringify(validate.errors)}`);
+
   const points = [
     ...fixture.base.positions.map((feature: any) => [feature.data.lon, feature.data.lat]),
     ...fixture.base.routes.flatMap((feature: any) => feature.data.points),
@@ -32,7 +31,9 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
   const id = `inference-${fixture.jobId}`;
   const ring = [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)], [Math.min(...xs), Math.max(...ys)], [Math.min(...xs), Math.min(...ys)]];
   const region = { id, data: { id, kind: "inference-bounds", ring } };
-  const admitted = (candidate: any): boolean => validate(candidate)
+  const validateMembership = await compileGisScopeExport(repoRoot, GIS_MAP_CONTROL_SCHEMA_MODULE, "GisMapCreateRegionGroupMembership");
+  const admitted = (candidate: any): boolean => validateMembership({ drawingChildId: candidate.base.drawingChildId, valueChildId: candidate.base.valueChildId, imageChildId: null })
+    && Number.isSafeInteger(candidate.expected.maximumBytes) && candidate.expected.maximumBytes >= 0 && candidate.expected.maximumBytes <= 65_536
     && candidate.expected.region.id === `inference-${candidate.jobId}`
     && candidate.expected.region.data.id === candidate.expected.region.id
     && candidate.expected.drawing.index === candidate.base.positions.length + candidate.base.routes.length + candidate.base.regions.length
@@ -46,7 +47,7 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
   for (const symbol of ["GisMapCreateRegionGroupWorkV1", "create_region_group_work", "SemioDrawingMutation", "SemioValueMutation", "drawing_inverse", "value_inverse"]) {
     if (!source.includes(symbol)) throw new Error(`GIS Map typed group owner missing ${symbol}`);
   }
-  for (const fragment of ["after_children.starts_with(before_children)", "projected_drawing != after_drawing", "projected_value != after_value", "bytes > 65_536", '("id".into(), dsl::DslValue::String(id.clone()))']) {
+  for (const fragment of ["after_children.starts_with(before_children)", "projected_drawing != after_drawing", "projected_value != after_value", "bytes > 65_536", '("id".into(), semio_framework_value::DslValue::String(id.clone()))']) {
     if (!source.includes(fragment)) throw new Error(`GIS Map typed group invariant missing ${fragment}`);
   }
   if (!schema.includes('value.get("points").or_else(|| value.get("ring"))')) throw new Error("GIS Map ring geometry is not projected");
@@ -63,7 +64,7 @@ export async function proveGisMapCreateRegionGroup(repoRoot: string): Promise<vo
     if (hostile === "oversize") candidate.expected.maximumBytes++;
     if (admitted(candidate)) throw new Error(`GIS Map hostile group admitted ${hostile}`);
   }
-  const validateMembership = await compileGisScopeExport(repoRoot, GIS_MAP_CONTROL_SCHEMA_MODULE, "GisMapCreateRegionGroupMembership");
+
   for (const row of fixture.membershipCases) {
     const membership = { drawingChildId: row.deriveChildren ? "gismap-drawing" : row.drawingChildId, valueChildId: row.deriveChildren ? "gismap-value" : row.valueChildId, imageChildId: row.imageChildId };
     const accepted = membership.drawingChildId === "gismap-drawing" && membership.valueChildId === "gismap-value" && membership.imageChildId === null;

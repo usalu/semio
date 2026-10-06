@@ -7,7 +7,7 @@ use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::remodeling::engine::{describe_video_probe, images as remodeling_image, video as remodeling_video, video_codec_to_artifact};
 use crate::editor::remodeling::payload_from_data_url;
 use crate::mutations::{create_asset, create_stream};
-use crate::op::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use crate::schema::mint_remodeling_id;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, VideoSource};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};

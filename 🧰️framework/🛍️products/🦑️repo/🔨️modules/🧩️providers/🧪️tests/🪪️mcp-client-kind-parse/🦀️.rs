@@ -31,13 +31,13 @@ mod subject {
 
     /// 🪪️ Every accepted spelling parses to one kind.
     pub fn every_accepted_spelling_parses_to_one_kind(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         Ok(Outcome::projection(Json::Array(strings(&vectors, "inputs").iter().map(|input| Json::String(format!("{input:?}={}", parsed(input)))).collect())))
     }
 
     /// 🏷️ Each kind names one server and one hook client.
     pub fn each_kind_names_one_server_and_one_hook_client(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let mut projected = Vec::new();
         for slug in strings(&vectors, "kinds") {
             let kind = parse_mcp_client_kind(&slug).map_err(|error| error.message)?;
@@ -48,7 +48,7 @@ mod subject {
 
     /// 🔁️ A resolved client slug maps back to a kind.
     pub fn a_resolved_client_maps_back_to_a_kind(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         Ok(Outcome::projection(Json::Array(
             strings(&vectors, "resolvedClients").iter().map(|client| Json::String(format!("{client:?}={}", mcp_kind_from_resolved_client(client).as_str()))).collect(),
         )))
@@ -56,7 +56,7 @@ mod subject {
 
     /// ⚠️ An unknown spelling is refused.
     pub fn an_unknown_spelling_is_refused(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let refused: Vec<Json> = strings(&vectors, "inputs").iter().filter(|input| parsed(input) == "refused").map(|input| Json::String(input.clone())).collect();
         Ok(Outcome::projection(Json::Object(vec![
             ("refused".to_string(), Json::Array(refused)),

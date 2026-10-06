@@ -68,7 +68,7 @@
     {
       "factoryId": "stdio.native.las.v1",
       "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📜️artifact-definition.json",
-      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
     }
   ]
 }

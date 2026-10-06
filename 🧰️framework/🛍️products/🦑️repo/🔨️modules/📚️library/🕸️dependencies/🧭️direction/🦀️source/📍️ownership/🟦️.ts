@@ -4,9 +4,9 @@ import { projectCargoProviderManifest, rustModuleScopeProof, type RustModuleGrap
 import { rustTokens, rustTokenPairs, rustIdentifierSymbol, type RustToken } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import {rustSourceTargets,rustSourceTargetProblem,type RustSourceInputInventory} from "../🟦️.ts";
 
-export const COMPUTE_OWNERSHIP_CONTRACT_PATH="🧰️framework/🔨️modules/◻️2d/🧮️compute/🧫️fixtures/📍️binding-origin/🔣️.json";
+export const COMPUTE_OWNERSHIP_CONTRACT_PATH="🧰️framework/🔨️modules/◻️2d/🧮️compute/📏️ownership/🔣️.json";
 const COMPUTE_FAMILY_SYMBOLS=["EngineKey","EngineHandle","EngineFault","EngineHandles","EngineCache","EngineRep"] as const;
-export const COMPUTE_OWNERSHIP_DECLARATION_PATH=COMPUTE_OWNERSHIP_CONTRACT_PATH.split("/🧫️fixtures/")[0]+"/🦀️.rs";
+export const COMPUTE_OWNERSHIP_DECLARATION_PATH=COMPUTE_OWNERSHIP_CONTRACT_PATH.split("/📏️ownership/")[0]+"/🦀️.rs";
 
 function localEnumFacts(source:string,tokens:readonly RustToken[],pairs:ReadonlyMap<number,number>,facts:RustBindingFacts):readonly Readonly<{declaration:RustBindingFacts["declarations"][number];variants:ReadonlyMap<string,number>}>[] {
  const result:Readonly<{declaration:RustBindingFacts["declarations"][number];variants:ReadonlyMap<string,number>}>[]=[];

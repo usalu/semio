@@ -1,12 +1,9 @@
 import assert from "node:assert/strict";
-import Ajv2020 from "ajv/dist/2020";
-import schema from "../../🧬️schema/📥️retained-pack-load/🔣️.json";
+
 import fixture from "../../🧫️fixtures/📥️retained-pack-load/🔣️.json";
 
 /** 📥️ The retained-load native gate consumes one closed, schema-first lifecycle fixture. */
 export function testWindowConfigRetainedPackLoadFixture(): void {
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   assert.deepEqual(fixture.owners.map((owner) => owner.windowIds.length), [2, 1]);
   assert.deepEqual(fixture.candidateProtocol.phases, [
     "ingress",

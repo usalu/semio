@@ -1,6 +1,6 @@
 //! 📜️ Trinity Rewriting app command — `delete-rule-clause`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{edit_lhs, edit_rhs, remove_parameter_binding, remove_rule_layout_point};
 use crate::standards::v1::subsets::any::schema::{self, Rhs};
 use crate::RewritingSnapshot;

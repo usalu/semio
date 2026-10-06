@@ -1,6 +1,6 @@
 /** 🧪️ terra-jco-spike bun/node harness — drives the jco-transpiled `jcoprobe` component through
  * S1-S4 and prints PASS/FAIL verdict lines the report can quote verbatim. */
-import { probe } from "../../🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js";
+import { probe } from "../../🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js";
 
 type JcoProbeVerdict = Readonly<{ id: string; ok: boolean; detail: string }>;
 
@@ -39,7 +39,7 @@ async function runS2() {
 // #region S3 — spawn-detached: export resolves before the spawned background import completes
 async function runS3() {
   const events = [];
-  const origSlowEcho = (await import("../../🧫️fixtures/🧩️jcoprobe/🌐️browser-host/🟨️.js")).slowEcho;
+  const origSlowEcho = (await import("../../🧪️testing/🧩️jcoprobe/🌐️browser-host/🟨️.js")).slowEcho;
   const start = performance.now();
   const result = await probe.spawnDetached(80);
   const exportDoneAt = performance.now() - start;

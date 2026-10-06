@@ -3,7 +3,7 @@
  * unions on `kind`/`mutation` discriminants). Source of truth stays the Rust file. */
 
 import type {SemioTransform} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type {SemioTransform} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 
 export type SpatialKind = "site" | "building" | "storey" | "space";

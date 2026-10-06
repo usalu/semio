@@ -1,0 +1,42 @@
+{
+  "schemaBytes": 15263,
+  "tableWidths": {
+    "en1993_bridge_fatigue": 16,
+    "en1993_cold_formed_action": 8,
+    "en1993_cold_formed_member": 22,
+    "en1993_crane_action": 8,
+    "en1993_crane_runway": 20,
+    "en1993_document": 2,
+    "en1993_fatigue_band": 10,
+    "en1993_fatigue_detail": 7,
+    "en1993_fire_exposure": 27,
+    "en1993_joint": 52,
+    "en1993_joint_action": 11,
+    "en1993_load_case": 7,
+    "en1993_material": 19,
+    "en1993_member": 32,
+    "en1993_member_action": 24,
+    "en1993_pile": 15,
+    "en1993_pile_action": 8,
+    "en1993_plated_action": 8,
+    "en1993_plated_panel": 19,
+    "en1993_section": 57,
+    "en1993_silo_shell": 22,
+    "en1993_tension_action": 8,
+    "en1993_tension_component": 10,
+    "en1993_tower_action": 8,
+    "en1993_tower_leg": 11
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 25,
+      "valueBytes": 3236
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 1,
+      "valueBytes": 10
+    }
+  ]
+}

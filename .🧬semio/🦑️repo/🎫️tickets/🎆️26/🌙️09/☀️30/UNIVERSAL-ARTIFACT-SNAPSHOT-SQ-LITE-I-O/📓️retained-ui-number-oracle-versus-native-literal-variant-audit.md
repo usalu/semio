@@ -1,0 +1,9 @@
+# Retained UI Number Oracle Versus Native Literal Variant Audit
+
+Read-only exact current failure/test audit. The unrelated failing law is Plugin `🧪️tests/🔬️app-merge-ui-values/🦀️.rs:25`, list assertion30. It passes UiValue::Number(1.0), but its current repaired expected value is DslValue::from(&serde_json::json!([1.0,false])). This still preserves Serde's Float1.0 category: Value From<&serde_json::Value>314 uses is_u64/is_i64 and otherwise constructs Number::Float. It does not apply JSON UI normalization.
+
+Production retained UI bridge Plugin7153 calls DslValue::json_number. Value184 and documented json_integer129 expressly normalize safe integral finite f64 to UInt unless negative, fractional or past safe range stays Float, and nonfinite becomes Null. Thus UInt1 is the correct native value for this UI argument. It is separate from DslValue::float's explicit whole-float/IEEE preservation contract.
+
+Existing language-neutral authority already exists: Value `🧫️fixtures/🔣️json-projection/🔣️.json` numbers, Rust unit105 a_json_number_reads_back_as_its_json_text, and Source `🧪️tests/🔣️json-projection/🟦️.ts:34` independently pins each JSON text to JSON.stringify(Number(literal)). This rules out inventing a new numeric interpretation from Serde json!(1.0). JSON Schema numeric semantics do not distinguish native UInt and Float categories.
+
+Concrete minimal fixture correction is an expected independent Serde parse of canonical `[1,false]`, with that spelling pinned by Bun/Node `JSON.stringify([1.0,false])`, or reuse the existing shared projection corpus's corresponding number1 expected text. Keep exact list length/order and false unchanged. Do not invoke json_number on both expected and actual, and do not relax native Snapshot variant/to_bits laws. An independently captured JavaScript JSON output makes the UI oracle truthful while preserving those stronger literal boundaries.

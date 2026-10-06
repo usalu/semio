@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/compiler/syntax/rust/generated-token-output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "macro",
+    "start",
+    "end",
+    "line",
+    "origin",
+    "inputs"
+  ],
+  "properties": {
+    "macro": {
+      "type": "string",
+      "minLength": 1
+    },
+    "start": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Offset in UTF-16 code units"
+    },
+    "end": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Offset in UTF-16 code units"
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "origin": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provider",
+            "symbol",
+            "kind",
+            "importStart",
+            "importEnd"
+          ],
+          "properties": {
+            "provider": {
+              "const": "quote"
+            },
+            "symbol": {
+              "const": "quote"
+            },
+            "kind": {
+              "const": "direct-import"
+            },
+            "importStart": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Offset in UTF-16 code units"
+            },
+            "importEnd": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Offset in UTF-16 code units"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provider",
+            "symbol",
+            "kind"
+          ],
+          "properties": {
+            "provider": {
+              "const": "quote"
+            },
+            "symbol": {
+              "const": "quote"
+            },
+            "kind": {
+              "const": "qualified"
+            }
+          }
+        }
+      ]
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "expression",
+          "start",
+          "end",
+          "line"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "include",
+              "include_str",
+              "include_bytes"
+            ]
+          },
+          "expression": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Offset in UTF-16 code units"
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Offset in UTF-16 code units"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

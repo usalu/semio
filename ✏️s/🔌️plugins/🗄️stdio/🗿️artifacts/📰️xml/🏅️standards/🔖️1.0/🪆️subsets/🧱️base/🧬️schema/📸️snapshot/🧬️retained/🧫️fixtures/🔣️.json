@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemas.assets.semio-tech.com/stdio/xml/retained-document.fixture.schema.json",
   "xml": "<?xml version='1.0' encoding='UTF-8'?><!--lead--><!DOCTYPE root [<!ENTITY writer \"semio\">]><?before data?><root empty=\"\" unicode=\"🧬\"><child>alpha</child><![CDATA[beta]]><!--inside--><?inner ok?></root><!--tail-->",
   "expected": {
     "nodes": 9,

@@ -18,6 +18,7 @@ const PLAYBOOK_PLAY_SURFACE_BUILDER: &str = "playbook.play.builder";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: PLAYBOOK_PLAY_WINDOW_BUILDER.into(),
         label: LocalizedLabel::native("Builder", "Builder"),
         body_key: PLAYBOOK_PLAY_BODY_BUILDER.into(),

@@ -1,9 +1,9 @@
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { materializeHost } from "../../🖥️host/🏗️materialization/🟦️.ts";
-import { type Implementation, type SubjectRawInputs, type TestRole } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type Implementation, type SubjectRawInputs, type TestRole } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type DiscoveredCase, type TestResult, markRunComplete, planExecution, readResults } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { type TestLevel } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
+import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { rmSync, writeFileSync } from "node:fs";
 

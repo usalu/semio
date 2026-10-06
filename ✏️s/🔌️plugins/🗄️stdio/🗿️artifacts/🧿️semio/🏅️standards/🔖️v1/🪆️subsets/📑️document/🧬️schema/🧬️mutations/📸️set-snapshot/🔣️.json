@@ -19,5 +19,6 @@
   "requiredLanguageSurfaces": [
     "rust",
     "json-schema"
-  ]
+  ],
+  "editable": false
 }

@@ -256,6 +256,7 @@ fn select(id: &str, value: &str, items: Vec<(&str, &str)>) -> UiNode {
 
 fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
     UiTreeItemNode {
+        tone: None,
         window: None,
         granularity: None,
         id: id.into(),
@@ -295,6 +296,31 @@ fn open_select(tree: &mut UiTree, ui: &UiNode) -> NodeId {
     tree.node_mut(root).unwrap().state.open = true;
     tree.apply_tree(ui);
     root
+}
+
+/// 🚦️ A tree row carries only a semantic tone to its paint — the four outcome roles, each with an ink of the theme; the
+/// neutral tone and the brand roles carry none, and a toneless row costs nothing on the wire.
+#[test]
+fn a_tree_row_carries_only_a_semantic_tone() {
+    let theme = crate::wgpu::Theme::light();
+    for (tone, carried) in [
+        (ui_contract::Tone::Info, true),
+        (ui_contract::Tone::Success, true),
+        (ui_contract::Tone::Warning, true),
+        (ui_contract::Tone::Danger, true),
+        (ui_contract::Tone::Neutral, false),
+        (ui_contract::Tone::Primary, false),
+        (ui_contract::Tone::Secondary, false),
+        (ui_contract::Tone::Tertiary, false),
+    ] {
+        assert_eq!(tree_row_tone(tone), carried.then_some(tone), "{tone:?}: carried to the row");
+        assert_eq!(theme.tone_ink(tone).is_some(), carried, "{tone:?}: an ink of the theme");
+    }
+    assert!(theme.tone_ink(ui_contract::Tone::Warning) == Some(theme.warning) && theme.tone_ink(ui_contract::Tone::Danger) == Some(theme.error) && theme.tone_ink(ui_contract::Tone::Success) == Some(theme.success), "the outcome roles paint the theme's outcome inks");
+    let mut row = UiTreeItemNode::base("row", Label::data("Row"));
+    assert!(!serde_json::to_string(&row).expect("wire").contains("tone"), "a toneless row costs nothing on the wire");
+    row.tone = Some(ui_contract::Tone::Warning);
+    assert_eq!(serde_json::to_value(&row).expect("wire")["tone"], serde_json::json!("warning"));
 }
 
 #[test]

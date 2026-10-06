@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-set-mtllib",
       "class": "handcrafted",
       "target": {
@@ -56,7 +55,6 @@
       "comparisonPipeline": "obj-3-0-document-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "document-set-usemtl",
       "class": "handcrafted",
       "target": {

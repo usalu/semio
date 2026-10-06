@@ -1,4 +1,4 @@
-import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ StlArtifact schema — full `stdio.stl` artifact state (mirrors `StlSnapshot`). */
 export interface StlTriangle {
   normal: [Binary64, Binary64, Binary64];
@@ -77,7 +77,7 @@ export function parseStlTriangle(value: unknown, at = "$"): StlTriangle {
 /** 📐️ Parse an owned fixed-width coordinate component without numeric coercion. */
 export function parseStlCoordinateTuple(value:unknown,at="$"):[Binary64,Binary64,Binary64]{
   const values=stdioStlAsciiAnyArtifactGuardArray(value,at,{minItems:3,maxItems:3});
-  return [parseBinary64Transport(values[0]),parseBinary64Transport(values[1]),parseBinary64Transport(values[2])];
+  return [parseBinary64(values[0]),parseBinary64(values[1]),parseBinary64(values[2])];
 }
 
 /** 🔺️ Parse the three independent authored vertex tuples of one facet. */

@@ -1,0 +1,71 @@
+dialect grammar
+grammar stdio.docx.mutations
+extension docx
+start document
+comment none
+
+# Real one-line `OpText::print_op`/`parse_op` shape of `../../../🧬️schema/🦀️.rs` (`print_docx_mutation`/
+# `parse_docx_mutation`): `keyword arg=value arg=value ...`, one alternative per `DocxMutation` variant,
+# every keyword/arg-name token copied from the real `format!(...)` call sites.
+#
+# `set-snapshot`'s `snapshot` and every XML `address`/`parent` carry the lowercase hex of the value's
+# RFC 8259 JSON (`enc_docx_snapshot`/`enc_xml_address`: `hex_encode(dsl::json::to_json_string(..))`), so
+# they are the framework's built-in `hex` MACRO (bare `hex`, deliberately not defined as a production --
+# `📖️grammar-recipe.md` §1.3(f)/§3 pitfall 2). `[0]`/`[1,x]` is `encode_option`'s tri-state shape (§1.4).
+document = set-snapshot | patch-snapshot | insert-block | remove-block | set-block-content | set-run-text | replace-xml-node | set-run-formatting | set-paragraph-style | insert-table-row | remove-table-row | insert-xml-node | remove-xml-node | insert-style | remove-style | set-style-name | set-style-based-on | set-part | remove-part
+
+patch-snapshot = "patch-snapshot" "patch" "=" hex
+set-snapshot = "set-snapshot" "snapshot" "=" hex
+insert-block = "insert-block" "path" "=" block-path "block" "=" block
+remove-block = "remove-block" "path" "=" block-path
+set-block-content = "set-block-content" "path" "=" block-path "block" "=" block
+set-run-text = "set-run-text" "address" "=" hex "text" "=" hex
+replace-xml-node = "replace-xml-node" "address" "=" hex "node" "=" x-node
+set-run-formatting = "set-run-formatting" "address" "=" hex "bold" "=" bool-lit "italic" "=" bool-lit "underline" "=" bool-lit
+set-paragraph-style = "set-paragraph-style" "address" "=" hex "style-id" "=" opt-hex
+insert-table-row = "insert-table-row" "address" "=" hex "index" "=" INT "cells" "=" text-list
+remove-table-row = "remove-table-row" "address" "=" hex "index" "=" INT
+insert-xml-node = "insert-xml-node" "parent" "=" hex "index" "=" INT "node" "=" x-node
+remove-xml-node = "remove-xml-node" "parent" "=" hex "index" "=" INT "expected-name" "=" hex "revision" "=" hex
+insert-style = "insert-style" "style" "=" style
+remove-style = "remove-style" "id" "=" hex
+set-style-name = "set-style-name" "id" "=" hex "name" "=" hex
+set-style-based-on = "set-style-based-on" "id" "=" hex "based-on" "=" opt-hex
+set-part = "set-part" "path" "=" hex "content-type" "=" hex "bytes" "=" hex
+remove-part = "remove-part" "path" "=" hex
+
+bool-lit = "0" | "1"
+opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
+text-list = "[" text-item* "]"
+text-item = hex ","?
+
+# ── `DocxBlockPath` -- `[[segment,...],index]` (`enc_block_path`) ────────────────────────────────
+block-path = "[" segments-list "," INT "]"
+segments-list = "[" segment-item* "]"
+segment-item = segment ","?
+segment = "[" INT "," INT "," INT "]"
+
+# ── Whole-item value shapes `print_docx_mutation` reuses from `../../../🧬️schema/🧬️mutations/🔺️diff/🦀️.rs` (`enc_block`/`enc_paragraph`/
+# `enc_run`/`enc_table`/`enc_style`, positional `[...]` records, `P`/`T` block tags) ──────────────────────
+block = "P" paragraph | "T" table
+blocks-list = "[" block-item* "]"
+block-item = block ","?
+paragraph = "[" runs-list "," opt-hex "," extra-list "]"
+runs-list = "[" run-item* "]"
+run-item = run ","?
+run = "[" hex "," bool-lit "," bool-lit "," bool-lit "," extra-list "]"
+extra-list = "[" x-node-item* "]"
+x-node-item = x-node ","?
+table = "[" rows-list "," extra-list "]"
+rows-list = "[" row-item* "]"
+row-item = row ","?
+row = "[" cells-list "," extra-list "]"
+cells-list = "[" cell-item* "]"
+cell-item = cell ","?
+cell = "[" blocks-list "," extra-list "]"
+style = "[" hex "," hex "," opt-hex "]"
+
+# `XmlNode` value shape (`enc_xml_node`): `E`lement `[name,[attrs],[children]]`, `T`ext, `D`ata (CDATA), com`M`ent,
+# `P`rocessing instruction `[target,data]`.
+x-node = "E" "[" hex "," "[" x-attr-item* "]" "," "[" x-node-item* "]" "]" | "T" "[" hex "]" | "D" "[" hex "]" | "M" "[" hex "]" | "P" "[" hex "," hex "]"
+x-attr-item = "[" hex "," hex "]" ","?

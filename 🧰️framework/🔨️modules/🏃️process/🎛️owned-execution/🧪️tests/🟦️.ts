@@ -4,7 +4,6 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8"));
 test("validates neutral owned process vectors with Ajv",()=>expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true));
 
 test("terminates a bounded owned descendant process", async () => {

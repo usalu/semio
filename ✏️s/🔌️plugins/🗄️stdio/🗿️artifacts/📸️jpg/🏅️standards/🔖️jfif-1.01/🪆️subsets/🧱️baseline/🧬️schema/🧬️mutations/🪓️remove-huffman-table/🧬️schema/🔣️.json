@@ -9,7 +9,19 @@
   ],
   "properties": {
     "key": {
-      "$ref": "#/$defs/JpgHuffmanTableKey"
+      "$ref": "#/$defs/JpgHuffmanTableKey",
+      "x-semio-ui": {
+        "label": {
+          "en": "Table",
+          "de": "Tabelle"
+        },
+        "description": {
+          "en": "Class (DC or AC) and destination id of the Huffman table that is removed.",
+          "de": "Klasse (DC oder AC) und Zielkennung der Huffman-Tabelle, die entfernt wird."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   },
   "$defs": {

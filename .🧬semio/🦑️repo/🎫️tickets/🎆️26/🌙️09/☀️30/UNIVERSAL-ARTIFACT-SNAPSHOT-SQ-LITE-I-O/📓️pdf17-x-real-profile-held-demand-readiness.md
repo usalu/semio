@@ -1,0 +1,9 @@
+# PDF17 X Real Profile Held Demand
+
+Three guarded held pairs are in `📥️inputs/pdf17-x-real-profile-native-demand-held-pairs.json`: the actual existing native SQLite owning module plus a hand-authored literal neutral contract and closed const schema. No production paths are changed; no compiler/test gate ran.
+
+The selected law is `sqlite_snapshot_pdf17_x_initial_retains_real_profile_typed_raw_and_both_public_forms`. It uses the genuine `PdfXBuilderConstruction::new("FOGRA39")`, without a replacement default fixture, and requires Catalog1 → Pages4 and OutputIntent2 → real Stream3. The exact retained profile is 3024 bytes with actual measured SHA256384b832de3412066743b52a75ee906b6fb9fb8d9e09e936fc2c43223815c6e0a, tags16, N3. Typed `PdfOutputIntent.profile` must contain those same bytes. Optional intent fields remain absent.
+
+The literal independent seven-axis X projection has one GTS_PDFX/FOGRA39/profile-present intent and empty encryption/page/font/script/launch/media families for this zero-page X initial owner. The existing independent facade reads actual resolved/decompressed `(N,bytes)` tuples before native decode and after both public Binary/Text SQLite owner reconstructions. Native decode and both public reconstructions require full typed owner equality, not a marker-only comparison. The current X validator is required to report no Error/Fatal. Both owner and reconstructed snapshots use the existing retirement API.
+
+Expected RED source boundary: current X seed only publishes objects1/2 and omits real Root/Pages/Stream3/typed intent. Root chooses exact provider repair after genuine assertion receipt. Guard freshness must be rechecked against any concurrent UA/test additions; do not overwrite later source. The fixture/schema are not yet registered Source demands, and no actual runtime validity is claimed by this source-only capsule.

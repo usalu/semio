@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "id": "prefix",
+      "before": "a\nb\nc\n",
+      "after": "a\nb\nowner\n",
+      "current": "foreign\na\nb\nc\n",
+      "expected": "foreign\na\nb\nowner\n",
+      "refused": false
+    },
+    {
+      "id": "middle",
+      "before": "a\nb\nc\nd\n",
+      "after": "a\nb\nc\nowner\n",
+      "current": "a\nforeign\nb\nc\nd\n",
+      "expected": "a\nforeign\nb\nc\nowner\n",
+      "refused": false
+    },
+    {
+      "id": "overlap",
+      "before": "a\nb\nc\n",
+      "after": "a\nowner\nc\n",
+      "current": "a\nforeign\nc\n",
+      "expected": null,
+      "refused": true
+    },
+    {
+      "id": "same",
+      "before": "a\nb\n",
+      "after": "a\nowner\n",
+      "current": "a\nb\n",
+      "expected": "a\nowner\n",
+      "refused": false
+    }
+  ]
+}

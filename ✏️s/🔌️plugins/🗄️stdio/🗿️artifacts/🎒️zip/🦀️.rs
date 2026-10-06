@@ -114,28 +114,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.zip",
                     extension: Some("zip"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.zip"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.zip.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.zip.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.diff"),
@@ -146,8 +146,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -156,8 +156,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.zip.spr"),
                 },
             ]
@@ -242,20 +242,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod entries {
                             #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🗃️entries/🦀️.rs"]
@@ -268,20 +260,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -380,9 +364,7 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v2_0::subsets::base::schema::*;
 }
-pub mod io {
-    pub use super::standards::v2_0::subsets::base::io::*;
-}
+
 
 /// 📦️ Shared OPC (Open Packaging Conventions) layer — zip-and-XML container plumbing
 /// that `docx`/`xlsx`/`pptx` import cross-artifact (`crate::opc::*`).
@@ -556,3 +538,7 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v2_0::subsets::iso21320::io::{ZipIso21320BuilderConstruction, ZipIso21320AnalyzerAnalysis, ZipIso21320BuilderFacets, ZipIso21320Builder, ZipIso21320Analyzer, ZipIso21320Composer};
+
+pub use crate::standards::v2_0::subsets::base::io::{ZipBuilderConstruction, ZipParts, ZipAnalyzerAnalysis, ZipBuilderFacets, ZipBuilder, ZipAnalyzer, ZipComposer};

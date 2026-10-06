@@ -1,4 +1,4 @@
-import {binary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ GltfSnapshot twin: the typed glTF 2.0 document model exactly as its Rust `ToValue` wire writes it, and the
  * readers that decode that wire. A member the wire omits when empty or default is optional here, as in `🔣️.json`.
  * @see ./🔣️.json

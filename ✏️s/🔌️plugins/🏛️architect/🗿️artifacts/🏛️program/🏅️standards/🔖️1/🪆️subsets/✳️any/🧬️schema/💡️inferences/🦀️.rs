@@ -1988,19 +1988,9 @@ impl RegisterCsvRow {
     }
 }
 
-/// 📤️ Serializes a plugin to pretty JSON.
-pub fn export_json(program: &ProgramSnapshot) -> Result<String, PluginError> {
-    Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(program))))
-}
 
-/// 📥️ Deserializes a plugin from JSON with schema validation.
-pub fn import_json(json: &str) -> Result<ProgramSnapshot, PluginError> {
-    let program: ProgramSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| PluginError::Deserialize(e.to_string()))?;
-    if program.schema != ARCHITECT_PROGRAM_SCHEMA {
-        return Err(PluginError::InvalidSchema { expected: ARCHITECT_PROGRAM_SCHEMA.into(), actual: program.schema });
-    }
-    Ok(program)
-}
+
+
 
 fn csv_record(values: &[&str]) -> stdio_csv::schema::snapshot::CsvRecord {
     stdio_csv::schema::snapshot::CsvRecord { fields: values.iter().map(|v| stdio_csv::schema::snapshot::CsvField { value: (*v).to_string(), quoted: false }).collect() }

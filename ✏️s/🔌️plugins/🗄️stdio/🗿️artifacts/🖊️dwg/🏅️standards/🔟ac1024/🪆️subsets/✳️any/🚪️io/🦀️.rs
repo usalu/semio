@@ -1254,7 +1254,7 @@ pub fn encode_r2004_snapshot(snapshot: &crate::DwgSnapshot) -> Result<Vec<u8>, S
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
+    use crate::standards::v_ac1024::subsets::any::io::DwgAnalyzer;
     use crate::DwgSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -11507,7 +11507,7 @@ mod tests;
 /// unioned with ac1018's own `io_registry::entries()` by the root `crate::
 /// declaration()`'s `dwg_combined_composer_entries()`.
 pub mod io_registry {
-    use crate::standards::v_ac1024::subsets::any::schema::DwgComposer as DwgRawAnyComposer;
+    use crate::standards::v_ac1024::subsets::any::io::DwgComposer as DwgRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -11562,3 +11562,124 @@ mod polyline_io_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔮️acadrust-oracle/🦀️.rs"]
 mod acadrust_oracle_tests;
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{DwgDiff, DwgMutation, DwgSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.dwg` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct DwgBuilderConstruction {
+        snapshot: DwgSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for DwgBuilderConstruction {
+        type Snapshot = DwgSnapshot;
+        type Mutation = DwgMutation;
+        type Diff = DwgDiff;
+        fn empty() -> Self {
+            Self { snapshot: DwgSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<DwgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<DwgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::schema::mutations::apply_dwg_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <DwgDiff as protocol::MutationDiff<DwgSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::DwgSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.dwg` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct DwgParts {
+        pub snapshot: Option<DwgSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.dwg` (ac1024/✳️any) sources.
+    pub struct DwgAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for DwgAnalyzerAnalysis {
+        type Parts = DwgParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = DwgParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <DwgSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <DwgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec DwgBuilderFacets {
+        construction: DwgBuilderConstruction,
+        analysis: DwgAnalyzerAnalysis,
+        composition: crate::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition,
+    }
+    builder: DwgBuilder,
+    analyzer: DwgAnalyzer,
+    composer: DwgComposer,
+);

@@ -1,0 +1,7 @@
+# Semio Value/Table Nine Held Complete Providers
+
+Three coherent current IO row writer providers cover Value, Table and their Graph property dependency without API adapters. Value reference cells resolve a real caller-paid borrowed node-ID frontier to INTEGER; Table/Graph keep literal TEXT references. All existing paid owned-value frontiers, map order/duplicate entries, Int/Float lexemes and independent Table row widths survive. Graph uses four explicit IEEE754 companions and plain insertion for all other entities.
+
+Two borrowed pretyped censuses count exact non-NULL cell bytes and all ownership links. Value owns document/root/nodes and actual paid hexadecimal ID spans; case-equivalent IDs sort/resolve by decoded bytes through cancellable heap-sort/binary lookup without String/BTreeMap or a proof mirror. Its root binary body remains the actual UTF-8 document grammar. Nested Table binary values retain their distinct tag grammar and literal references. Both match the original depth64 and stage controls; no raised grants.
+
+Four owner Native entry providers put complete admission ahead of the original typed construction/forecast. Allocation uses original physical remaining budget, retained cumulative native owned bytes, final Owned retirement and original envelopes/field writers. All nine pairs remain HELD pending genuine owning Before plus independent review. Their existing schema-first matched demands are four paths per owner, not a new oracle copied from the provider.

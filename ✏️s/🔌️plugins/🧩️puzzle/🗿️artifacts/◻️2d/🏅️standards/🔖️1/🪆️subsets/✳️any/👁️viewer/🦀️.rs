@@ -54,7 +54,7 @@ pub struct Puzzle2dViewer;
 
 impl ArtifactViewer for Puzzle2dViewer {
     type Snapshot = Puzzle2dSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Puzzle2dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

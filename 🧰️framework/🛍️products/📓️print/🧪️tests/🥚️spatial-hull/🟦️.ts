@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { Delaunay } from "d3-delaunay";
-import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { compileVizProbe, probeProjection, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -49,7 +49,7 @@ export default defineTestAdapter({
       },
       /** 🎯️ `\SemioVizHull`'s monotone chain over the same point set. */
       subject: async (ctx: AdapterContext): Promise<{ projection: ProbeProjection }> => {
-        const records = await compileVizProbe(ctx.fixture("shared://🥚️spatial-hull/hull.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+        const records = await compileVizProbe(ctx.input("shared://🥚️spatial-hull/hull.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
         return { projection: probeProjection(records) };
       },
     },

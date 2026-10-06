@@ -872,9 +872,9 @@ fn external_all_of_union_uses_the_registered_document_shape_for_controls_and_var
             "null".into()
         }
     }
-    const ENVELOPE: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/✉️envelope/🔣️.json");
-    const MODEL: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/🏛️model/🔣️.json");
-    const TEXT: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/📝️text/🔣️.json");
+    const ENVELOPE: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/✉️envelope/🧾️schema-input.json");
+    const MODEL: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/🏛️model/🧾️schema-input.json");
+    const TEXT: &str = include_str!("../../🧫️fixtures/🔗️external-all-of/📝️text/🧾️schema-input.json");
     let empty = semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
     for (id, source) in [("s.test.details-envelope", ENVELOPE), ("s.test.details-model", MODEL), ("s.test.details-text", TEXT)] {
         semio_framework_schema_registry::register_artifact_schema_descriptor(semio_framework_schema_registry::ArtifactSchemaDescriptor {

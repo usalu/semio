@@ -11,13 +11,65 @@
   ],
   "properties": {
     "x": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pan X",
+          "de": "Verschiebung X"
+        },
+        "description": {
+          "en": "Horizontal pan offset of the view.",
+          "de": "Horizontale Verschiebung der Ansicht."
+        },
+        "step": 1,
+        "precision": 1
+      }
     },
     "y": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Pan Y",
+          "de": "Verschiebung Y"
+        },
+        "description": {
+          "en": "Vertical pan offset of the view.",
+          "de": "Vertikale Verschiebung der Ansicht."
+        },
+        "step": 1,
+        "precision": 1
+      }
     },
     "zoom": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Zoom",
+          "de": "Zoom"
+        },
+        "description": {
+          "en": "Zoom factor of the view.",
+          "de": "Zoomfaktor der Ansicht."
+        },
+        "step": 0.05,
+        "precision": 2,
+        "softMin": 0.1,
+        "softMax": 8,
+        "scale": "log",
+        "snaps": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4
+        ]
+      }
     }
   }
 }

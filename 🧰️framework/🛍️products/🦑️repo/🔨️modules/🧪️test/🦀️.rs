@@ -21,6 +21,6 @@ pub mod law;
 //#endregion 🔖️Modules
 
 //#region 🔖️Surface
-pub use protocol::{digest, parse_json, sha256_hex, Fixture, Json, Outcome, Plan, ProductionDispatch, ResultArtifact, Scenario, SubsetTarget};
+pub use protocol::{digest, parse_json, sha256_hex, TestInput, Json, Outcome, Plan, ProductionDispatch, ResultArtifact, Scenario, SubsetTarget};
 pub use runner::{run_main, Adapter, Context};
 //#endregion 🔖️Surface

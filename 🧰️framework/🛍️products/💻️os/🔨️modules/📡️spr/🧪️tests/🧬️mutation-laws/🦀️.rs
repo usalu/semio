@@ -56,7 +56,7 @@ impl DiffAlgebra<i64> for CounterDiff {
 //#endregion 🔺️StructuralDiff
 
 //#region 🧬️Mutations
-#[path = "../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testing/🧬️mutation-laws/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub use mutations::*;
 //#endregion 🧬️Mutations
@@ -68,7 +68,7 @@ mod tests {
     use crate::os_spr::{Mutation, MutationLeaf, OpText};
 
     fn fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!("../../🧫️fixtures/🧬️mutation-laws/🔣️.json")).expect("law fixture")
+        serde_json::from_str(include_str!("../../🧪️testing/🧬️mutation-laws/🔣️.json")).expect("law fixture")
     }
 
     pub(crate) fn assert_leaf<T>(index: usize, wrap: fn(T) -> CounterMutation, descriptor: &str, witness: &str)

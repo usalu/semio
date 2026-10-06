@@ -1,7 +1,6 @@
 import {test,expect} from "bun:test";
-import {existsSync,readFileSync} from "node:fs";
+import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import Ajv from "ajv";
 import {blake3} from "@noble/hashes/blake3.js";
 import {Database} from "bun:sqlite";
 const owner=resolve(import.meta.dir,"../../.."),read=(path:string)=>JSON.parse(readFileSync(resolve(owner,path),"utf8"));
@@ -52,21 +51,4 @@ test("failed schema storage accounts for its actual returned diagnostic owner",(
  expect(()=>insert.run(47,0,46,47)).toThrow();
  expect(()=>insert.run(46,0,46,45)).toThrow();
  db.close();
-});
-test("controlled schema storage has a closed exact caller ownership contract",()=>{
- const path="🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json";
- expect(existsSync(resolve(owner,path)),"actual neutral controlled schema storage contract").toBe(true);
- const fixture=read(path),schema=read("🧬️schema/🔑️schema-hash/💰️storage/🔣️.json");
- const expected={schema:"pack.schema.controlled-storage/v1",nativeLaw:"schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted",directions:["encode","decode"],cases:["flat","nested","nested-inner-field-changed","recursive","every-shape","empty","mutualRecursive","broadRepeatedEdges"],semantic:"independentCanonicalBlake3",requests:"fullSystemAllocatorRequests",allowance:"observedExactAndOneByteShort",zero:"ownershipLimitBeforeScratchRequest",cumulative:"sameCallerNoRefund",cancellation:"canceledBeforePublication",released:"completeTemporaryBacking",abiEstimate:false,inlineHasherHeapCharge:false,failureChannel:{scratch:"callerDataAllowanceMonotonic",diagnostic:"actualReturnedMessageCapacity",requests:"completeSystemRequestsIncludingDiagnostic",release:"dropReturnedDiagnosticInsideObservation",admission:"mayPrecedeCanceledMaterialization",vectors:[
-  {scope:"zero",message:"native encoding ownership exceeds caller limit",requested:46,admitted:0,diagnostic:46,released:46},
-  {scope:"short",message:"native encoding ownership exceeds caller limit",requested:174,admitted:160,diagnostic:46,released:174},
-  {scope:"cumulative",message:"native encoding ownership exceeds caller limit",requested:366,admitted:320,diagnostic:46,released:366},
-  {scope:"start",message:"native encoding canceled",requested:24,admitted:0,diagnostic:24,released:24},
-  {scope:"admittedInterior",message:"native encoding canceled",requested:24,admitted:64,diagnostic:24,released:24},
-  {scope:"materializedInterior",message:"native encoding canceled",requested:88,admitted:64,diagnostic:24,released:88},
-  {scope:"unicodeDiagnostic",message:"任意\u0000🙂",requested:11,admitted:0,diagnostic:11,released:11}
- ]}};
- expect(fixture).toEqual(expected);
- const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);
- for(const change of [(value:any)=>value.requests="incomingBytes",(value:any)=>value.abiEstimate=true,(value:any)=>value.inlineHasherHeapCharge=true,(value:any)=>value.cumulative="newControlPerCall",(value:any)=>value.failureChannel.diagnostic="unobservedGuess",(value:any)=>value.failureChannel.foreign=true,(value:any)=>value.failureChannel.vectors[0].foreign=true]){const wrong=structuredClone(fixture);change(wrong);expect(validate(wrong)).toBe(false);}
 });

@@ -33,6 +33,7 @@
           "en": "Adler-32 of the preset dictionary; empty clears FDICT.",
           "de": "Adler-32 des Vorgabewörterbuchs; leer löscht FDICT."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 10

@@ -67,7 +67,7 @@ impl store::ArtifactPack for ImperativeConfig {
 //#endregion 🔖️ArtifactCodec
 
 fn default_contributions_json() -> String {
-    crate::io::default_imperative_contributions_json()
+    crate::standards::v1::subsets::any::io::default_imperative_contributions_json()
 }
 
 impl Default for ImperativeConfig {
@@ -92,3 +92,6 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️contract-vectors/🦀️.rs"]
 mod contract_vectors;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

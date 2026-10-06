@@ -1,7 +1,6 @@
 /** 🪢️ The hub's canonical checkpoint pair — the one seed a native, a wasm32 and a React shell open a hub document on —
  * replayed from the language-agnostic fixture `🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json`, the same
- * rows the kernel's Rust law (`📇️directory/🧬️schema/🪢️canonical-checkpoint-pair-v1`) replays. Ajv holds the fixture to
- * its schema; `node:crypto` is the independent digest oracle (the TypeScript decoder leaves digests to the bootstrap
+ * rows the kernel's Rust law (`📇️directory/🧬️schema/🪢️canonical-checkpoint-pair-v1`) replays. Ajv validates decoded scope and frontier payloads; `node:crypto` is the independent digest oracle (the TypeScript decoder leaves digests to the bootstrap
  * assembler, so this runner verifies them the way the Rust decoder does). */
 import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
@@ -36,9 +35,13 @@ function verifyDigests(pair: CanonicalCheckpointPairV1): void {
 }
 
 describe("🪢️ canonical checkpoint pair", () => {
-  it("the fixture satisfies its schema", () => {
-    const validate = semioSchemaAjvV1({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  it("decoded scopes and frontiers satisfy their actual payload contracts", () => {
+    const ajv = semioSchemaAjvV1({ allErrors: true, strict: true }).addSchema(schema);
+    for (const row of fixture.pairs) {
+      const decoded = decodeCanonicalCheckpointPairV1(hexBytes(row.bodyHex));
+      expect(ajv.validate({ $ref: `${schema.$id}#/definitions/scope` }, decoded.scope)).toBe(true);
+      expect(ajv.validate({ $ref: `${schema.$id}#/definitions/frontier` }, decoded.baselineFrontier)).toBe(true);
+    }
   });
 
   it("the fixture limits are the TypeScript wire constants", () => {

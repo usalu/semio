@@ -1,0 +1,11 @@
+# PDF17 UA Genuine Seed Coherence and ICC Source Readiness
+
+Read-only; the three-path guarded proposal `📥️inputs/pdf17-ua-genuine-seed-and-initial-held-pairs.json` is HELD and was not mounted or compiled. It preserves caller-explicit `new(lang)` and proposes the authored undetermined document tag `und` for blank initial documents and the empty builder. This is not UI locale selection.
+
+Current UA `check_ua_conformance` accepts nonempty raw Catalog Lang bytes; it does not reject `und` or validate language syntax. Missing/empty language and title are warnings; missing marked MarkInfo or StructTreeRoot are hard failures. Preserve those original predicates, including the original raw mutation negative law.
+
+Current seed has Catalog1→MarkInfo2/StructTreeRoot3/ViewerPreferences4 but lacks both trailer Root and a Pages graph. More importantly, it leaves typed language, mark_info, viewer_preferences and catalog_extra empty, although native reconciliation compares those lanes against the raw graph. The held proposal adds Catalog1→Pages5 with real empty Kids/Count0, trailer Root1, mirrors the three typed lanes and retains StructTreeRoot3 in catalog_extra. Existing native lift explicitly preserves StructTreeRoot as an unrecognized Catalog extra. This prevents reconciliation from treating authored profile data as stale graph-only values. Existing add_page/build/profile assertions remain unchanged; actual native before/after conformance and full typed SQLite catalog equality must be executed by Root before success is claimed.
+
+Bounded committed PDF asset inspection found no usable real ICC profile. X/VT set-output-intent generators and fixture streams contain the literal 17-byte marker `ICC-PROFILE-BYTES`. The file index found no .icc/.icm resource. Raw and Python-zlib-expanded PDF stream inspection found no profile with acsp signature and profile-size header; this is bounded evidence, not a complete PDF/ICC parser proof or universal resource absence. No fake header/profile is proposed.
+
+The exact preserved source locators and profile-signature inspection qualification are in `📥️inputs/pdf-committed-icc-source-signature-index.json`. Official ICC resource readiness is documented separately; no external asset was downloaded.

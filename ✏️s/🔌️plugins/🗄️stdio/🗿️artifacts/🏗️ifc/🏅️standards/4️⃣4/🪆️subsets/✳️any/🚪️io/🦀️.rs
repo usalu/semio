@@ -15,7 +15,7 @@ pub mod spatial;
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v4::subsets::any::schema::IfcAnalyzer;
+    use crate::standards::v4::subsets::any::io::IfcAnalyzer;
     use crate::IfcSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -66,7 +66,7 @@ mod tests;
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use crate::standards::v4::subsets::any::schema::IfcComposer as IfcRawAnyComposer;
+    use crate::standards::v4::subsets::any::io::IfcComposer as IfcRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -78,3 +78,124 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{IfcDiff, IfcMutation, IfcSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.ifc` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct IfcBuilderConstruction {
+        snapshot: IfcSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for IfcBuilderConstruction {
+        type Snapshot = IfcSnapshot;
+        type Mutation = IfcMutation;
+        type Diff = IfcDiff;
+        fn empty() -> Self {
+            Self { snapshot: IfcSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::schema::mutations::apply_ifc_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <IfcDiff as protocol::MutationDiff<IfcSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::IfcSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.ifc` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct IfcParts {
+        pub snapshot: Option<IfcSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.ifc` (4/✳️any) sources.
+    pub struct IfcAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for IfcAnalyzerAnalysis {
+        type Parts = IfcParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = IfcParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <IfcSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <IfcSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec IfcBuilderFacets {
+        construction: IfcBuilderConstruction,
+        analysis: IfcAnalyzerAnalysis,
+        composition: crate::standards::v4::subsets::any::io::derived_composition::IfcComposerComposition,
+    }
+    builder: IfcBuilder,
+    analyzer: IfcAnalyzer,
+    composer: IfcComposer,
+);

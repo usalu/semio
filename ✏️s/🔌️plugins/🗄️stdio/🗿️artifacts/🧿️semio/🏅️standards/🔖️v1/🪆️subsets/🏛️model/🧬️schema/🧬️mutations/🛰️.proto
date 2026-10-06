@@ -7,6 +7,7 @@ enum SemioModelMutationTag {
   INSERT_SPATIAL_NODE = 2; REMOVE_SPATIAL_NODE = 3; SET_SPATIAL_NODE = 4;
   INSERT_ELEMENT = 5; REMOVE_ELEMENT = 6; SET_ELEMENT = 7;
   INSERT_RELATION = 8; REMOVE_RELATION = 9; SET_RELATION = 10;
+  DRAG_ELEMENTS = 11; ROTATE_ELEMENTS = 12; SCALE_ELEMENTS = 13;
 }
 
 message SemioModelMutation {
@@ -26,4 +27,9 @@ message SemioModelMutation {
   repeated bytes psets = 14;
   optional string from = 15;
   optional string to = 16;
+  repeated string targets = 17;
+  repeated double offset = 18;
+  repeated double axis = 19;
+  optional double angle = 20;
+  repeated double factors = 21;
 }

@@ -90,11 +90,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     }
 }
 //#endregion 🗃️Apps
-// 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-// handcrafted DSL (`store::ArtifactDsl`) that this module (which parses the content as a raw
-// `FlowHostSnapshot`, not a `Generation3dDocument`) doesn't read — inlined the same flow-fixture JSON
-// this module actually needs, decoupled from procedural's document format.
-const HEX_COLUMN_FIXTURE_JSON: &str = r#"{
+/// 🧱️ The authored hexagonal-column learning program consumed by this playbook module.
+const HEX_COLUMN_LEARNING_PROGRAM_JSON: &str = r#"{
   "schema": "flow.host_snapshot",
   "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 },
   "widgets": [
@@ -143,10 +140,10 @@ app_labels! {
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "procmodule")]
 pub struct ModuleRenderPayload {
-    fixture_slug: String,
+    example_id: String,
     /// 🧬️ Deliberately untyped: binds through the engine's `Shape::Value` escape hatch because the key
     /// set is driven entirely by whichever `Widget::InputSlider`/`Widget::Neuron` ids the referenced
-    /// `fixture_slug`'s flow graph happens to define (see `apply_flow_params`, which walks `params` as
+    /// `example_id`'s flow graph happens to define (see `apply_flow_params`, which walks `params` as
     /// an arbitrary `key -> f64` map and forwards every entry to `FlowHost::set_slider_value`) — no
     /// fixed schema spans all fixtures, so a typed `dsl::DslArtifact` derive doesn't apply here.
     #[dsl(value)]
@@ -214,11 +211,11 @@ fn default_params_field() -> DslValue {
     DslValue::Null
 }
 
-/// 🌱️ The module's default document — the hex-column fixture with its stock procedural params. Used
+/// 🌱️ The module's default document — the hex-column learning program with its stock procedural params. Used
 /// as `ArtifactApp::initial_snapshot`; live slot renders override it with the forms-supplied payload.
 fn default_payload() -> ModuleRenderPayload {
     ModuleRenderPayload {
-        fixture_slug: "hexagonal-mushroom-column".into(),
+        example_id: "hexagonal-mushroom-column".into(),
         params: json_to_dsl_value(&semio_framework_pack_json::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })),
         question_id: String::new(),
         controller_id: String::new(),
@@ -259,9 +256,9 @@ impl MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
 
 //#endregion 🔖️DocumentMutation
 
-fn fixture_json_for_slug(slug: &str) -> Option<&'static str> {
+fn learning_program_json(slug: &str) -> Option<&'static str> {
     match slug {
-        "hexagonal-mushroom-column" => Some(HEX_COLUMN_FIXTURE_JSON),
+        "hexagonal-mushroom-column" => Some(HEX_COLUMN_LEARNING_PROGRAM_JSON),
         _ => None,
     }
 }
@@ -546,21 +543,21 @@ fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_snapshot: &Fl
 }
 
 fn render_preview_body(owner: &mut ModuleGeometryOwner, payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltNode> {
-    let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
-    let Some(fixture_json) = fixture_json_for_slug(slug) else {
-        return text_node(format!("Unknown fixture slug: {slug}"));
+    let slug = if payload.example_id.is_empty() { "hexagonal-mushroom-column" } else { payload.example_id.as_str() };
+    let Some(snapshot_json) = learning_program_json(slug) else {
+        return text_node(format!("Unknown learning example: {slug}"));
     };
-    let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(fixture_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| FlowHostSnapshot::default());
+    let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| FlowHostSnapshot::default());
     let params = params_as_json(&payload.params);
     let (meshes_json, instances_json) = evaluated_preview_payload(owner, &host_snapshot, &params);
-    // 🧊️ The decoded fixture is this function's own owner of the widgets' dictionaries.
+    // 🧊️ The decoded learning program is this function's own owner of the widgets' dictionaries.
     host_snapshot.retire_cold();
     scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
 }
 //#endregion 🔖️Preview
 
 //#region 🔖️MediaExport
-/// 🧵️ Collects every distinct brep geometry handle exposed by the fixture's preview-flagged widgets, evaluated against the current param overrides — same eval pass as `evaluated_preview_payload`, minus the tessellation step.
+/// 🧵️ Collects every distinct brep geometry handle exposed by the learning program's preview-flagged widgets, evaluated against the current param overrides — same eval pass as `evaluated_preview_payload`, minus the tessellation step.
 fn evaluated_preview_geometry_handles(owner: &mut ModuleGeometryOwner, host_snapshot: &FlowHostSnapshot, params: &Value) -> Vec<String> {
     let mut host = match owner.host(host_snapshot.clone()) {
         Ok(host) => host,
@@ -589,11 +586,11 @@ fn evaluated_preview_geometry_handles(owner: &mut ModuleGeometryOwner, host_snap
 
 /// 📤️ Handles `Command::ExportSolid`: re-evaluates the active host_snapshot, exports every preview geometry handle through `flow` brep geometry session's STEP/OBJ/STL kernel codecs (GLB bridges through mesh tessellation), and stashes the JSON result on `params.__solidExport` for the host shell to read back.
 fn handle_export_solid(owner: &mut ModuleGeometryOwner, payload: &mut ModuleRenderPayload, format: &str) {
-    let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
-    let Some(fixture_json) = fixture_json_for_slug(slug) else {
+    let slug = if payload.example_id.is_empty() { "hexagonal-mushroom-column" } else { payload.example_id.as_str() };
+    let Some(snapshot_json) = learning_program_json(slug) else {
         return;
     };
-    let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(fixture_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| FlowHostSnapshot::default());
+    let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| FlowHostSnapshot::default());
     let params = params_as_json(&payload.params);
     let mut handles = evaluated_preview_geometry_handles(owner, &host_snapshot, &params);
     if let Ok(imported) = imported_geometry_handles(owner, &params) {
@@ -700,13 +697,13 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
 }
 
 fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels, parent_window: Option<(&str, &str)>, embedded: bool) -> UiAssemblyResult<BuiltNode> {
-    let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
-    let Some(fixture_json) = fixture_json_for_slug(slug) else {
-        return text_node(format!("Unknown fixture slug: {slug}"));
+    let slug = if payload.example_id.is_empty() { "hexagonal-mushroom-column" } else { payload.example_id.as_str() };
+    let Some(snapshot_json) = learning_program_json(slug) else {
+        return text_node(format!("Unknown learning example: {slug}"));
     };
-    let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(fixture_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginAssemblyError::new("procedural.fixture", error.to_string()))?;
+    let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginAssemblyError::new("procedural.learning-program", error.to_string()))?;
     let spec = flow_host_snapshot_to_form_spec(&host_snapshot);
-    // 🧊️ `spec` is an OWNED form projection, so the decoded fixture is done here — closed, never
+    // 🧊️ `spec` is an OWNED form projection, so the decoded learning program is done here — closed, never
     // dropped (see `evaluated_preview_payload`). Retired BEFORE the `?`-returning body below so no
     // early exit can leak it.
     host_snapshot.retire_cold();
@@ -1171,3 +1168,6 @@ semio_framework_plugin::extension_exports!(module_extension_bundle, module_plugi
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

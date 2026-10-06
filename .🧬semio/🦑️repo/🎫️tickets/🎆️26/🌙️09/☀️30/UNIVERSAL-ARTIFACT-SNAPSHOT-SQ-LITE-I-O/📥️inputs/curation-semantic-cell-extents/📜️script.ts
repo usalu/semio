@@ -1,0 +1,13 @@
+import {Database} from "bun:sqlite";
+import {readFileSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import assert from "node:assert/strict";
+const repo="/Users/ueli/Documents/semio",ticket=join(import.meta.dir,"../.."),base=join(repo,"✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
+const fixture=JSON.parse(readFileSync(join(base,"🧫️fixtures/🪶️sqlite/🔣️.json"),"utf8"));
+const {curationSnapshotToSqliteDatabase}=await import(join(base,"🟦️.ts"));
+const {binary64,binary32}=await import(join(repo,"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts"));
+const {exportSqliteDatabase}=await import(join(repo,"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts"));
+const cases=[{id:"base",width:0,hex:null},...fixture.binary64Words.map((hex:string)=>({id:"binary64-"+hex,width:64,hex})),...fixture.binary32Words.map((hex:string)=>({id:"binary32-"+hex,width:32,hex}))],observed=[];
+for(const c of cases){const snapshot=structuredClone(fixture.snapshot);for(const extra of snapshot.stockExtra){const g=extra.geometry;if(g.kind==="mesh"){g.positions=g.positions.map((value:number)=>c.width===32?{bits:parseInt(c.hex!,16)}:binary32(value));g.normals=g.normals.map((value:number)=>c.width===32?{bits:parseInt(c.hex!,16)}:binary32(value));}else{for(const key of Object.keys(g)){if(typeof g[key]==="number")g[key]=c.width===64?{bits:BigInt("0x"+c.hex)}:binary64(g[key]);}}}
+const db=Database.deserialize(await exportSqliteDatabase(await curationSnapshotToSqliteDatabase(snapshot)),{safeIntegers:true});try{assert.deepEqual(db.query("PRAGMA integrity_check").all(),[{integrity_check:"ok"}]);assert.deepEqual(db.query("PRAGMA foreign_key_check").all(),[]);const tables=db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all() as {name:string}[];assert.equal(tables.length,14);let bytes=0,rows=0;const tableExtents=[];for(const {name}of tables){const values=db.query('SELECT * FROM "'+name+'"').all() as Record<string,unknown>[];let extent=0;for(const row of values){for(const value of Object.values(row)){assert(value===null||typeof value==="string"||typeof value==="number"||typeof value==="bigint");extent+=value===null?0:typeof value==="string"?Buffer.byteLength(value,"utf8"):8;}}bytes+=extent;rows+=values.length;tableExtents.push({name,rows:values.length,bytes:extent});}assert.equal(rows,34);observed.push({...c,bytes,rows,tableExtents});console.log("[DEBUG] Curation complete independent physical SQL cells case="+c.id+" tables="+tables.length+" rows="+rows+" bytes="+bytes+" all_IEEE_companions_included=true");}finally{db.close();}}
+writeFileSync(join(ticket,"🗑️generated/curation-independent-semantic-cell-extents.json"),JSON.stringify(observed,null,2)+"\n");

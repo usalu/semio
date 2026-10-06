@@ -368,7 +368,8 @@ const INVERSE_SCENARIOS: &[&str] = &[
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_remodel_remodeling::standards::v1::subsets::any::schema::mutations::{apply_remodeling_mutation_json, round_trip_remodeling_dsl, undo_remodeling_mutation_json};
+    use semio_s_artifact_remodel_remodeling::standards::v1::subsets::any::schema::mutations::{apply_remodeling_mutation_json, undo_remodeling_mutation_json};
+    use semio_s_artifact_remodel_remodeling::standards::v1::subsets::any::io::text::snapshot::{round_trip_remodeling_dsl};
 
     /// 🧫️ One specification vector, addressed entirely by the scenario's own doc string. The three
     /// documents are kept as TEXT as well as parsed: the production bridges take the committed bytes,
@@ -385,7 +386,7 @@ mod subject {
 
     /// 🧫️ A declared fixture's committed bytes as UTF-8 text.
     fn text(ctx: &Context, uri: &str) -> Result<String, String> {
-        String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("the committed fixture {uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("the committed fixture {uri} is not UTF-8: {error}"))
     }
 
     /// 📜️ The vector the scenario's doc string addresses. A `code` member marks a vector whose
@@ -478,7 +479,7 @@ mod subject {
     /// answer, and any divergence is codec drift this case exists to catch.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let carrier = ctx.doc_json()?.str("carrier");
-        let input = ctx.fixture_bytes(&carrier)?;
+        let input = ctx.input_bytes(&carrier)?;
         let source = String::from_utf8(input.clone()).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
         let value = parse_json(&round_trip_remodeling_dsl(&source)?)?;
         let parsed = value.get("snapshot").cloned().ok_or_else(|| "the bridge answer carries no snapshot".to_string())?;

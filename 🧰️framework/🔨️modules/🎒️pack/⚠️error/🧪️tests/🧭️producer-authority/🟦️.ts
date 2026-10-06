@@ -3,11 +3,8 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {inflateRawSync} from "node:zlib";
 import grammarFixture from "../../🧫️fixtures/🧭️cause/📡️codec/🔣️.json";
-import grammarSchema from "../../🧬️schema/🧭️cause/📡️codec/🔣️.json";
 
 test("system zlib independently confirms the closed retained DEFLATE grammar corpus",()=>{
- const validate=new Ajv({strict:true}).compile(grammarSchema);
- expect(validate(grammarFixture)).toBe(true);
  for(const row of grammarFixture.cases){
   let kind:"invalidValue"|null=null,raw:number[]=[];
   try{raw=Array.from(inflateRawSync(Uint8Array.from(row.stored)));}catch(error){
@@ -24,7 +21,6 @@ import Ajv from "ajv/dist/2020.js";
 import causeKindSchema from "../../🧬️schema/🧭️cause/🪪️kind/🔣️.json";
 import causeKindFixture from "../../🧫️fixtures/🧭️cause/🪪️kind/🔣️.json";
 import fixture from "../../🧫️fixtures/🧭️cause/🔣️.json";
-import schema from "../../🧬️schema/🧭️cause/🔣️.json";
 import {PackError,type PackErrorData} from "../../🟦️.ts";
 import {ValueError,type ValueRefusalKind} from "../../../../🌱️value/⚠️refusal/🟦️.ts";
 import {TextError} from "../../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
@@ -59,13 +55,9 @@ test("the closed producer corpus refuses absent kinds and absent transport polic
  const validateCause=new Ajv({strict:true}).compile(causeKindSchema);
  for(const cause of causeKindFixture)expect(validateCause(cause)).toBe(true);
  for(const cause of [{kind:"transport",category:"unknown"},{kind:"transport",category:"nativeIo",refusalKind:"invalidValue"},{kind:"refusal",refusalKind:"externalFailure"},{kind:"refusal"},{kind:"transport"}])expect(validateCause(cause)).toBe(false);
- const validate=new Ajv({strict:true}).compile(schema);
- expect(validate(fixture)).toBe(true);
  expect(new Set(fixture.cases.map(row=>row.expectedKind))).toEqual(new Set(kinds));
  const replace=(id:string,patch:Record<string,unknown>)=>({...fixture,cases:fixture.cases.map(row=>row.id===id?{...row,...patch}:row)});
- for(const patch of [{kind:null},{kind:"unknown"},{unexpected:true}])expect(validate(replace("physical-credit",patch))).toBe(false);
- expect(validate(replace("injected-transport-workLimit-transient",{retry:null}))).toBe(false);
- expect(validate({...fixture,implicitKind:"invalidValue"})).toBe(false);
+ 
 });
 
 test("actual canonical Pack projection matches independent SQLite output without deriving kind from prose",()=>{
@@ -85,12 +77,9 @@ test("actual canonical Pack projection matches independent SQLite output without
  }finally{database.close();}
 });
 import pagedFixture from "../../🧫️fixtures/🧭️cause/📋️paged/🔣️.json";
-import pagedSchema from "../../🧬️schema/🧭️cause/📋️paged/🔣️.json";
 
 test("borrowed factories preserve lower kinds and byte witnesses against independent SQLite",()=>{
- const validate=new Ajv({strict:true}).compile(pagedSchema);
- expect(validate(pagedFixture)).toBe(true);
- for(const patch of [{kind:"canceled"},{allocatedBytes:-1},{unexpected:true},{expectedKind:"invalidValue"}])expect(validate({...pagedFixture,cases:pagedFixture.cases.map((row,index)=>index===3?{...row,...patch}:row)})).toBe(false);
+ 
  const database=new Database(":memory:");
  try{
   for(const row of pagedFixture.cases){

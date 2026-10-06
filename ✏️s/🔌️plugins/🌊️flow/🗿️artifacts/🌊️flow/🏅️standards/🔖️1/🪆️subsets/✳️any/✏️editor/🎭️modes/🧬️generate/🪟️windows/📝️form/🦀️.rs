@@ -31,6 +31,7 @@ pub const FLOW_PLAY_BODY_GENERATE_FORM: &str = "flow.play.generate-form";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: FLOW_PLAY_WINDOW_GENERATE_FORM.into(),
         label: LocalizedLabel::native("Form", "Formular"),
         body_key: FLOW_PLAY_BODY_GENERATE_FORM.into(),

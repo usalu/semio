@@ -1,0 +1,214 @@
+{
+  "checkedAt": "2026-10-06T00:40:46.769Z",
+  "production": [
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "a4e889bfc59de298dd00bb732ca6d0e47b05f0d1ea3b272fdb690b31a57cb122"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🪶️sqlite/🫳️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🪶️sqlite/🫳️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "145d66efa88fc18bd0f081da955b78615622ea34afe9e226f2310a64baae36f7"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "e449e7c14fae20f10579785d737a1fdaaf0faa95261d1b3a9bf5b914912b8cf0"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "ffa54b594e8faa1eb61e99100b1509f29120a45dc13cf9393dabc569687cb051"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "7c35f96f968c5734122b1b31a5c0502a3941e32c8f2dacd18cb05bda99c2e997"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "4c368586ed0284b45f911bdf03c9af51835215f26d3ab1d400908a8dbdc2d17b"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "41da08d61332700d09b2d865bd0b37b38f67f091d6ef928d6884eb43d6e870f8"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "86d3bfb3d4f0edfb49165117ca8c85558330bfd2372c1da1ed5759552487ed24"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "ebb381ba4d4beb533e68cbe6139212f36ced6b2ed3e06d81dcb462aa971c593e"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "580a8864a96c5e4183d1809a218ae5af8d66ee8d885c28875b648545240115d2"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "7a48c3a7e78f98e3a056267883672f8bebbb5462732117f45707ff44a460e5aa"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "9e7ffd61cc217736706123e34eb11ed3bb61ec607d909e75f6778dfbbb1b8f0f"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "33d6f88279e900a06301c3da367a170770e6bdd0f185f0d124c722efb796eb7f"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "c25d745bebc49048e8e136ab0f3470da5ae33a28afb690f8dfe980c5aa8e5e98"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "bd8ddba46109ee805f06a9820a51b8ba2a0e1cee85d080e2816fc0a7a688e634"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "188b956ced7353371507b2b594283d329758d492bc5a77d950ec1a336063f972"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "aa4bcea929683c883fbabc62879c4200004c3a620c25659b4fde7e9e6ce8f821"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "8a4c62d73c3b5ce0d4a1b5954ee75b45b15865b6dbcf9e6e2517b928541ae34f"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "eacde36afb637af120c5db62662aa84c11f5947dee8ce015bcb4571e37fc8ce7"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "2ee97a2c81a2214a13ad423bf858f69810db645639c823410e8a77dd2056a5da"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "feb3e1f268e9731c0f5b1500d984eee8dfad676163c760ebb2b6bb9222fe48bb"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "68ae1de11910e4a9e5cfad0b53dd01b76eabc2f01eec21824e453e77691bf7f8"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "deca1938799f423caa9bf7e75557c2ec5784e1a5aba861c3ce5c8c6318c0d76e"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "7fcb5b73afcbc6fed39db9f430e9a064ee1ca23aa72f6257d5b87e7026710c47"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "24f4799d4b3b30fed2ffe8fd5553265a5b57dc7bcf2898a4c6700dac7e01c9be"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "f9eafe5409d1b874fbb6e528eb447ff837a0767cad4ef57130e67b60c1c7a2ad"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/📏️encoding/💰️backing/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📏️encoding/💰️backing/🦀️.rs",
+      "exists": true,
+      "matchesMounted": false,
+      "sha256": "c7abbbf1534ab43c031da06d9c62a069da9231b0583c4f134eb2cd6f679f48f9"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/📏️encoding/💰️backing/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📏️encoding/💰️backing/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "a8dd06386160f39352d60abea521322ff3963058f45cf0a171e69d028f8854dd"
+    },
+    {
+      "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/📏️encoding/💰️backing/🦀️.rs",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📏️encoding/💰️backing/🦀️.rs",
+      "exists": true,
+      "matchesMounted": true,
+      "sha256": "707167d4b3ef318308cadac6d3ec68daeaaf2c67b4b1c81f5bb9bf3efdbc8fdd"
+    }
+  ],
+  "vdiHeld": {
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🦀️.rs",
+    "liveMatchesHeldBefore": true,
+    "liveMatchesHeldAfter": false
+  }
+}

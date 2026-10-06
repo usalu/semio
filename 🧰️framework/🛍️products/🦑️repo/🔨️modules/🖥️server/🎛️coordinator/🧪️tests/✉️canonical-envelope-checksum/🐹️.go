@@ -14,7 +14,7 @@ import (
 
 func goldenEvent(ctx *host.Context) (coordinator.EventEnvelope, string, error) {
 	var event coordinator.EventEnvelope
-	data, err := ctx.FixtureBytes("shared://📜️g3-event-log.jsonl")
+	data, err := ctx.InputBytes("shared://📜️g3-event-log.jsonl")
 	if err != nil {
 		return event, "", err
 	}
@@ -38,7 +38,7 @@ func goldenLineIsCanonical(ctx *host.Context) (host.Outcome, error) {
 	if err != nil {
 		return host.Outcome{}, err
 	}
-	schema, err := ctx.FixtureBytes("schema://repo.server.coordinator/G3EventLogContract")
+	schema, err := ctx.InputBytes("schema://repo.server.coordinator/G3EventLogContract")
 	if err != nil {
 		return host.Outcome{}, err
 	}

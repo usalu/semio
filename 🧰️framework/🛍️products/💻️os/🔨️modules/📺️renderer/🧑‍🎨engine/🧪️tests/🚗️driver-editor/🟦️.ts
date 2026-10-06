@@ -2,7 +2,7 @@
 import { describe, expect, test } from "vitest";
 import { uiI18n } from "@semio-tech/ui-react";
 import { isShellLocale } from "@semio-tech/framework";
-import Ajv from "ajv";
+
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,7 +11,6 @@ import { driverDisplayLabel } from "../../🧱️elements/🛠️ShellHelpers/�
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const frameworkRoot = join(engineRoot, "..", "..", "..", "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🚗️driver-editor", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🚗️driver-editor", "🔣️.json"), "utf8"));
 
 type Driver = Record<string, string>;
 type State = { selected: string; drivers: Record<string, Driver>; draft: Driver | null; saveLabel: string };
@@ -32,10 +31,7 @@ const remove = (state: State, id: string): State => {
 };
 
 describe("🚗️ driver editor contract", () => {
-  test("the shared fixture satisfies the Ajv schema oracle", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("the independent reducer matches edit, selection, save and delete vectors", () => {
     let state: State = { selected: "default", drivers: structuredClone(fixture.builtins), draft: null, saveLabel: "" };

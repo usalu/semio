@@ -1,18 +1,20 @@
 //! 🦀️ Rust side of the runner-detection case: the manifest order and the JavaScript runner choice.
 
 use semio_framework_repo_test_runner as subject;
+#[path = "../../🧪️testing/🦀️.rs"]
+mod examples;
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
 //#region 🔖️Support
-fn vectors(ctx: &Context) -> Result<subject::DetectionVectors, String> {
-    subject::parse_detection_vectors(&ctx.fixture_bytes("shared://🧭️detection-vectors.json")?)
+fn vectors(ctx: &Context) -> Result<examples::DetectionVectors, String> {
+    examples::parse_detection_vectors(&ctx.input_bytes("shared://🧭️detection-vectors.json")?)
 }
 
 fn strings(values: &[String]) -> Json {
     Json::Array(values.iter().map(|value| Json::String(value.clone())).collect())
 }
 
-fn js_argv(fixture: &subject::DetectionVectors, bundle_root: &str, filter: &str) -> Vec<String> {
+fn js_argv(fixture: &examples::DetectionVectors, bundle_root: &str, filter: &str) -> Vec<String> {
     let (_, args) = subject::detect_js_test_runner(&fixture.snapshot, &fixture.snapshot.absolute(bundle_root), filter);
     args
 }

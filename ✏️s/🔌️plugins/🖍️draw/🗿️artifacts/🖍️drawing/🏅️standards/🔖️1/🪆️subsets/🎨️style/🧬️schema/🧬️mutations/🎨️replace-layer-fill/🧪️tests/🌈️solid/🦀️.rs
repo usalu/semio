@@ -90,13 +90,13 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "replace-layer-fill/solid-to-linear-gradient: the fill really changes, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("replace-layer-fill's diff pins a layers delta");
-    assert!(delta.patched[0].patch.fill_json.is_some(), "the fill patch field must be populated");
-    assert_eq!(delta.patched[0].patch.stroke_json, None, "a fill replace must leave the stroke patch field empty");
+    assert!(delta.patched[0].patch.fill.is_some(), "the fill patch field must be populated");
+    assert_eq!(delta.patched[0].patch.stroke, None, "a fill replace must leave the stroke patch field empty");
 }
 
-/// 🔺️ The produced diff is EXACTLY the committed one. The fill rides as a `fillJson` blob holding the
+/// 🔺️ The produced diff is EXACTLY the committed one. The fill rides as a `fill` blob holding the
 /// TAGGED union — `"kind":"linearGradient"` and its stops — so the variant switch survives every
-/// representation. The committed `"strokeJson": null` pins that a fill swap leaves the stroke alone.
+/// representation. The committed `"stroke": null` pins that a fill swap leaves the stroke alone.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
@@ -105,10 +105,9 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "replace-layer-fill/solid-to-linear-gradient: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("replace-layer-fill pins a layers delta");
     let patch = &delta.patched[0].patch;
-    let blob = patch.fill_json.as_deref().expect("the fill lane is populated");
-    let fill: Option<FillStyle> = serde_json::from_str(blob).expect("the fill blob is itself valid JSON");
+    let fill = patch.fill.as_ref().expect("typed fill patch").value.clone();
     assert!(matches!(fill, Some(FillStyle::LinearGradient { .. })), "the blob carries the tagged gradient variant, not a bare colour");
-    assert!(patch.stroke_json.is_none(), "a fill swap must leave the stroke lane empty");
+    assert!(patch.stroke.is_none(), "a fill swap must leave the stroke lane empty");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

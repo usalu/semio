@@ -1,41 +1,28 @@
-import { dirname, join } from "node:path";
-import { POLICY_SOURCE_OPERATIONS, policySourceText, type PolicySourceOperations } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
+import { POLICY_SOURCE_OPERATIONS, policySourceDirectory, type PolicySourceOperations } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policySchemaFieldDifferences } from "../../../🔍️field-discovery/⚖️comparison/🟦️.ts";
-import { policyExtractGraphqlSchemaFields } from "../../../🔍️field-discovery/🔗️graphql/🟦️.ts";
-import { policyExtractProtobufSchemaFields } from "../../../🔍️field-discovery/🛰️protobuf/🟦️.ts";
-import { policyExtractTypescriptSchemaFields } from "../../../🔍️field-discovery/🟦️typescript/🟦️.ts";
-import { policyExtractTypescriptSchemaFile } from "../../../🔍️field-discovery/🟦️typescript/📂️module-resolution/🟦️.ts";
-import { policyExtractRustSchemaFields } from "../../../🔍️field-discovery/🦀️rust/🟦️.ts";
+import { POLICY_SCHEMA_FACET_RELS, policyLoadSchemaFacetLeaves } from "../../📚️facet-leaves/🟦️.ts";
+import { policyDiscoverArtifactSchemaOwners } from "../../🔍️owner-discovery/🟦️.ts";
 
-/** 🪪️ Audits exact document, snapshot and diff fields across authored representations. */
+/** 🪪️ Audits authored document, snapshot and diff declarations through their semantic owners. */
 export function policyArtifactOwnershipFieldParity(root: string, operations: PolicySourceOperations = POLICY_SOURCE_OPERATIONS): { path: string; missing: string[]; extra: string[] }[] {
-  const fixtureSource = policySourceText(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧫️fixtures/🧪️abstraction-ownership/🔣️.json", operations);
-  if (fixtureSource.state !== "file") throw new Error(`Artifact ownership fixture is ${fixtureSource.state}.`);
-  const fixture = JSON.parse(fixtureSource.text) as { artifactSchemas: string[] },
-    paths = new Set(fixture.artifactSchemas);
-  for (const path of fixture.artifactSchemas) if (!path.includes("/🔺️diff/")) paths.add(join(dirname(path), "📸️snapshot/🔣️.json"));
-  const representations = [
-      ["🦀️.rs", policyExtractRustSchemaFields],
-      ["🟦️.ts", policyExtractTypescriptSchemaFields],
-      ["🔗️.graphql", policyExtractGraphqlSchemaFields],
-      ["🛰️.proto", policyExtractProtobufSchemaFields],
-    ] as const,
-    breaches: { path: string; missing: string[]; extra: string[] }[] = [];
-  for (const path of paths) {
-    const schemaSource = policySourceText(root, path, operations);
-    if (schemaSource.state !== "file") throw new Error(`Artifact ownership schema ${path} is ${schemaSource.state}.`);
-    const schema = JSON.parse(schemaSource.text) as { title: string; properties: Record<string, unknown> };
-    for (const [filename, extract] of representations) {
-      const source = join(dirname(path), filename),
-        sourceRead = policySourceText(root, source, operations),
-        text = sourceRead.state === "file" ? sourceRead.text : "",
-        declaration = filename === "🟦️.ts" ? policyExtractTypescriptSchemaFile(join(root, source), text, schema.title) : extract(text, schema.title),
-        difference = policySchemaFieldDifferences(
-          Object.keys(schema.properties ?? {}),
-          declaration.fields.map((field) => field.name),
-        );
-      if (!declaration.typeName) difference.missing.unshift(`declaration:${schema.title}`);
-      if (difference.missing.length || difference.extra.length) breaches.push({ path: source, ...difference });
+  const discovery = policyDiscoverArtifactSchemaOwners(root, operations);
+  if (discovery.issues.length) throw new Error("Artifact owner discovery is unresolved: " + JSON.stringify(discovery.issues));
+  const breaches: { path: string; missing: string[]; extra: string[] }[] = [];
+  for (const owner of discovery.owners) for (const facet of POLICY_SCHEMA_FACET_RELS) {
+    const path = owner + "/" + facet, source = policySourceDirectory(root, path, operations);
+    if (source.state === "missing") continue;
+    if (source.state !== "directory") throw new Error("Artifact schema " + path + " is " + source.state);
+    const leaves = policyLoadSchemaFacetLeaves(root, path, operations), normative = leaves.find(leaf => leaf.formatId === "🔣️jsonschema");
+    if (!normative?.extract) {
+      breaches.push({ path: normative?.relPath ?? path + "/🔣️.json", missing: ["source:" + (normative?.sourceState ?? "missing")], extra: [] });
+      continue;
+    }
+    for (const leaf of leaves) {
+      if (leaf === normative) continue;
+      const difference = policySchemaFieldDifferences(normative.extract.fields.map(field => field.name), leaf.extract?.fields.map(field => field.name) ?? []);
+      if (leaf.sourceState !== "file") difference.missing.unshift("source:" + leaf.sourceState);
+      else if (!leaf.extract?.typeName) difference.missing.unshift("declaration:" + normative.extract.typeName);
+      if (difference.missing.length || difference.extra.length) breaches.push({ path: leaf.relPath, ...difference });
     }
   }
   return breaches.sort((left, right) => left.path.localeCompare(right.path));

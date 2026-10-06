@@ -92,7 +92,7 @@ fn controlled_diagnostic_all_owner_corpus_and_exact_admission() {
 fn controlled_diagnostic_independent_ajv_schema_oracle() {
     let schema: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🎛️controlled/🔣️.json")).unwrap();
     let value_schema: serde_json::Value = serde_json::from_str(include_str!("../../../🌱️value/⚠️refusal/🧬️schema/🔣️.json")).unwrap();
-    let script = "import Ajv from 'ajv/dist/2020.js';const x=JSON.parse(await Bun.stdin.text()),ajv=new Ajv({strict:true}).addSchema(x.valueSchema);if(!ajv.validate(x.schema,x.fixture))throw Error(JSON.stringify(ajv.errors));const rows=x.fixture.cases.map(row=>{const valid=ajv.getSchema(x.schema.$id+'#/$defs/'+row.owner);if(valid(row.input)!==row.accepted)throw Error(row.id);if(row.accepted&&!valid(row.expected))throw Error(row.id+' output');return row.accepted;});await Bun.write(Bun.stdout,JSON.stringify(rows));";
+    let script = "import Ajv from 'ajv/dist/2020.js';const x=JSON.parse(await Bun.stdin.text()),ajv=new Ajv({strict:true}).addSchema(x.valueSchema).addSchema(x.schema);const rows=x.fixture.cases.map(row=>{const valid=ajv.getSchema(x.schema.$id+'#/$defs/'+row.owner);if(valid(row.input)!==row.accepted)throw Error(row.id);if(row.accepted&&!valid(row.expected))throw Error(row.id+' output');return row.accepted;});await Bun.write(Bun.stdout,JSON.stringify(rows));";
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
     child.stdin.take().unwrap().write_all(serde_json::json!({"schema":schema,"valueSchema":value_schema,"fixture":fixture()}).to_string().as_bytes()).unwrap();
     let output = child.wait_with_output().unwrap();

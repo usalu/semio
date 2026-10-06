@@ -1,6 +1,6 @@
 //! 🎬️ 🎬️ Trinity Rewriting app command — `set-active-example`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use semio_framework_plugin::{Emit, NoConfigMutation};
 use store::ArtifactDsl;

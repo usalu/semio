@@ -185,7 +185,7 @@ fn a_drag_edited_in_history_replays_its_downstream() {
         store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Wfc2dSnapshot, crate::Wfc2dMutation>());
         let log = [drag_slots(vec!["room-a".into()], 1.0, 0.0), drag_slots(vec!["room-a".into(), "room-b".into()], 0.0, 2.0), resize_slot("room-a".into(), 3.0, 1.5)];
         for mutation in &log {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the edit applies");
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let edited = drag_slots(vec!["room-a".into()], 3.0, -1.0);

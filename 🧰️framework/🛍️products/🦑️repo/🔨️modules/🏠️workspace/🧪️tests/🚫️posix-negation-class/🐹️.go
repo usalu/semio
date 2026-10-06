@@ -27,7 +27,7 @@ type globVectorFile struct {
 }
 
 func loadGlobVectors(ctx *host.Context) (globVectorFile, error) {
-	data, err := ctx.FixtureBytes("shared://📡️glob-vectors.json")
+	data, err := ctx.InputBytes("shared://📡️glob-vectors.json")
 	if err != nil {
 		return globVectorFile{}, err
 	}

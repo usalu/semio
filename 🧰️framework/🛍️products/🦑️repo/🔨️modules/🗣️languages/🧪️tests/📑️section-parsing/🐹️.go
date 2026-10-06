@@ -56,7 +56,7 @@ func started(sections []model.Section) []any {
 }
 
 func read(ctx *host.Context, name string) (string, error) {
-	path, err := ctx.Fixture("shared://" + name)
+	path, err := ctx.Input("shared://" + name)
 	if err != nil {
 		return "", err
 	}

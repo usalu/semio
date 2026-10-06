@@ -9,7 +9,7 @@
 use crate::fem3d_engine::meshing::{mesh_solids, NODE_MERGE_TOLERANCE};
 use crate::fem3d_engine::fem3d_solve_all;
 use crate::model::Dof;
-use crate::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, print_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{FemAxis, Fem3dSnapshot};
 use std::collections::{HashMap, HashSet};
 

@@ -1,6 +1,6 @@
-use crate::io::export::serializers::artifacts::{dwg::v_ac1018::any as dwg_out, dxf::v_r12::any as dxf_out, pdf::v1_4::any as pdf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out, txt::v_utf_8::any as txt_out};
-use crate::io::import::deserializers::artifacts::{dwg::v_ac1018::any as dwg_in, dxf::v_r12::any as dxf_in, txt::v_utf_8::any as txt_in};
-use crate::standards::v1::subsets::any::schema::value_to_dsl;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{dwg::v_ac1018::any as dwg_out, dxf::v_r12::any as dxf_out, pdf::v1_4::any as pdf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out, txt::v_utf_8::any as txt_out};
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{dwg::v_ac1018::any as dwg_in, dxf::v_r12::any as dxf_in, txt::v_utf_8::any as txt_in};
+use crate::standards::v1::subsets::any::io::text::snapshot::value_to_dsl;
 use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
 use geo::{Area, Coord, LineString, Polygon};
 
@@ -71,9 +71,10 @@ fn page_formats_are_real_files_of_their_format() {
     assert!(svg.contains("<svg") && svg.matches("<path").count() == 4, "{svg}");
     let pdf = pdf_out::serialize_bytes(&map()).expect("pdf");
     assert!(pdf.starts_with(b"%PDF-1.4"));
-    let png = semio_s_artifact_stdio_png::io::decode_png(&png_out::serialize_bytes(&map()).expect("png")).expect("decodes as png");
-    assert_eq!((png.width, png.height), (256, 256));
-    assert!(png.pixels.chunks(4).filter(|px| px[3] > 0).count() > 100, "markers and lines are painted");
+    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(&png_out::serialize_bytes(&map()).expect("png")).expect("decodes as png");
+    let preview = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::png_preview(&png).expect("owned PNG preview");
+    assert_eq!((preview.width, preview.height), (256, 256));
+    assert!(preview.bytes.chunks(4).filter(|px| px[3] > 0).count() > 100, "markers and lines are painted");
 }
 
 #[test]
@@ -84,8 +85,8 @@ fn txt_is_the_exact_dsl_carrier() {
 
 mod geojson_io {
     use super::feature;
-    use crate::io::export::serializers::artifacts::json::v_rfc8259::geojson as geojson_out;
-    use crate::io::import::deserializers::artifacts::json::v_rfc8259::geojson as geojson_in;
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::geojson as geojson_out;
+    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::geojson as geojson_in;
     use crate::standards::v1::subsets::any::schema::dsl_to_value;
     use crate::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature};
     use serde_json::Value;
@@ -129,7 +130,7 @@ mod geojson_io {
     /// and 149 routes — with the coordinates the map holds, and the sibling import restores the map.
     #[test]
     fn geojson_crate_reads_the_bundled_example_export() {
-        let example = crate::standards::v1::subsets::any::schema::default_document();
+        let example = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
         let bytes = geojson_out::serialize_bytes(&example).expect("the bundled example exports");
         let geojson::GeoJson::FeatureCollection(collection) = geojson::GeoJson::from_str(std::str::from_utf8(&bytes).expect("utf-8")).expect("the geojson crate reads our export") else {
             panic!("the export is a FeatureCollection")

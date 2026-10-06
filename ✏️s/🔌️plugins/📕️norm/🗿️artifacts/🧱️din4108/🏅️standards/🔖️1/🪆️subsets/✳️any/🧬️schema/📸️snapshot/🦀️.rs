@@ -37,12 +37,7 @@ pub struct Din4108Snapshot {
     #[state(artifact)]
     pub thermal_bridges: Vec<ThermalBridge>,
 }
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;
-crate::impl_norm_artifact_record!(Din4108Snapshot, extension = "din4108", envelope_id = "norm.din4108", sqlite = sqlite::sqlite_codec);
+crate::impl_norm_artifact_record!(Din4108Snapshot, extension = "din4108", envelope_id = "norm.din4108", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
 
 impl Default for Din4108Snapshot {
     fn default() -> Self {
@@ -212,33 +207,15 @@ impl Din4108Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ Canonical JSON projection of a [`Din4108Snapshot`].
-pub fn encode_din4108_snapshot_json(snapshot: &Din4108Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ Inverse of [`encode_din4108_snapshot_json`].
-pub fn decode_din4108_snapshot_json(text: &str) -> Result<Din4108Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📖️ Parses a committed `.dsl.semio` artifact into a [`Din4108Snapshot`].
-pub fn decode_din4108_dsl(text: &str) -> Result<Din4108Snapshot, String> {
-    <Din4108Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-/// 🖨️ Prints a [`Din4108Snapshot`] to its canonical `.dsl.semio` body.
-pub fn encode_din4108_dsl(snapshot: &Din4108Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
 
-/// 📦️ Decodes a [`Din4108Snapshot`] from the binary `.pack.semio` envelope.
-pub fn decode_din4108_pack(bytes: &[u8]) -> Result<Din4108Snapshot, String> {
-    <Din4108Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
 
-/// 📦️ Encodes a [`Din4108Snapshot`] to its binary `.pack.semio` envelope.
-pub fn encode_din4108_pack(snapshot: &Din4108Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge

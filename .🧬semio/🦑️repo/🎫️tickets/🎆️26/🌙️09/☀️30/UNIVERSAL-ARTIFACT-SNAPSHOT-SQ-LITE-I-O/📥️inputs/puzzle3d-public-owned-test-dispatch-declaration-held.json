@@ -1,0 +1,14 @@
+{
+  "qualification": "One held test-only first-party compile-time dependency for existing public Editor/Viewer dyn_enum_close harness. No production runtime dependency. Actual compiler-only Before has zero assertions.",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "regions": [
+        {
+          "before": "[dev-dependencies]\n",
+          "after": "[dev-dependencies]\nsemio-framework-dispatch-macros = { workspace = true }\n"
+        }
+      ]
+    }
+  ]
+}

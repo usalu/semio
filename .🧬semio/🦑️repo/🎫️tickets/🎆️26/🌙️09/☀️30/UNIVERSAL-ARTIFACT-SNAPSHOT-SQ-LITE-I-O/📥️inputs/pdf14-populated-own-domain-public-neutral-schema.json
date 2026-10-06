@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "codecSchema",
+    "structuralSchema",
+    "dialect",
+    "owner",
+    "editedOwner",
+    "geometryPolicy",
+    "publicMetadataColumns"
+  ],
+  "properties": {
+    "codecSchema": {
+      "const": "stdio.pdf"
+    },
+    "structuralSchema": {
+      "const": "s.stdio.pdf"
+    },
+    "dialect": {
+      "const": {
+        "artifact_kind": "s.stdio.pdf",
+        "standard": "1.4",
+        "subset": "*"
+      }
+    },
+    "owner": {
+      "const": {
+        "schema": "stdio.pdf",
+        "pages": [
+          {
+            "width": 200,
+            "height": 300,
+            "text": "First page"
+          },
+          {
+            "width": 400,
+            "height": 500,
+            "text": "Second page"
+          }
+        ]
+      }
+    },
+    "editedOwner": {
+      "const": {
+        "schema": "stdio.pdf",
+        "pages": [
+          {
+            "width": 200,
+            "height": 300,
+            "text": "First page"
+          },
+          {
+            "width": 8,
+            "height": 9,
+            "text": "Independent page edit"
+          }
+        ]
+      }
+    },
+    "geometryPolicy": {
+      "const": "finite-only"
+    },
+    "publicMetadataColumns": {
+      "const": [
+        "id",
+        "schema_version",
+        "artifact_kind",
+        "standard",
+        "subset",
+        "native_encoding"
+      ]
+    }
+  }
+}

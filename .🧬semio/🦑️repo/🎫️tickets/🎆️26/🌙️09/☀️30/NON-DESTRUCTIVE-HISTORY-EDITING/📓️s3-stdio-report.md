@@ -346,3 +346,243 @@ S4-STDIO (Opus executor), successor of S3-STDIO. Scratch: `🗑️generated/s4-s
   peer's (Codex sqlite-snapshot conversion: semio ×19 `🪶️sqlite`/`🛬️native`/`🛫️native` 08:00, gltf/csv/tsv/binary/deflate/png sqlite
   09:22–11:00, step 11:32–12:28; S3-GRAPHS semio graph `drag-nodes` 11:48–12:07); contract files touched 10-03 15:32–23:53 + 10-04 01:04
   (raster/bytes/details/part21/`🩹️patch` imports) are peer value/DSL refactor waves. No half-finished S3-STDIO edit found.
+
+## Session 5 — 2026-10-05
+
+S5-TEXT-STDIO (one executor for S4-TEXT + S4-STDIO; the text half is `📓️w3-t2-text-report.md` § Session 5). Scratch
+`🗑️generated/s5-text-stdio/`. Ticket inputs (keep at close): `🧪️s5-text-stdio-input-ui.py` (engine: `--check` default, explicit
+file list, fails closed on an empty root / a row without an input / an input without a row / a refused annotation),
+`🧪️s5-text-stdio-input-ui-table.py` (the reviewed table: one hand-authored row per input MEANING), `🧪️s5-text-stdio-input-ui.files.txt`,
+`🧪️s5-text-stdio-input-ui-check.ts` (pre-flight with the framework's own reader). Per-input table: `📓️s5-text-stdio-input-table.md`.
+
+### S5.0 Status log (newest first)
+
+- 09:36 RESUME after the 07:45 cut. Repair-first: the six files of the interrupted wave were written atomically at 07:31:02 and are
+  complete; the verifying check had run across the cut (07:43:35–07:47:30, `check-semio-tests-1.txt`): **`cargo check
+  --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-stdio-semio --lib --tests --all-features` exit 0** (lib 393 warnings, lib test
+  452 = type-check proof) → the 14 lib-test errors are gone. Re-check on the current tree (73 stdio files changed after 07:48, a
+  Codex peer's sqlite-native wave) is running cold after the prune (`check-semio-tests-2.txt`).
+- 07:31 stdio-semio LIB-TEST repaired (14 errors in 5 stale tests, all model drift, none a production red):
+  - image ⇄ tiff: `TiffIfd` has no `pixels`, `TiffTag` no `kind`, `TiffSnapshot` no `pixels`, `TiffValues::Ascii` is bytes. The import
+    fixture is now a real one-strip RGB page (`storage.chunks`), the export law projects the decoded page with
+    `decode_tiff_page_rgba` and compares all four samples.
+  - **Production defect found by rewriting that law**: `SemioImageToTiff` wrote a 4-sample page without `ExtraSamples` (338), which
+    the tiff crate's own projector refuses ("four-sample display projection requires one unassociated alpha ExtraSample") — an
+    exported image could not be re-imported. Fixed: the exporter plants `ExtraSamples = [2]` (unassociated alpha); stale module doc
+    corrected.
+  - presentation ⇄ pptx: `PptxSnapshot::from_parts` takes two arguments and `presentation` is a projection method — the fixtures
+    build through the crate's own `build_minimal_pptx`, the export law reads `pptx.presentation()`.
+- 02:14 CUT. Landed and checked before it (each under one `stdio` hold, `cargo check … --lib` exit 0 with warnings):
+  b1 las, zip, mp4, tsv, txt, stl (37 files; 01:50–01:52) · b2 csv, mp3, png, wav, tiff, ply (25; 01:56–01:57) · b3 md, xml, json,
+  obj, jpg, svg (82 + codemod 11 sites; 02:08–02:10) · b4 xlsx, pptx, docx, step, binary, deflate (68 + codemod 9 sites;
+  02:13–02:14). Text crates (`jack`, `rewriting`, `writer`, `vcs` + the stdio closure) `--lib` exit 0 at 02:40.
+
+### S5.1 P1 census (before, 01:05) — `🗑️generated/s5-text-stdio/census.py`
+
+Unit: top-level payload properties of every leaf schema on disk (`…/🧬️mutations/<leaf…>/🧬️schema/🔣️.json`, fixtures/tests excluded,
+`mutation` discriminator excluded). "Bare" = no `x-semio-ui` on the property: it read only through type inference and the label
+glossary — no description, no step, no unit, no role.
+
+| tree | leaves | explicit | bare | no input |
+|---|---:|---:|---:|---:|
+| stdio | 1031 | 890 | **821** | 45 |
+| trinity | 16 | 11 | 17 | — |
+| writer | 10 | 9 | 10 | — |
+| vcs | 6 | 3 | 3 | — |
+
+Bare by stdio crate: semio 335, pdf 166, svg 50, step 44, xlsx 29, json 25, obj 21, zip 20, xml 19, jpg 17, pptx 16, las 13, ply 11,
+md 11, mp4 9, tiff 7, stl 7, txt 7, wav 5, tsv 5, png 2, csv 1, mp3 1 (the audit's 644 excluded the 190 `$ref` inputs).
+What was missing, by kind (top 10 of 723 distinct leaf/input rows): `index` integer ≥ 0 ×130 (a different thing in every leaf:
+page, point, track, block, row, keyframe …), string `id` ×55, `name` ×38, `key` ×26, child-index `path` ×19, whole `snapshot` ×62,
+`value` ×14, text ×11, `descriptorOrdinal` ×12, script ×10. The full per-crate table (leaf, input pointer, JSON type, what was
+missing, what is declared) is `📓️s5-text-stdio-input-table.md`.
+
+### S5.2 P1 method — a table of meanings, applied surgically
+
+- One constructor per judgement (`AT`/`IDX` which item an index addresses, `POS` where an insert lands, `ENT` an entity named by id
+  → reference chip with `role: target` + `ref.kind`, `KEY` a key the mutation may create → text in group `target`, `TXT`/`MULTI`/
+  `FLAG`/`INT`/`NUM`/`VEC` the value with its unit/step/precision/soft bounds/snaps, `REC` a structured value whose members carry
+  their own declarations, `ADDR` a structured address, `BLOB` an opaque member beside real parameters, `DISC` a fixed discriminator).
+  Examples of the distinctions the table makes: pdf `set-page-rotation.rotation` = dial, `°`, step 90, snaps 0/90/180/270; pdf page
+  `width`/`height` = stepper in `pt`, snaps at A5/A4/Letter/Legal/A3/A2; b-rep `tol` = log slider 1e-9…1e-1 with decade snaps;
+  mp4/semio-video `width`/`height` = `px` with 640…3840 / 360…2160 snaps; mesh `new_metallic`/`new_roughness` = slider 0–1 step 0.01;
+  camera `zoom` = log slider 0.1–8 with snaps; graph node `x`/`y`/`width`/`height` snap to the window's `gridFactor`;
+  png/bmp/tiff colour channels = sliders 0–255; `ExtraSamples`-style code integers = steppers with the legal values in the description.
+- **Design §22.20 (01:50)**: a leaf whose whole VALUE is opaque is declared WITHDRAW-ONLY in its descriptor (`"editable": false`),
+  never hidden. The table's `W` rows name them with the reason; a leaf that takes no parameter at all is withdraw-only by shape.
+  `hidden` stays only for an opaque member beside real parameters (wav `patch-data.data`).
+- Earlier declarations that lacked a step are AMENDED (`A` rows: 372 inputs, gltf 166, gif 43, ifc 25, …) so every interactive
+  number declares `step` or snaps.
+- Engine guarantees: span-surgical insert (every other byte kept; the parsed document must equal the original plus exactly the
+  written members), `InputUi` meta-schema validation with third-party `jsonschema`, the reader's widget/shape/bounds rules, and the
+  pre-flight `bun 🧪️s5-text-stdio-input-ui-check.ts <bundle>` = the framework reader over every patched leaf before the write
+  (last run: 746 files, 0 findings added).
+- Findings fixed on the way (semio graph subset, were gate reds): `remove-node-property` `/node_id` reference on an object and
+  `/key` `role: target` without `ref.kind`; `create-edge`/`create-node`/`add-node-port` unlabelled `source_port`, `target_port`,
+  `ports`, port `kind` options, `category`.
+
+### S5.3 State at 10:45 (what is on disk, what was run)
+
+| Family (one `stdio` hold each) | On disk | Verifying run |
+|---|---|---|
+| b1 las zip mp4 tsv txt stl | declarations (37 files) | `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-stdio-{las,zip,mp4,tsv,txt,stl} --lib` **exit 0** 01:52 |
+| b2 csv mp3 png wav tiff ply | declarations (25) | same form, **exit 0** 01:57 |
+| b3 md xml json obj jpg svg | declarations (82) + tool-mismatch codemod 11 sites | **exit 0** 02:10 |
+| b4 xlsx pptx docx step binary deflate | declarations (68) + codemod 9 sites | **exit 0** 02:14 |
+| stdio-semio tests | 5 test files + image→tiff exporter (`ExtraSamples`) | `… -p semio-s-artifact-stdio-semio --lib --tests --all-features` **exit 0** 07:47 and again on the current tree **exit 0** 09:52 (lib 393 / lib-test 452 warnings) |
+| b5 avi bmp dwg dxf epw gif | declarations + amendments (58 files incl. 7 `editable: false` descriptors) + codemod 8 sites | **NO VERDICT** — gate v6 closed 15 min (09:52–10:07), second run sat 26 min childless behind shared-dir locks and was stopped by me (exit 143), third gate closed 10:41. Pre-flight with the framework reader: 0 findings added. **OWED**: `zsh T/🚦️gate.sh && CARGO_BUILD_JOBS=3 cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-stdio-avi -p semio-s-artifact-stdio-bmp -p semio-s-artifact-stdio-dwg -p semio-s-artifact-stdio-dxf -p semio-s-artifact-stdio-epw -p semio-s-artifact-stdio-gif --lib --message-format=short` |
+
+Totals of the plan (`python3 T/🧪️s5-text-stdio-input-ui.py`, 775 table rows → 1226 inputs in 862 files, 0 problems): **526 inputs
+declared on disk**, 493 to declare + 207 to amend still STAGED (semio 343, pdf 166, gltf 166, ifc 23, html 2); withdraw-only
+leaves **8 marked of 115** (avi, bmp, dwg, dxf, epw, gif ×2, rewriting `edit-before-fixture`), 106 staged, 1 blocked (gltf
+`default-scene/unbind` also needs `payload = Apply` dropped from its `#[mutation_leaf]` attribute, same wave); tool-mismatch codemod
+**28 of 72 sites** rewritten (`python3 T/🧪️s5-gates-tool-mismatch.py --root ✏️s/🔌️plugins/🗄️stdio` → 44 left in 39 files).
+
+Gates on the disk state (bun, repo root, 10:42): `schema mutation-inputs --census --under ✏️s/🔌️plugins/🗄️stdio` = 2011 findings
+(was 4705 at 01:33 under the same tightened gate): `numericUndeclared` 2489 → **1882**, `labelInferred` 2119 → counted (GATES
+narrowed the rule), `inputless` 27, 7 leaves withdraw-only, `labelMissing` 12 / `uiInvalid` 1 / `widgetIncompatible` 1 /
+`optionLabelMissing` 2 (all semio graph, cleared by the staged semio family), catalogue 86. `python3 T/🧪️s4-stdio-fixture-digests.py
+--check` = 0 stale. **Projection when the staged families land** (computed from the gate's JSON against the plan): `inputless` 0,
+label/widget findings 0, `numericUndeclared` 1882 → **911, none top-level**.
+
+### S5.4 The remainder of clause 5 in stdio — 632 nested numeric members
+
+After the plan, every top-level input is declared; what stays `numericUndeclared` are the numeric MEMBERS of structured values
+(`REC` inputs): 911 findings = **632 distinct schema nodes in 176 files** (469 integers, 162 numbers) — e.g. semio `SemioPoint2.x/y`
+and `Point3` (70 + 70 + 39 findings), pdf `PdfDate` parts and `ObjRef.num/gen`, zip entry fields, mp4 track boxes, array items of
+address paths. The node list with label / widget / unit / type / bounds is `🗑️generated/s5-text-stdio/nested-numeric-nodes.json`
+(keep until that layer is authored). Next table layer = `D` rows on those shared definitions (integers: step 1 + precision 0 where
+the member is a count, index, size or code; coordinates and factors by their unit). Not started.
+
+### S5.5 Design §22.20 in stdio (withdraw-only)
+
+- 78 whole-document leaves (`set-snapshot` ×77, gltf `snapshot/set`), 9 opaque-value leaves (las `set-vlr-data`, zip
+  `set-entry-data` ×2, jpg `replace-pixels`, wav `set-data`, pdf `set-document-id`, semio video `set-sample-data`, semio mesh
+  `replace-primitive-geometry`, bcf `set-viewpoint-snapshot`), 27 parameterless leaves (remove-/clear-/collapse-/strip-…;
+  marked by shape, no table row). All of them carry `#[mutation_leaf(contract = ::protocol)]` only, except gltf
+  `default-scene/unbind`. The 56 `patch-snapshot` leaves stay editable (`input_schema = Self::input_schema_at_path`).
+- The semio base `apply-<subset>` forwarding leaves are NOT parameterless (their `mutation` member is the nested subset
+  mutation, not the aggregate tag) and stay untouched.
+- Found by reading before marking, reported 10:03, fixed by S5-GATES 10:09: the derive's withdraw-only arm emitted only
+  `input_schema() -> None`, so the derived payload law would have failed every marked leaf with a fixture ("declares no input
+  schema yet rebuilds from its payload"); it now also emits a refusing `with_input_value`.
+
+### S5.6 Owed, in order (each = one `stdio` hold: `zsh T/🔐️lock.sh acquire stdio S5-TEXT-STDIO`, then
+`zsh T/🗑️generated/s5-text-stdio/batch.sh <name> <artifacts> [extra -p …]`, which applies the table to those artifacts, runs the
+codemod on their roots, passes gate v6 and checks their libs; release on exit 0)
+
+1. b5 check (above). 2. `batch.sh b6 gltf,html,ifc,bcf` — first Edit gltf `🏠️default-scene/✂️unbind/🦀️.rs:27` to
+`#[mutation_leaf(contract = ::protocol)]`. 3. `batch.sh b7 pdf` (also settles the 07:33 `apply_validated_snapshot_patch` E0603:
+the fn was private at HEAD, the Codex wave made it `pub` at 08:12 — not standing in source). 4. `python3
+T/🧪️s5-gates-tool-mismatch.py --root ✏️s/🔌️plugins/🗄️stdio/📇️registry --apply`, then `batch.sh b8 semio "-p
+semio-s-artifact-stdio-contract"`. 5. markers + codemod of the families landed before the marker existed: `batch.sh m1
+las,zip,mp4,tsv,txt,stl`, `m2 csv,mp3,png,wav,tiff,ply`, `m3 md,xml,json,obj,jpg,svg`, `m4 xlsx,pptx,docx,step,binary,deflate`.
+6. `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-stdio --target wasm32-wasip2 --lib` → "COMPOSITION GREEN stdio".
+7. Tests (≥ 25 GiB, `zsh T/🚦️gate.sh 3 25`): `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-stdio-semio --lib --
+image::io presentation::io` (the five repaired laws; the tiff round trip now asserts all four samples), then the derived payload
+law of one marked crate (`-p semio-s-artifact-stdio-gif --lib -- mutation`), the `--features oracles` check of the oracle crates
+and `test parity exhaustive` for the D4 rows (unchanged from S4, not started).
+8. After everything: `bun …/🧪️test/📜️script.ts schema mutation-inputs --census --under ✏️s/🔌️plugins/🗄️stdio`, `schema
+mutation-payloads --json --under ✏️s/🔌️plugins/🗄️stdio`, `schema mutation-editability --json --under ✏️s/🔌️plugins/🗄️stdio`.
+
+### S5.7 Open items (P5) — recommendations
+
+- **Composition ledger** (`🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/🧫️fixtures/🧩️composition/🔣️.json`, 218 of 265 `callers` rows
+  stale): there is NO refresh command — `🔮️oracles/📜️script.ts` registers tests only, and the law (`🧪️tests/🧩️composition/🟦️.ts:247–258`)
+  pins the sha256 of every caller test file with the oracle-crate rename undone. That is a migration pin over files that are
+  edited every wave; refreshing 218 digests buys one green run. Recommendation (hub = coordinator/INFRA decision, design §21.3
+  "compat pins are deleted"): delete the per-caller digest assertion and keep the structural rows (source exists, names the
+  current package, no retired path). Audit meanwhile: `python3 T/🧪️s4-stdio-composition-ledger-audit.py`.
+- **gltf `♾️any` set/patch-snapshot ownership**: both leaves address the whole asset, never one of the eight subsets, so neither
+  "smallest subset owner" nor a subset policy `single` is true. Recommendation: own them in the `♾️any` manifest as an explicit
+  typed compound over the eight subsets (the escape `wildcard-subset-owner` itself names), one row each, instead of sixteen
+  duplicated subset rows that would test the same dispatch arm; with §22.20 `snapshot/set` is withdraw-only and `snapshot/patch`
+  is typed per instance by its pointer, so the compound is exact.
+- **hub trinity lib-test macro gap**: untouched (S5-INFRA's macro). The hub crate lists `semio-framework-async-macros` but the
+  `plugin_exports!` test arm names `crate::semio_framework_async`; owed check after INFRA's fix: `cargo check --manifest-path
+  🌎️hub/Cargo.toml -p semio-hub-trinity --lib --tests`.
+- **Tool census (c)**: png / tiff / bmp paint and pdf page editors publish a plain edit outside a tool transaction — port onto the
+  framework gesture slot after "PRESS ON DISK" (S5-TOOLS §22.29); not started.
+
+### S5.8 Coordinator actions
+
+- Central `schema generate` (stdio: 66 `leafUncatalogued` + 20 `malformed`; every edited leaf schema changes its catalogue hash).
+- Describe at the final wave: `stdio`, `trinity`, `writer`, `vcs`, and every composition that publishes `s.stdio.semio` member
+  leaves (reasoning, dag, sequence, flow, mathematical, imperative, playbook, cad, space) — the input descriptors and the
+  withdraw-only flags travel in `INPUT_SCHEMAS`.
+- Rule 49 (live proof): the probe exercises puzzle 2d only; none of the stdio declarations is reachable live. The missing
+  user-visible step is "open a stdio document, edit a parameter leaf in the history editor in both renderers" (e.g. pdf
+  `set-page-rotation`: a dial with four snaps; gif `set-screen-size`: two `px` steppers; a `set-snapshot` row offering Withdraw
+  only).
+
+- 10:49 PARKED (rule 66): gate v6 closed again at 10:48:55 (shared-cargo 3). `stdio` lock released 10:44; no cargo of mine is running; b5 and the rewriting marker stay WRITTEN BUT UNVERIFIED by cargo (commands in S5.3 / S5.6 and `📓️w3-t2-text-report.md` S5.5).
+
+### S5.9 USAGE STOP 11:35 — state for the 14:20 resume
+
+- ALL families are APPLIED (8 apply-only `stdio` holds, train lines 11:01–11:04, restore = `tar -xf 🗑️generated/s5-text-stdio/pre-<name>.tar -C <repo>`): **1226 / 1226 inputs declared, 114 / 115 `editable: false` markers** (gltf `default-scene/unbind` stays blocked until S5-GATES' derive hunk accepts `payload = <Variant>` on a withdraw-only leaf), **tool-mismatch codemod 72 / 72** stdio sites.
+- VERIFIED in the private build dir (`zsh T/🗑️generated/s5-text-stdio/check.sh <name> ✏️s/Cargo.toml -p … --lib`, target `🗑️generated/s5-text-stdio/target`): b5 avi bmp dwg dxf epw gif + trinity-rewriting marker **exit 0** 11:11 (`check-b5.txt`); m2 csv mp3 png wav tiff ply **exit 0** 11:16 (`check-m2.txt`); m3 md xml json obj jpg svg **exit 0** 11:17 (`check-m3.txt`); m4 xlsx pptx docx step binary deflate: start 11:17:19 end 11:26:56 exit=0     Finished `dev` profile [unoptimized] target(s) in 9m 35s  (`check-m4.txt`).
+- NO VERDICT m1 (las zip mp4 tsv txt stl): exit 101 at 11:13 on a framework mid-save that is not stdio — `🔌️plugin/🦀️.rs:13676:43 E0425 tool_once_emit` not found in `semio_framework_tool_machine` (`check-m1.txt`). OWED: `zsh T/🗑️generated/s5-text-stdio/check.sh m1 ✏️s/Cargo.toml -p semio-s-artifact-stdio-las -p semio-s-artifact-stdio-zip -p semio-s-artifact-stdio-mp4 -p semio-s-artifact-stdio-tsv -p semio-s-artifact-stdio-txt -p semio-s-artifact-stdio-stl --lib`.
+- APPLIED BUT UNVERIFIED by cargo (rule 68 stopped new cargos at 11:18): b6 gltf html ifc bcf, b7 pdf, b8 semio + contract. OWED, same script: `check.sh b6 ✏️s/Cargo.toml -p semio-s-artifact-stdio-gltf -p semio-s-artifact-stdio-html -p semio-s-artifact-stdio-ifc -p semio-s-artifact-stdio-bcf --lib`; `check.sh b7 ✏️s/Cargo.toml -p semio-s-artifact-stdio-pdf --lib`; `check.sh b8 ✏️s/Cargo.toml -p semio-s-artifact-stdio-semio -p semio-s-artifact-stdio-contract --lib`; then jack / rewriting / writer / vcs `--lib` and `semio-hub-stdio` wasip2. (The cold b5 run compiled semio, pdf and docx as dependencies while those families were being applied — not a verdict for them.)
+- Gate on the disk state, 11:22: stdio `mutation-inputs` **4705 → 997** (`numericUndeclared` 910 all nested, `inputless` 1, catalogue 86; label / widget / option findings 0; 111 leaves withdraw-only, 0 refused); trinity 16 (catalogue only).
+- STAGED, NOT APPLIED — the record-member layer (`N` rows in `🧪️s5-text-stdio-input-ui-table.py`, region `RecordMembers`): 1003 member declarations in 100 shared records, dry check 0 problems, covers 568 of the 631 nested numeric nodes (837 of 910 findings). Before applying: `python3 T/🧪️s5-text-stdio-input-ui.py --emit-files T/🧪️s5-text-stdio-input-ui.files.txt --emit-bundle <json>` (the committed file list predates this layer), `bun T/🧪️s5-text-stdio-input-ui-check.ts <json>`, then `apply.sh` per family. The other 63 nodes are leaf-level byte / index arrays of earlier declarations (binary, deflate, docx, gif, gltf `order` ×17, html `path`, semio bytes …: amend rows or withdraw-only by the value rule) and three inline `SemioVideoStream` members.
+- NOT STARTED: ledger per-caller pin deletion (hub lock), gltf `♾️any` typed compound manifest, paint / page tool ports (after "PRESS GREEN"), every test build. The private target dir stays for the owed checks; delete it once they are green.
+
+### S5.10 Base-crate red triage and the patch-snapshot inverse-rows law (2026-10-06, 03:34–03:55)
+
+Sources: `🗑️generated/coord/base-check.txt` (coordinator runs 03:30 = 2923 located errors and 03:44 = 2906, the second
+stopped before deflate), my private runs `🗑️generated/s5-text-stdio/check-p1-gltf.txt` (03:52, txt 78 errors) and
+`check-p1-pdf.txt` (03:53, deflate 17 errors). `cargo check --lib` of dwg / txt / deflate / semio is **NOT green**.
+
+- **Errors mine 0 / the Codex peer's all** — deflate 17, txt 78, dwg 1064, semio 1773. 0 errors sit in the 934 files my
+  10-05 waves touched and 0 error lines mention `MutationLeaf`, withdraw-only, `editable`, `x-semio`, tool-mismatch or
+  `FaultCode`. Caveat: every error is a name-resolution error (E0433 1363, E0425 1120, E0422 284, E0255 39, E0119 39,
+  E0432 27, E0428 18, unreadable include 14), so type-check has not reached these crates: m1 (txt) and b8 (semio) of my
+  waves stay WRITTEN BUT UNVERIFIED by cargo, nothing more can be said about them until resolution is clean.
+- **Where** (03:44 run): dwg `🚪️io/🪶️sqlite/📸️snapshot` 1040; semio `🚪️io/📝️text/🔺️diff` 915, `🚪️io/💾️binary/🧬️mutations` 254,
+  `🚪️io/💾️binary/🔺️diff` 219, `🚪️io/🪶️sqlite/📸️snapshot` 135, `🚪️io/📝️text/📸️snapshot` 99, `🚪️io/💾️binary/📸️snapshot` 67,
+  `🚪️io/📝️text/🧬️mutations` 41; txt `🚪️io/💾️binary/🧬️mutations` 42 + `🚪️io/📝️text/🧬️mutations` 36; crate roots semio 16, dwg 14,
+  deflate 14; old-tree leftovers 14 includes + 4.
+- **Cause classes — one relocation in flight** (codecs moved into `🚪️io/{📝️text,💾️binary,🪶️sqlite}/{📸️snapshot,🔺️diff,🧬️mutations}`):
+  1. crate roots written by a script at 03:05:12 (all four in the same second): semio mounts `io` twice per subset
+     (`🧿️semio/🦀️.rs:1374, 1424, 1427, 1471, 1474, 3320, 3527, 3530, 3689, 3692, 3956, 3959, 4106, 4109, 4316, 4319` E0428),
+     dwg and deflate re-export from an `io` their root never mounts (`🖊️dwg/🦀️.rs:143…`, `🗜️deflate/🦀️.rs:113–156` E0433);
+  2. the relocated codec modules glob-import the old module but need its PRIVATE items — e.g. animation
+     `🚪️io/💾️binary/🧬️mutations/🦀️.rs:24–36` uses `TAG_*` / `OP_BINARY_FORMAT`, which stay private `const`s in
+     `🧬️schema/🧬️mutations/🦀️.rs` region `OpCodecs` (E0425 207 `TAG_*`, 894 functions / values, E0422 284 records);
+  3. that leftover region still includes the protocol from its old place — `include_str!("💾️binary/📡️.protocol.semio")`
+     in 13 semio subsets + dwg, while the file now lives at `🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio`;
+  4. new sqlite / diff files name snapshot types without importing them (`DwgEntityBody`, `DwgLogicalObjectBody`,
+     `SemioDiff`, `SemioSubsetSnapshot`, … E0433) and import `sqlite_native`, which no crate declares (deflate
+     `🧬️schema/📸️snapshot/🦀️.rs:110`, `🚪️io/💾️binary/📸️snapshot/🦀️.rs:13`, `🚪️io/📝️text/📸️snapshot/🦀️.rs:19`);
+  5. generated per-leaf payload codecs in txt import `…::io::{binary,text}::mutations::<Leaf>Payload`, which nothing
+     exports, and each leaf module is declared twice (E0255 `insert_line` … at `🚪️io/💾️binary/🧬️mutations/🦀️.rs:62–77`);
+  6. old and new codec impls both mounted (E0119 `OpText` / `OpBinary` / `ArtifactDsl` / `ArtifactPack`, semio kit / graph).
+- **First error per crate**: semio `🧿️semio/🦀️.rs:1374:1 E0428 the name io is defined multiple times`; dwg
+  `🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs:44:69 couldn't read …/💾️binary/📡️.protocol.semio` (then
+  `🖊️dwg/🦀️.rs:143:35 E0433 io`); txt `…/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs:62:1 E0255 insert_line`; deflate
+  `…/✳️any/🧬️schema/📸️snapshot/🦀️.rs:110:9 E0432 sqlite_native` (then `🗜️deflate/🦀️.rs:113:35 E0433 io`).
+- **No adaptation of ours applies.** Nothing in my files consumes an API the peer moved; the breaks are inside the
+  peer's generated modules, the script-written roots and the regions its cut left behind. The peer is writing right now
+  (deflate `🧬️schema/📸️snapshot/🦀️.rs` 03:46:17, semio animation `🚪️io/🪶️sqlite/📸️snapshot` tests 03:35–03:41, gltf
+  `♾️any/🚪️io` 03:3x; `Codex` processes alive), so a hand edit of those files would collide with its generator and be
+  overwritten or break its anchors. **Only the peer can finish**: mount `io` exactly once per subset in the four roots;
+  move the `OpCodecs` leftovers (tags, keywords, format) into the `🚪️io` module or make them `pub(crate)` and re-point the
+  14 includes; add the missing imports in the sqlite / diff files and declare `sqlite_native`; export the `<Leaf>Payload`
+  types and drop the duplicate leaf mounts in txt; delete the old impls duplicated in `🚪️io`.
+- **Payload law red (pdf op 44, gltf op 76: "answers 128 inverse row(s) where its leaf schema declares 1") — FIXED AT
+  THE SOURCE.** Cause: `#[mutation_leaf(input_schema = Self::input_schema_at_path)]` answers the per-operation schema
+  built by `snapshot_patch_input_schema_text` (`📇️registry/🧬️contract/✏️editing/🩹️patch/🦀️.rs`), whose root carried no
+  `x-semio-inverse-rows`; the kernel law (`📡️spr/🎮️command/🦀️.rs` `mutation_inverse_rows_declaration_failures`) then reads
+  "1" while the leaf answers `SNAPSHOT_PATCH_MAX_INVERSE_PARTS`. All 56 static leaf schemas already declare
+  `{ "bounded": 128 }`; only crates whose snapshot schema resolves at test time (pdf, gltf) reach the generated text.
+  Hunk: the generated root now carries `x-semio-inverse-rows { bounded: SNAPSHOT_PATCH_MAX_INVERSE_PARTS }`; new contract
+  test `a_patch_input_schema_declares_the_inverse_rows_its_leaf_answers` (`🩹️patch/🧪️tests/🦀️.rs`). Train line 03:40:52
+  `p1-patch-schema-inverse-rows`, restore `tar -xf 🗑️generated/s5-text-stdio/pre-p1.tar -C <repo>`.
+  - VERIFIED 03:45: `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-stdio-contract --lib -- a_patch_input_schema`
+    → `2 passed; 0 failed` (the new test + the existing reader / validator test over the new text), `check-p1.txt`.
+  - NOT RUN — the derive-emitted laws themselves: gltf's test closure contains txt (red, 78), pdf's contains deflate
+    (red, 17). Owed once those two compile, private dir, one at a time:
+    `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-stdio-gltf --lib -- semio_payload_law` and
+    `… -p semio-s-artifact-stdio-pdf --lib -- semio_payload_law`.
+- Private target dir deleted at the end of this turn (951 MiB); every owed check of S5.9 (m1, b6, b7, b8) stays owed and is
+  blocked by the same four crates.

@@ -70,7 +70,7 @@ pub(crate) mod context {
     /// technique `📐️cad`'s own `two_instances_converge_disjoint_edits_via_backbone` test uses.
     pub async fn app_with_jack() -> WriterApp {
         let mut app = new_app().await;
-        let document = crate::document_dsl::jack_example_document();
+        let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
         let (schema, id) = (document.schema.clone(), document.id.clone());
         let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
         let files = store::print_document_pack(&envelope).await.expect("print jack document pack");
@@ -86,7 +86,7 @@ pub(crate) mod context {
     /// so the artifact's OWN owner catalog retires it here — the same shape `🖨️raster`'s
     /// `retire_raster_envelope` uses for exactly this fixture pattern.
     pub fn retire_writer_envelope(envelope: store::ArtifactEnvelope<WriterSnapshot, WriterMutation>) {
-        let mut retirement = crate::spr::writer_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled writer owner catalog retires one envelope");
+        let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::writer_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled writer owner catalog retires one envelope");
         for _ in 0..1_000_000 {
             if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) {
                 return;
@@ -185,7 +185,7 @@ fn writer_envelope_wire() -> Vec<u8> {
     let snapshot_hex = <WriterSnapshot as ArtifactPack>::encode_pack(&snapshot).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = format!("{{\"schema\":\"{WRITER_DOCUMENT_SCHEMA}\",\"id\":\"writer-live-load\",\"vcs\":{{\"initialSnapshot\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}").into_bytes();
     let envelope = store::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None);
-    let mut retirement = crate::spr::writer_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::writer_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..10_000 {
         match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {
@@ -253,7 +253,7 @@ fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
         WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: snapshot_json.clone() }),
         WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://brief.md".into(), text: "# Brief".into() }),
         WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: snapshot_json.clone() }),
-        WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: snapshot_json }),
+        WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: snapshot_json }),
         WriterCommand::FormatDocument(format_document::FormatDocument {}),
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "renamed".into() }),
         WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("format".into()) }),
@@ -279,6 +279,9 @@ fn writer_command_job(command: WriterCommand, text: Arc<str>) -> WriterCommandTo
         window_transient: Some(WriterMainWindowTransient::default()),
         completion: None,
         pending_completion_rejection: None,
+        returned_allocations: semio_framework_value::retirement::allocation_return::ParentAllocationReturn::try_new(MAX_WRITER_COMMAND_RAW_BYTES,MAX_WRITER_COMMAND_RAW_BYTES*16).unwrap(),
+        returned_fault: semio_framework_plugin::__diagnostic::FaultCloseOwner::empty(),
+        return_refusal: None,
         raw_input: None,
         raw_bytes: vec![1, 2, 3],
         raw_page_cursor: 2,
@@ -293,7 +296,7 @@ fn writer_command_job(command: WriterCommand, text: Arc<str>) -> WriterCommandTo
 #[test]
 fn writer_completion_rejection_retires_child_before_command_without_reemission() {
     let mut emit: Emit<WriterMutation, NoConfigMutation, NoDraftMutation> = Emit::default();
-    emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<WriterSnapshot, WriterMutation>("member", "writer-child", &[]));
+    emit.child_emits.push(semio_framework_plugin::app::ChildEmit::open("member","writer-child",0));
     let rejected = ArtifactToolCompletionRejection::<EditorApp<WriterPlayApp>> {
         emit: Ok(emit),
         ephemeral: EphemeralEmit::default(),
@@ -397,7 +400,7 @@ fn bounded_host_load_and_engagement_admission_reject_plus_one_without_consuming_
         WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "x".repeat(MAX_WRITER_EXAMPLE_ID_BYTES) }),
         WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
-        WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
+        WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES) }),
         WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES)) }),
@@ -412,7 +415,7 @@ fn bounded_host_load_and_engagement_admission_reject_plus_one_without_consuming_
         WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "x".repeat(MAX_WRITER_EXAMPLE_ID_BYTES + 1) }),
         WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
-        WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
+        WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1) }),
         WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1)) }),
@@ -485,7 +488,7 @@ async fn writer_live_envelope_cancel_closes_retained_pages_without_publication()
 
 #[semio_framework_async_macros::async_test]
 async fn jack_completions_use_example_fixture() {
-    let json = crate::standards::v1::subsets::any::schema::jack_completions_json("RETURN a.", 9).unwrap_or_default();
+    let json = crate::standards::v1::subsets::any::io::text::snapshot::jack_completions_json("RETURN a.", 9).unwrap_or_default();
     assert!(!json.is_empty());
 }
 
@@ -526,7 +529,7 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         ("set-snapshot", WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "{}".into() })),
         ("open-document", WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: "x".into() })),
         ("document-json", WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() })),
-        ("fixture-json", WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() })),
+        ("document-json", WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "{}".into() })),
         ("active-example", WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() })),
         ("format-document", WriterCommand::FormatDocument(format_document::FormatDocument {})),
         ("commit-rename", WriterCommand::CommitRename(commit_rename::CommitRename { text: "x".into() })),
@@ -561,7 +564,7 @@ pub(super) fn every_command() -> Vec<WriterCommand> {
         WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: "{}".into() }),
         WriterCommand::OpenDocument(open_document::OpenDocument { uri: "writer://jack".into(), text: String::new() }),
         WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: "{}".into() }),
-        WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{}".into() }),
+        WriterCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "{}".into() }),
         WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() }),
         WriterCommand::FormatDocument(format_document::FormatDocument {}),
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "piece".into() }),
@@ -633,7 +636,7 @@ async fn ast_interaction_domain_is_declared_topology_and_transitive_on_the_main_
 /// root has no parent, every child's parent is its syntactic parent's id.
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_walks_the_jack_ast_into_parent_links() {
-    let document = crate::document_dsl::jack_example_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
     let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -674,7 +677,7 @@ async fn writer_io_declares_the_extra_text_out_port() {
 
 #[semio_framework_async_macros::async_test]
 async fn export_media_text_out_projects_the_document_as_a_chapter() {
-    let document = crate::document_dsl::jack_example_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc_view = ArtifactView::new(&document, &history);
     let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
@@ -700,7 +703,7 @@ async fn export_media_rejects_unknown_ports() {
 /// of rows, and the destructive `cut` row stays the trailing item.
 #[semio_framework_async_macros::async_test]
 async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
-    let document = crate::document_dsl::jack_example_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
     let config = NoConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -886,3 +889,27 @@ fn the_artifact_preflight_declares_room_for_the_inverse_it_will_stage() {
     assert!(footprint.is_admissible());
 }
 //#endregion 📬️StorePreparation
+
+#[test]
+fn writer_parent_return_keeps_actual_allocations_and_typed_fault_until_physical_close(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️parent-return.json")).unwrap();
+    let mut emit:Emit<WriterMutation,NoConfigMutation,NoDraftMutation>=Emit::default();
+    emit.child_emits.push(semio_framework_plugin::app::ChildEmit::open(fixture["slot"].as_str().unwrap(),fixture["childId"].as_str().unwrap(),0));
+    let rejected=ArtifactToolCompletionRejection::<EditorApp<WriterPlayApp>>{emit:Ok(emit),ephemeral:EphemeralEmit::default(),fault:Fault::new(semio_framework_plugin::FaultOrigin::Framework,semio_framework_plugin::FaultCode::new(fixture["faultCode"].as_str().unwrap()),fixture["faultMessage"].as_str().unwrap())};
+    let scope=rejected.fault.scope.as_ref()as*const _;let message=rejected.fault.message.as_ptr();
+    let mut job=writer_command_job(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit{value:Some("lint".into())}),Arc::from("writer text"));job.raw_bytes=Vec::new();job.pending_completion_rejection=Some(rejected);job.begin_close();
+    assert_eq!(job.close_step(0,1),InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0});
+    for _ in 0..fixture["childTurns"].as_u64().unwrap(){if job.pending_completion_rejection.is_none(){break;}let step=job.close_step(1,fixture["childBytes"].as_u64().unwrap()as usize);if let InteractiveJobCloseStep::Pending{released_items,released_bytes}=step{assert!(released_items<=1&&released_bytes<=4);}}
+    assert!(job.pending_completion_rejection.is_none());assert!(job.command.is_some());assert!(!job.terminal_is_empty());assert!(job.returned_allocations.retained_bytes()>0);let fault=job.returned_fault.fault().unwrap();assert_eq!(fault.scope.as_ref()as*const _,scope);assert_eq!(fault.message.as_ptr(),message);assert_eq!(fault.code.0,fixture["faultCode"].as_str().unwrap());assert_eq!(fault.message,fixture["faultMessage"].as_str().unwrap());
+    for _ in 0..fixture["parentTurns"].as_u64().unwrap(){if job.terminal_is_empty(){break;}let _=job.close_step(1,fixture["parentBytes"].as_u64().unwrap()as usize);}
+    assert!(job.returned_allocations.terminal_is_empty());assert_eq!(job.returned_allocations.retained_bytes(),0);assert!(job.returned_fault.terminal_is_empty());assert!(job.terminal_is_empty());eprintln!("[DEBUG] Writer exact typed rejection handed genuine allocations to registered job parent; physical parent and fault owners empty only after original4096 grant");
+}
+
+#[test]
+fn writer_parent_return_drains_full_parent_before_retrying_exact_child_owner(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️parent-return.json")).unwrap();let mut emit:Emit<WriterMutation,NoConfigMutation,NoDraftMutation>=Emit::default();emit.child_emits.push(semio_framework_plugin::app::ChildEmit::open(fixture["slot"].as_str().unwrap(),fixture["childId"].as_str().unwrap(),0));let child_pointer=emit.child_emits[0].child_id.as_ptr();let rejected=ArtifactToolCompletionRejection::<EditorApp<WriterPlayApp>>{emit:Ok(emit),ephemeral:EphemeralEmit::default(),fault:Fault::new(semio_framework_plugin::FaultOrigin::Framework,semio_framework_plugin::FaultCode::new(fixture["faultCode"].as_str().unwrap()),fixture["faultMessage"].as_str().unwrap())};let mut job=writer_command_job(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit{value:Some("lint".into())}),Arc::from("writer text"));job.raw_bytes=Vec::new();job.pending_completion_rejection=Some(rejected);job.begin_close();let capacity=fixture["childId"].as_str().unwrap().len();for _ in 0..fixture["parentSlots"].as_u64().unwrap(){let mut text=fixture["childId"].as_str().unwrap().to_owned();assert!(job.returned_allocations.return_text(&mut text,1).unwrap());}
+    let before=job.returned_allocations.retained_bytes();assert_eq!(job.close_step(1,4),InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!(job.returned_allocations.retained_bytes(),before);assert_eq!(job.pending_completion_rejection.as_ref().unwrap().emit.as_ref().unwrap().child_emits[0].child_id.as_ptr(),child_pointer);
+    assert_eq!(job.close_step(1,4096),InteractiveJobCloseStep::Pending{released_items:1,released_bytes:capacity});assert_eq!(job.returned_allocations.retained_bytes(),before-capacity);assert_eq!(job.pending_completion_rejection.as_ref().unwrap().emit.as_ref().unwrap().child_emits[0].child_id.as_ptr(),child_pointer);
+    for _ in 0..fixture["childTurns"].as_u64().unwrap(){if job.terminal_is_empty(){break;}let step=job.close_step(1,4096);if let InteractiveJobCloseStep::Pending{released_items,released_bytes}=step{assert!(released_items<=1&&released_bytes<=4096);}}
+    assert!(job.terminal_is_empty());assert!(job.returned_allocations.terminal_is_empty());assert!(job.returned_fault.terminal_is_empty());eprintln!("[DEBUG] full actual parent slots retain original child pointer; original full parent grant releases one allocation before source retry and eventual true terminal");
+}

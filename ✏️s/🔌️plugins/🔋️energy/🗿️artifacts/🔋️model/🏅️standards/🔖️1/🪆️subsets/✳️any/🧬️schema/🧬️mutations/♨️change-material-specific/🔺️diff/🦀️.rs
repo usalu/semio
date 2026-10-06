@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeMaterialSpecificHeat, base: &EnergyModelSnaps
     if let Some(item) = model.materials.iter_mut().find(|item| item.id == payload.id) {
         item.specific_heat_j_kg_k = payload.new_specific_heat_j_kg_k;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "properties": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfNamedProperties"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfNamedProperties",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Property list",
+          "de": "Eigenschaftsliste"
+        },
+        "description": {
+          "en": "Name and entries of the property list marked content refers to.",
+          "de": "Name und Einträge der Eigenschaftsliste, auf die markierter Inhalt verweist."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

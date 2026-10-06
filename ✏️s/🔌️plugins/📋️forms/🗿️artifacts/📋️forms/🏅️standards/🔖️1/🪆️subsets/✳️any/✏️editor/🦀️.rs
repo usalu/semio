@@ -16,7 +16,7 @@
 pub mod questions;
 
 use crate::editor::forms::commands::{
-    add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_fixture, move_question, move_step, next_step, patch_question_options, patch_questions, patch_step, patch_vector_field, previous_step, remove_question,
+    add_question, add_question_option, add_step, add_vector_field, drop_question_kind, export_snapshot, move_question, move_step, next_step, patch_question_options, patch_questions, patch_step, patch_vector_field, previous_step, remove_question,
     remove_question_option, remove_step, remove_vector_field, reset_try, set_active_example, set_contributions, set_spec_json, set_try_value, set_try_value_step, set_try_values, submit, update_form,
 };
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
@@ -426,7 +426,7 @@ mod args_bridge {
             "dropQuestionKind" => FormsCommand::DropQuestionKind(decode(action, fold(args, &[("block_id", "target_id"), ("position", "drop_position")], &[]))?),
             "setSpecJson" => FormsCommand::SetSpecJson(decode(action, fold(args, &[], &[("document", "json"), ("value", "json")]))?),
             "setActiveExample" => FormsCommand::SetActiveExample(decode(action, fold(args, &[("id", "example_id"), ("value", "example_id")], &[]))?),
-            "exportFixture" => FormsCommand::ExportFixture(decode(action, plain())?),
+            "exportSnapshot" => FormsCommand::ExportSnapshot(decode(action, plain())?),
             "exportResponses" => FormsCommand::ExportResponses(decode(action, plain())?),
             "discardResponse" => FormsCommand::DiscardResponse(decode(action, plain())?),
             _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the forms editor has no command for action '{action}'"))),
@@ -473,7 +473,7 @@ semio_framework_plugin::app_commands! {
         "dropQuestionKind" as "drop-question-kind" => drop_question_kind::DropQuestionKind,
         "setSpecJson" as "spec-json" => set_spec_json::SetSpecJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
-        "exportFixture" as "export-fixture" => export_fixture::ExportFixture,
+        "exportSnapshot" as "export-snapshot" => export_snapshot::ExportSnapshot,
         "setTryValueStep" as "try-value-step" => set_try_value_step::SetTryValueStep,
         "exportResponses" as "export-responses" => export_responses::ExportResponses,
         "discardResponse" as "discard-response" => discard_response::DiscardResponse,
@@ -542,7 +542,7 @@ const FORMS_RETAINED_TOOL_IDS: &[&str] = &[
     "dropQuestionKind",
     "setSpecJson",
     "setActiveExample",
-    "exportFixture",
+    "exportSnapshot",
     "setTryValueStep",
     "exportResponses",
     "discardResponse",
@@ -558,7 +558,7 @@ fn forms_bounded_contract() -> ToolExecutionContract {
 struct FormsWindowCommandWork {
     tool_id: &'static str,
     completed: bool,
-    response_export: Option<crate::schema::response::export::ResponseExport>,
+    response_export: Option<crate::standards::v1::subsets::any::io::text::snapshot::response::export::ResponseExport>,
 }
 
 impl FormsWindowCommandWork {
@@ -587,7 +587,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
     ) -> Option<usize> {
         if self.completed || command.command_id() != self.tool_id { return None; }
         match command {
-            FormsCommand::ExportResponses(_) => Some(crate::schema::response::export::ResponseExport::work_items(&snapshot.responses)),
+            FormsCommand::ExportResponses(_) => Some(crate::standards::v1::subsets::any::io::text::snapshot::response::export::ResponseExport::work_items(&snapshot.responses)),
             FormsCommand::SetTryValue(_)
             | FormsCommand::SetTryValues(_)
             | FormsCommand::SetTryValueStep(_)
@@ -613,7 +613,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
         match input.command {
             FormsCommand::ExportResponses(payload) => {
                 if self.response_export.is_none() {
-                    self.response_export = Some(crate::schema::response::export::ResponseExport::new(&payload.format).map_err(Fault::from)?);
+                    self.response_export = Some(crate::standards::v1::subsets::any::io::text::snapshot::response::export::ResponseExport::new(&payload.format).map_err(Fault::from)?);
                 }
                 let Some(data) = self.response_export.as_mut().expect("admitted response exporter").advance(&input.snapshot.responses) else {
                     return Ok(ArtifactCommandWorkStep::Progress { stage: "forms-export-responses", preview: br#"{"en":"Exporting answers","de":"Antworten werden exportiert"}"# });
@@ -771,7 +771,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommand
         ArtifactToolPublicationContract { tool_id: "dropQuestionKind", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setSpecJson", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
-        ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "exportSnapshot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "setTryValueStep", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "exportResponses", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "discardResponse", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -822,7 +822,6 @@ struct FormsStorePreparation<P, M> {
     prefix: &'static str,
     base: Option<store::SnapshotRead<P>>,
     mutation: Option<M>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -836,9 +835,9 @@ where
     P: Clone + Send + Sync + 'static,
     M: protocol::Mutation<P> + protocol::OpBinary + Send + 'static,
 {
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("forms-store-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("forms-store-lane".into());
         }
         admit_forms_store_mutation::<P, M>(mutation)
     }
@@ -858,7 +857,6 @@ where
             prefix: self.prefix,
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -919,9 +917,6 @@ where
         if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        if self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"forms-store-base-retirement-rejected"));
@@ -935,7 +930,7 @@ where
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation
@@ -1062,7 +1057,7 @@ impl ArtifactEditor for FormsPlayApp {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the forms command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
-        let maximum_work_items = if tool_id == "exportResponses" { crate::schema::response::export::ResponseExport::work_items(&request.snapshot.responses) } else { 1 };
+        let maximum_work_items = if tool_id == "exportResponses" { crate::standards::v1::subsets::any::io::text::snapshot::response::export::ResponseExport::work_items(&request.snapshot.responses) } else { 1 };
         let work = Box::new(FormsWindowCommandWork::new(tool_id));
         let operation_context = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -1125,7 +1120,7 @@ impl ArtifactEditor for FormsPlayApp {
             "dropQuestionKind" => forms_bounded_contract(),
             "setSpecJson" => forms_bounded_contract(),
             "setActiveExample" => forms_bounded_contract(),
-            "exportFixture" => forms_bounded_contract(),
+            "exportSnapshot" => forms_bounded_contract(),
             "exportResponses" => forms_bounded_contract(),
             "discardResponse" => forms_bounded_contract(),
             "setTryValueStep" => forms_bounded_contract(),
@@ -1319,7 +1314,7 @@ pub fn create_forms_app() -> AppDefinition {
             .view_action("previousStep", LocalizedLabel::native("Previous Step", "Vorheriger Schritt"))
             .view_action("nextStep", LocalizedLabel::native("Next Step", "Nächster Schritt"))
             .mutation("submit", LocalizedLabel::native("Submit", "Absenden"))
-            .shell_action("exportFixture", LocalizedLabel::native("Export Form", "Formular exportieren"))
+            .shell_action("exportSnapshot", LocalizedLabel::native("Export Form", "Formular exportieren"))
             .shell_action("exportResponses", LocalizedLabel::native("Export Responses", "Antworten exportieren"))
             .mutation("discardResponse", LocalizedLabel::native("Remove Response", "Antwort entfernen"))
             .action_args("exportResponses", vec![ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("json", LocalizedLabel::data("JSON")), ActionArgOption::new("csv", LocalizedLabel::data("CSV"))]).default_value(&"json")])
@@ -1347,7 +1342,7 @@ pub fn create_forms_app() -> AppDefinition {
             .action_describe("updateForm", LocalizedLabel::native("Changes the form title.", "Ändert den Formulartitel."))
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the form design with a template. Existing answers stay with this form.", "Ersetzt den Formularentwurf durch eine Vorlage. Vorhandene Antworten bleiben in diesem Formular."))
             .action_describe("setSpecJson", LocalizedLabel::native("Imports the title and questions from a saved Forms JSON document. Existing answers stay with this form.", "Importiert Titel und Fragen aus einem gespeicherten Forms-JSON-Dokument. Vorhandene Antworten bleiben in diesem Formular."))
-            .action_describe("exportFixture", LocalizedLabel::native("Downloads a Forms document containing its design and saved answers.", "Lädt ein Forms-Dokument mit Entwurf und gespeicherten Antworten herunter."))
+            .action_describe("exportSnapshot", LocalizedLabel::native("Downloads a Forms document containing its design and saved answers.", "Lädt ein Forms-Dokument mit Entwurf und gespeicherten Antworten herunter."))
             .action_describe("submit", LocalizedLabel::native("Submits the answers currently entered in the form preview.", "Sendet die aktuell in der Formularvorschau eingegebenen Antworten ab."))
             // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
             .action_destructive("removeBlock")
@@ -1388,7 +1383,7 @@ pub fn create_forms_app() -> AppDefinition {
             .action_interactive_job("dropQuestionKind", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSpecJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            .action_interactive_job("exportFixture", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportResponses", InteractiveJobClassification::Migrated)
             .action_interactive_job("discardResponse", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument forms for the panel-visible create/switch actions.

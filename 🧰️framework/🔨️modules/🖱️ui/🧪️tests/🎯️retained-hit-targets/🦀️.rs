@@ -67,6 +67,7 @@ fn action_of(value: &Value) -> Option<ActionDescriptor> {
 
 fn tree_item(value: &Value) -> UiTreeItemNode {
     UiTreeItemNode {
+        tone: None,
         window: None,
         granularity: None,
         id: value["id"].as_str().expect("item id").to_string(),

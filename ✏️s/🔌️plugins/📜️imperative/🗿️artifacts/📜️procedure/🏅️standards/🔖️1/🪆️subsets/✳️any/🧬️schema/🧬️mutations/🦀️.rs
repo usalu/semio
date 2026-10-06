@@ -42,25 +42,9 @@ impl protocol::SemanticMutation<ProcedureSnapshot> for ProcedureMutation {
     }
 }
 
-/// 📝️ No parent operation line exists.
-impl protocol::OpText for ProcedureMutation {
-    fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "a procedure has no parent-lane mutation; content edits are child-lane leaves", semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        match *self {}
-    }
-}
 
-/// 💾️ No parent operation record exists.
-impl protocol::OpBinary for ProcedureMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        match *self {}
-    }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Err(protocol::ProtocolError::Malformed { what: "procedure-mutation", offset: 0, detail: "a procedure has no parent-lane mutation; content edits are child-lane leaves".into() })
-    }
-}
+
+
 
 /// 🧊️ Nothing to retire: the vocabulary is uninhabited.
 impl neural_engine::ColdRetire for ProcedureMutation {

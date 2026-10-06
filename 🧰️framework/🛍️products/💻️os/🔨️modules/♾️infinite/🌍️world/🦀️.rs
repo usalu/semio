@@ -14444,7 +14444,7 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, inner.w, inner.h);
     let (polygon, rectangle, crossing) = marquee_local_polygon(state, inner);
-    let (meshes, draws) = legacy_geometry_fixture(state);
+    let (meshes, draws) = scene_geometry(state);
     let ids = if component_mode_active(state) {
         screen_select_components(&meshes, &draws, view_proj, state.projection_spec, inner.w, inner.h, &polygon, rectangle, state.granularity.as_str(), state.active_object_id.as_deref(), crossing)
     } else {
@@ -14727,7 +14727,7 @@ fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, inner.w, inner.h);
     let (polygon, rectangle, crossing) = marquee_local_polygon(state, inner);
-    let (meshes, draws) = legacy_geometry_fixture(state);
+    let (meshes, draws) = scene_geometry(state);
     state.marquee_preview_ids = if component_mode_active(state) {
         screen_select_components(&meshes, &draws, view_proj, state.projection_spec, inner.w, inner.h, &polygon, rectangle, state.granularity.as_str(), state.active_object_id.as_deref(), crossing)
     } else {
@@ -14736,7 +14736,7 @@ fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
 }
 
 #[cfg(test)]
-fn legacy_geometry_fixture(state: &World3dState) -> (HashMap<String, Mesh3dLease>, Vec<SceneDraw3d>) {
+fn scene_geometry(state: &World3dState) -> (HashMap<String, Mesh3dLease>, Vec<SceneDraw3d>) {
     (state.meshes.iter().map(|(id, mesh)| (id.clone(), *mesh)).collect(), state.draws.iter().cloned().collect())
 }
 

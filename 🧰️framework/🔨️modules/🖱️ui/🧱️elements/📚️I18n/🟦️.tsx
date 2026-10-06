@@ -594,6 +594,8 @@ export type UiTranslationSchema = {
       readonly backboneFile: UiLabelValue;
       readonly backboneFolder: UiLabelValue;
       readonly backboneRemote: UiLabelValue;
+      /** 📎️ Attaching the document to a folder, a file or a hub failed; nothing is saved there. */
+      readonly attachFailed: UiLabelValue;
       /** 🪪️ The focused program has no document of its own, so there is nothing to attach to a folder, a file or a hub. */
       readonly documentUnidentified: UiLabelValue;
       /** 📎️ The offer to reconnect the folder this device remembers for the booted document (`os.config.local-folders`). */
@@ -665,8 +667,10 @@ export type UiTranslationSchema = {
         readonly noOp: UiLabelValue;
         readonly partial: UiLabelValue;
         readonly clamped: UiLabelValue;
+        readonly preconditionDrifted: UiLabelValue;
         readonly duplicateId: UiLabelValue;
         readonly invariant: UiLabelValue;
+        readonly inverseRefused: UiLabelValue;
         readonly cascade: UiLabelValue;
         readonly apply: UiLabelValue;
       };
@@ -734,9 +738,10 @@ export type UiTranslationSchema = {
         readonly agent: UiLabelValue;
       };
     };
-    /** ⏪️ Time-travel chrome of non-destructive history editing (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING):
+    /** ⏪️ History-editing chrome of non-destructive history editing (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING):
      * the persistent band, the per-window indicator, the remappable `ui.timeTravel.accept|discard|exit` chords and
-     * the localized `timeTravel.*` refusals. Stage and refusal texts are the `⏪️time-travel` module's own
+     * the localized `timeTravel.*` refusals. Every text is a row of the one `labels` table of the shared band corpus
+     * (`🧫️time-travel-band`), which the wgpu shell embeds; stage and refusal texts are the `⏪️time-travel` module's own
      * `TIME_TRAVEL_LABELS`. */
     readonly timeTravel: {
       readonly band: UiLabelValue;
@@ -766,6 +771,7 @@ export type UiTranslationSchema = {
       readonly back: UiLabelValue;
       readonly cancelReplay: UiLabelValue;
       readonly rerun: UiLabelValue;
+      readonly nextProblem: UiLabelValue;
       /** 👥️ A peer's open history edit, labelled from this replica's own history rows (no locale text on the wire). */
       readonly peer: {
         readonly editingRow: UiLabelValue;
@@ -791,6 +797,9 @@ export type UiTranslationSchema = {
         readonly replayFaulted: UiLabelValue;
         readonly commitFailed: UiLabelValue;
         readonly memberGone: UiLabelValue;
+        readonly notWithdrawable: UiLabelValue;
+        readonly editorClosed: UiLabelValue;
+        readonly readOnly: UiLabelValue;
       };
     };
     /** 🛟️ The hub and event-log refusals of history transitions (`history.malformed-transition`,

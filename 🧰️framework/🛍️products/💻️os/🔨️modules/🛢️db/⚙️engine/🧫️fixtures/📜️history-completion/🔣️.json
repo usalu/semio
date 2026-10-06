@@ -1,5 +1,4 @@
 {
-  "schema": "semio.db.history-completion/v1",
   "document": "history-completion",
   "operations": [
     "history-completion-1",

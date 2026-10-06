@@ -45,13 +45,17 @@ use framework_schema::ArtifactSchema;
 /// It is deliberately NOT font-decoded through a `/ToUnicode` CMap: this standard's writer shows
 /// the field back through a simple single-byte font, so what is read is exactly what any reader
 /// recovers, and decode→encode→decode is stable on it.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct PageDoc {
     pub width: f64,
     pub height: f64,
     #[value(default)]
     pub text: String,
+}
+
+impl PartialEq for PageDoc {
+    fn eq(&self, other: &Self) -> bool { self.width.to_bits() == other.width.to_bits() && self.height.to_bits() == other.height.to_bits() && self.text == other.text }
 }
 
 impl PageDoc {
@@ -125,51 +129,9 @@ impl PdfSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Codecs
-impl store::ArtifactDsl for PdfSnapshot {
-    const EXTENSION: &'static str = "pdf";
-    fn envelope_id() -> &'static str {
-        "stdio.pdf"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((envelope, rest)) => {
-                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
-                rest
-            }
-            Err(_) => text,
-        };
-        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 272 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl store::ArtifactPack for PdfSnapshot {
-    /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
 
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let raw = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "pack envelope mismatch")));
-        }
-        let (record, report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        if report.schema_drift || !report.unknown_field_ids.is_empty() { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF1.4 snapshot record schema mismatch"))); }
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
-}
+
 //#endregion 🔖️Codecs
 
 //#region 🔖️SnapshotFixtures
@@ -197,5 +159,3 @@ pub fn demo_pdf_snapshot() -> PdfSnapshot {
 }
 //#endregion 🔖️SnapshotFixtures
 
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;

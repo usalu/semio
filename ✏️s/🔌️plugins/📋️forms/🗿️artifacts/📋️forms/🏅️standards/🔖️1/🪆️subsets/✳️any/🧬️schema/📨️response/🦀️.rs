@@ -1,8 +1,5 @@
 //! 📨️ An immutable submission keeps the labels and kinds that accompanied its answers.
 
-#[path = "📤️export/🦀️.rs"]
-pub mod export;
-
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct FormsAnswer {

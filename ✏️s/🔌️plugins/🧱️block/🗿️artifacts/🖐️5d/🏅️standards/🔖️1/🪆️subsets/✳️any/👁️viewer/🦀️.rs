@@ -51,7 +51,7 @@ pub struct Block5dViewer;
 
 impl ArtifactViewer for Block5dViewer {
     type Snapshot = Block5dSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Block5dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -109,7 +109,7 @@ impl ArtifactViewer for Block5dViewer {
     /// artifact-side `default_block5d_snapshot` the editor boots on too (no editor import: this is
     /// `crate::standards::v1::subsets::any::schema`).
     fn initial_snapshot() -> Block5dSnapshot {
-        crate::standards::v1::subsets::any::schema::default_block5d_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_block5d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block5dViewCommand::Noop` variant never carries a config

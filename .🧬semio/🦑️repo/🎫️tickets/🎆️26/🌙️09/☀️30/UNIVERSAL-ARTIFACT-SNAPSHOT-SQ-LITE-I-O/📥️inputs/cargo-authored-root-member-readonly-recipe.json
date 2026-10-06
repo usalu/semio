@@ -1,0 +1,36 @@
+{
+  "qualification": "Proposed semantic correction; no implementation or execution",
+  "admission": [
+    "read actual owner manifest through existing physical/read guard",
+    "require actual root package object",
+    "require root Cargo.toml matched by authored member-manifests authority",
+    "respect explicit root exclusion consistently with member-directory exclusion",
+    "insert same physical owner manifest once before existing nested walk",
+    "run unchanged final missing/duplicate name and nearest-workspace checks"
+  ],
+  "virtualWorkspace": "Root document without package never becomes member; it remains only owner",
+  "neutralExpectedCensus": [
+    {
+      "directory": ".",
+      "manifest": "Cargo.toml",
+      "name": "native-dependency-fixture",
+      "workspace": "."
+    }
+  ],
+  "independentCargoAssertions": [
+    "packages length is exactly one",
+    "package name matches closed neutral name",
+    "manifest_path normalized equals fixture root Cargo.toml",
+    "workspace_members length exactly one and member id equals genuine package id",
+    "workspace_root normalized equals fixture root",
+    "same predicates after genuine lock refresh"
+  ],
+  "preserve": [
+    "strict physical ancestry",
+    "authored member-manifests",
+    "all nested package traversal",
+    "all normal/dev Cargo/Nx/esbuild/schema oracles",
+    "original lock negative vectors",
+    "90second cancellation ownership"
+  ]
+}

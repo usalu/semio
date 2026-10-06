@@ -1,0 +1,28 @@
+use crate::standards::v1::subsets::any::io::binary::mutations::*;
+use crate::mutations::set_snapshot;
+use crate::En1995Snapshot;
+
+fn sample_mutation() -> En1995Mutation {
+    En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En })
+}
+
+#[semio_framework_async_macros::async_test]
+async fn op_binary_round_trips_and_agrees_with_text() {
+    let mutation = sample_mutation();
+    store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
+    let bytes = encode_op(&mutation).expect("encode");
+    assert_eq!(decode_op(&bytes).expect("decode"), mutation);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn document_text_round_trips_through_store() {
+    let envelope = store::create_document_envelope("norm.en1995/v1", "en1995", En1995Snapshot::default(), None);
+    // 🏪️ A bare `ArtifactStore::new` installs NO document-store owners: the first `Apply` is refused
+    // with `edit history insertion requires its exact mutation retirement factory`, and a store that
+    // survived would then trip the terminal-empty shallow-shell witness in `Drop`.
+    let mut store = store::os_store::test_support::plain_test_store(envelope).await;
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![sample_mutation()], transaction: None }).await.expect("apply");
+    store::os_store::test_support::assert_document_text_round_trip(&store).await;
+    store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    store::os_store::test_support::close_plain_test_store(&mut store);
+}

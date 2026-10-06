@@ -5,7 +5,7 @@ use semio_repo_test_host::{digest, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Scenarios
 fn digest_and_fixture_resolution(ctx: &Context) -> Result<Outcome, String> {
-    let vector = ctx.fixture_bytes("shared://📡️protocol-vector.txt")?;
+    let vector = ctx.input_bytes("shared://📡️protocol-vector.txt")?;
     Ok(Outcome::projection(Json::Object(vec![
         ("vectorDigest".to_string(), Json::String(digest(&vector))),
         ("literalDigest".to_string(), Json::String(digest(b"semio"))),
@@ -17,7 +17,7 @@ fn digest_and_fixture_resolution(ctx: &Context) -> Result<Outcome, String> {
 }
 
 fn fixture_not_in_plan_is_an_error(ctx: &Context) -> Result<Outcome, String> {
-    let reported = ctx.fixture("shared://this-fixture-is-not-declared").is_err();
+    let reported = ctx.input("shared://this-fixture-is-not-declared").is_err();
     Ok(Outcome::projection(Json::Object(vec![("resolverReportedFailure".to_string(), Json::Bool(reported))])))
 }
 

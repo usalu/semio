@@ -1509,3 +1509,832 @@ repo-wide grep finds no other literal or caller. `cargo check -p semio-framework
   - Negative control: the stepping rule changed to `replayed > cap` gives **3 fail, 2 pass**, as expected.
   - os TS `bun ./📜️script.ts test-store-oracles`: **12 pass, 0 fail** (5268 expects; was 7).
   - `tsc -p 🧪️s4-store-typecheck-deferred-reprojection.tsconfig.json` (781 files, both twins listed): **0 errors**.
+
+## Session 5 — 2026-10-05
+
+Successor S5-STORE (Opus), coordinator `⚪3f26aaa1…`. Brief: design §22.3/.5/.6/.11, audit `📓️audit-s5-goal.md` gaps 3/6/9/11/14,
+`📓️s5-resume.md` §1.4. Scratch: `🗑️generated/s5-store/`. Start state: `landing` + `serve` held by `COORDINATOR-ACTIVATION`
+(00:14) → reading, design and staging only.
+
+### P1 design — the viewed alternative is per-replica state (§22.3), written before any code (00:35)
+
+**Finding (read from the code, not from a report): the mechanism is already on disk.** Ticket
+`26/10/01/PER-VIEWER-ALTERNATIVE-HEAD` (closed 10-01, its `design.md`) landed it; audit G9.1 and design §9.8 quote the
+behaviour from before that ticket. Nothing in the store, the fold or the wire moves another replica's head today.
+
+1. **Where the head lives.** `ViewerHead { line_id, checkpoint_id }` (`📡️replication/🔗️causal/🔀️transition/🦀️.rs:649`), held
+   per replica in the envelope (`active_alternative_id`, `viewer_checkpoint_id`), never in the event log. `fold_history` is
+   the canonical trunk tip (hub Check In); `fold_history_for(…, head)` is one viewer's projection — `applied`, `checkpoint`,
+   `alternative` and which scoped supersessions are effective depend on the head; changes, checkpoints, alternative
+   registrations, the redo stack and refusals do not.
+2. **Shared vs local.** `Branch` registers the alternative (id, name, root checkpoint) for everyone and selects nothing
+   (`:766`). `Checkout` is only validated (`:775`) and no code authors it: `SwitchAlternative` / `CheckoutCheckpoint` call
+   `move_head` (store `:21882–21924`), which sets this envelope's head and reprojects. A new-alternative finalize authors
+   `[Commit?, Branch, Supersede{scope: alt}]` as one batch and sets only the author's head (`author_supersession`
+   `viewing_new`, `:21585`; deferred: `PendingLocalStep.head`).
+3. **Persisted local-only.** `.spr` record `REC_VIEWER` (`0x45`, non-critical; `print_document_spr` `:13576`) in the
+   replica's own archive (folder binding = `persistedLocalOnly`, browser archive). The shared forms carry no head and hydrate to
+   the trunk tip: the `.ops` text and the hub Check In pair (`replay_envelopes_onto_pair` clears the head, `:11518`).
+4. **Wire.** Unchanged — no layout or persisted-record change, so nothing rides the channel-22 wave.
+5. **What this session adds (proof, schema first).** A language-agnostic two-replica corpus
+   `🏪️store/🧫️fixtures/🧫️viewer-head/🔣️.json` + schema `🏪️store/🧬️schema/🔣️viewer-head/🔣️.json`; an independent TS model
+   `🏪️store/🧪️tests/🧪️viewer-head/🟦️.ts` (shared event set, per-replica head, fast-json-patch fold, fast-check over arrival
+   orders; registered in `test-store-oracles`); the Rust law `🧪️viewer-head/🦀️.rs` over real stores: A finalizes a new
+   alternative → B's head, projection, applied order and content revision are unchanged; B lists the alternative; B switches
+   locally and A does not move; an `.spr` reload restores each replica's own head while `.ops` hydrates to the trunk; every
+   arrival order of the shared log converges (same registrations, equal projections for equal heads).
+6. **What is deleted (own wave, after P2/P3, on coordinator GO).** The dead `HistoryTransition::Checkout` (wire tag 4, the
+   `.ops` `checkout` line, TS kind, schema + corpus rows, the `co-*` steps of `🧫️supersede-fold`) and its last use as a
+   shape tag (`ArtifactCommand::history_transition_kinds` claims `SwitchAlternative`/`CheckoutCheckpoint` author `Checkout`,
+   `:3287`; a config store needs a typed head-move refusal instead). No produced byte changes (tags 5 and 6 keep their
+   numbers; the admissible set shrinks), so no channel bump; it touches the shared replication crate and three codecs.
+
+Coordinator 00:5x: P1 = this proof; G9.1 / §9.8 marked stale; GO for the `Checkout` deletion as its own wave after P2–P4 and
+the foreign-step Withdraw. Correction to item 5: B's content revision is NOT asserted unchanged (A's pending-edit commit moves
+the trunk tip checkpoint, which the revision names); the law pins B's head, projection, applied order and supersessions.
+
+### Design note — `Withdrawn` of an operation that plans foreign steps (coordinator decision 00:5x, §22.1), written before code
+
+**Facts read from the code.**
+- "Plans foreign steps" is `Mutation::may_emit_foreign_steps()`: `true` for every `#[derive(CompositeMutation)]` kind and for a
+  hand-written aggregate that does not override the trait default; `false` for plain derived leaves. Today `admit_replacement`
+  (store `:23701`) refuses every supersession of such an operation, a withdrawal included, and `effective_operation` folds the
+  refusal as a `Fatal` `mutation.invariant` no-op.
+- Foreign steps are never re-planned by a fold: a replay folds the operation's own diff only
+  (`foreign_steps_are_excluded_from_fold_plan_diff`). They were materialized when the composite gesture was authored: a gesture
+  whose plan has foreign steps applies nothing and becomes a gateway transaction (`TransactionProposal` → `TransactionPrepare` →
+  `TransactionCommit`), and every member store — the planner's own included — commits its operations as exactly ONE edit whose
+  operations all carry `MutationMeta.group_id = txn_id` (`transaction_commit` → `stamp_tail_group_id`; composed members
+  `commit_transaction_group`). A plan without foreign steps applies as an ordinary edit with no `group_id`.
+- `group_id` is persisted (`.spr` `HistoryOpMeta.group_id`) and is NOT on the wire: `edit_from_operation_envelope` gives every
+  ingested operation `group_id: None`. Product trees contain no `call_foreign` today (only the kernel law fixture and the plugin
+  `set-transaction` fixture plan foreign steps); cad `create-building-storey` and hand-written aggregates are "foreign-step"
+  operations whose unit is themselves.
+
+**Decision as the store implements it.**
+1. **The unit and its address.** The unit of an operation is every applied operation carrying its `group_id`, in every member
+   store; an operation without a `group_id` planned nothing foreign and is its own unit. The store answers
+   `unit_operations(mutation_id)` (this store's part, the operation itself included, applied order) and `unit_id(mutation_id)`
+   (the `group_id` the other member stores are asked by).
+2. **Supersede law (`admit_replacement`, every fold site, every replica).** `Withdrawn` is admitted for every operation: a
+   withdrawn foreign-step operation folds as a no-op, without a fault. An `Input` replacement of an operation that plans foreign
+   steps (or a replacement that itself plans them) stays refused — except the operation's own recorded input
+   (`payload == original.encode_op()`), which re-plans exactly what was materialized: that is what the undo of a withdrawal
+   authors (`SupersedeLedger::restore` re-authors the previous effective input), so the withdrawal is undoable.
+3. **One store: the unit moves together (authoring law, `supersede_inputs` + `draft_inputs`).** A supersession that names an
+   operation of a unit must name every applied operation of that unit in this store, all `Withdrawn` or all their recorded
+   inputs; anything else is refused at authoring with nothing recorded. So a store's part of a unit is withdrawn by ONE
+   `Supersede` (one history row) and restored by one.
+4. **Several stores.** Logs are per document, so the unit is withdrawn by one `Supersede` per member log — "one history row" is
+   the acting store's row; each member's own history shows its own. Composed members of one instance: the store's
+   `CompositionCoordinator` gains `withdraw_group(parent, children, group_id)` beside `undo_group` (two phases: every member
+   holding operations of the group dry-runs its withdrawal — a blocking report anywhere refuses the whole step with nothing
+   authored — then each member authors its `Supersede`). Members in other instances need the gateway to fan the same two
+   phases out (a `TransactionUndo`-shaped verb): a new `AppCommand`, so it rides channel 22 — not in this WP.
+5. **What a remote replica folds.** Exactly the authored transitions: a `Supersede` whose inputs are `Withdrawn` for the unit's
+   operations of that document. Each folds as a no-op through `effective_operation`; no unit knowledge is needed, and the
+   member documents converge per document as their own supersedes arrive (the same per-document arrival the composite gesture's
+   member edits had).
+6. **Gap that needs the wire (stated, not worked around).** A non-authoring replica holds no `group_id`, so it cannot complete a
+   cross-store unit. Until `MutationEnvelope` carries the group (trailing flag bit 3, channel 22), the store refuses, on such a
+   replica, to withdraw a foreign-step operation whose plan on its base (`foreign_steps(state_before)`) is not empty
+   (`unit not addressable`); an operation that plans nothing foreign there — every product operation today — is its own unit
+   and withdraws.
+7. **Runtime consequences (S5-RUNTIME).** The Withdraw row action drafts `unit_operations(target)` together; `editable` (input
+   editing) is false for an operation inside a unit (`unit_id(..).is_some()`), since rule 3 refuses its input replacement.
+
+**Addendum 01:2x — scope as approved, and two corrections from reading `dispatch_group`.**
+- `group_id` is not only the gateway `txn_id`: `CompositionCoordinator::dispatch_group` mints one (`GroupMeta.group_id: None` →
+  the invocation id) for EVERY parent+child gesture of one instance. Rules 1 and 3 above therefore apply to a **cross-artifact
+  unit** only: an operation that plans foreign steps and whose plan on the state before it is not empty (every replica can
+  evaluate `foreign_steps(state_before)`), or an operation whose `MutationMeta.origin` is `Transaction { .. }`. Ordinary
+  one-instance gesture groups keep today's per-store editing.
+- A unit with foreign steps always has a member in another instance, so rule 4's `withdraw_group` has no subject and is dropped.
+- Coordinator scope: the cross-instance fan-out is NOT this session (no product tree calls `call_foreign`). **Explicit limit:**
+  the store refuses to withdraw (or restore) an operation of a cross-artifact unit with `VcsError::UnitSpansDocuments` → fault
+  code `history.unit-spans-documents` (en "This step also changed other documents, so it cannot be withdrawn on its own yet." /
+  de "Dieser Schritt hat auch andere Dokumente geändert und lässt sich daher noch nicht einzeln zurückziehen."), nothing
+  recorded; a law pins it. Every product operation today is its own unit and withdraws.
+- Read API as S5-RUNTIME was told: `unit_id(mutation_id)` is `Some` for a member of a cross-artifact unit (Withdraw unavailable,
+  `editable` false), `unit_operations(mutation_id)` is this store's part of it (the operation alone otherwise).
+- Wire: a `MutationEnvelope.unit` field (trailing flag bit 3, one `str` after `[line]`, the gateway transaction id of a
+  `Transaction`-origin operation) would let a non-authoring replica of a target document know the unit. **Coordinator decision
+  00:5x: NOT added this session** — it has no producer until `transaction_commit` stamps group and origin BEFORE the edit is
+  announced (today `dispatch(Apply)` then `stamp_tail_group_id`, plugin `:35292–35294`), and no consumer while cross-artifact
+  withdrawal is refused. Wave B is unchanged.
+- **OPEN ITEM FOR A LATER TICKET (cross-artifact units):** withdrawal refused (`history.unit-spans-documents`); wire `unit`
+  field deferred (layout: `🔗️causal/🦀️.rs:916/:954/:1159`, TS `🟦️.ts:1035/:1060/:1396/:1491`, fixture
+  `🧮️document-backbone-batch-v1` `trailing-flags-invalid` `08` → `10`); precondition: a stamped gateway commit; then the gateway
+  fan-out verb (two phases per member, `TransactionUndo`-shaped). Until then a non-authoring replica of a TARGET document cannot
+  tell a `Transaction`-origin member (its `origin` is not on the wire) and treats it as an ordinary operation.
+
+Laws (store): a withdrawn foreign-step operation folds as a no-op at every site (live, Report replay, `.spr`/`.ops` reload,
+replica ingest in any order, retained initializer); its undo restores it; an `Input` replacement other than the recorded input
+still folds as the `mutation.invariant` fatal no-op; a partial unit withdrawal is refused with nothing recorded; a whole unit
+withdraws as one `Supersede`.
+
+### Staged while `landing` is held by COORDINATOR-ACTIVATION (00:35–01:0x) — nothing saved under `🧰️framework/**` yet
+
+| Wave | Staged where | State |
+|---|---|---|
+| P1 proof | `🗑️generated/s5-store/stage-p1/🏪️store/{🧬️schema/🔣️viewer-head, 🧫️fixtures/🧫️viewer-head, 🧪️tests/🧪️viewer-head/{🟦️.ts,🦀️.rs}}` | corpus 4 cases / 52 steps (hand-computed expectations); TS twin run from the staging tree: **5 pass / 0 fail, 1972 expects**; negative control (a received `branch` moves the receiver's head): **3 fail / 2 pass**; Rust law parses (`rustfmt`), never compiled |
+| FW (foreign-step Withdraw) | script `🧪️s5-store-foreign-withdraw.py` (`--check`: 7 anchors pending, each unique; `--emit` + `rustfmt` parse: store ok, vcs ok); laws `🗑️generated/s5-store/stage-fw/🏪️store/{🧬️schema/🔣️supersede-law, 🧫️fixtures/🧫️supersede-law, 🧪️tests/🧪️supersede-law/{🟦️.ts,🦀️.rs}}` | TS twin: **5 pass / 0 fail, 658 expects** (12 input rows + 12 unit rows, both tables total); Rust law parses, never compiled |
+| P2 (inverse refused) | script `🧪️s5-store-inverse-refused.py` (1 anchor pending; parse ok; refuses to apply before the vocabulary holds `mutation.inverse-refused`); law `🗑️generated/s5-store/stage-p2/inverse-refused-laws.rs` (appended to `🧪️supersede-law/🦀️.rs` at landing) | parses; waits for "OUTCOME CODES LANDED" |
+
+**P1 corpus conventions.** Two replicas `a`/`b`; steps `edit`, `commit`, `alternative` (finalize as a new alternative),
+`supersede` (`document`/`line`), `switch`, `checkout`, `receive` (`authored`/`reversed`), `reload` (`spr`/`ops`); after every
+step both replicas' views are stated (line, explicit checkpoint, state, applied, supersessions, listed alternatives);
+`converged` states every alternative's tip for any arrival order of the whole log. Edits carry one operation (a received
+multi-operation edit arrives as one edit per operation, so `applied` would differ between author and receiver). Concurrent
+edits commute (`addN`), because the Rust order of same-millisecond events of two replicas is decided by random actor ids.
+
+**P2 semantics (decided while reading the fold sites).** A messageless fold site (`fold_effective_edit`: prefix ring,
+materialization, retained initializers) never calls `inverse`, so "inverse refused ⇒ no-op" could not hold at every site
+without an inverse per fold. Therefore: the operation folds forward exactly as `fold_operation` folds it everywhere, the
+Report replay adds one `Fatal` `mutation.inverse-refused` message for that mutation and stages no inverse rows for it; the
+report blocks finalizing until the mutation is edited or withdrawn. This also unblocks loading: `project_envelope_history`
+replays in Report mode (store `:12858`) and today a document whose replay meets a refused inverse cannot load at all.
+
+### Landed 01:10–01:16 (first `landing` hold, 5 min 22 s)
+
+- **Wave FW** (`python3 T/🧪️s5-store-foreign-withdraw.py`, 7 anchors, one write per file): `🌿️vcs/🦀️.rs` — `VcsError::UnitSpansDocuments
+  { mutation_id, unit }`, its `Display`, fault code `history.unit-spans-documents`; `🏪️store/🦀️.rs` — `admit_replacement` (a
+  withdrawal is admitted for every operation; a foreign-step operation takes no input but its own recorded one),
+  `ArtifactStore::unit_id`, `unit_operations`, private `plans_foreign_steps` (region `🔖️TimeTravelReads`), `supersede_input`
+  refuses a unit operation (region `🔖️Supersede`).
+  **RAN** (gate v3, 01:11:20–01:15:50): `cargo check -p semio-framework-os-kernel -p semio-framework-plugin --lib
+  --message-format=short` → **exit 0**, `Finished dev in 4m 29s` (plugin lib 283 warnings: type-checked). This is also the F3
+  proof's first owed check (kernel + plugin lib).
+- **Language-agnostic law halves** (`python3 T/🧪️s5-store-land-laws.py viewer-head|supersede-law`): schema + corpus + TS twin of
+  both sets under `🏪️store/{🧬️schema/🔣️<set>, 🧫️fixtures/🧫️<set>, 🧪️tests/🧪️<set>/🟦️.ts}`, registered in the os package
+  (`📦️packages/🟦️typescript/📜️script.ts` oracle list, `📋️project.json` nx inputs).
+  **RAN**: `bun ./📜️script.ts test-store-oracles` → **22 pass / 0 fail** (5 files, 7948 expects; was 12 pass in 3 files).
+- **NOT landed (staged, parse-checked only):** the Rust laws `🧪️viewer-head/🦀️.rs` (2 laws) and `🧪️supersede-law/🦀️.rs` (3 laws) and
+  their mounts in `🧪️tests/🔬️unit/🦀️.rs` — the kernel test target does not compile (S5-CHANNEL). Land with
+  `python3 T/🧪️s5-store-land-laws.py viewer-head --rust` / `… supersede-law --rust`.
+- Rule 55 (01:16): build gate v4 (cargo < 4, rustc < 6, `CARGO_BUILD_JOBS=3`; `cargo test` builds need ≥ 25 GiB free).
+
+### P4 — folder reload (R2-2, R2-4): what is on disk and what it closes (01:05)
+
+- **R2-4** (`local.backbone-scope-mismatch` on every folder-bound batch). Cause (W2-B F3.2): the shell addressed a folder
+  document by a runtime counter (`${pluginId}-${instanceId}`) while the guest stamps its store id; and the TS actor demanded a
+  hub-verified cold pair of a folder document. On disk: worker `handleLocalMsg` asks for the pair only under a hub binding and
+  refuses exactly the envelopes whose `document_id` is not the binding's (`🏪️store/👷️worker/🟦️.ts:6995–7001`); the shell
+  attaches by the program's own identity (`syncAttachDocumentIdV1`, SHELLS' tree). Law: `💻️os/🧪️tests/🧪️folder-archive-restore`
+  "a folder-bound document admits the edits its program stamps with its own identity, and refuses a batch addressed by a
+  runtime counter (e2e R2-4)". **Closes R2-4 at worker level**; the live probe (batch B, running) is the proof.
+- **R2-2** (rows, supersede rows and alternatives lost after re-attach). The store pair always carried them (Run 2's archive
+  held all 5 edits and 11 transitions). On disk: `retire_displaced_document_rows` after every whole-document replacement
+  (plugin `🦀️.rs:26275, 28818, 28866, 35358`; `⏪️time-travel/🦀️.rs:3263`), the worker's own-write echo guard (`folderArchive`,
+  `:4138`), and `restoreDocumentArchiveV1` (load → re-read history → refresh). Laws: plugin
+  `a_document_archive_round_trip_lists_every_history_row_of_its_source` (edits, an overwrite with its undo and redo, two
+  new-alternative finalizes, edits on the alternative; rows and transition count equal after the archive load into an instance
+  holding another document) and the worker law "attach, edit, reload and re-attach restores the head and the history rows, with
+  no refused edit and no own-write echo".
+  **RAN 01:03**: `bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ../../🔨️modules/🏪️store/👷️worker/🟦️.ts -t "folder archive
+  restore"` → **5 passed** (14 skipped by the filter).
+- **Gap in the laws:** neither asserts the alternatives a reloaded instance LISTS, the head it stands on, or the warnings of
+  the rows; the worker law drives a TS stand-in program, not the guest. The plugin law is the one that fails on the old
+  behaviour (it found the displaced rows). Extension staged below.
+- **P4 law extension — STAGED** (`🗑️generated/s5-store/stage-p4/folder-reload-law.rs`, parses appended to
+  `🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs`; that file is not in my trees): law
+  `a_reattached_folder_document_restores_rows_history_edits_alternatives_and_warnings` — edits, a session-path OVERWRITE whose
+  replay introduces a `mutation.no-op` warning, a session-path NEW ALTERNATIVE, `document_archive` → a fresh instance holding
+  another document → archive load; asserts projection, edit rows and history-edit rows with their per-mutation outcomes, the
+  alternatives list, the head (`active_alternative_id`) and the durable outcomes. Needs the plugin test target to compile.
+
+### P5 — owed verification (01:18–01:30)
+
+| When | Command | Result |
+|---|---|---|
+| 01:11–01:15 | `cargo check -p semio-framework-os-kernel -p semio-framework-plugin --lib` (after wave FW) | **exit 0** (F3 kernel + plugin lib proof) |
+| 01:18–01:25 | `CARGO_BUILD_JOBS=3 cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-{writer-writer,trinity-jack,draw-drawing,raster-raster,procedural-generation2d,procedural-generation3d,gis-gismap,process-process3d} --lib --keep-going` (`check-8-native-1.txt`) | exit 101. **GREEN (0 errors): writer, drawing, generation2d, generation3d, process3d.** RED: jack 2 (`🧬️schema/📸️snapshot/📝️text/🦀️.rs:30,71` E0425 `attach_bundled_content`, TEXT), raster 1 (`✏️editor/🎮️commands/🖌️paint-stroke/🦀️.rs:381` E0599 `map_err` on `GestureDrive`, TOOLS/STROKES), gismap 42 (inference worker `os_dsl::{DslValue,ToValue}`, io import/export, `💾️binary/🦀️.rs:263` in `🔖️OwnedSprCatalog`; **4 in my region** `🔖️RetainedStoreInitialization` `:830–873`) |
+| 01:26 | `python3 T/🧪️s5-store-gismap-initializer-value-error.py` | applied: `pump_active` / `pump_terminal_retirement` answer `ValueError` (writer's pattern), 5 String refusals → `InvariantViolated`, 2 fault sinks take `into_message()`; 9 lines, region-scoped |
+| 01:27–01:28 | `cargo check … -p semio-s-artifact-gis-gismap --lib` | **blocked by a peer red in the kernel lib**: `🗣️dsl/🦀️.rs:219:71 E0308 EncodeOptions` (landing held by S5-TOOLS; reported to `main`). gismap fix UNVERIFIED |
+
+OWED after the kernel is green again: the gismap re-check (expect the 4 initializer errors gone), the same 8 crates with
+`--target wasm32-wasip2`, `bun nx run workspace:verify -- interactivity tool-jobs`.
+
+### `Checkout` deletion wave — census and plan (coordinator GO 00:5x; own wave after P2–P4; NOT started)
+
+No produced byte changes: no code authors `HistoryTransition::Checkout` since 10-01 and the fold only validates it, so no
+persisted document and no wire message of a current build holds tag 4; tags 5 (`Repin`) and 6 (`Supersede`) keep their numbers,
+the decoder answers tag 4 as an unknown tag. No channel bump. Sites (`git grep`, 01:30):
+
+| Tree | Sites |
+|---|---|
+| `FW/📡️replication/🔗️causal/🔀️transition/🦀️.rs` | variant `:125`, `HistoryTransitionKind::Checkout` `:232/:239 (ALL [..; 7] → 6)/:248/:263`, encode `:385`, decode tag 4 `:477`, fold arm `:775`, docs `:523/:670` |
+| `…/🔀️transition/🧪️tests/🔬️unit/🦀️.rs` | 10 uses (`commit_and_checkout_materialize_facts_and_positions`, `checkout_governs_concurrent_edits_by_hlc`, …) → heads move by `ViewerHead` |
+| `FW/📡️replication/🟦️.ts` | `HISTORY_TRANSITION_KINDS` `:1135`, `SupersessionFoldTransition` `:1181`, docs `:1097/:1177/:1191` |
+| `FW/📡️replication/🧪️tests/{🧪️history-transition/{🐍️.py,🟦️.ts}, 🧪️supersede-fold/🟦️.ts}` | generator rows, the TS encoder arm, the `checkout` event shape |
+| `FW/📡️replication/🔗️causal/{🧬️schema/🔣️history-transition, 🧬️schema/🔣️supersede-fold, 🧫️fixtures/🧫️history-transition, 🧫️fixtures/🧫️supersede-fold}` | schema `kind` enums, accepted/malformed corpus rows (tag 4 becomes a malformed row), fold steps `co-1/co-2/co-3` (the expectations they precede already depend on `expect.head` only), the `shapes` table |
+| `OSM/🏪️store/🦀️.rs` | `.ops` `OpsHeaderLine::Checkout` print `:12784` / parse `:13852`, `ArtifactCommand::history_transition_kinds` `:3281–3287` (`SwitchAlternative`/`CheckoutCheckpoint` claim `Checkout`: replace by a head-move predicate + a typed config-store refusal), doc of `branched_alternative` |
+| `OSM/🏪️store/🧪️tests/{🔬️unit, 🧪️supersede-replay}/🦀️.rs` | `a_config_store_holds_undo_and_redo_only` (`Checkout` kind), the trunk law's `Checkout { .. } => false` arm |
+| `OSM/📡️spr/📜️history/🦀️.rs` | the `.ops` text twin (`checkout` line) |
+| `OSM/🛢️db/🗿️artifact/🦀️.rs`, `OSM/🔌️plugin/🦀️.rs` (+ `🔬️plugin-runtime-plugin-builder-contract`), `🌎️hub/…/🪐️space/…/🧪️tests`, `✏️s/🔌️plugins/🌿️vcs/…/✏️editor/🧪️tests` | one mention each to re-read (several are the `checkoutCheckpoint` ACTION id, which stays) |
+
+Order: schema + corpora + Python generator → Rust codec/fold + unit tests → TS twin + tests → store `.ops` + shape gate →
+`cargo check -p semio-framework-replication -p semio-framework-os-kernel -p semio-framework-plugin --lib`, replication
+`cargo test --lib`, replication TS, os `test-store-oracles`, `python3 …/🧪️history-transition/🐍️.py`.
+
+### More owed runs (01:33)
+
+| Command | Result |
+|---|---|
+| `python3 T/🧪️s4-store-deferred-reprojection-corpus-law.py --check` | `pending: inverse, law` — anchors still resolve; lands with the first kernel test build |
+| `bun ./📜️script.ts verify interactivity tool-jobs` (`verify-tool-jobs.txt`) | **exit 1** at rule `shared-action-fixture`: "descriptor disposition join is not exact across manifest and runtime factory definitions" (`📜️script.ts:5691`) — a manifest/runtime action-descriptor rule (GATES/RUNTIME), raised before the run reports the envelope pins F3 corrected, so those stay unproven by this gate |
+
+**P6 (replay cost) — NOT started.** Notes for the successor: the store has no mutation-id index (`locate_mutation` `:19334`
+scans applied edits; `supersede_inputs` builds a whole `HashMap<MutationId, &Mutation>` per call `:21764`; `unit_id` adds one
+`locate_mutation` per supersede input); an index must follow `applied_edit_ids` through `StackMirrorDirt` like the cursor
+mirror does. The live digest chain is recomputed in `prefix_state_recorded` (`forward_prefix_digests` twice per call).
+
+### P4 — layer split agreed with S5-LOAD (coordinator relay 01:4x), and the hot-attach answer
+
+One law per layer: **mine** = (a) store / `.spr` / vcs reload of rows, supersessions, alternatives and `REC_VIEWER`;
+(b) the folder TRANSPORT (Rust actor `🏪️store/🔄️sync`, TS worker). **S5-LOAD** = the route on the program side of the channel
+(`PluginApp`, `DocumentArchiveLoadHost`, `ReadHistory`). The plugin-level draft `stage-p4/folder-reload-law.rs` is therefore
+LOAD's to take or drop (it drives `PluginApp`); I do not land it.
+
+- **(a) STAGED** in `stage-p1/…/🧪️viewer-head/🦀️.rs`, region `🧪️ReloadLaws`:
+  `the_persisted_pair_restores_edits_history_edits_alternatives_the_head_and_warnings` — the probe's sequence at the store
+  (three edits; a session-path OVERWRITE whose replay leaves a durable `Warning`; a session-path NEW ALTERNATIVE), then the pair
+  a detach persists (`print_document_pack`) → a re-attached store (`parse_document_pack`): every edit with author and
+  operations, the 4 history transitions, the alternatives with their chains, the head, both effective supersessions, the
+  durable outcomes, the applied order, the projection and the content revision are equal; the `.ops` text restores all but the
+  head, at the trunk tip. Parses; never compiled.
+- **(b) on disk, RAN**: TS worker `🧪️folder-archive-restore` 5 pass (01:03, above): no batch refused, the archive is written per
+  `localDocumentArchive`, the read-back after re-attach replaces the document once, the own write is no echo, an envelope
+  addressed by a runtime counter is refused `local.backbone-scope-mismatch`. Rust actor twin (`🏪️store/🔄️sync/🦀️.rs:2652–2681`,
+  `:4724–4750`): the same scope check and `persist_archive`; its storage laws
+  (`document_archive_event_log_storage_round_trips_complete_owned_bytes`, `folder_event_log_storage_round_trips_*`,
+  `document_archive_actor_refuses_malformed_and_over_limit_candidates_without_displacing_live_bytes`) are OWED (kernel test
+  target). The transport is content-agnostic: (b) proves the bytes come back, (a) proves what those bytes restore.
+
+**LOAD's finding — "the document port is a HOT attach: a folder holds nothing until the first published batch, and a program
+that only receives never writes its folder". Is that intended?** At the transport: yes by construction, and it cannot be
+otherwise there — the actor persists what it is handed (`LocalDocumentArchive`) and reads back; it never originates an archive,
+because the pack belongs to the program. As product behaviour: **no, it is a gap on the route side.** (1) Binding an existing
+document to an empty folder and leaving without another edit leaves the folder empty, so the re-attach restores nothing.
+(2) A replica bound to a folder AND a hub that only receives never refreshes its folder archive (stale, recoverable from the
+hub; a folder-only binding has no remote peers — `persistedLocalOnly`, `allowsCollaboration: false`). The shell writes the
+archive only from its outbound-send path (`ShellHost` `archivePersistence`, `:3221`). Fix for the route owner: persist the
+program's archive when the bind's first folder read finds none, and after an ingested batch. The transport accepts
+`localDocumentArchive` at any time after `open`; if the route wants a positive "the folder holds no archive" signal instead of
+waiting out the read (the identity document races a 2 s timeout for exactly this, `ShellHost:4214`), I add a
+`documentArchiveAbsent` event to both actor twins (schema first) — on request.
+
+### Resume 04:24 (usage cut ~02:40–04:22, rule 62) — repair-first
+
+- Nothing of mine was half on disk. `--check` of every wave script: FW `none pending`, gismap fix `none pending`, both law
+  landings `none pending`; staged and untouched: PM (`store:pair-merge`), P3 (4 anchors), P2 (1 anchor). The TS twin of the
+  supersede law had landed at 01:16. **RAN 04:25**: `bun ./📜️script.ts test-store-oracles` → **22 pass / 0 fail** (5 files,
+  8169 expects). A peer added 11 lines to the store at 02:18 (`:6284`); my anchors still resolve.
+- 01:50–02:47 before the cut: decisions recorded as design §22.22 (below); four `acquire landing` rounds (S5-LOAD, S5-UI,
+  S5-RUNTIME, S5-GATES held it), no landing. 04:24–: `landing` still shows S5-GATES' hold from 02:25 (it verifies an interrupted
+  kernel landing); FIFO ticket kept.
+
+### Design §22.22 — a folder read-back merges, it never replaces (coordinator requirement, probe batch H) — STAGED
+
+**Defect (read from the code):** a folder read-back of another writer's bytes is a whole-document replacement
+(`documentArchiveReplaced` → archive load → store replacement): (a) the receiver's events the archive lacks are dropped,
+(b) `parse_decoded_document_spr` adopts the pair's `REC_VIEWER` (store `:13701`), so the receiver moves onto the WRITER's
+alternative, (c) the replacement ends an open time-travel session.
+
+**Store wave PM** (`T/🧪️s5-store-pair-merge.py`, one insertion, region `🔖️PairMerge` after `🔖️ArtifactStore`; parses):
+`ArtifactStore::merge_persisted_pair(pack, spr) -> Result<PairMerge { merged, ahead }, VcsError>` — parses the pair, refuses
+another document (id, schema or genesis digest differ: `ValidationFailed`, nothing changed), ingests every operation and history
+transition the store lacks through `ingest_remote` (head untouched, own edits kept, an open replay sees an ordinary base
+move), never reads the pair's viewer head; `ahead` = events the store holds and the pair lacks. A cold construction
+(`parse_document_pack` → new store) stays the only reader of `REC_VIEWER`.
+- Persist rule (S5-LOAD's route): persist iff `ahead > 0` after a read-back merge; always (coalesced) after a hub ingest. It
+  terminates without clocks: A writes the union, B merges it with `ahead == 0` and writes nothing.
+- Law (staged in `stage-p1/…/🧪️viewer-head/🦀️.rs`, region `🧪️PairMergeLaws`):
+  `a_read_back_pair_merges_its_log_and_never_moves_the_reader` — A on its own alternative with an uncommitted edit, B writes
+  the pair with a trunk edit: A's merge = `{ merged: 1, ahead: 4 }` and A's head, projection, applied edits and supersessions
+  are unchanged; B's merge of A's union = `{ merged: 4, ahead: 0 }` and B stays on the trunk; a third round merges nothing;
+  another document's pair is refused with nothing changed; only a cold load stands where its pair says.
+- **Known cost (follow-up):** the merge parses the whole pair (`parse_document_pack` folds the foreign log) synchronously —
+  O(pair) per read-back, not stepped. The exact typed envelopes need the typed edits; a stepped variant belongs with the
+  stepped document load (`📓️api-stepped-document-load.md`). The ingest half already honours `defer_remote_replays`.
+
+### Two probe items (coordinator relay 04:3x, batch E)
+
+1. **"The History body lists Alternatives / 'Main line' only once the document holds a checkpoint — intended?"** It is not a
+   precondition of the main line: the trunk exists from the genesis (`trunk_alternative_id()`, `active_line_id()` and
+   `SwitchAlternative { trunk }` all work with zero checkpoints). It IS a store invariant of the LIST: `vcs.alternatives` holds
+   checkpoint chains, and consumers index the tip (`switch_local_alternative` `checkpoint_ids.last()`, `SpaceMember::checkout`,
+   composition pins, `malformed_alternative_checkpoint_pin_is_rejected_at_construction`), so the fold lists the trunk "as soon
+   as a commit made on it gives it a chain" (`🔀️transition/🦀️.rs:852`). I agree with the lean: the main line should be listed
+   from the first edit. The fix is in the body (S5-RUNTIME): list the main line from `trunk_alternative_id()` whenever
+   `vcs.alternatives` does not hold it, current while `active_alternative_id` is `None` — no store change; an empty-chain entry
+   in `vcs.alternatives` would break the tip readers above. On request I add a read `ArtifactStore::history_lines()` (trunk
+   first, `tip: Option<checkpoint>`), so the body needs no special case.
+2. **O4 — `commitCheckpoint refused: dispatch-failed — actor-document-port.retired` after a detach.** Two layers.
+   Shell (SHELLS/LOAD): `AutoCheckinScheduler` is keyed on `[isEditorSession, currentDocumentId, dispatchCheckpoint]`
+   (`ShellHost:11177–11187`), not on the document port: a detach leaves its timer armed. It must cancel on detach (key the
+   effect on the binding as well) — that is the "cancel the pending automatic checkpoint" the relay asks for.
+   Worker (mine, `🏪️store/👷️worker/🟦️.ts:2385–2388`): the browser actor throws `actor-document-port.retired` AFTER the guest ran
+   the command, when it hands the guest's outbound messages to a port that is gone. So the checkpoint was NOT refused — the
+   guest committed it and only its announcement was dropped; the shell is told "dispatch-failed" about a command that took
+   effect. The dropped announcement heals at the next bind (`attach_backbone` announces the whole history; LOAD's
+   persist-on-bind / `ahead > 0` rule rewrites the folder). **Open (not started, low priority):** refuse a publishing command
+   at admission while the document port is retired (a typed local refusal before the guest runs — an 11th
+   `command-rejection` code, schema + both twins + notice), instead of failing after the fact.
+
+### F4 — the two-peer divergence seen live (probe batch H, coordinator relay 04:5x): triage and acceptance law
+
+Evidence `🗑️generated/s5-e2e/run5-react-en-H.final.txt`: B's PUT is fetched by A (GET 200) but A's body never lists B's edit;
+A's Accept reviews `ready` without it; A's finalize is never written to the folder; both peers end different, neither is told.
+
+| Symptom | Layer | Reading (from the code) |
+|---|---|---|
+| A fetches B's bytes, B's edit never becomes a row / a "not applied while editing" row | **store (root)** + route | the fetched pair never reaches A's live store as events: the store had no entry for a fetched pair (only a whole replacement). React routes the read-back to `loadDocumentArchive` (`ShellHost:3319`). The store's remote path that yields the rows, the generation bump and `BaseMoved` is driven by envelopes only — `merge_persisted_pair` produces them |
+| A's Accept reviews `ready` without B's edit | store (same root) | the replay covers what the store holds |
+| no folder PUT after A's finalize | route / session | the store announces the finalize (`commit_finished_replay` → `install_transitions` → `flush_outbound`; deferred: `adopt_pending` → `flush_outbound`). Either the worker got that batch and the shell's `archivePersistence` did not fire for a publication that is not a command's reply (LOAD), or the session commit's batch never left the guest (RUNTIME) — the ndjson of A's worker at ~130 s decides |
+| one `timeTravel.stale` on A at 109.5 s | session | A's session generation moved once at B's write although no row changed — what the guest did with the archive load under an open session is the load route's to answer |
+
+**Acceptance law (staged, `🧪️viewer-head/🦀️.rs` region `🧪️PairMergeLaws`):**
+`two_peers_on_one_folder_converge_through_an_open_history_edit` — A edits, B opens the pair cold; A holds a draft and a replay
+begun early; B edits and writes; A's merge = `{ merged: 1, ahead: 0 }`, A's generation moves, the early replay commits
+`Stale`, `state_before(target, drafts)` is unchanged and B's edit sits downstream; Accept's report contains B's mutation and
+reaches draft + B's edit; finalize; merging the folder's (B's) pair = `{ merged: 0, ahead: 1 }` → A persists; B merges
+`{ merged: 1, ahead: 0 }`; both show the same state, supersession and applied edits; a last merge = `{ 0, 0 }`.
+The merge retires the parsed pair through `ArtifactEnvelope::retire_unadopted` (never a bare drop).
+
+### Wave AA — `documentArchiveAbsent` on both actor twins — STAGED (04:45–05:00)
+
+Script `T/🧪️s5-store-archive-absent.py` (`--check`: 20 edits pending, every anchor unique; `--emit`: the Rust files parse with
+`rustfmt`, both TS files transpile). Shape as agreed with S5-LOAD: TS `{ kind: "documentArchiveAbsent" }` (strict parse: no
+other key), Rust `ArtifactEvent::DocumentArchiveAbsent`.
+- **Rule, both twins** (schema `🏪️store/🔄️sync/🧬️schema/🔣️folder-archive-presence`, 9-case corpus
+  `🏪️store/🧫️fixtures/🧫️folder-archive-presence`): the actor remembers the archive the folder is known to hold (last read or
+  written; none after a read that found it empty); it announces the absence once per open — when the first ANSWERED read finds
+  no archive and nothing was read or written before — and writes an archive only when its bytes differ from the held one.
+- TS worker: `folderBootstrapped`, `pollFolderOnce` (a 204/404 that raced a write is ignored; an emptied folder forgets the held
+  archive and reports `persisted: false`), `writeFolder` (no PUT for the held bytes). `💻️os/🟦️.ts`: union + strict parse.
+- Rust native actor: `folder_held_hash` (separate from `last_written_hash`, whose self-write suppression is unchanged —
+  an external archive with the same operation ids never updated it, so it could not carry the de-dup), `folder_bootstrapped`,
+  `setup` / `handle_external_change` (a read ERROR is no longer taken for an absent archive) / `persist_write_archive`; test
+  seams `setup_test`, `folder_writes_test`. The wasm Rust actor has no folder. **One no-op arm in the wgpu shell's exhaustive
+  `ArtifactEvent` match** (S5-WGPU's file; it already persists on an empty folder) and the two test name maps.
+- An append-only folder event log cannot be emptied, so the Rust law stages 7 of the 9 cases (stated in the schema).
+- Laws to write at landing: TS — the corpus through the real worker inside `folder archive restore` (+ codec round trip and
+  the strict-parse refusal); Rust — the corpus through `native_actor::ArtifactActor` over a temp folder (with the other Rust
+  laws, behind the kernel test target).
+
+### Wave PM LANDED 05:11:45–05:20:14 — "MERGE PAIR ON DISK"
+
+`python3 T/🧪️s5-store-pair-merge.py` (7 anchors, one write of `🏪️store/🦀️.rs`):
+- region `🔖️PairMerge`: `PairMerge { merged, ahead }`; `ArtifactStore::merge_persisted_history(pack, history: HistoryLog)` (the
+  decoded entry S5-LOAD's stepped archive machine calls; another document is refused before anything is parsed: doc id,
+  schema, `artifact_initial_digest_of_pack(pack)` vs the store's genesis digest) and `merge_persisted_pair(pack, spr)` = decode +
+  that. The parsed pair retires through `ArtifactEnvelope::retire_unadopted`.
+- `SpaceMember::merge_persisted_envelope(envelope_pack)`: default refuses (`ValidationFailed`), `ArtifactStore` decodes its
+  member pack and merges. **Owed by S5-NESTED:** the `space_members!` arm (one delegating line, like `envelope_pack_bytes`).
+- `AppliedMutation.unit: Option<String>` (S5-RUNTIME), filled by `applied_edit_mutations`; `applied_edit_units(position)`
+  replaces the per-operation `plans_foreign_steps`: no fold unless an operation of the edit may plan foreign steps, then one
+  prefix-ring fold per edit.
+- **RAN** (gate v5, `CARGO_BUILD_JOBS=3`): `cargo check -p semio-framework-os-kernel -p semio-framework-plugin --lib` → **exit 0**
+  (`Finished dev in 1m 02s`, plugin lib 283 warnings).
+- **Follow-up (not done):** `merge_persisted_history` still builds the typed edits AND folds the foreign log once
+  (`parse_decoded_document_spr` → `settle_parsed_envelope`) before it ingests: O(pair operations) in one call. Extract the
+  typed-edit conversion (`parse_decoded_document_spr` lines of the edit loop) so the merge skips the settle.
+- 05:21–05:22 baseline `cargo check -p semio-framework-os-kernel --lib --tests`: the **lib test target type-checks** (898
+  warnings); exit 101 only from the peer integration test `sqlite_snapshot_native_admission` (3 × E0432, known remainder).
+
+### Coordinator relay 05:2x — port rebinding, F6
+
+1. **A port rebinding made A's next draft input `timeTravel.stale`.** `attach_hot_backbone` / `attach_backbone` /
+   `detach_backbone` bump the generation; the detach bump is a pinned refusal contract (`🏪️store/🔗️backbone/✂️detach` law,
+   `🧪️tests/🔗️backbone-detach` twin, cases `full-destination` and `generation-overflow`) and other consumers read the generation
+   as "the store changed", so it stays. **Store half — wave RB STAGED** (`T/🧪️s5-store-content-staleness.py`):
+   `commit_finished_replay` is stale on the content revision alone. Law staged (`🧪️viewer-head/🦀️.rs` region `🧪️PortLaws`):
+   `a_port_rebinding_moves_no_content_and_keeps_a_finished_replay`. **Session half (S5-RUNTIME):** `TimeTravelBase`
+   compares `store_generation` and `content_revision` together (`FW/⏪️time-travel/🦀️.rs:98–102, :623`; TT
+   `watch_time_travel_base`); the base must be the content revision alone.
+2. **F6 ("Loading document: 0 of 1" stays after Cancel).** Not the store's reprojection status: `reprojection_status()` answers
+   `kind: Load` from `live_document_load()` → `ActiveDocumentArchiveLoad::status()` before it asks the store. A cancelled load
+   stays listed until it is `terminal()`, which needs maintenance steps nobody drives after the cancel; "0 of 1" is the
+   machine's own count. The store offers `ArtifactStoreInitializationAuthority::progress()` (operations folded / to fold) for
+   the fold phase. Owner: S5-LOAD.
+
+### "RB ON DISK" — RB + P2 + the Rust laws LANDED 05:40:01–05:42:15 (one hold)
+
+- **RB** (`python3 T/🧪️s5-store-content-staleness.py`): `commit_finished_replay` refuses `Stale` only when
+  `finished.revision != content_revision`.
+- **P2** (`python3 T/🧪️s5-store-inverse-refused.py`, after S5-PUZZLE's "OUTCOME CODES LANDED" 05:35):
+  `EditReplay::replay_operation` — Report mode: a refused inverse is that mutation's `Fatal` `mutation.inverse-refused`, the
+  forward folds as `fold_operation` folds it at every site, no inverse rows are staged for it, the replay continues; Merge mode
+  still answers `VcsError::InverseRefused`.
+- **Rust laws** (`python3 T/🧪️s5-store-land-laws.py viewer-head --rust` / `… supersede-law --rust`), mounted in
+  `🏪️store/🧪️tests/🔬️unit/🦀️.rs` as `viewer_head_tests` (6 laws) and `supersede_law_tests` (4 laws).
+- **RAN:** `cargo check -p semio-framework-os-kernel -p semio-framework-plugin --lib` → **exit 0** (49 s);
+  `cargo check -p semio-framework-os-kernel --lib --tests` → **exit 0**.
+- **RAN 05:42:30–05:44:30:** `RUST_MIN_STACK=268435456 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/target-nde-s5-store
+  cargo test -p semio-framework-os-kernel --lib -- viewer_head_tests supersede_law_tests` → **8 passed / 2 failed**
+  (`test-laws-1.txt`).
+
+| Law | Result |
+|---|---|
+| `viewer_head_tests::two_peers_on_one_folder_converge_through_an_open_history_edit` (F4 acceptance) | **pass** |
+| `viewer_head_tests::a_read_back_pair_merges_its_log_and_never_moves_the_reader` | **pass** |
+| `viewer_head_tests::the_persisted_pair_restores_edits_history_edits_alternatives_the_head_and_warnings` (P4, store layer) | **pass** |
+| `viewer_head_tests::a_port_rebinding_moves_no_content_and_keeps_a_finished_replay` (RB) | **pass** |
+| `supersede_law_tests::a_refused_inverse_is_one_fatal_mutation_and_the_session_stays_repairable` (P2) | **pass** |
+| `supersede_law_tests::every_input_row_is_admitted_and_folded_as_the_table_says` (12 rows) | **pass** |
+| `supersede_law_tests::a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_input_restores_it` | **pass** |
+| `supersede_law_tests::every_unit_row_names_its_unit_and_refuses_its_supersession_as_the_table_says` (12 rows) | **pass** |
+| `viewer_head_tests::the_viewer_head_corpus_matches_two_stores` | **FAIL** — real defect below |
+| `viewer_head_tests::a_finalize_as_a_new_alternative_moves_only_its_author` | **FAIL** — real defect below |
+
+### Defect found by the two red laws — the causal DAG applies a dependent before its buffered dependency (05:50)
+
+Both laws pass every step up to their arrival-order sweep and die there in `ingest_remote` with
+`ValidationFailed("malformed history fold at offset 0: branch names unknown checkpoint ck-…")` (backtrace `test-laws-2.txt`:
+the sweep's `deliver`). **Cause:** `MutationDag::insert` (`FW/📡️replication/🔗️causal/🦀️.rs`) marks an envelope pending only
+when a dependency is "wholly unknown"; a dependency that is buffered but itself still pending counts as met. Arrival
+`[Commit, Branch, Supersede, operations…]` (a rotation of the log): the `Commit` waits for the operations it covers, the
+`Branch` names the buffered `Commit` and is applied at once, and the store folds a `Branch` without its `Commit`. The crate's
+own test comments call it "the `insert`-classification quirk"; `advance_ready_one` already requires every dependency to be
+applied. **Live meaning:** a replica that receives a new-alternative finalize before the batch with the edits it commits
+refuses the batch.
+**Fix STAGED** (`T/🧪️s5-store-dag-pending-rule.py`, 4 anchors resolve): `pending` = some dependency is not applied; doc; DAG law
+`a_dependency_that_is_buffered_but_pending_keeps_its_dependent_pending` (b, c, a drains a, b, c). Touches the replication
+foundation crate (every dependent rebuilds once): sequencing asked of `main`.
+
+### "DAG RULE LANDED" 06:03:22–06:11:17 (coordinator GO 05:5x, before wave B)
+
+`python3 T/🧪️s5-store-dag-pending-rule.py` (re-read right before: `🔗️causal/🦀️.rs` clean vs HEAD, mtime 10-04 18:27):
+`MutationDag::insert` — pending while any dependency is not APPLIED (was: while one is wholly unknown) + doc;
+`🔗️causal/🧪️tests/🔬️unit/🦀️.rs` — law `a_dependency_that_is_buffered_but_pending_keeps_its_dependent_pending`, one stale
+sentence.
+- **RAN:** `cargo check -p semio-framework-replication -p semio-framework-os-kernel -p semio-framework-plugin --lib` → **exit 0**
+  (1 m 16 s). `cargo test -p semio-framework-replication --lib -- causal` → **58 passed / 0 failed** (the new law included).
+- **RAN 06:01–06:02 (before the DAG edit), owed kernel store filters:** `cargo test -p semio-framework-os-kernel --lib --
+  deferred_reprojection_tests supersede_replay_tests tool_transaction_tests hot_path_tests os_spr::history::tests` →
+  **97 passed / 0 failed** (`test-filters-1.txt`; includes the three N17 local-step laws: an interior undo under a foreign tail
+  defers).
+- **OWED (stand-back for wave B, 06:12: no new cargo):** re-run of the two red laws after the DAG rule —
+  `RUST_MIN_STACK=268435456 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/⚡️cache/cargo/target-nde-s5-store cargo test
+  -p semio-framework-os-kernel --lib -- viewer_head_tests supersede_law_tests` (expect 10 / 0).
+
+### S5-RUNTIME's question — the legacy emit route authors every edit as `local` (06:15)
+
+True, and it is a store defect, not only a route one. `replay_mutations` stamps `author_id:
+mutation.author_id().unwrap_or(ActorId("local"))`, the edit's actor is that first operation's author
+(`edit_actor_from_meta`), and `apply_command` then REPLACES the store's local actor with it — so a plain
+`ArtifactCommand::Apply` of an aggregate without `author_id()` is authored `local` whatever `set_local_actor_id(meta.actor)`
+said, on every replica. A peer's ingested edit then carries actor `local` too: `edit_is_local` is true for it, `Undo` may take
+the peer's tail edit, and the fold's ownership rule (`foreign`) cannot tell the two authors apart. Whether a non-migrated
+document verb still reaches the route is the tool-jobs census's to list (the route is live code: `dispatch_emit` → `Apply`);
+the store must make it impossible either way. **Fix plan = P3 widened ("every edit names its author", §22.6), one wave after
+LOCKS OPEN:** (1) `replay_mutations` authors with `mutation.author_id()`, else the store's `local_actor_id`; with neither the
+command is refused before anything is recorded (a typed `VcsError`, no `"local"` literal left in the store); `local_actor()`
+for transition envelopes likewise; (2) `edit_is_local` counts authored edits only, `validate_durable_history` and the paged
+`.spr` decoder refuse an unauthored edit (staged: `T/🧪️s5-store-authored-edits.py`); (3) S5-RUNTIME: every route sets
+`set_local_actor_id(Some(meta.actor))` before a store dispatch — `dispatch_emit` included; (4) the store's test harness names
+its local actor at construction and the hand-built unauthored edits (census: 6 test sites) get one; (5) law: two replicas
+through plain `Apply` with distinct actors — each undoes only its own edit, the other's is refused by the fold.
+
+### Stand-back for wave B (06:12 →) — state and the exact next steps
+
+Everything below is staged; nothing of mine is half on disk (every wave script answers `pending: none` for what landed).
+
+| Step (in order, at "LOCKS OPEN") | Command | Lock |
+|---|---|---|
+| 1. re-run the two laws the DAG rule fixes | `RUST_MIN_STACK=268435456 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target-nde-s5-store cargo test -p semio-framework-os-kernel --lib -- viewer_head_tests supersede_law_tests` (expect 10 / 0) | none |
+| 2. wave AA (`documentArchiveAbsent`, both twins, schema + corpus + both laws) | `python3 T/🧪️s5-store-archive-absent.py --rust-law` (22 edits + the Rust law; `--check` first) → `cargo check -p semio-framework-os-kernel -p semio-framework-plugin -p semio-framework-os-renderer-wgpu --lib` and `cargo check -p semio-framework-os-kernel --lib --tests` → os TS `bun x vitest run --config ../../🧪️tests/🎚️config/🟦️.ts ../../🔨️modules/🏪️store/👷️worker/🟦️.ts -t "folder archive restore"` (expect 6) + `tsc` of the os package → `cargo test -p semio-framework-os-kernel --lib -- the_folder_archive_presence_corpus` | `landing` then `serve` |
+| 3. P3 widened (every edit names its author; no `"local"` fallback) | store: `T/🧪️s5-store-authored-edits.py` (4 anchors: `edit_is_local`, `validate_durable_history`, the paged decoder) + `replay_mutations` (`:22224`) and `local_actor()` (`:20346`) authoring with the store's local actor or refusing typed; harness actor; 6 hand-built test edits; needs S5-RUNTIME's `set_local_actor_id` on every route in the same window | `landing` |
+| 4. dead-`Checkout` deletion | census + order in "`Checkout` deletion wave" above | `landing` + `serve` |
+| 5. P6 replay cost | notes in "More owed runs" above | `landing` |
+
+Wave AA additions since the first staging: the TS law (the corpus through the real worker inside `folder archive restore`,
+the codec round trip and the strict-parse refusal) and the Rust law
+(`the_folder_archive_presence_corpus_matches_the_native_actor`, 7 of 9 cases through `native_actor::ArtifactActor` over a temp
+folder) are wired into the script (`🗑️generated/s5-store/stage-aa/laws/*`); all 22 anchors still resolve at 06:26 and every
+edited Rust file parses, both TS files transpile. Never compiled, never run.
+
+Also open from the brief, not started: 8-crate `wasm32-wasip2` check (gismap initializer fix on disk, unverified:
+`cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-gis-gismap --lib`), the `merge_persisted_history` settle-fold
+removal, the 11th `command-rejection` code for a retired document port (O4), `history_lines()` for the main-line row.
+
+### Session-5 summary at the stand-back (06:45)
+
+**Landed (4 `landing` holds, each released green):** FW 01:10 · PM 05:11 · RB + P2 + Rust laws 05:40 · DAG rule 06:03.
+Files: `🏪️store/🦀️.rs` (regions `🔖️EffectiveForwards`, `🔖️TimeTravelReads`, `🔖️Supersede`, `🔖️PairMerge`, `🔖️EditReplay`,
+`SpaceMember`), `🌿️vcs/🦀️.rs` (`UnitSpansDocuments`), `📡️replication/🔗️causal/🦀️.rs` (+ unit tests), gismap initializer region,
+new `🏪️store/{🧬️schema/🔣️,🧫️fixtures/🧫️,🧪️tests/🧪️}{viewer-head,supersede-law}`, mounts in `🏪️store/🧪️tests/🔬️unit/🦀️.rs`, os
+`test-store-oracles` registration.
+**Ran:** kernel + plugin lib checks ×4 exit 0; kernel `--lib --tests` check exit 0; os `test-store-oracles` 22 / 0; worker
+`folder archive restore` 5 / 0; kernel store filters 97 / 0; replication `causal` 58 / 0; new store laws 8 / 2 (the 2 reds
+= the DAG defect, fixed on disk, re-run owed).
+**Not done:** P1's `Checkout` deletion, P3 (staged; widened by the legacy-emit finding), P6, wave AA (staged complete),
+8-crate wasip2 check.
+
+**Wave B is rewriting the tree under the staged waves (06:14 →, S5-CHANNEL):** it removed `description` from
+`ArtifactCommand::Apply` in my two landed law files (correct; the staged copies are re-synced from the tree, `land-laws --check`
+= none pending) and changed the paged edit decoder, so `T/🧪️s5-store-authored-edits.py` no longer resolves its
+`decoder-write` anchor (`anchor occurs 0 times`) — **P3 must be re-derived against the post-wave-B store** (it is widened
+anyway). The plugin-level draft `stage-p4/folder-reload-law.rs` (S5-LOAD's to take) still passes `description:` to `Apply`.
+Wave AA's 22 anchors resolved at 06:45 during wave B; re-run `--check` after "WAVE B LANDED".
+
+### Resume 07:27 ("LOCKS OPEN", build B1 live, channel 22)
+
+- **RAN 07:27:43–07:30:02** the owed re-run: `cargo test -p semio-framework-os-kernel --lib -- viewer_head_tests
+  supersede_law_tests` → **9 passed / 1 failed** (`test-laws-3.txt`). `a_finalize_as_a_new_alternative_moves_only_its_author` is
+  green with the DAG rule.
+- **Second real defect found by `the_viewer_head_corpus_matches_two_stores`** (backtrace `test-laws-4.txt`: `act` → `deliver` →
+  `ingest_remote_merge` → `bump` → `assert_mirrors_are_live`: "incremental applied revision records … first stale record
+  Some(1), 3 live vs 3 rebuilt"). The merge of a remote edit renumbers every applied edit by its applied position (store
+  `:22754`) and marks the revision accumulator dirty from the insertion point `k` only; `sequence_number` is part of an edit's
+  revision digest (`edit_digest`: the edit's JSON, or the chained header). Corpus case 2, replica `a` on its alternative:
+  step 8 ingests `b`'s trunk edit — the merge orders it into the applied order (numbers 1, 2, 3) and the reproject that
+  follows drops it again (not visible at `a`'s head; `a` keeps 1, 3); step 12 ingests `b`'s edit on the alternative at the tail
+  (`k = 2`) and renumbers position 1 from 3 to 2 without re-digesting its record. Release builds have no oracle: the live
+  content revision silently differs from a rebuilt one.
+  **Fix STAGED** (`T/🧪️s5-store-ingest-renumber-dirt.py`, 1 anchor): the renumbering reports the first position it changed,
+  the accumulator is dirty from `min(k, that)`; one ledger walk instead of one ledger search per applied edit (O(n²) → O(n)
+  per remote ingest). Lands with wave AA.
+- **Wider finding, not fixed (design list):** `sequence_number` is replica-local and path-dependent (a live store numbers by
+  applied position, a reload by ledger position; a hidden edit keeps the number it got while briefly ordered, so numbers can
+  also repeat across applied and hidden edits) and it is inside the edit's revision digest — the content revision is not a
+  pure function of (log, head). Taking it out of the digest touches the one-item sealer's canonical edit bytes
+  (`🏪️store/🧵️canonical-edit`).
+- Wave AA after wave B: `python3 T/🧪️s5-store-archive-absent.py --rust-law --check` → all 22 edits + the Rust law pending,
+  every anchor resolves.
+
+### "AA ON DISK" — wave AA + renumber fix LANDED 09:36–10:01 (resume after the 07:45 cut; rules 64–67)
+
+- Applied 09:37 in one hold: `T/🧪️s5-store-archive-absent.py --rust-law` (10 files: `🔄️sync/🦀️.rs`, `👷️worker/🟦️.ts`,
+  `💻️os/🟦️.ts`, wgpu shell arm, schema, corpus, three test files) and `T/🧪️s5-store-ingest-renumber-dirt.py`.
+- RAN: `bun test ./🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-archive-restore/🟦️.ts` → 6 pass / 0 fail (09:47);
+  `tsc` over the three AA TypeScript files (ticket-local tsconfig) → 0 errors; `test-store-oracles` → 22 / 0.
+- `serve` released 09:48, `landing` released 10:00:46; restore script `T/🧪️s5-store-restore-aa.py` (hunk-exact inverse,
+  `--check` clean); train line `10:01:05 S5-STORE AA+renumber 10 files`. Train first pass GREEN 10:05 (kernel + plugin +
+  wgpu + ui `--lib`) on a tree holding both → the coordinator relayed "AA ON DISK" to S5-LOAD.
+- Rule 67 (landing train) from here on: a hold is apply-only, no cargo inside it, one line in `coord/train.txt`, the
+  framework-closure verdict is read from `coord/train.status`.
+- NOT RUN: the Rust law `the_folder_archive_presence_corpus_matches_the_native_actor` — the `sync` module is mounted
+  only with `--features sync`, my filter without the feature matched 0 tests. OWED:
+  `cargo test -p semio-framework-os-kernel --lib --features sync -- the_folder_archive_presence_corpus`.
+
+### Design §22.28 — `sequence_number` leaves the revision digest (wave C, channel 23) — STAGED 10:19, not landed
+
+**Problem.** `Edit.sequence_number` is where an edit stands in ONE replica's ledger. Three writers disagree about it: a
+live store numbers the applied edits by applied position after every remote merge (`ingest_remote_merge`); the history-log
+reload numbers every edit by ledger position (`parse_decoded_document_spr`, `sequence_number: index + 1`); an edit of a
+line the replica does not stand on keeps the number it arrived with. The member was inside the edit's revision record
+(single-operation: inside the hashed JSON; chained: a 4-byte part of `edit-chained`), so the content revision was not a
+pure function of (log, head).
+
+**Witnessed, not only argued (10:21).** The staged law, temporarily in the tree, is RED under the current rule: corpus
+case `a-new-alternative-moves-only-its-author`, reversed arrival, a replica that stood on the trunk throughout — its own
+`.spr` reload names another content revision than the replica showed (`🗑️generated/s5-store/test-laws-5.txt`).
+
+**Rule after wave C** (confirmed with S5-CHANNEL, who reseals fixtures / schema / TS twins):
+- single-operation edit: `record("edit", [id, JSON(edit WITHOUT its sequenceNumber member)])`, other members in the
+  same order (id, actor?, forwards, inverse, mutationMeta?, verb?, startedAt, finishedAt?, line);
+- chained edit: `record("edit-chained", [id, actorTag, actor, startedAt, finishedAtTag, finishedAt, n+chain ×3])` — only
+  the 4-byte sequence part is gone; `edit-verb`, `edit-line`, the three chains unchanged;
+- the one-item sealer streams exactly that JSON (its Edit field table 10 → 9, child ordinals 6/7/8 = startedAt /
+  finishedAt / line), so sealer digest == store digest; its byte count comes from the same traversal;
+- `CursorRevisionAccumulator::revision_value(edit)` is the one oracle of "what the identity covers" (store digest and
+  the five Rust test oracles use it);
+- the remote merge's renumbering dirties revision records from the insertion point `k` only (the 09:37 fix's wider
+  dirt range is no longer needed: a renumbered edit keeps its digest);
+- `Edit.sequence_number` stays on the type, the wire, `.spr`, `.ops`; `authority_digest` keeps `next_sequence_number`
+  (preparation identity). `validate_durable_history` still requires unique non-negative numbers.
+
+**What changes on disk or wire: nothing.** The revision digest is replica-local (session base, staleness, projection
+stamp); it is in no `.spr` / `.ops` / wire / hub record. The only pinned bytes are the canonical-edit fixtures
+(`🔏️canonical-edit-sealer.json`, `🗺️canonical-borrowed-map.json`: `expectedJson` + `expectedDigest`;
+`📖️canonical-reader.json`: `expectedByteLength`, `expectedJsonSha256`; `🔗️edit-digest-chains.json`: every
+`expectedDigest`), their schema and two TS twins — S5-CHANNEL's half. The fixtures' `edit` inputs keep `sequenceNumber`.
+
+**Proof law (staged, `viewer_head_tests::a_content_revision_names_a_head_whatever_line_its_replica_stood_on`).** For
+every case of the viewer-head corpus a fresh replica takes the whole log in every arrival order (log order, reversed,
+every rotation) while standing on each line of the case — it steps onto a line the moment the line is listed, so the
+other lines' edits (a peer's trunk edit, for a replica on an alternative) reach it while it shows something else. Then,
+per line: the replica's own persisted pair restores exactly the revision it showed (R1), and all replicas name ONE
+content revision for the line whatever they stood on and whatever order the events came in (R2). The assertion message
+carries each variant's arrival, standing line and ledger positions.
+
+**Limit, recorded (R3).** Author and receiver still hold different records of one edit: a received edit has
+`started_at: ""`, `finished_at: None`, `payload_hash: None`, `base_version: 0`, `undo_policy: ExactBaseOnly`, no
+`group_id` / `origin` — none of these are on the wire. So an author and a receiver name different content revisions for
+the same head. No product path compares revisions across replicas today (the token never leaves its replica); making
+R3 hold means either carrying those members on the wire or taking them out of the identity — a later decision.
+
+**Encoder order (coordinator's exposure question, 10:10).** Checked in code:
+- revision digest: never calls `encode_wire_value`; hashes `pack_json::to_json_string`, i.e. value order (record members
+  in `to_value` declaration order, intrinsic objects in stored order; `pack_json::Object` is an insertion-ordered `Vec`),
+  not key-sorted. Its TS twin hashes `JSON.stringify` in document order. It relies on a reload giving intrinsic objects
+  back in stored order — the unsorted pack encoder guarantees that, the sorting one did not. The supersession digest
+  covers payload bytes as stored;
+- sealer: owns its form — explicit field tables for edit / meta / clock / origin / target, payloads walk the mutation's
+  own canonical traversal in stored order;
+- archive pair: compared as raw bytes only (`folder_held_hash`, `last_written_hash`, TS `folderArchive`;
+  `initial_digest` = blake3 of the genesis pack bytes, a re-encode of a decoded genesis is order-preserving). Drift only
+  across builds (sorted vs unsorted genesis re-encode → "other genesis" refusal), which the channel bump covers. The TS
+  worker's `placeholderPayloadHash` over the sorted TS encoding is never verified by Rust.
+
+**Staged:** `python3 T/🧪️s5-store-revision-digest.py --check` → 13 hunks pending in 6 files
+(`🏪️store/🦀️.rs` ×4, `🧵️canonical-edit/🦀️.rs` ×3, `🧵️canonical-edit/🧪️tests/🔬️unit/🦀️.rs` ×2,
+`🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs` ×1, `📖️reader/🧪️tests/📖️reader/🦀️.rs` ×2,
+`🏪️store/🧪️tests/🧪️viewer-head/🦀️.rs` ×1); `--only rule|law`, `--revert`, `--emit <dir>`. Emitted copies parse
+(`rustfmt` over the four test files and, via stdin, the store and the sealer) and the hunks are rustfmt-stable. The law
+compiled in the 10:19 kernel test build (1 m 55 s, 892 warnings). Landing order on "WAVE C GO": this script → S5-NESTED
+N2 → S5-CHANNEL's reseal → bump. Until the reseal lands, the Rust laws reading those fixtures are red by construction.
+A surrogate probe that predicts the post-change outcome (`🗑️generated/s5-store/debug-revision-surrogate.py`,
+`[DEBUG]`, applied and reverted, never run: the gate stayed closed and the disk fell below the test floor) is kept for
+the first test window.
+
+### Defect CL — a commit on an alternative did not depend on the alternative's registration (found 10:21, fixed 10:36)
+
+- Symptom (the corpus law, once the renumber fix let it run further): `ingest_remote` →
+  `ValidationFailed("malformed history fold at offset 0: commit ck-… names unknown alternative alternative-…")`.
+- Cause: `pending_checkpoint_transition` declared the commit's operations and its parent checkpoint as dependencies,
+  never the `Branch` that registered `Commit.line_id`. The history fold refuses a commit whose line it does not list
+  (`🔗️causal/🔀️transition/🦀️.rs:760`), so a receiver holding the operations and the parent applied the commit before
+  the registration and refused the event. Every other fold refusal already has its declared dependency (commit → parent,
+  commit → operations, branch → checkpoint, repin → checkpoint); scoped supersessions fold tolerantly.
+- Fix LANDED 10:36:37 (apply-only hold, train line): `T/🧪️s5-store-commit-names-its-line.py --only rule` — store
+  `alternative_origin(alternative_id)` + one `dependencies.extend(…)` in `pending_checkpoint_transition`. One more
+  dependency id on newly authored `Commit` events; no codec, wire or persisted format change.
+- Focused law STAGED (`--only law`, `a_commit_on_an_alternative_waits_for_the_alternative`): the commit names the
+  registration among its dependencies; reversed and every rotation converge on the author's registrations and projection.
+  Not landed: compile-unverified until a test build is allowed.
+
+### Runs and blocks 10:19–10:36
+
+| when | command | result |
+|---|---|---|
+| 10:19–10:21 | gate → `cargo test -p semio-framework-os-kernel --lib --no-run` (private target dir, jobs 3) | exit 0, 1 m 55 s, 892 warnings |
+| 10:21 | `… cargo test -p semio-framework-os-kernel --lib -- viewer_head_tests supersede_law_tests the_folder_archive_presence_corpus` (witness law in the tree) | 9 passed / 2 failed of 11: witness law RED on R1 (by design), corpus law RED on defect CL; archive law matched 0 tests (needs `--features sync`) |
+| 10:24–10:34 | same build for the `[DEBUG]` surrogate probe | never started: gate closed 10 min (5 shared cargos at 0 % CPU), moved to background by the tool cap, I killed my own waiting gate; disk 30 → 16 → 13 GiB (test floor 25) |
+| 10:35 | revert of probe + witness law (one hold) | tree as before (`--check`: all 13 hunks pending) |
+
+OWED (needs ≥ 25 GiB free and train GREEN through CL):
+`zsh T/🚦️gate.sh 3 25 && RUST_MIN_STACK=268435456 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target-nde-s5-store cargo test -p semio-framework-os-kernel --lib -- viewer_head_tests supersede_law_tests`
+— expect 10 / 0 before wave C, 11 / 0 after it (12 / 0 with the CL law).
+
+### Wave C LANDED 10:58:37 (by S5-CHANNEL, inside the coordinator's hold) — and my fix-forward 10:59:56
+
+- S5-CHANNEL ran `python3 T/🧪️s5-store-revision-digest.py` (13 hunks, 6 files) → NESTED's N2 → its own reseal; channel 23.
+  FRAMEWORK train GREEN 11:02:30 through wave C (`--lib`).
+- **My defect, found by my own test build and fixed forward (test-only):** three of the five Rust test oracles named
+  `crate::os_store::CursorRevisionAccumulator`; the store module is `crate::os_store::component` (the accumulator is
+  private to it, not re-exported) → `E0433` at `📖️reader/🧪️tests/📖️reader/🦀️.rs:84,339` and
+  `🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs:222`. `--lib` cannot see test files, so neither my `rustfmt` parse check nor the
+  train caught it. Fix `T/🧪️s5-store-revision-digest-oracle-path.py` (path → `crate::os_store::component::…` in the two
+  test files and inside the wave script, which still answers `pending: none`); train line written. Lesson: a hunk in a
+  test file is only staged once a TEST build compiled it — the witness law was compiled at 10:19, the oracle hunks were
+  not.
+- Kernel test builds (private `CARGO_TARGET_DIR` + `CARGO_BUILD_BUILD_DIR`, no shared lock, no gate):
+  10:49:59–10:59:09 cold, exit 101 (my 3 × E0433 + 1 foreign error); 11:00:14–11:02:27 warm, exit 101 with ONE error
+  left, not mine: `🏪️store/🧪️tests/🔬️unit/🦀️.rs:9712` `ChildDispatch::borrowed(child_ref,&source,&schema,&labels)` →
+  `E0599` (test `dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal`, fixture `🫳️child-dispatch`; the
+  test file changed 10:32, the store has no `ChildDispatch::borrowed`). Reported; the coordinator routed it to S5-NESTED.
+  It blocks every kernel `--lib` test build, so NO law of mine ran after wave C.
+- CL's focused law (`a_commit_on_an_alternative_waits_for_the_alternative`) is in the tree since 10:47 (test-only hold)
+  and COMPILED in both builds above (no error names it); not run.
+
+### P3 → B3 (10:47), shape decided by the coordinator: design §22.34 — the actor is a required constructor argument
+
+Why not the refusal before B2: only the trait default answers `Mutation::author_id()` (`None`; two test types override
+it), so every store that applies without a bound actor authors through the two `"local"` literals. A refusal is a
+run-time change no `--lib` check sees. Census of `ArtifactStore::new` (227 sites, `git grep`, 11:03):
+
+| crate / area | production | tests |
+|---|---|---|
+| kernel `🏪️store` | 6 (`:3837 :3858 :11500 :11663 :26775 :28293`) | 164 |
+| kernel `🔌️plugin` | 2 (`:25559` bound by wave H, `:38871`) | 12 |
+| kernel `🏃️run` / `🪐️space` / `🛢️db` / `🌊️flow` | 1 (`🏗️bootstrap/🦀️.rs:229`) / 1 (`:461`) / 0 / 0 | 0 / 3 / 1 / 1 |
+| `🖥️host` | 1 (`:829`) | 2 |
+| `✏️s` plugins (draw 8, wfc 4, gis 3, raster 3, shooting 2, fem 2, lowpoly 2, playbook 2, remodel 2, stdio 2, trinity 1, space 1, sourcing 1) | 0 | 33 |
+
+plus 52 `set_local_actor_id(` calls and 13 `.local_actor_id()` reads in 4 files. §22.34 (written into `📋️design.md`):
+`ArtifactStore::new(envelope, actor)` and every retained initializer take the actor; the store holds `local_actor:
+ActorId`; authoring is total (mutation's author, else the store's); genesis / codec `apply_ops` / plain test stores pass
+`LOCAL_ACTOR_ID`; `edit_is_local` authored-only; unauthored edits refused by `validate_durable_history` and the paged
+decoder. `cargo check --tests` enumerates every unbound site, so the codemod is fail-closed at compile time.
+NOT STAGED YET: the codemod needs a `--tests` check to prove itself (the lesson above) and cargo is closed for
+activation B2. The stale `T/🧪️s5-store-authored-edits.py` stays unapplied and is superseded.
+
+### Design §22.35 — a document is identified by its genesis pack's stored bytes (S5-LOAD's finding, 11:05) — decided, not staged
+
+Read in code: `initial_digest` is `blake3(initial_snapshot.encode_pack())` on EVERY route (store `:17769`, `:18046`,
+hydration `:306`, eight plugin initializers through `store::artifact_initial_digest`), while the two same-document tests
+hash a peer's STORED bytes (`merge_persisted_history` `:23677`, backbone `verify_genesis` `:23031`), and
+`print_document_pack` re-encodes the genesis on every persist. The two sides agree only while decode → encode is
+byte-stable, which an encoder change (member order of typed records) breaks: one document reads as two, the pair is
+loaded instead of merged, the hub refuses a peer's `Genesis`.
+Decision (written as §22.35): the genesis pack is encoded once, at creation; the envelope keeps the bytes beside the
+decoded snapshot; identity = blake3 of the stored bytes; every load keeps the bytes it decoded from; persist and the
+backbone `Genesis` emit them verbatim. Rejected: a store-owned canonical key-ordered form (a second encoder contract —
+member order, number forms — that drifts the same way; needs a decode + sort per read-back) and a recorded digest
+without the bytes (the stored pack could no longer be checked against it).
+Plan (B3, ONE wave with §22.34 — both change `create_document_envelope` / `ArtifactStore::new` and the same 227 sites):
+1. `ArtifactVcs` gains the immutable genesis bytes; `create_document_envelope` encodes once; `parse_document_spr`
+   keeps the bytes it decoded from; `artifact_initial_digest(initial)` (the re-encoding form) is deleted.
+2. `print_document_pack` and the backbone `Genesis` writer emit the kept bytes; hydration and the eight plugin
+   initializers hash the bytes they read (incrementally, no second materialisation).
+3. Law "two encoders, one document → merge": a test snapshot type with two byte forms of one value; a replica created
+   with form A, a replica that cold-loaded A's pair in a process whose `encode_pack` yields form B: B's persisted pack
+   is byte-equal to A's, each merges the other's pair (`PairMerge`), both name one content revision, and a pair whose
+   genesis bytes differ is refused as another document. TS twin: the worker already treats the archive as opaque bytes.
+
+### Kernel law run after the reboot (16:19–16:35) — everything of mine is green; wave LO landed
+
+Full table, every red with its owner: `T/📓️s5-kernel-law-run.md`. In short:
+- `viewer_head_tests supersede_law_tests` **13 / 0** — the §22.28 law, CL's law and the corpus law all pass. This is the
+  first run that verifies wave C (the §22.28 law was RED before it: live ≠ own reload), wave CL and the renumber fix.
+- canonical-edit laws **25 / 0** (S5-CHANNEL's reseal agrees with the sealer and the store digest); replication `causal`
+  **58 / 0** (DAG pending rule); `--features sync` archive-presence law **1 / 0**, whole `os_store::sync::` **88 / 0**
+  (the wave AA Rust half, never run before); `os_spr::` **343 / 0**; `the_document_archive_load_host` **1 / 0**.
+- `os_store::` 514 / 1 and the whole binary 1188 / 6: five deterministic reds, none in a file a fleet wave changed (four
+  are the Codex peer's in-flight object-member-order work in the pack encoder, one is an `os_dsl` record refusal message),
+  and one test-isolation flake (passes alone).
+- **Wave LO, my red fixed forward (16:25):** a live store listed changes, checkpoints and alternatives in ARRIVAL order
+  (`adopt_history_facts` kept known facts in place and appended new ones) while the fold — and a reload — list them in
+  log order. `T/🧪️s5-store-ledgers-follow-log-order.py`: `order_ledger_as` after adoption + the focused law
+  `the_ledgers_list_their_facts_in_log_order_whatever_order_the_events_arrived_in`. Fourth defect this corpus law has
+  surfaced (DAG pending rule, renumber dirt, commit → branch dependency, ledger order), each hidden behind the previous.
+- Harness note: a test binary run directly needs `SEMIO_TEST_ARTIFACT_DIR` and the package directory as cwd
+  (`os_spr::io::native::…caller_cancellation…` panics without the variable).
+- §22.34 + §22.35 remain decided-not-staged; the precondition "this run is green" holds for everything the fleet owns.
+
+## Session 5 — 2026-10-06
+
+### Wave RR — a refused command retires what its replay built (design §23; S5-AGNOSTIC's raster abort) — rule APPLIED 01:45, UNVERIFIED; law STAGED
+
+**Bug (read in code).** `ArtifactStore::replay_mutations` kept its working projection (`pre_snapshot.clone()`), the command's
+operations and their inverses as plain locals. Of its four refusal exits only the refused inverse retired them; the encode
+failure (`?`), the failing diff (`applied?`) and the policy rejection (`return Err(VcsError::Rejected { .. })`) let them fall
+to drop glue — and a projection owning a fail-closed root (raster's owned map) panics there:
+`drop_glue::<RasterSnapshot>` ← `replay_mutations` ← `apply_command` ← `dispatch`
+(`T/🗑️generated/s5-agnostic/raster-g12-backtrace.txt`). Its three callers had the same shape after a successful replay:
+every `?` between the replay and the adoption (`replace_local_actor_retained`, `reserve_edit_history_slot`,
+`operation_envelopes`, the open edit's lookup, `record_edit_messages`, …) dropped the same owners bare, and
+`replace_current_retained` dropped the projection it was offered when it refused.
+
+**Census of the same shape.** `replay_mutations` was the ONLY replay with bare locals: the folds hold their intermediate in
+`ReplayProjection` (retires on drop), the history replays own their state in `EditReplay` / `EditReplayResult` /
+`EffectiveOperation` (all `Drop`), `replay_operation` retires `back` on its own refusal, the remote merge retires its batch
+through `retire_scratch_edits`.
+
+**Fix — one mechanism** (`T/🧪️s5-store-replay-retires-on-every-exit.py --only rule`, 10 parts, `🏪️store/🦀️.rs`,
++92 / −54): `ScratchOwner<T>` holds a scratch owner and retires it through a given cold retirement on EVERY exit path
+until `adopt` hands it to the store.
+- `replay_mutations` holds projection / operations / inverses as `ScratchOwner`s and RETURNS them as such (its loop is
+  index-based so no reference is held across the `await` — no new `Sync` bound on `Mutation`);
+- `apply_command`, `open_transaction_edit`, `append_transaction` adopt each part where the store takes it; the edit
+  `apply_command` builds is a `ScratchOwner` until `insert_reserved_edit_history` takes it;
+- `replace_current_retained` wraps the offered projection and retires it (`retire_shared_projection`) when it refuses.
+Sites: 4 exits in `replay_mutations`, 5 + 3 + 2 early returns in the three callers, 2 in `replace_current_retained`.
+Restore: `--revert-rule` (hunks swapped back, the old span from the sidecar, digest-checked before writing).
+
+**Law — STAGED, not applied** (`--only law`: `🏪️store/🧪️tests/🧪️replay-retirement/🦀️.rs`, corpus
+`🧫️fixtures/🧫️replay-retirement/🔣️.json` (7 cases), schema, one mount line in the store unit tests):
+`replay_retirement_tests::a_refused_apply_retires_everything_its_replay_built` — a store over a demo operation and a demo
+diff with a fail-closed owner's discipline (cold retirement and bare drops are counted; the diff's technology counts every
+projection it produces and every scratch projection retired through it). For an encode failure, a refused inverse, a
+failing diff and an error the merge policy rejects — at the first, a middle and the last operation — the store answers the
+refusal the corpus names; every operation of the command and every inverse derived from it retired cold, none reached a
+bare `Drop`; projections retired == projections applied + 1 (the working copy); the store shows what it showed; it still
+applies an edit and closes to its terminal-empty witness. The fixture counts instead of panicking in `Drop` because the
+demo snapshot is shared by every store test; the count is the same proof (zero bare drops, every scratch projection
+through `retire_projection`).
+
+**Not verified — said plainly.** No cargo ran: when the wave was ready the disk had fallen from 9 to 3 GiB (6 at 01:46),
+swap stood at 19.9 of 21.5 GiB, and the disk keeper had pruned my private target dir (a cold kernel build would be ~9 min
+and several GiB). The emitted store and law file parse (`rustfmt`), the corpus and schema are valid JSON, every anchor
+matched its exact count and the old `replay_mutations` span matched its digest. The rule waits for the FRAMEWORK train
+lane; the law waits for a kernel test build:
+`P=…/⚡️cache/cargo/target-nde-s5-store; python3 T/🧪️s5-store-replay-retires-on-every-exit.py --only law && RUST_MIN_STACK=268435456 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=$P CARGO_BUILD_BUILD_DIR=$P cargo test -p semio-framework-os-kernel --lib -- replay_retirement_tests viewer_head_tests supersede_law_tests`
+(expect 1 + 9 + 4 = 14 / 0), then S5-AGNOSTIC's reproduction
+`cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-raster-raster --lib -- --exact editor::raster::component::unit_tests::context::history_edits_end_to_end`.
+
+### Wave RR verified (02:25–02:33): train GREEN 01:47, law landed and green, raster no longer aborts
+
+- Rule: FRAMEWORK train GREEN 01:47:02 through the RR line (coordinator relay). Law applied 02:25 (apply-only hold, train
+  line): `replay_retirement_tests` + corpus + schema + mount.
+- RAN (private target + build dir, jobs 3; kernel test build 3 m 15 s, exit 0):
+  `replay_retirement_tests viewer_head_tests supersede_law_tests` → **14 / 0** (1 + 9 + 4), outputs `🗑️generated/s5-store/rr-laws.txt`;
+  whole `os_store::` → **517 / 1**, the one red is the Codex peer's known
+  `…sqlite_snapshot_native_physical_pack_record_preserves_literal_table_and_numeric_tags` (object member order, unchanged).
+- The law's discrimination is by construction, not by a run against the old code: before RR every refusal but the refused
+  inverse dropped `FailClosedOp`s live (`dropped > 0`) and retired `applied` instead of `applied + 1` projections.
+- Product evidence: S5-AGNOSTIC's batch re-ran raster at 02:03:33 on the tree holding RR
+  (`🗑️generated/s5-agnostic/family-raster.test.txt`): zero "reached Drop before" panics (the 01:17 run aborted in
+  `drop_glue::<RasterSnapshot>`); refused seed edits now come back as `Rejected { policy: Normal, .. }` rows in its census.
+  The family is still 3 passed / 1 failed on the acceptance CENSUS (13 of 22 editable leaves exercised; 9 named with
+  reasons) — the raster family's own finding, not a store abort. The raster reproduction was therefore not re-run by me.
+- NOT RUN: `--features sync -- the_folder_archive_presence_corpus`. The build at 02:30:51 did not compile — 18 errors, all
+  in files a peer saved at 02:27:02–02:27:43 (`📡️spr/🦀️.rs:44` unresolved `os_spr::command::{DiffCodec, OpBinary,
+  OpText}`, `🗣️dsl/🦀️.rs:210–250` and `🗣️dsl/🧪️tests/🔬️unit/🦀️.rs` "cannot find `binary` in `io`"; the replication crate's
+  `🚪️io`, `⚙️codec`, `🎮️mutation` changed in the same minute — the Codex peer's wave in flight). None in a file of mine;
+  my non-sync build had compiled replication before those saves. Last green run of that law: 2026-10-05 16:34 (1 / 0,
+  whole `os_store::sync::` 88 / 0); wave RR does not touch the sync module. OWED when the tree compiles again:
+  `… cargo test -p semio-framework-os-kernel --lib --features sync -- the_folder_archive_presence_corpus`.

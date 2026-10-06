@@ -12,13 +12,58 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Index the new point takes in the ordered point list.",
+          "de": "Index, den der neue Punkt in der geordneten Punktliste einnimmt."
+        },
+        "step": 1,
+        "precision": 0,
+        "order": 10
+      }
     },
     "x": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "X",
+          "de": "X"
+        },
+        "description": {
+          "en": "Horizontal coordinate of the point.",
+          "de": "Horizontale Koordinate des Punkts."
+        },
+        "step": 1,
+        "precision": 2,
+        "order": 20
+      }
     },
     "y": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Y",
+          "de": "Y"
+        },
+        "description": {
+          "en": "Vertical coordinate of the point.",
+          "de": "Vertikale Koordinate des Punkts."
+        },
+        "step": 1,
+        "precision": 2,
+        "order": 30
+      }
     }
   }
 }

@@ -4,7 +4,7 @@
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::preview_eval::{self, PreviewEvalTarget};
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -36,7 +36,7 @@ pub fn evaluate(window_id: &str, window_kind_id: &str, target: PreviewEvalTarget
                 preview_eval::settle_empty_tick(window_id, session);
                 return (Emit::default(), session.eval_publication_for(retained.as_deref()));
             };
-            let host = crate::standards::v1::subsets::any::schema::generation_preview_host(&doc.snapshot.host_snapshot, &values);
+            let host = crate::standards::v1::subsets::any::io::text::snapshot::generation_preview_host(&doc.snapshot.host_snapshot, &values);
             let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, &host.host_snapshot, session, retained.as_deref());
             host.retire_cold();
             outcome

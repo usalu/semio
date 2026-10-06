@@ -8,7 +8,7 @@ app_labels! {
     pub struct TrinityJackLabels {
         pieces: native_en "Pieces", native_de "Stücke", reuse_en "Pieces", reuse_de "Stücke";
         connections: native_en "Connections", native_de "Verbindungen", reuse_en "Connections", reuse_de "Verbindungen";
-        fixtures: native_en "Fixtures", native_de "Fixturen", reuse_en "Fixtures", reuse_de "Fixturen";
+        graph_examples: native_en "Graph Examples", native_de "Graphbeispiele", reuse_en "Graph Examples", reuse_de "Graphbeispiele";
         example_queries: native_en "Example queries", native_de "Beispielabfragen", reuse_en "Example queries", reuse_de "Beispielabfragen";
         manifest_kinds: native_en "Manifest kinds", native_de "Manifestarten", reuse_en "Manifest kinds", reuse_de "Manifestarten";
         piece: native_en "Piece", native_de "Stück", reuse_en "Piece", reuse_de "Stück";

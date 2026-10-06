@@ -62,6 +62,6 @@ pub fn diff(payload: &super::CreateFenestration, base: &EnergyModelSnapshot) -> 
             vertices_m: Vec::new(),
         },
     );
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

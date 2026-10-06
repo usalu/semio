@@ -13,7 +13,20 @@
       "const": "removeRuleLayoutPoint"
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Layout point",
+          "de": "Layoutpunkt"
+        },
+        "description": {
+          "en": "Key of the rule layout point that is removed.",
+          "de": "Schlüssel des Layoutpunkts der Regel, der entfernt wird."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

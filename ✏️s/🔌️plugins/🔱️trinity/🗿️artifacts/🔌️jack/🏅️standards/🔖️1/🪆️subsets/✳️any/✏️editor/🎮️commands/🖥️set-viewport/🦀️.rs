@@ -1,7 +1,7 @@
 //! 👁️ Trinity Jack app command — set the addressed graph window viewport.
 
 use crate::editor::jack::window_config::{addressed, JackGraphWindowConfigMutation, SetCamera};
-use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::Camera;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, ViewModel};
 use semio_framework_os_kernel::Viewport2d;

@@ -1,0 +1,794 @@
+[
+  {
+    "owner": "stl",
+    "id": "originalSharedSourceNative",
+    "input": {
+      "schema": "s.stdio.stl@ascii/*",
+      "solidName": "Bibliothek 🌠",
+      "triangles": [
+        {
+          "normal": [
+            {
+              "bits": {
+                "unsignedWord": "0"
+              }
+            },
+            {
+              "bits": {
+                "unsignedWord": "0"
+              }
+            },
+            {
+              "bits": {
+                "unsignedWord": "0"
+              }
+            }
+          ],
+          "vertices": [
+            [
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              }
+            ],
+            [
+              {
+                "bits": {
+                  "unsignedWord": "4614500768194494464"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              }
+            ],
+            [
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "4611686018427387904"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              }
+            ]
+          ]
+        },
+        {
+          "normal": [
+            {
+              "bits": {
+                "unsignedWord": "0"
+              }
+            },
+            {
+              "bits": {
+                "unsignedWord": "13830554455654793216"
+              }
+            },
+            {
+              "bits": {
+                "unsignedWord": "0"
+              }
+            }
+          ],
+          "vertices": [
+            [
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              }
+            ],
+            [
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "4616189618054758400"
+                }
+              }
+            ],
+            [
+              {
+                "bits": {
+                  "unsignedWord": "4614500768194494464"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              },
+              {
+                "bits": {
+                  "unsignedWord": "0"
+                }
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    "inputSha256": "e5ef9ec8aa26895a0d37013cb6ebc2078e200645e5ab1af1c5cb92209e2f6c77",
+    "rows": 9,
+    "valueBytes": 762,
+    "schemaBytes": 1483,
+    "tables": [
+      {
+        "table": "stl_facet",
+        "width": 12,
+        "rows": 2,
+        "semanticBytes": 180
+      },
+      {
+        "table": "stl_solid",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 42
+      },
+      {
+        "table": "stl_vertex",
+        "width": 12,
+        "rows": 6,
+        "semanticBytes": 540
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "owner": "stl",
+    "id": "emptyCollectionsRetainMetadata",
+    "input": {
+      "schema": "s.stdio.stl@ascii/*",
+      "solidName": "Bibliothek 🌠",
+      "triangles": []
+    },
+    "inputSha256": "6302204d9357991b4576d04faf38b5543f950ba0402ee6b13f18c551960e6102",
+    "rows": 1,
+    "valueBytes": 42,
+    "schemaBytes": 1483,
+    "tables": [
+      {
+        "table": "stl_facet",
+        "width": 12,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "stl_solid",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 42
+      },
+      {
+        "table": "stl_vertex",
+        "width": 12,
+        "rows": 0,
+        "semanticBytes": 0
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "owner": "obj",
+    "id": "originalSharedSourceNative",
+    "input": {
+      "schema": "s.stdio.obj@3.0/*",
+      "vertices": [
+        {
+          "x": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "y": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "z": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "w": {
+            "bits": {
+              "unsignedWord": "4607182418800017408"
+            }
+          }
+        },
+        {
+          "x": {
+            "bits": {
+              "unsignedWord": "4614500768194494464"
+            }
+          },
+          "y": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "z": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          }
+        },
+        {
+          "x": {
+            "bits": {
+              "unsignedWord": "4614500768194494464"
+            }
+          },
+          "y": {
+            "bits": {
+              "unsignedWord": "4611686018427387904"
+            }
+          },
+          "z": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          }
+        },
+        {
+          "x": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "y": {
+            "bits": {
+              "unsignedWord": "4611686018427387904"
+            }
+          },
+          "z": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "w": {
+            "bits": {
+              "unsignedWord": "4611686018427387904"
+            }
+          }
+        }
+      ],
+      "texcoords": [
+        {
+          "u": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "v": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          }
+        },
+        {
+          "u": {
+            "bits": {
+              "unsignedWord": "4607182418800017408"
+            }
+          },
+          "v": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "w": {
+            "bits": {
+              "unsignedWord": "4602678819172646912"
+            }
+          }
+        }
+      ],
+      "normals": [
+        {
+          "x": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "y": {
+            "bits": {
+              "unsignedWord": "0"
+            }
+          },
+          "z": {
+            "bits": {
+              "unsignedWord": "4607182418800017408"
+            }
+          }
+        }
+      ],
+      "faces": [
+        {
+          "vertices": [
+            {
+              "vertex": 0,
+              "texcoord": 0,
+              "normal": 0
+            },
+            {
+              "vertex": 1,
+              "texcoord": 1
+            },
+            {
+              "vertex": 2
+            },
+            {
+              "vertex": 3,
+              "normal": 0
+            }
+          ]
+        },
+        {
+          "vertices": [
+            {
+              "vertex": 0
+            },
+            {
+              "vertex": 2
+            },
+            {
+              "vertex": 3
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "name": "Fassade 🌠",
+          "faces": [
+            {
+              "unsignedWord": "0"
+            },
+            {
+              "unsignedWord": "1"
+            }
+          ]
+        },
+        {
+          "name": "Nebenraum",
+          "faces": [
+            {
+              "unsignedWord": "1"
+            }
+          ]
+        }
+      ],
+      "objects": [
+        {
+          "name": "Bibliothek",
+          "faces": [
+            {
+              "unsignedWord": "0"
+            },
+            {
+              "unsignedWord": "1"
+            }
+          ]
+        }
+      ],
+      "mtllib": "library.mtl",
+      "usemtl": [
+        {
+          "faceIndexFrom": {
+            "unsignedWord": "0"
+          },
+          "material": "Holz"
+        },
+        {
+          "faceIndexFrom": {
+            "unsignedWord": "2"
+          },
+          "material": "Glas"
+        }
+      ],
+      "smoothingGroups": [
+        {
+          "faceIndexFrom": {
+            "unsignedWord": "0"
+          },
+          "group": 7
+        },
+        {
+          "faceIndexFrom": {
+            "unsignedWord": "2"
+          }
+        }
+      ],
+      "unknownStatements": [
+        {
+          "lineIndex": {
+            "unsignedWord": "0"
+          },
+          "raw": "# Gebäude 🌠"
+        },
+        {
+          "lineIndex": {
+            "unsignedWord": "12"
+          },
+          "raw": "custom_entity 42"
+        }
+      ]
+    },
+    "inputSha256": "18d706c203753760137a6457dc9d863fdf538246d3e652117e4bf27967b95bd8",
+    "rows": 34,
+    "valueBytes": 1830,
+    "schemaBytes": 6231,
+    "tables": [
+      {
+        "table": "obj_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 36
+      },
+      {
+        "table": "obj_face",
+        "width": 3,
+        "rows": 2,
+        "semanticBytes": 48
+      },
+      {
+        "table": "obj_face_boundary",
+        "width": 4,
+        "rows": 3,
+        "semanticBytes": 88
+      },
+      {
+        "table": "obj_face_vertex",
+        "width": 9,
+        "rows": 7,
+        "semanticBytes": 344
+      },
+      {
+        "table": "obj_group",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 69
+      },
+      {
+        "table": "obj_group_face",
+        "width": 6,
+        "rows": 3,
+        "semanticBytes": 144
+      },
+      {
+        "table": "obj_material_range",
+        "width": 7,
+        "rows": 2,
+        "semanticBytes": 104
+      },
+      {
+        "table": "obj_normal",
+        "width": 12,
+        "rows": 1,
+        "semanticBytes": 90
+      },
+      {
+        "table": "obj_object",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 34
+      },
+      {
+        "table": "obj_object_face",
+        "width": 6,
+        "rows": 2,
+        "semanticBytes": 96
+      },
+      {
+        "table": "obj_smoothing_range",
+        "width": 7,
+        "rows": 2,
+        "semanticBytes": 104
+      },
+      {
+        "table": "obj_texcoord",
+        "width": 12,
+        "rows": 2,
+        "semanticBytes": 158
+      },
+      {
+        "table": "obj_unknown_statement",
+        "width": 6,
+        "rows": 2,
+        "semanticBytes": 111
+      },
+      {
+        "table": "obj_vertex",
+        "width": 15,
+        "rows": 4,
+        "semanticBytes": 404
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "owner": "obj",
+    "id": "emptyCollectionsRetainMetadata",
+    "input": {
+      "schema": "s.stdio.obj@3.0/*",
+      "vertices": [],
+      "texcoords": [],
+      "normals": [],
+      "faces": [],
+      "groups": [],
+      "objects": [],
+      "mtllib": "library.mtl",
+      "usemtl": [],
+      "smoothingGroups": [],
+      "unknownStatements": []
+    },
+    "inputSha256": "ed5e8cc52cf679b56baf5ba4d43b04b8c4e4941b051d76d38c4f42be0a132c37",
+    "rows": 2,
+    "valueBytes": 60,
+    "schemaBytes": 6231,
+    "tables": [
+      {
+        "table": "obj_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 36
+      },
+      {
+        "table": "obj_face",
+        "width": 3,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_face_boundary",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 24
+      },
+      {
+        "table": "obj_face_vertex",
+        "width": 9,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_group",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_group_face",
+        "width": 6,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_material_range",
+        "width": 7,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_normal",
+        "width": 12,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_object",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_object_face",
+        "width": 6,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_smoothing_range",
+        "width": 7,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_texcoord",
+        "width": 12,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_unknown_statement",
+        "width": 6,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_vertex",
+        "width": 15,
+        "rows": 0,
+        "semanticBytes": 0
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "owner": "obj",
+    "id": "originalSourceEmpty",
+    "input": {
+      "schema": "empty.obj",
+      "vertices": [],
+      "texcoords": [],
+      "normals": [],
+      "faces": [],
+      "groups": [],
+      "objects": [],
+      "usemtl": [],
+      "smoothingGroups": [],
+      "unknownStatements": []
+    },
+    "inputSha256": "af2b7f0079f83cf977997c9e6d58254f9600ad43f5999209911e64f6e157109b",
+    "rows": 2,
+    "valueBytes": 41,
+    "schemaBytes": 6231,
+    "tables": [
+      {
+        "table": "obj_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 17
+      },
+      {
+        "table": "obj_face",
+        "width": 3,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_face_boundary",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 24
+      },
+      {
+        "table": "obj_face_vertex",
+        "width": 9,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_group",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_group_face",
+        "width": 6,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_material_range",
+        "width": 7,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_normal",
+        "width": 12,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_object",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_object_face",
+        "width": 6,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_smoothing_range",
+        "width": 7,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_texcoord",
+        "width": 12,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_unknown_statement",
+        "width": 6,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "obj_vertex",
+        "width": 15,
+        "rows": 0,
+        "semanticBytes": 0
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  }
+]

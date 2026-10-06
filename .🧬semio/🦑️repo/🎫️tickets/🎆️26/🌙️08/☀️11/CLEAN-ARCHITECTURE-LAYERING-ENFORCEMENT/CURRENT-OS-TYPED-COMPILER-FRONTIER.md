@@ -46,3 +46,66 @@ File/SPR context1 completed through Nx: seven full source pairs, sixteen runtime
 The stages above are historical. An external shared cleanup removed their generated predecessor/diagnostic authorities; they must not be reconstructed from this report. Fresh current work and exact surviving inputs are tracked in [Current OS Execution Recovery](CURRENT-OS-EXECUTION-RECOVERY.md).
 
 Native's newly captured original whole OS replay3 produced a fresh 69-error libtest compiler frontier. Current outside writers then supplied the missing bounded caller, recognizer and associated-bound corrections. The fresh twelve-file source2 captures all twelve as exact current no-ops, independently admitted by Low. A common standalone policy RED/GREEN source pair adds only the actual nonoptional normal defining Error dependency and Root's current policy component, retaining CommandContext input/transport ledgers, cancellation token and progress. Source composition does not establish compiler or runtime success. Native exclusively owns the unchanged whole library and deliberate binary execution; the mounted-session caller closure and broader pure API retirement remain separate outstanding work.
+
+
+Common12 finite independent admission: all29 current predecessor/full authored/inverse pairs and61 current contexts match physical bytes and SHA256 endpoints;20 authority raw hashes match. Six full foreign before/current/inverse advances are retained without equivalence. Published typed-order four after frames remain explicit contexts, separate from29 owned policy/durable rows. Original owning OS test-native whole --lib --features sync,ureq and empty filters remain exact. No Record/Child/Specific/mounted overlay or native result admitted. Proof: os-fresh-policy-common-green-index-independent-12.json.
+
+
+Common13 finite Ready:29 current fullpairs/61 currentcontexts/rawauthority hashes exact. Exact owned deleted/inserted cut conserved versus12. Six complete after bodies differ through full unknown foreign law continuations (five noops current; durable owned ordered-input expression remains same), retained complete in proof; no wholebody/runtime equivalence. Eleven declared foreign advances retain full inverses. Original whole --lib sync,ureq/emptyfilters unchanged.
+
+
+OS path helper source1 independently Ready: sole hashFileV1 script path argument becomes root-resolved absolute path, exact full before/after SHA and reversible forward/inverse cut checked. Current predecessor exact; both runtimePresentationV1/runtimeRosterV1 AST source texts byte-exact, Posix/Win32 system path cases agree. No collector/native execution change. Proof native-os-path/independent-source-1.json.
+
+
+OS helper root-path publisher finite review: Ready. Actual source1 inverse is a full-body start-zero edit; an earlier localized-inverse concern was an audit reading error and is withdrawn. Exact source/proof/self/codec guards, fsynced intent, same-descriptor predecessor and inode checks, positioned writes and fsync are present. No publication or atomic workspace claim is inferred. Proof: `🗑️generated/native-os-path/independent-publisher-1.json`.
+
+
+OS root-path helper publication1 actual admission: one exact current endpoint, full intent source/inverse and source/proof/self/codec bindings verified against the fsynced journal and receipt. Both collector functions remain conserved by the admitted source proof. OS12 retains its historical predecessor helper scope; this source continuation supplies absolute script hashing for future preparation, without a runtime or prior-source-equivalence claim.
+
+
+Common16 finite source Ready: twenty-nine current predecessors/endpoints and sixty-one full contexts checked. Owned linear deleted/inserted cuts equal admitted common13; full after-body continuations retained as unknown, no semantic equivalence. Raw authorities match; actual SQLite root/manifest and existing Error dependency addition conserved. Proof: `cargo-workspace-general-transfer/os-fresh-policy-common-green-index-independent-16.json` under generated output. Native/runtime claims remain separate.
+
+
+Common18 source admission verifies all29 actual current preimages/full after hashes and61 full contexts. Twenty-eight owned linear source cuts conserve common16 exactly; the sole fixture rebasing adds only three ordered postSnapshotEntries inputs, with every other parsed field unchanged. Current golden Pack and other full foreign bodies are unknown continuations, not historical equivalence. Proof os-fresh-policy-common-green-index-independent-18.json is finite source-only; original native whole remains mandatory.
+
+
+Common19 finite source admission verifies all29 current full pairs/61contexts, original whole lib/sync,ureq/no filters and all29 owned linear source cuts exactly conserved from18. Registry17 current full defining continuation is unknown source history; fixture adds only the previously admitted ordered inputs and no foreign golden changes are overwritten. Proof os-fresh-policy-common-green-index-independent-19.json; actual native whole remains required.
+
+## Runtime Projection2 Current Refusal
+
+Independent bounded reading verified all raw bindings, all 1513 current asset hashes/byte counts, and exact file/directory/link graph/oracle conservation. Two declaring sources advanced afterwards: OS Run bootstrap and MCP workspace. Complete captured/current/inverse bodies are retained in replay-13/independent-runtime-projection-current-refusal-2.json. Bootstrap removes only description: None; MCP is a substantive unknown full continuation. Both retained literalFiles name the generated plugin registry. No Ready or semantic/current equivalence claim was emitted; a separate syntactic literal projection qualification is required.
+
+## Current Runtime Projection3 Ready
+
+All1513 full asset SHA/byte counts and actual current hashes, all11 full current declaring hashes, all raw evidence bindings and seven full retained unknown pair hashes verified independently. File1496/directory1473 membership, complete linkGraph, oracle and language-neutral law cases are exactly conserved from immutable2. Projection3 has zero predecessor pins; original2 current refusal and historical declaring observations remain evidence only. Native dispatch/source atomic identity and semantic equivalence are not claimed. Exact proof: replay-13/independent-current-runtime-full-projection-3.json. No Cargo or production writes occurred.
+
+Projection3 supplemental exact JavaScript UTF16 forward/inverse reconstruction checked every one of seven pairs; immutable primary proof retained. Supplemental independent-current-runtime-full-projection-inverses-3.json binds its raw hash.
+
+## Distinct OS13 Metadata Observer Source Ready
+
+Corrected helper repeats streamed plan hash, all31 snapshot provider manifest hashes and root CargoAfter immediately before each ordinary/locked dispatch and final receipt. Original route executor full frame and route rawhash, liveRootlock, self/codec and initial snapshotLock guards remain exact. Buffer chunks are decoded once with exact raw UTF8 roundtrip/hash/length; complete ordinary/locked graph comparison and Bun/@iarna lock agreement remain. Source-only independent-metadata-helper-1.json emitted; no metadata or Cargo was run by auditor.
+
+OS13 plan physical observation independently verifies7540 snapshot frame hashes/current physical copies,7536 retained preimage hashes,31 full providers,29 exact index19 authored bodies and exact snapshot rootCargoAfter. Zero runtime source pins. Six later complete current pairs retained as unknown: ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖍️draw/🔣️.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖍️draw/🛂️.descriptor.semio", "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖍️draw/.source-stat-index.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🪶️sqlite/📏️value/🦀️.rs", "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]. Metadata/whole compiler Ready is not inferred; immutable source observation proof records this scope.
+
+## OS13 Final Preparation Ready
+
+Exact streamed plan/metadata hashes and prior physical-source proof bind7540 snapshotframes,7536preimages,31 providers and29 common19 after bodies. Distinct metadata ordinary/locked terminal0 each; complete raw UTF8 byte hashes/lengths and full parsed resolve graphs agree (179packages). Held/live Rootlock and selected snapshotlock full bytes/independent TOML parses agree. Six complete unknown current pairs retained, including one absence; this is not semantic resolution or atomic source equivalence. Eight exact bindings sealed independent-green-plan-provider-admission-1.json. Native notified original unchanged whole route may proceed. No auditor Cargo execution occurred.
+
+## OS13 Original Whole Runtime RED
+
+Exact raw indexed roster independently confirms1284selected/708completed/707PASS/1FAIL/576uncompleted/4excluded; all presentation occurrences retained with duplicate-finalFAIL exact association. Sole durable_owned_group_decision_matches_neutral_canonical_hash_and_bounds decision SHA mismatch remains a genuine failure. Compiler/origin/source checkpoint pending; no historical selected count or wholeGREEN inference. Exact independent-runtime-failed-observation-1.json retains current raw SHA/bytes/full indexed roster.
+
+
+### OS13 Honest Failed Source Checkpoint
+
+Sealed the independent failed checkpoint with 27 streamed exact bindings (sixteen required release inputs plus eleven finite metadata/runtime/source qualifiers). Official selection 1,284 completed 708: 707 PASS and one FAIL, with 576 uncompleted and four excluded. The sole failure remains the durable decision SHA assertion; whole success is false. All 2,841 primary compiled input bodies from 2,671 captured full pairs independently match compiler byte lengths and BLAKE3; 166 units and 1,147 ambiguous origins remain explicit. The four normalized prior-source associations independently match full retained before SHA, byte length, BLAKE3 and source association hashes. Original post capture exit one is preserved. Secondary candidate current identity and unique physical origins are not asserted. No assertions were rerun.
+
+
+### Current Common20 Source Admission
+
+Admitted all 29 current full pairs, 64 context hashes and exact original whole lib/sync,ureq route without filters. Four after bodies are exactly the admitted durable source4 schema-bound current-input successors. The remaining 25 owned cuts are conserved: 24 whole endpoints unchanged and one sync-test identity row refreshed to an unknown current full body, with no historical body equivalence. No source publication or native success is inferred.
+
+Fresh OS14 runtime capture2441 completed0 using the frozen Native helper and immutable original plan13. replay14/runtime-inputs-ready-1.json retains1496files1473directories1513fullassets11currentdeclaringframes and3neutral cases. Existing runtime-frontiers command74917 completed0 with1524checks/zeroadvances/zerooldpins. This is a finite current observation, not atomic source capture or native result; Low admission and parent Cargo ordering remain mandatory. No collector/codec or held Editor mutation occurred.
+
+
+OS14 fresh current runtime census admission: source SHA `22818cfb35cf015a6a0b26509529ad39299c0e513bb439ebfeae1bc72b8a5449` retains 1513 complete current assets, eleven current declarations, 1496 matching files and 1473 example directories. Independent full current SHA/byte checks, three own/micromatch cases, fast-glob full membership, 349 symlink target/type checks and 1210 complete physical-directory child/oracle checks pass. All eleven historical declaration preimages join the bounded exact prior13plan SHA `dbfaaa24aa48173206d83411768bbf1b7a4a083abe13aecc6180b98bd0f8cc6a`; current literal projections are exact. Fresh frontier has 1524 exact checks, no foreign pairs or pins. Proof: `🗑️generated/consumer-os-native/replay-14/independent-current-runtime-census-1.json`. No atomic capture, individual Rust literal resolution, old pin, or native runtime claim.

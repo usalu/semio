@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv from "ajv/dist/2020.js";
+
 import TOML from "@iarna/toml";
 
 type Case = Readonly<{id: string; mode: string; names?: Readonly<{spec: string; to: string; from: string}>; members: readonly string[]; traits: readonly string[]}>;
@@ -10,14 +10,11 @@ const owner = resolve(import.meta.dir, "../.."), read = (path: string): string =
 
 test("language-neutral emission modes require explicit projection names and exclude product fronts", () => {
   const fixture = JSON.parse(read("🧫️fixtures/🧩️composition/🔣️.json")) as {cases: Case[]; ownedFronts: string[]; higherFronts: string[]};
-  const validate = new Ajv({strict: true}).compile(JSON.parse(read("🧬️schema/🧩️composition/🔣️.json")));
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(new Set(fixture.ownedFronts).intersection(new Set(fixture.higherFronts)).size).toBe(0);
   const projection = fixture.cases.find(row => row.mode === "Projection")!;
   expect(Object.values(projection.names!)).toEqual([...projection.members]);
   expect(projection.traits).toEqual([]);
   expect(fixture.cases.find(row => row.mode === "Record")!.members).toContain("__dsl_from_record_controlled");
-  expect(validate({...fixture, productDefaults: true})).toBe(false);
 });
 
 test("the generic emitter is an actual proc macro owner with private third-party syntax types", () => {

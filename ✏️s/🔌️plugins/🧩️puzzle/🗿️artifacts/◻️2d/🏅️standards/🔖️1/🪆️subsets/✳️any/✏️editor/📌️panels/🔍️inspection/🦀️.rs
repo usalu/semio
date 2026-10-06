@@ -7,7 +7,7 @@
 //! selection — the same arg shape the context menu sends.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, fixture_target_regions, puzzle_extension_id, ui_label, Puzzle2dInteractionSnapshot, Puzzle2dScene, PUZZLE2D_FIXTURE_SCHEMA, PUZZLE2D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle2d::{board_snapshot_edges, board_snapshot_nodes, snapshot_target_regions, puzzle_extension_id, ui_label, Puzzle2dInteractionSnapshot, Puzzle2dScene, PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
@@ -217,30 +217,30 @@ fn handle_fields(node: &Value, handle: &Value, labels: &Puzzle2dLabels) -> UiAss
 /// 🈳️ The document summary — what an empty (or unresolvable) selection shows.
 fn summary(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiAssemblyResult<BuiltNode> {
     let rows = ui_node_list([
-        tree_item_desc(format!("{ROOT}.schema"), ui_label(labels.schema.as_str())?, Some(PUZZLE2D_FIXTURE_SCHEMA.into())),
+        tree_item_desc(format!("{ROOT}.schema"), ui_label(labels.schema.as_str())?, Some(PUZZLE2D_BOARD_SNAPSHOT_SCHEMA.into())),
         tree_item_desc(format!("{ROOT}.extension"), ui_label(labels.extension.as_str())?, Some(puzzle_extension_id().into())),
-        tree_item_desc(format!("{ROOT}.nodes"), ui_label(labels.nodes.as_str())?, Some(fixture_nodes(&envelope.fixture).len().to_string())),
-        tree_item_desc(format!("{ROOT}.edges"), ui_label(labels.edges.as_str())?, Some(fixture_edges(&envelope.fixture).len().to_string())),
+        tree_item_desc(format!("{ROOT}.nodes"), ui_label(labels.nodes.as_str())?, Some(board_snapshot_nodes(&envelope.board_snapshot).len().to_string())),
+        tree_item_desc(format!("{ROOT}.edges"), ui_label(labels.edges.as_str())?, Some(board_snapshot_edges(&envelope.board_snapshot).len().to_string())),
     ])?;
     PanelTreeBuilder::new(ROOT)?.section(format!("{ROOT}.summary"), Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, rows)?.build()
 }
 
 /// 🔍️ The first selected entity's field group: a node, an edge, or a handle nested under a node.
-fn selected_section(fixture: &Value, interaction: &Puzzle2dInteractionSnapshot, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> Option<UiAssemblyResult<BuiltNode>> {
+fn selected_section(snapshot: &Value, interaction: &Puzzle2dInteractionSnapshot, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> Option<UiAssemblyResult<BuiltNode>> {
     let ids = interaction.selected_ids();
     let section = |label: &str, id: &str, fields: UiAssemblyResult<UiFixedList<BuiltNode>>| -> UiAssemblyResult<BuiltNode> {
         ids_section(PanelTreeBuilder::new(ROOT)?, windows, ids, labels)?.section(format!("{ROOT}.{id}"), Some(ui_label(label)?), true, fields?)?.build()
     };
     let first = ids.first()?;
-    let nodes = fixture_nodes(fixture);
+    let nodes = board_snapshot_nodes(snapshot);
     if let Some(node) = nodes.iter().find(|node| node.get("id").and_then(Value::as_str) == Some(first)) {
         return Some(section(labels.node.as_str(), "node", node_fields(node, labels)));
     }
-    if let Some(edge) = fixture_edges(fixture).iter().find(|edge| edge.get("id").and_then(Value::as_str) == Some(first)) {
+    if let Some(edge) = board_snapshot_edges(snapshot).iter().find(|edge| edge.get("id").and_then(Value::as_str) == Some(first)) {
         return Some(section(labels.edge.as_str(), "edge", edge_fields(edge, labels)));
     }
     // 🎯️ Slice 2F: a region is resolved after nodes and edges, the same order the board hit-tests in.
-    if let Some(region) = fixture_target_regions(fixture).iter().find(|region| region.get("id").and_then(Value::as_str) == Some(first)) {
+    if let Some(region) = snapshot_target_regions(snapshot).iter().find(|region| region.get("id").and_then(Value::as_str) == Some(first)) {
         return Some(section(labels.target_region.as_str(), "target-region", target_region_fields(region, labels)));
     }
     nodes
@@ -252,7 +252,7 @@ fn selected_section(fixture: &Value, interaction: &Puzzle2dInteractionSnapshot, 
 
 //#region 🔖️Render
 pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    match selected_section(&envelope.fixture, &envelope.interaction, labels, windows) {
+    match selected_section(&envelope.board_snapshot, &envelope.interaction, labels, windows) {
         Some(section) => section,
         None => summary(envelope, labels),
     }

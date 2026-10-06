@@ -78,117 +78,15 @@ pub fn raster_artifact_schema_descriptor() -> semio_framework_schema_registry::A
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{RasterDiff, RasterMutation, RasterSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct RasterBuilderConstruction {
-        snapshot: RasterSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for RasterBuilderConstruction {
-        type Snapshot = RasterSnapshot;
-        type Mutation = RasterMutation;
-        type Diff = RasterDiff;
-        fn empty() -> Self {
-            Self { snapshot: RasterSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<RasterSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<RasterSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::RasterSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct RasterParts {
-        pub snapshot: Option<RasterSnapshot>,
-    }
-
-    pub struct RasterAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for RasterAnalyzerAnalysis {
-        type Parts = RasterParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.raster.raster", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = RasterParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <RasterSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <RasterSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec RasterBuilderFacets {
-        construction: RasterBuilderConstruction,
-        analysis: RasterAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::RasterComposerComposition,
-    }
-    builder: RasterBuilder,
-    analyzer: RasterAnalyzer,
-    composer: RasterComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
@@ -197,22 +95,9 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `crate::standards::v1::subsets::any::schema::…` (the artifact root's own pre-existing `pub mod schema { pub
 /// use super::standards::v1::subsets::any::schema::*; }` shim keeps that path resolving).
 use crate::{RasterSnapshot, RasterTransform};
-pub fn create_raster_id(prefix: &str) -> String {
-    use std::hash::BuildHasher;
-    use std::sync::{OnceLock,atomic::{AtomicU64,Ordering}};
-    static NAMESPACE:OnceLock<[u64;2]>=OnceLock::new();
-    static NEXT:AtomicU64=AtomicU64::new(0);
-    let namespace=NAMESPACE.get_or_init(||{
-        let state=std::collections::hash_map::RandomState::new();
-        [state.hash_one(0_u8),state.hash_one(1_u8)]
-    });
-    let next=NEXT.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect("Raster identity sequence exhausted");
-    format!("{prefix}-{:016x}{:016x}{next:016x}",namespace[0],namespace[1])
-}
 
-pub fn empty_raster_snapshot() -> RasterSnapshot {
-    RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "raster".into(), title: Some("Untitled".into()), layers: Vec::new(), assets: RasterOwnedMap::new() }
-}
+
+
 
 //#region 🔖️Tree
 pub fn layer_node_id(layer: &RasterLayerNode) -> &str {
@@ -320,13 +205,7 @@ pub fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode
 }
 //#endregion 🔖️Tree
 
-/// 🖼️ `pub` (not `fn` as it was inside `⚙️engine`, where crate-locality made privacy moot): now called
-/// cross-module from `🚪️io/🦀️.rs`'s `MediaImport` region (`raster_document_from_dwg_drawing`,
-/// `raster_image_layer_and_asset`), which need a specific name/width/height rather than
-/// `create_layer_of_kind`'s generic defaults.
-pub fn create_pixel_layer(name: &str, width: u32, height: u32) -> RasterLayerNode {
-    RasterLayerNode::Pixel { id: create_raster_id("layer"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(width), height: Some(height), image_key: None }
-}
+
 
 fn create_group_layer() -> RasterLayerNode {
     RasterLayerNode::Group { id: create_raster_id("group"), name: "Group".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: Vec::new() }
@@ -353,61 +232,15 @@ pub fn create_layer_of_kind(kind: &str) -> RasterLayerNode {
     }
 }
 
-pub fn empty_raster_document() -> RasterSnapshot {
-    let mut document = empty_raster_snapshot();
-    document.id = "empty".into();
-    document.layers = vec![create_pixel_layer("Background", 512, 512)];
-    document
-}
 
-pub fn semio_fixture_snapshot() -> RasterSnapshot {
-    let mut assets = RasterOwnedMap::new();
-    // 🖼️ A real, decodable 2x2 RGBA PNG (not merely the PNG magic-number bytes the pre-migration
-    // fixture embedded verbatim with no decode validation) — this migration routes every asset
-    // through the real `s.stdio.semio/v1/image` png codec (`mint_raster_asset_child`), so the fixture
-    // must be genuinely decodable for `composite_scene_syncs_document_and_assets` to keep proving
-    // real embedded pixels survive, not a decode-failure fallback.
-    let emblem = RasterImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
-    assets.insert("semio-emblem".into(), crate::mint_raster_asset_child("semio-emblem", &emblem)).expect("single fixture asset fits the owned map");
-    let mut params = RasterOwnedMap::new();
-    params.insert("brightness".into(), semio_framework_value::DslValue::float(0.12)).expect("first fixture adjustment fits the owned map");
-    params.insert("contrast".into(), semio_framework_value::DslValue::float(0.08)).expect("second fixture adjustment has a distinct key and fits the owned map");
-    RasterSnapshot {
-        schema: RASTER_DOCUMENT_SCHEMA.into(),
-        id: "semio-demo".into(),
-        title: Some("Semio Raster Demo".into()),
-        layers: vec![
-            RasterLayerNode::Pixel {
-                id: "backdrop".into(),
-                name: "Backdrop".into(),
-                visible: true, locked: false,
-                opacity: 1.0,
-                blend_mode: "normal".into(),
-                transform: RasterTransform::default(),
-                mask: None,
-                width: Some(1024),
-                height: Some(1024),
-                image_key: Some("semio-emblem".into()),
-            },
-            RasterLayerNode::Adjustment { id: "brighten".into(), name: "Brighten".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params },
-        ],
-        assets,
-    }
-}
 
-/// 📄️ The `semio` example document used by the app manifest and tests.
-pub fn semio_example_document() -> RasterSnapshot {
-    semio_fixture_snapshot()
-}
+#[cfg(test)]
+#[path = "🧪️testing/🦀️.rs"]
+mod testing;
+#[cfg(test)]
+pub use testing::raster_image_test_snapshot;
 
-/// 📄️ The demo document every raster surface lands on right after boot (the shell replays
-/// `setActiveExample demo`; the store itself boots on [`empty_raster_document`], see
-/// `RasterPlayApp::initial_snapshot`): the committed `📚️examples/🎬️demo` Semio-logo carrier, read through the artifact's own text codec so the `.dsl.semio` asset stays the single
-/// source of truth instead of being restated in Rust. Falls back to [`empty_raster_document`] when
-/// the carrier does not parse — the same shape `block2d`'s `default_block2d_snapshot` uses.
-pub fn default_raster_document() -> RasterSnapshot {
-    super::snapshot::text::parse_dsl(crate::examples::art_raster_demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_raster_document())
-}
+
 
 /// 📚️ The committed example document behind one registered example id, or `None` when the id is not
 /// one this subset registers — the lookup `🎮️commands/🎬️set-active-example` resolves against.

@@ -1,6 +1,6 @@
 //! 📄️ 📄️ Sourcing curation app commands command — `set-active-example`.
 
-use crate::op::SourcingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::{reset_document_effect, EMPTY_EXAMPLE_ID};
@@ -15,12 +15,12 @@ pub struct SetActiveExample {
 
 //#region 📚️BoundedExample
 const MAXIMUM_EXAMPLE_BYTES: usize = 8_192;
-const _: () = assert!(crate::document_dsl::DEMO_STOCK_TEXT.len() <= MAXIMUM_EXAMPLE_BYTES);
-const _: () = assert!(crate::document_dsl::EMPTY_CURATION_TEXT.len() <= MAXIMUM_EXAMPLE_BYTES);
+const _: () = assert!(crate::standards::v1::subsets::any::io::text::snapshot::DEMO_STOCK_TEXT.len() <= MAXIMUM_EXAMPLE_BYTES);
+const _: () = assert!(crate::standards::v1::subsets::any::io::text::snapshot::EMPTY_CURATION_TEXT.len() <= MAXIMUM_EXAMPLE_BYTES);
 
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, CurationSnapshot>, _cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault> {
     let text = match payload.example_id.as_str() {
-        EMPTY_EXAMPLE_ID => crate::document_dsl::EMPTY_CURATION_TEXT.to_string(),
+        EMPTY_EXAMPLE_ID => crate::standards::v1::subsets::any::io::text::snapshot::EMPTY_CURATION_TEXT.to_string(),
         id => crate::standards::v1::subsets::any::examples().iter().find(|example| example.id() == id).map(semio_framework_plugin::ExampleSource::document).ok_or_else(|| Fault::from("sourcing.example.unknown"))?,
     };
     let next = <CurationSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(error.to_string()))?;

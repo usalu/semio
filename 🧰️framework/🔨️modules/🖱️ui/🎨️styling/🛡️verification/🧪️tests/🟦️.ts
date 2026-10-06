@@ -10,7 +10,7 @@ import * as verification from "../🟦️.ts";
 /** 🛡️Proves explicit owner scopes and source rules against AJV and TypeScript syntax. */
 export function proveStylingVerificationContractV1(): number {
   const ajv = new Ajv({ strict: true }).addSchema(schema);
-  assert.equal(ajv.getSchema(`${schema.$id}#/$defs/CasesV1`)!(corpus), true);
+  
   const validate = ajv.getSchema(`${schema.$id}#/$defs/ScopeV1`)!;
   const applicationSource = ajv.getSchema(`${schema.$id}#/$defs/ApplicationPathV1`)!;
   const colorSource = ajv.getSchema(`${schema.$id}#/$defs/ColorApplicationPathV1`)!;

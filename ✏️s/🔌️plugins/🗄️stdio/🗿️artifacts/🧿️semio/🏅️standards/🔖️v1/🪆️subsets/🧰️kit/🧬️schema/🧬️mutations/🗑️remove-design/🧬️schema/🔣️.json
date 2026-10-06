@@ -10,7 +10,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Design",
+          "de": "Entwurf"
+        },
+        "description": {
+          "en": "Id of the design.",
+          "de": "Kennung des Entwurfs."
+        },
+        "ref": {
+          "kind": "design"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

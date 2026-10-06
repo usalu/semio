@@ -52,3 +52,7 @@ pub fn plugin() -> Result<Plugin<NoteApps>, PluginAssemblyError> {
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]
 mod surface_tests;
 //#endregion 🧪️SurfaceTests
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "🧪️tests/🛂️committed-descriptor/🦀️.rs"]
+mod committed_descriptor_tests;

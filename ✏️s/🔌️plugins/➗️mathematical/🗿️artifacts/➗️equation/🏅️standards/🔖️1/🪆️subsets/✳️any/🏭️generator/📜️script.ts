@@ -56,8 +56,8 @@ function generate(outRoot: string): number {
 }
 
 async function manifests(): Promise<void> {
-  const catalog = JSON.parse(readFileSync(CATALOG, "utf8")) as { fixtureManifests?: { generator?: { oracle?: string; platform?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
-  const owned = (catalog.fixtureManifests ?? []).filter((entry) => entry.generator?.oracle === ORACLE_ID);
+  const catalog = JSON.parse(readFileSync(CATALOG, "utf8")) as { testEvidence?: { generator?: { oracle?: string; platform?: string }; files: { path: string; sha256: string; bytes: number }[] }[] };
+  const owned = (catalog.testEvidence ?? []).filter((entry) => entry.generator?.oracle === ORACLE_ID);
   if (owned.length === 0) throw new Error(`no fixture manifest names ${ORACLE_ID}`);
   for (const entry of owned) {
     for (const file of entry.files) {

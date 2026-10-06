@@ -1,0 +1,30 @@
+{
+  "qualification": "HELD five protocol/COS authority joins; Int64 scalar exact first-party runtime mapping must be registered before GraphQL executable credit; no mount",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🛰️.proto",
+      "before": "message PdfObject {\n  string kind = 1;\n  optional bool value = 2;\n  repeated PdfDictEntry dict = 3;\n  optional bytes data = 4;\n  repeated PdfStreamFilter filters = 5;\n}\n",
+      "after": "message PdfObject {\n  string kind = 1;\n  oneof payload {\n    bool bool_value = 2;\n    sint64 int_value = 3;\n    PdfDecimal real_value = 4;\n    bytes str_value = 5;\n    string name_value = 6;\n    PdfObjectArray array_value = 7;\n    PdfObjectDict dict_value = 8;\n    ObjRef ref_value = 9;\n    PdfObjectStream stream_value = 10;\n  }\n}\nmessage PdfObjectArray { repeated PdfObject value = 1; }\nmessage PdfObjectDict { repeated PdfDictEntry value = 1; }\nmessage PdfObjectStream { repeated PdfDictEntry dict = 1; bytes data = 2; repeated PdfStreamFilter filters = 3; }\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔗️.graphql",
+      "before": "type PdfObject {\n  kind: String!\n  value: Boolean\n  dict: [PdfDictEntry!]\n  data: [Int!]\n  filters: [PdfStreamFilter!]\n}\n",
+      "after": "scalar Int64\n\ntype PdfObject {\n  kind: String!\n  boolValue: Boolean\n  intValue: Int64\n  realValue: PdfDecimal\n  strValue: [Int!]\n  nameValue: String\n  arrayValue: [PdfObject!]\n  dictValue: [PdfDictEntry!]\n  refValue: ObjRef\n  dict: [PdfDictEntry!]\n  data: [Int!]\n  filters: [PdfStreamFilter!]\n}\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔗️.graphql",
+      "before": "input PdfObjectInput {\n  kind: String!\n  value: Boolean\n  dict: [PdfDictEntryInput!]\n  data: [Int!]\n  filters: [PdfStreamFilterInput!]\n}\n",
+      "after": "input PdfObjectInput {\n  kind: String!\n  boolValue: Boolean\n  intValue: Int64\n  realValue: PdfDecimalInput\n  strValue: [Int!]\n  nameValue: String\n  arrayValue: [PdfObjectInput!]\n  dictValue: [PdfDictEntryInput!]\n  refValue: ObjRefInput\n  dict: [PdfDictEntryInput!]\n  data: [Int!]\n  filters: [PdfStreamFilterInput!]\n}\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🪢️restore-dpart-graph/🛰️.proto",
+      "before": null,
+      "after": "syntax = \"proto3\";\npackage semio.s_stdio_pdf_1_7_vt.mutation.restore_dpart_graph;\nimport \"../../../../🧱️base/🧬️schema/🔺️diff/🛰️.proto\";\nmessage RestoreDpartGraphMutation { semio.s_stdio_pdf_1_7.diff.PdfRawGraph graph = 1; }\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🪢️restore-dpart-graph/🔗️.graphql",
+      "before": null,
+      "after": "# 🪢️ Exact ordered graph input uses the first-party full COS input types.\ninput RestoreDpartGraphMutationInput { graph: PdfRawGraphInput! }\ninput PdfRawGraphInput { objects: [PdfIndirectObjectInput!]! catalogExtra: [PdfDictEntryInput!]! }\n"
+    }
+  ]
+}

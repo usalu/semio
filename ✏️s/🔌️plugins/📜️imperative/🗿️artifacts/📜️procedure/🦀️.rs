@@ -297,11 +297,11 @@ pub fn procedure_flow_leaves(base: &Path, next: &Path) -> Vec<SemioFlowMutation>
 }
 
 /// 🧬️ Publishes flow child `leaves` as ONE edit of the exact composed `flow` child; no leaf is the empty emit.
-pub fn procedure_child_emit<C, D>(snapshot: &ProcedureSnapshot, leaves: &[SemioFlowMutation]) -> semio_framework_plugin::Emit<ProcedureMutation, C, D> {
+pub fn procedure_child_emit<C, D>(snapshot: &ProcedureSnapshot, leaves: Vec<SemioFlowMutation>) -> semio_framework_plugin::Emit<ProcedureMutation, C, D> {
     if leaves.is_empty() {
         return semio_framework_plugin::Emit::default();
     }
-    semio_framework_plugin::Emit { child_emits: vec![semio_framework_plugin::app::ChildEmit::of::<SemioFlowSnapshot, _>("flow", &snapshot.flow.child_id, leaves)], ..Default::default() }
+    semio_framework_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_framework_plugin::app::ChildEmitPreparation::of::<SemioFlowSnapshot, _>("flow", &snapshot.flow.child_id, leaves)]), ..Default::default() }
 }
 
 /// 🧰️ Applies one program edit to the composed scene and publishes its flow leaves as ONE child edit.
@@ -309,7 +309,7 @@ pub fn procedure_edit_emit<C, D>(doc: &semio_framework_plugin::ArtifactView<'_, 
     let base = procedure_scene(doc)?.path.clone();
     let mut next = base.clone();
     edit(&mut next);
-    Ok(procedure_child_emit(doc.snapshot, &procedure_flow_leaves(&base, &next)))
+    Ok(procedure_child_emit(doc.snapshot, procedure_flow_leaves(&base, &next)))
 }
 //#endregion 🔖️Scene
 
@@ -466,20 +466,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod topology {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
@@ -492,11 +484,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
                     pub mod operations;
@@ -588,20 +575,14 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-}
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-    }
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
@@ -610,9 +591,7 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-    }
+
 }
 
 #[path = "."]
@@ -754,3 +733,5 @@ pub fn procedure_child_restore_projection(snapshot: &crate::ProcedureSnapshot) -
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("procedure.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection
+
+pub use crate::standards::v1::subsets::any::io::{ProcedureBuilderConstruction, ProcedureParts, ProcedureAnalyzerAnalysis, ProcedureBuilderFacets, ProcedureBuilder, ProcedureAnalyzer, ProcedureComposer};

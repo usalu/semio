@@ -113,7 +113,7 @@ def verdict(sheet_task, answer):
 # region 🔖️Handlers
 def verdicts(ctx):
     """🗃️ Every committed (sheet task, answer) pair, judged and held to its committed verdict."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))
+    vectors = json.loads(ctx.input_bytes(VECTORS))
     tasks = {task["id"]: task for task in vectors["sheetTasks"]}
     produced = {}
     for vector in vectors["vectors"] + vectors["malformed"]:

@@ -5,7 +5,7 @@ use semio_framework_plugin::{tree_item, tree_item_with_action, ui_node_list, Pan
 
 //#region 🔖️Render
 /// 📚️ One bundled graph fixture the catalogue can load.
-struct FixturePreset {
+struct GraphExample {
     id: &'static str,
     label: &'static str,
 }
@@ -17,7 +17,7 @@ struct ExampleQuery {
     query: &'static str,
 }
 
-const FIXTURES: [FixturePreset; 2] = [FixturePreset { id: "nakagin", label: "Nakagin — Table" }, FixturePreset { id: "branch-chain", label: "Branch — Graph" }];
+const GRAPH_EXAMPLES: [GraphExample; 2] = [GraphExample { id: "nakagin", label: "Nakagin — Table" }, GraphExample { id: "branch-chain", label: "Branch — Graph" }];
 
 const EXAMPLES: [ExampleQuery; 8] = [
     ExampleQuery { id: "where-or", label: "Where Or", query: "MATCH (a:Piece) WHERE a.name = 't_f0_b_c0' OR a.name = 't_f0_b_c1' RETURN a.name" },
@@ -30,10 +30,10 @@ const EXAMPLES: [ExampleQuery; 8] = [
     ExampleQuery { id: "merge-edge", label: "Merge Edge", query: "MERGE (x:Piece)-[:Connection]->(y:Piece)" },
 ];
 
-fn fixture_row(preset: &FixturePreset) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn graph_example_row(preset: &GraphExample) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let args = crate::editor::jack::ui_value_map([("exampleId", crate::editor::jack::ui_value_text(preset.id)?)])?;
     tree_item_with_action(
-        format!("trinity-jack-catalogue.fixture.{}", preset.id),
+        format!("trinity-jack-catalogue.graph-example.{}", preset.id),
         crate::editor::jack::ui_label(preset.label)?,
         Some(crate::editor::jack::commands::preset_query(preset.id).into()),
         crate::editor::jack::jack_action("setActiveExample", Some(args))?,
@@ -52,7 +52,7 @@ pub(crate) fn render(labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> s
         tree_item("trinity-jack-catalogue.connector", crate::editor::jack::ui_label(labels.connector.as_str())?),
     ])?;
     PanelTreeBuilder::new("trinity-jack-catalogue")?
-        .window_section(windows, "trinity-jack-catalogue.fixtures", Some(crate::editor::jack::ui_label(labels.fixtures.as_str())?), true, &FIXTURES, fixture_row)?
+        .window_section(windows, "trinity-jack-catalogue.graph-examples", Some(crate::editor::jack::ui_label(labels.graph_examples.as_str())?), true, &GRAPH_EXAMPLES, graph_example_row)?
         .window_section(windows, "trinity-jack-catalogue.examples", Some(crate::editor::jack::ui_label(labels.example_queries.as_str())?), true, &EXAMPLES, example_row)?
         .section("trinity-jack-catalogue.kinds", Some(crate::editor::jack::ui_label(labels.manifest_kinds.as_str())?), false, kind_items)?
         .build()

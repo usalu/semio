@@ -1,0 +1,83 @@
+{
+  "qualification": "Source-only factual guarded factory region map, no executable after replacement fabricated where real seed backing/graph authority is incomplete. Diagnostic runtime remains compiler-only.",
+  "profiles": [
+    {
+      "profile": "ua",
+      "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧬️schema/🦀️.rs",
+      "seedBefore": "    fn seeded_snapshot(lang: String) -> PdfSnapshot {\n        let objects = vec![\n            PdfIndirectObject {\n                id: ObjRef { num: 1, gen: 0 },\n                value: PdfObject::Dict(vec![\n                    PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Catalog\".into()) },\n                    PdfDictEntry { key: \"MarkInfo\".into(), value: PdfObject::Ref(ObjRef { num: 2, gen: 0 }) },\n                    PdfDictEntry { key: \"StructTreeRoot\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },\n                    PdfDictEntry { key: \"Lang\".into(), value: PdfObject::Str(lang.into_bytes()) },\n                    PdfDictEntry { key: \"ViewerPreferences\".into(), value: PdfObject::Ref(ObjRef { num: 4, gen: 0 }) },\n                ]),\n            },\n            PdfIndirectObject { id: ObjRef { num: 2, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Marked\".into(), value: PdfObject::Bool(true) }]) },\n            PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"StructTreeRoot\".into()) }]) },\n            PdfIndirectObject { id: ObjRef { num: 4, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"DisplayDocTitle\".into(), value: PdfObject::Bool(true) }]) },\n        ];\n        PdfSnapshot { objects, ..PdfSnapshot::default() }\n    }\n",
+      "builder": "PdfUaBuilderConstruction",
+      "surfaces": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/✏️editor/🦀️.rs",
+          "exactBefore": "    fn initial_snapshot() -> PdfSnapshot {\n        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()\n    }",
+          "matchCount": 1,
+          "proposedFactoryJoin": "Own standards::v1_7::subsets::ua initial profile source; validate via PdfUaBuilderConstruction::build before and after actual encode_pdf/decode_pdf; preserve exact Snapshot and profile mutation type."
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/👁️viewer/🦀️.rs",
+          "exactBefore": "    fn initial_snapshot() -> PdfSnapshot {\n        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()\n    }",
+          "matchCount": 1,
+          "proposedFactoryJoin": "Own standards::v1_7::subsets::ua initial profile source; validate via PdfUaBuilderConstruction::build before and after actual encode_pdf/decode_pdf; preserve exact Snapshot and profile mutation type."
+        }
+      ],
+      "readiness": "held prerequisite: seed lacks trailer Root; cannot safely replace initial with builder-empty and claim full roundtrip",
+      "additionalGate": "Explicit authored nonempty document language, no invented UI fallback"
+    },
+    {
+      "profile": "vt",
+      "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🦀️.rs",
+      "seedBefore": "    fn seeded_snapshot(output_condition: String) -> PdfSnapshot {\n        let objects = vec![\n            PdfIndirectObject {\n                id: ObjRef { num: 1, gen: 0 },\n                value: PdfObject::Dict(vec![\n                    PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Catalog\".into()) },\n                    PdfDictEntry { key: \"OutputIntents\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) },\n                    PdfDictEntry { key: \"DPartRoot\".into(), value: PdfObject::Ref(ObjRef { num: 10, gen: 0 }) },\n                ]),\n            },\n            PdfIndirectObject {\n                id: ObjRef { num: 2, gen: 0 },\n                value: PdfObject::Dict(vec![\n                    PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"OutputIntent\".into()) },\n                    PdfDictEntry { key: \"S\".into(), value: PdfObject::Name(\"GTS_PDFX\".into()) },\n                    PdfDictEntry { key: \"OutputConditionIdentifier\".into(), value: PdfObject::Str(output_condition.into_bytes()) },\n                    PdfDictEntry { key: \"DestOutputProfile\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },\n                ]),\n            },\n            PdfIndirectObject {\n                id: ObjRef { num: 10, gen: 0 },\n                value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"DPartRoot\".into()) }, PdfDictEntry { key: \"DParts\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 11, gen: 0 })]) }]),\n            },\n            PdfIndirectObject { id: ObjRef { num: 11, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"DPart\".into()) }, PdfDictEntry { key: \"DPM\".into(), value: PdfObject::Dict(vec![]) }]) },\n        ];\n        PdfSnapshot { objects, ..PdfSnapshot::default() }\n    }\n",
+      "builder": "PdfVtBuilderConstruction",
+      "surfaces": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/✏️editor/🦀️.rs",
+          "exactBefore": "    fn initial_snapshot() -> PdfSnapshot {\n        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()\n    }",
+          "matchCount": 1,
+          "proposedFactoryJoin": "Own standards::v1_7::subsets::vt initial profile source; validate via PdfVtBuilderConstruction::build before and after actual encode_pdf/decode_pdf; preserve exact Snapshot and profile mutation type."
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/👁️viewer/🦀️.rs",
+          "exactBefore": "    fn initial_snapshot() -> PdfSnapshot {\n        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()\n    }",
+          "matchCount": 1,
+          "proposedFactoryJoin": "Own standards::v1_7::subsets::vt initial profile source; validate via PdfVtBuilderConstruction::build before and after actual encode_pdf/decode_pdf; preserve exact Snapshot and profile mutation type."
+        }
+      ],
+      "readiness": "held prerequisite: seed lacks trailer Root; cannot safely replace initial with builder-empty and claim full roundtrip",
+      "additionalGate": "Resolve actual DestOutputProfile object3 with genuine ICC domain bytes; seed currently references absent object"
+    },
+    {
+      "profile": "x",
+      "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🧬️schema/🦀️.rs",
+      "seedBefore": "    fn seeded_snapshot(output_condition: String) -> PdfSnapshot {\n        let objects = vec![\n            PdfIndirectObject {\n                id: ObjRef { num: 1, gen: 0 },\n                value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Catalog\".into()) }, PdfDictEntry { key: \"OutputIntents\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) }]),\n            },\n            PdfIndirectObject {\n                id: ObjRef { num: 2, gen: 0 },\n                value: PdfObject::Dict(vec![\n                    PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"OutputIntent\".into()) },\n                    PdfDictEntry { key: \"S\".into(), value: PdfObject::Name(\"GTS_PDFX\".into()) },\n                    PdfDictEntry { key: \"OutputConditionIdentifier\".into(), value: PdfObject::Str(output_condition.into_bytes()) },\n                    PdfDictEntry { key: \"DestOutputProfile\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },\n                ]),\n            },\n        ];\n        PdfSnapshot { objects, ..PdfSnapshot::default() }\n    }\n",
+      "builder": "PdfXBuilderConstruction",
+      "surfaces": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+          "exactBefore": "    fn initial_snapshot() -> PdfSnapshot {\n        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()\n    }",
+          "matchCount": 1,
+          "proposedFactoryJoin": "Own standards::v1_7::subsets::x initial profile source; validate via PdfXBuilderConstruction::build before and after actual encode_pdf/decode_pdf; preserve exact Snapshot and profile mutation type."
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/👁️viewer/🦀️.rs",
+          "exactBefore": "    fn initial_snapshot() -> PdfSnapshot {\n        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()\n    }",
+          "matchCount": 1,
+          "proposedFactoryJoin": "Own standards::v1_7::subsets::x initial profile source; validate via PdfXBuilderConstruction::build before and after actual encode_pdf/decode_pdf; preserve exact Snapshot and profile mutation type."
+        }
+      ],
+      "readiness": "held prerequisite: seed lacks trailer Root; cannot safely replace initial with builder-empty and claim full roundtrip",
+      "additionalGate": "Resolve actual DestOutputProfile object3 with genuine ICC domain bytes; seed currently references absent object"
+    }
+  ],
+  "nativeGraphAuthority": {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+    "line": 170,
+    "exactSource": "    let retained = dict_get(&snapshot.trailer, \"Root\").and_then(PdfObject::as_ref).is_some() && !snapshot.objects.is_empty() && options.lower == LowerOptions::default();"
+  },
+  "requiredFactoryConstruction": [
+    "real authored owner graph plus valid Catalog/Pages relationships and trailer Root before lowering",
+    "profile original objects retained with collision-free references and actual profile resource bytes",
+    "actual profile builder/check unchanged both before native write and after genuine native decode",
+    "handcrafted neutral complete owner fixture equality Binary/Text and both public SQLite routes",
+    "UA explicit document language is part of authored initial source, never silent default UI language"
+  ]
+}

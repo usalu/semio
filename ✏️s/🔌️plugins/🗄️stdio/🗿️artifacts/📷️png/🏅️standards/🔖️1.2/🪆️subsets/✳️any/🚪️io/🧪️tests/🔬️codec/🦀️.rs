@@ -8,7 +8,7 @@ const MULTI_IDAT: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/�
 const ADAM7_RGBA8: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-adam7.png");
 const GRAYSCALE_1: &[u8] = include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/grayscale-1bit.png");
 const CONTROLLED_PAINT: &str = include_str!("../../../../../../../🧫️fixtures/🧬️native-paint-controlled/🔣️.json");
-const STRUCTURE_CORPUS: &str = include_str!("../../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️audit/🔣️.json");
+const STRUCTURE_CORPUS: &str = include_str!("../../🪶️sqlite/📸️snapshot/🧫️fixtures/🚦️audit/🔣️.json");
 
 fn hex(text: &str) -> Vec<u8> {
     text.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()

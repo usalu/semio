@@ -6,7 +6,7 @@ use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "import-media")]
 pub struct ImportMedia {
     pub node_id: String,

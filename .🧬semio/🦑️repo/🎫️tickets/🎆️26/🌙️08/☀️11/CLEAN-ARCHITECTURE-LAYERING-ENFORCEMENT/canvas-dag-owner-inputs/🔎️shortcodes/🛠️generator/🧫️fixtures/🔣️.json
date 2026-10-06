@@ -1,0 +1,8 @@
+{
+  "fileNames":[{"name":"🧑‍💻code.svg","key":"code"},{"name":"🏔️terrain-3d.svg","key":"terrain-3d"},{"name":"🧩️puzzle.svg","key":"puzzle"},{"name":"🧬️CAPS_1.svg","key":"CAPS_1"}],
+  "cases": [
+    {"id":"direct-sources","directory":"general/canvas/shortcodes/generated","emoji":{"z":"😀","a":"snow\n\"word\""},"themed":[{"key":"z","path":"general/assets/themed/🧱️z.svg"},{"key":"a","path":"general/assets/themed/🅰️a.svg"}],"catalog":[{"key":"x","path":"general/assets/catalog/🧩️x.svg"}],"keys":{"emoji":["a","z"],"themed":["a","z"],"catalog":["x"]}},
+    {"id":"utf8-and-nul","directory":"general/canvas/shortcodes/generated","emoji":{"ä":"🧬️","z":"null\u0000word","\u0000":"🦀️"},"themed":[],"catalog":[{"key":"constructor","path":"general/assets/🧩️constructor.svg"}],"keys":{"emoji":["\u0000","z","ä"],"themed":[],"catalog":["constructor"]}},
+    {"id":"empty-static-tables","directory":"general/canvas/shortcodes/generated","emoji":{},"themed":[],"catalog":[],"keys":{"emoji":[],"themed":[],"catalog":[]}}
+  ]
+}

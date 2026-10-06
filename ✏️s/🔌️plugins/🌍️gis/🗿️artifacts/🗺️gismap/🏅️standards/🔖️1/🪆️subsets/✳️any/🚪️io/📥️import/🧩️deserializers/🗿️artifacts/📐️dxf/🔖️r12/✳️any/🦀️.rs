@@ -10,6 +10,6 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{decode_d
 pub fn register() {}
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<GisMapSnapshot, semio_framework_diagnostic::TextError> {
-    let drawing = decode_drawing(bytes, SemioDrawingFormat::Dxf).map_err(|error| semio_framework_diagnostic::TextError::new(format!("gismap←dxf: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let drawing = decode_drawing(bytes, SemioDrawingFormat::Dxf).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("gismap←dxf: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     Ok(gis_map_snapshot_from_drawing(&drawing))
 }

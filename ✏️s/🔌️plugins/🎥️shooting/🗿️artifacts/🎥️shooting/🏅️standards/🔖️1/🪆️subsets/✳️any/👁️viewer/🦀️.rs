@@ -50,7 +50,7 @@ pub struct ShootingViewer;
 
 impl ArtifactViewer for ShootingViewer {
     type Snapshot = ShootingSnapshot;
-    type Mutation = crate::op::ShootingMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -63,7 +63,7 @@ impl ArtifactViewer for ShootingViewer {
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> ShootingSnapshot {
-        crate::standards::v1::subsets::any::schema::default_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `ShootingViewCommand::Noop` variant never carries a config

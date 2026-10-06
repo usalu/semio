@@ -15,7 +15,22 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Shared string",
+          "de": "Gemeinsame Zeichenfolge"
+        },
+        "description": {
+          "en": "Index of the entry in the shared string table, counted from 0.",
+          "de": "Index des Eintrags in der Tabelle gemeinsamer Zeichenfolgen, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

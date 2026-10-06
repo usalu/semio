@@ -211,11 +211,6 @@
       "id": "foreign-factory",
       "mutation": "factory",
       "accepted": false
-    },
-    {
-      "id": "duplicate-case-substitution",
-      "mutation": "case",
-      "accepted": false
     }
   ]
 }

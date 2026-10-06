@@ -1,6 +1,6 @@
 //! ♻️ Block5d document retirement — every semantic field retires through byte-bounded cursors, so a
 //! replaced document root or a folded mutation is released in paid pages, never by a bare drop. The
-//! shared `Block*` rows retire through `semio-s-artifact-block-2d`, which owns them.
+//! shared `Block*` rows retire through their plugin owner `semio-s-plugin-block`.
 
 use crate::{Block5dGripKind, Block5dGripTemplate, Block5dPart2d, Block5dPart3d, Block5dSnapshot};
 use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;

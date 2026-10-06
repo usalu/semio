@@ -10,10 +10,12 @@ PORT="${S_OS_PORT:-6012}"
 RENDERER="${S_OS_RENDERER:-react}"
 LOG="$TK/🗑️generated/serve-$PORT-supervised.txt"
 DEV="$ROOT/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"
+WGPU="$ROOT/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
 alive() { [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "http://127.0.0.1:$PORT/" 2>/dev/null)" = "200" ]; }
 start() {
   for p in $(lsof -nP -iTCP:"$PORT" -sTCP:LISTEN -t 2>/dev/null); do kill -TERM "$p" 2>/dev/null; sleep 3; kill -0 "$p" 2>/dev/null && kill -KILL "$p"; done
-  (cd "$DEV" && NODE_OPTIONS= nohup bun ./📜️script.ts serve puzzle2d "$RENDERER" dev >> "$LOG" 2>&1 < /dev/null &)
+  if [ "$RENDERER" = wgpu ]; then (cd "$WGPU" && S_OS_PORT="$PORT" NODE_OPTIONS= nohup bun ../../🌐️server/📜️script.ts serve puzzle2d dev >> "$LOG" 2>&1 < /dev/null &)
+  else (cd "$DEV" && NODE_OPTIONS= nohup bun ./📜️script.ts serve puzzle2d "$RENDERER" dev >> "$LOG" 2>&1 < /dev/null &); fi
   echo "$(date '+%H:%M:%S') started serve" >> "$LOG.events"
 }
 alive || start

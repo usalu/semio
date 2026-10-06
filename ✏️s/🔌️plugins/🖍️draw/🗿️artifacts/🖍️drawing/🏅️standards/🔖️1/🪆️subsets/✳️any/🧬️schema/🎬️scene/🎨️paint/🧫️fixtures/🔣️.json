@@ -1,0 +1,686 @@
+[
+  {
+    "source": "butt-rejects-end-extension",
+    "queries": [
+      {
+        "point": [
+          8.5,
+          10.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "bounds": [
+      10,
+      6,
+      90,
+      14
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "round-accepts-end-extension",
+    "queries": [
+      {
+        "point": [
+          8.5,
+          10.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "square-accepts-corner",
+    "queries": [
+      {
+        "point": [
+          7.5,
+          13.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "bounds": [
+      6,
+      6,
+      94,
+      14
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "round-rejects-square-corner",
+    "queries": [
+      {
+        "point": [
+          7.5,
+          13.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "dash-paint",
+    "queries": [
+      {
+        "point": [
+          15.5,
+          10.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "dash-gap",
+    "queries": [
+      {
+        "point": [
+          25.5,
+          10.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "dash-round-cap",
+    "queries": [
+      {
+        "point": [
+          22.5,
+          10.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "anisotropic-outside",
+    "queries": [
+      {
+        "point": [
+          60.5,
+          27.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "bounds": [
+      40,
+      24,
+      120,
+      26
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "anisotropic-inside",
+    "queries": [
+      {
+        "point": [
+          60.5,
+          25.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "bounds": [
+      40,
+      24,
+      120,
+      26
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "reflected-painted-stroke",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          30.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "miter-apex",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          3.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "bevel-apex",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          3.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "round-apex",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          3.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "evenodd-hole",
+    "queries": [
+      {
+        "point": [
+          40.5,
+          40.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "bounds": [
+      10,
+      10,
+      80,
+      80
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "nonzero-overlapping-fill",
+    "queries": [
+      {
+        "point": [
+          40.5,
+          40.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "bounds": [
+      10,
+      10,
+      80,
+      80
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "world-tolerance-across-dash-gap",
+    "queries": [
+      {
+        "point": [
+          24.5,
+          10.5
+        ],
+        "tolerance": 5,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "open-fill-closes",
+    "queries": [
+      {
+        "point": [
+          30.5,
+          20.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "open-stroke-does-not-close",
+    "queries": [
+      {
+        "point": [
+          20.5,
+          27.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "cubic-fill-inside",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          60.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "cubic-fill-outside",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          85.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "cubic-stroke-apex",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          78.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "cubic-stroke-outside",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          85.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "ellipse-arc-fill",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          30.5
+        ],
+        "tolerance": 0,
+        "expected": true
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  },
+  {
+    "source": "ellipse-arc-hollow-stroke",
+    "queries": [
+      {
+        "point": [
+          50.5,
+          30.5
+        ],
+        "tolerance": 0,
+        "expected": false
+      }
+    ],
+    "precision": [
+      {
+        "requiredFlatness": 0.001,
+        "accepted": true
+      },
+      {
+        "requiredFlatness": 0.0005,
+        "accepted": false
+      },
+      {
+        "requiredFlatness": 0.002,
+        "accepted": true
+      }
+    ]
+  }
+]

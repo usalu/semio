@@ -1,6 +1,6 @@
 /** 🔢️ Exact word interfaces for owned snapshot numeric text. */
-import {binary64,binary32,binary64Value,binary32Value,parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-export type {Binary64,Binary32} from "../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,binary32,binary64Value,binary32Value,parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+export type {Binary64,Binary32} from "../../../../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 function nan64(bits:bigint):boolean{return(bits&0x7ff0000000000000n)===0x7ff0000000000000n&&(bits&0xfffffffffffffn)!==0n}
 function nan32(bits:number):boolean{return(bits&0x7f800000)===0x7f800000&&(bits&0x7fffff)!==0}
 function number(text:string):number{if(typeof text!=="string"||! /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text))throw Error("invalid numeric payload literal");return Number(text)}

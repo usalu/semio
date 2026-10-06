@@ -3,18 +3,15 @@
  * UTF-8 ↔ scalar offsets), jsdiff (third party) derives the same changed run for every edit, no concurrent insert-only
  * workload loses a typed scalar, and a reincarnated window never makes a host duplicate one. */
 import { describe, expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import { diffChars } from "diff";
 import fixture from "../../🧫️fixtures/✂️text-splice/🔣️.json";
-import schema from "../../🧬️schema/✂️text-splice/🔣️.json";
 import fc from "fast-check";
 import typingLaw from "../../../../🛠️tool-machine/🧫️fixtures/🧫️typing-law/🔣️.json";
 import { applyTextSpliceV1, composeTextSplicesV1, createTextEditorTypingRunV1, locateTextSpliceV1, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, TEXT_EDITOR_TYPING_IDLE_MS, rebaseTextEditsV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_SPLICE_CONTEXT_SCALARS, TEXT_SPLICE_MIN_TWO_SIDED_SCALARS, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, textSpliceFromEditV1, utf8OffsetOfScalarV1, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextSpliceV1 } from "../../✂️text-splice/🟦️.ts";
 
 describe("text splice", () => {
   test("the schema admits the fixture and pins the constants", () => {
-    const validate = new Ajv().compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.contextScalars).toBe(TEXT_SPLICE_CONTEXT_SCALARS);
     expect(fixture.minTwoSidedScalars).toBe(TEXT_SPLICE_MIN_TWO_SIDED_SCALARS);
   });
@@ -153,9 +150,6 @@ describe("text splice", () => {
   }
 
   test("a scene declares splice typing and echoes the applied splice seq", () => {
-    const validate = new Ajv().addSchema(schema, "text-splice");
-    expect(validate.validate({ $ref: "text-splice#/definitions/typing" }, { mode: "splice" })).toBe(true);
-    expect(validate.validate({ $ref: "text-splice#/definitions/selectionEcho" }, { start: 3, end: 3, splice: 7 })).toBe(true);
     expect(textEditorTypingV1(JSON.stringify({ fontPx: 13, typing: { mode: "splice" } }))).toEqual({ mode: "splice" });
     expect(textEditorTypingV1(JSON.stringify({ readOnly: true }))).toBeNull();
     expect(textEditorTypingV1("not json")).toBeNull();

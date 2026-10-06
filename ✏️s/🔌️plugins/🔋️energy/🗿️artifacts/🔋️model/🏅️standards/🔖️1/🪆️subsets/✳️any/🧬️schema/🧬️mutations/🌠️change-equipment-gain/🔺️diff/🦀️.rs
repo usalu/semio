@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeEquipmentGainRadiantFraction, base: &EnergyMo
     if let Some(item) = model.equipment.iter_mut().find(|item| item.id == payload.id) {
         item.radiant_fraction = payload.new_radiant_fraction;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

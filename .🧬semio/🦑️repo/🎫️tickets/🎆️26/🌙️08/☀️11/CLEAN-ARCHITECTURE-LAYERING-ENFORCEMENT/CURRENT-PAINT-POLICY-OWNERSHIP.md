@@ -1,0 +1,34 @@
+
+
+Finite source1 admission: Ready for the four-row ownership proposal. All current predecessors and three full contexts match. Two General roots and one Product root partition the original three roots; one General and five Product exception tuples preserve all six original tuples byte-for-byte in original order. Four scanner helper bodies are exact; the allowlist helper only receives its prior constant as a parameter. All nine original General tests remain, both final non-vacuity/refusal assertion blocks are exact, and the transferred Product law uses the same scanner. Literal mounts resolve and the Product manifest has ten ancestors to the repository. Native execution and live traversal remain unproved. Bound proof: `🗑️generated/paint-policy-owner/source-independent-1.json`.
+
+
+Intro3 composition finite Ready: eight current rows compose the original four Intro rows and four common Paint rows exactly; seven held/current contexts verified with schema type advance preserved. Paint is identical in RED/GREEN, whose only omitted implementation is the Intro predicate. New helper preserves admitted literal closure except direct paths to the same shared fixtures; original UI features/empty rest and exact source/helper/codec gates remain. Actual paired provider/runtime admission pending. Exact proofs under generated introduction-policy: `independent-paint-common-source-3.json`, `whole-paint-helper-source-independent-3.json`.
+
+
+Actual Intro epoch3 paired preparation independently Ready:3881 complete assets and both physical snapshots checked with exact eight authored/root/selected-lock overrides; all3530 epoch2 held frames exact plus351 additions. Twenty-eight provider hashes, four ordinary/locked raw metadata phases0/external0/current Rootlock and helper/codec exact. Original UI packages[], default features, tui-terminal,wgpu and script test remain. Native assertions pending; proof `introduction-whole/epoch-3/independent-plan-provider-admission-1.json` under generated output.
+
+
+Intro3 genuine RED independently sealed: one exact E0432 missing Intro predicate/no runtime; all1143 compiled length/BLAKE matching candidates and858fullpre/current frame hashes verified,61units/precurrent0/unavailable374/ambiguous756 retained. Sixteen exact bindings preserve composite8rows/sharedPaint and original UI route. No unique origin/live equivalence claim. Bound epoch3 `independent-red-source-checkpoint-1.json`.
+
+
+Held GREEN3 lock continuation: independently admitted the sole Schema Registry dev-only Tokio lock delta, with all other parsed package rows conserved and both held snapshot root/lock exact. The separate dispatcher requires the exact prior plan, metadata, original helper and codec bodies, qualified current Root lock, and all held GREEN snapshot hashes before original whole execution. Its source proof is `🗑️generated/introduction-whole/epoch-3/independent-green-continuation-helper-1.json`. No native execution or current-source equivalence follows from this source admission.
+
+
+Actual held Intro GREEN3 whole is independently Ready: official 298 selected/completed/PASS, zero skipped, all 298 indexed PASS identities and DEBUG130 shared controls retained. Independent physical verification checks 61 units/1143 inputs, all available retained preimages and matching current candidates against compiled length/BLAKE, and all full-frame SHA identities. Twenty exact bindings seal the original source floor plus lock observation/admission and separate dispatcher/proof in `generated/introduction-whole/epoch-3/independent-green-whole-source-checkpoint-1.json`. Candidate ambiguity and unknown foreign pairs remain qualified; this does not establish Product paint native execution or live-source equivalence.
+
+
+Intro8 publication plan2 is independently Ready: all eight current full predecessors/inverses, six readonly guard contexts, ten full evidence files and36 RED/GREEN runtime bindings rehashed exact. The sole readonly schema successor adds seven leaf type annotations (one string/six boolean), with all other parsed data unchanged and the bound130+28 oracle agreeing. Publisher repeats exact reviewed-plan/evidence/context guards after durable intent and FD opening, then final sameFD predecessor/path-inode checks immediately before writing; public mounts follow additions. This is a concrete publication source gate, not an atomic live native claim. Proofs rust-paint-context-independent-1.json and rust-paint-publication-plan-independent-2.json.
+
+
+Actual Intro/Paint eight-row publication2 independently verifies the exact reviewed plan/full fsynced journal, all eight intent/inverse pairs and current after bodies, six readonly contexts and36 native bindings. Generic298/130 floor remains pinned; Product companion native execution is still separate and pending. Actual atomic execution-source identity and unique physical origin are expressly false. Proof rust-paint-publication-independent-2.json.
+
+
+Separate ProductWGPU original whole helper source is independently Ready, bound to actual Intro/Paint source8/publication2/postpubproof and codec. It preserves the sibling TypeScript package NativeTestScript/test-native registration, original runRepositoryCargoTests at repository-root cwd, long floor and empty rest/all-targets. Capture retains Product renderer/shared paint/provider domains, exact original mechanism bodies and full later foreign library frames. Actual source/provider metadata and whole runtime remain required; helper source proof product-wgpu-whole-helper-source-independent-1.json.
+
+
+ProductWGPU original preparation is independently Ready: admitted bounded codec reads3559full sourceframes/73providers, all exactcurrentbyte identities, actual ordinary+locked metadatazero/rawbytehashes/fullparsedgraphs equal, Rootlockunchanged, originaltest-native/alltargets/longfloor/restempty/repoRootcwd andscript/project/helper/codec joins exact. Currentforeignsourcegapszero; atomicdispatch identity remains false. Proof product-wgpu-native-whole/epoch-1/independent-source-provider-admission-1.json. Original native whole pending.
+
+## Product WGPU Original Whole Runtime RED
+
+Exact original raw indexed roster independently confirms1652selected,258completed,257PASS,1FAIL,11excluded,1394uncompleted.259 raw presentations preserve duplicate finalFAIL. Solefailure is EngineSurfaceRegistry element size86544 versus expected82656; staged352/context384 entries agree. Physical receipt contains two same-file current gaps at GeneralValue allocation-return, compiled5391 bytes/BLAKE4cfddc7a51c3b5cf184027d653486cd2bbc93a1371916f776e73c347f39d7a23; its before is null/unavailable. No current or historical source equality is inferred. Raw observation admitted, complete compiled-source Ready remains false until exact retained predecessor is found or scope remains explicitly unresolved. No rerun occurred.

@@ -1,0 +1,8 @@
+# Root Native48 Terminal and Eleven After Coordination
+
+The actual unchanged registered complementary cohort reached terminal exit1 after 191 minutes 51 seconds. All48 owners started. There were 46 runtime summaries: 36 owning scopes passed and 10 scopes had genuine assertion failures; Block3d and VCS stopped on compiler defects and receive no runtime credit. The original12 failed target names are preserved verbatim in generated/root-complementary-forty-eight-native-complete-current-after-provider-and-public-closures.log. This is no universal green result.
+
+A fresh original Native replay now selects the eleven coherently repaired owners: Energy, GIS map, Lowpoly, Playbook, Playground, Procedure, EN1992, Block3d, VCS, Rewriting and Remodeling. Actual project names come from the completed original registered command and owner project manifests. The original quick policy, per-owner native selection, build/assertion grants, row/byte/allocation limits, uncached execution and dependencies remain unchanged. It uses the same root-owned Cargo cache only after the original48 command terminal, and runs sequentially. Retained log: generated/root-eleven-native-owning-original-semantic-after.log. Puzzle2d's genuine14/12/2 failure is still awaiting complete two-constructor semantic closure and is excluded from this repaired replay pending that work.
+
+Remodeling's new Source law passed22/22 with its strict type check. EN1992/Procedure Source passed11/5; Playbook/Playground passed5/17. These Source receipts do not substitute for any Native result. Shared Value/replication storage and Physical outside11 receipts are separately owned by the execution agents and retained in their own reports.
+

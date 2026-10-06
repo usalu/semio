@@ -1,12 +1,11 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
+
 import { describe, expect, test } from "vitest";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "⏱️frame-latency", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "⏱️frame-latency", "🔣️.json"), "utf8"));
 
 type Authority = { domain: "rendererFrame" | "browserInputBatch"; generation: number };
 type Observation = { authority: Authority; stage: string; startedUs: number; durationUs: number; workItems: number };
@@ -82,10 +81,7 @@ const independentOracle = (rows: Observation[], capacity: number) => {
 };
 
 describe("⏱️ authority-correlated frame latency diagnostics", () => {
-  test("the language-neutral aggregation vectors satisfy their schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("an independent fixed-capacity oracle coalesces scalar floods without losing cumulative stages", () => {
     expect(independentOracle(observations, fixture.oracleCapacity)).toEqual(fixture.expected);

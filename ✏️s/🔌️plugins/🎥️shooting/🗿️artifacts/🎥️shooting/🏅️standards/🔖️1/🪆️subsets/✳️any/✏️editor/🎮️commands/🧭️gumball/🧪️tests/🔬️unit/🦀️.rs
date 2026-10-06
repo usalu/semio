@@ -98,7 +98,11 @@ async fn an_id_less_gesture_moves_the_live_selection() {
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).expect("targets");
     app.handle_action("interactionSelect", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local")).await.expect("interactionSelect");
     artifact_app_laws::settle_registered_typed_operation(&mut *app, SHOOTING_TEST_INSTANCE).await.expect("the selection settles");
+    let captured = app.interaction_state().await;
+    eprintln!("[DEBUG] Shooting idless before dispatch selection={:?}", captured.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| (&selection.granularity, &selection.ids)));
     let rows = dispatch_rows(&mut app, translate(Vec::new(), 3.0)).await;
+    let after_dispatch = app.interaction_state().await;
+    eprintln!("[DEBUG] Shooting idless after dispatch rows={} selection={:?}", rows.len(), after_dispatch.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| (&selection.granularity, &selection.ids)));
     assert_eq!(rows.len(), 1, "the selection fallback commits one transaction");
     assert_eq!(origin(&app, &asset_id), [before[0] + 3.0, before[1], before[2]]);
 }
@@ -108,7 +112,7 @@ async fn an_id_less_gesture_moves_the_live_selection() {
 /// edit already moved.
 #[semio_framework_async_macros::async_test]
 async fn the_drag_leaf_replays_its_edited_offset_relative_to_any_base() {
-    let base = crate::standards::v1::subsets::any::schema::default_snapshot();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let asset_id = base.assets[0].id.clone();
     let (transaction, mutations) = shooting_gumball_commit("translateSelection", "seed", GumballToolRequest::on(&base, ShootingMutation::DragAssets(crate::mutations::drag_assets::DragAssets { asset_ids: vec![asset_id.clone()], dx: 1.0, dy: 0.0, dz: 0.0 }))).expect("a moving gesture commits");
     assert!(transaction.id.starts_with("tx-"));
@@ -130,14 +134,14 @@ async fn the_drag_leaf_replays_its_edited_offset_relative_to_any_base() {
 async fn a_gumball_drag_edited_in_history_replays_its_downstream() {
     use crate::mutations::{drag_assets::DragAssets, rotate_assets::RotateAssets, scale_assets::ScaleAssets};
     use protocol::OpBinary;
-    let base = crate::standards::v1::subsets::any::schema::default_snapshot();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let asset_ids = vec![base.assets[0].id.clone()];
     let drag = |dx: f64, dy: f64| ShootingMutation::DragAssets(DragAssets { asset_ids: asset_ids.clone(), dx, dy, dz: 0.0 });
     let log = [drag(1.0, 0.0), ShootingMutation::RotateAssets(RotateAssets { asset_ids: asset_ids.clone(), ax: 0.0, ay: 0.0, az: 1.0, angle: 0.5 }), ShootingMutation::ScaleAssets(ScaleAssets { asset_ids: asset_ids.clone(), sx: 2.0, sy: 1.0, sz: 1.0 })];
     let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope::<ShootingSnapshot, ShootingMutation>(crate::SHOOTING_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None)).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ShootingSnapshot, ShootingMutation>());
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the edit applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = drag(-2.0, 4.0);

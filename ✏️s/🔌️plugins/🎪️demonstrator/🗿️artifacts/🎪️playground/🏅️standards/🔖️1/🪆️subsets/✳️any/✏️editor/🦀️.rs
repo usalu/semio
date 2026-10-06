@@ -159,7 +159,6 @@ struct PlaygroundStorePreparationFactory;
 struct PlaygroundStorePreparation {
     base: Option<store::SnapshotRead<PlaygroundSnapshot>>,
     mutation: Option<PlaygroundMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(PlaygroundSnapshot, Vec<PlaygroundMutation>, PlaygroundMutation, usize)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<PlaygroundSnapshot, PlaygroundMutation>>,
@@ -177,9 +176,9 @@ fn playground_mutation_bytes(mutation: &PlaygroundMutation) -> Result<usize, Str
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<PlaygroundSnapshot, PlaygroundMutation> for PlaygroundStorePreparationFactory {
-    fn preflight(&self, mutation: &PlaygroundMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Playground Store preparation rejected its lane or description".into());
+    fn preflight(&self, mutation: &PlaygroundMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Playground Store preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, playground_mutation_bytes(mutation)?))
     }
@@ -200,7 +199,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<PlaygroundSnapshot, Playgroun
         Ok(Box::new(PlaygroundStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             prepared: None,
@@ -265,7 +263,7 @@ impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutati
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -284,7 +282,7 @@ impl store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutati
         Ok(store::SnapshotRetirementStep::Complete)
     }
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation
@@ -389,7 +387,7 @@ impl ArtifactEditor for PlaygroundEditor {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("playground-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "playground-command-tool-mismatch"));
         }
         if playground_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::from("playground-command-payload-too-large"));

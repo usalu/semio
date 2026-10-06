@@ -1,4 +1,4 @@
-import {type Binary64,type Binary32,parseBinary64Transport,parseBinary32Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ PlySnapshot schema — complete per PLY's generic element/property system. */
 
 export type PlyScalarType = 'char' | 'uChar' | 'short' | 'uShort' | 'int' | 'uInt' | 'float' | 'double';
@@ -123,8 +123,8 @@ export function parsePlyValue(value:unknown,at="$"):PlyValue{
    for(let index=values.length-1;index>=0;index--)pending.push({source:values[index],target:owned});
   }else{
    const kind=parsePlyScalarType(row["kind"],`${at}.kind`);
-   if(kind==="float")frame.target.push({kind,value:parseBinary32Transport(row["value"])});
-   else if(kind==="double")frame.target.push({kind,value:parseBinary64Transport(row["value"])});
+   if(kind==="float")frame.target.push({kind,value:parseBinary32(row["value"])});
+   else if(kind==="double")frame.target.push({kind,value:parseBinary64(row["value"])});
    else{const bounds={char:[-128,127],uChar:[0,255],short:[-32768,32767],uShort:[0,65535],int:[-2147483648,2147483647],uInt:[0,4294967295]}as const;const range=bounds[kind];frame.target.push({kind,value:stdioPly10AnySnapshotGuardInteger(row["value"],`${at}.value`,{minimum:range[0],maximum:range[1]})});}
   }
  }

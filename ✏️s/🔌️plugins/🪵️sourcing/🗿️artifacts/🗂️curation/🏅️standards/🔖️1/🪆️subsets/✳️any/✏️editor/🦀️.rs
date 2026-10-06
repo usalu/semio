@@ -6,7 +6,7 @@
 //! compute in the artifact's `🧬️schema`. This file is a routing table: `handle` → `SourcingCurationCommand::
 //! dispatch`, `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::op::SourcingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::{CurationSnapshot, CuratedItem, ObjectKindExtra, SOURCING_CURATION_SCHEMA};
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::modes::edit;
@@ -498,7 +498,6 @@ struct SourcingCurationConfigPreparationFactory;
 struct SourcingCurationConfigPreparation {
     base: Option<store::SnapshotRead<SourcingCurationConfig>>,
     mutation: Option<SourcingCurationConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(SourcingCurationConfig, Vec<SourcingCurationConfigMutation>, SourcingCurationConfigMutation)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<SourcingCurationConfig, SourcingCurationConfigMutation>>,
@@ -575,16 +574,16 @@ fn prepare_sourcing_curation_config(base: &SourcingCurationConfig, mutation: Sou
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<SourcingCurationConfig, SourcingCurationConfigMutation> for SourcingCurationConfigPreparationFactory {
-    fn preflight(&self, mutation: &SourcingCurationConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SOURCING_CURATION_CONFIG_METADATA_BYTES) {
-            return Err("Sourcing Config preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &SourcingCurationConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Sourcing Config preparation rejected its lane".into());
         }
         sourcing_curation_config_mutation_retained_bytes(mutation)?;
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, SOURCING_CURATION_CONFIG_GRANT_BYTES))
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCurationConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation>> {
-        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+        if self.preflight(&request.mutation, request.lane).is_err()
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
@@ -593,7 +592,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<SourcingCurationConfig, Sourc
             return Err(request);
         }
         Ok(Box::new(SourcingCurationConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
+            base: Some(request.base), mutation: Some(request.mutation), authority: Some(request.authority), candidate: None, prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes: 0, cancelled: false, closing: false,
         }))
     }
@@ -637,15 +636,9 @@ impl store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCura
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(mutation) = self.mutation.as_ref() {
-            let bytes = sourcing_curation_config_mutation_retained_bytes(mutation)?;
+            let bytes = sourcing_curation_config_mutation_retained_bytes(mutation).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, message))?;
             if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
             self.mutation = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
-        }
-        if let Some(description) = self.description.as_ref() {
-            let bytes = description.len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
-            self.description = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         if let Some(base) = self.base.take() {
@@ -661,7 +654,7 @@ impl store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCura
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ConfigStorePreparation
@@ -690,7 +683,6 @@ struct SourcingCurationArtifactPreparationFactory;
 struct SourcingCurationArtifactPreparation {
     base: Option<store::SnapshotRead<CurationSnapshot>>,
     mutation: Option<SourcingMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(CurationSnapshot, Vec<SourcingMutation>, SourcingMutation)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<CurationSnapshot, SourcingMutation>>,
@@ -747,16 +739,16 @@ fn prepare_sourcing_curation_document(base: &CurationSnapshot, mutation: Sourcin
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<CurationSnapshot, SourcingMutation> for SourcingCurationArtifactPreparationFactory {
-    fn preflight(&self, mutation: &SourcingMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > SOURCING_CURATION_DOCUMENT_METADATA_BYTES) {
-            return Err("Sourcing Curation preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &SourcingMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Sourcing Curation preparation rejected its lane".into());
         }
         sourcing_curation_mutation_retained_bytes(mutation)?;
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, SOURCING_CURATION_DOCUMENT_GRANT_BYTES))
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation>>, store::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation>> {
-        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+        if self.preflight(&request.mutation, request.lane).is_err()
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
@@ -765,7 +757,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<CurationSnapshot, SourcingMut
             return Err(request);
         }
         Ok(Box::new(SourcingCurationArtifactPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
+            base: Some(request.base), mutation: Some(request.mutation), authority: Some(request.authority), candidate: None, prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes: 0, cancelled: false, closing: false,
         }))
     }
@@ -809,15 +801,9 @@ impl store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> 
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(mutation) = self.mutation.as_ref() {
-            let bytes = sourcing_curation_mutation_retained_bytes(mutation)?;
+            let bytes = sourcing_curation_mutation_retained_bytes(mutation).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, message))?;
             if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
             self.mutation = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
-        }
-        if let Some(description) = self.description.as_ref() {
-            let bytes = description.len();
-            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
-            self.description = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
         }
         if let Some(base) = self.base.take() {
@@ -833,7 +819,7 @@ impl store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ArtifactStorePreparation
@@ -980,7 +966,7 @@ impl ArtifactEditor for SourcingCurationApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("sourcing-curation-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "sourcing-curation-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, sourcing_curation_retained_reduce, sourcing_curation_bounded_extent));

@@ -1,0 +1,1988 @@
+{
+  "qualification": "Current direct primary callsites and historical-owner joins; no universal denominator or runtime inference",
+  "owners": [
+    {
+      "owner": "WriterSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+      "historicalRoute": "@semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 140,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 213,
+          "text": "pub fn artifact<A: WriterApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "WRITER_DIALECT",
+          "body": " artifact_kind: \"s.writer.writer\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "EquationSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+      "historicalRoute": "@semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 305,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 452,
+          "text": "pub fn artifact<A: EquationApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EQUATION_DIALECT",
+          "body": " artifact_kind: \"s.mathematical.equation\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🦀️.rs",
+      "historicalRoute": "@semio-tech/wfc-2d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 31,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 104,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "WFC_2D_DIALECT",
+          "body": " artifact_kind: WFC_2D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🦀️.rs",
+      "historicalRoute": "@semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 30,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 104,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "WFC_GRID2D_DIALECT",
+          "body": " artifact_kind: WFC_GRID2D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🦀️.rs",
+      "historicalRoute": "@semio-tech/wfc-bitmap-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 38,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 179,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "WFC_BITMAP_DIALECT",
+          "body": " artifact_kind: WFC_BITMAP_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🦀️.rs",
+      "historicalRoute": "@semio-tech/wfc-3d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 32,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 131,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "WFC3D_DIALECT",
+          "body": " artifact_kind: WFC3D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🦀️.rs",
+      "historicalRoute": "@semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 30,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 109,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "WFC_GRID3D_DIALECT",
+          "body": " artifact_kind: WFC_GRID3D_DOCUMENT_SCHEMA, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+      "historicalRoute": "@semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 60,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 151,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 156,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::generation2d::Generation2dPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "GENERATION2D_DIALECT",
+          "body": " artifact_kind: \"s.procedural.generation2d\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+      "historicalRoute": "@semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 82,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 147,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 152,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::generation3d::Generation3dPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "GENERATION3D_DIALECT",
+          "body": " artifact_kind: \"s.procedural.generation3d\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "FlowSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "historicalRoute": "@semio-tech/flow-flow-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 343,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 398,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 404,
+          "text": ".document_codec::<EditorApp<editor::flow::FlowPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "FLOW_DIALECT",
+          "body": " artifact_kind: \"s.flow.flow\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+      "historicalRoute": "@semio-tech/gis-gisterrain-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 40,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 187,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 192,
+          "text": ".document_codec_bare::<GisTerrainSnapshot, GisTerrainMutation>(GIS_3D_TERRAIN_SCHEMA, GISTERRAIN_DIALECT)"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "GISTERRAIN_DIALECT",
+          "body": " artifact_kind: \"s.gis.gisterrain\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+      "historicalRoute": "@semio-tech/gis-gismap-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 142,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 332,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 338,
+          "text": ".document_codec_bare::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, GISMAP_DIALECT)"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "GISMAP_DIALECT",
+          "body": " artifact_kind: \"s.gis.gismap\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "VcsSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
+      "historicalRoute": "@semio-tech/vcs-vcs-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 27,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 84,
+          "text": "pub fn artifact<A: VcsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "VCS_DIALECT",
+          "body": " artifact_kind: \"s.vcs.vcs\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs",
+      "historicalRoute": "@semio-tech/animate-presentation-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 270,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 373,
+          "text": "/// (`ArtifactDeclaration::builder(...).schema(...).inferences(...).composers(...).document_codec(...)`"
+        },
+        {
+          "line": 379,
+          "text": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "ANIMATE_DIALECT",
+          "body": " artifact_kind: \"s.animate.presentation\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "historicalRoute": "@semio-tech/shooting-shooting-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 36,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 168,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 174,
+          "text": ".document_codec::<semio_framework_plugin::app::EditorApp<editor::shooting::ShootingPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "SHOOTING_DIALECT",
+          "body": " artifact_kind: \"s.shooting.shooting\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+      "historicalRoute": "@semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 26,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 82,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 85,
+          "text": ".document_codec_bare::<standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot, standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(PLAYGROUND_DOCUMENT_SCHEMA, PLAYGROUND_DIALECT)"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "PLAYGROUND_DIALECT",
+          "body": " artifact_kind: \"s.demonstrator.playground\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "historicalRoute": "@semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 331,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 415,
+          "text": "pub fn artifact<A: SequenceApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "SEQUENCE_DIALECT",
+          "body": " artifact_kind: \"s.sequence.sequence\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "historicalRoute": "@semio-tech/fem-2d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 391,
+          "text": "// 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Fem2dPlayApp>>()` derives its"
+        },
+        {
+          "line": 415,
+          "text": "/// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as"
+        },
+        {
+          "line": 419,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "FEM2D_DIALECT",
+          "body": " artifact_kind: \"s.fem.fem2d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "historicalRoute": "@semio-tech/fem-3d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 370,
+          "text": "// 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Fem3dPlayApp>>()` derives its"
+        },
+        {
+          "line": 394,
+          "text": "/// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as"
+        },
+        {
+          "line": 398,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "FEM3D_DIALECT",
+          "body": " artifact_kind: \"s.fem.fem3d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "historicalRoute": "@semio-tech/architect-program-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 220,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 643,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 648,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::architect::ArchitectPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "ARCHITECT_DIALECT",
+          "body": " artifact_kind: \"s.architect.program\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "historicalRoute": "@semio-tech/process-process3d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 1019,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 1084,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 1089,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::process3d::Process3dPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "PROCESS3D_DIALECT",
+          "body": " artifact_kind: \"s.process.process3d\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+      "historicalRoute": "@semio-tech/lowpoly-lowpoly-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 335,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 418,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 424,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::lowpoly::LowpolyPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "LOWPOLY_DIALECT",
+          "body": " artifact_kind: \"s.lowpoly.lowpoly\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "WiresSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "historicalRoute": "@semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 294,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 362,
+          "text": "/// .document_codec(...)` chain) is deleted outright, not kept alongside this, per the ticket's own"
+        },
+        {
+          "line": 368,
+          "text": "pub fn artifact<A: WiresApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "WIRES_DIALECT",
+          "body": " artifact_kind: \"s.reasoning.wires\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "FormsSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs",
+      "historicalRoute": "@semio-tech/forms-forms-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 379,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 446,
+          "text": "pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "FORMS_DIALECT",
+          "body": " artifact_kind: \"s.forms.forms\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "historicalRoute": "@semio-tech/layout-layout-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 528,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 655,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 661,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::layout::LayoutPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "LAYOUT_DIALECT",
+          "body": " artifact_kind: \"s.layout.layout\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "CadSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "historicalRoute": "@semio-tech/cad-cad-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 455,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 571,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 577,
+          "text": ".document_codec::<semio_framework_plugin::app::EditorApp<editor::cad::CadPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "CAD_DIALECT",
+          "body": " artifact_kind: \"s.cad.cad\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1990Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1990-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 151,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 194,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 200,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1990::En1990PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1990_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1990\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-din18599-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 484,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 527,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 533,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::din18599::Din18599PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "DIN18599_DIALECT",
+          "body": " artifact_kind: \"s.norm.din18599\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1997Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1997-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 23,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 249,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 255,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1997::En1997PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1997_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1997\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-din16798-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 141,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 184,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 190,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::din16798::Din16798PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "DIN16798_DIALECT",
+          "body": " artifact_kind: \"s.norm.din16798\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1991Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1991-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 176,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 219,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 225,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1991::En1991PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1991_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1991\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1992Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1992-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 402,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 445,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 451,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1992::En1992PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1992_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1992\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 2005,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 2056,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 2062,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::vdi3805::Vdi3805PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "VDI3805_DIALECT",
+          "body": " artifact_kind: \"s.norm.vdi3805\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 1184,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 1231,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 1237,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::iso16757::Iso16757PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "ISO16757_DIALECT",
+          "body": " artifact_kind: \"s.norm.iso16757\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1993Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1993-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 355,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 398,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 404,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1993::En1993PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1993_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1993\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1994Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1994-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 438,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 481,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 487,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1994::En1994PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1994_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1994\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-din4108-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 141,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 184,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 190,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::din4108::Din4108PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "DIN4108_DIALECT",
+          "body": " artifact_kind: \"s.norm.din4108\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1996Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1996-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 281,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 323,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 329,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1996::En1996PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1996_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1996\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1995Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1995-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 210,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 252,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 258,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1995::En1995PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1995_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1995\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1999Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1999-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 27,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 69,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 75,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1999::En1999PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1999_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1999\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "En1998Snapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+      "historicalRoute": "@semio-tech/norm-en1998-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 23,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 65,
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 71,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::en1998::En1998PlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "EN1998_DIALECT",
+          "body": " artifact_kind: \"s.norm.en1998\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "historicalRoute": "@semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 368,
+          "text": "/// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as"
+        },
+        {
+          "line": 371,
+          "text": "pub fn artifact<A: PlaybookApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        },
+        {
+          "line": 460,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "PLAYBOOK_DIALECT",
+          "body": " artifact_kind: \"s.playbook.playbook\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "historicalRoute": "@semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 367,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 374,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::procedure::ImperativePlayApp>>()"
+        },
+        {
+          "line": 426,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "PROCEDURE_DIALECT",
+          "body": " artifact_kind: \"s.imperative.procedure\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "historicalRoute": "@semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 42,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 115,
+          "text": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "REMODELING_DIALECT",
+          "body": " artifact_kind: \"s.remodel.remodeling\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+      "historicalRoute": "@semio-tech/energy-model-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 619,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 649,
+          "text": "/// `register_document_codec()` — folded into this declaration via `.document_codec_bare::<Snapshot,"
+        },
+        {
+          "line": 650,
+          "text": "/// Mutation>(schema)` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d): `.document_codec::<A:"
+        },
+        {
+          "line": 652,
+          "text": "/// headless library with ZERO apps — there is no `ArtifactApp` to name. `document_codec_bare` is the"
+        },
+        {
+          "line": 690,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 696,
+          "text": ".document_codec_bare::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, semio_framework_plugin::Dialect { artifact_kind: \"s.energy.model\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId(\"*\") })"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "MODEL_DIALECT",
+          "body": " artifact_kind: ENERGY_MODEL_ARTIFACT_SCHEMA_ID, standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "historicalRoute": "@semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 137,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 261,
+          "text": "/// .document_codec(...)` chain, deleted outright, no dual channel) as the ONLY registration channel"
+        },
+        {
+          "line": 266,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "TRINITY_REWRITING_DIALECT",
+          "body": " artifact_kind: \"s.trinity.rewriting\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "JackSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "historicalRoute": "@semio-tech/trinity-jack-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 493,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 616,
+          "text": "// 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<TrinityJackPlayApp>>()`"
+        },
+        {
+          "line": 640,
+          "text": "/// .document_codec(...)` chain, deleted outright, no dual channel) as the ONLY registration channel"
+        },
+        {
+          "line": 645,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "TRINITY_JACK_DIALECT",
+          "body": " artifact_kind: \"s.trinity.jack\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "DagSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "historicalRoute": "@semio-tech/dag-dag-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 292,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 355,
+          "text": "/// .document_codec::<...>()` chain) outright. No dual registration: the plugin root's"
+        },
+        {
+          "line": 359,
+          "text": "pub fn artifact<A: DagApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "DAG_DIALECT",
+          "body": " artifact_kind: \"s.dag.dag\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+      "historicalRoute": "@semio-tech/draw-drawing-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 467,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 537,
+          "text": "/// .document_codec(...)` chain, deleted outright, no dual channel) as the ONLY registration channel"
+        },
+        {
+          "line": 543,
+          "text": "pub fn artifact<A: DrawingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "DRAWING_DIALECT",
+          "body": " artifact_kind: \"s.draw.drawing\", standard: semio_framework::StandardId(\"1\"), subset: semio_framework::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "RasterSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "historicalRoute": "@semio-tech/raster-raster-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 834,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 905,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 911,
+          "text": ".document_codec::<semio_framework_plugin::app::EditorApp<editor::raster::RasterPlayApp>>()"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "RASTER_DIALECT",
+          "body": " artifact_kind: \"s.raster.raster\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "NoteSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs",
+      "historicalRoute": "@semio-tech/note-note-rs:verify-sqlite-snapshot-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 84,
+          "text": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>"
+        },
+        {
+          "line": 104,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "NOTE_DIALECT",
+          "body": " artifact_kind: \"s.note.note\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "historicalRoute": "@semio-tech/puzzle-2d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 562,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 636,
+          "text": "// 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle2dPlayApp>>()` derives"
+        },
+        {
+          "line": 661,
+          "text": "/// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as"
+        },
+        {
+          "line": 665,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "PUZZLE2D_DIALECT",
+          "body": " artifact_kind: \"s.puzzle.puzzle2d\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+      "historicalRoute": "@semio-tech/puzzle-5d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 1109,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 1168,
+          "text": "// 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle5dPlayApp>>()` derives"
+        },
+        {
+          "line": 1193,
+          "text": "/// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as"
+        },
+        {
+          "line": 1197,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "PUZZLE5D_DIALECT",
+          "body": " artifact_kind: \"s.puzzle.puzzle5d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "historicalRoute": "@semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 729,
+          "text": "pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {"
+        },
+        {
+          "line": 818,
+          "text": "// 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle3dPlayApp>>()` derives"
+        },
+        {
+          "line": 843,
+          "text": "/// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as"
+        },
+        {
+          "line": 847,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "PUZZLE3D_DIALECT",
+          "body": " artifact_kind: \"s.puzzle.puzzle3d\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "historicalRoute": "@semio-tech/block-2d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 108,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 184,
+          "text": "// 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Block2dPlayApp>>()` derives"
+        },
+        {
+          "line": 214,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "BLOCK2D_DIALECT",
+          "body": " artifact_kind: \"s.block.block2d\", standard: semio_framework_plugin::StandardId(\"1\"), subset: semio_framework_plugin::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "historicalRoute": "@semio-tech/block-5d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 138,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 185,
+          "text": "// 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Block5dPlayApp>>()` derives"
+        },
+        {
+          "line": 215,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "BLOCK5D_DIALECT",
+          "body": " artifact_kind: \"s.block.block5d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "historicalRoute": "@semio-tech/block-3d-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 264,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 321,
+          "text": "// 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Block3dPlayApp>>()` derives"
+        },
+        {
+          "line": 351,
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "BLOCK3D_DIALECT",
+          "body": " artifact_kind: \"s.block.block3d\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+      "historicalRoute": "@semio-tech/space-home-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 33,
+          "text": "pub async fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 66,
+          "text": "/// `.document_codec::<A>()` instead, keyed off `A` the same way this declaration is keyed off `kind`."
+        },
+        {
+          "line": 101,
+          "text": "pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 106,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::home::HomeApp>>()"
+        },
+        {
+          "line": 113,
+          "text": "pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 118,
+          "text": ".document_codec_bare::<SHomeSnapshot,SHomeMutation>(S_HOME_DOCUMENT_SCHEMA,HOME_DIALECT)"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "HOME_DIALECT",
+          "body": " artifact_kind: \"s.space.home\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "historicalRoute": "@semio-tech/space-space-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 36,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 83,
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {"
+        },
+        {
+          "line": 86,
+          "text": ".document_codec::<semio_framework_plugin::EditorApp<editor::space_index::SpaceIndexEditor>>()"
+        },
+        {
+          "line": 91,
+          "text": "pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_framework_plugin::ArtifactDefinitionError>{"
+        },
+        {
+          "line": 94,
+          "text": ".document_codec_bare::<SSpaceSnapshot,SSpaceMutation>(S_SPACE_INDEX_DOCUMENT_SCHEMA,SPACE_INDEX_DIALECT)"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "SPACE_INDEX_DIALECT",
+          "body": " artifact_kind: \"s.space.space\", standard: semio_framework_plugin::app::StandardId(\"1\"), subset: semio_framework_plugin::app::SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    },
+    {
+      "owner": "CurationSnapshot",
+      "snapshotRoot": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs",
+      "historicalRoute": "@semio-tech/sourcing-curation-rs:test-snapshot-sqlite-native",
+      "currentRootExists": true,
+      "declarationLines": [
+        {
+          "line": 267,
+          "text": "pub fn artifact_kind() -> ArtifactKindSpec {"
+        },
+        {
+          "line": 333,
+          "text": "pub fn artifact<A: SourcingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {"
+        }
+      ],
+      "coordinateConstants": [
+        {
+          "name": "SOURCING_DIALECT",
+          "body": " artifact_kind: \"s.sourcing.curation\", standard: StandardId(\"1\"), subset: SubsetId::ANY "
+        }
+      ],
+      "qualification": "Historical concrete owner joined to current source; nested public trees require owning entrypoint resolution, not runtime credit"
+    }
+  ],
+  "primary": [
+    {
+      "source": "🌎️hub/🧩️compositions/🔱️trinity/🦀️.rs",
+      "line": 40,
+      "call": ".declare_artifact(semio_s_artifact_trinity_jack::artifact::<TrinityApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🔱️trinity/🦀️.rs",
+      "line": 41,
+      "call": ".declare_artifact(semio_s_artifact_trinity_rewriting::artifact::<TrinityApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📸️remodel/🦀️.rs",
+      "line": 32,
+      "call": ".declare_artifact(crate::artifacts::remodeling::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🖨️raster/🦀️.rs",
+      "line": 38,
+      "call": ".artifact(crate::artifacts::raster::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌊️flow/🦀️.rs",
+      "line": 32,
+      "call": ".artifact(crate::artifacts::flow::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🏭️process/🦀️.rs",
+      "line": 30,
+      "call": ".artifact(crate::artifacts::process3d::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 79,
+      "call": ".artifact(din4108)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 80,
+      "call": ".artifact(din16798)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 81,
+      "call": ".artifact(din18599)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 82,
+      "call": ".artifact(en1990)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 83,
+      "call": ".artifact(en1991)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 84,
+      "call": ".artifact(en1992)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 85,
+      "call": ".artifact(en1993)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 86,
+      "call": ".artifact(en1994)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 87,
+      "call": ".artifact(en1995)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 88,
+      "call": ".artifact(en1996)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 89,
+      "call": ".artifact(en1997)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 90,
+      "call": ".artifact(en1998)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 91,
+      "call": ".artifact(en1999)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 92,
+      "call": ".artifact(iso16757)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📕️norm/🦀️.rs",
+      "line": 93,
+      "call": ".artifact(vdi3805)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📐️cad/🦀️.rs",
+      "line": 30,
+      "call": ".artifact(crate::artifacts::cad::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧱️block/🦀️.rs",
+      "line": 32,
+      "call": ".declare_artifact(semio_s_artifact_block_2d::artifact::<BlockApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧱️block/🦀️.rs",
+      "line": 33,
+      "call": ".declare_artifact(semio_s_artifact_block_3d::artifact::<BlockApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧱️block/🦀️.rs",
+      "line": 34,
+      "call": ".declare_artifact(semio_s_artifact_block_5d::artifact::<BlockApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🕸️dag/🦀️.rs",
+      "line": 35,
+      "call": ".declare_artifact(crate::artifacts::dag::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/💡️reasoning/🦀️.rs",
+      "line": 28,
+      "call": ".declare_artifact(crate::artifacts::wires::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🎬️sequence/🦀️.rs",
+      "line": 34,
+      "call": ".declare_artifact(crate::artifacts::sequence::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/✒️writer/🦀️.rs",
+      "line": 28,
+      "call": ".declare_artifact(crate::artifacts::writer::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🎞️animate/🦀️.rs",
+      "line": 26,
+      "call": ".declare_artifact(crate::artifacts::presentation::artifact::<AnimateApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🪐️space/🦀️.rs",
+      "line": 234,
+      "call": ".artifact(::semio_framework_async::poll::resolve_ready(semio_s_artifact_space_home::declaration()).map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🪐️space/🦀️.rs",
+      "line": 239,
+      "call": ".artifact(semio_s_artifact_space_space::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌀️procedural/🦀️.rs",
+      "line": 98,
+      "call": ".artifact(semio_s_artifact_procedural_generation2d::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌀️procedural/🦀️.rs",
+      "line": 99,
+      "call": ".artifact(semio_s_artifact_procedural_generation3d::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌿️vcs/🦀️.rs",
+      "line": 37,
+      "call": ".declare_artifact(crate::artifacts::vcs::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌍️gis/🦀️.rs",
+      "line": 46,
+      "call": ".artifact(semio_s_artifact_gis_gismap::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🌍️gis/🦀️.rs",
+      "line": 47,
+      "call": ".artifact(semio_s_artifact_gis_gisterrain::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 58,
+      "call": ".declare_artifact(semio_s_artifact_wfc_bitmap::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 59,
+      "call": ".declare_artifact(semio_s_artifact_wfc_grid2d::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 60,
+      "call": ".declare_artifact(semio_s_artifact_wfc_2d::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 61,
+      "call": ".declare_artifact(semio_s_artifact_wfc_grid3d::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🀄️wfc/🦀️.rs",
+      "line": 62,
+      "call": ".declare_artifact(semio_s_artifact_wfc_3d::artifact::<WfcApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📜️imperative/🦀️.rs",
+      "line": 36,
+      "call": ".artifact(crate::artifacts::procedure::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🪵️sourcing/🦀️.rs",
+      "line": 39,
+      "call": ".declare_artifact(crate::artifacts::curation::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🗒️note/🦀️.rs",
+      "line": 41,
+      "call": ".declare_artifact(crate::artifacts::note::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📋️forms/🦀️.rs",
+      "line": 39,
+      "call": ".declare_artifact(crate::artifacts::forms::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🏛️architect/🦀️.rs",
+      "line": 30,
+      "call": ".artifact(crate::artifacts::program::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🎥️shooting/🦀️.rs",
+      "line": 29,
+      "call": ".artifact(crate::artifacts::shooting::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/➗️mathematical/🦀️.rs",
+      "line": 44,
+      "call": ".declare_artifact(crate::artifacts::equation::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📏️layout/🦀️.rs",
+      "line": 39,
+      "call": ".artifact(crate::artifacts::layout::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧩️puzzle/🦀️.rs",
+      "line": 70,
+      "call": ".declare_artifact(semio_s_artifact_puzzle_2d::artifact::<PuzzleApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧩️puzzle/🦀️.rs",
+      "line": 71,
+      "call": ".declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PuzzleApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🧩️puzzle/🦀️.rs",
+      "line": 72,
+      "call": ".declare_artifact(semio_s_artifact_puzzle_5d::artifact::<PuzzleApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs",
+      "line": 44,
+      "call": ".declare_artifact(semio_s_artifact_fem_2d::artifact::<FemApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs",
+      "line": 45,
+      "call": ".declare_artifact(semio_s_artifact_fem_3d::artifact::<FemApps>())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🖍️draw/🦀️.rs",
+      "line": 41,
+      "call": ".declare_artifact(crate::artifacts::drawing::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/📖️playbook/🦀️.rs",
+      "line": 35,
+      "call": ".declare_artifact(crate::artifacts::playbook::artifact())"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/💠️lowpoly/🦀️.rs",
+      "line": 32,
+      "call": ".artifact(crate::artifacts::lowpoly::declaration().map_err(PluginAssemblyError::definition)?)"
+    },
+    {
+      "source": "🌎️hub/🧩️compositions/🔋️energy/🦀️.rs",
+      "line": 44,
+      "call": ".artifact(crate::declaration().map_err(PluginAssemblyError::definition)?)"
+    }
+  ],
+  "additional": {
+    "owner": "ChartSnapshot",
+    "artifactRoot": "🧰️framework/🛍️products/📓️print/🦀️.rs",
+    "declaration": "chart_artifact_declaration",
+    "plugin": "print_plugin",
+    "kind": "s.print.chart",
+    "standard": "v1",
+    "subset": "any",
+    "schema": "print.chart"
+  }
+}

@@ -76,7 +76,7 @@ semio_framework_ui_locale::app_labels! {
         rotate_flag: native_en "Rotate", native_de "Drehen", reuse_en "Rotate", reuse_de "Drehen";
         export: native_en "Export", native_de "Exportieren", reuse_en "Export", reuse_de "Exportieren";
         import: native_en "Import", native_de "Importieren", reuse_en "Import", reuse_de "Importieren";
-        import_invalid: native_en "The file is not a puzzle 2d fixture", native_de "Die Datei ist kein Puzzle-2d-Fixture", reuse_en "The file is not a puzzle 2d fixture", reuse_de "Die Datei ist kein Puzzle-2d-Fixture";
+        import_invalid: native_en "The file is not a puzzle 2d snapshot", native_de "Die Datei ist kein Puzzle-2d-Fixture", reuse_en "The file is not a puzzle 2d snapshot", reuse_de "Die Datei ist kein Puzzle-2d-Fixture";
         import_too_large: native_en "That file is larger than one import may carry", native_de "Diese Datei ist größer als ein Import tragen kann", reuse_en "That file is larger than one import may carry", reuse_de "Diese Datei ist größer als ein Import tragen kann";
         // measures
         automatic: native_en "Automatic", native_de "Automatisch", reuse_en "Automatic", reuse_de "Automatisch";

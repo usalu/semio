@@ -1,7 +1,7 @@
 //! 🧪 Fill tool laws — definition, progressive payloads, abort, oracle parity, and the language-agnostic vector.
 
 use super::*;
-use crate::schema::inferences::solve_with_clock;
+use crate::host::inferences::solve_with_clock;
 use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 

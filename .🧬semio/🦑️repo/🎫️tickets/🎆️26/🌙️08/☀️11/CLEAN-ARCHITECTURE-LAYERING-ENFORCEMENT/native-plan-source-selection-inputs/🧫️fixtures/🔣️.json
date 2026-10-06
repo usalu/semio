@@ -1,0 +1,66 @@
+{
+  "chunkBytes": [
+    1,
+    2,
+    7,
+    65536
+  ],
+  "cases": [
+    {
+      "name": "No Sources",
+      "source": "{\"assets\": [{\"path\": \"a.rs\", \"source\": \"YWJj\", \"encoding\": \"base64\", \"sha256\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\", \"byteCount\": 3}, {\"path\": \"β.rs\", \"source\": \"zrHwn5iA\", \"encoding\": \"base64\", \"sha256\": \"6336ea0bde3a656ee28f637c6d5afbfa2abef9290f9cf6fcbac0e26e88f12f06\", \"byteCount\": 6}], \"routes\": [], \"rootWorkspace\": {\"after\": \"root\"}, \"executor\": {\"helper\": {\"source\": \"exact\"}}, \"authority\": {\"path\": \"owned\"}, \"sourceProof\": {\"path\": \"proof\"}, \"omitted\": {\"source\": \"irrelevant\"}}",
+      "paths": [],
+      "refused": false
+    },
+    {
+      "name": "One Exact Source",
+      "source": "{\"assets\": [{\"path\": \"a.rs\", \"source\": \"YWJj\", \"encoding\": \"base64\", \"sha256\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\", \"byteCount\": 3}, {\"path\": \"β.rs\", \"source\": \"zrHwn5iA\", \"encoding\": \"base64\", \"sha256\": \"6336ea0bde3a656ee28f637c6d5afbfa2abef9290f9cf6fcbac0e26e88f12f06\", \"byteCount\": 6}], \"routes\": [], \"rootWorkspace\": {\"after\": \"root\"}, \"executor\": {\"helper\": {\"source\": \"exact\"}}, \"authority\": {\"path\": \"owned\"}, \"sourceProof\": {\"path\": \"proof\"}, \"omitted\": {\"source\": \"irrelevant\"}}",
+      "paths": [
+        "a.rs"
+      ],
+      "refused": false
+    },
+    {
+      "name": "Two Unicode Sources",
+      "source": "{\"assets\": [{\"path\": \"a.rs\", \"source\": \"YWJj\", \"encoding\": \"base64\", \"sha256\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\", \"byteCount\": 3}, {\"path\": \"β.rs\", \"source\": \"zrHwn5iA\", \"encoding\": \"base64\", \"sha256\": \"6336ea0bde3a656ee28f637c6d5afbfa2abef9290f9cf6fcbac0e26e88f12f06\", \"byteCount\": 6}], \"routes\": [], \"rootWorkspace\": {\"after\": \"root\"}, \"executor\": {\"helper\": {\"source\": \"exact\"}}, \"authority\": {\"path\": \"owned\"}, \"sourceProof\": {\"path\": \"proof\"}, \"omitted\": {\"source\": \"irrelevant\"}}",
+      "paths": [
+        "a.rs",
+        "β.rs"
+      ],
+      "refused": false
+    },
+    {
+      "name": "Unknown Selector",
+      "source": "{\"assets\": [{\"path\": \"a.rs\", \"source\": \"YWJj\", \"encoding\": \"base64\", \"sha256\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\", \"byteCount\": 3}, {\"path\": \"β.rs\", \"source\": \"zrHwn5iA\", \"encoding\": \"base64\", \"sha256\": \"6336ea0bde3a656ee28f637c6d5afbfa2abef9290f9cf6fcbac0e26e88f12f06\", \"byteCount\": 6}], \"routes\": [], \"rootWorkspace\": {\"after\": \"root\"}, \"executor\": {\"helper\": {\"source\": \"exact\"}}, \"authority\": {\"path\": \"owned\"}, \"sourceProof\": {\"path\": \"proof\"}, \"omitted\": {\"source\": \"irrelevant\"}}",
+      "paths": [
+        "missing"
+      ],
+      "refused": true
+    },
+    {
+      "name": "Duplicate Selector",
+      "source": "{\"assets\": [{\"path\": \"a.rs\", \"source\": \"YWJj\", \"encoding\": \"base64\", \"sha256\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\", \"byteCount\": 3}, {\"path\": \"β.rs\", \"source\": \"zrHwn5iA\", \"encoding\": \"base64\", \"sha256\": \"6336ea0bde3a656ee28f637c6d5afbfa2abef9290f9cf6fcbac0e26e88f12f06\", \"byteCount\": 6}], \"routes\": [], \"rootWorkspace\": {\"after\": \"root\"}, \"executor\": {\"helper\": {\"source\": \"exact\"}}, \"authority\": {\"path\": \"owned\"}, \"sourceProof\": {\"path\": \"proof\"}, \"omitted\": {\"source\": \"irrelevant\"}}",
+      "paths": [
+        "a.rs",
+        "a.rs"
+      ],
+      "refused": true
+    },
+    {
+      "name": "Selected Body Hash Refusal",
+      "source": "{\"assets\": [{\"path\": \"a.rs\", \"source\": \"YWJk\", \"encoding\": \"base64\", \"sha256\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\", \"byteCount\": 3}, {\"path\": \"β.rs\", \"source\": \"zrHwn5iA\", \"encoding\": \"base64\", \"sha256\": \"6336ea0bde3a656ee28f637c6d5afbfa2abef9290f9cf6fcbac0e26e88f12f06\", \"byteCount\": 6}], \"routes\": [], \"rootWorkspace\": {\"after\": \"root\"}, \"executor\": {\"helper\": {\"source\": \"exact\"}}, \"authority\": {\"path\": \"owned\"}, \"sourceProof\": {\"path\": \"proof\"}, \"omitted\": {\"source\": \"irrelevant\"}}",
+      "paths": [
+        "a.rs"
+      ],
+      "refused": true
+    },
+    {
+      "name": "Source Before Selector Refusal",
+      "source": "{\"assets\": [{\"source\": \"YWJj\", \"path\": \"a.rs\", \"encoding\": \"base64\", \"sha256\": \"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\", \"byteCount\": 3}, {\"path\": \"β.rs\", \"source\": \"zrHwn5iA\", \"encoding\": \"base64\", \"sha256\": \"6336ea0bde3a656ee28f637c6d5afbfa2abef9290f9cf6fcbac0e26e88f12f06\", \"byteCount\": 6}], \"routes\": [], \"rootWorkspace\": {\"after\": \"root\"}, \"executor\": {\"helper\": {\"source\": \"exact\"}}, \"authority\": {\"path\": \"owned\"}, \"sourceProof\": {\"path\": \"proof\"}, \"omitted\": {\"source\": \"irrelevant\"}}",
+      "paths": [
+        "a.rs"
+      ],
+      "refused": true
+    }
+  ]
+}

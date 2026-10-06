@@ -3,6 +3,10 @@ use super::*;
 async fn demo_source_nonempty() {
     assert!(!PRIMARY_TEXT.is_empty());
     let _ = source();
+    let literal = <crate::TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("current handcrafted TIFF literal fixture");
+    let native = crate::engine::decode_tiff(NATIVE_BYTES).expect("genuine authored TIFF native fixture");
+    assert_eq!(literal, native, "handcrafted demo text retains the complete genuine native owner");
+    eprintln!("[DEBUG] TIFF current literal demo matches complete genuine native owner ifds={} byte_order={:?}", literal.ifds.len(), literal.byte_order);
 }
 
 /// 🧪️ Ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING's

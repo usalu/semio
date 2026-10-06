@@ -226,7 +226,7 @@ async fn add_grip_kind_then_add_grip_then_remove_round_trips() {
 async fn boots_on_the_forest_left_example_document() {
     let mut app = new_app().await;
     let booted = app.snapshot().expect("snapshot");
-    assert_ne!(booted, crate::standards::v1::subsets::any::schema::empty_block5d_snapshot());
+    assert_ne!(booted, crate::standards::v1::subsets::any::io::text::snapshot::empty_block5d_snapshot());
     assert_eq!(booted.part_kind.label, "Hexagonal Cut Concrete Forest Left");
     assert!(booted.representations.first().and_then(|representation| representation.mesh_url.as_deref()).is_some());
     assert!(!booted.grip_kinds.is_empty());

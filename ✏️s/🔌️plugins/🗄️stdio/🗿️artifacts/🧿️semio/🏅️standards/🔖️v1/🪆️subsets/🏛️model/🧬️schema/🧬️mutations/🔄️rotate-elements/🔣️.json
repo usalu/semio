@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/🔄️rotate-elements",
+  "semanticKind": "rotate-elements",
+  "displayName": "Rotate Elements",
+  "emoji": "🔄️",
+  "aggregateVariant": "RotateElements",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "rotate-elements",
+  "binaryTag": 12,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

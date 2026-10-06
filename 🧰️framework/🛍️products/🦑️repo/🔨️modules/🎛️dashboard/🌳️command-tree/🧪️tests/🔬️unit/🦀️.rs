@@ -17,7 +17,7 @@ fn segment_key_strips_emoji_prefix() {
 #[test]
 fn discover_builds_verb_first_level() {
     let tmp = temp_root("verbs");
-    let pkg = tmp.join("✏️s/🔌️plugins/demo/📦️packages/🦀️rust");
+    let pkg = tmp.join("🔨️modules/🧪️demo/📦️packages/🦀️rust");
     fs::create_dir_all(&pkg).unwrap();
     fs::write(pkg.join("📋️project.json"), r#"{"name":"@semio-tech/demo","targets":{"test":{"executor":"nx:run-commands"}}}"#).unwrap();
     let tree = discover(&tmp);

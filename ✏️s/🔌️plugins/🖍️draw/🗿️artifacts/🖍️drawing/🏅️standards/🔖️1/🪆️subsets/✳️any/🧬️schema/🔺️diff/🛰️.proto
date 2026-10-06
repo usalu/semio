@@ -24,12 +24,12 @@ message DrawingLayerPatch {
   optional string name = 3;
   optional double opacity = 4;
   optional string blend_mode = 5;
-  optional string transform_json = 6;
-  optional string fill_json = 7;
-  optional string stroke_json = 8;
+  optional DrawingTransform transform = 6;
+  optional DrawingFillPatch fill = 7;
+  optional DrawingStrokePatch stroke = 8;
   optional string boolean_operation = 9;
-  optional string trace_params_json = 10;
-  optional string layer_json = 11;
+  optional DrawingTraceParams trace_params = 10;
+  optional semio.s.draw.drawing.artifact.DrawingLayerNode layer = 11;
   optional DrawingPathSegments path_segments = 12;
   optional string text_content = 13;
   optional double text_size = 14;
@@ -44,3 +44,8 @@ message DrawingDiff {
   optional DrawingAssetsDelta assets = 6;
   optional semio.s.draw.drawing.artifact.DrawingArtboard artboard = 7;
 }
+
+message DrawingTransform { double x=1;double y=2;double scale_x=3;double scale_y=4;double shear=5;double rotation=6; }
+message DrawingTraceParams { double threshold=1;double simplify_epsilon=2; }
+message DrawingFillPatch { optional semio.s.draw.drawing.artifact.FillStyle value=1; }
+message DrawingStrokePatch { optional semio.s.draw.drawing.artifact.StrokeStyle value=1; }

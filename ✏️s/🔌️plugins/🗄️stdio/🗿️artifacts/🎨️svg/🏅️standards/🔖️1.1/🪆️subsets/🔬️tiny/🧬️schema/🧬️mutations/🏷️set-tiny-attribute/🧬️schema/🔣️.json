@@ -14,10 +14,37 @@
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Element path",
+          "de": "Elementpfad"
+        },
+        "description": {
+          "en": "Child indices leading from the root element to the element, each counted from 0.",
+          "de": "Kindindizes vom Wurzelelement bis zum Element, jeweils ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
       }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Attribute",
+          "de": "Attribut"
+        },
+        "description": {
+          "en": "Qualified name of the attribute that is set or removed.",
+          "de": "Qualifizierter Name des Attributs, das gesetzt oder entfernt wird."
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "value": {
       "anyOf": [
@@ -27,7 +54,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "Attribute value; cleared, the attribute is removed.",
+          "de": "Attributwert; geleert wird das Attribut entfernt."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

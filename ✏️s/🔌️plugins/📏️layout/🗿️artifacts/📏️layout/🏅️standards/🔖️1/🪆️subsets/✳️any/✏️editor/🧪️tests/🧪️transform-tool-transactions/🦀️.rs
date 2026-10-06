@@ -296,7 +296,7 @@ async fn gumball_drag(app: &mut LayoutApp, dx: f64) {
 /// 🧮️ The fresh fold of a log of frame-selection leaves on the demo document.
 fn folded(log: &[LayoutMutation]) -> LayoutSnapshot {
     use protocol::{Mutation, MutationDiff};
-    log.iter().fold(crate::standards::v1::subsets::any::schema::default_document(), |document, mutation| mutation.diff(&document).diff().apply(&document).expect("the leaf applies"))
+    log.iter().fold(crate::standards::v1::subsets::any::io::text::snapshot::default_document(), |document, mutation| mutation.diff(&document).diff().apply(&document).expect("the leaf applies"))
 }
 
 fn drag_leaf(dx: f64) -> LayoutMutation {
@@ -399,7 +399,7 @@ async fn a_drag_edited_onto_a_missing_frame_blocks_finalize_until_its_targets_ar
 fn reference_chips_name_frames_by_kind_content_and_page() {
     use semio_framework_ui_locale::Locale;
     use semio_framework_ui_locale::Terminology;
-    let document = crate::standards::v1::subsets::any::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let frame = ["frame".to_string()];
     let chip = |kinds: &[String], id: &str, locale| <LayoutPlayApp as ArtifactEditor>::entity_label(&document, kinds, id).map(|label| label.resolve(Terminology::Native, locale).to_string());
     assert_eq!(chip(&frame, "frame-text-1", Locale::En).as_deref(), Some("Text Frame \u{201c}Hello layout\u{201d} \u{b7} Page 1"));

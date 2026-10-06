@@ -1,0 +1,5 @@
+# Foundation Testing Registration
+
+The extracted private observation helper now belongs to hub-testing/hub-test-expectation. Hub Foundation named inputs point to its actual testing implementation; retired fixture-expectation schema ownership and its schema-child identity are gone. The current application session test configuration belongs to hub-testing-config and selects the actual installed composition entry. Existing executable broker profiles and targets remain the same. The plugin executor updates independent plain ownership/context witnesses against these declarations.
+
+Actual Nx Foundation execution passed12tests264assertions, including independently parsed graphs, full TypeScript graph compilation, Node/WebCrypto authentication, transport bounds, injection/readiness, hostile definition parsing and exact registration inputs. Strict credential source predicates now select the actual exported run_native_entrypoint/run_mcp_entrypoint functions; ordering, fd3 closure, no leaked authority, supervisor and hostile mutations remain. The independent syn source oracle uses those exact selectors too; its native run is not claimed here.

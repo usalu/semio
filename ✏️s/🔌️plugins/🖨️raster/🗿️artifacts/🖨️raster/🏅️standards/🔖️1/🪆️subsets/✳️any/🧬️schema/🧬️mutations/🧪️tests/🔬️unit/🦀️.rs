@@ -1,5 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::{empty_raster_snapshot, layer_name, layer_visible};
+use crate::standards::v1::subsets::any::schema::{layer_name, layer_visible};
+use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
 use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use protocol::Mutation;
 
@@ -146,8 +147,8 @@ async fn store_applies_layer_create() {
     // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
     // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
     // built with the artifact's own `raster_document_store_owners`, never bare.
-    store.install_document_store_owners_exact(crate::spr::raster_document_store_owners());
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], description: None, transaction: None }).await.expect("apply");
+    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_owners());
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     store::os_store::test_support::close_plain_test_store(&mut store);
 }
@@ -355,9 +356,9 @@ fn retire_projection_closes_every_owned_map_in_a_displaced_projection() {
 fn retire_cold_closes_every_owned_map_in_a_displaced_diff() {
     let mut replacement = empty_raster_snapshot();
     replacement.layers.push(adjustment_layer_with_params("replacement-brighten"));
-    let whole = crate::diff::text::diff_from_snapshot(replacement);
+    let whole = crate::standards::v1::subsets::any::schema::diff::diff_from_snapshot(replacement);
     <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(whole);
-    let sparse = crate::diff::text::diff_add_layer(None, 0, adjustment_layer_with_params("added-brighten"));
+    let sparse = crate::standards::v1::subsets::any::schema::diff::diff_add_layer(None, 0, adjustment_layer_with_params("added-brighten"));
     <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(sparse);
 }
 
@@ -406,7 +407,7 @@ fn json_export_serializes_a_populated_document() {
     document.id = "json-export-populated".into();
     document.layers.push(adjustment_layer_with_params("brighten"));
     document.assets.insert("seed".into(), crate::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("one export asset fits the owned map");
-    let bytes = crate::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&document).expect("a populated raster document exports as json");
+    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&document).expect("a populated raster document exports as json");
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
     let text = String::from_utf8(bytes).expect("json export is utf-8");
     assert!(text.contains("\"brightness\""), "the export carries the adjustment params: {text}");

@@ -1,0 +1,9 @@
+# Rust Path Line Cursor
+
+The authored TypeScript path inspector previously sliced and split the full preceding source text for each emitted reference. Its line computation now uses one monotone UTF-16 cursor counting LF while the first-argument token offsets advance. API declarations, root admission, callable recognition, path decoding, output fields and shared fixtures are unchanged; total preceding-source scanning is linear rather than repeated per reference. No timing threshold or native performance claim is made.
+
+Actual guarded publicationcc4df6 retains a complete before/after/inverse pair and immediate predecessor/current hashes in `generated/runtime-direction/path-line-cursor-publication-1.json`. Independent current-source review and actual old/new APIs agree on four adversarial nested-call, multiline raw-string, CRLF, Unicode and skipped-root controls. Ascending emitted first-argument token starts justify the cursor; LF counting matches the previous prefix split.
+
+The first owning invocation80794 named a nonexistent project and genuinely ended1 before the test route; its raw log is retained as tooling failure. Correct current existing owning Nx route25677 actually ended0: three tests/105assertions/zero failures for the same30path+fiveinvalid-root controls, installed Rust grammar/JSON5/Ajv, runtime DEBUG observations and strict/noEmit TypeScript. The raw `path-line-cursor-owning-2.log` and actual terminal receipt are retained. Test source identity at dispatch was not separately captured; the publication source identity and current-after observation are distinct facts.
+
+Rust counterpart source1 and its shared35controls remain immutable in Native's active paired epoch. Genuine native RED1087 reached exactly two missing-inspector E0425 errors; GREEN and any Rust line-cursor successor remain pending. No runtime equivalence to the different native source epoch is inferred.

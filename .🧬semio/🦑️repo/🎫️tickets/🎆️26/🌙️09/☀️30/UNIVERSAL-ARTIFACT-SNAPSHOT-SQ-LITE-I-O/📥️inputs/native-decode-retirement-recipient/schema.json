@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "native-decode/retirement-recipient/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "slots",
+    "logicalBytes",
+    "pageBytes",
+    "pages",
+    "maximumItems",
+    "maximumBytes",
+    "maximumOwnerWords",
+    "cases",
+    "maximumAllocation",
+    "initialAllocation"
+  ],
+  "properties": {
+    "schema": {
+      "const": "native-decode/retirement-recipient/v1"
+    },
+    "slots": {
+      "const": 1
+    },
+    "logicalBytes": {
+      "const": 8194
+    },
+    "pageBytes": {
+      "const": 4096
+    },
+    "pages": {
+      "const": 3
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "const": 4096
+    },
+    "maximumOwnerWords": {
+      "const": 4
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "missing",
+          "mode": "missing",
+          "entered": 0,
+          "error": "ownership",
+          "retained": false
+        },
+        {
+          "id": "success",
+          "mode": "success",
+          "entered": 1,
+          "error": null,
+          "retained": true
+        },
+        {
+          "id": "refusal",
+          "mode": "refusal",
+          "entered": 1,
+          "error": "invalid",
+          "retained": true
+        },
+        {
+          "id": "canceled",
+          "mode": "canceled",
+          "entered": 0,
+          "error": "canceled",
+          "retained": false
+        },
+        {
+          "id": "over-limit",
+          "mode": "over-limit",
+          "entered": 0,
+          "error": "ownership",
+          "retained": false
+        },
+        {
+          "id": "occupied",
+          "mode": "occupied",
+          "entered": 1,
+          "error": "ownership",
+          "retained": true
+        },
+        {
+          "id": "initial-4096",
+          "mode": "initial-4096",
+          "entered": 1,
+          "error": "ownership",
+          "retained": false
+        },
+        {
+          "id": "canceled-after-wrapper",
+          "mode": "canceled-after-wrapper",
+          "entered": 0,
+          "error": "canceled",
+          "retained": false
+        },
+        {
+          "id": "interior-canceled",
+          "mode": "interior-canceled",
+          "entered": 1,
+          "error": "canceled",
+          "retained": true
+        }
+      ]
+    },
+    "maximumAllocation": {
+      "const": 65536
+    },
+    "initialAllocation": {
+      "const": 4096
+    }
+  }
+}

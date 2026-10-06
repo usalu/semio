@@ -63,7 +63,7 @@
     },
     {
       "id": "nested-fixture-root-leaf",
-      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧬️mutations/🧮️demo",
+      "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo",
       "path": "🧬️mutations/➕️add-n",
       "owner": "🧬️mutations/➕️add-n",
       "form": "descriptor",

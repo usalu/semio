@@ -1,3 +1,6 @@
+use crate::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_pretty;
+use crate::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_text;
+use crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use super::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

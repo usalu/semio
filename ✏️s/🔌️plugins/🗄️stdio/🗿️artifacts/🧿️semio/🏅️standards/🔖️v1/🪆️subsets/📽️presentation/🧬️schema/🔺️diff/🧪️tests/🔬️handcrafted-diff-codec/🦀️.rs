@@ -1,5 +1,5 @@
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 /// 🧪️ `SlideShapeDiff::Replace` coverage: a shape-KIND change at the same slide/shape index
 /// (never reachable through any single mutation variant — only through a real structural

@@ -9,7 +9,8 @@
 //! carries on a cell the solve coloured differently.
 
 use crate::mutations::pin_pixel;
-use crate::schema::snapshot::{decode_base64, pin_index, BitmapSnapshot};
+use crate::schema::snapshot::{pin_index, BitmapSnapshot};
+use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64};
 use crate::BitmapMutation;
 use semio_framework_plugin::{ArtifactView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

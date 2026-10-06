@@ -108,5 +108,3 @@ export const parseEn1996MortarType: NormWireReader<En1996MortarType> = normWireL
 export const parseEn1996UnitGroup: NormWireReader<En1996UnitGroup> = normWireLiteral("Group1", "Group2", "Group3", "Group4");
 export const parseEn1996UnitMaterial: NormWireReader<En1996UnitMaterial> = normWireLiteral("Clay", "CalciumSilicate", "Aerated", "Concrete");
 export const parseEn1996WallType: NormWireReader<En1996WallType> = normWireLiteral("LoadBearing", "Shear", "NonLoadBearing");
-
-export * from "./🪶️sqlite/🟦️.ts";

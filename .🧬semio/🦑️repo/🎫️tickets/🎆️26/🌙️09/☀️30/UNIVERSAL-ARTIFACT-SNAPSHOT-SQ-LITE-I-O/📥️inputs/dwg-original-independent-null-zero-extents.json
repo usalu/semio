@@ -1,0 +1,3358 @@
+{
+  "factory": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🟦️.ts",
+  "emptyRecipe": "clear drawing.objects only; preserve document, header and all other drawing fields",
+  "cases": [
+    {
+      "id": "full",
+      "rows": 1311,
+      "valueBytes": 67485,
+      "schemaBytes": 251168,
+      "tableCount": 277,
+      "maxColumns": 142,
+      "tables": [
+        {
+          "table": "dwg_annotation_scale",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 52
+        },
+        {
+          "table": "dwg_application_history",
+          "width": 12,
+          "rows": 1,
+          "semanticBytes": 81
+        },
+        {
+          "table": "dwg_application_info",
+          "width": 10,
+          "rows": 1,
+          "semanticBytes": 127
+        },
+        {
+          "table": "dwg_application_property",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 122
+        },
+        {
+          "table": "dwg_arc_entity",
+          "width": 13,
+          "rows": 1,
+          "semanticBytes": 76
+        },
+        {
+          "table": "dwg_assoc_2d_constraint_group",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_assoc_network",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_assoc_network_member",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 93
+        },
+        {
+          "table": "dwg_associative_action",
+          "width": 8,
+          "rows": 3,
+          "semanticBytes": 198
+        },
+        {
+          "table": "dwg_associative_action_dependency",
+          "width": 6,
+          "rows": 5,
+          "semanticBytes": 240
+        },
+        {
+          "table": "dwg_associative_dependency",
+          "width": 17,
+          "rows": 3,
+          "semanticBytes": 342
+        },
+        {
+          "table": "dwg_associative_dimension_dependency_body",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 17
+        },
+        {
+          "table": "dwg_associative_geometry_dependency",
+          "width": 4,
+          "rows": 1,
+          "semanticBytes": 29
+        },
+        {
+          "table": "dwg_associative_value_dependency",
+          "width": 4,
+          "rows": 1,
+          "semanticBytes": 31
+        },
+        {
+          "table": "dwg_associative_variable",
+          "width": 10,
+          "rows": 1,
+          "semanticBytes": 47
+        },
+        {
+          "table": "dwg_auxiliary_header",
+          "width": 18,
+          "rows": 1,
+          "semanticBytes": 147
+        },
+        {
+          "table": "dwg_axis_constraint",
+          "width": 2,
+          "rows": 2,
+          "semanticBytes": 32
+        },
+        {
+          "table": "dwg_block_action",
+          "width": 2,
+          "rows": 4,
+          "semanticBytes": 56
+        },
+        {
+          "table": "dwg_block_action_base_point",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 34
+        },
+        {
+          "table": "dwg_block_action_base_point_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 84
+        },
+        {
+          "table": "dwg_block_action_dependency",
+          "width": 5,
+          "rows": 8,
+          "semanticBytes": 320
+        },
+        {
+          "table": "dwg_block_action_display_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_action_node_identifier",
+          "width": 4,
+          "rows": 12,
+          "semanticBytes": 384
+        },
+        {
+          "table": "dwg_block_action_offset_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "dwg_block_alignment_grip",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "dwg_block_alignment_grip_orientation_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 84
+        },
+        {
+          "table": "dwg_block_alignment_parameter",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "dwg_block_base_point_base_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 94
+        },
+        {
+          "table": "dwg_block_base_point_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "dwg_block_base_point_parameter",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_block_begin_entity",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_block_element",
+          "width": 2,
+          "rows": 9,
+          "semanticBytes": 108
+        },
+        {
+          "table": "dwg_block_end_entity",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_block_flip_action",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 44
+        },
+        {
+          "table": "dwg_block_flip_definition_base_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "dwg_block_flip_definition_end_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 94
+        },
+        {
+          "table": "dwg_block_flip_grip",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 17
+        },
+        {
+          "table": "dwg_block_flip_grip_orientation_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_flip_label_point_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_flip_parameter",
+          "width": 11,
+          "rows": 1,
+          "semanticBytes": 58
+        },
+        {
+          "table": "dwg_block_grip",
+          "width": 7,
+          "rows": 4,
+          "semanticBytes": 164
+        },
+        {
+          "table": "dwg_block_grip_location_component",
+          "width": 3,
+          "rows": 8,
+          "semanticBytes": 160
+        },
+        {
+          "table": "dwg_block_grip_location_coordinate",
+          "width": 6,
+          "rows": 12,
+          "semanticBytes": 516
+        },
+        {
+          "table": "dwg_block_header_insert_backreference_handle",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_block_header_owned_entity_handle",
+          "width": 5,
+          "rows": 3,
+          "semanticBytes": 120
+        },
+        {
+          "table": "dwg_block_header_record",
+          "width": 26,
+          "rows": 1,
+          "semanticBytes": 162
+        },
+        {
+          "table": "dwg_block_linear_allowed_value",
+          "width": 6,
+          "rows": 3,
+          "semanticBytes": 129
+        },
+        {
+          "table": "dwg_block_linear_constraint_allowed_value",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 94
+        },
+        {
+          "table": "dwg_block_linear_constraint_parameter",
+          "width": 10,
+          "rows": 2,
+          "semanticBytes": 116
+        },
+        {
+          "table": "dwg_block_linear_grip",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_block_linear_grip_orientation_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "dwg_block_linear_parameter",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 27
+        },
+        {
+          "table": "dwg_block_move_action",
+          "width": 12,
+          "rows": 1,
+          "semanticBytes": 69
+        },
+        {
+          "table": "dwg_block_one_point_definition_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_one_point_parameter",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "dwg_block_parameter_connection",
+          "width": 5,
+          "rows": 14,
+          "semanticBytes": 504
+        },
+        {
+          "table": "dwg_block_parameter_dependency_body",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 17
+        },
+        {
+          "table": "dwg_block_parameter_property",
+          "width": 3,
+          "rows": 14,
+          "semanticBytes": 336
+        },
+        {
+          "table": "dwg_block_representation_data",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "dwg_block_scale_action",
+          "width": 8,
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "dwg_block_stretch_action",
+          "width": 12,
+          "rows": 1,
+          "semanticBytes": 74
+        },
+        {
+          "table": "dwg_block_two_point_definition_base_coordinate",
+          "width": 6,
+          "rows": 8,
+          "semanticBytes": 320
+        },
+        {
+          "table": "dwg_block_two_point_definition_end_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_two_point_parameter",
+          "width": 4,
+          "rows": 4,
+          "semanticBytes": 128
+        },
+        {
+          "table": "dwg_block_visibility_definition_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "dwg_block_visibility_eligible_handle",
+          "width": 5,
+          "rows": 3,
+          "semanticBytes": 120
+        },
+        {
+          "table": "dwg_block_visibility_grip",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_block_visibility_parameter",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_cell_background_color",
+          "width": 9,
+          "rows": 4,
+          "semanticBytes": 192
+        },
+        {
+          "table": "dwg_cell_border",
+          "width": 13,
+          "rows": 8,
+          "semanticBytes": 632
+        },
+        {
+          "table": "dwg_cell_border_color",
+          "width": 9,
+          "rows": 8,
+          "semanticBytes": 384
+        },
+        {
+          "table": "dwg_cell_content_color",
+          "width": 9,
+          "rows": 4,
+          "semanticBytes": 192
+        },
+        {
+          "table": "dwg_cell_content_format",
+          "width": 18,
+          "rows": 4,
+          "semanticBytes": 424
+        },
+        {
+          "table": "dwg_cell_margins",
+          "width": 19,
+          "rows": 4,
+          "semanticBytes": 480
+        },
+        {
+          "table": "dwg_cell_style",
+          "width": 7,
+          "rows": 4,
+          "semanticBytes": 212
+        },
+        {
+          "table": "dwg_circle_entity",
+          "width": 7,
+          "rows": 1,
+          "semanticBytes": 44
+        },
+        {
+          "table": "dwg_class",
+          "width": 13,
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "dwg_class_reserved_value",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_constrained_bounded_line",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "dwg_constrained_datum_line",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_constrained_implicit_point",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "dwg_constraint_connected_node_identifier",
+          "width": 4,
+          "rows": 42,
+          "semanticBytes": 1344
+        },
+        {
+          "table": "dwg_constraint_coordinate",
+          "width": 8,
+          "rows": 6,
+          "semanticBytes": 337
+        },
+        {
+          "table": "dwg_constraint_geometry",
+          "width": 4,
+          "rows": 3,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_constraint_group_member_handle",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_constraint_node",
+          "width": 5,
+          "rows": 14,
+          "semanticBytes": 592
+        },
+        {
+          "table": "dwg_constraint_work_plane_coordinate",
+          "width": 6,
+          "rows": 3,
+          "semanticBytes": 129
+        },
+        {
+          "table": "dwg_constraint_work_plane_vector",
+          "width": 3,
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_custom_property",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "dwg_dependency",
+          "width": 12,
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "dwg_dictionary",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "dwg_dictionary_entry",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 88
+        },
+        {
+          "table": "dwg_dictionary_variable",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 17
+        },
+        {
+          "table": "dwg_dimension_clone_insertion_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_dimension_definition_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_extension_line_1_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "dwg_dimension_extension_line_2_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 94
+        },
+        {
+          "table": "dwg_dimension_insertion_scale_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "dwg_dimension_style_behavior",
+          "width": 11,
+          "rows": 1,
+          "semanticBytes": 88
+        },
+        {
+          "table": "dwg_dimension_style_control_additional_handle",
+          "width": 5,
+          "rows": 3,
+          "semanticBytes": 120
+        },
+        {
+          "table": "dwg_dimension_style_dimension_line_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "dwg_dimension_style_extension_line_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "dwg_dimension_style_fill_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "dwg_dimension_style_geometry",
+          "width": 34,
+          "rows": 1,
+          "semanticBytes": 223
+        },
+        {
+          "table": "dwg_dimension_style_r2010",
+          "width": 14,
+          "rows": 1,
+          "semanticBytes": 81
+        },
+        {
+          "table": "dwg_dimension_style_record",
+          "width": 20,
+          "rows": 1,
+          "semanticBytes": 101
+        },
+        {
+          "table": "dwg_dimension_style_text",
+          "width": 34,
+          "rows": 1,
+          "semanticBytes": 225
+        },
+        {
+          "table": "dwg_dimension_style_text_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "dwg_dimension_style_units",
+          "width": 20,
+          "rows": 1,
+          "semanticBytes": 160
+        },
+        {
+          "table": "dwg_dimension_text_midpoint_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_distance_constraint",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "dwg_document",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 49
+        },
+        {
+          "table": "dwg_draw_order_entry",
+          "width": 7,
+          "rows": 2,
+          "semanticBytes": 112
+        },
+        {
+          "table": "dwg_drawing",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_drawing_extmax",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 84
+        },
+        {
+          "table": "dwg_drawing_extmin",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "dwg_drawing_layer",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "dwg_dynamic_block_proxy_node",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_dynamic_block_purge_preventer",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "dwg_ellipse_entity",
+          "width": 10,
+          "rows": 1,
+          "semanticBytes": 65
+        },
+        {
+          "table": "dwg_entity",
+          "width": 2,
+          "rows": 19,
+          "semanticBytes": 307
+        },
+        {
+          "table": "dwg_entity_center_coordinate",
+          "width": 6,
+          "rows": 3,
+          "semanticBytes": 105
+        },
+        {
+          "table": "dwg_entity_color",
+          "width": 9,
+          "rows": 19,
+          "semanticBytes": 1064
+        },
+        {
+          "table": "dwg_entity_common",
+          "width": 27,
+          "rows": 19,
+          "semanticBytes": 2983
+        },
+        {
+          "table": "dwg_entity_ellipse_major_axis_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_extrusion_coordinate",
+          "width": 6,
+          "rows": 8,
+          "semanticBytes": 344
+        },
+        {
+          "table": "dwg_entity_face3d_corner_coordinate",
+          "width": 6,
+          "rows": 3,
+          "semanticBytes": 129
+        },
+        {
+          "table": "dwg_entity_insert_insertion_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_entity_insert_scale_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_line_end_coordinate",
+          "width": 6,
+          "rows": 4,
+          "semanticBytes": 164
+        },
+        {
+          "table": "dwg_entity_line_start_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_point_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "dwg_entity_spline_control_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_spline_knot",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 84
+        },
+        {
+          "table": "dwg_entity_spline_weight",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "dwg_entity_text_alignment_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_text_insertion_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_vertex_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_evaluation_expression",
+          "width": 14,
+          "rows": 24,
+          "semanticBytes": 1364
+        },
+        {
+          "table": "dwg_evaluation_graph",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_evaluation_graph_edge",
+          "width": 8,
+          "rows": 2,
+          "semanticBytes": 128
+        },
+        {
+          "table": "dwg_evaluation_graph_node",
+          "width": 6,
+          "rows": 3,
+          "semanticBytes": 144
+        },
+        {
+          "table": "dwg_evaluation_point_group_10_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 94
+        },
+        {
+          "table": "dwg_evaluation_point_group_11_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_explicit_constraint",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "dwg_extended_entity_data",
+          "width": 5,
+          "rows": 82,
+          "semanticBytes": 3280
+        },
+        {
+          "table": "dwg_face3d_entity",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_geometric_constraint",
+          "width": 4,
+          "rows": 11,
+          "semanticBytes": 352
+        },
+        {
+          "table": "dwg_header",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_header_dimension_settings",
+          "width": 112,
+          "rows": 1,
+          "semanticBytes": 610
+        },
+        {
+          "table": "dwg_header_drawing_policy",
+          "width": 82,
+          "rows": 1,
+          "semanticBytes": 461
+        },
+        {
+          "table": "dwg_header_integer_settings",
+          "width": 29,
+          "rows": 1,
+          "semanticBytes": 232
+        },
+        {
+          "table": "dwg_header_modes",
+          "width": 22,
+          "rows": 1,
+          "semanticBytes": 176
+        },
+        {
+          "table": "dwg_header_relations",
+          "width": 96,
+          "rows": 1,
+          "semanticBytes": 640
+        },
+        {
+          "table": "dwg_header_scalars",
+          "width": 69,
+          "rows": 1,
+          "semanticBytes": 266
+        },
+        {
+          "table": "dwg_header_space",
+          "width": 7,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_header_space_extents_maximum",
+          "width": 6,
+          "rows": 4,
+          "semanticBytes": 140
+        },
+        {
+          "table": "dwg_header_space_extents_minimum",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_insertion_base",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_limits_maximum",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_limits_minimum",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_origin",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_back",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_bottom",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_front",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_left",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_right",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_top",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_ucs_x_axis",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_y_axis",
+          "width": 6,
+          "rows": 6,
+          "semanticBytes": 210
+        },
+        {
+          "table": "dwg_header_strings",
+          "width": 12,
+          "rows": 1,
+          "semanticBytes": 26
+        },
+        {
+          "table": "dwg_header_time",
+          "width": 10,
+          "rows": 1,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_header_units",
+          "width": 18,
+          "rows": 1,
+          "semanticBytes": 75
+        },
+        {
+          "table": "dwg_insert_attribute_handle",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_insert_entity",
+          "width": 8,
+          "rows": 1,
+          "semanticBytes": 49
+        },
+        {
+          "table": "dwg_layer_record",
+          "width": 13,
+          "rows": 1,
+          "semanticBytes": 88
+        },
+        {
+          "table": "dwg_layer_record_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "dwg_layout",
+          "width": 40,
+          "rows": 1,
+          "semanticBytes": 250
+        },
+        {
+          "table": "dwg_layout_coordinate",
+          "width": 8,
+          "rows": 17,
+          "semanticBytes": 1080
+        },
+        {
+          "table": "dwg_layout_viewport_handle",
+          "width": 5,
+          "rows": 3,
+          "semanticBytes": 120
+        },
+        {
+          "table": "dwg_line_entity",
+          "width": 4,
+          "rows": 1,
+          "semanticBytes": 19
+        },
+        {
+          "table": "dwg_linear_dimension_entity",
+          "width": 36,
+          "rows": 1,
+          "semanticBytes": 236
+        },
+        {
+          "table": "dwg_linetype_dash",
+          "width": 23,
+          "rows": 2,
+          "semanticBytes": 300
+        },
+        {
+          "table": "dwg_linetype_record",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 27
+        },
+        {
+          "table": "dwg_lwpolyline_entity",
+          "width": 11,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_lwpolyline_vertex",
+          "width": 13,
+          "rows": 2,
+          "semanticBytes": 124
+        },
+        {
+          "table": "dwg_lwpolyline_vertex_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_material",
+          "width": 21,
+          "rows": 1,
+          "semanticBytes": 132
+        },
+        {
+          "table": "dwg_material_channels",
+          "width": 7,
+          "rows": 1,
+          "semanticBytes": 56
+        },
+        {
+          "table": "dwg_material_color",
+          "width": 8,
+          "rows": 3,
+          "semanticBytes": 167
+        },
+        {
+          "table": "dwg_material_map",
+          "width": 12,
+          "rows": 6,
+          "semanticBytes": 463
+        },
+        {
+          "table": "dwg_material_map_transform_coordinate",
+          "width": 6,
+          "rows": 24,
+          "semanticBytes": 1050
+        },
+        {
+          "table": "dwg_mleader_arrow",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "dwg_mleader_block_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_mleader_block_scale_coordinate",
+          "width": 6,
+          "rows": 4,
+          "semanticBytes": 175
+        },
+        {
+          "table": "dwg_mleader_block_style",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 61
+        },
+        {
+          "table": "dwg_mleader_dogleg",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "dwg_mleader_landing",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 27
+        },
+        {
+          "table": "dwg_mleader_leader_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_mleader_leader_style",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 38
+        },
+        {
+          "table": "dwg_mleader_style",
+          "width": 20,
+          "rows": 1,
+          "semanticBytes": 144
+        },
+        {
+          "table": "dwg_mleader_text_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_mleader_text_style",
+          "width": 19,
+          "rows": 1,
+          "semanticBytes": 159
+        },
+        {
+          "table": "dwg_mline_element_color",
+          "width": 9,
+          "rows": 3,
+          "semanticBytes": 144
+        },
+        {
+          "table": "dwg_mline_fill_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_mline_style",
+          "width": 17,
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "dwg_mline_style_element",
+          "width": 7,
+          "rows": 3,
+          "semanticBytes": 166
+        },
+        {
+          "table": "dwg_object",
+          "width": 13,
+          "rows": 82,
+          "semanticBytes": 8773
+        },
+        {
+          "table": "dwg_object_reactor_handle",
+          "width": 5,
+          "rows": 246,
+          "semanticBytes": 9840
+        },
+        {
+          "table": "dwg_object_referenced_handle",
+          "width": 5,
+          "rows": 82,
+          "semanticBytes": 3280
+        },
+        {
+          "table": "dwg_placeholder",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_plot_options",
+          "width": 8,
+          "rows": 1,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_point_entity",
+          "width": 7,
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "dwg_polyface_face_entity",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_polyface_face_index",
+          "width": 4,
+          "rows": 4,
+          "semanticBytes": 128
+        },
+        {
+          "table": "dwg_polyface_mesh_entity",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "dwg_polyface_mesh_vertex_handle",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_polyline3d_entity",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "dwg_polyline3d_vertex_handle",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_preview",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 49
+        },
+        {
+          "table": "dwg_preview_palette_entry",
+          "width": 7,
+          "rows": 2,
+          "semanticBytes": 112
+        },
+        {
+          "table": "dwg_preview_pixel_index",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_product_information",
+          "width": 7,
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "dwg_property_expression_reference",
+          "width": 5,
+          "rows": 8,
+          "semanticBytes": 320
+        },
+        {
+          "table": "dwg_registered_application_record",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_revision",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_revision_history",
+          "width": 4,
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "dwg_sequence_end_entity",
+          "width": 1,
+          "rows": 1,
+          "semanticBytes": 8
+        },
+        {
+          "table": "dwg_sort_entities_table",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "dwg_spline_entity",
+          "width": 11,
+          "rows": 1,
+          "semanticBytes": 72
+        },
+        {
+          "table": "dwg_stretch_point",
+          "width": 3,
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_stretch_point_coordinate",
+          "width": 6,
+          "rows": 3,
+          "semanticBytes": 129
+        },
+        {
+          "table": "dwg_stretch_selection",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_stretch_selection_vertex_index",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_stretch_selector",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_stretch_selector_point_index",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_summary",
+          "width": 16,
+          "rows": 1,
+          "semanticBytes": 151
+        },
+        {
+          "table": "dwg_table_control",
+          "width": 10,
+          "rows": 9,
+          "semanticBytes": 216
+        },
+        {
+          "table": "dwg_table_control_entry",
+          "width": 5,
+          "rows": 27,
+          "semanticBytes": 936
+        },
+        {
+          "table": "dwg_table_record",
+          "width": 6,
+          "rows": 7,
+          "semanticBytes": 332
+        },
+        {
+          "table": "dwg_table_style",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "dwg_template",
+          "width": 4,
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "dwg_text_entity",
+          "width": 26,
+          "rows": 1,
+          "semanticBytes": 161
+        },
+        {
+          "table": "dwg_text_style_record",
+          "width": 18,
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "dwg_variable_value_dependency_handle",
+          "width": 5,
+          "rows": 3,
+          "semanticBytes": 120
+        },
+        {
+          "table": "dwg_vertex_entity",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_viewport_ambient_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_viewport_entity",
+          "width": 58,
+          "rows": 1,
+          "semanticBytes": 374
+        },
+        {
+          "table": "dwg_viewport_frozen_layer_handle",
+          "width": 5,
+          "rows": 3,
+          "semanticBytes": 120
+        },
+        {
+          "table": "dwg_viewport_grid_unit_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "dwg_viewport_record",
+          "width": 142,
+          "rows": 1,
+          "semanticBytes": 922
+        },
+        {
+          "table": "dwg_viewport_record_ambient_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "dwg_viewport_snap_base_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_snap_unit_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 94
+        },
+        {
+          "table": "dwg_viewport_status_flag",
+          "width": 4,
+          "rows": 23,
+          "semanticBytes": 872
+        },
+        {
+          "table": "dwg_viewport_ucs_origin_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_ucs_x_axis_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_viewport_ucs_y_axis_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 49
+        },
+        {
+          "table": "dwg_viewport_view_center_coordinate",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "dwg_viewport_view_direction_coordinate",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 84
+        },
+        {
+          "table": "dwg_viewport_view_target_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visibility_state",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 56
+        },
+        {
+          "table": "dwg_visibility_state_expression_handle",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 40
+        },
+        {
+          "table": "dwg_visibility_state_visible_handle",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_visual_edge_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_visual_edge_intersection_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_visual_edge_obscured_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_visual_edge_silhouette_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_visual_face_monochrome_color",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 48
+        },
+        {
+          "table": "dwg_visual_style",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 37
+        },
+        {
+          "table": "dwg_visual_style_display",
+          "width": 9,
+          "rows": 1,
+          "semanticBytes": 51
+        },
+        {
+          "table": "dwg_visual_style_edge",
+          "width": 37,
+          "rows": 1,
+          "semanticBytes": 256
+        },
+        {
+          "table": "dwg_visual_style_face",
+          "width": 18,
+          "rows": 1,
+          "semanticBytes": 112
+        },
+        {
+          "table": "dwg_xrecord",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_xrecord_binary_octet",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_xrecord_object_id_handle",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_xrecord_value",
+          "width": 22,
+          "rows": 83,
+          "semanticBytes": 3903
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "id": "emptyObjects",
+      "rows": 63,
+      "valueBytes": 5086,
+      "schemaBytes": 251168,
+      "tableCount": 277,
+      "maxColumns": 142,
+      "tables": [
+        {
+          "table": "dwg_annotation_scale",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_application_history",
+          "width": 12,
+          "rows": 1,
+          "semanticBytes": 81
+        },
+        {
+          "table": "dwg_application_info",
+          "width": 10,
+          "rows": 1,
+          "semanticBytes": 127
+        },
+        {
+          "table": "dwg_application_property",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 122
+        },
+        {
+          "table": "dwg_arc_entity",
+          "width": 13,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_assoc_2d_constraint_group",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_assoc_network",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_assoc_network_member",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_associative_action",
+          "width": 8,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_associative_action_dependency",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_associative_dependency",
+          "width": 17,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_associative_dimension_dependency_body",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_associative_geometry_dependency",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_associative_value_dependency",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_associative_variable",
+          "width": 10,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_auxiliary_header",
+          "width": 18,
+          "rows": 1,
+          "semanticBytes": 147
+        },
+        {
+          "table": "dwg_axis_constraint",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_action",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_action_base_point",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_action_base_point_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_action_dependency",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_action_display_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_action_node_identifier",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_action_offset_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_alignment_grip",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_alignment_grip_orientation_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_alignment_parameter",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_base_point_base_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_base_point_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_base_point_parameter",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_begin_entity",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_element",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_end_entity",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_flip_action",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_flip_definition_base_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_flip_definition_end_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_flip_grip",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_flip_grip_orientation_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_flip_label_point_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_flip_parameter",
+          "width": 11,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_grip",
+          "width": 7,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_grip_location_component",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_grip_location_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_header_insert_backreference_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_header_owned_entity_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_header_record",
+          "width": 26,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_linear_allowed_value",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_linear_constraint_allowed_value",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_linear_constraint_parameter",
+          "width": 10,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_linear_grip",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_linear_grip_orientation_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_linear_parameter",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_move_action",
+          "width": 12,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_one_point_definition_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_one_point_parameter",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_parameter_connection",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_parameter_dependency_body",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_parameter_property",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_representation_data",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_scale_action",
+          "width": 8,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_stretch_action",
+          "width": 12,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_two_point_definition_base_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_two_point_definition_end_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_two_point_parameter",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_visibility_definition_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_visibility_eligible_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_visibility_grip",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_block_visibility_parameter",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_cell_background_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_cell_border",
+          "width": 13,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_cell_border_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_cell_content_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_cell_content_format",
+          "width": 18,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_cell_margins",
+          "width": 19,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_cell_style",
+          "width": 7,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_circle_entity",
+          "width": 7,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_class",
+          "width": 13,
+          "rows": 1,
+          "semanticBytes": 106
+        },
+        {
+          "table": "dwg_class_reserved_value",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_constrained_bounded_line",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_constrained_datum_line",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_constrained_implicit_point",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_constraint_connected_node_identifier",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_constraint_coordinate",
+          "width": 8,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_constraint_geometry",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_constraint_group_member_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_constraint_node",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_constraint_work_plane_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_constraint_work_plane_vector",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_custom_property",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "dwg_dependency",
+          "width": 12,
+          "rows": 1,
+          "semanticBytes": 102
+        },
+        {
+          "table": "dwg_dictionary",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dictionary_entry",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dictionary_variable",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_clone_insertion_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_definition_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_extension_line_1_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_extension_line_2_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_insertion_scale_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_behavior",
+          "width": 11,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_control_additional_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_dimension_line_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_extension_line_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_fill_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_geometry",
+          "width": 34,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_r2010",
+          "width": 14,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_record",
+          "width": 20,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_text",
+          "width": 34,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_text_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_style_units",
+          "width": 20,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dimension_text_midpoint_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_distance_constraint",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_document",
+          "width": 5,
+          "rows": 1,
+          "semanticBytes": 49
+        },
+        {
+          "table": "dwg_draw_order_entry",
+          "width": 7,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_drawing",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_drawing_extmax",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 84
+        },
+        {
+          "table": "dwg_drawing_extmin",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 45
+        },
+        {
+          "table": "dwg_drawing_layer",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "dwg_dynamic_block_proxy_node",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_dynamic_block_purge_preventer",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_ellipse_entity",
+          "width": 10,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_center_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_common",
+          "width": 27,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_ellipse_major_axis_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_extrusion_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_face3d_corner_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_insert_insertion_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_insert_scale_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_line_end_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_line_start_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_point_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_spline_control_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_spline_knot",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_spline_weight",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_text_alignment_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_text_insertion_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_entity_vertex_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_evaluation_expression",
+          "width": 14,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_evaluation_graph",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_evaluation_graph_edge",
+          "width": 8,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_evaluation_graph_node",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_evaluation_point_group_10_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_evaluation_point_group_11_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_explicit_constraint",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_extended_entity_data",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_face3d_entity",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_geometric_constraint",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header",
+          "width": 2,
+          "rows": 1,
+          "semanticBytes": 16
+        },
+        {
+          "table": "dwg_header_dimension_settings",
+          "width": 112,
+          "rows": 1,
+          "semanticBytes": 610
+        },
+        {
+          "table": "dwg_header_drawing_policy",
+          "width": 82,
+          "rows": 1,
+          "semanticBytes": 461
+        },
+        {
+          "table": "dwg_header_integer_settings",
+          "width": 29,
+          "rows": 1,
+          "semanticBytes": 232
+        },
+        {
+          "table": "dwg_header_modes",
+          "width": 22,
+          "rows": 1,
+          "semanticBytes": 176
+        },
+        {
+          "table": "dwg_header_relations",
+          "width": 96,
+          "rows": 1,
+          "semanticBytes": 640
+        },
+        {
+          "table": "dwg_header_scalars",
+          "width": 69,
+          "rows": 1,
+          "semanticBytes": 266
+        },
+        {
+          "table": "dwg_header_space",
+          "width": 7,
+          "rows": 2,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_header_space_extents_maximum",
+          "width": 6,
+          "rows": 4,
+          "semanticBytes": 140
+        },
+        {
+          "table": "dwg_header_space_extents_minimum",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_insertion_base",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_limits_maximum",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_limits_minimum",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_origin",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_back",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_bottom",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_front",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_left",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_right",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_origin_top",
+          "width": 6,
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "dwg_header_space_ucs_x_axis",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_header_space_ucs_y_axis",
+          "width": 6,
+          "rows": 6,
+          "semanticBytes": 210
+        },
+        {
+          "table": "dwg_header_strings",
+          "width": 12,
+          "rows": 1,
+          "semanticBytes": 26
+        },
+        {
+          "table": "dwg_header_time",
+          "width": 10,
+          "rows": 1,
+          "semanticBytes": 80
+        },
+        {
+          "table": "dwg_header_units",
+          "width": 18,
+          "rows": 1,
+          "semanticBytes": 75
+        },
+        {
+          "table": "dwg_insert_attribute_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_insert_entity",
+          "width": 8,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_layer_record",
+          "width": 13,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_layer_record_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_layout",
+          "width": 40,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_layout_coordinate",
+          "width": 8,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_layout_viewport_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_line_entity",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_linear_dimension_entity",
+          "width": 36,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_linetype_dash",
+          "width": 23,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_linetype_record",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_lwpolyline_entity",
+          "width": 11,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_lwpolyline_vertex",
+          "width": 13,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_lwpolyline_vertex_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_material",
+          "width": 21,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_material_channels",
+          "width": 7,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_material_color",
+          "width": 8,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_material_map",
+          "width": 12,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_material_map_transform_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_arrow",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_block_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_block_scale_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_block_style",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_dogleg",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_landing",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_leader_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_leader_style",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_style",
+          "width": 20,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_text_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mleader_text_style",
+          "width": 19,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mline_element_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mline_fill_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mline_style",
+          "width": 17,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_mline_style_element",
+          "width": 7,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_object",
+          "width": 13,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_object_reactor_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_object_referenced_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_placeholder",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_plot_options",
+          "width": 8,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_point_entity",
+          "width": 7,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_polyface_face_entity",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_polyface_face_index",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_polyface_mesh_entity",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_polyface_mesh_vertex_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_polyline3d_entity",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_polyline3d_vertex_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_preview",
+          "width": 6,
+          "rows": 1,
+          "semanticBytes": 49
+        },
+        {
+          "table": "dwg_preview_palette_entry",
+          "width": 7,
+          "rows": 2,
+          "semanticBytes": 112
+        },
+        {
+          "table": "dwg_preview_pixel_index",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_product_information",
+          "width": 7,
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "dwg_property_expression_reference",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_registered_application_record",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_revision",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "dwg_revision_history",
+          "width": 4,
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "dwg_sequence_end_entity",
+          "width": 1,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_sort_entities_table",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_spline_entity",
+          "width": 11,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_stretch_point",
+          "width": 3,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_stretch_point_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_stretch_selection",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_stretch_selection_vertex_index",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_stretch_selector",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_stretch_selector_point_index",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_summary",
+          "width": 16,
+          "rows": 1,
+          "semanticBytes": 151
+        },
+        {
+          "table": "dwg_table_control",
+          "width": 10,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_table_control_entry",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_table_record",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_table_style",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_template",
+          "width": 4,
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "dwg_text_entity",
+          "width": 26,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_text_style_record",
+          "width": 18,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_variable_value_dependency_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_vertex_entity",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_ambient_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_entity",
+          "width": 58,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_frozen_layer_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_grid_unit_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_record",
+          "width": 142,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_record_ambient_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_snap_base_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_snap_unit_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_status_flag",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_ucs_origin_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_ucs_x_axis_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_ucs_y_axis_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_view_center_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_view_direction_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_viewport_view_target_coordinate",
+          "width": 6,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visibility_state",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visibility_state_expression_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visibility_state_visible_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visual_edge_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visual_edge_intersection_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visual_edge_obscured_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visual_edge_silhouette_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visual_face_monochrome_color",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visual_style",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visual_style_display",
+          "width": 9,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visual_style_edge",
+          "width": 37,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_visual_style_face",
+          "width": 18,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_xrecord",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_xrecord_binary_octet",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_xrecord_object_id_handle",
+          "width": 5,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "dwg_xrecord_value",
+          "width": 22,
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    }
+  ]
+}

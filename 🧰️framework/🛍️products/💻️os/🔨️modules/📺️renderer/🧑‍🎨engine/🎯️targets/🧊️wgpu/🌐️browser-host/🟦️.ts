@@ -312,8 +312,8 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
         cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
         hostIo: createWgpuPageHostIo(),
         onProgress: (stage, progress, worker) => {
-            const contract = bootLifecycleSchema["x-semio-lifecycle"];
-            if (disposed || bootComplete || options.signal?.aborted || typeof stage !== "string" || stage.length === 0 || stage.length > contract.maximumStageScalars * 2 || [...stage].length > contract.maximumStageScalars || !Number.isFinite(progress) || progress < contract.minimumProgress || progress > contract.maximumProgress) return;
+            const contract = bootLifecycleSchema.properties;
+            if (disposed || bootComplete || options.signal?.aborted || typeof stage !== "string" || stage.length === 0 || stage.length > contract.stage.maxLength * 2 || [...stage].length > contract.stage.maxLength || !Number.isFinite(progress) || progress < contract.progress.minimum || progress > contract.progress.maximum) return;
             try { options.onProgress?.({ stage, progress, worker: { ...worker } }); } catch { }
             status.textContent = `${stage} ${Math.round(progress * 100)}%${worker.degraded ? (options.locale === "de" ? " · verzögerte Taktung" : " · deferred cadence") : ""}`;
             status.dataset.workerDegraded = worker.degraded ? "true" : "false";

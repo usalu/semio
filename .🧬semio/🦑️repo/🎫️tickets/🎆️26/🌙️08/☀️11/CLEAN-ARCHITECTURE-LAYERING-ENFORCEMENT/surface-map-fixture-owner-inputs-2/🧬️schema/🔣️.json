@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "owner",
+    "fixtures"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "owner": {
+      "const": "surface.tiled-map.vector-tiles"
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "sha256",
+          "byteCount"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^sample-[0-5]-[0-9]+-[0-9]+\\.pbf$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "byteCount": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

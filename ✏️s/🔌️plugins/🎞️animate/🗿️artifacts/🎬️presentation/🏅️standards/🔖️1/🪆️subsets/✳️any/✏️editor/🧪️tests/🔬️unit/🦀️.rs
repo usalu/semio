@@ -137,7 +137,7 @@ fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
         let encoded = serde_json::to_vec(&mutation).expect("third-party JSON encode");
         let decoded: PresentationConfigMutation = serde_json::from_slice(&encoded).expect("third-party JSON decode");
         assert_eq!(decoded, mutation);
-        assert_eq!(factory.preflight(&decoded, None, store::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
+        assert_eq!(factory.preflight(&decoded, store::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
     }
 }
 
@@ -149,7 +149,6 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
     let mut preparation = AnimatePresentationConfigPreparation {
         base: None,
         mutation: Some(PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value })),
-        description: None,
         authority: None,
         candidate: None,
         sealed_candidate: None,

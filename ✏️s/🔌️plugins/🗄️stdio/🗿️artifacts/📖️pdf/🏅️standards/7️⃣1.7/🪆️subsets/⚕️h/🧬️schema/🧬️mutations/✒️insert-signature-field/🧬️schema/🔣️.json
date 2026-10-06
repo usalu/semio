@@ -14,7 +14,21 @@
       "description": "Aggregate discriminator spliced in by PdfHMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Field name",
+          "de": "Feldname"
+        },
+        "description": {
+          "en": "Partial name the new signature field carries.",
+          "de": "Teilname, den das neue Signaturfeld trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

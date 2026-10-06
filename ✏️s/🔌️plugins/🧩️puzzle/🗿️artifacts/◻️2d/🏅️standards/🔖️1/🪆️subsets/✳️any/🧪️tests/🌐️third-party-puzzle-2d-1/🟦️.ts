@@ -33,7 +33,7 @@ import { dirname, join } from "node:path";
 import Graph from "graphology";
 import { compare, applyPatch, deepClone, type Operation } from "fast-json-patch";
 import { Validator } from "jsonschema";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🧫️Vectors
@@ -81,7 +81,7 @@ function tagOf(kind: string): string {
 const DISCOVERED = new Map<string, Vector[]>();
 
 function vectors(ctx: AdapterContext): Vector[] {
-  const root = dirname(ctx.fixture(VECTOR_ROOT_URI));
+  const root = dirname(ctx.input(VECTOR_ROOT_URI));
   const cached = DISCOVERED.get(root);
   if (cached !== undefined) return cached;
   const found: Vector[] = [];

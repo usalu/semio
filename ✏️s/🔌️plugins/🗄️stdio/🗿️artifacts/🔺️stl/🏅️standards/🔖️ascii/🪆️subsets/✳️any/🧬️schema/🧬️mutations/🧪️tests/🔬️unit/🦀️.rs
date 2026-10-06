@@ -1,7 +1,7 @@
 use super::*;
 use crate::schema::diff::{StlTriangleAdded, StlTriangleDiff, StlTriangleModified, StlTrianglesDiff};
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec, MutationDiff};
+use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
 
 //#region Fixtures
 async fn tri(nx: f64, ny: f64, nz: f64, seed: f64) -> StlTriangle {

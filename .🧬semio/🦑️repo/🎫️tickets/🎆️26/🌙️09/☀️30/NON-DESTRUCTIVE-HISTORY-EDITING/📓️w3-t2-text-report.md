@@ -666,3 +666,87 @@ Coordinator actions:
 - `describe` trinity, writer, vcs, stdio md/html/binary/deflate
 - wgpu `generate-frame-worker`
 - the S4-GATES stage-r45 rename of the guest `ledger-not-replayable` fault code
+
+## Session 5 — 2026-10-05 (S5-TEXT-STDIO, coordinator `⚪3f26aaa1…`)
+
+Successor of S4-TEXT and S4-STDIO (one executor for both; the stdio half is in `📓️s3-stdio-report.md` § Session 5). Scratch:
+`🗑️generated/s5-text-stdio/`. Ticket inputs: `🧪️s5-text-stdio-input-ui.py` (engine), `🧪️s5-text-stdio-input-ui-table.py` (the
+reviewed table), `🧪️s5-text-stdio-input-ui.files.txt` (explicit file list), `🧪️s5-text-stdio-input-ui-check.ts` (pre-flight with
+the framework reader). Per-input table: `📓️s5-text-stdio-input-table.md`.
+
+### S5.1 Repair-first diff (fleet rule 46)
+
+- Files newer than S4.9 (22:13): trinity 19 (jack 22:28–23:00 + 23:19, rewriting 23:19), writer 1 (editor unit test 23:19), vcs 0.
+  The 22:28–23:07 jack edits are a peer's native-document wave that commit 670 (23:07:33) captured half-way: the jack text/pack
+  facet became a literal parent record with the content child as a HANDLE (`📝️text/🧬️records/🦀️.rs`, new), `📝️text/🦀️.rs` calls
+  `crate::attach_bundled_content` after both decoders, and no revision of the tree ever defined that function
+  (`git log -S'fn attach_bundled_content' -- <jack>` = empty). The bundled demo asset is not migrated either:
+  `🖼️assets/🎬️demo/🗣️.dsl.semio` still carries inline `nodes=[…]`, `🖼️assets/🎬️demo/🪆️content/` is an empty directory.
+- **Repaired (routed by S5-STORE's check, E0425 ×2 at `📝️text/🦀️.rs:30,71`)**: `🪆️content/🦀️.rs` gains `attach_bundled_content`
+  (+ private `bundled_jack_content`): a decoded document whose content handle names a child that ships with the plugin gets that
+  child as its local owner; today the only shipped child is the empty graph every fresh document starts from, every other handle
+  stays an address the host's composed boundary materializes (§20.15). **WRITTEN BUT UNVERIFIED (rule 56: foundation RED 01:32
+  `semio-framework-pack`, no cargo allowed)** — OWED command in S5.4.
+- **Still half-finished after that repair (not compile reds; user-visible)**: the Nakagin demo cannot parse through the literal
+  record (inline `nodes=`), so `default_fixture()` falls back to the EMPTY graph and `setActiveExample` loads nothing useful; the
+  text-facet laws `nakagin_example_dsl_round_trips` / `dsl_round_trip_mini_and_bundled_fixtures` will fail. Completing it needs the
+  bundled content child asset (the tower as a Semio graph document under `🖼️assets/🎬️demo/🪆️content/`) + the parent asset rewritten
+  to the handle form with the child id `store::content_id("jack-content", pack)` — a Rust fixture writer, i.e. a test build.
+
+### S5.2 P2 — declared input metadata (trinity, writer, vcs)
+
+Applied by `python3 🧪️s5-text-stdio-input-ui.py --apply --files 🧪️s5-text-stdio-input-ui.files.txt --only writer,rewriting,jack,vcs`
+(span-surgical, 15 files; outside the puzzle closure, no lock):
+
+- **writer** (10 inputs): window-config `kind` consts → `role: discriminator`; `set-camera.camera` (+ members pan X/Y stepper,
+  zoom slider log 0.1–8, snaps 0.25/0.5/1/2/4); `set-engagement-input.value` text; `set-lint-generation.value` stepper;
+  `edit-text.text` multiline; `rename-writer.newId` text.
+- **rewriting** (11 inputs + 19 shared members): `kind` discriminators; camera as above; `set-lod-mode.value`; rule/parameter keys as
+  target text keys; `newLhs` / `newRhs` labelled and described, their members declared ONCE in the artifact schema
+  (`🧬️schema/🔣️.json`: `lhs.pattern`, `lhs.whereClause` multiline, the six `Pattern` variables/kinds, `rhs.create/delete/set/merge/
+  parameters`, `set[].var/prop`, `parameters[].name/kind` with labelled options); `change-rule-layout.newPoint.x/y` steppers
+  (step 1, precision 2).
+- **`edit-before-fixture.newWorkingGraph` is declared `hidden`** with label "Before fixture" / "Ausgangszustand" and a description:
+  it is the whole working graph (nodes, edges, manifest), not a set of inputs — working-canvas edits are child-lane leaves since
+  §20.15; the row offers Withdraw only. This removes the 51 nested findings the census attributed to it without inventing labels
+  for a form nobody can use.
+- **jack** (6): `kind` discriminators, camera, lod mode, `set-query.value` multiline.
+- **vcs** (3): `rename-vcs.newTitle` text, `add-tag.tag` text, `remove-tag.tag` reference (`role: target`, `ref.kind: tag`).
+
+### S5.3 Gates run (bun, repo root; the tightened `mutation-inputs` of S5-GATES)
+
+| Command | Before (01:05) | After (01:37) |
+|---|---|---|
+| `bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts schema mutation-inputs --census --under ✏️s/🔌️plugins/🔱️trinity` | 67 findings (46 labelMissing, 5 optionLabelMissing, 3 refUnresolved, 13 malformed) | **16** = 13 `malformed` (catalogue rows of the leaves deleted in S4 → central `schema generate`) + 3 `refUnresolved` (`framework/graph/manifest/property-value.json` uncatalogued → central generate); 21 declared + 0 inferred of 23, 0 glossary labels at any depth |
+| same `--under ✏️s/🔌️plugins/✒️writer` | 0 findings, 14/14 by inference | **0**, 14 declared + 0 inferred |
+| same `--under ✏️s/🔌️plugins/🌿️vcs` | 0 findings, 6/6 by inference | **0**, 6 declared + 0 inferred |
+| `bun 🧪️s5-text-stdio-input-ui-check.ts <bundle>` (framework reader over every patched leaf, before the write) | — | 638 files, 78 findings cleared, **0 added** |
+
+### S5.4 Owed / open
+
+- **OWED (rule 56, then gate v4)**: `CARGO_BUILD_JOBS=3 cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-trinity-jack
+  -p semio-s-artifact-trinity-rewriting -p semio-s-artifact-writer-writer -p semio-s-artifact-vcs-vcs --features
+  semio-s-artifact-trinity-jack/component-app-assembly,semio-s-artifact-trinity-rewriting/component-app-assembly --lib --tests
+  --keep-going --message-format=short`, then `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-trinity -p semio-hub-writer
+  -p semio-hub-vcs --target wasm32-wasip2 --lib --keep-going`.
+- OWED (tests, ≥ 25 GiB free): the S4.9 list (jack `documents_reload_identically`, `child_history_edits_end_to_end`; rewriting both
+  composed laws; writer typing laws; vcs `canvas_pointer_wire_requires_samples_and_cancelled`).
+- P3 for these trees: the census of 23:42 already counts 0 raw `*-tool-mismatch` codes in jack, writer and vcs (converted in S4.8).
+
+### S5.5 After the cuts (10:45)
+
+- jack `attach_bundled_content`: **verified** — `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-trinity-jack -p
+  semio-s-artifact-trinity-rewriting -p semio-s-artifact-writer-writer -p semio-s-artifact-vcs-vcs --features
+  …jack/component-app-assembly,…rewriting/component-app-assembly --lib --keep-going` **exit 0** 02:36–02:40 (jack 34, rewriting
+  68, writer 4, vcs 10 warnings). `--tests` and the hub wasip2 checks stay OWED (S5.4).
+- Design §22.20: rewriting `edit-before-fixture` is WITHDRAW-ONLY — descriptor `"editable": false` (09:49; the leaf carries
+  `#[mutation_leaf(contract = ::protocol)]` only), its `newWorkingGraph` keeps label + description and no widget (the earlier
+  `hidden` was removed). **OWED**: the lib check above once more (the marker changes the derive's output).
+- Gate now (`schema mutation-inputs --census`, 09:48, before the marker is read): trinity 39 findings = 23 inside
+  `edit-before-fixture` (gone with the marker) + 13 `malformed` + 3 `refUnresolved` (both central `schema generate`); writer 0
+  (14 declared + 0 inferred); vcs 0 (6 + 0). "Trinity labels en + de": every remaining trinity input label is declared in both
+  locales (0 `labelInferred` outside the withdraw-only leaf).
+- Tool-mismatch: 0 raw codes in jack, writer, vcs (S4.8); the S5-TOOLS F21 `emit` wave will touch rewriting
+  `🕸️node-graph-edit:126` and announces first.
+- Still open from S5.1: the Nakagin demo asset (inline `nodes=` in a handle-only record) — needs a Rust fixture writer, i.e. a test
+  build; until then `default_fixture()` is the empty graph.

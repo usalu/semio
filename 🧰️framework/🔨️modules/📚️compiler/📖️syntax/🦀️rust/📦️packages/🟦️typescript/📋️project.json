@@ -30,6 +30,21 @@
         "command": "bun ./📜️script.ts test-absence",
         "forwardAllArgs": true
       }
+    },
+    "test-path-literals": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/**/*",
+        "sharedGlobals"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-path-literals",
+        "forwardAllArgs": true
+      }
     }
   }
 }

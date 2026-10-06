@@ -492,11 +492,11 @@ fn one_item_store_preparation_rejects_non_document_lanes() {
     use store::ArtifactStoreOneItemPreparationFactory;
     let artifact = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::HistoryLane::Document);
     let config = VcsOneItemPreparationFactory::<VcsDemoConfig, VcsDemoConfigMutation>::new(store::HistoryLane::Document);
-    assert!(artifact.preflight(&crate::mutations::change_counter(1), None, store::HistoryLane::Document).is_ok());
-    assert!(artifact.preflight(&crate::mutations::change_counter(1), None, store::HistoryLane::Interaction).is_err());
+    assert!(artifact.preflight(&crate::mutations::change_counter(1), store::HistoryLane::Document).is_ok());
+    assert!(artifact.preflight(&crate::mutations::change_counter(1), store::HistoryLane::Interaction).is_err());
     let mutation = VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig::default() };
-    assert!(config.preflight(&mutation, None, store::HistoryLane::Document).is_ok());
-    assert!(config.preflight(&mutation, None, store::HistoryLane::Interaction).is_err());
+    assert!(config.preflight(&mutation, store::HistoryLane::Document).is_ok());
+    assert!(config.preflight(&mutation, store::HistoryLane::Interaction).is_err());
 }
 
 #[test]
@@ -810,12 +810,12 @@ async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn the_one_item_preflight_declares_room_for_a_point_inverse() {
     let factory = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::HistoryLane::Document);
-    let footprint = store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), None, store::HistoryLane::Document)
+    let footprint = store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), store::HistoryLane::Document)
         .expect("the document lane admits its own counter mutation");
     assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     assert!(footprint.is_admissible());
     assert!(
-        store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), None, store::HistoryLane::Interaction).is_err(),
+        store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), store::HistoryLane::Interaction).is_err(),
         "the declared lane is part of the envelope the factory admits"
     );
 }

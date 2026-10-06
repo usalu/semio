@@ -1,0 +1,26 @@
+[
+  {
+    "name": "bcf",
+    "type": "BcfSnapshot",
+    "artifactKind": "s.stdio.bcf",
+    "standard": "2.1",
+    "subset": "*",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot"
+  },
+  {
+    "name": "deflate",
+    "type": "DeflateSnapshot",
+    "artifactKind": "s.stdio.deflate",
+    "standard": "rfc1950",
+    "subset": "*",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot"
+  },
+  {
+    "name": "semioText",
+    "type": "SemioTextSnapshot",
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "text",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot"
+  }
+]

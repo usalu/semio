@@ -1,0 +1,41 @@
+{
+  "contract": "identified-patchable-collection/v1",
+  "cases": [
+    {
+      "id": "a",
+      "value": 0,
+      "other": 1,
+      "delta": 1
+    },
+    {
+      "id": "café 日本語 🧰",
+      "value": 5,
+      "other": -2,
+      "delta": -7
+    },
+    {
+      "id": "a\u0000b",
+      "value": -4,
+      "other": -4,
+      "delta": null
+    },
+    {
+      "id": "",
+      "value": 13,
+      "other": 0,
+      "delta": -13
+    },
+    {
+      "id": "0",
+      "value": -1,
+      "other": 0,
+      "delta": 1
+    },
+    {
+      "id": "same",
+      "value": 9,
+      "other": 9,
+      "delta": null
+    }
+  ]
+}

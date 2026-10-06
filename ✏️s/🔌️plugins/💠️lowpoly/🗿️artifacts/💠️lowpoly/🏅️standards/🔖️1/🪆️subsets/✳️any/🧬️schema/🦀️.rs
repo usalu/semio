@@ -162,36 +162,28 @@ pub fn mesh_data_from_transfer(transfer: &semio_framework_value::DslValue, paint
     }
 }
 
-/// 🔺️ Rebuilds a fresh single-object lowpoly projection from a DWG-imported mesh. Relocated from
-/// `⚙️engine/🧵️media`. Routes through `semio_framework_value::ToValue` (not `serde_json::to_value` on `LowpolySnapshot`
-/// directly) since the snapshot transitively carries `LowpolyObject.mesh:
-/// Option<store::ArtifactChild<SemioMeshSnapshot>>`, whose `Serialize` is `#[cfg(test)]`-only
-/// (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`) — `semio_framework_value::ToValue`
-/// stays available unconditionally, and the `DslValue`→`serde_json::Value` bridge (`🌱️value/🦀️.rs`)
-/// yields the identical JSON shape.
-pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
-    let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
-    let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
-    let snapshot = crate::snapshot_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
-    Ok(semio_framework_value::ToValue::to_value(&snapshot).into())
+/// 🧱️ Builds a typed managed mesh document directly from a decoded triangle mesh.
+pub fn lowpoly_snapshot_from_mesh(mesh: &MeshData) -> Result<crate::LowpolySnapshot, String> {
+    let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|error| format!("{error:?}"))?;
+    let state = crate::LowpolyMeshState::from_mesh(halfedge);
+    let child = crate::managed_mesh_child_handle("obj-1", &state);
+    Ok(crate::LowpolySnapshot { schema: crate::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![crate::LowpolyObject {
+        id: "obj-1".into(), name: "Imported Mesh".into(), transform: crate::LowpolyTransform::default(), smooth_shading: false,
+        mesh: Some(child), paint_layers: vec![crate::LowpolyPaintLayer::new("Base")], mesh_content: String::new(), mesh_state: Some(state),
+    }] })
 }
 
-/// 🧊️ Minimal document wrapper for `3d.mesh` resources — no dedicated schema exists yet. Relocated
-/// from `⚙️engine/🧵️media`. `MeshData` implements `semio_framework_value::ToValue` first-party (hand-written in
-/// `🏗️mesh-engine/🦀️.rs`, since `serde`'s `Serialize` on it is `#[cfg(test)]`-only per the same
-/// ticket), so this bridges through that instead of `serde_json::to_value(mesh)`.
-pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
-    let document = semio_framework_value::DslValue::object([("schema".to_string(), semio_framework_value::DslValue::String("mesh.document".to_string())), ("mesh".to_string(), semio_framework_value::ToValue::to_value(mesh))]);
-    Ok(document.into())
+/// 🧬️ Projects a mesh document into its intrinsic value contract.
+pub fn mesh_document_value(mesh: &MeshData) -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::object([("schema".to_string(), semio_framework_value::DslValue::String("mesh.document".to_string())), ("mesh".to_string(), semio_framework_value::ToValue::to_value(mesh))])
 }
 
-/// 🔺️ Relocated from `⚙️engine/🧵️media`. Mirrors `mesh_document_from_mesh`'s `semio_framework_value::ToValue` bridge in
-/// reverse (`semio_framework_value::FromValue`), since `MeshData: Deserialize` is likewise `#[cfg(test)]`-only.
-pub fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<MeshData, String> {
-    doc.get("mesh")
-        .and_then(|value| semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(value.clone())).ok())
-        .filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty())
-        .map_or_else(|| Ok(semio_framework_plugin::mesh_from_kind("box")), Ok)
+/// 🧩️ Binds a nonempty triangle mesh from the intrinsic document value.
+pub fn mesh_from_document_value(document: &semio_framework_value::DslValue) -> Result<MeshData, String> {
+    let value = document.get("mesh").ok_or_else(|| "mesh document requires its typed mesh field".to_string())?;
+    let mesh: MeshData = semio_framework_value::FromValue::from_value(value.clone()).map_err(|error| error.to_string())?;
+    if mesh.positions.is_empty() || mesh.indices.is_empty() { return Err("mesh document requires nonempty positions and indices".into()); }
+    Ok(mesh)
 }
 //#endregion 🔖️MediaConversion
 
@@ -352,119 +344,15 @@ pub fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<(u32, Vec<u8>)> 
 //#endregion 🔖️PixelCompute
 
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::schema::diff::LowpolyDiff;
-    use crate::schema::mutations::LowpolyMutation;
-    use crate::schema::snapshot::LowpolySnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct LowpolyBuilderConstruction {
-        snapshot: LowpolySnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for LowpolyBuilderConstruction {
-        type Snapshot = LowpolySnapshot;
-        type Mutation = LowpolyMutation;
-        type Diff = LowpolyDiff;
-        fn empty() -> Self {
-            Self { snapshot: LowpolySnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <LowpolyDiff as protocol::MutationDiff<LowpolySnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::LowpolySnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct LowpolyParts {
-        pub snapshot: Option<LowpolySnapshot>,
-    }
-
-    pub struct LowpolyAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for LowpolyAnalyzerAnalysis {
-        type Parts = LowpolyParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.lowpoly.lowpoly", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = LowpolyParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <LowpolySnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec LowpolyBuilderFacets {
-        construction: LowpolyBuilderConstruction,
-        analysis: LowpolyAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::LowpolyComposerComposition,
-    }
-    builder: LowpolyBuilder,
-    analyzer: LowpolyAnalyzer,
-    composer: LowpolyComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests
@@ -485,3 +373,12 @@ pub use crate::LowpolyObject;
 pub use crate::LowpolyPaintLayer;
 pub use crate::LowpolySelection;
 //#endregion 🔁️Re-exports
+
+/// 🩸 Contiguous RGBA octets shared by mutations and sparse deltas.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct PixelRun {
+    pub offset: u32,
+    #[value(with = "semio_framework_value::bytes")]
+    pub bytes: Vec<u8>,
+}

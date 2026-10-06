@@ -111,9 +111,9 @@ export class GapScript extends Script {
     const manifested = new Set(registry.mutationManifests.flatMap((manifest) => manifest.mutations.map((mutation) => mutation.capability)));
     // 🧫️A capability is only genuinely covered once fixtures exist for it too. Counting a manifest as
     // sufficient would repeat the error this whole protocol exists to remove.
-    const fixtured = new Set(registry.contributions.flatMap((contribution) => contribution.fixtureManifests.map((fixture) => `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}`)));
+    const fixtured = new Set(registry.contributions.flatMap((contribution) => contribution.testEvidence.map((fixture) => `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}`)));
     const fixtureCountFor = (artifact: string, standard: string, subset: string): number =>
-      registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => fixture.target.artifact === artifact && fixture.target.standard === standard && fixture.target.subset === subset).length;
+      registry.contributions.flatMap((contribution) => contribution.testEvidence).filter((fixture) => fixture.target.artifact === artifact && fixture.target.standard === standard && fixture.target.subset === subset).length;
 
     type Row = { owner: string; catalog: string; capability: string; kinds: number; subset: string; state: string; oracles: string; owed: string; fixtures: number };
     const rows: Row[] = [];

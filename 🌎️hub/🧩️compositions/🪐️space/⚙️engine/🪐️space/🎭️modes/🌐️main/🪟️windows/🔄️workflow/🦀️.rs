@@ -6,7 +6,8 @@ use crate::engine::space::config::SpaceConfig;
 use crate::engine::space::terminology::SStudioLabels;
 use semio_framework_os::{build_os_workflow_operator_infos, os_workflow_to_flow_host_snapshot_json, os_workflow_to_node_graph_payload, OsWorkflowCamera, WorkflowSnapshot};
 use semio_framework_os_kernel::Viewport2d;
-use semio_framework_plugin::{resolve_labels, ActionDescriptor, InteractionRef, LocalizedLabel, SurfaceKind, ViewModel, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_locale::{LocalizedLabel};
+use semio_framework_plugin::{resolve_labels, ActionDescriptor, InteractionRef, SurfaceKind, ViewModel, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_scene::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene};
 
 /// 🎯️ Builds a controller-addressed `ActionDescriptor` with no args — the `s_play_action` helper
@@ -50,6 +51,7 @@ pub async fn definition() -> WindowKindDefinition {
     let config = SpaceConfig::default();
     let engagement = workflow_engagement(&config, projection.graph.nodes.len()).await;
     WindowKindDefinition {
+        initial_utility_id: None,
         id: S_PLAY_WINDOW_WORKFLOW.into(),
         label: LocalizedLabel::native("Workflow", "Workflow"),
         body_key: S_PLAY_BODY_WORKFLOW.into(),
@@ -94,7 +96,7 @@ async fn json_array_to_node_graph_find_items(json: &str) -> Vec<NodeGraphFindIte
     semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
 }
 
-async fn json_array_to_node_graph_operators<T: dsl::ToValue + Clone>(operators: &[T]) -> Vec<NodeGraphOperatorRecord> {
+async fn json_array_to_node_graph_operators<T: semio_framework_value::ToValue + Clone>(operators: &[T]) -> Vec<NodeGraphOperatorRecord> {
     Some(semio_framework_pack_json::to_json_string(&operators.to_vec())).and_then(|json| semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).unwrap_or_default()
 }
 // TEMP(Wave 3) end

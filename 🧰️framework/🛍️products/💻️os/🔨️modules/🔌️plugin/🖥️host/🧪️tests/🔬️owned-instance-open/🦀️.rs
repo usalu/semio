@@ -11,7 +11,7 @@ fn repo_root()->PathBuf {
     path
 }
 fn fixture_component()->PathBuf {
-    let path=repo_root().join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧫️fixtures/🧩️component/📦️packages/🦀️rust/dist/component-dev/semio_framework_plugin_host_fixture.wasm");
+    let path=repo_root().join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/component-dev/semio_framework_plugin_host_test_component.wasm");
     assert!(path.is_file(),"neutral fixture producer prerequisite did not deliver {}",path.display());
     path
 }
@@ -159,8 +159,8 @@ async fn wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter() {
 
 
 const STAGED_CODEC_COMPONENTS:[(&str,&str,&str,&str,CodecSweepRuntime,GenesisMirrorText);2]=[
-    ("semio:neutral-host-fixture","semio_framework_plugin_host_fixture.wasm",FIXTURE_ARTIFACT_KIND,FIXTURE_DOCUMENT_SCHEMA,CodecSweepRuntime::Owned,GenesisMirrorText::Structured),
-    ("semio:neutral-host-fixture","semio_framework_plugin_host_fixture.wasm",FIXTURE_ARTIFACT_KIND,FIXTURE_DOCUMENT_SCHEMA,CodecSweepRuntime::Jit,GenesisMirrorText::Structured),
+    ("semio:neutral-host-fixture","semio_framework_plugin_host_test_component.wasm",FIXTURE_ARTIFACT_KIND,FIXTURE_DOCUMENT_SCHEMA,CodecSweepRuntime::Owned,GenesisMirrorText::Structured),
+    ("semio:neutral-host-fixture","semio_framework_plugin_host_test_component.wasm",FIXTURE_ARTIFACT_KIND,FIXTURE_DOCUMENT_SCHEMA,CodecSweepRuntime::Jit,GenesisMirrorText::Structured),
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -378,7 +378,7 @@ fn a_call_waiting_for_another_calls_assembly_relays_its_fuel_honours_its_cancell
 
 #[test]
 fn neutral_component_inventory_is_portable_and_names_both_independent_runtime_oracles() {
-    let source=include_str!("../../🧫️fixtures/🧩️component/🧫️fixtures/🔣️.json");
+    let source=include_str!("../../🧪️testing/🧩️component/🧫️fixtures/🔣️.json");
     let law:serde_json::Value=serde_json::from_str(source).unwrap();
     let owned:semio_framework_value::DslValue=semio_framework_pack_json::from_json_str(source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&owned)).unwrap(),law);

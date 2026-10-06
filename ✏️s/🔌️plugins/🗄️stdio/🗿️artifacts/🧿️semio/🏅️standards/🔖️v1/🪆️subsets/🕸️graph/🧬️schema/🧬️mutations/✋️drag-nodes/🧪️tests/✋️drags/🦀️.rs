@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✋️drag-nodes/✋️drags/🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("drag-nodes before snapshot decodes")
+    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("drag-nodes before snapshot decodes")
 }
 fn expected_after() -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(AFTER).expect("drag-nodes after snapshot decodes")
+    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER).expect("drag-nodes after snapshot decodes")
 }
 fn mutation() -> SemioGraphMutation {
     semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("drag-nodes mutation decodes")
@@ -53,8 +53,8 @@ async fn the_undo_moves_every_node_back_to_its_base_position() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioGraphSnapshot = crate::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::graph::schema::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
+        let decoded: SemioGraphSnapshot = crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::graph::io::text::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
         assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(text).expect("snapshot reparses"), "drag-nodes/drags: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("drag-nodes mutation encodes");

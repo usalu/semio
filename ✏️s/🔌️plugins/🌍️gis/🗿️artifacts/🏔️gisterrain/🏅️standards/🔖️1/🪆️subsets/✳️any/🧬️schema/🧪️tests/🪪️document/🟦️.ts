@@ -1,6 +1,6 @@
 /** 🧪️ Terrain facets preserve durable child handles independently of window preferences. */
 import {test} from "bun:test";
-import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import assert from "node:assert/strict";
 import { applyPatch, type Operation } from "fast-json-patch";
 import { join } from "node:path";

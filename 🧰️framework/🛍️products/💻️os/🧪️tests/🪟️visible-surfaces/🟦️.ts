@@ -10,6 +10,8 @@ import neutral from "../../../../🔨️modules/🛂️manifest/🧫️fixtures/
 import { BROWSER_ACTOR_VISIBLE_SURFACES_V1, browserActorVisibleSurfacesV1, type BrowserActorVisibleTurnV1 } from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🟦️.ts";
 import schema from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🧬️schema/🔣️.json" with { type: "json" };
 
+import examples from "../../🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🧫️fixtures/🔣️.json" with { type: "json" };
+
 const contract = BROWSER_ACTOR_VISIBLE_SURFACES_V1;
 const turns = Object.keys(contract.turns) as BrowserActorVisibleTurnV1[];
 
@@ -19,7 +21,7 @@ describe("🪟️ browser actor visible surfaces", () => {
     expect(validate(contract), JSON.stringify(validate.errors)).toBe(true);
   });
 
-  it.each(contract.cases.map((row) => [row.name, row] as const))("%s", (_name, row) => {
+  it.each(examples.cases.map((row) => [row.name, row] as const))("%s", (_name, row) => {
     expect(browserActorVisibleSurfacesV1(row.surfaces, row.turn as BrowserActorVisibleTurnV1)).toEqual(row.visible);
   });
 

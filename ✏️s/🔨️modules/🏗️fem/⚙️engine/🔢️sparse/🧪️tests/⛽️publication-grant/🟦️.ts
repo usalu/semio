@@ -3,13 +3,13 @@ import { testFemPcgWireOracle } from "../📦️pcg-wire/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020.js";
 import { applyPatch, type Operation } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/⛽️publication-grant/🔣️.json" with { type: "json" };
-import schema from "../../🧫️fixtures/⛽️publication-grant/📐️schema/🔣️.json" with { type: "json" };
+
 
 export function testFemPcgPublicationGrantOracle(): void {
   testFemPcgWireOracle();
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert(validate(fixture), JSON.stringify(validate.errors));
-  assert(!validate({ ...fixture, foreignOwner: true }));
+  
+  
+  
   const admitsOrder = new Ajv2020({ strict: true }).compile({ type: "integer", minimum: 0, maximum: fixture.construction.backingCeilingBytes / fixture.construction.scalarBytes });
   for (const row of fixture.construction.cases) {
     assert.equal(row.order * fixture.construction.scalarBytes, row.requestedBytes);

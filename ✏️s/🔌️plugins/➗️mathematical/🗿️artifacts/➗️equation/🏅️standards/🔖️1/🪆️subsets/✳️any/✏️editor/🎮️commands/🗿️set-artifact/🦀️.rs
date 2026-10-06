@@ -1,6 +1,6 @@
 //! 📄️ 📄️ Equation play app commands command — `set-artifact`.
 
-use crate::document_dsl::EquationGraphDsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::EquationGraphDsl;
 use crate::op::EquationMutation;
 use crate::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
 use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
@@ -18,7 +18,7 @@ pub struct SetArtifact {
 }
 
 pub fn handle(payload: &SetArtifact, doc: &ArtifactView<'_, EquationSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<EquationMutation, NoConfigMutation>, Fault> {
-    let Ok(graph) = crate::document_dsl::math_graph_from_dsl(payload.graph.clone()) else {
+    let Ok(graph) = crate::standards::v1::subsets::any::io::text::snapshot::math_graph_from_dsl(payload.graph.clone()) else {
         return Ok(Emit::default());
     };
     let mut operations = Vec::new();

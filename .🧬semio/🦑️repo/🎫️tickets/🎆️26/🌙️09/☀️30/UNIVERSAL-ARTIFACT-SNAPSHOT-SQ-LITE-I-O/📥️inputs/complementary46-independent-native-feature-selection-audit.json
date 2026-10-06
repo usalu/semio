@@ -1,0 +1,497 @@
+[
+  {
+    "owner": "Wfc2dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Grid2dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "BitmapSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Wfc3dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "GisTerrainSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "GisMapSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "VcsSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "PresentationSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "PlaygroundSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "SequenceSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Fem2dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [
+      "snapshotSqliteTestFeatures: [\"component-app-assembly\"]"
+    ],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": [
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 40,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      }
+    ]
+  },
+  {
+    "owner": "Fem3dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [
+      "snapshotSqliteTestFeatures: [\"component-app-assembly\"]"
+    ],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": [
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 40,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      }
+    ]
+  },
+  {
+    "owner": "ProgramSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Process3dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [
+      "snapshotSqliteTestFeatures: []"
+    ],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "LowpolySnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "WiresSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "FormsSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "LayoutSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "CadSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "En1990Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Din18599Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Din16798Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "En1991Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "En1992Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Vdi3805Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Iso16757Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "En1993Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "En1994Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Din4108Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "En1996Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "En1995Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "En1999Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "En1998Snapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "PlaybookSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "ProcedureSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "RemodelingSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "EnergyModelSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "RewritingSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/📜️script.ts",
+    "options": [
+      "snapshotSqliteTestFeatures: [\"component-app-assembly\"]"
+    ],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": [
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 302,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      }
+    ]
+  },
+  {
+    "owner": "JackSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/📜️script.ts",
+    "options": [
+      "snapshotSqliteTestFeatures: [\"component-app-assembly\"]"
+    ],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": [
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 312,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      }
+    ]
+  },
+  {
+    "owner": "DagSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "DrawingSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": []
+  },
+  {
+    "owner": "Puzzle2dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [
+      "snapshotSqliteTestFeatures:[\"component-app-assembly\"]"
+    ],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": [
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 89,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      },
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 91,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      },
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 99,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      }
+    ]
+  },
+  {
+    "owner": "Puzzle3dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [
+      "testFeatures: [\"component-app-assembly\"]",
+      "snapshotSqliteTestFeatures:[\"component-app-assembly\"]"
+    ],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": [
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 253,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      }
+    ]
+  },
+  {
+    "owner": "Block2dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": true,
+    "overrideFeature": true,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite-native",
+    "cfg": [
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 226,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      }
+    ]
+  },
+  {
+    "owner": "Block5dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [
+      "snapshotSqliteTestFeatures:[\"component-app-assembly\"]"
+    ],
+    "override": false,
+    "overrideFeature": false,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite native",
+    "cfg": [
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 251,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      }
+    ]
+  },
+  {
+    "owner": "Block3dSnapshot",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+    "options": [],
+    "override": true,
+    "overrideFeature": true,
+    "target": "bun ./📜️script.ts test-snapshot-sqlite-native",
+    "cfg": [
+      {
+        "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "line": 263,
+        "text": "#[cfg(feature=\"component-app-assembly\")]"
+      }
+    ]
+  }
+]

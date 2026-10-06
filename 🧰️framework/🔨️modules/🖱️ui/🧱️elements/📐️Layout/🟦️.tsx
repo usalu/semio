@@ -91,6 +91,11 @@ export interface LayoutProps {
   /** 🎥️ Optional chrome row directly under `navbar`, above the canvas/panels row (e.g. {@link TutorialBar}) — `flex-shrink-0` like `navbar`/`footer`, never affecting the middle column's z-index invariant below. */
   subnavbar?: React.ReactNode;
   footer?: React.ReactNode;
+  /** 🧱️ Optional chrome row directly under `footer` — the last row of the shell, in flow (`flex-shrink-0`), so what it holds
+   * (the shell's status bands) reserves its own space and lies over nothing and under nothing. It cannot sit between the
+   * canvas/panels row and the footer: an open chrome-hosted bottom panel pulls its cap half a row below that region, into
+   * the footer band (`chromeHostedOpenPanelPositionStyle`), and would paint over a row placed there. */
+  subfooter?: React.ReactNode;
   /** 🧭️ Per-anchor panel config — panels float over the navbar/footer/canvas, keyed by which anchor they grow from. */
   panels?: Partial<Record<Anchor, Omit<PanelProps, "anchor">>>;
   mobilePanel?: LayoutMobilePanelProps;
@@ -103,7 +108,7 @@ export interface LayoutProps {
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobilePanel, canvas, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => (
+const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, panels, mobilePanel, canvas, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => (
   <UiMobileProvider mobile={mobile}>
     <GhostProvider>
       {/* 🎨️ One continuous base floor for navbar + canvas + footer — chrome rows stay transparent over this paint. */}
@@ -144,6 +149,11 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobi
             </div>
           )}
           {footer && <div className="flex-shrink-0">{footer}</div>}
+          {subfooter && (
+            <div data-slot="layout-subfooter" className="flex-shrink-0">
+              {subfooter}
+            </div>
+          )}
         </SurfaceScope>
       </div>
     </GhostProvider>

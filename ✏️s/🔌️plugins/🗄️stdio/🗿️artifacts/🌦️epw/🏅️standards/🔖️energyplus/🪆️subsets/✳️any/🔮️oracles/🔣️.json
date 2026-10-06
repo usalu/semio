@@ -336,9 +336,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-record-applied",
       "class": "handcrafted",
       "target": {
@@ -381,7 +380,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). InsertRecord{index:1,record:hour-2-interpolated} inserts a real hourly EnergyPlus record between the existing two, matching the committed set-snapshot leaf's own Hannover IWEC fixture schema."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-record-applied",
       "class": "handcrafted",
       "target": {
@@ -424,7 +422,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). RemoveRecord{index:0} drops the first hourly record."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-comments1-applied",
       "class": "handcrafted",
       "target": {
@@ -467,7 +464,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetComments1{value} overwrites the raw COMMENTS 1 header line."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-comments2-applied",
       "class": "handcrafted",
       "target": {
@@ -510,7 +506,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetComments2{value} overwrites the raw COMMENTS 2 header line."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-data-periods-applied",
       "class": "handcrafted",
       "target": {
@@ -553,7 +548,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetDataPeriods replaces the whole DATA PERIODS header record (start weekday and date range), matching EpwDataPeriods's own nested shape."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-design-conditions-applied",
       "class": "handcrafted",
       "target": {
@@ -596,7 +590,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetDesignConditions{value} overwrites the raw DESIGN CONDITIONS header line with a real ASHRAE-style design-day record."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-ground-temperatures-applied",
       "class": "handcrafted",
       "target": {
@@ -639,7 +632,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetGroundTemperatures{value} overwrites the raw GROUND TEMPERATURES header line with a real 12-month soil-temperature record at 0.5 m depth."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-holidays-dst-applied",
       "class": "handcrafted",
       "target": {
@@ -682,7 +674,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetHolidaysDst{value} flips the leading DST-observed flag from No to Yes."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-location-applied",
       "class": "handcrafted",
       "target": {
@@ -725,7 +716,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetLocation replaces the whole LOCATION header record with a different real German WMO station (Berlin), matching EpwLocation's own field set."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-record-field-applied",
       "class": "handcrafted",
       "target": {
@@ -768,7 +758,6 @@
       "notes": "Handcrafted EpwSnapshot before/after pair, schema and base data taken from this subset's own committed set-snapshot leaf fixture (a real Hannover IWEC weather record). SetRecordField{recordIndex:1,fieldIndex:<dryBulbTemp's ordinal in the fixed 35-field EnergyPlus data-record layout>,value:\"9.9\"} overwrites one field of one hourly record in place, leaving every other field and record untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-typical-extreme-periods-applied",
       "class": "handcrafted",
       "target": {

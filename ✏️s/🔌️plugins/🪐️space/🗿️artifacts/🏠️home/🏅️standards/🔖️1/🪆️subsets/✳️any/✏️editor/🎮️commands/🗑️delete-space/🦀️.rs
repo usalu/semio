@@ -5,7 +5,7 @@
 //! empty-`.args()` dialog degenerates to a plain confirm/cancel per `DialogDefinition`'s own doc)
 //! emits the real `Effect::ReplayShellCommand` (contract §C6).
 
-use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};

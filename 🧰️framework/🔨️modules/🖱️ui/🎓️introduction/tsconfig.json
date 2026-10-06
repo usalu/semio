@@ -1,0 +1,19 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "bun",
+      "node"
+    ],
+    "incremental": false
+  },
+  "include": [
+    "📜️script.ts",
+    "🟦️.ts",
+    "🧪️tests/**/*.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    "**/🗑️generated/**"
+  ]
+}

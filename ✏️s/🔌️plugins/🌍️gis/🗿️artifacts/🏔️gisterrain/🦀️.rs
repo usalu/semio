@@ -218,20 +218,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod bounds {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
@@ -244,11 +236,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
                     pub mod operations;
@@ -257,10 +244,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod change_exaggeration {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/🦀️.rs"]
@@ -270,13 +253,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/💾️binary/🦀️.rs"]
-                            pub mod binary;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/🧪️tests/⛰️raises/🦀️.rs"]
                             mod tests_raises_the_exaggeration_from_one_to_two_and_a_half;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-exaggeration/📝️text/🦀️.rs"]
-                            pub mod text;
                         }
                         #[path = "."]
                         pub mod change_imported_features {
@@ -287,13 +266,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/💾️binary/🦀️.rs"]
-                            pub mod binary;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/🧪️tests/📥️imports/🦀️.rs"]
                             mod tests_imports_a_single_harbor_position_descriptor;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📥change-imported-features/📝️text/🦀️.rs"]
-                            pub mod text;
                         }
                     }
                 }
@@ -438,62 +413,36 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
-pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-}
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-}
+
+
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::schema::diff::binary::*;
-    }
+
+
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::mutations::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-    }
+
+
+
 }
 pub mod snapshot {
     pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-    }
+
+
+
 }
 pub use crate::standards::v1::subsets::any::schema::diff::GisTerrainDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
@@ -603,3 +552,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v1::subsets::any::io::{GisterrainBuilderConstruction, GisTerrainParts, GisTerrainAnalyzerAnalysis, GisterrainBuilderFacets, GisterrainBuilder, GisTerrainAnalyzer, GisTerrainComposer};

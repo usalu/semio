@@ -1,0 +1,27 @@
+{
+  "x-semio": {
+    "kind": "collection",
+    "members": [
+      {
+        "directory": "🧬️mutations",
+        "id": "s.stdio.gltf.io.mutation.text",
+        "kind": "io",
+        "responsibility": "Canonical one-line glTF mutation transport.",
+        "io": {
+          "format": "s.stdio.gltf.mutation.text",
+          "direction": "transport"
+        }
+      },
+      {
+        "directory": "💡️inferences",
+        "id": "s.stdio.gltf.inference.io.text",
+        "kind": "io",
+        "responsibility": "Deterministic glTF inference text codec.",
+        "io": {
+          "format": "s.stdio.gltf.inference.text",
+          "direction": "export"
+        }
+      }
+    ]
+  }
+}

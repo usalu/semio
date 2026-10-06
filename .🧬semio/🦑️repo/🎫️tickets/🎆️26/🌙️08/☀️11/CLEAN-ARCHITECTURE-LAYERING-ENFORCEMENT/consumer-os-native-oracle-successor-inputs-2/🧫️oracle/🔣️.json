@@ -1,0 +1,13 @@
+{
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧪️tests/🔬️paged-ledger/📜️oracle.py",
+  "before": null,
+  "after": "\"\"\"Independent list oracle for a paged history ledger.\n\nReads the language-agnostic fixture, pushes that many ids, deletes the named logical index, and appends the replacement. The Rust ledger's live order must equal this JSON array.\n\"\"\"\n\nimport json\nimport pathlib\n\nfixture = pathlib.Path(__file__).resolve().parents[2] / \"🧬️schema\" / \"📸️paged-history-ledger\" / \"🔣️.json\"\nlaw = json.loads(fixture.read_text())\nitems = [str(index) for index in range(law[\"pushes\"])]\ndel items[law[\"removeLogical\"]]\nitems.append(law[\"replacement\"])\nprint(json.dumps(items))\n",
+  "beforeHash": null,
+  "afterHash": "679f655aaac5a7f66378405b64b23a3cd3566508a9eb066bc1ee801100d0f378",
+  "definingFixture": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧬️schema/📸️paged-history-ledger/🔣️.json",
+    "source": "{\n  \"pushes\": 80,\n  \"removeLogical\": 17,\n  \"replacement\": \"replacement\"\n}\n",
+    "sha256": "27eb06690eff65bf2e986e5a4de5eb0ef1ab74bcd8c7be487472b1332732f199"
+  },
+  "originalCompilerPreIdentityClaimed": false
+}

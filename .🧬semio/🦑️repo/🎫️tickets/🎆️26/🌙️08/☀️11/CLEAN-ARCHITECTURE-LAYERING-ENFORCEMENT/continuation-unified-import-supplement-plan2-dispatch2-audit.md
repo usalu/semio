@@ -1,0 +1,5 @@
+# Unified Import Supplement and Dispatch
+
+All original plan fields and 118 native pairs remain unchanged except the appended check list and import receipt. Three true-null canonical TS additions retain complete before/after/inverse bodies and exact frame hashes. All 3,317 held endpoints independently match, including the metadata-qualified snapshot lock. All raw supplement bindings match. Original four Cargo graph observations remain inherited: no manifest or Rust source changed. Static traversal reports zero missing relative imports; bare/dynamic loader dependencies remain qualified.
+
+Reviewed dispatcher2 adds exact supplemental authority guards and separate immutable pre/terminal paths, conserving both actual original owning route arguments and source/cancellation protocol. Separate gates permit execution only. No native or whole success is inferred. An initial audit comparison mistakenly omitted nativeExecuted from only one plan; correcting the observer comparison confirmed no producer change. No false proof or source write was emitted.

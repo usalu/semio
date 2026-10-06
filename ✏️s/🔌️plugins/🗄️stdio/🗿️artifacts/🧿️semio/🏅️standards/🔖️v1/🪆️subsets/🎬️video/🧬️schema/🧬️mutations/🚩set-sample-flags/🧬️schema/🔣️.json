@@ -18,11 +18,41 @@
     },
     "streamIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Stream",
+          "de": "Datenstrom"
+        },
+        "description": {
+          "en": "Index of the stream, counted from 0.",
+          "de": "Index des Datenstroms, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Sample",
+          "de": "Sample"
+        },
+        "description": {
+          "en": "Index of the sample within the stream, counted from 0.",
+          "de": "Index des Samples innerhalb des Datenstroms, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "pts": {
       "type": "integer",
@@ -32,11 +62,26 @@
         "label": {
           "en": "Presentation time stamp",
           "de": "Präsentationszeitstempel (PTS)"
-        }
+        },
+        "step": 1
       }
     },
     "key": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Sync sample",
+          "de": "Sync-Sample"
+        },
+        "description": {
+          "en": "Whether the sample decodes without any earlier sample (a key frame).",
+          "de": "Ob das Sample ohne frühere Samples dekodierbar ist (ein Schlüsselbild)."
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

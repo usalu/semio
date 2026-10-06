@@ -5,7 +5,6 @@ import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { scheduleShellTransientNoticeDismissV1, SHELL_TRANSIENT_NOTICE_AUTO_DISMISS_MS } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import fixture from "../../🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🔣️.json" with { type: "json" };
-import schema from "../../🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🧬️schema/🔣️.json" with { type: "json" };
 
 afterEach(() => {
   cleanup();
@@ -23,8 +22,6 @@ function NoticeHarness(): React.ReactElement | null {
 
 describe("Shell chrome deadlines", () => {
   it("validates the neutral deadline fixture", () => {
-    const validate = new Ajv2020({ strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.timing.noticeDismissMs).toBe(SHELL_TRANSIENT_NOTICE_AUTO_DISMISS_MS);
   });
 

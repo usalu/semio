@@ -1,5 +1,5 @@
-use crate::io::export::serializers::artifacts::csv::v_rfc4180::any as csv_out;
-use crate::io::import::deserializers::artifacts::csv::v_rfc4180::any as csv_in;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any as csv_out;
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::csv::v_rfc4180::any as csv_in;
 use crate::schema::snapshot::ProgramSnapshot;
 
 const TABLE: &str = "register,id,name,status,priority,tags,source\nstakeholders,00000000-0000-0000-0000-000000000001,\"Owner, Client\",draft,high,,brief\n";

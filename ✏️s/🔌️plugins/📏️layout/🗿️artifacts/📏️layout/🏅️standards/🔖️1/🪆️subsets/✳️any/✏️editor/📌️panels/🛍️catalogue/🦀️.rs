@@ -88,7 +88,7 @@ pub(crate) const NATIVE_OPEN: &[(&str, &str, &str, &str)] = &[
     ("s.forms.forms", "1", "*", "forms.form"),
     ("s.flow.flow", "1", "*", "flow.host_snapshot"),
     ("s.mathematical.equation", "1", "*", "semio.equation/v1"),
-    ("s.puzzle.puzzle2d", "1", "*", "puzzle.2d.fixture"),
+    ("s.puzzle.puzzle2d", "1", "*", "board.ports.directed.v1"),
     ("s.block.block2d", "1", "*", "block.2d"),
     ("s.procedural.generation2d", "1", "*", "generation.2d"),
     ("s.gis.gisterrain", "1", "*", "gis.terrain"),
@@ -96,7 +96,7 @@ pub(crate) const NATIVE_OPEN: &[(&str, &str, &str, &str)] = &[
     ("s.wfc.wfc2d", "1", "*", "s.wfc.wfc2d"),
     ("s.animate.presentation", "1", "*", "animate.presentation"),
     ("s.sequence.sequence", "1", "*", "sequence.sequence"),
-    ("s.reasoning.wires", "1", "*", "reasoning.wires.fixture"),
+    ("s.reasoning.wires", "1", "*", "reasoning.wires.identity.snapshot"),
 ];
 
 pub(crate) fn native_open(artifact_kind: &str) -> Option<(&'static str, &'static str, &'static str)> {

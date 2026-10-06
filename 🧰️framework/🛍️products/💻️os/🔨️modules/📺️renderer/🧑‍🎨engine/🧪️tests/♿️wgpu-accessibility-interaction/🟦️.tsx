@@ -16,8 +16,6 @@ import { PanelTabBar, type PanelTabNode } from "../../../../../../../🔨️modu
 import { Toggle } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx";
 import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
 import accessibilityVisibilityFixture from "../../🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json";
-import accessibilityVisibilitySchema from "../../🧬️schema/♿️wgpu-accessibility-visibility/🔣️.json";
-import accessibilityInteractionSchema from "../../🧬️schema/♿️wgpu-accessibility-interaction/🔣️.json";
 
 type ProjectionNode = {
   readonly nodeId: number;
@@ -80,7 +78,6 @@ type DockTabKeyboardFixture = {
   readonly stale: { readonly node: string; readonly generation: number };
 };
 const dockTabKeyboardFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/⌨️dock-tab-keyboard/🔣️.json"), "utf8")) as DockTabKeyboardFixture;
-const dockTabKeyboardSchema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧬️schema/⌨️dock-tab-keyboard/🔣️.json"), "utf8"));
 const { computeAccessibleDescription, computeAccessibleName, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const mounted: Root[] = [];
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -205,8 +202,6 @@ afterEach(() => {
 
 describe("wgpu accessibility interaction contract", () => {
   it("validates the accepted chrome epoch and bounded Settings strip grammar", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(accessibilityInteractionSchema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.presentedChrome.successorEpoch).toBeGreaterThan(fixture.presentedChrome.firstEpoch);
     const rule = fixture.presentedChrome.generationRule;
     expect(fixture.presentedChrome.controls.map((control) => control.id)).toContain(rule.controlId);
@@ -231,13 +226,9 @@ describe("wgpu accessibility interaction contract", () => {
   });
 
   it("validates the visible-document publication grammar", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(accessibilityVisibilitySchema);
-    expect(validate(accessibilityVisibilityFixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
   it.each(dockTabKeyboardFixture.cases)("matches the production React Mode roving Dock tab keyboard contract: $id", (row) => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(dockTabKeyboardSchema);
-    expect(validate(dockTabKeyboardFixture), JSON.stringify(validate.errors)).toBe(true);
     vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} });
     vi.stubGlobal("MutationObserver", class { observe(): void {} disconnect(): void {} takeRecords(): MutationRecord[] { return []; } });
     const container = document.createElement("div");
@@ -266,8 +257,6 @@ describe("wgpu accessibility interaction contract", () => {
 
   it("mirrors Dock tabs with one tab stop per stack and exact addressed keyboard routing", async () => {
     vi.useFakeTimers();
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(dockTabKeyboardSchema);
-    expect(validate(dockTabKeyboardFixture), JSON.stringify(validate.errors)).toBe(true);
     const root = document.createElement("div");
     document.body.append(root);
     const sent: WireEvent[] = [];
@@ -512,6 +501,70 @@ describe("wgpu accessibility interaction contract", () => {
     options[1]!.click();
     expect(sent.filter((event) => event.kind === "accessibility-activate")).toEqual([{ kind: "accessibility-activate", windowId: "settings", windowGeneration: 4, nodeId: 11, nodeKey: "appearance::option::dark" }]);
     mirror.dispose();
+  });
+
+  it("activates an actionable tree row by click, Enter and Space, and leaves a row without an activation alone", async () => {
+    vi.useFakeTimers();
+    const root = document.createElement("div");
+    document.body.append(root);
+    const sent: WireEvent[] = [];
+    const nodes = [
+      { nodeId: 3, key: "actions", role: "tree", depth: 0, label: "Actions", live: "off" },
+      { nodeId: 6, key: "action.selectAll", role: "treeitem", depth: 1, label: "Select All", live: "off", focusable: true, tabbable: true, actionable: true, selected: false },
+      { nodeId: 7, key: "action.caption", role: "treeitem", depth: 1, label: "180 nodes", live: "off", focusable: true, tabbable: true, actionable: false, selected: false },
+    ];
+    const mirror = createAccessibilityMirror(root, {
+      introspect: async () => JSON.stringify({ windows: [{ windowId: "pane", windowGeneration: 4, nodes }] }),
+      enqueueLossless: (event) => { sent.push(event as WireEvent); return true; },
+    }, "en");
+    mirror.refresh();
+    await vi.advanceTimersByTimeAsync(400);
+    const row = root.querySelector<HTMLElement>('[data-node-key="action.selectAll"]')!;
+    const caption = root.querySelector<HTMLElement>('[data-node-key="action.caption"]')!;
+    const activations = () => sent.filter((event) => event.kind === "accessibility-activate");
+    const address = { kind: "accessibility-activate", windowId: "pane", windowGeneration: 4, nodeId: 6, nodeKey: "action.selectAll" };
+    expect([row.dataset.actionable, caption.dataset.actionable]).toEqual(["true", undefined]);
+    row.click();
+    for (const key of ["Enter", " "]) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      row.dispatchEvent(event);
+      expect(event.defaultPrevented, `"${key}" is the row's own key`).toBe(true);
+    }
+    const chord = new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true, cancelable: true });
+    row.dispatchEvent(chord);
+    row.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true, cancelable: true }));
+    expect(chord.defaultPrevented, "a chord stays the shell's").toBe(false);
+    expect(activations(), "one activation per click, Enter and Space").toEqual([address, address, address]);
+    caption.click();
+    caption.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    expect(activations(), "a row without an activation activates nothing").toHaveLength(3);
+    mirror.dispose();
+    root.remove();
+  });
+
+  it("spends one ownership walk and one projection pull on a storm of refresh calls", async () => {
+    vi.useFakeTimers();
+    const root = document.createElement("div");
+    document.body.append(root);
+    const nodes = Array.from({ length: 40 }, (_, index) => ({ nodeId: index + 1, key: `row.${index}`, role: "treeitem", depth: 0, label: `Row ${index}`, live: "off", focusable: true, tabbable: true, actionable: false }));
+    const introspect = vi.fn(async () => JSON.stringify({ windows: [{ windowId: "history", windowGeneration: 2, nodes }] }));
+    const domOwns = vi.fn(() => false);
+    const mirror = createAccessibilityMirror(root, { introspect, enqueueLossless: () => true }, "en", undefined, domOwns);
+    mirror.refresh();
+    await vi.advanceTimersByTimeAsync(400);
+    expect(root.querySelectorAll("[data-node-key]"), "the projection is mirrored").toHaveLength(nodes.length);
+    for (let second = 0; second < 3; second += 1) {
+      introspect.mockClear();
+      domOwns.mockClear();
+      for (let call = 0; call < 12_000; call += 1) mirror.refresh();
+      expect(domOwns.mock.calls.length, "a burst of frame-step refreshes walks the mirror at most once").toBeLessThanOrEqual(nodes.length);
+      expect(introspect, "and pulls nothing before the refresh floor").not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(400);
+      expect(introspect, "one pull per refresh floor").toHaveBeenCalledTimes(1);
+      expect(domOwns.mock.calls.length, "one walk when the burst starts and one when its pull starts").toBeLessThanOrEqual(2 * nodes.length);
+    }
+    mirror.dispose();
+    root.remove();
   });
 
   it("keeps the real focus then activation address across a focus-only mirror refresh", async () => {

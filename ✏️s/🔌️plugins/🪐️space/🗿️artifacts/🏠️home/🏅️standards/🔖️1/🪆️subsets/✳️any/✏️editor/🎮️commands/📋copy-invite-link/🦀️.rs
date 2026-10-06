@@ -4,7 +4,7 @@
 //! the token does not exist until the hub mints it, so no `Effect` here can construct it
 //! synchronously.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};

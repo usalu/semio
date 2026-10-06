@@ -24,7 +24,7 @@ fn sample_block(id: &str, label: &str, kind: &str) -> PlaybookBlock {
         schema: None,
         src: None,
         accept: None,
-        fixture_slug: None,
+        example_id: None,
         params: None,
         condition: None,
     }

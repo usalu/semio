@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "neutral-container",
+      "source": "{\"values\":[1,\"ä\",true,null]}",
+      "policy": "Reject",
+      "expected": {
+        "kind": "object",
+        "members": [
+          {
+            "name": "values",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "number",
+                  "text": "1"
+                },
+                {
+                  "kind": "string",
+                  "value": "ä"
+                },
+                {
+                  "kind": "boolean",
+                  "value": true
+                },
+                {
+                  "kind": "null"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "duplicate-replace-owner",
+      "source": "{\"a\":{\"old\":[1]},\"a\":{\"new\":[2]}}",
+      "policy": "Replace",
+      "expected": {
+        "kind": "object",
+        "members": [
+          {
+            "name": "a",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "new",
+                  "value": {
+                    "kind": "array",
+                    "items": [
+                      {
+                        "kind": "number",
+                        "text": "2"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "work-before-node",
+      "source": "true",
+      "policy": "Reject",
+      "maximumUnits": 1,
+      "error": "unit-budget"
+    },
+    {
+      "id": "owned-before-node",
+      "source": "true",
+      "policy": "Reject",
+      "maximumOwnedBytes": 1,
+      "error": "owned-byte-budget"
+    },
+    {
+      "id": "partial-string-budget",
+      "source": "[\"partial\",{\"b\":2}]",
+      "policy": "Reject",
+      "maximumUnits": 15,
+      "error": "unit-budget"
+    },
+    {
+      "id": "partial-malformed",
+      "source": "{\"a\":[1,2],\"b\":",
+      "policy": "Reject",
+      "error": "malformed-json"
+    },
+    {
+      "id": "duplicate-refusal-owners",
+      "source": "{\"a\":[1],\"a\":[2]}",
+      "policy": "Reject",
+      "error": "duplicate-member"
+    },
+    {
+      "id": "number-spelling",
+      "source": "-1.20e+3",
+      "policy": "Reject",
+      "expected": {
+        "kind": "number",
+        "text": "-1.20e+3"
+      }
+    }
+  ]
+}

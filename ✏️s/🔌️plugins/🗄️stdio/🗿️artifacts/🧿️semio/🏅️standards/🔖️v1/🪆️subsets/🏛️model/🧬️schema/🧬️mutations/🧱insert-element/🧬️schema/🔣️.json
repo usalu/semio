@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
     },
     "element": {
-      "$ref": "#/$defs/SemioModelElement"
+      "$ref": "#/$defs/SemioModelElement",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "description": {
+          "en": "Id, class, placement, geometry and property sets of the element that is inserted.",
+          "de": "Kennung, Klasse, Platzierung, Geometrie und Eigenschaftssätze des Elements, das eingefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

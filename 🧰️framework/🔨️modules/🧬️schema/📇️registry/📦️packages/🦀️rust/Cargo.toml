@@ -25,7 +25,12 @@ path = "../../🧪️tests/📇️catalog/🦀️.rs"
 name = "schema-registry-neutrality"
 path = "../../🧪️tests/🧱️neutrality/🦀️.rs"
 
+[[test]]
+name = "schema-registry-assembly"
+path = "../../🧪️tests/🧷️assembly/🦀️.rs"
+
 [dependencies]
 
 [dev-dependencies]
 serde_json = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }

@@ -17,8 +17,8 @@ const SEQUENCE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 mod subject {
     use super::SEQUENCE_ASSET;
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_sequence_sequence::document_dsl::{parse_dsl, print_dsl};
-    use semio_s_artifact_sequence_sequence::mutations::encode_sequence_projection_json;
+    use semio_s_artifact_sequence_sequence::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
+    use semio_s_artifact_sequence_sequence::standards::v1::subsets::any::io::text::mutations::encode_sequence_projection_json;
     use semio_s_artifact_sequence_sequence::SequenceSnapshot;
     use semio_repo_test_host::law::{carrier_is_exact, round_trip_preserves};
 
@@ -30,7 +30,7 @@ mod subject {
     /// `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` is this codec's OWN output — a semio-native
     /// envelope no foreign writer ever produced — so reproducing it exactly is the correct answer.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = ctx.fixture_bytes(SEQUENCE_ASSET)?;
+        let input = ctx.input_bytes(SEQUENCE_ASSET)?;
         let committed = String::from_utf8(input.clone()).map_err(|error| format!("the committed sequence artifact is not UTF-8: {error}"))?;
         let decoded = parse_dsl(&committed).map_err(|error| format!("identity-round-trip: the committed sequence artifact does not parse: {error:?}"))?;
         let printed = print_dsl(&decoded);

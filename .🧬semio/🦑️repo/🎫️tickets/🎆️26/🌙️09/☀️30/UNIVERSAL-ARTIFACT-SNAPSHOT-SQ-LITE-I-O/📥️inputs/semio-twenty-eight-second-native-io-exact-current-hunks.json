@@ -1,0 +1,420 @@
+[
+  {
+    "family": "text",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::text::schema::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::text::schema::snapshot::native_decoding::decode(payload,control)}\n",
+        "after": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::text::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::text::io::sqlite::snapshot::native_decoding::decode(payload,control)}\n"
+      },
+      {
+        "tag": "insert",
+        "before": "",
+        "after": "\n#[path = \"🛫️native/🦀️.rs\"]\npub(crate) mod native_encoding;\n\n#[path = \"🛬️native/🦀️.rs\"]\npub(crate) mod native_decoding;\n"
+      }
+    ]
+  },
+  {
+    "family": "text",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioTextSnapshot,SemioTextRun,SemioTextMark,SemioTextMarkKind,STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_decoding as native;\n",
+        "after": "use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextSnapshot,SemioTextRun,SemioTextMark,SemioTextMarkKind,STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;\n"
+      },
+      {
+        "tag": "replace",
+        "before": "  control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let kind=super::mark_kind_from_tag(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let href=native::text(&mut reader,control)?;marks.push(SemioTextMark{kind,href});control.step()?;}Ok::<_,ValueError>(())})?;\n",
+        "after": "  control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let kind=crate::standards::v1::subsets::text::io::binary::snapshot::mark_kind_from_tag(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let href=native::text(&mut reader,control)?;marks.push(SemioTextMark{kind,href});control.step()?;}Ok::<_,ValueError>(())})?;\n"
+      }
+    ]
+  },
+  {
+    "family": "text",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioTextSnapshot,SemioTextRun,SemioTextMark};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_encoding::{self,Writer};\n",
+        "after": "use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextSnapshot,SemioTextRun,SemioTextMark};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn mark(value:&SemioTextMark,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),semio_framework_value::ValueError>{writer.delimiter(b\"[\",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{super::mark_kind_tag(value.kind)}else{super::enc_mark_kind(value.kind) as u8})?;writer.delimiter(b\",\",encoding)?;writer.string(&value.href,encoding)?;writer.delimiter(b\"]\",encoding)}\n",
+        "after": "fn mark(value:&SemioTextMark,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),semio_framework_value::ValueError>{writer.delimiter(b\"[\",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{crate::standards::v1::subsets::text::io::binary::snapshot::mark_kind_tag(value.kind)}else{crate::standards::v1::subsets::text::io::text::snapshot::enc_mark_kind(value.kind) as u8})?;writer.delimiter(b\",\",encoding)?;writer.string(&value.href,encoding)?;writer.delimiter(b\"]\",encoding)}\n"
+      }
+    ]
+  },
+  {
+    "family": "text",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/📏️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/📏️native/🦀️.rs",
+    "chunks": []
+  },
+  {
+    "family": "text",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "pub(crate) fn encode_snapshot(value:&super::SemioSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{encode(encoding,\"semio stdio.semio.dsl v1\\n\",\"stdio.semio.pack v1\",control,|w,e|{w.entities(1)?;if e==SnapshotEncoding::Binary{w.byte(1)?;w.byte(super::subset_ordinal(&value.subset))?;w.string(&value.schema,e)?}else{w.bytes(b\"subset=\")?;w.bytes(super::subset_tag(&value.subset).as_bytes())?;w.bytes(b\"\\nschema=\")?;w.string(&value.schema,e)?;w.byte(b'\\n')?}subset(&value.subset,w,e)})}\nfn subset(value:&super::SemioSubsetSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{\n use super::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;\n",
+        "after": "pub(crate) fn encode_snapshot(value:&crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{encode(encoding,\"semio stdio.semio.dsl v1\\n\",\"stdio.semio.pack v1\",control,|w,e|{w.entities(1)?;if e==SnapshotEncoding::Binary{w.byte(1)?;w.byte(crate::standards::v1::subsets::base::io::binary::snapshot::subset_ordinal(&value.subset))?;w.string(&value.schema,e)?}else{w.bytes(b\"subset=\")?;w.bytes(crate::standards::v1::subsets::base::io::text::snapshot::subset_tag(&value.subset).as_bytes())?;w.bytes(b\"\\nschema=\")?;w.string(&value.schema,e)?;w.byte(b'\\n')?}subset(&value.subset,w,e)})}\nfn subset(value:&crate::standards::v1::subsets::base::schema::snapshot::SemioSubsetSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{\n use crate::standards::v1::subsets::base::schema::snapshot::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;\n"
+      },
+      {
+        "tag": "replace",
+        "before": " S::Brep(v)=>owners::brep::schema::snapshot::native_encoding::fields(v,w,e),\n S::Mesh(v)=>owners::mesh::schema::snapshot::native_encoding::fields(v,w,e),\n S::Model(v)=>owners::model::schema::snapshot::native_encoding::fields(v,w,e),\n S::Value(v)=>owners::value::schema::snapshot::native_encoding::fields(v,w),\n S::Document(v)=>owners::document::schema::snapshot::native_encoding::fields(v,w,e),\n S::Cad(v)=>owners::cad::schema::snapshot::native_encoding::fields(v,w,e),\n S::Drawing(v)=>owners::drawing::schema::snapshot::native_encoding::fields(v,w,e),\n S::Image(v)=>owners::image::schema::snapshot::native_encoding::fields(v,w,e),\n S::Video(v)=>owners::video::schema::snapshot::native_encoding::fields(v,w,e),\n S::Audio(v)=>owners::audio::schema::snapshot::native_encoding::fields(v,w,e),\n S::Animation(v)=>owners::animation::schema::snapshot::native_encoding::fields(v,w,e),\n S::Presentation(v)=>owners::presentation::schema::snapshot::native_encoding::fields(v,w,e),\n S::Flow(v)=>owners::flow::schema::snapshot::native_encoding::fields(v,w,e),\n S::Text(v)=>owners::text::schema::snapshot::native_encoding::fields(v,w,e),\n S::Table(v)=>owners::table::schema::snapshot::native_encoding::fields(v,w,e),\n S::Graph(v)=>owners::graph::schema::snapshot::native_encoding::fields(v,w,e),\n S::Object(v)=>owners::object::schema::snapshot::native_encoding::fields(v,w,e),\n S::Kit(v)=>owners::kit::schema::snapshot::native_encoding::fields(v,w,e)\n",
+        "after": " S::Brep(v)=>owners::brep::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Mesh(v)=>owners::mesh::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Model(v)=>owners::model::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Value(v)=>owners::value::io::sqlite::snapshot::native_encoding::fields(v,w),\n S::Document(v)=>owners::document::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Cad(v)=>owners::cad::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Drawing(v)=>owners::drawing::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Image(v)=>owners::image::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Video(v)=>owners::video::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Audio(v)=>owners::audio::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Animation(v)=>owners::animation::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Presentation(v)=>owners::presentation::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Flow(v)=>owners::flow::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Text(v)=>owners::text::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Table(v)=>owners::table::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Graph(v)=>owners::graph::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Object(v)=>owners::object::io::sqlite::snapshot::native_encoding::fields(v,w,e),\n S::Kit(v)=>owners::kit::io::sqlite::snapshot::native_encoding::fields(v,w,e)\n"
+      }
+    ]
+  },
+  {
+    "family": "text",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "pub(crate) fn decode_snapshot(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<super::SemioSnapshot,ValueError>{decode(payload,super::STDIO_SEMIO_DOCUMENT_SCHEMA,control,binary_snapshot,text_snapshot)}\n",
+        "after": "pub(crate) fn decode_snapshot(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{decode(payload,crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,control,binary_snapshot,text_snapshot)}\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn binary_snapshot(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<super::SemioSnapshot,ValueError>{\n use super::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;\n",
+        "after": "fn binary_snapshot(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{\n use crate::standards::v1::subsets::base::schema::snapshot::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;\n"
+      },
+      {
+        "tag": "replace",
+        "before": " 3=>{let body=control.borrow_text(body)?;S::Value(owners::value::schema::snapshot::native_decoding::document(body,control,limits)?)},\n",
+        "after": " 3=>{let body=control.borrow_text(body)?;S::Value(owners::value::io::sqlite::snapshot::native_decoding::document(body,control,limits)?)},\n"
+      },
+      {
+        "tag": "replace",
+        "before": " };Ok(super::SemioSnapshot{schema,subset})\n",
+        "after": " };Ok(crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot{schema,subset})\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn text_snapshot(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<super::SemioSnapshot,ValueError>{\n use super::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;\n",
+        "after": "fn text_snapshot(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot,ValueError>{\n use crate::standards::v1::subsets::base::schema::snapshot::SemioSubsetSnapshot as S;use crate::standards::v1::subsets as owners;\n"
+      },
+      {
+        "tag": "replace",
+        "before": " \"brep\"=>S::Brep(owners::brep::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"mesh\"=>S::Mesh(owners::mesh::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"model\"=>S::Model(owners::model::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"value\"=>S::Value(owners::value::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"document\"=>S::Document(owners::document::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"cad\"=>S::Cad(owners::cad::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"drawing\"=>S::Drawing(owners::drawing::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"image\"=>S::Image(owners::image::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"video\"=>S::Video(owners::video::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"audio\"=>S::Audio(owners::audio::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"animation\"=>S::Animation(owners::animation::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"presentation\"=>S::Presentation(owners::presentation::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"flow\"=>S::Flow(owners::flow::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"text\"=>S::Text(owners::text::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"table\"=>S::Table(owners::table::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"graph\"=>S::Graph(owners::graph::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"object\"=>S::Object(owners::object::schema::snapshot::native_decoding::document(body,control,limits)?),\n \"kit\"=>S::Kit(owners::kit::schema::snapshot::native_decoding::document(body,control,limits)?),\n",
+        "after": " \"brep\"=>S::Brep(owners::brep::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"mesh\"=>S::Mesh(owners::mesh::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"model\"=>S::Model(owners::model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"value\"=>S::Value(owners::value::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"document\"=>S::Document(owners::document::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"cad\"=>S::Cad(owners::cad::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"drawing\"=>S::Drawing(owners::drawing::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"image\"=>S::Image(owners::image::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"video\"=>S::Video(owners::video::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"audio\"=>S::Audio(owners::audio::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"animation\"=>S::Animation(owners::animation::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"presentation\"=>S::Presentation(owners::presentation::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"flow\"=>S::Flow(owners::flow::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"text\"=>S::Text(owners::text::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"table\"=>S::Table(owners::table::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"graph\"=>S::Graph(owners::graph::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"object\"=>S::Object(owners::object::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n \"kit\"=>S::Kit(owners::kit::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),\n"
+      },
+      {
+        "tag": "replace",
+        "before": " };Ok(super::SemioSnapshot{schema,subset})\n",
+        "after": " };Ok(crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot{schema,subset})\n"
+      }
+    ]
+  },
+  {
+    "family": "audio",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::audio::schema::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::audio::schema::snapshot::native_decoding::decode(payload,control)}\n",
+        "after": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::audio::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::audio::io::sqlite::snapshot::native_decoding::decode(payload,control)}\n"
+      },
+      {
+        "tag": "insert",
+        "before": "",
+        "after": "\n#[path = \"🛫️native/🦀️.rs\"]\npub(crate) mod native_encoding;\n\n#[path = \"🛬️native/🦀️.rs\"]\npub(crate) mod native_decoding;\n"
+      }
+    ]
+  },
+  {
+    "family": "audio",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioAudioSnapshot,SemioAudioChannel,SemioAudioTag,SemioAudioFormat,STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_decoding as native;\n",
+        "after": "use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioSnapshot,SemioAudioChannel,SemioAudioTag,SemioAudioFormat,STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;\n"
+      },
+      {
+        "tag": "replace",
+        "before": " let schema=native::text(&mut reader,control)?;let sample_rate=reader.read_u32_le().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;let format=super::format_from_tag(reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut channels=control.allocate_vec::<SemioAudioChannel>(count)?;\n",
+        "after": " let schema=native::text(&mut reader,control)?;let sample_rate=reader.read_u32_le().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;let format=crate::standards::v1::subsets::audio::io::binary::snapshot::format_from_tag(reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut channels=control.allocate_vec::<SemioAudioChannel>(count)?;\n"
+      },
+      {
+        "tag": "replace",
+        "before": " let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,[\"schema\",\"sampleRate\",\"format\",\"channels\",\"tags\"],control)?;let schema=native::hex_text(fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,\"Semio audio native schema field missing\"))?,control)?;let sample_rate=super::parse_u32(fields[1].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,\"Semio audio native sample rate missing\"))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let format=match fields[2]{Some(\"pcm8\")=>SemioAudioFormat::Pcm8,Some(\"pcm16\")|None=>SemioAudioFormat::Pcm16,Some(\"pcm24\")=>SemioAudioFormat::Pcm24,Some(\"pcm32\")=>SemioAudioFormat::Pcm32,Some(\"f32\")=>SemioAudioFormat::Float32,Some(\"f64\")=>SemioAudioFormat::Float64,Some(_)=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"invalid Semio audio native format\"))};\n",
+        "after": " let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,[\"schema\",\"sampleRate\",\"format\",\"channels\",\"tags\"],control)?;let schema=native::hex_text(fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,\"Semio audio native schema field missing\"))?,control)?;let sample_rate=crate::standards::v1::subsets::mesh::io::text::snapshot::parse_u32(fields[1].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,\"Semio audio native sample rate missing\"))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let format=match fields[2]{Some(\"pcm8\")=>SemioAudioFormat::Pcm8,Some(\"pcm16\")|None=>SemioAudioFormat::Pcm16,Some(\"pcm24\")=>SemioAudioFormat::Pcm24,Some(\"pcm32\")=>SemioAudioFormat::Pcm32,Some(\"f32\")=>SemioAudioFormat::Float32,Some(\"f64\")=>SemioAudioFormat::Float64,Some(_)=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,\"invalid Semio audio native format\"))};\n"
+      }
+    ]
+  },
+  {
+    "family": "audio",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioAudioSnapshot,SemioAudioChannel,SemioAudioTag};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_encoding::{self,Writer};\n",
+        "after": "use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioSnapshot,SemioAudioChannel,SemioAudioTag};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};\n"
+      },
+      {
+        "tag": "replace",
+        "before": "pub(crate) fn fields(snapshot:&SemioAudioSnapshot,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.entities(1)?;if encoding==SnapshotEncoding::Binary{writer.byte(1)?;}else{writer.bytes(b\"schema=\")?;}writer.string(&snapshot.schema,encoding)?;writer.delimiter(b\"\\nsampleRate=\",encoding)?;if encoding==SnapshotEncoding::Binary{writer.bytes(&snapshot.sample_rate.to_le_bytes())?;}else{writer.integer(u64::from(snapshot.sample_rate),encoding)?;}writer.delimiter(b\"\\nformat=\",encoding)?;if encoding==SnapshotEncoding::Binary{writer.byte(super::format_tag(snapshot.format))?;}else{writer.bytes(super::enc_format(snapshot.format).as_bytes())?;}writer.delimiter(b\"\\nchannels=\",encoding)?;writer.list(&snapshot.channels,encoding,|writer,value|channel(value,writer,encoding))?;writer.delimiter(b\"\\ntags=\",encoding)?;writer.list(&snapshot.tags,encoding,|writer,value|tag(value,writer,encoding))}\n",
+        "after": "pub(crate) fn fields(snapshot:&SemioAudioSnapshot,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.entities(1)?;if encoding==SnapshotEncoding::Binary{writer.byte(1)?;}else{writer.bytes(b\"schema=\")?;}writer.string(&snapshot.schema,encoding)?;writer.delimiter(b\"\\nsampleRate=\",encoding)?;if encoding==SnapshotEncoding::Binary{writer.bytes(&snapshot.sample_rate.to_le_bytes())?;}else{writer.integer(u64::from(snapshot.sample_rate),encoding)?;}writer.delimiter(b\"\\nformat=\",encoding)?;if encoding==SnapshotEncoding::Binary{writer.byte(crate::standards::v1::subsets::audio::io::binary::snapshot::format_tag(snapshot.format))?;}else{writer.bytes(crate::standards::v1::subsets::audio::io::text::snapshot::enc_format(snapshot.format).as_bytes())?;}writer.delimiter(b\"\\nchannels=\",encoding)?;writer.list(&snapshot.channels,encoding,|writer,value|channel(value,writer,encoding))?;writer.delimiter(b\"\\ntags=\",encoding)?;writer.list(&snapshot.tags,encoding,|writer,value|tag(value,writer,encoding))}\n"
+      }
+    ]
+  },
+  {
+    "family": "video",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::video::schema::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::video::schema::snapshot::native_decoding::decode(payload,control)}\n",
+        "after": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::video::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::video::io::sqlite::snapshot::native_decoding::decode(payload,control)}\n"
+      },
+      {
+        "tag": "insert",
+        "before": "",
+        "after": "\n#[path = \"🛫️native/🦀️.rs\"]\npub(crate) mod native_encoding;\n\n#[path = \"🛬️native/🦀️.rs\"]\npub(crate) mod native_decoding;\n"
+      }
+    ]
+  },
+  {
+    "family": "video",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioVideoSnapshot,SemioVideoStream,SemioVideoStreamKind,SemioVideoSample,SemioRational,STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_decoding as native;\n",
+        "after": "use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot,SemioVideoStream,SemioVideoStreamKind,SemioVideoSample,SemioRational,STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;\n"
+      },
+      {
+        "tag": "replace",
+        "before": "  let kind=super::kind_from_tag(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let codec=native::text(&mut reader,control)?;let width=reader.read_u32_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let height=reader.read_u32_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let rate=SemioRational{num:integer(&mut reader)?,den:integer(&mut reader)?};\n",
+        "after": "  let kind=crate::standards::v1::subsets::video::io::binary::snapshot::kind_from_tag(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let codec=native::text(&mut reader,control)?;let width=reader.read_u32_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let height=reader.read_u32_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let rate=SemioRational{num:integer(&mut reader)?,den:integer(&mut reader)?};\n"
+      }
+    ]
+  },
+  {
+    "family": "video",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioVideoSnapshot,SemioVideoStream,SemioVideoSample,SemioVideoStreamKind};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_encoding::{self,Writer};\n",
+        "after": "use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot,SemioVideoStream,SemioVideoSample,SemioVideoStreamKind};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn stream(value:&SemioVideoStream,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),semio_framework_value::ValueError>{writer.delimiter(b\"[\",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{super::kind_tag(value.kind)}else{match value.kind{SemioVideoStreamKind::Video=>b'V',SemioVideoStreamKind::Audio=>b'A',SemioVideoStreamKind::Subtitle=>b'S'}})?;writer.delimiter(b\",\",encoding)?;writer.string(&value.codec,encoding)?;writer.delimiter(b\",\",encoding)?;writer.fixed_u32(value.width,encoding)?;writer.delimiter(b\",\",encoding)?;writer.fixed_u32(value.height,encoding)?;writer.delimiter(b\",[\",encoding)?;writer.signed64(value.rate.num,encoding)?;writer.delimiter(b\",\",encoding)?;writer.signed64(value.rate.den,encoding)?;writer.delimiter(b\"],\",encoding)?;writer.list(&value.samples,encoding,|writer,value|sample(value,writer,encoding))?;writer.delimiter(b\"]\",encoding)}\n",
+        "after": "fn stream(value:&SemioVideoStream,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),semio_framework_value::ValueError>{writer.delimiter(b\"[\",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{crate::standards::v1::subsets::video::io::binary::snapshot::kind_tag(value.kind)}else{match value.kind{SemioVideoStreamKind::Video=>b'V',SemioVideoStreamKind::Audio=>b'A',SemioVideoStreamKind::Subtitle=>b'S'}})?;writer.delimiter(b\",\",encoding)?;writer.string(&value.codec,encoding)?;writer.delimiter(b\",\",encoding)?;writer.fixed_u32(value.width,encoding)?;writer.delimiter(b\",\",encoding)?;writer.fixed_u32(value.height,encoding)?;writer.delimiter(b\",[\",encoding)?;writer.signed64(value.rate.num,encoding)?;writer.delimiter(b\",\",encoding)?;writer.signed64(value.rate.den,encoding)?;writer.delimiter(b\"],\",encoding)?;writer.list(&value.samples,encoding,|writer,value|sample(value,writer,encoding))?;writer.delimiter(b\"]\",encoding)}\n"
+      }
+    ]
+  },
+  {
+    "family": "object",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::object::schema::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::object::schema::snapshot::native_decoding::decode(payload,control)}\n",
+        "after": "fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::object::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\nfn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::object::io::sqlite::snapshot::native_decoding::decode(payload,control)}\n"
+      },
+      {
+        "tag": "insert",
+        "before": "",
+        "after": "\n#[path = \"🛫️native/🦀️.rs\"]\npub(crate) mod native_encoding;\n\n#[path = \"🛬️native/🦀️.rs\"]\npub(crate) mod native_decoding;\n"
+      }
+    ]
+  },
+  {
+    "family": "object",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioObjectSnapshot,SemioTransform,STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA};\n",
+        "after": "use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;\nuse crate::standards::v1::subsets::object::schema::snapshot::{SemioObjectSnapshot,STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA};\n"
+      },
+      {
+        "tag": "replace",
+        "before": " let schema=native::text(&mut reader,control)?;let transform=super::read_transform(&mut reader).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let mut owner=native::Owned::new(SemioObjectSnapshot{schema,transform,brep:None,mesh:None,properties:None});\n",
+        "after": " let schema=native::text(&mut reader,control)?;let transform=crate::standards::v1::subsets::drawing::io::binary::snapshot::read_transform(&mut reader).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let mut owner=native::Owned::new(SemioObjectSnapshot{schema,transform,brep:None,mesh:None,properties:None});\n"
+      }
+    ]
+  },
+  {
+    "family": "object",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::SemioObjectSnapshot;\nuse crate::standards::v1::subsets::base::schema::snapshot::native_encoding::{self,Writer};\n",
+        "after": "use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};\n"
+      }
+    ]
+  },
+  {
+    "family": "value-table",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned;\n",
+        "after": "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned::new(self));}\n",
+        "after": "fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::value::schema::snapshot::native_encoding::encode(self,encoding,control)}\n",
+        "after": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::value::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\n"
+      },
+      {
+        "tag": "replace",
+        "before": " fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::value::schema::snapshot::native_decoding::decode(payload,control)}\n",
+        "after": " fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::value::io::sqlite::snapshot::native_decoding::decode(payload,control)}\n"
+      },
+      {
+        "tag": "insert",
+        "before": "",
+        "after": "\n#[path = \"🛫️native/🦀️.rs\"]\npub(crate) mod native_encoding;\n\n#[path = \"🛬️native/🦀️.rs\"]\npub(crate) mod native_decoding;\n"
+      }
+    ]
+  },
+  {
+    "family": "value-table",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned;\n",
+        "after": "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned::new(self));}\n",
+        "after": "fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::table::schema::snapshot::native_encoding::encode(self,encoding,control)}\n",
+        "after": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::table::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\n"
+      },
+      {
+        "tag": "replace",
+        "before": " fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::table::schema::snapshot::native_decoding::decode(payload,control)}\n",
+        "after": " fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::table::io::sqlite::snapshot::native_decoding::decode(payload,control)}\n"
+      },
+      {
+        "tag": "insert",
+        "before": "",
+        "after": "\n#[path = \"🛫️native/🦀️.rs\"]\npub(crate) mod native_encoding;\n\n#[path = \"🛬️native/🦀️.rs\"]\npub(crate) mod native_decoding;\n"
+      }
+    ]
+  },
+  {
+    "family": "value-table",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned;\n",
+        "after": "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::schema::snapshot::native_decoding::Owned::new(self));}\n",
+        "after": "fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::graph::schema::snapshot::native_encoding::encode(self,encoding,control)}\n",
+        "after": "fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{crate::standards::v1::subsets::graph::io::sqlite::snapshot::native_encoding::encode(self,encoding,control)}\n"
+      },
+      {
+        "tag": "replace",
+        "before": " fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::graph::schema::snapshot::native_decoding::decode(payload,control)}\n",
+        "after": " fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{crate::standards::v1::subsets::graph::io::sqlite::snapshot::native_decoding::decode(payload,control)}\n"
+      },
+      {
+        "tag": "insert",
+        "before": "",
+        "after": "\n#[path = \"🛫️native/🦀️.rs\"]\npub(crate) mod native_encoding;\n\n#[path = \"🛬️native/🦀️.rs\"]\npub(crate) mod native_decoding;\n"
+      }
+    ]
+  },
+  {
+    "family": "value-table",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioValue,SemioValueEntry,SemioValueNode,SemioValueSnapshot,ValueId,STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_decoding as native;\n",
+        "after": "use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue,SemioValueEntry,SemioValueNode,SemioValueSnapshot,ValueId,STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;\n"
+      }
+    ]
+  },
+  {
+    "family": "value-table",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioValue,SemioValueEntry,SemioValueNode,SemioValueSnapshot};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_encoding::{self,Writer};\n",
+        "after": "use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue,SemioValueEntry,SemioValueNode,SemioValueSnapshot};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};\n"
+      }
+    ]
+  },
+  {
+    "family": "value-table",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioTableSnapshot,SemioTableColumn,SemioTableRow,SemioTableCellKind,SemioValue,STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::schema::snapshot::native_decoding as native;\nuse crate::standards::v1::subsets::value::schema::snapshot::native_decoding as values;\n",
+        "after": "use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;\nuse crate::standards::v1::subsets::table::schema::snapshot::{SemioTableSnapshot,SemioTableColumn,SemioTableRow,SemioTableCellKind,STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};\nuse crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;\nuse crate::standards::v1::subsets::value::io::sqlite::snapshot::native_decoding as values;\n"
+      }
+    ]
+  },
+  {
+    "family": "value-table",
+    "oldPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "chunks": [
+      {
+        "tag": "replace",
+        "before": "use super::{SemioTableSnapshot,SemioTableColumn,SemioTableCellKind,SemioTableRow};\n",
+        "after": "use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableSnapshot,SemioTableColumn,SemioTableCellKind,SemioTableRow};\n"
+      },
+      {
+        "tag": "replace",
+        "before": "fn column(column:&SemioTableColumn,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),semio_framework_value::ValueError>{writer.delimiter(b\"[\",encoding)?;writer.string(&column.name,encoding)?;writer.delimiter(b\",\",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{match column.kind{SemioTableCellKind::Null=>0,SemioTableCellKind::Bool=>1,SemioTableCellKind::Int=>2,SemioTableCellKind::Float=>3,SemioTableCellKind::Str=>4,SemioTableCellKind::Bytes=>5}}else{super::enc_cell_kind(column.kind) as u8})?;writer.delimiter(b\"]\",encoding)}\n",
+        "after": "fn column(column:&SemioTableColumn,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),semio_framework_value::ValueError>{writer.delimiter(b\"[\",encoding)?;writer.string(&column.name,encoding)?;writer.delimiter(b\",\",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{match column.kind{SemioTableCellKind::Null=>0,SemioTableCellKind::Bool=>1,SemioTableCellKind::Int=>2,SemioTableCellKind::Float=>3,SemioTableCellKind::Str=>4,SemioTableCellKind::Bytes=>5}}else{crate::standards::v1::subsets::table::io::text::snapshot::enc_cell_kind(column.kind) as u8})?;writer.delimiter(b\"]\",encoding)}\n"
+      }
+    ]
+  }
+]

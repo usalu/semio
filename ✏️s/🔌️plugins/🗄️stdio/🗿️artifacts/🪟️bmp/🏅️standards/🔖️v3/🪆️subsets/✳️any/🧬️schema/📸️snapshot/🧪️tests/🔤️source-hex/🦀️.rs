@@ -28,9 +28,9 @@ fn source_hex_consumption_matches_independent_decoder_without_panicking() {
         if valid {
             assert_eq!(oracle.unwrap(), bytes, "{id}: independent byte output");
             let snapshot = native.unwrap();
-            let layout = crate::io::bmp_layout(&snapshot).unwrap();
+            let layout = crate::standards::v_v3::subsets::any::io::bmp_layout(&snapshot).unwrap();
             assert_eq!((layout.width, layout.height), (1, 1), "{id}");
-            assert_eq!(crate::io::bmp_rgba8_preview(&snapshot).unwrap(), pixels, "{id}: decoded pixel output");
+            assert_eq!(crate::standards::v_v3::subsets::any::io::bmp_rgba8_preview(&snapshot).unwrap(), pixels, "{id}: decoded pixel output");
             assert_eq!(BmpSnapshot::parse_dsl(&snapshot.print_dsl()).unwrap(), snapshot, "{id}: canonical source roundtrip");
         }
         eprintln!("[DEBUG] bmp source-hex case={id} valid={valid}");

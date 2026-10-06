@@ -88,3 +88,6 @@ semio_framework_value::artifact_retire_struct!(Generation3dViewTransient { previ
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

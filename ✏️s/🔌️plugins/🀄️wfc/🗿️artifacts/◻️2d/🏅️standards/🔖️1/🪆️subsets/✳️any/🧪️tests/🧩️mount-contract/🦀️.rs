@@ -4,7 +4,7 @@
 //! a stale mount is a compile error before it can become a silent gap.
 
 use crate::examples::{hex_ring, terrain_ring, two_room_corridor, wall_roof_facade_strip};
-use crate::standards::v1::subsets::any::io::snapshot::text::{parse_dsl, print_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{Wfc2dSnapshot, WFC_2D_DIALECT};
 use store::ArtifactPack;
 
@@ -46,13 +46,13 @@ fn example_labels_are_localized_en_and_de() {
 /// advertises — one string, spelled once, on both sides of the roster.
 #[test]
 fn the_inference_route_is_declared_consistently() {
-    let metadata = crate::schema::inferences::wfc2d_inference_metadata();
+    let metadata = crate::host::inferences::wfc2d_inference_metadata();
     assert_eq!(metadata.owner, "wfc");
     assert_eq!(metadata.artifact_kind, crate::WFC_2D_DOCUMENT_SCHEMA);
-    assert_eq!(metadata.inference_schema, crate::schema::inferences::WFC_2D_INFERENCE_TOOL_ID);
-    assert_eq!(crate::schema::inferences::WFC_2D_INFERENCE_TOOL_ID, "s.wfc.wfc2d.solve");
-    assert_eq!(crate::schema::inferences::WFC_2D_INFERENCE_JOB_KIND, "semio.infer");
-    assert_eq!(crate::schema::inferences::wfc2d_artifact_inference_descriptor().id, "s.wfc.wfc2d.solve");
+    assert_eq!(metadata.inference_schema, crate::host::inferences::WFC_2D_INFERENCE_TOOL_ID);
+    assert_eq!(crate::host::inferences::WFC_2D_INFERENCE_TOOL_ID, "s.wfc.wfc2d.solve");
+    assert_eq!(crate::host::inferences::WFC_2D_INFERENCE_JOB_KIND, "semio.infer");
+    assert_eq!(crate::host::inferences::wfc2d_artifact_inference_descriptor().id, "s.wfc.wfc2d.solve");
 }
 
 /// 🧬️ The schema descriptor carries twenty non-empty leaves — four facets × five languages.

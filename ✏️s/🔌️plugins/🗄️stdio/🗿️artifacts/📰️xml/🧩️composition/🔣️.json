@@ -117,7 +117,7 @@
     {
       "factoryId": "stdio.native.xml.v1",
       "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📜️artifact-definition.json",
-      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
     }
   ]
 }

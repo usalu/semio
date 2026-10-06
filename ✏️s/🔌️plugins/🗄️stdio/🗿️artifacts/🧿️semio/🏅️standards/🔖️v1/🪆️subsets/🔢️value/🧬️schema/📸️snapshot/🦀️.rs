@@ -148,142 +148,30 @@ impl Default for SemioValueSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️SnapshotTextCodec
-/// 🌳️ `SemioValueSnapshot`'s own real recursive text encoding — `[hex(schema),<value>,[<node>,...]]`
-/// — genuinely walked/parsed field-by-field (never a hex dump of a `serde_json` blob). Reuses the
-/// SAME tag-prefixed `SemioValue` grammar (`enc_semio_value`/`dec_semio_value`) the sibling
-/// `🔺️diff`/`🧬️mutations` facets already define for their own text codecs — this subset has no
-/// natural "on-disk file format" of its own the way `json`/`csv` do (`SemioValueSnapshot` is a
-/// NEUTRAL semio type), so reusing one already-real, already-hand-rolled grammar as the single
-/// source of truth for every facet is the honest choice, not a shortcut (`json`'s own `JsonValue`
-/// text codec is likewise shared verbatim by its diff/mutations facets' `value=` token). Single
-/// source of truth: `🧬️mutations/🦀️.rs`'s `SetSnapshot` argument encoding calls THESE
-/// functions directly rather than keeping its own second copy.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
-    let nodes = s.nodes.iter().map(crate::standards::v1::subsets::value::schema::diff::enc_semio_value_node).collect::<Vec<_>>().join(",");
-    format!("[{},{},[{}]]", crate::standards::v1::subsets::value::schema::diff::enc_str(&s.schema), crate::standards::v1::subsets::value::schema::diff::enc_semio_value(&s.root), nodes)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
-    use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-    use crate::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_semio_value_node, dec_str};
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [schema_s, root_s, nodes_s] = parts.as_slice() else {
-        return Err(format!("semio value snapshot: expected 3 top-level fields, got {}", parts.len()));
-    };
-    let nodes_inner = strip_brackets(nodes_s)?;
-    let nodes = split_top_level(nodes_inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_semio_value_node).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioValueSnapshot { schema: dec_str(schema_s)?, root: dec_semio_value(root_s)?, nodes })
-}
+
+
 //#endregion 🔖️SnapshotTextCodec
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🎁️ Real recursive text/binary round trip — NOT a per-on-disk-file-format codec (this subset's
-/// snapshot is a NEUTRAL semio type, like `json`'s own `JsonSnapshot`, not a real-world file
-/// format), so — mirroring `json`'s own text-native precedent exactly (`🔣️json/…/📸️snapshot/
-/// 🦀️.rs`'s `ArtifactPack::encode_pack_with`: `write_json_text(&self.value).into_bytes()`
-/// passed straight to `wrap_binary`, no distinct "binary JsonValue" layout) — the PACK bytes are
-/// the SAME real compact text this facet's DSL emits, wrapped in the semio envelope. No
-/// `serde_json` anywhere in this impl block.
-impl store::ArtifactDsl for SemioValueSnapshot {
-    const EXTENSION: &'static str = "semio";
-    fn envelope_id() -> &'static str {
-        STDIO_SEMIOVALUE_DOCUMENT_SCHEMA
-    }
 
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        dec_semio_value_snapshot(body.trim()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
 
-    fn print_dsl(&self) -> String {
-        let body = enc_semio_value_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl store::ArtifactPack for SemioValueSnapshot {
-
-    /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
-
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = enc_semio_value_snapshot(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-        }
-        let _ = options;
-        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::from(semio_framework_value::ValueError::from(e)))?;
-        dec_semio_value_snapshot(text).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
-    }
-}
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
-/// `stdio.semio.value` — the shape `🔢️mutate-semio-value` compares under `ordered-json-v1`, derived
-/// from the snapshot type itself rather than hand-written a second time in the adapter, where it
-/// could drift away from the type it claims to project. A thin `pack::to_json_string` wrapper
-/// (first-party, over `ToValue`/`DslValue`). Mirrors `📊️table`'s and `🌊️flow`'s own bridges.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_semio_value_snapshot_json(snapshot: &SemioValueSnapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_value_snapshot_json`] — decodes a committed
-/// `(before, mutation, after)` specification vector into a real [`SemioValueSnapshot`], so the case
-/// adapter reads the committed fixture instead of re-declaring it as a Rust literal beside it.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_value_snapshot_json(text: &str) -> Result<SemioValueSnapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
+
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Wire
-/// 📝️ Parses `stdio.semio.value` DSL text into a [`SemioValueSnapshot`] — a named pass-through of
-/// this snapshot's own `store::ArtifactDsl` impl above, whose trait and error type are both
-/// unnameable outside this crate, so `🔢️mutate-semio-value`'s `identity-round-trip` scenario reaches
-/// the real committed artifact (`../../../../✉️base/📚️examples/🕸️graph/🖼️assets/🗣️.dsl.semio`)
-/// through this instead.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn parse_semio_value_dsl(text: &str) -> Result<SemioValueSnapshot, String> {
-    <SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
-}
 
-/// 📝️ Renders a [`SemioValueSnapshot`] back as `stdio.semio.value` DSL text — the inverse of
-/// [`parse_semio_value_dsl`].
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn print_semio_value_dsl(snapshot: &SemioValueSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
 
-/// 📦️ Encodes a [`SemioValueSnapshot`] as a semio pack envelope — the binary twin of the DSL text.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_semio_value_pack(snapshot: &SemioValueSnapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
 
-/// 📦️ Decodes a semio pack envelope into a [`SemioValueSnapshot`] — the inverse of
-/// [`encode_semio_value_pack`], reading
-/// `../../../../✉️base/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_value_pack(bytes: &[u8]) -> Result<SemioValueSnapshot, String> {
-    <SemioValueSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
-}
+
+
+
+
 //#endregion 🔖️Wire
 
 //#region 🔖️Demo
@@ -320,14 +208,8 @@ pub(crate) fn demo_semio_value_snapshot() -> SemioValueSnapshot {
 mod tests;
 //#endregion 🔖️Tests
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
 
-#[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
 
-#[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+
+
+

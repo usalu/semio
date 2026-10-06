@@ -16,13 +16,56 @@
       "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "description": {
+          "en": "Id of the edge.",
+          "de": "Kennung der Kante."
+        },
+        "ref": {
+          "kind": "edge"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "from": {
-      "$ref": "#/$defs/PortRef"
+      "$ref": "#/$defs/PortRef",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Source",
+          "de": "Quelle"
+        },
+        "description": {
+          "en": "Node and port the edge starts at.",
+          "de": "Knoten und Anschluss, an dem die Kante beginnt."
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "to": {
-      "$ref": "#/$defs/PortRef"
+      "$ref": "#/$defs/PortRef",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Target",
+          "de": "Ziel"
+        },
+        "description": {
+          "en": "Node and port the edge ends at.",
+          "de": "Knoten und Anschluss, an dem die Kante endet."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

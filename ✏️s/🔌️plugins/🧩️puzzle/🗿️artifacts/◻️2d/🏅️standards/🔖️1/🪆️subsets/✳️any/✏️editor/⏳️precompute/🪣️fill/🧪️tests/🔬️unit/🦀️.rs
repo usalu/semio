@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::puzzle2d::config::PUZZLE2D_DEFAULT_SUGGESTION_OFFSET;
 use crate::editor::puzzle2d::unit_tests::context::*;
 use crate::editor::puzzle2d::modes::edit::tools::fill;
-use crate::editor::puzzle2d::{fixture_nodes, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID};
+use crate::editor::puzzle2d::{board_snapshot_nodes, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID};
 use geo::{coord, Intersects, Rect};
 use semio_framework_job::{drive_step, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
 use semio_framework_plugin::{DslValue, PluginApp};
@@ -12,21 +12,21 @@ use std::collections::BTreeMap;
 
 const FILL_RUN_FIXTURE: &str = include_str!("../../🧫️fixtures/🎞️fill-run.json");
 
-fn fixture() -> Value {
-    let fixture: Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture parses");
-    assert_eq!(fixture["schema"], "s.puzzle2d.fill-run.v1");
-    fixture
+fn snapshot() -> Value {
+    let snapshot: Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run snapshot parses");
+    assert_eq!(snapshot["schema"], "s.puzzle2d.fill-run.v1");
+    snapshot
 }
 
 fn number(value: &Value) -> u64 {
-    value.as_u64().unwrap_or_else(|| panic!("fixture number expected, found {value}"))
+    value.as_u64().unwrap_or_else(|| panic!("snapshot number expected, found {value}"))
 }
 
 fn text(value: &Value) -> &str {
-    value.as_str().unwrap_or_else(|| panic!("fixture text expected, found {value}"))
+    value.as_str().unwrap_or_else(|| panic!("snapshot text expected, found {value}"))
 }
 
-/// 🛍️ The committed document of a fixture `document` spec: an example load (or the empty board), optionally reduced
+/// 🛍️ The committed document of a snapshot `document` spec: an example load (or the empty board), optionally reduced
 /// to its first `keepNodes` nodes and the edges between them, or with every edge detached.
 fn example(spec: &Value) -> Arc<Puzzle2dPlaySnapshot> {
     let mut app = app_with_registry();
@@ -207,20 +207,20 @@ fn summary(log: &RunLog, prefix: usize) -> Value {
     })
 }
 
-/// 🎞️ Every fixture case reproduces its exact verdict prefix, counters, op/entity/checkpoint counts and stall, and
+/// 🎞️ Every snapshot case reproduces its exact verdict prefix, counters, op/entity/checkpoint counts and stall, and
 /// every run keeps the per-run laws: two ops and one entity per placement, verdict counts equal the counters,
 /// every final verdict was first `testing`, ops alternate `create_node`/`connect_handles`, entities digest the
 /// created node ids, placements never reuse a document id, and the run ends `complete` with one closing step.
 #[test]
 fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
-    let fixture = fixture();
-    let prefix = number(&fixture["verdictPrefix"]) as usize;
-    for case in fixture["cases"].as_array().expect("cases") {
+    let snapshot = snapshot();
+    let prefix = number(&snapshot["verdictPrefix"]) as usize;
+    for case in snapshot["cases"].as_array().expect("cases") {
         let document = example(&case["document"]);
         let log = run(&document, number(&case["run"]), number(&case["requested"]));
         assert_eq!(summary(&log, prefix), case["expected"], "{}", text(&case["id"]));
         let counters = log.counters();
-        assert_eq!(log.ops.len() as u64, counters[1] * number(&fixture["opsPerPlacement"]));
+        assert_eq!(log.ops.len() as u64, counters[1] * number(&snapshot["opsPerPlacement"]));
         assert_eq!(log.entities.len() as u64, counters[1]);
         let count = |wanted: ToolRunVerdict| log.finals.iter().filter(|(_, verdict, ..)| *verdict == wanted).count() as u64;
         assert_eq!((log.finals.len() as u64, count(ToolRunVerdict::Success), count(ToolRunVerdict::Danger), count(ToolRunVerdict::Warning)), (counters[0], counters[1], counters[2], counters[3]));
@@ -249,11 +249,11 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
 /// of puzzle3d's target-volume rule, stated by `🎞️fill-run.json`'s own `targetRegion` vector.
 #[test]
 fn fill_run_job_places_only_inside_visible_target_regions() {
-    let fixture = fixture();
-    let vector = &fixture["targetRegion"];
+    let snapshot = snapshot();
+    let vector = &snapshot["targetRegion"];
     let expected = &vector["expected"];
     let base = example(&vector["document"]);
-    let seed = fixture_nodes(base.value()).first().cloned().expect("the reduced board keeps its seed node");
+    let seed = board_snapshot_nodes(base.value()).first().cloned().expect("the reduced board keeps its seed node");
     let (cx, cy) = (seed["x"].as_f64().expect("seed x"), seed["y"].as_f64().expect("seed y"));
     let half = vector["halfSpan"].as_f64().expect("half span");
     let bounds = [cx - half, cy - half, cx + half, cy + half];
@@ -291,7 +291,7 @@ fn fill_run_job_places_only_inside_visible_target_regions() {
         let refusals: Vec<&(u64, ToolRunVerdict, u16, ToolRunTraceSubject)> = constrained.finals.iter().filter(|(_, _, code, _)| reason_id(*code) == reason).collect();
         assert!(!refusals.is_empty(), "the constrained run refused nothing as {reason}, so the constraint never bit");
         for (_, produced, ..) in &refusals {
-            assert_eq!(verdict_id(*produced), verdict, "an {reason} refusal carries the verdict the fixture declares");
+            assert_eq!(verdict_id(*produced), verdict, "an {reason} refusal carries the verdict the snapshot declares");
         }
     }
     if expected["unconstrainedRunLeavesTheRegion"].as_bool() == Some(true) {
@@ -338,7 +338,7 @@ fn depth(left: &Rect<f64>, right: &Rect<f64>) -> f64 {
 /// may disagree.
 #[test]
 fn fill_run_job_collision_verdicts_agree_with_the_geo_oracle() {
-    let law = &fixture()["geoOracle"];
+    let law = &snapshot()["geoOracle"];
     let document = example(&law["document"]);
     let log = run(&document, number(&law["run"]), number(&law["requested"]));
     let hosts: Vec<Rect<f64>> = document.value()["nodes"].as_array().expect("nodes").iter().map(oracle_node_rect).collect();
@@ -390,7 +390,7 @@ fn fill_run_job_collision_verdicts_agree_with_the_geo_oracle() {
 /// free-run equality below is what the law really proves.
 #[test]
 fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict() {
-    let document = example(&fixture()["resume"]["document"]);
+    let document = example(&snapshot()["resume"]["document"]);
     let mut job = fresh(&document, 1, 6);
     let mut log = RunLog::default();
     run_to_complete(&mut job, 1, &mut log);
@@ -408,7 +408,7 @@ fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict
 /// count it retracts the provisional tail to exactly the kept placements, retires their success records and completes.
 #[test]
 fn fill_run_job_resume_raise_continues_the_sequence_and_lower_retracts_the_tail() {
-    let law = &fixture()["resume"];
+    let law = &snapshot()["resume"];
     let document = example(&law["document"]);
     let (run_id, first, raise, lower) = (number(&law["run"]), number(&law["first"]), number(&law["raise"]), number(&law["lower"]));
     let base = run(&document, run_id, first);
@@ -445,7 +445,7 @@ fn fill_run_job_resume_raise_continues_the_sequence_and_lower_retracts_the_tail(
 /// placement it marks exactly that placement `danger`, retracts to it and re-appends every later survivor.
 #[test]
 fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors() {
-    let law = &fixture()["revalidate"];
+    let law = &snapshot()["revalidate"];
     let document = example(&law["document"]);
     let base = run(&document, number(&law["run"]), number(&law["requested"]));
     let checkpoint = base.checkpoints.last().expect("checkpoint").clone();
@@ -503,7 +503,7 @@ fn replay_clock() -> Option<u64> {
 /// as job cost.
 #[test]
 fn fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin() {
-    let law = &fixture()["interactive"];
+    let law = &snapshot()["interactive"];
     let document = example(&law["document"]);
     let mut best: Vec<u128> = Vec::new();
     for cold in 0..number(&law["coldRuns"]) {
@@ -587,15 +587,15 @@ fn document_pack(app: &Puzzle2dApp) -> store::ArtifactPackFiles {
     ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("document pack")
 }
 
-/// 🧰️ An app holding the fixture `document` spec's example reduced to its first `keepNodes` nodes — the removed
+/// 🧰️ An app holding the snapshot `document` spec's example reduced to its first `keepNodes` nodes — the removed
 /// nodes deleted by ordinary local `delete-node` edits — with the fill count set in config.
 fn fill_app(spec: &Value, requested: u64) -> Puzzle2dApp {
     let mut app = app_with_registry();
     load_example(&mut app, text(&spec["example"]));
     let keep = number(&spec["keepNodes"]) as usize;
-    let deletes: Vec<String> = fixture_nodes(&fixture_of(&app)).iter().skip(keep).filter_map(|node| node["id"].as_str()).map(|id| protocol::OpText::print_op(&crate::standards::v1::subsets::any::schema::mutations::delete_node(id.to_string()))).collect();
+    let deletes: Vec<String> = board_snapshot_nodes(&fixture_of(&app)).iter().skip(keep).filter_map(|node| node["id"].as_str()).map(|id| protocol::OpText::print_op(&crate::standards::v1::subsets::any::schema::mutations::delete_node(id.to_string()))).collect();
     ::semio_framework_async::poll::resolve_ready(app.ingest_operations_text(&deletes.join("\n"))).expect("delete the nodes past keepNodes");
-    assert_eq!(fixture_of(&app), example(spec).value().clone(), "the app commits exactly the fixture document");
+    assert_eq!(fixture_of(&app), example(spec).value().clone(), "the app commits exactly the snapshot document");
     dispatch(&mut app, "setFillCount", Some(&json!({ "count": requested })), None).expect("set fill count");
     app
 }
@@ -604,11 +604,11 @@ fn fill_app(spec: &Value, requested: u64) -> Puzzle2dApp {
 /// finalize publishes them as exactly one history entry, and one undo removes every placed node.
 #[test]
 fn fill_run_start_complete_finalize_is_one_undo_entry() {
-    let law = &fixture()["finalize"];
+    let law = &snapshot()["finalize"];
     let requested = number(&law["requested"]);
     let mut app = fill_app(&law["document"], requested);
     let before = fixture_of(&app);
-    let (nodes, history) = (fixture_nodes(&before).len(), history_len(&mut app));
+    let (nodes, history) = (board_snapshot_nodes(&before).len(), history_len(&mut app));
     assert_eq!(tool_run_action(&mut app, "toolRunStart", &[("toolId", DslValue::String(fill::TOOL_ID.into()))]).get("toolRun").and_then(DslValue::as_str), Some("spawnJob"));
     pump_until(&mut app, "fill run completes", |app| run_state(app) == Some("complete"));
     assert_eq!(app.tool_run_presence().map(|presence| (presence.completed, presence.total)), Some((requested, Some(requested))));
@@ -618,10 +618,10 @@ fn fill_run_start_complete_finalize_is_one_undo_entry() {
     let run = [("runId", DslValue::String("1".into())), ("generation", DslValue::String("0".into()))];
     assert_eq!(tool_run_action(&mut app, "toolRunFinalize", &run).get("toolRun").and_then(DslValue::as_str), Some("beginFinalize"));
     pump_until(&mut app, "fill run finalizes", |app| run_state(app) == Some("finalized"));
-    assert_eq!(fixture_nodes(&fixture_of(&app)).len(), nodes + requested as usize);
+    assert_eq!(board_snapshot_nodes(&fixture_of(&app)).len(), nodes + requested as usize);
     assert_eq!((history_len(&mut app) - history) as u64, number(&law["historyEntriesAdded"]));
     dispatch(&mut app, "undo", None, None).expect("undo the finalized fill run");
-    assert_eq!(fixture_nodes(&fixture_of(&app)).len(), nodes, "one undo removes every placement");
+    assert_eq!(board_snapshot_nodes(&fixture_of(&app)).len(), nodes, "one undo removes every placement");
     close_app(&mut app);
 }
 
@@ -635,14 +635,14 @@ fn a_hundred_placement_fill_is_one_history_entry_that_undoes_and_redoes() {
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     dispatch(&mut app, "setFillCount", Some(&json!({ "count": 100 })), None).expect("set fill count");
     let before = fixture_of(&app);
-    let (nodes, history) = (fixture_nodes(&before).len(), history_len(&mut app));
+    let (nodes, history) = (board_snapshot_nodes(&before).len(), history_len(&mut app));
     tool_run_action(&mut app, "toolRunStart", &[("toolId", DslValue::String(fill::TOOL_ID.into()))]);
     pump_until(&mut app, "hundred-placement fill run completes", |app| run_state(app) == Some("complete"));
     let run = [("runId", DslValue::String("1".into())), ("generation", DslValue::String("0".into()))];
     tool_run_action(&mut app, "toolRunFinalize", &run);
     pump_until(&mut app, "hundred-placement fill run finalizes", |app| run_state(app) == Some("finalized"));
     let filled = fixture_of(&app);
-    let placed = fixture_nodes(&filled).len();
+    let placed = board_snapshot_nodes(&filled).len();
     assert!(placed > nodes, "the run must place at least one node, placed {placed} from {nodes}");
     assert_eq!(history_len(&mut app) - history, 1, "a whole fill run costs the history exactly one entry");
     dispatch(&mut app, "undo", None, None).expect("undo the finalized fill run");
@@ -655,7 +655,7 @@ fn a_hundred_placement_fill_is_one_history_entry_that_undoes_and_redoes() {
 /// 🛑️ Abort after provisional placements exist leaves the document pack byte-identical and the history untouched.
 #[test]
 fn fill_run_abort_leaves_the_document_byte_identical() {
-    let law = &fixture()["finalize"];
+    let law = &snapshot()["finalize"];
     let mut app = fill_app(&law["document"], number(&law["requested"]));
     let (pack, history) = (document_pack(&app), history_len(&mut app));
     tool_run_action(&mut app, "toolRunStart", &[("toolId", DslValue::String(fill::TOOL_ID.into()))]);

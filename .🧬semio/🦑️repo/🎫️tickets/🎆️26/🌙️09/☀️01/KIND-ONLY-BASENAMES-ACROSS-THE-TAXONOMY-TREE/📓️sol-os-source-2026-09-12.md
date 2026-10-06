@@ -52,7 +52,7 @@ The source hashes were captured from the live files before the move. The current
 | 26 | 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧬️session.d.ts | 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.d.ts | typescript-declaration / removed | 144 / 4 | 50e1da46fed6f7800eaf361d245c2065af54ee2fd9e2b5719483dcba8c5c1089 | 50e1da46fed6f7800eaf361d245c2065af54ee2fd9e2b5719483dcba8c5c1089 |
 | 27 | 🌎️hub/📦️packages/🟦️typescript/🟦️.ts | 🌎️hub/🤝️integration-harness/🟦️.ts | typescript / package-glue | 12437 / 247 | cb751f755848ab9ebe38644561bea8c5b247d8a451c445ca580835926e70705e | f168376029b72459fcc8f6b82f0153ed1e36254308c09aaa74132a7d177829a2 |
 | 28 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/🦀️.rs | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🦀️.rs | rust / removed | 30813 / 520 | 64d561dc30b9883156a7a3ed942e148991fdb8e3ac4b6737252d15cfb08876f8 | 95055d1e4e7c032bebfe216a9acc4bb15480e60a7ad906ccdf6c5e33b3eb81d9 |
-| 29 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/🦀️.rs | rust / removed | 1153 / 40 | 3276feb9a423a52d2ea5d96faae813af1b1e519a742be5b0fe2bade947e872a2 | 3276feb9a423a52d2ea5d96faae813af1b1e519a742be5b0fe2bade947e872a2 |
+| 29 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/🦀️.rs | rust / removed | 1153 / 40 | 3276feb9a423a52d2ea5d96faae813af1b1e519a742be5b0fe2bade947e872a2 | 3276feb9a423a52d2ea5d96faae813af1b1e519a742be5b0fe2bade947e872a2 |
 | 30 | 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🧹️executable-source/🟦️.ts | 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧹️executable-source/🟦️.ts | typescript / removed | 217 / 4 | 6828ea4e15206d5dd60673dcd2310c2fbc51639fe1be29f781af79c573917717 | 6828ea4e15206d5dd60673dcd2310c2fbc51639fe1be29f781af79c573917717 |
 
 Four package-body cases called out during coordination are explicitly represented:
@@ -136,7 +136,7 @@ The portable fixture retains the following exact consumers. Each exists in the f
 - 🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml
 - 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx
 - 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx
-- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml
 - 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts
 - 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📋️project.json
 - 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts

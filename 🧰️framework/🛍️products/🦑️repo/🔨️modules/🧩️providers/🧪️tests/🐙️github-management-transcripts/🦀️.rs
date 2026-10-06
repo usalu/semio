@@ -12,7 +12,7 @@ mod subject {
     const TRANSCRIPTS: &str = "shared://🐙️github-management-transcripts/🎞️gh-transcripts.json";
 
     fn provider(ctx: &Context) -> Result<GitHubManagementProvider, String> {
-        let transcript = ctx.fixture_json(TRANSCRIPTS)?.get(&ctx.scenario.id).cloned().ok_or_else(|| format!("transcript fixture carries no entry for scenario {}", ctx.scenario.id))?;
+        let transcript = ctx.input_json(TRANSCRIPTS)?.get(&ctx.scenario.id).cloned().ok_or_else(|| format!("transcript fixture carries no entry for scenario {}", ctx.scenario.id))?;
         let runner = RecordedProcessRunner::from_json(&transcript.to_string()).map_err(|error| error.message)?;
         Ok(GitHubManagementProvider::new(ProcessRunners::from(runner)))
     }

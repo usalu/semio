@@ -1,0 +1,86 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "schema": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧬️schema/🔣️.json",
+    "literal": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🏗️bootstrap/🧬️schema/🔣️.json",
+    "line": 48
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "schema": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧬️schema/🔣️.json",
+    "literal": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧬️schema/🔣️.json",
+    "line": 302
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "schema": "🧰️framework/🔨️modules/🎭️actor/🏘️composition/🧬️schema/🔣️.json",
+    "literal": "../../../../../../🔨️modules/🎭️actor/🏘️composition/🧬️schema/🔣️.json",
+    "line": 320
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "schema": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧬️schema/🔣️.json",
+    "literal": "../../../../../../🔨️modules/🎭️actor/🪪️activation/📤️return/🏘️admission/🧬️schema/🔣️.json",
+    "line": 817
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+    "schema": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema/🔣️.json",
+    "literal": "../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🧯️fault/🧬️schema/🔣️.json",
+    "line": 969
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🟦️.ts",
+    "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧬️schema/🔣️.json",
+    "literal": "../../🧬️schema/🔣️.json",
+    "line": 7
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+    "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔣️.json",
+    "literal": "../../🧬️schema/🔣️.json",
+    "line": 8
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+    "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🧵️topology/🔣️.json",
+    "literal": "../../🧬️schema/🧵️topology/🔣️.json",
+    "line": 20
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+    "schema": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/📐️selection/🔣️.json",
+    "literal": "../../🧬️schema/📐️selection/🔣️.json",
+    "line": 39
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "schema": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🧬️schema/🚦️sqlite-cohort/🔣️.json",
+    "literal": "../../../../../../../../../../📇️registry/🧬️contract/📐️part21/🧬️schema/🚦️sqlite-cohort/🔣️.json",
+    "line": 17
+  },
+  {
+    "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️tests/🪟️window-config-contract/🟦️.ts",
+    "schema": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🧬️schema/🚧️retained-limits/🔣️.json",
+    "literal": "../../🎮️commands/🧬️schema/🚧️retained-limits/🔣️.json",
+    "line": 11
+  },
+  {
+    "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🔌️container-providers/🟦️.ts",
+    "schema": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧬️schema/🔌️container-providers/🔣️.json",
+    "literal": "../../🧬️schema/🔌️container-providers/🔣️.json",
+    "line": 4
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧩️map-create-region-group/🟦️.ts",
+    "schema": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧬️schema/🧩️map-create-region-group/🔣️.json",
+    "literal": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧬️schema/🧩️map-create-region-group/🔣️.json",
+    "line": 8
+  },
+  {
+    "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🌐️browser/🟦️.ts",
+    "schema": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧬️schema/🔣️.json",
+    "literal": "../../🧬️schema/🔣️.json",
+    "line": 5
+  }
+]

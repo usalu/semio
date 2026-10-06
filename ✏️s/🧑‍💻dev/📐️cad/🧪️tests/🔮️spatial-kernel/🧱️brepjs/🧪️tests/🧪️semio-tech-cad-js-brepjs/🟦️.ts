@@ -478,8 +478,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("concrete forest left play fixture roundtrips shape, building, energy, and structure models", async () => {
       const { readFile } = await import("node:fs/promises");
       const fixturePath = new URL("../../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🎮️play/🔣️.json", source.url);
-      const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
-      const space = ModelSpace.fromJSON(fixtureJson);
+      const snapshotJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
+      const space = ModelSpace.fromJSON(snapshotJson);
       const shape = space.models[defaultModelDefinitionId()]!;
       const building = space.models[AEC_BUILDING_MODEL_DEFINITION_ID]!;
       const energy = space.models[AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID]!;

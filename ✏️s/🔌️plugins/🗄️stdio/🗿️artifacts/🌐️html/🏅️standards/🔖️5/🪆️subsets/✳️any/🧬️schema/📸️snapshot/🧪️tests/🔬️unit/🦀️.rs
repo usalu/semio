@@ -1,3 +1,4 @@
+use crate::standards::v5::subsets::any::io::text::snapshot::write_html_document;
 use super::*;
 
 const FIXTURE: &str = include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🧪️example/🌐️.html");

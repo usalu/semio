@@ -10,10 +10,38 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Design id",
+          "de": "Entwurfs-ID"
+        },
+        "description": {
+          "en": "Id the new design carries.",
+          "de": "Kennung, die der neue Entwurf trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "description": {
+          "en": "Display name of the new design.",
+          "de": "Anzeigename des neuen Entwurfs."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

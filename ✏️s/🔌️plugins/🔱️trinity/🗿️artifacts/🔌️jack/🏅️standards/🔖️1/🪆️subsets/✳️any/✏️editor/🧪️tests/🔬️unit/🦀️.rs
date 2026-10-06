@@ -15,7 +15,7 @@ fn trinity_jack_manifest_for_tests() -> App {
 #[semio_framework_async_macros::async_test]
 async fn trinity_jack_command_text_and_binary_round_trip() {
     let commands = vec![
-        TrinityJackCommand::SetFixtureJson { json: "{}".into() },
+        TrinityJackCommand::LoadDocumentJson { json: "{}".into() },
         TrinityJackCommand::DeleteSelection,
         TrinityJackCommand::PatchNodes { node_ids: vec!["a".into()], field: "name".into(), value: "Renamed".into() },
         TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a".into()), results_window_id: "results".into() },
@@ -110,7 +110,7 @@ async fn settle(app: &mut JackTestApp) -> artifact_app_laws::TypedOperationFixtu
 }
 
 fn jack_envelope_wire() -> Vec<u8> {
-    jack_envelope_wire_of(crate::empty_trinity_graph_fixture())
+    jack_envelope_wire_of(crate::empty_trinity_graph_snapshot())
 }
 
 /// 📦️ The exact envelope wire a host hands the guest for `snapshot` (initial snapshot, no edits).
@@ -134,7 +134,7 @@ fn jack_envelope_wire_of(snapshot: crate::JackSnapshot) -> Vec<u8> {
     }))
     .into_bytes();
     let envelope = store::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None);
-    let mut retirement = crate::standards::v1::subsets::any::schema::mutations::binary::jack_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::jack_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Jack fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {
@@ -297,7 +297,7 @@ async fn node_graph_select_updates_selection_and_document_tree() {
 
 #[semio_framework_async_macros::async_test]
 async fn nakagin_fixture_has_nodes() {
-    assert!(!crate::jack_working_scene(&default_fixture()).expect("curated example scene").nodes.is_empty());
+    assert!(!crate::jack_working_scene(&default_snapshot()).expect("curated example scene").nodes.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -698,7 +698,7 @@ async fn window_kind_actions_scope_text_verbs_to_the_query_editor() {
 }
 
 /// 🎫️ Slice B3b. The navbar example picker dispatches a REGISTERED example id, and `demo` is the only
-/// example this subset registers — `fixture_dsl_for_preset` knew `nakagin`/`branch-chain` only, so
+/// example this subset registers — `example_dsl_for_preset` knew `nakagin`/`branch-chain` only, so
 /// every navbar pick resolved to `None` and loaded nothing with no fault anywhere. The staged argument
 /// form must offer the same registered id, never an id the resolver would drop.
 #[semio_framework_async_macros::async_test]
@@ -741,7 +741,7 @@ async fn set_active_example_resolves_every_id_the_shell_can_send() {
 /// ships with, and must run there.
 #[semio_framework_async_macros::async_test]
 async fn every_shipped_query_lints_clean_and_runs_on_the_curated_example() {
-    let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_FIXTURE_DSL).expect("curated example parses");
+    let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_EXAMPLE_DSL).expect("curated example parses");
     for query in [crate::TRINITY_JACK_DEFAULT_QUERY, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b"] {
         let graph = crate::Graph::from_snapshot(example.clone()).expect("curated example graph");
         let diagnostics = crate::core::lint(&graph, query);
@@ -824,7 +824,7 @@ async fn the_shells_select_all_patch_undo_redo_round_trip_restores_every_node() 
 #[semio_framework_async_macros::async_test]
 async fn a_loaded_example_keeps_the_local_users_patch_undoable() {
     let mut app = new_app().await;
-    let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_FIXTURE_DSL).expect("curated example parses");
+    let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_EXAMPLE_DSL).expect("curated example parses");
     let handle = admit_jack_envelope(&mut app, &jack_envelope_wire_of(example));
     assert_eq!(drive_jack_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("exact load acknowledgement"));
@@ -910,7 +910,7 @@ async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_wit
         (schema.get("type").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-format").and_then(semio_framework_plugin::DslValue::as_str), items.get("x-semio-entity-kind").and_then(semio_framework_plugin::DslValue::as_str)),
         (Some("array"), Some("entityId"), Some("ast/node"))
     );
-    let first = crate::jack_working_scene(&default_fixture()).expect("curated example scene").nodes[0].id.clone();
+    let first = crate::jack_working_scene(&default_snapshot()).expect("curated example scene").nodes[0].id.clone();
     let named = probe_agent_lane::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(
         create_trinity_jack_app,
         Some(&format!(r#"{{"verbs":{{"patchNodes":{{"nodeIds":["{first}"],"field":"name","value":"Agent Named"}}}}}}"#)),

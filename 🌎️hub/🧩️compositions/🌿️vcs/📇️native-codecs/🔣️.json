@@ -10,20 +10,9 @@
       "schema": "vcs.vcs",
       "extension": "vcs",
       "capability": "s.vcs.vcs.codec.document",
-      "protocolPath": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocolPath": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "protocolBytes": 331,
       "protocolSha256": "e16083d1e963d571b44c3cc4eac8d5d3992aeecf606cd4a4a6b1095c101605d3"
     }
-  ],
-  "hostile": [
-    "missing",
-    "duplicate",
-    "foreign-package",
-    "wrong-version",
-    "bare-kind",
-    "legacy-schema",
-    "legacy-kind",
-    "wrong-extension",
-    "zero-hash"
   ]
 }

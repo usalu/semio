@@ -19,5 +19,6 @@
     "json-schema",
     "text",
     "binary"
-  ]
+  ],
+  "editable": false
 }

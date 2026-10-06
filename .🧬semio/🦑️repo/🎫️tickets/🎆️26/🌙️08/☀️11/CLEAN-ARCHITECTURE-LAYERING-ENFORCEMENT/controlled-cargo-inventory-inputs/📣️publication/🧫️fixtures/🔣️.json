@@ -1,0 +1,96 @@
+{
+  "cases": [
+    {
+      "id": "comments-and-neighbor",
+      "source": "title = \"keep\"\n[workspace]\n# members = [\"decoy\"]\nmembers = [\"old\"] # keep members comment\nexclude = []\n[package]\nname = \"keep\"\n",
+      "members": [
+        "a",
+        "b"
+      ],
+      "exclude": [
+        "child"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "multiline-array",
+      "source": "[workspace]\nmembers = [\n \"old]\", # ] decoy\n]\nexclude = [\"old\"]\n",
+      "members": [
+        "a\"b",
+        "back\\slash"
+      ],
+      "exclude": [],
+      "accepted": true
+    },
+    {
+      "id": "missing-exclude",
+      "source": "[workspace]\nmembers = [\"old\"]\n[workspace.metadata]\nkeep = true\n",
+      "members": [
+        "."
+      ],
+      "exclude": [
+        "child"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "inline-fields",
+      "source": "workspace = { members = [\"old\"], exclude = [] }\nother = \"preserved\"\n",
+      "members": [
+        "a"
+      ],
+      "exclude": [
+        "child"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "inline-missing-exclude",
+      "source": "workspace = { members = [\"old\"] }\n",
+      "members": [
+        "a"
+      ],
+      "exclude": [],
+      "accepted": false
+    },
+    {
+      "id": "dotted-fields",
+      "source": "workspace.members = [\"old\"]\nworkspace.exclude = []\n",
+      "members": [
+        "a"
+      ],
+      "exclude": [],
+      "accepted": true
+    },
+    {
+      "id": "crlf",
+      "source": "[workspace]\r\nmembers = [\"old\"]\r\nexclude = []\r\n",
+      "members": [
+        "a"
+      ],
+      "exclude": [
+        "child"
+      ],
+      "accepted": true
+    },
+    {
+      "id": "quoted-header",
+      "source": "[\"workspace\"]\nmembers = [\"old\"]\nexclude = []\n",
+      "members": [
+        "unicode/🦀️"
+      ],
+      "exclude": [],
+      "accepted": true
+    },
+    {
+      "id": "invalid-members",
+      "source": "[workspace]\nmembers = [\"old\"]\nexclude = []\n",
+      "members": [
+        "a",
+        "a"
+      ],
+      "exclude": [],
+      "accepted": false
+    }
+  ]
+}

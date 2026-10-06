@@ -115,7 +115,7 @@ async fn set_result_animation_applies_one_named_field() {
 /// disagrees with the configuration actually captured, is refused by name.
 #[semio_framework_async_macros::async_test]
 async fn set_result_animation_honours_the_window_a_control_tagged() {
-    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();

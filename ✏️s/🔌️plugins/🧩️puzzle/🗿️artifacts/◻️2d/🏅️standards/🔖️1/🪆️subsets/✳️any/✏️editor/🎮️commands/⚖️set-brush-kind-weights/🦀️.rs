@@ -64,8 +64,8 @@ fn puzzle2d_ensure_catalog_kind_weights(weights: &mut BTreeMap<String, f64>, kin
 }
 
 pub fn set_brush_kind_weights(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
-    let node_ids = puzzle2d_kind_ids(&ctx.scene.fixture, "nodes");
-    let handle_ids = puzzle2d_kind_ids(&ctx.scene.fixture, "handles");
+    let node_ids = puzzle2d_kind_ids(&ctx.scene.board_snapshot, "nodes");
+    let handle_ids = puzzle2d_kind_ids(&ctx.scene.board_snapshot, "handles");
     puzzle2d_ensure_catalog_kind_weights(&mut ctx.scene.runtime.node_kind_weights, &node_ids);
     puzzle2d_ensure_catalog_kind_weights(&mut ctx.scene.runtime.handle_kind_weights, &handle_ids);
     if let Some(weights) = args.and_then(|value| value.get("weights")) {

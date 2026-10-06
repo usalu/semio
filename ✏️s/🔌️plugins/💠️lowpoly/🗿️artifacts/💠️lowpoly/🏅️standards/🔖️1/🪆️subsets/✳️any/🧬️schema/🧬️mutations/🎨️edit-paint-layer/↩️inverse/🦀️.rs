@@ -3,7 +3,7 @@
 //! empty runs, matching the original write's own out-of-range no-op behavior).
 
 use super::EditPaintLayer;
-use crate::mutations::PixelRun;
+use crate::schema::PixelRun;
 use crate::{LowpolyMutation, LowpolySnapshot};
 
 //#region 🔖️Inverse

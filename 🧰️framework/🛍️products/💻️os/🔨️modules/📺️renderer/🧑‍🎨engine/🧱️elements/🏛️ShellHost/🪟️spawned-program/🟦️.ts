@@ -138,10 +138,9 @@ export function guestActiveUtilityByWindowIdV1(
   byWindowId: Readonly<Record<string, string | null>>,
   spawnedId: string | null,
   spawnedIds: readonly string[],
-): Record<string, string> {
-  const entries: [string, string][] = [];
+): Record<string, string | null> {
+  const entries: [string, string | null][] = [];
   for (const [windowId, utilityId] of Object.entries(byWindowId)) {
-    if (!utilityId) continue;
     const owner = spawnedIdOfWindowInstanceV1(windowId, spawnedIds);
     if (owner !== spawnedId) continue;
     entries.push([owner === null ? windowId : windowId.slice(owner.length + SPAWNED_WINDOW_SEPARATOR.length), utilityId]);

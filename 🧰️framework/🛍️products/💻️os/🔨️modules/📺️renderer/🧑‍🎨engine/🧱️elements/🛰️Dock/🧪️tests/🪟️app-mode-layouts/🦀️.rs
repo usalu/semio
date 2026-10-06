@@ -101,6 +101,7 @@ struct FixtureStack {
 //#region 🧫️FixtureApp
 fn fixture_window_kind(kind: &FixtureWindowKind) -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: kind.id.clone(),
         label: LocalizedLabel::data(&kind.label),
         body_key: format!("{}.body", kind.id),

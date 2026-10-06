@@ -1076,7 +1076,7 @@ fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<L
     // 📤️ A queue of the job's OWN, never `request.output_chunks`: the mounted operation keeps a clone
     // of the request's queue and drains it at retirement (`MountedTypedCommandFullOperation::
     // retirement_step`), which emptied every download right after the host's ACK — a 0-byte `Demo.pdf`
-    // (ticket 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END). Same shape as puzzle's `export_fixture`.
+    // (ticket 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END). Same shape as puzzle's `export_snapshot`.
     drop(request.output_chunks);
     let payload = LayoutExportToolPayload {
         request: LayoutExportRequest { kind, page_id, snapshot: request.snapshot, preflight_json: None, parent_document_id: request.parent_document_id, canonical_base_revision_hex },
@@ -1222,7 +1222,7 @@ impl ArtifactEditor for LayoutPlayApp {
     const DOCUMENT_SCHEMA: &'static str = crate::LAYOUT_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> LayoutSnapshot {
-        crate::standards::v1::subsets::any::schema::default_document()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

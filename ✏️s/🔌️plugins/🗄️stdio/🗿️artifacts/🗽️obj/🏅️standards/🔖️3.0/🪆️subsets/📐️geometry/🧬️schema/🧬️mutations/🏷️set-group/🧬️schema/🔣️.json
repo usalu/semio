@@ -15,13 +15,41 @@
       "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Group",
+          "de": "Gruppe"
+        },
+        "description": {
+          "en": "Name of the group (`g` statement) that is created or reassigned.",
+          "de": "Name der Gruppe (`g`-Anweisung), die angelegt oder neu zugeordnet wird."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "faces": {
       "type": "array",
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Faces",
+          "de": "Flächen"
+        },
+        "description": {
+          "en": "Indices of the faces that belong to the group, counted from 0.",
+          "de": "Indizes der Flächen, die zu der Gruppe gehören, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 20
       }
     }
   }

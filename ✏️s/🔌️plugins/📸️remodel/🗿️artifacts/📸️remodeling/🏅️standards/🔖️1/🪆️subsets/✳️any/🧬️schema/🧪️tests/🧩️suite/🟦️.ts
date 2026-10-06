@@ -17,10 +17,13 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { decodeRemodelingSnapshot, defaultRemodelingScene, remodelingSnapshotToJsonText, type RemodelingSnapshot } from "../../📸️snapshot/🟦️.ts";
-import { applyRemodelingDiff, decodeRemodelingDiff, remodelingDiffLanes, remodelingDiffToJsonText } from "../../🔺️diff/🟦️.ts";
-import { REMODELING_MUTATION_TAGS, applyRemodelingMutation, decodeRemodelingMutation, remodelingMutationOutcome } from "../../🧬️mutations/🟦️.ts";
-import { remodelingArtifactFromSnapshot, remodelingArtifactToSnapshot } from "../../🟦️.ts";
+import {decodeRemodelingSnapshot, remodelingSnapshotToJsonText} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+import {defaultRemodelingScene, type RemodelingSnapshot} from "../../📸️snapshot/🟦️.ts";
+import {applyRemodelingDiff, remodelingDiffLanes} from "../../🔺️diff/🟦️.ts";
+import {decodeRemodelingDiff, remodelingDiffToJsonText} from "../../../🚪️io/📝️text/🔺️diff/🔣️json/🟦️.ts";
+import {REMODELING_MUTATION_TAGS, applyRemodelingMutation, remodelingMutationOutcome} from "../../🧬️mutations/🟦️.ts";
+import {decodeRemodelingMutation} from "../../../🚪️io/📝️text/🧬️mutations/🔣️json/🟦️.ts";
+import {remodelingArtifactFromSnapshot, remodelingArtifactToSnapshot} from "../../🟦️.ts";
 import { remodelingSnapshotFromDslText } from "../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));

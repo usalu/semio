@@ -1,0 +1,135 @@
+[
+  {
+    "id": "graph",
+    "accepted": true,
+    "input": {
+      "id": "graph",
+      "owner": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
+      "command": [
+        "test-native",
+        "long"
+      ],
+      "cargoArgs": [
+        "--lib",
+        "--no-fail-fast"
+      ],
+      "selectedFeatures": [],
+      "level": "long",
+      "extraFeatureScope": false
+    }
+  },
+  {
+    "id": "ui-board",
+    "accepted": true,
+    "input": {
+      "id": "ui-board",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+      "command": [
+        "test",
+        "wgpu-engine",
+        "long",
+        "--features",
+        "board"
+      ],
+      "cargoArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib",
+        "--features",
+        "board"
+      ],
+      "selectedFeatures": [
+        "wgpu-engine",
+        "board"
+      ],
+      "level": "long",
+      "extraFeatureScope": "Explicit staged Board owner feature added to unchanged original full wgpu-engine owner route"
+    }
+  },
+  {
+    "id": "missing-board",
+    "accepted": false,
+    "input": {
+      "id": "ui-board",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+      "command": [
+        "test",
+        "wgpu-engine",
+        "long",
+        "--features",
+        "board"
+      ],
+      "cargoArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib",
+        "--features",
+        "board"
+      ],
+      "selectedFeatures": [
+        "wgpu-engine"
+      ],
+      "level": "long",
+      "extraFeatureScope": "Explicit staged Board owner feature added to unchanged original full wgpu-engine owner route"
+    }
+  },
+  {
+    "id": "filter",
+    "accepted": false,
+    "input": {
+      "id": "graph",
+      "owner": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
+      "command": [
+        "test-native",
+        "long",
+        "--filter",
+        "force"
+      ],
+      "cargoArgs": [
+        "--lib",
+        "--no-fail-fast"
+      ],
+      "selectedFeatures": [],
+      "level": "long",
+      "extraFeatureScope": false
+    }
+  },
+  {
+    "id": "wrong-owner",
+    "accepted": false,
+    "input": {
+      "id": "graph",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+      "command": [
+        "test-native",
+        "long"
+      ],
+      "cargoArgs": [
+        "--lib",
+        "--no-fail-fast"
+      ],
+      "selectedFeatures": [],
+      "level": "long",
+      "extraFeatureScope": false
+    }
+  },
+  {
+    "id": "quick",
+    "accepted": false,
+    "input": {
+      "id": "graph",
+      "owner": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
+      "command": [
+        "test-native",
+        "long"
+      ],
+      "cargoArgs": [
+        "--lib",
+        "--no-fail-fast"
+      ],
+      "selectedFeatures": [],
+      "level": "quick",
+      "extraFeatureScope": false
+    }
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "source": "empty"
+  },
+  {
+    "source": "opaque cropped path"
+  },
+  {
+    "source": "overlapping separate layers"
+  },
+  {
+    "source": "nested group opacity"
+  }
+]

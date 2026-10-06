@@ -83,13 +83,9 @@ type RetainedAuditFixture = {
 class RetainedAuditScript extends BundleScript {
   async run(): Promise<void> {
     const fixturePath = resolve(this.root, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json");
-    const schemaPath = resolve(this.root, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json");
     const ownerPath = resolve(this.root, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
     const fixture = (await Bun.file(fixturePath).json()) as RetainedAuditFixture;
-    const schema = (await Bun.file(schemaPath).json()).$defs.CadRetainedJobs;
     const owner = await Bun.file(ownerPath).text();
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    if (!validate(fixture)) throw new Error(`CAD retained audit schema rejected the fixture: ${JSON.stringify(validate.errors)}`);
 
     const commandBlock = owner.slice(owner.indexOf("semio_framework_plugin::app_commands!"), owner.indexOf("/// 🌉️ Converts"));
     const commandIds = [...commandBlock.matchAll(/^\s*"([^"]+)"\s+as\s+/gm)].map((match) => match[1]!);

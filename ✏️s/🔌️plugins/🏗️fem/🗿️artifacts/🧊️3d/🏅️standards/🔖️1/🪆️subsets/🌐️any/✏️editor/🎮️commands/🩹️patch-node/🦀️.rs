@@ -1,7 +1,7 @@
 //! 🩹️ Fem3d play app command — `patch-node`: one-field edit of a node (`x`, `y`, `z`) → `ReplaceNode`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_node;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

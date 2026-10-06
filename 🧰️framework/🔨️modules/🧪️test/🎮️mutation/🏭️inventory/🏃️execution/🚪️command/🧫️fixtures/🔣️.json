@@ -1,0 +1,54 @@
+{
+  "schema": "semio.mutation-inventory.cargo-command/v1",
+  "nativeSource": "fn main() { let args=std::env::args().skip(1).collect::<Vec<_>>(); if args.get(1).is_some_and(|value|value==\"test.refused\"){eprintln!(\"authored fixture refusal\");std::process::exit(7);}for argument in args {println!(\"{argument}\");}}\n",
+  "cases": [
+    {
+      "id": "document",
+      "argv": [
+        "list-mutations",
+        "test.document",
+        "1",
+        "any"
+      ],
+      "code": 0
+    },
+    {
+      "id": "transient",
+      "argv": [
+        "list-mutations",
+        "test.document",
+        "1",
+        "any",
+        "test-window"
+      ],
+      "code": 0
+    },
+    {
+      "id": "other-owner",
+      "argv": [
+        "list-mutations",
+        "another.owner",
+        "2",
+        "subset"
+      ],
+      "code": 0
+    },
+    {
+      "id": "refused-owner",
+      "argv": [
+        "list-mutations",
+        "test.refused",
+        "1",
+        "any"
+      ],
+      "code": 7
+    }
+  ],
+  "controls": [
+    "missing-policy",
+    "mismatched-policy",
+    "relative-manifest",
+    "unknown-request-field",
+    "mismatched-compiler-storage"
+  ]
+}

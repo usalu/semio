@@ -2046,9 +2046,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "report-strip",
       "class": "third-party-generated",
       "target": {
@@ -2088,7 +2087,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-insert-page",
       "class": "third-party-generated",
       "target": {
@@ -2137,7 +2135,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-page",
       "class": "third-party-generated",
       "target": {
@@ -2186,7 +2183,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-move-page",
       "class": "third-party-generated",
       "target": {
@@ -2235,7 +2231,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-page-media-box",
       "class": "third-party-generated",
       "target": {
@@ -2284,7 +2279,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-page-crop-box",
       "class": "third-party-generated",
       "target": {
@@ -2333,7 +2327,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-page-rotation",
       "class": "third-party-generated",
       "target": {
@@ -2382,7 +2375,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-page-content",
       "class": "third-party-generated",
       "target": {
@@ -2431,7 +2423,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-append-page-content",
       "class": "third-party-generated",
       "target": {
@@ -2480,7 +2471,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-info",
       "class": "third-party-generated",
       "target": {
@@ -2529,7 +2519,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-insert-object",
       "class": "third-party-generated",
       "target": {
@@ -2578,7 +2567,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-object",
       "class": "third-party-generated",
       "target": {
@@ -2627,7 +2615,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-object-value",
       "class": "third-party-generated",
       "target": {
@@ -2676,7 +2663,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-dict-entry",
       "class": "third-party-generated",
       "target": {
@@ -2725,7 +2711,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-dict-entry",
       "class": "third-party-generated",
       "target": {
@@ -2774,7 +2759,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-trailer-entry",
       "class": "third-party-generated",
       "target": {
@@ -2823,7 +2807,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-trailer-entry",
       "class": "third-party-generated",
       "target": {
@@ -2872,7 +2855,6 @@
       "comparisonPipeline": "pdf-1-7-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-page-box",
       "class": "third-party-generated",
       "target": {
@@ -2921,7 +2903,6 @@
       "notes": "A two-page lopdf-built seed with the set-page-box mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-page-user-unit",
       "class": "third-party-generated",
       "target": {
@@ -2970,7 +2951,6 @@
       "notes": "A two-page lopdf-built seed with the set-page-user-unit mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-insert-content",
       "class": "third-party-generated",
       "target": {
@@ -3019,7 +2999,6 @@
       "notes": "A two-page lopdf-built seed with the insert-content mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-content",
       "class": "third-party-generated",
       "target": {
@@ -3068,7 +3047,6 @@
       "notes": "A two-page lopdf-built seed with the remove-content mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-replace-content",
       "class": "third-party-generated",
       "target": {
@@ -3117,7 +3095,6 @@
       "notes": "A two-page lopdf-built seed with the replace-content mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-insert-annotation",
       "class": "third-party-generated",
       "target": {
@@ -3166,7 +3143,6 @@
       "notes": "A two-page lopdf-built seed with the insert-annotation mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-annotation",
       "class": "third-party-generated",
       "target": {
@@ -3215,7 +3191,6 @@
       "notes": "A two-page lopdf-built seed with the remove-annotation mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-annotation",
       "class": "third-party-generated",
       "target": {
@@ -3264,7 +3239,6 @@
       "notes": "A two-page lopdf-built seed with the set-annotation mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-font",
       "class": "third-party-generated",
       "target": {
@@ -3313,7 +3287,6 @@
       "notes": "A two-page lopdf-built seed with the set-font mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-font",
       "class": "third-party-generated",
       "target": {
@@ -3362,7 +3335,6 @@
       "notes": "A two-page lopdf-built seed with the remove-font mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-image",
       "class": "third-party-generated",
       "target": {
@@ -3411,7 +3383,6 @@
       "notes": "A two-page lopdf-built seed with the set-image mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-image",
       "class": "third-party-generated",
       "target": {
@@ -3460,7 +3431,6 @@
       "notes": "A two-page lopdf-built seed with the remove-image mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-form",
       "class": "third-party-generated",
       "target": {
@@ -3509,7 +3479,6 @@
       "notes": "A two-page lopdf-built seed with the set-form mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-form",
       "class": "third-party-generated",
       "target": {
@@ -3558,7 +3527,6 @@
       "notes": "A two-page lopdf-built seed with the remove-form mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-ext-g-state",
       "class": "third-party-generated",
       "target": {
@@ -3607,7 +3575,6 @@
       "notes": "A two-page lopdf-built seed with the set-ext-g-state mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-ext-g-state",
       "class": "third-party-generated",
       "target": {
@@ -3656,7 +3623,6 @@
       "notes": "A two-page lopdf-built seed with the remove-ext-g-state mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-shading",
       "class": "third-party-generated",
       "target": {
@@ -3705,7 +3671,6 @@
       "notes": "A two-page lopdf-built seed with the set-shading mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-shading",
       "class": "third-party-generated",
       "target": {
@@ -3754,7 +3719,6 @@
       "notes": "A two-page lopdf-built seed with the remove-shading mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-pattern",
       "class": "third-party-generated",
       "target": {
@@ -3803,7 +3767,6 @@
       "notes": "A two-page lopdf-built seed with the set-pattern mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-pattern",
       "class": "third-party-generated",
       "target": {
@@ -3852,7 +3815,6 @@
       "notes": "A two-page lopdf-built seed with the remove-pattern mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-color-space",
       "class": "third-party-generated",
       "target": {
@@ -3901,7 +3863,6 @@
       "notes": "A two-page lopdf-built seed with the set-color-space mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-color-space",
       "class": "third-party-generated",
       "target": {
@@ -3950,7 +3911,6 @@
       "notes": "A two-page lopdf-built seed with the remove-color-space mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-properties",
       "class": "third-party-generated",
       "target": {
@@ -3999,7 +3959,6 @@
       "notes": "A two-page lopdf-built seed with the set-properties mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-properties",
       "class": "third-party-generated",
       "target": {
@@ -4048,7 +4007,6 @@
       "notes": "A two-page lopdf-built seed with the remove-properties mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-embedded-file",
       "class": "third-party-generated",
       "target": {
@@ -4097,7 +4055,6 @@
       "notes": "A two-page lopdf-built seed with the set-embedded-file mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-embedded-file",
       "class": "third-party-generated",
       "target": {
@@ -4146,7 +4103,6 @@
       "notes": "A two-page lopdf-built seed with the remove-embedded-file mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-outlines",
       "class": "third-party-generated",
       "target": {
@@ -4195,7 +4151,6 @@
       "notes": "A two-page lopdf-built seed with the set-outlines mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-named-destination",
       "class": "third-party-generated",
       "target": {
@@ -4244,7 +4199,6 @@
       "notes": "A two-page lopdf-built seed with the set-named-destination mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-named-destination",
       "class": "third-party-generated",
       "target": {
@@ -4293,7 +4247,6 @@
       "notes": "A two-page lopdf-built seed with the remove-named-destination mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-page-labels",
       "class": "third-party-generated",
       "target": {
@@ -4342,7 +4295,6 @@
       "notes": "A two-page lopdf-built seed with the set-page-labels mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-output-intents",
       "class": "third-party-generated",
       "target": {
@@ -4391,7 +4343,6 @@
       "notes": "A two-page lopdf-built seed with the set-output-intents mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-acro-form",
       "class": "third-party-generated",
       "target": {
@@ -4440,7 +4391,6 @@
       "notes": "A two-page lopdf-built seed with the set-acro-form mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-optional-content",
       "class": "third-party-generated",
       "target": {
@@ -4489,7 +4439,6 @@
       "notes": "A two-page lopdf-built seed with the set-optional-content mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-page-layout",
       "class": "third-party-generated",
       "target": {
@@ -4538,7 +4487,6 @@
       "notes": "A two-page lopdf-built seed with the set-page-layout mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-page-mode",
       "class": "third-party-generated",
       "target": {
@@ -4587,7 +4535,6 @@
       "notes": "A two-page lopdf-built seed with the set-page-mode mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-viewer-preferences",
       "class": "third-party-generated",
       "target": {
@@ -4636,7 +4583,6 @@
       "notes": "A two-page lopdf-built seed with the set-viewer-preferences mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-open-action",
       "class": "third-party-generated",
       "target": {
@@ -4685,7 +4631,6 @@
       "notes": "A two-page lopdf-built seed with the set-open-action mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-language",
       "class": "third-party-generated",
       "target": {
@@ -4734,7 +4679,6 @@
       "notes": "A two-page lopdf-built seed with the set-language mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-mark-info",
       "class": "third-party-generated",
       "target": {
@@ -4783,7 +4727,6 @@
       "notes": "A two-page lopdf-built seed with the set-mark-info mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-metadata",
       "class": "third-party-generated",
       "target": {
@@ -4832,7 +4775,6 @@
       "notes": "A two-page lopdf-built seed with the set-metadata mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-document-id",
       "class": "third-party-generated",
       "target": {
@@ -4881,7 +4823,6 @@
       "notes": "A two-page lopdf-built seed with the set-document-id mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-encryption",
       "class": "third-party-generated",
       "target": {
@@ -4930,7 +4871,6 @@
       "notes": "A two-page lopdf-built seed with the set-encryption mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-set-catalog-entry",
       "class": "third-party-generated",
       "target": {
@@ -4979,7 +4919,6 @@
       "notes": "A two-page lopdf-built seed with the set-catalog-entry mutation applied through lopdf's own public COS API (🔁️codec/🦀️.rs::apply). ⬅️before.pdf is the arranged seed and ➡️after.pdf is the result lopdf wrote. Observability is checked before a pair is written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "base-remove-catalog-entry",
       "class": "third-party-generated",
       "target": {

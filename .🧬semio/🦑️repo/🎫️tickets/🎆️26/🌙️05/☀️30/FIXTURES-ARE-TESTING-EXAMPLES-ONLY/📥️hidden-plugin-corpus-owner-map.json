@@ -1,0 +1,4985 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/artifact.json",
+      "title": "Generation3dArtifact",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hostSnapshot",
+        "generation"
+      ],
+      "properties": {
+        "hostSnapshot": {
+          "$ref": "#/$defs/FlowHostSnapshot",
+          "x-semio-state": "artifact"
+        },
+        "generation": {
+          "$ref": "#/$defs/GenerationPlayState",
+          "x-semio-state": "artifact"
+        }
+      },
+      "$defs": {
+        "Generation3dPreparedMesh": {
+          "title": "Generation3dPreparedMesh",
+          "type": "object",
+          "required": [
+            "positions",
+            "indices"
+          ],
+          "properties": {
+            "positions": {
+              "type": "array",
+              "minItems": 9,
+              "maxItems": 300000,
+              "items": {
+                "type": "number"
+              }
+            },
+            "indices": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 300000,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "normals": {
+              "type": "array",
+              "maxItems": 300000,
+              "items": {
+                "type": "number"
+              }
+            },
+            "uvs": {
+              "type": "array",
+              "maxItems": 200000,
+              "items": {
+                "type": "number"
+              }
+            },
+            "colors": {
+              "type": "array",
+              "maxItems": 400000,
+              "items": {
+                "type": "number"
+              }
+            },
+            "attributes": {
+              "type": "object"
+            },
+            "materials": {
+              "type": "object"
+            },
+            "textures": {
+              "type": "object"
+            },
+            "faceIds": {
+              "type": "array",
+              "maxItems": 600000,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            },
+            "edgeIds": {
+              "type": "array",
+              "maxItems": 600000,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            },
+            "vertexIds": {
+              "type": "array",
+              "maxItems": 600000,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            },
+            "edgePositions": {
+              "type": "array",
+              "maxItems": 3600000,
+              "items": {
+                "type": "number",
+                "minimum": -3.4028234663852886e+38,
+                "maximum": 3.4028234663852886e+38
+              }
+            },
+            "componentReferences": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "face": {
+                  "type": "array",
+                  "maxItems": 600000,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 128
+                  }
+                },
+                "edge": {
+                  "type": "array",
+                  "maxItems": 600000,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 128
+                  }
+                },
+                "vertex": {
+                  "type": "array",
+                  "maxItems": 600000,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 128
+                  }
+                }
+              }
+            }
+          },
+          "x-semio-formats": [
+            "🔣️jsonschema"
+          ]
+        },
+        "Generation3dRegistryTextRoundTrip": {
+          "title": "Generation3dRegistryTextRoundTrip",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "sourceKinds",
+            "target",
+            "preserveGraph"
+          ],
+          "properties": {
+            "source": {
+              "const": "imported-unit-cube"
+            },
+            "sourceKinds": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "native",
+                  "json-bridge"
+                ]
+              },
+              "minItems": 2,
+              "maxItems": 2,
+              "uniqueItems": true
+            },
+            "target": {
+              "const": "s.stdio.txt"
+            },
+            "preserveGraph": {
+              "const": true
+            }
+          },
+          "x-semio-formats": [
+            "🔣️jsonschema"
+          ]
+        },
+        "Generation3dIoAuthority": {
+          "title": "Generation3dIoAuthority",
+          "x-semio-formats": [
+            "🔣️jsonschema"
+          ],
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "version",
+            "forbiddenSegments",
+            "forbiddenPrefixes",
+            "cases"
+          ],
+          "properties": {
+            "format": {
+              "const": "semio.generation3d.io-authority"
+            },
+            "version": {
+              "const": 1
+            },
+            "forbiddenSegments": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "forbiddenPrefixes": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "source",
+                  "allowed"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "source": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "allowed": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Generation3dExportInputs": {
+          "title": "Generation3dExportInputs",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "document",
+            "preparedGeometry",
+            "rejectGeometryAsDocument",
+            "rejectDocumentAsGeometry"
+          ],
+          "properties": {
+            "document": {
+              "type": "array",
+              "items": {
+                "const": "txt"
+              },
+              "minItems": 1,
+              "maxItems": 1
+            },
+            "preparedGeometry": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "stl",
+                  "obj",
+                  "ply",
+                  "gltf",
+                  "las",
+                  "dwg"
+                ]
+              },
+              "minItems": 6,
+              "maxItems": 6,
+              "uniqueItems": true
+            },
+            "rejectGeometryAsDocument": {
+              "enum": [
+                "stl",
+                "obj",
+                "ply",
+                "gltf",
+                "las",
+                "dwg"
+              ]
+            },
+            "rejectDocumentAsGeometry": {
+              "const": "txt"
+            }
+          },
+          "x-semio-formats": [
+            "🔣️jsonschema"
+          ]
+        },
+        "CameraJson": {
+          "title": "CameraJson",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "zoom"
+          ],
+          "properties": {
+            "x": {
+              "format": "double",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Pan X",
+                  "de": "Verschiebung X"
+                },
+                "step": 1,
+                "precision": 1,
+                "group": "camera",
+                "order": 10
+              },
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            "y": {
+              "format": "double",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Pan Y",
+                  "de": "Verschiebung Y"
+                },
+                "step": 1,
+                "precision": 1,
+                "group": "camera",
+                "order": 20
+              },
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            "zoom": {
+              "format": "double",
+              "x-semio-ui": {
+                "widget": "slider",
+                "role": "value",
+                "label": {
+                  "en": "Zoom",
+                  "de": "Zoom"
+                },
+                "step": 0.01,
+                "precision": 2,
+                "softMin": 0.1,
+                "softMax": 10,
+                "scale": "log",
+                "snaps": [
+                  0.5,
+                  1,
+                  2
+                ],
+                "group": "camera",
+                "order": 30
+              },
+              "$ref": "#/$defs/Binary64Transport"
+            }
+          }
+        },
+        "WidgetLayout": {
+          "title": "WidgetLayout",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "format": "double",
+              "$ref": "#/$defs/Binary64Transport"
+            },
+            "y": {
+              "format": "double",
+              "$ref": "#/$defs/Binary64Transport"
+            }
+          }
+        },
+        "SynapseSpec": {
+          "title": "SynapseSpec",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "from",
+            "to",
+            "fromPort",
+            "toPort"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "from": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            },
+            "fromPort": {
+              "type": "string"
+            },
+            "toPort": {
+              "type": "string"
+            }
+          }
+        },
+        "Widget": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id",
+                "neuronKind",
+                "params",
+                "inputPorts",
+                "outputPorts",
+                "preview"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "neuron",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "ID",
+                      "de": "ID"
+                    },
+                    "description": {
+                      "en": "Unique widget id in this graph.",
+                      "de": "Eindeutige Baustein-ID in diesem Graphen."
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "neuronKind": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Neuron kind",
+                      "de": "Neuronenart"
+                    },
+                    "description": {
+                      "en": "Operator id, e.g. math.add.",
+                      "de": "Operator-ID, z. B. math.add."
+                    },
+                    "group": "kind",
+                    "order": 20
+                  }
+                },
+                "params": {
+                  "$ref": "#/$defs/Dictionary",
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Parameters",
+                      "de": "Parameter"
+                    },
+                    "description": {
+                      "en": "Operator parameters by key.",
+                      "de": "Operatorparameter je Schlüssel."
+                    },
+                    "group": "value",
+                    "order": 30
+                  }
+                },
+                "inputPorts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Input ports",
+                      "de": "Eingänge"
+                    },
+                    "group": "ports",
+                    "order": 40
+                  }
+                },
+                "outputPorts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Output ports",
+                      "de": "Ausgänge"
+                    },
+                    "group": "ports",
+                    "order": 50
+                  }
+                },
+                "preview": {
+                  "type": "boolean",
+                  "x-semio-ui": {
+                    "widget": "toggle",
+                    "role": "value",
+                    "label": {
+                      "en": "Preview",
+                      "de": "Vorschau"
+                    },
+                    "group": "appearance",
+                    "order": 60
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Neuron",
+                  "de": "Neuron"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id",
+                "label",
+                "value",
+                "min",
+                "max",
+                "step"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "inputSlider",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "ID",
+                      "de": "ID"
+                    },
+                    "description": {
+                      "en": "Unique widget id in this graph.",
+                      "de": "Eindeutige Baustein-ID in diesem Graphen."
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "label": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Label",
+                      "de": "Bezeichnung"
+                    },
+                    "group": "appearance",
+                    "order": 20
+                  }
+                },
+                "value": {
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Value",
+                      "de": "Wert"
+                    },
+                    "step": 0.1,
+                    "precision": 3,
+                    "group": "value",
+                    "order": 30
+                  },
+                  "$ref": "#/$defs/Binary64Transport"
+                },
+                "min": {
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Minimum",
+                      "de": "Minimum"
+                    },
+                    "step": 0.1,
+                    "precision": 3,
+                    "group": "range",
+                    "order": 40
+                  },
+                  "$ref": "#/$defs/Binary64Transport"
+                },
+                "max": {
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Maximum",
+                      "de": "Maximum"
+                    },
+                    "step": 0.1,
+                    "precision": 3,
+                    "group": "range",
+                    "order": 50
+                  },
+                  "$ref": "#/$defs/Binary64Transport"
+                },
+                "step": {
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Step",
+                      "de": "Schrittweite"
+                    },
+                    "step": 0.1,
+                    "precision": 3,
+                    "group": "range",
+                    "order": 60
+                  },
+                  "$ref": "#/$defs/Binary64Transport"
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Slider input",
+                  "de": "Schiebereglereingabe"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id",
+                "text"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "inputNote",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "ID",
+                      "de": "ID"
+                    },
+                    "description": {
+                      "en": "Unique widget id in this graph.",
+                      "de": "Eindeutige Baustein-ID in diesem Graphen."
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "text": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "multiline",
+                    "role": "value",
+                    "label": {
+                      "en": "Text",
+                      "de": "Text"
+                    },
+                    "group": "value",
+                    "order": 20
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Note input",
+                  "de": "Notizeingabe"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id",
+                "src"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "inputImage",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "ID",
+                      "de": "ID"
+                    },
+                    "description": {
+                      "en": "Unique widget id in this graph.",
+                      "de": "Eindeutige Baustein-ID in diesem Graphen."
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "src": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Image source",
+                      "de": "Bildquelle"
+                    },
+                    "description": {
+                      "en": "Address of the image, e.g. an https or data URL.",
+                      "de": "Adresse des Bildes, z. B. eine https- oder data-URL."
+                    },
+                    "group": "source",
+                    "order": 20
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Image input",
+                  "de": "Bildeingabe"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id",
+                "name",
+                "schema"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "variable",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "ID",
+                      "de": "ID"
+                    },
+                    "description": {
+                      "en": "Unique widget id in this graph.",
+                      "de": "Eindeutige Baustein-ID in diesem Graphen."
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Name",
+                      "de": "Name"
+                    },
+                    "group": "identity",
+                    "order": 20
+                  }
+                },
+                "schema": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Schema",
+                      "de": "Schema"
+                    },
+                    "description": {
+                      "en": "Value schema of the variable, e.g. dictionary.",
+                      "de": "Werteschema der Variablen, z. B. dictionary."
+                    },
+                    "group": "kind",
+                    "order": 30
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Variable",
+                  "de": "Variable"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id",
+                "preview",
+                "expanded"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "outputPreview",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "ID",
+                      "de": "ID"
+                    },
+                    "description": {
+                      "en": "Unique widget id in this graph.",
+                      "de": "Eindeutige Baustein-ID in diesem Graphen."
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "preview": {
+                  "$ref": "#/$defs/Dictionary",
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Preview values",
+                      "de": "Vorschauwerte"
+                    },
+                    "group": "value",
+                    "order": 20
+                  }
+                },
+                "expanded": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Expanded entries",
+                      "de": "Aufgeklappte Einträge"
+                    },
+                    "group": "appearance",
+                    "order": 30
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Preview output",
+                  "de": "Vorschauausgabe"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id",
+                "action"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "outputAction",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "ID",
+                      "de": "ID"
+                    },
+                    "description": {
+                      "en": "Unique widget id in this graph.",
+                      "de": "Eindeutige Baustein-ID in diesem Graphen."
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "action": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Action",
+                      "de": "Aktion"
+                    },
+                    "group": "value",
+                    "order": 20
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Action output",
+                  "de": "Aktionsausgabe"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id",
+                "format"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "outputExport",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "ID",
+                      "de": "ID"
+                    },
+                    "description": {
+                      "en": "Unique widget id in this graph.",
+                      "de": "Eindeutige Baustein-ID in diesem Graphen."
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "format": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Format",
+                      "de": "Format"
+                    },
+                    "description": {
+                      "en": "Artifact-owned 3D export format, e.g. gltf or obj.",
+                      "de": "Artefakteigenes 3D-Exportformat, z. B. gltf oder obj."
+                    },
+                    "group": "value",
+                    "order": 20
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Export output",
+                  "de": "Exportausgabe"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id",
+                "name",
+                "tree",
+                "flow"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "cluster",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "ID",
+                      "de": "ID"
+                    },
+                    "description": {
+                      "en": "Unique widget id in this graph.",
+                      "de": "Eindeutige Baustein-ID in diesem Graphen."
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Name",
+                      "de": "Name"
+                    },
+                    "group": "identity",
+                    "order": 20
+                  }
+                },
+                "tree": {
+                  "$ref": "#/$defs/FlowTree",
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Graph",
+                      "de": "Graph"
+                    },
+                    "description": {
+                      "en": "Neurons and synapses inside the cluster.",
+                      "de": "Neuronen und Synapsen im Cluster."
+                    },
+                    "group": "record",
+                    "order": 30
+                  }
+                },
+                "flow": {
+                  "$ref": "#/$defs/FlowUi",
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Layout",
+                      "de": "Anordnung"
+                    },
+                    "description": {
+                      "en": "Canvas presentation of the cluster graph.",
+                      "de": "Darstellung des Clustergraphen auf der Leinwand."
+                    },
+                    "group": "appearance",
+                    "order": 40
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Cluster",
+                  "de": "Cluster"
+                }
+              }
+            }
+          ]
+        },
+        "FlowHostSnapshot": {
+          "title": "FlowHostSnapshot",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "camera",
+            "widgets",
+            "synapses",
+            "layout"
+          ],
+          "properties": {
+            "schema": {
+              "type": "string"
+            },
+            "camera": {
+              "$ref": "#/$defs/CameraJson"
+            },
+            "widgets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Widget"
+              }
+            },
+            "synapses": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SynapseSpec"
+              }
+            },
+            "layout": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/WidgetLayout"
+              }
+            }
+          }
+        },
+        "FormGeneration": {
+          "title": "FormGeneration",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "name",
+            "values"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "values": {
+              "type": "object",
+              "additionalProperties": {
+                "description": "the answer, any JSON value"
+              }
+            }
+          }
+        },
+        "GenerationPlayState": {
+          "title": "GenerationPlayState",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "generations"
+          ],
+          "properties": {
+            "generations": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FormGeneration"
+              }
+            },
+            "selectedGenerationId": {
+              "type": "string"
+            },
+            "previewText": {
+              "type": "string"
+            }
+          }
+        },
+        "Generation3dPreviewCamera": {
+          "title": "Generation3dPreviewCamera",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "positionX",
+            "positionY",
+            "positionZ",
+            "targetX",
+            "targetY",
+            "targetZ",
+            "fov"
+          ],
+          "properties": {
+            "positionX": {
+              "type": "number",
+              "format": "double"
+            },
+            "positionY": {
+              "type": "number",
+              "format": "double"
+            },
+            "positionZ": {
+              "type": "number",
+              "format": "double"
+            },
+            "targetX": {
+              "type": "number",
+              "format": "double"
+            },
+            "targetY": {
+              "type": "number",
+              "format": "double"
+            },
+            "targetZ": {
+              "type": "number",
+              "format": "double"
+            },
+            "fov": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        },
+        "Generation3dStringList": {
+          "title": "Generation3dStringList",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "values"
+          ],
+          "properties": {
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "Dictionary": {
+          "type": "object",
+          "additionalProperties": {
+            "description": "a neural value, any JSON value"
+          }
+        },
+        "FlowTree": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "neurons",
+            "synapses"
+          ],
+          "properties": {
+            "neurons": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FlowNeuron"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Neurons",
+                  "de": "Neuronen"
+                },
+                "group": "record",
+                "order": 10
+              }
+            },
+            "synapses": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SynapseSpec"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Synapses",
+                  "de": "Synapsen"
+                },
+                "group": "record",
+                "order": 20
+              }
+            }
+          }
+        },
+        "FlowNeuron": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "kind",
+            "params"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "kind": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Neuron kind",
+                  "de": "Neuronenart"
+                },
+                "group": "kind",
+                "order": 20
+              }
+            },
+            "params": {
+              "$ref": "#/$defs/Dictionary",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Parameters",
+                  "de": "Parameter"
+                },
+                "group": "value",
+                "order": 30
+              }
+            },
+            "tree": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/FlowTree"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Nested graph",
+                  "de": "Verschachtelter Graph"
+                },
+                "group": "record",
+                "order": 40
+              }
+            }
+          }
+        },
+        "FlowUi": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "camera",
+            "nodes",
+            "previews"
+          ],
+          "properties": {
+            "camera": {
+              "$ref": "#/$defs/CameraJson",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Camera",
+                  "de": "Kamera"
+                },
+                "group": "camera",
+                "order": 10
+              }
+            },
+            "nodes": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/FlowNodeGui"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Nodes",
+                  "de": "Knoten"
+                },
+                "description": {
+                  "en": "Presentation per node id.",
+                  "de": "Darstellung je Knoten-ID."
+                },
+                "group": "record",
+                "order": 20
+              }
+            },
+            "previews": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FlowPreviewGui"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Previews",
+                  "de": "Vorschauen"
+                },
+                "group": "record",
+                "order": 30
+              }
+            }
+          }
+        },
+        "FlowNodeGui": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "layout",
+            "chrome"
+          ],
+          "properties": {
+            "layout": {
+              "$ref": "#/$defs/WidgetLayout",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Position",
+                  "de": "Position"
+                },
+                "group": "position",
+                "order": 10
+              }
+            },
+            "chrome": {
+              "$ref": "#/$defs/NodeChrome",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Chrome",
+                  "de": "Rahmen"
+                },
+                "group": "appearance",
+                "order": 20
+              }
+            }
+          }
+        },
+        "NodeChrome": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "preview"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "plain",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "preview": {
+                  "type": "boolean",
+                  "x-semio-ui": {
+                    "widget": "toggle",
+                    "role": "value",
+                    "label": {
+                      "en": "Preview",
+                      "de": "Vorschau"
+                    },
+                    "group": "appearance",
+                    "order": 10
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Plain",
+                  "de": "Schlicht"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "label",
+                "min",
+                "max",
+                "step",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "slider",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "label": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Label",
+                      "de": "Bezeichnung"
+                    },
+                    "group": "appearance",
+                    "order": 10
+                  }
+                },
+                "min": {
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Minimum",
+                      "de": "Minimum"
+                    },
+                    "step": 0.1,
+                    "precision": 3,
+                    "group": "range",
+                    "order": 20
+                  },
+                  "$ref": "#/$defs/Binary64Transport"
+                },
+                "max": {
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Maximum",
+                      "de": "Maximum"
+                    },
+                    "step": 0.1,
+                    "precision": 3,
+                    "group": "range",
+                    "order": 30
+                  },
+                  "$ref": "#/$defs/Binary64Transport"
+                },
+                "step": {
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Step",
+                      "de": "Schrittweite"
+                    },
+                    "step": 0.1,
+                    "precision": 3,
+                    "group": "range",
+                    "order": 40
+                  },
+                  "$ref": "#/$defs/Binary64Transport"
+                },
+                "value": {
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Value",
+                      "de": "Wert"
+                    },
+                    "step": 0.1,
+                    "precision": 3,
+                    "group": "value",
+                    "order": 50
+                  },
+                  "$ref": "#/$defs/Binary64Transport"
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Slider",
+                  "de": "Schieberegler"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "text"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "note",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "text": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "multiline",
+                    "role": "value",
+                    "label": {
+                      "en": "Text",
+                      "de": "Text"
+                    },
+                    "group": "value",
+                    "order": 10
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Note",
+                  "de": "Notiz"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "src"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "image",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "src": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Image source",
+                      "de": "Bildquelle"
+                    },
+                    "group": "source",
+                    "order": 10
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Image",
+                  "de": "Bild"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "name",
+                "schema"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "variable",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "name": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Name",
+                      "de": "Name"
+                    },
+                    "group": "identity",
+                    "order": 10
+                  }
+                },
+                "schema": {
+                  "type": "string",
+                  "x-semio-ui": {
+                    "widget": "text",
+                    "role": "value",
+                    "label": {
+                      "en": "Schema",
+                      "de": "Schema"
+                    },
+                    "group": "kind",
+                    "order": 20
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Variable",
+                  "de": "Variable"
+                }
+              }
+            }
+          ]
+        },
+        "FlowPreviewGui": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "mode",
+            "preview",
+            "expanded"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "ID",
+                  "de": "ID"
+                },
+                "group": "identity",
+                "order": 10
+              }
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/FlowChannelRef"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Source",
+                  "de": "Quelle"
+                },
+                "group": "ports",
+                "order": 20
+              }
+            },
+            "mode": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Mode",
+                  "de": "Modus"
+                },
+                "group": "appearance",
+                "order": 30
+              }
+            },
+            "preview": {
+              "$ref": "#/$defs/Dictionary",
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Preview values",
+                  "de": "Vorschauwerte"
+                },
+                "group": "value",
+                "order": 40
+              }
+            },
+            "expanded": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Expanded entries",
+                  "de": "Aufgeklappte Einträge"
+                },
+                "group": "appearance",
+                "order": 50
+              }
+            },
+            "layout": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/WidgetLayout"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-semio-ui": {
+                "role": "value",
+                "label": {
+                  "en": "Position",
+                  "de": "Position"
+                },
+                "group": "position",
+                "order": 60
+              }
+            }
+          }
+        },
+        "FlowChannelRef": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "neuron",
+            "channel"
+          ],
+          "properties": {
+            "neuron": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Neuron",
+                  "de": "Neuron"
+                },
+                "group": "ports",
+                "order": 10
+              }
+            },
+            "channel": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "text",
+                "role": "value",
+                "label": {
+                  "en": "Channel",
+                  "de": "Kanal"
+                },
+                "group": "ports",
+                "order": 20
+              }
+            }
+          }
+        },
+        "Binary64Word": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bits"
+          ],
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          }
+        },
+        "Binary64Transport": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binary64Word"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "Generation3dExportRequest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format"
+          ],
+          "properties": {
+            "format": {
+              "enum": [
+                "stl",
+                "obj",
+                "ply",
+                "gltf",
+                "las",
+                "dwg",
+                "txt"
+              ]
+            },
+            "widgetId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      }
+    },
+    "definitions": [
+      "Generation3dIoAuthority",
+      "Generation3dRegistryTextRoundTrip",
+      "Generation3dExportInputs"
+    ],
+    "principal": "Generation3dExportRequest"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/browser-bundle/component.json",
+      "title": "Semio OS Plugin Browser Bundle",
+      "$defs": {
+        "ActorFactoryV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "format",
+            "artifact",
+            "artifactLaws",
+            "name",
+            "component",
+            "importInterfaces",
+            "starts",
+            "calls",
+            "expected",
+            "afterCloseB",
+            "lifecycle",
+            "laws"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "format": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "artifact": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "codegenPolicy",
+                "maximumBytes"
+              ],
+              "properties": {
+                "schema": {
+                  "$ref": "#/$defs/BrowserContractId"
+                },
+                "codegenPolicy": {
+                  "$ref": "#/$defs/BrowserContractId"
+                },
+                "maximumBytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 268435456
+                }
+              }
+            },
+            "artifactLaws": {
+              "$ref": "#/$defs/BrowserLawList"
+            },
+            "name": {
+              "$ref": "#/$defs/BrowserActorName"
+            },
+            "component": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "importInterfaces": {
+              "type": "array",
+              "maxItems": 19,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/WitInterfaceId"
+              }
+            },
+            "starts": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            },
+            "calls": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              }
+            },
+            "expected": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            },
+            "afterCloseB": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "lifecycle": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "open",
+                "invoking",
+                "closing",
+                "closed"
+              ],
+              "properties": {
+                "open": {
+                  "$ref": "#/$defs/BrowserActorLifecycleState"
+                },
+                "invoking": {
+                  "$ref": "#/$defs/BrowserActorLifecycleState"
+                },
+                "closing": {
+                  "$ref": "#/$defs/BrowserActorLifecycleState"
+                },
+                "closed": {
+                  "$ref": "#/$defs/BrowserActorLifecycleState"
+                }
+              }
+            },
+            "laws": {
+              "$ref": "#/$defs/BrowserLawList"
+            }
+          }
+        },
+        "ActorImportV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "identity",
+            "actors",
+            "limits",
+            "streamClose",
+            "guestStreamDrop",
+            "lateStreamFault",
+            "failedStreamRetirement"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "streamClose": {
+              "$ref": "#/$defs/BrowserStreamOutcome"
+            },
+            "guestStreamDrop": {
+              "$ref": "#/$defs/BrowserStreamOutcome"
+            },
+            "lateStreamFault": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message"
+              ],
+              "properties": {
+                "code": {
+                  "$ref": "#/$defs/BrowserFaultCode"
+                },
+                "message": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "failedStreamRetirement": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "message",
+                "cancelMessage"
+              ],
+              "properties": {
+                "code": {
+                  "$ref": "#/$defs/BrowserFaultCode"
+                },
+                "message": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "cancelMessage": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "component",
+                "canonicalInterface",
+                "expectedImports",
+                "jco",
+                "emittedAsyncBindings",
+                "unsupportedImport",
+                "productionHostAsyncAbiQualified",
+                "artifactPolicy"
+              ],
+              "properties": {
+                "artifactPolicy": {
+                  "$ref": "#/$defs/BrowserContractId"
+                },
+                "component": {
+                  "$ref": "#/$defs/WitInterfaceId"
+                },
+                "canonicalInterface": {
+                  "$ref": "#/$defs/WitInterfaceId"
+                },
+                "expectedImports": {
+                  "type": "array",
+                  "minItems": 15,
+                  "maxItems": 15,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/WitInterfaceId"
+                  },
+                  "contains": {
+                    "const": "semio:framework/host-async@1.0.0"
+                  }
+                },
+                "jco": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "asyncMode",
+                    "asyncImports"
+                  ],
+                  "properties": {
+                    "asyncMode": {
+                      "enum": [
+                        "jspi",
+                        "asyncify",
+                        "sync"
+                      ]
+                    },
+                    "asyncImports": {
+                      "type": "array",
+                      "minItems": 8,
+                      "maxItems": 8,
+                      "uniqueItems": true,
+                      "items": {
+                        "$ref": "#/$defs/WitFunctionId"
+                      }
+                    }
+                  }
+                },
+                "emittedAsyncBindings": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "trampoline",
+                      "fnName"
+                    ],
+                    "properties": {
+                      "trampoline": {
+                        "type": "string",
+                        "pattern": "^[0-9]+$"
+                      },
+                      "fnName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    }
+                  }
+                },
+                "unsupportedImport": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "productionHostAsyncAbiQualified": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "actors": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "actorId",
+                  "link",
+                  "blob",
+                  "timer"
+                ],
+                "properties": {
+                  "actorId": {
+                    "$ref": "#/$defs/BrowserActorName"
+                  },
+                  "link": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "okRequest",
+                      "okValue",
+                      "errorRequest",
+                      "errorValue"
+                    ],
+                    "properties": {
+                      "okRequest": {
+                        "$ref": "#/$defs/BrowserPackBytes"
+                      },
+                      "okValue": {
+                        "$ref": "#/$defs/BrowserPackBytes"
+                      },
+                      "errorRequest": {
+                        "$ref": "#/$defs/BrowserPackBytes"
+                      },
+                      "errorValue": {
+                        "$ref": "#/$defs/BrowserPackBytes"
+                      }
+                    }
+                  },
+                  "blob": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "okHash",
+                      "chunks",
+                      "errorHash",
+                      "errorValue"
+                    ],
+                    "properties": {
+                      "okHash": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32
+                      },
+                      "chunks": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 8,
+                        "items": {
+                          "$ref": "#/$defs/BrowserPackBytes"
+                        }
+                      },
+                      "errorHash": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32
+                      },
+                      "errorValue": {
+                        "$ref": "#/$defs/BrowserPackBytes"
+                      }
+                    }
+                  },
+                  "timer": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "delayMs"
+                    ],
+                    "properties": {
+                      "delayMs": {
+                        "type": "integer",
+                        "minimum": 4,
+                        "maximum": 32
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "limits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "buildBudgetMs",
+                "runtimeBudgetMs",
+                "maximumOutputBytes",
+                "actors"
+              ],
+              "properties": {
+                "buildBudgetMs": {
+                  "type": "integer",
+                  "minimum": 1000,
+                  "maximum": 3600000
+                },
+                "runtimeBudgetMs": {
+                  "type": "integer",
+                  "minimum": 1000,
+                  "maximum": 3600000
+                },
+                "maximumOutputBytes": {
+                  "type": "integer",
+                  "minimum": 1024,
+                  "maximum": 268435456
+                },
+                "actors": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 64
+                }
+              }
+            }
+          }
+        },
+        "BrowserActorLifecycleState": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "activeInvocations"
+          ],
+          "properties": {
+            "phase": {
+              "$ref": "#/$defs/BrowserLifecyclePhase"
+            },
+            "activeInvocations": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4096
+            }
+          }
+        },
+        "BrowserActorName": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "maxLength": 64
+        },
+        "BrowserArtifactDistributionV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "owner",
+            "files"
+          ],
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1
+            },
+            "files": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!.*(?:^|[\\\\/])(?:\\.{1,2}|\\.nx-artifact\\.json)(?:[\\\\/]|$))[^\\\\/:\\u0000-\\u001f\\u007f]+(?:[\\\\/][^\\\\/:\\u0000-\\u001f\\u007f]+)*$"
+              }
+            }
+          }
+        },
+        "BrowserByte": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "BrowserContractId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*(?:[./]v[0-9]+(?:\\.[0-9]+)*)$"
+        },
+        "BrowserFault": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "origin",
+            "code",
+            "severity",
+            "message",
+            "scope",
+            "retryable"
+          ],
+          "properties": {
+            "origin": {
+              "enum": [
+                "edge",
+                "renderer",
+                "os",
+                "module",
+                "plugin",
+                "app",
+                "extension",
+                "framework"
+              ]
+            },
+            "code": {
+              "$ref": "#/$defs/BrowserFaultCode"
+            },
+            "severity": {
+              "enum": [
+                "info",
+                "warning",
+                "error",
+                "fatal"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1
+            },
+            "scope": {
+              "type": "object"
+            },
+            "retryable": {
+              "type": "boolean"
+            }
+          }
+        },
+        "BrowserFaultCode": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)*$"
+        },
+        "BrowserLawId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "BrowserLawList": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/BrowserLawId"
+          }
+        },
+        "BrowserLifecyclePhase": {
+          "enum": [
+            "open",
+            "closing",
+            "closed"
+          ]
+        },
+        "BrowserLogicalPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+        },
+        "BrowserPackBytes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/BrowserByte"
+          }
+        },
+        "BrowserSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "not": {
+            "const": "0000000000000000000000000000000000000000000000000000000000000000"
+          }
+        },
+        "BrowserSourceDigest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "logicalPath",
+            "sha256",
+            "byteLength"
+          ],
+          "properties": {
+            "logicalPath": {
+              "$ref": "#/$defs/BrowserLogicalPath"
+            },
+            "sha256": {
+              "$ref": "#/$defs/BrowserSha256"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 67108864
+            }
+          }
+        },
+        "BrowserStreamOutcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "activeInvocations",
+            "cancellations",
+            "result",
+            "locked"
+          ],
+          "properties": {
+            "phase": {
+              "$ref": "#/$defs/BrowserLifecyclePhase"
+            },
+            "activeInvocations": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4096
+            },
+            "cancellations": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4096
+            },
+            "result": {
+              "enum": [
+                "pending",
+                "fulfilled",
+                "rejected"
+              ]
+            },
+            "locked": {
+              "type": "boolean"
+            }
+          }
+        },
+        "CodegenManifestV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "runtime",
+            "importInterfaces",
+            "files"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+              "const": "1.34.0"
+            },
+            "runtime": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*@[0-9]+\\.[0-9]+\\.[0-9]+$",
+              "const": "bun@1.3.14"
+            },
+            "importInterfaces": {
+              "type": "array",
+              "maxItems": 19,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^(semio:framework/(pure|host-async)@1\\.0\\.0|wasi:(cli/(environment|exit|stdin|stdout|stderr|terminal-input|terminal-output|terminal-stdin|terminal-stdout|terminal-stderr)|clocks/(monotonic-clock|wall-clock)|io/(error|poll|streams))@0\\.2\\.0|wasi:random/(insecure-seed|random)@0\\.2\\.9)$"
+              }
+            },
+            "files": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 65,
+              "uniqueItems": true,
+              "contains": {
+                "const": "browser-actor.js"
+              },
+              "items": {
+                "type": "string",
+                "pattern": "^browser-actor\\.(js|core[0-9]*\\.wasm)$"
+              }
+            }
+          }
+        },
+        "CodegenPolicyV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "revision",
+            "runtime",
+            "compiler",
+            "packages",
+            "parser",
+            "firstParty",
+            "options"
+          ],
+          "properties": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/BrowserContractId"
+                }
+              ],
+              "const": "semio.os.browser-codegen-policy.v1"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536,
+              "const": 1
+            },
+            "runtime": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "version",
+                "executable"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "bun",
+                    "node",
+                    "deno"
+                  ],
+                  "const": "bun"
+                },
+                "version": {
+                  "type": "string",
+                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                  "const": "1.3.14"
+                },
+                "executable": {
+                  "$ref": "#/$defs/CodegenDigest"
+                }
+              }
+            },
+            "compiler": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "module",
+                "inputs",
+                "cores"
+              ],
+              "properties": {
+                "module": {
+                  "$ref": "#/$defs/CodegenDigest"
+                },
+                "inputs": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 128,
+                  "items": {
+                    "$ref": "#/$defs/BrowserSourceDigest"
+                  }
+                },
+                "cores": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "$ref": "#/$defs/BrowserSourceDigest"
+                  }
+                }
+              }
+            },
+            "packages": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "version",
+                  "lockSha256",
+                  "manifestSha256"
+                ],
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "@bytecodealliance/jco",
+                      "@bytecodealliance/jco-transpile",
+                      "@bytecodealliance/preview2-shim"
+                    ]
+                  },
+                  "version": {
+                    "type": "string",
+                    "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+                  },
+                  "lockSha256": {
+                    "$ref": "#/$defs/BrowserSha256"
+                  },
+                  "manifestSha256": {
+                    "$ref": "#/$defs/BrowserSha256"
+                  }
+                }
+              }
+            },
+            "parser": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "version",
+                "manifestSha256",
+                "lockRowSha256",
+                "entry"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9][a-z0-9-]*$",
+                  "const": "typescript"
+                },
+                "version": {
+                  "type": "string",
+                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                  "const": "5.9.3"
+                },
+                "manifestSha256": {
+                  "$ref": "#/$defs/BrowserSha256"
+                },
+                "lockRowSha256": {
+                  "$ref": "#/$defs/BrowserSha256"
+                },
+                "entry": {
+                  "$ref": "#/$defs/BrowserSourceDigest"
+                }
+              }
+            },
+            "firstParty": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "$ref": "#/$defs/BrowserSourceDigest"
+              }
+            },
+            "options": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "jco",
+                "entrypoint",
+                "target",
+                "format",
+                "name",
+                "instantiation",
+                "asyncMode",
+                "nodejsCompat",
+                "base64Cutoff",
+                "importInterfaces",
+                "asyncImports"
+              ],
+              "properties": {
+                "jco": {
+                  "type": "string",
+                  "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                  "const": "1.34.0"
+                },
+                "entrypoint": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256,
+                  "const": "@bytecodealliance/jco/component"
+                },
+                "target": {
+                  "enum": [
+                    "browser",
+                    "node"
+                  ],
+                  "const": "browser"
+                },
+                "format": {
+                  "enum": [
+                    "esm",
+                    "cjs"
+                  ],
+                  "const": "esm"
+                },
+                "name": {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/BrowserActorName"
+                    }
+                  ],
+                  "const": "browser-actor"
+                },
+                "instantiation": {
+                  "enum": [
+                    "async",
+                    "sync"
+                  ],
+                  "const": "async"
+                },
+                "asyncMode": {
+                  "enum": [
+                    "jspi",
+                    "asyncify",
+                    "sync"
+                  ],
+                  "const": "jspi"
+                },
+                "nodejsCompat": {
+                  "type": "boolean",
+                  "const": false
+                },
+                "base64Cutoff": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1048576,
+                  "const": 0
+                },
+                "importInterfaces": {
+                  "type": "array",
+                  "maxItems": 19,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  }
+                },
+                "asyncImports": {
+                  "type": "array",
+                  "minItems": 8,
+                  "maxItems": 8,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  }
+                }
+              }
+            }
+          }
+        },
+        "CodegenDigest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "byteLength"
+          ],
+          "properties": {
+            "sha256": {
+              "$ref": "#/$defs/BrowserSha256"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8589934592
+            }
+          }
+        },
+        "CompilerCapsuleV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "source",
+            "cores",
+            "expected",
+            "denied"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            "cores": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "hex"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9._-]+\\.wasm$"
+                  },
+                  "hex": {
+                    "type": "string",
+                    "pattern": "^(?:[0-9a-f]{2})+$"
+                  }
+                }
+              }
+            },
+            "expected": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8
+            },
+            "denied": {
+              "$ref": "#/$defs/BrowserLawList"
+            }
+          }
+        },
+        "CompilerSourcesV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "files",
+            "expected",
+            "inputs",
+            "laws"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "files": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 16,
+              "propertyNames": {
+                "pattern": "^[A-Za-z0-9._-]+\\.js$"
+              },
+              "additionalProperties": {
+                "type": "string",
+                "maxLength": 1024
+              }
+            },
+            "expected": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "inputs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/BrowserLogicalPath"
+              }
+            },
+            "laws": {
+              "$ref": "#/$defs/BrowserLawList"
+            }
+          }
+        },
+        "ComponentFactoryV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "component",
+            "name",
+            "calls",
+            "expected",
+            "forbidden",
+            "factoryModes",
+            "cancelledBeforeCompile",
+            "cancelledDuringCompile"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "component": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "name": {
+              "$ref": "#/$defs/BrowserActorName"
+            },
+            "calls": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              }
+            },
+            "expected": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            },
+            "forbidden": {
+              "$ref": "#/$defs/BrowserLawList"
+            },
+            "factoryModes": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "generated",
+                  "explicit-async"
+                ]
+              }
+            },
+            "cancelledBeforeCompile": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "compilations",
+                "instances"
+              ],
+              "properties": {
+                "compilations": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 64
+                },
+                "instances": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 64
+                }
+              }
+            },
+            "cancelledDuringCompile": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "compilations",
+                "instances",
+                "stagingZeroed"
+              ],
+              "properties": {
+                "compilations": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 64
+                },
+                "instances": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 64
+                },
+                "stagingZeroed": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "GeneratedActorHostActivationV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "activations"
+          ],
+          "properties": {
+            "activations": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "actorId",
+                  "generation",
+                  "value"
+                ],
+                "properties": {
+                  "actorId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "generation": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*$"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "GeneratedComponentInstantiationV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "component",
+            "calls",
+            "expected"
+          ],
+          "properties": {
+            "component": {
+              "type": "string",
+              "minLength": 1
+            },
+            "calls": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "instance",
+                  "delta"
+                ],
+                "properties": {
+                  "instance": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "delta": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  }
+                }
+              }
+            },
+            "expected": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "moduleImportInstances",
+                "instantiated",
+                "results",
+                "memory",
+                "distinctMemories",
+                "factoryHasNoModuleInstanceRoots",
+                "automaticHasModuleInstanceRoots"
+              ],
+              "properties": {
+                "moduleImportInstances": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 64
+                },
+                "instantiated": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 64
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  }
+                },
+                "memory": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  }
+                },
+                "distinctMemories": {
+                  "type": "boolean"
+                },
+                "factoryHasNoModuleInstanceRoots": {
+                  "type": "boolean"
+                },
+                "automaticHasModuleInstanceRoots": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "HostActivationV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "actors",
+            "limits",
+            "responses",
+            "stream",
+            "closedFault",
+            "lateStreamFault",
+            "laws"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "actors": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "generation"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "generation": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*$"
+                  }
+                }
+              }
+            },
+            "limits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pendingEffects",
+                "streams",
+                "bufferedStreamBytes",
+                "streamChunkBytes"
+              ],
+              "properties": {
+                "pendingEffects": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                },
+                "streams": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                },
+                "bufferedStreamBytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 268435456
+                },
+                "streamChunkBytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 16777216
+                }
+              }
+            },
+            "responses": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 64,
+                "items": {
+                  "$ref": "#/$defs/BrowserByte"
+                }
+              }
+            },
+            "stream": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/BrowserByte"
+              }
+            },
+            "closedFault": {
+              "$ref": "#/$defs/BrowserFault"
+            },
+            "lateStreamFault": {
+              "$ref": "#/$defs/BrowserFault"
+            },
+            "laws": {
+              "$ref": "#/$defs/BrowserLawList"
+            }
+          }
+        },
+        "Preview2ShimImportRewriteV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cases"
+          ],
+          "properties": {
+            "cases": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "source",
+                  "prefix",
+                  "output"
+                ],
+                "properties": {
+                  "source": {
+                    "type": "string"
+                  },
+                  "prefix": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "output": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "WasiActivationV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "limits",
+            "output",
+            "readyIndices",
+            "emptyAmbient",
+            "terminal",
+            "laws"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "limits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "resources",
+                "waiters",
+                "writeBytes",
+                "outputBytes"
+              ],
+              "properties": {
+                "resources": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                },
+                "waiters": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                },
+                "writeBytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 16777216
+                },
+                "outputBytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 268435456
+                }
+              }
+            },
+            "output": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 64,
+              "items": {
+                "$ref": "#/$defs/BrowserByte"
+              }
+            },
+            "readyIndices": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            },
+            "emptyAmbient": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "environment",
+                "arguments",
+                "cwd",
+                "terminal"
+              ],
+              "properties": {
+                "environment": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "additionalItems": false
+                  }
+                },
+                "arguments": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "cwd": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "terminal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "terminal": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "phase",
+                "resources",
+                "waiters",
+                "timers"
+              ],
+              "properties": {
+                "phase": {
+                  "$ref": "#/$defs/BrowserLifecyclePhase"
+                },
+                "resources": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65536
+                },
+                "waiters": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65536
+                },
+                "timers": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65536
+                }
+              }
+            },
+            "laws": {
+              "$ref": "#/$defs/BrowserLawList"
+            },
+            "lineBuffer": {
+              "$ref": "#/$defs/WasiLineBufferLaw"
+            }
+          }
+        },
+        "WasiLineBufferLaw": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "chunks",
+            "hostCalls",
+            "preview2HostCalls"
+          ],
+          "properties": {
+            "chunks": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "hostCalls": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "channel",
+                  "text",
+                  "level"
+                ],
+                "properties": {
+                  "channel": {
+                    "enum": [
+                      "stdout",
+                      "stderr"
+                    ]
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "level": {
+                    "enum": [
+                      "debug",
+                      "error",
+                      "log"
+                    ]
+                  }
+                }
+              }
+            },
+            "preview2HostCalls": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "WitFunctionId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*(?:@[0-9]+\\.[0-9]+\\.[0-9]+)?#[A-Za-z0-9._\\[\\]-]+$"
+        },
+        "WitInterfaceId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*@[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "definitions": [
+      "ActorFactoryV1",
+      "CompilerCapsuleV1",
+      "ComponentFactoryV1",
+      "GeneratedComponentInstantiationV1",
+      "Preview2ShimImportRewriteV1",
+      "ActorImportV1",
+      "CompilerSourcesV1",
+      "GeneratedActorHostActivationV1",
+      "HostActivationV1",
+      "WasiActivationV1",
+      "WasiLineBufferLaw",
+      "BrowserLawId",
+      "BrowserLawList"
+    ],
+    "principal": "CodegenPolicyV1"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️lifetime/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/lifetime/component.json",
+      "title": "Semio OS Plugin Lifetime",
+      "$defs": {
+        "AggregateAdmissionV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "scope",
+            "registry",
+            "beforeDetach",
+            "descendants",
+            "terminal"
+          ],
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            },
+            "scope": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "nativeAggregateMounted",
+                "nativeLayoutMeasured",
+                "allocatorFailureExecuted",
+                "strictCallbackTimingProven"
+              ],
+              "properties": {
+                "nativeAggregateMounted": {
+                  "type": "boolean"
+                },
+                "nativeLayoutMeasured": {
+                  "type": "boolean"
+                },
+                "allocatorFailureExecuted": {
+                  "type": "boolean"
+                },
+                "strictCallbackTimingProven": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "registry": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "logicalSlots",
+                "initializationGrantBytes",
+                "injectedLayouts",
+                "allocatorOvershoot"
+              ],
+              "properties": {
+                "owner": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9]*(?:::[A-Za-z][A-Za-z0-9]*)*$"
+                },
+                "logicalSlots": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1048576
+                },
+                "initializationGrantBytes": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "injectedLayouts": {
+                  "type": "array",
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "slotBytes",
+                      "allocationGrantBytes",
+                      "allocationCalls",
+                      "requestedBytes",
+                      "initializationTurns"
+                    ],
+                    "properties": {
+                      "slotBytes": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "allocationGrantBytes": {
+                        "$ref": "#/$defs/LifetimeBytes"
+                      },
+                      "allocationCalls": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "requestedBytes": {
+                        "$ref": "#/$defs/LifetimeBytes"
+                      },
+                      "initializationTurns": {
+                        "$ref": "#/$defs/LifetimeBytes"
+                      }
+                    }
+                  }
+                },
+                "allocatorOvershoot": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "requestedBytes",
+                    "actualBytes",
+                    "admittedBytes",
+                    "retainedBytes",
+                    "appConstructed"
+                  ],
+                  "properties": {
+                    "requestedBytes": {
+                      "$ref": "#/$defs/LifetimeBytes"
+                    },
+                    "actualBytes": {
+                      "$ref": "#/$defs/LifetimeBytes"
+                    },
+                    "admittedBytes": {
+                      "$ref": "#/$defs/LifetimeBytes"
+                    },
+                    "retainedBytes": {
+                      "$ref": "#/$defs/LifetimeBytes"
+                    },
+                    "appConstructed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "beforeDetach": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "required",
+                "cases"
+              ],
+              "properties": {
+                "required": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/DetachParticipant"
+                  }
+                },
+                "cases": {
+                  "type": "array",
+                  "minItems": 12,
+                  "maxItems": 12,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "missing",
+                      "sameCapturedKey",
+                      "generationAvailable",
+                      "detach"
+                    ],
+                    "properties": {
+                      "missing": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": {
+                          "$ref": "#/$defs/DetachParticipant"
+                        }
+                      },
+                      "sameCapturedKey": {
+                        "type": "boolean"
+                      },
+                      "generationAvailable": {
+                        "type": "boolean"
+                      },
+                      "detach": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "descendants": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "resumeLogicalCapBytes",
+                "fields",
+                "logicalBytes",
+                "physicalCapacityBytes",
+                "retirementGrants",
+                "emptyReservedFieldStillOwnsBacking"
+              ],
+              "properties": {
+                "resumeLogicalCapBytes": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "fields": {
+                  "type": "array",
+                  "minItems": 5,
+                  "maxItems": 5,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "owner",
+                      "length",
+                      "capacity"
+                    ],
+                    "properties": {
+                      "owner": {
+                        "enum": [
+                          "PendingResume.meta.actor",
+                          "TaskResumeOutcome.Emit.artifact_ops",
+                          "TaskResumeOutcome.Emit.config_ops",
+                          "TaskResumeOutcome.Emit.draft_ops",
+                          "InstanceMetadata.app_id"
+                        ]
+                      },
+                      "length": {
+                        "$ref": "#/$defs/LifetimeBytes"
+                      },
+                      "capacity": {
+                        "$ref": "#/$defs/LifetimeBytes"
+                      }
+                    }
+                  }
+                },
+                "logicalBytes": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "physicalCapacityBytes": {
+                  "$ref": "#/$defs/LifetimeBytes"
+                },
+                "retirementGrants": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/LifetimeBytes"
+                  }
+                },
+                "emptyReservedFieldStillOwnsBacking": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "terminal": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "ready",
+                "cases",
+                "lateVerdictKeepsReleasedShellWitness",
+                "faultDoesNotEraseStructuralOwner"
+              ],
+              "properties": {
+                "ready": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "appEmpty",
+                    "pumpEmpty",
+                    "descendantsEmpty",
+                    "schedulingRevoked",
+                    "queuedCallbacks",
+                    "runningCallbacks",
+                    "quarantineAlias",
+                    "shellReleased",
+                    "elapsedUs"
+                  ],
+                  "properties": {
+                    "appEmpty": {
+                      "type": "boolean"
+                    },
+                    "pumpEmpty": {
+                      "type": "boolean"
+                    },
+                    "descendantsEmpty": {
+                      "type": "boolean"
+                    },
+                    "schedulingRevoked": {
+                      "type": "boolean"
+                    },
+                    "queuedCallbacks": {
+                      "$ref": "#/$defs/LifetimeBytes"
+                    },
+                    "runningCallbacks": {
+                      "$ref": "#/$defs/LifetimeBytes"
+                    },
+                    "quarantineAlias": {
+                      "type": "boolean"
+                    },
+                    "shellReleased": {
+                      "type": "boolean"
+                    },
+                    "elapsedUs": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0
+                    }
+                  }
+                },
+                "cases": {
+                  "type": "array",
+                  "minItems": 12,
+                  "maxItems": 12,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "name",
+                      "changes",
+                      "ackConsumed"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "changes": {
+                        "$ref": "#/$defs/TerminalFields"
+                      },
+                      "ackConsumed": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "lateVerdictKeepsReleasedShellWitness": {
+                  "type": "boolean"
+                },
+                "faultDoesNotEraseStructuralOwner": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "CloseConstructionV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "events",
+            "states",
+            "atWorkerShellExactLiveAllocation",
+            "constructionFailure",
+            "allocationGrantProven",
+            "descendantCloseProven"
+          ],
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            },
+            "events": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "live",
+                  "workerShell",
+                  "quarantine"
+                ]
+              }
+            },
+            "states": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "liveOwner",
+                  "workerShell",
+                  "quarantineOwner"
+                ],
+                "properties": {
+                  "liveOwner": {
+                    "type": "boolean"
+                  },
+                  "workerShell": {
+                    "type": "boolean"
+                  },
+                  "quarantineOwner": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "atWorkerShellExactLiveAllocation": {
+              "type": "boolean"
+            },
+            "constructionFailure": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "phase",
+                "liveOwner",
+                "generationUnchanged",
+                "sameAllocation",
+                "actualAllocatorFailureProven"
+              ],
+              "properties": {
+                "phase": {
+                  "enum": [
+                    "before-worker-allocation",
+                    "after-worker-allocation",
+                    "after-quarantine"
+                  ]
+                },
+                "liveOwner": {
+                  "type": "boolean"
+                },
+                "generationUnchanged": {
+                  "type": "boolean"
+                },
+                "sameAllocation": {
+                  "type": "boolean"
+                },
+                "actualAllocatorFailureProven": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "allocationGrantProven": {
+              "type": "boolean"
+            },
+            "descendantCloseProven": {
+              "type": "boolean"
+            }
+          }
+        },
+        "DetachParticipant": {
+          "enum": [
+            "RuntimeCloseWorkerState",
+            "runtime.close_quarantine",
+            "REACTOR_CLOSES",
+            "PATCHES",
+            "PENDING_PATCHES",
+            "COMMAND_INGRESS",
+            "JOB_RENDER_BINDINGS",
+            "PRESENCE",
+            "return-source"
+          ]
+        },
+        "LifetimeBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "RuntimeFaultVectorsV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "ceilingUs",
+            "scopes",
+            "messageTemplate",
+            "vectors",
+            "classifications"
+          ],
+          "properties": {
+            "schema": {
+              "type": "string",
+              "const": "semio.plugin.runtime-fault-vectors.v1"
+            },
+            "ceilingUs": {
+              "type": "integer",
+              "const": 8000
+            },
+            "scopes": {
+              "const": [
+                "live",
+                "close"
+              ]
+            },
+            "messageTemplate": {
+              "const": "runtime {scope} cleanup faulted for instance {instance}: {detail} [{variant}] (elapsed {elapsed}, ceiling {ceilingUs}us)"
+            },
+            "vectors": {
+              "type": "array",
+              "minItems": 19,
+              "maxItems": 19,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "variant",
+                  "code",
+                  "class",
+                  "detail"
+                ],
+                "properties": {
+                  "variant": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z-]*[a-z]$"
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^plugin\\.internal\\.[a-z][a-z-]*[a-z]$"
+                  },
+                  "class": {
+                    "enum": [
+                      "abi-mismatch",
+                      "interactive-ceiling",
+                      "clock",
+                      "plugin-internal"
+                    ]
+                  },
+                  "detail": {
+                    "type": "string",
+                    "minLength": 8
+                  }
+                }
+              }
+            },
+            "classifications": {
+              "type": "array",
+              "minItems": 7,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "class"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "code": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "supervisor": {
+                    "enum": [
+                      "running",
+                      "crashed",
+                      "quarantined"
+                    ]
+                  },
+                  "class": {
+                    "enum": [
+                      "abi-mismatch",
+                      "interactive-ceiling",
+                      "clock",
+                      "plugin-internal",
+                      "install-failed",
+                      "unknown"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "TerminalFields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "appEmpty": {
+              "type": "boolean"
+            },
+            "pumpEmpty": {
+              "type": "boolean"
+            },
+            "descendantsEmpty": {
+              "type": "boolean"
+            },
+            "schedulingRevoked": {
+              "type": "boolean"
+            },
+            "queuedCallbacks": {
+              "$ref": "#/$defs/LifetimeBytes"
+            },
+            "runningCallbacks": {
+              "$ref": "#/$defs/LifetimeBytes"
+            },
+            "quarantineAlias": {
+              "type": "boolean"
+            },
+            "shellReleased": {
+              "type": "boolean"
+            },
+            "elapsedUs": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "definitions": [
+      "RuntimeFaultVectorsV1",
+      "AggregateAdmissionV1",
+      "CloseConstructionV1"
+    ],
+    "principal": "TerminalFields"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/builder/component.json",
+      "title": "Semio OS Plugin Builder",
+      "$defs": {
+        "ArtifactAdmissionV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "cases",
+            "firstParty"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BuilderContractId"
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 15,
+              "maxItems": 15,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "plugin",
+                  "package",
+                  "channel",
+                  "kind",
+                  "code"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "plugin": {
+                    "$ref": "#/$defs/BuilderPluginId"
+                  },
+                  "package": {
+                    "$ref": "#/$defs/BuilderPackageId"
+                  },
+                  "channel": {
+                    "enum": [
+                      "artifact",
+                      "definition",
+                      "tree"
+                    ]
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "enum": [
+                      "accepted",
+                      "plugin-assembly.artifact-kind",
+                      "plugin-assembly.artifact-owner"
+                    ]
+                  }
+                }
+              }
+            },
+            "firstParty": {
+              "type": "array",
+              "minItems": 39,
+              "maxItems": 39,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "plugin",
+                  "kind",
+                  "definition",
+                  "root"
+                ],
+                "properties": {
+                  "plugin": {
+                    "$ref": "#/$defs/BuilderPluginId"
+                  },
+                  "kind": {
+                    "$ref": "#/$defs/BuilderArtifactKind"
+                  },
+                  "definition": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "root": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "BuilderArtifactKind": {
+          "type": "string",
+          "pattern": "^s\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "BuilderContractId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*/v[0-9]+$"
+        },
+        "BuilderPackageId": {
+          "type": "string",
+          "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "BuilderPluginId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "TopicContributionsV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "cases"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BuilderContractId"
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "contributions"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z]+(-[a-z]+)*$"
+                  },
+                  "contributions": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "topic",
+                        "payload"
+                      ],
+                      "properties": {
+                        "topic": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+                        },
+                        "payload": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "identity",
+                            "executable"
+                          ],
+                          "properties": {
+                            "identity": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "executable": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "definitions": [
+      "ArtifactAdmissionV1",
+      "TopicContributionsV1"
+    ],
+    "principal": "BuilderArtifactKind"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎠️activation/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/host/activation/component.json",
+      "title": "Semio OS Plugin Host Activation",
+      "$defs": {
+        "ActivationAdmissionV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "cases"
+          ],
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 5,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "stage",
+                  "actorRetained",
+                  "instantiations",
+                  "drops",
+                  "admitted"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "stage": {
+                    "$ref": "#/$defs/ActivationStage"
+                  },
+                  "actorRetained": {
+                    "type": "boolean"
+                  },
+                  "instantiations": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "drops": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "admitted": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ActivationStage": {
+          "enum": [
+            "record",
+            "quarantine",
+            "shard",
+            "instantiate",
+            "register",
+            "complete"
+          ]
+        }
+      }
+    },
+    "definitions": [
+      "ActivationAdmissionV1"
+    ],
+    "principal": "ActivationStage"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️lifecycle/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/host/lifecycle/component.json",
+      "title": "Semio OS Plugin Host Lifecycle",
+      "$defs": {
+        "ReactorTurnLifecycleV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "code",
+            "maximumFaultBytes",
+            "cases"
+          ],
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            },
+            "code": {
+              "$ref": "#/$defs/ReactorFaultCode"
+            },
+            "maximumFaultBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16777216
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 10,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "code",
+                  "retryable",
+                  "events",
+                  "eligible"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "code": {
+                    "$ref": "#/$defs/ReactorFaultCode"
+                  },
+                  "retryable": {
+                    "type": "boolean"
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/ReactorLifecycleEvent"
+                    }
+                  },
+                  "eligible": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ReactorFaultCode": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)*$"
+        },
+        "ReactorLifecycleEvent": {
+          "enum": [
+            "open",
+            "close",
+            "ack",
+            "wake",
+            "page"
+          ]
+        }
+      }
+    },
+    "definitions": [
+      "ReactorTurnLifecycleV1"
+    ],
+    "principal": "ReactorFaultCode"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/describe/component.json",
+      "title": "Semio OS Plugin Describe",
+      "$defs": {
+        "DescribeContractId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*/v[0-9]+$"
+        },
+        "DescribeLawId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "DescribeSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "DescribeHex": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{2})*$"
+        },
+        "DescribeEnvironmentPair": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 16384
+            }
+          ],
+          "additionalItems": false
+        },
+        "EmissionBudgetV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "cases"
+          ],
+          "properties": {
+            "format": {
+              "$ref": "#/$defs/DescribeContractId"
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 5,
+              "maxItems": 5,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "budgetMs",
+                  "elapsedMs",
+                  "expired",
+                  "remainingMs"
+                ],
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "unlimited",
+                      "before-limit",
+                      "at-limit",
+                      "after-limit",
+                      "already-exhausted"
+                    ]
+                  },
+                  "budgetMs": {
+                    "type": "integer",
+                    "minimum": -1
+                  },
+                  "elapsedMs": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "expired": {
+                    "type": "boolean"
+                  },
+                  "remainingMs": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "FreshSourceEpochV1": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "toolchain",
+            "environment",
+            "legs",
+            "files"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/DescribeContractId"
+            },
+            "toolchain": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "cargo",
+                "rustc"
+              ],
+              "properties": {
+                "cargo": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 8192
+                },
+                "rustc": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 8192
+                }
+              }
+            },
+            "environment": {
+              "type": "array",
+              "maxItems": 256,
+              "items": {
+                "$ref": "#/$defs/DescribeEnvironmentPair"
+              }
+            },
+            "legs": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "package",
+                  "args"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]*$"
+                  },
+                  "package": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]*$"
+                  },
+                  "args": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 128,
+                    "items": {
+                      "type": "string",
+                      "maxLength": 4096
+                    }
+                  }
+                }
+              }
+            },
+            "files": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32768,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha256",
+                  "byteLength",
+                  "mode"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  "sha256": {
+                    "$ref": "#/$defs/DescribeSha256"
+                  },
+                  "byteLength": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4194304
+                  },
+                  "mode": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4095
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "definitions": [
+      "EmissionBudgetV1"
+    ],
+    "principal": "FreshSourceEpochV1"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/os/flow/artifacts/flow/parameter/component.json",
+      "title": "Flow Graph Parameter Contracts",
+      "$defs": {
+        "GraphParameterBound": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "value",
+            "min",
+            "max",
+            "step"
+          ],
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            }
+          }
+        },
+        "GraphParameterV1": {
+          "title": "Flow Graph Parameter Interaction",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "cases",
+            "action",
+            "expected"
+          ],
+          "properties": {
+            "schema": {
+              "const": "semio.flow.graph-parameter.v1"
+            },
+            "action": {
+              "const": "nodeGraphEdit"
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "app",
+                  "controllerId",
+                  "surfaceId",
+                  "widgetId",
+                  "label",
+                  "before",
+                  "request",
+                  "after"
+                ],
+                "properties": {
+                  "app": {
+                    "enum": [
+                      "flow",
+                      "generation2d",
+                      "generation3d"
+                    ]
+                  },
+                  "controllerId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "surfaceId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "widgetId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "before": {
+                    "$ref": "#/$defs/GraphParameterBound"
+                  },
+                  "request": {
+                    "type": "number"
+                  },
+                  "after": {
+                    "$ref": "#/$defs/GraphParameterBound"
+                  }
+                }
+              }
+            },
+            "expected": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "documentJsonReads",
+                "wholeFixtureActions",
+                "gestureEndActions",
+                "commitTimerMs"
+              ],
+              "properties": {
+                "documentJsonReads": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 0
+                },
+                "wholeFixtureActions": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 0
+                },
+                "gestureEndActions": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 0
+                },
+                "commitTimerMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 0
+                }
+              }
+            }
+          }
+        },
+        "GraphParameterCommand": {
+          "description": "🎚️ The `nodeGraphEdit` command a slider gesture dispatches: exactly one widget, one numeric value, and optionally the surface it was raised on. No document or fixture payload may ride along.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "widgetId",
+            "value"
+          ],
+          "properties": {
+            "widgetId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "value": {
+              "type": "number"
+            },
+            "surfaceId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      }
+    },
+    "definitions": [
+      "GraphParameterV1"
+    ],
+    "principal": "GraphParameterBound"
+  }
+]

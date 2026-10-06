@@ -1,0 +1,24 @@
+{
+  "literalUnit": "x",
+  "literalLength": 32769,
+  "literalTail": "A",
+  "mismatchTail": "B",
+  "formatSpacing": " ",
+  "schemaFrontier": 16384,
+  "refusal": "invalidValue",
+  "cancellation": "canceled",
+  "cases": [
+    {
+      "name": "literal",
+      "accept": true
+    },
+    {
+      "name": "formatted",
+      "accept": true
+    },
+    {
+      "name": "lateLiteralMismatch",
+      "accept": false
+    }
+  ]
+}

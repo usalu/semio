@@ -4,7 +4,7 @@
 //! is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::schema::default_document;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 use crate::viewer::gismap::modes::view;
 use crate::viewer::gismap::modes::view::windows::map;
 use crate::{GisMapSnapshot, GISMAP_DIALECT, GIS_MAP_SCHEMA};
@@ -84,7 +84,7 @@ impl protocol::OpBinary for GisMapViewCommand {
 /// 🔒️ The emitted `Emit` carries `window_config_mutations` and NOTHING else — no artifact mutation, no
 /// config mutation, no effect — the runtime half of the read-only guarantee whose compile-time half
 /// is `ViewEmit`.
-fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<crate::op::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+fn camera_emit(command: &GisMapViewCommand, view_state: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let GisMapViewCommand::SetCamera { camera } = command;
     let view = view_state.ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("gis.map.viewer.window-required"), "a camera change requires a concrete map window"))?;
     if camera.is_empty() {
@@ -148,7 +148,7 @@ fn gis_map_view_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<GisMapViewer>>>,
     _operation: &AppOperationContext,
-) -> Result<Emit<crate::op::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::GisMapMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     camera_emit(command, context.and_then(|context| context.view_state.as_ref()))
 }
 
@@ -213,7 +213,7 @@ impl ArtifactViewer for GisMapViewer {
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = GisMapSnapshot;
-    type Mutation = crate::op::GisMapMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -228,7 +228,7 @@ impl ArtifactViewer for GisMapViewer {
     /// 🔐️ The document-store owner catalogue, identical to the sibling editor's: a viewer owns the
     /// same snapshot envelope and must allocate it the same way.
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::gis_map_document_store_owners())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::gis_map_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {

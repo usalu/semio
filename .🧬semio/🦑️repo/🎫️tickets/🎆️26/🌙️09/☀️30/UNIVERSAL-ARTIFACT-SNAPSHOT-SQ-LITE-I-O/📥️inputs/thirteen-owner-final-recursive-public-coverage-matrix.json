@@ -1,0 +1,1360 @@
+{
+  "qualification": "Source-only every owning explicit #[path] module and inline mod inspected. No execution or absence-of-capability assertion. Earlier parent-only coverage map is superseded.",
+  "owners": [
+    {
+      "owner": "Process3dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "process.3d",
+      "selectedCommand": "bun nx run @semio-tech/process-process3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs"
+      ],
+      "moduleNames": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "name": "public_cohort"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "name": "native_semantic_census"
+        }
+      ],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧮️census/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️public/🔣️.json",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 5,
+          "signature": "fn laws() -> serde_json::Value {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 25,
+          "signature": "fn full(word: u64) -> Process3dSnapshot {"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_process3d_actual_parent_bare_capability_is_present",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_complete_parent_native_formats_preserve_all_fields_and_words",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_parent_child_addresses_are_independent_literals",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_genuine_controlled_metadata_and_typed_construction_cover_every_variant",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_domain_fields",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_independent_sqlite_knows_every_handwritten_table_and_scalar_width",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_actual_document_declaration_exposes_parent_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_owned_native_large_fields_have_real_interior_controls",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_actual_public_file_preserves_complete_parent_owner",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_native_exact_semantic_cells_both_directions",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_public_declared_export_reaches_full_native_and_independent_physical_fields",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_process3d_public_declared_import_binds_independent_semantic_rows_and_exact_native_words",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs"
+        }
+      ],
+      "publicExtent": "nested genuine public both native forms and independent edited import; Root appended parent full-word law separate",
+      "publicSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 213,
+          "text": "semio_framework_plugin::Plugin::<SqliteProcessApps>::builder(\"process\").label(\"Process owned SQLite\").version(\"0.0.1\").package_id(\"semio:process\").artifact(crate::declaration().unwrap()).try_build().unwrap();"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs",
+          "line": 3,
+          "text": "use store::io::{ArtifactDialect,io_mechanism::{io_route,io_run_with_snapshot_control}};"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs",
+          "line": 9,
+          "text": "fn publish(){semio_framework_plugin::Plugin::<SqliteProcessApps>::builder(\"process\").label(\"Process3d actual public SQLite parent\").version(\"0.0.1\").package_id(\"semio:process\").artifact(crate::declaration().unwrap()).try_build().unwrap();}"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs",
+          "line": 16,
+          "text": "publish();let from=dialect();let into=ArtifactDialect::from(SQLITE_SNAPSHOT);let route=io_route(&from,&into,1).await.expect(\"actual declared Process3d parent must publish its SQLite export route\").value;assert_eq!(route.hops.len(),cohort()[\"routeHops\"].as_u64().unwrap()as usize);assert_eq!(route.fidelity,IoFidelity::Exact);"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs",
+          "line": 17,
+          "text": "for word in words(){let expected=full(word);for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=payload(&expected,encoding);let mut phases=Vec::new();let file=io_run_with_snapshot_control(&route,input,SqliteDatabaseLimits::default(),&mut |p|{phases.push(p.phase);true}).await.expect(\"actual Process3d native owner must produce its physical SQLite file\").value;let IoPayload::Binary(bytes)=file else{panic!(\"SQLite public endpoint must return binary\")};inspect(&bytes,word,encoding);for phase in[SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::WritePages]{assert!(phases.contains(&phase),\"missing actual public export phase {phase:?}\");}}}"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs",
+          "line": 22,
+          "text": "publish();let from=ArtifactDialect::from(SQLITE_SNAPSHOT);let into=dialect();let route=io_route(&from,&into,1).await.expect(\"actual declared Process3d parent must publish its SQLite import route\").value;assert_eq!(route.hops.len(),cohort()[\"routeHops\"].as_u64().unwrap()as usize);assert_eq!(route.fidelity,IoFidelity::Exact);"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs",
+          "line": 23,
+          "text": "for word in words(){let mut expected=full(word);expected.stock_payload.label=cohort()[\"independentEdit\"][\"value\"].as_str().unwrap().into();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=IoPayload::Binary(independent(word,encoding));let mut phases=Vec::new();let output=io_run_with_snapshot_control(&route,input,SqliteDatabaseLimits::default(),&mut |p|{phases.push(p.phase);true}).await.expect(\"independent semantic Process3d SQLite file must reach the actual native owner\").value;assert_eq!(output,payload(&expected,encoding),\"actual literal DSL/Pack output differs from the owner factory\");let actual=match output{IoPayload::Binary(bytes)=>Process3dSnapshot::decode_pack(&bytes).unwrap(),IoPayload::Text(text)=>Process3dSnapshot::parse_dsl(&text).unwrap()};assert_full(&actual,&expected,word);for phase in[SqliteSnapshotPhase::ReadPages,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative]{assert!(phases.contains(&phase),\"missing actual public import phase {phase:?}\");}}}"
+        }
+      ],
+      "independentEditSourceLines": [],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "SqliteProcessApps actual declaration enum"
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.2d",
+      "selectedCommand": "bun nx run @semio-tech/fem-2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 10,
+          "signature": "fn fixture()->serde_json::Value{serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap()}"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 15,
+          "signature": "fn state()->Fem2dSnapshot{"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_fem2d_declared_capability_is_owned",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem2d_complete_physical_state",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem2d_independent_bun_file_queries_and_edits",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem2d_all_words_and_count_widths",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem2d_invalid_graph_and_storage",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem2d_actual_declaration_erased_words_both_encodings",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem2d_real_interior_copy_controls_and_budgets",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem2d_native_decode_actual_interior_owned_work",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 33,
+          "statement": "#[test]fn sqlite_snapshot_fem2d_independent_bun_file_queries_and_edits(){use std::io::Write;use std::process::{Command,Stdio};let d=project(&state());let script=r#\"import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\\'table\\'').get().n!==18n)throw Error('table count');if(d.query('SELECT authored_id FROM fem2d_node WHE"
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.3d",
+      "selectedCommand": "bun nx run @semio-tech/fem-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 10,
+          "signature": "fn fixture()->serde_json::Value{serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap()}"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 15,
+          "signature": "fn state()->Fem3dSnapshot{"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_fem3d_declared_capability_is_owned",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem3d_complete_physical_state",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem3d_independent_bun_file_edits",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem3d_all_words_counts_axes",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem3d_invalid_graph_and_storage",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem3d_actual_declaration_erased_words_both_encodings",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem3d_real_interior_copy_controls_and_budgets",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_fem3d_native_decode_actual_interior_owned_work",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 33,
+          "statement": "#[test]fn sqlite_snapshot_fem3d_independent_bun_file_edits(){use std::io::Write;use std::process::{Command,Stdio};let d=project(&state());let script=r#\"import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()),{safeIntegers:true});if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');if(d.query('SELECT COUNT(*) AS n FROM sqlite_schema WHERE type=\\'table\\'').get().n!==19n)throw Error('table count');if(d.query('SELECT case_id FROM fem3d_combination_term ORDER B"
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    },
+    {
+      "owner": "WiresSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.reasoning.wires",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "reasoning.wires.fixture",
+      "selectedCommand": "bun nx run @semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs"
+      ],
+      "moduleNames": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "name": "semantic"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "name": "native_semantic_census"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+          "name": "declaration"
+        }
+      ],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧮️census/🔣️.json",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 5,
+          "signature": "fn native_fixture()->WiresSnapshot{"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+          "line": 3,
+          "signature": "fn fixture()->serde_json::Value{serde_json::from_str(include_str!(\"../../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap()}"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_wires_exact_native_records_preserve_complete_intrinsic_and_handle",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_deep_complete_native_records_preserve_allowed_intrinsic_depth",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_quota",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_native_exact_semantic_cells_both_directions",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_independent_sql_queries_aliases_edits_and_exact_ieee_words",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_refuses_independently_valid_unreachable_cycle_and_preallocates_metadata",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_deep_controls_and_complete_native_row_admission",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_flat_native_refuses_unowned_and_repeated_node_references",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_controlled_flat_output_retains_full_tree_and_admits_before_materialization",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_controlled_native_output_cancels_inside_deep_records_and_long_unicode",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_authored_text_grammar_and_protocol_cover_actual_flat_records",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_wires_actual_declaration_typed_public_and_erased_routes",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs"
+        }
+      ],
+      "publicExtent": "nested genuine typed and erased public both native forms",
+      "publicSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+          "line": 71,
+          "text": "use store::io::io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route,io_run_with_snapshot_control};"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+          "line": 72,
+          "text": "let plugin=semio_framework_plugin::Plugin::<WiresSqliteApps>::builder(\"reasoning\").label(\"Wires owning SQLite declaration\").version(\"0.0.1\").package_id(\"semio:reasoning\").declare_artifact(crate::artifact::<WiresSqliteApps>()).try_build().unwrap();let mut snapshot=owned(native_fixture());let limits=SqliteDatabaseLimits::default();let dialect=store::os_io::ArtifactDialect{artifact_kind:\"s.reasoning.wires\".into(),standard:\"1\".into(),subset:\"*\".into()};let sqlite=store::os_io::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);let export=io_route(&dialect,&sqlite,1).await.unwrap().value;let import=io_route(&sqlite,&dialect,1).await.unwrap().value;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+          "line": 73,
+          "text": "for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let file=io_export_sqlite_snapshot(&dialect,snapshot.as_mut(),encoding,limits,&mut |_|true).await.unwrap().value;let mut restored=owned(io_import_sqlite_snapshot::<WiresSnapshot>(&dialect,&file,limits,&mut |_|true).await.unwrap().value);assert_intrinsic(&snapshot.as_mut().wires_fixture,&restored.as_mut().wires_fixture);assert_intrinsic(&snapshot.as_mut().meta,&restored.as_mut().meta);assert_eq!(snapshot.as_mut().content,restored.as_mut().content);let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot.as_mut())),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot.as_mut()))};let file=io_run_with_snapshot_control(&export,payload,limits,&mut |_|true).await.unwrap().value;let payload=io_run_with_snapshot_control(&import,file,limits,&mut |_|true).await.unwrap().value;let mut restored=owned(WiresSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap());assert_intrinsic(&snapshot.as_mut().wires_fixture,&restored.as_mut().wires_fixture);assert_intrinsic(&snapshot.as_mut().meta,&restored.as_mut().meta);assert_eq!(snapshot.as_mut().content,restored.as_mut().content);"
+        }
+      ],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+          "line": 13,
+          "statement": "let script=\"import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok'||d.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const f=JSON.parse(process.argv[1]);const s=d.query('SELECT value_ieee754_bits AS bits FROM wires_float JOIN wires_meta_root ON wires_meta_root.value_id=wires_float.id');s.safeIntegers(true);if(s.get().bits!==BigInt.asIntN(64,BigInt('0x'+process.argv[2])))throw Error('exactIEEE');const u=d.query('SELECT high,low FROM wires_unsigned').ge"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+          "line": 15,
+          "statement": "let corrupted=oracle(&renamed,\"import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));d.exec(\\\"UPDATE wires_float SET value_numeric_class=CASE WHEN value_numeric_class='nan' THEN 'finite' ELSE 'nan' END\\\");if(d.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');await Bun.write(Bun.stdout,d.serialize());d.close();\",&[]);assert!(WiresSnapshot::from_sqlite_database(&corrupted,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+          "line": 17,
+          "statement": "let mut snapshot=owned(native_fixture());let database=snapshot.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let edited=oracle(&database,\"import{Database}from'bun:sqlite';const d=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));d.query('UPDATE wires_text SET value=?').run(process.argv[1]);await Bun.write(Bun.stdout,d.serialize());d.close();\",&[f[\"editedText\"].as_str().unwrap().into()]);let mut restored=owned(WiresSnapshot::from_sqlite_database(&edited,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap());match&restored.a"
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "WiresSqliteApps actual Editor/Viewer VcsArtifactApp enum"
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.layout.layout",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "layout.layout",
+      "selectedCommand": "bun nx run @semio-tech/layout-layout-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/🦀️.rs",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"
+      ],
+      "moduleNames": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "name": "backing"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/🦀️.rs",
+          "name": "observed"
+        }
+      ],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧾️dictionary/🔣️.json",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 18,
+          "signature": "fn component_fixture()->crate::LayoutDrawingChild {"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_layout_declared_owner_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_layout_inline_drawing_controlled_metadata",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_layout_inline_drawing_owned_fields_controlled_input_output",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_layout_inline_drawing_long_native_copy_is_interior_controlled",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_layout_complete_owned_fields_words_and_literals_cross_both_native_encodings",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_layout_deep_inline_drawing_component_has_owned_controlled_boundaries",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_layout_inline_drawing_all_node_fields_preserve_ieee_words",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_layout_full_concrete_requests_preserve_every_owned_field",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 5,
+          "text": "semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder(\"layout\").label(\"Layout owned SQLite\").version(\"0.0.1\").package_id(\"semio:layout\").artifact(crate::declaration().unwrap()).try_build().unwrap();"
+        }
+      ],
+      "independentEditSourceLines": [],
+      "witnessQualification": "Default declaration capability probe plus authored inline-drawing/owned-field/full concrete backing and raw-word laws; no public route law in resolved tree. Child projection does not alone establish full parent public persistence.",
+      "appMembership": "Layout current declaration law uses actual NoPluginApp; future full public composition must match current real declaration"
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.remodel.remodeling",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "remodeling.scene",
+      "selectedCommand": "bun nx run @semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 3,
+          "signature": "fn laws()->serde_json::Value{serde_json::from_str(include_str!(\"../../🧫️fixtures/🪶️sqlite/🔣️.json\")).unwrap()}"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_remodeling_actual_factory_owns_parent_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_remodeling_inline_clouds_are_native_tagged_values",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_remodeling_durable_chunks_are_native_literal_octets",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_remodeling_binary32_samples_agree_with_independent_words",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_remodeling_native_text_binary32_words_match_source_neutral_spelling",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_remodeling_declared_json_preserves_every_owned_ieee_word",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_remodeling_declared_json_covers_every_owned_scalar_path",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [],
+      "witnessQualification": "Existing laws use default_remodeling_scene plus isolated sparse/buffer/stream word branches and JSON roundtrips; no complete independent populated semantic SQLite owner/read/edit witness found in this resolved tree.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.trinity.rewriting",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "trinity.rewrite.rule",
+      "selectedCommand": "bun nx run @semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🌳️typed/🔣️.json",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 5,
+          "signature": "fn laws() -> serde_json::Value {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 63,
+          "signature": "fn full(word:u64)->RewritingSnapshot{"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_rewriting_actual_bare_parent_owns_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_binary_keeps_all_authored_strings_and_property_words",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_text_keeps_all_authored_strings_and_property_words",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_genuine_controlled_record_covers_actual_recursive_property_domain",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_declared_json_retains_layout_words_and_all_property_states",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_independent_sqlite_interprets_all_thirty_domain_tables",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_real_large_authored_string_control_is_interior",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_strings",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 205,
+          "statement": "for(const hex of l.binary64Bits){const word=BigInt('0x'+hex),v=num(hex);d.query('UPDATE rewriting_layout SET x=?,y=?,x_ieee754_bits=?,x_numeric_class=?,y_ieee754_bits=?,y_numeric_class=? WHERE id=1').run(v[0],v[0],v[1],v[2],v[1],v[2]);const row=d.query('SELECT x_ieee754_bits,x_numeric_class FROM rewriting_layout WHERE id=1').get();if(BigInt.asUintN(64,row.x_ieee754_bits).toString(16).padStart(16,'0')!==hex||row.x_numeric_class!==v[2])throw Error('word');}"
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    },
+    {
+      "owner": "JackSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.trinity.jack",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.trinity.jack",
+      "selectedCommand": "bun nx run @semio-tech/trinity-jack-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 5,
+          "signature": "fn laws() -> serde_json::Value {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 40,
+          "signature": "fn full(word: u64, address: usize) -> JackSnapshot {"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_jack_actual_bare_parent_owns_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_binary_preserves_inline_manifest_and_literal_content",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_text_preserves_inline_manifest_and_literal_content",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_every_native_camera_word_preserves_full_parent",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_child_coordinates_survive_attached_and_unresolved_native_owners",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_actual_controlled_typed_value_construction_preserves_all_fields",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_declared_json_camera_words_are_closed_and_exact",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_public_json_snapshot_api_preserves_the_same_literal_owned_parent",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and_words",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_all13_tables_and153_rows_survive_independent_edits",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_independently_malformed_semantic_entities_are_refused",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phases",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 243,
+          "statement": "let edited = independent_jack_file(&bytes, \"UPDATE jack_document SET manifest_id='still-independent',query='SQL query'; UPDATE jack_content_child SET child_id='alias!@/',artifact_id='unresolved!@/';\");"
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    },
+    {
+      "owner": "DagSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.dag.dag",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "dag.dag",
+      "selectedCommand": "bun nx run @semio-tech/dag-dag-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 6,
+          "signature": "fn laws() -> serde_json::Value {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 9,
+          "signature": "fn full(index: usize) -> DagSnapshot {"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_dag_actual_bare_parent_owns_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_actual_io_declaration_owns_parent_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_binary_keeps_unresolved_literal_child_addresses",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_text_keeps_unresolved_literal_child_addresses",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_controlled_value_constructs_only_actual_parent_fields",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_declared_json_preserves_literal_parent_child_fields",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_independent_sqlite_interprets_literal_two_table_parent",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_actual_semantic_rows_admit_exact_count_and_cancel_all_copy_phases",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_owned_relationship_and_dialect_edits_are_rejected",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_dag_independent_sqlite_edits_reconstruct_literal_parent",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 213,
+          "statement": "let script = r#\"import{Database}from'bun:sqlite';const db=Database.deserialize(await Bun.stdin.bytes());if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('SQLite integrity');if(db.query('SELECT count(*) AS n FROM sqlite_schema WHERE type=\\'table\\'').get().n!==2)throw Error('tables');db.exec(\"UPDATE dag_content_child SET child_id='independent child',artifact_id='independent target'\");process.stdout.write(db.serialize());\"#;"
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.3d",
+      "selectedCommand": "bun nx run @semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        }
+      ],
+      "constructors": [],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_puzzle3d_actual_typed_bare_capability_is_present",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_actual_play_bare_capability_is_present",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_native_typed_text_and_pack_preserve_every_word",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_play_text_preserves_the_actual_typed_snapshot",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_declared_json_preserves_every_word",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_controlled_scale_has_real_metadata_and_both_variants",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_all23_tables_physical_oracle_and_edit_reconstruct_all_words",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_independently_edited_malformed_graphs_are_rejected",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_codecs_keep_all23_domain_tables",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_puzzle3d_exact_rows_and_all_four_interior_copy_phases",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 162,
+          "statement": "let edited = independent_puzzle3_edit(&bytes, \"UPDATE puzzle3_document SET domain='independent'; UPDATE puzzle3_reference_source SET url='unresolved!@/';\");"
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.2d",
+      "selectedCommand": "bun nx run @semio-tech/block-2d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 5,
+          "signature": "fn laws() -> serde_json::Value {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 11,
+          "signature": "fn full(word: u64) -> Block2dSnapshot {"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_block2d_actual_bare_capability_is_present",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_actual_declared_codec_has_owned_sqlite_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_all_fields_and_words_survive_actual_text_and_pack",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_optional_absence_remains_distinct_from_present_empty",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_controlled_record_constructs_every_owned_field",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_actual_declared_json_preserves_every_owned_word",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_independent_sqlite_reads_the_literal_table_and_word_contract",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_independent_edited_physical_database_preserves_every_word",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_independent_malformed_entities_refuse",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_row_frontier_and_real_four_phase_cancellation",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block2d_actual_erased_declared_binary_text_retains_full_domain",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 137,
+          "statement": "let edited = import_sqlite_database(&independent_edit(&bytes, \"UPDATE block2_meta SET description='independent';UPDATE block2_handle SET handle_kind='unresolved edited'\"), SqliteDatabaseLimits::default(), &mut |_| true).unwrap();"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 154,
+          "statement": "\"UPDATE block2_handle SET ordinal=2\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 155,
+          "statement": "\"UPDATE block2_camera2d SET x_ieee754_bits=1\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 156,
+          "statement": "\"UPDATE block2_camera2d SET x_numeric_class='nan'\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 158,
+          "statement": "\"UPDATE block2_compatibility SET bidirectional=3\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 160,
+          "statement": "\"UPDATE block2_attribute SET document_id=999\","
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.5d",
+      "selectedCommand": "bun nx run @semio-tech/block-5d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 5,
+          "signature": "fn laws() -> serde_json::Value {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 11,
+          "signature": "fn full(word: u64) -> Block5dSnapshot {"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_block5d_actual_bare_capability_is_present",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_actual_declared_codec_has_owned_sqlite_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_all_fields_and_words_survive_actual_text_and_pack",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_optional_absence_remains_distinct_from_present_empty",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_controlled_record_constructs_every_owned_field",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_independent_sqlite_reads_the_real_fifteen_table_contract",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_actual_declared_json_preserves_every_owned_word",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_full_relational_words_and_independent_edited_file_reconstruct",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_malformed_relational_ownership_and_optional_words_refuse",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_exact_row_admission_and_four_real_copy_phase_cancellations",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block5d_actual_declared_erased_binary_text_queries_every_domain_table",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 160,
+          "statement": "let bytes = independent_edit(&bytes, \"UPDATE block5_meta SET description='independent edited metadata';UPDATE block5_grip SET grip_kind='independent unresolved semantic kind'\");"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 177,
+          "statement": "\"UPDATE block5_grip SET ordinal=2\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 178,
+          "statement": "\"UPDATE block5_camera2d SET x_ieee754_bits=1\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 179,
+          "statement": "\"UPDATE block5_camera2d SET x_numeric_class='nan'\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 180,
+          "statement": "\"UPDATE block5_part3d SET orientation_y=NULL,orientation_y_ieee754_bits=NULL,orientation_y_numeric_class=NULL\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 182,
+          "statement": "\"UPDATE block5_compatibility SET bidirectional=3\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 183,
+          "statement": "\"UPDATE block5_representation_tag SET representation_id=99999\","
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "coordinates": [
+        {
+          "kind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.3d",
+      "selectedCommand": "bun nx run @semio-tech/block-3d-rs:test-snapshot-sqlite-native --skip-nx-cache",
+      "artifactRoot": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "resolvedFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ],
+      "moduleNames": [],
+      "fixtures": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+          "exists": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+          "exists": true
+        }
+      ],
+      "constructors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 5,
+          "signature": "fn laws() -> serde_json::Value {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 11,
+          "signature": "fn full(word: u64) -> Block3dSnapshot {"
+        }
+      ],
+      "laws": [
+        {
+          "name": "sqlite_snapshot_block3d_actual_bare_capability_is_present",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_actual_declared_codec_has_owned_sqlite_capability",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_all_fields_and_words_survive_actual_text_and_pack",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_catalog_keeps_all_five_independent_literal_fields",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_optional_absence_remains_distinct_from_present_empty",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_controlled_record_constructs_every_owned_field",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_actual_declared_json_preserves_every_owned_word",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_independent_sqlite_reads_the_literal_table_and_word_contract",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_independent_edited_physical_database_preserves_every_word",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_independent_malformed_entities_refuse",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_row_frontier_and_real_four_phase_cancellation",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        },
+        {
+          "name": "sqlite_snapshot_block3d_actual_erased_declared_binary_text_retains_full_domain",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+        }
+      ],
+      "publicExtent": "no actual public route calls in this complete resolved owning SQLite test tree; capability presence or a missing feature is not inferred",
+      "publicSourceLines": [],
+      "independentEditSourceLines": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 164,
+          "statement": "&independent_edit(&bytes, \"UPDATE block3_meta SET description='independent';UPDATE block3_vortex SET vortex_kind='unresolved edited';UPDATE block3_catalog_child SET child_id='independent local',artifact_id='independent target'\"),"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 187,
+          "statement": "\"UPDATE block3_vortex SET ordinal=2\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 188,
+          "statement": "\"UPDATE block3_camera3d SET zoom_ieee754_bits=1\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 189,
+          "statement": "\"UPDATE block3_camera3d SET zoom_numeric_class='nan'\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 191,
+          "statement": "\"UPDATE block3_compatibility SET bidirectional=3\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 193,
+          "statement": "\"UPDATE block3_representation_tag SET representation_id=999\","
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "line": 194,
+          "statement": "\"UPDATE block3_catalog_child SET subset='graph'\","
+        }
+      ],
+      "witnessQualification": "Actual fixture constructors and named full-field/word/native/independent physical edit laws retained below; full coverage is restricted to their explicit assertions, not inferred from names.",
+      "appMembership": "No concrete public app enum in resolved SQLite test tree; inspect genuine builder generic obligation before adding a law, never fabricate NoPluginApp."
+    }
+  ]
+}

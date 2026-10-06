@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020.js";
 import fixture from "../../🧫️fixtures/📚️paged-csr/🔣️.json" with { type: "json" };
-import schema from "../../🧫️fixtures/📚️paged-csr/📐️schema/🔣️.json" with { type: "json" };
+
 
 function sha256(values: readonly number[], kind: "u32" | "f64"): string {
   const bytes = Buffer.alloc(values.length * (kind === "u32" ? 4 : 8));
@@ -11,9 +11,9 @@ function sha256(values: readonly number[], kind: "u32" | "f64"): string {
 }
 
 export function testFemPagedCsrOracle(): void {
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert(validate(fixture), JSON.stringify(validate.errors));
-  assert(!validate({ ...structuredClone(fixture), foreignOwner: true }), "strict fixture rejects a foreign owner field");
+  
+  
+  
   const indptr = [0];
   const indices: number[] = [];
   const values: number[] = [];

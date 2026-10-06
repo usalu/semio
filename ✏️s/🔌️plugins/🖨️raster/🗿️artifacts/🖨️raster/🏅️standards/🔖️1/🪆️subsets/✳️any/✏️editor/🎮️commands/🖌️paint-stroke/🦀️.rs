@@ -378,7 +378,7 @@ pub fn handle_in_window(payload: &PaintStroke, doc: &ArtifactView<'_, RasterSnap
     };
     let tick = PaintToolRequest { stroke, points: payload.xs.iter().zip(&payload.ys).map(|(x, y)| RasterStrokePoint { x: *x, y: *y }).collect() };
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
-    let drive = drive_gesture::<RasterPaintTool>(open, press, phase, Some(tick), seed, "");
+    let drive = drive_gesture::<RasterPaintTool>(open, press, phase, Some(tick), seed, "").map_err(|refusal| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, refusal.code(), "the paint tool refused the stroke"))?;
     let stroke = drive.next.map_or_else(|| window.stroke.clone(), |next| next.map(Box::new));
     Ok(match drive.committed {
         Some((transaction, mutations)) if !seed.is_empty() => (Emit::commit_transaction(transaction, mutations), RasterCompositeWindowTransient { stroke: None, closed: closing(gesture) }),

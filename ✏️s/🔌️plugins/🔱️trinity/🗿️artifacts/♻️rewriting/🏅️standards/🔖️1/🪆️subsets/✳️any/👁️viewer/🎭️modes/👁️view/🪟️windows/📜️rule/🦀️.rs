@@ -27,7 +27,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `RewritingSnapshot -> TextView` read: LHS pattern, RHS actions and the live parameter
 /// bindings, pretty-printed as one read-only JSON document — no rule-applied After computation (that
-/// stays the editor-only `after_fixture_json` helper's job), no rule-layout point positions (pure
+/// stays the editor-only `rewritten_graph_json` helper's job), no rule-layout point positions (pure
 /// window-arrangement state, not rule content).
 pub fn rule_text(state: &RewritingSnapshot) -> String {
     let document = semio_framework_pack_json::json!({ "lhs": state.lhs, "rhs": state.rhs, "parameterBindings": state.parameter_bindings });

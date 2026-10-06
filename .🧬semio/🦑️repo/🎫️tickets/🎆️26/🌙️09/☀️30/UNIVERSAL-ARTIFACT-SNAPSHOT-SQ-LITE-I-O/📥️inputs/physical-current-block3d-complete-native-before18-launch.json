@@ -1,0 +1,22 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "nx",
+    "run",
+    "@semio-tech/block-3d-rs:test-snapshot-sqlite-native",
+    "--skip-nx-cache",
+    "--outputStyle=stream",
+    "--excludeTaskDependencies"
+  ],
+  "env": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "SEMIO_TEST_LEVEL": "quick",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/block3d-complete-native-before18-artifacts"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-block3d-complete-native-before18.log",
+  "expectedCount": 18,
+  "status": "prepared actual registered Before; Root firstparty Diagnostic dependency repaired; providers held; waiting sequential Native lane",
+  "preparedAt": "2026-10-05T20:43:06.070Z"
+}

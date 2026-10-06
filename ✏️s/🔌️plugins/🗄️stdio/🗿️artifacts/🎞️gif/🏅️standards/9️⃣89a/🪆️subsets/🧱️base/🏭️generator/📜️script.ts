@@ -17,7 +17,7 @@
 // that writes into `../🧫️fixtures/`, and its output is reviewed and committed before any test reads it.
 //
 //   bun 📜️script.ts generate [--out <dir>]   # (re)builds the engine, writes the fixture, prints its sha256
-//   bun 📜️script.ts manifests                 # prints the fixtureManifests entry for the committed fixture
+//   bun 📜️script.ts manifests                 # prints the testEvidence entry for the committed fixture
 //
 // TWO generators live in this one file, each backing a DIFFERENT oracle, sharing nothing but the
 // `gif` 0.13 dependency:
@@ -29,7 +29,7 @@
 //                                   sharing code with `main.rs` or `🦀️oracle.rs`).
 //
 //   bun 📜️script.ts build          [--only <recipe-id>] [--out <dir>]   # writes <out>/<id>/{before,after}.gif
-//   bun 📜️script.ts build-manifests [--only <recipe-id>]                 # prints the fixtureManifests block (JSON)
+//   bun 📜️script.ts build-manifests [--only <recipe-id>]                 # prints the testEvidence block (JSON)
 //
 // @see ../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️gif-las-pdf17-findings.md
 // @see ./🧫️fixtures/📖️reader/🦀️.rs — the `build`/`project` codec this file's `build`/`build-manifests` commands shell out to
@@ -48,7 +48,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
+const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const ENGINE_MANIFEST = join(ENGINE_DIR, "Cargo.toml");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
@@ -162,7 +162,6 @@ async function manifests(): Promise<void> {
   if (!existsSync(outPath)) throw new Error(`${outPath} does not exist — run "generate" first`);
   const digest = await sha256(outPath);
   const entry = {
-    schema: "semio.repository-test.fixture/v2",
     id: RECIPE,
     class: "third-party-generated",
     family: "mechanical",
@@ -210,7 +209,6 @@ function readerManifestEntry(recipe: ReaderRecipe, outDir: string): Record<strin
   const dir = join(outDir, directory);
   const files = [readerFileEntry("expected-before-gif", dir, BEFORE_FILE, directory), readerFileEntry("expected-after-gif", dir, AFTER_FILE, directory)];
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.gif", standard: "89a", subset: "any" },
@@ -387,7 +385,6 @@ print(kind + ': written')
         files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "image/gif", sha256: await sha256(path), bytes: readFileSync(path).length });
       }
       entries.push({
-        schema: "semio.repository-test.fixture/v2",
         id: `extension-${kind}`,
         class: "third-party-generated",
         target: { artifact: "s.stdio.gif", standard: "89a", subset: "any" },
@@ -457,7 +454,6 @@ print(kind + ': written')
       files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "image/gif", sha256: `sha256:${[...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("")}`, bytes: bytes.length });
     }
     process.stdout.write(`${JSON.stringify([{
-      schema: "semio.repository-test.fixture/v2",
       id: `aspect-${kind}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.gif", standard: "89a", subset: "any" },

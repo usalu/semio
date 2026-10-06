@@ -1,4 +1,4 @@
-import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 // 🚪️ Example `two-room-corridor` — the TypeScript twin of `🦀️.rs`'s builder, ported row by row.
 
 import type { Wfc2dColor, Wfc2dSnapshot, Wfc2dTileMedia } from "../../🧬️schema/📸️snapshot/🟦️.ts";

@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeSpaceFloorArea, base: &EnergyModelSnapshot) -
     if let Some(item) = model.spaces.iter_mut().find(|item| item.id == payload.id) {
         item.floor_area_m2 = payload.new_floor_area_m2;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

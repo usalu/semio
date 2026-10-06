@@ -30,107 +30,6 @@
     }
   },
   "$defs": {
-    "HomeDirectoryProjectionWire": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema",
-        "wire",
-        "expectedDocumentIds",
-        "expectedIndexedDocumentIds",
-        "malformed"
-      ],
-      "properties": {
-        "schema": {
-          "const": "semio.space.home.directory-projection-wire/v1"
-        },
-        "wire": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "spaces",
-            "cursor",
-            "users"
-          ],
-          "properties": {
-            "spaces": {
-              "type": "object",
-              "minProperties": 1,
-              "additionalProperties": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "view",
-                  "members",
-                  "documents",
-                  "indexedDocuments"
-                ],
-                "properties": {
-                  "view": {
-                    "$ref": "#/$defs/HomeDirectoryProjectionWireSpaceView"
-                  },
-                  "members": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "$ref": "#/$defs/HomeDirectoryProjectionWireMemberView"
-                    }
-                  },
-                  "documents": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "$ref": "#/$defs/HomeDirectoryProjectionWireDocumentDescriptor"
-                    }
-                  },
-                  "indexedDocuments": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "$ref": "#/$defs/HomeDirectoryProjectionWireIndexedDocument"
-                    }
-                  }
-                }
-              }
-            },
-            "cursor": {
-              "const": 3
-            },
-            "users": {
-              "type": "object",
-              "minProperties": 1,
-              "additionalProperties": {
-                "$ref": "#/$defs/HomeDirectoryProjectionWireUserView"
-              }
-            }
-          }
-        },
-        "expectedDocumentIds": {
-          "const": [
-            "document-雪"
-          ]
-        },
-        "expectedIndexedDocumentIds": {
-          "const": [
-            "document-雪"
-          ]
-        },
-        "malformed": {
-          "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        }
-      },
-      "title": "HomeDirectoryProjectionWire",
-      "description": "The Home directory projection wire law: the transient projection's `directory` read model must round-trip every document and indexed document, and corruption must be explicit rather than defaulted.",
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
     "HomeDirectoryProjectionWireSpaceView": {
       "type": "object",
       "additionalProperties": false,
@@ -149,7 +48,8 @@
       ],
       "properties": {
         "id": {
-          "const": "space-α"
+          "type": "string",
+          "minLength": 1
         },
         "name": {
           "type": "string",
@@ -187,7 +87,8 @@
           "minimum": 0
         },
         "documentCount": {
-          "const": 1
+          "type": "integer",
+          "minimum": 0
         },
         "activeConnections": {
           "type": "integer",
@@ -361,7 +262,8 @@
       ],
       "properties": {
         "spaceId": {
-          "const": "space-α"
+          "type": "string",
+          "minLength": 1
         },
         "documentId": {
           "type": "string",
@@ -481,6 +383,69 @@
       "x-semio-formats": [
         "🔣️jsonschema"
       ]
+    },
+    "HomeDirectoryProjectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spaces",
+        "cursor",
+        "users"
+      ],
+      "properties": {
+        "spaces": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "view",
+              "members",
+              "documents",
+              "indexedDocuments"
+            ],
+            "properties": {
+              "view": {
+                "$ref": "#/$defs/HomeDirectoryProjectionWireSpaceView"
+              },
+              "members": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/HomeDirectoryProjectionWireMemberView"
+                }
+              },
+              "documents": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/HomeDirectoryProjectionWireDocumentDescriptor"
+                }
+              },
+              "indexedDocuments": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/HomeDirectoryProjectionWireIndexedDocument"
+                }
+              }
+            }
+          }
+        },
+        "cursor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "users": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/HomeDirectoryProjectionWireUserView"
+          }
+        }
+      }
     }
   }
 }

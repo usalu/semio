@@ -583,9 +583,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-header-applied",
       "class": "third-party-generated",
       "target": {
@@ -634,7 +633,6 @@
       "notes": "Whole-value IHDR replace: width/height change (4x2 -> 6x2), colour type/bit depth/interlace held fixed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-palette-applied",
       "class": "third-party-generated",
       "target": {
@@ -683,7 +681,6 @@
       "notes": "Whole-value PLTE replace over an Indexed base; index bytes (pixels) untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-transparency-applied",
       "class": "third-party-generated",
       "target": {
@@ -732,7 +729,6 @@
       "notes": "tRNS color-key add over an RGB (non-alpha) base."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-gamma-applied",
       "class": "third-party-generated",
       "target": {
@@ -783,7 +779,6 @@
       "notes": "gAMA replace (1/2.2 -> 1.0, scaled x100000)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-chromaticities-applied",
       "class": "third-party-generated",
       "target": {
@@ -832,7 +827,6 @@
       "notes": "cHRM replace (sRGB primaries -> an arbitrary other primary/white-point set)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-srgb-intent-applied",
       "class": "third-party-generated",
       "target": {
@@ -881,7 +875,6 @@
       "notes": "sRGB rendering intent replace (Perceptual -> RelativeColorimetric)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-physical-dims-applied",
       "class": "third-party-generated",
       "target": {
@@ -930,7 +923,6 @@
       "notes": "pHYs replace (2835x2835 px/m -> 1000x4000, unit Unspecified)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-timestamp-applied",
       "class": "third-party-generated",
       "target": {
@@ -979,7 +971,6 @@
       "notes": "tIME replace with a FIXED, hand-chosen 7-byte payload — never wall-clock. UNCARRIED: png::Info 0.18.1 has no tIME field."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-background-applied",
       "class": "third-party-generated",
       "target": {
@@ -1028,7 +1019,6 @@
       "notes": "bKGD replace, written through png::Writer::write_chunk's raw escape hatch (the encoder has no bKGD setter at all)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-text-chunk-applied",
       "class": "third-party-generated",
       "target": {
@@ -1077,7 +1067,6 @@
       "notes": "No tEXt chunk -> one (keyword \"Comment\")."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-text-chunk-applied",
       "class": "third-party-generated",
       "target": {
@@ -1126,7 +1115,6 @@
       "notes": "One tEXt chunk -> none."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-text-chunk-applied",
       "class": "third-party-generated",
       "target": {
@@ -1175,7 +1163,6 @@
       "notes": "The one tEXt chunk's text is replaced, keyword held fixed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-pixels-applied",
       "class": "third-party-generated",
       "target": {
@@ -1224,7 +1211,6 @@
       "notes": "Same header, disjoint pixel sample bytes (byte-inverted)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-unknown-chunk-applied",
       "class": "third-party-generated",
       "target": {
@@ -1273,7 +1259,6 @@
       "notes": "No unrecognised chunk -> one private ancillary chunk (fourcc prVt). UNCARRIED: the decoder skips unrecognised ancillary chunks entirely."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-unknown-chunk-applied",
       "class": "third-party-generated",
       "target": {
@@ -1322,7 +1307,6 @@
       "notes": "One unrecognised chunk -> none. UNCARRIED for the same reason."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "chunk-change-timestamp",
       "class": "third-party-generated",
       "target": {
@@ -1369,7 +1353,6 @@
       "comparisonPipeline": "png-1-2-chunk-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "chunk-insert-unknown-chunk",
       "class": "third-party-generated",
       "target": {
@@ -1416,7 +1399,6 @@
       "comparisonPipeline": "png-1-2-chunk-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "chunk-remove-unknown-chunk",
       "class": "third-party-generated",
       "target": {
@@ -1463,7 +1445,6 @@
       "comparisonPipeline": "png-1-2-chunk-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -1506,7 +1487,6 @@
       "notes": "SetSnapshot replaces the whole document: the 2x1 RGBA swatch's two pixels trade places while its gAMA and tEXt chunks stay as the replacement states them."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -1549,7 +1529,6 @@
       "notes": "PatchSnapshot{set /gama = 45455} is the editor's compact path-addressed patch: the gAMA chunk changes in place and every other member stays untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-pixels-applied",
       "class": "handcrafted",
       "target": {

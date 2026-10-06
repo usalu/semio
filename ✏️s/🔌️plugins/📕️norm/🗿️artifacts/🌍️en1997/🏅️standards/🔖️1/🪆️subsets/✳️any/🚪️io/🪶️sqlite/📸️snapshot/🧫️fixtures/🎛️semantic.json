@@ -1,0 +1,26 @@
+{
+  "schemaBytes": 8324,
+  "tableWidths": {
+    "en1997_document": 12,
+    "en1997_footing": 19,
+    "en1997_foundation_load_case": 23,
+    "en1997_pile": 33,
+    "en1997_pile_test_profile": 10,
+    "en1997_retaining_wall": 42,
+    "en1997_slope": 14,
+    "en1997_soil_layer": 38,
+    "en1997_uplift_case": 19
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 9,
+      "valueBytes": 1602
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 1,
+      "valueBytes": 112
+    }
+  ]
+}

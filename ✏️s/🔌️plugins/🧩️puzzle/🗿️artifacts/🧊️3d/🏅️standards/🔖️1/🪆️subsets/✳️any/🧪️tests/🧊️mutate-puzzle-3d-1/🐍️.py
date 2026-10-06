@@ -611,7 +611,7 @@ def doc_json(ctx):
 
 def leaf(ctx, spec, name):
     """🧫️ One committed leaf of the vector the doc string addresses."""
-    return json.loads(ctx.fixture_bytes(spec[name]).decode("utf-8"))
+    return json.loads(ctx.input_bytes(spec[name]).decode("utf-8"))
 
 
 def uri_in(ctx, needle):
@@ -690,7 +690,7 @@ def identity_handler(ctx):
     vortices, an attraction whose two endpoints are `"<objectId>:<vortexId>"` ports rather than object
     ids, a target volume and an image reference."""
     uri = uri_in(ctx, "⬅️before")
-    committed = ctx.fixture_bytes(uri)
+    committed = ctx.input_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
     validate(document, "identity-round-trip")
     object_ids = {record["id"] for record in document["objects"]}

@@ -88,7 +88,7 @@ struct ProbePreparationFactory {
 }
 
 impl fixture_store::ArtifactStoreOneItemPreparationFactory<u8, u8> for ProbePreparationFactory {
-    fn preflight(&self, mutation: &u8, _description: Option<&str>, _lane: fixture_store::HistoryLane) -> Result<fixture_store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &u8, _lane: fixture_store::HistoryLane) -> Result<fixture_store::ArtifactStoreOneItemFootprint, String> {
         if (self.accepts)(mutation) {
             Ok(fixture_store::ArtifactStoreOneItemFootprint { work_items: fixture_store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, retained_bytes: self.retained_bytes })
         } else {
@@ -164,7 +164,7 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let factory: ArtifactPreparationFactory<u8, u8> = routed_native_edit_preparation_factory(Some(NativeEditPreparationRoute::new(|mutation| *mutation == 1 || *mutation == 2, primary)), fallback);
     for row in fixture["routeCases"].as_array().expect("route cases") {
         let mutation = row["mutation"].as_u64().expect("mutation") as u8;
-        let actual = factory.preflight(&mutation, None, fixture_store::HistoryLane::Document);
+        let actual = factory.preflight(&mutation, fixture_store::HistoryLane::Document);
         match row["expected"].as_str().expect("expected route") {
             "primary" => assert_eq!(actual.expect("primary route").retained_bytes, 11, "{}", row["id"]),
             "fallback" => assert_eq!(actual.expect("fallback route").retained_bytes, 22, "{}", row["id"]),

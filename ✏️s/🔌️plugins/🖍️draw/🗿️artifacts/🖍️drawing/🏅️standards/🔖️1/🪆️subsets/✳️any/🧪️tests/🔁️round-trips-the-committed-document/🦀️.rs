@@ -21,7 +21,7 @@ mod subject {
     use super::DSL_ASSET;
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_draw_drawing::standards::v1::subsets::any::schema::mutations::round_trip_drawing_dsl;
+    use semio_s_artifact_draw_drawing::standards::v1::subsets::any::io::text::snapshot::round_trip_drawing_dsl;
 
     /// 🔁️ The identity law in role, on the real committed example. Its two halves are asserted
     /// separately: the reparsed document must agree with the first parse, and the reprinted text
@@ -29,7 +29,7 @@ mod subject {
     /// wave's usual no-pass-through tripwire because the committed `🗣️.dsl.semio` is this codec's
     /// OWN canonical output, committed as the artifact's example.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = ctx.fixture_bytes(DSL_ASSET)?;
+        let input = ctx.input_bytes(DSL_ASSET)?;
         let text = String::from_utf8(input.clone()).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
         let value = parse_json(&round_trip_drawing_dsl(&text)?)?;
         let parsed = value.get("snapshot").cloned().ok_or_else(|| "the bridge answer carries no snapshot".to_string())?;

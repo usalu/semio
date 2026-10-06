@@ -34,7 +34,7 @@
     {
       "id": "semantic-ply-v1",
       "description": "PLY documents compared by wire format, in-order comments and name-keyed elements (each its own ordered property declarations and ordered rows of typed cell values). Unlike a pure mesh format, comments and element/property declarations are themselves normative here -- InsertComment/RemoveComment/AddElement/RemoveElement/SetFormat mutate exactly this surface -- so nothing here is producer freedom the way generator strings are for OBJ/STL.",
-      "tolerance": 1e-05
+      "tolerance": 0.00001
     }
   ],
   "mutationCatalogs": [
@@ -283,9 +283,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-element-applied",
       "class": "handcrafted",
       "target": {
@@ -328,7 +327,6 @@
       "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). AddElement{index:1,element:face} appends a real face element (a vertex-index list property) after the existing vertex element."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-element-applied",
       "class": "handcrafted",
       "target": {
@@ -371,7 +369,6 @@
       "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). RemoveElement{name:\"face\"} drops the face element, leaving only vertex."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-row-applied",
       "class": "handcrafted",
       "target": {
@@ -414,7 +411,6 @@
       "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). InsertRow{element_name:vertex,index:1,row:(0.5,0.5,0.0)} inserts a third vertex between the existing two."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-row-applied",
       "class": "handcrafted",
       "target": {
@@ -457,7 +453,6 @@
       "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). RemoveRow{element_name:vertex,index:0} drops the first vertex row."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-row-property-applied",
       "class": "handcrafted",
       "target": {
@@ -500,7 +495,6 @@
       "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). SetRowProperty{element_name:vertex,row_index:1,property_name:z,value:2.5} overwrites one scalar property of one row in place."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-comment-applied",
       "class": "handcrafted",
       "target": {
@@ -543,7 +537,6 @@
       "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). InsertComment{index:1,comment:\"second pass\"} appends a header comment line."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-comment-applied",
       "class": "handcrafted",
       "target": {
@@ -586,7 +579,6 @@
       "notes": "Handcrafted PlySnapshot before/after pair (schema per this subset's own set-snapshot leaf's committed fixture). RemoveComment{index:1} drops the appended comment, leaving the original."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-format-applied",
       "class": "handcrafted",
       "target": {

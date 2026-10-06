@@ -155,20 +155,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod duration {
                             #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
@@ -181,23 +173,18 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
-            }
+            
+#[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🚪️io/🦀️.rs"]
+pub mod io;
+}
         }
     }
 }
@@ -284,3 +271,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v1_0::subsets::any::io::{AviBuilderConstruction, AviParts, AviAnalyzerAnalysis, AviBuilderFacets, AviBuilder, AviAnalyzer, AviComposer};

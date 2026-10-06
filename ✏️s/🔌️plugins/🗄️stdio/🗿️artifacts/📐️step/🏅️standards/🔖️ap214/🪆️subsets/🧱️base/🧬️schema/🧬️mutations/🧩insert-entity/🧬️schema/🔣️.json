@@ -16,10 +16,38 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the entities of the DATA section at which it is inserted, counted from 0.",
+          "de": "Position unter den Entitäten des DATA-Abschnitts, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "entity": {
-      "$ref": "#/$defs/StepEntity"
+      "$ref": "#/$defs/StepEntity",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "Instance name, type and arguments of the entity that is inserted.",
+          "de": "Instanzname, Typ und Argumente der Entität, die eingefügt wird."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

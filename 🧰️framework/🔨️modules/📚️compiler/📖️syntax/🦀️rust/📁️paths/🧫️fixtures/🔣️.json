@@ -1,0 +1,397 @@
+{
+  "schemaVersion": 1,
+  "roots": [
+    "general",
+    "specific",
+    "specific/plugins",
+    "📝owner"
+  ],
+  "cases": [
+    {
+      "id": "method-join",
+      "source": "fn f() { let p = root.join(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 27,
+          "end": 42,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "method-push",
+      "source": "fn f() { root.push(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "push",
+          "context": "method",
+          "start": 19,
+          "end": 34,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "qualified-path",
+      "source": "fn f() { let p = std::path::Path::new(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "std::path::Path::new",
+          "context": "qualified",
+          "start": 38,
+          "end": 53,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "qualified-pathbuf",
+      "source": "fn f() { let p = std::path::PathBuf::from(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "std::path::PathBuf::from",
+          "context": "qualified",
+          "start": 42,
+          "end": 57,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "qualified-fs",
+      "source": "fn f() { std::fs::read_to_string(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "std::fs::read_to_string",
+          "context": "qualified",
+          "start": 33,
+          "end": 48,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "unicode-escape",
+      "source": "fn f() { root.join(\"\\u{1f4dd}owner/data\"); }",
+      "expected": [
+        {
+          "value": "📝owner/data",
+          "path": "📝owner/data",
+          "root": "📝owner",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 40,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "raw-hashes",
+      "source": "fn f() { root.join(r##\"specific/data\"##); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 39,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "byte-literal",
+      "source": "fn f() { root.join(b\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 35,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "raw-byte-literal",
+      "source": "fn f() { root.join(br#\"specific/data\"#); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 38,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "windows-separator",
+      "source": "fn f() { root.join(\"specific\\\\plugins\\\\data\"); }",
+      "expected": [
+        {
+          "value": "specific\\plugins\\data",
+          "path": "specific/plugins/data",
+          "root": "specific/plugins",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 44,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "relative-prefix",
+      "source": "fn f() { root.join(\"../.././specific/data\"); }",
+      "expected": [
+        {
+          "value": "../.././specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 42,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "longest-root",
+      "source": "fn f() { root.join(\"specific/plugins/data\"); }",
+      "expected": [
+        {
+          "value": "specific/plugins/data",
+          "path": "specific/plugins/data",
+          "root": "specific/plugins",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 42,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "traversal-after-owner",
+      "source": "fn f() { root.join(\"specific/../general/data\"); }",
+      "expected": [
+        {
+          "value": "specific/../general/data",
+          "path": "specific/../general/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 45,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "owner-directory",
+      "source": "fn f() { root.join(\"specific\"); }",
+      "expected": [
+        {
+          "value": "specific",
+          "path": "specific",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 29,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "line-and-unicode",
+      "source": "fn f() {\n let x = \"🧪\"; root.join(\"specific/data\");\n}",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 34,
+          "end": 49,
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "nested-call",
+      "source": "fn f() { std::fs::read(root.join(\"specific/data\")); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 33,
+          "end": 48,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "only-first-fs-argument",
+      "source": "fn f() { std::fs::write(\"general/data\", \"specific/data\"); }",
+      "expected": [
+        {
+          "value": "general/data",
+          "path": "general/data",
+          "root": "general",
+          "call": "std::fs::write",
+          "context": "qualified",
+          "start": 24,
+          "end": 38,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "unresolved-custom-receiver",
+      "source": "fn f() { custom.join(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 21,
+          "end": 36,
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "comment",
+      "source": "// root.join(\"specific/data\")\nfn f() { /* root.join(\"specific/data\"); /* nested */ */ }",
+      "expected": []
+    },
+    {
+      "id": "diagnostic",
+      "source": "fn f() { println!(\"specific/data\"); }",
+      "expected": []
+    },
+    {
+      "id": "constant",
+      "source": "const LABEL: &str = \"specific/data\";",
+      "expected": []
+    },
+    {
+      "id": "other-method",
+      "source": "fn f() { root.contains(\"specific/data\"); }",
+      "expected": []
+    },
+    {
+      "id": "root-prefix",
+      "source": "fn f() { root.join(\"specificity/data\"); }",
+      "expected": []
+    },
+    {
+      "id": "message-prefix",
+      "source": "fn f() { root.join(\"message specific/data\"); }",
+      "expected": []
+    },
+    {
+      "id": "character",
+      "source": "fn f() { root.join('x'); }",
+      "expected": []
+    },
+    {
+      "id": "dynamic-argument",
+      "source": "fn f() { root.join(path); }",
+      "expected": []
+    },
+    {
+      "id": "dynamic-concat",
+      "source": "fn f() { root.join(concat!(\"specific\", \"/data\")); }",
+      "expected": []
+    },
+    {
+      "id": "unresolved-import-alias",
+      "source": "fn f() { fs::read(\"specific/data\"); }",
+      "expected": []
+    },
+    {
+      "id": "absolute-host-path",
+      "source": "fn f() { root.join(\"/host/specific/data\"); }",
+      "expected": []
+    },
+    {
+      "id": "unknown-owner",
+      "source": "fn f() { root.join(\"other/data\"); }",
+      "expected": []
+    }
+  ],
+  "invalidRoots": [
+    {
+      "id": "empty",
+      "roots": [
+        ""
+      ],
+      "refusal": "invalid-root"
+    },
+    {
+      "id": "parent",
+      "roots": [
+        "a/../b"
+      ],
+      "refusal": "invalid-root"
+    },
+    {
+      "id": "windows",
+      "roots": [
+        "a\\b"
+      ],
+      "refusal": "invalid-root"
+    },
+    {
+      "id": "absolute",
+      "roots": [
+        "/a"
+      ],
+      "refusal": "invalid-root"
+    },
+    {
+      "id": "duplicate",
+      "roots": [
+        "a",
+        "a"
+      ],
+      "refusal": "invalid-root"
+    }
+  ]
+}

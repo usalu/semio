@@ -5,7 +5,7 @@ use crate::op::FormMutation;
 // value/derive surface) for `value_to_dsl`/`dsl_to_value` below — importing the artifact's own `dsl`
 // submodule under the bare name would shadow that crate and break every `semio_framework_value::DslValue`/`semio_framework_value::ToValue::to_value`
 // reference in this file (confirmed by `cargo check`: E0425/E0433 "not found in `dsl`").
-use crate::document_dsl as forms_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot as forms_dsl;
 use crate::{forms_snapshot_with_state, forms_steps, FormsResultsChild, FormsSnapshot, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
 use semio_framework_pack_json::{Object, Value};
 use framework_schema::ArtifactSchema;
@@ -112,33 +112,15 @@ pub fn empty_forms_snapshot() -> FormsSnapshot {
     forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, &[FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }])
 }
 
-/// 🌱️ The forms app's default document — the building-component fixture, seeded from its derive-
-/// generated `.forms` DSL text.
-pub fn building_component_spec() -> FormsSnapshot {
-    forms_dsl::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).expect("bundled Forms template must be valid")
-}
 
-/// 📇️ Loads the canonical Contact template.
-pub fn default_example_spec() -> FormsSnapshot {
-    forms_dsl::parse_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).expect("bundled Forms template must be valid")
-}
 
-/// 📄️ JSON re-serialization of [`default_example_spec`], for the framework-generic call sites that
-/// contractually require JSON text (`App::example`'s manifest `document_json`).
-pub fn default_example_json() -> String {
-    semio_framework_pack_json::to_json_string(&default_example_spec())
-}
 
-/// 📄️ The `onboarding` example, parsed once from `forms_dsl::ONBOARDING_EXAMPLE_TEXT`.
-pub fn onboarding_example_spec() -> FormsSnapshot {
-    forms_dsl::parse_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).expect("bundled Forms template must be valid")
-}
 
-/// 📄️ JSON re-serialization of [`onboarding_example_spec`], for the framework-generic call sites that
-/// contractually require JSON text (`App::example`'s manifest `document_json`).
-pub fn onboarding_example_json() -> String {
-    semio_framework_pack_json::to_json_string(&onboarding_example_spec())
-}
+
+
+
+
+
 
 /// 🔠️ Every `(step title, question)` pair in document order — the empty-inspector diagnostic and every
 /// command test's "did the edit land" assertion share this flattening.

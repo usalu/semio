@@ -3,7 +3,7 @@
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::change_slider_value;
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::move_nodes;
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
 use crate::Generation3dSnapshot;

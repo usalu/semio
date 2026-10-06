@@ -53,7 +53,7 @@ The earlier OS Rust facade unresolved row is absent from this snapshot, but that
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧬️schema-validation.ts`: lines = 19; evidence = function body performs non-delegating work
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🌐️flow-browser.js`: lines = 155; evidence = runtime type or namespace declaration
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🖥️flow-host.js`: lines = 705; evidence = runtime type or namespace declaration
-- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs`: lines = 40; evidence = authored Rust item declaration
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs`: lines = 40; evidence = authored Rust item declaration
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/🦀️.rs`: lines = 520; evidence = authored Rust item declaration
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/⚙️vite.config.ts`: lines = 218; evidence = function body performs non-delegating work
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📊️bench-web-harness.ts`: lines = 260; evidence = domain type declaration is owned inside the package
@@ -126,7 +126,7 @@ The later 207-finding policy census has 62 authored package-source rows, distinc
 | Package Metadata and Flow | `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🌐️flow-browser.js` |
 | Package Metadata and Flow | `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🖥️flow-host.js` |
 | OS/Hub Source | `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/🦀️.rs` |
-| OS/Hub Source | `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs` |
+| OS/Hub Source | `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library/🦀️.rs` |
 | OS/Hub Source | `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📊️bench-web-harness.ts` |
 | OS/Hub Source | `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins.ts` |
 | OS/Hub Source | `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🧹️executable-source/🟦️.ts` |

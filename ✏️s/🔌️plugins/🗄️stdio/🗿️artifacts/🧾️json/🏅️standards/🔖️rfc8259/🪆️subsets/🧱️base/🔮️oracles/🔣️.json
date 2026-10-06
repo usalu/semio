@@ -179,9 +179,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "json-base-insert-array-element",
       "class": "third-party-generated",
       "target": {
@@ -232,7 +231,6 @@
       "notes": "Authored (before, after) JSON pair for `insert-array-element`. The pair is the expectation; the third-party JSON reader reads both halves."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "json-base-remove-array-element",
       "class": "third-party-generated",
       "target": {
@@ -283,7 +281,6 @@
       "notes": "Authored (before, after) JSON pair for `remove-array-element`. The pair is the expectation; the third-party JSON reader reads both halves."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "json-base-remove-member",
       "class": "third-party-generated",
       "target": {
@@ -334,7 +331,6 @@
       "notes": "Authored (before, after) JSON pair for `remove-member`. The pair is the expectation; the third-party JSON reader reads both halves."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "json-base-set-member",
       "class": "third-party-generated",
       "target": {
@@ -385,7 +381,6 @@
       "notes": "Authored (before, after) JSON pair for `set-member`. The pair is the expectation; the third-party JSON reader reads both halves."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "json-base-set-scalar",
       "class": "third-party-generated",
       "target": {

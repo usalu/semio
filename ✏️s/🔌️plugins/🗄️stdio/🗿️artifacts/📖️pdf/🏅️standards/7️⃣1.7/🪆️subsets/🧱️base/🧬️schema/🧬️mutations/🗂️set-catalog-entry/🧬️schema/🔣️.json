@@ -15,10 +15,36 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Key",
+          "de": "Schlüssel"
+        },
+        "description": {
+          "en": "Name of the entry in the document catalog.",
+          "de": "Name des Eintrags im Dokumentkatalog."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "value": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "The PDF object stored under the key: null, boolean, number, name, string, array, dictionary, stream or reference.",
+          "de": "Das unter dem Schlüssel gespeicherte PDF-Objekt: null, Wahrheitswert, Zahl, Name, Zeichenkette, Array, Wörterbuch, Datenstrom oder Referenz."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

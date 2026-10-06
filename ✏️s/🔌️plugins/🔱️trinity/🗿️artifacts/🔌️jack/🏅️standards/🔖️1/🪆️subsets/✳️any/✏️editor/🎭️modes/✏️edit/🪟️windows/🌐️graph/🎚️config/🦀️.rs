@@ -89,3 +89,6 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: JackGraphWi
 #[cfg(test)]
 #[path = "🧪️tests/🔬️window/🦀️.rs"]
 mod tests;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

@@ -27,6 +27,7 @@
           "en": "Index of the block in the BLOCKS section, counted from 0.",
           "de": "Index des Blocks im Abschnitt BLOCKS, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10

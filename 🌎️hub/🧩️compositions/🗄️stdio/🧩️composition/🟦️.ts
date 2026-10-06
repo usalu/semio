@@ -152,17 +152,7 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
   const editors = rows.flatMap(row => row.apps).filter(app => app.role === "editor");
   const editorLaws = editors.map(app => `    (${app.laws!.editing}, ${app.laws!.sqliteSnapshot}, ${app.type}, ${app.factory}),`).join("\n");
   publish("🤖️generated/🧪️editor-laws/🦀️.rs", editors.length ? `editor_catalog_laws! {\n${editorLaws}\n}\n` : "const EDITOR_COUNT: usize = 0;\n");
-  const editorFixture = JSON.parse(read(hubRoot, "🧫️fixtures/✏️editor-catalog/🔣️.json"));
-  editorFixture.editorCount = editors.length;
-  editorFixture.formatCount = rows.length;
-  editorFixture.editorApps = rows.flatMap(row => row.playgrounds.map(playground => playground.app));
-  publish("🧫️fixtures/✏️editor-catalog/🔣️.json", JSON.stringify(editorFixture, null, 2) + "\n");
   const receipts = rows.flatMap((row) => row.nativeReceipts).sort((a, b) => Buffer.compare(Buffer.from(a.factory_id), Buffer.from(b.factory_id)));
-  const homeFixture = JSON.parse(read(hubRoot, "🧫️fixtures/🏠️home-io-surface/🔣️.json"));
-  homeFixture.fullArtifactCount = rows.length;
-  homeFixture.nativeCodecCount = receipts.length;
-  for (const vector of homeFixture.surfaceCases) vector.catalog = vector.selected.every((feature: string) => feature === "home-io") ? selectCompositionContributionsV1(inputs.map(input => input.contribution), "home").length : rows.length;
-  publish("🧫️fixtures/🏠️home-io-surface/🔣️.json", JSON.stringify(homeFixture, null, 2) + "\n");
   publish("🔌️plugin/📇️catalog/📜️native-codec-factories.json", JSON.stringify({ schema: "semio.stdio.native-openable-catalog-provider/v1", provider_id: "stdio/native-codecs/v1", plugin_id: "stdio", package_id: "semio:stdio", receipts }, null, 2) + "\n");
   const payload = JSON.parse(read(hubRoot, "📇️publication/📜️native-catalog.json"));
   payload.nativeCodecs = receipts.map((row) => ({ artifactKind: row.artifact_kind, artifactSchema: row.artifact_schema, packSchemaHash: row.pack_schema_hash, factoryId: row.factory_id, extension: row.extension, protocolSourceSha256: row.protocol_source_sha256 }));

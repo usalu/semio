@@ -141,6 +141,7 @@ wgpu = { version = "29.0.4", default-features = false, features = ["std", "metal
 arboard = { version = "3", optional = true }
 
 [dev-dependencies]
+semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
 semio-framework-ui-viewport = { path = "../../🪟️viewport/📦️packages/🦀️rust" }
 tiny-skia = "0.11.4"

@@ -28,7 +28,7 @@ type chainFixture struct {
 
 // 🧫️document reads the golden chain the whole case is stated against.
 func document(ctx *host.Context) (chainFixture, error) {
-	raw, err := ctx.FixtureBytes("shared://🔗️event-chain.json")
+	raw, err := ctx.InputBytes("shared://🔗️event-chain.json")
 	if err != nil {
 		return chainFixture{}, err
 	}

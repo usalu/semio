@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "owner", "originalLaw", "law", "fixture", "schema", "descriptorPath", "componentDirectory", "componentName", "profiles", "pluginId", "load", "manifest", "missingComponent"],
+  "properties": {
+    "version": {"const": 1},
+    "owner": {"const": "🌎️hub/🧩️compositions/🗒️note"},
+    "originalLaw": {"const": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🧪️tests/🔬️unit/🦀️.rs"},
+    "law": {"const": "🧪️tests/🛂️committed-descriptor/🦀️.rs"},
+    "fixture": {"const": "🧫️fixtures/🛂️committed-descriptor/🔣️.json"},
+    "schema": {"const": "🧬️schema/🛂️committed-descriptor/🔣️.json"},
+    "descriptorPath": {"const": "🌎️hub/🧩️compositions/🗒️note/🛂️.descriptor.semio"},
+    "componentDirectory": {"const": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist"},
+    "componentName": {"const": "semio_hub_note.wasm"},
+    "profiles": {"const": ["component-dev", "component-release"]},
+    "pluginId": {"const": "note"},
+    "load": {"const": "hot_reload_plugin"},
+    "manifest": {"const": "plugin_graph().manifest"},
+    "missingComponent": {"const": "return-without-runtime-proof"}
+  }
+}

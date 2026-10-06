@@ -10,7 +10,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::schema::Generation2dAnalyzer;
+    use crate::standards::v1::subsets::any::io::Generation2dAnalyzer;
     use crate::Generation2dSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -70,8 +70,8 @@ pub use derived_composition::*;
 /// 🚪️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// the composer/export-entry registry lives with the rest of `🚪️io`, not behind an engine facade.
 pub mod io_registry {
-    use crate::standards::v1::subsets::any::schema::Generation2dBuilder as Generation2dAnyBuilder;
-    use crate::standards::v1::subsets::any::schema::Generation2dComposer as Generation2dAnyComposer;
+    use crate::standards::v1::subsets::any::io::Generation2dBuilder as Generation2dAnyBuilder;
+    use crate::standards::v1::subsets::any::io::Generation2dComposer as Generation2dAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
     use std::sync::OnceLock;
 
@@ -297,7 +297,7 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
 pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, String> {
     let eval_json = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default());
     let outputs = semio_framework_pack_json::parse(&eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let handles = crate::standards::v1::subsets::any::schema::output_drawing_handles(&snapshot.host_snapshot, &outputs);
+    let handles = crate::standards::v1::subsets::any::io::text::snapshot::output_drawing_handles(&snapshot.host_snapshot, &outputs);
     semio_drawing_from_scenes(&handles.iter().map(|handle| semio_framework_os_flow::render_scene_json(handle)).collect::<Vec<_>>())
 }
 
@@ -313,3 +313,120 @@ pub fn generation2d_drawing(_snapshot: &crate::Generation2dSnapshot) -> Result<s
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{Generation2dDiff, Generation2dMutation, Generation2dSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct Generation2dBuilderConstruction {
+        snapshot: Generation2dSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for Generation2dBuilderConstruction {
+        type Snapshot = Generation2dSnapshot;
+        type Mutation = Generation2dMutation;
+        type Diff = Generation2dDiff;
+        fn empty() -> Self {
+            Self { snapshot: Generation2dSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<Generation2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<Generation2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
+            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
+            }
+            (self, outcome)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <Generation2dDiff as protocol::MutationDiff<Generation2dSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::Generation2dSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct Generation2dParts {
+        pub snapshot: Option<Generation2dSnapshot>,
+    }
+
+    pub struct Generation2dAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for Generation2dAnalyzerAnalysis {
+        type Parts = Generation2dParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation2d", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = Generation2dParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <Generation2dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <Generation2dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec Generation2dBuilderFacets {
+        construction: Generation2dBuilderConstruction,
+        analysis: Generation2dAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::any::io::derived_composition::Generation2dComposerComposition,
+    }
+    builder: Generation2dBuilder,
+    analyzer: Generation2dAnalyzer,
+    composer: Generation2dComposer,
+);

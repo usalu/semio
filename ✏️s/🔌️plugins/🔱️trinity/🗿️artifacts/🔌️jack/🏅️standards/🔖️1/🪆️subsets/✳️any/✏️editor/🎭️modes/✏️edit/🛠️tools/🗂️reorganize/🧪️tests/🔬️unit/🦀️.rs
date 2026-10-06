@@ -39,7 +39,7 @@ fn number(value: &Value) -> f64 {
 
 /// 🗼️ The curated Nakagin example's content child.
 fn nakagin() -> SemioGraphSnapshot {
-    crate::jack_content_for_handle(&crate::editor::jack::default_fixture().content).expect("curated example content child").snapshot().clone()
+    crate::jack_content_for_handle(&crate::editor::jack::default_snapshot().content).expect("curated example content child").snapshot().clone()
 }
 
 /// 🧸️ The live node positions of the app's `content` member store (design §20.15: the parent holds no content).

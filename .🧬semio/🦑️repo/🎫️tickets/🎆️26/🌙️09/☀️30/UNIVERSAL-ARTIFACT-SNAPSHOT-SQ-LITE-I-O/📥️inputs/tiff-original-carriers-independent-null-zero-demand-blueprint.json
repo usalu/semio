@@ -1,0 +1,744 @@
+[
+  {
+    "id": "originalSourceTwoIfd",
+    "input": {
+      "schema": "stdio.tiff",
+      "byteOrder": "bigEndian",
+      "ifds": [
+        {
+          "entries": [
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "byte",
+                "value": [
+                  0,
+                  255
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "ascii",
+                "value": [
+                  71,
+                  114,
+                  195,
+                  188,
+                  195,
+                  159,
+                  101,
+                  0
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "short",
+                "value": [
+                  0,
+                  65535
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "long",
+                "value": [
+                  0,
+                  4294967295
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "rational",
+                "value": [
+                  [
+                    4294967295,
+                    0
+                  ],
+                  [
+                    1,
+                    4294967295
+                  ]
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "sByte",
+                "value": [
+                  -128,
+                  127
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "undefined",
+                "value": [
+                  0,
+                  255
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "sShort",
+                "value": [
+                  -32768,
+                  32767
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "sLong",
+                "value": [
+                  -2147483648,
+                  2147483647
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "sRational",
+                "value": [
+                  [
+                    -2147483648,
+                    0
+                  ],
+                  [
+                    2147483647,
+                    -1
+                  ]
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "float",
+                "value": [
+                  {
+                    "bits": 0
+                  },
+                  {
+                    "bits": 2147483648
+                  },
+                  {
+                    "bits": 1
+                  },
+                  {
+                    "bits": 2139095040
+                  },
+                  {
+                    "bits": 4286578688
+                  },
+                  {
+                    "bits": 2143289361
+                  },
+                  {
+                    "bits": 2139095047
+                  }
+                ]
+              }
+            },
+            {
+              "tag": 65535,
+              "values": {
+                "kind": "double",
+                "value": [
+                  {
+                    "bits": {
+                      "binary64Bits": "0000000000000000"
+                    }
+                  },
+                  {
+                    "bits": {
+                      "binary64Bits": "8000000000000000"
+                    }
+                  },
+                  {
+                    "bits": {
+                      "binary64Bits": "0000000000000001"
+                    }
+                  },
+                  {
+                    "bits": {
+                      "binary64Bits": "7ff0000000000000"
+                    }
+                  },
+                  {
+                    "bits": {
+                      "binary64Bits": "fff0000000000000"
+                    }
+                  },
+                  {
+                    "bits": {
+                      "binary64Bits": "7ff8000000000011"
+                    }
+                  },
+                  {
+                    "bits": {
+                      "binary64Bits": "7ff0000000000007"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "storage": {
+            "kind": "strips",
+            "offsetsKind": "short",
+            "byteCountsKind": "long",
+            "chunks": [
+              [
+                0,
+                255
+              ],
+              [
+                64,
+                128
+              ]
+            ]
+          }
+        },
+        {
+          "entries": [
+            {
+              "tag": 0,
+              "values": {
+                "kind": "byte",
+                "value": []
+              }
+            }
+          ],
+          "storage": {
+            "kind": "tiles",
+            "offsetsKind": "long",
+            "byteCountsKind": "short",
+            "chunks": [
+              [
+                9,
+                8,
+                0,
+                255
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    "inputSha256": "9aec5a38856b05f22e6f2389960148be58830cebe2a0a7a8696e750bd7a15427",
+    "rows": 59,
+    "valueBytes": 2222,
+    "schemaBytes": 3886,
+    "tables": [
+      {
+        "table": "tiff_ascii_value",
+        "width": 4,
+        "rows": 8,
+        "semanticBytes": 256
+      },
+      {
+        "table": "tiff_byte_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_chunk",
+        "width": 4,
+        "rows": 3,
+        "semanticBytes": 80
+      },
+      {
+        "table": "tiff_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 27
+      },
+      {
+        "table": "tiff_double_value",
+        "width": 6,
+        "rows": 7,
+        "semanticBytes": 320
+      },
+      {
+        "table": "tiff_float_value",
+        "width": 6,
+        "rows": 7,
+        "semanticBytes": 320
+      },
+      {
+        "table": "tiff_ifd",
+        "width": 6,
+        "rows": 2,
+        "semanticBytes": 91
+      },
+      {
+        "table": "tiff_long_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_rational_value",
+        "width": 5,
+        "rows": 2,
+        "semanticBytes": 80
+      },
+      {
+        "table": "tiff_short_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_signed_byte_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_signed_long_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_signed_rational_value",
+        "width": 5,
+        "rows": 2,
+        "semanticBytes": 80
+      },
+      {
+        "table": "tiff_signed_short_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_tag",
+        "width": 5,
+        "rows": 13,
+        "semanticBytes": 520
+      },
+      {
+        "table": "tiff_undefined_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "id": "originalNativeOneIfd",
+    "input": {
+      "schema": "stdio.tiff",
+      "byteOrder": "bigEndian",
+      "ifds": [
+        {
+          "entries": [
+            {
+              "tag": 60000,
+              "values": {
+                "kind": "byte",
+                "value": [
+                  0,
+                  255
+                ]
+              }
+            },
+            {
+              "tag": 60001,
+              "values": {
+                "kind": "ascii",
+                "value": [
+                  101,
+                  120,
+                  97,
+                  99,
+                  116,
+                  0,
+                  111,
+                  99,
+                  116,
+                  101,
+                  116,
+                  115,
+                  0
+                ]
+              }
+            },
+            {
+              "tag": 60002,
+              "values": {
+                "kind": "short",
+                "value": [
+                  0,
+                  65535
+                ]
+              }
+            },
+            {
+              "tag": 60003,
+              "values": {
+                "kind": "long",
+                "value": [
+                  0,
+                  4294967295
+                ]
+              }
+            },
+            {
+              "tag": 60004,
+              "values": {
+                "kind": "rational",
+                "value": [
+                  [
+                    4294967295,
+                    0
+                  ]
+                ]
+              }
+            },
+            {
+              "tag": 60005,
+              "values": {
+                "kind": "sByte",
+                "value": [
+                  -128,
+                  127
+                ]
+              }
+            },
+            {
+              "tag": 60006,
+              "values": {
+                "kind": "undefined",
+                "value": [
+                  0,
+                  255
+                ]
+              }
+            },
+            {
+              "tag": 60007,
+              "values": {
+                "kind": "sShort",
+                "value": [
+                  -32768,
+                  32767
+                ]
+              }
+            },
+            {
+              "tag": 60008,
+              "values": {
+                "kind": "sLong",
+                "value": [
+                  -2147483648,
+                  2147483647
+                ]
+              }
+            },
+            {
+              "tag": 60009,
+              "values": {
+                "kind": "sRational",
+                "value": [
+                  [
+                    -2147483648,
+                    -1
+                  ]
+                ]
+              }
+            },
+            {
+              "tag": 60010,
+              "values": {
+                "kind": "float",
+                "value": [
+                  {
+                    "bits": 2143289410
+                  }
+                ]
+              }
+            },
+            {
+              "tag": 60011,
+              "values": {
+                "kind": "double",
+                "value": [
+                  {
+                    "bits": {
+                      "binary64Bits": "7ff8000000000042"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "storage": {
+            "kind": "strips",
+            "offsetsKind": "short",
+            "byteCountsKind": "long",
+            "chunks": [
+              [
+                1,
+                2
+              ],
+              [
+                3,
+                4,
+                5
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    "inputSha256": "7a9911a72d7a56cc14e1929d0cdae479cea5770f92f1daf282db2c7589bd19ba",
+    "rows": 47,
+    "valueBytes": 1620,
+    "schemaBytes": 3886,
+    "tables": [
+      {
+        "table": "tiff_ascii_value",
+        "width": 4,
+        "rows": 13,
+        "semanticBytes": 416
+      },
+      {
+        "table": "tiff_byte_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_chunk",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 53
+      },
+      {
+        "table": "tiff_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 27
+      },
+      {
+        "table": "tiff_double_value",
+        "width": 6,
+        "rows": 1,
+        "semanticBytes": 35
+      },
+      {
+        "table": "tiff_float_value",
+        "width": 6,
+        "rows": 1,
+        "semanticBytes": 35
+      },
+      {
+        "table": "tiff_ifd",
+        "width": 6,
+        "rows": 1,
+        "semanticBytes": 46
+      },
+      {
+        "table": "tiff_long_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_rational_value",
+        "width": 5,
+        "rows": 1,
+        "semanticBytes": 40
+      },
+      {
+        "table": "tiff_short_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_signed_byte_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_signed_long_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_signed_rational_value",
+        "width": 5,
+        "rows": 1,
+        "semanticBytes": 40
+      },
+      {
+        "table": "tiff_signed_short_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "tiff_tag",
+        "width": 5,
+        "rows": 12,
+        "semanticBytes": 480
+      },
+      {
+        "table": "tiff_undefined_value",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "id": "emptyIfds",
+    "input": {
+      "schema": "stdio.tiff",
+      "byteOrder": "bigEndian",
+      "ifds": []
+    },
+    "inputSha256": "387dd1e8014aecc73c0aff7568d3387f34afa945f594da20a6a9a3397561ec47",
+    "rows": 1,
+    "valueBytes": 27,
+    "schemaBytes": 3886,
+    "tables": [
+      {
+        "table": "tiff_ascii_value",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_byte_value",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_chunk",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 27
+      },
+      {
+        "table": "tiff_double_value",
+        "width": 6,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_float_value",
+        "width": 6,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_ifd",
+        "width": 6,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_long_value",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_rational_value",
+        "width": 5,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_short_value",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_signed_byte_value",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_signed_long_value",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_signed_rational_value",
+        "width": 5,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_signed_short_value",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_tag",
+        "width": 5,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "tiff_undefined_value",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  }
+]

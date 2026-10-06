@@ -1,7 +1,7 @@
 //! 🔺️ `change-widget-input` sparse diff — replaces the ONE addressed operator with its input set to the typed literal
 //! (or the addressed text source with its text set), read off the BASE widget through [`ChangeWidgetInput::landing`].
 
-use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, Generation3dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, Generation3dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::ChangeWidgetInput;
 use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::Generation3dSnapshot;
@@ -23,7 +23,7 @@ pub fn diff(payload: &ChangeWidgetInput, base: &Generation3dSnapshot) -> protoco
         Ok(None) => protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warning("mutation.no-op", format!("Input \"{}\" of \"{}\" already holds this value.", payload.channel, payload.id)).at(target())]),
         Ok(Some(next)) => {
             let widgets = WidgetsDiff { removed: Vec::new(), set: vec![(index, next)] };
-            let diff = diff_fixture_from_helpers(base, &widgets, &SynapsesDiff::default(), &LayoutDiff::default(), None, None);
+            let diff = diff_snapshot_from_helpers(base, &widgets, &SynapsesDiff::default(), &LayoutDiff::default(), None, None);
             for (_, widget) in widgets.set {
                 widget.retire_cold();
             }

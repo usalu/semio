@@ -1,0 +1,148 @@
+{
+  "qualification": "source-only potential correction; no production edit or execution",
+  "proposedPluginSchema": "s.flow.flow",
+  "taxonomyAuthorities": [
+    "ArtifactSchema id s.flow.flow on FlowArtifact and FlowSnapshot",
+    "schema descriptor id s.flow.flow",
+    "definition identity s.flow.flow",
+    "native dialect s.flow.flow/1/*"
+  ],
+  "occurrences": [
+    {
+      "path": "🌎️hub/🧩️compositions/🌊️flow/🔣️.json",
+      "line": 4000,
+      "text": "            \"schema\": \"flow.host_snapshot\",",
+      "category": "authored-composition-metadata",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌊️flow/🔣️.json",
+      "line": 4441,
+      "text": "          \"artifactSchema\": \"flow.host_snapshot\",",
+      "category": "authored-composition-metadata",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌊️flow/🔣️.json",
+      "line": 9232,
+      "text": "          \"artifactSchema\": \"flow.host_snapshot\",",
+      "category": "authored-composition-metadata",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🌊️flow/🔣️.json",
+      "line": 9481,
+      "text": "        \"artifactJson\": \"semio flow.flow.dsl v1\\nschema=flow.host_snapshot\\ncamera {\\n  x=0 y=0 zoom=1\\n}\\nwidgets {\\n  input-slider id=slider label=Number value=3 min=0 max=10 step=0.1\\n  neuron id=add neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]\\n  output-preview id=preview expanded=[ ]\\n}\\nlayout={\\n  add=x=120 y=-40 preview=x=240 y=-40 slider=x=40 y=-40\\n}\\nsynapses [id:TEXT link:WIRE] {\\n  s1 slider@number->add@a\\n  s2 add@sum->preview\\n}\\n\",",
+      "category": "framework-host-genesis",
+      "intendedAction": "preserve flow.host_snapshot"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 107,
+      "text": "/// (`interactive-job.catalog-authority`, `schema='flow.snapshot' expected_schema='flow.host_snapshot'`),",
+      "category": "historical-diagnostic-docstring",
+      "intendedAction": "preserve historical quotation or rewrite prose without fabricating old receipt"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "line": 390,
+      "text": "                .descriptor(b\"flow.host_snapshot:flow\")?",
+      "category": "plugin-registration-metadata",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "line": 391,
+      "text": "                .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::codec(), \"flow.host_snapshot\")?)?",
+      "category": "plugin-registration-metadata",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "line": 392,
+      "text": "                .claim(ArtifactIdentityClaim::codec_extension(\"flow.host_snapshot\", \"flow\")?)?,",
+      "category": "plugin-registration-metadata",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts",
+      "line": 280,
+      "text": "assert(demo.startsWith(\"semio flow.flow.dsl v1\\nschema=flow.host_snapshot\\n\"), \"the demo ships its content child's genesis scene in the host grammar, never a bare content reference\");",
+      "category": "framework-host-genesis",
+      "intendedAction": "preserve flow.host_snapshot"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs",
+      "line": 100,
+      "text": "    let live = semio_framework_artifact_flow_flow::FlowHostSnapshot { schema: \"flow.host_snapshot\".into(), camera: config.camera.clone(), widgets, synapses, layout };",
+      "category": "framework-host-genesis",
+      "intendedAction": "preserve flow.host_snapshot"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1676,
+      "text": "        artifact_schema: \"flow.host_snapshot\",",
+      "category": "plugin-tool-proof-authority",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1692,
+      "text": "        artifact_schema: \"flow.host_snapshot\",",
+      "category": "plugin-tool-proof-authority",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1728,
+      "text": "        artifact_schema: \"flow.host_snapshot\",",
+      "category": "plugin-tool-proof-authority",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1749,
+      "text": "        artifact_schema: \"flow.host_snapshot\",",
+      "category": "plugin-tool-proof-authority",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "line": 1899,
+      "text": "        artifact_schema: \"flow.host_snapshot\",",
+      "category": "plugin-tool-proof-authority",
+      "intendedAction": "correct to s.flow.flow after live demand"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio",
+      "line": 2,
+      "text": "schema=flow.host_snapshot",
+      "category": "framework-host-genesis",
+      "intendedAction": "preserve flow.host_snapshot"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/📝️text/🗣️.dsl.semio",
+      "line": 2,
+      "text": "schema=flow.host_snapshot content=childId=content target=artifactId=\"literal target!@/日本\" artifactKind=s.stdio.semio standard=v1 subset=flow",
+      "category": "plugin-parent-literal-fixture",
+      "intendedAction": "handcraft new default literal while retaining independent arbitrary-schema tests"
+    }
+  ],
+  "nonliteralRegions": [
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "line": 39,
+      "action": "replace framework reexport with plugin-owned FLOW_DOCUMENT_SCHEMA constant"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "line": 39,
+      "action": "explicitly distinguish default plugin schema from borrowed host bridge schema; retain arbitrary persisted schema verbatim"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "line": 51,
+      "action": "genuine framework host projection must use framework schema authority if normalized; do not globally rewrite literal fields"
+    }
+  ]
+}

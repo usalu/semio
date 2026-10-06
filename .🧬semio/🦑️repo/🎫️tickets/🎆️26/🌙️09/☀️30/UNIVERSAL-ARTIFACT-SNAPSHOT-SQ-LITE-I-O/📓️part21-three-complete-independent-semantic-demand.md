@@ -1,0 +1,7 @@
+# Part21 Three Complete Independent Semantic Demands
+
+Twelve schema-first fixture/schema/Source/Native demand paths preserve every original header, scalar word, graph and EDM field. STEP full 65 rows/1916 bytes and empty entities 12/381 require canonical schema 3437, all 12 tables, maximum 10 columns. IFC4 full 65/1869 and empty entities 18/456 require 3250/11/11. IFC2x3 full 58/1847 and empty instances 17/587 require 4006/12/17. All independent extents use NULL payload 0 and original matched Source/Native factories.
+
+Both actual SQL directions and both Native forms require exact and all five minus-one copied limits; separate column laws isolate static width admission. STEP/IFC4 NaN identity compares complete relational reprojection with exact IEEE companion words; it never uses f64 PartialEq. IFC2x3 exact coefficient/sign/scale/exponent and original EDM remain untouched. Original authored tests, quick policy, deadlines and grants are unchanged; no new executable command. Both IFC schemas use the same actual stdio-ifc-rs package, while STEP uses stdio-step-rs. Providers are unchanged by this phase. Owning Source and genuine Native Before must execute before repairs.
+
+Actual owning Source commands completed: STEP 9 passed/0 failed, 95 expectations, 1296ms; actual shared IFC package 24 passed/0 failed across both schema files, 229 expectations, 820ms. Providers are still unchanged; genuine Native Before remains queued. All original Source controls remain.

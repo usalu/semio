@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "feature": "las-generator-current-owner-membership",
+  "rows": [
+    {
+      "manifest": "Cargo.toml",
+      "stale": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🏭️generator/🧫️fixtures/📦️packages/🦀️rust",
+      "expected": "absent"
+    },
+    {
+      "manifest": "✏️s/Cargo.toml",
+      "stale": "🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🏭️generator/🧫️fixtures/📦️packages/🦀️rust",
+      "expected": "absent"
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🏭️generator/🧪️tests/🧰️support/📦️packages/🦀️rust/Cargo.toml",
+      "stale": "../../../../🧫️fixtures/📦️packages/🦀️rust",
+      "expected": "self"
+    }
+  ]
+}

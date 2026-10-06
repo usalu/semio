@@ -1,0 +1,5 @@
+# Part21 Current Canonical Module Glue
+
+Root authorized removal of the absent schema/Snapshot SQLite and duplicate test registrations for STEP, IFC4 and IFC2x3. Their actual current IO/sqlite/Snapshot roots already own those same implementations, original tests and fixtures. The retained schema native module remains the authored controlled native codec; its exact shared functions and the two semantic admission methods now have crate visibility required by the moved IO sibling. IFC reconstruction and diagnostics import that retained native authority directly. Required document schema constants are imported directly from each owner. No aliases or absent paths were recreated.
+
+Original test bodies, paid frontier grants, forecast constants, protocols and semantic role admission are unchanged. Current static owner inventory is STEP14 IO tests plus1 retained native test, IFC4 13 plus1 retained native test, IFC2x3 16 plus1 retained native test: original selected15+31 identities preserved. This does not claim runtime After; Root owns the pending unchanged registered cohort94980. Full guarded before/after capsule retained.

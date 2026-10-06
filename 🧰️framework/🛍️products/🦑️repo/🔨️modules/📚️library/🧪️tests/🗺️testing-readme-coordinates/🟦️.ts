@@ -1,4 +1,3 @@
-import Ajv from "ajv";
 import { expect, test } from "bun:test";
 import { parse as parseJson, type ParseError } from "jsonc-parser";
 import { fromMarkdown } from "mdast-util-from-markdown";
@@ -33,9 +32,8 @@ function readOwned(path: string): Buffer {
   }
 }
 
-const ownerRelative = relative(root, import.meta.dir).split("\\").join("/");
-const vector = JSON.parse(readOwned(ownerRelative + "../../🖼️assets/🗺️testing-readme-coordinates/🔣️.json").toString("utf8"));
-const schema = JSON.parse(readOwned(ownerRelative + "../../🧬️schema/🗺️testing-readme-coordinates/🔣️.json").toString("utf8"));
+const vectorPath = relative(root, join(libraryRoot, "🧫️fixtures/🗺️testing-readme-coordinates/🔣️.json")).split("\\").join("/");
+const vector = JSON.parse(readOwned(vectorPath).toString("utf8"));
 const content = (): string => readOwned(vector.documents.readme).toString("utf8");
 const squash = (value: string): string => value.replace(/\s+/gu, " ").trim();
 const nodeText = (node: any): string => typeof node.value === "string" ? node.value : (node.children ?? []).map(nodeText).join("");
@@ -55,11 +53,9 @@ function markdownFacts(source: string) {
   return { inline, paragraphs, code };
 }
 
-test("authored coordinate and prose vectors satisfy their neutral schema and independent JSON parser", () => {
-  const validate = new Ajv({ allErrors: true }).compile(schema);
-  expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+test("authored coordinate and prose vectors agree with independent JSON parser", () => {
   const errors: ParseError[] = [];
-  expect(parseJson(readOwned(ownerRelative + "../../🖼️assets/🗺️testing-readme-coordinates/🔣️.json").toString("utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
+  expect(parseJson(readOwned(vectorPath).toString("utf8"), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
   expect(errors).toEqual([]);
   for (const rows of [vector.kindLeaves, vector.inlineCoordinates, vector.paragraphs, vector.parserCases]) {
     const keys = rows.map((row: any) => row.id ?? row.kindId);

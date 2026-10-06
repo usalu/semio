@@ -2519,6 +2519,15 @@
       "options": {
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts\" sync --all"
       }
+    },
+    "cargo-prepare": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts\" prepare"
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": []
     }
   }
 }

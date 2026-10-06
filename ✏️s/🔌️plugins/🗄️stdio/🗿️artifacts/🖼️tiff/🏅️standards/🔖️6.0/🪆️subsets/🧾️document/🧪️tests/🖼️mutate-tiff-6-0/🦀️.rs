@@ -18,8 +18,8 @@ use semio_repo_test_host::law;
 /// mutable copy's bytes — the real two-page scan, or for the raster outlines the small document a whole-raster
 /// wire payload fits in. Neither is ever written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
-    let copy = ctx.copy_fixture(&input, Some("input.tiff"))?;
+    let input = ctx.step_input_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
+    let copy = ctx.copy_input(&input, Some("input.tiff"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

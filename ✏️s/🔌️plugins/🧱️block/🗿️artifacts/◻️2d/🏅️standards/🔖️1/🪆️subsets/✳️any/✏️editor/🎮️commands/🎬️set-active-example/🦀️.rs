@@ -141,7 +141,7 @@ fn replace_document_operations(current: &Block2dSnapshot, next: &Block2dSnapshot
 }
 //#endregion 🔖️ReplaceDocument
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 use crate::Block2dSnapshot;
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -155,8 +155,8 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block2dSnapshot>, _cfg: &ConfigView<'_, Block2dConfig>) -> Result<Emit<Block2dMutation, Block2dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
-        BLOCK2D_EXAMPLE_LEFT => crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
-        BLOCK2D_EXAMPLE_RIGHT => crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).ok(),
+        BLOCK2D_EXAMPLE_LEFT => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK2D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
+        BLOCK2D_EXAMPLE_RIGHT => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT).ok(),
         _ => None,
     };
     match example {

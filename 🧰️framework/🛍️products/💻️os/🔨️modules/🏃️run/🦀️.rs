@@ -99,6 +99,9 @@ pub enum RunError {
     },
     Cycle(Vec<String>),
     Host(String),
+    /// 🤝️ The guest itself was refused at admission (`ActivationRefusal.fault`, e.g. `plugin.channel-mismatch` with its
+    /// `guest`/`host` params): the structured fault, so the runner's caller tells its localized notice.
+    Refused(semio_framework::Fault),
     Media(MediaError),
     Io {
         path: PathBuf,
@@ -135,6 +138,7 @@ impl std::fmt::Display for RunError {
             Self::NoConverter { class, from, to } => write!(formatter, "no media converter registered for {class:?}: {from:?} -> {to:?}"),
             Self::Cycle(nodes) => write!(formatter, "workflow has a cycle (unreachable nodes: {nodes:?})"),
             Self::Host(message) => write!(formatter, "host error: {message}"),
+            Self::Refused(fault) => write!(formatter, "{}: {}", fault.code.0, fault.message),
             Self::Media(error) => write!(formatter, "media error: {error}"),
             Self::Io { path, source } => write!(formatter, "io error at {}: {source}", path.display()),
             Self::Serde(error) => write!(formatter, "(de)serialization error: {error}"),
@@ -152,6 +156,15 @@ impl std::error::Error for RunError {
             Self::Serde(error) => Some(error),
             _ => None,
         }
+    }
+}
+
+/// 🚪️ An activation that installed no actor, as the runner reports it: the guest's own admission fault when it carries
+/// one (audit F1), else the host's reason in words.
+pub fn activation_refusal_error(refusal: semio_framework_plugin_host::activation::ActivationRefusal) -> RunError {
+    match refusal.fault {
+        Some(fault) => RunError::Refused(fault),
+        None => RunError::Host(refusal.reason),
     }
 }
 
@@ -2130,7 +2143,7 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
         let instance_handle = self.next_handle;
         self.next_handle += 1;
         let kind = ActorKind::PluginApp { plugin: PackageId(plugin_id.to_string()), app_id: app_id.to_string(), instance_id: instance_handle };
-        let actor = self.kernel.activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &NODE_TURN_BUDGET).await.map_err(|refusal| RunError::Host(refusal.reason))?;
+        let actor = self.kernel.activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual, &compiled, &[], &NODE_TURN_BUDGET).await.map_err(activation_refusal_error)?;
         self.instances.insert(instance_handle, (plugin_id.to_string(), instance_handle));
         self.instance_actors.insert(instance_handle, actor);
         let open_event = Event::InstanceOpen {
@@ -2334,6 +2347,7 @@ fn app_command_seq(command: &AppCommand) -> u64 {
         | AppCommand::CancelMediaExport { seq, .. }
         | AppCommand::ReadDocumentIdentity { seq }
         | AppCommand::ReadChildHeads { seq }
+        | AppCommand::MergeDocumentArchive { seq, .. }
         | AppCommand::TakeMediaExportChunk { seq, .. } => *seq,
     }
 }

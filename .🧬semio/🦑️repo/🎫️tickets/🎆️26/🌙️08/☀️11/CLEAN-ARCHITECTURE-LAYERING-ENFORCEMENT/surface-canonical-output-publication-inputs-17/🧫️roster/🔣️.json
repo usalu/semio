@@ -1,0 +1,69 @@
+{
+  "cases": [
+    {
+      "id": "all-real-five",
+      "paths": [
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/package.json"
+      ],
+      "refused": false
+    },
+    {
+      "id": "missing",
+      "paths": [
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm.d.ts"
+      ],
+      "refused": true
+    },
+    {
+      "id": "duplicate",
+      "paths": [
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm"
+      ],
+      "refused": true
+    },
+    {
+      "id": "foreign-root",
+      "paths": [
+        "Cargo.toml",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/package.json"
+      ],
+      "refused": true
+    },
+    {
+      "id": "unknown-output",
+      "paths": [
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/foreign.json"
+      ],
+      "refused": true
+    },
+    {
+      "id": "order",
+      "paths": [
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/package.json",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.d.ts",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm"
+      ],
+      "refused": true
+    }
+  ]
+}

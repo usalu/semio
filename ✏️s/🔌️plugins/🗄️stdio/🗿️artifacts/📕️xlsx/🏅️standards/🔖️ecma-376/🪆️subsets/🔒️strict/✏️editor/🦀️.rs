@@ -164,7 +164,7 @@ impl ArtifactEditor for XlsxStrictEditor {
     }
 
     fn initial_snapshot() -> XlsxSnapshot {
-        XlsxSnapshot::default()
+        <crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction::new(crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook::default())).expect("valid authored strict XLSX initial owner")
     }
 
     /// ✏️ Resolves the rendered worksheet/row/column identity and optimistic revision, then emits

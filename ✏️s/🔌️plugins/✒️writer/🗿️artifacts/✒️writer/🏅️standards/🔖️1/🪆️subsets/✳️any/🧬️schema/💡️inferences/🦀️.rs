@@ -68,46 +68,9 @@ pub fn writer_artifact_inference_descriptor() -> semio_framework_schema_registry
 //#endregion 🔖️Descriptor
 
 //#region 🔖️LanguageInferences
-/// 📡️ Semantic token payload for the text editor scene (LSP `data` array or grammar tokens) — derived
-/// straight from a `WriterSnapshot` (its `language_id`/`text` fields), so it lives here beside
-/// `WriterInference` rather than in `🧬️schema`'s text-only helpers.
-pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
-    let text = crate::writer_text(document);
-    if let Some(spec) = semio_framework_dsl::language(&document.language_id) {
-        let session = dsl::lsp::LanguageSession::open(spec, text.clone());
-        return Some(semio_framework_pack_json::to_json_string(&session.semantic_tokens_lsp()));
-    }
-    if semio_framework_dsl::idiom(&document.language_id).is_some() {
-        let tokens = crate::schema::tokenize_language(&text, &document.language_id);
-        return serde_json::to_string(&tokens).ok();
-    }
-    None
-}
 
-pub fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) -> Option<String> {
-    let text = crate::writer_text(document);
-    if document.language_id == "jack" {
-        let graph = example_graph();
-        let diagnostics: Vec<semio_framework_pack_json::Value> = lint(&graph, &text).into_iter().map(|diag| semio_framework_pack_json::json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message })).collect();
-        return Some(semio_framework_pack_json::to_json_string(&diagnostics));
-    }
-    if let Some(hooks) = semio_framework_dsl::idiom(&document.language_id) {
-        if let Err(err) = (hooks.canonicalize)(&text) {
-            let end = text.len().max(1);
-            return serde_json::to_string(&[json!({ "start": 0, "end": end, "severity": "error", "message": err.message })]).ok();
-        }
-    } else if let Some(spec) = semio_framework_dsl::language(&document.language_id) {
-        let session = dsl::lsp::LanguageSession::open(spec, text.clone());
-        if let Err(err) = session.canonicalize() {
-            let end = text.len().max(1);
-            return serde_json::to_string(&[json!({ "start": 0, "end": end, "severity": "error", "message": err.message })]).ok();
-        }
-    }
-    if lint_signal > 0 {
-        return Some(json!([{ "start": 0, "end": text.len().max(1), "severity": "info", "message": format!("Lint pass #{lint_signal}") }]).to_string());
-    }
-    None
-}
+
+
 //#endregion 🔖️LanguageInferences
 
 #[cfg(test)]

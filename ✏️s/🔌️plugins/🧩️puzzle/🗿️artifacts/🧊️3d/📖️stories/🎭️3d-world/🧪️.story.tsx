@@ -119,7 +119,7 @@ function loadPuzzle3dWasm(): Promise<Puzzle3dWasmModule> {
   return puzzle3dWasmModulePromise;
 }
 
-async function parsePuzzle3dFixtureDsl(dslText: string): Promise<StoryWorld3dFixture> {
+async function parsePuzzle3dSceneSnapshotDsl(dslText: string): Promise<StoryWorld3dFixture> {
   const mod = await loadPuzzle3dWasm();
   return JSON.parse(mod.puzzle3dParseDslJson(dslText)) as StoryWorld3dFixture;
 }
@@ -281,7 +281,7 @@ function World3dStoryHost({ fixtureDsl }: { readonly fixtureDsl: string }): Reac
 
   useEffect(() => {
     let cancelled = false;
-    parsePuzzle3dFixtureDsl(fixtureDsl).then((fixture) => {
+    parsePuzzle3dSceneSnapshotDsl(fixtureDsl).then((fixture) => {
       if (!cancelled) setState({ fixture, runtime: STORY_DEFAULT_RUNTIME });
     });
     return () => {

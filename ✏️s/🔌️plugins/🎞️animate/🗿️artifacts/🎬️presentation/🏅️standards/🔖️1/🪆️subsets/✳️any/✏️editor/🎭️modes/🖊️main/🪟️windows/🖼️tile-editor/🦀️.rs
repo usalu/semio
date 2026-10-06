@@ -19,6 +19,7 @@ const PRESENTATION_PLAY_SURFACE_MAIN: &str = "animate.presentation.play";
 /// 🧱️ Stitched into the app manifest by `crate::editor::animate::create_animate_presentation_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: PRESENTATION_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Tile editor", "Kacheleditor"),
         body_key: PRESENTATION_PLAY_BODY_MAIN.into(),

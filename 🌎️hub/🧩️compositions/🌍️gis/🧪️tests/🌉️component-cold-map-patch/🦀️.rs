@@ -83,7 +83,7 @@ async fn canonical_pair(value: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
     let envelope = semio_framework_os_kernel::create_document_envelope::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, "shared-map", snapshot, None);
     let files = semio_framework_os_kernel::print_document_pack(&envelope).await.expect("canonical GIS pack pair");
     assert_eq!(files.pack, envelope.vcs.initial_snapshot.encode_pack());
-    let mut retirement = semio_s_artifact_gis_gismap::spr::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::binary::mutations::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     let mut retired = false;
     for _ in 0..100_000 {
         match retirement.close_step(1, semio_framework_os_kernel::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS envelope retirement") {
@@ -210,8 +210,8 @@ impl RetainedSurface {
 
     /// 🚚️ The ASSEMBLED tiled-map scene: the spine decoded out of the fixed-capacity
     /// `SurfaceProps.doc`, plus every out-of-doc payload lane (`SceneDoc::split_lanes`) that rides
-    /// beside it as a `paged_text_carrier` child of the same node. `map_fixture_json` IS such a lane
-    /// (`framework.scene.tiledmap.mapFixture`), so a bare `semio_framework_ui_scene::decode` reads it
+    /// beside it as a `paged_text_carrier` child of the same node. `map_descriptor_json` IS such a lane
+    /// (`framework.scene.tiledmap.mapDescriptor`), so a bare `semio_framework_ui_scene::decode` reads it
     /// as the empty spine field — this is the Rust twin of the React Interpreter's `sceneFromLanes`
     /// and of the framework's own `built_surface_scene`.
     fn scene(&self) -> Option<TiledMapScene> {
@@ -287,7 +287,7 @@ async fn render_until_scene(runtime: &WasmtimeRuntime, instance: &mut GuestInsta
         *session += 1;
         event = Event::PatchAck { receipt, surface, revision };
         if let Some(scene) = scene {
-            assert!(scene.map_fixture_json.contains(marker), "map scene omits {marker}");
+            assert!(scene.map_descriptor_json.contains(marker), "map scene omits {marker}");
             matched = Some((scene, revision));
         }
     }
@@ -344,10 +344,10 @@ async fn genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surfac
     let mut session = 940_051;
     let mut retained = RetainedSurface::default();
     let (before, before_revision) = render_until_scene(&runtime, &mut instance, lifetime, "cold-before", &mut session, &mut retained).await;
-    assert!(!before.map_fixture_json.contains("patched-after"));
+    assert!(!before.map_descriptor_json.contains("patched-after"));
     dispatch_patch_positions(&runtime, &mut instance, &fixture["document"]["after"]).await;
     let (after, after_revision) = render_until_scene(&runtime, &mut instance, lifetime, "patched-after", &mut session, &mut retained).await;
-    assert!(!after.map_fixture_json.contains("cold-before"));
+    assert!(!after.map_descriptor_json.contains("cold-before"));
     assert!(after_revision > before_revision);
 }
 

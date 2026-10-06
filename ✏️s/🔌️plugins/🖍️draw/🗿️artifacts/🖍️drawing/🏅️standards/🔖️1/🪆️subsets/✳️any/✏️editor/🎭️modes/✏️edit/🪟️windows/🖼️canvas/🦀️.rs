@@ -81,9 +81,10 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
 }
 
 /// 🎯️ Projects the request-owned selection and the retained gesture preview into shared canvas paths.
-pub fn render(plan: Option<&crate::schema::scene_preparation::DocumentScenePlan>, revision: u32, document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String]) -> UiAssemblyResult<BuiltNode> {
+pub fn render(prepared: Option<&crate::schema::scene_paint::scene::PreparedScene>, revision: u32, document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String]) -> UiAssemblyResult<BuiltNode> {
+    let plan=prepared.map(|scene|&scene.plan);
     let mut scene_nodes=match plan{Some(plan)=>crate::schema::scene_view::nodes(plan,preview.transformation.as_ref()).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.canvas",error.to_string()))?,None=>Vec::new()};
-    let selected_bounds=if let Some(plan)=plan{crate::schema::scene_view::selection_bounds(plan,selection).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.selection",error.to_string()))?.map(|[x,y,r,b]|[x,y,r-x,b-y])}else{None};
+    let selected_bounds=if let Some(scene)=prepared{crate::schema::scene_paint::scene::query::prepared_selection_bounds(scene,selection).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.selection",error.to_string()))?.map(|[x,y,r,b]|[x,y,r-x,b-y])}else{None};
     if let Some(movement)=&preview.node_translation {
         for node in &mut scene_nodes {
             let points=movement.targets.iter().filter(|target|target.layer_id==node.id).map(|target|crate::schema::geometry::editing::PathPointRef {index:target.index,point:target.point}).collect::<Vec<_>>();

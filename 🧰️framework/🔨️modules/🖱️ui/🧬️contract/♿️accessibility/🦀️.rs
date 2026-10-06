@@ -73,8 +73,20 @@ pub fn accessibility_role(component: &crate::Component, activatable: bool) -> &'
         crate::Component::Text(_) => "paragraph",
         crate::Component::Button(_) => "button",
         crate::Component::Separator(_) => "separator",
-        crate::Component::Input(_) => "textbox",
-        crate::Component::Select(_) => "combobox",
+        crate::Component::Input(props) => {
+            if props.kind == crate::InputKind::Number {
+                "spinbutton"
+            } else {
+                "textbox"
+            }
+        }
+        crate::Component::Select(props) => {
+            if props.appearance == crate::SelectAppearance::Segmented {
+                "radiogroup"
+            } else {
+                "combobox"
+            }
+        }
         crate::Component::Toggle(props) => {
             if props.appearance == crate::ToggleAppearance::Checkbox {
                 "checkbox"
@@ -209,6 +221,21 @@ pub struct AccessibilityProjectionNode {
     pub value_text: Option<String>,
     #[serde(default, skip_serializing_if = "is_default")]
     pub busy: bool,
+    /// 🪜️ The step a range control moves by, in the display units `value_min`/`value_max`/`value_now` speak.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value_step: Option<f64>,
+    /// 🚧️ A control whose typed draft is refused (`aria-invalid`); only a renderer's walk knows a draft.
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub invalid: bool,
+    /// 🧮️ The rows of the logical list a windowed row belongs to (`aria-setsize`); a renderer's walk stamps it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub set_size: Option<usize>,
+    /// 📍️ A windowed row's one-based place in that list (`aria-posinset`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pos_in_set: Option<usize>,
+    /// 🚦️ The semantic tone a tree row paints ([`accessibility_tone`]); never the only cue of a state.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tone: Option<String>,
 }
 
 /// 📶️ The range semantics a component announces: `aria-valuemin`/`max`/`now`/`valuetext` for a
@@ -221,6 +248,7 @@ pub struct AccessibilityValue {
     pub now: Option<f64>,
     pub text: Option<String>,
     pub busy: bool,
+    pub step: Option<f64>,
 }
 
 /// 🔊️ The number a range control announces for a stored value: unchanged without a display factor, else
@@ -241,6 +269,15 @@ fn spoken_text(stored: f64, factor: Option<f64>, precision: Option<u16>, unit: O
     unit.filter(|unit| !unit.as_str().is_empty()).map_or_else(|| text.clone(), |unit| format!("{text} {}", unit.as_str()))
 }
 
+/// 👣️ The step a range control announces, in display units: its declared `step`, else (a non-positive or non-finite
+/// one) the `10^-precision` display step the keyboard law walks, else none.
+fn spoken_step(step: f64, precision: Option<u16>, factor: Option<f64>) -> Option<f64> {
+    if step.is_finite() && step > 0.0 {
+        return Some(spoken_number(step, factor));
+    }
+    precision.map(|precision| crate::round_ui_number(10f64.powi(-i32::from(precision.min(crate::UI_NUMBER_PRECISION_MAX))), precision))
+}
+
 /// 📶️ Projects [`AccessibilityValue`] out of a component; every non-range component answers the empty
 /// default.
 pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
@@ -252,27 +289,42 @@ pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
                 (crate::InputKind::Number, Some(stored)) if stored.is_finite() && (props.precision.is_some() || props.display_factor.is_some()) => crate::ui_number_display_text(stored, props.display_factor, props.precision),
                 _ => props.value.as_str().to_string(),
             };
-            AccessibilityValue { min: props.min.map(shown), max: props.max.map(shown), now: stored.map(shown), text: Some(text), busy: false }
+            AccessibilityValue { min: props.min.map(shown), max: props.max.map(shown), now: stored.map(shown), text: Some(text), busy: false, step: (props.kind == crate::InputKind::Number).then(|| spoken_step(props.step.unwrap_or(0.0), props.precision, props.display_factor)).flatten() }
         }
         crate::Component::Select(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
         crate::Component::Slider(props) => {
             let unit = props.display_unit.as_ref().or(props.unit.as_ref());
             let described = unit.is_some() || props.precision.is_some() || props.display_factor.is_some();
             let text = described.then(|| spoken_text(props.value, props.display_factor, props.precision, unit));
-            AccessibilityValue { min: Some(spoken_number(props.min, props.display_factor)), max: Some(spoken_number(props.max, props.display_factor)), now: Some(spoken_number(props.value, props.display_factor)), text, busy: false }
+            AccessibilityValue { min: Some(spoken_number(props.min, props.display_factor)), max: Some(spoken_number(props.max, props.display_factor)), now: Some(spoken_number(props.value, props.display_factor)), text, busy: false, step: spoken_step(props.step, props.precision, props.display_factor).or_else(|| Some(spoken_number(1.0, props.display_factor))) }
         }
         crate::Component::NumberStepper(props) => {
             let shown = |value: f64| spoken_number(value, props.display_factor);
             let text = props.uniform.then(|| spoken_text(props.value, props.display_factor, props.precision, props.display_unit.as_ref().or(props.unit.as_ref())));
-            AccessibilityValue { min: props.min.map(shown), max: props.max.map(shown), now: props.uniform.then(|| shown(props.value)), text, busy: false }
+            AccessibilityValue { min: props.min.map(shown), max: props.max.map(shown), now: props.uniform.then(|| shown(props.value)), text, busy: false, step: spoken_step(props.step, props.precision, props.display_factor).or_else(|| Some(spoken_number(1.0, props.display_factor))) }
         }
-        crate::Component::Ring(props) => AccessibilityValue { min: Some(0.0), max: Some(1.0), now: Some(props.t), text: Some(props.t.to_string()), busy: false },
+        crate::Component::Ring(props) => AccessibilityValue { min: Some(0.0), max: Some(1.0), now: Some(props.t), text: Some(props.t.to_string()), busy: false, step: None },
         crate::Component::IconSelect(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
         crate::Component::Progress(props) => match props.total {
-            Some(total) => AccessibilityValue { min: Some(0.0), max: Some(total), now: Some(props.completed), text: Some(props.value_text.0.as_str().to_string()), busy: false },
+            Some(total) => AccessibilityValue { min: Some(0.0), max: Some(total), now: Some(props.completed), text: Some(props.value_text.0.as_str().to_string()), busy: false, step: None },
             None => AccessibilityValue { busy: true, ..AccessibilityValue::default() },
         },
         _ => AccessibilityValue::default(),
+    }
+}
+
+/// 🎨️ The tone a tree row announces: the semantic roles React's tree rows paint (`info`, `success`, `warning`, `danger`);
+/// `None` for every other component, the neutral tone and the brand roles.
+pub fn accessibility_tone(record: &crate::UiNodeRecord) -> Option<&'static str> {
+    if !matches!(record.component, crate::Component::TreeItem(_)) {
+        return None;
+    }
+    match record.style.tone {
+        crate::Tone::Info => Some("info"),
+        crate::Tone::Success => Some("success"),
+        crate::Tone::Warning => Some("warning"),
+        crate::Tone::Danger => Some("danger"),
+        crate::Tone::Neutral | crate::Tone::Primary | crate::Tone::Secondary | crate::Tone::Tertiary => None,
     }
 }
 
@@ -316,7 +368,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         },
         selected: None,
         expanded: match &record.component {
-            crate::Component::Select(_) => Some(false),
+            crate::Component::Select(props) => props.appearance.is_menu().then_some(false),
             crate::Component::TreeSection(props) => Some(props.default_open.unwrap_or(true)),
             crate::Component::TreeItem(props) if record.children.iter().any(|child| Some(*child) != props.inline_toolbar && Some(*child) != props.detail) => {
                 Some(props.default_open.unwrap_or(true))
@@ -334,6 +386,11 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         value_now: value.now,
         value_text: value.text,
         busy: value.busy,
+        value_step: value.step,
+        invalid: false,
+        set_size: None,
+        pos_in_set: None,
+        tone: accessibility_tone(record).map(str::to_string),
     }
 }
 //#endregion 🔖️AccessibilityProjection

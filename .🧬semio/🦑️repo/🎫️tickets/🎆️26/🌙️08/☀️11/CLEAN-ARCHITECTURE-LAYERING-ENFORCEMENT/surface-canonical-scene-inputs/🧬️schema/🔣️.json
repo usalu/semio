@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/framework/surface/graph-scene",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "instanceId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pluginId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "appId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "x": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "y": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "width": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "height": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "inputs": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "abbreviation": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "fullName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "resourceKind": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "valueType": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "outputs": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "abbreviation": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "fullName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "resourceKind": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "valueType": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sourceNodeId",
+          "sourcePortId",
+          "targetNodeId",
+          "targetPortId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sourceNodeId": {
+            "type": "string"
+          },
+          "sourcePortId": {
+            "type": "string"
+          },
+          "targetNodeId": {
+            "type": "string"
+          },
+          "targetPortId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "viewport": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "previewOffJson": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lodJson": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "controlsJson": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "clustersJson": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "statusJson": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "computingJson": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "capabilitiesJson": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "hostSnapshotJson": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

@@ -1430,7 +1430,7 @@ fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
 #[test]
 fn rectangle_wire_preview_emits_edge_only_mesh() {
     let _serial = test_serial();
-    let projection = <Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::snapshot::text::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
+    let projection = <Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
     let config = Generation3dConfig::default();
     let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
     let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
@@ -2700,12 +2700,12 @@ fn mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers() {
         let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
         semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
             let operation = case["operation"].as_str().unwrap();
-            let id = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::ensure_gumball_node(host, "extrude@meshOut#0", operation).unwrap();
+            let id = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::ensure_gumball_node(host, "extrude@meshOut#0", operation).unwrap();
             let transform = host.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget) == id).unwrap();
             assert!(matches!(transform, semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, preview: true, .. } if neuron_kind == case["operator"].as_str().unwrap()));
             assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == "extrude" && wire.from_port == "meshOut" && wire.to == id && wire.to_port == case["input"].as_str().unwrap()));
             assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.from_port == case["output"].as_str().unwrap() && wire.to == "analysis"));
-            assert_eq!(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::ensure_gumball_node(host, &id, operation).unwrap(), id);
+            assert_eq!(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::ensure_gumball_node(host, &id, operation).unwrap(), id);
         });
         snapshot.retire_cold();
     }

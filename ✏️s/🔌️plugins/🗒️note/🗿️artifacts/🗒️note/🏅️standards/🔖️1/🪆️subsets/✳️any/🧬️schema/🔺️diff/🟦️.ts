@@ -1,5 +1,6 @@
 /** 🔺️ Sparse Note document changes reuse the authored block, image and link contracts. */
-import { parseNoteArtifact, parseNoteBlockNode, parseNoteImageAsset, parseNoteRecord, noteDocumentFields, noteString, noteNullable, noteArray, noteMap, type NoteValueParser, type NoteArtifact, type NoteBlockNode, type NoteImageAsset, type ArtifactLink, type Binary64 } from "../🟦️.ts";
+import { parseNoteArtifact, parseNoteBlockNode, parseNoteImageAsset, parseNoteRecord, noteDocumentFields, noteString, noteNullable, noteArray, noteMap, type NoteValueParser, type NoteArtifact, type NoteBlockNode, type NoteImageAsset, type ArtifactLink } from "../🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type { NoteArtifact, NoteBlockNode, NoteImageAsset, ArtifactLink } from "../🟦️.ts";
 export interface NoteDiff {
   /** 🧬️ @state artifact */

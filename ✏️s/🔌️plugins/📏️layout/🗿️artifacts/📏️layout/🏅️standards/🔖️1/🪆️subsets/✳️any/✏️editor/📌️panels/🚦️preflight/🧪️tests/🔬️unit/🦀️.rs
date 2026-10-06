@@ -4,7 +4,7 @@ use semio_framework_ui_locale::AppLabels;
 
 #[semio_framework_async_macros::async_test]
 async fn preflight_finds_missing_asset() {
-    let issues = run_layout_preflight(&crate::standards::v1::subsets::any::schema::default_document(), LayoutLabels::labels(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let issues = run_layout_preflight(&crate::standards::v1::subsets::any::io::text::snapshot::default_document(), LayoutLabels::labels(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
     let mut app = layout_app().await;
     let json = render_body(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT).await;

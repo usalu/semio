@@ -34,6 +34,6 @@ pub fn diff(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSnaps
     if let Some(item) = model.setpoint_managers.iter_mut().find(|item| item.id == payload.id) {
         item.kind = kind;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

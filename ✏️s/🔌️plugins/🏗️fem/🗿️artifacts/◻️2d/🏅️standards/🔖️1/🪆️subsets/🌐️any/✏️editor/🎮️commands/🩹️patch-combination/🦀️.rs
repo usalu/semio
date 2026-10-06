@@ -1,7 +1,7 @@
 //! 🩹️ Fem2d play app command — `patch-combination`: renames a combination (`name`), re-weights one term (`term:<caseId>`) or appends one (`addTerm`) → `ReplaceCombination`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_combination;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::FemCombinationTerm;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

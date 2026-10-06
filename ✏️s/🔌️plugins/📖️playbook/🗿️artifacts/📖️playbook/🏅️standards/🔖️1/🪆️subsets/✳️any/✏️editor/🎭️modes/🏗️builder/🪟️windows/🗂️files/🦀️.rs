@@ -16,6 +16,7 @@ const PLAYBOOK_PLAY_FILES_ROOT: &str = "playbook";
 
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: PLAYBOOK_PLAY_WINDOW_FILES.into(),
         label: LocalizedLabel::native("Files", "Dateien"),
         body_key: PLAYBOOK_PLAY_BODY_FILES.into(),

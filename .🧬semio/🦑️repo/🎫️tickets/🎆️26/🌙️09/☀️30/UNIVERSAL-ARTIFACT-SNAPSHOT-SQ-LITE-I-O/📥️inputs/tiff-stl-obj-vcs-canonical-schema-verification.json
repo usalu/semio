@@ -1,0 +1,34 @@
+[
+  {
+    "owner": "tiff",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot",
+    "raw": 3652,
+    "canonical": 3886,
+    "semicolonAdded": 3902,
+    "tables": 16
+  },
+  {
+    "owner": "stl",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "raw": 1461,
+    "canonical": 1483,
+    "semicolonAdded": 1486,
+    "tables": 3
+  },
+  {
+    "owner": "obj",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot",
+    "raw": 6069,
+    "canonical": 6231,
+    "semicolonAdded": 6245,
+    "tables": 14
+  },
+  {
+    "owner": "vcs",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "raw": 406,
+    "canonical": 420,
+    "semicolonAdded": 422,
+    "tables": 2
+  }
+]

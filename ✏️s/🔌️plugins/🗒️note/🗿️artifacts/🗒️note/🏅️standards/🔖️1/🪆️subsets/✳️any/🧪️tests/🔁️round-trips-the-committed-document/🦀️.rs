@@ -18,8 +18,8 @@ mod subject {
     use super::EXAMPLE_ASSET;
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_note_note::standards::v1::subsets::any::io::snapshot::text::{parse_note_dsl, print_note_dsl};
-    use semio_s_artifact_note_note::standards::v1::subsets::any::schema::mutations::encode_note_snapshot_json;
+    use semio_s_artifact_note_note::standards::v1::subsets::any::io::text::snapshot::{parse_note_dsl, print_note_dsl};
+    use semio_s_artifact_note_note::standards::v1::subsets::any::io::text::snapshot::encode_note_snapshot_json;
 
     fn projection(snapshot: &semio_s_artifact_note_note::NoteSnapshot) -> Result<semio_repo_test_host::Json, String> {
         parse_json(&encode_note_snapshot_json(snapshot))
@@ -33,7 +33,7 @@ mod subject {
     /// reproducing it is the correct answer and any drift between the committed artifact and the
     /// printer is the defect this scenario exists to catch.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let committed = ctx.fixture_bytes(EXAMPLE_ASSET)?;
+        let committed = ctx.input_bytes(EXAMPLE_ASSET)?;
         let text = String::from_utf8(committed.clone()).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
         let parsed = parse_note_dsl(&text)?;
         let printed = print_note_dsl(&parsed);

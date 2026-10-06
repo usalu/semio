@@ -1,0 +1,616 @@
+{
+  "qualification": "Retained actual full owning380run344pass36fail;no gates run.",
+  "summary": "Summary [   8.943s] 380 tests run: 344 passed, 36 failed, 0 skipped",
+  "failures": [
+    {
+      "law": "editor::shooting::component::unit_tests::command_ids_are_unique_across_every_row",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:276:5:",
+      "reason": "assertion `left == right` failed: every ShootingCommand row must be covered by every_command()",
+      "firstDifference": {
+        "offset": 1,
+        "left": "35",
+        "right": "36"
+      }
+    },
+    {
+      "law": "editor::shooting::component::unit_tests::retained_command_catalog_matches_the_serde_json_oracle",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:249:5:",
+      "reason": "assertion `left == right` failed",
+      "firstDifference": {
+        "offset": 42,
+        "left": "ShootingRetainedCatalogSummary { routes: 36, bounded: 35, resumable: 1, migrated: 35, fail_closed: 1, unique: true, route_ids: {\"addAsset\", \"a",
+        "right": "ShootingRetainedCatalogSummary { routes: 37, bounded: 36, resumable: 1, migrated: 36, fail_closed: 1, unique: true, route_ids: {\"addAsset\", \"a"
+      }
+    },
+    {
+      "law": "editor::shooting::commands::gumball::tests::an_id_less_gesture_moves_the_live_selection",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️gumball/🧪️tests/🔬️unit/🦀️.rs:102:5:",
+      "reason": "assertion `left == right` failed: the selection fallback commits one transaction",
+      "firstDifference": {
+        "offset": 0,
+        "left": "0",
+        "right": "1"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_asset_url::tests_points_asset_prop_at_v2_mesh::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-asset-url/🧪️tests/🌐️points/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: change-asset-url/points-asset-prop-at-v2-mesh: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_scene_ambient_intensity::tests_dims_scene_ambient_to_quarter::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-scene-ambient/🧪️tests/🔅️dims/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: change-scene-ambient-intensity/dims-scene-ambient-to-quarter: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_scene_material_roughness::tests_polishes_scene_material_to_quarter::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-scene/🧪️tests/✨️polishes/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: change-scene-material-roughness/polishes-scene-material-to-quarter: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_scene_shadow_enabled::tests_switches_scene_shadows_off::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌑️change-scene-shadow/🧪️tests/🌑️switches/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: change-scene-shadow-enabled/switches-scene-shadows-off: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_scene_sun_azimuth::tests_turns_scene_sun_to_315_degrees::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-scene-sun/🧪️tests/🧭️turns/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: change-scene-sun-azimuth/turns-scene-sun-to-315-degrees: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_scene_sun_elevation::tests_raises_scene_sun_to_60_degrees::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-scene-sun/🧪️tests/🌅️raises/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: change-scene-sun-elevation/raises-scene-sun-to-60-degrees: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_scene_sun_intensity::tests_dims_scene_sun_to_half::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun/🧪️tests/💡️dims/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: change-scene-sun-intensity/dims-scene-sun-to-half: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_scene_sun_enabled::tests_switches_scene_sun_off::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-scene-sun/🧪️tests/☀️switches/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: change-scene-sun-enabled/switches-scene-sun-off: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_shot_format::tests_switches_shot_wide_to_svg::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-shot-format/🧪️tests/🎨️switches/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: change-shot-format/switches-shot-wide-to-svg: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_shot_height::tests_heightens_shot_close_to_768::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-shot-height/🧪️tests/↕️heightens/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: change-shot-height/heightens-shot-close-to-768: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_shot_shape::tests_rounds_shot_wide_to_ellipse::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-shot-shape/🧪️tests/⭕️rounds/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: change-shot-shape/rounds-shot-wide-to-ellipse: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::change_shot_width::tests_widens_shot_close_to_1024::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-shot-width/🧪️tests/↔️widens/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: change-shot-width/widens-shot-close-to-1024: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::create_asset::tests_appends_asset_detail::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-asset/🧪️tests/➕️appends/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: create-asset/appends-asset-detail: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::create_asset::tests_appends_asset_detail::committed_diff_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-asset/🧪️tests/➕️appends/🦀️.rs:106:5:",
+      "reason": "assertion `left == right` failed: create-asset/appends-asset-detail: committed diff JSON is not canonical",
+      "firstDifference": {
+        "offset": 198,
+        "left": "\"id\": String(\"asset-detail\"), \"name\": String(\"Detail\"), \"origin\": Array [Number(0.0), Number(4.0), Number(0.0)], \"url\": String(\"/mesh/detail.glb\")}], \"patched\":",
+        "right": "\"id\": String(\"asset-detail\"), \"name\": String(\"Detail\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(4.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::create_saved_camera::tests_appends_saved_camera_top::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥️create-saved-camera/🧪️tests/🎥️appends/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: create-saved-camera/appends-saved-camera-top: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::create_asset::tests_appends_asset_detail::produces_committed_diff",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-asset/🧪️tests/➕️appends/🦀️.rs:94:5:",
+      "reason": "assertion `left == right` failed: create-asset/appends-asset-detail: produced diff differs from the committed 🔺️diff/🔣️.json",
+      "firstDifference": {
+        "offset": 198,
+        "left": "\"id\": String(\"asset-detail\"), \"name\": String(\"Detail\"), \"origin\": Array [Number(0.0), Number(4.0), Number(0.0)], \"url\": String(\"/mesh/detail.glb\")}], \"patched\":",
+        "right": "\"id\": String(\"asset-detail\"), \"name\": String(\"Detail\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(4.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::create_shot::tests_appends_shot_macro::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️create-shot/🧪️tests/📸️appends/🦀️.rs:66:9:",
+      "reason": "assertion `left == right` failed: create-shot/appends-shot-macro: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::delete_saved_camera::tests_removes_trailing_cam_close::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-saved-camera/🧪️tests/🚫️removes/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: delete-saved-camera/removes-trailing-cam-close: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::delete_asset::tests_removes_trailing_asset_prop::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-asset/🧪️tests/🗑️removes/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: delete-asset/removes-trailing-asset-prop: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::drag_assets::tests_offsets_both_assets_and_skips_a_ghost::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️drag-assets/🧪️tests/🚚️offsets/🦀️.rs:65:9:",
+      "reason": "assertion `left == right` failed: drag-assets/offsets-both-assets-and-skips-a-ghost: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::delete_shot::tests_removes_trailing_shot_close::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-shot/🧪️tests/🚫️removes/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: delete-shot/removes-trailing-shot-close: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::rename_asset::tests_renames_asset_hero_to_lead::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-asset/🧪️tests/🏷️renames/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: rename-asset/renames-asset-hero-to-lead: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::rename_saved_camera::tests_relabels_cam_close_to_tight::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪️rename-saved-camera/🧪️tests/🔤️relabels/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: rename-saved-camera/relabels-cam-close-to-tight: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::rename_shot::tests_relabels_shot_close_to_detail::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-shot/🧪️tests/🔤️relabels/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: rename-shot/relabels-shot-close-to-detail: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::reorder_assets::tests_moves_asset_hero_behind_asset_prop::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-assets/🧪️tests/🔀️moves/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: reorder-assets/moves-asset-hero-behind-asset-prop: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::reorder_saved_cameras::tests_moves_cam_close_to_front::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️reorder-saved-cameras/🧪️tests/🔁️moves/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: reorder-saved-cameras/moves-cam-close-to-front: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::reorder_shots::tests_moves_shot_close_to_front::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️reorder-shots/🧪️tests/⬆️moves/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: reorder-shots/moves-shot-close-to-front: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::replace_saved_camera_view::tests_repositions_cam_close_view::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️replace-saved/🧪️tests/📍️repositions/🦀️.rs:65:9:",
+      "reason": "assertion `left == right` failed: replace-saved-camera-view/repositions-cam-close-view: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::replace_shot_camera::tests_rewrites_cam_wide_through_shot_wide::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📷️replace-shot-camera/🧪️tests/📷️rewrites/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: replace-shot-camera/rewrites-cam-wide-through-shot-wide: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::rotate_assets::tests_spins_asset_hero_about_z::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-assets/🧪️tests/🔄️spins/🦀️.rs:67:9:",
+      "reason": "assertion `left == right` failed: rotate-assets/spins-asset-hero-about-z: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::scale_assets::tests_doubles_asset_hero_scale::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️scale-assets/🧪️tests/📏️doubles/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: scale-assets/doubles-asset-hero-scale: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::set_active_asset::tests_activates_asset_prop::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️set-active-asset/🧪️tests/📌️activates/🦀️.rs:63:9:",
+      "reason": "assertion `left == right` failed: set-active-asset/activates-asset-prop: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::mutations::set_active_shot::tests_activates_shot_close::committed_json_is_canonical",
+      "location": "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/../.././././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-active-shot/🧪️tests/🎯️activates/🦀️.rs:64:9:",
+      "reason": "assertion `left == right` failed: set-active-shot/activates-shot-close: committed before JSON is not canonical",
+      "firstDifference": {
+        "offset": 497,
+        "left": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"url\": String(\"/mesh/prop.glb\")}], \"savedCamera",
+        "right": "\"), \"id\": String(\"asset-prop\"), \"name\": String(\"Prop\"), \"orientation\": Null, \"origin\": Array [Number(0.0), Number(0.0), Number(0.0)], \"scale\": Null, \"url\": Stri"
+      }
+    }
+  ],
+  "neutralOracle": {
+    "library": "serde_json",
+    "scope": "test-only-existing-dependency",
+    "ownedInterface": "ShootingRetainedCatalogOracle",
+    "runtimeDependency": false,
+    "expected": {
+      "routes": 37,
+      "bounded": 36,
+      "resumable": 1,
+      "migrated": 36,
+      "failClosed": 1,
+      "unique": true
+    }
+  },
+  "routeRows": [
+    {
+      "id": "importSnapshotJson",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "decode and replace a complete document through a retained byte cursor"
+    },
+    {
+      "id": "setActiveExample",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "encode and replace a complete fixture document through a retained cursor"
+    },
+    {
+      "id": "setActiveShot",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish a document mutation after an artifact preparation factory is installed"
+    },
+    {
+      "id": "setActiveAsset",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish a config mutation after a config preparation factory is installed"
+    },
+    {
+      "id": "setShotCamera",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "locate a shot and publish its camera mutation through a retained cursor"
+    },
+    {
+      "id": "saveCamera",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "append a saved camera through an artifact preparation factory"
+    },
+    {
+      "id": "setSunAzimuth",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish a lighting document mutation after an artifact preparation factory is installed"
+    },
+    {
+      "id": "setSunElevation",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish a lighting document mutation after an artifact preparation factory is installed"
+    },
+    {
+      "id": "setSunIntensity",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish a lighting document mutation after an artifact preparation factory is installed"
+    },
+    {
+      "id": "setAmbientIntensity",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish a lighting document mutation after an artifact preparation factory is installed"
+    },
+    {
+      "id": "setMaterialRoughness",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish a material document mutation after an artifact preparation factory is installed"
+    },
+    {
+      "id": "setShadowEnabled",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish a lighting document mutation after an artifact preparation factory is installed"
+    },
+    {
+      "id": "toggleSun",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish a lighting document mutation after an artifact preparation factory is installed"
+    },
+    {
+      "id": "setActiveShotLabel",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "locate a shot and publish its label mutation through a retained cursor"
+    },
+    {
+      "id": "setActiveShotFormat",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "locate a shot and publish its format mutation through a retained cursor"
+    },
+    {
+      "id": "setActiveShotShape",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "locate a shot and publish its shape mutation through a retained cursor"
+    },
+    {
+      "id": "patchShots",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "advance a persistent shot patch microcursor over caller-selected ids"
+    },
+    {
+      "id": "patchAssets",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "advance a persistent asset patch microcursor over caller-selected ids"
+    },
+    {
+      "id": "addShot",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "append a shot through an artifact preparation factory"
+    },
+    {
+      "id": "addAsset",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "append an asset through an artifact preparation factory"
+    },
+    {
+      "id": "importAsset",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "decode and publish an unbounded asset payload through retained byte pages"
+    },
+    {
+      "id": "resetFixture",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "encode and replace a complete fixture document through a retained cursor"
+    },
+    {
+      "id": "translateSelection",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "advance a persistent selection translation microcursor"
+    },
+    {
+      "id": "rotateSelection",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "advance a persistent selection rotation microcursor"
+    },
+    {
+      "id": "scaleSelection",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "advance a persistent selection scale microcursor"
+    },
+    {
+      "id": "setCamera",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish fixed camera configuration after a config preparation factory is installed"
+    },
+    {
+      "id": "loadSavedCamera",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "locate a saved camera through a retained document cursor before publishing config"
+    },
+    {
+      "id": "setCenterModel",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish fixed center-model configuration after a config preparation factory is installed"
+    },
+    {
+      "id": "setActiveUtility",
+      "execution": "resumable",
+      "admission": "FailClosed",
+      "feature": "publish fixed active-utility configuration after a config preparation factory is installed"
+    },
+    {
+      "id": "setShotSelection",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "publish variable shot selection configuration after a config preparation factory is installed"
+    },
+    {
+      "id": "worldPointerDown",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "replace the no-op placeholder with a retained interaction-owned operation"
+    },
+    {
+      "id": "worldPointerMove",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "replace the no-op placeholder with a retained interaction-owned operation"
+    },
+    {
+      "id": "saveDownload",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "encode the complete document into retained output pages"
+    },
+    {
+      "id": "importAssetRequest",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "emit exactly one fixed host asset file-open request"
+    },
+    {
+      "id": "exportActiveShot",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "render and encode the active shot through retained output pages"
+    },
+    {
+      "id": "exportAllShots",
+      "execution": "bounded",
+      "admission": "Migrated",
+      "feature": "advance a persistent shot render and export cursor"
+    }
+  ],
+  "sourceCommandRows": 35,
+  "sourceRoutesIncludingSetActiveUtility": 36,
+  "sourceBounded": 35,
+  "canonicalFailureCount": 31,
+  "repairRegions": [
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+      "lines": [
+        249,
+        276
+      ],
+      "intent": "Pin exact current roster35 command rows and36 total routes/35 bounded; retain unique IDs, wire equivalence, exact sets and serde oracle."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+      "intent": "Authored routes already36/35; fix only summary37/36 to36/35 (migrated35), preserve resumable1/failClosed1/unique true/all route rows/publication contracts."
+    }
+  ]
+}

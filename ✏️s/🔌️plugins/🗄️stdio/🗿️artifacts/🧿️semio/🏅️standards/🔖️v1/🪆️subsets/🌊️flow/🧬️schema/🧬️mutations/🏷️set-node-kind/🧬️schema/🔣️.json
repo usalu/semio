@@ -15,10 +15,41 @@
       "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Id of the node.",
+          "de": "Kennung des Knotens."
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "kind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Kind",
+          "de": "Art"
+        },
+        "description": {
+          "en": "Kind of the node, as the flow vocabulary names it.",
+          "de": "Art des Knotens, wie sie das Flussvokabular benennt."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

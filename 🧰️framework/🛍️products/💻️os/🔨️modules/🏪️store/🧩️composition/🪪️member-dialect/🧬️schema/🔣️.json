@@ -3,104 +3,6 @@
   "$id": "https://json.schemas.assets.semio-tech.com/os/store/composition/member-dialect/schema.json",
   "title": "Store Closed Member Dialect Admission",
   "$defs": {
-    "ClosedMemberDialectAdmission": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "contractId",
-        "bindings",
-        "cases",
-        "identityCases",
-        "graphCases",
-        "projectionSlots",
-        "projectionCases",
-        "publicRestoreCases"
-      ],
-      "properties": {
-        "contractId": {
-          "const": "semio.member-dialect-admission/v1"
-        },
-        "bindings": {
-          "type": "array",
-          "minItems": 2,
-          "items": {
-            "$ref": "#/$defs/Binding"
-          }
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 12,
-          "items": {
-            "$ref": "#/$defs/Case"
-          }
-        },
-        "identityCases": {
-          "type": "array",
-          "minItems": 9,
-          "items": {
-            "$ref": "#/$defs/IdentityCase"
-          }
-        },
-        "graphCases": {
-          "type": "array",
-          "minItems": 7,
-          "items": {
-            "$ref": "#/$defs/GraphCase"
-          }
-        },
-        "projectionSlots": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Slot"
-          }
-        },
-        "publicRestoreCases": {
-          "type": "array",
-          "minItems": 4,
-          "items": {
-            "$ref": "#/$defs/PublicRestoreCase"
-          }
-        },
-        "projectionCases": {
-          "type": "array",
-          "minItems": 12,
-          "items": {
-            "$ref": "#/$defs/ProjectionCase"
-          }
-        }
-      }
-    },
-    "PublicRestoreCase": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "parentHasChild",
-        "slot",
-        "childId",
-        "accepted"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "parentHasChild": {
-          "type": "boolean"
-        },
-        "slot": {
-          "type": "string",
-          "minLength": 1
-        },
-        "childId": {
-          "type": "string",
-          "minLength": 1
-        },
-        "accepted": {
-          "type": "boolean"
-        }
-      }
-    },
     "Slot": {
       "type": "object",
       "additionalProperties": false,
@@ -153,41 +55,6 @@
         }
       }
     },
-    "ProjectionCase": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "parent",
-        "incoming",
-        "projected",
-        "accepted"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "projected": {
-          "type": "boolean"
-        },
-        "accepted": {
-          "type": "boolean"
-        },
-        "parent": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ProjectedRef"
-          }
-        },
-        "incoming": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/ProjectedRef"
-          }
-        }
-      }
-    },
     "Edge": {
       "type": "object",
       "additionalProperties": false,
@@ -208,42 +75,6 @@
         "child": {
           "type": "string",
           "minLength": 1
-        }
-      }
-    },
-    "GraphCase": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "edges",
-        "candidate",
-        "accepted",
-        "inserted",
-        "syncAccepted"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "edges": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Edge"
-          }
-        },
-        "candidate": {
-          "$ref": "#/$defs/Edge"
-        },
-        "accepted": {
-          "type": "boolean"
-        },
-        "inserted": {
-          "type": "boolean"
-        },
-        "syncAccepted": {
-          "type": "boolean"
         }
       }
     },
@@ -268,42 +99,6 @@
         },
         "childId": {
           "type": "string"
-        }
-      }
-    },
-    "IdentityCase": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "expectedOwned",
-        "persistedId",
-        "persistedOwner",
-        "accepted"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "expectedOwned": {
-          "type": "boolean"
-        },
-        "persistedId": {
-          "type": "string"
-        },
-        "accepted": {
-          "type": "boolean"
-        },
-        "persistedOwner": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Owner"
-            },
-            {
-              "type": "null"
-            }
-          ]
         }
       }
     },
@@ -374,103 +169,6 @@
           ]
         }
       }
-    },
-    "Case": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "operation",
-        "requested",
-        "accepted",
-        "variant"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "operation": {
-          "enum": [
-            "create",
-            "open"
-          ]
-        },
-        "requested": {
-          "$ref": "#/$defs/Dialect"
-        },
-        "persisted": {
-          "$ref": "#/$defs/Persisted"
-        },
-        "accepted": {
-          "type": "boolean"
-        },
-        "variant": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "operation": {
-                "const": "open"
-              }
-            },
-            "required": [
-              "operation"
-            ]
-          },
-          "then": {
-            "properties": {
-              "persisted": {}
-            },
-            "required": [
-              "persisted"
-            ]
-          },
-          "else": {
-            "not": {
-              "properties": {
-                "persisted": {}
-              },
-              "required": [
-                "persisted"
-              ]
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "accepted": {
-                "const": true
-              }
-            },
-            "required": [
-              "accepted"
-            ]
-          },
-          "then": {
-            "properties": {
-              "variant": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          },
-          "else": {
-            "properties": {
-              "variant": {
-                "type": "null"
-              }
-            }
-          }
-        }
-      ]
     }
   }
 }

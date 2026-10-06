@@ -32,3 +32,24 @@ fn emits_all_core_descriptor_fields() {
     }
     assert!(emitted.contains("MutationLeafDescriptor") && emitted.contains("ExplicitMutation") && emitted.contains("JsonSchema"));
 }
+#[test]
+fn a_withdraw_only_descriptor_answers_no_input_schema() {
+    let fixture = fixture();
+    let authority = authority(fixture["authorityOwner"].as_str().unwrap());
+    let raw = |name: &str| fixture["cases"].as_array().unwrap().iter().find(|vector| vector["name"] == name).unwrap()["raw"].as_str().unwrap().as_bytes().to_vec();
+    let editable = parse_mutation_leaf_descriptor(&raw("valid-full"), &authority).unwrap();
+    let marked = parse_mutation_leaf_descriptor(&raw("valid-editable-true"), &authority).unwrap();
+    let withdrawn = parse_mutation_leaf_descriptor(&raw("valid-withdraw-only"), &authority).unwrap();
+    assert!(editable.editable && marked.editable && !withdrawn.editable);
+    let contract: syn::Path = syn::parse_str("::protocol").unwrap();
+    let plain = MutationLeafAttrs { contract: contract.clone(), payload: None, input_schema: None };
+    let name: syn::Ident = syn::parse_str("SetSnapshot").unwrap();
+    assert!(mutation_leaf_withdraw_only(&name, &editable, &plain).unwrap().is_none());
+    let emitted = mutation_leaf_withdraw_only(&name, &withdrawn, &plain).unwrap().unwrap().to_string();
+    assert!(emitted.contains("input_schema") && emitted.contains("None"), "{emitted}");
+    assert!(emitted.contains("with_input_value") && emitted.contains("InvalidValue") && emitted.contains("SetSnapshot") && emitted.contains("is withdraw-only"), "a withdraw-only leaf refuses every edited payload: {emitted}");
+    assert!(!emitted.contains("from_input_value"), "a withdraw-only leaf still decodes from its payload: {emitted}");
+    let wrapped = MutationLeafAttrs { contract: contract.clone(), payload: Some(syn::parse_str("Apply").unwrap()), input_schema: None };
+    let instanced = MutationLeafAttrs { contract, payload: None, input_schema: Some(syn::parse_str("schema_at_path").unwrap()) };
+    assert!(mutation_leaf_withdraw_only(&name, &withdrawn, &wrapped).is_err() && mutation_leaf_withdraw_only(&name, &withdrawn, &instanced).is_err());
+}

@@ -15,10 +15,40 @@
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     },
     "handle": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "Handle of the entity.",
+          "de": "Referenz (Handle) der Entität."
+        },
+        "ref": {
+          "kind": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "entity": {
-      "$ref": "#/$defs/CadEntity"
+      "$ref": "#/$defs/CadEntity",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Geometry",
+          "de": "Geometrie"
+        },
+        "description": {
+          "en": "Type and geometric data the entity takes: line, circle, arc, polyline, text or block insert.",
+          "de": "Typ und Geometriedaten, die die Entität erhält: Linie, Kreis, Bogen, Polylinie, Text oder Blockreferenz."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

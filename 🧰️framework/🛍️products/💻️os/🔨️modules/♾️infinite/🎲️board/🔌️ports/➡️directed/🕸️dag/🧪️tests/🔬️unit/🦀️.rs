@@ -804,10 +804,10 @@ fn dag_host_align_selection_horizontal_and_vertical_center() {
     host.set_viewport(800, 600, 1.0);
     host.set_selection(&["scale".into(), "combine".into(), "screen".into()]);
     host.align_selection("alignHorizontal").unwrap();
-    let xs: Vec<f64> = host.selected_fixture_nodes().into_iter().map(|(_, node)| node.x).collect();
+    let xs: Vec<f64> = host.selected_snapshot_nodes().into_iter().map(|(_, node)| node.x).collect();
     assert!(xs.windows(2).all(|pair| (pair[0] - pair[1]).abs() < 1e-6));
     host.align_selection("alignVertical").unwrap();
-    let ys: Vec<f64> = host.selected_fixture_nodes().into_iter().map(|(_, node)| node.y).collect();
+    let ys: Vec<f64> = host.selected_snapshot_nodes().into_iter().map(|(_, node)| node.y).collect();
     assert!(ys.windows(2).all(|pair| (pair[0] - pair[1]).abs() < 1e-6));
 }
 
@@ -817,10 +817,10 @@ fn dag_host_align_selection_left_and_distribute_horizontal() {
     host.set_viewport(800, 600, 1.0);
     host.set_selection(&["scale".into(), "combine".into(), "screen".into()]);
     host.align_selection("alignLeft").unwrap();
-    let left_edges: Vec<f64> = host.selected_fixture_nodes().into_iter().map(|(_, node)| node.x - node.width * 0.5).collect();
+    let left_edges: Vec<f64> = host.selected_snapshot_nodes().into_iter().map(|(_, node)| node.x - node.width * 0.5).collect();
     assert!(left_edges.windows(2).all(|pair| (pair[0] - pair[1]).abs() < 1e-6));
     host.align_selection("distributeHorizontal").unwrap();
-    let mut xs: Vec<f64> = host.selected_fixture_nodes().into_iter().map(|(_, node)| node.x).collect();
+    let mut xs: Vec<f64> = host.selected_snapshot_nodes().into_iter().map(|(_, node)| node.x).collect();
     xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
     assert!(xs.windows(2).all(|pair| pair[1] > pair[0]));
 }

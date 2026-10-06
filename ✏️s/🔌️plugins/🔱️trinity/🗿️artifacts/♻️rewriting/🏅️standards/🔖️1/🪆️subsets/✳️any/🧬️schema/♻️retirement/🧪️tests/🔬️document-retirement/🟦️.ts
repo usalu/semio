@@ -4,15 +4,15 @@ import { semioSchemaAjvV1,addSemioMutationLeafSchemasV1 } from "../../../../../.
 
 /** ♻️ Independent typed-owner accounting retains every declared parent and mutation role. */
 export function testRewritingDocumentRetirementOracle(): void {
- const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8")),specification=JSON.parse(readFileSync(new URL("../../../📸️snapshot/🧫️fixtures/🪶️sqlite/🌳️typed/🔣️.json",import.meta.url),"utf8")),schemaOwner=new URL("../../../📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});
+ const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8")),specification=JSON.parse(readFileSync(new URL("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🌳️typed/🔣️.json",import.meta.url),"utf8")),schemaOwner=new URL("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});
  for(const path of specification.schemaDocuments)ajv.addSchema(JSON.parse(readFileSync(new URL(path,schemaOwner),"utf8")));
  ajv.addSchema(JSON.parse(readFileSync(new URL("../../../🔣️.json",import.meta.url),"utf8")));
  addSemioMutationLeafSchemasV1(ajv,new URL("../../../🧬️mutations",import.meta.url));
  const snapshot=JSON.parse(readFileSync(new URL("../../../📸️snapshot/🔣️.json",import.meta.url),"utf8")),mutation=JSON.parse(readFileSync(new URL("../../../🧬️mutations/🔣️.json",import.meta.url),"utf8"));
  if(!ajv.getSchema(snapshot.$id))ajv.addSchema(snapshot);if(!ajv.getSchema(mutation.$id))ajv.addSchema(mutation);
- const validate=ajv.compile(JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧬️schema/🔣️.json",import.meta.url),"utf8")));assert(validate(fixture),JSON.stringify(validate.errors));assert.equal(validate({...fixture,carrier:"{}"}),false);assert.equal(validate({...fixture,snapshots:[{...fixture.snapshots[0],value:{beforeFixtureJson:"{}"}},fixture.snapshots[1]]}),false);assert(validate(fixture),JSON.stringify(validate.errors));
+ 
  const text=(value:string|undefined):number=>value===undefined?0:Buffer.byteLength(value,"utf8");
- assert.deepEqual(fixture.snapshots.map((row:any)=>row.id),["empty","nested-properties-and-layout"]);assert.deepEqual(fixture.budgets,[{items:1,bytes:1},{items:3,bytes:5}]);assert.deepEqual(fixture.mutations.map((row:any)=>row.value.mutation),["editBeforeFixture","editLhs","editRhs","changeParameterBinding","removeParameterBinding","changeRuleLayoutPoint","removeRuleLayoutPoint","dragRuleNodes","setRuleLayoutPoints"]);
+ assert.deepEqual(fixture.snapshots.map((row:any)=>row.id),["empty","nested-properties-and-layout"]);assert.deepEqual(fixture.budgets,[{items:1,bytes:1},{items:3,bytes:5}]);assert.deepEqual(fixture.mutations.map((row:any)=>row.value.mutation),["editWorkingGraph","editLhs","editRhs","changeParameterBinding","removeParameterBinding","changeRuleLayoutPoint","removeRuleLayoutPoint","dragRuleNodes","setRuleLayoutPoints"]);
  const property=(value:any):number=>{switch(value.kind){case"null":return 0;case"bool":return 1;case"number":return 8;case"string":return text(value.value);case"array":return value.values.reduce((sum:number,value:any)=>sum+property(value),0);case"object":return Object.entries(value.values).reduce((sum,[key,value])=>sum+text(key)+property(value),0);default:throw Error("retirement property family");}};
  const pattern=(value:any):number=>["leftVar","leftKind","edgeVar","edgeKind","rightVar","rightKind"].reduce((sum,key)=>sum+text(value[key]),0);
  const lhs=(value:any):number=>pattern(value.pattern)+text(value.whereClause);

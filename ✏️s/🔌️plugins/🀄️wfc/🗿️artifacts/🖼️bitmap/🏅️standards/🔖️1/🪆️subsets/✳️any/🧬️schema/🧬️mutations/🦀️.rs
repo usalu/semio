@@ -70,20 +70,9 @@ pub fn inverse_bitmap_mutation(projection: &BitmapSnapshot, mutation: &BitmapMut
 }
 
 //#region 🌉️TestBridge
-/// 🌉️ The language-neutral report of one committed specification vector — decoded, diffed, applied and inverted
-/// through this subset's production JSON codec and `Mutation` implementation — that the `mutate-bitmap` case's
-/// subject half judges with `law::vector`. Its signature names only `str`, so a generated test host reaches it.
-/// @see store::os_store::test_support::mutation_report_json
-pub fn bitmap_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    store::os_store::test_support::mutation_report_json::<BitmapSnapshot, BitmapMutation>(base_json, mutation_json, after_json)
-}
 
-/// 🔁️ Decodes one snapshot through this subset's production JSON codec and re-encodes it — the subject half of the
-/// case's `identity-round-trip` scenario.
-pub fn bitmap_snapshot_json_round_trip(text: &str) -> Result<String, String> {
-    let snapshot: BitmapSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    Ok(semio_framework_pack_json::to_json_string(&snapshot))
-}
+
+
 //#endregion 🌉️TestBridge
 
 //#region 🧪️Tests

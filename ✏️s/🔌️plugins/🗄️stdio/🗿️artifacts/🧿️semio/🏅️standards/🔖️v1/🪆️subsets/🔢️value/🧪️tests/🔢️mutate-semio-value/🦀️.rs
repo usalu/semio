@@ -37,19 +37,24 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, JsonMember, JsonValue};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonValue};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::{
         apply_semio_value_mutation, insert_list_item, inverse_semio_value_mutation, remove_list_item, remove_map_entry, remove_node, set_map_entry, set_node, set_snapshot, set_value, SemioValueMutation, SemioValuePath, SemioValuePathSegment,
     };
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{
-        decode_semio_value_pack, decode_semio_value_snapshot_json, encode_semio_value_pack, encode_semio_value_snapshot_json, parse_semio_value_dsl, print_semio_value_dsl, SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::io::binary::snapshot::{decode_semio_value_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::io::binary::snapshot::{encode_semio_value_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::io::text::snapshot::{print_semio_value_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::io::text::snapshot::{parse_semio_value_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::io::text::snapshot::{decode_semio_value_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::io::text::snapshot::{encode_semio_value_snapshot_json};
     use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Decode
     /// 🧫️ A small, forward-only, hand-written structural decoder — turns the fixture bytes
-    /// `Context::fixture_json` reads STRAIGHT from the committed file into real
+    /// `Context::snapshot_json` reads STRAIGHT from the committed file into real
     /// `SemioValueSnapshot`/`SemioValueMutation` values. It decodes JSON STRUCTURE only, field by
     /// field, mirroring each payload's own declared serde shape; it never invents or reimplements
     /// any mutation SEMANTICS, which still run through the real entry points below.
@@ -281,7 +286,7 @@ mod subject {
 
     /// 🌲️ The real building model, parsed through this repository's own DSL codec.
     fn forest(ctx: &Context) -> Result<SemioValueSnapshot, String> {
-        parse_semio_value_dsl(&utf8(ctx.fixture_bytes(FOREST_DSL)?, "the committed building model")?)
+        parse_semio_value_dsl(&utf8(ctx.input_bytes(FOREST_DSL)?, "the committed building model")?)
     }
 
     /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector.
@@ -317,7 +322,7 @@ mod subject {
 
     fn vector(ctx: &Context, position: usize, label: &str) -> Result<SemioValueSnapshot, String> {
         let uri = step_fixtures(ctx).into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} fixture", ctx.scenario.id))?;
-        decode_semio_value_snapshot_json(&utf8(ctx.fixture_bytes(&uri)?, &uri)?)
+        decode_semio_value_snapshot_json(&utf8(ctx.input_bytes(&uri)?, &uri)?)
     }
 
     /// `"noMutation"` maps to the identity mutation `SetSnapshot(set_snapshot::SetSnapshot { snapshot:
@@ -325,7 +330,7 @@ mod subject {
     /// convention `mutation` above applies for the non-vector scenarios.
     fn vector_mutation(ctx: &Context, position: usize) -> Result<SemioValueMutation, String> {
         let uri = step_fixtures(ctx).into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no mutation fixture", ctx.scenario.id))?;
-        let json = ctx.fixture_json(&uri)?;
+        let json = ctx.input_json(&uri)?;
         if json.str("mutation") == "noMutation" {
             return Ok(SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: vector(ctx, 0, "before-snapshot")? }));
         }
@@ -403,7 +408,7 @@ mod subject {
     /// `objects` array is lifted into a graph node keyed by `<model id>#objects` with a `Ref` left
     /// where it stood.
     pub fn payload_fidelity(ctx: &Context) -> Result<Outcome, String> {
-        let source = parse_json_text(&utf8(ctx.fixture_bytes(FOREST_JSON)?, "the committed building source")?).map_err(|error| format!("payload-fidelity: the committed building source must parse as RFC 8259 JSON: {error}"))?;
+        let source = parse_json_text(&utf8(ctx.input_bytes(FOREST_JSON)?, "the committed building source")?).map_err(|error| format!("payload-fidelity: the committed building source must parse as RFC 8259 JSON: {error}"))?;
         let derived = SemioValueSnapshot { schema: forest(ctx)?.schema.clone(), root: root_of(&source)?, nodes: nodes_of(&source)? };
         let committed = forest(ctx)?;
         if derived != committed {
@@ -430,18 +435,18 @@ mod subject {
     /// grammar alone, while the building model's bytes were written by the PYTHON implementation and
     /// this codec has to reproduce THOSE.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let graph_dsl = ctx.fixture_bytes(GRAPH_DSL)?;
+        let graph_dsl = ctx.input_bytes(GRAPH_DSL)?;
         let graph = parse_semio_value_dsl(&utf8(graph_dsl.clone(), "the committed demo graph")?)?;
         let graph_printed = print_semio_value_dsl(&graph);
         carrier_is_exact(graph_printed.as_bytes(), &graph_dsl)?;
-        let graph_pack = ctx.fixture_bytes(GRAPH_PACK)?;
+        let graph_pack = ctx.input_bytes(GRAPH_PACK)?;
         let graph_unpacked = decode_semio_value_pack(&graph_pack)?;
         if graph_unpacked != graph {
             return Err(disagreement("identity-round-trip: the demo graph's binary twin decodes to a different document than its text", &graph_unpacked, &graph));
         }
         let graph_repacked = encode_semio_value_pack(&graph);
         carrier_is_exact(&graph_repacked, &graph_pack)?;
-        let forest_dsl = ctx.fixture_bytes(FOREST_DSL)?;
+        let forest_dsl = ctx.input_bytes(FOREST_DSL)?;
         let document = parse_semio_value_dsl(&utf8(forest_dsl.clone(), "the committed building model")?)?;
         let forest_printed = print_semio_value_dsl(&document);
         carrier_is_exact(forest_printed.as_bytes(), &forest_dsl)?;
@@ -449,7 +454,7 @@ mod subject {
         if reparsed != document {
             return Err(disagreement("identity-round-trip: printing the building model back to DSL and reparsing it lost content", &reparsed, &document));
         }
-        let forest_pack = ctx.fixture_bytes(FOREST_PACK)?;
+        let forest_pack = ctx.input_bytes(FOREST_PACK)?;
         let forest_unpacked = decode_semio_value_pack(&forest_pack)?;
         if forest_unpacked != document {
             return Err(disagreement("identity-round-trip: the building model's binary twin decodes to a different document than its text", &forest_unpacked, &document));

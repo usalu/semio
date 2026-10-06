@@ -343,7 +343,7 @@ pub mod text {
     // so the trait-object parameter is dropped for the concrete type instead of routed through
     // `dyn_enum_close!` (an enum of one variant is worse than none — see 📓️terra-dedyn-fleet-animate-report.md).
     fn render_markup_to_svg_snapshot(renderer: &semio_framework_typeset::TypstTypesetter, markup: &str) -> Option<semio_s_artifact_stdio_svg::SvgSnapshot> {
-        use semio_s_artifact_stdio_svg::schema::snapshot::parse_svg_xml;
+        use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::parse_svg_xml;
         let svg_text = renderer.render_svg(markup)?;
         let doc = parse_svg_xml(&svg_text).ok()?;
         Some(semio_s_artifact_stdio_svg::SvgSnapshot { schema: semio_s_artifact_stdio_svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc })
@@ -356,7 +356,7 @@ pub mod text {
     /// svg codec deliberately does not attempt — a rendering concern, not a duplicated codec), but
     /// that string is now stdio-validated first instead of Typst's raw, unchecked output.
     fn typst_markup_to_validated_svg(renderer: &semio_framework_typeset::TypstTypesetter, markup: &str) -> String {
-        use semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml;
+        use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
         render_markup_to_svg_snapshot(renderer, markup).and_then(|snapshot| write_svg_xml(&snapshot.doc).ok()).unwrap_or_default()
     }
     //#endregion 🔖️TextRenderer

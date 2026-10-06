@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 
 //#region 🔖️Adapter
 /// 🔗️ The fixture URIs one line of feature text names: `shared://`, `local://`, `asset://` or `schema://` at a word
-/// start, up to whitespace or one of `"'`,;)]` — `FIXTURE_URI_RE` of `🧪️test/🟦️.ts`.
-pub fn fixture_uris_in(text: &str) -> Vec<String> {
+/// start, up to whitespace or one of `"'`,;)]` — `TEST_INPUT_URI_RE` of `🧪️test/🟦️.ts`.
+pub fn test_input_uris_in(text: &str) -> Vec<String> {
     let mut found = Vec::new();
     let mut at = 0;
     while at < text.len() {
@@ -39,20 +39,20 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
     /// 🧫️ Absolute path of a resolved fixture.
-    pub fn fixture(&self, uri: &str) -> Result<PathBuf, String> {
-        self.plan.fixture(uri).map(|relative| self.repo_root.join(relative))
+    pub fn input(&self, uri: &str) -> Result<PathBuf, String> {
+        self.plan.input(uri).map(|relative| self.repo_root.join(relative))
     }
 
     /// 🔗️ Every fixture URI the scenario's steps name, in step order and whatever scheme the feature uses — the
-    /// platform's one fixture-URI grammar (`FIXTURE_URI_RE`, `🧪️test/🟦️.ts`). The feature is the single place a
+    /// platform's one fixture-URI grammar (`TEST_INPUT_URI_RE`, `🧪️test/🟦️.ts`). The feature is the single place a
     /// vector path is written down.
-    pub fn step_fixture_uris(&self) -> Vec<String> {
-        self.scenario.steps.iter().flat_map(|(_, text)| fixture_uris_in(text)).collect()
+    pub fn step_input_uris(&self) -> Vec<String> {
+        self.scenario.steps.iter().flat_map(|(_, text)| test_input_uris_in(text)).collect()
     }
 
     /// 🧫️ Bytes of a resolved fixture.
-    pub fn fixture_bytes(&self, uri: &str) -> Result<Vec<u8>, String> {
-        std::fs::read(self.fixture(uri)?).map_err(|error| error.to_string())
+    pub fn input_bytes(&self, uri: &str) -> Result<Vec<u8>, String> {
+        std::fs::read(self.input(uri)?).map_err(|error| error.to_string())
     }
 
     /// 📥️ Bytes THIS scenario's subject host produced in `implementation`, for an oracle that declares
@@ -72,15 +72,15 @@ impl<'a> Context<'a> {
     /// recorded no-oracle decision — carry their vectors as committed JSON beside the implementation,
     /// and without this they had to be hand-transcribed into Rust literals, which is both laborious
     /// and a place for the transcription to drift away from the fixture it claims to mirror.
-    pub fn fixture_json(&self, uri: &str) -> Result<crate::protocol::Json, String> {
-        let bytes = self.fixture_bytes(uri)?;
+    pub fn input_json(&self, uri: &str) -> Result<crate::protocol::Json, String> {
+        let bytes = self.input_bytes(uri)?;
         let text = String::from_utf8(bytes).map_err(|error| format!("fixture {} is not UTF-8: {}", uri, error))?;
         crate::protocol::parse_json(&text).map_err(|error| format!("fixture {} is not valid JSON: {}", uri, error))
     }
 
     /// 🧫️ Copies an immutable fixture into the work directory and returns the mutable copy's path.
-    pub fn copy_fixture(&self, uri: &str, as_name: Option<&str>) -> Result<PathBuf, String> {
-        let source = self.fixture(uri)?;
+    pub fn copy_input(&self, uri: &str, as_name: Option<&str>) -> Result<PathBuf, String> {
+        let source = self.input(uri)?;
         let name = as_name.map(|value| value.to_string()).unwrap_or_else(|| source.file_name().map(|value| value.to_string_lossy().to_string()).unwrap_or_else(|| "fixture".to_string()));
         let target = self.work_dir.join(name);
         std::fs::create_dir_all(&self.work_dir).map_err(|error| error.to_string())?;

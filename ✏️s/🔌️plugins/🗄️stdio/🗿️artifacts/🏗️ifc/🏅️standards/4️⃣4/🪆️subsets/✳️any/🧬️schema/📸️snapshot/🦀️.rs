@@ -12,13 +12,6 @@
 //! https://www.iso.org/standard/70303.html (IFC4) / https://www.iso.org/standard/63141.html (Part 21)
 
 use crate::STDIO_IFC_DOCUMENT_SCHEMA;
-#[path="🚦️native/🦀️.rs"]
-mod native;
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite_snapshot;
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 
@@ -268,18 +261,9 @@ pub fn from_part21_document(schema: impl Into<String>, doc: &Part21Document) -> 
 //#endregion 🔖️Part21Conversion
 
 //#region 🔖️NativeCodec
-impl store::ArtifactDsl for IfcSnapshot {
-    const EXTENSION: &'static str = "ifc";
-    fn envelope_id() -> &'static str { STDIO_IFC_DOCUMENT_SCHEMA }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { native::parse_text(text) }
-    fn print_dsl(&self) -> String { native::print_text(self) }
-}
 
-impl store::ArtifactPack for IfcSnapshot {
-    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as semio_framework_os_kernel::ArtifactSqliteSnapshot>::sqlite_codec())}
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { native::encode_pack(self,options) }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { native::decode_pack(bytes,options) }
-}
+
+
 //#endregion 🔖️NativeCodec
 
 //#region 🧪️Tests

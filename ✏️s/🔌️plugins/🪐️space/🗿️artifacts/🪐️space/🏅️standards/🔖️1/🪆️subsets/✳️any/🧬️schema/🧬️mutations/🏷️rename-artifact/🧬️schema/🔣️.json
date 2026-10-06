@@ -32,7 +32,19 @@
       }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "Name the artifact shows from now on.",
+          "de": "Name, den das Artefakt von nun an trägt."
+        }
+      }
     }
   }
 }

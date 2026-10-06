@@ -312,6 +312,123 @@
       },
       "prevented": true,
       "forwarded": 0
+    },
+    {
+      "id": "number-law-arrow-is-the-renderers",
+      "target": "mirror-number",
+      "key": "ArrowUp",
+      "modifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      },
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "number-large-arrow-is-the-renderers",
+      "target": "mirror-number",
+      "key": "ArrowDown",
+      "modifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": true
+      },
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "number-page-key-is-the-renderers",
+      "target": "mirror-number",
+      "key": "PageUp",
+      "modifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      },
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "number-home-toward-a-bound-is-the-renderers",
+      "target": "mirror-number",
+      "key": "Home",
+      "modifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      },
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "number-end-without-a-bound-stays-native",
+      "target": "mirror-number",
+      "key": "End",
+      "modifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      },
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "number-enter-commits-in-the-renderer",
+      "target": "mirror-number",
+      "key": "Enter",
+      "modifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      },
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "number-typing-stays-native",
+      "target": "mirror-number",
+      "key": "7",
+      "modifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      },
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "number-chorded-arrow-stays-native",
+      "target": "mirror-number",
+      "key": "ArrowUp",
+      "modifiers": {
+        "ctrl": true,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      },
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "number-tab-stays-native",
+      "target": "mirror-number",
+      "key": "Tab",
+      "modifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      },
+      "prevented": false,
+      "forwarded": 0
     }
   ],
   "focusLossCases": [

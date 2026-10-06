@@ -1,4 +1,4 @@
-//! 🧪️ `scale-selection` fixture — `🎯️halves-node-region`.
+//! 🧪️ `scale-selection` snapshot — `🎯️halves-node-region`.
 //!
 //! Factor 0.5 about (20, 10): `node-a` closes in on the pivot and `region-1` scales its corner AND its extent.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     assert!(!inverse.is_empty(), "scale-selection/halves-node-region: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");

@@ -1,157 +1,567 @@
 {
-  "$schema": "../../🧬️schema/🔣️supersede-replay/🔣️.json",
   "family": "demo",
   "cases": [
     {
       "name": "interior-set-rewrites-downstream-adds",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "edits": [
-        [{ "operation": "setN", "n": 1 }],
-        [{ "operation": "addN", "delta": 2 }],
-        [{ "operation": "addN", "delta": 3 }, { "operation": "addN", "delta": 4 }]
+        [
+          {
+            "operation": "setN",
+            "n": 1
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 2
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 3
+          },
+          {
+            "operation": "addN",
+            "delta": 4
+          }
+        ]
       ],
-      "supersessions": [{ "edit": 0, "op": 0, "replacement": { "operation": "setN", "n": 10 } }],
+      "supersessions": [
+        {
+          "edit": 0,
+          "op": 0,
+          "replacement": {
+            "operation": "setN",
+            "n": 10
+          }
+        }
+      ],
       "expected": {
-        "state": { "n": 19 },
+        "state": {
+          "n": 19
+        },
         "outcomes": [
-          { "edit": 0, "op": 0, "worst": null, "codes": [], "superseded": true, "withdrawn": false },
-          { "edit": 1, "op": 0, "worst": "info", "codes": ["mutation.cascade"], "superseded": false, "withdrawn": false },
-          { "edit": 2, "op": 0, "worst": "info", "codes": ["mutation.cascade"], "superseded": false, "withdrawn": false },
-          { "edit": 2, "op": 1, "worst": "info", "codes": ["mutation.cascade"], "superseded": false, "withdrawn": false }
+          {
+            "edit": 0,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "edit": 1,
+            "op": 0,
+            "worst": "info",
+            "codes": [
+              "mutation.cascade"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "edit": 2,
+            "op": 0,
+            "worst": "info",
+            "codes": [
+              "mutation.cascade"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "edit": 2,
+            "op": 1,
+            "worst": "info",
+            "codes": [
+              "mutation.cascade"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
         ],
         "blocksFinalize": false
       }
     },
     {
       "name": "withdraw-folds-as-a-no-op",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "edits": [
-        [{ "operation": "setN", "n": 5 }],
-        [{ "operation": "addN", "delta": 2 }],
-        [{ "operation": "addN", "delta": 1 }]
+        [
+          {
+            "operation": "setN",
+            "n": 5
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 2
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 1
+          }
+        ]
       ],
-      "supersessions": [{ "edit": 1, "op": 0, "replacement": "withdrawn" }],
+      "supersessions": [
+        {
+          "edit": 1,
+          "op": 0,
+          "replacement": "withdrawn"
+        }
+      ],
       "expected": {
-        "state": { "n": 6 },
+        "state": {
+          "n": 6
+        },
         "outcomes": [
-          { "edit": 0, "op": 0, "worst": null, "codes": [], "superseded": false, "withdrawn": false },
-          { "edit": 1, "op": 0, "worst": null, "codes": [], "superseded": true, "withdrawn": true },
-          { "edit": 2, "op": 0, "worst": "info", "codes": ["mutation.cascade"], "superseded": false, "withdrawn": false }
+          {
+            "edit": 0,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "edit": 1,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": true,
+            "withdrawn": true
+          },
+          {
+            "edit": 2,
+            "op": 0,
+            "worst": "info",
+            "codes": [
+              "mutation.cascade"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
         ],
         "blocksFinalize": false
       }
     },
     {
       "name": "delete-blocks-every-downstream-write",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "edits": [
-        [{ "operation": "setN", "n": 5 }],
-        [{ "operation": "addN", "delta": 1 }],
-        [{ "operation": "setN", "n": 3 }]
+        [
+          {
+            "operation": "setN",
+            "n": 5
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 1
+          }
+        ],
+        [
+          {
+            "operation": "setN",
+            "n": 3
+          }
+        ]
       ],
-      "supersessions": [{ "edit": 0, "op": 0, "replacement": { "operation": "deleteN" } }],
+      "supersessions": [
+        {
+          "edit": 0,
+          "op": 0,
+          "replacement": {
+            "operation": "deleteN"
+          }
+        }
+      ],
       "expected": {
-        "state": { "n": null },
+        "state": {
+          "n": null
+        },
         "outcomes": [
-          { "edit": 0, "op": 0, "worst": null, "codes": [], "superseded": true, "withdrawn": false },
-          { "edit": 1, "op": 0, "worst": "error", "codes": ["mutation.target-missing"], "superseded": false, "withdrawn": false },
-          { "edit": 2, "op": 0, "worst": "error", "codes": ["mutation.target-missing"], "superseded": false, "withdrawn": false }
+          {
+            "edit": 0,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "edit": 1,
+            "op": 0,
+            "worst": "error",
+            "codes": [
+              "mutation.target-missing"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "edit": 2,
+            "op": 0,
+            "worst": "error",
+            "codes": [
+              "mutation.target-missing"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
         ],
         "blocksFinalize": true
       }
     },
     {
       "name": "restore-replaces-a-set",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "edits": [
-        [{ "operation": "setN", "n": 2 }],
-        [{ "operation": "addN", "delta": 4 }]
+        [
+          {
+            "operation": "setN",
+            "n": 2
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 4
+          }
+        ]
       ],
-      "supersessions": [{ "edit": 0, "op": 0, "replacement": { "operation": "restoreN", "n": 7 } }],
+      "supersessions": [
+        {
+          "edit": 0,
+          "op": 0,
+          "replacement": {
+            "operation": "restoreN",
+            "n": 7
+          }
+        }
+      ],
       "expected": {
-        "state": { "n": 11 },
+        "state": {
+          "n": 11
+        },
         "outcomes": [
-          { "edit": 0, "op": 0, "worst": null, "codes": [], "superseded": true, "withdrawn": false },
-          { "edit": 1, "op": 0, "worst": "info", "codes": ["mutation.cascade"], "superseded": false, "withdrawn": false }
+          {
+            "edit": 0,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "edit": 1,
+            "op": 0,
+            "worst": "info",
+            "codes": [
+              "mutation.cascade"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
         ],
         "blocksFinalize": false
       }
     },
     {
       "name": "interior-operation-of-a-coalesced-edit",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "edits": [
-        [{ "operation": "setN", "n": 1 }, { "operation": "addN", "delta": 1 }],
-        [{ "operation": "addN", "delta": 10 }]
+        [
+          {
+            "operation": "setN",
+            "n": 1
+          },
+          {
+            "operation": "addN",
+            "delta": 1
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 10
+          }
+        ]
       ],
-      "supersessions": [{ "edit": 0, "op": 1, "replacement": { "operation": "addN", "delta": 5 } }],
+      "supersessions": [
+        {
+          "edit": 0,
+          "op": 1,
+          "replacement": {
+            "operation": "addN",
+            "delta": 5
+          }
+        }
+      ],
       "expected": {
-        "state": { "n": 16 },
+        "state": {
+          "n": 16
+        },
         "outcomes": [
-          { "edit": 0, "op": 0, "worst": null, "codes": [], "superseded": false, "withdrawn": false },
-          { "edit": 0, "op": 1, "worst": "info", "codes": ["mutation.cascade"], "superseded": true, "withdrawn": false },
-          { "edit": 1, "op": 0, "worst": "info", "codes": ["mutation.cascade"], "superseded": false, "withdrawn": false }
+          {
+            "edit": 0,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "edit": 0,
+            "op": 1,
+            "worst": "info",
+            "codes": [
+              "mutation.cascade"
+            ],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "edit": 1,
+            "op": 0,
+            "worst": "info",
+            "codes": [
+              "mutation.cascade"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
         ],
         "blocksFinalize": false
       }
     },
     {
       "name": "a-later-set-absorbs-an-earlier-supersession",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "edits": [
-        [{ "operation": "setN", "n": 1 }],
-        [{ "operation": "setN", "n": 2 }],
-        [{ "operation": "addN", "delta": 3 }]
+        [
+          {
+            "operation": "setN",
+            "n": 1
+          }
+        ],
+        [
+          {
+            "operation": "setN",
+            "n": 2
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 3
+          }
+        ]
       ],
       "supersessions": [
-        { "edit": 0, "op": 0, "replacement": { "operation": "setN", "n": 100 } },
-        { "edit": 2, "op": 0, "replacement": "withdrawn" }
+        {
+          "edit": 0,
+          "op": 0,
+          "replacement": {
+            "operation": "setN",
+            "n": 100
+          }
+        },
+        {
+          "edit": 2,
+          "op": 0,
+          "replacement": "withdrawn"
+        }
       ],
       "expected": {
-        "state": { "n": 2 },
+        "state": {
+          "n": 2
+        },
         "outcomes": [
-          { "edit": 0, "op": 0, "worst": null, "codes": [], "superseded": true, "withdrawn": false },
-          { "edit": 1, "op": 0, "worst": null, "codes": [], "superseded": false, "withdrawn": false },
-          { "edit": 2, "op": 0, "worst": null, "codes": [], "superseded": true, "withdrawn": true }
+          {
+            "edit": 0,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "edit": 1,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "edit": 2,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": true,
+            "withdrawn": true
+          }
         ],
         "blocksFinalize": false
       }
     },
     {
       "name": "an-input-breaking-the-supersede-law-folds-as-a-fatal-no-op",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "edits": [
-        [{ "operation": "setN", "n": 1 }],
-        [{ "operation": "addN", "delta": 2 }],
-        [{ "operation": "addN", "delta": 3 }]
+        [
+          {
+            "operation": "setN",
+            "n": 1
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 2
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 3
+          }
+        ]
       ],
       "supersessions": [
-        { "edit": 0, "op": 0, "replacement": { "invalid": { "schema": "other/v1", "payloadHex": "0100" } } },
-        { "edit": 2, "op": 0, "replacement": { "invalid": { "schema": "demo/v1", "payloadHex": "ff13" } } }
+        {
+          "edit": 0,
+          "op": 0,
+          "replacement": {
+            "invalid": {
+              "schema": "other/v1",
+              "payloadHex": "0100"
+            }
+          }
+        },
+        {
+          "edit": 2,
+          "op": 0,
+          "replacement": {
+            "invalid": {
+              "schema": "demo/v1",
+              "payloadHex": "ff13"
+            }
+          }
+        }
       ],
       "expected": {
-        "state": { "n": 2 },
+        "state": {
+          "n": 2
+        },
         "outcomes": [
-          { "edit": 0, "op": 0, "worst": "fatal", "codes": ["mutation.invariant"], "superseded": true, "withdrawn": false },
-          { "edit": 1, "op": 0, "worst": "info", "codes": ["mutation.cascade"], "superseded": false, "withdrawn": false },
-          { "edit": 2, "op": 0, "worst": "fatal", "codes": ["mutation.invariant"], "superseded": true, "withdrawn": false }
+          {
+            "edit": 0,
+            "op": 0,
+            "worst": "fatal",
+            "codes": [
+              "mutation.invariant"
+            ],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "edit": 1,
+            "op": 0,
+            "worst": "info",
+            "codes": [
+              "mutation.cascade"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          },
+          {
+            "edit": 2,
+            "op": 0,
+            "worst": "fatal",
+            "codes": [
+              "mutation.invariant"
+            ],
+            "superseded": true,
+            "withdrawn": false
+          }
         ],
         "blocksFinalize": true
       }
     },
     {
       "name": "a-deleted-start-heals-downstream",
-      "initial": { "n": null },
+      "initial": {
+        "n": null
+      },
       "edits": [
-        [{ "operation": "restoreN", "n": 4 }],
-        [{ "operation": "addN", "delta": 1 }]
+        [
+          {
+            "operation": "restoreN",
+            "n": 4
+          }
+        ],
+        [
+          {
+            "operation": "addN",
+            "delta": 1
+          }
+        ]
       ],
-      "supersessions": [{ "edit": 0, "op": 0, "replacement": { "operation": "restoreN", "n": 40 } }],
+      "supersessions": [
+        {
+          "edit": 0,
+          "op": 0,
+          "replacement": {
+            "operation": "restoreN",
+            "n": 40
+          }
+        }
+      ],
       "expected": {
-        "state": { "n": 41 },
+        "state": {
+          "n": 41
+        },
         "outcomes": [
-          { "edit": 0, "op": 0, "worst": null, "codes": [], "superseded": true, "withdrawn": false },
-          { "edit": 1, "op": 0, "worst": "info", "codes": ["mutation.cascade"], "superseded": false, "withdrawn": false }
+          {
+            "edit": 0,
+            "op": 0,
+            "worst": null,
+            "codes": [],
+            "superseded": true,
+            "withdrawn": false
+          },
+          {
+            "edit": 1,
+            "op": 0,
+            "worst": "info",
+            "codes": [
+              "mutation.cascade"
+            ],
+            "superseded": false,
+            "withdrawn": false
+          }
         ],
         "blocksFinalize": false
       }

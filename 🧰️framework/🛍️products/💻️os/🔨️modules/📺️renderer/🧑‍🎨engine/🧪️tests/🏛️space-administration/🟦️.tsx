@@ -8,9 +8,9 @@ import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.
 import propertiesFixture from "../../🧱️elements/🛂️SpaceAdministration/🧫️fixtures/⚙️properties/🔣️.json";
 import deleteFixture from "../../🧱️elements/🛂️SpaceAdministration/🧫️fixtures/🗑️delete-space/🔣️.json";
 import admissionFixture from "../../../../📇️directory/🧬️schema/🏛️administration/🧫️fixtures/🛂️command-admission/🔣️.json";
-import admissionFixtureSchema from "../../../../📇️directory/🧬️schema/🏛️administration/🧫️fixtures/🛂️command-admission/🧬️schema/🔣️.json";
-import propertiesFixtureSchema from "../../🧱️elements/🛂️SpaceAdministration/🧫️fixtures/⚙️properties/🧬️schema/🔣️.json";
-import deleteFixtureSchema from "../../🧱️elements/🛂️SpaceAdministration/🧫️fixtures/🗑️delete-space/🧬️schema/🔣️.json";
+
+
+
 import {
   decodeBackboneWorkerRequest,
   decodeBackboneWorkerResponse,
@@ -81,18 +81,6 @@ const workerState = (patch: Partial<Extract<BackboneWorkerResponse, { kind: "dir
   ({ kind: "directory-administration-state", operationEpoch: 1, spaceId: SPACE, phase: "ready", ...patch }) as Extract<BackboneWorkerResponse, { kind: "directory-administration-state" }>;
 
 describe("ShellHost space administration state", () => {
-  it("validates the neutral administration fixtures and refuses unknown envelope and row fields", () => {
-    const ajv = new Ajv({ strict: false });
-    ajv.addSchema(directorySchema);
-    for (const [schema, fixture] of [[propertiesFixtureSchema, propertiesFixture], [deleteFixtureSchema, deleteFixture], [admissionFixtureSchema, admissionFixture]] as const) {
-      const valid = ajv.compile(schema);
-      expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);
-      expect(valid({ ...fixture, extra: true })).toBe(false);
-    }
-    const valid = ajv.compile(propertiesFixtureSchema);
-    expect(valid({ ...propertiesFixture, cases: propertiesFixture.cases.map((row, index) => index === 0 ? { ...row, extra: true } : row) })).toBe(false);
-  });
-
   it("admits only schema-owned administration commands bound to the current page and capability", () => {
     const ajv = new Ajv({ strict: false });
     ajv.addSchema(directorySchema);

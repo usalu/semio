@@ -1,0 +1,12 @@
+{
+  "mutation": "rotateElements",
+  "targets": [
+    "wall-1"
+  ],
+  "axis": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "angle": 1.5707963267948966
+}

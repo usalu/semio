@@ -1,0 +1,9 @@
+# Board API Source 5 Audit
+
+The latest source authority was checked against exact Closure2, all 351 row body hashes and inverse predecessors, 576 full source-frame hashes, sequential Board cuts, complete original origin inputs, 3,081 function association hashes, 12 owned/Ajv controls and nine retained syntax observations. This observes source metadata only. The owned scene prepare source replaces the temporary full BoardHost constructor route with empty typed entity owners; publication admission is separate and precedes host borrowing. Controlled allocation, partial decoder retirement, full synchronize/browser/layout composition and native behavior remain explicitly unproved.
+
+The finite admission is false: source hashes and association hashes pass, but five newly authored scene files lack their initial null-to-full-body cut association in the ledger. Consequently sequential reconstruction has two predecessor mismatches and three missing final endpoints. The producer confirmed this metadata defect and is staging Source6 with explicit initial cuts and new-function associations. Fresh scene/prepare/test proposed bodies contain zero BoardHost::new/default/new_normal calls; this is a source observation only.
+
+## Corrected Source6
+
+The separate Source6 retains the exact Source5 endpoint rows and now includes all five initial null-to-full creation cuts before later edits. Full sequential reconstruction passes, all351 body/inverse rows and576 source frames hash correctly,3,110 association hashes pass,13 changed Rust endpoints have matching retained zero-error syntax observations, and12 controls agree. Full three origin objects remain exact. Scene prepare bodies contain no temporary whole BoardHost constructor calls. This is source metadata admission only; all named allocation/decoder/browser/layout/native gaps remain held.

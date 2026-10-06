@@ -1,3 +1,5 @@
+use crate::standards::v1::subsets::any::io::text::mutations::encode_en1995_mutation_json;
+use crate::standards::v1::subsets::any::io::text::mutations::decode_en1995_mutation_json;
 use super::*;
 use protocol::SemanticMutation;
 

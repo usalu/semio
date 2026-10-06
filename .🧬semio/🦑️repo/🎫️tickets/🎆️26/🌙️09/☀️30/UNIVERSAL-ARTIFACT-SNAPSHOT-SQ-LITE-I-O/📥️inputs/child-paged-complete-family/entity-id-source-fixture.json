@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "wire": "17",
+  "paddingByte": 32,
+  "paddingBytes": 8192,
+  "sourceBytes": 8194,
+  "secondSource": [
+    0,
+    127,
+    128,
+    255
+  ],
+  "parent": "par\u0000ent",
+  "slot": "slöt",
+  "ordinal": 7,
+  "childCases": [
+    [],
+    [
+      0
+    ],
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      0
+    ]
+  ],
+  "invocationChildren": [
+    {
+      "id": "z-child",
+      "operations": [
+        0
+      ]
+    },
+    {
+      "id": "ä-child",
+      "operations": [
+        1
+      ]
+    },
+    {
+      "id": "a-child",
+      "operations": [
+        1,
+        0
+      ]
+    },
+    {
+      "id": "a-child",
+      "operations": [
+        0,
+        1
+      ]
+    }
+  ],
+  "invocationOrders": [
+    [
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      1,
+      0,
+      2,
+      3
+    ],
+    [
+      1,
+      3,
+      0,
+      2
+    ],
+    [
+      3,
+      2,
+      1,
+      0
+    ]
+  ],
+  "maximumAllocationBytes": 65536,
+  "maximumItems": 1,
+  "maximumBytes": 4096
+}

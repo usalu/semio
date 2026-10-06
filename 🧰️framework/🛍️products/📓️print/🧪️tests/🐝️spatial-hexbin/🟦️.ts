@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import { hexbin as makeHexbin } from "d3-hexbin";
-import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -48,7 +48,7 @@ export default defineTestAdapter({
       oracle: (ctx: AdapterContext) => ({ projection: { "spatial/hexbin": rows(ctx).flatMap((row) => bins(Number(row.radius))) } }),
       /** 🎯️ `\SemioVizHexbin` over the same points and radii. */
       subject: async (ctx: AdapterContext): Promise<{ projection: ProbeProjection }> => {
-        const records = await compileVizProbe(ctx.fixture("shared://🐝️spatial-hexbin/hexbin.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+        const records = await compileVizProbe(ctx.input("shared://🐝️spatial-hexbin/hexbin.tex"), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
         return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
       },
     },

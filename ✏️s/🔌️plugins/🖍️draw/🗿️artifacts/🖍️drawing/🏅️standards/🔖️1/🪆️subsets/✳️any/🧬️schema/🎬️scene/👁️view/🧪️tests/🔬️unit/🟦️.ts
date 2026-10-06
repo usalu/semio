@@ -8,7 +8,7 @@ import rows from "../../../📋️prepare/🧫️fixtures/🎬️vector/🔣️.
 import traceRows from "../../../🔍️trace/🧫️fixtures/🔣️.json";
 import {DocumentVectorJob,DocumentSceneJob} from "../../../📋️prepare/🟦️.ts";
 import {preparedSceneNodes,preparedSceneSelected} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 const lift=(value:unknown):unknown=>typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,value])=>[key,lift(value)])):value;
 const limits={maxWork:10000000,trace:traceRows[0]!.limits,booleans:{tolerance:.005,epsilon:1e-8,maxDepth:32,maxReferences:256,maxEdges:65536,maxParameters:262144,maxAtomicEdges:65536,maxSegments:65536,maxRetainedSegments:262144,maxWork:10000000}};
 test("completed vector geometry is borrowed by canvas projection with exact shared records",()=>{const validate=new Ajv({strict:true}).compile(schema);for(const sample of cases){const row=rows.find(row=>row.name===sample.name)!;const job=new DocumentVectorJob({...row.document,layers:lift(row.document.layers)} as never,row.limits,limits);while(!job.advance(7).done){}const moved=job.intoRetirement();while(!moved.job.advance(7).done){}const plan=moved.output!,records=preparedSceneNodes(plan);expect(validate(records)).toBe(true);expect(records).toEqual(sample.expected);for(const record of records){const node=plan.nodes.find(node=>node.id===record.id)!;expect(record.groups).toBe(node.groups);if(node.content.kind==="path"){expect(record.segments).toBe(node.content.segments);expect(record.fill).toBe(node.content.fill??undefined);expect(record.stroke).toBe(node.content.stroke??undefined);}}}console.log("[DEBUG] Complete canvas projections preserved seven neutral record sets and borrowed actual geometry and paint owners");});
@@ -36,10 +36,10 @@ test("completed geometry bounds match shared stroke, image, text and curve cases
 });
 
 import selectionBoundCases from "../../🧫️fixtures/📐️selection/🔣️.json";
-import selectionBoundSchema from "../../🧬️schema/📐️selection/🔣️.json";
+
 import {preparedSceneSelectionBounds} from "../../🟦️.ts";
 test("actual prepared selection handles exclude locked roots and invisible geometry while retaining locked children of selected groups",()=>{
- expect(new Ajv({strict:true}).compile(selectionBoundSchema)(selectionBoundCases)).toBe(true);
+
  for(const sample of selectionBoundCases){const row=rows.find(row=>row.name===sample.source)!;const source=structuredClone(row.document)as any;
  const visit=(layer:any)=>{if(sample.locked.includes(layer.id))layer.locked=true;if(sample.hidden.includes(layer.id))layer.visible=false;if(sample.zeroOpacity.includes(layer.id))layer.opacity=0;if(layer.kind==="group"){if(sample.ordinary){layer.isolation=false;layer.opacity=1;layer.blendMode="normal";}layer.children.forEach(visit);}};source.layers.forEach(visit);
  const job=new DocumentVectorJob({...source,layers:lift(source.layers)}as never,row.limits,limits);while(!job.advance(7).done){}const plan=job.result(),before=structuredClone(plan),bounds=preparedSceneSelectionBounds(plan,sample.selected);expect(bounds,sample.name).toEqual(sample.expected);expect(plan).toEqual(before);

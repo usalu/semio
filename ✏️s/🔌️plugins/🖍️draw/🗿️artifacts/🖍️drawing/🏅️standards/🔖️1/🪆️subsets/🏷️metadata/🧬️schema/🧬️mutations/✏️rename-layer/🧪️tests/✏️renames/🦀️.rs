@@ -103,7 +103,7 @@ async fn produces_committed_diff() {
     assert_eq!(delta.patched[0].id, "shape-a", "the entry addresses the layer by its unchanged identity key");
     let patch = &delta.patched[0].patch;
     assert_eq!(patch.name.as_deref(), Some("Alpha Renamed"), "the name lane carries the new label");
-    assert!(patch.layer_json.is_none(), "a rename must not degrade into a whole-layer replacement");
+    assert!(patch.layer.is_none(), "a rename must not degrade into a whole-layer replacement");
     assert!(delta.removed.is_empty() && delta.added.is_empty(), "a rename is never expressed as a remove-and-re-add");
 }
 

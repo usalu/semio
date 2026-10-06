@@ -4,10 +4,6 @@ use crate::schema::mutation_support::{diff_at_path, resolve, JsonPath};
 use crate::schema::snapshot::JsonValue;
 use crate::JsonSnapshot;
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]

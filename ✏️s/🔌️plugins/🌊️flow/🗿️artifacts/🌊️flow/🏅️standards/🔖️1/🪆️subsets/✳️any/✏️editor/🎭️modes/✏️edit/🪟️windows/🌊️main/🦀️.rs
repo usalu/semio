@@ -31,6 +31,7 @@ const FLOW_PLAY_SURFACE_MAIN: &str = "flow.play.main";
 /// [`window_measures`], not frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: FLOW_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Flow", "Flow"),
         body_key: FLOW_PLAY_BODY_MAIN.into(),
@@ -95,7 +96,7 @@ pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &
     // 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
     let (nodes, edges) = with_host_from_snapshot(snapshot, config, session, |host| dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    let (fixture_json, flow_extras) = with_live_host_snapshot(snapshot, |live| {
+    let (snapshot_json, flow_extras) = with_live_host_snapshot(snapshot, |live| {
         (Some(semio_framework_pack_json::to_json_string(live)), flow_backed_node_graph_extras(live, &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session)))
     });
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
@@ -109,7 +110,7 @@ pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &
         }),
         capabilities_json: flow_extras.capabilities_json,
         lod_json: flow_extras.lod_json,
-        host_snapshot_json: flow_extras.host_snapshot_json.or(fixture_json),
+        host_snapshot_json: flow_extras.host_snapshot_json.or(snapshot_json),
         eval_json: flow_extras.eval_json,
         status_json: flow_extras.status_json,
         selection: selection.to_vec(),

@@ -47,25 +47,9 @@ impl protocol::SemanticMutation<DagSnapshot> for DagMutation {
     }
 }
 
-/// 📝️ No parent operation line exists.
-impl protocol::OpText for DagMutation {
-    fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "a DAG has no parent-lane mutation; content edits are child-lane leaves", semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        match *self {}
-    }
-}
 
-/// 💾️ No parent operation record exists.
-impl protocol::OpBinary for DagMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        match *self {}
-    }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Err(protocol::ProtocolError::Malformed { what: "dag-mutation", offset: 0, detail: "a DAG has no parent-lane mutation; content edits are child-lane leaves".into() })
-    }
-}
+
+
 //#endregion 🔖️Aggregate
 
 //#region 🧪️Tests

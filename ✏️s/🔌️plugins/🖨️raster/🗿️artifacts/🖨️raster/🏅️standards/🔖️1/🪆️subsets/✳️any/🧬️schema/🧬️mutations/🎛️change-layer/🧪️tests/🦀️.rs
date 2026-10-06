@@ -26,7 +26,7 @@ fn adjustment_parameter_vectors_preserve_other_fields_and_exact_undo() {
 }
 #[test]
 fn adjustment_parameter_diff_composition_keeps_brightness_and_contrast() {
-    let mut before=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+    let mut before=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     let layer=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
     let id=crate::standards::v1::subsets::any::schema::layer_node_id(&layer).to_owned();before.layers.push(layer);
     let first=RasterMutation::ChangeLayerAdjustmentParameter(ChangeLayerAdjustmentParameter {layer_id:id.clone(),parameter:"brightness".into(),expected:None,value:Some(crate::RasterAdjustmentNumber::decimal(0.2))});
@@ -39,7 +39,7 @@ fn adjustment_parameter_diff_composition_keeps_brightness_and_contrast() {
 
 #[test]
 fn adjustment_parameter_diff_can_replace_a_key_at_map_capacity() {
-    let mut before=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+    let mut before=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     let mut layer=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
     let id=crate::standards::v1::subsets::any::schema::layer_node_id(&layer).to_owned();
     let RasterLayerNode::Adjustment {params,..}=&mut layer else {panic!("adjustment")};
@@ -57,7 +57,7 @@ fn adjustment_parameter_diff_can_replace_a_key_at_map_capacity() {
 fn adjustment_parameter_patch_vectors_match_schema_acceptance() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
     for row in fixture["parameterPatches"].as_array().unwrap() {
-        let mut before=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+        let mut before=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
         let layer=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
         let id=crate::standards::v1::subsets::any::schema::layer_node_id(&layer).to_owned();
         before.layers.push(layer);

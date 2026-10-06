@@ -1,0 +1,15 @@
+# Markdown Three Held Provider Review
+
+Read-only 2026-10-06. Reviewed [SQL/visitor candidate](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/md-complete-semantic/provider-1-held.rs), [native join candidate](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/md-complete-semantic/provider-2-held.rs), [borrowed census candidate](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/md-complete-semantic/provider-3-held.rs). No compiler/gate run.
+
+Fresh readback confirms Root's announced fixes: candidate3 inner module doc now precedes the table constant; obsolete row-only borrowed_census helpers are absent from candidate2. No definite remaining static blocker found in the reviewed role, API and privacy boundaries.
+
+The borrowed exact root4/block11/inline8/ListItem1 Records require every derived optional entry and accept Absent explicitly. Enum ordinal whitelists map to actual SQL tags. Masks preserve the original controlled constructor's mandatory fields, inactive fields and permitted empty collections; optional list start remains independent of ordered. Fresh actual SQL md_heading admits level0..255, confirming UInt8 is the correct authority and a1..6 restriction would be invented.
+
+Copied cell formulas preserve all27 tables/max4/schema3901, NULL0 and original full88/1879/empty1/37 authorities. Each base block/inline entity costs8+tagUTF8 plus its exact subtype row: heading16, paragraph/quote/break/emphasis/strong8, list24+optionalStart8, code8+optionalInfo+literal, HTML8+raw, link8+URL+optionalTitle, image8+alt+URL+optionalTitle. Each ownership relation32; list item24. There are no IEEE fields in this native family.
+
+Paid byte-per-node block and inline owner frontiers are allocated by the original NativeDecodeControl before typed binding. Root references are bounds/unique checked; same-domain children must be forward; block-to-inline edges have no parent ordinal comparison. Final owner coverage closes aliases/unowned nodes. Scoped bounded256-byte text and whole-census stages restore caller binder work; no private controller or typed/SQL mirror introduced.
+
+SQL and physical preflight rewrite every WriteFrame push to actual RowWriter/NativeEncodingBound allocate_frontier/push_frontier APIs. Initial capacity is paid; subsequent growth is paid. The physical forecast remains file_only with original4096 node/24text constants, separate from exact semantic copied limits. Native encode admits typed values before project_controlled; native decode admits the original borrowed record before Snapshot::__dsl_from_record_controlled and original reconstruction. pub(super) methods under Snapshot/sqlite remain callable from sibling owned_pack through parent Snapshot visibility.
+
+Static review does not qualify genuine original cancellation, deep allocation, reconstruction retirement, exact/one-short laws or public IO. The three-path coherent candidate must remain held until original Before and owning After receipts exist.

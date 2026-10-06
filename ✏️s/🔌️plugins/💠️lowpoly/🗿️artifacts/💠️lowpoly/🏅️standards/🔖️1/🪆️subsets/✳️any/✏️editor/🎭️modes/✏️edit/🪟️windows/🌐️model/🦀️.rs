@@ -58,6 +58,7 @@ pub const LOWPOLY_MAIN_ACTIONS: &[&str] = &[
 /// 🧱️ Stitched into the app manifest by `crate::editor::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: LOWPOLY_PLAY_WINDOW_MAIN.into(),
         label: semio_framework_ui_locale::LocalizedLabel::native("Model", "Modell"),
         body_key: LOWPOLY_PLAY_BODY_MAIN.into(),

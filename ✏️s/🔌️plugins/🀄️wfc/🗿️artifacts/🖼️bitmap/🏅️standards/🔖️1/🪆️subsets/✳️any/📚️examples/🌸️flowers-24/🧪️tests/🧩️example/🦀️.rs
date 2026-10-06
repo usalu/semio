@@ -2,7 +2,7 @@
 //! exercises the ground constraint and the pin lane.
 
 use super::{indices, label, snapshot, EDGE, GROUND, PETAL, PRIMARY_TEXT, SEED, SKY, STEM};
-use crate::schema::snapshot::text::{parse_dsl, print_dsl};
+use crate::io::text::snapshot::{parse_dsl, print_dsl};
 
 #[test]
 fn committed_asset_is_the_print_of_the_authored_spec() {
@@ -16,8 +16,8 @@ fn committed_asset_parses_back_to_the_authored_spec() {
 
 #[test]
 fn the_pack_codec_round_trips_the_same_document() {
-    let bytes = crate::schema::snapshot::binary::encode(&snapshot());
-    assert_eq!(crate::schema::snapshot::binary::decode(&bytes).expect("committed document decodes"), snapshot());
+    let bytes = crate::io::binary::snapshot::encode(&snapshot());
+    assert_eq!(crate::io::binary::snapshot::decode(&bytes).expect("committed document decodes"), snapshot());
 }
 
 #[test]

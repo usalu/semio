@@ -67,6 +67,20 @@
           "test-fresh-component"
         ]
       }
+    },
+    "test-canonical-descriptor-pack": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-canonical-descriptor-pack",
+        "cwd": "{projectRoot}"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "test-canonical-descriptor-pack"
+        ]
+      }
     }
   },
   "namedInputs": {

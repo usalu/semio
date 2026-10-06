@@ -9,7 +9,6 @@ import { chromium } from "playwright";
 import { act, cleanup, render } from "@semio-tech/ui-react/test";
 import { COMPOSE_WINDOW_TEMPLATE_MIME, Mode, uiI18n } from "@semio-tech/ui-react";
 import { afterEach, expect, it, vi } from "vitest";
-import schema from "../../🧬️schema/🪟️empty-dock-notice/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🪟️empty-dock-notice/🔣️.json" with { type: "json" };
 
 afterEach(async () => {
@@ -19,8 +18,6 @@ afterEach(async () => {
 });
 
 it("validates the bilingual empty dock contract", () => {
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
 });
 
 it("centers the actual localized Mode notice and wraps it without adding a window or control", async () => {

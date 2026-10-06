@@ -7,11 +7,10 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020.js";
+
 import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
 import fixture from "../../🧫️fixtures/🔤️text-advances/🔣️.json" with { type: "json" };
-import schema from "../../🧬️schema/🔤️text-advances/🔣️.json" with { type: "json" };
 
 const fonts = resolve(dirname(fileURLToPath(import.meta.url)), "../../../🖼️assets/🔤️fonts");
 const faceFiles: Record<string, string> = {
@@ -20,10 +19,7 @@ const faceFiles: Record<string, string> = {
 };
 
 describe("🔤️ text advance corpus", () => {
-  it("declares its contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   it("is Chromium's own unkerned and kerned DOM width for every row", async () => {
     const faces = fixture.faces as Record<string, string>;

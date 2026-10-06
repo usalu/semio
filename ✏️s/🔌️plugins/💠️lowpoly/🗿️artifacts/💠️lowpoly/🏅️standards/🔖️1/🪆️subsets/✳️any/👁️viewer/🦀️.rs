@@ -47,7 +47,7 @@ pub struct LowpolyViewer;
 
 impl ArtifactViewer for LowpolyViewer {
     type Snapshot = LowpolySnapshot;
-    type Mutation = crate::op::LowpolyMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

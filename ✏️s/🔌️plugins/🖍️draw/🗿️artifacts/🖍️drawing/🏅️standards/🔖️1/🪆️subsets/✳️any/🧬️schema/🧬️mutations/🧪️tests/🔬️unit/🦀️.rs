@@ -1,5 +1,8 @@
+use crate::standards::v1::subsets::any::io::text::mutations::parse_layer_field_input;
 use super::*;
-use crate::schema::{create_drawing_path_layer, create_drawing_shape_layer_rect, default_drawing_document};
+use crate::schema::{create_drawing_shape_layer_rect};
+use crate::standards::v1::subsets::any::io::text::snapshot::{default_drawing_document};
+use crate::standards::v1::subsets::any::io::text::snapshot::{create_drawing_path_layer};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 
@@ -246,7 +249,7 @@ async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], in
     let mut store = store::ArtifactStore::new(store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(crate::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None)).await.expect("the store opens");
     store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
     for mutation in log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a selection transform applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("a selection transform applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), log.len(), "one applied operation per committed leaf");

@@ -30,7 +30,7 @@ var instants = []int64{-2208988800, 0, 951782400, 1234567890, 1767225600, 176990
 
 // 🧩️ commitsOf is the recorded commit stream every scenario groups.
 func commitsOf(ctx *host.Context) ([]metrics.CommitDelta, error) {
-	raw, err := ctx.FixtureBytes("shared://🎞️git-transcript.json")
+	raw, err := ctx.InputBytes("shared://🎞️git-transcript.json")
 	if err != nil {
 		return nil, err
 	}

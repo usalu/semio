@@ -1,4 +1,4 @@
-//! 🧪️ `scale-selection` fixture — `⏸️keeps-a-unit-factor`.
+//! 🧪️ `scale-selection` snapshot — `⏸️keeps-a-unit-factor`.
 //!
 //! A unit factor is a Warning-level `mutation.no-op`: the default diff, nothing to undo.
 //!
@@ -104,5 +104,5 @@ fn declared_outcome_holds() {
 /// ↩️ Nothing moved, so nothing is undone.
 #[test]
 fn inverse_is_empty() {
-    assert!(inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture").is_empty(), "scale-selection/keeps-a-unit-factor: a no-op must yield no inverse step");
+    assert!(inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse snapshot").is_empty(), "scale-selection/keeps-a-unit-factor: a no-op must yield no inverse step");
 }

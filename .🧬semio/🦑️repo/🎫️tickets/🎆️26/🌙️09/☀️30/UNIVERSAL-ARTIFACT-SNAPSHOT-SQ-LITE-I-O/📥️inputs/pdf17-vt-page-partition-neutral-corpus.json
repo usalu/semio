@@ -1,0 +1,39 @@
+{
+  "kind": "native graph admission and exact inverse",
+  "schema": "s.stdio.pdf.1.7",
+  "pageGraph": {
+    "Catalog": 1,
+    "Pages": 2,
+    "Page": 3,
+    "Count": 1,
+    "Kids": [
+      3
+    ],
+    "Parent": 2,
+    "MediaBox": [
+      0,
+      0,
+      100,
+      100
+    ]
+  },
+  "partitionGraph": {
+    "DPartRoot": 5,
+    "DPartRootNode": 4,
+    "Parent": 5,
+    "Start": 3,
+    "DPM": {
+      "Job": "neutral job"
+    }
+  },
+  "refusals": [
+    "no Page",
+    "dangling Pages",
+    "unreachable detached Page",
+    "wrong Page.Parent",
+    "cyclic Pages",
+    "typed-only Page"
+  ],
+  "inverse": "entire Snapshot and retained object order restored, no orphan Root/node",
+  "independentOracle": "not executed; installed lopdf must separately inspect reachable graph and all graph references"
+}

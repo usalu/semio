@@ -10,7 +10,7 @@ use crate::editor::home::{
     config::{home_retained_contract, HomeConfig, HomeConfigMutation, HomeConfigPreparationFactory, HOME_DIRECTORY_PAGE_BYTES},
     transient::{HomeTransient, HomeTransientMutation, HomeTransientRetirementFactory},
 };
-use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::viewer::home::modes::view;
 use crate::viewer::home::modes::view::windows::main;
 use semio_framework_plugin::app::{Dialect, InteractionView};

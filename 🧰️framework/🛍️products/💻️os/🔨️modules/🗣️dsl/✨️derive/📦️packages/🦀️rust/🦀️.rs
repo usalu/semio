@@ -20,14 +20,18 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
 }
 //#endregion 🔖️DslArtifact
 
-//#region 🔖️DslDiff
-/// 🧩️ Derives OS diff transport over the canonical record contract.
-#[proc_macro_derive(DslDiff)]
-// 🚫️async: E3 proc-macro entry
-pub fn derive_dsl_diff(input: TokenStream) -> TokenStream {
-    component::expand_dsl_diff(input)
+/// 📝️ Implements a diff's text representation at its I/O owner.
+#[proc_macro]
+pub fn diff_text(input: TokenStream) -> TokenStream {
+    component::expand_diff_text(input)
 }
-//#endregion 🔖️DslDiff
+
+/// 💾️ Implements a diff's binary representation at its I/O owner.
+#[proc_macro]
+pub fn diff_binary(input: TokenStream) -> TokenStream {
+    component::expand_diff_binary(input)
+}
+
 
 
 

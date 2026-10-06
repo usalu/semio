@@ -28,8 +28,8 @@ const STUB_FORMATS: &[&str] = &[];
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_artifact_lowpoly_lowpoly::io::export::serializers::artifacts as export;
-    use semio_s_artifact_lowpoly_lowpoly::io::import::deserializers::artifacts as import;
+    use semio_s_artifact_lowpoly_lowpoly::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    use semio_s_artifact_lowpoly_lowpoly::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use semio_s_artifact_lowpoly_lowpoly::LowpolySnapshot;
 
     /// 🧫️ The committed fixture the scenario's own doc string names, parsed as a real
@@ -38,7 +38,7 @@ mod subject {
     fn document(ctx: &Context) -> Result<LowpolySnapshot, String> {
         let spec = ctx.doc_json()?;
         let uri = spec.str("document");
-        let bytes = ctx.fixture_bytes(&uri)?;
+        let bytes = ctx.input_bytes(&uri)?;
         serde_json::from_slice::<LowpolySnapshot>(&bytes).map_err(|error| format!("fixture {uri} is not a valid LowpolySnapshot: {error}"))
     }
 

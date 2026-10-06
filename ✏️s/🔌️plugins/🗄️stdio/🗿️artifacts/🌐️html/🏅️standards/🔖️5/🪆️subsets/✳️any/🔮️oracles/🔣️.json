@@ -301,9 +301,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-doctype-applied",
       "class": "third-party-generated",
       "target": {
@@ -354,7 +353,6 @@
       "notes": "Document type declaration's SYSTEM identifier set (none -> about:legacy-compat)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -405,7 +403,6 @@
       "notes": "A new <span> element node inserted as the last child of <body>."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -456,7 +453,6 @@
       "notes": "The <span> element node removed from <body>."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-element-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -507,7 +503,6 @@
       "notes": "Element tag name retagged div -> section, attributes and content held fixed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -558,7 +553,6 @@
       "notes": "The id attribute value replaced, a -> b."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-text-applied",
       "class": "third-party-generated",
       "target": {
@@ -609,7 +603,6 @@
       "notes": "Character-data content of <p> replaced, Hello -> World."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-comment-applied",
       "class": "third-party-generated",
       "target": {
@@ -660,7 +653,6 @@
       "notes": "Comment node's data replaced, old -> new."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-raw-text-applied",
       "class": "third-party-generated",
       "target": {

@@ -1,0 +1,22 @@
+{
+  "schemaBytes": 5814,
+  "tableWidths": {
+    "en1995_connection": 37,
+    "en1995_connection_action": 9,
+    "en1995_document": 2,
+    "en1995_member": 73,
+    "en1995_member_action": 28
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 9,
+      "valueBytes": 2293
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 1,
+      "valueBytes": 10
+    }
+  ]
+}

@@ -6,5 +6,5 @@ export type{WiresSnapshot}from"./🏅️standards/🔖️1/🪆️subsets/✳️
 export{parseWiresValue}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts";
 export type{WiresValue}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts";
 export type{WiresDiff}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
-export{WIRES_SQLITE_SCHEMA,wiresSnapshotToSqliteDatabase,wiresSnapshotFromSqliteDatabase,validateWiresSnapshotSqliteDialect}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts";
-export{decodeWiresJsonValue,decodeWiresJsonSnapshot}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/🔣️json/🟦️.ts";
+export{WIRES_SQLITE_SCHEMA,wiresSnapshotToSqliteDatabase,wiresSnapshotFromSqliteDatabase,validateWiresSnapshotSqliteDialect}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
+export{decodeWiresJsonValue,decodeWiresJsonSnapshot}from"./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";

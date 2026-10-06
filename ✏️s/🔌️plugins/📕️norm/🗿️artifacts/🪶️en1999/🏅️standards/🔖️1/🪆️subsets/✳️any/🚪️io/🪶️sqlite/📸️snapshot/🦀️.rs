@@ -1,0 +1,106 @@
+//! 🪶️ Explicit persisted aluminium entities, owned relationships and binary64 scalar words.
+use crate::standards::v1::subsets::any::schema::snapshot::{En1999Snapshot,AluminiumMaterial,PlateElement,AluminiumSection,MemberAction,AluminiumMember,SupportCondition,BoltGroup,WeldGroup,AluminiumConnection,FireScenario,FatigueDetail,ColdFormedSheet,AluminiumShell};
+use crate::document::AnnexChoice;
+use std::collections::BTreeMap;
+use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
+
+const SECTION:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9)];
+const PLATE:&[FloatColumn]=&[FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(8)];
+const MEMBER:&[FloatColumn]=&[FloatColumn::Binary64(6),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12)];
+const ACTION:&[FloatColumn]=&[FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13)];
+const BOLTS:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8)];
+const WELDS:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5)];
+const FIRE:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6)];
+const FATIGUE:&[FloatColumn]=&[FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10)];
+const SHEET:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7)];
+const SHELL:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7)];
+fn ordinal(n:usize)->Result<Cell<'static>, ValueError>{Ok(Cell::Integer(i64::try_from(n).map_err(|e| invalid(e.to_string()))?))}
+fn flag(v:bool)->Cell<'static>{Cell::Integer(i64::from(v))}
+fn read_flag(r:FloatRow<'_>,i:usize)->Result<bool, ValueError>{match r.integer(i)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("EN1999 boolean differs"))}}
+fn annex(v:AnnexChoice)->&'static str{match v{AnnexChoice::En=>"En",AnnexChoice::De=>"De"}}
+fn read_annex(v:&str)->Result<AnnexChoice, ValueError>{match v{"En"=>Ok(AnnexChoice::En),"De"=>Ok(AnnexChoice::De),_=>Err(invalid("EN1999 unknown owned annex"))}}
+fn read_support(v:&str)->Result<SupportCondition, ValueError>{[SupportCondition::SimplySupported,SupportCondition::Continuous,SupportCondition::Cantilever].into_iter().find(|support|support.code()==v).ok_or_else(||invalid("EN1999 unknown member support"))}
+fn actions(out:&mut RowWriter<'_,'_>,table:&str,parent:i64,values:&[MemberAction])->Result<(), ValueError>{for(n,a)in values.iter().enumerate(){out.insert_float(table,&[Cell::Integer(parent),ordinal(n)?,Cell::Text(&a.id),Cell::Text(&a.kind),Cell::Text(&a.category),Cell::Text(&a.source),Cell::Real(a.g_k_line),Cell::Real(a.q_k_line),Cell::Real(a.n_k),Cell::Real(a.v_y_k),Cell::Real(a.v_z_k),Cell::Real(a.m_y_k),Cell::Real(a.m_z_k)],ACTION)?;}Ok(())}
+fn checkpoint(c:&mut SqliteSnapshotControl<'_>,n:usize,total:usize)->Result<(), ValueError>{if n%256==0{c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,n,total)?;}Ok(())}
+type Entities<'a>=BTreeMap<i64,FloatRow<'a>>;
+fn entities<'a>(d:&'a SqliteDatabase,table:&str,count:usize,floats:&'static[FloatColumn],c:&mut SqliteSnapshotControl<'_>)->Result<Entities<'a>, ValueError>{let rows=&d.table(table)?.rows;let mut out=Entities::new();for(n,row)in rows.iter().enumerate(){checkpoint(c,n,rows.len())?;let r=FloatRow::new(row,floats)?;if r.rowid<=0||r.integer(0)?!=r.rowid||r.values.len()!=count||out.insert(r.rowid,r).is_some(){return Err(invalid("EN1999 aliased identity or column shape differs"));}}Ok(out)}
+fn groups<'a>(rows:Entities<'a>,parents:&Entities<'_>,c:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,Vec<FloatRow<'a>>>, ValueError>{let mut out=BTreeMap::<i64,Vec<FloatRow<'a>>>::new();for(n,r)in rows.into_values().enumerate(){checkpoint(c,n,0)?;let p=r.integer(1)?;if !parents.contains_key(&p){return Err(invalid("EN1999 owning foreign key is dangling"));}out.entry(p).or_default().push(r);}Ok(out)}
+fn ordered<'a>(rows:impl IntoIterator<Item=FloatRow<'a>>,parent:i64,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<FloatRow<'a>>, ValueError>{let mut out=BTreeMap::new();for(n,r)in rows.into_iter().enumerate(){checkpoint(c,n,0)?;let i=usize::try_from(r.integer(2)?).map_err(|e| invalid(e.to_string()))?;if r.integer(1)?!=parent||out.insert(i,r).is_some(){return Err(invalid("EN1999 parent or ordinal differs"));}}for(n,i)in out.keys().copied().enumerate(){checkpoint(c,n,out.len())?;if n!=i{return Err(invalid("EN1999 ordinals must be dense"));}}Ok(out.into_values().collect())}
+fn text(r:FloatRow<'_>,i:usize,c:&mut SqliteSnapshotControl<'_>)->Result<String, ValueError>{reconstruct_text(c,r.text(i)?)}
+fn read_actions(rows:Vec<FloatRow<'_>>,parent:i64,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<MemberAction>, ValueError>{let mut out=Vec::new();for r in ordered(rows,parent,c)?{checkpoint(c,out.len(),0)?;out.push(MemberAction{id:text(r,3,c)?,kind:text(r,4,c)?,category:text(r,5,c)?,source:text(r,6,c)?,g_k_line:r.real(7)?,q_k_line:r.real(8)?,n_k:r.real(9)?,v_y_k:r.real(10)?,v_z_k:r.real(11)?,m_y_k:r.real(12)?,m_z_k:r.real(13)?});}Ok(out)}
+/// 🪝️ Explicit optional native-codec capability owned by EN1999's derived record.
+pub fn codec()->store::ArtifactSqliteSnapshotCodec{<En1999Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+
+impl En1999Snapshot {
+    fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {
+        out.insert_key("en1999_document",1,&[Cell::Text(annex(self.annex))])?;
+  for(n,m)in self.materials.iter().enumerate(){out.insert("en1999_material",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&m.id),Cell::Text(&m.designation)])?;}
+  for(n,s)in self.sections.iter().enumerate(){let id=out.insert_float("en1999_section",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&s.id),Cell::Text(&s.kind),Cell::Real(s.height),Cell::Real(s.width),Cell::Real(s.flange_thickness),Cell::Real(s.web_thickness),Cell::Real(s.outer_diameter)],SECTION)?;for(k,p)in s.elements.iter().enumerate(){out.insert_float("en1999_plate_element",&[Cell::Integer(id),ordinal(k)?,Cell::Text(&p.id),Cell::Real(p.width),Cell::Real(p.thickness),flag(p.outstand),flag(p.welded),Cell::Real(p.weld_position)],PLATE)?;}}
+  for(n,m)in self.members.iter().enumerate(){let id=out.insert_float("en1999_member",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&m.id),Cell::Text(&m.section_id),Cell::Text(&m.material_id),Cell::Real(m.length),Cell::Text(m.support.code()),Cell::Real(m.buckling_length_y),Cell::Real(m.buckling_length_z),Cell::Real(m.buckling_length_t),Cell::Real(m.ltb_length),Cell::Real(m.c1),flag(m.restrained_ltb)],MEMBER)?;actions(out,"en1999_member_action",id,&m.actions)?;}
+  for(n,v)in self.connections.iter().enumerate(){let id=out.insert("en1999_connection",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&v.id),Cell::Text(&v.member_id),Cell::Text(&v.material_id),Cell::Text(&v.kind)])?;actions(out,"en1999_connection_action",id,&v.actions)?;let b=&v.bolts;out.insert_key_float("en1999_bolt_group",id,&[Cell::Text(&b.material),Cell::Real(b.diameter),Cell::Integer(i64::from(b.rows)),Cell::Integer(i64::from(b.bolts_per_row)),Cell::Real(b.edge_distance),Cell::Real(b.pitch),Cell::Real(b.gauge),Cell::Real(b.plate_thickness)],BOLTS)?;let w=&v.welds;out.insert_key_float("en1999_weld_group",id,&[Cell::Text(&w.filler_alloy),Cell::Real(w.throat),Cell::Real(w.length),Cell::Real(w.beta_w),Cell::Real(w.haz_extent)],WELDS)?;}
+  for(n,f)in self.fire_scenarios.iter().enumerate(){out.insert_float("en1999_fire_scenario",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&f.id),Cell::Text(&f.member_id),Cell::Real(f.theta_a),Cell::Real(f.duration_s)],FIRE)?;}
+  for(n,f)in self.fatigue_details.iter().enumerate(){out.insert_float("en1999_fatigue_detail",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&f.id),Cell::Text(&f.member_id),Cell::Text(&f.detail_category),Cell::Real(f.delta_sigma_c),Cell::Real(f.delta_sigma_ed),Cell::Real(f.n_cycles),Cell::Real(f.m1),Cell::Real(f.m2)],FATIGUE)?;}
+  for(n,s)in self.cold_formed.iter().enumerate(){let id=out.insert_float("en1999_cold_formed_sheet",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&s.id),Cell::Text(&s.material_id),Cell::Real(s.thickness),Cell::Real(s.width),Cell::Real(s.span),flag(s.welded)],SHEET)?;actions(out,"en1999_sheet_action",id,&s.actions)?;}
+  for(n,s)in self.shells.iter().enumerate(){let id=out.insert_float("en1999_shell",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&s.id),Cell::Text(&s.material_id),Cell::Real(s.radius),Cell::Real(s.thickness),Cell::Real(s.length)],SHELL)?;actions(out,"en1999_shell_action",id,&s.actions)?;}
+        Ok(())
+    }
+    fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {semio_s_artifact_norm_contract::sqlite_native::schema(En1999Snapshot::SQLITE_SCHEMA,16,28,control)?; let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
+}
+impl ArtifactSqliteSnapshot for En1999Snapshot{
+ const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)},control)}
+
+ fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload, ValueError>{
+  let mut rows=1usize;let mut visited=0usize;c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;
+  let mut add=|n:usize|->Result<(), ValueError>{rows=rows.checked_add(n).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 native row count overflow"))?;c.check_rows(rows)?;visited=visited.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 native frontier count overflow"))?;if visited%256==0{c.checkpoint(SqliteSnapshotPhase::EncodeNative,rows,0)?;}Ok(())};
+  for n in[self.materials.len(),self.sections.len(),self.members.len(),self.connections.len(),self.fire_scenarios.len(),self.fatigue_details.len(),self.cold_formed.len(),self.shells.len()]{add(n)?;}
+  for v in &self.sections{add(v.elements.len())?;}for v in &self.members{add(v.actions.len())?;}for v in &self.connections{add(v.actions.len())?;add(2)?;}for v in &self.cold_formed{add(v.actions.len())?;}for v in &self.shells{add(v.actions.len())?;}
+  c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,rows)?;
+  self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c)
+ }
+
+    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> { let mut out = RowWriter::new(Self::SQLITE_SCHEMA, control)?; self.write_sqlite_rows(&mut out)?; out.finish() }
+ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self, ValueError>{
+  validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;let docs=entities(d,"en1999_document",2,&[],c)?;if docs.len()!=1||!docs.contains_key(&1){return Err(invalid("EN1999 requires one identity-1 document"));}let doc=docs[&1];
+  let material_rows=entities(d,"en1999_material",5,&[],c)?;let section_rows=entities(d,"en1999_section",10,SECTION,c)?;let member_rows=entities(d,"en1999_member",14,MEMBER,c)?;let connection_rows=entities(d,"en1999_connection",7,&[],c)?;let sheet_rows=entities(d,"en1999_cold_formed_sheet",9,SHEET,c)?;let shell_rows=entities(d,"en1999_shell",8,SHELL,c)?;
+  let mut plates=groups(entities(d,"en1999_plate_element",9,PLATE,c)?,&section_rows,c)?;let mut member_actions=groups(entities(d,"en1999_member_action",14,ACTION,c)?,&member_rows,c)?;let mut connection_actions=groups(entities(d,"en1999_connection_action",14,ACTION,c)?,&connection_rows,c)?;let mut sheet_actions=groups(entities(d,"en1999_sheet_action",14,ACTION,c)?,&sheet_rows,c)?;let mut shell_actions=groups(entities(d,"en1999_shell_action",14,ACTION,c)?,&shell_rows,c)?;let mut bolt_rows=entities(d,"en1999_bolt_group",9,BOLTS,c)?;let mut weld_rows=entities(d,"en1999_weld_group",6,WELDS,c)?;
+  if bolt_rows.len()!=connection_rows.len()||weld_rows.len()!=connection_rows.len(){return Err(invalid("EN1999 mandatory bolt/weld cardinality differs"));}for(n,key)in bolt_rows.keys().enumerate(){checkpoint(c,n,bolt_rows.len())?;if !connection_rows.contains_key(key)||!weld_rows.contains_key(key){return Err(invalid("EN1999 bolt or weld owning connection differs"));}}
+  let(mut materials,mut sections,mut members,mut connections,mut fire_scenarios,mut fatigue_details,mut cold_formed,mut shells)=(Vec::new(),Vec::new(),Vec::new(),Vec::new(),Vec::new(),Vec::new(),Vec::new(),Vec::new());
+  for r in ordered(material_rows.into_values(),1,c)?{checkpoint(c,materials.len(),0)?;materials.push(AluminiumMaterial{id:text(r,3,c)?,designation:text(r,4,c)?});}
+  for r in ordered(section_rows.into_values(),1,c)?{checkpoint(c,sections.len(),0)?;let mut elements=Vec::new();for p in ordered(plates.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?{checkpoint(c,elements.len(),0)?;elements.push(PlateElement{id:text(p,3,c)?,width:p.real(4)?,thickness:p.real(5)?,outstand:read_flag(p,6)?,welded:read_flag(p,7)?,weld_position:p.real(8)?});}sections.push(AluminiumSection{id:text(r,3,c)?,kind:text(r,4,c)?,height:r.real(5)?,width:r.real(6)?,flange_thickness:r.real(7)?,web_thickness:r.real(8)?,outer_diameter:r.real(9)?,elements});}
+  for r in ordered(member_rows.into_values(),1,c)?{checkpoint(c,members.len(),0)?;members.push(AluminiumMember{id:text(r,3,c)?,section_id:text(r,4,c)?,material_id:text(r,5,c)?,length:r.real(6)?,support:read_support(r.text(7)?)?,buckling_length_y:r.real(8)?,buckling_length_z:r.real(9)?,buckling_length_t:r.real(10)?,ltb_length:r.real(11)?,c1:r.real(12)?,restrained_ltb:read_flag(r,13)?,actions:read_actions(member_actions.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?});}
+  for r in ordered(connection_rows.into_values(),1,c)?{checkpoint(c,connections.len(),0)?;let b=bolt_rows.remove(&r.rowid).ok_or_else(|| invalid("EN1999 missing mandatory bolt group"))?;let w=weld_rows.remove(&r.rowid).ok_or_else(|| invalid("EN1999 missing mandatory weld group"))?;connections.push(AluminiumConnection{id:text(r,3,c)?,member_id:text(r,4,c)?,material_id:text(r,5,c)?,kind:text(r,6,c)?,actions:read_actions(connection_actions.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?,bolts:BoltGroup{material:text(b,1,c)?,diameter:b.real(2)?,rows:u32::try_from(b.integer(3)?).map_err(|e| invalid(e.to_string()))?,bolts_per_row:u32::try_from(b.integer(4)?).map_err(|e| invalid(e.to_string()))?,edge_distance:b.real(5)?,pitch:b.real(6)?,gauge:b.real(7)?,plate_thickness:b.real(8)?},welds:WeldGroup{filler_alloy:text(w,1,c)?,throat:w.real(2)?,length:w.real(3)?,beta_w:w.real(4)?,haz_extent:w.real(5)?}});}
+  for r in ordered(entities(d,"en1999_fire_scenario",7,FIRE,c)?.into_values(),1,c)?{checkpoint(c,fire_scenarios.len(),0)?;fire_scenarios.push(FireScenario{id:text(r,3,c)?,member_id:text(r,4,c)?,theta_a:r.real(5)?,duration_s:r.real(6)?});}
+  for r in ordered(entities(d,"en1999_fatigue_detail",11,FATIGUE,c)?.into_values(),1,c)?{checkpoint(c,fatigue_details.len(),0)?;fatigue_details.push(FatigueDetail{id:text(r,3,c)?,member_id:text(r,4,c)?,detail_category:text(r,5,c)?,delta_sigma_c:r.real(6)?,delta_sigma_ed:r.real(7)?,n_cycles:r.real(8)?,m1:r.real(9)?,m2:r.real(10)?});}
+  for r in ordered(sheet_rows.into_values(),1,c)?{checkpoint(c,cold_formed.len(),0)?;cold_formed.push(ColdFormedSheet{id:text(r,3,c)?,material_id:text(r,4,c)?,thickness:r.real(5)?,width:r.real(6)?,span:r.real(7)?,welded:read_flag(r,8)?,actions:read_actions(sheet_actions.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?});}
+  for r in ordered(shell_rows.into_values(),1,c)?{checkpoint(c,shells.len(),0)?;shells.push(AluminiumShell{id:text(r,3,c)?,material_id:text(r,4,c)?,radius:r.real(5)?,thickness:r.real(6)?,length:r.real(7)?,actions:read_actions(shell_actions.remove(&r.rowid).unwrap_or_default(),r.rowid,c)?});}
+  c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(Self{annex:read_annex(doc.text(1)?)?,materials,sections,members,connections,fire_scenarios,fatigue_details,cold_formed,shells})
+ }
+ fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,_d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.norm.en1999"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("EN1999 owned dialect differs")));}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;
+  let mut b=NativeEncodingBound::file_only(c)?;let mut rows=1;admit_rows(&mut b,&mut rows,self.materials.len())?;admit_rows(&mut b,&mut rows,self.sections.len())?;admit_rows(&mut b,&mut rows,self.members.len())?;admit_rows(&mut b,&mut rows,self.connections.len().checked_mul(3).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 connection row overflow"))?)?;admit_rows(&mut b,&mut rows,self.fire_scenarios.len())?;admit_rows(&mut b,&mut rows,self.fatigue_details.len())?;admit_rows(&mut b,&mut rows,self.cold_formed.len())?;admit_rows(&mut b,&mut rows,self.shells.len())?;
+  for s in &self.sections{admit_rows(&mut b,&mut rows,s.elements.len())?;}for m in &self.members{admit_rows(&mut b,&mut rows,m.actions.len())?;}for v in &self.connections{admit_rows(&mut b,&mut rows,v.actions.len())?;}for s in &self.cold_formed{admit_rows(&mut b,&mut rows,s.actions.len())?;}for s in &self.shells{admit_rows(&mut b,&mut rows,s.actions.len())?;}b.add(16384)?;
+  for m in &self.materials{b.add(2048)?;for v in [&m.id,&m.designation]{b.repeated(v.len(),24)?;}}
+  for s in &self.sections{b.add(16384)?;for v in [&s.id,&s.kind]{b.repeated(v.len(),24)?;}for p in &s.elements{b.add(8192)?;b.repeated(p.id.len(),24)?;}}
+  for m in &self.members{b.add(16384)?;for v in [&m.id,&m.section_id,&m.material_id]{b.repeated(v.len(),24)?;}bound_actions(&m.actions,&mut b)?;}
+  for v in &self.connections{b.add(32768)?;for t in [&v.id,&v.member_id,&v.material_id,&v.kind,&v.bolts.material,&v.welds.filler_alloy]{b.repeated(t.len(),24)?;}bound_actions(&v.actions,&mut b)?;}
+  for f in &self.fire_scenarios{b.add(8192)?;for t in [&f.id,&f.member_id]{b.repeated(t.len(),24)?;}}
+  for f in &self.fatigue_details{b.add(16384)?;for t in [&f.id,&f.member_id,&f.detail_category]{b.repeated(t.len(),24)?;}}
+  for s in &self.cold_formed{b.add(12288)?;for t in [&s.id,&s.material_id]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
+  for s in &self.shells{b.add(12288)?;for t in [&s.id,&s.material_id]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
+  b.finish()
+ }
+}
+fn bound_actions(values:&[MemberAction],b:&mut NativeEncodingBound<'_,'_>)->Result<(), ValueError>{for a in values{b.add(16384)?;for t in [&a.id,&a.kind,&a.category,&a.source]{b.repeated(t.len(),24)?;}}Ok(())}
+fn admit_rows(b:&mut NativeEncodingBound<'_,'_>,rows:&mut usize,add:usize)->Result<(), ValueError>{*rows=rows.checked_add(add).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 native row count overflow"))?;b.check_rows(*rows)?;b.checkpoint()}
+
+#[path="🛂️admission/🦀️.rs"]
+pub(in crate::standards::v1::subsets::any)mod admission;
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
+

@@ -1,5 +1,5 @@
-import { formatUiNumber } from "../🔢️number-format/🟦️.ts";
-import { uiNumberDisplay, uiNumberDisplayText } from "../🧩️component/🟦️.ts";
+import { formatUiNumber, roundUiNumber } from "../🔢️number-format/🟦️.ts";
+import { UI_NUMBER_PRECISION_MAX, uiNumberDisplay, uiNumberDisplayText } from "../🧩️component/🟦️.ts";
 /**
  * ♿️ The TypeScript twin of the contract's own `♿️accessibility/🦀️.rs` projection region.
  *
@@ -48,10 +48,20 @@ export type UiAccessibilityProjectionNodeV1 = {
   readonly valueNow: number | null;
   readonly valueText: string | null;
   readonly busy: boolean;
+  /** 🪜️ The step a range control moves by, in the display units of `valueMin`/`valueMax`/`valueNow`. */
+  readonly valueStep: number | null;
+  /** 🚧️ A control whose typed draft is refused (`aria-invalid`); only a renderer's walk knows a draft. */
+  readonly invalid: boolean;
+  /** 🧮️ The rows of the logical list a windowed row belongs to (`aria-setsize`); a renderer's walk stamps it. */
+  readonly setSize: number | null;
+  /** 📍️ A windowed row's one-based place in that list (`aria-posinset`). */
+  readonly posInSet: number | null;
+  /** 🚦️ The semantic tone a tree row paints ({@link uiAccessibilityToneV1}); never the only cue of a state. */
+  readonly tone: string | null;
 };
 
 /** 📶️ The range semantics a component announces — the TS mirror of the Rust `AccessibilityValue`. */
-export type UiAccessibilityValueV1 = Pick<UiAccessibilityProjectionNodeV1, "valueMin" | "valueMax" | "valueNow" | "valueText" | "busy">;
+export type UiAccessibilityValueV1 = Pick<UiAccessibilityProjectionNodeV1, "valueMin" | "valueMax" | "valueNow" | "valueText" | "busy" | "valueStep">;
 
 /** 🗂️ The authored container role's own ARIA name — `plain`/`group`/`field` are all plain grouping
  * (a field is a label plus its control, which is a group, not a landmark), `section` is a region. */
@@ -88,9 +98,9 @@ export function uiAccessibilityRoleV1(component: Component, activatable: boolean
     case "separator":
       return "separator";
     case "input":
-      return "textbox";
+      return component.kind === "number" ? "spinbutton" : "textbox";
     case "select":
-      return "combobox";
+      return component.appearance === "segmented" ? "radiogroup" : "combobox";
     case "toggle":
       return component.appearance === "checkbox" ? "checkbox" : "button";
     case "keyValueList":
@@ -166,6 +176,18 @@ function spokenText(stored: number, factor: number | null, precision: number | n
   return unit == null || unit === "" ? text : `${text} ${unit}`;
 }
 
+/** 👣️ The step a range control announces, in display units: its declared `step`, else (a non-positive or non-finite one) the `10^-precision` display step the keyboard law walks, else none; the twin of the Rust `spoken_step`. */
+function spokenStep(step: number | null | undefined, precision: number | null | undefined, factor: number | null): number | null {
+  if (step != null && Number.isFinite(step) && step > 0) return spokenNumber(step, factor);
+  return precision == null ? null : roundUiNumber(10 ** -Math.min(precision, UI_NUMBER_PRECISION_MAX), precision);
+}
+
+/** 🎨️ The tone a tree row announces — `info`, `success`, `warning` or `danger`; `null` for every other component, the neutral tone and the brand roles; the twin of the Rust `accessibility_tone`. */
+export function uiAccessibilityToneV1(record: UiNodeRecord): string | null {
+  const tone = record.component.type === "treeItem" ? record.style?.tone : undefined;
+  return tone === "info" || tone === "success" || tone === "warning" || tone === "danger" ? tone : null;
+}
+
 /** 📶️ `aria-valuemin`/`max`/`now`/`valuetext` for a determinate progress bar, only `aria-busy` while it
  * is indeterminate (a total that is absent, never merely zero), and nothing for every other component. */
 export function uiAccessibilityValueV1(component: Component): UiAccessibilityValueV1 {
@@ -174,24 +196,24 @@ export function uiAccessibilityValueV1(component: Component): UiAccessibilityVal
     const factor = component.kind === "number" ? (component.displayFactor ?? null) : null;
     const shown = (value: number | null | undefined): number | null => (value == null ? null : spokenNumber(value, factor));
     const valueText = component.kind === "number" && (component.precision != null || factor != null) && Number.isFinite(numeric) ? uiNumberDisplayText(numeric, factor, component.precision) : component.value;
-    return { valueMin: shown(component.min), valueMax: shown(component.max), valueNow: Number.isFinite(numeric) ? shown(numeric) : null, valueText, busy: false };
+    return { valueMin: shown(component.min), valueMax: shown(component.max), valueNow: Number.isFinite(numeric) ? shown(numeric) : null, valueText, busy: false, valueStep: component.kind === "number" ? spokenStep(component.step, component.precision, factor) : null };
   }
-  if (component.type === "select" || component.type === "iconSelect") return { valueMin: null, valueMax: null, valueNow: null, valueText: component.value, busy: false };
+  if (component.type === "select" || component.type === "iconSelect") return { valueMin: null, valueMax: null, valueNow: null, valueText: component.value, busy: false, valueStep: null };
   if (component.type === "slider") {
     const factor = component.displayFactor ?? null;
     const unit = component.displayUnit ?? component.unit ?? null;
     const described = unit != null || component.precision != null || factor != null;
-    return { valueMin: spokenNumber(component.min, factor), valueMax: spokenNumber(component.max, factor), valueNow: spokenNumber(component.value, factor), valueText: described ? spokenText(component.value, factor, component.precision, unit) : null, busy: false };
+    return { valueMin: spokenNumber(component.min, factor), valueMax: spokenNumber(component.max, factor), valueNow: spokenNumber(component.value, factor), valueText: described ? spokenText(component.value, factor, component.precision, unit) : null, busy: false, valueStep: spokenStep(component.step, component.precision, factor) ?? spokenNumber(1, factor) };
   }
   if (component.type === "numberStepper") {
     const factor = component.displayFactor ?? null;
     const shown = (value: number | null | undefined): number | null => (value == null ? null : spokenNumber(value, factor));
-    return { valueMin: shown(component.min), valueMax: shown(component.max), valueNow: component.uniform ? shown(component.value) : null, valueText: component.uniform ? spokenText(component.value, factor, component.precision, component.displayUnit ?? component.unit ?? null) : null, busy: false };
+    return { valueMin: shown(component.min), valueMax: shown(component.max), valueNow: component.uniform ? shown(component.value) : null, valueText: component.uniform ? spokenText(component.value, factor, component.precision, component.displayUnit ?? component.unit ?? null) : null, busy: false, valueStep: spokenStep(component.step, component.precision, factor) ?? spokenNumber(1, factor) };
   }
-  if (component.type === "ring") return { valueMin: 0, valueMax: 1, valueNow: component.t, valueText: String(component.t), busy: false };
-  if (component.type !== "progress") return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: false };
-  if (component.total == null) return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: true };
-  return { valueMin: 0, valueMax: component.total, valueNow: component.completed, valueText: component.valueText, busy: false };
+  if (component.type === "ring") return { valueMin: 0, valueMax: 1, valueNow: component.t, valueText: String(component.t), busy: false, valueStep: null };
+  if (component.type !== "progress") return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: false, valueStep: null };
+  if (component.total == null) return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: true, valueStep: null };
+  return { valueMin: 0, valueMax: component.total, valueNow: component.completed, valueText: component.valueText, busy: false, valueStep: null };
 }
 
 /** 📐️ The filled share in `0..1` of a progress bar, `null` while indeterminate — the twin of the Rust
@@ -219,7 +241,7 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
   const treeItem = record.component.type === "treeItem" ? record.component : null;
   const treeItemHasOrdinaryChild = treeItem !== null && (record.children ?? []).some((child) => child !== treeItem.inlineToolbar && child !== treeItem.detail);
   const expanded = record.component.type === "select"
-    ? false
+    ? (record.component.appearance === "segmented" ? null : false)
     : record.component.type === "treeSection"
       ? record.component.defaultOpen ?? true
       : record.component.type === "treeItem" && (record.component.defaultOpen != null || treeItemHasOrdinaryChild)
@@ -250,6 +272,10 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     activeDescendant: null,
     level: record.component.type === "treeItem" ? depth + 1 : null,
     ...uiAccessibilityValueV1(record.component),
+    invalid: false,
+    setSize: null,
+    posInSet: null,
+    tone: uiAccessibilityToneV1(record),
   };
 }
 

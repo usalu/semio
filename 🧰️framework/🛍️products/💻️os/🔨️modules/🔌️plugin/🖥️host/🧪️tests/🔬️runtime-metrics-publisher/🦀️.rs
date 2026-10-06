@@ -54,7 +54,7 @@ async fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
 /// the crate-purity grep this repo's acceptance criteria runs unconditionally over `component.rs`
 /// files (this one is the HOST, not the pure `🎭️actor` crate, but the same discipline is followed
 /// here since the file is right next to it and easy to mistake for one).
-const SCALE_FIXTURE_REGISTRY_JSON: &str = include_str!("../../../../../🧫️fixtures/⚖️scale/🤖️generated/📇️registry/🔣️.json");
+const SCALE_FIXTURE_REGISTRY_JSON: &str = include_str!("../../../../../🧪️testing/⚖️scale/🤖️generated/📇️registry/🔣️.json");
 
 #[derive(serde::Deserialize)]
 struct ScaleFixtureRegistry {

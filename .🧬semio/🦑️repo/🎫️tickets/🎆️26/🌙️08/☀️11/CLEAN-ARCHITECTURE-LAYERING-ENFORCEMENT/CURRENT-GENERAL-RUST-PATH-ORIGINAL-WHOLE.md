@@ -1,0 +1,35 @@
+# General Rust Path Original Whole Native Route
+
+Parent schedules source1 genuine RED then GREEN through the original compiler NativeScript and whole --lib/package semio-framework-compiler route. Source1 and its independent source proof retain five full GREEN/RED pairs, four identical common mounts/laws/provider edits and the same30positive controls plus five owned-root refusals. RED omits only the public inspector. No additional request filter or feature removal is authorized.
+
+The separate native helper builds two immutable current provider/domain snapshots with complete frame bodies, exact paired Nx/package/project markers and a root workspace member rewrite limited to actual defining providers. It preserves original Script/project/body and default features; actual snapshot dispatch calls that unchanged owning script. Ordinary+locked metadata will run sequentially in both snapshots with exact byte-conserved output and existing external-lock refusal. Independent exact plan/metadata/helper/codec admission is mandatory before native execution. All live policy, executor and hash imports are guarded against retained full defining source frames.
+
+Five launcher commands are registered with a complete fsynced before/after/inverse journal. No native preparation, compiler or runtime result exists yet. Root/High published DSL intrinsic-bytes and OS mesh-pack-wire four literal corrections before preparation and will be captured as actual current sources. OS12 awaits fresh common index11 because old10 has one known current DSL unit no-op advance; sealed10 stays intact.
+
+
+## Actual paired preparation
+
+Independent finite helper source admission is whole-helper-source-independent-1.json (exact776e5247a4c3c06f4171154a1d974b2d003bc6ba284fcbcb6e540d1d4999ba95). Preparation78362 completed0 and sealed1461 complete shared current source frames,12 defining provider manifests and two immutable five-row snapshots. Plan32729093bytes and metadata1412166bytes retain full bodies; four actual ordinary+locked metadata phases all0,externalAdvances0 and current live RootCargo.lock unchanged.
+
+Only snapshot root workspace members/defaultmembers and the five authored rows are changed; exact root before/after and paired row authority are retained. Source1/common35controls/owningScript and project/current defining contexts were guarded. Full plan/physical/provider/executor admission is pending before the genuine original whole RED. No native test has run yet.
+
+
+## Import closure refusal and immutable continuation
+
+Dispatch76652 completed1 before Cargo because the original snapshot Cargo runner could not import its General schema validator. Epoch1 raw, pre, terminal, plan and metadata remain intact; this is not genuine inspector RED and no .d source evidence is invented.
+
+Helper continuation is journaled with full776e5247before/56bdd1a5after bodies and inverses. Independent whole-helper-source-independent-2.json admits captured-body recursive relative TS import closure and snapshot Cargo interface preflight. Five launch commands now select epoch2 with a full fsynced configuration journal.
+
+Held preparation60384 completed0:all1461 admitted source frames exact plus one missing validator frame,1462 total/12 defining providers. Original actual snapshot Cargo module preflight imports succeeded. Four newly actual ordinary+locked metadata phases0/external0 and full pairedplan33645783bytes sealed; all original source5pairs/35controls/whole --lib/defaults retained. Later full current foreign pairs are explicit with no equivalence and no live restores. Independent new plan admission precedes genuine RED2.
+
+The paired epoch 2 original compiler RED completed with terminal 1 and exactly two E0425 diagnostics for the absent `inspect_rust_path_literals` API, at the two shared law call sites. It reached Cargo/Rust compilation; no test execution or selected roster is inferred. The original postprocessor separately refused its missing captured hash-provider frame before producing a physical receipt. That diagnostic refusal is preserved at `🗑️generated/rust-path-whole/red-physical-2.log` and does not indicate an advanced hash implementation.
+
+A separate physical-only observer at `rust-path-physical-inputs/📜️script.ts` captures the actual `.d` checksum/fence inputs and exact current pure first-party BLAKE3 source, compares the compiled Rust checksum oracle, and preserves all candidate origins and full before/current/inverse frames. Low admitted its finite source scope; ambiguous matching origins remain explicit for independent qualification. Distinct registered observer dispatch is handle 41208, with raw log `🗑️generated/rust-path-whole/red-physical-observation-2.log`; no compiler rerun or held paired input mutation occurred.
+
+The distinct RED2 physical observer completed terminal 0: 40 compiled units, 585 checksum observations and 585 physical source frames; known predecessor gaps and current gaps are both zero. It explicitly retains 503 unavailable predecessor observations and five later full foreign source pairs. Actual original compiler exit remains 1; no runtime law success is inferred. Independent origin and exact receipt admission is pending before GREEN2.
+
+Low sealed `🗑️generated/rust-path-whole/epoch-2/independent-red-source-checkpoint-1.json` with 13 exact bindings: genuine two E0425 compiler diagnostics, no runtime, 40 units and 585 BLAKE/current checks without gaps. All 82 available predecessors match; 503 unavailable predecessors remain explicit. The 78 snapshot/live same-content candidate sets are independently verified while `uniquePhysicalOriginClaim=false` remains. Original unchanged GREEN2 dispatch is handle 78915, raw `🗑️generated/rust-path-whole/green-whole-2.log`, against the exact admitted paired epoch 2 plan. No RED rerun or dispatch input mutation occurred.
+
+Original unchanged GREEN2 completed terminal 0 (handle 78915): nextest selected and passed all 56 compiler library laws. The two new functions both passed; retained stdout emits `[DEBUG] Rust shared path` for the exact 30 positive/negative literal corpus cases and `[DEBUG] Rust shared invalid root` for all five refusal cases. Full raw output is `🗑️generated/rust-path-whole/green-whole-2.log`. Distinct physical observer is handle 5128; final independent source/roster/35-case association remains pending. This validates the exact paired proposal snapshot, without asserting later live-source equivalence or publication.
+
+Low final GREEN2 admission is sealed at `🗑️generated/rust-path-whole/epoch-2/independent-green-whole-source-checkpoint-1.json`: 13 exact bindings, all 56 indexed PASS plus Summary 56 run/56 passed/0 skipped, exact 30 corpus and five refusal DEBUG observations. Physical 40-unit/585-check evidence matches, with 82 available predecessors and 503 unavailable retained. The same-content location ambiguities remain explicit; paired native RED→GREEN is complete for the immutable proposal epoch. No live publication or current-source equivalence is inferred. The next owning native epoch is full current OS12 using independently admitted common index11 and a new current runtime census.

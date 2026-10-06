@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Schema
@@ -38,7 +38,7 @@ export default defineTestAdapter({
   scenarios: {
     "golden-encoding-per-payload": {
       oracle: (ctx) => {
-        const vectors = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://✉️payload-vectors.json"))).cases as Vector[];
+        const vectors = JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://✉️payload-vectors.json"))).cases as Vector[];
         vectors.forEach(judge);
         return {
           projection: {
@@ -50,7 +50,7 @@ export default defineTestAdapter({
     },
     "omit-empty-and-explicit-null": {
       oracle: (ctx) => {
-        const vectors = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://✉️payload-vectors.json"))).cases as Vector[];
+        const vectors = JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://✉️payload-vectors.json"))).cases as Vector[];
         return {
           projection: {
             optional: vectors.map((vector) => ({

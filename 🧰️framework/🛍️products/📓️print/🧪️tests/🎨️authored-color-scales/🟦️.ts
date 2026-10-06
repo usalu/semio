@@ -11,7 +11,7 @@ import niceVectors from "./✨️nice.json";
 import missingRenderVectors from "./❔️render.json";
 import chartSchema from "../../🧬️schema/🔣️.json";
 import { validateVizChartSpecification } from "../../🧬️schema/💡️inferences/✅️validation/🟦️.ts";
-import { inferVizChart } from "../../🧬️schema/💡️inferences/🟦️.ts";
+import {inferVizChart} from "../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";;
 import type { VizChartSpecification } from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 
 type OracleScale = {

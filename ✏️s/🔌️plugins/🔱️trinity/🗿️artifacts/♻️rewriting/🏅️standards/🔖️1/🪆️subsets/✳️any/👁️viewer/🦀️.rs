@@ -5,7 +5,7 @@
 //! or draft mutation. MUST NOT import anything from the sibling editor module
 //! (`policyViewerPurityBreaches`).
 
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::viewer::rewriting::modes::view;
 use crate::viewer::rewriting::modes::view::windows::rule;
 use crate::{RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
@@ -49,9 +49,7 @@ impl protocol::OpBinary for TrinityRewritingViewCommand {
 #[derive(Default, Clone, Copy)]
 pub struct TrinityRewritingViewer;
 
-/// 👁️ Read-only initial rule state — the empty/default snapshot (no pattern, no bound parameters, no
-/// working fixture), distinct from the editor's `default_rule_state()` (Nakagin fixture + seeded
-/// `label-core` demo rule): a fresh viewer session has no editor-authored rule to show yet.
+/// 👁️ A fresh viewer begins with the canonical empty rule and graph.
 fn empty_rule_state() -> RewritingSnapshot {
     RewritingSnapshot::default()
 }

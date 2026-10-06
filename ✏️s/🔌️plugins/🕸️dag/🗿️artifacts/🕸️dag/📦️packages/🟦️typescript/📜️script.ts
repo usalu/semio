@@ -9,4 +9,4 @@ if(process.argv[2]==="verify"&&process.argv[3]==="snapshot-sqlite-source"){
  while(pending.length){const dir=pending.pop()!;for(const entry of readdirSync(dir,{withFileTypes:true})){const path=join(dir,entry.name);if(entry.isDirectory()&&entry.name!=="🧪️tests")pending.push(path);else if(entry.isFile()&&entry.name.endsWith(".ts"))files.push(path);}}
  await runRepositoryCommand(process.execPath,["x","tsc",...files,"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck"],repo,"dag-dag:published-source-consumers",120000);
  console.log(`[dag-dag] checked published consumers=${files.length}`);
-}else await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/dag-dag",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/📋️contract/🟦️.ts"]});
+}else await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/dag-dag",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📋️contract/🟦️.ts"]});

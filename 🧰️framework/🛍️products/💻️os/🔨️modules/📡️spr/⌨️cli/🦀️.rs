@@ -196,7 +196,6 @@ fn fingerprint(edit: &crate::os_spr::HistoryEdit) -> String {
     edit.actor.hash(&mut hasher);
     edit.started_at.hash(&mut hasher);
     edit.finished_at.hash(&mut hasher);
-    edit.description.hash(&mut hasher);
     for op in &edit.ops {
         op.text.hash(&mut hasher);
         op.binary.hash(&mut hasher);
@@ -451,8 +450,7 @@ async fn cmd_log(rest: &[String], context: &crate::os_pack::control::CommandCont
         }
         let actor_display = edit.actor.as_deref().unwrap_or("-");
         let checkpoint_marker = checkpoint_lane_at.get(&ordinal).map_or(String::new(), |ids| format!(" [checkpoint {}]", ids.join(", ")));
-        let description = edit.description.as_deref().map_or(String::new(), |d| format!(" \"{d}\""));
-        lines.push(format!("#{ordinal:<5} {} actor={actor_display} started={} ops={}{checkpoint_marker}{description}", edit.id, edit.started_at, edit.ops.len()));
+        lines.push(format!("#{ordinal:<5} {} actor={actor_display} started={} ops={}{checkpoint_marker}", edit.id, edit.started_at, edit.ops.len()));
     }
 
     if reverse {

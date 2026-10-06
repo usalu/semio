@@ -1,6 +1,6 @@
 
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::Mutation as _;
 use protocol::MutationDiff as _;
 use store::{ArtifactDsl, BlobStore};
@@ -621,7 +621,7 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     // op here is an in-memory fixture operation, never real I/O.
     let mut nested_space_store =
         crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None))).expect("valid artifact store fixture");
-    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], description: None, transaction: None })).expect("apply");
+    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None })).expect("apply");
     crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() })).expect("commit checkpoint");
     let original_pack_files = crate::host::resolve_kernel_future(nested_space_store.snapshot_pack()).expect("snapshot pack");
 

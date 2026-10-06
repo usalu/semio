@@ -1558,6 +1558,10 @@ pub enum VcsError {
     /// 🐘️ A gesture's edit needs `rows` staged rows (forwards plus inverses) where at most `capacity` are admitted — the one-item
     /// ceiling, or the rows its leaves declare (`x-semio-inverse-rows`, design §20.5). Refused before anything was recorded.
     TooLarge { rows: usize, capacity: usize },
+    /// 🧷️ The operation `mutation_id` belongs to the cross-artifact unit `unit`: it planned steps in other documents, or it is
+    /// such a step. A unit is superseded in all of its documents at once, which no replica can do yet, so the supersession
+    /// was refused before anything was recorded.
+    UnitSpansDocuments { mutation_id: String, unit: String },
 }
 
 impl std::fmt::Display for VcsError {
@@ -1592,6 +1596,7 @@ impl std::fmt::Display for VcsError {
             Self::HistoryFull { capacity } => write!(formatter, "the edit history holds at most {capacity} edits and is full"),
             Self::HistoryReplaying => formatter.write_str("a history step still replays on this store"),
             Self::TooLarge { rows, capacity } => write!(formatter, "the edit needs {rows} staged rows where at most {capacity} are admitted"),
+            Self::UnitSpansDocuments { mutation_id, unit } => write!(formatter, "operation {mutation_id} belongs to the cross-artifact unit {unit}, which one document alone cannot supersede"),
         }
     }
 }
@@ -1614,7 +1619,7 @@ impl From<MutationApplyError> for VcsError {
 
 /// 🚨️ Every `VcsError` is a module fault; the refusals a runtime surfaces as their own notices carry their own codes:
 /// `toolTransaction.open`, `toolTransaction.unknown`, `history.full` (its capacity the notice's `{n}` param),
-/// `history.replaying` and `mutation.too-large`.
+/// `history.replaying`, `mutation.too-large` and `history.unit-spans-documents`.
 impl semio_framework_diagnostic::FaultFrom for VcsError {
     fn fault_origin(&self) -> semio_framework_diagnostic::FaultOrigin {
         semio_framework_diagnostic::FaultOrigin::Module
@@ -1627,6 +1632,7 @@ impl semio_framework_diagnostic::FaultFrom for VcsError {
             Self::HistoryFull { .. } => "history.full",
             Self::HistoryReplaying => "history.replaying",
             Self::TooLarge { .. } => "mutation.too-large",
+            Self::UnitSpansDocuments { .. } => "history.unit-spans-documents",
             _ => "module.vcs",
         })
     }

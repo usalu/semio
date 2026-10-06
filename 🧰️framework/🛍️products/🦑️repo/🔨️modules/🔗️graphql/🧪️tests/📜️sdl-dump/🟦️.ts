@@ -12,7 +12,7 @@
 
 //#region 🔌️Adapters
 import { buildSchema, isEnumType, isInputObjectType, isInterfaceType, isObjectType, isScalarType, isUnionType, type GraphQLNamedType } from "graphql";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🖼️Inventory
@@ -45,7 +45,7 @@ export default defineTestAdapter({
   scenarios: {
     "served-schema-matches-the-committed-sdl": {
       oracle: (ctx) => {
-        const schema = buildSchema(Buffer.from(ctx.fixtureBytes("shared://📜️served-schema/🔗️.graphql")).toString("utf8"));
+        const schema = buildSchema(Buffer.from(ctx.inputBytes("shared://📜️served-schema/🔗️.graphql")).toString("utf8"));
         const named = Object.values(schema.getTypeMap())
           .filter((declared) => !declared.name.startsWith("__"))
           .filter((declared) => !(isScalarType(declared) && BUILT_IN.includes(declared.name)))

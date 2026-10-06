@@ -30,8 +30,8 @@ pub mod set_active_example {
         if !example_id.is_empty() && example_id != crate::examples::demo::ID {
             return Ok(Emit::default());
         }
-        let document = crate::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::examples::demo::PRIMARY_TEXT)
-            .map_err(|error| Fault::from(format!("sequence example {} is not parsable: {error:?}", crate::examples::demo::ID)))?;
+        let document = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT)
+            .map_err(|error| crate::editor::sequence::sequence_fault("sequence.example.unparsable", format!("sequence example {} is not parsable: {error:?}", crate::examples::demo::ID)))?;
         Ok(Emit { effects: vec![reset_sequence_document_effect(&document)], ..Default::default() })
     }
 

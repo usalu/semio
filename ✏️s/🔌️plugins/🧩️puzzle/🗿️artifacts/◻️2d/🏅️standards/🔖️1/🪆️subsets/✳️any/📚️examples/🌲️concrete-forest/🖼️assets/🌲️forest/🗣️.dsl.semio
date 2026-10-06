@@ -1,5 +1,5 @@
 semio puzzle.puzzle2d.dsl v1
-schema=puzzle.2d.fixture
+schema=board.ports.directed.v1
 camera {
   x=230.72767272727273 y=93.53074909090908 zoom=2
 }

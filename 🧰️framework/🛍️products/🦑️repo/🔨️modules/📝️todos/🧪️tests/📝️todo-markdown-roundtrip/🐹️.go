@@ -49,7 +49,7 @@ func renderLineTodo(todo *model.Todo) string {
 // region 🔖️Scenarios
 
 func rewritingALineAndReadingItBackAgrees(ctx *host.Context) (host.Outcome, error) {
-	data, err := ctx.FixtureBytes("shared://📝️line-vectors.json")
+	data, err := ctx.InputBytes("shared://📝️line-vectors.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

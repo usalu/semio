@@ -1,7 +1,7 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `set-parameter`.
 
 use crate::standards::v1::subsets::any::schema::mutations::change_parameter_binding;
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::{ParameterKind, Rhs};
 use crate::RewritingSnapshot;
 use semio_framework_graph::manifest::PropertyValue;

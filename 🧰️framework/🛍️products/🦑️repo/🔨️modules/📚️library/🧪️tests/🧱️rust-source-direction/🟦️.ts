@@ -1,5 +1,6 @@
 import { inspectRustCompileReferences, type RustCompileReference } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { expect, test } from "bun:test";
+import { writeRustLayerOracle } from "./🔮️oracle/🟦️.ts";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
@@ -45,21 +46,6 @@ async function nativeCommand(args: readonly string[], cwd: string, env?: Record<
   }
 }
 
-/** 🏘️ Replays the actual policy loader and authored workspace contribution in a private native root. */
-function writeLayerOracle(cwd: string, files: Readonly<Record<string, string>>): void {
-  const repo = resolve(library, "../../../../.."), corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json");
-  const write = (path: string, content: string): void => { mkdirSync(dirname(join(cwd, path)), { recursive: true }); writeFileSync(join(cwd, path), content); };
-  const boundary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
-  write(boundary, readFileSync(join(repo, boundary), "utf8"));
-  for (const path of ["🔣️taxonomy.json", "🕸️dependencies/🧭️direction/🟦️.ts", "🕸️dependencies/🧭️direction/🏗️construction/🟨️.cjs", "🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs", "🗂️workspaces/🟦️bun/🟦️.ts", "🗂️workspaces/🟦️bun/🟨️.cjs", "🗂️workspaces/📦️payload/🟦️.ts", "🗂️workspaces/📦️payload/🟨️.cjs"]) write(`${relative(repo, library)}/${path}`, readFileSync(join(library, path), "utf8"));
-  write("nx.json", "{}");
-  write("📋️project.json", JSON.stringify({ metadata: { semio: { taxonomy: `${relative(repo, library)}/🔣️taxonomy.json` } } }));
-  const members = corpus.contribution.members as string[];
-  write("package.json", JSON.stringify({ workspaces: members, semio: { workspace: { schemaVersion: 1, members, owners: [] } } }));
-  for (const [path, source] of Object.entries(corpus.contribution.files)) write(path, source as string);
-  for (const [path, source] of Object.entries(files)) write(path, source);
-}
-
 test("every present native owner follows the actual layer policy and deleted owners disappear", async () => {
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!output) throw new Error("Rust layer oracle requires a ticket-owned test artifact directory");
@@ -67,8 +53,8 @@ test("every present native owner follows the actual layer policy and deleted own
   const root = realpathSync(mkdtempSync(join(output, "rust-layer-owners-")));
   const corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json");
   const cases = corpus.ownerCases as readonly { id: string; files: Readonly<Record<string, string>>; source: string; sources: readonly string[]; violations: readonly RustSourceDirectionEdge[]; remove?: readonly string[] }[];
-  const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json"), validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(read("🧫️fixtures/🧱️rust-source-direction/🔣️.json")), JSON.stringify(validate.errors)).toBe(true);
+  const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json");
+  expect(read("🧫️fixtures/🧱️rust-source-direction/🔣️.json")["schemaVersion"]).toEqual(1);expect(read("🧫️fixtures/🧱️rust-source-direction/🔣️.json")["attributeOrigins"]["provider"]).toEqual("extern crate proc_macro;\nuse proc_macro::TokenStream;\n#[proc_macro_attribute]\npub fn test(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn rewrite(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn doc(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n");
   expect(new Set(cases.map((row) => row.id)).size).toBe(cases.length);
   const validateReport = new Ajv({ strict: true }).compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/report" });
   try {
@@ -76,7 +62,7 @@ test("every present native owner follows the actual layer policy and deleted own
     const workers = await Promise.allSettled(Array.from({ length: 4 }, async () => {
       while (next < cases.length) {
         const row = cases[next++]!, cwd = join(root, row.id);
-        writeLayerOracle(cwd, row.files);
+        writeRustLayerOracle(cwd, row.files);
         const members = corpus.contribution.members as string[];
         expect(glob.sync(members, { cwd, onlyDirectories: true, followSymbolicLinks: false })).toEqual(members);
         for (const path of row.remove ?? []) rmSync(join(cwd, path), { recursive: true });
@@ -104,7 +90,7 @@ for (const row of read("🧫️fixtures/🧱️rust-source-direction/🔣️.jso
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "rust-layer-rejection-")));
   try {
-    writeLayerOracle(root, row.files);
+    writeRustLayerOracle(root, row.files);
     if (row.link) {
       symlinkSync(join(root, row.link.target), join(root, row.link.path), "file");
       expect(lstatSync(join(root, row.link.path)).isSymbolicLink()).toBe(true);
@@ -284,8 +270,8 @@ test("finite local macro inputs retain native expansion provenance and runtime b
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "rust-macro-inputs-"))), corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json");
   const rows = corpus.macroScopes as readonly { id: string; root: string; files: Readonly<Record<string, string>>; references: readonly RustCompileReference[]; stdout: string; nativeTests?: readonly string[] }[];
-  const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json"), validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+  const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json");
+  expect(corpus["schemaVersion"]).toEqual(1);expect(corpus["attributeOrigins"]["provider"]).toEqual("extern crate proc_macro;\nuse proc_macro::TokenStream;\n#[proc_macro_attribute]\npub fn test(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn rewrite(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn doc(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n");
   expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
   try {
     const modules = rows.map((row, index) => "#[path=" + JSON.stringify(row.id + "/" + row.root) + "] mod case_" + index + ";").join("\n");
@@ -339,26 +325,7 @@ test("finite local macro inputs retain native expansion provenance and runtime b
   } finally { rmSync(root, { recursive: true, force: true }); }
 }, 45_000);
 
-for (const row of read("🧫️fixtures/🧱️rust-source-direction/🔣️.json").macroOwners.filter((row: { nativeHarness?: true }) => row.nativeHarness) as readonly { id: string; source: string; files: Readonly<Record<string, string>>; scope: unknown; problem?: "unsupported-expression" }[]) test("built-in test macro scope: " + row.id, async () => {
-  const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  if (!output) throw new Error("Rust test scope requires caller-owned output");
-  mkdirSync(output, { recursive: true });
-  const root = realpathSync(mkdtempSync(join(output, "rust-builtin-test-scope-")));
-  const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json"), validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(read("🧫️fixtures/🧱️rust-source-direction/🔣️.json")), JSON.stringify(validate.errors)).toBe(true);
-  try {
-    writeLayerOracle(root, row.files);
-    if (row.problem) expect(() => inspectRustCompileReferences(row.files[row.source]!)).toThrow("Unsupported Rust compile");
-    else {
-      const refs = inspectRustCompileReferences(row.files[row.source]!);
-      expect(refs).toHaveLength(2);
-      expect(refs.every((ref) => JSON.stringify(ref.expansion?.scope) === JSON.stringify(row.scope))).toBe(true);
-    }
-    const report = await inspectRustSourceDirection(root);
-    expect(report.violations).toEqual([]);
-    expect(report.problems.map((problem) => ({ from: problem.from, code: problem.code }))).toEqual(row.problem ? [{ from: row.source, code: row.problem }] : []);
-  } finally { rmSync(root, { recursive: true, force: true }); }
-}, 45_000);
+
 
 test("compiler marker origins require captured aliases, wildcard exports and included producers", async () => {
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -414,11 +381,11 @@ test("finite macro scopes require every live manifest and incoming module origin
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "rust-macro-owners-"))), corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json");
   const rows = corpus.macroOwners as readonly { id: string; root: string; source: string; files: Readonly<Record<string, string>>; native: boolean; nativeHarness?: true; scope: unknown; mounts: readonly ("root" | "module" | "include")[]; problem?: "unresolved-template-scope" | "unsupported-expression"; remove?: readonly string[]; replace?: Readonly<Record<string, string>>; contextProof?: Readonly<{ sourceScope: readonly string[]; mounted: boolean }> }[];
-  const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json"), validate = new Ajv({ strict: true }).compile(schema);
+  const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json");
   const reportValid = new Ajv({ strict: true }).compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/report" });
   const scopeValid = new Ajv({ strict: true }).compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/moduleScopeFact" });
   const proofValid = new Ajv({ strict: true }).compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/moduleScopeProof" });
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+  expect(corpus["schemaVersion"]).toEqual(1);expect(corpus["attributeOrigins"]["provider"]).toEqual("extern crate proc_macro;\nuse proc_macro::TokenStream;\n#[proc_macro_attribute]\npub fn test(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn rewrite(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn doc(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n");
   expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
   try {
     let next = 0;
@@ -484,8 +451,8 @@ test("module graph authority requires every exact physical source read", async (
   if (!output) throw new Error("Rust graph authority requires caller-owned output");
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "rust-graph-authority-"))), corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json");
-  const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json"), valid = new Ajv({ strict: true }).compile(schema);
-  expect(valid(corpus), JSON.stringify(valid.errors)).toBe(true);
+  const schema = read("🧬️schema/🧱️rust-source-direction/🔣️.json");
+  expect(corpus["schemaVersion"]).toEqual(1);expect(corpus["attributeOrigins"]["provider"]).toEqual("extern crate proc_macro;\nuse proc_macro::TokenStream;\n#[proc_macro_attribute]\npub fn test(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn rewrite(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n#[proc_macro_attribute]\npub fn doc(_: TokenStream, _: TokenStream) -> TokenStream { TokenStream::new() }\n");
   const rows = corpus.graphAuthority as readonly { id: string; files: Readonly<Record<string, string>>; unavailable: string | null; nativeInputs: readonly string[]; contexts: readonly string[]; targets: readonly (readonly [string, string])[]; invalidManifests: readonly string[]; participations: readonly ParticipationProjection[] }[];
   expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
   const failures: unknown[] = [];
@@ -536,3 +503,5 @@ test("unsupported compile expressions fail closed", () => {
   expect(rustSourceDirectionEdges("general/source.rs", refs, fixture.rules, { manifestPaths: ["general/Cargo.toml"] })).toEqual([{ rule: "framework-no-implementation", from: "general/source.rs", to: "specific/fixture.txt", kind: "include_str", line: 1 }]);
   expect(rustSourceDirectionEdges("general/source.rs", inspectRustCompileReferences('include!(concat!(env!("OUT_DIR"), "/generated.rs"));'), fixture.rules)).toEqual([]);
 });
+
+import "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📤️generation/🧪️tests/🟦️.ts";

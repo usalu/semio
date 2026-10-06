@@ -18,6 +18,6 @@ pub fn diff(payload: &super::ChangeRunStartDay, base: &EnergyModelSnapshot) -> p
         let period = base.model.run_period;
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("A start day of {} does not form a calendar interval with the run period {}-{} .. {}-{} of {}.", payload.new_start_day, period.start_month, period.start_day, period.end_month, period.end_day, period.year), Vec::<String>::new());
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

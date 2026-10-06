@@ -1,7 +1,7 @@
 import {getDocument} from "pdfjs-dist/legacy/build/pdf.mjs";
 import legendVectors from "../🎬️render-scene/🔣️legend.json";
 import {legendSpecifications} from "../🎬️render-scene/🧭️legend/🟦️.ts";
-import {inferVizChart} from "../../🧬️schema/💡️inferences/🟦️.ts";
+import {inferVizChart} from "../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";;
 import fontVectors from "../../🔨️modules/🔤print-font-catalog/📏️metrics/🧪️tests/🔣️.json";
 import { measurePrintSans } from "../../🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts";
 /** 🧪️ Compiles actual native inference output and neutral grammar vectors with independent D3 oracles. */

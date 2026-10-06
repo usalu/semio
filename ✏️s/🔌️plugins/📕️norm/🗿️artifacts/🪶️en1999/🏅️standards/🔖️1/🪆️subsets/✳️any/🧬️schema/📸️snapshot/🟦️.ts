@@ -163,5 +163,3 @@ export const parsePlateElement: NormWireReader<PlateElement> = normWireObject<Pl
 export const parseBoltGroup: NormWireReader<BoltGroup> = normWireObject<BoltGroup>({ material: normWireRequired(normWireString), diameter: normWireRequired(normWireNumber), rows: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), boltsPerRow: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), edgeDistance: normWireRequired(normWireNumber), pitch: normWireRequired(normWireNumber), gauge: normWireRequired(normWireNumber), plateThickness: normWireRequired(normWireNumber) });
 export const parseWeldGroup: NormWireReader<WeldGroup> = normWireObject<WeldGroup>({ fillerAlloy: normWireRequired(normWireString), throat: normWireRequired(normWireNumber), length: normWireRequired(normWireNumber), betaW: normWireRequired(normWireNumber), hazExtent: normWireRequired(normWireNumber) });
 export const parseSupportCondition: NormWireReader<SupportCondition> = normWireLiteral("simplySupported", "continuous", "cantilever");
-
-export * from "./🪶️sqlite/🟦️.ts";

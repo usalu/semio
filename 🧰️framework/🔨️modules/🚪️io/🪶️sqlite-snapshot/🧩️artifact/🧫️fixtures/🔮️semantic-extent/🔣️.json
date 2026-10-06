@@ -1,0 +1,18 @@
+{
+  "sql": "CREATE TABLE cell_payload(id INTEGER PRIMARY KEY,missing TEXT,empty TEXT,label TEXT,amount INTEGER,fraction REAL,octets BLOB)",
+  "values": [
+    1,
+    null,
+    "",
+    "雪",
+    7,
+    0.5,
+    [
+      0,
+      255
+    ]
+  ],
+  "rows": 1,
+  "valueBytes": 29,
+  "width": 7
+}

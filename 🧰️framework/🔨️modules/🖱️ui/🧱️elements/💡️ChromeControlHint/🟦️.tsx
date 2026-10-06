@@ -134,8 +134,10 @@ export function ChromeControlHint({ id, text, always = false, children }: { read
  * the action's `aria-describedby`), and visible text anchored to the action while it is hovered (after
  * {@link CHROME_CONTROL_TOOLTIP_DELAY_MS}), keyboard-focused or pressed (click, tap, Enter, Space) — until a hovering pointer leaves,
  * focus moves away, Escape, or a press lands elsewhere. Conformance case `💬️row-semantics` (`revealReason`), the same hint
- * the wgpu renderer paints. */
-export function DisabledReasonHint({ id, reason, children }: { readonly id: string; readonly reason: string; readonly children: React.ReactElement }): React.ReactNode {
+ * the wgpu renderer paints. A caller wraps its action ALWAYS and passes `reason: undefined` while the action can run: the
+ * wrapper then holds no reason element, and the action keeps its element — and the focus on it — when it becomes refused
+ * or runnable again (a focused Edit that its own press made refused says why at once, instead of being remounted). */
+export function DisabledReasonHint({ id, reason, children }: { readonly id: string; readonly reason: string | undefined; readonly children: React.ReactElement }): React.ReactNode {
   const flow = useFlow();
   const floatingHost = useShellFloatingSurfaceHost();
   const triggerRef = React.useRef<HTMLSpanElement>(null);
@@ -178,9 +180,9 @@ export function DisabledReasonHint({ id, reason, children }: { readonly id: stri
     }
     const resolved = resolvePopoverPlacement(trigger.getBoundingClientRect(), content.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight }, "top", "center", 8, 0, 8, flow.inline === "rtl", true);
     setPlacement({ left: resolved.left, top: resolved.top, transformOrigin: resolved.transformOrigin });
-  }, [flow.inline, revealed]);
+  }, [flow.inline, revealed, reason]);
 
-  const shown = revealed && floatingHost !== null;
+  const shown = revealed && reason !== undefined && floatingHost !== null;
   return (
     <>
       <span
@@ -196,7 +198,7 @@ export function DisabledReasonHint({ id, reason, children }: { readonly id: stri
       >
         {children}
       </span>
-      {shown ? (
+      {reason === undefined ? null : shown ? (
         createPortal(
           <span
             ref={contentRef}

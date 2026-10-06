@@ -9,7 +9,7 @@
 
 use crate::STDIO_JPG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::text as owned_text;
+use crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot as owned_text;
 
 //#region Jfif
 /// 📏️ JFIF APP0 `units` byte (ITU-T T.871 / JFIF 1.02 §). `Aspect` means `x_density`/
@@ -269,40 +269,9 @@ impl Default for JpgSnapshot {
 //#endregion Snapshot
 
 //#region HandcraftedArtifactCodecs
-impl store::ArtifactDsl for JpgSnapshot {
-    const EXTENSION: &'static str = "jpg";
-    fn envelope_id() -> &'static str {
-        "stdio.jpg"
-    }
 
-    fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
-        let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
-        if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JPG owned Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)));}
-        owned_text::from_record(semio_framework_dsl_record::parse_exact(body,&owned_text::spec(),&semio_framework_dsl_record::ParseOptions::default())?)
-    }
-    fn print_dsl(&self)->String{
-        let body=semio_framework_dsl_record::print(&owned_text::to_record(self),&owned_text::spec(),semio_framework_dsl_record::JoinMode::Document);
-        let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared JPG envelope");store::semio_format::wrap_text(&envelope,&body)
-    }
-}
 
-impl store::ArtifactPack for JpgSnapshot {
-    fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(owned_text::spec())}
-    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
-    fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
-        let body=store::pack_rt::encode_document(&owned_text::spec(),&owned_text::to_record(self),options)?;
-        let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))
-    }
-    fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{
-        let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JPG owned Pack envelope mismatch")));}
-        owned_text::from_record(store::pack_rt::decode_document(&body,&owned_text::spec(),options)?.0).map_err(|error|store::PackError::from(error))
-    }
-}
+
 //#endregion HandcraftedArtifactCodecs
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
+

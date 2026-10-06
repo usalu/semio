@@ -95,7 +95,7 @@ async fn between_self_is_empty() {
 /// `List`/`Typed` recursion and a real COMPLEX instance (2-entry `entities`).
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::DiffCodec;
+    use protocol::{DiffBinary,DiffCodec,DiffText};
     let complex_inst = Part21Instance { id: 9, entities: vec![("IFCQUANTITYAREA".into(), vec![Part21Value::Real(10.5.into()), Part21Value::Int(-3), Part21Value::Enum("EDGE".into())]), ("IFCPHYSICALSIMPLEQUANTITY".into(), vec![Part21Value::Unset])] };
     let cases = vec![
         Ifc2x3Diff::default(),

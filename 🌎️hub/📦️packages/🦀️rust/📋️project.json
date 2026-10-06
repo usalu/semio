@@ -42,7 +42,7 @@
     ],
     "hubFoundationSources": [
       "{workspaceRoot}/🌎️hub/🏗️build/🛂staging-environment/🟦️.ts",
-      "{workspaceRoot}/🌎️hub/🧬️schema/🛂️fixture-expectation/{🟦️.ts,🔣️.json}",
+      "{workspaceRoot}/🌎️hub/🧪️testing/🛂️expectation/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts",
       "{workspaceRoot}/🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts",

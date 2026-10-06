@@ -1,0 +1,29 @@
+# EPW Complete Native Semantic Admission
+
+The original actual owner has five authored tables. Its full lexical fixture requires six rows and475 semantic bytes; the same headers with empty periods/records require three rows and242. Shared canonical schema storage is2377 bytes, including each semicolon-free statement and its table name; the raw DDL alone is2322 bytes. Maximum declared width is38. All35 hourly values and all nine location values are Text, preserving literal numerical spelling; records_per_hour is the only unsigned32 domain primitive.
+
+Five demand paths are mounted: existing control fixture gains closed complete/empty semantic bounds; its companion2020 schema rejects unknown or changed facts; a Bun SQLite oracle measures every real export storage cell, identities, columns and statements; Source and Native owning laws exercise exact/one-short copied rows/values/schema/tables/columns on both native forms. Existing laws and physical grants are retained. Source84221 is active; genuine Native Before is queued behind the active Pack owning lane. No provider qualification is inferred.
+
+Two provider paths are held in 📥️inputs/epw-complete-semantic. One typed row visitor feeds the real SQL Projection through RowWriter and borrows those same cells for native encode/preflight. A separate direct RecordValue visitor validates every actual root/nested field, unsigned32, literal Text and List/Record role and pre-admits full copied limits before __dsl_from_record_controlled constructs its owner. It uses existing parent native checkpoints and256-byte text stages, with no SQL shadow or typed allocations for the census. Existing native allocation/output preflight remains separate.
+
+## Actual Owning Before and Preserved Physical Preflight
+
+The registered Source demand completed with six passing laws and 47 expects. Actual registered Native Before session 65270 terminated with 12 laws, 11 passed and one failed, 29 outside; Nextest df2d8ca0-d1da-4d77-8f88-f3fe5d9eeaa2, quick profile, 0.094 seconds. The complete-cells law reached the real owning fixture and failed at its native preflight: the old NativeEncodingBound applies an expansion forecast to max_value_bytes. The real SQL projection and independent full extent had already succeeded. No compiler-only or hypothetical failure credit is claimed.
+
+Mounted typed admission visits the same authored RowWriter cells; direct native CST admission precedes owned typed reconstruction and retains exact UInt32/Text/List/Record roles. The old file forecast remains separate through explicit NativeEncodingBound::file_only, with every original constant and original 1024-byte preallocation refusal law preserved. Actual encoding retains its original cumulative allocation, exact file, envelope, progress and cancellation controls. Generic file-only scope has a closed neutral fixture and independent Ajv/SQLite summation demand, with owning qualification pending. The EPW oracle was consolidated into the core IO test module; the duplicate was removed.
+
+Actual full Native After session 85776 is running, with the original eleven laws and the complete-cell demand, unchanged quick policy and grants. No passing runtime qualification yet. The consolidated Source replay also remains pending. Full/empty demands remain 6/475 and 3/242 cells with canonical schema extent 2377, five tables and maximum 38 columns. Logs remain under generated/root-epw-complete-native-semantic-before.log and root-epw-complete-native-semantic-after.log.
+
+## Genuine After and Workload Repair, 2026-10-05 20:26 UTC
+
+After80753 progressed through repaired Cargo preparation and actually ran12 tests:8 passed4 failed29 outside,.083s, Nextest9b0a9667-c114-4a0d-969a-83e78a77940d. Allfour failures report schema.native decoding exceeded declared stage workload during existing typed native decode; this is a genuine runtime failure, superseding prior preparation-only After85776 without claiming success. Borrowed semantic census left its completed rows stage installed before the typed binder advanced. One provider path now scopes only that census through NativeDecodeControl::scoped_stage; the existing cumulative ownership, callback, limits and typed binder are preserved. Analogous MP3/AVI held providers corrected before mount. Independent review confirms only stage metadata restores, no allocation refund. Owning EPW After replay remains required.
+
+Consolidated registered Source route66361 actually passed EPW6/6,47expects and AVI7/7,60expects. These artifact routes do not run strict TypeScript. EPW full6/475 and empty3/242 remain correct under authored NULL0 because their projections have no null cells. No grant, deadline, conservative file forecast or original eleven law was altered.
+
+## Scoped Workload Owning Replay, 2026-10-05 20:40 UTC
+
+The repaired EPW full12-law owning replay is queued sequentially with AVI full15 in registered Nx run-many38762, preserving original dependencies, quick profile and grants. Only the borrowed semantic census stage is scoped; typed binder, cumulative physical ownership, file forecast and original controls are unchanged. Prior genuine12/8/4 remains a failed runtime receipt until this new replay completes. Log generated/root-avi-complete-and-epw-scoped-native-owning-after.log.
+
+## Genuine Scoped Census Owning After, 2026-10-05 21:07 UTC
+
+Owning EPW in38762 actually completed12/12,0 failures,29 outside,.153s, Nextestbb74d19d-1dcf-4745-9fa4-9bde47196666. Original eleven laws plus independent full6/475 and empty3/242 copied semantic boundary law ran under unchanged quick policy/controls. Corrected borrowed scoped workload restores parser stage metadata without ownership refund. Whole run-many exit1 is AVI's separately recorded failure; it does not invalidate genuine EPW12 runtime pass. Current Source6/6 separately qualified; no strict is inferred. Reconstruction/frontier physical ownership remains a separate qualification obligation.

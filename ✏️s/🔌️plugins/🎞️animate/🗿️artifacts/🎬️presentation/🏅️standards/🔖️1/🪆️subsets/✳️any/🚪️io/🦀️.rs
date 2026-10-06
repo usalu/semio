@@ -56,7 +56,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 //#region 🔖️MediaCodec
 /// 🖼️ Encodes a portable title card through the shared XML/SVG model.
 pub fn animate_presentation_document_json_to_svg(value: &semio_framework_pack_json::Value) -> Result<(String, u32, u32), String> {
-    use semio_s_artifact_stdio_svg::schema::snapshot::write_svg_xml;
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
     let title = value.get("title").and_then(|entry| entry.as_str()).or_else(|| value.get("id").and_then(|entry| entry.as_str())).unwrap_or("Animate Presentation");
     let attributes = |values: &[(&str, &str)]| values.iter().map(|(name, value)| XmlAttr { name: (*name).into(), value: (*value).into() }).collect();
@@ -69,7 +69,8 @@ pub fn animate_presentation_document_json_to_svg(value: &semio_framework_pack_js
 /// 📥️ Rasterizes a DWG drawing through the native host into a one-slide deck.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> Result<semio_framework_value::DslValue, String> {
-    use semio_s_artifact_stdio_svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{write_svg_xml};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_svg_xml};
     let (svg, width, height) = semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?)?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
@@ -84,3 +85,12 @@ pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_st
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️MediaCodec
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

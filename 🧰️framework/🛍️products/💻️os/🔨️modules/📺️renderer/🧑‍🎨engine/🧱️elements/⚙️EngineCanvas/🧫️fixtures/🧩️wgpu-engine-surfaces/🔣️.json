@@ -3,7 +3,7 @@
   "provenance": {
     "world3d": "verbatim copy of 🧰️framework/…/♾️infinite/🌍️world/🧫️fixtures/🌉️scene-bridge/🔣️.json — s.procedural.generation3d's `hexagonal-mushroom-column` preview payload, produced by the real pipeline (parse_dsl → FlowHost::evaluate → tessellate_geometry(0.05) → preview_payload_from_eval) in that plugin's example-geometry harness and independently confirmed there by a parry3d oracle. Copied rather than imported so the framework renderer never depends on a plugin crate; the source fixture is itself pinned back to the live kernel by `hexagonal_mushroom_column_preview_payload_matches_the_scene_bridge_fixture`.",
     "tiledMap": "the descriptor shape 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map's own `sync_map_json` lanes drive (positions/routes/regions), as the gis 2d app publishes it through `TiledMapScene::base`.",
-    "board2d": "verbatim copy of vector[0] of 🧰️framework/…/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧫️fixtures/🔣️board-ingress.json — the `reasoning.mindmap.fixture` document the puzzle 2d board publishes, pinned there by `board_fixture_json_vectors_match_the_json_oracle`."
+    "board2d": "verbatim copy of vector[0] of 🧰️framework/…/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧫️fixtures/🔣️board-ingress.json — the `board.normal.undirected.v1` document the puzzle 2d board publishes, pinned there by `board_snapshot_json_vectors_match_the_json_oracle`."
   },
   "world3d": {
     "meshesJson": [
@@ -608,7 +608,7 @@
     }
   },
   "tiledMap": {
-    "mapFixtureJson": {
+    "mapDescriptorJson": {
       "positions": [
         {
           "id": "zurich",
@@ -666,8 +666,8 @@
     }
   },
   "board2d": {
-    "fixtureJson": {
-      "schema": "reasoning.mindmap.fixture",
+    "snapshotJson": {
+      "schema": "board.normal.undirected.v1",
       "camera": {
         "x": 1.0,
         "y": 2.0,

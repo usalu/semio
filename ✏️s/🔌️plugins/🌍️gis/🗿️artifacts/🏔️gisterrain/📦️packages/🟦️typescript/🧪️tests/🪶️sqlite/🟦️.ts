@@ -3,7 +3,7 @@ import {gisTerrainSnapshotToSqliteDatabase,gisTerrainSnapshotFromSqliteDatabase,
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import fixture from "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json";
+import fixture from "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json";
 test("GIS terrain public package preserves signaling NaN and separately owned mesh handles",async()=>{
  const snapshot:GisTerrainArtifact={exaggeration:{bits:BigInt("0x"+fixture.words[5]!)},mesh:fixture.child};
  const oracle=Database.deserialize(await exportSqliteDatabase(await gisTerrainSnapshotToSqliteDatabase(snapshot)));

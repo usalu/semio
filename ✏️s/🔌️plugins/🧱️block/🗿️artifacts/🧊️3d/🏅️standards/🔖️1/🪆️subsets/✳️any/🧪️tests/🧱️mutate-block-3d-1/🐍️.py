@@ -371,7 +371,7 @@ def doc_json(ctx):
 
 def leaf(ctx, spec, name):
     """🧫️ One committed leaf of the vector the doc string addresses."""
-    return json.loads(ctx.fixture_bytes(spec[name]).decode("utf-8"))
+    return json.loads(ctx.input_bytes(spec[name]).decode("utf-8"))
 
 
 def uri_in(ctx, needle):
@@ -448,7 +448,7 @@ def identity_handler(ctx):
     that it really is that document: a catalogue child, at least two local vortex kinds, a placed
     vortex bound to a kind the document declares, and a representation."""
     uri = uri_in(ctx, "⬅️before")
-    committed = ctx.fixture_bytes(uri)
+    committed = ctx.input_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
     validate(document, "identity-round-trip")
     if len(document["vortexKindExtra"]) < 2 or not document["vortices"] or not document["representations"]:

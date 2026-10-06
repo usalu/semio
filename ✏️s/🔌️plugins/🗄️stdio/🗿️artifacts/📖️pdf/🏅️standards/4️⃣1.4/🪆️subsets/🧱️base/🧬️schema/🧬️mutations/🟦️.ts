@@ -10,6 +10,10 @@ import type { ResizePage } from "./📐️resize-page/🟦️";
 export type { ResizePage } from "./📐️resize-page/🟦️";
 import type { ReplacePageText } from "./♻️replace-page-text/🟦️";
 export type { ReplacePageText } from "./♻️replace-page-text/🟦️";
+import type { SetSnapshot } from "./📸️set-snapshot/🟦️.ts";
+export type { SetSnapshot } from "./📸️set-snapshot/🟦️.ts";
+import type { PatchSnapshot } from "./🩹️patch-snapshot/🟦️.ts";
+export type { PatchSnapshot } from "./🩹️patch-snapshot/🟦️.ts";
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
@@ -18,5 +22,7 @@ export type PdfMutation =
   | { mutation: "remove-page"; payload: RemovePage }
   | { mutation: "move-page"; payload: MovePage }
   | { mutation: "resize-page"; payload: ResizePage }
-  | { mutation: "replace-page-text"; payload: ReplacePageText };
+  | { mutation: "replace-page-text"; payload: ReplacePageText }
+  | { mutation: "set-snapshot"; payload: SetSnapshot }
+  | { mutation: "patch-snapshot"; payload: PatchSnapshot };
 //#endregion 🔖️Aggregate

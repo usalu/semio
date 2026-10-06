@@ -26,8 +26,8 @@ use crate::editor::animate::modes::main::windows::tile_editor;
 use crate::editor::animate::panels::{artifact, catalogue, inspection};
 use crate::editor::animate::terminology::animate_presentation_labels;
 use crate::mutations::create_tile::CreateTile;
-use crate::op::PresentationMutation;
-use crate::standards::v1::subsets::any::schema::build_tile_morph_prompt;
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
+use crate::standards::v1::subsets::any::io::text::snapshot::build_tile_morph_prompt;
 use crate::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
@@ -474,7 +474,6 @@ struct AnimatePresentationConfigPreparationFactory;
 struct AnimatePresentationConfigPreparation {
     base: Option<store::SnapshotRead<PresentationConfig>>,
     mutation: Option<PresentationConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(PresentationConfig, PresentationConfigMutation, PresentationConfigMutation)>,
     sealed_candidate: Option<(PresentationConfig, protocol::Edit<PresentationConfigMutation>)>,
@@ -510,11 +509,11 @@ fn animate_presentation_config_edit_bytes(edit: &protocol::Edit<PresentationConf
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparationFactory {
-    fn preflight(&self, mutation: &PresentationConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &PresentationConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         let mutation_bytes = match mutation {
             PresentationConfigMutation::SetEngagementInput(payload) => payload.value.len(),
         };
-        if lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+        if lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES {
             return Err("Animate Presentation config preparation rejected its lane or byte envelope".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, ANIMATE_PRESENTATION_CONFIG_STEP_BYTES))
@@ -529,7 +528,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, Presentat
         };
         if request.lane != store::HistoryLane::Document
             || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES
-            || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES)
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
@@ -540,7 +538,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, Presentat
         Ok(Box::new(AnimatePresentationConfigPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             sealed_candidate: None,
@@ -621,10 +618,10 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some() || self.description.is_some()) && grant.maximum_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES {
+        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some()) && grant.maximum_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
-        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: ANIMATE_PRESENTATION_CONFIG_STEP_BYTES });
         }
         if let Some(base) = self.base.take() {
@@ -644,7 +641,7 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
         Ok(store::SnapshotRetirementStep::Complete)
     }
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ConfigStorePreparation
@@ -991,7 +988,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::from("animate-presentation-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "animate-presentation-command-tool-mismatch"));
         }
         if animate_presentation_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::from("animate-presentation-command-payload-too-large"));
@@ -1043,7 +1040,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::presentation_envelope_decode_owner_bundle())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::presentation_envelope_decode_owner_bundle())
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {

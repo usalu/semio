@@ -45,6 +45,7 @@ import {
   TREE_WINDOW_OVERSCAN_ROWS,
   Textarea,
   Toggle,
+  ToggleGroup,
   TreeCheckbox,
   Tree,
   VirtualFileSystem,
@@ -165,7 +166,7 @@ import {
 import { decodeScenePackField, decodeScenePackValue } from "@semio-tech/framework-os";
 import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🟦️.ts";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
-import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
+import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, uiTextInputKey, uiTextInputKeyOf } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
@@ -210,6 +211,12 @@ export type UiPresenceOverlayValue = {
 const EMPTY_PRESENCE_OVERLAY: UiPresenceOverlayValue = { byKey: new Map() };
 
 export const UiPresenceOverlayContext = createContext<UiPresenceOverlayValue>(EMPTY_PRESENCE_OVERLAY);
+
+/** 🛑️ Row actions the HOST itself refuses, by verb, each with the reason it names — a state the host holds before the
+ * guest's refreshed rows say it (the stage of an open history-edit session); `null`: the host refuses none. A refused
+ * action reads and behaves exactly as one the guest published disabled with that reason: focusable, `aria-disabled`,
+ * described by the reason, never dispatched — so nothing changes when the guest's rows arrive and say the same. */
+export const RowActionRefusalsContext = createContext<ReadonlyMap<string, string> | null>(null);
 
 export function usePresenceOverlayEntry(key: string): UiPresenceOverlayEntry {
   const overlay = useContext(UiPresenceOverlayContext);
@@ -1529,11 +1536,15 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
     }
     dispatchTrigger(context, record, commitOnBlur ? "commit" : "change", value);
   };
-  /** ⌨️ Enter commits without waiting for focus to leave — the gesture a user expects from an inline
-   * editor, and the one a keyboard-only user has. */
-  const commitOnEnter = (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); discardDraft(); setRefusal(null); return; }
-    if (event.key !== "Enter" || event.shiftKey) return;
+  /** ⌨️ A draft's keys follow the shared text-control law (design §22.7, `uiTextInputKey`, corpus `🧫️text-controls`): Escape
+   * drops the draft; a single-line field commits on Enter without waiting for focus to leave — the gesture a keyboard-only
+   * user has; a multi-line field keeps Enter for its line break and commits on Ctrl/⌘+Enter. A key pressed while an input
+   * method composes belongs to the composition. */
+  const draftKey = (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const pressed = event.nativeEvent.isComposing ? null : uiTextInputKeyOf(event);
+    const action = pressed === null ? null : uiTextInputKey(component.kind ?? "text", pressed.key, pressed.modifiers);
+    if (action === "revert") { event.preventDefault(); event.stopPropagation(); discardDraft(); setRefusal(null); return; }
+    if (action !== "commit") return;
     event.preventDefault();
     commitValue((event.target as HTMLInputElement | HTMLTextAreaElement).value);
     (event.target as HTMLInputElement | HTMLTextAreaElement).blur();
@@ -1577,7 +1588,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
         value={commitOnBlur ? draft : component.value}
         placeholder={component.placeholder ?? undefined}
         onChange={commitOnBlur ? (event) => setDraft(event.target.value) : (event) => commitValue(event.target.value)}
-        onKeyDown={commitOnBlur ? commitOnEnter : undefined}
+        onKeyDown={commitOnBlur ? draftKey : undefined}
         onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined}
       />
       {recovery}
@@ -1603,7 +1614,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       step={shown(component.step) ?? (component.kind === "number" && component.precision != null ? 10 ** -component.precision : undefined)}
       accept={component.kind === "file" ? (component.accept ?? undefined) : undefined}
       onChange={commitOnBlur && component.kind !== "file" ? (event) => setDraft(event.target.value) : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
-      onKeyDown={(event) => { if (!lawKey(event) && commitOnBlur) commitOnEnter(event); }}
+      onKeyDown={(event) => { if (!lawKey(event) && commitOnBlur) draftKey(event); }}
       onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : continuous ? () => lane.commit() : undefined}
     />
   );
@@ -1621,8 +1632,27 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   return picker ? <span ref={pickerRef} className="contents">{field}</span> : field;
 }
 
+/** 🔽️ A select as its `appearance` says: a menu that opens its options, or — `segmented` — every option at once as a radio
+ * group (`ToggleGroup` under radio semantics): one checked option, arrow keys move the choice, the chosen one never presses
+ * off. Both dispatch the picked value on `Trigger::Change`. */
 function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "select" }>;
+  if (component.appearance === "segmented") {
+    return (
+      <ToggleGroup
+        id={nodeDomId(context.store, record, context.domScope)}
+        kind="single"
+        semantics="radio"
+        data-ui-node-id={record.id}
+        data-ui-node-key={record.key}
+        aria-label={record.accessibility.label ?? undefined}
+        disabled={record.disabled}
+        value={component.value}
+        onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}
+        items={component.items.map((item) => ({ value: item.value, icon: "circle-dot" as const, text: item.label }))}
+      />
+    );
+  }
   return (
     <Select id={`${nodeDomId(context.store, record, context.domScope)}-select`} disabled={record.disabled} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
       <SelectTrigger id={nodeDomId(context.store, record, context.domScope)} aria-label={record.accessibility.label ?? undefined} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
@@ -1753,16 +1783,29 @@ function RingView({ record, context }: { readonly record: UiNodeRecord; readonly
   return <Ring id={nodeDomId(context.store, record, context.domScope)} onOrbChange={(_orbId, _oldT, newT) => lane.offer(toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
 }
 
+/** 🖼️ An icon picker named by its record's label (its kind select and its field both read it) and locked while the record
+ * is disabled — an editor control like any other, dispatching the picked icon on `Trigger::Change`. */
 function IconSelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "iconSelect" }>;
+  const id = nodeDomId(context.store, record, context.domScope);
+  const label = record.accessibility.label ?? null;
   return (
-    <IconSelector
-      classifyIconSelectorMode={component.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
-      id={nodeDomId(context.store, record, context.domScope)}
-      onChange={(next) => dispatchTrigger(context, record, "change", toUiValue(next))}
-      uniform={component.uniform}
-      value={component.value}
-    />
+    <>
+      {label === null ? null : (
+        <span id={`${id}.label`} className="sr-only">
+          {label}
+        </span>
+      )}
+      <IconSelector
+        aria-labelledby={label === null ? undefined : `${id}.label`}
+        classifyIconSelectorMode={component.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
+        disabled={record.disabled}
+        id={id}
+        onChange={(next) => dispatchTrigger(context, record, "change", toUiValue(next))}
+        uniform={component.uniform}
+        value={component.value}
+      />
+    </>
   );
 }
 
@@ -2470,18 +2513,20 @@ function rowTreeActions(record: UiNodeRecord, props: Extract<Component, { type: 
   return (props.rowActions ?? []).map((action, actionIndex) => {
     const busy = admission?.isPending(target, action) ?? false;
     const unavailable = admission ? !admission.active : false;
-    return { kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", busy, disabled: action.disabled === true || busy || unavailable, reason: action.disabled && action.reason ? wireLabel(action.reason) : undefined, onClick: () => admission ? admission.dispatch(record.id, record.key, actionIndex, rowActionAdmissionKeyV1(target, action)) : dispatchCurrentRowAction(record.id, record.key, actionIndex, context, rowActionAdmissionKeyV1(target, action)) };
+    const refused = admission?.refusedBy(action);
+    return { kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label ? wireLabel(action.label) : undefined, placement: action.placement ?? "row", busy, disabled: action.disabled === true || refused !== undefined || busy || unavailable, reason: action.disabled && action.reason ? wireLabel(action.reason) : refused, onClick: () => admission ? admission.dispatch(record.id, record.key, actionIndex, rowActionAdmissionKeyV1(target, action)) : dispatchCurrentRowAction(record.id, record.key, actionIndex, context, rowActionAdmissionKeyV1(target, action)) };
   });
 }
 
-/** 🎬️ One table row action, named `"<label>: <row name>"`. A disabled one stays focusable — `aria-disabled`, never run —
+/** 🎬️ One table row action, named `"<label>: <row name>"`. Only a retired document's action is natively disabled. A
+ * disabled one — and one whose own dispatch is still pending, which is busy — stays focusable — `aria-disabled`, never run —
  * names its reason through `aria-describedby` and shows it as visible text while hovered, focused or pressed
  * (`DisabledReasonHint`), exactly as a tree row's action (`🌳️Tree`) and the wgpu renderer do (`💬️row-semantics`). */
-function TableRowActionButton({ action, name, busy, unavailable, onRun }: { readonly action: RowAction; readonly name: string; readonly busy: boolean; readonly unavailable: boolean; readonly onRun: () => void }): ReactElement {
+function TableRowActionButton({ action, name, busy, unavailable, refused, onRun }: { readonly action: RowAction; readonly name: string; readonly busy: boolean; readonly unavailable: boolean; readonly refused: string | undefined; readonly onRun: () => void }): ReactElement {
   const reasonId = `${useId()}-reason`;
   const label = action.label ? `${wireLabel(action.label)}: ${name}` : name;
-  const reason = action.disabled === true && action.reason ? wireLabel(action.reason) : undefined;
-  const disabled = action.disabled === true || busy || unavailable;
+  const reason = action.disabled === true && action.reason ? wireLabel(action.reason) : refused;
+  const disabled = action.disabled === true || refused !== undefined || busy || unavailable;
   const button = (
     <Button
       type="button"
@@ -2491,7 +2536,7 @@ function TableRowActionButton({ action, name, busy, unavailable, onRun }: { read
       icon={resolveControlIconNode(action.icon)}
       aria-label={label}
       title={reason ? undefined : label}
-      disabled={busy || unavailable}
+      disabled={unavailable}
       aria-disabled={disabled ? true : undefined}
       aria-busy={busy || undefined}
       aria-describedby={reason ? reasonId : undefined}
@@ -2501,18 +2546,17 @@ function TableRowActionButton({ action, name, busy, unavailable, onRun }: { read
       }}
     />
   );
-  return reason ? (
+  return (
     <DisabledReasonHint id={reasonId} reason={reason}>
       {button}
     </DisabledReasonHint>
-  ) : (
-    button
   );
 }
 
 type RowActionAdmissionControllerV1 = Readonly<{
   active: boolean;
   isPending(target: RowTarget, action: RowAction): boolean;
+  refusedBy(action: RowAction): string | undefined;
   dispatch(recordId: UiNodeRecord["id"], recordKey: string, actionIndex: number, authoredKey: string): void;
 }>;
 
@@ -2543,12 +2587,14 @@ function useRowActionAdmissionV1(context: UiInterpreterContext): RowActionAdmiss
   const owner = context.localDocumentOwner ?? fallback.current;
   const registry = useMemo(() => rowActionAdmissionRegistryV1(owner, context.store), [owner, context.store]);
   const epoch = useSyncExternalStore(registry.subscribe, registry.snapshot, registry.snapshot);
+  const refusals = useContext(RowActionRefusalsContext);
   return useMemo(() => ({
     active: registry.active,
     isPending: (target: RowTarget, action: RowAction) => registry.isPending(rowActionAdmissionKeyV1(target, action)),
+    refusedBy: (action: RowAction) => refusals?.get(action.verb),
     dispatch: (recordId, recordKey, actionIndex, authoredKey) => {
       const current = currentRowAction(recordId, recordKey, actionIndex, context, authoredKey);
-      if (!current || !registry.active) return;
+      if (!current || !registry.active || refusals?.has(current.action.verb)) return;
       const token = registry.begin(rowActionAdmissionKeyV1(current.target, current.action));
       if (!token) return;
       try {
@@ -2560,7 +2606,7 @@ function useRowActionAdmissionV1(context: UiInterpreterContext): RowActionAdmiss
         throw error;
       }
     },
-  }), [context, epoch, registry]);
+  }), [context, epoch, registry, refusals]);
 }
 
 function TreeView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
@@ -2749,6 +2795,7 @@ function SurfaceAccessibilityShell({ record, context, children }: { readonly rec
       data-ui-node-id={record.id}
       data-ui-node-key={record.key}
       data-ui-surface-shell=""
+      data-window-content-layout={record.component.type === "surface" && record.component.kind === "canvas-2d" ? "edgeless" : undefined}
       role="application"
       tabIndex={record.disabled ? -1 : 0}
       aria-disabled={record.disabled || undefined}
@@ -3138,7 +3185,7 @@ function TableView({ store, record, context }: { readonly store: UiDocumentStore
                   {hasActions ? (
                     <div role="gridcell" aria-colindex={columnTotal + 1} className="flex min-w-0 items-center gap-single px-single">
                       {(props.rowActions ?? []).map((action, actionIndex) => (
-                        <TableRowActionButton key={actionIndex} action={action} name={name} busy={props.target ? rowAdmission.isPending(props.target, action) : false} unavailable={!rowAdmission.active} onRun={() => rowAdmission.dispatch(row.id, row.key, actionIndex, rowActionAdmissionKeyV1(props.target!, action))} />
+                        <TableRowActionButton key={actionIndex} action={action} name={name} busy={props.target ? rowAdmission.isPending(props.target, action) : false} unavailable={!rowAdmission.active} refused={rowAdmission.refusedBy(action)} onRun={() => rowAdmission.dispatch(row.id, row.key, actionIndex, rowActionAdmissionKeyV1(props.target!, action))} />
                       ))}
                     </div>
                   ) : null}
@@ -3255,6 +3302,8 @@ if (import.meta.vitest) {
   await registerContinuousPressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerNumberKeyboardLawTests } = await import("./🧪️tests/🧪️number-keyboard-law/🟦️.tsx");
   await registerNumberKeyboardLawTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
+  const { registerTests1: registerTextKeyboardLawTests } = await import("./🧪️tests/🧪️text-keyboard-law/🟦️.tsx");
+  await registerTextKeyboardLawTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
   await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView, uiChildReactKeys, uiSiblingReactKeys }, { url: import.meta.url });
   const { registerTests1: registerTreeWindowTests } = await import("./🧪️tests/🪟️tree-windows/🟦️.tsx");

@@ -1,0 +1,314 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "valueBudget",
+        "allocationBudget",
+        "scalarBytes",
+        "encodings",
+        "directions",
+        "grants"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "process3d"
+        },
+        "valueBudget": {
+          "const": "cumulativeSqlStorageClasses"
+        },
+        "allocationBudget": {
+          "const": "independentOwnedRequests"
+        },
+        "scalarBytes": {
+          "const": 8
+        },
+        "encodings": {
+          "const": [
+            "binary",
+            "text"
+          ]
+        },
+        "directions": {
+          "const": [
+            "decodeNative",
+            "encodeNative"
+          ]
+        },
+        "grants": {
+          "const": [
+            "exact",
+            "minusOne",
+            "zero"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "valueBudget",
+        "allocationBudget",
+        "scalarBytes",
+        "encodings",
+        "directions",
+        "grants"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "const": "wires"
+        },
+        "valueBudget": {
+          "const": "cumulativeSqlStorageClasses"
+        },
+        "allocationBudget": {
+          "const": "independentOwnedRequests"
+        },
+        "scalarBytes": {
+          "const": 8
+        },
+        "encodings": {
+          "const": [
+            "binary",
+            "text"
+          ]
+        },
+        "directions": {
+          "const": [
+            "decodeNative",
+            "encodeNative"
+          ]
+        },
+        "grants": {
+          "const": [
+            "exact",
+            "minusOne",
+            "zero"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🧪️tests/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "broken"
+      ],
+      "properties": {
+        "files": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "broken": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌳️ast/🧪️tests/📦️wire-types/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "cases"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "value",
+              "accept"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "jack-query-result-valid-table",
+                  "jack-query-result-invalid-kind",
+                  "jack-query-result-invalid-row"
+                ]
+              },
+              "name": {
+                "const": "QueryResult"
+              },
+              "value": {},
+              "accept": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🎛️semantic/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaBytes",
+        "tableWidths",
+        "cases"
+      ],
+      "properties": {
+        "schemaBytes": {
+          "const": 3920
+        },
+        "tableWidths": {
+          "const": {
+            "bcf_camera": 29,
+            "bcf_coloring": 4,
+            "bcf_coloring_component": 4,
+            "bcf_comment": 8,
+            "bcf_components": 2,
+            "bcf_document": 3,
+            "bcf_orthogonal_camera": 4,
+            "bcf_perspective_camera": 4,
+            "bcf_raw_part": 5,
+            "bcf_selection": 4,
+            "bcf_snapshot_image": 2,
+            "bcf_topic": 10,
+            "bcf_topic_label": 4,
+            "bcf_viewpoint": 4,
+            "bcf_visibility_exception": 4
+          }
+        },
+        "cases": {
+          "const": [
+            {
+              "id": "full",
+              "rows": 29,
+              "valueBytes": 1259
+            },
+            {
+              "id": "metadataRetainingEmpty",
+              "rows": 3,
+              "valueBytes": 110
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🎛️semantic/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaBytes",
+        "tableWidths",
+        "cases"
+      ],
+      "properties": {
+        "schemaBytes": {
+          "const": 690
+        },
+        "tableWidths": {
+          "const": {
+            "deflate_document": 6,
+            "deflate_payload_byte": 4
+          }
+        },
+        "cases": {
+          "const": [
+            {
+              "id": "full",
+              "rows": 1025,
+              "valueBytes": 32813
+            },
+            {
+              "id": "metadataRetainingEmpty",
+              "rows": 1,
+              "valueBytes": 45
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🎛️semantic/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaBytes",
+        "tableWidths",
+        "cases"
+      ],
+      "properties": {
+        "schemaBytes": {
+          "const": 578
+        },
+        "tableWidths": {
+          "const": {
+            "semio_text_document": 2,
+            "semio_text_run": 5,
+            "semio_text_mark": 5
+          }
+        },
+        "cases": {
+          "const": [
+            {
+              "id": "full",
+              "rows": 8,
+              "valueBytes": 257
+            },
+            {
+              "id": "metadataRetainingEmpty",
+              "rows": 1,
+              "valueBytes": 26
+            }
+          ]
+        }
+      }
+    }
+  }
+]

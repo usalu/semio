@@ -38,7 +38,7 @@ type hookVectorFile struct {
 
 func loadHookVectors(ctx *host.Context) (hookVectorFile, error) {
 	var file hookVectorFile
-	raw, err := ctx.FixtureBytes(hookVectors)
+	raw, err := ctx.InputBytes(hookVectors)
 	if err != nil {
 		return file, err
 	}

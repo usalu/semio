@@ -1,4 +1,5 @@
-import{binary64,type Binary64}from"../../../🟦️.ts";
+import { binary64 } from "../../../🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🎚️ generation2d direct `change-slider-value` payload mirror of `ChangeSliderValue`, with its closed-schema parser. */
 export interface ChangeSliderValue {
   id: string;

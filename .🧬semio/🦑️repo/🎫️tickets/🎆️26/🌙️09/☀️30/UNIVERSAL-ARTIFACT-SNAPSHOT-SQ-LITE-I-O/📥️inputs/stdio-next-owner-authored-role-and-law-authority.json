@@ -1,0 +1,5234 @@
+[
+  {
+    "schema": "stdio.ifc",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 3250,
+    "tableWidths": [
+      {
+        "table": "ifc_aggregate_element",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "aggregate_value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "entity_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "complex_type_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc_complex_type",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "entity_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc_document",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc_entity",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "instance_id",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc_file_description_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc_file_name_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc_file_schema_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc_header",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          }
+        ]
+      },
+      {
+        "table": "ifc_typed_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "typed_value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "kind",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "integer_value",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "real_value",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "string_value",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "enum_value",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "reference_instance_id",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "reference_entity_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "typed_name",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "real_bits",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "real_class",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_snapshot_ifc4_native_preflight_and_erased_binary_text",
+      "sqlite_snapshot_ifc4_rejects_corrupt_ownership_reference_words_ieee_and_controls",
+      "sqlite_snapshot_ifc4_every_header_value_variant_full_width_and_ieee_word",
+      "sqlite_snapshot_ifc4_independent_sqlite_full_value_query_and_edit",
+      "sqlite_snapshot_ifc4_cohort_controlled_input_preserves_actual_carrier_and_cancels_inside_copy",
+      "sqlite_snapshot_ifc4_cohort_controlled_output_preserves_actual_carrier_and_cancels_inside_copy",
+      "sqlite_snapshot_ifc4_cohort_semantic_words_match_independent_sqlite_dataview",
+      "sqlite_snapshot_ifc4_surrogate_root_header_ids_are_relationships_not_fixed_ones",
+      "sqlite_snapshot_ifc4_controlled_native_owned_frame_preserves_literal_schema_and_all_variants",
+      "sqlite_snapshot_ifc4_actual_removal_keeps_literal_references_through_erased_native_and_sqlite_file"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  },
+  {
+    "schema": "stdio.ifc.2x3",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-ifc-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 4006,
+    "tableWidths": [
+      {
+        "table": "ifc2x3_document",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "edm_preamble_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_edm_preamble",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "producer",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "module",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "creation_date",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "host",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "database",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "database_version",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "database_creation_date",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "model",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "model_creation_date",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "header_model",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "header_model_creation_date",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "user",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "group_name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "license",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "options",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_entity_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "entity_type_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_entity_type",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "instance_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_file_description_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_file_name_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_file_schema_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_header",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_instance",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "instance_id",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_list_element",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "list_value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_typed_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "typed_value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "ifc2x3_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "kind",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "integer_value",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "decimal_negative",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "decimal_coefficient",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "decimal_scale",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "decimal_exponent",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "string_value",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "enum_value",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "reference_instance_id",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "reference_instance_row_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "typed_name",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_snapshot_ifc2x3_native_literal_decimal_preflight_and_erased_encodings",
+      "sqlite_snapshot_ifc2x3_exact_owned_mvd_diagnostics_and_coordinates",
+      "sqlite_snapshot_ifc2x3_owned_view_preflight_budgets_and_cancellation",
+      "sqlite_snapshot_ifc2x3_refuses_corrupt_decimal_optional_owner_forests_and_limits",
+      "sqlite_snapshot_ifc2x3_exact_decimal_components_optional_edm_and_header_graph",
+      "sqlite_snapshot_ifc2x3_independent_sqlite_decimal_and_edm_field_edit",
+      "sqlite_snapshot_ifc2x3_cohort_controlled_input_preserves_actual_carrier_and_cancels_inside_copy",
+      "sqlite_snapshot_ifc2x3_cohort_controlled_output_preserves_actual_carrier_and_cancels_inside_copy",
+      "sqlite_snapshot_ifc2x3_owned_decimal_coefficients_survive_semantic_files_without_display",
+      "sqlite_snapshot_ifc2x3_surrogate_root_header_ids_are_relationships_not_fixed_ones",
+      "sqlite_snapshot_ifc2x3_controlled_native_owned_frame_preserves_literal_schema_and_all_variants",
+      "sqlite_snapshot_ifc2x3_owned_decimal_coefficient_is_literal_state_not_exchange_validation",
+      "sqlite_snapshot_ifc2x3_actual_removal_keeps_literal_references_through_erased_native_and_sqlite_file"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  },
+  {
+    "schema": "stdio.las",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-las-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-las-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 5875,
+    "tableWidths": [
+      {
+        "table": "las_document",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "las_header",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "version_major",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "version_minor",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "system_identifier",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "generating_software",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "creation_day_of_year",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "creation_year",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "header_size",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "offset_to_point_data",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "number_of_vlrs",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "point_data_format_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "point_data_record_length",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "number_of_point_records",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_scale",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_scale",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_scale",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_offset",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_offset",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_offset",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "max_x",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "min_x",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "max_y",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "min_y",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "max_z",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "min_z",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_scale_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_scale_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_scale_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_scale_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_scale_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_scale_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_offset_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_offset_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_offset_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_offset_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_offset_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_offset_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "max_x_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "max_x_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "min_x_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "min_x_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "max_y_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "max_y_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "min_y_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "min_y_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "max_z_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "max_z_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "min_z_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "min_z_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "las_point",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "y",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "z",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "intensity",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "return_number",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "number_of_returns",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "scan_direction_flag",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "edge_of_flight_line",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "classification",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "scan_angle_rank",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "user_data",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "point_source_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "las_point_gps",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "time",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "time_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "time_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "las_point_rgb",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "red",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "green",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "blue",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "las_return_histogram",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "count",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "las_vlr",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "user_id",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "record_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "description",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "las_vlr_octet",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "vlr_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_snapshot_full_header_vlr_points_ieee_and_edited_sqlite",
+      "sqlite_snapshot_refuses_valid_sqlite_incoherent_identity_and_child_order",
+      "sqlite_snapshot_owned_coordinates_controls_and_actual_declarations",
+      "sqlite_snapshot_complete_typescript_native_relational_interoperability",
+      "sqlite_snapshot_large_semantic_loops_cancel_before_completion",
+      "sqlite_snapshot_erased_binary_and_text_capabilities_preserve_every_native_field",
+      "sqlite_snapshot_las_native_encoding_preflight_admits_owned_model_and_refuses_budget_or_cancellation",
+      "sqlite_snapshot_las_native_encoding_preflight_bounds_escaped_text_and_cancels_borrowed_members"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  },
+  {
+    "schema": "stdio.md",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-md-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-md-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 3901,
+    "tableWidths": [
+      {
+        "table": "md_block",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "kind",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_block_inline",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "block_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "inline_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_block_quote",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          }
+        ]
+      },
+      {
+        "table": "md_code_block",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "info",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "literal",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_code_span",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "literal",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_document",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_document_block",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "block_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_emphasis",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          }
+        ]
+      },
+      {
+        "table": "md_emphasis_inline",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "emphasis_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "inline_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_hard_break",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          }
+        ]
+      },
+      {
+        "table": "md_heading",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "level",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_html_block",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "raw",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_html_inline",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "raw",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_image",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "alt",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "url",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "title",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_inline",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "kind",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_link",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "url",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "title",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_link_text",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "link_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "inline_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_list",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "ordered",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "start",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "tight",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_list_item",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "list_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_list_item_block",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "item_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "block_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_paragraph",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          }
+        ]
+      },
+      {
+        "table": "md_quote_block",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "quote_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "block_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_soft_break",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          }
+        ]
+      },
+      {
+        "table": "md_strong",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          }
+        ]
+      },
+      {
+        "table": "md_strong_inline",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "strong_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "inline_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_text",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "text",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "md_thematic_break",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_snapshot_md_independent_consistent_surrogate_renumbering_retains_literal_tree",
+      "sqlite_snapshot_md_owned_guard_refuses_different_permitted_literal_tree",
+      "sqlite_snapshot_md_all_semantic_variants_and_optional_states",
+      "sqlite_snapshot_md_independent_sqlite_queries_and_edits_tree_entities",
+      "sqlite_snapshot_md_rejects_invalid_ownership_ordinals_tags_and_bounds",
+      "sqlite_snapshot_md_iterative_tree_supports_1024_owned_levels",
+      "sqlite_snapshot_commonmark_owned_encoding_preflight_checks_bounds_before_allocation",
+      "sqlite_snapshot_commonmark_logical_erased_records_preserve_1024_tree_levels",
+      "sqlite_snapshot_commonmark_neutral_exact_coordinate_guard_and_identity",
+      "sqlite_snapshot_md_authored_domain_census_matches_every_independent_table",
+      "sqlite_snapshot_md_owned_native_output_preserves_every_literal_variant",
+      "sqlite_snapshot_md_native_output_exact_file_and_domain_row_frontiers",
+      "sqlite_snapshot_md_native_authored_schema_admission_precedes_owned_work",
+      "sqlite_snapshot_md_native_output_cancels_inside_known_unicode_ownership",
+      "sqlite_snapshot_md_native_output_cancels_inside_wide_empty_list_census",
+      "sqlite_snapshot_md_native_decode_cancels_inside_owned_wide_empty_item_frontier",
+      "sqlite_snapshot_md_deep_partial_owned_refusal_retires_without_recursive_drop",
+      "sqlite_snapshot_commonmark_handwritten_logical_text_refuses_cycles_reuse_orphans_and_mixed_variants",
+      "sqlite_snapshot_commonmark_authored_grammar_recognizes_all_typed_logical_kinds",
+      "sqlite_snapshot_md_whole_native_control_keeps_deep_fields_and_interior_cancellation",
+      "sqlite_snapshot_md_final_sql_checkpoint_cancellation_retires_complete_deep_tree"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  },
+  {
+    "schema": "stdio.obj",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-obj-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-obj-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 6231,
+    "tableWidths": [
+      {
+        "table": "obj_document",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "material_library",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_face",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_face_boundary",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "face_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_face_vertex",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "face_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "vertex_source_index",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "texcoord_source_index",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_source_index",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "vertex_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "texcoord_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_group",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_group_face",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "group_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "face_source_index_high",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "face_source_index_low",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "face_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_material_range",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "first_face_source_index_high",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "first_face_source_index_low",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "first_boundary_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "material",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_normal",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "y",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "z",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_object",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_object_face",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "object_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "face_source_index_high",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "face_source_index_low",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "face_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_smoothing_range",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "first_face_source_index_high",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "first_face_source_index_low",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "first_boundary_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "group_number",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_texcoord",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "u",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "v",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "w",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "u_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "u_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "v_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "v_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "w_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "w_numeric_class",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_unknown_statement",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "source_line_ordinal_high",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "source_line_ordinal_low",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "raw",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "obj_vertex",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "y",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "z",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "w",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "w_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "w_numeric_class",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_snapshot_obj_controlled_output_retains_exact_ieee_and_source_words_with_interior_cancellation",
+      "sqlite_snapshot_obj_unresolved_native_source_indices_are_complete_states",
+      "sqlite_snapshot_obj_unsigned_source_words_and_optional_resolved_relationships_are_independently_editable",
+      "sqlite_snapshot_obj_signed_surrogate_renumbering_preserves_owned_identity_guard",
+      "sqlite_snapshot_obj_source_line_positions_preserve_unsigned_words",
+      "sqlite_snapshot_obj_geometry_membership_ranges_and_unknown_statements_roundtrip",
+      "sqlite_snapshot_obj_independent_sql_joins_and_edits_reconstruct_geometry",
+      "sqlite_snapshot_ieee754_native_domain_through_independent_sqlite",
+      "sqlite_snapshot_exact_owned_coordinates_and_document_identity",
+      "sqlite_snapshot_obj_native_encoding_preflight_admits_owned_model_and_refuses_budget_or_cancellation",
+      "sqlite_snapshot_obj_native_encoding_preflight_bounds_escaped_text_and_cancels_borrowed_members",
+      "sqlite_snapshot_obj_erased_binary_and_text_keep_owned_schema_exact_ieee_and_intermediate_state",
+      "sqlite_snapshot_obj_controlled_native_admits_unsigned_source_indices_and_bounds_rows"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  },
+  {
+    "schema": "stdio.png",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-png-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-png-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 7206,
+    "tableWidths": [
+      {
+        "table": "png_background",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "chunk_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "sample",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_chromaticity",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "white_x",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "white_y",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "red_x",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "red_y",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "green_x",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "green_y",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "blue_x",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "blue_y",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_chunk",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "kind",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_deflate_block",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "stream_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "final",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "kind",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "alignment",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "hlit",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "hdist",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "hclen",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_deflate_code",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "block_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "length",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_deflate_length",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "block_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "symbol",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "extra",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_deflate_token",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "block_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "symbol",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "extra",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "distance_symbol",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "distance_extra",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_document",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "role",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_gamma",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_idat",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "stream_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "length",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_ihdr",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "width",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "height",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "bit_depth",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "color_type",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "compression",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "filter",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "interlace",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_inflated_tail",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_literal_octet",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_packed_remainder",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "bit_count",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_palette",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "chunk_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "red",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "green",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "blue",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_physical",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "x",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "unit",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_sample",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "scanline_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_scanline",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "pass",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "row",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "width",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "channels",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "bit_depth",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "filter",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_srgb",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "intent",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_stream",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "cmf",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "flg",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "adler",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "padding",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "padding_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_text",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "keyword",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "language",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "translated",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "compressed",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "stream_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_time",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "year",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "month",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "day",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "hour",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "minute",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "second",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_transparency",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "chunk_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "sample",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "png_unknown_octet",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "chunk_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_snapshot_owns_one_exact_canonical_byte_carrier",
+      "sqlite_snapshot_png_reconstruction_refuses_invalid_canonical_bytes_atomically",
+      "sqlite_snapshot_png_projection_and_reconstruction_obey_cancellation_and_ownership_limits",
+      "sqlite_snapshot_png_semantic_chunks_scanlines_and_exact_native_owner"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  },
+  {
+    "schema": "stdio.step",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-step-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-step-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 3437,
+    "tableWidths": [
+      {
+        "table": "step_aggregate_element",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "aggregate_value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_argument",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "entity_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "complex_type_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_author",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_complex_type",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "entity_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_description",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "content",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_document",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_entity",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "instance_id",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_header",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "implementation_level",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "timestamp",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "preprocessor_version",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "originating_system",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "authorization",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_organization",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_schema_identifier",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_typed_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "wrapper_value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "type_name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "step_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "kind",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "integer_value",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "real_value",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "string_value",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "enum_value",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "reference_instance_id",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "reference_entity_id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "real_bits",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "real_class",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_snapshot_step_native_preflight_and_bare_binary_text_admission",
+      "sqlite_snapshot_step_large_scalar_before_copy_controls_and_borrowed_profile_budgets",
+      "sqlite_snapshot_step_full_model_all_ieee_words_and_native_state",
+      "sqlite_snapshot_step_rejects_structural_reference_scalar_corruption_and_controls",
+      "sqlite_snapshot_step_independent_sqlite_joins_and_header_edit",
+      "sqlite_snapshot_step_exact_typed_profiles_refuse_wrong_coordinates_and_preserve_diagnostics",
+      "sqlite_snapshot_step_cohort_controlled_input_preserves_actual_carrier_and_cancels_inside_copy",
+      "sqlite_snapshot_step_cohort_controlled_output_preserves_actual_carrier_and_cancels_inside_copy",
+      "sqlite_snapshot_step_cohort_semantic_words_match_independent_sqlite_dataview",
+      "sqlite_snapshot_step_surrogate_root_header_ids_are_relationships_not_fixed_ones",
+      "sqlite_snapshot_step_controlled_native_owned_frame_preserves_literal_schema_and_all_variants"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  },
+  {
+    "schema": "stdio.stl",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-stl-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-stl-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 1483,
+    "tableWidths": [
+      {
+        "table": "stl_facet",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "solid_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_x",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_y",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_z",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_x_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_x_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_y_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_y_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_z_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "normal_z_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "stl_solid",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "stl_vertex",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "facet_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "y",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "z",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "x_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "y_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_ieee754_bits",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "z_numeric_class",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_snapshot_stl_controlled_output_preserves_full_words_and_cancels_inside_unicode",
+      "sqlite_snapshot_stl_facets_own_exactly_three_vertices_and_preserve_normals",
+      "sqlite_snapshot_stl_sql_edits_reconstruct_native_facet_coordinates",
+      "sqlite_snapshot_ieee754_native_domain_through_independent_sqlite",
+      "sqlite_snapshot_exact_owned_coordinates_and_document_identity",
+      "sqlite_snapshot_stl_native_encoding_preflight_admits_owned_model_and_refuses_budget_or_cancellation",
+      "sqlite_snapshot_stl_native_encoding_preflight_bounds_escaped_text_and_cancels_borrowed_members",
+      "sqlite_snapshot_stl_erased_binary_and_text_keep_owned_schema_exact_ieee_and_intermediate_state",
+      "sqlite_snapshot_stl_whole_native_controls_exact_ieee_admission_and_interior_cancellation",
+      "sqlite_snapshot_stl_typed_guard_compares_full_state_and_accepts_independent_surrogate_renumbering"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  },
+  {
+    "schema": "stdio.tiff",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-tiff-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-tiff-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 3886,
+    "tableWidths": [
+      {
+        "table": "tiff_ascii_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_byte_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_chunk",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "ifd_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "payload",
+            "type": "BLOB",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_document",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "byte_order",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_double_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_bits",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_class",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_float_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "REAL",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_bits",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_class",
+            "type": "TEXT",
+            "notNull": 0,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_ifd",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "document_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "storage_kind",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "offsets_type",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "byte_counts_type",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_long_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_rational_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "numerator",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "denominator",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_short_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_signed_byte_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_signed_long_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_signed_rational_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "numerator",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "denominator",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_signed_short_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_tag",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "ifd_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "tag_number",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value_type",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "tiff_undefined_value",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "tag_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_preserves_storage_ascii_octets_and_ieee_bits",
+      "independent_sqlite_oracle_reads_and_edits_owned_chunk_bytes",
+      "relational_and_ownership_limits_are_enforced",
+      "sqlite_snapshot_tiff_declared_native_factory_matches_live_protocol",
+      "sqlite_snapshot_tiff_erased_native_preserves_complete_custom_owner",
+      "ordinary_and_controlled_initial_record_pack_body_diagnostic"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  },
+  {
+    "schema": "stdio.zip",
+    "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust/📋️project.json",
+    "nativeTarget": "@semio-tech/stdio-zip-rs:test-snapshot-sqlite-native",
+    "sourceTarget": "@semio-tech/stdio-zip-rs:test-snapshot-sqlite-source",
+    "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+    "schemaBytes": 3963,
+    "tableWidths": [
+      {
+        "table": "zip_archive",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "schema",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "comment",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "comment_utf8",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_central_extra_field",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "tag",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_central_extra_field_byte",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "extra_field_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_central_header",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "version_made_by",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "version_needed",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "flags",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "modified_time",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "modified_date",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "legacy_name_present",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "comment",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "legacy_comment_present",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "internal_attributes",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "external_attributes",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_central_legacy_comment_byte",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_central_legacy_name_byte",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_entry",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "archive_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "name",
+            "type": "TEXT",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "compression_method",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "data_descriptor_signature",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_entry_byte",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "entry_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_local_extra_field",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "tag",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_local_extra_field_byte",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "extra_field_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_local_header",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "version_needed",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "flags",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "modified_time",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "modified_date",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "legacy_name_present",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      },
+      {
+        "table": "zip_local_legacy_name_byte",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INTEGER",
+            "notNull": 0,
+            "primaryKey": 1
+          },
+          {
+            "name": "header_id",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "ordinal",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          },
+          {
+            "name": "value",
+            "type": "INTEGER",
+            "notNull": 1,
+            "primaryKey": 0
+          }
+        ]
+      }
+    ],
+    "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "declaredNativeLaws": [
+      "sqlite_snapshot_zip_large_archive_comment_can_cancel_before_owned_copy",
+      "sqlite_snapshot_zip_all_member_header_policy_and_ordered_extra_fields_roundtrip",
+      "sqlite_snapshot_zip_independent_archive_member_header_and_payload_edits",
+      "sqlite_snapshot_zip_named_guards_use_owned_header_metadata_without_wire_materialization",
+      "sqlite_snapshot_zip_named_guard_independent_sqlite_edits_and_bounded_cancel",
+      "sqlite_snapshot_zip_full_unsigned16_method_domain_is_distinct_from_iso_and_native_wire",
+      "sqlite_snapshot_zip_erased_binary_and_text_keep_all_unsigned16_methods_and_noncanonical_metadata",
+      "sqlite_snapshot_zip_native_encoding_admits_owned_model_and_refuses_budget_or_cancellation",
+      "sqlite_snapshot_zip_native_encoding_bounds_escaped_text_and_cancels_borrowed_members",
+      "sqlite_snapshot_zip_declared_controlled_native_input_output_and_exact_rows",
+      "sqlite_snapshot_zip_owned_native_copy_and_collection_work_can_cancel_interior"
+    ],
+    "scope": "Declared law names only, not runtime/selected count"
+  }
+]

@@ -1,4 +1,4 @@
-//! 🧪️ `rotate-selection` fixture — `🔄️turns-two-nodes`.
+//! 🧪️ `rotate-selection` snapshot — `🔄️turns-two-nodes`.
 //!
 //! A quarter turn of `node-a` and `node-b` about (20, 10): both orbit the pivot and every one of their handle angles turns by the same π/2, so the edge between them keeps its geometry.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     assert!(!inverse.is_empty(), "rotate-selection/turns-two-nodes: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");

@@ -38,17 +38,17 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed catalog, statute list and territory forest.
     fn inputs(ctx: &Context) -> Result<Json, String> {
-        parse_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://🎯️goal-statute-territory.json")?))
+        parse_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🎯️goal-statute-territory.json")?))
     }
 
     /// 📥️ The committed expectations.
     fn expected(ctx: &Context) -> Result<Json, String> {
-        parse_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://📤️goal-statute-territory-expectations.json")?))
+        parse_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://📤️goal-statute-territory-expectations.json")?))
     }
 
     /// 📥️ The record set the goals and tickets come from.
     fn records(ctx: &Context) -> Result<tree::MemoryTreeSource, String> {
-        tree::MemoryTreeSource::from_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://🌳️tree-source.json")?))
+        tree::MemoryTreeSource::from_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🌳️tree-source.json")?))
     }
 
     /// 📜️ The catalog the statute ports are satisfied with.

@@ -171,9 +171,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-block-applied",
       "class": "handcrafted",
       "target": {
@@ -216,7 +215,6 @@
       "notes": "InsertBlock{path:[],index:1,block} inserts a real CommonMark paragraph block between the heading and the original paragraph."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-applied",
       "class": "handcrafted",
       "target": {
@@ -259,7 +257,6 @@
       "notes": "RemoveBlock{path:[],index:0} drops the heading block, leaving the paragraph."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-block-applied",
       "class": "handcrafted",
       "target": {
@@ -302,7 +299,6 @@
       "notes": "ReplaceBlock{path:[],index:1,block} overwrites the paragraph block with a real level-2 heading block, changing its kind entirely."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-inlines-applied",
       "class": "handcrafted",
       "target": {

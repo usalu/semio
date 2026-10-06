@@ -1,4 +1,4 @@
-import{parseFormsJsonQuestion,parseFormsJsonValue}from"../../🌱️value/🔣️json/🟦️.ts";
+import {parseFormsJsonQuestion,parseFormsJsonValue} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 /** 🧪️ Shared answer contracts checked independently with Ajv and ajv-formats. */
 import assert from "node:assert/strict";
 import Ajv from "ajv";

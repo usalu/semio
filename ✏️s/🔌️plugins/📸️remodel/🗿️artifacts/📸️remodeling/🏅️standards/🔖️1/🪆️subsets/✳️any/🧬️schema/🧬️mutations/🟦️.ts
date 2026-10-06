@@ -1,5 +1,5 @@
-import {binary32Value,binary64Value,type Binary32,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import type {ByteBuffer,Float32Buffer} from "../📸️snapshot/🟦️.ts";
+import {binary32Value,binary64Value,type Binary32,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {ByteBuffer, Float32Buffer} from "../📸️snapshot/🟦️.ts";
 /** 🧬️ Remodeling mutation vocabulary — TypeScript twin of `🧬️mutations/🦀️.rs` and of all
  *  thirty-six `<slug>/🔺️diff/🦀️.rs` leaves.
  *
@@ -15,70 +15,8 @@ import type {ByteBuffer,Float32Buffer} from "../📸️snapshot/🟦️.ts";
  */
 
 import { contentId } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { applyRemodelingDiff, emptyRemodelingDiff, type RemodelingDiff, type RemodelingGcpList, type RemodelingMediaStreamList } from "../🔺️diff/🟦️.ts";
-import {
-  CAMERA_CALIBRATION_SPEC,
-  CAMERA_TRAJECTORY_SPEC,
-  DENSE_CLOUD_SPEC,
-  DENSE_PARAMS_SPEC,
-  FEATURE_PARAMS_SPEC,
-  FRAME_REF_SPEC,
-  GCP_OBSERVATION_SPEC,
-  GEO_PARAMS_SPEC,
-  GEO_PRODUCTS_SPEC,
-  GROUND_CONTROL_POINT_SPEC,
-  IMAGE_ASSET_SPEC,
-  INGEST_PARAMS_SPEC,
-  MATCH_PARAMS_SPEC,
-  MEDIA_KINDS,
-  REMODELING_CONTENT_KINDS,
-  MEDIA_STREAM_SPEC,
-  MESH_PARAMS_SPEC,
-  MOTION_PARAMS_SPEC,
-  MOTION_TRACK_SUMMARY_SPEC,
-  QC_REPORT_SPEC,
-  REMODELING_MESH_SPEC,
-  RIG_EXTRINSIC_SPEC,
-  SFM_PARAMS_SPEC,
-  SPARSE_CLOUD_SPEC,
-  VIDEO_SOURCE_SPEC,
-  camelOf,
-  decodeRecord,
-  type CalibrationState,
-  type CameraCalibration,
-  type CameraTrajectory,
-  type DenseCloud,
-  type DenseParams,
-  type FeatureParams,
-  type FieldSpec,
-  type FrameRef,
-  type GcpObservation,
-  type GeoParams,
-  type GeoProducts,
-  type GroundControlPoint,
-  type ImageAsset,
-  type IngestParams,
-  type MatchParams,
-  type MediaKind,
-  type MediaStream,
-  type MeshParams,
-  type MotionParams,
-  type MotionTrackSummary,
-  type QcReportSnapshot,
-  type ReconstructionResults,
-  type RecordSpec,
-  type RemodelingAssetChild,
-  type RemodelingContentKind,
-  type RemodelingDurableArtifact,
-  type RemodelingDurableArtifactStore,
-  type RemodelingMesh,
-  type RemodelingSnapshot,
-  type RigExtrinsic,
-  type SfmParams,
-  type SparseCloud,
-  type ValueSpec,
-  type VideoSource,
-} from "../📸️snapshot/🟦️.ts";
+import {applyRemodelingDiff, emptyRemodelingDiff, type RemodelingDiff, type RemodelingGcpList, type RemodelingMediaStreamList} from "../🔺️diff/🟦️.ts";
+import {CAMERA_CALIBRATION_SPEC, CAMERA_TRAJECTORY_SPEC, DENSE_CLOUD_SPEC, DENSE_PARAMS_SPEC, FEATURE_PARAMS_SPEC, FRAME_REF_SPEC, GCP_OBSERVATION_SPEC, GEO_PARAMS_SPEC, GEO_PRODUCTS_SPEC, GROUND_CONTROL_POINT_SPEC, IMAGE_ASSET_SPEC, INGEST_PARAMS_SPEC, MATCH_PARAMS_SPEC, MEDIA_KINDS, REMODELING_CONTENT_KINDS, MEDIA_STREAM_SPEC, MESH_PARAMS_SPEC, MOTION_PARAMS_SPEC, MOTION_TRACK_SUMMARY_SPEC, QC_REPORT_SPEC, REMODELING_MESH_SPEC, RIG_EXTRINSIC_SPEC, SFM_PARAMS_SPEC, SPARSE_CLOUD_SPEC, VIDEO_SOURCE_SPEC, camelOf, type CalibrationState, type CameraCalibration, type CameraTrajectory, type DenseCloud, type DenseParams, type FeatureParams, type FieldSpec, type FrameRef, type GcpObservation, type GeoParams, type GeoProducts, type GroundControlPoint, type ImageAsset, type IngestParams, type MatchParams, type MediaKind, type MediaStream, type MeshParams, type MotionParams, type MotionTrackSummary, type QcReportSnapshot, type ReconstructionResults, type RecordSpec, type RemodelingAssetChild, type RemodelingContentKind, type RemodelingDurableArtifact, type RemodelingDurableArtifactStore, type RemodelingMesh, type RemodelingSnapshot, type RigExtrinsic, type SfmParams, type SparseCloud, type ValueSpec, type VideoSource} from "../📸️snapshot/🟦️.ts";
 
 //#region 🔖️Payloads
 export interface CreateStream {
@@ -368,17 +306,6 @@ export const REMODELING_MUTATION_SPECS: Record<RemodelingMutationTag, RecordSpec
 };
 
 export const REMODELING_MUTATION_TAGS = Object.keys(REMODELING_MUTATION_SPECS) as RemodelingMutationTag[];
-
-/** 🦠️ Decodes a parsed RFC 8259 value into a validated tagged mutation. */
-export function decodeRemodelingMutation(json: unknown): RemodelingMutation {
-  if (typeof json !== "object" || json === null || Array.isArray(json)) throw new Error(`mutation: expected an object, got ${JSON.stringify(json)}`);
-  const source = json as Record<string, unknown>;
-  const tag = source.mutation;
-  if (typeof tag !== "string" || !(tag in REMODELING_MUTATION_SPECS)) throw new Error(`mutation: unknown tag ${JSON.stringify(tag)}`);
-  const { mutation: _tag, ...rest } = source;
-  const body = decodeRecord(rest, REMODELING_MUTATION_SPECS[tag as RemodelingMutationTag], `${tag}`);
-  return { mutation: tag, ...body } as unknown as RemodelingMutation;
-}
 //#endregion 🔖️Spec
 
 //#region 🔖️AssetHandles

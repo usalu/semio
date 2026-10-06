@@ -22,6 +22,7 @@ pub const BLOCK2D_BODY_BOARD: &str = "block2d.play.board";
 /// 🧱️ Stitched into the app manifest by `crate::editor::block2d::create_block2d_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: BLOCK2D_WINDOW_BOARD.into(),
         label: LocalizedLabel::native("Node Kind", "Knotenart"),
         body_key: BLOCK2D_BODY_BOARD.into(),

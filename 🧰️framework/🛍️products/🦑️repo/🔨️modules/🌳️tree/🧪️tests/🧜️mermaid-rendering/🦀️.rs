@@ -8,7 +8,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed Mermaid fixture.
     fn fixture(ctx: &Context) -> Result<Json, String> {
-        parse_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://🧜️mermaid-vectors.json")?))
+        parse_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🧜️mermaid-vectors.json")?))
     }
 
     /// 📃️ Reads a string list out of a JSON object.

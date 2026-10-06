@@ -139,144 +139,15 @@ pub fn cad_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::diff::schema::CadDiff;
-    use crate::mutations::CadMutation;
-    use crate::{CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::ArtifactBuilder;
-    use crate::CadReferenceIndex;
 
-    //#region Builder
-    fn empty_snapshot() -> CadSnapshot {
-        CadSnapshot {
-            schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
-            id: String::new(),
-            shape_model: None,
-            building_model: None,
-            energy_model: None,
-            structure_classic_model: None,
-            drawings: Vec::new(),
-            references_by_model_definition_id: CadReferenceIndex::new(),
-            nodes: Vec::new(),
-        }
-    }
-
-    /// Builds a `cad` snapshot.
-    #[derive(Clone, Debug)]
-    pub struct CadBuilderConstruction {
-        snapshot: CadSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for CadBuilderConstruction {
-        type Snapshot = CadSnapshot;
-        type Mutation = CadMutation;
-        type Diff = CadDiff;
-
-        fn empty() -> Self {
-            Self { snapshot: empty_snapshot(), diagnostics: Vec::new() }
-        }
-
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<CadSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<CadSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <CadDiff as protocol::MutationDiff<CadSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-    //#endregion Builder
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::CadSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct CadParts {
-        pub snapshot: Option<CadSnapshot>,
-    }
-
-    pub struct CadAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for CadAnalyzerAnalysis {
-        type Parts = CadParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.cad.cad", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = CadParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <CadSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <CadSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec CadBuilderFacets {
-        construction: CadBuilderConstruction,
-        analysis: CadAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::CadComposerComposition,
-    }
-    builder: CadBuilder,
-    analyzer: CadAnalyzer,
-    composer: CadComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports

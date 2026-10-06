@@ -1,4 +1,4 @@
-import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 // 🔷️ Example `hex-ring` — the TypeScript twin of `🦀️.rs`'s builder, same rounding, same ids.
 
 import type { Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot } from "../../🧬️schema/📸️snapshot/🟦️.ts";

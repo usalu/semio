@@ -16,7 +16,7 @@ use crate::editor::shooting::modes::edit::windows::scene as scene_window;
 use crate::editor::shooting::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::shooting::presence::{ShootingPresence, ShootingPresenceMutation};
 use crate::editor::shooting::terminology::shooting_play_labels;
-use crate::op::ShootingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
@@ -270,7 +270,7 @@ semio_framework_plugin::app_commands! {
         "addShot" as "add-shot" => add_shot::AddShot,
         "addAsset" as "add-asset" => add_asset::AddAsset,
         "importAsset" as "import-asset" => import_asset::ImportAsset,
-        "resetFixture" as "reset-snapshot" => reset_snapshot::ResetSnapshot,
+        "resetSnapshot" as "reset-snapshot" => reset_snapshot::ResetSnapshot,
         "translateSelection" as "translate-selection" => translate_selection::TranslateSelection,
         "rotateSelection" as "rotate-selection" => rotate_selection::RotateSelection,
         "scaleSelection" as "scale-selection" => scale_selection::ScaleSelection,
@@ -434,7 +434,7 @@ mod args_bridge {
             "addShot" => ShootingCommand::AddShot(decode(action, fold(args, &[], &[("format", text("png")), ("shape", text("rectangle"))]))?),
             "addAsset" => ShootingCommand::AddAsset(decode(action, fold(args, &[], &[("format", text("glb"))]))?),
             "importAsset" => ShootingCommand::ImportAsset(decode(action, fold(args, &[("value", "payload")], &[]))?),
-            "resetFixture" => ShootingCommand::ResetSnapshot(decode(action, plain())?),
+            "resetSnapshot" => ShootingCommand::ResetSnapshot(decode(action, plain())?),
             "translateSelection" => ShootingCommand::TranslateSelection(decode(action, fold(args, IDS, &[("asset_ids", DslValue::Array(Vec::new())), ("dx", zero()), ("dy", zero()), ("dz", zero())]))?),
             "rotateSelection" => ShootingCommand::RotateSelection(decode(action, fold(args, IDS, &[("asset_ids", DslValue::Array(Vec::new())), ("ax", zero()), ("ay", zero()), ("az", one()), ("angle", zero())]))?),
             "scaleSelection" => ShootingCommand::ScaleSelection(decode(action, fold(args, IDS, &[("asset_ids", DslValue::Array(Vec::new())), ("sx", one()), ("sy", one()), ("sz", one())]))?),
@@ -486,7 +486,7 @@ const SHOOTING_BOUNDED_TOOL_IDS: &[&str] = &[
     "addShot",
     "addAsset",
     "importAsset",
-    "resetFixture",
+    "resetSnapshot",
     "translateSelection",
     "rotateSelection",
     "scaleSelection",
@@ -527,7 +527,11 @@ fn shooting_bounded_reduce(
     if !SHOOTING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.route"), "the bounded Shooting reducer rejects resumable routes"));
     }
+    #[cfg(test)]
+    eprintln!("[DEBUG] Shooting retained reducer command={} selection={:?}", command.command_id(), interaction.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| (&selection.granularity, &selection.ids)));
     let mut ctx = ShootingDispatchCtx { selected_asset_ids: interaction.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default() };
+    #[cfg(test)]
+    eprintln!("[DEBUG] Shooting retained reducer selected_asset_ids={:?}", ctx.selected_asset_ids);
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None }, &mut ctx)
 }
 
@@ -605,7 +609,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ShootingCommandJobF
         ArtifactToolPublicationContract { tool_id: "addShot", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "addAsset", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "importAsset", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "resetFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "resetSnapshot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -676,7 +680,7 @@ impl ArtifactEditor for ShootingPlayApp {
             "addShot" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "addAsset" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "importAsset" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
-            "resetFixture" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
+            "resetSnapshot" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "translateSelection" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "rotateSelection" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
             "scaleSelection" => ToolExecutionContract::bounded_first_step(65_536, 64, 1, 262_144, 7_500),
@@ -718,6 +722,8 @@ impl ArtifactEditor for ShootingPlayApp {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         };
+        #[cfg(test)]
+        eprintln!("[DEBUG] Shooting retained request command={} selection={:?}", request.command.command_id(), request.interaction_state.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| (&selection.granularity, &selection.ids)));
         let payload = ArtifactRetainedCommandPayload::try_new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
@@ -743,7 +749,7 @@ impl ArtifactEditor for ShootingPlayApp {
     }
 
     fn initial_snapshot() -> ShootingSnapshot {
-        crate::standards::v1::subsets::any::schema::default_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -995,7 +1001,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .mutation("addShot", LocalizedLabel::native("Add Shot", "Aufnahme hinzufügen"))
             .mutation("addAsset", LocalizedLabel::native("Add Asset", "Objekt hinzufügen"))
             .mutation("importAsset", LocalizedLabel::native("Import Asset", "Objekt importieren"))
-            .mutation("resetFixture", LocalizedLabel::native("Reset Fixture", "Vorgabe zurücksetzen"))
+            .mutation("resetSnapshot", LocalizedLabel::native("Reset Fixture", "Vorgabe zurücksetzen"))
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
@@ -1054,8 +1060,8 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("addShot", InteractiveJobClassification::Migrated)
             .action_interactive_job("addAsset", InteractiveJobClassification::Migrated)
             .action_interactive_job("importAsset", InteractiveJobClassification::Migrated)
-            .action_interactive_job("resetFixture", InteractiveJobClassification::Migrated)
-            .action_destructive("resetFixture")
+            .action_interactive_job("resetSnapshot", InteractiveJobClassification::Migrated)
+            .action_destructive("resetSnapshot")
             .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
@@ -1129,7 +1135,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("addShot", LocalizedLabel::native("Adds a new shot with the given format and shape, framed by the current viewport camera.", "Fügt eine neue Aufnahme mit dem angegebenen Format und der Form hinzu, gerahmt von der aktuellen Ansichtskamera."))
             .action_describe("addAsset", LocalizedLabel::native("Adds a new placeholder asset of the given format to the scene.", "Fügt der Szene ein neues Platzhalterobjekt des angegebenen Formats hinzu."))
             .action_describe("importAsset", LocalizedLabel::native("Imports a GLB model (data-URL payload, optional name) as a new asset in the scene.", "Importiert ein GLB-Modell (Data-URL-Inhalt, optionaler Name) als neues Objekt in die Szene."))
-            .action_describe("resetFixture", LocalizedLabel::native("Resets the whole shooting document to the default scene; every shot, asset and saved camera is discarded.", "Setzt das gesamte Shooting-Dokument auf die Standardszene zurück; alle Aufnahmen, Objekte und gespeicherten Kameras werden verworfen."))
+            .action_describe("resetSnapshot", LocalizedLabel::native("Resets the whole shooting document to the default scene; every shot, asset and saved camera is discarded.", "Setzt das gesamte Shooting-Dokument auf die Standardszene zurück; alle Aufnahmen, Objekte und gespeicherten Kameras werden verworfen."))
             .action_describe("translateSelection", LocalizedLabel::native("Moves the given assets by dx, dy and dz; one gumball drag is one history step whose offset stays editable.", "Verschiebt die angegebenen Objekte um dx, dy und dz; ein Gumball-Zug ist ein Verlaufsschritt, dessen Versatz bearbeitbar bleibt."))
             .action_describe("rotateSelection", LocalizedLabel::native("Rotates the given assets by an angle around the axis ax, ay, az; one gumball drag is one history step whose rotation stays editable.", "Dreht die angegebenen Objekte um einen Winkel um die Achse ax, ay, az; ein Gumball-Zug ist ein Verlaufsschritt, dessen Drehung bearbeitbar bleibt."))
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the given assets by sx, sy and sz; one gumball drag is one history step whose factors stay editable.", "Skaliert die angegebenen Objekte um sx, sy und sz; ein Gumball-Zug ist ein Verlaufsschritt, dessen Faktoren bearbeitbar bleiben."))

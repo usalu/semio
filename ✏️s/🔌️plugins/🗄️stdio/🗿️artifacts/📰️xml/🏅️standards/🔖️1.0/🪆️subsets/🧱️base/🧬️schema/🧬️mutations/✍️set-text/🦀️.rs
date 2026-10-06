@@ -3,10 +3,6 @@ use crate::schema::diff::{diff_at_path, XmlDiff, XmlNodeDiff};
 use crate::schema::mutation_support::XmlNodePath;
 use crate::XmlSnapshot;
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]

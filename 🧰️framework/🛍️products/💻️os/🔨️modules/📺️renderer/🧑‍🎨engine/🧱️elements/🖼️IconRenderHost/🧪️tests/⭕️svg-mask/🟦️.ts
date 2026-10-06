@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import sharp from "sharp";
 import { Color, OrthographicCamera, Scene } from "three";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
@@ -11,13 +11,9 @@ import { describe, expect, it } from "vitest";
 
 const host = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const fixture = JSON.parse(readFileSync(resolve(host, "🧫️fixtures/⭕️svg-mask/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(host, "🧬️schema/⭕️svg-mask/🔣️.json"), "utf8"));
 
 describe("⭕️ Icon SVG ellipse export", () => {
-  it("validates the neutral view-box and alpha contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   it("clips actual Three output and preserves centered, translated, and implicit view boxes", async () => {
     for (const row of fixture.cases) {

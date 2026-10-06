@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dialect",
+    "documentLanguage",
+    "root",
+    "pages",
+    "references",
+    "typed",
+    "objectNumbers",
+    "conformance",
+    "nativeEncodings",
+    "negativeCodes"
+  ],
+  "properties": {
+    "dialect": {
+      "const": {
+        "artifactKind": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "ua"
+      }
+    },
+    "documentLanguage": {
+      "const": "und"
+    },
+    "root": {
+      "const": {
+        "num": 1,
+        "gen": 0
+      }
+    },
+    "pages": {
+      "const": {
+        "num": 5,
+        "gen": 0,
+        "kids": [],
+        "count": 0
+      }
+    },
+    "references": {
+      "const": {
+        "MarkInfo": 2,
+        "StructTreeRoot": 3,
+        "ViewerPreferences": 4
+      }
+    },
+    "typed": {
+      "const": {
+        "language": "und",
+        "marked": true,
+        "userProperties": false,
+        "suspects": false,
+        "displayDocTitle": true
+      }
+    },
+    "objectNumbers": {
+      "const": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "conformance": {
+      "const": {
+        "subset": "ua",
+        "pageCount": 0,
+        "markInfo": true,
+        "structTreeRoot": true,
+        "lang": "und",
+        "displayDocTitle": true,
+        "infoTitle": null,
+        "fontPrograms": []
+      }
+    },
+    "nativeEncodings": {
+      "const": [
+        "binary",
+        "text"
+      ]
+    },
+    "negativeCodes": {
+      "const": [
+        "stdio.pdf.ua.missing-markinfo-marked",
+        "stdio.pdf.ua.missing-structtreeroot"
+      ]
+    }
+  }
+}

@@ -16,7 +16,7 @@ import (
 const transcripts = "shared://🐙️github-management-transcripts/🎞️gh-transcripts.json"
 
 func provider(ctx *host.Context) (*providers.GitHubManagementProvider, error) {
-	raw, err := ctx.FixtureBytes(transcripts)
+	raw, err := ctx.InputBytes(transcripts)
 	if err != nil {
 		return nil, err
 	}

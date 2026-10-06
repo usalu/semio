@@ -1,0 +1,77 @@
+{
+  "qualification": "READONLY PROPOSAL; no production mutations or runtime credit",
+  "rows": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "artifactKind": "s.fem.fem2d",
+      "retain": "Existing full owner factory, all eight words, both wire forms, independent SQL edit/import assertions and retirement remain in place",
+      "replaceQuery": "SELECT * FROM semio_snapshot",
+      "prependCheck": "if(JSON.stringify(Object.keys(m))!==JSON.stringify([\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"])||m.id!==1n||m.schema_version!==1n)throw Error(\"fullMetadataIdentityAndOrder\");",
+      "preserveExistingFourByNameChecks": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "artifactKind": "s.fem.fem3d",
+      "retain": "Existing full owner factory, all eight words, both wire forms, independent SQL edit/import assertions and retirement remain in place",
+      "replaceQuery": "SELECT * FROM semio_snapshot",
+      "prependCheck": "if(JSON.stringify(Object.keys(m))!==JSON.stringify([\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"])||m.id!==1n||m.schema_version!==1n)throw Error(\"fullMetadataIdentityAndOrder\");",
+      "preserveExistingFourByNameChecks": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "artifactKind": "s.layout.layout",
+      "retain": "Existing full owner factory, all eight words, both wire forms, independent SQL edit/import assertions and retirement remain in place",
+      "replaceQuery": "SELECT * FROM semio_snapshot",
+      "prependCheck": "if(JSON.stringify(Object.keys(m))!==JSON.stringify([\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"])||m.id!==1n||m.schema_version!==1n)throw Error(\"fullMetadataIdentityAndOrder\");",
+      "preserveExistingFourByNameChecks": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "artifactKind": "s.trinity.rewriting",
+      "retain": "Existing full owner factory, all eight words, both wire forms, independent SQL edit/import assertions and retirement remain in place",
+      "replaceQuery": "SELECT * FROM semio_snapshot",
+      "prependCheck": "if(JSON.stringify(Object.keys(m))!==JSON.stringify([\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"])||m.id!==1n||m.schema_version!==1n)throw Error(\"fullMetadataIdentityAndOrder\");",
+      "preserveExistingFourByNameChecks": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "artifactKind": "s.trinity.jack",
+      "retain": "Existing full owner factory, all eight words, both wire forms, independent SQL edit/import assertions and retirement remain in place",
+      "replaceQuery": "SELECT * FROM semio_snapshot",
+      "prependCheck": "if(JSON.stringify(Object.keys(m))!==JSON.stringify([\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"])||m.id!==1n||m.schema_version!==1n)throw Error(\"fullMetadataIdentityAndOrder\");",
+      "preserveExistingFourByNameChecks": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "artifactKind": "s.puzzle.puzzle3d",
+      "retain": "Existing full owner factory, all eight words, both wire forms, independent SQL edit/import assertions and retirement remain in place",
+      "replaceQuery": "SELECT * FROM semio_snapshot",
+      "prependCheck": "if(JSON.stringify(Object.keys(m))!==JSON.stringify([\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"])||m.id!==1n||m.schema_version!==1n)throw Error(\"fullMetadataIdentityAndOrder\");",
+      "preserveExistingFourByNameChecks": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "artifactKind": "s.block.block2d",
+      "retain": "Existing full owner factory, all eight words, both wire forms, independent SQL edit/import assertions and retirement remain in place",
+      "replaceQuery": "SELECT * FROM semio_snapshot",
+      "prependCheck": "if(JSON.stringify(Object.keys(m))!==JSON.stringify([\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"])||m.id!==1n||m.schema_version!==1n)throw Error(\"fullMetadataIdentityAndOrder\");",
+      "preserveExistingFourByNameChecks": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "artifactKind": "s.block.block3d",
+      "retain": "Existing full owner factory, all eight words, both wire forms, independent SQL edit/import assertions and retirement remain in place",
+      "replaceQuery": "SELECT * FROM semio_snapshot",
+      "prependCheck": "if(JSON.stringify(Object.keys(m))!==JSON.stringify([\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"])||m.id!==1n||m.schema_version!==1n)throw Error(\"fullMetadataIdentityAndOrder\");",
+      "preserveExistingFourByNameChecks": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "artifactKind": "s.block.block5d",
+      "retain": "Existing full owner factory, all eight words, both wire forms, independent SQL edit/import assertions and retirement remain in place",
+      "replaceQuery": "SELECT * FROM semio_snapshot",
+      "prependCheck": "if(JSON.stringify(Object.keys(m))!==JSON.stringify([\"id\",\"artifact_kind\",\"standard\",\"subset\",\"schema_version\",\"native_encoding\"])||m.id!==1n||m.schema_version!==1n)throw Error(\"fullMetadataIdentityAndOrder\");",
+      "preserveExistingFourByNameChecks": true
+    }
+  ]
+}

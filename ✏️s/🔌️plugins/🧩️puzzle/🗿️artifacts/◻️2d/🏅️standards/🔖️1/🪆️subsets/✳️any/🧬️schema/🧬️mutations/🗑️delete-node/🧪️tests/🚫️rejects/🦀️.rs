@@ -1,4 +1,4 @@
-//! 🧪️ `delete-node` fixture — `🚫️rejects`.
+//! 🧪️ `delete-node` snapshot — `🚫️rejects`.
 //!
 //! The addressed capsule stands elsewhere in the tower but not on this board, so the verb answers `mutation.target-missing` and touches nothing.
 //!
@@ -53,7 +53,7 @@ fn the_refusal_is_the_declared_one() {
 /// ↩️ A verb that could not find its target has nothing to undo, so its inverse is empty.
 #[test]
 fn inverse_of_a_refusal() {
-    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse snapshot");
     assert_eq!(inverse.len(), 0, "delete-node/rejects-deleting-a-capsule-the-board-never-held: got {inverse:?}");
 }
 

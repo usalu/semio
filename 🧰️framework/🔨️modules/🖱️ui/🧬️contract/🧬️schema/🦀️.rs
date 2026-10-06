@@ -1,6 +1,5 @@
 //! 🧬️ The `framework.ui.contract` schema leaf: this scope's named-export registration, the Rust half
-//! of the three exports `🔣️.json` declares (`ConformanceCatalogFixture`, `ContractFixture`,
-//! `PresenceUpdate` — contract
+//! of the `PresenceUpdate` export `🔣️.json` declares — contract
 //! §B: a `🧬️schema/🦀️.rs` carries the scope's pub types and `include_str!`s its siblings), plus the
 //! versioned semantic UI wire-type metadata and its owned TypeScript projection — the latter
 //! extracted from owner `📦️packages/🦀️rust/🦀️.rs` so that file stays pure wiring (no
@@ -32,7 +31,7 @@ pub const DECLARED_FORMATS: [SchemaFormat; 2] = [SchemaFormat::JsonSchema, Schem
 const LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), typescript: "", graphql: "", json_schema: include_str!("🔣️.json"), proto: "" };
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 3] = [SchemaExport { id: "ConformanceCatalogFixture", leaves: LEAVES }, SchemaExport { id: "ContractFixture", leaves: LEAVES }, SchemaExport { id: "PresenceUpdate", leaves: LEAVES }];
+const EXPORTS: [SchemaExport; 1] = [SchemaExport { id: "PresenceUpdate", leaves: LEAVES }];
 
 /// 📌️ Registers `framework.ui.contract`'s named exports into the process-wide export catalog.
 /// See `📋️execution-contract.md` §C and `semio_framework_schema_registry::resolve_schema_export`.
@@ -53,57 +52,9 @@ mod scope_schema_export_law;
 
 //#region 🔖️Exports
 
-use serde::Deserialize;
-use std::collections::BTreeMap;
-
-/// 🧫 `🧫️fixtures/🧪️conformance/📇️catalog.json`: the language-neutral conformance corpus index — the
-/// case identities and the per-role filenames every renderer's conformance run reads, so a directory
-/// glyph is never an identity. The Rust half of the `ConformanceCatalogFixture` export its
-/// `"x-semio-formats"` declares; `🧪️tests/🔬️conformance-unit/🦀️.rs` decodes the file through it.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ConformanceCatalogFixture {
-    pub version: u32,
-    pub roles: BTreeMap<String, String>,
-    pub groups: BTreeMap<String, ConformanceCatalogFixtureGroup>,
-}
-
-/// 🗂️ One corpus group: whether its cases carry a patch role, and the case id → directory map.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ConformanceCatalogFixtureGroup {
-    pub patch: bool,
-    pub cases: BTreeMap<String, String>,
-}
-
-/// 🧫 `🧫️fixtures/👥️presence-overlay.json`: the four presence-overlay cases proving that one update's
-/// `selected`/`hovered`/`previewed` flags stay separate through a round trip. The Rust half of the
-/// `ContractFixture` export; `🧪️tests/🔬️presence-unit/🦀️.rs` decodes the file through it.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ContractFixture {
-    pub cases: Vec<ContractFixtureCase>,
-}
-
-/// 🧩️ One presence-overlay case: the update as it travels the wire, and the flags it must resolve to.
-/// `update` is the scope's own [`PresenceUpdate`] export, never a structural clone of it — the JSON half
-/// says the same thing by `$ref`-ing `#/$defs/PresenceUpdate` and narrowing it with `const`/`minimum`.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ContractFixtureCase {
-    pub name: String,
-    pub update: PresenceUpdate,
-    pub expected: ContractFixtureFlags,
-}
-
-/// 🚩️ The three own-presence flags a case expects after the update is applied.
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
-#[serde(deny_unknown_fields)]
-pub struct ContractFixtureFlags {
-    pub selected: bool,
-    pub hovered: bool,
-    pub previewed: bool,
-}
+#[cfg(test)]
+#[path = "../🧪️testing/📇️conformance/🦀️.rs"]
+pub(crate) mod examples;
 
 /// 📡️ The Rust half of the `PresenceUpdate` export: the crate's own coalesced, TTL-scoped presence
 /// message, declared once in `📦️packages/🦀️rust/👥️presence.rs` and re-exported here so the scope's
@@ -682,6 +633,16 @@ export type ScrollAxes = "none" | "horizontal" | "vertical" | "both";"####,
 export type ScrollLayout = { axes: ScrollAxes, padding: EdgeSpace, sizing: Sizing, };"####,
     },
     SchemaMetadata {
+        name: "SelectAppearance",
+        version: 1,
+        typescript: r####"/**
+ * 🗳️ How a select shows its one choice: a `menu` that opens its options on demand, or `segmented` — every option
+ * visible at once as one row of mutually exclusive buttons (a radio group), for the few-option choices a descriptor
+ * declares segmented (`x-semio-ui.widget: "segmented"`). Arrow keys move the choice along a segmented row.
+ */
+export type SelectAppearance = "menu" | "segmented";"####,
+    },
+    SchemaMetadata {
         name: "SelectItem",
         version: 1,
         typescript: r####"/**
@@ -691,11 +652,12 @@ export type SelectItem = { value: string, label: Label, };"####,
     },
     SchemaMetadata {
         name: "SelectProps",
-        version: 1,
+        version: 2,
         typescript: r####"/**
- * 🔽️ Props for `Component::Select`. `on_change` moved to the record's `bindings`.
+ * 🔽️ Props for `Component::Select`. `on_change` moved to the record's `bindings`. `appearance` only chooses how the one
+ * choice is shown ([`SelectAppearance`]); value, items and `Trigger::Change` are the same in both.
  */
-export type SelectProps = { value: string, items: Array<SelectItem>, placeholder: Label | null, };"####,
+export type SelectProps = { value: string, items: Array<SelectItem>, placeholder: Label | null, appearance?: SelectAppearance, };"####,
     },
     SchemaMetadata {
         name: "SeparatorProps",

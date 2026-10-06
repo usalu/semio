@@ -38,7 +38,7 @@ mod subject {
 
     /// 🧫️ One group of the committed vectors.
     fn group(ctx: &Context<'_>, name: &str) -> Result<Vec<Value>, String> {
-        let document: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))?;
+        let document: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))?;
         document.get(name).and_then(Value::as_array).cloned().ok_or_else(|| format!("{VECTORS} carries no {name} group"))
     }
 

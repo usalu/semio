@@ -1,7 +1,7 @@
 //! 🎨️ Checked indexed and direct BMP region authoring with retained progress.
 
 use super::{BmpEditCommand, BmpEditor, BmpNativeEditCommand};
-use crate::io::{bmp_layout, bmp_revision, BmpRegion};
+use crate::standards::v_v3::subsets::any::io::{bmp_layout, bmp_revision, BmpRegion};
 use crate::schema::mutations::{BmpMutation, PaintDirectRegion, PaintIndexedRegion};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
@@ -132,7 +132,7 @@ pub fn direct_action() -> ActionDefinition {
     ActionDefinition::bounded_catalog(DIRECT_ACTION_ID, LocalizedLabel::native("Paint Direct Region", "Direktfarbbereich malen"), ActionKind::Mutation).with_args(args)
 }
 
-fn checked_bounds(layout: &crate::io::BmpLayout, region: BmpRegion) -> Result<(), Fault> {
+fn checked_bounds(layout: &crate::standards::v_v3::subsets::any::io::BmpLayout, region: BmpRegion) -> Result<(), Fault> {
     if region.width == 0 || region.height == 0 {
         return Err(fault("stdio.bmp.paint-region.empty", "Paint region width and height must be positive"));
     }

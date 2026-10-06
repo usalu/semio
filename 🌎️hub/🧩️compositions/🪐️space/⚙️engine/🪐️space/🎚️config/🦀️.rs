@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 /// per-window options keyed by window-instance id" rule). Distinct from `semio_framework_os::OsWorkflowCamera`
 /// (a plain, non-`dsl`-field data type this crate can't blanket-impl `dsl::DslField` for under the
 /// orphan rule) — converts to/from it 1:1 at the render boundary.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceWindowCamera {
     pub x: f64,
@@ -47,9 +47,9 @@ impl From<SpaceWindowCamera> for OsWorkflowCamera {
 /// _>`, per the Configured Node Apps recipe) — today that's always
 /// `crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW`, since split-pane
 /// window *instances* aren't a thing anywhere in this codebase yet.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
-#[dsl(id = "s.spacecfg")]
+#[artifact(id = "s.spacecfg")]
 #[dsl(layout = "lines")]
 pub struct SpaceConfig {
     /// 🎥️ Workflow-canvas camera, keyed by window id.
@@ -88,11 +88,11 @@ impl store::ArtifactDsl for SpaceConfig {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -113,7 +113,7 @@ impl store::ArtifactPack for SpaceConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -150,11 +150,11 @@ store::impl_whole_record_config!(SpaceConfig);
 /// not a granular patch type.
 // 🧯️ `large_enum_variant`: `Snapshot` deliberately carries the WHOLE `SpaceConfig` while every other row
 // carries one or two scalars — that whole-config snapshot IS the inverse mechanism every variant's
-// `backwards()` returns. Boxing it would change the derived `dsl::DslOps` wire encoding, which this
+// `backwards()` returns. Boxing it would change the derived `semio_framework_dsl_record_derive::DslEnum` wire encoding, which this
 // migration must preserve byte-for-byte, so the size skew is accepted by design (same tradeoff as
 // block3d's `Block3dConfigMutation`/gis's `Gis2dConfigMutation`).
 #[allow(clippy::large_enum_variant)]
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum SpaceConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
@@ -193,21 +193,21 @@ pub enum SpaceConfigMutation {
 //#region 🔖️OpCodec
 impl protocol::OpText for SpaceConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown mutation line '{line}'"),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline)
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
     }
 }
 
@@ -215,10 +215,10 @@ impl protocol::OpText for SpaceConfigMutation {
 impl protocol::OpBinary for SpaceConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
+        let spec = (variants[ordinal].1.ordinary)();
         let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
@@ -234,12 +234,12 @@ impl protocol::OpBinary for SpaceConfigMutation {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 
@@ -487,8 +487,8 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    fn inverse(&self, base: &SpaceConfig) -> Vec<Self> {
-        vec![SpaceConfigMutation::Snapshot { config: base.clone() }]
+    fn inverse(&self, base: &SpaceConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        Ok(vec![SpaceConfigMutation::Snapshot { config: base.clone() }])
     }
 }
 //#endregion 🔖️ConfigOperations

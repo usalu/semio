@@ -124,14 +124,13 @@ fn kinds_match_the_enum_and_the_catalog() {
 }
 //#endregion 🧪️KindsCatalog
 
-//#region 🔄FixtureRefresh
+//#region 🔄TestInputresh
 fn fixture_json_encode<T: semio_framework_value::ToValue>(value: &T) -> String {
-    serde_json::to_string_pretty(&Into::<serde_json::Value>::into(semio_framework_value::ToValue::to_value(value))).expect("fixture json encode") + "\n"
+    serde_json::to_string_pretty(&Into::<serde_json::Value>::into(crate::standards::v1::subsets::any::io::text::lowpoly_json_value(value))).expect("fixture json encode") + "\n"
 }
 
 fn fixture_json_decode<T: semio_framework_value::FromValue>(text: &str) -> T {
-    let parsed: serde_json::Value = serde_json::from_str(text).expect("fixture json parses");
-    semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(parsed)).expect("fixture json decodes")
+    crate::standards::v1::subsets::any::io::text::lowpoly_json_decode(text).expect("fixture json decodes")
 }
 
 /// 🔄️ Re-encodes every committed mutation quintet under `🧫️fixtures/🧬️mutations` when
@@ -173,4 +172,4 @@ fn refresh_lowpoly_mutation_fixtures_when_requested() {
         std::fs::write(&diff_path, fixture_json_encode(raised.diff())).expect("write diff");
     }
 }
-//#endregion 🔄FixtureRefresh
+//#endregion 🔄TestInputresh

@@ -9,7 +9,24 @@
   ],
   "properties": {
     "child_id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Child",
+          "de": "Kind"
+        },
+        "description": {
+          "en": "Id of the composed child that is deleted.",
+          "de": "Kennung des zusammengesetzten Kindes, das gelöscht wird."
+        },
+        "ref": {
+          "kind": "child"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

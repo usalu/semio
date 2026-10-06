@@ -1,0 +1,18 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/🧬️schema/🦀️.rs",
+    "before": "    pub fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {\n        let objects = &snapshot.objects;\n        let mut out = Vec::new();",
+    "after": "    pub fn check_pdf_a_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {\n        let objects = &snapshot.objects;\n        let mut out = Vec::new();\n        if snapshot.encryption.is_some() {\n            out.push(hard(CODE_ENCRYPT, \"PDF/A forbids retained document encryption\".into()));\n        }"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🧬️schema/🦀️.rs",
+    "before": "    pub fn check_x_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {\n        let objects = &snapshot.objects;\n        let mut out = Vec::new();",
+    "after": "    pub fn check_x_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {\n        let objects = &snapshot.objects;\n        let mut out = Vec::new();\n        if snapshot.encryption.is_some() {\n            out.push(hard(CODE_ENCRYPT, \"PDF/X forbids retained document encryption\".into()));\n        }"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🧬️schema/🦀️.rs",
+    "before": "    pub fn check_e_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {\n        let objects = &snapshot.objects;\n        let mut out = Vec::new();",
+    "after": "    pub fn check_e_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {\n        let objects = &snapshot.objects;\n        let mut out = Vec::new();\n        if snapshot.encryption.is_some() {\n            out.push(hard(CODE_ENCRYPT, \"PDF/E forbids retained document encryption\".into()));\n        }"
+  }
+]
+

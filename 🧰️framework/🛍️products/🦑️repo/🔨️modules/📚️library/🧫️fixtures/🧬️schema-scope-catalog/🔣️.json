@@ -271,6 +271,7 @@
       "expected": {
         "scopes": {},
         "diagnosticCodes": [
+          "schema-fixture-defines-schema",
           "schema-fixture-defines-schema"
         ],
         "placementPaths": [
@@ -280,15 +281,15 @@
     },
     {
       "id": "inert-schema-data",
-      "reason": "A schema-shaped parser input stays silent only when the enclosing case names it under inertSchemaData; nothing is exempted by shape or by location.",
+      "reason": "A schema-shaped parser input is inert only as ordinary named data, without a schema contract facet.",
       "files": {
         "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
           "id": "a",
           "inertSchemaData": [
-            "🧬️schema/🔣️.json"
+            "🧾️schema-input.json"
           ]
         },
-        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧾️schema-input.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
           "title": "approvalFixture"
         }
@@ -506,7 +507,7 @@
     },
     {
       "id": "facet-document-keeps-scope-path",
-      "reason": "A facet document repeats its module's scope path and varies only the facet filename; one that resolves under a different scope path is reported and never deepens the catalog.",
+      "reason": "Facet documents use canonical facet directories and a single facet filename under the unchanged scope identity.",
       "files": {
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
@@ -532,18 +533,6 @@
             }
           }
         },
-        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🔣️.json": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
-          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/snapshot/text.json",
-          "title": "ThingSnapshotText",
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "body": {
-              "type": "string"
-            }
-          }
-        },
         "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json": {
           "$schema": "http://json-schema.org/draft-07/schema#",
           "$id": "https://json.schemas.assets.semio-tech.com/s/other/thing/diff.json",
@@ -552,6 +541,18 @@
           "additionalProperties": false,
           "properties": {
             "id": {
+              "type": "string"
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔺️diff/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/snapshot-diff.json",
+          "title": "ThingSnapshotDiff",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "body": {
               "type": "string"
             }
           }
@@ -575,9 +576,9 @@
                 "file": "📸️snapshot/🔣️.json",
                 "facet": "snapshot"
               },
-              "ThingSnapshotText": {
-                "file": "📸️snapshot/📝️text/🔣️.json",
-                "facet": "snapshot/text"
+              "ThingSnapshotDiff": {
+                "file": "📸️snapshot/🔺️diff/🔣️.json",
+                "facet": "snapshot-diff"
               }
             },
             "dependsOn": []
@@ -760,6 +761,1212 @@
               "InferenceApproval": {
                 "file": "🔣️.json",
                 "facet": "contract"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "document-json-facet-is-never-inert",
+      "reason": "A test case cannot authorize a schema facet as inert data; contracts belong to domain owners.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "inertSchemaData": [
+            "🧬️schema/🔣️.json"
+          ]
+        },
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object"
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "fixture-sql-facet-is-never-inert",
+      "reason": "A test case cannot authorize a schema facet as inert data; contracts belong to domain owners.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "inertSchemaData": [
+            "🧬️schema/🪶️.sql"
+          ]
+        },
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🪶️.sql": "CREATE TABLE example (id TEXT);\n"
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "fixture-graphql-facet-is-never-inert",
+      "reason": "A test case cannot authorize a schema facet as inert data; contracts belong to domain owners.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "inertSchemaData": [
+            "🧬️schema/🔗️.graphql"
+          ]
+        },
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔗️.graphql": "type Example { id: ID! }\n"
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "fixture-protobuf-facet-is-never-inert",
+      "reason": "A test case cannot authorize a schema facet as inert data; contracts belong to domain owners.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "inertSchemaData": [
+            "🧬️schema/🛰️.proto"
+          ]
+        },
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🛰️.proto": "syntax = \"proto3\"; message Example { string id = 1; }\n"
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "fixture-interface-facet-is-never-inert",
+      "reason": "A test case cannot authorize a schema facet as inert data; contracts belong to domain owners.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "inertSchemaData": [
+            "🧬️schema/🟦️.ts"
+          ]
+        },
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🟦️.ts": "export interface Example { id: string }\n"
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "fixture-retired-schema-directory-is-never-authority",
+      "reason": "An old schema-directory spelling inside examples is still a contract violation.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🛂️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object"
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "undeclared-parser-schema-input-is-not-authority",
+      "reason": "An undeclared schema definition cannot silently masquerade as ordinary fixture data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧾️schema-input.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object"
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "testing-support-owner-defines-its-domain-contract",
+      "reason": "Executable testing support owns its synthetic domain contract while adjacent fixture examples own none.",
+      "files": {
+        "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️component/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/framework/os/testing/component/schema.json",
+          "$defs": {
+            "Component": {
+              "type": "object"
+            }
+          }
+        },
+        "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️component/🧫️fixtures/🔣️.json": {
+          "example": true
+        }
+      },
+      "expected": {
+        "scopes": {
+          "framework.os.testing.component": {
+            "path": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️component/🧬️schema",
+            "level": "testing-support",
+            "exports": {
+              "Component": {
+                "file": "🔣️.json",
+                "facet": "schema"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "adjacent-test-corpus-fixturecorpus",
+      "reason": "Physical domain fixture and case contracts remain valid; separate test corpus wrappers are rejected even outside collection trees.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "FixtureCorpus": {
+              "type": "object",
+              "properties": {
+                "cases": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "expected": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "adjacent-domain-physicalfixture",
+      "reason": "Physical domain fixture and case contracts remain valid; separate test corpus wrappers are rejected even outside collection trees.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "PhysicalFixture": {
+              "type": "object",
+              "properties": {
+                "clampingForce": {
+                  "type": "number"
+                },
+                "orientation": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct PhysicalFixture;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "PhysicalFixture": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "adjacent-domain-domaincase",
+      "reason": "Physical domain fixture and case contracts remain valid; separate test corpus wrappers are rejected even outside collection trees.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "DomainCase": {
+              "type": "object",
+              "properties": {
+                "caseId": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct DomainCase;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "DomainCase": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "adjacent-test-corpus-corpuscasesv1",
+      "reason": "Physical domain fixture and case contracts remain valid; separate test corpus wrappers are rejected even outside collection trees.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CorpusCasesV1": {
+              "type": "object",
+              "properties": {
+                "vectors": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "accepted": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "adjacent-domain-schemafixture-report",
+      "reason": "A produced schema test diagnostic report is a semantic result contract, even when its identity mentions fixtures and an expected value appears in its diagnostics.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "SchemaFixtureReport": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "expected": {
+                  "type": "string"
+                },
+                "actual": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expected",
+                "actual"
+              ]
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct SchemaFixtureReport;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "SchemaFixtureReport": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "title-independent-expectation-corpus",
+      "reason": "Test corpus structure, including titleless roots, cannot become a schema authority. Actual per-value domains remain valid.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "VerificationCatalog": {
+              "type": "object",
+              "properties": {
+                "cases": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "expectedPolicy": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "titleless-expectation-corpus",
+      "reason": "Test corpus structure, including titleless roots, cannot become a schema authority. Actual per-value domains remain valid.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "vectors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "expectedPolicy": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct Corner;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-expectation-setting",
+      "reason": "A genuine domain field called expected does not define a corpus.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "ExpectationSetting": {
+              "type": "object",
+              "properties": {
+                "expected": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct ExpectationSetting;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ExpectationSetting": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "execution-plan-domain-contract",
+      "reason": "An executable plan owns real instruction and outcome metadata; scenario outcome fields alone do not make its protocol a test corpus.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ExecutionPlan",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scenarios": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Scenario"
+              }
+            }
+          },
+          "$defs": {
+            "Scenario": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "keyword": {
+                        "enum": [
+                          "Given",
+                          "When",
+                          "Then"
+                        ]
+                      },
+                      "text": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "outcome": {
+                  "enum": [
+                    "applied",
+                    "rejected"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ExecutionPlan;\npub struct Scenario;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "ExecutionPlan": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "Scenario": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "fixed-reader-observation-through-all-of",
+      "reason": "Fixed trial observations are examples; fixed grant policy bounds alone remain a real domain contract.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "ReaderObservation": {
+              "allOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "readerReleaseGrants": {
+                      "const": [
+                        1,
+                        64,
+                        4096
+                      ]
+                    },
+                    "oldReaderSurvivesReplacement": {
+                      "const": true
+                    },
+                    "comparisonHeapAllocations": {
+                      "const": 0
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\n\npub struct ReaderObservation;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-fixed-grant-policy",
+      "reason": "Fixed trial observations are examples; fixed grant policy bounds alone remain a real domain contract.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "ReaderPolicy": {
+              "allOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "readerReleaseGrants": {
+                      "const": [
+                        1,
+                        64,
+                        4096
+                      ]
+                    },
+                    "maxReaderBytes": {
+                      "const": 4096
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\n\npub struct ReaderPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ReaderPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "named-outcome-still-cannot-own-frozen-test-cases",
+      "reason": "Frozen example tables cannot acquire schema authority through an Outcome name; variable runtime reports retain their actual contract.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "TrialOutcome": {
+              "type": "object",
+              "properties": {
+                "cases": {
+                  "const": [
+                    {
+                      "value": 1,
+                      "expected": 2
+                    },
+                    {
+                      "value": 2,
+                      "expected": 3
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct TrialOutcome;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-produced-report-has-variable-case-observations",
+      "reason": "Frozen example tables cannot acquire schema authority through an Outcome name; variable runtime reports retain their actual contract.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "ExecutionReport": {
+              "type": "object",
+              "properties": {
+                "cases": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "accepted": {
+                        "type": "boolean"
+                      },
+                      "expected": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct ExecutionReport;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ExecutionReport": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "frozen-query-observations-cannot-own-a-schema",
+      "reason": "Frozen expected lookup observations are testing examples; an actual fixed unit symbol policy remains a domain contract.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "LookupObservations": {
+              "type": "object",
+              "properties": {
+                "queries": {
+                  "const": [
+                    {
+                      "symbol": "m",
+                      "expectedIndex": 0
+                    },
+                    {
+                      "symbol": "unknown",
+                      "expectedIndex": null
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct LookupObservations;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "actual-frozen-unit-symbol-policy",
+      "reason": "Frozen expected lookup observations are testing examples; an actual fixed unit symbol policy remains a domain contract.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "UnitPolicy": {
+              "type": "object",
+              "properties": {
+                "symbols": {
+                  "const": [
+                    "m",
+                    "mm",
+                    "kg"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct UnitPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "UnitPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
               }
             },
             "dependsOn": []

@@ -1,3 +1,6 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::onboarding_example_json;
+use crate::standards::v1::subsets::any::io::text::snapshot::onboarding_example_spec;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_example_json;
 use super::*;
 use semio_framework_pack_json::object;
 

@@ -20,7 +20,7 @@ const GLTF_WRITER_FREEDOM: &[&str] = &["byteLength", "fileSize", "generator", "c
 
 /// 🧫️ A work-directory copy of the spec's own `fixture`; the committed fixture is never written to.
 fn mutable_input(ctx: &Context, spec: &Json) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(&spec.str("fixture"), Some("input.gltf"))?;
+    let copy = ctx.copy_input(&spec.str("fixture"), Some("input.gltf"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 

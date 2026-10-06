@@ -29,7 +29,20 @@
       ],
       "additionalItems": false,
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Scale factors",
+          "de": "Skalierungsfaktoren"
+        },
+        "description": {
+          "en": "X, Y and Z factor that turns the stored integer coordinates into real coordinates.",
+          "de": "X-, Y- und Z-Faktor, der die gespeicherten ganzzahligen Koordinaten in reale Koordinaten umrechnet."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "offset": {
       "type": "array",
@@ -46,7 +59,20 @@
       ],
       "additionalItems": false,
       "minItems": 3,
-      "maxItems": 3
+      "maxItems": 3,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Offsets",
+          "de": "Versätze"
+        },
+        "description": {
+          "en": "X, Y and Z offset added to the scaled coordinates.",
+          "de": "X-, Y- und Z-Versatz, der zu den skalierten Koordinaten addiert wird."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

@@ -1,0 +1,211 @@
+{
+  "nodes": {
+    "ticket-fixture-verification": {
+      "name": "ticket-fixture-verification",
+      "type": "lib",
+      "data": {
+        "root": ".",
+        "name": "ticket-fixture-verification",
+        "targets": {
+          "structural-catalog-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts structural-catalog-test",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "kernel-test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts kernel-test",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "kernel-command": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts kernel-command",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "schema": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts schema",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "verify": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts verify",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "tests": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts tests",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "parity": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts parity",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "kernel-corpus": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts kernel-corpus"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "owner-command": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "trinity-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/📜️script.ts\" test --features component-app-assembly --lib -E \"test(fresh_runtime_rule_matches_the_empty_document_and_independent_json_oracle) | test(renders_before_and_after_graphs) | test(rewrite_rule_labels_core)\""
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "flow-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts\" test --lib -E \"test(example_fixture_dsl_round_trips) | test(default_snapshot_dsl_round_trips) | test(renders_node_graph_scene_for_the_default_document)\""
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "puzzle2d-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts\" test --features component-app-assembly --lib snapshot_import_requires_the_explicit_payload_contract"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "puzzle5d-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts\" check --features component-app-assembly"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "kernel-native": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts owner-command \"🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts\" paged-history-stack-check --native"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "stdio-production": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📜️script.ts\" test-production-preparation"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "print-measurement": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts\" test measurement"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "cad-geometry-source": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📜️script.ts\" source-check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "hub-broker": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🌎️hub/📦️packages/🦀️rust/📜️script.ts\" browser-broker-check"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "hub-creation": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🌎️hub/📦️packages/🦀️rust/📜️script.ts\" space-artifact-creation-check source"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "repo-test-long": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📜️script.ts\" test long"
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": [],
+        "tags": []
+      }
+    }
+  },
+  "externalNodes": {},
+  "dependencies": {
+    "ticket-fixture-verification": []
+  },
+  "version": "6.0",
+  "errors": [],
+  "computedAt": 1791252750668
+}

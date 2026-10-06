@@ -21,8 +21,28 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Id",
+              "de": "ID"
+            }
+          }
         }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Edge id",
+          "de": "Kanten-ID"
+        },
+        "description": {
+          "en": "Id the new edge carries.",
+          "de": "Kennung, die die neue Kante trägt."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "source": {
@@ -33,8 +53,33 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node id",
+              "de": "Knoten-ID"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "graph",
+              "granularity": "node"
+            }
+          }
         }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Source node",
+          "de": "Quellknoten"
+        },
+        "description": {
+          "en": "Node the edge starts at.",
+          "de": "Knoten, an dem die Kante beginnt."
+        },
+        "group": "target",
+        "order": 20
       }
     },
     "target": {
@@ -45,15 +90,68 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node id",
+              "de": "Knoten-ID"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "graph",
+              "granularity": "node"
+            }
+          }
         }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Target node",
+          "de": "Zielknoten"
+        },
+        "description": {
+          "en": "Node the edge ends at.",
+          "de": "Knoten, an dem die Kante endet."
+        },
+        "group": "target",
+        "order": 30
       }
     },
     "kind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Kind",
+          "de": "Art"
+        },
+        "description": {
+          "en": "Kind of the edge, as the graph's manifest names it.",
+          "de": "Art der Kante, wie sie das Manifest des Graphen benennt."
+        },
+        "group": "value",
+        "order": 40
+      }
     },
     "label": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label",
+          "de": "Beschriftung"
+        },
+        "description": {
+          "en": "Text shown on the edge.",
+          "de": "Text, der an der Kante angezeigt wird."
+        },
+        "group": "value",
+        "order": 50
+      }
     },
     "properties": {
       "type": "array",
@@ -72,6 +170,19 @@
             "$ref": "#/$defs/SemioValue"
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Properties",
+          "de": "Eigenschaften"
+        },
+        "description": {
+          "en": "Keyed typed entries attached to the edge.",
+          "de": "Einträge mit Schlüssel und typisiertem Wert, die an der Kante hängen."
+        },
+        "group": "value",
+        "order": 60
       }
     },
     "source_port": {
@@ -82,7 +193,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Source port",
+          "de": "Quellanschluss"
+        },
+        "description": {
+          "en": "Name of the port on the source node; cleared, the edge attaches to the node itself.",
+          "de": "Name des Anschlusses am Quellknoten; geleert hängt die Kante am Knoten selbst."
+        },
+        "group": "value",
+        "order": 70
+      }
     },
     "target_port": {
       "anyOf": [
@@ -92,7 +217,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Target port",
+          "de": "Zielanschluss"
+        },
+        "description": {
+          "en": "Name of the port on the target node; cleared, the edge attaches to the node itself.",
+          "de": "Name des Anschlusses am Zielknoten; geleert hängt die Kante am Knoten selbst."
+        },
+        "group": "value",
+        "order": 80
+      }
     },
     "at": {
       "type": "integer",

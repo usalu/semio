@@ -1,4 +1,4 @@
-//! 🧪️ `add-node-handle` fixture — `➕️adds`.
+//! 🧪️ `add-node-handle` snapshot — `➕️adds`.
 //!
 //! A null index appends, so the new door lands after the tambour's own top handle rather than inside its slot order.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

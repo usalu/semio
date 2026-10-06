@@ -28,7 +28,7 @@ pub use crate::standards::v1_7::subsets::base::modules::lexer::PdfEngineError as
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-    use crate::standards::v1_7::subsets::base::schema::PdfAnalyzer;
+    use crate::standards::v1_7::subsets::base::io::PdfAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
@@ -1309,13 +1309,13 @@ mod tests;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v1_7::subsets::a::schema::PdfAComposer;
-    use crate::standards::v1_7::subsets::base::schema::PdfComposer as PdfRawAnyComposer;
-    use crate::standards::v1_7::subsets::e::schema::PdfEComposer;
-    use crate::standards::v1_7::subsets::h::schema::PdfHComposer;
-    use crate::standards::v1_7::subsets::ua::schema::PdfUaComposer;
-    use crate::standards::v1_7::subsets::vt::schema::PdfVtComposer;
-    use crate::standards::v1_7::subsets::x::schema::PdfXComposer;
+    use crate::standards::v1_7::subsets::a::io::PdfAComposer;
+    use crate::standards::v1_7::subsets::base::io::PdfComposer as PdfRawAnyComposer;
+    use crate::standards::v1_7::subsets::e::io::PdfEComposer;
+    use crate::standards::v1_7::subsets::h::io::PdfHComposer;
+    use crate::standards::v1_7::subsets::ua::io::PdfUaComposer;
+    use crate::standards::v1_7::subsets::vt::io::PdfVtComposer;
+    use crate::standards::v1_7::subsets::x::io::PdfXComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -1339,3 +1339,164 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+    use crate::standards::v1_7::subsets::base::schema::mutations::{apply_pdf_mutation, InsertPage, PdfMutation, SetInfo};
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.pdf.1.7` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct PdfBuilderConstruction {
+        snapshot: PdfSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl PdfBuilderConstruction {
+        /// ➕ Typed construction: appends a page (the analyzer→builder round-trip acceptance test's
+        /// primary entry point -- requirement #8's `InsertPage`, exposed ergonomically).
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_page(self, page: PdfPage) -> Self {
+            let index = self.snapshot.pages.len();
+            let (next, _diff) = self.mutate(PdfMutation::InsertPage(InsertPage { index, page }));
+            next
+        }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_info(self, info: PdfInfo) -> Self {
+            let (next, _diff) = self.mutate(PdfMutation::SetInfo(SetInfo { info }));
+            next
+        }
+    }
+
+    impl ArtifactBuilder for PdfBuilderConstruction {
+        type Snapshot = PdfSnapshot;
+        type Mutation = PdfMutation;
+        type Diff = PdfDiff;
+        fn empty() -> Self {
+            Self { snapshot: PdfSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.pdf.1.7` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct PdfParts {
+        pub snapshot: Option<PdfSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.pdf` (1.7/🧱️base) sources.
+    pub struct PdfAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for PdfAnalyzerAnalysis {
+        type Parts = PdfParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
+
+        /// 🔍️ Real sniff (requirement #9): inspects `%PDF-` magic + version probe via
+        /// `engine::sniff_pdf`, does not discard its argument.
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => match crate::standards::v1_7::subsets::base::io::sniff_pdf(bytes) {
+                    Some(_version) => IoConfidence::High,
+                    None => IoConfidence::Low,
+                },
+                AnalyzeSource::Text(text) => {
+                    if crate::standards::v1_7::subsets::base::io::sniff_pdf(text.as_bytes()).is_some() { return IoConfidence::High; }
+                    match store::semio_format::split_text_preamble(text) {
+                        Ok((envelope, _)) if envelope.matches_identity("stdio.pdf.1.7", store::semio_format::Component::Dsl, 1) => IoConfidence::High,
+                        _ => IoConfidence::Low,
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = PdfParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match if text.as_bytes().starts_with(b"%PDF-") {
+                        crate::standards::v1_7::subsets::base::io::decode_pdf(text.as_bytes()).map_err(|error| format!("{error:?}"))
+                    } else {
+                        <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+                    } {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match if crate::standards::v1_7::subsets::base::io::sniff_pdf(bytes).is_some() {
+                        crate::standards::v1_7::subsets::base::io::decode_pdf(bytes).map_err(|error| format!("{error:?}"))
+                    } else {
+                        <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+                    } {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec PdfBuilderFacets {
+        construction: PdfBuilderConstruction,
+        analysis: PdfAnalyzerAnalysis,
+        composition: crate::standards::v1_7::subsets::base::io::derived_composition::PdfComposerComposition,
+    }
+    builder: PdfBuilder,
+    analyzer: PdfAnalyzer,
+    composer: PdfComposer,
+);

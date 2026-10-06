@@ -10,7 +10,7 @@ use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrush
 use crate::BlockRepresentation;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, world3d_selection_json, WorldProjectionConfig};
 
-use semio_framework_pack_json::{parse, Value};
+use semio_framework_pack_json::{json, parse, Value};
 
 fn vec3(v: [f64; 3]) -> Value {
     Value::from(v.iter().map(|c| Value::from(*c)).collect::<Vec<Value>>())

@@ -33,7 +33,7 @@ message FormQuestion {
   optional string schema = 15;
   optional string src = 16;
   optional string accept = 17;
-  optional string fixture_slug = 18;
+  optional string example_id = 18;
   semio.framework.value.DslValue params = 19;
   FormExpr condition = 20;
 }

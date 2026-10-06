@@ -1,0 +1,23 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "nx",
+    "run-many",
+    "--target=test-snapshot-sqlite-native",
+    "--projects=@semio-tech/stdio-binary-rs,@semio-tech/stdio-csv-rs,@semio-tech/stdio-tsv-rs",
+    "--parallel=1",
+    "--skip-nx-cache",
+    "--outputStyle=stream",
+    "--excludeTaskDependencies"
+  ],
+  "env": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "SEMIO_TEST_LEVEL": "quick",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/stdio-three-complete-native-before-artifacts"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-stdio-three-complete-native-before.log",
+  "status": "STARTED after framework Space17/17 and Collection17/17 actual terminal",
+  "startedAt": "2026-10-05T19:56:45.237Z"
+}

@@ -5,7 +5,8 @@ use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::S_PLAY_CATALOGUE_BODY_KEY;
 use semio_framework_os::{os_app_primary_output_kind, os_app_registration, workflow_palette};
 use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, HasBase};
-use semio_framework_plugin::{tree_window_item, Locale, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Terminology, TreeWindows, UiFixedMap, UiText};
+use semio_framework_ui_locale::{Locale, Terminology};
+use semio_framework_plugin::{tree_window_item, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, UiFixedMap, UiText};
 use semio_framework_ui_contract as ui;
 use std::collections::BTreeMap;
 
@@ -13,7 +14,7 @@ use std::collections::BTreeMap;
 pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(crate::engine::space::S_PLAY_CATALOGUE_TAB_ID.into()),
-        label: semio_framework_plugin::LocalizedLabel::native(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
+        label: semio_framework_ui_locale::LocalizedLabel::native(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
         group: PanelGroup::Workbench,
         body_key: Some(S_PLAY_CATALOGUE_BODY_KEY.into()),
         children: Vec::new(),

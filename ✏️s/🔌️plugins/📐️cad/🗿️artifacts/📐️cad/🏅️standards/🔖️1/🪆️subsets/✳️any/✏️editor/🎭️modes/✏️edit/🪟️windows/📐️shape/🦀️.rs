@@ -31,6 +31,7 @@ pub const PANE: CadPaneId = CadPaneId::Shape;
 /// never frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Shape", "Form"),
         body_key: BODY_KEY.into(),

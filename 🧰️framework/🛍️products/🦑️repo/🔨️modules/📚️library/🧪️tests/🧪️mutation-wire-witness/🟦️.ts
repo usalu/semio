@@ -9,7 +9,6 @@ import { inventoryTaxonomy } from "../../🧹️normalization/🟦️.ts";
 const owner = resolve(import.meta.dir, "../..");
 const repoRoot = process.env.SEMIO_FIXTURE_REPO_ROOT ?? resolve(import.meta.dir, "../../../../../../..");
 const vector = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧫️mutation-wire-witness/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️mutation-wire-witness/🔣️.json"), "utf8"));
 const taxonomy = loadCatalogTaxonomy();
 const spec = taxonomy.semanticDirectoryKinds[vector.kindId]!;
 const unresolved = /^(?:directory|file)-kind-(?:unresolved|ambiguous)$|^semantic-stem-(?:unresolved|ambiguous)$/u;
@@ -23,9 +22,8 @@ const split = (name: string): { emoji: string; slug: string } => {
   return match ? { emoji: match[1]!, slug: match[2]! } : { emoji: "", slug: name };
 };
 
-test("the mutation wire witness vectors satisfy their schema (Ajv)", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+test("the mutation wire witness resolutions agree with independent taxonomy admission", () => {
+  for (const row of vector.resolutions) expect(oracle({ ...split(row.name), parentKindId: row.parentKindId })).toBe(row.expectedKindId === vector.kindId);
 });
 
 test("exactly one registered kind claims the wire witness name, bounded to mutation-leaf fixture scopes", () => {

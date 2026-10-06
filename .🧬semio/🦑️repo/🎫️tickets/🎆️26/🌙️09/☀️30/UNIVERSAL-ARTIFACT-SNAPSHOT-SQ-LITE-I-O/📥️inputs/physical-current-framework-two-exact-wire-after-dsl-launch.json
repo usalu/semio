@@ -1,0 +1,23 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "nx",
+    "run-many",
+    "--target=test",
+    "--projects=@semio-tech/framework-space-space-rs,@semio-tech/framework-space-collection-rs",
+    "--parallel=1",
+    "--args=--lib actual_borrowed_wire_matches_public_file_for_every_text_role --no-fail-fast",
+    "--skip-nx-cache",
+    "--outputStyle=stream",
+    "--excludeTaskDependencies"
+  ],
+  "env": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "SEMIO_TEST_LEVEL": "quick",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/framework-three-original-before-native-artifacts"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-framework-two-exact-wire-after-dsl-provider.log",
+  "status": "After tagged derive and DSL emitter; Pack provider Root pending; both real wire encodings unchanged"
+}

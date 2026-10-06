@@ -147,7 +147,7 @@ def vectors(ctx):
     Discovery rather than enumeration is deliberate: this artifact's scenario directories are being
     authored and renamed continuously, and the sibling case's hand-written Examples table pointed at
     four directories that no longer existed."""
-    root = os.path.dirname(ctx.fixture(VECTOR_ROOT_URI))
+    root = os.path.dirname(ctx.input(VECTOR_ROOT_URI))
     if root in DISCOVERED:
         return DISCOVERED[root]
     found = []
@@ -696,7 +696,7 @@ def region_vectors(ctx):
     (`<vocabulary>/<leaf>/<scenario>/…`) rather than through `vectors`, whose `SCENARIOS_DIR`
     indirection still points at the pre-relocation tree and therefore discovers nothing today. Read
     the ticket report beside this case before reconciling the two."""
-    root = os.path.dirname(ctx.fixture(VECTOR_ROOT_URI))
+    root = os.path.dirname(ctx.input(VECTOR_ROOT_URI))
     found = []
     for leaf in sorted(os.listdir(root)):
         if REGION_FAMILY not in kind_of(leaf) or not os.path.isdir(os.path.join(root, leaf)):

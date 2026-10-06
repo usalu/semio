@@ -12,7 +12,7 @@
 
 //#region 🔌️Adapters
 import { Kind, parse, valueFromASTUntyped, type OperationDefinitionNode } from "graphql";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔢️Coercion
@@ -58,10 +58,10 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "arguments-resolve-against-variables": {
-      oracle: (ctx) => ({ projection: project(JSON.parse(Buffer.from(ctx.fixtureBytes("shared://🔀️variable-coercion/🔣️coercions.json")).toString("utf8")) as { cases: Case[] }, false) }),
+      oracle: (ctx) => ({ projection: project(JSON.parse(Buffer.from(ctx.inputBytes("shared://🔀️variable-coercion/🔣️coercions.json")).toString("utf8")) as { cases: Case[] }, false) }),
     },
     "defaults-fill-only-absent-arguments": {
-      oracle: (ctx) => ({ projection: project(JSON.parse(Buffer.from(ctx.fixtureBytes("shared://🔀️variable-coercion/🔣️coercions.json")).toString("utf8")) as { cases: Case[] }, true) }),
+      oracle: (ctx) => ({ projection: project(JSON.parse(Buffer.from(ctx.inputBytes("shared://🔀️variable-coercion/🔣️coercions.json")).toString("utf8")) as { cases: Case[] }, true) }),
     },
   },
 });

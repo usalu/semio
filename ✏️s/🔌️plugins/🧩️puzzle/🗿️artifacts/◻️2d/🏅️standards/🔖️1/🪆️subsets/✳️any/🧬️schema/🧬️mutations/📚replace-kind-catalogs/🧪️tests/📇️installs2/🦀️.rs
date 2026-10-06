@@ -1,4 +1,4 @@
-//! 🧪️ `replace-kind-catalogs` fixture — `📇️installs2`.
+//! 🧪️ `replace-kind-catalogs` snapshot — `📇️installs2`.
 //!
 //! Installs a handle catalogue keyed on the tower's own door kinds where the board carried none.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

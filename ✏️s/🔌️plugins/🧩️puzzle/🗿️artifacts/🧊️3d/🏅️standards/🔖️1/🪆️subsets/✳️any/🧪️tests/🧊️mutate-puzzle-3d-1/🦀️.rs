@@ -6,7 +6,7 @@
 //! document and `Puzzle3dMutation` IS its specification, so there is nothing third-party to register. What
 //! stands in for an oracle is named there and exercised here: the committed
 //! `(before, mutation, diff, outcome, after)` quintets under
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/<fixture>/`, replayed
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/<scene_snapshot>/`, replayed
 //! through the platform, plus two metamorphic laws asserted IN ROLE.
 //!
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner
@@ -23,7 +23,7 @@
 //! subset's own codec can establish: the committed diff's collection arms record removals as bare
 //! ids, so a removed record is not reconstructable from the diff alone and the full law
 //! `apply(inverse(m), apply(m, base)) == base` stays with the production `inverse()` implementation
-//! and the per-leaf fixture tests that already exercise it.
+//! and the per-leaf scene_snapshot tests that already exercise it.
 //!
 //! @see semio_repo_test_host::law — the shared law helpers.
 
@@ -107,7 +107,7 @@ fn vector(ctx: &Context) -> Result<Vector, String> {
     if !KINDS.contains(&kind.as_str()) {
         return Err(format!("scenario doc string names {kind:?}, which is not a declared Puzzle3dMutation kind"));
     }
-    Ok(Vector { kind, before: ctx.fixture_json(&spec.str("before"))?, mutation: ctx.fixture_json(&spec.str("mutation"))?, diff: ctx.fixture_json(&spec.str("diff"))?, after: ctx.fixture_json(&spec.str("after"))?, outcome: ctx.fixture_json(&spec.str("outcome"))? })
+    Ok(Vector { kind, before: ctx.input_json(&spec.str("before"))?, mutation: ctx.input_json(&spec.str("mutation"))?, diff: ctx.input_json(&spec.str("diff"))?, after: ctx.input_json(&spec.str("after"))?, outcome: ctx.input_json(&spec.str("outcome"))? })
 }
 
 /// 🐫️ `create-object` → `createObject`, the discriminant this subset's
@@ -122,7 +122,7 @@ fn declared_kind(mutation: &Json) -> String {
     mutation.str("mutation")
 }
 
-/// 🚦️ Whether the committed outcome itself declares this vector a no-op — the fixture's own record
+/// 🚦️ Whether the committed outcome itself declares this vector a no-op — the scene_snapshot's own record
 /// that the mutation had nothing to do, which inverts what the observability law must demand.
 fn declares_no_op(outcome: &Json) -> bool {
     outcome.array("messages").iter().any(|message| message.str("code") == "mutation.no-op")
@@ -266,8 +266,8 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
 /// input unread would be caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
     const SNAPSHOT: &str = "shared://🧬️mutations/🌱create-object/appends-object-c/📸️snapshot/⬅️before/🔣️.json";
-    let committed = ctx.fixture_bytes(SNAPSHOT)?;
-    let parsed = ctx.fixture_json(SNAPSHOT)?;
+    let committed = ctx.input_bytes(SNAPSHOT)?;
+    let parsed = ctx.input_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();
     law::reparsed_not_copied(reserialized.as_bytes(), &committed)?;
     let reparsed = semio_repo_test_host::parse_json(&reserialized)?;

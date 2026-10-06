@@ -8,7 +8,7 @@ async fn renders_node_graph_scene() {
     assert!(render_body(&mut app, GENERATION_3D_PLAY_BODY_MAIN).await.contains("node-graph"));
 }
 
-/// 🛍️ The scene names its operators by KIND ID (inside `fixtureJson`) and carries only the document's
+/// 🛍️ The scene names its operators by KIND ID (inside `snapshotJson`) and carries only the document's
 /// own neuron kinds as operator records — never the registered catalogue (~100 KB, three times the
 /// fixed 32 KiB per-surface admission; ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). Those records
 /// are how the canvas instantiates the graph instead of `FlowHostSnapshot::default()`'s placeholder slider.

@@ -16,7 +16,7 @@ import (
 
 // 🎞️ transcript is the recorded git session this case replays.
 func transcript(ctx *host.Context) (*metrics.GitTranscript, error) {
-	raw, err := ctx.FixtureBytes("shared://🎞️git-transcript.json")
+	raw, err := ctx.InputBytes("shared://🎞️git-transcript.json")
 	if err != nil {
 		return nil, err
 	}

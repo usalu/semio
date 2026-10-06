@@ -39,7 +39,7 @@ const INPUT: &str = "asset://🏛️architectural/🏛️architectural.dwg";
 /// 🧫️ Copies the immutable committed drawing into the work directory and returns the mutable copy's
 /// bytes; the committed file is never written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.dwg"))?;
+    let copy = ctx.copy_input(INPUT, Some("input.dwg"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input
@@ -164,7 +164,8 @@ mod subject {
     use super::{conforms, mutable_input, params_of, predicted, refused, NATIVE_VERSION};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
-    use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::snapshot::{decode_dwg, encode_dwg};
+    use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::{encode_dwg};
+    use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::{decode_dwg};
     use semio_s_artifact_stdio_dwg::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_dwg_test_oracle::standards::v_ac1024::subsets::any::project_dwg;
     use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, round_trip_preserves, wire_operation};

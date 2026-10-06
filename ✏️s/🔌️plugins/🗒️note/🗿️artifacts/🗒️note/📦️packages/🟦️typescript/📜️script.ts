@@ -12,7 +12,7 @@ class TestScript extends BundleScript {
 }
 class SqliteTestScript extends BundleScript {
   run(): void {
-    runCmd(process.execPath, ["test", join(this.repoRoot, "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🧪️tests/🟦️.ts")]);
+    runCmd(process.execPath, ["test", join(this.repoRoot, "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")]);
   }
 }
 class ContractTestScript extends BundleScript {

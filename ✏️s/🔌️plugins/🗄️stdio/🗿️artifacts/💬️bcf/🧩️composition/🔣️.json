@@ -68,7 +68,7 @@
     {
       "factoryId": "stdio.native.bcf.v1",
       "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📜️artifact-definition.json",
-      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"
     }
   ]
 }

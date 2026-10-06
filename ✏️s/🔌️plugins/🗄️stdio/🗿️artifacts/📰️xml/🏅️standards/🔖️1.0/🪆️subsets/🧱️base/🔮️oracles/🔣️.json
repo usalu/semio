@@ -407,9 +407,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-declaration-applied",
       "class": "third-party-generated",
       "target": {
@@ -460,7 +459,6 @@
       "notes": "Whole-value replace of the declaration only (version/encoding/standalone); doctype, prolog and root untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-doctype-applied",
       "class": "third-party-generated",
       "target": {
@@ -511,7 +509,6 @@
       "notes": "Whole-value replace of the doctype only (SYSTEM -> PUBLIC external id, one entity added); declaration, prolog and root untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-element-applied",
       "class": "third-party-generated",
       "target": {
@@ -562,7 +559,6 @@
       "notes": "A third `item` element is inserted into the root's children before the CDATA section; every other node keeps its position."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-element-applied",
       "class": "third-party-generated",
       "target": {
@@ -613,7 +609,6 @@
       "notes": "The root's CDATA child is removed; the two items, comment and PI keep their relative order."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -664,7 +659,6 @@
       "notes": "The first `item`'s `qty` attribute changes value; its text, the second item, and every other attribute are untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-text-applied",
       "class": "third-party-generated",
       "target": {

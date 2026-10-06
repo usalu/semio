@@ -6,7 +6,7 @@
 
 use crate::results_window_config::{ChangeSelectedCheckIndex, NormResultsWindowConfigMutation};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::op::Din4108Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Din4108Mutation;
 use crate::Din4108Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

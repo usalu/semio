@@ -148,6 +148,7 @@ const engineTestSuites = [
   elementSuite("🛠️ShellHelpers", "🪟️tree-windows", "tsx"),
   elementSuite("🛠️ShellHelpers/⏯️tool-run-panel", "🧩️component", "tsx"),
   elementSuite("🛠️ShellHelpers/⏪️time-travel", "🧩️component", "tsx"),
+  elementSuite("🛠️ShellHelpers/⏪️time-travel", "📐️geometry", "tsx"),
   elementSuite("🛠️ShellHelpers", "🧪️staged-arg-controls", "tsx"),
   elementSuite("🕸️NodeGraph", "🖱️scroll-gesture"),
   elementSuite("🕸️NodeGraph", "🫱️interaction-publication"),

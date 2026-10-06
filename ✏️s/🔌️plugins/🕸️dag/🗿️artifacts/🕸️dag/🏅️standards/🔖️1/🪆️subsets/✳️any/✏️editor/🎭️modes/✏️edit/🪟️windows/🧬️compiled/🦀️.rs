@@ -24,6 +24,7 @@ const DAG_PLAY_SURFACE_COMPILED: &str = "dag.play.compiled-dag";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: DAG_PLAY_WINDOW_COMPILED.into(),
         label: LocalizedLabel::native("DSL", "DSL"),
         body_key: DAG_PLAY_BODY_COMPILED.into(),

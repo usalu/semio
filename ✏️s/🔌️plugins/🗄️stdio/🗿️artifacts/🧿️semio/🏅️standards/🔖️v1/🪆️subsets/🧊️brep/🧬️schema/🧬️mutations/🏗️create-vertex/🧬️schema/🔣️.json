@@ -11,13 +11,70 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Vertex id",
+          "de": "Vertex-ID"
+        },
+        "description": {
+          "en": "Id the new vertex carries.",
+          "de": "Kennung, die der neue Vertex trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "point": {
-      "$ref": "#/$defs/SemioPoint3"
+      "$ref": "#/$defs/SemioPoint3",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Point",
+          "de": "Punkt"
+        },
+        "description": {
+          "en": "Position of the vertex as x, y, z.",
+          "de": "Position des Vertex als x, y, z."
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "tol": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "slider",
+        "role": "value",
+        "label": {
+          "en": "Tolerance",
+          "de": "Toleranz"
+        },
+        "description": {
+          "en": "Geometric tolerance of the vertex: the distance within which it coincides with the geometry it bounds.",
+          "de": "Geometrische Toleranz des Vertex: der Abstand, innerhalb dessen sie mit der begrenzten Geometrie zusammenfällt."
+        },
+        "step": 1e-09,
+        "precision": 9,
+        "softMin": 1e-09,
+        "softMax": 0.1,
+        "scale": "log",
+        "snaps": [
+          1e-09,
+          1e-08,
+          1e-07,
+          1e-06,
+          1e-05,
+          0.0001,
+          0.001,
+          0.01,
+          0.1
+        ],
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

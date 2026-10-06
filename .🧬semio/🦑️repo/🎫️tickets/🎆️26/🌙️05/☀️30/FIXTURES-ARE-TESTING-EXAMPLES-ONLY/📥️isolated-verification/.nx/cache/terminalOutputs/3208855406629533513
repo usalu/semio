@@ -1,0 +1,23 @@
+> bun ./📜️script.ts kernel-test
+
+[DEBUG] isolated Nx verification kernel-test
+19 | }
+20 | 
+21 | /** 📁️ Refuses escaped or symlink-backed manifest ancestry before reading owner authority. */
+22 | function physical(root: string, path: string): string {
+23 |   const full = resolve(root, path), rel = slash(relative(root, full));
+24 |   if (rel.startsWith("../") || isAbsolute(rel)) throw new Error(`Cargo workspace path escapes repository: ${path}`);
+                                                               ^
+error: Cargo workspace path escapes repository: ../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml
+      at physical (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts:24:59)
+      at cargoWorkspaceForManifest (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts:111:16)
+      at prepareCargoWorkspaceInvocation (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts:219:17)
+      at runCmdInternal (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts:96:24)
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts:141:18)
+      at runCargo (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts:2224:3)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts:1880:11)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts:74:71)
+      at async runScriptMain (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts:15:16)
+
+Bun v1.3.14 (macOS arm64)
+Warning: command "bun ./📜️script.ts kernel-test" exited with non-zero status code

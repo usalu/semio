@@ -17,7 +17,7 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 # region 🔖️Scenarios
 def digest_and_fixture_resolution(ctx: Context) -> Outcome:
     """#⃣ Projects the owned digest of the shared vector and of a fixed literal."""
-    vector = ctx.fixture_bytes("shared://📡️protocol-vector.txt")
+    vector = ctx.input_bytes("shared://📡️protocol-vector.txt")
     return Outcome(
         {
             "vectorDigest": digest(vector),
@@ -34,7 +34,7 @@ def fixture_not_in_plan_is_an_error(ctx: Context) -> Outcome:
     """🚫️ An undeclared fixture URI must fail loudly rather than resolve to a default."""
     reported = False
     try:
-        ctx.fixture("shared://this-fixture-is-not-declared")
+        ctx.input("shared://this-fixture-is-not-declared")
     except KeyError:
         reported = True
     return Outcome({"resolverReportedFailure": reported})

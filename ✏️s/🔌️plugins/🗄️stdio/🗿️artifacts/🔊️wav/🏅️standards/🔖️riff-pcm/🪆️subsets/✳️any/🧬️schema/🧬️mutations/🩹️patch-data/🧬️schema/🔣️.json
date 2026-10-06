@@ -6,7 +6,25 @@
   "additionalProperties": false,
   "required": ["mutation","index", "removeCount", "data"],
   "properties": {
-    "index": { "type": "integer", "minimum": 0 },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Start sample",
+          "de": "Start-Sample"
+        },
+        "description": {
+          "en": "Index of the first sample the patch replaces, counted from 0.",
+          "de": "Index des ersten Samples, das die Änderung ersetzt, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
     "removeCount": {
       "type": "integer",
       "minimum": 0,
@@ -19,10 +37,27 @@
         "description": {
           "en": "Number of items removed at the index before the new items are inserted.",
           "de": "Anzahl der Elemente, die am Index vor dem Einfügen der neuen Elemente entfernt werden."
-        }
+        },
+        "step": 1
       }
     },
-    "data": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/set-data/schema.json#/$defs/WavData" },
+    "data": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/wav/riff-pcm/any/mutation/set-data/schema.json#/$defs/WavData",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "value",
+        "label": {
+          "en": "Inserted samples",
+          "de": "Eingefügte Samples"
+        },
+        "description": {
+          "en": "Samples written at the start position. Bulk data is not edited inline; withdraw the mutation instead.",
+          "de": "Samples, die an der Startposition geschrieben werden. Massendaten werden nicht direkt bearbeitet; stattdessen die Mutation zurückziehen."
+        },
+        "group": "value",
+        "order": 30
+      }
+    },
     "moveTo": {
       "type": ["integer", "null"],
       "minimum": 0,
@@ -35,7 +70,8 @@
         "description": {
           "en": "Index the patched range is moved to.",
           "de": "Index, an den der geänderte Bereich verschoben wird."
-        }
+        },
+        "step": 1
       }
     },
     "mutation": { "const": "patchData", "description": "Aggregate discriminator spliced in by WavMutation; absent when the payload stands alone." }

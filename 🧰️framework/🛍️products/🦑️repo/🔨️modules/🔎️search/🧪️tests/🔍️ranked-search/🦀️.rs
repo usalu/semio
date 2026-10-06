@@ -8,7 +8,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 #[cfg(feature = "sut")]
 fn vectors_rank_the_same_way(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_search::{Index, MatchQuery};
-    let file = ctx.fixture_json("shared://📡️ranking-vectors.json")?;
+    let file = ctx.input_json("shared://📡️ranking-vectors.json")?;
     let mut rankings = Vec::new();
     for vector in file.array("vectors") {
         let name = vector.str("name");

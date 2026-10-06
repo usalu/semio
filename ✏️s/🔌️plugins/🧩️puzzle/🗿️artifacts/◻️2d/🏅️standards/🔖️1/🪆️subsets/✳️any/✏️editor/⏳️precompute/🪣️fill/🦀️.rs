@@ -9,7 +9,8 @@
 use crate::editor::puzzle2d::engine::{
     BoardFillCandidateEvent, BoardFillCandidateVerdict, BoardFillCaptureFault, BoardFillIngressHandleText, BoardFillIngressKindText, BoardFillIngressRuleText, BoardFillIngressTemplateText, BoardFillJob, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotIngress, BoardFillStage,
 };
-use crate::standards::v1::subsets::any::schema::mutations::text::{Puzzle2dMutation, Puzzle2dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
 use crate::standards::v1::subsets::any::schema::mutations::{connect_handles, create_node};
 use semio_framework_job::{Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, RevisionId, StepBudget, StepContext, StepOutcome, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_tool_run::{ToolRunCounter, ToolRunIdentity, ToolRunProgress, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_REASON_CONFLICT};
@@ -335,8 +336,8 @@ fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result<[Puzzle2dM
 /// 🎯️ The normalized bounds of every visible target region the document declares, capped at
 /// [`FILL_RUN_TARGET_REGION_SLOTS`] — a document painted past that ceiling constrains fill by its
 /// first regions rather than faulting the run, and the excess is visible in the board itself.
-pub(crate) fn fill_visible_region_bounds(fixture: &Value) -> Vec<[f64; 4]> {
-    crate::editor::puzzle2d::fixture_target_regions(fixture)
+pub(crate) fn fill_visible_region_bounds(snapshot: &Value) -> Vec<[f64; 4]> {
+    crate::editor::puzzle2d::snapshot_target_regions(snapshot)
         .iter()
         .filter(|region| region.get("hidden").and_then(Value::as_bool) != Some(true))
         .take(FILL_RUN_TARGET_REGION_SLOTS)

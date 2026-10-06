@@ -43,7 +43,7 @@ impl ArtifactViewer for Din18599Viewer {
     /// 🪆️ The derived `climateTable` child (`s.stdio.semio@v1/table`) opens through the stdio semio member family.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = Din18599Snapshot;
-    type Mutation = crate::op::Din18599Mutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Din18599Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

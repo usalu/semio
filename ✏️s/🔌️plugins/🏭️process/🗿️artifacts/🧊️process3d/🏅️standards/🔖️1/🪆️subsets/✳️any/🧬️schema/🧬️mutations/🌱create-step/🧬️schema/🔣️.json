@@ -15,7 +15,20 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Where the step is inserted in the process.",
+          "de": "Wo der Schritt im Prozess eingefügt wird."
+        },
+        "widget": "stepper",
+        "role": "value",
+        "step": 1
+      }
     },
     "step": {
       "title": "ProcessStep",

@@ -1,0 +1,12 @@
+{
+ "cases":[
+  {"name":"empty","positions":[],"radii":[],"edges":[],"pins":[],"parameters":{"iterations":1,"idealEdgeLength":4,"repulsionStrength":0,"springStrength":1,"gravity":0,"centerX":0,"centerY":0,"timeStep":1,"velocityDamping":1,"maxSpeed":100}},
+  {"name":"spring","positions":[[-1,0],[1,0]],"radii":[1,1],"edges":[[0,1]],"pins":[null,null],"parameters":{"iterations":1,"idealEdgeLength":4,"repulsionStrength":0,"springStrength":1,"gravity":0,"centerX":0,"centerY":0,"timeStep":1,"velocityDamping":1,"maxSpeed":100}},
+  {"name":"pinned-spring","positions":[[-1,0],[1,0]],"radii":[1,1],"edges":[[0,1]],"pins":[[-1,0],null],"parameters":{"iterations":1,"idealEdgeLength":4,"repulsionStrength":0,"springStrength":1,"gravity":0,"centerX":0,"centerY":0,"timeStep":1,"velocityDamping":1,"maxSpeed":100}},
+  {"name":"repulsion","positions":[[-1,0],[1,0]],"radii":[2,3],"edges":[],"pins":[null,null],"parameters":{"iterations":1,"idealEdgeLength":4,"repulsionStrength":2,"springStrength":0,"gravity":0,"centerX":0,"centerY":0,"timeStep":1,"velocityDamping":1,"maxSpeed":100}},
+  {"name":"gravity","positions":[[10,20]],"radii":[1],"edges":[],"pins":[null],"parameters":{"iterations":1,"idealEdgeLength":4,"repulsionStrength":0,"springStrength":0,"gravity":0.25,"centerX":2,"centerY":4,"timeStep":1,"velocityDamping":0.5,"maxSpeed":100}},
+  {"name":"speed-cap","positions":[[-1,0],[1,0]],"radii":[1,1],"edges":[[0,1]],"pins":[null,null],"parameters":{"iterations":1,"idealEdgeLength":40,"repulsionStrength":0,"springStrength":1,"gravity":0,"centerX":0,"centerY":0,"timeStep":1,"velocityDamping":1,"maxSpeed":2}},
+  {"name":"cooling-retains-velocity","positions":[[-1,2],[1,4]],"radii":[1,2],"edges":[[0,1]],"pins":[null,null],"parameters":{"iterations":3,"idealEdgeLength":5,"repulsionStrength":0.5,"springStrength":0.1,"gravity":0.02,"centerX":0,"centerY":0,"timeStep":0.75,"velocityDamping":0.9,"maxSpeed":3}},
+  {"name":"coincident","positions":[[1,1],[1,1]],"radii":[1,1],"edges":[[0,1]],"pins":[null,null],"parameters":{"iterations":2,"idealEdgeLength":4,"repulsionStrength":1,"springStrength":1,"gravity":0,"centerX":0,"centerY":0,"timeStep":1,"velocityDamping":1,"maxSpeed":100}}
+ ]
+}

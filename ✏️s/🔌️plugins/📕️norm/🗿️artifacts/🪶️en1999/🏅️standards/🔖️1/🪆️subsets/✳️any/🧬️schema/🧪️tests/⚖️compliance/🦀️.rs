@@ -2,7 +2,8 @@
 
 use crate::document::{AnnexChoice, CheckStatus};
 use crate::snapshot::En1999Snapshot;
-use crate::standards::v1::subsets::any::schema::snapshot::{decode_en1999_dsl, encode_en1999_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{encode_en1999_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{decode_en1999_dsl};
 use crate::standards::v1::subsets::any::schema::{evaluate_structure, na_de, part_1_1, part_1_2, part_1_3};
 use std::path::PathBuf;
 use std::process::Command;
@@ -382,7 +383,7 @@ fn bundled_example_assets_match_regenerated_dsl_and_pack() {
         let dsl_path = any.join("🖼️assets").join(name).join(name).join("🗣️.dsl.semio");
         let pack_path = any.join("🖼️assets").join(name).join("🎒️.pack.semio");
         let expected_dsl = encode_en1999_dsl(&snap);
-        let expected_pack = crate::standards::v1::subsets::any::schema::snapshot::encode_en1999_pack(&snap);
+        let expected_pack = crate::standards::v1::subsets::any::io::binary::snapshot::encode_en1999_pack(&snap);
         let committed_dsl = std::fs::read_to_string(&dsl_path).unwrap_or_default();
         let committed_pack = std::fs::read(&pack_path).unwrap_or_default();
         assert_eq!(
@@ -770,11 +771,11 @@ fn regen_example_assets_when_env_set() {
         std::fs::write(dir.join("🗣️.dsl.semio"), encode_en1999_dsl(&snap)).unwrap();
         std::fs::write(
             any.join("🖼️assets").join(name).join("🎒️.pack.semio"),
-            crate::standards::v1::subsets::any::schema::snapshot::encode_en1999_pack(&snap),
+            crate::standards::v1::subsets::any::io::binary::snapshot::encode_en1999_pack(&snap),
         ).unwrap();
         std::fs::write(
             dir.join("🔣️.json"),
-            crate::standards::v1::subsets::any::schema::snapshot::encode_en1999_snapshot_json(&snap),
+            crate::standards::v1::subsets::any::io::text::snapshot::encode_en1999_snapshot_json(&snap),
         ).unwrap();
     }
 }

@@ -56,6 +56,7 @@ pub fn set_camera_action() -> ActionDefinition {
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::gismap::create_gismap_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Map", "Karte"),
         body_key: BODY_KEY.into(),

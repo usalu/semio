@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { parse, stringify } from "yaml";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎯️Canonical
@@ -28,8 +28,8 @@ function canonical(value: unknown): string {
 //#region 🧭️Adapter
 /** 🟦️ The `yaml` package decides what each vector means; this repository's decoder is judged against it. */
 /** 🧫️ The vectors the oracle decides, read straight from the immutable fixture. */
-function vectorsOf(ctx: { fixtureBytes(uri: string): Uint8Array }): { name: string; source: string }[] {
-  return (JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://📡️codec-vectors.json"))) as { vectors: { name: string; source: string }[] }).vectors;
+function vectorsOf(ctx: { inputBytes(uri: string): Uint8Array }): { name: string; source: string }[] {
+  return (JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://📡️codec-vectors.json"))) as { vectors: { name: string; source: string }[] }).vectors;
 }
 
 export default defineTestAdapter({

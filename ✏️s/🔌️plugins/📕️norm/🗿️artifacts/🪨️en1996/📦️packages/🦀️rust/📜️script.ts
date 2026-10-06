@@ -38,5 +38,5 @@ if (command === "regenerate-example-assets") {
   const router = new ScriptRouter(packageRoot).register("regenerate-example-assets", RegenerateExampleAssetsScript);
   await router.run(["regenerate-example-assets"]);
 } else {
-  await runArtifactRustPackageMain(packageRoot, cargoName, {snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"]});
+  await runArtifactRustPackageMain(packageRoot, cargoName, {snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
 }

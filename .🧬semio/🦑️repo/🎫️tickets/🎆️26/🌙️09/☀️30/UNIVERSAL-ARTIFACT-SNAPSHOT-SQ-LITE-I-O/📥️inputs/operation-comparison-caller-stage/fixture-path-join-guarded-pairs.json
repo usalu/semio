@@ -1,0 +1,9 @@
+{
+  "pairs": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/📦️bytes/🧪️/🧫️fixtures/🧭️caller-stage.json",
+      "before": "",
+      "after": "{\n  \"source\": [\n    17\n  ],\n  \"foreign\": [\n    18\n  ],\n  \"callerTotal\": 2,\n  \"callerBefore\": 1\n}\n"
+    }
+  ]
+}

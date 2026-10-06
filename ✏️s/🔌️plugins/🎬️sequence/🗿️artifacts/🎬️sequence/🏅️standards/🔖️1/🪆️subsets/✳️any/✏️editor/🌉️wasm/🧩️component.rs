@@ -24,11 +24,11 @@ impl SequenceDomain for SequenceDomainAdapter {
     fn execute(&mut self, operation: u16, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
         use protocol::*;
         match operation {
-            SEQUENCE_OPERATION_LOAD_FIXTURE => {
-                let fixture: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(domain_error)?;
-                self.host.replace_snapshot(fixture).map(|_| Vec::new()).map_err(domain_error)
+            SEQUENCE_OPERATION_LOAD_SNAPSHOT => {
+                let snapshot: SequenceHostSnapshot = semio_framework_pack_json::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(domain_error)?;
+                self.host.replace_snapshot(snapshot).map(|_| Vec::new()).map_err(domain_error)
             }
-            SEQUENCE_OPERATION_FIXTURE => {
+            SEQUENCE_OPERATION_SNAPSHOT => {
                 self.host.sync_from_dag();
                 self.host.to_json().map(String::into_bytes).map_err(domain_error)
             }
@@ -178,9 +178,9 @@ impl SequenceDomainAdapter {
     }
 
     fn render_frame(&mut self) -> Result<Vec<u8>, SequenceFailure> {
-        let fixture = self.host.to_json().map_err(domain_error)?;
+        let snapshot = self.host.to_json().map_err(domain_error)?;
         let labels = self.host.dag.label_overlay_paint_state_json().map_err(domain_error)?;
-        Ok(format!("{{\"fixture\":{fixture},\"labels\":{labels}}}").into_bytes())
+        Ok(format!("{{\"snapshot\":{snapshot},\"labels\":{labels}}}").into_bytes())
     }
 
     fn world_from_screen(&self, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {

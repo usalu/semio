@@ -1,0 +1,10 @@
+{
+ "schema":"framework.ui.engagement-status/v1",
+ "role":"status",
+ "live":"polite",
+ "atomic":true,
+ "cases":[
+  {"locale":"en","texts":["1 layer · 0 selected","1 layer · 1 selected","1 layer · 0 selected"]},
+  {"locale":"de","texts":["1 Ebene · 0 ausgewählt","1 Ebene · 1 ausgewählt","1 Ebene · 0 ausgewählt"]}
+ ]
+}

@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "direct-import-interpolation",
+      "source": "use quote::quote;\nfn generate(){quote!{const INPUT:&str=include_str!(#dependency);}}",
+      "macro": "quote",
+      "expressions": [
+        "#dependency"
+      ]
+    },
+    {
+      "id": "direct-import-literal-is-generated",
+      "source": "use quote::quote;\nfn generate(){quote!(include_str!(\"generated.txt\"));}",
+      "macro": "quote",
+      "expressions": [
+        "\"generated.txt\""
+      ]
+    },
+    {
+      "id": "qualified-generator",
+      "source": "fn generate(){quote::quote!{include_bytes!(#bytes)}}",
+      "macro": "quote::quote",
+      "expressions": [
+        "#bytes"
+      ]
+    },
+    {
+      "id": "aliased-direct-import",
+      "source": "use quote::quote as emit;\nfn generate(){emit!{include!(#module)}}",
+      "macro": "emit",
+      "expressions": [
+        "#module"
+      ]
+    },
+    {
+      "id": "outside-authored-nested-function",
+      "source": "use quote::quote;\nfn generate(){quote!{include_str!(#dependency)}; fn nested(){let _=include_str!(\"authored.txt\");}}",
+      "macro": "quote",
+      "expressions": [
+        "#dependency"
+      ],
+      "authored": "authored.txt"
+    },
+    {
+      "id": "nested-quoted-output",
+      "source": "use quote::quote;\nfn generate(){quote!{mod child{const INPUT:&str=::core::include_str!(#dependency);const BYTES:&[u8]=include_bytes!(#data);}}}",
+      "macro": "quote",
+      "expressions": [
+        "#dependency",
+        "#data"
+      ]
+    },
+    {
+      "id": "repeated-quoted-output",
+      "source": "use quote::quote;\nfn generate(){quote!{const INPUTS:&[&str]=&[#(::core::include_str!(#documents)),*];}}",
+      "macro": "quote",
+      "expressions": [
+        "#documents"
+      ]
+    },
+    {
+      "id": "unicode-span",
+      "source": "use quote::quote;\nfn generate(){let _=\"🧬️\";quote!{include_str!(#dependency)}}",
+      "macro": "quote",
+      "expressions": [
+        "#dependency"
+      ]
+    }
+  ],
+  "unsupported": [
+    {
+      "id": "unresolved-name",
+      "source": "fn generate(){quote!{include_str!(#dependency)}}"
+    },
+    {
+      "id": "shadowed-root-macro",
+      "source": "use quote::quote;macro_rules!quote{($x:tt)=>{include_str!(\"authored.txt\")}}fn generate(){quote!{include_str!(#dependency)};}"
+    },
+    {
+      "id": "shadowed-qualified-module",
+      "source": "mod quote{macro_rules!quote{($x:tt)=>{include_str!(\"authored.txt\")}}}fn generate(){quote::quote!{include_str!(#dependency)};}"
+    },
+    {
+      "id": "aliased-shadow",
+      "source": "use quote::quote as emit;macro_rules!emit{($x:tt)=>{include_str!(\"authored.txt\")}}fn generate(){emit!{include_str!(#dependency)};}"
+    },
+    {
+      "id": "conditional-import",
+      "source": "#[cfg(test)]use quote::quote;fn generate(){quote!{include_str!(#dependency)}}"
+    },
+    {
+      "id": "glob-origin",
+      "source": "use quote::*;fn generate(){quote!{include_str!(#dependency)}}"
+    },
+    {
+      "id": "group-origin",
+      "source": "use quote::{quote};fn generate(){quote!{include_str!(#dependency)}}"
+    },
+    {
+      "id": "lexical-local-origin",
+      "source": "fn generate(){use quote::quote;quote!{include_str!(#dependency)}}"
+    }
+  ],
+  "authoredMacros": [
+    {
+      "id": "local-quote-macro-is-authored",
+      "source": "macro_rules!quote{($path:literal)=>{include_str!($path)}}\nconst INPUT:&str=quote!(\"authored.txt\");",
+      "paths": [
+        "authored.txt"
+      ]
+    }
+  ]
+}

@@ -1,8 +1,11 @@
 //! 🪆️ Scenario consumer uses the declared parent and sole retained rich child.
 use semio_repo_test_host::{Context, Json};
 use semio_framework_value::FromValue;
-use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::schema::snapshot::{decode_rewriting_snapshot_json, encode_rewriting_snapshot_json, RewritingSnapshot};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{decode_semio_graph_snapshot_json, encode_semio_graph_snapshot_json};
+use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::schema::snapshot::{RewritingSnapshot};
+use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::snapshot::{decode_rewriting_snapshot_json};
+use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::snapshot::{encode_rewriting_snapshot_json};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::{decode_semio_graph_snapshot_json};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::{encode_semio_graph_snapshot_json};
 use semio_s_artifact_trinity_jack::{jack_content_for_handle, materialize_jack_snapshot};
 
 pub fn declared_text(ctx: &Context, role: &str) -> Result<String, String> {
@@ -12,7 +15,7 @@ pub fn declared_text(ctx: &Context, role: &str) -> Result<String, String> {
     if found.next().is_some() {
         return Err(format!("{} repeats its declared {role}", ctx.scenario.id));
     }
-    String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("{role} is not UTF-8: {error}"))
+    String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("{role} is not UTF-8: {error}"))
 }
 
 pub fn declared_owner(ctx: &Context, parent_role: &str, child_role: &str) -> Result<RewritingSnapshot, String> {

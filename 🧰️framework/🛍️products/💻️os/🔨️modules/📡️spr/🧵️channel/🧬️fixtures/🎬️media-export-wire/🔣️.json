@@ -1,6 +1,6 @@
 {
   "$schema": "./🧬️schema/🔣️.json",
-  "channelVersion": 21,
+  "channelVersion": 23,
   "u64Encoding": "unsigned LEB128; JSON model values are canonical unsigned decimal strings",
   "handle": {
     "appInstanceId": 42,

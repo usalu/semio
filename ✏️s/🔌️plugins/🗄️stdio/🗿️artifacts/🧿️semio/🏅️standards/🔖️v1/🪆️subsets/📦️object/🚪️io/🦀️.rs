@@ -8,7 +8,7 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-    use crate::standards::v1::subsets::object::schema::SemioObjectAnalyzer;
+    use crate::standards::v1::subsets::object::io::SemioObjectAnalyzer;
     use semio_framework_plugin::{
         register_composer_entries, register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator,
         SubsetValidatorEntry,
@@ -148,3 +148,159 @@ pub mod derived_composition {
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+    use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
+    use crate::standards::v1::subsets::object::schema::mutations::{apply_semio_object_mutation, SemioObjectMutation};
+    use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioObjectBuilderConstruction {
+        snapshot: SemioObjectSnapshot,
+    }
+
+    //#region 🔖️TypedConstructors
+    impl SemioObjectBuilderConstruction {
+        /// 🏗️ Starts a fresh object at the identity transform, no geometry/properties children.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new() -> Self {
+            Self { snapshot: SemioObjectSnapshot::default() }
+        }
+        /// 🧭️ Overrides the object's placement.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_transform(mut self, transform: SemioTransform) -> Self {
+            self.snapshot.transform = transform;
+            self
+        }
+        /// 🧱️ Attaches an owned brep CHILD handle (never embedded content).
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_brep(mut self, child_id: impl Into<String>, target: store::os_io::ArtifactRef) -> Result<Self, String> {
+            let child_id = child_id.into();
+            crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&child_id, &target, "brep")?;
+            self.snapshot.brep = Some(store::ArtifactChild::new(child_id, target));
+            Ok(self)
+        }
+    }
+    //#endregion 🔖️TypedConstructors
+
+    impl ArtifactBuilder for SemioObjectBuilderConstruction {
+        type Snapshot = SemioObjectSnapshot;
+        type Mutation = SemioObjectMutation;
+        type Diff = SemioObjectDiff;
+        fn empty() -> Self {
+            Self { snapshot: SemioObjectSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioObjectSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = apply_semio_object_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioObjectDiff as protocol::MutationDiff<SemioObjectSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            self.snapshot.validate().map_err(|message| vec![semio_framework_diagnostic::Diagnostic::error("object.document", semio_framework_diagnostic::TextSpan::at(1, 1), message)])?;
+            Ok(self.snapshot)
+        }
+    }
+
+    //#region 🔖️Tests
+    #[cfg(test)]
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    //#endregion 🔖️Tests
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::v1::subsets::object::schema::snapshot::{SemioObjectSnapshot, STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioObjectParts {
+        pub snapshot: Option<SemioObjectSnapshot>,
+    }
+
+    pub struct SemioObjectAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SemioObjectAnalyzerAnalysis {
+        type Parts = SemioObjectParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("object") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    let marker = STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    if text.contains(STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SemioObjectParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.object.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.object.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SemioObjectBuilderFacets {
+        construction: SemioObjectBuilderConstruction,
+        analysis: SemioObjectAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::object::io::derived_composition::SemioObjectComposerComposition,
+    }
+    builder: SemioObjectBuilder,
+    analyzer: SemioObjectAnalyzer,
+    composer: SemioObjectComposer,
+);

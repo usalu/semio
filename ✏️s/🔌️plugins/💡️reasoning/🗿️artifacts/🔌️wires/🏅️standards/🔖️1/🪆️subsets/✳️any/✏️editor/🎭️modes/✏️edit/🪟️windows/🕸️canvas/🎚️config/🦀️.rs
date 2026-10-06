@@ -81,3 +81,6 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: WiresCanvas
     }
     Ok(semio_framework_plugin::WindowConfigMutation::of::<WiresCanvasWindowConfigOwner>(window_id, mutation))
 }
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

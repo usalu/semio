@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import type { WavMutation, WavSnapshot } from "../🟦️.ts";
-import type { WavMutation as BinaryWavMutation } from "../💾️binary/🟦️.ts";
-import type { WavMutation as TextWavMutation } from "../📝️text/🟦️.ts";
+import type { WavMutation as BinaryWavMutation } from "../../../🚪️io/💾️binary/🧬️mutations/🟦️.ts";
+import type { WavMutation as TextWavMutation } from "../../../🚪️io/📝️text/🧬️mutations/🟦️.ts";
 import { parseWavSnapshot,validateWavSerialization } from "../../📸️snapshot/🟦️.ts";
 import { parseWavDiff } from "../../🔺️diff/🟦️.ts";
 

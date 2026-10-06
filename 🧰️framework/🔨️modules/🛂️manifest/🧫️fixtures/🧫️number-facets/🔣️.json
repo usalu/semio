@@ -1,5 +1,4 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "note": "🎛️ `ActionArgDef::number_facets` / `actionArgNumberFacets`: the UI-contract facets every renderer of an input derives from its descriptor — key range (a slider's or dial's travel; a stepper's, number field's or vector axis' hard bounds, an excluded bound none), step (a non-positive one none), look, axis, unit symbols (deg reads °, percent reads %), display factor, precision (at most 15), the detents the detent law and the limits admit (ascending, inside the key range), and the schema's hard limits with refusals in the case's locale naming the bound in display units (twelve significant digits) beside the shown unit. `facets: null` for an input that is no number. Written by the ticket script `🧪️s3-w1e-number-facets.py` (an independent Python implementation).",
   "cases": [
     {

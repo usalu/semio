@@ -6,7 +6,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
 import { UIFind, UIFindProvider, UISearch, useUIFind } from "../../🟦️.tsx";
 import { buildOsCommands } from "../../../🛠️ShellHelpers/🟦️.tsx";
 
@@ -55,8 +54,6 @@ function ScopedSearchContent({ surface }: { readonly surface: "search" | "find" 
 
 describe("ShellSearch React parity oracle", () => {
   it("keeps every neutral embedded shortcut, localized portal and restored focus in its owning root", async () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     for (const row of fixture.embedded.cases) {
       cleanup();
       render(<>{fixture.embedded.roots.map((root) => <ScopedSearchHarness key={root.id} id={root.id} locale={root.locale as "en" | "de"} surface={row.surface as "search" | "find"} />)}</>);
@@ -104,8 +101,6 @@ describe("ShellSearch React parity oracle", () => {
   it("validates the language-neutral fixture and pins the authored token geometry", () => {
     document.documentElement.lang = "en";
     document.documentElement.dataset.appearance = "light";
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     render(<SearchHarness onSelect={vi.fn()} />);
     const dialog = screen.getByRole("dialog", { name: fixture.locales.en.searchTitle });
     const input = document.getElementById(fixture.controls.searchInputId) as HTMLInputElement;

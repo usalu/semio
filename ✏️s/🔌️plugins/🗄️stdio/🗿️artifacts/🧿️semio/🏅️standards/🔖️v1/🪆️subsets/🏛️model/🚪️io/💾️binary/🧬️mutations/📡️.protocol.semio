@@ -1,0 +1,41 @@
+dialect protocol
+protocol stdio.semio.model.mutation
+version 1
+schema stdio.semio.model.mutation
+start body
+framing record
+
+# Real `SemioModelMutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's `key=value ...` text arguments.
+# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
+# derives every tag from these records (`dsl::protocol_record`), and decodes a tag to its record's kind.
+header fixed 2
+field format u8
+field tag u8
+record set-snapshot tag=0
+field payload bytes
+record insert-spatial-node tag=1
+field payload bytes
+record remove-spatial-node tag=2
+field payload bytes
+record set-spatial-node tag=3
+field payload bytes
+record insert-element tag=4
+field payload bytes
+record remove-element tag=5
+field payload bytes
+record set-element tag=6
+field payload bytes
+record insert-relation tag=7
+field payload bytes
+record remove-relation tag=8
+field payload bytes
+record set-relation tag=9
+field payload bytes
+record patch-snapshot tag=10
+field payload bytes
+record drag-elements tag=11
+field payload bytes
+record rotate-elements tag=12
+field payload bytes
+record scale-elements tag=13
+field payload bytes

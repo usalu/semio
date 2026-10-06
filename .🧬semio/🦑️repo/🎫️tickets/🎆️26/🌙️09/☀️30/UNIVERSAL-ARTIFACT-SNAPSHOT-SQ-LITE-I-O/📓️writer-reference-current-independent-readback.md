@@ -1,0 +1,3 @@
+# Writer Reference Current Independent Readback
+
+All three current production files match the retained guarded after-source exactly at readback. The two handcrafted assets replace only packed target strings with genuine target Record fields artifact-id/artifact-kind/standard/subset; child_id and every Writer scalar/text field remain. Getters now fail explicitly on invalid authored constants instead of substituting an empty owner. No parser/Native execution by this audit; Physical owns actual13 replay. The full original canonical equality predicates and neutral complete owners remain its runtime authority. This audit does not credit Hub’s separate source reference failure or claim its repair.

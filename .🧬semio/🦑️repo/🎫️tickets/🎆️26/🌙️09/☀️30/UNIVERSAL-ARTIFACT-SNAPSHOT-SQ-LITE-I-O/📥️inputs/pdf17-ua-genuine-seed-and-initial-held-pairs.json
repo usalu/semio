@@ -1,0 +1,48 @@
+{
+  "qualification": "HELD source-only guarded proposal. No production edits/compiler/runtime credit. Root owns real predicate-preserving demand and execution.",
+  "languagePolicy": "Explicit authored document undetermined tag und; new(lang) remains caller-explicit; no UI locale selection.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🧬️schema/🦀️.rs",
+      "regions": [
+        {
+          "before": "PdfIndirectObject, PdfInfo, PdfObject, PdfPage, PdfSnapshot",
+          "after": "PdfIndirectObject, PdfInfo, PdfMarkInfo, PdfObject, PdfPage, PdfSnapshot, PdfViewerPreferences"
+        },
+        {
+          "before": "    fn seeded_snapshot(lang: String) -> PdfSnapshot {\n        let objects = vec![\n            PdfIndirectObject {\n                id: ObjRef { num: 1, gen: 0 },\n                value: PdfObject::Dict(vec![\n                    PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Catalog\".into()) },\n                    PdfDictEntry { key: \"MarkInfo\".into(), value: PdfObject::Ref(ObjRef { num: 2, gen: 0 }) },\n                    PdfDictEntry { key: \"StructTreeRoot\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },\n                    PdfDictEntry { key: \"Lang\".into(), value: PdfObject::Str(lang.into_bytes()) },\n                    PdfDictEntry { key: \"ViewerPreferences\".into(), value: PdfObject::Ref(ObjRef { num: 4, gen: 0 }) },\n                ]),\n            },\n            PdfIndirectObject { id: ObjRef { num: 2, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Marked\".into(), value: PdfObject::Bool(true) }]) },\n            PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"StructTreeRoot\".into()) }]) },\n            PdfIndirectObject { id: ObjRef { num: 4, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"DisplayDocTitle\".into(), value: PdfObject::Bool(true) }]) },\n        ];\n        PdfSnapshot { objects, ..PdfSnapshot::default() }\n    }\n",
+          "after": "    fn seeded_snapshot(lang: String) -> PdfSnapshot {\n        let language = lang.clone();\n        let objects = vec![\n            PdfIndirectObject {\n                id: ObjRef { num: 1, gen: 0 },\n                value: PdfObject::Dict(vec![\n                    PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Catalog\".into()) },\n                    PdfDictEntry { key: \"Pages\".into(), value: PdfObject::Ref(ObjRef { num: 5, gen: 0 }) },\n                    PdfDictEntry { key: \"MarkInfo\".into(), value: PdfObject::Ref(ObjRef { num: 2, gen: 0 }) },\n                    PdfDictEntry { key: \"StructTreeRoot\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },\n                    PdfDictEntry { key: \"Lang\".into(), value: PdfObject::Str(lang.into_bytes()) },\n                    PdfDictEntry { key: \"ViewerPreferences\".into(), value: PdfObject::Ref(ObjRef { num: 4, gen: 0 }) },\n                ]),\n            },\n            PdfIndirectObject { id: ObjRef { num: 2, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Marked\".into(), value: PdfObject::Bool(true) }]) },\n            PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"StructTreeRoot\".into()) }]) },\n            PdfIndirectObject { id: ObjRef { num: 4, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"DisplayDocTitle\".into(), value: PdfObject::Bool(true) }]) },\n            PdfIndirectObject { id: ObjRef { num: 5, gen: 0 }, value: PdfObject::Dict(vec![\n                PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Pages\".into()) },\n                PdfDictEntry { key: \"Kids\".into(), value: PdfObject::Array(Vec::new()) },\n                PdfDictEntry { key: \"Count\".into(), value: PdfObject::Int(0) },\n            ]) },\n        ];\n        PdfSnapshot {\n            language: Some(language),\n            mark_info: Some(PdfMarkInfo { marked: true, user_properties: false, suspects: false }),\n            viewer_preferences: Some(PdfViewerPreferences { display_doc_title: true, ..PdfViewerPreferences::default() }),\n            catalog_extra: vec![PdfDictEntry { key: \"StructTreeRoot\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) }],\n            trailer: vec![PdfDictEntry { key: \"Root\".into(), value: PdfObject::Ref(ObjRef { num: 1, gen: 0 }) }],\n            objects,\n            ..PdfSnapshot::default()\n        }\n    }\n"
+        },
+        {
+          "before": "            Self::new(\"en\")",
+          "after": "            Self::new(\"und\")"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/✏️editor/🦀️.rs",
+      "regions": [
+        {
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "after": "        <crate::standards::v1_7::subsets::ua::schema::PdfUaBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v1_7::subsets::ua::schema::PdfUaBuilderConstruction::new(\"und\")).expect(\"authored blank UA owner must satisfy its profile\")"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/👁️viewer/🦀️.rs",
+      "regions": [
+        {
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "after": "        <crate::standards::v1_7::subsets::ua::schema::PdfUaBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v1_7::subsets::ua::schema::PdfUaBuilderConstruction::new(\"und\")).expect(\"authored blank UA owner must satisfy its profile\")"
+        }
+      ]
+    }
+  ],
+  "requiredDemand": [
+    "new(und) seeded Catalog references real empty Pages5, trailer Root1, StructTreeRoot3, MarkInfo2 and ViewerPreferences4",
+    "preserve original profile hard-failure predicates before and after native encode_pdf/decode_pdf",
+    "assert decoded language=und, mark_info.marked=true, display_doc_title=true, StructTreeRoot reference retained",
+    "existing new(en-US).add_page and set_info construction laws remain unchanged",
+    "genuine initial catalog typed SQLite both forms full Snapshot equality remains mandatory"
+  ]
+}

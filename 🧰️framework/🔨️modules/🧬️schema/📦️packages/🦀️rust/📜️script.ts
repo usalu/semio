@@ -33,7 +33,7 @@ class SubsetContractScript extends BundleScript {
 class EntityOwnershipScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("test entity-ownership accepts no arguments");
-    const { proveEntityCatalogOwnership } = await import("../../🏷️entity-kinds/📏️ownership/🟦️.ts");
+    const { proveEntityCatalogOwnership } = await import("../../🧪️tests/🏷️entity-kinds/📏️ownership/🟦️.ts");
     await proveEntityCatalogOwnership(this.repoRoot);
     const { runVitestV1, readVitestPolicyV1 } = await import("../../../🏃️process/🧪️testing/🧪️vitest/🟦️.ts");
     await runVitestV1(readVitestPolicyV1(process.env, this.root), [resolve(this.root, "../../🧪️tests/🏷️entity-kinds/🟦️.ts")], resolve(this.root, "../../🧪️tests/🎚️config/🟦️.ts"), process.env);

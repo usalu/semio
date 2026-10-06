@@ -28,6 +28,7 @@ pub const RESPONSES: &str = "forms-responses.items";
 
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW.into(), label: LocalizedLabel::native("Responses", "Antworten"), body_key: BODY.into(), surface_kind: SurfaceKind::Canvas2d,
         icon_id: "list-checks".into(), options: WindowOptions::default(), actions: Vec::new(), utilities: Vec::new(),
         params_schema: None, artifact_snapshot_schema: None, input_event_schema: None, output_schema: None, capabilities: Vec::new(), interactions: Vec::new(),

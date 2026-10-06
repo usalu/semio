@@ -1,0 +1,10 @@
+{"cases":[
+ {"id":"three-channels","json":"[1,2,3]","expected":[1,2,3,255]},
+ {"id":"four-channels","json":"[255,128,64,0]","expected":[255,128,64,0]},
+ {"id":"missing-third","json":"[1,2]","expected":null},
+ {"id":"wrong-channel-kinds","json":"[null,false,true]","expected":[0,0,0,255]},
+ {"id":"float-negative-clamp","json":"[1.0,-1,300,\"x\"]","expected":[0,0,255,255]},
+ {"id":"maximum-owned-uint","json":"[18446744073709551615,0,128,18446744073709551615]","expected":[255,0,128,255]},
+ {"id":"extra-channels","json":"[1,2,3,4,5]","expected":[1,2,3,4]},
+ {"id":"zero-float-alpha","json":"[0,0,0,0.0]","expected":[0,0,0,255]}
+]}

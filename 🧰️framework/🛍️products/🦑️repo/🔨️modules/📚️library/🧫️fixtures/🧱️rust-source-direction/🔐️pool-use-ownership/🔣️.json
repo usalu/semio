@@ -1,10 +1,8 @@
 {
   "schemaVersion": 1,
   "neutralFixture": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧫️fixtures/🔣️.json",
-  "neutralSchema": "🧰️framework/🔨️modules/⏳️async/🔐️use/🧬️schema/🔣️.json",
   "neutralRouter": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
   "mountedFixture": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount/🧫️fixtures/🔐️pool-use/🔣️.json",
-  "mountedSchema": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount/🧬️schema/🔐️pool-use/🔣️.json",
   "mountedRouter": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
   "neutralLaws": [
     "native_pool::tests::worker_pool_use_native_busy_keeps_executor_running_until_final_release",

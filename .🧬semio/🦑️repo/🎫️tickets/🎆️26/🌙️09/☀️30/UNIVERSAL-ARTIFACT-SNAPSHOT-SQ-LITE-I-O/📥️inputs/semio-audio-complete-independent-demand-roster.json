@@ -1,0 +1,209 @@
+{
+  "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot",
+  "contract": {
+    "schemaBytes": 966,
+    "tableWidths": {
+      "semio_audio_document": 4,
+      "semio_audio_channel": 3,
+      "semio_audio_sample": 5,
+      "semio_audio_tag": 5
+    },
+    "cases": [
+      {
+        "id": "full_pcm8",
+        "format": "pcm8",
+        "empty": false,
+        "rows": 14,
+        "valueBytes": 515
+      },
+      {
+        "id": "empty_pcm8",
+        "format": "pcm8",
+        "empty": true,
+        "rows": 3,
+        "valueBytes": 115
+      },
+      {
+        "id": "full_pcm16",
+        "format": "pcm16",
+        "empty": false,
+        "rows": 14,
+        "valueBytes": 516
+      },
+      {
+        "id": "empty_pcm16",
+        "format": "pcm16",
+        "empty": true,
+        "rows": 3,
+        "valueBytes": 116
+      },
+      {
+        "id": "full_pcm24",
+        "format": "pcm24",
+        "empty": false,
+        "rows": 14,
+        "valueBytes": 516
+      },
+      {
+        "id": "empty_pcm24",
+        "format": "pcm24",
+        "empty": true,
+        "rows": 3,
+        "valueBytes": 116
+      },
+      {
+        "id": "full_pcm32",
+        "format": "pcm32",
+        "empty": false,
+        "rows": 14,
+        "valueBytes": 516
+      },
+      {
+        "id": "empty_pcm32",
+        "format": "pcm32",
+        "empty": true,
+        "rows": 3,
+        "valueBytes": 116
+      },
+      {
+        "id": "full_f32",
+        "format": "f32",
+        "empty": false,
+        "rows": 14,
+        "valueBytes": 514
+      },
+      {
+        "id": "empty_f32",
+        "format": "f32",
+        "empty": true,
+        "rows": 3,
+        "valueBytes": 114
+      },
+      {
+        "id": "full_f64",
+        "format": "f64",
+        "empty": false,
+        "rows": 14,
+        "valueBytes": 514
+      },
+      {
+        "id": "empty_f64",
+        "format": "f64",
+        "empty": true,
+        "rows": 3,
+        "valueBytes": 114
+      }
+    ],
+    "publicIo": {
+      "schemaBytes": 1259,
+      "tableWidths": {
+        "semio_audio_document": 4,
+        "semio_audio_channel": 3,
+        "semio_audio_sample": 5,
+        "semio_audio_tag": 5,
+        "semio_snapshot": 6
+      },
+      "cases": [
+        {
+          "id": "full_pcm8",
+          "rows": 15,
+          "valueBytes": {
+            "binary": 557,
+            "text": 555
+          }
+        },
+        {
+          "id": "empty_pcm8",
+          "rows": 4,
+          "valueBytes": {
+            "binary": 157,
+            "text": 155
+          }
+        },
+        {
+          "id": "full_pcm16",
+          "rows": 15,
+          "valueBytes": {
+            "binary": 558,
+            "text": 556
+          }
+        },
+        {
+          "id": "empty_pcm16",
+          "rows": 4,
+          "valueBytes": {
+            "binary": 158,
+            "text": 156
+          }
+        },
+        {
+          "id": "full_pcm24",
+          "rows": 15,
+          "valueBytes": {
+            "binary": 558,
+            "text": 556
+          }
+        },
+        {
+          "id": "empty_pcm24",
+          "rows": 4,
+          "valueBytes": {
+            "binary": 158,
+            "text": 156
+          }
+        },
+        {
+          "id": "full_pcm32",
+          "rows": 15,
+          "valueBytes": {
+            "binary": 558,
+            "text": 556
+          }
+        },
+        {
+          "id": "empty_pcm32",
+          "rows": 4,
+          "valueBytes": {
+            "binary": 158,
+            "text": 156
+          }
+        },
+        {
+          "id": "full_f32",
+          "rows": 15,
+          "valueBytes": {
+            "binary": 556,
+            "text": 554
+          }
+        },
+        {
+          "id": "empty_f32",
+          "rows": 4,
+          "valueBytes": {
+            "binary": 156,
+            "text": 154
+          }
+        },
+        {
+          "id": "full_f64",
+          "rows": 15,
+          "valueBytes": {
+            "binary": 556,
+            "text": 554
+          }
+        },
+        {
+          "id": "empty_f64",
+          "rows": 4,
+          "valueBytes": {
+            "binary": 156,
+            "text": 154
+          }
+        }
+      ]
+    }
+  },
+  "nativeFactory": "fixture() with only exact declared format; channels-only empty retains tags",
+  "sourceFactory": "structuredClone(input) with same format/empty recipes",
+  "qualification": "12 independently measured matched carrier cases, not replacement of original default/all-format/one-empty-channel laws"
+}

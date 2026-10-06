@@ -1,0 +1,16 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "nx",
+    "run-many",
+    "--target=test-snapshot-sqlite-source",
+    "--projects=@semio-tech/stdio-binary-rs,@semio-tech/stdio-csv-rs,@semio-tech/stdio-tsv-rs",
+    "--parallel=3",
+    "--skip-nx-cache",
+    "--outputStyle=stream",
+    "--excludeTaskDependencies"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-stdio-three-independent-semantic-source-before-provider.log",
+  "status": "neutral Source three cases each; Native providers untouched"
+}

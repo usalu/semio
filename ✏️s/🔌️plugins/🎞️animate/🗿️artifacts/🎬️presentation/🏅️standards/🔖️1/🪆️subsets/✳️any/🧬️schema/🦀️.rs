@@ -237,44 +237,7 @@ pub fn populate_tile_drafts_from_grid(spec: FigureTileGridSeedSpec<'_>) -> Vec<c
         .collect()
 }
 
-pub fn build_tile_morph_prompt(source: &crate::FigureTileSource, drafts: &[crate::FigureTileDraft]) -> String {
-    fn format_frame(frame: &crate::FigureTileFrame) -> String {
-        format!("{{ x: {:.6}, y: {:.6}, width: {:.6}, height: {:.6} }}", frame.x, frame.y, frame.width, frame.height)
-    }
-    let kind = if source.kind.is_empty() { "figure" } else { source.kind.as_str() };
-    let mut lines = vec![
-        "Wire a one-to-many morph for animate presentation deck tiles using the parameters below.".into(),
-        String::new(),
-        "## Source media".into(),
-        format!("- kind: {kind}"),
-        format!("- src: {}", semio_framework_pack_json::to_json_string(&source.src)),
-    ];
-    if let Some(aspect) = source.source_aspect {
-        lines.push(format!("- sourceAspect: {aspect}"));
-    }
-    if kind == "pdf" {
-        if let Some(page) = source.pdf_page {
-            lines.push(format!("- pdfPage: {page}"));
-        }
-    }
-    lines.push(format!("- frame: {}", format_frame(&source.frame)));
-    lines.push(String::new());
-    lines.push("## Tiles (normalized source crops; overlap allowed)".into());
-    for draft in drafts {
-        lines.push(format!("- {} ({}): crop {}", draft.name, draft.id, format_frame(&draft.crop)));
-    }
-    let embodiment_hint = match kind {
-        "video" => "Use video embodiments for tile participants and the source clip.",
-        "pdf" => "Use pdf embodiments for tile participants and the source document page.",
-        _ => "Register one participant per tile with a tile figure embodiment using each crop above.",
-    };
-    lines.push(String::new());
-    lines.push("## Task".into());
-    lines.push(format!("1. {embodiment_hint}"));
-    lines.push("2. On the source slide, place the full media with morphTo slots pointing at each tile participant.".into());
-    lines.push("3. Use reveal.js auto-animate; morph from the actual disposition including ephemeral modifications.".into());
-    lines.join("\n")
-}
+
 //#endregion 🎞️TilePlay
 //#endregion 🔖️DocumentHelpers
 

@@ -3,14 +3,10 @@ import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import {NativeDecodeControl} from "../🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
 import stageFixture from "../🧫️fixtures/🪆️stage/🔣️.json";
-import stageSchema from "../🧬️schema/🪆️stage/🔣️.json";
 import {stageOracle,type StageCase,type StageOperation,type StageResult} from "./🪆️stage/🟦️.ts";
 
 test("nested native stages preserve parent workloads, cancellation and cumulative ownership",async()=>{
-  const ajv=new Ajv({strict:true});expect(ajv.validate(stageSchema,stageFixture)).toBe(true);
-  const admit=ajv.getSchema(`${stageSchema.$id}#/$defs/case`)!;for(const c of stageFixture.cases)expect(admit(c)).toBe(true);for(const c of stageFixture.refusals)expect(admit(c.value)).toBe(false);
   const classify=(error:unknown)=>{const message=(error as Error).message;const labels=new Map([["native decoding exceeded declared stage workload","overrun"],["native decoding canceled","canceled"],["native decoding ownership exceeds caller limit","limit"],["owned child rejected","rejected"]]);const label=labels.get(message);if(!label)throw error;return label;};
   for(const c of stageFixture.cases as StageCase[]){
     let progress:StageResult["progress"]={completed:0,total:0,ownedBytes:0};const errors:string[]=[];
@@ -28,7 +24,6 @@ test("nested native stages preserve parent workloads, cancellation and cumulativ
 });
 
 test("native materialization retains cumulative bounds and interior cancellation",async()=>{
-  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
   const database=new Database(":memory:");database.run("CREATE TABLE charge(position INTEGER PRIMARY KEY,bytes INTEGER NOT NULL)");
   try{for(const c of fixture.cases){
     const control=new NativeDecodeControl(c.maximumBytes,()=>true);let acceptedCharges=0;

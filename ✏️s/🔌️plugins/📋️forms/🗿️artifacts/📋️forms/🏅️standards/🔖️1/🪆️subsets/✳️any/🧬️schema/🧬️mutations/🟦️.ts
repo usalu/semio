@@ -59,7 +59,7 @@ export interface FormQuestion {
   schema?: string;
   src?: string;
   accept?: string;
-  fixtureSlug?: string;
+  exampleId?: string;
   params?: DslValue;
   condition?: FormExpr;
 }

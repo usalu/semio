@@ -45,7 +45,7 @@
           }
         ]
       },
-      "protocolPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocolPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "protocolBytes": 337,
       "protocolSha256": "c0570280e7cae9b73a7ad3974379b41a066d2081395f96ed63e7adb9ce0e4c53",
       "packSchemaHash": "9db3600794058afc0186dcaafdcf07c1518cc0b2171132a5732c0e6761b16d64"
@@ -76,20 +76,10 @@
           }
         ]
       },
-      "protocolPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
+      "protocolPath": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
       "protocolBytes": 345,
       "protocolSha256": "ac3f653f904ef8675fae602e6c784ea50b222c9220402bc7f5b83196fbdbf984",
       "packSchemaHash": "75f885ec74f5625e62da331a5f0c6c8f8ef0ff54e343644e9b1a0116aa0cfd45"
     }
-  ],
-  "hostile": [
-    "missing",
-    "duplicate",
-    "foreign-package",
-    "wrong-version",
-    "bare-kind",
-    "wrong-schema",
-    "wrong-extension",
-    "zero-hash"
   ]
 }

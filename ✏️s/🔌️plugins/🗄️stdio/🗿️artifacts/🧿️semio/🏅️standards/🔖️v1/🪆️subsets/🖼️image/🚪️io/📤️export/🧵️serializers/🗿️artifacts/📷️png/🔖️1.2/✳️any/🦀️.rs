@@ -34,8 +34,8 @@ impl ArtifactSerializer for SemioImageToPng {
             plte: None, trns: None, gama: None, chrm: None, srgb: None, phys: None, time: None, bkgd: None,
             text_chunks, pixels: frame.rgba8.clone(), chunk_order, unknown_chunks: Vec::new(),
         };
-        let bytes = semio_s_artifact_stdio_png::io::author_png_projection(&projection).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
-        semio_s_artifact_stdio_png::io::decode_png(&bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
+        let bytes = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&projection).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(&bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 

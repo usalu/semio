@@ -58,7 +58,10 @@
         "$ref": "#/$defs/Identifier"
       },
       "additionalProperties": {
-        "$ref": "#/$defs/Identifier"
+        "anyOf": [
+          { "$ref": "#/$defs/Identifier" },
+          { "type": "null" }
+        ]
       }
     },
     "windowInstances": {

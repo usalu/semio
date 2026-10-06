@@ -21,7 +21,7 @@
 // rewrite the expectation it is measured against.
 //
 //   bun 📜️script.ts generate [--out <dir>] [--only <fixture-id>]
-//   bun 📜️script.ts manifests                      # emit the fixtureManifests block for 🔮️oracles
+//   bun 📜️script.ts manifests                      # emit the testEvidence block for 🔮️oracles
 //
 // @see ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/⚙️generator/📜️script.ts
 //      — the sibling this generator's shape, CLI and manifest format are mirrored from
@@ -273,9 +273,9 @@ function write(path: string, body: string): void {
 function synchronizeOracleFixtureCoordinates(manifests: readonly Record<string, unknown>[]): void {
   const oraclePath = join(import.meta.dir, "..", "🔮️oracles", "🔣️.json");
   const oracle = JSON.parse(readFileSync(oraclePath, "utf8")) as Record<string, unknown>;
-  const existing = oracle.fixtureManifests as Record<string, unknown>[];
+  const existing = oracle.testEvidence as Record<string, unknown>[];
   const generatedById = new Map(manifests.map((manifest) => [String(manifest.id), manifest]));
-  oracle.fixtureManifests = existing.map((manifest) => {
+  oracle.testEvidence = existing.map((manifest) => {
     const generated = generatedById.get(String(manifest.id));
     if (generated === undefined) return manifest;
     const generator = generated.generator as Record<string, unknown>;
@@ -441,7 +441,6 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
   files.push({ role: "expected-measurements", path: `../🧫️fixtures/${fixtureDirectory}/${EXPECTED_METRICS_FILENAME}`, mediaType: "application/json", sha256: await contentDigest(metricsBody), bytes: Buffer.byteLength(metricsBody) });
 
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.semio", standard: "v1", subset: "brep" },

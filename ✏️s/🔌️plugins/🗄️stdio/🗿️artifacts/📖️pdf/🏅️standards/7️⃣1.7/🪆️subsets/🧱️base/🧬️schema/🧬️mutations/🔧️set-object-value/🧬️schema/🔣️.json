@@ -15,10 +15,35 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "id": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef",
+      "x-semio-ui": {
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "Object and generation number of the indirect object.",
+          "de": "Objekt- und Generationsnummer des indirekten Objekts."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "value": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfObject",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Object value",
+          "de": "Objektwert"
+        },
+        "description": {
+          "en": "The PDF object stored under the number: null, boolean, number, name, string, array, dictionary, stream or reference.",
+          "de": "Das unter der Nummer gespeicherte PDF-Objekt: null, Wahrheitswert, Zahl, Name, Zeichenkette, Array, Wörterbuch, Datenstrom oder Referenz."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

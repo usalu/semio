@@ -48,7 +48,3 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOutlines {
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;

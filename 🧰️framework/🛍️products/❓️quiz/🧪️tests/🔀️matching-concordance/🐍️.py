@@ -299,7 +299,7 @@ def close(produced, committed):
 
 def scores(ctx):
     """🗃️ Every committed matching vector, scored, corroborated and held to its committed result."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))
+    vectors = json.loads(ctx.input_bytes(VECTORS))
     tasks = {task["id"]: task for task in vectors["tasks"]}
     produced = {}
     for vector in vectors["vectors"]:
@@ -313,7 +313,7 @@ def scores(ctx):
 
 def guessed(ctx):
     """🔮️ Every committed answer that guesses where the cards are hidden, or leaves items out on a timed sheet task, scored, corroborated and held to its committed result."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))
+    vectors = json.loads(ctx.input_bytes(VECTORS))
     tasks = {task["id"]: task for task in vectors["tasks"]}
     produced = {}
     for vector in vectors["guessed"]:
@@ -328,7 +328,7 @@ def guessed(ctx):
 def degraded(ctx):
     """🩹️ Every committed input that bypasses validation degrades to the committed result or to none — never a throw, never NaN."""
     produced = {}
-    for vector in json.loads(ctx.fixture_bytes(VECTORS))["degraded"]:
+    for vector in json.loads(ctx.input_bytes(VECTORS))["degraded"]:
         produced[vector["id"]] = matching_result(vector["task"], vector["sheetTask"], vector.get("answer"))
         if not close(produced[vector["id"]], vector["expected"]):
             raise AssertionError("degraded/%s: the reference result %r differs from the committed %r" % (vector["id"], produced[vector["id"]], vector["expected"]))

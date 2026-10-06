@@ -1,0 +1,78 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "moves",
+    "bindings"
+  ],
+  "properties": {
+    "contract": {
+      "const": "neutral-fixture-ownership/v1"
+    },
+    "moves": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "oldLiteral",
+          "target",
+          "occurrences",
+          "mode"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "oldLiteral": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurrences": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "mode": {
+            "enum": [
+              "relative",
+              "root-expression"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

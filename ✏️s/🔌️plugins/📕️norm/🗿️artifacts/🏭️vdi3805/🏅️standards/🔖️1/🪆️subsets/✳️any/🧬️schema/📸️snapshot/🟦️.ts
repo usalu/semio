@@ -236,5 +236,3 @@ export const parseVdi3805ConnectionPoint: NormWireReader<Vdi3805ConnectionPoint>
 export const parseVdi3805EditionProfileChoice: NormWireReader<Vdi3805EditionProfileChoice> = normWireLiteral("legacy", "current");
 export const parseVdi3805ExtensionBag: NormWireReader<Vdi3805ExtensionBag> = normWireObject<Vdi3805ExtensionBag>({ fields: normWireRequired(normWireMap(normWireString)) });
 export const parseVdiQuantityKind: NormWireReader<VdiQuantityKind> = normWireLiteral("dimensionless", "length", "area", "volume", "mass", "time", "temperature", "force", "pressure", "stress", "moment", "energy", "power", "thermalConductivity", "thermalResistance", "heatTransferCoefficient", "airPermeability", "ventilationRate", "acceleration");
-
-export * from "./🪶️sqlite/🟦️.ts";

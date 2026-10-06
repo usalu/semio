@@ -22267,9 +22267,9 @@
       }
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml",
-      "domain": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest",
-      "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/🦀️.rs",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml",
+      "domain": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest",
+      "lib": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/🦀️.rs",
       "name": "semio-browser-actor-import-guest",
       "source": "[package]\nname = \"semio-browser-actor-import-guest\"\nversion = \"0.1.0\"\nedition = \"2021\"\npublish = false\n\n[workspace]\n\n[lib]\ncrate-type = [\"cdylib\"]\npath = \"../../🦀️.rs\"\n\n[dependencies]\nwit-bindgen = { version = \"=0.57.1\", features = [\"macros\", \"async-spawn\"] }\n\n[profile.release]\nopt-level = \"s\"\n",
       "sha256": "74997af3c88ab4b2e24f57bc957983e2ef49b3cf2aff3998f1c6a1622b27f5b7",

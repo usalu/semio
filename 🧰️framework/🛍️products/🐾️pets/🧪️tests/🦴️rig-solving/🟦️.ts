@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🦴️rig/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type Affine, type Pose, compose, invert, restPose, solveRig, transform } from "../../🔨️modules/🦴️rig/🟦️.ts";
 import type { Species } from "../../🧬️schema/🟦️.ts";
 
@@ -20,7 +20,7 @@ type Vectors = {
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** 🧬️ The committed species of that id. */

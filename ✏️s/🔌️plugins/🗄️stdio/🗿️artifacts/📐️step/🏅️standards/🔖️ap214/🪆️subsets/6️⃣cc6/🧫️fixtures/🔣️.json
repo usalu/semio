@@ -1,6 +1,5 @@
 [
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-bore-scale-1e3",
     "class": "third-party-generated",
     "target": {
@@ -76,7 +75,6 @@
     "notes": "The bored-box operation at 1e3× — box 20000³, bore r=5000/h=40000 — the third of a planned four-point scale sweep whose other points are `cut-micro-scale-bore` (1e-3) and `cut-bored-box-through` (1); the fourth (1e6) was ATTEMPTED and ABANDONED, see the comment immediately below this recipe for why. MEASURED: 1 solid, 7 faces / 15 edges / 10 vertices, volume 6429203673205.049 — topologically identical to the base-scale rung, confirming the exact Boolean itself is scale-invariant up to 1e3×. The sweep's real finding is at 1e6×, where the generator's own fixed-absolute-tolerance MESHING stage — not the Boolean — stopped being tractable."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-bored-box-through",
     "class": "third-party-generated",
     "target": {
@@ -152,7 +150,6 @@
     "notes": "Partial volumetric overlap: a cylinder bored clean through a box. The analytic answer 20³ − π·5²·20 is known in closed form, so this fixture also pins the kernel's own exactness."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-box-across-cylinder-seam",
     "class": "third-party-generated",
     "target": {
@@ -228,7 +225,6 @@
     "notes": "A deliberately-engineered SEAM-CROSSING case: OCCT's cylindrical surface parametrization seams at θ=0 (the +x direction), so this cutter box straddles x=+radius exactly at y=0 — the cut boundary is forced to cross the cylindrical face's periodic wraparound (θ: 359°→0°) rather than merely approach it. MEASURED: 6 faces, 12 edges, 8 vertices, volume 5941.44mm³ — a single clean face split at the seam, no duplicate or degenerate face reported."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-box-across-sphere-pole",
     "class": "third-party-generated",
     "target": {
@@ -304,7 +300,6 @@
     "notes": "The sphere counterpart to the cylinder-seam case: a sphere's parametrization has a genuine POLE singularity (not just a seam), where every meridian converges to a single point. This cutter box is centered exactly over the +z pole so the cut boundary passes directly through it, forcing the kernel to trim a face across its degenerate pole rather than around it. MEASURED: 6 faces, 15 edges, 10 vertices, volume 4091.83mm³ — the pole survives as a valid (if pathological) trimmed spherical face, no crash or degenerate zero-area face reported."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-chain-order-b-then-c",
     "class": "third-party-generated",
     "target": {
@@ -387,7 +382,6 @@
     "notes": "A−B−C: base minus cutter B, then minus cutter C, where B and C mutually overlap (centres 10 apart, radius 6 each). Paired with `cut-chain-order-c-then-b`, which applies the same two cutters in the opposite order — Boolean subtraction is order-independent in set theory (A−B−C = A−C−B) and this pair checks whether the kernel actually agrees with itself down to volume and topology when the intermediate SHAPE differs between the two orders. MEASURED: 1 solid, 9 faces / 21 edges / 14 vertices, volume 13656.168803337727, area 4992.452293197475 — EXACTLY equal to `cut-chain-order-c-then-b` on every one of these numbers (see that fixture's notes). Order-independence holds."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-chain-order-c-then-b",
     "class": "third-party-generated",
     "target": {
@@ -470,7 +464,6 @@
     "notes": "A−C−B: the same base and the same two mutually-overlapping cutters as `cut-chain-order-b-then-c`, applied in the opposite order. MEASURED: 1 solid, 9 faces / 21 edges / 14 vertices, volume 13656.168803337727, area 4992.452293197475 — EXACTLY equal to `cut-chain-order-b-then-c` on every measured number, despite the two orders producing a genuinely different intermediate shape after the first cut. Boolean subtraction's order-independence is confirmed at the kernel level, not just set-theoretically."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-chain-ten-sequential",
     "class": "third-party-generated",
     "target": {
@@ -539,7 +532,6 @@
     "notes": "Ten sequential through-bores drilled one at a time down a 100×20×20 bar, each cut applied to the RESULT of the previous one — the chain-depth case the single-cutter fixtures cannot exercise. Like the `mechanical` family's own chains, only the base is exported, since a 10-step chain has no two-operand reproduction path. MEASURED: 1 solid, 16 faces (6 base + 10 bore side faces — matches 6+10 exactly) / 42 edges / 28 vertices, volume 34345.1332235384 (matching the analytic 40000−10·π·3²·20=34345.13… to 6 significant figures). Ten independent, non-overlapping cuts compound cleanly with no accumulated defect."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-coincident-faces",
     "class": "third-party-generated",
     "target": {
@@ -615,7 +607,6 @@
     "notes": "Two boxes with the SAME x/y footprint stacked so all four side faces are pairwise coincident planes, overlapping halfway in z (A: z∈[0,10], B: z∈[5,15]) — distinct from `face-touching` (zero-overlap flush adjacency): here the coincident planes carry a genuine shared interior, not just a shared boundary. CUT (A−B). MEASURED: a clean 6-face / 12-edge / 8-vertex box of volume 500 (the untouched lower half, z∈[0,5]) — the coincident side planes cause no extra faces here."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-compound-spheres-from-block",
     "class": "third-party-generated",
     "target": {
@@ -691,7 +682,6 @@
     "notes": "A MULTI-SOLID operand: three separate spheres assembled with `compound` into ONE tool, cut from a block in a SINGLE boolean call rather than three chained cuts — the case where a kernel might silently only process the first solid of a compound, or fail on multi-body tools entirely. MEASURED: none of that happened — 9 faces (6 flat block faces + 3 independent spherical cavity faces), 21 edges, 14 vertices, volume 17195.75mm³ (block 18000mm³ minus all three spheres' volumes, confirming every solid in the compound was applied)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-cone-from-cylinder",
     "class": "third-party-generated",
     "target": {
@@ -767,7 +757,6 @@
     "notes": "Cone/cylinder, off-axis so the cone's slant surface genuinely exits through the cylinder's lateral wall rather than sitting fully contained. MEASURED: 6 faces, 11 edges, 7 vertices, volume 4348.89mm³ (cylinder 6031.86 minus the cone's partial overlap) — a real conical/cylindrical surface intersection, not a degenerate coaxial case."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-contained-operand",
     "class": "third-party-generated",
     "target": {
@@ -843,7 +832,6 @@
     "notes": "One operand fully contained in the other, producing an internal cavity. A cavity is exactly what mesh similarity alone cannot see, which is why volume and validity are asserted beside it."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-coplanar-face-cutter",
     "class": "third-party-generated",
     "target": {
@@ -919,7 +907,6 @@
     "notes": "Coplanar faces: the cutter's top face lies exactly on the box's mid-plane. Coplanarity is the classic source of kernel-dependent face splitting, which is why face counts are NOT asserted here."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-disconnected-result",
     "class": "third-party-generated",
     "target": {
@@ -995,7 +982,6 @@
     "notes": "A cut that splits the base into TWO bodies. The component count is the assertion; volume alone cannot tell one body from two."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-disjoint-operands",
     "class": "third-party-generated",
     "target": {
@@ -1071,7 +1057,6 @@
     "notes": "Completely disjoint operands. The declared outcome is a NO-OP: subtracting something that touches nothing must return the base unchanged, not merely 'something that does not crash'."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-edge-touching-boxes",
     "class": "third-party-generated",
     "target": {
@@ -1147,7 +1132,6 @@
     "notes": "Edge contact only (diagonal placement), CUT. MEASURED: byte-identical to the untouched base — volume 1000, 6 faces / 12 edges / 8 vertices. Complements `robustness`'s `fuse-edge-touching-boxes` (disjoint) with the cut side of the same arrangement."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-face-touching-boxes",
     "class": "third-party-generated",
     "target": {
@@ -1223,7 +1207,6 @@
     "notes": "Two boxes flush against a shared FULL face (zero gap, zero overlap), CUT. MEASURED: the result is byte-identical to the untouched base — volume 1000, 6 faces / 12 edges / 8 vertices, no imprint whatsoever. This is the cut sibling of `fuse-face-touching-boxes`; unlike the tangent-cylinder rung in `robustness`, a flat face-on-face touch leaves no trace at all, not even a face split."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-filleted-boss-pocket",
     "class": "third-party-generated",
     "target": {
@@ -1299,7 +1282,6 @@
     "notes": "A FILLETED solid (all 12 edges of a box rounded at r=3) used as the cutting TOOL — the case where a fillet's newly-introduced toroidal/cylindrical corner patches must survive a second boolean, which is exactly where kernels most often disagree. MEASURED: the filleted boss alone carries 26 faces, 56 edges, 24 vertices (up from the box's 6/12/8), volume 3761.33mm³ (vs. the sharp box's 4096mm³ — the fillets removed 334.67mm³, plausible for 12 quarter-round r=3 edges plus 8 corner spheres). Pocket cut result: 23 faces, 52 edges, 28 vertices, volume 15622.79mm³."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-full-subtraction",
     "class": "third-party-generated",
     "target": {
@@ -1361,7 +1343,6 @@
     "notes": "The tool completely swallows the base. The declared outcome is EMPTY, so a kernel that returned the base unchanged would fail rather than pass quietly."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-helical-coil-groove",
     "class": "third-party-generated",
     "target": {
@@ -1437,7 +1418,6 @@
     "notes": "The closest this kernel offers to genuine THREAD geometry: a small circular profile swept along a `helix` spine (radius 9, pitch 6, 4 turns over height 24), cut into a base cylinder to carve a helical groove — the standing-directive 'helical/threaded geometry' case. MEASURED SURPRISE, and the reason `rejected` is the honest outcome here rather than `applied`: the BOOLEAN itself succeeds in memory — `cut(base, coil)` returns 1 valid solid — and the coil TOOL alone exports to STEP fine (46398 bytes). But exporting THAT CUT RESULT crashes the kernel outright: `exportSTEP` throws `{\"kind\":\"IO\",\"code\":\"STEP_EXPORT_CRASHED\",\"message\":\"STEP export crashed the kernel (Out of bounds memory access (evaluating 'func(...args)')); the shape likely contains geometry the STEP writer cannot serialize\"}` — a WASM memory fault, not a validation error. WORSE, confirmed directly against the kernel in a scratch harness rather than assumed: the crash is NOT contained to that one export call — it PERMANENTLY POISONS the WASM instance. Every `exportSTEP` call made afterward in the same process fails with that identical message, including exporting the untouched base cylinder again and exporting a brand-new, entirely unrelated 5×5×5 box. This is why `build()` below never calls `exportSTEP` on the grooved result itself: doing so inside the generator's own pipeline would not just fail this one fixture, it would take down every operand/result export queued after it in the same process (a real hazard for any future FULL, non `--only` regeneration run that happens to schedule this recipe before others). A related, independent surprise measured while building this case: the bare `helix(pitch, height, radius=9, ...)` wire's own declared bounds already extend to radius ~9.46 (5% past nominal) before any sweep, and once swept with a tube radius of 1.5 the coil solid's bounding box balloons further, to a radial extent of roughly 21 on one side (nominal envelope 9+1.5=10.5). `operands`/`result` below are the safely-exportable base cylinder and coil tool, recorded for provenance only — the finding this fixture pins is the STEP_EXPORT_CRASHED payload and its kernel-poisoning blast radius, not the fallback shape's numbers."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-high-aspect-ratio-bore",
     "class": "third-party-generated",
     "target": {
@@ -1513,7 +1493,6 @@
     "notes": "A hair-thin bore of radius 5e-4 (diameter 1e-3) through a 1000-unit cube: a 1e6:1 aspect ratio between the bore's length and its diameter, the extreme end of what surface–surface intersection is expected to resolve. MEASURED: the exact kernel resolves it cleanly — 1 solid, 7 faces / 15 edges / 10 vertices, volume 999999999.9992146 (Δ≈7.85e-4 from the undivided 1e9, matching the analytic bore volume π·(5e-4)²·1000≈7.854e-4). CAVEAT: this exact result's default-tolerance (1e-3) tessellation is rejected as 'Not manifold' by the independent manifold-3d engine — the bore's own diameter (1e-3) is comparable to the tessellation chord tolerance, and no tolerance retried resolves it. The exact BRep and its own standard mesh disagree on validity; see the report."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-identical-operands",
     "class": "third-party-generated",
     "target": {
@@ -1575,7 +1554,6 @@
     "notes": "Identical operands. A − A is empty; a kernel that returned a zero-volume shell instead of nothing would fail the declared outcome."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-large-coordinate-bore",
     "class": "third-party-generated",
     "target": {
@@ -1651,7 +1629,6 @@
     "notes": "The same bored box translated a kilometre from the origin. Absolute error grows with the coordinate, so only the relative term is meaningful here."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-lofted-funnel-from-block",
     "class": "third-party-generated",
     "target": {
@@ -1727,7 +1704,6 @@
     "notes": "A LOFT between a wide circle (r=6, z=0) and a smaller, laterally-offset circle (r=3, translated [5,0,20]) — a genuinely oblique ruled surface between two periodic profiles, used as a boolean operand. MEASURED: the loft alone is a valid solid, 3 faces, 3 edges, 2 vertices, volume 1319.47mm³. Cut result: 9 faces, 15 edges, 10 vertices, volume 25680.53mm³."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-micro-scale-bore",
     "class": "third-party-generated",
     "target": {
@@ -1803,7 +1779,6 @@
     "notes": "Sub-millimetre geometry. An absolute tolerance sized for millimetres would swallow the whole model, which is precisely what the scale-relative resolution rule exists to prevent."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-narrow-channel",
     "class": "third-party-generated",
     "target": {
@@ -1879,7 +1854,6 @@
     "notes": "A 1e-6-wide slot cut clean through a 30×20×10 slab, edge-to-edge and top-to-bottom, splitting it into two halves separated by a gap four orders of magnitude below a millimetre. MEASURED: the kernel DOES separate the two halves — 2 solids, 12 faces / 24 edges / 16 vertices (identical topology to two independent boxes), volume 5999.9996999999985 (Δ≈3e-4 from the undivided 6000, matching the tiny channel volume). No merge-tolerance artifact: a 1e-6 gap is enough to keep the halves apart."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-nearly-identical-operands",
     "class": "third-party-generated",
     "target": {
@@ -1955,7 +1929,6 @@
     "notes": "Two corner-aligned boxes differing by 0.001 mm in one dimension (12 vs 11.999) — a NEAR duplicate rather than an exact one. CUT leaves a paper-thin sliver. MEASURED: volume 0.144 (0.001×12×12), the sliver a naive tolerance sized in millimetres would swallow whole."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-open-shell-accepted-as-empty",
     "class": "third-party-generated",
     "target": {
@@ -2017,7 +1990,6 @@
     "notes": "The other half of `reject-open-shell-fuse`'s finding: the SAME open, uncapped 5-face shell fed into `cut` (instead of `fuse`) does NOT raise at all. It silently returns a shape with ZERO solids (declared EMPTY here, matching `getSolids().length === 0`) while direct kernel introspection during authoring measured that same in-memory result still reporting `isValidSolid() === true` — a validity flag that is not actually asserting there is a solid. `intersect` on the same open shell behaves the same way (0 solids, `isValidSolid` true). Only `fuse` raises; `cut` and `intersect` fail silently instead of rejecting."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-partial-revolved-ring-groove",
     "class": "third-party-generated",
     "target": {
@@ -2093,7 +2065,6 @@
     "notes": "A PARTIAL revolve (270°, i.e. a 3/4 ring left deliberately open) as a cutting tool — `revolve`'s angle is in RADIANS, unlike every other angle in this file which is degrees, so the recipe converts explicitly rather than repeat the corpus's one silent-degrees-vs-radians trap. MEASURED: the open 3/4 ring is a single valid solid — 6 faces, 12 edges, 8 vertices, volume 918.92mm³ (a quarter less than the same profile's full 360° revolve would give, consistent with 270/360) — confirming the kernel closes a partial revolve with genuine flat end-cap faces rather than leaving an open shell. Groove cut into a disc: 7 faces, 15 edges, 10 vertices, volume 2222.68mm³."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-pentagon-prism-from-block",
     "class": "third-party-generated",
     "target": {
@@ -2169,7 +2140,6 @@
     "notes": "Prism via `polygon` (an irregular, non-regular pentagon) + `extrude` — the code path a wedge built from `polyhedron` never exercises. MEASURED: pentagon area 126mm² × height 15 = exactly 1890mm³ for the tool (confirms `polygon`+`extrude` compute planar area exactly, no approximation loss); the cut result carries 11 faces, 27 edges, 18 vertices, volume 7740mm³."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-self-intersecting-tool",
     "class": "third-party-generated",
     "target": {
@@ -2245,7 +2215,6 @@
     "notes": "'Rejected self-intersecting input', attempted: a bowtie (self-crossing) quadrilateral wire, faced and `thicken`-ed into a solid whose own faces cross themselves. Both `isValid` and `isValidSolid` correctly report FALSE for this shape standing alone (measured volume rounds to ~0, ±4e-14). MEASURED SURPRISE: cutting it from an ordinary box does NOT raise — `cut` silently accepts the known-invalid operand and returns a result with `isValidSolid` now TRUE, unchanged volume (nothing to remove, since the bowtie's own volume is ~0) but an imprinted extra face and edges from the self-crossing surface. The kernel performs no validity check on a boolean operand before running the operation."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-skewed-bore",
     "class": "third-party-generated",
     "target": {
@@ -2321,7 +2290,6 @@
     "notes": "A non-axis-aligned cutter through a box. Rotating the tool takes the operation off every analytic shortcut and onto the kernel's real surface–surface intersection."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-sliver-intersection",
     "class": "third-party-generated",
     "target": {
@@ -2397,7 +2365,6 @@
     "notes": "A sliver cutter box(1e-7, 20, 20) shaving a full-face, near-zero-depth slice off a 20³ box. MEASURED: the kernel does not reach the boolean at all — `box(1e-7, ...)` ITSELF throws a bare `WebAssembly.Exception` with no message, no name and no enumerable properties (`Object.keys(e).length === 0`, `String(e) === '[object WebAssembly.Exception]'`) the instant any box dimension is exactly 1e-7. A scratch bisection (not part of this pipeline) found the boundary is exactly between 1e-7 (throws) and 2e-7 (succeeds, box constructs and cuts cleanly) — the kernel's own working tolerance is a hard wall for `box()`, not a soft one: there is no degraded-but-valid regime below it, only success or an opaque crash. `result`/`operands` fall back to an ordinary disjoint cut (recorded for provenance only); the finding is the exception, not the fallback numbers."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-sphere-from-box",
     "class": "third-party-generated",
     "target": {
@@ -2473,7 +2440,6 @@
     "notes": "Sphere/box: a doubly-curved cutter against planar faces, and a periodic surface whose seam placement is a kernel decision rather than a semantic one."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-spline-bounded-pocket",
     "class": "third-party-generated",
     "target": {
@@ -2549,7 +2515,6 @@
     "notes": "A NURBS/spline-bounded face: `bsplineApprox` fits a B-spline curve through 4 scattered points, closed by one straight edge, faced and extruded into a pocket tool — the only fixture in the corpus whose cutting boundary is a genuine free-form curve rather than an analytic primitive. MEASURED and load-bearing: an EARLIER control-point layout for this same idea ([0,0,0],[3,4,0],[7,-3,0],[10,2,0]) produced a self-crossing boundary and `isValidSolid` measured FALSE on the extruded tool, even though the subsequent cut still completed — that layout was discarded rather than shipped invalid; the control points below were chosen specifically because they measure `valid: true`. Tool alone: 4 faces, 6 edges, 4 vertices, volume 341.64mm³. Cut result: 10 faces, 18 edges, 12 vertices, volume 17658.36mm³."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-tangent-cylinder-epsilon-above",
     "class": "third-party-generated",
     "target": {
@@ -2625,7 +2590,6 @@
     "notes": "Epsilon ABOVE contact: the cutter bites 1e-6 into the face. MEASURED: a sliver of 8.44e-8 is removed and the shape reaches 9 faces / 21 edges — the upper rung of the contact bracket, and the one a tolerance sized in millimetres would swallow whole."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-tangent-cylinder-epsilon-below",
     "class": "third-party-generated",
     "target": {
@@ -2701,7 +2665,6 @@
     "notes": "Epsilon BELOW contact: the cutter misses by 1e-6. Declared no-op. The lower rung of the three-rung contact bracket."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-tangent-cylinder-exact",
     "class": "third-party-generated",
     "target": {
@@ -2777,7 +2740,6 @@
     "notes": "EXACT tangency, the middle rung of the contact bracket. MEASURED: the kernel removes ZERO volume (8000 to within 1.8e-12) but IMPRINTS the tangent line, taking the shape from 6 faces / 12 edges to 7 / 15. So the class is APPLIED, not no-op: a volume-only comparison cannot tell this apart from the epsilon-below rung, and the epsilon-below rung genuinely leaves 6 faces untouched."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-tangential-sphere-contact",
     "class": "third-party-generated",
     "target": {
@@ -2853,7 +2815,6 @@
     "notes": "A sphere tangent to a box's top face at a single POINT (as opposed to `robustness`'s cylinder tangent along a LINE), cut from the box. SURPRISE, and the inverse of `fuse-vertex-touching-boxes`'s finding: the RAW in-memory kernel result does gain an extra vertex at the tangent point (9 instead of the plain box's 8, with faces/edges unchanged at 6/12) — but that lone imprinted vertex does NOT survive the STEP export/reimport round trip. The committed, re-imported `expected.step` measures 6 faces / 12 edges / 8 vertices and volume 8000 — byte-identical to the untouched box, exactly like `cut-vertex-touching-boxes`. Declared NO-OP per the pipeline's own rule (measure what was WRITTEN, not the in-memory shape); the in-memory-only imprint is recorded here because `cut-tangent-cylinder-exact`'s LINE tangency imprint (6→7 faces) does survive reimport, and the difference between a surviving line imprint and a vanishing point imprint is itself the finding."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-thin-wall-shell",
     "class": "third-party-generated",
     "target": {
@@ -2929,7 +2890,6 @@
     "notes": "A 0.2 mm wall left behind by a nested cut. Thin walls are where tessellation-only comparison passes while the exact shape is wrong."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-through-shelled-box",
     "class": "third-party-generated",
     "target": {
@@ -3005,7 +2965,6 @@
     "notes": "A `shell` result (a box with one face removed and the remaining walls offset to 2mm thickness, i.e. an open-top hollow container) used as the BASE of a boolean, then drilled straight through — the case where a boolean must cut through thin, previously-hollowed walls rather than solid stock. MEASURED: the shelled box alone is 11 faces, 24 edges, 16 vertices, volume 3392mm³ (down from the sharp box's 8000mm³ — consistent with a 2mm-thick shell of a 20mm cube missing one face). Drilled result: 13 faces, 30 edges, 20 vertices, volume 3278.90mm³ — the drill only had to remove material from the solid bottom wall, since the top was already open."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-tiny-bore-far-from-origin",
     "class": "third-party-generated",
     "target": {
@@ -3081,7 +3040,6 @@
     "notes": "Combines the two axes `cut-large-coordinate-bore` and `cut-micro-scale-bore` each exercise alone: a normal-size 20³ box translated 1e6 units from the origin, bored by a 1e-3-radius channel — a feature seven orders of magnitude smaller than its own coordinate offset. MEASURED: 1 solid, 7 faces / 15 edges / 10 vertices, volume 7999.999937168143 — Δ≈6.28e-5 from the undivided 8000, matching the analytic bore volume π·(1e-3)²·20≈6.28e-5 almost exactly. A negative result worth recording: this kernel's double-precision arithmetic still resolves a 1e-3 feature at a 1e6 coordinate offset without visible degradation beyond the expected analytic value."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-tiny-edge-below-tolerance",
     "class": "third-party-generated",
     "target": {
@@ -3157,7 +3115,6 @@
     "notes": "A corner notch box(1e-7, 1e-7, 1e-7) meant to shave the very corner of a 20³ box, producing edges at the kernel's own 1e-7 working tolerance. MEASURED: same root cause as `cut-sliver-intersection` — `box(1e-7, 1e-7, 1e-7)` itself throws the identical bare, message-less `WebAssembly.Exception` before any boolean runs. The two fixtures independently hit the SAME constructor guard (any box dimension ≤1e-7 throws, ≥2e-7 succeeds), which is itself a finding: two structurally different degeneracies (a full-face sliver, a corner notch) turn out to share one root cause in `box()`, not two. `result`/`operands` fall back to an ordinary disjoint cut (recorded for provenance only)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-torus-groove-from-cylinder",
     "class": "third-party-generated",
     "target": {
@@ -3233,7 +3190,6 @@
     "notes": "Torus/cylinder: an O-ring-style toroidal groove cut into a cylinder's lateral wall, where the torus's outer radius (13) exceeds the cylinder's radius (12) so the tool genuinely breaches the wall. MEASURED and load-bearing for consumers: the reimported result's declared `getBounds` reports a radial extent of 13.12 (9.3% larger than the cylinder's own radius), but re-tessellating and walking every mesh vertex gives a true max radial distance of exactly 12.0 — the trimmed toroidal face's axis-aligned bounding box is LOOSE, not the geometry. `boundingBoxDiagonal` for this fixture is therefore not a tight proxy for shape extent; volume (2084.04mm³), 5 faces, 7 edges, 4 vertices are the trustworthy numbers."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-unit-boundary-slot",
     "class": "third-party-generated",
     "target": {
@@ -3309,7 +3265,6 @@
     "notes": "A 0.001-unit-wide through-slot centred exactly on x=1000 (spanning 999.9995 to 1000.0005) — the millimetre/metre crossover coordinate — cut through a 2000×100×100 bar. MEASURED: 2 solids, 12 faces / 24 edges / 16 vertices, volume 19999989.999999996 (=2000·100·100−0.001·100·100=20000000−10=19999990, matching to 9 significant figures). The kernel splits cleanly at this boundary coordinate with no rounding artifact at the mm/m crossover."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-valid-no-op",
     "class": "third-party-generated",
     "target": {
@@ -3385,7 +3340,6 @@
     "notes": "A canonical VALID no-op: a cylinder tool positioned entirely outside the base box, cut. MEASURED: the result is byte-identical to the untouched base (same volume, same 6 faces / 12 edges / 8 vertices) — the vocabulary's cleanest 'legitimately does nothing' case, distinct in construction from `spatial-relationship`'s `cut-disjoint-operands` so the two families don't share a fixture."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-vertex-touching-boxes",
     "class": "third-party-generated",
     "target": {
@@ -3461,7 +3415,6 @@
     "notes": "Two boxes sharing only a single corner point, CUT. MEASURED: byte-identical to the untouched base — volume 1000, 6 faces / 12 edges / 8 vertices. A single shared point is even less than a shared edge, and still imprints nothing."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cut-wedge-from-block",
     "class": "third-party-generated",
     "target": {
@@ -3537,7 +3490,6 @@
     "notes": "Wedge built directly from `polyhedron` (6 explicit vertices, 5 explicit quad/triangle face loops) rather than swept from a 2-D profile — the classic doorstop shape. MEASURED: the kernel silently RETRIANGULATED every declared quad face, reporting 8 faces (not the 5 submitted) once queried — `polyhedron`'s face count is not the input face count. Volume 400mm³ (0.5×10×8×10, exact triangular-prism formula) confirms the geometry itself is correct despite the face-count surprise. Cut result: 14 faces, 29 edges, 18 vertices, volume 10425mm³."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "cutall-many-cutters",
     "class": "third-party-generated",
     "target": {
@@ -3613,7 +3565,6 @@
     "notes": "25 non-overlapping through-bores removed from a 100×20×10 plate in ONE `cutAll(base, tools)` batch call, rather than 25 sequential pairwise cuts — the N-way batch-boolean path the rest of this corpus never exercises with more than a handful of tools. The 25 cutters are also exported as one compound STEP so the reproduction path stays a single extra file. MEASURED: 1 solid, 31 faces (6 base + 25 bore side faces — matches 6+25 exactly) / 87 edges / 58 vertices, volume 18869.02664470766. `cutAll`'s single-batch result is topologically clean at 25 tools, same pattern the 10-tool sequential chain showed."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-chamfered-boss-to-block",
     "class": "third-party-generated",
     "target": {
@@ -3689,7 +3640,6 @@
     "notes": "A CHAMFERED cylinder (both circular rim edges broken at 2mm, all edges selected) fused onto a plate — chamfer's flat conical break-edges meeting the plate's planar face is a different failure mode from a fillet's tangent blend. MEASURED: chamfered boss alone is 5 faces, 7 edges, 4 vertices, volume 2228.44mm³ (vs. the sharp cylinder's 2412.74mm³). Fused result: 10 faces, 19 edges, 12 vertices, volume 11228.44mm³ — exactly plate-volume + chamfered-boss-volume, confirming a clean, lossless union."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-coaxial-cylinders-epsilon-above",
     "class": "third-party-generated",
     "target": {
@@ -3765,7 +3715,6 @@
     "notes": "Coaxial-cylinder bracket, upper rung: the two same-radius, same-axis cylinders overlap by 1e-6 along their shared axis. MEASURED: 1 solid, 5 faces / 7 edges / 4 vertices, volume 3141.5925750499773 — Δ≈7.85e-5 from the exact rung's volume, matching the analytic overlap π·5²·1e-6=7.854e-5 to 4 significant figures. Distinguishable from the exact rung by both volume and topology."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-coaxial-cylinders-epsilon-below",
     "class": "third-party-generated",
     "target": {
@@ -3841,7 +3790,6 @@
     "notes": "Coaxial-cylinder bracket, lower rung: the upper cylinder's base cap sits 1e-6 above the lower cylinder's top cap, same axis, same radius. MEASURED: 2 solids, 6 faces / 6 edges / 4 vertices (3 faces / 3 edges / 2 vertices per cylinder), volume 3141.5926535897934."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-coaxial-cylinders-exact",
     "class": "third-party-generated",
     "target": {
@@ -3917,7 +3865,6 @@
     "notes": "Coaxial-cylinder bracket, middle rung: the two r=5 cylinders share one axis and touch cap-to-cap EXACTLY — a full circular face in contact, the cylindrical analogue of `fuse-face-touching-boxes`. MEASURED: merges to 1 solid, 4 faces / 5 edges / 3 vertices, volume 3141.5926535897934 — IDENTICAL volume to the epsilon-below rung, the contact plane is IMPRINTED (a residual seam between the two cylindrical side faces) rather than fully healed into a single continuous side face. The direct cylindrical analogue of `cut-tangent-cylinder-exact`'s zero-volume imprint."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-coincident-faces",
     "class": "third-party-generated",
     "target": {
@@ -3993,7 +3940,6 @@
     "notes": "The same coincident-side-plane boxes, FUSED. Geometrically the union is a plain 10×10×15 box with no re-entrant feature at all. MEASURED: volume 1500 is exactly right, but the shape carries 14 faces / 28 edges / 16 vertices, NOT the 6 / 12 / 8 a simplified box would have — `fuse` does not auto-merge the coincident-but-only-partially-overlapping side faces into single planar faces (there is a separate `simplify()` in the API for that, and this recipe deliberately does not call it). This is the sharpest surprise in the family: a boolean answer that is analytically a plain box is topologically nothing like one."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-contained-operand",
     "class": "third-party-generated",
     "target": {
@@ -4069,7 +4015,6 @@
     "notes": "One operand fully contained in the other, FUSED. MEASURED: the result is byte-for-byte the same shape as the outer box alone — same volume (8000), same 6 faces / 12 edges / 8 vertices, no imprint at all. Declared NO-OP rather than applied: fusing a fully-swallowed shape changes nothing a re-importer could observe, unlike `cut-contained-operand`'s cavity."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-coplanar-cutter-boxes",
     "class": "third-party-generated",
     "target": {
@@ -4145,7 +4090,6 @@
     "notes": "Coplanar cutters, fuse side: a wider, shorter slab whose BOTTOM face lies exactly on the tall box's bottom face plane (`robustness`'s `cut-coplanar-face-cutter` supplies the cut side of this same arrangement). MEASURED: single solid, volume 13000 (8000+9000−4000, the analytic union)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-coplanar-partial-face-epsilon-above",
     "class": "third-party-generated",
     "target": {
@@ -4221,7 +4165,6 @@
     "notes": "Coplanar partial-face bracket, upper rung: the lid embeds 1e-6 into the base across the shared half-face. MEASURED: 1 solid, 14 faces / 32 edges / 20 vertices, volume 7999.9998000000005 (Δ≈2e-4 from the exact rung, matching the 1e-6-thick overlap slab). CAVEAT: like the vertex-touching upper rung, this exact result's default-tolerance mesh is rejected as 'Not manifold' by the independent manifold-3d engine at every tessellation tolerance tried — see the report."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-coplanar-partial-face-epsilon-below",
     "class": "third-party-generated",
     "target": {
@@ -4297,7 +4240,6 @@
     "notes": "Coplanar partial-face bracket, lower rung: the lid sits 1e-6 above the base's top plane, half out of alignment in x. MEASURED: 2 solids, 12 faces / 24 edges / 16 vertices, volume 8000.000000000001."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-coplanar-partial-face-exact",
     "class": "third-party-generated",
     "target": {
@@ -4373,7 +4315,6 @@
     "notes": "Coplanar partial-face bracket, middle rung: the lid's bottom face is EXACTLY coplanar with the base's top face, overlapping only the x:[10,20] half of it — a partial, coplanar, non-degenerate-in-area contact distinct from full-face touching. MEASURED: 1 solid, 12 faces / 26 edges / 16 vertices, volume 7999.999999999999, area 2800 (down from 3200 disjoint-total — the coincident half-faces are consumed, not doubled). Unlike the vertex and sphere-tangent brackets, a partial but non-zero-area coplanar contact DOES merge into one solid."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-cylinder-cross",
     "class": "third-party-generated",
     "target": {
@@ -4449,7 +4390,6 @@
     "notes": "Cylinder/cylinder at right angles: two periodic surfaces meeting in a genuine 3-D intersection curve, the case where seam-crossing splits differ between kernels."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-disjoint-boxes",
     "class": "third-party-generated",
     "target": {
@@ -4525,7 +4465,6 @@
     "notes": "Completely disjoint operands, fused. MEASURED: two solids, total volume 2000 (1000+1000) — a boolean union of shapes that share no boundary stays disjoint rather than becoming one compound-but-still-two-bodies shape; component count is the only thing that would catch a kernel that merged them into a single bounding shell."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-disjoint-result",
     "class": "third-party-generated",
     "target": {
@@ -4601,7 +4540,6 @@
     "notes": "The 'disjoint / no-intersection result' vocabulary item, canonical form: two boxes that share no boundary at all, fused. MEASURED: two solids survive, total volume 2000 (1000+1000) — fusing shapes with nothing in common does not force them into a single body."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-double-rotated-skewed-box",
     "class": "third-party-generated",
     "target": {
@@ -4677,7 +4615,6 @@
     "notes": "A box rotated about TWO different, non-parallel axes in sequence (25° about X, then 40° about Y) before being fused — no single rotation axis or plane describes its orientation, unlike `cut-skewed-bore`'s one-axis tilt. MEASURED: the skewed box alone reports 6 faces, 12 edges, 8 vertices, volume 5880mm³ (unchanged by rotation, as expected) with a bounding box no longer aligned to any face. Fused result: 14 faces, 36 edges, 24 vertices, volume 12920.60mm³ — exactly the sum of both boxes' volumes, a clean union despite the compound tilt."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-edge-on-face-epsilon-above",
     "class": "third-party-generated",
     "target": {
@@ -4753,7 +4690,6 @@
     "notes": "Edge-on-face bracket, upper rung: the blade's bottom edge embeds 1e-6 into the slab along its full length. MEASURED: 1 solid, 15 faces / 33 edges / 20 vertices, volume 5279.99999999992."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-edge-on-face-epsilon-below",
     "class": "third-party-generated",
     "target": {
@@ -4829,7 +4765,6 @@
     "notes": "Edge-on-face bracket, lower rung: the blade's bottom edge sits 1e-6 above the slab's top face along its entire 20-unit length. MEASURED: 2 solids, 12 faces / 24 edges / 16 vertices, volume 5279.999999999904."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-edge-on-face-exact",
     "class": "third-party-generated",
     "target": {
@@ -4905,7 +4840,6 @@
     "notes": "Edge-on-face bracket, middle rung: the blade's diamond-section bottom vertex, extruded along its 20-unit length into a straight EDGE, rests EXACTLY on the slab's flat top face. MEASURED: this stays TWO solids (12→13 faces, 24→27 edges, 16→18 vertices versus the epsilon-below rung — the contact line IS imprinted onto the slab's top face) but the imprint does not merge the bodies, so the declared class is DISJOINT, not applied — the same reasoning `fuse-edge-touching-boxes` established for full-edge contact between two boxes, now confirmed for a genuine line contact between a curved-cross-section blade and a flat face. Volume is identical to the epsilon-below rung (5279.999999999904) — only the topology changes."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-edge-touching-boxes",
     "class": "third-party-generated",
     "target": {
@@ -4981,7 +4915,6 @@
     "notes": "Edge contact only — the degenerate case between 'joined' and 'two bodies'. MEASURED: this kernel leaves TWO solids (12 faces, 23 edges, total volume 2000), so the declared class is DISJOINT, not applied. The volume is identical either way; only the component count separates the two answers, which is why component count is asserted and face count is not."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-face-touching-boxes",
     "class": "third-party-generated",
     "target": {
@@ -5057,7 +4990,6 @@
     "notes": "Exact face contact. Two boxes sharing a whole face must fuse into ONE solid; a kernel that left two components would be caught by the component-count assertion, not by the volume, which is identical either way."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-identical-operands",
     "class": "third-party-generated",
     "target": {
@@ -5133,7 +5065,6 @@
     "notes": "Two independently-constructed but geometrically identical boxes, FUSED — the component count is the whole assertion, since a duplicate-detection bug could just as easily double an operand into two exactly-coincident solids or corrupt the shared-face topology. MEASURED: a single solid, volume 1728 (12³), a clean 6 faces / 12 edges / 8 vertices — indistinguishable from either operand alone."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-near-coplanar-faces-1e-9-radians",
     "class": "third-party-generated",
     "target": {
@@ -5209,7 +5140,6 @@
     "notes": "Two 20×20×10 slabs share a bottom-edge hinge line, but the lid is tilted 1e-9 RADIANS (5.72957795e-8°) about that edge rather than sitting flat — so the two faces are coplanar at one edge and diverge to ~2e-8 units of overlap at the far edge, 20 units away. MEASURED: 1 solid, 10 faces / 20 edges / 12 vertices, volume 7999.999996 (Δ≈4e-6 from the undivided 8000, consistent with a wedge-shaped sliver of that magnitude). The kernel treats the whole continuously-varying overlap as one contact rather than splitting it at some internal angular threshold."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-nearly-identical-operands",
     "class": "third-party-generated",
     "target": {
@@ -5285,7 +5215,6 @@
     "notes": "The same near-duplicate pair, FUSED. The smaller box is a corner-aligned subset of the larger one, so the union's VOLUME matches the larger operand exactly (1728 = 12³) — but unlike `fuse-contained-operand`'s clean 6/12/8, this one measures 10 faces / 20 edges / 12 vertices. The smaller box's own top face sits only 0.001 mm below the larger box's top face, close enough that the kernel leaves it behind as a redundant near-coplanar sliver face instead of absorbing it cleanly — a volume-only comparison would call this a no-op; the face count is what catches the artifact. Declared APPLIED on the same reasoning as `cut-tangent-cylinder-exact`."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-nested-void-in-void",
     "class": "third-party-generated",
     "target": {
@@ -5361,7 +5290,6 @@
     "notes": "A void inside a void: the outer operand is a 30³ shell with a 20³ internal cavity; the inner operand is a separate, disjoint 8³ shell with its OWN 4³ internal cavity, floating entirely inside the outer cavity with 6 units of clearance on every side. MEASURED: 2 solids, 4 SHELLS (2 per solid — the outer boundary and the inner-cavity boundary of each, exactly as designed), 24 faces (12 per solid) / 48 edges / 32 vertices, volume 19447.999999999993 (=[30³−20³]+[8³−4³]=19000+448=19448, matching to 6 significant figures). Both independent cavities survive the fuse and the export/reimport round-trip with their own shell intact."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-nonmanifold-vertex-compound",
     "class": "third-party-generated",
     "target": {
@@ -5437,7 +5365,6 @@
     "notes": "'Rejected non-manifold input', attempted: two boxes touching at a single vertex, bundled with `compound()` into ONE operand (rather than passed as two separate operands, as `spatial-relationship`'s `fuse-vertex-touching-boxes` does) — a compound whose local topology at that shared point is not a 2-manifold surface. `isValid` reports TRUE for the bare compound. MEASURED SURPRISE: fusing a third, disjoint box against this non-manifold compound does not raise at all — the kernel accepts it outright and returns THREE disjoint solids (volume 2000+125=2125), simply treating the compound as 'two solids' and unioning in the third. No non-manifold check is performed on a boolean operand."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-partial-overlap-boxes",
     "class": "third-party-generated",
     "target": {
@@ -5513,7 +5440,6 @@
     "notes": "Partial volumetric overlap, fused — the union term of V(A∪B)+V(A∩B)=V(A)+V(B) that `intersect-overlapping-boxes` already supplies the other half of. MEASURED: single solid, volume 1875 (1000+1000−125, matching the closed form)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-sphere-tangent-plane-epsilon-above",
     "class": "third-party-generated",
     "target": {
@@ -5589,7 +5515,6 @@
     "notes": "Sphere/plane tangency bracket, upper rung: the sphere sinks 1e-6 into the slab, producing a minute spherical cap of intersection. MEASURED: 1 solid, 7 faces / 15 edges / 10 vertices (same counts as the other two rungs — the cap intersection doesn't add topology here, since the merged single face where the sphere meets the top face is not a new distinct face at this tessellation-independent BRep level), volume 4523.598775598248, Δ≈5e-11 from the exact rung. Distinguished from the exact rung by solid count (1 vs 2) and this minute volume delta, not by faces/edges."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-sphere-tangent-plane-epsilon-below",
     "class": "third-party-generated",
     "target": {
@@ -5665,7 +5590,6 @@
     "notes": "Sphere/plane tangency bracket, lower rung: the sphere's pole sits 1e-6 above the slab's top face (z=10). MEASURED: 2 solids, 7 faces / 15 edges / 10 vertices, volume 4523.598775598298."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-sphere-tangent-plane-exact",
     "class": "third-party-generated",
     "target": {
@@ -5741,7 +5665,6 @@
     "notes": "Sphere/plane tangency bracket, middle rung: the sphere's pole touches the slab's flat top face at a SINGLE point (z=15 puts the pole exactly on z=10). A doubly-curved surface meeting a plane in a point is the most degenerate contact a curved/planar pair can have. MEASURED: 2 solids, 7 faces / 15 edges / 10 vertices, volume 4523.598775598298 — numerically IDENTICAL to the epsilon-below rung down to the last measured digit. Confirms the vertex-touching bracket's finding on a curved surface: a single tangent point produces NO imprint and no merge, unlike the coaxial-cylinder bracket's full-circle cap contact, which does imprint."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-swept-rib-to-block",
     "class": "third-party-generated",
     "target": {
@@ -5817,7 +5740,6 @@
     "notes": "A circular profile SWEPT along a genuinely curved (non-planar-trivial) three-point-arc spine, fused onto a block — a curved rib, the shape family a `sweep`-produced solid must survive a boolean untouched. MEASURED: the swept rib alone is 3 faces, 3 edges, 2 vertices, volume 285.23mm³. Fused result: 12 faces, 24 edges, 15 vertices, volume 9018.27mm³ — exactly block + rib volume, a clean union with no material lost at the rib's tangent entry into the block face."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-tangential-sphere-contact",
     "class": "third-party-generated",
     "target": {
@@ -5893,7 +5815,6 @@
     "notes": "The same point-tangent sphere, FUSED to the box. MEASURED: two solids (volume 8000 + 523.6 sphere ≈ 8523.6), so — like edge- and vertex-touching — a single-point tangency does not merge the two bodies into one."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-thickened-shell-into-block",
     "class": "third-party-generated",
     "target": {
@@ -5969,7 +5890,6 @@
     "notes": "Started as a `thicken` boolean-operand test (thicken a cylinder's curved lateral face by 2mm into a closed tube-shell solid, then fuse it fully embedded inside a larger block) and the MEASUREMENT overturned the intended outcome, exactly the trap this corpus exists to catch. `thicken(getFaces(cylinder)[0], 2)` measured `measureVolume = -6031.86` — a NEGATIVE volume, i.e. the thickened solid comes back with inverted face orientation — even though its magnitude is exactly right (π×(17²−15²)×30 = 6031.86, the correct annulus volume). Fusing that inverted-orientation tube into a block that fully contains it does NOT add material: the reimported result measures `solids: 2` and a TOTAL volume of 101968.14mm³, which is the block's own 108000mm³ MINUS 6031.86mm³ — i.e. `fuse` behaved like `cut` and split the block into a disjoint inner core plus an outer shell-with-cavity. Kept as `disjoint` rather than dropped or silently relabeled `applied`, because a kernel treating an inverted-orientation `thicken` result as a subtractive tool inside `fuse` is precisely the kind of orientation-sensitivity a BRep kernel under test must be measured against."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-torus-torus-interlock",
     "class": "third-party-generated",
     "target": {
@@ -6045,7 +5965,6 @@
     "notes": "Two identical tori (major 10, minor 3) offset so their tubes overlap, like two interlocked rings. MEASURED, and the reason the offset below is 16 rather than the more obviously-overlapping 14: at an offset of exactly 14 the fused RESULT is a `isValidSolid`-true, single-solid, exact-BRep-valid shape by the exact kernel, yet its own tessellation (at this fixture's declared tolerance) is REJECTED as non-manifold by the independent mesh engine (`ManifoldError: Not manifold`) — an exact-solid/tessellation disagreement that would fail this family's own `step-mesh-compare` self-check. Nearby offsets (12, 16, 18, and a pure-Z offset) all tessellate cleanly; 16 was kept as the shipped geometry specifically because it stays comfortably clear of whatever degenerate alignment offset 14 hits. At offset 16: 9 faces, 25 edges, 14 vertices, volume 3226.62mm³, mesh genus 2 — below the naive sum of two independent tori (3553.06mm³), confirming the overlap was genuinely resolved rather than the kernel silently keeping two disjoint solids."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-vertex-touching-boxes",
     "class": "third-party-generated",
     "target": {
@@ -6121,7 +6040,6 @@
     "notes": "Two boxes sharing only a single corner point, FUSED. MEASURED (re-imported): TWO solids survive (volume 2000 = 1000+1000, 12 faces / 24 edges / 16 vertices — exactly 2×6/2×12/2×8, i.e. no sharing at all), so the declared class is DISJOINT — same convention as `robustness`'s edge-touching case, one contact dimension lower. The IN-MEMORY kernel result tells a different, more interesting story before export: it WELDS the two coincident corner points into a single shared vertex (15, not 16) even while leaving the two bodies unmerged — but that weld does not survive the STEP round-trip: re-imported, the two solids each keep their own vertex at the same coincident point, exactly the same in-memory-vs-reimport gap the generator's own `reimport` doc records for `fuse-edge-touching-boxes`. The committed metrics are the reimported 16, per the pipeline's own rule to measure what was written."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-vertex-touching-boxes-epsilon-above",
     "class": "third-party-generated",
     "target": {
@@ -6197,7 +6115,6 @@
     "notes": "Vertex-contact bracket, upper rung: the diagonal cube overlaps the base cube by a 1e-6³ corner cube. MEASURED: 1 solid, 12 faces / 30 edges / 20 vertices, volume 1999.9999999999993 — merges cleanly per the exact kernel. CAVEAT: the default-tolerance (1e-3) tessellation of this exact result is rejected as 'Not manifold' by the independent manifold-3d mesh engine, at every tessellation tolerance tried down to 1e-8 — the exact BRep is valid but its standard mesh is not, the sharpest disagreement this bracket family produced. See the report's mesh-verification section."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-vertex-touching-boxes-epsilon-below",
     "class": "third-party-generated",
     "target": {
@@ -6273,7 +6190,6 @@
     "notes": "Vertex-contact bracket, lower rung: the diagonal cube's corner misses by 1e-6 in all three axes. MEASURED: 2 solids, 12 faces / 24 edges / 16 vertices, total volume 2000.0000000000002."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "fuse-vertex-touching-boxes-exact",
     "class": "third-party-generated",
     "target": {
@@ -6349,7 +6265,6 @@
     "notes": "Vertex-contact bracket, middle rung: the diagonal cube's corner touches the base cube's corner EXACTLY — a single shared point, the most degenerate contact this corpus can express. MEASURED: 2 solids, 12 faces / 24 edges / 16 vertices, volume 1999.999999999999 — numerically IDENTICAL topology to the epsilon-below rung. A single tangent point produces no imprint at all: the kernel does not even split a face at the touching corner, unlike full-edge or full-face contact."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-coincident-faces",
     "class": "third-party-generated",
     "target": {
@@ -6425,7 +6340,6 @@
     "notes": "The same coincident-side-plane boxes, INTERSECTED. MEASURED: a clean 6-face / 12-edge / 8-vertex box of volume 500 (the shared middle slab, z∈[5,10]) — unlike `fuse-coincident-faces`, intersect DOES land on the minimal topology here, so the two operations disagree on how much to simplify the identical coincident planes."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-contained-operand",
     "class": "third-party-generated",
     "target": {
@@ -6501,7 +6415,6 @@
     "notes": "One operand fully contained in the other, INTERSECTED. MEASURED: the result equals the inner box exactly — volume 216 (6³), 6 faces / 12 edges / 8 vertices, single solid. Complements `cut-contained-operand` (cavity) and `fuse-contained-operand` (no-op): the three operations give three genuinely different answers for the same pair of solids."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-coplanar-cutter-boxes",
     "class": "third-party-generated",
     "target": {
@@ -6577,7 +6490,6 @@
     "notes": "The same coplanar-bottom-face arrangement, INTERSECTED. MEASURED: a clean 6-face / 12-edge / 8-vertex box of volume 4000 — the slab fully covers the tall box's footprint for z∈[0,10], so the intersection is exactly that lower half."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-disjoint-boxes",
     "class": "third-party-generated",
     "target": {
@@ -6639,7 +6551,6 @@
     "notes": "Completely disjoint operands, intersected. MEASURED: zero solids — the intersect side of the same disjoint arrangement `fuse-disjoint-boxes` and `cut-disjoint-operands` already cover for fuse and cut."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-disjoint-operands",
     "class": "third-party-generated",
     "target": {
@@ -6701,7 +6612,6 @@
     "notes": "Empty intersection. The declared outcome is EMPTY, distinguishing 'correctly nothing' from 'the operation failed and produced nothing'."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-edge-touching-boxes",
     "class": "third-party-generated",
     "target": {
@@ -6763,7 +6673,6 @@
     "notes": "Edge contact only (diagonal placement), INTERSECTED. MEASURED: zero solids — a shared edge has zero volume."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-empty-valid-result",
     "class": "third-party-generated",
     "target": {
@@ -6825,7 +6734,6 @@
     "notes": "The 'empty result where that is valid' vocabulary item: a cylinder and a box that do not overlap, intersected — distinct geometry from `intersect-disjoint-operands` above so the two zero-solid fixtures in this file exercise different shape pairs. MEASURED: zero solids, correctly nothing rather than a degenerate zero-volume shell."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-face-touching-boxes",
     "class": "third-party-generated",
     "target": {
@@ -6887,7 +6795,6 @@
     "notes": "Two boxes flush against a shared FULL face, INTERSECTED. MEASURED: zero solids — a shared boundary face has zero volume, so the declared outcome is EMPTY even though the two boxes share an entire face's worth of coincident geometry."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-identical-operands",
     "class": "third-party-generated",
     "target": {
@@ -6963,7 +6870,6 @@
     "notes": "Two independently-constructed but geometrically identical boxes, INTERSECTED (`failure`'s `cut-identical-operands` already covers the cut side, which is empty by construction — A−A). MEASURED: a single solid, volume 1728, 6 faces / 12 edges / 8 vertices. The component count of exactly 1 is the assertion the task calls out explicitly: volume alone cannot tell 'one coincident solid' from 'two exactly-overlapping solids nobody merged.'"
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-nearly-identical-operands",
     "class": "third-party-generated",
     "target": {
@@ -7039,7 +6945,6 @@
     "notes": "The same near-duplicate pair, INTERSECTED. MEASURED: volume 1727.856 (11.999×12×12) — exactly the smaller operand, the mirror image of `cut-nearly-identical-operands`'s 0.144 sliver (1728 = 1727.856 + 0.144, so the two fixtures cross-check each other)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-overlapping-boxes",
     "class": "third-party-generated",
     "target": {
@@ -7115,7 +7020,6 @@
     "notes": "Partial overlap intersection with the closed-form answer 5³. Supplies the A∩B term of the Boolean volume identity V(A∪B) + V(A∩B) = V(A) + V(B)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-sphere-sphere-lens",
     "class": "third-party-generated",
     "target": {
@@ -7191,7 +7095,6 @@
     "notes": "Sphere/sphere boolean INTERSECTION (common), not the cut/fuse already covered elsewhere in the family — two doubly-periodic surfaces meeting along a single circle, producing a lens. MEASURED: 3 faces, 3 edges, 2 vertices, volume 871.27mm³, valid solid."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-splits-into-several-bodies",
     "class": "third-party-generated",
     "target": {
@@ -7267,7 +7170,6 @@
     "notes": "A result that splits into SEVERAL bodies via INTERSECT rather than cut (`cut-disconnected-result` already covers the cut side): a slab intersected with a three-tooth comb tool (three disjoint boxes bundled as one compound operand) leaves three disjoint pieces. MEASURED: 3 solids, total volume 4500 (3×1500) — the component count is the assertion, since the total volume alone reads identically whether the pieces are 3 separate bodies or one kernel mistakenly welded together."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-tangential-sphere-contact",
     "class": "third-party-generated",
     "target": {
@@ -7329,7 +7231,6 @@
     "notes": "The same point-tangent sphere, INTERSECTED with the box. MEASURED: zero solids — a point of tangency has zero volume."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "intersect-vertex-touching-boxes",
     "class": "third-party-generated",
     "target": {
@@ -7391,7 +7292,6 @@
     "notes": "Two boxes sharing only a single corner point, INTERSECTED. MEASURED: zero solids — a single shared point has zero volume and the kernel reports true emptiness rather than a degenerate point-shape."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-block-fifteen-cuts",
     "class": "third-party-generated",
     "target": {
@@ -7460,7 +7360,6 @@
     "notes": "A machined block produced by a LONG subtractive sequence: 16 through-holes cut ONE AT A TIME (not batched with `cutAll`) in a 4×4 grid, then a shallow pocket. 17 sequential operations — the case this goal names explicitly, where intermediate-state defects accumulate one boolean at a time. ABANDONED a trailing `chamfer(block, 0.5)` over all edges: MEASURED kernel failure `CHAMFER_FAILED: [object WebAssembly.Exception]` at 88 edges — the isolated 16-hole case from the qualification spike chamfered fine, so the failure is specific to this combination of hole-grid and pocket edges, not to chamfering-after-many-cuts in general. Recorded as a kernel finding rather than silently dropped. MEASURED: volume 64938.2 mm3, area 16531.7 mm2, 29 faces / 88 edges / 58 vertices, 1 solid, mesh genus 16, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-enclosure-boss-vented",
     "class": "third-party-generated",
     "target": {
@@ -7529,7 +7428,6 @@
     "notes": "A CHAIN beyond `mechanical-ribbed-enclosure`: hollow box, 3 ribs, 3 vent slots through the front wall, 4 bosses on the floor with pilot holes, 4 through mounting holes in the solid corner posts, then `fillet` on the SELECTED vertical corner edges (`edgeFinder().inDirection([0,0,1])`), not every edge — 17 operations total. Exercises real edge-selected filleting after a long subtractive/additive chain, which is where a kernel's edge-blend solver meets the most topology at once. MEASURED: volume 27840.1 mm3, area 22999.6 mm2, 145 faces / 504 edges / 356 vertices, 1 solid, mesh genus 12, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-filleted-bracket",
     "class": "third-party-generated",
     "target": {
@@ -7598,7 +7496,6 @@
     "notes": "An angled bracket built by a CHAIN: fuse the upright and the foot, then two angled cuts. Like the other mechanical fixtures it exports only its BASE — the fused blank — because a chain is not decomposable into two operand files, and declaring `operand-a`/`operand-b` here would promise a reproduction path that does not exist. Filleting is deliberately left out where the kernel refuses it, because a fixture that quietly skipped its own defining feature would be worse than none."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-fixture-plate",
     "class": "third-party-generated",
     "target": {
@@ -7667,7 +7564,6 @@
     "notes": "A fixture plate: four patterned through-holes and a central pocket, produced by a subtractive sequence rather than a single operation. Repeated Boolean chains are where intermediate-state defects accumulate."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-fixture-plate-slotted",
     "class": "third-party-generated",
     "target": {
@@ -7736,7 +7632,6 @@
     "notes": "Beyond `mechanical-fixture-plate`: 4 counterbored holes (two concentric cylinders `cutAll`'d together per hole), a central pocket, two stadium-shaped slots (`fuseAll` of two cylinders and a connecting box, then cut as one tool), and a 3×2 fastener grid produced by `rectangularPattern` rather than a manual loop. 21 operations total, none of the six feature groups overlapping in plan so the case isolates each feature's contribution. MEASURED: volume 38071.2 mm3, area 13720.9 mm2, 41 faces / 107 edges / 71 vertices, 1 solid, mesh genus 12, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-gearbox-cover",
     "class": "third-party-generated",
     "target": {
@@ -7805,7 +7700,6 @@
     "notes": "A gearbox-style cover disc: a central through shaft bore, a shallow bearing pocket, a concentric O-RING GROOVE (built as the difference of two thin cylinders, then cut as one tool), a 6-hole bolt circle via `circularPattern`, and finally `chamfer` on every edge the chain produced. 6 operations, and the groove tool is itself a nested Boolean — a cut used to BUILD a cutter rather than to finish a part. MEASURED: volume 26197.5 mm3, area 11903.5 mm2, 38 faces / 77 edges / 44 vertices, 1 solid, mesh genus 7, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-heatsink-fins",
     "class": "third-party-generated",
     "target": {
@@ -7874,7 +7768,6 @@
     "notes": "A base plate carrying 15 fins, EACH 1mm thick and spaced 3.6mm apart, produced by ONE `rectangularPattern` call rather than 15 manual translates — the case that stresses thin-wall handling at SCALE rather than in isolation. Two mounting holes complete the plate. 3 operations, but 15 thin walls in the result. MEASURED: volume 36551.2 mm3, area 46729.0 mm2, 85 faces / 210 edges / 140 vertices, 1 solid, mesh genus 2, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-housing-threaded-boss",
     "class": "third-party-generated",
     "target": {
@@ -7943,7 +7836,6 @@
     "notes": "A housing with a boss carrying a REAL external thread: `thread({radius:6, pitch:2.5, height:15})` builds the helical ridge (a loft over rotated tooth sections, not a primitive), fused onto the boss core, fused onto the housing, then a blind pilot bore down through the boss. 4 operations. `thread` is the one place in this corpus that exercises a helical sweep. MEASURED: volume 31318.7 mm3, area 7669.4 mm2, 269 faces / 655 edges / 390 vertices, 1 solid, mesh genus 0, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-lightening-bracket-grid",
     "class": "third-party-generated",
     "target": {
@@ -8012,7 +7904,6 @@
     "notes": "A filleted plate then a 5×3 grid of 15 through-holes cut as ONE tool built by `gridPattern`, rather than the manual `[x,y]` loops the older `mechanical-fixture-plate` uses — the lightening-pattern case the goal names, and a plate with genus 15 if the kernel tracks it correctly. ABANDONED `fillet(plate, 4)` over ALL 12 edges: MEASURED as a SILENT kernel defect, not a thrown error — brepjs returned a shape with `isValidSolid() === false` and `measureVolume() === 0` while reporting SUCCESS, because a 4mm radius exceeds what a 6mm-thick slab's top/bottom rim edges can support. The fix, verified: fillet only the 4 SELECTED vertical edges (`edgeFinder().inDirection([0,0,1])`) at radius 2 — a bound the thickness supports. MEASURED: volume 21434.7 mm3, area 10500.8 mm2, 25 faces / 69 edges / 46 vertices, 1 solid, mesh genus 15, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-multi-union-trim-drilled",
     "class": "third-party-generated",
     "target": {
@@ -8081,7 +7972,6 @@
     "notes": "Four DISTINCT primitives (a base plate, two cylinders and a cone boss) fused into one blank, a single planar TRIM cut that flattens whichever components overhang it, then a final round of drilling. 6 shape operations, exercising the multi-component-union-then-trim-then-drill pattern the goal calls out as distinct from a plain subtractive chain. ABANDONED `fuseAll([base, post1, post2, boss])` for the union: MEASURED to leave 7 separate `getSolids()` entries even though the total volume matched a correctly-merged single solid exactly — the same `fuseAll`-does-not-merge defect found in `mechanical-nested-shell-channels`, here with all 4 primitives genuinely volume-overlapping (not just touching). Fixed with 3 sequential `fuse` calls, which measured back to 1 solid. MEASURED: volume 22067.7 mm3, area 6890.0 mm2, 18 faces / 30 edges / 20 vertices, 1 solid, mesh genus 0, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-nested-shell-channels",
     "class": "third-party-generated",
     "target": {
@@ -8150,7 +8040,6 @@
     "notes": "A NESTED shell: an outer box hollowed by the real `shell()` operation (not a manual cut), a second smaller box independently `shell()`-ed and seated inside the first cavity, two ribs bridging the gap between the two shells, then two horizontal channels piercing BOTH walls into the inner cavity. 6 shape operations — 1 solid, 34 faces, 89 edges, MEASURED. ABANDONED building the union with `fuseAll([outerShell, innerShell, rib1, rib2])`: MEASURED to leave 4 separate `getSolids()` entries in the result despite correct total volume — `fuseAll` over 3+ shapes does not merge touching/overlapping pieces into one manifold solid the way sequential pairwise `fuse` does. Fixed by folding the four shapes in with 3 sequential `fuse` calls instead, which measured back to a single solid. This is the direct test of thin-partition and double-wall handling the goal calls out — a lost inner cavity here leaves the outer shell completely untouched. MEASURED: volume 38875.6 mm3, area 25935.7 mm2, 34 faces / 89 edges / 56 vertices, 1 solid, mesh genus 7, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-pipe-manifold",
     "class": "third-party-generated",
     "target": {
@@ -8219,7 +8108,6 @@
     "notes": "A manifold: a main bore with a branch bore meeting it at right angles inside the body. Intersecting internal passages are the case where a lost cavity leaves the outer surface — and therefore the Hausdorff distance — untouched."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-pipe-manifold-reducer-branch",
     "class": "third-party-generated",
     "target": {
@@ -8288,7 +8176,6 @@
     "notes": "Beyond `mechanical-pipe-manifold`: a STEPPED main bore (Ø16 cylinder, a reducing cone, Ø8 cylinder, built as one `fuseAll` tool then cut in one pass), a vertical branch, a 30° angled branch, and a bolt-hole ring at each flange face via `circularPattern`. Intersecting internal passages leave the outer surface untouched, which is exactly the case where a lost cavity would go undetected by a surface-only check. MEASURED: volume 67910.6 mm3, area 16541.7 mm2, 20 faces / 48 edges / 30 vertices, 1 solid, mesh genus 3, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-ribbed-enclosure",
     "class": "third-party-generated",
     "target": {
@@ -8357,7 +8244,6 @@
     "notes": "A shelled enclosure with internal ribs and vent slots — a nested cavity crossed by thin partitions, and the closest this corpus comes to a real housing."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-skewed-bracket-gusseted",
     "class": "third-party-generated",
     "target": {
@@ -8426,7 +8312,6 @@
     "notes": "A CHAIN: fuse an upright and a foot, build ONE gusset as a `polygon` + `extrude` triangular plate, `mirror` it to the opposite side and fuse both, then three cutters at COMPOUND angles (two sequential `rotate` calls each, around different axes) plus two vertical mounting holes. 10 operations. The compound-angle cutters take every analytic shortcut off the table the way a single-axis skew cannot. MEASURED: volume 27550.4 mm3, area 10073.8 mm2, 31 faces / 81 edges / 51 vertices, 1 solid, mesh genus 2, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "mechanical-valve-body",
     "class": "third-party-generated",
     "target": {
@@ -8495,7 +8380,6 @@
     "notes": "A spool-shaped body built by `revolve`-ing an 8-point profile around Z (not a primitive), then a through main bore, a perpendicular branch port meeting it inside the body, and a STEPPED counterbore at the top flange (two concentric cylinders) standing in for a valve seat's concentric sealing faces. 6 operations. The revolved body means every downstream cut lands on a genuinely doubly-curved surface, not an axis-aligned box. MEASURED: volume 19445.3 mm3, area 7387.3 mm2, 14 faces / 28 edges / 18 vertices, 1 solid, mesh genus 3, self step-mesh-compare normalizedSymmetricDifferenceVolume 0."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "reject-ellipse-structured-error",
     "class": "third-party-generated",
     "target": {
@@ -8571,7 +8455,6 @@
     "notes": "'A deterministic structured error': `ellipse(5, 10)` — a minor radius LARGER than the major one. Unlike the raw primitives above, this constructor genuinely rejects, and does so with a typed, reproducible payload rather than an opaque exception: caught VERBATIM as `{\"kind\":\"VALIDATION\",\"code\":\"ELLIPSE_RADII\",\"message\":\"The minor radius must be smaller than the major one\"}`. Because the malformed ellipse never becomes a usable shape, `result`/`operands` fall back to an ordinary disjoint cut (recorded for provenance only) — the finding this fixture pins is the exact error payload above, not the fallback geometry's numbers."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "reject-negative-box-width",
     "class": "third-party-generated",
     "target": {
@@ -8647,7 +8530,6 @@
     "notes": "'Rejected invalid input', attempted: `box(-5, 10, 10)` — a negative extent. MEASURED SURPRISE: the kernel does NOT reject this. It silently accepts the negative width and mirrors the box into the NEGATIVE-x half-space — measured bounds x∈[-5,0], y∈[0,10], z∈[0,10] — producing an ordinary 5×10×10 box (volume 500, 6 faces / 12 edges / 8 vertices, `isValidSolid` true) with no error, warning or flag of any kind. The declared outcome is NO-OP because the cut tool below is placed far away specifically so the boolean itself changes nothing observable; the finding this fixture pins is entirely in the base operand's own construction, not in the boolean applied to it."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "reject-open-shell-fuse",
     "class": "third-party-generated",
     "target": {
@@ -8723,7 +8605,6 @@
     "notes": "'Rejected open shell where a solid is required': a box built from only 5 of its 6 faces via `sewShells` (no cap on the 6th) is an open Shell, not a Solid — yet `isValid` and even `isValidSolid` both report TRUE for it standing alone. Fed as the base into `fuse`, the kernel DOES reject, but not with a validation message: it logs 'fuse history path produced null result; retrying without evolution tracking', retries, and then throws the caught, VERBATIM message `Cannot determine shape type: shape is null`. The same open shell fed into `cut` or `intersect` does NOT throw at all — see `cut-open-shell-accepted-as-empty` below for that half of the finding. Because the kernel genuinely raises here, `result` falls back to the untouched second operand (recorded for provenance only; the finding is the caught message, not this fallback shape's numbers)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "reject-zero-height-cylinder",
     "class": "third-party-generated",
     "target": {

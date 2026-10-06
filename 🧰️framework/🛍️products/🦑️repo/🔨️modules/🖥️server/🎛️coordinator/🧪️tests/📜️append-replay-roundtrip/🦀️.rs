@@ -14,7 +14,7 @@ struct AppendVectors {
 }
 
 fn append_vectors(ctx: &Context) -> Result<AppendVectors, String> {
-    let bytes = ctx.fixture_bytes("shared://📜️append-vectors.json")?;
+    let bytes = ctx.input_bytes("shared://📜️append-vectors.json")?;
     let parsed: SerdeJson = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
     let inputs = parsed
         .get("inputs")

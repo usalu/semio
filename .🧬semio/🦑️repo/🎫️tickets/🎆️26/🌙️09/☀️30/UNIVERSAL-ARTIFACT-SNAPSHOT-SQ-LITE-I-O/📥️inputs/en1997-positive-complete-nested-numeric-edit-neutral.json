@@ -1,0 +1,285 @@
+{
+  "qualification": "Hand-authored coherent nested geometry/numeric edit, literal expected owners, source-only no runtime.",
+  "package": "semio-s-artifact-norm-en1997",
+  "target": "@semio-tech/norm-en1997-rs:test-snapshot-sqlite-native",
+  "snapshotSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+  "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+  "sourceTest": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+  "fixture": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+  "tables": [
+    "en1997_document",
+    "en1997_soil_layer",
+    "en1997_footing",
+    "en1997_foundation_load_case",
+    "en1997_pile",
+    "en1997_pile_test_profile",
+    "en1997_retaining_wall",
+    "en1997_slope",
+    "en1997_uplift_case"
+  ],
+  "domainRowCounts": {
+    "en1997_document": 1,
+    "en1997_soil_layer": 1,
+    "en1997_footing": 1,
+    "en1997_foundation_load_case": 1,
+    "en1997_pile": 1,
+    "en1997_pile_test_profile": 1,
+    "en1997_retaining_wall": 1,
+    "en1997_slope": 1,
+    "en1997_uplift_case": 1
+  },
+  "edit": {
+    "path": "piles[0].testProfiles[0].shaftResistance",
+    "before": 32.5,
+    "after": 8,
+    "bits": "4620693217682128896",
+    "class": "finite",
+    "sql": "UPDATE en1997_pile_test_profile SET shaft_resistance=8.0,shaft_resistance_ieee754_bits=4620693217682128896,shaft_resistance_ieee754_class='finite' WHERE ordinal=0 AND pile_id=(SELECT id FROM en1997_pile WHERE document_id=1 AND ordinal=0)",
+    "requireChanges": 1
+  },
+  "cases": [
+    {
+      "annex": "En",
+      "expectedSnapshot": {
+        "structureId": "structure\u0000地盤",
+        "geotechnicalCategory": 255,
+        "designSituation": "authored situation",
+        "designApproach": "unknown approach",
+        "annex": "En",
+        "groundwaterLevel": -4.25,
+        "investigationDepth": -12.5,
+        "layers": [
+          {
+            "id": "duplicate layer",
+            "soilType": "日本 sand",
+            "depthTop": -1.1,
+            "depthBottom": -2.2,
+            "gamma": 3.3,
+            "gammaPrime": 4.4,
+            "phiPrimeDeg": 5.5,
+            "cohesionEffective": 6.6,
+            "cohesionUndrained": 7.7,
+            "oedometricModulus": 8.8,
+            "poissonRatio": 9.9,
+            "cptQc": 10.1,
+            "sptN": 11.2
+          }
+        ],
+        "footings": [
+          {
+            "id": "footing",
+            "width": 12.3,
+            "length": 13.4,
+            "embedment": 14.5,
+            "baseInclinationDeg": 15.6,
+            "settlementLimit": 16.7,
+            "loadCases": [
+              {
+                "id": "load",
+                "designSituation": "",
+                "verticalPermanent": 17.8,
+                "verticalVariable": 18.9,
+                "horizontalPermanent": 19.1,
+                "horizontalVariable": 20.2,
+                "momentPermanent": 21.3,
+                "momentVariable": 22.4
+              }
+            ]
+          }
+        ],
+        "piles": [
+          {
+            "id": "pile",
+            "pileType": "custom pile",
+            "diameter": 23.5,
+            "length": 24.6,
+            "count": 4294967295,
+            "alphaS": 25.7,
+            "unitShaftResistance": 26.8,
+            "unitBaseResistance": 27.9,
+            "compressionPermanent": 28.1,
+            "compressionVariable": 29.2,
+            "tensionPermanent": 30.3,
+            "tensionVariable": 31.4,
+            "testProfiles": [
+              {
+                "id": "test",
+                "shaftResistance": 8,
+                "baseResistance": 33.6
+              }
+            ]
+          }
+        ],
+        "retainingWalls": [
+          {
+            "id": "wall",
+            "height": 34.7,
+            "embedment": 35.8,
+            "baseWidth": 36.9,
+            "stemThickness": 37.1,
+            "backfillPhiDeg": 38.2,
+            "backfillGamma": 39.3,
+            "wallFrictionDeg": 40.4,
+            "earthPressureMode": "unknown mode",
+            "wallMovement": "custom movement",
+            "ocr": 41.5,
+            "concreteGamma": 42.6,
+            "surcharge": 43.7,
+            "verticalPermanent": 44.8,
+            "horizontalPermanent": 45.9
+          }
+        ],
+        "slopes": [
+          {
+            "id": "slope",
+            "angleDeg": 46.1,
+            "height": 47.2,
+            "length": 48.3,
+            "governingLayerId": "missing authored reference"
+          }
+        ],
+        "upliftCases": [
+          {
+            "id": "uplift",
+            "permanentStabilizing": 49.4,
+            "permanentDestabilizing": 50.5,
+            "variableDestabilizing": 51.6,
+            "porePressure": 52.7,
+            "totalStress": 53.8
+          }
+        ]
+      }
+    },
+    {
+      "annex": "De",
+      "expectedSnapshot": {
+        "structureId": "structure\u0000地盤",
+        "geotechnicalCategory": 255,
+        "designSituation": "authored situation",
+        "designApproach": "unknown approach",
+        "annex": "De",
+        "groundwaterLevel": -4.25,
+        "investigationDepth": -12.5,
+        "layers": [
+          {
+            "id": "duplicate layer",
+            "soilType": "日本 sand",
+            "depthTop": -1.1,
+            "depthBottom": -2.2,
+            "gamma": 3.3,
+            "gammaPrime": 4.4,
+            "phiPrimeDeg": 5.5,
+            "cohesionEffective": 6.6,
+            "cohesionUndrained": 7.7,
+            "oedometricModulus": 8.8,
+            "poissonRatio": 9.9,
+            "cptQc": 10.1,
+            "sptN": 11.2
+          }
+        ],
+        "footings": [
+          {
+            "id": "footing",
+            "width": 12.3,
+            "length": 13.4,
+            "embedment": 14.5,
+            "baseInclinationDeg": 15.6,
+            "settlementLimit": 16.7,
+            "loadCases": [
+              {
+                "id": "load",
+                "designSituation": "",
+                "verticalPermanent": 17.8,
+                "verticalVariable": 18.9,
+                "horizontalPermanent": 19.1,
+                "horizontalVariable": 20.2,
+                "momentPermanent": 21.3,
+                "momentVariable": 22.4
+              }
+            ]
+          }
+        ],
+        "piles": [
+          {
+            "id": "pile",
+            "pileType": "custom pile",
+            "diameter": 23.5,
+            "length": 24.6,
+            "count": 4294967295,
+            "alphaS": 25.7,
+            "unitShaftResistance": 26.8,
+            "unitBaseResistance": 27.9,
+            "compressionPermanent": 28.1,
+            "compressionVariable": 29.2,
+            "tensionPermanent": 30.3,
+            "tensionVariable": 31.4,
+            "testProfiles": [
+              {
+                "id": "test",
+                "shaftResistance": 8,
+                "baseResistance": 33.6
+              }
+            ]
+          }
+        ],
+        "retainingWalls": [
+          {
+            "id": "wall",
+            "height": 34.7,
+            "embedment": 35.8,
+            "baseWidth": 36.9,
+            "stemThickness": 37.1,
+            "backfillPhiDeg": 38.2,
+            "backfillGamma": 39.3,
+            "wallFrictionDeg": 40.4,
+            "earthPressureMode": "unknown mode",
+            "wallMovement": "custom movement",
+            "ocr": 41.5,
+            "concreteGamma": 42.6,
+            "surcharge": 43.7,
+            "verticalPermanent": 44.8,
+            "horizontalPermanent": 45.9
+          }
+        ],
+        "slopes": [
+          {
+            "id": "slope",
+            "angleDeg": 46.1,
+            "height": 47.2,
+            "length": 48.3,
+            "governingLayerId": "missing authored reference"
+          }
+        ],
+        "upliftCases": [
+          {
+            "id": "uplift",
+            "permanentStabilizing": 49.4,
+            "permanentDestabilizing": 50.5,
+            "variableDestabilizing": 51.6,
+            "porePressure": 52.7,
+            "totalStress": 53.8
+          }
+        ]
+      }
+    }
+  ],
+  "preserveBinary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000042",
+    "7ff0000000000001",
+    "0000000000000001",
+    "0010000000000000"
+  ],
+  "independentOracle": [
+    "integrity_check ok",
+    "foreign_key_check empty",
+    "exact9 raw domain tables/9 rows",
+    "join child pile_id to parent real id, parent ordinal0 and child ordinal0",
+    "safeIntegers true coherent REAL/INTEGER/class literal equality",
+    "full expected owner and all55 scalar raw bits; no projector-derived expected"
+  ],
+  "publicMetadata": "Public file has additional actual semio_snapshot metadata; raw domain9 roster not applied blindly."
+}

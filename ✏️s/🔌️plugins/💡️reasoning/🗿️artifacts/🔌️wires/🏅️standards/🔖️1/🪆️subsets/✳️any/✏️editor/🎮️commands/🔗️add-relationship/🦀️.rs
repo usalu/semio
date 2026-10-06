@@ -54,7 +54,7 @@ fn endpoints(payload: &AddRelationship, composed: &WiresComposed, selected: &[St
 /// 🔗️ The `create-edge` leaf connecting `source` to `target` with a new edge of `kind`; when both nodes carry an identity the
 /// edge records the relationship (`kind`, `sourceIdentityId`, `targetIdentityId`) as its `relationship` property.
 fn relationship_edge(snapshot: &WiresSnapshot, edge_id: &str, kind: &str, source: &str, target: &str) -> SemioGraphMutation {
-    let identity = |node: &str| wires_identities(&snapshot.wires_fixture).iter().find(|row| entity_id(row, "nodeId") == Some(node)).and_then(|row| row.get("identityId").cloned());
+    let identity = |node: &str| wires_identities(&snapshot.wires_snapshot).iter().find(|row| entity_id(row, "nodeId") == Some(node)).and_then(|row| row.get("identityId").cloned());
     let relationship = match (identity(source), identity(target)) {
         (Some(source_identity), Some(target_identity)) => vec![SemioValueEntry {
             key: WIRES_RELATIONSHIP_PROPERTY.into(),
@@ -77,7 +77,7 @@ fn relate(payload: &AddRelationship, doc: &ArtifactView<'_, WiresSnapshot>, sele
     let (source, target) = endpoints(payload, &composed, selected)?;
     let kind = if payload.kind.is_empty() { DEFAULT_RELATIONSHIP_KIND } else { payload.kind.as_str() };
     let edge_id = (1..).map(|ordinal| format!("edge-{ordinal}")).find(|candidate| board_edge(&composed.board, candidate).is_none()).unwrap_or_default();
-    let mut emit = crate::wires_child_emit(doc.snapshot, &[relationship_edge(doc.snapshot, &edge_id, kind, &source, &target)]);
+    let mut emit = crate::wires_child_emit(doc.snapshot, vec![relationship_edge(doc.snapshot, &edge_id, kind, &source, &target)]);
     emit.effects.push(wires_select_effect(&[edge_id], WIRES_GRANULARITY_EDGE, "replace"));
     Ok(emit)
 }

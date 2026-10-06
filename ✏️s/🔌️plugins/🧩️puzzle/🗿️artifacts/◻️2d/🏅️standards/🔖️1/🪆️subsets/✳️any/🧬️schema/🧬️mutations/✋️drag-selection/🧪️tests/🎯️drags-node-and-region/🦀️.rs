@@ -1,4 +1,4 @@
-//! 🧪️ `drag-selection` fixture — `🎯️drags-node-and-region`.
+//! 🧪️ `drag-selection` snapshot — `🎯️drags-node-and-region`.
 //!
 //! One drag over a node AND a target region (ids classified by document membership): `node-a` and `region-1`'s corner both move by (10, 4).
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     assert!(!inverse.is_empty(), "drag-selection/drags-node-and-region: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");

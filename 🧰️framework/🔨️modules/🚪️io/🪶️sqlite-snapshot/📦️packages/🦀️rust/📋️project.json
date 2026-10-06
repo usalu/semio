@@ -42,6 +42,17 @@
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-operation"
       }
+    },
+    "test-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-ownership"
+      }
     }
   }
 }

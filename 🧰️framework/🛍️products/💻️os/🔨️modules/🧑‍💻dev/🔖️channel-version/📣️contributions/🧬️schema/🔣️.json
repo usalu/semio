@@ -9,6 +9,30 @@
         "path",
         "occurrences"
       ],
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "hostileValues",
+            "hostileOccurrences"
+          ],
+          "properties": {
+            "hostileValues": true,
+            "hostileOccurrences": true
+          }
+        },
+        {
+          "propertyNames": {
+            "enum": [
+              "path",
+              "occurrences",
+              "arbitrary",
+              "guest",
+              "derived"
+            ]
+          }
+        }
+      ],
       "properties": {
         "path": {
           "$ref": "#/$defs/PathV1"
@@ -18,8 +42,14 @@
           "minimum": 1,
           "maximum": 4096
         },
+        "hostileOccurrences": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
         "hostileValues": {
           "type": "array",
+          "minItems": 1,
           "maxItems": 64,
           "uniqueItems": true,
           "items": {
@@ -87,100 +117,6 @@
       "maxLength": 4096,
       "pattern": "^(?![A-Za-z]:)(?!/)(?!.*//)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\\\u0000-\\u001f\\u007f]+[^/\\\\\\u0000-\\u001f\\u007f]$(?![\\s\\S])|^[^/\\\\.\\u0000-\\u001f\\u007f]$(?![\\s\\S])",
       "x-semio-path-identity": "nfc-casefold"
-    },
-    "CensusCasesV1": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "pin",
-          "owners",
-          "candidates",
-          "files",
-          "expected"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "pin": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 4294967295
-          },
-          "owners": {
-            "$ref": "#/$defs/OwnersV1"
-          },
-          "candidates": {
-            "type": "array",
-            "uniqueItems": true,
-            "items": {
-              "$ref": "#/$defs/PathV1"
-            }
-          },
-          "files": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "expected": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-    "CasesV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "cases",
-        "census"
-      ],
-      "properties": {
-        "cases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "input",
-              "accepted",
-              "paths"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "input": {
-                "type": "array"
-              },
-              "accepted": {
-                "type": "boolean"
-              },
-              "paths": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/$defs/PathV1"
-                }
-              }
-            }
-          }
-        },
-        "census": {
-          "$ref": "#/$defs/CensusCasesV1"
-        }
-      }
     }
   }
 }

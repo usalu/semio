@@ -264,25 +264,7 @@ pub fn apply_gltf_mutation(snapshot: &mut GltfSnapshot, mutation: &GltfMutation)
 }
 
 //#region 🌉️TestBridge
-/// 🌉️ The `(kind, params)` row a mutation case states (`delete-camera`, `{"index":0}`) as the [`GltfMutation`] wire form
-/// `{"mutation": "deleteCamera", "payload": {"phase": "apply", "value": params}}`, decoded by the production codec.
-fn gltf_row_mutation(kind: &str, params_json: &str) -> Result<GltfMutation, String> {
-    let params: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(params_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{kind}: the parameters are not JSON: {error}"))?;
-    let variant: String = kind
-        .split('-')
-        .enumerate()
-        .map(|(index, word)| {
-            let mut letters = word.chars();
-            match letters.next() {
-                Some(first) if index > 0 => first.to_uppercase().chain(letters).collect::<String>(),
-                _ => word.to_string(),
-            }
-        })
-        .collect();
-    let payload = semio_framework_value::DslValue::object(vec![("phase".to_string(), semio_framework_value::DslValue::String("apply".to_string())), ("value".to_string(), params)]);
-    let wire = semio_framework_value::DslValue::object(vec![("mutation".to_string(), semio_framework_value::DslValue::String(variant)), ("payload".to_string(), payload)]);
-    <GltfMutation as semio_framework_value::FromValue>::from_value(wire).map_err(|error| format!("{kind}: not a glTF mutation of this vocabulary: {error}"))
-}
+
 
 /// 🌉️ Reads a `.glb` container or `.gltf` JSON text through the production codec — whichever the bytes are.
 fn gltf_bridge_read(document: &[u8]) -> Result<GltfSnapshot, String> {

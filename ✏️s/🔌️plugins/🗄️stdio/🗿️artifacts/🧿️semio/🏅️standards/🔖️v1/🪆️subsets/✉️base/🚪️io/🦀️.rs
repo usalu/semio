@@ -7,7 +7,7 @@ pub mod derived_composition {
     use crate::standards::v1::subsets::animation::io::SemioAnimationValidator;
     use crate::standards::v1::subsets::audio::io::SemioAudioValidator;
     use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
-    use crate::standards::v1::subsets::base::schema::SemioAnalyzer;
+    use crate::standards::v1::subsets::base::io::SemioAnalyzer;
     use crate::standards::v1::subsets::brep::io::SemioBrepValidator;
     use crate::standards::v1::subsets::cad::io::SemioCadValidator;
     use crate::standards::v1::subsets::document::io::SemioDocumentValidator;
@@ -170,25 +170,25 @@ pub use derived_composition::*;
 /// ARTIFACTS-AND-APP-STATE-MACHINES) — pure `ComposerEntry` aggregation across all 19 subsets
 /// (the 13 domain subsets + `text` + this `✉️base` envelope's own), no engine needed.
 pub mod io_registry {
-    use crate::standards::v1::subsets::animation::schema::SemioAnimationComposer;
-    use crate::standards::v1::subsets::audio::schema::SemioAudioComposer;
-    use crate::standards::v1::subsets::base::schema::SemioComposer as SemioRawAnyComposer;
-    use crate::standards::v1::subsets::brep::schema::SemioBrepComposer;
-    use crate::standards::v1::subsets::cad::schema::SemioCadComposer;
-    use crate::standards::v1::subsets::document::schema::SemioDocumentComposer;
-    use crate::standards::v1::subsets::drawing::schema::SemioDrawingComposer;
-    use crate::standards::v1::subsets::flow::schema::SemioFlowComposer;
-    use crate::standards::v1::subsets::graph::schema::SemioGraphComposer;
-    use crate::standards::v1::subsets::image::schema::SemioImageComposer;
-    use crate::standards::v1::subsets::kit::schema::SemioKitComposer;
-    use crate::standards::v1::subsets::mesh::schema::SemioMeshComposer;
-    use crate::standards::v1::subsets::model::schema::SemioModelComposer;
-    use crate::standards::v1::subsets::object::schema::SemioObjectComposer;
-    use crate::standards::v1::subsets::presentation::schema::SemioPresentationComposer;
-    use crate::standards::v1::subsets::table::schema::SemioTableComposer;
-    use crate::standards::v1::subsets::text::schema::SemioTextComposer;
-    use crate::standards::v1::subsets::value::schema::SemioValueComposer;
-    use crate::standards::v1::subsets::video::schema::SemioVideoComposer;
+    use crate::standards::v1::subsets::animation::io::SemioAnimationComposer;
+    use crate::standards::v1::subsets::audio::io::SemioAudioComposer;
+    use crate::standards::v1::subsets::base::io::SemioComposer as SemioRawAnyComposer;
+    use crate::standards::v1::subsets::brep::io::SemioBrepComposer;
+    use crate::standards::v1::subsets::cad::io::SemioCadComposer;
+    use crate::standards::v1::subsets::document::io::SemioDocumentComposer;
+    use crate::standards::v1::subsets::drawing::io::SemioDrawingComposer;
+    use crate::standards::v1::subsets::flow::io::SemioFlowComposer;
+    use crate::standards::v1::subsets::graph::io::SemioGraphComposer;
+    use crate::standards::v1::subsets::image::io::SemioImageComposer;
+    use crate::standards::v1::subsets::kit::io::SemioKitComposer;
+    use crate::standards::v1::subsets::mesh::io::SemioMeshComposer;
+    use crate::standards::v1::subsets::model::io::SemioModelComposer;
+    use crate::standards::v1::subsets::object::io::SemioObjectComposer;
+    use crate::standards::v1::subsets::presentation::io::SemioPresentationComposer;
+    use crate::standards::v1::subsets::table::io::SemioTableComposer;
+    use crate::standards::v1::subsets::text::io::SemioTextComposer;
+    use crate::standards::v1::subsets::value::io::SemioValueComposer;
+    use crate::standards::v1::subsets::video::io::SemioVideoComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -224,3 +224,128 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::v1::subsets::base::schema::diff::SemioDiff;
+    use crate::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, SemioMutation};
+    use crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioBuilderConstruction {
+        snapshot: SemioSnapshot,
+    }
+
+    impl ArtifactBuilder for SemioBuilderConstruction {
+        type Snapshot = SemioSnapshot;
+        type Mutation = SemioMutation;
+        type Diff = SemioDiff;
+        fn empty() -> Self {
+            Self { snapshot: SemioSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<SemioSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<SemioSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = apply_semio_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <SemioDiff as protocol::MutationDiff<SemioSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            Ok(self.snapshot)
+        }
+    }
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, STDIO_SEMIO_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct SemioParts {
+        pub snapshot: Option<SemioSnapshot>,
+    }
+
+    pub struct SemioAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for SemioAnalyzerAnalysis {
+        type Parts = SemioParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    let marker = STDIO_SEMIO_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    if text.contains(STDIO_SEMIO_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = SemioParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <SemioSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <SemioSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec SemioBuilderFacets {
+        construction: SemioBuilderConstruction,
+        analysis: SemioAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::base::io::derived_composition::SemioComposerComposition,
+    }
+    builder: SemioBuilder,
+    analyzer: SemioAnalyzer,
+    composer: SemioComposer,
+);

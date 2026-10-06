@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "schemaVersion": 1,
+  "minimumDomainTables": 1,
+  "integrity": [
+    {
+      "integrity_check": "ok"
+    }
+  ],
+  "foreignKeys": [],
+  "nativeEncodings": [
+    "binary",
+    "text"
+  ]
+}

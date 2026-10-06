@@ -548,9 +548,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "no-mutation-applied",
       "class": "third-party-generated",
       "target": {
@@ -599,7 +598,6 @@
       "notes": "Identity — before and after bytes are the same document."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -650,7 +648,6 @@
       "notes": "Whole-document replace: main header, a stream's strh.rate/length and a new movi chunk all change together."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-main-header-applied",
       "class": "third-party-generated",
       "target": {
@@ -701,7 +698,6 @@
       "notes": "Only avih fields change; streams/idx1/unknown chunks untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-stream-applied",
       "class": "third-party-generated",
       "target": {
@@ -752,7 +748,6 @@
       "notes": "A third stream is appended; mainHeader.streams is left stale at 2, matching real dispatch."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-stream-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {
@@ -796,7 +791,6 @@
       "notes": "Attempted insertion index exceeds the final collection length — mutation.apply.invalid-index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-stream-applied",
       "class": "third-party-generated",
       "target": {
@@ -847,7 +841,6 @@
       "notes": "The audio stream (index 1) is removed; mainHeader.streams stays stale at 2."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-stream-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -891,7 +884,6 @@
       "notes": "Attempted removal index does not exist — mutation.apply.missing-target."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-stream-header-applied",
       "class": "third-party-generated",
       "target": {
@@ -942,7 +934,6 @@
       "notes": "Stream 0's strh is whole-value replaced (rate changes)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-stream-header-rejected-missing-stream",
       "class": "third-party-generated",
       "target": {
@@ -986,7 +977,6 @@
       "notes": "Attempted stream_index does not exist — missing-target on the streams collection."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-stream-format-applied",
       "class": "third-party-generated",
       "target": {
@@ -1037,7 +1027,6 @@
       "notes": "Stream 1's strf is whole-value replaced (samplesPerSec changes)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-stream-format-rejected-missing-stream",
       "class": "third-party-generated",
       "target": {

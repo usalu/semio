@@ -463,7 +463,7 @@ def doc_json(ctx):
 
 def leaf(ctx, spec, name):
     """🧫️ One committed leaf of the vector the doc string addresses."""
-    return json.loads(ctx.fixture_bytes(spec[name]).decode("utf-8"))
+    return json.loads(ctx.input_bytes(spec[name]).decode("utf-8"))
 
 
 def uri_in(ctx, needle):
@@ -540,7 +540,7 @@ def identity_handler(ctx):
     objects, one of them carrying a mesh child handle and a paint stack whose pixels decode to a real
     byte buffer, the other carrying neither."""
     uri = uri_in(ctx, "⬅️before")
-    committed = ctx.fixture_bytes(uri)
+    committed = ctx.input_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
     validate(document, "identity-round-trip")
     if len(document["objects"]) < 2:

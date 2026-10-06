@@ -15,7 +15,10 @@ use crate::editor::drawing::modes::edit::windows::canvas::transient::DrawingCanv
 use crate::mutations::{drag_layers, drag_path_points, rotate_layers, scale_layers, DrawingPathPointTarget};
 use crate::op::DrawingMutation;
 use crate::schema::geometry::handles::{handle_motion, HandleMotion};
-use crate::schema::{create_drawing_path_layer, create_drawing_trace_layer, layer_id};
+use crate::schema::scene_paint::scene::query::{PreparedScenePickJob,PreparedScenePick,PreparedSceneIdentity};
+use crate::editor::drawing::geometry_session::MountedSceneQuery;
+use crate::schema::{create_drawing_trace_layer, layer_id};
+use crate::standards::v1::subsets::any::io::text::snapshot::{create_drawing_path_layer};
 use crate::{DrawingLayerNode, DrawingSnapshot, PathSegment};
 use crate::schema::geometry::editing::{PathPoint,path_point_hit};
 use machine::Command;
@@ -795,15 +798,14 @@ impl TracePath {
 
 #[derive(Clone, Debug)]
 enum TracePointerWork {
-    Roots { next: usize },
-    Enter(TracePath),
-    GroupChildren { path: TracePath, next: usize },
-    Visit(TracePath),
+    SelectionPaths {next:usize},
+    SelectionBounds {next:usize},
+    ControlNodes {next:usize},
+    ControlSegments {index:usize,path:TracePath,next:usize,matrix:[f64;6]},
     NodeArea {path:TracePath,next:usize,matrix:[f64;6]},
     PublishNodeArea {path:TracePath,next:usize,geometry:String},
-    PathBounds { path: TracePath, next: usize, matrix: [f64;6], current: [f64;2], start: [f64;2], min: [f64; 2], max: [f64; 2], control_hit: bool },
-    GeometryPaint {path:TracePath,bounds:(f64,f64,f64,f64),control_hit:bool,cursor:crate::schema::geometry::picking::PathHitCursor},
-    PolygonBounds { path: TracePath, next: usize, matrix: [f64;6], min: [f64; 2], max: [f64; 2] },
+    Pick,
+    PublishPick {next:usize},
 }
 
 #[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -840,6 +842,9 @@ pub(crate) struct TracePointerJob {
     selected_paths: Vec<TracePath>,
     selection_bounds: Option<[f64;4]>,
     completed_work: usize,
+    cache_identity:Option<PreparedSceneIdentity>,
+    pick:Option<PreparedScenePickJob>,
+    pub(crate) failure:Option<String>,
     pub(crate) overflowed: bool,
 }
 
@@ -850,7 +855,7 @@ impl TracePointerJob {
 
     fn new_bound(generation: u64, document: &DrawingSnapshot, world: [f64; 2], base_revision: String) -> Self {
         let mut work = UiFixedList::default();
-        let _ = work.try_push(TracePointerWork::Roots { next: document.layers.len() });
+        let _ = work.try_push(TracePointerWork::SelectionPaths {next:0});
         Self {
             app_instance_id: 0,
             document_id: document.id.clone(),
@@ -872,6 +877,7 @@ impl TracePointerJob {
             selected_paths: Vec::new(),
             selection_bounds: None,
             completed_work: 0,
+            cache_identity:None,pick:None,failure:None,
             overflowed: false,
         }
     }
@@ -915,219 +921,101 @@ impl TracePointerJob {
         }
     }
 
-    pub(crate) fn advance(&mut self, document: &DrawingSnapshot) -> bool {
-        if self.overflowed {
-            return true;
-        }
+    /// 🪪️ Every granted step and eventual publication refers to the exact complete cache.
+    pub(crate) fn validate_cache(&self,borrowed:&MountedSceneQuery<'_>)->Result<(),Fault>{
+        let live=PreparedSceneIdentity{source:borrowed.source,build:borrowed.build,flatness:borrowed.scene.flatness};
+        if self.cache_identity!=Some(live) {return Err(Fault::from("Drawing geometry changed during the pointer query"));}
+        if let Some(error)=&self.failure {return Err(Fault::from(error.clone()));}
+        Ok(())
+    }
+
+    pub(crate) fn advance(&mut self,document:&DrawingSnapshot,borrowed:&MountedSceneQuery<'_>)->bool {
+        if self.overflowed{return true;}
+        let live=PreparedSceneIdentity{source:borrowed.source,build:borrowed.build,flatness:borrowed.scene.flatness};
+        if self.cache_identity.is_none(){self.cache_identity=Some(live);}
+        if let Err(error)=self.validate_cache(borrowed){self.failure=Some(error.message);self.overflowed=true;return true;}
+        let scene=borrowed.scene;
         for _ in 0..TRACE_POINTER_WORK_PER_STEP {
-            let Some(work) = self.work.pop() else { return true };
-            self.completed_work += 1;
-            match work {
-                TracePointerWork::Roots { next } => {
-                    if next == 0 {
-                        continue;
+            let Some(work)=self.work.pop()else{return true};self.completed_work+=1;
+            let step=(||->Result<(),Fault>{
+                match work {
+                    TracePointerWork::SelectionPaths{next}=>{
+                        if let Some(node)=scene.plan.nodes.get(next) {
+                            if self.selected_ids.contains(&node.id) {self.selected_paths.push(TracePath::from_source(&node.source_path).ok_or_else(||Fault::from("Invalid prepared layer address"))?);}
+                            self.push_work(TracePointerWork::SelectionPaths{next:next+1});
+                        }else{self.push_work(TracePointerWork::SelectionBounds{next:0});}
                     }
-                    self.push_work(TracePointerWork::Roots { next: next - 1 });
-                    if let Some(path) = TracePath::root(next - 1) {
-                        self.push_work(TracePointerWork::Enter(path));
-                    }
-                }
-                TracePointerWork::Enter(path) => {
-                    let Some(layer) = drawing_layer_at_path(&document.layers, &path) else { continue };
-                    let base=trace_layer_base(layer);
-                    let selected_ancestor=self.selected_paths.iter().any(|parent|crate::schema::geometry::translation::path_contains(&parent.indices[..usize::from(parent.len)],&path.indices[..usize::from(path.len)]));
-                    if !base.visible || (base.locked && (self.node_editing || !selected_ancestor)) { continue; }
-                    if !selected_ancestor && self.selected_ids.contains(&base.id) {self.selected_paths.push(path);}
-
-                    if let DrawingLayerNode::Group(group) = layer {
-                        self.push_work(TracePointerWork::GroupChildren { path, next: group.children.len() });
-                    } else {
-                        self.push_work(TracePointerWork::Visit(path));
-                    }
-                }
-                TracePointerWork::GroupChildren { path, next } => {
-                    if next == 0 {
-                        continue;
-                    }
-                    self.push_work(TracePointerWork::GroupChildren { path, next: next - 1 });
-                    if let Some(child_path) = path.child(next - 1) {
-                        self.push_work(TracePointerWork::Enter(child_path));
-                    }
-                }
-                TracePointerWork::Visit(path) => {
-                    let Some(layer) = drawing_layer_at_path(&document.layers, &path) else { continue };
-                    let Some(matrix) = trace_path_matrix(&document.layers, &path) else { continue };
-                    if self.node_area {
-                        if matches!(layer,DrawingLayerNode::Path(_)) && self.selected_ids.contains(&trace_layer_base(layer).id) {
-                            self.node_hash=Some(points::geometry_hasher());self.node_indices.clear();
-                            self.push_work(TracePointerWork::NodeArea {path,next:0,matrix});
-                        }
-                        continue;
-                    }
-                    match layer {
-                        DrawingLayerNode::Path(path_layer) if !path_layer.segments.is_empty() => self.push_work(TracePointerWork::PathBounds { path, next: 0, matrix, current: [0.0;2], start: [0.0;2], min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2], control_hit: false }),
-                        DrawingLayerNode::Shape(shape) if shape.shape_kind == "polygon" && shape.polygon.as_ref().is_some_and(|polygon| !polygon.points.is_empty()) => {
-                            self.push_work(TracePointerWork::PolygonBounds { path, next: 0, matrix, min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2] });
-                        }
-                        DrawingLayerNode::Shape(_) if self.marquee.is_none()&&self.lasso.is_none()&&self.world.iter().all(|value|value.is_finite())=>{
-                            let bounds=trace_layer_bounds_with_matrix(layer,matrix);
-                            let cursor=trace_paint_cursor(self,layer,matrix);
-                            self.push_work(TracePointerWork::GeometryPaint {path,bounds,control_hit:false,cursor});
-                        }
-                        _ => consider_trace_candidate(self, layer, path, trace_layer_bounds_with_matrix(layer,matrix), false, None),
-                    }
-                }
-                TracePointerWork::NodeArea {path,next,matrix}=>{
-                    let Some(DrawingLayerNode::Path(layer))=drawing_layer_at_path(&document.layers,&path) else {self.overflowed=true;return true;};
-                    if let Some(segment)=layer.segments.get(next) {
-                        if points::hash_segment(self.node_hash.as_mut().expect("active node hash"),segment).is_none() {self.overflowed=true;return true;}
-                        if self.marquee.is_some_and(|(start,end,_)|points::anchor_in_marquee(segment,matrix,start,end)) {
-                            if self.node_indices.len()+self.hits.len()>=DRAWING_QUERY_HIT_CAPACITY {self.overflowed=true;return true;}
-                            self.node_indices.push(next);
-                        }
-                        self.push_work(TracePointerWork::NodeArea {path,next:next+1,matrix});
-                    } else {
-                        let geometry=self.node_hash.take().expect("finished node hash").finalize().to_hex();
-                        self.push_work(TracePointerWork::PublishNodeArea {path,next:0,geometry});
-                    }
-                }
-                TracePointerWork::PublishNodeArea {path,next,geometry}=>{
-                    if let Some(index)=self.node_indices.get(next) {
-                        let Some(layer)=drawing_layer_at_path(&document.layers,&path) else {self.overflowed=true;return true;};
-                        let Some(id)=points::point_id(&trace_layer_base(layer).id,&geometry,*index,PathPoint::Anchor) else {self.overflowed=true;return true;};
-                        self.node_bytes+=id.len();
-                        if self.node_bytes>DRAWING_QUERY_TARGET_BYTES || self.hits.try_push(id).is_err() {self.overflowed=true;return true;}
-                        self.push_work(TracePointerWork::PublishNodeArea {path,next:next+1,geometry});
-                    }
-                }
-                TracePointerWork::PathBounds { path, next, matrix, mut current, mut start, mut min, mut max, mut control_hit } => {
-                    let Some(DrawingLayerNode::Path(path_layer)) = drawing_layer_at_path(&document.layers, &path) else { continue };
-                    if let Some(segment) = path_layer.segments.get(next) {
-                        let bounds = crate::schema::geometry::segment_bounds(segment,current,start,matrix);
-                        extend_trace_bounds(&mut min,&mut max,[bounds[0],bounds[1]]);
-                        extend_trace_bounds(&mut min,&mut max,[bounds[0]+bounds[2],bounds[1]+bounds[3]]);
-                        match segment {
-                            PathSegment::Move { to } => { current=*to; start=*to; }
-                            PathSegment::Close => current=start,
-                            _ => { if let Some(point)=trace_segment_point(segment) { current=point; } }
-                        }
-                        if self.node_editing && !path_layer.base.locked && self.selected_ids.contains(&path_layer.base.id) {
-                            if let Some((point,distance))=path_point_hit(segment,matrix,self.world,self.tolerance) {
-                                if self.node_hit.as_ref().is_none_or(|(previous,_,_,old)|previous.indices==path.indices && previous.len==path.len && distance<*old) {self.node_hit=Some((path,next,point,distance));}
+                    TracePointerWork::SelectionBounds{next}=>{
+                        if let Some(node)=scene.plan.nodes.get(next) {
+                            if node.visible&&node.opacity>0.0&&node.groups.iter().all(|group|group.opacity>0.0)&&crate::schema::scene_preparation::scene_selection_relation(&node.source_path,node.locked_ancestors,&self.selected_paths).map_err(|error|Fault::from(error.to_string()))?.bounds_selection.is_some() {
+                                if let Some([x,y,r,b])=scene.geometry[next].bounds.or(scene.geometry[next].geometry_bounds) {let bounds=[x,y,r-x,b-y];self.selection_bounds=Some(self.selection_bounds.map_or(bounds,|old|{let(x,y)=(old[0].min(bounds[0]),old[1].min(bounds[1]));[x,y,(old[0]+old[2]).max(bounds[0]+bounds[2])-x,(old[1]+old[3]).max(bounds[1]+bounds[3])-y]}));}
                             }
+                            self.push_work(TracePointerWork::SelectionBounds{next:next+1});
+                        }else if self.node_area||self.node_editing||self.include_control_points{self.push_work(TracePointerWork::ControlNodes{next:scene.plan.nodes.len()});}
+                        else{self.push_work(TracePointerWork::Pick);}
+                    }
+                    TracePointerWork::ControlNodes{next}=>{
+                        if next==0 {if !self.node_area{self.push_work(TracePointerWork::Pick);}return Ok(());}
+                        let index=next-1;self.push_work(TracePointerWork::ControlNodes{next:index});let node=&scene.plan.nodes[index];
+                        if !node.visible||node.opacity<=0.0||node.groups.iter().any(|group|group.opacity<=0.0)||node.locked_ancestors!=0{return Ok(());}
+                        let path=TracePath::from_source(&node.source_path).ok_or_else(||Fault::from("Invalid prepared layer address"))?;
+                        if !matches!(drawing_layer_at_path(&document.layers,&path),Some(DrawingLayerNode::Path(_))){return Ok(());}
+                        if self.node_area {if self.selected_ids.contains(&node.id){self.node_hash=Some(points::geometry_hasher());self.node_indices.clear();self.push_work(TracePointerWork::NodeArea{path,next:0,matrix:node.transform});}}
+                        else if self.node_editing&&self.selected_ids.contains(&node.id)||self.include_control_points{self.push_work(TracePointerWork::ControlSegments{index,path,next:0,matrix:node.transform});}
+                    }
+                    TracePointerWork::ControlSegments{index,path,next,matrix}=>{
+                        let Some(DrawingLayerNode::Path(layer))=drawing_layer_at_path(&document.layers,&path)else{return Err(Fault::from("Authored control path changed"));};
+                        if let Some(segment)=layer.segments.get(next){
+                            if let Some((point,distance))=path_point_hit(segment,matrix,self.world,self.tolerance){
+                                if self.node_editing&&self.selected_ids.contains(&layer.base.id)&&self.node_hit.as_ref().is_none_or(|(previous,_,_,old)|previous.indices==path.indices&&previous.len==path.len&&distance<*old){self.node_hit=Some((path,next,point,distance));}
+                                if self.include_control_points&&self.best.as_ref().is_none_or(|best|best.generality<4){self.best=Some(TracePickCandidate{generality:4,layer_id:scene.plan.nodes[index].id.clone(),image_key:None,path});}
+                            }
+                            self.push_work(TracePointerWork::ControlSegments{index,path,next:next+1,matrix});
                         }
-                        if self.include_control_points && trace_segment_control_hit(segment, matrix, self.world, self.tolerance) {
-                            control_hit = true;
+                    }
+                    TracePointerWork::NodeArea{path,next,matrix}=>{
+                        let Some(DrawingLayerNode::Path(layer))=drawing_layer_at_path(&document.layers,&path)else{return Err(Fault::from("Authored anchor path changed"));};
+                        if let Some(segment)=layer.segments.get(next){
+                            points::hash_segment(self.node_hash.as_mut().expect("active node hash"),segment).ok_or_else(||Fault::from("Invalid authored anchor"))?;
+                            if self.marquee.is_some_and(|(start,end,_)|points::anchor_in_marquee(segment,matrix,start,end)){if self.node_indices.len()+self.hits.len()>=DRAWING_QUERY_HIT_CAPACITY{return Err(Fault::from("Anchor selection exceeds capacity"));}self.node_indices.push(next);}
+                            self.push_work(TracePointerWork::NodeArea{path,next:next+1,matrix});
+                        }else{let geometry=self.node_hash.take().expect("finished node hash").finalize().to_hex();self.push_work(TracePointerWork::PublishNodeArea{path,next:0,geometry});}
+                    }
+                    TracePointerWork::PublishNodeArea{path,next,geometry}=>{
+                        if let Some(index)=self.node_indices.get(next){
+                            let layer=drawing_layer_at_path(&document.layers,&path).ok_or_else(||Fault::from("Authored anchor path changed"))?;
+                            let id=points::point_id(&trace_layer_base(layer).id,&geometry,*index,PathPoint::Anchor).ok_or_else(||Fault::from("Invalid anchor selection"))?;
+                            self.node_bytes+=id.len();if self.node_bytes>DRAWING_QUERY_TARGET_BYTES||self.hits.try_push(id).is_err(){return Err(Fault::from("Anchor selection exceeds capacity"));}
+                            self.push_work(TracePointerWork::PublishNodeArea{path,next:next+1,geometry});
                         }
-                        self.push_work(TracePointerWork::PathBounds { path, next: next + 1, matrix, current, start, min, max, control_hit });
-                    } else if min[0].is_finite() {
-                        let bounds=(min[0],min[1],max[0]-min[0],max[1]-min[1]);
-                        if self.marquee.is_none()&&self.lasso.is_none()&&self.world.iter().all(|value|value.is_finite()) {
-                            let layer=drawing_layer_at_path(&document.layers,&path).expect("path work retains its layer");
-                            let cursor=trace_paint_cursor(self,layer,matrix);
-                            self.push_work(TracePointerWork::GeometryPaint {path,bounds,control_hit,cursor});
-                        } else {consider_trace_candidate(self,drawing_layer_at_path(&document.layers,&path).expect("path work retains its layer"),path,bounds,control_hit,None);}
-
                     }
-                }
-                TracePointerWork::GeometryPaint {path,bounds,control_hit,mut cursor}=>{
-                    let Some(layer)=drawing_layer_at_path(&document.layers,&path) else {continue;};
-                    let finished=match layer {
-                        DrawingLayerNode::Path(body)=>cursor.step(&body.segments),
-                        DrawingLayerNode::Shape(body)=>cursor.step_with(|index|crate::schema::shape_path_segment(body,index)),
-                        _=>continue,
-                    };
-                    if !finished {self.push_work(TracePointerWork::GeometryPaint {path,bounds,control_hit,cursor});}
-                    else {
-                        if cursor.failed(){self.overflowed=true;}
-                        let attributes=&trace_layer_base(layer).attributes;
-                        let fill=attributes.fill.is_some();
-                        let stroke=attributes.stroke.is_some()||!fill;
-                        consider_trace_candidate(self,layer,path,bounds,control_hit,Some(cursor.contains(fill,stroke,attributes.fill_rule==crate::FillRule::Evenodd)));
+                    TracePointerWork::Pick=>{
+                        if self.pick.is_none(){
+                            let query=if let Some(polygon)=&self.lasso{PreparedScenePick::Lasso{points:polygon.as_slice().to_vec()}}else if let Some((start,end,crossing))=self.marquee{PreparedScenePick::Rectangle{start,end,crossing}}else{PreparedScenePick::Point{point:self.world,tolerance:self.tolerance,required_flatness:if self.tolerance==0.0{scene.flatness}else{(self.tolerance/80.0).clamp(1e-6,16.0)}}};
+                            self.pick=Some(PreparedScenePickJob::new(live,query,DRAWING_QUERY_HIT_CAPACITY).map_err(Fault::from)?);
+                            self.push_work(TracePointerWork::Pick);
+                        }else if self.pick.as_mut().unwrap().advance(scene,live,1).map_err(Fault::from)?.done{self.push_work(TracePointerWork::PublishPick{next:0});}
+                        else{self.push_work(TracePointerWork::Pick);}
                     }
-                }
-                TracePointerWork::PolygonBounds { path, next, matrix, mut min, mut max } => {
-                    let Some(DrawingLayerNode::Shape(shape)) = drawing_layer_at_path(&document.layers, &path) else { continue };
-                    let Some(polygon) = &shape.polygon else { continue };
-                    if let Some(point) = polygon.points.get(next) {
-                        extend_trace_bounds(&mut min, &mut max, *point);
-                        self.push_work(TracePointerWork::PolygonBounds { path, next: next + 1, matrix, min, max });
-                    } else if min[0].is_finite() {
-                        let layer=drawing_layer_at_path(&document.layers,&path).expect("polygon work retains its layer");
-                        let bounds=trace_world_bounds(matrix,min,max);
-                        if self.marquee.is_none()&&self.lasso.is_none()&&self.world.iter().all(|value|value.is_finite()) {
-                            let cursor=trace_paint_cursor(self,layer,matrix);
-                            self.push_work(TracePointerWork::GeometryPaint {path,bounds,control_hit:false,cursor});
-                        }else {consider_trace_candidate(self,layer,path,bounds,false,None);}
+                    TracePointerWork::PublishPick{next}=>{
+                        if let Some(index)=self.pick.as_ref().unwrap().result(live).map_err(Fault::from)?.get(next).copied(){
+                            let node=&scene.plan.nodes[index];let path=TracePath::from_source(&node.source_path).ok_or_else(||Fault::from("Invalid prepared layer address"))?;
+                            if self.marquee.is_some()||self.lasso.is_some(){self.node_bytes+=node.id.len();if self.node_bytes>DRAWING_QUERY_TARGET_BYTES||self.hits.try_push(node.id.clone()).is_err(){return Err(Fault::from("Layer selection exceeds capacity"));}}
+                            else if self.best.as_ref().is_none_or(|best|best.generality<4){self.best=Some(TracePickCandidate{generality:2,layer_id:node.id.clone(),image_key:match &node.content{crate::schema::scene_preparation::DocumentSceneContent::Image{asset,..}=>Some(asset.clone()),_=>None},path});}
+                            self.push_work(TracePointerWork::PublishPick{next:next+1});
+                        }
                     }
-                }
-            }
+                }Ok(())
+            })();
+            if let Err(error)=step{self.failure=Some(error.message);self.overflowed=true;return true;}
         }
         self.work.is_empty()
     }
 }
 
-fn trace_paint_cursor(job:&TracePointerJob,layer:&DrawingLayerNode,matrix:[f64;6])->crate::schema::geometry::picking::PathHitCursor {
-    let [a,b,c,d,_,_]=matrix;
-    let scale=((a+d).hypot(b-c)+(a-d).hypot(b+c))*0.5;
-    let radius=job.tolerance+trace_layer_base(layer).attributes.stroke.as_ref().map_or(0.0,|stroke|stroke.width.max(0.0)*scale*0.5);
-    crate::schema::geometry::picking::PathHitCursor::new(job.world,matrix,radius,(job.tolerance/80.0).max(1e-5))
-}
-
-fn consider_trace_candidate(job: &mut TracePointerJob, layer: &DrawingLayerNode, path: TracePath, bounds: (f64, f64, f64, f64), control_hit: bool,paint_hit:Option<bool>) {
-    let base = trace_layer_base(layer);
-    if job.selected_paths.iter().any(|parent|crate::schema::geometry::translation::path_contains(&parent.indices[..usize::from(parent.len)],&path.indices[..usize::from(path.len)])) {
-        let next=[bounds.0,bounds.1,bounds.2,bounds.3];
-        if next.iter().all(|value|value.is_finite()) { job.selection_bounds=Some(job.selection_bounds.map_or(next,|old| {
-            let (x,y)=(old[0].min(next[0]),old[1].min(next[1]));
-            [x,y,(old[0]+old[2]).max(next[0]+next[2])-x,(old[1]+old[3]).max(next[1]+next[3])-y]
-        })); }
-    }
-    if !base.visible || base.locked {
-        return;
-    }
-    if let Some(polygon)=&job.lasso {
-        if crate::schema::geometry::selection::polygon_encloses_bounds(polygon.as_slice(),[bounds.0,bounds.1,bounds.2,bounds.3]) && job.hits.try_push(layer_id(layer).to_string()).is_err() { job.overflowed=true; }
-        return;
-    }
-    if let Some((start, end, crossing)) = job.marquee {
-        if matches!(layer, DrawingLayerNode::Group(_)) {
-            return;
-        }
-        let rect_x = start[0].min(end[0]);
-        let rect_y = start[1].min(end[1]);
-        let rect_w = (end[0] - start[0]).abs();
-        let rect_h = (end[1] - start[1]).abs();
-        let intersects = rect_x <= bounds.0 + bounds.2 && rect_x + rect_w >= bounds.0 && rect_y <= bounds.1 + bounds.3 && rect_y + rect_h >= bounds.1;
-        let contains = bounds.0 >= rect_x && bounds.1 >= rect_y && bounds.0 + bounds.2 <= rect_x + rect_w && bounds.1 + bounds.3 <= rect_y + rect_h;
-        if (if crossing { intersects } else { contains }) && job.hits.try_push(layer_id(layer).to_string()).is_err() {
-            job.overflowed = true;
-        }
-        return;
-    }
-    if !control_hit && (paint_hit==Some(false)||(paint_hit.is_none()&&!trace_point_in_bounds(job.world, bounds, job.tolerance))) {
-        return;
-    }
-    let candidate = TracePickCandidate {
-        path,
-        generality: if control_hit {
-            4
-        } else {
-            match layer {
-                DrawingLayerNode::Group(_) => 0,
-                DrawingLayerNode::Boolean(_) | DrawingLayerNode::Trace(_) => 1,
-                _ => 2,
-            }
-        },
-        layer_id: layer_id(layer).to_string(),
-        image_key: match layer {
-            DrawingLayerNode::Image(image) => Some(image.image_key.clone()),
-            _ => None,
-        },
-    };
-    if job.best.as_ref().is_none_or(|best| candidate.generality > best.generality) {
-        job.best = Some(candidate);
-    }
+impl AsRef<[u16]> for TracePath{fn as_ref(&self)->&[u16]{&self.indices[..usize::from(self.len)]}}
+impl TracePath{
+ fn from_source(source:&[u16])->Option<Self>{if source.is_empty()||source.len()>TRACE_POINTER_MAX_DEPTH{return None;}let mut path=Self{indices:[0;TRACE_POINTER_MAX_DEPTH],len:source.len()as u8};path.indices[..source.len()].copy_from_slice(source);Some(path)}
 }
 
 fn drawing_layer_at_path<'a>(roots: &'a [DrawingLayerNode], path: &TracePath) -> Option<&'a DrawingLayerNode> {
@@ -1151,39 +1039,6 @@ fn trace_path_matrix(roots: &[DrawingLayerNode], path: &TracePath) -> Option<[f6
     Some(matrix)
 }
 
-fn trace_segment_point(segment: &PathSegment) -> Option<[f64; 2]> {
-    match segment {
-        PathSegment::Move { to } | PathSegment::Line { to } | PathSegment::Quad { to, .. } | PathSegment::Cubic { to, .. } | PathSegment::Arc { to, .. } => Some(*to),
-        PathSegment::Close => None,
-    }
-}
-
-fn trace_segment_control_hit(segment: &PathSegment, matrix: [f64;6], world: [f64; 2], tolerance: f64) -> bool {
-    path_point_hit(segment,matrix,world,tolerance).is_some()
-}
-
-fn extend_trace_bounds(min: &mut [f64; 2], max: &mut [f64; 2], point: [f64; 2]) {
-    min[0] = min[0].min(point[0]);
-    min[1] = min[1].min(point[1]);
-    max[0] = max[0].max(point[0]);
-    max[1] = max[1].max(point[1]);
-}
-
-fn trace_world_bounds(matrix: [f64;6], min: [f64; 2], max: [f64; 2]) -> (f64, f64, f64, f64) {
-    let corners = [min, [max[0], min[1]], max, [min[0], max[1]]];
-    let mut world_min = [f64::INFINITY; 2];
-    let mut world_max = [f64::NEG_INFINITY; 2];
-    for corner in corners {
-        extend_trace_bounds(&mut world_min, &mut world_max, trace_transform_point(matrix, corner));
-    }
-    (world_min[0], world_min[1], world_max[0] - world_min[0], world_max[1] - world_min[1])
-}
-
-fn trace_transform_point(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
-    let [a, b, c, d, e, f] = matrix;
-    [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f]
-}
-
 fn trace_layer_base(layer: &DrawingLayerNode) -> &crate::DrawingLayerBase {
     match layer {
         DrawingLayerNode::Shape(value) => &value.base,
@@ -1196,44 +1051,6 @@ fn trace_layer_base(layer: &DrawingLayerNode) -> &crate::DrawingLayerBase {
     }
 }
 
-#[cfg(test)]
-fn trace_layer_world_bounds(layer: &DrawingLayerNode) -> (f64, f64, f64, f64) {
-    trace_layer_bounds_with_matrix(layer,crate::schema::drawing_transform_to_matrix(&trace_layer_base(layer).transform))
-}
-
-fn trace_layer_bounds_with_matrix(layer: &DrawingLayerNode, matrix: [f64;6]) -> (f64, f64, f64, f64) {
-    if matches!(layer,DrawingLayerNode::Shape(_)) {
-        if let Some(bounds)=crate::schema::path_segments_bounds_with_matrix(&crate::schema::layer_to_path_segments(layer),matrix) {return bounds;}
-    }
-    let local = match layer {
-        DrawingLayerNode::Text(value) => {let [w,h]=semio_framework_2d::text::drawing_text_fallback_extent(&value.content,value.size);(value.x,value.y,w.max(8.0),h.max(8.0))},
-        DrawingLayerNode::Image(value) => (0.0, 0.0, value.width, value.height),
-        DrawingLayerNode::Shape(value) => match value.shape_kind.as_str() {
-            "rect" => value.rect.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |rect| (rect.x, rect.y, rect.width, rect.height)),
-            "ellipse" => value.ellipse.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |ellipse| (ellipse.cx - ellipse.rx, ellipse.cy - ellipse.ry, ellipse.rx * 2.0, ellipse.ry * 2.0)),
-            "circle" => value.circle.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |circle| (circle.cx - circle.r, circle.cy - circle.r, circle.r * 2.0, circle.r * 2.0)),
-            "line" => value.line.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |line| (line.x1.min(line.x2), line.y1.min(line.y2), (line.x2 - line.x1).abs(), (line.y2 - line.y1).abs())),
-            _ => (-64.0, -64.0, 128.0, 128.0),
-        },
-        DrawingLayerNode::Path(_) => (-64.0, -64.0, 128.0, 128.0),
-        DrawingLayerNode::Group(_) | DrawingLayerNode::Boolean(_) | DrawingLayerNode::Trace(_) => (-64.0, -64.0, 128.0, 128.0),
-    };
-    trace_world_bounds(matrix, [local.0, local.1], [local.0 + local.2, local.1 + local.3])
-}
-
-
-/// 🎯️ Uses the same bounded geometry traversal for handle presentation and gesture hit testing.
-pub(crate) fn selected_transform_bounds(document: &DrawingSnapshot,ids: &[String]) -> Option<[f64;4]> {
-    if ids.is_empty() {return None;}
-    let mut query=TracePointerJob::new_query(document,[f64::NAN;2],0.0,false);
-    query.retain_selection_bounds(ids).ok()?;
-    while !query.advance(document) {}
-    if query.overflowed {None} else {query.selection_bounds}
-}
-
-fn trace_point_in_bounds(point: [f64; 2], bounds: (f64, f64, f64, f64), tolerance: f64) -> bool {
-    point[0] >= bounds.0 - tolerance && point[0] <= bounds.0 + bounds.2 + tolerance && point[1] >= bounds.1 - tolerance && point[1] <= bounds.1 + bounds.3 + tolerance
-}
 //#endregion 🧵️TracePointerJob
 
 //#region 🔖️DrawingSession
@@ -1260,6 +1077,7 @@ pub struct DrawingSession {
     /// 🧱️ The committed document and admission of the current dispatch, shared without a copy when the retained owner has it.
     pub(crate) base: Option<DrawingToolBase>,
     pub(crate) trace_pointer: Option<TracePointerJob>,
+    pub(crate) source_identity:Option<crate::schema::scene_identity::SceneIdentity>,
     pub(crate) point_query: Option<DrawingPointQuery>,
     move_sample_cursor: usize,
     pub(crate) node_marquee: Option<NodeMarquee>,
@@ -1456,6 +1274,7 @@ impl DrawingSession {
             window_transient: DrawingCanvasWindowTransient::default(),
             base: None,
             trace_pointer: None,
+            source_identity:None,
             point_query: None,
             move_sample_cursor: 0,
             node_marquee: None,
@@ -1734,7 +1553,14 @@ fn queue_trace_pointer(payload: &CanvasPointerDown, job: &TracePointerJob) -> Ef
 /// 🖼️ One bounded step of the trace pointer job: requeued while the document walk continues, then the canvas tool commits
 /// the trace layer of the image under the pointer as one transaction.
 fn advance_trace_pointer(session: &mut DrawingSession, mut job: TracePointerJob, payload: &CanvasPointerDown, base: DrawingToolBase) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-    if !job.advance(&base.document) {
+    let captured=session.source_identity.ok_or_else(||Fault::from("Drawing pointer has no source authority"))?;
+    crate::editor::drawing::geometry_session::prepare_query(captured,&base.document);
+    let complete=crate::editor::drawing::geometry_session::with_query(captured,|status,borrowed|match status{
+        crate::schema::scene_identity::admission::SceneAdmissionStatus::Pending=>Ok(false),
+        crate::schema::scene_identity::admission::SceneAdmissionStatus::Ready=>{let complete=job.advance(&base.document,&borrowed.unwrap());if job.overflowed{Err(Fault::from(job.failure.clone().unwrap_or_else(||"Drawing pointer exceeds capacity".into())))}else{Ok(complete)}},
+        _=>Err(Fault::from("Drawing pointer geometry is unavailable or changed")),
+    })?;
+    if !complete {
         let effect = queue_trace_pointer(payload, &job);
         retain_trace_progress(session, &job);
         let _ = session.retain_trace_pointer(job);

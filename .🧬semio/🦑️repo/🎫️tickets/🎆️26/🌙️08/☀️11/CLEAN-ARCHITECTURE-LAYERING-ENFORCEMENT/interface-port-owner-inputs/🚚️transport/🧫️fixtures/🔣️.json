@@ -1,0 +1,18 @@
+{
+  "contract":"product-graph-scene-transport/v1",
+  "cases":[
+    {"slot":"previewOffJson","value":["nø∅","𝄞"],"expected":"[\"nø∅\",\"𝄞\"]"},
+    {"slot":"lodJson","value":{"node":"near"},"expected":"{\"node\":\"near\"}"},
+    {"slot":"controlsJson","value":{"enabled":true},"expected":"{\"enabled\":true}"},
+    {"slot":"clustersJson","value":[],"expected":"[]"},
+    {"slot":"statusJson","value":null,"expected":"null"},
+    {"slot":"computingJson","value":false,"expected":"false"},
+    {"slot":"capabilitiesJson","value":{"read":true,"write":false},"expected":"{\"read\":true,\"write\":false}"},
+    {"slot":"hostSnapshotJson","value":{"nodes":[],"edges":[]},"expected":"{\"edges\":[],\"nodes\":[]}"},
+    {"slot":"statusJson","value":{"integer":"uint","decimal":"18446744073709551615"},"expected":"18446744073709551615"},
+    {"slot":"computingJson","value":{"integer":"int","decimal":"-9223372036854775808"},"expected":"-9223372036854775808"}
+  ],
+  "excluded":["editable","selection","hover","operators","findItems","highlighted","lanes","presencePeersJson","evalJson","interactionDomain"],
+  "edge":{"id":"e","sourceNodeId":"a","sourcePortId":"out","targetNodeId":"b","targetPortId":"in","label":"Product label"},
+  "expectedEdge":{"id":"e","sourceNodeId":"a","sourcePortId":"out","targetNodeId":"b","targetPortId":"in"}
+}

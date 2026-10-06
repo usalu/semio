@@ -4,7 +4,7 @@
 pub mod set_adjacency_field {
     use crate::editor::architect::catalog::patch_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::{EntityId, ProgramSnapshot};
     use semio_framework_value::DslValue as Value;
     use semio_framework_value::FromValue;
@@ -36,7 +36,7 @@ use semio_framework_value::ToValue;
 pub mod set_adjacency_kind {
     use crate::editor::architect::catalog::{adjacency_kind_from_id, find_adjacency, new_adjacency, next_adjacency_kind};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::schema::mutations as leaves;
     use crate::{EntityId, ProgramSnapshot};
     use semio_framework_value::FromValue;
@@ -94,7 +94,7 @@ use semio_framework_value::ToValue;
 
 pub mod set_adjacency_filter {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;

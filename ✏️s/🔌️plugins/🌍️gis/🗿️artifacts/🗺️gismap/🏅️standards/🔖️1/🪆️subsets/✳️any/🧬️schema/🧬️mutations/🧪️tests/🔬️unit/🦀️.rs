@@ -1,5 +1,7 @@
 use super::*;
-use crate::schema::{empty_gis_map_snapshot, gis_map_descriptor_json, gis_map_document_from_descriptor_json};
+use crate::schema::{gis_map_descriptor_json};
+use crate::standards::v1::subsets::any::io::text::snapshot::{gis_map_document_from_descriptor_json};
+use crate::standards::v1::subsets::any::io::text::snapshot::{empty_gis_map_snapshot};
 use crate::GIS_MAP_SCHEMA;
 use serde_json::json;
 use store::{create_document_envelope, ArtifactCommand};
@@ -97,8 +99,8 @@ async fn descriptor_round_trips_through_document() {
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_vcs_replays_operations() {
     let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_snapshot(), None)).await.expect("map store");
-    store.install_document_store_owners_exact(crate::spr::gis_map_document_store_owners());
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], description: None, transaction: None }).await.expect("apply");
+    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::gis_map_document_store_owners());
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: feature("p1") })], transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     use semio_framework_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<GisMapSnapshot, GisMapMutation>::new();

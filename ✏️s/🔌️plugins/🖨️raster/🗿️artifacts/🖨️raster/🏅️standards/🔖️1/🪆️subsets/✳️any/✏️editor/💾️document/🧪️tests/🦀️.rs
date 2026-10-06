@@ -1,12 +1,12 @@
 //! 💾️ Editable archives preserve the layer tree, embedded image owners and semantic undo history.
 use crate::editor::raster::{unit_tests::context,RasterCommand,commands::patch_layer};
-use crate::standards::v1::subsets::any::schema::{semio_fixture_snapshot,find_layer,layer_name,snapshot::retire_raster_snapshot};
+use crate::standards::v1::subsets::any::schema::{raster_image_test_snapshot,find_layer,layer_name,snapshot::retire_raster_snapshot};
 use semio_framework_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
 async fn editable_archive_restores_nested_masks_assets_adjustments_and_history() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let mut document=semio_fixture_snapshot();document.title=Some(fixture["title"].as_str().unwrap().into());
+    let mut document=raster_image_test_snapshot();document.title=Some(fixture["title"].as_str().unwrap().into());
     let layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();crate::retire_raster_layers(std::mem::replace(&mut document.layers,layers));
     let mut envelope=store::create_document_envelope::<crate::RasterSnapshot,crate::RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"raster",document,None);envelope.dialect=Some(crate::RASTER_DIALECT.into());
     let files=store::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);

@@ -1,0 +1,20 @@
+//! 🌀️ Owned Generation2d retained field contract and exact declared SQLite capability.
+use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
+use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
+#[path="../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🦀️.rs"]mod typed;
+impl ArtifactSqliteSnapshot for Generation2dSnapshot{
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{c.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;if Self::SQLITE_SCHEMA.len()>c.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Generation authored schema exceeds caller limit"))}crate::standards::v1::subsets::any::io::text::snapshot::decode_sqlite_native(payload,c)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;if Self::SQLITE_SCHEMA.len()>c.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Generation authored schema exceeds caller limit"))}crate::standards::v1::subsets::any::io::text::snapshot::encode_sqlite_native(self,encoding,c)}
+ fn retire_sqlite_snapshot(self){self.retire_cold();}
+ const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{typed::project(&self.host_snapshot,&self.generation,Self::SQLITE_SCHEMA,c)}
+ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let(host_snapshot,generation)=typed::reconstruct(d,Self::SQLITE_SCHEMA,c)?;Ok(Self{host_snapshot,generation})}
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{typed::preflight(&self.host_snapshot,&self.generation,c)}
+ fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(|error|store::io_schema::IoError::from_value_error(error))?;if dialect.artifact_kind!="s.procedural.generation2d"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"Generation2d dialect differs from its owned wildcard")))}if d.table("generation_host").map_err(|error|store::io_schema::IoError::from_value_error(error))?.single_row().map_err(|error|store::io_schema::IoError::from_value_error(error))?.text(1).map_err(|error|store::io_schema::IoError::from_value_error(error))?!=self.host_snapshot.schema{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"Generation2d projected host schema differs")))}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(|error|store::io_schema::IoError::from_value_error(error))?;Ok(store::io_schema::IoOutcome::clean(()))}
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
+

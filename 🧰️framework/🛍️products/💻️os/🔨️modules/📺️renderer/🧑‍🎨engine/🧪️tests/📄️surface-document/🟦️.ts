@@ -3,7 +3,6 @@ import { expect,it } from "vitest";
 import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧫️fixtures/🔣️.json";
-import schema from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧬️schema/🔣️.json";
 import { runSessionAppSwitchV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
 import { prepareDocumentSurfaceV1 } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🟦️.ts";
 it("validates the neutral handoff traces",() => expect(new Ajv().compile(schema)(fixture)).toBe(true));

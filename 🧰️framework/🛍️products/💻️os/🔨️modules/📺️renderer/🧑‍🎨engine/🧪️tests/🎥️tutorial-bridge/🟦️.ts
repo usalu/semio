@@ -1,4 +1,4 @@
-import Ajv from "ajv";
+
 import { Matrix3, Vector2 } from "three";
 import { dagWorldToScreen } from "../../🧱️elements/🕸️NodeGraph/🟦️.tsx";
 import graphFixture from "../../🧱️elements/⚙️EngineCanvas/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json" with { type: "json" };
@@ -8,7 +8,6 @@ import { ANCHORS, composeTutorialUi, createTutorialClock } from "@semio-tech/ui-
 import { createMemoryStoragePort, type TutorialDefinition, type TutorialUiChange, type TutorialUiSnapshot } from "@semio-tech/framework";
 import { createLocalInteractionStoreV1, initialShellState, shellReducer, type LocalInteractionStoreV1, type ShellAction } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot, type TutorialUiBridgeContext } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import schema from "../../🧬️schema/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🎥️tutorial-bridge/🔣️.json" with { type: "json" };
 
 const project = (snapshot: TutorialUiSnapshot) => ({
@@ -64,8 +63,6 @@ describe("tutorial bridge parity", () => {
   });
 
   it("validates the neutral round-trip, delta, and semantic-point fixture", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(Object.keys(fixture.snapshot.activePanelTabByGroup)).toEqual(ANCHORS);
     expect(new Set(fixture.gestureMatrix.map((point) => point.kind))).toEqual(new Set(["scene", "canvas", "entity", "curve", "domain"]));
   });

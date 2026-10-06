@@ -26,9 +26,7 @@ impl<PA> ArtifactApps for PA where
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-#[path = "🧬️schema/🧱️shared/🦀️.rs"]
-mod shared;
-pub use shared::*;
+pub use semio_s_plugin_block::{BlockKindIdentity, BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation, BlockCamera2d, BlockCamera3d, BlockMeta};
 
 pub const BLOCK_2D_SCHEMA: &str = "block.2d";
 
@@ -122,34 +120,6 @@ pub fn artifact_kind() -> ArtifactKindSpec {
     }
 }
 
-/// 🗂️ The ONE `kit.catalog` declaration of the `🧱️block` plugin. Every block app produces this kind
-/// on its `"catalog:out"` port, and all three used to spell the spec out by hand — which drifted on
-/// `dimension` (`"2d"`/`"3d"`/`"5d"`), so the plugin refused to assemble at all:
-/// `plugin-assembly.media-kind: artifact kind "kit.catalog" has conflicting descriptors`
-/// (`🏗️builder/🦀️.rs:648` requires every contribution of one id to be equal). The kind describes the
-/// CATALOG, not the app that emitted it — a kit catalog carries meshes whatever the producing
-/// board's dimension — so it has one spelling, kept here in the crate `🧊️3d` and `🖐️5d` already
-/// depend on. `🧩️puzzle` and `🪵️sourcing` are consumers and reference it by `kind_id` only; see
-/// `🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs`'s own note resolving ownership of this kind to `🧱️block`.
-pub const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
-
-/// 🗂️ See [`KIT_CATALOG_ARTIFACT_ID`].
-pub fn kit_catalog_artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: KIT_CATALOG_ARTIFACT_ID.into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("Kit Catalog", "Bausatzkatalog"),
-        source_format: KIT_CATALOG_ARTIFACT_ID.into(),
-        component_kind: "kit-catalog".into(),
-        dimension: "3d".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-        schema: KIT_CATALOG_ARTIFACT_ID.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    }
-}
 //#endregion 🔖️ArtifactKind
 
 //#region 🧪️Tests
@@ -230,20 +200,20 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "block.block2d",
                     extension: Some("block2d"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("block.block2d"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "block.block2d.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("block.block2d.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -262,8 +232,8 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("2d.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -272,8 +242,8 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("2d.spr"),
                 },
             ]
@@ -310,20 +280,12 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                                pub mod text;
                                 #[path = "."]
                                 pub mod bounds {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
@@ -336,21 +298,12 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                                pub mod text;
-                                pub use text::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                                pub mod binary;
                             }
                             #[path = "."]
                             pub mod mutations {
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                                pub mod text;
                                 #[path = "."]
                                 pub mod rename_node_kind {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-node-kind/🔺️diff/🦀️.rs"]
@@ -926,3 +879,5 @@ pub mod config {
         }
     }
 }
+
+pub use crate::standards::v1::subsets::any::io::{Block2dBuilderConstruction, Block2dParts, Block2dAnalyzerAnalysis, Block2dBuilderFacets, Block2dBuilder, Block2dAnalyzer, Block2dComposer};

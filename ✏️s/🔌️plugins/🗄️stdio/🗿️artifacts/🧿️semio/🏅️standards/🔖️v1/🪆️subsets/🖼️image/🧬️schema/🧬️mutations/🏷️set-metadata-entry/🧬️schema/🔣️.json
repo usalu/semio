@@ -15,10 +15,37 @@
       "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Key",
+          "de": "Schlüssel"
+        },
+        "description": {
+          "en": "Name of the metadata entry that is set; a new name adds the entry.",
+          "de": "Name des Metadateneintrags, der gesetzt wird; ein neuer Name fügt den Eintrag hinzu."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "value": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "Text the metadata entry holds.",
+          "de": "Text, den der Metadateneintrag enthält."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

@@ -4,7 +4,7 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { resolve } from "node:path";
-import { runBmpPaintRegionFixtureChecks } from "../../🏅️standards/🔖️v3/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-region/🟦️.ts";
+import { runBmpPaintRegionChecks } from "../../🏅️standards/🔖️v3/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎮️commands/🎨️paint-region/🧪️tests/🟦️.ts";
 import { runBmpSourceHexFixtureChecks } from "../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🔤️source-hex/🟦️.ts";
 
 /** 🔮️ Runs the independent image-rs BMP decoder laws in its test-only crate. */
@@ -15,4 +15,4 @@ class OracleScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-bmp", { testFeatures: ["component-app-assembly"], commands: { "test-oracle": OracleScript }, twins: [{ name: "snapshot-source-hex", run: runBmpSourceHexFixtureChecks }, { name: "paint-region", run: runBmpPaintRegionFixtureChecks }], snapshotSqliteTests: ["../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-bmp", { testFeatures: ["component-app-assembly"], commands: { "test-oracle": OracleScript }, twins: [{ name: "snapshot-source-hex", run: runBmpSourceHexFixtureChecks }, { name: "paint-region", run: runBmpPaintRegionChecks }], snapshotSqliteTests: ["../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

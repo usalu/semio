@@ -232,6 +232,12 @@
       ]
     },
     {
+      "id": "s.stdio.svg.schema.schema-export-s-stdio-svg-xml-document.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema-export:s.stdio.svg#xml-document",
+      "claims": [{ "namespace": "schema-export", "value": "s.stdio.svg#xml-document" }]
+    },
+    {
       "id": "s.stdio.svg.schema.schema-s-stdio-svg.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.svg",

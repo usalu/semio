@@ -1,0 +1,180 @@
+{
+  "schema": "./space.sqlite-fixture/v1",
+  "dialect": "./os.space@1/*",
+  "cancelAt": 256,
+  "identityOffset": 1000,
+  "invalidDialects": [
+    "./other@1/*",
+    "./os.space@2/*",
+    "./os.space@1/named"
+  ],
+  "invalidUtf16CodeUnits": [
+    [
+      55296
+    ],
+    [
+      57343
+    ]
+  ],
+  "nativeSnapshot": {
+    "schema": "literal schema 世界\u0000",
+    "name": "Shared 日本\u0000",
+    "kind": "Studio",
+    "visibility": "Private",
+    "users": [
+      {
+        "id": "duplicate",
+        "name": "First",
+        "avatar": null,
+        "role": "Author"
+      },
+      {
+        "id": "duplicate",
+        "name": "Second",
+        "avatar": "",
+        "role": "Spectator"
+      }
+    ],
+    "collections": [
+      {
+        "id": "independent collection",
+        "name": "",
+        "document_id": "unresolved document\u0000"
+      },
+      {
+        "id": "independent collection",
+        "name": "二",
+        "document_id": ""
+      }
+    ],
+    "programs": [
+      "duplicate",
+      "duplicate",
+      ""
+    ],
+    "extensions": [
+      {
+        "extensionId": "duplicate",
+        "version": "",
+        "sourceUri": "pkg:\u0000日本",
+        "packageHash": "not a hash",
+        "enabled": false
+      },
+      {
+        "extensionId": "duplicate",
+        "version": "2",
+        "sourceUri": "",
+        "packageHash": "",
+        "enabled": true
+      }
+    ]
+  },
+  "rows": {
+    "space_document": [
+      [
+        1,
+        "literal schema 世界\u0000",
+        "Shared 日本\u0000",
+        "studio",
+        "private"
+      ]
+    ],
+    "space_user": [
+      [
+        1,
+        1,
+        0,
+        "duplicate",
+        "First",
+        null,
+        "author"
+      ],
+      [
+        2,
+        1,
+        1,
+        "duplicate",
+        "Second",
+        "",
+        "spectator"
+      ]
+    ],
+    "space_collection": [
+      [
+        1,
+        1,
+        0,
+        "independent collection",
+        "",
+        "unresolved document\u0000"
+      ],
+      [
+        2,
+        1,
+        1,
+        "independent collection",
+        "二",
+        ""
+      ]
+    ],
+    "space_program": [
+      [
+        1,
+        1,
+        0,
+        "duplicate"
+      ],
+      [
+        2,
+        1,
+        1,
+        "duplicate"
+      ],
+      [
+        3,
+        1,
+        2,
+        ""
+      ]
+    ],
+    "space_extension": [
+      [
+        1,
+        1,
+        0,
+        "duplicate",
+        "",
+        "pkg:\u0000日本",
+        "not a hash",
+        0
+      ],
+      [
+        2,
+        1,
+        1,
+        "duplicate",
+        "2",
+        "",
+        "",
+        1
+      ]
+    ]
+  },
+  "edit": {
+    "table": "space_user",
+    "column": "name",
+    "value": "edited SQLite 日本"
+  },
+  "rowsTotal": 10,
+  "reconstructionBudget": {
+    "textUnit": "日本𐀀",
+    "repeat": 32768,
+    "retainedCopies": 2,
+    "ceilingNumerator": 3,
+    "ceilingDenominator": 2
+  },
+  "nativeRetention": {
+    "ceilingNumerator": 3,
+    "ceilingDenominator": 2
+  }
+}

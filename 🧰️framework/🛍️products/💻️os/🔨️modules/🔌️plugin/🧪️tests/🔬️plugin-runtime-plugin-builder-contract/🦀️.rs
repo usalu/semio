@@ -15,6 +15,12 @@ mod plugin_builder_contract_tests {
     /// 🌐️ One locale cell of a history row's label carrier. Every assertion below names the locale
     /// it reads, so a row that carries only English cannot pass by accident; the carrier's own
     /// locale axis is asserted by `a_shell_noted_row_carries_the_same_text_in_every_locale`.
+    fn test_child_emit(slot:impl Into<String>,child_id:impl Into<String>,operations:&[TestMutation])->ChildEmit{
+        let mut emit=ChildEmit::open(slot,child_id,operations.len());
+        for operation in operations{emit.push::<TestSnapshot,_>(operation).expect("actual fixture mutation must encode completely");}
+        emit
+    }
+
     fn label_in(label: &LocalizedLabel, locale: Locale) -> &str {
         label.resolve(Terminology::Native, locale)
     }
@@ -189,7 +195,7 @@ mod plugin_builder_contract_tests {
     }
 
     impl store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation> for TestCountOneItemPreparationFactory {
-        fn preflight(&self, mutation: &TestMutation, _description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        fn preflight(&self, mutation: &TestMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
             if !matches!(mutation, TestMutation::SetCount(SetCount { .. })) || lane != store::HistoryLane::Document {
                 return Err("test count accepts exactly one scalar mutation".into());
             }
@@ -874,7 +880,7 @@ mod plugin_builder_contract_tests {
             }
             TestCommand::CompositeEdit { slot, child_id, child_value } => Ok(Emit {
                 artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: "composite".into() })],
-                child_emits: vec![ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), &[TestMutation::SetCount(SetCount { value: *child_value })])],
+                child_preparations:std::collections::VecDeque::from([crate::app::ChildEmitPreparation::of::<TestSnapshot,_>(slot.clone(),child_id.clone(),vec![TestMutation::SetCount(SetCount{value:*child_value})])]),
                 ..Default::default()
             }),
             TestCommand::ProbeChild { slot, child_id } => {
@@ -1314,7 +1320,7 @@ mod plugin_builder_contract_tests {
             }
             let emit = match self.command.as_deref().unwrap() {
                 TestCommand::CompositeEdit { slot, child_id, child_value } => {
-                    let child_emits = (!slot.is_empty()).then(|| ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), &[TestMutation::SetCount(SetCount { value: *child_value })])).into_iter().collect();
+                    let child_emits = (!slot.is_empty()).then(|| test_child_emit(slot.clone(), child_id.clone(), &[TestMutation::SetCount(SetCount { value: *child_value })])).into_iter().collect();
                     Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })], child_emits, ..Default::default() }
                 }
                 TestCommand::PickItem { id } => keyed_pick_emit(id),
@@ -1916,6 +1922,11 @@ mod plugin_builder_contract_tests {
         let id = 41;
         let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
         app.bind_instance_id(id).await;
+        let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
+        app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply {
+            mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })],
+            transaction: None,
+        }).await.expect("the actual parent declares the exact member before registration");
         let child = new_test_child("child-1").await.expect("construct child");
         app.register_child("slot", "child-1", test_child_dialect().await, child).await.expect("register child");
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("admit retained child gesture");
@@ -2016,9 +2027,11 @@ mod plugin_builder_contract_tests {
             assert_eq!(child.snapshot().expect("child snapshot").count, 9);
 
             let admitted = active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("undo retained group");
-            crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("undo reserved-job commit");
+            let undone = crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("undo reserved-job commit");
             artifact_app_laws::settle_registered_typed_operation(&mut active.app, id).await.expect("undo publication");
-            assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0);
+            let skipped: Vec<String> = undone.diagnostics.iter().map(|diagnostic| diagnostic.message.clone()).collect();
+            assert!(skipped.is_empty(), "the group undo skips no member of its own gesture: {skipped:?}");
+            assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0, "the parent's edit of the gesture is undone with its group (parent tail group {:?})", store::SpaceMember::tail_group_id(&active.app.store).await);
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child").member;
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
@@ -3335,7 +3348,7 @@ mod plugin_builder_contract_tests {
                 .iter()
                 .enumerate()
                 .map(|(index, child)| {
-                    let emitted = ChildEmit::of::<TestSnapshot, _>(child["slot"].as_str().unwrap(), child["childId"].as_str().unwrap(), &[TestMutation::SetCount(SetCount { value: index as i32 + 1 })]);
+                    let emitted = test_child_emit(child["slot"].as_str().unwrap(), child["childId"].as_str().unwrap(), &[TestMutation::SetCount(SetCount { value: index as i32 + 1 })]);
                     assert!(emitted.ops.iter().all(|op| !op.is_empty()), "real composite mutation owns nonempty encoded bytes");
                     emitted
                 })
@@ -3367,7 +3380,7 @@ mod plugin_builder_contract_tests {
             for _ in 0..10_000 {
                 let step = job.close_step(fixture["maximumItems"].as_u64().unwrap() as usize, fixture["maximumBytes"].as_u64().unwrap() as usize);
                 if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } = step {
-                    assert!(released_items <= 1 && released_bytes <= 4);
+                    assert!(released_items<=1&&released_bytes<=fixture["maximumBytes"].as_u64().unwrap() as usize);
                 }
                 if let Some((children, parents, _)) = job.test_pending_emit_shape() {
                     assert_eq!(parents, 1, "parent lane remains owned until every child is terminal");
@@ -4403,6 +4416,22 @@ mod plugin_builder_contract_tests {
         }
     }
 
+    /// 📇️ The APP's half of a composition: declares `child_id` in the parent's one owned-child slot beside every member
+    /// it already declares. The runtime admits a member only under the identity its parent's snapshot declares
+    /// (`declared_child_reference`), so a law that registers a live member declares it first — exactly as a product
+    /// parent's own leaf does before its member is opened.
+    async fn declare_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
+        let mut children: Vec<String> = app.test_snapshot().await.slot.iter().map(|child| child.target.to_uri()).collect();
+        children.push(ArtifactRef { artifact_id: child_id.into(), dialect: test_child_dialect().await }.to_uri());
+        app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children })], transaction: None }).await.expect("the parent declares the member it is about to own");
+    }
+
+    /// 🤝️ [`declare_test_child`], then the RUNTIME's half: a fresh [`new_test_child`] registered as that declared member.
+    async fn register_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
+        declare_test_child(app, child_id).await;
+        app.register_child("slot", child_id, test_child_dialect().await, new_test_child(child_id).await.expect("construct child")).await.expect("register the declared child");
+    }
+
     /// 🧪️ A live child `ArtifactStore<TestSnapshot, TestMutation>`, wrapped as `TestMembers` —
     /// the shape `VcsArtifactApp::register_child`/`open_child` expect. Built directly (no
     /// runtime `ChildStoreFactory`/`MemberFactory` registration needed — `TestMembers::open`
@@ -4641,6 +4670,7 @@ mod plugin_builder_contract_tests {
         app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
         let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack()).await.unwrap();
         let before = member.envelope_pack_bytes().await.unwrap();
+        declare_test_child(&mut app, "child-1").await;
         let error = app.register_child("slot", "child-1", dialect, member).await.expect_err("direct transfer must not apply a deferred restore pin");
         let mut returned = error.member.expect("exact caller member returned");
         assert_eq!(returned.envelope_pack_bytes().await.unwrap(), before);
@@ -4692,7 +4722,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
         let mut app = contract_composed_app().await;
-        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child seeds ownership");
+        register_test_child(&mut app, "child-1").await;
 
         let result = app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
 
@@ -4732,8 +4762,8 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn an_agent_transaction_carries_owned_child_op_groups_and_commits_undoes_and_redoes_them_as_one_group() {
         let mut app = contract_composed_app().await;
-        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
-        let children = vec![ChildEmit::of::<TestSnapshot, _>("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 5 })])];
+        register_test_child(&mut app, "child-1").await;
+        let children = vec![test_child_emit("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 5 })])];
         let wire = ChildEmit::encode_groups(&children);
         assert!(!wire.is_empty(), "a gesture that touches a child carries its group");
         assert_eq!(ChildEmit::decode_groups(&wire).expect("the wire pack decodes"), children, "the group survives the wire byte for byte");
@@ -4763,7 +4793,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.test_snapshot().await.label, "agent", "redo reapplies the parent");
         assert!(app.transaction_undo("txn-someone-else").await.is_err(), "a group no member carries is refused by name");
 
-        let only_child = ChildEmit::encode_groups(&[ChildEmit::of::<TestSnapshot, _>("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 8 })])]);
+        let only_child = ChildEmit::encode_groups(&[test_child_emit("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 8 })])]);
         let outcome = app.transaction_prepare("txn-agent-2", "", &[], &[], &only_child, Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "a children-only transaction is a pre-planned transaction");
         app.transaction_commit("txn-agent-2", &meta()).await.expect("commit the children-only transaction");
@@ -4771,63 +4801,73 @@ mod plugin_builder_contract_tests {
         app.transaction_undo("txn-agent-2").await.expect("undo the children-only group");
         assert_eq!(child_count!(app), 5);
 
-        let stray = ChildEmit::encode_groups(&[ChildEmit::of::<TestSnapshot, _>("slot", "ghost", &[TestMutation::SetCount(SetCount { value: 1 })])]);
+        let stray = ChildEmit::encode_groups(&[test_child_emit("slot", "ghost", &[TestMutation::SetCount(SetCount { value: 1 })])]);
         let refused = app.transaction_prepare("txn-agent-3", "", &[], &[], &stray, Some(protocol::MutationOrigin::Owner)).await;
         assert_eq!(refused.rejection.expect("a child this instance does not hold is refused").code.0, "transaction.member-rejected");
     }
 
+    /// 📥️ Drives one stepped document archive load on `app` to its terminal status and acknowledges it.
+    async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>, operation: u64, archive: protocol::DocumentArchivePack) -> protocol::DocumentArchiveLoadStatus {
+        PluginApp::begin_document_archive_load(app, operation, archive).expect("the runtime admits the archive");
+        let status = loop {
+            let status = PluginApp::poll_document_archive_load(app, operation).await.expect("poll");
+            if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
+                break status;
+            }
+        };
+        PluginApp::acknowledge_document_archive_load(app, operation).expect("acknowledge");
+        status
+    }
+
     /// 🧒️ Registering a member is the RUNTIME's job; declaring it on the parent snapshot is the
-    /// APP's. `ChildRestoreProjection` is built from the loaded parent's own declared child
-    /// fields and from nothing else — no live registry state can stand in for them — so a member
-    /// the reloaded parent does not declare is refused by `validate_parent_child_restore`,
-    /// exactly as a real composed document's would be.
+    /// APP's: the runtime admits a member only under the identity its parent's snapshot declares.
     ///
-    /// 📤️ Persist exactly what the host would: the parent's document pack plus one
-    /// `ChildPackEntry` per live child.
+    /// 📤️ Persist exactly what the host does: the document archive (`ReadDocumentArchive`) — the
+    /// parent pack and `.spr` plus one owner-stamped entry per live member (design §21.6: the
+    /// recursive archive is the single carrier).
     ///
-    /// 📥️ Reload into a FRESH app, the way the host's document load + `LoadChildren` would. Explicit
-    /// `TestMembers`: nothing else in this branch constructs one directly to pin `M` for
-    /// inference — `open_child`'s `M::open` dispatch is compile-time generic, not a value.
+    /// 📥️ Reload into a FRESH app through the stepped archive load (`LoadDocumentArchive`). The
+    /// child comes back as its OWN live store, at the value its own history ended on, owned by the
+    /// reloaded document.
     ///
-    /// The child came back as its OWN live store, at the value its own history ended on —
-    /// and reload went through the real factory, not a cache.
+    /// 🚫️ The members travel WITH the parent: the same archive without them is refused by the
+    /// ownership closure (`closure-rejected`), so a composed parent never loads half — there is no
+    /// "parent first, children later" route.
     #[semio_framework_async_macros::async_test]
     async fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
         let mut app = contract_composed_app_raw().await;
-        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
+        register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the migrated composite gesture settles before it is persisted");
-
-        let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
-        app.test_store_mut()
-            .await
-            .dispatch(store::ArtifactCommand::Apply {
-                mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })],
-                description: Some("declare the composed member".into()),
-                transaction: None,
-            })
-            .await
-            .expect("the parent declares the member it owns");
         assert_eq!(app.test_snapshot().await.slot.len(), 1, "the live parent declares exactly its one member");
 
-        let parent_pack = PluginApp::document_pack(&app).await.expect("parent document pack");
-        let entries = PluginApp::child_packs(&app).await.expect("child packs");
-        assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].slot, "slot");
-        assert_eq!(entries[0].child_id, "child-1");
-        assert_eq!(entries[0].dialect, test_child_dialect().await.to_coordinate());
+        let archive = PluginApp::document_archive(&app).await.expect("the composed document archives its closure");
+        let document = app.store.envelope().id.clone();
+        assert_eq!(
+            archive.members.iter().map(|entry| (entry.owner.parent.artifact_id.as_str(), entry.owner.slot.as_str(), entry.owner.child_id.as_str(), entry.reference.artifact_id.as_str())).collect::<Vec<_>>(),
+            vec![(document.as_str(), "slot", "child-1", "child-1")],
+            "the archive carries the one member, owner-stamped to the document"
+        );
 
         let mut reloaded = contract_composed_app_raw().await;
-        artifact_app_laws::load_document(&mut reloaded, &parent_pack).await.expect("load parent document pack");
+        let status = drive_test_archive_load(&mut reloaded, 21, archive.clone()).await;
+        assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{:?}", semio_framework_diagnostic::decode_fault_bytes(&status.fault));
         assert_eq!(reloaded.test_snapshot().await.slot.len(), 1, "the reloaded parent carries its own declaration through the pack");
-        for entry in &entries {
-            let dialect = ArtifactDialect::parse_coordinate(&entry.dialect).expect("dialect round trips");
-            PluginApp::load_child_pack(&mut reloaded, &entry.slot, &entry.child_id, dialect, &entry.envelope_pack).await.expect("load child pack");
-        }
-
         let child = reloaded.child_store("slot", "child-1").await.expect("child restored");
         let restored: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&child.document_pack_bytes().await.expect("child pack")).expect("decode child");
         assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
+        assert_eq!(child.owner_ref().map(|owner| (owner.parent.artifact_id, owner.slot, owner.child_id)), Some((document.clone(), "slot".to_string(), "child-1".to_string())), "the reloaded child is owned by the reloaded document");
+
+        let mut halved = contract_composed_app_raw().await;
+        let mut parent_alone = archive;
+        parent_alone.members.clear();
+        let refused = drive_test_archive_load(&mut halved, 22, parent_alone).await;
+        let refusal = format!("{:?}", semio_framework_diagnostic::decode_fault_bytes(&refused.fault));
+        assert_eq!(refused.state, protocol::DocumentArchiveLoadState::Fault, "a parent that declares a member never loads without it: {refusal}");
+        assert!(refusal.contains("closure-rejected"), "the ownership closure names the refusal: {refusal}");
+        assert!(halved.test_snapshot().await.slot.is_empty() && halved.child_store("slot", "child-1").await.is_none(), "a refused load leaves the open document as it was");
+
+        drain_and_close_composed_fixture(&mut halved);
         drain_and_close_composed_fixture(&mut reloaded);
         drain_and_close_composed_fixture(&mut app);
     }
@@ -4838,7 +4878,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_composed_documents_child_heads_answer_each_owned_childs_current_head_snapshot() {
         let mut app = contract_composed_app_raw().await;
-        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
+        register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the composite gesture settles");
 
@@ -4847,33 +4887,6 @@ mod plugin_builder_contract_tests {
         let head: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&heads[0].head_pack).expect("the head pack is the child's snapshot pack");
         assert_eq!(head.count, 7, "the head pack carries the child's current value");
         assert_eq!(crate::inference_child_dependency(&heads[0].slot, &heads[0].child_id), "child:slot/child-1");
-        drain_and_close_composed_fixture(&mut app);
-    }
-
-    /// 🪆️ LAW (design §20.15, W-b): the framework's `artifact:out` export of a composed document is the composed carrier — a document
-    /// archive whose parent is the HEAD snapshot pack with an empty `.spr` and whose members are the owned children's envelopes — while a
-    /// document without children keeps the plain head pack.
-    #[semio_framework_async_macros::async_test]
-    async fn the_artifact_out_export_of_a_composed_document_is_the_composed_carrier() {
-        let mut app = contract_composed_app_raw().await;
-        let plain = match PluginApp::export_media(&mut app, "artifact:out").await.expect("plain export").payload {
-            crate::MediaPayload::Structured { json, .. } => store::pack_rt::pack_value_from_base64(&json).expect("base64 head pack"),
-            other => panic!("artifact:out answers a structured payload, got {other:?}"),
-        };
-        assert_eq!(<TestSnapshot as ArtifactPack>::decode_pack(&plain).expect("a document without children exports its head pack"), app.test_snapshot().await);
-
-        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
-        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the composite gesture settles");
-        let media = PluginApp::export_media(&mut app, "artifact:out").await.expect("composed export");
-        let crate::MediaPayload::Structured { schema, json } = media.payload else { panic!("artifact:out answers a structured payload") };
-        assert_eq!(schema, <TestApp as ArtifactApp>::DOCUMENT_SCHEMA);
-        let carrier = store::pack_rt::pack_value_from_base64(&json).expect("base64 carrier");
-        let archive = protocol::decode_document_archive_bytes(&carrier).await.expect("the carrier is a document archive");
-        assert!(archive.parent_spr.is_empty(), "the head carrier holds no parent history");
-        assert_eq!(<TestSnapshot as ArtifactPack>::decode_pack(&archive.parent_pack).expect("parent head pack"), app.test_snapshot().await);
-        assert_eq!(archive.members.iter().map(|entry| (entry.ordinal, entry.owner.slot.as_str(), entry.owner.child_id.as_str())).collect::<Vec<_>>(), vec![(0, "slot", "child-1")]);
-        assert!(!archive.members[0].envelope_pack.is_empty(), "each member carries its persisted envelope");
         drain_and_close_composed_fixture(&mut app);
     }
 
@@ -4887,7 +4900,7 @@ mod plugin_builder_contract_tests {
         source
             .test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 41 })], description: None, transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 41 })], transaction: None })
             .await
             .expect("the source edits its document");
         let artifact = PluginApp::produce_media(&mut source, "artifact:out").await.expect("the source hands out its whole document");
@@ -4930,16 +4943,9 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_composed_document_crosses_a_media_edge_with_its_children() {
         let mut source = contract_composed_app_raw().await;
-        source.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
+        register_test_child(&mut source, "child-1").await;
         source.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut source, meta().instance_id).await.expect("the composite gesture settles");
-        let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
-        source
-            .test_store_mut()
-            .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })], description: None, transaction: None })
-            .await
-            .expect("the parent declares the member it owns");
         let mut artifact = PluginApp::produce_media(&mut source, "artifact:out").await.expect("the composed source hands out its whole document");
         artifact.data = String::from_utf8(artifact.data).expect("a text-only host edge carries the carrier").into_bytes();
 
@@ -5008,7 +5014,7 @@ mod plugin_builder_contract_tests {
     async fn a_composed_checkpoint_commit_is_driven_one_ready_unit_per_turn_with_progress() {
         let mut app = contract_composed_app().await;
         for child in ["child-1", "child-2"] {
-            app.register_child("slot", child, test_child_dialect().await, new_test_child(child).await.expect("construct child")).await.expect("register child");
+            register_test_child(&mut app, child).await;
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta()).await.expect("composite edit");
         }
         let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("admit checkpoint");
@@ -5044,7 +5050,7 @@ mod plugin_builder_contract_tests {
     async fn a_composed_checkpoint_commit_cancels_between_units() {
         let mut app = contract_composed_app().await;
         for child in ["child-1", "child-2"] {
-            app.register_child("slot", child, test_child_dialect().await, new_test_child(child).await.expect("construct child")).await.expect("register child");
+            register_test_child(&mut app, child).await;
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta()).await.expect("composite edit");
         }
         let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("admit checkpoint");
@@ -5070,7 +5076,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them() {
         let mut app = contract_composed_app().await;
-        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
+        register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("first composite edit");
 
         app.dispatch_action("commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("checkpoint");
@@ -5099,12 +5105,12 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn child_content_publication_path_copies_fixed_pages_and_command_capture_retains_one_root() {
         let mut app = contract_composed_app().await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+        register_test_child(&mut app, "child-a").await;
         let admitted = ChildContentView::clone(&app.child_content_root);
         let admitted_root = admitted.root.as_ref().expect("published root").clone();
         assert!(std::sync::Arc::ptr_eq(&admitted_root, app.child_content_root.root.as_ref().expect("live root")), "command capture retains exactly one immutable root Arc");
 
-        app.register_child("slot", "child-b", test_child_dialect().await, new_test_child("child-b").await.expect("construct child-b")).await.expect("register child-b");
+        register_test_child(&mut app, "child-b").await;
         let current_root = app.child_content_root.root.as_ref().expect("advanced root");
         assert!(!std::sync::Arc::ptr_eq(&admitted_root, current_root), "a child lifecycle event publishes a new root");
         assert!(admitted.typed_read::<TestSnapshot>("slot", "child-a").is_ok(), "the admitted root remains exact after later publication");
@@ -5123,6 +5129,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn child_snapshot_retirement_rejection_preserves_exact_erased_owner() {
         let mut app = contract_composed_app_raw().await;
+        declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
@@ -5160,13 +5167,14 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_requires_terminal_empty_before_reclaim() {
         let mut app = contract_composed_app_raw().await;
+        declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", true);
         {
             let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("exact child owner").member;
             for value in 1..=2 {
                 child
-                    .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value })], description: Some("advance past the captured snapshot".into()), transaction: None })
+                    .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value })], transaction: None })
                     .await
                     .expect("member advances past the captured snapshot");
             }
@@ -5209,6 +5217,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_reclaims_completed_owner_for_later_publication() {
         let mut app = contract_composed_app_raw().await;
+        declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
         let generation = app.admit_child_content_publication().expect("admit replacement root");
@@ -5234,6 +5243,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn child_publications_at_the_maximum_rate_wait_on_retirement_instead_of_faulting() {
         let mut app = contract_composed_app_raw().await;
+        declare_test_child(&mut app, "child-a").await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
         let start = app.child_content_generation;
@@ -5259,9 +5269,9 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn maximum_child_public_dispatch_reaches_first_continuation_without_clone_or_encode() {
         let mut app = contract_composed_app().await;
-        app.register_child("slot", "child-maximum", test_child_dialect().await, new_test_child("child-maximum").await.expect("construct maximum child")).await.expect("register maximum child");
+        register_test_child(&mut app, "child-maximum").await;
         let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child").member;
-        child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) })], description: None, transaction: None }).await.expect("seed maximum child");
+        child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) })], transaction: None }).await.expect("seed maximum child");
         let publication_generation = app.admit_child_content_publication().expect("admit maximum child publication");
         app.publish_child_content_member(publication_generation, "slot", "child-maximum").await.expect("publish maximum child root");
         MAXIMUM_CHILD_CLONES.store(0, std::sync::atomic::Ordering::Release);
@@ -5281,7 +5291,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn the_child_content_view_never_goes_stale_across_undo_and_redo() {
         let mut app = contract_composed_app().await;
-        app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
+        register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
         assert_eq!(reads_child_count(&app).await, 7);
 
@@ -5304,8 +5314,8 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child() {
         let mut app = contract_composed_app().await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child")).await.expect("register child seeds ownership");
-        app.register_child("slot", "child-b", test_child_dialect().await, new_test_child("child-b").await.expect("construct child")).await.expect("register child seeds ownership");
+        register_test_child(&mut app, "child-a").await;
+        register_test_child(&mut app, "child-b").await;
 
         let before = app.test_snapshot().await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-a".into(), child_value: 5 }, &meta()).await.expect("composite edit");
@@ -5321,6 +5331,9 @@ mod plugin_builder_contract_tests {
 
     }
 
+    /// 🧒️ The parent declares the created child first: absorb admits a member only under the
+    /// identity the published parent declares, like every other admission.
+    ///
     /// 🌱️ Proves `VcsArtifactApp::absorb_created_children` — the mechanism a
     /// `ChildGenesis`-authoring `Emit` constructor (a later wave) will rely on to make a
     /// freshly-minted child reachable at all; per B2's own `GroupReceipt::created_children`
@@ -5328,14 +5341,15 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn created_children_survive_absorb_into_the_child_store_map() {
         let mut app = contract_composed_app().await;
+        declare_test_child(&mut app, "genesis-child").await;
         let parent_id = app.store.envelope().id.clone();
-        app.composition.graph_mut().await.insert_owns(&parent_id, "genesisSlot", "genesis-child").await.expect("seed ownership so absorb's slot_of lookup resolves");
+        app.composition.graph_mut().await.insert_owns(&parent_id, "slot", "genesis-child").await.expect("seed ownership so absorb's slot_of lookup resolves");
         let target = ArtifactRef { artifact_id: "genesis-child".into(), dialect: test_child_dialect().await };
         let created: Vec<(ArtifactRef, TestMembers)> = vec![(target, new_test_child("genesis-child").await.expect("construct genesis child"))];
 
         app.absorb_created_children(created).await.expect("absorb child and publish immutable root");
 
-        let entry = app.children.get_mut(&("genesisSlot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under its real slot");
+        let entry = app.children.get_mut(&("slot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under the slot its parent declares it in");
         assert_eq!(entry.reference.dialect.artifact_kind, "s.test.child");
         assert_eq!(entry.member.document_id().await, "genesis-child");
         drain_and_close_composed_fixture(&mut app);
@@ -5599,7 +5613,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app().await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()), transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
             .await
             .expect("seed document edit");
         assert_eq!(app.test_snapshot().await.count, 1);
@@ -5645,7 +5659,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app().await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()), transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
             .await
             .expect("seed document edit");
         assert_eq!(app.test_snapshot().await.count, 1);
@@ -5792,7 +5806,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app().await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("Set Active Example".into()), transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
             .await
             .expect("document example");
         let _ = app.test_history().await;
@@ -5838,7 +5852,7 @@ mod plugin_builder_contract_tests {
         app.bind_instance_id(1).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("seed".into()), transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
             .await
             .expect("seed document edit");
         let runtime = super::PluginRuntime::<TestRuntimeApps>::new();
@@ -5929,7 +5943,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app().await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], description: Some("Increment".into()), transaction: None })
+            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None })
             .await
             .expect("document edit");
         let _ = app.test_history().await;

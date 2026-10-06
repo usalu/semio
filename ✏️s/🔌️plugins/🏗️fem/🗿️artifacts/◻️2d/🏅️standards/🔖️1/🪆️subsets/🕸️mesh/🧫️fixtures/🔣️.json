@@ -1,6 +1,5 @@
 [
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-hairline-thickness",
     "class": "third-party-generated",
     "target": {
@@ -67,7 +66,6 @@
     "notes": "a 2×1 m footprint at 1e-6 m thickness — thickness far below the weld grid's own absolute floor at metre scale, kept as a recorded edge case rather than dropped to make the corpus look clean."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "degenerate-sliver-outline",
     "class": "third-party-generated",
     "target": {
@@ -134,7 +132,6 @@
     "notes": "a 5×0.01 m sliver footprint, 0.1 m thick — an extreme aspect ratio in-plane rather than through the thickness."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "polygon-l-shape",
     "class": "third-party-generated",
     "target": {
@@ -201,7 +198,6 @@
     "notes": "an L-shaped (non-convex, re-entrant) footprint, 0.3 m thick."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "polygon-triangle",
     "class": "third-party-generated",
     "target": {
@@ -268,7 +264,6 @@
     "notes": "a triangular footprint, 0.15 m thick."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "rect-floor-slab",
     "class": "third-party-generated",
     "target": {
@@ -335,7 +330,6 @@
     "notes": "4×2 m, 0.25 m thick — mirrors the committed create-region/appends-a-solid-d78275 scenario exactly (same outline+thickness)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "rect-thin-plate",
     "class": "third-party-generated",
     "target": {
@@ -402,7 +396,6 @@
     "notes": "10×6 m footprint, 0.02 m thick — a high aspect-ratio plate."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "rect-unit-square",
     "class": "third-party-generated",
     "target": {
@@ -469,7 +462,6 @@
     "notes": "1×1 m square, 0.1 m thick — the simplest possible FemRegion."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "region-one-hole",
     "class": "third-party-generated",
     "target": {
@@ -536,7 +528,6 @@
     "notes": "4×2 m slab, one 1×1 m rectangular hole (a stair opening) — genus 1."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "region-two-holes",
     "class": "third-party-generated",
     "target": {
@@ -603,7 +594,6 @@
     "notes": "4×2 m slab, two disjoint square holes — genus 2."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-one-hole-1e-3",
     "class": "third-party-generated",
     "target": {
@@ -670,7 +660,6 @@
     "notes": "region-one-hole scaled ×1e-3 (millimetre-scale slab)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-one-hole-1e3",
     "class": "third-party-generated",
     "target": {
@@ -737,7 +726,6 @@
     "notes": "region-one-hole scaled ×1e3 (kilometre-scale slab)."
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "scale-one-hole-1e6",
     "class": "third-party-generated",
     "target": {

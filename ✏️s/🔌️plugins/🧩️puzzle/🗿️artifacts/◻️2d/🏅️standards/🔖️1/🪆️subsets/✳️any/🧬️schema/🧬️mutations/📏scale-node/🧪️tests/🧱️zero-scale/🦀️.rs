@@ -1,4 +1,4 @@
-//! 🧪️ `scale-node` fixture — `🧱️zero-scale`.
+//! 🧪️ `scale-node` snapshot — `🧱️zero-scale`.
 //!
 //! A zero node scale is what the schema's `exclusiveMinimum: 0` forbids: a Fatal `mutation.invariant`, the node keeps its size.
 //!

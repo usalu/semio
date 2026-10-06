@@ -10,7 +10,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vertex",
+          "de": "Vertex"
+        },
+        "description": {
+          "en": "Id of the vertex that is deleted.",
+          "de": "Kennung des Vertex, der gelöscht wird."
+        },
+        "ref": {
+          "kind": "vertex"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

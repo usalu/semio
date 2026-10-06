@@ -1,0 +1,11 @@
+{
+  "word": "ä🧩\n\"\\\u0000",
+  "repeats": 1024,
+  "prefix": "source-prefix:",
+  "maximumDepth": 128,
+  "maximumOutputBytes": 65536,
+  "cancelAt": 1024,
+  "sinkRefuseAt": 2048,
+  "maximumItems": 32,
+  "refusedCollectionItems": 6
+}

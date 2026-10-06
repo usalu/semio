@@ -16,13 +16,57 @@
       "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Id of the node.",
+          "de": "Kennung des Knotens."
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Parameter",
+          "de": "Parameter"
+        },
+        "description": {
+          "en": "Name of the node parameter.",
+          "de": "Name des Knotenparameters."
+        },
+        "group": "target",
+        "order": 20
+      }
     },
     "value": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "Text form of the value the parameter takes.",
+          "de": "Textform des Werts, den der Parameter erhält."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

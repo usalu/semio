@@ -1,5 +1,4 @@
 {
-  "schema": "semio.db.wal.open-rejection/v1",
   "acquisition": [
     {
       "stage": "before-acquire",

@@ -7,7 +7,7 @@ use crate::EquationGeometry;
 async fn set_artifact_replaces_graph_and_geometry() {
     let mut app = math_app().await;
     let geometry = EquationGeometry { points: vec![crate::EquationPoint { x: 1.0, y: 2.0 }] };
-    dispatch(&mut app, EquationCommand::SetArtifact(SetArtifact { graph: crate::document_dsl::math_graph_to_dsl(&crate::EquationGraph { algorithm: "components".into(), ..Default::default() }), geometry: geometry.clone() })).await;
+    dispatch(&mut app, EquationCommand::SetArtifact(SetArtifact { graph: crate::standards::v1::subsets::any::io::text::snapshot::math_graph_to_dsl(&crate::EquationGraph { algorithm: "components".into(), ..Default::default() }), geometry: geometry.clone() })).await;
     let projection = app.snapshot().expect("projection");
     assert_eq!(projection.graph.algorithm, "components");
     assert_eq!(projection.geometry.clone(), geometry);

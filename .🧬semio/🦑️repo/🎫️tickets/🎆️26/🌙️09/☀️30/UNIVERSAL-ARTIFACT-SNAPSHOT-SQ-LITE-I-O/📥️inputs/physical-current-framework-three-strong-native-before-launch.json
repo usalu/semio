@@ -1,0 +1,36 @@
+{
+  "status": "strong Native demand and exact static schema mounted; domain providers unchanged",
+  "cwd": "/Users/ueli/Documents/semio",
+  "env": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "SEMIO_TEST_LEVEL": "quick",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/framework-three-original-before-native-artifacts"
+  },
+  "commands": [
+    [
+      "bun",
+      "run",
+      "nx",
+      "run-many",
+      "--target=test-snapshot-sqlite-native",
+      "--projects=@semio-tech/framework-space-space-rs,@semio-tech/framework-space-collection-rs",
+      "--parallel=1",
+      "--skip-nx-cache",
+      "--outputStyle=stream",
+      "--excludeTaskDependencies"
+    ],
+    [
+      "bun",
+      "run",
+      "nx",
+      "run",
+      "@semio-tech/framework-os-kernel:test-space-history-sqlite-native",
+      "--skip-nx-cache",
+      "--outputStyle=stream",
+      "--excludeTaskDependencies"
+    ]
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-framework-three-strong-native-before.log",
+  "assertions": "All original tests/providers remain unchanged; original strong allocation/reconstruction/file/row/cancellation budgets retained"
+}

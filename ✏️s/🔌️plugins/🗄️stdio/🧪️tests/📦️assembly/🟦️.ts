@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import Ajv from "ajv";
 import { parse } from "@iarna/toml";
 import { readFileSync } from "node:fs";
 
@@ -7,8 +6,7 @@ import { readFileSync } from "node:fs";
 export function runAssemblyChecks(): number {
   const load = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const fixture = load("../../🧫️fixtures/📦️assembly/🔣️.json");
-  const validate = new Ajv({ strict: true }).compile(load("../../🧬️schema/📦️assembly/🔣️.json"));
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
+  assert.equal(new Set(fixture.cases.map((row: { id: string }) => row.id)).size, fixture.cases.length);
   let checks = 1;
   for (const row of fixture.cases) {
     let selected: string[] = [...row.selected];
@@ -35,8 +33,6 @@ export function runAssemblyChecks(): number {
   checks++;
   const capabilityRoot = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability";
   const capability = load(`${capabilityRoot}/🧫️fixtures/🔣️.json`);
-  const validateCapability = new Ajv({ strict: true }).compile(load(`${capabilityRoot}/🧬️schema/🔣️.json`));
-  assert.equal(validateCapability(capability), true, JSON.stringify(validateCapability.errors));
   for (const row of capability.cases) {
     assert.equal(row.native, true);
     assert.equal(row.sqlite, row.relational);

@@ -1,5 +1,4 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "version": 1,
   "entries": [
     "📄️document.tex",
@@ -78,7 +77,10 @@
   "collisions": [
     {
       "id": "canonical-leaf",
-      "entries": ["🔨️modules/🕸️graph/📐️.tex", "🔨️modules/🕸️graph/_.tex"],
+      "entries": [
+        "🔨️modules/🕸️graph/📐️.tex",
+        "🔨️modules/🕸️graph/_.tex"
+      ],
       "inputs": {
         "🔨️modules/🕸️graph/📐️.tex": "canonical",
         "🔨️modules/🕸️graph/_.tex": "native collision"
@@ -86,12 +88,20 @@
     },
     {
       "id": "repeated-entry",
-      "entries": ["📐️.tex", "📐️.tex"],
-      "inputs": { "📐️.tex": "canonical" }
+      "entries": [
+        "📐️.tex",
+        "📐️.tex"
+      ],
+      "inputs": {
+        "📐️.tex": "canonical"
+      }
     },
     {
       "id": "directory-file",
-      "entries": ["📦️library", "library"],
+      "entries": [
+        "📦️library",
+        "library"
+      ],
       "inputs": {
         "📦️library": "file",
         "library/fixture.tex": "directory child"

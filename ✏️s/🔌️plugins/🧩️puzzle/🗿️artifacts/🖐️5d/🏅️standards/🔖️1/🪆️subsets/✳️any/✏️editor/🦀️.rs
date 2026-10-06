@@ -7,12 +7,14 @@
 //! `📌️panels/<panel>` or `🎭️modes/✏️edit/🪟️windows/{◻2d,🧊️3d}`. This file dispatches and stitches.
 //!
 //! 🌉️ `ArtifactApp::Snapshot` is the `Puzzle5dPlaySnapshot` newtype over a bare
-//! `serde_json::Value` document (see `crate::standards::v1::subsets::any::schema::mutations::text`'s `🔖️ValueBridge`), not the
+//! `serde_json::Value` document (see `crate::standards::v1::subsets::any::io::text::mutations`'s `🔖️ValueBridge`), not the
 //! typed `Puzzle5dSnapshot` — the `Puzzle5dDocument` model below is this app's own structural twin
 //! of it, and each action emits the granular typed operation delta
 //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle5dPlaySnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle5dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{puzzle5d_document_delta_operations};
 use crate::Puzzle5dSnapshot;
 use crate::editor::puzzle5d::commands::{
     add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
@@ -26,7 +28,7 @@ use crate::editor::puzzle5d::commands::{
 use crate::editor::puzzle5d::commands::{add_target_volume, delete_target_volume, relocate_target_volume, set_target_volume_flag, set_voxel_dims};
 use crate::editor::puzzle5d::commands::{set_chunk_size, set_proximity_radius};
 use crate::editor::puzzle5d::commands::{accept_suggestion, close_vortex_suggestions, hover_suggestion, open_vortex_suggestions};
-use crate::editor::puzzle5d::commands::{export_fixture, import_fixture, open_add_part_dialog, open_import_fixture};
+use crate::editor::puzzle5d::commands::{export_snapshot, import_snapshot, open_add_part_dialog, open_import_snapshot};
 use crate::editor::puzzle5d::config::{Puzzle5dCamera2d, Puzzle5dConfig, Puzzle5dConfigMutation, Puzzle5dRuntime};
 use crate::editor::puzzle5d::modes::edit;
 use crate::editor::puzzle5d::modes::edit::tools::fill as fill_tool;
@@ -111,7 +113,7 @@ pub const PUZZLE5D_PLAY_APP_ID: &str = "puzzle5d-play";
 pub const PUZZLE5D_PLAY_CONTROLLER_ID: &str = "puzzle5d-play";
 pub const PUZZLE5D_PLAY_WINDOWS: [&str; 2] = [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID];
 pub const PUZZLE5D_SCHEMA: &str = "puzzle.5d";
-pub const PUZZLE5D_BOARD_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
+pub const PUZZLE5D_BOARD_SNAPSHOT_SCHEMA: &str = "board.ports.directed.v1";
 pub const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
 pub const PUZZLE5D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
 pub const PUZZLE5D_EXAMPLE_CAPSULE_DREAM: &str = "capsule-dream";
@@ -441,7 +443,7 @@ pub struct Puzzle5dDocument {
 /// document JSON, matching `Puzzle5dPlaySnapshot`'s own still-`serde_json::Value` boundary), so this
 /// routes through the framework's pre-existing `DslValue -> serde_json::Value` bridge and the
 /// struct's own unconditional `Deserialize` instead. Needed because
-/// `🎮️commands/🧪️set-fixture-json` round-trips this type through `semio_framework_pack_json::from_json_str`.
+/// `🎮️commands/📄️load-document-json` round-trips this type through `semio_framework_pack_json::from_json_str`.
 impl semio_framework_value::FromValue for Puzzle5dDocument {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         serde_json::from_value(serde_json::Value::from(&value)).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
@@ -455,7 +457,7 @@ pub fn empty_document() -> Puzzle5dDocument {
 /// 📥️ Decodes a SHIPPED example's JSON into the editor twin. A failure here is a build defect in the
 /// example asset, never user input, so it is loud: the silent `empty_document()` fallback this used to
 /// carry is what let the 2026-09-17 example regression ship a zero-part Nakagin and Capsule Dream.
-/// User-supplied JSON arrives through `📥️import-fixture`, which refuses with a notice instead.
+/// User-supplied JSON arrives through `📥️import-snapshot`, which refuses with a notice instead.
 pub fn document_from_json(json_text: &str) -> Puzzle5dDocument {
     serde_json::from_str::<Puzzle5dDocument>(json_text).unwrap_or_else(|error| panic!("puzzle5d example document decodes: {error}"))
 }
@@ -4233,9 +4235,9 @@ macro_rules! puzzle5d_command_variants {
 }
 
 puzzle5d_command_variants! {
-    ExportFixture = "exportFixture",
-    ImportFixture = "importFixture",
-    OpenImportFixture = "openImportFixture",
+    ExportSnapshot = "exportSnapshot",
+    ImportSnapshot = "importSnapshot",
+    OpenImportSnapshot = "openImportSnapshot",
     OpenAddPartDialog = "openAddPartDialog",
     SetActiveExample = "setActiveExample",
     AddNode = "addNode",
@@ -4717,8 +4719,8 @@ impl Puzzle5dPlayApp {
 /// function. No behaviour lives in this match.
 fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Option<&Value>) {
     match action {
-        "importFixture" => import_fixture::import_fixture(ctx, args),
-        "openImportFixture" => open_import_fixture::open_import_fixture(ctx),
+        "importSnapshot" => import_snapshot::import_snapshot(ctx, args),
+        "openImportSnapshot" => open_import_snapshot::open_import_snapshot(ctx),
         "openAddPartDialog" => open_add_part_dialog::open_add_part_dialog(ctx),
         "setActiveExample" => set_active_example::set_active_example(ctx, args),
         "selectSameKindSelection" => select_same_kind::select_same_kind(ctx),
@@ -4814,10 +4816,10 @@ pub(crate) const PUZZLE5D_RETAINED_TOOL_IDS: &[&str] = &[
     "engagementInput",
     "engagementRepeatLast",
     "engagementSubmit",
-    "exportFixture",
-    "importFixture",
+    "exportSnapshot",
+    "importSnapshot",
     "openAddPartDialog",
-    "openImportFixture",
+    "openImportSnapshot",
     "selectSameKindSelection",
     "setFillCount",
     "setSelectionFlag",
@@ -5007,7 +5009,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     }
 }
 
-/// 📤 `exportFixture` reads the document and publishes a download; it owns no mutation, so it resolves
+/// 📤 `exportSnapshot` reads the document and publishes a download; it owns no mutation, so it resolves
 /// straight from the snapshot and picks its lane by payload size: one inline effect under the guest's
 /// contiguous request ceiling, the framework's segmented-download lane above it, a localized notice
 /// above what one segmented download may carry. It is NOT a `dispatch_puzzle5d_action` arm because a
@@ -5021,7 +5023,7 @@ struct Puzzle5dExportWork {
 
 impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for Puzzle5dExportWork {
     fn tool_id(&self) -> &'static str {
-        "exportFixture"
+        "exportSnapshot"
     }
 
     fn bind_view_state(&mut self, view_state: Option<semio_framework_plugin::ViewModel>) {
@@ -5045,12 +5047,12 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         }
         self.consumed = true;
         let document: Puzzle5dDocument = serde_json::from_value(snapshot.value().clone()).map_err(|_| Fault::from("puzzle5d-export-document-malformed"))?;
-        Ok(match export_fixture::puzzle5d_export_publication(&document)? {
-            export_fixture::Puzzle5dExportPublication::Inline(effect) => {
+        Ok(match export_snapshot::puzzle5d_export_publication(&document)? {
+            export_snapshot::Puzzle5dExportPublication::Inline(effect) => {
                 crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![effect], ui_scope: UiDirtyScope::None, ..Default::default() })
             }
-            export_fixture::Puzzle5dExportPublication::Segmented(download) => crate::retained_command::PuzzleCommandWorkStep::Download(download),
-            export_fixture::Puzzle5dExportPublication::Refused(_) => crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.export_too_large.as_str())),
+            export_snapshot::Puzzle5dExportPublication::Segmented(download) => crate::retained_command::PuzzleCommandWorkStep::Download(download),
+            export_snapshot::Puzzle5dExportPublication::Refused(_) => crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.export_too_large.as_str())),
         })
     }
 }
@@ -8304,7 +8306,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
 }
 
 /// 📏️ The retained command route's own wire-admission band, widened off the shared 8 KiB/512 puzzle
-/// default to puzzle 3d's (`PUZZLE3D_IMPORT_RAW_BYTES`/`PUZZLE3D_IMPORT_DECODED_ITEMS`): one whole `importFixture`
+/// default to puzzle 3d's (`PUZZLE3D_IMPORT_RAW_BYTES`/`PUZZLE3D_IMPORT_DECODED_ITEMS`): one whole `importSnapshot`
 /// file, escaped, plus its envelope (`PUZZLE_IMPORT_RAW_BYTES`) — and a Nakagin-sized document's camera/grid/sun
 /// publications, which the narrow band rejects before the job ever admits.
 const PUZZLE5D_RETAINED_RAW_BYTES: usize = crate::retained_command::PUZZLE_IMPORT_RAW_BYTES;
@@ -8507,10 +8509,10 @@ impl ArtifactOwnedToolJobFactory for Puzzle5dRetainedCommandJobFactory {
         ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "engagementRepeatLast", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient, ArtifactToolPublicationLane::Interaction] },
-        ArtifactToolPublicationContract { tool_id: "exportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "importFixture", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "exportSnapshot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "importSnapshot", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "openAddPartDialog", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-        ArtifactToolPublicationContract { tool_id: "openImportFixture", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "openImportSnapshot", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "selectSameKindSelection", lanes: &[ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "setFillCount", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setSelectionFlag", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -8584,7 +8586,6 @@ struct Puzzle5dStorePreparationFactory;
 struct Puzzle5dStorePreparation {
     base: Option<store::SnapshotRead<Puzzle5dPlaySnapshot>>,
     mutation: Option<Puzzle5dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(Puzzle5dPlaySnapshot, Vec<Puzzle5dMutation>, Puzzle5dMutation)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Puzzle5dPlaySnapshot, Puzzle5dMutation>>,
@@ -8597,9 +8598,9 @@ struct Puzzle5dStorePreparation {
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dPlaySnapshot, Puzzle5dMutation> for Puzzle5dStorePreparationFactory {
     /// 🧾️ The forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`): a selection
     /// leaf one setter per changed pose field of each target, a removal the record and the fasteners it severs.
-    fn preflight(&self, mutation: &Puzzle5dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Puzzle5d Store preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &Puzzle5dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Puzzle5d Store preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle5dPlaySnapshot, _>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -8619,7 +8620,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dPlaySnapshot, Puzzle5
         Ok(Box::new(Puzzle5dStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             prepared: None,
@@ -8688,7 +8688,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutati
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -8708,7 +8708,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutati
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 
@@ -8717,7 +8717,6 @@ struct Puzzle5dConfigStorePreparationFactory;
 struct Puzzle5dConfigStorePreparation {
     base: Option<store::SnapshotRead<Puzzle5dConfig>>,
     mutation: Option<Puzzle5dConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Puzzle5dConfig, Puzzle5dConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -8726,9 +8725,9 @@ struct Puzzle5dConfigStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dConfig, Puzzle5dConfigMutation> for Puzzle5dConfigStorePreparationFactory {
-    fn preflight(&self, mutation: &Puzzle5dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Puzzle5d config Store preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &Puzzle5dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Puzzle5d config Store preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -8747,7 +8746,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dConfig, Puzzle5dConfi
         Ok(Box::new(Puzzle5dConfigStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -8788,7 +8786,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutati
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -8802,7 +8800,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutati
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation
@@ -8834,10 +8832,10 @@ impl Puzzle5dRetainedCommandProofs {
             "engagementInput",
             "engagementRepeatLast",
             "engagementSubmit",
-            "exportFixture",
-            "importFixture",
+            "exportSnapshot",
+            "importSnapshot",
             "openAddPartDialog",
-            "openImportFixture",
+            "openImportSnapshot",
             "selectSameKindSelection",
             "setFillCount",
             "setSelectionFlag",
@@ -9042,7 +9040,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             return Ok(None);
         }
         if request.command.action_id() != request.tool_id {
-            return Err(Fault::from("puzzle5d-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "puzzle5d-command-tool-mismatch"));
         }
         let tool_id = request.command.action_id();
         let mut work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match tool_id {
@@ -9063,7 +9061,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             "deleteFastener" => Box::new(Puzzle5dDeleteFastenerWork::default()),
             "addNode" => Box::new(Puzzle5dAddNodeWork::default()),
             "createFastener" => Box::new(Puzzle5dCreateFastenerWork::default()),
-            "exportFixture" => Box::new(Puzzle5dExportWork::default()),
+            "exportSnapshot" => Box::new(Puzzle5dExportWork::default()),
             "setActiveExample" => Box::new(Puzzle5dSetActiveExampleWork::default()),
             "registerBrushMesh" => Box::new(Puzzle5dRegisterBrushMeshWork::default()),
             "setPartKindWeight" | "setGripKindWeight" => Box::new(Puzzle5dKindWeightWork::new(tool_id)),
@@ -9614,13 +9612,13 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("shift+tab", "cycleBrushCandidateBack")
             .keybinding("f", "focusSelection")
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after document delta).
-            // 📤️📥️ Document IO. `exportFixture`/`openImportFixture` are SHELL verbs (a download, a file
-            // picker — no document mutation of their own); `importFixture` is the mutation the picker
+            // 📤️📥️ Document IO. `exportSnapshot`/`openImportSnapshot` are SHELL verbs (a download, a file
+            // picker — no document mutation of their own); `importSnapshot` is the mutation the picker
             // re-dispatches once per wire page and never a menu row of its own, so the user-facing
             // "Import" row is the one that actually opens a picker.
-            .action_with(ActionDefinition::bounded_catalog("exportFixture", puzzle5d_localized(|l| l.export), ActionKind::Shell).with_category("file"))
-            .action_with(ActionDefinition::bounded_catalog("openImportFixture", puzzle5d_localized(|l| l.import), ActionKind::Shell).with_category("file"))
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importFixture", puzzle5d_localized(|l| l.import), ActionKind::Mutation) })
+            .action_with(ActionDefinition::bounded_catalog("exportSnapshot", puzzle5d_localized(|l| l.export), ActionKind::Shell).with_category("file"))
+            .action_with(ActionDefinition::bounded_catalog("openImportSnapshot", puzzle5d_localized(|l| l.import), ActionKind::Shell).with_category("file"))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSnapshot", puzzle5d_localized(|l| l.import), ActionKind::Mutation) })
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
@@ -9730,11 +9728,11 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("engagementRepeatLast", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
             .action_interactive_job("focusSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("exportFixture", InteractiveJobClassification::Migrated)
-            .action_destructive("exportFixture")
-            .action_interactive_job("importFixture", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportSnapshot", InteractiveJobClassification::Migrated)
+            .action_destructive("exportSnapshot")
+            .action_interactive_job("importSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("openAddPartDialog", InteractiveJobClassification::Migrated)
-            .action_interactive_job("openImportFixture", InteractiveJobClassification::Migrated)
+            .action_interactive_job("openImportSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchFastener", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchGrip", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchPart", InteractiveJobClassification::Migrated)
@@ -9823,9 +9821,9 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
     .action_describe("translateSelection", LocalizedLabel::native("Moves the selected parts by dx and dy.", "Verschiebt die ausgewählten Teile um dx und dy."))
     .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected parts by the given angle.", "Dreht die ausgewählten Teile um den angegebenen Winkel."))
     .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected parts by the given factor.", "Skaliert die ausgewählten Teile um den angegebenen Faktor."))
-    .action_describe("exportFixture", LocalizedLabel::native("Writes the whole 5D puzzle as JSON to a downloaded file named after the active example on the user's machine.", "Schreibt das gesamte 5D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."))
-    .action_describe("openImportFixture", LocalizedLabel::native("Opens the host's file picker for a 5D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 5D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
-    .action_describe("importFixture", LocalizedLabel::native("Replaces the whole 5D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 5D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
+    .action_describe("exportSnapshot", LocalizedLabel::native("Writes the whole 5D puzzle as JSON to a downloaded file named after the active example on the user's machine.", "Schreibt das gesamte 5D-Puzzle als JSON in eine heruntergeladene, nach dem aktiven Beispiel benannte Datei auf dem Rechner des Nutzers."))
+    .action_describe("openImportSnapshot", LocalizedLabel::native("Opens the host's file picker for a 5D puzzle JSON file; the chosen file then replaces the whole puzzle.", "Öffnet die Dateiauswahl des Hosts für eine 5D-Puzzle-JSON-Datei; die gewählte Datei ersetzt dann das gesamte Puzzle."))
+    .action_describe("importSnapshot", LocalizedLabel::native("Replaces the whole 5D puzzle with one read from an imported JSON file; the previous puzzle is discarded.", "Ersetzt das gesamte 5D-Puzzle durch eines aus einer importierten JSON-Datei; das bisherige Puzzle wird verworfen."))
     .action_describe("setSelectionFlag", LocalizedLabel::native("Sets one flag (such as hidden or locked) on the given or selected parts.", "Setzt eine Markierung (etwa verborgen oder gesperrt) auf den angegebenen oder ausgewählten Teile."))
     .action_describe("setSelectionHidden", LocalizedLabel::native("Sets the given or selected parts hidden or shown, to exactly the value passed; repeating it changes nothing.", "Verbirgt die angegebenen oder ausgewählten Teile oder zeigt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
     .action_describe("setSelectionLocked", LocalizedLabel::native("Sets the given or selected parts locked or unlocked, to exactly the value passed; repeating it changes nothing.", "Sperrt die angegebenen oder ausgewählten Teile oder entsperrt sie, genau nach dem übergebenen Wert; eine Wiederholung ändert nichts."))
@@ -9888,7 +9886,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
     .action_audience("setCamera2d", semio_framework_plugin::CapabilityAudience::Chrome)
     .action_audience("setCamera3d", semio_framework_plugin::CapabilityAudience::Chrome)
     .action_audience("applyBoardEvents", semio_framework_plugin::CapabilityAudience::Input)
-    .action_destructive("importFixture")
+    .action_destructive("importSnapshot")
     .build_definition()
 }
 

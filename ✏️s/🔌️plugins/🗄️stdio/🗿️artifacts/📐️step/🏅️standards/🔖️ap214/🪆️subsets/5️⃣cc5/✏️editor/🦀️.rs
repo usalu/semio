@@ -214,7 +214,7 @@ impl ArtifactEditor for StepCc5Editor {
             return Ok(None);
         }
         if stepCc5Editor_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-example-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -253,7 +253,7 @@ impl ArtifactEditor for StepCc5Editor {
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { stepCc5Editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> StepSnapshot {
-        StepSnapshot::default()
+        <crate::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc5 initial owner")
     }
 
     fn handle(

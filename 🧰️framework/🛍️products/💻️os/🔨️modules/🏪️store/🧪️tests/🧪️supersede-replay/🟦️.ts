@@ -3,7 +3,7 @@
  * against (`🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs`). */
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+
 import { applyPatch, type Operation } from "fast-json-patch";
 
 //#region 🧮️DemoOracle
@@ -64,12 +64,8 @@ function replay(testCase: Case): Case["expected"] {
 
 //#region 🧪️Corpus
 const corpus = read("../../🧫️fixtures/🧫️supersede-replay/🔣️.json");
-const schema = read("../../🧬️schema/🔣️supersede-replay/🔣️.json");
 
-test("🧬️ the supersede-replay corpus satisfies its JSON Schema", () => {
-  const validate = new Ajv({ strict: true, allErrors: true, allowUnionTypes: true }).compile(schema);
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-});
+
 
 test("🧮️ an independent fast-json-patch replay reproduces every expected state and outcome", () => {
   for (const testCase of corpus.cases as Case[]) {

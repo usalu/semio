@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::precompute_model_tests::context::*;
-use crate::standards::v1::subsets::any::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
+use crate::standards::v1::subsets::any::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, EngineSceneObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
 
 fn catalog_host_engine() -> Puzzle3dCollision {
     let mut engine = Puzzle3dCollision::new();
@@ -8,10 +8,10 @@ fn catalog_host_engine() -> Puzzle3dCollision {
     engine.register_mesh("/test/host.glb".to_string(), &positions, &indices);
     engine.register_mesh("/test/candidate.glb".to_string(), &positions, &indices);
     let scene = SceneConfig {
-        fixture: Fixture {
+        scene_snapshot: EngineSceneSnapshot {
             attractions: vec![],
             target_volumes: vec![],
-            objects: vec![FixtureObject {
+            objects: vec![EngineSceneObject {
                 id: "host".to_string(),
                 object_kind: Some("Host".to_string()),
                 anchor: Default::default(),
@@ -58,11 +58,11 @@ fn brush_candidates_allow_separated_boxes() {
     engine.register_mesh("/test/obstacle.glb".to_string(), &positions, &indices);
     engine.register_mesh("/test/preview.glb".to_string(), &positions, &indices);
     let scene = SceneConfig {
-        fixture: Fixture {
+        scene_snapshot: EngineSceneSnapshot {
             attractions: vec![],
             target_volumes: vec![],
             objects: vec![
-                FixtureObject {
+                EngineSceneObject {
                     id: "obstacle".to_string(),
                     object_kind: Some("Kind".to_string()),
                     anchor: Default::default(),
@@ -72,7 +72,7 @@ fn brush_candidates_allow_separated_boxes() {
                     scale: None,
                     vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
                 },
-                FixtureObject {
+                EngineSceneObject {
                     id: "host".to_string(),
                     object_kind: Some("Host".to_string()),
                     anchor: Default::default(),
@@ -131,7 +131,7 @@ fn a_scene_sync_invalidates_the_brush_derivation_per_object() {
     assert_eq!(engine.work_pending_for_test(), queue_len_after_step, "an identical scene invalidates nothing at all");
 
     let mut scene: serde_json::Value = serde_json::from_str(&json).unwrap();
-    scene["fixture"]["objects"].as_array_mut().unwrap().push(serde_json::json!({ "id": "extra", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [5.0, 0.0, 0.0], "orientation": [0.0, 0.0, 0.0, 1.0], "vortices": [{ "id": "v0", "vortexKind": "port-a", "position": [0.0, 0.0, 0.0], "direction": [0.0, 0.0, -1.0] }] }));
+    scene["sceneSnapshot"]["objects"].as_array_mut().unwrap().push(serde_json::json!({ "id": "extra", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [5.0, 0.0, 0.0], "orientation": [0.0, 0.0, 0.0, 1.0], "vortices": [{ "id": "v0", "vortexKind": "port-a", "position": [0.0, 0.0, 0.0], "direction": [0.0, 0.0, -1.0] }] }));
     let grown_json = serde_json::to_string(&scene).unwrap();
     engine.set_scene(&grown_json).expect("set_scene with one added object should succeed");
     assert_eq!(engine.work_pending_for_test(), queue_len_after_step + 1, "one added object enqueues exactly its own one brush target, and no other object's");
@@ -262,7 +262,7 @@ fn the_5d_facing_precompute_surface_stays_public() {
     let payload = BrushPlacePayload { target_vortex_full_id: "probe:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
     let rejected: Result<Puzzle3dEngineOutcome, GuardError> = session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload });
     assert!(matches!(rejected, Err(GuardError::BrushPlacementRejected)));
-    let _: fn(&Fixture, &BrushPlacePayload, &KindCatalogBundle) -> Fixture = apply_brush_placement_to_fixture;
+    let _: fn(&EngineSceneSnapshot, &BrushPlacePayload, &KindCatalogBundle) -> EngineSceneSnapshot = apply_brush_placement_to_snapshot;
 }
 
 /// 🎯️ Relocated from `🧬️mutations/💾️binary/🦀️.rs`'s
@@ -276,7 +276,7 @@ fn dispatch_brush_preview_without_scene_returns_none() {
 
 /// 🗺️ Wave W-P: a Nakagin-scale scene (180 objects, one per spatial cell) driven through the persistent
 /// interactive brush broad phase. The former implementation rebuilt a `Vec<PlacedCollisionEntry>` from a
-/// full fixture scan and linear-scanned it for every candidate — `O(N × C)` per popped vortex. The index
+/// full scene_snapshot scan and linear-scanned it for every candidate — `O(N × C)` per popped vortex. The index
 /// must instead visit only the cells the preview's own bounds span, which is what the examined-cell and
 /// examined-member witnesses assert: strictly fewer members than the scene holds.
 #[test]
@@ -287,7 +287,7 @@ fn nakagin_scale_brush_broad_phase_visits_only_the_queried_cells() {
     let (positions, indices) = unit_cube_mesh_buffers();
     engine.register_mesh("/test/host.glb".to_string(), &positions, &indices);
     let objects = (0..OBJECTS)
-        .map(|index| FixtureObject {
+        .map(|index| EngineSceneObject {
             id: format!("object-{index}"),
             object_kind: Some("Host".to_string()),
             anchor: Default::default(),
@@ -299,7 +299,7 @@ fn nakagin_scale_brush_broad_phase_visits_only_the_queried_cells() {
         })
         .collect::<Vec<_>>();
     let scene = SceneConfig {
-        fixture: Fixture { objects, attractions: vec![], target_volumes: vec![] },
+        scene_snapshot: EngineSceneSnapshot { objects, attractions: vec![], target_volumes: vec![] },
         kind_catalogs: Some(KindCatalogBundle {
             objects: vec![ObjectKind {
                 id: "Host".to_string(),
@@ -351,7 +351,7 @@ fn brush_broad_phase_follows_one_moved_object_without_a_rebuild() {
     while engine.step_brush_index() {}
     let before = *engine.brush_index.entry_bounds("host").expect("host entry");
     let mut scene = (*engine.scene.clone().expect("scene")).clone();
-    scene.fixture.objects[0].origin = [64.0, 0.0, 0.0];
+    scene.scene_snapshot.objects[0].origin = [64.0, 0.0, 0.0];
     engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("moved scene");
     while engine.step_brush_index() {}
     let after = *engine.brush_index.entry_bounds("host").expect("host entry after move");
@@ -368,7 +368,7 @@ fn brush_broad_phase_withdraws_an_owner_the_scene_dropped() {
     while engine.step_brush_index() {}
     assert!(engine.brush_index.entry_bounds("host").is_some(), "the original owner is indexed");
     let mut scene = (*engine.scene.clone().expect("scene")).clone();
-    scene.fixture.objects[0].id = "successor".to_string();
+    scene.scene_snapshot.objects[0].id = "successor".to_string();
     engine.set_scene(&serde_json::to_string(&scene).expect("scene json")).expect("re-identified scene");
     while engine.step_brush_index() {}
     assert!(engine.brush_index.entry_bounds("host").is_none(), "the dropped owner must be withdrawn, not orphaned");
@@ -432,11 +432,11 @@ fn a_registered_mesh_is_shared_by_id_across_sessions() {
 //#region 🧩️PagedBrushMeshUploads
 /// 🥽️ The language-neutral upload contract both ends implement: this decoder, and the renderer's pager
 /// (`🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🟦️.tsx`),
-/// which is held to the same fixture by `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`.
+/// which is held to the same scene_snapshot by `🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`.
 const BRUSH_MESH_UPLOAD_FIXTURE: &str = include_str!("../../../../🧫️fixtures/🥽️brush-mesh-upload/🔣️.json");
 
 fn brush_mesh_upload_fixture() -> serde_json::Value {
-    serde_json::from_str(BRUSH_MESH_UPLOAD_FIXTURE).expect("brush mesh upload fixture")
+    serde_json::from_str(BRUSH_MESH_UPLOAD_FIXTURE).expect("brush mesh upload scene_snapshot")
 }
 
 fn fixture_count(value: &serde_json::Value) -> usize {
@@ -482,8 +482,8 @@ fn brush_mesh_page_wire_bytes(url: &str, digest: &str, page: u32, page_count: u3
 #[test]
 fn a_document_scale_mesh_uploads_in_pages_and_registers() {
     let _store = brush_mesh_store_laws_guard();
-    let fixture = brush_mesh_upload_fixture();
-    let scale = &fixture["documentScale"][0];
+    let scene_snapshot = brush_mesh_upload_fixture();
+    let scale = &scene_snapshot["documentScale"][0];
     let position_count = fixture_count(&scale["positions"]);
     let index_count = fixture_count(&scale["indices"]);
     let positions: Vec<f32> = (0..position_count).map(|value| value as f32 * 0.5).collect();
@@ -492,7 +492,7 @@ fn a_document_scale_mesh_uploads_in_pages_and_registers() {
     let url = "/test/document-scale.glb";
     let digest = brush_mesh_digest(&positions, &indices);
     let pages = brush_mesh_pages(&positions, &indices);
-    assert_eq!(pages.len(), fixture_count(&scale["pages"]), "the document-scale mesh pages exactly as the language-neutral fixture declares");
+    assert_eq!(pages.len(), fixture_count(&scale["pages"]), "the document-scale mesh pages exactly as the language-neutral scene_snapshot declares");
     let page_count = u32::try_from(pages.len()).expect("page count");
     let mut closed = None;
     for (index, (positions_b64, indices_b64)) in pages.iter().enumerate() {
@@ -734,16 +734,16 @@ fn the_residency_counter_only_climbs_and_the_request_set_is_bounded() {
 #[test]
 fn the_paged_upload_contract_matches_the_language_neutral_fixture() {
     let _store = brush_mesh_store_laws_guard();
-    let fixture = brush_mesh_upload_fixture();
-    assert_eq!(fixture_count(&fixture["commandRawBytes"]), crate::retained_command::PUZZLE_COMMAND_RAW_BYTES);
-    assert_eq!(fixture_count(&fixture["pageValues"]), PUZZLE3D_MESH_PAGE_VALUES);
-    assert_eq!(fixture_count(&fixture["pageBase64Chars"]), PUZZLE3D_MESH_PAGE_BASE64_CHARS);
-    assert_eq!(fixture_count(&fixture["uploadSlots"]), PUZZLE3D_MESH_UPLOAD_SLOTS);
-    assert_eq!(fixture_count(&fixture["maxPages"]), usize::try_from(PUZZLE3D_MESH_UPLOAD_MAX_PAGES).expect("page ceiling"));
-    let declared: Vec<&str> = fixture["faults"].as_array().expect("fault codes").iter().map(|code| code.as_str().expect("fault code")).collect();
+    let scene_snapshot = brush_mesh_upload_fixture();
+    assert_eq!(fixture_count(&scene_snapshot["commandRawBytes"]), crate::retained_command::PUZZLE_COMMAND_RAW_BYTES);
+    assert_eq!(fixture_count(&scene_snapshot["pageValues"]), PUZZLE3D_MESH_PAGE_VALUES);
+    assert_eq!(fixture_count(&scene_snapshot["pageBase64Chars"]), PUZZLE3D_MESH_PAGE_BASE64_CHARS);
+    assert_eq!(fixture_count(&scene_snapshot["uploadSlots"]), PUZZLE3D_MESH_UPLOAD_SLOTS);
+    assert_eq!(fixture_count(&scene_snapshot["maxPages"]), usize::try_from(PUZZLE3D_MESH_UPLOAD_MAX_PAGES).expect("page ceiling"));
+    let declared: Vec<&str> = scene_snapshot["faults"].as_array().expect("fault codes").iter().map(|code| code.as_str().expect("fault code")).collect();
     let owned = [Puzzle3dMeshUploadFault::Envelope, Puzzle3dMeshUploadFault::Payload, Puzzle3dMeshUploadFault::Gap, Puzzle3dMeshUploadFault::Capacity, Puzzle3dMeshUploadFault::Digest, Puzzle3dMeshUploadFault::Geometry];
     assert_eq!(declared, owned.iter().map(|fault| fault.code()).collect::<Vec<&str>>(), "every fault the plugin can raise is named in the shared contract");
-    let example = &fixture["example"];
+    let example = &scene_snapshot["example"];
     let positions: Vec<f32> = example["positions"].as_array().expect("positions").iter().map(|value| value.as_f64().expect("position") as f32).collect();
     let indices: Vec<u32> = example["indices"].as_array().expect("indices").iter().map(|value| u32::try_from(value.as_u64().expect("index")).expect("index fits")).collect();
     let url = example["url"].as_str().expect("url");
@@ -753,9 +753,9 @@ fn the_paged_upload_contract_matches_the_language_neutral_fixture() {
     let page = &example["pages"][0];
     let positions_b64 = page["positionsB64"].as_str().expect("positions payload");
     let indices_b64 = page["indicesB64"].as_str().expect("indices payload");
-    assert_eq!(brush_mesh_pages(&positions, &indices)[0], (positions_b64.to_string(), indices_b64.to_string()), "the Rust encoding is the payload the fixture pins");
-    let staged = admit_brush_mesh_page(url, digest, 0, 1, positions_b64, indices_b64).expect("the fixture page closes its own run");
-    assert_eq!(staged, Puzzle3dMeshUploadStep::Complete(positions, indices), "the fixture page reassembles into the fixture's own geometry");
+    assert_eq!(brush_mesh_pages(&positions, &indices)[0], (positions_b64.to_string(), indices_b64.to_string()), "the Rust encoding is the payload the scene_snapshot pins");
+    let staged = admit_brush_mesh_page(url, digest, 0, 1, positions_b64, indices_b64).expect("the scene_snapshot page closes its own run");
+    assert_eq!(staged, Puzzle3dMeshUploadStep::Complete(positions, indices), "the scene_snapshot page reassembles into the scene_snapshot's own geometry");
 }
 
 /// 🧹️ Wave W-M2: a page run a closed document abandoned costs one staging slot until the session

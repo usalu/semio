@@ -5,7 +5,8 @@
 //! the editor's own `handle` applies `JsonMutation::SetScalar` there, replacing whichever subtree
 //! previously lived at it.
 
-use crate::schema::snapshot::{write_json_pretty, JsonMember, JsonValue};
+use crate::schema::snapshot::{JsonMember, JsonValue};
+use crate::standards::v_rfc8259::subsets::base::io::text::snapshot::{write_json_pretty};
 use crate::JsonSnapshot;
 use semio_framework_plugin::app::{EditableTreeNode, TreeNodeView, TreeView, TreeWindowKit, WindowKit};
 use semio_framework_plugin::BuiltNode;

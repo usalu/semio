@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::mutations::apply_bitmap_mutation;
-use crate::schema::snapshot::encode_base64;
+use crate::standards::v1::subsets::any::io::text::snapshot::encode_base64;
 
 fn commit(snapshot: &BitmapSnapshot, payload: &PinSolution) -> BitmapSnapshot {
     let mut next = snapshot.clone();

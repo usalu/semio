@@ -3,11 +3,13 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::precompute_model_tests::context::*;
 
 /// 🧮️ Primitive work one penetration probe step may cost ([`precompute_work_done`]): a vertex or inset probe is two
-/// queries; a face probe clips every near face and probes the clipped polygon's edges and centroid.
-const PENETRATION_STEP_WORK_CEILING: u64 = 100_000;
+/// queries; a face probe clips every near face and probes the clipped polygon's edges and centroid. The measured maximum
+/// is 221 units (a flush-docked pair of ~1000-triangle parts; two overlapping cubes cost 207).
+const PENETRATION_STEP_WORK_CEILING: u64 = 512;
 
-/// 🧮️ Primitive work the whole measure of a flush-docked pair of ~1000-triangle parts may cost.
-const PENETRATION_MEASURE_WORK_CEILING: u64 = 100_000_000;
+/// 🧮️ Primitive work the whole measure of a flush-docked pair of ~1000-triangle parts may cost. It measures 23 314 units
+/// over 5095 steps.
+const PENETRATION_MEASURE_WORK_CEILING: u64 = 65_536;
 
 struct TestStepContext {
     cancelled: bool,
@@ -511,12 +513,12 @@ fn penetration_steps_stay_within_interaction_watchdog() {
 
 #[test]
 fn document_scale_capacities_are_derived_from_the_flagship_fixture_not_the_bookkeeping_batch() {
-    assert!(DOCUMENT_OBJECT_SLOTS >= NAKAGIN_DOCUMENT_OBJECTS + DOCUMENT_FILL_HEADROOM_SLOTS, "objects must hold the flagship fixture plus its declared fill headroom");
+    assert!(DOCUMENT_OBJECT_SLOTS >= NAKAGIN_DOCUMENT_OBJECTS + DOCUMENT_FILL_HEADROOM_SLOTS, "objects must hold the flagship scene_snapshot plus its declared fill headroom");
     assert!(DOCUMENT_ATTRACTION_SLOTS >= NAKAGIN_DOCUMENT_OBJECTS + DOCUMENT_FILL_HEADROOM_SLOTS, "one attraction per placement shares the object headroom");
     assert_eq!((DOCUMENT_VORTEX_SLOTS, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CELL_SLOTS), (2 * DOCUMENT_OBJECT_SLOTS, DOCUMENT_OBJECT_SLOTS, 4 * DOCUMENT_OBJECT_SLOTS));
     assert_eq!((DOCUMENT_VOLUME_SLOTS, DOCUMENT_CANDIDATE_SLOTS), (DOCUMENT_KIND_SLOTS, 4 * DOCUMENT_KIND_SLOTS));
     for (slots, page) in [
-        (DOCUMENT_OBJECT_SLOTS, FixedOwnerVec::<crate::standards::v1::subsets::any::schema::FixtureObject, DOCUMENT_OBJECT_SLOTS>::page_bytes()),
+        (DOCUMENT_OBJECT_SLOTS, FixedOwnerVec::<crate::standards::v1::subsets::any::schema::EngineSceneObject, DOCUMENT_OBJECT_SLOTS>::page_bytes()),
         (DOCUMENT_ATTRACTION_SLOTS, FixedOwnerVec::<crate::standards::v1::subsets::any::schema::AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::page_bytes()),
         (DOCUMENT_VOLUME_SLOTS, FixedOwnerVec::<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>::page_bytes()),
         (DOCUMENT_OBJECT_SLOTS, FixedOwnerMap::<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>::page_bytes()),
@@ -580,18 +582,18 @@ fn an_owner_whose_page_was_refused_refuses_every_insert_instead_of_trapping() {
 ///
 /// 🧊️ The guest runs on one linear memory that grows and never shrinks, served by `dlmalloc` with a
 /// 64 KiB granularity, so a single block larger than that is the first request a fragmented or
-/// nearly-full guest refuses. `FixedOwnerVec<FixtureObject, DOCUMENT_OBJECT_SLOTS>` used to ask for
+/// nearly-full guest refuses. `FixedOwnerVec<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>` used to ask for
 /// ≈432 KiB in ONE piece, and `DOCUMENT_OWNER_PAGE_BYTES` admitted up to a whole MiB — the block
 /// whose refusal abandoned a Nakagin fill plan the user was 40+ s into (W-F6 §8 item 2). The
 /// declared width is unchanged; it is now backed by lazily claimed sub-pages, and this law is what
 /// keeps a later widening from re-crossing the ceiling.
 #[test]
 fn every_fixed_owner_sub_page_request_stays_under_the_guest_contiguous_ceiling() {
-    use crate::standards::v1::subsets::any::schema::{AttractionProps, BrushCompatibleCandidate, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, VortexKindCatalog};
+    use crate::standards::v1::subsets::any::schema::{AttractionProps, BrushCompatibleCandidate, CableKindCatalog, EngineSceneObject, KindCompatEntry, ObjectKind, VortexKindCatalog};
     for (owner, bytes) in [
-        ("fixture objects", FixedOwnerVec::<FixtureObject, DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
-        ("fixture attractions", FixedOwnerVec::<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::sub_page_bytes()),
-        ("fixture target volumes", FixedOwnerVec::<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>::sub_page_bytes()),
+        ("scene_snapshot objects", FixedOwnerVec::<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>::sub_page_bytes()),
+        ("scene_snapshot attractions", FixedOwnerVec::<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::sub_page_bytes()),
+        ("scene_snapshot target volumes", FixedOwnerVec::<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>::sub_page_bytes()),
         ("catalog objects", FixedOwnerVec::<ObjectKind, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
         ("catalog vortices", FixedOwnerVec::<VortexKindCatalog, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
         ("catalog cables", FixedOwnerVec::<CableKindCatalog, DOCUMENT_KIND_SLOTS>::sub_page_bytes()),
@@ -746,7 +748,6 @@ fn penetration_of_flush_thousand_triangle_parts_stays_interactive() {
         }
     };
     let total = precompute_work_done() - started;
-    eprintln!("[DEBUG] penetration flush pair: worst step {worst} units, total {total} units over {steps} steps");
     assert_eq!(depth, 0.0, "flush docking is contact, not penetration");
     assert!(worst <= PENETRATION_STEP_WORK_CEILING, "one probe step cost {worst} units of primitive work over {steps} steps, over {PENETRATION_STEP_WORK_CEILING}");
     assert!(total <= PENETRATION_MEASURE_WORK_CEILING, "a fitting 1k-triangle pair cost {total} units over {steps} steps, over {PENETRATION_MEASURE_WORK_CEILING}");

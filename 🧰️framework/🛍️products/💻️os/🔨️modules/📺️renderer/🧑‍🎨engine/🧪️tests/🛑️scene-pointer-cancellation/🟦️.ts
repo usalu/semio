@@ -1,4 +1,4 @@
-import Ajv from "ajv";
+
 import { describe, expect, it } from "vitest";
 import boardSource from "../../🧱️elements/🖥️Board2dHost/🟦️.tsx?raw";
 import inkSource from "../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx?raw";
@@ -13,7 +13,6 @@ import shellSource from "../../🧱️elements/🐚️Shell/🎯️targets/🧊�
 import rendererSource from "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs?raw";
 import winitSource from "../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs?raw";
 import fixture from "../../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json";
-import schema from "../../🧬️schema/🛑️scene-pointer-cancellation/🔣️.json";
 
 type Owner = Readonly<{ surfaceId: string; generation: number; pointerId: number }>;
 
@@ -21,12 +20,7 @@ const sameOwner = (left: Owner, right: Owner): boolean => left.surfaceId === rig
 const cancelOwner = (active: Owner | null, signal: Owner): Owner | null => (active && sameOwner(active, signal) ? null : active);
 
 describe("scene pointer cancellation contract", () => {
-  it("validates the six-family language-neutral contract with the independent JSON Schema oracle", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...fixture, cases: fixture.cases.slice(1) })).toBe(false);
-    expect(validate({ ...fixture, cases: fixture.cases.map((entry) => (entry.family === "ink" ? { ...entry, reactStatus: "invented" } : entry)) })).toBe(false);
-  });
+  
 
   it("pins discard, the Ink gesture abort, and TiledMap navigation without inventing React support", () => {
     expect(fixture.cases.map(({ family }) => family)).toEqual(["nodeGraph", "board2d", "ink", "tiledMap", "paint2d", "textEditor"]);

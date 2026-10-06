@@ -22,7 +22,7 @@
 // that writes into `../🧫️fixtures/`, and its output is reviewed and committed before any test reads it.
 //
 //   bun 📜️script.ts generate [--out <dir>]   # (re)builds both engines and writes every fixture
-//   bun 📜️script.ts manifests                 # prints the fixtureManifests entries for all 61 committed fixtures
+//   bun 📜️script.ts manifests                 # prints the testEvidence entries for all 61 committed fixtures
 //
 // @see ../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️gif-las-pdf17-findings.md
 
@@ -40,7 +40,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const SUBSET = "base";
-const ASSET_ENGINE = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
+const REFERENCE_ENGINE = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const MUTATION_ENGINE = join(HERE, "🔁️codec", "📦️packages", "🦀️rust");
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 const ORACLE_ID = "lopdf-pdf-1-7-base-mutate-reader";
@@ -130,7 +130,7 @@ async function sha256(path: string): Promise<string> {
 
 //#region 🚪️Commands
 async function generate(outRoot: string): Promise<void> {
-  build(ASSET_ENGINE);
+  build(REFERENCE_ENGINE);
   build(MUTATION_ENGINE);
   mkdirSync(join(outRoot, ASSET_DIRECTORY), { recursive: true });
   const asset = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(outRoot, ASSET_DIRECTORY, ASSET_FILE)], { stdio: "inherit" });
@@ -142,7 +142,6 @@ async function generate(outRoot: string): Promise<void> {
 async function manifests(): Promise<void> {
   const entries: unknown[] = [];
   entries.push({
-    schema: "semio.repository-test.fixture/v2",
     id: ASSET_RECIPE,
     class: "third-party-generated",
     target: { artifact: "s.stdio.pdf", standard: "1.7", subset: SUBSET },
@@ -167,7 +166,6 @@ async function manifests(): Promise<void> {
       files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "application/pdf", sha256: await sha256(path), bytes: readFileSync(path).length });
     }
     entries.push({
-      schema: "semio.repository-test.fixture/v2",
       id: `${SUBSET}-${kind}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.pdf", standard: "1.7", subset: SUBSET },

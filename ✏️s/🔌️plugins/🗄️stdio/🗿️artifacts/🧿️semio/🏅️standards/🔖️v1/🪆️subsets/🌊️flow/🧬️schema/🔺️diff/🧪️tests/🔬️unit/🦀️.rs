@@ -1,5 +1,9 @@
+use crate::flow::io::text::diff::dec_edge;
+use crate::flow::io::text::diff::enc_edge;
+use crate::flow::io::text::diff::dec_node;
+use crate::flow::io::text::diff::enc_node;
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn node(id: &str, kind: &str, label: &str, params: Vec<(&str, &str)>, x: f64, y: f64) -> FlowNode {

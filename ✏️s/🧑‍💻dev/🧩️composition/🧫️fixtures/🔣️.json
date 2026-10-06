@@ -965,7 +965,7 @@
       "sha256": "a0d2380065a6924102ba4d62d74e63034eea64321035c32a51d9e291e03ba4df",
       "laws": [
         "editor::generation3d::modes::edit::windows::flow::tests::flow_graph_node_status_is_localized",
-        "editor::generation3d::modes::edit::windows::flow::tests::the_node_graph_canvas_declares_the_activate_binding_the_keyboard_fixture_states",
+        "editor::generation3d::modes::edit::windows::flow::tests::the_node_graph_canvas_declares_the_activate_binding_the_keyboard_snapshot_states",
         "editor::generation3d::modes::edit::windows::flow::tests::flow_graph_outline_answers_its_language_agnostic_law",
         "editor::generation3d::modes::edit::windows::flow::tests::flow_graph_rows_pick_through_the_tree_domain_and_hover_on_their_own"
       ]

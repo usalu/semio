@@ -56,7 +56,7 @@ fn round_trip(kind: &str, input: &SerdeJson) -> Result<String, String> {
 }
 
 fn vectors(ctx: &Context) -> Result<Vec<PayloadCase>, String> {
-    let bytes = ctx.fixture_bytes("shared://✉️payload-vectors.json")?;
+    let bytes = ctx.input_bytes("shared://✉️payload-vectors.json")?;
     let parsed: SerdeJson = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
     let cases = parsed.get("cases").and_then(SerdeJson::as_array).ok_or("payload vectors have no cases array")?;
     cases

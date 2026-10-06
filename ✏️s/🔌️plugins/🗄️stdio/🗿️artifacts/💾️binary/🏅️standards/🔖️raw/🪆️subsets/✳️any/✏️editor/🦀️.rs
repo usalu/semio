@@ -266,7 +266,7 @@ fn build_binary_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Bin
         return Ok(None);
     }
     if binary_command_id(&request.command) != request.tool_id {
-        return Err(Fault::from("stdio-binary-text-command-tool-mismatch"));
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-binary-text-command-tool-mismatch"));
     }
     let tool_id = binary_command_id(&request.command);
     let operation = AppOperationContext {

@@ -10,11 +10,9 @@ use std::rc::Rc;
 
 //#region 🧬️Contract
 
-pub const SEQUENCE_ABI_SCHEMA: &str = include_str!("🧬️schema/🔣️.json");
-
 pub const SEQUENCE_OPERATION_OPEN: u16 = 2_300;
-pub const SEQUENCE_OPERATION_LOAD_FIXTURE: u16 = 2_301;
-pub const SEQUENCE_OPERATION_FIXTURE: u16 = 2_302;
+pub const SEQUENCE_OPERATION_LOAD_SNAPSHOT: u16 = 2_301;
+pub const SEQUENCE_OPERATION_SNAPSHOT: u16 = 2_302;
 pub const SEQUENCE_OPERATION_CATALOGUE: u16 = 2_303;
 pub const SEQUENCE_OPERATION_ADD_STEP: u16 = 2_304;
 pub const SEQUENCE_OPERATION_ADD_STEP_DROPPED: u16 = 2_305;

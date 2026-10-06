@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Layer"
+        },
+        "description": {
+          "en": "Name of the layer.",
+          "de": "Name des Layers."
+        },
+        "ref": {
+          "kind": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "colorIndex": {
       "anyOf": [
@@ -36,7 +53,8 @@
         "description": {
           "en": "ACI color number; 256 = by layer, 0 = by block.",
           "de": "ACI-Farbnummer; 256 = von Layer, 0 = von Block."
-        }
+        },
+        "step": 1
       }
     },
     "lineType": {
@@ -64,7 +82,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Visible",
+          "de": "Sichtbar"
+        },
+        "description": {
+          "en": "Whether the layer is displayed.",
+          "de": "Ob der Layer angezeigt wird."
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-point-applied",
       "class": "handcrafted",
       "target": {
@@ -50,7 +49,6 @@
       "notes": "InsertPoint{index:1,point:<the real Puzzle5D pattern-sphere third point>} inserts a real point (identical to the one this subset's own differential feature uses for set-snapshot) between the two base points."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-point-applied",
       "class": "handcrafted",
       "target": {
@@ -93,7 +91,6 @@
       "notes": "RemovePoint{index:0} drops the first of two points, leaving one."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-point-applied",
       "class": "handcrafted",
       "target": {

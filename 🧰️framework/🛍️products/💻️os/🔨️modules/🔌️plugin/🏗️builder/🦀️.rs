@@ -782,7 +782,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             return Err(PluginAssemblyError::new("plugin-assembly.surface-dependency-gate", breach));
         }
         crate::app::host_foreign_surface_kinds(&mut plugin.manifest);
-        let assembly = store::begin_artifact_assembly().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
+        let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
         crate::app::commit_artifact_registration_plan(&assembly, registry_plan)?;
         Ok(plugin.with_descriptor_extras(crate::plugin_runtime::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets }))
     }

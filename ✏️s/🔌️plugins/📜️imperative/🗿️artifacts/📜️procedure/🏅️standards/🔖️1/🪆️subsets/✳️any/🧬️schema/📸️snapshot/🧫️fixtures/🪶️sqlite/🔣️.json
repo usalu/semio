@@ -1,9 +1,0 @@
-{
-  "snapshot": {
-    "schema": "owned procedure 日本\u0000",
-    "flow": {"childId": "program child 日本", "target": {"artifactId": "independent program target", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow"}}},
-    "text": {"childId": "seed child β", "target": {"artifactId": "independent seed target", "dialect": {"artifactKind": "arbitrary owned kind", "standard": "", "subset": "owned subset"}}}
-  },
-  "editedSchema": "independent procedure schema 日本",
-  "editedTarget": "independent seed target β"
-}

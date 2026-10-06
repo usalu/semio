@@ -21,17 +21,13 @@ pub struct PaintRegionMutation {
     pub alpha: u8,
 }
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 impl protocol::MutationKind<TiffSnapshot, TiffMutation> for PaintRegionMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "tiled-region", kind: "paint-region", record: "PaintRegion" };
 
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<TiffDiff> {
-        let region = crate::io::TiffRegion { x: self.x, y: self.y, width: self.width, height: self.height };
-        match crate::io::paint_tiff_region_controlled(base, &self.revision, self.ifd_index, region, [self.red, self.green, self.blue, self.alpha], &mut |_, _| true) {
+        let region = crate::standards::v6_0::subsets::document::io::TiffRegion { x: self.x, y: self.y, width: self.width, height: self.height };
+        match crate::standards::v6_0::subsets::document::io::paint_tiff_region_controlled(base, &self.revision, self.ifd_index, region, [self.red, self.green, self.blue, self.alpha], &mut |_, _| true) {
             Ok(next) => protocol::MutationOutcome::new(TiffDiff::between(base, &next)),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, [format!("ifd:{}:region:{},{},{},{}", self.ifd_index, self.x, self.y, self.width, self.height)]),
         }
@@ -53,5 +49,5 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for PaintRegionMutation 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
     let base = crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot();
-    TiffMutation::PaintRegion(PaintRegionMutation { revision: crate::io::tiff_revision(&base), ifd_index: 0, x: 0, y: 0, width: 1, height: 1, red: 0, green: 0, blue: 0, alpha: 255 })
+    TiffMutation::PaintRegion(PaintRegionMutation { revision: crate::standards::v6_0::subsets::document::io::tiff_revision(&base), ifd_index: 0, x: 0, y: 0, width: 1, height: 1, red: 0, green: 0, blue: 0, alpha: 255 })
 }

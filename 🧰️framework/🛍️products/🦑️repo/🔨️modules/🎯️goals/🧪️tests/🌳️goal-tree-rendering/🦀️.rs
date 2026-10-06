@@ -8,7 +8,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 #[cfg(feature = "sut")]
 fn seeds(ctx: &Context) -> Result<(Vec<semio_framework_repo_goals::GoalSeed>, Vec<semio_framework_repo_goals::TicketSeed>), String> {
     use semio_framework_repo_goals as goals;
-    let file = ctx.fixture_json("shared://🌳️tree-vectors.json")?;
+    let file = ctx.input_json("shared://🌳️tree-vectors.json")?;
     let goal_seeds = file
         .array("goals")
         .iter()

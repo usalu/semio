@@ -43,9 +43,9 @@ fn the_artifact_facet_wraps_exactly_the_snapshot() {
 #[test]
 fn the_builder_facet_constructs_from_text_and_from_binary() {
     let document = crate::examples::wall_roof_facade_strip::snapshot();
-    let text = crate::schema::snapshot::text::print_dsl(&document);
+    let text = crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&document);
     assert_eq!(Wfc3dBuilderConstruction::from_text(&text).expect("text builds").build().expect("no diagnostics"), document);
-    let bytes = crate::schema::snapshot::binary::encode(&document);
+    let bytes = crate::standards::v1::subsets::any::io::binary::snapshot::encode(&document);
     assert_eq!(Wfc3dBuilderConstruction::from_binary(&bytes).expect("binary builds").build().expect("no diagnostics"), document);
     assert_eq!(Wfc3dBuilderConstruction::empty().build().expect("empty builds"), Wfc3dSnapshot::default());
 }
@@ -53,10 +53,10 @@ fn the_builder_facet_constructs_from_text_and_from_binary() {
 #[test]
 fn the_analyzer_facet_recognises_both_native_carriers() {
     let document = crate::examples::tower_stack::snapshot();
-    let text = crate::schema::snapshot::text::print_dsl(&document);
+    let text = crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&document);
     let analysis = Wfc3dAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(&text)]);
     assert_eq!(analysis.parts.snapshot.expect("text analyses"), document);
-    let bytes = crate::schema::snapshot::binary::encode(&document);
+    let bytes = crate::standards::v1::subsets::any::io::binary::snapshot::encode(&document);
     let analysis = Wfc3dAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
     assert_eq!(analysis.parts.snapshot.expect("binary analyses"), document);
     assert_eq!(Wfc3dAnalyzerAnalysis::DIALECT.artifact_kind, "s.wfc.wfc3d");

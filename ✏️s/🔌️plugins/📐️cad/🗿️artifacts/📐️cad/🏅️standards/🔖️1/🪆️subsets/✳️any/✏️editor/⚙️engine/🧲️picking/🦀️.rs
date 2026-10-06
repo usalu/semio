@@ -3,8 +3,8 @@
 //!
 //! 🧭️ Target-neutral on purpose: these are the sub-object pick targets, visibility filters,
 //! hover-key aliases and modifier-mode selection merges a spatial editor needs, computed from the
-//! pane's own `(&[CadObject], Option<&CadGeometry>)` pair — the exact pair
-//! `modes::edit::cad_pane_working_objects` already returns. React's `World3dHost` and the wgpu
+//! pane's own `(&[CadObject], Option<&CadGeometry>)` pair — the exact pair a composed pane
+//! (`crate::CadComposedPanes`) holds. React's `World3dHost` and the wgpu
 //! `render_world3d_surface_step` both paint whatever the play app puts on the `World3d` wire, so
 //! computing this here closes the gap on BOTH targets at once instead of twice.
 //!

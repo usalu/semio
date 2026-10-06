@@ -1,0 +1,34 @@
+{
+  "schemaBytes": 3963,
+  "tableWidths": {
+    "zip_archive": 4,
+    "zip_central_extra_field": 4,
+    "zip_central_extra_field_byte": 4,
+    "zip_central_header": 11,
+    "zip_central_legacy_comment_byte": 4,
+    "zip_central_legacy_name_byte": 4,
+    "zip_entry": 6,
+    "zip_entry_byte": 4,
+    "zip_local_extra_field": 4,
+    "zip_local_extra_field_byte": 4,
+    "zip_local_header": 6,
+    "zip_local_legacy_name_byte": 4
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 30,
+      "valueBytes": 1151
+    },
+    {
+      "id": "emptyEntries",
+      "rows": 1,
+      "valueBytes": 36
+    },
+    {
+      "id": "absentEntryMetadata",
+      "rows": 11,
+      "valueBytes": 528
+    }
+  ]
+}

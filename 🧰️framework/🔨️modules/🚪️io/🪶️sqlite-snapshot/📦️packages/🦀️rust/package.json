@@ -7,7 +7,8 @@
   "scripts": {
     "test-refusal": "bun nx run @semio-tech/framework-sqlite-snapshot-rs:test-refusal",
     "test-native": "bun nx run @semio-tech/framework-sqlite-snapshot-rs:test-native",
-    "test-operation": "bun nx run @semio-tech/framework-sqlite-snapshot-rs:test-operation"
+    "test-operation": "bun nx run @semio-tech/framework-sqlite-snapshot-rs:test-operation",
+    "test-ownership": "bun nx run @semio-tech/framework-sqlite-snapshot-rs:test-ownership"
   },
   "nx": {
     "includedScripts": []

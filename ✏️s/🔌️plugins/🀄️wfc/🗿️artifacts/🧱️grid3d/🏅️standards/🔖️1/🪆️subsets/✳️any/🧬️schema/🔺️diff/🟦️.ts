@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🔺 s.wfc.grid3d diff — a sparse, key-keyed delta. An indexed upsert rides as a `[index, member]`
  * pair, exactly as the Rust `Vec<(usize, T)>` lanes encode it. */
 

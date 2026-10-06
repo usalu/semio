@@ -20,7 +20,7 @@
 // the expectation it is measured against.
 //
 //   bun 📜️script.ts generate  [--only <fixture-id>]     # writes the semantic fixture directory's ⬅️before/➡️after pair
-//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the fixtureManifests block (JSON)
+//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the testEvidence block (JSON)
 //
 // @see ../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏭️generator/📜️script.ts — the
 //      sibling generator this file's CLI/recipe shape is mirrored from.
@@ -114,7 +114,6 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
   const files = [fileEntry("expected-before-svg", dir, BEFORE_FILE, directory), fileEntry("expected-after-svg", dir, AFTER_FILE, directory)];
 
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.svg", standard: "1.1", subset: "base" },

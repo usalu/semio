@@ -1,4 +1,4 @@
-import {binary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type { WavData, WavFmt, WavMutation, WavSnapshot } from "../../../🧬️schema/🧬️mutations/🟦️";
 
 export const WAV_AUDIO_EDIT_PAYLOAD_SCHEMA = "s.stdio.wav.command.edit-audio.v1" as const;

@@ -1,0 +1,98 @@
+[
+  {
+    "name": "Fresh Commands",
+    "source": "isolated group opacity applies once to overlapping children",
+    "steps": 0,
+    "mode": "live"
+  },
+  {
+    "name": "After Group Begin",
+    "source": "isolated group opacity applies once to overlapping children",
+    "steps": 1,
+    "mode": "live"
+  },
+  {
+    "name": "After First Draw",
+    "source": "isolated group opacity applies once to overlapping children",
+    "steps": 2,
+    "mode": "live"
+  },
+  {
+    "name": "After Second Draw",
+    "source": "isolated group opacity applies once to overlapping children",
+    "steps": 3,
+    "mode": "live"
+  },
+  {
+    "name": "After Group End",
+    "source": "isolated group opacity applies once to overlapping children",
+    "steps": 4,
+    "mode": "live"
+  },
+  {
+    "name": "After Adjustment Draw",
+    "source": "adjustment changes only existing colors",
+    "steps": 1,
+    "mode": "live"
+  },
+  {
+    "name": "After Adjustment",
+    "source": "adjustment changes only existing colors",
+    "steps": 2,
+    "mode": "live"
+  },
+  {
+    "name": "Across Tile Boundary",
+    "source": "Transformed Group Mask Across Three Tiles",
+    "steps": 1025,
+    "mode": "live"
+  },
+  {
+    "name": "Partial Masked Adjustment",
+    "source": "Masked Adjustment Inside an Isolated Group",
+    "steps": 9,
+    "mode": "live"
+  },
+  {
+    "name": "Completed Group",
+    "source": "isolated group opacity applies once to overlapping children",
+    "steps": 0,
+    "mode": "complete"
+  },
+  {
+    "name": "Completed Mask",
+    "source": "pixel mask coverage multiplies alpha",
+    "steps": 0,
+    "mode": "complete"
+  },
+  {
+    "name": "Completed Tiles",
+    "source": "Transformed Group Mask Across Three Tiles",
+    "steps": 0,
+    "mode": "complete"
+  },
+  {
+    "name": "Cancelled Fresh",
+    "source": "isolated group opacity applies once to overlapping children",
+    "steps": 0,
+    "mode": "cancelled"
+  },
+  {
+    "name": "Cancelled Tile",
+    "source": "Transformed Group Mask Across Three Tiles",
+    "steps": 1025,
+    "mode": "cancelled"
+  },
+  {
+    "name": "Unpublished Complete Cancellation",
+    "source": "isolated group opacity applies once to overlapping children",
+    "steps": 0,
+    "mode": "cancelledComplete"
+  },
+  {
+    "name": "Published Complete Cancellation",
+    "source": "isolated group opacity applies once to overlapping children",
+    "steps": 0,
+    "mode": "published"
+  }
+]

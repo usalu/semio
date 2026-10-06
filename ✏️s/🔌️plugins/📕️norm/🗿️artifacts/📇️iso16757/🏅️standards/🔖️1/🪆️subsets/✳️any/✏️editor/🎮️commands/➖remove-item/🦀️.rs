@@ -1,6 +1,6 @@
 //! Norm command — `remove-item`.
 
-use crate::op::Iso16757Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Iso16757Mutation;
 use crate::Iso16757Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

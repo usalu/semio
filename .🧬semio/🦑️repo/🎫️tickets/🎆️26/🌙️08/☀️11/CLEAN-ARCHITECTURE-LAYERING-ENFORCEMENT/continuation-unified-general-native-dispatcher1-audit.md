@@ -1,0 +1,3 @@
+# Unified General Native Dispatcher 1 Audit
+
+The dispatcher binds the exact independently admitted held plan, metadata, preparer, codec and per-owner proof. All held endpoint hashes are checked before and immediately before the original script, with the qualified snapshot lock after hash. The actual held executor is guarded before and after import and before dispatch; final full checks and raw/executor guards retain source gaps or cancellation/refusal terminals. Graph runs the unchanged argument-free whole script; UI runs its whole script with explicit board feature extension. No live whole Root source identity or runtime outcome is inferred from dispatch admission. Syntax diagnostics are empty.

@@ -20,6 +20,7 @@ const VCS_PLAY_SURFACE_HISTORY: &str = "vcs.play.history";
 /// 🧱️ Stitched into the app manifest by `crate::editor::vcs::create_vcs_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: VCS_PLAY_WINDOW_HISTORY.into(),
         label: LocalizedLabel::native("History", "Verlauf"),
         body_key: VCS_PLAY_BODY_HISTORY.into(),

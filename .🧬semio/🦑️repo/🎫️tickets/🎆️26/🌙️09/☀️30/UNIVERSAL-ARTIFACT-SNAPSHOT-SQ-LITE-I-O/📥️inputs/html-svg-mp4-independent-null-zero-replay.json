@@ -1,0 +1,440 @@
+[
+  {
+    "kind": "html",
+    "case": "full",
+    "rows": 38,
+    "valueBytes": 864,
+    "nullCells": 1,
+    "tables": [
+      {
+        "table": "html_attribute",
+        "rows": 5,
+        "semanticBytes": 150,
+        "nullCells": 1
+      },
+      {
+        "table": "html_child",
+        "rows": 10,
+        "semanticBytes": 320,
+        "nullCells": 0
+      },
+      {
+        "table": "html_comment",
+        "rows": 1,
+        "semanticBytes": 12,
+        "nullCells": 0
+      },
+      {
+        "table": "html_document",
+        "rows": 1,
+        "semanticBytes": 30,
+        "nullCells": 0
+      },
+      {
+        "table": "html_element",
+        "rows": 7,
+        "semanticBytes": 85,
+        "nullCells": 0
+      },
+      {
+        "table": "html_node",
+        "rows": 11,
+        "semanticBytes": 164,
+        "nullCells": 0
+      },
+      {
+        "table": "html_raw_text",
+        "rows": 2,
+        "semanticBytes": 76,
+        "nullCells": 0
+      },
+      {
+        "table": "html_text",
+        "rows": 1,
+        "semanticBytes": 27,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "kind": "svg",
+    "case": "full",
+    "rows": 41,
+    "valueBytes": 1030,
+    "nullCells": 2,
+    "tables": [
+      {
+        "table": "svg_attribute",
+        "rows": 5,
+        "semanticBytes": 224,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_cdata",
+        "rows": 1,
+        "semanticBytes": 27,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_child",
+        "rows": 8,
+        "semanticBytes": 256,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_comment",
+        "rows": 3,
+        "semanticBytes": 39,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_declaration",
+        "rows": 1,
+        "semanticBytes": 30,
+        "nullCells": 1
+      },
+      {
+        "table": "svg_doctype",
+        "rows": 1,
+        "semanticBytes": 33,
+        "nullCells": 1
+      },
+      {
+        "table": "svg_document",
+        "rows": 1,
+        "semanticBytes": 25,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_document_misc",
+        "rows": 2,
+        "semanticBytes": 76,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_element",
+        "rows": 5,
+        "semanticBytes": 57,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_entity",
+        "rows": 1,
+        "semanticBytes": 49,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_node",
+        "rows": 11,
+        "semanticBytes": 175,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_processing_instruction",
+        "rows": 1,
+        "semanticBytes": 19,
+        "nullCells": 0
+      },
+      {
+        "table": "svg_text",
+        "rows": 1,
+        "semanticBytes": 20,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "kind": "mp4",
+    "case": "full",
+    "rows": 66,
+    "valueBytes": 2680,
+    "nullCells": 1,
+    "tables": [
+      {
+        "table": "mp4_avc_extension",
+        "rows": 1,
+        "semanticBytes": 32,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_avc_pps",
+        "rows": 1,
+        "semanticBytes": 26,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_avc_sps",
+        "rows": 3,
+        "semanticBytes": 78,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_avc_sps_extension",
+        "rows": 2,
+        "semanticBytes": 51,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_bitrate",
+        "rows": 1,
+        "semanticBytes": 32,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_chunk_sample_count",
+        "rows": 4,
+        "semanticBytes": 128,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_codec",
+        "rows": 2,
+        "semanticBytes": 40,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_color",
+        "rows": 1,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_compatible_brand",
+        "rows": 4,
+        "semanticBytes": 118,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_document",
+        "rows": 1,
+        "semanticBytes": 24,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_edit",
+        "rows": 2,
+        "semanticBytes": 117,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_ftyp",
+        "rows": 1,
+        "semanticBytes": 30,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_hevc_array",
+        "rows": 2,
+        "semanticBytes": 80,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_hevc_config",
+        "rows": 1,
+        "semanticBytes": 140,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_hevc_nal",
+        "rows": 3,
+        "semanticBytes": 78,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_movie",
+        "rows": 1,
+        "semanticBytes": 99,
+        "nullCells": 1
+      },
+      {
+        "table": "mp4_movie_matrix",
+        "rows": 9,
+        "semanticBytes": 288,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_pixel_aspect_ratio",
+        "rows": 1,
+        "semanticBytes": 24,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_sample",
+        "rows": 2,
+        "semanticBytes": 99,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_track",
+        "rows": 2,
+        "semanticBytes": 112,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_track_matrix",
+        "rows": 18,
+        "semanticBytes": 576,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_track_metadata",
+        "rows": 2,
+        "semanticBytes": 235,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_visual_sample_entry",
+        "rows": 2,
+        "semanticBytes": 208,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "kind": "mp4",
+    "case": "emptyBrandsTracks",
+    "rows": 12,
+    "valueBytes": 441,
+    "nullCells": 1,
+    "tables": [
+      {
+        "table": "mp4_avc_extension",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_avc_pps",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_avc_sps",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_avc_sps_extension",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_bitrate",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_chunk_sample_count",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_codec",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_color",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_compatible_brand",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_document",
+        "rows": 1,
+        "semanticBytes": 24,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_edit",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_ftyp",
+        "rows": 1,
+        "semanticBytes": 30,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_hevc_array",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_hevc_config",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_hevc_nal",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_movie",
+        "rows": 1,
+        "semanticBytes": 99,
+        "nullCells": 1
+      },
+      {
+        "table": "mp4_movie_matrix",
+        "rows": 9,
+        "semanticBytes": 288,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_pixel_aspect_ratio",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_sample",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_track",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_track_matrix",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_track_metadata",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "mp4_visual_sample_entry",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  }
+]

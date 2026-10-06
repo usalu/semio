@@ -1,4 +1,4 @@
-//! 🧪️ `rotate-selection` fixture — `🎯️turns`.
+//! 🧪️ `rotate-selection` scene_snapshot — `🎯️turns`.
 //!
 //! A half turn about +x over an object AND a target volume, each about its own origin; `object-b`, which `object-a` attracts, is re-placed from the turned `object-a` (`mutation.cascade`).
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "rotate-selection/turns: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

@@ -87,7 +87,7 @@ codegen-units = 1
 All have `[workspace]` section with their own members, built independently:
 
 **Test/Fixture Fixtures:**
-1. `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml`
+1. `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.toml`
    - Browser fixture; fixture-scoped, not in root member list
 2. `🧰️framework/🛍️products/💻️os/🧪️testkit/🧩️jcoprobe/👽️guest/📦️packages/🦀️rust/Cargo.toml`
    - Testkit probe; fixture-scoped

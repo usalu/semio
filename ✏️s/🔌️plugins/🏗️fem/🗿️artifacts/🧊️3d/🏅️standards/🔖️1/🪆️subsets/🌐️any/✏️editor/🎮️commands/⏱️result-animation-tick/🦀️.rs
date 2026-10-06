@@ -3,7 +3,7 @@
 //! (`semio_s_artifact_fem_2d::editor::fem2d::commands::result_animation_tick`), driven over
 //! [`crate::editor::fem3d::commands::set_result_animation::Fem3dResultsPlayback`].
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel};
 pub use semio_s_artifact_fem_2d::editor::fem2d::commands::result_animation_tick::{result_animation_tick_step, ResultAnimationTick};
 

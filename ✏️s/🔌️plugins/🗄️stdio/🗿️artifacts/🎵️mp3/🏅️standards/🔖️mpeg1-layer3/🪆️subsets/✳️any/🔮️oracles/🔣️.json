@@ -179,9 +179,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-frames-applied",
       "class": "handcrafted",
       "target": {
@@ -224,7 +223,6 @@
       "notes": "SetFrames{frames:[...]} replaces the whole MPEG frame list with a real 2-frame sequence (frame 2 appended), every header bit-field spelled per the real 4-byte MPEG1 Layer III header layout."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-id3v1-applied",
       "class": "handcrafted",
       "target": {
@@ -267,7 +265,6 @@
       "notes": "SetId3v1{id3v1:None} strips the 128-byte ID3v1 trailer."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-id3v2-applied",
       "class": "handcrafted",
       "target": {

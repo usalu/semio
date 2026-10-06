@@ -1,6 +1,6 @@
 //! 📥️ 📥️ Forms play app commands command — `set-active-example`.
 
-use crate::document_dsl as forms_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot as forms_dsl;
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::schema::empty_forms_snapshot;
 use crate::{op::FormMutation, FormsSnapshot};

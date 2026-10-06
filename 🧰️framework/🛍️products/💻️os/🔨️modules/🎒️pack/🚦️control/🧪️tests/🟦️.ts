@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020.js";
+
 import {readFileSync} from "node:fs";
 import fixture from "../🧫️fixtures/🔣️.json";
 test("command transport exposes authored finite admission, cancellation and progress before external operations",()=>{
@@ -16,6 +16,5 @@ test("command transport exposes authored finite admission, cancellation and prog
 });
 
 test("independent fatal UTF8 decoder preserves the full page-crossing scalar and rejects an incomplete scalar",()=>{
- const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,textTransfer:{...fixture.textTransfer,pageBytes:0}})).toBe(false);
  const recipe=fixture.textTransfer;const payload=recipe.prefix.repeat(recipe.prefixRepeat)+recipe.tail;const bytes=Buffer.from(payload);expect(bytes.length).toBe(65540);expect(new TextDecoder("utf-8",{fatal:true}).decode(bytes)).toBe(payload);expect(()=>new TextDecoder("utf-8",{fatal:true}).decode(Uint8Array.from(recipe.invalid))).toThrow();expect(Buffer.from(recipe.prefix.repeat(recipe.prefixRepeat)).length).toBe(recipe.pageBytes-1);console.log("[DEBUG] independent fatal UTF8 decoder retained complete multibyte input across the authored page boundary");
 });

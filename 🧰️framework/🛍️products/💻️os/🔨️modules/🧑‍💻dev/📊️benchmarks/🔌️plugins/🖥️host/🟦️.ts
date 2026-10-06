@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { runCmdStatus } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { WGPU_SCRIPT_PATH } from "../../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
-const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
+const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 
 function benchNativeRows(repoRoot: string, outDir: string, registryPath: string, shardCount: number): Record<string, unknown>[] {
   const wasmPath = join(repoRoot, SCALE_COMPONENT_ARTIFACT);

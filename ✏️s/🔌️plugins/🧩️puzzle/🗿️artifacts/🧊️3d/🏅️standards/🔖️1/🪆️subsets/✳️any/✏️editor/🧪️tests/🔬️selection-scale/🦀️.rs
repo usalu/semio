@@ -18,7 +18,7 @@ fn mentions(node: &Value, needle: &str) -> bool {
 /// the outliner both landed nothing — so every selection-scoped verb on it was unreachable. The
 /// framework prunes a picked id that its `interaction_topology` does not contain
 /// (`protocol::validate_state`), and that topology is rebuilt per pick off a fresh decode of the whole
-/// fixture, so a pick on a large document is exactly where a narrowed universe would show up first.
+/// scene_snapshot, so a pick on a large document is exactly where a narrowed universe would show up first.
 #[semio_framework_async_macros::async_test]
 async fn a_pick_by_id_on_the_flagship_document_persists_and_reaches_inspection() {
     let mut app = app().await;
@@ -73,7 +73,7 @@ async fn a_pick_reaches_the_world_body_of_every_window_instance_the_host_refresh
 /// ⏱️ Wave B46 LAW: one pick's interaction work is bounded independent of the document size.
 ///
 /// 🧾️ The measurable unit is how many times the app's own `interaction_topology` is built — one build
-/// is one full fixture decode plus one `TopologyNode` per object, vortex, attraction, target volume,
+/// is one full scene_snapshot decode plus one `TopologyNode` per object, vortex, attraction, target volume,
 /// reference and object kind (~900 nodes on the flagship). A pick used to pay it TWICE, once in the
 /// framework's `interactionSelect` arm and once in the revalidation behind it, with nothing between
 /// them that can move the document. The count must be the same on a 1-object and a 180-object

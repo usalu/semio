@@ -11,10 +11,38 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Type id",
+          "de": "Typ-ID"
+        },
+        "description": {
+          "en": "Id the new type carries.",
+          "de": "Kennung, die der neue Typ trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "description": {
+          "en": "Display name of the new type.",
+          "de": "Anzeigename des neuen Typs."
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "category": {
       "type": "string",

@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️SceneJson
 /// 👁️ Read-only twin of the editor's `object_scale_json`, over the real typed `Puzzle3dScale` (a
-/// scalar-or-`[x,y,z]` closed union) instead of a `serde_json::Value` scratch fixture.
+/// scalar-or-`[x,y,z]` closed union) instead of a `serde_json::Value` scratch scene_snapshot.
 fn puzzle3d_view_object_scale(object: &Puzzle3dObject) -> [f64; 3] {
     match &object.scale {
         Some(Puzzle3dScale::Uniform(scale)) => [*scale, *scale, *scale],

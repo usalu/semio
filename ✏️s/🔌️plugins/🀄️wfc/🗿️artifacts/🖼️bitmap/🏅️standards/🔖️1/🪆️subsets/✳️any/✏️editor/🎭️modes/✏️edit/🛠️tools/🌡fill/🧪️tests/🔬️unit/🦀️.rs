@@ -1,7 +1,7 @@
 //! 🧪 Fill tool — payload shape, schema leaf, and interactive step progress.
 
 use super::*;
-use crate::schema::snapshot::{encode_base64, BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel};
+use crate::schema::snapshot::{BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel};
 use semio_framework_job::{Generation, InteractiveJob, InteractiveJobCloseStep, OperationId, StepBudget, StepOutcome};
 use semio_framework_plugin::ToolRunJobPort;
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
@@ -10,7 +10,7 @@ fn stripes() -> BitmapSnapshot {
     let indices: Vec<u8> = (0..16u32).map(|cell| (cell % 2) as u8).collect();
     BitmapSnapshot {
         seed: 11,
-        input: BitmapInput { width: 4, height: 4, palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)], pixels: encode_base64(&indices) },
+        input: BitmapInput { width: 4, height: 4, palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)], pixels: (indices).to_vec() },
         output: BitmapOutputSpec { width: 6, height: 4, periodic: true },
         model: BitmapOverlappingModel { pattern_size: 2, symmetry: 1, periodic_input: true, ground: None },
         pinned: Vec::new(),
@@ -22,7 +22,7 @@ fn odd_checkerboard(seed: u64) -> BitmapSnapshot {
     let indices: Vec<u8> = (0..16u32).map(|cell| ((cell % 4 + cell / 4) % 2) as u8).collect();
     BitmapSnapshot {
         seed,
-        input: BitmapInput { width: 4, height: 4, palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)], pixels: encode_base64(&indices) },
+        input: BitmapInput { width: 4, height: 4, palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)], pixels: (indices).to_vec() },
         output: BitmapOutputSpec { width: 5, height: 5, periodic: true },
         model: BitmapOverlappingModel { pattern_size: 2, symmetry: 1, periodic_input: true, ground: None },
         pinned: Vec::new(),

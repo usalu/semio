@@ -58,12 +58,8 @@ impl CurationSnapshot {
 pub fn curation_selection_summary(snapshot: &CurationSnapshot) -> String {
     snapshot.curated.iter().map(|item| format!("{}x{}", item.object_id, item.count)).collect::<Vec<_>>().join(" ")
 }
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;
 #[cfg(test)]
 #[path = "../🧪️tests/🪪️document-contract/🦀️.rs"]
 mod document_contract_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+

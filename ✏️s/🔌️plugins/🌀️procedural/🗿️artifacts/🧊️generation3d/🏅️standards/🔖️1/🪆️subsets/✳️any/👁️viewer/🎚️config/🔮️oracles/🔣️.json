@@ -160,9 +160,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-sun-applied",
       "class": "handcrafted",
       "target": {
@@ -227,7 +226,6 @@
       "notes": "Moving the sun replaces its JSON."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-active-example-applied",
       "class": "handcrafted",
       "target": {
@@ -292,7 +290,6 @@
       "notes": "Picking the box-fillet example makes it what this read-only surface shows."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-show-mode-applied",
       "class": "handcrafted",
       "target": {
@@ -357,7 +354,6 @@
       "notes": "Switching to shaded with edges replaces the shading mode."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-preview-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -422,7 +418,6 @@
       "notes": "Orbiting the preview replaces its camera."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-lod-mode-applied",
       "class": "handcrafted",
       "target": {

@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn update_text_frame_sets_inset_and_thread_and_inverse_restores_them() {
-    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let mutation = LayoutMutation::UpdateTextFrame(UpdateTextFrame {
         page_id: "page-1".into(),
         frame_id: "frame-text-1".into(),

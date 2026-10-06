@@ -13,6 +13,7 @@ const PLAYBOOK_PLAY_SURFACE_SOURCE: &str = "playbook.play.source";
 
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: PLAYBOOK_PLAY_WINDOW_SOURCE.into(),
         label: LocalizedLabel::native("Source", "Quelle"),
         body_key: PLAYBOOK_PLAY_BODY_SOURCE.into(),

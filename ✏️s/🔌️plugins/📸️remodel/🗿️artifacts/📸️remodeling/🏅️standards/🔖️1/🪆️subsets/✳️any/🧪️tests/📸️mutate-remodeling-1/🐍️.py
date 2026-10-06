@@ -175,7 +175,7 @@ def doc_json(ctx: Context):
 
 
 def _read_json(ctx: Context, uri: str):
-    return json.loads(ctx.fixture_bytes(uri))
+    return json.loads(ctx.input_bytes(uri))
 
 
 def spec_of(ctx: Context):
@@ -950,7 +950,7 @@ def identity_handler(ctx: Context) -> Outcome:
     that the carrier really is this artifact's DSL and not an empty or JSON file, so a handler that
     answered with whatever it was handed would be caught here."""
     carrier = doc_json(ctx)["carrier"]
-    committed = ctx.fixture_bytes(carrier)
+    committed = ctx.input_bytes(carrier)
     text = committed.decode("utf-8")
     assert text.strip(), "identity-round-trip: the committed example is empty"
     assert not text.lstrip().startswith(("{", "[")), "identity-round-trip: the committed example is JSON, not the DSL carrier this scenario names"

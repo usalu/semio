@@ -1,0 +1,32 @@
+[
+  {
+    "id": "version",
+    "action": "version",
+    "refused": false
+  },
+  {
+    "id": "native-metadata",
+    "action": "native-metadata",
+    "refused": false
+  },
+  {
+    "id": "unbound",
+    "action": "unbound",
+    "refused": true
+  },
+  {
+    "id": "duplicate",
+    "action": "duplicate",
+    "refused": true
+  },
+  {
+    "id": "zero",
+    "action": "zero",
+    "refused": true
+  },
+  {
+    "id": "cancel",
+    "action": "cancel",
+    "refused": true
+  }
+]

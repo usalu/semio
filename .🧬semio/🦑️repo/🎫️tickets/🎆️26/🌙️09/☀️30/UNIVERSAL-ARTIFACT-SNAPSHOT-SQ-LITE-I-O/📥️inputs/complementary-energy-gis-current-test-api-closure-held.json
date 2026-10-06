@@ -1,0 +1,57 @@
+{
+  "qualification": "Four narrow existing native test API authority corrections, predicates preserved",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs",
+      "regions": [
+        {
+          "before": "dsl::json::from_json_str(&vector[\"base\"].to_string())",
+          "after": "semio_framework_pack_json::from_json_str(&vector[\"base\"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject)"
+        },
+        {
+          "before": "dsl::json::from_json_str(&vector[\"mutation\"].to_string())",
+          "after": "semio_framework_pack_json::from_json_str(&vector[\"mutation\"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject)"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+      "regions": [
+        {
+          "before": "    let args = dsl::json::from_json_str::<semio_framework_value::DslValue>(\"{\\\"camera\\\":{\\\"position\\\":[12.0,-9.0,7.5],\\\"target\\\":[4.0,3.0,1.35],\\\"zoom\\\":1.0}}\").expect(\"args\");",
+          "after": "    let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(\"{\\\"camera\\\":{\\\"position\\\":[12.0,-9.0,7.5],\\\"target\\\":[4.0,3.0,1.35],\\\"zoom\\\":1.0}}\", semio_framework_pack_json::JsonMemberPolicy::Reject).expect(\"args\");"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+      "regions": [
+        {
+          "before": "model_edit(\"rename-material\", &base, &edited, \"rename\".into())",
+          "after": "model_edit(\"rename-material\", &base, &edited)"
+        },
+        {
+          "before": "model_edit(\"change-thermostat-zone\", &base, &rehomed, \"rehome\".into())",
+          "after": "model_edit(\"change-thermostat-zone\", &base, &rehomed)"
+        },
+        {
+          "before": "super::model_edit(\"probe\", base, edited, \"probe\".into())",
+          "after": "super::model_edit(\"probe\", base, edited)"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+      "regions": [
+        {
+          "before": "    assert_eq!((png.width, png.height), (256, 256));",
+          "after": "    let preview = semio_s_artifact_stdio_png::io::png_preview(&png).expect(\"owned PNG preview\");\n    assert_eq!((preview.width, preview.height), (256, 256));"
+        },
+        {
+          "before": "    assert!(png.pixels.chunks(4).filter(|px| px[3] > 0).count() > 100, \"markers and lines are painted\");",
+          "after": "    assert!(preview.bytes.chunks(4).filter(|px| px[3] > 0).count() > 100, \"markers and lines are painted\");"
+        }
+      ]
+    }
+  ]
+}

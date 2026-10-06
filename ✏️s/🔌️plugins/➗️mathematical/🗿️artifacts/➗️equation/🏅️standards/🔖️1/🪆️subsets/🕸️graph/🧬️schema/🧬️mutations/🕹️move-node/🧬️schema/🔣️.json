@@ -29,10 +29,38 @@
       }
     },
     "x": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position X",
+          "de": "Position X"
+        },
+        "description": {
+          "en": "Horizontal canvas position the node moves to.",
+          "de": "Horizontale Zeichenflächenposition, an die der Knoten verschoben wird."
+        },
+        "step": 1,
+        "precision": 2
+      }
     },
     "y": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position Y",
+          "de": "Position Y"
+        },
+        "description": {
+          "en": "Vertical canvas position the node moves to.",
+          "de": "Vertikale Zeichenflächenposition, an die der Knoten verschoben wird."
+        },
+        "step": 1,
+        "precision": 2
+      }
     }
   }
 }

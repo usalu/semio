@@ -15,7 +15,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_artifact_wfc_2d::standards::v1::subsets::any::schema::mutations::wfc2d_mutation_report_json;
+    use semio_s_artifact_wfc_2d::standards::v1::subsets::any::io::text::mutations::wfc2d_mutation_report_json;
     use semio_repo_test_host::law::vector::{self, Leaves};
 
     fn report(leaves: &Leaves) -> Result<String, String> {

@@ -38,7 +38,7 @@ export type SemioKitMutation =
   | { AddDesign: AddDesign }
   | { RemoveDesign: RemoveDesign }
   | { EditDesign: EditDesign }
-  | { SetSnapshot: SetSnapshot };
+  | { SetSnapshot: SetSnapshot }
   | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }
 
 function stringField(row: Record<string, unknown>, field: string, at: string): string {

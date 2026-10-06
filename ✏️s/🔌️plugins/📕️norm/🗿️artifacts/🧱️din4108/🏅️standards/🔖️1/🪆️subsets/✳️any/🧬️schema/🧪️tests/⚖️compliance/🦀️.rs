@@ -3,7 +3,7 @@
 use crate::document::CheckStatus;
 use crate::field_meta::din4108_field_meta;
 use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use crate::standards::v1::subsets::any::schema::snapshot::{encode_din4108_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{encode_din4108_dsl};
 use crate::standards::v1::subsets::any::schema::{
     layer_resistance, part_2, part_3, part_4, part_6, part_7, total_resistance, u_value, F_RSI_MINIMUM, R_SE, R_SI_WALL,
 };

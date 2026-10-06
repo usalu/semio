@@ -49,14 +49,14 @@ fn replace(value: &mut DslValue, path: &[String], replacement: DslValue) {
     replace(slot, &path[1..], replacement);
 }
 
-fn fixture_view(fixture: &IntegerCarrierFixture) -> ViewModel {
+fn scene_view(fixture: &IntegerCarrierFixture) -> ViewModel {
     semio_framework_pack_json::from_json_str(&fixture.view_context.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the fixture context decodes")
 }
 
 #[semio_framework_async_macros::async_test]
 async fn both_doors_carry_the_view_context_as_the_same_exact_pack_bytes() {
     let fixture = fixture();
-    let bytes = dsl::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&fixture_view(&fixture)));
+    let bytes = dsl::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&scene_view(&fixture)));
     assert_eq!(hex(&bytes), fixture.pack_hex, "the wgpu door's `view_state_pack_base64` and the React door's `encodePackValue` must agree byte for byte");
 }
 
@@ -80,7 +80,7 @@ async fn the_guest_decodes_every_integer_field_exactly() {
 #[semio_framework_async_macros::async_test]
 async fn a_widened_float_is_refused_and_never_rounded() {
     let fixture = fixture();
-    let carried = semio_framework_value::ToValue::to_value(&fixture_view(&fixture));
+    let carried = semio_framework_value::ToValue::to_value(&scene_view(&fixture));
 
     let mut widened = carried.clone();
     replace(&mut widened, &fixture.integer_paths[0], semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(1.0)));

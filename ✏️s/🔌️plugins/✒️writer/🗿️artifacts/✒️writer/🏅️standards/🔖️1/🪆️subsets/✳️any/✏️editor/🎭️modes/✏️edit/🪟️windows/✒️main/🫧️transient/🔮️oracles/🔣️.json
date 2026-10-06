@@ -120,9 +120,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-engagement-input-applied",
       "class": "handcrafted",
       "target": {
@@ -187,7 +186,6 @@
       "notes": "Typing an engagement prompt replaces the engagement input."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-editor-selection-applied",
       "class": "handcrafted",
       "target": {
@@ -252,7 +250,6 @@
       "notes": "Selecting characters 4 to 17 records the editor selection."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-lint-generation-applied",
       "class": "handcrafted",
       "target": {

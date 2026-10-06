@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::terminology::puzzle3d_labels;
-use crate::editor::puzzle3d::{nakagin_fixture, Puzzle3dScene, PUZZLE3D_DEFAULT_UTILITY};
+use crate::editor::puzzle3d::{nakagin_scene_snapshot, Puzzle3dScene, PUZZLE3D_DEFAULT_UTILITY};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 const RETIREMENT_DRAIN_STEPS: usize = 4096;
@@ -23,8 +23,8 @@ fn labels() -> &'static Puzzle3dLabels {
     puzzle3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis")
 }
 
-fn scene(fixture: crate::editor::puzzle3d::Puzzle3dFixture) -> Puzzle3dScene {
-    Puzzle3dScene { fixture, runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() }
+fn scene(scene_snapshot: crate::editor::puzzle3d::Puzzle3dSceneSnapshot) -> Puzzle3dScene {
+    Puzzle3dScene { scene_snapshot, runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() }
 }
 
 fn section_key(suffix: &str) -> String {
@@ -80,21 +80,21 @@ fn window_of(node: &serde_json::Value) -> (usize, usize) {
 }
 
 /// 🧫️ A catalog of `kinds` object kinds, each declaring `templates` rim-vortex templates.
-fn wide_catalog(kinds: usize, templates: usize) -> crate::editor::puzzle3d::Puzzle3dFixture {
+fn wide_catalog(kinds: usize, templates: usize) -> crate::editor::puzzle3d::Puzzle3dSceneSnapshot {
     let entries: Vec<Value> = (0..kinds)
         .map(|index| {
             let vortices: Vec<Value> = (0..templates).map(|slot| json!({ "vortexKind": format!("edge-{slot}") })).collect();
             json!({ "id": format!("kind-{index}"), "label": format!("Kind {index}"), "meshUrl": "mesh://kind", "vortices": Value::from(vortices) })
         })
         .collect();
-    let mut fixture = crate::editor::puzzle3d::empty_fixture();
-    fixture.meta.kind_catalogs = Some(semio_framework_pack_json::to_dsl_value(&json!({ "objects": Value::from(entries) })));
-    fixture
+    let mut scene_snapshot = crate::editor::puzzle3d::empty_scene_snapshot();
+    scene_snapshot.meta.kind_catalogs = Some(semio_framework_pack_json::to_dsl_value(&json!({ "objects": Value::from(entries) })));
+    scene_snapshot
 }
 
 #[test]
 fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
-    let envelope = scene(nakagin_fixture());
+    let envelope = scene(nakagin_scene_snapshot());
     let node = built(&envelope, &objects_open());
     assert!(matches!(node.component, ui::Component::Tree(_)));
     let objects = node.children.iter().find(|section| section.key.as_str() == "puzzle3d-play-kinds.objects").expect("objects section");
@@ -174,7 +174,7 @@ fn a_tree_window_request_materialises_exactly_its_slice_of_the_catalog() {
 /// the row itself rather than on a leaf underneath it.
 #[test]
 fn every_object_kind_row_activates_add_object_kind_with_its_own_kind_id() {
-    let envelope = scene(nakagin_fixture());
+    let envelope = scene(nakagin_scene_snapshot());
     let node = built(&envelope, &objects_open());
     let objects = node.children.iter().find(|section| section.key.as_str() == "puzzle3d-play-kinds.objects").expect("objects section");
     let rows: Vec<_> = objects.children.iter().collect();
@@ -207,7 +207,7 @@ fn every_object_kind_row_activates_add_object_kind_with_its_own_kind_id() {
 /// under the panel is an object kind rather than a vortex template.
 #[test]
 fn the_catalogue_opens_its_object_kinds_and_folds_the_template_catalogs() {
-    let envelope = scene(nakagin_fixture());
+    let envelope = scene(nakagin_scene_snapshot());
     drain();
     let node = render(&envelope, labels(), &TreeWindows::unhosted()).expect("catalogue tree");
     let open_state = |key: &str| {
@@ -226,18 +226,18 @@ fn the_catalogue_opens_its_object_kinds_and_folds_the_template_catalogs() {
 }
 
 /// 🌲️ The DEFAULT document's catalogue, which every law above misses: they all read
-/// `nakagin_fixture()`, while the aggregator boots on `concrete-forest` (`initial_snapshot` /
+/// `nakagin_scene_snapshot()`, while the aggregator boots on `concrete-forest` (`initial_snapshot` /
 /// `create_puzzle3d_app`), so an empty objects catalog THERE is the one a user actually sees. Pins
-/// that the shipped fixture declares object kinds and that each one names a `/mesh/` representation
+/// that the shipped scene_snapshot declares object kinds and that each one names a `/mesh/` representation
 /// url which resolves through the SAME index the world mesh lane publishes — never a `meshUrl` key,
 /// which these compose-shaped rows do not carry.
 #[test]
 fn the_default_concrete_forest_catalogue_declares_kinds_with_resolvable_mesh_urls() {
-    let fixture = crate::editor::puzzle3d::default_fixture();
-    let entries = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects");
+    let scene_snapshot = crate::editor::puzzle3d::default_scene_snapshot();
+    let entries = crate::editor::puzzle3d::puzzle3d_catalog_entries(&scene_snapshot, "objects");
     assert!(!entries.is_empty(), "the default document's catalogue must declare object kinds, else the Catalogue panel opens empty");
-    let index = crate::editor::puzzle3d::Puzzle3dKindMeshIndex::of(&fixture.meta);
-    let lane = crate::editor::puzzle3d::collect_mesh_urls(&fixture);
+    let index = crate::editor::puzzle3d::Puzzle3dKindMeshIndex::of(&scene_snapshot.meta);
+    let lane = crate::editor::puzzle3d::collect_mesh_urls(&scene_snapshot);
     for entry in entries {
         let kind_id = entry.get("id").and_then(semio_framework_value::DslValue::as_str).expect("every catalogue row names a kind").to_string();
         let url = entry
@@ -273,9 +273,9 @@ fn the_default_concrete_forest_catalogue_declares_kinds_with_resolvable_mesh_url
 /// preview parses).
 #[test]
 fn the_default_concrete_forest_catalogue_renders_a_draggable_row_for_every_kind() {
-    let fixture = crate::editor::puzzle3d::default_fixture();
-    let declared = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects").len();
-    let envelope = scene(fixture);
+    let scene_snapshot = crate::editor::puzzle3d::default_scene_snapshot();
+    let declared = crate::editor::puzzle3d::puzzle3d_catalog_entries(&scene_snapshot, "objects").len();
+    let envelope = scene(scene_snapshot);
     let node = built(&envelope, &objects_open());
     let objects = node.children.iter().find(|section| section.key.as_str() == "puzzle3d-play-kinds.objects").expect("objects section");
     let rows: Vec<_> = objects.children.iter().collect();

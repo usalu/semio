@@ -3,7 +3,8 @@ use super::*;
 use protocol::{Mutation,MutationDiff};
 #[semio_framework_async_macros::async_test]
 async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
-    use crate::standards::v1::subsets::any::schema::{create_layer_of_kind,empty_raster_snapshot,layer_node_id,snapshot::retire_raster_snapshot};
+    use crate::standards::v1::subsets::any::schema::{create_layer_of_kind, layer_node_id, snapshot::retire_raster_snapshot};
+    use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
     for kind in ["pixel","group"] {for row in fixture["cases"].as_array().unwrap(){
         let mut base=empty_raster_snapshot();base.layers.push(create_layer_of_kind(kind));let id=layer_node_id(&base.layers[0]).to_owned();

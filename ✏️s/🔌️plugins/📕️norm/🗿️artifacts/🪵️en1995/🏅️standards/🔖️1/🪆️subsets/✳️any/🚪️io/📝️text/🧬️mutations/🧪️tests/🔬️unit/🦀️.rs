@@ -1,0 +1,84 @@
+use crate::standards::v1::subsets::any::schema::mutations::En1995Mutation;
+use crate::mutations::*;
+
+/// ⚖️ Every variant — full-coverage `OpText` round trip over the closed vocabulary.
+#[semio_framework_async_macros::async_test]
+async fn every_variant_op_text_round_trips() {
+    let cases = every_mutation();
+    assert_eq!(cases.len(), KINDS.len());
+    for mutation in cases {
+        store::os_store::test_support::assert_op_line_round_trip(&mutation);
+    }
+}
+
+fn every_mutation() -> Vec<En1995Mutation> {
+    let base = crate::En1995Snapshot::compliant_building_beam();
+    vec![
+        En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+        En1995Mutation::InsertMember(insert_member::InsertMember { index: 99, member: crate::TimberMember { id: "beam-B9".into(), ..base.members[0].clone() } }),
+        En1995Mutation::RemoveMember(remove_member::RemoveMember { index: 0 }),
+        En1995Mutation::ChangeMemberLabelEn(change_member_label_en::ChangeMemberLabelEn { member_id: base.members[0].id.clone(), new_value: "Beam B1 (revised)".into() }),
+        En1995Mutation::ChangeMemberLabelDe(change_member_label_de::ChangeMemberLabelDe { member_id: base.members[0].id.clone(), new_value: "Träger B1 (überarbeitet)".into() }),
+        En1995Mutation::ChangeMemberRole(change_member_role::ChangeMemberRole { member_id: base.members[0].id.clone(), new_value: crate::MemberRole::Column }),
+        En1995Mutation::ChangeMemberStrengthClass(change_member_strength_class::ChangeMemberStrengthClass { member_id: base.members[0].id.clone(), new_value: "GL32h".into() }),
+        En1995Mutation::ChangeMemberServiceClass(change_member_service_class::ChangeMemberServiceClass { member_id: base.members[0].id.clone(), new_value: 2 }),
+        En1995Mutation::ChangeMemberSupport(change_member_support::ChangeMemberSupport { member_id: base.members[0].id.clone(), new_value: crate::SupportType::Cantilever }),
+        En1995Mutation::ChangeMemberB(change_member_b::ChangeMemberB { member_id: base.members[0].id.clone(), new_value: 0.24 }),
+        En1995Mutation::ChangeMemberH(change_member_h::ChangeMemberH { member_id: base.members[0].id.clone(), new_value: 0.5 }),
+        En1995Mutation::ChangeMemberSpan(change_member_span::ChangeMemberSpan { member_id: base.members[0].id.clone(), new_value: 7.0 }),
+        En1995Mutation::ChangeMemberSupportLength(change_member_support_length::ChangeMemberSupportLength { member_id: base.members[0].id.clone(), new_value: 0.2 }),
+        En1995Mutation::ChangeMemberBearingLength(change_member_bearing_length::ChangeMemberBearingLength { member_id: base.members[0].id.clone(), new_value: 0.2 }),
+        En1995Mutation::ChangeMemberBucklingLengthY(change_member_buckling_length_y::ChangeMemberBucklingLengthY { member_id: base.members[0].id.clone(), new_value: 6.0 }),
+        En1995Mutation::ChangeMemberBucklingLengthZ(change_member_buckling_length_z::ChangeMemberBucklingLengthZ { member_id: base.members[0].id.clone(), new_value: 2.0 }),
+        En1995Mutation::ChangeMemberRestraintSpacing(change_member_restraint_spacing::ChangeMemberRestraintSpacing { member_id: base.members[0].id.clone(), new_value: 1.0 }),
+        En1995Mutation::ChangeMemberNotchDepth(change_member_notch_depth::ChangeMemberNotchDepth { member_id: base.members[0].id.clone(), new_value: 0.02 }),
+        En1995Mutation::ChangeMemberNotchDistance(change_member_notch_distance::ChangeMemberNotchDistance { member_id: base.members[0].id.clone(), new_value: 0.1 }),
+        En1995Mutation::ChangeMemberMCrit(change_member_m_crit::ChangeMemberMCrit { member_id: base.members[0].id.clone(), new_value: 150000.0 }),
+        En1995Mutation::ChangeMemberMassKgPerM(change_member_mass_kg_per_m::ChangeMemberMassKgPerM { member_id: base.members[0].id.clone(), new_value: 140.0 }),
+        En1995Mutation::ChangeMemberMassKgPerM2(change_member_mass_kg_per_m2::ChangeMemberMassKgPerM2 { member_id: base.members[0].id.clone(), new_value: 60.0 }),
+        En1995Mutation::ChangeMemberDampingXi(change_member_damping_xi::ChangeMemberDampingXi { member_id: base.members[0].id.clone(), new_value: 0.02 }),
+        En1995Mutation::ChangeMemberFireDuration(change_member_fire_duration::ChangeMemberFireDuration { member_id: base.members[0].id.clone(), new_value: 1800.0 }),
+        En1995Mutation::ChangeMemberBridgeNObs(change_member_bridge_n_obs::ChangeMemberBridgeNObs { member_id: base.members[0].id.clone(), new_value: 1.0e5 }),
+        En1995Mutation::ChangeMemberBridgeTLYears(change_member_bridge_tl_years::ChangeMemberBridgeTLYears { member_id: base.members[0].id.clone(), new_value: 50.0 }),
+        En1995Mutation::ChangeMemberBridgeBeta(change_member_bridge_beta::ChangeMemberBridgeBeta { member_id: base.members[0].id.clone(), new_value: 5.0 }),
+        En1995Mutation::ChangeMemberBridgeA(change_member_bridge_a::ChangeMemberBridgeA { member_id: base.members[0].id.clone(), new_value: 15.0 }),
+        En1995Mutation::ChangeMemberBridgeB(change_member_bridge_b::ChangeMemberBridgeB { member_id: base.members[0].id.clone(), new_value: 4.0 }),
+        En1995Mutation::ChangeMemberBridgeCrowd(change_member_bridge_crowd::ChangeMemberBridgeCrowd { member_id: base.members[0].id.clone(), new_value: 1.0 }),
+        En1995Mutation::InsertMemberAction(insert_member_action::InsertMemberAction { member_id: base.members[0].id.clone(), index: 99, action: crate::CharacteristicAction { id: "w".into(), ..base.members[0].actions[0].clone() } }),
+        En1995Mutation::RemoveMemberAction(remove_member_action::RemoveMemberAction { member_id: base.members[0].id.clone(), index: 0 }),
+        En1995Mutation::ChangeMemberActionKind(change_member_action_kind::ChangeMemberActionKind { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "imposed".into() }),
+        En1995Mutation::ChangeMemberActionCategory(change_member_action_category::ChangeMemberActionCategory { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "B".into() }),
+        En1995Mutation::ChangeMemberLoadDuration(change_member_load_duration::ChangeMemberLoadDuration { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "short".into() }),
+        En1995Mutation::ChangeMemberActionQLine(change_member_action_q_line::ChangeMemberActionQLine { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 3500.0 }),
+        En1995Mutation::ChangeMemberActionFPoint(change_member_action_f_point::ChangeMemberActionFPoint { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 2000.0 }),
+        En1995Mutation::ChangeMemberActionMK(change_member_action_mk::ChangeMemberActionMK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 12000.0 }),
+        En1995Mutation::ChangeMemberActionVK(change_member_action_vk::ChangeMemberActionVK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 8000.0 }),
+        En1995Mutation::ChangeMemberActionNK(change_member_action_nk::ChangeMemberActionNK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 5000.0 }),
+        En1995Mutation::ChangeMemberActionNTK(change_member_action_ntk::ChangeMemberActionNTK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 3000.0 }),
+        En1995Mutation::ChangeMemberActionFC90K(change_member_action_fc90_k::ChangeMemberActionFC90K { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 9000.0 }),
+        En1995Mutation::InsertConnection(insert_connection::InsertConnection { index: 99, connection: crate::TimberConnection { id: "conn-C9".into(), ..base.connections[0].clone() } }),
+        En1995Mutation::RemoveConnection(remove_connection::RemoveConnection { index: 0 }),
+        En1995Mutation::ChangeConnectionLabelEn(change_connection_label_en::ChangeConnectionLabelEn { connection_id: base.connections[0].id.clone(), new_value: "Bolt group (revised)".into() }),
+        En1995Mutation::ChangeConnectionLabelDe(change_connection_label_de::ChangeConnectionLabelDe { connection_id: base.connections[0].id.clone(), new_value: "Schraubverbund (überarbeitet)".into() }),
+        En1995Mutation::ChangeConnectionFastenerType(change_connection_fastener_type::ChangeConnectionFastenerType { connection_id: base.connections[0].id.clone(), new_value: "screw".into() }),
+        En1995Mutation::ChangeConnectionStrengthClass(change_connection_strength_class::ChangeConnectionStrengthClass { connection_id: base.connections[0].id.clone(), new_value: "C24".into() }),
+        En1995Mutation::ChangeConnectionServiceClass(change_connection_service_class::ChangeConnectionServiceClass { connection_id: base.connections[0].id.clone(), new_value: 2 }),
+        En1995Mutation::ChangeConnectionDiameter(change_connection_diameter::ChangeConnectionDiameter { connection_id: base.connections[0].id.clone(), new_value: 0.016 }),
+        En1995Mutation::ChangeConnectionNumber(change_connection_number::ChangeConnectionNumber { connection_id: base.connections[0].id.clone(), new_value: 12 }),
+        En1995Mutation::ChangeConnectionRows(change_connection_rows::ChangeConnectionRows { connection_id: base.connections[0].id.clone(), new_value: 3 }),
+        En1995Mutation::ChangeConnectionSpacing(change_connection_spacing::ChangeConnectionSpacing { connection_id: base.connections[0].id.clone(), new_value: 0.1 }),
+        En1995Mutation::ChangeConnectionEdgeDistance(change_connection_edge_distance::ChangeConnectionEdgeDistance { connection_id: base.connections[0].id.clone(), new_value: 0.05 }),
+        En1995Mutation::ChangeConnectionEndDistance(change_connection_end_distance::ChangeConnectionEndDistance { connection_id: base.connections[0].id.clone(), new_value: 0.1 }),
+        En1995Mutation::ChangeConnectionT1(change_connection_t1::ChangeConnectionT1 { connection_id: base.connections[0].id.clone(), new_value: 0.22 }),
+        En1995Mutation::ChangeConnectionT2(change_connection_t2::ChangeConnectionT2 { connection_id: base.connections[0].id.clone(), new_value: 0.22 }),
+        En1995Mutation::ChangeConnectionSteelPlate(change_connection_steel_plate::ChangeConnectionSteelPlate { connection_id: base.connections[0].id.clone(), new_value: true }),
+        En1995Mutation::ChangeConnectionPlateThickness(change_connection_plate_thickness::ChangeConnectionPlateThickness { connection_id: base.connections[0].id.clone(), new_value: 0.008 }),
+        En1995Mutation::ChangeConnectionShearPlanes(change_connection_shear_planes::ChangeConnectionShearPlanes { connection_id: base.connections[0].id.clone(), new_value: 2 }),
+        En1995Mutation::ChangeConnectionFUK(change_connection_fuk::ChangeConnectionFUK { connection_id: base.connections[0].id.clone(), new_value: 500_000_000.0 }),
+        En1995Mutation::InsertConnectionAction(insert_connection_action::InsertConnectionAction { connection_id: base.connections[0].id.clone(), index: 99, action: crate::ConnectionAction { id: "w".into(), ..base.connections[0].actions[0].clone() } }),
+        En1995Mutation::RemoveConnectionAction(remove_connection_action::RemoveConnectionAction { connection_id: base.connections[0].id.clone(), index: 0 }),
+        En1995Mutation::ChangeConnectionActionKind(change_connection_action_kind::ChangeConnectionActionKind { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: "imposed".into() }),
+        En1995Mutation::ChangeConnectionLoadDuration(change_connection_load_duration::ChangeConnectionLoadDuration { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: "short".into() }),
+        En1995Mutation::ChangeConnectionActionFK(change_connection_action_fk::ChangeConnectionActionFK { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: 12000.0 }),
+    ]
+}

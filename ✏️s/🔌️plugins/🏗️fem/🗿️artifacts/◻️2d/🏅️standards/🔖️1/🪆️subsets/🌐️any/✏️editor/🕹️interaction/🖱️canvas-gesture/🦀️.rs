@@ -9,7 +9,7 @@ use semio_framework_plugin::{Emit, Fault, NoConfigMutation, ViewModel};
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-type Fem2dMutation = crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+type Fem2dMutation = crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 
 //#region 🔖️Constants
 pub const FEM2D_UTILITY_SELECT_DIRECT: &str = "selectDirect";

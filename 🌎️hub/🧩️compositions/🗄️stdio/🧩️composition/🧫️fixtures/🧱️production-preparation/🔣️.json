@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "id": "examples-absent", "examplesPresent": false },
+    { "id": "examples-retained", "examplesPresent": true }
+  ],
+  "examplePaths": ["🧫️fixtures/✏️editor-catalog/🔣️.json", "🧫️fixtures/🏠️home-io-surface/🔣️.json"],
+  "expectedExampleWrites": 0
+}

@@ -15,8 +15,8 @@ export class NativeOpenableIdentityCheckScript extends BundleScript {
     const ajv = new Ajv({ allErrors: true, strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);
-    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/VcsNativeOpenableIdentity` });
-    if (!validate(fixture)) throw new Error(`VCS identity fixture is invalid: ${ajv.errorsText(validate.errors)}`);
+    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/VcsNativeOpenableIdentityAuthority` });
+    if (!validate(fixture.authority)) throw new Error(`VCS identity authority is invalid: ${ajv.errorsText(validate.errors)}`);
     const identities = new Set<string>();
     for (const hostile of fixture.hostileCases) {
       if (identities.has(hostile.name)) throw new Error("duplicate hostile identity case");
@@ -24,9 +24,9 @@ export class NativeOpenableIdentityCheckScript extends BundleScript {
       const candidate = structuredClone(fixture);
       if (hostile.value === null) delete candidate.authority[hostile.field];
       else candidate.authority[hostile.field] = hostile.value;
-      if (validate(candidate)) throw new Error(`VCS hostile identity admitted: ${hostile.name}`);
+      if (validate(candidate.authority)) throw new Error(`VCS hostile identity admitted: ${hostile.name}`);
     }
-    const protocol = readFileSync(join(this.repoRoot, "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    const protocol = readFileSync(join(this.repoRoot, "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     const webDigest = Buffer.from(await crypto.subtle.digest("SHA-256", protocol)).toString("hex");
     if (webDigest !== fixture.snapshotProtocolSha256 || webDigest !== createHash("sha256").update(protocol).digest("hex")) throw new Error("VCS protocol identity differs from its pinned neutral vector");
     console.log(`vcs-native-openable-identity-oracle: positive=1 hostile-denied=${identities.size} protocol-webcrypto=1`);

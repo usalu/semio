@@ -1,4 +1,4 @@
-//! 🧪️ `scale-selection` fixture — `🧱️zero-factor`.
+//! 🧪️ `scale-selection` scene_snapshot — `🧱️zero-factor`.
 //!
 //! A zero factor would flatten the object; the schema's `exclusiveMinimum: 0` forbids it: a Fatal `mutation.invariant`.
 //!

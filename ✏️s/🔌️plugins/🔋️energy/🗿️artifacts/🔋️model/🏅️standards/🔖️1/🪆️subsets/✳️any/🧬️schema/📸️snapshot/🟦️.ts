@@ -18,5 +18,3 @@ export interface EnergyModelSnapshot {
   /** @state artifact @link weather */
   weatherLink: ArtifactLink|null;
 }
-
-export {ENERGY_MODEL_SQLITE_SCHEMA,energyModelToSqliteDatabase,energyModelFromSqliteDatabase} from "./🪶️sqlite/🟦️.ts";

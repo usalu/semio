@@ -13,6 +13,20 @@
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Element path",
+          "de": "Elementpfad"
+        },
+        "description": {
+          "en": "Child indices leading from the root element to the element, each counted from 0.",
+          "de": "Kindindizes vom Wurzelelement bis zum Element, jeweils ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
       }
     },
     "transform": {
@@ -26,7 +40,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Transform",
+          "de": "Transformation"
+        },
+        "description": {
+          "en": "Ordered transform operations (matrix, translate, scale, rotate, skewX, skewY); cleared, the attribute is removed.",
+          "de": "Geordnete Transformationsoperationen (matrix, translate, scale, rotate, skewX, skewY); geleert wird das Attribut entfernt."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

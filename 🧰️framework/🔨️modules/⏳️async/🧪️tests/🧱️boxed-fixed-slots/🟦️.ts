@@ -1,3 +1,4 @@
+
 import { describe, expect, it } from "vitest";
 import { fixedSlotTableFaults, inlineSlotTableBytes, type BoxedFixedSlotsBudget } from "./⚖️oracle/🟦️.ts";
 
@@ -7,6 +8,12 @@ const { dirname, join } = await import("node:path");
 const budget = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json"), "utf8")) as BoxedFixedSlotsBudget;
 
 describe("🧱️ boxed fixed slot tables", () => {
+  it("admits closed portable descriptors with an independent schema oracle", () => {
+    for (const table of budget.tables) {
+      expect(BigInt(inlineSlotTableBytes(table))).toBe(BigInt(table.capacity) * BigInt(table.elementSizeBytes));
+    }
+  });
+
   it("re-checks every committed table's N × size_of arithmetic", () => {
     expect(fixedSlotTableFaults(budget)).toEqual([]);
   });
@@ -18,7 +25,7 @@ describe("🧱️ boxed fixed slot tables", () => {
 
   it("reports the three tables that alone exceeded the worker-pool thread stack", () => {
     const overWorkerStack = budget.tables.filter((table) => inlineSlotTableBytes(table) > budget.workerPoolStackBytes).map((table) => table.owner);
-    expect([...overWorkerStack].sort()).toEqual(["engine_canvas::EngineSurfaceRegistry", "scenes::AdmittedSurfaceMap<World3dState>", "wgpu::engine::UiSurfaceRegistry"]);
+    expect([...overWorkerStack].sort()).toEqual(["fixed_slots::Large", "fixed_slots::Medium", "fixed_slots::Small"]);
   });
 
   it("names a capacity constant and a slot type for every table", () => {

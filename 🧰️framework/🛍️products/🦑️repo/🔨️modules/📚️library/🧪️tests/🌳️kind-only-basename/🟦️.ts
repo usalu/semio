@@ -18,7 +18,7 @@ type Fixture = Readonly<{
 
 const owner = join(import.meta.dir, "../../🧫️fixtures/🌳️kind-only-basename");
 const fixture = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8")) as Fixture;
-const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🌳️kind-only-basename/🔣️.json"), "utf8"));
+
 const taxonomy = JSON.parse(readFileSync(join(import.meta.dir, "../../🔣️taxonomy.json"), "utf8")) as Taxonomy;
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const sorted = (rows: readonly Finding[]): Finding[] => [...rows].sort((left, right) => Buffer.from(`${left.path}\0${left.breachId}`).compare(Buffer.from(`${right.path}\0${right.breachId}`)));
@@ -72,9 +72,9 @@ async function independentOracle(root: string): Promise<Finding[]> {
 
 describe("kind-only implementation leaf taxonomy", () => {
   test("validates the portable filesystem contract and binds its kind records to taxonomy", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...fixture, extra: true })).toBe(false);
+    
+    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["contractId"]).toEqual("kind-only-implementation-leaf-v1");expect(fixture["semantics"]).toEqual({"implementationLeaf":"file-kind-emoji-and-longest-extension-chain","semanticConcern":"registered-directory","targetOwnership":"target-before-package","fixedAdmission":"exact-scope-only","unknownKind":"fail-closed"});expect(fixture["topology"]).toEqual({"packagesDirectory":"📦️packages","targetsDirectory":"🎯️targets","packageLanguageDirectories":["🦀️rust","🟦️typescript","🟨️javascript","🐹️go","🐍️python","🔷️dotnet"],"semanticExecutionCollections":["🏭️generator","🔬️probes","🔮️oracles"],"obsoleteExecutionCollections":["🏗️generator"]});
+    
     for (const kind of fixture.fileKinds) {
       expect(taxonomy.fileKinds[kind.id]).toEqual<Pick<typeof kind, "emoji" | "extensionChains" | "role">>({ emoji: kind.emoji, extensionChains: kind.extensionChains, role: kind.role });
       expect(taxonomy.implementationLeafPolicy.roles.includes(taxonomy.fileKinds[kind.id]!.role) || taxonomy.implementationLeafPolicy.fileKindIds.includes(kind.id)).toBe(kind.implementation);

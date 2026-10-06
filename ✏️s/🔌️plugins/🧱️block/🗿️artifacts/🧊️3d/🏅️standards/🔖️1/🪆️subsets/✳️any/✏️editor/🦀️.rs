@@ -9,7 +9,7 @@
 //! this surface's own typed media I/O surface (below — constitutional: general, an artifact must never
 //! depend on a surface, so it lives here rather than under `🗿️artifacts`).
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
 use crate::{artifact_kind, Block3dSnapshot, BLOCK3D_DIALECT, BLOCK_3D_SCHEMA};
 use crate::editor::block3d::commands::patch_object_kind;
 use crate::editor::block3d::commands::set_camera;
@@ -87,7 +87,7 @@ pub const BLOCK3D_GRANULARITY_VORTEX: &str = "vortex";
 pub const BLOCK3D_GRANULARITY_SURFACE: &str = "surface";
 /// 🗂️ The `s/plugin/puzzle` 3d catalog artifact kind block3d's `"catalog:out"` port produces — see
 /// `block3d_io` and `Block3dPlayApp::export_media`.
-use semio_s_artifact_block_2d::KIT_CATALOG_ARTIFACT_ID;
+use semio_s_plugin_block_catalog::ARTIFACT_ID;
 
 /// 🎯️ The semantic-contract action binding addressed at this surface — the single factory every
 /// contract-built node (`📌️panels/*`) binds its `on_change`/item actions with.
@@ -458,7 +458,6 @@ struct Block3dArtifactStorePreparationFactory;
 struct Block3dArtifactStorePreparation {
     base: Option<store::SnapshotRead<Block3dSnapshot>>,
     mutation: Option<Block3dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Block3dSnapshot, Block3dMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -468,9 +467,9 @@ struct Block3dArtifactStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Block3dSnapshot, Block3dMutation> for Block3dArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &Block3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("block3d-artifact-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &Block3dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("block3d-artifact-lane".into());
         }
         admit_block3d_artifact_mutation(mutation)
     }
@@ -492,7 +491,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block3dSnapshot, Block3dMutat
         Ok(Box::new(Block3dArtifactStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -547,9 +545,6 @@ impl store::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation> fo
         if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        if self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-artifact-base-retirement-rejected"));
@@ -563,7 +558,7 @@ impl store::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation> fo
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 
@@ -584,7 +579,6 @@ struct Block3dConfigStorePreparationFactory;
 struct Block3dConfigStorePreparation {
     base: Option<store::SnapshotRead<Block3dConfig>>,
     mutation: Option<Block3dConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Block3dConfig, Block3dConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -594,9 +588,9 @@ struct Block3dConfigStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Block3dConfig, Block3dConfigMutation> for Block3dConfigStorePreparationFactory {
-    fn preflight(&self, mutation: &Block3dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("block3d-config-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &Block3dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("block3d-config-lane".into());
         }
         admit_block3d_config_mutation(mutation)
     }
@@ -618,7 +612,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block3dConfig, Block3dConfigM
         Ok(Box::new(Block3dConfigStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -673,9 +666,6 @@ impl store::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation
         if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        if self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "block3d-config-base-retirement-rejected"));
@@ -689,7 +679,7 @@ impl store::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation
@@ -819,7 +809,7 @@ impl ArtifactEditor for Block3dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id || block3d_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-            return Err(Fault::from("block3d-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "block3d-retained-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match tool_id {
@@ -848,7 +838,7 @@ impl ArtifactEditor for Block3dPlayApp {
     /// the `World3d` window renders `representations[].mesh_url`, so an empty boot document painted an
     /// empty scene until a client dispatched `setActiveExample`. See `dsl::block3d_boot_snapshot`.
     fn initial_snapshot() -> Block3dSnapshot {
-        crate::standards::v1::subsets::any::schema::snapshot::text::block3d_boot_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::block3d_boot_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1027,7 +1017,7 @@ impl ArtifactEditor for Block3dPlayApp {
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::standards::v1::subsets::any::schema::inferences::puzzle3d_catalog_fragment(doc.snapshot, &[]);
-        Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
+        Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
 //#endregion 🔖️Block3dPlayApp
@@ -1039,7 +1029,7 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .artifact_kind(artifact_kind())
         // 🗂️ The puzzle3d catalog artifact this surface's `"catalog:out"` port produces — see
         // `block3d_io`/`Block3dPlayApp::export_media`.
-        .artifact_kind(semio_s_artifact_block_2d::kit_catalog_artifact_kind())
+        .artifact_kind(semio_s_plugin_block_catalog::artifact_kind())
         .icon_id("box")
         .mode_def(edit_mode::definition())
         .default_mode_id(edit_mode::BLOCK3D_PLAY_MODE_EDIT)

@@ -1,0 +1,8 @@
+import {readFileSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import assert from "node:assert/strict";
+const root="/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot";
+const fixture=join(root,"🧫️fixtures/🪶️sqlite/🔣️.json"),before=readFileSync(fixture,"utf8"),value=JSON.parse(before);assert(!Object.hasOwn(value.control,"maxLookupBackingBytes"));value.control.maxLookupBackingBytes=16384;
+const schema=join(root,"🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"),schemaBefore=readFileSync(schema,"utf8"),contract=JSON.parse(schemaBefore);contract.properties.control.required.push("maxLookupBackingBytes");contract.properties.control.properties.maxLookupBackingBytes={type:"integer",const:16384};
+const test=join(root,"🧪️tests/🪶️sqlite/🟦️.ts"),testBefore=readFileSync(test,"utf8"),testAfter=testBefore.replace('maxAllocationBytes:fixture.control.maxOwnedBytes','maxAllocationBytes:fixture.control.maxLookupBackingBytes');assert.notEqual(testAfter,testBefore);
+const pairs=[{path:fixture,before,after:JSON.stringify(value,null,2)+"\n"},{path:schema,before:schemaBefore,after:JSON.stringify(contract,null,2)+"\n"},{path:test,before:testBefore,after:testAfter}];writeFileSync(join(import.meta.dir,"guarded-pairs.json"),JSON.stringify(pairs,null,2)+"\n");for(const pair of pairs)assert.equal(readFileSync(pair.path,"utf8"),pair.before,"Concurrent Curation concrete Source demand change");for(const pair of pairs)writeFileSync(pair.path,pair.after);console.log("[DEBUG] Curation neutral separate finite concrete index budget demanded paths=3 semantic_ceiling_unchanged=true");

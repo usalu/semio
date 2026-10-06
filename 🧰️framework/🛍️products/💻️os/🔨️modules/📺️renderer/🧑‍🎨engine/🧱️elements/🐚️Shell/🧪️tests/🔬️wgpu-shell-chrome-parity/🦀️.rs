@@ -15,6 +15,7 @@ use ui_wgpu::wgpu::WindowLayout;
 const EXAMPLE_PICKER_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📚️example-picker.json");
 const SURFACE_SWITCH_FIXTURE: &str = include_str!("../../../🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json");
 const SURFACE_CONTROLS_FIXTURE: &str = include_str!("../../🧫️fixtures/🛑️surface-controls/🔣️.json");
+const CHROME_PANEL_SAFE_AREA_FIXTURE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🛟️chrome-panel-safe-area/🔣️.json");
 const BOOT_EXAMPLE_FIXTURE: &str = include_str!("../../🧫️fixtures/📚️boot-example/🔣️.json");
 const WINDOW_ICON_OVERRIDE_FIXTURE: &str = include_str!("../../🧫️fixtures/🪟️window-icon-overrides/🔣️.json");
 const WGPU_SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
@@ -44,6 +45,7 @@ fn fixture_role(value: &str) -> AppRole {
 
 fn parity_window_kinds() -> WindowKinds {
     WindowKinds::try_from(vec![WindowKindDefinition {
+        initial_utility_id: None,
         id: "main".into(),
         label: LocalizedLabel::native("Main", "Haupt"),
         body_key: "main.body".into(),
@@ -228,13 +230,15 @@ fn the_boot_example_query_reaches_the_picker_through_the_shared_resolver() {
     assert!(body.contains("shell_offered_examples("), "boot and role sync use the declared example offer authority");
     assert!(body.contains("resolve_boot_example_id("), "sync_session_chrome resolves through the shared predicate, never its own inline rule");
     assert!(body.contains("crate::boot_app_example()"), "`?example=` is the declared default the resolver is handed");
-    let apply = WGPU_SHELL_SOURCE.split("async fn apply_boot_example").nth(1).expect("the shell declares apply_boot_example");
-    let apply_body = apply.split("\n    /// ").next().expect("the body of apply_boot_example");
-    assert!(apply_body.contains("\"setActiveExample\""), "a boot-requested example is ANNOUNCED to the guest, not only painted on the trigger");
+    let apply = WGPU_SHELL_SOURCE.split("async fn announce_session_example").nth(1).expect("the shell declares announce_session_example");
+    let apply_body = apply.split("\n    /// ").next().expect("the body of announce_session_example");
+    assert!(apply_body.contains("\"setActiveExample\""), "the resolved example is ANNOUNCED to the guest, not only painted on the trigger");
+    assert!(!apply_body.contains("boot_app_example"), "the announcement never depends on a `?example=` query: a boot without one opens the dialect's first example as React does");
+    assert!(!WGPU_SHELL_SOURCE.contains("fn apply_boot_example"), "the boot has no example path of its own");
     let settle = WGPU_SHELL_SOURCE.split("async fn settle_boot").nth(1).expect("the shell declares settle_boot");
     let settle_body = settle.split("\n    /// ").next().expect("the body of settle_boot");
     let push = settle_body.find("push_contributions").expect("settle_boot pushes contributions");
-    let example = settle_body.find("apply_boot_example").expect("settle_boot applies the boot example");
+    let example = settle_body.find("announce_session_example").expect("settle_boot announces the resolved example");
     let refresh = settle_body.find("refresh_ui").expect("settle_boot refreshes");
     assert!(push < example && example < refresh, "the boot example is announced AFTER the flow-extension registry is armed and BEFORE the first render");
 }
@@ -774,6 +778,7 @@ fn window_scope_app(fixture: &Value, app_id: &str) -> AppDefinition {
         .expect("⌨️ fixture app kinds")
         .iter()
         .map(|kind| WindowKindDefinition {
+            initial_utility_id: None,
             id: kind["id"].as_str().expect("⌨️ fixture kind id").into(),
             label: LocalizedLabel::native(kind["id"].as_str().expect("⌨️ fixture kind id"), kind["id"].as_str().expect("⌨️ fixture kind id")),
             body_key: format!("{}.body", kind["id"].as_str().expect("⌨️ fixture kind id")),
@@ -1009,8 +1014,8 @@ fn the_shells_own_accelerator_chords_are_reserved_from_the_app_keybinding_loop()
 /// `Frame visible` and the preview `Cancel`.
 #[test]
 fn a_chrome_panel_reserves_a_safe_area_for_the_surface_overlay_row() {
-    let fixture: Value = serde_json::from_str(SURFACE_CONTROLS_FIXTURE).expect("🛟️ the surface-controls fixture parses");
-    let rows = fixture["chromePanelSafeArea"].as_array().expect("🛟️ chromePanelSafeArea rows");
+    let fixture: Value = serde_json::from_str(CHROME_PANEL_SAFE_AREA_FIXTURE).expect("🛟️ the General UI safe-area fixture parses");
+    let rows = fixture.as_array().expect("🛟️ chromePanelSafeArea rows");
     assert!(!rows.is_empty(), "🛟️ the safe-area corpus is not empty");
     let read_rect = |value: &Value| {
         let box_ = value.as_array().expect("🛟️ a box is [x, y, w, h]");
@@ -1028,17 +1033,21 @@ fn a_chrome_panel_reserves_a_safe_area_for_the_surface_overlay_row() {
             _ => SafeAreaYield::Either,
         };
         let gap = row["gap"].as_f64().unwrap() as f32;
-        let safe_area = chrome_panel_safe_area(affordance, host, anchor, &panels, yield_axis, gap);
-        assert_eq!(safe_area.inline, row["expected"]["inline"].as_f64().unwrap() as f32, "🛟️ {id}: inline reserve");
-        assert_eq!(safe_area.block, row["expected"]["block"].as_f64().unwrap() as f32, "🛟️ {id}: block reserve");
-        let cleared =
-            Rect::new(affordance.x - if anchor.horizontal() == "right" { safe_area.inline } else { -safe_area.inline }, affordance.y - if anchor.vertical() == "bottom" { safe_area.block } else { -safe_area.block }, affordance.w, affordance.h);
-        if safe_area.inline > 0.0 || safe_area.block > 0.0 {
+        let reversed: Vec<Rect> = panels.iter().rev().copied().collect();
+        for order in [&panels, &reversed] {
+            let safe_area = chrome_panel_safe_area(affordance, host, anchor, order, yield_axis, gap);
+            assert_eq!(safe_area.inline, row["expected"]["inline"].as_f64().unwrap() as f32, "🛟️ {id}: inline reserve");
+            assert_eq!(safe_area.block, row["expected"]["block"].as_f64().unwrap() as f32, "🛟️ {id}: block reserve");
+            if safe_area.inline == 0.0 && safe_area.block == 0.0 { continue; }
+            let cleared = Rect::new(affordance.x + if anchor.horizontal() == "right" { -safe_area.inline } else { safe_area.inline }, affordance.y + if anchor.vertical() == "bottom" { -safe_area.block } else { safe_area.block }, affordance.w, affordance.h);
+            assert!(cleared.x >= host.x && cleared.y >= host.y && cleared.x + cleared.w <= host.x + host.w && cleared.y + cleared.h <= host.y + host.h, "🛟️ {id}: placement stays entirely inside the actual host");
             for panel in &panels {
-                assert!(!(cleared.x < panel.x + panel.w && cleared.x + cleared.w > panel.x && cleared.y < panel.y + panel.h && cleared.y + cleared.h > panel.y), "🛟️ {id}: the reserved affordance clears every panel it yielded to");
+                let expanded = if safe_area.inline > 0.0 { Rect::new(panel.x - gap, panel.y, panel.w + 2.0 * gap, panel.h) } else { Rect::new(panel.x, panel.y - gap, panel.w, panel.h + 2.0 * gap) };
+                assert!(!(cleared.x < expanded.x + expanded.w && cleared.x + cleared.w > expanded.x && cleared.y < expanded.y + expanded.h && cleared.y + cleared.h > expanded.y), "🛟️ {id}: placement preserves the axis gap against every panel");
             }
         }
     }
+    eprintln!("[DEBUG] Native chrome safe area accepted {} ordered placements across {} neutral rows", rows.len() * 2, rows.len());
 }
 
 /// 🛟️ The same rule where the shell actually places chrome: an open LEFT floating panel covers a dock

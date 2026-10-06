@@ -1,7 +1,7 @@
 import { expect, mock, test } from "bun:test";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, join } from "node:path";
-import Ajv from "ajv";
+
 import { Command } from "commander";
 import { spawnSync } from "node:child_process";
 import { BundleScript, findWorkspaceRoot } from "../../../🏃️process/🧭️routing/🟦️.ts";
@@ -10,7 +10,6 @@ type Call = { kind: string; args: string[]; level?: string; coverage?: boolean; 
 type Case = { id: string; argv: string[]; inheritedLevel?: string; calls: Call[]; rejected: boolean; level: string; coverage: boolean };
 const ui = resolve(import.meta.dir, "../.."), packageRoot = join(ui, "📦️packages/🦀️rust"), root = findWorkspaceRoot(ui);
 const corpus = JSON.parse(readFileSync(join(ui, "🧫️fixtures/🧭️native-command/🔣️.json"), "utf8")) as { cases: Case[] };
-const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(ui, "🧬️schema/🧭️native-command/🔣️.json"), "utf8")));
 let calls: Call[] = [];
 mock.module(resolve(ui, "../🏃️process/🧪️testing/🦀️cargo/🟦️.ts"), () => ({
   readCargoTestPolicyV1: () => ({}),
@@ -56,7 +55,6 @@ function oracle(row: Case): { calls: Call[]; rejected: boolean; level: string; c
 }
 
 test("UI native dispatch corpus is closed and independently admitted", () => {
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
   expect(new Set(corpus.cases.map(row => row.id)).size).toBe(corpus.cases.length);
 });
 

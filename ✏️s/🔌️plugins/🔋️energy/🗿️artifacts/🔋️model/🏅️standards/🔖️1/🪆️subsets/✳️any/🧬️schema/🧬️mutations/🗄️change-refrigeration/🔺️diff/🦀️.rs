@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeRefrigerationSystemCaseCount, base: &EnergyMo
     if let Some(item) = model.refrigeration_systems.iter_mut().find(|item| item.id == payload.id) {
         item.case_count = payload.new_case_count;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

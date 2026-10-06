@@ -8,12 +8,8 @@
 
 use crate::STDIO_LAS_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+
 
 //#region 🔖️Header
 /// 📋 The LAS 1.0 public header block, minus the fixed 4-byte "LASF" signature (checked, never
@@ -166,5 +162,4 @@ impl Default for LasSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-#[path="📦️pack/🦀️.rs"]
-mod pack;
+

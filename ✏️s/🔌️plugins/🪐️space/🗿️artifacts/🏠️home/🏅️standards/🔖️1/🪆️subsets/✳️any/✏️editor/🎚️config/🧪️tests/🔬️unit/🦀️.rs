@@ -31,7 +31,6 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
     let mut preparation = HomeConfigPreparation {
         base: None,
         mutation: Some(HomeConfigMutation::RetireLocalStudio { space_id: "studio-a".into() }),
-        description: None,
         authority: None,
         candidate: None,
         sealed_candidate: None,
@@ -93,10 +92,10 @@ fn local_studio_tombstones_refuse_inadmissible_ids_and_the_ceiling() {
         assert!(outcome.messages().iter().any(|message| message.code.0 == code), "{code}");
     }
     let factory = HomeConfigPreparationFactory;
-    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: "studio-a".into() }, None, store::HistoryLane::Document).is_ok());
-    assert!(factory.preflight(&HomeConfigMutation::RestoreLocalStudio { space_id: "studio-a".into() }, None, store::HistoryLane::Document).is_ok());
-    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: String::new() }, None, store::HistoryLane::Document).is_err());
-    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: "x".repeat(HOME_RETIRED_LOCAL_STUDIO_ID_BYTES + 1) }, None, store::HistoryLane::Document).is_err());
-    assert!(factory.preflight(&HomeConfigMutation::Snapshot { config: HomeConfig::default() }, None, store::HistoryLane::Document).is_err());
+    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: "studio-a".into() }, store::HistoryLane::Document).is_ok());
+    assert!(factory.preflight(&HomeConfigMutation::RestoreLocalStudio { space_id: "studio-a".into() }, store::HistoryLane::Document).is_ok());
+    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: String::new() }, store::HistoryLane::Document).is_err());
+    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: "x".repeat(HOME_RETIRED_LOCAL_STUDIO_ID_BYTES + 1) }, store::HistoryLane::Document).is_err());
+    assert!(factory.preflight(&HomeConfigMutation::Snapshot { config: HomeConfig::default() }, store::HistoryLane::Document).is_err());
 }
 //#endregion 🪦️LocalStudioTombstones

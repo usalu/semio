@@ -148,28 +148,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.jpg",
                     extension: Some("jpg"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_jfif_1_01::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.jpg.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v_jfif_1_01::subsets::document::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.jpg.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v_jfif_1_01::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v_jfif_1_01::subsets::document::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v_jfif_1_01::subsets::document::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.diff"),
@@ -180,8 +180,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -190,8 +190,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v_jfif_1_01::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.jpg.spr"),
                 },
             ]
@@ -202,7 +202,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_jfif_1_01::engine::io_registry as v_jfif_1_01;
+    use crate::subsets::document::io::io_registry as v_jfif_1_01;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -236,9 +236,7 @@ pub mod standards {
         // existing `standards::v_jfif_1_01::engine::*`/root `engine::*` path still resolves
         // (`📸️remodel`'s own `jpg::engine::decode_jpg`/`encode_jpg`/`JpgError` consumer
         // included).
-        pub mod engine {
-            pub use super::subsets::document::io::*;
-        }
+
         #[path = "."]
         pub mod subsets {
             #[path = "."]
@@ -253,20 +251,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod dimensions {
                             #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
@@ -279,10 +269,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
@@ -293,8 +279,6 @@ pub mod standards {
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
                         pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif/🦀️.rs"]
                         pub mod change_jfif_header;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re/🦀️.rs"]
@@ -315,8 +299,6 @@ pub mod standards {
                         pub mod replace_pixels;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant/🦀️.rs"]
                         pub mod replace_quant_table;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[cfg(test)]
                     #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🛡️mutation-regressions/🦀️.rs"]
@@ -387,7 +369,10 @@ pub mod standards {
                 pub mod io;
                 #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧬️schema/🦀️.rs"]
                 pub mod schema;
-            }
+            
+#[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🚪️io/🦀️.rs"]
+pub mod io;
+}
         }
     }
 }
@@ -399,9 +384,7 @@ pub mod schema {
 pub mod engine {
     pub use super::standards::v_jfif_1_01::engine::*;
 }
-pub mod io {
-    pub use super::standards::v_jfif_1_01::subsets::document::io::*;
-}
+
 
 #[path = "."]
 pub mod examples {
@@ -558,3 +541,7 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v_jfif_1_01::subsets::baseline::io::{JpgBaselineBuilderConstruction, JpgBaselineAnalyzerAnalysis, JpgBaselineBuilderFacets, JpgBaselineBuilder, JpgBaselineAnalyzer, JpgBaselineComposer};
+
+pub use crate::standards::v_jfif_1_01::subsets::document::io::{JpgBuilderConstruction, JpgParts, JpgAnalyzerAnalysis, JpgBuilderFacets, JpgBuilder, JpgAnalyzer, JpgComposer};

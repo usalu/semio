@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "phase": "HELD",
+  "sourceRoles": {
+    "operation": "original immutable OperationSourceCollection frames; hash exact u64LE length followed by all raw octets",
+    "text": "original immutable TextReadSource bytes; no String staging",
+    "index": "caller-owned PagedList<usize,N>, admitted before allocation and retained on every refusal",
+    "output": "caller-owned TextEncodingOutput is entered only after a finite EntityId success receipt; exact small result extent declared before write"
+  },
+  "domains": {
+    "child": "child NUL parent NUL slot NUL raw_parent_fingerprint NUL ordinal_u32LE",
+    "invocation": "invocation NUL parent NUL raw_parent_fingerprint then child pairs each NUL original_id NUL raw_fingerprint"
+  },
+  "ordering": "bytewise child identifier ordering, duplicate identifier ties preserve original input ordinal; cancellable heap sort of admitted scalar ordinals",
+  "ownership": {
+    "sourceCopies": 0,
+    "inputMutation": false,
+    "ordinaryExitDrops": false,
+    "physicalPageBytes": 4096,
+    "maximumItems": 1,
+    "maximumAllocationBytes": 65536,
+    "parent": "all retained index/source/output physical pages require actual pre-admitted parent return or bounded physical disposal"
+  },
+  "refusals": [
+    "missing original source ordinal",
+    "missing original source byte",
+    "index recipient nonempty",
+    "index page initial4096 exceeds caller admission",
+    "cancellation during sorting or hashing",
+    "actual output extent/write refusal poisons recipient after finite hash success"
+  ],
+  "requiredJoins": [
+    "actual Store dispatch/group policy retained context",
+    "child ID exact source fields",
+    "invocation sorted indices immutable during hashing",
+    "inverse/undo/redo held source group",
+    "all early exits explicit source/index/output owner retention",
+    "full original ChildEmit8194 1/4096 law",
+    "owning original package"
+  ],
+  "credit": "no Native/runtime/Store/all-caller credit until genuine missing/Before then actual owning After",
+  "borrowBoundary": "hashing consumes the supplied control first and returns a finite EntityId (domain plus16ASCIIbytes); the same cumulative control is then supplied to actual PagedText/inline producer, whose closure only calls EntityId.encode_into(output); no simultaneous mutable control alias"
+}

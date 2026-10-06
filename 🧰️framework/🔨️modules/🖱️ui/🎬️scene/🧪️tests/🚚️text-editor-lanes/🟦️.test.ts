@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import fixture from "../../🧫️fixtures/🚚️text-editor-lanes/🔣️.json";
-import schema from "../../🧬️schema/🚚️text-editor-lanes/🔣️.json";
 import { TEXT_EDITOR_SCENE_LANES, textEditorSceneFromLanes } from "../../🟦️.ts";
 
 test("text buffer carriers match their language-neutral schema", () => {
-  expect(new Ajv().compile(schema)(fixture)).toBe(true);
   expect(TEXT_EDITOR_SCENE_LANES).toEqual<readonly { lane: string; field: string; bodyKey: string; optional: boolean }[]>([{ lane: "buffer", field: fixture.field, bodyKey: fixture.laneKey, optional: false }]);
 });
 

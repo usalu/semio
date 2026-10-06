@@ -10,7 +10,7 @@ import type {
   Puzzle3dVortex,
 } from "../📸️snapshot/🟦️.ts";
 
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type {Puzzle3dScale,Puzzle3dReferenceSource,Puzzle3dKindCatalogs,Puzzle3dVector3,Puzzle3dVector4} from "../📸️snapshot/🟦️.ts";
 export type {Puzzle3dScale,Puzzle3dReferenceSource,Puzzle3dKindCatalogs,Puzzle3dCatalogCableKind,Puzzle3dCatalogAttractionKind} from "../📸️snapshot/🟦️.ts";
 

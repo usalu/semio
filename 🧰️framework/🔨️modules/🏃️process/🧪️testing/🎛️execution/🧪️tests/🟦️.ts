@@ -6,8 +6,7 @@ import { spawnSync } from "node:child_process";
 
 test("test commands require explicit budgets and preserve failure and cancellation", async () => {
   const owner = resolve(import.meta.dir, ".."), source = join(owner, "🟦️.ts"), require = createRequire(import.meta.url);
-  const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")), schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
-  expect(new (require("ajv").default)().validate(schema, fixture)).toBe(true);
+  const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
   const api = await import(source);
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR!; expect(output).toBeTruthy(); mkdirSync(output, { recursive: true });
   const temporary = mkdtempSync(join(output, "test-command-")), module = join(temporary, "execution.mjs");

@@ -75,8 +75,7 @@ export async function createFlowSession(): Promise<FlowWasmSession> {
 
 //#region EditorSession
 export type EditorWasmSession = GraphWasmSession & {
-  syncFromSceneJson(json: string): void;
-  syncFromScenePack?(bytes: Uint8Array): void;
+  synchronizeScene(bytes: Uint8Array, format: 0 | 1, maximumInputBytes: number, maximumOwnedBytes: number, progress: (completed: number, total: number, ownedBytes: number) => boolean): void;
   setText(text: string): void;
   text(): string;
   caret(): number;
@@ -230,7 +229,7 @@ export type Board2dWasmSession = {
   attach_canvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
   setSize(width: number, height: number, dpr: number): void;
   renderFrame(): void;
-  parseFixtureJson(json: string): boolean;
+  loadBoardSnapshotJson(json: string): boolean;
   syncDescriptorJson(json: string): void;
   setKindCatalogsJson(json: string): void;
   setCamera(x: number, y: number, zoom: number): void;
@@ -284,8 +283,8 @@ export type Board2dWasmSession = {
   handlePositionsJson?(): string;
   /** 🖱️ Transitive same-kind hover: every element of `kindId` in `domain` paints hovered, with no board event and no guest round trip. Both `null` clears it. */
   setHoveredKindSilent?(domain: string | null, kindId: string | null): void;
-  setFixtureDropPreviewJson?(json: string): void;
-  clearFixtureDropPreview?(): void;
+  setDropPreviewJson?(json: string): void;
+  clearDropPreview?(): void;
   defersDescriptorSyncFromJs?(): boolean;
   isDraggingAreaSelect?(): boolean;
   /** 🐢️ Silent cross-pane mirror setters (WS-live-sync round 4) — move nodes/set preselect/set the marquee outline without emitting board events or a fixture reset, so a peer pane can mirror another pane's live gesture without round-tripping through the program. */

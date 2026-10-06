@@ -1,0 +1,1 @@
+//! 🚪️ Artifact representation module ownership.

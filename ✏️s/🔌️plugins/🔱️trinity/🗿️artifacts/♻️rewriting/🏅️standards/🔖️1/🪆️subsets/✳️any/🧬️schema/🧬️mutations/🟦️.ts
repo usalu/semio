@@ -1,5 +1,5 @@
 /** ♻️ Rewriting direct-mutation discriminated union. */
-import type { EditBeforeFixture } from "./🖼️edit-before-fixture/🟦️.ts";
+import type { EditWorkingGraph } from "./🖼️edit-working-graph/🟦️.ts";
 import type { EditLhs } from "./👈️edit-lhs/🟦️.ts";
 import type { EditRhs } from "./👉️edit-rhs/🟦️.ts";
 import type { ChangeParameterBinding } from "./🔧️change-parameter/🟦️.ts";
@@ -10,7 +10,7 @@ import type { DragRuleNodes } from "./🫳️drag-rule/🟦️.ts";
 import type { SetRuleLayoutPoints } from "./📍️set-rule-layout/🟦️.ts";
 
 export type RewriteRuleMutation =
-  | ({ mutation: "editBeforeFixture" } & EditBeforeFixture)
+  | ({ mutation: "editWorkingGraph" } & EditWorkingGraph)
   | ({ mutation: "editLhs" } & EditLhs)
   | ({ mutation: "editRhs" } & EditRhs)
   | ({ mutation: "changeParameterBinding" } & ChangeParameterBinding)

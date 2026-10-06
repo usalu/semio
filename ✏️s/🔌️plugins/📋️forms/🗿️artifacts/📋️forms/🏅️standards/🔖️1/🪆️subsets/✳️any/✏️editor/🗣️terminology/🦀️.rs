@@ -78,7 +78,7 @@ semio_framework_ui_locale::app_labels! {
         export_csv: native_en "Export Answers as CSV", native_de "Feldantworten als CSV exportieren", reuse_en "Export Answers as CSV", reuse_de "Feldantworten als CSV exportieren";
         respond_again: native_en "Start a New Response", native_de "Neue Antwort beginnen", reuse_en "Start a New Response", reuse_de "Neue Antwort beginnen";
         submit: native_en "Submit", native_de "Absenden", reuse_en "Submit", reuse_de "Absenden";
-        fixture_slug: native_en "Fixture Slug", native_de "Fixture-Slug", reuse_en "Fixture Slug", reuse_de "Fixture-Slug";
+        example_id: native_en "Fixture Slug", native_de "Fixture-Slug", reuse_en "Fixture Slug", reuse_de "Fixture-Slug";
         no_steps_tree_item: native_en "(no steps)", native_de "(keine Schritte)", reuse_en "(no steps)", reuse_de "(keine Schritte)";
         actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
         kind_text: native_en "Text", native_de "Text", reuse_en "Text", reuse_de "Text";

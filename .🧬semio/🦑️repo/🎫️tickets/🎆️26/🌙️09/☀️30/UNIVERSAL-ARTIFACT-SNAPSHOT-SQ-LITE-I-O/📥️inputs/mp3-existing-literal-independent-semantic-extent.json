@@ -1,0 +1,23 @@
+{
+  "authority": "Existing MP3 Snapshot SQLite fixture inserted directly in independent Bun SQLite under authored SQL; provider not imported",
+  "rawSqlBytes": 2231,
+  "schemaBytes": 2342,
+  "rows": 18,
+  "valueBytes": 733,
+  "emptyBranches": [
+    {"id":"absent-tags","schema":"owned.mp3 世界\u0000","rows":1,"valueBytes":25},
+    {"id":"present-empty-tags","schema":"owned.mp3 世界\u0000","rows":3,"valueBytes":65}
+  ],
+  "tables": [
+    {"table":"mp3_document","width":2,"rows":1,"valueBytes":25,"schemaBytes":94},
+    {"table":"mp3_id3v2_tag","width":4,"rows":1,"valueBytes":32,"schemaBytes":297},
+    {"table":"mp3_id3v2_frame","width":5,"rows":2,"valueBytes":76,"schemaBytes":250},
+    {"table":"mp3_id3v2_frame_octet","width":4,"rows":3,"valueBytes":96,"schemaBytes":233},
+    {"table":"mp3_id3v1_tag","width":1,"rows":1,"valueBytes":8,"schemaBytes":103},
+    {"table":"mp3_id3v1_octet","width":4,"rows":5,"valueBytes":160,"schemaBytes":217},
+    {"table":"mp3_audio_frame","width":15,"rows":2,"valueBytes":240,"schemaBytes":911},
+    {"table":"mp3_audio_payload_octet","width":4,"rows":3,"valueBytes":96,"schemaBytes":237}
+  ],
+  "integrity":"ok",
+  "foreignKeyFailures":0
+}

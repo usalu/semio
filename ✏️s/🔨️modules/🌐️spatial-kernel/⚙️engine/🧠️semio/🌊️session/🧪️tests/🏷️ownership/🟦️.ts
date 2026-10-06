@@ -9,10 +9,9 @@ const read = (path: string) => readFileSync(join(owner,path), "utf8");
 export function sessionLaws() {
   const schema = JSON.parse(read("🧬️schema/🔣️.json"));
   const ajv = new Ajv({ strict:true, allErrors:true }).addKeyword("x-semio-formats").addSchema(schema);
-  for (const [path, definition] of [["🔣️.json","SemioGeometryVerbsV1"],["🧫️fixtures/🏷️session-lifetime/🔣️.json","SemioGeometrySessionLifetimeV1"],["🧫️fixtures/🏷️ownership/🔣️.json","SemioGeometrySessionOwnershipV1"],["🧫️fixtures/🧹️retirement/🔣️.json","SemioGeometrySessionRetirementV1"]]) {
-    const validate = ajv.getSchema(`${schema.$id}#/$defs/${definition}`)!;
-    assert(validate(JSON.parse(read(path!))), JSON.stringify(validate.errors));
-  }
+  const verbs = ajv.getSchema(`${schema.$id}#/$defs/SemioGeometryVerbsV1`)!;
+  assert(verbs(JSON.parse(read("🔣️.json"))), JSON.stringify(verbs.errors));
+  const closeReceipt = ajv.getSchema(`${schema.$id}#/$defs/SemioGeometryCloseReceiptV1`)!;
   const retirement = JSON.parse(read("🧫️fixtures/🧹️retirement/🔣️.json"));
   let remaining = retirement.payloadBytes;
   const receipts = retirement.grants.map(([items, bytes]: number[]) => {
@@ -21,6 +20,7 @@ export function sessionLaws() {
     const credit = Math.min(bytes,remaining); remaining -= credit;
     return { phase:"pending", items:1, bytes:credit };
   });
+  for (const receipt of receipts) assert(closeReceipt(receipt), JSON.stringify(closeReceipt.errors));
   assert.deepEqual(receipts,retirement.receipts);
   for (const boundary of [retirement.capture.shellBoundary,retirement.portBoundary]) {
     for (const layout of [1,8,64,257,4096,8192]) {
@@ -38,6 +38,6 @@ export function sessionLaws() {
     assert.deepEqual([...source.matchAll(/#\[test\]\s*fn (\w+)/g)].map(match => match[1]), group.laws);
   }
   assert(!/static (KERNEL|MESH_CACHE|TESSELLATION_JOBS)|OnceLock/.test(read("🦀️.rs")));
-  console.log(`Semio geometry session: ${fixture.groups.reduce((sum: number, group: any) => sum + group.laws.length, 0)} exact native laws;4 portable contracts`);
+  console.log(`Semio geometry session: ${fixture.groups.reduce((sum: number, group: any) => sum + group.laws.length, 0)} exact native laws; actual verb descriptor and close receipt contracts`);
   return fixture.groups.map((group: any) => ({ package: fixture.package, target: group.target, laws:group.laws }));
 }

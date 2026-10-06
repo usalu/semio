@@ -13,7 +13,7 @@ async fn renders_text_editor_scene() {
 #[semio_framework_async_macros::async_test]
 async fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
     let mut app = new_app().await;
-    let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::document_dsl::jack_example_json()), &crate::editor::writer::unit_tests::context::main_window_view()).await.expect("render");
+    let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::standards::v1::subsets::any::io::text::snapshot::jack_example_json()), &crate::editor::writer::unit_tests::context::main_window_view()).await.expect("render");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("render JSON");
     let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes::<TextEditorScene>(&json).expect("text-editor scene");
     assert!(scene.placeholders_json.as_deref().is_some_and(|value| !value.is_empty()), "placeholders: {:?}", scene.placeholders_json);

@@ -18,7 +18,7 @@ type treeVectorFile struct {
 }
 
 func loadTreeVectors(ctx *host.Context) (treeVectorFile, error) {
-	data, err := ctx.FixtureBytes("shared://🌳️tree-vectors.json")
+	data, err := ctx.InputBytes("shared://🌳️tree-vectors.json")
 	if err != nil {
 		return treeVectorFile{}, err
 	}

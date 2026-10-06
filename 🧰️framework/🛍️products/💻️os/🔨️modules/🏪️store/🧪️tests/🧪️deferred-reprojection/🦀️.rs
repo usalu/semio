@@ -24,7 +24,7 @@ async fn store_named(id: &str, n: Option<i32>) -> ArtifactStore<DemoSnapshot, De
 async fn authored(id: &str, n: Option<i32>, edits: Vec<Vec<DemoMutation>>) -> (ArtifactStore<DemoSnapshot, DemoMutation>, Vec<crate::os_spr::MutationEnvelope>) {
     let mut author = store_named(id, n).await;
     for mutations in edits {
-        author.dispatch(ArtifactCommand::Apply { mutations, description: None, transaction: None }).await.expect("a clean edit applies");
+        author.dispatch(ArtifactCommand::Apply { mutations, transaction: None }).await.expect("a clean edit applies");
     }
     let log = author.event_log().expect("log");
     (author, log)
@@ -172,7 +172,7 @@ async fn a_local_edit_or_a_further_remote_change_restarts_the_deferred_replay() 
     deferred.set_local_actor_id(Some("deferred".into())).expect("actor");
     deferred.ingest_remote(remote_supersede("deferred-restart", vec![replaced(&ids[0], set(10))], 0)).await.expect("admitted");
     deferred.step_reprojection(None).await.expect("a step");
-    deferred.dispatch(ArtifactCommand::Apply { mutations: vec![add(100)], description: None, transaction: None }).await.expect("a local edit while the replay waits");
+    deferred.dispatch(ArtifactCommand::Apply { mutations: vec![add(100)], transaction: None }).await.expect("a local edit while the replay waits");
     assert_eq!(deferred.snapshot_ref().n, Some(129), "the local edit lands on the history before the change");
     let later = remote_supersede("deferred-restart", vec![replaced(&ids[3], add(0))], 1);
     deferred.ingest_remote(later.clone()).await.expect("a further remote change joins the waiting one");
@@ -325,10 +325,10 @@ fn settle(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) {
 async fn long_history(id: &str, budget: Option<ReplayTurnBudget>) -> ArtifactStore<DemoSnapshot, CountedOp> {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, CountedOp>("demo/v1", id, DemoSnapshot { n: Some(0) }, None)).await;
     store.enable_convergence_early_exit();
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(set(1), Some("early"))], description: None, transaction: None }).await.expect("the early edit");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(set(1), Some("early"))], transaction: None }).await.expect("the early edit");
     for _ in 1..LONG_HISTORY {
         settle(&mut store);
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1), Some("later"))], description: None, transaction: None }).await.expect("a later edit");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1), Some("later"))], transaction: None }).await.expect("a later edit");
     }
     settle(&mut store);
     store.set_local_actor_id(Some("early".into())).expect("actor");
@@ -431,7 +431,7 @@ async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_
     }
     store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![SupersedeInput { target: first, replacement: Some(CountedOp(set(100), None)) }] }).await.expect("the finalize waits");
     store.step_reprojection(None).await.expect("a step");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1000), None)], description: None, transaction: None }).await.expect("an edit while the finalize waits");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![CountedOp(add(1000), None)], transaction: None }).await.expect("an edit while the finalize waits");
     assert_eq!(store.snapshot_ref().n, Some(LONG_HISTORY + 1000), "the edit lands on the history before the finalize");
     assert_eq!(store.reprojection_progress().map(|progress| progress.done), Some(0), "the edit restarts the finalize's replay");
     assert!(drive_local(&mut store).await.1.is_ok());

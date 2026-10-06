@@ -17,7 +17,7 @@ fn unit_cube() -> SemioMeshSnapshot {
 #[test]
 fn a_unit_cube_projects_to_the_analytic_hexagon() {
     let png = ::semio_framework_async::poll::resolve_ready(SemioMeshToPng::serialize(&unit_cube())).expect("png");
-    let projection = semio_s_artifact_stdio_png::io::project_png(&png.bytes).expect("mesh PNG projection");
+    let projection = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&png.bytes).expect("mesh PNG projection");
     assert_eq!((projection.width, projection.height), (512, 512));
     let painted = projection.pixels.chunks(4).map(|px| 1.0 - (px[0] as f64 + px[1] as f64 + px[2] as f64) / 765.0).map(|darkness| if darkness > 0.05 { 1.0 } else { 0.0 }).sum::<f64>();
     let scale = (MESH_VIEW_EDGE - 2.0 * MESH_VIEW_MARGIN) / (2.0 * (2.0f64 / 3.0).sqrt());

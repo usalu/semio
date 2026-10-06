@@ -25,4 +25,4 @@ if (segments[0] === "fem3d-numerical-child-native") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-fem-3d", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], snapshotSqliteTestBudgetMs: 120000 });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-fem-3d", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], snapshotSqliteTestBudgetMs: 120000, snapshotSqliteTestFeatures: ["component-app-assembly"] });

@@ -8,8 +8,6 @@
 
 use crate::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted raster document snapshot (persistent fields of the artifact).
@@ -56,56 +54,13 @@ pub fn retire_raster_artifact(artifact: crate::standards::v1::subsets::any::sche
 mod record;
 use record::RasterNativeDocument;
 
-/// 🖨️ Prints the owner's literal typed forest and intrinsic records.
-pub(crate) fn print_pack_record_text(snapshot:&RasterSnapshot)->String{
- semio_framework_dsl_record::print(&RasterNativeDocument::ordinary(snapshot).__dsl_to_record(),&RasterNativeDocument::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document)
-}
-/// 📖️ Reconstructs the literal native forest without an embedded layer or child container.
-pub(crate) fn parse_pack_record_text(body:&str)->Result<RasterSnapshot,semio_framework_diagnostic::TextError>{
- let record=semio_framework_dsl_record::parse(body,&RasterNativeDocument::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;
- RasterNativeDocument::__dsl_from_record(&record)?.ordinary_snapshot().map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))
-}
+
+
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// ✉️ Native text and pack encode the same literal typed Raster graph.
-impl store::ArtifactDsl for RasterSnapshot {
-    const EXTENSION: &'static str = "raster";
-    fn envelope_id() -> &'static str {
-        "raster.raster"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        parse_pack_record_text(body)
-    }
-    fn print_dsl(&self) -> String {
-        let body = print_pack_record_text(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl store::ArtifactPack for RasterSnapshot {
-    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&RasterNativeDocument::__dsl_spec(), &RasterNativeDocument::ordinary(self).__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &RasterNativeDocument::__dsl_spec(), options)?;
-        RasterNativeDocument::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.ordinary_snapshot().map_err(store::PackError::from)
-    }
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        Some(RasterNativeDocument::__dsl_spec())
-    }
-}
+
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️Defaults
@@ -116,6 +71,4 @@ impl Default for RasterSnapshot {
 }
 //#endregion 🔖️Defaults
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+

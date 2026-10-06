@@ -1,58 +1,237 @@
 {
-  "$schema": "🧬️schema/🔣️.json",
   "note": "🧩️ Composed-child history backfill (design §12): the Rust runtime law `🧪️tests/🧪️composed-child-history/🦀️.rs` runs every case through `member_backfill`; the TypeScript twin `🧪️tests/🧪️composed-child-history/🟦️.ts` derives every case independently and Ajv validates this file against its schema.",
   "cases": [
     {
       "id": "a-gesture-on-parent-and-child-joins-the-parent-row",
       "histories": [
-        { "store": "content/flow-1", "editId": "c1", "transaction": "tx-00000000000000a1", "at": 1000, "description": null, "startedAt": "1000", "opCount": 1, "opLines": ["drag-nodes add 10 0"], "firstLabel": { "en": "Drag 1 node by (10, 0)", "de": "1 Knoten um (10; 0) ziehen" } }
+        {
+          "store": "content/flow-1",
+          "editId": "c1",
+          "transaction": "tx-00000000000000a1",
+          "at": 1000,
+          "startedAt": "1000",
+          "opCount": 1,
+          "opLines": [
+            "drag-nodes add 10 0"
+          ],
+          "firstLabel": {
+            "en": "Drag 1 node by (10, 0)",
+            "de": "1 Knoten um (10; 0) ziehen"
+          }
+        }
       ],
       "logged": [],
-      "parentTransactions": { "tx-00000000000000a1": "p1" },
-      "expected": { "attached": { "p1": ["c1"] }, "groups": [] }
+      "parentTransactions": {
+        "tx-00000000000000a1": "p1"
+      },
+      "expected": {
+        "attached": {
+          "p1": [
+            "c1"
+          ]
+        },
+        "groups": []
+      }
     },
     {
       "id": "one-transaction-across-two-members-is-one-row",
       "histories": [
-        { "store": "content/flow-1", "editId": "c2", "transaction": "tx-00000000000000b2", "at": 2000, "description": null, "startedAt": "2000", "opCount": 2, "opLines": ["set-node-param slider value 4", "set-node-param slider2 value 5"], "firstLabel": { "en": "Set node param", "de": "Knotenparameter setzen" } },
-        { "store": "drawing/flow-2", "editId": "d2", "transaction": "tx-00000000000000b2", "at": 2000, "description": null, "startedAt": "2000", "opCount": 1, "opLines": ["set-node-param slider value 4"], "firstLabel": { "en": "Set node param", "de": "Knotenparameter setzen" } }
-      ],
-      "logged": [],
-      "parentTransactions": {},
-      "expected": {
-        "attached": {},
-        "groups": [{ "at": 2000, "transaction": "tx-00000000000000b2", "editIds": ["c2", "d2"], "label": { "en": "Set node param (+1)", "de": "Knotenparameter setzen (+1)" }, "startedAt": "2000" }]
-      }
-    },
-    {
-      "id": "edits-without-a-transaction-are-rows-of-their-own-in-moment-order",
-      "histories": [
-        { "store": "content/flow-1", "editId": "e9", "transaction": null, "at": 3000, "description": null, "startedAt": "3000", "opCount": 1, "opLines": ["insert-node n9"], "firstLabel": { "en": "Insert node", "de": "Knoten einfügen" } },
-        { "store": "content/flow-1", "editId": "e1", "transaction": null, "at": 2500, "description": "Imported", "startedAt": "2500", "opCount": 1, "opLines": ["set-snapshot"], "firstLabel": { "en": "Set snapshot", "de": "Schnappschuss setzen" } },
-        { "store": "content/flow-1", "editId": "e5", "transaction": null, "at": 3000, "description": null, "startedAt": "3000", "opCount": 1, "opLines": ["remove-node n5"] }
+        {
+          "store": "content/flow-1",
+          "editId": "c2",
+          "transaction": "tx-00000000000000b2",
+          "at": 2000,
+          "startedAt": "2000",
+          "opCount": 2,
+          "opLines": [
+            "set-node-param slider value 4",
+            "set-node-param slider2 value 5"
+          ],
+          "firstLabel": {
+            "en": "Set node param",
+            "de": "Knotenparameter setzen"
+          }
+        },
+        {
+          "store": "drawing/flow-2",
+          "editId": "d2",
+          "transaction": "tx-00000000000000b2",
+          "at": 2000,
+          "startedAt": "2000",
+          "opCount": 1,
+          "opLines": [
+            "set-node-param slider value 4"
+          ],
+          "firstLabel": {
+            "en": "Set node param",
+            "de": "Knotenparameter setzen"
+          }
+        }
       ],
       "logged": [],
       "parentTransactions": {},
       "expected": {
         "attached": {},
         "groups": [
-          { "at": 2500, "transaction": null, "editIds": ["e1"], "label": { "en": "Imported", "de": "Imported" }, "startedAt": "2500" },
-          { "at": 3000, "transaction": null, "editIds": ["e5"], "label": { "en": "remove-node n5", "de": "remove-node n5" }, "startedAt": "3000" },
-          { "at": 3000, "transaction": null, "editIds": ["e9"], "label": { "en": "Insert node", "de": "Knoten einfügen" }, "startedAt": "3000" }
+          {
+            "at": 2000,
+            "transaction": "tx-00000000000000b2",
+            "editIds": [
+              "c2",
+              "d2"
+            ],
+            "label": {
+              "en": "Set node param (+1)",
+              "de": "Knotenparameter setzen (+1)"
+            },
+            "startedAt": "2000"
+          }
+        ]
+      }
+    },
+    {
+      "id": "edits-without-a-transaction-are-rows-of-their-own-in-moment-order",
+      "histories": [
+        {
+          "store": "content/flow-1",
+          "editId": "e9",
+          "transaction": null,
+          "at": 3000,
+          "startedAt": "3000",
+          "opCount": 1,
+          "opLines": [
+            "insert-node n9"
+          ],
+          "firstLabel": {
+            "en": "Insert node",
+            "de": "Knoten einfügen"
+          }
+        },
+        {
+          "store": "content/flow-1",
+          "editId": "e1",
+          "transaction": null,
+          "at": 2500,
+          "startedAt": "2500",
+          "opCount": 1,
+          "opLines": [
+            "set-snapshot"
+          ],
+          "firstLabel": {
+            "en": "Set snapshot",
+            "de": "Schnappschuss setzen"
+          }
+        },
+        {
+          "store": "content/flow-1",
+          "editId": "e5",
+          "transaction": null,
+          "at": 3000,
+          "startedAt": "3000",
+          "opCount": 1,
+          "opLines": [
+            "remove-node n5"
+          ]
+        }
+      ],
+      "logged": [],
+      "parentTransactions": {},
+      "expected": {
+        "attached": {},
+        "groups": [
+          {
+            "at": 2500,
+            "transaction": null,
+            "editIds": [
+              "e1"
+            ],
+            "label": {
+              "en": "Set snapshot",
+              "de": "Schnappschuss setzen"
+            },
+            "startedAt": "2500"
+          },
+          {
+            "at": 3000,
+            "transaction": null,
+            "editIds": [
+              "e5"
+            ],
+            "label": {
+              "en": "remove-node n5",
+              "de": "remove-node n5"
+            },
+            "startedAt": "3000"
+          },
+          {
+            "at": 3000,
+            "transaction": null,
+            "editIds": [
+              "e9"
+            ],
+            "label": {
+              "en": "Insert node",
+              "de": "Knoten einfügen"
+            },
+            "startedAt": "3000"
+          }
         ]
       }
     },
     {
       "id": "edits-a-row-already-carries-are-never-backfilled",
       "histories": [
-        { "store": "content/flow-1", "editId": "c1", "transaction": "tx-00000000000000c3", "at": 1000, "description": null, "startedAt": "1000", "opCount": 1, "opLines": ["drag-nodes add 10 0"], "firstLabel": { "en": "Drag 1 node by (10, 0)", "de": "1 Knoten um (10; 0) ziehen" } },
-        { "store": "content/flow-1", "editId": "c2", "transaction": "tx-00000000000000c4", "at": 1100, "description": null, "startedAt": "1100", "opCount": 1, "opLines": ["drag-nodes add 0 5"], "firstLabel": { "en": "Drag 1 node by (0, 5)", "de": "1 Knoten um (0; 5) ziehen" } }
+        {
+          "store": "content/flow-1",
+          "editId": "c1",
+          "transaction": "tx-00000000000000c3",
+          "at": 1000,
+          "startedAt": "1000",
+          "opCount": 1,
+          "opLines": [
+            "drag-nodes add 10 0"
+          ],
+          "firstLabel": {
+            "en": "Drag 1 node by (10, 0)",
+            "de": "1 Knoten um (10; 0) ziehen"
+          }
+        },
+        {
+          "store": "content/flow-1",
+          "editId": "c2",
+          "transaction": "tx-00000000000000c4",
+          "at": 1100,
+          "startedAt": "1100",
+          "opCount": 1,
+          "opLines": [
+            "drag-nodes add 0 5"
+          ],
+          "firstLabel": {
+            "en": "Drag 1 node by (0, 5)",
+            "de": "1 Knoten um (0; 5) ziehen"
+          }
+        }
       ],
-      "logged": ["c1"],
+      "logged": [
+        "c1"
+      ],
       "parentTransactions": {},
       "expected": {
         "attached": {},
-        "groups": [{ "at": 1100, "transaction": "tx-00000000000000c4", "editIds": ["c2"], "label": { "en": "Drag 1 node by (0, 5)", "de": "1 Knoten um (0; 5) ziehen" }, "startedAt": "1100" }]
+        "groups": [
+          {
+            "at": 1100,
+            "transaction": "tx-00000000000000c4",
+            "editIds": [
+              "c2"
+            ],
+            "label": {
+              "en": "Drag 1 node by (0, 5)",
+              "de": "1 Knoten um (0; 5) ziehen"
+            },
+            "startedAt": "1100"
+          }
+        ]
       }
     }
   ]

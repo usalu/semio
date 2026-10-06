@@ -30,6 +30,7 @@ pub const ARCHITECT_VIEW_BODY_REGISTER: &str = "architect.view.register";
 /// 👁️ Stitched into the viewer manifest by `crate::viewer::architect::create_architect_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: ARCHITECT_VIEW_WINDOW_REGISTER.into(),
         label: LocalizedLabel::native("Register Overview", "Register-Übersicht"),
         body_key: ARCHITECT_VIEW_BODY_REGISTER.into(),

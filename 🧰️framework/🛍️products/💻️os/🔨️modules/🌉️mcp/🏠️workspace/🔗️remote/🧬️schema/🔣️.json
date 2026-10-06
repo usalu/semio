@@ -3,86 +3,139 @@
   "$id": "https://json.schemas.assets.semio-tech.com/os/mcp/workspace/remote/component.json",
   "title": "Semio OS MCP Remote Workspace",
   "$defs": {
-    "Sha256Hex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-    "Sha256Etag": { "type": "string", "pattern": "^\"[0-9a-f]{64}\"$" },
-    "LowerHex": { "type": "string", "pattern": "^[0-9a-f]*$" },
-    "ScopeId": { "type": "string", "minLength": 1, "maxLength": 256 },
-    "HubOrigin": { "type": "string", "minLength": 1, "maxLength": 2048, "pattern": "^https?://[^\\s/]+" },
-    "Generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Sha256Etag": {
+      "type": "string",
+      "pattern": "^\"[0-9a-f]{64}\"$"
+    },
+    "LowerHex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]*$"
+    },
+    "ScopeId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "HubOrigin": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^https?://[^\\s/]+"
+    },
+    "Generation": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
     "HubUnavailableCauseV1": {
       "description": "🔎️ What made the hub directory unavailable (os-mcp 🔗️remote `HubUnavailableCause`): an HTTP answer with its typed hub code, a transport fault with its own bounded detail, this gateway's own spent network byte budget (the hub is fine; the call continues once it refills), or an unreadable answer.",
       "oneOf": [
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "status", "code"],
+          "required": [
+            "kind",
+            "status",
+            "code"
+          ],
           "properties": {
-            "kind": { "const": "http" },
-            "status": { "type": "integer", "minimum": 100, "maximum": 599 },
-            "code": { "oneOf": [{ "type": "string", "minLength": 1, "maxLength": 64 }, { "type": "null" }] }
+            "kind": {
+              "const": "http"
+            },
+            "status": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 599
+            },
+            "code": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "detail"],
-          "properties": { "kind": { "const": "transport" }, "detail": { "type": "string", "minLength": 1, "maxLength": 512 } }
+          "required": [
+            "kind",
+            "detail"
+          ],
+          "properties": {
+            "kind": {
+              "const": "transport"
+            },
+            "detail": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          }
         },
-        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "network-budget" } } },
-        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "undecodable-response" } } }
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "network-budget"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "undecodable-response"
+            }
+          }
+        }
       ]
     },
     "HubUnavailableRefusalDetailsV1": {
       "description": "🗣️ The `details` of a retryable PLUGIN_UNAVAILABLE refusal the hub binding answers: its typed cause and the en + de sentence a client shows.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["cause", "summary"],
+      "required": [
+        "cause",
+        "summary"
+      ],
       "properties": {
-        "cause": { "$ref": "#/$defs/HubUnavailableCauseV1" },
+        "cause": {
+          "$ref": "#/$defs/HubUnavailableCauseV1"
+        },
         "summary": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["en", "de"],
-          "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
-        }
-      }
-    },
-    "HubUnavailableRefusalCorpusV1": {
-      "description": "🧪️ Neutral corpus: one directory-client fault per case and the exact gateway refusal it becomes.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "detailMaxChars", "cases"],
-      "properties": {
-        "schema": { "const": "semio.os-mcp.hub-unavailable-refusal-corpus/v1" },
-        "detailMaxChars": { "const": 512 },
-        "cases": {
-          "type": "array",
-          "minItems": 6,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["id", "fault", "expected"],
-            "properties": {
-              "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-              "fault": {
-                "oneOf": [
-                  { "type": "object", "additionalProperties": false, "required": ["kind", "io"], "properties": { "kind": { "const": "transport" }, "io": { "type": "string", "minLength": 1 } } },
-                  { "type": "object", "additionalProperties": false, "required": ["kind", "status", "body"], "properties": { "kind": { "const": "http" }, "status": { "type": "integer", "minimum": 100, "maximum": 599 }, "body": { "type": "string" } } },
-                  { "type": "object", "additionalProperties": false, "required": ["kind", "decode"], "properties": { "kind": { "const": "decode" }, "decode": { "type": "string" } } },
-                  { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "budget" } } }
-                ]
-              },
-              "expected": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["code", "message", "details", "retryable"],
-                "properties": {
-                  "code": { "const": "PLUGIN_UNAVAILABLE" },
-                  "message": { "type": "string", "minLength": 1 },
-                  "details": { "$ref": "#/$defs/HubUnavailableRefusalDetailsV1" },
-                  "retryable": { "const": true }
-                }
-              }
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
             }
           }
         }
@@ -90,218 +143,11 @@
     },
     "HubComponentTransferPhaseV1": {
       "description": "📶️ Where one execution-target component transfer is, the first word of every progress message it publishes: `awaiting-stream` while the hub's asset stream rule or this gateway's one stream is taken, `receiving` while its bytes arrive, `retrying` after an interrupted stream or a hub shortage.",
-      "enum": ["awaiting-stream", "receiving", "retrying"]
-    },
-    "HubComponentAssetCorpusV1": {
-      "description": "🧪️ Neutral corpus: execution-target components as static assets. Each case starts from a store state and runs the gateway once per `runs` entry — a new store over the same root between runs, as a restarted gateway — against a hub answering the listed stream answers in order: `exact` the lease's bytes, `wrong` bytes of the declared length that do not hash to the lease, `short` a stream ending half-way, `busy` the typed `429` of the hub's asset stream rule naming `busyRetryAfterMs`, `unavailable` a `503`, `unauthorized` a `401`. A store copy that verifies costs no request; a busy hub is a wait; an interrupted stream or a shortage is asked again up to `streamAttempts` requests; bytes off the lease are refused and never kept. `phases` is the transfer's progress with repeats folded. The component is `byteLength` bytes, byte i being (31 i + 7) mod 251.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "component", "busyRetryAfterMs", "streamAttempts", "cases"],
-      "properties": {
-        "schema": { "const": "semio.os-mcp.hub-component-asset-corpus/v1" },
-        "component": { "type": "object", "additionalProperties": false, "required": ["byteLength", "sha256"], "properties": { "byteLength": { "type": "integer", "minimum": 1 }, "sha256": { "$ref": "#/$defs/Sha256Hex" } } },
-        "busyRetryAfterMs": { "type": "integer", "minimum": 1, "maximum": 30000 },
-        "streamAttempts": { "const": 4 },
-        "cases": {
-          "type": "array",
-          "minItems": 6,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["id", "store", "runs"],
-            "properties": {
-              "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-              "store": { "enum": ["empty", "verified", "tampered"] },
-              "runs": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": ["hub", "expected"],
-                  "properties": {
-                    "hub": { "type": "array", "items": { "enum": ["exact", "wrong", "short", "busy", "unavailable", "unauthorized"] } },
-                    "expected": {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "required": ["outcome", "componentRequests", "phases"],
-                      "properties": {
-                        "outcome": { "enum": ["store", "hub", "refused", "unavailable", "denied"] },
-                        "componentRequests": { "type": "integer", "minimum": 0 },
-                        "phases": { "type": "array", "items": { "$ref": "#/$defs/HubComponentTransferPhaseV1" } }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "AuthenticatedHubDescriptorIndexCaseV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["tokenPresent", "responses", "expected"],
-      "properties": {
-        "tokenPresent": { "type": "boolean" },
-        "responses": {
-          "type": "array",
-          "maxItems": 8,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["status"],
-            "properties": {
-              "status": { "type": "integer", "minimum": 100, "maximum": 599 },
-              "body": {},
-              "canonicalBody": { "type": "string" }
-            },
-            "oneOf": [
-              { "type": "object", "required": ["body"], "properties": { "body": {} } },
-              { "type": "object", "required": ["canonicalBody"], "properties": { "canonicalBody": { "type": "string" } } }
-            ]
-          }
-        },
-        "streamMessage": { "type": "object" },
-        "expected": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["state", "errorCode", "cacheAction", "resourceUris", "noTokenLeak"],
-          "properties": {
-            "state": { "enum": ["unbound", "refreshing", "ready", "revoked"] },
-            "errorCode": { "type": ["string", "null"] },
-            "cacheAction": { "enum": ["none", "publish", "invalidate"] },
-            "resourceUris": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": { "type": "string", "pattern": "^semio://" }
-            },
-            "noTokenLeak": { "const": true },
-            "requests": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^/" } }
-          }
-        }
-      }
-    },
-    "AuthenticatedHubDescriptorIndexV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["contractVersion", "limits", "cases"],
-      "properties": {
-        "contractVersion": { "const": 1 },
-        "limits": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["maxDocuments", "maxTokenBytes", "maxDiagnosticBytes", "operationTimeoutMs"],
-          "properties": {
-            "maxDocuments": { "const": 4096 },
-            "maxTokenBytes": { "const": 4096 },
-            "maxDiagnosticBytes": { "const": 4096 },
-            "operationTimeoutMs": { "const": 10000 }
-          }
-        },
-        "cases": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["noToken", "expiredToken", "publicWithoutMembership", "memberReady", "sameDocumentOtherSpace", "memberRevoked", "streamReconnect", "agentBelowMembership", "humanBelowMembership", "principalAboveMembership", "pagedWindows", "pagesCrossAnAuthorizationChange"],
-          "properties": {
-            "noToken": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "expiredToken": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "publicWithoutMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "memberReady": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "sameDocumentOtherSpace": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "memberRevoked": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "streamReconnect": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "agentBelowMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "humanBelowMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "principalAboveMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "pagedWindows": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "pagesCrossAnAuthorizationChange": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" }
-          }
-        }
-      }
-    },
-    "CanonicalPairCacheMountBindingV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["hubOrigin", "authorityGeneration", "spaceId", "documentId", "sameDocumentOtherSpace", "descriptorDigest", "checkpointId", "catalogGeneration"],
-      "properties": {
-        "hubOrigin": { "$ref": "#/$defs/HubOrigin" },
-        "authorityGeneration": { "$ref": "#/$defs/Generation" },
-        "spaceId": { "$ref": "#/$defs/ScopeId" },
-        "documentId": { "$ref": "#/$defs/ScopeId" },
-        "sameDocumentOtherSpace": { "$ref": "#/$defs/ScopeId" },
-        "descriptorDigest": { "$ref": "#/$defs/Sha256Hex" },
-        "checkpointId": { "$ref": "#/$defs/Sha256Hex" },
-        "catalogGeneration": { "$ref": "#/$defs/Generation" }
-      }
-    },
-    "CanonicalPairWireV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mediaType", "etag", "packHex", "sprHex", "packSha256", "sprSha256", "aggregateSha256", "wireHex"],
-      "properties": {
-        "mediaType": { "const": "application/vnd.semio.canonical-checkpoint-pair.v1" },
-        "etag": { "$ref": "#/$defs/Sha256Etag" },
-        "packHex": { "$ref": "#/$defs/LowerHex" },
-        "sprHex": { "$ref": "#/$defs/LowerHex" },
-        "packSha256": { "$ref": "#/$defs/Sha256Hex" },
-        "sprSha256": { "$ref": "#/$defs/Sha256Hex" },
-        "aggregateSha256": { "$ref": "#/$defs/Sha256Hex" },
-        "wireHex": { "$ref": "#/$defs/LowerHex" }
-      }
-    },
-    "CanonicalPairCacheMountV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "limits", "binding", "valid", "negativeVectors", "lifecycle"],
-      "properties": {
-        "schema": { "const": "semio.mcp.canonical-pair-cache-mount.fixture/v1" },
-        "limits": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["pairBytes", "cacheBytes", "entries", "headerBytes", "recordBytes"],
-          "properties": {
-            "pairBytes": { "const": 4194304 },
-            "cacheBytes": { "const": 8388608 },
-            "entries": { "const": 4 },
-            "headerBytes": { "const": 16384 },
-            "recordBytes": { "const": 4096 }
-          }
-        },
-        "binding": { "$ref": "#/$defs/CanonicalPairCacheMountBindingV1" },
-        "valid": { "$ref": "#/$defs/CanonicalPairWireV1" },
-        "negativeVectors": {
-          "type": "array",
-          "minItems": 15,
-          "uniqueItems": true,
-          "items": {
-            "enum": [
-              "truncated",
-              "reordered",
-              "duplicate",
-              "oversize-record",
-              "wrong-scope",
-              "wrong-digest",
-              "wrong-checkpoint",
-              "malformed-utf8",
-              "control-character",
-              "bad-pack-hash",
-              "bad-aggregate",
-              "bad-etag",
-              "missing-terminal",
-              "trailing-data",
-              "same-document-other-space"
-            ]
-          }
-        },
-        "lifecycle": {
-          "type": "array",
-          "minItems": 8,
-          "uniqueItems": true,
-          "items": { "enum": ["cache-hit", "cache-miss", "stale-completion", "eviction", "revoke", "stream-loss-reconnect", "rebootstrap", "cancel", "restart"] }
-        }
-      }
+      "enum": [
+        "awaiting-stream",
+        "receiving",
+        "retrying"
+      ]
     }
   }
 }

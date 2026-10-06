@@ -1,6 +1,5 @@
 /** 🧬️ DeflateSnapshot schema — typed RFC1950 zlib container. */
 export type DeflateLevelHint = "fastest" | "fast" | "default" | "maximum";
-export * from "./🪶️sqlite/🟦️.ts";
 
 export interface DeflateSnapshot {
   /** @state artifact */ schema: string;

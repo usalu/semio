@@ -209,9 +209,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-layer-adds-a-node",
       "class": "third-party-generated",
       "target": {
@@ -264,7 +263,6 @@
       "notes": "A second node appears in the scene. The reader independently recovers one more element with the new path's own d/fill."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-layer-removes-a-node",
       "class": "third-party-generated",
       "target": {
@@ -317,7 +315,6 @@
       "notes": "The deleted layer's node is gone from the scene; the surviving node is byte-for-byte unchanged."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "duplicate-layer-inserts-a-copy",
       "class": "third-party-generated",
       "target": {
@@ -370,7 +367,6 @@
       "notes": "An identical node is inserted right after the source, doubling the element count with the same geometry and paint."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-layer-swaps-two-nodes",
       "class": "third-party-generated",
       "target": {

@@ -1,6 +1,7 @@
 /** 🌱️ Wires owns the complete native intrinsic Value domain. */
 import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type WiresValue=
  |{kind:"null"}|{kind:"boolean";value:boolean}|{kind:"unsigned";value:bigint}|{kind:"signed";value:bigint}
  |{kind:"float";value:Binary64}|{kind:"text";value:string}|{kind:"bytes";value:Uint8Array}
@@ -18,7 +19,7 @@ export function parseWiresValue(value:unknown):WiresValue{
    case"null":put({kind});break;
    case"boolean":if(typeof row.value!=="boolean")throw Error("Wires boolean differs");put({kind,value:row.value});break;
    case"unsigned":case"signed":if(typeof row.value!=="bigint"||(kind==="unsigned"?(row.value<0n||row.value>18446744073709551615n):(row.value< -9223372036854775808n||row.value>9223372036854775807n)))throw Error("Wires native integer differs");put({kind,value:row.value});break;
-   case"float":put({kind,value:parseBinary64Transport(row.value)});break;
+   case"float":put({kind,value:parseBinary64(row.value)});break;
    case"text":if(typeof row.value!=="string")throw Error("Wires text differs");put({kind,value:row.value});break;
    case"bytes":if(!(row.value instanceof Uint8Array))throw Error("Wires octets differ");put({kind,value:row.value.slice()});break;
    case"array":{if(!Array.isArray(row.items))throw Error("Wires array differs");const items:WiresValue[]=new Array(row.items.length);put({kind,items});for(let i=row.items.length-1;i>=0;i--)pending.push({source:row.items[i],put:value=>{items[i]=value}});break;}

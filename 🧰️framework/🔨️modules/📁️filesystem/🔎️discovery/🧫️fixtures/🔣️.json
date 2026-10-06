@@ -1,0 +1,302 @@
+{
+  "cases": [
+    {
+      "id": "empty-directory",
+      "root": "root",
+      "cancelAfter": null,
+      "nodes": {
+        "root": {
+          "identity": "root",
+          "entries": []
+        }
+      },
+      "expected": {
+        "files": [],
+        "directories": 1,
+        "cancelled": false
+      }
+    },
+    {
+      "id": "ordinary-tree",
+      "root": "root",
+      "cancelAfter": null,
+      "nodes": {
+        "root": {
+          "identity": "root",
+          "entries": [
+            {
+              "value": "child",
+              "directory": true
+            },
+            {
+              "value": "a.grammar.semio",
+              "directory": false
+            }
+          ]
+        },
+        "child": {
+          "identity": "child",
+          "entries": [
+            {
+              "value": "x.txt",
+              "directory": false
+            },
+            {
+              "value": "b.grammar.semio",
+              "directory": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "files": [
+          "a.grammar.semio",
+          "b.grammar.semio"
+        ],
+        "directories": 2,
+        "cancelled": false
+      }
+    },
+    {
+      "id": "self-cycle",
+      "root": "root",
+      "cancelAfter": null,
+      "nodes": {
+        "root": {
+          "identity": "root",
+          "entries": [
+            {
+              "value": "root",
+              "directory": true
+            },
+            {
+              "value": "a.grammar.semio",
+              "directory": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "files": [
+          "a.grammar.semio"
+        ],
+        "directories": 1,
+        "cancelled": false
+      }
+    },
+    {
+      "id": "mutual-cycle",
+      "root": "root",
+      "cancelAfter": null,
+      "nodes": {
+        "root": {
+          "identity": "root",
+          "entries": [
+            {
+              "value": "child",
+              "directory": true
+            },
+            {
+              "value": "a.grammar.semio",
+              "directory": false
+            }
+          ]
+        },
+        "child": {
+          "identity": "child",
+          "entries": [
+            {
+              "value": "root",
+              "directory": true
+            },
+            {
+              "value": "b.grammar.semio",
+              "directory": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "files": [
+          "a.grammar.semio",
+          "b.grammar.semio"
+        ],
+        "directories": 2,
+        "cancelled": false
+      }
+    },
+    {
+      "id": "physical-alias",
+      "root": "root",
+      "cancelAfter": null,
+      "nodes": {
+        "root": {
+          "identity": "root",
+          "entries": [
+            {
+              "value": "first",
+              "directory": true
+            },
+            {
+              "value": "second",
+              "directory": true
+            }
+          ]
+        },
+        "first": {
+          "identity": "shared",
+          "entries": [
+            {
+              "value": "a.grammar.semio",
+              "directory": false
+            }
+          ]
+        },
+        "second": {
+          "identity": "shared",
+          "entries": [
+            {
+              "value": "a.grammar.semio",
+              "directory": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "files": [
+          "a.grammar.semio"
+        ],
+        "directories": 2,
+        "cancelled": false
+      }
+    },
+    {
+      "id": "nonmatching-leaf",
+      "root": "root",
+      "cancelAfter": null,
+      "nodes": {
+        "root": {
+          "identity": "root",
+          "entries": [
+            {
+              "value": "a.txt",
+              "directory": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "files": [],
+        "directories": 1,
+        "cancelled": false
+      }
+    },
+    {
+      "id": "cancel-before-expansion",
+      "root": "root",
+      "cancelAfter": 0,
+      "nodes": {
+        "root": {
+          "identity": "root",
+          "entries": [
+            {
+              "value": "a.grammar.semio",
+              "directory": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "files": [],
+        "directories": 0,
+        "cancelled": true
+      }
+    },
+    {
+      "id": "cancel-with-pending",
+      "root": "root",
+      "cancelAfter": 1,
+      "nodes": {
+        "root": {
+          "identity": "root",
+          "entries": [
+            {
+              "value": "child",
+              "directory": true
+            },
+            {
+              "value": "a.grammar.semio",
+              "directory": false
+            }
+          ]
+        },
+        "child": {
+          "identity": "child",
+          "entries": [
+            {
+              "value": "b.grammar.semio",
+              "directory": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "files": [
+          "a.grammar.semio"
+        ],
+        "directories": 1,
+        "cancelled": true
+      }
+    },
+    {
+      "id": "deep-finite-chain",
+      "root": "root",
+      "cancelAfter": null,
+      "nodes": {
+        "root": {
+          "identity": "root",
+          "entries": [
+            {
+              "value": "a",
+              "directory": true
+            }
+          ]
+        },
+        "a": {
+          "identity": "a",
+          "entries": [
+            {
+              "value": "b",
+              "directory": true
+            }
+          ]
+        },
+        "b": {
+          "identity": "b",
+          "entries": [
+            {
+              "value": "c",
+              "directory": true
+            }
+          ]
+        },
+        "c": {
+          "identity": "c",
+          "entries": [
+            {
+              "value": "a.grammar.semio",
+              "directory": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "files": [
+          "a.grammar.semio"
+        ],
+        "directories": 4,
+        "cancelled": false
+      }
+    }
+  ]
+}

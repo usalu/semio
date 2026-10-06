@@ -1,0 +1,56 @@
+> bun ./📜️script.ts kernel-test
+
+[DEBUG] isolated Nx verification kernel-test
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 11 queued owner(s): 20005670-4180-4fb5-b0dc-03c16121c31f, 8596b973-4987-47ee-9fe4-207ecd62607b, 23827be2-d779-4d54-bb10-63bb7f4e9999, f0214332-aa4a-4fbf-8762-18e7f472b4c8, 4a94b407-0ef0-407d-aa7c-7bf4df8e473a, 8cf1e4e9-c1d6-475a-98ab-26779e76785d, 8406558c-1827-42b1-bdfa-ab8136fe2bf4, 82dc6316-57aa-4bf7-b9b8-f02f6c1fb3d3, 85f7a841-b29d-4cfe-80a0-fe1cc3190946, 55d9aae9-8210-418f-a5b3-5b4e4d4e38b8, b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 10 queued owner(s): 8596b973-4987-47ee-9fe4-207ecd62607b, 23827be2-d779-4d54-bb10-63bb7f4e9999, f0214332-aa4a-4fbf-8762-18e7f472b4c8, 4a94b407-0ef0-407d-aa7c-7bf4df8e473a, 8cf1e4e9-c1d6-475a-98ab-26779e76785d, 8406558c-1827-42b1-bdfa-ab8136fe2bf4, 82dc6316-57aa-4bf7-b9b8-f02f6c1fb3d3, 85f7a841-b29d-4cfe-80a0-fe1cc3190946, 55d9aae9-8210-418f-a5b3-5b4e4d4e38b8, b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 9 queued owner(s): 23827be2-d779-4d54-bb10-63bb7f4e9999, f0214332-aa4a-4fbf-8762-18e7f472b4c8, 4a94b407-0ef0-407d-aa7c-7bf4df8e473a, 8cf1e4e9-c1d6-475a-98ab-26779e76785d, 8406558c-1827-42b1-bdfa-ab8136fe2bf4, 82dc6316-57aa-4bf7-b9b8-f02f6c1fb3d3, 85f7a841-b29d-4cfe-80a0-fe1cc3190946, 55d9aae9-8210-418f-a5b3-5b4e4d4e38b8, b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 8 queued owner(s): f0214332-aa4a-4fbf-8762-18e7f472b4c8, 4a94b407-0ef0-407d-aa7c-7bf4df8e473a, 8cf1e4e9-c1d6-475a-98ab-26779e76785d, 8406558c-1827-42b1-bdfa-ab8136fe2bf4, 82dc6316-57aa-4bf7-b9b8-f02f6c1fb3d3, 85f7a841-b29d-4cfe-80a0-fe1cc3190946, 55d9aae9-8210-418f-a5b3-5b4e4d4e38b8, b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 7 queued owner(s): 4a94b407-0ef0-407d-aa7c-7bf4df8e473a, 8cf1e4e9-c1d6-475a-98ab-26779e76785d, 8406558c-1827-42b1-bdfa-ab8136fe2bf4, 82dc6316-57aa-4bf7-b9b8-f02f6c1fb3d3, 85f7a841-b29d-4cfe-80a0-fe1cc3190946, 55d9aae9-8210-418f-a5b3-5b4e4d4e38b8, b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 6 queued owner(s): 8cf1e4e9-c1d6-475a-98ab-26779e76785d, 8406558c-1827-42b1-bdfa-ab8136fe2bf4, 82dc6316-57aa-4bf7-b9b8-f02f6c1fb3d3, 85f7a841-b29d-4cfe-80a0-fe1cc3190946, 55d9aae9-8210-418f-a5b3-5b4e4d4e38b8, b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 4 queued owner(s): 82dc6316-57aa-4bf7-b9b8-f02f6c1fb3d3, 85f7a841-b29d-4cfe-80a0-fe1cc3190946, 55d9aae9-8210-418f-a5b3-5b4e4d4e38b8, b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 3 queued owner(s): 85f7a841-b29d-4cfe-80a0-fe1cc3190946, 55d9aae9-8210-418f-a5b3-5b4e4d4e38b8, b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 2 queued owner(s): 55d9aae9-8210-418f-a5b3-5b4e4d4e38b8, b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 1 queued owner(s): b0d5cb3b-d87c-4c84-9d7e-fea9ae2e76bd
+40 |   let onCancel, returnValue = new @Promise((resolve, reject) => {
+41 |     let timeout = setTimeoutGlobal(() => resolve(value), after, ...arguments_);
+42 |     if (!reference)
+43 |       timeout?.unref?.();
+44 |     if (signal)
+45 |         clearTimeout(timeout), reject(@makeAbortError(@undefined, { cause: signal.reason }));
+                                                          ^
+AbortError: The operation was aborted.
+ code: "ABORT_ERR"
+
+      at onCancel (node:timers/promises:45:54)
+
+Bun v1.3.14 (macOS arm64)
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 10 queued owner(s): 16262914-8898-4a40-aef8-faa86649bd6d, f1aff62f-61a2-4aa7-b17e-c8ec5a68ccfb, 9ea711d8-5a7f-45fa-89cb-b9ac80341f52, 58eee020-abbe-4580-a933-87d27cdc0a3e, ac40851d-1167-4e0b-b207-54d1c118363a, 86733463-43ba-420b-b018-ad9732468a42, c662ea51-27e6-46d2-b30f-1952392df972, 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 9 queued owner(s): f1aff62f-61a2-4aa7-b17e-c8ec5a68ccfb, 9ea711d8-5a7f-45fa-89cb-b9ac80341f52, 58eee020-abbe-4580-a933-87d27cdc0a3e, ac40851d-1167-4e0b-b207-54d1c118363a, 86733463-43ba-420b-b018-ad9732468a42, c662ea51-27e6-46d2-b30f-1952392df972, 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 8 queued owner(s): 9ea711d8-5a7f-45fa-89cb-b9ac80341f52, 58eee020-abbe-4580-a933-87d27cdc0a3e, ac40851d-1167-4e0b-b207-54d1c118363a, 86733463-43ba-420b-b018-ad9732468a42, c662ea51-27e6-46d2-b30f-1952392df972, 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 6 queued owner(s): ac40851d-1167-4e0b-b207-54d1c118363a, 86733463-43ba-420b-b018-ad9732468a42, c662ea51-27e6-46d2-b30f-1952392df972, 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 6 queued owner(s): ac40851d-1167-4e0b-b207-54d1c118363a, 86733463-43ba-420b-b018-ad9732468a42, c662ea51-27e6-46d2-b30f-1952392df972, 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 6 queued owner(s): ac40851d-1167-4e0b-b207-54d1c118363a, 86733463-43ba-420b-b018-ad9732468a42, c662ea51-27e6-46d2-b30f-1952392df972, 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 5 queued owner(s): 86733463-43ba-420b-b018-ad9732468a42, c662ea51-27e6-46d2-b30f-1952392df972, 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 5 queued owner(s): 86733463-43ba-420b-b018-ad9732468a42, c662ea51-27e6-46d2-b30f-1952392df972, 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 3 queued owner(s): 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 3 queued owner(s): 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 3 queued owner(s): 4f74d05e-0f8c-4135-b0db-ac63aff18369, 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 2 queued owner(s): 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Waiting for exclusive access to cargo-preparation:/Users/ueli/Documents/semio behind 2 queued owner(s): 60345953-255f-403c-aacb-d785031b9460, 25036e21-7e42-4c6e-89ff-32b4e6591ba9
+Selected Cargo preparation failed: Cargo.toml (1)
+137 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+138 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+139 |  */
+140 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+141 |   const status = runCmdInternal(cmd, args, opts);
+142 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                    ^
+error: cargo test --manifest-path Cargo.toml --lib os_store::tests:: -- --nocapture exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts:142:31)
+      at runCargo (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts:2224:3)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts:1880:11)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts:74:71)
+      at async runScriptMain (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts:15:16)
+
+Bun v1.3.14 (macOS arm64)
+Warning: command "bun ./📜️script.ts kernel-test" exited with non-zero status code

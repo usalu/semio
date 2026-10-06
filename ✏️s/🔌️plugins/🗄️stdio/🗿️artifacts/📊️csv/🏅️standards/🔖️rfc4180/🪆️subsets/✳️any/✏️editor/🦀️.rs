@@ -93,26 +93,26 @@ pub enum CsvEditorCommand {
 impl protocol::OpText for CsvEditorCommand {
     fn print_op(&self) -> String {
         match self {
-            CsvEditorCommand::SetCell { row, column, revision, value } => format!("set-cell row={row} column={column} revision={} value={}", crate::schema::diff::hex_encode(revision.as_bytes()), crate::schema::diff::hex_encode(value.as_bytes())),
-            CsvEditorCommand::AddRow { revision } => format!("add-row revision={}", crate::schema::diff::hex_encode(revision.as_bytes())),
-            CsvEditorCommand::RemoveRow { row, revision } => format!("remove-row row={row} revision={}", crate::schema::diff::hex_encode(revision.as_bytes())),
-            CsvEditorCommand::AddColumn { revision } => format!("add-column revision={}", crate::schema::diff::hex_encode(revision.as_bytes())),
-            CsvEditorCommand::RemoveColumn { column, revision } => format!("remove-column column={column} revision={}", crate::schema::diff::hex_encode(revision.as_bytes())),
-            CsvEditorCommand::SetHeader { column, revision, value } => format!("set-header column={column} revision={} value={}", crate::schema::diff::hex_encode(revision.as_bytes()), crate::schema::diff::hex_encode(value.as_bytes())),
-            CsvEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", crate::schema::diff::hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
-            CsvEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", crate::schema::diff::hex_encode(example_id.as_bytes())),
+            CsvEditorCommand::SetCell { row, column, revision, value } => format!("set-cell row={row} column={column} revision={} value={}", crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(revision.as_bytes()), crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(value.as_bytes())),
+            CsvEditorCommand::AddRow { revision } => format!("add-row revision={}", crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(revision.as_bytes())),
+            CsvEditorCommand::RemoveRow { row, revision } => format!("remove-row row={row} revision={}", crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(revision.as_bytes())),
+            CsvEditorCommand::AddColumn { revision } => format!("add-column revision={}", crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(revision.as_bytes())),
+            CsvEditorCommand::RemoveColumn { column, revision } => format!("remove-column column={column} revision={}", crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(revision.as_bytes())),
+            CsvEditorCommand::SetHeader { column, revision, value } => format!("set-header column={column} revision={} value={}", crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(revision.as_bytes()), crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(value.as_bytes())),
+            CsvEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
+            CsvEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_encode(example_id.as_bytes())),
         }
     }
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if let Some(rest) = line.strip_prefix("active-example id=") {
-            let bytes = crate::schema::diff::hex_decode(rest)
+            let bytes = crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_decode(rest)
                 .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("csv editor command: invalid id hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             let example_id = String::from_utf8(bytes)
                 .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("csv editor command: invalid id utf8: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             return Ok(CsvEditorCommand::SetActiveExample { example_id });
         }
         if let Some(raw) = line.strip_prefix("snapshot-edit event=") {
-            let bytes = crate::schema::diff::hex_decode(raw)
+            let bytes = crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_decode(raw)
                 .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("csv editor command: invalid snapshot edit hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes)
                 .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("csv editor command: invalid snapshot edit: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
@@ -133,7 +133,7 @@ impl protocol::OpText for CsvEditorCommand {
                 "row" => row = raw.parse::<u32>().ok(),
                 "column" => column = raw.parse::<u32>().ok(),
                 "revision" => {
-                    let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| {
+                    let bytes = crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_decode(raw).map_err(|error| {
                         semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("csv editor command: invalid revision hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1))
                     })?;
                     revision = Some(String::from_utf8(bytes).map_err(|error| {
@@ -141,7 +141,7 @@ impl protocol::OpText for CsvEditorCommand {
                     })?);
                 }
                 "value" => {
-                    let bytes = crate::schema::diff::hex_decode(raw)
+                    let bytes = crate::standards::v_rfc4180::subsets::any::io::text::diff::hex_decode(raw)
                         .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("csv editor command: invalid value hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
                     value = Some(String::from_utf8(bytes).map_err(|error| {
                         semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("csv editor command: invalid value utf8: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1))
@@ -518,12 +518,12 @@ impl ArtifactEditor for CsvEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        Ok(crate::schema::snapshot::encode_csv(snapshot).into_bytes())
+        Ok(crate::standards::v_rfc4180::subsets::any::io::text::snapshot::encode_csv(snapshot).into_bytes())
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
         let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
-        crate::schema::snapshot::decode_csv(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+        crate::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
     fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
@@ -555,7 +555,7 @@ impl ArtifactEditor for CsvEditor {
             return Ok(None);
         }
         if csv_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-csv-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-csv-retained-command-tool-mismatch"));
         }
         let tool_id = csv_command_id(&request.command);
         let operation = AppOperationContext {

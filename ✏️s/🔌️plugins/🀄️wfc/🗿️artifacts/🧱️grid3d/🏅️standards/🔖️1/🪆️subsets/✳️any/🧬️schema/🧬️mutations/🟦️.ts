@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬 s.wfc.grid3d mutations — the TypeScript twin of the semantic vocabulary. The wire form is
  * internally tagged by the variant name, exactly as the committed fixture quintets carry it. */
 

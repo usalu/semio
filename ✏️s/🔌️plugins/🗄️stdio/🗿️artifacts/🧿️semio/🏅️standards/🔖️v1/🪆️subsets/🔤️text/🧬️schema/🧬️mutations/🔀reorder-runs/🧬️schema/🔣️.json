@@ -11,11 +11,41 @@
   "properties": {
     "from": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Run",
+          "de": "Textlauf"
+        },
+        "description": {
+          "en": "Index of the run that moves, counted from 0.",
+          "de": "Index des Textlaufs, der verschoben wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "to": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Destination",
+          "de": "Zielposition"
+        },
+        "description": {
+          "en": "Position the run holds afterwards, counted from 0.",
+          "de": "Position, die der Textlauf danach einnimmt, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

@@ -1,0 +1,19 @@
+{
+  "command": "SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/norm-twelve-relocated-source-artifacts' bun run nx run-many --target=test-snapshot-sqlite-source --projects='@semio-tech/norm-en1995-rs,@semio-tech/norm-en1999-rs,@semio-tech/norm-din4108-rs,@semio-tech/norm-en1991-rs,@semio-tech/norm-en1990-rs,@semio-tech/norm-en1996-rs,@semio-tech/norm-en1994-rs,@semio-tech/norm-din16798-rs,@semio-tech/norm-din18599-rs,@semio-tech/norm-en1993-rs,@semio-tech/norm-vdi3805-rs,@semio-tech/norm-en1997-rs' --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-norm-twelve-relocated-source.log' 2>&1",
+  "projects": [
+    "@semio-tech/norm-en1995-rs",
+    "@semio-tech/norm-en1999-rs",
+    "@semio-tech/norm-din4108-rs",
+    "@semio-tech/norm-en1991-rs",
+    "@semio-tech/norm-en1990-rs",
+    "@semio-tech/norm-en1996-rs",
+    "@semio-tech/norm-en1994-rs",
+    "@semio-tech/norm-din16798-rs",
+    "@semio-tech/norm-din18599-rs",
+    "@semio-tech/norm-en1993-rs",
+    "@semio-tech/norm-vdi3805-rs",
+    "@semio-tech/norm-en1997-rs"
+  ],
+  "scope": "Actual twelve registered owning Source routes at moved canonical IO authority; unchanged original quick profiles; no Native inference",
+  "at": "2026-10-06T00:52:26.944Z"
+}

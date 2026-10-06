@@ -27,7 +27,7 @@ use crate::{FlowMutation, FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_infinite_dag::DagDrawLod;
-use semio_framework_plugin::app::{ChildEmit, InteractionView};
+use semio_framework_plugin::app::{ChildEmit,ChildEmitPreparation, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
@@ -419,9 +419,9 @@ fn duplicate_edge_id(source: &str, target: &str) -> String {
 
 fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, values: &crate::playbook::PlaybookValues) -> String {
     let live = snapshot.to_host_snapshot();
-    let fixture_json = semio_framework_pack_json::to_json_string(&live);
+    let snapshot_json = semio_framework_pack_json::to_json_string(&live);
     let values: semio_framework_pack_json::Object = values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect();
-    let patched = flow::forms_bridge::apply_generation_values_to_host_snapshot(&fixture_json, &values);
+    let patched = flow::forms_bridge::apply_generation_values_to_host_snapshot(&snapshot_json, &values);
     let patched_fixture = match FlowHost::parse_host_snapshot_json(&patched) {
         Ok(parsed) => {
             live.retire_cold();
@@ -656,7 +656,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             node.id = target_id.clone();
             let edge = FlowEdge { id: edge_id, from: PortRef { node: payload.widget_id.clone(), port: String::new() }, to: PortRef { node: target_id, port: String::new() }, kind: "data".into() };
             let emit = Emit {
-                child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &[SemioFlowMutation::InsertNode(insert_node::InsertNode::new(node)), SemioFlowMutation::InsertEdge(insert_edge::InsertEdge::new(edge))])],
+                child_preparations: std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content", child_id, vec![SemioFlowMutation::InsertNode(insert_node::InsertNode::new(node)), SemioFlowMutation::InsertEdge(insert_edge::InsertEdge::new(edge))])]),
                 ..Default::default()
             };
             self.completed = true;
@@ -733,7 +733,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                     _ => Fault::from("flow-retained-direct-route-mismatch"),
                 });
             }
-            return Ok(ArtifactCommandWorkStep::Complete(flow_content_leaves_emit(&snapshot.content.child_id, &flow_removal_leaves(&child, &node_ids, &edge_ids))));
+            return Ok(ArtifactCommandWorkStep::Complete(flow_content_leaves_emit(&snapshot.content.child_id, flow_removal_leaves(&child, &node_ids, &edge_ids))));
         }
         if matches!(command, FlowCommand::DeleteSelection(_)) {
             let selected = interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice());
@@ -793,7 +793,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             if node_ids.is_empty() && edge_ids.is_empty() {
                 return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
             }
-            return Ok(ArtifactCommandWorkStep::Complete(flow_content_leaves_emit(&snapshot.content.child_id, &flow_removal_leaves(&child, &node_ids, &edge_ids))));
+            return Ok(ArtifactCommandWorkStep::Complete(flow_content_leaves_emit(&snapshot.content.child_id, flow_removal_leaves(&child, &node_ids, &edge_ids))));
         }
         if let FlowCommand::SetPreviewOff(payload) = command {
             if self.preview_off.is_none() {
@@ -871,7 +871,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             }
             self.completed = true;
             let leaves = patch_flow_widgets::patch_flow_widgets_leaves(&child, payload);
-            return Ok(ArtifactCommandWorkStep::Complete(patch_flow_widgets::widget_leaves_emit(&snapshot.content.child_id, &leaves)));
+            return Ok(ArtifactCommandWorkStep::Complete(patch_flow_widgets::widget_leaves_emit(&snapshot.content.child_id, leaves)));
         }
         self.completed = true;
         flow_direct_store_emit(command, &config, view).map(ArtifactCommandWorkStep::Complete)
@@ -1035,13 +1035,34 @@ const FLOW_CHILD_GROUP_RAW_BYTES: usize = 16_384;
 struct FlowChildGroupWork {
     tool_id: &'static str,
     instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
+    output: Option<Emit<FlowMutation, NoConfigMutation, NoDraftMutation>>,
     completed: bool,
     closing: bool,
 }
 
 impl FlowChildGroupWork {
     fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { tool_id, instance_owner: Some(instance_owner), completed: false, closing: false }
+        Self { tool_id, instance_owner: Some(instance_owner), output: None, completed: false, closing: false }
+    }
+
+    fn has_vector_allocation<T>(owner:&Vec<T>)->bool{std::mem::size_of::<T>()!=0&&owner.capacity()!=0}
+
+    fn accept_output(&mut self,emit:Emit<FlowMutation,NoConfigMutation,NoDraftMutation>,child_id:&str)->Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>,Fault>{
+        assert!(self.output.is_none(),"one Flow work unit retains at most one original output");
+        self.output=Some(emit);
+        let emit=self.output.as_ref().expect("original output retained before validation");
+        let maximum=FLOW_STORE_MAX_MUTATION_ITEMS+1;
+        let ready=emit.child_emits.first().is_some_and(|child|child.slot=="content"&&child.child_id==child_id&&!child.ops.is_empty()&&child.ops.len()<=maximum&&child.labels.len()==child.ops.len());
+        let preparing=emit.child_preparations.front().is_some_and(|source|source.matches_source::<SemioFlowMutation>("content",child_id,maximum));
+        let exact=(ready&&emit.child_preparations.is_empty())||(preparing&&emit.child_emits.is_empty());
+        if emit.child_emits.len()+emit.child_preparations.len()>1
+            || ((!emit.child_emits.is_empty()||!emit.child_preparations.is_empty())&&!exact)
+            || (emit.transaction.is_some()&&!exact)
+            || !emit.artifact_mutations.is_empty()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()
+            || !emit.effects.is_empty()||!emit.events.is_empty()
+        {return Err(Fault::from("flow-retained-child-group-output-contract"));}
+        self.completed=true;
+        Ok(ArtifactCommandWorkStep::Complete(self.output.take().expect("validated original output transferred once")))
     }
 
     fn admitted_child<'a>(
@@ -1090,7 +1111,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation } = *input;
-        if self.closing || self.completed {
+        if self.closing || self.completed || self.output.is_some() {
             return Err(Fault::from("flow-retained-child-group-terminal"));
         }
         if command.command_id() != self.tool_id || !Self::payload_admitted(command) {
@@ -1110,38 +1131,43 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                 _ => Err(Fault::from("flow-retained-child-group-route-mismatch")),
             })?
         })?;
-        let exact_child = emit.child_emits.first().filter(|child| child.slot == "content" && child.child_id == snapshot.content.child_id && !child.ops.is_empty() && child.ops.len() <= FLOW_STORE_MAX_MUTATION_ITEMS + 1 && child.labels.len() == child.ops.len());
-        if emit.child_emits.len() > 1
-            || (!emit.child_emits.is_empty() && exact_child.is_none())
-            || (emit.transaction.is_some() && exact_child.is_none())
-            || !emit.artifact_mutations.is_empty()
-            || !emit.config_mutations.is_empty()
-            || !emit.draft_mutations.is_empty()
-            || !emit.effects.is_empty()
-            || !emit.events.is_empty()
-        {
-            return Err(Fault::from("flow-retained-child-group-output-contract"));
-        }
-        self.completed = true;
-        Ok(ArtifactCommandWorkStep::Complete(emit))
+        self.accept_output(emit, &snapshot.content.child_id)
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing || maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->semio_framework_job::InteractiveJobCloseStep{
+        use semio_framework_job::InteractiveJobCloseStep;
+        use semio_framework_plugin::app::PluginCloseStep;
+        if !self.closing{return InteractiveJobCloseStep::Blocked;}
+        if maximum_items==0||maximum_bytes==0{return InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0};}
+        if let Some(emit)=self.output.as_mut(){
+            if let Some(step)=emit.close_child_one(1,maximum_bytes){return match step{
+                PluginCloseStep::Pending{released_items,released_bytes}=>InteractiveJobCloseStep::Pending{released_items,released_bytes},
+                PluginCloseStep::Complete=>InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0},
+                _=>InteractiveJobCloseStep::Blocked,
+            };}
+            if let Some(transaction)=emit.transaction.as_mut(){
+                for text in [&mut transaction.id,&mut transaction.tool]{
+                    let bytes=text.capacity();if bytes==0{continue;}
+                    if bytes>maximum_bytes{return InteractiveJobCloseStep::Pending{released_items:0,released_bytes:0};}
+                    *text=String::new();return InteractiveJobCloseStep::Pending{released_items:1,released_bytes:bytes};
+                }
+                emit.transaction=None;return InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0};
+            }
+            if Self::has_vector_allocation(&emit.artifact_mutations)||Self::has_vector_allocation(&emit.config_mutations)||Self::has_vector_allocation(&emit.window_config_mutations)||Self::has_vector_allocation(&emit.draft_mutations)
+                ||Self::has_vector_allocation(&emit.effects)||Self::has_vector_allocation(&emit.events)||Self::has_vector_allocation(&emit.extension_invocations)||Self::has_vector_allocation(&emit.interaction_writes)||Self::has_vector_allocation(&emit.tasks)||matches!(emit.ui_scope,semio_framework::kernel::UiDirtyScope::Partial{..})
+            {return InteractiveJobCloseStep::Blocked;}
+            self.output=None;return InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0};
         }
-        if self.instance_owner.take().is_some() {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete
+        if self.instance_owner.take().is_some(){return InteractiveJobCloseStep::Pending{released_items:1,released_bytes:0};}
+        InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.instance_owner.is_none()
+        self.closing && self.instance_owner.is_none() && self.output.is_none()
     }
 }
 
@@ -1673,7 +1699,7 @@ impl FlowGraphOperationJobFactoryProofs {
         owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.flow.flow@1/*#editor",
-        artifact_schema: "flow.host_snapshot",
+        artifact_schema: "s.flow.flow",
         factory: "FlowGraphOperationJobFactory",
         factory_type: FlowGraphOperationJobFactory,
         contract: flow_graph_operation_contract(),
@@ -1689,7 +1715,7 @@ impl FlowDirectStoreJobFactoryProofs {
         owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.flow.flow@1/*#editor",
-        artifact_schema: "flow.host_snapshot",
+        artifact_schema: "s.flow.flow",
         factory: "FlowDirectStoreJobFactory",
         factory_type: FlowDirectStoreJobFactory,
         contract: flow_direct_store_contract(),
@@ -1725,7 +1751,7 @@ impl FlowHostEffectJobFactoryProofs {
         owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.flow.flow@1/*#editor",
-        artifact_schema: "flow.host_snapshot",
+        artifact_schema: "s.flow.flow",
         factory: "FlowHostEffectJobFactory",
         factory_type: FlowHostEffectJobFactory,
         tools: {
@@ -1746,7 +1772,7 @@ impl FlowChildGroupJobFactoryProofs {
         owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.flow.flow@1/*#editor",
-        artifact_schema: "flow.host_snapshot",
+        artifact_schema: "s.flow.flow",
         factory: "FlowChildGroupJobFactory",
         factory_type: FlowChildGroupJobFactory,
         tools: {
@@ -1896,7 +1922,7 @@ impl FlowContributionsJobFactoryProofs {
         owner: semio_framework_plugin::EditorApp<FlowPlayApp>,
         owner_file: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.flow.flow@1/*#editor",
-        artifact_schema: "flow.host_snapshot",
+        artifact_schema: "s.flow.flow",
         factory: "FlowContributionsJobFactory",
         factory_type: FlowContributionsJobFactory,
         contract: flow_contributions_contract(),
@@ -2549,14 +2575,14 @@ pub fn flow_scene_publication(composed: &FlowSnapshot, widgets: &[Widget], synap
     let scene = composed.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-edit-scene-owner-missing"))?;
     let base = crate::flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout);
     let leaves = flow_content_leaves(&base, &crate::flow_content_snapshot_from_working(widgets, synapses, layout));
-    Ok(flow_content_leaves_emit(&composed.content.child_id, &leaves))
+    Ok(flow_content_leaves_emit(&composed.content.child_id, leaves))
 }
 
 /// 📮️ `leaves` as ONE group on the content child `child_id`; nothing when there are none.
-pub fn flow_content_leaves_emit(child_id: &str, leaves: &[SemioFlowMutation]) -> Emit<FlowMutation, NoConfigMutation> {
+pub fn flow_content_leaves_emit(child_id: &str, leaves: Vec<SemioFlowMutation>) -> Emit<FlowMutation, NoConfigMutation> {
     match leaves.is_empty() {
         true => Emit::default(),
-        false => Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, leaves)], ui_scope: UiDirtyScope::Full, ..Default::default() },
+        false => Emit { child_preparations: std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content", child_id, leaves)]), ui_scope: UiDirtyScope::Full, ..Default::default() },
     }
 }
 
@@ -2567,7 +2593,7 @@ pub fn flow_scene_replacement(composed: &FlowSnapshot, widgets: &[Widget], synap
     if composed.content.local_owner::<FlowWorkingScene>().is_some_and(|scene| crate::flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout) == next) {
         return Emit::default();
     }
-    flow_content_leaves_emit(&composed.content.child_id, &[SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot::new(next))])
+    flow_content_leaves_emit(&composed.content.child_id, vec![SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot::new(next))])
 }
 
 /// 🗑️ The child leaves that delete `node_ids` and `edge_ids` from `child`: every named edge and every edge touching a named
@@ -2851,3 +2877,7 @@ pub mod demo_session;
 #[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
 //#endregion 🪢️TaxonomyMounts
+
+#[cfg(test)]
+#[path="🧪️tests/📨️child-preparation/🦀️.rs"]
+mod child_preparation_owner_tests;

@@ -11,7 +11,7 @@ import { toolJobDrawingGestureOperationOwnerSelfTests } from "./🧰️framework
 import { toolJobArtifactRetainedCommandSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-artifact-retained-command/🟦️.ts";
 import { interactivityAllAppDiscoverySelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-all-app-discovery/🟦️.ts";
 import { interactivityRuntimeSourceSelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-runtime-source/🟦️.ts";
-import { interactivityToolRunPolicySelfTests } from "./🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🔬️interactivity-tool-run-policy/🟦️.ts";
+import { interactivityToolRunPolicySelfTests } from "./🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🧪️interactivity-tool-run-policy/🟦️.ts";
 import { historyClosurePolicySelfTests } from "./🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️history-closure-policy/🟦️.ts";
 import { interactivityLiveReconcileSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️interactivity-live-reconcile/🟦️.ts";
 import { interactivityMountedLayoutTextSelfTests } from "./🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️interactivity-mounted-layout-text/🟦️.ts";
@@ -50,15 +50,16 @@ import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesF
 import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { canonicalArchitectureEnvironment } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { buildSemanticCensus, fileKindIdForSourcePath, createRustMutationCodecOwnershipInspector, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustModuleGraphFacts, inspectRustModuleGraph, inspectRustRunnableTests, inspectRustStructure, inspectRustChildKindMetadata, inspectRustSourceIdentities, createRustMutationInputInspector, resolveRustPathAttributes, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown, taxonomyRelativePathIsExcluded, taxonomyImplementationFilesystemFindings, workspaceAuthorityPath, noFollowDirectoryAncestry, semanticOwnedInputFileSnapshot, inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory, loadCatalogTaxonomy, mutationPayloadSchemaRelativePath, mutationPayloadSchemaProblems, jsonDocumentDuplicateKeys, mutationOwnerIdentity, subsetDirectoryNameForId, subsetIdForDirectoryName } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, fileKindIdForSourcePath, createRustMutationCodecOwnershipInspector, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustModuleGraphFacts, inspectRustModuleGraph, inspectRustRunnableTests, inspectRustStructure, inspectRustChildKindMetadata, inspectRustSourceIdentities, createRustMutationInputInspector, resolveRustPathAttributes, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown, taxonomyRelativePathIsExcluded, taxonomyImplementationFilesystemFindings, workspaceAuthorityPath, noFollowDirectoryAncestry, semanticOwnedInputFileSnapshot, inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory, loadCatalogTaxonomy, mutationPayloadSchemaRelativePath, mutationPayloadSchemaProblems, jsonDocumentDuplicateKeys, mutationOwnerIdentity, subsetDirectoryNameForId, subsetIdForDirectoryName } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings, type PathEmojiEntry } from "./🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { POLICY_SKIP_DIRS, policyReadFileSafe, policyReaddirSafe } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
+import { artifactIoArchitectureBreaches, missingArtifactDiffWireTypes } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚪️io/🏛️architecture/🟦️.ts";
 import { policyWalkRelFiles } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🚶️file-walk/🟦️.ts";
 import { policyLineOfIndex } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📍️source-coordinate/🟦️.ts";
 import { policySurfaceRoots } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗺️surface/🟦️.ts";
 import { policyListPluginArtifactDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts";
 import { POLICY_STANDARDS_DIR, POLICY_SUBSETS_DIR, policyListArtifactDialectDirs, type PolicyArtifactDialect } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts";
-import { verifyTaxonomy, verifyTaxonomyScopes } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
+import { verifyTaxonomy, verifyTaxonomyScopesClosed } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { taxonomyTicketDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🟦️.ts";
 import { POLICY_MUTATION_PLAN_DIR, POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME, POLICY_TS_COMPONENT_LEAF, policyArtifactRootOfMutationsDir, policyLeadingEmojiPrefix, policyStripEmoji, policyStructuralRelativeLocator } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { mutationTaxonomySourceAdmission, policyFindAllMutationsDirs } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts";
@@ -1303,20 +1304,20 @@ function toolJobMicrosecondWorkerExact(pluginRaw: string, jobRaw: string, traceR
   const worker = body(job, "fn drive_worker_job_authority<");
   const duration = body(job, "pub fn from_duration(");
   const clock = body(job, "pub fn default_now_us(");
-  const preflight = "if budget.fuel == 0 || now_us().is_none_or(|now_us| now_us >= budget.deadline_us)";
+  const preflight = "if budget.fuel == 0 || start_us.is_none_or(|start_us| start_us >= budget.deadline_us)";
   return toolJobMountedDispatchOneTurnExact(plugin) && !!setup && !!operation && !!driver && !!worker && !!duration && !!clock
     && /step_budget_us:\s*u64::from\(admission\.proof\.contract\(\)\.max_step_micros\),/.test(setup)
     && setup.includes("now_us: semio_framework_job::default_now_us,")
     && setup.includes("fuel_per_step: admission.proof.contract().max_work_units_per_step")
     && setup.includes("ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes)")
     && ["self.decoded_items > self.contract.max_decoded_items", "self.contract.max_work_units_per_step == 0", "self.contract.max_output_bytes"].every((token) => operation.includes(token))
-    && plugin.includes("TypedOperationResultPageWriter") && plugin.includes("one typed-operation result exceeds its fixed incremental encoder authority")
+    && plugin.includes("if encoded.len() > TYPED_OPERATION_RESULT_PAGE_BYTES") && plugin.includes("one typed-operation result exceeds its fixed incremental encoder authority")
     && duration.includes("start_us.checked_add(duration_us).map(")
-    && worker.includes("(params.now_us)().and_then(|start_us| StepBudget::from_duration(config.fuel_per_step, start_us, config.step_budget_us))")
+    && worker.includes("let start_us = (params.now_us)();") && worker.includes("start_us.and_then(|start_us| StepBudget::from_duration(config.fuel_per_step, start_us, config.step_budget_us))")
     && worker.includes("invalid deadline retains its pre-admitted terminal fault page")
     && driver.includes(preflight) && driver.indexOf(preflight) < driver.indexOf("job.step(&mut cx)")
     && clock.includes("semio_framework_trace::try_now_us()")
-    && trace.includes("fn default_clock_us() -> Option<u64> { None }")
+    && /fn default_clock_us\(\) -> Option<u64> \{\s*None\s*\}/.test(trace)
     && trace.includes("elapsed().as_micros()).ok()");
 }
 
@@ -6485,16 +6486,16 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   const femSparse = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
   const femEngineModel = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
   const femElements2d = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
-  const presentationEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs");
+  const presentationEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
   const presentationWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
-  const writerEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs");
+  const writerEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
   const writerEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const writerWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
-  const jackEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs");
+  const jackEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
   const jackEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const jackWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const trinityRewrite = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️.rs");
-  const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs");
+  const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
   const gisMapEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const rasterRetainedSource = (file: string): string => {
@@ -6514,7 +6515,7 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   ]
     .map(rasterRetainedSource);
   const rasterEnvelopeCodec = [
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
@@ -7147,6 +7148,53 @@ async function runDocstringEmojiGate(root: string, args: readonly string[]): Pro
   }
 }
 
+/** 🪢️ The artifact-agnostic gates of the framework contract (design §22.31 c, §22.32 d). `framework-names` fails on every line of
+ * framework code — outside tests, fixtures, oracles, generated trees and doc comments — that names an artifact, and prints each
+ * `path:line`; `utility-machines` fails on every artifact that declares a `UtilityDefinition` and uses no tool-machine vocabulary,
+ * and prints every utility artifact with the vocabulary it uses. Neither publishes an acceptance record.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runArtifactNameCensus`, `runUtilityMachineCensus` */
+async function runAgnosticGate(root: string, args: readonly string[]): Promise<void> {
+  if (args.length !== 1 || (args[0] !== "framework-names" && args[0] !== "utility-machines")) throw new Error("usage: verify agnostic <framework-names|utility-machines>");
+  const { runArtifactNameCensus, runUtilityMachineCensus } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+  const controller = new AbortController();
+  const cancel = (): void => controller.abort();
+  process.once("SIGINT", cancel);
+  try {
+    if (args[0] === "framework-names") {
+      const census = runArtifactNameCensus(root, controller.signal, (line) => console.error(`[verify agnostic] ${line}`));
+      for (const hit of census.hits) console.log(`[verify agnostic] framework-names ${hit.path}:${hit.line} ${hit.name} ${hit.text}`);
+      for (const disagreement of census.disagreements) console.log(`[verify agnostic] oracle disagreement ${disagreement}`);
+      console.log(`[verify agnostic] rule=framework-names files=${census.files} naming=${new Set(census.hits.map((hit) => hit.path)).size} lines=${census.hits.length} oracle=${census.disagreements.length === 0 ? "agrees" : "DISAGREES"}`);
+      if (census.hits.length > 0 || census.disagreements.length > 0) process.exitCode = 1;
+      return;
+    }
+    const census = runUtilityMachineCensus(root, controller.signal, (line) => console.error(`[verify agnostic] ${line}`));
+    for (const artifact of census.artifacts) console.log(`[verify agnostic] utility-machines ${artifact.machine.length === 0 ? "OFFENDER" : "machine"} ${artifact.artifact} utilities=${artifact.utilities} vocabulary=${artifact.machine.join(",") || "none"}`);
+    console.log(`[verify agnostic] rule=utility-machines files=${census.files} artifacts=${census.artifacts.length} offenders=${census.offenders.length}`);
+    if (census.offenders.length > 0) process.exitCode = 1;
+  } finally {
+    process.removeListener("SIGINT", cancel);
+  }
+}
+
+/** 🐘️ The structural cap gate (audit F3): every mutation leaf whose payload schema caps its inverse rows
+ * (`x-semio-inverse-rows.bounded`) is wrapped by a non-generic `#[derive(Mutations)]` aggregate of its artifact, so the derived
+ * payload law — the per-leaf oracle of the cap — exists. Prints the bounded leaves per plugin and every `capLawMissing` leaf;
+ * `--under <repository-relative path>` narrows it and refuses a path that holds no bounded leaf. Publishes no acceptance record.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🟦️.ts `mutationCapReport` */
+async function runMutationCapGate(root: string, args: readonly string[]): Promise<void> {
+  if (!(args.length === 0 || (args.length === 2 && args[0] === "--under" && args[1] !== ""))) throw new Error("usage: verify mutation-caps [--under <repository-relative path>]");
+  const { mutationCapReport } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🟦️.ts");
+  const report = mutationCapReport(root, args[1] ?? "");
+  if (args.length === 2 && report.leaves.length === 0) throw new Error(`verify mutation-caps: --under ${JSON.stringify(args[1])} holds no bounded leaf`);
+  const plugins = new Map<string, number>();
+  for (const leaf of report.leaves) plugins.set(leaf.directory.split("/").slice(0, 3).join("/"), (plugins.get(leaf.directory.split("/").slice(0, 3).join("/")) ?? 0) + 1);
+  for (const [plugin, count] of [...plugins].sort(([left], [right]) => left.localeCompare(right))) console.log(`[verify mutation-caps] ${plugin} bounded=${count} missing=${report.findings.filter((finding) => finding.directory.startsWith(`${plugin}/`)).length}`);
+  for (const finding of report.findings) console.log(`[verify mutation-caps] ${finding.code} ${finding.directory} — ${finding.detail}`);
+  console.log(`[verify mutation-caps] bounded=${report.leaves.length} capLawMissing=${report.findings.length}`);
+  if (report.findings.length > 0) process.exitCode = 1;
+}
+
 /** 🐞️ The debug-tag census as a gate (acceptance ledger 5.12): fails on any tracked line outside the ticket tree and Markdown
  * prose that carries the tag AGENTS.md reserves for temporary logs, cross-checks the scanner against `git grep -c`, prints
  * the findings and publishes the acceptance record.
@@ -7251,6 +7299,14 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "docstrings") {
       await (segments[1] === "emoji-unique" ? runDocstringEmojiGate(this.root, segments.slice(2)) : runDocstringCensusGate(this.root, segments[1]));
+      return;
+    }
+    if (segments[0] === "agnostic") {
+      await runAgnosticGate(this.root, segments.slice(1));
+      return;
+    }
+    if (segments[0] === "mutation-caps") {
+      await runMutationCapGate(this.root, segments.slice(1));
       return;
     }
     if (segments[0] === "debug-tags") {
@@ -7863,13 +7919,13 @@ export class VerifyScript extends Script {
     if (scopesFrom !== undefined) {
       const scopes = readFileSync(resolve(this.root, scopesFrom), "utf8").split("\n").map((line) => line.trim()).filter(Boolean);
       let dirty = 0, done = 0;
-      for (const verification of verifyTaxonomyScopes({ repoRoot: this.root, scopes })) {
+      for (const verification of verifyTaxonomyScopesClosed({ repoRoot: this.root, scopes })) {
         const errors = verification.violations.filter((violation) => violation.severity === "error").length;
         dirty += Number(!verification.clean);
         done += 1;
         if (args.includes("--json")) console.log(JSON.stringify(verification));
         else {
-          console.log(`[verify taxonomy ${mode}] clean=${verification.clean} errors=${errors} warnings=${verification.violations.length - errors} scope=${verification.scope}`);
+          console.log(`[verify taxonomy ${mode}] clean=${verification.clean} errors=${errors} warnings=${verification.violations.length - errors} scope=${verification.scope}${verification.closure === undefined ? "" : ` closure=${verification.closure}`}`);
           for (const violation of verification.violations) console.log(`[verify taxonomy ${mode}] ${violation.severity} ${violation.code} ${violation.path}: ${violation.message}`);
         }
       }
@@ -9786,7 +9842,7 @@ const INTERACTIVITY_TOOL_RUN_ANY = "🏅️standards/🔖️1/🪆️subsets/✳
  */
 export const INTERACTIVITY_TOOL_RUN_REQUIREMENTS: readonly InteractivityToolRunRequirement[] = [
   { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🪣️fill-build-tick", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/⏳️precompute/🪣️fill"], verbs: ["fillBuildTick", "fill_build_tick", "cancelFillBuild", "cancel_fill_build", "take_locked_into_fixture", "FILL_LOCK_PLACEMENTS_PER_TICK", "enqueue_fill_job", "fill_job_identity"], measures: ["cancel_measure", "progress_measure"], lane: "W1-B", inventory: "§1.1" },
-  { toolId: "importFixture", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️import-fixture"], verbs: [], measures: [], lane: "unassigned", inventory: "§1.1" },
+  { toolId: "importSnapshot", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎮️commands/📥️import-snapshot"], verbs: [], measures: [], lane: "unassigned", inventory: "§1.1" },
   { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/⏳️precompute/🪣️fill"], verbs: ["brushFillSessionBegin", "brushFillSessionStep", "brushFillSessionCancel", "brushFillSessionDiscard", "brushFillSessionAdopt", "fill_session_begin", "fill_session_step", "fill_session_clear", "Puzzle2dFillLifecycle"], measures: ["cancel_measure", "progress_measure"], lane: "W2-A", inventory: "§1.2" },
   { toolId: "fill", root: `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["✏️editor/🎭️modes/✏️edit/☑️options/🪣️fill", "✏️editor/🎭️modes/✏️edit/🪟️windows/◻️2d/🪛️utilities/🪣️fill", "✏️editor/🎮️commands/🧮️set-fill-count", "✏️editor/🎮️commands/🛑️cancel-fill-build", "✏️editor/🧠️precompute"], verbs: ["cancelFillBuild", "cancel_fill_build"], measures: ["fill_cancel_measure", "fill_progress_measure"], lane: "W2-B", inventory: "§1.3" },
   { toolId: "previewEval", root: `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/${INTERACTIVITY_TOOL_RUN_ANY}`, scope: ["🧵️preview-eval/⏯️tool-run"], verbs: ["cancelPreviewEval", "cancel_preview_eval", "CancelPreviewEval", "PREVIEW_CANCEL_ACTION_ID", "rearm_attached_previews"], measures: [], lane: "W3-2 procedural preview eval", inventory: "§2.1" },
@@ -10085,7 +10141,7 @@ function historyClosurePluginProduction(path: string): boolean {
 export const HISTORY_CLOSURE_RULES: readonly HistoryClosureRule[] = [
   { id: "amend-emit", anchors: ["Emit::amend", "amend_config"], pattern: /\b(?:Action)?Emit::amend\b|\bamend_config\b/, applies: () => true, allow: [], reason: "a gesture is a tool transaction (artifact lane) or one config edit at gesture end (config lane); no emission amends the previous edit" },
   { id: "amend-last", anchors: ["AmendLast", "amendLast"], pattern: /\bAmendLast\w*|\bamendLast\w*/, applies: () => true, allow: [], reason: "the Store has no amend command on any lane; a transaction-scoped open edit (§15) is the only growing edit" },
-  { id: "coalesce-key", anchors: ["coalesce_key", "coalesceKey"], pattern: /\bcoalesce_key\b|\bcoalesceKey\b|\bset_coalesce_key\b/, applies: () => true, allow: ["🌎️hub/🧩️compositions/🪐️space/🧫️fixtures/🧫️fixtures/🔮️ownership/🔣️.json"], reason: "no emission, edit, digest, wire frame, persisted record or fixture carries a coalesce key; history rows group by TransactionRef" },
+  { id: "coalesce-key", anchors: ["coalesce_key", "coalesceKey"], pattern: /\bcoalesce_key\b|\bcoalesceKey\b|\bset_coalesce_key\b/, applies: () => true, allow: ["🌎️hub/🧩️compositions/🪐️space/🧪️testing/🧫️fixtures/🔮️ownership/🔣️.json"], reason: "no emission, edit, digest, wire frame, persisted record or fixture carries a coalesce key; history rows group by TransactionRef" },
   { id: "preview-contract", anchors: ["UtilityPreviewContract"], pattern: /\bUtilityPreviewContract\b/, applies: () => true, allow: [], reason: "the actions-vs-tools contract is `🔖️ToolContract`; there is no preview pattern beside tool machines" },
   { id: "bracket-verb", anchors: ["transformBegin", "transformEnd", "paintStrokeBegin", "paintStrokeEnd"], pattern: /\b(?:transform|paintStroke)(?:Begin|End)\b/, applies: () => true, allow: ["🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures/🖐️gumball-verb-audience.json", "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"], reason: "a gesture is one tool-machine press with stream/commit/abort phases; no bracket verb exists" },
   { id: "host-snapshot-bracket", anchors: ["setHostSnapshot", "SetHostSnapshot", "set_host_snapshot"], pattern: /\bsetHostSnapshot\b|\bSetHostSnapshot\b|\bset_host_snapshot\b/, applies: (path) => !HISTORY_CLOSURE_TESTS.test(path), allow: ["🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json"], reason: "node-graph hosts journal id-keyed rows (move/connect/delete); a whole host snapshot is never a history mutation (refusal laws and the shared refusal fixture name it)" },
@@ -13977,7 +14033,7 @@ export class TestScript extends Script {
 //#region 🔖️BenchScript
 /**
  * ⚖️ Plugin-runtime scale bench (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet
- * `V1`) — drives the seeded 50×50 scale fixture (`🧫️fixtures/⚖️scale`, 2550 records) through the
+ * `V1`) — drives the seeded 50×50 scale fixture (`🧪️testing/⚖️scale`, 2550 records) through the
  * pooled actor kernel on one renderer and asserts the eight `BENCH_BUDGETS` rows of
  * `📓️design-workforce.md` §4. The budgets and the harness live in the dev bundle beside the
  * fixture generator that emits the registry they read, so this verb is a thin router: the numbers
@@ -16676,35 +16732,35 @@ function policyCommandEnvelopeCompletenessBreaches(repoRoot: string): BreachReco
 //#endregion 🔧️PolicyRuleCommandEnvelopeCompleteness
 
 //#region 🔧️PolicyRuleDiffCompleteness
-/**
- * 📏️W1 grammar-engine wave rule (design ruling B-R4) — mirrors `policyCommandEnvelopeCompletenessBreaches`'s
- * shrinking-allowlist pattern one step further: every file that defines a real `impl
- * protocol::MutationDiff<...>` for some type must ALSO give that same type a `protocol::DiffCodec`
- * impl (via `#[derive(dsl::DslDiff)]` or a hand-rolled `impl DiffCodec for`) — a diff is a first-class
- * grammared value now, not serde-only. `POLICY_DIFF_COMPLETENESS_ALLOWLIST` tracks not-yet-converted
- * (or permanently-exempt trait-machinery-fixture) files exactly like `POLICY_PACK_COMPLETENESS_ALLOWLIST`
- * does for the pack lock step. File-level (not per-type) detection, matching this file's established
- * convention: a file "has a diff impl" if some line matches `impl ... MutationDiff<...>`, and "has
- * DiffCodec coverage" if it mentions `dsl::DslDiff` (the derive) or `DiffCodec for` (a hand-rolled impl)
- * anywhere in the same file. Paths may still contain `/op` (the grammar facet folder stays).
- */
+/** 🔺️ Every authored artifact diff owns both native representations outside its semantic schema. */
 function policyDiffCompletenessBreaches(repoRoot: string): BreachRecord[] {
-  const breaches: BreachRecord[] = [];
-  const diffImplPattern = /\bimpl\b[^\n{]*\bMutationDiff\s*</;
-  for (const relPath of policyAllRustFiles(repoRoot)) {
+  const breaches: BreachRecord[] = [], files = policyAllRustFiles(repoRoot);
+  const codecs = new Map<string, {text: string; binary: string}>();
+  for (const relPath of files) {
     if (POLICY_DIFF_COMPLETENESS_ALLOWLIST.has(policyNormalizeRelPath(relPath))) continue;
+    const owner = relPath.match(/^(.*?\/🗿️artifacts\/[^/]+(?:\/🏅️standards\/[^/]+\/🪆️subsets\/[^/]+)?)(?:\/|$)/u)?.[1];
+    if (!owner || /\/(?:🚪️io|🧪️tests|🧫️fixtures)\//u.test(relPath)) continue;
     const content = policyReadFileSafe(repoRoot, relPath);
-    if (!diffImplPattern.test(content)) continue;
-    const hasDiffCodec = content.includes("dsl::DslDiff") || content.includes("DiffCodec for");
-    if (hasDiffCodec) continue;
+    if (!/\bMutationDiff\s*</u.test(content)) continue;
+    let representations = codecs.get(owner);
+    if (!representations) {
+      representations = {text: "", binary: ""};
+      for (const source of files.filter(path => path.startsWith(owner + "/🚪️io/"))) {
+        if (source.includes("/📝️text/")) representations.text += policyReadFileSafe(repoRoot, source) + "\n";
+        if (source.includes("/💾️binary/")) representations.binary += policyReadFileSafe(repoRoot, source) + "\n";
+      }
+      codecs.set(owner, representations);
+    }
+    const missing = missingArtifactDiffWireTypes(content, representations.text, representations.binary);
+    if (!missing.length) continue;
     breaches.push({
       id: `diff-completeness-${relPath}`,
-      summary: `"${relPath}" implements protocol::MutationDiff but never gives that diff type a protocol::DiffCodec impl`,
-      kind: "dsl-migration/diff-completeness",
+      summary: `"${relPath}" has diff types without paired I/O codecs: ${missing.join(", ")}`,
+      kind: "artifact-io/diff-completeness",
       scope: relPath,
       priority: "high",
-      reason: "Design ruling B-R4: every MutationDiff type must also be a grammared DiffCodec value (print/parse/encode/decode_diff) — via #[derive(dsl::DslDiff)] or a hand-rolled impl.",
-      solution: `Add #[derive(dsl::DslDiff)] to ${relPath}'s diff type (or a hand-rolled impl DiffCodec for it), or if it's a genuine trait-machinery test fixture / not-yet-converted real type, add "${relPath}" to POLICY_DIFF_COMPLETENESS_ALLOWLIST citing why.`,
+      reason: "Semantic diffs require independently owned DiffText and DiffBinary implementations.",
+      solution: `Implement ${missing.join(", ")} in ${owner}/🚪️io/📝️text/🔺️diff and 🚪️io/💾️binary/🔺️diff.`,
     });
   }
   return breaches;
@@ -17546,19 +17602,15 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
         if (schemaChildDirs.includes(nested.name)) {
           const repRoot = `${nestedRoot}/${nested.name}`;
           for (const rep of policyReaddirSafe(repoRoot, repRoot).filter((e) => e.isDirectory)) {
-            if (representationDirs.includes(rep.name)) continue;
-            if (nested.name === "🧬️mutations") {
-              // wildcard mutation slug under schema/mutations
-              continue;
-            }
+            if (artifactFacetPathIsDeclared(`🧬️schema/${nested.name}/${rep.name}`, taxonomy)) continue;
             breaches.push({
               id: `taxonomy-dirs-artifact-${repRoot}-${rep.name}`,
-              summary: `"${repRoot}/${rep.name}" is not a recognized representation dir`,
+              summary: `"${repRoot}/${rep.name}" is not a recognized semantic schema child`,
               kind: "taxonomy/dirs",
               scope: breachScope,
               priority: policyNewSurfacePriority(crate, "medium"),
-              reason: `Discovery contract: 🧬️schema/<snapshot|diff|mutations> may contain ${representationDirs.join(", ")} (mutations also allow emoji-slug dirs).`,
-              solution: `Move "${rep.name}" into a representationDirs member or a mutation slug.`,
+              reason: "Schema contains semantic declarations and mutation/inference members; representations belong to I/O.",
+              solution: `Move codec "${rep.name}" to 🚪️io/<representation>/${nested.name}, or author a semantic member.`,
             });
           }
           continue;
@@ -17576,6 +17628,14 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
     };
     const validateIoFacet = (nestedRoot: string, breachScope: string): void => {
       for (const nested of policyReaddirSafe(repoRoot, nestedRoot).filter((e) => e.isDirectory)) {
+        if (representationDirs.includes(nested.name)) {
+          const repRoot = `${nestedRoot}/${nested.name}`;
+          for (const facet of policyReaddirSafe(repoRoot, repRoot).filter((entry) => entry.isDirectory)) {
+            if (artifactFacetPathIsDeclared(`🚪️io/${nested.name}/${facet.name}`, taxonomy)) continue;
+            breaches.push({ id: `taxonomy-dirs-artifact-${repRoot}-${facet.name}`, summary: `"${repRoot}/${facet.name}" is not a semantic codec facet`, kind: "taxonomy/dirs", scope: breachScope, priority: "high", reason: "Native I/O representations own semantic codec facets.", solution: `Use ${taxonomy.ioSemanticCollectionDirNames.join(", ")} under ${repRoot}.` });
+          }
+          continue;
+        }
         if (!ioDirectionDirs.includes(nested.name)) {
           breaches.push({
             id: `taxonomy-dirs-artifact-${nestedRoot}-${nested.name}`,
@@ -17583,8 +17643,8 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
             kind: "taxonomy/dirs",
             scope: breachScope,
             priority: policyNewSurfacePriority(crate, "medium"),
-            reason: `Discovery contract: 🚪️io may only contain ${ioDirectionDirs.join(", ")}.`,
-            solution: `Rename "${nested.name}" to an ioDirectionDirs member.`,
+            reason: `Discovery contract: 🚪️io contains ${[...ioDirectionDirs, ...representationDirs].join(", ")}.`,
+            solution: `Move "${nested.name}" below a native representation or use a foreign I/O direction.`,
           });
           continue;
         }
@@ -21516,8 +21576,7 @@ function policyStdioSchemaChildDirs(taxonomy: ReturnType<typeof loadTaxonomy>): 
 }
 
 function policyStdioRepresentationDirs(taxonomy: ReturnType<typeof loadTaxonomy>): string[] {
-  const from = taxonomy.representationDirs as string[] | undefined;
-  return from?.length ? [...from] : [...POLICY_STDIO_REPRESENTATION_FALLBACK];
+  return [...taxonomy.nativeRepresentationDirs];
 }
 
 function policyStdioFormatDir(artifacts: PolicyStdioDefinitionTable["artifacts"], formatId: string): string | undefined {
@@ -22207,11 +22266,7 @@ function policySchemaRootIsOwning(repoRoot: string, schemaRoot: string, migrated
   return existsSync(join(repoRoot, schemaRoot, "📸️snapshot"));
 }
 
-/** ⚖️Schema tree under 🧬️schema with representation text/binary spec leaves (ticket STDIO-ARTIFACTS-AND-IO).
- * Migrated artifacts are checked at their 🏅️standards/🔖️.../🪆️subsets/✳️.../🧬️schema location instead —
- * and, per ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1, only a
- * SCHEMA-OWNING subset (has its own `📸️snapshot/`) is held to the full tree; a DELEGATING subset (see
- * `policySchemaIsDelegatingPair`) needs only the rs+ts re-export pair. */
+/** ⚖️ Validates pure semantic schema declarations and native representation specifications owned by I/O. */
 export function policySchemaRepresentationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const taxonomy = loadTaxonomy();
@@ -22257,37 +22312,23 @@ export function policySchemaRepresentationBreaches(repoRoot: string): BreachReco
           scope: artRel,
           priority: "high",
           reason: `taxonomy.schemaChildDirs requires ${child} under every 🧬️schema facet.`,
-          solution: `Add ${childAbs}/ with representation dirs and schemaFormats leaves.`,
+          solution: `Add ${childAbs}/ with pure semantic declarations and schemaFormats leaves.`,
         });
         continue;
       }
       breaches.push(...policySchemaFormatLeafBreaches(repoRoot, childAbs, artRel, taxonomy));
       for (const rep of representationDirs) {
-        const repAbs = `${childAbs}/${rep}`;
+        const repAbs = `${schemaRoot.slice(0, -schemaFacet.length)}🚪️io/${rep}/${child}`;
         if (!existsSync(join(repoRoot, repAbs))) {
-          breaches.push({
-            id: `stdio-schema-rep-${repAbs}`,
-            summary: `"${childAbs}" is missing representation ${rep}/`,
-            kind: "stdio-artifacts/schema-representation",
-            scope: artRel,
-            priority: "high",
-            reason: `Each schema child carries ${POLICY_STDIO_FACET_TEXT} and ${POLICY_STDIO_FACET_BINARY} spec trees.`,
-            solution: `Add ${repAbs}/ with all normative spec leaves.`,
-          });
+          if (child === "🧬️mutations" || child === "💡️inferences") continue;
+          breaches.push({ id: `artifact-io-rep-${repAbs}`, summary: `"${repAbs}" is missing a native codec facet`, kind: "artifact-io/representation", scope: artRel, priority: "high", reason: "Snapshot and diff native wire codecs belong below an I/O representation.", solution: `Add ${repAbs}/ with normative spec leaves.` });
           continue;
         }
+        if ((child === "🧬️mutations" || child === "💡️inferences") && policyReaddirSafe(repoRoot, repAbs).some(entry => entry.isDirectory || entry.name === "📝️.md")) continue;
         for (const leaf of policySchemaRepresentationLeavesFor(rep)) {
           const leafRel = `${repAbs}/${leaf}`;
           if (existsSync(join(repoRoot, leafRel))) continue;
-          breaches.push({
-            id: `stdio-schema-leaf-${leafRel}`,
-            summary: `"${repAbs}" is missing spec leaf ${leaf}`,
-            kind: "stdio-artifacts/schema-representation",
-            scope: artRel,
-            priority: "high",
-            reason: "Text and binary representation nodes own fixed handcrafted spec filenames.",
-            solution: `Add ${leafRel}.`,
-          });
+          breaches.push({ id: `artifact-io-leaf-${leafRel}`, summary: `"${repAbs}" is missing spec leaf ${leaf}`, kind: "artifact-io/representation", scope: artRel, priority: "high", reason: "Wire codec specifications belong to their I/O representation and semantic facet.", solution: `Add ${leafRel}.` });
         }
       }
     }
@@ -22985,6 +23026,11 @@ function policyMutationVocabularyBreaches(repoRoot: string): BreachRecord[] {
   return breaches;
 }
 
+/** 🚪️ Enforces semantic schema and artifact wire ownership across every artifact dialect. */
+export function policyArtifactIoBreaches(repoRoot: string): BreachRecord[] {
+  return artifactIoArchitectureBreaches(repoRoot);
+}
+
 /** ⚖️Aggregates stdio-artifact policy scanners (catalog, builder, decomposer, schema, io matrix, DAG, codecs,
  * plus the standards/subsets migrated-side rules -- each pair is shape-partitioned: an artifact is checked
  * by exactly one side of every pair, never both, per policyArtifactIsMigrated). */
@@ -22994,6 +23040,7 @@ export function policyStdioArtifactsBreaches(repoRoot: string): BreachRecord[] {
     ...policyArtifactBuilderBreaches(repoRoot),
     ...policyArtifactDecomposerBreaches(repoRoot),
     ...policySchemaRepresentationBreaches(repoRoot),
+    ...policyArtifactIoBreaches(repoRoot),
     ...policyIoSerializerMatrixBreaches(repoRoot),
     ...policyIoMatrixMigratedBreaches(repoRoot),
     ...policyIoTerminalityBreaches(repoRoot),

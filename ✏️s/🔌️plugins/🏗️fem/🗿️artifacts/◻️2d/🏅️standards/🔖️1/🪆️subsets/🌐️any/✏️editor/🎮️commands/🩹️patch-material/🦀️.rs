@@ -1,7 +1,7 @@
 //! 🩹️ Fem2d play app command — `patch-material`: one-field edit of a material (`name`, `e`, `nu`, `rho`) → `ReplaceMaterial`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_material;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

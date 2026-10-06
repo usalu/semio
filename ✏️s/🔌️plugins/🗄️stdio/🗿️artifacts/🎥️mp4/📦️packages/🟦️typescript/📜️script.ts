@@ -8,7 +8,7 @@ const command = process.argv[2] ?? "test";
 if (command === "test" && process.argv.slice(3).some((argument) => argument !== "--")) {
   throw new Error("This artifact test target runs its complete registered suite and accepts no test selectors.");
 }
-await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/stdio-mp4",{suites:["🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"]});
+await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/stdio-mp4",{suites:["🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
 
 if (command === "test") {
   const mutations = resolve(import.meta.dir, "../../🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations");

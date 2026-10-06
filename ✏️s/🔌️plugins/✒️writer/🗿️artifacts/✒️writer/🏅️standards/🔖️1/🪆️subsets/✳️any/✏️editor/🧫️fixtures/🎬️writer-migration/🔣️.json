@@ -76,9 +76,9 @@
       ]
     },
     {
-      "action": "setFixtureJson",
+      "action": "loadDocumentJson",
       "variants": [
-        "fixture-json"
+        "document-json"
       ],
       "publication": [
         "HostOnly"

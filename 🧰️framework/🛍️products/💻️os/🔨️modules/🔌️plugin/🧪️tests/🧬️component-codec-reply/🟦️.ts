@@ -61,11 +61,12 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       const { join } = await import("node:path");
       const { pathToFileURL } = await import("node:url");
       const { pluginComponentBridgeSource } = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
+      const { APP_CHANNEL_VERSION } = await import("../../../../🟦️.ts");
       const directory = mkdtempSync(join(tmpdir(), "semio-codec-bridge-"));
       try {
         writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
         writeFileSync(join(directory, "🟨️.js"), "export const __resolveEffect = () => {}; export const __rejectEffect = () => {};\n");
-        writeFileSync(join(directory, "fixture_component.js"), "export const reactor = {}; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n");
+        writeFileSync(join(directory, "fixture_component.js"), `export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION} }; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n`);
         const observed: Record<string, unknown>[] = [];
         for (const [index, row] of fixture.cases.entries()) {
           const codec = codecFor(row);

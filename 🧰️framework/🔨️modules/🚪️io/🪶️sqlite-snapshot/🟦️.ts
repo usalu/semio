@@ -1,4 +1,5 @@
 import { hostContinuations } from "../../⏳️async/🪃️continuation/🟦️.ts";
+import {textUtf8ByteLength} from "../../🌱️value/📝️text/🟦️.ts";
 /** 🪶️ Dependency-free relational SQLite 3 physical engine. @see https://sqlite.org/fileformat.html */
 import { ValueError, type ValueRefusalKind } from "../../🌱️value/⚠️refusal/🟦️.ts";
 export { ValueError, type ValueRefusalKind } from "../../🌱️value/⚠️refusal/🟦️.ts";
@@ -130,19 +131,7 @@ async function text(bytes: Uint8Array,options:SqliteDatabaseOptions): Promise<st
   try{return out+decoder.decode();}catch{return invalid("UTF-8");}
 }
 function textByteLength(value: string): number {
-  let bytes = 0;
-  for (let index = 0; index < value.length; index++) {
-    const code = value.charCodeAt(index);
-    if (code >= 0xd800 && code <= 0xdbff) {
-      const next = value.charCodeAt(++index);
-      if (!(next >= 0xdc00 && next <= 0xdfff)) invalid("UTF-8");
-      bytes += 4;
-    } else {
-      if (code >= 0xdc00 && code <= 0xdfff) invalid("UTF-8");
-      bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : 3;
-    }
-  }
-  return bytes;
+  try{return textUtf8ByteLength(value);}catch(error){if(error instanceof ValueError)return invalid("UTF-8");throw error;}
 }
 async function textByteLengthControlled(value:string,options:SqliteDatabaseOptions):Promise<number>{
   if(value.length<16384){cancelled(options);return textByteLength(value);}
@@ -315,7 +304,7 @@ function* schemaWork(name: string, sql: string, maxColumns: number, prepared?:re
 async function schemaControlled(name:string,sql:string,maxColumns:number,options:SqliteDatabaseOptions):Promise<TableSchema>{return grammarControlled(schemaWork(name,sql,maxColumns),options);}
 /** 🔤️ Canonicalize a literal SQLite identifier using bounded ASCII case folding. */
 export async function sqliteIdentifierKeyControlled(value:string,options:SqliteDatabaseOptions):Promise<string>{const operation=sqliteOperation(options);return grammarControlled(foldedText(value,value.length,0,"indexTables"),operation);}
-interface ParsedTableSchema { tokens:readonly Token[]; columns:TableSchema }
+interface ParsedTableSchema { source:string; tokens:readonly Token[]; columns:TableSchema }
 function* parseSchemaWork(sql:string,options:SqliteDatabaseOptions,prepared?:Map<string,ParsedTableSchema>):GrammarWork<SqliteDatabase>{
  const limit=limits(options);if(sql.length>limit.schema||(yield* measuredText(sql))>limit.schema)refuse("ownershipLimit","schema limit");
  const statements:Token[][]=[];let statement:Token[]=[],units=0;
@@ -323,7 +312,7 @@ function* parseSchemaWork(sql:string,options:SqliteDatabaseOptions,prepared?:Map
  if(statement.length)statements.push(statement);if(statements.length>limit.tables)refuse("workLimit","table limit");
  const names=new Set<string>(),tables:SqliteTable[]=[];let bytes=0;
  for(const statement of statements){const name=identifier(statement[2]),source=sql.slice(statement[0]!.start,statement.at(-1)!.end),folded=statement[2]!.folded;
-  if(names.has(folded)||folded.startsWith("sqlite_"))invalid("schema table name");names.add(folded);bytes+=(yield* measuredText(name))+(yield* measuredText(source));if(bytes>limit.schema)refuse("ownershipLimit","schema limit");const columns=yield* schemaWork(name,source,limit.columns,statement);prepared?.set(folded,{tokens:statement,columns});tables.push({name,sql:source,rows:[]});yield* tokenFrontier(tables.length,statements.length);
+  if(names.has(folded)||folded.startsWith("sqlite_"))invalid("schema table name");names.add(folded);bytes+=(yield* measuredText(name))+(yield* measuredText(source));if(bytes>limit.schema)refuse("ownershipLimit","schema limit");const columns=yield* schemaWork(name,source,limit.columns,statement);prepared?.set(folded,{source,tokens:statement,columns});tables.push({name,sql:source,rows:[]});yield* tokenFrontier(tables.length,statements.length);
  }return {tables};
 }
 /** 🏛️ Parse handcrafted CREATE TABLE statements synchronously without filesystem access. */
@@ -331,18 +320,19 @@ export function parseSqliteDatabaseSchema(sql:string,options:SqliteDatabaseOptio
 /** 🧵️ Parse the same handcrafted schema with bounded operation-owned grammar checkpoints. */
 export async function parseSqliteDatabaseSchemaControlled(sql:string,options:SqliteDatabaseOptions={}):Promise<SqliteDatabase>{const operation=sqliteOperation(options);return grammarControlled(parseSchemaWork(sql,operation),operation);}
 
-function* validateSchemaWork(database:SqliteDatabase,sql:string,options:SqliteDatabaseOptions):GrammarWork<void>{
+function* validateSchemaWork(database:SqliteDatabase,sql:string,options:SqliteDatabaseOptions):GrammarWork<SqliteDatabase>{
  const limit=limits(options),expectedNames=new Map<string,ParsedTableSchema>(),expected=yield* parseSchemaWork(sql,options,expectedNames);if(database.tables.length!==expected.tables.length)invalid("artifact table count");
  const names=new Set<string>();let rows=0,total=0,schemaBytes=0,tables=0;for(const table of database.tables){total+=table.rows.length;if(total>limit.rows)refuse("workLimit","row limit");yield* tokenFrontier(++tables,database.tables.length);}
  for(const table of database.tables){const name=yield* foldedText(table.name);if(names.has(name))invalid("artifact duplicate table");names.add(name);yield* tokenFrontier(names.size,database.tables.length);const definition=expectedNames.get(name);if(!definition)invalid("artifact unknown table");
-  schemaBytes+=(yield* measuredText(table.name))+(yield* measuredText(table.sql));if(schemaBytes>limit.schema)refuse("ownershipLimit","schema limit");const received=yield* tokenWork(table.sql);if(!(yield* equivalentSchema(received,definition.tokens)))invalid("artifact table schema mismatch");const columns=definition.columns,ids=new Set<bigint>();
+  schemaBytes+=(yield* measuredText(table.name))+(yield* measuredText(table.sql));if(schemaBytes>limit.schema)refuse("ownershipLimit","schema limit");if(!(yield* equalText(table.sql,definition.source))){const received=yield* tokenWork(table.sql);if(!(yield* equivalentSchema(received,definition.tokens)))invalid("artifact table schema mismatch");}const columns=definition.columns,ids=new Set<bigint>();
   for(const row of table.rows){if(++rows>limit.rows)refuse("workLimit","row limit");if(row.values.length!==columns.columns.length)invalid("column count");if(typeof row.rowid!=="bigint"||row.rowid<INT_MIN||row.rowid>INT_MAX||ids.has(row.rowid))invalid("rowid range or duplicate");ids.add(row.rowid);if(columns.alias!==undefined&&row.values[columns.alias]!==row.rowid)invalid("primary key alias");if(rows%256===0)yield {phase:"validateRows",completed:rows,total};}
  }
+ return expected;
 }
 /** 🔎️ Validate the handcrafted semantic schema synchronously, including row identities. */
 export function validateSqliteDatabaseSchema(database:SqliteDatabase,sql:string,options:SqliteDatabaseOptions={}):void{cancelled(options);grammarSync(validateSchemaWork(database,sql,options));}
-/** 🧵️ Validate the same semantic schema and row corpus with bounded operation checkpoints. */
-export async function validateSqliteDatabaseSchemaControlled(database:SqliteDatabase,sql:string,options:SqliteDatabaseOptions={}):Promise<void>{const operation=sqliteOperation(options);await grammarControlled(validateSchemaWork(database,sql,operation),operation);}
+/** 🧵️ Validate the full row corpus and return its already parsed authored schema under one operation. */
+export async function validateSqliteDatabaseSchemaControlled(database:SqliteDatabase,sql:string,options:SqliteDatabaseOptions={}):Promise<SqliteDatabase>{const operation=sqliteOperation(options);return grammarControlled(validateSchemaWork(database,sql,operation),operation);}
 
 function* equivalentSchema(received:readonly Token[], trusted:readonly Token[]): GrammarWork<boolean> {
   if (trusted.length !== received.length) return false;

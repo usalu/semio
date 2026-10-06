@@ -68,13 +68,20 @@ type DrawingLayerPatch {
   opacity: Float
   blendMode: String
   fillRule: FillRule
-  transformJson: String
-  fillJson: String
-  strokeJson: String
+  transform: DrawingTransform
+  fill: DrawingFillPatch
+  stroke: DrawingStrokePatch
   booleanOperation: String
-  traceParamsJson: String
-  layerJson: String
+  traceParams: DrawingTraceParams
+  layer: DrawingLayerNode
   pathSegments: [PathSegment!]
   textContent: String
   textSize: Float
 }
+
+# import DrawingTransform from "../🧬️mutations/🔗️.graphql"
+# import DrawingTraceParams from "../🧬️mutations/🔗️.graphql"
+# import FillStyle from "../🧬️mutations/🔗️.graphql"
+# import StrokeStyle from "../🔗️.graphql"
+type DrawingFillPatch { value: FillStyle }
+type DrawingStrokePatch { value: StrokeStyle }

@@ -15,12 +15,7 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "transformJson": null,
-          "fillJson": null,
-          "strokeJson": null,
           "booleanOperation": null,
-          "traceParamsJson": null,
-          "layerJson": null,
           "pathSegments": [
             {
               "kind": "move",
@@ -59,7 +54,12 @@
           ],
           "textContent": null,
           "textSize": null,
-          "fillRule": null
+          "fillRule": null,
+          "transform": null,
+          "fill": null,
+          "stroke": null,
+          "traceParams": null,
+          "layer": null
         }
       }
     ],

@@ -64,7 +64,7 @@ fn keep_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_reasoning_wires::editor::wires::modes::edit::windows::canvas::config::wires_canvas_window_config_mutation_report_json;
+    use semio_s_artifact_reasoning_wires::editor::wires::modes::edit::windows::canvas::config::io::text::mutations::wires_canvas_window_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         wires_canvas_window_config_mutation_report_json(committed.before, committed.mutation, committed.after)

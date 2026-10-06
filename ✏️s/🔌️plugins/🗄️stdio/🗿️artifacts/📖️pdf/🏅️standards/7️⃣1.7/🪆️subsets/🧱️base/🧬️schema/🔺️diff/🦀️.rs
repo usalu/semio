@@ -2172,42 +2172,9 @@ pub enum PdfPageBox {
 //#endregion 🔖️MutationDiffBuilders
 
 //#region 🔖️DiffCodec
-/// 🧾 One codec for every lane: the derive-owned value encoding. Text is the one-line
-/// `value=<dsl value>` record (`📝️text/📖️.grammar.semio`), binary is the `OP_BINARY_FORMAT`
-/// byte followed by the container-less pack record body of the same value
-/// (`💾️binary/📡️.protocol.semio`). Both are deterministic and decode back to the identical
-/// `PdfDiff`.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-struct PdfDiffRecord {
-    value: semio_framework_value::DslValue,
-}
 
-impl protocol::DiffCodec for PdfDiff {
-    fn print_diff(&self) -> String {
-        let model = PdfDiffRecord { value: semio_framework_value::ToValue::to_value(self) };
-        semio_framework_dsl_record::print(&model.__dsl_to_record(), &PdfDiffRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Inline)
-    }
-    fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let record = semio_framework_dsl_record::parse(text, &PdfDiffRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 64 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Inline })?;
-        let model = PdfDiffRecord::__dsl_from_record(&record)?;
-        <Self as semio_framework_value::FromValue>::from_value(model.value).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
-        out.extend_from_slice(&store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)));
-        Ok(out)
-    }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        match bytes.first() {
-            Some(format) if *format == store::pack_rt::OP_BINARY_FORMAT => {}
-            Some(format) => return Err(malformed("diff format", 0, format!("expected {}, got {format}", store::pack_rt::OP_BINARY_FORMAT))),
-            None => return Err(malformed("diff format", 0, "empty diff".into())),
-        }
-        let value = store::pack_rt::decode_wire_value(&bytes[1..]).map_err(|error| malformed("diff body", 1, error.to_string()))?;
-        <Self as semio_framework_value::FromValue>::from_value(value).map_err(|error| malformed("diff value", 1, error.to_string()))
-    }
-}
+
+
 //#endregion 🔖️DiffCodec
 
 //#region 🧪️Tests

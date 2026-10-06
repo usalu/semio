@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by PdfAMutation; absent when the payload stands alone."
     },
     "fileName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Embedded file",
+          "de": "Eingebettete Datei"
+        },
+        "description": {
+          "en": "File name of the embedded file whose AFRelationship changes.",
+          "de": "Dateiname der eingebetteten Datei, deren AFRelationship sich ändert."
+        },
+        "ref": {
+          "kind": "embeddedFile"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

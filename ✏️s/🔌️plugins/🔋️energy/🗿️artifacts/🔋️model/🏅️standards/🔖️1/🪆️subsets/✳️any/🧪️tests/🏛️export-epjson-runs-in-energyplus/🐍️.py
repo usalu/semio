@@ -384,13 +384,13 @@ def _subject_document(ctx: Context):
 
 
 def _model(ctx: Context, case: str):
-    return json.loads(ctx.fixture_bytes("shared://🏛️bestest-%s/🔋️model.json" % case).decode("utf-8"))
+    return json.loads(ctx.input_bytes("shared://🏛️bestest-%s/🔋️model.json" % case).decode("utf-8"))
 
 
 def _reference(ctx: Context, case: str):
     uri = "shared://🏛️bestest-%s/🔮️energyplus.json" % case
     try:
-        raw = ctx.fixture_bytes(uri)
+        raw = ctx.input_bytes(uri)
     except Exception as error:  # noqa: BLE001 — the message is the whole point
         raise AssertionError("case %s: no committed EnergyPlus reference at %s (%s); this oracle will not synthesize one" % (case, uri, error)) from error
     return json.loads(raw.decode("utf-8"))
@@ -422,7 +422,7 @@ def _energyplus_run(case):
         raw, document = _subject_document(ctx)
         violations = _validate(ctx, document)
         assert not violations, "case %s: the exported epJSON breaks Energy+.schema.epJSON in %d place(s):\n%s" % (case, len(violations), "\n".join("  " + entry for entry in violations[:40]))
-        epw = ctx.fixture("shared://🌦️denver-tmy/🌦️.epw")
+        epw = ctx.input("shared://🌦️denver-tmy/🌦️.epw")
         free_float = not document.get("ZoneHVAC:IdealLoadsAirSystem")
         work = _run(ctx, case, raw, epw)
         measured = _results(case, work, free_float)

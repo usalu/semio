@@ -14,7 +14,7 @@ export async function proveCargoBuildLeasesV1(artifactRoot: string): Promise<voi
   const implementation = fileURLToPath(new URL("../🟦️.ts", import.meta.url));
   const worker = join(root, "📜️script.ts");
   const oracle = new Ajv({ strict: true }).addSchema(schema);
-  assert(oracle.getSchema(schema.$id + "#/$defs/PortableCorpusV1")!(corpus));
+  
   const validate = oracle.getSchema(schema.$id)!;
   const children: { process: Bun.Subprocess<"pipe", "pipe", "pipe">; output: string; error: string; done: Promise<number> }[] = [];
   writeFileSync(worker, `import { acquireCargoBuildLeaseV1 } from ${JSON.stringify(implementation)};

@@ -121,7 +121,6 @@ pub struct HistoryEdit {
     pub actor: Option<String>,
     pub started_at: String,
     pub finished_at: Option<String>,
-    pub description: Option<String>,
     /// 🏷️ The id of the action or command that authored this edit (mirrors `crate::os_spr::command::Edit::verb`).
     pub verb: Option<String>,
     /// 🌿️ Authored branch identity, explicitly null for trunk or unknown provenance.
@@ -289,7 +288,6 @@ const F_EDIT_ID: u16 = 0;
 const F_EDIT_STARTED: u16 = 1;
 const F_EDIT_ACTOR: u16 = 2;
 const F_EDIT_FINISHED: u16 = 3;
-const F_EDIT_DESCRIPTION: u16 = 4;
 const F_EDIT_VERB: u16 = 5;
 const F_EDIT_LINE: u16 = 6;
 const F_TRANSITION_ID: u16 = 0;
@@ -312,7 +310,6 @@ fn edit_spec() -> RecordSpec {
             FieldSpec::new(F_EDIT_STARTED, "started", Shape::Text),
             FieldSpec::new(F_EDIT_ACTOR, "actor", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_FINISHED, "finished", Shape::Text).optional(),
-            FieldSpec::new(F_EDIT_DESCRIPTION, "description", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_VERB, "verb", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_LINE, "line", Shape::List(Box::new(Shape::Text))),
         ],
@@ -391,7 +388,6 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
         actor: Option<String>,
         started_at: String,
         finished_at: Option<String>,
-        description: Option<String>,
         verb: Option<String>,
         line: Option<String>,
     }
@@ -406,8 +402,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 id: header.id,
                 actor: header.actor,
                 started_at: header.started_at,
-                finished_at: header.finished_at,
-                description: header.description, verb: header.verb, line: header.line,
+                finished_at: header.finished_at, verb: header.verb, line: header.line,
                 ops: std::mem::take(forwards),
                 inverse: Vec::new(),
                 meta: None, lane: None,
@@ -441,7 +436,6 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                     started_at: required_text(&record, F_EDIT_STARTED, "edit started")?,
                     actor: field_text(&record, F_EDIT_ACTOR),
                     finished_at: field_text(&record, F_EDIT_FINISHED),
-                    description: field_text(&record, F_EDIT_DESCRIPTION),
                     verb: field_text(&record, F_EDIT_VERB),
                     line: match record.get(F_EDIT_LINE) {
                         Some(semio_framework_dsl_record::FieldValue::List(values)) if values.len() <= 1 => values.first().map(|value| match value { semio_framework_dsl_record::FieldValue::Text(line) => Ok(line.clone()), _ => Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: "expected text".into() }) }).transpose()?,
@@ -488,9 +482,6 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
         }
         if let Some(finished) = &edit.finished_at {
             fields.push((F_EDIT_FINISHED, semio_framework_dsl_record::FieldValue::Text(finished.clone())));
-        }
-        if let Some(description) = &edit.description {
-            fields.push((F_EDIT_DESCRIPTION, semio_framework_dsl_record::FieldValue::Text(description.clone())));
         }
         if let Some(verb) = &edit.verb {
             fields.push((F_EDIT_VERB, semio_framework_dsl_record::FieldValue::Text(verb.clone())));
@@ -657,9 +648,9 @@ pub async fn decode_doc(payload: &[u8], dict: &DictReader) -> Result<(String, St
 //#endregion 🔖️Doc
 
 //#region 🔖️Edit
-// REC_EDIT layout: format u8, presence u8 (bit0 actor, bit1 finished, bit2 key, bit3 description,
+// REC_EDIT layout: format u8, presence u8 (bit0 actor, bit1 finished, bits 2-3 unassigned and refused,
 // bit4 explicit_meta, bit5 has_backwards_section, bit6 lane, bit7 verb), id, started(ts), [actor(dictref)],
-// [finished(ts)], [key(str)], [description(str)], [lane(str)], [verb(str)], op_count varint, op_count x op-payload (see
+// [finished(ts)], [lane(str)], [verb(str)], op_count varint, op_count x op-payload (see
 // write_op_payload: op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary] + text_len varint
 // + utf8 + [binary_len varint + bytes iff bit1]), [iff bit5: back_count varint + back_count x
 // op-payload (inverse, in apply order)], [explicit_meta iff bit4: op_count x op-meta entry (see
@@ -829,9 +820,6 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     if edit.finished_at.is_some() {
         presence |= 1 << 1;
     }
-    if edit.description.is_some() {
-        presence |= 1 << 3;
-    }
     if edit.meta.is_some() {
         presence |= 1 << 4;
     }
@@ -854,9 +842,6 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
         prev_epoch_ms = crate::os_spr::scalar::write_timestamp(&mut out, finished, prev_epoch_ms);
     }
     let _ = prev_epoch_ms;
-    if let Some(description) = &edit.description {
-        write_str_field(&mut out, description).await;
-    }
     if let Some(lane) = &edit.lane {
         write_str_field(&mut out, lane).await;
     }
@@ -910,10 +895,9 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
         None
     };
     let _ = prev_epoch_ms;
-    if presence & (1 << 2) != 0 {
-        return Err(ProtocolError::Malformed { what: "edit presence", offset: 0, detail: "bit 2 is unassigned".into() });
+    if presence & 0b1100 != 0 {
+        return Err(ProtocolError::Malformed { what: "edit presence", offset: 0, detail: "bits 2 and 3 are unassigned".into() });
     }
-    let description = if presence & (1 << 3) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let lane = if presence & (1 << 6) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let verb = if presence & (1 << 7) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let line = match input.read_u8()? {
@@ -952,7 +936,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     } else {
         None
     };
-    Ok(HistoryEdit { id, actor, started_at, finished_at, description, verb, line, ops, inverse, meta, lane })
+    Ok(HistoryEdit { id, actor, started_at, finished_at, verb, line, ops, inverse, meta, lane })
 }
 //#endregion 🔖️Edit
 

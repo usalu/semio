@@ -23,7 +23,8 @@
         "label": {
           "en": "Major version",
           "de": "Hauptversion"
-        }
+        },
+        "step": 1
       }
     },
     "minor": {
@@ -35,7 +36,8 @@
         "label": {
           "en": "Minor version",
           "de": "Nebenversion"
-        }
+        },
+        "step": 1
       }
     }
   }

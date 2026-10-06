@@ -50,7 +50,7 @@ pub struct Block3dViewer;
 
 impl ArtifactViewer for Block3dViewer {
     type Snapshot = Block3dSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Block3dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -112,7 +112,7 @@ impl ArtifactViewer for Block3dViewer {
     /// a viewer has no `setActiveExample` action at all (its sole command is `Noop`), so an empty boot
     /// document made this surface permanently blank. See `dsl::block3d_boot_snapshot`.
     fn initial_snapshot() -> Block3dSnapshot {
-        crate::standards::v1::subsets::any::schema::snapshot::text::block3d_boot_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::block3d_boot_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Block3dViewCommand::Noop` variant never carries a config

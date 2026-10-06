@@ -233,6 +233,12 @@
       ]
     },
     {
+      "id": "s.stdio.pptx.schema.schema-export-s-stdio-pptx-xml-document.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema-export:s.stdio.pptx#xml-document",
+      "claims": [{ "namespace": "schema-export", "value": "s.stdio.pptx#xml-document" }]
+    },
+    {
       "id": "s.stdio.pptx.schema.schema-s-stdio-pptx.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.pptx",

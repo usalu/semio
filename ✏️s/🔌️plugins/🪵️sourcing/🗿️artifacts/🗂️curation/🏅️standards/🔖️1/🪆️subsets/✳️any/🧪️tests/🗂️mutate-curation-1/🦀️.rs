@@ -52,7 +52,8 @@ const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "change-c
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::schema::mutations::{apply_sourcing_mutation_reporting, decode_sourcing_mutation_json, inverse_sourcing_mutation_steps, SourcingMutation};
+    use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::schema::mutations::{apply_sourcing_mutation_reporting, inverse_sourcing_mutation_steps, SourcingMutation};
+    use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::io::text::mutations::{decode_sourcing_mutation_json};
     use semio_s_artifact_sourcing_curation::standards::v1::subsets::any::{schema::snapshot::{curation_selection_summary, CurationSnapshot}, io::snapshot::{json::{decode_curation_snapshot_json, encode_curation_snapshot_json}, text::{parse_curation_dsl, print_curation_dsl}}};
 
     //#region 🔖️Plan
@@ -69,7 +70,7 @@ mod subject {
 
     /// 🧫️ The declared fixture's bytes as UTF-8 text.
     fn fixture_text(ctx: &Context, uri: &str) -> Result<String, String> {
-        String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("the declared fixture is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("the declared fixture is not UTF-8: {error}"))
     }
 
     fn snapshot_of(text: &str, label: &str, kind: &str) -> Result<CurationSnapshot, String> {

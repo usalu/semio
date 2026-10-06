@@ -10,7 +10,7 @@ use semio_framework_ui_contract::{TreeWindow, TREE_WINDOW_PATH_SEPARATOR, UI_BUI
 
 //#region 🔖️Fixtures
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
+    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot()
 }
 
 fn english() -> &'static Fem3dLabels {

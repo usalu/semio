@@ -16,6 +16,6 @@ pub fn diff(payload: &super::ChangeFaultType, base: &EnergyModelSnapshot) -> pro
     if let Some(item) = model.faults.iter_mut().find(|item| item.id == payload.id) {
         item.fault_type = payload.new_fault_type;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

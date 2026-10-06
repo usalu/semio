@@ -3,7 +3,7 @@
     "🧬️schema/📎️references/🦀️.rs",
     "🧬️schema/📎️references/🚦️frontiers/🦀️.rs",
     "🧬️schema/📎️references/🔌️consumers/🦀️.rs",
-    "🧬️schema/📸️snapshot/🪶️sqlite/🚦️owner/🦀️.rs"
+    "🚪️io/🪶️sqlite/📸️snapshot/🚦️owner/🦀️.rs"
   ],
   "broken": "pub struct Broken { entries: Vec<(String, }"
 }

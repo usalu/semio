@@ -34,6 +34,28 @@ function packedCarrierRoot(bodyKey: string, children: readonly number[]): UiNode
 export async function registerTests1(vitest: Pick<typeof import("vitest"), "describe" | "expect" | "it" | "vi">, dependencies: PluginRuntimeTestDependenciesV1, source: { url: string }): Promise<void> {
   const { testState, leftoverShellInvocationFrames, ActivationRegistry, ActorDocumentBindingV1, adaptPluginHandle, assertAddressedInvocation, AppChannelClient, AppChannelRequestSequence, applyRetainedWindowPatches, applyUiPatch, applyUiPatchToRetained, ArtifactMutationRouter, assertShardJspiAvailable, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, buildShardClientOptions, coerceTurnResult, coerceWireBytes, commandIngressFaultDisplay, computeDependencyLevels, consumeTypedOperationEffects, createShardCommandIngressPages, createTurnOutcomeBroadcast, currentPluginRuntimeActor, decodeActorUiPatchReceipt, decodeAppFrame, decodeBackboneMessage, decodeConflictsFromWire, decodeFaultFromWire, decodeForeignStep, decodeInvocationResultPacks, decodeLocalInteractionCaptureJson, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, decodeWirePack, decodeWirePatchOps, DEFAULT_SHARD_BUDGET, drainTypedOperationTurns, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, emptyUiDocumentState, encodeActorUiPatchReceipt, encodeDocumentBackboneControlV1, encodeMutationOrigin, encodePackValue, enqueuePluginTurn, faultDisplayMessage, fetchDescriptorManifest, fnv1aHex, getActivationRegistry, getPluginTurnScheduler, getShardClient, getThunkScheduler, handlePluginShardLost, forgetInstanceForRecovery, onPluginInstancesLost, PLUGIN_ACTOR_INSTANCE_LOST_FAULT, rememberInstanceForRecovery, hasRequiredUiPatches, InstanceDirectory, invocationFromFrames, isPluginInstanceRetiredV1, isShardLostError, loadPluginModule, loadPluginModulesInDependencyOrder, LOCAL_INTERACTION_CAPTURE_MAX_BYTES, localInteractionIdentityEquals, MAX_TRANSACTION_DEPTH, nextGlobalInstanceId, normalizeWireUiNodeRecord, notePluginLoadProgress, orderPluginRegistryEntries, OwnedResidentLedger, packWireNatural, patchAckEvents, pendingCoalescedTurns, pendingCompletionEffects, pendingLifecycleTurns, pendingTurnEffects, performContextMenu, performInvocation, PLUGIN_BOOT_SHARD_LOST_FAULT, PLUGIN_OPERATION_DRAIN_BUDGET, PLUGIN_TURN_MAILBOX_CAPACITY, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, PluginBootShardLostError, pluginLoadProgressAt, pluginSurfaceRef, poolConcurrency, rejectionCodeFromBytes, releasePendingLifecycleTurn, rendererResidentLedger, resolveDescriptorBeforeRuntime, retainedSurfaceHash, retainedSurfaceId, retainedSurfacesForActor, retainedSurfaceToBuiltNode, retainedSurfaceToSnapshot, retainedUiRefreshResponse, uiRefreshSectionUnchanged, retainedWindowByActor, retainTurnUiPatches, runBounded, sectionValueFromBuiltNode, runPluginLifecycleTurn, SEGMENTED_DOWNLOAD_MARKER_PREFIX, SemioFaultError, SURFACE_RENDER_FAULT, SERIALIZE_PER_ACTOR_MAILBOX_CAPACITY, serializeCommandIngressForActor, serializePerActor, setPluginRuntimeActor, settleAcknowledgedPluginTurns, settlePluginTurn, SHARD_LIVENESS_POLICY, SHARD_WORKER_URL, ShardClient, sharedPluginTurnScheduler, sharedThunkScheduler, shellFrameBytes, submitPluginLifecycleTurn, submitPluginTurn, teardownPluginActor, tearingDownPluginActors, TransactionCoordinator, TurnScheduler, TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_PARK_EVICTION_FAULT, TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT, TYPED_OPERATION_TERMINAL_SEEN, TYPED_OPERATION_UNATTRIBUTED_FAULT, typedOperationAcknowledgements, TypedOperationCall, TypedOperationRouter, typedOperationResult, uiRefreshBodyKeys, uiRefreshSectionTargets, uiRefreshSurfaceEvents, wireEffectToFriendly, wireExtensionInvocation, wireNatural, wirePatchSurfaceId, wireTurnStatusTag, withTypedOperationCall, yieldPluginUiContinuation } = dependencies;
   const { describe, expect, it, vi } = vitest;
+  it("validates independent job completion ownership and latest render authority", async () => {
+    const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🏁️job-completion-ownership/🔣️.json");
+    for (const row of fixture.cases) {
+      const owners = new Map<string, number>();
+      const current = new Map<number, string>();
+      for (const step of row.steps) {
+        if (step.action === "bind") {
+          owners.set(step.job, step.instance);
+          current.set(step.instance, step.job);
+        } else if (step.action === "complete") {
+          owners.delete(step.job);
+          if (current.get(step.instance) === step.job) current.delete(step.instance);
+        } else {
+          for (const [job, instance] of owners) if (instance === step.instance) owners.delete(job);
+          current.delete(step.instance);
+        }
+        expect([...owners.keys()].sort()).toEqual(step.owned);
+        expect([...current.values()].sort()).toEqual(step.accepted);
+      }
+    }
+    console.info("[DEBUG] Job ownership oracle: five independent histories preserve all terminals and latest repaint");
+  });
   /** 🚪️ The whole-instance UI close ladder's own budget, priced off what a close RETIRES.
    *
    * 🐛️ It used to spend `PLUGIN_UI_CONTINUATION_LIMIT` — a SETTLE bound, host round trips for ONE
@@ -370,7 +392,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const { default: fixture } = await import("../../🧱️elements/🖼️IconRenderHost/🧫️fixtures/📡️export-wire/🔣️.json");
         const { default: schema } = await import("../../🧱️elements/🖼️IconRenderHost/🧬️schema/📡️export-wire/🔣️.json");
         const { default: Ajv2020 } = await import("ajv/dist/2020");
-        const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts");
+            const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts");
         const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
         for (const sample of fixture.cases) {
           expect(validate(sample.items), sample.name).toBe(sample.valid);
@@ -527,6 +549,52 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       // in this renderer ever called `ShardClient.startJob`/`stepJob` — so on this target EVERY
       // plugin-authored isolated job was started zero times and stepped zero times, silently. That is
       // what left puzzle 3d's fill planning frozen at zero in the browser.
+      it("publishes isolated job completion without requiring another user command", async () => {
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🏁️job-completion-publication/🔣️.json");
+                for (const row of fixture.cases) {
+          let instance = 0;
+          const submitted: ShardEventEnvelope[][] = [];
+          const completions: unknown[] = [];
+          const bytes = (value: unknown) => Array.from(encodePackValue(value));
+          const history = { cursor: 2, upserts: [] };
+          let terminal = false;
+          let published = false;
+          let remaining = row.continuations;
+          await withRequester(async (_actor, events) => {
+            submitted.push([...events]);
+            terminal ||= events.some(event => event.kind === "job-completed");
+            if (published) return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+            if (terminal && remaining-- > 0) return { uiPatches: [], effects: [], nextWake: null, status: { tag: row.handoffStatus } };
+            published = terminal;
+            return {
+              uiPatches: [], nextWake: null, status: { tag: "idle" },
+              effects: terminal ? [
+                { tag: "notify", val: { message: row.message } },
+                { tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ OperationCompleted: { operation: BigInt(row.operation), revision: BigInt(row.revision), ui_scope: bytes({ kind: "full" }), history_patch: bytes(history) } })) } },
+              ] : [
+                { tag: "spawn-job", val: { job: BigInt(row.job), kind: "semio.draw.mounted-vector", input: new Uint8Array([1]), placement: { tag: "isolated" } } },
+                { tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(null), diagnostics: bytes([]), ui_scope: bytes({ kind: "none" }), history_patch: [], messages: [], mutations: [], inverse_group: [] } })) } },
+              ],
+            };
+          }, async (handle, opened) => {
+            instance = opened;
+            const unsubscribe = handle.subscribeOperationCompletions(instance, completion => completions.push(completion));
+            try {
+              await handle.captureExtensionCompletion!(instance, 1n).complete({ ok: encodePackValue(null) });
+              for (let turn = 0; turn < 256 && completions.length === 0; turn += 1) await yieldPluginUiContinuation();
+              if (row.continuations === 0) {
+                await yieldPluginUiContinuation();
+                expect(submitted, row.id).toHaveLength(2);
+              }
+              expect.soft(completions, row.id).toEqual([{ instanceId: instance, operation: BigInt(row.operation), revision: BigInt(row.revision), uiScope: { kind: "full" }, historyPatch: history, requestedEffects: [{ notify: { message: row.message } }], terminalOutput: undefined }]);
+              expect.soft(submitted.length, row.id).toBeGreaterThanOrEqual(2 + row.continuations);
+              expect(submitted.slice(1).flat().map(event => event.kind), row.id).toEqual(["job-completed"]);
+            } finally { unsubscribe(); }
+          }, { jobs: { step: () => ({ status: row.outcome as "done" | "failed", value: new Uint8Array([1]) }) } });
+        }
+        console.info("[DEBUG] Isolated job publication: four exact-authority fixtures complete without another input");
+      });
+
       it("starts an isolated job, steps it to its terminal and feeds job-completed back into the actor", async () => {
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
         const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
@@ -1862,7 +1930,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
                 if ("PollDocumentArchiveLoad" in command) {
                   polls += 1;
                   const { seq, operation } = command.PollDocumentArchiveLoad;
-                  return encodeAppFrame({ DocumentArchiveLoad: { in_reply_to: seq, status: { operation, state: polls < 3 ? "running" : "ready", completed: polls, total: 3, fault: [] } } });
+                  return encodeAppFrame({ DocumentArchiveLoad: { in_reply_to: seq, status: { operation, state: polls < 3 ? "running" : "ready", completed: polls, total: 3, ahead: 0, fault: [] } } });
                 }
                 if ("AcknowledgeDocumentArchiveLoad" in command) return encodeAppFrame({ Done: { in_reply_to: command.AcknowledgeDocumentArchiveLoad.seq } });
                 throw new Error(`unexpected command ${JSON.stringify(command)}`);
@@ -2453,11 +2521,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
       it("routes a foreign typed-operation fault page to its own call and never to the observing call", async () => {
         const { Buffer } = await import("node:buffer");
-        const { default: Ajv } = await import("ajv");
         const { default: routing } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/📬️typed-operation-routing.json");
-        const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
-        const schema = { $ref: `${rendererModule.$id}#/$defs/PluginRuntimeTypedOperationRoutingV1` };
-        expect(new Ajv({ strict: true }).addSchema(rendererModule).compile(schema)(routing)).toBe(true);
         expect([TYPED_OPERATION_PARK_CAPACITY, TYPED_OPERATION_UNATTRIBUTED_FAULT, TYPED_OPERATION_PARK_EVICTION_FAULT]).toEqual([routing.capacity, routing.unattributedCode, routing.evictionCode]);
         const page = (operation: string, sequence: number, lane: number, text: string) => {
           const body = Buffer.alloc(30);

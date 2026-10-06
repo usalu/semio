@@ -7,7 +7,7 @@
 //! walls on the five-grid, doors at the midpoints, floor everywhere else. The committed
 //! `🗣️.dsl.semio` asset is the PRINT of this builder and never a second authority.
 
-use crate::schema::snapshot::{encode_base64, BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel, BitmapSnapshot, WFC_BITMAP_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel, BitmapSnapshot, WFC_BITMAP_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -56,7 +56,7 @@ pub fn snapshot() -> BitmapSnapshot {
             width: EDGE,
             height: EDGE,
             palette: vec![BitmapColor::opaque(38, 38, 46), BitmapColor::opaque(226, 222, 210), BitmapColor::opaque(198, 132, 72)],
-            pixels: encode_base64(&indices()),
+            pixels: (indices().to_vec()),
         },
         output: BitmapOutputSpec { width: 24, height: 24, periodic: true },
         model: BitmapOverlappingModel { pattern_size: 3, symmetry: 8, periodic_input: true, ground: None },

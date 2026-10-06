@@ -1,0 +1,11 @@
+# S Home Direct Native Semantic Closure
+
+Actual registered original5 Before genuinely ran:2passed3failed,29skipped,2.640s in 🗑️generated/physical-current-outside11-registered-native.log. Failures are original complete guard/decode budget, known Unicode direct input one-short schema bytes, and controlled direct output same byte refusal. No timeout or compiler-only substitute.
+
+Schema-first closed independent corpus pins home_document identity8, unsigned generation high8/low8 and actual UTF8 schema cells:24,49,40bytes across zero/full unsigned64/literal Unicode+NUL. The added owning Source/Native tests reinterpret the actual exported handwritten SQL file with Bun SQLite and validate the closed corpus with Ajv. Direct preflight,encode,decode exact/one-short bytes/rows/columns/authoredSQLschema are demanded; original5 predicates untouched. New strengthened owning roster is6 Native; provider remains unmodified pending actual Before of new law.
+
+Actual registered Source leaf genuinely exits0:7/7 passed in162.00ms, including closed Ajv corpus and independent actual SQLite24/49/40 semantic cells/high-low words. Log: 🗑️generated/physical-current-shome-semantic-source-owning.log. Held provider in 📥️inputs/physical-current-shome-semantic-provider-pair.json shares one actual row writer between owned SQL and typed native/preflight, and visits only borrowed Text/UInt CST fields through copied limits before typed construction. Native Before6/After remains pending; no provider runtimecredit.
+
+Fresh strengthened owning Native6 Before completed2pass4fail29skip3.588s, no compiler-only credit. Actual independent empty/Unicode/extreme u64 SQLite corpus reached original speculative preflight refusal at exact24cells. Original5 failures remain unchanged. Guarded typed visitor and borrowed pretyped CST provider mounted only after this genuine Before.
+
+Mounted actual owning Native After6/6passed29skip1.453s exit0; all original5 included unchanged. Source7/7passed162ms. Direct borrowed CST before typed construction, same typed relational row visitor on output and actual SQL, semantic24/49/40bytes with schema/row/column/value exact and one-short corpus, independent BunSQLite/Ajv; named allocation/reconstruction controls preserved.

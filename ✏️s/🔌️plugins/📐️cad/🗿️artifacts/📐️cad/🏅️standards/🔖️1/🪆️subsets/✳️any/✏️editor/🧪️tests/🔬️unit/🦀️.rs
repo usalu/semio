@@ -76,6 +76,8 @@ pub(crate) mod context {
     }
 
     semio_framework_plugin::history_edit_acceptance_law!("cad", CadPlayApp, cad_app_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_reload_law!("cad", CadPlayApp, cad_app_manifest_for_tests, "../..");
+    semio_framework_plugin::composed_child_history_law!("cad", CadPlayApp, cad_app_manifest_for_tests, [("translateSelection", r#"{"objectIds":["object-hexagonal-cut-concrete-forest-left"],"dx":1.5,"dy":0.0,"dz":0.0}"#)]);
     
     pub fn empty_history() -> HistoryView {
         HistoryView::empty()
@@ -187,12 +189,53 @@ pub(crate) mod context {
         cad_runtime_from(&config_after(emit, base), &CadWorldWindowTransient::default())
     }
     
+    /// 🎛️ A render view of `scene` with no live child: every pane reads the genesis content its child id names.
     pub fn view(scene: CadSnapshot, runtime: CadPlayRuntime) -> CadPlayView {
-        CadPlayView { document: scene, runtime, interaction: CadInteractionSnapshot::default() }
+        CadPlayView::of(&scene, &ChildContentView::EMPTY, runtime, CadInteractionSnapshot::default())
     }
 
+    /// 🕹️ [`view`] with a live `"cad"` interaction.
     pub fn view_with_interaction(scene: CadSnapshot, runtime: CadPlayRuntime, interaction: CadInteractionSnapshot) -> CadPlayView {
-        CadPlayView { document: scene, runtime, interaction }
+        CadPlayView::of(&scene, &ChildContentView::EMPTY, runtime, interaction)
+    }
+
+    /// 🪆️ The render view of the mounted app's document composed with its live children.
+    pub fn live_view(app: &CadFixtureApp) -> CadPlayView {
+        CadPlayView::of(&app.snapshot().expect("snapshot"), &app.test_child_content_view(), CadPlayRuntime::default(), CadInteractionSnapshot::default())
+    }
+
+    /// 🏛️ `pane`'s model as the mounted app's child store holds it now.
+    pub async fn pane_model(app: &CadFixtureApp, pane: CadPaneId) -> semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot {
+        use store::{ArtifactPack, SpaceMember};
+        let parent = app.snapshot().expect("CAD parent snapshot");
+        let child = crate::cad_pane_model(&parent, pane).unwrap_or_else(|| panic!("{pane:?} pane composes a model child"));
+        let member = app.child_store(crate::cad_pane_model_slot(pane), &child.child_id).await.unwrap_or_else(|| panic!("{pane:?} pane model member is live"));
+        semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot::decode_pack(&member.document_pack_bytes().await.expect("pane model pack")).expect("pane model snapshot")
+    }
+
+    /// 🧱️ `pane`'s objects as the mounted app's child store holds them now.
+    pub async fn pane_objects(app: &CadFixtureApp, pane: CadPaneId) -> Vec<CadObject> {
+        objects_from_model_snapshot(&pane_model(app, pane).await)
+    }
+
+    /// 🧩️ Every history row that lists composed-member mutations, oldest first.
+    pub async fn member_rows(app: &mut CadFixtureApp) -> Vec<semio_framework::kernel::HistoryEntry> {
+        let mut rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|entry| entry.mutations.iter().any(|mutation| mutation.store.is_some())).collect();
+        rows.sort_by_key(|entry| entry.seq);
+        rows
+    }
+
+    /// 🪟️ The action metadata of a command dispatched in the open world window `window_id` of kind `window_kind_id`.
+    pub fn window_meta(window_id: &str, window_kind_id: &str) -> ActionMeta {
+        ActionMeta {
+            view_state: Some(ViewModel {
+                window_id: Some(window_id.into()),
+                active_window_kind_id: Some(window_kind_id.into()),
+                window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_kind_id.into() }],
+                ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
+            }),
+            ..meta("local")
+        }
     }
 
     /// 🌲️ The forest document as an interaction-less render view.
@@ -372,8 +415,10 @@ async fn every_example_load_is_admitted_and_settles_through_the_host_document_ar
         for pane in CadPaneId::all() {
             let Some(child) = crate::cad_pane_model(&live, pane) else { continue };
             assert!(app.child_store(crate::cad_pane_model_slot(pane), &child.child_id).await.is_some(), "{example_id:?}: the genesis-derived {pane:?} model member is live after the load");
-            let scene = crate::cad_pane_local_scene(&live, pane).unwrap_or_else(|| panic!("{example_id:?}: the loaded {pane:?} pane resolves its materialization"));
-            assert!(!crate::cad_scene_pane_objects(&scene, pane).is_empty(), "{example_id:?}: the loaded {pane:?} pane renders real objects");
+            let genesis = crate::cad_bundled_pane_scene(&child.child_id).unwrap_or_else(|| panic!("{example_id:?}: the loaded {pane:?} pane names a genesis scene"));
+            let objects = pane_objects(&app, pane).await;
+            assert_eq!(objects, crate::cad_scene_pane_objects(&genesis, pane), "{example_id:?}: the loaded {pane:?} pane's child holds its genesis objects exactly");
+            assert_eq!(objects.is_empty(), example_id.is_empty(), "{example_id:?}: only the empty document loads empty panes ({pane:?})");
         }
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
     }
@@ -643,9 +688,9 @@ async fn forest_example_uses_per_object_brep_meshes() {
     assert!(scene.building_objects.iter().all(|object| object.solid_handle.is_some()));
 }
 
-/// 🗄️ The mesh lane is remembered per materialized scene: a second render of the same `Arc` answers
-/// the same bytes without tessellating, an object edit (a different digest) re-tessellates, and a
-/// re-minted scene (the same objects under a new `Arc`) is a miss by construction.
+/// 🗄️ The mesh lane is remembered per genesis scene and tessellated object set: a second render of the same `Arc` and
+/// objects answers the same bytes without tessellating, an object edit (a different digest) re-tessellates, and the
+/// same objects over another genesis scene (a new `Arc`, a new raw geometry identity) are a miss by construction.
 #[semio_framework_async_macros::async_test]
 async fn mesh_lane_is_cached_per_materialized_scene() {
     let scene = std::sync::Arc::new(forest_working_scene());
@@ -900,7 +945,7 @@ async fn renders_world_scene_for_each_pane() {
 #[semio_framework_async_macros::async_test]
 async fn world_scene_binds_the_cad_interaction_domain_at_object_granularity() {
     let scene = forest_play_scene();
-    let view = CadPlayView { document: scene, runtime: CadPlayRuntime::default(), interaction: CadInteractionSnapshot::default() };
+    let view = view(scene, CadPlayRuntime::default());
     let node = edit::build_world_scene_for_pane(&view, CadPaneId::Shape, shape::SURFACE_ID, None, CadDislocateOptions::default()).expect("scene surface");
     assert_eq!(node.key.as_str(), shape::SURFACE_ID);
     let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = &node.component else { panic!("world-3d surface node") };
@@ -909,25 +954,20 @@ async fn world_scene_binds_the_cad_interaction_domain_at_object_granularity() {
     assert_eq!(world.domain_granularity_id.as_deref(), Some(edit::CAD_WORLD_PICK_GRANULARITY));
 }
 
-/// 🛡️ Anti-regression guard for the "four empty windows" defect: `forest_play_document` must
-/// actually populate `shape_model`/`building_model`/`energy_model`/`structure_classic_model`
-/// (via `cad_document_pane_bundle`, carried as each handle's `ArtifactChild::local_owner`), and
-/// `build_world_scene_for_pane`'s own pane resolver (`edit::cad_pane_working_scene`/
-/// `edit::cad_pane_working_objects`) must read real objects back out of them instead of the
-/// hardcoded empty slice the defect shipped with. Checks the exact `instances_json` string
-/// `build_world_scene_for_pane` feeds `MeshWindowKit::render` — the built scene's world-3d
-/// payload the defect left permanently empty — for every pane, not just via the lower-level
-/// `world_instances_json(&scene.building_objects, ..)` shortcut `forest_example_uses_per_object_brep_meshes` uses.
+/// 🛡️ Anti-regression guard for the "four empty windows" defect: every pane of the forest document must compose real
+/// objects — from its model child, or from the genesis scene its child id names while no child is live — and
+/// `build_world_scene_for_pane` must publish them. Checks the exact `instances_json` string it feeds
+/// `MeshWindowKit::render` — the built scene's world-3d payload the defect left permanently empty — for every pane.
 #[semio_framework_async_macros::async_test]
 async fn forest_example_world_scene_has_non_empty_instances_for_every_pane() {
-    let document = forest_play_scene();
+    let envelope = forest_view();
     for pane in CadPaneId::all() {
-        let working_scene = edit::cad_pane_working_scene(&document, pane).unwrap_or_else(|| panic!("pane {pane:?} must resolve a local-owner working scene"));
-        let (objects, _geometry) = edit::cad_pane_working_objects(&working_scene, pane);
+        let composed = envelope.panes.pane(pane);
+        let (objects, geometry) = (composed.objects.as_slice(), composed.geometry(pane));
         assert!(!objects.is_empty(), "pane {pane:?} must have real objects, not the empty-defect slice");
-        let instances_json = edit::world_instances_json(objects, &view(document.clone(), CadPlayRuntime::default()));
+        let instances_json = edit::world_instances_json(objects, &envelope);
         assert_ne!(instances_json, "[]", "pane {pane:?} instances_json must not be empty");
-        let meshes_json = edit::world_meshes_json(objects, _geometry);
+        let meshes_json = edit::world_meshes_json(objects, geometry);
         assert!(meshes_json.contains("\"data\""), "pane {pane:?} must inline its solids' tessellation into meshesJson");
         assert!(!meshes_json.contains("\"kind\""), "pane {pane:?} must not degrade authored solids to placeholder kinds");
     }
@@ -1346,38 +1386,41 @@ async fn sun_measures_registered_for_all_four_panes_and_default_off() {
 
 //#endregion 🔖️ViewModel
 //#region 🔖️Operations
+/// 🈳️ A new document composes every pane from its first render: `default_document()` names the four EMPTY model children,
+/// each derives an empty genesis pack, and `addObject` refuses by name only where no model child is composed at all.
 #[semio_framework_async_macros::async_test]
-async fn add_object_action_seeds_an_empty_pane_with_a_composed_model_child() {
-    // 🪆️ 2026-09-16: `addObject` is a real mutation now. `default_document()` holds no model child
-    // at all, so this is the empty-pane arm of the re-materialization seam — the created object
-    // mints the pane's composed `s.stdio.semio.model` child rather than dropping on the floor.
-    // Selection stays out of scope (framework-owned, unreachable from `handle()`).
-    let app = CadPlayApp::default();
+async fn a_new_document_composes_four_empty_panes_and_add_object_needs_a_composed_pane() {
     let scene = default_document();
-    assert!(scene.shape_model.is_none(), "this arm needs a pane with no composed child yet");
-    let emit = drive(&app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
-    assert_eq!(emit.artifact_mutations.len(), 1, "addObject emits one bounded parent op");
-    let after = apply_mutations(&scene, &emit.artifact_mutations);
-    assert!(after.shape_model.is_some(), "the first object mints the pane's composed model child");
-    let objects = cad_pane_objects(&after, CadPaneId::Shape);
-    assert_eq!(objects.len(), 1);
-    assert_eq!(objects[0].typology, "building.building.column");
+    for pane in CadPaneId::all() {
+        let child = crate::cad_pane_model(&scene, pane).unwrap_or_else(|| panic!("{pane:?} pane composes its empty model child"));
+        assert_eq!(child.child_id, crate::cad_empty_pane_child(pane).child_id);
+        let pack = crate::cad_genesis_child_pack(&scene, crate::cad_pane_model_slot(pane), &child.child_id).unwrap_or_else(|| panic!("{pane:?} pane derives its genesis pack"));
+        let model = <semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("genesis pack decodes");
+        assert!(model.elements.is_empty(), "{pane:?} pane is born empty");
+    }
+    let fault = drive_result(&CadPlayApp::default(), &empty_cad_snapshot(), "addObject", Some(json!({ "typology": "building.building.column" })), &CadConfig::default()).err().expect("a pane without a model child refuses addObject");
+    assert_eq!(fault.code.0, "cad.object.pane-uncomposed");
 }
 
+/// 🧱️ `addObject` lands ONE `insert-element` on the addressed pane's model child and never touches the parent document
+/// (design §20.15).
 #[semio_framework_async_macros::async_test]
 async fn add_object_through_wrapper_grows_the_composed_pane() {
     let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot");
-    app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).await.expect("add object dispatch");
+    let objects_before = pane_objects(&app, CadPaneId::Shape).await;
+    app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("building.building.column".into()) }), &meta("local")).await.expect("add object dispatch");
     settle(&mut app).await;
-    let after = app.snapshot().expect("snapshot");
-    assert_ne!(semio_framework_pack_json::to_json_string(&before), semio_framework_pack_json::to_json_string(&after), "addObject must re-mint the addressed pane's composed model child");
+    assert_eq!(app.snapshot().expect("snapshot"), before, "addObject never moves the parent document");
+    let objects = pane_objects(&app, CadPaneId::Shape).await;
+    assert_eq!(objects.len(), objects_before.len() + 1, "the shape pane's model child holds one more element");
+    assert_eq!(objects.last().map(|object| object.typology.as_str()), Some("building.building.column"));
     close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn derive_transformation_populates_energy_pane() {
-    // ⚠️ `apply_transformation_mutations` is a documented no-op pending the child-dispatch seam
+    // ⚠️ `apply_transformation_entries` yields nothing until the derivation rules are written
     // (see its own doc comment in this file) — this instead exercises the real derive algorithm
     // directly (`run_derive_from_geometry`), the pure function `applyTransformation` will call
     // once that seam exists. `make_object_for_typology` already built and dropped its own local
@@ -1648,27 +1691,29 @@ async fn import_cad_file_action_accepts_spatial_json_text_string_payload() {
     assert!(next.shape_model.is_some(), "a real imported object must mint a shape-model child");
 }
 
+/// 📥️ A single object file lands as ONE `insert-element` on the shape pane's model child (design §20.15); where no model
+/// child is composed the import is refused by name, never dropped. Selecting the imported object stays the host's
+/// follow-up `interactionSelect` (selection is framework-owned).
 #[semio_framework_async_macros::async_test]
 async fn import_cad_file_action_imports_obj_by_extension() {
-    // ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: `import_cad_object_by_extension`
-    // now returns a `SemioModelElement` — composing it into the document needs the same
-    // child-dispatch seam as `commands/🧱️object/component.rs` (see `import_cad_file::handle`'s
-    // own doc comment). Documented no-op. 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM
-    // (26/08/14): auto-selecting the imported object is no longer reachable from `handle()`
-    // either (selection is framework-owned) — this now only asserts the document-write gap.
-    let app = CadPlayApp::default();
-    let scene = default_document();
     let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
     let obj_data_url = format!("data:model/obj;base64,{}", base64_codec::base64_standard_encode(obj_text));
-    let fault = drive_result(&app, &scene, "importCadFile", Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })), &CadConfig::default()).err().expect("an object import is refused until composed pane models accept it");
-    assert_eq!(fault.code.0, "cad.import-object-unavailable");
+    let fault = drive_result(&CadPlayApp::default(), &empty_cad_snapshot(), "importCadFile", Some(json!({ "payload": obj_data_url.clone(), "name": "triangle.obj" })), &CadConfig::default()).err().expect("an object import into a pane without a model child is refused");
+    assert_eq!(fault.code.0, "cad.import-object-refused");
+    let mut app = new_app().await;
+    let parent = app.snapshot().expect("snapshot");
+    let before = pane_objects(&app, CadPaneId::Shape).await.len();
+    app.dispatch_typed(CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: "triangle.obj".into(), payload: obj_data_url }), &meta("local")).await.expect("import dispatch");
+    settle(&mut app).await;
+    assert_eq!(pane_objects(&app, CadPaneId::Shape).await.len(), before + 1, "the imported object is one more element of the shape pane's model child");
+    assert_eq!(app.snapshot().expect("snapshot"), parent, "an object import never moves the parent document");
+    close(&mut app);
 }
 //#endregion 🔖️Import
 //#region 🔖️History
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_added_node_through_generic_helper() {
-    // ⚠️ `AddObject` is a documented no-op pending the child-dispatch seam (see
-    // `commands/🧱️object/component.rs`'s module doc) — this exercises the generic
+    // 🧪️ Parent-lane undo/redo through the generic
     // `assert_undo_redo_round_trip` test context helper (distinct from `undo_redo_round_trips_added_node_through_wrapper`
     // below, which drives the manual add/undo/redo dance) against the real `AddNode` command.
     let mut app = new_app().await;
@@ -1814,87 +1859,115 @@ async fn ingest_operations_is_idempotent_for_cad() {
 //#endregion 🔖️Convergence
 
 
-//#region 🪆️ObjectMutationSeam
-/// 🪆️ The pane's live objects, read back through the exact accessor the world scene and the document
-/// tree use — a mutation that does not land here has not re-materialized anything.
-fn shape_objects(document: &CadSnapshot) -> Vec<crate::standards::v1::subsets::any::io::geometry_import::CadObject> {
-    cad_pane_objects(document, CadPaneId::Shape)
-}
-
-/// 🥽️ The `instances` lane one pane's world-3d surface publishes — the rendered transform.
-fn shape_instances_lane(document: &CadSnapshot) -> String {
-    let envelope = view(document.clone(), CadPlayRuntime::default());
-    let node = edit::build_world_scene_for_pane(&envelope, CadPaneId::Shape, "cad.play.scene3d/shape", None, CadDislocateOptions::default()).expect("shape world scene");
+//#region 🪆️ObjectChildLane
+/// 🥽️ The `instances` lane the shape pane's world-3d surface publishes for the mounted app — the rendered transform.
+fn shape_instances_lane(app: &CadFixtureApp) -> String {
+    let node = edit::build_world_scene_for_pane(&live_view(app), CadPaneId::Shape, "cad.play.scene3d/shape", None, CadDislocateOptions::default()).expect("shape world scene");
     scene_lane(&node, "instances")
 }
 
-/// ▶️ Law (a): `translateSelection` on the demo document changes the selected object's transform in
-/// the composed child AND the rendered instance transform after re-materialization. This is the
-/// gumball-snaps-back defect the 2026-09-16 CAD end-to-end report left open.
+/// ▶️ Law (a): `translateSelection` on the demo document moves the selected object in the shape pane's composed model
+/// child AND the rendered instance — ONE tool-transaction row on that member store whose relative leaf stays editable —
+/// while the parent document and the pane's child id never change (design §12, §20.15). This is the gumball-snaps-back
+/// defect the 2026-09-16 CAD end-to-end report left open.
 #[semio_framework_async_macros::async_test]
 async fn translate_selection_moves_the_object_and_the_rendered_instance() {
-    let app = CadPlayApp::default();
-    let scene = forest_play_scene();
-    let before = shape_objects(&scene);
-    let target = before.first().expect("the demo document materializes shape objects").clone();
-    let emit = drive(&app, &scene, "translateSelection", Some(json!({ "objectIds": [target.id.clone()], "dx": 1.5, "dy": -2.25, "dz": 0.5 })));
-    assert!(!emit.artifact_mutations.is_empty(), "translateSelection must emit a real document operation");
-
-    let after = apply_mutations(&scene, &emit.artifact_mutations);
-    let moved = shape_objects(&after).into_iter().find(|object| object.id == target.id).expect("the object survives the move");
+    let mut app = new_app().await;
+    let parent = app.snapshot().expect("snapshot");
+    let store = format!("{}/{}", crate::cad_pane_model_slot(CadPaneId::Shape), crate::cad_pane_model(&parent, CadPaneId::Shape).expect("the demo document composes a shape child").child_id);
+    let target = pane_objects(&app, CadPaneId::Shape).await.first().expect("the demo document holds shape objects").clone();
+    app.dispatch_typed(CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec![target.id.clone()], dx: 1.5, dy: -2.25, dz: 0.5 }), &meta("local")).await.expect("translate dispatch");
+    settle(&mut app).await;
+    assert_eq!(app.snapshot().expect("snapshot"), parent, "a transform never moves the parent document or re-mints the pane's child handle");
+    let moved = pane_objects(&app, CadPaneId::Shape).await.into_iter().find(|object| object.id == target.id).expect("the object survives the move");
     assert_eq!(moved.origin, [target.origin[0] + 1.5, target.origin[1] - 2.25, target.origin[2] + 0.5], "the composed child carries the new origin");
-    assert_ne!(after.shape_model.as_ref().map(|child| child.child_id.clone()), scene.shape_model.as_ref().map(|child| child.child_id.clone()), "the pane's child handle is re-minted");
+    assert_eq!(CadObject { origin: target.origin, ..moved.clone() }, target, "a drag changes the origin and nothing else");
 
-    let lane = shape_instances_lane(&after);
+    let rows = member_rows(&mut app).await;
+    assert_eq!(rows.len(), 1, "one gesture is one row: {rows:?}");
+    let transaction = rows[0].transaction.as_ref().expect("the gesture row carries its transaction");
+    assert_eq!(transaction.tool, "s.cad.cad@1/*#editor#translateSelection");
+    assert_eq!(rows[0].mutations.len(), 1, "one relative leaf: {:?}", rows[0].mutations);
+    assert_eq!(rows[0].mutations[0].store.as_deref(), Some(store.as_str()));
+    assert!(rows[0].mutations[0].editable, "a drag's inputs are editable");
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 element by (1.5, -2.25, 0.5)");
+
+    let lane = shape_instances_lane(&app);
     let position = format!("\"position\":[{},{},{}]", moved.origin[0], moved.origin[1], moved.origin[2]);
     assert!(lane.contains(&position), "the rendered instance must carry the moved pose: looked for {position} in {lane}");
+    close(&mut app);
 }
 
-/// ▶️ Law (b): `addObject` yields a new rendered instance in the addressed pane.
+/// ▶️ Law (b): `addObject` in the shape window yields a new rendered instance in that pane.
 #[semio_framework_async_macros::async_test]
 async fn add_object_yields_a_new_rendered_instance() {
-    let app = CadPlayApp::default();
-    let scene = forest_play_scene();
-    let before = shape_objects(&scene).len();
-    let emit = drive_in_window(&app, &scene, "addObject", Some(json!({ "typology": "spatial.shape.primitive.box" })), &CadConfig::default(), "cad-window-shape", shape::WINDOW_KIND_ID).expect("addObject handled");
-    assert_eq!(emit.artifact_mutations.len(), 1, "addObject is one bounded parent op");
-
-    let after = apply_mutations(&scene, &emit.artifact_mutations);
-    let objects = shape_objects(&after);
-    assert_eq!(objects.len(), before + 1, "the pane materializes one more object");
+    let mut app = new_app().await;
+    let before = pane_objects(&app, CadPaneId::Shape).await.len();
+    app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &window_meta("cad-window-shape", shape::WINDOW_KIND_ID)).await.expect("addObject dispatch");
+    settle(&mut app).await;
+    let objects = pane_objects(&app, CadPaneId::Shape).await;
+    assert_eq!(objects.len(), before + 1, "the pane's model child holds one more object");
     let created = objects.last().expect("the created object is appended");
-    assert!(shape_instances_lane(&after).contains(created.id.as_str()), "the created object is a rendered instance");
+    assert!(shape_instances_lane(&app).contains(created.id.as_str()), "the created object is a rendered instance");
+    close(&mut app);
 }
 
-/// ↩️ Law (c): undo restores. Every object gesture's ops are ordinary in-history `CadMutation`s, so
-/// the existing history mechanism inverts them with nothing app-specific — applied newest-first, the
-/// inverses bring the demo document back exactly.
+/// ↩️ Law (c): undo restores. Every object gesture is an ordinary child-lane edit with an exact inverse (a relative leaf
+/// undoes as the absolute `set-element` placement of each addressed element, a removal as the element's re-insertion), so
+/// undoing the gestures newest-first brings the pane's model back exactly and the parent never moved.
 #[semio_framework_async_macros::async_test]
-async fn object_mutations_invert_back_to_the_demo_document() {
-    let app = CadPlayApp::default();
-    let scene = forest_play_scene();
-    let target = shape_objects(&scene).first().expect("shape objects").id.clone();
+async fn object_gestures_undo_back_to_the_demo_document() {
+    let mut app = new_app().await;
+    let parent = app.snapshot().expect("snapshot");
+    let genesis = pane_objects(&app, CadPaneId::Shape).await;
+    let target = genesis.first().expect("shape objects").id.clone();
     let gestures = [
-        drive(&app, &scene, "translateSelection", Some(json!({ "objectIds": [target.clone()], "dx": 2.0, "dy": 0.0, "dz": 0.0 }))),
-        drive(&app, &scene, "scaleSelection", Some(json!({ "objectIds": [target.clone()], "sx": 2.0, "sy": 2.0, "sz": 2.0 }))),
-        drive(&app, &scene, "deleteObject", Some(json!({ "objectId": target.clone() }))),
+        CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec![target.clone()], dx: 2.0, dy: 0.0, dz: 0.0 }),
+        CadCommand::ScaleSelection(scale_selection::ScaleSelection { object_ids: vec![target.clone()], sx: 2.0, sy: 2.0, sz: 2.0 }),
+        CadCommand::DeleteObject(delete_object::DeleteObject { object_id: target.clone() }),
     ];
-    for emit in gestures {
-        assert!(!emit.artifact_mutations.is_empty(), "every object gesture emits a real operation");
-        let mut forward = scene.clone();
-        let mut inverses: Vec<CadMutation> = Vec::new();
-        for mutation in &emit.artifact_mutations {
-            inverses.extend(protocol::Mutation::inverse(mutation, &forward).expect("valid retained mutation inverse fixture"));
-            forward = protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, &forward).diff(), &forward).expect("gesture applies");
-        }
-        assert_ne!(forward, scene, "the gesture moved the document");
-        inverses.reverse();
-        let restored = apply_mutations(&forward, &inverses);
-        assert_eq!(restored, scene, "undo must restore the demo document");
-        assert_eq!(shape_objects(&restored), shape_objects(&scene), "undo must restore the materialized objects too");
+    let count = gestures.len();
+    for command in gestures {
+        let before = pane_objects(&app, CadPaneId::Shape).await;
+        app.dispatch_typed(command, &meta("local")).await.expect("gesture dispatch");
+        settle(&mut app).await;
+        assert_ne!(pane_objects(&app, CadPaneId::Shape).await, before, "every object gesture lands a real child edit");
     }
+    assert_eq!(member_rows(&mut app).await.len(), count, "one row per gesture");
+    for _ in 0..count {
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", TEST_INSTANCE).await;
+    }
+    let restored = pane_objects(&app, CadPaneId::Shape).await;
+    assert_eq!(restored.len(), genesis.len(), "undo restores every object");
+    for object in &genesis {
+        assert_eq!(restored.iter().find(|candidate| candidate.id == object.id), Some(object), "undo restores {} exactly", object.id);
+    }
+    assert_eq!(app.snapshot().expect("snapshot"), parent, "the parent document never moved");
+    close(&mut app);
 }
-//#endregion 🪆️ObjectMutationSeam
+
+/// 🎛️ Law (d): an inspector field edit is ONE absolute `set-element` on the object's pane child that changes that facet
+/// only, and an inspector origin DELTA is the transform tool's relative `drag-elements`.
+#[semio_framework_async_macros::async_test]
+async fn an_inspector_edit_is_one_set_element_and_an_origin_delta_is_a_relative_drag() {
+    let mut app = new_app().await;
+    let target = pane_objects(&app, CadPaneId::Shape).await.first().expect("shape objects").clone();
+    app.dispatch_typed(CadCommand::PatchObject(patch_object::PatchObject { object_id: target.id.clone(), field: "label".into(), value: Some("Renamed".into()), delta: None }), &meta("local")).await.expect("rename dispatch");
+    settle(&mut app).await;
+    let renamed = pane_objects(&app, CadPaneId::Shape).await.into_iter().find(|object| object.id == target.id).expect("the object survives");
+    assert_eq!(CadObject { label: target.label.clone(), ..renamed.clone() }, target, "a rename changes the label and nothing else");
+    assert_eq!(renamed.label, "Renamed");
+    app.dispatch_typed(CadCommand::PatchObject(patch_object::PatchObject { object_id: target.id.clone(), field: "origin.x".into(), value: None, delta: Some(0.75) }), &meta("local")).await.expect("origin delta dispatch");
+    settle(&mut app).await;
+    let rows = member_rows(&mut app).await;
+    assert_eq!(rows.len(), 2, "two edits are two rows: {rows:?}");
+    assert!(rows[0].op_lines.iter().any(|line| line.starts_with("set-element")), "{:?}", rows[0].op_lines);
+    assert!(rows[0].transaction.is_none(), "a plain inspector edit is no tool transaction");
+    assert!(rows[1].op_lines.iter().any(|line| line.starts_with("drag-elements")), "{:?}", rows[1].op_lines);
+    assert!(rows[1].transaction.as_ref().is_some_and(|transaction| transaction.tool == "s.cad.cad@1/*#editor#patchObject"), "{:?}", rows[1].transaction);
+    close(&mut app);
+}
+//#endregion 🪆️ObjectChildLane
 
 //#region 🧩️Contributions
 /// 🧩️ Law (e): a contributed `cad.computer` pack is accepted by `setContributions` — the payload
@@ -2081,7 +2154,7 @@ async fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_
 /// `commit.fromStates` entry, so it commits at once). Without a session the empty line stays the idle no-op.
 #[semio_framework_async_macros::async_test]
 async fn empty_submit_during_a_session_fires_the_state_confirm_and_commits() {
-    let document = empty_cad_snapshot();
+    let models = CadPaneModels(vec![(CadPaneId::Shape, "shape-model-test".into(), crate::standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(&[]))]);
     let mut runtime = CadPlayRuntime::default();
     assert!(start_interaction_session(&mut runtime, CadPaneId::Shape, "primitive.box"));
     {
@@ -2091,15 +2164,15 @@ async fn empty_submit_during_a_session_fires_the_state_confirm_and_commits() {
         assert_eq!(session.state, "first_corner_height");
     }
     runtime.engagement_input = "2".into();
-    assert!(engagement_submit_entries(&document, &mut runtime, CadPaneId::Shape).is_empty(), "the typed height is a scalar entry, not a commit");
+    assert!(engagement_submit_entries(&models, &mut runtime, CadPaneId::Shape).is_empty(), "the typed height is a scalar entry, not a commit");
     assert_eq!(runtime.engagement_session.as_ref().map(|session| session.state.as_str()), Some("first_corner_height"));
     assert!(runtime.engagement_input.is_empty(), "a consumed scalar entry clears the published line");
-    let entries = engagement_submit_entries(&document, &mut runtime, CadPaneId::Shape);
+    let entries = engagement_submit_entries(&models, &mut runtime, CadPaneId::Shape);
     assert_eq!(entries.len(), 1, "accepting the height reaches `ready` and commits exactly one box: {entries:?}");
-    assert!(matches!(entries[0], CadToolEntry::Leaf(CadMutation::CreateObject(_))));
+    assert!(matches!(entries[0], CadToolEntry::Create { pane: CadPaneId::Shape, .. }));
     assert!(runtime.engagement_session.is_none(), "the committed session is closed");
     assert_eq!(runtime.engagement_step, "Committed 1 object(s)");
-    assert!(engagement_submit_entries(&document, &mut runtime, CadPaneId::Shape).is_empty());
+    assert!(engagement_submit_entries(&models, &mut runtime, CadPaneId::Shape).is_empty());
     assert_eq!(runtime.engagement_step, "Idle");
 }
 //#endregion 🔖️EngagementSubmit
@@ -2107,22 +2180,32 @@ async fn empty_submit_during_a_session_fires_the_state_confirm_and_commits() {
 //#region 🔖️EngagementCommit
 /// 🧵️ One engagement is at most one history item (design §17.4): every non-committing step (keystroke, start, pointer move,
 /// pick) is window-transient state only, and the committing step — the empty line, which is the state's `confirm` into the
-/// box's `ready` commit state — is the one document edit with the objects on the artifact lane and no coalesce key.
+/// box's `ready` commit state — is the one stamped edit: an `insert-element` on the shape pane's model child, with no
+/// parent mutation and no config edit (design §20.15).
 #[semio_framework_async_macros::async_test]
 async fn engagement_steps_are_window_state_until_the_one_committing_edit() {
     use semio_framework_pack_json::json;
-    let app = CadPlayApp::default();
-    let scene = empty_cad_snapshot();
+    let mut mounted = new_app().await;
+    let scene = mounted.snapshot().expect("snapshot");
+    let children = mounted.test_child_content_view();
+    let shape_child = crate::cad_pane_model(&scene, CadPaneId::Shape).expect("the demo document composes a shape child").child_id.clone();
     let config = CadConfig::default();
+    let history = empty_history();
+    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: TEST_INSTANCE, parent_document_id: "cad-test-document".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "seed-engagement".into() };
     let mut transient = CadWorldWindowTransient::default();
     let mut step = |action: &str, args: Value, what: &str| {
-        let (emit, next) = drive_engagement(&app, &scene, action, Some(args), &config, &transient).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
-        transient = next;
+        let doc = ArtifactView::with_children(&scene, &history, children.clone()).bound_to_operation(operation.clone());
+        let cfg = ConfigView { snapshot: &config, window: None };
+        let mut ctx = CadDispatchCtx::new(CadInteractionSnapshot::default(), None, transient.clone());
+        let emit = command_from_action(action, Some(&args)).dispatch(&doc, &cfg, &mut ctx).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+        if let Some(next) = ctx.next_window_transient {
+            transient = next;
+        }
         emit
     };
     let window_only = |emit: &Emit<CadMutation, CadConfigMutation>, what: &str| {
         assert!(emit.config_mutations.is_empty() && emit.transaction.is_none(), "{what} is no config edit and opens no transaction");
-        assert!(emit.artifact_mutations.is_empty(), "{what} touches no document");
+        assert!(emit.artifact_mutations.is_empty() && emit.child_preparations.is_empty(), "{what} touches no document");
     };
     for (index, character) in ["B", "Bo", "Box"].iter().enumerate() {
         window_only(&step("engagementInput", json!({ "pane": "shape", "value": character }), "keystroke"), &format!("keystroke {index}"));
@@ -2134,14 +2217,27 @@ async fn engagement_steps_are_window_state_until_the_one_committing_edit() {
     }
     window_only(&step("engagementInput", json!({ "pane": "shape", "value": "2" }), "height"), "the height keystroke");
     window_only(&step("engagementSubmit", json!({ "pane": "shape" }), "apply"), "applying the typed height");
-    let emit = step("engagementSubmit", json!({ "pane": "shape" }), "commit");
-    assert!(emit.transaction.is_some(), "the commit is its own stamped document edit");
-    assert!(emit.config_mutations.is_empty(), "the commit edits no config");
-    assert_eq!(emit.artifact_mutations.len(), 1, "one box lands: {:?}", emit.artifact_mutations);
-    assert!(matches!(emit.artifact_mutations[0], CadMutation::CreateObject(_)));
+    let mut emit = step("engagementSubmit", json!({ "pane": "shape" }), "commit");
+    assert!(emit.transaction.as_ref().is_some_and(|transaction| transaction.tool == "s.cad.cad@1/*#editor#primitive.box"), "the commit is its own stamped edit: {:?}", emit.transaction);
+    assert!(emit.config_mutations.is_empty() && emit.artifact_mutations.is_empty(), "the commit edits neither the config nor the parent document");
+    let mut ready = false;
+    for _ in 0..4096 {
+        match emit.prepare_child_one(1, 65_536).expect("bounded child preparation") {
+            semio_framework_plugin::app::ChildEmitPreparationStep::Ready => {
+                ready = true;
+                break;
+            }
+            semio_framework_plugin::app::ChildEmitPreparationStep::Pending => {}
+            semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault) => panic!("child preparation refused: {}", fault.message),
+        }
+    }
+    assert!(ready, "the commit's child edit prepares within its bound");
+    assert_eq!(emit.child_emits.len(), 1, "one pane child receives the box");
+    assert_eq!((emit.child_emits[0].slot.as_str(), emit.child_emits[0].child_id.as_str(), emit.child_emits[0].ops.len()), ("shapeModel", shape_child.as_str(), 1), "one `insert-element` on the shape pane's child");
     let runtime = cad_runtime_from(&config, &transient);
     assert!(runtime.engagement_session.is_none());
     assert_eq!(runtime.engagement_step, "Committed 1 object(s)");
+    close(&mut mounted);
 }
 //#endregion 🔖️EngagementCommit
 
@@ -2185,10 +2281,9 @@ async fn world_scene_render_cost_probe() {
         let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options).expect("scene");
     }
     let warm = warm.elapsed() / 10;
-    let scene = crate::cad_pane_local_scene(&view.document, CadPaneId::Building).expect("scene");
-    let (objects, geometry) = edit::cad_pane_working_objects(&scene, CadPaneId::Building);
+    let composed = view.panes.pane(CadPaneId::Building);
     let lane = std::time::Instant::now();
-    let meshes = edit::world_meshes_json_cached(CadPaneId::Building, Some(&scene), objects, geometry);
+    let meshes = edit::world_meshes_json_cached(CadPaneId::Building, composed.genesis.as_ref(), &composed.objects, composed.geometry(CadPaneId::Building));
     let lane = lane.elapsed();
     let carrier = std::time::Instant::now();
     let _ = semio_framework_plugin::paged_text_carrier("meshes", &meshes);
@@ -2220,7 +2315,7 @@ async fn current_pane_exports_its_real_solids() {
 fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
     use semio_framework_plugin::app::ArtifactEditor;
     use semio_framework_value::DslValue;
-    let corpus: Value = semio_framework_pack_json::from_json_str(include_str!("../../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let corpus: Value = semio_framework_pack_json::from_json_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(corpus["intrinsicGeometry"]["childPublication"], "unavailable");
     let text = include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧫️fixtures/📦️set-object-applied/⬅️before.obj");
     let scene = default_document();

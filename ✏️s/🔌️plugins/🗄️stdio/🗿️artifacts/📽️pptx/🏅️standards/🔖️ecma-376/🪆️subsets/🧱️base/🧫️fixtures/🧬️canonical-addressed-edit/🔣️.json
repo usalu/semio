@@ -1,5 +1,4 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "schema": "semio.stdio.pptx.canonical-addressed-edit.v1",
   "cases": [
     {
@@ -8,27 +7,80 @@
       "presentationPath": "custom/deck/main.xml",
       "presentationXml": "<?deck keep?><deck:presentation xmlns:deck=\"http://schemas.openxmlformats.org/presentationml/2006/main\" xmlns:rel=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" xmlns:ext=\"urn:semio:fixture\"><ext:before/><deck:sldIdLst ext:keep=\"list\"><deck:sldId id=\"900\" rel:id=\"slideBeta\"/><deck:sldId id=\"700\" rel:id=\"slideAlpha\"/></deck:sldIdLst><ext:after/></deck:presentation><!--presentation-tail-->",
       "relationships": [
-        { "id": "slideAlpha", "type": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide", "target": "../slides/alpha.xml", "resolvedPath": "custom/slides/alpha.xml" },
-        { "id": "slideBeta", "type": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide", "target": "../slides/beta.xml", "resolvedPath": "custom/slides/beta.xml" }
+        {
+          "id": "slideAlpha",
+          "type": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
+          "target": "../slides/alpha.xml",
+          "resolvedPath": "custom/slides/alpha.xml"
+        },
+        {
+          "id": "slideBeta",
+          "type": "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
+          "target": "../slides/beta.xml",
+          "resolvedPath": "custom/slides/beta.xml"
+        }
       ],
       "slides": [
         {
           "path": "custom/slides/beta.xml",
           "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
           "xml": "<deck:sld xmlns:deck=\"http://schemas.openxmlformats.org/presentationml/2006/main\" xmlns:draw=\"http://schemas.openxmlformats.org/drawingml/2006/main\" xmlns:ext=\"urn:semio:fixture\"><deck:cSld><deck:spTree><deck:nvGrpSpPr/><deck:grpSpPr/><deck:sp ext:keep=\"shape\"><deck:nvSpPr><deck:cNvPr id=\"42\" name=\"Rich title\" ext:token=\"shape-id\"/><deck:cNvSpPr/><deck:nvPr/></deck:nvSpPr><deck:spPr><draw:xfrm rot=\"120000\" flipH=\"1\"><draw:off x=\"10\" y=\"20\"/><ext:between/><draw:ext cx=\"30\" cy=\"40\"/></draw:xfrm><ext:geometry/></deck:spPr><deck:txBody><draw:bodyPr/><draw:p ext:paragraph=\"keep\"><draw:pPr lvl=\"2\"/><draw:r><draw:rPr b=\"1\" lang=\"de-DE\"/><draw:t>Rich </draw:t></draw:r><draw:r><draw:rPr i=\"1\" sz=\"1800\"/><draw:t>title</draw:t></draw:r><draw:endParaRPr lang=\"de-DE\"/></draw:p></deck:txBody><ext:tail/></deck:sp><deck:graphicFrame><deck:nvGraphicFramePr><deck:cNvPr id=\"77\" name=\"Chart\"/></deck:nvGraphicFramePr><ext:chartPayload/></deck:graphicFrame></deck:spTree></deck:cSld></deck:sld>",
-          "shapeIds": ["42", "77"]
+          "shapeIds": [
+            "42",
+            "77"
+          ]
         },
         {
           "path": "custom/slides/alpha.xml",
           "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
           "xml": "<deck:sld xmlns:deck=\"http://schemas.openxmlformats.org/presentationml/2006/main\" xmlns:draw=\"http://schemas.openxmlformats.org/drawingml/2006/main\"><deck:cSld><deck:spTree><deck:nvGrpSpPr/><deck:grpSpPr/><deck:sp><deck:nvSpPr><deck:cNvPr id=\"88\" name=\"Second\"/><deck:cNvSpPr/><deck:nvPr/></deck:nvSpPr><deck:spPr/><deck:txBody><draw:bodyPr/><draw:p><draw:r><draw:t>Second slide</draw:t></draw:r></draw:p></deck:txBody></deck:sp></deck:spTree></deck:cSld></deck:sld>",
-          "shapeIds": ["88"]
+          "shapeIds": [
+            "88"
+          ]
         }
       ],
       "edits": {
-        "text": { "slidePath": "custom/slides/beta.xml", "shapeId": "42", "from": "Rich title", "to": "Edited title", "preserve": ["ext:keep=\"shape\"", "lang=\"de-DE\"", "<draw:pPr lvl=\"2\"/>", "<draw:endParaRPr lang=\"de-DE\"/>", "<ext:tail/>"] },
-        "position": { "slidePath": "custom/slides/beta.xml", "shapeId": "42", "from": "Rich title", "to": "Rich title", "fromPosition": { "x": "10", "y": "20", "cx": "30", "cy": "40" }, "toPosition": { "x": "101", "y": "202", "cx": "303", "cy": "404" }, "preserve": ["rot=\"120000\"", "flipH=\"1\"", "<ext:between/>", "<ext:geometry/>"] },
-        "moveSlide": { "relationshipId": "slideAlpha", "destinationIndex": 0 }
+        "text": {
+          "slidePath": "custom/slides/beta.xml",
+          "shapeId": "42",
+          "from": "Rich title",
+          "to": "Edited title",
+          "preserve": [
+            "ext:keep=\"shape\"",
+            "lang=\"de-DE\"",
+            "<draw:pPr lvl=\"2\"/>",
+            "<draw:endParaRPr lang=\"de-DE\"/>",
+            "<ext:tail/>"
+          ]
+        },
+        "position": {
+          "slidePath": "custom/slides/beta.xml",
+          "shapeId": "42",
+          "from": "Rich title",
+          "to": "Rich title",
+          "fromPosition": {
+            "x": "10",
+            "y": "20",
+            "cx": "30",
+            "cy": "40"
+          },
+          "toPosition": {
+            "x": "101",
+            "y": "202",
+            "cx": "303",
+            "cy": "404"
+          },
+          "preserve": [
+            "rot=\"120000\"",
+            "flipH=\"1\"",
+            "<ext:between/>",
+            "<ext:geometry/>"
+          ]
+        },
+        "moveSlide": {
+          "relationshipId": "slideAlpha",
+          "destinationIndex": 0
+        }
       }
     },
     {
@@ -37,27 +89,75 @@
       "presentationPath": "deck/presentation/main.xml",
       "presentationXml": "<pres:presentation xmlns:pres=\"http://purl.oclc.org/ooxml/presentationml/main\" xmlns:odr=\"http://purl.oclc.org/ooxml/officeDocument/relationships\" xmlns:ext=\"urn:semio:fixture\"><pres:sldIdLst><pres:sldId id=\"1001\" odr:id=\"rSecond\"/><ext:marker/><pres:sldId id=\"1002\" odr:id=\"rFirst\"/></pres:sldIdLst></pres:presentation>",
       "relationships": [
-        { "id": "rFirst", "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slide", "target": "../../pages/one.xml", "resolvedPath": "pages/one.xml" },
-        { "id": "rSecond", "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slide", "target": "../../pages/two.xml", "resolvedPath": "pages/two.xml" }
+        {
+          "id": "rFirst",
+          "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slide",
+          "target": "../../pages/one.xml",
+          "resolvedPath": "pages/one.xml"
+        },
+        {
+          "id": "rSecond",
+          "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slide",
+          "target": "../../pages/two.xml",
+          "resolvedPath": "pages/two.xml"
+        }
       ],
       "slides": [
         {
           "path": "pages/two.xml",
           "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
           "xml": "<pres:sld xmlns:pres=\"http://purl.oclc.org/ooxml/presentationml/main\" xmlns:d=\"http://purl.oclc.org/ooxml/drawingml/main\" xmlns:ext=\"urn:semio:fixture\"><pres:cSld><pres:spTree><pres:nvGrpSpPr/><pres:grpSpPr/><pres:sp><pres:nvSpPr><pres:cNvPr id=\"501\" name=\"Strict title\"/><pres:cNvSpPr/><pres:nvPr><pres:ph type=\"title\"/></pres:nvPr></pres:nvSpPr><pres:spPr><d:xfrm ext:lock=\"yes\"><d:off x=\"-5\" y=\"6\"/><d:ext cx=\"700\" cy=\"800\"/><ext:xfrmTail/></d:xfrm></pres:spPr><pres:txBody><d:bodyPr/><d:p><d:r><d:rPr b=\"1\"/><d:t>Strict </d:t></d:r><d:r><d:rPr i=\"1\"/><d:t>title</d:t></d:r></d:p></pres:txBody></pres:sp></pres:spTree></pres:cSld></pres:sld>",
-          "shapeIds": ["501"]
+          "shapeIds": [
+            "501"
+          ]
         },
         {
           "path": "pages/one.xml",
           "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slide+xml",
           "xml": "<pres:sld xmlns:pres=\"http://purl.oclc.org/ooxml/presentationml/main\" xmlns:d=\"http://purl.oclc.org/ooxml/drawingml/main\"><pres:cSld><pres:spTree><pres:nvGrpSpPr/><pres:grpSpPr/><pres:pic><pres:nvPicPr><pres:cNvPr id=\"601\" name=\"Strict picture\"/><pres:cNvPicPr/><pres:nvPr/></pres:nvPicPr><pres:blipFill/><pres:spPr/></pres:pic></pres:spTree></pres:cSld></pres:sld>",
-          "shapeIds": ["601"]
+          "shapeIds": [
+            "601"
+          ]
         }
       ],
       "edits": {
-        "text": { "slidePath": "pages/two.xml", "shapeId": "501", "from": "Strict title", "to": "Strict edited", "preserve": ["<pres:ph type=\"title\"/>", "<d:rPr b=\"1\"/>", "<d:rPr i=\"1\"/>"] },
-        "position": { "slidePath": "pages/two.xml", "shapeId": "501", "from": "Strict title", "to": "Strict title", "fromPosition": { "x": "-5", "y": "6", "cx": "700", "cy": "800" }, "toPosition": { "x": "50", "y": "60", "cx": "7000", "cy": "8000" }, "preserve": ["ext:lock=\"yes\"", "<ext:xfrmTail/>"] },
-        "moveSlide": { "relationshipId": "rFirst", "destinationIndex": 0 }
+        "text": {
+          "slidePath": "pages/two.xml",
+          "shapeId": "501",
+          "from": "Strict title",
+          "to": "Strict edited",
+          "preserve": [
+            "<pres:ph type=\"title\"/>",
+            "<d:rPr b=\"1\"/>",
+            "<d:rPr i=\"1\"/>"
+          ]
+        },
+        "position": {
+          "slidePath": "pages/two.xml",
+          "shapeId": "501",
+          "from": "Strict title",
+          "to": "Strict title",
+          "fromPosition": {
+            "x": "-5",
+            "y": "6",
+            "cx": "700",
+            "cy": "800"
+          },
+          "toPosition": {
+            "x": "50",
+            "y": "60",
+            "cx": "7000",
+            "cy": "8000"
+          },
+          "preserve": [
+            "ext:lock=\"yes\"",
+            "<ext:xfrmTail/>"
+          ]
+        },
+        "moveSlide": {
+          "relationshipId": "rFirst",
+          "destinationIndex": 0
+        }
       }
     }
   ]

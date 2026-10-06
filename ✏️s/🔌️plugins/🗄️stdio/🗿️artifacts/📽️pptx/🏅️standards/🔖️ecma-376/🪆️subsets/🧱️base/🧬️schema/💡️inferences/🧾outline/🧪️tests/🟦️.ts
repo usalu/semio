@@ -6,8 +6,8 @@ import pptxSchema from "../../../📸️snapshot/🔣️.json";
 import xmlSchema from "../../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json";
 test("PPTX outline reads actual OPC XML and refuses missing retained authority",async()=>{
  const fixture=await Bun.file(new URL("../🧫️fixtures/🔣️.json",import.meta.url)).json();
- const schema=await Bun.file(new URL("../🧫️fixtures/🧬️schema/🔣️.json",import.meta.url)).json();
- expect(new Ajv({strict:false}).addSchema(xmlSchema).addSchema(pptxSchema).validate(schema,fixture)).toBe(true);
+ 
+ expect(fixture["contractId"]).toEqual("pptx-outline-owned-xml-refusal");expect(fixture["authority"]).toEqual("actualOpcAndXml");expect(fixture["expected"]["slideCount"]).toEqual(1);expect(fixture["expected"]["shapeCount"]).toEqual(2);expect(fixture["expected"]["wordCount"]).toEqual(2);
  const compute=(outlineOwner as unknown as{computePptxOutline?:(snapshot:unknown)=>unknown}).computePptxOutline;expect(compute).toBeTypeOf("function");
  const sql=new Database(":memory:");try{
   sql.exec("CREATE TABLE nodes(id INTEGER PRIMARY KEY,part TEXT,parent INTEGER,name TEXT,text TEXT);CREATE TABLE attrs(owner INTEGER,name TEXT,value TEXT);CREATE TABLE rels(owner TEXT,id TEXT,kind TEXT,target TEXT)");

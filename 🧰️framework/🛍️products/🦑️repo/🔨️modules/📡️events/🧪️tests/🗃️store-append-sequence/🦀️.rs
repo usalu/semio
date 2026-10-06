@@ -14,7 +14,7 @@ struct StoreVectors {
 }
 
 fn store_vectors(ctx: &Context) -> Result<StoreVectors, String> {
-    let bytes = ctx.fixture_bytes("shared://🗄️store-vectors.json")?;
+    let bytes = ctx.input_bytes("shared://🗄️store-vectors.json")?;
     let parsed: SerdeJson = serde_json::from_slice(&bytes).map_err(|error| error.to_string())?;
     let inputs = serde_json::from_value(parsed.get("inputs").cloned().ok_or("store vectors have no inputs array")?).map_err(|error: serde_json::Error| error.to_string())?;
     let interrupt_phases = parsed

@@ -11,7 +11,19 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Connection Id",
+          "de": "Verbindungs-ID"
+        },
+        "description": {
+          "en": "Identity of the connection; no other connection may carry it.",
+          "de": "Identität der Verbindung; keine andere Verbindung darf sie tragen."
+        }
+      }
     },
     "source": {
       "type": "string",
@@ -52,7 +64,19 @@
     "index": {
       "type": "integer",
       "minimum": 0,
-      "description": "Roster position to insert at; absent appends. Inverses restore exact order with it."
+      "description": "Roster position to insert at; absent appends. Inverses restore exact order with it.",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Position in set",
+          "de": "Position in der Menge"
+        },
+        "description": {
+          "en": "Index the connection is inserted at; absent appends it. Undo of a disconnect names the removed index.",
+          "de": "Index, an dem die Verbindung eingefügt wird; fehlt er, wird angehängt. Das Rückgängigmachen eines Trennens nennt den entfernten Index."
+        }
+      }
     }
   }
 }

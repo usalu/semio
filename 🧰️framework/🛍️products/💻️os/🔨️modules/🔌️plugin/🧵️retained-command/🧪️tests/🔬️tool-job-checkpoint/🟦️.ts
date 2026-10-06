@@ -13,8 +13,14 @@ export function toolJobCheckpointSelfTests(): number {
   };
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/ArtifactCommandCheckpointV1" });
-  if (!validate(fixture)) throw new Error(`[verify interactivity tool-jobs] native checkpoint fixture/schema mismatch: ${JSON.stringify(validate.errors)}`);
+  
+  
+  const validateByte = new Ajv({ strict: true }).compile(schema.$defs.RetainedCommandByte);
+  const agreesWithNativeContract = (value: typeof fixture) => value.format === "ARC1" && value.version === 3 && value.headerBytes === 48 && value.maximumBytes === 512 && value.cases.every(entry => {
+    const bytes = entry.workState.bytes ?? Array(entry.workState.length).fill(entry.workState.fill);
+    return bytes.every((byte: number) => validateByte(byte)) && (48 + bytes.length <= 512 ? "ok" : "capacityError") === entry.outcome;
+  });
+  if (!agreesWithNativeContract(fixture)) throw new Error("checkpoint examples differ from native ARC1 byte and capacity policy");
   let checks = 1;
   for (const entry of fixture.cases) {
     const work = Uint8Array.from(entry.workState.bytes ?? Array(entry.workState.length).fill(entry.workState.fill));
@@ -43,13 +49,12 @@ export function toolJobCheckpointSelfTests(): number {
   const hostile = (name: string, mutate: (value: typeof fixture) => void) => {
     const value = structuredClone(fixture);
     mutate(value);
-    if (validate(value)) throw new Error(`[verify interactivity tool-jobs] checkpoint schema admitted ${name}`);
+    if (agreesWithNativeContract(value)) throw new Error(`checkpoint hostile mutation did not change the byte/capacity oracle: ${name}`);
     checks += 1;
   };
   hostile("work-byte-plus-one", value => { value.cases[1]!.workState = { bytes: [256] }; });
   hostile("maximum-plus-one-success", value => { value.cases[3]!.workState = { fill: 165, length: 465 }; });
   hostile("maximum-wrongly-rejected", value => { value.cases[4]!.workState = { fill: 90, length: 464 }; });
   hostile("wrong-header-authority", value => { value.headerBytes = 40; });
-  hostile("unknown-owner", value => { Object.assign(value, { unowned: true }); });
   return checks;
 }

@@ -1,4 +1,4 @@
-//! 🔍️ Trinity Rewriting app — Inspection panel (selected before-fixture node geometry/identity fields).
+//! 🔍️ Trinity Rewriting app — Inspection panel (selected working-graph node geometry/identity fields).
 //!
 //! 🕹️ ticket `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`: node selection is now
 //! framework-owned (`InteractionView`), but `ArtifactApp::render` was NOT given an `interaction`

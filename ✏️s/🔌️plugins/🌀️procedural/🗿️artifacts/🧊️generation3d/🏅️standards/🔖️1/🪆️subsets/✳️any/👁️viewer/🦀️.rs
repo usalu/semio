@@ -116,7 +116,7 @@ impl<'a> Generation3dViewedDocument<'a> {
         if example_id.is_empty() {
             return Self::Empty(crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot());
         }
-        match crate::standards::v1::subsets::any::schema::example_snapshot(example_id) {
+        match crate::standards::v1::subsets::any::io::text::snapshot::example_snapshot(example_id) {
             Some(example) => Self::Example(example),
             None => Self::Opened(snapshot),
         }
@@ -1221,7 +1221,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_document_store_owners())
+        Some(crate::host::generation3d_document_store_owners())
     }
 
     /// 🗃️ The viewer holds a real document store (read-only, but owned), so it owes the same bounded
@@ -1502,7 +1502,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     }
 
     fn initial_snapshot() -> Generation3dSnapshot {
-        crate::standards::v1::subsets::any::schema::default_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: `dispatch` returns `ViewEmit`, so this signature cannot widen into

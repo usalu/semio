@@ -20,8 +20,8 @@ import (
 	"time"
 )
 
-// Fixture is one immutable fixture the coordinator resolved for this case.
-type Fixture struct {
+// 📥️ TestInput is one example, asset, or schema input resolved for this case.
+type TestInput struct {
 	URI    string `json:"uri"`
 	Scope  string `json:"scope"`
 	Name   string `json:"name"`
@@ -75,7 +75,7 @@ type Plan struct {
 	OutputDir             string        `json:"outputDir"`
 	ArtifactDir           string        `json:"artifactDir"`
 	ResultsPath           string        `json:"resultsPath"`
-	Fixtures              []Fixture     `json:"fixtures"`
+	Inputs                []TestInput     `json:"inputs"`
 	Scenarios             []Scenario    `json:"scenarios"`
 }
 
@@ -190,8 +190,8 @@ func (c *Context) Target() (*SubsetTarget, error) {
 }
 
 // Fixture resolves a declared fixture URI to an absolute path; an undeclared URI is an error.
-func (c *Context) Fixture(uri string) (string, error) {
-	for _, fixture := range c.Plan.Fixtures {
+func (c *Context) Input(uri string) (string, error) {
+	for _, fixture := range c.Plan.Inputs {
 		if fixture.URI == uri {
 			return filepath.Join(c.RepoRoot, fixture.Path), nil
 		}
@@ -199,23 +199,23 @@ func (c *Context) Fixture(uri string) (string, error) {
 	return "", fmt.Errorf("fixture %s is not part of this plan — declare it in the feature file", uri)
 }
 
-// FixtureBytes reads a declared fixture.
-func (c *Context) FixtureBytes(uri string) ([]byte, error) {
-	path, err := c.Fixture(uri)
+// InputBytes reads a declared fixture.
+func (c *Context) InputBytes(uri string) ([]byte, error) {
+	path, err := c.Input(uri)
 	if err != nil {
 		return nil, err
 	}
 	return os.ReadFile(path)
 }
 
-// CopyFixture copies an immutable fixture into the work directory and returns the mutable copy.
-func (c *Context) CopyFixture(uri string, as string) (string, error) {
-	bytes, err := c.FixtureBytes(uri)
+// CopyInput copies an immutable fixture into the work directory and returns the mutable copy.
+func (c *Context) CopyInput(uri string, as string) (string, error) {
+	bytes, err := c.InputBytes(uri)
 	if err != nil {
 		return "", err
 	}
 	if as == "" {
-		source, _ := c.Fixture(uri)
+		source, _ := c.Input(uri)
 		as = filepath.Base(source)
 	}
 	if err := os.MkdirAll(c.WorkDir, 0o755); err != nil {

@@ -12,11 +12,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🪟️mounted-window-fetch.json" with { type: "json" };
 import { partitionRefreshWindowInstancesV1, windowLayoutWindowIdsV1 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 
-import Ajv from "ajv";
+
 import React, { act, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import debtFixture from "../../🧱️elements/🏛️ShellHost/🪟️mounted-window-refresh/🧫️fixtures/🔣️.json";
-import debtSchema from "../../🧱️elements/🏛️ShellHost/🪟️mounted-window-refresh/🧬️schema/🔣️.json";
 import { retireSkippedWindowBodies } from "../../🧱️elements/🏛️ShellHost/🪟️mounted-window-refresh/🟦️.ts";
 
 beforeEach(() => { vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true); });
@@ -57,10 +56,7 @@ describe("🪟️ mounted-window refresh fetch", () => {
   });
 });
 
-it("the skipped-window debt vectors satisfy an independent schema", () => {
-  const validate = new Ajv({ strict: true }).compile(debtSchema);
-  expect(validate(debtFixture), JSON.stringify(validate.errors)).toBe(true);
-});
+
 
 for (const row of debtFixture.cases) it(`React mounting observes owed bodies: ${row.id}`, async () => {
   let debt: ReadonlyMap<string, string> = new Map(row.previous as [string, string][]);

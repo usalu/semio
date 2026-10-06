@@ -2,7 +2,8 @@
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::standards::v1::subsets::any::schema::with_host;
-use crate::standards::v1::subsets::any::schema::mutations::text::{generation2d_host_snapshot_operations, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{generation2d_host_snapshot_operations};
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

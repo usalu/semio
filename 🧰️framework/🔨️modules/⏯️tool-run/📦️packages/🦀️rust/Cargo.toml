@@ -21,9 +21,7 @@ path = "🦀️.rs"
 semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
-# 🎒️ `encode_record_body`/`decode_record_body_exact` and the `ToValue`/`FromValue` derives; the derive
-# output is rooted at `::semio_framework_os_kernel::`, so the dependency keeps its real name.
-semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
 # 🗣️ `LocalizedLabel`/`Locale` live in the declarative-only `wgpu` feature (no `wgpu` crate).
 ui = { path = "../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 serde = { workspace = true }

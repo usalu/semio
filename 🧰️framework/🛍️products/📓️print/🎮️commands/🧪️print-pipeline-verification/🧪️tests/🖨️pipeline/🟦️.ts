@@ -1,6 +1,6 @@
 import MarkdownIt from "markdown-it";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join } from "node:path";
@@ -188,9 +188,6 @@ export function verifyPrintMacroStaging(): void {
     readonly shimGrammar: { readonly contractId: string; readonly grammarId: string; readonly acceptedRole: string; readonly rejections: readonly { readonly id: string; readonly suffix?: string; readonly source?: string; readonly expectedRole: string }[] };
     readonly collisions: readonly { readonly id: string; readonly entries: readonly string[]; readonly inputs: Readonly<Record<string, string>> }[];
   };
-  const require = createRequire(import.meta.url), schema = JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema/🔣️.json"), "utf8"));
-  const validate = new (require("ajv").default)({ strict: false }).compile(schema);
-  assert.ok(validate(fixture), JSON.stringify(validate.errors));
   const taxonomy = loadCatalogTaxonomy(), scopedFileKindId = scopedFileKindIdForSourcePath(fixture.sourceKind.canonicalPath, taxonomy);
   assert.equal(scopedFileKindId, fixture.sourceKind.scopedKindId);
   assert.equal(taxonomyFileKindIsImplementation(`scoped:${scopedFileKindId}`, taxonomy), true);

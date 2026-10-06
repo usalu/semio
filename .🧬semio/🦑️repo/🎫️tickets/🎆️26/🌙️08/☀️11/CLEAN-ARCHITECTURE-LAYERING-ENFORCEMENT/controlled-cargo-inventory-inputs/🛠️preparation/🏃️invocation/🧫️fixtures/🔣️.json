@@ -1,0 +1,82 @@
+[
+  {
+    "command": "build",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "check",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "test",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "metadata",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "fetch",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "update",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "tree",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "clippy",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "rustc",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "nextest",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "llvm-cov",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "generate-lockfile",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "run",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "bench",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "doc",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "rustdoc",
+    "requiresOwnerPreparation": true
+  },
+  {
+    "command": "fmt",
+    "requiresOwnerPreparation": false
+  },
+  {
+    "command": "clean",
+    "requiresOwnerPreparation": false
+  },
+  {
+    "command": "version",
+    "requiresOwnerPreparation": false
+  },
+  {
+    "command": "help",
+    "requiresOwnerPreparation": false
+  }
+]

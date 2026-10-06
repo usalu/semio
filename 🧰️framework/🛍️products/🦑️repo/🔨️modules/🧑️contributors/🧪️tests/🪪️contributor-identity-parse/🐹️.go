@@ -33,7 +33,7 @@ type checkpointLogFile struct {
 // region 🔖️Scenarios
 
 func authorLinesResolveToAliases(ctx *host.Context) (host.Outcome, error) {
-	documentsData, err := ctx.FixtureBytes("shared://🧑️‍💻️contributor-documents.json")
+	documentsData, err := ctx.InputBytes("shared://🧑️‍💻️contributor-documents.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}
@@ -41,7 +41,7 @@ func authorLinesResolveToAliases(ctx *host.Context) (host.Outcome, error) {
 	if err := json.Unmarshal(documentsData, &documentFile); err != nil {
 		return host.Outcome{}, err
 	}
-	logData, err := ctx.FixtureBytes("shared://🏁️checkpoint-log.json")
+	logData, err := ctx.InputBytes("shared://🏁️checkpoint-log.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

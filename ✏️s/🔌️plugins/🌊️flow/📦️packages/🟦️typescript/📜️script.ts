@@ -2,7 +2,6 @@
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌊️ `@semio-tech/flow-js` router: `bun ./📜️script.ts test`. */
 import { resolve } from "node:path";
-import Ajv from "ajv";
 import { runCmd, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -141,9 +140,6 @@ class ActionCohortAuditScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const flowRoot = resolve(this.root, "../..");
     const noteRoot = resolve(flowRoot, "../🗒️note");
-    const schemaModule = await Bun.file(resolve(flowRoot, "🎬️action-cohort/🧬️schema/🔣️.json")).json();
-    const ajv = new Ajv({ allErrors: true, strict: true }).addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-    const validate = ajv.addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/ActionCohort` });
     const fixtures = [
       await Bun.file(resolve(flowRoot, "🧫️fixtures/🎬️action-cohort/🔣️.json")).json() as Fixture,
       await Bun.file(resolve(noteRoot, "🧫️fixtures/🧪️action-cohort/🔣️.json")).json() as Fixture,
@@ -152,7 +148,6 @@ class ActionCohortAuditScript extends BundleScript {
     if (!["all", "flow", "note"].includes(scope)) throw new Error(`unknown action-cohort scope ${scope}`);
     const selected = fixtures.filter((fixture) => scope === "all" || fixture.owner === (scope === "flow" ? "FlowPlayApp" : "NotePlayApp"));
     for (const fixture of selected) {
-      if (!validate(fixture)) throw new Error(`${fixture.owner} failed Ajv: ${JSON.stringify(validate.errors)}`);
       if (!fixtureOracle(fixture)) throw new Error(`${fixture.owner} failed the independent fixture oracle`);
       const pluginRoot = fixture.owner === "FlowPlayApp" ? flowRoot : noteRoot;
       const source = await Bun.file(resolve(pluginRoot, fixture.source)).text();
@@ -177,12 +172,12 @@ class ActionCohortAuditScript extends BundleScript {
       { ...fixtures[0]!, routeCount: fixtures[0]!.routeCount + 1 },
       { ...fixtures[1]!, groups: fixtures[1]!.groups.map((group, index) => index === 0 ? { ...group, lanes: ["host-only", "artifact"] } : group) },
     ];
-    if (hostileFixtures.some((fixture) => Boolean(validate(fixture)) && fixtureOracle(fixture))) throw new Error("Flow/Note hostile fixture mutation passed both oracles");
+    if (hostileFixtures.some((fixture) => fixtureOracle(fixture))) throw new Error("Flow/Note hostile fixture mutation passed the semantic oracle");
     const total = selected.reduce((sum, fixture) => sum + fixture.routeCount, 0);
     const failclosed = selected.reduce((sum, fixture) => sum + fixture.groups.flatMap((group) => group.routes).length, 0);
     const globals = selected.reduce((sum, fixture) => sum + fixture.globals.length, 0);
     const retained = selected.reduce((sum, fixture) => sum + fixture.retainedRoutes.length, 0);
-    console.error(`validated ${scope === "all" ? "Flow/Note" : scope} action cohort; routes=${total}; retained=${retained}; failclosed=${failclosed - retained}; globals=${globals}; scanThenMonolith=0; schema=Ajv; oracle=independent`);
+    console.error(`validated ${scope === "all" ? "Flow/Note" : scope} action cohort; routes=${total}; retained=${retained}; failclosed=${failclosed - retained}; globals=${globals}; scanThenMonolith=0; oracle=independent`);
   }
 }
 

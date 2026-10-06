@@ -1,0 +1,10 @@
+import {readFileSync} from "node:fs";
+import {join} from "node:path";
+const [command,id]=process.argv.slice(2);
+if(command!=="machine")throw Error("Unknown receiver law command");
+const corpus=JSON.parse(readFileSync(join(import.meta.dir,"🔣️.json"),"utf8"));
+const row=corpus.cases.find((row:{id:string})=>row.id===id);
+if(!row)throw Error("Unknown closed receiver case");
+process.stdout.write(row.source);
+process.stderr.write("receiver-law-owner\n");
+if(id==="process-refusal")process.exitCode=7;

@@ -40,7 +40,7 @@ fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
 
 #[test]
 fn default_document_boot_child_projection_and_genesis_packs_are_valid() {
-    use crate::schema::default_document;
+    use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
     let snapshot = default_document();
     let projection = store::ChildRestoreProjection::from_snapshot(&snapshot).expect("reuse-map default document child refs");
     assert_eq!(projection.len(), 2, "drawing and value; image is absent on the default map");

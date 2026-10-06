@@ -26,6 +26,7 @@ const NOTE_PLAY_SURFACE_NAVIGATOR: &str = "note.play.navigator";
 /// [`window_measures`], not frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: NOTE_PLAY_WINDOW_NAVIGATOR.into(),
         label: LocalizedLabel::native("Navigator", "Navigator"),
         body_key: NOTE_PLAY_BODY_NAVIGATOR.into(),

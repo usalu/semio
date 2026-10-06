@@ -1,0 +1,5 @@
+# Semio Text Complete Independent Semantic Demands
+
+Four schema-first contract, closed draft2020 schema, Source and Native demand paths retain every original fixture and owning law. Actual native and Source factories were independently proved matched: full8/257 and runs-only-empty1/26, retaining original schema and all empty lexical/mark roles. Static canonical578, all3tables/max5. Every new Native law uses the same public controller and all five independently measured exact/one-short grants, plus actual registered typed public IO with Binary/Text metadata. Independent BunSQLite interprets every exported SQL cell and identity.
+
+The complete pass is newly demanded before actual custom native typed construction; shared physical min(remaining,max_value_bytes), native file forecasts and writer file/value conflation remain unmodified for genuine Before. No synthetic subset package, deadline extension, allocation grant increase or broad other-owner edit. New tests are already covered by existing Source/native owner selectors and launch commands. Held provider work is separate and requires original owning Before evidence.

@@ -11,10 +11,10 @@ async fn render_projects_canonical_bmp_pixels_to_browser_png() {
     let document = crate::standards::v_v3::subsets::any::schema::demo_bmp_snapshot();
     let view = image_view(&document).expect("preview");
     assert_eq!((view.width, view.height, view.mime.as_str()), (4, 2, "image/png"));
-    let preview = crate::io::bmp_png_preview(&document).expect("PNG");
+    let preview = crate::standards::v_v3::subsets::any::io::bmp_png_preview(&document).expect("PNG");
     assert_eq!(view.base64, semio_s_artifact_stdio_contract::base64_standard(&preview.bytes));
     let decoded = semio_framework_pixels::decode_png(&preview.bytes).expect("PNG");
-    assert_eq!(decoded.pixels, crate::io::bmp_rgba8_preview(&document).expect("RGBA"));
+    assert_eq!(decoded.pixels, crate::standards::v_v3::subsets::any::io::bmp_rgba8_preview(&document).expect("RGBA"));
     render(&document, Locale::En).expect("image window");
 }
 

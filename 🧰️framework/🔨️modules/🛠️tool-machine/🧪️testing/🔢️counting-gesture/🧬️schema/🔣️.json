@@ -1,0 +1,204 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/testing/tool-machine/counting-gesture.json",
+  "title": "Counting Gesture Test Models",
+  "$defs": {
+    "CountingGestureTicks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer"
+      }
+    },
+    "CountingGestureState": {
+      "description": "The law's counting tool's persisted open gesture: its verb, the base revision it started on and its ticks so far; `corrupt` marks one its `resume` refuses.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verb",
+        "base",
+        "ticks"
+      ],
+      "properties": {
+        "verb": {
+          "type": "string",
+          "minLength": 1
+        },
+        "base": {
+          "description": "The document revision; empty = pinned to no revision (a tool whose leaves fold on any base).",
+          "type": "string"
+        },
+        "ticks": {
+          "$ref": "#/$defs/CountingGestureTicks"
+        },
+        "corrupt": {
+          "const": true
+        },
+        "press": {
+          "description": "The host press that opened the gesture; absent = opened by a dispatch that named none.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "CountingGestureDispatch": {
+      "description": "One dispatch of a streamed gesture verb: the verb, its wire `phase`/`reason` arguments, the tick (`null` = none) and the document's current base revision.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verb",
+        "tick",
+        "base"
+      ],
+      "properties": {
+        "verb": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-machine/schema.json#/$defs/GesturePhaseWord"
+        },
+        "reason": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-machine/schema.json#/$defs/ToolAbortReason"
+        },
+        "tick": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "base": {
+          "description": "The document revision; empty = pinned to no revision (a tool whose leaves fold on any base).",
+          "type": "string"
+        }
+      }
+    },
+    "CountingGestureOutcome": {
+      "description": "What one dispatch did: the reason the drive aborted the window's open gesture with, the ticks it committed as ONE transaction, the window's next persisted gesture (`unchanged`, `cleared` or the gesture) and the refusal that faulted the dispatch. A refused dispatch publishes nothing, aborts nothing and leaves the persisted gesture unchanged.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aborted",
+        "committed",
+        "next",
+        "refused"
+      ],
+      "properties": {
+        "aborted": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-machine/schema.json#/$defs/ToolAbortReason"
+            }
+          ]
+        },
+        "committed": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/CountingGestureTicks"
+            }
+          ]
+        },
+        "next": {
+          "oneOf": [
+            {
+              "enum": [
+                "unchanged",
+                "cleared"
+              ]
+            },
+            {
+              "$ref": "#/$defs/CountingGestureState"
+            }
+          ]
+        },
+        "refused": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-machine/schema.json#/$defs/ToolRefusal"
+            }
+          ]
+        }
+      }
+    },
+    "CountingGestureSlotObservation": {
+      "description": "What one ledger step reports: the ticks a dispatch committed as ONE transaction, the refusal that faulted it, the gestures host facts ended (window order) every window's persisted gesture after the step and the press each window last closed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "committed",
+        "refused",
+        "aborted",
+        "open",
+        "closed"
+      ],
+      "properties": {
+        "committed": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/CountingGestureTicks"
+            }
+          ]
+        },
+        "refused": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-machine/schema.json#/$defs/ToolRefusal"
+            }
+          ]
+        },
+        "aborted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "window",
+              "reason"
+            ],
+            "properties": {
+              "window": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/tool-machine/schema.json#/$defs/ToolAbortReason"
+              }
+            }
+          }
+        },
+        "open": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CountingGestureState"
+          }
+        },
+        "closed": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

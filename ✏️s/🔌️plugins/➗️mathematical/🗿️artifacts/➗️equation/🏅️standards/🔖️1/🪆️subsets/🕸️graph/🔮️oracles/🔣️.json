@@ -389,13 +389,13 @@
     {
       "id": "equation-csv-exact",
       "description": "📏️ Near-exact, because a flat node grid has no tessellation freedom at all — x/y ARE the coordinates, not a re-sampleable curve. The only legitimate freedom is DECIMAL FORMATTING (5 against 5.0), which the comparison already normalizes by parsing to f64. The floor admits IEEE-754 round-tripping of a decimal literal and nothing else.",
-      "absoluteLength": 1e-09,
+      "absoluteLength": 1e-9,
       "relativeLength": 1e-12,
-      "absoluteArea": 1e-09,
+      "absoluteArea": 1e-9,
       "relativeArea": 1e-11,
-      "absoluteVolume": 1e-09,
+      "absoluteVolume": 1e-9,
       "relativeVolume": 1e-11,
-      "normalizedHausdorffMax": 1e-09,
+      "normalizedHausdorffMax": 1e-9,
       "normalizedCentroidDistanceMax": 1e-10,
       "maxOverrideFactor": 1
     }
@@ -773,9 +773,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-node-adds-a-row",
       "class": "third-party-generated",
       "target": {
@@ -828,7 +827,6 @@
       "notes": "A new row appended for the created node. The csv reader independently recovers the same row count and the same id/label/x/y for the new row."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-node-removes-a-row",
       "class": "third-party-generated",
       "target": {
@@ -881,7 +879,6 @@
       "notes": "The deleted node's row is gone; the surviving rows are byte-for-byte unchanged, which is exactly what an id-keyed removal from a flat grid should look like to an independent reader."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-nodes-removes-two-rows",
       "class": "third-party-generated",
       "target": {
@@ -934,7 +931,6 @@
       "notes": "A bulk delete removes two of four rows; the reader recovers the surviving two, in original order, untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-node-label-rewrites-the-quoted-cell",
       "class": "third-party-generated",
       "target": {
@@ -987,7 +983,6 @@
       "notes": "The label cell is rewritten to a value containing an embedded double-quote, exercising RFC 4180 rule 6's quote-doubling — the reader must recover the same label text through the escape."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-node-rewrites-the-coordinate-cells",
       "class": "third-party-generated",
       "target": {

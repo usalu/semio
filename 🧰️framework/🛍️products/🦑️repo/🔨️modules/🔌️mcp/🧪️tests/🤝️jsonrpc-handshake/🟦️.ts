@@ -11,7 +11,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { ListPromptsRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Oracle
@@ -40,7 +40,7 @@ export async function referenceServer(): Promise<ReferenceChannel> {
 
 /** 🤝️ Performs the fixture's handshake against the reference server and returns the raw envelope. */
 async function handshake(ctx: AdapterContext): Promise<{ envelope: Record<string, unknown>; requested: string }> {
-  const fixture = JSON.parse(readFileSync(ctx.fixture("shared://🤝️initialize-lenient.json"), "utf8")) as Record<string, unknown>;
+  const fixture = JSON.parse(readFileSync(ctx.input("shared://🤝️initialize-lenient.json"), "utf8")) as Record<string, unknown>;
   const channel = await referenceServer();
   const envelope = await channel.send({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: fixture.requestedProtocolVersion, capabilities: fixture.capabilities, clientInfo: fixture.clientInfo } });
   return { envelope, requested: String(fixture.requestedProtocolVersion) };
@@ -48,7 +48,7 @@ async function handshake(ctx: AdapterContext): Promise<{ envelope: Record<string
 
 /** 🔁️ Delivers the initialized notification before the initialize reply, then pings the reference server. */
 async function pipelinedHandshake(ctx: AdapterContext): Promise<{ initializeAccepted: boolean; pingAnswered: boolean }> {
-  const fixture = JSON.parse(readFileSync(ctx.fixture("shared://🤝️initialize-lenient.json"), "utf8")) as Record<string, unknown>;
+  const fixture = JSON.parse(readFileSync(ctx.input("shared://🤝️initialize-lenient.json"), "utf8")) as Record<string, unknown>;
   const channel = await referenceServer();
   await channel.notify({ jsonrpc: "2.0", method: "notifications/initialized" });
   const initialized = await channel.send({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: fixture.requestedProtocolVersion, capabilities: fixture.capabilities, clientInfo: fixture.clientInfo } });
@@ -68,7 +68,7 @@ function referenceServerInstance(): Server {
 /** 🚰️ Feeds the reference server one burst over a standard-input stream that ENDS immediately, then
  * collects every line it wrote — the `printf … | server` shape a short-lived client produces. */
 async function burstThenEOF(ctx: AdapterContext): Promise<Record<string, unknown>[]> {
-  const fixture = JSON.parse(readFileSync(ctx.fixture("shared://🤝️initialize-lenient.json"), "utf8")) as Record<string, unknown>;
+  const fixture = JSON.parse(readFileSync(ctx.input("shared://🤝️initialize-lenient.json"), "utf8")) as Record<string, unknown>;
   const burst = [
     JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: fixture.requestedProtocolVersion, capabilities: fixture.capabilities, clientInfo: fixture.clientInfo } }),
     JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized", params: {} }),

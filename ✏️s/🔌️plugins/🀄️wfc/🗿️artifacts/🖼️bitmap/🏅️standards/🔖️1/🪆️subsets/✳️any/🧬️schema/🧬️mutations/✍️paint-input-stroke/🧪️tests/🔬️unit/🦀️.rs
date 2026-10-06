@@ -3,7 +3,7 @@
 
 use super::*;
 use crate::mutations::{apply_bitmap_mutation, BitmapMutation};
-use crate::schema::snapshot::{decode_base64, BitmapSnapshot};
+use crate::schema::snapshot::{BitmapSnapshot};
 
 fn point(x: u32, y: u32) -> BitmapStrokePoint {
     BitmapStrokePoint { x, y }
@@ -15,7 +15,7 @@ fn base() -> BitmapSnapshot {
 
 fn codes(mutation: &BitmapMutation, snapshot: &BitmapSnapshot) -> Vec<(String, String)> {
     let outcome = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(mutation, snapshot);
-    outcome.messages().iter().map(|message| (semio_framework_pack_json::to_json_string(&message.level).trim_matches('"').to_string(), message.code.0.clone())).collect()
+    outcome.messages().iter().map(|message| (crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&message.level).trim_matches('"').to_string(), message.code.0.clone())).collect()
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn a_stroke_that_leaves_the_sample_paints_the_rest_and_warns_partial() {
     let outcome = <BitmapMutation as protocol::Mutation<BitmapSnapshot>>::diff(&mutation, &base());
     let region = &outcome.diff().input_regions[0];
     assert_eq!((region.x, region.y, region.width, region.height), (2, 0, 2, 1), "the region covers the inside cells only");
-    assert_eq!(decode_base64(&region.pixels).expect("region decodes"), vec![0, 0]);
+    assert_eq!(region.pixels.clone(), vec![0, 0]);
 }
 
 #[test]

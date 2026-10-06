@@ -23,6 +23,9 @@ fn facade_exports_match_registered_macros() {
     let facade = syn::parse_file(include_str!("../../../🦀️.rs")).unwrap();
     let exports: BTreeSet<_> = facade.items.iter().filter_map(|item| match item { syn::Item::Use(item) => Some(&item.tree), _ => None }).filter_map(|tree| match tree { syn::UseTree::Path(path) if path.ident == "dsl_derive" => Some(path.tree.as_ref()), _ => None }).flat_map(|tree| match tree { syn::UseTree::Group(group) => group.items.iter().collect::<Vec<_>>(), _ => panic!("facade derive exports must be explicit") }).map(|tree| match tree { syn::UseTree::Name(name) => name.ident.to_string(), _ => panic!("facade derive exports must be named") }).collect();
     assert_eq!(exports, expected("facadeExports"));
-    assert!(exports.is_subset(&compiled));
+    let root = syn::parse_file(include_str!("../../📦️packages/🦀️rust/🦀️.rs")).unwrap();
+    let macros: BTreeSet<_> = root.items.iter().filter_map(|item| match item { syn::Item::Fn(item) if item.attrs.iter().any(|attr| attr.path().is_ident("proc_macro")) => Some(item.sig.ident.to_string()), _ => None }).collect();
+    assert_eq!(macros, expected("registeredMacros"));
+    assert!(exports.is_subset(&compiled.union(&macros).cloned().collect()));
     assert!(expected("traitOnly").is_disjoint(&compiled));
 }

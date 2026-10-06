@@ -5,7 +5,7 @@ use crate::editor::remodeling::commands::import_video_frame_payload::import_tran
 use crate::editor::remodeling::transient::RemodelingWindowTransient;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::replace_stream_source;
-use crate::op::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use crate::schema::video_codec_from_label;
 use crate::{RemodelingSnapshot, VideoSource};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

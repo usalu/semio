@@ -1,0 +1,12 @@
+{
+  "projects": [
+    "@semio-tech/norm-en1995-rs",
+    "@semio-tech/norm-din4108-rs",
+    "@semio-tech/norm-en1991-rs",
+    "@semio-tech/norm-en1990-rs",
+    "@semio-tech/norm-en1996-rs"
+  ],
+  "command": "SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/norm-five-relocated-source-after-artifacts' bun run nx run-many --target=test-snapshot-sqlite-source --projects='@semio-tech/norm-en1995-rs,@semio-tech/norm-din4108-rs,@semio-tech/norm-en1991-rs,@semio-tech/norm-en1990-rs,@semio-tech/norm-en1996-rs' --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-norm-five-relocated-source-after.log' 2>&1",
+  "scope": "Five failed/unentered current Source owners only; unchanged original quick route and grants",
+  "at": "2026-10-06T01:37:39.312Z"
+}

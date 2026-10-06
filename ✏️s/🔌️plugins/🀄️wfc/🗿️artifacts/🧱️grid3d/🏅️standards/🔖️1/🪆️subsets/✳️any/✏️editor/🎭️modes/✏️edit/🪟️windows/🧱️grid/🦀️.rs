@@ -92,6 +92,7 @@ pub fn interaction() -> semio_framework_plugin::InteractionDefinition {
 /// app-scope actions, never a window kind's own, and silently drops what it cannot find.
 pub fn definition() -> WindowKindDefinition {
     let mut definition = WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Grid", "Raster"),
         body_key: BODY_KEY.into(),

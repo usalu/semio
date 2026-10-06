@@ -1,7 +1,7 @@
 import { scopeContributionsJson, type PluginManifest } from "@semio-tech/framework";
 /** 🩺 Window-fault classification conformance against the SAME language-neutral vector fixture the
  * Rust plugin runtime decodes (`🔌️plugin/🩺️runtime-fault-vectors.json`), with strict Ajv as the
- * independent oracle for the fixture's own shape. */
+ * independent oracle for actual BrowserFault wire values. */
 
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
@@ -9,7 +9,7 @@ import { classifyWindowFault, liveInstanceWindowFaultV1, WINDOW_FAULT_ATTRIBUTE,
 import retiredInstanceFaults from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🪦️retired-instance-fault/🔣️.json";
 import { isPluginInstanceRetiredV1, markPluginInstanceRetiredV1 } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { createContributionsPublisher } from "../../🧱️elements/🛠️ShellHelpers/🧩️contributions/🟦️.ts";
-import pluginLifetimeSchema from "../../../../🔌️plugin/🚪️lifetime/🧬️schema/🔣️.json";
+import browserSchema from "../../../../🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json";
 import faultVectors from "../../../../🔌️plugin/🩺️runtime-fault-vectors.json";
 import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
 import uiBundleSource from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts?raw";
@@ -28,17 +28,14 @@ const message = (scope: string, vector: FaultVector, instance: number, elapsed: 
 
 describe("window fault discriminators", () => {
   it("accepts the shared fixture under a strict independent schema oracle and rejects adversarial shapes", () => {
-    const ajv = new Ajv({ strict: true, allErrors: true });
-    const validate = ajv.addSchema(pluginLifetimeSchema).compile({ $ref: `${pluginLifetimeSchema.$id}#/$defs/RuntimeFaultVectorsV1` });
-    expect(validate(faultVectors), JSON.stringify(validate.errors)).toBe(true);
-    const hostile = [
-      { ...faultVectors, extra: true },
-      { ...faultVectors, ceilingUs: 16000 },
-      { ...faultVectors, vectors: faultVectors.vectors.slice(1) },
-      { ...faultVectors, vectors: faultVectors.vectors.map((vector) => ({ ...vector, code: vector.code.replace("plugin.internal.", "plugin.") })) },
-      { ...faultVectors, vectors: faultVectors.vectors.map((vector) => ({ ...vector, class: "install-failed" })) },
-    ];
-    for (const candidate of hostile) expect(validate(candidate), JSON.stringify(candidate).slice(0, 80)).toBe(false);
+    const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(browserSchema);
+    const validate = ajv.getSchema(`${browserSchema.$id}#/$defs/BrowserFault`)!;
+    for (const vector of faultVectors.vectors as readonly FaultVector[]) {
+      const wire = { origin: "plugin", code: vector.code, severity: "error", message: message("live", vector, 7, "12345us"), scope: { instance: 7 }, retryable: false };
+      expect(validate(wire), JSON.stringify(validate.errors)).toBe(true);
+      expect(windowFaultFromError(wire).class).toBe(vector.class);
+      for (const malformed of [{ ...wire, retryable: "false" }, { ...wire, code: "INVALID.CODE" }, { ...wire, extra: true }]) expect(validate(malformed)).toBe(false);
+    }
   });
 
   it("classifies every declared runtime fault code exactly as the fixture says, for both cleanup scopes", () => {
@@ -113,23 +110,17 @@ describe("retired instance faults", () => {
     row.failure.kind === "marked" ? markPluginInstanceRetiredV1(new Error(row.failure.message)) : row.failure.kind === "error" ? new Error(row.failure.message) : { origin: row.failure.origin, code: row.failure.code, severity: "error", message: row.failure.message };
 
   it("accepts the neutral corpus under a strict independent schema oracle and rejects adversarial shapes", () => {
-    const failureSchema = {
-      oneOf: [
-        { type: "object", additionalProperties: false, required: ["kind", "message"], properties: { kind: { enum: ["marked", "error"] }, message: { type: "string", minLength: 1 } } },
-        { type: "object", additionalProperties: false, required: ["kind", "origin", "code", "message"], properties: { kind: { const: "wire" }, origin: { type: "string" }, code: { type: "string" }, message: { type: "string" } } },
-      ],
-    };
-    const validate = new Ajv({ strict: true, allErrors: true }).compile({
-      type: "object",
-      additionalProperties: false,
-      required: ["description", "rows"],
-      properties: {
-        description: { type: "string" },
-        rows: { type: "array", minItems: 1, items: { type: "object", additionalProperties: false, required: ["name", "failure", "fault"], properties: { name: { type: "string" }, failure: failureSchema, fault: { anyOf: [{ type: "null" }, { enum: ["abi-mismatch", "interactive-ceiling", "clock", "plugin-internal", "install-failed", "unknown"] }] } } } },
-      },
-    });
-    expect(validate(retiredInstanceFaults), JSON.stringify(validate.errors)).toBe(true);
-    for (const hostile of [{ ...retiredInstanceFaults, rows: [] }, { ...retiredInstanceFaults, rows: [{ ...rows[0], fault: "retired" }] }, { ...retiredInstanceFaults, rows: [{ ...rows[0], failure: { kind: "wire", message: "x" } }] }]) expect(validate(hostile)).toBe(false);
+    const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(browserSchema);
+    const validate = ajv.getSchema(`${browserSchema.$id}#/$defs/BrowserFault`)!;
+    for (const row of rows.filter((row) => row.failure.kind === "wire")) {
+      const wire = { origin: row.failure.origin, code: row.failure.code, severity: "error", message: row.failure.message, scope: {}, retryable: false };
+      expect(validate(wire), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate({ ...wire, code: "INVALID.CODE" })).toBe(false);
+      expect(validate({ ...wire, retryable: "false" })).toBe(false);
+      expect(validate({ ...wire, extra: true })).toBe(false);
+      expect(windowFaultFromError(wire).class).toBe(row.fault);
+    }
+    expect(new Set(rows.map((row) => row.name)).size).toBe(rows.length);
     expect(rows.some((row) => row.fault === null) && rows.some((row) => row.fault !== null)).toBe(true);
   });
 

@@ -27,7 +27,7 @@
 // case's committed REAL GLB export the same generic way and write only each row's `➡️after.glb`.
 //
 // @see ../🔬️probes/📜️script.ts — the reader half; this file only WRITES, it never reads back semantics
-// @see ../🔣️oracle.json — mutationManifests / fixtureManifests this generator's output is registered under
+// @see ../🔣️oracle.json — mutationManifests / testEvidence this generator's output is registered under
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️pilot-playbook.md
 
 //#endregion 🧲️Header
@@ -1371,9 +1371,9 @@ async function main(argv: readonly string[]): Promise<number> {
   const contextualOperations = [...new Set(RECIPES.map((row) => row.mutationId.split("-")[0]!))];
   const destinations = selected.map((recipe) => {
     const id = `${recipe.mutationId}-applied`;
-    return gltfFixtureOutputPaths(catalog.fixtureManifests, id, catalogDir, contextualOperations, outRoot);
+    return gltfFixtureOutputPaths(catalog.testEvidence, id, catalogDir, contextualOperations, outRoot);
   });
-  const realDestinations = realSelected.map((row) => realRowOutputPath(catalog.fixtureManifests, row.id, catalogDir, outRoot));
+  const realDestinations = realSelected.map((row) => realRowOutputPath(catalog.testEvidence, row.id, catalogDir, outRoot));
   let count = 0;
   if (selected.length > 0) {
     const base = await buildBaseDoc();

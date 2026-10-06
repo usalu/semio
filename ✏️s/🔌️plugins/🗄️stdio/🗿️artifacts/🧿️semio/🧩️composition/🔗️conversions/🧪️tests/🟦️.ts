@@ -1,14 +1,13 @@
 import { strict as assert } from "node:assert";
 import { existsSync, readFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv";
 import { selectSemioConversionDependenciesV1, prepareSemioConversionDefinitionV1 } from "../🟦️.ts";
 
 /** 🧪️ Compares authored Semio dependencies with actual lower conversion exports. */
 export function runSemioConversionDefinitionChecks(): number {
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
   const corpus = read("../🧫️fixtures/🔣️.json");
-  assert(new Ajv({ strict: true }).compile(read("../🧬️schema/🔣️.json"))(corpus));
+  assert.equal(new Set(corpus.cases.map((row: { id: string }) => row.id)).size, corpus.cases.length);
   for (const vector of corpus.cases) {
     const accepted = vector.exports.every((value: { package: string; identity: string }) => vector.packages.includes(value.package) && /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$/.test(value.identity)) && new Set(vector.exports.map((value: { package: string }) => value.package)).size === vector.exports.length && new Set(vector.exports.map((value: { identity: string }) => value.identity)).size === vector.exports.length;
     assert.equal(accepted, vector.accepted, vector.id);

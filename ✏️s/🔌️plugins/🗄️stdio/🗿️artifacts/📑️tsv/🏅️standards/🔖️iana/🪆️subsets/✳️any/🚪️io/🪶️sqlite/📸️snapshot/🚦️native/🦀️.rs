@@ -1,0 +1,16 @@
+//! 🚦️ Complete logical TSV fields borrow exact forecasts and use the shared paid Record producer.
+use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+use crate::store;
+use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedRecordSpec as R,BorrowedShape as H,RecordLayout};
+use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind as K,native_encoding::NativeEncodeProgress};
+use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase};
+fn text()->H{H::Text}
+fn row_shape()->H{H::List(text)}
+static SNAPSHOT:[F;4]=[F::new(0,"schema",H::Text),F::new(1,"records",H::List(row_shape)),F::new(2,"trailing-newline",H::Bool),F::new(3,"line-ending",H::Enum(&[("lf",0),("crlf",1)]))];
+fn spec()->R{R{keyword:None,layout:RecordLayout::Inline,fields:&SNAPSHOT}}
+pub(crate)fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<TsvSnapshot,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,"stdio.tsv",TsvSnapshot::__dsl_spec_producer(),|record,native|{crate::standards::iana::subsets::any::io::sqlite::snapshot::admission::admit(record,native,limits)?;TsvSnapshot::__dsl_from_record_controlled(record,native)},control)}
+pub(crate) fn preflight(snapshot:&TsvSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
+ crate::standards::iana::subsets::any::io::sqlite::snapshot::semantic(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;let limits=control.limits();let component=match encoding{SnapshotEncoding::Binary=>store::semio_format::Component::Pack,SnapshotEncoding::Text=>store::semio_format::Component::Dsl};let maximum=limits.max_file_bytes.checked_sub(store::semio_format::declared_envelope_prefix_len("stdio.tsv",component,1)?).ok_or_else(||ValueError::new(K::OwnershipLimit,"TSV file ceiling cannot contain its declared envelope"))?;
+ control.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{let mut progress=|event:NativeEncodeProgress|checkpoint(event.completed,event.total);let mut native=NativeEncodeControl::new(remaining,&mut progress);let result=match encoding{SnapshotEncoding::Text=>semio_framework_dsl_record::measure_print_borrowed(snapshot,&spec(),usize::MAX,&mut native),SnapshotEncoding::Binary=>{let options=pack::record::EncodeOptions::default();pack::record::measure_document_borrowed(snapshot,&spec(),&options,&mut native)}}.and_then(|length|if length>maximum{Err(ValueError::new(K::OwnershipLimit,"TSV exact native output exceeds file byte ceiling"))}else{Ok(())});(result,native.owned_bytes())})?
+}
+pub(crate) fn encode(snapshot:&TsvSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io_schema::IoPayload,ValueError>{preflight(snapshot,encoding,control)?;store::encode_sqlite_snapshot_record_native(encoding,"stdio.tsv",TsvSnapshot::__dsl_spec_producer(),|native|snapshot.__dsl_to_record_controlled(native),control)}

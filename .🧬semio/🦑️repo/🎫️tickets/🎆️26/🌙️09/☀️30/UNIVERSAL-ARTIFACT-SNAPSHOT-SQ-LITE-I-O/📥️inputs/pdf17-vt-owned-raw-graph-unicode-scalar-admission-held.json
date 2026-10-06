@@ -1,0 +1,15 @@
+{
+  "qualification": "HELD local raw-graph text admission parity only; first-party Rust String cannot represent lone UTF16 surrogates. Does not change global native-json text policy. No execution.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🪢️raw-graph/🟦️.ts",
+      "before": "  if (Object.keys(row).length !== keys.length || keys.some(key => !Object.hasOwn(row, key))) throw new Error('Graph record members differ from its schema'); return row;",
+      "after": "  if (Object.keys(row).length !== keys.length || keys.some(key => !Object.hasOwn(row, key))) throw new Error('Graph record members differ from its schema');\n  for (const item of Object.values(row)) if (typeof item === 'string') for (const scalar of item) { const point = scalar.codePointAt(0)!; if (point >= 0xd800 && point <= 0xdfff) throw new Error('Graph text requires Unicode scalar values'); }\n  return row;"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🪢️raw-graph/🟦️.ts",
+      "before": "  const allowed=kind==='flate'?",
+      "after": "  for (const item of Object.values(row)) if (typeof item === 'string') for (const scalar of item) { const point = scalar.codePointAt(0)!; if (point >= 0xd800 && point <= 0xdfff) throw new Error('Graph text requires Unicode scalar values'); }\n  const allowed=kind==='flate'?"
+    }
+  ]
+}

@@ -14,9 +14,10 @@ import browserAuthorityFixture from "../../🧫️fixtures/🧊️wgpu-browser-e
 import rendererSchema from "../../../🧬️schema/🔣️.json";
 import { assertPinnedBunVersion, decodeAstralEscapes } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
 import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, retireWgpuOwnedUiInstanceLifecycle, settleFailedInstanceOpen, WgpuOwnedUiInstanceRoute, type WgpuPluginHandle } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
-import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
+import { resolvePlaygroundBoot, type PluginCatalog } from "@semio-tech/framework";
 import bootSelectionFixture from "../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json";
+import operationPublicationCorpus from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json";
+
 import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
@@ -62,7 +63,7 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     readAppDocumentIdentity: async (instanceId) => ({ appInstanceId: instanceId, parentDocumentId: null }),
     codec: async () => null,
     ephemeralSnapshot: () => null,
-    takeProgressHistoryPatches: () => [],
+    takeOperationPublications: () => [],
     submitMediaExport: () => Promise.reject(new Error("fake.media-export")),
     pollMediaExport: () => Promise.reject(new Error("fake.media-export")),
     cancelMediaExport: async () => {},
@@ -102,6 +103,31 @@ describe("framework renderer wgpu plugin bridge", () => {
     expect(wgpuEphemeralSnapshot(null)).toBeNull();
   });
 
+  it("queues what a guest publishes between two host calls and hands it to Rust once, as JSON", async () => {
+    const { encodeAppFrame, encodePackValue, packUInt } = await import("@semio-tech/framework-os");
+    const { operationCompletionPublication, stashOperationProgress, stashOperationPublication, takeOperationPublications, WGPU_OPERATION_PUBLICATION_CAPACITY } = await import("../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts");
+    const frame = (carried: { readonly output?: unknown; readonly uiScope?: unknown; readonly historyPatch?: unknown }) => encodeAppFrame({ Invocation: { in_reply_to: 0, output: carried.output === undefined ? [] : Array.from(encodePackValue(carried.output as never)), diagnostics: [], ui_scope: carried.uiScope === undefined ? [] : Array.from(encodePackValue(carried.uiScope as never)), history_patch: carried.historyPatch === undefined ? [] : Array.from(encodePackValue(carried.historyPatch as never)), messages: [], mutations: [], inverse_group: [] } });
+    expect(stashOperationProgress(9_001, frame({})), "a frame that says nothing stays the next dispatch's").toBe(false);
+    expect(stashOperationProgress(9_001, frame({ historyPatch: { cursor: packUInt(4n), timeTravel: { stage: "replaying", done: packUInt(2n), total: packUInt(5n) } } })), "a pure progress frame is the lane's alone").toBe(true);
+    expect(stashOperationProgress(9_001, frame({ output: { interactionView: {} }, uiScope: { kind: "full" } })), "a frame with an output still owes the next dispatch its fold").toBe(false);
+    expect(stashOperationProgress(9_001, frame({ uiScope: { kind: "none" } })), "a scope that asks for nothing is consumed and queues nothing").toBe(true);
+    expect(takeOperationPublications(9_001), "oldest first, each with exactly what its frame carried").toEqual([{ completed: false, historyPatch: { cursor: 4, timeTravel: { stage: "replaying", done: 2, total: 5 } } }, { completed: false, uiScope: { kind: "full" } }]);
+    expect(takeOperationPublications(9_001), "a take drains the queue").toEqual([]);
+    expect(operationPublicationCorpus.capacity).toBe(WGPU_OPERATION_PUBLICATION_CAPACITY);
+    for (const row of operationPublicationCorpus.rows) {
+      stashOperationPublication(9_002, row.publication as never);
+      expect(takeOperationPublications(9_002), row.name).toEqual(row.queued ? [row.publication] : []);
+    }
+    expect(operationCompletionPublication({ uiScope: { kind: "none" }, historyPatch: { cursor: 3 } }), "a completion keeps its scope and its patch").toEqual({ completed: true, uiScope: { kind: "none" }, historyPatch: { cursor: 3 } });
+    expect(operationCompletionPublication({ uiScope: null, historyPatch: undefined }), "an absent carrier is absent").toEqual({ completed: true });
+    for (let index = 0; index <= WGPU_OPERATION_PUBLICATION_CAPACITY; index += 1) stashOperationPublication(9_003, { completed: index === 0, historyPatch: { cursor: index } as never });
+    expect(takeOperationPublications(9_003), "a lane that outgrew its authority asks for a re-read instead of dropping rows").toEqual([{ completed: true, uiScope: { kind: "full" }, resync: true }]);
+    const bridge = pluginHandleForBridge(fakeHandle({ takeOperationPublications: (instanceId) => (instanceId === 7 ? [{ completed: true, historyPatch: { cursor: 2n } as never }] : []) }));
+    expect(bridge.takeOperationPublications(7)).toBe('[{"completed":true,"historyPatch":{"cursor":2}}]');
+    expect(bridge.takeOperationPublications(8)).toBe("[]");
+  });
+
+  
   it("queues the history patch of an uncorrelated progress frame and hands it to Rust once, as JSON", async () => {
     const { encodeAppFrame, encodePackValue, packUInt } = await import("@semio-tech/framework-os");
     const { stashProgressHistoryPatch, takeProgressHistoryPatches } = await import("../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts");
@@ -115,8 +141,7 @@ describe("framework renderer wgpu plugin bridge", () => {
     expect(bridge.takeProgressHistoryPatches(7)).toBe('[{"cursor":2}]');
     expect(bridge.takeProgressHistoryPatches(8)).toBe("[]");
   });
-
-  it("crosses the document-backbone door with an exact u64 binding generation and refuses an unknown operation", async () => {
+it("crosses the document-backbone door with an exact u64 binding generation and refuses an unknown operation", async () => {
     const seen: { operation: string; bindingGeneration: bigint; uri: string }[] = [];
     const bridge = pluginHandleForBridge(fakeHandle({
       documentBackbone: async (_instanceId, operation, bindingGeneration, uri) => {
@@ -261,8 +286,8 @@ describe("framework renderer wgpu plugin bridge", () => {
     const { DEFAULT_SHARD_BUDGET } = await import("../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts");
     const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
     const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
-    const validate = semioSchemaAjvV1({ strict: true }).addSchema(rendererSchema).getSchema(`${rendererSchema.$id}#/$defs/PluginRuntimeLifecycleSchedulerV1`)!;
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    
+    
     const sent: string[] = [];
     const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" }, coldPairIngress: { tag: "idle" } };
     const node = { id: 0, key: "root", component: { type: "text", value: "owned", emphasize: null, dataAttributes: null }, layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false, transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [] };
@@ -563,7 +588,17 @@ describe("framework renderer wgpu generated worker", () => {
   });
 
   it("hands the wgpu shell its generation3d boot plan in dependency order, so the requested plugin is never plugins[0] — the ordering the Rust boot selection (🧫️fixtures/🔬️wgpu-shell-boot-selection) must survive", () => {
-    const boot = resolvePlaygroundBoot(PLUGIN_CATALOG, "generation3d");
+    
+    
+    const catalog: PluginCatalog = {
+      plugins: bootSelectionFixture.catalog.plugins.map((entry) => ({ ...entry, wasmOut: `${entry.pluginId}.wasm`, role: "plugin", contributes: [], consumes: [] })),
+      extensions: [],
+      hosts: [],
+      playgrounds: bootSelectionFixture.catalog.playgrounds,
+      moduleUrl: (pluginId) => `${pluginId}.wasm`,
+      extensionModuleUrl: (pluginId) => `${pluginId}.wasm`,
+    };
+    const boot = resolvePlaygroundBoot(catalog, "generation3d");
     const ids = boot.plugins.map((entry) => entry.pluginId);
     expect(ids).toContain("procedural");
     expect(ids).toContain("flow");

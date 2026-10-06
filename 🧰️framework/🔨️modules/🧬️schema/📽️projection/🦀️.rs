@@ -19,14 +19,14 @@ export type ActionAddress = { pluginId: string, appId: string, modeId: string, w
         },
         SchemaMetadata {
             name: "ActionArgControl",
-            version: 2,
+            version: 3,
             typescript: r####"/**
  * 🎚️ Declarative input control for one action argument — a lean manifest-altitude enum,
  * deliberately NOT `ui_wgpu::wgpu::UiControlNode` (whose variants embed live values and immediate-dispatch
  * wiring). Renderers map each variant onto a staged form field. Tagged with `kind` to mirror the
  * sibling `UtilityNode`/`UiControlNode` declarative-tree convention.
  */
-export type ActionArgControl = { "kind": "text", placeholder?: string, } | { "kind": "number", min?: number, max?: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, } | { "kind": "stepper", min?: number, max?: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, snaps?: Array<number>, snapSource?: SnapSource, } | { "kind": "slider", min: number, max: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, snaps?: Array<number>, snapSource?: SnapSource, scale?: NumberScale, } | { "kind": "dial", min: number, max: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, snaps?: Array<number>, snapSource?: SnapSource, } | { "kind": "toggle" } | { "kind": "select", options: Array<ActionArgOption>, } | { "kind": "segmented", options: Array<ActionArgOption>, } | { "kind": "vector", dims: number, min?: number, max?: number, unit?: string, step?: number, snaps?: Array<number>, snapSource?: SnapSource, precision?: number, displayUnit?: string, displayFactor?: number, } | { "kind": "color", alpha: boolean, } | { "kind": "reference", kinds: Array<string>, domain?: string, granularity?: string, many?: boolean, minItems?: number, maxItems?: number, idType?: ReferenceIdType, } | { "kind": "iconSelect", classifierKind: string, } | { "kind": "artifactKind", roles: Array<AppRole>, } | { "kind": "surfaceApp", roles: Array<AppRole>, dialectArg: string, };"####,
+export type ActionArgControl = { "kind": "text", placeholder?: string, } | { "kind": "multiline" } | { "kind": "number", min?: number, max?: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, } | { "kind": "stepper", min?: number, max?: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, snaps?: Array<number>, snapSource?: SnapSource, } | { "kind": "slider", min: number, max: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, snaps?: Array<number>, snapSource?: SnapSource, scale?: NumberScale, } | { "kind": "dial", min: number, max: number, step?: number, unit?: string, precision?: number, displayUnit?: string, displayFactor?: number, snaps?: Array<number>, snapSource?: SnapSource, } | { "kind": "toggle" } | { "kind": "select", options: Array<ActionArgOption>, } | { "kind": "segmented", options: Array<ActionArgOption>, } | { "kind": "vector", dims: number, min?: number, max?: number, unit?: string, step?: number, snaps?: Array<number>, snapSource?: SnapSource, precision?: number, displayUnit?: string, displayFactor?: number, } | { "kind": "color", alpha: boolean, } | { "kind": "reference", kinds: Array<string>, domain?: string, granularity?: string, many?: boolean, minItems?: number, maxItems?: number, idType?: ReferenceIdType, } | { "kind": "iconSelect", classifierKind: string, } | { "kind": "artifactKind", roles: Array<AppRole>, } | { "kind": "surfaceApp", roles: Array<AppRole>, dialectArg: string, };"####,
         },
         SchemaMetadata {
             name: "ActionArgDef",
@@ -795,8 +795,8 @@ export type HostedArtifactKind = { id: string, schema: string, owner: string, };
         },
         SchemaMetadata {
             name: "IconName",
-            version: 1,
-            typescript: r####"export type IconName = "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | "arrow-up" | "award" | "bar-chart-3" | "beam" | "bell" | "book-open" | "box" | "building" | "cad-shape" | "calendar" | "calendar-days" | "camera" | "check" | "check-circle-2" | "chevron-down" | "chevron-left" | "chevron-right" | "chevron-up" | "chevrons-up-down" | "circle" | "circle-dot" | "clipboard" | "clipboard-list" | "clock" | "cloud" | "code" | "columns" | "combine" | "component" | "copy" | "cpu" | "crosshair" | "cylinder" | "dag" | "display-windows" | "document-jack" | "document-report" | "download" | "draw" | "edit" | "edit-3" | "eraser" | "export" | "external-link" | "eye" | "eye-off" | "fem-app" | "fem-model" | "file" | "file-archive" | "file-code" | "file-image" | "file-json" | "file-spreadsheet" | "file-text" | "file-type" | "file-video" | "filter" | "flip-horizontal" | "flip-vertical" | "flow" | "flow-graph" | "focus" | "folder" | "folder-open" | "folder-plus" | "forms" | "gis2d" | "gis3d" | "git-branch" | "git-commit" | "git-merge" | "globe" | "graduation-cap" | "graph-dag" | "graph-media" | "grid-3x3" | "grip-vertical" | "hammer" | "hand" | "hard-drive" | "hash" | "help-circle" | "hexagon" | "home" | "hud-overlay" | "image" | "image-plus" | "image-up" | "imperative" | "import" | "info" | "landmark" | "lasso" | "layers" | "layout" | "layout-grid" | "library" | "lightbulb" | "link" | "link-2-off" | "list" | "list-checks" | "list-ordered" | "list-tree" | "loader-2" | "lock" | "lock-open" | "lod-depth" | "lowpoly-model" | "magnet" | "map" | "math-app" | "math-graph" | "maximize-2" | "message-circle" | "message-square" | "minimize-2" | "minus" | "monitor" | "moon" | "more-horizontal" | "mouse-pointer" | "mouse-pointer-2" | "move" | "move-3d" | "network" | "note" | "note-math" | "paint-bucket" | "paintbrush" | "palette" | "panel-catalogue" | "panel-inspection" | "panel-left" | "panel-parameters" | "panel-right" | "panel-top" | "pause" | "pen-tool" | "pencil" | "pipette" | "play" | "play-circle" | "plug" | "plus" | "preview" | "procedural2d" | "process-workpiece" | "projection-axonometric" | "projection-curvilinear" | "projection-dimetric" | "projection-isometric" | "projection-oblique" | "projection-oblique-cabinet" | "projection-oblique-cavalier" | "projection-oblique-military" | "projection-one-point" | "projection-orthographic" | "projection-parallel" | "projection-perspective" | "projection-three-point" | "projection-trimetric" | "projection-two-point" | "puzzle" | "puzzle5d-3d" | "raster" | "reasoning-wires" | "rectangle-tool" | "redo" | "redo-2" | "relocate-3d" | "remodel-app" | "remodel-model" | "rotate-ccw" | "rotate-cw" | "s" | "save" | "scaling" | "scan" | "scan-line" | "scene-3d" | "scissors" | "search" | "select-all" | "sequence" | "settings" | "settings-2" | "shapes" | "shooting-scene" | "sigma" | "skip-back" | "skip-forward" | "slab" | "sliders-horizontal" | "smartphone" | "smile" | "sparkles" | "square" | "square-arrow-down-left" | "square-arrow-down-right" | "square-arrow-up-left" | "square-arrow-up-right" | "square-dashed" | "sticky-note" | "sun" | "table-2" | "tablet" | "tags" | "terrain-3d" | "text-cursor" | "text-search" | "toggle-left" | "transform-3d" | "trash" | "trash-2" | "triangle" | "triangle-alert" | "trinity" | "trinity-lhs" | "trinity-rewriting" | "trinity-rhs" | "type" | "typography" | "undo" | "undo-2" | "unlink" | "unlock" | "user" | "users" | "volume-brush" | "window" | "workbench" | "workflow" | "wrench" | "writer" | "x" | "zoom-in" | "zoom-out";"####,
+            version: 2,
+            typescript: r####"export type IconName = "alert-circle" | "align-left" | "animate" | "app-window" | "architect" | "architect-graph" | "arrow-down" | "arrow-left" | "arrow-right" | "arrow-right-left" | "arrow-up" | "award" | "bar-chart-3" | "beam" | "bell" | "book-open" | "box" | "building" | "cad-shape" | "calendar" | "calendar-days" | "camera" | "check" | "check-circle-2" | "chevron-down" | "chevron-left" | "chevron-right" | "chevron-up" | "chevrons-up-down" | "circle" | "circle-dot" | "clipboard" | "clipboard-list" | "clock" | "cloud" | "cloud-download" | "code" | "columns" | "combine" | "component" | "copy" | "cpu" | "crosshair" | "cylinder" | "dag" | "display-windows" | "document-jack" | "document-report" | "download" | "draw" | "edit" | "edit-3" | "eraser" | "export" | "external-link" | "eye" | "eye-off" | "fem-app" | "fem-model" | "file" | "file-archive" | "file-code" | "file-image" | "file-json" | "file-spreadsheet" | "file-text" | "file-type" | "file-video" | "filter" | "flip-horizontal" | "flip-vertical" | "flow" | "flow-graph" | "focus" | "folder" | "folder-open" | "folder-plus" | "forms" | "gis2d" | "gis3d" | "git-branch" | "git-commit" | "git-merge" | "globe" | "graduation-cap" | "graph-dag" | "graph-media" | "grid-3x3" | "grip-vertical" | "hammer" | "hand" | "hard-drive" | "hash" | "help-circle" | "hexagon" | "home" | "hud-overlay" | "image" | "image-plus" | "image-up" | "imperative" | "import" | "info" | "landmark" | "lasso" | "layers" | "layout" | "layout-grid" | "library" | "lightbulb" | "link" | "link-2-off" | "list" | "list-checks" | "list-ordered" | "list-tree" | "loader-2" | "lock" | "lock-open" | "lod-depth" | "lowpoly-model" | "magnet" | "map" | "math-app" | "math-graph" | "maximize-2" | "message-circle" | "message-square" | "minimize-2" | "minus" | "monitor" | "moon" | "more-horizontal" | "mouse-pointer" | "mouse-pointer-2" | "move" | "move-3d" | "network" | "note" | "note-math" | "paint-bucket" | "paintbrush" | "palette" | "panel-catalogue" | "panel-inspection" | "panel-left" | "panel-parameters" | "panel-right" | "panel-top" | "pause" | "pen-tool" | "pencil" | "pipette" | "play" | "play-circle" | "plug" | "plus" | "preview" | "procedural2d" | "process-workpiece" | "projection-axonometric" | "projection-curvilinear" | "projection-dimetric" | "projection-isometric" | "projection-oblique" | "projection-oblique-cabinet" | "projection-oblique-cavalier" | "projection-oblique-military" | "projection-one-point" | "projection-orthographic" | "projection-parallel" | "projection-perspective" | "projection-three-point" | "projection-trimetric" | "projection-two-point" | "puzzle" | "puzzle5d-3d" | "raster" | "reasoning-wires" | "rectangle-tool" | "redo" | "redo-2" | "relocate-3d" | "remodel-app" | "remodel-model" | "rotate-ccw" | "rotate-cw" | "s" | "save" | "scaling" | "scan" | "scan-line" | "scene-3d" | "scissors" | "search" | "select-all" | "sequence" | "settings" | "settings-2" | "shapes" | "shooting-scene" | "sigma" | "skip-back" | "skip-forward" | "slab" | "sliders-horizontal" | "smartphone" | "smile" | "sparkles" | "square" | "square-arrow-down-left" | "square-arrow-down-right" | "square-arrow-up-left" | "square-arrow-up-right" | "square-dashed" | "sticky-note" | "sun" | "table-2" | "tablet" | "tags" | "terrain-3d" | "text-cursor" | "text-search" | "toggle-left" | "transform-3d" | "trash" | "trash-2" | "triangle" | "triangle-alert" | "trinity" | "trinity-lhs" | "trinity-rewriting" | "trinity-rhs" | "type" | "typography" | "undo" | "undo-2" | "unlink" | "unlock" | "user" | "users" | "volume-brush" | "window" | "workbench" | "workflow" | "wrench" | "writer" | "x" | "zoom-in" | "zoom-out";"####,
         },
         SchemaMetadata {
             name: "IdempotencyMode",
@@ -1342,11 +1342,11 @@ export type ToolRunCounterDefinition = { id: string, label: unknown, };"####,
         },
         SchemaMetadata {
             name: "ToolRunDefinition",
-            version: 1,
+            version: 2,
             typescript: r####"/**
  * 📜️ Static run declaration attached to tool and utility definitions (§2.4).
  */
-export type ToolRunDefinition = { mutating: boolean, rebase: ToolRunRebasePolicy, reconfigure: ToolRunReconfigurePolicy, unit: unknown, stages: Array<ToolRunStageDefinition>, counters: Array<ToolRunCounterDefinition>, reasons: Array<ToolRunReasonDefinition>, trace: ToolRunTraceKind, runJob: JobKindId, revalidateJob?: JobKindId, settings?: ToolRunSettingsReads, windows?: Array<string>, };"####,
+export type ToolRunDefinition = { mutating: boolean, rebase: ToolRunRebasePolicy, reconfigure: ToolRunReconfigurePolicy, unit: unknown, stages: Array<ToolRunStageDefinition>, counters: Array<ToolRunCounterDefinition>, reasons: Array<ToolRunReasonDefinition>, trace: ToolRunTraceKind, runJob: JobKindId, revalidateJob?: JobKindId, settings?: ToolRunSettingsReads, windows?: Array<string>, member?: string, };"####,
         },
         SchemaMetadata {
             name: "ToolRunReasonDefinition",
@@ -1837,10 +1837,10 @@ export type UiStatus = "waiting" | "loading" | "idle" | "finished";"####,
         },
         SchemaMetadata { name: "UiTextNode", version: 1, typescript: r####"export type UiTextNode = { value: Label, emphasize?: boolean, dataAttributes?: { [key in string]?: string }, presence?: UiPresence, menu?: UiMenuRef, };"#### },
         SchemaMetadata { name: "UiToggleNode", version: 1, typescript: r####"export type UiToggleNode = { id: string, iconId: IconName, text?: Label, onChange: ActionDescriptor, presence?: UiPresence, menu?: UiMenuRef, };"#### },
-        SchemaMetadata { name: "UiTreeItemAction", version: 2, typescript: r####"export type UiTreeItemAction = { iconId: IconName, label?: Label, action: ActionDescriptor, placement?: UiTreeActionPlacement, disabled?: boolean, };"#### },
+        SchemaMetadata { name: "UiTreeItemAction", version: 3, typescript: r####"export type UiTreeItemAction = { iconId: IconName, label?: Label, action: ActionDescriptor, placement?: UiTreeActionPlacement, disabled?: boolean, reason?: Label, };"#### },
         SchemaMetadata {
             name: "UiTreeItemNode",
-            version: 1,
+            version: 2,
             typescript: r####"export type UiTreeItemNode = { id: string, label: Label, description?: string, iconId?: IconName, presence?: UiPresence, defaultOpen?: boolean, action?: ActionDescriptor, actions?: Array<UiTreeItemAction>, draggable?: boolean, dragData?: { [key in string]?: string }, items?: Array<UiTreeItemNode>, control?: UiControlNode,
 /**
  * 👁️ Domain "eye toggle" flag: the row stays visible, dimmed, and clickable (to un-hide) —
@@ -1861,7 +1861,12 @@ window?: UiTreeWindow,
  * 🎯️ The interaction granularity this row picks when the owning tree carries the domain binding
  * (`UiTreeNode.interactionDomain`), keyed by this row's own `id`.
  */
-granularity?: string, };"####,
+granularity?: string, 
+/**
+ * 🚦️ The semantic tone this row's label and icon paint (`Theme::tone_ink`) — a history row's outcome, a refused
+ * input: one of the four outcome roles, never the only cue of the state it colours.
+ */
+tone?: Tone, };"####,
         },
         SchemaMetadata {
             name: "UiTreeNode",
@@ -2077,6 +2082,10 @@ actions: Array<ActionDefinition>,
  * 🧰️ Utilities this window kind accepts — references `AppDefinition.utilities` ids. Empty = no utilities.
  */
 utilities: Array<UtilityRef>,
+/**
+ * 🌅️ The first arm of each new window instance, accepted by this window's utility roster.
+ */
+initialUtilityId?: UtilityRef,
 /**
  * 🕹️ Interaction domains this window kind accepts — references `AppDefinition.interactions` ids.
  * Empty = no interactions.

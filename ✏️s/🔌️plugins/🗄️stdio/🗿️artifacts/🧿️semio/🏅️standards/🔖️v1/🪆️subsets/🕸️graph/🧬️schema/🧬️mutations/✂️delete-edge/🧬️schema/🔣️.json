@@ -9,7 +9,19 @@
   ],
   "properties": {
     "id": {
-      "$ref": "#/$defs/GraphEdgeId"
+      "$ref": "#/$defs/GraphEdgeId",
+      "x-semio-ui": {
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "description": {
+          "en": "The edge that is deleted.",
+          "de": "Die Kante, die gelöscht wird."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   },
   "$defs": {
@@ -21,7 +33,20 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Edge id",
+              "de": "Kanten-ID"
+            },
+            "ref": {
+              "kind": "edge",
+              "domain": "graph",
+              "granularity": "edge"
+            }
+          }
         }
       }
     }

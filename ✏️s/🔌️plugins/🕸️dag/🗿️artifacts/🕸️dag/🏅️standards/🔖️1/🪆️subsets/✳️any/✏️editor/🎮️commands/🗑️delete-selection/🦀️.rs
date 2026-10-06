@@ -33,5 +33,5 @@ pub fn apply_with_state(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSna
 /// 🗑️ The selected nodes leave the `content` child with every edge they hold (edges first, each row point-invertible); the
 /// framework prunes the deleted ids out of `graph`'s selection via `DagPlayApp::interaction_topology`.
 fn apply_to(_payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, selected: &[String]) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-    Ok(crate::dag_child_emit(doc.snapshot, &crate::schema::remove_nodes_leaves(&crate::dag_scene(doc)?, selected)))
+    Ok(crate::dag_child_emit(doc.snapshot, crate::schema::remove_nodes_leaves(&crate::dag_scene(doc)?, selected)))
 }

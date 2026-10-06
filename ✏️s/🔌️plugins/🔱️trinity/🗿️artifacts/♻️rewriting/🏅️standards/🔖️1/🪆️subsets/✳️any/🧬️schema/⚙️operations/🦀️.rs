@@ -78,7 +78,7 @@ pub async fn dispatch_rewrite_rule_mutations(store: &mut RewriteRuleStore, mutat
     if mutations.is_empty() {
         return Ok(());
     }
-    store.dispatch(ArtifactCommand::Apply { mutations, description: None, transaction: None }).await.map_err(TrinityRewritingError::from).map(|_| ())
+    store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }).await.map_err(TrinityRewritingError::from).map(|_| ())
 }
 //#endregion 🔖️BatchHelpers
 

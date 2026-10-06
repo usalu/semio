@@ -678,7 +678,7 @@
           }
         },
         "field": {
-          "const": "fixtureSlug",
+          "const": "exampleId",
           "x-semio-ui": {
             "role": "discriminator",
             "label": {

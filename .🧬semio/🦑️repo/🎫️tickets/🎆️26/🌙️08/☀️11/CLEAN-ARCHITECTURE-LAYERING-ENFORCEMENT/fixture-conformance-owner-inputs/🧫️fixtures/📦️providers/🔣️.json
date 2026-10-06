@@ -1,0 +1,19 @@
+{
+  "schemaVersion":1,
+  "cases":[
+    {"id":"owned-test","value":{"schema-version":1,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":["typed_fixture_laws"],"features":[],"default-features":true}]},"accepted":true},
+    {"id":"owned-lib-features","value":{"schema-version":1,"law-targets":[{"target-kind":"lib","target-name":"alpha","laws":["tests::grammar_conformance","tests::protocol_conformance"],"features":["native-laws"],"default-features":false}]},"accepted":true},
+    {"id":"missing-declaration","value":null,"accepted":false},
+    {"id":"wrong-version","value":{"schema-version":2,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":["typed_fixture_laws"],"features":[],"default-features":true}]},"accepted":false},
+    {"id":"empty-targets","value":{"schema-version":1,"law-targets":[]},"accepted":false},
+    {"id":"empty-laws","value":{"schema-version":1,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":[],"features":[],"default-features":true}]},"accepted":false},
+    {"id":"duplicate-law","value":{"schema-version":1,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":["typed_fixture_laws","typed_fixture_laws"],"features":[],"default-features":true}]},"accepted":false},
+    {"id":"unsupported-target","value":{"schema-version":1,"law-targets":[{"target-kind":"example","target-name":"fixture-conformance","laws":["typed_fixture_laws"],"features":[],"default-features":true}]},"accepted":false},
+    {"id":"missing-feature-selection","value":{"schema-version":1,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":["typed_fixture_laws"],"default-features":true}]},"accepted":false},
+    {"id":"no-default-feature-guess","value":{"schema-version":1,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":["typed_fixture_laws"],"features":[]}]},"accepted":false},
+    {"id":"no-policy-exemption","value":{"schema-version":1,"soft-skip":true,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":["typed_fixture_laws"],"features":[],"default-features":true}]},"accepted":false},
+    {"id":"no-selector-injection","value":{"schema-version":1,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":["--skip typed_fixture_laws"],"features":[],"default-features":true}]},"accepted":false},
+    {"id":"no-arbitrary-cargo-arguments","value":{"schema-version":1,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":["typed_fixture_laws"],"features":[],"default-features":true,"cargo-arguments":["--skip"]}]},"accepted":false},
+    {"id":"duplicate-feature","value":{"schema-version":1,"law-targets":[{"target-kind":"test","target-name":"fixture-conformance","laws":["typed_fixture_laws"],"features":["native-laws","native-laws"],"default-features":true}]},"accepted":false}
+  ]
+}

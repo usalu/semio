@@ -66,7 +66,7 @@ fn reference_asset(case: &str) -> String {
 /// 📥️ The committed EnergyPlus reference for one case, or an error naming exactly what is absent.
 fn reference(ctx: &Context, case: &str) -> Result<Json, String> {
     let uri = reference_asset(case);
-    ctx.fixture_json(&uri).map_err(|error| format!("case {case}: no committed EnergyPlus reference at {uri} ({error}) — the oracle for this case has not been produced yet, so there is nothing to compare against"))
+    ctx.input_json(&uri).map_err(|error| format!("case {case}: no committed EnergyPlus reference at {uri} ({error}) — the oracle for this case has not been produced yet, so there is nothing to compare against"))
 }
 
 #[cfg(feature = "sut")]
@@ -173,12 +173,12 @@ mod subject {
     /// 🏃️ Run one case through this repository's own engine and write its result document into the
     /// scenario work directory as `⚙️semio.json` before comparing anything.
     fn simulate(ctx: &Context, case: &str) -> Result<Json, String> {
-        let committed = String::from_utf8(ctx.fixture_bytes(&model_asset(case))?).map_err(|error| format!("case {case}: the committed model is not UTF-8: {error}"))?;
+        let committed = String::from_utf8(ctx.input_bytes(&model_asset(case))?).map_err(|error| format!("case {case}: the committed model is not UTF-8: {error}"))?;
         let built = bestest::model_json(case).ok_or_else(|| format!("case {case} is not registered in the engine's own §5.2 catalogue"))?;
         if committed != built {
             return Err(format!("case {case}: the committed 🔋️model.json is not what the case builder produces today — regenerate the fixtures before trusting any comparison"));
         }
-        let weather_path = ctx.fixture(WEATHER_ASSET)?;
+        let weather_path = ctx.input(WEATHER_ASSET)?;
         let weather = std::fs::read_to_string(&weather_path).map_err(|error| format!("cannot read {}: {error}", weather_path.display()))?;
         let digest = semio_repo_test_host::sha256_hex(weather.as_bytes());
         let text = epw::results_report_json(case, &weather, WEATHER_ASSET, &digest, 3).map_err(|error| format!("case {case}: the engine refused the committed model: {error}"))?;
@@ -246,7 +246,7 @@ mod subject {
     /// 🔁️ The committed model is exactly the builder's output, and it survives this subset's own
     /// canonical JSON in both directions.
     pub fn model_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let committed = String::from_utf8(ctx.fixture_bytes(&model_asset("600"))?).map_err(|error| format!("the committed model is not UTF-8: {error}"))?;
+        let committed = String::from_utf8(ctx.input_bytes(&model_asset("600"))?).map_err(|error| format!("the committed model is not UTF-8: {error}"))?;
         let built = bestest::model_json("600").ok_or("case 600 is not registered")?;
         if committed != built {
             return Err("the committed 🔋️model.json for case 600 is not what the case builder produces today".to_string());

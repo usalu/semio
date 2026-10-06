@@ -1,7 +1,9 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::run;
+use crate::executor::execute;
 use crate::JackWorkingScene;
 use super::*;
 use crate::ast::QueryResultKind;
-use crate::language_service::{complete, format as format_source, hover, lint, semantic_tokens};
+use crate::language_service::{parse, complete, format as format_source, hover, lint, semantic_tokens};
 use crate::lexer::{lex, tokenize, Token, TokenClass};
 use crate::{Camera, JackSnapshot, Manifest};
 
@@ -39,7 +41,7 @@ async fn run_match_return_graph() {
     let mut g = mini_graph();
     let result = run(&mut g, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b").unwrap();
     assert_eq!(result.kind, QueryResultKind::Graph);
-    let fixture = result.graph_fixture.expect("graph fixture");
+    let fixture = result.graph_snapshot.expect("graph fixture");
     assert_eq!(fixture.nodes().expect("valid retained Jack child").len(), 2);
     assert_eq!(fixture.edges().expect("valid retained Jack child").len(), 1);
 }
@@ -219,14 +221,14 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         assert_eq!(actual.0.rows, expected.0.rows);
         assert_eq!(actual.1, expected.1);
         let graph_value = |snapshot: &Option<Box<JackSnapshot>>| snapshot.as_ref().map(|snapshot| serde_json::from_str::<serde_json::Value>(&snapshot.to_json().expect("materialized graph JSON")).expect("reference JSON"));
-        assert_eq!(graph_value(&actual.0.graph_fixture), graph_value(&expected.0.graph_fixture));
+        assert_eq!(graph_value(&actual.0.graph_snapshot), graph_value(&expected.0.graph_snapshot));
         let packed = semio_framework_pack_json::to_json_string(&actual.0);
         assert!(packed.len() <= 1_048_576, "retained query result exceeded its emitted byte admission");
         let json: serde_json::Value = serde_json::from_str(&packed).unwrap();
         assert_eq!(json["columns"], case["columns"]);
         assert_eq!(json["rows"], case["rows"]);
         if let Some(node_ids) = case.get("nodeIds") {
-            let graph = actual.0.graph_fixture.as_ref().expect("typed graph result retains its local fixture owner");
+            let graph = actual.0.graph_snapshot.as_ref().expect("typed graph result retains its local fixture owner");
             let mut actual_nodes: Vec<_> = graph.nodes().expect("valid retained Jack child").iter().map(|node| node.id.clone()).collect();
             let mut actual_edges: Vec<_> = graph.edges().expect("valid retained Jack child").iter().map(|edge| edge.id.clone()).collect();
             actual_nodes.sort();
@@ -242,6 +244,10 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
             assert_eq!(decoded.manifest, graph.manifest);
         }
         assert_eq!(actual.1.len(), case["mutations"].as_u64().unwrap() as usize);
+        let mut published = mini_graph();
+        crate::apply_graph_effects(&mut published, &actual.1).unwrap();
+        if let Some(count) = case.get("postNodeCount") { assert_eq!(published.nodes.len(), count.as_u64().unwrap() as usize); }
+        if let Some(count) = case.get("postEdgeCount") { assert_eq!(published.edges.len(), count.as_u64().unwrap() as usize); }
         assert!(execution.step().is_err());
         assert!(steps > 1);
         eprintln!("resumable query completed in {steps} steps with {} document mutations", actual.1.len());
@@ -341,7 +347,7 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
     let cell_bytes = policy["cellBytes"].as_u64().expect("cell bytes") as usize;
     let maximum_bytes = policy["maximumBytes"].as_u64().expect("maximum bytes") as usize;
     let encoded_cells = 2 + row_count * (cell_bytes + 2) + row_count.saturating_sub(1);
-    assert!(encoded_cells > maximum_bytes, "neutral table oracle must exceed the result admission");
+    assert!(row_count * cell_bytes > maximum_bytes, "retained UTF-8 alone exceeds the result grant");
     let mut graph = mini_graph();
     let template = graph.nodes.get("root").expect("root node").clone();
     graph.nodes.clear();
@@ -363,7 +369,7 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
             Err(error) => Some(error),
         })
         .expect("oversized query result is rejected");
-    assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message, "query result exceeds its output admission");
+    assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message, "query result exceeds its retained ownership grant");
     execution.begin_close();
     let mut complete = false;
     for _ in 0..100_000 {
@@ -380,7 +386,34 @@ fn query_ownership_output_admission_rejects_oversized_table_before_publication()
         }
     }
     assert!(complete && execution.terminal_is_empty());
-    eprintln!("query output admission rejected a {encoded_cells}-byte table before publication");
+    eprintln!("[DEBUG] query retained ownership rejected a table whose JSON has {encoded_cells} bytes");
+}
+
+#[test]
+fn query_ownership_typed_result_capacity_is_independent_of_json_escaping() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️resumable-query/🔣️.json")).unwrap();
+    let policy = &fixture["resultOwnership"];
+    for (index, text) in policy["texts"].as_array().unwrap().iter().enumerate() {
+        let mut graph = mini_graph();
+        graph.nodes.retain(|id, _| id == "root");
+        graph.edges.clear();
+        graph.nodes.get_mut("root").unwrap().name = text.as_str().unwrap().repeat(policy["cellBytes"].as_u64().unwrap() as usize);
+        let mut execution = QueryExecution::with_result_grant(graph, parse("MATCH (a:Piece) RETURN a.name").unwrap(), policy["maximumOwnedBytes"].as_u64().unwrap() as usize);
+        let (result, effects) = (0..1000).find_map(|_| execution.step().unwrap()).expect("typed retained result");
+        assert!(effects.is_empty());
+        assert_eq!(result.rows[0][0].as_str().unwrap().len(), policy["cellBytes"].as_u64().unwrap() as usize);
+        let reference = serde_json::to_string(&serde_json::json!({"kind":"table","columns":["a.name"],"rows":[[result.rows[0][0].as_str().unwrap()]]})).unwrap();
+        let mut progress = |_| true;
+        let mut control = semio_framework_value::NativeEncodeControl::new(policy["maximumEncodedBytes"].as_u64().unwrap() as usize, &mut progress);
+        let encoded = crate::standards::v1::subsets::any::io::text::snapshot::encode_query_result_json(&result, &mut control);
+        assert_eq!(encoded.is_ok(), policy["textAdmission"][index].as_bool().unwrap());
+        if let Ok(encoded) = encoded { assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(), serde_json::from_str::<serde_json::Value>(&reference).unwrap()); }
+        assert_eq!(reference.len() <= policy["maximumEncodedBytes"].as_u64().unwrap() as usize, policy["textAdmission"][index].as_bool().unwrap());
+        let mut progress = |_| false;
+        let mut control = semio_framework_value::NativeEncodeControl::new(1_048_576, &mut progress);
+        assert_eq!(crate::standards::v1::subsets::any::io::text::snapshot::encode_query_result_json(&result, &mut control).unwrap_err().kind, semio_framework_value::ValueRefusalKind::Canceled);
+    }
+    eprintln!("[DEBUG] Jack query ownership uses intrinsic text bytes; JSON admission remains physical");
 }
 
 #[test]

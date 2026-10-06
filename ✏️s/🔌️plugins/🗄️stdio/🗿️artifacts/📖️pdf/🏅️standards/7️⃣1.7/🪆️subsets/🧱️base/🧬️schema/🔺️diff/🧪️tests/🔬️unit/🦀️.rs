@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1_7::subsets::base::io::{text_document, PdfTextLayout};
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 fn base() -> PdfSnapshot {
     let mut snapshot = text_document(&[(200.0, 300.0, "one"), (200.0, 300.0, "two")]);

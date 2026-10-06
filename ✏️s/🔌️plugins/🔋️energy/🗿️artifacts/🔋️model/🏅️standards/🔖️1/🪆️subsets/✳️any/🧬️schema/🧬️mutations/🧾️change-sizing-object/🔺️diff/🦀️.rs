@@ -17,6 +17,6 @@ pub fn diff(payload: &super::ChangeSizingObjectSizingType, base: &EnergyModelSna
     if let Some(item) = model.sizing_objects.iter_mut().find(|item| item.id == payload.id) {
         item.sizing_type = payload.new_sizing_type;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

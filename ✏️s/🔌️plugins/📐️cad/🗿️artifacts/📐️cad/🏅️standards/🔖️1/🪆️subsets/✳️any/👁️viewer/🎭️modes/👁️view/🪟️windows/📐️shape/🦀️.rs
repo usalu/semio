@@ -34,6 +34,7 @@ const CAD_VIEW_FALLBACK_MESH_KIND: &str = "box";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::cad::create_cad_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Shape", "Form"),
         body_key: BODY_KEY.into(),

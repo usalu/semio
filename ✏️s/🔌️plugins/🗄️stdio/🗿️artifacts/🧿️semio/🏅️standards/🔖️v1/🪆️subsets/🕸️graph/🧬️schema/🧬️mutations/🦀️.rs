@@ -109,16 +109,7 @@ pub fn inverse_semio_graph_mutation(mutation: &SemioGraphMutation, base: &SemioG
     })
 }
 
-/// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
-/// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
-/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors
-/// carry — into a real [`SemioGraphMutation`]. Payload fields are snake_case (`new_position`, `new_label`) while the snapshot side is
-/// camelCase — two different conventions in one specification vector, which is precisely the kind of
-/// detail a transcribed Rust literal gets wrong silently.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_graph_mutation_json(text: &str) -> Result<SemioGraphMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests

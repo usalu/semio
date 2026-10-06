@@ -3,7 +3,8 @@
 
 use crate::engine::space::terminology::SStudioLabels;
 use semio_framework_os::{WorkflowSnapshot, OS_WORKFLOW_VFS_ROOT_ID};
-use semio_framework_plugin::{resolve_labels, LocalizedLabel, SurfaceKind, ViewModel, WindowKindDefinition};
+use semio_framework_ui_locale::{LocalizedLabel};
+use semio_framework_plugin::{resolve_labels, SurfaceKind, ViewModel, WindowKindDefinition};
 use semio_framework_ui_scene::VirtualFileSystemScene;
 
 //#region 🔖️Constants
@@ -15,6 +16,7 @@ pub const S_PLAY_SURFACE_MEDIA_VFS: &str = "s.play.media-vfs";
 //#region 🔖️Manifest
 pub async fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: S_PLAY_WINDOW_MEDIA_VFS.into(),
         label: LocalizedLabel::native("Media VFS", "Media-VFS"),
         body_key: S_PLAY_BODY_MEDIA_VFS.into(),

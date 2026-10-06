@@ -96,7 +96,7 @@ fn keep_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_imperative_procedure::editor::procedure::config::imperative_config_mutation_report_json;
+    use semio_s_artifact_imperative_procedure::editor::procedure::config::component::io::text::mutations::imperative_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         imperative_config_mutation_report_json(committed.before, committed.mutation, committed.after)

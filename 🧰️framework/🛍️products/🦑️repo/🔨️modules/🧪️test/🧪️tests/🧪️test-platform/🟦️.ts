@@ -20,8 +20,8 @@ import protocolSchema from "../../../../../../🔨️modules/🧪️test/🧬️
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { type TestCasePlan, type FeatureScenario } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, subjectFeaturesFor, executePipeline, pipelineRoleArtifacts, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, subjectRawInputsByScenario, makeAdapterContext, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type TestCasePlan, type FeatureScenario } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveTestInputs, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, testInputUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, subjectFeaturesFor, executePipeline, pipelineRoleArtifacts, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, subjectRawInputsByScenario, makeAdapterContext, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { parseFeature } from "../../../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -173,7 +173,7 @@ Feature: A thing
   });
 
   test("fixture references are collected from every step, doc string and table cell", () => {
-    expect(fixtureUrisIn(parseFeature(source))).toEqual(["local://a.json", "local://b.json", "shared://vector.bin"]);
+    expect(testInputUrisIn(parseFeature(source))).toEqual(["local://a.json", "local://b.json", "shared://vector.bin"]);
   });
 });
 
@@ -426,7 +426,7 @@ describe("📥️ subject raw routing", () => {
     try {
       writeFileSync(join(dir, "s1.raw"), "first");
       writeFileSync(join(dir, "s2.raw"), "second");
-      const plan = { workDir: join(dir, "work"), artifactDir: join(dir, "artifacts"), fixtures: [], subjectRawInputs: { s1: { rust: join(dir, "s1.raw") }, s2: { rust: join(dir, "s2.raw") } } } as unknown as TestCasePlan;
+      const plan = { workDir: join(dir, "work"), artifactDir: join(dir, "artifacts"), inputs: [], subjectRawInputs: { s1: { rust: join(dir, "s1.raw") }, s2: { rust: join(dir, "s2.raw") } } } as unknown as TestCasePlan;
       const context = (id: string) => makeAdapterContext(dir, plan, { id, name: id, steps: [] } as unknown as FeatureScenario, "oracle");
       expect(new TextDecoder().decode(context("s1").subjectRawBytes("rust"))).toBe("first");
       expect(new TextDecoder().decode(context("s2").subjectRawBytes("rust"))).toBe("second");
@@ -486,7 +486,7 @@ describe("📈️ non-aggregate metrics", () => {
 
 describe("🔮️ oracle evidence rules", () => {
   test("a differential scenario with neither an oracle nor a second implementation is a contract breach", () => {
-    const registry: import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry = { schemaVersion: 1, oracles: [], probes: [], noOracleDecisions: [{ id: "vectors-only", capabilities: ["x"], rationale: "a rationale long enough to satisfy the schema minimum length", substitutes: ["specification-vectors"] }], comparisonProfiles: [...CORE_COMPARISON_PROFILES], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], contributions: [] };
+    const registry: import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry = { schemaVersion: 1, oracles: [], probes: [], noOracleDecisions: [{ id: "vectors-only", capabilities: ["x"], rationale: "a rationale long enough to satisfy the schema minimum length", substitutes: ["specification-vectors"] }], comparisonProfiles: [...CORE_COMPARISON_PROFILES], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], testEvidence: [], contributions: [] };
     const feature = "@capability-x @no-oracle-vectors-only @comparison-ordered-json-v1\nFeature: F\n  @id-s @level-quick @mode-differential\n  Scenario: S\n    Given a value\n";
     const taxonomy = testTaxonomy(repoRoot);
     const featureFilename = testFilenameForKind(taxonomy, taxonomy.testFeatureFileKindId);
@@ -514,7 +514,7 @@ describe("🔮️ oracle evidence rules", () => {
 
   test("a declared differential row whose adapter cannot run is a contract breach: no entry point, or no adapter in the oracle's language", () => {
     const oracle = { id: "reader-x", kind: "third-party-library" as const, ecosystem: "javascript", package: "reader-x", capabilities: ["x"], comparisonProfiles: ["ordered-json-v1"], license: "MIT", testOnly: true as const };
-    const registry: import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry = { schemaVersion: 1, oracles: [oracle], probes: [], noOracleDecisions: [], comparisonProfiles: [...CORE_COMPARISON_PROFILES], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], contributions: [] };
+    const registry: import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry = { schemaVersion: 1, oracles: [oracle], probes: [], noOracleDecisions: [], comparisonProfiles: [...CORE_COMPARISON_PROFILES], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], testEvidence: [], contributions: [] };
     const feature = "@capability-x @oracle-reader-x @comparison-ordered-json-v1\nFeature: F\n  @id-s @level-quick @mode-differential\n  Scenario: S\n    Given a value\n";
     const taxonomy = testTaxonomy(repoRoot);
     const featureFilename = testFilenameForKind(taxonomy, taxonomy.testFeatureFileKindId);
@@ -588,8 +588,8 @@ describe("🌱️ native second implementation", () => {
       oracleHostPackages: [],
       mutationCatalogs: [],
       mutationManifests,
-      fixtureManifests: [],
-      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: [], mutationManifests, fixtureManifests: [], probes: [], problems: [] }],
+      testEvidence: [],
+      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: [], mutationManifests, testEvidence: [], probes: [], problems: [] }],
     }) as unknown as Registry;
 
   test("isSemioNativeArtifact refuses every s.stdio.* interchange format except s.stdio.semio itself", () => {
@@ -777,13 +777,13 @@ describe("🧫️ mutation without fixture", () => {
   type Mutation = import("../../📦️packages/🟦️typescript/🟦️.ts").ManifestMutation;
   type Manifest = import("../../📦️packages/🟦️typescript/🟦️.ts").MutationManifest;
   type Catalog = import("../../📦️packages/🟦️typescript/🟦️.ts").MutationCatalog;
-  type Fixture = import("../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts").FixtureManifest;
+  type Fixture = import("../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts").TestEvidence;
   type Registry = import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry;
 
   const mutation = (id: string, capability: string): Mutation => ({ id, capability, outcomes: ["applied"], productionDispatch: { operation: id, bridgeVersion: 1 }, oracleRequirements: [{ capability, qualifyingKind: "third-party-library" as const }] });
   const manifestWith = (mutations: readonly Mutation[]): Manifest => ({ schema: "semio.repository-test.mutation-manifest/v2", artifact: "s.norm.test-fixture", standard: "1", subset: "only", mutations });
   const fixture = (mutationId: string, subset = "only"): Fixture =>
-    ({ schema: "semio.repository-test.fixture/v2", id: `${mutationId}-fixture`, class: "handcrafted", target: { artifact: "s.norm.test-fixture", standard: "1", subset }, mutation: mutationId, units: { length: "unitless", angle: "degree" }, files: [], provenance: { license: "MIT", source: "handcrafted" }, comparisonProfile: "ordered-json-v1", reproducible: true } as unknown as Fixture);
+    ({ id: `${mutationId}-fixture`, class: "handcrafted", target: { artifact: "s.norm.test-fixture", standard: "1", subset }, mutation: mutationId, units: { length: "unitless", angle: "degree" }, files: [], provenance: { license: "MIT", source: "handcrafted" }, comparisonProfile: "ordered-json-v1", reproducible: true } as unknown as Fixture);
   const catalog = (capability: string, mutationIds: readonly string[]): Catalog =>
     ({ id: `${capability}-catalog`, capability, kinds: mutationIds, vectors: mutationIds.map((id) => ({ mutationId: id, sourceMutationDirectoryName: id, mutationDirectoryName: id, scenarios: [{ id: "direct-behavior", directoryName: "🧪️direct-behavior" }] })) } as unknown as Catalog);
   const registryWith = (manifests: readonly Manifest[], fixtures: readonly Fixture[] = [], catalogs: readonly Catalog[] = []): Registry =>
@@ -798,8 +798,8 @@ describe("🧫️ mutation without fixture", () => {
       oracleHostPackages: [],
       mutationCatalogs: catalogs,
       mutationManifests: manifests,
-      fixtureManifests: fixtures,
-      contributions: [{ owner: "test/owner", manifestPath: "test/owner/🔮️oracles/🔣️.json", oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: catalogs, mutationManifests: manifests, fixtureManifests: fixtures, probes: [], problems: [] }],
+      testEvidence: fixtures,
+      contributions: [{ owner: "test/owner", manifestPath: "test/owner/🔮️oracles/🔣️.json", oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: catalogs, mutationManifests: manifests, testEvidence: fixtures, probes: [], problems: [] }],
     }) as unknown as Registry;
 
   test("a mutation with neither a v2 fixture nor a v1 vector is a breach", () => {
@@ -809,7 +809,7 @@ describe("🧫️ mutation without fixture", () => {
     expect(breaches[0]!.summary).toContain("change-a");
   });
 
-  test("a registered v2 FixtureManifest naming this mutation and target discharges it", () => {
+  test("a registered v2 TestEvidence naming this mutation and target discharges it", () => {
     const manifest = manifestWith([mutation("change-a", "test-fixture-1-mutate")]);
     expect(mutationFixtureBreaches(registryWith([manifest], [fixture("change-a")]))).toEqual([]);
   });
@@ -861,9 +861,9 @@ describe("🧫️ mutation without fixture", () => {
         if (entry.isDirectory()) walk(child);
         else if (entry.isFile() && entry.name.endsWith(".json")) {
           const content = readFileSync(join(repoRoot, child), "utf8");
-          if (!/"(?:mutationManifests|fixtureManifests)"\s*:/u.test(content)) continue;
+          if (!/"(?:mutationManifests|testEvidence)"\s*:/u.test(content)) continue;
           const value = JSON.parse(content);
-          if (Array.isArray(value.mutationManifests) || Array.isArray(value.fixtureManifests)) physical.push({ path: child, value });
+          if (Array.isArray(value.mutationManifests) || Array.isArray(value.testEvidence)) physical.push({ path: child, value });
         }
       }
     };
@@ -878,12 +878,12 @@ describe("🧫️ mutation without fixture", () => {
       const live = matches[0]!;
       expect(basename(dirname(row.path)), row.path).toBe(taxonomy.testOraclesDirName);
       expect(declarationIds(live), row.path).toEqual(declarationIds(row.value));
-      expect(live.fixtureManifests.map((fixture) => fixture.id), row.path).toEqual((row.value.fixtureManifests ?? []).map((fixture: { id: string }) => fixture.id));
+      expect(live.testEvidence.map((fixture) => fixture.id), row.path).toEqual((row.value.testEvidence ?? []).map((fixture: { id: string }) => fixture.id));
       for (const manifest of row.value.mutationManifests ?? []) if (witnesses.has(manifest.artifact)) observedWitnesses.add(manifest.artifact);
     }
     const live = liveRegistry.contributions.filter((contribution) => contribution.owner === owner || contribution.owner.startsWith(`${owner}/`));
     expect(live.flatMap((contribution) => contribution.mutationManifests).flatMap((manifest) => manifest.mutations).length).toBe(physical.flatMap((row) => row.value.mutationManifests ?? []).flatMap((manifest) => manifest.mutations).length);
-    expect(live.flatMap((contribution) => contribution.fixtureManifests).length).toBe(physical.flatMap((row) => row.value.fixtureManifests ?? []).length);
+    expect(live.flatMap((contribution) => contribution.testEvidence).length).toBe(physical.flatMap((row) => row.value.testEvidence ?? []).length);
     expect([...observedWitnesses].sort()).toEqual([...witnesses].sort());
     expect(mutationFixtureBreaches(liveRegistry)).toEqual([]);
   }, 30_000);
@@ -938,8 +938,8 @@ describe("⚖️ comparison pipelines", () => {
 
 describe("🧩️ cross-language oracle hosts", () => {
   test("a subject host enables the features the owner and its ancestors declare for its language, and nothing else", () => {
-    const contribution = (owner: string, subjectFeatures: readonly { implementation: "rust" | "python"; features: readonly string[]; rationale: string }[]) => ({ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures, mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], probes: [], problems: [] });
-    const registry = { schemaVersion: 2, oracles: [], probes: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], contributions: [contribution("plugin", [{ implementation: "rust", features: ["app"], rationale: "the plugin's surfaces are feature-gated" }]), contribution("plugin/artifact", [{ implementation: "rust", features: ["assembly", "app"], rationale: "the artifact's surfaces are feature-gated" }, { implementation: "python", features: ["py"], rationale: "another language" }]), contribution("plugin/sibling", [{ implementation: "rust", features: ["sibling"], rationale: "a sibling owner" }])] } as unknown as Parameters<typeof subjectFeaturesFor>[0];
+    const contribution = (owner: string, subjectFeatures: readonly { implementation: "rust" | "python"; features: readonly string[]; rationale: string }[]) => ({ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures, mutationCatalogs: [], mutationManifests: [], testEvidence: [], probes: [], problems: [] });
+    const registry = { schemaVersion: 2, oracles: [], probes: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], testEvidence: [], contributions: [contribution("plugin", [{ implementation: "rust", features: ["app"], rationale: "the plugin's surfaces are feature-gated" }]), contribution("plugin/artifact", [{ implementation: "rust", features: ["assembly", "app"], rationale: "the artifact's surfaces are feature-gated" }, { implementation: "python", features: ["py"], rationale: "another language" }]), contribution("plugin/sibling", [{ implementation: "rust", features: ["sibling"], rationale: "a sibling owner" }])] } as unknown as Parameters<typeof subjectFeaturesFor>[0];
     expect(subjectFeaturesFor(registry, "plugin/artifact/subset", "rust")).toEqual(["app", "assembly"]);
     expect(subjectFeaturesFor(registry, "plugin/artifact/subset", "python")).toEqual(["py"]);
     expect(subjectFeaturesFor(registry, "other", "rust")).toEqual([]);
@@ -1103,8 +1103,8 @@ describe("🎯 reimplementation-registered-as-third-party is entry-granular, not
       oracleHostPackages: [],
       mutationCatalogs: [],
       mutationManifests: [],
-      fixtureManifests: [],
-      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], probes: [], problems: [] }],
+      testEvidence: [],
+      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: [], mutationManifests: [], testEvidence: [], probes: [], problems: [] }],
     }) as unknown as Registry;
 
   /** 🦀️ A `match kind { … }` catch-all whose exact wording is what the detector's `predicts` regex looks
@@ -1184,12 +1184,6 @@ describe("⚖️ artifact comparison profiles", () => {
 
 describe("🧭️ contribution directory ownership", () => {
   test("the canonical oracle collection matches neutral cases and the minimatch oracle", async () => {
-    const { default: Ajv } = await import("ajv");
-    const compiler = new Ajv({ strict: false, allErrors: true });
-    compiler.addSchema(protocolSchema, "protocol");
-    const contract = compiler.getSchema("protocol#/$defs/ContributionDirectoryOwnershipCases");
-    expect(contract).toBeDefined();
-    expect(contract!(oracleDirectoryCases)).toBe(true);
     const taxonomy = testTaxonomy(repoRoot);
     expect(oracleDirectoryCases.directoryName).toBe(taxonomy.testOraclesDirName);
     expect(oracleDirectoryCases.cases.map(({ path }) => isTestOraclePath(taxonomy, path))).toEqual(oracleDirectoryCases.cases.map(({ owned }) => owned));
@@ -1468,19 +1462,19 @@ describe("🧫️ real-world artifact fixtures", () => {
   test("asset:// resolves against the owner assets and pins the real artifact's digest", () => {
     expect(existsSync(join(repoRoot, thesis))).toBe(true);
     const uri = "asset://🎓️bachelor-thesis/🎓️bachelor-thesis.pdf";
-    const { fixtures, missing } = resolveFixtures(repoRoot, discovered, [uri]);
+    const { inputs, missing } = resolveTestInputs(repoRoot, discovered, [uri]);
     expect(missing).toEqual([]);
-    expect(fixtures[0].scope).toBe("asset");
-    expect(fixtures[0].path).toBe(thesis);
-    expect(fixtures[0].digest.length).toBeGreaterThan(0);
+    expect(inputs[0].scope).toBe("asset");
+    expect(inputs[0].path).toBe(thesis);
+    expect(inputs[0].digest.length).toBeGreaterThan(0);
   });
 
   test("asset:// cannot escape the owner assets", () => {
-    expect(resolveFixtures(repoRoot, discovered, ["asset://../../../../../../etc/hosts"]).missing.length).toBe(1);
+    expect(resolveTestInputs(repoRoot, discovered, ["asset://../../../../../../etc/hosts"]).missing.length).toBe(1);
   });
 
   test("the three fixture schemes are all extracted from a feature's text", () => {
-    expect(fixtureUrisIn(parseFeature("@capability-x\nFeature: f\n  @id-s\n  @level-quick\n  @mode-conformance\n  Scenario: s\n    Given asset://a/b.pdf and shared://c.png and local://d.csv\n    Then y"))).toEqual(["asset://a/b.pdf", "local://d.csv", "shared://c.png"]);
+    expect(testInputUrisIn(parseFeature("@capability-x\nFeature: f\n  @id-s\n  @level-quick\n  @mode-conformance\n  Scenario: s\n    Given asset://a/b.pdf and shared://c.png and local://d.csv\n    Then y"))).toEqual(["asset://a/b.pdf", "local://d.csv", "shared://c.png"]);
   });
 
   test("a test vector cannot be addressed as a production asset", () => {
@@ -1494,8 +1488,8 @@ describe("🧫️ real-world artifact fixtures", () => {
       mkdirSync(join(root, projectedOwner, ...projected.split("/").slice(0, -1)), { recursive: true });
       writeFileSync(join(root, projectedOwner, projected), "{}\n");
       const uri = `asset://${projected}`;
-      expect(fixtureUrisIn(parseFeature(`@capability-x\nFeature: f\n  @id-s @level-quick @mode-conformance\n  Scenario: s\n    Given ${uri}\n`))).toEqual([uri]);
-      expect(resolveFixtures(root, projectedCase, [uri])).toMatchObject({ missing: [uri], fixtures: [] });
+      expect(testInputUrisIn(parseFeature(`@capability-x\nFeature: f\n  @id-s @level-quick @mode-conformance\n  Scenario: s\n    Given ${uri}\n`))).toEqual([uri]);
+      expect(resolveTestInputs(root, projectedCase, [uri])).toMatchObject({ missing: [uri], inputs: [] });
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

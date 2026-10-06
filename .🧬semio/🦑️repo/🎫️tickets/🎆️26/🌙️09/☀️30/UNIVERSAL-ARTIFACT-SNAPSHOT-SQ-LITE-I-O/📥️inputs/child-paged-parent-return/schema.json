@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "wire",
+    "paddingByte",
+    "paddingBytes",
+    "wireBytes",
+    "maximumItems",
+    "maximumBytes",
+    "parentSlots",
+    "parentTotalBytes",
+    "lawTurns",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "child-paged-parent-return/v1"
+    },
+    "wire": {
+      "const": "17"
+    },
+    "paddingByte": {
+      "const": 32
+    },
+    "paddingBytes": {
+      "const": 8192
+    },
+    "wireBytes": {
+      "const": 8194
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "const": 4096
+    },
+    "parentSlots": {
+      "const": 1
+    },
+    "parentTotalBytes": {
+      "const": 65536
+    },
+    "lawTurns": {
+      "const": 8322
+    },
+    "cases": {
+      "const": [
+        "zero-items",
+        "live-payload-refusal",
+        "full-parent-refusal",
+        "small-parent-refusal",
+        "actual-page-handoff-and-disposal"
+      ]
+    }
+  }
+}
+

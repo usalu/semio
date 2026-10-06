@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     },
     "edge": {
-      "$ref": "#/$defs/FlowEdge"
+      "$ref": "#/$defs/FlowEdge",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "description": {
+          "en": "Id, kind and endpoints of the edge that is inserted.",
+          "de": "Kennung, Art und Endpunkte der Kante, die eingefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

@@ -1,0 +1,7 @@
+# Framework Publication Owning Source Current
+
+The six actual registered framework Source commands completed exit0, without cache: Space7/7, FlowHost8/8, framework Infinite DAG7/7, Collection6/6, Workflow43/43, Run57/57 (128/128 total). These are distinct concrete framework owners and remain separate from plugin Flow, plugin DAG and plugin Space/Home. Actual command and output: generated/root-six-framework-publication-owning-source-current.log, with exact registered target authority read from each artifact's permanent Rust-package project/router.
+
+This is Source runtime qualification of those six owning selections. It does not prove normal Native publication, retirement, or every unfiltered package law. Current normal Native Flow10/10, Run18/18, framework DAG10/10 are separately retained. Space/Collection and explicit SpaceHistory need their actual current Native gates; Workflow's existing publication law is valid at its declared imperative boundary, without an inferred new ordinary host policy. History intentionally requires explicit publication and is not an absent-hook bug.
+
+Root's actual full48 Native run continues in its isolated sequential Cargo lane. Additional Native outside48, Chart, shipped Stdio13, generic combined IO interoperability, framework Space/Collection/Workflow and History admission are queued for that lane after the running cohort finishes. No unexecuted command is credited as passing.

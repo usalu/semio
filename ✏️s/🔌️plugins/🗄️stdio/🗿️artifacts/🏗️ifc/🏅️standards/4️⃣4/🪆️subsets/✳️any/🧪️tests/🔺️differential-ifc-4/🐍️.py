@@ -72,7 +72,7 @@ KINDS = ["set-snapshot", "set-file-description", "set-file-name", "set-file-sche
 
 def mutable_input(ctx: Context) -> str:
     """🧫️ The work-directory copy of the committed fixture — never the committed file itself."""
-    return ctx.copy_fixture(INPUT, "input.ifc")
+    return ctx.copy_input(INPUT, "input.ifc")
 
 
 # endregion 🔖️Input

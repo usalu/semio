@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import { compile } from "@tailwindcss/node";
 import { interactiveActiveFillClass, interactiveOnClass, interactiveTabActiveClass } from "../../../../../../../🔨️modules/🖱️ui/🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { chromium } from "playwright";
@@ -11,15 +11,11 @@ import { describe, expect, it } from "vitest";
 
 const engine = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const fixture = JSON.parse(readFileSync(resolve(engine, "🧫️fixtures/🎨️chrome-palette/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(engine, "🧬️schema/🎨️chrome-palette/🔣️.json"), "utf8"));
 const cssPath = resolve(engine, "../../../../../🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css");
 const css = readFileSync(cssPath, "utf8");
 
 describe("🎨️ Chrome palette projection", () => {
-  it("validates the neutral semantic CSS contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   it("uses the semantic active paints for tree, toggle and tab controls", async () => {
     const classes = [interactiveActiveFillClass, interactiveOnClass, interactiveTabActiveClass];

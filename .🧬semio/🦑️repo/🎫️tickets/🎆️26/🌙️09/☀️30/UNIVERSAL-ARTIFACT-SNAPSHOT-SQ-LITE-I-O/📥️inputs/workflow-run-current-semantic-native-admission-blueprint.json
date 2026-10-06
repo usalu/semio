@@ -1,0 +1,1124 @@
+{
+  "qualification": "Source-only. Column declarations independently read from authored SQL; arrays use zero-based DSL IDs. No executed receipt supplied by this audit.",
+  "owners": {
+    "Workflow": {
+      "sql": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "tables": [
+        {
+          "table": "workflow_document",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id = 1)"
+            },
+            {
+              "name": "schema",
+              "type": "TEXT",
+              "declaration": "schema TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "workflow_graph",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES workflow_document(id)"
+            },
+            {
+              "name": "schema",
+              "type": "TEXT",
+              "declaration": "schema TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "workflow_node",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "graph_id",
+              "type": "INTEGER",
+              "declaration": "graph_id INTEGER NOT NULL REFERENCES workflow_graph(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK(ordinal >= 0)"
+            },
+            {
+              "name": "node_id",
+              "type": "TEXT",
+              "declaration": "node_id TEXT NOT NULL"
+            },
+            {
+              "name": "plugin_id",
+              "type": "TEXT",
+              "declaration": "plugin_id TEXT NOT NULL"
+            },
+            {
+              "name": "app_id",
+              "type": "TEXT",
+              "declaration": "app_id TEXT NOT NULL"
+            },
+            {
+              "name": "label",
+              "type": "TEXT",
+              "declaration": "label TEXT NOT NULL"
+            },
+            {
+              "name": "yields",
+              "type": "TEXT",
+              "declaration": "yields TEXT NOT NULL"
+            },
+            {
+              "name": "artifact_ref",
+              "type": "TEXT",
+              "declaration": "artifact_ref TEXT NOT NULL"
+            },
+            {
+              "name": "config_ref",
+              "type": "TEXT",
+              "declaration": "config_ref TEXT NOT NULL"
+            },
+            {
+              "name": "x",
+              "type": "REAL",
+              "declaration": "x REAL"
+            },
+            {
+              "name": "y",
+              "type": "REAL",
+              "declaration": "y REAL"
+            },
+            {
+              "name": "width",
+              "type": "REAL",
+              "declaration": "width REAL"
+            },
+            {
+              "name": "height",
+              "type": "REAL",
+              "declaration": "height REAL"
+            },
+            {
+              "name": "x_bits",
+              "type": "INTEGER",
+              "declaration": "x_bits INTEGER NOT NULL"
+            },
+            {
+              "name": "x_class",
+              "type": "TEXT",
+              "declaration": "x_class TEXT NOT NULL CHECK(x_class IN ('finite','positiveInfinity','negativeInfinity','nan'))"
+            },
+            {
+              "name": "y_bits",
+              "type": "INTEGER",
+              "declaration": "y_bits INTEGER NOT NULL"
+            },
+            {
+              "name": "y_class",
+              "type": "TEXT",
+              "declaration": "y_class TEXT NOT NULL CHECK(y_class IN ('finite','positiveInfinity','negativeInfinity','nan'))"
+            },
+            {
+              "name": "width_bits",
+              "type": "INTEGER",
+              "declaration": "width_bits INTEGER NOT NULL"
+            },
+            {
+              "name": "width_class",
+              "type": "TEXT",
+              "declaration": "width_class TEXT NOT NULL CHECK(width_class IN ('finite','positiveInfinity','negativeInfinity','nan'))"
+            },
+            {
+              "name": "height_bits",
+              "type": "INTEGER",
+              "declaration": "height_bits INTEGER NOT NULL"
+            },
+            {
+              "name": "height_class",
+              "type": "TEXT",
+              "declaration": "height_class TEXT NOT NULL CHECK(height_class IN ('finite','positiveInfinity','negativeInfinity','nan'))"
+            }
+          ]
+        },
+        {
+          "table": "workflow_port",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "node_id",
+              "type": "INTEGER",
+              "declaration": "node_id INTEGER NOT NULL REFERENCES workflow_node(id)"
+            },
+            {
+              "name": "collection",
+              "type": "TEXT",
+              "declaration": "collection TEXT NOT NULL CHECK(collection IN ('input','output'))"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK(ordinal >= 0)"
+            },
+            {
+              "name": "endpoint_id",
+              "type": "TEXT",
+              "declaration": "endpoint_id TEXT NOT NULL"
+            },
+            {
+              "name": "port_id",
+              "type": "TEXT",
+              "declaration": "port_id TEXT NOT NULL"
+            },
+            {
+              "name": "label",
+              "type": "TEXT",
+              "declaration": "label TEXT NOT NULL"
+            },
+            {
+              "name": "direction",
+              "type": "INTEGER",
+              "declaration": "direction INTEGER NOT NULL CHECK(direction IN (0,1))"
+            },
+            {
+              "name": "media_class",
+              "type": "INTEGER",
+              "declaration": "media_class INTEGER NOT NULL CHECK(media_class >= 0 AND media_class <= 7)"
+            },
+            {
+              "name": "media_form",
+              "type": "INTEGER",
+              "declaration": "media_form INTEGER NOT NULL CHECK(media_form >= 0 AND media_form <= 15)"
+            },
+            {
+              "name": "kind_id",
+              "type": "TEXT",
+              "declaration": "kind_id TEXT"
+            },
+            {
+              "name": "required",
+              "type": "INTEGER",
+              "declaration": "required INTEGER NOT NULL CHECK(required IN (0,1))"
+            },
+            {
+              "name": "multiplicity",
+              "type": "INTEGER",
+              "declaration": "multiplicity INTEGER NOT NULL CHECK(multiplicity IN (0,1))"
+            }
+          ]
+        },
+        {
+          "table": "workflow_edge",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "graph_id",
+              "type": "INTEGER",
+              "declaration": "graph_id INTEGER NOT NULL REFERENCES workflow_graph(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK(ordinal >= 0)"
+            },
+            {
+              "name": "edge_id",
+              "type": "TEXT",
+              "declaration": "edge_id TEXT NOT NULL"
+            },
+            {
+              "name": "source_node_id",
+              "type": "TEXT",
+              "declaration": "source_node_id TEXT NOT NULL"
+            },
+            {
+              "name": "source_port_id",
+              "type": "TEXT",
+              "declaration": "source_port_id TEXT NOT NULL"
+            },
+            {
+              "name": "target_node_id",
+              "type": "TEXT",
+              "declaration": "target_node_id TEXT NOT NULL"
+            },
+            {
+              "name": "target_port_id",
+              "type": "TEXT",
+              "declaration": "target_port_id TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "workflow_contract",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "edge_id",
+              "type": "INTEGER",
+              "declaration": "edge_id INTEGER NOT NULL REFERENCES workflow_edge(id)"
+            },
+            {
+              "name": "kind_id",
+              "type": "TEXT",
+              "declaration": "kind_id TEXT NOT NULL"
+            },
+            {
+              "name": "media_class",
+              "type": "INTEGER",
+              "declaration": "media_class INTEGER NOT NULL CHECK(media_class >= 0 AND media_class <= 7)"
+            },
+            {
+              "name": "media_form",
+              "type": "INTEGER",
+              "declaration": "media_form INTEGER NOT NULL CHECK(media_form >= 0 AND media_form <= 15)"
+            },
+            {
+              "name": "wire_kind",
+              "type": "TEXT",
+              "declaration": "wire_kind TEXT NOT NULL CHECK(wire_kind IN ('binary','document','intrinsic'))"
+            },
+            {
+              "name": "format_kind",
+              "type": "TEXT",
+              "declaration": "format_kind TEXT"
+            },
+            {
+              "name": "wire_schema",
+              "type": "TEXT",
+              "declaration": "wire_schema TEXT"
+            },
+            {
+              "name": "conversion_from",
+              "type": "INTEGER",
+              "declaration": "conversion_from INTEGER CHECK(conversion_from >= 0 AND conversion_from <= 15)"
+            },
+            {
+              "name": "conversion_to",
+              "type": "INTEGER",
+              "declaration": "conversion_to INTEGER CHECK(conversion_to >= 0 AND conversion_to <= 15)"
+            }
+          ]
+        },
+        {
+          "table": "workflow_parameter",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES workflow_document(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK(ordinal >= 0)"
+            },
+            {
+              "name": "parameter_id",
+              "type": "TEXT",
+              "declaration": "parameter_id TEXT NOT NULL"
+            },
+            {
+              "name": "name",
+              "type": "TEXT",
+              "declaration": "name TEXT NOT NULL"
+            },
+            {
+              "name": "kind",
+              "type": "TEXT",
+              "declaration": "kind TEXT NOT NULL CHECK(kind IN ('numeric','categorical','toggle','text'))"
+            }
+          ]
+        },
+        {
+          "table": "workflow_numeric",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "parameter_id",
+              "type": "INTEGER",
+              "declaration": "parameter_id INTEGER NOT NULL REFERENCES workflow_parameter(id)"
+            },
+            {
+              "name": "value",
+              "type": "REAL",
+              "declaration": "value REAL"
+            },
+            {
+              "name": "min",
+              "type": "REAL",
+              "declaration": "min REAL"
+            },
+            {
+              "name": "max",
+              "type": "REAL",
+              "declaration": "max REAL"
+            },
+            {
+              "name": "step",
+              "type": "REAL",
+              "declaration": "step REAL"
+            },
+            {
+              "name": "value_bits",
+              "type": "INTEGER",
+              "declaration": "value_bits INTEGER NOT NULL"
+            },
+            {
+              "name": "value_class",
+              "type": "TEXT",
+              "declaration": "value_class TEXT NOT NULL CHECK(value_class IN ('finite','positiveInfinity','negativeInfinity','nan'))"
+            },
+            {
+              "name": "min_bits",
+              "type": "INTEGER",
+              "declaration": "min_bits INTEGER"
+            },
+            {
+              "name": "min_class",
+              "type": "TEXT",
+              "declaration": "min_class TEXT CHECK(min_class IN ('finite','positiveInfinity','negativeInfinity','nan'))"
+            },
+            {
+              "name": "max_bits",
+              "type": "INTEGER",
+              "declaration": "max_bits INTEGER"
+            },
+            {
+              "name": "max_class",
+              "type": "TEXT",
+              "declaration": "max_class TEXT CHECK(max_class IN ('finite','positiveInfinity','negativeInfinity','nan'))"
+            },
+            {
+              "name": "step_bits",
+              "type": "INTEGER",
+              "declaration": "step_bits INTEGER"
+            },
+            {
+              "name": "step_class",
+              "type": "TEXT",
+              "declaration": "step_class TEXT CHECK(step_class IN ('finite','positiveInfinity','negativeInfinity','nan'))"
+            }
+          ]
+        },
+        {
+          "table": "workflow_categorical",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "parameter_id",
+              "type": "INTEGER",
+              "declaration": "parameter_id INTEGER NOT NULL REFERENCES workflow_parameter(id)"
+            },
+            {
+              "name": "value",
+              "type": "TEXT",
+              "declaration": "value TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "workflow_category_option",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "categorical_id",
+              "type": "INTEGER",
+              "declaration": "categorical_id INTEGER NOT NULL REFERENCES workflow_categorical(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK(ordinal >= 0)"
+            },
+            {
+              "name": "value",
+              "type": "TEXT",
+              "declaration": "value TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "workflow_toggle",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "parameter_id",
+              "type": "INTEGER",
+              "declaration": "parameter_id INTEGER NOT NULL REFERENCES workflow_parameter(id)"
+            },
+            {
+              "name": "value",
+              "type": "INTEGER",
+              "declaration": "value INTEGER NOT NULL CHECK(value IN (0,1))"
+            }
+          ]
+        },
+        {
+          "table": "workflow_text",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "parameter_id",
+              "type": "INTEGER",
+              "declaration": "parameter_id INTEGER NOT NULL REFERENCES workflow_parameter(id)"
+            },
+            {
+              "name": "value",
+              "type": "TEXT",
+              "declaration": "value TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES workflow_document(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK(ordinal >= 0)"
+            },
+            {
+              "name": "parameter_id",
+              "type": "TEXT",
+              "declaration": "parameter_id TEXT NOT NULL"
+            },
+            {
+              "name": "node_id",
+              "type": "TEXT",
+              "declaration": "node_id TEXT NOT NULL"
+            },
+            {
+              "name": "field_path",
+              "type": "TEXT",
+              "declaration": "field_path TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "workflow_input",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES workflow_document(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK(ordinal >= 0)"
+            },
+            {
+              "name": "input_id",
+              "type": "TEXT",
+              "declaration": "input_id TEXT NOT NULL"
+            },
+            {
+              "name": "kind_id",
+              "type": "TEXT",
+              "declaration": "kind_id TEXT NOT NULL"
+            },
+            {
+              "name": "selector",
+              "type": "TEXT",
+              "declaration": "selector TEXT NOT NULL"
+            },
+            {
+              "name": "required",
+              "type": "INTEGER",
+              "declaration": "required INTEGER NOT NULL CHECK(required IN (0,1))"
+            },
+            {
+              "name": "multiplicity",
+              "type": "INTEGER",
+              "declaration": "multiplicity INTEGER NOT NULL CHECK(multiplicity IN (0,1))"
+            }
+          ]
+        },
+        {
+          "table": "workflow_input_binding",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES workflow_document(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK(ordinal >= 0)"
+            },
+            {
+              "name": "input_id",
+              "type": "TEXT",
+              "declaration": "input_id TEXT NOT NULL"
+            },
+            {
+              "name": "node_id",
+              "type": "TEXT",
+              "declaration": "node_id TEXT NOT NULL"
+            },
+            {
+              "name": "port_id",
+              "type": "TEXT",
+              "declaration": "port_id TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "workflow_output_binding",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK(id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES workflow_document(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK(ordinal >= 0)"
+            },
+            {
+              "name": "node_id",
+              "type": "TEXT",
+              "declaration": "node_id TEXT NOT NULL"
+            },
+            {
+              "name": "port_id",
+              "type": "TEXT",
+              "declaration": "port_id TEXT NOT NULL"
+            },
+            {
+              "name": "path_template",
+              "type": "TEXT",
+              "declaration": "path_template TEXT NOT NULL"
+            }
+          ]
+        }
+      ],
+      "dslFields": {
+        "snapshot": [
+          "schema",
+          "graph",
+          "parameters(Statements)",
+          "parameter_bindings",
+          "inputs",
+          "input_bindings",
+          "output_bindings"
+        ],
+        "graph": [
+          "schema",
+          "nodes",
+          "edges"
+        ],
+        "node": [
+          "id",
+          "plugin_id",
+          "app_id",
+          "label",
+          "yields",
+          "artifact_ref",
+          "config_ref",
+          "x",
+          "y",
+          "width",
+          "height",
+          "inputs",
+          "outputs"
+        ],
+        "edge": [
+          "id",
+          "source_node_id",
+          "source_port_id",
+          "target_node_id",
+          "target_port_id",
+          "contract"
+        ],
+        "port": [
+          "id",
+          "port_id",
+          "label",
+          "direction(Enum)",
+          "class(Enum)",
+          "form(Enum)",
+          "kind_id(optionalText)",
+          "required(Bool)",
+          "multiplicity(Enum)"
+        ],
+        "parameters": {
+          "numeric": [
+            "id",
+            "name",
+            "value",
+            "min(optional)",
+            "max(optional)",
+            "step(optional)"
+          ],
+          "categorical": [
+            "id",
+            "name",
+            "value",
+            "options"
+          ],
+          "toggle": [
+            "id",
+            "name",
+            "value(Bool)"
+          ],
+          "text": [
+            "id",
+            "name",
+            "value"
+          ]
+        },
+        "contract": [
+          "kind_id",
+          "class(Enum)",
+          "form(Enum)",
+          "wire_kind(Text)",
+          "wire_format(optionalText)",
+          "wire_schema(optionalText)",
+          "conversion_from(optionalEnum)",
+          "conversion_to(optionalEnum)"
+        ],
+        "parameter_binding": [
+          "parameter_id",
+          "node_id",
+          "field_path"
+        ],
+        "input_binding": [
+          "input_id",
+          "node_id",
+          "port_id"
+        ],
+        "output_binding": [
+          "node_id",
+          "port_id",
+          "path_template"
+        ]
+      }
+    },
+    "Run": {
+      "sql": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+      "tables": [
+        {
+          "table": "run_document",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK (id = 1)"
+            },
+            {
+              "name": "schema",
+              "type": "TEXT",
+              "declaration": "schema TEXT NOT NULL"
+            },
+            {
+              "name": "workflow_ref",
+              "type": "TEXT",
+              "declaration": "workflow_ref TEXT NOT NULL"
+            },
+            {
+              "name": "workflow_checkpoint_id",
+              "type": "TEXT",
+              "declaration": "workflow_checkpoint_id TEXT NOT NULL"
+            },
+            {
+              "name": "input_collection_ref",
+              "type": "TEXT",
+              "declaration": "input_collection_ref TEXT NOT NULL"
+            },
+            {
+              "name": "input_snapshot_id",
+              "type": "TEXT",
+              "declaration": "input_snapshot_id TEXT NOT NULL"
+            },
+            {
+              "name": "output_collection_ref",
+              "type": "TEXT",
+              "declaration": "output_collection_ref TEXT NOT NULL"
+            },
+            {
+              "name": "status",
+              "type": "INTEGER",
+              "declaration": "status INTEGER NOT NULL CHECK (status >= 0 AND status <= 4)"
+            },
+            {
+              "name": "started_at",
+              "type": "TEXT",
+              "declaration": "started_at TEXT NOT NULL"
+            },
+            {
+              "name": "finished_at",
+              "type": "TEXT",
+              "declaration": "finished_at TEXT"
+            },
+            {
+              "name": "sealed",
+              "type": "INTEGER",
+              "declaration": "sealed INTEGER NOT NULL CHECK (sealed IN (0,1))"
+            }
+          ]
+        },
+        {
+          "table": "run_trigger",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK (id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES run_document(id)"
+            },
+            {
+              "name": "kind",
+              "type": "TEXT",
+              "declaration": "kind TEXT NOT NULL CHECK (kind IN ('manual','automation'))"
+            },
+            {
+              "name": "actor",
+              "type": "TEXT",
+              "declaration": "actor TEXT"
+            },
+            {
+              "name": "automation_ref",
+              "type": "TEXT",
+              "declaration": "automation_ref TEXT"
+            },
+            {
+              "name": "event_fingerprint",
+              "type": "TEXT",
+              "declaration": "event_fingerprint TEXT"
+            }
+          ]
+        },
+        {
+          "table": "run_parameter_value",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK (id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES run_document(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK (ordinal >= 0)"
+            },
+            {
+              "name": "parameter_id",
+              "type": "TEXT",
+              "declaration": "parameter_id TEXT NOT NULL"
+            },
+            {
+              "name": "value",
+              "type": "TEXT",
+              "declaration": "value TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "run_node",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK (id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES run_document(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK (ordinal >= 0)"
+            },
+            {
+              "name": "node_id",
+              "type": "TEXT",
+              "declaration": "node_id TEXT NOT NULL"
+            },
+            {
+              "name": "status",
+              "type": "INTEGER",
+              "declaration": "status INTEGER NOT NULL CHECK (status >= 0 AND status <= 2)"
+            },
+            {
+              "name": "document_fingerprint",
+              "type": "TEXT",
+              "declaration": "document_fingerprint TEXT NOT NULL"
+            },
+            {
+              "name": "config_fingerprint",
+              "type": "TEXT",
+              "declaration": "config_fingerprint TEXT NOT NULL"
+            },
+            {
+              "name": "duration_ms",
+              "type": "REAL",
+              "declaration": "duration_ms REAL"
+            },
+            {
+              "name": "duration_ms_bits",
+              "type": "INTEGER",
+              "declaration": "duration_ms_bits INTEGER NOT NULL"
+            },
+            {
+              "name": "duration_ms_class",
+              "type": "TEXT",
+              "declaration": "duration_ms_class TEXT NOT NULL CHECK (duration_ms_class IN ('finite','positiveInfinity','negativeInfinity','nan'))"
+            }
+          ]
+        },
+        {
+          "table": "run_port_fingerprint",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK (id > 0)"
+            },
+            {
+              "name": "node_id",
+              "type": "INTEGER",
+              "declaration": "node_id INTEGER NOT NULL REFERENCES run_node(id)"
+            },
+            {
+              "name": "direction",
+              "type": "TEXT",
+              "declaration": "direction TEXT NOT NULL CHECK (direction IN ('input','output'))"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK (ordinal >= 0)"
+            },
+            {
+              "name": "port_id",
+              "type": "TEXT",
+              "declaration": "port_id TEXT NOT NULL"
+            },
+            {
+              "name": "fingerprint",
+              "type": "TEXT",
+              "declaration": "fingerprint TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "run_output_artifact",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK (id > 0)"
+            },
+            {
+              "name": "node_id",
+              "type": "INTEGER",
+              "declaration": "node_id INTEGER NOT NULL REFERENCES run_node(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK (ordinal >= 0)"
+            },
+            {
+              "name": "port_id",
+              "type": "TEXT",
+              "declaration": "port_id TEXT NOT NULL"
+            },
+            {
+              "name": "artifact_id",
+              "type": "TEXT",
+              "declaration": "artifact_id TEXT NOT NULL"
+            },
+            {
+              "name": "path",
+              "type": "TEXT",
+              "declaration": "path TEXT NOT NULL"
+            }
+          ]
+        },
+        {
+          "table": "run_log",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "declaration": "id INTEGER PRIMARY KEY CHECK (id > 0)"
+            },
+            {
+              "name": "document_id",
+              "type": "INTEGER",
+              "declaration": "document_id INTEGER NOT NULL REFERENCES run_document(id)"
+            },
+            {
+              "name": "ordinal",
+              "type": "INTEGER",
+              "declaration": "ordinal INTEGER NOT NULL CHECK (ordinal >= 0)"
+            },
+            {
+              "name": "node_id",
+              "type": "TEXT",
+              "declaration": "node_id TEXT NOT NULL"
+            },
+            {
+              "name": "level",
+              "type": "TEXT",
+              "declaration": "level TEXT NOT NULL"
+            },
+            {
+              "name": "message",
+              "type": "TEXT",
+              "declaration": "message TEXT NOT NULL"
+            },
+            {
+              "name": "at",
+              "type": "TEXT",
+              "declaration": "at TEXT NOT NULL"
+            }
+          ]
+        }
+      ],
+      "dslFields": {
+        "snapshot": [
+          "schema",
+          "workflow_ref",
+          "workflow_checkpoint_id",
+          "input_collection_ref",
+          "input_snapshot_id",
+          "parameter_values",
+          "output_collection_ref",
+          "status(Enum)",
+          "trigger(Block)",
+          "node_records",
+          "logs",
+          "started_at",
+          "finished_at(optionalText)",
+          "sealed(Bool)"
+        ],
+        "trigger": [
+          "kind",
+          "actor(optional)",
+          "automation_ref(optional)",
+          "event_fingerprint(optional)"
+        ],
+        "node": [
+          "node_id",
+          "status(Enum)",
+          "document_fingerprint",
+          "config_fingerprint",
+          "input_fingerprints",
+          "output_fingerprints",
+          "outputs",
+          "duration_ms(Float)"
+        ],
+        "parameter_value": [
+          "parameter_id",
+          "value"
+        ],
+        "fingerprint": [
+          "port_id",
+          "fingerprint"
+        ],
+        "output": [
+          "port_id",
+          "artifact_id",
+          "path"
+        ],
+        "log": [
+          "node_id",
+          "level",
+          "message",
+          "at"
+        ]
+      }
+    }
+  }
+}

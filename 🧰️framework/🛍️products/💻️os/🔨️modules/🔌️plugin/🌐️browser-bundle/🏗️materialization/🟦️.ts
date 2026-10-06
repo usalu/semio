@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { SHARD_LIVENESS_POLICY } from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 /** 🌐 Shared jco transpile + plugin web glue (dev runner + extension store).
  *
@@ -27,19 +28,8 @@ export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
 export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
 export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fonts.bin";
 
-/** 🫀️ The generated worker's progress-heartbeat cadence, interpolated into
- * {@link shardWorkerSource}. Its OWNER is the schema-owned liveness policy
- * (`https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/schema.json#/$defs/ShardClient` —
- * `🎭️actor/📮️shard-client/🧬️schema/🔣️.json` +
- * `🧫️fixtures/🔣️.json`, mirrored on the host side by `SHARD_LIVENESS_POLICY`); this declaration is
- * held equal to `policy.progressIntervalMs` by that module's own in-source suite, which reads this
- * literal straight out of this file, so editing one alone fails closed.
- *
- * Declared rather than read from the fixture at generation time on purpose: this module sits in
- * `⚙️vite.config.ts`'s import graph and is bundled by `Bun.build` for the bench harness, where
- * neither a relative `import.meta.url` file read nor an import of `📮️shard-client/🟦️.ts` (which
- * would drag the whole kernel/ui/resident graph into config loading) survives. */
-export const SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS = 1000;
+/** 🫀️ Uses the canonical lightweight shard watchdog policy for generated progress ticks. */
+export const SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS = SHARD_LIVENESS_POLICY.progressIntervalMs;
 
 /** 📤️ The generated worker's per-chunk byte cap for the segmented-download lane, interpolated into
  * {@link shardWorkerSource}. Its OWNER is the schema-owned chunk contract

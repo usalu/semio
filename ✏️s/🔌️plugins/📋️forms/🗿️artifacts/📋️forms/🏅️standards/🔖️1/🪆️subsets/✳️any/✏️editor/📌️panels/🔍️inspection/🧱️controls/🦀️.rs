@@ -57,7 +57,7 @@ fn property_label<'a>(field: &str, labels: &'a FormsLabels) -> &'a str {
         "default" => labels.default.as_str(), "min" => labels.min.as_str(), "max" => labels.max.as_str(),
         "step" => labels.step_field.as_str(), "unit" => labels.unit.as_str(), "schema" => labels.schema.as_str(),
         "text" => labels.text.as_str(), "src" => labels.src.as_str(), "accept" => labels.accept.as_str(),
-        "fixtureSlug" => labels.fixture_slug.as_str(), _ => labels.label.as_str(),
+        "exampleId" => labels.example_id.as_str(), _ => labels.label.as_str(),
     }
 }
 
@@ -71,7 +71,7 @@ fn property_value(question: &FormQuestion, field: &str) -> String {
         "step" => question.step.map(|v| v.to_string()).unwrap_or_default(),
         "unit" => question.unit.clone().unwrap_or_default(), "schema" => question.schema.clone().unwrap_or_default(),
         "text" => question.text.clone().unwrap_or_default(), "src" => question.src.clone().unwrap_or_default(),
-        "accept" => question.accept.clone().unwrap_or_default(), "fixtureSlug" => question.fixture_slug.clone().unwrap_or_default(),
+        "accept" => question.accept.clone().unwrap_or_default(), "exampleId" => question.example_id.clone().unwrap_or_default(),
         _ => String::new(),
     }
 }

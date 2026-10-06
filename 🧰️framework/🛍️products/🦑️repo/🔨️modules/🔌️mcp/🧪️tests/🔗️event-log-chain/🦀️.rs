@@ -7,7 +7,7 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 //#region 🔖️Support
 
 fn fixture(ctx: &Context) -> Result<Json, String> {
-    let raw = ctx.fixture_bytes("shared://🔗️event-chain.json")?;
+    let raw = ctx.input_bytes("shared://🔗️event-chain.json")?;
     parse_json(&String::from_utf8_lossy(&raw))
 }
 

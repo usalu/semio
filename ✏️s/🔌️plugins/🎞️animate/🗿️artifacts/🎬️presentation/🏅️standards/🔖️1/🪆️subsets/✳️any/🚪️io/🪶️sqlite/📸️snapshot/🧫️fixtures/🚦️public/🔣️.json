@@ -1,0 +1,33 @@
+{
+  "metadataColumns": [
+    "id",
+    "artifact_kind",
+    "standard",
+    "subset",
+    "schema_version",
+    "native_encoding"
+  ],
+  "metadata": {
+    "id": 1,
+    "artifact_kind": "s.animate.presentation",
+    "standard": "1",
+    "subset": "*",
+    "schema_version": 1
+  },
+  "nativeEncodings": [
+    "binary",
+    "text"
+  ],
+  "domainTables": [
+    "presentation_document",
+    "presentation_source",
+    "presentation_tile",
+    "presentation_child"
+  ],
+  "entityIdentity": "positive-rowid",
+  "independentEdit": {
+    "sql": "UPDATE presentation_tile SET name=? WHERE ordinal=0",
+    "value": "Public SQLite 日本\u0000literal €"
+  },
+  "retirement": "explicit"
+}

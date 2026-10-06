@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "tables": [
+    "presentation_document",
+    "presentation_source",
+    "presentation_tile",
+    "presentation_child"
+  ],
+  "cases": [
+    {
+      "name": "complete-owner",
+      "word": null,
+      "mode": "complete",
+      "bytes": 562,
+      "rows": 6
+    },
+    {
+      "name": "geometry-0000000000000000",
+      "word": "0000000000000000",
+      "mode": "complete",
+      "bytes": 562,
+      "rows": 6
+    },
+    {
+      "name": "geometry-8000000000000000",
+      "word": "8000000000000000",
+      "mode": "complete",
+      "bytes": 562,
+      "rows": 6
+    },
+    {
+      "name": "geometry-0000000000000001",
+      "word": "0000000000000001",
+      "mode": "complete",
+      "bytes": 562,
+      "rows": 6
+    },
+    {
+      "name": "geometry-3ff0000000000000",
+      "word": "3ff0000000000000",
+      "mode": "complete",
+      "bytes": 562,
+      "rows": 6
+    },
+    {
+      "name": "geometry-7ff0000000000000",
+      "word": "7ff0000000000000",
+      "mode": "complete",
+      "bytes": 652,
+      "rows": 6
+    },
+    {
+      "name": "geometry-fff0000000000000",
+      "word": "fff0000000000000",
+      "mode": "complete",
+      "bytes": 652,
+      "rows": 6
+    },
+    {
+      "name": "geometry-7ff0000000000001",
+      "word": "7ff0000000000001",
+      "mode": "complete",
+      "bytes": 463,
+      "rows": 6
+    },
+    {
+      "name": "geometry-7ff8123456789abc",
+      "word": "7ff8123456789abc",
+      "mode": "complete",
+      "bytes": 463,
+      "rows": 6
+    },
+    {
+      "name": "geometry-fff123456789abcd",
+      "word": "fff123456789abcd",
+      "mode": "complete",
+      "bytes": 463,
+      "rows": 6
+    },
+    {
+      "name": "absent-options-and-empty-tiles",
+      "word": null,
+      "mode": "absent",
+      "bytes": 281,
+      "rows": 4
+    },
+    {
+      "name": "present-zero-options-and-empty-tiles",
+      "word": null,
+      "mode": "zero",
+      "bytes": 311,
+      "rows": 4
+    }
+  ]
+}

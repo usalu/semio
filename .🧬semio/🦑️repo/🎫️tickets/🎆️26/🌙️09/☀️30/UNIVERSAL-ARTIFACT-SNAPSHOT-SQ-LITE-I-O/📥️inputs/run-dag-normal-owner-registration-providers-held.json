@@ -1,0 +1,17 @@
+{
+  "qualification": "HELD source-only; no production edits or compiler/gates",
+  "pairs": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🦀️.rs",
+      "before": "impl store::ArtifactPack for RunArtifact {\n",
+      "after": "impl store::ArtifactPack for RunArtifact {\n    /// 📣️ Publishes this actual owner through ordinary Store construction and hydration.\n    fn native_snapshot_registration() -> Option<(store::io_schema::Dialect, store::ArtifactCodec)> {\n        Some((store::io_schema::Dialect { artifact_kind: \"os.run\", standard: store::io_schema::StandardId(\"1\"), subset: store::io_schema::SubsetId(\"*\") }, store::ArtifactCodec::bare::<Self, crate::RunMutation>(S_RUN_SCHEMA)))\n    }\n",
+      "guard": "exactly one before region; retain all other bytes"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🦀️.rs",
+      "before": "impl crate::os_store::ArtifactPack for DagSnapshot {\n",
+      "after": "impl crate::os_store::ArtifactPack for DagSnapshot {\n /// 📣️ Publishes this actual owner through ordinary Store construction and hydration.\n fn native_snapshot_registration() -> Option<(crate::os_store::io_schema::Dialect, crate::os_store::ArtifactCodec)> {\n     Some((crate::os_store::io_schema::Dialect { artifact_kind: \"dag.host_snapshot\", standard: crate::os_store::io_schema::StandardId(\"1\"), subset: crate::os_store::io_schema::SubsetId(\"*\") }, crate::os_store::ArtifactCodec::bare::<Self, DagMutation>(DAG_DOCUMENT_SCHEMA)))\n }\n",
+      "guard": "exactly one before region; retain all other bytes"
+    }
+  ]
+}

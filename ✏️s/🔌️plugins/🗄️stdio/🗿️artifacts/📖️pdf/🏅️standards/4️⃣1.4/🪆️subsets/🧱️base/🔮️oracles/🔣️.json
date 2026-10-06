@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧬️ Exact 5-leaf PDF 1.4/ANY catalog. Reference lopdf never links the subject implementation.",
+  "_comment": "🧬️ Five independent lopdf PDF operation kinds plus two separately declared own snapshot/path contract kinds; empty contract vectors carry no third-party coverage credit.",
   "oracles": [
     {
       "id": "lopdf-pdf-1-4-mutate",
@@ -133,6 +133,17 @@
         "move-page",
         "resize-page",
         "replace-page-text"
+      ]
+    },
+    {
+      "id": "pdf-1-4-base-snapshot-operation-contract",
+      "capability": "pdf-1-4-snapshot-operation-contract",
+      "standardDirectoryName": "4️⃣1.4",
+      "subsetDirectoryName": "🧱️base",
+      "vectors": [],
+      "kinds": [
+        "set-snapshot",
+        "patch-snapshot"
       ]
     }
   ],
@@ -406,9 +417,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-page",
       "class": "third-party-generated",
       "target": {
@@ -457,7 +467,6 @@
       "comparisonPipeline": "pdf-1-4-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-page",
       "class": "third-party-generated",
       "target": {
@@ -506,7 +515,6 @@
       "comparisonPipeline": "pdf-1-4-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-page",
       "class": "third-party-generated",
       "target": {
@@ -555,7 +563,6 @@
       "comparisonPipeline": "pdf-1-4-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "resize-page",
       "class": "third-party-generated",
       "target": {
@@ -604,7 +611,6 @@
       "comparisonPipeline": "pdf-1-4-base-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-page-text",
       "class": "third-party-generated",
       "target": {

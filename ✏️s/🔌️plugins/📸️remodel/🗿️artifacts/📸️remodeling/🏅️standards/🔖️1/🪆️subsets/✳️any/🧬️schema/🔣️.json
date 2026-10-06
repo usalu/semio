@@ -155,7 +155,10 @@
               "en": "Horizontal focal length in pixels.",
               "de": "Horizontale Brennweite in Pixeln."
             },
-            "unit": "px"
+            "unit": "px",
+            "widget": "stepper",
+            "precision": 1,
+            "step": 1
           }
         },
         "fy": {
@@ -170,7 +173,10 @@
               "en": "Vertical focal length in pixels.",
               "de": "Vertikale Brennweite in Pixeln."
             },
-            "unit": "px"
+            "unit": "px",
+            "widget": "stepper",
+            "precision": 1,
+            "step": 1
           }
         },
         "cx": {
@@ -185,7 +191,10 @@
               "en": "Horizontal principal point in pixels.",
               "de": "Horizontaler Hauptpunkt in Pixeln."
             },
-            "unit": "px"
+            "unit": "px",
+            "widget": "stepper",
+            "precision": 1,
+            "step": 1
           }
         },
         "cy": {
@@ -200,7 +209,10 @@
               "en": "Vertical principal point in pixels.",
               "de": "Vertikaler Hauptpunkt in Pixeln."
             },
-            "unit": "px"
+            "unit": "px",
+            "widget": "stepper",
+            "precision": 1,
+            "step": 1
           }
         },
         "skew": {
@@ -214,7 +226,10 @@
             "description": {
               "en": "Axis skew of the image sensor.",
               "de": "Achsenscherung des Bildsensors."
-            }
+            },
+            "widget": "stepper",
+            "precision": 4,
+            "step": 0.001
           }
         },
         "distortion": {
@@ -397,7 +412,8 @@
               "en": "Radius of the matching window, in pixels.",
               "de": "Radius des Vergleichsfensters, in Pixeln."
             },
-            "unit": "px"
+            "unit": "px",
+            "step": 1
           }
         },
         "minViewConsistency": {
@@ -414,7 +430,8 @@
             "description": {
               "en": "How many views must agree on a depth for it to be kept.",
               "de": "Wie viele Ansichten einer Tiefe zustimmen müssen, damit sie bleibt."
-            }
+            },
+            "step": 1
           }
         },
         "confidenceThreshold": {
@@ -445,7 +462,8 @@
             "description": {
               "en": "The most points the dense cloud keeps.",
               "de": "Die meisten Punkte, die die dichte Wolke behält."
-            }
+            },
+            "step": 10000
           }
         }
       }
@@ -516,7 +534,8 @@
             "description": {
               "en": "How many keypoints each frame aims for.",
               "de": "Wie viele Merkmale jedes Bild anstrebt."
-            }
+            },
+            "step": 100
           }
         },
         "octaves": {
@@ -533,7 +552,8 @@
             "description": {
               "en": "How many scale octaves the detector searches.",
               "de": "Wie viele Skalenoktaven der Detektor durchsucht."
-            }
+            },
+            "step": 1
           }
         },
         "edgeThreshold": {
@@ -566,7 +586,20 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame",
+              "de": "Bild"
+            },
+            "description": {
+              "en": "The frame's index in its stream.",
+              "de": "Der Index des Bilds in seinem Stream."
+            },
+            "widget": "stepper",
+            "role": "value",
+            "step": 1
+          }
         },
         "timestampMs": {
           "$ref": "#/$defs/Binary64Transport",
@@ -580,7 +613,10 @@
               "en": "When the frame was taken, in milliseconds from the stream start.",
               "de": "Wann das Bild aufgenommen wurde, in Millisekunden ab Streambeginn."
             },
-            "unit": "ms"
+            "unit": "ms",
+            "widget": "stepper",
+            "precision": 0,
+            "step": 1
           }
         },
         "assetId": {
@@ -626,7 +662,8 @@
             "description": {
               "en": "The frame of that stream the point is observed in.",
               "de": "Das Bild dieses Streams, in dem der Punkt beobachtet wird."
-            }
+            },
+            "step": 1
           }
         },
         "pixel": {
@@ -679,7 +716,10 @@
               "en": "Geographic longitude of the local origin; empty when not georeferenced.",
               "de": "Geografische Länge des lokalen Ursprungs; leer ohne Georeferenz."
             },
-            "unit": "°"
+            "unit": "°",
+            "widget": "stepper",
+            "precision": 6,
+            "step": 0.0001
           }
         },
         "originLat": {
@@ -701,7 +741,10 @@
               "en": "Geographic latitude of the local origin; empty when not georeferenced.",
               "de": "Geografische Breite des lokalen Ursprungs; leer ohne Georeferenz."
             },
-            "unit": "°"
+            "unit": "°",
+            "widget": "stepper",
+            "precision": 6,
+            "step": 0.0001
           }
         },
         "originAlt": {
@@ -723,7 +766,10 @@
               "en": "Altitude of the local origin, in metres; empty when not georeferenced.",
               "de": "Höhe des lokalen Ursprungs, in Metern; leer ohne Georeferenz."
             },
-            "unit": "m"
+            "unit": "m",
+            "widget": "stepper",
+            "precision": 2,
+            "step": 0.1
           }
         },
         "gsdM": {
@@ -783,7 +829,14 @@
               "en": "The longest side of the orthophoto, in pixels.",
               "de": "Die längste Seite des Orthofotos, in Pixeln."
             },
-            "unit": "px"
+            "unit": "px",
+            "step": 256,
+            "snaps": [
+              1024,
+              2048,
+              4096,
+              8192
+            ]
           }
         }
       }
@@ -884,7 +937,8 @@
             "description": {
               "en": "Every how many frames one is taken.",
               "de": "Jedes wievielte Bild genommen wird."
-            }
+            },
+            "step": 1
           }
         },
         "maxFrames": {
@@ -901,7 +955,8 @@
             "description": {
               "en": "The most frames an import takes.",
               "de": "Die meisten Bilder, die ein Import nimmt."
-            }
+            },
+            "step": 10
           }
         },
         "downscaleLongEdgePx": {
@@ -919,7 +974,15 @@
               "en": "The long edge frames are downscaled to, in pixels; 0 keeps them.",
               "de": "Die lange Kante, auf die Bilder verkleinert werden, in Pixeln; 0 behält sie."
             },
-            "unit": "px"
+            "unit": "px",
+            "step": 64,
+            "snaps": [
+              0,
+              1280,
+              1920,
+              2560,
+              3840
+            ]
           }
         },
         "minSharpness": {
@@ -1010,7 +1073,8 @@
             "description": {
               "en": "How many following frames each frame is matched against.",
               "de": "Mit wie vielen folgenden Bildern jedes Bild abgeglichen wird."
-            }
+            },
+            "step": 1
           }
         },
         "maxPairsPerFrame": {
@@ -1027,7 +1091,8 @@
             "description": {
               "en": "The most frame pairs one frame takes part in.",
               "de": "Die meisten Bildpaare, an denen ein Bild teilnimmt."
-            }
+            },
+            "step": 1
           }
         },
         "loopClosure": {
@@ -1127,7 +1192,10 @@
               "en": "How far the stream is shifted against the others, in milliseconds.",
               "de": "Wie weit der Stream gegen die anderen verschoben ist, in Millisekunden."
             },
-            "unit": "ms"
+            "unit": "ms",
+            "widget": "stepper",
+            "precision": 0,
+            "step": 1
           }
         },
         "fpsHint": {
@@ -1142,7 +1210,18 @@
               "en": "The nominal frame rate, in frames per second; 0 when unknown.",
               "de": "Die nominelle Bildrate in Bildern pro Sekunde; 0, wenn unbekannt."
             },
-            "unit": "fps"
+            "unit": "fps",
+            "widget": "stepper",
+            "precision": 2,
+            "step": 1,
+            "snaps": [
+              24,
+              25,
+              30,
+              50,
+              60,
+              120
+            ]
           }
         },
         "frames": {
@@ -1222,7 +1301,8 @@
             "description": {
               "en": "How many triangles the mesh is reduced to.",
               "de": "Auf wie viele Dreiecke das Mesh reduziert wird."
-            }
+            },
+            "step": 1000
           }
         },
         "smoothingIterations": {
@@ -1239,7 +1319,8 @@
             "description": {
               "en": "How many times the mesh is smoothed.",
               "de": "Wie oft das Mesh geglättet wird."
-            }
+            },
+            "step": 1
           }
         },
         "textureEnabled": {
@@ -1271,7 +1352,15 @@
               "en": "Side of the texture image, in pixels.",
               "de": "Seite des Texturbilds, in Pixeln."
             },
-            "unit": "px"
+            "unit": "px",
+            "step": 256,
+            "snaps": [
+              512,
+              1024,
+              2048,
+              4096,
+              8192
+            ]
           }
         },
         "guaranteeWatertight": {
@@ -1302,7 +1391,8 @@
             "description": {
               "en": "The largest hole boundary, in vertices, that is filled.",
               "de": "Der größte Lochrand, in Ecken, der gefüllt wird."
-            }
+            },
+            "step": 1
           }
         },
         "selfIntersectionCheck": {
@@ -1353,7 +1443,8 @@
             "description": {
               "en": "The most motion tracks kept.",
               "de": "Die meisten behaltenen Bewegungsspuren."
-            }
+            },
+            "step": 100
           }
         },
         "trackWindowPx": {
@@ -1371,7 +1462,8 @@
               "en": "Window a track is followed in, in pixels.",
               "de": "Fenster, in dem eine Spur verfolgt wird, in Pixeln."
             },
-            "unit": "px"
+            "unit": "px",
+            "step": 1
           }
         },
         "minTrackQuality": {
@@ -1402,7 +1494,8 @@
             "description": {
               "en": "How many frames a track must span.",
               "de": "Über wie viele Bilder eine Spur reichen muss."
-            }
+            },
+            "step": 1
           }
         }
       }
@@ -1775,7 +1868,8 @@
             "description": {
               "en": "How many random samples the robust estimate draws.",
               "de": "Wie viele Zufallsstichproben die robuste Schätzung zieht."
-            }
+            },
+            "step": 100
           }
         },
         "ransacThresholdPx": {
@@ -1806,7 +1900,8 @@
             "description": {
               "en": "How many views a point must be seen in.",
               "de": "In wie vielen Ansichten ein Punkt gesehen werden muss."
-            }
+            },
+            "step": 1
           }
         },
         "baMaxIterations": {
@@ -1823,7 +1918,8 @@
             "description": {
               "en": "The most bundle adjustment iterations.",
               "de": "Die meisten Bündelausgleichsiterationen."
-            }
+            },
+            "step": 10
           }
         },
         "robustLoss": {
@@ -1986,7 +2082,10 @@
               "en": "The video's duration, in milliseconds.",
               "de": "Die Dauer des Videos, in Millisekunden."
             },
-            "unit": "ms"
+            "unit": "ms",
+            "widget": "stepper",
+            "precision": 0,
+            "step": 1
           }
         },
         "frameCount": {
@@ -2003,20 +2102,49 @@
             "description": {
               "en": "How many frames the video holds.",
               "de": "Wie viele Bilder das Video enthält."
-            }
+            },
+            "step": 1
           }
         },
         "width": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Width",
+              "de": "Breite"
+            },
+            "description": {
+              "en": "The video's frame width, in pixels.",
+              "de": "Die Bildbreite des Videos, in Pixeln."
+            },
+            "widget": "stepper",
+            "role": "value",
+            "unit": "px",
+            "step": 1
+          }
         },
         "height": {
           "type": "integer",
           "format": "uint32",
           "minimum": 0,
-          "maximum": 4294967295
+          "maximum": 4294967295,
+          "x-semio-ui": {
+            "label": {
+              "en": "Height",
+              "de": "Höhe"
+            },
+            "description": {
+              "en": "The video's frame height, in pixels.",
+              "de": "Die Bildhöhe des Videos, in Pixeln."
+            },
+            "widget": "stepper",
+            "role": "value",
+            "unit": "px",
+            "step": 1
+          }
         }
       }
     },
@@ -2148,159 +2276,6 @@
         "maxInFlightPages": {
           "type": "integer",
           "minimum": 1
-        }
-      },
-      "additionalProperties": false,
-      "x-semio-formats": [
-        "🔣️jsonschema"
-      ]
-    },
-    "RemodelingRetainedCommandLimits": {
-      "type": "object",
-      "required": [
-        "controller",
-        "documentSchema",
-        "factory",
-        "limits",
-        "publicationContracts",
-        "routes",
-        "oracle"
-      ],
-      "properties": {
-        "controller": {
-          "const": "s.remodel.remodeling@1/*#editor"
-        },
-        "documentSchema": {
-          "const": "remodeling.scene"
-        },
-        "factory": {
-          "const": "RemodelingRetainedCommandJobFactory"
-        },
-        "limits": {
-          "type": "object",
-          "required": [
-            "bounded"
-          ],
-          "properties": {
-            "bounded": {
-              "$ref": "#/$defs/RemodelingRetainedCommandStepContract"
-            }
-          },
-          "additionalProperties": false
-        },
-        "publicationContracts": {
-          "type": "array",
-          "minItems": 40,
-          "maxItems": 40,
-          "items": {
-            "type": "object",
-            "required": [
-              "toolId",
-              "lanes"
-            ],
-            "properties": {
-              "toolId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "lanes": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 1,
-                "items": {
-                  "enum": [
-                    "HostOnly",
-                    "Artifact",
-                    "Config"
-                  ]
-                }
-              }
-            },
-            "additionalProperties": false
-          }
-        },
-        "routes": {
-          "allOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/retained-command/component.json#/$defs/RetainedCommandRoutes"
-            },
-            {
-              "type": "array",
-              "minItems": 40,
-              "maxItems": 40,
-              "items": {
-                "type": "object",
-                "required": [
-                  "id",
-                  "execution",
-                  "feature"
-                ],
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "execution": {
-                    "const": "bounded"
-                  },
-                  "feature": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "additionalProperties": false
-              }
-            }
-          ]
-        },
-        "oracle": {
-          "type": "object",
-          "required": [
-            "library",
-            "scope",
-            "ownedInterface",
-            "runtimeDependency",
-            "expected"
-          ],
-          "properties": {
-            "library": {
-              "const": "serde_json"
-            },
-            "scope": {
-              "const": "test-only-existing-dependency"
-            },
-            "ownedInterface": {
-              "const": "RemodelingRetainedCatalogOracle"
-            },
-            "runtimeDependency": {
-              "const": false
-            },
-            "expected": {
-              "type": "object",
-              "required": [
-                "routes",
-                "bounded",
-                "resumable",
-                "unique"
-              ],
-              "properties": {
-                "routes": {
-                  "const": 40
-                },
-                "bounded": {
-                  "const": 40
-                },
-                "resumable": {
-                  "const": 0
-                },
-                "unique": {
-                  "const": true
-                }
-              },
-              "additionalProperties": false
-            }
-          },
-          "additionalProperties": false
         }
       },
       "additionalProperties": false,

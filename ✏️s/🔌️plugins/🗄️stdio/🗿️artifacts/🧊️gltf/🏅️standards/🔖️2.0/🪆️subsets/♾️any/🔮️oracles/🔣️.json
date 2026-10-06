@@ -3164,9 +3164,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-required-extension-applied",
       "class": "third-party-generated",
       "target": {
@@ -3217,7 +3216,6 @@
       "notes": "Promotes the already-used KHR_materials_unlit into extensionsRequired too, matching the manifest's own referencePolicy ('requires prior extensionsUsed membership') — add-required-extension."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-used-extension-applied",
       "class": "third-party-generated",
       "target": {
@@ -3268,7 +3266,6 @@
       "notes": "Declares ACME_marker as an additional used extension — add-used-extension."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-default-scene-applied",
       "class": "third-party-generated",
       "target": {
@@ -3319,7 +3316,6 @@
       "notes": "Moves the document's default scene pointer from sceneA (0) to sceneB (1) — bind-default-scene."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-morph-target-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -3370,7 +3366,6 @@
       "notes": "Adds a NORMAL attribute to mesh 0 primitive 0's morph target 0 — bind-morph-target-attribute{mesh,primitive,target,semantic,accessor}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-node-camera-applied",
       "class": "third-party-generated",
       "target": {
@@ -3421,7 +3416,6 @@
       "notes": "Points emptyNode at the camera — bind-node-camera{node,camera}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-node-child-applied",
       "class": "third-party-generated",
       "target": {
@@ -3472,7 +3466,6 @@
       "notes": "Adopts emptyNode as a child of the plane's sibling meshNode at position 0 — bind-node-child{parent,child,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-node-mesh-applied",
       "class": "third-party-generated",
       "target": {
@@ -3523,7 +3516,6 @@
       "notes": "Points emptyNode at mesh 0 — bind-node-mesh{node,mesh}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-node-skin-applied",
       "class": "third-party-generated",
       "target": {
@@ -3574,7 +3566,6 @@
       "notes": "Points emptyNode at skin 0 (leaves its mesh unset — a skin reference is checkable independent of a bound mesh) — bind-node-skin{node,skin}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-primitive-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -3625,7 +3616,6 @@
       "notes": "Adds a COLOR_0 attribute to mesh 0 primitive 0, bound to a fresh accessor — bind-primitive-attribute{mesh,primitive,semantic,accessor}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-primitive-indices-applied",
       "class": "third-party-generated",
       "target": {
@@ -3676,7 +3666,6 @@
       "notes": "Mesh 0 primitive 0 starts non-indexed (indices removed), then a fresh scalar accessor is created and bound — bind-primitive-indices{mesh,primitive,accessor}. three exposes this as geometry.index becoming non-null."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-primitive-material-applied",
       "class": "third-party-generated",
       "target": {
@@ -3727,7 +3716,6 @@
       "notes": "Rebinds mesh 0 primitive 0 from material 0 to material 1 — bind-primitive-material{mesh,primitive,material}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-scene-root-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -3778,7 +3766,6 @@
       "notes": "Adds emptyNode as an ADDITIONAL root of sceneB (which starts with only soloNode) at position 0 — bind-scene-root-node{scene,node,position}. emptyNode is first detached from root so it is not a root twice over."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-asset-descriptive-metadata-applied",
       "class": "third-party-generated",
       "target": {
@@ -3829,7 +3816,6 @@
       "notes": "asset.generator/copyright/minVersion change — change-asset-descriptive-metadata."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-asset-extension-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -3880,7 +3866,6 @@
       "notes": "Sets asset.extensions.ACME_marker — change-asset-extension-data."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-asset-extra-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -3931,7 +3916,6 @@
       "notes": "asset.extras.revision 1 -> 2 — change-asset-extra-data."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-asset-version-applied",
       "class": "third-party-generated",
       "target": {
@@ -3982,7 +3966,6 @@
       "notes": "asset.version stays semantically 2.0 but the exact string changes as production would only ever accept — change-asset-version. (Kept at \"2.0\": a version bump like \"2.1\" would not exist as a real glTF minor version; the mutation's own touchedPaths is document/asset/version, and the reader's evidence is that exact string.)"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-document-extension-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4033,7 +4016,6 @@
       "notes": "Sets root document.extensions.ACME_marker — change-document-extension-data."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-document-extra-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4084,7 +4066,6 @@
       "notes": "Root document.extras.documentPurpose changes — change-document-extra-data."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-material-alpha-mode-applied",
       "class": "third-party-generated",
       "target": {
@@ -4135,7 +4116,6 @@
       "notes": "matB's alphaMode: OPAQUE -> BLEND — change-material-alpha-mode{material,alphaMode}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-material-double-sided-applied",
       "class": "third-party-generated",
       "target": {
@@ -4186,7 +4166,6 @@
       "notes": "matB's doubleSided: false -> true — change-material-double-sided{material,doubleSided}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-mesh-extension-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4237,7 +4216,6 @@
       "notes": "Sets mesh 0's extensions.ACME_marker — change-mesh-extension-data{mesh,data}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-mesh-extra-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4288,7 +4266,6 @@
       "notes": "Sets mesh 0's extras.state — change-mesh-extra-data{mesh,data}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-mesh-morph-weights-applied",
       "class": "third-party-generated",
       "target": {
@@ -4339,7 +4316,6 @@
       "notes": "Sets mesh 0's default weights to [0.75] (mesh-level, distinct from the node-level override) — change-mesh-morph-weights{mesh,weights}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-mesh-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -4390,7 +4366,6 @@
       "notes": "Renames mesh 0 — change-mesh-name{mesh,value}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-node-extension-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4441,7 +4416,6 @@
       "notes": "Sets emptyNode.extensions.KHR_materials_unlit — change-node-extension-data{node,data}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-node-extra-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4492,7 +4466,6 @@
       "notes": "Sets emptyNode.extras.state — change-node-extra-data{node,data:{state:present,value}}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-node-morph-weights-applied",
       "class": "third-party-generated",
       "target": {
@@ -4543,7 +4516,6 @@
       "notes": "Overrides meshNode's morph weight from 0.5 to 0.9 at the node level — change-node-morph-weights{node,weights}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-node-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -4594,7 +4566,6 @@
       "notes": "Renames emptyNode — change-node-name{node,value}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-node-transform-applied",
       "class": "third-party-generated",
       "target": {
@@ -4645,7 +4616,6 @@
       "notes": "Sets emptyNode's TRS translation to (2,3,4) — change-node-transform{node,transform:{kind:trs,...}}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-primitive-extension-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4696,7 +4666,6 @@
       "notes": "Sets mesh 0 primitive 0's extensions.ACME_marker — change-primitive-extension-data{mesh,primitive,data}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-primitive-extra-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4747,7 +4716,6 @@
       "notes": "Sets mesh 0 primitive 0's extras.state — change-primitive-extra-data{mesh,primitive,data}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-primitive-topology-mode-applied",
       "class": "third-party-generated",
       "target": {
@@ -4798,7 +4766,6 @@
       "notes": "Changes mesh 0's primitive mode from 4 (TRIANGLES, three's default) to 0 (POINTS) — change-primitive-topology-mode{mesh,primitive,mode}. three converts drawing mode at parse time, so geometry shape itself is the witnessed evidence."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-scene-extension-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4849,7 +4816,6 @@
       "notes": "Sets sceneB.extensions.ACME_marker — change-scene-extension-data{scene,data}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-scene-extra-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -4900,7 +4866,6 @@
       "notes": "Sets sceneB.extras.state — change-scene-extra-data{scene,data}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-scene-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -4951,7 +4916,6 @@
       "notes": "Renames sceneB — change-scene-name{scene,value}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-animation-applied",
       "class": "third-party-generated",
       "target": {
@@ -5002,7 +4966,6 @@
       "notes": "Inserts a second, minimal-but-valid animation (one channel targeting emptyNode's translation) at position 1 — create-animation{position}. Animations are eagerly resolved by three regardless of scene reachability, so this one is given real valid samplers rather than left empty."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-camera-applied",
       "class": "third-party-generated",
       "target": {
@@ -5053,7 +5016,6 @@
       "notes": "Inserts a minimal perspective camera at position 1, reindexing cameraNode's reference — create-camera{position,projection}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-material-applied",
       "class": "third-party-generated",
       "target": {
@@ -5104,7 +5066,6 @@
       "notes": "Inserts a default material at position 1, reindexing every primitive.material reference at or past it — create-material{position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-mesh-applied",
       "class": "third-party-generated",
       "target": {
@@ -5155,7 +5116,6 @@
       "notes": "Inserts a minimal empty-primitive-list mesh at position 1, reindexing every node.mesh reference so nothing shifts onto the new entry — create-mesh{position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-morph-target-applied",
       "class": "third-party-generated",
       "target": {
@@ -5206,7 +5166,6 @@
       "notes": "Appends a second (empty) morph target to mesh 0 primitive 0 — create-morph-target{mesh,primitive,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -5257,7 +5216,6 @@
       "notes": "Inserts a new minimal node at index 1 of the flat nodes array, reindexing every node-reference site (children, scene roots, skin joints/skeleton, animation channel targets) so the document stays coherent — create-node{position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-primitive-applied",
       "class": "third-party-generated",
       "target": {
@@ -5308,7 +5266,6 @@
       "notes": "Appends a minimal empty primitive to mesh 0 — create-primitive{mesh,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-scene-applied",
       "class": "third-party-generated",
       "target": {
@@ -5359,7 +5316,6 @@
       "notes": "Inserts a new empty scene at position 1, reindexing the document's default `scene` pointer — create-scene{position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-skin-applied",
       "class": "third-party-generated",
       "target": {
@@ -5410,7 +5366,6 @@
       "notes": "Inserts a minimal skin (one joint, the existing jointNode) at position 1, reindexing skinnedNode's reference — create-skin{position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-animation-applied",
       "class": "third-party-generated",
       "target": {
@@ -5461,7 +5416,6 @@
       "notes": "Removes animation 0 — delete-animation{index}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-camera-applied",
       "class": "third-party-generated",
       "target": {
@@ -5512,7 +5466,6 @@
       "notes": "Removes camera 0, reindexing cameraNode's reference to it — delete-camera{index}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-material-applied",
       "class": "third-party-generated",
       "target": {
@@ -5563,7 +5516,6 @@
       "notes": "Removes material 1 (matB), reindexing every primitive.material reference — delete-material{index}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-mesh-applied",
       "class": "third-party-generated",
       "target": {
@@ -5614,7 +5566,6 @@
       "notes": "Removes the plane mesh, reindexing every node.mesh reference (planeNode loses its mesh; any mesh index after it shifts down) — delete-mesh{index}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-morph-target-applied",
       "class": "third-party-generated",
       "target": {
@@ -5665,7 +5616,6 @@
       "notes": "Mesh 0 starts without mesh-level default weights (a target may only be deleted while no weight list pins the target count), then its only morph target is removed and every node-level weight entry cleared so target-count coherence survives — delete-morph-target{mesh,primitive,target}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -5716,7 +5666,6 @@
       "notes": "Removes the unreferenced solo node from scene B's node list, reindexing every node-reference site — delete-node{index}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-primitive-applied",
       "class": "third-party-generated",
       "target": {
@@ -5767,7 +5716,6 @@
       "notes": "Removes mesh 0's only primitive — delete-primitive{mesh,primitive}. Mesh weights stay coherent (unchanged) exactly as the manifest's referencePolicy states."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-scene-applied",
       "class": "third-party-generated",
       "target": {
@@ -5818,7 +5766,6 @@
       "notes": "Removes sceneB, reindexing the document's default `scene` pointer (which stays at 0, unaffected) — delete-scene{index}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-skin-applied",
       "class": "third-party-generated",
       "target": {
@@ -5869,7 +5816,6 @@
       "notes": "Removes skin 0, reindexing skinnedNode's reference to it — delete-skin{index}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-animation-applied",
       "class": "third-party-generated",
       "target": {
@@ -5920,7 +5866,6 @@
       "notes": "A second animation (identical shape) is appended, then the two are swapped — move-animation{index,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-camera-applied",
       "class": "third-party-generated",
       "target": {
@@ -5971,7 +5916,6 @@
       "notes": "A second camera is appended (referenced by cameraNode), then the two are swapped, reindexing the reference — move-camera{index,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-material-applied",
       "class": "third-party-generated",
       "target": {
@@ -6022,7 +5966,6 @@
       "notes": "Swaps the two materials' positions, reindexing every primitive.material reference — move-material{index,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-mesh-applied",
       "class": "third-party-generated",
       "target": {
@@ -6073,7 +6016,6 @@
       "notes": "Swaps the box and plane meshes' array positions, reindexing every node.mesh reference to match — move-mesh{index,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-morph-target-applied",
       "class": "third-party-generated",
       "target": {
@@ -6124,7 +6066,6 @@
       "notes": "Mesh 0 primitive 0 gets a second, DISTINCT morph target appended (its own fresh accessor, so the two targets are not content-identical), then the two are swapped along with their parallel node.weights entries — move-morph-target{mesh,primitive,target,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-morph-target-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -6175,7 +6116,6 @@
       "notes": "Target 0 gets a second attribute (NORMAL) appended, then POSITION is moved after it — move-morph-target-attribute{mesh,primitive,target,semantic,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -6226,7 +6166,6 @@
       "notes": "Relocates the flat nodes[] array entry for emptyNode from its original index to the front, reindexing every node-reference site that shifted as a result — move-node{index,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-node-child-applied",
       "class": "third-party-generated",
       "target": {
@@ -6277,7 +6216,6 @@
       "notes": "Moves root's last child to the front of root.children — move-node-child{parent,child,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-node-parent-applied",
       "class": "third-party-generated",
       "target": {
@@ -6328,7 +6266,6 @@
       "notes": "Reparents emptyNode from root to sceneB's soloNode, clearing the old parent link and the old scene-root membership it never had — move-node-parent{parent,child,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-primitive-applied",
       "class": "third-party-generated",
       "target": {
@@ -6379,7 +6316,6 @@
       "notes": "Mesh 0 gets a second (empty) primitive appended, then the two are swapped — move-primitive{mesh,primitive,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-primitive-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -6430,7 +6366,6 @@
       "notes": "Moves the POSITION key to the end of mesh 0 primitive 0's attribute map — move-primitive-attribute{mesh,primitive,semantic,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-required-extension-applied",
       "class": "third-party-generated",
       "target": {
@@ -6481,7 +6416,6 @@
       "notes": "extensionsRequired gets a second entry, then the two are swapped — move-required-extension."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-scene-applied",
       "class": "third-party-generated",
       "target": {
@@ -6532,7 +6466,6 @@
       "notes": "Swaps sceneA and sceneB's positions, reindexing the default `scene` pointer with sceneA — move-scene{index,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-scene-root-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -6583,7 +6516,6 @@
       "notes": "sceneA gets a second root (a detached copy-free extra: emptyNode) so a root-position move is observable, then moves it to the front — move-scene-root-node{scene,node,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-skin-applied",
       "class": "third-party-generated",
       "target": {
@@ -6634,7 +6566,6 @@
       "notes": "A second skin (same joint, referenced by skinnedNode) is appended, then the two are swapped, reindexing the reference — move-skin{index,position}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-used-extension-applied",
       "class": "third-party-generated",
       "target": {
@@ -6685,7 +6616,6 @@
       "notes": "extensionsUsed gets a second entry appended, then the two are swapped — move-used-extension."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-required-extension-applied",
       "class": "third-party-generated",
       "target": {
@@ -6736,7 +6666,6 @@
       "notes": "Withdraws a required-extension declaration — remove-required-extension. Starts from a document where KHR_materials_unlit is required (both used and required)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-used-extension-applied",
       "class": "third-party-generated",
       "target": {
@@ -6787,7 +6716,6 @@
       "notes": "Withdraws KHR_materials_unlit from extensionsUsed (nothing depends on it as required) — remove-used-extension."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-animations-applied",
       "class": "third-party-generated",
       "target": {
@@ -6838,7 +6766,6 @@
       "notes": "A second animation (identical shape) is appended, then the pair is reversed — reorder-animations{order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-cameras-applied",
       "class": "third-party-generated",
       "target": {
@@ -6889,7 +6816,6 @@
       "notes": "A second camera is appended (referenced by cameraNode), then the pair is reversed, reindexing the reference — reorder-cameras{order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-materials-applied",
       "class": "third-party-generated",
       "target": {
@@ -6940,7 +6866,6 @@
       "notes": "Reverses materials[], reindexing every primitive.material reference — reorder-materials{order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-meshs-applied",
       "class": "third-party-generated",
       "target": {
@@ -6991,7 +6916,6 @@
       "notes": "Reverses the meshes[] array, reindexing every node.mesh reference to match — reorder-meshs{order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-morph-target-attributes-applied",
       "class": "third-party-generated",
       "target": {
@@ -7042,7 +6966,6 @@
       "notes": "Target 0 gets a second attribute (NORMAL) appended, then the two-key map is reversed — reorder-morph-target-attributes{mesh,primitive,target,order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-morph-targets-applied",
       "class": "third-party-generated",
       "target": {
@@ -7093,7 +7016,6 @@
       "notes": "Mesh 0 primitive 0 gets a second, DISTINCT morph target appended (its own fresh accessor), then the pair is reversed along with the parallel node.weights entries — reorder-morph-targets{mesh,primitive,order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-node-children-applied",
       "class": "third-party-generated",
       "target": {
@@ -7144,7 +7066,6 @@
       "notes": "Reverses root.children — a complete permutation, reorder-node-children{parent,order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-nodes-applied",
       "class": "third-party-generated",
       "target": {
@@ -7195,7 +7116,6 @@
       "notes": "A full permutation of the flat nodes[] array (reversed), with every node-reference site reindexed to match — reorder-nodes{order}. Node identity is index-based, so parser.json.nodes order plus the reindexed reference sites are the observable signature."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-primitive-attributes-applied",
       "class": "third-party-generated",
       "target": {
@@ -7246,7 +7166,6 @@
       "notes": "Reverses mesh 0 primitive 0's attribute key order — reorder-primitive-attributes{mesh,primitive,order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-primitives-applied",
       "class": "third-party-generated",
       "target": {
@@ -7297,7 +7216,6 @@
       "notes": "Mesh 0 gets a second (empty) primitive appended, then the pair is reversed — reorder-primitives{mesh,order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-required-extensions-applied",
       "class": "third-party-generated",
       "target": {
@@ -7348,7 +7266,6 @@
       "notes": "extensionsRequired gets a second entry, then the pair is reversed — reorder-required-extensions."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-scene-root-nodes-applied",
       "class": "third-party-generated",
       "target": {
@@ -7399,7 +7316,6 @@
       "notes": "sceneA gets a second root (emptyNode), then the two-element root list is reversed — reorder-scene-root-nodes{scene,order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-scenes-applied",
       "class": "third-party-generated",
       "target": {
@@ -7450,7 +7366,6 @@
       "notes": "Reverses the scenes[] array, reindexing the default `scene` pointer with it — reorder-scenes{order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-skins-applied",
       "class": "third-party-generated",
       "target": {
@@ -7501,7 +7416,6 @@
       "notes": "A second skin (same joint, referenced by skinnedNode) is appended, then the pair is reversed, reindexing the reference — reorder-skins{order}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-used-extensions-applied",
       "class": "third-party-generated",
       "target": {
@@ -7552,7 +7466,6 @@
       "notes": "extensionsUsed gets a second entry appended, then the pair is reversed — reorder-used-extensions."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-default-scene-applied",
       "class": "third-party-generated",
       "target": {
@@ -7603,7 +7516,6 @@
       "notes": "Clears the document's default scene pointer entirely — unbind-default-scene."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-morph-target-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -7654,7 +7566,6 @@
       "notes": "Removes mesh 0 primitive 0's morph target 0 POSITION attribute — unbind-morph-target-attribute{mesh,primitive,target,semantic}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-node-camera-applied",
       "class": "third-party-generated",
       "target": {
@@ -7705,7 +7616,6 @@
       "notes": "Clears cameraNode's camera reference — unbind-node-camera{node}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-node-child-applied",
       "class": "third-party-generated",
       "target": {
@@ -7756,7 +7666,6 @@
       "notes": "Removes emptyNode from root's children — unbind-node-child{parent,child}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-node-mesh-applied",
       "class": "third-party-generated",
       "target": {
@@ -7807,7 +7716,6 @@
       "notes": "Clears meshNode's mesh reference — unbind-node-mesh{node}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-node-skin-applied",
       "class": "third-party-generated",
       "target": {
@@ -7858,7 +7766,6 @@
       "notes": "Clears skinnedNode's skin reference — unbind-node-skin{node}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-primitive-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -7909,7 +7816,6 @@
       "notes": "Removes mesh 0 primitive 0's NORMAL attribute — unbind-primitive-attribute{mesh,primitive,semantic}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-primitive-indices-applied",
       "class": "third-party-generated",
       "target": {
@@ -7960,7 +7866,6 @@
       "notes": "Clears mesh 0 primitive 0's indices reference — unbind-primitive-indices{mesh,primitive}. three exposes this as geometry.index becoming null (a non-indexed draw)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-primitive-material-applied",
       "class": "third-party-generated",
       "target": {
@@ -8011,7 +7916,6 @@
       "notes": "Clears mesh 0 primitive 0's material reference — unbind-primitive-material{mesh,primitive}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-scene-root-node-applied",
       "class": "third-party-generated",
       "target": {
@@ -8062,7 +7966,6 @@
       "notes": "Removes soloNode from sceneB's root list, leaving sceneB empty — unbind-scene-root-node{scene,node}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-accessor-applied",
       "class": "third-party-generated",
       "target": {
@@ -8109,7 +8012,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-buffer-applied",
       "class": "third-party-generated",
       "target": {
@@ -8156,7 +8058,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-buffer-view-applied",
       "class": "third-party-generated",
       "target": {
@@ -8203,7 +8104,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-image-applied",
       "class": "third-party-generated",
       "target": {
@@ -8250,7 +8150,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-sampler-applied",
       "class": "third-party-generated",
       "target": {
@@ -8297,7 +8196,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-texture-applied",
       "class": "third-party-generated",
       "target": {
@@ -8344,7 +8242,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-accessor-applied",
       "class": "third-party-generated",
       "target": {
@@ -8391,7 +8288,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-buffer-applied",
       "class": "third-party-generated",
       "target": {
@@ -8438,7 +8334,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-buffer-view-applied",
       "class": "third-party-generated",
       "target": {
@@ -8485,7 +8380,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-image-applied",
       "class": "third-party-generated",
       "target": {
@@ -8532,7 +8426,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-sampler-applied",
       "class": "third-party-generated",
       "target": {
@@ -8579,7 +8472,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "delete-texture-applied",
       "class": "third-party-generated",
       "target": {
@@ -8626,7 +8518,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-accessor-applied",
       "class": "third-party-generated",
       "target": {
@@ -8673,7 +8564,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-buffer-applied",
       "class": "third-party-generated",
       "target": {
@@ -8720,7 +8610,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-buffer-view-applied",
       "class": "third-party-generated",
       "target": {
@@ -8767,7 +8656,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-image-applied",
       "class": "third-party-generated",
       "target": {
@@ -8814,7 +8702,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-sampler-applied",
       "class": "third-party-generated",
       "target": {
@@ -8861,7 +8748,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-texture-applied",
       "class": "third-party-generated",
       "target": {
@@ -8908,7 +8794,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-accessors-applied",
       "class": "third-party-generated",
       "target": {
@@ -8955,7 +8840,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-buffers-applied",
       "class": "third-party-generated",
       "target": {
@@ -9002,7 +8886,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-buffer-views-applied",
       "class": "third-party-generated",
       "target": {
@@ -9049,7 +8932,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-images-applied",
       "class": "third-party-generated",
       "target": {
@@ -9096,7 +8978,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-samplers-applied",
       "class": "third-party-generated",
       "target": {
@@ -9143,7 +9024,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "reorder-textures-applied",
       "class": "third-party-generated",
       "target": {
@@ -9190,7 +9070,6 @@
       "reproducible": true
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-node-child-metabolism-applied",
       "class": "handcrafted",
       "target": {
@@ -9233,7 +9112,6 @@
       "notes": "Links node 3 as node 2's first child — bind-node-child{parent:2,child:3,position:0}; node 3 keeps its scene-root entry, which the operation never touches."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-node-child-metabolism-applied",
       "class": "handcrafted",
       "target": {
@@ -9276,7 +9154,6 @@
       "notes": "Removes the real input's one nested link, node 1 from node 0's children — unbind-node-child{parent:0,child:1}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bind-scene-root-node-metabolism-applied",
       "class": "handcrafted",
       "target": {
@@ -9319,7 +9196,6 @@
       "notes": "Adds node 1 (node 0's child) as scene 0's first root — bind-scene-root-node{scene:0,node:1,position:0}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "unbind-scene-root-node-metabolism-applied",
       "class": "handcrafted",
       "target": {
@@ -9362,7 +9238,6 @@
       "notes": "Removes node 5 from scene 0's root list — unbind-scene-root-node{scene:0,node:5}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-material-alpha-mode-metabolism-applied",
       "class": "handcrafted",
       "target": {
@@ -9405,7 +9280,6 @@
       "notes": "Material 0's alphaMode: OPAQUE (absent) -> MASK — change-material-alpha-mode{material:0,alphaMode:MASK}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-material-double-sided-metabolism-applied",
       "class": "handcrafted",
       "target": {
@@ -9448,7 +9322,6 @@
       "notes": "Material 0's doubleSided: false (absent) -> true — change-material-double-sided{material:0,doubleSided:true}."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "create-scene-metabolism-applied",
       "class": "handcrafted",
       "target": {

@@ -1,0 +1,83 @@
+{
+  "schema": "semio.mutation-inventory.execution-laws/v1",
+  "cases": [
+    {
+      "id": "stdout-and-stderr",
+      "source": "process.stdout.write(\"π \\\"inventory\\\"\\n\");process.stderr.write(\"diagnostic\\n\")",
+      "code": 0,
+      "stdout": "π \"inventory\"\n",
+      "stderr": "diagnostic\n"
+    },
+    {
+      "id": "nonzero-process",
+      "source": "process.stdout.write(\"partial\");process.stderr.write(\"refused\");process.exit(7)",
+      "code": 7,
+      "stdout": "partial",
+      "stderr": "refused"
+    },
+    {
+      "id": "empty-process",
+      "source": "void 0",
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "chunked-unicode",
+      "source": "for(const x of [\"α\",\"β\",\"\\n\"])process.stdout.write(x)",
+      "code": 0,
+      "stdout": "αβ\n",
+      "stderr": ""
+    }
+  ],
+  "controls": [
+    {
+      "id": "capture-limit",
+      "kind": "capture",
+      "source": "process.stdout.write(\"x\".repeat(65536));setTimeout(()=>{},10000)",
+      "maximumCaptureBytes": 13,
+      "reason": "capture-budget"
+    },
+    {
+      "id": "deadline",
+      "kind": "deadline",
+      "source": "setTimeout(()=>{},10000)",
+      "budgetMs": 100,
+      "reason": "deadline"
+    },
+    {
+      "id": "cancellation",
+      "kind": "cancel",
+      "source": "process.stdout.write(\"started\");setTimeout(()=>{},10000)",
+      "reason": "cancelled"
+    },
+    {
+      "id": "unit-refusal",
+      "kind": "units",
+      "source": "process.stdout.write(\"unreachable\")",
+      "maximumUnits": 1,
+      "reason": "work-budget"
+    },
+    {
+      "id": "byte-refusal",
+      "kind": "bytes",
+      "source": "process.stdout.write(\"unreachable\")",
+      "maximumOwnedBytes": 1,
+      "reason": "byte-budget"
+    }
+  ],
+  "leases": [
+    {
+      "id": "actual-cargo-owner",
+      "kind": "cargo",
+      "reason": "exit"
+    },
+    {
+      "id": "held-compiler-deadline",
+      "kind": "held",
+      "reason": "deadline",
+      "budgetMs": 3000,
+      "queued": true
+    }
+  ]
+}

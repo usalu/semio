@@ -3576,7 +3576,7 @@ impl LayoutExportJob {
 fn proxy_png_rgb(data_url: &str) -> Option<PdfRaster> {
     let payload = data_url.strip_prefix("data:image/png;base64,")?;
     let bytes = decode_base64(payload).ok()?;
-    let snapshot = semio_s_artifact_stdio_png::io::project_png(&bytes).ok()?;
+    let snapshot = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&bytes).ok()?;
     let pixels = u64::from(snapshot.width).checked_mul(u64::from(snapshot.height))?;
     if pixels == 0 || pixels > 65_536 {
         return None;
@@ -4675,36 +4675,36 @@ fn headless_batch_export(kind: LayoutExportKind, snapshot: &LayoutSnapshot, page
 }
 
 #[cfg(test)]
-pub fn export_document_svg_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<String, crate::io::LayoutError> {
+pub fn export_document_svg_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<String, crate::standards::v1::subsets::any::io::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
-        return Err(crate::io::LayoutError::PageNotFound(page_id.into()));
+        return Err(crate::standards::v1::subsets::any::io::LayoutError::PageNotFound(page_id.into()));
     }
-    headless_batch_export(LayoutExportKind::Svg, doc, Some(page_id), None).map(|commit| commit.data).map_err(crate::io::LayoutError::Svg)
+    headless_batch_export(LayoutExportKind::Svg, doc, Some(page_id), None).map(|commit| commit.data).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)
 }
 
 #[cfg(test)]
-pub fn export_document_pdf_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::io::LayoutError> {
+pub fn export_document_pdf_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::standards::v1::subsets::any::io::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
-        return Err(crate::io::LayoutError::PageNotFound(page_id.into()));
+        return Err(crate::standards::v1::subsets::any::io::LayoutError::PageNotFound(page_id.into()));
     }
-    let commit = headless_batch_export(LayoutExportKind::Pdf, doc, Some(page_id), None).map_err(crate::io::LayoutError::Svg)?;
-    decode_base64(&commit.data).map_err(crate::io::LayoutError::Svg)
+    let commit = headless_batch_export(LayoutExportKind::Pdf, doc, Some(page_id), None).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)?;
+    decode_base64(&commit.data).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)
 }
 
 #[cfg(test)]
-pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::io::LayoutError> {
+pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -> Result<Vec<u8>, crate::standards::v1::subsets::any::io::LayoutError> {
     if !doc.pages.iter().any(|page| page.id == page_id) {
-        return Err(crate::io::LayoutError::PageNotFound(page_id.into()));
+        return Err(crate::standards::v1::subsets::any::io::LayoutError::PageNotFound(page_id.into()));
     }
-    let commit = headless_batch_export(LayoutExportKind::Png, doc, Some(page_id), None).map_err(crate::io::LayoutError::Svg)?;
-    decode_base64(&commit.data).map_err(crate::io::LayoutError::Svg)
+    let commit = headless_batch_export(LayoutExportKind::Png, doc, Some(page_id), None).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)?;
+    decode_base64(&commit.data).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)
 }
 
 #[cfg(test)]
-pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, crate::io::LayoutError> {
+pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, crate::standards::v1::subsets::any::io::LayoutError> {
     let snapshot: LayoutSnapshot = semio_framework_pack_json::from_json_str(doc_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
-    let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(crate::io::LayoutError::Svg)?;
-    decode_base64(&commit.data).map_err(crate::io::LayoutError::Svg)
+    let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)?;
+    decode_base64(&commit.data).map_err(crate::standards::v1::subsets::any::io::LayoutError::Svg)
 }
 //#endregion 🧪️TestOracle
 

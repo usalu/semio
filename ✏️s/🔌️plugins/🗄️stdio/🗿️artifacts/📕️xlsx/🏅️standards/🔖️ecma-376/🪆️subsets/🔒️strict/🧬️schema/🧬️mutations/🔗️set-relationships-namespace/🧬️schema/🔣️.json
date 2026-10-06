@@ -9,7 +9,21 @@
   ],
   "properties": {
     "namespace": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Relationships namespace",
+          "de": "Beziehungsnamensraum"
+        },
+        "description": {
+          "en": "Namespace URI the conformance class prescribes for document relationships.",
+          "de": "Namensraum-URI, die die Konformitätsklasse für Dokumentbeziehungen vorschreibt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

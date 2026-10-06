@@ -1,0 +1,253 @@
+{
+  "qualification": "Actual ANSI-stripped retained nextest literal receipts, no tests run. mtime is filesystem timestamp only.",
+  "receipts": [
+    {
+      "name": "wfc3d-declared-nested-mesh-child-after-f32-fixture-spelling.log",
+      "mtime": "2026-10-04T20:21:30.319Z",
+      "receipts": [
+        " Nextest run ID 411ade89-a0c1-49d3-af56-530a846350a3 with nextest profile: quick",
+        "     Summary [   0.062s] 2 tests run: 2 passed, 219 skipped"
+      ]
+    },
+    {
+      "name": "wfc3d-declared-nested-mesh-child-after-current-semio-joins.log",
+      "mtime": "2026-10-04T20:08:56.625Z",
+      "receipts": [
+        " Nextest run ID 257b0ac4-b68b-4512-a9a0-fad41f800a1c with nextest profile: quick",
+        "     Summary [   0.045s] 2 tests run: 1 passed, 1 failed, 219 skipped"
+      ]
+    },
+    {
+      "name": "root-note-nine-current-full-owned-native-baseline.log",
+      "mtime": "2026-10-04T07:39:25.771Z",
+      "receipts": [
+        " Nextest run ID 0c887c4c-7e4b-4eff-84e9-ff8db6c5f663 with nextest profile: quick",
+        "     Summary [   0.468s] 9 tests run: 7 passed, 2 failed, 422 skipped"
+      ]
+    },
+    {
+      "name": "root-procedure-puzzle5d-playbook-current-native-baseline.log",
+      "mtime": "2026-10-02T16:50:58.703Z",
+      "receipts": [
+        " Nextest run ID 55be247a-5c29-42ef-bd6c-0f1dc3702bb6 with nextest profile: quick",
+        "     Summary [   0.119s] 14 tests run: 10 passed, 4 failed, 153 skipped",
+        " Nextest run ID b725e0d5-b530-4c31-b0ed-781763161e18 with nextest profile: quick",
+        "     Summary [   0.123s] 11 tests run: 6 passed, 5 failed, 168 skipped"
+      ]
+    },
+    {
+      "name": "root-puzzle5d-actual-native-factory-scale-baseline.log",
+      "mtime": "2026-10-02T14:24:09.663Z",
+      "receipts": [
+        " Nextest run ID 2ad1bb3c-8a1c-4cda-bd25-194ceadcde80 with nextest profile: quick",
+        "     Summary [   0.232s] 12 tests run: 9 passed, 3 failed, 501 skipped"
+      ]
+    },
+    {
+      "name": "wfc-five-whole-native-current.log",
+      "mtime": "2026-10-02T14:19:48.062Z",
+      "receipts": [
+        "@semio-tech/wfc-bitmap-rs:  Nextest run ID d4a00f26-04e5-4260-8650-93efcb06852c with nextest profile: quick",
+        "@semio-tech/wfc-bitmap-rs:      Summary [  48.051s] 188 tests run: 188 passed, 1 skipped",
+        "@semio-tech/wfc-2d-rs:  Nextest run ID 0126aec9-f597-4a3b-b929-36bd4deecddd with nextest profile: quick",
+        "@semio-tech/wfc-2d-rs:      Summary [   0.618s] 177 tests run: 177 passed, 0 skipped",
+        "@semio-tech/wfc-3d-rs:  Nextest run ID 7c1b260c-2f84-4214-9e5b-d17734b12c0d with nextest profile: quick",
+        "@semio-tech/wfc-3d-rs:      Summary [   0.704s] 217 tests run: 217 passed, 2 skipped",
+        "@semio-tech/wfc-grid2d-rs:  Nextest run ID 9039c55d-6ef1-4fe3-9d6b-84cf4c9ce526 with nextest profile: quick",
+        "@semio-tech/wfc-grid2d-rs:      Summary [   0.368s] 158 tests run: 158 passed, 0 skipped",
+        "@semio-tech/wfc-grid3d-rs:  Nextest run ID 7759751e-329f-400e-bfad-f1f297fe06f7 with nextest profile: quick",
+        "@semio-tech/wfc-grid3d-rs:      Summary [   0.599s] 184 tests run: 183 passed, 1 failed, 2 skipped"
+      ]
+    },
+    {
+      "name": "root-puzzle5d-procedure-playbook-controlled-native-baseline.log",
+      "mtime": "2026-10-02T14:13:24.858Z",
+      "receipts": [
+        "@semio-tech/playbook-playbook-rs:  Nextest run ID 4704bfe6-fa47-4a32-bd77-07087691baf9 with nextest profile: quick",
+        "@semio-tech/playbook-playbook-rs:      Summary [   0.050s] 8 tests run: 6 passed, 2 failed, 168 skipped"
+      ]
+    },
+    {
+      "name": "root-wav-remodeling-puzzle5d-native-owned.log",
+      "mtime": "2026-10-02T13:47:59.175Z",
+      "receipts": [
+        "@semio-tech/stdio-wav-rs:  Nextest run ID 245c9fa5-d8ec-4e7f-9749-995062ea494d with nextest profile: quick",
+        "@semio-tech/stdio-wav-rs:      Summary [   0.279s] 17 tests run: 17 passed, 40 skipped",
+        "@semio-tech/remodel-remodeling-rs:  Nextest run ID 2f075b0d-913d-4bcd-b4db-4cb9d9c3723f with nextest profile: quick",
+        "@semio-tech/remodel-remodeling-rs:      Summary [   1.553s] 16 tests run: 16 passed, 1327 skipped",
+        "@semio-tech/puzzle-5d-rs:  Nextest run ID a13362b3-cdb8-4ee1-8d36-026ad10a6277 with nextest profile: quick",
+        "@semio-tech/puzzle-5d-rs:      Summary [   0.024s] 5 tests run: 1 passed, 4 failed, 501 skipped"
+      ]
+    },
+    {
+      "name": "wfc-flow-fem-native-canonical-ui-current.log",
+      "mtime": "2026-10-02T13:35:55.737Z",
+      "receipts": [
+        "@semio-tech/fem-2d-rs:  Nextest run ID 55480832-6d6e-450a-a7f2-0ac51b05b24e with nextest profile: quick",
+        "@semio-tech/fem-3d-rs:  Nextest run ID 8498ed37-0a5f-48e1-a9ca-3c617db1d14e with nextest profile: quick",
+        "@semio-tech/wfc-grid3d-rs:  Nextest run ID a59d85b3-f7fe-4c44-afc8-0e9348832841 with nextest profile: quick",
+        "@semio-tech/wfc-grid3d-rs:      Summary [   0.163s] 9 tests run: 9 passed, 177 skipped",
+        "@semio-tech/flow-flow-rs:  Nextest run ID e58e3842-fe24-4406-a25f-ea66fec51b07 with nextest profile: quick",
+        "@semio-tech/flow-flow-rs:      Summary [   0.141s] 8 tests run: 5 passed, 3 failed, 277 skipped"
+      ]
+    },
+    {
+      "name": "wfc-grid3d-2d-flow-controlled-native-implemented-current.log",
+      "mtime": "2026-10-02T12:05:47.146Z",
+      "receipts": [
+        "@semio-tech/wfc-2d-rs:  Nextest run ID b551e9de-5db2-46aa-8efa-cdae74679809 with nextest profile: quick",
+        "@semio-tech/wfc-2d-rs:      Summary [   0.289s] 9 tests run: 9 passed, 168 skipped"
+      ]
+    },
+    {
+      "name": "wfc-flow-controlled-native-borrowed-child-current.log",
+      "mtime": "2026-10-02T11:58:54.652Z",
+      "receipts": [
+        "@semio-tech/wfc-2d-rs:  Nextest run ID ef978322-08f3-4915-8b87-605c991f885d with nextest profile: quick",
+        "@semio-tech/wfc-2d-rs:      Summary [   0.225s] 9 tests run: 5 passed, 4 failed, 168 skipped",
+        "@semio-tech/wfc-3d-rs:  Nextest run ID 008d0aca-c167-46d2-ac17-3b6698e01332 with nextest profile: quick",
+        "@semio-tech/wfc-3d-rs:      Summary [   0.362s] 9 tests run: 9 passed, 210 skipped",
+        "@semio-tech/wfc-grid2d-rs:  Nextest run ID dc63e15d-71f0-4c81-82e4-5041810d0182 with nextest profile: quick",
+        "@semio-tech/wfc-grid2d-rs:      Summary [   0.291s] 9 tests run: 9 passed, 149 skipped",
+        "@semio-tech/wfc-grid3d-rs:  Nextest run ID 3d1b36b6-7224-49af-97cc-60df7eb4a511 with nextest profile: quick",
+        "@semio-tech/wfc-grid3d-rs:      Summary [   0.057s] 9 tests run: 5 passed, 4 failed, 177 skipped"
+      ]
+    },
+    {
+      "name": "wfc-four-controlled-native-direct-state-current.log",
+      "mtime": "2026-10-02T11:41:59.676Z",
+      "receipts": [
+        "@semio-tech/wfc-3d-rs:  Nextest run ID 4f1337e4-2161-419d-968a-82ab6b376f37 with nextest profile: quick",
+        "@semio-tech/wfc-3d-rs:      Summary [   0.065s] 9 tests run: 5 passed, 4 failed, 210 skipped",
+        "@semio-tech/wfc-grid2d-rs:  Nextest run ID f465df09-60c4-419d-a901-cbcea833bf01 with nextest profile: quick",
+        "@semio-tech/wfc-grid2d-rs:      Summary [   0.137s] 9 tests run: 7 passed, 2 failed, 149 skipped"
+      ]
+    },
+    {
+      "name": "wfc-grid2d-controls-literal-identities-authentic-red.log",
+      "mtime": "2026-10-02T10:02:39.661Z",
+      "receipts": [
+        " Nextest run ID 08e35593-c38f-4106-bd8e-2c290f10a5d1 with nextest profile: quick",
+        "     Summary [   0.819s] 9 tests run: 4 passed, 5 failed, 149 skipped"
+      ]
+    },
+    {
+      "name": "wfc-bitmap-controlled-output-implemented-current.log",
+      "mtime": "2026-10-02T09:31:47.705Z",
+      "receipts": [
+        " Nextest run ID 39650078-6454-41c5-8531-15122d985dba with nextest profile: quick",
+        "     Summary [   1.876s] 10 tests run: 10 passed, 179 skipped"
+      ]
+    },
+    {
+      "name": "wfc-bitmap-controlled-output-authentic-red.log",
+      "mtime": "2026-10-02T09:19:20.452Z",
+      "receipts": [
+        " Nextest run ID 7246e07e-0cc7-42ab-97b4-4fb5d9d47f76 with nextest profile: quick",
+        "     Summary [   0.396s] 10 tests run: 6 passed, 4 failed, 179 skipped"
+      ]
+    },
+    {
+      "name": "note-canonical-rebuilt-sqlite-guest-current.log",
+      "mtime": "2026-10-02T05:07:18.199Z",
+      "receipts": [
+        " Nextest run ID b8c74bc7-6f86-4be5-8f1c-ec6e3b8c03a5 with nextest profile: quick",
+        "     Summary [ 153.885s] 2 tests run: 2 passed, 426 skipped"
+      ]
+    },
+    {
+      "name": "note-native-controlled-output-first-green.log",
+      "mtime": "2026-10-02T04:19:40.007Z",
+      "receipts": [
+        " Nextest run ID 8bfd35f9-52d8-40cc-9595-325149ad4391 with nextest profile: quick",
+        "     Summary [   1.994s] 8 tests run: 8 passed, 420 skipped"
+      ]
+    },
+    {
+      "name": "note-native-controlled-output-drawing-canonical-red.log",
+      "mtime": "2026-10-02T03:59:44.906Z",
+      "receipts": [
+        " Nextest run ID fa00e5ec-fab0-418a-b47d-eca8709269ad with nextest profile: quick",
+        "     Summary [  30.756s] 10 tests run: 7 passed, 3 failed, 418 skipped"
+      ]
+    },
+    {
+      "name": "note-controlled-native-real-guest-green.log",
+      "mtime": "2026-10-01T22:31:27.594Z",
+      "receipts": [
+        " Nextest run ID 167bf057-fd06-46d6-95a3-c1a60e2c727c with nextest profile: quick"
+      ]
+    },
+    {
+      "name": "note-owned-native-label-lifetime-fixed-red.log",
+      "mtime": "2026-10-01T21:11:37.896Z",
+      "receipts": [
+        " Nextest run ID d1ae6459-4811-41dd-a934-8e73280653ac with nextest profile: quick",
+        "     Summary [ 139.173s] 9 tests run: 6 passed, 3 failed, 417 skipped"
+      ]
+    },
+    {
+      "name": "wfc-bitmap-controlled-native-first.log",
+      "mtime": "2026-10-01T20:58:45.872Z",
+      "receipts": [
+        " Nextest run ID 2fd1d6a8-d31e-41d1-9a87-799344bce359 with nextest profile: fundamental",
+        "     Summary [   1.178s] 8 tests run: 8 passed, 179 skipped"
+      ]
+    },
+    {
+      "name": "wfc-bitmap-controlled-native-red.log",
+      "mtime": "2026-10-01T20:45:16.063Z",
+      "receipts": [
+        " Nextest run ID 9a0a8cfd-2cf5-4220-a037-7b6bf62285a6 with nextest profile: fundamental",
+        "     Summary [   0.160s] 7/8 tests run: 4 passed, 3 failed, 179 skipped"
+      ]
+    },
+    {
+      "name": "equation-native-semantic-paired-fifth.log",
+      "mtime": "2026-10-01T16:20:15.900Z",
+      "receipts": [
+        " Nextest run ID fe0c22b7-d8a2-47e6-b418-0c30bad839b7 with nextest profile: fundamental",
+        "     Summary [   0.238s] 5 tests run: 5 passed, 398 skipped"
+      ]
+    },
+    {
+      "name": "equation-native-semantic-paired-fourth.log",
+      "mtime": "2026-10-01T16:16:17.955Z",
+      "receipts": [
+        " Nextest run ID 7d6069dd-6be2-4d44-beb5-90dcae3509a4 with nextest profile: fundamental",
+        "     Summary [   0.231s] 5 tests run: 4 passed, 1 failed, 398 skipped"
+      ]
+    },
+    {
+      "name": "equation-native-semantic-paired-second.log",
+      "mtime": "2026-10-01T16:10:50.119Z",
+      "receipts": [
+        " Nextest run ID c2822737-7028-444b-ba66-016342b60cde with nextest profile: fundamental",
+        "     Summary [   0.244s] 5 tests run: 4 passed, 1 failed, 398 skipped"
+      ]
+    },
+    {
+      "name": "wfc-bitmap-native-first.log",
+      "mtime": "2026-10-01T08:56:53.355Z",
+      "receipts": [
+        " Nextest run ID 06ef31d8-b0bd-451a-8a59-41d6f02b8956 with nextest profile: fundamental",
+        "     Summary [   0.114s] 4 tests run: 4 passed, 179 skipped"
+      ]
+    },
+    {
+      "name": "note-sqlite-guest-owned-quick-test.log",
+      "mtime": "2026-10-01T08:52:15.388Z",
+      "receipts": [
+        " Nextest run ID bc84b59f-d5c0-4895-a454-45324fb6d0b5 with nextest profile: quick",
+        "     Summary [  56.471s] 2 tests run: 2 passed, 418 skipped"
+      ]
+    },
+    {
+      "name": "note-sqlite-guest-public-semio-retry-test.log",
+      "mtime": "2026-10-01T08:45:58.670Z",
+      "receipts": [
+        " Nextest run ID 2a313099-8156-4f7f-bb98-bf9530104ed7 with nextest profile: fundamental"
+      ]
+    }
+  ]
+}

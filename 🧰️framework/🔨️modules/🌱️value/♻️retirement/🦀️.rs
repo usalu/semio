@@ -480,3 +480,6 @@ impl<T: RetireOwned + Sync> SnapshotRetirementFactory<T> for SharedValueRetireme
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path="📦️allocation-return/🦀️.rs"]
+pub mod allocation_return;

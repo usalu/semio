@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {"semantic": "impl MutationDiff<Snapshot> for Delta {}", "text": "impl DiffText for Delta {}", "binary": "impl DiffBinary for Delta {}", "missing": []},
+    {"semantic": "impl protocol::MutationDiff<Snapshot> for Delta {}", "text": "protocol::io::diff_text!(Delta);", "binary": "protocol::io::diff_binary!(Delta);", "missing": []},
+    {"semantic": "impl MutationDiff<Snapshot> for Delta {}", "text": "impl DiffText for Delta {}", "binary": "", "missing": ["Delta"]},
+    {"semantic": "impl MutationDiff<Snapshot> for Delta {}", "text": "// impl DiffText for Delta {}", "binary": "const NOTE:&str = \"impl DiffBinary for Delta {}\";", "missing": ["Delta"]},
+    {"semantic": "impl MutationDiff<Snapshot> for Delta {} impl MutationDiff<Snapshot> for Other {}", "text": "impl DiffText for Delta {} impl DiffText for Other {}", "binary": "impl DiffBinary for Delta {}", "missing": ["Other"]},
+    {"semantic": "#[derive(DslDiff)] struct Delta; impl MutationDiff<Snapshot> for Delta {}", "text": "", "binary": "", "missing": ["Delta"]},
+    {"semantic": "impl<T> MutationDiff<Snapshot<T>> for module::Delta<T> {}", "text": "impl<T> DiffText for module::Delta<T> {}", "binary": "impl<T> DiffBinary for module::Delta<T> {}", "missing": []}
+  ]
+}

@@ -1,6 +1,6 @@
 //! 🔘️ 🔘️ Block 3D play app commands command — `add-vortex-kind`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
 use crate::{Block3dSnapshot, Block3dVortexKind};
 use crate::editor::block3d::config::{Block3dConfig, Block3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

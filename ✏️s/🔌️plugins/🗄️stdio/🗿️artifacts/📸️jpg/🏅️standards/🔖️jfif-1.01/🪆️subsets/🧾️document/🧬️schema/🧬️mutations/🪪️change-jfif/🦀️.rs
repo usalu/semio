@@ -17,10 +17,6 @@ pub struct ChangeJfifHeaderMutation {
 //#endregion Payload
 
 //#region Facets
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion Facets
 
 //#region Semantics
@@ -61,10 +57,7 @@ pub fn contribute(base: &JpgSnapshot, version: (u8, u8), density_units: JfifDens
 }
 //#endregion Semantics
 
-#[cfg(test)]
-pub(crate) fn test_case() -> JpgMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-jfif-header payload")
-}
+
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

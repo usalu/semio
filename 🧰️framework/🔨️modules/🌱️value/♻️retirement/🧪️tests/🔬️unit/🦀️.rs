@@ -161,3 +161,21 @@ fn native_capacity_closed_vectors_preserve_the_consumed_admission_owner(){
     }
     eprintln!("[DEBUG] native source capacity twelve closed vectors preserve owner/counters/callback; checked overflow, signed ceiling, refusal and resumed cancellation");
 }
+
+use crate::{ValueRefusalKind,retirement::allocation_return::{ParentAllocationReturn,AllocationReturnStep}};
+#[test]
+fn parent_return_fixture_demands_actual_full_allocation_release(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📦️allocation-return/🧫️fixtures/📦️return.json")).unwrap();
+    let maximum=fixture["maximumAllocationBytes"].as_u64().unwrap()as usize;let total=fixture["maximumTotalBytes"].as_u64().unwrap()as usize;
+    let mut parent=ParentAllocationReturn::<2>::try_new(maximum,total).unwrap();let mut text=fixture["text"].as_str().unwrap().to_owned();let text_pointer=text.as_ptr();let text_capacity=text.capacity();assert_eq!(text_capacity,fixture["expectedTextBytes"].as_u64().unwrap()as usize);
+    assert!(!parent.return_text(&mut text,0).unwrap());assert_eq!(text.as_ptr(),text_pointer);assert_eq!(text,fixture["text"].as_str().unwrap());assert!(parent.terminal_is_empty());
+    assert!(parent.return_text(&mut text,1).unwrap());assert!(text.is_empty());assert_eq!(text.capacity(),0);assert!(!parent.terminal_is_empty());assert_eq!(parent.retained_bytes(),text_capacity);
+    let mut values=Vec::<u32>::with_capacity(fixture["emptyVectorCapacity"].as_u64().unwrap()as usize);let vector_capacity=values.capacity();assert_eq!(vector_capacity*std::mem::size_of::<u32>(),fixture["expectedVectorBytes"].as_u64().unwrap()as usize);let vector_pointer=values.as_ptr().cast::<u8>();values.push(9);
+    assert_eq!(parent.return_empty_vec(&mut values,1).unwrap_err().kind,ValueRefusalKind::InvariantViolated);assert_eq!(values,[9]);assert_eq!(values.as_ptr().cast::<u8>(),vector_pointer);values.clear();assert!(parent.return_empty_vec(&mut values,1).unwrap());assert_eq!(values.capacity(),0);
+    let mut occupied="member".to_owned();let occupied_pointer=occupied.as_ptr();assert!(!parent.return_text(&mut occupied,1).unwrap());assert_eq!(occupied.as_ptr(),occupied_pointer);assert_eq!(occupied,"member");
+    let owned=parent.retained_bytes();assert_eq!(parent.close_step(0,maximum),AllocationReturnStep::Pending{released_items:0,released_bytes:0});assert_eq!(parent.close_step(1,fixture["childBytes"].as_u64().unwrap()as usize),AllocationReturnStep::Pending{released_items:0,released_bytes:0});assert_eq!(parent.retained_bytes(),owned);assert!(!parent.terminal_is_empty());
+    let mut released=0;for _ in 0..3{match parent.close_step(1,maximum){AllocationReturnStep::Complete=>break,AllocationReturnStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1&&released_bytes<=maximum);released+=released_bytes;}}}assert_eq!(released,fixture["expectedTextBytes"].as_u64().unwrap()as usize+fixture["expectedVectorBytes"].as_u64().unwrap()as usize);assert_eq!(parent.retained_bytes(),0);assert!(parent.terminal_is_empty());
+    let mut oversized="x".repeat(fixture["refusedPayloadBytes"].as_u64().unwrap()as usize);let pointer=oversized.as_ptr();let capacity=oversized.capacity();assert_eq!(parent.return_text(&mut oversized,1).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);assert_eq!(oversized.as_ptr(),pointer);assert_eq!(oversized.capacity(),capacity);assert_eq!(oversized.len(),fixture["refusedPayloadBytes"].as_u64().unwrap()as usize);assert!(parent.terminal_is_empty());
+    assert_eq!(serde_json::to_string(&oversized).unwrap(),serde_json::to_string(&"x".repeat(fixture["refusedPayloadBytes"].as_u64().unwrap()as usize)).unwrap());
+    eprintln!("[DEBUG] genuine parent flat-allocation tokens preserve actual source pointers/layouts, zero/full-slot/4byte refusal and terminal=false until physical full-grant deallocation; original8194 exceeds4096 authority unchanged");
+}

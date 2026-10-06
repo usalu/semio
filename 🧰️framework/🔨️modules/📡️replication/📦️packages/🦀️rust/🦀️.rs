@@ -29,6 +29,13 @@ use semio_framework_diagnostic::*;
 pub use semio_framework_value as value;
 pub use semio_framework_value::dsl_value;
 
+#[cfg(test)]
+#[path = "../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+
 #[path = "../../🆔️ids/🦀️.rs"]
 pub mod ids;
 
@@ -40,6 +47,10 @@ pub mod dictionary;
 
 #[path = "../../🔐️crypto/🦀️.rs"]
 pub mod crypto;
+
+#[path = "../../🚪️io/🦀️.rs"]
+pub mod io;
+pub use io::{DiffBinary, DiffCodec, DiffText, OpBinary, OpText};
 
 #[path = "../../🎮️mutation/🦀️.rs"]
 pub mod mutation;

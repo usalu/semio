@@ -47,9 +47,5 @@ impl Default for DrawingSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

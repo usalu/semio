@@ -1,0 +1,8 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,"required":["version","from","to","cases"],
+  "properties":{
+    "version":{"const":1},"from":{"const":"infinite_canvas"},"to":{"const":"semio_framework_ui::canvas"},
+    "cases":{"type":"array","minItems":8,"maxItems":8,"items":{"type":"object","additionalProperties":false,"required":["id","source","after","cuts"],"properties":{"id":{"type":"string"},"source":{"type":"string"},"after":{"type":"string"},"cuts":{"type":"integer","minimum":0}}}}
+  }
+}

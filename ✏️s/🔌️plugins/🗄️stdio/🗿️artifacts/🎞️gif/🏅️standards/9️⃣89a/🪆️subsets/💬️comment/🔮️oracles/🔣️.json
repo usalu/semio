@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "extension-insert-comment",
       "class": "third-party-generated",
       "target": {
@@ -56,7 +55,6 @@
       "comparisonPipeline": "gif-89a-extension-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "extension-remove-comment",
       "class": "third-party-generated",
       "target": {

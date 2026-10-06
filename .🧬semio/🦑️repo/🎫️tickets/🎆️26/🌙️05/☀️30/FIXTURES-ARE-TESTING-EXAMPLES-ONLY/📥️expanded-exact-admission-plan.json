@@ -1,0 +1,1017 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+    "start": 13858,
+    "before": "const validate = await ownedExport(repoRoot, \"os\", \"GisMapApprovalHistoryV1\");",
+    "after": "",
+    "line": 196
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+    "start": 19099,
+    "before": "const validate = await ownedExport(repoRoot, \"os\", \"GisMapInferencePortV1\");",
+    "after": "",
+    "line": 249
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+    "start": 32593,
+    "before": "const validate = await ownedExport(repoRoot, \"os\", \"GisMapPeerRebootstrapV1\");",
+    "after": "",
+    "line": 430
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+    "start": 13939,
+    "before": "if (!validate(fixture)) throw new Error(`invalid GIS Map approval history corpus: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 197
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+    "start": 14061,
+    "before": "if (validate({ ...fixture, cases: fixture.cases.slice(1) })) throw new Error(\"approval history schema admitted a missing lifecycle law\");",
+    "after": "",
+    "line": 198
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+    "start": 19178,
+    "before": "if (!validate(fixture)) throw new Error(`invalid GIS Map inference port corpus: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 250
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+    "start": 19815,
+    "before": "for (const [index, candidate] of hostileCorpora.entries()) if (validate(candidate)) throw new Error(`GIS Map inference port corpus accepted hostile mutation ${index}`);",
+    "after": "",
+    "line": 260
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts",
+    "start": 32674,
+    "before": "if (!validate(fixture)) throw new Error(`invalid GIS Map peer rebootstrap fixture: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 431
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "start": 4096,
+    "before": "const validate = ajv.addSchema(schema).compile<CadPresenceRetirementFixture>({ $ref: `${schema.$id}#/$defs/CadPresenceRetirementLaws` });",
+    "after": "",
+    "line": 73
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "start": 4236,
+    "before": "if (!validate(fixture)) throw new Error(`CAD presence retirement schema: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 74
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "start": 5413,
+    "before": "if (validate(hostile)) throw new Error(\"CAD presence schema accepted an enlarged production grant\");",
+    "after": "",
+    "line": 87
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 104144,
+    "before": "const validate = semioSchemaAjvV1({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/GisMapPeerRebootstrapV1`)! as unknown as (value: unknown) => value is GisMapPeerRebootstrapFixtureV1;",
+    "after": "",
+    "line": 1554
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 185204,
+    "before": "const valid = semioSchemaAjvV1({ strict: true }).compile({ $defs: schema.$defs, $ref: \"#/$defs/GisMapInferencePortV1\" });",
+    "after": "",
+    "line": 2869
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 209714,
+    "before": "const validate = semioSchemaAjvV1({ strict: true }).compile({ $defs: schema.$defs, $ref: \"#/$defs/GisMapInferencePortV1\" });",
+    "after": "",
+    "line": 3193
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 271812,
+    "before": "const validateScope = validators.getSchema(`${schema.$id}#/$defs/DocumentOpeningScopeResolutionV1`)!;",
+    "after": "",
+    "line": 4165
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 271920,
+    "before": "const validateFirstOpen = validators.getSchema(`${schema.$id}#/$defs/DocumentFirstOpenV1`)!;",
+    "after": "",
+    "line": 4166
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 104354,
+    "before": "expect(validate(parsed)).toBe(true);",
+    "after": "",
+    "line": 1555
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 104397,
+    "before": "if (!validate(parsed)) throw new Error(\"GIS Map peer rebootstrap fixture is invalid\");",
+    "after": "",
+    "line": 1556
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 185332,
+    "before": "expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);",
+    "after": "",
+    "line": 2870
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 209845,
+    "before": "expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);",
+    "after": "",
+    "line": 3194
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "start": 272019,
+    "before": "expect(corpus.cases.every((row: unknown) => validateScope(row)) && validateFirstOpen(corpus.firstOpen), JSON.stringify([...validateScope.errors ?? [], ...validateFirstOpen.errors ?? []])).toBe(true);",
+    "after": "",
+    "line": 4167
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts",
+    "start": 1423,
+    "before": "const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, \"GisComponentColdMapPatch\");",
+    "after": "",
+    "line": 18
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts",
+    "start": 1528,
+    "before": "if (!validate(fixture)) throw new Error(`invalid GIS component cold-map corpus: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 19
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts",
+    "start": 618,
+    "before": "const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, \"GisInferenceControl\");",
+    "after": "",
+    "line": 11
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts",
+    "start": 718,
+    "before": "if (!validate(fixture)) throw new Error(`invalid GIS controlled corpus: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 12
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts",
+    "start": 1457,
+    "before": "const validateIdentity = gisContract(this.repoRoot, \"GisArtifactIdentity\");",
+    "after": "",
+    "line": 24
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts",
+    "start": 3128,
+    "before": "const validateControl = gisContract(this.repoRoot, \"GisInferenceControl\");",
+    "after": "",
+    "line": 43
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts",
+    "start": 1537,
+    "before": "if (!validateIdentity(identity)) throw new Error(`invalid GIS identity fixture: ${JSON.stringify(validateIdentity.errors)}`);",
+    "after": "",
+    "line": 25
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts",
+    "start": 2665,
+    "before": "if (validateIdentity(candidate)) throw new Error(`GIS identity oracle admitted ${kind}`);",
+    "after": "",
+    "line": 38
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts",
+    "start": 3207,
+    "before": "if (!validateControl(control)) throw new Error(`invalid GIS control fixture: ${JSON.stringify(validateControl.errors)}`);",
+    "after": "",
+    "line": 44
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+    "start": 1015,
+    "before": "const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, \"GisNativeCodecs\");",
+    "after": "const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, \"GisNativeCodecsReceipt\");",
+    "line": 16
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+    "start": 1976,
+    "before": "const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });",
+    "after": "",
+    "line": 25
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+    "start": 1111,
+    "before": "if (!validate(fixture)) throw new Error(`invalid GIS receipt corpus: ${JSON.stringify(validate.errors)}`);",
+    "after": "for (const receipt of fixture.receipts) if (!validate(receipt)) throw new Error(`invalid GIS codec receipt: ${JSON.stringify(validate.errors)}`);",
+    "line": 17
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts",
+    "start": 2090,
+    "before": "if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);",
+    "after": "",
+    "line": 26
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts",
+    "start": 2845,
+    "before": "const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });",
+    "after": "",
+    "line": 50
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts",
+    "start": 2959,
+    "before": "if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);",
+    "after": "",
+    "line": 51
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 693,
+    "before": "const validate = retirementAjv.getSchema(`${schemaDocument.$id}#/$defs/FlowSessionRetirementV1`)!;",
+    "after": "",
+    "line": 12
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 4169,
+    "before": "const validateClose = flowWasmContract(\"FlowRetainedSessionCloseV1\");",
+    "after": "",
+    "line": 49
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 4990,
+    "before": "const validateRuntime = flowWasmContract(\"FlowBrowserRuntimeLifetimeV1\");",
+    "after": "",
+    "line": 62
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 792,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": "",
+    "line": 13
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 3668,
+    "before": "for (const mutant of [{ ...fixture, extra: true }, { ...fixture, grants: [16384] }, { ...fixture, dag: { ...fixture.dag, minimumUtf8Bytes: 1600 } }, { ...fixture, scene: { retirementCapacity: 1025 } }, { ...fixture, expected: { ...fixture.expected, zeroGrant: \"progress\" } }]) assert(!validate(mutant));",
+    "after": "",
+    "line": 44
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 4239,
+    "before": "assert(validateClose(sessionClose), \"retained session close fixture must satisfy its owned contract\");",
+    "after": "",
+    "line": 50
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 4417,
+    "before": "for (const mutant of [\n  { ...sessionClose, extra: true },\n  { ...sessionClose, browser: { ...sessionClose.browser, terminalBeforeClose: true } },\n  { ...sessionClose, close: { ...sessionClose.close, retainedBeforePoll: 0 } },\n  { ...sessionClose, ordering: [\"session-closed\", \"session-released\", \"domain-retired\"] },\n]) assert(!validateClose(mutant));",
+    "after": "",
+    "line": 52
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 5064,
+    "before": "assert(validateRuntime(runtimeLifetime), \"browser runtime lifetime fixture must satisfy its owned contract\");",
+    "after": "",
+    "line": 63
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 5255,
+    "before": "for (const mutant of [{ ...runtimeLifetime, initialSessions: 1 }, { ...runtimeLifetime, extra: true }, { ...runtimeLifetime, afterCloseA: { ...runtimeLifetime.afterCloseA, globalCloseCalls: 1 } }, { ...runtimeLifetime, receipt: { ...runtimeLifetime.receipt, completion: \"control-admitted\" } }, { ...runtimeLifetime, openFailure: { ...runtimeLifetime.openFailure, uncertainTransport: { ...runtimeLifetime.openFailure.uncertainTransport, terminal: false } } }]) assert(!validateRuntime(mutant));",
+    "after": "",
+    "line": 65
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+    "start": 876,
+    "before": "const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: \"#/$defs/FlowTypedCopyV1\" });",
+    "after": "",
+    "line": 15
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+    "start": 995,
+    "before": "if (!validate(fixture)) throw new Error(\"Flow selected copy strict schema failed\");",
+    "after": "",
+    "line": 16
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts",
+    "start": 1304,
+    "before": "for (const value of hostiles) if (validate(value)) throw new Error(\"Flow selected copy accepted hostile schema\");",
+    "after": "",
+    "line": 19
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts",
+    "start": 628,
+    "before": "const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: \"#/$defs/FlowRetirementV1\" });",
+    "after": "const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: \"#/$defs/FlowCamera\" });",
+    "line": 13
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts",
+    "start": 748,
+    "before": "if (!validate(fixture)) throw new Error(\"Flow retirement strict fixture schema failed\");",
+    "after": "if (!validate(fixture.hostDocument.camera)) throw new Error(\"Flow camera violates its semantic contract\");",
+    "line": 14
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts",
+    "start": 1067,
+    "before": "for (const value of hostiles) if (validate(value)) throw new Error(\"Flow retirement schema accepted hostile payload\");",
+    "after": "",
+    "line": 17
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts",
+    "start": 1099,
+    "before": "const validate = flowWasmContract(\"FlowBrowserTypesV1\");",
+    "after": "",
+    "line": 18
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts",
+    "start": 1158,
+    "before": "assert.equal(validate(fixture), true);",
+    "after": "",
+    "line": 19
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts",
+    "start": 4024,
+    "before": "assert.equal(validate(bad), false);",
+    "after": "",
+    "line": 53
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts",
+    "start": 700,
+    "before": "const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: \"#/$defs/GenerationRootV1\" });",
+    "after": "const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: \"#/$defs/GenerationValueV1\" });",
+    "line": 12
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts",
+    "start": 820,
+    "before": "if (!validate(fixture)) throw new Error(\"generation root fixture failed strict schema\");",
+    "after": "for (const generation of fixture.generation.generations) for (const value of Object.values(generation.values)) if (!validate(value)) throw new Error(\"generation value violates its semantic contract\");",
+    "line": 13
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts",
+    "start": 1105,
+    "before": "for (const value of hostiles) if (validate(value)) throw new Error(\"generation root schema accepted hostile input\");",
+    "after": "",
+    "line": 15
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts",
+    "start": 4261,
+    "before": "const identity = ajv.getSchema(`${rendererSchema.$id}#/$defs/HostIdentityResolutionV1`)!;",
+    "after": "",
+    "line": 64
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts",
+    "start": 4440,
+    "before": "expect(identity(hostBootstrapFixture.identity), JSON.stringify(identity.errors)).toBe(true);",
+    "after": "",
+    "line": 66
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 180013,
+    "before": "const validate = ajv.getSchema(`${rendererSchema.$id}#/$defs/TutorialInteractionCaptureV1`)!;",
+    "after": "",
+    "line": 3071
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 302580,
+    "before": "const validate = peerExport(flowWasmSchema, \"FlowBrowserRuntimeLifetimeV1\");",
+    "after": "",
+    "line": 5206
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 713563,
+    "before": "const validate = rendererExport(\"ShellLabelResolutionV1\");",
+    "after": "const validate = rendererExport(\"ShellLabelResolutionLanguages\");",
+    "line": 12541
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 180111,
+    "before": "expect(validate(tutorialInteractionFixture), JSON.stringify(validate.errors)).toBe(true);",
+    "after": "",
+    "line": 3072
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 180205,
+    "before": "expect(\n      validate({\n        ...tutorialInteractionFixture,\n        observed: {\n          ...tutorialInteractionFixture.observed,\n          selection: { mesh: { ...tutorialInteractionFixture.observed.selection.mesh, ids: [7] } },\n        },\n      }),\n    ).toBe(false);",
+    "after": "",
+    "line": 3073
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 302661,
+    "before": "expect(validate(flowBrowserRuntimeFixture), JSON.stringify(validate.errors)).toBe(true);",
+    "after": "",
+    "line": 5207
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 713626,
+    "before": "expect(validate(labelResolutionFixture), JSON.stringify(validate.errors)).toBe(true);",
+    "after": "expect(Object.values(labelResolutionFixture.matrix).every((labels) => validate(labels)), JSON.stringify(validate.errors)).toBe(true);",
+    "line": 12542
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 714652,
+    "before": "expect(validate({ ...labelResolutionFixture, matrix: { native: { en: \"Only English\" }, reuse: matrix.reuse } })).toBe(false);",
+    "after": "expect(validate({ en: \"Only English\" })).toBe(false);",
+    "line": 12560
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts",
+    "start": 1610,
+    "before": "const validate = rendererExport(\"OpenArtifactRelayV1\");",
+    "after": "",
+    "line": 22
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts",
+    "start": 3040,
+    "before": "const resolution = rendererExport(\"DocumentOpeningScopeResolutionV1\");",
+    "after": "",
+    "line": 46
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts",
+    "start": 4059,
+    "before": "const validate = rendererExport(\"SharedDocumentOpeningAccessV1\");",
+    "after": "",
+    "line": 68
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts",
+    "start": 1670,
+    "before": "expect(validate(artifactOpeningFixture)).toBe(true);",
+    "after": "",
+    "line": 23
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts",
+    "start": 3115,
+    "before": "expect(openingScopeFixture.cases.every((row) => resolution(row)) && rendererExport(\"DocumentFirstOpenV1\")(openingScopeFixture.firstOpen)).toBe(true);",
+    "after": "",
+    "line": 47
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts",
+    "start": 4188,
+    "before": "expect(validate(row), `${row.id}: ${JSON.stringify(validate.errors)}`).toBe(true);",
+    "after": "",
+    "line": 70
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 13239,
+    "before": "export const parseAdmittedShellInstanceTransitionV1 = (value: unknown): AdmittedShellInstanceTransitionV1 => parseRendererExport(\"AdmittedShellInstanceTransitionV1\", value);",
+    "after": "",
+    "line": 163
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 13413,
+    "before": "export const parseDocumentOpeningTransitionV1 = (value: unknown): DocumentOpeningTransitionV1 => parseRendererExport(\"DocumentOpeningTransitionV1\", value);",
+    "after": "",
+    "line": 164
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 13569,
+    "before": "export const parseDocumentOpeningAdmissionV1 = (value: unknown): DocumentOpeningAdmissionV1 => parseRendererExport(\"DocumentOpeningAdmissionV1\", value);",
+    "after": "",
+    "line": 165
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 13722,
+    "before": "export const parseDocumentOpeningBackgroundSequenceV1 = (value: unknown): DocumentOpeningBackgroundSequenceV1 => parseRendererExport(\"DocumentOpeningBackgroundSequenceV1\", value);",
+    "after": "",
+    "line": 166
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 13902,
+    "before": "export const parseDocumentOpeningCloseFailureV1 = (value: unknown): DocumentOpeningCloseFailureV1 => parseRendererExport(\"DocumentOpeningCloseFailureV1\", value);",
+    "after": "",
+    "line": 167
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 14064,
+    "before": "export const parseDocumentOpeningScopeResolutionV1 = (value: unknown): DocumentOpeningScopeResolutionV1 => parseRendererExport(\"DocumentOpeningScopeResolutionV1\", value);",
+    "after": "",
+    "line": 168
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 14235,
+    "before": "export const parseDocumentFirstOpenV1 = (value: unknown): DocumentFirstOpenV1 => parseRendererExport(\"DocumentFirstOpenV1\", value);",
+    "after": "",
+    "line": 169
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 14367,
+    "before": "export const parseTutorialRunTransitionV1 = (value: unknown): TutorialRunTransitionV1 => parseRendererExport(\"TutorialRunTransitionV1\", value);",
+    "after": "",
+    "line": 170
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 14511,
+    "before": "export const parseTutorialDriveTransitionV1 = (value: unknown): TutorialDriveTransitionV1 => parseRendererExport(\"TutorialDriveTransitionV1\", value);",
+    "after": "",
+    "line": 171
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 14661,
+    "before": "export const parsePausedTutorialSeekTransitionV1 = (value: unknown): PausedTutorialSeekTransitionV1 => parseRendererExport(\"PausedTutorialSeekTransitionV1\", value);",
+    "after": "",
+    "line": 172
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 14826,
+    "before": "export const parseSerialTutorialDriveTransitionV1 = (value: unknown): SerialTutorialDriveTransitionV1 => parseRendererExport(\"SerialTutorialDriveTransitionV1\", value);",
+    "after": "",
+    "line": 173
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts",
+    "start": 14994,
+    "before": "export const parseHostIdentityResolutionV1 = (value: unknown): HostIdentityResolutionV1 => parseRendererExport(\"HostIdentityResolutionV1\", value);",
+    "after": "",
+    "line": 174
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+    "start": 59954,
+    "before": "const validate = await registrySchemaValidator(\"NativeCatalogSelectionV1\");",
+    "after": "const validateInput = await registrySchemaValidator(\"NativeCatalogSelectionInputV1\");\n  const validate = (value: any): boolean => validateInput({ packages: value.packages, profiles: value.profiles, availableProviders: value.availableProviders });",
+    "line": 974
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+    "start": 60032,
+    "before": "if (!validate(fixture)) throw new Error(`native catalog selection fixture denied: ${JSON.stringify(validate.errors)}`);",
+    "after": "if (!validate(fixture)) throw new Error(\"native catalog domain input was denied\");",
+    "line": 975
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+    "start": 41863,
+    "before": "const validate = await registrySchemaValidator(\"RustTaxonomyMountsV1\");",
+    "after": "",
+    "line": 730
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+    "start": 47272,
+    "before": "const validate = await registrySchemaValidator(\"PluginRootOwnershipV1\");",
+    "after": "",
+    "line": 796
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+    "start": 41939,
+    "before": "if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));",
+    "after": "",
+    "line": 731
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts",
+    "start": 47349,
+    "before": "if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));",
+    "after": "",
+    "line": 797
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "start": 20568,
+    "before": "const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(owner, \"🧬️schema\", \"🔣️.json\"), \"NativeUiPatchMarshallingV1\");",
+    "after": "",
+    "line": 309
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "start": 20724,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": "",
+    "line": 310
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/♻️relay-lifecycle/🟦️.ts",
+    "start": 1574,
+    "before": "const validate = ajv.getSchema(`${schema.$id}#/$defs/RelayLifecycleV1`)!;",
+    "after": "",
+    "line": 19
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/♻️relay-lifecycle/🟦️.ts",
+    "start": 1648,
+    "before": "if (!validate(fixture)) throw new Error(`relay lifecycle fixture schema violation: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 20
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-factory-proof-join/🟦️.ts",
+    "start": 816,
+    "before": "const validate = ajv.compile({ ...schema, $ref: \"#/$defs/ToolFactoryProofV1\" });",
+    "after": "",
+    "line": 13
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-factory-proof-join/🟦️.ts",
+    "start": 899,
+    "before": "if (!validate(fixture)) throw new Error(`factory runtime fixture schema: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 14
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 1117,
+    "before": "const validate = ajv.compile({ $ref: schema.$id + \"#/$defs/ToolLatestWinsV1\" });",
+    "after": "",
+    "line": 13
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 2537,
+    "before": "const validateIntegration = ajv.compile({ $ref: schema.$id + \"#/$defs/ToolLatestWinsIntegrationV1\" });",
+    "after": "",
+    "line": 30
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 7714,
+    "before": "const validateRaw = ajv.compile({ $ref: schema.$id + \"#/$defs/RawAllocationCloseV1\" });",
+    "after": "",
+    "line": 91
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 9185,
+    "before": "const validateChildClose = ajv.compile({ $ref: schema.$id + \"#/$defs/ChildPrepublicationCloseV1\" });",
+    "after": "",
+    "line": 104
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 15707,
+    "before": "const validateDispatch = ajv.compile({ $ref: schema.$id + \"#/$defs/MountedDispatchBindingV1\" });",
+    "after": "",
+    "line": 147
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 1200,
+    "before": "if (!validate(fixture)) throw new Error(`latest-wins schema: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 14
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 2279,
+    "before": "for (const hostile of hostiles) if (validate(hostile)) throw new Error(\"latest-wins schema accepted a forged scope or enlarged grant\");",
+    "after": "",
+    "line": 28
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 2642,
+    "before": "if (!validateIntegration(integration)) throw new Error(`latest-wins integration schema: ${JSON.stringify(validateIntegration.errors)}`);",
+    "after": "",
+    "line": 31
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 4047,
+    "before": "for (const hostile of integrationHostiles) if (validateIntegration(hostile)) throw new Error(\"latest-wins integration schema accepted stale authority, collision, starvation, or a missing accepted target\");",
+    "after": "",
+    "line": 47
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 7804,
+    "before": "if (!validateRaw(rawFixture)) throw new Error(`retained raw allocation schema: ${JSON.stringify(validateRaw.errors)}`);",
+    "after": "",
+    "line": 92
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 9288,
+    "before": "if (!validateChildClose(childCloseFixture)) throw new Error(`retained child close fixture: ${JSON.stringify(validateChildClose.errors)}`);",
+    "after": "",
+    "line": 105
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts",
+    "start": 15806,
+    "before": "if (!validateDispatch(dispatchFixture)) throw new Error(`mounted dispatch fixture: ${JSON.stringify(validateDispatch.errors)}`);",
+    "after": "",
+    "line": 148
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️reactor-contract-oracles/🟦️.ts",
+    "start": 4577,
+    "before": "const validateReceipt = ajv.getSchema<IssuedPatchFixture>(`${schema.$id}#/$defs/PendingPatchReceiptV1`)!;",
+    "after": "",
+    "line": 73
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️reactor-contract-oracles/🟦️.ts",
+    "start": 4685,
+    "before": "assert(validateReceipt(fixture), JSON.stringify(validateReceipt.errors));",
+    "after": "",
+    "line": 74
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts",
+    "start": 1198,
+    "before": "const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: \"#/$defs/ArtifactCommandCheckpointV1\" });",
+    "after": "",
+    "line": 16
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts",
+    "start": 1329,
+    "before": "if (!validate(fixture)) throw new Error(`[verify interactivity tool-jobs] native checkpoint fixture/schema mismatch: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 17
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts",
+    "start": 3053,
+    "before": "if (validate(value)) throw new Error(`[verify interactivity tool-jobs] checkpoint schema admitted ${name}`);",
+    "after": "",
+    "line": 46
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts",
+    "start": 804,
+    "before": "const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: \"#/$defs/OwnerFactoryResolutionV1\" });",
+    "after": "",
+    "line": 12
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts",
+    "start": 932,
+    "before": "if (!validate(fixture)) throw new Error(`owner factory fixture schema: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 13
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts",
+    "start": 1496,
+    "before": "if (validate(hostile)) throw new Error(\"owner factory strict schema accepted an adversarial fixture\");",
+    "after": "",
+    "line": 17
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts",
+    "start": 995,
+    "before": "const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: \"#/$defs/ScalarConfigCohortV1\" });",
+    "after": "",
+    "line": 15
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts",
+    "start": 1119,
+    "before": "if (!validate(fixture)) throw new Error(`scalar Config fixture schema: ${JSON.stringify(validate.errors)}`);",
+    "after": "",
+    "line": 16
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts",
+    "start": 5523,
+    "before": "if (validate(hostile)) throw new Error(\"scalar Config strict schema accepted a hostile fixture\");",
+    "after": "",
+    "line": 65
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
+    "start": 768,
+    "before": "const validate = ajv.getSchema(`${document.$id}#/$defs/MutationSourceAuthorityV1`)!;",
+    "after": "",
+    "line": 14
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
+    "start": 853,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": "",
+    "line": 15
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
+    "start": 1625,
+    "before": "for (const item of hostile) assert(!validate(item));",
+    "after": "",
+    "line": 31
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 767,
+    "before": "const validate = contract(\"ValueRetirementV1\");",
+    "after": "",
+    "line": 15
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 2139,
+    "before": "const validateCache = contract(\"CacheRetirementV1\");",
+    "after": "",
+    "line": 35
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 3839,
+    "before": "const validateEvaluation = contract(\"EvaluationOwnersV1\");",
+    "after": "",
+    "line": 60
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 815,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": "",
+    "line": 16
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 1933,
+    "before": "assert(!validate(mutant));",
+    "after": "",
+    "line": 29
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 2192,
+    "before": "assert(validateCache(cacheFixture), JSON.stringify(validateCache.errors));",
+    "after": "",
+    "line": 36
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 3394,
+    "before": "for (const mutant of [{ ...cacheFixture, extra: true }, { ...cacheFixture, expected: { ...cacheFixture.expected, sharedReleasedBytes: 1 } }, { ...cacheFixture, operations: [{ op: \"erase\" }, ...cacheFixture.operations.slice(1)] }]) assert(!validateCache(mutant));",
+    "after": "",
+    "line": 55
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 3898,
+    "before": "assert(validateEvaluation(evaluation), JSON.stringify(validateEvaluation.errors));",
+    "after": "",
+    "line": 61
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
+    "start": 4364,
+    "before": "for (const mutant of [{ ...evaluation, extra: true }, { ...evaluation, expectedBytes: 0 }]) assert(!validateEvaluation(mutant));",
+    "after": "",
+    "line": 65
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts",
+    "start": 10771,
+    "before": "const transition = ajv.getSchema(`${rendererSchema.$id}#/$defs/DocumentOpeningTransitionV1`)!;",
+    "after": "",
+    "line": 191
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts",
+    "start": 10870,
+    "before": "const admission = ajv.getSchema(`${rendererSchema.$id}#/$defs/DocumentOpeningAdmissionV1`)!;",
+    "after": "",
+    "line": 192
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts",
+    "start": 10967,
+    "before": "const closeFailure = ajv.getSchema(`${rendererSchema.$id}#/$defs/DocumentOpeningCloseFailureV1`)!;",
+    "after": "",
+    "line": 193
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts",
+    "start": 11070,
+    "before": "const background = ajv.getSchema(`${rendererSchema.$id}#/$defs/DocumentOpeningBackgroundSequenceV1`)!;",
+    "after": "",
+    "line": 194
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts",
+    "start": 11177,
+    "before": "expect(documentOpeningFixture.cases.every((row) => transition(row))).toBe(true);",
+    "after": "",
+    "line": 195
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts",
+    "start": 11262,
+    "before": "expect(documentOpeningFixture.admissions.every((row) => admission(row))).toBe(true);",
+    "after": "",
+    "line": 196
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts",
+    "start": 11351,
+    "before": "expect(documentOpeningFixture.closeFailures.every((row) => closeFailure(row))).toBe(true);",
+    "after": "",
+    "line": 197
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts",
+    "start": 11446,
+    "before": "expect(Object.values(documentOpeningFixture.backgroundSessions).every((row) => background(row))).toBe(true);",
+    "after": "",
+    "line": 198
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts",
+    "start": 22796,
+    "before": "const validate = semioSchemaAjvV1({ strict: true }).addSchema(rendererSchema).getSchema(`${rendererSchema.$id}#/$defs/PluginRuntimeLifecycleSchedulerV1`)!;",
+    "after": "",
+    "line": 289
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts",
+    "start": 22956,
+    "before": "expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);",
+    "after": "",
+    "line": 290
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/🟦️.ts",
+    "start": 489,
+    "before": "const validate = ajv.getSchema(`${document.$id}#/$defs/MacroExportsV1`)!;",
+    "after": "",
+    "line": 10
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/🟦️.ts",
+    "start": 563,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": "",
+    "line": 11
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/🟦️.ts",
+    "start": 1509,
+    "before": "for (const mutant of [{ ...fixture, extra: true }, { ...fixture, facadeExports: [\"DslRecord\", \"DslRecord\"] }, { ...fixture, traitOnly: [\"invalid-name\"] }]) assert(!validate(mutant));",
+    "after": "",
+    "line": 22
+  }
+]

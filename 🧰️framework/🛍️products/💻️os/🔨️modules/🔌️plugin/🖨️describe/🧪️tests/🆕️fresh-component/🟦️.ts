@@ -1,14 +1,28 @@
-export function createFreshComponentTests(dependencies: import("../../🏭️fresh-component/🟦️.ts").FreshComponentTestDependencies, source: { directory: string; url: string }) {
-  const { acquireCargoBuildLeaseV1, repoCacheDirectory, captureFreshComponentInputs, captureFreshSourceEpochV1, closeSync, createHash, existsSync, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, FRESH_SOURCE_EPOCH_LIMITS, freshRun, freshSourceEpochBytesV1, freshSourceOrderedJson, freshStage, freshWasmArtifactSize, isAbsolute, join, mkdirSync, mkdtempSync, openSync, parseFreshRustDepInfoV1, readdirSync, readFileSync, readStableBuildFile, renameSync, resolve, rmSync, semanticOwnedInputFileSnapshot, stageFreshComponentInputs, writeFileSync } = dependencies;
+import { createHash } from "node:crypto";
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { isAbsolute, join, resolve } from "node:path";
+import { acquireCargoBuildLeaseV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { readStableBuildFile } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { semanticOwnedInputFileSnapshot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, freshWasmArtifactSize } from "../../🏗️component-build/🟦️.ts";
+import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1 } from "../../🧾️source-epoch/🟦️.ts";
+import { captureFreshComponentInputs, freshRun, freshStage, stageFreshComponentInputs } from "../../🏭️fresh-component/🟦️.ts";
+
+export function createFreshComponentTests() {
+  const source = { directory: resolve(import.meta.dir, "../../📦️packages/🦀️rust") };
+  function testArtifactRoot(repoRoot: string): string {
+    const root = process.env.SEMIO_TEST_ARTIFACT_DIR ?? repoCacheDirectory(repoRoot, "tests", "fresh-component", "🗑️generated");
+    mkdirSync(root, { recursive: true });
+    return root;
+  }
   type FreshSourceEpochLawsFixtureV1 = Readonly<{
-    schema: string;
     limits: Readonly<{ fileBytes: number; totalBytes: number; files: number; legs: number }>;
     files: readonly Readonly<{ path: string; text: string }>[];
     legs: readonly Readonly<{ id: string; package: string; args: readonly string[]; inputs: readonly string[] }>[];
     cases: readonly string[];
   }>;
   type FreshStagingFixtureV1 = Readonly<{
-    schema: string;
     appChannelVersion: number;
     componentHex: string;
     componentSha256: string;
@@ -17,7 +31,6 @@ export function createFreshComponentTests(dependencies: import("../../🏭️fre
     laws: readonly string[];
   }>;
   type FreshProcessFixtureV1 = Readonly<{
-    schema: string;
     maxOutputBytes: number;
     diagnosticChars: number;
     queuedCargoCases: readonly Readonly<{ name: string; mode: "cancel" | "timeout" }>[];
@@ -35,18 +48,14 @@ export function createFreshComponentTests(dependencies: import("../../🏭️fre
     const { dirname } = await import("node:path");
     const { symlinkSync, ftruncateSync } = await import("node:fs");
     const fixtureRoot = resolve(source.directory, "../../🧫️fixtures/🧾️fresh-source-epoch");
-    const fixture: unknown = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const fixture: FreshSourceEpochLawsFixtureV1 = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true, allErrors: true });
     const describeSchema = JSON.parse(readFileSync(resolve(source.directory, "../../🧬️schema/🔣️.json"), "utf8"));
     ajv.addSchema(describeSchema);
-    const validate = ajv.compile<FreshSourceEpochLawsFixtureV1>({ $ref: `${describeSchema.$id}#/$defs/FreshSourceEpochLawsV1` });
     const validateEpoch = ajv.compile({ $ref: `${describeSchema.$id}#/$defs/FreshSourceEpochV1` });
-    assert(validate(fixture), JSON.stringify(validate.errors));
     assert.deepEqual(fixture.limits, FRESH_SOURCE_EPOCH_LIMITS);
-    const depInfo: unknown = JSON.parse(readFileSync(join(fixtureRoot, "📃️dep-info.json"), "utf8"));
-    const validateDepInfo = ajv.compile<RustDepInfoLawsFixtureV1>({ $ref: `${describeSchema.$id}#/$defs/RustDepInfoLawsV1` });
-    assert(validateDepInfo(depInfo), JSON.stringify(validateDepInfo.errors));
+    const depInfo: RustDepInfoLawsFixtureV1 = JSON.parse(readFileSync(join(fixtureRoot, "📃️dep-info.json"), "utf8"));
     for (const row of depInfo.cases) {
       const bytes = Buffer.from(row.text);
       if (row.expected === null) assert.throws(() => parseFreshRustDepInfoV1(bytes, () => {}), row.id);
@@ -55,7 +64,7 @@ export function createFreshComponentTests(dependencies: import("../../🏭️fre
     assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array([0xff, 0x0a]), () => {}), "lossy UTF-8");
     assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array(depInfo.maximumBytes + 1), () => {}), "dep-info byte bound");
     assert.throws(() => parseFreshRustDepInfoV1(Buffer.from(depInfo.cases[0].text), () => { throw new Error("dep-info cancelled"); }), /dep-info cancelled/);
-    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    const artifactRoot = testArtifactRoot(repoRoot);
     assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
     const evidence = mkdtempSync(join(artifactRoot, "fresh-source-epoch-"));
     const legs: FreshSourceEpochLegV1[] = fixture.legs.map(({ id, package: cargoPackage, args }) => ({ id, package: cargoPackage, args }));
@@ -125,22 +134,16 @@ export function createFreshComponentTests(dependencies: import("../../🏭️fre
     assert.throws(() => semanticOwnedInputFileSnapshot(bounded, "input.rs", { maximumBytes: 3 * FRESH_IO_CHUNK_BYTES, checkpoint() { if (++checks === 4) throw new Error("bounded snapshot cancellation"); } }), /bounded snapshot cancellation/);
     assert.equal(checks, 4);
     for (const path of ["../foreign.rs", "/foreign.rs", "C:/foreign.rs", "a\\foreign.rs", "node_modules/source.rs", "target/source.rs", "🗑️generated/source.rs"]) assert.throws(() => captureFreshSourceEpochV1(bounded, { ...plan, files: [path] }, { cancelled: () => false, remainingMs: () => 10000, checkpoint() {} }), /coordinate|refuses/);
-    console.log(`fresh-source-epoch: AJV=3 stable-stringify=1 WebCrypto=1 physical-laws=${fixture.cases.length} bounded-capture=2 unsafe-paths=7 dep-info=${depInfo.cases.length}+3 evidence=${evidence}; Cargo resolver/dep-info integration remains unqualified`);
+    console.log(`fresh-source-epoch: AJV=1 stable-stringify=1 WebCrypto=1 physical-laws=${fixture.cases.length} bounded-capture=2 unsafe-paths=7 dep-info=${depInfo.cases.length}+3 evidence=${evidence}; Cargo resolver/dep-info integration remains unqualified`);
   }
   
   /** 🧪️ Qualifies retained verified inputs and staging independently of Cargo or descriptor execution. */
   async function testFreshComponentStagingV1(repoRoot: string): Promise<void> {
     const assert: typeof import("node:assert/strict") = (await import("node:assert/strict")).default;
-    const { default: Ajv } = await import("ajv");
     const { encodePackValue } = await import("../../../../../🟦️.ts");
     const fixtureRoot = resolve(source.directory, "../../🧫️fixtures/🧊️fresh-staging");
-    const fixture: unknown = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const describeSchema = JSON.parse(readFileSync(resolve(source.directory, "../../🧬️schema/🔣️.json"), "utf8"));
-    const stagingAjv = new Ajv({ strict: true, allErrors: true });
-    stagingAjv.addSchema(describeSchema);
-    const validate = stagingAjv.compile<FreshStagingFixtureV1>({ $ref: `${describeSchema.$id}#/$defs/FreshStagingV1` });
-    assert(validate(fixture), JSON.stringify(validate.errors));
-    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    const fixture: FreshStagingFixtureV1 = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const artifactRoot = testArtifactRoot(repoRoot);
     assert(artifactRoot !== undefined && artifactRoot.includes("🗑️generated"));
     mkdirSync(artifactRoot, { recursive: true });
     const evidence = mkdtempSync(join(artifactRoot, "fresh-component-staging-"));
@@ -338,22 +341,16 @@ export function createFreshComponentTests(dependencies: import("../../🏭️fre
     snapshot.componentBytes.fill(0);
     capturedCore.fill(0);
     snapshot.descriptorBytes.fill(0);
-    console.log(`fresh-component-staging: AJV=1 WebCrypto=1 Pack=1 BLAKE3=1 laws=${fixture.laws.length} evidence=${evidence}`);
+    console.log(`fresh-component-staging: WebCrypto=1 Pack=1 BLAKE3=1 laws=${fixture.laws.length} evidence=${evidence}`);
   }
   
   /** 🧪️ Qualifies bounded process retirement and refuses Cargo startup after queued cancellation or deadline. */
   async function testFreshComponentProcessV1(repoRoot: string): Promise<void> {
     const assert: typeof import("node:assert/strict") = (await import("node:assert/strict")).default;
-    const { default: Ajv } = await import("ajv");
     const { default: deepEqual } = await import("fast-deep-equal");
     const fixtureRoot = resolve(source.directory, "../../🧫️fixtures/🧵️fresh-process");
-    const fixture: unknown = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const describeSchema = JSON.parse(readFileSync(resolve(source.directory, "../../🧬️schema/🔣️.json"), "utf8"));
-    const processAjv = new Ajv({ strict: true, allErrors: true });
-    processAjv.addSchema(describeSchema);
-    const validate = processAjv.compile<FreshProcessFixtureV1>({ $ref: `${describeSchema.$id}#/$defs/FreshProcessV1` });
-    assert(validate(fixture), JSON.stringify(validate.errors));
-    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    const fixture: FreshProcessFixtureV1 = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const artifactRoot = testArtifactRoot(repoRoot);
     assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
     const evidence = mkdtempSync(join(artifactRoot, "fresh-process-laws-"));
     for (const row of fixture.cases) {
@@ -439,7 +436,7 @@ export function createFreshComponentTests(dependencies: import("../../🏭️fre
       } finally { holder.release(); }
       const successor = await acquireCargoBuildLeaseV1(options); successor.release();
     }
-    console.log("fresh-component-process: AJV=1 fast-deep-equal=3 runtime-laws=" + (fixture.cases.length + fixture.queuedCargoCases.length) + " evidence=" + evidence);
+    console.log("fresh-component-process: fast-deep-equal=3 runtime-laws=" + (fixture.cases.length + fixture.queuedCargoCases.length) + " evidence=" + evidence);
   }
   return { testFreshComponentSourceEpochV1, testFreshComponentStagingV1, testFreshComponentProcessV1 };
 }

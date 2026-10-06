@@ -39,8 +39,15 @@ mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::mutations::{apply_semio_text_mutation, decode_semio_text_mutation_json, inverse_semio_text_mutation, SemioTextMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{decode_semio_text_pack, decode_semio_text_snapshot_json, encode_semio_text_pack, encode_semio_text_snapshot_json, parse_semio_text_dsl, print_semio_text_dsl, SemioTextSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::mutations::{apply_semio_text_mutation, inverse_semio_text_mutation, SemioTextMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::io::text::mutations::{decode_semio_text_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::io::binary::snapshot::{decode_semio_text_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::io::binary::snapshot::{encode_semio_text_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::io::text::snapshot::{print_semio_text_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::io::text::snapshot::{parse_semio_text_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::io::text::snapshot::{decode_semio_text_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::text::io::text::snapshot::{encode_semio_text_snapshot_json};
 
     //#region 🔖️Input
     /// 📰️ The document every mutation row runs on: 384 real runs of the real German article
@@ -60,7 +67,7 @@ mod subject {
 
     /// 📰️ The article, parsed through this repository's own DSL codec.
     fn note(ctx: &Context) -> Result<SemioTextSnapshot, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(ARTICLE_DSL)?).map_err(|error| format!("the article artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(ARTICLE_DSL)?).map_err(|error| format!("the article artifact is not UTF-8: {error}"))?;
         parse_semio_text_dsl(&text)
     }
 
@@ -70,8 +77,8 @@ mod subject {
     }
 
     fn vector(ctx: &Context, position: usize, label: &str) -> Result<String, String> {
-        let uri = ctx.step_fixture_uris().into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
+        let uri = ctx.step_input_uris().into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
     }
 
     fn apply(current: &mut SemioTextSnapshot, step: &SemioTextMutation, what: &str) -> Result<(), String> {
@@ -140,7 +147,7 @@ mod subject {
     /// equal input" tripwire would be exactly backwards; its MIRROR law is asserted in its place
     /// through `law::carrier_is_exact`, which fails with the offset of the first differing byte.
     fn carrier_pair(ctx: &Context, dsl_uri: &str, pack_uri: &str, what: &str) -> Result<(SemioTextSnapshot, Json), String> {
-        let dsl_bytes = ctx.fixture_bytes(dsl_uri)?;
+        let dsl_bytes = ctx.input_bytes(dsl_uri)?;
         let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: {what} is not UTF-8: {error}"))?;
         let parsed = parse_semio_text_dsl(&text)?;
         let printed = print_semio_text_dsl(&parsed);
@@ -149,7 +156,7 @@ mod subject {
         if reparsed != parsed {
             return Err(disagreement(&format!("identity-round-trip: printing {what} back to DSL and reparsing it lost content"), &reparsed, &parsed));
         }
-        let pack_bytes = ctx.fixture_bytes(pack_uri)?;
+        let pack_bytes = ctx.input_bytes(pack_uri)?;
         let unpacked = decode_semio_text_pack(&pack_bytes)?;
         if unpacked != parsed {
             return Err(disagreement(&format!("identity-round-trip: the binary twin of {what} decodes to a different document than its text"), &unpacked, &parsed));

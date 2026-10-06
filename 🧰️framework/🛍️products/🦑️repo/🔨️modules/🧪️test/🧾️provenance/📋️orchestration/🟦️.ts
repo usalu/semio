@@ -1,6 +1,6 @@
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { matchesFixture, readSelectors } from "../../🔍️discovery/🎛️selection/🟦️.ts";
-import { contentDigestOf, fixtureManifestProblems, installFixtureFile, loadOracleRegistry, publishFixtureManifest, subsetCoordinate, testCacheDir, verifyFixture } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { contentDigestOf, testEvidenceProblems, installEvidenceFile, loadOracleRegistry, publishTestEvidence, subsetCoordinate, testCacheDir, verifyFixture } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
@@ -12,7 +12,7 @@ export class FixtureScript extends Script {
     const [subcommand = "verify"] = segments;
     const registry = loadOracleRegistry(this.repoRoot);
     const selectors = readSelectors(segments);
-    const fixtures = registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => matchesFixture(fixture, selectors));
+    const fixtures = registry.contributions.flatMap((contribution) => contribution.testEvidence).filter((fixture) => matchesFixture(fixture, selectors));
     switch (subcommand) {
       case "verify": {
         let bad = 0;
@@ -38,12 +38,12 @@ export class FixtureScript extends Script {
           reproducible: fixture.reproducible,
           generator: fixture.generator?.oracle ?? "",
           engine: fixture.generator?.engineFamily ?? "",
-          // 🪆️Resolved, not spelled: `fixtureManifestProblems` judges `✳️any` by what sits BESIDE it
+          // 🪆️Resolved, not spelled: `testEvidenceProblems` judges `✳️any` by what sits BESIDE it
           // when it is handed the repository, exactly as the contract phase and the coverage gate
           // already do (both other call sites pass it). Omitting it here made `fixture audit` the
           // one command that read the bare spelling, so every single-subset owner's fixture — gif,
           // las, obj — audited as a wildcard breach while the release gate it feeds reported it clean.
-          problems: fixtureManifestProblems(fixture, this.repoRoot),
+          problems: testEvidenceProblems(fixture, this.repoRoot),
         }));
         if (segments.includes("--json")) {
           console.log(JSON.stringify(rows, null, 2));
@@ -113,9 +113,9 @@ export class FixtureScript extends Script {
           for (const file of fixture.files) {
             const produced = join(outDir, fixture.id, basename(file.path));
             if (!existsSync(produced)) continue;
-            installFixtureFile(this.repoRoot, produced);
+            installEvidenceFile(this.repoRoot, produced);
           }
-          publishFixtureManifest(this.repoRoot, fixture);
+          publishTestEvidence(this.repoRoot, fixture);
           generated += 1;
           console.log(`[fixture generate] ${fixture.id}: ${fixture.files.length} file(s) into the content-addressed store`);
         }

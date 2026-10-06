@@ -6,6 +6,9 @@ import "🔀️move-page/🛰️.proto";
 import "📐️resize-page/🛰️.proto";
 import "♻️replace-page-text/🛰️.proto";
 
+import "📸️set-snapshot/🛰️.proto";
+import "🩹️patch-snapshot/🛰️.proto";
+
 // 🧬️ Exactly one direct PDF 1.4 operation.
 message PdfMutation {
   oneof mutation {
@@ -14,5 +17,7 @@ message PdfMutation {
     MovePage move_page = 3;
     ResizePage resize_page = 4;
     ReplacePageText replace_page_text = 5;
+    SetSnapshot set_snapshot = 6;
+    PatchSnapshot patch_snapshot = 7;
   }
 }

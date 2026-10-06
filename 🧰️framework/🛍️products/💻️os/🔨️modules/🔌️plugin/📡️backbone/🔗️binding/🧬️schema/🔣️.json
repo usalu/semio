@@ -20,133 +20,102 @@
     "DocumentBackboneBindingV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "operation", "instanceId", "bindingGeneration", "uri"],
+      "required": [
+        "schema",
+        "operation",
+        "instanceId",
+        "bindingGeneration",
+        "uri"
+      ],
       "properties": {
-        "schema": { "const": "semio.plugin.document-backbone-binding.v1" },
-        "operation": { "enum": ["bind", "retire"] },
-        "instanceId": { "$ref": "#/$defs/InstanceId" },
-        "bindingGeneration": { "$ref": "#/$defs/U64" },
-        "uri": { "$ref": "#/$defs/Uri" }
+        "schema": {
+          "const": "semio.plugin.document-backbone-binding.v1"
+        },
+        "operation": {
+          "enum": [
+            "bind",
+            "retire"
+          ]
+        },
+        "instanceId": {
+          "$ref": "#/$defs/InstanceId"
+        },
+        "bindingGeneration": {
+          "$ref": "#/$defs/U64"
+        },
+        "uri": {
+          "$ref": "#/$defs/Uri"
+        }
       }
     },
     "DocumentBackboneBindingReceiptV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "operation", "instanceId", "bindingGeneration", "uri"],
+      "required": [
+        "schema",
+        "operation",
+        "instanceId",
+        "bindingGeneration",
+        "uri"
+      ],
       "properties": {
-        "schema": { "const": "semio.plugin.document-backbone-binding-receipt.v1" },
-        "operation": { "enum": ["bound", "retired", "refused"] },
-        "instanceId": { "$ref": "#/$defs/InstanceId" },
-        "bindingGeneration": { "$ref": "#/$defs/U64" },
-        "uri": { "$ref": "#/$defs/Uri" },
-        "code": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[a-z][a-z0-9.-]*$" }
+        "schema": {
+          "const": "semio.plugin.document-backbone-binding-receipt.v1"
+        },
+        "operation": {
+          "enum": [
+            "bound",
+            "retired",
+            "refused"
+          ]
+        },
+        "instanceId": {
+          "$ref": "#/$defs/InstanceId"
+        },
+        "bindingGeneration": {
+          "$ref": "#/$defs/U64"
+        },
+        "uri": {
+          "$ref": "#/$defs/Uri"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[a-z][a-z0-9.-]*$"
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "operation": { "const": "refused" } }, "required": ["operation"] },
-          "then": { "properties": { "code": { "type": "string" } }, "required": ["code"] },
-          "else": { "not": { "required": ["code"] } }
-        }
-      ]
-    },
-    "DocumentBackboneBindingCaseV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "initial", "command", "receipt", "final"],
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "initial": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["generation", "uri"],
-          "properties": {
-            "generation": { "$ref": "#/$defs/U64" },
-            "uri": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Uri" }] }
-          }
-        },
-        "command": { "$ref": "#/$defs/DocumentBackboneBindingV1" },
-        "receipt": { "$ref": "#/$defs/DocumentBackboneBindingReceiptV1" },
-        "final": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["generation", "uri"],
-          "properties": {
-            "generation": { "$ref": "#/$defs/U64" },
-            "uri": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Uri" }] }
-          }
-        }
-      }
-    },
-    "DocumentBackboneBindingFixtureV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["limits", "dataLimits", "cases", "codec", "hostile"],
-      "properties": {
-        "limits": {
-          "const": { "controlBytes": 4096, "uriBytes": 1280, "codeBytes": 256 }
-        },
-        "dataLimits": {
-          "const": { "hotMessageBytes": 262144, "genesisMessageBytes": 4194304, "pendingBytes": 1048576, "pendingMessages": 64, "genesisTransport": "cold-pair" }
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 8,
-          "maxItems": 8,
-          "items": { "$ref": "#/$defs/DocumentBackboneBindingCaseV1" }
-        },
-        "codec": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["golden", "hostile"],
-          "properties": {
-            "golden": {
-              "type": "array",
-              "minItems": 4,
-              "maxItems": 4,
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["id", "value", "hex", "hotPort"],
-                "properties": {
-                  "id": { "enum": ["genesis", "mutations", "ack-empty", "ack-one"] },
-                  "value": { "type": "object" },
-                  "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" },
-                  "hotPort": { "type": "boolean" }
-                }
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "refused"
               }
             },
-            "hostile": {
-              "type": "array",
-              "minItems": 9,
-              "maxItems": 9,
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["id", "hex"],
-                "properties": {
-                  "id": { "type": "string", "minLength": 1 },
-                  "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})*$" }
-                }
-              }
-            }
-          }
-        },
-        "hostile": {
-          "type": "array",
-          "minItems": 7,
-          "maxItems": 7,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["id", "value"],
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
             "properties": {
-              "id": { "type": "string", "minLength": 1 },
-              "value": {}
+              "code": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "code"
+              ]
             }
           }
         }
-      }
+      ]
     }
-  },
-  "$ref": "#/$defs/DocumentBackboneBindingFixtureV1"
+  }
 }

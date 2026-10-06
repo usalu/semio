@@ -147,7 +147,7 @@ impl protocol::OpBinary for GisTerrainWindowConfigMutation {
 //#region 🌉️TestBridge
 /// 🔮️ One JSON report of applying a `set-camera` mutation to a `GisTerrainWindowConfig`, for a
 /// language-neutral test adapter — the identical shape and purpose
-/// `crate::gis_terrain_mutation_report_json` already establishes for the
+/// `crate::standards::v1::subsets::any::io::text::mutations::gis_terrain_mutation_report_json` already establishes for the
 /// terrain's own document-level mutations, applied here to gis3d's editor-config artifact (shard
 /// G4, this ticket).
 ///

@@ -202,9 +202,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -269,7 +268,6 @@
       "notes": "Restoring a saved config replaces every field at once."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-sun-applied",
       "class": "handcrafted",
       "target": {
@@ -334,7 +332,6 @@
       "notes": "Moving the sun replaces its JSON."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-show-mode-applied",
       "class": "handcrafted",
       "target": {
@@ -399,7 +396,6 @@
       "notes": "Switching to wireframe replaces the preview shading mode."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-preview-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -464,7 +460,6 @@
       "notes": "Orbiting the 3d preview replaces its camera."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-lod-mode-applied",
       "class": "handcrafted",
       "target": {
@@ -529,7 +524,6 @@
       "notes": "Choosing the fine tessellation replaces the LOD tier."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -594,7 +588,6 @@
       "notes": "Panning the flow-graph canvas replaces its camera."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-selected-generation-applied",
       "class": "handcrafted",
       "target": {
@@ -659,7 +652,6 @@
       "notes": "Selecting the second generation records its id."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-preview-camera-no-op",
       "class": "handcrafted",
       "target": {
@@ -724,7 +716,6 @@
       "notes": "Setting the camera to the one the config already holds is the leaf's warned no-op."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-no-op",
       "class": "handcrafted",
       "target": {

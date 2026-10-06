@@ -63,8 +63,8 @@
       "requested": 100,
       "turns": 1,
       "budgetWork": 1000,
-      "stepWorkCeiling": 100000,
-      "appendOpsCeiling": 4096
+      "stepWorkCeiling": 16384,
+      "appendOpsCeiling": 16
     }
   },
   "cases": [

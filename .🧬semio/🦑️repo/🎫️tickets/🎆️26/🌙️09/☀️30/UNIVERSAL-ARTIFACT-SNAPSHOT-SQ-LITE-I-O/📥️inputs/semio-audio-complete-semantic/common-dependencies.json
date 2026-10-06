@@ -1,0 +1,17 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🪶️sqlite/📏️native/🦀️.rs",
+    "beforeSha256": "6f9f3554ed14089f2d290ef13d4a1b003aadb1de7cb4c1dedbe6d9f0bc02bf90",
+    "afterSha256": "1a85b0be1dd9470426b0e4c5f276aea5a0cb4b56364d16194c12f6dfbc675c7a"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛫️native/🦀️.rs",
+    "beforeSha256": "a32b1aa3eb79f3ee46a666bb12d772619a7ab182c05b2d5e750aed9c2f2d3fa3",
+    "afterSha256": "e94d56534e30ad8995d51cad995bf27826c63ac1fda061e9c1157ca06a95054d"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🛬️native/🦀️.rs",
+    "beforeSha256": "791102194781dfdeb75c6a523f6d14df1b615c3314916cd69e0d86873c65dece",
+    "afterSha256": "b89bdf01fe265b3b4b53980b4e18644deb69e24774c83328b616770ed9c3996e"
+  }
+]

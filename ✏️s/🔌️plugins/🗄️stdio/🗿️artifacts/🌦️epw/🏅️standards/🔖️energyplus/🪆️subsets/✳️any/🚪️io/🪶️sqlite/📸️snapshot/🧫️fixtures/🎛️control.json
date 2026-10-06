@@ -1,0 +1,27 @@
+{
+  "largeTextBytes": 65537,
+  "entityCount": 2000,
+  "cancelAt": 256,
+  "semanticCells": {
+    "tableWidths": {
+      "epw_document": 8,
+      "epw_location": 10,
+      "epw_data_periods": 2,
+      "epw_data_period": 7,
+      "epw_record": 38
+    },
+    "schemaBytes": 2377,
+    "cases": [
+      {
+        "id": "complete",
+        "rows": 6,
+        "valueBytes": 475
+      },
+      {
+        "id": "empty",
+        "rows": 3,
+        "valueBytes": 242
+      }
+    ]
+  }
+}

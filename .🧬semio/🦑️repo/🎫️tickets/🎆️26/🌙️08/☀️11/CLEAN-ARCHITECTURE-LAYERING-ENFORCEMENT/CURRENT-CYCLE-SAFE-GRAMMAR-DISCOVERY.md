@@ -1,0 +1,23 @@
+# Current Cycle Safe Grammar Discovery Source Audit
+
+Independent finite source admission is Ready for cycle-safe-discovery-source-1.json. All seven complete before/after SHA pairs match, all seven current physical predecessors match (new files absent), and the exact OS grammar #[path] resolves to General Filesystem discovery. Rust discovery mounts its own original corpus law; both Rust and TypeScript corpus includes resolve within the discovery owner.
+
+The former recursive walker is replaced by an explicit pending stack plus caller-supplied physical identity set. Each physical directory is expanded once; the caller retains filesystem classification and exact basename suffix predicate. Identity and directory-read errors now propagate to the owning law instead of silently hiding unavailable inputs. A caller-owned control callback is checked before every pending directory; partial files and visited count are retained on cancellation. The grammar caller reports physical directory progress and refuses cancellation.
+
+The nine retained closed schema cases agree across expected output, actual TypeScript implementation and independent graphlib/Ajv observations: empty/tree, self/mutual cycle, physical alias, nonmatching leaf and cancellation controls. The actual reachable installed-package cycle observation remains separate evidence; no Rust execution or production publication has occurred for this proposal.
+
+Independently compared the complete original grammar law tail from its nonempty cohort assertion onward: byte-exact preservation of every original parser/compiler/conformance assertion. Only discovery input collection and its explicit cancellation assertion change. The root and exact *.grammar.semio predicate are retained. This removes recursion/cycle nontermination in the proposed implementation; it does not retire Specific-root ownership or establish live full grammar execution. SourceReady is bounded to these seven pairs and this closed corpus. Owning native runtime and genuine live matching membership remain required separately.
+
+## Actual Publication
+
+Actual owning target69601 completed with terminal0. Bun ran one complete corpus test with all nine shared cases, nineteen expectations, one pass and zero failures. Installed graphlib reachability and Ajv schema validation ran against the actual published TypeScript implementation. The output is retained in `🗑️generated/neutral-render-owner/cycle-safe-discovery-native-bun-1.log`. This is actual TypeScript runtime evidence; Rust and genuine live filesystem traversal remain pending.
+
+Registration24451 completed with terminal0 and four guarded source writes: the existing General package script, Nx project, package scripts and launch.json. The new `@semio-tech/framework-rs:test-directory-discovery` command runs the complete shared TypeScript corpus through existing budgeted execution. The target calls only its owning script; package scripts call Nx. Every original route and launch entry is conserved, with complete before/after/inverse journal records. Actual execution69601 is dispatched; registration alone is not a test result.
+
+Independently admitted actual publication19654: seven current physical bodies are byte-exact to the admitted successors. The publication receipt binds exact current authority and independent admission raw hashes. Its journal retains all seven full before/after/inverse pairs, followed by exactly one begin/complete pair for each row and a final published record. Both implementations, their tests, fixture and schema precede the OS law switch. Current source admission is exact; owning Rust runtime and live cohort execution remain unproved by this publication. The registered General Bun route is a separate subsequent verification.
+
+## Owning General Route and Actual Bun Execution
+
+Finite route publication review confirms the actual General script/project/package bodies equal the admitted successors. Script registration runs the sole complete shared corpus through the existing bounded test command; project calls its script, package calls Nx, and launch registration calls owning Nx route. The complete launch body advanced later; its full before/current pair is retained separately and the owned launch row remains byte-exact. No whole launch-body equivalence is claimed.
+
+Actual owning Nx log69601 reports one test across one file, 19 expectations, 1 pass and 0 fail; the nine-case corpus loop and independent graphlib/Ajv comparisons are preserved in that exact current test source. Nx reports the owning target successful, cache 0/4. This admits actual TypeScript corpus runtime only. Rust discovery and live Specific traversal remain separately unexecuted.

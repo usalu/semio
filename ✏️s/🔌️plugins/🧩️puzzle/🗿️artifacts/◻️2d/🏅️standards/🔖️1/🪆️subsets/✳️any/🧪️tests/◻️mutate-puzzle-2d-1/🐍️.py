@@ -782,7 +782,7 @@ def doc_json(ctx):
 
 def leaf(ctx, spec, name):
     """🧫️ One committed leaf of the vector the doc string addresses."""
-    return json.loads(ctx.fixture_bytes(spec[name]).decode("utf-8"))
+    return json.loads(ctx.input_bytes(spec[name]).decode("utf-8"))
 
 
 def uri_in(ctx, needle):
@@ -862,7 +862,7 @@ def identity_handler(ctx):
     additionally requires, in role, that it really is a board and not a graph: two nodes, at least
     three handles OWNED BY those nodes, and an edge whose two endpoints are handles rather than nodes."""
     uri = uri_in(ctx, "⬅️before")
-    committed = ctx.fixture_bytes(uri)
+    committed = ctx.input_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
     validate(document, "identity-round-trip")
     handles = [handle["id"] for node in document["nodes"] for handle in node["handles"]]
@@ -898,7 +898,7 @@ def spec_vector_handler(ctx):
     if spec["verdict"] == "refused":
         if outcome.get("status") != "rejected" or not outcome.get("code"):
             raise AssertionError("spec-vector-%s: a refusal vector must declare a rejected status and a machine-readable code, found %r" % (kind, outcome))
-        if not spec["diff"].endswith("🚫️.absent") or ctx.fixture_bytes(spec["diff"]):
+        if not spec["diff"].endswith("🚫️.absent") or ctx.input_bytes(spec["diff"]):
             raise AssertionError("spec-vector-%s: contract D6 requires an EMPTY 🔺️diff/🚫️.absent sentinel beside a refusal, never an empty patch" % kind)
         try:
             apply_mutation(before, kind, payload)

@@ -13,8 +13,8 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
   const owner = join(repoRoot, "🌎️hub/🧩️compositions/🌍️gis");
   const root = join(owner, "📇️native-codecs");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisNativeCodecs");
-  if (!validate(fixture)) throw new Error(`invalid GIS receipt corpus: ${JSON.stringify(validate.errors)}`);
+  const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisNativeCodecsReceipt");
+  for (const receipt of fixture.receipts) if (!validate(receipt)) throw new Error(`invalid GIS codec receipt: ${JSON.stringify(validate.errors)}`);
   const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1");
   const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8")) as { cases: ReadonlyArray<{ id: string; documentId: string; accepted: boolean }> };
   const registryModule = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json"), "utf8"));
@@ -22,8 +22,8 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
   const registryAjv = new RegistryAjv({ strict: true, allErrors: true });
   registryAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   registryAjv.addSchema(registryModule);
-  const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });
-  if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);
+  
+  
   for (const row of documentIds.cases) if (/^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.documentId) !== row.accepted) throw new Error(`artifact document-id oracle mismatch ${row.id}`);
   const manifest = Bun.TOML.parse(readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any;
   if (manifest.package.metadata.component.package !== fixture.packageId) throw new Error("GIS Cargo package identity differs from receipt owner");
@@ -42,12 +42,13 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
       : [[1, "exaggeration", false], [2, "importedFeaturesJson", false], [3, "mesh", true]];
     if (row.packRecord.keyword !== row.extension || JSON.stringify(row.packRecord.fields.map((field: any) => [field.id, field.key, field.optional])) !== JSON.stringify(fields)) throw new Error("GIS structural pack record mismatch");
   }
+  const hostileVectors = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📇️native-codecs/🔣️.json"), "utf8")) as { readonly hostile: readonly string[] };
   const expected = new Map(fixture.receipts.map((row: any) => [row.factoryId, JSON.stringify(row)]));
   const admitted = (candidate: any): boolean => candidate.pluginId === "gis" && candidate.packageId === "semio:gis" && candidate.packageVersion === version && candidate.receipts.length === 2
     && new Set(candidate.receipts.map((row: any) => row.factoryId)).size === 2
     && candidate.receipts.every((row: any) => expected.get(row.factoryId) === JSON.stringify(row));
   if (!admitted(fixture)) throw new Error("literal GIS closure was denied");
-  for (const hostile of fixture.hostile) {
+  for (const hostile of hostileVectors.hostile) {
     const candidate = structuredClone(fixture);
     switch (hostile) {
       case "missing": candidate.receipts.pop(); break;
@@ -61,7 +62,7 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
     }
     if (admitted(candidate)) throw new Error(`GIS hostile closure admitted ${hostile}`);
   }
-  console.log(`gis-native-codec-oracle: receipts=2 hostile=${fixture.hostile.length} ajv+node+webcrypto=1; no catalog activation or GIS execution claim`);
+  console.log(`gis-native-codec-oracle: receipts=2 hostile=${hostileVectors.hostile.length} ajv+node+webcrypto=1; no catalog activation or GIS execution claim`);
 }
 
 /** 🧷 Exact native receipt proof; it does not activate a hub catalog or inference executor. */

@@ -1,0 +1,13 @@
+{
+  "contractId": "flow-child-preparation-output-owner",
+  "slot": "content",
+  "childId": "child !@/\u0000引用😀",
+  "foreignSlot": "foreign !@/\u0000引用😀",
+  "target": "a !@/\u0000引用😀",
+  "dx": 1.5,
+  "dy": -2.0,
+  "operationCount": 1,
+  "closeGrant": 4096,
+  "closeSteps": 512,
+  "refusalCode": "flow-retained-child-group-output-contract"
+}

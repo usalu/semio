@@ -51,7 +51,7 @@ pub struct En1997Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1997Snapshot, extension = "en1997", envelope_id = "norm.en1997", sqlite = crate::snapshot::sqlite::codec);
+crate::impl_norm_artifact_record!(En1997Snapshot, extension = "en1997", envelope_id = "norm.en1997", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1997Snapshot {
@@ -225,24 +225,12 @@ pub fn noncompliant_demo() -> En1997Snapshot {
 }
 
 //#region 🌉️ExternalCodecBridge
-pub fn encode_en1997_snapshot_json(snapshot: &En1997Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
-pub fn decode_en1997_snapshot_json(text: &str) -> Result<En1997Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
-pub fn decode_en1997_dsl(text: &str) -> Result<En1997Snapshot, String> {
-    <En1997Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
-pub fn encode_en1997_dsl(snapshot: &En1997Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
-pub fn decode_en1997_pack(bytes: &[u8]) -> Result<En1997Snapshot, String> {
-    <En1997Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
-pub fn encode_en1997_pack(snapshot: &En1997Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge
 
 
@@ -251,8 +239,3 @@ pub fn encode_en1997_pack(snapshot: &En1997Snapshot) -> Vec<u8> {
 #[path = "🧪️tests/🔬️regen-assets/🦀️.rs"]
 mod regen_assets;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;

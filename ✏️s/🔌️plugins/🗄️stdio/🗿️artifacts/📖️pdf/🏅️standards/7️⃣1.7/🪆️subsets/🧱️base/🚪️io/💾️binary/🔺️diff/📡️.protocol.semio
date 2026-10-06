@@ -1,0 +1,14 @@
+dialect protocol
+protocol stdio.pdf.1.7.diff
+version 1
+schema stdio.pdf.1.7.diff
+start diff
+framing record
+
+# 🔺️ Derive-owned binary diff frame (`../../../🧬️schema/🦀️.rs` `🔖️DiffCodec`): the shared op `format`
+# byte, then the container-less pack record body of the same sparse `PdfDiff` value the text
+# facet prints. The value's lanes (page, resource, navigation, document and retained COS
+# collections) are all typed fields of that one record; `flags` are not needed because every
+# lane is an optional field of the walked value rather than a separately framed segment.
+field format u8
+chain diff bytes

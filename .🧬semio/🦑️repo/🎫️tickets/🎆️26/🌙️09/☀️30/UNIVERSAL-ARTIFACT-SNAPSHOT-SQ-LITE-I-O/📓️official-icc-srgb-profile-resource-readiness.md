@@ -1,0 +1,11 @@
+# Official ICC sRGB Profile Resource Readiness
+
+Direct official page reads only; no search query, binary download, asset mount or profile execution occurred.
+
+ICC publishes `sRGB_v4_ICC_preference.icc` as a v4 colour-space-class profile and a separate display-class variant. Its specific terms allow copying/distribution for any purpose without a fee while requiring the original file and copyright notice to remain unchanged; advertising may not imply ICC endorsement. The profile is intended for v4 workflows. These are identity and licensing facts, not proof of PDF/X suitability. [ICC sRGB profiles](https://registry.color.org/rgb-registry/srgbprofiles).
+
+The same page publishes `sRGB2014.icc`, an ICC v2 sRGB profile with perceptual default intent, D50 media white and Bradford D65→D50 adaptation. It states a February2015 revision of the black-point tag. Its general license is reached through the current ICC Profile Library. That license permits embedding and redistribution; altered profiles must remove original identification/copyright and must not be represented as the original. [ICC Profile Library](https://registry.color.org/profile-library/).
+
+The official specification page identifies ICC.1:2022 profile version4.4 as the current v4 format and advises v4 for most applications. It links the exact architecture/profile-format/data-structure specification. [ICC Specifications](https://www.color.org/icc_specs2/).
+
+The smallest non-fabricated next option is an explicitly selected, unchanged official sRGB resource with its actual license/identity retained, once Root authorizes and captures the real bytes/digest. Alternatively a wholly handcrafted first-party profile must satisfy the actual ICC format and receive independent parser/colour-transform validation; copying a header or the existing 17-byte fixture marker is insufficient. No digest, tag roster, binary size, rendering correctness or PDF/X conformance is guessed here. Embedding raw profile bytes requires no runtime library or exposed external API type. The existing PDF OutputIntent must point to an actual profile stream with an appropriate component count, and genuine profile-specific Native/oracle demands must validate it rather than only test DestOutputProfile key presence.

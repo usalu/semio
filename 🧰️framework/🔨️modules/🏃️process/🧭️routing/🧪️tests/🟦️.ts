@@ -6,13 +6,10 @@ import findUp from "find-up";
 import { findWorkspaceRoot } from "../🟦️.ts";
 import { runScriptMain } from "../🚪️entrypoint/🟦️.ts";
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import { Command } from "commander";
 import { BundleScript, ScriptRouter } from "../🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
 import corpus from "../🧫️fixtures/🔣️.json";
-
-expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
 
 for (const row of corpus.cases) test(row.id, async () => {
   const execute = async (oracle: boolean): Promise<typeof row.expected> => {

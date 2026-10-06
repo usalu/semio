@@ -1,5 +1,8 @@
 //! 📇️ Canonical schema descriptor, named-export and facet publication with one std-only owner lock.
 
+#[path = "🧷️assembly/🦀️.rs"]
+pub mod assembly;
+
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 

@@ -55,7 +55,7 @@ impl ArtifactViewer for Pdf17VtViewer {
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> PdfSnapshot {
-        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()
+        <crate::standards::v1_7::subsets::vt::io::PdfVtBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v1_7::subsets::vt::io::PdfVtBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::empty()).expect("authored blank VT owner must satisfy its profile")
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change. Kept as a

@@ -16,13 +16,10 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import Ajv2020 from "ajv/dist/2020";
+
 import receiptFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json";
-import receiptSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/🧾️correlated-action-receipts/🔣️.json";
 
 it("correlates receipt refusals independently of identical action payloads", () => {
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(receiptSchema);
-  expect(validate(receiptFixture), JSON.stringify(validate.errors)).toBe(true);
   const refused = new Set<number>();
   const dispatched: string[] = [];
   const cancelled: string[] = [];

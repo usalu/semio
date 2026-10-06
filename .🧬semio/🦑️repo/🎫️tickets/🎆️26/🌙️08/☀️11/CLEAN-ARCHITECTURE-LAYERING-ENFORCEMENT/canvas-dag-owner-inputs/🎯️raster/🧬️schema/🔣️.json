@@ -1,0 +1,17 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["version","format","usage","depthOrArrayLayers","mipLevelCount","sampleCount","dimension","viewFormats","cases"],
+  "properties":{
+    "version":{"const":1},
+    "format":{"const":"rgba8-unorm"},
+    "usage":{"const":["storage-binding","texture-binding"]},
+    "depthOrArrayLayers":{"const":1},
+    "mipLevelCount":{"const":1},
+    "sampleCount":{"const":1},
+    "dimension":{"const":"2d"},
+    "viewFormats":{"const":[]},
+    "cases":{"type":"array","minItems":8,"items":{"type":"object","additionalProperties":false,"required":["id","width","height","bytes","refusal"],"properties":{"id":{"type":"string","minLength":1},"width":{"type":"integer","minimum":0,"maximum":4294967295},"height":{"type":"integer","minimum":0,"maximum":4294967295},"bytes":{"type":["string","null"],"pattern":"^[0-9]+$"},"refusal":{"enum":[null,"empty-target","target-byte-overflow"]}}}}
+  }
+}

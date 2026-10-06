@@ -329,12 +329,12 @@ def uri_in(ctx, needle):
 
 def json_fixture(ctx, needle):
     """🧫️ The declared JSON fixture this scenario names."""
-    return json.loads(ctx.fixture_bytes(uri_in(ctx, needle)).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri_in(ctx, needle)).decode("utf-8"))
 
 
 def tower(ctx):
     """🗼️ The real committed Nakagin Capsule Tower scene, read through its own carrier."""
-    return parse_carrier(ctx.fixture_bytes(uri_in(ctx, "asset://")).decode("utf-8"))
+    return parse_carrier(ctx.input_bytes(uri_in(ctx, "asset://")).decode("utf-8"))
 
 
 def projection_of(document):
@@ -434,7 +434,7 @@ def identity_handler(ctx):
     The projection is the scene itself, which is what lets the two languages be compared on what
     they each read out of the same real bytes.
     """
-    text = ctx.fixture_bytes(uri_in(ctx, "asset://")).decode("utf-8")
+    text = ctx.input_bytes(uri_in(ctx, "asset://")).decode("utf-8")
     document, order = parse_carrier(text)
     if document["name"] != "Nakagin Capsule Tower" or len(document["nodes"]) != 9 or len(document["edges"]) != 6:
         raise AssertionError("identity-round-trip: the committed example is the nine-node, six-edge Nakagin tower, read %r with %d node(s) and %d edge(s)" % (document.get("name"), len(document["nodes"]), len(document["edges"])))

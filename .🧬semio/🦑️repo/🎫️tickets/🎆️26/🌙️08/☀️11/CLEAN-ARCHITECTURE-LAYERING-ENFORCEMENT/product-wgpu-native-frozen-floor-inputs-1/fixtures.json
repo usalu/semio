@@ -1,0 +1,119 @@
+[
+  {
+    "id": "original",
+    "input": {
+      "argv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "extraArgs": [],
+      "rest": [],
+      "level": "long"
+    },
+    "accepted": true
+  },
+  {
+    "id": "rest",
+    "input": {
+      "argv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "extraArgs": [],
+      "rest": [
+        "filter"
+      ],
+      "level": "long"
+    },
+    "accepted": false
+  },
+  {
+    "id": "extra",
+    "input": {
+      "argv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "extraArgs": [
+        "--lib"
+      ],
+      "rest": [],
+      "level": "long"
+    },
+    "accepted": false
+  },
+  {
+    "id": "package",
+    "input": {
+      "argv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "other"
+      ],
+      "extraArgs": [],
+      "rest": [],
+      "level": "long"
+    },
+    "accepted": false
+  },
+  {
+    "id": "level",
+    "input": {
+      "argv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "extraArgs": [],
+      "rest": [],
+      "level": "quick"
+    },
+    "accepted": false
+  },
+  {
+    "id": "argv",
+    "input": {
+      "argv": [
+        "nx",
+        "run",
+        "@semio-tech/framework-renderer-wgpu:test-native",
+        "--skip-nx-cache"
+      ],
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "extraArgs": [],
+      "rest": [],
+      "level": "long"
+    },
+    "accepted": false
+  }
+]

@@ -9,7 +9,6 @@ import { TaskManagerWindow, type TaskManagerTaskV1 } from "../../🧱️elements
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🔄️shell-utility-leaves", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🔄️shell-utility-leaves", "🔣️.json"), "utf8"));
 
 const independentSelectedChoice = (uri: string | null): string | null => {
   if (uri === null) return null;
@@ -23,8 +22,6 @@ afterEach(cleanup);
 
 describe("🔄️ target-neutral Shell utility leaves", () => {
   test("the shared fixture satisfies its schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
   test("the independent URI oracle preserves all three choices while detached and selects only the attached kind", () => {

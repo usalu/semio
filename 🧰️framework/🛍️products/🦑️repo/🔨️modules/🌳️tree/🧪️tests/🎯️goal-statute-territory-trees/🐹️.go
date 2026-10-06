@@ -46,7 +46,7 @@ func (stub) MarkdownLink(kind string, data map[string]any) string {
 
 // 📥️ fixtureObject decodes a JSON fixture into a generic object keeping its raw members.
 func fixtureObject(ctx *host.Context, uri string) (map[string]json.RawMessage, error) {
-	raw, err := ctx.FixtureBytes(uri)
+	raw, err := ctx.InputBytes(uri)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func inputs(ctx *host.Context) (map[string]json.RawMessage, error) {
 
 // 📥️ expected is the committed expectations document.
 func expected(ctx *host.Context) (map[string]any, error) {
-	raw, err := ctx.FixtureBytes("shared://📤️goal-statute-territory-expectations.json")
+	raw, err := ctx.InputBytes("shared://📤️goal-statute-territory-expectations.json")
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func expected(ctx *host.Context) (map[string]any, error) {
 
 // 📥️ records is the record set the goals and tickets come from.
 func records(ctx *host.Context) (*tree.MemoryTreeSource, error) {
-	raw, err := ctx.FixtureBytes("shared://🌳️tree-source.json")
+	raw, err := ctx.InputBytes("shared://🌳️tree-source.json")
 	if err != nil {
 		return nil, err
 	}

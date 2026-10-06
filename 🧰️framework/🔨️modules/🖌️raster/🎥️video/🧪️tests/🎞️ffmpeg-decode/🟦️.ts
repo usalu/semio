@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../🧪️test/🔌️adapter/🟦️.ts";
 import { AvcPcmEncoder, bt601Cb, bt601Cr, bt601Luma, encodeVideoRuns } from "../../🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -18,7 +18,7 @@ type Run = Readonly<{ rgb?: Rgb; quadrants?: readonly Rgb[]; frames: number }>;
 type VideoCase = Readonly<{ id: string; width: number; height: number; fps: number; runs: readonly Run[]; expected: Readonly<{ frameCount: number; syncSamples: readonly number[]; mp4Sha256: string }> }>;
 
 function cases(ctx: AdapterContext): readonly VideoCase[] {
-  return (JSON.parse(readFileSync(ctx.fixture("shared://🔣️.json"), "utf8")) as { cases: readonly VideoCase[] }).cases;
+  return (JSON.parse(readFileSync(ctx.input("shared://🔣️.json"), "utf8")) as { cases: readonly VideoCase[] }).cases;
 }
 
 function colourAt(run: Run, width: number, height: number, x: number, y: number): Rgb {

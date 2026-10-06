@@ -5,7 +5,6 @@ import Ajv from"ajv/dist/2020.js";
 import fixture from"../../🧫️fixtures/🎞️intrinsic-media/🔣️.json";
 import schema from"../../🧬️schema/🎞️intrinsic-media/🔣️.json";
 import depthFixture from"../../🧫️fixtures/🎞️intrinsic-media/🌲️depth/🔣️.json";
-import depthSchema from"../../🧬️schema/🎞️intrinsic-media/🌲️depth/🔣️.json";
 type Literal={kind:string;value?:unknown};
 
 test("closed intrinsic media corpus survives independent SQLite file materialization",()=>{
@@ -32,7 +31,6 @@ test("closed intrinsic media corpus survives independent SQLite file materializa
 });
 
 test("intrinsic depth counts semantic array edges through the declared upper frontier",()=>{
- const validate=new Ajv({strict:true}).compile(depthSchema);expect(validate(depthFixture)).toBe(true);expect(validate({...depthFixture,legacyDepth:64})).toBe(false);
  const database=new Database(":memory:");database.exec("CREATE TABLE chain(id INTEGER PRIMARY KEY,parent INTEGER,kind TEXT NOT NULL,word BLOB)");
  try{for(const row of depthFixture.cases){database.exec("DELETE FROM chain");const insert=database.query("INSERT INTO chain VALUES(?,?,?,?)");for(let edge=0;edge<=row.edges;edge++)insert.run(edge,edge===0?null:edge-1,edge===row.edges?"float":"array",edge===row.edges?Buffer.from(depthFixture.leafWord,"hex"):null);const file=database.serialize(),reopened=Database.deserialize(file);try{const measured=reopened.query("WITH RECURSIVE depth(id,n) AS (SELECT id,0 FROM chain WHERE parent IS NULL UNION ALL SELECT child.id,depth.n+1 FROM chain child JOIN depth ON child.parent=depth.id) SELECT MAX(n) AS edges FROM depth").get() as {edges:number};expect(measured.edges).toBe(row.edges);expect(measured.edges<=row.maxDepth).toBe(row.accepted);const leaf=reopened.query("SELECT word FROM chain WHERE kind='float'").get() as {word:Uint8Array};expect(Buffer.from(leaf.word).toString("hex")).toBe(depthFixture.leafWord);}finally{reopened.close();}}}finally{database.close();}
 });

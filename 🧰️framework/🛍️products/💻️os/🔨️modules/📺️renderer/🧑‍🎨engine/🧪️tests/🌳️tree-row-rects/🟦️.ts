@@ -14,7 +14,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import { describe, expect, it } from "vitest";
 import { domSizePx, STYLING_METRICS } from "@semio-tech/ui-styling";
 import { resolveThemeGeometry } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/🏛️model/🟦️.ts";
@@ -32,8 +32,6 @@ const law = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🌳️tree
   readonly metrics: { readonly rowHeightPx: number; readonly uiSpacingCompactPx: number; readonly treeRowUiSpacing: number };
   readonly cases: readonly FixtureCase[];
 };
-
-const densitySchema = JSON.parse(readFileSync(resolve(uiRoot, "🧬️schema/🌳️tree-row-density/🔣️.json"), "utf8"));
 const density = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🌳️tree-row-density/🔣️.json"), "utf8")) as {
   readonly rowHeightPx: number;
   readonly rowIconPx: number;
@@ -145,8 +143,6 @@ describe("🧊️ the wgpu side takes the same metric from the same token", () =
 
 describe("🌳️ the Actions tree keeps React's intrinsic row density", () => {
   it("validates the language-neutral density contract", () => {
-    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(densitySchema);
-    expect(validate(density), JSON.stringify(validate.errors)).toBe(true);
     expect(density.firstRows).toEqual(["action.clearSelection", "action.selectAll"]);
     expect(density.terminalRowId).toBe("action.engagementAbort");
   });

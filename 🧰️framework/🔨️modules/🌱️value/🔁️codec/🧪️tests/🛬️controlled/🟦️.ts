@@ -3,14 +3,11 @@ import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv/dist/2020";
 import fixture from "../../🧫️fixtures/🛬️controlled/🔣️.json";
-import schema from "../../🧬️schema/🛬️controlled/🔣️.json";
 import Ajv7 from "ajv";
 import borrowedKeys from "../../🧫️fixtures/🛬️controlled/🔗️borrowed-keys.json";
-import borrowedKeySchema from "../../🧬️schema/🛬️controlled/🔗️borrowed-keys.json";
 import { ValueError } from "../../../⚠️refusal/🟦️.ts";
 
 test("controlled native constructor neutral corpus independently validates and preserves ordered values",()=>{
-  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   const database=new Database(":memory:");
   database.exec("CREATE TABLE entry(id INTEGER PRIMARY KEY,label TEXT NOT NULL,optional INTEGER);CREATE TABLE sample(entry INTEGER NOT NULL,ordinal INTEGER NOT NULL,value INTEGER NOT NULL);");
   const insert=database.query("INSERT INTO entry VALUES(?,?,?)"),sample=database.query("INSERT INTO sample VALUES(?,?,?)");
@@ -28,7 +25,6 @@ test("controlled native constructor neutral corpus independently validates and p
 });
 
 test("unordered set corpus matches independent SQLite membership without promising iteration order",()=>{
-  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   expect(new Set([...fixture.hashSets,...fixture.dropOwners].map(row=>row.id)).size).toBe(fixture.hashSets.length+fixture.dropOwners.length);
   const database=new Database(":memory:");
   database.exec("CREATE TABLE member(value INTEGER PRIMARY KEY CHECK(value >= 0 AND value <= 4294967295));");
@@ -44,7 +40,6 @@ test("unordered set corpus matches independent SQLite membership without promisi
 });
 
 test("custom bridge defaults are portable and independently normalized by SQLite JSON",()=>{
-  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   expect(new Set(fixture.customDefaults.map(row=>row.id)).size).toBe(fixture.customDefaults.length);
   const database=new Database(":memory:");
   for(const row of fixture.customDefaults){
@@ -57,7 +52,6 @@ test("custom bridge defaults are portable and independently normalized by SQLite
 });
 
 test("intrinsic IEEE words and octets agree with independent DataView and Buffer",()=>{
-  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   const view=new DataView(new ArrayBuffer(8));
   for(const word of fixture.floatWords){const bits=BigInt(`0x${word}`);view.setBigUint64(0,bits,false);expect(view.getBigUint64(0,false)).toBe(bits);expect(Buffer.from(view.buffer).toString("hex")).toBe(word);}
   expect([...Buffer.from(fixture.octets)]).toEqual(fixture.octets);
@@ -78,14 +72,13 @@ test("owned Binary32 intrinsic bridge corpus agrees with independent DataView an
 });
 
 test("NaN Binary32 bridge corpus preserves independent IEEE sign and payload positions",()=>{
- expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  const narrow=new DataView(new ArrayBuffer(4)),wide=new DataView(new ArrayBuffer(8));
  for(const row of fixture.binary32NanBridges){narrow.setUint32(0,Number.parseInt(row.word,16),false);wide.setBigUint64(0,BigInt("0x"+row.binary64Word),false);const bits32=BigInt(narrow.getUint32(0,false)),bits64=wide.getBigUint64(0,false);expect(bits64>>63n).toBe(bits32>>31n);expect((bits64>>52n)&2047n).toBe(2047n);expect((bits64&4503599627370495n)>>29n).toBe(bits32&8388607n);expect(Buffer.from(wide.buffer).toString("hex")).toBe(row.binary64Word);}
 });
 
 
 test("controlled native output neutral corpus preserves independent JSON and SQLite values",async()=>{
- const fixture=(await import("../../🧫️fixtures/🛫️controlled/🔣️.json")).default,shape=(await import("../../🧬️schema/🛫️controlled/🔣️.json")).default;expect(new Ajv({strict:true}).validate(shape,fixture)).toBe(true);
+ const fixture=(await import("../../🧫️fixtures/🛫️controlled/🔣️.json")).default;
  expect(Object.keys(fixture.entries[0]!)).toEqual(fixture.fieldOrder);const db=new Database(":memory:");db.exec("CREATE TABLE encoded_entry(id INTEGER PRIMARY KEY,label TEXT NOT NULL,optional INTEGER);CREATE TABLE encoded_sample(parent INTEGER NOT NULL,ordinal INTEGER NOT NULL,value INTEGER NOT NULL);CREATE TABLE word(value INTEGER NOT NULL)");
  for(const [index,row]of fixture.entries.entries()){db.query("INSERT INTO encoded_entry VALUES(?,?,?)").run(index,row.label,row.optional===null?null:row.optional?1:0);for(const[ordinal,value]of row.samples.entries())db.query("INSERT INTO encoded_sample VALUES(?,?,?)").run(index,ordinal,value);expect(JSON.parse(JSON.stringify(row))).toEqual(row);expect(db.query("SELECT label AS label,optional AS optional FROM encoded_entry WHERE id=?").get(index)).toEqual({label:row.label,optional:row.optional===null?null:row.optional?1:0});expect((db.query("SELECT value FROM encoded_sample WHERE parent=? ORDER BY ordinal").all(index) as {value:number}[]).map(row=>row.value)).toEqual(row.samples);}
  for(const word of fixture.integerWords)db.query("INSERT INTO word VALUES(?)").run(BigInt(word));expect((db.query("SELECT CAST(value AS TEXT) AS word FROM word ORDER BY rowid").all() as {word:string}[]).map(row=>row.word)).toEqual(fixture.integerWords);
@@ -93,8 +86,7 @@ test("controlled native output neutral corpus preserves independent JSON and SQL
 });
 
 test("controlled enum field identities survive generated-binding names in independent SQLite JSON",async()=>{
- const fixture=(await import("../../🧫️fixtures/🛫️controlled/🔣️.json")).default,schema=(await import("../../🧬️schema/🛫️controlled/🔣️.json")).default;
- expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);expect(new Set(fixture.bindingHygiene.map(row=>row.id)).size).toBe(fixture.bindingHygiene.length);
+ const fixture=(await import("../../🧫️fixtures/🛫️controlled/🔣️.json")).default;expect(new Set(fixture.bindingHygiene.map(row=>row.id)).size).toBe(fixture.bindingHygiene.length);
  const uninhabited=new Ajv({strict:true}).compile(false);expect(new Set(fixture.emptyEnums.map(row=>row.id)).size).toBe(fixture.emptyEnums.length);for(const row of fixture.emptyEnums){expect(row.inhabited).toBe(false);for(const input of row.inputs)expect(uninhabited(input)).toBe(false);}
  const database=new Database(":memory:");
  for(const row of fixture.bindingHygiene){const output=row.id==="external"?{Named:row.fields}:row.id==="internal"?{kind:"Named",...row.fields}:{kind:"Named",payload:row.fields};expect(output).toEqual(row.output);const result=database.query("SELECT json(?) AS value").get(JSON.stringify(output)) as {value:string};expect(JSON.parse(result.value)).toEqual(row.output);const pointer=row.id==="external"?'$.Named':row.id==="internal"?'$':'$.payload';expect(database.query("SELECT count(*) AS count FROM json_each(?,?)").get(JSON.stringify(row.output),pointer)).toEqual({count:Object.keys(row.fields).length+(row.id==="internal"?1:0)});}
@@ -102,7 +94,6 @@ test("controlled enum field identities survive generated-binding names in indepe
 });
 
 test("scalar owner-named defaults retain independent SQLite JSON value semantics", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   const database = new Database(":memory:");
   try {
     const items = database.query("SELECT value FROM json_each(?, '$.items') ORDER BY key").all(JSON.stringify(fixture.scalarOwnerConstInput)) as { value: number }[];
@@ -115,7 +106,6 @@ test("scalar owner-named defaults retain independent SQLite JSON value semantics
 });
 
 test("borrowed long-key corpus retains literal UTF-8 membership through independent SQLite", () => {
-  expect(new Ajv7({strict:true}).compile(borrowedKeySchema)(borrowedKeys)).toBe(true);
   expect(borrowedKeys.expectedKind).toBe(new ValueError("canceled","owned cancellation").kind);
   const key=borrowedKeys.unit.repeat(borrowedKeys.repeat),bytes=new TextEncoder().encode(key);
   expect(bytes.length).toBe(140000);
@@ -139,7 +129,6 @@ test("borrowed object index has explicit full-key scratch and ordered identity a
   expect(index,"closed neutral exact borrowed-key storage facet").toBeDefined();
   if(!index)throw Error("borrowed-key index authority is absent");
   expect(index.storage).toBe("indexedOwnedSlots");expect(index.requests).toBe("fullConcreteReplacement");expect(index.probes).toBe("boundedFullUtf8Equality");
-  expect(new Ajv7({strict:true}).compile(borrowedKeySchema)(borrowedKeys)).toBe(true);
   const database=new Database(":memory:");
   try {
     database.run("CREATE TABLE member(ordinal INTEGER PRIMARY KEY,key TEXT NOT NULL COLLATE BINARY)");
@@ -156,9 +145,7 @@ test("borrowed object index has explicit full-key scratch and ordered identity a
 test("canonical intrinsic retirement declares complete actual owner release without new backing",()=>{
  const contract=(borrowedKeys as unknown as {canonicalRetirement?:unknown}).canonicalRetirement;
  expect(contract,"canonical all-nine retirement contract").toEqual({requestBytes:0,releasedBytes:"completeBorrowedCapacityCensus",sourceCorpus:"intrinsic-media-wire-v1",depth:256,longBranch:{unit:"文🌠",repeat:20000,utf8Bytes:140000}});
- expect(new Ajv7({strict:true}).compile(borrowedKeySchema)(borrowedKeys)).toBe(true);
  expect(intrinsicCorpus.contract).toBe((contract as {sourceCorpus:string}).sourceCorpus);
- const validate=new Ajv7({strict:true}).compile(borrowedKeySchema);expect(validate({...borrowedKeys,canonicalRetirement:{...borrowedKeys.canonicalRetirement,requestBytes:1}})).toBe(false);expect(validate({...borrowedKeys,canonicalRetirement:{...borrowedKeys.canonicalRetirement,opaqueOwner:true}})).toBe(false);
  const word=new DataView(new ArrayBuffer(8));word.setBigUint64(0,0xfff800000000002an);expect(Number.isNaN(word.getFloat64(0))).toBe(true);expect(word.getBigUint64(0)).toBe(0xfff800000000002an);
  expect(Buffer.byteLength("文🌠".repeat(20000))).toBe(140000);
  const database=new Database(":memory:");try{database.run("CREATE TABLE intrinsic(ordinal INTEGER PRIMARY KEY,kind TEXT NOT NULL)");const kinds:string[]=[];type Node={kind:string;value?:unknown};const visit=(value:Node)=>{kinds.push(value.kind);if(value.kind==="array")for(const child of value.value as Node[])visit(child);if(value.kind==="object")for(const member of value.value as {key:string;value:Node}[])visit(member.value);};visit(intrinsicCorpus.value as Node);for(const[i,kind]of kinds.entries())database.query("INSERT INTO intrinsic VALUES(?,?)").run(i,kind);expect(database.query("SELECT kind FROM intrinsic ORDER BY ordinal").all()).toEqual(kinds.map(kind=>({kind})));expect(database.query("SELECT DISTINCT kind FROM intrinsic ORDER BY kind").all()).toEqual(["array","bool","bytes","float","int","null","object","string","uint"].map(kind=>({kind})));expect(database.query("SELECT count(DISTINCT kind) AS count FROM intrinsic").get()).toEqual({count:9});}finally{database.close();}

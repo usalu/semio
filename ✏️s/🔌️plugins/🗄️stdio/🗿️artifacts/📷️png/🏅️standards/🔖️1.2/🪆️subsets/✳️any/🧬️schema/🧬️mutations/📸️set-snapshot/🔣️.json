@@ -12,5 +12,6 @@
   "diffParticipation": "detect",
   "outcomeClasses": ["applied"],
   "composition": "atomic",
-  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"]
+  "requiredLanguageSurfaces": ["rust", "typescript", "graphql", "protobuf", "json-schema", "text", "binary"],
+  "editable": false
 }

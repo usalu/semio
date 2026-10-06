@@ -5,11 +5,25 @@
 //! mutation-leaf migration recipe.
 
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::standards::v1::subsets::presentation::schema::diff::{
-    dec_block, dec_frame, dec_layout, dec_list, dec_master, dec_shape, dec_slide, dec_str, decode_option, diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape,
-    diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, enc_block, enc_frame, enc_layout, enc_list, enc_master, enc_shape, enc_slide, enc_str,
-    encode_option, frame_of, SemioPresentationDiff,
-};
+use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
 /// 🔧️ `OpBinary`/`OpText` both unconditional (not `#[cfg(test)]`-gated): the real
 /// `impl protocol::OpBinary for SemioPresentationMutation` below (production code) calls
@@ -227,164 +241,17 @@ pub(crate) fn agg_inverse(this: &SemioPresentationMutation, base: &SemioPresenta
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🎙️ Hand-rolled `OpText`/`OpBinary` (same reasoning as `DocxMutation`'s: the payload types are
-/// data-carrying enums the `dsl::DslOps` derive cannot bridge) — reuses the diff file's
-/// `pub(crate)` grammar primitives rather than duplicating them. Grammar: `keyword arg=value ...`
-/// (space-separated), matching the docx/gif/svg convention. `no-mutation` is no longer a keyword
-/// this codec parses (there is nothing left to construct for it); a `🧪️tests/mutate-*` adapter that
-/// must still honor the `no-mutation` scenario id maps it to the identity `set-snapshot` mutation
-/// itself, ahead of this codec.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
-    match m {
-        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", crate::standards::v1::subsets::presentation::schema::diff::enc_presentation_snapshot(snapshot)),
-        SemioPresentationMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
-        SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => format!("insert-slide index={index} slide={}", enc_slide(slide)),
-        SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }) => format!("remove-slide index={index}"),
-        SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index, layout_id }) => format!("set-slide-layout index={index} layout-id={}", encode_option(layout_id, |v| enc_str(v))),
-        SemioPresentationMutation::SetSlideNotes(set_slide_notes::SetSlideNotes { index, notes }) => format!("set-slide-notes index={index} notes={}", enc_list(notes, enc_block)),
-        SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index, shape_index, shape }) => format!("insert-shape slide-index={slide_index} shape-index={shape_index} shape={}", enc_shape(shape)),
-        SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index, shape_index }) => format!("remove-shape slide-index={slide_index} shape-index={shape_index}"),
-        SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index, shape_index, frame }) => format!("set-shape-frame slide-index={slide_index} shape-index={shape_index} frame={}", enc_frame(frame)),
-        SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => {
-            format!("set-text-box-blocks slide-index={slide_index} shape-index={shape_index} blocks={}", enc_list(blocks, enc_block))
-        }
-        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master }) => format!("insert-master master={}", enc_master(master)),
-        SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id }) => format!("remove-master id={}", enc_str(id)),
-        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout }) => format!("insert-layout layout={}", enc_layout(layout)),
-        SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id }) => format!("remove-layout id={}", enc_str(id)),
-        SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id, master_id }) => format!("set-layout-master id={} master-id={}", enc_str(id), enc_str(master_id)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioPresentationMutation::PatchSnapshot(crate::standards::v1::subsets::presentation::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
-    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> =
-        rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("presentation mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
-    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("presentation mutation: missing arg '{k}' for '{keyword}'"));
-    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
-    match keyword {
-        "set-snapshot" => Ok(SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::standards::v1::subsets::presentation::schema::diff::dec_presentation_snapshot(arg("snapshot")?)? })),
-        "insert-slide" => Ok(SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: usize_arg("index")?, slide: dec_slide(arg("slide")?)? })),
-        "remove-slide" => Ok(SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: usize_arg("index")? })),
-        "set-slide-layout" => Ok(SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: usize_arg("index")?, layout_id: decode_option(arg("layout-id")?, dec_str)? })),
-        "set-slide-notes" => Ok(SemioPresentationMutation::SetSlideNotes(set_slide_notes::SetSlideNotes { index: usize_arg("index")?, notes: dec_list(arg("notes")?, dec_block)? })),
-        "insert-shape" => Ok(SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, shape: dec_shape(arg("shape")?)? })),
-        "remove-shape" => Ok(SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")? })),
-        "set-shape-frame" => Ok(SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, frame: dec_frame(arg("frame")?)? })),
-        "set-text-box-blocks" => Ok(SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, blocks: dec_list(arg("blocks")?, dec_block)? })),
-        "insert-master" => Ok(SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: dec_master(arg("master")?)? })),
-        "remove-master" => Ok(SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id: dec_str(arg("id")?)? })),
-        "insert-layout" => Ok(SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: dec_layout(arg("layout")?)? })),
-        "remove-layout" => Ok(SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id: dec_str(arg("id")?)? })),
-        "set-layout-master" => Ok(SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id: dec_str(arg("id")?)?, master_id: dec_str(arg("master-id")?)? })),
-        other => Err(format!("presentation mutation: unknown keyword {other:?}")),
-    }
-}
 
-impl OpText for SemioPresentationMutation {
-    fn print_op(&self) -> String {
-        print_presentation_mutation(self)
-    }
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_presentation_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-}
 
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `SemioPresentationMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
-const TAG_INSERT_SLIDE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-slide");
-const TAG_REMOVE_SLIDE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-slide");
-const TAG_SET_SLIDE_LAYOUT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-slide-layout");
-const TAG_SET_SLIDE_NOTES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-slide-notes");
-const TAG_INSERT_SHAPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-shape");
-const TAG_REMOVE_SHAPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-shape");
-const TAG_SET_SHAPE_FRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-shape-frame");
-const TAG_SET_TEXT_BOX_BLOCKS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-text-box-blocks");
-const TAG_INSERT_MASTER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-master");
-const TAG_REMOVE_MASTER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-master");
-const TAG_INSERT_LAYOUT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-layout");
-const TAG_REMOVE_LAYOUT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-layout");
-const TAG_SET_LAYOUT_MASTER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-layout-master");
-//#endregion 🏷️WireTags
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn wire_tag(m: &SemioPresentationMutation) -> u8 {
-    match m {
-        SemioPresentationMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioPresentationMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
-        SemioPresentationMutation::InsertSlide(_) => TAG_INSERT_SLIDE,
-        SemioPresentationMutation::RemoveSlide(_) => TAG_REMOVE_SLIDE,
-        SemioPresentationMutation::SetSlideLayout(_) => TAG_SET_SLIDE_LAYOUT,
-        SemioPresentationMutation::SetSlideNotes(_) => TAG_SET_SLIDE_NOTES,
-        SemioPresentationMutation::InsertShape(_) => TAG_INSERT_SHAPE,
-        SemioPresentationMutation::RemoveShape(_) => TAG_REMOVE_SHAPE,
-        SemioPresentationMutation::SetShapeFrame(_) => TAG_SET_SHAPE_FRAME,
-        SemioPresentationMutation::SetTextBoxBlocks(_) => TAG_SET_TEXT_BOX_BLOCKS,
-        SemioPresentationMutation::InsertMaster(_) => TAG_INSERT_MASTER,
-        SemioPresentationMutation::RemoveMaster(_) => TAG_REMOVE_MASTER,
-        SemioPresentationMutation::InsertLayout(_) => TAG_INSERT_LAYOUT,
-        SemioPresentationMutation::RemoveLayout(_) => TAG_REMOVE_LAYOUT,
-        SemioPresentationMutation::SetLayoutMaster(_) => TAG_SET_LAYOUT_MASTER,
-    }
-}
-/// ✂️ Just the `key=value ...` argument tail of `print_presentation_mutation` — the binary frame's
-/// `tag` byte already carries the keyword, so the text keyword itself is redundant in the binary
-/// payload.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
-    match print_presentation_mutation(m).split_once(' ') {
-        Some((_, rest)) => rest.to_string(),
-        None => String::new(),
-    }
-}
 
-/// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: real binary
-/// op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut. `format u8`
-/// (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two
-/// REAL fixed fields; the variant's own `key=value ...` argument payload follows as one opaque
-/// trailing `bytes` chain — reusing the already-real, already-tested
-/// `print_presentation_mutation`/`parse_presentation_mutation` text codec rather than re-deriving a
-/// second independent encoding (`protocol-array-of-records`/`protocol-prim-ref-recursion`, per the
-/// grammar recipe's own gap table — same honest boundary the sibling `../../🔺️diff/💾️binary/
-/// 📡️.protocol.semio` uses).
-impl OpBinary for SemioPresentationMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
-        out.extend_from_slice(print_presentation_mutation_args(self).as_bytes());
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        if bytes.len() < 2 {
-            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
-        }
-        if bytes[0] != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
-        }
-        if bytes[1] == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::presentation::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
-        }
-        let tag = bytes[1];
-        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
-        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
-        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
-    }
-}
+
+
+
+
+
+
+
 //#endregion OpCodecs
 
 //#region 🔖️Demo

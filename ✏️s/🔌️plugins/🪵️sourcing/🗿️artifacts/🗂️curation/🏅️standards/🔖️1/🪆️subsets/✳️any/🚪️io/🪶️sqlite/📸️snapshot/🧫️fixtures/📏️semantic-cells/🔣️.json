@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "tableCount": 14,
+  "rowCount": 34,
+  "cases": [
+    {
+      "id": "base",
+      "width": 0,
+      "hex": null,
+      "bytes": 1329
+    },
+    {
+      "id": "binary64-0000000000000000",
+      "width": 64,
+      "hex": "0000000000000000",
+      "bytes": 1329
+    },
+    {
+      "id": "binary64-8000000000000000",
+      "width": 64,
+      "hex": "8000000000000000",
+      "bytes": 1329
+    },
+    {
+      "id": "binary64-0000000000000001",
+      "width": 64,
+      "hex": "0000000000000001",
+      "bytes": 1329
+    },
+    {
+      "id": "binary64-3ff0000000000000",
+      "width": 64,
+      "hex": "3ff0000000000000",
+      "bytes": 1329
+    },
+    {
+      "id": "binary64-7ff0000000000000",
+      "width": 64,
+      "hex": "7ff0000000000000",
+      "bytes": 1439
+    },
+    {
+      "id": "binary64-fff0000000000000",
+      "width": 64,
+      "hex": "fff0000000000000",
+      "bytes": 1439
+    },
+    {
+      "id": "binary64-7ff0000000000001",
+      "width": 64,
+      "hex": "7ff0000000000001",
+      "bytes": 1208
+    },
+    {
+      "id": "binary64-7ff8123456789abc",
+      "width": 64,
+      "hex": "7ff8123456789abc",
+      "bytes": 1208
+    },
+    {
+      "id": "binary64-fff8fedcba987654",
+      "width": 64,
+      "hex": "fff8fedcba987654",
+      "bytes": 1208
+    },
+    {
+      "id": "binary32-00000000",
+      "width": 32,
+      "hex": "00000000",
+      "bytes": 1329
+    },
+    {
+      "id": "binary32-80000000",
+      "width": 32,
+      "hex": "80000000",
+      "bytes": 1329
+    },
+    {
+      "id": "binary32-00000001",
+      "width": 32,
+      "hex": "00000001",
+      "bytes": 1329
+    },
+    {
+      "id": "binary32-3f800000",
+      "width": 32,
+      "hex": "3f800000",
+      "bytes": 1329
+    },
+    {
+      "id": "binary32-7f800000",
+      "width": 32,
+      "hex": "7f800000",
+      "bytes": 1389
+    },
+    {
+      "id": "binary32-ff800000",
+      "width": 32,
+      "hex": "ff800000",
+      "bytes": 1389
+    },
+    {
+      "id": "binary32-7f800001",
+      "width": 32,
+      "hex": "7f800001",
+      "bytes": 1263
+    },
+    {
+      "id": "binary32-7fc12345",
+      "width": 32,
+      "hex": "7fc12345",
+      "bytes": 1263
+    },
+    {
+      "id": "binary32-ffc54321",
+      "width": 32,
+      "hex": "ffc54321",
+      "bytes": 1263
+    }
+  ],
+  "nativeBacking": {
+    "maximumBytes": 1048576,
+    "repeatedOwnerships": 2,
+    "tinyAllocationBytes": [
+      0,
+      1
+    ],
+    "requestIncludesReallocFullSize": true
+  }
+}

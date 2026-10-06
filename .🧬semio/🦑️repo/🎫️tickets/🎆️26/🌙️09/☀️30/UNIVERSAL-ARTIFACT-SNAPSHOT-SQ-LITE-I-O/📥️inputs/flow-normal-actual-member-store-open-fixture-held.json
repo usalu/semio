@@ -1,0 +1,14 @@
+{
+  "qualification": "ActualFlowAfter publicwordlaw9/10GREEN,newStoreopen public allbody passed then failed missing boundedDisposer; use real genericcreate_member_store owner constructor with actualownerdisposer, preserve automaticnewregistry/body/coldclose without testlocal barecodec",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "    let envelope=store::create_document_envelope(FLOW_DOCUMENT_SCHEMA,\"flow-normal-registration-law\",seed,None);\n    let owner=FlowStore::new(envelope).await.unwrap();",
+          "after": "    let owner=store::create_member_store::<FlowHostSnapshot,FlowMutation>(FLOW_DOCUMENT_SCHEMA,\"flow-normal-registration-law\",&store::io::ArtifactDialect{artifact_kind:\"flow.host_snapshot\".into(),standard:\"1\".into(),subset:\"*\".into()},&seed.encode_pack()).await.unwrap();"
+        }
+      ]
+    }
+  ]
+}

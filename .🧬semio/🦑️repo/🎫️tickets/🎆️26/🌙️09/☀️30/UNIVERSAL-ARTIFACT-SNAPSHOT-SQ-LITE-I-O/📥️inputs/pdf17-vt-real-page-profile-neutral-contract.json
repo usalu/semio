@@ -1,0 +1,59 @@
+{
+  "kind": "s.stdio.pdf",
+  "standard": "1.7",
+  "subset": "vt",
+  "conditionIdentifier": "sRGB2014",
+  "profile": {
+    "name": "sRGB2014",
+    "bytes": 3024,
+    "sha256": "384b832de3412066743b52a75ee906b6fb9fb8d9e09e936fc2c43223815c6e0a",
+    "tags": 16,
+    "components": 3
+  },
+  "graph": {
+    "root": 1,
+    "outputIntent": 2,
+    "profileStream": 3,
+    "pages": 4,
+    "kids": [
+      5
+    ],
+    "count": 1,
+    "page": 5,
+    "dpartRoot": 10,
+    "dpartRootNode": 11,
+    "parent": 10,
+    "start": 5
+  },
+  "conformance": {
+    "encryptionDictionaries": [],
+    "outputIntents": [
+      {
+        "subtype": "GTS_PDFX",
+        "outputConditionIdentifier": "sRGB2014",
+        "hasDestOutputProfile": true
+      }
+    ],
+    "pageBoxes": [
+      {
+        "trimBox": [
+          0,
+          0,
+          612,
+          792
+        ],
+        "artBox": null
+      }
+    ],
+    "fontPrograms": [],
+    "javaScriptActions": [],
+    "launchActions": [],
+    "mediaAnnotations": [],
+    "dpartRoot": [
+      {
+        "hasMetadata": false,
+        "job": null
+      }
+    ]
+  }
+}

@@ -180,9 +180,9 @@ fn imperative_retained_extent(command: &ImperativeCommand, _snapshot: &Procedure
 }
 
 /// 🧮️ One shell-supplied argument as this app's own `ValueDsl` scalar — `SetStepParams::params` is a
-/// `BTreeMap<String, ValueDsl>` whose fields are private to `crate::document_dsl`, so the conversion
+/// `BTreeMap<String, ValueDsl>` whose fields are private to `crate::standards::v1::subsets::any::io::text::snapshot`, so the conversion
 /// goes through the engine `Value` the module already converts from.
-fn imperative_value_dsl(value: &semio_framework_value::DslValue) -> crate::document_dsl::ValueDsl {
+fn imperative_value_dsl(value: &semio_framework_value::DslValue) -> crate::standards::v1::subsets::any::io::text::snapshot::ValueDsl {
     let engine = match value {
         semio_framework_value::DslValue::Bool(flag) => neural_engine::Value::Atom(neural_engine::Atom::Boolean(*flag)),
         semio_framework_value::DslValue::Number(number) => match number.as_i64() {
@@ -191,9 +191,9 @@ fn imperative_value_dsl(value: &semio_framework_value::DslValue) -> crate::docum
         },
         semio_framework_value::DslValue::String(text) => neural_engine::Value::Atom(neural_engine::Atom::String(text.clone())),
         semio_framework_value::DslValue::Null => neural_engine::Value::Atom(neural_engine::Atom::Null),
-        other => neural_engine::Value::Atom(neural_engine::Atom::String(dsl::json::to_json_string(other))),
+        other => neural_engine::Value::Atom(neural_engine::Atom::String(semio_framework_pack_json::to_json_string(other))),
     };
-    crate::document_dsl::value_to_value_dsl(&engine)
+    crate::standards::v1::subsets::any::io::text::snapshot::value_to_value_dsl(&engine)
 }
 
 /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into the typed `ImperativeCommand` every
@@ -209,7 +209,7 @@ fn imperative_command_from_action(action: &str, args: Option<&semio_framework_va
     let text = |keys: &[&str], fallback: &str| match lookup(keys) {
         Some(semio_framework_value::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
         Some(semio_framework_value::DslValue::String(_)) | None => fallback.to_string(),
-        Some(other) => dsl::json::to_json_string(other),
+        Some(other) => semio_framework_pack_json::to_json_string(other),
     };
     let optional_text = |keys: &[&str]| match lookup(keys) {
         Some(semio_framework_value::DslValue::String(raw)) if !raw.is_empty() => Some(raw.clone()),

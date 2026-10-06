@@ -1,18 +1,18 @@
 import { defaultPlaygroundVariant } from "../🎮️playground/⭐️default/🟦️.ts";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, sep } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import type { RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { discoverCatalogPackages, discoverPackageProblems, getWorkspaceRoot, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, validateGeneratorContractsAgainstWorkspace } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { declaredProjectTargets, generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "../🚀️launch/🟦️.ts";
+import { declaredProjectTargets, generateLaunchJson, LAUNCH_OUTPUT_REL_PATH, reconcileRepositoryLaunchSeed } from "../🚀️launch/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../📦️deployment/🟦️.ts";
 import { validateDescriptors } from "../🛂️descriptor-verification/🟦️.ts";
 import { ON_ARTIFACT_KIND_PREFIX, PLUGIN_AREAS, PLUGIN_AREAS_STATE, DeployedRegistryEntryV1, REGISTRY_DIAGNOSTICS_FILE, type RegistryChannelDiagnosticV1, TAXONOMY, generatePluginRegistry, generatePluginRegistryReport } from "../🔎️discovery/🟦️.ts";
 import { FrameworkPackageEntry, emitFrameworkPackagesTypeScript, generateFrameworkPackageRegistry } from "../🧰️framework-catalog/🟦️.ts";
 import { AssetSpecRow, PlaygroundEntry, generatePlaygroundRegistry, generateWithheldPlaygroundRegistry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 import { buildPlaygroundSession } from "../🎮️playground/🧭️session/🟦️.ts";
-import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, readGeneratedCatalogProjection, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
+import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
 import { findNewContractPluginRoots, validatePlaygroundRegistry, validateTaxonomyTree } from "../🗿️taxonomy-validation/🟦️.ts";
 import { publicationComponentAdmission, renderOwnerPublications } from "../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/📣️publication/🟦️.ts";
 import { publicationWasmPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
@@ -444,6 +444,28 @@ export class CheckGeneratedScript extends BundleScript {
     if (!existsSync(launchPath) || readFileSync(launchPath, "utf8") !== generateLaunchJson(repoRoot, launchPlaygrounds, declaredProjectTargets(repoRoot))) stale.push(LAUNCH_OUTPUT_REL_PATH);
     if (stale.length) throw new Error(`Generated registry output is stale: ${stale.join(", ")}`);
     console.log("plugin registry generated catalog and launch bytes are fresh.");
+  }
+}
+
+
+/** 🧷️ Keeps hand-made `.vscode/launch.json` rows across the next render by moving them into the seed: run it right before
+ * `generate`. `--check` writes nothing; `--adopt-edits` also gives an edited seed row the content its launch twin carries; a
+ * path argument reads another launch file (a snapshot taken before a render). Exit 3: a render would still drop or change
+ * hand-made launch content (`--check`), or edited rows stay unresolved because `--adopt-edits` was not given. */
+export class ReconcileLaunchSeedScript extends BundleScript {
+  run(segments: string[]): void {
+    const flags = segments.filter((segment) => segment.startsWith("--")), [from, ...rest] = segments.filter((segment) => !segment.startsWith("--"));
+    if (rest.length || flags.some((flag) => flag !== "--check" && flag !== "--adopt-edits")) throw new Error("usage: reconcile-launch-seed [--check] [--adopt-edits] [<launch file>]");
+    const repoRoot = getWorkspaceRoot(), check = flags.includes("--check"), adoptEdits = flags.includes("--adopt-edits");
+    const launch = readFileSync(from ? resolve(from) : join(repoRoot, LAUNCH_OUTPUT_REL_PATH), "utf8");
+    const result = reconcileRepositoryLaunchSeed(repoRoot, renderCatalogFiles(repoRoot, undefined, "exclude").launchPlaygrounds, launch, adoptEdits);
+    console.log(`launch seed: ${check ? "would move" : "moved"} ${result.adopted.length} configuration row(s) and ${result.adoptedInputs.length} input(s) into the seed; ${result.edited.length} edited seed row(s) ${adoptEdits ? "taken from the launch file" : "unresolved"}; ${result.misplaced} misplaced input row(s)`);
+    for (const [label, rows] of Object.entries({ adopted: result.adopted, inputs: result.adoptedInputs, edited: result.edited, drifted: result.drifted, renamed: result.renamed, stale: result.stale })) console.log(`${label}: ${rows.join(" | ") || "-"}`);
+    if (!check && result.seed !== result.previous) {
+      if (readFileSync(result.path, "utf8") !== result.previous) throw new Error("launch seed changed while reconciling; re-run");
+      writeFileSync(result.path, result.seed);
+    }
+    if (check ? result.seed !== result.previous || result.edited.length > 0 : !adoptEdits && result.edited.length > 0) process.exitCode = 3;
   }
 }
 

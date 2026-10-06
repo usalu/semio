@@ -1,0 +1,14 @@
+import {type FormDictionary} from "../../../../🧬️schema/🟦️.ts";
+import {parseLayoutDiff,type LayoutDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
+import{formDictionaryNativeJson,formDictionaryFromNativeJson}from"../../../../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧾️dictionary/🪪️native-json/🟦️.ts";
+import {row,array,fields,paragraph,character,run,story,frame,page,child,link,image,artifact} from "../../📸️snapshot/🪪️native-json/🟦️.ts";
+
+function delta(v:unknown,convert:(v:unknown,out:boolean)=>unknown,out:boolean):unknown{const r={...row(v)};r.added=array(r.added).map(v=>convert(v,out));return r;}
+
+function diff(v:unknown,out:boolean):unknown{const r={...row(v)};if(r.dataFields!=null){const change={...row(r.dataFields)};if(change.dictionary!=null)change.dictionary=out?formDictionaryNativeJson(change.dictionary as FormDictionary):formDictionaryFromNativeJson(change.dictionary);r.dataFields=change;}if(r.artifact!=null)r.artifact=artifact(r.artifact,out);if(r.grid!=null)r.grid=fields(r.grid,["baselineGrid","baselineOffset"],out);if(r.paragraphStyles!=null)r.paragraphStyles=delta(r.paragraphStyles,paragraph,out);if(r.characterStyles!=null)r.characterStyles=delta(r.characterStyles,character,out);if(r.stories!=null){const stories=row(delta(r.stories,story,out));stories.patched=array(stories.patched).map(v=>{const entry={...row(v)},patch={...row(entry.patch)};if(patch.style_runs!=null)patch.style_runs=array(patch.style_runs).map(v=>run(v,out));entry.patch=patch;return entry;});r.stories=stories;}if(r.links!=null)r.links=delta(r.links,image,out);if(r.parentPages!=null)r.parentPages=delta(r.parentPages,(v,out)=>page(v,out,true),out);if(r.pages!=null){const pages=row(delta(r.pages,(v,out)=>page(v,out,false),out));pages.patched=array(pages.patched).map(v=>{const entry={...row(v)},patch={...row(entry.patch)};if(patch.frame_added!=null){const frameAdded={...row(patch.frame_added)};frameAdded.frame=frame(frameAdded.frame,out);patch.frame_added=frameAdded;}if(patch.guides!=null)patch.guides=array(patch.guides).map(v=>fields(v,["x","y","w","h"],out));if(patch.overrides!=null)patch.overrides=array(patch.overrides).map(v=>{const o={...row(v)};if(o.bounds!=null)o.bounds=fields(o.bounds,["x","y","w","h","rotation"],out);return o;});entry.patch=patch;return entry;});r.pages=pages;}if(r.backgroundDrawing!=null)r.backgroundDrawing=child(r.backgroundDrawing,out);if(r.referencedModel!=null)r.referencedModel=link(r.referencedModel,out);return r;}
+
+/** 📥️ Converts full typed entity additions inside the existing native diff facet. */
+export function layoutDiffFromNativeJson(value:unknown):LayoutDiff{return parseLayoutDiff(diff(value,false));}
+
+/** 📤️ Emits native JSON diff fields without changing ordered entity additions. */
+export function layoutDiffNativeJson(value:LayoutDiff):unknown{return diff(value,true);}

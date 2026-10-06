@@ -15,7 +15,7 @@ use crate::Block2dSnapshot;
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_zip::io::encode_zip;
+use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip;
 use semio_s_artifact_stdio_zip::schema::snapshot::ZipEntry;
 use semio_s_artifact_stdio_zip::ZipSnapshot;
 

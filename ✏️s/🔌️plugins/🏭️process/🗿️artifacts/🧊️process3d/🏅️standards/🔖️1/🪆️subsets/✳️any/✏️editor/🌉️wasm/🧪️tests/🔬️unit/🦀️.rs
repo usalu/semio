@@ -5,7 +5,7 @@ use crate::mutations::change_stock_label::ChangeStockLabel;
 use crate::mutations::create_step::CreateStep;
 use crate::mutations::delete_step::DeleteStep;
 use crate::mutations::replace_stock_solid::ReplaceStockSolid;
-use crate::op::Process3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, PROCESS_3D_SCHEMA};
 use store::{create_document_envelope, ArtifactCommand, Author};
 
@@ -30,7 +30,7 @@ fn drill_step(id: &str) -> ProcessStep {
 /// every fixture to finish through [`close_store`].
 async fn new_store() -> Process3dStore {
     let mut store = Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None)).await.expect("new store");
-    store.install_document_store_owners_exact(crate::spr::process3d_document_store_owners());
+    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::process3d_document_store_owners());
     store
 }
 
@@ -65,19 +65,19 @@ async fn step_mutations_dispatch_real_effects() {
     let mut store = new_store().await;
     let empty = store.snapshot().expect("snapshot");
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") })], description: None, transaction: None }).await.expect("dispatch create");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") })], transaction: None }).await.expect("dispatch create");
     let after_create = store.snapshot().expect("snapshot");
     assert_ne!(after_create, empty, "CreateStep must change the persisted document");
     assert!(after_create.step_payloads.iter().any(|step| step.id == "cut-1"));
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "cut-1".into(), new_enabled: false })], description: None, transaction: None }).await.expect("dispatch enabled change");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "cut-1".into(), new_enabled: false })], transaction: None }).await.expect("dispatch enabled change");
     assert!(!store.snapshot().expect("snapshot").step_payloads.iter().find(|step| step.id == "cut-1").expect("cut-1 present").enabled);
 
     let origin = StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() };
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "cut-1".into(), new_origin: Some(origin.clone()) })], description: None, transaction: None }).await.expect("dispatch origin change");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "cut-1".into(), new_origin: Some(origin.clone()) })], transaction: None }).await.expect("dispatch origin change");
     assert_eq!(store.snapshot().expect("snapshot").step_payloads.iter().find(|step| step.id == "cut-1").expect("cut-1 present").origin, Some(origin.clone()));
 
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::DeleteStep(DeleteStep { id: "cut-1".into() })], description: None, transaction: None }).await.expect("dispatch delete");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::DeleteStep(DeleteStep { id: "cut-1".into() })], transaction: None }).await.expect("dispatch delete");
     assert_eq!(store.snapshot().expect("snapshot"), empty, "DeleteStep must restore the pre-create document");
 
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
@@ -104,7 +104,7 @@ async fn a_placed_step_edited_in_history_replays_its_downstream() {
         Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }),
     ];
     for mutation in &log {
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a placed step applies");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("a placed step applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let mut deeper = drill_step("drill-1");
@@ -137,7 +137,6 @@ async fn sets_stock_and_backwards_restores() {
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: new_handle.clone() }), Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() })],
-            description: None,
             transaction: None,
         })
         .await
@@ -159,7 +158,6 @@ async fn sets_stock_to_imported_solid_and_backwards_restores() {
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![Process3dMutation::ReplaceStockSolid(ReplaceStockSolid { new_solid: imported_handle.clone() }), Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Imported STEP".into() })],
-            description: None,
             transaction: None,
         })
         .await
@@ -178,7 +176,7 @@ async fn sets_stock_to_imported_solid_and_backwards_restores() {
 async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
     let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None);
     let mut store = Process3dStore::new(envelope).await.expect("new store");
-    store.install_document_store_owners_exact(crate::spr::process3d_document_store_owners());
+    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::process3d_document_store_owners());
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![
@@ -187,7 +185,6 @@ async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
                 Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") }),
                 Process3dMutation::CreateStep(CreateStep { index: 1, step: drill_step("drill-1") }),
             ],
-            description: Some("build timeline".into()),
             transaction: None,
         })
         .await

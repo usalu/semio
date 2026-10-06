@@ -1,19 +1,17 @@
 use super::*;
 
-use crate::schema_metadata::{ContractFixture, ContractFixtureFlags};
+use crate::schema_metadata::examples::{PresenceExamples, PresenceExamplesFlags};
 
-/// 🧫 Decodes the overlay fixture through this scope's `ContractFixture` export — the Rust half
-/// `🧬️schema/🦀️.rs` declares — and still compares the re-serialized update with the committed wire text,
-/// which is what proves the three own-presence flags stay separate rather than collapsing into one.
+/// 👥️ Plain presence examples preserve their exact serialized updates and separate own flags.
 #[test]
 fn presence_overlay_fixture_preserves_separate_own_flags() {
     const FIXTURE: &str = include_str!("../../🧫️fixtures/👥️presence-overlay.json");
-    let fixture: ContractFixture = serde_json::from_str(FIXTURE).unwrap();
+    let fixture: PresenceExamples = serde_json::from_str(FIXTURE).unwrap();
     let wire: serde_json::Value = serde_json::from_str(FIXTURE).unwrap();
     assert_eq!(fixture.cases.len(), 4);
     for (case, wire_case) in fixture.cases.iter().zip(wire["cases"].as_array().unwrap()) {
         assert_eq!(serde_json::to_value(&case.update).unwrap(), wire_case["update"]);
-        assert_eq!(ContractFixtureFlags { selected: case.update.own.selected, hovered: case.update.own.hovered, previewed: case.update.own.previewed }, case.expected);
+        assert_eq!(PresenceExamplesFlags { selected: case.update.own.selected, hovered: case.update.own.hovered, previewed: case.update.own.previewed }, case.expected);
         assert_eq!(case.update.node_key, "item:根,1");
     }
 }

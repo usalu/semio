@@ -3,7 +3,7 @@
 //! `s.stdio.semio@v1/graph` vocabulary — no parent leaf reads the child.
 use crate::RewritingSnapshot;
 use semio_framework_diagnostic::Severity;
-use semio_framework_plugin::app::{ChildContentView, ChildEmit};
+use semio_framework_plugin::app::{ChildContentView, ChildEmit,ChildEmitPreparation};
 use semio_framework_plugin::{Emit, Fault};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
@@ -36,11 +36,11 @@ pub(crate) fn genesis_working_child_pack(parent: &RewritingSnapshot, slot: &str,
 }
 
 /// 🧬️ Publishes `leaves` as ONE edit of the exact composed `workingGraph` child; no leaf is the empty emit.
-pub(crate) fn working_child_emit<M, C, D>(parent: &RewritingSnapshot, leaves: &[SemioGraphMutation]) -> Emit<M, C, D> {
+pub(crate) fn working_child_emit<M, C, D>(parent: &RewritingSnapshot, leaves: Vec<SemioGraphMutation>) -> Emit<M, C, D> {
     if leaves.is_empty() {
         return Emit::default();
     }
-    Emit { child_emits: vec![ChildEmit::of::<SemioGraphSnapshot, _>(WORKING_CHILD_SLOT, &parent.working_graph.content.child_id, leaves)], ..Default::default() }
+    Emit { child_preparations: std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioGraphSnapshot, _>(WORKING_CHILD_SLOT, &parent.working_graph.content.child_id, leaves)]), ..Default::default() }
 }
 
 /// 🛂️ Applies `leaf` to the running working child when the graph vocabulary admits it there; a refused leaf leaves it untouched.
@@ -58,12 +58,12 @@ pub fn rewriting_fault_notices() -> &'static [(&'static str, semio_framework_ui_
     use semio_framework_ui_locale::LocalizedLabel;
     static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
         [
-            ("rewriting.child-refused", LocalizedLabel::native("The example graph of this rule is not loaded as a Semio graph.", "Der Beispielgraph dieser Regel ist nicht als Semio-Graph geladen.")),
-            ("rewriting.child-projection", LocalizedLabel::native("The example graph of this rule cannot be restored.", "Der Beispielgraph dieser Regel lässt sich nicht wiederherstellen.")),
-            ("rewriting.window-required", LocalizedLabel::native("This view change needs an open window.", "Diese Ansichtsänderung braucht ein offenes Fenster.")),
-            ("rewriting.graph-window-required", LocalizedLabel::native("This view change needs a graph window.", "Diese Ansichtsänderung braucht ein Graphfenster.")),
-            ("rewriting.lod", LocalizedLabel::native("This level-of-detail name is too long.", "Dieser Detailstufen-Name ist zu lang.")),
-            ("rewriting.viewport", LocalizedLabel::native("This viewport is not valid.", "Dieser Ausschnitt ist ungültig.")),
+            ("trinity.rewriting.child-refused", LocalizedLabel::native("The example graph of this rule is not loaded as a Semio graph.", "Der Beispielgraph dieser Regel ist nicht als Semio-Graph geladen.")),
+            ("trinity.rewriting.child-projection", LocalizedLabel::native("The example graph of this rule cannot be restored.", "Der Beispielgraph dieser Regel lässt sich nicht wiederherstellen.")),
+            ("trinity.rewriting.window-required", LocalizedLabel::native("This view change needs an open window.", "Diese Ansichtsänderung braucht ein offenes Fenster.")),
+            ("trinity.rewriting.graph-window-required", LocalizedLabel::native("This view change needs a graph window.", "Diese Ansichtsänderung braucht ein Graphfenster.")),
+            ("trinity.rewriting.lod", LocalizedLabel::native("This level-of-detail name is too long.", "Dieser Detailstufen-Name ist zu lang.")),
+            ("trinity.rewriting.viewport", LocalizedLabel::native("This viewport is not valid.", "Dieser Ausschnitt ist ungültig.")),
             ("trinity.rewriting.node-graph.row", LocalizedLabel::native("This graph edit is not possible on this canvas.", "Diese Graphänderung ist auf dieser Fläche nicht möglich.")),
             ("trinity.rewriting.retained-capacity", LocalizedLabel::native("This edit is too large to apply in one step.", "Diese Änderung ist zu groß, um sie in einem Schritt anzuwenden.")),
         ]

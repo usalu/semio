@@ -1,0 +1,36 @@
+
+
+Source2 finite audit: standalone SQLite owner glue alone physically mounts defining component. Proposed OS/General facade consumers bind directly to same standalone normal provider via owned reexport/path dependencies. Existing artifact/transfer modules and four controlled function reexports already public; underlying transfer functions public in current full source. New package exports add no backend API. Generic three laws inspect only own glue/neutral manifest and closed one-case/six-export corpus, independent Rust grammar/TOML; Product consumer conservation remains source evidence. All12 endpoints/inverses/five contexts exact,11 current predecessors exact; shared launch.json advanced, full unknown pair retained in independent-launch-current-pair-2.json. Rebase only owned launch entry before law/config publication. Source1 historical/unpublished. No IOregistry extraction/native/runtime readiness inferred.
+
+
+Actual production publication1 independently verified against source4: five full rows, full predecessor inverse bodies, current endpoints and journal/source byte hashes match. Fresh shared-launch observation is retained without treating its whole body as a production input. Original owning GREEN2 exact raw bytes report three complete laws passed, sixteen expectations, strict TypeScript completed. Earlier missing-export RED and prematurely dispatched repeated RED remain preserved. Controlled exports point to already-public definitions of the single Standalone SQLite owner; native SQLite execution, IO registry cut and atomic source identity remain unclaimed.
+
+
+Original SQLite native whole observer helper source review Ready for capture and metadata. Exact owning NativeScript package/arguments `--lib --no-fail-fast`, empty rest and original Nx target are guarded, raw metadata is buffered and UTF-8 roundtrip checked, full provider source/parser parity and helper/codec proofs retained. Captured execution frame is checked before import and each dispatch. Actual prepared source/provider and physical/native results remain pending. Bound helper proof: `🗑️generated/sqlite-single-owner/whole-helper-source-independent-1.json`.
+
+
+Native epoch1 preparation independently Ready: all1207 complete capture bodies/current endpoints and twelve providers exact; both ordinary/locked raw metadata phases0/external0/current lock unchanged, helper/codec exact. Original registered `--lib --no-fail-fast`, empty rest/default features conserved. Actual whole subsequently RED: official forty executed/thirty-eight passed/two failed in original shared-provider allocation laws; both differ by36 bytes. Physical/post source checkpoint pending, and no failure expectation or allocation implementation was altered by this audit.
+
+
+Honest native epoch1 failed checkpoint independently Ready: exact raw official40 run/38PASS/2FAIL/0skipped; all235 physical compiled length/BLAKE inputs and full base64 frame SHA hashes verified,22units,pre/current0 gaps with211unavailablepre explicit. Ten source/metadata/helper/codec/raw/terminal/post proof bindings sealed. WholeGreen remains false, no assertions rerun or expected-byte changes. Proof: `sqlite-native-whole/epoch-1/independent-failed-whole-source-checkpoint-1.json`.
+
+
+Diagnostic ledger source1 finite Ready4pairs/6frames: original fixture fields unchanged plus5 closed cardinality vectors; all6 allocator law names retained. Actual allocation_stage parent initial checkpoint then bool accept_progress does not construct a parent interior cancellation error. New helper separately measures parent/child diagnostics outside payload observation and validates cardinality/returned child message/capacity; cancellation/backing/ownership/empty rows assertions remain. First-party ledger agrees SQLite five vectors. Native rerun pending. Bound proof: `sqlite-diagnostic-ledger/source-independent-1.json` under generated output.
+
+
+Ledger publisher plan1 finite review requests two source corrections before dispatch: final inode/path identity is currently checked before the last ten-binding hash guard, so move/repeat it after that guard and final FD predecessor read. Retain reviewed publication plan bytes/hash including publisherSource in receipt and guard exact plan bytes. Source cardinality correction itself remains admitted; no writes/rerun occurred. Refusal proof: `sqlite-diagnostic-ledger/publication-plan-independent-1.json` under generated output.
+
+
+Ledger publisher2 finite Ready: exact reviewed plan bytes guarded repeatedly and complete publisherSource/rawhash retained in receipt. Final same-FD predecessor reread and descriptor/path inode check now follow the last ten-binding streamed hash pass immediately before writes. Four source rows/six contexts/failed40-law proof remain guarded; schema thenfixture thenlaw joins. Prior plan1 refusal preserved, no native rerun yet. Bound proof: `sqlite-diagnostic-ledger/publication-plan-independent-2.json` under generated output.
+
+
+Ledger actual publication1 independently Ready: four current after bodies and complete immutable source rows/inverses exact, six engine/control frames unchanged, full reviewed plan2/rawsha/publisherSource retained, original failed40-law tenbindings exact, four fsynced intent/written events present. This is law/fixture cardinality correction publication; new original native execution remains pending.
+
+
+Diagnostic-ledger original Bun/strict owning observation independently binds exact raw file bytes/SHA and actual exit-zero terminal: 7/7 complete laws, DEBUG five schedules, zero failures and completed strict TypeScript. All four current authored frames equal the admitted publication endpoints. This is post-terminal observation, not atomic execution-source identity; the original native 40-law rerun remains separate and pending. Authority: generated/sqlite-diagnostic-ledger/original-refusal-whole-observation-1.json.
+
+
+SQLite epoch2 preparation is independently Ready with1210 captureframes/12providers, actual ordinary/locked metadatazero/rawbytes/hash lengths exact and original whole route unchanged. Three complete current PackJSON foreign pairs are retained in the preparation proof, with proof-file timestamp association separately sealed before readiness dispatch; captured-source bytes are not all current and atomic execution identity is false. The live compiler post must preserve original mismatches and may only associate these exact retained predispatch bodies. Native40 outcome remains pending.
+
+
+Actual original SQLite native whole epoch2 is independently Ready: all40 indexed PASS laws, official40/40/zero skipped acrossone binary. Physical22units235checks independently verify all available pre/current lengths/BLAKE and full-frameSHA, unavailable211 explicit; no pre/current gaps. Fourteen exact bindings preserve old38/2 checkpoint, ledger source/admission/publication, new actual execution and three predispatch foreign PackJSON bodies with timestamp-before-immediate-pre. None of those foreign bodies needed association to close a compiled pre-gap. Source atomic identity remains false; original engine/cancellation assertions are not weakened. Proof sqlite-native-whole/epoch-2/independent-whole-source-checkpoint-1.json.

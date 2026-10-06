@@ -23,7 +23,7 @@ mod subject {
 
     /// 🗃️ Every committed sheet assembled by the crate.
     pub fn sheets(ctx: &Context) -> Result<Outcome, String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         let quizzes: BTreeMap<String, Quiz> = decode!(vectors["quizzes"], Vec<Quiz>)?.into_iter().map(|quiz| (quiz.id.clone(), quiz)).collect();
         let mut projection = Map::new();
         for vector in vectors["sheets"].as_array().ok_or("the vectors carry no sheets")? {

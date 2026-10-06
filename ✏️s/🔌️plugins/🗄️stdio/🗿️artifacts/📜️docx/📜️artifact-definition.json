@@ -233,6 +233,12 @@
       ]
     },
     {
+      "id": "s.stdio.docx.schema.schema-export-s-stdio-docx-xml-document.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema-export:s.stdio.docx#xml-document",
+      "claims": [{ "namespace": "schema-export", "value": "s.stdio.docx#xml-document" }]
+    },
+    {
       "id": "s.stdio.docx.schema.schema-s-stdio-docx.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.docx",

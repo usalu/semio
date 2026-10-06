@@ -152,7 +152,7 @@ func genericProfileSurface(ctx *host.Context) (host.Outcome, error) {
 }
 
 func ideProfileSurface(ctx *host.Context) (host.Outcome, error) {
-	raw, err := ctx.FixtureBytes("shared://📋️surface.json")
+	raw, err := ctx.InputBytes("shared://📋️surface.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

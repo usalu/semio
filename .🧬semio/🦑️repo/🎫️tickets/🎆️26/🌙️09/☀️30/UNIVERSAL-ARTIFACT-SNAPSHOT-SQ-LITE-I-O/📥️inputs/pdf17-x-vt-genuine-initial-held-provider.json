@@ -1,0 +1,80 @@
+{
+  "qualification": "Held six scoped production joins plus unchanged genuine resource. No production/runtime credit before owning demand and repair execution.",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🧬️schema/🦀️.rs",
+      "regions": [
+        {
+          "before": "PdfInfo, PdfObject, PdfPage, PdfSnapshot",
+          "after": "PdfInfo, PdfObject, PdfOutputIntent, PdfPage, PdfSnapshot"
+        },
+        {
+          "before": "    fn seeded_snapshot(output_condition: String) -> PdfSnapshot {\n        let objects = vec![\n            PdfIndirectObject {\n                id: ObjRef { num: 1, gen: 0 },\n                value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Catalog\".into()) }, PdfDictEntry { key: \"OutputIntents\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) }]),\n            },\n            PdfIndirectObject {\n                id: ObjRef { num: 2, gen: 0 },\n                value: PdfObject::Dict(vec![\n                    PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"OutputIntent\".into()) },\n                    PdfDictEntry { key: \"S\".into(), value: PdfObject::Name(\"GTS_PDFX\".into()) },\n                    PdfDictEntry { key: \"OutputConditionIdentifier\".into(), value: PdfObject::Str(output_condition.into_bytes()) },\n                    PdfDictEntry { key: \"DestOutputProfile\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },\n                ]),\n            },\n        ];\n        PdfSnapshot { objects, ..PdfSnapshot::default() }\n    }\n",
+          "after": "    fn seeded_snapshot(output_condition: String) -> PdfSnapshot {\n        let profile = include_bytes!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../🖼️assets/🌈️icc/🌈️sRGB2014.icc\")).to_vec();\n        let condition_identifier = output_condition.clone();\n        let objects = vec![\n            PdfIndirectObject { id: ObjRef { num: 1, gen: 0 }, value: PdfObject::Dict(vec![\n                PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Catalog\".into()) },\n                PdfDictEntry { key: \"Pages\".into(), value: PdfObject::Ref(ObjRef { num: 4, gen: 0 }) },\n                PdfDictEntry { key: \"OutputIntents\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) },\n            ]) },\n            PdfIndirectObject { id: ObjRef { num: 2, gen: 0 }, value: PdfObject::Dict(vec![\n                PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"OutputIntent\".into()) },\n                PdfDictEntry { key: \"S\".into(), value: PdfObject::Name(\"GTS_PDFX\".into()) },\n                PdfDictEntry { key: \"OutputConditionIdentifier\".into(), value: PdfObject::Str(output_condition.into_bytes()) },\n                PdfDictEntry { key: \"DestOutputProfile\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },\n            ]) },\n            PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Stream { dict: vec![PdfDictEntry { key: \"N\".into(), value: PdfObject::Int(3) }], data: profile.clone(), filters: Vec::new() } },\n            PdfIndirectObject { id: ObjRef { num: 4, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Pages\".into()) }, PdfDictEntry { key: \"Kids\".into(), value: PdfObject::Array(Vec::new()) }, PdfDictEntry { key: \"Count\".into(), value: PdfObject::Int(0) }]) },\n        ];\n        PdfSnapshot {\n            output_intents: vec![PdfOutputIntent { subtype: \"GTS_PDFX\".into(), condition_identifier, condition: None, registry_name: None, info: None, profile: Some(profile) }],\n            catalog_extra: Vec::new(),\n            trailer: vec![PdfDictEntry { key: \"Root\".into(), value: PdfObject::Ref(ObjRef { num: 1, gen: 0 }) }],\n            objects,\n            ..PdfSnapshot::default()\n        }\n    }\n"
+        },
+        {
+          "before": "            Self::new(\"FOGRA39\")",
+          "after": "            Self::new(\"sRGB2014\")"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+      "regions": [
+        {
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "after": "        <crate::standards::v1_7::subsets::x::schema::PdfXBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v1_7::subsets::x::schema::PdfXBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::empty()).expect(\"authored blank X owner must satisfy its profile\")"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/👁️viewer/🦀️.rs",
+      "regions": [
+        {
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "after": "        <crate::standards::v1_7::subsets::x::schema::PdfXBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v1_7::subsets::x::schema::PdfXBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::empty()).expect(\"authored blank X owner must satisfy its profile\")"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🦀️.rs",
+      "regions": [
+        {
+          "before": "PdfInfo, PdfObject, PdfPage, PdfSnapshot",
+          "after": "PdfInfo, PdfObject, PdfOutputIntent, PdfPage, PdfSnapshot"
+        },
+        {
+          "before": "    fn seeded_snapshot(output_condition: String) -> PdfSnapshot {\n        let objects = vec![\n            PdfIndirectObject {\n                id: ObjRef { num: 1, gen: 0 },\n                value: PdfObject::Dict(vec![\n                    PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Catalog\".into()) },\n                    PdfDictEntry { key: \"OutputIntents\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) },\n                    PdfDictEntry { key: \"DPartRoot\".into(), value: PdfObject::Ref(ObjRef { num: 10, gen: 0 }) },\n                ]),\n            },\n            PdfIndirectObject {\n                id: ObjRef { num: 2, gen: 0 },\n                value: PdfObject::Dict(vec![\n                    PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"OutputIntent\".into()) },\n                    PdfDictEntry { key: \"S\".into(), value: PdfObject::Name(\"GTS_PDFX\".into()) },\n                    PdfDictEntry { key: \"OutputConditionIdentifier\".into(), value: PdfObject::Str(output_condition.into_bytes()) },\n                    PdfDictEntry { key: \"DestOutputProfile\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },\n                ]),\n            },\n            PdfIndirectObject {\n                id: ObjRef { num: 10, gen: 0 },\n                value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"DPartRoot\".into()) }, PdfDictEntry { key: \"DParts\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 11, gen: 0 })]) }]),\n            },\n            PdfIndirectObject { id: ObjRef { num: 11, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"DPart\".into()) }, PdfDictEntry { key: \"DPM\".into(), value: PdfObject::Dict(vec![]) }]) },\n        ];\n        PdfSnapshot { objects, ..PdfSnapshot::default() }\n    }\n",
+          "after": "    fn seeded_snapshot(output_condition: String) -> PdfSnapshot {\n        let profile = include_bytes!(concat!(env!(\"CARGO_MANIFEST_DIR\"), \"/../../🖼️assets/🌈️icc/🌈️sRGB2014.icc\")).to_vec();\n        let condition_identifier = output_condition.clone();\n        let objects = vec![\n            PdfIndirectObject { id: ObjRef { num: 1, gen: 0 }, value: PdfObject::Dict(vec![\n                PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Catalog\".into()) },\n                PdfDictEntry { key: \"Pages\".into(), value: PdfObject::Ref(ObjRef { num: 4, gen: 0 }) },\n                PdfDictEntry { key: \"OutputIntents\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 2, gen: 0 })]) },\n                PdfDictEntry { key: \"DPartRoot\".into(), value: PdfObject::Ref(ObjRef { num: 10, gen: 0 }) },\n            ]) },\n            PdfIndirectObject { id: ObjRef { num: 2, gen: 0 }, value: PdfObject::Dict(vec![\n                PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"OutputIntent\".into()) },\n                PdfDictEntry { key: \"S\".into(), value: PdfObject::Name(\"GTS_PDFX\".into()) },\n                PdfDictEntry { key: \"OutputConditionIdentifier\".into(), value: PdfObject::Str(output_condition.into_bytes()) },\n                PdfDictEntry { key: \"DestOutputProfile\".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },\n            ]) },\n            PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Stream { dict: vec![PdfDictEntry { key: \"N\".into(), value: PdfObject::Int(3) }], data: profile.clone(), filters: Vec::new() } },\n            PdfIndirectObject { id: ObjRef { num: 4, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"Pages\".into()) }, PdfDictEntry { key: \"Kids\".into(), value: PdfObject::Array(Vec::new()) }, PdfDictEntry { key: \"Count\".into(), value: PdfObject::Int(0) }]) },\n            PdfIndirectObject { id: ObjRef { num: 10, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"DPartRoot\".into()) }, PdfDictEntry { key: \"DParts\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 11, gen: 0 })]) }]) },\n            PdfIndirectObject { id: ObjRef { num: 11, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"DPart\".into()) }, PdfDictEntry { key: \"DPM\".into(), value: PdfObject::Dict(Vec::new()) }]) },\n        ];\n        PdfSnapshot {\n            output_intents: vec![PdfOutputIntent { subtype: \"GTS_PDFX\".into(), condition_identifier, condition: None, registry_name: None, info: None, profile: Some(profile) }],\n            catalog_extra: vec![PdfDictEntry { key: \"DPartRoot\".into(), value: PdfObject::Ref(ObjRef { num: 10, gen: 0 }) }],\n            trailer: vec![PdfDictEntry { key: \"Root\".into(), value: PdfObject::Ref(ObjRef { num: 1, gen: 0 }) }],\n            objects,\n            ..PdfSnapshot::default()\n        }\n    }\n"
+        },
+        {
+          "before": "            Self::new(\"FOGRA39\")",
+          "after": "            Self::new(\"sRGB2014\")"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/✏️editor/🦀️.rs",
+      "regions": [
+        {
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "after": "        <crate::standards::v1_7::subsets::vt::schema::PdfVtBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v1_7::subsets::vt::schema::PdfVtBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::empty()).expect(\"authored blank VT owner must satisfy its profile\")"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/👁️viewer/🦀️.rs",
+      "regions": [
+        {
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "after": "        <crate::standards::v1_7::subsets::vt::schema::PdfVtBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v1_7::subsets::vt::schema::PdfVtBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::empty()).expect(\"authored blank VT owner must satisfy its profile\")"
+        }
+      ]
+    }
+  ],
+  "resource": {
+    "input": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/pdf-official-icc/🌈️sRGB2014.icc",
+    "asset": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🖼️assets/🌈️icc/🌈️sRGB2014.icc",
+    "sha256": "384b832de3412066743b52a75ee906b6fb9fb8d9e09e936fc2c43223815c6e0a"
+  }
+}

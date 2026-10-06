@@ -1,151 +1,27 @@
 {
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schemaVersion",
-    "cases"
-  ],
-  "properties": {
-    "schemaVersion": {
-      "const": 1
-    },
-    "cases": {
-      "type": "array",
-      "minItems": 10,
-      "maxItems": 10,
-      "items": {
-        "oneOf": [
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "owner",
-              "wire"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "owner": {
-                "const": "color"
-              },
-              "wire": {
-                "$ref": "#/$defs/color"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "owner",
-              "wire"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "owner": {
-                "const": "function"
-              },
-              "wire": {
-                "$ref": "#/$defs/function"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "owner": {
-                "const": "action"
-              },
-              "wire": {
-                "$ref": "#/$defs/action"
-              }
-            },
-            "required": [
-              "id",
-              "owner",
-              "wire"
-            ]
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "owner": {
-                "const": "outline"
-              },
-              "wire": {
-                "$ref": "#/$defs/outline"
-              }
-            },
-            "required": [
-              "id",
-              "owner",
-              "wire"
-            ]
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "owner": {
-                "const": "form"
-              },
-              "wire": {
-                "$ref": "#/$defs/form"
-              }
-            },
-            "required": [
-              "id",
-              "owner",
-              "wire"
-            ]
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "owner": {
-                "const": "date"
-              },
-              "wire": {
-                "$ref": "#/$defs/date"
-              }
-            },
-            "required": [
-              "id",
-              "owner",
-              "wire"
-            ]
-          }
-        ]
-      }
-    }
-  },
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://s.stdio.pdf.1.7.base.recursive-value",
+  "title": "PdfRecursiveValue",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/color"
+    },
+    {
+      "$ref": "#/$defs/function"
+    },
+    {
+      "$ref": "#/$defs/action"
+    },
+    {
+      "$ref": "#/$defs/outline"
+    },
+    {
+      "$ref": "#/$defs/form"
+    },
+    {
+      "$ref": "#/$defs/date"
+    }
+  ],
   "$defs": {
     "color": {
       "oneOf": [

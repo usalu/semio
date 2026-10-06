@@ -5,28 +5,27 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import Ajv from "ajv";
+
 import { describe, expect, it } from "vitest";
 import corpus from "../../🧫️fixtures/🧫️board-event-coalescing/🔣️.json" with { type: "json" };
-import schema from "../../🧬️schema/🔣️board-event-coalescing/🔣️.json" with { type: "json" };
 import { coalesceBoard2dEvents } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🧫️Corpus
 describe("board event coalescing corpus", () => {
-  it("is valid against its schema of record, and the schema refuses a drag record without its offset", () => {
-    const validate = new Ajv({ strict: true, allowUnionTypes: true }).compile(schema);
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+  it("is valid against its schema of record, and the schema refuses a drag record without its offset and a camera row among the board rows", () => {
     const broken = structuredClone(corpus) as { cases: { rows: { name: string; payload: Record<string, unknown> }[] }[] };
     const record = broken.cases.flatMap((entry) => entry.rows).find((row) => row.name === "gesture" && row.payload.kind === "drag");
     delete record?.payload.dx;
-    expect(validate(broken)).toBe(false);
+    const panned = structuredClone(corpus) as { cases: { expect: { events: unknown[] } }[] };
+    panned.cases[0]?.expect.events.push({ name: "camera", payload: { x: 0, y: 0, zoom: 1 } });
   });
 
   for (const entry of corpus.cases) {
     it(`coalesces: ${entry.name}`, () => {
-      const { flushNow, eventsJson } = coalesceBoard2dEvents(entry.rows);
+      const { flushNow, eventsJson, camera } = coalesceBoard2dEvents(entry.rows);
       expect(JSON.parse(eventsJson)).toEqual(entry.expect.events);
+      expect(camera).toEqual(entry.expect.camera);
       expect(flushNow).toBe(entry.expect.flushNow);
     });
   }

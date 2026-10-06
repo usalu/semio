@@ -1,7 +1,7 @@
 //! 👁️ 👁️ Trinity Jack app command — `text-edit`.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_query;
-use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 
 /// ⌨️ The query editor's text as one `set-query` document mutation — the whole query, a single buffer. A live typing delivery

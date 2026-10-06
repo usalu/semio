@@ -9,7 +9,8 @@
 //! for exactly those two renumbering mutations. Ordinary painting never touches either: it rides
 //! `inputRegions`, a real sparse list of rectangular writes.
 
-use crate::schema::snapshot::{pin_key, resized_buffer, write_region, BitmapColor, BitmapOverlappingModel, BitmapOutputSpec, BitmapPinnedPixel, BitmapSnapshot};
+use crate::schema::snapshot::{pin_key, resized_buffer, BitmapColor, BitmapOverlappingModel, BitmapOutputSpec, BitmapPinnedPixel, BitmapSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{write_region};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -24,7 +25,8 @@ pub struct BitmapPixelRegion {
     pub y: u32,
     pub width: u32,
     pub height: u32,
-    pub pixels: String,
+    #[value(with = "semio_framework_value::bytes")]
+    pub pixels: Vec<u8>,
 }
 //#endregion 🔖️Region
 
@@ -42,7 +44,8 @@ pub struct BitmapDiff {
     #[state(artifact)]
     pub input_height: Option<u32>,
     #[state(artifact)]
-    pub input_pixels: Option<String>,
+    #[value(with = "semio_framework_value::bytes::optional")]
+    pub input_pixels: Option<Vec<u8>>,
     #[state(artifact)]
     pub input_regions: Vec<BitmapPixelRegion>,
     #[state(artifact)]
@@ -143,7 +146,7 @@ impl protocol::MutationDiff<BitmapSnapshot> for BitmapDiff {
             next.input.height = height;
         }
         if let Some(pixels) = &self.input_pixels {
-            let decoded = crate::schema::snapshot::decode_base64(pixels).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.malformed-pixels", "the replacement input pixel buffer is not base64").at(["inputPixels"]))?;
+            let decoded = pixels.clone();
             if decoded.len() != (next.input.width as usize) * (next.input.height as usize) {
                 return Err(protocol::MutationApplyError::new("mutation.apply.invariant", "the replacement input pixel buffer does not match the input size").at(["inputPixels"]));
             }
@@ -156,12 +159,12 @@ impl protocol::MutationDiff<BitmapSnapshot> for BitmapDiff {
             next.input.palette = palette.clone();
         }
         for (position, region) in self.input_regions.iter().enumerate() {
-            let pixels = crate::schema::snapshot::decode_base64(&region.pixels).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.malformed-pixels", "a region write is not base64").at(["inputRegions".to_string(), position.to_string()]))?;
+            let pixels = &region.pixels;
             if !write_region(&mut buffer, next.input.width, next.input.height, region.x, region.y, region.width, region.height, &pixels) {
                 return Err(protocol::MutationApplyError::new("mutation.apply.invariant", "a region write falls outside the input bitmap").at(["inputRegions".to_string(), position.to_string()]));
             }
         }
-        next.input.pixels = crate::schema::snapshot::encode_base64(&buffer);
+        next.input.pixels = buffer;
         if let Some(output) = self.output {
             next.output = output;
         }

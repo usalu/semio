@@ -1,6 +1,7 @@
-/** 🧪️ The React time-travel chrome against the language-neutral band corpus (`🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-band`):
- * every stage's lines in English and German, the controls with what disables them, the reserved verbs they dispatch with the
- * session generation, the remappable chords (never Escape, never from a form field) published on `aria-keyshortcuts`, the
+/** 🧪️ The React history-editing chrome against the language-neutral band corpus (`🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-band`):
+ * the i18n catalogue pinned to the corpus's one `labels` table (every key, both tiers, both languages, and no other key),
+ * every stage's lines in English and German, the controls with their corpus-owned ids and what disables them — a refused
+ * one focusable and telling its reason — the reserved verbs they dispatch with the session generation, the remappable chords (never Escape, never from a form field) published on `aria-keyshortcuts`, the
  * window indicator's accessible name, the framework history body rendered through the interpreter instead of a
  * host-built tab, and peers' open history edits against the peers corpus the wgpu shell asserts too
  * (`🧫️time-travel-peers`). The corpus's `transitions` pin when the History panel is revealed and where focus moves; the
@@ -19,21 +20,21 @@ import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import userEvent from "@testing-library/user-event";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
-import { createElement, Fragment, useCallback, useReducer, useState } from "react";
+import { createElement, Fragment, useCallback, useLayoutEffect, useReducer, useState } from "react";
 import { createMachine, transition, type AnyMachineSnapshot } from "xstate";
 import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
-import { composeControlKeybindings, PresenceBar, SHELL_KEYBINDINGS, TREE_WINDOW_PATH_SEPARATOR, UIDialog, UiKeybindingsProvider } from "@semio-tech/ui-react";
+import { CHROME_CONTROL_TOOLTIP_DELAY_MS, composeControlKeybindings, PresenceBar, SHELL_KEYBINDINGS, TREE_WINDOW_PATH_SEPARATOR, uiChromeTranslationBundles, UIDialog, UiKeybindingsProvider } from "@semio-tech/ui-react";
 import { encodePresenceHistoryEdit, encodePresenceInteraction, encodePresenceToolRun } from "@semio-tech/framework-replication";
 import { createMemoryStoragePort, type ActionDescriptor, type BuiltNode, type HistoryEntry, type HistoryPatch, type HistoryTimeTravel, type UiIntent } from "@semio-tech/framework";
 import type { PanelDock, PanelTabNode } from "@semio-tech/ui-react";
 import { initialShellState, shellReducer, type ShellAction, type ShellState } from "../../../../🐚️Shell/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../../../../📃️UiDocumentStore/🟦️.tsx";
-import { checkinSubmitMessageV1, checkpointGateV1, checkpointOnCloseKeyV1, presenceEphemeralPeerFieldsV1, EMPTY_SHELL_HISTORY_PROJECTION_V1, FRAMEWORK_CHECKIN_CONTROLLER_ID, HISTORY_REFUSAL_LABEL_KEYS, historyPatchShouldApplyV1, historyRefusalCodeV1, historyRefusalNoticeV1, historyRefusalOfOutputV1, operationProgressPartsV1, panelActionRoutesThroughHostV1, panelTabDefinitionToNode, shellHistoryCursorDomV1, shellHistoryProjectionAfterPatchV1, shellLabel, syncShellLabelLocale, useCheckpointOnCloseV1, type ShellHistoryProjectionV1 } from "../../../🟦️.tsx";
-import { HISTORY_ROW_KEY_PREFIX, HistoryReprojectionStatus, historyReprojectionControlV1, revealHistoryPanelV1, scheduleTimeTravelFocusV1, TIME_TRAVEL_CHORD_IDS, TimeTravelBand, timeTravelBandControlsV1, timeTravelBandTextV1, timeTravelControlActionV1, timeTravelFocusElementV1, timeTravelFocusIsHeldV1, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, timeTravelTransitionV1, TimeTravelWindowIndicator, useTimeTravelRevealV1, type TimeTravelFocusTargetV1 } from "../../🟦️.tsx";
-import { TREE_ROW_TONE_CLASSES, UiPresenceOverlayContext } from "../../../../🗣️Interpreter/🟦️.tsx";
+import { checkinSubmitMessageV1, checkpointGateV1, checkpointOnCloseKeyV1, presenceEphemeralPeerFieldsV1, EMPTY_SHELL_HISTORY_PROJECTION_V1, FRAMEWORK_CHECKIN_CONTROLLER_ID, HISTORY_REFUSAL_LABEL_KEYS, historyPatchShouldApplyV1, historyRefusalCodeV1, historyRefusalNoticeV1, historyRefusalOfOutputV1, operationProgressPartsV1, programHistoryProjectionsWithLoadV1, shellHistoryProjectionWithLoadV1, panelActionRoutesThroughHostV1, panelTabDefinitionToNode, shellHistoryCursorDomV1, shellHistoryProjectionAfterPatchV1, shellLabel, syncShellLabelLocale, useCheckpointOnCloseV1, type ShellHistoryProjectionV1 } from "../../../🟦️.tsx";
+import { HISTORY_ROW_KEY_PREFIX, HistoryReprojectionStatus, historyReprojectionControlV1, revealHistoryPanelV1, scheduleTimeTravelFocusV1, TIME_TRAVEL_CHORD_IDS, TIME_TRAVEL_CONTROL_IDS, TIME_TRAVEL_ROW_ACTION_REFUSALS, TIME_TRAVEL_ROW_ACTION_VERBS, TimeTravelBand, timeTravelRowActionRefusalsV1, timeTravelBandControlsV1, timeTravelBandTextV1, timeTravelControlActionV1, timeTravelFocusElementV1, timeTravelFocusIsHeldV1, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, timeTravelTransitionV1, TimeTravelWindowIndicator, useTimeTravelRevealV1, type TimeTravelFocusTargetV1 } from "../../🟦️.tsx";
+import { RowActionRefusalsContext, TREE_ROW_TONE_CLASSES, UiPresenceOverlayContext } from "../../../../🗣️Interpreter/🟦️.tsx";
 import { TIME_TRAVEL_CODE_LABELS, TIME_TRAVEL_LABELS } from "../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
-import { HISTORY_NOTICE_LABELS } from "../../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
-import { documentLoadCancelledV1, historyFaultNoticeV1, historyLaneNoticeV1, historyOutputNoticeV1, IMPORT_ABORT_ACTION_ID, importOpenedFilesV1 } from "../../../🟦️.tsx";
+import { HISTORY_NOTICE_LABELS, historyReprojectionStatus } from "../../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { documentLoadCancelledV1, HISTORY_SILENT_REFUSALS_V1, historyFaultNoticeV1, historyLaneNoticeV1, historyOutputNoticeV1, historySilentRefusalOfFaultV1, historySilentRefusalOfOutputV1, IMPORT_ABORT_ACTION_ID, importOpenedFilesV1 } from "../../../🟦️.tsx";
 
 const { computeAccessibleName, computeAccessibleDescription, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const { roles: ariaRoles, aria: ariaProperties } = createRequire(import.meta.url)("aria-query") as { readonly roles: ReadonlyMap<string, { readonly props: Readonly<Record<string, unknown>> }>; readonly aria: ReadonlyMap<string, unknown> };
@@ -43,7 +44,12 @@ const framework = join(here, "..", "..", "..", "..", "..", "..", "..", "..", "..
 const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
 const corpus = readJson(join(shellHelpers, "🧫️fixtures", "🧫️time-travel-band", "🔣️.json"));
 const rowActionCorpus = readJson(join(framework, "🔨️modules", "🖱️ui", "🧫️fixtures", "♿️disabled-row-action", "🔣️.json")) as readonly { readonly id: string; readonly label: string; readonly focusable: boolean; readonly actionable: boolean }[];
-type Case = { readonly name: string; readonly session: HistoryTimeTravel; readonly text: Readonly<Record<"en" | "de", Record<string, string | null>>>; readonly controls: readonly { readonly control: string; readonly action: string; readonly disabledBy: string | null }[]; readonly indicator: Readonly<Record<"en" | "de", string>> };
+type Case = { readonly name: string; readonly session: HistoryTimeTravel; readonly text: Readonly<Record<"en" | "de", Record<string, string | null>>>; readonly controls: readonly { readonly control: string; readonly controlId: string; readonly action: string; readonly disabledBy: string | null; readonly args?: Readonly<Record<string, string>> }[]; readonly indicator: Readonly<Record<"en" | "de", string>> };
+/** 🏷️ The corpus's one copy of every band, indicator, peer and refusal text: label key → tier → locale, placeholders in single braces. */
+type LabelRow = Readonly<Record<"normal" | "beginner", Readonly<Record<"en" | "de", string>>>>;
+const labels = corpus.labels as Readonly<Record<string, LabelRow>>;
+/** 🧩️ A corpus label at the normal tier with its placeholders filled. */
+const corpusLabel = (key: string, locale: "en" | "de", values: Readonly<Record<string, string | number>> = {}): string => labels[key]!.normal[locale].replace(/\{(\w+)\}/gu, (_, name: string) => String(values[name]));
 const cases = corpus.cases as readonly Case[];
 /** 👥️ The peers' history-edit corpus (`🧫️time-travel-peers`) both shells assert: the rows a replica holds, the peers on
  * its roster, and per locale every editing peer's chip and every history-body node's note. */
@@ -66,6 +72,13 @@ function mountBand(session: HistoryTimeTravel, locale: string, overrides: Readon
 
 const band = (container: HTMLElement): HTMLElement => container.querySelector("[data-semio-time-travel]") as HTMLElement;
 const controlButton = (container: HTMLElement, control: string): HTMLButtonElement | null => container.querySelector(`[data-semio-time-travel-control="${control}"]`);
+/** 💬️ What `aria-describedby` of `element` reads: the text of every element it names, in order. */
+const describedBy = (element: Element): string => (element.getAttribute("aria-describedby") ?? "").split(/\s+/u).filter(Boolean).map((id) => document.getElementById(id)?.textContent ?? "").join(" ");
+/** 👁️ The disabled reason a sighted person reads right now (`DisabledReasonHint` revealed), with the id it carries. */
+const revealedReason = (): { readonly id: string; readonly text: string } | null => {
+  const shown = document.querySelector('[data-slot="row-action-reason"][data-revealed]');
+  return shown === null ? null : { id: shown.id, text: shown.textContent ?? "" };
+};
 
 describe("⏪️ time-travel band corpus", () => {
   afterEach(() => cleanup());
@@ -74,9 +87,42 @@ describe("⏪️ time-travel band corpus", () => {
   it("validates against its schema and every session against the kernel's HistoryTimeTravel wire schema", () => {
     const ajv = new Ajv({ allErrors: true, strict: false });
     ajv.addSchema(readJson(join(framework, "🔨️modules", "🎠️kernel", "🧬️schema", "🔣️history-patch", "🔣️.json")));
-    const validate = ajv.compile(readJson(join(shellHelpers, "🧬️schema", "🔣️time-travel-band", "🔣️.json")));
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
     expect(new Set(cases.map((entry) => entry.session.stage))).toEqual(new Set(["editing", "replaying", "reviewing", "choosing", "finalizing"]));
+  });
+
+  it("pins the i18n catalogue to the corpus's labels table: every key, both tiers, both languages, and no other key", () => {
+    const flatten = (node: unknown, prefix: string, out: Map<string, { readonly normal: string; readonly beginner: string }>): void => {
+      const entry = node as Readonly<Record<string, unknown>>;
+      if (typeof entry.label === "object" && entry.label !== null && Object.keys(entry).length === 1) out.set(prefix, entry.label as { readonly normal: string; readonly beginner: string });
+      else for (const [key, value] of Object.entries(entry)) flatten(value, `${prefix}.${key}`, out);
+    };
+    for (const locale of LOCALES) {
+      const ui = (uiChromeTranslationBundles[locale].translation as unknown as { readonly ui: { readonly timeTravel: unknown; readonly history: unknown; readonly mutation: { readonly level: unknown } } }).ui;
+      const catalogue = new Map<string, { readonly normal: string; readonly beginner: string }>();
+      flatten(ui.timeTravel, "ui.timeTravel", catalogue);
+      flatten(ui.history, "ui.history", catalogue);
+      flatten(ui.mutation.level, "ui.mutation.level", catalogue);
+      expect([...catalogue.keys()].sort(), `${locale}: the catalogue's keys are the table's`).toEqual(Object.keys(labels).sort());
+      for (const [key, row] of Object.entries(labels)) for (const tier of ["normal", "beginner"] as const) expect(catalogue.get(key)?.[tier], `${key} (${tier}, ${locale})`).toBe(row[tier][locale].replace(/\{(\w+)\}/gu, "{{$1}}"));
+    }
+    for (const row of corpus.refusals as readonly { readonly code: string; readonly label: string; readonly text: Readonly<Record<"en" | "de", string>> }[]) expect([HISTORY_REFUSAL_LABEL_KEYS[row.code as keyof typeof HISTORY_REFUSAL_LABEL_KEYS], row.text], row.code).toEqual([row.label, labels[row.label]!.normal]);
+    for (const entry of cases) {
+      for (const locale of LOCALES) {
+        const { session } = entry;
+        const target = session.targetLabel === undefined ? null : session.targetLabel.native[locale];
+        expect(entry.text[locale], `${entry.name} (${locale}): every line is a label of the table`).toEqual({
+          stage: corpusLabel(`ui.timeTravel.stage.${session.stage}`, locale),
+          target: target === null ? null : corpusLabel("ui.timeTravel.target", locale, { target }),
+          progress: session.stage === "replaying" && session.total !== undefined ? corpusLabel("ui.timeTravel.progress", locale, { done: session.done ?? 0, total: session.total }) : null,
+          review: session.stage === "reviewing" && session.review !== undefined ? corpusLabel(`ui.timeTravel.review.${session.review}`, locale) : null,
+          outcome: session.worst === undefined ? null : corpusLabel("ui.timeTravel.worst", locale, { level: corpusLabel(`ui.mutation.level.${session.worst}`, locale) }),
+          fault: session.fault === undefined ? null : corpusLabel(HISTORY_REFUSAL_LABEL_KEYS[historyRefusalCodeV1(session.fault) ?? "timeTravel.replay-faulted"], locale),
+          accepted: (session.acceptedCount ?? 0) > 0 ? corpusLabel("ui.timeTravel.accepted", locale, { count: session.acceptedCount ?? 0 }) : null,
+        });
+        expect(entry.indicator[locale], `${entry.name} (${locale})`).toBe(session.stage === "editing" && target !== null ? corpusLabel("ui.timeTravel.indicatorTarget", locale, { target }) : corpusLabel(`ui.timeTravel.stage.${session.stage}`, locale));
+      }
+    }
+    for (const locale of LOCALES) for (const row of Object.values(labels)) for (const tier of ["normal", "beginner"] as const) expect(/time travel|zeitreise/iu.test(row[tier][locale]), `${row[tier][locale]}: one name for the concept — "History editing" / "Verlaufsbearbeitung"`).toBe(false);
   });
 
   it("derives every stage's lines, controls, verbs and indicator in English and German", () => {
@@ -86,8 +132,8 @@ describe("⏪️ time-travel band corpus", () => {
         expect(timeTravelBandTextV1(entry.session, { ...axes, locale }), `${entry.name} (${locale})`).toEqual(entry.text[locale]);
         expect(timeTravelIndicatorTextV1(entry.session, { ...axes, locale }), `${entry.name} (${locale})`).toBe(entry.indicator[locale]);
         const controls = timeTravelBandControlsV1(entry.session);
-        expect(controls.map(({ control, disabledBy }) => ({ control, action: timeTravelControlActionV1(corpus.controllerId, entry.session, control).action, disabledBy })), entry.name).toEqual(entry.controls);
-        for (const { control } of controls) expect(timeTravelControlActionV1(corpus.controllerId, entry.session, control)).toEqual({ controllerId: corpus.controllerId, action: entry.controls.find((row) => row.control === control)!.action, args: { generation: entry.session.generation } });
+        expect(controls.map(({ control, controlId, disabledBy }) => ({ control, controlId, action: timeTravelControlActionV1(corpus.controllerId, entry.session, control).action, disabledBy })), entry.name).toEqual(entry.controls.map(({ control, controlId, action, disabledBy }) => ({ control, controlId, action, disabledBy })));
+        for (const row of entry.controls) expect([TIME_TRAVEL_CONTROL_IDS[row.control as keyof typeof TIME_TRAVEL_CONTROL_IDS], timeTravelControlActionV1(corpus.controllerId, entry.session, row.control as keyof typeof TIME_TRAVEL_CONTROL_IDS)], `${entry.name}: ${row.control}`).toEqual([row.controlId, { controllerId: corpus.controllerId, action: row.action, args: row.args ?? { generation: entry.session.generation } }]);
       }
     }
   });
@@ -104,11 +150,9 @@ describe("⏪️ time-travel band corpus", () => {
         expect(progress === null, entry.name).toBe(entry.text[locale].progress === null);
         if (progress !== null) expect([progress.value, progress.max, progress.getAttribute("aria-label")]).toEqual([entry.session.done, entry.session.total, entry.text[locale].progress]);
         const buttons = [...status.querySelectorAll<HTMLButtonElement>("button[data-semio-time-travel-control]")];
-        expect(buttons.map((button) => button.dataset.semioTimeTravelControl), entry.name).toEqual(entry.controls.map((row) => row.control));
-        expect(buttons.map((button) => [button.textContent, button.disabled, button.title || null]), `${entry.name} (${locale})`).toEqual(entry.controls.map((row) => [String(shellLabel(`ui.timeTravel.${row.control}` as Parameters<typeof shellLabel>[0])), row.disabledBy !== null, row.disabledBy === null ? null : String(shellLabel(row.disabledBy as Parameters<typeof shellLabel>[0]))]));
-        const review = status.querySelector<HTMLElement>("[data-semio-time-travel-review]");
-        const finalize = controlButton(view.container, "finalize");
-        if (finalize !== null) expect(finalize.getAttribute("aria-describedby"), entry.name).toBe(finalize.disabled && review !== null ? review.id : null);
+        expect(buttons.map((button) => [button.dataset.semioTimeTravelControl, button.id]), entry.name).toEqual(entry.controls.map((row) => [row.control, row.controlId]));
+        expect(buttons.map((button) => [button.textContent, button.getAttribute("aria-disabled"), describedBy(button) || null, computeAccessibleDescription(button) || null]), `${entry.name} (${locale})`).toEqual(entry.controls.map((row) => { const reason = row.disabledBy === null ? null : String(shellLabel(row.disabledBy as Parameters<typeof shellLabel>[0])); return [String(shellLabel(`ui.timeTravel.${row.control}` as Parameters<typeof shellLabel>[0])), reason === null ? null : "true", reason, reason]; }));
+        expect(buttons.map((button) => [button.disabled, button.hasAttribute("title"), button.tabIndex >= 0]), `${entry.name} (${locale}): a refused control stays reachable — never the disabled attribute, never a title`).toEqual(entry.controls.map(() => [false, false, true]));
         view.unmount();
       }
     }
@@ -119,9 +163,70 @@ describe("⏪️ time-travel band corpus", () => {
     for (const entry of cases) {
       const view = mountBand(entry.session, "en");
       for (const row of entry.controls) controlButton(view.container, row.control)!.click();
-      expect(view.dispatched, entry.name).toEqual(entry.controls.filter((row) => row.disabledBy === null).map((row) => ({ controllerId: corpus.controllerId, action: row.action, args: { generation: entry.session.generation } })));
+      expect(view.dispatched, entry.name).toEqual(entry.controls.filter((row) => row.disabledBy === null).map((row) => ({ controllerId: corpus.controllerId, action: row.action, args: row.args ?? { generation: entry.session.generation } })));
       view.unmount();
     }
+  });
+
+  it("keeps a refused control in the Tab order and shows its reason on hover, keyboard focus and press — hidden again on leave, blur and Escape — in both languages", async () => {
+    const user = userEvent.setup();
+    const blocked = cases.find((entry) => entry.controls.some((row) => row.control === "finalize" && row.disabledBy === "ui.timeTravel.refusal.blocked") && entry.controls.some((row) => row.control === "rerun" && row.disabledBy !== null))!;
+    for (const locale of LOCALES) {
+      syncShellLabelLocale(locale);
+      const view = mountBand(blocked.session, locale);
+      const reached: string[] = [];
+      for (let stop = 0; stop < blocked.controls.length; stop += 1) {
+        await act(async () => {
+          await user.tab();
+        });
+        reached.push((document.activeElement as HTMLElement | null)?.dataset.semioTimeTravelControl ?? "");
+      }
+      expect(reached, `${locale}: Tab walks every control, the refused ones too`).toEqual(blocked.controls.map((row) => row.control));
+      act(() => (document.activeElement as HTMLElement).blur());
+      for (const row of blocked.controls.filter((entry) => entry.disabledBy !== null)) {
+        const button = controlButton(view.container, row.control)!;
+        const reason = String(shellLabel(row.disabledBy as Parameters<typeof shellLabel>[0]));
+        const told = () => [revealedReason()?.text ?? null, describedBy(button), button.getAttribute("aria-describedby") === (revealedReason()?.id ?? button.getAttribute("aria-describedby"))];
+        expect(told(), `${row.control} (${locale}): at rest the reason is the description only`).toEqual([null, reason, true]);
+        fireEvent.pointerEnter(button, { pointerType: "mouse" });
+        expect(revealedReason(), `${row.control} (${locale}): a hover reveals only after the tooltip delay`).toBeNull();
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, CHROME_CONTROL_TOOLTIP_DELAY_MS + 50));
+        });
+        expect(told(), `${row.control} (${locale}): hover`).toEqual([reason, reason, true]);
+        fireEvent.pointerLeave(button, { pointerType: "mouse" });
+        expect(told(), `${row.control} (${locale}): leave`).toEqual([null, reason, true]);
+        act(() => button.focus());
+        expect([document.activeElement === button, ...told()], `${row.control} (${locale}): keyboard focus`).toEqual([true, reason, reason, true]);
+        fireEvent.keyDown(button, { key: "Escape" });
+        expect(told(), `${row.control} (${locale}): Escape`).toEqual([null, reason, true]);
+        fireEvent.click(button);
+        expect(told(), `${row.control} (${locale}): press`).toEqual([reason, reason, true]);
+        act(() => button.blur());
+        expect(told(), `${row.control} (${locale}): blur`).toEqual([null, reason, true]);
+      }
+      expect(view.dispatched, `${locale}: a refused control dispatches nothing, however it is pressed`).toEqual([]);
+      expect(band(view.container).querySelector("[data-semio-time-travel-controls]")?.getAttribute("aria-live"), `${locale}: revealing a reason never re-announces the status`).toBe("off");
+      expect(ariaFindings([view.container])).toEqual([]);
+      view.unmount();
+    }
+  }, 30_000);
+
+  it("keeps a control's element and the focus on it when the session makes it refused or runnable again", () => {
+    syncShellLabelLocale("en");
+    const ready = cases.find((entry) => entry.session.stage === "reviewing" && entry.controls.some((row) => row.control === "finalize" && row.disabledBy === null))!;
+    const blocked = cases.find((entry) => entry.session.stage === "reviewing" && entry.controls.some((row) => row.control === "finalize" && row.disabledBy === "ui.timeTravel.refusal.blocked") && entry.session.nextProblem === undefined)!;
+    const bindings = composeControlKeybindings(new Map(), {});
+    const mounted = (session: HistoryTimeTravel) => createElement(UiKeybindingsProvider, { bindings, children: createElement(TimeTravelBand, { session, terminology: axes.terminology, locale: "en", controllerId: corpus.controllerId, onAction: () => undefined }) });
+    const view = render(mounted(ready.session));
+    const finalize = controlButton(view.container, "finalize")!;
+    act(() => finalize.focus());
+    view.rerender(mounted(blocked.session));
+    const refused = controlButton(view.container, "finalize")!;
+    expect([refused === finalize, document.activeElement === finalize, refused.getAttribute("aria-disabled"), revealedReason()?.text], "a focused Finalize that the session blocks keeps its element and says why at once").toEqual([true, true, "true", String(shellLabel("ui.timeTravel.refusal.blocked"))]);
+    view.rerender(mounted(ready.session));
+    expect([controlButton(view.container, "finalize") === finalize, document.activeElement === finalize, finalize.hasAttribute("aria-disabled"), revealedReason()]).toEqual([true, true, false, null]);
+    view.unmount();
   });
 
   it("tells every history-edit refusal of the corpus in both languages, coded by its own code, with its default severity", () => {
@@ -261,6 +366,7 @@ describe("🗣️ the time-travel bundle texts are the ⏪️time-travel module'
       ["ui.timeTravel.refusal.blocked", "refusalBlocked"],
       ["ui.timeTravel.refusal.empty", "refusalEmpty"],
       ["ui.timeTravel.refusal.cancelled", "replayCancelled"],
+      ["ui.timeTravel.refusal.readOnly", "refusalReadOnly"],
       ["ui.timeTravel.review.noChanges", "noChanges"],
       ["ui.timeTravel.review.needsReplay", "needsReplay"],
       ["ui.timeTravel.review.blocked", "reportBlocking"],
@@ -504,17 +610,39 @@ const byIdSuffix = (root: ParentNode, key: string): HTMLElement | null => [...ro
 const nextFrames = (count: number) => act(async () => {
   for (let frame = 0; frame < count; frame += 1) await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
 });
-type Transition = { readonly name: string; readonly from: HistoryTimeTravel | null; readonly to: HistoryTimeTravel | null; readonly reveal: boolean; readonly focus: TimeTravelFocusTargetV1 | null };
+type Transition = { readonly name: string; readonly from: HistoryTimeTravel | null; readonly to: HistoryTimeTravel | null; readonly reveal: boolean; readonly focus: TimeTravelFocusTargetV1 | null; readonly scrollTo: string | null };
 /** 🗝️ The draft editor's node keys the corpus holds the Rust producer and every shell's focus resolution to. */
 type EditorKeys = { readonly panel: string; readonly accept: { readonly control: string; readonly row: string }; readonly inputs: readonly { readonly pointer: string; readonly control: string; readonly row: string }[] };
 
 describe("🧭️ a session change reveals the History panel and moves focus where the session continues", () => {
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    syncShellLabelLocale("en");
+  });
 
   it("reveals and focuses exactly as the shared corpus's transitions say", () => {
     const transitions = corpus.transitions as readonly Transition[];
     expect(new Set(transitions.map((row) => row.focus))).toEqual(new Set(["editor", "band", "dialog", null]));
-    for (const row of transitions) expect(timeTravelTransitionV1(row.from, row.to), row.name).toEqual({ reveal: row.reveal, focus: row.focus });
+    for (const row of transitions) expect(timeTravelTransitionV1(row.from, row.to), row.name).toEqual({ reveal: row.reveal, focus: row.focus, scrollTo: row.scrollTo });
+    expect(transitions.filter((row) => row.scrollTo !== null).map((row) => [row.reveal, row.to?.stage, row.scrollTo === `framework.history.mutation.${row.to?.nextProblem?.mutationId}`]), "a scroll target is the row of the mutation the session names, on a revealing edge into a review").toEqual(transitions.filter((row) => row.scrollTo !== null).map(() => [true, "reviewing", true]));
+  });
+
+  it("offers Next problem first in a blocked review and opens the mutation the session names — never one the shell computed", () => {
+    const blocked = cases.filter((entry) => entry.session.nextProblem !== undefined);
+    expect(blocked.map((entry) => [entry.session.stage, entry.controls[0]?.control, entry.controls[0]?.args]), "the corpus names a next problem with and without a member store").toEqual([["reviewing", "nextProblem", { mutationId: "m-5" }], ["reviewing", "nextProblem", { mutationId: "m-7", store: "parts/p-1" }]]);
+    for (const locale of LOCALES) {
+      syncShellLabelLocale(locale);
+      for (const entry of blocked) {
+        const view = mountBand(entry.session, locale);
+        const next = controlButton(view.container, "nextProblem")!;
+        expect([next.textContent, next.id, next.getAttribute("aria-disabled"), band(view.container).querySelector("button")], `${entry.name} (${locale})`).toEqual([corpusLabel("ui.timeTravel.nextProblem", locale), "shell.time-travel.next-problem", null, next]);
+        next.click();
+        expect(view.dispatched, `${entry.name} (${locale})`).toEqual([{ controllerId: corpus.controllerId, action: "historyEditBegin", args: entry.session.nextProblem }]);
+        view.unmount();
+      }
+    }
+    const silent = cases.filter((entry) => entry.session.stage === "reviewing" && entry.session.nextProblem === undefined);
+    expect([silent.length > 0, silent.every((entry) => timeTravelBandControlsV1(entry.session).every((row) => row.control !== "nextProblem"))], "a review whose session names no next problem — blocked or not — offers none").toEqual([true, true]);
   });
 
   it("finds the draft's first input, else its Accept, the band and the prompt in the shell's own DOM", () => {
@@ -671,14 +799,31 @@ describe("♿️ the draft editor is named, operable by keyboard alone and says 
     for (const text of ["Warning: Partially applied", "Error: Target missing"]) expect(rowOf(text)?.closest("[id]")?.querySelector("svg"), text).not.toBeNull();
   });
 
-  it("fits a phone: the band wraps within 90 % of the viewport and every control is a touch-size target", () => {
+  it("fits a phone: the band wraps within 90 % of the viewport, paints its own opaque surface, and every control is at least a 24 × 24 touch target from the size tokens", () => {
+    const styles = join(framework, "🔨️modules", "🖱️ui", "🎨️styling");
+    const [uiCss, paletteCss] = [readFileSync(join(styles, "🖌️ui", "🎨️.css"), "utf8"), readFileSync(join(styles, "🎨️palette", "🎨️.css"), "utf8")];
+    const multiplier = Number(/--size-large:\s*calc\(([0-9.]+) \* var\(--ui-spacing\)\)/u.exec(uiCss)?.[1]);
+    const spacingPx = (density: "compact" | "touch"): number => {
+      const found = new RegExp(`--spacing-${density}:\\s*([0-9.]+)(px|rem)`, "u").exec(paletteCss)!;
+      return Number(found[1]) * (found[2] === "rem" ? 16 : 1);
+    };
+    expect([/@utility min-h-large \{\s*min-height: var\(--size-large\);/u.test(uiCss), /@utility min-w-large \{\s*min-width: var\(--size-large\);/u.test(uiCss), /@utility ui-surface \{\s*background-color: var\(--surface-bg\);/u.test(uiCss), /--color-menu\b/u.test(uiCss)], "the utilities the band wears exist, and `bg-menu` names no colour").toEqual([true, true, true, false]);
+    expect([multiplier * spacingPx("compact") >= 24, multiplier * spacingPx("touch") >= 24], `the large size token is ${multiplier} × --ui-spacing: ${multiplier * spacingPx("compact")} px compact, ${multiplier * spacingPx("touch")} px touch (WCAG 2.5.8 asks 24 × 24)`).toEqual([true, true]);
     for (const entry of cases) {
       const view = mountBand(entry.session, "en");
       const status = band(view.container);
-      expect([status.classList.contains("max-w-[90vw]"), status.classList.contains("flex-wrap")], entry.name).toEqual([true, true]);
-      for (const control of status.querySelectorAll("button")) expect(control.classList.contains("min-h-medium"), `${entry.name}: ${control.textContent}`).toBe(true);
+      expect([status.classList.contains("max-w-[90vw]"), status.classList.contains("flex-wrap"), status.getAttribute("data-level"), status.classList.contains("ui-surface"), status.classList.contains("bg-menu")], entry.name).toEqual([true, true, "panel", true, false]);
+      for (const control of status.querySelectorAll("button")) expect([control.classList.contains("min-h-large"), control.classList.contains("min-w-large")], `${entry.name}: ${control.textContent}`).toEqual([true, true]);
       view.unmount();
     }
+  });
+
+  it("mounts the shell's bottom bands in the layout's subfooter row — in flow, never an absolute overlay over the footer or a panel", () => {
+    const host = readFileSync(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const slot = host.slice(host.indexOf("subfooter={"), host.indexOf("panels={Object.fromEntries"));
+    expect([host.split("subfooter={").length - 1, slot.includes("<TimeTravelBand "), slot.includes("<HistoryReprojectionStatus "), slot.includes("<LocalFolderReconnectBand"), slot.includes("data-semio-checkin-band"), /\babsolute\b|\bfixed\b/u.test(slot)], "every bottom band sits in the one subfooter slot, none positioned out of flow").toEqual([1, true, true, true, true, false]);
+    expect(host.slice(0, host.indexOf("subfooter={")).includes("<TimeTravelBand "), "no second mount of the band outside the slot").toBe(false);
+    expect(/focusedTimeTravel !== null \|\| focusedReprojection !== null \|\|/u.test(slot), "a replay with no session open still shows its status").toBe(true);
   });
 
   it("uses only ARIA attributes each role supports, references only ids that exist and names every control", () => {
@@ -857,12 +1002,44 @@ describe("🛰️ ShellHost's reveal and focus wiring drives the shell's real la
     root.remove();
   });
 
+  it("scrolls the first blocking row into view once it is mounted, moving no focus, and drops the scroll when the session closes", async () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const scrolled: string[] = [];
+    const scrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (this: Element) {
+      scrolled.push(this.id);
+    };
+    try {
+      const probe = mount({ session: at("replaying", { target: "m-2", done: 8, total: 8, acceptedCount: 1 }), mobile: false, history: true, root });
+      const before = probe.seen.actions.length;
+      probe.rerender({ session: at("reviewing", { generation: 2, review: "blocked", blocking: true, acceptedCount: 1, nextProblem: { mutationId: "m-5" } }) });
+      expect(probe.seen.actions.slice(before), "a replay that completed blocked reveals the History panel again").toEqual(["SET_PANEL_PATH", "SET_PANEL_VISIBLE"]);
+      await nextFrames(1);
+      expect(scrolled, "the row is not mounted yet").toEqual([]);
+      root.innerHTML = '<div id="panel:framework.panel.history/framework.history.entry.4"><div id="panel:framework.panel.history/framework.history.entry.4/framework.history.mutation.m-5" tabindex="0"></div></div>';
+      await nextFrames(2);
+      expect([scrolled, document.activeElement === document.body]).toEqual([["panel:framework.panel.history/framework.history.entry.4/framework.history.mutation.m-5"], true]);
+      root.innerHTML = "";
+      probe.rerender({ session: at("editing", { generation: 3, target: "m-5" }) });
+      probe.rerender({ session: at("reviewing", { generation: 4, review: "blocked", blocking: true, acceptedCount: 1, nextProblem: { mutationId: "m-9", store: "parts/p-1" } }) });
+      probe.rerender({ session: null });
+      root.innerHTML = '<div id="panel:framework.panel.history/framework.history.mutation.m-9"></div>';
+      await nextFrames(4);
+      expect(scrolled, "a closed session scrolls nothing").toHaveLength(1);
+    } finally {
+      Element.prototype.scrollIntoView = scrollIntoView;
+      root.remove();
+    }
+  });
+
   it("agrees with an xstate model of the reveal-and-focus statechart on every corpus transition", () => {
     const stages = ["editing", "replaying", "reviewing", "choosing", "finalizing"] as const;
     const focusOf = { editing: "editor", replaying: "band", reviewing: "band", choosing: "dialog", finalizing: null } as const;
-    type Move = { readonly type: "session"; readonly stage: (typeof stages)[number] | null; readonly fresh: boolean; readonly retarget: boolean };
+    type Move = { readonly type: "session"; readonly stage: (typeof stages)[number] | null; readonly fresh: boolean; readonly retarget: boolean; readonly problem: boolean };
     const toward = (from: string) => [
       { guard: ({ event }: { event: Move }) => event.stage === null, target: "#chrome.inactive", actions: [{ type: "answer", params: { reveal: false, focus: null } }] },
+      { guard: ({ event }: { event: Move }) => event.stage === "reviewing" && event.problem && (event.fresh || from !== "reviewing"), target: "#chrome.reviewing", actions: [{ type: "answer", params: { reveal: true, focus: "band" } }] },
       ...stages.flatMap((stage) => [
         { guard: ({ event }: { event: Move }) => event.stage === stage && event.fresh, target: `#chrome.${stage}`, actions: [{ type: "answer", params: { reveal: true, focus: focusOf[stage] } }] },
         { guard: ({ event }: { event: Move }) => event.stage === stage && (from !== stage || (stage === "editing" && event.retarget)), target: `#chrome.${stage}`, actions: [{ type: "answer", params: { reveal: false, focus: focusOf[stage] } }] },
@@ -872,14 +1049,84 @@ describe("🛰️ ShellHost's reveal and focus wiring drives the shell's real la
     const machine = createMachine({ id: "chrome", initial: "inactive", states: Object.fromEntries(["inactive", ...stages].map((state) => [state, { on: { session: toward(state) } }])) } as never);
     for (const row of corpus.transitions as readonly Transition[]) {
       const snapshot = machine.resolveState({ value: row.from?.stage ?? "inactive" } as never) as AnyMachineSnapshot;
-      const [, actions] = transition(machine, snapshot, { type: "session", stage: row.to?.stage ?? null, fresh: row.to !== null && (row.from === null || row.from.sessionId !== row.to.sessionId), retarget: row.from?.target !== row.to?.target } as never);
+      const [, actions] = transition(machine, snapshot, { type: "session", stage: row.to?.stage ?? null, fresh: row.to !== null && (row.from === null || row.from.sessionId !== row.to.sessionId), retarget: row.from?.target !== row.to?.target, problem: row.to?.nextProblem !== undefined } as never);
       const answer = (actions as unknown as readonly { readonly type: string; readonly params: { readonly reveal: boolean; readonly focus: TimeTravelFocusTargetV1 | null } }[]).find((action) => action.type === "answer")!.params;
       expect(answer, `${row.name}: the statechart`).toEqual({ reveal: row.reveal, focus: row.focus });
-      expect(timeTravelTransitionV1(row.from, row.to), `${row.name}: the shell`).toEqual(answer);
+      expect(timeTravelTransitionV1(row.from, row.to), `${row.name}: the shell`).toEqual({ ...answer, scrollTo: row.scrollTo });
     }
   });
 });
 //#endregion 🛰️ShellReveal
+
+//#region 🧷️RefreshKeepsOpenInputs
+/** 🧯️ The draft editor's input rows as the runtime builds them, behind `leading` band rows — a body refresh that adds or
+ * drops a row ahead of the inputs (a fault line, a progress line, Next problem) renumbers every node after it. */
+const inputsBody = (leading: number): BuiltNode =>
+  node("framework.history", { type: "tree", interactionDomain: null }, [
+    section("framework.history.timeTravel", "History editing", [treeItem("framework.history.timeTravel.status", "Editing a mutation", [], { icon: "clock" }), ...Array.from({ length: leading }, (_, index) => treeItem(`framework.history.timeTravel.line.${index}`, `Line ${index}`, []))]),
+    section("framework.history.editor.inputs", "Inputs", [
+      treeItem("framework.history.editor.input.factor.row", "Factor", [node("framework.history.editor.input.factor", { type: "slider", value: 1.5, min: 0.1, max: 10, step: 0.01, unit: null, snaps: [0.25, 0.5, 1, 2, 4], appearance: "track", scale: "log", precision: 2, displayUnit: null, displayFactor: null, limits: { min: { value: 0, exclusive: true, refusal: "Must be greater than 0" }, max: null } }, [], [bind(controller, "historyEditInput", draftArgs("/factor"), "change")], { label: "Factor" })], { description: "Spreads positions from the pivot." }),
+      treeItem("framework.history.editor.input.dx.row", "dx", [node("framework.history.editor.input.dx", { type: "numberStepper", value: 80, step: 1, uniform: true, min: -1000, max: 1000, precision: null }, [], [bind(controller, "historyEditInput", draftArgs("/dx"), "change")], { label: "dx" })]),
+      treeItem("framework.history.editor.input.name.row", "Name", [node("framework.history.editor.input.name", { type: "input", kind: "text", value: "Old", placeholder: null, commit: "blur", min: null, max: null, step: null, accept: null, precision: null, snaps: [] }, [], [bind(controller, "historyEditInput", draftArgs("/name"), "commit")], { label: "Name" })]),
+      treeItem("framework.history.editor.input.note.row", "Note", [node("framework.history.editor.input.note", { type: "input", kind: "longText", value: "One", placeholder: null, commit: "blur", min: null, max: null, step: null, accept: null, precision: null, snaps: [] }, [], [bind(controller, "historyEditInput", draftArgs("/note"), "commit")], { label: "Note" })]),
+    ]),
+  ]);
+
+describe("🧷️ a body refresh never remounts an input that is being edited (live fault F1)", () => {
+  afterEach(() => cleanup());
+
+  /** 🖼️ Mounts the History leaf over a store the test refreshes, as the shell's body-store cache does (`loadSnapshot`). */
+  const mountInputs = (dispatched: ActionDescriptor[]) => {
+    const store = new UiDocumentStore("panel:framework.panel.history");
+    store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", inputsBody(0)));
+    const leaf = panelTabDefinitionToNode(historyTab as Parameters<typeof panelTabDefinitionToNode>[0], "settings", { "framework.panel.history": store }, (action) => dispatched.push(action), 1, overlay);
+    if (leaf.kind !== "leaf") throw new Error("history tab is a leaf");
+    const source = leaf.trees[0]!.tree;
+    const config = "resolveTree" in source ? source.resolveTree() : source;
+    const view = render(createElement(Fragment, null, config.emptyState));
+    return { ...view, refresh: (leading: number) => act(() => store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", inputsBody(leading)))) };
+  };
+  const readoutEditor = (container: HTMLElement) => container.querySelector<HTMLInputElement>('[data-slot="slider-content"] input[type="number"]');
+  const control = (container: HTMLElement, key: string) => container.querySelector<HTMLElement>(`[id$="/framework.history.editor.input.${key}"]`);
+
+  it("keeps an open slider readout editor — its typed text, its focus — and then refuses the typed value naming the bound", async () => {
+    const user = userEvent.setup();
+    const dispatched: ActionDescriptor[] = [];
+    const view = mountInputs(dispatched);
+    const heading = [...view.container.querySelectorAll<HTMLElement>('[data-slot="tree-section-row"]')].find((row) => row.textContent?.includes("Inputs"))!;
+    act(() => heading.focus());
+    await act(async () => {
+      await user.dblClick(view.container.querySelector<HTMLElement>('[data-slot="slider-value"]')!);
+    });
+    const field = readoutEditor(view.container)!;
+    expect(document.activeElement, "the readout editor takes focus from the tree row").toBe(field);
+    fireEvent.change(field, { target: { value: "-5" } });
+    for (const leading of [2, 0, 1]) {
+      view.refresh(leading);
+      expect([readoutEditor(view.container) === field, field.value, document.activeElement === field], `a refresh with ${leading} leading rows`).toEqual([true, "-5", true]);
+    }
+    await act(async () => {
+      await user.keyboard("{Enter}");
+    });
+    expect([readoutEditor(view.container) === field, field.getAttribute("aria-invalid"), view.container.querySelector('[role="alert"]')?.textContent, dispatched], "the typed value is refused in place, naming the bound").toEqual([true, "true", "Must be greater than 0", []]);
+  });
+
+  it("keeps a stepper's field, a text draft and a multi-line draft — each element, its typed text and the focus", async () => {
+    const view = mountInputs([]);
+    const stepper = view.container.querySelector<HTMLInputElement>('[data-stepper-input="true"]')!;
+    const name = control(view.container, "name") as HTMLInputElement;
+    const note = control(view.container, "note") as HTMLTextAreaElement;
+    expect([stepper !== null, name?.tagName, note?.tagName]).toEqual([true, "INPUT", "TEXTAREA"]);
+    fireEvent.change(name, { target: { value: "New name" } });
+    fireEvent.change(note, { target: { value: "One\nTwo" } });
+    for (const [focused, leading] of [[stepper, 3], [name, 0], [note, 2]] as const) {
+      act(() => focused.focus());
+      view.refresh(leading);
+      expect([view.container.querySelector('[data-stepper-input="true"]') === stepper, control(view.container, "name") === name, control(view.container, "note") === note, name.value, note.value, document.activeElement === focused], `a refresh with ${leading} leading rows`).toEqual([true, true, true, "New name", "One\nTwo", true]);
+    }
+  });
+});
+//#endregion 🧷️RefreshKeepsOpenInputs
 
 //#region 🪟️MutationPages
 /** 📚️ A history row as the runtime now builds it (gap N1): a windowed item over every mutation of its transaction — the
@@ -896,13 +1143,162 @@ const pagedHistoryBody = (refusal: string | null, editLabel: string): BuiltNode 
     ]),
   ]);
 
+/** 🎬️ Mutation rows as the runtime builds them since design §22.1: every row holds `[Edit, Withdraw]`, a row with an accepted
+ * draft `[Edit, Restore]`, a withdrawn row `[Edit]` alone — each action its own verb on the row's ONE target (`{mutationId}`),
+ * a refused one disabled with its reason. */
+const actionRowsBody = (rows: readonly { readonly id: string; readonly label: string; readonly actions: readonly { readonly icon: string; readonly label: string; readonly verb: string; readonly reason?: string }[] }[]): BuiltNode =>
+  node("framework.history", { type: "tree", interactionDomain: null }, [
+    node("framework.history.commands", { type: "treeSection", label: "Commands", defaultOpen: true, headerToolbar: null, window: null }, [
+      node(`${HISTORY_ROW_KEY_PREFIX}4`, { type: "treeItem", label: "Arrange", description: null, icon: "move", defaultOpen: true, draggable: null, dragData: null, dimmed: null, selected: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [], target: null },
+        rows.map((row) =>
+          node(`framework.history.mutation.${row.id}`, { type: "treeItem", label: row.label, description: null, icon: "circle", defaultOpen: null, draggable: null, dragData: null, dimmed: null, selected: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: row.actions.map((action) => ({ icon: action.icon, label: action.label, reason: action.reason ?? null, verb: action.verb, placement: "row", disabled: action.reason !== undefined })), target: { scope: controller, version: 1, args: { mutationId: row.id }, activation: null } }),
+        ),
+      ),
+    ]),
+  ]);
+
 describe("🪟️ every mutation of a history row is reachable, and a refused Edit says why", () => {
   afterEach(() => cleanup());
+
+  it("refuses every row action in the commit that shows a replaying or finalizing stage — from the session patch alone — and nothing flips when the guest's rows say the same", () => {
+    expect(corpus.rowActions, "the React tables are the corpus's").toEqual({ verbs: [...TIME_TRAVEL_ROW_ACTION_VERBS], stages: TIME_TRAVEL_ROW_ACTION_REFUSALS });
+    expect([timeTravelRowActionRefusalsV1(null), ...(["editing", "reviewing", "choosing"] as const).map((stage) => timeTravelRowActionRefusalsV1({ stage }))], "no session, or a stage whose rows speak for themselves: the shell refuses none").toEqual([null, null, null, null]);
+    const rows = (reason?: string) =>
+      actionRowsBody([
+        { id: "m-0", label: "Drag selection", actions: [{ icon: "edit", label: "Edit", verb: "historyEditBegin", reason }, { icon: "eye-off", label: "Withdraw", verb: "historyEditWithdraw", reason }] },
+        { id: "m-1", label: "Rotate", actions: [{ icon: "edit", label: "Edit", verb: "historyEditBegin", reason }, { icon: "rotate-ccw", label: "Restore", verb: "historyEditRestore", reason }] },
+      ]);
+    const sessionOf = (stage: HistoryTimeTravel["stage"]): HistoryTimeTravel => cases.find((entry) => entry.session.stage === stage)!.session;
+    for (const locale of LOCALES) {
+      syncShellLabelLocale(locale);
+      const dispatched: ActionDescriptor[] = [];
+      const store = new UiDocumentStore("panel:framework.panel.history");
+      store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", rows()));
+      const leaf = panelTabDefinitionToNode(historyTab as Parameters<typeof panelTabDefinitionToNode>[0], "settings", { "framework.panel.history": store }, (action) => dispatched.push(action), 1, overlay);
+      if (leaf.kind !== "leaf") throw new Error("history tab is a leaf");
+      const source = leaf.trees[0]!.tree;
+      const body = ("resolveTree" in source ? source.resolveTree() : source).emptyState;
+      const commits: (readonly [string | null, readonly (string | null)[]])[] = [];
+      const Witness = () => {
+        useLayoutEffect(() => {
+          commits.push([document.querySelector("[data-semio-time-travel]")?.getAttribute("data-semio-time-travel") ?? null, [...document.querySelectorAll('[data-slot="action"]')].map((button) => button.getAttribute("aria-disabled"))]);
+        });
+        return null;
+      };
+      const bindings = composeControlKeybindings(new Map(), {});
+      const Probe = ({ session }: { readonly session: HistoryTimeTravel }) =>
+        createElement(RowActionRefusalsContext.Provider, { value: timeTravelRowActionRefusalsV1(session) }, createElement(UiKeybindingsProvider, { bindings, children: createElement(TimeTravelBand, { session, terminology: axes.terminology, locale, controllerId: corpus.controllerId, onAction: () => undefined }) }), body, createElement(Witness));
+      const view = render(createElement(Probe, { session: sessionOf("reviewing") }));
+      const actions = () => [...view.container.querySelectorAll<HTMLButtonElement>('[data-slot="action"]')];
+      const read = () => actions().map((button) => [button.disabled, button.getAttribute("aria-disabled"), button.getAttribute("aria-describedby") === null ? null : computeAccessibleDescription(button)]);
+      const mounted = actions();
+      expect([mounted.length, read()], `reviewing: the rows speak for themselves (${locale})`).toEqual([4, mounted.map(() => [false, null, null])]);
+      for (const stage of ["replaying", "finalizing"] as const) {
+        const reason = corpusLabel(corpus.rowActions.stages[stage], locale);
+        act(() => mounted[0]!.focus());
+        commits.length = 0;
+        view.rerender(createElement(Probe, { session: sessionOf(stage) }));
+        const shown = commits.filter(([staged]) => staged === stage);
+        expect([shown.length >= 1, shown.every(([, disabled]) => disabled.length === 4 && disabled.every((value) => value === "true"))], `${stage}: the commit that shows the stage already refuses every row action (${locale})`).toEqual([true, true]);
+        expect([actions().every((button, index) => button === mounted[index]), read(), document.activeElement === mounted[0]], `${stage}: the same buttons, focusable, each naming why; the focus stays (${locale})`).toEqual([true, mounted.map(() => [false, "true", reason]), true]);
+        for (const button of actions()) fireEvent.click(button);
+        expect(dispatched, `${stage}: a refused row action dispatches nothing (${locale})`).toEqual([]);
+        act(() => store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", rows(reason))));
+        expect([actions().every((button, index) => button === mounted[index]), read()], `${stage}: the guest's refreshed rows say the same and nothing flips (${locale})`).toEqual([true, mounted.map(() => [false, "true", reason])]);
+        act(() => store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", rows())));
+        view.rerender(createElement(Probe, { session: sessionOf("reviewing") }));
+        expect(read(), `after ${stage} the rows speak for themselves again (${locale})`).toEqual(mounted.map(() => [false, null, null]));
+      }
+      fireEvent.click(actions()[1]!);
+      expect(dispatched.map((action) => action.action), `a runnable row action runs (${locale})`).toEqual(["historyEditWithdraw"]);
+      view.unmount();
+    }
+    syncShellLabelLocale("en");
+  });
+
+  it("offers Edit beside Withdraw or Restore on a mutation row, each its own verb on the row's one target, a refused one naming why", () => {
+    const edit = { icon: "edit", label: "Edit", verb: "historyEditBegin" };
+    const withdraw = { icon: "eye-off", label: "Withdraw", verb: "historyEditWithdraw" };
+    const restore = { icon: "rotate-ccw", label: "Restore", verb: "historyEditRestore" };
+    const notEditable = "The inputs of this mutation cannot be edited";
+    const dispatched: ActionDescriptor[] = [];
+    const view = mountHistoryBody(actionRowsBody([
+      { id: "m-0", label: "Drag selection", actions: [edit, withdraw] },
+      { id: "m-1", label: "Rotate", actions: [edit, restore] },
+      { id: "m-2", label: "Import", actions: [{ ...edit, reason: notEditable }, withdraw] },
+      { id: "m-3", label: "Scale", actions: [edit] },
+    ]), (action) => dispatched.push(action));
+    const actions = (id: string) => [...view.container.querySelector<HTMLElement>(`[id$="/framework.history.mutation.${id}"]`)!.querySelectorAll<HTMLButtonElement>('[data-slot="action"]')];
+    expect(["m-0", "m-1", "m-2", "m-3"].map((id) => actions(id).map((button) => computeAccessibleName(button)))).toEqual([["Edit", "Withdraw"], ["Edit", "Restore"], ["Edit", "Withdraw"], ["Edit"]]);
+    const refused = actions("m-2")[0]!;
+    expect([refused.getAttribute("aria-disabled"), refused.disabled, refused.tabIndex >= 0, computeAccessibleDescription(refused)], "a mutation whose inputs cannot be edited keeps its Edit, refused and saying why").toEqual(["true", false, true, notEditable]);
+    for (const id of ["m-0", "m-1", "m-2", "m-3"]) for (const button of actions(id)) fireEvent.click(button);
+    expect(dispatched.map((action) => [action.action, action.args])).toEqual([
+      ["historyEditBegin", { mutationId: "m-0" }],
+      ["historyEditWithdraw", { mutationId: "m-0" }],
+      ["historyEditBegin", { mutationId: "m-1" }],
+      ["historyEditRestore", { mutationId: "m-1" }],
+      ["historyEditWithdraw", { mutationId: "m-2" }],
+      ["historyEditBegin", { mutationId: "m-3" }],
+    ]);
+    expect(ariaFindings([view.container])).toEqual([]);
+    view.unmount();
+  });
+
+  it("keeps a refused Edit focusable and naming its reason for every refusal a session stage names, in English and German — also while its own dispatch is still pending", async () => {
+    const named = (corpus.refusals as readonly { readonly code: string; readonly text: Readonly<Record<"en" | "de", string>> }[]).filter((row) => row.code.startsWith("timeTravel."));
+    expect(named.length).toBeGreaterThanOrEqual(18);
+    for (const locale of LOCALES) {
+      for (const row of named) {
+        const view = mountHistoryBody(pagedHistoryBody(row.text[locale], "Edit"), () => undefined);
+        const edits = [...view.container.querySelectorAll<HTMLButtonElement>('[data-slot="action"]')];
+        expect([edits.length, edits.every((button) => !button.disabled && button.tabIndex >= 0 && button.getAttribute("aria-disabled") === "true" && computeAccessibleDescription(button) === row.text[locale])], `${row.code} (${locale}): never the disabled attribute, always the reason`).toEqual([8, true]);
+        view.unmount();
+      }
+    }
+    const dispatched: ActionDescriptor[] = [];
+    const answers: (() => void)[] = [];
+    const answer = () => act(async () => {
+      answers.shift()!();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const store = new UiDocumentStore("panel:framework.panel.history");
+    store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", pagedHistoryBody(null, "Edit")));
+    const leaf = panelTabDefinitionToNode(historyTab as Parameters<typeof panelTabDefinitionToNode>[0], "settings", { "framework.panel.history": store }, (action) => (dispatched.push(action), new Promise<void>((resolve) => answers.push(resolve))) as unknown as void, 1, overlay);
+    if (leaf.kind !== "leaf") throw new Error("history tab is a leaf");
+    const source = leaf.trees[0]!.tree;
+    const view = render(createElement(Fragment, null, ("resolveTree" in source ? source.resolveTree() : source).emptyState));
+    const pressed = view.container.querySelector<HTMLButtonElement>('[data-slot="action"]')!;
+    act(() => pressed.focus());
+    await act(async () => {
+      fireEvent.click(pressed);
+    });
+    expect([dispatched.map((action) => action.action), pressed.disabled, pressed.getAttribute("aria-busy"), pressed.getAttribute("aria-disabled"), document.activeElement === pressed], "the Edit whose Begin is still in flight is busy, not gone: it keeps the focus the press gave it").toEqual([["historyEditBegin"], false, "true", "true", true]);
+    fireEvent.click(pressed);
+    expect(dispatched.length, "a press while its own dispatch is in flight dispatches nothing").toBe(1);
+    await answer();
+    const answered = view.container.querySelector<HTMLButtonElement>('[data-slot="action"]')!;
+    expect([answered === pressed, answered.disabled, answered.getAttribute("aria-busy"), answered.getAttribute("aria-disabled"), answered.getAttribute("aria-describedby"), document.activeElement === answered], "the verb's answer — a silent `{rejected}` result included — ends the pending state: the button is what the guest publishes again, enabled and without a reason, and keeps the focus").toEqual([true, false, null, null, null, true]);
+    await act(async () => {
+      fireEvent.click(answered);
+    });
+    expect([dispatched.length, answered.getAttribute("aria-busy")], "and it runs again").toEqual([2, "true"]);
+    const reason = named.find((row) => row.code === "timeTravel.illegal")!.text.en;
+    act(() => store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", pagedHistoryBody(reason, "Edit"))));
+    const refused = view.container.querySelector<HTMLButtonElement>('[data-slot="action"]')!;
+    expect([dispatched.length, refused === pressed, refused.disabled, computeAccessibleDescription(refused), document.activeElement === refused], "the session it opened refuses a second Begin: the same button, still focused, now says why").toEqual([2, true, false, reason, true]);
+    await answer();
+    expect([refused.getAttribute("aria-busy"), refused.getAttribute("aria-disabled"), computeAccessibleDescription(refused), document.activeElement === refused], "the answer to that Begin leaves the guest's refusal standing").toEqual([null, "true", reason, true]);
+    view.unmount();
+  });
 
   it("windows a history row over all its mutations under the path the runtime files its page request under", () => {
     const view = mountHistoryBody(pagedHistoryBody(null, "Edit"), () => undefined);
     const group = view.container.querySelector<HTMLElement>(`[data-tree-window-path="${`framework.history.commands${TREE_WINDOW_PATH_SEPARATOR}${HISTORY_ROW_KEY_PREFIX}4`}"]`);
     expect([group?.getAttribute("data-tree-window-total"), group?.getAttribute("data-tree-window-length"), group?.querySelector('[data-tree-window-spacer="trailing"]')?.getAttribute("data-tree-window-rows")]).toEqual(["40", "8", "32"]);
+    const rows = [...group!.querySelectorAll<HTMLElement>("[data-tree-window-row]")].filter((row) => row.parentElement?.closest("[data-tree-window-path]") === group);
+    expect(rows.map((row) => [row.getAttribute("role"), row.getAttribute("aria-posinset"), row.getAttribute("aria-setsize")]), "every materialised mutation row tells assistive technology its place among all 40").toEqual(Array.from({ length: 8 }, (_, index) => ["treeitem", String(index + 1), "40"]));
     view.unmount();
   });
 
@@ -987,6 +1383,20 @@ describe("📢️ history-lane refusals reach the person in the kernel's own wor
     expect(historyLaneNoticeV1({ code: "history.full" }, 12)?.text, "the count is the projection's, never digits read from a fault message").toBe("This document's history is full (12 edits).");
     expect(fixture.notices.find((row) => row.code === "document.loading")).toEqual({ code: "document.loading", en: "The document is still loading — wait for it or cancel it first.", de: "Das Dokument wird noch geladen — abwarten oder zuerst abbrechen." });
     expect([historyFaultNoticeV1({ code: "module.vcs" }, 0), historyOutputNoticeV1({ rejected: "app.unknown" }, 0), historyLaneNoticeV1({ code: "timeTravel.frozen" }, 0), historyFaultNoticeV1({ code: "timeTravel.frozen", severity: "warning" }, 0)?.code]).toEqual([null, null, null, "timeTravel.frozen"]);
+  });
+
+  it("never tells the human a refusal the corpus marks silent — a late event of an older session — and still names it for the trace", () => {
+    const refusals = corpus.refusals as readonly { readonly code: string; readonly silent?: boolean }[];
+    expect([refusals.filter((row) => row.silent === true).map((row) => row.code), [...HISTORY_SILENT_REFUSALS_V1]], "the corpus and the shell name the same silent refusals").toEqual([["timeTravel.stale"], ["timeTravel.stale"]]);
+    for (const row of refusals) {
+      const code = historyRefusalCodeV1(row.code);
+      const silent = row.silent === true;
+      expect(
+        [historyOutputNoticeV1({ rejected: row.code }, 0) === null, historyFaultNoticeV1({ code: row.code, severity: "warning" }, 0) === null, historyFaultNoticeV1({ code: "module.vcs", causes: [{ code: row.code }] }, 0) === null, historySilentRefusalOfOutputV1({ rejected: row.code }), historySilentRefusalOfFaultV1({ code: row.code }), historySilentRefusalOfFaultV1({ code: "module.vcs", causes: [{ code: row.code }] }), historyRefusalOfOutputV1({ rejected: row.code })],
+        `${row.code}: a verb's silent result, the fault's own code or a cause's`,
+      ).toEqual([silent, silent, silent, silent ? code : null, silent ? code : null, silent ? code : null, code]);
+    }
+    expect([historySilentRefusalOfOutputV1({ rejected: "app.unknown" }), historySilentRefusalOfOutputV1(null), historySilentRefusalOfFaultV1({ code: "module.vcs" })]).toEqual([null, null, null]);
   });
 
   it("folds the history's edit count from every patch — the `{n}` a later history-full notice names", () => {
@@ -1115,6 +1525,43 @@ describe("📡️ a history change replaying before adoption is announced outsid
       cleanup();
     }
     syncShellLabelLocale("en");
+  });
+
+  it("shows a stepped document load as the shell's own status while no session is open, and leaves none once the load settles, fails or is cancelled", () => {
+    const key = "toy#1";
+    const loading = programHistoryProjectionsWithLoadV1({}, key, { completed: 0, total: 1 });
+    expect(loading[key]?.reprojection, "the host's first poll of the load").toEqual({ kind: "load", done: 0, total: 1 });
+    for (const locale of LOCALES) {
+      syncShellLabelLocale(locale);
+      const status = mountStatus(loading[key]!.reprojection!, locale);
+      const expected = historyReprojectionStatus({ kind: "load", done: 0, total: 1 }, "native", locale);
+      expect(
+        [status.root.getAttribute("data-semio-history-reprojection"), status.root.getAttribute("data-semio-history-reprojection-phase"), status.root.querySelector("[data-semio-history-reprojection-text]")?.textContent, status.root.querySelector('[role="status"]')?.textContent, status.root.querySelector("[data-semio-history-reprojection-control]")?.getAttribute("data-semio-history-reprojection-control")],
+        `no session, no check-in: the load alone raises the status (${locale})`,
+      ).toEqual(["load", "progress", expected.text, `${expected.title}: ${expected.text}`, "cancelReplay"]);
+      status.unmount();
+    }
+    syncShellLabelLocale("en");
+    const known = shellHistoryProjectionAfterPatchV1(EMPTY_SHELL_HISTORY_PROJECTION_V1, { cursor: 7, canUndo: true, editCount: 3 }, true);
+    const stepped = shellHistoryProjectionWithLoadV1(known, { completed: 2, total: 5 });
+    expect([stepped.reprojection, stepped.cursor, stepped.canUndo, stepped.editCount, stepped.entries === known.entries], "a load step moves the reprojection alone").toEqual([{ kind: "load", done: 2, total: 5 }, 7, true, 3, true]);
+    expect(shellHistoryProjectionWithLoadV1(stepped, { completed: 2, total: 5 }) === stepped, "a poll reporting the same progress wakes no reader").toBe(true);
+    const ended = shellHistoryProjectionWithLoadV1(stepped, null);
+    expect([ended.reprojection, ended.cursor, shellHistoryProjectionWithLoadV1(ended, null) === ended], "a settled, failed or cancelled load leaves no status").toEqual([null, 7, true]);
+    const remote = shellHistoryProjectionAfterPatchV1(EMPTY_SHELL_HISTORY_PROJECTION_V1, { cursor: 4, reprojection: { done: 1, total: 9, kind: "remote" } }, true);
+    expect(shellHistoryProjectionWithLoadV1(remote, null) === remote, "ending a load never clears a replay of another kind").toBe(true);
+    const projections = { [key]: stepped, "other#2": remote };
+    const cleared = programHistoryProjectionsWithLoadV1(projections, key, null);
+    expect(
+      [cleared[key]?.reprojection, cleared["other#2"] === remote, programHistoryProjectionsWithLoadV1(cleared, key, null) === cleared, programHistoryProjectionsWithLoadV1(cleared, "", { completed: 1, total: 2 }) === cleared, programHistoryProjectionsWithLoadV1(cleared, "unknown#9", null) === cleared],
+      "only the loading program's projection moves; no program or nothing to end is the same map",
+    ).toEqual([null, true, true, true, true]);
+    const host = readFileSync(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"), "utf8");
+    const load = host.slice(host.indexOf("const task = documentTransferRef.current.trackDocumentTransfer(file, baseSession.pluginId);"), host.indexOf("`Effect::LoadDocument` is pack+spr bytes only"));
+    expect(
+      [load.split("programHistoryProjectionsWithLoadV1(").length - 1, /progress: \(status\) => \{[^}]*showLoad\(status\);/u.test(load), /\} finally \{\s*showLoad\(null\);/u.test(load)],
+      "the shell folds every polled step of a load into the loading program's projection and ends it however the load ends",
+    ).toEqual([1, true, true]);
   });
 
   it("folds the waiting reprojection from every patch — a patch without one clears it", () => {

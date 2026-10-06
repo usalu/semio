@@ -1,4 +1,4 @@
-//! 🧪️ `change-node-kind` fixture — `🏗️rekinds`.
+//! 🧪️ `change-node-kind` snapshot — `🏗️rekinds`.
 //!
 //! Both kinds are real Nakagin capsule types; the verb consults no catalogue, so the rename is accepted on the node alone.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

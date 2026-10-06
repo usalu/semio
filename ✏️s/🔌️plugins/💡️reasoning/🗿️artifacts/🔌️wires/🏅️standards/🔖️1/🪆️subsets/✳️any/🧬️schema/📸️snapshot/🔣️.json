@@ -5,12 +5,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "wiresFixture",
+    "wiresSnapshot",
     "content",
     "meta"
   ],
   "properties": {
-    "wiresFixture": {
+    "wiresSnapshot": {
       "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json",
       "x-semio-state": "artifact"
     },

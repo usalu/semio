@@ -1,0 +1,349 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.repo.mutation-input-declaration/v1",
+  "$ref": "#/definitions/resolvedLeaf",
+  "definitions": {
+    "source": {
+      "description": "Where one UI fact comes from: the input's own x-semio-ui (declared), the reader's inference from the field name or JSON type (inferred), or nowhere (absent).",
+      "enum": [
+        "declared",
+        "inferred",
+        "absent"
+      ]
+    },
+    "pointer": {
+      "description": "The RFC 6901 pointer of an input in the payload; `/-` is an array item.",
+      "type": "string",
+      "pattern": "^(/([^/~]|~[01])*)*$"
+    },
+    "code": {
+      "enum": [
+        "numericUndeclared",
+        "labelAbsent",
+        "widgetUndeclared",
+        "multilineUncontrolled",
+        "inputless"
+      ]
+    },
+    "finding": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        {
+          "$ref": "#/definitions/code"
+        },
+        {
+          "$ref": "#/definitions/pointer"
+        }
+      ]
+    },
+    "declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pointer",
+        "key",
+        "type",
+        "widget",
+        "role",
+        "label",
+        "step",
+        "snaps"
+      ],
+      "properties": {
+        "pointer": {
+          "$ref": "#/definitions/pointer"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean",
+            "object",
+            "array",
+            null
+          ]
+        },
+        "widget": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "$ref": "#/definitions/source"
+              }
+            }
+          ]
+        },
+        "step": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/source"
+            }
+          ]
+        },
+        "snaps": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "resolvedInput": {
+      "description": "One leaf input as an oracle resolves it: its key, settled JSON type, whether a label shows for it (no hidden input, no array item), whether the input-label glossary names its key, the x-semio-ui merged over its $ref chain (outer keys first) and the control kind a reader hands it (null when none).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "type",
+        "labelled",
+        "glossary",
+        "ui",
+        "control"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean",
+            "object",
+            "array",
+            null
+          ]
+        },
+        "labelled": {
+          "type": "boolean"
+        },
+        "glossary": {
+          "type": "boolean"
+        },
+        "ui": {
+          "type": "object"
+        },
+        "control": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "resolvedLeaf": {
+      "description": "One mutation leaf as an oracle resolves it: whether its descriptor leaves it editable (`editable` absent or true) and how many top-level inputs its editor shows (hidden ones do not count).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "editable",
+        "shown"
+      ],
+      "properties": {
+        "editable": {
+          "type": "boolean"
+        },
+        "shown": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "leafShowsInput": {
+      "description": "Leaf rule (design §22.20): a leaf is either editable and shows at least one input, or its descriptor declares it withdraw-only (`\"editable\": false`) — never an editor with zero rows.",
+      "type": "object",
+      "if": {
+        "type": "object",
+        "properties": {
+          "editable": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "shown": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "numericDeclared": {
+      "description": "Rule a: an interactive number — role value or none, widget slider, stepper, dial or none, no reference — declares its step or its snapping points (a non-empty snaps list or a snapSource).",
+      "type": "object",
+      "if": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "integer",
+              "number"
+            ]
+          },
+          "ui": {
+            "type": "object",
+            "properties": {
+              "widget": {
+                "enum": [
+                  "slider",
+                  "stepper",
+                  "dial"
+                ]
+              },
+              "role": {
+                "const": "value"
+              },
+              "ref": false
+            }
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "ui": {
+            "type": "object",
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "step"
+                ],
+                "properties": {
+                  "step": {}
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "snaps"
+                ],
+                "properties": {
+                  "snaps": {
+                    "type": "array",
+                    "minItems": 1
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "snapSource"
+                ],
+                "properties": {
+                  "snapSource": {}
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "labelResolved": {
+      "description": "Rule b: the label of a shown input resolves in every locale — the input-label glossary names its key (a legitimate source, design §6: such a label is counted as inferred, never refused), or its own x-semio-ui.label states every locale (the manifest's InputLabel).",
+      "type": "object",
+      "if": {
+        "type": "object",
+        "properties": {
+          "labelled": {
+            "const": true
+          },
+          "glossary": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "ui": {
+            "type": "object",
+            "required": [
+              "label"
+            ],
+            "properties": {
+              "label": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json#/$defs/InputLabel"
+              }
+            }
+          }
+        }
+      }
+    },
+    "widgetDeclared": {
+      "description": "Rule c: a declared widget is one of the strict vocabulary (the widget enum of the manifest's InputUi, which the vendor-annotation vocabulary registers for x-semio-ui).",
+      "type": "object",
+      "properties": {
+        "ui": {
+          "type": "object",
+          "properties": {
+            "widget": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json#/$defs/InputUi/properties/widget"
+            }
+          }
+        }
+      }
+    },
+    "multilineControlled": {
+      "description": "Rule d (design §22.7), armed once the reader maps the multiline presentation to a control: an input declared multiline is handed the multi-line control.",
+      "type": "object",
+      "if": {
+        "type": "object",
+        "required": [
+          "ui"
+        ],
+        "properties": {
+          "ui": {
+            "type": "object",
+            "required": [
+              "widget"
+            ],
+            "properties": {
+              "widget": {
+                "const": "multiline"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "control": {
+            "const": "multiline"
+          }
+        }
+      }
+    }
+  }
+}

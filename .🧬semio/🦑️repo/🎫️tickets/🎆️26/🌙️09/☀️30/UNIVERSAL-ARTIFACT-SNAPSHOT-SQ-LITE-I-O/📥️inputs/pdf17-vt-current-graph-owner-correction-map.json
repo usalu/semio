@@ -1,0 +1,178 @@
+{
+  "qualification": "source-only finite owners; no fixture binary/runtime conformance inference",
+  "owners": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🦀️.rs",
+      "category": "production seed/checker",
+      "anchors": [
+        {
+          "line": 34,
+          "literal": "/// a minimal `/DPartRoot` → `/DParts` → one `/DPart` node carrying `/DPM`."
+        },
+        {
+          "line": 57,
+          "literal": "value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"DPartRoot\".into()) }, PdfDictEntry { key: \"DParts\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 11, gen: 0 })]) }]),"
+        },
+        {
+          "line": 183,
+          "literal": "/// 🌳️ Real, recursive walk of the `/DPartRoot`/`/DParts` tree (ISO 16612-2 §6.2): each DPart"
+        },
+        {
+          "line": 184,
+          "literal": "/// node may itself carry a nested `/DParts` array. Returns the refs of every DPart node reachable"
+        },
+        {
+          "line": 189,
+          "literal": "let Some(dparts) = node.dict_get(\"DParts\").and_then(|v| v.as_array()) else { return };"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs",
+      "category": "original four-law fixture",
+      "anchors": [
+        {
+          "line": 32,
+          "literal": "value: PdfObject::Dict(vec![PdfDictEntry { key: \"Type\".into(), value: PdfObject::Name(\"DPartRoot\".into()) }, PdfDictEntry { key: \"DParts\".into(), value: PdfObject::Array(vec![PdfObject::Ref(ObjRef { num: 11, gen: 0 })]) }]),"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs",
+      "category": "original two constructor laws",
+      "anchors": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs",
+      "category": "literal native composition fixture",
+      "anchors": [
+        {
+          "line": 25,
+          "literal": "body.extend_from_slice(b\"6 0 obj\\n<< /Type /DPartRoot /DParts [7 0 R] >>\\nendobj\\n\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🦀️.rs",
+      "category": "production mutation delegate",
+      "anchors": [
+        {
+          "line": 19,
+          "literal": "const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: \"set\", entity: \"dpart-root\", kind: \"set-dpart-root\", record: \"Set\" };"
+        },
+        {
+          "line": 23,
+          "literal": "support::set_dpart_root(&mut next, &self.job);"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🗂️set-dpart-root/🧪️tests/🔬️unit/🦀️.rs",
+      "category": "original mutation fixture",
+      "anchors": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/🔁️codec/🦀️.rs",
+      "category": "test-only corpus writer/parser",
+      "anchors": [
+        {
+          "line": 32,
+          "literal": "\"set-dpart-root\","
+        },
+        {
+          "line": 93,
+          "literal": "\"Parent\" => pages_id,"
+        },
+        {
+          "line": 197,
+          "literal": "let root = document.add_object(dictionary! { \"Type\" => \"DPartRoot\", \"DPartRootNode\" => part });"
+        },
+        {
+          "line": 282,
+          "literal": "\"set-dpart-root\" => {"
+        },
+        {
+          "line": 285,
+          "literal": "let root = document.add_object(dictionary! { \"Type\" => \"DPartRoot\", \"DPartRootNode\" => part });"
+        },
+        {
+          "line": 292,
+          "literal": "let root = document.add_object(dictionary! { \"Type\" => \"DPartRoot\", \"DPartRootNode\" => part });"
+        },
+        {
+          "line": 300,
+          "literal": "let node = document.get_object(root).and_then(Object::as_dict).map_err(|e| e.to_string())?.get(b\"DPartRootNode\").and_then(Object::as_reference).map_err(|e| e.to_string())?;"
+        },
+        {
+          "line": 428,
+          "literal": ".get(b\"DPartRootNode\")"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🏅️conformance-support/🦀️.rs",
+      "category": "production shared graph mutation owner",
+      "anchors": [
+        {
+          "line": 249,
+          "literal": "/// 🗂️ The `/DPart` node `/Root/DPartRoot/DPartRootNode` points at."
+        },
+        {
+          "line": 253,
+          "literal": "root.dict_get(\"DPartRootNode\")?.as_ref()"
+        },
+        {
+          "line": 378,
+          "literal": "pub fn set_dpart_root(snapshot: &mut PdfSnapshot, job: &str) {"
+        },
+        {
+          "line": 384,
+          "literal": "let root = insert_object(snapshot, dict(vec![(\"Type\", PdfObject::Name(\"DPartRoot\".to_string())), (\"DPartRootNode\", PdfObject::Ref(node_id))]));"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📃️document/🦀️.rs",
+      "category": "shared dev-only independent reader/mutation engine",
+      "anchors": [
+        {
+          "line": 1707,
+          "literal": "let node_id = root.get(b\"DPartRootNode\").ok()?.as_reference().ok()?;"
+        },
+        {
+          "line": 2109,
+          "literal": "\"set-dpart-root\" => {"
+        },
+        {
+          "line": 2124,
+          "literal": "root.set(\"DPartRootNode\", Object::Reference(node_id));"
+        },
+        {
+          "line": 2206,
+          "literal": "\"remove-dpart-root\" | \"set-dpart-metadata\" | \"remove-dpart-metadata\" => vec![kind_spec(\"set-dpart-root\", vec![(\"job\", Json::String(\"arranged variable-data job\".to_string()))])],"
+        },
+        {
+          "line": 2310,
+          "literal": "\"set-dpart-root\" => kind_spec(\"remove-dpart-root\", vec![]),"
+        },
+        {
+          "line": 2313,
+          "literal": "kind_spec(\"set-dpart-root\", vec![(\"job\", Json::String(job))])"
+        }
+      ]
+    }
+  ],
+  "requiredGraph": {
+    "root": "indirect DPartRootNode reference",
+    "node": "Type absent allowed, wrong present Type rejected; Parent required actual enclosing owner",
+    "children": "DParts array of arrays containing indirect DPart refs",
+    "leaf": "actual Page Start required; no terminal zero-page claim",
+    "metadata": "DPM optional, current warning policy retained separately"
+  },
+  "preserve": [
+    "original four analysis predicates",
+    "original two constructor predicates and new+one add_page yields one page",
+    "existing mutation inverse and own Job literal",
+    "independent projection complete ordered fields and nonexhaustive reader qualification"
+  ]
+}

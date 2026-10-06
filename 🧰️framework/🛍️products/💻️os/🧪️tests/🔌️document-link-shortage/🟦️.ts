@@ -1,5 +1,5 @@
 /** 🔌️ LAW: the TS twin of the kernel's `DocumentLink` walks the SAME language-agnostic fixture as the Rust runner
- * (`🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️document-link-shortage/🦀️.rs`), and the fixture is admitted by its schema
+ * (`🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️document-link-shortage/🦀️.rs`), with actual policy, event and observation payloads validated
  * through Ajv (third-party) — so the React worker, the native actor and the browser actor share one reconnect,
  * expiry and revocation rule (ticket 26/09/23 audit P2-2). The terminal texts equal React's execution-target
  * status texts, which the worker already shows. */
@@ -23,9 +23,14 @@ export async function registerDocumentLinkShortageTests(
   const { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1 } = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
 
   describe("DocumentLinkShortage", () => {
-    it("owns a fixture its schema admits and the kernel's policy", async () => {
-      const validate = semioSchemaAjvV1({ strict: false, allErrors: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    it("owns the kernel policy and admits actual event and observation payloads", async () => {
+      const ajv = semioSchemaAjvV1({ strict: false, allErrors: true }).addSchema(schema);
+      const validates = (name: string, payload: unknown): boolean => Boolean(ajv.validate({ $ref: `${schema.$id}#/$defs/${name}` }, payload));
+      expect(validates("Policy", twin.DOCUMENT_LINK_SHORTAGE_POLICY)).toBe(true);
+      for (const vector of fixture.vectors) for (const step of vector.steps) {
+        expect(validates("Event", step.event)).toBe(true);
+        expect(validates("Observation", step.expect)).toBe(true);
+      }
       expect({ ...twin.DOCUMENT_LINK_SHORTAGE_POLICY }).toEqual(fixture.policy);
       expect([...twin.DOCUMENT_LINK_ACCESS_REFUSED_STATUSES]).toEqual(fixture.accessRefusedStatuses);
     });

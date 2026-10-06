@@ -300,7 +300,7 @@ def doc_json(ctx):
 
 def leaf(ctx, spec, name):
     """🧫️ One committed leaf of the vector the doc string addresses."""
-    return json.loads(ctx.fixture_bytes(spec[name]).decode("utf-8"))
+    return json.loads(ctx.input_bytes(spec[name]).decode("utf-8"))
 
 
 def uri_in(ctx, needle):
@@ -377,7 +377,7 @@ def identity_handler(ctx):
     active model definition — and that every child target the snapshot carries expanded really does
     round-trip through the single-string wire spelling the mutation payloads use."""
     uri = uri_in(ctx, "⬅️before")
-    committed = ctx.fixture_bytes(uri)
+    committed = ctx.input_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
     validate(document, "identity-round-trip")
     for slot in SLOTS.values():

@@ -27,7 +27,7 @@ type selectorVectors struct {
 }
 
 func selectors(ctx *host.Context) ([]string, error) {
-	path, err := ctx.Fixture("shared://🧬️scope-selectors.json")
+	path, err := ctx.Input("shared://🧬️scope-selectors.json")
 	if err != nil {
 		return nil, err
 	}

@@ -21,11 +21,12 @@ const box=(a:Vec2,b:Vec2):Box=>[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max
 const merge=(a:Box,b:Box):Box=>[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[2],b[2]),Math.max(a[3],b[3])];
 const intersects=(a:Box,b:Box,e:number)=>a[0]<=b[2]+e&&a[2]+e>=b[0]&&a[1]<=b[3]+e&&a[3]+e>=b[1];
 const boxDistance=(b:Box,p:Vec2)=>Math.hypot(Math.max(b[0]-p[0],0,p[0]-b[2]),Math.max(b[1]-p[1],0,p[1]-b[3]));
-const ray=(b:Box,p:Vec2)=>b[2]>=p[0]&&b[1]<=p[1]&&b[3]>p[1];
+const ray=(b:Box,p:Vec2,axis:0|1,direction:number)=>((direction>0?b[axis+2]!>=p[axis]:b[axis]!<=p[axis])&&b[1-axis]!<=p[1-axis]!&&b[3-axis]!>p[1-axis]!);
 const interpolate=(e:Edge,t:number):Vec2=>t===0?e.a:t===1?e.b:point([e.a[0]+(e.b[0]-e.a[0])*t,e.a[1]+(e.b[1]-e.a[1])*t]);
 function parameter(e:Edge,p:Vec2):number {const dx=e.b[0]-e.a[0],dy=e.b[1]-e.a[1];return Math.abs(dx)>=Math.abs(dy)?(p[0]-e.a[0])/dx:(p[1]-e.a[1])/dy;}
+function endpoint(e:Edge,p:Vec2,epsilon:number,len:number):number|null{const t=parameter(e,p),tolerance=epsilon/len;return t>=-tolerance&&t<=1+tolerance&&Math.abs(cross(e.a,e.b,p))<=epsilon*len?Math.max(0,Math.min(1,t)):null;}
 function distance(e:Edge,p:Vec2):number {const dx=e.b[0]-e.a[0],dy=e.b[1]-e.a[1],len=Math.hypot(dx,dy),t=Math.max(0,Math.min(1,((p[0]-e.a[0])*(dx/len)+(p[1]-e.a[1])*(dy/len))/len));return length(p,interpolate(e,t));}
-function winding(e:Edge,p:Vec2):number {const c=cross(e.a,e.b,p);return e.a[1]<=p[1]&&e.b[1]>p[1]&&c>0?1:e.a[1]>p[1]&&e.b[1]<=p[1]&&c<0?-1:0;}
+function winding(e:Edge,p:Vec2,axis:0|1,direction:number):number {const other=1-axis,ax=e.a[axis]*direction,bx=e.b[axis]*direction,px=p[axis]*direction,ay=e.a[other]!,by=e.b[other]!,py=p[other]!,c=(bx-ax)*(py-ay)-(by-ay)*(px-ax);return ay<=py&&by>py&&c>0?1:ay>py&&by<=py&&c<0?-1:0;}
 const apply=(operation:BooleanInput["operation"],a:boolean,b:boolean)=>operation==="union"?a||b:operation==="difference"?a&&!b:operation==="intersection"?a&&b:a!==b;
 const spread=(value:number)=>{let n=value;n=(n|(n<<8))&0x00ff00ff;n=(n|(n<<4))&0x0f0f0f0f;n=(n|(n<<2))&0x33333333;return(n|(n<<1))&0x55555555;};
 function morton(e:Edge,b:Box):number {const x=b[2]===b[0]?0:Math.max(0,Math.min(65535,Math.floor(((e.a[0]+e.b[0])/2-b[0])/(b[2]-b[0])*65535))),y=b[3]===b[1]?0:Math.max(0,Math.min(65535,Math.floor(((e.a[1]+e.b[1])/2-b[1])/(b[3]-b[1])*65535)));return(spread(x)|(spread(y)<<1))>>>0;}
@@ -43,13 +44,13 @@ export class BooleanJob {
  private operand=0;private contour=0;private at=0;private entering=true;private first:Vec2|null=null;private previous:Vec2|null=null;private bounds:Box=[Infinity,Infinity,-Infinity,-Infinity];private rules:BooleanOperand["fillRule"][]=[];private source:Edge[]=[];
  private indexMode:"push"|"leaves"|"levels"="push";private indexAt=0;private indexHeap=new Heap<{key:number;edge:number}>((a,b)=>a.key-b.key||a.edge-b.edge);private tree:Node[]=[];private level:number[]=[];private nextLevel:number[]=[];private root=-1;private query:number[]=[];private pivot=0;
  private splitAt=0;private splitValues:Iterator<number>|null=null;private splitHeap=new Heap<number>((a,b)=>a-b);private splitBuild=true;private splitPrevious:number|null=null;private nodes:Vec2[]=[];private grid=new Map<string,number[]>();private atomic:[number,number][]=[];private atomicIds=new Set<string>();
- private classifyAt=0;private classifyMode:"start"|"nearest"|"ray"|"fold"="start";private midpoint:Vec2=[0,0];private leftPoint:Vec2=[0,0];private rightPoint:Vec2=[0,0];private nearest=Infinity;private leftWinding:number[]=[];private rightWinding:number[]=[];private foldAt=0;private leftFilled=false;private rightFilled=false;
+ private classifyAt=0;private classifyMode:"start"|"nearest"|"ray"|"fold"="start";private classifyAxis:0|1=0;private classifyDirection=1;private midpoint:Vec2=[0,0];private leftPoint:Vec2=[0,0];private rightPoint:Vec2=[0,0];private nearest=Infinity;private leftWinding:number[]=[];private rightWinding:number[]=[];private foldAt=0;private leftFilled=false;private rightFilled=false;
  private boundary:Boundary[]=[];private outgoing=new Map<number,number[]>();private boundaryAt=0;private current=-1;private start=0;private raw:number[][]=[];private ring:number[]=[];private positions=new Map<number,number>();private selecting=false;private choiceAt=0;private choiceNode=0;private reverseAngle=0;private best=-1;private bestAngle=Infinity;
  private splitRing:number[]|null=null;private ringSplitAt=0;private ringSplitStop=0;private ringSplitCopy=true;
  private compactAt=0;private compactVertex=0;private compactMode:"scan"|"measure"="scan";private compactPoints:Vec2[]=[];private area=0;private lower=0;private upper=0;private rings:Ring[]=[];
  private ringHeap=new Heap<{key:[number,number,number,number];ring:number}>((a,b)=>a.key[0]-b.key[0]||a.key[1]-b.key[1]||a.key[2]-b.key[2]||a.key[3]-b.key[3]);private emitting:number|null=null;private emitAt=0;private output:PathSegment[]=[];
  constructor(private input:BooleanInput) {
-  if(!["union","difference","intersection","xor"].includes(input.operation)||!Array.isArray(input.operands)||!input.operands.length||input.operands.length>1024||!Number.isFinite(input.epsilon)||input.epsilon<1e-12||input.epsilon>16||!integer(input.maxEdges,65536)||!integer(input.maxParameters,262144)||!integer(input.maxAtomicEdges,65536)||!integer(input.maxSegments,65536)||!integer(input.maxWork,1000000000))bad("Invalid boolean contract");this.input={...input};
+  if(!["union","difference","intersection","xor"].includes(input.operation)||!Array.isArray(input.operands)||!input.operands.length||input.operands.length>1024||!Number.isFinite(input.epsilon)||input.epsilon<1e-12||input.epsilon>16||!integer(input.maxEdges,262144)||!integer(input.maxParameters,1048576)||!integer(input.maxAtomicEdges,262144)||!integer(input.maxSegments,327680)||!integer(input.maxWork,1000000000))bad("Invalid boolean contract");this.input={...input};
  }
  private addEdge(a:Vec2,b:Vec2):void {
   if(length(a,b)===0)return;if(this.source.length>=this.input.maxEdges)bad("Boolean exceeds edge budget");if(this.parameters+2>this.input.maxParameters)bad("Boolean exceeds parameter budget");
@@ -58,7 +59,7 @@ export class BooleanJob {
  private addParameter(e:Edge,value:number):void {const v=Math.max(0,Math.min(1,value));if(!e.parameters.has(v)){if(this.parameters>=this.input.maxParameters)bad("Boolean exceeds parameter budget");e.parameters.add(v);this.parameters++;}}
  private intersect(a:Edge,b:Edge):void {
   const rx=a.b[0]-a.a[0],ry=a.b[1]-a.a[1],sx=b.b[0]-b.a[0],sy=b.b[1]-b.a[1],ox=b.a[0]-a.a[0],oy=b.a[1]-a.a[1],denominator=rx*sy-ry*sx,la=length(a.a,a.b),lb=length(b.a,b.b),ta=this.input.epsilon/la,tb=this.input.epsilon/lb;
-  if(Math.abs(denominator)>Number.EPSILON*16*la*lb){const t=(ox*sy-oy*sx)/denominator,u=(ox*ry-oy*rx)/denominator;if(t>=-ta&&t<=1+ta&&u>=-tb&&u<=1+tb){this.addParameter(a,t);this.addParameter(b,u);}return;}
+  if(Math.abs(denominator)>Number.EPSILON*16*la*lb){let snap=endpoint(b,a.a,this.input.epsilon,lb);if(snap!==null){this.addParameter(a,0);this.addParameter(b,snap);return;}snap=endpoint(b,a.b,this.input.epsilon,lb);if(snap!==null){this.addParameter(a,1);this.addParameter(b,snap);return;}snap=endpoint(a,b.a,this.input.epsilon,la);if(snap!==null){this.addParameter(a,snap);this.addParameter(b,0);return;}snap=endpoint(a,b.b,this.input.epsilon,la);if(snap!==null){this.addParameter(a,snap);this.addParameter(b,1);return;}const t=(ox*sy-oy*sx)/denominator,u=(ox*ry-oy*rx)/denominator;if(t>=-ta&&t<=1+ta&&u>=-tb&&u<=1+tb){this.addParameter(a,t);this.addParameter(b,u);}return;}
   if(Math.abs(ox*ry-oy*rx)>this.input.epsilon*la)return;
   for(const p of [b.a,b.b]){const t=parameter(a,p);if(t>=-ta&&t<=1+ta)this.addParameter(a,t);}for(const p of [a.a,a.b]){const t=parameter(b,p);if(t>=-tb&&t<=1+tb)this.addParameter(b,t);}
  }
@@ -71,9 +72,9 @@ export class BooleanJob {
  private prepare():void {
   if(this.operand===this.input.operands.length){const magnitude=Math.max(Math.abs(this.bounds[0]),Math.abs(this.bounds[1]),Math.abs(this.bounds[2]),Math.abs(this.bounds[3]));if(this.source.length&&this.input.epsilon<magnitude*Number.EPSILON*16)bad("Boolean epsilon is below coordinate precision");this.phase="indexing";return;}
   const operand=this.input.operands[this.operand]!;
-  if(this.entering){if(!operand||!Array.isArray(operand.contours)||operand.contours.length>4096||!["nonzero","evenodd"].includes(operand.fillRule))bad("Invalid boolean operand");this.rules.push(operand.fillRule);this.prepared++;this.entering=false;return;}
+  if(this.entering){if(!operand||!Array.isArray(operand.contours)||operand.contours.length>65536||!["nonzero","evenodd"].includes(operand.fillRule))bad("Invalid boolean operand");this.rules.push(operand.fillRule);this.prepared++;this.entering=false;return;}
   if(this.contour===operand.contours.length){this.operand++;this.contour=0;this.entering=true;return;}
-  const points=operand.contours[this.contour]!;if(!Array.isArray(points)||points.length>65536)bad("Invalid boolean contour");
+  const points=operand.contours[this.contour]!;if(!Array.isArray(points)||points.length>262144)bad("Invalid boolean contour");
   if(this.at<points.length){if(this.vertices>=this.input.maxEdges)bad("Boolean exceeds input vertex budget");const p=point(points[this.at++]!);this.vertices++;this.bounds=merge(this.bounds,[p[0],p[1],p[0],p[1]]);if(this.previous)this.addEdge(this.previous,p);else this.first=p;this.previous=p;return;}
   if(this.previous&&this.first)this.addEdge(this.previous,this.first);this.contour++;this.at=0;this.previous=null;this.first=null;
  }
@@ -90,7 +91,7 @@ export class BooleanJob {
   if(this.pivot===this.source.length){this.phase="splitting";return;}
   const index=this.query.pop();if(index===undefined){this.pivot++;if(this.pivot<this.source.length)this.query.push(this.root);return;}
   const node=this.tree[index]!,edge=this.source[this.pivot]!;if(node.maximum<=this.pivot||!intersects(node.box,edge.box,this.input.epsilon))return;
-  if(node.edge>=0){this.pairs++;this.intersect(edge,this.source[node.edge]!);}else this.query.push(node.right,node.left);
+  if(node.edge>=0){this.pairs++;this.intersect(edge,this.source[node.edge]!);}else{const l=this.tree[node.left]!,r=this.tree[node.right]!;if(r.maximum>this.pivot&&intersects(r.box,edge.box,this.input.epsilon))this.query.push(node.right);if(l.maximum>this.pivot&&intersects(l.box,edge.box,this.input.epsilon))this.query.push(node.left);}
  }
  private splitting():void {
   if(this.splitAt===this.source.length){this.phase="classifying";return;}
@@ -105,14 +106,14 @@ export class BooleanJob {
  private classify():void {
   if(this.classifyAt===this.atomic.length){this.query=[];this.phase="contours";return;}
   const [from,to]=this.atomic[this.classifyAt]!,a=this.nodes[from]!,b=this.nodes[to]!;
-  if(this.classifyMode==="start"){this.midpoint=[(a[0]+b[0])/2,(a[1]+b[1])/2];this.nearest=Infinity;this.query=[this.root];this.classifyMode="nearest";return;}
+  if(this.classifyMode==="start"){this.midpoint=[(a[0]+b[0])/2,(a[1]+b[1])/2];let distance=Infinity;for(const axis of [0,1]as const)for(const direction of [-1,1]){const next=direction>0?this.bounds[axis+2]!-this.midpoint[axis]:this.midpoint[axis]-this.bounds[axis]!;if(next<distance){distance=next;this.classifyAxis=axis;this.classifyDirection=direction;}}const len=length(a,b);this.nearest=4*Math.min(len*.25,Math.max(this.input.epsilon*2,len*1e-7));this.query=[this.root];this.classifyMode="nearest";return;}
   if(this.classifyMode==="nearest"){
-   const index=this.query.pop();if(index!==undefined){const n=this.tree[index]!;if(boxDistance(n.box,this.midpoint)>this.nearest)return;if(n.edge>=0){const d=distance(this.source[n.edge]!,this.midpoint);if(d>this.input.epsilon)this.nearest=Math.min(this.nearest,d);}else{const l=this.tree[n.left]!,r=this.tree[n.right]!;if(boxDistance(l.box,this.midpoint)<=boxDistance(r.box,this.midpoint))this.query.push(n.right,n.left);else this.query.push(n.left,n.right);}return;}
+   const index=this.query.pop();if(index!==undefined){const n=this.tree[index]!;if(boxDistance(n.box,this.midpoint)>this.nearest)return;if(n.edge>=0){const d=distance(this.source[n.edge]!,this.midpoint);if(d>this.input.epsilon)this.nearest=Math.min(this.nearest,d);}else{const l=boxDistance(this.tree[n.left]!.box,this.midpoint),r=boxDistance(this.tree[n.right]!.box,this.midpoint);if(l<=r){if(r<=this.nearest)this.query.push(n.right);if(l<=this.nearest)this.query.push(n.left);}else{if(l<=this.nearest)this.query.push(n.left);if(r<=this.nearest)this.query.push(n.right);}}return;}
    const len=length(a,b),offset=Math.min(len*.25,this.nearest*.25,Math.max(this.input.epsilon*2,len*1e-7)),nx=-(b[1]-a[1])/len,ny=(b[0]-a[0])/len;
    this.leftPoint=[this.midpoint[0]+nx*offset,this.midpoint[1]+ny*offset];this.rightPoint=[this.midpoint[0]-nx*offset,this.midpoint[1]-ny*offset];if(length(this.leftPoint,this.rightPoint)===0)bad("Boolean probes exceed coordinate precision");
    this.leftWinding=Array(this.rules.length).fill(0);this.rightWinding=Array(this.rules.length).fill(0);this.query=[this.root];this.classifyMode="ray";return;
   }
-  if(this.classifyMode==="ray"){const index=this.query.pop();if(index!==undefined){const n=this.tree[index]!;if(!ray(n.box,this.leftPoint)&&!ray(n.box,this.rightPoint))return;if(n.edge>=0){const e=this.source[n.edge]!;this.leftWinding[e.operand]!+=winding(e,this.leftPoint);this.rightWinding[e.operand]!+=winding(e,this.rightPoint);}else this.query.push(n.right,n.left);return;}this.foldAt=0;this.classifyMode="fold";return;}
+  if(this.classifyMode==="ray"){const index=this.query.pop();if(index!==undefined){const n=this.tree[index]!;if(!ray(n.box,this.leftPoint,this.classifyAxis,this.classifyDirection)&&!ray(n.box,this.rightPoint,this.classifyAxis,this.classifyDirection))return;if(n.edge>=0){const e=this.source[n.edge]!;this.leftWinding[e.operand]!+=winding(e,this.leftPoint,this.classifyAxis,this.classifyDirection);this.rightWinding[e.operand]!+=winding(e,this.rightPoint,this.classifyAxis,this.classifyDirection);}else{const l=this.tree[n.left]!.box,r=this.tree[n.right]!.box;if(ray(r,this.leftPoint,this.classifyAxis,this.classifyDirection)||ray(r,this.rightPoint,this.classifyAxis,this.classifyDirection))this.query.push(n.right);if(ray(l,this.leftPoint,this.classifyAxis,this.classifyDirection)||ray(l,this.rightPoint,this.classifyAxis,this.classifyDirection))this.query.push(n.left);}return;}this.foldAt=0;this.classifyMode="fold";return;}
   if(this.foldAt<this.rules.length){const rule=this.rules[this.foldAt]!,inside=(n:number)=>rule==="evenodd"?n%2!==0:n!==0,l=inside(this.leftWinding[this.foldAt]!),r=inside(this.rightWinding[this.foldAt]!);this.leftFilled=this.foldAt?apply(this.input.operation,this.leftFilled,l):l;this.rightFilled=this.foldAt?apply(this.input.operation,this.rightFilled,r):r;this.foldAt++;return;}
   if(this.leftFilled!==this.rightFilled){const edge:Boundary=this.leftFilled?{from,to,used:false}:{from:to,to:from,used:false},index=this.boundary.length;this.boundary.push(edge);const outgoing=this.outgoing.get(edge.from)??[];outgoing.push(index);this.outgoing.set(edge.from,outgoing);}
   this.classifyAt++;this.classifyMode="start";
@@ -139,9 +140,14 @@ export class BooleanJob {
   if(this.emitAt===ring.points.length){this.output.push({kind:"close"});this.emitting=null;return;}this.output.push({kind:this.emitAt===0?"move":"line",to:ring.points[(ring.anchor+this.emitAt++)%ring.points.length]!});
  }
  private step():void {switch(this.phase){case"preparing":this.prepare();break;case"indexing":this.indexing();break;case"intersections":this.intersections();break;case"splitting":this.splitting();break;case"classifying":this.classify();break;case"contours":this.contours();break;case"compacting":this.compact();break;case"emitting":this.emit();break;case"complete":break;}}
- advance(grant:number):BooleanProgress {
+ /** 🧭️ Nested owners advance bounded work without allocating observer snapshots per unit. */
+ advanceWork(grant:number):boolean {
   if(!Number.isSafeInteger(grant)||grant<=0)bad("Boolean work grant must be a positive integer");if(this.cancelled)throw new DOMException("Boolean cancelled","AbortError");if(this.failure)throw this.failure;
   try{for(let at=0;at<grant&&this.phase!=="complete";at++){if(this.work>=this.input.maxWork)bad("Boolean exceeds work budget");this.step();this.work++;}}catch(error){this.failure=error;throw error;}
+  return this.phase==="complete";
+ }
+ advance(grant:number):BooleanProgress {
+  this.advanceWork(grant);
   return{phase:this.phase,operands:this.prepared,vertices:this.vertices,edges:this.source.length,parameters:this.parameters,pairs:this.pairs,atomicEdges:this.atomic.length,boundaryEdges:this.boundary.length,contours:this.rings.length,segments:this.output.length,work:this.work,done:this.phase==="complete"};
  }
  result():PathSegment[]{if(this.cancelled)throw new DOMException("Boolean cancelled","AbortError");if(this.failure)throw this.failure;if(this.phase!=="complete")throw Error("Boolean incomplete");return this.output;}

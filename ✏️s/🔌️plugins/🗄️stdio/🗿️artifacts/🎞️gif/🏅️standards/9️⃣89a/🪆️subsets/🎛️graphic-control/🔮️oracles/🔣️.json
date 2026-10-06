@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-frame-delay-applied",
       "class": "third-party-generated",
       "target": {
@@ -58,7 +57,6 @@
       "notes": "Frame 0's delay changes."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-frame-disposal-applied",
       "class": "third-party-generated",
       "target": {
@@ -109,7 +107,6 @@
       "notes": "Frame 0's disposal method changes."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-frame-transparency-applied",
       "class": "third-party-generated",
       "target": {
@@ -160,7 +157,6 @@
       "notes": "Frame 0 gains a transparent index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-frame-user-input-applied",
       "class": "third-party-generated",
       "target": {

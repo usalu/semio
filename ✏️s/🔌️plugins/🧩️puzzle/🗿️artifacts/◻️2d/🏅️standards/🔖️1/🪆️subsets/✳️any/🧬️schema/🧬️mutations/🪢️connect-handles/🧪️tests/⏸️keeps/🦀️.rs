@@ -1,4 +1,4 @@
-//! 🧪️ `connect-handles` fixture — `⏸️keeps`.
+//! 🧪️ `connect-handles` snapshot — `⏸️keeps`.
 //!
 //! A duplicate edge id is a WARNING-level no-op, not a rejection: the verb answers an empty diff and the board does not move.
 //!
@@ -53,7 +53,7 @@ fn declared_outcome_holds() {
 #[test]
 fn inverse_is_payload_derived_and_does_not_restore() {
     let base = before();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation()).expect("valid retained mutation inverse snapshot");
     assert_eq!(inverse.len(), 1, "connect-handles/keeps-an-edge-the-tower-already-holds: this kind undoes in exactly one step, got {inverse:?}");
     let mut snapshot = base.clone();
     for step in &inverse {

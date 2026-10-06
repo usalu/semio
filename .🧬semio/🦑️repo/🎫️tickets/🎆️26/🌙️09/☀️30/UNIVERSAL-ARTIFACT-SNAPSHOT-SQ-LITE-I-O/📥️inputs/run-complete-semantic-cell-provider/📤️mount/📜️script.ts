@@ -1,0 +1,3 @@
+import{readFileSync,writeFileSync}from"node:fs";import{join}from"node:path";import assert from"node:assert/strict";
+const pairs:{path:string;before:string;after:string}[]=JSON.parse(readFileSync(join(import.meta.dir,"../held-provider-pairs.json"),"utf8"));assert.equal(pairs.length,2);for(const pair of pairs)assert.equal(readFileSync(pair.path,"utf8"),pair.before,"Concurrent Run semantic provider change "+pair.path);for(const pair of pairs)writeFileSync(pair.path,pair.after);for(const pair of pairs)assert.equal(readFileSync(pair.path,"utf8"),pair.after);console.log("[DEBUG] Run complete typed and borrowed SQL cells mounted paths=2 shared_control_changes=0 reconstruction_changes=0");
+

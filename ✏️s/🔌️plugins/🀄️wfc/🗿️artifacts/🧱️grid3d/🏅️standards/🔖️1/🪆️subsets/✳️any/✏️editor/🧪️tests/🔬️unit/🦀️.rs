@@ -211,4 +211,29 @@ fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_ros
     assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
 }
 
+/// 🎯️ LAW (design §22.32): a cell click of an armed writing utility is the framework's one-step tool — ONE tool transaction
+/// `s.wfc.grid3d@1/*#editor#<utility>` holding the click's one leaf; `select` yields nothing and leaves zero trace; a view
+/// without an admission publishes the leaf plainly.
+#[test]
+fn a_cell_click_of_an_armed_utility_is_one_tool_transaction() {
+    let document = crate::examples::blocks::snapshot();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let admitted = ArtifactView::with_operation(&document, &history, semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc".into(), operation_id: 1, generation: 1, canonical_base_revision: [7; 32], authoring_seed: "seed".into() });
+    let no_config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &no_config, window: None };
+    let armed = |utility: &str| {
+        let mut view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+        view.active_utility_id = Some(utility.into());
+        view
+    };
+    let click = Grid3dEditorCommand::PickCell { cell_id: "0:0:0".into() };
+    let masked = grid3d_command_emit(&click, &admitted, &cfg, Some(&armed(grid::UTILITY_MASK))).expect("the armed click dispatches");
+    let transaction = masked.transaction.clone().expect("the click is a tool transaction");
+    assert_eq!((transaction.tool, masked.artifact_mutations.len()), (format!("{GRID3D_EDITOR_APP_ID}#{}", grid::UTILITY_MASK), 1), "ONE transaction of the click's one leaf");
+    let selected = grid3d_command_emit(&click, &admitted, &cfg, Some(&armed(grid::UTILITY_SELECT))).expect("select dispatches");
+    assert!(selected.transaction.is_none() && selected.artifact_mutations.is_empty(), "select yields nothing: zero trace");
+    let plain = grid3d_command_emit(&click, &ArtifactView::new(&document, &history), &cfg, Some(&armed(grid::UTILITY_MASK))).expect("a view without an admission dispatches");
+    assert!(plain.transaction.is_none() && plain.artifact_mutations.len() == 1, "no admission: the leaf publishes plainly");
+}
+
 semio_framework_plugin::history_edit_acceptance_law!("wfc", super::Grid3dEditor, || semio_framework_plugin::App { definition: super::create_grid3d_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

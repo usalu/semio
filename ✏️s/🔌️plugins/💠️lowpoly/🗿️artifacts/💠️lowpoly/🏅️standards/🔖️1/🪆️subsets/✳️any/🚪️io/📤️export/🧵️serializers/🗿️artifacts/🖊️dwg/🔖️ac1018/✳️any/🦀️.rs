@@ -4,7 +4,7 @@
 //! `mesh_to_dwg_drawing` -> `DwgSnapshot::from_drawing` -> `encode_dwg` (AC1024).
 //!
 //! 🔖 `IoFidelity::Lossy`: one polyface mesh of triangles — objects, names and paint do not survive.
-use crate::io::mesh_geometry::world_parts;
+use crate::standards::v1::subsets::any::io::mesh_geometry::world_parts;
 use crate::schema::snapshot::LowpolySnapshot;
 use semio_framework_plugin::MeshData;
 use semio_s_artifact_stdio_dwg::{dwg_to_bytes, mesh_to_dwg_drawing, DwgSnapshot};

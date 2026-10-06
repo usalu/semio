@@ -391,6 +391,13 @@ fn intrinsic_projection_node<'a>(mut value:&'a DslValue,path:&[usize])->Result<&
 /// bound for `#[dsl(statements)] Vec<T>` collection fields and for `#[derive(DslOps)]` operation
 /// enums. `#[derive(DslEnum)]`-with-struct-variants and `#[derive(DslOps)]` both implement this.
 pub trait DslVariants: Sized {
+    /// 🏷️ Reads the current authored variant and its literal ordinal without allocating labels.
+    fn projected_variant_identity(&self)->(&'static str,usize,RecordSpecProducer);
+    /// 🫳️ Borrows one original variant field by its declared ordinal path.
+    fn projected_variant_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>;
+    /// 🔑️ Borrows a key from the original variant's ranked field source.
+    fn projected_variant_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>;
+
     /// 🐌️ Lazy: each entry is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec`
     /// — a self-referential grammar's own `variants()` would otherwise need to recurse infinitely
     /// just to construct this list. See [`Shape::Statements`]'s doc comment for the full rationale.

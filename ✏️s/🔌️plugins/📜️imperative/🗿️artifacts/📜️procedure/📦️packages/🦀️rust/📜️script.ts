@@ -23,4 +23,4 @@ if (segments[0] === "procedure-document-contract") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-imperative-procedure", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], commands: { verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-imperative-procedure", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: { verify: OwnedVerifyScript } });

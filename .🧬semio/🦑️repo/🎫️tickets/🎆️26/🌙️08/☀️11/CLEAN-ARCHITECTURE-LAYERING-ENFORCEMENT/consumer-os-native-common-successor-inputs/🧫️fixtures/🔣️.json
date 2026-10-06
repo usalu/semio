@@ -1,0 +1,153 @@
+{
+  "cases": [
+    {
+      "id": "exact",
+      "previous": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        },
+        {
+          "path": "other",
+          "before": "c",
+          "after": "d"
+        }
+      ],
+      "current": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "e"
+        },
+        {
+          "path": "other",
+          "before": "c",
+          "after": "d"
+        }
+      ],
+      "allowed": "owner",
+      "accepted": true
+    },
+    {
+      "id": "foreign",
+      "previous": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        },
+        {
+          "path": "other",
+          "before": "c",
+          "after": "d"
+        }
+      ],
+      "current": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        },
+        {
+          "path": "other",
+          "before": "c",
+          "after": "e"
+        }
+      ],
+      "allowed": "owner",
+      "accepted": false
+    },
+    {
+      "id": "predecessor",
+      "previous": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        }
+      ],
+      "current": [
+        {
+          "path": "owner",
+          "before": "x",
+          "after": "e"
+        }
+      ],
+      "allowed": "owner",
+      "accepted": false
+    },
+    {
+      "id": "duplicate",
+      "previous": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        },
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        }
+      ],
+      "current": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "e"
+        },
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        }
+      ],
+      "allowed": "owner",
+      "accepted": false
+    },
+    {
+      "id": "missing",
+      "previous": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        },
+        {
+          "path": "other",
+          "before": "c",
+          "after": "d"
+        }
+      ],
+      "current": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "e"
+        }
+      ],
+      "allowed": "owner",
+      "accepted": false
+    },
+    {
+      "id": "unchanged",
+      "previous": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        }
+      ],
+      "current": [
+        {
+          "path": "owner",
+          "before": "a",
+          "after": "b"
+        }
+      ],
+      "allowed": "owner",
+      "accepted": false
+    }
+  ]
+}

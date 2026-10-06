@@ -299,7 +299,7 @@ pub use action::{
 };
 #[cfg(feature = "wgpu-engine")]
 pub use chrome::{
-    chrome_item_bg, chrome_item_text, foreground_on_fill, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, UiDriverChrome, UiDriverDrag, UiDriverLabels,
+    chrome_item_bg, chrome_item_text, foreground_on_fill, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, UiDriverChrome, UiDriverDrag, UiDriverLabelTier, UiDriverLabels,
     UiDriverTooltips, ICON_TINY, ICON_TREE_ROW, SIZE_TINY,
 };
 #[cfg(feature = "wgpu-engine")]

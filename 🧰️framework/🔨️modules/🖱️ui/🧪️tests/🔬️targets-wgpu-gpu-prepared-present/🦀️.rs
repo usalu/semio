@@ -361,6 +361,8 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
         "world3d_painted_pipeline_translucent",
         "world3d_authored_front_pipeline",
         "world3d_authored_double_translucent_pipeline",
+        "world3d_authored_painted_double_pipeline",
+        "world3d_authored_painted_double_translucent_pipeline",
         "world3d_authored_painted_front_pipeline",
         "world3d_authored_painted_front_translucent_pipeline",
         "world3d_celebration_pipeline",
@@ -369,8 +371,16 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
         "world3d_grid_pipeline",
         "world_postprocess_pipeline",
     ];
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️encoded-world-pipelines/🔣️.json")).unwrap();
+    let expected: Vec<&str> = fixture["pipelines"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
+    assert_eq!(encoded_world_pipelines.as_slice(), expected.as_slice());
     for label in encoded_world_pipelines {
         assert!(draw_source.contains(&format!("label: Some(\"{label}\")")), "the {label} encoded-color pipeline remains registered");
+        let marker = format!("label: Some(\"{label}\")");
+        assert_eq!(draw_source.matches(&marker).count(), 1, "each encoded pipeline has one defining label");
+        let tail = draw_source.split(&marker).nth(1).unwrap();
+        let descriptor = &tail[..tail.find("cache: None,").unwrap()];
+        assert_eq!(descriptor.matches("format: world_encoded_format, blend:").count(), 1, "each pipeline targets one encoded attachment");
     }
     assert_eq!(
         draw_source.matches("format: world_encoded_format, blend:").count(),

@@ -1,6 +1,5 @@
 [
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-coincident-face-stack-fuse-large",
     "class": "third-party-generated",
     "target": {
@@ -77,7 +76,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-coincident-face-stack-fuse-small",
     "class": "third-party-generated",
     "target": {
@@ -154,7 +152,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-cut-fully-engulfed-empty",
     "class": "third-party-generated",
     "target": {
@@ -217,7 +214,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-cut-fuse-chain-large",
     "class": "third-party-generated",
     "target": {
@@ -294,7 +290,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-cut-fuse-chain-small",
     "class": "third-party-generated",
     "target": {
@@ -371,7 +366,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-cut-no-overlap-noop",
     "class": "third-party-generated",
     "target": {
@@ -448,7 +442,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-disjoint-compound-mixed-scale",
     "class": "third-party-generated",
     "target": {
@@ -525,7 +518,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-fuse-cut-intersect-three-step",
     "class": "third-party-generated",
     "target": {
@@ -602,7 +594,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-intersect-non-overlap-empty",
     "class": "third-party-generated",
     "target": {
@@ -665,7 +656,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-multistep-complex-scaled-1e4",
     "class": "third-party-generated",
     "target": {
@@ -742,7 +732,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-nested-void-double-large",
     "class": "third-party-generated",
     "target": {
@@ -819,7 +808,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-nested-void-double-small",
     "class": "third-party-generated",
     "target": {
@@ -896,7 +884,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-nested-void-single-large",
     "class": "third-party-generated",
     "target": {
@@ -973,7 +960,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-nested-void-single-small",
     "class": "third-party-generated",
     "target": {
@@ -1050,7 +1036,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-non-manifold-corner-touch-boxes",
     "class": "third-party-generated",
     "target": {
@@ -1127,7 +1112,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-tangent-cylinders-line-contact",
     "class": "third-party-generated",
     "target": {
@@ -1204,7 +1188,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-tangent-spheres-point-contact",
     "class": "third-party-generated",
     "target": {
@@ -1281,7 +1264,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "booleans-tangent-spheres-point-contact-large",
     "class": "third-party-generated",
     "target": {
@@ -1358,7 +1340,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-curve-arc-to-spline-square",
     "class": "third-party-generated",
     "target": {
@@ -1428,7 +1409,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-curve-line-to-arc-square-large",
     "class": "third-party-generated",
     "target": {
@@ -1498,7 +1478,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-curve-line-to-arc-square-small",
     "class": "third-party-generated",
     "target": {
@@ -1568,7 +1547,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-curve-line-to-spline-rectangle",
     "class": "third-party-generated",
     "target": {
@@ -1638,7 +1616,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-curve-prism-line-to-arc-large",
     "class": "third-party-generated",
     "target": {
@@ -1708,7 +1685,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-curve-prism-line-to-arc-small",
     "class": "third-party-generated",
     "target": {
@@ -1778,7 +1754,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-curve-tangent-arc-fillet-like",
     "class": "third-party-generated",
     "target": {
@@ -1848,7 +1823,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-surface-cylindrical-strip-to-bspline-large",
     "class": "third-party-generated",
     "target": {
@@ -1918,7 +1892,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-surface-cylindrical-strip-to-bspline-small",
     "class": "third-party-generated",
     "target": {
@@ -1988,7 +1961,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-surface-disk-plane-to-general",
     "class": "third-party-generated",
     "target": {
@@ -2058,7 +2030,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-surface-plane-to-bspline-pentagon",
     "class": "third-party-generated",
     "target": {
@@ -2128,7 +2099,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-surface-plane-to-bspline-square-large",
     "class": "third-party-generated",
     "target": {
@@ -2198,7 +2168,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-surface-plane-to-bspline-square-small",
     "class": "third-party-generated",
     "target": {
@@ -2268,7 +2237,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "geometry-replace-surface-plane-to-bspline-triangle",
     "class": "third-party-generated",
     "target": {
@@ -2338,7 +2306,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-inplane-shift-prism-solid-large",
     "class": "third-party-generated",
     "target": {
@@ -2408,7 +2375,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-inplane-shift-prism-solid-small",
     "class": "third-party-generated",
     "target": {
@@ -2478,7 +2444,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-inplane-shift-quad-large",
     "class": "third-party-generated",
     "target": {
@@ -2548,7 +2513,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-inplane-shift-quad-small",
     "class": "third-party-generated",
     "target": {
@@ -2618,7 +2582,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-lifts-third-corner-off-base-plane",
     "class": "third-party-generated",
     "target": {
@@ -2688,7 +2651,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-lifts-third-corner-off-base-plane-large",
     "class": "third-party-generated",
     "target": {
@@ -2758,7 +2720,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-makes-pentagon-nonplanar-rejected",
     "class": "third-party-generated",
     "target": {
@@ -2814,7 +2775,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-makes-quad-nonplanar-rejected",
     "class": "third-party-generated",
     "target": {
@@ -2870,7 +2830,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-self-intersect-bowtie-rejected",
     "class": "third-party-generated",
     "target": {
@@ -2940,7 +2899,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "move-vertex-self-intersect-bowtie-rejected-large",
     "class": "third-party-generated",
     "target": {
@@ -3010,7 +2968,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-edge-chord-across-disk",
     "class": "third-party-generated",
     "target": {
@@ -3080,7 +3037,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-edge-diagonal-across-square-large",
     "class": "third-party-generated",
     "target": {
@@ -3150,7 +3106,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-edge-diagonal-across-square-small",
     "class": "third-party-generated",
     "target": {
@@ -3220,7 +3175,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-face-caps-open-cylinder",
     "class": "third-party-generated",
     "target": {
@@ -3290,7 +3244,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-face-closes-open-box-large",
     "class": "third-party-generated",
     "target": {
@@ -3360,7 +3313,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-face-closes-open-box-small",
     "class": "third-party-generated",
     "target": {
@@ -3430,7 +3382,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-shell-from-cylinder-faces",
     "class": "third-party-generated",
     "target": {
@@ -3500,7 +3451,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-shell-second-shell-flipped-sense",
     "class": "third-party-generated",
     "target": {
@@ -3570,7 +3520,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-shell-second-shell-flipped-sense-large",
     "class": "third-party-generated",
     "target": {
@@ -3640,7 +3589,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-solid-second-disjoint-solid-large",
     "class": "third-party-generated",
     "target": {
@@ -3710,7 +3658,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-solid-second-disjoint-solid-small",
     "class": "third-party-generated",
     "target": {
@@ -3780,7 +3727,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-solid-void-boundary-as-solid",
     "class": "third-party-generated",
     "target": {
@@ -3850,7 +3796,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-vertex-apex-above-box-large",
     "class": "third-party-generated",
     "target": {
@@ -3920,7 +3865,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-vertex-apex-above-box-small",
     "class": "third-party-generated",
     "target": {
@@ -3990,7 +3934,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-build-create-vertex-three-loose-points",
     "class": "third-party-generated",
     "target": {
@@ -4060,7 +4003,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-edge-boundary-edge-rejected",
     "class": "third-party-generated",
     "target": {
@@ -4116,7 +4058,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-edge-loose-diagonal-large",
     "class": "third-party-generated",
     "target": {
@@ -4186,7 +4127,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-edge-loose-diagonal-small",
     "class": "third-party-generated",
     "target": {
@@ -4256,7 +4196,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-face-from-redundant-shell-large",
     "class": "third-party-generated",
     "target": {
@@ -4326,7 +4265,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-face-from-redundant-shell-small",
     "class": "third-party-generated",
     "target": {
@@ -4396,7 +4334,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-face-still-bounding-closed-shell-rejected",
     "class": "third-party-generated",
     "target": {
@@ -4466,7 +4403,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-shell-only-shell-of-solid-rejected",
     "class": "third-party-generated",
     "target": {
@@ -4522,7 +4458,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-shell-redundant-shell-large",
     "class": "third-party-generated",
     "target": {
@@ -4592,7 +4527,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-shell-redundant-shell-small",
     "class": "third-party-generated",
     "target": {
@@ -4662,7 +4596,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-solid-one-of-three",
     "class": "third-party-generated",
     "target": {
@@ -4732,7 +4665,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-solid-second-disjoint-solid-large",
     "class": "third-party-generated",
     "target": {
@@ -4802,7 +4734,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-solid-second-disjoint-solid-small",
     "class": "third-party-generated",
     "target": {
@@ -4872,7 +4803,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-vertex-corner-cascade-rejected",
     "class": "third-party-generated",
     "target": {
@@ -4928,7 +4858,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-vertex-loose-apex-large",
     "class": "third-party-generated",
     "target": {
@@ -4998,7 +4927,6 @@
     "reproducibilityDiffs": []
   },
   {
-    "schema": "semio.repository-test.fixture/v2",
     "id": "topology-remove-delete-vertex-loose-apex-small",
     "class": "third-party-generated",
     "target": {

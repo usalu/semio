@@ -10,7 +10,22 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Image file directory",
+          "de": "Bildverzeichnis (IFD)"
+        },
+        "description": {
+          "en": "Index of the image file directory, counted from 0.",
+          "de": "Index des Bildverzeichnisses, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

@@ -1,11 +1,13 @@
 //! 🧪️ Snapshot facet — the document's own invariants: pixel decoding, pin ordering, palette use,
 //! and the region primitives every paint mutation is built on.
 
+use crate::standards::v1::subsets::any::schema::snapshot::write_region;
+
 use super::*;
 
 fn scene() -> BitmapSnapshot {
     BitmapSnapshot {
-        input: BitmapInput { width: 3, height: 2, palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)], pixels: encode_base64(&[0, 1, 0, 1, 0, 1]) },
+        input: BitmapInput { width: 3, height: 2, palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)], pixels: ([0, 1, 0, 1, 0, 1]).to_vec() },
         output: BitmapOutputSpec { width: 4, height: 4, periodic: false },
         pinned: vec![BitmapPinnedPixel { x: 1, y: 0, color: 1 }, BitmapPinnedPixel { x: 0, y: 2, color: 0 }],
         ..BitmapSnapshot::default()
@@ -22,7 +24,7 @@ fn a_default_snapshot_names_its_own_schema_and_decodes() {
 #[test]
 fn indices_refuse_a_buffer_of_the_wrong_length() {
     let mut snapshot = scene();
-    snapshot.input.pixels = encode_base64(&[0, 1]);
+    snapshot.input.pixels = ([0, 1]).to_vec();
     assert_eq!(snapshot.input.indices(), None, "a buffer that is not width * height bytes is not this bitmap's");
 }
 

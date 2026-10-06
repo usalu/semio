@@ -20,7 +20,7 @@ const BASELINE_HAS_HEADER: bool = true;
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.csv"))?;
+    let copy = ctx.copy_input(INPUT, Some("input.csv"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input
@@ -145,7 +145,8 @@ mod subject {
     use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::mutations::apply_csv_mutation;
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_csv::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::schema::snapshot::{decode_csv, encode_csv};
+    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::{encode_csv};
+    use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::{decode_csv};
     use semio_s_artifact_stdio_csv::{CsvMutation, CsvSnapshot};
     use semio_s_artifact_stdio_csv_test_oracle::standards::v_rfc4180::subsets::any::project_csv_grid;
 

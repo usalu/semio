@@ -18,11 +18,12 @@ pub struct SetInputPixels {
     pub y: u32,
     pub width: u32,
     pub height: u32,
-    pub pixels: String,
+    #[value(with = "semio_framework_value::bytes")]
+    pub pixels: Vec<u8>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_input_pixels(x: u32, y: u32, width: u32, height: u32, pixels: String) -> BitmapMutation {
+pub fn set_input_pixels(x: u32, y: u32, width: u32, height: u32, pixels: Vec<u8>) -> BitmapMutation {
     BitmapMutation::SetInputPixels(SetInputPixels { x, y, width, height, pixels })
 }
 

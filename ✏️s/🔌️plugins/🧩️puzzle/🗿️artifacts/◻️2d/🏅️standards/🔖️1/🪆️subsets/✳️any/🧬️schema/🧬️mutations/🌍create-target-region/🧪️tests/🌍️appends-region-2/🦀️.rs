@@ -1,4 +1,4 @@
-//! 🧪️ `create-target-region` fixture — `🌍️appends-region-2`.
+//! 🧪️ `create-target-region` snapshot — `🌍️appends-region-2`.
 //!
 //! Paints a second fill-constraining rectangle onto the alpha board. `region-2` carries no label, so that `Option` stays absent from the wire form the builder puts in `added`.
 //!
@@ -45,7 +45,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

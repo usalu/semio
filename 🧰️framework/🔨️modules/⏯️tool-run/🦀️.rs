@@ -11,7 +11,7 @@ use semio_framework_dsl_record::RecordLayout;
 use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_dsl_record::Shape;
-use dsl::os_pack::{decode_record_body_exact, encode_record_body, DecodeOptions, EncodeOptions};
+use pack::record::{decode_record_body_exact, encode_record_body, DecodeOptions, EncodeOptions};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};

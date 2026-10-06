@@ -2,7 +2,7 @@
 
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::standards::v1::subsets::any::schema::host_operations;
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{change_slider_value, move_nodes};
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
 use crate::Generation2dSnapshot;

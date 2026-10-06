@@ -16,7 +16,7 @@
 //! position must lie in `lon ∈ [−180, 180]`, `lat ∈ [−90, 90]` (projected metres written without a
 //! `crs` fail here rather than land in the ocean off Africa). The writer never writes `crs`.
 
-use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, JsonSnapshot, JsonValue};
+use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonSnapshot, JsonValue};
 use serde_json::{Map, Number, Value};
 
 //#region 🔹Model
@@ -90,65 +90,17 @@ const WEB_MERCATOR_RADIUS: f64 = 6_378_137.0;
 /// 🪜️ Nesting bound for GeometryCollections (RFC 7946 §3.1.8 advises against nesting at all).
 const MAXIMUM_GEOMETRY_DEPTH: usize = 32;
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn fail<T>(path: &str, message: impl Into<String>) -> Result<T, GeoJsonError> {
-    Err(GeoJsonError { path: path.into(), message: message.into() })
-}
 
-/// 🔑️ The member `key` of an object (the last one when a name repeats, as RFC 8259 readers commonly do).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn member<'a>(value: &'a JsonValue, key: &str) -> Option<&'a JsonValue> {
-    match value {
-        JsonValue::Object { members } => members.iter().rev().find(|member| member.key == key).map(|member| &member.value),
-        _ => None,
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn text(value: Option<&JsonValue>) -> Option<&str> {
-    match value {
-        Some(JsonValue::String { value }) => Some(value),
-        _ => None,
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn items(value: Option<&JsonValue>) -> Option<&[JsonValue]> {
-    match value {
-        Some(JsonValue::Array { items }) => Some(items),
-        _ => None,
-    }
-}
 
-/// 🔢️ A number lexeme read with Rust's correctly rounded decimal conversion — the lexeme is the
-/// document's own text, so no intermediate parser can move a coordinate by an ulp.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn number(value: &JsonValue) -> Option<f64> {
-    match value {
-        JsonValue::Number { lexeme } => lexeme.parse::<f64>().ok().filter(|number| number.is_finite()),
-        _ => None,
-    }
-}
 
-/// 🌉️ A JSON value as `serde_json` holds it, numbers converted from their lexeme exactly: integers as
-/// integers, everything else through the correctly rounded `f64` reading.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn exact_serde_value(value: &JsonValue) -> Value {
-    match value {
-        JsonValue::Null => Value::Null,
-        JsonValue::Bool { value } => Value::Bool(*value),
-        JsonValue::Number { lexeme } => lexeme
-            .parse::<u64>()
-            .map(Number::from)
-            .or_else(|_| lexeme.parse::<i64>().map(Number::from))
-            .ok()
-            .or_else(|| lexeme.parse::<f64>().ok().and_then(Number::from_f64))
-            .map_or(Value::Null, Value::Number),
-        JsonValue::String { value } => Value::String(value.clone()),
-        JsonValue::Array { items } => Value::Array(items.iter().map(exact_serde_value).collect()),
-        JsonValue::Object { members } => Value::Object(members.iter().map(|member| (member.key.clone(), exact_serde_value(&member.value))).collect()),
-    }
-}
+
+
+
+
+
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn source_crs(root: &JsonValue) -> Result<GeoJsonSourceCrs, GeoJsonError> {
@@ -165,71 +117,125 @@ fn source_crs(root: &JsonValue) -> Result<GeoJsonSourceCrs, GeoJsonError> {
     }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn position(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str) -> Result<GeoJsonPosition, GeoJsonError> {
-    let Some(coordinates) = items(Some(value)) else { return fail(path, "a position is an array of numbers") };
-    if coordinates.len() < 2 {
-        return fail(path, "a position has at least longitude and latitude");
-    }
-    let mut numbers = Vec::with_capacity(coordinates.len());
-    for (index, coordinate) in coordinates.iter().enumerate() {
-        let Some(value) = number(coordinate) else { return fail(&format!("{path}/{index}"), "a coordinate is a finite number") };
-        numbers.push(value);
-    }
-    if crs == GeoJsonSourceCrs::WebMercator {
-        numbers[0] = (numbers[0] / WEB_MERCATOR_RADIUS).to_degrees();
-        numbers[1] = (2.0 * (numbers[1] / WEB_MERCATOR_RADIUS).exp().atan() - std::f64::consts::FRAC_PI_2).to_degrees();
-    }
-    wgs84_range(&numbers, path)?;
-    Ok(numbers)
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn wgs84_range(position: &[f64], path: &str) -> Result<(), GeoJsonError> {
-    if !(-180.0..=180.0).contains(&position[0]) || !(-90.0..=90.0).contains(&position[1]) {
-        return fail(path, format!("[{}, {}] is not a WGS 84 longitude/latitude (lon ∈ [−180, 180], lat ∈ [−90, 90])", position[0], position[1]));
-    }
-    Ok(())
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn positions(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, minimum: usize, what: &str) -> Result<Vec<GeoJsonPosition>, GeoJsonError> {
-    let Some(list) = items(Some(value)) else { return fail(path, format!("{what} coordinates are an array of positions")) };
-    if list.len() < minimum {
-        return fail(path, format!("{what} needs at least {minimum} positions"));
-    }
-    list.iter().enumerate().map(|(index, item)| position(item, crs, &format!("{path}/{index}"))).collect()
-}
 
-/// 📐️ Twice the signed planar area of a closed ring (shoelace) — positive for counter-clockwise.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ring_signed_area2(ring: &[GeoJsonPosition]) -> f64 {
-    ring.windows(2).map(|pair| pair[0][0] * pair[1][1] - pair[1][0] * pair[0][1]).sum()
-}
 
+
+
+
+
+
+
+
+
+
+
+/// 📖️ Reads an RFC 7946 GeoJSON document (the lexeme-exact `JsonValue` of the base subset's parser)
+/// under this module's coordinate reference policy. Foreign members and `bbox` carry nothing into the
+/// model; they are dropped.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn polygon(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, left_handed: &mut usize) -> Result<Vec<Vec<GeoJsonPosition>>, GeoJsonError> {
-    let Some(rings) = items(Some(value)) else { return fail(path, "Polygon coordinates are an array of linear rings") };
-    if rings.is_empty() {
-        return fail(path, "a Polygon has an exterior ring");
-    }
-    let mut out = Vec::with_capacity(rings.len());
-    for (index, ring) in rings.iter().enumerate() {
-        let ring_path = format!("{path}/{index}");
-        let ring = positions(ring, crs, &ring_path, 4, "a linear ring")?;
-        if ring.first() != ring.last() {
-            return fail(&ring_path, "a linear ring is closed: its first and last positions are identical (RFC 7946 §3.1.6)");
+pub fn read_geojson(root: &JsonValue) -> Result<GeoJsonRead, GeoJsonError> {
+    let source_crs = source_crs(root)?;
+    let mut left_handed_rings = 0;
+    let features = match text(member(root, "type")) {
+        Some("FeatureCollection") => {
+            let Some(members) = items(member(root, "features")) else { return fail("/features", "a FeatureCollection has a `features` array") };
+            members.iter().enumerate().map(|(index, part)| feature(part, source_crs, &format!("/features/{index}"), &mut left_handed_rings)).collect::<Result<_, _>>()?
         }
-        if (ring_signed_area2(&ring) > 0.0) != (index == 0) {
-            *left_handed += 1;
-        }
-        out.push(ring);
+        Some("Feature") => vec![feature(root, source_crs, "", &mut left_handed_rings)?],
+        Some(_) => vec![GeoJsonFeature { id: None, geometry: Some(geometry(root, source_crs, "", 0, &mut left_handed_rings)?), properties: None }],
+        None => return fail("/type", "a GeoJSON object has a string `type`"),
+    };
+    Ok(GeoJsonRead { features, source_crs, left_handed_rings })
+}
+
+
+//#endregion 🔖️Reader
+
+//#region 🔖️Writer
+
+
+
+
+
+
+
+
+
+
+
+//#endregion 🔖️Writer
+
+//#region 🔖️Conformance
+pub const CODE_NOT_GEOJSON: &str = "stdio.json.geojson.not-rfc7946";
+pub const CODE_LEGACY_CRS: &str = "stdio.json.geojson.legacy-crs";
+pub const CODE_LEFT_HANDED_RING: &str = "stdio.json.geojson.left-handed-ring";
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diagnostic(code: &'static str, severity: semio_framework_diagnostic::Severity, message: String) -> semio_framework_diagnostic::Diagnostic {
+    semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(code), severity, span: semio_framework_diagnostic::TextSpan::at(1, 1), message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }
+}
+
+/// 🛡️ Applies the semantic RFC7946 constraints without a storage authority.
+pub fn check_geojson_conformance(snapshot:&JsonSnapshot)->Vec<semio_framework_diagnostic::Diagnostic>{check_geojson_conformance_with_control(snapshot,&mut conformance::UnboundedGeoJsonConformance).expect("unbounded semantic GeoJSON conformance")}
+
+//#endregion 🔖️Conformance
+
+//#region 🏗️DerivedConstruction
+
+//#endregion 🏗️DerivedConstruction
+
+//#region 🧐️DerivedAnalysis
+
+//#endregion 🧐️DerivedAnalysis
+
+//#region 🧬️DerivedArtifactFacets
+
+//#endregion 🧬️DerivedArtifactFacets
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests
+
+#[path="🛡️conformance/🦀️.rs"]
+mod conformance;
+pub use conformance::{GeoJsonConformanceControl,check_geojson_conformance_with_control};
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn fail<T>(path: &str, message: impl Into<String>) -> Result<T, GeoJsonError> {
+    Err(GeoJsonError { path: path.into(), message: message.into() })
+}
+
+/// 🔑️ The member `key` of an object (the last one when a name repeats, as RFC 8259 readers commonly do).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn member<'a>(value: &'a JsonValue, key: &str) -> Option<&'a JsonValue> {
+    match value {
+        JsonValue::Object { members } => members.iter().rev().find(|member| member.key == key).map(|member| &member.value),
+        _ => None,
     }
-    Ok(out)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn geometry(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, depth: usize, left_handed: &mut usize) -> Result<GeoJsonGeometry, GeoJsonError> {
+pub(crate) fn text(value: Option<&JsonValue>) -> Option<&str> {
+    match value {
+        Some(JsonValue::String { value }) => Some(value),
+        _ => None,
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn items(value: Option<&JsonValue>) -> Option<&[JsonValue]> {
+    match value {
+        Some(JsonValue::Array { items }) => Some(items),
+        _ => None,
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn geometry(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, depth: usize, left_handed: &mut usize) -> Result<GeoJsonGeometry, GeoJsonError> {
     if depth > MAXIMUM_GEOMETRY_DEPTH {
         return fail(path, format!("GeometryCollections nest deeper than {MAXIMUM_GEOMETRY_DEPTH}"));
     }
@@ -253,7 +259,7 @@ fn geometry(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, depth: usize, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn feature(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, left_handed: &mut usize) -> Result<GeoJsonFeature, GeoJsonError> {
+pub(crate) fn feature(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, left_handed: &mut usize) -> Result<GeoJsonFeature, GeoJsonError> {
     if text(member(value, "type")) != Some("Feature") {
         return fail(&format!("{path}/type"), "a feature has `\"type\": \"Feature\"`");
     }
@@ -283,79 +289,67 @@ fn feature(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, left_handed: &m
     Ok(GeoJsonFeature { id, geometry, properties })
 }
 
-/// 📖️ Reads an RFC 7946 GeoJSON document (the lexeme-exact `JsonValue` of the base subset's parser)
-/// under this module's coordinate reference policy. Foreign members and `bbox` carry nothing into the
-/// model; they are dropped.
+/// 🔢️ A number lexeme read with Rust's correctly rounded decimal conversion — the lexeme is the
+/// document's own text, so no intermediate parser can move a coordinate by an ulp.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn read_geojson(root: &JsonValue) -> Result<GeoJsonRead, GeoJsonError> {
-    let source_crs = source_crs(root)?;
-    let mut left_handed_rings = 0;
-    let features = match text(member(root, "type")) {
-        Some("FeatureCollection") => {
-            let Some(members) = items(member(root, "features")) else { return fail("/features", "a FeatureCollection has a `features` array") };
-            members.iter().enumerate().map(|(index, part)| feature(part, source_crs, &format!("/features/{index}"), &mut left_handed_rings)).collect::<Result<_, _>>()?
-        }
-        Some("Feature") => vec![feature(root, source_crs, "", &mut left_handed_rings)?],
-        Some(_) => vec![GeoJsonFeature { id: None, geometry: Some(geometry(root, source_crs, "", 0, &mut left_handed_rings)?), properties: None }],
-        None => return fail("/type", "a GeoJSON object has a string `type`"),
-    };
-    Ok(GeoJsonRead { features, source_crs, left_handed_rings })
+pub(crate) fn number(value: &JsonValue) -> Option<f64> {
+    match value {
+        JsonValue::Number { lexeme } => lexeme.parse::<f64>().ok().filter(|number| number.is_finite()),
+        _ => None,
+    }
 }
 
-/// 📖️ [`read_geojson`] over GeoJSON text, parsed by the base subset's own lexeme-preserving parser.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn read_geojson_text(text: &str) -> Result<GeoJsonRead, GeoJsonError> {
-    let root = parse_json_text(text).map_err(|error| GeoJsonError { path: String::new(), message: format!("not a JSON text: {error}") })?;
-    read_geojson(&root)
-}
-//#endregion 🔖️Reader
-
-//#region 🔖️Writer
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn position_value(position: &GeoJsonPosition, path: &str) -> Result<Value, GeoJsonError> {
-    if position.len() < 2 {
+pub(crate) fn position(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str) -> Result<GeoJsonPosition, GeoJsonError> {
+    let Some(coordinates) = items(Some(value)) else { return fail(path, "a position is an array of numbers") };
+    if coordinates.len() < 2 {
         return fail(path, "a position has at least longitude and latitude");
     }
-    let numbers = position.iter().map(|number| Number::from_f64(*number).map(Value::Number)).collect::<Option<Vec<_>>>();
-    let Some(numbers) = numbers else { return fail(path, "a coordinate is a finite number") };
-    wgs84_range(position, path)?;
-    Ok(Value::Array(numbers))
+    let mut numbers = Vec::with_capacity(coordinates.len());
+    for (index, coordinate) in coordinates.iter().enumerate() {
+        let Some(value) = number(coordinate) else { return fail(&format!("{path}/{index}"), "a coordinate is a finite number") };
+        numbers.push(value);
+    }
+    if crs == GeoJsonSourceCrs::WebMercator {
+        numbers[0] = (numbers[0] / WEB_MERCATOR_RADIUS).to_degrees();
+        numbers[1] = (2.0 * (numbers[1] / WEB_MERCATOR_RADIUS).exp().atan() - std::f64::consts::FRAC_PI_2).to_degrees();
+    }
+    wgs84_range(&numbers, path)?;
+    Ok(numbers)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn positions_value(positions: &[GeoJsonPosition], path: &str, minimum: usize, what: &str) -> Result<Value, GeoJsonError> {
-    if positions.len() < minimum {
+pub(crate) fn positions(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, minimum: usize, what: &str) -> Result<Vec<GeoJsonPosition>, GeoJsonError> {
+    let Some(list) = items(Some(value)) else { return fail(path, format!("{what} coordinates are an array of positions")) };
+    if list.len() < minimum {
         return fail(path, format!("{what} needs at least {minimum} positions"));
     }
-    positions.iter().enumerate().map(|(index, position)| position_value(position, &format!("{path}/{index}"))).collect::<Result<Vec<_>, _>>().map(Value::Array)
-}
-
-/// 🔁️ A ring as RFC 7946 writes it: closed (the first position repeated when it is not already) and
-/// wound by the right-hand rule — counter-clockwise for the exterior, clockwise for holes (§3.1.6).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn right_handed_ring(ring: &[GeoJsonPosition], exterior: bool) -> Vec<GeoJsonPosition> {
-    let mut closed = ring.to_vec();
-    if let (Some(first), Some(last)) = (ring.first(), ring.last()) {
-        if first != last {
-            closed.push(first.clone());
-        }
-    }
-    if (ring_signed_area2(&closed) > 0.0) != exterior {
-        closed.reverse();
-    }
-    closed
+    list.iter().enumerate().map(|(index, item)| position(item, crs, &format!("{path}/{index}"))).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn polygon_value(rings: &[Vec<GeoJsonPosition>], path: &str) -> Result<Value, GeoJsonError> {
+pub(crate) fn polygon(value: &JsonValue, crs: GeoJsonSourceCrs, path: &str, left_handed: &mut usize) -> Result<Vec<Vec<GeoJsonPosition>>, GeoJsonError> {
+    let Some(rings) = items(Some(value)) else { return fail(path, "Polygon coordinates are an array of linear rings") };
     if rings.is_empty() {
         return fail(path, "a Polygon has an exterior ring");
     }
-    rings.iter().enumerate().map(|(index, ring)| positions_value(&right_handed_ring(ring, index == 0), &format!("{path}/{index}"), 4, "a linear ring")).collect::<Result<Vec<_>, _>>().map(Value::Array)
+    let mut out = Vec::with_capacity(rings.len());
+    for (index, ring) in rings.iter().enumerate() {
+        let ring_path = format!("{path}/{index}");
+        let ring = positions(ring, crs, &ring_path, 4, "a linear ring")?;
+        if ring.first() != ring.last() {
+            return fail(&ring_path, "a linear ring is closed: its first and last positions are identical (RFC 7946 §3.1.6)");
+        }
+        if (ring_signed_area2(&ring) > 0.0) != (index == 0) {
+            *left_handed += 1;
+        }
+        out.push(ring);
+    }
+    Ok(out)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn geometry_value(geometry: &GeoJsonGeometry, path: &str) -> Result<Value, GeoJsonError> {
+pub(crate) fn geometry_value(geometry: &GeoJsonGeometry, path: &str) -> Result<Value, GeoJsonError> {
     let coordinates_path = format!("{path}/coordinates");
     let (kind, coordinates) = match geometry {
         GeoJsonGeometry::Point(position) => ("Point", position_value(position, &coordinates_path)?),
@@ -372,169 +366,37 @@ fn geometry_value(geometry: &GeoJsonGeometry, path: &str) -> Result<Value, GeoJs
     Ok(serde_json::json!({ "type": kind, "coordinates": coordinates }))
 }
 
-/// 📤️ Writes `features` as one RFC 7946 FeatureCollection: WGS 84 only (no `crs`), rings closed and
-/// right-handed, `properties` always present (`null` when absent), `id` only when the feature has one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn write_geojson(features: &[GeoJsonFeature]) -> Result<Value, GeoJsonError> {
-    let mut written = Vec::with_capacity(features.len());
-    for (index, feature) in features.iter().enumerate() {
-        let path = format!("/features/{index}");
-        let mut object = Map::new();
-        object.insert("type".into(), Value::String("Feature".into()));
-        match &feature.id {
-            Some(GeoJsonId::Text(text)) => {
-                object.insert("id".into(), Value::String(text.clone()));
-            }
-            Some(GeoJsonId::Number(number)) => {
-                object.insert("id".into(), Value::Number(number.clone()));
-            }
-            None => {}
-        }
-        object.insert("geometry".into(), feature.geometry.as_ref().map(|geometry| geometry_value(geometry, &format!("{path}/geometry"))).transpose()?.unwrap_or(Value::Null));
-        object.insert("properties".into(), feature.properties.clone().map(Value::Object).unwrap_or(Value::Null));
-        written.push(Value::Object(object));
+pub(crate) fn wgs84_range(position: &[f64], path: &str) -> Result<(), GeoJsonError> {
+    if !(-180.0..=180.0).contains(&position[0]) || !(-90.0..=90.0).contains(&position[1]) {
+        return fail(path, format!("[{}, {}] is not a WGS 84 longitude/latitude (lon ∈ [−180, 180], lat ∈ [−90, 90])", position[0], position[1]));
     }
-    Ok(serde_json::json!({ "type": "FeatureCollection", "features": written }))
+    Ok(())
 }
-//#endregion 🔖️Writer
-
-//#region 🔖️Conformance
-pub const CODE_NOT_GEOJSON: &str = "stdio.json.geojson.not-rfc7946";
-pub const CODE_LEGACY_CRS: &str = "stdio.json.geojson.legacy-crs";
-pub const CODE_LEFT_HANDED_RING: &str = "stdio.json.geojson.left-handed-ring";
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diagnostic(code: &'static str, severity: semio_framework_diagnostic::Severity, message: String) -> semio_framework_diagnostic::Diagnostic {
-    semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(code), severity, span: semio_framework_diagnostic::TextSpan::at(1, 1), message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }
+pub(crate) fn position_value(position: &GeoJsonPosition, path: &str) -> Result<Value, GeoJsonError> {
+    if position.len() < 2 {
+        return fail(path, "a position has at least longitude and latitude");
+    }
+    let numbers = position.iter().map(|number| Number::from_f64(*number).map(Value::Number)).collect::<Option<Vec<_>>>();
+    let Some(numbers) = numbers else { return fail(path, "a coordinate is a finite number") };
+    wgs84_range(position, path)?;
+    Ok(Value::Array(numbers))
 }
 
-/// 🛡️ RFC 7946 conformance of one decoded `JsonSnapshot`: an unreadable document is a hard error; a
-/// GJ2008 `crs` member (removed by §4) and rings against the right-hand rule (a §3.1.6 SHOULD) are soft.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn check_geojson_conformance(snapshot: &JsonSnapshot) -> Vec<semio_framework_diagnostic::Diagnostic> {
-    let mut proceed=|_|true;
-    let mut control=semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut proceed,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{max_rows:usize::MAX,..semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()});
-    check_geojson_conformance_controlled(snapshot,&mut control).expect("borrowed GeoJSON conformance without cancellation")
+pub(crate) fn positions_value(positions: &[GeoJsonPosition], path: &str, minimum: usize, what: &str) -> Result<Value, GeoJsonError> {
+    if positions.len() < minimum {
+        return fail(path, format!("{what} needs at least {minimum} positions"));
+    }
+    positions.iter().enumerate().map(|(index, position)| position_value(position, &format!("{path}/{index}"))).collect::<Result<Vec<_>, _>>().map(Value::Array)
 }
-//#endregion 🔖️Conformance
 
-//#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use super::check_geojson_conformance;
-    use crate::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
-    use crate::standards::v_rfc8259::subsets::base::schema::mutations::JsonMutation;
-    use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
-
-    /// 🏗️ The base subset's mutation vocabulary over the shared `JsonSnapshot`; only the build gate is
-    /// this subset's own: a snapshot that is not RFC 7946 GeoJSON never builds.
-    #[derive(Clone, Debug, Default)]
-    pub struct JsonGeoJsonBuilderConstruction {
-        snapshot: JsonSnapshot,
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn polygon_value(rings: &[Vec<GeoJsonPosition>], path: &str) -> Result<Value, GeoJsonError> {
+    if rings.is_empty() {
+        return fail(path, "a Polygon has an exterior ring");
     }
-
-    impl ArtifactBuilder for JsonGeoJsonBuilderConstruction {
-        type Snapshot = JsonSnapshot;
-        type Mutation = JsonMutation;
-        type Diff = JsonDiff;
-
-        fn empty() -> Self {
-            Self { snapshot: JsonSnapshot::from_value(serde_json::json!({ "type": "FeatureCollection", "features": [] })) }
-        }
-
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot }
-        }
-
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { snapshot: <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)? })
-        }
-
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { snapshot: <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes)? })
-        }
-
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = crate::schema::mutations::apply_json_mutation(&mut self.snapshot, &mutation);
-            (self, outcome)
-        }
-
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot)?;
-            Ok(self)
-        }
-
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            let hard: Vec<semio_framework_diagnostic::Diagnostic> = check_geojson_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).collect();
-            if hard.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(hard)
-            }
-        }
-    }
+    rings.iter().enumerate().map(|(index, ring)| positions_value(&right_handed_ring(ring, index == 0), &format!("{path}/{index}"), 4, "a linear ring")).collect::<Result<Vec<_>, _>>().map(Value::Array)
 }
-pub use derived_construction::*;
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use super::check_geojson_conformance;
-    use crate::standards::v_rfc8259::subsets::base::schema::JsonAnalyzer as JsonAnyAnalyzer;
-    use crate::standards::v_rfc8259::subsets::base::schema::JsonParts;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
-
-    /// 🎯️ This subset's dialect coordinate.
-    pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("geojson") };
-
-    /// 🧐️ The base analyzer's real parse, with RFC 7946 conformance folded on top.
-    pub struct JsonGeoJsonAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for JsonGeoJsonAnalyzerAnalysis {
-        type Parts = JsonParts;
-        const DIALECT: Dialect = DIALECT;
-
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            JsonAnyAnalyzer::sniff(source)
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = JsonAnyAnalyzer::analyze(sources);
-            let mut diagnostics = inner.diagnostics.clone();
-            let mut confidence = inner.confidence;
-            if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_geojson_conformance(snapshot);
-                if checks.iter().any(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-                    confidence = IoConfidence::Low;
-                }
-                diagnostics.extend(checks);
-            }
-            Analysis { parts: inner.parts, dialect: DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec JsonGeoJsonBuilderFacets {
-        construction: JsonGeoJsonBuilderConstruction,
-        analysis: JsonGeoJsonAnalyzerAnalysis,
-        composition: crate::standards::v_rfc8259::subsets::geojson::io::derived_composition::JsonGeoJsonComposerComposition,
-    }
-    builder: JsonGeoJsonBuilder,
-    analyzer: JsonGeoJsonAnalyzer,
-    composer: JsonGeoJsonComposer,
-);
-//#endregion 🧬️DerivedArtifactFacets
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite_conformance;
-pub use sqlite_conformance::check_geojson_conformance_controlled;

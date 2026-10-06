@@ -1,4 +1,4 @@
-import { parseBinary64, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ StlSnapshot schema — complete per the ASCII STL spec
  * (https://en.wikipedia.org/wiki/STL_(file_format)): `solid`/`endsolid` header/trailer name plus
  * an ordered, self-contained (non-index-shared) triangle list. */

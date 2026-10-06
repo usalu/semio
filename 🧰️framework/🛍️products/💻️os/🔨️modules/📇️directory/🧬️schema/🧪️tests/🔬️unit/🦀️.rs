@@ -12,7 +12,7 @@ fn intrinsic_bytes_are_refused_by_the_directory_json_event_mirror() {
 
 #[test]
 fn directory_session_authority_v1_matches_neutral_corpus_and_binding_goldens() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
     for row in fixture["rows"].as_array().expect("rows") {
         let parsed = serde_json::from_value::<DirectorySessionAuthorityV1>(row["value"].clone()).ok().filter(DirectorySessionAuthorityV1::validate);
         assert_eq!(parsed.is_some(), row["accepted"].as_bool().expect("accepted"), "{}", row["id"]);

@@ -1,0 +1,21 @@
+[
+ {"name":"fresh source","source":"fill then stroke source over","phase":"preparing","steps":0,"mode":"live"},
+ {"name":"partially converted source","source":"fill then stroke source over","phase":"preparing","steps":2,"mode":"live"},
+ {"name":"active flattening","source":"fill then stroke source over","phase":"flattening","steps":1,"mode":"live"},
+ {"name":"closing actual flattener","source":"fill then stroke source over","phase":"flattenCleanup","steps":1,"mode":"live"},
+ {"name":"partially copied contours","source":"fill then stroke source over","phase":"contours","steps":1,"mode":"live"},
+ {"name":"retiring copied flat owners","source":"fill then stroke source over","phase":"contoursCleanup","steps":1,"mode":"live"},
+ {"name":"active stroke outline","source":"fill then stroke source over","phase":"stroke","steps":3,"mode":"live"},
+ {"name":"closing actual stroke","source":"fill then stroke source over","phase":"strokeCleanup","steps":1,"mode":"live"},
+ {"name":"active fill sweep","source":"fill then stroke source over","phase":"fillCoverage","steps":3,"mode":"live"},
+ {"name":"closing actual fill sweep","source":"fill then stroke source over","phase":"fillCoverageCleanup","steps":1,"mode":"live"},
+ {"name":"active stroke sweep","source":"fill then stroke source over","phase":"strokeCoverage","steps":3,"mode":"live"},
+ {"name":"closing actual stroke sweep","source":"fill then stroke source over","phase":"strokeCoverageCleanup","steps":1,"mode":"live"},
+ {"name":"private painted candidate","source":"fill then stroke source over","phase":"painting","steps":1,"mode":"live"},
+ {"name":"complete valid pixels","source":"fill then stroke source over","phase":"complete","steps":0,"mode":"live"},
+ {"name":"cancelled closing stroke","source":"fill then stroke source over","phase":"strokeCleanup","steps":1,"mode":"cancelled"},
+ {"name":"complete unpublished cancellation","source":"fill then stroke source over","phase":"complete","steps":0,"mode":"cancelled"},
+ {"name":"published cancellation","source":"fill then stroke source over","phase":"complete","steps":0,"mode":"published"},
+ {"name":"sticky failed geometry","source":"fill then stroke source over","phase":"flattening","steps":0,"mode":"failure"},
+ {"name":"completed genuine gradient ramp","source":"local linear gradient","phase":"complete","steps":0,"mode":"live"}
+]

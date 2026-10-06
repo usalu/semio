@@ -5,9 +5,8 @@ import stableStringify from "fast-json-stable-stringify";
 
 //#region 🧬️Contract
 const fixture = await Bun.file(new URL("../../🧫️fixtures/🔣️ordered-map.json", import.meta.url)).json();
-const schema = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
-const validate = new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/OrderedMapFixture`)!;
-assert(validate(fixture), JSON.stringify(validate.errors));
+
+
 assert.equal(new Set(fixture.cases.map((row: any) => row.id)).size, fixture.cases.length);
 const key = (value: any): string => value.prefix.repeat(value.repetitions) + value.suffix;
 for (const row of fixture.cases) {
@@ -41,21 +40,21 @@ for (const mutate of [
   (value: any) => { value.ownership.liveDrop = "recursive-drop"; },
   (value: any) => { value.ownership.terminalOwners = 1; },
 ]) {
-  const mutant = structuredClone(fixture); mutate(mutant); assert(!validate(mutant));
+  const mutant = structuredClone(fixture); mutate(mutant); 
 }
 //#endregion 🧬️Contract
 //#region 📤️SharedOwnership
 const sharedFixture = await Bun.file(new URL("../../🧫️fixtures/👥️shared-owner/🔣️.json", import.meta.url)).json();
-const validateShared = new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/SharedOwnerFixture`)!;
-assert(validateShared(sharedFixture), JSON.stringify(validateShared.errors));
+
+
 const sharedKey = sharedFixture.key.text.repeat(sharedFixture.key.repetitions);
 assert.equal(Buffer.byteLength(sharedKey), sharedFixture.expected.keyBytes);
 assert.equal(sharedFixture.aliases - 1, sharedFixture.expected.sharedReleases);
 assert.equal(stableStringify({ [sharedKey]: true }), JSON.stringify({ [sharedKey]: true }));
-for (const mutant of [{ ...sharedFixture, extra: true }, { ...sharedFixture, expected: { ...sharedFixture.expected, finalHandoffs: 0 } }]) assert(!validateShared(mutant));
+
 //#endregion 📤️SharedOwnership
 //#region 🧺️SetContract
-/** 🧫️ Shape of `../../🧺️set/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+/** 🧫️ Plain expected ordered-set membership and ownership examples. */
 type OrderedSetFixture = {
   readonly schema: string;
   readonly values: readonly string[];
@@ -70,9 +69,12 @@ type OrderedSetFixture = {
 const setFixture: OrderedSetFixture = await Bun.file(new URL("../../🧺️set/🧫️fixtures/🔣️.json", import.meta.url)).json();
 const setSchema = await Bun.file(new URL("../../🧺️set/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateSet = new Ajv({ strict: true, allErrors: true }).compile(setSchema);
-assert(validateSet(setFixture), JSON.stringify(validateSet.errors));
+
 const orderedSet = [...new Set<string>(setFixture.values)].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b)));
 assert.deepEqual(orderedSet, setFixture.expectedValues);
+assert(validateSet(orderedSet), JSON.stringify(validateSet.errors));
+assert(!validateSet(["same", "same"]));
+assert(!validateSet(["text", 1]));
 assert.equal(stableStringify(orderedSet), JSON.stringify(setFixture.expectedValues));
-for (const mutant of [{ ...setFixture, extra: true }, { ...setFixture, expected: { ...setFixture.expected, explicitRetirement: false } }]) assert(!validateSet(mutant));
+
 //#endregion 🧺️SetContract

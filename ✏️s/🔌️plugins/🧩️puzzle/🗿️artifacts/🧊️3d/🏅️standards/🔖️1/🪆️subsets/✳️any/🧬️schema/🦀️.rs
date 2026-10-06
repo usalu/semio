@@ -109,123 +109,21 @@ pub fn puzzle3d_artifact_schema_descriptor() -> ::semio_framework_schema_registr
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{Puzzle3dDiff, Puzzle3dMutation, Puzzle3dSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Puzzle3dBuilderConstruction {
-        snapshot: Puzzle3dSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for Puzzle3dBuilderConstruction {
-        type Snapshot = Puzzle3dSnapshot;
-        type Mutation = Puzzle3dMutation;
-        type Diff = Puzzle3dDiff;
-        fn empty() -> Self {
-            Self { snapshot: Puzzle3dSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { snapshot: <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { snapshot: <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::Puzzle3dSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Puzzle3dParts {
-        pub snapshot: Option<Puzzle3dSnapshot>,
-    }
-
-    pub struct Puzzle3dAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for Puzzle3dAnalyzerAnalysis {
-        type Parts = Puzzle3dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.puzzle.puzzle3d", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = Puzzle3dParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec Puzzle3dBuilderFacets {
-        construction: Puzzle3dBuilderConstruction,
-        analysis: Puzzle3dAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::Puzzle3dComposerComposition,
-    }
-    builder: Puzzle3dBuilder,
-    analyzer: Puzzle3dAnalyzer,
-    composer: Puzzle3dComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️PrecomputeModel
 // ⚙️➡️🧬️ Rehomed from the former `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
 // the pure data shapes the interactive brush/fill precompute session (now `crate::editor::puzzle3d::precompute`)
-// exchanges with its host — the kind catalogs, the host rules/weights, the `Fixture`/`SceneConfig` wire
+// exchanges with its host — the kind catalogs, the host rules/weights, the `EngineSceneSnapshot`/`SceneConfig` wire
 // projection `Puzzle3dEngineCommand::SetScene` carries, and the brush/fill readouts. An artifact is a schema
 // plus an io system, never an engine — the actual stateful session lives app-side; this is its data.
 pub(crate) type Quat = [f64; 4];
@@ -425,7 +323,7 @@ pub struct CableKindCatalog {
 }
 
 /// 🗂️ The compile-time-catalog side of a scene: object/vortex/cable kind rows, reachable through
-/// `apply_brush_placement_to_fixture`'s public signature.
+/// `apply_brush_placement_to_snapshot`'s public signature.
 #[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct KindCatalogBundle {
@@ -453,7 +351,7 @@ pub struct VortexProps {
 
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-pub struct FixtureObject {
+pub struct EngineSceneObject {
     pub id: String,
     #[cfg_attr(test, serde(rename = "objectKind", default))]
     #[value(rename = "objectKind", default)]
@@ -524,16 +422,16 @@ pub struct WorldVolumeProps {
 }
 
 /// 🏗️ A puzzle-3d scene's object/attraction/target-volume state, reachable through
-/// `apply_brush_placement_to_fixture`'s public signature.
+/// `apply_brush_placement_to_snapshot`'s public signature.
 #[derive(Debug, Clone, PartialEq, Default, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-pub struct Fixture {
+pub struct EngineSceneSnapshot {
     #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub attractions: Vec<AttractionProps>,
     #[cfg_attr(test, serde(default))]
     #[value(default)]
-    pub objects: Vec<FixtureObject>,
+    pub objects: Vec<EngineSceneObject>,
     #[cfg_attr(test, serde(default, rename = "targetVolumes"))]
     #[value(default, rename = "targetVolumes")]
     pub target_volumes: Vec<WorldVolumeProps>,
@@ -545,7 +443,9 @@ pub struct Fixture {
 #[derive(Debug, Clone, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub struct SceneConfig {
-    pub(crate) fixture: Fixture,
+    #[cfg_attr(test, serde(rename = "sceneSnapshot"))]
+    #[value(rename = "sceneSnapshot")]
+    pub(crate) scene_snapshot: EngineSceneSnapshot,
     #[cfg_attr(test, serde(rename = "kindCatalogs", default))]
     #[value(rename = "kindCatalogs", default)]
     pub(crate) kind_catalogs: Option<KindCatalogBundle>,
@@ -902,26 +802,7 @@ pub struct FillRunCheckpoint {
     pub inputs: [u8; 32],
 }
 
-impl FillRunCheckpoint {
-    pub const BYTES: usize = 68;
 
-    pub fn encode(self) -> [u8; Self::BYTES] {
-        let mut bytes = [0; Self::BYTES];
-        bytes[..8].copy_from_slice(&self.requested.to_le_bytes());
-        bytes[8..16].copy_from_slice(&self.placements.to_le_bytes());
-        bytes[16..20].copy_from_slice(&self.provisional_ops.to_le_bytes());
-        bytes[20..28].copy_from_slice(&self.tested.to_le_bytes());
-        bytes[28..36].copy_from_slice(&self.next_key.to_le_bytes());
-        bytes[36..].copy_from_slice(&self.inputs);
-        bytes
-    }
-
-    pub fn decode(bytes: &[u8]) -> Option<Self> {
-        let bytes: &[u8; Self::BYTES] = bytes.try_into().ok()?;
-        let u64_at = |at: usize| u64::from_le_bytes(bytes[at..at + 8].try_into().expect("eight bytes"));
-        Some(Self { requested: u64_at(0), placements: u64_at(8), provisional_ops: u32::from_le_bytes(bytes[16..20].try_into().expect("four bytes")), tested: u64_at(20), next_key: u64_at(28), inputs: bytes[36..].try_into().expect("thirty-two bytes") })
-    }
-}
 
 pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
     Puzzle3dSnapshot::default()
@@ -949,44 +830,18 @@ pub enum Puzzle3dEngineCommand {
     BrushPreview { vortex_full_id: String, candidate_index: u32 },
 }
 //#region 🔖️HandcraftedOpCodecs
-/// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
-impl protocol::OpText for Puzzle3dEngineCommand {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
-                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
-    }
-}
 
-impl protocol::OpBinary for Puzzle3dEngineCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
+
+
 //#endregion 🔖️HandcraftedOpCodecs
 
 /// 📬️ What `dispatch` hands back — the typed counterpart of what each old JSON-string method
-/// returned (a `Fixture` JSON string, a `BrushPreviewState` JSON string, or nothing). Plain Rust, no
+/// returned (a `EngineSceneSnapshot` JSON string, a `BrushPreviewState` JSON string, or nothing). Plain Rust, no
 /// DSL/wasm-bindgen requirement — this only ever crosses the artifact <-> app boundary in-process.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Puzzle3dEngineOutcome {
     Unit,
-    Fixture(Fixture),
+    EngineSceneSnapshot(EngineSceneSnapshot),
     BrushPreview(Option<BrushPreviewState>),
 }
 //#endregion 🔖️PrecomputeCommand

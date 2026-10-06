@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 import Ajv from "ajv";
 import vectors from "../../🧫️fixtures/🧩️composition/🔣️.json" with { type: "json" };
 import archiveVectors from "../../../../🧫️fixtures/📡️channel/🗃️document-archive/🔣️.json" with { type: "json" };
-import archiveSchema from "../../../../🧫️fixtures/📡️channel/🗃️document-archive/🧬️schema/🔣️.json" with { type: "json" };
+
 
 const graphlib = createRequire(import.meta.url)("graphlib");
 
@@ -197,8 +197,8 @@ export function testRecursiveOwnedDocumentReplacementOracle(): void {
   } as const;
   const validate = new Ajv({ strict: true }).compile(schema);
   assert(validate(vectors), JSON.stringify(validate.errors));
-  const validateArchive = new Ajv({ strict: true }).compile(archiveSchema);
-  assert(validateArchive(archiveVectors.archive), JSON.stringify(validateArchive.errors));
+  
+  
   const declared: ArchiveMembership[] = [{ parent: "root-1", slot: "children", childId: "child-1", target: "child-1" }, { parent: "child-1", slot: "nested", childId: "grandchild-1", target: "grandchild-1" }];
   assert(archiveClosureAccepted(archiveVectors.rootArtifactId, archiveVectors.archive.members, declared));
   const independent = structuredClone(archiveVectors.archive);

@@ -11,7 +11,7 @@
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::{ShootingDispatchCtx, SHOOTING_PLAY_APP_ID};
-use crate::op::ShootingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use machine::Command;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

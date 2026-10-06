@@ -1,0 +1,640 @@
+{
+  "qualification": "Actual catalog25failure receipt plus current production source-only;no executions/no provider changes. Both native payload equality and full typed oracle remain required.",
+  "failureRows": [
+    {
+      "law": "sqlite_snapshot_ifc2x3_cobie_editor",
+      "location": "    thread 'sqlite_snapshot_ifc2x3_cobie_editor' (15573568) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"owned snapshot violates subset s.stdio.ifc@2x3/cobie\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.ifc.2x3.cobie.file-schema\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_SCHEMA does not declare IFC2X3\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.ifc.2x3.cobie.view-definition\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_DESCRIPTION's ViewDefinition tuple does not name FMHandOverView\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.ifc.2x3.cobie.missing-building-or-storey\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"missing IFCBUILDING and IFCBUILDINGSTOREY -- COBie's Facility/Floor sheets need both\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.ifc.2x3.cobie.missing-type-assignment\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no real IFC*TYPE + IFCRELDEFINESBYTYPE pairing found -- COBie's Type sheet needs maintainable products related to a type\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.ifc.2x3.cobie.file-schema",
+        "stdio.ifc.2x3.cobie.view-definition",
+        "stdio.ifc.2x3.cobie.missing-building-or-storey",
+        "stdio.ifc.2x3.cobie.missing-type-assignment"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_ifc2x3_cv20_editor",
+      "location": "    thread 'sqlite_snapshot_ifc2x3_cv20_editor' (15573880) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"owned snapshot violates subset s.stdio.ifc@2x3/cv20\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.ifc.2x3.cv20.file-schema\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_SCHEMA does not declare IFC2X3 -- Coordination View 2.0 is an IFC2x3 MVD\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.ifc.2x3.cv20.view-definition\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_DESCRIPTION's ViewDefinition tuple does not name CoordinationView\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.ifc.2x3.cv20.project-unit-assignment\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"expected exactly one IFCPROJECT, found 0\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.ifc.2x3.cv20.file-schema",
+        "stdio.ifc.2x3.cv20.view-definition",
+        "stdio.ifc.2x3.cv20.project-unit-assignment"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_ifc2x3_sav_editor",
+      "location": "    thread 'sqlite_snapshot_ifc2x3_sav_editor' (15574088) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"owned snapshot violates subset s.stdio.ifc@2x3/sav\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.ifc.2x3.sav.file-schema\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_SCHEMA does not declare IFC2X3\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.ifc.2x3.sav.view-definition\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_DESCRIPTION's ViewDefinition tuple does not name StructuralAnalysisView\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.ifc.2x3.sav.no-analysis-model\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no IFCSTRUCTURALANALYSISMODEL instance -- a StructuralAnalysisView document must have at least one\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.ifc.2x3.sav.no-group-assignment\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no IFCRELASSIGNSTOGROUP instance -- structural members/connections are not related to their analysis model\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.ifc.2x3.sav.no-loads\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no IFCSTRUCTURALLOADGROUP instance -- no loads present\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.ifc.2x3.sav.file-schema",
+        "stdio.ifc.2x3.sav.view-definition",
+        "stdio.ifc.2x3.sav.no-analysis-model",
+        "stdio.ifc.2x3.sav.no-group-assignment",
+        "stdio.ifc.2x3.sav.no-loads"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_pptx_strict_editor",
+      "location": "    thread 'sqlite_snapshot_pptx_strict_editor' (15575588) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"PPTX owned snapshot violates its exact profile\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.pptx.strict.transitional-ns-present\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"part ppt/slideMasters/slideMaster1.xml declares a Transitional OOXML main namespace\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.transitional-ns-present\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"part ppt/slideLayouts/slideLayout1.xml declares a Transitional OOXML main namespace\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.transitional-ns-present\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"part ppt/theme/theme1.xml declares a Transitional OOXML main namespace\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.main-ns-not-strict\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"root officeDocument part ppt/presentation.xml does not declare the expected PresentationML root namespace http://purl.oclc.org/ooxml/presentationml/main\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.conformance-attr-missing\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"root officeDocument part ppt/presentation.xml does not declare conformance=\\\"strict\\\"\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.transitional-ns-present\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"part ppt/presentation.xml declares a Transitional OOXML main namespace\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.relationship-base-not-strict\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"relationship rId1 owned by  uses Transitional relationship type http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.relationship-base-not-strict\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"relationship rId1 owned by ppt/presentation.xml uses Transitional relationship type http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.relationship-base-not-strict\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"relationship rId1 owned by ppt/slideLayouts/slideLayout1.xml uses Transitional relationship type http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.relationship-base-not-strict\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"relationship rId1 owned by ppt/slideMasters/slideMaster1.xml uses Transitional relationship type http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.pptx.strict.relationship-base-not-strict\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"relationship rId2 owned by ppt/slideMasters/slideMaster1.xml uses Transitional relationship type http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.pptx.strict.transitional-ns-present",
+        "stdio.pptx.strict.transitional-ns-present",
+        "stdio.pptx.strict.transitional-ns-present",
+        "stdio.pptx.strict.main-ns-not-strict",
+        "stdio.pptx.strict.conformance-attr-missing",
+        "stdio.pptx.strict.transitional-ns-present",
+        "stdio.pptx.strict.relationship-base-not-strict",
+        "stdio.pptx.strict.relationship-base-not-strict",
+        "stdio.pptx.strict.relationship-base-not-strict",
+        "stdio.pptx.strict.relationship-base-not-strict",
+        "stdio.pptx.strict.relationship-base-not-strict"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_step_cc1_editor",
+      "location": "    thread 'sqlite_snapshot_step_cc1_editor' (15578041) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"owned snapshot violates subset s.stdio.step@ap214/cc1\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.step.cc1.file-schema-automotive-design\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.step.cc1.product-definition-chain\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 config data normally carries one\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.step.cc1.file-schema-automotive-design",
+        "stdio.step.cc1.product-definition-chain"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_step_cc2_editor",
+      "location": "    thread 'sqlite_snapshot_step_cc2_editor' (15578093) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"owned snapshot violates subset s.stdio.step@ap214/cc2\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.step.cc2.file-schema-automotive-design\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.step.cc2.product-definition-chain\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 data normally carries one\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.step.cc2.file-schema-automotive-design",
+        "stdio.step.cc2.product-definition-chain"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_step_cc3_editor",
+      "location": "    thread 'sqlite_snapshot_step_cc3_editor' (15578142) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"owned snapshot violates subset s.stdio.step@ap214/cc3\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.step.cc3.file-schema-automotive-design\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.step.cc3.product-definition-chain\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 data normally carries one\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.step.cc3.file-schema-automotive-design",
+        "stdio.step.cc3.product-definition-chain"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_step_cc4_editor",
+      "location": "    thread 'sqlite_snapshot_step_cc4_editor' (15578301) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"owned snapshot violates subset s.stdio.step@ap214/cc4\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.step.cc4.file-schema-automotive-design\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.step.cc4.product-definition-chain\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 data normally carries one\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.step.cc4.file-schema-automotive-design",
+        "stdio.step.cc4.product-definition-chain"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_step_cc5_editor",
+      "location": "    thread 'sqlite_snapshot_step_cc5_editor' (15578357) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"owned snapshot violates subset s.stdio.step@ap214/cc5\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.step.cc5.file-schema-automotive-design\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.step.cc5.product-definition-chain\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 data normally carries one\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.step.cc5.file-schema-automotive-design",
+        "stdio.step.cc5.product-definition-chain"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_step_cc6_editor",
+      "location": "    thread 'sqlite_snapshot_step_cc6_editor' (15578444) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"owned snapshot violates subset s.stdio.step@ap214/cc6\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.step.cc6.file-schema-automotive-design\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"FILE_SCHEMA does not declare AUTOMOTIVE_DESIGN -- ISO 10303-214 requires the AP214 EXPRESS schema\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.step.cc6.product-definition-chain\"), severity: Warning, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"no PRODUCT + PRODUCT_DEFINITION_FORMATION + PRODUCT_DEFINITION chain found -- real AP214 data normally carries one\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.step.cc6.file-schema-automotive-design",
+        "stdio.step.cc6.product-definition-chain"
+      ]
+    },
+    {
+      "law": "sqlite_snapshot_xlsx_strict_editor",
+      "location": "    thread 'sqlite_snapshot_xlsx_strict_editor' (15579508) panicked at 🧩️compositions/🗄️stdio/📦️packages/🦀️rust/../../🧪️tests/✏️editor-catalog/🦀️.rs:215:63:",
+      "detail": "    shipped editor SQLite export: IoError { cause: ValueError { kind: InvalidValue, message: \"XLSX owned snapshot violates its exact profile\" }, diagnostics: [Diagnostic { code: FaultCode(\"stdio.xlsx.strict.namespace-mismatch\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"xl/workbook.xml root xmlns is Some(\\\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\\\"), expected the Strict SpreadsheetML namespace \\\"http://purl.oclc.org/ooxml/spreadsheetml/main\\\" (ISO/IEC 29500-1)\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.xlsx.strict.relationships-namespace-mismatch\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"xl/workbook.xml root xmlns:r is Some(\\\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\\\"), expected the Strict officeDocument relationships namespace \\\"http://purl.oclc.org/ooxml/officeDocument/relationships\\\"\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }, Diagnostic { code: FaultCode(\"stdio.xlsx.strict.conformance-attribute\"), severity: Error, span: TextSpan { line: 1, column: 1, length: 0 }, message: \"xl/workbook.xml workbook@conformance is None, expected \\\"strict\\\" (ISO/IEC 29500-1 §12.3.24)\", expected: None, scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None } }] }\n    stack backtrace:\n       0: __rustc::rust_begin_unwind",
+      "diagnosticCodes": [
+        "stdio.xlsx.strict.namespace-mismatch",
+        "stdio.xlsx.strict.relationships-namespace-mismatch",
+        "stdio.xlsx.strict.conformance-attribute"
+      ]
+    }
+  ],
+  "sourceRows": [
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/✏️editor/🦀️.rs",
+      "initialLine": 255,
+      "initialSource": "fn initial_snapshot() -> Ifc2x3Snapshot {\n        Ifc2x3Snapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧬️schema/🦀️.rs",
+          "line": 55,
+          "source": "pub struct Ifc2x3CobieBuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧬️schema/🦀️.rs",
+          "line": 63,
+          "source": "pub fn new() -> Self {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧬️schema/🦀️.rs",
+          "line": 110,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🧬️schema/🦀️.rs",
+          "line": 222,
+          "source": "pub struct Ifc2x3CobieAnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🚪️io/🦀️.rs",
+          "line": 20,
+          "source": "pub struct Ifc2x3CobieComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🚪️io/🦀️.rs",
+          "line": 30,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/🚪️io/🦀️.rs",
+          "line": 47,
+          "source": "pub struct Ifc2x3CobieValidator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/✏️editor/🦀️.rs",
+      "initialLine": 255,
+      "initialSource": "fn initial_snapshot() -> Ifc2x3Snapshot {\n        Ifc2x3Snapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🧬️schema/🦀️.rs",
+          "line": 52,
+          "source": "pub struct Ifc2x3SavBuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🧬️schema/🦀️.rs",
+          "line": 59,
+          "source": "pub fn new() -> Self {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🧬️schema/🦀️.rs",
+          "line": 103,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🧬️schema/🦀️.rs",
+          "line": 194,
+          "source": "pub struct Ifc2x3SavAnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🚪️io/🦀️.rs",
+          "line": 20,
+          "source": "pub struct Ifc2x3SavComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🚪️io/🦀️.rs",
+          "line": 30,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/🚪️io/🦀️.rs",
+          "line": 47,
+          "source": "pub struct Ifc2x3SavValidator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/✏️editor/🦀️.rs",
+      "initialLine": 255,
+      "initialSource": "fn initial_snapshot() -> Ifc2x3Snapshot {\n        Ifc2x3Snapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🧬️schema/🦀️.rs",
+          "line": 78,
+          "source": "pub struct Ifc2x3Cv20BuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🧬️schema/🦀️.rs",
+          "line": 87,
+          "source": "pub fn new() -> Self {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🧬️schema/🦀️.rs",
+          "line": 148,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🧬️schema/🦀️.rs",
+          "line": 282,
+          "source": "pub struct Ifc2x3Cv20AnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🚪️io/🦀️.rs",
+          "line": 22,
+          "source": "pub struct Ifc2x3Cv20ComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🚪️io/🦀️.rs",
+          "line": 32,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/🚪️io/🦀️.rs",
+          "line": 49,
+          "source": "pub struct Ifc2x3Cv20Validator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🦀️.rs",
+      "initialLine": 255,
+      "initialSource": "fn initial_snapshot() -> StepSnapshot {\n        StepSnapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧬️schema/🦀️.rs",
+          "line": 29,
+          "source": "pub struct StepCc1BuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧬️schema/🦀️.rs",
+          "line": 70,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🧬️schema/🦀️.rs",
+          "line": 158,
+          "source": "pub struct StepCc1AnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs",
+          "line": 7,
+          "source": "use crate::standards::v_ap214::engine::ladder::ensure_file_schema;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs",
+          "line": 23,
+          "source": "pub struct StepCc1ComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs",
+          "line": 33,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs",
+          "line": 37,
+          "source": "ensure_file_schema(&mut doc, \"AUTOMOTIVE_DESIGN\");"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs",
+          "line": 56,
+          "source": "pub struct StepCc1Validator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/🦀️.rs",
+      "initialLine": 255,
+      "initialSource": "fn initial_snapshot() -> StepSnapshot {\n        StepSnapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🦀️.rs",
+          "line": 29,
+          "source": "pub struct StepCc5BuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🦀️.rs",
+          "line": 70,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🧬️schema/🦀️.rs",
+          "line": 157,
+          "source": "pub struct StepCc5AnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🚪️io/🦀️.rs",
+          "line": 7,
+          "source": "use crate::standards::v_ap214::engine::ladder::ensure_file_schema;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🚪️io/🦀️.rs",
+          "line": 23,
+          "source": "pub struct StepCc5ComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🚪️io/🦀️.rs",
+          "line": 33,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🚪️io/🦀️.rs",
+          "line": 37,
+          "source": "ensure_file_schema(&mut doc, \"AUTOMOTIVE_DESIGN\");"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/🚪️io/🦀️.rs",
+          "line": 56,
+          "source": "pub struct StepCc5Validator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/🦀️.rs",
+      "initialLine": 255,
+      "initialSource": "fn initial_snapshot() -> StepSnapshot {\n        StepSnapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🦀️.rs",
+          "line": 29,
+          "source": "pub struct StepCc4BuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🦀️.rs",
+          "line": 70,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🧬️schema/🦀️.rs",
+          "line": 157,
+          "source": "pub struct StepCc4AnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🚪️io/🦀️.rs",
+          "line": 7,
+          "source": "use crate::standards::v_ap214::engine::ladder::ensure_file_schema;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🚪️io/🦀️.rs",
+          "line": 23,
+          "source": "pub struct StepCc4ComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🚪️io/🦀️.rs",
+          "line": 33,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🚪️io/🦀️.rs",
+          "line": 37,
+          "source": "ensure_file_schema(&mut doc, \"AUTOMOTIVE_DESIGN\");"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/🚪️io/🦀️.rs",
+          "line": 56,
+          "source": "pub struct StepCc4Validator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/🦀️.rs",
+      "initialLine": 255,
+      "initialSource": "fn initial_snapshot() -> StepSnapshot {\n        StepSnapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🦀️.rs",
+          "line": 29,
+          "source": "pub struct StepCc3BuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🦀️.rs",
+          "line": 70,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🧬️schema/🦀️.rs",
+          "line": 157,
+          "source": "pub struct StepCc3AnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🚪️io/🦀️.rs",
+          "line": 7,
+          "source": "use crate::standards::v_ap214::engine::ladder::ensure_file_schema;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🚪️io/🦀️.rs",
+          "line": 23,
+          "source": "pub struct StepCc3ComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🚪️io/🦀️.rs",
+          "line": 33,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🚪️io/🦀️.rs",
+          "line": 37,
+          "source": "ensure_file_schema(&mut doc, \"AUTOMOTIVE_DESIGN\");"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/🚪️io/🦀️.rs",
+          "line": 56,
+          "source": "pub struct StepCc3Validator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/🦀️.rs",
+      "initialLine": 255,
+      "initialSource": "fn initial_snapshot() -> StepSnapshot {\n        StepSnapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧬️schema/🦀️.rs",
+          "line": 29,
+          "source": "pub struct StepCc6BuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧬️schema/🦀️.rs",
+          "line": 70,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🧬️schema/🦀️.rs",
+          "line": 157,
+          "source": "pub struct StepCc6AnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🚪️io/🦀️.rs",
+          "line": 7,
+          "source": "use crate::standards::v_ap214::engine::ladder::ensure_file_schema;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🚪️io/🦀️.rs",
+          "line": 23,
+          "source": "pub struct StepCc6ComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🚪️io/🦀️.rs",
+          "line": 33,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🚪️io/🦀️.rs",
+          "line": 37,
+          "source": "ensure_file_schema(&mut doc, \"AUTOMOTIVE_DESIGN\");"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🚪️io/🦀️.rs",
+          "line": 56,
+          "source": "pub struct StepCc6Validator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/🦀️.rs",
+      "initialLine": 255,
+      "initialSource": "fn initial_snapshot() -> StepSnapshot {\n        StepSnapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🦀️.rs",
+          "line": 29,
+          "source": "pub struct StepCc2BuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🦀️.rs",
+          "line": 70,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🧬️schema/🦀️.rs",
+          "line": 157,
+          "source": "pub struct StepCc2AnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🚪️io/🦀️.rs",
+          "line": 7,
+          "source": "use crate::standards::v_ap214::engine::ladder::ensure_file_schema;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🚪️io/🦀️.rs",
+          "line": 23,
+          "source": "pub struct StepCc2ComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🚪️io/🦀️.rs",
+          "line": 33,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🚪️io/🦀️.rs",
+          "line": 37,
+          "source": "ensure_file_schema(&mut doc, \"AUTOMOTIVE_DESIGN\");"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/🚪️io/🦀️.rs",
+          "line": 56,
+          "source": "pub struct StepCc2Validator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🦀️.rs",
+      "initialLine": 130,
+      "initialSource": "fn initial_snapshot() -> PptxSnapshot {\n        crate::standards::v_ecma_376::subsets::base::schema::blank_pptx_snapshot()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 38,
+          "source": "pub struct PptxStrictBuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 76,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 110,
+          "source": "pub const STRICT_MAIN_NS: &str = \"http://purl.oclc.org/ooxml/presentationml/main\";"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 114,
+          "source": "pub const STRICT_REL_BASE: &str = \"http://purl.oclc.org/ooxml/officeDocument/relationships\";"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 197,
+          "source": "pub struct PptxStrictAnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🚪️io/🦀️.rs",
+          "line": 23,
+          "source": "pub struct PptxStrictComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🚪️io/🦀️.rs",
+          "line": 33,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🚪️io/🦀️.rs",
+          "line": 50,
+          "source": "pub struct PptxStrictValidator;"
+        }
+      ]
+    },
+    {
+      "editor": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🦀️.rs",
+      "initialLine": 166,
+      "initialSource": "fn initial_snapshot() -> XlsxSnapshot {\n        XlsxSnapshot::default()\n    }",
+      "subsetGateAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 39,
+          "source": "pub fn stamp_strict_namespace(mut snapshot: XlsxSnapshot) -> XlsxSnapshot {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 63,
+          "source": "pub struct XlsxStrictBuilderConstruction {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 71,
+          "source": "pub fn new(workbook: XlsxWorkbook) -> Self {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 115,
+          "source": "fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 156,
+          "source": "pub const STRICT_SML_NS: &str = \"http://purl.oclc.org/ooxml/spreadsheetml/main\";"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 160,
+          "source": "pub const STRICT_R_NS: &str = \"http://purl.oclc.org/ooxml/officeDocument/relationships\";"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🦀️.rs",
+          "line": 241,
+          "source": "pub struct XlsxStrictAnalyzerAnalysis;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🚪️io/🦀️.rs",
+          "line": 23,
+          "source": "pub struct XlsxStrictComposerComposition;"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🚪️io/🦀️.rs",
+          "line": 33,
+          "source": "fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {"
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🚪️io/🦀️.rs",
+          "line": 53,
+          "source": "pub struct XlsxStrictValidator;"
+        }
+      ]
+    }
+  ],
+  "productionRepairPolicy": {
+    "ifc": "Use real seeded subset constructor/document and existing build validation; preserve schema IFC2X3+exact ViewDefinition and SAV model constraints, literal entity/reference/order/full owner. Do not replace catalog initial source with test adapter.",
+    "step": "Handcraft genuine per-CC initial Part21 domain owner with AUTOMOTIVE_DESIGN and full geometry ladder; builder default is still invalid. Header correction alone is not full CC proof. Existing composer ensures header and checks hard constraints.",
+    "pptx": "Handcraft genuine strict initial OPC/xml/relationship owner. Existing strict builder from_snapshot/build validates but does not convert namespaces. Base blank remains transitional.",
+    "xlsx": "Use real workbook to strict constructor new(workbook) with existing stamp_strict_namespace+build, preserving typed/full XML/domain state. Revalidate all workbook/relationships/package constraints."
+  }
+}

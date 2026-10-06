@@ -13,7 +13,21 @@
       "const": "renameVcs"
     },
     "newTitle": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New title",
+          "de": "Neuer Titel"
+        },
+        "description": {
+          "en": "Title the history view carries afterwards.",
+          "de": "Titel, den die Verlaufsansicht danach trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

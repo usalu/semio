@@ -23,7 +23,7 @@ export async function registerReplayReportTests(vitest: NonNullable<ImportMeta["
     it("gates finalize exactly like the language-agnostic verdicts", async () => {
       const { fixture, schema } = await load();
       const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      for (const row of fixture.cases as Json[]) expect(validate(row.report), JSON.stringify(validate.errors)).toBe(true);
       expect(schema.definitions.Severity.enum).toEqual([...REPLAY_SEVERITIES]);
       for (const row of fixture.cases as Json[]) {
         expect(replayReportBlocksFinalize(row.report), row.id).toBe(row.expect.blocksFinalize);

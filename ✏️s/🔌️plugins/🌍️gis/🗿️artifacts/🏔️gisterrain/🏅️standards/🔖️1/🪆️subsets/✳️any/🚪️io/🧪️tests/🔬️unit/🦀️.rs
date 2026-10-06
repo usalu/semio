@@ -1,5 +1,5 @@
-use crate::io::export::serializers::artifacts::{gltf::v2_0::any as gltf_out, las::v1_0::any as las_out, obj::v3_0::any as obj_out, ply::v1_0::any as ply_out, stl::v_ascii::any as stl_out, txt::v_utf_8::any as txt_out};
-use crate::io::import::deserializers::artifacts::txt::v_utf_8::any as txt_in;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{gltf::v2_0::any as gltf_out, las::v1_0::any as las_out, obj::v3_0::any as obj_out, ply::v1_0::any as ply_out, stl::v_ascii::any as stl_out, txt::v_utf_8::any as txt_out};
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any as txt_in;
 use crate::GisTerrainSnapshot;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -28,7 +28,7 @@ fn mesh_formats_carry_the_two_surface_triangles() {
     assert_eq!(obj.lines().filter(|line| line.starts_with("f ")).count(), 2);
     let ply = ply_out::serialize_bytes(&terrain()).expect("ply");
     assert!(ply.starts_with(b"ply\n"));
-    let las = semio_s_artifact_stdio_las::io::decode_las(&las_out::serialize_bytes(&terrain()).expect("las")).expect("decodes as las");
+    let las = semio_s_artifact_stdio_las::standards::v1_0::subsets::any::io::decode_las(&las_out::serialize_bytes(&terrain()).expect("las")).expect("decodes as las");
     assert!(!las.points.is_empty());
 }
 

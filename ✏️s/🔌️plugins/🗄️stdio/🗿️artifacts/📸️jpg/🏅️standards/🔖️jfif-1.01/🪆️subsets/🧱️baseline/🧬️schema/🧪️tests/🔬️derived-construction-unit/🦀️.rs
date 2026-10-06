@@ -20,8 +20,8 @@ mod tests {
     async fn real_encoded_jpeg_builds_clean_via_from_binary() {
         let (w, h) = (24u32, 24u32);
         let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
-        let bytes = crate::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
-        let decoded = crate::standards::v_jfif_1_01::engine::decode_jpg(&bytes).expect("decode");
+        let bytes = crate::subsets::document::io::encode_jpg(&snap).expect("encode");
+        let decoded = crate::subsets::document::io::decode_jpg(&bytes).expect("decode");
         let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
         let built = JpgBaselineBuilderConstruction::from_binary(&packed).expect("from_binary").build().expect("real baseline JPEG must build clean");
         assert!(built.frame.is_some());

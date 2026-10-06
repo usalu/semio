@@ -1,4 +1,4 @@
-//! 🧪️ `drag-selection` fixture — `✋️drags-two-objects`.
+//! 🧪️ `drag-selection` scene_snapshot — `✋️drags-two-objects`.
 //!
 //! Drags `object-a` and `object-b` by (1.5, -2, 0.5): both origins move by the one offset, read off the base, and `attraction-1`, which touches both, is re-derived from the moved poses (`mutation.cascade`).
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "drag-selection/drags-two-objects: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

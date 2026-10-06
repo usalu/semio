@@ -5,7 +5,7 @@
 //! table surface gets a presence roster (owned by `👥️PresenceBar`, lane 2-F/3-A territory), not a
 //! placeholder that silently drops the action id.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

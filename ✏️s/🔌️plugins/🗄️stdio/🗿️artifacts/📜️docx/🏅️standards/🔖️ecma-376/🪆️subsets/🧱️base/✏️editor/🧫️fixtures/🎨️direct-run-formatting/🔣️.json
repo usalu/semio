@@ -1,5 +1,4 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "id": "inherited-bold-explicit-off",
   "documentXml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body><w:p><w:pPr><w:pStyle w:val=\"InheritedBold\"/></w:pPr><w:r><w:t>Styled</w:t></w:r></w:p><w:sectPr/></w:body></w:document>",
   "stylesXml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:styles xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:style w:type=\"paragraph\" w:styleId=\"InheritedBold\"><w:name w:val=\"Inherited Bold\"/><w:rPr><w:b/></w:rPr></w:style></w:styles>",

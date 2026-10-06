@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioImageMutation; absent when the payload stands alone."
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Key",
+          "de": "Schlüssel"
+        },
+        "description": {
+          "en": "Name of the metadata entry that is removed.",
+          "de": "Name des Metadateneintrags, der entfernt wird."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

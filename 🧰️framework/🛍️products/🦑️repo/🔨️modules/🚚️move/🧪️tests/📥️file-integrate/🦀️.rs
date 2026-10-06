@@ -41,7 +41,7 @@ fn expect(name: &str, field: &str, expected: &Json, produced: &Json) -> Result<(
 
 #[cfg(feature = "sut")]
 fn the_source_lands_inside_the_markers(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📥️file-integrate-trees.json")?;
+    let file = ctx.input_json("shared://📥️file-integrate-trees.json")?;
     let mut integrated = Vec::new();
     for vector in file.array("cases") {
         let name = vector.str("name");
@@ -56,7 +56,7 @@ fn the_source_lands_inside_the_markers(ctx: &Context) -> Result<Outcome, String>
 
 #[cfg(feature = "sut")]
 fn the_new_section_is_parseable(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📥️file-integrate-trees.json")?;
+    let file = ctx.input_json("shared://📥️file-integrate-trees.json")?;
     let mut read_back = Vec::new();
     for vector in file.array("cases") {
         let name = vector.str("name");
@@ -75,7 +75,7 @@ fn the_new_section_is_parseable(ctx: &Context) -> Result<Outcome, String> {
 
 #[cfg(feature = "sut")]
 fn an_unknown_parent_section_is_refused(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📥️file-integrate-trees.json")?;
+    let file = ctx.input_json("shared://📥️file-integrate-trees.json")?;
     let sample = file
         .array("cases")
         .into_iter()

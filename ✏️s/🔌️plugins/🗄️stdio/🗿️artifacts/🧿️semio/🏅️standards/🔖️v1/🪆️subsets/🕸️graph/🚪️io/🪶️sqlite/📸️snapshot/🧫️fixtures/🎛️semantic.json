@@ -1,0 +1,217 @@
+{
+  "schemaBytes": 3039,
+  "tableWidths": {
+    "semio_graph_document": 2,
+    "semio_graph_edge": 10,
+    "semio_graph_edge_property": 5,
+    "semio_graph_list_element": 4,
+    "semio_graph_map_entry": 5,
+    "semio_graph_node": 18,
+    "semio_graph_port": 6,
+    "semio_graph_port_property": 5,
+    "semio_graph_property": 5,
+    "semio_graph_value": 8
+  },
+  "cases": [
+    {
+      "id": "full",
+      "sourceSnapshot": {
+        "schema": "s.stdio.semio.graph",
+        "nodes": [
+          {
+            "id": {
+              "value": "first"
+            },
+            "kind": "typed",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "c004000000000000"
+              },
+              "y": {
+                "bits": "400a000000000000"
+              }
+            },
+            "width": {
+              "bits": "0000000000000000"
+            },
+            "height": {
+              "bits": "0000000000000000"
+            },
+            "ports": [
+              {
+                "name": "read",
+                "kind": "in",
+                "category": "",
+                "properties": []
+              },
+              {
+                "name": "write",
+                "kind": "out",
+                "category": "",
+                "properties": []
+              },
+              {
+                "name": "both",
+                "kind": "inOut",
+                "category": "",
+                "properties": []
+              }
+            ],
+            "properties": [
+              {
+                "key": "same",
+                "value": {
+                  "kind": "map",
+                  "entries": [
+                    {
+                      "key": "nested",
+                      "value": {
+                        "kind": "list",
+                        "items": [
+                          {
+                            "kind": "str",
+                            "value": "payload"
+                          },
+                          {
+                            "kind": "ref",
+                            "id": {
+                              "value": "external-domain-id"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "key": "same",
+                "value": {
+                  "kind": "bytes",
+                  "value": [
+                    0,
+                    255
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": {
+              "value": "second"
+            },
+            "kind": "",
+            "label": "",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "0000000000000000"
+              }
+            },
+            "width": {
+              "bits": "0000000000000000"
+            },
+            "height": {
+              "bits": "0000000000000000"
+            },
+            "ports": [],
+            "properties": []
+          }
+        ],
+        "edges": [
+          {
+            "id": {
+              "value": "forward"
+            },
+            "source": {
+              "value": "first"
+            },
+            "target": {
+              "value": "second"
+            },
+            "kind": "data",
+            "label": "one",
+            "properties": []
+          },
+          {
+            "id": {
+              "value": "backward"
+            },
+            "source": {
+              "value": "second"
+            },
+            "target": {
+              "value": "first"
+            },
+            "kind": "data",
+            "label": "two",
+            "properties": []
+          },
+          {
+            "id": {
+              "value": "self"
+            },
+            "source": {
+              "value": "first"
+            },
+            "target": {
+              "value": "first"
+            },
+            "kind": "self",
+            "label": "three",
+            "properties": []
+          }
+        ]
+      },
+      "rows": 19,
+      "valueBytes": 798
+    },
+    {
+      "id": "metadataRetainingEmpty",
+      "sourceSnapshot": {
+        "schema": "s.stdio.semio.graph",
+        "nodes": [],
+        "edges": []
+      },
+      "rows": 1,
+      "valueBytes": 27
+    }
+  ],
+  "publicIo": {
+    "schemaBytes": 3332,
+    "tableWidths": {
+      "semio_graph_document": 2,
+      "semio_graph_edge": 10,
+      "semio_graph_edge_property": 5,
+      "semio_graph_list_element": 4,
+      "semio_graph_map_entry": 5,
+      "semio_graph_node": 18,
+      "semio_graph_port": 6,
+      "semio_graph_port_property": 5,
+      "semio_graph_property": 5,
+      "semio_graph_value": 8,
+      "semio_snapshot": 6
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 20,
+        "valueBytes": {
+          "binary": 840,
+          "text": 838
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 69,
+          "text": 67
+        }
+      }
+    ]
+  }
+}

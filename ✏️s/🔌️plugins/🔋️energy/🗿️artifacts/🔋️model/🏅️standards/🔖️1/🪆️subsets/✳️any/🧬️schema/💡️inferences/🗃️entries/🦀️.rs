@@ -24,23 +24,7 @@ pub struct EnergyModelEntries {
     pub content_digest: String,
 }
 
-/// 🗃️ `entryCount` = number of top-level `Model` fields (its own `DslValue::Object` always has
-/// one key per field — `Model` derives `Default`, never a partial object); `byteSize` = real UTF-8
-/// byte length of that JSON; `contentDigest` = a deterministic (within-process) fingerprint over
-/// those same bytes. Std-only (`DefaultHasher`), same reasoning as `🏠️home/🆔digest`: no external
-/// hash crate needed for a single scalar byte-string digest.
-pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
-    let model = crate::energy_model(snapshot);
-    let json = semio_framework_pack_json::to_json_string(&model);
-    let bytes = json.as_bytes();
-    let entry_count = match model.to_value() {
-        DslValue::Object(entries) => entries.len() as u32,
-        _ => 0,
-    };
-    let mut hasher = DefaultHasher::new();
-    bytes.hash(&mut hasher);
-    EnergyModelEntries { entry_count, byte_size: bytes.len() as u32, content_digest: format!("{:016x}", hasher.finish()) }
-}
+
 //#endregion 🔖️Entries
 
 #[cfg(test)]

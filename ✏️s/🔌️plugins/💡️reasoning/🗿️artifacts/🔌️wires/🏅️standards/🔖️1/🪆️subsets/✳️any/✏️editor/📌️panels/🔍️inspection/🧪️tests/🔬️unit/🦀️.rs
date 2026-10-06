@@ -49,7 +49,7 @@ async fn topic_lookup_stays_local_to_the_wires_extension() {
 async fn metabolism_fixture_hydrates_extension() {
     let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
     let (_, content) = crate::wires_bundled_contents().iter().find(|(id, _)| id == &document.content.child_id).expect("the demo parent names its bundled board");
-    let json = fixture_json_string(&crate::wires_composed(&document, content).fixture);
+    let json = board_snapshot_json_string(&crate::wires_composed(&document, content).identity_snapshot);
     let ext = DefaultWiresExtension::from_host_snapshot_json(&json).expect("metabolism fixture");
     assert_eq!(ext.topics.len(), 7);
     assert_eq!(ext.relationships.len(), 9);

@@ -56,7 +56,7 @@ mod subject {
     /// 📥️ The committed case model, or an error naming exactly what is absent.
     fn model_text(ctx: &Context, case: &str) -> Result<String, String> {
         let uri = model_asset(case);
-        let bytes = ctx.fixture_bytes(&uri).map_err(|error| format!("case {case}: no committed model at {uri} ({error})"))?;
+        let bytes = ctx.input_bytes(&uri).map_err(|error| format!("case {case}: no committed model at {uri} ({error})"))?;
         String::from_utf8(bytes).map_err(|error| format!("case {case}: the committed model is not UTF-8: {error}"))
     }
 
@@ -233,7 +233,7 @@ mod subject {
     /// 📤️ The one place the crate is called: the committed model in, the exported epJSON out.
     fn export(ctx: &Context, case: &str) -> Result<(String, Json), String> {
         let model_json = model_text(ctx, case)?;
-        let epjson = semio_s_artifact_energy_model::io::export::serializers::artifacts::epjson::v25_2::any::epjson_from_model_json(&model_json).map_err(|error| format!("case {case}: {error}"))?;
+        let epjson = semio_s_artifact_energy_model::standards::v1::subsets::any::io::export::serializers::artifacts::epjson::v25_2::any::epjson_from_model_json(&model_json).map_err(|error| format!("case {case}: {error}"))?;
         let document = semio_repo_test_host::parse_json(&epjson)?;
         Ok((epjson, document))
     }
@@ -256,7 +256,7 @@ mod subject {
             let model_json = model_text(ctx, case)?;
             let (epjson, _) = export(ctx, case)?;
             publish(ctx, &epjson)?;
-            let diagnostics = semio_s_artifact_energy_model::io::export::serializers::artifacts::epjson::v25_2::any::epjson_diagnostics_json(&model_json).map_err(|error| format!("case {case}: {error}"))?;
+            let diagnostics = semio_s_artifact_energy_model::standards::v1::subsets::any::io::export::serializers::artifacts::epjson::v25_2::any::epjson_diagnostics_json(&model_json).map_err(|error| format!("case {case}: {error}"))?;
             let codes = match semio_repo_test_host::parse_json(&diagnostics)? {
                 Json::Array(items) => items.iter().map(|item| item.str("code")).collect::<Vec<_>>(),
                 _ => Vec::new(),

@@ -7,33 +7,8 @@
  *  wrappers so an optional list stays a scalar across every format.
  */
 
-import {
-  CALIBRATION_STATE_SPEC,
-  DURABLE_ARTIFACT_SPEC,
-  ARTIFACT_CHILD_SPEC,
-  GROUND_CONTROL_POINT_SPEC,
-  MEDIA_STREAM_SPEC,
-  RECONSTRUCTION_PARAMS_SPEC,
-  RECONSTRUCTION_RESULTS_SPEC,
-  decodeRecord,
-  defaultsOf,
-  writeRecordJson,
-  type CalibrationState,
-  type GroundControlPoint,
-  type MediaStream,
-  type ReconstructionParams,
-  type ReconstructionResults,
-  type RecordSpec,
-  type RemodelingAssetChild,
-  type RemodelingDurableArtifactStore,
-  type RemodelingSnapshot,
-  type ValueSpec,
-} from "../📸️snapshot/🟦️.ts";
-import {
-  REMODELING_ARTIFACT_SPEC,
-  remodelingArtifactToSnapshot,
-  type RemodelingArtifact,
-} from "../🟦️.ts";
+import {CALIBRATION_STATE_SPEC, DURABLE_ARTIFACT_SPEC, ARTIFACT_CHILD_SPEC, GROUND_CONTROL_POINT_SPEC, MEDIA_STREAM_SPEC, RECONSTRUCTION_PARAMS_SPEC, RECONSTRUCTION_RESULTS_SPEC, decodeRecord, defaultsOf, type CalibrationState, type GroundControlPoint, type MediaStream, type ReconstructionParams, type ReconstructionResults, type RecordSpec, type RemodelingAssetChild, type RemodelingDurableArtifactStore, type RemodelingSnapshot, type ValueSpec} from "../📸️snapshot/🟦️.ts";
+import {REMODELING_ARTIFACT_SPEC, remodelingArtifactToSnapshot, type RemodelingArtifact} from "../🟦️.ts";
 
 //#region 🔖️DeltaHelpers
 /** 📋 Media-stream list wrapper so optional list diffs stay scalar across formats. */
@@ -104,15 +79,6 @@ export const REMODELING_DIFF_SPEC: RecordSpec = {
 //#region 🔖️Codec
 /** 🫙 `RemodelingDiff::default()` — every lane untouched. */
 export const emptyRemodelingDiff = (): RemodelingDiff => defaultsOf(REMODELING_DIFF_SPEC) as unknown as RemodelingDiff;
-
-/** 🔺️ Decodes a parsed RFC 8259 value into a validated `RemodelingDiff`. */
-export const decodeRemodelingDiff = (json: unknown): RemodelingDiff => decodeRecord(json, REMODELING_DIFF_SPEC, "") as unknown as RemodelingDiff;
-
-/** 📄️ Encodes a diff as `serde_json::to_string_pretty` would render it. */
-export const remodelingDiffToJsonText = (diff: RemodelingDiff): string => writeRecordJson(diff as unknown as Record<string, unknown>, REMODELING_DIFF_SPEC, 0);
-
-/** 📄️ Encodes a diff into a plain JSON value. */
-export const encodeRemodelingDiff = (diff: RemodelingDiff): unknown => JSON.parse(remodelingDiffToJsonText(diff));
 
 /** 🔑 Persistent lanes the apply walks, paired with the snapshot field each writes. */
 const PERSISTENT_LANES: readonly [keyof RemodelingDiff, keyof RemodelingSnapshot, boolean][] = [

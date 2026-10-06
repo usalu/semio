@@ -1,0 +1,16 @@
+dialect grammar
+grammar stdio.pdf.mutations
+start op
+comment none
+
+op = insert-page | remove-page | move-page | resize-page | replace-page-text | set-snapshot | patch-snapshot
+insert-page = "insert-page" "payload" "=" hex
+remove-page = "remove-page" "payload" "=" hex
+move-page = "move-page" "payload" "=" hex
+resize-page = "resize-page" "payload" "=" hex
+replace-page-text = "replace-page-text" "payload" "=" hex
+set-snapshot = "set-snapshot" "payload" "=" snapshot-dsl
+patch-snapshot = "patch-snapshot" "payload" "=" snapshot-patch-text
+
+snapshot-dsl = REST
+snapshot-patch-text = REST

@@ -15,8 +15,9 @@ use crate::editor::lowpoly::session::{lowpoly_paint_drive, lowpoly_tool_emit, pa
 use semio_framework_tool_machine::GesturePhase;
 use crate::editor::lowpoly::view::{resolve_active_object_id, utility_param_f32, utility_params_value};
 use crate::editor::lowpoly::LowpolyPlayApp;
-use crate::mutations::{apply_paint_stroke::ApplyPaintStroke, edit_paint_layer::EditPaintLayer, PixelRun};
-use crate::op::LowpolyMutation;
+use crate::schema::PixelRun;
+use crate::mutations::{apply_paint_stroke::ApplyPaintStroke, edit_paint_layer::EditPaintLayer};
+use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from};
 use crate::{LowpolyPaintLayer, LowpolySnapshot};
 use semio_framework_plugin::app::ArtifactOwnedToolJobContext;
@@ -138,7 +139,7 @@ pub fn lowpoly_paint_step(
         LowpolyPaintTick::Nothing => None,
     };
     let base_revision: String = operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect();
-    let drive = lowpoly_paint_drive(&context.transient, &window, phase, tick, &operation.authoring_seed, &base_revision);
+    let drive = lowpoly_paint_drive(&context.transient, &window, phase, tick, &operation.authoring_seed, &base_revision)?;
     let emit = match drive.committed {
         Some((reference, mutations)) if !operation.authoring_seed.is_empty() => Emit::commit_transaction(reference, mutations),
         Some((_, mutations)) => Emit::mutations(mutations),

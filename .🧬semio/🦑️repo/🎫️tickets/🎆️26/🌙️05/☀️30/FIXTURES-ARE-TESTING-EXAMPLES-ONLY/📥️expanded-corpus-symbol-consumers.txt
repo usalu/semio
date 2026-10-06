@@ -1,0 +1,70 @@
+🌎️hub/📦️packages/🦀️rust/📜️script.ts:88:import { proveGisComponentColdMapPatch } from "../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
+🌎️hub/📦️packages/🦀️rust/📜️script.ts:13570:    await proveGisComponentColdMapPatch(this.repoRoot);
+🌎️hub/📦️packages/🦀️rust/📜️script.ts:13664:      ["GIS cold-map neutral source", nativeGate.includes("await proveGisComponentColdMapPatch(this.repoRoot)") && scriptSource.includes('from "../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts"')],
+🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts:13:export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<void> {
+🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts:18:  const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisComponentColdMapPatch");
+🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts:111:    await proveGisComponentColdMapPatch(this.repoRoot);
+🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts:117:    await proveGisComponentColdMapPatch(this.repoRoot);
+🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts:43:    const validateControl = gisContract(this.repoRoot, "GisInferenceControl");
+🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts:11:  const validate = await compileGisScopeExport(repoRoot, GIS_SCHEMA_MODULE, "GisInferenceControl");
+🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts:25:  const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });
+🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts:50:  const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });
+🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts:12:  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/GenerationRootV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts:138:export interface DocumentOpeningScopeResolutionV1 { readonly id: string; readonly ref: DocumentOpeningRefV1; readonly context: DocumentOpeningContextV1; readonly expected?: readonly DocumentOpeningTargetV1[]; readonly error?: DocumentOpeningErrorCodeV1 }
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts:149:export interface HostIdentityResolutionV1 { readonly aliases: HostAppAliasesV1; readonly apps: readonly HostAppV1[]; readonly expected: { readonly landingAppId: string; readonly hostAppId: string } }
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts:168:export const parseDocumentOpeningScopeResolutionV1 = (value: unknown): DocumentOpeningScopeResolutionV1 => parseRendererExport("DocumentOpeningScopeResolutionV1", value);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🟦️.ts:174:export const parseHostIdentityResolutionV1 = (value: unknown): HostIdentityResolutionV1 => parseRendererExport("HostIdentityResolutionV1", value);
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts:22:    const validate = rendererExport("OpenArtifactRelayV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts:46:    const resolution = rendererExport("DocumentOpeningScopeResolutionV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts:5206:    const validate = peerExport(flowWasmSchema, "FlowBrowserRuntimeLifetimeV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts:12541:    const validate = rendererExport("ShellLabelResolutionV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts:64:    const identity = ajv.getSchema(`${rendererSchema.$id}#/$defs/HostIdentityResolutionV1`)!;
+🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts:15:const validate = contract("ValueRetirementV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts:35:const validateCache = contract("CacheRetirementV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts:14:const validate = ajv.getSchema(`${document.$id}#/$defs/MutationSourceAuthorityV1`)!;
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts:73:  const validate = ajv.addSchema(schema).compile<CadPresenceRetirementFixture>({ $ref: `${schema.$id}#/$defs/CadPresenceRetirementLaws` });
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts:730:    const validate = await registrySchemaValidator("RustTaxonomyMountsV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts:796:    const validate = await registrySchemaValidator("PluginRootOwnershipV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts:884:export function planNativeCatalogSelectionV1(input: NativeCatalogSelectionInputV1, profileId: string): readonly NativeCatalogSelectionPackageV1[] {
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts:935:export async function previewNativeCatalogSelectionV1(
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts:974:  const validate = await registrySchemaValidator("NativeCatalogSelectionV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts:1038:      const plan = planNativeCatalogSelectionV1(candidate, profileId);
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts:1040:      const result = await previewNativeCatalogSelectionV1(plan, async selected => {
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-factory-proof-join/🟦️.ts:13:  const validate = ajv.compile({ ...schema, $ref: "#/$defs/ToolFactoryProofV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts:13:  const validate = ajv.compile({ $ref: schema.$id + "#/$defs/ToolLatestWinsV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts:30:  const validateIntegration = ajv.compile({ $ref: schema.$id + "#/$defs/ToolLatestWinsIntegrationV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts:91:  const validateRaw = ajv.compile({ $ref: schema.$id + "#/$defs/RawAllocationCloseV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts:104:  const validateChildClose = ajv.compile({ $ref: schema.$id + "#/$defs/ChildPrepublicationCloseV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts:147:  const validateDispatch = ajv.compile({ $ref: schema.$id + "#/$defs/MountedDispatchBindingV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️reactor-contract-oracles/🟦️.ts:73:  const validateReceipt = ajv.getSchema<IssuedPatchFixture>(`${schema.$id}#/$defs/PendingPatchReceiptV1`)!;
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts:309:    const validate = moduleExportValidator(new Ajv({ strict: true, allErrors: true }), join(owner, "🧬️schema", "🔣️.json"), "NativeUiPatchMarshallingV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/♻️relay-lifecycle/🟦️.ts:19:const validate = ajv.getSchema(`${schema.$id}#/$defs/RelayLifecycleV1`)!;
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts:18:  "RetainedCommandOracle", "RetainedCommandRouteDisposition", "RetainedCommandRouteExecutionLane", "RetainedCommandRouteExecutionFeature",
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts:19:  "RetainedCommandRouteVariant", "RetainedCommandCorpusLimits", "RetainedCommandDeclaredLimits", "RetainedCommandCohortFactory",
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts:20:  "RetainedCommandCohortRoute", "RetainedCommandCohortApp", "RetainedCommandCensus", "RetainedCommandLimits",
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts:21:  "RetainedCommandRoute", "RetainedCommandRoutes", "RetainedCommandCohort", "RetainedCommandRoutesDocument",
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts:16:  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/ArtifactCommandCheckpointV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts:12:  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/OwnerFactoryResolutionV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts:15:  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/ScalarConfigCohortV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts:15:  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/FlowTypedCopyV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts:13:  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/FlowRetirementV1" });
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts:18:  const validate = flowWasmContract("FlowBrowserTypesV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts:12:const validate = retirementAjv.getSchema(`${schemaDocument.$id}#/$defs/FlowSessionRetirementV1`)!;
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts:49:const validateClose = flowWasmContract("FlowRetainedSessionCloseV1");
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts:62:const validateRuntime = flowWasmContract("FlowBrowserRuntimeLifetimeV1");
+✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts:1554:      const validate = semioSchemaAjvV1({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/GisMapPeerRebootstrapV1`)! as unknown as (value: unknown) => value is GisMapPeerRebootstrapFixtureV1;
+✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts:2869:      const valid = semioSchemaAjvV1({ strict: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/GisMapInferencePortV1" });
+✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts:3193:      const validate = semioSchemaAjvV1({ strict: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/GisMapInferencePortV1" });
+✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts:4165:      const validateScope = validators.getSchema(`${schema.$id}#/$defs/DocumentOpeningScopeResolutionV1`)!;
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts:47: * exactly so a defect in `reduceGisMapInferencePortV1` cannot hide behind itself. */
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts:196:  const validate = await ownedExport(repoRoot, "os", "GisMapApprovalHistoryV1");
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts:249:  const validate = await ownedExport(repoRoot, "os", "GisMapInferencePortV1");
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts:291:      productionState = production.reduceGisMapInferencePortV1(productionState as never, step.event as never) as unknown as OracleStatus;
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts:302:  let pendingProduction = production.reduceGisMapInferencePortV1(production.reduceGisMapInferencePortV1(production.idleGisMapInferencePortStatusV1(), { kind: "start" }), { kind: "cancel" });
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts:307:  pendingProduction = production.reduceGisMapInferencePortV1(pendingProduction, accepted as never);
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts:313:    const viaProduction = production.reduceGisMapInferencePortV1(structuredClone(row.from) as never, row.event as never) as unknown as OracleStatus;
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts:430:  const validate = await ownedExport(repoRoot, "os", "GisMapPeerRebootstrapV1");
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🟦️.ts:1:import { GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, gisMapInferenceCodeFromStatusV1, gisMapInferencePortTerminalV1, idleGisMapInferencePortStatusV1, parseGisMapInferenceApprovalReceiptV1, parseGisMapApprovalUndoReceiptV1, parseGisMapInferenceEventPageV1, parseGisMapInferenceJobReceiptV1, reduceGisMapInferencePortV1, sealGisMapApprovalUndoRequestV1, sealGisMapInferenceApprovalRequestV1, sealGisMapInferenceJobRequestV1, type GisMapApprovalHistoryStatusV1, type GisMapApprovalUndoReceiptV1, type GisMapInferenceApprovalReceiptV1, type GisMapInferenceJobRequestV1, type GisMapInferencePortCodeV1, type GisMapInferencePortEventV1, type GisMapInferencePortStatusV1 } from "../🧬️schema/🟦️.ts";
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🟦️.ts:280:  const next = reduceGisMapInferencePortV1(operation.status, event);
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts:299:export function reduceGisMapInferencePortV1(current: GisMapInferencePortStatusV1, event: GisMapInferencePortEventV1): GisMapInferencePortStatusV1 {
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🦀️.rs:605:/// 🧮 Total, pure transition — the Rust twin of `reduceGisMapInferencePortV1`. It never fabricates a

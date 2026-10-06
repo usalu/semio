@@ -72,7 +72,7 @@ async fn set_node_preserves_every_json_value_kind_and_rejects_invalid_source() {
         let command = JsonIJsonIJsonEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), revision, value: source.into() };
         let emit = json_i_json_emit(&command, &snapshot, None).expect("valid JSON value");
         let next = protocol::MutationDiff::apply(<JsonMutation as protocol::Mutation<JsonSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact node patch applies");
-        let native = crate::schema::snapshot::parse_json_text(source).expect("JSON file parser");
+        let native = crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(source).expect("JSON file parser");
         let expected = serde_json::from_str::<serde_json::Value>(source).expect("serde_json oracle");
         assert_eq!(next.value, native);
         assert_eq!(serde_json::Value::from(&next.value), expected);

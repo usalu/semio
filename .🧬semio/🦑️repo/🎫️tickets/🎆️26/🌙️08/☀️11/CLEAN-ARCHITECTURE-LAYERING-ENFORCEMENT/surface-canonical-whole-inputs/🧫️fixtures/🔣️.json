@@ -1,0 +1,32 @@
+{
+  "cases": [
+    {
+      "id": "UTF8",
+      "path": "source.rs",
+      "source": "// 🧬️ owned\n",
+      "mutation": null,
+      "refused": false
+    },
+    {
+      "id": "Empty",
+      "path": "empty.rs",
+      "source": "",
+      "mutation": null,
+      "refused": false
+    },
+    {
+      "id": "ByteChange",
+      "path": "foreign.rs",
+      "source": "before",
+      "mutation": "after",
+      "refused": true
+    },
+    {
+      "id": "Truncate",
+      "path": "truncated.rs",
+      "source": "whole source",
+      "mutation": "whole",
+      "refused": true
+    }
+  ]
+}

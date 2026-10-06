@@ -8,7 +8,7 @@ import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 const decorate = (error: ValueError, path: readonly (string | number)[]): ValueError => path.reduceRight((error, segment) => error.under(segment), error);
 test("owned typed refusal construction preserves all kinds and paths against Ajv and SQLite", () => {
-  const ajv = new Ajv({ strict: true }); assert(ajv.validate(schema, fixture), JSON.stringify(ajv.errors));
+  const valid = new Ajv({ strict: true }).compile(schema);
   const db = new Database(":memory:"); db.run("CREATE TABLE path(position INTEGER PRIMARY KEY,segment TEXT NOT NULL)");
   try {
     for (const row of fixture.cases) {
@@ -16,6 +16,7 @@ test("owned typed refusal construction preserves all kinds and paths against Ajv
       const prefix = (db.query("SELECT GROUP_CONCAT(segment,'.') AS prefix FROM(SELECT segment FROM path ORDER BY position)").get() as { prefix: string | null }).prefix;
       const display = (db.query("SELECT COALESCE(? || '.', '') || ? AS display").get(prefix, row.message) as { display: string }).display;
       const error = decorate(new ValueError(row.kind as ValueRefusalKind, row.message), row.path);
+      assert(valid({ kind: error.kind, display: error.toString() }), row.id);
       assert.equal(error.kind, row.expected.kind, row.id); assert.equal(error.toString(), display, row.id); assert.equal(error.toString(), row.expected.display, row.id);
     }
   } finally { db.close(); }

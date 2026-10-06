@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn derives_from_checked_canonical_layout() {
-    let snapshot = crate::io::decode_bmp(include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap();
+    let snapshot = crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap();
     assert_eq!(compute_bmp_dimensions(&snapshot), BmpDimensions { width: 3, height: 2, bit_depth: 24, has_alpha: false, pixel_count: 6 });
 }
 

@@ -1,5 +1,6 @@
+use crate::standards::v_ecma_376::subsets::base::io::text::diff::PptxDiffRecord;
 use super::*;
-use protocol::{command::DiffAlgebra, DiffCodec, MutationDiff};
+use protocol::{command::DiffAlgebra, DiffBinary,DiffCodec,DiffText, MutationDiff};
 
 #[test]
 fn canonical_diff_roundtrips_and_restores_exact_authority() {

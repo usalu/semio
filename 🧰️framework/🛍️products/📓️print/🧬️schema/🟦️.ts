@@ -60,15 +60,6 @@ export type VizProbeRecord = { readonly case: string; readonly scenario: string;
 export const VIZ_GALLERY_THEMES = ["light", "dark"] as const;
 export type VizGalleryTheme = (typeof VIZ_GALLERY_THEMES)[number];
 
-/** 📄️ Where one catalogue kind of a section landed: its one-based page and that page's extracted text. */
-export type VizGalleryKindPage = { readonly page: number; readonly text: string };
-
-/** 📏️ One rendered gallery variant (section x theme x language). */
-export type VizGalleryVariantMeasurement = { readonly pages: number; readonly kinds: Readonly<Record<string, VizGalleryKindPage>>; readonly hash: string };
-
-/** 🖼️ The committed evidence of the `🖼️gallery-render` case, keyed `<section>/<theme>/<language>`. */
-export type VizGalleryRenderEvidence = { readonly schemaVersion: 1; readonly generatedBy: string; readonly variants: Readonly<Record<string, VizGalleryVariantMeasurement>> };
-
 /** 🧬️ The schema document, including the `x-` annotations that carry the per-family vocabulary. */
 export type VizSchemaDocument = {
   readonly $id: string;

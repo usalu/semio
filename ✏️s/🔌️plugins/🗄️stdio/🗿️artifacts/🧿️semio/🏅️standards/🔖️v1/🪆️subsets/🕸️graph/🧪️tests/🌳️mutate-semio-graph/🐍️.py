@@ -651,6 +651,12 @@ def pack_bytes(document: dict) -> bytes:
 # endregion 🔖️Pack
 
 
+#: 🧱️ The incident edges ONE `delete-node` severs at most. The committed leaf payload schema
+#: `…/🧬️mutations/🗑️delete-node/🧬️schema/🔣️.json` declares `x-semio-inverse-rows: {"bounded": 1025}`: the undo is the
+#: row that restores the node plus one row per severed edge, so the 1025th incident edge makes the delete a refusal
+#: (`mutation.target-referenced`) that changes nothing and has nothing to undo.
+DELETE_NODE_CASCADE_EDGES_MAXIMUM = 1024
+
 #: 🏷️ The externally tagged JSON name of each kebab-case kind, as the committed specification
 #: vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/🦠️mutation/` spell it.
 TAG_OF_KIND = {
@@ -727,6 +733,15 @@ def edge_at(document: dict, edge_id: dict, verb: str) -> dict:
     raise AssertionError("%s addresses edge %r, which the graph does not carry" % (verb, edge_id))
 
 
+def severed_edges(document: dict, node_id: dict, verb: str) -> list:
+    """✂️ `(index, edge)` of every edge a `delete-node` of `node_id` severs, in document order. More than
+    `DELETE_NODE_CASCADE_EDGES_MAXIMUM` of them is a refusal, never a partial cascade."""
+    severed = [(at, edge) for at, edge in enumerate(document["edges"]) if edge["source"] == node_id or edge["target"] == node_id]
+    if len(severed) > DELETE_NODE_CASCADE_EDGES_MAXIMUM:
+        raise AssertionError("%s addresses node %r, which %d edges still reference — one delete severs at most %d" % (verb, node_id, len(severed), DELETE_NODE_CASCADE_EDGES_MAXIMUM))
+    return severed
+
+
 def apply_mutation(document: dict, mutation: dict) -> dict:
     """🧬️ Applies one verb, returning a NEW document. `delete-node` CASCADES into every edge with
     that node as source or target, which is the behaviour the committed `removes-the-sink-node-and-
@@ -743,8 +758,9 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         result["nodes"].insert(insert_index(result["nodes"], args.get("at")), created)
     elif tag == "DeleteNode":
         node_at(result, args["id"], tag)
+        severed = {at for at, _ in severed_edges(result, args["id"], tag)}
         result["nodes"] = [node for node in result["nodes"] if node["id"] != args["id"]]
-        result["edges"] = [edge for edge in result["edges"] if edge["source"] != args["id"] and edge["target"] != args["id"]]
+        result["edges"] = [edge for at, edge in enumerate(result["edges"]) if at not in severed]
     elif tag == "ChangeNodeKind":
         node_at(result, args["id"], tag)["kind"] = args["new_kind"]
     elif tag == "ChangeNodeLabel":
@@ -827,7 +843,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     if tag == "DeleteNode":
         node = node_at(document, args["id"], tag)
         steps = [{"CreateNode": {"id": clone(node["id"]), "kind": node["kind"], "label": node["label"], "position": point_number(node["position"]), "width": number(node["width"]), "height": number(node["height"]), "ports": clone(node["ports"]), "properties": clone(node["properties"]), "at": document["nodes"].index(node)}}]
-        steps.extend(edge_mutation(edge, at) for at, edge in enumerate(document["edges"]) if edge["source"] == args["id"] or edge["target"] == args["id"])
+        steps.extend(edge_mutation(edge, at) for at, edge in severed_edges(document, args["id"], tag))
         return steps
     if tag == "ChangeNodeKind":
         return [{"ChangeNodeKind": {"id": clone(args["id"]), "new_kind": node_at(document, args["id"], tag)["kind"]}}]
@@ -898,13 +914,13 @@ def doc_json(ctx: Context) -> dict:
 def prepared(ctx: Context) -> tuple:
     """🕸️ The real committed wires graph, plus the scenario's own verb."""
     plan = doc_json(ctx)
-    document = apply_all(parse_dsl(ctx.fixture_bytes(TOWER_DSL).decode("utf-8")), plan.get("prepare", []))
+    document = apply_all(parse_dsl(ctx.input_bytes(TOWER_DSL).decode("utf-8")), plan.get("prepare", []))
     return document, plan["mutation"]
 
 
-def fixture_json(ctx: Context, uri: str) -> dict:
+def snapshot_json(ctx: Context, uri: str) -> dict:
     """🧫️ One committed specification-vector file, decoded from the bytes the plan pinned."""
-    return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input
@@ -933,10 +949,10 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
-    before_uri, mutation_uri, after_uri = ctx.step_fixture_uris()[:3]
-    before = fixture_json(ctx, before_uri)
-    after = fixture_json(ctx, after_uri)
-    applied = apply_mutation(before, fixture_json(ctx, mutation_uri))
+    before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
+    before = snapshot_json(ctx, before_uri)
+    after = snapshot_json(ctx, after_uri)
+    applied = apply_mutation(before, snapshot_json(ctx, mutation_uri))
     if applied != after:
         raise AssertionError("%s: the applied snapshot does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(after)))
     return Outcome(applied)
@@ -947,14 +963,14 @@ def carrier_pair(ctx: Context, dsl_uri: str, pack_uri: str, what: str) -> dict:
     byte for byte. `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary
     twin, so an exact re-emission is the CORRECT answer and the must-differ tripwire would be
     backwards here."""
-    dsl_bytes = ctx.fixture_bytes(dsl_uri)
+    dsl_bytes = ctx.input_bytes(dsl_uri)
     document = parse_dsl(dsl_bytes.decode("utf-8"))
     printed = print_dsl(document).encode("utf-8")
     if printed != dsl_bytes:
         raise AssertionError("re-printing %s did not reproduce its committed DSL bytes (%d vs %d bytes)" % (what, len(printed), len(dsl_bytes)))
     if parse_dsl(printed.decode("utf-8")) != document:
         raise AssertionError("re-parsing the printed %s lost content" % what)
-    committed_pack = ctx.fixture_bytes(pack_uri)
+    committed_pack = ctx.input_bytes(pack_uri)
     unpacked = parse_pack(committed_pack)
     if unpacked != document:
         raise AssertionError("the binary twin of %s decodes to a different graph than its text\n     got: %s\nexpected: %s" % (what, json.dumps(unpacked), json.dumps(document)))

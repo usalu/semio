@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 import * as geo from "d3-geo";
-import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { compileVizProbe, probeProjection, roundProbeNumbers, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -66,7 +66,7 @@ function grid(values: readonly number[]): number[] {
 }
 
 async function subject(ctx: AdapterContext, fixture: string): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbe(ctx.fixture(fixture), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
+  const records = await compileVizProbe(ctx.input(fixture), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id });
   return { projection: probeProjection(roundProbeNumbers(records, DECIMALS)) };
 }
 // #endregion 🧫️Vectors

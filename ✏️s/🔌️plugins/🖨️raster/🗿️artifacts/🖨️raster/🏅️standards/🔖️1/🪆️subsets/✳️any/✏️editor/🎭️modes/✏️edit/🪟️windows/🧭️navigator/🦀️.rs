@@ -23,6 +23,7 @@ const RASTER_PLAY_SURFACE_NAVIGATOR: &str = "raster.play.navigator";
 /// the navigator has no live chrome measures of its own.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: RASTER_PLAY_WINDOW_NAVIGATOR.into(),
         label: LocalizedLabel::native("Navigator", "Navigator"),
         body_key: RASTER_PLAY_BODY_NAVIGATOR.into(),

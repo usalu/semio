@@ -449,7 +449,7 @@ fn decode_rejects_crc_mismatch() {
 async fn deterministic_logical_round_trip() {
     use crate::schema::mutations::set_snapshot;
     use crate::{ZipDiff, ZipMutation};
-    use protocol::{DiffAlgebra, DiffCodec, MutationDiff, OpBinary, OpText};
+    use protocol::{DiffAlgebra, DiffBinary,DiffCodec,DiffText, MutationDiff, OpBinary, OpText};
     use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
 
     let entry = ZipEntry { name: "readme.md".into(), data: b"# hello\nsome content here to compress".to_vec(), ..Default::default() };
@@ -489,9 +489,9 @@ async fn deterministic_logical_round_trip() {
     crate::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
     assert_eq!(from_binary_op, logical);
 
-    let analysis = crate::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(archive_bytes)]);
+    let analysis = crate::standards::v2_0::subsets::base::io::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(archive_bytes)]);
     assert_eq!(analysis.parts.snapshot.as_ref(), Some(&logical));
-    let dialect = <crate::standards::v2_0::subsets::base::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
+    let dialect = <crate::standards::v2_0::subsets::base::io::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
     let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(archive_bytes) }]).expect("compose native OPC ZIP");
     assert_eq!(composition.snapshot, logical);
 

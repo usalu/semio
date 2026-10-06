@@ -16,7 +16,7 @@ const PACKAGE = "semio-framework-tool-run";
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🧪️tests/🧩️conformance/🟦️.ts")], { cwd: this.repoRoot , budgetMs: testLevelBudgetMs()});
+    await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🧪️tests/🧪️conformance/🟦️.ts")], { cwd: this.repoRoot , budgetMs: testLevelBudgetMs()});
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [PACKAGE], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }

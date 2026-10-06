@@ -17,6 +17,6 @@ pub fn diff(payload: &super::ChangeZoneEquipmentType, base: &EnergyModelSnapshot
     if let Some(item) = model.zone_equipment.iter_mut().find(|item| item.id == payload.id) {
         item.equipment_type = payload.new_equipment_type.clone();
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

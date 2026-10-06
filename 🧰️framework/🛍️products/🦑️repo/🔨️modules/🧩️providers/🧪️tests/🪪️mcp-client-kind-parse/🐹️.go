@@ -23,7 +23,7 @@ type identityVectorFile struct {
 
 func loadIdentityVectors(ctx *host.Context) (identityVectorFile, error) {
 	var file identityVectorFile
-	raw, err := ctx.FixtureBytes(identityVectors)
+	raw, err := ctx.InputBytes(identityVectors)
 	if err != nil {
 		return file, err
 	}

@@ -3,10 +3,6 @@ use crate::schema::diff::SvgDiff;
 use crate::SvgSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlDoctype;
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]

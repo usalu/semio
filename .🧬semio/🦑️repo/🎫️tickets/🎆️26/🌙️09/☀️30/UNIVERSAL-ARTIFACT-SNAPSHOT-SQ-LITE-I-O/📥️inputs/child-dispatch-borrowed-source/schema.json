@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "parent",
+    "child",
+    "slot",
+    "invalidN",
+    "opSchema",
+    "label",
+    "expectedPolicy"
+  ],
+  "properties": {
+    "schema": {
+      "const": "child-dispatch-borrow/v1"
+    },
+    "parent": {
+      "const": "borrow-parent"
+    },
+    "child": {
+      "const": "borrow-child"
+    },
+    "slot": {
+      "const": "borrow-slot"
+    },
+    "invalidN": {
+      "const": -1
+    },
+    "opSchema": {
+      "const": "demo/v1"
+    },
+    "label": {
+      "const": "borrowed-rejection"
+    },
+    "expectedPolicy": {
+      "const": "normal"
+    }
+  }
+}

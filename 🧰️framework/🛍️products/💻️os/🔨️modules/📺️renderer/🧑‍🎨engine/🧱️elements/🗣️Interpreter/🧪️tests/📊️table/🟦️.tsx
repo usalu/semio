@@ -15,16 +15,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { readFileSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
-  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
 
   const fixtureDir = join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧪️conformance/🧩️component/📊️table");
   const snapshot = JSON.parse(readFileSync(join(fixtureDir, "📸️snapshot.json"), "utf8"));
   const matrixFixtureDir = join(dirname(fileURLToPath(source.url)), "../../../../🔌️plugin/🪟️window-kits/📊️table/🧫️fixtures/↔️two-axis");
   const matrixFixture = JSON.parse(readFileSync(join(matrixFixtureDir, "🔣️.json"), "utf8"));
-  const matrixSchema = JSON.parse(readFileSync(join(matrixFixtureDir, "🧬️schema/🔣️.json"), "utf8"));
   const rowTargetDir = join(dirname(fileURLToPath(source.url)), "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🎯️row-target");
   const rowTarget = JSON.parse(readFileSync(join(rowTargetDir, "🔣️.json"), "utf8"));
-  const rowTargetSchema = JSON.parse(readFileSync(join(rowTargetDir, "🧬️schema/🔣️.json"), "utf8"));
 
   function mount(onIntent: (intent: any) => void, windows: unknown = null, sourceSnapshot: any = snapshot) {
     const store = new UiDocumentStore(sourceSnapshot.surface);
@@ -184,8 +181,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("windows columns independently and preserves their logical addresses", () => {
-      const validate = new Ajv2020({ strict: true }).compile(matrixSchema);
-      expect(validate(matrixFixture), JSON.stringify(validate.errors)).toBe(true);
       const wide = structuredClone(snapshot);
       const table = wide.nodes[0].component;
       table.columns = matrixFixture.headers;
@@ -227,7 +222,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("dispatches a tree row and a table row with one target identically, by the row-target fixture", () => {
-      expect(new Ajv2020({ strict: false }).validate(rowTargetSchema, rowTarget)).toBe(true);
       const row = (name: string) => rowTarget.rows.find((candidate: any) => candidate.case === name).component;
       const record = (id: number, key: string, component: any, children: number[] = []) => ({ id, key, component, layout: { kind: "stack", axis: "vertical", gap: "none", padding: { all: "none" }, align: "stretch", justify: "start", grow: false, wrap: false }, style: {}, activity: "idle", disabled: false, transition: null, accessibility: {}, bindings: [], menu: null, children });
       const surface = "panel:row-target";

@@ -1,0 +1,3045 @@
+{
+  "qualification": "Bounded known complementary map; no universal count; source only, no gates executed.",
+  "rows": [
+    {
+      "owner": "WriterSnapshot",
+      "package": "semio-s-artifact-writer-writer",
+      "manifest": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.writer.writer",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "writer.document",
+      "artifactRoot": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: WriterApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 213
+        }
+      ],
+      "script": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-writer-writer\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });"
+      ],
+      "nxProject": "@semio-tech/writer-writer-rs",
+      "target": "@semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_writer_owned_strings_child_identity_and_independent_sql_edit",
+        "sqlite_snapshot_writer_actual_erased_codec_and_request_bounds",
+        "sqlite_snapshot_writer_neutral_exact_coordinates_fixed_identity_and_request_limits",
+        "sqlite_snapshot_writer_signed_aliases_and_complete_owned_field_guard",
+        "sqlite_snapshot_writer_whole_controlled_native_stages_child_identity_and_limits",
+        "sqlite_snapshot_writer_real_owned_declaration_public_and_erased_io",
+        "sqlite_snapshot_writer_authored_native_text_boundary_is_complete",
+        "sqlite_snapshot_writer_controlled_output_preserves_literal_handles_and_cancels_inside_text",
+        "sqlite_snapshot_writer_explicit_native_output_boundary_preserves_complete_owned_state",
+        "sqlite_snapshot_writer_explicit_native_schema_and_row_admission_precedes_work",
+        "sqlite_snapshot_writer_explicit_native_output_exact_file_frontier_and_unicode_cancel",
+        "sqlite_snapshot_writer_explicit_native_input_preserves_actual_fields_and_request_admission"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_writer_real_owned_declaration_public_and_erased_io"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "EquationSnapshot",
+      "package": "semio-s-artifact-mathematical-equation",
+      "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.mathematical.equation",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.equation/v1",
+      "artifactRoot": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: EquationApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 452
+        }
+      ],
+      "script": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-mathematical-equation\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/mathematical-equation-rs",
+      "target": "@semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_equation_typed_lexemes_labels_handles_and_independent_sql_edit",
+        "sqlite_snapshot_equation_actual_erased_binary_text_retain_only_persisted_state",
+        "sqlite_snapshot_equation_deep_retirement_exact_profile_and_bounded_cancellation",
+        "sqlite_snapshot_equation_authored_logical_grammar_demo_and_actual_declaration_agree",
+        "sqlite_snapshot_equation_deep_erased_native_retains_flat_owned_state_on_small_stack",
+        "sqlite_snapshot_equation_controlled_typed_construction_preserves_admission_and_known_work",
+        "sqlite_snapshot_equation_whole_native_control_preserves_typed_fields_and_interior_cancellation",
+        "sqlite_snapshot_equation_explicit_native_output_boundary_preserves_complete_owned_state",
+        "sqlite_snapshot_equation_explicit_native_schema_and_row_admission_precedes_work",
+        "sqlite_snapshot_equation_explicit_native_output_exact_file_frontier_and_unicode_cancel",
+        "sqlite_snapshot_equation_independent_consistent_surrogate_renumbering"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_equation_authored_logical_grammar_demo_and_actual_declaration_agree"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "package": "semio-s-artifact-wfc-2d",
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.wfc.wfc2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.wfc2d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 104
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-wfc-2d\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], snapshotSqliteTestBudgetMs: 120000 });"
+      ],
+      "nxProject": "@semio-tech/wfc-2d-rs",
+      "target": "@semio-tech/wfc-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_wfc2d_genuine_controlled_native_words",
+        "sqlite_snapshot_wfc2d_all_owned_media_and_slot_words",
+        "sqlite_snapshot_wfc2d_independent_relations_and_path_edit",
+        "sqlite_snapshot_wfc2d_corrupt_graph_and_point_shape",
+        "sqlite_snapshot_wfc2d_actual_native_declaration",
+        "sqlite_snapshot_wfc2d_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_wfc2d_actual_owned_io_declaration_codec",
+        "sqlite_snapshot_wfc2d_retains_native_literal_identity_states",
+        "sqlite_snapshot_wfc2d_native_real_collection_and_utf_frontiers",
+        "sqlite_snapshot_wfc2d_canonical_pixels_and_full_literal_owner_states"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_wfc2d_actual_native_declaration",
+        "sqlite_snapshot_wfc2d_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_wfc2d_actual_owned_io_declaration_codec"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "package": "semio-s-artifact-wfc-grid2d",
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.wfc.grid2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.grid2d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 104
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-wfc-grid2d\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], snapshotSqliteTestBudgetMs: 120000 });"
+      ],
+      "nxProject": "@semio-tech/wfc-grid2d-rs",
+      "target": "@semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_grid2d_retains_native_literal_identity_states",
+        "sqlite_snapshot_wfc_grid2d_all_media_path_and_words",
+        "sqlite_snapshot_wfc_grid2d_independent_queries_and_edit",
+        "sqlite_snapshot_wfc_grid2d_invalid_typed_graph_and_controls",
+        "sqlite_snapshot_wfc_grid2d_actual_native_declaration",
+        "sqlite_snapshot_grid2d_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_grid2d_actual_owned_io_declaration_codec",
+        "sqlite_snapshot_grid2d_genuine_native_input_output_words_and_admission",
+        "sqlite_snapshot_grid2d_native_real_collection_and_utf_frontiers",
+        "sqlite_snapshot_wfc_grid2d_canonical_pixels_and_full_literal_owner_states"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_wfc_grid2d_actual_native_declaration",
+        "sqlite_snapshot_grid2d_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_grid2d_actual_owned_io_declaration_codec"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "package": "semio-s-artifact-wfc-bitmap",
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.wfc.bitmap",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.bitmap",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 179
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-wfc-bitmap\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"],snapshotSqliteTestBudgetMs:120000});"
+      ],
+      "nxProject": "@semio-tech/wfc-bitmap-rs",
+      "target": "@semio-tech/wfc-bitmap-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_wfc_bitmap_all_native_fields",
+        "sqlite_snapshot_wfc_bitmap_independent_query_and_edit",
+        "sqlite_snapshot_wfc_bitmap_invalid_relations_limits_cancellation",
+        "sqlite_snapshot_wfc_bitmap_actual_owner_native_admission",
+        "sqlite_snapshot_bitmap_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_bitmap_actual_owned_io_declaration_codec",
+        "sqlite_snapshot_bitmap_explicit_controlled_native_owner",
+        "sqlite_snapshot_bitmap_controlled_native_interior_and_large_copy",
+        "sqlite_snapshot_bitmap_explicit_controlled_native_output",
+        "sqlite_snapshot_bitmap_output_real_collection_and_unicode_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_bitmap_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_bitmap_actual_owned_io_declaration_codec"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "package": "semio-s-artifact-wfc-3d",
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.wfc.wfc3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.wfc3d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 131
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-wfc-3d\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"],snapshotSqliteTestBudgetMs:120000});"
+      ],
+      "nxProject": "@semio-tech/wfc-3d-rs",
+      "target": "@semio-tech/wfc-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_wfc3d_genuine_controlled_native_words",
+        "sqlite_snapshot_wfc3d_all_owned_graph_and_word_states",
+        "sqlite_snapshot_wfc3d_independent_sql_join_and_edge_edit",
+        "sqlite_snapshot_wfc3d_graph_corruption_and_controls",
+        "sqlite_snapshot_wfc3d_actual_owner_native_admission",
+        "sqlite_snapshot_wfc3d_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_wfc3d_actual_owned_io_declaration_codec",
+        "sqlite_snapshot_wfc3d_retains_native_literal_identity_states",
+        "sqlite_snapshot_wfc3d_native_real_collection_and_utf_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_wfc3d_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_wfc3d_actual_owned_io_declaration_codec"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "package": "semio-s-artifact-wfc-grid3d",
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.wfc.grid3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.grid3d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 109
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-wfc-grid3d\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"],snapshotSqliteTestBudgetMs:120000});"
+      ],
+      "nxProject": "@semio-tech/wfc-grid3d-rs",
+      "target": "@semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_grid3d_genuine_controlled_native_words",
+        "sqlite_snapshot_wfc_grid3d_exact_ieee_widths_and_media",
+        "sqlite_snapshot_wfc_grid3d_independent_relations_edit",
+        "sqlite_snapshot_wfc_grid3d_invalid_graph_and_bounds",
+        "sqlite_snapshot_wfc_grid3d_actual_owner_native_admission",
+        "sqlite_snapshot_grid3d_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_grid3d_actual_owned_io_declaration_codec",
+        "sqlite_snapshot_grid3d_retains_native_literal_identity_states",
+        "sqlite_snapshot_grid3d_native_real_collection_and_utf_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_grid3d_declared_erased_roundtrip_both_native_encodings",
+        "sqlite_snapshot_grid3d_actual_owned_io_declaration_codec"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "package": "semio-s-artifact-procedural-generation2d",
+      "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.procedural.generation2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "generation.2d",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 151
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "}, snapshotSqliteTestFeatures: [], snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], snapshotSqliteTestBudgetMs: 120000, commands: { verify: OwnedVerifyScript } });"
+      ],
+      "nxProject": "@semio-tech/procedural-generation2d-rs",
+      "target": "@semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_generation_intrinsic_text_preserves_numeric_variants",
+        "sqlite_snapshot_generation2d_wide_owned_answer_row_frontier_and_interior_cancel",
+        "sqlite_snapshot_generation_native_row_frontier_matches_complete_relational_entities",
+        "sqlite_snapshot_procedural_generation2d_independent_entity_renumbering_preserves_owned_state",
+        "sqlite_snapshot_procedural_generation2d_controlled_native_input_preserves_complete_owned_state",
+        "sqlite_snapshot_procedural_generation2d_controlled_native_output_preserves_exact_physical_bytes",
+        "sqlite_snapshot_procedural_generation2d_native_controls_cancel_inside_large_owned_literals",
+        "sqlite_snapshot_procedural_generation2d_full_owned_state",
+        "sqlite_snapshot_procedural_generation2d_independent_sqlite_edit",
+        "sqlite_snapshot_procedural_generation2d_bad_structure_and_admission",
+        "sqlite_snapshot_procedural_generation2d_erased_native_encodings_and_retained_refusals",
+        "sqlite_snapshot_procedural_generation2d_actual_declaration_owned_io",
+        "sqlite_snapshot_procedural_generation2d_deep_owned_answers_and_partial_cancellation"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_procedural_generation2d_actual_declaration_owned_io"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "package": "semio-s-artifact-procedural-generation3d",
+      "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.procedural.generation3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "generation.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 147
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "  snapshotSqliteTestFeatures: [], snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"],",
+        "  snapshotSqliteTestBudgetMs: 120000,"
+      ],
+      "nxProject": "@semio-tech/procedural-generation3d-rs",
+      "target": "@semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_procedural_generation3d_wire_primitive_controlled_binding_preserves_literal_ownership",
+        "sqlite_snapshot_generation_native_row_frontier_matches_complete_relational_entities",
+        "sqlite_snapshot_procedural_generation3d_independent_entity_renumbering_preserves_owned_state",
+        "sqlite_snapshot_procedural_generation3d_controlled_native_input_preserves_complete_owned_state",
+        "sqlite_snapshot_procedural_generation3d_controlled_native_output_preserves_exact_physical_bytes",
+        "sqlite_snapshot_procedural_generation3d_native_controls_cancel_inside_large_owned_literals",
+        "sqlite_snapshot_procedural_generation3d_full_owned_state",
+        "sqlite_snapshot_procedural_generation3d_independent_sqlite_edit",
+        "sqlite_snapshot_procedural_generation3d_bad_structure_and_admission",
+        "sqlite_snapshot_procedural_generation3d_erased_native_encodings_and_retained_refusals",
+        "sqlite_snapshot_procedural_generation3d_actual_declaration_owned_io",
+        "sqlite_snapshot_procedural_generation3d_deep_owned_answers_and_partial_cancellation"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_procedural_generation3d_actual_declaration_owned_io"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "FlowSnapshot",
+      "package": "semio-s-artifact-flow-flow",
+      "manifest": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.flow.flow",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "flow.host_snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 398
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-flow-flow\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { verify: OwnedVerifyScript, \"test-source\": SourceTestScript, \"child-identity-check\": ChildIdentityCheckScript, \"child-edit-check\": ChildEditCheckScript, \"add-widget-retained-check\": AddWidgetRetainedCheckScript } });"
+      ],
+      "nxProject": "@semio-tech/flow-flow-rs",
+      "target": "@semio-tech/flow-flow-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_flow_owned_child_and_independent_edit",
+        "sqlite_snapshot_flow_bad_owned_rows_and_cancellation",
+        "sqlite_snapshot_flow_actual_bare_erased_encodings",
+        "sqlite_snapshot_flow_exact_wildcard_guard",
+        "sqlite_snapshot_flow_actual_declaration_owned_io",
+        "sqlite_snapshot_flow_all_literal_reference_fields_match_native_and_sqlite",
+        "sqlite_snapshot_flow_controlled_native_full_string_fields",
+        "sqlite_snapshot_flow_native_each_owned_string_has_interior_admission",
+        "sqlite_snapshot_flow_joint_distinct_persisted_owners_retain_public_io"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_flow_actual_declaration_owned_io",
+        "sqlite_snapshot_flow_joint_distinct_persisted_owners_retain_public_io"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "package": "semio-s-artifact-gis-gisterrain",
+      "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "gis.terrain",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 187
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-gis-gisterrain\", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/gis-gisterrain-rs",
+      "target": "@semio-tech/gis-gisterrain-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_terrain_map_mutation_preserves_zero_word_change",
+        "sqlite_snapshot_terrain_map_mutation_preserves_integer_variant_change",
+        "sqlite_snapshot_terrain_map_mutation_identical_nan_word_is_noop",
+        "sqlite_snapshot_terrain_map_mutation_distinguishes_nan_and_optional_owner",
+        "sqlite_snapshot_terrain_native_encode_counts_complete_map_rows_before_work",
+        "sqlite_snapshot_terrain_native_decode_counts_complete_map_rows",
+        "sqlite_snapshot_terrain_complete_imported_intrinsic_owner_roundtrips",
+        "sqlite_snapshot_gis_terrain_all_ieee_words_and_independent_sql",
+        "sqlite_snapshot_gis_terrain_complete_native_record_and_actual_erased_provider",
+        "sqlite_snapshot_gis_terrain_exact_profile_and_resource_admission",
+        "sqlite_snapshot_gisterrain_real_declaration_public_typed_io",
+        "sqlite_snapshot_gis_terrain_whole_native_controls_admission_and_interior_cancellation",
+        "sqlite_snapshot_terrain_explicit_native_output_boundary_preserves_complete_owned_state",
+        "sqlite_snapshot_terrain_explicit_native_schema_and_row_admission_precedes_work",
+        "sqlite_snapshot_terrain_explicit_native_output_exact_file_frontier_and_unicode_cancel"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_gisterrain_real_declaration_public_typed_io"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "package": "semio-s-artifact-gis-gismap",
+      "manifest": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "gis.map",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 332
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-gis-gismap\", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/gis-gismap-rs",
+      "target": "@semio-tech/gis-gismap-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_gis_map_all_owned_variants_and_independent_sql",
+        "sqlite_snapshot_gis_map_actual_erased_complete_intrinsic_native_records",
+        "sqlite_snapshot_gis_map_deep_retirement_budgets_cancellation_and_exact_owned_profile",
+        "sqlite_snapshot_gismap_real_declaration_public_typed_io",
+        "sqlite_snapshot_gis_map_whole_native_control_preserves_exact_fields_and_interior_cancellation",
+        "sqlite_snapshot_map_explicit_native_output_boundary_preserves_complete_owned_state",
+        "sqlite_snapshot_map_explicit_native_schema_and_row_admission_precedes_work",
+        "sqlite_snapshot_map_explicit_native_output_exact_file_frontier_and_unicode_cancel"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_gismap_real_declaration_public_typed_io"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "VcsSnapshot",
+      "package": "semio-s-artifact-vcs-vcs",
+      "manifest": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.vcs.vcs",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "vcs.vcs",
+      "artifactRoot": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: VcsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 84
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-vcs-vcs\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/vcs-vcs-rs",
+      "target": "@semio-tech/vcs-vcs-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_vcs_complete_and_empty_domains_retain_all_native_fields",
+        "sqlite_snapshot_vcs_every_signed64_word_survives_both_declared_erased_directions",
+        "sqlite_snapshot_vcs_independent_sql_queries_and_edits_have_no_native_carrier",
+        "sqlite_snapshot_vcs_independent_malformed_sql_refuses_exact_shape_parents_ordinals_and_types",
+        "sqlite_snapshot_vcs_caller_row_value_and_file_limits_precede_native_ownership",
+        "sqlite_snapshot_vcs_initial_and_interior_control_cancels_every_expensive_phase",
+        "sqlite_snapshot_vcs_large_text_ownership_has_real_interior_copy_cancellation",
+        "sqlite_snapshot_vcs_typed_tag_collection_declares_its_own_interior_workload",
+        "sqlite_snapshot_vcs_actual_declaration_mount_exports_and_imports_queryable_files",
+        "sqlite_snapshot_vcs_actual_native_declaration_exposes_relational_capability",
+        "sqlite_snapshot_vcs_neutral_native_fields_agree_with_independent_serde",
+        "sqlite_snapshot_vcs_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_vcs_every_signed64_word_survives_both_declared_erased_directions",
+        "sqlite_snapshot_vcs_typed_tag_collection_declares_its_own_interior_workload",
+        "sqlite_snapshot_vcs_actual_declaration_mount_exports_and_imports_queryable_files",
+        "sqlite_snapshot_vcs_actual_native_declaration_exposes_relational_capability"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "package": "semio-s-artifact-animate-presentation",
+      "manifest": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.animate.presentation",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "animate.presentation",
+      "artifactRoot": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>",
+          "line": 379
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-animate-presentation\", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/animate-presentation-rs",
+      "target": "@semio-tech/animate-presentation-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_presentation_ordinary_native_geometry_preserves_all_raw_words",
+        "sqlite_snapshot_presentation_actual_native_declaration_exposes_owned_relational_capability",
+        "sqlite_snapshot_presentation_neutral_native_fields_retain_both_literal_child_domains",
+        "sqlite_snapshot_presentation_queryable_all_fields_options_and_literal_children_are_exact",
+        "sqlite_snapshot_presentation_every_geometry_word_survives_both_erased_native_directions",
+        "sqlite_snapshot_presentation_independent_queries_and_surrogate_edits_remain_semantic",
+        "sqlite_snapshot_presentation_independent_malformed_sql_refuses_owned_shapes",
+        "sqlite_snapshot_presentation_exact_caller_limits_precede_all_ownership",
+        "sqlite_snapshot_presentation_initial_and_large_utf8_cancellation_reaches_actual_native_phases",
+        "sqlite_snapshot_presentation_cancellation_reaches_interior_owned_tile_traversal",
+        "sqlite_snapshot_presentation_actual_declaration_mount_routes_queryable_files"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_presentation_actual_native_declaration_exposes_owned_relational_capability",
+        "sqlite_snapshot_presentation_actual_declaration_mount_routes_queryable_files"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "package": "semio-s-artifact-shooting-shooting",
+      "manifest": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.shooting.shooting",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "shooting.shooting",
+      "artifactRoot": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 168
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "  if(segments.length!==1||segments[0]!==\"snapshot-sqlite-source\")throw Error(\"Unknown Shooting owned verification\");",
+        "  await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--target\",\"ESNext\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",\"--resolveJsonModule\",\"--skipLibCheck\",resolve(snapshot,\"🟦️.ts\"),resolve(snapshot,\"🧪️tests/🪶️sqlite/🟦️.ts\")],this.repoRoot,\"shooting-snapshot-sqlite-public-types\");",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-shooting-shooting\", {commands:{verify:VerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/shooting-shooting-rs",
+      "target": "@semio-tech/shooting-shooting-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_shooting_neutral_native_json_has_exact_optional_field_presence",
+        "sqlite_snapshot_shooting_canonical_native_codec_and_actual_declaration_expose_owned_relational_capability",
+        "sqlite_snapshot_shooting_both_authored_native_examples_match_the_literal_snapshot_printer",
+        "sqlite_snapshot_shooting_complete_native_fields_retain_every_literal_emblem_component",
+        "sqlite_snapshot_shooting_all_native_geometry_fields_preserve_independent_raw_words",
+        "sqlite_snapshot_shooting_queryable_all_owned_fields_and_complete_optional_presence",
+        "sqlite_snapshot_shooting_every_geometry_word_survives_both_erased_native_directions",
+        "sqlite_snapshot_shooting_independent_queries_and_surrogate_edits_retain_semantics",
+        "sqlite_snapshot_shooting_independent_malformed_sql_refuses_owned_shapes",
+        "sqlite_snapshot_shooting_exact_row_and_file_and_owned_limits_precede_all_construction",
+        "sqlite_snapshot_shooting_initial_and_large_utf8_cancellation_reaches_native_phases",
+        "sqlite_snapshot_shooting_cancellation_reaches_interior_actual_asset_traversal",
+        "sqlite_snapshot_shooting_actual_artifact_declaration_mount_routes_queryable_files"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_shooting_canonical_native_codec_and_actual_declaration_expose_owned_relational_capability",
+        "sqlite_snapshot_shooting_actual_artifact_declaration_mount_routes_queryable_files"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "package": "semio-s-artifact-demonstrator-playground",
+      "manifest": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.demonstrator.playground",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "playground.playground",
+      "artifactRoot": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 82
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-demonstrator-playground\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/demonstrator-playground-rs",
+      "target": "@semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_playground_actual_bare_owner_has_capability",
+        "sqlite_snapshot_playground_actual_declaration_registers_both_io_directions",
+        "sqlite_snapshot_playground_ordinary_native_formats_keep_every_literal_field",
+        "sqlite_snapshot_playground_authored_single_table_is_independently_queryable",
+        "sqlite_snapshot_playground_actual_erased_native_formats_use_queryable_parent",
+        "sqlite_snapshot_playground_owned_rows_are_literal_and_refuse_hostile_shapes",
+        "sqlite_snapshot_playground_controlled_copies_refuse_inside_all_four_phases",
+        "sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_metadata_rows"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_playground_actual_declaration_registers_both_io_directions"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "package": "semio-s-artifact-sequence-sequence",
+      "manifest": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.sequence.sequence",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "sequence.sequence",
+      "artifactRoot": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: SequenceApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 415
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "  snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"],"
+      ],
+      "nxProject": "@semio-tech/sequence-sequence-rs",
+      "target": "@semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_sequence_demo_matches_the_actual_parent_native_printer",
+        "sqlite_snapshot_sequence_complete_parent_and_empty_reference_fields_are_exact",
+        "sqlite_snapshot_sequence_all_owned_reference_domains_survive_both_erased_directions",
+        "sqlite_snapshot_sequence_independent_query_and_reference_edits_are_semantic",
+        "sqlite_snapshot_sequence_independent_malformed_sql_rejects_shape_parents_and_types",
+        "sqlite_snapshot_sequence_caller_limits_precede_complete_native_and_relational_ownership",
+        "sqlite_snapshot_sequence_initial_and_large_text_cancellation_reaches_all_native_phases",
+        "sqlite_snapshot_sequence_actual_declaration_mount_routes_queryable_files",
+        "sqlite_snapshot_sequence_actual_native_declaration_exposes_relational_capability",
+        "sqlite_snapshot_sequence_neutral_json_retains_every_child_reference_field",
+        "sqlite_snapshot_sequence_native_child_carrier_preserves_all_owned_string_domains",
+        "sqlite_snapshot_sequence_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_sequence_actual_declaration_mount_routes_queryable_files",
+        "sqlite_snapshot_sequence_actual_native_declaration_exposes_relational_capability"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "package": "semio-s-artifact-fem-2d",
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.2d",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 419
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-fem-2d\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], snapshotSqliteTestBudgetMs: 120000 });"
+      ],
+      "nxProject": "@semio-tech/fem-2d-rs",
+      "target": "@semio-tech/fem-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_fem2d_declared_capability_is_owned",
+        "sqlite_snapshot_fem2d_complete_physical_state",
+        "sqlite_snapshot_fem2d_independent_bun_file_queries_and_edits",
+        "sqlite_snapshot_fem2d_all_words_and_count_widths",
+        "sqlite_snapshot_fem2d_invalid_graph_and_storage",
+        "sqlite_snapshot_fem2d_actual_declaration_erased_words_both_encodings",
+        "sqlite_snapshot_fem2d_real_interior_copy_controls_and_budgets",
+        "sqlite_snapshot_fem2d_native_decode_actual_interior_owned_work"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_fem2d_declared_capability_is_owned",
+        "sqlite_snapshot_fem2d_actual_declaration_erased_words_both_encodings"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "package": "semio-s-artifact-fem-3d",
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 398
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-fem-3d\", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], snapshotSqliteTestBudgetMs: 120000 });"
+      ],
+      "nxProject": "@semio-tech/fem-3d-rs",
+      "target": "@semio-tech/fem-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_fem3d_declared_capability_is_owned",
+        "sqlite_snapshot_fem3d_complete_physical_state",
+        "sqlite_snapshot_fem3d_independent_bun_file_edits",
+        "sqlite_snapshot_fem3d_all_words_counts_axes",
+        "sqlite_snapshot_fem3d_invalid_graph_and_storage",
+        "sqlite_snapshot_fem3d_actual_declaration_erased_words_both_encodings",
+        "sqlite_snapshot_fem3d_real_interior_copy_controls_and_budgets",
+        "sqlite_snapshot_fem3d_native_decode_actual_interior_owned_work"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_fem3d_declared_capability_is_owned",
+        "sqlite_snapshot_fem3d_actual_declaration_erased_words_both_encodings"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "package": "semio-s-artifact-architect-program",
+      "manifest": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.architect.program",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "architect.program",
+      "artifactRoot": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 643
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "    if (segments.length === 1 && segments[0] === \"snapshot-sqlite-source\") {",
+        "      await runRepositoryCommand(process.execPath, [resolve(this.repoRoot, \"node_modules/typescript/bin/tsc\"), \"--noEmit\", \"--strict\", \"--target\", \"ESNext\", \"--module\", \"ESNext\", \"--moduleResolution\", \"bundler\", \"--allowImportingTsExtensions\", \"--resolveJsonModule\", \"--esModuleInterop\", \"--skipLibCheck\", resolve(snapshot, \"🟦️.ts\"), resolve(snapshot, \"🧪️tests/🪶️sqlite/🟦️.ts\")], this.repoRoot, \"architect-snapshot-sqlite-public-types\");",
+        "    if(args.length)throw Error(\"test-snapshot-sqlite-source-profile accepts no arguments\");",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-architect-program\", { commands: { verify: OwnedVerifyScript, \"test-snapshot-sqlite-source-profile\":SnapshotSourceProfileScript }, snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/architect-program-rs",
+      "target": "@semio-tech/architect-program-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_architect_actual_declaration_routes_complete_queryable_files",
+        "sqlite_snapshot_architect_all_unsigned64_words_agree_with_independent_json_and_native",
+        "sqlite_snapshot_architect_authored_schema_limit_precedes_native_work",
+        "sqlite_snapshot_architect_known_unicode_fields_cancel_inside_each_owned_phase",
+        "sqlite_snapshot_architect_owned_budget_refuses_large_fields_in_both_native_directions",
+        "sqlite_snapshot_architect_complete_erased_codec_preserves_ieee_and_unsigned_words",
+        "sqlite_snapshot_architect_exact_integer_queries_do_not_round_into_binary64_words",
+        "sqlite_snapshot_architect_exact_row_limits_apply_before_native_construction",
+        "sqlite_snapshot_architect_four_owned_phases_cancel_before_work",
+        "sqlite_snapshot_architect_independent_sql_edits_reject_unowned_and_inconsistent_rows",
+        "sqlite_snapshot_architect_all_sixty_five_registers_match_real_sqlite_and_native",
+        "sqlite_snapshot_architect_declared_child_projection_preserves_independent_identities",
+        "sqlite_snapshot_architect_actual_native_factory_exposes_complete_owned_capability",
+        "sqlite_snapshot_architect_entity_id_controlled_metadata_preserves_text_shape",
+        "sqlite_snapshot_architect_literal_entity_ids_admit_before_controlled_native_construction",
+        "sqlite_snapshot_architect_literal_entity_ids_have_controlled_native_output",
+        "sqlite_snapshot_architect_schema_admitted_existing_parent_matches_independent_json",
+        "sqlite_snapshot_architect_independent_local_child_aliases_survive_native_parent"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_architect_actual_declaration_routes_complete_queryable_files",
+        "sqlite_snapshot_architect_all_sixty_five_registers_match_real_sqlite_and_native",
+        "sqlite_snapshot_architect_declared_child_projection_preserves_independent_identities",
+        "sqlite_snapshot_architect_actual_native_factory_exposes_complete_owned_capability"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "package": "semio-s-artifact-process-process3d",
+      "manifest": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "process.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 1084
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-process-process3d\", { commands: { \"check-snapshot-sqlite-source\": SourceCheckScript }, snapshotSqliteTestFeatures: [], snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/process-process3d-rs",
+      "target": "@semio-tech/process-process3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_process3d_actual_parent_bare_capability_is_present",
+        "sqlite_snapshot_process3d_complete_parent_native_formats_preserve_all_fields_and_words",
+        "sqlite_snapshot_process3d_parent_child_addresses_are_independent_literals",
+        "sqlite_snapshot_process3d_genuine_controlled_metadata_and_typed_construction_cover_every_variant",
+        "sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_domain_fields",
+        "sqlite_snapshot_process3d_independent_sqlite_knows_every_handwritten_table_and_scalar_width",
+        "sqlite_snapshot_process3d_actual_document_declaration_exposes_parent_capability",
+        "sqlite_snapshot_process3d_owned_native_large_fields_have_real_interior_controls"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_process3d_actual_document_declaration_exposes_parent_capability"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "package": "semio-s-artifact-lowpoly-lowpoly",
+      "manifest": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.lowpoly.lowpoly",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "lowpoly.document",
+      "artifactRoot": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 418
+        }
+      ],
+      "script": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-lowpoly-lowpoly\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/lowpoly-lowpoly-rs",
+      "target": "@semio-tech/lowpoly-lowpoly-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_lowpoly_actual_native_word_and_independent_child_fidelity",
+        "sqlite_snapshot_lowpoly_actual_erased_capability_and_independent_queryable_entities",
+        "sqlite_snapshot_lowpoly_actual_controlled_native_octet_work_and_row_admission",
+        "sqlite_snapshot_lowpoly_controlled_native_output_preserves_words_and_cancels_within_unicode",
+        "sqlite_snapshot_lowpoly_actual_owned_declaration_erased_io_routes"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_lowpoly_actual_owned_declaration_erased_io_routes"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "WiresSnapshot",
+      "package": "semio-s-artifact-reasoning-wires",
+      "manifest": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.reasoning.wires",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "reasoning.wires.fixture",
+      "artifactRoot": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: WiresApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 368
+        }
+      ],
+      "script": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-reasoning-wires\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });"
+      ],
+      "nxProject": "@semio-tech/reasoning-wires-rs",
+      "target": "@semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_wires_exact_native_records_preserve_complete_intrinsic_and_handle",
+        "sqlite_snapshot_wires_deep_complete_native_records_preserve_allowed_intrinsic_depth",
+        "sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_quota"
+      ],
+      "declarationLawCandidates": [],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "FormsSnapshot",
+      "package": "semio-s-artifact-forms-forms",
+      "manifest": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.forms.forms",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "forms.form",
+      "artifactRoot": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 446
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-forms-forms\", { snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { verify: OwnedVerifyScript } });"
+      ],
+      "nxProject": "@semio-tech/forms-forms-rs",
+      "target": "@semio-tech/forms-forms-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_forms_declared_native_owner_has_semantic_sqlite_capability",
+        "sqlite_snapshot_forms_neutral_typed_state_and_independent_editable_sqlite",
+        "sqlite_snapshot_forms_native_borrowed_row_frontier_refuses_before_projection",
+        "sqlite_snapshot_forms_independent_surrogates_and_distinct_owned_handles",
+        "sqlite_snapshot_forms_native_deep_owned_frontiers_and_retirement",
+        "sqlite_snapshot_forms_independent_relational_cycles_and_duplicate_metadata_refuse",
+        "sqlite_snapshot_forms_actual_erased_native_import_requires_owned_output",
+        "sqlite_snapshot_forms_flat_native_deep_both_real_erased_directions",
+        "sqlite_snapshot_forms_controlled_flat_row_admission_and_unicode_output",
+        "sqlite_snapshot_forms_actual_declared_registry_and_public_typed_file"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_forms_declared_native_owner_has_semantic_sqlite_capability",
+        "sqlite_snapshot_forms_actual_declared_registry_and_public_typed_file"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "package": "semio-s-artifact-layout-layout",
+      "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.layout.layout",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "layout.layout",
+      "artifactRoot": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 655
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-layout-layout\", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/layout-layout-rs",
+      "target": "@semio-tech/layout-layout-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec",
+        "sqlite_snapshot_layout_declared_owner_capability",
+        "sqlite_snapshot_layout_inline_drawing_controlled_metadata",
+        "sqlite_snapshot_layout_inline_drawing_owned_fields_controlled_input_output",
+        "sqlite_snapshot_layout_inline_drawing_long_native_copy_is_interior_controlled",
+        "sqlite_snapshot_layout_complete_owned_fields_words_and_literals_cross_both_native_encodings",
+        "sqlite_snapshot_layout_deep_inline_drawing_component_has_owned_controlled_boundaries",
+        "sqlite_snapshot_layout_inline_drawing_all_node_fields_preserve_ieee_words"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec",
+        "sqlite_snapshot_layout_declared_owner_capability"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "CadSnapshot",
+      "package": "semio-s-artifact-cad-cad",
+      "manifest": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.cad.cad",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "cad.scene",
+      "artifactRoot": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 571
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "    if (segments.length === 1 && segments[0] === \"snapshot-sqlite-source\") {",
+        "      await runRepositoryCommand(process.execPath, [resolve(this.repoRoot, \"node_modules/typescript/bin/tsc\"), \"--noEmit\", \"--strict\", \"--target\", \"ESNext\", \"--module\", \"ESNext\", \"--moduleResolution\", \"bundler\", \"--allowImportingTsExtensions\", \"--resolveJsonModule\", \"--esModuleInterop\", \"--skipLibCheck\", resolve(snapshot, \"🟦️.ts\"), resolve(snapshot, \"🧪️tests/🪶️sqlite/🟦️.ts\")], this.repoRoot, \"cad-snapshot-sqlite-public-types\");",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-cad-cad\", { ...{ twins: [{ name: \"cad-presence-retirement\", run: cadPresenceRetirementSelfTests }] }, commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/cad-cad-rs",
+      "target": "@semio-tech/cad-cad-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_cad_parent_projection_settles_actual_system_backing_requests",
+        "sqlite_snapshot_cad_parent_reconstruction_settles_actual_system_backing_requests",
+        "sqlite_snapshot_cad_parent_all_fields_raw_words_and_cumulative_exact_backing",
+        "sqlite_snapshot_cad_parent_actual_native_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_cad_parent_independent_literal_child_aliases_survive_both_native_formats",
+        "sqlite_snapshot_cad_parent_all_reference_numeric_slots_preserve_every_raw_word",
+        "sqlite_snapshot_cad_parent_complete_and_empty_owned_domains_retain_queryable_fields",
+        "sqlite_snapshot_cad_parent_every_numeric_word_survives_both_erased_directions",
+        "sqlite_snapshot_cad_parent_independent_queries_and_surrogate_edits_preserve_literal_groups",
+        "sqlite_snapshot_cad_parent_independent_malformed_edits_refuse_owned_relations",
+        "sqlite_snapshot_cad_parent_exact_row_and_genuine_physical_output_admission",
+        "sqlite_snapshot_cad_parent_initial_cancellation_reaches_all_four_owned_phases",
+        "sqlite_snapshot_cad_parent_long_unicode_is_cancellable_inside_every_owned_phase",
+        "sqlite_snapshot_cad_parent_actual_native_declaration_routes_queryable_files"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_cad_parent_actual_native_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_cad_parent_actual_native_declaration_routes_queryable_files"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1990Snapshot",
+      "package": "semio-s-artifact-norm-en1990",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1990",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1990/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 194
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1990\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1990-rs",
+      "target": "@semio-tech/norm-en1990-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1990_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_en1990_owned_native_decoder_controls_both_physical_payloads",
+        "sqlite_snapshot_en1990_all_neutral_fields_and_empty_owned_domains",
+        "sqlite_snapshot_en1990_neutral_unsigned8_widths_agree_with_serde",
+        "sqlite_snapshot_en1990_every_numeric_domain_retains_each_neutral_binary64_word",
+        "sqlite_snapshot_en1990_independent_sqlite_joins_and_full_domain_edits",
+        "sqlite_snapshot_en1990_refuses_malformed_choice_coverage_and_semantic_relationships",
+        "sqlite_snapshot_en1990_initial_cancellation_and_borrowed_native_admission",
+        "sqlite_snapshot_en1990_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+        "sqlite_snapshot_en1990_actual_erased_codec_and_declaration_preserve_all_owned_words",
+        "sqlite_snapshot_en1990_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1990_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_en1990_actual_erased_codec_and_declaration_preserve_all_owned_words"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "package": "semio-s-artifact-norm-din18599",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.din18599",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.din18599/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 527
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-din18599\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-din18599-rs",
+      "target": "@semio-tech/norm-din18599-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_din18599_owned_native_decoder_controls_both_physical_payloads",
+        "sqlite_snapshot_din18599_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_din18599_all_neutral_fields_agree_with_serde_and_empty_domains",
+        "sqlite_snapshot_din18599_all_native_choices_and_unsigned32_widths_agree_with_serde",
+        "sqlite_snapshot_din18599_every_numeric_domain_retains_each_neutral_binary64_word",
+        "sqlite_snapshot_din18599_independent_sqlite_joins_climate_identity_and_plant_edits",
+        "sqlite_snapshot_din18599_refuses_malformed_choices_widths_parents_ordinals_and_word_companions",
+        "sqlite_snapshot_din18599_initial_and_nested_operations_support_cancellation_and_native_admission",
+        "sqlite_snapshot_din18599_large_child_identity_cancels_before_any_encoding_or_semantic_copy",
+        "sqlite_snapshot_din18599_actual_erased_codec_and_declaration_preserve_all_owned_words",
+        "sqlite_snapshot_din18599_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_din18599_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_din18599_actual_erased_codec_and_declaration_preserve_all_owned_words"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1997Snapshot",
+      "package": "semio-s-artifact-norm-en1997",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1997",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1997/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 249
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1997\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts\",\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1997-rs",
+      "target": "@semio-tech/norm-en1997-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1997_every_owned_field_and_independent_engine_edit",
+        "sqlite_snapshot_en1997_ownership_ordinals_widths_and_scalar_consistency",
+        "sqlite_snapshot_en1997_limits_and_large_copy_cancellation",
+        "sqlite_snapshot_en1997_actual_bare_erased_encodings_and_owned_coordinates",
+        "sqlite_snapshot_en1997_actual_declaration_typed_io_has_no_native_encoding",
+        "sqlite_snapshot_en1997_empty_collections_and_annex_variants_need_one_domain_row",
+        "sqlite_snapshot_en1997_all_fifty_five_fields_have_independent_exact_word_oracle",
+        "sqlite_snapshot_en1997_every_ieee_word_survives_actual_erased_native_encodings",
+        "sqlite_snapshot_en1997_controlled_native_owner_admits_physical_and_typed_state",
+        "sqlite_snapshot_en1997_controlled_output_has_exact_wire_and_real_interior_admission"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1997_actual_declaration_typed_io_has_no_native_encoding"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "package": "semio-s-artifact-norm-din16798",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.din16798",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.din16798/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 184
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-din16798\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-din16798-rs",
+      "target": "@semio-tech/norm-din16798-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_din16798_owned_native_decoder_controls_both_physical_payloads",
+        "sqlite_snapshot_din16798_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_din16798_all_neutral_fields_agree_with_serde_and_empty_domains",
+        "sqlite_snapshot_din16798_native_unsigned_widths_and_annex_agree_with_serde",
+        "sqlite_snapshot_din16798_every_numeric_domain_preserves_all_neutral_binary64_words",
+        "sqlite_snapshot_din16798_independent_sqlite_joins_and_domain_edits",
+        "sqlite_snapshot_din16798_refuses_malformed_annex_widths_ordinals_parents_and_words",
+        "sqlite_snapshot_din16798_initial_and_nested_operations_support_cancellation_and_native_admission",
+        "sqlite_snapshot_din16798_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+        "sqlite_snapshot_din16798_actual_erased_codec_and_declaration_preserve_all_owned_words",
+        "sqlite_snapshot_din16798_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_din16798_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_din16798_actual_erased_codec_and_declaration_preserve_all_owned_words"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1991Snapshot",
+      "package": "semio-s-artifact-norm-en1991",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1991",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1991/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 219
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1991\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1991-rs",
+      "target": "@semio-tech/norm-en1991-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1991_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_en1991_owned_native_decoder_controls_both_physical_payloads",
+        "sqlite_snapshot_en1991_all_neutral_fields_and_empty_owned_domains",
+        "sqlite_snapshot_en1991_neutral_unsigned8_widths_and_choices_agree_with_serde",
+        "sqlite_snapshot_en1991_every_numeric_domain_retains_each_neutral_binary64_word",
+        "sqlite_snapshot_en1991_independent_sqlite_joins_and_full_domain_edits",
+        "sqlite_snapshot_en1991_refuses_malformed_choices_widths_relationships_and_words",
+        "sqlite_snapshot_en1991_initial_and_nested_operations_support_cancellation_and_native_admission",
+        "sqlite_snapshot_en1991_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+        "sqlite_snapshot_en1991_actual_erased_codec_and_declaration_preserve_all_owned_words",
+        "sqlite_snapshot_en1991_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1991_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_en1991_actual_erased_codec_and_declaration_preserve_all_owned_words"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1992Snapshot",
+      "package": "semio-s-artifact-norm-en1992",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1992",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1992/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 445
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1992\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts\", \"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1992-rs",
+      "target": "@semio-tech/norm-en1992-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1992_all_entities_independent_sqlite_and_edit",
+        "sqlite_snapshot_en1992_parent_order_width_bool_enum_and_ieee_guards",
+        "sqlite_snapshot_en1992_limits_and_large_copy_cancellation",
+        "sqlite_snapshot_en1992_actual_bare_erased_encodings_and_coordinates",
+        "sqlite_snapshot_en1992_actual_declaration_typed_io_has_no_native_encoding",
+        "sqlite_snapshot_en1992_empty_root_and_optional_absence",
+        "sqlite_snapshot_en1992_all_sixty_fields_have_independent_exact_word_oracle",
+        "sqlite_snapshot_en1992_every_ieee_word_survives_actual_erased_native_encodings",
+        "sqlite_snapshot_en1992_all_closed_native_enums_preserved",
+        "sqlite_snapshot_en1992_reconstruction_cancels_during_large_collection",
+        "sqlite_snapshot_en1992_controlled_native_owner_admits_physical_and_typed_state",
+        "sqlite_snapshot_en1992_controlled_output_has_exact_wire_and_real_interior_admission"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1992_actual_declaration_typed_io_has_no_native_encoding"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "package": "semio-s-artifact-norm-vdi3805",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.vdi3805",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.vdi3805/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 2056
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir,\"semio-s-artifact-norm-vdi3805\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-vdi3805-rs",
+      "target": "@semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_vdi3805_native_sheet_id_refuses_every_out_of_width_word",
+        "sqlite_snapshot_vdi3805_owned_native_decoder_controls_physical_and_typed_construction",
+        "sqlite_snapshot_vdi3805_controlled_native_binding_preserves_every_neutral_numeric_word",
+        "sqlite_snapshot_vdi3805_controlled_attribute_binding_admits_before_owned_copy_and_cancels_inside_entries",
+        "sqlite_snapshot_vdi3805_complete_native_fixture_agrees_with_independent_serde",
+        "sqlite_snapshot_vdi3805_actual_bare_factory_exposes_complete_owned_capability",
+        "sqlite_snapshot_vdi3805_all_fields_and_empty_independent_catalogue_subjects_survive_sqlite",
+        "sqlite_snapshot_vdi3805_every_complete_numeric_domain_retains_all_neutral_raw_words",
+        "sqlite_snapshot_vdi3805_all_neutral_unsigned64_security_words_retain_native_width",
+        "sqlite_snapshot_vdi3805_all_neutral_quantity_and_edition_choices_retain_exact_identity",
+        "sqlite_snapshot_vdi3805_shared_independent_sql_corpus_refuses_lost_native_ownership",
+        "sqlite_snapshot_vdi3805_independent_sqlite_queries_complete_entities_and_applies_semantic_edits",
+        "sqlite_snapshot_vdi3805_refuses_malformed_choices_widths_booleans_parents_ordinals_maps_words_and_mandatory_subjects",
+        "sqlite_snapshot_vdi3805_initial_and_nested_operations_support_cancellation_and_borrowed_native_admission",
+        "sqlite_snapshot_vdi3805_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+        "sqlite_snapshot_vdi3805_actual_erased_codec_and_declaration_preserve_every_owned_word",
+        "sqlite_snapshot_vdi3805_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_vdi3805_actual_bare_factory_exposes_complete_owned_capability",
+        "sqlite_snapshot_vdi3805_actual_erased_codec_and_declaration_preserve_every_owned_word"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "package": "semio-s-artifact-norm-iso16757",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.iso16757",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.iso16757/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 1231
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-iso16757\",{snapshotSqliteTestBudgetMs:120000,snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts\",\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-iso16757-rs",
+      "target": "@semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_owner_projects_all_handwritten_tables",
+        "sqlite_snapshot_all_fifty_five_tables_full_neutral_model_and_oracle",
+        "sqlite_snapshot_recursive_ownership_variants_and_width_guards",
+        "sqlite_snapshot_resource_and_cancellation_bound_complete_owner",
+        "sqlite_snapshot_actual_bare_erased_encodings_and_native_preflight",
+        "sqlite_snapshot_actual_exact_declaration_typed_io_both_encodings",
+        "sqlite_snapshot_signed_unsigned_domains_and_recursive_owner_retirement",
+        "sqlite_snapshot_all_ieee_fields_have_independent_exact_word_oracle",
+        "sqlite_snapshot_every_ieee_word_survives_actual_erased_native_encodings",
+        "sqlite_snapshot_controlled_native_owner_admits_complete_and_exact_word_state",
+        "sqlite_snapshot_controlled_catalogue_custom_binding_is_iterative_and_cancellable",
+        "sqlite_snapshot_controlled_catalogue_binding_rejects_shape_and_admits_before_copy",
+        "sqlite_snapshot_controlled_catalogue_frontier_cancels_before_wide_admission",
+        "sqlite_snapshot_controlled_catalogue_unknown_keys_have_bounded_diagnostics",
+        "sqlite_snapshot_controlled_optional_catalogue_presence_never_swallows_cancellation",
+        "sqlite_snapshot_iso16757_controlled_output_has_exact_wire_and_real_interior_admission"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_actual_exact_declaration_typed_io_both_encodings"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1993Snapshot",
+      "package": "semio-s-artifact-norm-en1993",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1993",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1993/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 398
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1993\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts\",\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1993-rs",
+      "target": "@semio-tech/norm-en1993-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1993_all_entities_and_independent_sqlite_edit",
+        "sqlite_snapshot_en1993_ownership_order_width_and_ieee_guards",
+        "sqlite_snapshot_en1993_limits_and_large_copy_cancellation",
+        "sqlite_snapshot_en1993_actual_bare_erased_encodings_and_coordinates",
+        "sqlite_snapshot_en1993_actual_declaration_typed_io_has_no_native_encoding",
+        "sqlite_snapshot_en1993_empty_collections_and_annex_variants",
+        "sqlite_snapshot_en1993_all_ninety_six_fields_have_independent_exact_word_oracle",
+        "sqlite_snapshot_en1993_every_ieee_word_survives_actual_erased_native_encodings",
+        "sqlite_snapshot_en1993_collection_progress_cancellation",
+        "sqlite_snapshot_en1993_controlled_native_owner_admits_physical_and_typed_state",
+        "sqlite_snapshot_en1993_controlled_output_has_exact_wire_and_real_interior_admission"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1993_actual_declaration_typed_io_has_no_native_encoding"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1994Snapshot",
+      "package": "semio-s-artifact-norm-en1994",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1994",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1994/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 481
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1994\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1994-rs",
+      "target": "@semio-tech/norm-en1994-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1994_owned_native_decoder_controls_both_physical_payloads",
+        "sqlite_snapshot_en1994_actual_bare_factory_exposes_full_owned_capability",
+        "sqlite_snapshot_en1994_neutral_complete_subject_agrees_with_serde_and_empty_domains",
+        "sqlite_snapshot_en1994_all_annex_choices_and_unsigned_studs_agree_with_independent_serde",
+        "sqlite_snapshot_en1994_every_complete_numeric_domain_retains_every_neutral_raw_word",
+        "sqlite_snapshot_en1994_independent_sqlite_queries_all_components_and_applies_semantic_edits",
+        "sqlite_snapshot_en1994_refuses_malformed_shape_width_boolean_parent_ordinal_word_and_missing_mandatory_entities",
+        "sqlite_snapshot_en1994_initial_and_nested_operations_support_cancellation_and_borrowed_native_admission",
+        "sqlite_snapshot_en1994_large_owned_text_cancels_before_projection_reconstruction_and_native_encoding_copy",
+        "sqlite_snapshot_en1994_actual_erased_codec_and_declaration_preserve_every_owned_word",
+        "sqlite_snapshot_en1994_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1994_actual_bare_factory_exposes_full_owned_capability",
+        "sqlite_snapshot_en1994_actual_erased_codec_and_declaration_preserve_every_owned_word"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "package": "semio-s-artifact-norm-din4108",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.din4108",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.din4108/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 184
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-din4108\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-din4108-rs",
+      "target": "@semio-tech/norm-din4108-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_din4108_owned_native_decoder_controls_both_physical_payloads",
+        "sqlite_snapshot_din4108_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_din4108_all_neutral_fields_agree_with_serde_and_empty_domains",
+        "sqlite_snapshot_din4108_all_climate_choices_agree_with_independent_serde",
+        "sqlite_snapshot_din4108_every_numeric_domain_retains_every_neutral_binary64_word",
+        "sqlite_snapshot_din4108_independent_sqlite_nested_joins_and_domain_edits",
+        "sqlite_snapshot_din4108_refuses_malformed_choice_boolean_parent_ordinal_word_and_identity",
+        "sqlite_snapshot_din4108_initial_and_nested_operations_support_cancellation_and_native_admission",
+        "sqlite_snapshot_din4108_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+        "sqlite_snapshot_din4108_actual_erased_codec_and_declaration_preserve_all_owned_words",
+        "sqlite_snapshot_din4108_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_din4108_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_din4108_actual_erased_codec_and_declaration_preserve_all_owned_words"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1996Snapshot",
+      "package": "semio-s-artifact-norm-en1996",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1996",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1996/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 323
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "  await runArtifactRustPackageMain(packageRoot, cargoName, {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1996-rs",
+      "target": "@semio-tech/norm-en1996-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1996_owned_native_decoder_controls_both_physical_payloads",
+        "sqlite_snapshot_en1996_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_en1996_all_neutral_fields_agree_with_serde_and_empty_domains",
+        "sqlite_snapshot_en1996_native_unsigned_widths_and_all_choices_agree_with_serde",
+        "sqlite_snapshot_en1996_every_numeric_domain_preserves_all_neutral_binary64_words",
+        "sqlite_snapshot_en1996_independent_sqlite_joins_and_domain_edits",
+        "sqlite_snapshot_en1996_refuses_malformed_choices_widths_booleans_ordinals_parents_and_words",
+        "sqlite_snapshot_en1996_initial_and_nested_operations_support_cancellation_and_native_admission",
+        "sqlite_snapshot_en1996_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+        "sqlite_snapshot_en1996_actual_erased_codec_and_declaration_preserve_all_owned_words",
+        "sqlite_snapshot_en1996_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1996_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_en1996_actual_erased_codec_and_declaration_preserve_all_owned_words"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1995Snapshot",
+      "package": "semio-s-artifact-norm-en1995",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1995",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1995/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 252
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1995\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1995-rs",
+      "target": "@semio-tech/norm-en1995-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1995_owned_native_decoder_controls_both_physical_payloads",
+        "sqlite_snapshot_en1995_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_en1995_all_neutral_fields_agree_with_serde_and_empty_domains",
+        "sqlite_snapshot_en1995_native_unsigned_widths_and_all_choices_agree_with_serde",
+        "sqlite_snapshot_en1995_every_numeric_domain_preserves_all_neutral_binary64_words",
+        "sqlite_snapshot_en1995_independent_sqlite_joins_and_domain_edits",
+        "sqlite_snapshot_en1995_refuses_malformed_choices_widths_booleans_ordinals_parents_and_words",
+        "sqlite_snapshot_en1995_initial_and_nested_operations_support_cancellation_and_native_admission",
+        "sqlite_snapshot_en1995_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+        "sqlite_snapshot_en1995_actual_erased_codec_and_declaration_preserve_all_owned_words",
+        "sqlite_snapshot_en1995_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1995_actual_bare_factory_exposes_owned_relational_capability",
+        "sqlite_snapshot_en1995_actual_erased_codec_and_declaration_preserve_all_owned_words"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1999Snapshot",
+      "package": "semio-s-artifact-norm-en1999",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1999",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1999/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 69
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1999\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1999-rs",
+      "target": "@semio-tech/norm-en1999-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1999_all_owned_fields_and_legal_invalid_references",
+        "sqlite_snapshot_en1999_independent_sqlite_queries_and_semantic_edit",
+        "sqlite_snapshot_en1999_malformed_ownership_flags_and_native_widths",
+        "sqlite_snapshot_en1999_all_binary64_states_preserve_native_words",
+        "sqlite_snapshot_en1999_limits_and_cancellation_precede_large_native_copies",
+        "sqlite_snapshot_en1999_actual_bare_capability_erased_encodings_and_coordinate_refusal",
+        "sqlite_snapshot_en1999_actual_declaration_typed_io_uses_no_native_encoding",
+        "sqlite_snapshot_en1999_all_sixty_four_fields_have_independent_exact_word_oracle",
+        "sqlite_snapshot_en1999_empty_annex_variants_need_exact_one_domain_row",
+        "sqlite_snapshot_en1999_scalar_query_word_class_and_annex_are_consistent",
+        "sqlite_snapshot_en1999_every_ieee_word_survives_actual_erased_native_encodings",
+        "sqlite_snapshot_en1999_controlled_native_owner_admits_physical_and_typed_state",
+        "sqlite_snapshot_en1999_controlled_output_has_exact_wire_and_real_interior_admission"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1999_actual_declaration_typed_io_uses_no_native_encoding"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "En1998Snapshot",
+      "package": "semio-s-artifact-norm-en1998",
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1998",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1998/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 65
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1998\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/norm-en1998-rs",
+      "target": "@semio-tech/norm-en1998-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_en1998_owned_native_decoder_controls_physical_and_typed_construction",
+        "sqlite_snapshot_en1998_actual_bare_factory_exposes_complete_owned_capability",
+        "sqlite_snapshot_en1998_neutral_complete_subject_agrees_with_serde_and_empty_domains",
+        "sqlite_snapshot_en1998_all_closed_site_choices_and_unsigned_member_agree_with_independent_serde",
+        "sqlite_snapshot_en1998_every_complete_numeric_domain_retains_every_neutral_raw_word",
+        "sqlite_snapshot_en1998_independent_sqlite_queries_all_components_and_applies_semantic_edits",
+        "sqlite_snapshot_en1998_refuses_malformed_choices_widths_booleans_parent_ordinals_words_and_mandatory_site",
+        "sqlite_snapshot_en1998_initial_and_nested_operations_support_cancellation_and_borrowed_native_admission",
+        "sqlite_snapshot_en1998_large_owned_text_cancels_before_projection_reconstruction_and_native_encoding_copy",
+        "sqlite_snapshot_en1998_actual_erased_codec_and_declaration_preserve_every_owned_word",
+        "sqlite_snapshot_en1998_genuine_output_admits_exact_row_and_file_frontiers"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_en1998_actual_bare_factory_exposes_complete_owned_capability",
+        "sqlite_snapshot_en1998_actual_erased_codec_and_declaration_preserve_every_owned_word"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "package": "semio-s-artifact-playbook-playbook",
+      "manifest": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.playbook.playbook",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "playbook.program",
+      "artifactRoot": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: PlaybookApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 371
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-playbook-playbook\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { verify: OwnedVerifyScript } });"
+      ],
+      "nxProject": "@semio-tech/playbook-playbook-rs",
+      "target": "@semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_playbook_independent_sqlite_queries_and_owned_edit",
+        "sqlite_snapshot_playbook_bad_owned_rows_and_bounded_cancellation",
+        "sqlite_snapshot_playbook_owned_fields_and_title_presence",
+        "sqlite_snapshot_playbook_exact_two_domain_rows_need_no_metadata_reservation",
+        "sqlite_snapshot_playbook_actual_declared_erased_encodings_and_coordinate_refusals",
+        "sqlite_snapshot_playbook_actual_declared_typed_io_and_final_metadata_rows",
+        "sqlite_snapshot_playbook_controlled_native_decode_honors_owned_fields_and_admission",
+        "sqlite_snapshot_playbook_canonical_json_controls_preserve_order_and_independent_values",
+        "sqlite_snapshot_playbook_controlled_native_output_is_the_ordinary_pack_and_text",
+        "sqlite_snapshot_playbook_canonical_block_options_follow_the_owned_value_schema",
+        "sqlite_snapshot_playbook_native_rows_and_schema_refuse_before_physical_ownership"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_playbook_actual_declared_erased_encodings_and_coordinate_refusals",
+        "sqlite_snapshot_playbook_actual_declared_typed_io_and_final_metadata_rows"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "package": "semio-s-artifact-imperative-procedure",
+      "manifest": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.imperative.procedure",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "procedure.document/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 367
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-imperative-procedure\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { verify: OwnedVerifyScript } });"
+      ],
+      "nxProject": "@semio-tech/imperative-procedure-rs",
+      "target": "@semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_procedure_independent_sqlite_queries_and_owned_edit",
+        "sqlite_snapshot_procedure_bad_owned_rows_and_bounded_cancellation",
+        "sqlite_snapshot_procedure_owned_parent_and_child_handles",
+        "sqlite_snapshot_procedure_exact_three_domain_rows_need_no_metadata_reservation",
+        "sqlite_snapshot_procedure_bare_erased_encodings_and_coordinate_refusals",
+        "sqlite_snapshot_procedure_actual_declaration_typed_io_and_final_metadata_rows",
+        "sqlite_snapshot_procedure_controlled_native_decode_honors_owned_fields_and_admission",
+        "sqlite_snapshot_procedure_controlled_native_output_preserves_literal_fields_and_exact_file_length",
+        "sqlite_snapshot_procedure_native_rows_and_schema_refuse_before_physical_ownership"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_procedure_actual_declaration_typed_io_and_final_metadata_rows"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "package": "semio-s-artifact-remodel-remodeling",
+      "manifest": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.remodel.remodeling",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "remodeling.scene",
+      "artifactRoot": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>",
+          "line": 115
+        }
+      ],
+      "script": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "    if (segments.length === 1 && segments[0] === \"snapshot-sqlite-source\") {",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-remodel-remodeling\", { commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/remodel-remodeling-rs",
+      "target": "@semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_remodeling_actual_factory_owns_parent_capability",
+        "sqlite_snapshot_remodeling_inline_clouds_are_native_tagged_values",
+        "sqlite_snapshot_remodeling_durable_chunks_are_native_literal_octets",
+        "sqlite_snapshot_remodeling_binary32_samples_agree_with_independent_words",
+        "sqlite_snapshot_remodeling_native_text_binary32_words_match_source_neutral_spelling",
+        "sqlite_snapshot_remodeling_declared_json_preserves_every_owned_ieee_word",
+        "sqlite_snapshot_remodeling_declared_json_covers_every_owned_scalar_path"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_remodeling_actual_factory_owns_parent_capability",
+        "sqlite_snapshot_remodeling_declared_json_preserves_every_owned_ieee_word",
+        "sqlite_snapshot_remodeling_declared_json_covers_every_owned_scalar_path"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "package": "semio-s-artifact-energy-model",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.energy.model",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "energy.model",
+      "artifactRoot": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 690
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-energy-model\", { snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts\",\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], twins: [{ name: \"epw-weather\", run: runWeatherChecks }] });"
+      ],
+      "nxProject": "@semio-tech/energy-model-rs",
+      "target": "@semio-tech/energy-model-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_energy_actual_owner_declares_capability",
+        "sqlite_snapshot_energy_typed_full_document_and_independent_edits",
+        "sqlite_snapshot_energy_every_typed_collection_matches_independent_serde_corpus",
+        "sqlite_snapshot_energy_strict_controlled_native_capability",
+        "sqlite_snapshot_energy_strict_controlled_input_owner",
+        "sqlite_snapshot_energy_canonical_u32_owners_have_real_controlled_constructors",
+        "sqlite_snapshot_energy_four_copy_phases_have_real_interior_cancellation_and_limits",
+        "sqlite_snapshot_energy_duplicate_surrogates_dangling_ownership_and_weakened_schema_refuse",
+        "sqlite_snapshot_energy_actual_bare_declared_both_native_encodings_and_exact_coordinate",
+        "sqlite_snapshot_energy_actual_declaration_typed_physical_io",
+        "sqlite_snapshot_energy_independent_engine_edits_every_ieee_field_then_erased_roundtrips",
+        "sqlite_snapshot_energy_shared_negative_rows_refuse_all_native_widths_and_ownership",
+        "sqlite_snapshot_energy_all_literal_link_pin_variants_have_exact_unsigned64_native_io"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_energy_actual_owner_declares_capability",
+        "sqlite_snapshot_energy_actual_bare_declared_both_native_encodings_and_exact_coordinate",
+        "sqlite_snapshot_energy_actual_declaration_typed_physical_io"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "package": "semio-s-artifact-trinity-rewriting",
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.trinity.rewriting",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "trinity.rewrite.rule",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 266
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-trinity-rewriting\", { snapshotSqliteTestFeatures: [\"component-app-assembly\"], snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/📋️contract/🟦️.ts\", \"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });"
+      ],
+      "nxProject": "@semio-tech/trinity-rewriting-rs",
+      "target": "@semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_rewriting_actual_bare_parent_owns_capability",
+        "sqlite_snapshot_rewriting_binary_keeps_all_authored_strings_and_property_words",
+        "sqlite_snapshot_rewriting_text_keeps_all_authored_strings_and_property_words",
+        "sqlite_snapshot_rewriting_genuine_controlled_record_covers_actual_recursive_property_domain",
+        "sqlite_snapshot_rewriting_declared_json_retains_layout_words_and_all_property_states",
+        "sqlite_snapshot_rewriting_independent_sqlite_interprets_all_thirty_domain_tables",
+        "sqlite_snapshot_rewriting_real_large_authored_string_control_is_interior",
+        "sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_strings",
+        "sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_rewriting_declared_json_retains_layout_words_and_all_property_states"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "JackSnapshot",
+      "package": "semio-s-artifact-trinity-jack",
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.trinity.jack",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.trinity.jack",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 645
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-trinity-jack\", { snapshotSqliteTestFeatures: [\"component-app-assembly\"], snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });"
+      ],
+      "nxProject": "@semio-tech/trinity-jack-rs",
+      "target": "@semio-tech/trinity-jack-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_jack_actual_bare_parent_owns_capability",
+        "sqlite_snapshot_jack_binary_preserves_inline_manifest_and_literal_content",
+        "sqlite_snapshot_jack_text_preserves_inline_manifest_and_literal_content",
+        "sqlite_snapshot_jack_every_native_camera_word_preserves_full_parent",
+        "sqlite_snapshot_jack_child_coordinates_survive_attached_and_unresolved_native_owners",
+        "sqlite_snapshot_jack_actual_controlled_typed_value_construction_preserves_all_fields",
+        "sqlite_snapshot_jack_declared_json_camera_words_are_closed_and_exact",
+        "sqlite_snapshot_jack_public_json_snapshot_api_preserves_the_same_literal_owned_parent",
+        "sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and_words",
+        "sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent",
+        "sqlite_snapshot_jack_all13_tables_and153_rows_survive_independent_edits",
+        "sqlite_snapshot_jack_independently_malformed_semantic_entities_are_refused",
+        "sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phases"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_jack_declared_json_camera_words_are_closed_and_exact",
+        "sqlite_snapshot_jack_public_json_snapshot_api_preserves_the_same_literal_owned_parent"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "DagSnapshot",
+      "package": "semio-s-artifact-dag-dag",
+      "manifest": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.dag.dag",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "dag.dag",
+      "artifactRoot": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: DagApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 359
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-dag-dag\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/📋️contract/🟦️.ts\"], commands: { verify: OwnedVerifyScript } });"
+      ],
+      "nxProject": "@semio-tech/dag-dag-rs",
+      "target": "@semio-tech/dag-dag-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_dag_actual_bare_parent_owns_capability",
+        "sqlite_snapshot_dag_actual_io_declaration_owns_parent_capability",
+        "sqlite_snapshot_dag_binary_keeps_unresolved_literal_child_addresses",
+        "sqlite_snapshot_dag_text_keeps_unresolved_literal_child_addresses",
+        "sqlite_snapshot_dag_controlled_value_constructs_only_actual_parent_fields",
+        "sqlite_snapshot_dag_declared_json_preserves_literal_parent_child_fields",
+        "sqlite_snapshot_dag_independent_sqlite_interprets_literal_two_table_parent",
+        "sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns",
+        "sqlite_snapshot_dag_actual_semantic_rows_admit_exact_count_and_cancel_all_copy_phases",
+        "sqlite_snapshot_dag_owned_relationship_and_dialect_edits_are_rejected",
+        "sqlite_snapshot_dag_independent_sqlite_edits_reconstruct_literal_parent"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_dag_actual_io_declaration_owns_parent_capability",
+        "sqlite_snapshot_dag_declared_json_preserves_literal_parent_child_fields"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "package": "semio-s-artifact-draw-drawing",
+      "manifest": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.draw.drawing",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "drawing.document",
+      "artifactRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: DrawingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 543
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-draw-drawing\", { commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/draw-drawing-rs",
+      "target": "@semio-tech/draw-drawing-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_draw_actual_io_declaration_capability",
+        "sqlite_snapshot_draw_owned_complete_fields_both_native_encodings",
+        "sqlite_snapshot_draw_exact_foreign_dialect_and_initial_cancellation",
+        "sqlite_snapshot_draw_every_scalar_word_typed_file_and_erased_native_io"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_draw_actual_io_declaration_capability"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "RasterSnapshot",
+      "package": "semio-s-artifact-raster-raster",
+      "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.raster.raster",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "raster.document",
+      "artifactRoot": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 905
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-raster-raster\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/raster-raster-rs",
+      "target": "@semio-tech/raster-raster-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_raster_actual_declaration_capability",
+        "sqlite_snapshot_raster_both_native_encodings_and_literal_child_identity",
+        "sqlite_snapshot_raster_controlled_owner_refusals",
+        "sqlite_snapshot_raster_full_owned_entities_and_raw_words_both_encodings",
+        "sqlite_snapshot_raster_schema_relationships_and_exact_row_bound",
+        "sqlite_snapshot_raster_four_phases_interior_large_copy_cancellation",
+        "sqlite_snapshot_raster_deep_flat_native_ownership_and_late_refusal",
+        "sqlite_snapshot_raster_cold_retirement_releases_atomic_large_strings",
+        "sqlite_snapshot_raster_independent_all_domains_and_leaf_edits"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_raster_actual_declaration_capability"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "NoteSnapshot",
+      "package": "semio-s-artifact-note-note",
+      "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.note.note",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "note.document",
+      "artifactRoot": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>",
+          "line": 84
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "if (segments[0] === \"sqlite-snapshot-native\") { await runArtifactRustTests(\"semio-s-artifact-note-note\",this.repoRoot,[\"quick\",\"--lib\",\"--no-fail-fast\",\"standards::v1::subsets::any::schema::snapshot::component::sqlite::tests::sqlite_snapshot_note_\"]); return; }"
+      ],
+      "nxProject": "@semio-tech/note-note-rs",
+      "target": "@semio-tech/note-note-rs:verify-sqlite-snapshot-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_note_full_concrete_backing_preserves_owned_state_and_caller_limits",
+        "sqlite_snapshot_note_controlled_output_preserves_literal_fields_and_stops_inside_text",
+        "sqlite_snapshot_note_controlled_native_owner_preserves_full_fixture_and_stops_inside_text",
+        "sqlite_snapshot_note_direct_domain_rows_do_not_reserve_file_metadata",
+        "sqlite_snapshot_note_owned_guard_checks_exact_identity_and_projection",
+        "sqlite_snapshot_note_preserves_ieee_settings_geometry_and_presence",
+        "sqlite_snapshot_note_iterative_groups_exceed512_and_sqlite_can_walk_them",
+        "sqlite_snapshot_note_preserves_every_entity_and_relationship",
+        "sqlite_snapshot_note_rejects_invalid_contracts_and_honors_control"
+      ],
+      "declarationLawCandidates": [],
+      "fixtureFiles": [],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census.",
+      "actualNativeSelector": "standards::v1::subsets::any::schema::snapshot::component::sqlite::tests::sqlite_snapshot_note_"
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "package": "semio-s-artifact-puzzle-2d",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.2d.fixture",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 665
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "    if(segments.length!==1||segments[0]!==\"snapshot-sqlite-source\")throw new Error(\"Unknown Puzzle 2D verification \"+segments.join(\" \"));",
+        "    await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--target\",\"ESNext\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",\"--resolveJsonModule\",\"--skipLibCheck\",resolve(snapshot,\"🟦️.ts\"),resolve(snapshot,\"🧪️tests/🪶️sqlite/🟦️.ts\")],this.repoRoot,\"puzzle2d-snapshot-sqlite-public-types\");",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-2d\", {snapshotSqliteTestFeatures:[\"component-app-assembly\"],commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/puzzle-2d-rs",
+      "target": "@semio-tech/puzzle-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_puzzle2d_typed_native_codec_exposes_owned_semantic_capability",
+        "sqlite_snapshot_puzzle2d_complete_neutral_fields_match_independent_serde_and_both_native_directions",
+        "sqlite_snapshot_puzzle2d_every_board_and_catalog_number_preserves_exact_native_words",
+        "sqlite_snapshot_puzzle2d_play_codec_exposes_the_same_owned_persisted_snapshot",
+        "sqlite_snapshot_puzzle2d_full_native_relational_fields_survive_physical_files",
+        "sqlite_snapshot_puzzle2d_every_board_catalog_word_reaches_both_erased_outputs",
+        "sqlite_snapshot_puzzle2d_independent_queries_and_surrogate_edits_retain_literal_domains",
+        "sqlite_snapshot_puzzle2d_independent_malformed_owned_relations_refuse",
+        "sqlite_snapshot_puzzle2d_exact_owned_rows_and_tiny_native_admission",
+        "sqlite_snapshot_puzzle2d_initial_controls_refuse_every_native_and_relational_direction",
+        "sqlite_snapshot_puzzle2d_play_literal_text_preserves_every_typed_native_word",
+        "sqlite_snapshot_puzzle2d_play_both_erased_directions_keep_every_native_word",
+        "sqlite_snapshot_puzzle2d_play_admits_exact_semantic_rows_and_physical_output_bytes",
+        "sqlite_snapshot_puzzle2d_actual_editor_viewer_declaration_routes_queryable_files"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_puzzle2d_actual_editor_viewer_declaration_routes_queryable_files"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "package": "semio-s-artifact-puzzle-5d",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle5d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.5d",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 1197
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "    if (args.length !== 1 || args[0] !== \"snapshot-sqlite-source\") throw new Error(\"verify snapshot-sqlite-source\");",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-5d\", {commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/puzzle-5d-rs",
+      "target": "@semio-tech/puzzle-5d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_puzzle5d_all_entities_and_words_cross_real_physical_files",
+        "sqlite_snapshot_puzzle5d_independent_sqlite_queries_edits_and_surrogate_renumbering",
+        "sqlite_snapshot_puzzle5d_rejects_malformed_graphs_presence_and_scalar_domains",
+        "sqlite_snapshot_puzzle5d_actual_typed_and_play_erased_io_preserves_every_field",
+        "sqlite_snapshot_puzzle5d_exact_borrowed_and_owned_row_frontiers_admit_before_copy",
+        "sqlite_snapshot_puzzle5d_all_four_copy_phases_have_real_interior_cancellation",
+        "sqlite_snapshot_puzzle5d_actual_native_capability_is_explicit",
+        "sqlite_snapshot_puzzle5d_play_native_capability_owns_the_same_complete_parent",
+        "sqlite_snapshot_puzzle5d_native_part_and_scale_words_survive_actual_text_and_pack",
+        "sqlite_snapshot_puzzle5d_actual_play_text_retains_the_typed_word_authority",
+        "sqlite_snapshot_puzzle5d_controlled_native_scale_preserves_both_exact_variants"
+      ],
+      "declarationLawCandidates": [],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "package": "semio-s-artifact-puzzle-3d",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 847
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "    if (args.length !== 1 || args[0] !== \"snapshot-sqlite-source\") throw new Error(\"verify snapshot-sqlite-source\");",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-3d\", { testFeatures: [\"component-app-assembly\"],commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTestFeatures:[],snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/puzzle-3d-rs",
+      "target": "@semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_puzzle3d_actual_typed_bare_capability_is_present",
+        "sqlite_snapshot_puzzle3d_actual_play_bare_capability_is_present",
+        "sqlite_snapshot_puzzle3d_native_typed_text_and_pack_preserve_every_word",
+        "sqlite_snapshot_puzzle3d_play_text_preserves_the_actual_typed_snapshot",
+        "sqlite_snapshot_puzzle3d_declared_json_preserves_every_word",
+        "sqlite_snapshot_puzzle3d_controlled_scale_has_real_metadata_and_both_variants",
+        "sqlite_snapshot_puzzle3d_all23_tables_physical_oracle_and_edit_reconstruct_all_words",
+        "sqlite_snapshot_puzzle3d_independently_edited_malformed_graphs_are_rejected",
+        "sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_codecs_keep_all23_domain_tables",
+        "sqlite_snapshot_puzzle3d_exact_rows_and_all_four_interior_copy_phases"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_puzzle3d_declared_json_preserves_every_word"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "package": "semio-s-artifact-block-2d",
+      "manifest": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.2d",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 214
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "  async run(): Promise<void> { await runArtifactRustTests(\"semio-s-artifact-block-2d\", this.repoRoot, [\"--lib\", \"sqlite_snapshot_\", \"--no-fail-fast\"]); }",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-block-2d\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"],commands:{\"test-snapshot-sqlite-native\":NativeSqliteBaselineScript}});"
+      ],
+      "nxProject": "@semio-tech/block-2d-rs",
+      "target": "@semio-tech/block-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_block2d_actual_bare_capability_is_present",
+        "sqlite_snapshot_block2d_actual_declared_codec_has_owned_sqlite_capability",
+        "sqlite_snapshot_block2d_all_fields_and_words_survive_actual_text_and_pack",
+        "sqlite_snapshot_block2d_optional_absence_remains_distinct_from_present_empty",
+        "sqlite_snapshot_block2d_controlled_record_constructs_every_owned_field",
+        "sqlite_snapshot_block2d_actual_declared_json_preserves_every_owned_word",
+        "sqlite_snapshot_block2d_independent_sqlite_reads_the_literal_table_and_word_contract",
+        "sqlite_snapshot_block2d_independent_edited_physical_database_preserves_every_word",
+        "sqlite_snapshot_block2d_independent_malformed_entities_refuse",
+        "sqlite_snapshot_block2d_row_frontier_and_real_four_phase_cancellation",
+        "sqlite_snapshot_block2d_actual_erased_declared_binary_text_retains_full_domain"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_block2d_actual_declared_codec_has_owned_sqlite_capability",
+        "sqlite_snapshot_block2d_actual_declared_json_preserves_every_owned_word",
+        "sqlite_snapshot_block2d_actual_erased_declared_binary_text_retains_full_domain"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "package": "semio-s-artifact-block-5d",
+      "manifest": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.5d",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 215
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "    if (args.length !== 1 || args[0] !== \"snapshot-sqlite-source\") throw new Error(\"verify snapshot-sqlite-source\");",
+        "await runArtifactRustPackageMain(import.meta.dir,\"semio-s-artifact-block-5d\",{commands:{verify:OwnedVerifyScript},snapshotSqliteTestFeatures:[],snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\",\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts\",\"../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/block-5d-rs",
+      "target": "@semio-tech/block-5d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_block5d_actual_bare_capability_is_present",
+        "sqlite_snapshot_block5d_actual_declared_codec_has_owned_sqlite_capability",
+        "sqlite_snapshot_block5d_all_fields_and_words_survive_actual_text_and_pack",
+        "sqlite_snapshot_block5d_optional_absence_remains_distinct_from_present_empty",
+        "sqlite_snapshot_block5d_controlled_record_constructs_every_owned_field",
+        "sqlite_snapshot_block5d_independent_sqlite_reads_the_real_fifteen_table_contract",
+        "sqlite_snapshot_block5d_actual_declared_json_preserves_every_owned_word",
+        "sqlite_snapshot_block5d_full_relational_words_and_independent_edited_file_reconstruct",
+        "sqlite_snapshot_block5d_malformed_relational_ownership_and_optional_words_refuse",
+        "sqlite_snapshot_block5d_exact_row_admission_and_four_real_copy_phase_cancellations",
+        "sqlite_snapshot_block5d_actual_declared_erased_binary_text_queries_every_domain_table"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_block5d_actual_declared_codec_has_owned_sqlite_capability",
+        "sqlite_snapshot_block5d_actual_declared_json_preserves_every_owned_word",
+        "sqlite_snapshot_block5d_actual_declared_erased_binary_text_queries_every_domain_table"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "package": "semio-s-artifact-block-3d",
+      "manifest": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {",
+          "line": 351
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "  async run(): Promise<void> { await runArtifactRustTests(\"semio-s-artifact-block-3d\", this.repoRoot, [\"--lib\", \"sqlite_snapshot_\", \"--no-fail-fast\"]); }",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-block-3d\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"],commands:{\"test-snapshot-sqlite-native\":NativeSqliteBaselineScript}});"
+      ],
+      "nxProject": "@semio-tech/block-3d-rs",
+      "target": "@semio-tech/block-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_block3d_actual_bare_capability_is_present",
+        "sqlite_snapshot_block3d_actual_declared_codec_has_owned_sqlite_capability",
+        "sqlite_snapshot_block3d_all_fields_and_words_survive_actual_text_and_pack",
+        "sqlite_snapshot_block3d_catalog_keeps_all_five_independent_literal_fields",
+        "sqlite_snapshot_block3d_optional_absence_remains_distinct_from_present_empty",
+        "sqlite_snapshot_block3d_controlled_record_constructs_every_owned_field",
+        "sqlite_snapshot_block3d_actual_declared_json_preserves_every_owned_word",
+        "sqlite_snapshot_block3d_independent_sqlite_reads_the_literal_table_and_word_contract",
+        "sqlite_snapshot_block3d_independent_edited_physical_database_preserves_every_word",
+        "sqlite_snapshot_block3d_independent_malformed_entities_refuse",
+        "sqlite_snapshot_block3d_row_frontier_and_real_four_phase_cancellation",
+        "sqlite_snapshot_block3d_actual_erased_declared_binary_text_retains_full_domain"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_block3d_actual_declared_codec_has_owned_sqlite_capability",
+        "sqlite_snapshot_block3d_actual_declared_json_preserves_every_owned_word",
+        "sqlite_snapshot_block3d_actual_erased_declared_binary_text_retains_full_domain"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "package": "semio-s-artifact-space-home",
+      "manifest": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.space.home",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.home",
+      "artifactRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 101
+        },
+        {
+          "text": "pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 113
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-space-home\", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/space-home-rs",
+      "target": "@semio-tech/space-home-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_home_controlled_native_output_retains_exact_fields_and_cancels_inside_unicode",
+        "sqlite_snapshot_home_unicode_native_parser_known_work_and_interior_cancellation",
+        "sqlite_snapshot_home_full_u64_strings_and_independent_sql_edit",
+        "sqlite_snapshot_home_complete_guard_controls_and_actual_erased_both_encodings",
+        "sqlite_snapshot_home_actual_owned_declaration_public_and_erased_routes"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_home_actual_owned_declaration_public_and_erased_routes"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "package": "semio-s-artifact-space-space",
+      "manifest": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.space.space",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.space",
+      "artifactRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {",
+          "line": 83
+        },
+        {
+          "text": "pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_framework_plugin::ArtifactDefinitionError>{",
+          "line": 91
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-space-space\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});"
+      ],
+      "nxProject": "@semio-tech/space-space-rs",
+      "target": "@semio-tech/space-space-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_space_controlled_native_output_retains_exact_fields_and_cancels_inside_unicode",
+        "sqlite_snapshot_space_full_occurrence_fields_and_independent_sqlite_edit",
+        "sqlite_snapshot_space_complete_guard_aliases_and_erased_native_controls",
+        "sqlite_snapshot_space_actual_declared_typed_and_registry_erased_io"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_space_actual_declared_typed_and_registry_erased_io"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    },
+    {
+      "owner": "CurationSnapshot",
+      "package": "semio-s-artifact-sourcing-curation",
+      "manifest": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/Cargo.toml",
+      "coordinates": [
+        {
+          "kind": "s.sourcing.curation",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "sourcing.curation/v1",
+      "artifactRoot": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs",
+      "declarationSignatures": [
+        {
+          "text": "pub fn artifact<A: SourcingApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {",
+          "line": 333
+        }
+      ],
+      "script": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/📜️script.ts",
+      "routerCurrent": [
+        "    if(segments.length===1&&segments[0]===\"snapshot-sqlite-source\"){",
+        "      await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--target\",\"ESNext\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",\"--resolveJsonModule\",\"--skipLibCheck\",resolve(snapshot,\"🟦️.ts\"),resolve(snapshot,\"🧪️tests/🪶️sqlite/🟦️.ts\")],this.repoRoot,\"curation-snapshot-sqlite-public-types\");",
+        "await runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-sourcing-curation\", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });"
+      ],
+      "nxProject": "@semio-tech/sourcing-curation-rs",
+      "target": "@semio-tech/sourcing-curation-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "testSource": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "sqliteLawNames": [
+        "sqlite_snapshot_curation_actual_io_declaration_exposes_owned_semantic_capability",
+        "sqlite_snapshot_curation_complete_neutral_recipes_reach_both_declared_native_directions",
+        "sqlite_snapshot_curation_mandatory_kit_child_admission_retains_literal_identity_strings",
+        "sqlite_snapshot_curation_every_native_quantity_preserves_exact_binary64_words",
+        "sqlite_snapshot_curation_mesh_native_scalars_preserve_exact_binary32_words",
+        "sqlite_snapshot_curation_local_kit_aliases_retain_distinct_literal_target_identities",
+        "sqlite_snapshot_curation_queryable_complete_recipes_and_empty_collection_presence",
+        "sqlite_snapshot_curation_all_quantity_words_survive_both_erased_native_directions",
+        "sqlite_snapshot_curation_all_mesh_words_survive_both_erased_native_directions",
+        "sqlite_snapshot_curation_sqlite_preserves_every_literal_kit_child_identity",
+        "sqlite_snapshot_curation_independent_queries_and_complete_surrogate_edits_retain_semantics",
+        "sqlite_snapshot_curation_independent_malformed_sql_refuses_owned_shapes",
+        "sqlite_snapshot_curation_exact_rows_and_native_owned_file_limits_precede_construction",
+        "sqlite_snapshot_curation_initial_and_interior_text_cancellation_reaches_owning_phases",
+        "sqlite_snapshot_curation_cancel_reaches_known_stock_and_ordinal_frontiers",
+        "sqlite_snapshot_curation_actual_native_io_declaration_routes_queryable_files",
+        "sqlite_snapshot_curation_distinct_logical_and_addressed_children_have_full_physical_integrity"
+      ],
+      "declarationLawCandidates": [
+        "sqlite_snapshot_curation_actual_io_declaration_exposes_owned_semantic_capability",
+        "sqlite_snapshot_curation_complete_neutral_recipes_reach_both_declared_native_directions",
+        "sqlite_snapshot_curation_actual_native_io_declaration_routes_queryable_files"
+      ],
+      "fixtureFiles": [
+        "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+        "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️schema/🔣️.json"
+      ],
+      "classification": "Runtime actual Hub primary artifact/declare_artifact builder; no Definition-only source found in this family",
+      "qualification": "Current source inventory. Candidate law names require body/API inspection; presence does not prove runtime declaration census."
+    }
+  ],
+  "chart": {
+    "owner": "ChartSnapshot",
+    "artifactRoot": "🧰️framework/🛍️products/📓️print/🦀️.rs",
+    "declaration": "chart_artifact_declaration",
+    "plugin": "print_plugin",
+    "kind": "s.print.chart",
+    "standard": "v1",
+    "subset": "any",
+    "schema": "print.chart",
+    "snapshotRoot": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot",
+    "provider": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+    "packageManifest": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml",
+    "packageName": "semio-framework-print",
+    "dependencyPath": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
+    "target": "@semio-tech/print-rs:test-snapshot-sqlite-native",
+    "selector": [
+      "--lib",
+      "sqlite_snapshot_",
+      "--no-fail-fast"
+    ],
+    "neutralFixtures": "🧰️framework/🛍️products/📓️print/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite"
+  },
+  "aggregateContract": {
+    "rowKey": [
+      "owner package",
+      "Snapshot Rust type",
+      "kind",
+      "standard",
+      "subset",
+      "schema"
+    ],
+    "requiredFields": [
+      "assembly classification",
+      "real declaration source",
+      "actual snapshot TypeId present",
+      "SQL nonempty",
+      "actual registered codec identity",
+      "SQL lookup exact",
+      "import route one hop Exact",
+      "export route one hop Exact",
+      "receipt selector and execution id"
+    ],
+    "rules": [
+      "Do not deduplicate by schema",
+      "Preserve Definition-only as non-runtime classification",
+      "No Default/null payload membership substitute",
+      "No universal completeness claim from this bounded source map"
+    ],
+    "publication": "Per-owner actual declaration law executes owning package; aggregate independent neutral JSON inventory is expected membership, genuine package output records actual assertions. No central runtime imports required."
+  }
+}

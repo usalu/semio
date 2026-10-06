@@ -216,7 +216,7 @@ mod tests {
         }
         let result = result.expect("fill completion within bounded opportunities");
         close_fill_session(&mut session);
-        pool.shutdown().expect("bounded fixture operation succeeds");
+        pool.shutdown().expect("bounded snapshot operation succeeds");
         (placements, previews, result)
     }
 
@@ -274,7 +274,7 @@ mod tests {
         }
         let checkpoint = checkpoint.expect("checkpoint within bounded opportunities");
         close_fill_session(&mut session);
-        pool.shutdown().expect("bounded fixture operation succeeds");
+        pool.shutdown().expect("bounded snapshot operation succeeds");
         checkpoint
     }
 
@@ -395,8 +395,8 @@ mod tests {
             "nodeKinds": [{ "id": "brush.kind", "name": "Brush Kind", "handles": [{ "handleKind": "port", "angle": 3.141592653589793 }] }]
         });
         h.set_board_kind_catalogs_from_json(&catalogs.to_string()).unwrap();
-        let fixture = json!({
-            "schema": "puzzle.2d.fixture",
+        let snapshot = json!({
+            "schema": "board.ports.directed.v1",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "a", "nodeKind": "a.kind", "shape": "circle", "radius": 40.0, "x": 0.0, "y": 0.0, "handles": [
@@ -409,7 +409,7 @@ mod tests {
             ],
             "edges": [{ "id": "e0", "edgeKind": "link", "source": "a:h0", "target": "b:h0" }]
         });
-        assert!(h.parse_fixture_json(&fixture.to_string()), "the two-node fixture must parse");
+        assert!(h.load_board_snapshot_json(&snapshot.to_string()), "the two-node snapshot must parse");
         let _ = h.drain_events_json();
 
         h.brush_open_slot("a:h0");
@@ -720,7 +720,7 @@ mod tests {
         }
         assert!(cancelled, "cancel terminal exceeded bounded opportunities");
         close_fill_session(&mut session);
-        pool.shutdown().expect("bounded fixture operation succeeds");
+        pool.shutdown().expect("bounded snapshot operation succeeds");
 
         let stale_operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(11), semio_framework_job::Generation(4), 9);
         let stale_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 32, stale_operation);
@@ -752,7 +752,7 @@ mod tests {
         }
         assert!(stale_fault, "stale terminal exceeded bounded opportunities");
         close_fill_session(&mut stale);
-        stale_pool.shutdown().expect("bounded fixture operation succeeds");
+        stale_pool.shutdown().expect("bounded snapshot operation succeeds");
     }
 
     #[test]
@@ -786,7 +786,7 @@ mod tests {
         }
         assert!(yielded, "deadline yield exceeded bounded opportunities");
         close_fill_session(&mut session);
-        pool.shutdown().expect("bounded fixture operation succeeds");
+        pool.shutdown().expect("bounded snapshot operation succeeds");
     }
 
     #[test]
@@ -803,7 +803,7 @@ mod tests {
         let refused_job = BoardFillJob::with_operation(capture_fill_snapshot(&host), 4, refused_operation);
         let mut refused = mount_fill_session(refused_job, refused_params);
         let unavailable = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
-        unavailable.shutdown().expect("bounded fixture operation succeeds");
+        unavailable.shutdown().expect("bounded snapshot operation succeeds");
         assert!(matches!(refused.pump_one(&unavailable, semio_framework_async::Lane::Background), Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(_))));
         close_fill_session(&mut refused);
 
@@ -842,7 +842,7 @@ mod tests {
         }
         assert!(terminal, "unclaimed completion exceeded bounded opportunities");
         close_fill_session(&mut complete);
-        pool.shutdown().expect("bounded fixture operation succeeds");
+        pool.shutdown().expect("bounded snapshot operation succeeds");
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -894,7 +894,7 @@ mod tests {
         );
         gate.store(true, std::sync::atomic::Ordering::Release);
         close_fill_session(&mut session);
-        pool.shutdown().expect("bounded fixture operation succeeds");
+        pool.shutdown().expect("bounded snapshot operation succeeds");
         assert!(queue_filled);
         assert!(saturated);
     }
@@ -1069,7 +1069,7 @@ mod tests {
         assert!(checkpointed);
         assert!(seen.into_iter().all(|value| value));
         close_fill_session(&mut session);
-        pool.shutdown().expect("bounded fixture operation succeeds");
+        pool.shutdown().expect("bounded snapshot operation succeeds");
     }
 
     #[test]
@@ -1077,11 +1077,11 @@ mod tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_utility("select");
-        h.set_fixture_drop_preview_json(r#"{"nodeKind":"capsule_J","screenX":200.0,"screenY":150.0,"shape":"circle","radius":20.0,"iconKind":"capsule_J"}"#).unwrap();
+        h.set_drop_preview_json(r#"{"nodeKind":"capsule_J","screenX":200.0,"screenY":150.0,"shape":"circle","radius":20.0,"iconKind":"capsule_J"}"#).unwrap();
         let ev = h.drain_events_json();
         assert!(!ev.contains("brushPlace"));
         assert!(h.encoded_scene_hint() > 0);
-        h.set_fixture_drop_preview_json("").unwrap();
+        h.set_drop_preview_json("").unwrap();
         assert!(h.encoded_scene_hint() > 0);
         close_board_host(h);
     }
@@ -1105,10 +1105,10 @@ mod tests {
             .to_string(),
         )
         .unwrap();
-        h.set_fixture_drop_preview_json(r#"{"nodeKind":"capsule_J","screenX":120.0,"screenY":90.0,"shape":"circle","radius":10.0,"iconKind":"capsule_J"}"#).unwrap();
+        h.set_drop_preview_json(r#"{"nodeKind":"capsule_J","screenX":120.0,"screenY":90.0,"shape":"circle","radius":10.0,"iconKind":"capsule_J"}"#).unwrap();
         let hint_with_preview = h.encoded_scene_hint();
         assert!(hint_with_preview > 0);
-        h.set_fixture_drop_preview_json("").unwrap();
+        h.set_drop_preview_json("").unwrap();
         let hint_cleared = h.encoded_scene_hint();
         assert!(hint_cleared != hint_with_preview || hint_with_preview > 0);
         close_board_host(h);
@@ -1255,8 +1255,8 @@ mod tests {
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
 
-        let fixture: serde_json::Value = serde_json::to_value(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
-        let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
+        let snapshot: serde_json::Value = serde_json::to_value(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+        let compat_str = snapshot.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         h.set_board_kind_catalogs_from_json(&catalogs_json_from_manifest_id("nakagin")).unwrap();
         let desc = SceneDescriptorJson {
@@ -1337,10 +1337,10 @@ mod tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
 
-        let fixture: serde_json::Value = serde_json::to_value(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
-        let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
+        let snapshot: serde_json::Value = serde_json::to_value(<crate::Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+        let compat_str = snapshot.get("meta").and_then(|m| m.get("kindCompatibility")).map_or_else(|| "[]".to_string(), |v| v.to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
-        let catalogs_str = fixture.get("meta").and_then(|m| m.get("kindCatalogs")).map_or_else(
+        let catalogs_str = snapshot.get("meta").and_then(|m| m.get("kindCatalogs")).map_or_else(
             || "{}".to_string(),
             |kc| {
                 serde_json::json!({
@@ -1484,7 +1484,7 @@ mod tests {
     /// `node_kinds` stayed empty and brush could never place anything.
     #[test]
     fn document_kind_catalogs_translate_into_engine_brush_candidates() {
-        let fixture = json!({
+        let snapshot = json!({
             "meta": {
                 "kindCatalogs": {
                     "nodes": [{
@@ -1508,10 +1508,10 @@ mod tests {
                 }
             }
         });
-        let raw_candidates = brush_candidate_count_for_catalogs(&fixture["meta"]["kindCatalogs"].to_string());
+        let raw_candidates = brush_candidate_count_for_catalogs(&snapshot["meta"]["kindCatalogs"].to_string());
         assert_eq!(raw_candidates, 0, "pushing the document catalogs verbatim must install nothing, else this guard proves nothing");
 
-        let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&fixture).expect("fixture carries meta.kindCatalogs");
+        let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&snapshot).expect("snapshot carries meta.kindCatalogs");
         let translated_candidates = brush_candidate_count_for_catalogs(&catalogs);
         assert!(translated_candidates > 0, "translated document catalogs must yield brush candidates, got {translated_candidates}");
     }
@@ -1549,8 +1549,8 @@ mod tests {
     /// the documents the app loads, so translating `meta.kindCatalogs` alone would have fixed nothing.
     #[test]
     fn manifest_only_documents_resolve_engine_kind_catalogs() {
-        let fixture = json!({ "meta": { "manifestId": "nakagin" } });
-        let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&fixture).expect("nakagin manifest catalogs");
+        let snapshot = json!({ "meta": { "manifestId": "nakagin" } });
+        let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&snapshot).expect("nakagin manifest catalogs");
         let parsed: serde_json::Value = serde_json::from_str(&catalogs).expect("catalog json");
         let node_kinds = parsed["nodeKinds"].as_array().expect("nodeKinds slice");
         assert!(!node_kinds.is_empty(), "the nakagin manifest must contribute node kinds");
@@ -1575,7 +1575,7 @@ mod tests {
         assert_eq!(empty_result.accepted_count, 0, "fill must accept nothing without engine kind catalogs");
         assert!(empty_placements.is_empty(), "fill must place nothing without engine kind catalogs");
 
-        let fixture = json!({
+        let snapshot = json!({
             "meta": {
                 "kindCatalogs": {
                     "nodes": [{
@@ -1599,7 +1599,7 @@ mod tests {
                 }
             }
         });
-        let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&fixture).expect("fixture carries meta.kindCatalogs");
+        let catalogs = crate::editor::puzzle2d::board_kind_catalogs_json(&snapshot).expect("snapshot carries meta.kindCatalogs");
         let mut catalog_host = BoardHost::new();
         catalog_host.set_size(800, 600, 1.0);
         catalog_host.set_suggestion_offset(40.0);

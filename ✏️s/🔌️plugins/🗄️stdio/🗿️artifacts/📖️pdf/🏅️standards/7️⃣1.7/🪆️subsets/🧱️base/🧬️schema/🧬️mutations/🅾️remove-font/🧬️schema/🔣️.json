@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Font",
+          "de": "Schrift"
+        },
+        "description": {
+          "en": "Resource name of the font that is removed.",
+          "de": "Ressourcenname der Schrift, die entfernt wird."
+        },
+        "ref": {
+          "kind": "font"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

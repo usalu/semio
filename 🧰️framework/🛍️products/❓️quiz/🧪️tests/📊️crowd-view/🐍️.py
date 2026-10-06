@@ -243,7 +243,7 @@ def close(produced, committed):
 
 def crowds(ctx):
     """🗃️ The crowd view of every committed quiz and set of results, corroborated and held to the committed view."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))
+    vectors = json.loads(ctx.input_bytes(VECTORS))
     quizzes = {quiz["id"]: quiz for quiz in vectors["quizzes"]}
     produced = {}
     for vector in vectors["vectors"]:

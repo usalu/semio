@@ -26,7 +26,7 @@ fn verdicts_for(vectors: &[Json]) -> Vec<Json> {
 
 #[cfg(feature = "sut")]
 fn the_posix_negation_spelling_is_accepted(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📡️glob-vectors.json")?;
+    let file = ctx.input_json("shared://📡️glob-vectors.json")?;
     Ok(Outcome::projection(Json::Object(vec![("verdicts".to_string(), Json::Array(verdicts_for(&file.array("divergentVectors"))))])))
 }
 

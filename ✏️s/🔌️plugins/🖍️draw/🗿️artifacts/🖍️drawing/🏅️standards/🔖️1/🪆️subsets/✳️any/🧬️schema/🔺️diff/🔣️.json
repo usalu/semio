@@ -217,37 +217,7 @@
             null
           ]
         },
-        "transformJson": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "fillJson": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "strokeJson": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "booleanOperation": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "traceParamsJson": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "layerJson": {
           "type": [
             "string",
             "null"
@@ -287,6 +257,627 @@
             "boolean",
             "null"
           ]
+        },
+        "transform": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DrawingTransform"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "$ref": "#/$defs/DrawingFillValue"
+                }
+              },
+              "required": [
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stroke": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/StrokeStyle"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "traceParams": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DrawingTraceParams"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layer": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/DrawingLayerNode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DrawingTransform": {
+      "title": "DrawingTransform",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rotation",
+        "scaleX",
+        "scaleY",
+        "x",
+        "y",
+        "shear"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "geometry",
+            "order": 10
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "geometry",
+            "order": 20
+          }
+        },
+        "scaleX": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Scale X",
+              "de": "Skalierung X"
+            },
+            "description": {
+              "en": "Negative values mirror the layer.",
+              "de": "Negative Werte spiegeln die Ebene."
+            },
+            "step": 0.01,
+            "precision": 3,
+            "group": "transform",
+            "order": 30
+          }
+        },
+        "scaleY": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Scale Y",
+              "de": "Skalierung Y"
+            },
+            "description": {
+              "en": "Negative values mirror the layer.",
+              "de": "Negative Werte spiegeln die Ebene."
+            },
+            "step": 0.01,
+            "precision": 3,
+            "group": "transform",
+            "order": 40
+          }
+        },
+        "rotation": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "dial",
+            "role": "value",
+            "label": {
+              "en": "Rotation",
+              "de": "Drehung"
+            },
+            "unit": "rad",
+            "displayUnit": "deg",
+            "displayFactor": 57.29577951308232,
+            "step": 0.017453292519943295,
+            "precision": 4,
+            "softMin": -3.141592653589793,
+            "softMax": 3.141592653589793,
+            "snaps": [
+              -3.141592653589793,
+              -1.5707963267948966,
+              0,
+              1.5707963267948966,
+              3.141592653589793
+            ],
+            "group": "transform",
+            "order": 50
+          }
+        },
+        "shear": {
+          "type": "number",
+          "description": "Upper-right coefficient before rotation, in R(rotation) × [[scaleX, shear], [0, scaleY]].",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Shear",
+              "de": "Scherung"
+            },
+            "step": 0.01,
+            "precision": 3,
+            "group": "transform",
+            "order": 60
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Transform",
+          "de": "Transformation"
+        },
+        "description": {
+          "en": "Position, scale, rotation and shear of the layer.",
+          "de": "Position, Skalierung, Drehung und Scherung der Ebene."
+        },
+        "group": "transform",
+        "order": 20
+      }
+    },
+    "DrawingTraceParams": {
+      "title": "DrawingTraceParams",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "simplifyEpsilon",
+        "threshold"
+      ],
+      "properties": {
+        "threshold": {
+          "type": "number",
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Threshold",
+              "de": "Schwellenwert"
+            },
+            "description": {
+              "en": "Brightness from which a pixel counts as ink.",
+              "de": "Helligkeit, ab der ein Pixel als Tinte gilt."
+            },
+            "step": 0.01,
+            "precision": 2,
+            "softMin": 0,
+            "softMax": 1,
+            "snaps": [
+              0,
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "group": "trace",
+            "order": 10
+          }
+        },
+        "simplifyEpsilon": {
+          "type": "number",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Simplification",
+              "de": "Vereinfachung"
+            },
+            "description": {
+              "en": "Largest deviation allowed when simplifying the traced path.",
+              "de": "Größte zulässige Abweichung beim Vereinfachen des Pfads."
+            },
+            "step": 0.05,
+            "precision": 2,
+            "softMin": 0,
+            "softMax": 10,
+            "group": "trace",
+            "order": 20
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Trace settings",
+          "de": "Nachzeichnen-Einstellungen"
+        },
+        "group": "trace",
+        "order": 20
+      }
+    },
+    "DrawingFillValue": {
+      "anyOf": [
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "color"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "solid",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "color": {
+                  "$ref": "#/$defs/DrawingFill_Color",
+                  "x-semio-ui": {
+                    "widget": "color",
+                    "role": "value",
+                    "label": {
+                      "en": "Color",
+                      "de": "Farbe"
+                    },
+                    "description": {
+                      "en": "Red, green, blue and alpha, each from 0 to 1.",
+                      "de": "Rot, Grün, Blau und Alpha, jeweils von 0 bis 1."
+                    },
+                    "step": 0.01,
+                    "group": "style",
+                    "order": 20
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Solid",
+                  "de": "Vollton"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "x1",
+                "y1",
+                "x2",
+                "y2",
+                "stops"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "linearGradient",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "x1": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Start X",
+                      "de": "Start X"
+                    },
+                    "step": 1,
+                    "precision": 2,
+                    "group": "geometry",
+                    "order": 20
+                  }
+                },
+                "y1": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Start Y",
+                      "de": "Start Y"
+                    },
+                    "step": 1,
+                    "precision": 2,
+                    "group": "geometry",
+                    "order": 30
+                  }
+                },
+                "x2": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "End X",
+                      "de": "Ende X"
+                    },
+                    "step": 1,
+                    "precision": 2,
+                    "group": "geometry",
+                    "order": 40
+                  }
+                },
+                "y2": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "End Y",
+                      "de": "Ende Y"
+                    },
+                    "step": 1,
+                    "precision": 2,
+                    "group": "geometry",
+                    "order": 50
+                  }
+                },
+                "stops": {
+                  "$ref": "#/$defs/DrawingFill_Stops",
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Color stops",
+                      "de": "Farbstopps"
+                    },
+                    "description": {
+                      "en": "Colors along the gradient.",
+                      "de": "Farben entlang des Verlaufs."
+                    },
+                    "group": "style",
+                    "order": 60
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Linear gradient",
+                  "de": "Linearer Verlauf"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "cx",
+                "cy",
+                "r",
+                "stops"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "radialGradient",
+                  "x-semio-ui": {
+                    "widget": "hidden",
+                    "role": "discriminator",
+                    "label": {
+                      "en": "Kind",
+                      "de": "Art"
+                    }
+                  }
+                },
+                "cx": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Center X",
+                      "de": "Mittelpunkt X"
+                    },
+                    "step": 1,
+                    "precision": 2,
+                    "group": "geometry",
+                    "order": 20
+                  }
+                },
+                "cy": {
+                  "type": "number",
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Center Y",
+                      "de": "Mittelpunkt Y"
+                    },
+                    "step": 1,
+                    "precision": 2,
+                    "group": "geometry",
+                    "order": 30
+                  }
+                },
+                "r": {
+                  "type": "number",
+                  "minimum": 0,
+                  "x-semio-ui": {
+                    "widget": "stepper",
+                    "role": "value",
+                    "label": {
+                      "en": "Radius",
+                      "de": "Radius"
+                    },
+                    "step": 1,
+                    "precision": 2,
+                    "group": "geometry",
+                    "order": 40
+                  }
+                },
+                "stops": {
+                  "$ref": "#/$defs/DrawingFill_Stops",
+                  "x-semio-ui": {
+                    "role": "value",
+                    "label": {
+                      "en": "Color stops",
+                      "de": "Farbstopps"
+                    },
+                    "description": {
+                      "en": "Colors along the gradient.",
+                      "de": "Farben entlang des Verlaufs."
+                    },
+                    "group": "style",
+                    "order": 50
+                  }
+                }
+              },
+              "x-semio-ui": {
+                "label": {
+                  "en": "Radial gradient",
+                  "de": "Radialer Verlauf"
+                }
+              }
+            }
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Fill",
+              "de": "Füllung"
+            },
+            "description": {
+              "en": "The new fill; empty removes it.",
+              "de": "Die neue Füllung; leer entfernt sie."
+            },
+            "group": "style",
+            "order": 20
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "DrawingFill_Color": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "DrawingFill_Stops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "offset",
+          "color"
+        ],
+        "properties": {
+          "offset": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "slider",
+              "role": "value",
+              "label": {
+                "en": "Offset",
+                "de": "Position"
+              },
+              "description": {
+                "en": "Where the stop sits along the gradient, 0 to 1.",
+                "de": "Lage des Stopps entlang des Verlaufs, 0 bis 1."
+              },
+              "step": 0.01,
+              "precision": 2,
+              "softMin": 0,
+              "softMax": 1,
+              "snaps": [
+                0,
+                0.25,
+                0.5,
+                0.75,
+                1
+              ],
+              "group": "style",
+              "order": 10
+            }
+          },
+          "color": {
+            "$ref": "#/$defs/DrawingFill_Color",
+            "x-semio-ui": {
+              "widget": "color",
+              "role": "value",
+              "label": {
+                "en": "Color",
+                "de": "Farbe"
+              },
+              "description": {
+                "en": "Red, green, blue and alpha, each from 0 to 1.",
+                "de": "Rot, Grün, Blau und Alpha, jeweils von 0 bis 1."
+              },
+              "step": 0.01,
+              "group": "style",
+              "order": 20
+            }
+          }
         }
       }
     }

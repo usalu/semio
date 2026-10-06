@@ -607,6 +607,10 @@ impl ToValue for Object {
 }
 //#endregion 🔖️DslValueBridge
 
+#[path = "📥️decode/🫳️borrowed/🦀️.rs"]
+mod borrowed_read_source;
+pub use borrowed_read_source::{JsonReadSource,JsonBorrowedParseCursor,JsonBorrowedDslCursor,JsonParsedValue,JsonReadLimits,JsonSourceCursor};
+
 //#region 🔖️Lexer
 /// 🪙️ One structural token — the streaming layer everything else is built on. A future
 /// chunked-`Read` streaming API would produce these incrementally across buffer refills; today's
@@ -649,20 +653,30 @@ impl NumberScan {
         else {if self.significant==0 {self.significant_start=self.position;}self.significant+=1;if self.significant<=1152 {self.significant_end=self.position+1;}else {self.sticky|=byte!=b'0';}}
         self.position+=1;
     }
-    fn finish(&self,input:&str)->Result<Number,JsonError> {
+    fn finish<S:JsonReadSource+?Sized>(&self,input:&S)->Result<Number,JsonError> {
         if !self.floating {if let Some(value)=self.unsigned {if !self.negative {return Ok(Number::UInt(value));}if value<=i64::MAX as u64 {return Ok(Number::Int(-(value as i64)));}if value==i64::MAX as u64+1 {return Ok(Number::Int(i64::MIN));}}}
-        let text=&input[self.start..self.position];
-        let value=if text.len()<=1200 {text.parse::<f64>()}
-        else if self.significant==0 {Ok(if self.negative {-0.0}else {0.0})}
-        else {
-            let mut normalized=String::with_capacity(1170);if self.negative {normalized.push('-');}
-            let mut digits=input[self.significant_start..self.significant_end].bytes().filter(|byte|*byte!=b'.');normalized.push(digits.next().unwrap() as char);normalized.push('.');for digit in digits {normalized.push(digit as char);}if self.sticky {normalized.push('1');}
-            normalized.push('e');let exponent=if self.exponent_negative {-self.exponent}else {self.exponent};normalized.push_str(&(self.integer_digits.saturating_sub(self.leading).saturating_sub(1).saturating_add(exponent)).to_string());normalized.parse::<f64>()
+        let length=self.position-self.start;
+        let value=if length<=1200{
+            let mut text=borrowed_read_source::NumberText::new();
+            for position in self.start..self.position{text.push(input.byte_at(position).ok_or(JsonError::InvalidNumber(self.start))?)?;}
+            text.text()?.parse::<f64>()
+        }else if self.significant==0{Ok(if self.negative{-0.0}else{0.0})}
+        else{
+            let mut normalized=borrowed_read_source::NumberText::new();if self.negative{normalized.push(b'-')?;}
+            let mut first=true;
+            for position in self.significant_start..self.significant_end{
+                let digit=input.byte_at(position).ok_or(JsonError::InvalidNumber(self.start))?;if digit==b'.'{continue;}
+                normalized.push(digit)?;if first{normalized.push(b'.')?;first=false;}
+            }
+            if self.sticky{normalized.push(b'1')?;}normalized.push(b'e')?;
+            let exponent=if self.exponent_negative{-self.exponent}else{self.exponent};
+            std::fmt::Write::write_fmt(&mut normalized,format_args!("{}",self.integer_digits.saturating_sub(self.leading).saturating_sub(1).saturating_add(exponent))).map_err(|_|JsonError::InvalidNumber(self.start))?;
+            normalized.text()?.parse::<f64>()
         }.map_err(|_|JsonError::InvalidNumber(self.start))?;
         if !value.is_finite() {return Err(JsonError::InvalidNumber(self.start));}Ok(Number::Float(value))
     }
-    fn step(&mut self,input:&str)->Result<Option<Number>,JsonError> {
-        let byte=input.as_bytes().get(self.position).copied();
+    fn step<S:JsonReadSource+?Sized>(&mut self,input:&S)->Result<Option<Number>,JsonError> {
+        let byte=input.byte_at(self.position);
         match self.state {
             0=>{self.state=1;if byte==Some(b'-') {self.negative=true;self.position+=1;return Ok(None);}},
             1=>{},
@@ -676,7 +690,7 @@ impl NumberScan {
             _=>unreachable!(),
         }
         if self.state==1 {let Some(byte @ b'0'..=b'9')=byte else {return Err(JsonError::InvalidNumber(self.start))};self.state=if byte==b'0' {3}else {2};self.digit(byte,true);return Ok(None);}
-        if self.state==8 {if let Some(byte @ b'0'..=b'9')=byte {self.exponent=(self.exponent.saturating_mul(10)+i64::from(byte-b'0')).min(i64::try_from(input.len()).unwrap_or(i64::MAX-400).saturating_add(400));self.position+=1;return Ok(None);}return self.finish(input).map(Some);}
+        if self.state==8 {if let Some(byte @ b'0'..=b'9')=byte {self.exponent=(self.exponent.saturating_mul(10)+i64::from(byte-b'0')).min(i64::try_from(input.byte_len()).unwrap_or(i64::MAX-400).saturating_add(400));self.position+=1;return Ok(None);}return self.finish(input).map(Some);}
         if matches!(self.state,2|3) && byte==Some(b'.') {self.floating=true;self.state=4;self.position+=1;return Ok(None);}
         if matches!(self.state,2|3|5) && matches!(byte,Some(b'e'|b'E')) {self.floating=true;self.state=6;self.position+=1;return Ok(None);}
         self.finish(input).map(Some)
@@ -806,10 +820,10 @@ pub fn parse_bytes(input: &[u8], policy: JsonMemberPolicy) -> Result<Value, Json
 }
 
 type JsonCandidates<T> = semio_framework_value::list::PagedList<T,{usize::MAX}>;
-struct JsonFrame {
-    object: bool, state: u8, values: JsonCandidates<Value>, entries: JsonCandidates<(String,Value)>,
+struct JsonFrame<V:JsonParsedValue> {
+    object: bool, state: u8, item_count:u64, values: JsonCandidates<V>, entries: JsonCandidates<(String,V)>,
     key: Option<String>, key_offset: usize, probe: usize, compare: usize, duplicate: Option<usize>,
-    array:Vec<Value>, members:Vec<(String,Value)>, admitted:bool, reverse:usize,
+    array:Vec<V>, members:Vec<(String,V)>, admitted:bool, reverse:usize,
 }
 struct JsonStringScan {start:usize,position:usize,bytes:usize,output:String,writing:bool,admitted:bool}
 enum JsonLexeme { String(JsonStringScan), Number(NumberScan) }
@@ -821,28 +835,41 @@ fn json_candidate_slot<T>(owner:&mut JsonCandidates<T>,control:&mut semio_framew
 }
 
 /// 🧵️ Retains the canonical JSON grammar and admitted candidates while borrowing unchanged source.
-pub struct JsonParseCursor {
-    position: usize, policy: JsonMemberPolicy, frames: Vec<JsonFrame>, lexeme: Option<JsonLexeme>,
-    pending: Option<Value>, result: Option<Value>, retired: JsonCandidates<Value>, obsolete:Option<Value>, complete: bool,
+pub type JsonParseCursor=JsonGrammarCursor<Value>;
+
+/// 🌳️ One retained grammar moves admitted semantic cells directly into its declared first-party output.
+pub struct JsonGrammarCursor<V:JsonParsedValue> {
+    position: usize, validated_position:usize, limits:JsonReadLimits, policy: JsonMemberPolicy, frames: Vec<JsonFrame<V>>, lexeme: Option<JsonLexeme>,
+    pending: Option<V>, result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, complete: bool,
 }
-impl JsonParseCursor {
+impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     /// 🌱️ Starts parsing without copying, scanning, or allocating for the source.
-    pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, policy, frames:Vec::new(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false } }
+    pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, validated_position:0, limits:JsonReadLimits{maximum_bytes:u64::MAX,maximum_allocation_bytes:usize::MAX,maximum_depth:MAX_DEPTH as usize,maximum_items:u64::MAX}, policy, frames:Vec::new(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false } }
     /// 📍️ Returns the measured source byte offset.
     pub fn position(&self) -> usize { self.position }
     /// 🧭️ Identifies the existing grammar or physical candidate frontier.
     pub fn phase(&self)->&'static str {match &self.lexeme {Some(JsonLexeme::String(scan))=>if scan.writing {"materialize-string"}else {"measure-string"},Some(JsonLexeme::Number(_))=>"number",None=>match self.frames.last(){Some(frame) if frame.state==8=>if frame.object {"materialize-object"}else {"materialize-array"},Some(frame)=>if frame.object {"collect-object"}else {"collect-array"},None=>"grammar"}}}
     /// ⏱️ Advances admitted grammar transitions under this operation's cumulative decode authority.
-    pub fn step(&mut self, input:&str, maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<Value>,JsonError> {
-        for _ in 0..maximum_units {
+    pub fn step(&mut self,input:&str,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<V>,JsonError>{
+        self.validated_position=input.len();
+        self.step_source(input,maximum_units,control)
+    }
+    fn step_source<S:JsonReadSource+?Sized>(&mut self,input:&S,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<V>,JsonError>{
+        control.scoped_maximum(self.limits.maximum_allocation_bytes,|control|{
+        for _ in 0..maximum_units{
             control.checkpoint()?;
-            if self.complete { return Ok(self.result.take()); }
+            if self.validated_position<input.byte_len(){
+                let character=borrowed_read_source::character(input,self.validated_position)?;
+                self.validated_position+=character.len_utf8();control.step()?;continue;
+            }
+            if self.complete{return Ok(self.result.take());}
             self.advance(input,control)?;control.step()?;
-            if self.complete { return Ok(self.result.take()); }
+            if self.complete{return Ok(self.result.take());}
         }
         Ok(None)
+        })
     }
-    fn advance(&mut self,input:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),JsonError> {
+    fn advance<S:JsonReadSource+?Sized>(&mut self,input:&S,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),JsonError> {
         if self.obsolete.is_some() {
             if !json_candidate_slot(&mut self.retired,control)? {return Ok(());}
             self.retired.push_reserved(self.obsolete.take().unwrap()).unwrap_or_else(|_|unreachable!());return Ok(());
@@ -853,7 +880,7 @@ impl JsonParseCursor {
                 if frame.object {
                     if let Some(index)=frame.duplicate {
                         if !json_candidate_slot(&mut self.retired,control)? {return Ok(());}
-                        let old=std::mem::replace(&mut frame.entries.get_mut(index).unwrap().1,self.pending.take().unwrap());self.retired.push_reserved(old).unwrap_or_else(|_|unreachable!());self.obsolete=frame.key.take().map(Value::String);frame.duplicate=None;
+                        let old=std::mem::replace(&mut frame.entries.get_mut(index).unwrap().1,self.pending.take().unwrap());self.retired.push_reserved(old).unwrap_or_else(|_|unreachable!());self.obsolete=frame.key.take().map(V::json_string);frame.duplicate=None;
                     } else {
                         if !json_candidate_slot(&mut frame.entries,control)? {return Ok(());}
                         frame.entries.push_reserved((frame.key.take().unwrap(),self.pending.take().unwrap())).unwrap_or_else(|_|unreachable!());
@@ -870,9 +897,9 @@ impl JsonParseCursor {
             match lexeme {
                 JsonLexeme::String(scan)=>{
                     if scan.writing && !scan.admitted {control.charge(scan.bytes)?;scan.output.try_reserve_exact(scan.bytes).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"JSON string allocation failed"))?;scan.admitted=true;return Ok(());}
-                    let mut lexer=Lexer {input,pos:if scan.writing {scan.position}else {self.position}};
-                    let character=json_character(&mut lexer)?;
-                    if scan.writing {scan.position=lexer.pos;}else {self.position=lexer.pos;}
+                    let mut position=if scan.writing{scan.position}else{self.position};
+                    let character=borrowed_read_source::json_character(input,&mut position)?;
+                    if scan.writing{scan.position=position;}else{self.position=position;}
                     if let Some(character)=character {
                         if scan.writing {if scan.output.len()+character.len_utf8()>scan.bytes{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON string changed after admission").into());}scan.output.push(character);}else {scan.bytes=scan.bytes.checked_add(character.len_utf8()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"JSON string size overflow"))?;}
                         return Ok(());
@@ -881,10 +908,10 @@ impl JsonParseCursor {
                     if scan.output.len()!=scan.bytes {return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON string changed after measurement").into());}
                     let Some(JsonLexeme::String(scan))=self.lexeme.take() else {unreachable!()};let text=scan.output;
                     if let Some(frame)=self.frames.last_mut().filter(|frame|frame.object && matches!(frame.state,0|2)) {frame.key=Some(text);frame.state=6;frame.probe=0;frame.compare=0;frame.duplicate=None;}
-                    else {self.pending=Some(Value::String(text));}
+                    else {self.pending=Some(V::json_string(text));}
                 },
                 JsonLexeme::Number(number)=>{
-                    if let Some(value)=number.step(input)? {self.position=number.position;self.lexeme=None;self.pending=Some(Value::Number(value));}
+                    if let Some(value)=number.step(input)? {self.position=number.position;self.lexeme=None;self.pending=Some(V::json_number(value));}
                     else {self.position=number.position;}
                 },
             }
@@ -901,7 +928,7 @@ impl JsonParseCursor {
             }
             return Ok(());
         }
-        let byte=input.as_bytes().get(self.position).copied();
+        let byte=input.byte_at(self.position);
         if matches!(byte,Some(b' '|b'\t'|b'\n'|b'\r')) {self.position+=1;return Ok(());}
         if self.result.is_some() {if byte.is_some() {return Err(JsonError::TrailingData(self.position));}self.complete=true;return Ok(());}
         let error=||JsonError::UnexpectedByte {found:byte.unwrap_or(0),offset:self.position};
@@ -919,17 +946,20 @@ impl JsonParseCursor {
                 if frame.state==1 {if byte==b']' {self.close_frame();return Ok(());}if byte!=b',' {return Err(error());}frame.state=2;self.position+=1;return Ok(());}
             }
         }
-        if self.frames.len() as u32>MAX_DEPTH {return Err(JsonError::MaxDepthExceeded(MAX_DEPTH));}
+        if self.frames.len()>self.limits.maximum_depth.min(MAX_DEPTH as usize){return Err(JsonError::MaxDepthExceeded(self.limits.maximum_depth.min(MAX_DEPTH as usize)as u32));}
+        let declared_item=self.frames.len().checked_sub(1).filter(|index|matches!(self.frames[*index].state,0|2));
+        if let Some(index)=declared_item{if self.frames[index].item_count>=self.limits.maximum_items{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"JSON declared collection extent exceeds caller limit").into());}}
         match byte {
             b'"'=>{self.position+=1;self.lexeme=Some(JsonLexeme::String(JsonStringScan {start:self.position,position:self.position,bytes:0,output:String::new(),writing:false,admitted:false}));},
             b'-'|b'0'..=b'9'=>self.lexeme=Some(JsonLexeme::Number(NumberScan::new(self.position))),
             b'{'|b'['=>{
-                if self.frames.capacity()==0 {self.frames=control.allocate_vec(MAX_DEPTH as usize+2)?;return Ok(());}
-                self.frames.push(JsonFrame {object:byte==b'{',state:0,values:Default::default(),entries:Default::default(),key:None,key_offset:0,probe:0,compare:0,duplicate:None,array:Vec::new(),members:Vec::new(),admitted:false,reverse:0});self.position+=1;
+                if self.frames.capacity()==0 {self.frames=control.allocate_vec(self.limits.maximum_depth.min(MAX_DEPTH as usize)+2)?;return Ok(());}
+                self.frames.push(JsonFrame {object:byte==b'{',state:0,item_count:0,values:Default::default(),entries:Default::default(),key:None,key_offset:0,probe:0,compare:0,duplicate:None,array:Vec::new(),members:Vec::new(),admitted:false,reverse:0});self.position+=1;
             },
-            b't'|b'f'|b'n'=>{let (text,value)=match byte {b't'=>("true",Value::Bool(true)),b'f'=>("false",Value::Bool(false)),_=>("null",Value::Null)};if !input[self.position..].starts_with(text) {return Err(error());}self.position+=text.len();self.pending=Some(value);},
+            b't'|b'f'|b'n'=>{let (text,value)=match byte {b't'=>("true",V::json_bool(true)),b'f'=>("false",V::json_bool(false)),_=>("null",V::json_null())};if !borrowed_read_source::starts_with(input,self.position,text) {return Err(error());}self.position+=text.len();self.pending=Some(value);},
             _=>return Err(error()),
         }
+        if let Some(index)=declared_item{self.frames[index].item_count+=1;}
         Ok(())
     }
     fn close_frame(&mut self) {self.frames.last_mut().unwrap().state=8;self.position+=1;}
@@ -941,7 +971,7 @@ impl JsonParseCursor {
         if !frame.values.terminal_is_empty() {frame.values.release_empty_page(usize::MAX).map_err(ValueError::from)?;return Ok(());}
         let length=if frame.object {frame.members.len()}else {frame.array.len()};
         if frame.reverse<length/2 {let opposite=length-1-frame.reverse;if frame.object {frame.members.swap(frame.reverse,opposite);}else {frame.array.swap(frame.reverse,opposite);}frame.reverse+=1;return Ok(());}
-        let frame=self.frames.pop().unwrap();self.pending=Some(if frame.object {Value::Object(Object(frame.members))}else {Value::Array(frame.array)});Ok(())
+        let frame=self.frames.pop().unwrap();self.pending=Some(if frame.object {V::json_object(frame.members)}else {V::json_array(frame.array)});Ok(())
     }
 }
 
@@ -950,9 +980,9 @@ impl semio_framework_value::retirement::RetireOwned for Object {fn retirement(se
 impl semio_framework_value::retirement::RetireOwned for Value {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;match self {Self::String(value)=>value.retirement(),Self::Array(value)=>value.retirement(),Self::Object(value)=>value.retirement(),Self::Number(value)=>leaf(value),Self::Bool(value)=>leaf(value),Self::Null=>leaf(())}}
 }
-impl semio_framework_value::retirement::RetireOwned for JsonFrame {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.values,self.entries,self.key,self.array,self.members)}}
+impl<V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonFrame<V> {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.values,self.entries,self.key,self.array,self.members)}}
 impl semio_framework_value::retirement::RetireOwned for JsonLexeme {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;match self {Self::String(value)=>value.output.retirement(),Self::Number(value)=>leaf(value)}}}
-impl semio_framework_value::retirement::RetireOwned for JsonParseCursor {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.frames,self.lexeme,self.pending,self.result,self.retired,self.obsolete)}}
+impl<V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonGrammarCursor<V> {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.frames,self.lexeme,self.pending,self.result,self.retired,self.obsolete)}}
 
 struct JsonMemberOrder {phase:u8,build:usize,end:usize,root:usize,child:usize,offset:usize,continuation:u8}
 impl JsonMemberOrder {
@@ -1631,6 +1661,10 @@ impl JsonWriteSource for DslValue{
     fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match json_native_node(self,path)?{JsonNativeNode::Value(Self::Object(entries))=>entries.get(index).map(|(key,_)|key.as_str()).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"JSON source key is absent")),_=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"JSON source key owner is absent"))}}
 }
 
+#[path = "🛫️encode/🫳️borrowed/🦀️.rs"]
+mod borrowed_source_sink;
+pub use borrowed_source_sink::write_json_source_into;
+
 /// 🧵️ Measures and writes the same owned source through bounded canonical writer transitions.
 pub struct JsonWriteCursor<S:JsonWriteSource> {
     source: Option<S>, frames: Vec<JsonWriteFrame>, path: Vec<usize>, writer: ControlledWriter, phase: u8,
@@ -1814,18 +1848,7 @@ fn controlled_key_equal(left: &str, right: &str, control: &mut semio_framework_v
     if left.len() != right.len() { return Ok(false); } control.scoped_stage(|control| { control.begin_stage(left.len())?; let mut position = 0; while position < left.len() { let end = position.saturating_add(65536).min(left.len()); let equal = left.as_bytes()[position..end] == right.as_bytes()[position..end]; control.advance(end - position)?; if !equal { return Ok(false); } position = end; } Ok(true) })
 }
 
-fn json_character(lexer: &mut Lexer<'_>) -> Result<Option<char>, JsonError> {
-    let character = lexer.input[lexer.pos..].chars().next().ok_or(JsonError::UnexpectedEof)?;
-    match character {
-        '"' => { lexer.pos += 1; Ok(None) },
-        '\\' => {
-            let start = lexer.pos; lexer.pos += 1; let escaped = lexer.input[lexer.pos..].chars().next().ok_or(JsonError::UnexpectedEof)?; lexer.pos += escaped.len_utf8();
-            let character = match escaped { '"' => '"', '\\' => '\\', '/' => '/', 'b' => '\u{0008}', 'f' => '\u{000c}', 'n' => '\n', 'r' => '\r', 't' => '\t', 'u' => { let unit = lexer.read_hex4(start)?; if (0xd800..=0xdbff).contains(&unit) { if lexer.peek_byte() != Some(b'\\') { return Err(JsonError::UnpairedSurrogate(start)); } lexer.pos += 1; if lexer.peek_byte() != Some(b'u') { return Err(JsonError::UnpairedSurrogate(start)); } lexer.pos += 1; let low = lexer.read_hex4(start)?; if !(0xdc00..=0xdfff).contains(&low) { return Err(JsonError::UnpairedSurrogate(start)); } char::from_u32(0x10000 + ((unit - 0xd800) << 10) + low - 0xdc00).ok_or(JsonError::UnpairedSurrogate(start))? } else if (0xdc00..=0xdfff).contains(&unit) { return Err(JsonError::UnpairedSurrogate(start)); } else { char::from_u32(unit).ok_or(JsonError::InvalidUnicodeEscape(start))? } }, _ => return Err(JsonError::InvalidEscape(start)) }; Ok(Some(character))
-        }
-        control if (control as u32) < 0x20 => Err(JsonError::ControlCharacterInString { byte: control as u8, offset: lexer.pos }),
-        character => { lexer.pos += character.len_utf8(); Ok(Some(character)) }
-    }
-}
+fn json_character(lexer:&mut Lexer<'_>)->Result<Option<char>,JsonError>{borrowed_read_source::json_character(lexer.input,&mut lexer.pos)}
 //#endregion 🔖️ToFromValueBridge
 
 //#region 🔖️Macro

@@ -1,0 +1,18 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "nx",
+    "exec",
+    "--projects=@semio-tech/stdio-binary-rs",
+    "--excludeTaskDependencies",
+    "--",
+    "bun",
+    "-e",
+    "const{runBudgetedTestCommand}=await import(\"/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts\");await runBudgetedTestCommand(process.execPath,[Bun.resolveSync(\"typescript/bin/tsc\",\"/Users/ueli/Documents/semio\"),\"--noEmit\",\"--strict\",\"--skipLibCheck\",\"--allowImportingTsExtensions\",\"--resolveJsonModule\",\"--esModuleInterop\",\"--target\",\"ESNext\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--types\",\"bun\",...[\"/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\",\"/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\",\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\",\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\",\"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]],{cwd:\"/Users/ueli/Documents/semio\",budgetMs:30000,throwOnFailure:true});"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-five-owner-source-strict-explicit-scope.log",
+  "budgetMs": 30000,
+  "status": "explicit one real project scope for five owning Source files; original compiler options/budget; no project graph policy bypass",
+  "startedAt": "2026-10-05T21:31:21.025Z"
+}

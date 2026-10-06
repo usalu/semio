@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️edit-working-graph",
+  "semanticKind": "edit-working-graph",
+  "displayName": "Edit Before Fixture",
+  "emoji": "🖼️",
+  "aggregateVariant": "EditWorkingGraph",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "edit-working-graph",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ],
+  "editable": false
+}

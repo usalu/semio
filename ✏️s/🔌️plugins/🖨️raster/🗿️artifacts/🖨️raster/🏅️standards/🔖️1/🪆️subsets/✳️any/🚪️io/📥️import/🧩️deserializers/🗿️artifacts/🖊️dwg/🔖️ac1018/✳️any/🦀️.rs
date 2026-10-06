@@ -10,5 +10,5 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{decode_d
 pub fn register() {}
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
-    crate::io::raster_document_from_dwg_drawing(&decode_drawing(bytes, SemioDrawingFormat::Dwg)?)
+    crate::standards::v1::subsets::any::io::raster_document_from_dwg_drawing(&decode_drawing(bytes, SemioDrawingFormat::Dwg)?)
 }

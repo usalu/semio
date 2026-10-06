@@ -6,7 +6,7 @@ use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "patch-app-instances")]
 pub struct PatchAppInstances {
     pub node_ids: Vec<String>,

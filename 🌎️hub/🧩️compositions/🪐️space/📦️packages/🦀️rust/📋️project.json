@@ -36,6 +36,18 @@
       },
       "outputs": []
     },
+    "snapshot-owner-census-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "bun ./📜️script.ts snapshot-owner-census source"},
+      "outputs": []
+    },
+    "snapshot-owner-census-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "bun ./📜️script.ts snapshot-owner-census native"},
+      "outputs": []
+    },
     "interactive-job-catalog-check": {
       "executor": "nx:run-commands",
       "cache": true,

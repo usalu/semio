@@ -8,7 +8,7 @@
 
 use crate::editor::wires::terminology::WiresLabels;
 use crate::editor::wires::{ui_label, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH, WIRES_PLAY_APP_ID};
-use crate::schema::{dsl_id, fixture_edges, wires_identities, wires_relationships};
+use crate::schema::{dsl_id, board_snapshot_edges, wires_identities, wires_relationships};
 use crate::WiresComposed;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -48,7 +48,7 @@ fn identity_label_lookup(wires: &semio_framework_value::DslValue, identity_id: u
 
 fn wires_identity_kind_name(composed: &WiresComposed, identity_kind_id: &str) -> Option<String> {
     composed
-        .fixture
+        .identity_snapshot
         .get("kindCatalogs")
         .and_then(|value| value.get("identityKinds"))
         .and_then(|value| value.as_array())
@@ -105,9 +105,9 @@ fn relationship_row(wires: &semio_framework_value::DslValue, edge: &semio_framew
 /// presence from the "graph" `InteractionState` post-render and would overwrite whatever this function
 /// stamped anyway.
 pub fn render(composed: &WiresComposed, labels: &WiresLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let wires = &composed.fixture;
+    let wires = &composed.identity_snapshot;
     let identities = wires_identities(wires);
-    let relationships = fixture_edges(&composed.board);
+    let relationships = board_snapshot_edges(&composed.board);
     PanelTreeBuilder::new(WIRES_PLAY_DOCUMENT_NAMESPACE)?
         .window_section_or_placeholder(windows, "wires-play-document.identities", Some(ui_label(labels.identities.as_str())?), true, identities, |identity| identity_row(composed, identity), ui_label("(none)")?)?
         .window_section_or_placeholder(windows, "wires-play-document.relationships", Some(ui_label(labels.relationships.as_str())?), false, relationships, |edge| relationship_row(wires, edge, labels), ui_label("(none)")?)?

@@ -382,7 +382,7 @@ def committed(ctx):
     spec = ctx.doc_json()
     if spec["kind"] != ctx.row():
         raise AssertionError("scenario %s: the doc string names %r" % (ctx.scenario["id"], spec["kind"]))
-    return {leaf: json.loads(ctx.fixture_bytes(spec[leaf]).decode("utf-8")) for leaf in LEAVES}
+    return {leaf: json.loads(ctx.input_bytes(spec[leaf]).decode("utf-8")) for leaf in LEAVES}
 
 
 def adapter():
@@ -423,8 +423,8 @@ def adapter():
         return answer(restored)
 
     def identity_oracle(ctx):
-        uri = ctx.step_fixture_uris()[0]
-        committed_bytes = ctx.fixture_bytes(uri)
+        uri = ctx.step_input_uris()[0]
+        committed_bytes = ctx.input_bytes(uri)
         document = json.loads(committed_bytes.decode("utf-8"))
         buffer = decode_base64(document["input"]["pixels"])
         if len(buffer) != document["input"]["width"] * document["input"]["height"]:

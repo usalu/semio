@@ -1,0 +1,32 @@
+{
+  "schema": "child-group-semantic-text-retirement/v1",
+  "text": "m",
+  "textBytes": 8194,
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "maximumAllocationBytes": 65536,
+  "partialScalars": 256,
+  "fields": [
+    "owner",
+    "slot",
+    "child_id",
+    "op_schema",
+    "label.native.en",
+    "label.native.de",
+    "label.reuse.en",
+    "label.reuse.de"
+  ],
+  "cases": [
+    "complete-original8194-text-owner",
+    "refused-partial256-with-original8194-backing",
+    "cancel-after-one-real-4096-page",
+    "canonical-mismatch-retains-all-semantic-owners",
+    "caller-installed-recipient-on-both-results"
+  ],
+  "expected": {
+    "complete": true,
+    "allNestedTerminal": true,
+    "maximumPhysicalStepBytes": 4096,
+    "sourceRetirementDoesNotDisposeTypedText": true
+  }
+}

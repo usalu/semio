@@ -5,6 +5,7 @@ export type ChannelVersionConsumerV1 = Readonly<{
   path: string;
   occurrences: number;
   hostileValues?: readonly number[];
+  hostileOccurrences?: number;
   arbitrary?: true;
   guest?: true;
   derived?: string;

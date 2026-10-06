@@ -154,10 +154,7 @@ pub fn inverse_en1992_mutation(mutation: &En1992Mutation, base: &En1992Snapshot)
 
     })
 }
-/// 📥️ Decodes one committed mutation JSON document into [`En1992Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
-pub fn decode_en1992_mutation_json(text: &str) -> Result<En1992Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🧪️Tests

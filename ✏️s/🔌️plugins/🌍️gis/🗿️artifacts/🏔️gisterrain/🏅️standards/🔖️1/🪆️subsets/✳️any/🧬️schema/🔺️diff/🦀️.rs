@@ -24,3 +24,64 @@ pub struct ImportedMapChange{
     pub value:Option<crate::schema::ImportedMap>,
 }
 //#endregion 🔹Diff
+
+use crate::schema::GisTerrainArtifact;
+use crate::GisTerrainSnapshot;
+use protocol::MutationDiff;
+
+impl GisTerrainDiff {
+    /// 🧬️ Applies sparse document changes to the artifact.
+    pub fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> protocol::MutationApplyResult<GisTerrainArtifact> {
+        self.apply(&artifact.to_snapshot()).map(GisTerrainArtifact::from_snapshot)
+    }
+}
+
+impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
+    fn apply(&self, snapshot: &GisTerrainSnapshot) -> protocol::MutationApplyResult<GisTerrainSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(value) = self.exaggeration {
+                next.exaggeration = value;
+            }
+            if let Some(value) = &self.imported_map {
+                next.imported_map = value.value.clone();
+            }
+            next
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(exaggeration);
+        take!(imported_map);
+    }
+}
+
+/// ⚡️ Diff helpers used by mutations.
+pub fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
+    GisTerrainDiff { exaggeration: Some(exaggeration), ..Default::default() }
+}
+
+pub fn diff_imported_map(value: Option<crate::schema::ImportedMap>) -> GisTerrainDiff {
+    GisTerrainDiff { imported_map: Some(ImportedMapChange{value}), ..Default::default() }
+}
+
+pub fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
+    GisTerrainDiff { artifact: Some(Box::new(GisTerrainArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

@@ -1,0 +1,3 @@
+# General UI Instance Stride Source
+
+The proposed law replaces only the stale 112-byte size assertion with the closed actual eight-lane 128-byte contract and additional alignment, offsets and byte projection controls. Removing that replacement reconstructs the complete original law exactly. Five defining frames are unchanged; physical surface lane offset112 and shader location15 remain exact. Independent Float32Array packing agrees for both schedules, with eight SQLite offsets and independent Ajv schema admission. Initial reviewer literal lookup required whitespace normalization, without source change. Native pass and publication remain separate.

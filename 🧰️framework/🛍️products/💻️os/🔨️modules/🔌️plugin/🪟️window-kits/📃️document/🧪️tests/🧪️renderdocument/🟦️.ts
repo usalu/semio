@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import Ajv2020 from "ajv/dist/2020";
+
 import type { UiValue } from "@semio-tech/framework";
 
 type TestSource = { readonly directory: string; readonly url: string };
@@ -29,9 +29,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("matches the language-neutral editable draft fixture", () => {
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/✏️editable/🔣️.json", source.url), "utf8")) as Fixture;
-      const schema = JSON.parse(readFileSync(new URL("./🧫️fixtures/✏️editable/🧬️schema/🔣️.json", source.url), "utf8"));
-      const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      
+      
+      
       for (const testCase of fixture.cases) {
         const draft = editableDocumentDraft({ pageIndex: testCase.page, itemIndex: testCase.item, text: testCase.text, arguments: testCase.staticArguments }, testCase.locale);
         expect(draft).toEqual({

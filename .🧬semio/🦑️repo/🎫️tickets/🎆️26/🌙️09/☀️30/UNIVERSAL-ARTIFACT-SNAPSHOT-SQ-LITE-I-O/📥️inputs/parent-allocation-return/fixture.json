@@ -1,0 +1,12 @@
+{
+  "maximumAllocationBytes": 4096,
+  "maximumTotalBytes": 8192,
+  "childItems": 1,
+  "childBytes": 4,
+  "text": "writer-child",
+  "refusedPayloadBytes": 8194,
+  "emptyVectorCapacity": 3,
+  "emptyVectorElementBytes": 4,
+  "expectedTextBytes": 12,
+  "expectedVectorBytes": 12
+}

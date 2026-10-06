@@ -1,0 +1,585 @@
+{
+  "schema": "semio.stdio.primary-snapshot-census/v1",
+  "scope": "selected-full-artifact-catalog",
+  "artifactKinds": [
+    "s.stdio.binary",
+    "s.stdio.txt",
+    "s.stdio.xml",
+    "s.stdio.deflate",
+    "s.stdio.zip",
+    "s.stdio.json",
+    "s.stdio.csv",
+    "s.stdio.md",
+    "s.stdio.gltf",
+    "s.stdio.obj",
+    "s.stdio.stl",
+    "s.stdio.ply",
+    "s.stdio.las",
+    "s.stdio.step",
+    "s.stdio.ifc",
+    "s.stdio.dwg",
+    "s.stdio.dxf",
+    "s.stdio.svg",
+    "s.stdio.png",
+    "s.stdio.jpg",
+    "s.stdio.gif",
+    "s.stdio.bmp",
+    "s.stdio.tiff",
+    "s.stdio.pdf",
+    "s.stdio.docx",
+    "s.stdio.pptx",
+    "s.stdio.xlsx",
+    "s.stdio.bcf",
+    "s.stdio.semio",
+    "s.stdio.mp4",
+    "s.stdio.avi",
+    "s.stdio.mp3",
+    "s.stdio.wav",
+    "s.stdio.epw",
+    "s.stdio.tsv",
+    "s.stdio.html"
+  ],
+  "dialectBindings": [
+    {
+      "kind": "s.stdio.avi",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.avi"
+    },
+    {
+      "kind": "s.stdio.bcf",
+      "standard": "2.1",
+      "subset": "*",
+      "schema": "stdio.bcf"
+    },
+    {
+      "kind": "s.stdio.binary",
+      "standard": "raw",
+      "subset": "*",
+      "schema": "stdio.binary"
+    },
+    {
+      "kind": "s.stdio.bmp",
+      "standard": "v3",
+      "subset": "*",
+      "schema": "stdio.bmp"
+    },
+    {
+      "kind": "s.stdio.csv",
+      "standard": "rfc4180",
+      "subset": "*",
+      "schema": "stdio.csv"
+    },
+    {
+      "kind": "s.stdio.deflate",
+      "standard": "rfc1950",
+      "subset": "*",
+      "schema": "stdio.deflate"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.docx"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.docx"
+    },
+    {
+      "kind": "s.stdio.docx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.docx"
+    },
+    {
+      "kind": "s.stdio.dwg",
+      "standard": "ac1018",
+      "subset": "*",
+      "schema": "stdio.dwg"
+    },
+    {
+      "kind": "s.stdio.dwg",
+      "standard": "ac1024",
+      "subset": "*",
+      "schema": "stdio.dwg"
+    },
+    {
+      "kind": "s.stdio.dxf",
+      "standard": "r12",
+      "subset": "*",
+      "schema": "stdio.dxf"
+    },
+    {
+      "kind": "s.stdio.epw",
+      "standard": "energyplus",
+      "subset": "*",
+      "schema": "stdio.epw"
+    },
+    {
+      "kind": "s.stdio.gif",
+      "standard": "87a",
+      "subset": "*",
+      "schema": "stdio.gif"
+    },
+    {
+      "kind": "s.stdio.gif",
+      "standard": "89a",
+      "subset": "*",
+      "schema": "stdio.gif.89a"
+    },
+    {
+      "kind": "s.stdio.gltf",
+      "standard": "2.0",
+      "subset": "*",
+      "schema": "stdio.gltf"
+    },
+    {
+      "kind": "s.stdio.html",
+      "standard": "5",
+      "subset": "*",
+      "schema": "stdio.html"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "*",
+      "schema": "stdio.ifc.2x3"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cobie",
+      "schema": "stdio.ifc.2x3"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cv20",
+      "schema": "stdio.ifc.2x3"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "sav",
+      "schema": "stdio.ifc.2x3"
+    },
+    {
+      "kind": "s.stdio.ifc",
+      "standard": "4",
+      "subset": "*",
+      "schema": "stdio.ifc"
+    },
+    {
+      "kind": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "*",
+      "schema": "stdio.jpg"
+    },
+    {
+      "kind": "s.stdio.jpg",
+      "standard": "jfif-1.01",
+      "subset": "baseline",
+      "schema": "stdio.jpg"
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "*",
+      "schema": "stdio.json"
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "geojson",
+      "schema": "stdio.json"
+    },
+    {
+      "kind": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "i-json",
+      "schema": "stdio.json"
+    },
+    {
+      "kind": "s.stdio.las",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.las"
+    },
+    {
+      "kind": "s.stdio.md",
+      "standard": "commonmark",
+      "subset": "*",
+      "schema": "stdio.md"
+    },
+    {
+      "kind": "s.stdio.mp3",
+      "standard": "mpeg1-layer3",
+      "subset": "*",
+      "schema": "stdio.mp3"
+    },
+    {
+      "kind": "s.stdio.mp4",
+      "standard": "isobmff",
+      "subset": "*",
+      "schema": "stdio.mp4"
+    },
+    {
+      "kind": "s.stdio.obj",
+      "standard": "3.0",
+      "subset": "*",
+      "schema": "stdio.obj"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "*",
+      "schema": "stdio.pdf"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "a",
+      "schema": "stdio.pdf"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "x",
+      "schema": "stdio.pdf"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "*",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "a",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "e",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "h",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "ua",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "vt",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "x",
+      "schema": "stdio.pdf.1.7"
+    },
+    {
+      "kind": "s.stdio.ply",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.ply"
+    },
+    {
+      "kind": "s.stdio.png",
+      "standard": "1.2",
+      "subset": "*",
+      "schema": "stdio.png"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.pptx"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.pptx"
+    },
+    {
+      "kind": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.pptx"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "*",
+      "schema": "stdio.semio"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "animation",
+      "schema": "s.stdio.semio.animation"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "audio",
+      "schema": "stdio.semio.audio"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "brep",
+      "schema": "stdio.semio.brep"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "cad",
+      "schema": "stdio.semio.cad"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "document",
+      "schema": "s.stdio.semio.document"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "drawing",
+      "schema": "stdio.semio.drawing"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "flow",
+      "schema": "stdio.semio.flow"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "graph",
+      "schema": "s.stdio.semio.graph"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "image",
+      "schema": "s.stdio.semio.image"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "kit",
+      "schema": "stdio.semio.kit"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "mesh",
+      "schema": "stdio.semio.mesh"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "model",
+      "schema": "stdio.semio.model"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "object",
+      "schema": "stdio.semio.object"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "presentation",
+      "schema": "s.stdio.semio.presentation"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "table",
+      "schema": "s.stdio.semio.table"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "text",
+      "schema": "s.stdio.semio.text"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "value",
+      "schema": "stdio.semio.value"
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "video",
+      "schema": "stdio.semio.video"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "*",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc1",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc2",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc3",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc4",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc5",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.step",
+      "standard": "ap214",
+      "subset": "cc6",
+      "schema": "stdio.step"
+    },
+    {
+      "kind": "s.stdio.stl",
+      "standard": "ascii",
+      "subset": "*",
+      "schema": "stdio.stl"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "*",
+      "schema": "stdio.svg"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "basic",
+      "schema": "stdio.svg"
+    },
+    {
+      "kind": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "tiny",
+      "schema": "stdio.svg"
+    },
+    {
+      "kind": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "*",
+      "schema": "stdio.tiff"
+    },
+    {
+      "kind": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "baseline",
+      "schema": "stdio.tiff"
+    },
+    {
+      "kind": "s.stdio.tsv",
+      "standard": "iana",
+      "subset": "*",
+      "schema": "stdio.tsv"
+    },
+    {
+      "kind": "s.stdio.txt",
+      "standard": "utf-8",
+      "subset": "*",
+      "schema": "stdio.txt"
+    },
+    {
+      "kind": "s.stdio.wav",
+      "standard": "riff-pcm",
+      "subset": "*",
+      "schema": "stdio.wav"
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "*",
+      "schema": "stdio.xlsx"
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "schema": "stdio.xlsx"
+    },
+    {
+      "kind": "s.stdio.xlsx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "schema": "stdio.xlsx"
+    },
+    {
+      "kind": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "*",
+      "schema": "stdio.xml"
+    },
+    {
+      "kind": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "valid",
+      "schema": "stdio.xml"
+    },
+    {
+      "kind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "*",
+      "schema": "stdio.zip"
+    },
+    {
+      "kind": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "iso21320",
+      "schema": "stdio.zip"
+    }
+  ],
+  "metadataOnly": "definitions-do-not-require-executable-codecs",
+  "runtimeRequirements": {
+    "installedDocumentCodec": true,
+    "semanticSqliteProvider": true,
+    "concreteSnapshotType": true,
+    "nonemptyDomainSql": true
+  }
+}

@@ -1,5 +1,5 @@
 /** 🧬️ SemioAudioSnapshot schema. */
-import type {Binary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type SemioAudioFormat = 'pcm8' | 'pcm16' | 'pcm24' | 'pcm32' | 'f32' | 'f64';
 export interface SemioAudioChannel {
   samples: Binary32[];

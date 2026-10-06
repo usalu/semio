@@ -909,3 +909,163 @@ OWED (rule 44): every check in S4.3, plus the D24 and S3.6 runs. When CARGO OPEN
 4. `stage-cad` apply (after the NEXT list) → cad native + wasip2 check.
 5. hub `semio-hub-flow`/`semio-hub-cad` wasip2 → message "COMPOSITION GREEN flow/cad".
 6. At TESTS RESUMED: the S3.6/S4.3 test list.
+
+## Session 5 — 2026-10-05
+
+Owner: S5-FLOWCAD (Opus executor, successor of S4-FLOWCAD). Scope: P1 flow import red + owed flow/cad checks → COMPOSITION GREEN,
+P2 staged CAD §20.15 path (`stage-model` → `stage-d24` → `stage-cad`), P3 laws, P4 flow fault notices / F4 / F13, P5 follow-ups.
+Scratch: `🗑️generated/s5-flowcad/`. Build gate v4 (rule 55: cargo < 4, rustc < 6, `CARGO_BUILD_JOBS=3`).
+
+### S5.1 Repair check (rule 46) and P1 — 01:12–01:26
+
+- Stage waves re-checked with `python3 T/🧪️s4-flowcad-stage.py <wave> status`: `model`, `d24`, `cad` — NO DRIFT (every base sha still
+  equals the tree). The trees are byte-current but the plugin API they target moved (see next bullet), so `stage-cad` needs an API
+  re-derivation, not a merge.
+- Peer refactor found in the flow tree (mtime 10-04 23:19, 5 files, newer than HEAD): owned-child emissions are now STEPPED
+  preparations — `Emit.child_preparations: VecDeque<ChildEmitPreparation>` (`ChildEmitPreparation::of::<S, M>(slot, child_id, Vec<M>)`,
+  `M: RetireOwned`), `ChildEmit::of` is gone (`ChildEmit::open` + `push`), tests drive `Emit::prepare_child_one`. The codemod left ONE
+  red in my tree: `✏️editor/🎮️commands/🩹️patch-flow-widgets/🦀️.rs:12` imported `ChildEmitPreparation` from the crate root → fixed to
+  `semio_framework_plugin::{app::ChildEmitPreparation, …}` (the dead `ChildEmit` import dropped; no framework re-export).
+- RAN `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-flow-flow -p semio-s-artifact-cad-cad --lib --keep-going
+  --message-format=short` (01:13–01:25, `check-1.txt`): **exit 0, Finished in 12m 15s; flow 18 warnings, cad 35 warnings, 0 errors**
+  (the S4.2 flow §20.15 deletion wave is green natively at `--lib`).
+- 01:27 `… --lib --tests` (`check-2-tests.txt`) exit 101 in 53 s: NOT in my trees — `🧰️framework/…/🗣️dsl/🦀️.rs:219:71 E0308
+  pack::record::EncodeOptions vs os_pack::value::EncodeOptions` (kernel; Codex pack peer mid-wave, rule 56). Reported to `main`.
+  OWED until `foundation.status` reads GREEN: the `--tests` check, both wasip2 checks, the two hubs.
+
+### S5.2 `stage-cad` re-derivation and NEXT list — source in the mirror tree (01:30 →), NOT applied
+
+Mirror: `🗑️generated/s4-flowcad/stage-cad/tree/` (tool `python3 T/🧪️s4-flowcad-stage.py cad status|diff|apply`; 41 paths, no drift).
+- API re-derivation: `cad_child_leaves_emit(models, transaction, leaves: Vec<CadToolLeaf>)` builds one
+  `ChildEmitPreparation::of::<SemioModelSnapshot, SemioModelMutation>` per touched pane in `Emit.child_preparations`
+  (+ `transaction`), no `ChildEmit::of` / `commit_child_transaction`; callers pass owned leaves.
+- `stage-model` needs ONE more file than staged: the stdio-semio crate root `🧿️semio/🦀️.rs` has an exhaustive
+  `impl RetireOwned for model_mutation::SemioModelMutation` (≈ L633) → three arms (`seq![targets, offset]`,
+  `seq![targets, axis, angle]`, `seq![targets, factors]`) must land in the same wave (closure file, landing lock).
+- NEXT 1 DONE (`🎮️commands/🧱️object`): add → tool emit (refuses `cad.object.pane-uncomposed` for a pane without a model child),
+  patch → plain `set-element` leaves, delete → plain `remove-element`, duplicate → tool emit.
+- NEXT 2 DONE (`🤝️engagement` ×3 sites, `🔄️transform`: `apply_transformation_entries`, relative-leaf doc).
+- NEXT 3 DONE (`📥️io`: 3 × `CadPlayView::of`); plus `importCadFile` of a single STEP/OBJ/STL/GLB object is now a real
+  `insert-element` tool transaction on the addressed pane's child (lane contract `[Child, WindowTransient]`, refusal
+  `cad.import-object-refused`; the old `cad.import-object-unavailable` "no child seam yet" refusal is gone).
+- NEXT 4 DONE (edit mode: `cad_pane_working_scene`/`cad_pane_working_objects` deleted, `build_world_scene_for_pane` reads
+  `envelope.panes`, mesh-lane cache keyed by `(pane, genesis Arc | None, objects digest)`).
+- NEXT 5 DONE (panels `🗿️artifact`, `🔍️inspection` read `envelope.panes`); picking + geometry-import doc lines.
+- NEW (design hole found): an EMPTY pane had no child, so `addObject`/constructions/imports landed nothing after §20.15.
+  `default_document()` now composes the four EMPTY model children (`crate::cad_empty_pane_child`, content-addressed from the
+  empty model) and the genesis catalogue resolves them — every pane has a child lane from the first render.
+- F9 cad done in the mirror: `cad-retained-command-tool-mismatch` → `app.command.tool-mismatch`.
+- Example law re-authored (`demo_asset_is_the_concrete_forest_and_every_pane_resolves`: child ids first, genesis pack round
+  trip through the lossless bridge). The demo asset `📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio` pins the four forest child ids
+  (`shape-model-bd0fface41bc0b4d`, …) — the ONLY tracked file that does; it is re-sealed after the first compile prints the
+  new ids (lossless bridge changes the content digests).
+- OPEN in the mirror: NEXT 6 (tests: editor 2249 lines, transform tool, inspection, artifact, sample-scene fixture = NEXT 7),
+  NEXT 8 (laws), NEXT 9 (TS/source contract).
+- Finding (pre-existing, not this wave): whole-scene importers (`scene_from_spatial_payload`, `cad_document_from_dwg`) mint
+  content-addressed pane handles whose content no archive member carries (`Effect::LoadDocument {pack, spr}` has no members)
+  → imported non-empty panes cannot derive a genesis pack. Route: S5-LOAD (`artifact:in` carrier with members).
+
+### S5.3 P1 closed — COMPOSITION GREEN flow + cad (01:48), flow `--tests` repaired (01:58)
+
+| Command (gate v4, `CARGO_BUILD_JOBS=3`) | Result |
+|---|---|
+| `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-flow -p semio-hub-cad --target wasm32-wasip2 --lib --keep-going` (`check-3-hub-wasip2.txt`) | **exit 0**, 3m36s; flow-flow 18 w, cad-cad 35 w, hub-flow 18 w, 0 errors → "COMPOSITION GREEN flow", "COMPOSITION GREEN cad" sent (cad = pre-§20.15 tree) |
+| `cargo check PM -p semio-s-artifact-flow-flow -p semio-s-artifact-cad-cad --lib --tests --keep-going` (`check-4-tests.txt`) | exit 101: **cad lib test green (99 w)**; flow lib test 6 errors, all in my test files (never compiled since S4.2 + peer API moves) |
+| fixes: `➕️add-widget` tests `dsl::ToValue` → `semio_framework_value::ToValue` (×2); `✏️node-graph-edit` tests `protocol::Terminology/Locale` → `semio_framework_ui_locale::…`; `📸️snapshot/🧪️tests/🪶️sqlite` `restore` returns `ValueError`; `✋️drag` tests drop the deleted `Emit.description` | — |
+| `cargo check PM -p semio-s-artifact-flow-flow --lib --tests --keep-going` (`check-5-flow-tests.txt`) | **exit 0**, 1m53s; lib 18 w, lib test 54 w |
+
+### S5.4 P2 step 1 LANDED — `stage-model` (stdio-semio 🏛️model relative leaves) under the `stdio` lock, 02:14:47–02:31
+
+Wave = `python3 T/🧪️s4-flowcad-stage.py model apply` (32 paths, no drift; pre-wave copies in `🗑️generated/s5-flowcad/pre-model/`) + three
+arms in the exhaustive `impl RetireOwned for model_mutation::SemioModelMutation` of `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs`
+(`DragElements → seq![targets, offset]`, `RotateElements → seq![targets, axis, angle]`, `ScaleElements → seq![targets, factors]`).
+On disk now: leaves `✋️drag-elements`, `🔄️rotate-elements`, `🔍️scale-elements` (Rust + leaf descriptor + payload schema with full
+`x-semio-ui` en/de incl. `step`/`snaps`, `x-semio-inverse-rows`), aggregate (`KINDS` 14, tags 11–13, text print/parse, demo rows),
+twins (`.ts`, `.graphql`, `.proto`, `.protocol.semio`, `.g4`, `.ebnf`, `.grammar.semio`), oracle catalog rows, `🏛️mutate-semio-model`
+test platform (Rust adapter, Python second implementation, feature rows, 3 fixture triples), unit law.
+
+| Command (gate v5, `CARGO_BUILD_JOBS=3`) | Result |
+|---|---|
+| baseline BEFORE the wave: `cargo check PM -p semio-s-artifact-stdio-semio --lib --tests --all-features --keep-going` (`check-6-…baseline.txt`) | lib **green** (392 w); lib test 14 errors, ALL pre-existing in `🖼️image/…/🖼️tiff` (10) and `📽️presentation` (4) test files — S5-TEXT-STDIO's |
+| same command AFTER the wave (`check-7-stdio-semio-wave.txt`) | lib **green** (392 w); lib test the same 14 tiff/presentation errors, **0 diagnostics in `🏛️model`** |
+| `cargo check HM -p semio-hub-stdio -p semio-hub-cad -p semio-hub-flow --target wasm32-wasip2 --lib --keep-going` (`check-8-hubs-wasip2.txt`) | **exit 0**, 6m24s (stdio-semio wasip2 229 w, hub-stdio 1 w, hub-flow 18 w) |
+
+Not run: the other 23 hubs that depend on stdio-semio (the wave only ADDS enum variants; `git grep` shows no exhaustive
+`SemioModelMutation` match outside stdio-semio). OWED (tests, rule 48/55): `cargo test PM -p semio-s-artifact-stdio-semio --lib --all-features
+-- relative_placement_leaves_derive_from_the_base_and_undo_exactly kinds_match_the_enum_and_the_catalog mutate_semio_model` — blocked
+until the 14 tiff/presentation test errors are fixed (the lib-test target does not compile); python arm:
+`python3 T/🧪️s4-flowcad-model-vectors.py --check`.
+Coordinator actions from this wave: central `schema generate` (3 new leaf payload schemas `s/stdio/semio/v1/model/mutation/{drag,rotate,scale}-elements`),
+describe stdio (model vocabulary 11 → 14 kinds), stdio composition ledger sha for `🏛️mutate-semio-model/🦀️.rs` (already stale before).
+
+### S5.5 P2 step 3 LANDED — `stage-cad` (CAD §20.15) applied to the plugin tree 10-05 07:33 (written 10-06; the 07:45 cut hit before the report)
+
+- Re-anchor after wave B: the one drifted base (`✏️editor/🦀️.rs`, 12 `description` hunks by S5-CHANNEL) was 3-way merged into the staged
+  file (`git merge-file`, clean; scratch `🗑️generated/s5-flowcad/reanchor/`); tests re-authored by
+  `🗑️generated/s5-flowcad/cad-tests-rederive.py` (exact-match, fail-closed). `python3 T/🧪️s4-flowcad-stage.py cad apply` → 41 paths
+  (pre-wave copies: `🗑️generated/s5-flowcad/pre-cad/tree/`). Deleted (rule 32): the 8 parent object leaves
+  `🆕create-object ❌delete-object 🚚move-objects 🌀rotate-objects ⚖️scale-objects ✋️drag-selection 🔄️rotate-selection 🔍️scale-selection`
+  (schema + fixtures dirs), crate-root `cad_pane_local_scene`, `cad_working_scene_from_models`, `cad_scene_with_pane_objects`,
+  `cad_pane_rematerialized_child`, `cad_pane_child_diff_slot`, edit-mode `cad_pane_working_scene/_objects`, fixture
+  `materialized_shape_scene/_objects`, `CadComposedPanes::pane_of` (unused).
+- RAN (gate v5, JOBS=3): `cargo check PM -p semio-s-artifact-cad-cad --lib --keep-going` **exit 0** 07:37 (34 w, `check-9`);
+  `… -p cad-cad -p flow-flow --lib --tests` 07:40: flow lib-test green (58 w), cad 1 error (missing `PluginApp` import in my transform
+  test) → fixed → `… -p semio-s-artifact-cad-cad --lib --tests` **exit 0** 07:53 (lib 33 w, lib test 95 w, `check-11`).
+  S5-AGNOSTIC's family build 10-05 18:40 compiled both lib-tests again (flow 58 w, cad 95 w).
+- NOT landed: `stage-d24` (os-flow, `landing`): staged, no drift at 07:28 10-05, never reached the queue.
+- Stale since this wave (coordinator): cad descriptor `🌎️hub/🧩️compositions/📐️cad/🔣️.json` + `.descriptor.semio` (8 parent kinds gone,
+  object tools publish on `Child`), central `schema generate`; stale non-staged twin `🧬️mutations/📖️.grammar.semio` (pre-existing: it
+  still spells `add-object`/`set-pane-objects`, vocabulary of two generations ago) — delete or regenerate with the describe wave.
+
+### S5.6 Acceptance faults of 10-05 (S5-AGNOSTIC, design §22.36 / §23) — source 10-06 02:02–02:25, strict economy
+
+**flow — `setActiveExample {exampleId: "demo"}` faulted on its own asset.** Cause: `✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio` spelled the
+`layout` map's record values inline (`add=x=120 y=-40`); the DSL codec requires braces for a map of records since the
+`RecordSpecProducer` refactor (`🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs:1043` parse, `🛫️encoding` print emit `{`): "expected LBrace,
+found Ident 'x'" (0-based line 11). Fix: the asset line is `add={ x=120 y=-40 } preview={ … } slider={ … }` (the one line; nothing
+else touched). Law added: `every_shipped_example_loads_through_set_active_example` (`🎨️set-active-example/🧪️tests/🔬️unit`): every
+`FlowPlayApp::examples()` entry parses through the route's boundary and the reducer accepts its id. The existing byte law
+(`demo_example_ships_the_laid_out_default_graph…`: asset == printer output) decides the exact whitespace; if it differs, the writer
+re-seals: `cargo test PM -p semio-s-artifact-flow-flow --lib -- --ignored zzz_write_demo_example_asset`.
+
+**cad — creation leaves left an unloadable document (`closure-rejected`, Incomplete).** Cause (read from
+`🗑️generated/s5-agnostic/family-flowcad.test.txt:2544`): the law applies `create-energy-model {childId: "cad-energy-2"}` on the initial
+document; `cad_genesis_child_pack` derived a member only for catalogue ids, so the handle the leaf hands out had no store. Second
+latent fault of the same root: the demo asset pinned the four forest child ids as content digests that the lossless model bridge
+(S5.5) changed → `setActiveExample demo` would have loaded four underivable panes. Fixes (all `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad`):
+1. `🦀️.rs` — genesis is TOTAL over declared children: a catalogue id is born with its scene, every other declared pane child with the
+   EMPTY model, a declared drawing child (`CAD_DRAWINGS_SLOT`) with the empty drawing; an undeclared child has none. A handle is two
+   strings — content reaches a child only as an archive member or as child-lane leaves.
+2. `🦀️.rs` + `💡️inferences/🦀️.rs` — bundled documents use STABLE NAMED child ids (`cad_named_pane_child(document, pane)` =
+   `<document>-<pane>-model`; forest: `hexagonal-cut-concrete-forest-left-{shape,building,energy,structure-classic}-model`; new
+   document: `cad-…-model`), never digests; `cad_model_child_for_pane` deleted. Demo asset re-authored by hand (4 ids × 2).
+3. §22.36 / §22.20 — ten child-lifecycle leaves declared withdraw-only (`"editable": false`, fifteenth descriptor key): the five that
+   hand out an owned child (`🧱create-shape-model ⚡create-energy-model 🏢create-building-model 🏛️create-structure-classic
+   📐️create-drawing`: `childId`/`target` are identity, nothing else remains), `🧹delete-drawing` (its only input names an owned
+   child) and the four inputless `delete-*-model`.
+4. Acceptance wiring (`✏️editor/🧪️tests/🔬️unit`): `composed_reload_law!("cad", …)` and `composed_child_history_law!("cad", …,
+   [("translateSelection", {objectIds: ["object-hexagonal-cut-concrete-forest-left"], dx: 1.5})])` — the forest shape object's
+   relative `drag-elements` on `shapeModel/<child>` is cad's seeded editable case; G12's derived cases (`create-node`,
+   `replace-references`, the reference leaves) now run on a loadable document.
+RAN: `zsh T/🚦️gate.sh 2 6 && CARGO_BUILD_JOBS=3 cargo check PM -p semio-s-artifact-flow-flow -p semio-s-artifact-cad-cad --lib`
+→ **exit 0** 02:19:40 (flow 20 w, cad 33 w; `check-12-lib.txt`). Test files of this turn are WRITTEN BUT UNVERIFIED (no test builds).
+OWED, in order: (1) `zsh T/🧪️s5-agnostic-run-family.sh flow semio-s-artifact-flow-flow`; (2) `zsh T/🧪️s5-agnostic-run-family.sh cad
+semio-s-artifact-cad-cad`; (3) `cargo test PM -p semio-s-artifact-cad-cad --lib -- demo_asset_is_the_concrete_forest
+a_new_document_composes object_gestures_undo translate_selection_moves a_mounted_translate a_streamed_gumball`;
+(4) `cargo test PM -p semio-s-artifact-flow-flow --lib -- every_shipped_example demo_example_ships set_active_example_demo`;
+(5) `bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts schema mutation-inputs --under "✏️s/🔌️plugins/📐️cad" --json` (0 `inputless`)
+and, cwd `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`, `bun ./📜️script.ts schema mutation-editability --json` (cad 0).
+OPEN (mine): `stage-d24`; P3 CAD history-edit laws (upstream parameter → downstream geometric failure as per-mutation Error);
+flow 77 anonymous refusals / F4 / F13; §22.10 cad gesture slot; hub wasip2 re-check after this turn. Finding for S5-LOAD (kept):
+whole-scene importers (`scene_from_spatial_payload`, `cad_document_from_dwg`) mint content-addressed handles whose content no archive
+member carries — with total genesis such an import now loads EMPTY panes instead of faulting; the carrier must ship members.
+Coordinator: describe flow + cad (flow hub `🔣️.json` embeds the old demo asset text), central `schema generate`.
+RAN 02:20 (bun, repo root): `schema mutation-inputs --under "✏️s/🔌️plugins/📐️cad" --json` → census cad: 28 leaves, **10 withdraw-only,
+28/28 inputs declared, 0 inferred, 0 `inputless`**; 8 diagnostics left, all `malformed` rows of the 8 DELETED parent leaves that the
+central catalogue still lists (`s.cad.cad.mutation.{create-object,delete-object,move-objects,rotate-objects,scale-objects,
+drag-selection,rotate-selection,scale-selection}`) → cleared by the coordinator's central `schema generate`, not by a plugin edit
+(`🗑️generated/s5-flowcad/gate-inputs-cad.json`). `schema mutation-editability` was started and not awaited (output
+`🗑️generated/s5-flowcad/gate-editability.json`) — OWED read.
+RAN 02:2x (bun, cwd repo test domain): `schema mutation-editability --json` → **cad: 19 leaves, 9 editable, 10 withdraw-only, 0 findings**
+(was 8 `parentLeafReadsChild`); flow: 0 parent leaves, 0 findings. The gate's 16 remaining diagnostics belong to other owners
+(`🗑️generated/s5-flowcad/gate-editability.json`). The OWED read above is done.

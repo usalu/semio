@@ -3,7 +3,8 @@
 //! scene graph back into blocks — it dumps the (truncated) raw XML into one text block, an honest
 //! `IoFidelity::Lossy` stub, unchanged behaviour from the pre-migration free function.
 
-use crate::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
+use crate::schema::{create_note_id, NoteIdOwner};
+use crate::standards::v1::subsets::any::io::text::snapshot::{empty_note_snapshot};
 use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

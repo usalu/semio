@@ -18,7 +18,7 @@ use crate::editor::generation3d::modes::{edit, generate};
 use crate::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
 use crate::editor::generation3d::terminology::generation3d_labels;
 use crate::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
 use semio_framework_os_flow::{FlowEvalSession, FlowHost};
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.4): `ArtifactEditor`/`Editor`/`Dialect` are curated at
@@ -1247,7 +1247,7 @@ impl Generation3dDocumentIoWork {
                     0=>{self.source_identity=Some(identity);self.projection=Some(semio_framework_dsl_record::native_encoding::RetainedFieldProjection::new(input.snapshot));self.phase=1;},
                     1=>if let Some(value)=self.projection.as_mut().unwrap().step(input.snapshot,1,&mut control)?{
                         self.projected=Some(value);
-                        let spec=crate::standards::v1::subsets::any::schema::snapshot::text::generation3d_document_spec_controlled(&mut control)?;
+                        let spec=crate::standards::v1::subsets::any::io::text::snapshot::generation3d_document_spec_controlled(&mut control)?;
                         if !matches!(self.projected,Some(semio_framework_dsl_record::FieldValue::Record(_))){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"generation3d projection root is not a record"))}
                         let Some(semio_framework_dsl_record::FieldValue::Record(record))=self.projected.take()else{unreachable!()};
                         self.writer=Some(semio_framework_dsl_record::RetainedRecordWriter::new(record,spec,semio_framework_dsl_record::JoinMode::Document,generation3d_document_io_contract().max_output_bytes));
@@ -1679,7 +1679,6 @@ struct Generation3dArtifactStorePreparationFactory;
 struct Generation3dArtifactStorePreparation {
     base: Option<store::SnapshotRead<Generation3dSnapshot>>,
     mutation: Option<Generation3dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Generation3dSnapshot, Generation3dMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -1689,9 +1688,9 @@ struct Generation3dArtifactStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Generation3dSnapshot, Generation3dMutation> for Generation3dArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &Generation3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("generation3d-artifact-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &Generation3dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("generation3d-artifact-lane".into());
         }
         admit_generation3d_artifact_mutation(mutation)
     }
@@ -1713,7 +1712,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation3dSnapshot, Generat
         Ok(Box::new(Generation3dArtifactStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -1770,9 +1768,6 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMu
         if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        if self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-artifact-base-retirement-rejected"));
@@ -1786,7 +1781,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMu
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ArtifactStorePreparation
@@ -1817,7 +1812,6 @@ struct Generation3dConfigPreparationFactory;
 struct Generation3dConfigPreparation {
     base: Option<store::SnapshotRead<Generation3dConfig>>,
     mutation: Option<Generation3dConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Generation3dConfig, Generation3dConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -1827,9 +1821,9 @@ struct Generation3dConfigPreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Generation3dConfig, Generation3dConfigMutation> for Generation3dConfigPreparationFactory {
-    fn preflight(&self, mutation: &Generation3dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("generation3d-config-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &Generation3dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("generation3d-config-lane".into());
         }
         admit_generation3d_config_mutation(mutation)
     }
@@ -1851,7 +1845,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation3dConfig, Generatio
         Ok(Box::new(Generation3dConfigPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -1908,9 +1901,6 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dConfig, Generation3dConf
         if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        if self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "generation3d-config-base-retirement-rejected"));
@@ -1924,7 +1914,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dConfig, Generation3dConf
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ConfigStorePreparation
@@ -1966,7 +1956,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_envelope_decode_owner_bundle())
+        Some(crate::host::generation3d_envelope_decode_owner_bundle())
     }
 
     /// 🧠️ One retained `FlowEvalSession` per app instance — see [`Generation3dInstanceOperationOwner`].
@@ -1975,7 +1965,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_document_store_owners())
+        Some(crate::host::generation3d_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1999,13 +1989,13 @@ impl ArtifactEditor for Generation3dPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::host::generation3d_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_validate_atomic_publication_authority(operation, generation, live_generation)
+        crate::host::generation3d_validate_atomic_publication_authority(operation, generation, live_generation)
             .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation3d atomic publication authority is absent or stale"))?;
-        crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_release_app_publication_authority(operation);
+        crate::host::generation3d_release_app_publication_authority(operation);
         Ok(())
     }
 
@@ -2177,7 +2167,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     fn initial_snapshot() -> Generation3dSnapshot {
-        crate::standards::v1::subsets::any::schema::default_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

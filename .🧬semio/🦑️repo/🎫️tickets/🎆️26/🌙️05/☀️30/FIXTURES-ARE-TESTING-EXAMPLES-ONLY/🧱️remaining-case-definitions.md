@@ -1,0 +1,46 @@
+# Remaining Case-Named Definition Review
+
+- `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json` — PortableCorpusV1 ['schema', 'identities', 'hostileArgs', 'cases'] 
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🧬️schema/🔣️.json` — CasesV1 ['sources', 'scopes', 'scans'] 
+- `🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json` — FaultNoticeCorpus ['note', 'appNotices', 'tables', 'resolutions'] 📢️ The language-agnostic corpus of app fault notices (🧫️fixtures/🧫️fault-notices): tables with the exact refusals validate_fault_notices / validateFaultNotices 
+- `🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json` — MutationInputCorpus ['schema', 'referenceIds', 'documents', 'cases'] 🧫️ The language-agnostic mutation-input corpus (🧫️fixtures/🧫️mutation-inputs): leaf payload schemas, the schema documents their cross-document $refs resolve to,
+- `🧰️framework/🔨️modules/🖼️assets/🥽️mesh/🧬️schema/🔣️.json` — MeshTransportCasesV1 [] 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🔣️.json` — DslUnsignedCases [] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧬️schema/🔣️.json` — DurableOwnedGroupCase ['id', 'variants', 'codecExpected', 'expected'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧬️schema/🔣️.json` — Case ['id', 'operation', 'value', 'index', 'text', 'entries', 'pages', 'inputBytes', 'retiredBytes', 'error'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📜️history/🗂️dictionary/🧾️record/🧬️schema/🔣️.json` — Case ['id', 'hex', 'repeat', 'hold', 'cancelAt', 'offset', 'entries', 'scratchBytes', 'error'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-dialect/🧬️schema/🔣️.json` — PublicRestoreCase ['id', 'parentHasChild', 'slot', 'childId', 'accepted'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-dialect/🧬️schema/🔣️.json` — ProjectionCase ['id', 'projected', 'accepted', 'parent', 'incoming'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-dialect/🧬️schema/🔣️.json` — GraphCase ['id', 'edges', 'candidate', 'accepted', 'inserted', 'syncAccepted'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-dialect/🧬️schema/🔣️.json` — IdentityCase ['id', 'expectedOwned', 'persistedId', 'accepted', 'persistedOwner'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🪪️member-dialect/🧬️schema/🔣️.json` — Case ['id', 'operation', 'requested', 'persisted', 'accepted', 'variant'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️.json` — FlowPackageContractCasesV1 ['cases'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🧬️schema/🔣️.json` — HistoryIdentityCase ['id', 'operation', 'index', 'text', 'hex', 'expectedOwner', 'value', 'error'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json` — ArtifactCreationReadyOpeningCase ['id', 'current', 'prepare', 'open', 'outcome', 'release', 'publish', 'failure'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json` — ArtifactCreationProgressCaseV1 ['id', 'locale', 'phase', 'cancelRequested', 'role', 'live', 'cancellable', 'opens', 'openingDisposition', 'retryable'] 🌱️ One rendered artifact-creation progress state: which phase it is in, whether cancellation was already requested, and the accessibility role, liveness, cancel
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json` — ArtifactCreationCatalogCaseV1 ['id', 'locale', 'phase', 'role', 'live', 'effectivePhase', 'hasChoices'] 🗂️ One rendered artifact-kind catalog state and the accessibility role and liveness it projects.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧬️schema/🔣️.json` — EditDigestChainsEditCase ['name', 'edit', 'expectedDigest'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧬️schema/🔣️.json` — EditDigestChainsGeneratedCase ['name', 'header', 'generatedOperations', 'expectedDigest'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📣️contributions/🧬️schema/🔣️.json` — CensusCasesV1 [] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📣️contributions/🧬️schema/🔣️.json` — CasesV1 ['cases', 'census'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/🔣️.json` — CanonicalBootstrapFolderMirrorCorpusV1 ['schema', 'documentId', 'artifactSchema', 'descriptorDigestV1', 'baselineFrontier', 'pairs', 'hostile'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🚫️rejected-page-close/🔣️.json` — Case ['id', 'pages', 'expectedDocument', 'closes'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️.json` — GroupReadCase ['id', 'capture', 'decision', 'fresh', 'captured', 'oldLeaseCurrent', 'preparedLeaseCurrent'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️owned-schema-record/🔣️.json` — SourceCase ['name', 'source'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️owned-schema-record/🔣️.json` — InvalidCase ['name', 'source', 'referenceCode', 'nativeCode'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🧬️owned-schema-record/🔣️.json` — PageCase ['name', 'pageBytes', 'chunks'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🔎️scalar-witness/🧬️schema/🔣️.json` — ScalarRecordCase ['id', 'ordinal', 'wireBytes', 'symbols', 'fields'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧬️schema/🔣️.json` — HubUnavailableRefusalCorpusV1 ['schema', 'detailMaxChars', 'cases'] 🧪️ Neutral corpus: one directory-client fault per case and the exact gateway refusal it becomes.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧬️schema/🔣️.json` — HubComponentAssetCorpusV1 ['schema', 'component', 'busyRetryAfterMs', 'streamAttempts', 'cases'] 🧪️ Neutral corpus: execution-target components as static assets. Each case starts from a store state and runs the gateway once per `runs` entry — a new store ov
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🧬️schema/🔣️.json` — AuthenticatedHubDescriptorIndexCaseV1 ['tokenPresent', 'responses', 'streamMessage', 'expected'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🔣️.json` — DslUnsignedCases [] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🧬️schema/🔣️.json` — DocumentBackboneBindingCaseV1 ['id', 'initial', 'command', 'receipt', 'final'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json` — DeploymentInventoryCasesV1 ['cases'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json` — RetainedCommandBoundaryCase ['name', 'bytes', 'accepted'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json` — RetainedCommandCorpusLimits ['schema', 'maximumTextBytes', 'maximumSchemaBytes', 'maximumRawBytes', 'maximumWorkItems', 'rejectedAdditionalBytes', 'expectedWorkItems', 'toolIds'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧬️schema/🔣️.json` — MandatoryMutationDescriptorCase [] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧬️schema/🔣️.json` — CorpusV1 ['version', 'cases', 'source', 'comparisons'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🧬️schema/🔣️.json` — CasesV1 ['cases', 'declarations'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/🔣️.json` — PackageContractCases ['cases'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🧬️schema/🔣️.json` — PackageContractCase ['id', 'snapshot'] 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🔣️.json` — SliderOverlayCase ['locale', 'scopeId', 'row'] 

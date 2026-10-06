@@ -326,7 +326,7 @@ mod open_tests {
     use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
 
     fn emit_open(kind: &str, artifact_ref: &str, frame_id: &str) -> Emit<LayoutMutation, NoConfigMutation> {
-        let mut document = crate::standards::v1::subsets::any::schema::default_document();
+        let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
         document.links[0].artifact_kind = kind.into();
         document.links[0].artifact_ref = artifact_ref.into();
         let config = NoConfig::default();
@@ -383,7 +383,7 @@ mod open_tests {
             styles: Vec::new(),
             layers: vec![DrawLayer { id: "imported".into(), name: "Imported".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] } }],
         };
-        let mut document = crate::standards::v1::subsets::any::schema::default_document();
+        let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
         document.links[0].artifact_kind = "s.draw.drawing".into();
         document.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
         let config = NoConfig::default();
@@ -397,7 +397,7 @@ mod open_tests {
 
     #[test]
     fn a_locked_frame_keeps_its_geometry_and_can_still_unlock() {
-        let mut document = crate::standards::v1::subsets::any::schema::default_document();
+        let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
         match document.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").unwrap() {
             crate::Frame::Rect { locked, .. } => *locked = Some(true),
             _ => panic!("rect"),

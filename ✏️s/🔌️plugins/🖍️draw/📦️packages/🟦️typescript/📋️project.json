@@ -19,6 +19,15 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "utility-action-policy": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts utility-action-policy",
+        "forwardAllArgs": true
+      }
     }
   }
 }

@@ -1,0 +1,2077 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/🧬️schema/🔣️.json",
+    "name": "CodecVectorFile",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "vectors"
+      ],
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "semio.repo.yaml.codec-vectors/1"
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/CodecVector"
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧬️schema/🔣️.json",
+    "name": "RankingVectorFile",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "vectors"
+      ],
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "semio.repo.search.ranking-vectors/1"
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/RankingVector"
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/🧬️schema/🔣️.json",
+    "name": "ArtifactIdVectors",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "vectors"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.repo.codebase.artifact-id-vectors/1"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ArtifactIdVector"
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/🧬️schema/🔣️.json",
+    "name": "IgnoreVectors",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "vectors"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.repo.codebase.ignore-vectors/1"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/IgnoreVector"
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+    "name": "Generation3dIoAuthority",
+    "definition": {
+      "title": "Generation3dIoAuthority",
+      "x-semio-formats": [
+        "🔣️jsonschema"
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "version",
+        "forbiddenSegments",
+        "forbiddenPrefixes",
+        "cases"
+      ],
+      "properties": {
+        "format": {
+          "const": "semio.generation3d.io-authority"
+        },
+        "version": {
+          "const": 1
+        },
+        "forbiddenSegments": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbiddenPrefixes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "source",
+              "allowed"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "allowed": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🧬️schema/🔣️.json",
+    "name": "BrowserActorVisibleSurfacesV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "description",
+        "sections",
+        "turns",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.os.browser-actor-visible-surfaces/v1"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/section"
+          }
+        },
+        "turns": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mount",
+            "repaint",
+            "refresh"
+          ],
+          "properties": {
+            "mount": {
+              "$ref": "#/definitions/turn"
+            },
+            "repaint": {
+              "$ref": "#/definitions/turn"
+            },
+            "refresh": {
+              "$ref": "#/definitions/turn"
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/case"
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json",
+    "name": "ActorFactoryV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "format",
+        "artifact",
+        "artifactLaws",
+        "name",
+        "component",
+        "importInterfaces",
+        "starts",
+        "calls",
+        "expected",
+        "afterCloseB",
+        "lifecycle",
+        "laws"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/BrowserContractId"
+        },
+        "format": {
+          "$ref": "#/$defs/BrowserContractId"
+        },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "codegenPolicy",
+            "maximumBytes"
+          ],
+          "properties": {
+            "schema": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "codegenPolicy": {
+              "$ref": "#/$defs/BrowserContractId"
+            },
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 268435456
+            }
+          }
+        },
+        "artifactLaws": {
+          "$ref": "#/$defs/BrowserLawList"
+        },
+        "name": {
+          "$ref": "#/$defs/BrowserActorName"
+        },
+        "component": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "importInterfaces": {
+          "type": "array",
+          "maxItems": 19,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/WitInterfaceId"
+          }
+        },
+        "starts": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "calls": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "expected": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "afterCloseB": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "lifecycle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "open",
+            "invoking",
+            "closing",
+            "closed"
+          ],
+          "properties": {
+            "open": {
+              "$ref": "#/$defs/BrowserActorLifecycleState"
+            },
+            "invoking": {
+              "$ref": "#/$defs/BrowserActorLifecycleState"
+            },
+            "closing": {
+              "$ref": "#/$defs/BrowserActorLifecycleState"
+            },
+            "closed": {
+              "$ref": "#/$defs/BrowserActorLifecycleState"
+            }
+          }
+        },
+        "laws": {
+          "$ref": "#/$defs/BrowserLawList"
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json",
+    "name": "CompilerCapsuleV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "source",
+        "cores",
+        "expected",
+        "denied"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/BrowserContractId"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "cores": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "hex"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._-]+\\.wasm$"
+              },
+              "hex": {
+                "type": "string",
+                "pattern": "^(?:[0-9a-f]{2})+$"
+              }
+            }
+          }
+        },
+        "expected": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "denied": {
+          "$ref": "#/$defs/BrowserLawList"
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json",
+    "name": "ComponentFactoryV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "component",
+        "name",
+        "calls",
+        "expected",
+        "forbidden",
+        "factoryModes",
+        "cancelledBeforeCompile",
+        "cancelledDuringCompile"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/BrowserContractId"
+        },
+        "component": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "name": {
+          "$ref": "#/$defs/BrowserActorName"
+        },
+        "calls": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "expected": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        },
+        "forbidden": {
+          "$ref": "#/$defs/BrowserLawList"
+        },
+        "factoryModes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "generated",
+              "explicit-async"
+            ]
+          }
+        },
+        "cancelledBeforeCompile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "compilations",
+            "instances"
+          ],
+          "properties": {
+            "compilations": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "instances": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            }
+          }
+        },
+        "cancelledDuringCompile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "compilations",
+            "instances",
+            "stagingZeroed"
+          ],
+          "properties": {
+            "compilations": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "instances": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "stagingZeroed": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json",
+    "name": "GeneratedComponentInstantiationV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "calls",
+        "expected"
+      ],
+      "properties": {
+        "component": {
+          "type": "string",
+          "minLength": 1
+        },
+        "calls": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "instance",
+              "delta"
+            ],
+            "properties": {
+              "instance": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "delta": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "moduleImportInstances",
+            "instantiated",
+            "results",
+            "memory",
+            "distinctMemories",
+            "factoryHasNoModuleInstanceRoots",
+            "automaticHasModuleInstanceRoots"
+          ],
+          "properties": {
+            "moduleImportInstances": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "instantiated": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64
+            },
+            "results": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            },
+            "memory": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            },
+            "distinctMemories": {
+              "type": "boolean"
+            },
+            "factoryHasNoModuleInstanceRoots": {
+              "type": "boolean"
+            },
+            "automaticHasModuleInstanceRoots": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json",
+    "name": "Preview2ShimImportRewriteV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "prefix",
+              "output"
+            ],
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "prefix": {
+                "type": "string",
+                "minLength": 1
+              },
+              "output": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧬️schema/🔣️.json",
+    "name": "CompositionOpen",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "limits",
+        "cases",
+        "framing",
+        "retention"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.member.open-operation/v1"
+        },
+        "limits": {
+          "const": {
+            "pageBytes": 4096,
+            "maximumPages": 4096,
+            "identityBytes": 256
+          }
+        },
+        "retention": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "stage",
+              "snapshots",
+              "mutations",
+              "cancelled"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stage": {
+                "enum": [
+                  "input",
+                  "snapshot",
+                  "forward",
+                  "inverse",
+                  "envelope",
+                  "initialization"
+                ]
+              },
+              "snapshots": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              },
+              "mutations": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2
+              },
+              "cancelled": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "framing": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "bytes",
+              "snapshot",
+              "history",
+              "reason"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bytes": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              "snapshot": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "history": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                ],
+                "additionalItems": false,
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "reason": {
+                "enum": [
+                  null,
+                  "malformed"
+                ]
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 11,
+          "maxItems": 11,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "sealed",
+              "bytes",
+              "expiresAtUs",
+              "nowUs",
+              "artifactId",
+              "ownerChildId",
+              "admitted",
+              "reason"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sealed": {
+                "type": "boolean"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16777216
+              },
+              "expiresAtUs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "nowUs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "artifactId": {
+                "type": "string"
+              },
+              "ownerChildId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "admitted": {
+                "type": "boolean"
+              },
+              "reason": {
+                "enum": [
+                  null,
+                  "unsealed",
+                  "empty",
+                  "expired",
+                  "identity",
+                  "owner"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️lifetime/🧬️schema/🔣️.json",
+    "name": "RuntimeFaultVectorsV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ceilingUs",
+        "scopes",
+        "messageTemplate",
+        "vectors",
+        "classifications"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "semio.plugin.runtime-fault-vectors.v1"
+        },
+        "ceilingUs": {
+          "type": "integer",
+          "const": 8000
+        },
+        "scopes": {
+          "const": [
+            "live",
+            "close"
+          ]
+        },
+        "messageTemplate": {
+          "const": "runtime {scope} cleanup faulted for instance {instance}: {detail} [{variant}] (elapsed {elapsed}, ceiling {ceilingUs}us)"
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 19,
+          "maxItems": 19,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "variant",
+              "code",
+              "class",
+              "detail"
+            ],
+            "properties": {
+              "variant": {
+                "type": "string",
+                "pattern": "^[a-z][a-z-]*[a-z]$"
+              },
+              "code": {
+                "type": "string",
+                "pattern": "^plugin\\.internal\\.[a-z][a-z-]*[a-z]$"
+              },
+              "class": {
+                "enum": [
+                  "abi-mismatch",
+                  "interactive-ceiling",
+                  "clock",
+                  "plugin-internal"
+                ]
+              },
+              "detail": {
+                "type": "string",
+                "minLength": 8
+              }
+            }
+          }
+        },
+        "classifications": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "class"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "supervisor": {
+                "enum": [
+                  "running",
+                  "crashed",
+                  "quarantined"
+                ]
+              },
+              "class": {
+                "enum": [
+                  "abi-mismatch",
+                  "interactive-ceiling",
+                  "clock",
+                  "plugin-internal",
+                  "install-failed",
+                  "unknown"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧬️schema/🔣️.json",
+    "name": "ArtifactAdmissionV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases",
+        "firstParty"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/BuilderContractId"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "plugin",
+              "package",
+              "channel",
+              "kind",
+              "code"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "plugin": {
+                "$ref": "#/$defs/BuilderPluginId"
+              },
+              "package": {
+                "$ref": "#/$defs/BuilderPackageId"
+              },
+              "channel": {
+                "enum": [
+                  "artifact",
+                  "definition",
+                  "tree"
+                ]
+              },
+              "kind": {
+                "type": "string"
+              },
+              "code": {
+                "enum": [
+                  "accepted",
+                  "plugin-assembly.artifact-kind",
+                  "plugin-assembly.artifact-owner"
+                ]
+              }
+            }
+          }
+        },
+        "firstParty": {
+          "type": "array",
+          "minItems": 39,
+          "maxItems": 39,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "plugin",
+              "kind",
+              "definition",
+              "root"
+            ],
+            "properties": {
+              "plugin": {
+                "$ref": "#/$defs/BuilderPluginId"
+              },
+              "kind": {
+                "$ref": "#/$defs/BuilderArtifactKind"
+              },
+              "definition": {
+                "type": "string",
+                "minLength": 1
+              },
+              "root": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧬️schema/🔣️.json",
+    "name": "TopicContributionsV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/BuilderContractId"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "contributions"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z]+(-[a-z]+)*$"
+              },
+              "contributions": {
+                "type": "array",
+                "maxItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "topic",
+                    "payload"
+                  ],
+                  "properties": {
+                    "topic": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "identity",
+                        "executable"
+                      ],
+                      "properties": {
+                        "identity": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "executable": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎠️activation/🧬️schema/🔣️.json",
+    "name": "ActivationAdmissionV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "stage",
+              "actorRetained",
+              "instantiations",
+              "drops",
+              "admitted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stage": {
+                "$ref": "#/$defs/ActivationStage"
+              },
+              "actorRetained": {
+                "type": "boolean"
+              },
+              "instantiations": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "drops": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "admitted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️lifecycle/🧬️schema/🔣️.json",
+    "name": "ReactorTurnLifecycleV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "code",
+        "maximumFaultBytes",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "code": {
+          "$ref": "#/$defs/ReactorFaultCode"
+        },
+        "maximumFaultBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "code",
+              "retryable",
+              "events",
+              "eligible"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "code": {
+                "$ref": "#/$defs/ReactorFaultCode"
+              },
+              "retryable": {
+                "type": "boolean"
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ReactorLifecycleEvent"
+                }
+              },
+              "eligible": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧬️schema/🔣️.json",
+    "name": "EmissionBudgetV1",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "cases"
+      ],
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/DescribeContractId"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "budgetMs",
+              "elapsedMs",
+              "expired",
+              "remainingMs"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "unlimited",
+                  "before-limit",
+                  "at-limit",
+                  "after-limit",
+                  "already-exhausted"
+                ]
+              },
+              "budgetMs": {
+                "type": "integer",
+                "minimum": -1
+              },
+              "elapsedMs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expired": {
+                "type": "boolean"
+              },
+              "remainingMs": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧬️schema/🔣️.json",
+    "name": "GraphParameterV1",
+    "definition": {
+      "title": "Flow Graph Parameter Interaction",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases",
+        "action",
+        "expected"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.flow.graph-parameter.v1"
+        },
+        "action": {
+          "const": "nodeGraphEdit"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "app",
+              "controllerId",
+              "surfaceId",
+              "widgetId",
+              "label",
+              "before",
+              "request",
+              "after"
+            ],
+            "properties": {
+              "app": {
+                "enum": [
+                  "flow",
+                  "generation2d",
+                  "generation3d"
+                ]
+              },
+              "controllerId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "surfaceId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "widgetId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "before": {
+                "$ref": "#/$defs/GraphParameterBound"
+              },
+              "request": {
+                "type": "number"
+              },
+              "after": {
+                "$ref": "#/$defs/GraphParameterBound"
+              }
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "documentJsonReads",
+            "wholeFixtureActions",
+            "gestureEndActions",
+            "commitTimerMs"
+          ],
+          "properties": {
+            "documentJsonReads": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 0
+            },
+            "wholeFixtureActions": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 0
+            },
+            "gestureEndActions": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 0
+            },
+            "commitTimerMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧬️schema/🔣️.json",
+    "name": "Components",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 19,
+          "maxItems": 19,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "component",
+              "bytes"
+            ],
+            "properties": {
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 32768
+              },
+              "component": {
+                "oneOf": [
+                  {
+                    "const": {
+                      "type": "container",
+                      "role": "group",
+                      "label": "A",
+                      "description": "B",
+                      "error": "C",
+                      "dropOverlay": {
+                        "title": "D",
+                        "hint": "E",
+                        "accept": "F"
+                      }
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "text",
+                      "value": "A",
+                      "dataAttributes": {
+                        "x": "🌊"
+                      }
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "button",
+                      "icon": "I",
+                      "label": "L"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "separator"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "input",
+                      "kind": "number",
+                      "value": "1",
+                      "placeholder": "P",
+                      "commit": "C",
+                      "accept": "A"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "select",
+                      "value": "v",
+                      "items": [
+                        {
+                          "value": "a",
+                          "label": "L"
+                        }
+                      ],
+                      "placeholder": "P"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "toggle",
+                      "on": true,
+                      "icon": "I",
+                      "text": "T"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "keyValueList",
+                      "entries": [
+                        {
+                          "label": "L",
+                          "value": "V"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "slider",
+                      "value": 2,
+                      "min": 0,
+                      "max": 4,
+                      "step": 1,
+                      "unit": "mm"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "numberStepper",
+                      "value": 1,
+                      "step": 1,
+                      "uniform": false
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "ring",
+                      "orbId": "x",
+                      "t": 0
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "iconSelect",
+                      "value": "v",
+                      "uniform": false,
+                      "classifierKind": "k"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "progress",
+                      "completed": 1,
+                      "total": 2,
+                      "valueText": "V"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "tree",
+                      "interactionDomain": "d"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "treeSection",
+                      "label": "L"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "treeItem",
+                      "label": "L",
+                      "description": "D",
+                      "icon": "I",
+                      "dragData": {
+                        "x": "🌊"
+                      },
+                      "rowActions": [
+                        {
+                          "icon": "R",
+                          "label": "B",
+                          "verb": "n"
+                        }
+                      ],
+                      "target": {
+                        "scope": "s",
+                        "version": 1,
+                        "args": {
+                          "x": [
+                            "🌊"
+                          ]
+                        },
+                        "activation": "a"
+                      }
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "image",
+                      "src": "S",
+                      "alt": "A"
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "extension",
+                      "extension": "E",
+                      "props": {
+                        "x": [
+                          "🌊"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "const": {
+                      "type": "surface",
+                      "kind": "canvas-2d",
+                      "docSchema": "wire",
+                      "doc": {
+                        "bytes": [
+                          0,
+                          1,
+                          2
+                        ]
+                      },
+                      "bindings": []
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧬️contention/🧬️schema/🔣️.json",
+    "name": "Contention",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "sustainedOverrunSteps",
+        "cases",
+        "verdicts",
+        "overruns"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "verdicts": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "start",
+              "end",
+              "fault",
+              "clockFault",
+              "sessionTerminal"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "end": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "fault": {
+                "type": "boolean"
+              },
+              "clockFault": {
+                "enum": [
+                  null,
+                  "Missing",
+                  "Backward"
+                ]
+              },
+              "sessionTerminal": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "lock",
+              "callback",
+              "returnsWhileHeld",
+              "violationRetained",
+              "returnedEvent"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lock": {
+                "enum": [
+                  "site",
+                  "violation",
+                  "event"
+                ]
+              },
+              "callback": {
+                "enum": [
+                  "timer",
+                  "watchdog",
+                  "event"
+                ]
+              },
+              "returnsWhileHeld": {
+                "const": true
+              },
+              "violationRetained": {
+                "type": "boolean"
+              },
+              "returnedEvent": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "sustainedOverrunSteps": {
+          "const": 4
+        },
+        "overruns": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "elapsedUs",
+              "terminalIndex",
+              "consecutive",
+              "longestRun",
+              "total",
+              "worstElapsedUs"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "elapsedUs": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 16,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "terminalIndex": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 3,
+                "maximum": 15
+              },
+              "consecutive": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16
+              },
+              "longestRun": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16
+              },
+              "worstElapsedUs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧬️schema/🔣️.json",
+    "name": "Cooperative",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "unitCost",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "unitCost": {
+          "const": 8
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "lane",
+              "weight",
+              "deficits",
+              "selected"
+            ],
+            "properties": {
+              "lane": {
+                "enum": [
+                  "Maintenance",
+                  "Background",
+                  "UserVisible",
+                  "Io",
+                  "Timer",
+                  "Interactive"
+                ]
+              },
+              "weight": {
+                "enum": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  8
+                ]
+              },
+              "deficits": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 7
+                }
+              },
+              "selected": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "items": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧬️schema/🔣️.json",
+    "name": "Budget",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "unit",
+        "cases"
+      ],
+      "properties": {
+        "$schema": {
+          "const": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json#/$defs/Budget"
+        },
+        "unit": {
+          "const": "microseconds"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "start",
+              "grant",
+              "fuel",
+              "deadline",
+              "samples",
+              "expired",
+              "yielded"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "start": {
+                "$ref": "#/definitions/u64"
+              },
+              "grant": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 7500
+              },
+              "fuel": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "deadline": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/u64"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "samples": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/definitions/u64"
+                }
+              },
+              "expired": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "boolean"
+                }
+              },
+              "yielded": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧬️schema/🔣️.json",
+    "name": "Binding",
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "cases"
+      ],
+      "properties": {
+        "$schema": {
+          "const": "https://json.schemas.assets.semio-tech.com/framework/job/budget/schema.json#/$defs/Binding"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mutation",
+              "admitted"
+            ],
+            "properties": {
+              "mutation": {
+                "enum": [
+                  "none",
+                  "wrong-helper",
+                  "divided-grant",
+                  "rounded-grant",
+                  "coarse-clock",
+                  "overflow-fallback",
+                  "expired-entry",
+                  "synthetic-clock",
+                  "missing-output-limit"
+                ]
+              },
+              "admitted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]

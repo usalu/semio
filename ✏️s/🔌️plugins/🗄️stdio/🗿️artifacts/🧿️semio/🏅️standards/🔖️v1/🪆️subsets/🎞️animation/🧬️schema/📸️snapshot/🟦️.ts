@@ -3,7 +3,7 @@
  * gltf's Animation/Channel/Sampler triad. Tagged unions use the real `#[serde(tag = "kind", ...)]`
  * discriminant. */
 
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export interface SemioPoint3 { x: Binary64; y: Binary64; z: Binary64; }
 export interface SemioQuaternion { x: Binary64; y: Binary64; z: Binary64; w: Binary64; }
 

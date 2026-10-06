@@ -7,62 +7,41 @@
     "TreeEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path"],
+      "required": [
+        "path"
+      ],
       "properties": {
-        "path": { "type": "string", "description": "🛤️ Slash-separated path relative to the materialised repository root." },
-        "content": { "type": "string", "description": "📄️ Exact file content; parent directories are created as needed." }
+        "path": {
+          "type": "string",
+          "description": "🛤️ Slash-separated path relative to the materialised repository root."
+        },
+        "content": {
+          "type": "string",
+          "description": "📄️ Exact file content; parent directories are created as needed."
+        }
       }
     },
     "RepoTree": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "entries"],
+      "required": [
+        "schema",
+        "entries"
+      ],
       "properties": {
-        "schema": { "const": "semio.repo.codebase.repo-tree/1" },
-        "comment": { "type": "string" },
-        "entries": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/TreeEntry" } }
-      }
-    },
-    "ArtifactIdVector": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["name", "kind", "path"],
-      "properties": {
-        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "kind": { "enum": ["folder", "file", "section", "definition"], "description": "🪪️ Which builder the vector selects." },
-        "path": { "type": "string", "description": "🛤️ The repository-relative path the id is built for." },
-        "sectionPath": { "type": "array", "items": { "type": "string" }, "description": "🔖️ Section segments, outermost first; empty means the file itself." },
-        "definitionName": { "type": "string" },
-        "definitionKind": { "enum": ["implementation", "interface", "constant", "test"] }
-      }
-    },
-    "ArtifactIdVectors": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "vectors"],
-      "properties": {
-        "schema": { "const": "semio.repo.codebase.artifact-id-vectors/1" },
-        "comment": { "type": "string" },
-        "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ArtifactIdVector" } }
-      }
-    },
-    "IgnoreVector": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["name", "path"],
-      "properties": {
-        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "path": { "type": "string" }
-      }
-    },
-    "IgnoreVectors": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "vectors"],
-      "properties": {
-        "schema": { "const": "semio.repo.codebase.ignore-vectors/1" },
-        "comment": { "type": "string" },
-        "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/IgnoreVector" } }
+        "schema": {
+          "const": "semio.repo.codebase.repo-tree/1"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/TreeEntry"
+          }
+        }
       }
     },
     "WalkProjection": {
@@ -71,9 +50,26 @@
       "minProperties": 1,
       "description": "🚶️ What the workspace-walk case projects: the considered files in walk order, plus the bundle and folder aggregates keyed off them.",
       "properties": {
-        "files": { "type": "array", "items": { "type": "string" } },
-        "bundles": { "type": "array", "items": { "type": "string" }, "description": "🧱️ One `id|folder|folders|files|lines` line per bundle, in aggregate order." },
-        "folders": { "type": "array", "items": { "type": "string" }, "description": "📁️ One `path|id|files|lines` line per folder, in aggregate order." }
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "🧱️ One `id|folder|folders|files|lines` line per bundle, in aggregate order."
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "📁️ One `path|id|files|lines` line per folder, in aggregate order."
+        }
       }
     },
     "IdProjection": {
@@ -82,8 +78,18 @@
       "minProperties": 1,
       "description": "🪪️ What the artifact-id-builders case projects: one `name=id` entry per vector, in vector order.",
       "properties": {
-        "ids": { "type": "array", "items": { "type": "string" } },
-        "uris": { "type": "array", "items": { "type": "string" } }
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uris": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "DetectionProjection": {
@@ -92,8 +98,18 @@
       "minProperties": 1,
       "description": "📦️ What the technology-bundle-detection case projects: one line per technology and one per bundle, in detection order.",
       "properties": {
-        "technologies": { "type": "array", "items": { "type": "string" } },
-        "bundles": { "type": "array", "items": { "type": "string" } }
+        "technologies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "IgnoreProjection": {
@@ -102,11 +118,30 @@
       "minProperties": 1,
       "description": "🙈️ What the ignore-integration case projects: one `name=excluded,gitignored,generated` entry per vector, plus the kept and dropped halves of a filtered walk.",
       "properties": {
-        "verdicts": { "type": "array", "items": { "type": "string" } },
-        "kept": { "type": "array", "items": { "type": "string" } },
-        "dropped": { "type": "array", "items": { "type": "string" } }
+        "verdicts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "kept": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dropped": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   },
-  "oneOf": [{ "$ref": "#/$defs/RepoTree" }, { "$ref": "#/$defs/ArtifactIdVectors" }, { "$ref": "#/$defs/IgnoreVectors" }]
+  "oneOf": [
+    {
+      "$ref": "#/$defs/RepoTree"
+    }
+  ]
 }

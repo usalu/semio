@@ -75,6 +75,7 @@ pub fn set_camera_action() -> ActionDefinition {
 /// declared exactly once, next to the other manifest calls.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Model", "Modell"),
         body_key: BODY_KEY.into(),

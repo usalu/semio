@@ -21,7 +21,8 @@ impl Serializer<DrawingSnapshot> for DrawingIntoSvg {
 use crate::schema::{DrawingSceneNode, flatten_drawing_document_to_scene_nodes};
 use crate::{FillStyle, GradientStop, PathSegment};
 use crate::schema::fill::sampling::PreparedFill;
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, PathCommand, SvgElement, TransformOp, ViewBox, typed_to_svg_document, write_svg_xml};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, PathCommand, SvgElement, TransformOp, ViewBox, typed_to_svg_document};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{write_svg_xml};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr;
 
 fn attr(name: &str, value: impl ToString) -> XmlAttr { XmlAttr { name: name.into(), value: value.to_string() } }

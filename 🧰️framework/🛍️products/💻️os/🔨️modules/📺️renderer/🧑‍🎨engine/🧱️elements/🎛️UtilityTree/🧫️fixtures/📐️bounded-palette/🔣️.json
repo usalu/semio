@@ -1,0 +1,16 @@
+{
+  "directions": ["up", "down"],
+  "widths": [150, 300, 480],
+  "utilities": [
+    { "id": "selectMarquee", "label": "Marquee Select" },
+    { "id": "selectLasso", "label": "Lasso Select" },
+    { "id": "selectDirect", "label": "Direct Select" },
+    { "id": "editNodes", "label": "Edit Nodes" },
+    { "id": "pan", "label": "Pan", "disabled": true },
+    { "id": "shapeRect", "label": "Rectangle" },
+    { "id": "shapeEllipse", "label": "Ellipse" },
+    { "id": "shapePolygon", "label": "Polygon" }
+  ],
+  "selection": { "locales": ["en", "de"], "methods": ["rectangle", "lasso"], "merges": ["replace", "additive", "subtractive", "invertive"] },
+  "expected": { "flow": "wrap-within-pane", "activationCount": 1, "preserveAddress": true }
+}

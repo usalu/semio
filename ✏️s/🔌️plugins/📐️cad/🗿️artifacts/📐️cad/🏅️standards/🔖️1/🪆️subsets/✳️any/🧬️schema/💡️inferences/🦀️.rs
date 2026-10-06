@@ -541,7 +541,7 @@ mod construct_query {
             out
         }
 
-        fn subgraph_fixture_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
+        fn subgraph_snapshot_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
             None
         }
     }
@@ -571,10 +571,10 @@ pub use construct_query::*;
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
     use crate::standards::v1::subsets::any::io::geometry_import::{
-        centroid_from_host_snapshot_primitives, import_geometry_handles, objects_from_host_snapshot_model, parse_geometry, resolve_primitive_handle, semio_model_snapshot_from_objects, tessellate_geometry_handle, tessellate_object_mesh, tessellate_object_mesh_from_host_snapshot, CadGeometry, CadObject,
+        centroid_from_host_snapshot_primitives, import_geometry_handles, objects_from_host_snapshot_model, parse_geometry, resolve_primitive_handle, tessellate_geometry_handle, tessellate_object_mesh, tessellate_object_mesh_from_host_snapshot, CadGeometry, CadObject,
         CadPrimitiveSlot,
     };
-    use crate::{cad_model_child_handle, CadCamera, CadModelChild, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
+    use crate::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer;
@@ -821,73 +821,58 @@ mod scene_compute {
         }
     }
 
-    /// ⚠️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: the single-box placeholder
-    /// object this used to inline directly is gone — `CadSnapshot` no longer carries inline object
-    /// data, only composed `s.stdio.semio.model` child HANDLES (minted by the host, out of a pure
-    /// function's reach). The default document now starts with no model children set; a caller that
-    /// wants the placeholder box back mints a `SemioModelSnapshot` child (via `model_element_from_solid_handle`-
-    /// style construction) and dispatches `create-shape-model` against the result. Documented gap,
-    /// not silently dropped.
+    /// 🆕️ The document a new CAD artifact starts as: no objects, and every pane composing its EMPTY
+    /// `s.stdio.semio@v1/model` child (`crate::cad_empty_pane_child`), so the first object gesture, construction or
+    /// import in any pane has a child lane to land on (design §20.15).
     pub fn default_document() -> CadSnapshot {
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
             id: "cad".into(),
-            shape_model: None,
-            building_model: None,
-            energy_model: None,
-            structure_classic_model: None,
+            shape_model: Some(crate::cad_empty_pane_child(CadPaneId::Shape)),
+            building_model: Some(crate::cad_empty_pane_child(CadPaneId::Building)),
+            energy_model: Some(crate::cad_empty_pane_child(CadPaneId::Energy)),
+            structure_classic_model: Some(crate::cad_empty_pane_child(CadPaneId::StructureClassic)),
             drawings: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Model".into(), kind: "group".into() }, CadNode { id: "node-box".into(), label: "Box".into(), kind: "solid".into() }],
             references_by_model_definition_id: crate::CadReferenceIndex::new(),
         }
     }
 
-    /// 🌉️ Mints pane `pane`'s composed `s.stdio.semio.model` child handle from its working
-    /// objects, content-addressed exactly like `scene_from_spatial_payload`/`cad_document_from_dwg`,
-    /// then attaches `scene` as the handle's local-only materialization via
-    /// `ArtifactChild::with_local_owner` — the same seam `flow`/`dag`/`jack`/`wires`/`sequence`
-    /// already use to keep in-process content beside a content-addressed handle when no host-level
-    /// child resolver has materialized it yet. An empty pane mints no child, matching this file's
-    /// existing "no fabricated child" rule.
-    fn cad_model_child_for_pane(pane: CadPaneId, objects: &[CadObject], scene: Arc<CadWorkingScene>) -> Option<CadModelChild> {
-        if objects.is_empty() {
-            return None;
-        }
-        let content_json = semio_framework_pack_json::to_json_string(&semio_model_snapshot_from_objects(objects));
-        Some(cad_model_child_handle(pane, &content_json).with_local_owner(scene))
+    /// 🌲️ The Concrete Forest Left example's genesis scene for `pane` — the pane's objects and the fixture's raw wire/vertex
+    /// `CadGeometry` (which `SemioModelSnapshot` has no field for), imported once through the real importer
+    /// (`cad_document_pane_bundle`) and shared by the example document and the genesis catalogue
+    /// (`crate::cad_bundled_pane_scene`).
+    pub(crate) fn forest_pane_scene(pane: CadPaneId) -> Arc<CadWorkingScene> {
+        static FOREST_PANE_SCENES: OnceLock<[Arc<CadWorkingScene>; 4]> = OnceLock::new();
+        FOREST_PANE_SCENES
+            .get_or_init(|| {
+                CadPaneId::all().map(|pane| {
+                    let (objects, geometry) = forest_pane_bundle(pane);
+                    let geometry = Some(geometry);
+                    Arc::new(match pane {
+                        CadPaneId::Shape => CadWorkingScene { objects, geometry, ..Default::default() },
+                        CadPaneId::Building => CadWorkingScene { building_objects: objects, building_geometry: geometry, ..Default::default() },
+                        CadPaneId::Energy => CadWorkingScene { energy_objects: objects, energy_geometry: geometry, ..Default::default() },
+                        CadPaneId::StructureClassic => CadWorkingScene { structure_classic_objects: objects, structure_classic_geometry: geometry, ..Default::default() },
+                    })
+                })
+            })[pane.index()]
+        .clone()
     }
 
-    /// 📟️ Builds the quad play document: shape/building/energy/structure-classic panes each
-    /// sourced from their own model definition inside the shared fixture JSON via
-    /// `cad_document_pane_bundle` — the real importer, never a parallel one. Empty panes stay empty —
-    /// never collapse to `default_document` (that single-box placeholder was the cut-concrete bug).
-    /// Each non-empty pane's objects are minted into a real `shape_model`/`building_model`/
-    /// `energy_model`/`structure_classic_model` child (`cad_model_child_for_pane`), carrying the
-    /// full `CadWorkingScene` (objects AND the fixture's raw wire/vertex `CadGeometry` — lost by
-    /// `SemioModelSnapshot`'s own schema) as its local-only materialization so
-    /// `build_world_scene_for_pane` can read real geometry back out at render time.
-    fn forest_play_document(source_json: &str, id: &str) -> CadSnapshot {
-        let (shape_objects, shape_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_SHAPE);
-        let (building_objects, building_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_BUILDING);
-        let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
-        let (structure_classic_objects, structure_classic_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
-        let scene = Arc::new(CadWorkingScene {
-            objects: shape_objects.clone(),
-            geometry: Some(shape_geometry),
-            building_objects: building_objects.clone(),
-            building_geometry: Some(building_geometry),
-            energy_objects: energy_objects.clone(),
-            energy_geometry: Some(energy_geometry),
-            structure_classic_objects: structure_classic_objects.clone(),
-            structure_classic_geometry: Some(structure_classic_geometry),
-        });
+    /// 📟️ Builds the quad play document: every pane composes its STABLE named model child
+    /// (`crate::cad_named_pane_child`), whose content is born from the genesis catalogue its id names — the Concrete
+    /// Forest Left fixture's pane scene ([`forest_pane_scene`]) — and lives in the child store from then on (design
+    /// §20.15). The handle is two strings and never a digest of the content it was born with.
+    fn forest_play_document() -> CadSnapshot {
+        let child = |pane: CadPaneId| Some(crate::cad_named_pane_child(CAD_EXAMPLE_FOREST_LEFT, pane));
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
-            id: id.into(),
-            shape_model: cad_model_child_for_pane(CadPaneId::Shape, &shape_objects, scene.clone()),
-            building_model: cad_model_child_for_pane(CadPaneId::Building, &building_objects, scene.clone()),
-            energy_model: cad_model_child_for_pane(CadPaneId::Energy, &energy_objects, scene.clone()),
-            structure_classic_model: cad_model_child_for_pane(CadPaneId::StructureClassic, &structure_classic_objects, scene),
+            id: CAD_EXAMPLE_FOREST_LEFT.into(),
+            shape_model: child(CadPaneId::Shape),
+            building_model: child(CadPaneId::Building),
+            energy_model: child(CadPaneId::Energy),
+            structure_classic_model: child(CadPaneId::StructureClassic),
             drawings: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Concrete Forest Left".into(), kind: "group".into() }],
             references_by_model_definition_id: forest_references_for_model_definitions(CAD_FOREST_REFERENCE_PLANE_Z),
@@ -899,7 +884,7 @@ mod scene_compute {
     /// `initial_snapshot`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
     pub fn forest_play_scene() -> CadSnapshot {
         static FOREST_PLAY_SCENE: OnceLock<CadSnapshot> = OnceLock::new();
-        FOREST_PLAY_SCENE.get_or_init(|| forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT)).clone()
+        FOREST_PLAY_SCENE.get_or_init(forest_play_document).clone()
     }
 
     pub fn next_cad_id(prefix: &str) -> String {

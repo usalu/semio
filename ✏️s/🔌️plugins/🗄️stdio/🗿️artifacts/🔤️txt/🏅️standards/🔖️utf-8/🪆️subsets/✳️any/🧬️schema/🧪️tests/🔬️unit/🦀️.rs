@@ -1,3 +1,5 @@
+use crate::standards::v_utf_8::subsets::any::io::text::snapshot::demo_txt_snapshot;
+use crate::standards::v_utf_8::subsets::any::io::text::snapshot::empty_txt_snapshot;
 use super::*;
 use crate::schema::mutations::InsertLineMutation;
 use crate::{TxtDiff, TxtMutation, STDIO_TXT_DOCUMENT_SCHEMA};
@@ -125,7 +127,7 @@ async fn field_sweep_covers_every_mutable_field() {
 /// Recognizer (mirrored here so this law does not depend on the framework's own harness).
 #[semio_framework_async_macros::async_test]
 async fn grammar_conformance_law() {
-    let grammar_text = crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO;
+    let grammar_text = crate::standards::v_utf_8::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO;
     let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
     assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar);
     let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
@@ -150,22 +152,22 @@ async fn protocol_walk_law() {
     let snap = demo_txt_snapshot();
     let pack_bytes = <TxtSnapshot as store::ArtifactPack>::encode_pack(&snap);
     let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
-    let pack_protocol = semio_framework_dsl::parse_protocol(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+    let pack_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
     let trace = semio_framework_dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
     assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
 
     // Spr (mutations binary facet) — a real, non-trivial mutation.
     let mutation = TxtMutation::InsertLine(InsertLineMutation { index: 1, text: "x".into() });
     let op_bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).expect("encode_op");
-    let spr_protocol = semio_framework_dsl::parse_protocol(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+    let spr_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
     let trace = semio_framework_dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
     assert_eq!(trace.consumed, op_bytes.len(), "mutations protocol must consume the whole op frame");
 
     // Diff binary facet.
     let mut before = snap.clone();
     let diff = crate::schema::mutations::apply_txt_mutation(&mut before, &mutation);
-    let diff_bytes = <TxtDiff as protocol::DiffCodec>::encode_diff(diff.diff()).expect("encode_diff");
-    let diff_protocol = semio_framework_dsl::parse_protocol(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+    let diff_bytes = <TxtDiff as protocol::DiffBinary>::encode_diff(diff.diff()).expect("encode_diff");
+    let diff_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_utf_8::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
     let trace = semio_framework_dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
     assert_eq!(trace.consumed, diff_bytes.len(), "diff protocol must consume the whole diff frame (32-byte header + opaque .spk tail)");
 }
@@ -193,17 +195,17 @@ async fn fixture_honesty_law() {
 /// of the eventual repo-wide policy gate.
 #[semio_framework_async_macros::async_test]
 async fn committed_grammar_and_protocol_files_parse() {
-    let g1 = semio_framework_dsl::parse_grammar(crate::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO);
+    let g1 = semio_framework_dsl::parse_grammar(crate::standards::v_utf_8::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO);
     assert!(g1.is_ok(), "snapshot grammar must parse: {g1:?}");
-    let g2 = semio_framework_dsl::parse_grammar(crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO);
+    let g2 = semio_framework_dsl::parse_grammar(crate::standards::v_utf_8::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO);
     assert!(g2.is_ok(), "mutations grammar must parse: {g2:?}");
-    let g3 = semio_framework_dsl::parse_grammar(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO);
+    let g3 = semio_framework_dsl::parse_grammar(crate::standards::v_utf_8::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO);
     assert!(g3.is_ok(), "diff grammar must parse: {g3:?}");
-    let p1 = semio_framework_dsl::parse_protocol(crate::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO);
+    let p1 = semio_framework_dsl::parse_protocol(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO);
     assert!(p1.is_ok(), "snapshot protocol must parse: {p1:?}");
-    let p2 = semio_framework_dsl::parse_protocol(crate::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO);
+    let p2 = semio_framework_dsl::parse_protocol(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO);
     assert!(p2.is_ok(), "mutations protocol must parse: {p2:?}");
-    let p3 = semio_framework_dsl::parse_protocol(crate::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO);
+    let p3 = semio_framework_dsl::parse_protocol(crate::standards::v_utf_8::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO);
     assert!(p3.is_ok(), "diff protocol must parse: {p3:?}");
 }
 

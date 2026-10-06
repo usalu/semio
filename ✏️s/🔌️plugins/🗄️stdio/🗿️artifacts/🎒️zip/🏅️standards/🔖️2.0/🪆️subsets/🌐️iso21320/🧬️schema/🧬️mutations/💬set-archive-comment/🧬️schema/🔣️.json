@@ -15,7 +15,21 @@
       "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
     },
     "comment": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Archive comment",
+          "de": "Archivkommentar"
+        },
+        "description": {
+          "en": "Free text stored at the end of the archive (at most 65,535 bytes).",
+          "de": "Freitext am Ende des Archivs (höchstens 65.535 Bytes)."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "commentUtf8": {
       "type": "boolean",

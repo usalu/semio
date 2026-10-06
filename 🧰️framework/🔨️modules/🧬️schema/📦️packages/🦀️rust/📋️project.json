@@ -106,8 +106,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧬️schema/🏷️entity-ownership/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📏️ownership/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🏷️entity-kinds/📏️ownership/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
     ]

@@ -360,6 +360,24 @@ pub fn shell_floor_paints(parent: Option<SurfaceScope>) -> bool {
 //#endregion 🏠️ShellFloor
 
 impl Theme {
+    /// 👆️ The `large` size token — 9 × the UI spacing — the least width and height of a touch target (React's `--size-large`,
+    /// above the pointer target minimum of [WCAG 2.2 SC 2.5.8](https://www.w3.org/TR/WCAG22/#target-size-minimum)).
+    pub fn size_large(&self) -> f32 {
+        chrome_px(9.0)
+    }
+
+    /// 🚦️ The ink of a semantic tone — the four outcome roles React paints `text-info`, `text-success`, `text-warning` and
+    /// `text-destructive`; `None` for the neutral tone and the brand roles, which keep the surrounding text colour.
+    pub fn tone_ink(&self, tone: ui_contract::Tone) -> Option<Rgba> {
+        match tone {
+            ui_contract::Tone::Info => Some(Rgba::from_token(&colors::INFO)),
+            ui_contract::Tone::Success => Some(self.success),
+            ui_contract::Tone::Warning => Some(self.warning),
+            ui_contract::Tone::Danger => Some(self.error),
+            ui_contract::Tone::Neutral | ui_contract::Tone::Primary | ui_contract::Tone::Secondary | ui_contract::Tone::Tertiary => None,
+        }
+    }
+
     // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn light() -> Self {
         from_chrome(&CHROME_LIGHT, &OUTCOME_LIGHT, &DIAGRAM_LIGHT, PresenceAppearance::Light)

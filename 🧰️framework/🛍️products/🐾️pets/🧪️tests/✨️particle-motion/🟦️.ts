@@ -22,7 +22,7 @@ type Vectors = {
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** 📊️ The sum of the words and the histogram of the units a lane yields for `count` indices from `first` on, over sixteen equal bins. */

@@ -143,7 +143,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
         let base = base();
         let mut store = crate::store_fixture::document_store(base.clone()).await;
         for mutation in &log {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the gesture applies");
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the gesture applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let target = ids[edited_at].clone();

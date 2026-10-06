@@ -13,7 +13,21 @@
       "const": "addTag"
     },
     "tag": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Tag",
+          "de": "Tag"
+        },
+        "description": {
+          "en": "Name of the tag that is added.",
+          "de": "Name des Tags, das hinzugefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

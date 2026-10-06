@@ -120,7 +120,13 @@
     "ignore": [
       "**/node_modules/**",
       "**/target/**",
-      "**/🗑️generated/**"
+      "**/🗑️generated/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/coverage/**",
+      "**/🤖️generated/**",
+      "**/🧫️fixtures/**",
+      "**/🧪️tests/**"
     ],
     "facetRels": [
       "🧬️schema",
@@ -324,5 +330,16 @@
         ""
       ]
     }
-  ]
+  ],
+  "runtimeOwnership": {
+    "forbiddenSegments": [
+      "🧫️fixtures",
+      "🧪️tests"
+    ],
+    "facets": [
+      "🔣️.json",
+      "📸️snapshot/🔣️.json",
+      "🔺️diff/🔣️.json"
+    ]
+  }
 }

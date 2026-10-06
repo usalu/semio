@@ -1,0 +1,25 @@
+{
+  "cmd": "bun run nx run-many --target=test-snapshot-sqlite-native --projects=@semio-tech/norm-en1995-rs,@semio-tech/norm-en1999-rs,@semio-tech/norm-din4108-rs,@semio-tech/norm-en1991-rs,@semio-tech/norm-en1990-rs,@semio-tech/norm-en1996-rs,@semio-tech/norm-en1994-rs,@semio-tech/norm-din16798-rs,@semio-tech/norm-din18599-rs,@semio-tech/norm-en1993-rs,@semio-tech/norm-vdi3805-rs,@semio-tech/norm-en1997-rs --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies",
+  "env": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "SEMIO_TEST_LEVEL": "quick",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/norm-twelve-complete-native-before-artifacts"
+  },
+  "expectedDeclaredLaws": 165,
+  "projects": [
+    "@semio-tech/norm-en1995-rs",
+    "@semio-tech/norm-en1999-rs",
+    "@semio-tech/norm-din4108-rs",
+    "@semio-tech/norm-en1991-rs",
+    "@semio-tech/norm-en1990-rs",
+    "@semio-tech/norm-en1996-rs",
+    "@semio-tech/norm-en1994-rs",
+    "@semio-tech/norm-din16798-rs",
+    "@semio-tech/norm-din18599-rs",
+    "@semio-tech/norm-en1993-rs",
+    "@semio-tech/norm-vdi3805-rs",
+    "@semio-tech/norm-en1997-rs"
+  ],
+  "policy": "Unchanged actual registered owner targets; Norm providers untouched. Prior Block19 After genuine17/2 residual shared canonical Coord/Dir gap retained separately."
+}

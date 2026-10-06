@@ -586,7 +586,7 @@ export type DevServeWorldV1 = Readonly<{
 
 /** 🛎️ A serve a harness runs against: `url` to drive, `reused` when it was already there, `stop()` ends only what the
  * fixture itself started. */
-export type DevServeFixtureV1 = Readonly<{ url: string; reused: boolean; stop: () => Promise<void> }>;
+export type DevServerV1 = Readonly<{ url: string; reused: boolean; stop: () => Promise<void> }>;
 
 export type DevServeOptionsV1 = Readonly<{
   repoRoot: string;
@@ -661,7 +661,7 @@ export function devServeWorldV1(repoRoot: string): DevServeWorldV1 {
  * it started), and hands back `stop()` for exactly what it started. The canonical hub port and a port held by something
  * that is not a serve are refused, never shared. `locale` is the language of the progress lines only; a harness seats the
  * shell's own language itself. */
-export async function ensureDevServe(options: DevServeOptionsV1): Promise<DevServeFixtureV1> {
+export async function ensureDevServe(options: DevServeOptionsV1): Promise<DevServerV1> {
   const world = options.world ?? devServeWorldV1(options.repoRoot);
   const locale = options.locale ?? devHubLocaleV1();
   const url = `http://127.0.0.1:${options.port}/`;

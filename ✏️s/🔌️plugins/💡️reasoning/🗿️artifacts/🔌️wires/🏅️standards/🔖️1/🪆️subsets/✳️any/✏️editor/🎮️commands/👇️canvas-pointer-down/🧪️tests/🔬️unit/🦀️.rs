@@ -59,7 +59,7 @@ async fn pointer_down_selects_the_hit_node_inline() {
     let left = view.for_window_instance("left").expect("canvas window instance");
     let result: Result<(), String> = async {
         let node = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral full graph node");
-        crate::editor::wires::unit_tests::context::load_graph_fixture(&mut app, vec![node], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
+        crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![node], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let meta = ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("inline-pick") };
         app.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await.map_err(|error| format!("{error:?}"))?;
         artifact_app_laws::settle_registered_typed_operation(&mut *app, 1).await.map_err(|error| format!("{error:?}"))?;

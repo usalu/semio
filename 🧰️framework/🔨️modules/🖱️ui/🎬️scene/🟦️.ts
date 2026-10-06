@@ -2,7 +2,7 @@
 /// <reference types="vitest/importMeta" />
 /** 🎬️ `@semio-tech/framework` — component scene protocol payloads shared by render hosts. */
 import type { IconName } from "@semio-tech/assets";
-import type { LocalizedLabel } from "../../🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts";
+
 import type { ActionDescriptor, PluginContextMenuRequest } from "../../🛂️manifest/🟦️.ts";
 import type { Viewport2d } from "../🪟️viewport/◻️2d/🧬️schema/🟦️.ts";
 export * from "./✂️text-splice/🟦️.ts";
@@ -626,7 +626,7 @@ export const BOARD2D_SCENE_LANE_KEY_PREFIX = "framework.scene.board2d.";
  * `Board2dSceneLane` / `BOARD2D_SCENE_LANE_*`; both pinned against
  * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json`. */
 export const BOARD2D_SCENE_LANES: readonly SceneLane<Board2dScene>[] = [
-  { lane: "fixture", field: "fixtureJson", bodyKey: "framework.scene.board2d.fixture", optional: false },
+  { lane: "snapshot", field: "snapshotJson", bodyKey: "framework.scene.board2d.snapshot", optional: false },
   { lane: "toolRunTrace", field: "toolRunTrace", bodyKey: "framework.scene.board2d.toolRunTrace", optional: true },
 ];
 
@@ -651,7 +651,7 @@ export const TILEDMAP_SCENE_LANE_KEY_PREFIX = "framework.scene.tiledmap.";
  * scales with the document (one opaque payload per position/route/region), so it outgrows the 32 KiB
  * surface doc on a real map — the gis `demo` map is 59 667 bytes. */
 export const TILEDMAP_SCENE_LANES: readonly SceneLane<TiledMapScene>[] = [
-  { lane: "mapFixture", field: "mapFixtureJson", bodyKey: "framework.scene.tiledmap.mapFixture", optional: false },
+  { lane: "mapDescriptor", field: "mapDescriptorJson", bodyKey: "framework.scene.tiledmap.mapDescriptor", optional: false },
 ];
 
 /** 🚚️ Resolves a retained node key back to the tiled-map lane it carries. */
@@ -1155,7 +1155,7 @@ export type VirtualFileSystemScene = {
 
 /** 🗺️ A tiled map surface scene payload — mirrors the wasm `componentScene` node's `tiledMap` field. */
 export type TiledMapScene = {
-  readonly mapFixtureJson: string;
+  readonly mapDescriptorJson: string;
   readonly cameraJson: string;
   readonly renderMode: string;
   readonly vectorStyle: string;
@@ -1195,7 +1195,7 @@ export type Board2dSuggestionMenu = {
 
 /** 🧩️ A 2D board surface scene payload — mirrors the wasm `componentScene` node's `board2d` field. */
 export type Board2dScene = {
-  readonly fixtureJson: string;
+  readonly snapshotJson: string;
   readonly cameraJson: string;
   readonly glyphCatalogsJson: string;
   readonly selectionJson: string;

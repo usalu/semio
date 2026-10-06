@@ -4,11 +4,11 @@
 //! This plugin owns no png byte codec and never will.
 //!
 //! 🧾️ `encode_png` always re-emits canonical RGBA8 (color type 6, bit depth 8), so this hop is lossless in both directions.
-use crate::io::{raster_composite_image, semio_image_to_format, PNG_DIALECT};
+use crate::standards::v1::subsets::any::io::{raster_composite_image, semio_image_to_format, PNG_DIALECT};
 use crate::RasterSnapshot;
 pub fn register() {}
 pub fn serialize_bytes(snapshot: &RasterSnapshot) -> Result<Vec<u8>, String> {
     let image = raster_composite_image(snapshot).map_err(|reason| format!("png export not available for this raster document: {reason}"))?;
     let target: semio_s_artifact_stdio_png::PngSnapshot = semio_image_to_format(&image, PNG_DIALECT)?;
-    semio_s_artifact_stdio_png::io::encode_png(&target)
+    semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&target)
 }

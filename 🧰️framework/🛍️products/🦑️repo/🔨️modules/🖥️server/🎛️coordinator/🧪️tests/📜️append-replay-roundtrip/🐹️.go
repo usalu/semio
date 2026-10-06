@@ -30,7 +30,7 @@ type appendVectors struct {
 
 func loadAppendVectors(ctx *host.Context) (appendVectors, []coordinator.EventInput, error) {
 	var vectors appendVectors
-	data, err := ctx.FixtureBytes("shared://📜️append-vectors.json")
+	data, err := ctx.InputBytes("shared://📜️append-vectors.json")
 	if err != nil {
 		return vectors, nil, err
 	}

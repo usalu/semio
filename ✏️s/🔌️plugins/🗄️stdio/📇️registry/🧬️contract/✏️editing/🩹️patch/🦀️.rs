@@ -181,6 +181,10 @@ pub fn snapshot_patch_from_bytes(bytes: &[u8]) -> Result<SnapshotPatch, String> 
     SnapshotPatch::decode_op(bytes).map_err(|error| error.to_string())
 }
 
+#[path = "📦️codec/🫳️borrowed/🦀️.rs"]
+mod borrowed_operation_source;
+pub use borrowed_operation_source::SnapshotPatchReadCursor;
+
 impl OpBinary for SnapshotPatch {
     fn encode_op(&self) -> Result<Vec<u8>, kernel::ProtocolError> {
         Ok(<Self as kernel::OpText>::print_op(self).into_bytes())
@@ -692,7 +696,8 @@ fn project_shape<S: ToValue>(snapshot: &S, path: &[semio_framework_schema::Schem
         .map_err(|error| SchemaFragmentContextRefusal::new(error.to_string()))
 }
 
-fn apply_validated_snapshot_patch<S: ToValue + FromValue + Clone>(snapshot: &S, patch: &SnapshotPatch, validator: &semio_framework_schema::OwnedJsonSchemaValidator) -> Result<S, SnapshotEditError> {
+/// 🧭️ Applies the caller's explicit snapshot schema to addressed paths and bounded post-edit context.
+pub fn apply_validated_snapshot_patch<S: ToValue + FromValue + Clone>(snapshot: &S, patch: &SnapshotPatch, validator: &semio_framework_schema::OwnedJsonSchemaValidator) -> Result<S, SnapshotEditError> {
     use semio_framework_schema::SchemaFragmentOperation;
     validate_patch(patch)?;
     let steps = steps(snapshot, patch)?;
@@ -1258,7 +1263,9 @@ fn hidden_index() -> DslValue {
 /// 🧬️ The input schema of `patch` against the snapshot schema whose `$id` is `snapshot_schema`, resolving documents
 /// through `resolve`, as a leaf payload schema (`{patch: …}`): the operation pinned, its pointers and position hidden, a
 /// written value typed by the snapshot sub-schema its pointer addresses (a `$ref` to that location, so its own UI facts
-/// apply) and a rename's new key as text. `None` when that location does not resolve or is ambiguous.
+/// apply) and a rename's new key as text, declaring the inverse rows every `patch-snapshot` leaf answers
+/// (`x-semio-inverse-rows.bounded`, [`SNAPSHOT_PATCH_MAX_INVERSE_PARTS`]). `None` when that location does not resolve or
+/// is ambiguous.
 pub fn snapshot_patch_input_schema_text(snapshot_schema: &str, patch: &SnapshotPatch, resolve: SnapshotSchemaResolver<'_>) -> Option<String> {
     let operation = ("operation".to_string(), DslValue::Object(vec![("const".into(), DslValue::String(patch.operation().into()))]));
     let (mut properties, mut required) = (vec![operation], vec!["operation", "path"]);
@@ -1300,6 +1307,7 @@ pub fn snapshot_patch_input_schema_text(snapshot_schema: &str, patch: &SnapshotP
     let schema = DslValue::Object(vec![
         ("$schema".into(), DslValue::String("http://json-schema.org/draft-07/schema#".into())),
         ("title".into(), DslValue::String("PatchSnapshot".into())),
+        ("x-semio-inverse-rows".into(), DslValue::Object(vec![("bounded".into(), DslValue::Number(semio_framework_value::Number::UInt(SNAPSHOT_PATCH_MAX_INVERSE_PARTS as u64)))])),
         ("type".into(), DslValue::String("object".into())),
         ("additionalProperties".into(), DslValue::Bool(false)),
         ("required".into(), strings(&["patch"])),

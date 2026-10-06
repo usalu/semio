@@ -1,0 +1,19 @@
+{
+  "beforeSchema": "stdio.pdf",
+  "middleSchema": "literal\u0000own14",
+  "afterSchema": "final/引用",
+  "pages": [
+    {
+      "width": 8,
+      "height": 9,
+      "text": "own14"
+    }
+  ],
+  "requirements": [
+    "nonempty schema-only diff",
+    "apply retains literal schema",
+    "inverse restores exact original",
+    "absorb preserves sequential final schema",
+    "pages remain exact"
+  ]
+}

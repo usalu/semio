@@ -8,5 +8,5 @@ import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬
  * SetFrameUserInput, InsertComment, RemoveComment, AddAppExtension, RemoveAppExtension) have no
  * TS payload types to mirror against yet; see `🦀️.rs` in this directory. */
 export type GifMutation =
-  | { mutation: 'setSnapshot'; snapshot: import('../📸️snapshot/🟦️.ts').GifSnapshot };
+  | { mutation: 'setSnapshot'; snapshot: import('../📸️snapshot/🟦️.ts').GifSnapshot }
   | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }

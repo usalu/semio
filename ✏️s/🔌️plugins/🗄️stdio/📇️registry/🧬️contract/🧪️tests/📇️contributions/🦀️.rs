@@ -133,7 +133,7 @@ fn authored_definition_constraints_match_independent_serde_oracle() {
         representation["descriptor"] = descriptor.into();
         let mut selected = contribution("alpha");
         selected.schema = Box::leak(serde_json::to_string(&source).unwrap().into_boxed_str());
-        selected.definition_constraint = row["constraint"].as_bool().unwrap().then_some(include_str!("../../🧫️fixtures/📇️contributions/📜️constraint.json"));
+        selected.definition_constraint = row["constraint"].as_bool().unwrap().then_some(include_str!("../../🧫️fixtures/📇️contributions/🧾️schema-input.json"));
         let expected = !row["constraint"].as_bool().unwrap() || source["representations"].as_array().unwrap().iter().all(|item| item["mimes"].as_array().unwrap().is_empty());
         assert_eq!(expected, row["accepted"].as_bool().unwrap());
         let result = ContributionRegistry::new(vec![selected]);

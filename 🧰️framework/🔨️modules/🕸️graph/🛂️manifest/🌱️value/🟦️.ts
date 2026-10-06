@@ -1,5 +1,5 @@
 /** 🌱️ The native graph manifest's six literal property variants, with exact binary64 numbers. */
-import {parseBinary64,type Binary64} from "../../../🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../🌱️value/🔢️ieee754/🟦️.ts";
 export type PropertyValue={kind:"null"}|{kind:"bool";value:boolean}|{kind:"number";value:Binary64}|{kind:"string";value:string}|{kind:"array";values:PropertyValue[]}|{kind:"object";values:Record<string,PropertyValue>};
 /** 🔤 Native graph text has the same Unicode scalar domain as Rust String. */
 export function propertyText(value:unknown):string{if(typeof value!=="string"||/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(value))throw Error("graph property requires native UTF8 text");return value;}

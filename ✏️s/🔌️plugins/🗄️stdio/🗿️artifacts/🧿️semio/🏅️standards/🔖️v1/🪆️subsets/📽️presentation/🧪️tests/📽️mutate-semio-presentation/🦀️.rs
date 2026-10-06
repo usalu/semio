@@ -50,10 +50,11 @@ mod subject {
         apply_semio_presentation_mutation, insert_layout, insert_master, insert_shape, insert_slide, remove_layout, remove_master, remove_shape, remove_slide, semio_presentation_mutation_inverse, set_layout_master, set_shape_frame,
         set_slide_layout, set_slide_notes, set_snapshot, set_textbox_blocks, SemioPresentationMutation,
     };
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::{
-        decode_semio_presentation_pack, encode_semio_presentation_pack, parse_semio_presentation_dsl, print_semio_presentation_dsl, PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage,
-        SlideShape, SlideTableCell, SlideTableRow,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::io::binary::snapshot::{decode_semio_presentation_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::io::binary::snapshot::{encode_semio_presentation_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::io::text::snapshot::{print_semio_presentation_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::io::text::snapshot::{parse_semio_presentation_dsl};
 
     //#region 🔖️Input
     /// 🎤️ The real derived talk deck — the committed `📽️.pptx` read once by an independent
@@ -402,7 +403,7 @@ mod subject {
     //#region 🔖️Handlers
     /// 🎤️ The real derived talk deck, parsed through this repository's own DSL codec.
     fn talk(ctx: &Context) -> Result<SemioPresentationSnapshot, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(TALK_DSL)?).map_err(|error| format!("the derived talk deck is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(TALK_DSL)?).map_err(|error| format!("the derived talk deck is not UTF-8: {error}"))?;
         parse_semio_presentation_dsl(&text)
     }
 
@@ -412,7 +413,7 @@ mod subject {
     /// `noMutation` sentinel into the identity `set-snapshot(base)` mutation.
     fn payload(ctx: &Context, base: &SemioPresentationSnapshot) -> Result<SemioPresentationMutation, String> {
         let json = match step_uris(ctx, "shared://📽️mutate-semio-presentation/").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")) {
-            Some(uri) => ctx.fixture_json(&uri)?,
+            Some(uri) => ctx.input_json(&uri)?,
             None => ctx.doc_json()?,
         };
         Ok(decode_mutation(&json, base))
@@ -473,9 +474,9 @@ mod subject {
         if uris.len() < 3 {
             return Err(format!("{}: the scenario names {} specification-vector fixtures, expected three", ctx.scenario.id, uris.len()));
         }
-        let mut current = decode_snapshot(&ctx.fixture_json(&uris[0])?);
-        let step = decode_mutation(&ctx.fixture_json(&uris[1])?, &current);
-        let expected = decode_snapshot(&ctx.fixture_json(&uris[2])?);
+        let mut current = decode_snapshot(&ctx.input_json(&uris[0])?);
+        let step = decode_mutation(&ctx.input_json(&uris[1])?, &current);
+        let expected = decode_snapshot(&ctx.input_json(&uris[2])?);
         apply(&mut current, &step, &ctx.scenario.id)?;
         if current != expected {
             return Err(disagreement(&format!("{}: the applied deck does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
@@ -495,7 +496,7 @@ mod subject {
     pub fn identity(ctx: &Context) -> Result<Outcome, String> {
         let mut report = Vec::new();
         for (name, dsl_uri, pack_uri) in [("talk", TALK_DSL, TALK_PACK), ("deck", DECK_DSL, DECK_PACK)] {
-            let dsl_bytes = ctx.fixture_bytes(dsl_uri)?;
+            let dsl_bytes = ctx.input_bytes(dsl_uri)?;
             let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: the committed {name} artifact is not UTF-8: {error}"))?;
             let parsed = parse_semio_presentation_dsl(&text)?;
             let printed = print_semio_presentation_dsl(&parsed);
@@ -504,7 +505,7 @@ mod subject {
             if reparsed != parsed {
                 return Err(disagreement(&format!("identity-round-trip: printing the {name} back to DSL and reparsing it lost content"), &reparsed, &parsed));
             }
-            let pack_bytes = ctx.fixture_bytes(pack_uri)?;
+            let pack_bytes = ctx.input_bytes(pack_uri)?;
             let unpacked = decode_semio_presentation_pack(&pack_bytes)?;
             if unpacked != parsed {
                 return Err(disagreement(&format!("identity-round-trip: the {name}'s binary twin decodes to a different deck than its text artifact"), &unpacked, &parsed));

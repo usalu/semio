@@ -30,7 +30,7 @@ mod generation_forms_tests {
                     schema: None,
                     src: None,
                     accept: None,
-                    fixture_slug: None,
+                    example_id: None,
                     params: None,
                     condition: None,
                 }],

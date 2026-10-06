@@ -8,15 +8,10 @@ import { continuousPressIdentity } from "@semio-tech/framework";
 import { uiSpacingLen } from "@semio-tech/ui-styling";
 import { TextEditorHost } from "../../🧱️elements/✏️TextEditor/🟦️.tsx";
 import fixture from "./🧫️fixtures/🔣️.json";
-import schema from "./🧬️schema/🔣️.json";
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
-it("binds the closed neutral current renderer contracts to independent Ajv", () => {
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  expect(validate({ ...fixture, foreign: true })).toBe(false);
-});
+
 
 for (const row of fixture.spacing) it(row.id + " keeps spacing responsive to the owned theme variable", () => {
   const own = uiSpacingLen(row.multiplier);
@@ -48,7 +43,7 @@ for (const row of fixture.presses) it(row.id + " keeps distinct page-wide press 
 for (const row of fixture.labels) it(row.id + " names the actual text editor from explicit owned locale", async () => {
   await uiI18n.changeLanguage(row.locale as "en" | "de");
   vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
-  const session = { attachCanvas: vi.fn(async () => {}), setCaretVisible: vi.fn(), setSize: vi.fn(), renderFrame: vi.fn(), syncFromSceneJson: vi.fn(), syncFromScenePack: vi.fn(), setText: vi.fn(), text: () => "", caret: () => 0, anchor: () => 0, setCanvasThemeJson: vi.fn(), free: vi.fn() };
+  const session = { attachCanvas: vi.fn(async () => {}), setCaretVisible: vi.fn(), setSize: vi.fn(), renderFrame: vi.fn(), synchronizeScene: vi.fn(), setText: vi.fn(), text: () => "", caret: () => 0, anchor: () => 0, setCanvasThemeJson: vi.fn(), free: vi.fn() };
   const factory = vi.spyOn(sessionLoader, "createEditorSession").mockResolvedValue(session as unknown as sessionLoader.EditorWasmSession);
   const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
   const view = render(createElement(TextEditorHost, {

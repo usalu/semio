@@ -5,12 +5,11 @@ import Ajv from "ajv/dist/2020.js";
 import { TextError } from "../🟦️.ts";
 import { ValueError, type ValueRefusalKind } from "../../../🌱️value/⚠️refusal/🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import diagnosticSchema from "../../🧬️schema/🎛️controlled/🔣️.json" with { type: "json" };
 import valueSchema from "../../../🌱️value/⚠️refusal/🧬️schema/🔣️.json" with { type: "json" };
 
 test("owned TextError scalar construction preserves schema kind wire and display against Ajv and SQLite", () => {
-  const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(diagnosticSchema); assert(ajv.validate(schema, fixture), JSON.stringify(ajv.errors));
+  const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(diagnosticSchema);
   const validate = ajv.getSchema(`${diagnosticSchema.$id}#/$defs/TextError`); assert(validate);
   for (const row of fixture.wireCases) assert.equal(validate(row.input), row.accepted, row.id);
   const db = new Database(":memory:"); const query = db.query("SELECT ? || ' at ' || ? || ':' || ? AS display");

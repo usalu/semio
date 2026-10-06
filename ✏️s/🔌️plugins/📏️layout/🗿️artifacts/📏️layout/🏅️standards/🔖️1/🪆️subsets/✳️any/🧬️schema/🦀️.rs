@@ -156,116 +156,15 @@ pub fn layout_artifact_schema_descriptor() -> semio_framework_schema_registry::A
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{LayoutDiff, LayoutMutation, LayoutSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug)]
-    pub struct LayoutBuilderConstruction {
-        snapshot: LayoutSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for LayoutBuilderConstruction {
-        type Snapshot = LayoutSnapshot;
-        type Mutation = LayoutMutation;
-        type Diff = LayoutDiff;
-        fn empty() -> Self {
-            Self { snapshot: crate::standards::v1::subsets::any::schema::default_document(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <LayoutDiff as protocol::MutationDiff<LayoutSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::LayoutSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct LayoutParts {
-        pub snapshot: Option<LayoutSnapshot>,
-    }
-
-    pub struct LayoutAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for LayoutAnalyzerAnalysis {
-        type Parts = LayoutParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = LayoutParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 📄️Document
-/// 📄️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
-/// — pure over `LayoutSnapshot`/`Page`, no engine state, no app type.
-pub fn parse_layout_document(json: &str) -> Result<crate::LayoutSnapshot, crate::io::LayoutError> {
-    let doc: crate::LayoutSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
-    if doc.schema != LAYOUT_DOCUMENT_SCHEMA {
-        return Err(crate::io::LayoutError::UnexpectedSchema(doc.schema));
-    }
-    Ok(doc)
-}
+
 
 pub struct ResolvedFrame {
     pub frame: crate::Frame,
@@ -313,115 +212,11 @@ pub fn resolve_page<'a>(doc: &'a crate::LayoutSnapshot, page: &'a Page) -> Vec<R
 //#endregion 📄️Document
 
 //#region 🔖️DocumentHelpers
-/// 📄️ The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_snapshot`
-/// and the app manifest's `.example(...)` document. Relocated from the deleted `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-pub fn default_document() -> crate::LayoutSnapshot {
-    build_demo_layout_snapshot()
-}
 
-fn build_demo_layout_snapshot() -> crate::LayoutSnapshot {
-    crate::LayoutSnapshot {
-        schema: LAYOUT_DOCUMENT_SCHEMA.into(),
-        name: "Demo".into(),
-        grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: true },
-        paragraph_styles: vec![ParagraphStyle { id: "paragraph.body".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() }],
-        character_styles: Vec::new(),
-        stories: vec![TextStory { id: "story-1".into(), content: "Hello layout".into(), style_runs: Vec::new() }],
-        links: vec![ImageLink { id: "link-missing".into(), path: "assets/missing.png".into(), hash: "sha256:missing".into(), width: 100, height: 100, dpi: 300, color_profile: None, state: Some("missing".into()), proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() }],
-        parent_pages: vec![ParentPage {
-            id: "parent-1".into(),
-            name: "Master".into(),
-            width: 400.0,
-            height: 500.0,
-            layer_ids: vec!["layer-parent".into()],
-            layers: vec![crate::Layer { id: "layer-parent".into(), name: "Master".into(), visible: true, locked: false, object_ids: vec!["frame-inherited".into()] }],
-            frames: vec![crate::Frame::Rect {
-                id: "frame-inherited".into(),
-                layer_id: "layer-parent".into(),
-                bounds: crate::LayoutBounds { x: 50.0, y: 50.0, width: 100.0, height: 80.0, rotation: 0.0 },
-                locked: None,
-                visible: None,
-                fill: None,
-                stroke: Some([0.4, 0.5, 0.7, 0.8]),
-            }],
-        }],
-        spreads: vec![Spread { id: "spread-1".into(), name: "Spread 1".into(), page_ids: vec!["page-1".into(), "page-2".into()] }],
-        pages: vec![
-            Page {
-                id: "page-1".into(),
-                name: "Page 1".into(),
-                spread_id: "spread-1".into(),
-                parent_page_id: Some("parent-1".into()),
-                width: 400.0,
-                height: 500.0,
-                margins: crate::PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
-                columns: crate::PageColumns { count: 1, gutter: 0.0 },
-                guides: Vec::new(),
-                layer_ids: vec!["layer-1".into()],
-                layers: vec![crate::Layer { id: "layer-1".into(), name: "Content".into(), visible: true, locked: false, object_ids: vec!["frame-text-1".into(), "frame-image-1".into(), "frame-1".into()] }],
-                frames: vec![
-                    crate::Frame::Text {
-                        id: "frame-text-1".into(),
-                        layer_id: "layer-1".into(),
-                        bounds: crate::LayoutBounds { x: 156.0, y: 220.0, width: 80.0, height: 40.0, rotation: 0.0 },
-                        locked: None,
-                        visible: None,
-                        story_id: "story-1".into(),
-                        thread_next: None,
-                        columns: 1,
-                        inset: crate::LayoutRect { x: 0.0, y: 0.0, width: 80.0, height: 40.0 },
-                        wrap_mode: "box".into(),
-                    },
-                    crate::Frame::Image {
-                        id: "frame-image-1".into(),
-                        layer_id: "layer-1".into(),
-                        bounds: crate::LayoutBounds { x: 136.0, y: 435.0, width: 60.0, height: 40.0, rotation: 0.0 },
-                        locked: None,
-                        visible: None,
-                        link_id: "link-missing".into(),
-                    },
-                    crate::Frame::Rect {
-                        id: "frame-1".into(),
-                        layer_id: "layer-1".into(),
-                        bounds: crate::LayoutBounds { x: 10.0, y: 10.0, width: 40.0, height: 40.0, rotation: 0.0 },
-                        locked: None,
-                        visible: None,
-                        fill: Some([1.0, 1.0, 1.0, 1.0]),
-                        stroke: None,
-                    },
-                ],
-                overrides: Vec::new(),
-            },
-            Page {
-                id: "page-2".into(),
-                name: "Page 2".into(),
-                spread_id: "spread-1".into(),
-                parent_page_id: None,
-                width: 400.0,
-                height: 500.0,
-                margins: crate::PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
-                columns: crate::PageColumns { count: 1, gutter: 0.0 },
-                guides: Vec::new(),
-                layer_ids: Vec::new(),
-                layers: Vec::new(),
-                frames: Vec::new(),
-                overrides: Vec::new(),
-            },
-        ],
-        print_target: None,
-        data_fields: None,
-        background_drawing: None,
-        referenced_model: None,
-    }
-}
 
-/// 🌉️ JSON bridge for `semio_framework_plugin::App::example`, which hardcodes `serde_json::from_str`
-/// on its `document_json` parameter (shared framework machinery, out of scope for this DSL migration) —
-/// derives the JSON from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
-pub fn layout_sample_document_json() -> String {
-    semio_framework_pack_json::to_json_string(&default_document())
-}
+
+
+
 
 /// 🎨️ Formats an optional RGBA color as a comma-separated text field value; two consumers
 /// (`📌️panels/🔍️inspection` reads it, `🎮️commands/🖼️add-frame` parses it back via `text_to_rgba`).
@@ -470,16 +265,7 @@ mod document_tests;
 //#endregion 🧪️DocumentTests
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec LayoutBuilderFacets {
-        construction: LayoutBuilderConstruction,
-        analysis: LayoutAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::LayoutComposerComposition,
-    }
-    builder: LayoutBuilder,
-    analyzer: LayoutAnalyzer,
-    composer: LayoutComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports

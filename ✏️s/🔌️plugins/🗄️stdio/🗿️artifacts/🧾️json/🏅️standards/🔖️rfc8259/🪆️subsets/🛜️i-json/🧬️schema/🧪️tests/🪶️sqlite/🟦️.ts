@@ -1,10 +1,10 @@
 /** 🛡️ Neutral I-JSON guards retain arbitrary syntax while admitting exact named meaning. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import fixture from "../../../../🧱️base/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json";
+import fixture from "../../../../🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json";
 import type {JsonSnapshot,JsonValue} from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
-import {jsonSnapshotToSqliteDatabase,jsonSnapshotFromSqliteDatabase} from "../../../../🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts";
-import {validateIJsonSnapshotSqliteDialect} from "../../🪶️sqlite/🟦️.ts";
+import {jsonSnapshotToSqliteDatabase,jsonSnapshotFromSqliteDatabase} from "../../../../🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
+import {validateIJsonSnapshotSqliteDialect} from "../../../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 const dialect={artifactKind:"s.stdio.json",standard:"rfc8259",subset:"i-json"};
 function value(input:unknown):JsonValue{if(input===null)return{kind:"null"};if(typeof input==="boolean")return{kind:"bool",value:input};if(typeof input==="string")return{kind:"string",value:input};if(typeof input==="number")return{kind:"number",lexeme:String(input)};if(Array.isArray(input))return{kind:"array",items:input.map(value)};return{kind:"object",members:Object.entries(input as Record<string,unknown>).map(([key,input])=>({key,value:value(input)}))};}

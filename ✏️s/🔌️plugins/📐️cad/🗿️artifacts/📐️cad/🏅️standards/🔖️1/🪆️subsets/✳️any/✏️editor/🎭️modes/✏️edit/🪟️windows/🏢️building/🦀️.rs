@@ -31,6 +31,7 @@ pub const PANE: CadPaneId = CadPaneId::Building;
 /// never frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Building", "Gebäude"),
         body_key: BODY_KEY.into(),

@@ -16,7 +16,7 @@ use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::puzzle3d::terminology::{puzzle3d_localized, Puzzle3dLabels};
 use crate::editor::puzzle3d::{
-    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, target_volume_scale_json, Puzzle3dFixture, Puzzle3dFixtureMeta, Puzzle3dInteractionSnapshot, Puzzle3dKindMeshIndex, Puzzle3dObject,
+    collect_mesh_urls, object_scale_json, puzzle3d_action, puzzle3d_vortex_full_id, quat_rotate_vector, target_volume_scale_json, Puzzle3dSceneSnapshot, Puzzle3dSceneMetadata, Puzzle3dInteractionSnapshot, Puzzle3dKindMeshIndex, Puzzle3dObject,
     Puzzle3dScene, Puzzle3dVortex, PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
 use semio_framework_plugin::{
@@ -44,6 +44,7 @@ pub const TEMPLATE_PERSPECTIVE: &str = r#"world-projection:{"mode":{"kind":"thre
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle3d::create_puzzle3d_app`.
 pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: puzzle3d_localized(|l| l.window_main),
         body_key: BODY_KEY.into(),
@@ -140,15 +141,15 @@ pub fn camera_unset(camera: &crate::editor::puzzle3d::config::Puzzle3dCamera) ->
 }
 
 /// 📷️ The axis-aligned centre and largest span of everything this document draws — objects,
-/// references and target volumes, since a fixture may legitimately carry no objects at all and still
+/// references and target volumes, since a scene_snapshot may legitimately carry no objects at all and still
 /// have something on screen to frame.
-fn framing_bounds(fixture: &Puzzle3dFixture) -> ([f64; 3], f64) {
-    let origins = fixture
+fn framing_bounds(scene_snapshot: &Puzzle3dSceneSnapshot) -> ([f64; 3], f64) {
+    let origins = scene_snapshot
         .objects
         .iter()
         .map(|object| object.origin)
-        .chain(fixture.references.iter().map(|reference| reference.origin))
-        .chain(fixture.target_volumes.iter().map(|volume| volume.origin));
+        .chain(scene_snapshot.references.iter().map(|reference| reference.origin))
+        .chain(scene_snapshot.target_volumes.iter().map(|volume| volume.origin));
     let mut minimum = [f64::INFINITY; 3];
     let mut maximum = [f64::NEG_INFINITY; 3];
     let mut seen = false;
@@ -184,8 +185,8 @@ fn framing_projection(window_id: &str) -> semio_framework_plugin::WorldProjectio
 /// every pane's published camera at all zeros until the first `setCamera` lands, so the world lane
 /// carries no view direction at boot and two panes of one document publish the SAME (zero) pose
 /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B15; B12 §4.1 measured it live).
-pub fn framed_camera(window_id: &str, fixture: &Puzzle3dFixture) -> crate::editor::puzzle3d::config::Puzzle3dCamera {
-    let (target, span) = framing_bounds(fixture);
+pub fn framed_camera(window_id: &str, scene_snapshot: &Puzzle3dSceneSnapshot) -> crate::editor::puzzle3d::config::Puzzle3dCamera {
+    let (target, span) = framing_bounds(scene_snapshot);
     let projection = framing_projection(window_id);
     let distance = (span * PUZZLE3D_FRAMING_SPANS).max(PUZZLE3D_FRAMING_MINIMUM_DISTANCE);
     let (position, up) = semio_framework_plugin::world3d_projection_pose(&projection, target, distance);
@@ -197,15 +198,15 @@ pub fn framed_camera(window_id: &str, fixture: &Puzzle3dFixture) -> crate::edito
 /// render/measure/dispatch paths may run it unconditionally.
 pub fn frame_unset_camera(scene: &mut Puzzle3dScene, window_id: &str) {
     if camera_unset(&scene.runtime.camera) {
-        scene.runtime.camera = framed_camera(window_id, &scene.fixture);
+        scene.runtime.camera = framed_camera(window_id, &scene.scene_snapshot);
     }
 }
 
 /// 🙈️ Hidden objects stay in the emitted array — `worldPick`'s `id` arg is the array index into it — but render at zero scale so they're effectively invisible without shifting any other object's index.
 /// Selection/hover paint is driven by `selectionJson` on the host — never baked here so instance geometry stays stable across picks.
-pub fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
+pub fn world_instances_geometry_json(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
     let mut residency = Puzzle3dInstanceResidency::default();
-    residency.refresh(fixture, &std::collections::BTreeSet::new(), &[]);
+    residency.refresh(scene_snapshot, &std::collections::BTreeSet::new(), &[]);
     residency.instances_json().to_string()
 }
 
@@ -242,7 +243,7 @@ fn instance_record_json(object: &Puzzle3dObject, mesh_id: &str, provisional: boo
 /// 🔑️ The per-object change key for ONE instance record — every field [`instance_record_json`] reads
 /// and nothing else, hashed structurally. No JSON is materialized: this is the difference between a
 /// per-object key that costs a handful of `Hash::hash` calls and the whole-document
-/// `format!`-then-hash [`fixture_geometry_fingerprint`] used to be (measured 20 716 µs on the
+/// `format!`-then-hash [`scene_geometry_fingerprint`] used to be (measured 20 716 µs on the
 /// 180-object Nakagin document, ticket 26/09/02 wave B44 §1).
 fn instance_record_fingerprint(object: &Puzzle3dObject, mesh_id: &str, provisional: bool, highlighted: bool) -> u64 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -314,7 +315,7 @@ pub fn hash_dsl_value<H: Hasher>(value: &semio_framework_value::DslValue, hasher
 /// is built, kept and invalidated PER OBJECT instead of per document.
 ///
 /// ⏱️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B44. Before it, one viewport render of the 180-object
-/// Nakagin document paid 20 716 µs hashing the whole fixture's JSON plus 2 449 µs re-serializing all
+/// Nakagin document paid 20 716 µs hashing the whole scene_snapshot's JSON plus 2 449 µs re-serializing all
 /// 180 records — for a gumball drag that moved ONE of them, and once per window and once more for the
 /// outliner. This walks the objects, re-serializes only the records whose own
 /// [`instance_record_fingerprint`] moved, and reports exactly which ids those were, so an intake that
@@ -336,17 +337,17 @@ pub struct Puzzle3dInstanceResidency {
 }
 
 impl Puzzle3dInstanceResidency {
-    /// 🔄️ Reconciles the residency against one fixture, the running tool's provisional entities
+    /// 🔄️ Reconciles the residency against one scene_snapshot, the running tool's provisional entities
     /// (`ArtifactView::tool_run().provisional_entities`, keyed by `fill_run_entity(object.id)`) and the object ids the open
     /// time-travel draft references (`InteractionView::draft_references`), so opening or closing a history edit republishes
     /// exactly the referenced records through the delta. Answers whether the published text changed — `false` means every
     /// record and the order are bit-identical and no consumer owes any work.
-    pub fn refresh(&mut self, fixture: &Puzzle3dFixture, provisional: &std::collections::BTreeSet<u64>, referenced: &[String]) -> bool {
-        let kind_meshes = Puzzle3dKindMeshIndex::of(&fixture.meta);
-        let mut order = Vec::with_capacity(fixture.objects.len());
+    pub fn refresh(&mut self, scene_snapshot: &Puzzle3dSceneSnapshot, provisional: &std::collections::BTreeSet<u64>, referenced: &[String]) -> bool {
+        let kind_meshes = Puzzle3dKindMeshIndex::of(&scene_snapshot.meta);
+        let mut order = Vec::with_capacity(scene_snapshot.objects.len());
         let mut changed = Vec::new();
         let mut rebuilt = 0_u32;
-        for object in &fixture.objects {
+        for object in &scene_snapshot.objects {
             let mesh_id = kind_meshes.resolve(object).map_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into(), world3d_mesh_id_from_url);
             let placed = !provisional.is_empty() && provisional.contains(&crate::editor::puzzle3d::precompute::fill::fill_run_entity(&object.id));
             let highlighted = referenced.iter().any(|id| id == &object.id);
@@ -491,17 +492,17 @@ pub const PUZZLE3D_FIT_PADDING: f64 = 1.25;
 /// its kind catalogs), never what its geometry currently holds.
 ///
 /// `WorldAutoFit` refits once per `${revision}:${meshes}` key, so this is the difference between
-/// "frame the new fixture when the user switches example" and "yank the camera every time an object
+/// "frame the new scene_snapshot when the user switches example" and "yank the camera every time an object
 /// moves": a catalog swap is a document swap, an object edit is not. Without the lane at all the
 /// camera after a swap is whatever the previous document left in `cameraJson` — Nakagin happens to
-/// sit inside Concrete Forest's framing, a fixture centred elsewhere would simply be off-screen
+/// sit inside Concrete Forest's framing, a scene_snapshot centred elsewhere would simply be off-screen
 /// (ticket 26/09/02 W-P5 §7).
-pub fn world_fit_revision(fixture: &Puzzle3dFixture) -> u32 {
+pub fn world_fit_revision(scene_snapshot: &Puzzle3dSceneSnapshot) -> u32 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    fixture.schema.hash(&mut hasher);
-    fixture.domain.hash(&mut hasher);
-    hash_optional_dsl_value(fixture.meta.kind_catalogs.as_ref(), &mut hasher);
-    hash_optional_dsl_value(fixture.meta.kind_compatibility.as_ref(), &mut hasher);
+    scene_snapshot.schema.hash(&mut hasher);
+    scene_snapshot.domain.hash(&mut hasher);
+    hash_optional_dsl_value(scene_snapshot.meta.kind_catalogs.as_ref(), &mut hasher);
+    hash_optional_dsl_value(scene_snapshot.meta.kind_compatibility.as_ref(), &mut hasher);
     (hasher.finish() >> 32) as u32
 }
 
@@ -512,14 +513,14 @@ pub fn world_fit_revision(fixture: &Puzzle3dFixture) -> u32 {
 /// 180-object Nakagin document and measured **20 716 µs** — 54 % of a cache-HIT viewport render, paid
 /// again per window and again for the outliner memo's key. The structural walk is the same O(n) key
 /// over the same four members with none of the allocation.
-pub fn fixture_geometry_fingerprint(fixture: &Puzzle3dFixture) -> u64 {
+pub fn scene_geometry_fingerprint(scene_snapshot: &Puzzle3dSceneSnapshot) -> u64 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    fixture.objects.len().hash(&mut hasher);
-    for object in &fixture.objects {
+    scene_snapshot.objects.len().hash(&mut hasher);
+    for object in &scene_snapshot.objects {
         hash_object(object, &mut hasher);
     }
-    fixture.references.len().hash(&mut hasher);
-    for reference in &fixture.references {
+    scene_snapshot.references.len().hash(&mut hasher);
+    for reference in &scene_snapshot.references {
         reference.id.hash(&mut hasher);
         reference.source.url.hash(&mut hasher);
         reference.source.media_kind.hash(&mut hasher);
@@ -528,8 +529,8 @@ pub fn fixture_geometry_fingerprint(fixture: &Puzzle3dFixture) -> u64 {
         reference.locked.hash(&mut hasher);
         reference.hidden.hash(&mut hasher);
     }
-    fixture.target_volumes.len().hash(&mut hasher);
-    for volume in &fixture.target_volumes {
+    scene_snapshot.target_volumes.len().hash(&mut hasher);
+    for volume in &scene_snapshot.target_volumes {
         volume.id.hash(&mut hasher);
         hash_axes(&volume.origin, &mut hasher);
         volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]).map(f64::to_bits).hash(&mut hasher);
@@ -537,8 +538,8 @@ pub fn fixture_geometry_fingerprint(fixture: &Puzzle3dFixture) -> u64 {
         volume.hidden.hash(&mut hasher);
         volume.locked.hash(&mut hasher);
     }
-    hash_optional_dsl_value(fixture.meta.kind_catalogs.as_ref(), &mut hasher);
-    hash_optional_dsl_value(fixture.meta.kind_compatibility.as_ref(), &mut hasher);
+    hash_optional_dsl_value(scene_snapshot.meta.kind_catalogs.as_ref(), &mut hasher);
+    hash_optional_dsl_value(scene_snapshot.meta.kind_compatibility.as_ref(), &mut hasher);
     hasher.finish()
 }
 
@@ -590,15 +591,15 @@ const WORLD_MESH_KINDS: [&str; 2] = [PUZZLE3D_FALLBACK_MESH_KIND, VORTEX_MARKER_
 /// 🧵️ The world mesh lane in `meshesJson` order: the kind meshes, then every sorted mesh url whose mesh id
 /// is new. A tool run trace subject's `mesh` is an index into exactly this list, so a fill run job is
 /// built with it and `meshesJson` is published from it.
-pub fn mesh_lane(fixture: &Puzzle3dFixture) -> Vec<String> {
+pub fn mesh_lane(scene_snapshot: &Puzzle3dSceneSnapshot) -> Vec<String> {
     let mut lane: Vec<String> = WORLD_MESH_KINDS.iter().map(|kind| (*kind).to_string()).collect();
     let mut ids: std::collections::HashSet<String> = lane.iter().cloned().collect();
-    lane.extend(collect_mesh_urls(fixture).into_iter().filter(|url| ids.insert(world3d_mesh_id_from_url(url))));
+    lane.extend(collect_mesh_urls(scene_snapshot).into_iter().filter(|url| ids.insert(world3d_mesh_id_from_url(url))));
     lane
 }
 
-pub fn world_meshes_json(fixture: &Puzzle3dFixture) -> String {
-    let lane = mesh_lane(fixture);
+pub fn world_meshes_json(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
+    let lane = mesh_lane(scene_snapshot);
     world3d_meshes_json_from_kinds_and_urls(&lane[..WORLD_MESH_KINDS.len()], &lane[WORLD_MESH_KINDS.len()..])
 }
 
@@ -607,25 +608,25 @@ fn world_vortex_direction(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [
     quat_rotate_vector(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), direction)
 }
 
-fn vortex_color(meta: &Puzzle3dFixtureMeta, vortex_kind: Option<&str>) -> String {
+fn vortex_color(meta: &Puzzle3dSceneMetadata, vortex_kind: Option<&str>) -> String {
     catalog_entry_field(meta, "vortices", vortex_kind, &["color"], "#38bdf8")
 }
 
-fn object_kind_color(meta: &Puzzle3dFixtureMeta, object_kind: Option<&str>) -> String {
+fn object_kind_color(meta: &Puzzle3dSceneMetadata, object_kind: Option<&str>) -> String {
     catalog_entry_field(meta, "objects", object_kind, &["color"], "#38bdf8")
 }
 
-fn object_kind_icon(meta: &Puzzle3dFixtureMeta, object_kind: Option<&str>) -> String {
+fn object_kind_icon(meta: &Puzzle3dSceneMetadata, object_kind: Option<&str>) -> String {
     catalog_entry_field(meta, "objects", object_kind, &["icon", "iconId"], "box")
 }
 
 /// 🏷️ The authored catalog label of an object kind, else its id — what a suggestion row names the kind by.
-fn object_kind_label(meta: &Puzzle3dFixtureMeta, object_kind: &str) -> String {
+fn object_kind_label(meta: &Puzzle3dSceneMetadata, object_kind: &str) -> String {
     catalog_entry_field(meta, "objects", Some(object_kind), &["label", "name"], object_kind)
 }
 
 /// 🎨️ First present `fields` entry on the `section` catalog row whose `id` is `kind_id`, else `fallback`.
-fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id: Option<&str>, fields: &[&str], fallback: &str) -> String {
+fn catalog_entry_field(meta: &Puzzle3dSceneMetadata, section: &str, kind_id: Option<&str>, fields: &[&str], fallback: &str) -> String {
     let Some(kind_id) = kind_id else {
         return fallback.into();
     };
@@ -658,10 +659,10 @@ fn object_vortices_visible(object: &Puzzle3dObject, runtime: &Puzzle3dRuntime, i
 
 /// 🌀️ Per-vortex marker records. `selected`/`hovered` are painted from the live `vortex` domain —
 /// `WorldVortexMarkers` reads them off each record (its own palette lookup), not off `selectionJson`.
-pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime, interaction: &Puzzle3dInteractionSnapshot, active_utility: &str) -> String {
+pub fn world_vortices_json(scene_snapshot: &Puzzle3dSceneSnapshot, runtime: &Puzzle3dRuntime, interaction: &Puzzle3dInteractionSnapshot, active_utility: &str) -> String {
     let selected_vortices = interaction.selected_vortex_ids();
     let mut records = Vec::new();
-    for object in &fixture.objects {
+    for object in &scene_snapshot.objects {
         if !object_vortices_visible(object, runtime, interaction, active_utility) {
             continue;
         }
@@ -676,7 +677,7 @@ pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime,
                 "position": position,
                 "direction": direction,
                 "radius": vortex.radius.unwrap_or(0.36),
-                "color": vortex_color(&fixture.meta, vortex.vortex_kind.as_deref()),
+                "color": vortex_color(&scene_snapshot.meta, vortex.vortex_kind.as_deref()),
                 "displayDirection": runtime.vortex_direction,
                 "selected": selected_vortices.iter().any(|id| id == &full_id),
                 "hovered": interaction.hovered.iter().any(|id| id == &full_id),
@@ -693,15 +694,15 @@ pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime,
 /// 9 ms world render at 96 placements (unoptimized native), re-paid by every refresh of the live run. The index
 /// keeps the resolver's first-match order (`or_insert`), so a full id two vortices spell alike still names the
 /// first one.
-pub fn world_attractions_json(fixture: &Puzzle3dFixture) -> String {
-    let mut vortices = std::collections::HashMap::with_capacity(fixture.objects.iter().map(|object| object.vortices.len()).sum());
-    for object in &fixture.objects {
+pub fn world_attractions_json(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
+    let mut vortices = std::collections::HashMap::with_capacity(scene_snapshot.objects.iter().map(|object| object.vortices.len()).sum());
+    for object in &scene_snapshot.objects {
         for vortex in &object.vortices {
             vortices.entry(crate::editor::puzzle3d::puzzle3d_vortex_full_id(&object.id, &vortex.id)).or_insert((object, vortex));
         }
     }
     let position = |full_id: &str| vortices.get(full_id).map(|(object, vortex)| crate::editor::puzzle3d::world_vortex_position(object, vortex));
-    let records: Vec<Value> = fixture
+    let records: Vec<Value> = scene_snapshot
         .attractions
         .iter()
         .filter_map(|attraction| {
@@ -718,8 +719,8 @@ pub fn world_attractions_json(fixture: &Puzzle3dFixture) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn world_target_volumes_json(fixture: &Puzzle3dFixture) -> String {
-    let records: Vec<Value> = fixture
+pub fn world_target_volumes_json(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
+    let records: Vec<Value> = scene_snapshot
         .target_volumes
         .iter()
         .map(|volume| {
@@ -737,8 +738,8 @@ pub fn world_target_volumes_json(fixture: &Puzzle3dFixture) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-pub fn world_references_json(fixture: &Puzzle3dFixture) -> String {
-    let records: Vec<Value> = fixture
+pub fn world_references_json(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
+    let records: Vec<Value> = scene_snapshot
         .references
         .iter()
         .map(|reference| {
@@ -776,10 +777,10 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
                 json!({
                     "index": index,
                     "key": key,
-                    "objectLabel": object_kind_label(&envelope.fixture.meta, &candidate.object_kind_id),
+                    "objectLabel": object_kind_label(&envelope.scene_snapshot.meta, &candidate.object_kind_id),
                     "vortexLabel": format!("vortex {}", candidate.source_vortex_index),
-                    "icon": object_kind_icon(&envelope.fixture.meta, object_kind),
-                    "color": object_kind_color(&envelope.fixture.meta, object_kind),
+                    "icon": object_kind_icon(&envelope.scene_snapshot.meta, object_kind),
+                    "color": object_kind_color(&envelope.scene_snapshot.meta, object_kind),
                 })
             })
             .collect();
@@ -816,7 +817,7 @@ pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecom
     // 🐁️ `hoveredVortexFullId` is the host's Alt+right-click suggestion target and its context-menu
     // priority key (`resolveWorldContextMenuTarget`) — it lives on the interaction record, not on
     // `selectionJson`, so it is projected from the live `vortex`-domain hover here.
-    if let (Some(object), Some(hovered)) = (value.as_object_mut(), interaction.hovered_vortex_full_id(&envelope.fixture)) {
+    if let (Some(object), Some(hovered)) = (value.as_object_mut(), interaction.hovered_vortex_full_id(&envelope.scene_snapshot)) {
         object.insert("hoveredVortexFullId".into(), json!(hovered));
     }
     value.to_string()
@@ -844,7 +845,7 @@ pub fn world3d_lod_json(runtime: &Puzzle3dRuntime) -> String {
 pub fn world_selection_json(envelope: &Puzzle3dScene, interaction: &Puzzle3dInteractionSnapshot) -> String {
     let runtime = &envelope.runtime;
     let object_ids = interaction.selected_object_ids();
-    let hovered_id = interaction.hovered_object_id(&envelope.fixture).map(str::to_string).or_else(|| interaction.hovered_reference_id(&envelope.fixture).map(|id| format!("reference:{id}")));
+    let hovered_id = interaction.hovered_object_id(&envelope.scene_snapshot).map(str::to_string).or_else(|| interaction.hovered_reference_id(&envelope.scene_snapshot).map(|id| format!("reference:{id}")));
     let mut value: Value = serde_json::from_str(&world3d_selection_json(runtime.selection_method.as_str(), object_ids, hovered_id.as_deref())).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!("mesh"));
@@ -865,7 +866,7 @@ pub fn world_selection_json(envelope: &Puzzle3dScene, interaction: &Puzzle3dInte
         if let Some(id) = interaction.selected_reference_ids().first() {
             object.insert("referenceSelectedId".into(), json!(id));
         }
-        if let Some(kind) = hovered_kind_id(&envelope.fixture, interaction) {
+        if let Some(kind) = hovered_kind_id(&envelope.scene_snapshot, interaction) {
             object.insert("hoveredKindId".into(), json!(kind));
         }
         if let Some(transform_mode) = transform_handle(&envelope.active_utility) {
@@ -889,8 +890,8 @@ pub fn world_selection_json(envelope: &Puzzle3dScene, interaction: &Puzzle3dInte
 
 /// 🎨️ The hovered CATALOGUE kind id, when the `kind` granularity is what the pointer is over — the
 /// host highlights every instance sharing that `objectKind` from this one field.
-fn hovered_kind_id<'a>(fixture: &Puzzle3dFixture, interaction: &'a Puzzle3dInteractionSnapshot) -> Option<&'a str> {
-    let catalogs = fixture.meta.kind_catalogs.as_ref()?;
+fn hovered_kind_id<'a>(scene_snapshot: &Puzzle3dSceneSnapshot, interaction: &'a Puzzle3dInteractionSnapshot) -> Option<&'a str> {
+    let catalogs = scene_snapshot.meta.kind_catalogs.as_ref()?;
     let entries = catalogs.get("objects").and_then(|value| value.as_array())?;
     interaction.hovered.iter().find(|id| entries.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))).map(String::as_str)
 }
@@ -899,7 +900,7 @@ fn hovered_kind_id<'a>(fixture: &Puzzle3dFixture, interaction: &'a Puzzle3dInter
 
 //#region 🔖️Render
 /// 🖼️ The world-3d surface node for this window — `instances_json`/`meshes_json` come pre-computed
-/// from `Puzzle3dPlayApp`'s geometry cache (they only change with the fixture's geometry fingerprint).
+/// from `Puzzle3dPlayApp`'s geometry cache (they only change with the scene_snapshot's geometry fingerprint).
 pub fn render(
     envelope: &Puzzle3dScene,
     precompute: &Puzzle3dPrecomputeSession,
@@ -909,18 +910,18 @@ pub fn render(
     interaction: &Puzzle3dInteractionSnapshot,
     suggestions: Option<&BrushSuggestionsFound>,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let vortices = world_vortices_json(&envelope.fixture, &envelope.runtime, interaction, envelope.active_utility.as_str());
+    let vortices = world_vortices_json(&envelope.scene_snapshot, &envelope.runtime, interaction, envelope.active_utility.as_str());
     let mut scene = World3dScene::base(camera_json(&envelope.runtime), meshes_json, instances_json, world_selection_json(envelope, interaction));
     scene.instances_delta_json = instances_delta_json;
     scene.vortices_json = Some(vortices);
-    scene.attractions_json = Some(world_attractions_json(&envelope.fixture));
-    scene.target_volumes_json = Some(world_target_volumes_json(&envelope.fixture));
-    scene.references_json = Some(world_references_json(&envelope.fixture));
+    scene.attractions_json = Some(world_attractions_json(&envelope.scene_snapshot));
+    scene.target_volumes_json = Some(world_target_volumes_json(&envelope.scene_snapshot));
+    scene.references_json = Some(world_references_json(&envelope.scene_snapshot));
     scene.interaction_json = Some(world_interaction_json(envelope, precompute, interaction, suggestions));
     scene.lod_json = Some(world3d_lod_json(&envelope.runtime));
     scene.chunking_json = Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
-    scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.fixture), PUZZLE3D_FIT_PADDING, None));
+    scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.scene_snapshot), PUZZLE3D_FIT_PADDING, None));
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): bound, so `World3dHost`'s generic
     // dispatch path emits `interactionSelect`/`interactionHover` for this domain
     // (`world3dSelectionActionArgs`/`world3dHoverActionArgs`) instead of the legacy
@@ -940,8 +941,8 @@ pub fn render(
 /// While a fill run is non-terminal, Escape in the input aborts that run (`toolRunAbort` with its current
 /// identity) instead of disarming the engagement.
 pub fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: Option<&ToolRunView>) -> WindowEngagement {
-    let object_count = envelope.fixture.objects.len();
-    let attraction_count = envelope.fixture.attractions.len();
+    let object_count = envelope.scene_snapshot.objects.len();
+    let attraction_count = envelope.scene_snapshot.attractions.len();
     let active_utility = envelope.active_utility.as_str();
     let objects_label = labels.objects.as_str();
     let attractions_label = labels.attractions.as_str();

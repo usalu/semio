@@ -161,9 +161,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-layer-visible-hides-a-node",
       "class": "third-party-generated",
       "target": {
@@ -216,7 +215,6 @@
       "notes": "Turning a layer invisible removes its scene node entirely — flatten_drawing_document_to_scene_nodes skips invisible layers before they ever become a node, so the element simply disappears from the export."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "carrier-set-layer-locked",
       "class": "third-party-generated",
       "target": {
@@ -265,7 +263,6 @@
       "comparisonPipeline": "drawing-1-carrier-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "carrier-rename-layer",
       "class": "third-party-generated",
       "target": {

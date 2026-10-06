@@ -1,6 +1,7 @@
 //! 🔀️ Guarded field edits; composition preserves every intermediate precondition.
 use crate::ChartSnapshot;
-use protocol::{DslValue, FromValue, ToValue, MutationApplyError, MutationApplyResult, MutationDiff, DiffAlgebra, DiffRegions, TouchedPaths};
+use semio_framework_value::{DslValue,FromValue,ToValue};
+use protocol::{MutationApplyError, MutationApplyResult, MutationDiff, DiffAlgebra, DiffRegions, TouchedPaths};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ChartEdit {

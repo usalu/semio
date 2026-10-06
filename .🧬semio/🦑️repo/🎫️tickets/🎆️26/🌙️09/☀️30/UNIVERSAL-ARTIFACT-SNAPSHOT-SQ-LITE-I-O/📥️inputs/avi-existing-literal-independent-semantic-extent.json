@@ -1,0 +1,20 @@
+{
+ "authority":"Existing AVI closed Snapshot fixture validated by Ajv and inserted directly under authored DDL in Bun SQLite; no domain provider imported",
+ "rawSqlBytes":5083,"schemaBytes":5237,"tableCount":12,"maxColumns":20,
+ "cases":[{"id":"full","rows":27,"valueBytes":1362},{"id":"empty","rows":2,"valueBytes":128}],
+ "tables":[
+  {"table":"avi_document","width":3,"rows":1,"valueBytes":40,"schemaBytes":161},
+  {"table":"avi_main_header","width":11,"rows":1,"valueBytes":88,"schemaBytes":867},
+  {"table":"avi_main_reserved","width":4,"rows":5,"valueBytes":160,"schemaBytes":233},
+  {"table":"avi_stream","width":4,"rows":3,"valueBytes":95,"schemaBytes":238},
+  {"table":"avi_stream_header","width":20,"rows":3,"valueBytes":446,"schemaBytes":1344},
+  {"table":"avi_bitmap_info","width":12,"rows":1,"valueBytes":95,"schemaBytes":857},
+  {"table":"avi_wave_format","width":8,"rows":1,"valueBytes":59,"schemaBytes":551},
+  {"table":"avi_raw_format","width":2,"rows":1,"valueBytes":11,"schemaBytes":110},
+  {"table":"avi_stream_chunk","width":6,"rows":3,"valueBytes":121,"schemaBytes":255},
+  {"table":"avi_stream_extra","width":5,"rows":4,"valueBytes":123,"schemaBytes":205},
+  {"table":"avi_unknown_chunk","width":5,"rows":2,"valueBytes":65,"schemaBytes":211},
+  {"table":"avi_hdrl_extra","width":5,"rows":2,"valueBytes":59,"schemaBytes":205}
+ ],
+ "integrity":"ok","foreignKeyFailures":0,"ajvFixtureValid":true
+}

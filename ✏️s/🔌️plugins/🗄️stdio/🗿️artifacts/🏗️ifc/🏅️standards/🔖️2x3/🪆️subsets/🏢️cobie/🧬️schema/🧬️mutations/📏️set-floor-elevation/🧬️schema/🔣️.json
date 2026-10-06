@@ -21,6 +21,7 @@
           "en": "STEP instance id of the IfcBuildingStorey.",
           "de": "STEP-Instanz-ID des IfcBuildingStorey."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -45,6 +46,7 @@
           "en": "Storey elevation in project length units; empty clears it.",
           "de": "Geschosshöhenkote in Längeneinheiten des Projekts; leer löscht sie."
         },
+        "step": 0.1,
         "precision": 3,
         "group": "value",
         "order": 20

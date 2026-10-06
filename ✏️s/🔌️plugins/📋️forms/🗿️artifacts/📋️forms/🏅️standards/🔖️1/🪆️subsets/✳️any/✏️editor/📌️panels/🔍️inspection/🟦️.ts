@@ -13,7 +13,7 @@ export function questionFields(kind: string): string[] {
     case "note": fields.push("text"); break;
     case "image": fields.push("src"); break;
     case "file": fields.push("accept"); break;
-    default: fields.push("fixtureSlug", "params"); break;
+    default: fields.push("exampleId", "params"); break;
   }
   return [...fields, "condition"];
 }

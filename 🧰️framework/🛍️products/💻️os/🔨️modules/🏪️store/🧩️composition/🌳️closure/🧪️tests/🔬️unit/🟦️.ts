@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import vectors from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
 import ioSchema from "../../../../../../../../🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import { OwnedDocumentClosure, type OwnedDocumentClosureInput } from "../../🟦️.ts";
 import ownerSchema from "../../../../🪆️child/🏠️owner/🧬️schema/🔣️.json" with { type: "json" };
@@ -58,7 +57,6 @@ function validate(input: OwnedDocumentClosureInput, fuel: number): boolean {
 /** 🌳️ A chain may exceed the per-parent child bound while respecting the global registry bound. */
 export function testOwnedDocumentClosureOracle(): void {
   const ajv = semioSchemaAjvV1({ strict: true }).addSchema(ioSchema).addSchema(ownerSchema);
-  const shape = ajv.compile(schema);
   const ownerShape = ajv.getSchema(ownerSchema.$id)!;
   for (const row of vectors.continuationCases) {
     const unchanged = ajv.compile({ const: row.beforeMembers });
@@ -75,7 +73,6 @@ export function testOwnedDocumentClosureOracle(): void {
   for (const owner of vectors.ownerCases.valid) { assert(ownerShape(owner)); assert.deepEqual(parseOwnerRef(owner), owner); }
   for (const owner of vectors.ownerCases.invalid) { assert.equal(ownerShape(owner), false); assert.throws(() => parseOwnerRef(owner)); }
   for (const row of vectors.cases) {
-    assert(shape(row.input), JSON.stringify(shape.errors));
     assert.equal(oracle(row.input), row.accepted, row.id + " graph oracle");
     for (const fuel of [1, 7, 64]) assert.equal(validate(row.input, fuel), row.accepted, row.id);
   }

@@ -1,0 +1,53 @@
+# Final Plugin, Composition and Assigned OS Closure
+
+All assigned schema writes and scoped consumer changes are complete. Ordinary example JSON remains inert testing data. Corpus-specific validator documents/definitions/admissions are retired; genuine domain values, policies, budgets, wire payloads and third-party/native/source behavior assertions retain their semantic owners. No compatibility aliases or migrations were added.
+
+## Exact Authored Changes
+
+The complete durable file union is `📥️complete-plugin-repository-file-ledger.json` and `📓️complete-plugin-repository-file-ledger.md`: 1,173 distinct authored paths across all assigned phases. Earlier plugin/Hub/repository wrapper closure contributes 640 paths. Structural closure adds its 58-path ledger. Expanded OS/plugin closure classifies 23 owners and retires 78 corpus definitions. Final constant corpus closure classifies 17 owners, deleting six pure documents and removing 16 corpus definitions plus nine wrapper roots while retaining domain records. Hidden-definition closure classifies eight owners and retires 25 corpus-only definitions; genuine Generation3d artifact root remains unchanged and export request validation references its actual per-request definition.
+
+Exact before bodies and review plans remain in ticket input files, especially `📥️expanded-plugin-os-corpus-map.json`, `📥️expanded-consumers-before.json`, `📥️expanded-manual-edits.json`, `📥️final-plugin-corpus-owner-map.json`, `📥️final-plugin-consumer-edits.json`, `📥️hidden-plugin-corpus-owner-map.json`, and `📥️hidden-plugin-consumers-before.json`. No generated outputs are required to reconstruct these changes. Root and runtime teammates own their separate schema/runtime/catalog ledgers.
+
+## Executable Testing Ownership
+
+114 imported inert Rust marker modules were deleted with their unused module declarations. Three genuine executable helpers were moved to testing support. The later 68-record move ledger records 38 authored source/config moves and 29 consumer path changes plus one placeholder deletion. These include five complete OBJ/DXF/GIF/LAS/PDF generator Cargo package trees moved from fixture packages into generator test support and the five `✏️s/Cargo.toml` workspace members. DWG component helpers, Semio geometry, Process SQLite, WFC, browser environment, procedural constructor and Honeybee Python helper code now live under tests. Inert source-text parser/compiler examples remain ordinary data.
+
+## Final Genuine Consumer Repairs
+
+Renderer Home bootstrap validates genuine Action/Outcome, receipt, identity and label values; the retired Step wrapper is absent. Its private PluginRuntime job-completion test retains every independent per-step Map ownership/latest-render comparison after removing the retired whole-corpus schema read. Window fault tests now use canonical BrowserFault wire validation, three malformed wire variants, owned classifiers and actual retirement behavior; both former standalone and inline corpus admissions are retired. Graph parameter command validation and actual keyboard/drag dispatch remain.
+
+Norm's strict source guards now name the exact current Inspection signature, including locale/controller arguments and the same Results-window selected index. Surface identity assertions use the actual BODY_ARTIFACT owner. Fifteen Inspection owners, thirty empty app surfaces, every selected-check command and five hostile surface changes remain tested. Foundation plain ownership observations were refreshed from the exact ordered TypeScript imports and current testing taxonomy; dependency/registration/credential laws remain strict.
+
+## Actual Validation
+
+- Structural DWG/WFC: 9 tests, 378 assertions; seven independent helper invocations and Python board/selection/history 16/4/6 cases passed.
+- Final Draw/Norm/IFC Bun run: 49 of 50 passed, 305,441 assertions. The sole stale IFC import URL was corrected; the subsequent IFC SQLite suite passed all 14 tests.
+- Final true retained owner check: eight plain example groups, two independent validators, ten lanes and five classifications passed.
+- Final semantic helpers: seven unique helpers passed (ten actual invocations): Remodel 22; GIS 26; Semio session 11 named native-law source predicates plus actual verb/receipt validation; CAD 23 physical ownership and per-value operation checks; Generation3d source authority 18; export-input contracts 12; artifact admission 15 vectors and 39 real first-party owners.
+- Hub Home source checks 13 passed. Norm taxonomy compares 554 actual source values and independent uniqueness/mutation controls, passed.
+- Norm surface source: 15 variants, 30 apps, 120 body identities and five hostile variants passed. Norm config source/codec/Ajv/byte oracles and strict TypeScript passed; the window ownership helper runs top-level assertions and Bun reports zero registered tests, so it is counted as a module oracle rather than a test suite.
+- Renderer Home source oracle 33 and first mounted suite 15 tests passed; the additional private PluginRuntime collection passed all four selected behavior tests (133 skipped, 137 registered). Actual graph parameter command/keyboard/drag tests passed both selected tests (712 skipped, 714 registered).
+- Renderer window fault final suite passed 14 tests after both standalone and inline example admissions were retired.
+- Foundation final parent verification: 12 passed, 264 assertions, including actual current credential-entry selectors and hostile source-order proofs, full graph TypeScript, taxonomy, transport and exact ordered registrations. My earlier run observed 11 pass/one native source-order failure; root repaired the exact current function selector and supplied actual executed green evidence.
+
+## Verification Limits and Pending Jobs
+
+No global native compilation pass is claimed. Runtime teammate logs report current unrelated concurrent Stdio TXT/RON/IO namespace duplicate-definition and missing audio/CAD/BREP/schema bindings; no remaining own SPR trait or Store trait-path failure was reported. Flow/scalar production reducer/source-signature assertions remain visible in earlier logs and were not loosened. The Stdio catalog helper requires an actual fresh build root; its attempted command failed usage before native/JCO/Cargo assertions and provides no pass evidence.
+
+Final structural closure also retired three inline whole-example schemas and redundant expected-constant/enum validators across seven exact source owners. Actual canonical acknowledgement, stage and scope schemas remain; produced boot/cancel/host-extension values and native source/SQLite/equality oracles are asserted directly. Read-only scoped inline review found zero candidates across 79 saved consumers before the final Semio/Interpreter additions.
+
+Five remaining Semio Flow/Animation/Graph/Image/hex-float complete example schemas were inspected as pure property constants, then removed with only their exact admission statements. Full originals remain in `📥️final-semio-complete-schema-map.json`. All four actual SQLite suites passed: 18 tests, 622 assertions, including full cells, metadata-empty roles, float grammar/classes, independent SQL extents and five budget refusal lanes. No creation-race claim is made for the extra hex-float discovery: predelete filesystem timestamps were not captured.
+
+Hub full roster and receipt-pair/opened-root actual source oracles passed: 30/29/30 independent SQLite projections, seven full roster hostile cases, eight receipt-pair cases, fifteen paths, seven denials, fourteen source checks. Host fault/retry/activation/reservation source/value oracles passed 10/4/6/6 checks. Retained surface source helper passed 26 assertions. Final renderer engine boot/cancel/host-extension/retention cohort passed all eight selected tests (706 skipped); its Interpreter private collection found an additional retired whole surface-lifetime schema import. That exact admission was replaced with a real mounted section/unmount DOM assertion, preserving all repeated same-id/focused-draft/blur-retirement laws.
+
+The final actual latest-wins helper still fails its genuine production authority predicate. It failed in an observed earlier task run `expanded-owner-checks.log` and again in `final-inline-oracles.log`; no pre-task baseline is claimed. Its obligations and exact predicate are compared against the saved pre-transform consumer bytes in `📓️latest-wins-production-authority-failure.md`. The predicate and all hostile-token controls remain enforced. The issued-patch semantic helper passed ten cases in the same runner.
+
+All owned behavior and read-only audit jobs have settled. Final Interpreter run `final-interpreter-actual-retirement2.log` passed 24 selected tests, 169 skipped (193 registered), in 124.83s, including actual DOM retirement, all repeated same-id/focus/blur cases, retention/sibling keys, viewport requests, column windows and identical row dispatch. Final source integrity checked 30 TS/TSX consumers: zero parser errors, lost named declarations or empty callbacks; 65 removed/replaced assertions are recorded for exact corpus-only/per-value review. Final inline review checked 86 exact consumers and found zero candidates. Logs `final-all-consumer-integrity.log` and `final-all-inline-review.log` are final green evidence. Parent owns final catalog regeneration and ticket cleanup. No owned jobs remain active.
+
+## Last Private Interpreter Consumer Closure
+
+The actual retained-surface collection exposed deleted schema reads in private Tree viewport, table two-axis and row-target suites. These exact pure corpus admissions were removed. The same callbacks retain true viewport body/overscan budgets, native viewport request/visibility output, actual mounted ARIA table column logical addresses and identical tree/table row activation targets. Full before bodies and edits are in `📥️final-plugin-consumer-edits.json`; named-suite AST integrity will include these two newly discovered consumers.
+
+## Final Handoff
+
+The final union contains 1,173 authored paths. No schema writers, behavior checks or audit jobs remain active. Current fixture scope closure includes all five extra Semio complete/hex-float corpus documents, all private Interpreter schema consumers discovered by actual collection, and all reviewed standalone/inline whole-example admissions. Genuine domain authority and independent native/third-party/source behavior checks remain. The remaining latest-wins predicate mismatch is concrete and preserved; see its dedicated evidence report. Parent owns root/global native compilation qualification, final catalogue validation and ticket closure.

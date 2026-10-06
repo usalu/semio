@@ -4,7 +4,7 @@ use semio_framework_job::InteractiveJob as _;
 #[test]
 fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch() {
     let mut emit: Emit<DrawingMutation, NoConfigMutation, NoDraftMutation> = Emit::default();
-    emit.child_emits.push(semio_framework_plugin::app::ChildEmit::of::<DrawingSnapshot, DrawingMutation>("member", "drawing-child", &[]));
+    emit.child_emits.push(semio_framework_plugin::app::ChildEmit::open("member","drawing-child",0));
     let rejected = semio_framework_plugin::app::ArtifactToolCompletionRejection::<semio_framework_plugin::EditorApp<DrawingPlayApp>> {
         emit: Ok(emit),
         ephemeral: semio_framework_plugin::EphemeralEmit::default(),
@@ -30,15 +30,15 @@ fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch(
         if job.pending_completion_rejection.is_none() {
             break;
         }
-        let step = job.close_step(1, 4);
+        let step = job.close_step(1, 4_096);
         if let semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1 && released_bytes <= 4);
+            assert!(released_items <= 1 && released_bytes <= 4_096);
         }
     }
     assert!(job.pending_completion_rejection.is_none());
     assert!(job.decoder.is_some(), "normal decoder owner stays retained until the rejected output is terminal");
-    assert_eq!(job.close_step(1, 4), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 });
-    assert_eq!(job.close_step(1, 4), semio_framework_job::InteractiveJobCloseStep::Complete);
+    assert_eq!(job.close_step(1, 4_096), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 });
+    assert_eq!(job.close_step(1, 4_096), semio_framework_job::InteractiveJobCloseStep::Complete);
     assert!(job.terminal_is_empty());
 }
 

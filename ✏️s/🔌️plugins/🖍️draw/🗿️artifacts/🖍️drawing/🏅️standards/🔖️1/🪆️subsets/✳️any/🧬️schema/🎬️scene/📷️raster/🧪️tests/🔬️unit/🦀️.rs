@@ -1,5 +1,26 @@
 use super::*;
 #[test]
+fn scene_sampled_pixels_wait_for_actual_affine_retirement_before_layer_publication(){
+ let sources:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖼️images/🔣️.json")).unwrap();let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️image/🔣️.json")).unwrap();assert_eq!(cases.as_array().unwrap().len(),4);
+ for row in cases.as_array().unwrap(){for grant in [1,7,4096]{
+  let source=sources.as_array().unwrap().iter().find(|v|v["name"]==row["source"]).unwrap();let mut job=RasterSceneJob::new(input(&source["input"])).unwrap();let mut parents=0;let mut closing=false;let mut pointer=None;let mut nodes=0;let mut cleanup_work=0;let mut done=false;
+  for _ in 0..2000000{let active=job.phase=="imageCleanup";if active{if !closing{parents+=1;closing=true;nodes=job.nodes;}assert!(job.sampler.is_none());assert_eq!(job.nodes,nodes);let pixels=job.sampled.as_ref().unwrap().pixels.as_ptr();if let Some(before)=pointer{assert_eq!(pixels,before);}else{pointer=Some(pixels);}}
+   let budget=if job.phase=="compositing"{grant}else{1};let before=job.work;let p=job.advance(budget).unwrap();assert!(p.work-before<=budget as u64);if active{if let Some(owner)=job.sampler_retirement.as_mut(){if owner.terminal_is_empty(){cleanup_work=owner.advance(1).unwrap().work;}}else{assert!(cleanup_work>=10);assert!(job.sampled.is_none());assert_eq!(job.nodes,nodes+1);closing=false;pointer=None;}}
+   if p.done{done=true;break;}}
+  assert!(done);assert_eq!(parents,row["parents"].as_u64().unwrap());assert!(job.sampler_retirement.is_none()&&job.sampled.is_none());assert_eq!(serde_json::to_value(&job.result().unwrap().pixels).unwrap(),source["expected"]);eprintln!("[DEBUG] Actual native scene affine handoff {}: grant={grant}, parents={parents}, moved pixel pointer retained and RGBA matched",row["source"]);
+ }}
+}
+#[test]
+fn scene_path_pixels_wait_for_actual_whole_parent_retirement_before_compositing(){
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️path/🔣️.json")).unwrap();
+ for row in rows.as_array().unwrap(){for grant in [1,7,4096]{let source=cases.as_array().unwrap().iter().find(|case|case["name"]==row["source"]).unwrap();let mut job=RasterSceneJob::new(input(&source["input"])).unwrap();let mut parents=0;let mut closing=false;let mut pointer=None;let mut nodes=0;let mut cleanup_work=0;let mut done=false;
+  for _ in 0..2000000{let active=job.phase=="pathCleanup";if active{if !closing{parents+=1;closing=true;nodes=job.nodes;}assert!(job.painter.is_none());assert_eq!(job.nodes,nodes);let pixels=job.painted.as_ref().unwrap().pixels.as_ptr();if let Some(before)=pointer{assert_eq!(pixels,before);}else{pointer=Some(pixels);}}
+   let budget=if job.phase=="compositing"{grant}else{1};let before=job.work;let p=job.advance(budget).unwrap();assert!(p.work-before<=budget as u64);if active{if let Some(owner)=job.painter_retirement.as_mut(){if owner.terminal_is_empty(){cleanup_work=owner.advance(1).unwrap().work;}}else{assert!(cleanup_work>=16);assert!(job.painted.is_none());assert_eq!(job.nodes,nodes+1);closing=false;pointer=None;}}
+   if p.done{done=true;break;}}
+  assert!(done);assert_eq!(parents,row["parents"].as_u64().unwrap());assert!(job.painter_retirement.is_none()&&job.painted.is_none());assert_eq!(serde_json::to_value(&job.result().unwrap().pixels).unwrap(),source["expected"]);eprintln!("[DEBUG] Native scene whole-path handoff {}: grant={grant}, parents={parents}, RGBA matched",row["source"]);
+ }}
+}
+#[test]
 fn painted_scenes_filter_every_shared_image_under_bounded_grants(){
  let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖼️images/🔣️.json")).unwrap();
  for row in cases.as_array().unwrap(){for grant in [1,7,4096]{let mut job=RasterSceneJob::new(input(&row["input"])).unwrap();let mut work=0;let mut done=false;for _ in 0..2000000{let p=job.advance(grant).unwrap();assert!(p.work-work<=grant as u64);work=p.work;if p.done{done=true;break;}}assert!(done);let expected:Vec<u8>=serde_json::from_value(row["expected"].clone()).unwrap();assert_eq!(job.result().unwrap().pixels,expected,"{} grant {grant}",row["name"]);}}
@@ -96,4 +117,21 @@ fn painted_scenes_forward_partial_source_decode_progress(){
  loop{let p=job.advance(1).unwrap();if let Some(image)=p.decoding{if phases.last()!=Some(&image.phase){phases.push(image.phase);}if image.phase=="png"&&image.pixels>0&&image.pixels<image.total_pixels{partial=true;assert!(job.result().is_err());}}if p.done{break;}}
  let expected:Vec<String>=serde_json::from_value(row["expectedDecodePhases"].clone()).unwrap();assert_eq!(phases,expected);assert!(partial);
  eprintln!("[DEBUG] Native scene observers received all source and partial PNG phases without partial image publication");
+}
+
+#[test]
+fn painted_scene_actual_compositor_retirement_before_completion(){
+ let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧹️compositing/🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+ for row in rows.as_array().unwrap(){for grant in [1,7,4096]{
+  let source=cases.as_array().unwrap().iter().find(|v|v["name"]==row["source"]).unwrap();let mut job=RasterSceneJob::new(input(&source["input"])).unwrap();let mut moved=None;let mut closing=0;let mut terminal=false;let mut done=false;
+  for _ in 0..2000000{
+   if job.phase=="compositingCleanup"{assert!(job.compositor.is_none());assert!(job.result().is_err());let pointer=job.output.as_ref().unwrap().pixels.as_ptr();if let Some(previous)=moved{assert_eq!(pointer,previous);}else{moved=Some(pointer);}
+    let child=job.compositor_retirement.as_ref().unwrap();if child.terminal_is_empty(){terminal=true;}else{closing+=1;}
+   }
+   let p=job.advance(if grant==1{1}else{grant}).unwrap();if p.done{done=true;break;}
+  }
+  assert!(done);if grant==1{assert!(terminal);assert!(closing>=6);}assert!(job.compositor_retirement.is_none());assert!(job.compositor.is_none());let output=job.into_result().unwrap();if let Some(pointer)=moved{assert_eq!(output.pixels.as_ptr(),pointer);}let expected:Vec<u8>=serde_json::from_value(source["expected"].clone()).unwrap();assert_eq!(output.pixels,expected);
+  eprintln!("[DEBUG] Actual native scene compositor handoff {}: grant={grant} closing={closing} terminal_empty=true moved_pixel_pointer=true",row["source"]);
+ }}
 }

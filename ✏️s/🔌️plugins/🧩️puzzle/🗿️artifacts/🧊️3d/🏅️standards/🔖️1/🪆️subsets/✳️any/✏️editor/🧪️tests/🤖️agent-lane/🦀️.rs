@@ -1,4 +1,4 @@
-//! 🤖️ The puzzle 3d editor's own tool-command job (`puzzle.3d.fixture.tool-command.v1`) on the agent lane: what the semio MCP gateway's
+//! 🤖️ The puzzle 3d editor's own tool-command job (`puzzle.3d.scene.v1.tool-command.v1`) on the agent lane: what the semio MCP gateway's
 //! `action_prepare` previews for the verbs its coverage battery reaches on a puzzle 3d document.
 
 use super::*;

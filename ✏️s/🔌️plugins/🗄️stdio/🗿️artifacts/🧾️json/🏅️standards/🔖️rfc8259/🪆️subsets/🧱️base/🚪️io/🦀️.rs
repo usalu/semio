@@ -2,7 +2,7 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_rfc8259::subsets::base::schema::JsonAnalyzer;
+    use crate::standards::v_rfc8259::subsets::base::io::JsonAnalyzer;
     use crate::JsonSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -53,9 +53,9 @@ pub use derived_composition::*;
 /// type (`&'static [&'static ComposerEntry]` vs this module's `&'static [ComposerEntry]`); a bare
 /// `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
-    use crate::standards::v_rfc8259::subsets::base::schema::JsonComposer as JsonRawAnyComposer;
-    use crate::standards::v_rfc8259::subsets::i_json::schema::JsonIJsonComposer;
-    use crate::standards::v_rfc8259::subsets::geojson::schema::JsonGeoJsonComposer;
+    use crate::standards::v_rfc8259::subsets::base::io::JsonComposer as JsonRawAnyComposer;
+    use crate::standards::v_rfc8259::subsets::i_json::io::JsonIJsonComposer;
+    use crate::standards::v_rfc8259::subsets::geojson::io::JsonGeoJsonComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -67,3 +67,132 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{JsonDiff, JsonMutation, JsonSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.json` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct JsonBuilderConstruction {
+        snapshot: JsonSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for JsonBuilderConstruction {
+        type Snapshot = JsonSnapshot;
+        type Mutation = JsonMutation;
+        type Diff = JsonDiff;
+        fn empty() -> Self {
+            Self { snapshot: JsonSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<JsonSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::schema::mutations::apply_json_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::JsonSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.json` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct JsonParts {
+        pub snapshot: Option<JsonSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.json` (rfc8259/✳️any) sources.
+    pub struct JsonAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for JsonAnalyzerAnalysis {
+        type Parts = JsonParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Text(text) => if <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text).is_ok() { IoConfidence::High } else { IoConfidence::Low },
+                AnalyzeSource::Binary(bytes) => if <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes).is_ok() { IoConfidence::High } else { IoConfidence::Low },
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = JsonParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+
+    //#region 🧪️Tests
+    #[cfg(test)]
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    //#endregion 🧪️Tests
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec JsonBuilderFacets {
+        construction: JsonBuilderConstruction,
+        analysis: JsonAnalyzerAnalysis,
+        composition: crate::standards::v_rfc8259::subsets::base::io::derived_composition::JsonComposerComposition,
+    }
+    builder: JsonBuilder,
+    analyzer: JsonAnalyzer,
+    composer: JsonComposer,
+);

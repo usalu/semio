@@ -23,6 +23,21 @@
       "outputs": [
         "{projectRoot}/dist/pending-host-close-check"
       ]
+    },
+    "test-descriptor-contract": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test descriptor-contract"
+      },
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/🛂️descriptor/**/*",
+        "{projectRoot}/../🧬️schema/📜️.wit",
+        "{projectRoot}/📜️script.ts"
+      ],
+      "outputs": []
     }
   }
 }

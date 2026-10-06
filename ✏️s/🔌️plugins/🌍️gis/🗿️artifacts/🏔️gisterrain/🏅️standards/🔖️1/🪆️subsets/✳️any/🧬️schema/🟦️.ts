@@ -3,7 +3,8 @@ import { parseSchemaRecord } from "../../../../../../../../../../🧰️framewor
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
-import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseImportedMap,type ImportedMap} from "./🗺️imported-map/🟦️.ts";
 export {parseImportedMap} from "./🗺️imported-map/🟦️.ts";
 export type {ImportedMap,ImportedFeature} from "./🗺️imported-map/🟦️.ts";
@@ -16,7 +17,7 @@ export interface GisTerrainArtifact {
 /** 🪪️ Parses the document boundary independently of window or OS settings. */
 export function parseGisTerrainArtifact(value: unknown, at = "$"): GisTerrainArtifact {
   const row = parseSchemaRecord(value, ["exaggeration", "importedMap", "mesh"], at);
-  const exaggeration = parseBinary64Transport(row.exaggeration);
+  const exaggeration = parseBinary64(row.exaggeration);
   const document: GisTerrainArtifact = { exaggeration };
   if(row.importedMap!==undefined)document.importedMap=parseImportedMap(row.importedMap);
   if (row.mesh != null) document.mesh = parseArtifactChild(row.mesh);

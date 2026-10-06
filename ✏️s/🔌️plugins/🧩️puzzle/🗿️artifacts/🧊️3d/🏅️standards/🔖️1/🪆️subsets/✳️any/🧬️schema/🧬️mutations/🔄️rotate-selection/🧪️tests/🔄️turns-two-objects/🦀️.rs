@@ -1,4 +1,4 @@
-//! 🧪️ `rotate-selection` fixture — `🔄️turns-two-objects`.
+//! 🧪️ `rotate-selection` scene_snapshot — `🔄️turns-two-objects`.
 //!
 //! A quarter turn about +z: `object-a` turns from the identity and `object-b`, which carries no orientation, gains one; neither origin moves, and `attraction-1`, which touches both, is re-derived from the turned poses (`mutation.cascade`).
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "rotate-selection/turns-two-objects: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

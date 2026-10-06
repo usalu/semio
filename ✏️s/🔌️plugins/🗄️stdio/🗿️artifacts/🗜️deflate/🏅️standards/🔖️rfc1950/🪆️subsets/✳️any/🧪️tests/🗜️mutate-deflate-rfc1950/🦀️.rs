@@ -20,7 +20,7 @@ const IDENTITY_INPUT: &str = "shared://🪶️readme-level1.zz";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns its bytes.
 fn mutable_input(ctx: &Context, uri: &str, name: &str) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(uri, Some(name))?;
+    let copy = ctx.copy_input(uri, Some(name))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

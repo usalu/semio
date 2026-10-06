@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

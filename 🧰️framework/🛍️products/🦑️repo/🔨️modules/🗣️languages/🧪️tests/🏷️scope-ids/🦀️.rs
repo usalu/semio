@@ -37,7 +37,7 @@ fn scope_id_grammar(_ctx: &Context) -> Result<Outcome, String> {
 fn scopes_of_a_source_file(ctx: &Context) -> Result<Outcome, String> {
     let mut entries = Vec::new();
     for name in SOURCES {
-        let bytes = ctx.fixture_bytes(&format!("shared://{name}"))?;
+        let bytes = ctx.input_bytes(&format!("shared://{name}"))?;
         let content = String::from_utf8(bytes).map_err(|e| e.to_string())?;
         let scopes = build_scopes_for_file(name, &content);
         entries.push((

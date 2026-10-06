@@ -147,7 +147,7 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
         return Ok(flow_drag_tool_emit(child_id, NODE_GRAPH_EDIT_VERB, authoring_seed, &content, leaves, &drags));
     }
-    Ok(flow_content_leaves_emit(child_id, &leaves))
+    Ok(flow_content_leaves_emit(child_id, leaves))
 }
 //#endregion 🔖️SharedDispatch
 

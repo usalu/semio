@@ -109,7 +109,7 @@ fn inspector_patch_refuses_a_locked_node_yet_the_lock_row_still_answers() {
     let allowed = dispatch(&mut app, "patchInspectorNodes", Some(&json!({ "ids": [id.clone()], "field": "x", "value": 999.0 })), None).expect("patch an unlocked node");
     assert!(notices(&allowed).is_empty(), "an unlocked patch raises no refusal: {:?}", allowed.requested_effects);
     let patched = fixture_of(&app);
-    let node = fixture_nodes(&patched).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id.as_str())).expect("the patched node").clone();
+    let node = board_snapshot_nodes(&patched).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id.as_str())).expect("the patched node").clone();
     assert_eq!(node.get("x").and_then(Value::as_f64), Some(999.0), "an unlocked patch commits its edit: {node}");
     close_app(&mut app);
 }
@@ -117,7 +117,7 @@ fn inspector_patch_refuses_a_locked_node_yet_the_lock_row_still_answers() {
 /// 🔐️ The predicate itself: nodes, their handles, edges and target regions all answer the same lock.
 #[test]
 fn the_lock_predicate_answers_for_every_entity_kind() {
-    let fixture = json!({
+    let snapshot = json!({
         "nodes": [
             { "id": "free", "x": 0.0, "y": 0.0, "handles": [{ "id": "free:link", "angle": 0.0 }] },
             { "id": "bound", "x": 0.0, "y": 0.0, "locked": true, "handles": [] },
@@ -126,10 +126,10 @@ fn the_lock_predicate_answers_for_every_entity_kind() {
         "edges": [{ "id": "wire", "source": "free:link", "target": "host:link", "locked": true }],
         "targetRegions": [{ "id": "zone", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0, "locked": true }]
     });
-    assert!(!puzzle2d_addresses_locked_entity(&fixture, &[]), "an empty address list locks nothing");
-    assert!(!puzzle2d_addresses_locked_entity(&fixture, &["free".into(), "free:link".into()]), "unlocked ids are not refused");
+    assert!(!puzzle2d_addresses_locked_entity(&snapshot, &[]), "an empty address list locks nothing");
+    assert!(!puzzle2d_addresses_locked_entity(&snapshot, &["free".into(), "free:link".into()]), "unlocked ids are not refused");
     for locked in ["bound", "host:link", "wire", "zone"] {
-        assert!(puzzle2d_addresses_locked_entity(&fixture, &[locked.to_string()]), "{locked} must answer the lock");
+        assert!(puzzle2d_addresses_locked_entity(&snapshot, &[locked.to_string()]), "{locked} must answer the lock");
     }
-    assert!(puzzle2d_addresses_locked_entity(&fixture, &["free".into(), "zone".into()]), "one locked entity refuses the whole gesture");
+    assert!(puzzle2d_addresses_locked_entity(&snapshot, &["free".into(), "zone".into()]), "one locked entity refuses the whole gesture");
 }

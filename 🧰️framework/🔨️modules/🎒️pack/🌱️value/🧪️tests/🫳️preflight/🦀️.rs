@@ -73,3 +73,120 @@ fn law(pack:bool){
 fn record_borrowed_preflight_text_exact_full_owners_and_cancellation(){law(false)}
 #[test]
 fn record_borrowed_preflight_pack_exact_compression_spill_and_cumulative_ownership(){law(true)}
+
+type TableRow=(String,Option<bool>,Option<i64>,Option<u64>,Option<f64>,Option<u32>,Vec<String>);
+struct TableStatements{rows:Vec<TableRow>,statements:Vec<(String,String)>}
+static TABLE_ROW:[F;7]=[F::new(0,"text",H::Text),F::new(1,"flag",H::Bool),F::new(2,"signed",H::Int),F::new(3,"unsigned",H::UInt),F::new(4,"real",H::Float),F::new(5,"kind",H::Enum(&[("keep",0),("erase",1)])),F::new(6,"nested",H::List(text))];
+fn table_row_spec()->S{S{keyword:None,layout:RecordLayout::Inline,fields:&TABLE_ROW}}
+static STATEMENT_PAYLOAD:[F;1]=[F::new(0,"value",H::Text)];
+fn append_spec()->S{S{keyword:Some("append"),layout:RecordLayout::Inline,fields:&STATEMENT_PAYLOAD}}
+fn remove_spec()->S{S{keyword:Some("remove"),layout:RecordLayout::Inline,fields:&STATEMENT_PAYLOAD}}
+static TABLE_STATEMENTS:[F;2]=[F::new(0,"rows",H::Table(table_row_spec)),F::new(1,"commands",H::Statements(&[("append",append_spec),("remove",remove_spec),("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",remove_spec)]))];
+fn table_statements_spec()->S{S{keyword:None,layout:RecordLayout::Inline,fields:&TABLE_STATEMENTS}}
+fn table_row_ordinary()->RecordSpec{use semio_framework_dsl_record::{FieldSpec,Shape};RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"text",Shape::Text),FieldSpec::new(1,"flag",Shape::Bool),FieldSpec::new(2,"signed",Shape::Int),FieldSpec::new(3,"unsigned",Shape::UInt),FieldSpec::new(4,"real",Shape::Float),FieldSpec::new(5,"kind",Shape::Enum(vec![("keep".into(),0),("erase".into(),1)])),FieldSpec::new(6,"nested",Shape::List(Box::new(Shape::Text)))])}
+fn statement_ordinary()->RecordSpec{RecordSpec::new(None,RecordLayout::Inline,vec![semio_framework_dsl_record::FieldSpec::new(0,"value",semio_framework_dsl_record::Shape::Text)])}
+impl DslField for TableStatements{
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,ValueError>{
+  use semio_framework_dsl_record::native_encoding::FieldProjectionView as V;
+  let absent=||V::Absent;match path{
+   []=>Ok(V::Record(&[0,1])),[0]=>Ok(V::List(self.rows.len())),[1]=>Ok(V::Statements(self.statements.len())),
+   [0,row]if *row<self.rows.len()=>Ok(V::Record(&[0,1,2,3,4,5,6])),
+   [0,row,column]if *row<self.rows.len()=>{let row=&self.rows[*row];Ok(match column{0=>V::Text(&row.0),1=>row.1.map(V::Bool).unwrap_or_else(absent),2=>row.2.map(V::Int).unwrap_or_else(absent),3=>row.3.map(V::UInt).unwrap_or_else(absent),4=>row.4.map(V::Float).unwrap_or_else(absent),5=>row.5.map(V::Enum).unwrap_or_else(absent),6=>V::List(row.6.len()),_=>return Err(semio_framework_dsl_record::native_encoding::projection_path_error())})},
+   [0,row,6,index]if *row<self.rows.len()&&*index<self.rows[*row].6.len()=>Ok(V::Text(&self.rows[*row].6[*index])),
+   [1,index]if *index<self.statements.len()=>Ok(V::Record(&[0])),
+   [1,index,0]if *index<self.statements.len()=>Ok(V::Text(&self.statements[*index].1)),
+   _=>Err(semio_framework_dsl_record::native_encoding::projection_path_error())
+  }
+ }
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path==[1]{self.statements.get(index).map(|row|row.0.as_str()).ok_or_else(semio_framework_dsl_record::native_encoding::projection_path_error)}else{Err(semio_framework_dsl_record::native_encoding::projection_path_error())}}
+ fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Record(semio_framework_dsl_record::RecordSpecProducer{ordinary:table_statements_ordinary,encoding:|_|Err(ValueError::new(K::UnsupportedOwner,"oracle metadata is ordinary only")),decoding:|_|Err(ValueError::new(K::UnsupportedOwner,"oracle metadata is ordinary only"))})}
+ fn to_value(&self)->FieldValue{use semio_framework_dsl_record::RecordValue;let mut root=RecordValue::default();let rows=self.rows.iter().map(|row|{let mut record=RecordValue::default();record.fields.insert(0,FieldValue::Text(row.0.clone()));record.fields.insert(1,row.1.map(FieldValue::Bool).unwrap_or(FieldValue::Absent));record.fields.insert(2,row.2.map(FieldValue::Int).unwrap_or(FieldValue::Absent));record.fields.insert(3,row.3.map(FieldValue::UInt).unwrap_or(FieldValue::Absent));record.fields.insert(4,row.4.map(FieldValue::Float).unwrap_or(FieldValue::Absent));record.fields.insert(5,row.5.map(FieldValue::Enum).unwrap_or(FieldValue::Absent));record.fields.insert(6,FieldValue::List(row.6.iter().cloned().map(FieldValue::Text).collect()));FieldValue::Record(record)}).collect();root.fields.insert(0,FieldValue::List(rows));root.fields.insert(1,FieldValue::Statements(self.statements.iter().map(|(key,value)|{let mut record=RecordValue::default();record.fields.insert(0,FieldValue::Text(value.clone()));(key.clone(),record)}).collect()));FieldValue::Record(root)}
+ fn from_value(_: &FieldValue)->Result<Self,String>{Err("oracle owner is immutable".into())}
+}
+fn table_statements_ordinary()->RecordSpec{
+ use semio_framework_dsl_record::{FieldSpec,Shape,RecordSpecProducer};
+ let row=RecordSpecProducer{ordinary:table_row_ordinary,encoding:|_|Err(ValueError::new(K::UnsupportedOwner,"oracle metadata is ordinary only")),decoding:|_|Err(ValueError::new(K::UnsupportedOwner,"oracle metadata is ordinary only"))};
+ let statement=RecordSpecProducer{ordinary:statement_ordinary,encoding:|_|Err(ValueError::new(K::UnsupportedOwner,"oracle metadata is ordinary only")),decoding:|_|Err(ValueError::new(K::UnsupportedOwner,"oracle metadata is ordinary only"))};
+ RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"rows",Shape::Table(row)),FieldSpec::new(1,"commands",Shape::Statements(vec![("append".into(),statement),("remove".into(),statement),("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk".into(),statement)]))])
+}
+fn table_statements_fixture()->TableStatements{
+ let fixture=fixture();let recipe=&fixture["tableStatements"];let sparse=recipe["sparseOrdinals"].as_array().unwrap();let count=recipe["rowCount"].as_u64().unwrap()as usize;let text=recipe["longText"]["prefix"].as_str().unwrap().repeat(recipe["longText"]["repeat"].as_u64().unwrap()as usize);
+ let rows=(0..count).map(|index|{let present=!sparse.iter().any(|value|value.as_u64().unwrap()as usize==index);(if index==0{text.clone()}else{format!("row.雪.{index}")},present.then_some(index%2==0),present.then_some(if index%2==0{i64::MIN}else{i64::MAX}),present.then_some(u64::MAX-index as u64),present.then_some(if index%2==0{-0.0}else{index as f64}),present.then_some(index as u32%2),vec![String::new(),format!("nested.{index}")])}).collect();
+ let statements=recipe["keywords"].as_array().unwrap().iter().zip(recipe["statementPayloads"].as_array().unwrap()).map(|(key,value)|(key.as_str().unwrap().into(),value.as_str().unwrap().into())).collect();
+ TableStatements{rows,statements}
+}
+#[test]
+fn record_borrowed_preflight_pack_table_and_statements_exact_ordinary_wire(){
+ let source=table_statements_fixture();let count=source.rows.len();let(spec,record)=owned(&source);let bytes=encode_document(&spec,&record,&EncodeOptions::default()).unwrap();
+ let script=concat!(include_str!("🔮️pack/🟦️.ts"),"\nconst actual=readBareClosedRecordPack(new Uint8Array(await Bun.stdin.arrayBuffer()));await Bun.write(Bun.stdout,JSON.stringify(actual));");
+ use std::{io::Write,process::{Command,Stdio}};let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let actual:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();assert_eq!(actual["0"]["tableRows"].as_array().unwrap().len(),count);
+ for(index,row)in source.rows.iter().enumerate(){let actual=&actual["0"]["tableRows"][index];assert_eq!(actual["0"],row.0);assert_eq!(actual["1"],row.1.map(serde_json::Value::Bool).unwrap_or(serde_json::Value::Null));assert_eq!(actual["2"],row.2.map(|value|serde_json::Value::String(value.to_string())).unwrap_or(serde_json::Value::Null));assert_eq!(actual["3"],row.3.map(|value|serde_json::Value::String(value.to_string())).unwrap_or(serde_json::Value::Null));assert_eq!(actual["4"],row.4.map(|value|serde_json::json!({"bits":format!("{:016x}",value.to_bits())})).unwrap_or(serde_json::Value::Null));assert_eq!(actual["5"],row.5.map(serde_json::Value::from).unwrap_or(serde_json::Value::Null));assert_eq!(actual["6"],serde_json::json!(row.6));}
+ for(index,(key,value))in source.statements.iter().enumerate(){assert_eq!(actual["1"]["statements"][index]["keyword"],*key);assert_eq!(actual["1"]["statements"][index]["record"]["0"],*value);}
+ parity(&source,&table_statements_spec(),true,false);eprintln!("[DEBUG] immutable sparse table bitmaps and forced statement symbols match ordinary Pack exactly");
+}
+
+#[derive(Debug,PartialEq,DslRecord)]
+struct NestedOwner{payload:CsvField}
+#[derive(Debug,PartialEq,DslRecord)]
+struct PackedSigned{values:Vec<i64>}
+static NESTED:[F;1]=[F::new(0,"payload",H::Record(csv_field))];
+fn nested_spec()->S{S{keyword:None,layout:RecordLayout::Inline,fields:&NESTED}}
+fn signed()->H{H::Int}
+static SIGNED:[F;1]=[F::new(0,"values",H::List(signed))];
+fn signed_spec()->S{S{keyword:None,layout:RecordLayout::Inline,fields:&SIGNED}}
+fn independent_pack(bytes:&[u8])->serde_json::Value{
+ use std::{io::Write,process::{Command,Stdio}};
+ let script=concat!(include_str!("🔮️pack/🟦️.ts"),"\nconst actual=readBareClosedRecordPack(new Uint8Array(await Bun.stdin.arrayBuffer()));await Bun.write(Bun.stdout,JSON.stringify(actual));");
+ let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));serde_json::from_slice(&output.stdout).unwrap()
+}
+fn logical_depth<T:DslField>(source:&T,spec:&S,maximum:u16){
+ let(ordinary,record)=owned(source);let mut options=EncodeOptions::default();options.limits.max_depth=maximum;let bytes=encode_document(&ordinary,&record,&options).unwrap();independent_pack(&bytes);
+ let mut allow=|_|true;let mut control=NativeEncodeControl::new(0,&mut allow);let(actual,requests,releases)=crate::test_allocation::observe_backing(||measure_document_borrowed(source,spec,&options,&mut control));assert_eq!(actual.unwrap(),bytes.len());assert_eq!((requests,releases,control.owned_bytes()),(0,0,0));
+ options.limits.max_depth=maximum-1;assert!(encode_document(&ordinary,&record,&options).is_err());let mut control=NativeEncodeControl::new(0,&mut allow);let((kind,diagnostic),requests,releases)=crate::test_allocation::observe_backing(||{let refusal=measure_document_borrowed(source,spec,&options,&mut control).expect_err("one-short logical wire depth refuses");(refusal.kind,refusal.message.capacity())});assert_eq!(kind,K::DepthLimit);assert_eq!(requests,releases);assert_eq!(requests,diagnostic);assert_eq!(control.owned_bytes(),0);assert_eq!(source.to_value(),FieldValue::Record(record));
+}
+#[test]
+fn record_borrowed_preflight_pack_nested_record_logical_depth(){
+ let corpus=fixture();let recipe=&corpus["logicalDepth"];let source=NestedOwner{payload:CsvField{value:recipe["nestedText"].as_str().unwrap().into(),quoted:true}};logical_depth(&source,&nested_spec(),recipe["nestedRecord"].as_u64().unwrap()as u16);eprintln!("[DEBUG] nested Record has its ordinary bare frame at logical level two");
+}
+#[test]
+fn record_borrowed_preflight_pack_packed_numeric_logical_depth(){
+ let corpus=fixture();let recipe=&corpus["logicalDepth"];let source=PackedSigned{values:recipe["signedWords"].as_array().unwrap().iter().map(|word|word.as_str().unwrap().parse().unwrap()).collect()};logical_depth(&source,&signed_spec(),recipe["packedSignedList"].as_u64().unwrap()as u16);let(spec,record)=owned(&source);assert_eq!(independent_pack(&encode_document(&spec,&record,&EncodeOptions::default()).unwrap())["0"],recipe["signedWords"]);eprintln!("[DEBUG] mandatory packed numeric List stays at its ordinary logical value level");
+}
+#[test]
+fn record_borrowed_preflight_pack_table_statements_logical_depth(){
+ let source=table_statements_fixture();let corpus=fixture();logical_depth(&source,&table_statements_spec(),corpus["logicalDepth"]["tableStatements"].as_u64().unwrap()as u16);eprintln!("[DEBUG] table fallback and bare statement frames retain the ordinary logical depth");
+}
+fn reference_row_spec()->S{S{keyword:None,layout:RecordLayout::Inline,fields:&REFERENCE_ROW}}
+static REFERENCE_ROW:[F;7]=[F::new(0,"text",H::Ref("document")),F::new(1,"flag",H::Bool),F::new(2,"signed",H::Int),F::new(3,"unsigned",H::UInt),F::new(4,"real",H::Float),F::new(5,"kind",H::Enum(&[("keep",0),("erase",1)])),F::new(6,"nested",H::List(text))];
+static REFERENCE_ROOT:[F;2]=[F::new(0,"rows",H::Table(reference_row_spec)),TABLE_STATEMENTS[1]];
+fn reference_row_ordinary()->RecordSpec{let mut spec=table_row_ordinary();spec.fields[0].shape=semio_framework_dsl_record::Shape::Ref("document");spec}
+#[test]
+fn record_borrowed_preflight_pack_long_forced_reference_column(){
+ use semio_framework_dsl_record::{Shape,RecordSpecProducer};let source=table_statements_fixture();let(mut ordinary,record)=owned(&source);let borrowed=S{keyword:None,layout:RecordLayout::Inline,fields:&REFERENCE_ROOT};ordinary.fields[0].shape=Shape::Table(RecordSpecProducer{ordinary:reference_row_ordinary,encoding:|_|Err(ValueError::new(K::UnsupportedOwner,"ordinary reference oracle metadata")),decoding:|_|Err(ValueError::new(K::UnsupportedOwner,"ordinary reference oracle metadata"))});let bytes=encode_document(&ordinary,&record,&EncodeOptions::default()).expect("single long Ref table cell requires a forced symbol");assert_eq!(independent_pack(&bytes)["0"]["tableRows"][0]["0"],source.rows[0].0);let mut allow=|_|true;let mut control=NativeEncodeControl::new(0,&mut allow);assert_eq!(super::borrowed_preflight::borrowed_schema_hash(borrowed,&mut control).unwrap(),super::schema_hash(&ordinary));let(actual,requests,releases)=crate::test_allocation::observe_backing(||measure_document_borrowed(&source,&borrowed,&EncodeOptions::default(),&mut control));assert_eq!(actual.unwrap(),bytes.len());assert_eq!((requests,releases,control.owned_bytes()),(0,0,0));eprintln!("[DEBUG] independent Node DEFLATE readback preserves a single forced Ref larger than 128 bytes");
+}
+
+#[derive(Debug,PartialEq,DslRecord)]
+struct AbsentOwner{value:Option<String>}
+static ABSENT:[F;1]=[F::new(0,"value",H::Text)];
+#[test]
+fn record_borrowed_preflight_pack_absent_root_has_no_wire_child_depth(){
+ let source=AbsentOwner{value:None};let(spec,record)=owned(&source);let corpus=fixture();let mut options=EncodeOptions::default();options.limits.max_depth=corpus["logicalDepth"]["rootAbsent"].as_u64().unwrap()as u16;let bytes=encode_document(&spec,&record,&options).unwrap();assert_eq!(independent_pack(&bytes),serde_json::json!({}));let borrowed=S{keyword:None,layout:RecordLayout::Inline,fields:&ABSENT};let mut allow=|_|true;let mut control=NativeEncodeControl::new(0,&mut allow);let(actual,requests,releases)=crate::test_allocation::observe_backing(||measure_document_borrowed(&source,&borrowed,&options,&mut control));assert_eq!(actual.unwrap(),bytes.len());assert_eq!((requests,releases,control.owned_bytes()),(0,0,0));assert_eq!(source.to_value(),FieldValue::Record(record));eprintln!("[DEBUG] omitted absent root fields have no wire child or caller depth debit");
+}
+
+struct SpatialOwner{coordinate:[f64;3],direction:[f64;3]}
+static SPATIAL:[F;2]=[F::new(0,"coordinate",H::Coord(3)),F::new(1,"direction",H::Dir)];
+fn spatial_spec()->S{S{keyword:None,layout:RecordLayout::Inline,fields:&SPATIAL}}
+fn spatial_ordinary()->RecordSpec{use semio_framework_dsl_record::{FieldSpec,Shape};RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"coordinate",Shape::Coord(3)),FieldSpec::new(1,"direction",Shape::Dir)])}
+impl DslField for SpatialOwner{
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,ValueError>{use semio_framework_dsl_record::native_encoding::FieldProjectionView as V;match path{[]=>Ok(V::Record(&[0,1])),[0]|[1]=>Ok(V::Tuple(3)),[0,index]if *index<3=>Ok(V::Float(self.coordinate[*index])),[1,index]if *index<3=>Ok(V::Float(self.direction[*index])),_=>Err(semio_framework_dsl_record::native_encoding::projection_path_error())}}
+ fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Record(semio_framework_dsl_record::RecordSpecProducer{ordinary:spatial_ordinary,encoding:|_|Err(ValueError::new(K::UnsupportedOwner,"ordinary oracle shape")),decoding:|_|Err(ValueError::new(K::UnsupportedOwner,"ordinary oracle shape"))})}
+ fn to_value(&self)->FieldValue{let mut value=semio_framework_dsl_record::RecordValue::default();value.fields.insert(0,FieldValue::Tuple(self.coordinate.into_iter().map(FieldValue::Float).collect()));value.fields.insert(1,FieldValue::Tuple(self.direction.into_iter().map(FieldValue::Float).collect()));FieldValue::Record(value)}
+ fn from_value(_: &FieldValue)->Result<Self,String>{Err("immutable oracle source".into())}
+}
+#[test]
+fn record_borrowed_preflight_pack_authored_coord_and_direction_exact_original_words(){
+ let corpus=fixture();let recipe=&corpus["spatial"];let words=|key:&str|->[f64;3]{recipe[key]["words"].as_array().unwrap().iter().map(|word|f64::from_bits(u64::from_str_radix(word.as_str().unwrap(),16).unwrap())).collect::<Vec<_>>().try_into().unwrap()};
+ let source=SpatialOwner{coordinate:words("coordinate"),direction:words("direction")};let(spec,record)=owned(&source);let bytes=encode_document(&spec,&record,&EncodeOptions::default()).unwrap();let readback=independent_pack(&bytes);
+ for(id,key)in[("0","coordinate"),("1","direction")]{let expected=serde_json::Value::Array(recipe[key]["words"].as_array().unwrap().iter().map(|word|serde_json::json!({"bits":word.as_str().unwrap()})).collect());assert_eq!(readback[id],expected);}
+ parity(&source,&spatial_spec(),true,false);eprintln!("[DEBUG] canonical borrowed Coord and Dir retain exact ordinary packed-f64 words with zero scratch");
+}

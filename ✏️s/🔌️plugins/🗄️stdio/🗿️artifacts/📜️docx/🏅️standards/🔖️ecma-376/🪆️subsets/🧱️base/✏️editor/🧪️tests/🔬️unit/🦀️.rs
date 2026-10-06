@@ -30,7 +30,7 @@ async fn create_docx_editor_builds_a_definition_for_the_editor_role() {
 }
 
 #[test]
-fn initial_document_matches_the_neutral_empty_paragraph_fixture_and_renders_one_target() {
+fn initial_document_matches_the_neutral_empty_paragraph_snapshot_and_renders_one_target() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌱️initial-document/🔣️.json")).unwrap();
     let snapshot = <DocxEditor as ArtifactEditor>::initial_snapshot();
     let targets = crate::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
@@ -289,7 +289,7 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     let generation = store.generation_now();
     let root = store.snapshot_root();
     let mut cancelled = store
-        .begin_apply_batch(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "docx-retained-opc-cancel".into(), vec![mutation.clone()], None, store::HistoryLane::Document, Some(&factory), None)
+        .begin_apply_batch(semio_framework_job::OperationId(1), generation, store.content_revision_now(), "docx-retained-opc-cancel".into(), vec![mutation.clone()], store::HistoryLane::Document, Some(&factory), None)
         .expect("large retained DOCX cancellation candidate admits");
     let mut progressed = false;
     for _ in 0..maximum_turns {
@@ -323,7 +323,6 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
             store.content_revision_now(),
             "docx-retained-opc-publish".into(),
             vec![mutation],
-            Some("Edit retained DOCX text".into()),
             store::HistoryLane::Document,
             Some(&factory),
             None,

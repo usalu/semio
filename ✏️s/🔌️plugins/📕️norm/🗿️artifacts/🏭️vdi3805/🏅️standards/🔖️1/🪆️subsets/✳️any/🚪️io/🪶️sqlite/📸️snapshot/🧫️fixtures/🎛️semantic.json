@@ -1,0 +1,49 @@
+{
+  "schemaBytes": 10809,
+  "tableWidths": {
+    "vdi3805_accessory": 6,
+    "vdi3805_building_system": 5,
+    "vdi3805_catalogue": 2,
+    "vdi3805_catalogue_extension": 4,
+    "vdi3805_component": 5,
+    "vdi3805_configuration": 5,
+    "vdi3805_connection": 27,
+    "vdi3805_curve": 4,
+    "vdi3805_curve_point": 9,
+    "vdi3805_curve_unit": 9,
+    "vdi3805_document": 4,
+    "vdi3805_edition": 4,
+    "vdi3805_file": 7,
+    "vdi3805_file_extension": 4,
+    "vdi3805_function_ref": 4,
+    "vdi3805_generic": 2,
+    "vdi3805_generic_entry": 6,
+    "vdi3805_geometry": 22,
+    "vdi3805_geometry_parameter": 6,
+    "vdi3805_heat_generator": 12,
+    "vdi3805_index_entry": 6,
+    "vdi3805_index_tag": 4,
+    "vdi3805_limits": 6,
+    "vdi3805_product": 8,
+    "vdi3805_product_extension": 4,
+    "vdi3805_pump": 17,
+    "vdi3805_radiator": 18,
+    "vdi3805_record": 4,
+    "vdi3805_record_extension": 4,
+    "vdi3805_record_field": 4,
+    "vdi3805_title": 5,
+    "vdi3805_valve": 14
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 62,
+      "valueBytes": 2965
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 5,
+      "valueBytes": 163
+    }
+  ]
+}

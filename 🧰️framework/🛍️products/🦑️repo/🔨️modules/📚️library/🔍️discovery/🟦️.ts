@@ -998,16 +998,11 @@ export interface Taxonomy {
   readonly schemaChildDirs: readonly string[];
   /** 📝️ Representation nodes under schema snapshot/diff/mutations. */
   readonly representationDirs: readonly string[];
+  /** 🧬️ Required native wire representations; storage representations remain optional. */
+  readonly nativeRepresentationDirs: readonly string[];
   /** 🚪️ Top-level dirs under `🚪️io/`: import and export. */
   readonly ioDirectionDirs: readonly string[];
-  /**
-   * 🚪️ The NATIVE-codec facet dirs legal directly below `🚪️io/` (unsplit, both directions at once —
-   * see the ⚠️ CORRECTION in design.md §1: `import`/`export` express direction, which exists only for
-   * FOREIGN dialects, never for the single bidirectional native codec). Each member carries
-   * `representationDirs` (`📝️text`/`💾️binary`) leaves and is itself declared in `semanticCollections` as
-   * `"🚪️io/<member>"` with an io direction (`transport` for the bidirectional ones, `export` for
-   * `💡️inferences` since inferences are derived-only, never imported).
-   */
+  /** 🚪️ Semantic codec facets below each native I/O representation; member collections are declared at `🚪️io/<representation>/<facet>`. */
   readonly ioSemanticCollectionDirNames: readonly string[];
   /** 🚪️ Direction to codec folder (import→deserializers, export→serializers). */
   readonly ioDirectionChildDirs: Readonly<Record<string, string>>;
@@ -3038,7 +3033,8 @@ function validateSchemaScopeVocabulary(taxonomy: Taxonomy): string[] {
  * member is a module whatever emoji its name starts with, and without it the repository test platform
  * (`🔨️modules/🧪️test`, which owns the test-protocol contract every host reads) would be classified as a
  * collection of its own examples. A collection never owns a contract scope — and, since WP2c, a schema
- * document inside one is a `schema-fixture-defines-schema` finding unless its case declares `inertSchemaData`.
+ * contract facet inside one is always a `schema-fixture-defines-schema` finding. A case may declare
+ * ordinary schema-shaped parser input as `inertSchemaData`, which never authorizes a contract facet.
  */
 export function schemaScopeCollectionPath(path: string, taxonomy: Taxonomy = loadTaxonomy(), matcher: TaxonomyPathMatcher = createTaxonomyPathMatcher()): boolean {
   const levels = taxonomy.schemaScopeOwnerLevels;
@@ -3050,6 +3046,12 @@ export function schemaScopeCollectionPath(path: string, taxonomy: Taxonomy = loa
     if (roots.some((pattern) => matcher.matches(prefix, pattern))) return true;
   }
   return false;
+}
+
+/** 🧱️ A contract facet below a collection boundary cannot become inert example data. */
+export function schemaCollectionContractPath(path: string, taxonomy: Taxonomy = loadTaxonomy(), matcher: TaxonomyPathMatcher = createTaxonomyPathMatcher()): boolean {
+  const segments = path.split("/");
+  return segments.some((segment, index) => (segment === taxonomy.schemaScopeOwnerLevels.facetDirName || segment === "🛂️schema") && schemaScopeCollectionPath(segments.slice(0, index).join("/"), taxonomy, matcher));
 }
 
 /** 🚫️ Owner shapes that can never carry a schema module, regardless of the level patterns. */
@@ -3235,6 +3237,38 @@ function schemaFormatDeclaresExport(formatId: string, source: string, exportId: 
   return new RegExp(`\\bparse${name}\\b`, "u").test(source) || new RegExp(`\\bexport\\b(?:\\s+type)?\\s*\\{[^}]*\\b${name}\\b[^}]*\\}`, "u").test(source);
 }
 
+/** 🧫️ Recognizes test corpus contracts from their examples and expectations independently of titles. */
+function schemaTestCorpusDefinition(exportId: string, subject: unknown, document: Record<string, unknown>): boolean {
+  const producedRecord = /(?:Report|Result|Progress|Outcome|Diagnostic|Coverage)(?:V\d+)?$/u.test(exportId);
+  const namedCorpus = /(?:Fixture|Corpus|Cases)/u.test(exportId);
+  const visited = [new Set<unknown>(), new Set<unknown>()];
+  const inspect = (value: unknown, testCases = false): boolean => {
+    const seen = visited[Number(testCases)]!;
+    if (!value || typeof value !== "object" || seen.has(value)) return false;
+    seen.add(value);
+    if (Array.isArray(value)) return value.some((child) => inspect(child, testCases));
+    const node = value as Record<string, unknown>;
+    const reference = typeof node.$ref === "string" ? node.$ref.match(/^#\/(\$defs|definitions)\/([^/]+)$/u) : null;
+    if (reference && inspect((document[reference[1]!] as Record<string, unknown> | undefined)?.[reference[2]!], testCases)) return true;
+    const properties = node.properties && typeof node.properties === "object" ? node.properties as Record<string, unknown> : {};
+    const expectations = Object.keys(properties).filter((key) => /^(?:expect$|expected(?:$|[A-Z]))/u.test(key));
+    if (!producedRecord && expectations.length && (testCases || namedCorpus || ["grants", "hostile", "hostiles", "sourceFixture"].some((key) => Object.hasOwn(properties, key)))) return true;
+    if (!producedRecord && testCases && ["accepted", "valid"].some((key) => Object.hasOwn(properties, key))) return true;
+    const marker = properties.schema && typeof properties.schema === "object" ? (properties.schema as Record<string, unknown>).const : undefined;
+    if (typeof marker === "string" && /(?:fixture|corpus|test[-.]cases)/iu.test(marker)) return true;
+    const fixedProperties = Object.entries(properties).filter(([, child]) => child && typeof child === "object" && Object.hasOwn(child, "const"));
+    const fixedTrials = fixedProperties.some(([key, child]) => /(?:Grants|Frontiers|Cuts|budgetCases|zeroGrants)$/u.test(key) && Array.isArray((child as Record<string, unknown>).const));
+    if (fixedTrials && fixedProperties.some(([key]) => /(?:Survives|Allocations|Readable|Mutates|Unchanged|RequiresTerminal|AfterClose|BeforeFinalReader)/u.test(key))) return true;
+    if (Object.entries(properties).some(([key, child]) => {
+      const examples = child && typeof child === "object" ? (child as Record<string, unknown>).const : undefined;
+      return Array.isArray(examples) && (["cases", "vectors", "scenarios", "laws"].includes(key) || examples.some((example) => example && typeof example === "object" && Object.keys(example).some((field) => /^(?:expect$|expected(?:$|[A-Z]))/u.test(field))));
+    })) return true;
+    if (Object.entries(properties).some(([key, child]) => inspect(child, testCases || /(?:^|[A-Z])(?:cases|vectors|scenarios)$/iu.test(key)))) return true;
+    return Object.entries(node).some(([key, child]) => !["properties", "$defs", "definitions"].includes(key) && inspect(child, testCases));
+  };
+  return inspect(subject);
+}
+
 function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, diagnostics: SchemaScopeDiagnostic[]): SchemaScopeDocument | null {
   let parsed: Record<string, unknown>;
   try {
@@ -3271,7 +3305,9 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
   };
   const rootExport = typeof parsed[resolution.rootExportKeyword] === "string" ? String(parsed[resolution.rootExportKeyword]) : null;
   const rootIsObject = parsed.type === "object" || (parsed.type === undefined && typeof parsed.properties === "object" && parsed.properties !== null);
-  if (rootExport && rootIsObject) {
+  const rootIsCorpus = schemaTestCorpusDefinition(rootExport ?? "", parsed, parsed);
+  if (rootIsCorpus) diagnostics.push({ code: "schema-fixture-defines-schema", path, detail: `${rootExport ?? "The document root"} defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas.` });
+  if (rootExport && rootIsObject && !rootIsCorpus) {
     if (exportPattern.test(rootExport)) {
       exports.push(rootExport);
       restriction(parsed, rootExport);
@@ -3281,7 +3317,8 @@ function readSchemaDocument(repoRoot: string, path: string, taxonomy: Taxonomy, 
   const defRows = defs && typeof defs === "object" && !Array.isArray(defs) ? (defs as Record<string, unknown>) : {};
   const defKeys = Object.keys(defRows);
   for (const key of defKeys) {
-    if (!exportPattern.test(key)) diagnostics.push({ code: "schema-export-id-invalid", path, detail: `${resolution.exportsKeyword} key ${JSON.stringify(key)} is not a PascalCase export id.` });
+    if (schemaTestCorpusDefinition(key, defRows[key], parsed)) diagnostics.push({ code: "schema-fixture-defines-schema", path, detail: `${key} defines a test corpus contract. Examples use actual domain contracts and cannot own separate schemas.` });
+    else if (!exportPattern.test(key)) diagnostics.push({ code: "schema-export-id-invalid", path, detail: `${resolution.exportsKeyword} key ${JSON.stringify(key)} is not a PascalCase export id.` });
     else if (!exports.includes(key)) {
       exports.push(key);
       restriction(defRows[key], key);
@@ -3346,7 +3383,7 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
   const formatLeaves = Object.entries(taxonomy.schemaFormats).map(([formatId, format]) => [formatId, canonicalPrimaryFilenameForKind(format.fileKindId, taxonomy)] as const);
   const ownerPaths = modulePaths.map((modulePath) => schemaScopeModuleOwnerPath(modulePath, taxonomy, matcher));
   const nestedOwners = new Set(ownerPaths);
-  const facetChainDirs = new Set([...taxonomy.schemaChildDirs, ...taxonomy.representationDirs]);
+  const facetChainDirs = new Set(taxonomy.schemaChildDirs);
   const ownedByNestedScope = (path: string, modulePath: string): boolean => {
     const segments = path.slice(modulePath.length + 1).split("/");
     for (let index = 1; index < segments.length; index += 1) if (nestedOwners.has(`${modulePath}/${segments.slice(0, index).join("/")}`)) return true;
@@ -3362,6 +3399,7 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
   const descriptorLeafName = canonicalPrimaryFilenameForKind(taxonomy.mutationDescriptorFileKindId, taxonomy);
   const inertDeclarations = new Map<string, ReadonlySet<string>>();
   const inertSchemaData = (path: string): boolean => {
+    if (schemaCollectionContractPath(path, taxonomy, matcher)) return false;
     const segments = path.split("/");
     for (let index = segments.length - 1; index > 0; index -= 1) {
       const caseFile = `${segments.slice(0, index).join("/")}/${descriptorLeafName}`;
@@ -3385,11 +3423,9 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
   const modules: SchemaScopeModule[] = [];
   const rootScopePaths = new Map<string, readonly string[] | null>();
   const rootDocuments = new Map<string, SchemaScopeDocument>();
-  const collectionModules: string[] = [];
   for (const [index, modulePath] of modulePaths.entries()) {
     const ownerPath = ownerPaths[index]!;
     if (schemaScopeCollectionPath(modulePath, taxonomy, matcher)) {
-      collectionModules.push(modulePath);
       continue;
     }
     const level = schemaScopeOwnerLevel(ownerPath, taxonomy, matcher);
@@ -3428,11 +3464,18 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     }
     modules.push({ modulePath, ownerPath, level, facetKindId, scopeId: rootScopeId, formats, documents, hashes });
   }
-  for (const modulePath of collectionModules) {
-    for (const path of filesUnder(modulePath)) {
-      if (path.slice(path.lastIndexOf("/") + 1) !== normativeJsonLeaf || inertSchemaData(path)) continue;
-      diagnostics.push({ code: "schema-fixture-defines-schema", path, detail: `${modulePath} lies inside a test or fixture collection, which holds example data and never a contract. Move the contract into its owner's ${facetDir} module, or declare this file in the enclosing case's ${descriptorLeafName} under ${taxonomy.schemaScopeOwnerLevels.inertSchemaDataKeyword}.` });
+  for (const path of sortedFiles) {
+    if (!schemaScopeCollectionPath(path, taxonomy, matcher)) continue;
+    if (!schemaCollectionContractPath(path, taxonomy, matcher)) {
+      if (!path.endsWith(".json") || inertSchemaData(path)) continue;
+      try {
+        const document = JSON.parse(readFileSync(join(root, path), "utf8")) as { $schema?: unknown } | null;
+        if (!document || typeof document.$schema !== "string" || !/^https?:\/\/json-schema\.org\//u.test(document.$schema)) continue;
+      } catch {
+        continue;
+      }
     }
+    diagnostics.push({ code: "schema-fixture-defines-schema", path, detail: `${path} defines a contract facet inside examples. Move the contract into its domain owner's ${facetDir} module; inert parser inputs must be ordinary named data files outside contract facets.` });
   }
   const declaredSemanticKind = (leafOwnerPath: string): string | null => {
     try {
@@ -3795,14 +3838,14 @@ function artifactFacetChildLevel(parents: readonly string[], taxonomy: Taxonomy)
   const c = parents[3];
   if (parents.length === 1) {
     if (root === "🧬️schema") return { kind: "fixed", dirs: taxonomy.schemaChildDirs ?? [] };
-    if (root === "🚪️io") return { kind: "fixed", dirs: [...(taxonomy.ioDirectionDirs ?? []), ...(taxonomy.ioSemanticCollectionDirNames ?? [])] };
+    if (root === "🚪️io") return { kind: "fixed", dirs: [...(taxonomy.ioDirectionDirs ?? []), ...(taxonomy.representationDirs ?? [])] };
     return { kind: "none" };
   }
   if (root === "🧬️schema") {
     if (parents.length === 2 && (taxonomy.schemaChildDirs ?? []).includes(a!)) {
       if (a === "🧬️mutations") return { kind: "fixed", dirs: ["*"] };
       if (a === "💡️inferences") return { kind: "fixed", dirs: ["*"] };
-      return { kind: "fixed", dirs: taxonomy.representationDirs ?? [] };
+      return { kind: "none" };
     }
     if (parents.length === 3 && a === "🧬️mutations") {
       if ((taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
@@ -3816,8 +3859,9 @@ function artifactFacetChildLevel(parents: readonly string[], taxonomy: Taxonomy)
   if (root === "🚪️io") {
     const directions = taxonomy.ioDirectionDirs ?? [];
     const childMap = taxonomy.ioDirectionChildDirs ?? {};
-    if (parents.length === 2 && (taxonomy.ioSemanticCollectionDirNames ?? []).includes(a!)) return { kind: "fixed", dirs: taxonomy.representationDirs ?? [] };
-    if (parents.length === 3 && (taxonomy.ioSemanticCollectionDirNames ?? []).includes(a!) && (taxonomy.representationDirs ?? []).includes(b!)) return { kind: "none" };
+    if (parents.length === 2 && (taxonomy.representationDirs ?? []).includes(a!)) return { kind: "fixed", dirs: taxonomy.ioSemanticCollectionDirNames ?? [] };
+    if (parents.length === 3 && (taxonomy.representationDirs ?? []).includes(a!) && (taxonomy.ioSemanticCollectionDirNames ?? []).includes(b!)) return { kind: b === "🧬️mutations" || b === "💡️inferences" ? "wildcard" : "none" };
+    if (parents.length === 4 && (taxonomy.representationDirs ?? []).includes(a!) && (b === "🧬️mutations" || b === "💡️inferences")) return { kind: "none" };
     if (parents.length === 2 && directions.includes(a!)) {
       const child = childMap[a!];
       return child ? { kind: "fixed", dirs: [child] } : { kind: "none" };
@@ -3846,11 +3890,12 @@ export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonom
   if (!root || !taxonomy.artifactComponentDirs.includes(root)) return false;
   const parents: string[] = [root];
   for (const segment of rest) {
-    if (parents.length === 2 && parents[0] === "🧬️schema" && (parents[1] === "💡️inferences" || parents[1] === "🧬️mutations") && (taxonomy.representationDirs ?? []).includes(segment)) return false;
+    if ((parents[0] === "🧬️schema" || parents[0] === "🚪️io" && parents.length >= 3) && (taxonomy.representationDirs ?? []).includes(segment)) return false;
     const level = artifactFacetChildLevel(parents, taxonomy);
     if (level.kind === "none") return false;
-    const directMutationOwner = parents.length === 2 && parents[0] === "🧬️schema" && parents[1] === "🧬️mutations";
-    const wildcardAccepted = directMutationOwner ? mutationDirectoryNameIsValid(segment, taxonomy) : isEmojiPrefixedSlugDir(segment, taxonomy);
+    const directMutationOwner = parents.length === 2 && parents[0] === "🧬️schema" && parents[1] === "🧬️mutations" || parents.length === 3 && parents[0] === "🚪️io" && parents[2] === "🧬️mutations";
+    const directInferenceOwner = parents.length === 2 && parents[0] === "🧬️schema" && parents[1] === "💡️inferences" || parents.length === 3 && parents[0] === "🚪️io" && parents[2] === "💡️inferences";
+    const wildcardAccepted = directMutationOwner ? mutationDirectoryNameIsValid(segment, taxonomy) : directInferenceOwner ? semanticDirectoryKindId(segment, taxonomy, { parentKindId: "inferences" }) !== null : parents.at(-1) === taxonomy.artifactsDirName ? semanticDirectoryKindId(segment, taxonomy, { parentKindId: "artifacts" }) !== null : isEmojiPrefixedSlugDir(segment, taxonomy);
     if (level.kind === "wildcard") {
       if (!wildcardAccepted) return false;
     } else {
@@ -5147,6 +5192,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     ...taxonomy.rootDataDirNames, ...taxonomy.schemaChildDirs, ...taxonomy.representationDirs, ...taxonomy.ioDirectionDirs,
     ...taxonomy.ioSemanticCollectionDirNames, ...Object.values(taxonomy.ioDirectionChildDirs), ...taxonomy.mutationBehaviorFacetDirs, ...taxonomy.mutationOrganizationalFacetDirs,
   ];
+  if (!Array.isArray(taxonomy.nativeRepresentationDirs) || taxonomy.nativeRepresentationDirs.length === 0 || new Set(taxonomy.nativeRepresentationDirs).size !== taxonomy.nativeRepresentationDirs.length || taxonomy.nativeRepresentationDirs.some(directory => !taxonomy.representationDirs.includes(directory))) problems.push("nativeRepresentationDirs must be a non-empty unique subset of representationDirs.");
   for (const directory of new Set(directoryValues)) if (!semanticDirectoryKindId(directory, taxonomy)) problems.push(`Semantic directory ${JSON.stringify(directory)} is not uniquely registered.`);
   for (const dir of taxonomy.artifactComponentDirs) if (!taxonomy.artifactChildDirs.includes(dir)) problems.push(`artifactChildDirs must include ${JSON.stringify(dir)}.`);
   for (const dir of taxonomy.windowRequiredChildDirs) if (!taxonomy.windowChildDirs.includes(dir)) problems.push(`windowChildDirs must include ${JSON.stringify(dir)}.`);
@@ -5631,7 +5677,7 @@ function semanticPackageGenerationAuthority(repoRoot: string, packageId: Semanti
 }
 /** 🪪️ Rejects noncanonical, colliding or historical coordinates for the single current JCO package. */
 export function parseCurrentJcoPackageDestination(input: unknown): CurrentJcoPackageDestination {
-  const semanticOwnerRoot = "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe/👽️guest";
+  const semanticOwnerRoot = "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/👽️guest";
   const packageRoot = semanticOwnerRoot + "/📦️packages/🦀️rust";
   const expected: CurrentJcoPackageDestination = { kind: "jco-canonical-package-v1", packageId: "jcoprobe-guest", semanticOwnerRoot, packageRoot, cargoManifestPath: packageRoot + "/Cargo.toml", cargoLockPath: packageRoot + "/Cargo.lock", componentPath: semanticOwnerRoot + "/🧩️component/🦀️.rs", witPath: packageRoot + "/🧬️schema/📜️world.wit", adapterPath: packageRoot + "/📚️library/🦀️.rs" };
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Current JCO destination must be an object");

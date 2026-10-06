@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 #[semio_framework_async_macros::async_test]
 async fn apply_replaces_nodes_and_edges_wholesale() {
@@ -39,5 +39,5 @@ async fn empty_diff_prints_empty_string() {
 
 #[semio_framework_async_macros::async_test]
 async fn edge_id_helper_smoke() {
-    assert_eq!(crate::standards::v1::subsets::graph::schema::snapshot::dec_edge_id("").unwrap(), GraphEdgeId::new(""));
+    assert_eq!(crate::standards::v1::subsets::graph::io::text::snapshot::dec_edge_id("").unwrap(), GraphEdgeId::new(""));
 }

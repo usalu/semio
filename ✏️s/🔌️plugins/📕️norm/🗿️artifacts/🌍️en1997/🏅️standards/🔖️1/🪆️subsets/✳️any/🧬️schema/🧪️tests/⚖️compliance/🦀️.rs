@@ -7,7 +7,8 @@ use crate::standards::v1::subsets::any::schema::{
     check_project, part_1, part_2, parse_design_approach, resolve_params, DesignApproach,
 };
 use crate::standards::v1::subsets::any::schema::inferences::outline::En1997Outline;
-use crate::standards::v1::subsets::any::schema::snapshot::{compliant_demo, decode_en1997_dsl, noncompliant_demo};
+use crate::standards::v1::subsets::any::schema::snapshot::{compliant_demo, noncompliant_demo};
+use crate::standards::v1::subsets::any::io::text::snapshot::{decode_en1997_dsl};
 use crate::En1997Snapshot;
 use std::path::PathBuf;
 use std::process::Command;

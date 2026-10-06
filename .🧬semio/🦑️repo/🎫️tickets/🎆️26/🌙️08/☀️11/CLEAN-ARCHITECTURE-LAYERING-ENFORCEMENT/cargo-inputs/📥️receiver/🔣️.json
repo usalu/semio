@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "cases": [
+    {"id":"empty","source":"{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample.item\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[]}","accepted":true},
+    {"id":"dispatch","source":"{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample.item\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[{\"id\":\"move-node\",\"variant\":\"position\",\"outcomes\":[\"applied\",\"rejected\"]}]}","accepted":true},
+    {"id":"undeclared-field","source":"{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample.item\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[],\"undeclared\":true}","accepted":false},
+    {"id":"process-refusal","source":"{\"schema\":\"semio.repository-test.runtime-inventory/v2\",\"artifact\":\"sample.item\",\"standard\":\"1\",\"subset\":\"any\",\"bridgeVersion\":1,\"mutations\":[]}","accepted":false}
+  ]
+}

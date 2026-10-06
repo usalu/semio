@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "direct-import-interpolation",
+      "outputs": [
+        {
+          "macro": "quote",
+          "start": 32,
+          "end": 83,
+          "line": 2,
+          "origin": {
+            "provider": "quote",
+            "symbol": "quote",
+            "kind": "direct-import",
+            "importStart": 0,
+            "importEnd": 17
+          },
+          "inputs": [
+            {
+              "kind": "include_str",
+              "expression": "#dependency",
+              "start": 56,
+              "end": 81,
+              "line": 2
+            }
+          ]
+        }
+      ],
+      "refusal": null
+    },
+    {
+      "id": "direct-import-literal-is-generated",
+      "outputs": [
+        {
+          "macro": "quote",
+          "start": 32,
+          "end": 69,
+          "line": 2,
+          "origin": {
+            "provider": "quote",
+            "symbol": "quote",
+            "kind": "direct-import",
+            "importStart": 0,
+            "importEnd": 17
+          },
+          "inputs": [
+            {
+              "kind": "include_str",
+              "expression": "\"generated.txt\"",
+              "start": 39,
+              "end": 68,
+              "line": 2
+            }
+          ]
+        }
+      ],
+      "refusal": null
+    },
+    {
+      "id": "qualified-generator",
+      "outputs": [
+        {
+          "macro": "quote::quote",
+          "start": 14,
+          "end": 51,
+          "line": 1,
+          "origin": {
+            "provider": "quote",
+            "symbol": "quote",
+            "kind": "qualified"
+          },
+          "inputs": [
+            {
+              "kind": "include_bytes",
+              "expression": "#bytes",
+              "start": 28,
+              "end": 50,
+              "line": 1
+            }
+          ]
+        }
+      ],
+      "refusal": null
+    },
+    {
+      "id": "aliased-direct-import",
+      "outputs": [
+        {
+          "macro": "emit",
+          "start": 40,
+          "end": 64,
+          "line": 2,
+          "origin": {
+            "provider": "quote",
+            "symbol": "quote",
+            "kind": "direct-import",
+            "importStart": 0,
+            "importEnd": 25
+          },
+          "inputs": [
+            {
+              "kind": "include",
+              "expression": "#module",
+              "start": 46,
+              "end": 63,
+              "line": 2
+            }
+          ]
+        }
+      ],
+      "refusal": null
+    },
+    {
+      "id": "outside-authored-nested-function",
+      "outputs": [
+        {
+          "macro": "quote",
+          "start": 32,
+          "end": 65,
+          "line": 2,
+          "origin": {
+            "provider": "quote",
+            "symbol": "quote",
+            "kind": "direct-import",
+            "importStart": 0,
+            "importEnd": 17
+          },
+          "inputs": [
+            {
+              "kind": "include_str",
+              "expression": "#dependency",
+              "start": 39,
+              "end": 64,
+              "line": 2
+            }
+          ]
+        }
+      ],
+      "refusal": null
+    },
+    {
+      "id": "nested-quoted-output",
+      "outputs": [
+        {
+          "macro": "quote",
+          "start": 32,
+          "end": 142,
+          "line": 2,
+          "origin": {
+            "provider": "quote",
+            "symbol": "quote",
+            "kind": "direct-import",
+            "importStart": 0,
+            "importEnd": 17
+          },
+          "inputs": [
+            {
+              "kind": "include_str",
+              "expression": "#dependency",
+              "start": 74,
+              "end": 99,
+              "line": 2
+            },
+            {
+              "kind": "include_bytes",
+              "expression": "#data",
+              "start": 118,
+              "end": 139,
+              "line": 2
+            }
+          ]
+        }
+      ],
+      "refusal": null
+    },
+    {
+      "id": "repeated-quoted-output",
+      "outputs": [
+        {
+          "macro": "quote",
+          "start": 32,
+          "end": 102,
+          "line": 2,
+          "origin": {
+            "provider": "quote",
+            "symbol": "quote",
+            "kind": "direct-import",
+            "importStart": 0,
+            "importEnd": 17
+          },
+          "inputs": [
+            {
+              "kind": "include_str",
+              "expression": "#documents",
+              "start": 72,
+              "end": 96,
+              "line": 2
+            }
+          ]
+        }
+      ],
+      "refusal": null
+    },
+    {
+      "id": "unicode-span",
+      "outputs": [
+        {
+          "macro": "quote",
+          "start": 44,
+          "end": 77,
+          "line": 2,
+          "origin": {
+            "provider": "quote",
+            "symbol": "quote",
+            "kind": "direct-import",
+            "importStart": 0,
+            "importEnd": 17
+          },
+          "inputs": [
+            {
+              "kind": "include_str",
+              "expression": "#dependency",
+              "start": 51,
+              "end": 76,
+              "line": 2
+            }
+          ]
+        }
+      ],
+      "refusal": null
+    },
+    {
+      "id": "unresolved-name",
+      "outputs": [],
+      "refusal": "unresolved-generator-origin"
+    },
+    {
+      "id": "shadowed-root-macro",
+      "outputs": [],
+      "refusal": "unresolved-generator-origin"
+    },
+    {
+      "id": "shadowed-qualified-module",
+      "outputs": [],
+      "refusal": "unresolved-generator-origin"
+    },
+    {
+      "id": "aliased-shadow",
+      "outputs": [],
+      "refusal": "unresolved-generator-origin"
+    },
+    {
+      "id": "conditional-import",
+      "outputs": [],
+      "refusal": "unresolved-generator-origin"
+    },
+    {
+      "id": "glob-origin",
+      "outputs": [],
+      "refusal": "unresolved-generator-origin"
+    },
+    {
+      "id": "group-origin",
+      "outputs": [],
+      "refusal": "unresolved-generator-origin"
+    },
+    {
+      "id": "lexical-local-origin",
+      "outputs": [],
+      "refusal": "unresolved-generator-origin"
+    },
+    {
+      "id": "local-quote-macro-is-authored",
+      "outputs": [],
+      "refusal": null
+    }
+  ]
+}

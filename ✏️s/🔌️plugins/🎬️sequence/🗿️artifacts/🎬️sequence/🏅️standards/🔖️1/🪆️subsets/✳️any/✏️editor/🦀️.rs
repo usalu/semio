@@ -30,7 +30,7 @@ use imperative_engine::{compile_to_text as imperative_compile_to_text, imperativ
 use infinite_board_port_directed_dag as dag;
 use neural_engine::{ChannelSpec, ColdOwner, Dictionary, Registry, RegistryRetirement, SharedRegistry, Value as NeuralValue, ValueRetirement, ValueRetirementStep};
 use semio_framework_artifact_infinite_dag::{dag_host_snapshot_to_wire_literal, DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
-use semio_framework_plugin::app::ChildEmit;
+use semio_framework_plugin::app::{ChildEmit,ChildEmitPreparation};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
@@ -188,9 +188,9 @@ pub fn sequence_io() -> AppIo {
 /// 🧸️ Resolves the document's exact published content child through its captured member-store view.
 pub fn sequence_working_scene_from_children(snapshot: &SequenceSnapshot, children: &semio_framework_plugin::app::ChildContentView) -> Result<ColdOwner<SequenceWorkingScene>, Fault> {
     let child_id = &snapshot.content.child_id;
-    let dialect = children.dialect("content", child_id).ok_or_else(|| Fault::from("sequence-content-child-dialect-required"))?;
+    let dialect = children.dialect("content", child_id).ok_or_else(|| sequence_fault("sequence.content.dialect", "sequence-content-child-dialect-required"))?;
     if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
-        return Err(Fault::from("sequence-content-child-dialect-mismatch"));
+        return Err(sequence_fault("sequence.content.dialect", "sequence-content-child-dialect-mismatch"));
     }
     let content = children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
     let (steps, edges) = crate::working_from_sequence_content_snapshot(&content);
@@ -277,11 +277,11 @@ pub fn sequence_scene_leaves(base: &SequenceWorkingScene, next: &SequenceWorking
 }
 
 /// 🌊️ Publishes child intent `leaves` as ONE edit of the exact composed Flow content child; nothing is the empty emit.
-pub fn sequence_child_leaves_emit(snapshot: &SequenceSnapshot, leaves: &[SemioFlowMutation]) -> Emit<SequenceMutation, NoConfigMutation> {
+pub fn sequence_child_leaves_emit(snapshot: &SequenceSnapshot, leaves: Vec<SemioFlowMutation>) -> Emit<SequenceMutation, NoConfigMutation> {
     if leaves.is_empty() {
         return Emit::default();
     }
-    Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", &snapshot.content.child_id, leaves)], ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }
+    Emit { child_preparations: std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content", &snapshot.content.child_id, leaves)]), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }
 }
 
 /// 🧰️ The child intent leaves one editor host mutation yields against the captured typed child.
@@ -296,7 +296,7 @@ pub fn sequence_child_leaves_from_host_mutation(doc: &ArtifactView<'_, SequenceS
 
 /// 🧰️ Applies one editor host mutation to the captured typed child and publishes its intent leaves as ONE child edit.
 pub fn sequence_child_emit_from_host_mutation(doc: &ArtifactView<'_, SequenceSnapshot>, mutate: impl FnOnce(&mut SequenceHost)) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-    Ok(sequence_child_leaves_emit(doc.snapshot, &sequence_child_leaves_from_host_mutation(doc, mutate)?))
+    Ok(sequence_child_leaves_emit(doc.snapshot, sequence_child_leaves_from_host_mutation(doc, mutate)?))
 }
 //#endregion 🔖️ChildIntentLeaves
 
@@ -355,6 +355,44 @@ impl std::error::Error for SequenceCoreError {
             _ => None,
         }
     }
+}
+
+/// 🚧️ One named refusal of the sequence editor: `code` is a row of [`sequence_fault_notices`] (or a framework code), `detail`
+/// the English diagnostic the logs keep; the person reads the notice.
+pub(crate) fn sequence_fault(code: &'static str, detail: impl Into<String>) -> Fault {
+    Fault::new(semio_framework_plugin::FaultOrigin::App, code, detail)
+}
+
+/// 📢️ The app fault notices of the sequence editor (`code → {en, de}`): every refusal its retained steps, windows and
+/// commands raise through [`sequence_fault`].
+pub fn sequence_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::OnceLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::OnceLock::new();
+    NOTICES
+        .get_or_init(|| {
+            vec![
+                ("sequence.content.dialect", LocalizedLabel::native("The sequence's step graph is not a Semio flow graph.", "Der Schrittgraph der Sequenz ist kein Semio-Flussgraph.")),
+                ("sequence.content.unavailable", LocalizedLabel::native("The sequence's step graph is not loaded yet.", "Der Schrittgraph der Sequenz ist noch nicht geladen.")),
+                ("sequence.window.unavailable", LocalizedLabel::native("This action needs an open sequence window.", "Diese Aktion braucht ein geöffnetes Sequenzfenster.")),
+                ("sequence.editor.capacity", LocalizedLabel::native("This sequence is too large for this action.", "Diese Sequenz ist für diese Aktion zu groß.")),
+                ("sequence.run.capacity", LocalizedLabel::native("The run produced more than the editor can hold; reduce repeats or effects.", "Der Lauf hat mehr erzeugt, als der Editor fassen kann; Wiederholungen oder Effekte reduzieren.")),
+                ("sequence.run.step-missing", LocalizedLabel::native("The run reached a step that no longer exists.", "Der Lauf hat einen Schritt erreicht, der nicht mehr existiert.")),
+                ("sequence.resume.invalid", LocalizedLabel::native("The interrupted action could not be resumed; start it again.", "Die unterbrochene Aktion konnte nicht fortgesetzt werden; bitte erneut starten.")),
+                ("sequence.publication.lane", LocalizedLabel::native("This change could not be recorded in the sequence's step graph.", "Diese Änderung konnte nicht im Schrittgraph der Sequenz aufgezeichnet werden.")),
+                ("sequence.retained.artifact-command", LocalizedLabel::native("This edit does not fit the sequence editor's current step.", "Diese Bearbeitung passt nicht zum aktuellen Schritt des Sequenzeditors.")),
+                ("sequence.retained.config-command", LocalizedLabel::native("This view change does not fit the sequence editor's current step.", "Diese Ansichtsänderung passt nicht zum aktuellen Schritt des Sequenzeditors.")),
+                ("sequence.retained.example-command", LocalizedLabel::native("This example could not be loaded into the sequence editor.", "Dieses Beispiel konnte nicht in den Sequenzeditor geladen werden.")),
+                ("sequence.retained.close", LocalizedLabel::native("The sequence editor could not finish closing this action.", "Der Sequenzeditor konnte das Schließen dieser Aktion nicht abschließen.")),
+                ("sequence.node-graph.malformed", LocalizedLabel::native("The node graph edit is malformed.", "Die Knotengraph-Bearbeitung ist fehlerhaft.")),
+                ("sequence.node-graph.unsupported", LocalizedLabel::native("A sequence has no sliders and no variadic ports.", "Eine Sequenz hat keine Schieberegler und keine variadischen Anschlüsse.")),
+                ("sequence.import-media.missing", LocalizedLabel::native("Choose a media file to import.", "Eine Mediendatei zum Importieren auswählen.")),
+                ("sequence.import-media.undecoded", LocalizedLabel::native("The media could not be decoded for import.", "Das Medium konnte für den Import nicht dekodiert werden.")),
+                ("sequence.viewport.camera", LocalizedLabel::native("The viewport change needs a valid camera.", "Die Ansichtsänderung braucht eine gültige Kamera.")),
+                ("sequence.action.unhandled", LocalizedLabel::native("This action is not available in the sequence editor.", "Diese Aktion ist im Sequenzeditor nicht verfügbar.")),
+                ("sequence.example.unparsable", LocalizedLabel::native("The bundled sequence example could not be read.", "Das mitgelieferte Sequenzbeispiel konnte nicht gelesen werden.")),
+                ("sequence.child.projection", LocalizedLabel::native("The sequence document's step graph could not be restored.", "Der Schrittgraph des Sequenzdokuments konnte nicht wiederhergestellt werden.")),
+            ]
+        })
+        .as_slice()
 }
 
 //#endregion ⚠️ Errors
@@ -526,7 +564,7 @@ impl Default for SequenceHost {
 }
 
 impl SequenceHost {
-    /// 🌊️ Builds a live host directly from a plain snapshot (the WASM bridge's `loadFixtureJson`/
+    /// 🌊️ Builds a live host directly from a plain snapshot (the WASM bridge's `loadSnapshotJson`/
     /// `SequenceHost::load_json` entry point).
     pub fn from_host_snapshot(host_snapshot: SequenceHostSnapshot) -> Self {
         let next_serial = max_serial_in_snapshot(&host_snapshot).max(100);
@@ -1092,7 +1130,7 @@ fn sequence_retained_delete_ids(scene: &SequenceWorkingScene, roots: impl IntoIt
 
 fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &SequenceSnapshot, scene: &SequenceWorkingScene, interaction: &protocol::InteractionState) -> Result<(Emit<SequenceMutation, NoConfigMutation>, Option<Dictionary>), Fault> {
     if scene.steps.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || scene.edges.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-        return Err(Fault::from("sequence-retained-scene-capacity"));
+        return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-scene-capacity"));
     }
     let mut discarded_params = None;
     let mut target = scene.clone();
@@ -1109,7 +1147,7 @@ fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &Sequenc
         SequenceCommand::DeleteSelection(_) => {
             let selected = interaction.selection.get(SEQUENCE_INTERACTION_STEPS).map(|selection| selection.ids.clone()).unwrap_or_default();
             if selected.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-                return Err(Fault::from("sequence-retained-selection-capacity"));
+                return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-selection-capacity"));
             }
             sequence_retained_remove(&mut target, &sequence_retained_delete_ids(scene, selected));
         }
@@ -1143,13 +1181,13 @@ fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &Sequenc
                 target.edges.push(SequenceEdge { id: sequence_retained_next_id(scene, "edge"), from: payload.source_node_id.clone(), to: payload.target_node_id.clone() });
             }
         }
-        _ => return Err(Fault::from("sequence-retained-artifact-route-mismatch")),
+        _ => return Err(sequence_fault("app.command.tool-mismatch", "sequence-retained-artifact-route-mismatch")),
     }
     let leaves = sequence_scene_leaves(scene, &target);
     if leaves.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-        return Err(Fault::from("sequence-retained-artifact-output-capacity"));
+        return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-artifact-output-capacity"));
     }
-    Ok((sequence_child_leaves_emit(snapshot, &leaves), discarded_params))
+    Ok((sequence_child_leaves_emit(snapshot, leaves), discarded_params))
 }
 
 #[derive(Default)]
@@ -1167,7 +1205,7 @@ impl SequenceRetainedSceneOwner {
     }
 
     fn scene(&self) -> Result<&SequenceWorkingScene, Fault> {
-        self.scene.as_ref().ok_or_else(|| Fault::from("sequence-retained-scene-required"))
+        self.scene.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-retained-scene-required"))
     }
 
     fn release_one(&mut self, maximum_bytes: usize) -> SequencePersistentRelease {
@@ -1246,7 +1284,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.cursor >= SEQUENCE_RETAINED_MAXIMUM_UNITS || !sequence_retained_artifact_command_admitted(command) {
-            return Err(Fault::from("sequence-retained-artifact-envelope"));
+            return Err(sequence_fault("sequence.retained.artifact-command", "sequence-retained-artifact-envelope"));
         }
         self.cursor += 1;
         if let Some(target) = self.replay_target {
@@ -1260,7 +1298,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         if self.cursor == 1 {
             return Ok(ArtifactCommandWorkStep::Progress { stage: "sequence-artifact-prepare", preview: b"{\"en\":\"Preparing Sequence edit\",\"de\":\"Sequenzbearbeitung wird vorbereitet\"}" });
         }
-        let context = context.ok_or_else(|| Fault::from("sequence-content-child-context-required"))?;
+        let context = context.ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-content-child-context-required"))?;
         self.scene_owner.capture(snapshot, context.children.as_ref())?;
         let scene = self.scene_owner.scene()?;
         let (emit, discarded_params) = sequence_retained_artifact_emit(command, snapshot, scene, interaction)?;
@@ -1269,16 +1307,16 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         }
         let exact_child = emit.child_emits.first().is_none_or(|child| child.slot == "content" && child.child_id == snapshot.content.child_id);
         if !emit.config_mutations.is_empty() || !emit.draft_mutations.is_empty() || !emit.artifact_mutations.is_empty() || emit.child_emits.len() > 1 || !exact_child {
-            return Err(Fault::from("sequence-retained-artifact-publication-lane"));
+            return Err(sequence_fault("sequence.publication.lane", "sequence-retained-artifact-publication-lane"));
         }
-        sequence_bounded_child_emit_bytes(&emit.child_emits, SEQUENCE_STORE_MAXIMUM_BYTES).map_err(|_| Fault::from("sequence-retained-artifact-output-bytes"))?;
+        sequence_bounded_child_emit_bytes(&emit.child_emits, SEQUENCE_STORE_MAXIMUM_BYTES).map_err(|_| sequence_fault("sequence.editor.capacity", "sequence-retained-artifact-output-bytes"))?;
         self.completed = true;
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
 
     fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
         if target.len() < 24 {
-            return Err(Fault::from("sequence-retained-artifact-checkpoint-capacity"));
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-artifact-checkpoint-capacity"));
         }
         target[..24].fill(0);
         target[..4].copy_from_slice(b"SRA1");
@@ -1290,12 +1328,12 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != 24 || &checkpoint[..4] != b"SRA1" || checkpoint[4] > 1 || checkpoint[5..8] != [0, 0, 0] {
-            return Err(Fault::from("sequence-retained-artifact-checkpoint-invalid"));
+            return Err(sequence_fault("sequence.resume.invalid", "sequence-retained-artifact-checkpoint-invalid"));
         }
-        let cursor = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("sequence-retained-artifact-checkpoint-cursor"))?)).map_err(|_| Fault::from("sequence-retained-artifact-checkpoint-cursor"))?;
-        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("sequence-retained-artifact-checkpoint-identity"))?);
+        let cursor = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-retained-artifact-checkpoint-cursor"))?)).map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-retained-artifact-checkpoint-cursor"))?;
+        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-retained-artifact-checkpoint-identity"))?);
         if identity != self.workspace_identity || cursor > SEQUENCE_RETAINED_MAXIMUM_UNITS || !self.scene_owner.empty() {
-            return Err(Fault::from("sequence-retained-artifact-checkpoint-owner-mismatch"));
+            return Err(sequence_fault("sequence.resume.invalid", "sequence-retained-artifact-checkpoint-owner-mismatch"));
         }
         self.cursor = 0;
         self.replay_target = (cursor != 0).then_some(cursor);
@@ -1405,7 +1443,7 @@ impl SequenceReorganizeState {
         let node_count = scene.steps.len();
         let edge_count = scene.edges.len();
         if node_count > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || edge_count > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-            return Err(Fault::from("sequence-reorganize-capacity"));
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-reorganize-capacity"));
         }
         if self.initialized < node_count {
             self.depths.push(0);
@@ -1492,7 +1530,7 @@ impl SequenceNodeGraphState {
                 NodeDragEmit::Nothing => Emit::default(),
                 drag => Emit { ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Emit::node_drag_child::<SemioFlowSnapshot, _>(drag, "content", &snapshot.content.child_id) },
             },
-            None => sequence_child_leaves_emit(snapshot, &leaves),
+            None => sequence_child_leaves_emit(snapshot, leaves),
         }
     }
 
@@ -1500,17 +1538,17 @@ impl SequenceNodeGraphState {
         match self.stage {
             SequenceNodeGraphStage::Parse => {
                 let SequenceCommand::NodeGraphEdit(payload) = command else {
-                    return Err(Fault::from("sequence-node-graph-route"));
+                    return Err(sequence_fault("app.command.tool-mismatch", "sequence-node-graph-route"));
                 };
                 if payload.operations_json.len() > SEQUENCE_RETAINED_RAW_BYTES {
-                    return Err(Fault::from("sequence-node-graph-bytes"));
+                    return Err(sequence_fault("sequence.node-graph.malformed", "sequence-node-graph-bytes"));
                 }
                 let Ok(Value::Array(operations)) = json::parse(&payload.operations_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-                    return Err(Fault::from("sequence-node-graph-json"));
+                    return Err(sequence_fault("sequence.node-graph.malformed", "sequence-node-graph-json"));
                 };
                 self.operations = operations.iter().map(|row| node_graph_edit::sequence_node_graph_row(&json::to_dsl_value(row))).collect::<Result<_, _>>()?;
                 if self.operations.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-                    return Err(Fault::from("sequence-node-graph-items"));
+                    return Err(sequence_fault("sequence.node-graph.malformed", "sequence-node-graph-items"));
                 }
                 self.base = Some(scene.clone());
                 self.target = Some(scene.clone());
@@ -1519,7 +1557,7 @@ impl SequenceNodeGraphState {
             }
             SequenceNodeGraphStage::Apply if self.operation < self.operations.len() => {
                 let operation = &self.operations[self.operation];
-                let target = self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                let target = self.target.as_mut().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
                 match operation {
                     NodeGraphEditRow::Move(record) => {
                         let mut moved = false;
@@ -1542,14 +1580,14 @@ impl SequenceNodeGraphState {
                     NodeGraphEditRow::Disconnect { synapse_id } => target.edges.retain(|edge| &edge.id != synapse_id),
                     NodeGraphEditRow::Delete { node_ids, synapse_ids } => {
                         if node_ids.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-                            return Err(Fault::from("sequence-node-graph-delete-capacity"));
+                            return Err(sequence_fault("sequence.editor.capacity", "sequence-node-graph-delete-capacity"));
                         }
                         target.edges.retain(|edge| !synapse_ids.contains(&edge.id));
                         self.delete_frontier = node_ids.iter().cloned().collect();
                         self.stage = SequenceNodeGraphStage::DeleteDiscover;
                         return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-delete", b"{\"en\":\"Preparing bounded graph removal\",\"de\":\"Begrenzte Graphentfernung wird vorbereitet\"}"));
                     }
-                    NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => return Err(Fault::from("sequence-node-graph-row-unsupported")),
+                    NodeGraphEditRow::SetSlider { .. } | NodeGraphEditRow::InsertPort { .. } => return Err(sequence_fault("sequence.node-graph.unsupported", "sequence-node-graph-row-unsupported")),
                 }
                 self.operation += 1;
                 Ok(SequencePersistentAdvance::Progress("sequence-node-graph-operation", b"{\"en\":\"Applying graph operation\",\"de\":\"Graphoperation wird angewendet\"}"))
@@ -1568,7 +1606,7 @@ impl SequenceNodeGraphState {
                     self.delete_scan = 0;
                     return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection-apply", "{\"en\":\"Preparing selected graph removal\",\"de\":\"Ausgewählte Graphentfernung wird vorbereitet\"}".as_bytes()));
                 }
-                let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                let target = self.target.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
                 if self.delete_scan < target.steps.len() {
                     let step = &target.steps[self.delete_scan];
                     if step.slot.as_ref().is_some_and(|slot| self.delete_current.as_ref().is_some_and(|id| slot.owner == *id)) && !self.delete_discovered.contains(&step.id) && !self.delete_frontier.contains(&step.id) {
@@ -1583,7 +1621,7 @@ impl SequenceNodeGraphState {
             }
             SequenceNodeGraphStage::DeleteApply => {
                 if let Some(id) = self.delete_discovered.pop() {
-                    let target = self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                    let target = self.target.as_mut().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
                     if let Some(index) = target.steps.iter().position(|step| step.id == id) {
                         self.discarded_steps.push_back(target.steps.remove(index));
                     }
@@ -1599,11 +1637,11 @@ impl SequenceNodeGraphState {
                 self.advance(command, scene)
             }
             SequenceNodeGraphStage::Complete => {
-                let base = self.base.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-base"))?;
-                let target = self.target.as_ref().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
+                let base = self.base.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-base"))?;
+                let target = self.target.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-node-graph-target"))?;
                 let leaves = sequence_scene_leaves(base, target);
                 if leaves.len() > SEQUENCE_PERSISTENT_MAXIMUM_UNITS {
-                    return Err(Fault::from("sequence-node-graph-output-items"));
+                    return Err(sequence_fault("sequence.editor.capacity", "sequence-node-graph-output-items"));
                 }
                 Ok(SequencePersistentAdvance::Complete(leaves))
             }
@@ -1834,7 +1872,7 @@ fn sequence_run_scope_bool(scope: &Dictionary, key: &str) -> bool {
 impl SequenceRunState {
     fn advance(&mut self, scene: &SequenceWorkingScene) -> Result<SequencePersistentAdvance, Fault> {
         if scene.steps.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS || scene.edges.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-            return Err(Fault::from("sequence-run-scene-capacity"));
+            return Err(sequence_fault("sequence.run.capacity", "sequence-run-scene-capacity"));
         }
         if !self.initialized {
             let (registry, retirement) = SharedRegistry::new(imperative_module_registry());
@@ -1849,7 +1887,7 @@ impl SequenceRunState {
             let result = RunResult { scope: self.scope.clone(), effects: self.effects.clone() };
             let json = semio_framework_pack_json::to_json_string(&result);
             if json.len() > SEQUENCE_STORE_MAXIMUM_BYTES {
-                return Err(Fault::from("sequence-run-result-capacity"));
+                return Err(sequence_fault("sequence.run.capacity", "sequence-run-result-capacity"));
             }
             return Ok(SequencePersistentAdvance::CompleteRun(json));
         };
@@ -1861,7 +1899,7 @@ impl SequenceRunState {
             if let Some(key) = frame.while_key.as_ref() {
                 if sequence_run_scope_bool(&self.scope, key) {
                     if frame.while_iterations == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-                        return Err(Fault::from("sequence-run-while-capacity"));
+                        return Err(sequence_fault("sequence.run.capacity", "sequence-run-while-capacity"));
                     }
                     frame.cursor = 0;
                     frame.while_iterations += 1;
@@ -1880,7 +1918,7 @@ impl SequenceRunState {
         }
         let index = frame.order.ordered[frame.cursor];
         frame.cursor += 1;
-        let step = scene.steps.get(index).ok_or_else(|| Fault::from("sequence-run-step-index"))?;
+        let step = scene.steps.get(index).ok_or_else(|| sequence_fault("sequence.run.step-missing", "sequence-run-step-index"))?;
         match step.kind.as_str() {
             "control.if" => {
                 let key = sequence_run_string(&step.params.0, "key");
@@ -1888,7 +1926,7 @@ impl SequenceRunState {
                 let depth_fault = self.frames.len() >= 65;
                 let required_effects = if depth_fault { 2 } else { 1 };
                 if self.effects.len().saturating_add(required_effects) > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-                    return Err(Fault::from("sequence-run-effect-capacity"));
+                    return Err(sequence_fault("sequence.run.capacity", "sequence-run-effect-capacity"));
                 }
                 let input = self.scope.merge(&step.params.0);
                 self.effects.push(imperative_engine::EffectLogEntry {
@@ -1907,11 +1945,11 @@ impl SequenceRunState {
             "control.repeat" => {
                 let count = sequence_run_number(&step.params.0, "count");
                 if count > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-                    return Err(Fault::from("sequence-run-repeat-capacity"));
+                    return Err(sequence_fault("sequence.run.capacity", "sequence-run-repeat-capacity"));
                 }
                 if self.frames.len() >= 65 {
                     if self.effects.len() == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-                        return Err(Fault::from("sequence-run-effect-capacity"));
+                        return Err(sequence_fault("sequence.run.capacity", "sequence-run-effect-capacity"));
                     }
                     self.effects.push(imperative_engine::EffectLogEntry { step_id: String::new(), kind: "control.depth".into(), input: Dictionary::new(), output: None, error: Some("nesting depth exceeded 64".into()) });
                 } else if count != 0 {
@@ -1925,7 +1963,7 @@ impl SequenceRunState {
                 if sequence_run_scope_bool(&self.scope, &key) {
                     if self.frames.len() >= 65 {
                         if self.effects.len() == SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
-                            return Err(Fault::from("sequence-run-effect-capacity"));
+                            return Err(sequence_fault("sequence.run.capacity", "sequence-run-effect-capacity"));
                         }
                         self.effects.push(imperative_engine::EffectLogEntry { step_id: String::new(), kind: "control.depth".into(), input: Dictionary::new(), output: None, error: Some("nesting depth exceeded 64".into()) });
                     } else {
@@ -1934,7 +1972,7 @@ impl SequenceRunState {
                 }
             }
             _ => {
-                let registry = self.registry.as_ref().ok_or_else(|| Fault::from("sequence-run-registry"))?;
+                let registry = self.registry.as_ref().ok_or_else(|| sequence_fault("sequence.content.unavailable", "sequence-run-registry"))?;
                 let result = Executor::new(registry).run(&Path { steps: vec![Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.0.clone(), bodies: BTreeMap::new() }] }, &self.scope);
                 if self.effects.len().saturating_add(result.effects.len()) > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
                     self.retirement.push_dictionary(result.scope);
@@ -1942,7 +1980,7 @@ impl SequenceRunState {
                         self.retirement.push_dictionary(effect.input);
                         if let Some(output) = effect.output { self.retirement.push_dictionary(output); }
                     }
-                    return Err(Fault::from("sequence-run-effect-capacity"));
+                    return Err(sequence_fault("sequence.run.capacity", "sequence-run-effect-capacity"));
                 }
                 let halt_frame = result.effects.iter().any(|effect| effect.error.is_some());
                 replace_scope_cold(&mut self.scope, result.scope);
@@ -2096,9 +2134,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.progress >= SEQUENCE_PERSISTENT_MAXIMUM_UNITS || command.command_id() != self.tool_id {
-            return Err(Fault::from("sequence-persistent-progress-capacity"));
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-persistent-progress-capacity"));
         }
-        let context = context.ok_or_else(|| Fault::from("sequence-window-context-required"))?;
+        let context = context.ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-window-context-required"))?;
         let config = main::config::from_snapshot(context.window_config.as_ref());
         self.scene_owner.capture(snapshot, context.children.as_ref())?;
         let scene = self.scene_owner.scene()?;
@@ -2116,26 +2154,26 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             }
             SequencePersistentAdvance::Complete(leaves) => {
                 if self.replay_target.is_some() {
-                    return Err(Fault::from("sequence-persistent-replay-overrun"));
+                    return Err(sequence_fault("sequence.resume.invalid", "sequence-persistent-replay-overrun"));
                 }
                 let emit = match &mut self.workspace {
                     SequencePersistentWorkspace::NodeGraph(state) => state.publish(snapshot, leaves, &operation.authoring_seed),
-                    _ => sequence_child_leaves_emit(snapshot, &leaves),
+                    _ => sequence_child_leaves_emit(snapshot, leaves),
                 };
                 let exact_child = emit.child_emits.first().is_none_or(|child| child.slot == "content" && child.child_id == snapshot.content.child_id);
                 let exact_lane = emit.config_mutations.is_empty() && emit.draft_mutations.is_empty() && emit.artifact_mutations.is_empty() && emit.child_emits.len() <= 1 && exact_child;
                 if !exact_lane {
-                    return Err(Fault::from("sequence-persistent-publication-lane"));
+                    return Err(sequence_fault("sequence.publication.lane", "sequence-persistent-publication-lane"));
                 }
-                sequence_bounded_child_emit_bytes(&emit.child_emits, SEQUENCE_STORE_MAXIMUM_BYTES).map_err(|_| Fault::from("sequence-persistent-output-bytes"))?;
+                sequence_bounded_child_emit_bytes(&emit.child_emits, SEQUENCE_STORE_MAXIMUM_BYTES).map_err(|_| sequence_fault("sequence.editor.capacity", "sequence-persistent-output-bytes"))?;
                 self.completed = true;
                 Ok(ArtifactCommandWorkStep::Complete(emit))
             }
             SequencePersistentAdvance::CompleteRun(json) => {
                 if self.replay_target.is_some() || self.tool_id != "run" {
-                    return Err(Fault::from("sequence-run-replay-overrun"));
+                    return Err(sequence_fault("sequence.resume.invalid", "sequence-run-replay-overrun"));
                 }
-                let view = context.view_state.as_ref().ok_or_else(|| Fault::from("sequence-script-window-view-required"))?;
+                let view = context.view_state.as_ref().ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-script-window-view-required"))?;
                 let transient = SequenceScriptWindowTransient { last_run_json: json };
                 self.completed = true;
                 Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
@@ -2151,7 +2189,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     }
     fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
         if target.len() < 24 {
-            return Err(Fault::from("sequence-persistent-checkpoint-capacity"));
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-persistent-checkpoint-capacity"));
         }
         target[..24].fill(0);
         target[..4].copy_from_slice(b"SRP1");
@@ -2161,15 +2199,15 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != 24 || &checkpoint[..4] != b"SRP1" || checkpoint[4..8] != [0, 0, 0, 0] {
-            return Err(Fault::from("sequence-persistent-checkpoint-invalid"));
+            return Err(sequence_fault("sequence.resume.invalid", "sequence-persistent-checkpoint-invalid"));
         }
-        let progress = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("sequence-persistent-checkpoint-cursor"))?)).map_err(|_| Fault::from("sequence-persistent-checkpoint-cursor"))?;
-        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("sequence-persistent-checkpoint-identity"))?);
+        let progress = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-persistent-checkpoint-cursor"))?)).map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-persistent-checkpoint-cursor"))?;
+        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-persistent-checkpoint-identity"))?);
         if identity != self.workspace_identity || progress > SEQUENCE_PERSISTENT_MAXIMUM_UNITS {
-            return Err(Fault::from("sequence-persistent-checkpoint-owner"));
+            return Err(sequence_fault("sequence.resume.invalid", "sequence-persistent-checkpoint-owner"));
         }
         if !self.workspace.empty() || !self.scene_owner.empty() {
-            return Err(Fault::from("sequence-persistent-restore-live-workspace"));
+            return Err(sequence_fault("sequence.resume.invalid", "sequence-persistent-restore-live-workspace"));
         }
         self.progress = 0;
         self.replay_target = (progress != 0).then_some(progress);
@@ -2330,8 +2368,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         if self.cursor == 1 {
             return Ok(ArtifactCommandWorkStep::Progress { stage: "sequence-config-prepare", preview: b"{\"en\":\"Preparing Sequence setting\",\"de\":\"Sequenzeinstellung wird vorbereitet\"}" });
         }
-        let context = context.ok_or_else(|| Fault::from("sequence-window-context-required"))?;
-        let view = context.view_state.as_ref().ok_or_else(|| Fault::from("sequence-window-view-required"))?;
+        let context = context.ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-window-context-required"))?;
+        let view = context.view_state.as_ref().ok_or_else(|| sequence_fault("sequence.window.unavailable", "sequence-window-view-required"))?;
         let mut config = main::config::from_snapshot(context.window_config.as_ref());
         self.completed = true;
         match command {
@@ -2351,13 +2389,13 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
                     window_transient: vec![script::transient::addressed(view, SequenceScriptWindowTransient::default())?],
                 },
             }),
-            _ => Err(Fault::from("sequence-window-route-rejected")),
+            _ => Err(sequence_fault("app.command.tool-mismatch", "sequence-window-route-rejected")),
         }
     }
 
     fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
         if target.len() < 24 {
-            return Err(Fault::from("sequence-retained-checkpoint-capacity"));
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-checkpoint-capacity"));
         }
         target[..24].fill(0);
         target[..4].copy_from_slice(b"SRC1");
@@ -2369,12 +2407,12 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != 24 || &checkpoint[..4] != b"SRC1" || checkpoint[4] > 1 || checkpoint[5..8] != [0, 0, 0] {
-            return Err(Fault::from("sequence-retained-checkpoint-invalid"));
+            return Err(sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-invalid"));
         }
-        let cursor = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("sequence-retained-checkpoint-cursor"))?)).map_err(|_| Fault::from("sequence-retained-checkpoint-cursor"))?;
-        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("sequence-retained-checkpoint-identity"))?);
+        let cursor = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-cursor"))?)).map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-cursor"))?;
+        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-identity"))?);
         if identity != self.workspace_identity || cursor > SEQUENCE_RETAINED_MAXIMUM_UNITS {
-            return Err(Fault::from("sequence-retained-checkpoint-owner-mismatch"));
+            return Err(sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-owner-mismatch"));
         }
         self.cursor = 0;
         self.replay_target = (cursor != 0).then_some(cursor);
@@ -2550,13 +2588,13 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         self.completed = true;
         match command {
             SequenceCommand::SetActiveExample(payload) => set_active_example::emit(&payload.example_id).map(ArtifactCommandWorkStep::Complete),
-            _ => Err(Fault::from("sequence-example-route-rejected")),
+            _ => Err(sequence_fault("app.command.tool-mismatch", "sequence-example-route-rejected")),
         }
     }
 
     fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
         if target.len() < 24 {
-            return Err(Fault::from("sequence-retained-checkpoint-capacity"));
+            return Err(sequence_fault("sequence.editor.capacity", "sequence-retained-checkpoint-capacity"));
         }
         target[..24].fill(0);
         target[..4].copy_from_slice(b"SRE1");
@@ -2568,12 +2606,12 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
 
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.len() != 24 || &checkpoint[..4] != b"SRE1" || checkpoint[4] > 1 || checkpoint[5..8] != [0, 0, 0] {
-            return Err(Fault::from("sequence-retained-checkpoint-invalid"));
+            return Err(sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-invalid"));
         }
-        let cursor = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("sequence-retained-checkpoint-cursor"))?)).map_err(|_| Fault::from("sequence-retained-checkpoint-cursor"))?;
-        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("sequence-retained-checkpoint-identity"))?);
+        let cursor = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-cursor"))?)).map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-cursor"))?;
+        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-identity"))?);
         if identity != self.workspace_identity || cursor > SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS {
-            return Err(Fault::from("sequence-retained-checkpoint-owner-mismatch"));
+            return Err(sequence_fault("sequence.resume.invalid", "sequence-retained-checkpoint-owner-mismatch"));
         }
         self.cursor = 0;
         self.replay_target = (cursor != 0).then_some(cursor);
@@ -2790,7 +2828,7 @@ impl SequenceImportJob {
         let base = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
         live.steps.push(SequenceStep { id, kind: "computation.import".into(), params: self.params.take().expect("retained parameter binding completed"), x, y: 0.0, slot: None, collapsed: false });
         let next = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
-        self.emit = Some(sequence_child_leaves_emit(snapshot.as_ref(), &sequence_scene_leaves(&base, &next)));
+        self.emit = Some(sequence_child_leaves_emit(snapshot.as_ref(), sequence_scene_leaves(&base, &next)));
         self.children = None;
         self.decoded = true;
         None
@@ -2818,6 +2856,14 @@ impl semio_framework_job::InteractiveJob for SequenceImportJob {
             });
         }
         cx.set_stage("sequence-import-publish");
+        if let Some(emit)=self.emit.as_mut(){
+            let bytes=emit.next_child_preparation_byte_demand().max(1);
+            match emit.prepare_child_one(1,bytes){
+                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Ready)=>{},
+                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Pending)=>{cx.consume_fuel(1);return semio_framework_job::StepOutcome::Yield;},
+                Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault))|Err(fault)=>return sequence_job_fault(cx,&fault.message),
+            }
+        }
         if !self.completed {
             let Some(emit) = self.emit.take() else {
                 return sequence_job_fault(cx, "sequence import lost its decoded child publication");
@@ -2892,7 +2938,7 @@ impl semio_framework_plugin::ArtifactReservedJob for SequenceImportJob {
             return Ok(match step { ValueRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }, ValueRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }, ValueRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence parameter input retirement is blocked" } });
         }
         if let Some(close) = self.retirement.as_mut() {
-            let step = close.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.message))?;
+            let step = close.close_step(maximum_items, maximum_bytes).map_err(|error| sequence_fault("sequence.retained.close", error.message))?;
             if close.terminal_is_empty() { self.retirement = None; }
             return Ok(match step { store::SnapshotRetirementStep::Pending { released_items, released_bytes } => semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }, store::SnapshotRetirementStep::Complete => semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }, store::SnapshotRetirementStep::Blocked => semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence media source retirement is blocked" } });
         }
@@ -3046,7 +3092,12 @@ impl ArtifactEditor for SequencePlayApp {
     const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.child-projection"), error.to_string()))
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.child.projection"), error.to_string()))
+    }
+
+    /// 🔔️ The localized notices of the editor's own refusal codes (design §20.12).
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+        sequence_fault_notices()
     }
 
     /// 🌱️ The derivable `content` member — see `crate::genesis_sequence_child_pack`.
@@ -3135,10 +3186,10 @@ impl ArtifactEditor for SequencePlayApp {
             return Ok(None);
         }
         if !request.raw_wire.is_empty() {
-            return Err(Fault::from("sequence import-media admits a decoded media value, never a wire payload"));
+            return Err(sequence_fault("sequence.import-media.undecoded", "sequence import-media admits a decoded media value, never a wire payload"));
         }
         let semio_framework_plugin::ArtifactReservedToolInput::Media { port, media } = &request.input else {
-            return Err(Fault::from("sequence import-media requires media input"));
+            return Err(sequence_fault("sequence.import-media.missing", "sequence import-media requires media input"));
         };
         let (port, media) = (port.clone(), media.clone());
         Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(SequenceImportJob::new(request, port, media))))
@@ -3240,7 +3291,7 @@ impl ArtifactEditor for SequencePlayApp {
         let base = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
         live.steps.push(SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false });
         let next = ColdOwner::new(SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });
-        Ok(sequence_child_leaves_emit(doc.snapshot, &sequence_scene_leaves(&base, &next)))
+        Ok(sequence_child_leaves_emit(doc.snapshot, sequence_scene_leaves(&base, &next)))
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
@@ -3286,13 +3337,13 @@ impl ArtifactEditor for SequencePlayApp {
             "run" => Ok(SequenceCommand::Run(run_command::Run {})),
             "stop" => Ok(SequenceCommand::Stop(stop_command::Stop {})),
             "setViewport" => {
-                let value = args.and_then(|value| value.get("camera")).or_else(|| args.and_then(|value| value.get("viewport"))).cloned().ok_or_else(|| Fault::from("sequence setViewport requires a camera"))?;
-                Ok(SequenceCommand::SetViewport(set_viewport::SetViewport { camera: semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid sequence setViewport camera: {error}")))? }))
+                let value = args.and_then(|value| value.get("camera")).or_else(|| args.and_then(|value| value.get("viewport"))).cloned().ok_or_else(|| sequence_fault("sequence.viewport.camera", "sequence setViewport requires a camera"))?;
+                Ok(SequenceCommand::SetViewport(set_viewport::SetViewport { camera: semio_framework_value::FromValue::from_value(value).map_err(|error| sequence_fault("sequence.viewport.camera", format!("invalid sequence setViewport camera: {error}")))? }))
             }
             "setActiveExample" => Ok(SequenceCommand::SetActiveExample(set_active_example::SetActiveExample {
                 example_id: text_arg(&["exampleId", "example_id", "id", "value"]).unwrap_or_else(|| crate::examples::demo::ID.into()),
             })),
-            other => Err(Fault::from(format!("sequence: unhandled action id {other}"))),
+            other => Err(sequence_fault("sequence.action.unhandled", format!("sequence: unhandled action id {other}"))),
         }
     }
 

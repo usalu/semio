@@ -10,7 +10,7 @@
 use semio_repo_test_host::{parse_json, Adapter, Context, Outcome};
 
 //#region 🔖️Vectors
-#[path = "🧫️fixtures/🦀️.rs"]
+#[path = "🧪️tests/🧰️support/🦀️.rs"]
 mod committed_vectors;
 use committed_vectors::vector;
 //#endregion 🔖️Vectors
@@ -33,7 +33,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::*;
-    use semio_s_artifact_space_home::editor::home::transient::mutations::home_transient_mutation_report_json;
+    use semio_s_artifact_space_home::editor::home::transient::component::io::text::mutations::home_transient_mutation_report_json;
     use semio_repo_test_host::law::vector;
 
     pub fn mutate(ctx: &Context) -> Result<Outcome, String> {

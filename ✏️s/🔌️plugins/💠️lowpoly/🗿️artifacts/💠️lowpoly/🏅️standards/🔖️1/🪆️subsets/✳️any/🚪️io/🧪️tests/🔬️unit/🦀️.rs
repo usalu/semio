@@ -25,16 +25,16 @@ fn fixture() -> LowpolySnapshot {
 #[semio_framework_async_macros::async_test]
 async fn txt_export_import_round_trips_the_snapshot() {
     let snapshot = fixture();
-    let bytes = crate::io::export::serializers::artifacts::txt::v_utf_8::any::serialize_bytes(&snapshot).expect("txt export");
-    let recovered = crate::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes).expect("txt import");
+    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::txt::v_utf_8::any::serialize_bytes(&snapshot).expect("txt export");
+    let recovered = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes).expect("txt import");
     assert_eq!(snapshot, recovered);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn json_export_import_round_trips_the_snapshot() {
     let snapshot = fixture();
-    let bytes = crate::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).expect("json export");
-    let recovered = crate::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).expect("json import");
+    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).expect("json export");
+    let recovered = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes).expect("json import");
     assert_eq!(snapshot, recovered);
 }
 
@@ -47,22 +47,22 @@ fn geometry_of(snapshot: &LowpolySnapshot) -> (usize, usize) {
 async fn mesh_formats_carry_the_geometry_and_nothing_else() {
     let snapshot = fixture();
     let (_, box_faces) = geometry_of(&snapshot);
-    let obj = crate::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).expect("obj export");
+    let obj = crate::standards::v1::subsets::any::io::export::serializers::artifacts::obj::v3_0::any::serialize_bytes(&snapshot).expect("obj export");
     assert!(!String::from_utf8(obj.clone()).expect("obj text").contains("semio"), "no private side channel in the file");
-    assert_eq!(geometry_of(&crate::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&obj).expect("obj import")), (8, box_faces));
-    let ply = crate::io::export::serializers::artifacts::ply::v1_0::any::serialize_bytes(&snapshot).expect("ply export");
-    assert_eq!(geometry_of(&crate::io::import::deserializers::artifacts::ply::v1_0::any::deserialize_bytes(&ply).expect("ply import")), (8, box_faces));
-    let gltf = crate::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).expect("gltf export");
-    assert_eq!(geometry_of(&crate::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(&gltf).expect("gltf import")).0, 8);
-    let dwg = crate::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).expect("dwg export");
-    assert_eq!(geometry_of(&crate::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&dwg).expect("dwg import")).0, 8);
-    let las = semio_s_artifact_stdio_las::io::decode_las(&crate::io::export::serializers::artifacts::las::v1_0::any::serialize_bytes(&snapshot).expect("las export")).expect("las decodes");
+    assert_eq!(geometry_of(&crate::standards::v1::subsets::any::io::import::deserializers::artifacts::obj::v3_0::any::deserialize_bytes(&obj).expect("obj import")), (8, box_faces));
+    let ply = crate::standards::v1::subsets::any::io::export::serializers::artifacts::ply::v1_0::any::serialize_bytes(&snapshot).expect("ply export");
+    assert_eq!(geometry_of(&crate::standards::v1::subsets::any::io::import::deserializers::artifacts::ply::v1_0::any::deserialize_bytes(&ply).expect("ply import")), (8, box_faces));
+    let gltf = crate::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&snapshot).expect("gltf export");
+    assert_eq!(geometry_of(&crate::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(&gltf).expect("gltf import")).0, 8);
+    let dwg = crate::standards::v1::subsets::any::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&snapshot).expect("dwg export");
+    assert_eq!(geometry_of(&crate::standards::v1::subsets::any::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&dwg).expect("dwg import")).0, 8);
+    let las = semio_s_artifact_stdio_las::standards::v1_0::subsets::any::io::decode_las(&crate::standards::v1::subsets::any::io::export::serializers::artifacts::las::v1_0::any::serialize_bytes(&snapshot).expect("las export")).expect("las decodes");
     assert_eq!(las.points.len(), 8);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn png_is_a_picture_of_the_model() {
-    let bytes = crate::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&fixture()).expect("png export");
+    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&fixture()).expect("png export");
     let png = semio_framework_pixels::decode_png(&bytes).expect("decodes as png");
     assert_eq!((png.width, png.height), (512, 512));
     assert!(png.pixels.chunks(4).filter(|px| px[0] < 250).count() > 10_000, "the box is painted");
@@ -71,7 +71,7 @@ async fn png_is_a_picture_of_the_model() {
 /// 🔮️ The third-party `gltf` reader (test-only) loads the GLB export.
 #[semio_framework_async_macros::async_test]
 async fn gltf_export_is_read_by_the_gltf_crate() {
-    let bytes = crate::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&fixture()).expect("gltf export");
+    let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any::serialize_bytes(&fixture()).expect("gltf export");
     let (document, buffers, _) = gltf::import_slice(&bytes).expect("the gltf crate imports the GLB");
     let primitive = document.meshes().next().expect("one mesh").primitives().next().expect("one primitive");
     let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
@@ -82,14 +82,14 @@ async fn gltf_export_is_read_by_the_gltf_crate() {
 #[semio_framework_async_macros::async_test]
 async fn geometry_format_garbage_bytes_still_error_loudly() {
     let bytes = b"not a real payload";
-    assert!(crate::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(bytes).is_err());
-    assert!(crate::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(bytes).is_err());
-    assert!(crate::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(bytes).is_err());
+    assert!(crate::standards::v1::subsets::any::io::import::deserializers::artifacts::stl::v_ascii::any::deserialize_bytes(bytes).is_err());
+    assert!(crate::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any::deserialize_bytes(bytes).is_err());
+    assert!(crate::standards::v1::subsets::any::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(bytes).is_err());
 }
 
 //#region 🕸️RealGeometryIo
-use crate::io::import::deserializers::artifacts::{obj::v3_0::any as obj_import, ply::v1_0::any as ply_import, stl::v_ascii::any as stl_import};
-use crate::io::export::serializers::artifacts::{obj::v3_0::any as obj_export, ply::v1_0::any as ply_export, stl::v_ascii::any as stl_export};
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{obj::v3_0::any as obj_import, ply::v1_0::any as ply_import, stl::v_ascii::any as stl_import};
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{obj::v3_0::any as obj_export, ply::v1_0::any as ply_export, stl::v_ascii::any as stl_export};
 use semio_framework_3d::mesh::HalfedgeMesh;
 
 fn mesh_of(object: &LowpolyObject) -> HalfedgeMesh {

@@ -1,0 +1,122 @@
+[
+  {
+    "format": "pcm8",
+    "empty": false,
+    "rows": 14,
+    "valueBytes": 515,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "pcm8",
+    "empty": true,
+    "rows": 3,
+    "valueBytes": 115,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "pcm16",
+    "empty": false,
+    "rows": 14,
+    "valueBytes": 516,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "pcm16",
+    "empty": true,
+    "rows": 3,
+    "valueBytes": 116,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "pcm24",
+    "empty": false,
+    "rows": 14,
+    "valueBytes": 516,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "pcm24",
+    "empty": true,
+    "rows": 3,
+    "valueBytes": 116,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "pcm32",
+    "empty": false,
+    "rows": 14,
+    "valueBytes": 516,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "pcm32",
+    "empty": true,
+    "rows": 3,
+    "valueBytes": 116,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "f32",
+    "empty": false,
+    "rows": 14,
+    "valueBytes": 514,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "f32",
+    "empty": true,
+    "rows": 3,
+    "valueBytes": 114,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "f64",
+    "empty": false,
+    "rows": 14,
+    "valueBytes": 514,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "format": "f64",
+    "empty": true,
+    "rows": 3,
+    "valueBytes": 114,
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  }
+]

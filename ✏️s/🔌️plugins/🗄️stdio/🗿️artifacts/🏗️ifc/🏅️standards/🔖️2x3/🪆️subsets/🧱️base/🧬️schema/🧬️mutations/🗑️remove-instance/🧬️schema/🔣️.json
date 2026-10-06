@@ -26,6 +26,7 @@
           "en": "STEP instance id (#n).",
           "de": "STEP-Instanz-ID (#n)."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10

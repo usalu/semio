@@ -712,3 +712,32 @@ fn the_staged_forms_category_header_registers_reacts_collapsible_row() {
         assert!(records.iter().any(|record| record.key.as_str().ends_with(&expected)), "⚡️ the form keeps React's '{expected}'");
     }
 }
+
+/// ⚖️ LAW (live fault F17): a press on an arg-carrying row moves only the shell's own pane state, so the SHELL republishes
+/// the pane — no refresh pass is owed and none is asked for. The press publishes the body with the staged form, a staged
+/// argument publishes the form again (its field reads the value, Execute resolves), and the second press publishes the
+/// folded list it started from.
+#[test]
+fn a_press_on_an_arg_carrying_row_republishes_the_pane_with_its_staged_form() {
+    let fixture = pane_fixture();
+    let form = &fixture["actionsPane"]["form"];
+    let mut shell = paired_pane_shell();
+    let surface = window_actions_surface_id("pane-top");
+    let published = |shell: &ShellState| shell.window_measures_minted.get(&surface).map(|minted| minted.0).expect("the Actions pane is published");
+    let press = || ActionDescriptor { controller_id: "framework".into(), action: "setActionExpanded".into(), args: crate::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog" }) };
+    let closed = published(&shell);
+    semio_framework_async::block_on(shell.dispatch_action(press())).expect("the row's own press");
+    assert!(shell.window_actions_documents.contains_key("pane-top") && shell.window_actions_documents.contains_key("pane-perspective"), "every live pane keeps its document");
+    let opened = published(&shell);
+    assert_ne!(opened, closed, "the press republished the pane with no refresh pass");
+    let execute = form["executeId"].as_str().expect("execute").replace("{windowSegment}", &semio_framework::element_id_segment("pane-top")).replace("{actionId}", "openAddObjectDialog");
+    assert!(published_keys(&shell, "pane-top", false).iter().any(|key| key.ends_with(&execute)), "and the body it published carries the staged form");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: crate::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog", "arg": "kind", "value": "beam" }) })).expect("a staged argument");
+    assert_ne!(published(&shell), opened, "a staged argument republishes the form");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "resetActionArgs".into(), args: crate::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog" }) })).expect("a reset");
+    assert_eq!(published(&shell), opened, "a reset republishes the untouched form");
+    semio_framework_async::block_on(shell.dispatch_action(press())).expect("the second press folds the form");
+    assert_eq!(published(&shell), closed, "the second press republishes the folded list");
+    let mut faults = Vec::new();
+    shell.refresh_window_action_panes(&[], &mut faults).expect("the pane documents retire");
+}

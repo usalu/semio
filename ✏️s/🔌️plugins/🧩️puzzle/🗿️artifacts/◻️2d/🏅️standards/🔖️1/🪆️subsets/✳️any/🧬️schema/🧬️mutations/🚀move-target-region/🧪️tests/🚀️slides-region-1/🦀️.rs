@@ -1,4 +1,4 @@
-//! 🧪️ `move-target-region` fixture — `🚀️slides-region-1`.
+//! 🧪️ `move-target-region` snapshot — `🚀️slides-region-1`.
 //!
 //! An absolute reposition of `region-1`'s minimum corner. Only `x`/`y` change — the builder clones the region and rewrites exactly those two fields.
 //!
@@ -44,7 +44,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

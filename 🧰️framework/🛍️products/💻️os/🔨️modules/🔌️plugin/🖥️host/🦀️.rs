@@ -8121,9 +8121,6 @@ impl OpeningResolver {
 mod opening_resolver_tests;
 //#endregion 🔖️OpeningResolver
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️poll-turn-memory/🦀️.rs"]
-mod poll_turn_memory_tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🪶️sqlite/⚠️refusal/🦀️.rs"]

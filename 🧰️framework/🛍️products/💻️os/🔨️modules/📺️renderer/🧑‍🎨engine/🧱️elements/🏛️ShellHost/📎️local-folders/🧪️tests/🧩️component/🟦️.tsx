@@ -173,7 +173,7 @@ describe("📎️ the shared local-folder corpus holds on React", () => {
 
 describe("🪪️ a sync attach addresses the program's own document (e2e R2-4)", () => {
   it("attaches a folder or a file's folder under the id the program's store stamps, a hub target under its own, and nothing for a program without a document", () => {
-    const identity = { parent_document_id: "puzzle.2d.fixture" };
+    const identity = { parent_document_id: "board.ports.directed.v1" };
     expect([
       syncAttachDocumentIdV1({ kind: "folder" }, identity),
       syncAttachDocumentIdV1({ kind: "file" }, identity),
@@ -182,6 +182,6 @@ describe("🪪️ a sync attach addresses the program's own document (e2e R2-4)"
       syncAttachDocumentIdV1({ kind: "folder" }, { parent_document_id: null }),
       syncAttachDocumentIdV1({ kind: "folder" }, { parent_document_id: "" }),
       syncAttachDocumentIdV1({ kind: "folder" }, null),
-    ]).toEqual(["puzzle.2d.fixture", "puzzle.2d.fixture", "puzzle.2d.fixture", "space-doc", null, null, null]);
+    ]).toEqual(["board.ports.directed.v1", "board.ports.directed.v1", "board.ports.directed.v1", "space-doc", null, null, null]);
   });
 });

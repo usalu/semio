@@ -82,16 +82,6 @@ mod tests {
         hex.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
     }
 
-    const CANONICAL_DSL: &[u8] = b"name=fixture\ngraph {\n}\ndirty-node-ids=[ ]\nexpected-deliveries [edge-id:TEXT] {\n}\n";
-
-    fn structural_pack(dsl: &[u8]) -> Vec<u8> {
-        let mut bytes = WORKFLOW_PACK_MAGIC.to_vec();
-        bytes.push(1);
-        bytes.extend_from_slice(&(dsl.len() as u32).to_le_bytes());
-        bytes.extend_from_slice(dsl);
-        bytes
-    }
-
     fn admit_page<R: OsHostFormatResolver>(service: &mut RetainedOsHostCodecService<R>, handle: AbiHandle, index: u32, bytes: &[u8]) {
         service.offer(handle, page(handle, index, bytes)).unwrap();
         loop {
@@ -105,58 +95,25 @@ mod tests {
 
     #[test]
     fn schema_and_language_neutral_fixture_cover_every_operation() {
-        for name in ["decodeWorkflowFixturePack", "parseWorkflowFixtureDsl", "mediaAcceptFilterKinds", "normalizeStdioFormatKind"] {
+        for name in ["mediaAcceptFilterKinds", "normalizeStdioFormatKind"] {
             assert!(OS_HOST_CODEC_SCHEMA_JSON.contains(name));
         }
-        for name in ["workflowPackOrder", "canonicalDslBytes:u32le", "workflowDslCanonical", "filterRetainedState", "normalizeRetainedState", "one-byte-or-completed-item-opportunity-per-grant", "transferPages"] {
+        for name in ["filterRetainedState", "normalizeRetainedState", "one-byte-or-completed-item-opportunity-per-grant", "transferPages"] {
             assert!(OS_HOST_CODEC_SCHEMA_JSON.contains(name));
         }
-        for name in ["decode_pack_request", "parse_dsl_request", "filter_request", "normalize_request"] {
+        for name in ["filter_request", "normalize_request"] {
             assert!(OS_HOST_CODEC_LEDGER_FIXTURE.contains(name));
         }
-        for line in OS_HOST_CODEC_LEDGER_FIXTURE.lines().skip(1).take(5) {
+        for line in OS_HOST_CODEC_LEDGER_FIXTURE.lines().skip(1).take(2) {
             let (_, hex) = line.split_once('\t').unwrap();
             assert!(matches!(decode_abi_message(&hex_bytes(hex)), Ok(AbiMessage::Request(_) | AbiMessage::Reply(_))));
         }
-        let rows: Vec<_> = OS_HOST_CODEC_LEDGER_FIXTURE.lines().filter_map(|line| line.split_once('\t')).collect();
-        let dsl = hex_bytes(rows.iter().find(|(name, _)| *name == "workflow_dsl_canonical").unwrap().1);
-        let pack = hex_bytes(rows.iter().find(|(name, _)| *name == "workflow_pack_structural").unwrap().1);
-        assert_eq!(&pack[..4], &WORKFLOW_PACK_MAGIC);
-        assert_eq!(&pack[9..], dsl);
+
     }
 
-    #[test]
-    fn valid_pack_and_dsl_are_equivalent_deterministic_paged_replies() {
-        let pack = structural_pack(CANONICAL_DSL);
-        let mut replies = Vec::new();
-        for (operation, bytes) in [(OsHostCodecOperation::DecodeWorkflowFixturePack, pack.as_slice()), (OsHostCodecOperation::ParseWorkflowFixtureDsl, CANONICAL_DSL)] {
-            let mut service = RetainedOsHostCodecService::new(FixtureFormatResolver);
-            let handle = service.begin(request(operation, 7, 1, bytes.len())).unwrap();
-            admit_input(&mut service, handle, bytes);
-            let (output, reply) = finish(&mut service, handle);
-            assert_eq!(payload(&output), CANONICAL_DSL);
-            assert_eq!(reply.status, AbiStatus::OK);
-            replies.push((output, reply.bytes.into_vec()));
-        }
-        assert_eq!(replies[0], replies[1]);
-    }
 
-    #[test]
-    fn workflow_pack_and_dsl_accept_every_byte_and_field_split() {
-        let pack = structural_pack(CANONICAL_DSL);
-        for (operation, bytes) in [(OsHostCodecOperation::DecodeWorkflowFixturePack, pack.as_slice()), (OsHostCodecOperation::ParseWorkflowFixtureDsl, CANONICAL_DSL)] {
-            for split in 0..=bytes.len() {
-                let mut service = RetainedOsHostCodecService::new(FixtureFormatResolver);
-                let handle = service.begin(request(operation, 70, 1, bytes.len())).unwrap();
-                admit_page(&mut service, handle, 0, &bytes[..split]);
-                admit_page(&mut service, handle, 1, &bytes[split..]);
-                service.seal(handle).unwrap();
-                let (output, reply) = finish(&mut service, handle);
-                assert_eq!(payload(&output), CANONICAL_DSL, "split={split}");
-                assert_eq!(reply.status, AbiStatus::OK, "split={split}");
-            }
-        }
-    }
+
+
 
     #[test]
     fn filter_and_normalize_preserve_registered_format_behavior() {
@@ -283,8 +240,6 @@ mod tests {
     #[test]
     fn malformed_pack_dsl_missing_array_and_unknown_kind_are_owned_failures() {
         for (operation, bytes, code) in [
-            (OsHostCodecOperation::DecodeWorkflowFixturePack, b"bad".as_slice(), OsHostCodecErrorCode::MalformedPack),
-            (OsHostCodecOperation::ParseWorkflowFixtureDsl, b"bad".as_slice(), OsHostCodecErrorCode::MalformedDsl),
             (OsHostCodecOperation::MediaAcceptFilterKinds, b"".as_slice(), OsHostCodecErrorCode::MissingKindArray),
             (OsHostCodecOperation::NormalizeStdioFormatKind, b"wat".as_slice(), OsHostCodecErrorCode::UnknownKind),
         ] {
@@ -301,36 +256,16 @@ mod tests {
         }
     }
 
-    #[test]
-    fn truncated_pack_dsl_and_invalid_utf8_fail_after_retained_decode() {
-        let mut truncated_pack = structural_pack(CANONICAL_DSL);
-        truncated_pack.pop();
-        let mut truncated_dsl = CANONICAL_DSL.to_vec();
-        truncated_dsl.pop();
-        let mut invalid_utf8 = CANONICAL_DSL.to_vec();
-        invalid_utf8.insert(invalid_utf8.len() - 1, 0xff);
-        for (request_id, operation, bytes, code) in [
-            (12, OsHostCodecOperation::DecodeWorkflowFixturePack, truncated_pack, OsHostCodecErrorCode::MalformedPack),
-            (13, OsHostCodecOperation::ParseWorkflowFixtureDsl, truncated_dsl, OsHostCodecErrorCode::MalformedDsl),
-            (14, OsHostCodecOperation::ParseWorkflowFixtureDsl, invalid_utf8, OsHostCodecErrorCode::InvalidUtf8),
-        ] {
-            let mut service = RetainedOsHostCodecService::new(FixtureFormatResolver);
-            let handle = service.begin(request(operation, request_id, 1, bytes.len())).unwrap();
-            admit_input(&mut service, handle, &bytes);
-            let (_, reply) = finish(&mut service, handle);
-            assert_eq!(u16::from_le_bytes(reply.bytes.as_slice().try_into().unwrap()), code as u16);
-            assert_eq!(reply.status.code, AbiStatusCode::Rejected);
-        }
-    }
+
 
     #[test]
     fn exact_input_and_output_limits_reject_plus_one_without_consuming_request() {
         let mut service = RetainedOsHostCodecService::new(FixtureFormatResolver);
-        let maximum = request(OsHostCodecOperation::DecodeWorkflowFixturePack, 20, 1, OS_HOST_CODEC_MAX_INPUT_BYTES);
+        let maximum = request(OsHostCodecOperation::MediaAcceptFilterKinds, 20, 1, OS_HOST_CODEC_MAX_INPUT_BYTES);
         assert!(service.begin(maximum).is_ok());
         let mut plus_one = vec![1];
         plus_one.extend_from_slice(&((OS_HOST_CODEC_MAX_INPUT_BYTES + 1) as u32).to_le_bytes());
-        let rejected = AbiRequest { operation: OsHostCodecOperation::DecodeWorkflowFixturePack.abi(), request_id: AbiRequestId(21), generation: 1, bytes: AbiBytes::try_new(plus_one).unwrap() };
+        let rejected = AbiRequest { operation: OsHostCodecOperation::MediaAcceptFilterKinds.abi(), request_id: AbiRequestId(21), generation: 1, bytes: AbiBytes::try_new(plus_one).unwrap() };
         let rejected = service.begin(rejected).unwrap_err();
         assert_eq!(rejected.0, AbiErrorCode::LimitExceeded);
         assert_eq!(rejected.1.request_id, AbiRequestId(21));
@@ -360,7 +295,7 @@ mod tests {
     #[test]
     fn page_count_limit_precedes_sequence_classification_and_returns_the_page() {
         let mut service = RetainedOsHostCodecService::new(FixtureFormatResolver);
-        let handle = service.begin(request(OsHostCodecOperation::DecodeWorkflowFixturePack, 24, 1, 0)).unwrap();
+        let handle = service.begin(request(OsHostCodecOperation::MediaAcceptFilterKinds, 24, 1, 0)).unwrap();
         let page = AbiPage { handle, index: ABI_MAX_PAGES_PER_TRANSFER, bytes: AbiPageBytes::default() };
         let rejected = service.offer(handle, page).unwrap_err();
         assert_eq!(rejected.code, AbiErrorCode::LimitExceeded);
@@ -370,11 +305,8 @@ mod tests {
 
     #[test]
     fn cancel_mid_every_structural_cursor_returns_exact_page_and_blocks_progress() {
-        let pack = structural_pack(CANONICAL_DSL);
         let filter = [1, 2, 0, 3, 0, b'd', b'w', b'g', 4, 0, b's', b't', b'e', b'p'];
         for (request_id, operation, bytes) in [
-            (30, OsHostCodecOperation::DecodeWorkflowFixturePack, pack.as_slice()),
-            (31, OsHostCodecOperation::ParseWorkflowFixtureDsl, CANONICAL_DSL),
             (33, OsHostCodecOperation::MediaAcceptFilterKinds, filter.as_slice()),
             (34, OsHostCodecOperation::NormalizeStdioFormatKind, b"stdio.dwg".as_slice()),
         ] {
@@ -396,7 +328,7 @@ mod tests {
     fn deadline_interruption_and_zero_credit_do_not_advance_any_structural_cursor() {
         let filter = [1, 1, 0, 3, 0, b'd', b'w', b'g'];
         for (request_id, operation, bytes) in
-            [(32, OsHostCodecOperation::ParseWorkflowFixtureDsl, CANONICAL_DSL), (35, OsHostCodecOperation::MediaAcceptFilterKinds, filter.as_slice()), (36, OsHostCodecOperation::NormalizeStdioFormatKind, b"stdio.dwg".as_slice())]
+            [(35, OsHostCodecOperation::MediaAcceptFilterKinds, filter.as_slice()), (36, OsHostCodecOperation::NormalizeStdioFormatKind, b"stdio.dwg".as_slice())]
         {
             let mut service = RetainedOsHostCodecService::new(FixtureFormatResolver);
             let handle = service.begin(request(operation, request_id, 1, bytes.len())).unwrap();
@@ -463,37 +395,12 @@ mod tests {
             assert!(!production.contains(forbidden), "public route contains forbidden whole-input edge {forbidden}");
         }
         assert!(production.contains("RegisteredOsHostFormatResolver"));
-        assert!(production.contains("WorkflowStructuralCursor"));
+        assert!(!production.contains("WorkflowStructuralCursor"));
         assert!(production.contains("FilterKindsStructuralCursor"));
         assert!(production.contains("NormalizeKindStructuralCursor"));
     }
 
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
-    #[test]
-    fn public_service_runs_the_retained_workflow_cursor_without_a_format_backend() {
-        let mut service = OsHostCodecService::new();
-        let handle = service.begin(request(OsHostCodecOperation::ParseWorkflowFixtureDsl, 80, 1, CANONICAL_DSL.len())).unwrap();
-        service.offer(handle, page(handle, 0, CANONICAL_DSL)).unwrap();
-        loop {
-            if service.step(handle, AbiWorkBudget::credits(usize::MAX)).unwrap().state == OsHostCodecStepState::InputAcknowledged {
-                break;
-            }
-        }
-        service.seal(handle).unwrap();
-        let mut output = Vec::new();
-        loop {
-            let step = service.step(handle, AbiWorkBudget::credits(usize::MAX)).unwrap();
-            if let Some(page) = step.page {
-                output.extend_from_slice(page.bytes.as_slice());
-                service.control(AbiControl::Acknowledge { handle, index: page.index }).unwrap();
-            }
-            if let Some(reply) = step.reply {
-                assert_eq!(reply.status, AbiStatus::OK);
-                break;
-            }
-        }
-        assert_eq!(payload(&output), CANONICAL_DSL);
-    }
+
 
     #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     #[test]

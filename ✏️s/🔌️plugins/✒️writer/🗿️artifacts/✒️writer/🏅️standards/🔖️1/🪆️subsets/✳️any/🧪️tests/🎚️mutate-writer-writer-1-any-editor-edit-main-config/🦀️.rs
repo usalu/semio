@@ -53,7 +53,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_writer_writer::editor::writer::modes::edit::windows::main::config::writer_main_window_config_mutation_report_json;
+    use semio_s_artifact_writer_writer::editor::writer::modes::edit::windows::main::component::config::io::text::mutations::writer_main_window_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         writer_main_window_config_mutation_report_json(committed.before, committed.mutation, committed.after)

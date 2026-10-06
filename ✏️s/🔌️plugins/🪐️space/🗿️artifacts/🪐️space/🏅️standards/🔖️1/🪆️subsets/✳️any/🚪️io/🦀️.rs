@@ -9,3 +9,12 @@ pub async fn io_registry_entries() -> &'static [semio_framework_plugin::Composer
     &[]
 }
 //#endregion 🔖️IoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

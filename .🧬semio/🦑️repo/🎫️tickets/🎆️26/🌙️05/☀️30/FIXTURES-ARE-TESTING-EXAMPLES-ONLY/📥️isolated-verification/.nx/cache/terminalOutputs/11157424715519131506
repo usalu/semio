@@ -1,0 +1,4 @@
+> bun ./📜️script.ts kernel-command test-directory-runtime-source
+
+[DEBUG] isolated Nx verification kernel-command
+[DEBUG] directory runtime identity independent-comparisons=2 workers=3

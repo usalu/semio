@@ -1,0 +1,152 @@
+{
+  "schema": "semio.os.channel-version-consumers/v1",
+  "consumers": [
+    {
+      "path": "🔨️modules/📡️spr/🧵️channel/🦀️.rs",
+      "occurrences": 1,
+      "guest": true
+    },
+    {
+      "path": "🟦️.ts",
+      "occurrences": 1
+    },
+    {
+      "path": "🧪️testing/⚖️scale/🦀️.rs",
+      "occurrences": 1,
+      "guest": true
+    },
+    {
+      "path": "🔨️modules/📇️directory/🧬️schema/🟦️.ts",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/📇️directory/🧬️schema/🔣️.json",
+      "occurrences": 3
+    },
+    {
+      "path": "🔨️modules/🌉️mcp/🏠️workspace/🧬️schema/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🌉️mcp/🏠️workspace/🧫️fixtures/🔐️hub-live-catalog/🔣️.json",
+      "occurrences": 3,
+      "hostileValues": [
+        13
+      ],
+      "hostileOccurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json",
+      "occurrences": 3
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json",
+      "occurrences": 8
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧬️schema/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🧬️catalog-publication/🔣️.json",
+      "occurrences": 3,
+      "hostileValues": [
+        22,
+        24
+      ],
+      "hostileOccurrences": 2
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧫️fixtures/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🟦️.ts",
+      "occurrences": 1,
+      "hostileValues": [
+        19
+      ],
+      "hostileOccurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧫️fixtures/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧊️fresh-staging/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/🧑‍💻dev/🧫️fixtures/🚀️local-hub.json",
+      "occurrences": 6
+    },
+    {
+      "path": "🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json",
+      "occurrences": 2,
+      "derived": "the document-open catalog encoding and plan digests"
+    },
+    {
+      "path": "🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json",
+      "occurrences": 3,
+      "derived": "the plan catalog expectedHex and its generation id"
+    },
+    {
+      "path": "🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+      "occurrences": 3,
+      "derived": "the lease's catalog generation and its Pack-encoded descriptorHex"
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts",
+      "occurrences": 2,
+      "hostileValues": [
+        13,
+        14
+      ],
+      "hostileOccurrences": 2
+    },
+    {
+      "path": "🔨️modules/🌉️mcp/💡️inference/🧫️fixtures/🧩️neutral-descriptors/🔣️.json",
+      "occurrences": 4
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts",
+      "occurrences": 1,
+      "arbitrary": true
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🖨️describe/🧫️fixtures/🧾️fresh-source-epoch/🔣️.json",
+      "occurrences": 1,
+      "arbitrary": true
+    },
+    {
+      "path": "🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🪪️document-identity-wire/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/📡️spr/🧵️channel/🧬️fixtures/🎬️media-export-wire/🧬️schema/🔣️.json",
+      "occurrences": 1
+    },
+    {
+      "path": "🔨️modules/📡️spr/🧵️channel/🧪️tests/🔬️unit/🦀️.rs",
+      "occurrences": 1,
+      "arbitrary": true
+    },
+    {
+      "path": "🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🔣️.json",
+      "occurrences": 1,
+      "derived": "the host fixture component's describe output (its `🛂️.descriptor.semio` twin is re-derived with it)"
+    }
+  ]
+}

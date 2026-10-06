@@ -1,0 +1,36 @@
+{
+  "text": "日本𐀀\u0000",
+  "textBytes": 11,
+  "slots": [
+    {
+      "name": "many",
+      "block": false,
+      "variants": [
+        "document",
+        "blob"
+      ]
+    },
+    {
+      "name": "nested",
+      "block": true,
+      "variants": [
+        "blob",
+        "document"
+      ]
+    },
+    {
+      "name": "maybe",
+      "block": true,
+      "variants": [
+        "document"
+      ]
+    },
+    {
+      "name": "required",
+      "block": true,
+      "variants": [
+        "blob"
+      ]
+    }
+  ]
+}

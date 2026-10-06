@@ -12,7 +12,7 @@
     {"widgetId": "", "value": 4},
     {"widgetId": "column-height", "value": "4"},
     {"widgetId": "column-height", "value": 4, "documentJson": "{}"},
-    {"widgetId": "column-height", "value": 4, "fixtureJson": "{}"},
+    {"widgetId": "column-height", "value": 4, "snapshotJson": "{}"},
     {"widgetId": "column-height", "value": 4, "operations": []},
     {"value": 4}
   ]

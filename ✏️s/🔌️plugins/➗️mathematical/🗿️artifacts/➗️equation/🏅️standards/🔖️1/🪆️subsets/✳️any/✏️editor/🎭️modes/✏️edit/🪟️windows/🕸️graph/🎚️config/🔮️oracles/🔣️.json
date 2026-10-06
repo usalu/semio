@@ -81,9 +81,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -148,7 +147,6 @@
       "notes": "The owner's committed contract vector for `set-camera` (🧫️fixtures/🔁️mutations.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-no-op",
       "class": "handcrafted",
       "target": {

@@ -1,0 +1,11 @@
+{
+  "qualification": "HELD owner-only provider region. Demand must genuinely fail before mount, then same original tests plus independent neutral Buffer oracle must run. No field policy/bounds/shared controls changes.",
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+  "sourceSha256": "67c4e0eff266b4a68f7a30cca4c61bd4fa4ce4ffaaf5cf11950bb7c49a86187f",
+  "regions": [
+    {
+      "before": "width: (a.width != b.width).then_some(b.width), height: (a.height != b.height).then_some(b.height)",
+      "after": "width: (a.width.to_bits() != b.width.to_bits()).then_some(b.width), height: (a.height.to_bits() != b.height.to_bits()).then_some(b.height)"
+    }
+  ]
+}

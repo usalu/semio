@@ -39,7 +39,7 @@ async fn curated_columns_are_sortable_and_echo_the_active_sort() {
     let cfg = SourcingCurationConfig { filters: Filters { sort: Some(crate::TableSort { column_id: "count".into(), direction: crate::SortDirection::Desc }), ..Default::default() }, ..Default::default() };
     let node = render(&curated_document(), &cfg, labels()).expect("bounded curated table");
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("expected a table surface") };
-    let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
+    let scene = crate::editor::sourcing::unit_tests::context::table_scene_of(&node).expect("complete retained table scene");
     let columns: serde_json::Value = serde_json::from_str(&scene.columns_json).unwrap();
     for index in 0..3 {
         assert_eq!(columns[index]["sortable"], true, "column {index} must be sortable");

@@ -1,0 +1,170 @@
+{
+  "authority": "Existing MP4 closed Snapshot fixture Ajv-validated and directly inserted under authored DDL in Bun SQLite; no domain provider imported",
+  "rawSqlBytes": 8044,
+  "schemaBytes": 8321,
+  "tableCount": 23,
+  "maxColumns": 16,
+  "cases": [
+    {
+      "id": "full",
+      "rows": 66,
+      "valueBytes": 2680
+    },
+    {
+      "id": "emptyBrandsTracks",
+      "rows": 12,
+      "valueBytes": 441
+    }
+  ],
+  "tables": [
+    {
+      "table": "mp4_document",
+      "width": 2,
+      "rows": 1,
+      "valueBytes": 24
+    },
+    {
+      "table": "mp4_ftyp",
+      "width": 3,
+      "rows": 1,
+      "valueBytes": 30
+    },
+    {
+      "table": "mp4_compatible_brand",
+      "width": 4,
+      "rows": 4,
+      "valueBytes": 118
+    },
+    {
+      "table": "mp4_movie",
+      "width": 10,
+      "rows": 1,
+      "valueBytes": 99
+    },
+    {
+      "table": "mp4_movie_matrix",
+      "width": 4,
+      "rows": 9,
+      "valueBytes": 288
+    },
+    {
+      "table": "mp4_track",
+      "width": 7,
+      "rows": 2,
+      "valueBytes": 112
+    },
+    {
+      "table": "mp4_codec",
+      "width": 3,
+      "rows": 2,
+      "valueBytes": 40
+    },
+    {
+      "table": "mp4_avc_sps",
+      "width": 4,
+      "rows": 3,
+      "valueBytes": 78
+    },
+    {
+      "table": "mp4_avc_pps",
+      "width": 4,
+      "rows": 1,
+      "valueBytes": 26
+    },
+    {
+      "table": "mp4_avc_extension",
+      "width": 4,
+      "rows": 1,
+      "valueBytes": 32
+    },
+    {
+      "table": "mp4_avc_sps_extension",
+      "width": 4,
+      "rows": 2,
+      "valueBytes": 51
+    },
+    {
+      "table": "mp4_hevc_config",
+      "width": 16,
+      "rows": 1,
+      "valueBytes": 140
+    },
+    {
+      "table": "mp4_hevc_array",
+      "width": 5,
+      "rows": 2,
+      "valueBytes": 80
+    },
+    {
+      "table": "mp4_hevc_nal",
+      "width": 4,
+      "rows": 3,
+      "valueBytes": 78
+    },
+    {
+      "table": "mp4_track_metadata",
+      "width": 14,
+      "rows": 2,
+      "valueBytes": 235
+    },
+    {
+      "table": "mp4_track_matrix",
+      "width": 4,
+      "rows": 18,
+      "valueBytes": 576
+    },
+    {
+      "table": "mp4_edit",
+      "width": 7,
+      "rows": 2,
+      "valueBytes": 117
+    },
+    {
+      "table": "mp4_visual_sample_entry",
+      "width": 13,
+      "rows": 2,
+      "valueBytes": 208
+    },
+    {
+      "table": "mp4_color",
+      "width": 6,
+      "rows": 1,
+      "valueBytes": 65
+    },
+    {
+      "table": "mp4_pixel_aspect_ratio",
+      "width": 3,
+      "rows": 1,
+      "valueBytes": 24
+    },
+    {
+      "table": "mp4_bitrate",
+      "width": 4,
+      "rows": 1,
+      "valueBytes": 32
+    },
+    {
+      "table": "mp4_chunk_sample_count",
+      "width": 4,
+      "rows": 4,
+      "valueBytes": 128
+    },
+    {
+      "table": "mp4_sample",
+      "width": 7,
+      "rows": 2,
+      "valueBytes": 99
+    }
+  ],
+  "integrity": "ok",
+  "foreignKeyFailures": 0,
+  "ajvFixtureValid": true,
+  "correction": {
+    "authoredNullBytes": 0,
+    "previousOracleNullBytes": 1,
+    "verifiedNullableFields": [
+      "movie.encoder"
+    ],
+    "method": "Independent authored DDL PRAGMA shows only movie.title/encoder and color.full_range nullable; literal title empty, encoder null, fullRange false. Subtract exactly one null cell in both original cases; full SQLite replay pending."
+  }
+}

@@ -6,12 +6,6 @@ use crate::{
 };
 use framework_schema::ArtifactSchema;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
-
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1995 timber-structure document.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -33,7 +27,7 @@ pub struct En1995Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1995Snapshot, extension = "en1995", envelope_id = "norm.en1995", sqlite = sqlite::sqlite_codec);
+crate::impl_norm_artifact_record!(En1995Snapshot, extension = "en1995", envelope_id = "norm.en1995", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1995Snapshot {
@@ -358,22 +352,10 @@ impl En1995Snapshot {
 }
 
 //#region 🌉️ExternalCodecBridge
-pub fn encode_en1995_snapshot_json(snapshot: &En1995Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
-pub fn decode_en1995_snapshot_json(text: &str) -> Result<En1995Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
-pub fn decode_en1995_dsl(text: &str) -> Result<En1995Snapshot, String> {
-    <En1995Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
-pub fn encode_en1995_dsl(snapshot: &En1995Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
-pub fn decode_en1995_pack(bytes: &[u8]) -> Result<En1995Snapshot, String> {
-    <En1995Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
-pub fn encode_en1995_pack(snapshot: &En1995Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge

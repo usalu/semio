@@ -17,6 +17,6 @@ pub fn diff(payload: &super::ChangeRoomAirModel, base: &EnergyModelSnapshot) -> 
     if let Some(item) = model.room_air_models.iter_mut().find(|item| item.zone_id == payload.zone_id) {
         item.model = payload.new_model;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

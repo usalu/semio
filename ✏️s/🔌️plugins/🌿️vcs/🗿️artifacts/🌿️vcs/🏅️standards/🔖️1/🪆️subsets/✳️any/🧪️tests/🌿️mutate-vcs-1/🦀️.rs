@@ -130,8 +130,13 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::schema::mutations::{apply_vcs_mutation_reporting, decode_vcs_mutation_json, inverse_vcs_mutation_steps, VcsDemoMutation};
-    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::schema::snapshot::{decode_vcs_snapshot_json, encode_vcs_snapshot_json, parse_vcs_dsl, print_vcs_dsl, VcsSnapshot};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::schema::mutations::{apply_vcs_mutation_reporting, inverse_vcs_mutation_steps, VcsDemoMutation};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::text::mutations::{decode_vcs_mutation_json};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::schema::snapshot::{VcsSnapshot};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::text::snapshot::{print_vcs_dsl};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::text::snapshot::{parse_vcs_dsl};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::text::snapshot::{decode_vcs_snapshot_json};
+    use semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::text::snapshot::{encode_vcs_snapshot_json};
 
     //#region 🔖️FixtureDecode
     /// 🧫️ Decodes the SAME committed fixture text `../🦀️.rs::fixture_text` embeds, through
@@ -277,7 +282,7 @@ mod subject {
     /// byte-exact law is asserted instead, together with a content check that a parser returning
     /// `VcsSnapshot::default()` (counter 0, status `new`, no tags) cannot satisfy.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed checkpoint artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed checkpoint artifact is not UTF-8: {error}"))?;
         let parsed = parse_vcs_dsl(&text)?;
         if parsed.title != "VCS Demo" || parsed.counter != 2 || parsed.status != "draft" || parsed.tags != vec!["alpha".to_string(), "beta".to_string()] {
             return Err(format!("identity-round-trip: the committed checkpoint is \"VCS Demo\" at counter 2, status draft, tags [alpha, beta], but parsed {}", encode_vcs_snapshot_json(&parsed)));

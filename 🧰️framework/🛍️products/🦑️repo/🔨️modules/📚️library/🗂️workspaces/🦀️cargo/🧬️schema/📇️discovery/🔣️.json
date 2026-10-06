@@ -4,7 +4,8 @@
   "additionalProperties": false,
   "required": [
     "schema-version",
-    "member-manifests"
+    "member-manifests",
+    "exclude-patterns"
   ],
   "properties": {
     "schema-version": {
@@ -17,7 +18,7 @@
       "items": {
         "type": "string",
         "minLength": 1,
-        "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+Cargo\\.toml$"
+        "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?:.*/)?Cargo\\.toml$"
       }
     },
     "owner-manifests": {
@@ -26,7 +27,16 @@
       "items": {
         "type": "string",
         "minLength": 1,
-        "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+Cargo\\.toml$"
+        "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)(?:.*/)?Cargo\\.toml$"
+      }
+    },
+    "exclude-patterns": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?![A-Za-z]:/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
       }
     }
   }

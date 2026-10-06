@@ -1,0 +1,32 @@
+{
+  "type":"object","additionalProperties":false,"required":["mode","nodes","handles","edges"],
+  "properties":{
+    "mode":{"enum":["normal","ported"]},
+    "camera":{"anyOf":[{"$ref":"#/$defs/camera"},{"type":"null"}]},
+    "nodes":{"type":"array","items":{"$ref":"#/$defs/node"}},
+    "handles":{"type":"array","items":{"$ref":"#/$defs/handle"}},
+    "edges":{"type":"array","items":{"$ref":"#/$defs/edge"}},
+    "wires":{"type":"array","items":{"$ref":"#/$defs/wire"}},
+    "regions":{"type":"array","items":{"$ref":"#/$defs/region"}},
+    "selectionExitHighlightIds":{"type":"array","items":{"type":"string"}}
+  },
+  "$defs":{
+    "string":{"type":["string","null"]},"number":{"type":["number","null"]},"boolean":{"type":["boolean","null"]},
+    "camera":{"type":"object","additionalProperties":false,"required":["x","y","zoom"],"properties":{"x":{"type":"number"},"y":{"type":"number"},"zoom":{"type":"number"}}},
+    "node":{"type":"object","additionalProperties":false,"required":["id","x","y"],"properties":{
+      "id":{"type":"string"},"x":{"type":"number"},"y":{"type":"number"},"draggable":{"$ref":"#/$defs/boolean"},"selected":{"$ref":"#/$defs/boolean"},"style":{"$ref":"#/$defs/string"},"text":{"$ref":"#/$defs/string"},"iconKind":{"$ref":"#/$defs/string"},"nodeKind":{"$ref":"#/$defs/string"},"userData":{},"visible":{"$ref":"#/$defs/boolean"},"locked":{"$ref":"#/$defs/boolean"},"root":{"$ref":"#/$defs/boolean"},"shape":{"$ref":"#/$defs/string"},"radius":{"$ref":"#/$defs/number"},"width":{"$ref":"#/$defs/number"},"height":{"$ref":"#/$defs/number"},"scale":{"$ref":"#/$defs/number"}
+    }},
+    "handle":{"type":"object","additionalProperties":false,"required":["id","nodeId","angle"],"properties":{
+      "id":{"type":"string"},"nodeId":{"type":"string"},"angle":{"type":"number"},"radius":{"$ref":"#/$defs/number"},"selected":{"$ref":"#/$defs/boolean"},"style":{"$ref":"#/$defs/string"},"handleKind":{"$ref":"#/$defs/string"},"color":{"$ref":"#/$defs/string"},"iconKind":{"$ref":"#/$defs/string"},"userData":{},"visible":{"$ref":"#/$defs/boolean"},"locked":{"$ref":"#/$defs/boolean"},"scale":{"$ref":"#/$defs/number"}
+    }},
+    "edge":{"type":"object","additionalProperties":false,"required":["id","source","target"],"properties":{
+      "id":{"type":"string"},"source":{"type":"string"},"target":{"type":"string"},"edgeKind":{"$ref":"#/$defs/string"},"sourceTip":{"$ref":"#/$defs/string"},"targetTip":{"$ref":"#/$defs/string"},"selected":{"$ref":"#/$defs/boolean"},"style":{"$ref":"#/$defs/string"},"userData":{},"visible":{"$ref":"#/$defs/boolean"},"locked":{"$ref":"#/$defs/boolean"}
+    }},
+    "wire":{"type":"object","additionalProperties":false,"required":["id","source"],"properties":{
+      "id":{"type":"string"},"source":{"type":"string"},"wireKind":{"$ref":"#/$defs/string"},"target":{"$ref":"#/$defs/string"},"endX":{"$ref":"#/$defs/number"},"endY":{"$ref":"#/$defs/number"},"selected":{"$ref":"#/$defs/boolean"},"style":{"$ref":"#/$defs/string"},"userData":{},"visible":{"$ref":"#/$defs/boolean"},"locked":{"$ref":"#/$defs/boolean"}
+    }},
+    "region":{"type":"object","additionalProperties":false,"required":["id","x","y","width","height"],"properties":{
+      "id":{"type":"string"},"x":{"type":"number"},"y":{"type":"number"},"width":{"type":"number"},"height":{"type":"number"},"label":{"$ref":"#/$defs/string"},"hidden":{"$ref":"#/$defs/boolean"},"locked":{"$ref":"#/$defs/boolean"},"selected":{"$ref":"#/$defs/boolean"}
+    }}
+  }
+}

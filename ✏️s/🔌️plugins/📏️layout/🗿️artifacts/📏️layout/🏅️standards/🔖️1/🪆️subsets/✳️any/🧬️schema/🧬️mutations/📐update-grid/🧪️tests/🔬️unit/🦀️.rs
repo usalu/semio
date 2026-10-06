@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn update_grid_replaces_the_baseline_and_inverse_restores_it() {
-    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let mutation = LayoutMutation::UpdateGrid(UpdateGrid { baseline_grid: 18.0, baseline_offset: 4.0, snap_to_baseline: false });
     let next = mutation.diff(&base).diff().apply(&base).expect("grid applies");
     assert_eq!(next.grid.baseline_grid, 18.0);

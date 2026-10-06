@@ -1,14 +1,14 @@
 /** 🧬️ The one strict Ajv oracle for semio JSON schemas: Ajv in strict mode with the `x-semio-*` vendor annotation vocabulary
- * (`../../🧫️fixtures/🧬️vendor-annotation-vocabulary/🔣️.json`) registered as annotation keywords, each with its value's meta-schema. Every schema law builds its validator here
+ * (`../../🧬️vendor-annotation-vocabulary/🔣️.json`) registered as annotation keywords, each with its value's meta-schema. Every schema law builds its validator here
  * instead of registering vendor keywords one call site at a time, so a schema that gains an annotation (e.g. `x-semio-note` in
  * `📇️directory/🧬️schema/🔣️.json`) keeps compiling everywhere, and a keyword outside the vocabulary still fails
  * (ticket 26/09/23 S15). https://ajv.js.org/strict-mode.html#prohibit-ignored-keywords */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import Ajv, { type Options } from "ajv";
 import addFormats, { type FormatName } from "ajv-formats";
-import vocabulary from "../../🧫️fixtures/🧬️vendor-annotation-vocabulary/🔣️.json" with { type: "json" };
+import vocabulary from "../../🧬️vendor-annotation-vocabulary/🔣️.json" with { type: "json" };
 import manifestSchema from "../../../🛂️manifest/🧬️schema/🔣️.json" with { type: "json" };
-import formatPolicy from "../../🧫️fixtures/✅️draft07-validation-vectors.json" with { type: "json" };
+import formatPolicy from "../../✅️validator/🏷️format-policy/🔣️.json" with { type: "json" };
 
 export const SEMIO_SCHEMA_VENDOR_VOCABULARY_V1 = vocabulary;
 
@@ -17,7 +17,7 @@ export const SEMIO_SCHEMA_VENDOR_VOCABULARY_DOCUMENTS_V1: readonly { readonly $i
 
 /** 🏷️ The owned validator's pinned `format` policy (`ASSERTED_STRING_FORMATS` in `🧬️schema/✅️validator/🦀️.rs`): the asserted
  * string formats, checked by `ajv-formats`, and the proto-derived spellings that stay annotations and never reject. */
-export const SEMIO_SCHEMA_FORMAT_POLICY_V1: { readonly asserted: readonly FormatName[]; readonly annotation: readonly string[] } = { asserted: formatPolicy.assertedFormats as FormatName[], annotation: formatPolicy.annotationFormats };
+export const SEMIO_SCHEMA_FORMAT_POLICY_V1: { readonly asserted: readonly FormatName[]; readonly annotation: readonly string[] } = { asserted: formatPolicy.asserted as FormatName[], annotation: formatPolicy.annotation };
 
 /** 🧬️ A strict Ajv (`options` override the defaults) that knows every declared `x-semio-*` annotation and every pinned `format`. */
 export function semioSchemaAjvV1(options: Options = {}): Ajv {

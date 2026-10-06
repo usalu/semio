@@ -103,14 +103,7 @@ pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSn
     })
 }
 
-/// 📥️ Decodes this subset's own default-derived JSON projection — the exact shape the committed
-/// `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification-vector fixtures carry
-/// (externally tagged by variant name, snake_case payload fields — no `#[value(rename_all)]` on
-/// this enum or its payload structs) — into a real `SemioKitMutation`. Same rationale as
-/// `../📸️snapshot/🦀️.rs`'s `decode_kit_snapshot_json`.
-pub fn decode_kit_mutation_json(text: &str) -> Result<SemioKitMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests

@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "root": {"typed": ["selection", "hover", "activeMode", "activeGranularity"], "oracle": ["activeGranularity", "activeMode", "hover", "selection"]},
+  "selection": {"typed": ["granularity", "ids", "anchorId"], "oracle": ["anchorId", "granularity", "ids"]},
+  "hover": ["channel", "ids"],
+  "contract": "declared-typed-record-fields-canonical;dynamic-object-occurrences-preserved"
+}

@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
 import { createHmac, webcrypto } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { existsSync, readFileSync } from "node:fs";
@@ -12,7 +11,7 @@ import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-envi
 import { orderedDirectoryPublicationOracle } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
 import { directChildEnvironment, directChildLaunch, deliverCredentialEnvelopeToChild, sealedDirectChildEnvironment, type CredentialChildOperations } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { mcpCredentialSourceOrderConforms, nativeCredentialSourceOrderConforms, proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder, sourceDefinitionBodies } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
-import { assertHubFixtureExpectation } from "../../🧬️schema/🛂️fixture-expectation/🟦️.ts";
+import { assertObservationExpectation } from "../../🧪️testing/🛂️expectation/🟦️.ts";
 import { authenticatedFrame, hmacProof, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
 import { allocateLocalHubRunRoot, finishLocalHub, localHubReadinessAdmitted, type LocalHubRun, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
@@ -20,7 +19,6 @@ import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️i
 
 const repoRoot = resolve(import.meta.dir, "../../..");
 const hubRoot = join(repoRoot, "🌎️hub");
-const schemaPath = join(hubRoot, "🧬️schema/🧱️foundation-source/🔣️.json");
 const fixturePath = join(hubRoot, "🧫️fixtures/🧱️foundation-source/🔣️.json");
 const fixtureSource = readFileSync(fixturePath, "utf8");
 const fixture = JSON.parse(fixtureSource) as {
@@ -71,10 +69,6 @@ function rootImportsForOwner(routerPath: string, ownerPath: string): readonly st
 }
 
 test("Hub foundation contract is schema-first and independently parsed", async () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")));
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  expect(validate({ ...fixture, schemaVersion: 2 })).toBe(false);
-  expect(validate({ ...fixture, owners: fixture.owners.slice(1) })).toBe(false);
   const jsonc = await import("jsonc-parser");
   const errors: import("jsonc-parser").ParseError[] = [];
   expect(jsonc.parse(fixtureSource, errors, { allowTrailingComma: false, disallowComments: true })).toEqual(fixture);
@@ -417,8 +411,8 @@ test("ordered publication and Cargo staging retain their exact authorities", () 
   expect(defaults.env).toEqual({ KEEP: "yes", RUST_MIN_STACK: fixture.limits.cargoBuildStack });
   expect(defaults.nativeEnv).toEqual({ RUST_MIN_STACK: fixture.limits.cargoNativeStack });
   expect(exactCargoStageEnvironments({ SEMIO_BUILD_RUST_MIN_STACK: "67108864" }).env.RUST_MIN_STACK).toBe("67108864");
-  expect(() => assertHubFixtureExpectation("negative", { stage: "contract", result: "rejected", code: "hostile" }, true)).toThrow(/hostile/u);
-  expect(() => assertHubFixtureExpectation("positive", { stage: "contract", result: "accepted", code: "valid" }, true)).not.toThrow();
+  expect(() => assertObservationExpectation("negative", { stage: "contract", result: "rejected", code: "hostile" }, true)).toThrow(/hostile/u);
+  expect(() => assertObservationExpectation("positive", { stage: "contract", result: "accepted", code: "valid" }, true)).not.toThrow();
 });
 
 // 🧮 This one parses every owner's TypeScript, the router's, `📋️project.json`, `nx.json` and

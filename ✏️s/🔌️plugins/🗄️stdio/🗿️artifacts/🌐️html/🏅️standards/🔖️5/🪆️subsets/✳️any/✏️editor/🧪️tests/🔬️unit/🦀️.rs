@@ -10,7 +10,7 @@ fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
 #[test]
 fn natural_file_route_exports_html5_and_reopens_through_one_mutation() {
     let source = b"<!doctype html><html><head><title>Natural Open Save</title></head><body><p>Edited body.</p></body></html>";
-    let edited = crate::standards::v5::subsets::any::schema::snapshot::parse_html_document(std::str::from_utf8(source).unwrap()).expect("HTML fixture");
+    let edited = crate::standards::v5::subsets::any::io::text::snapshot::parse_html_document(std::str::from_utf8(source).unwrap()).expect("HTML fixture");
     let bytes = <HtmlEditor as ArtifactEditor>::encode_natural_file(&edited).expect("HTML natural bytes");
     let oracle = semio_s_artifact_stdio_html_test_oracle::standards::v5::subsets::any::project_html_5;
     assert_eq!(oracle(&bytes).expect("html5ever reads exported HTML"), oracle(source).expect("html5ever reads expected HTML"));

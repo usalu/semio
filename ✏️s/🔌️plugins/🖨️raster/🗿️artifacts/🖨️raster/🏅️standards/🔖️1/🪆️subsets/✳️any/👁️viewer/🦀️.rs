@@ -73,7 +73,7 @@ impl ArtifactViewer for RasterViewer {
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::raster_document_store_owners())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_owners())
     }
 
     /// 📄️ Boots on the constant empty shell `empty_raster_snapshot()`, like the editor: the store's
@@ -81,7 +81,7 @@ impl ArtifactViewer for RasterViewer {
     /// the empty shell to both — see `RasterPlayApp::initial_snapshot`. A viewer instance receives its
     /// document through the archive/pack load path (raster's own paged clone authority).
     fn initial_snapshot() -> RasterSnapshot {
-        crate::standards::v1::subsets::any::schema::empty_raster_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `RasterViewCommand::Noop` variant never carries a config

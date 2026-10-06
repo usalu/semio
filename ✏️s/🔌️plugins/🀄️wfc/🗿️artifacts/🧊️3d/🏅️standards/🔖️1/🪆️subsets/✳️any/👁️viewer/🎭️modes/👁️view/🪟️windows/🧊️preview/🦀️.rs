@@ -25,6 +25,7 @@ const WFC_3D_VIEW_SURFACE: &str = "wfc.3d.view";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WFC_3D_VIEW_WINDOW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: WFC_3D_VIEW_BODY.into(),

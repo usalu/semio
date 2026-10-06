@@ -1,0 +1,877 @@
+{
+  "version": 1,
+  "extent": "./Complete domain SQL INTEGER/REAL=8, NULL=0, TEXT=UTF8 bytes; includes surrogate keys, every relationship and IEEE query/word/class companion",
+  "tables": 16,
+  "rows": 30,
+  "cases": [
+    {
+      "name": "base",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 249
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 82
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1348
+    },
+    {
+      "name": "0000000000000000",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 249
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 104
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1370
+    },
+    {
+      "name": "8000000000000000",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 249
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 104
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1370
+    },
+    {
+      "name": "0000000000000001",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 249
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 104
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1370
+    },
+    {
+      "name": "000fffffffffffff",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 249
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 104
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1370
+    },
+    {
+      "name": "7fefffffffffffff",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 249
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 104
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1370
+    },
+    {
+      "name": "7ff0000000000000",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 329
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 144
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1490
+    },
+    {
+      "name": "fff0000000000000",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 329
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 144
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1490
+    },
+    {
+      "name": "7ff8000000000011",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 161
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1238
+    },
+    {
+      "name": "7ff0000000000007",
+      "tables": [
+        {
+          "table": "workflow_categorical",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_category_option",
+          "rows": 3,
+          "bytes": 77
+        },
+        {
+          "table": "workflow_contract",
+          "rows": 2,
+          "bytes": 102
+        },
+        {
+          "table": "workflow_document",
+          "rows": 1,
+          "bytes": 19
+        },
+        {
+          "table": "workflow_edge",
+          "rows": 2,
+          "bytes": 72
+        },
+        {
+          "table": "workflow_graph",
+          "rows": 1,
+          "bytes": 30
+        },
+        {
+          "table": "workflow_input",
+          "rows": 2,
+          "bytes": 90
+        },
+        {
+          "table": "workflow_input_binding",
+          "rows": 2,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_node",
+          "rows": 2,
+          "bytes": 161
+        },
+        {
+          "table": "workflow_numeric",
+          "rows": 1,
+          "bytes": 60
+        },
+        {
+          "table": "workflow_output_binding",
+          "rows": 2,
+          "bytes": 62
+        },
+        {
+          "table": "workflow_parameter",
+          "rows": 4,
+          "bytes": 129
+        },
+        {
+          "table": "workflow_parameter_binding",
+          "rows": 2,
+          "bytes": 73
+        },
+        {
+          "table": "workflow_port",
+          "rows": 3,
+          "bytes": 233
+        },
+        {
+          "table": "workflow_text",
+          "rows": 1,
+          "bytes": 23
+        },
+        {
+          "table": "workflow_toggle",
+          "rows": 1,
+          "bytes": 24
+        }
+      ],
+      "bytes": 1238
+    }
+  ],
+  "nativeBacking": {
+    "maximumBytes": 4194304,
+    "repeatedOwnerships": 2,
+    "tinyAllocationBytes": [
+      0,
+      1
+    ],
+    "requestIncludesReallocFullSize": true
+  }
+}

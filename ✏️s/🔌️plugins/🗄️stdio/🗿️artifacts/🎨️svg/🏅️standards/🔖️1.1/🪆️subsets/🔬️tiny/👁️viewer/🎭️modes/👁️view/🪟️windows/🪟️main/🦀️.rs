@@ -1,7 +1,7 @@
 //! 👁️ `svg` view (tiny) — Main window: real `ImageWindowKit`
 //! render of the current document (read-only).
 
-use crate::standards::v1_1::subsets::tiny::schema::snapshot::write_svg_xml;
+use crate::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
 use crate::standards::v1_1::subsets::tiny::schema::snapshot::SvgSnapshot;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};

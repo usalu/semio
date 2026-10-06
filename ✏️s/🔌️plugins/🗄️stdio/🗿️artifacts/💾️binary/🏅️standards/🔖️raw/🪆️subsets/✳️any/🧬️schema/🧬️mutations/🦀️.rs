@@ -28,7 +28,7 @@ pub mod truncate_at;
 /// "single-field tuple variant" branch (`✨️derive/🦀️.rs`) delegates `DslVariants`
 /// straight through to that leaf's own `#[derive(semio_framework_dsl_record_derive::DslRecord)]`-provided `DslField` impl — the
 /// SAME `record_codegen` output the fields produced when they lived inline in the enum, so the
-/// committed `mutations::text::COMPONENT_GRAMMAR_SEMIO`/`mutations::binary::COMPONENT_PROTOCOL_SEMIO`
+/// committed `crate::standards::v_raw::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO`/`crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO`
 /// facets and this `OpText`/`OpBinary` pair are unaffected by the leaf split.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -118,43 +118,9 @@ pub(crate) fn agg_inverse(this: &BinaryMutation, base: &BinarySnapshot) -> Resul
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText` (P6: `semio_framework_dsl_record_derive::DslEnum` emits `DslVariants` only) — one-line grammar via
-/// the derived `RecordSpec`/`DslVariants`. Body is the same ~15-line shape every `DslOps`-derived
-/// enum's `OpText` impl uses (see `SpaceMutation`, `FlowMutationDsl` for the framework-side
-/// precedent this copies verbatim).
-impl OpText for BinaryMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let spec = (spec_fn.ordinary)();
-            let wire_keyword = spec.keyword.as_deref().unwrap_or(keyword);
-            let probe = format!("{} ", wire_keyword);
-            if line == wire_keyword || line.starts_with(&probe) {
-                let record = semio_framework_dsl_record::parse(line, &spec, &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
-                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown operation line '{line}'"), semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
-    }
-}
 
-/// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`, the generic
-/// `format u8 (=1) | variant ordinal varint | record body` layout shared by every `DslVariants`
-/// type. Zero per-artifact logic.
-impl OpBinary for BinaryMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("💾️binary/📡️.protocol.semio"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("💾️binary/📡️.protocol.semio"), bytes)
-    }
-}
+
+
 //#endregion OpCodecs
 
 /// 🧪️ P2-P3: representative `BinaryMutation` cases, one per variant, against [`tests::base`]'s

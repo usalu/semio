@@ -78,7 +78,7 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
     for index in 0..fixture["documentContinuation"]["importAdditionalGroups"].as_u64().unwrap(){incoming.host_snapshot.widgets.push(Widget::InputNote{id:format!("incoming-group-{index}"),text:format!("Group {index}")});}
     let export=crate::standards::v1::subsets::any::io::document_io::export_document(&incoming).unwrap();
     let command=Generation3dCommand::ImportDocument(import_document::ImportDocument{name:export.filename,payload:export.data,widget_id:None,channel:None,texture_id:None});
-    let expected=crate::standards::v1::subsets::any::schema::mutations::text::generation3d_host_snapshot_operations(&snapshot.host_snapshot,&incoming.host_snapshot);
+    let expected=crate::standards::v1::subsets::any::schema::mutations::generation3d_host_snapshot_operations(&snapshot.host_snapshot,&incoming.host_snapshot);
     let owner=semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());let mut work=Generation3dDocumentIoWork::new("importDocument",owner.clone());
     let extent=work.extent(&command,&snapshot,&protocol::InteractionState::default(),None).unwrap();let required=GENERATION3D_RETAINED_CAPACITY.rows(expected.len());
     work.begin_close();while !matches!(work.close_step(1,3),semio_framework_job::InteractiveJobCloseStep::Complete){}
@@ -346,7 +346,7 @@ fn production_hex(bytes: &[u8]) -> String {
 
 fn production_semantic_digest(snapshot: &Generation3dSnapshot) -> [u8; 32] {
     let mut digest = store::ArtifactStoreInitializationDigest::new(b"generation3d.production-law.semantic");
-    digest.observe(&crate::standards::v1::subsets::any::schema::snapshot::binary::encode(snapshot));
+    digest.observe(&crate::standards::v1::subsets::any::io::binary::snapshot::encode(snapshot));
     digest.finish()
 }
 
@@ -357,16 +357,16 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation3dSnapshot, [u8;
     let mut mutation_hex = Vec::new();
     mutation_hex.try_reserve_exact(mutations.len()).expect("P3 production mutation owner preflight");
     for mutation in &mutations {
-        mutation_hex.push(production_hex(&crate::standards::v1::subsets::any::schema::mutations::binary::encode_op(mutation).expect("P3 production mutation encoding")));
+        mutation_hex.push(production_hex(&crate::standards::v1::subsets::any::io::binary::mutations::encode_op(mutation).expect("P3 production mutation encoding")));
     }
     let mut expected = production_initial_snapshot(label);
-    crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_apply_retained_mutations_for_test(&mut expected, &mutations);
+    crate::host::generation3d_apply_retained_mutations_for_test(&mut expected, &mutations);
     let expected_digest = production_semantic_digest(&expected);
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": GENERATION_3D_SCHEMA,
         "id": "generation3d-production-mounted-law",
         "vcs": {
-            "initialSnapshot": production_hex(&crate::standards::v1::subsets::any::schema::snapshot::binary::encode_mounted(&snapshot)),
+            "initialSnapshot": production_hex(&crate::standards::v1::subsets::any::io::binary::snapshot::encode_mounted(&snapshot)),
             "edits": [{
                 "id": "generation3d-production-all14-edit",
                 "actor": "generation3d-production-law",
@@ -396,7 +396,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation3dSnapshot, [u8;
 
 /// 🔐️ Owns the publication lease `admit_production_envelope` took and releases it even when the law
 /// panics before its explicit release. The lease table is a PROCESS-GLOBAL 4-slot
-/// `FixedOperationRegistry` (`🧬️schema/🧬️mutations/💾️binary/🦀️.rs:211`), so one leaked slot turns every
+/// `FixedOperationRegistry` (`🚪️io/💾️binary/🧬️mutations/🦀️.rs:211`), so one leaked slot turns every
 /// later law in the same binary into `generation3d-publication.saturated` — an order-dependent red
 /// that has nothing to do with what those laws assert
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
@@ -411,7 +411,7 @@ impl Generation3dProductionLease {
             return false;
         }
         self.released = true;
-        crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_release_publication_authority(self.handle.operation, self.handle.generation)
+        crate::host::generation3d_release_publication_authority(self.handle.operation, self.handle.generation)
     }
 }
 
@@ -424,7 +424,7 @@ impl Drop for Generation3dProductionLease {
 fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, wire: &[u8]) -> Generation3dProductionLease {
     let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P3 production ingress credits");
-    crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, crate::standards::v1::subsets::any::schema::mutations::binary::Generation3dPublicationCredits { maximum_items: 8_192, maximum_output_pages: crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::standards::v1::subsets::any::schema::mutations::binary::GENERATION3D_MOUNTED_CONTROL_CREDITS })
+    crate::host::generation3d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, crate::host::Generation3dPublicationCredits { maximum_items: 8_192, maximum_output_pages: crate::host::GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::host::GENERATION3D_MOUNTED_CONTROL_CREDITS })
     .expect("P3 production publication authority");
     for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
         let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
@@ -448,7 +448,7 @@ fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
 /// `📓️remaining-suite-reds-2026-09-13.md` §3.3).
 fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
-        crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
+        crate::host::generation3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
             .expect("P3 authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one P3 production maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("P3 production load advancement");
@@ -485,7 +485,7 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
     drop(snapshot);
     expected.retire_cold();
 
-    use crate::standards::v1::subsets::any::schema::mutations::binary::Generation3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+    use crate::host::Generation3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
     for (hostile, expected_code) in [
         (Missing, "generation3d-publication.authority-missing"),
         (WrongOperation, "generation3d-publication.wrong-operation"),
@@ -501,9 +501,9 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
         candidate.retire_cold();
         let mut lease = admit_production_envelope(&mut app, &wire);
         let handle = lease.handle;
-        crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_arm_publication_hostile(handle.operation, hostile);
+        crate::host::generation3d_arm_publication_hostile(handle.operation, hostile);
         assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_take_publication_hostile_observed(handle.operation), Some(expected_code));
+        assert_eq!(crate::host::generation3d_take_publication_hostile_observed(handle.operation), Some(expected_code));
         assert_eq!(app.artifact_generation_now(), base_generation);
         let retained = context::snapshot(&app);
         assert_eq!(production_semantic_digest(&retained), last_valid_digest);

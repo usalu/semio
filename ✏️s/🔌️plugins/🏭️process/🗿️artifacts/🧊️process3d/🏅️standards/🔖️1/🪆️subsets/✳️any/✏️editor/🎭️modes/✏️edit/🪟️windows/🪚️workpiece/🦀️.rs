@@ -38,6 +38,7 @@ const PROCESS3D_FALLBACK_MESH_KIND: &str = "box";
 /// `window_measures`, never frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: PROCESS_3D_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Workpiece", "Werkstück"),
         body_key: PROCESS_3D_PLAY_BODY_MAIN.into(),

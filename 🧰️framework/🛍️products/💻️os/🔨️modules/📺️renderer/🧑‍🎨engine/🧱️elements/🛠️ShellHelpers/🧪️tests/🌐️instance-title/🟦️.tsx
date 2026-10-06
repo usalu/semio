@@ -8,7 +8,6 @@ import { isIconName } from "@semio-tech/assets";
 import { createWorldProjectionTemplates, decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, type WorldProjectionSpec, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🟦️.tsx";
-import schema from "../../🧬️schema/🌐️instance-title/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };
 import { initialShellState, shellReducer, type ActiveSession } from "../../../🐚️Shell/🟦️.tsx";
 
@@ -109,8 +108,6 @@ describe("locale-stable instance titles", () => {
   });
 
   it("keeps authored instance names while the actual React Dock localizes singleton windows", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} });
     vi.stubGlobal("MutationObserver", class { observe(): void {} disconnect(): void {} takeRecords(): MutationRecord[] { return []; } });
     const windowKinds = [

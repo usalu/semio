@@ -237,10 +237,7 @@ fn replace_all<T: Clone>(base: &[T], target: &[T], remove: impl Fn(usize) -> En1
 }
 
 //#region 🌉️ExternalCodecBridge
-/// 📥️ Decodes one committed mutation JSON document into [`En1998Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
-pub fn decode_en1998_mutation_json(text: &str) -> Result<En1998Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
 pub fn apply_en1998_mutation(base: &En1998Snapshot, mutation: &En1998Mutation) -> Result<(En1998Snapshot, Vec<String>), String> {
     let raised = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(mutation, base);

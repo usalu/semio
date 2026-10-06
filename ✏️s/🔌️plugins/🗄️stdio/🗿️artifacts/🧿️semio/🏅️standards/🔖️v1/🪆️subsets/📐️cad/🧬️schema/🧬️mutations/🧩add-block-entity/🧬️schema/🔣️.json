@@ -15,10 +15,40 @@
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     },
     "blockName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "Name of the block definition.",
+          "de": "Name der Blockdefinition."
+        },
+        "ref": {
+          "kind": "block"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "entity": {
-      "$ref": "#/$defs/CadEntityRecord"
+      "$ref": "#/$defs/CadEntityRecord",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "Handle, layer and geometry of the entity that is added.",
+          "de": "Referenz (Handle), Layer und Geometrie der Entität, die hinzugefügt wird."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

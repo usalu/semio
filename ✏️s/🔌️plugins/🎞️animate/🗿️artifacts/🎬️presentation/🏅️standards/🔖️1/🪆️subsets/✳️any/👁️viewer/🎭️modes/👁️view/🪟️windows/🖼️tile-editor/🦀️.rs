@@ -30,6 +30,7 @@ const SURFACE_ID: &str = "animate.presentation.view";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::animate::create_animate_presentation_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Tile editor", "Kacheleditor"),
         body_key: BODY_KEY.into(),

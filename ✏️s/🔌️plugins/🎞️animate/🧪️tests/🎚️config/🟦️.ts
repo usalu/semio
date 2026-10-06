@@ -39,6 +39,6 @@ export default defineConfig({
       "../../🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🔨️modules/🔌️pdf-canvas-port/🟦️.ts",
     ],
     passWithNoTests: false,
-    setupFiles: ["../../🧫️fixtures/🌐️browser-environment/🟦️.ts"],
+    setupFiles: ["../🧰️support/🌐️browser-environment/🟦️.ts"],
   },
 });

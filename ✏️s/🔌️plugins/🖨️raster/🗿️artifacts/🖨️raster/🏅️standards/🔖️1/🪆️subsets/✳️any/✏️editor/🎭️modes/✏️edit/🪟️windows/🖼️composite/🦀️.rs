@@ -26,6 +26,7 @@ const RASTER_PLAY_SURFACE_COMPOSITE: &str = "raster.play.composite";
 /// [`window_measures`], not frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: RASTER_PLAY_WINDOW_COMPOSITE.into(),
         label: LocalizedLabel::native("Composite", "Komposit"),
         body_key: RASTER_PLAY_BODY_COMPOSITE.into(),

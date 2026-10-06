@@ -45,7 +45,16 @@
       "type": "array",
       "items": {
         "type": "number",
-        "exclusiveMinimum": 0
+        "exclusiveMinimum": 0,
+        "x-semio-ui": {
+          "label": {
+            "en": "Cell size",
+            "de": "Zellgröße"
+          },
+          "widget": "stepper",
+          "role": "value",
+          "step": 0.1
+        }
       },
       "x-semio-ui": {
         "role": "value",

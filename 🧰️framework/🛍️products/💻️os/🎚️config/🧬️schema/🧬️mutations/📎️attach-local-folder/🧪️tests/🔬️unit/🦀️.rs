@@ -7,14 +7,14 @@ fn binding(document_id: &str, path: &str) -> LocalFolderBinding {
 
 #[test]
 fn attach_serializes_like_the_typescript_projection() {
-    let json = serde_json::to_value(attach_local_folder(binding("puzzle.2d.fixture", "/data/puzzles"))).expect("attach encodes");
-    assert_eq!(json, serde_json::json!({ "mutation": "attachLocalFolder", "documentId": "puzzle.2d.fixture", "pluginId": "puzzle2d", "appId": "s.puzzle.puzzle2d@1/*#editor", "folder": { "kind": "path", "path": "/data/puzzles" } }));
+    let json = serde_json::to_value(attach_local_folder(binding("board.ports.directed.v1", "/data/puzzles"))).expect("attach encodes");
+    assert_eq!(json, serde_json::json!({ "mutation": "attachLocalFolder", "documentId": "board.ports.directed.v1", "pluginId": "puzzle2d", "appId": "s.puzzle.puzzle2d@1/*#editor", "folder": { "kind": "path", "path": "/data/puzzles" } }));
 }
 
 #[test]
 fn attaching_a_new_document_inverts_to_its_detachment() {
     let base = LocalFolderBindings::default();
-    assert_eq!(attach_local_folder(binding("puzzle.2d.fixture", "/data/puzzles")).inverse(&base).expect("valid retained mutation inverse fixture"), vec![super::super::detach_local_folder("puzzle.2d.fixture")]);
+    assert_eq!(attach_local_folder(binding("board.ports.directed.v1", "/data/puzzles")).inverse(&base).expect("valid retained mutation inverse fixture"), vec![super::super::detach_local_folder("board.ports.directed.v1")]);
 }
 
 #[test]

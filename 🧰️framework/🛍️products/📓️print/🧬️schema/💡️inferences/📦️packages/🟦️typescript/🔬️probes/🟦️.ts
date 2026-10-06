@@ -1667,7 +1667,7 @@ async function inferredLayerChecks(): Promise<VizKernelCheck[]> {
 
 /** 🧩 Resolves language-neutral chart fixtures and compares geometry with D3. */
 export async function renderGrammarChecks(): Promise<VizKernelCheck[]> {
-  const { inferVizChart } = await import("../../../🟦️.ts");
+  const { inferVizChart } = await import("../../../../../🔨️modules/🏠️host/💡️inferences/🟦️.ts");
   const guideScale = await import("d3-scale");
   const d3 = await import("d3-shape");
   const d3Color = await import("d3-color");

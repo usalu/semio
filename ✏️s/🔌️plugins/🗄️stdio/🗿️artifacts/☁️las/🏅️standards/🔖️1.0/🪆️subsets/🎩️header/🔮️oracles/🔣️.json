@@ -563,9 +563,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "survey-strip",
       "class": "third-party-generated",
       "target": {
@@ -604,7 +603,6 @@
       "notes": "A single base input document exercising all 15 declared las@1.0 mutation kinds (2 VLRs, 6 points spanning classification/intensity/return-number/scan-angle, bounds and points-by-return deliberately divergent from the real point distribution so those two kinds are checked mutations, not no-ops). LAS itself declares no physical length/angle unit convention; 751 units, 62 prefixes is schema-required,  and  are placeholders, not claims. Verified to read back correctly through both las::Reader (6/6 points) and this subset's own oracle projection."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-version-applied",
       "class": "handcrafted",
       "target": {
@@ -647,7 +645,6 @@
       "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetVersion{major:1,minor:1} bumps the minor version only (major is already 1); parameters taken verbatim from this subset's own mutate-las-1-0 differential feature Examples row."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-system-identifier-applied",
       "class": "handcrafted",
       "target": {
@@ -690,7 +687,6 @@
       "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetSystemIdentifier renames the 32-byte header field; parameters match the differential feature's own Examples row."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-software-info-applied",
       "class": "handcrafted",
       "target": {
@@ -733,7 +729,6 @@
       "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetSoftwareInfo renames the 32-byte generating-software field; parameters match the differential feature's own Examples row."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-creation-date-applied",
       "class": "handcrafted",
       "target": {
@@ -776,7 +771,6 @@
       "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetCreationDate{dayOfYear:42,year:2027} matches the differential feature's own Examples row."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-scale-and-offset-applied",
       "class": "handcrafted",
       "target": {
@@ -819,7 +813,6 @@
       "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetScaleAndOffset{scale:[5e-4,5e-4,5e-4],offset:[583000,5804000,0]} matches the differential feature's own Examples row (a real UTM-like offset)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-bounds-applied",
       "class": "handcrafted",
       "target": {
@@ -862,7 +855,6 @@
       "notes": "Handcrafted LasSnapshot before/after pair (schema per this subset's own set-snapshot leaf). SetBounds matches the differential feature's own Examples row."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-points-by-return-applied",
       "class": "handcrafted",
       "target": {

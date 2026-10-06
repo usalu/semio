@@ -11,7 +11,7 @@ pub fn register() {}
 /// 📤️ Encode csv into a TxtSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &CsvSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = crate::schema::snapshot::encode_csv(from);
+    let text = crate::standards::v_rfc4180::subsets::any::io::text::snapshot::encode_csv(from);
     Ok(TxtSnapshot::from_body(&text))
 }
 

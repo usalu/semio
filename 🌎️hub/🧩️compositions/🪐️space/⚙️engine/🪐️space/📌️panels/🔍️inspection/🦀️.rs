@@ -23,7 +23,7 @@ use semio_framework_ui_contract::{input, select, tree_item as tree_item_row, Bui
 pub async fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(S_PLAY_INSPECTOR_TAB_ID.into()),
-        label: semio_framework_plugin::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
+        label: semio_framework_ui_locale::LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
         group: PanelGroup::Details,
         body_key: Some(crate::engine::space::S_PLAY_INSPECTOR_BODY_KEY.into()),
         children: Vec::new(),

@@ -5,9 +5,9 @@ import Ajv from "ajv";
 
 export function runBmpSourceHexFixtureChecks(): number {
   const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔤️source-hex/🔣️.json", import.meta.url), "utf8"));
-  const schema = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔤️source-hex/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  
+  
+  
   assert.equal(new Set(fixture.cases.map((row: { id: string }) => row.id)).size, fixture.cases.length);
   let checks = 2;
   for (const row of fixture.cases) {

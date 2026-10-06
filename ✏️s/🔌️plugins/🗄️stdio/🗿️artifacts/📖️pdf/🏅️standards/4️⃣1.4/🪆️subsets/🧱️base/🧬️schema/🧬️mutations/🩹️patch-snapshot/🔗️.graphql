@@ -1,0 +1,3 @@
+# 🩹️ Original pointer operation; value is admitted against own14 snapshot schema at its path.
+scalar SnapshotPatch
+input PatchSnapshotInput { patch: SnapshotPatch! }

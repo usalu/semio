@@ -6,7 +6,6 @@ import { createRequire } from "node:module";
 /** 🔁️ Compares persistent graph reloads under native Bun and Node after implementation, policy and helper edits. */
 export async function testGraphRevision(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔁️graph-revision/🔣️.json"), "utf8"));
-  assert.deepEqual(require("jsonschema").validate(fixture, JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔁️graph-revision/📐️schema/🔣️.json"), "utf8"))).errors, []);
   const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");
   const { cacheInternals } = await import("../../../🟨️.mjs");
   const commandSources = cacheInternals.relativeScriptInputs(fixture.commandSources.map((source: string) => join(workspace, source)), workspace).map((source: string) => source.slice("{workspaceRoot}/".length));

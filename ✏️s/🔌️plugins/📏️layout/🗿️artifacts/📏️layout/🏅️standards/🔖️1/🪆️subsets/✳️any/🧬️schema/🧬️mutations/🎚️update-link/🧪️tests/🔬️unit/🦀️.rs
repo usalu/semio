@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn update_link_raises_resolution_and_switches_the_print_profile() {
-    let mut base = crate::standards::v1::subsets::any::schema::default_document();
+    let mut base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     base.print_target = Some("print".into());
     let link = &mut base.links[0];
     link.state = None;

@@ -1,5 +1,4 @@
-/** 🧪️ Third-party oracle of the plain-text net-leaves corpus (`🧫️fixtures/🧫️net-leaves`): ajv validates the corpus against its
- * schema and jsdiff's array diff finds the lines both texts share at either end; the leaves an Apply means follow from those ends
+/** 🧪️ Third-party oracle of the plain-text net-leaves corpus (`🧫️fixtures/🧫️net-leaves`): ajv validates individual mutation records and jsdiff's array diff finds the lines both texts share at either end; the leaves an Apply means follow from those ends
  * alone (paired lines that differ are re-set, surplus lines removed last first or inserted), and an Apply that changes the line
  * ending or the terminator is the whole-buffer lowering (`null`). The Rust editor law replays the same corpus through `txt_emit`. */
 import { describe, expect, test } from "bun:test";
@@ -42,9 +41,9 @@ function netLeaves(beforeBody: string, afterBody: string): Leaf[] | null {
 }
 
 describe("plain-text net leaves (jsdiff oracle)", () => {
-  test("the corpus validates against its schema (ajv)", () => {
+  test("actual mutation records conform to their domain schema (ajv)", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+    for (const row of corpus.cases) for (const leaf of row.leaves ?? []) expect(validate(leaf), JSON.stringify(validate.errors)).toBe(true);
   });
 
   for (const row of corpus.cases) {

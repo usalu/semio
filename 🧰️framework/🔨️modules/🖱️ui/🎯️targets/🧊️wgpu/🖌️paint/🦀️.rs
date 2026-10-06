@@ -434,6 +434,15 @@ enum RetainedCaretAlignment {
     End,
 }
 
+/// 🪟️ The line of a multi-line text a single-row field shows — the one holding `caret` (the first without one) — and
+/// the caret's place inside it.
+pub(crate) fn text_line_view(text: &str, caret: Option<usize>) -> (&str, usize) {
+    let at = caret.filter(|caret| text.is_char_boundary(*caret)).unwrap_or(0).min(text.len());
+    let start = text[..at].rfind('\n').map_or(0, |index| index + 1);
+    let end = text[at..].find('\n').map_or(text.len(), |index| at + index);
+    (&text[start..end], at - start)
+}
+
 fn retained_caret_step(value: &str, caret: usize, bounds: Rect, size: f32, alignment: RetainedCaretAlignment, color: Rgba, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
     if value.len() > RETAINED_NODE_TEXT_MAX_BYTES || !value.is_char_boundary(caret) || !value.is_char_boundary(cursor.measure_byte) {
         return RetainedNodePaintStep::Fault;
@@ -901,7 +910,7 @@ fn retained_tree_node_step(
                     }
                 }
                 if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
-                    let color = foreground_on_fill(theme, theme.text_element, selected, on_hover_fill);
+                    let color = foreground_on_fill(theme, item.tone.and_then(|tone| theme.tone_ink(tone)).unwrap_or(theme.text_element), selected, on_hover_fill);
                     let x = if inline.is_rtl() { bounds.x + bounds.w - (indent - bounds.x) - TREE_ICON_SIZE } else { indent };
                     push_icon(draw, icons, icon_id.as_str(), x, row.y + (row.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
                 }
@@ -928,7 +937,7 @@ fn retained_tree_node_step(
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
             let on_hover_fill = previewed || item.presence.hover;
-            let color = foreground_on_fill(theme, theme.text_element, selected, on_hover_fill);
+            let color = foreground_on_fill(theme, item.tone.and_then(|tone| theme.tone_ink(tone)).unwrap_or(theme.text_element), selected, on_hover_fill);
             let color = if item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
             let value_width = if item.control.is_some() || item.content_lines.is_some() || item.inline_toolbar.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
@@ -1246,6 +1255,8 @@ pub(crate) fn paint_node_step_with_driver(
                         shown.as_deref().unwrap_or(input_node.value.as_str())
                     }
                 });
+                let long_text = input_node.input_kind == "longText";
+                let display = if long_text { text_line_view(display, node.state.edit.as_ref().filter(|edit| !edit.text.is_empty()).map(|edit| edit.caret)).0 } else { display };
                 let swatch = (input_node.input_kind == "color").then(|| color_input_swatch(bounds, display)).flatten();
                 let text_bounds = swatch.map_or(bounds, |(_, _, text_bounds)| text_bounds);
                 match cursor.phase {
@@ -1275,7 +1286,8 @@ pub(crate) fn paint_node_step_with_driver(
                             cursor.advance(3);
                             return RetainedNodePaintStep::Pending;
                         };
-                        match retained_caret_step(&edit.text, edit.caret, text_bounds, theme.font_size_body, RetainedCaretAlignment::Start, theme.accent, atlas, draw, cursor) {
+                        let (caret_line, caret_at) = if long_text { text_line_view(&edit.text, Some(edit.caret)) } else { (edit.text.as_str(), edit.caret) };
+                        match retained_caret_step(caret_line, caret_at, text_bounds, theme.font_size_body, RetainedCaretAlignment::Start, theme.accent, atlas, draw, cursor) {
                             RetainedNodePaintStep::Complete => {
                                 cursor.advance(3);
                                 RetainedNodePaintStep::Pending
@@ -3370,7 +3382,7 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
     // for both icon tint and label (previously this always used `text_element`/`theme.text`);
     // `dimmed` (the eye-toggle "hidden in scene" domain flag, or `presence.state == Disabled`) halves
     // its alpha without skipping the row — it stays visible and clickable to un-hide/re-enable.
-    let text_color = foreground_on_fill(theme, theme.text_element, selected, on_hover_fill);
+    let text_color = foreground_on_fill(theme, item.tone.and_then(|tone| theme.tone_ink(tone)).unwrap_or(theme.text_element), selected, on_hover_fill);
     let text_color = if dimmed { text_color.with_alpha(text_color.a * 0.5) } else { text_color };
     if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
         push_icon(draw, icons, icon_id.as_str(), indent, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);

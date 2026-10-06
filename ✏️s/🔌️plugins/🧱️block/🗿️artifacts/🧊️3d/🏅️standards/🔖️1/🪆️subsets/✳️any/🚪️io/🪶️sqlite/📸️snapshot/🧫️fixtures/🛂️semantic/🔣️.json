@@ -1,0 +1,61 @@
+{
+  "tableWidths": {
+    "block3_document": 2,
+    "block3_kind": 9,
+    "block3_catalog_child": 7,
+    "block3_representation": 8,
+    "block3_representation_tag": 4,
+    "block3_representation_attribute": 6,
+    "block3_vortex_kind_extra": 8,
+    "block3_vortex": 27,
+    "block3_compatibility": 7,
+    "block3_attribute": 6,
+    "block3_author": 6,
+    "block3_camera3d": 23,
+    "block3_meta": 3
+  },
+  "baseBytes": 539,
+  "floatRoles": 14,
+  "cases": [
+    {
+      "word": "0000000000000000",
+      "rows": 14,
+      "bytes": 847
+    },
+    {
+      "word": "8000000000000000",
+      "rows": 14,
+      "bytes": 847
+    },
+    {
+      "word": "0000000000000001",
+      "rows": 14,
+      "bytes": 847
+    },
+    {
+      "word": "3ff0000000000000",
+      "rows": 14,
+      "bytes": 847
+    },
+    {
+      "word": "7ff0000000000000",
+      "rows": 14,
+      "bytes": 987
+    },
+    {
+      "word": "fff0000000000000",
+      "rows": 14,
+      "bytes": 987
+    },
+    {
+      "word": "7ff0000000000001",
+      "rows": 14,
+      "bytes": 693
+    },
+    {
+      "word": "7ff8000000000042",
+      "rows": 14,
+      "bytes": 693
+    }
+  ]
+}

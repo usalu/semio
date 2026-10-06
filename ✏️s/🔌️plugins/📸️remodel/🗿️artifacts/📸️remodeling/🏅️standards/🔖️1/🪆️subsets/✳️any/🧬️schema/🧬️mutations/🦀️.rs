@@ -136,15 +136,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🌉️ExternalCodecBridge
-/// 🧩️ Decodes one committed `📸️snapshot/⬅️before/🔣️.json` document together with the
-/// `🦠️mutation/🔣️.json` payload beside it — the same bytes the leaf's own fixture test
-/// reads — into real typed values.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RemodelingSnapshot, RemodelingMutation), String> {
-    let snapshot: RemodelingSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed remodeling snapshot JSON does not decode: {error}"))?;
-    let mutation: RemodelingMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed remodeling mutation JSON does not decode: {error}"))?;
-    Ok((snapshot, mutation))
-}
+
 
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
@@ -159,12 +151,7 @@ fn bridge_step(snapshot: &RemodelingSnapshot, mutation: &RemodelingMutation) -> 
     }
 }
 
-/// 📤️ The bridge's answer shape: the resulting document beside the codes it raised, so a caller
-/// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_render(snapshot: &RemodelingSnapshot, messages: Vec<String>) -> String {
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot))), ("messages".to_string(), semio_framework_pack_json::array(messages.into_iter().map(semio_framework_pack_json::Value::String)))]))
-}
+
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
 /// `{"snapshot": …, "messages": [ … ]}`.
@@ -197,21 +184,7 @@ pub fn undo_remodeling_mutation_json(snapshot_json: &str, mutation_json: &str) -
     Ok(bridge_render(&current, messages))
 }
 
-/// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering
-/// `{"printed": …, "snapshot": …, "reparsed": …}` so a caller can weigh the identity law's two
-/// halves — the bytes against the committed artifact, and the projection against itself.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn round_trip_remodeling_dsl(text: &str) -> Result<String, String> {
-    use store::ArtifactDsl;
-    let parsed = <RemodelingSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed remodeling example does not parse: {error:?}"))?;
-    let printed = <RemodelingSnapshot as ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <RemodelingSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted remodeling document does not parse: {error:?}"))?;
-    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
-        ("printed".to_string(), semio_framework_pack_json::Value::String(printed)),
-        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&parsed))),
-        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&reparsed))),
-    ])))
-}
+
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Kinds

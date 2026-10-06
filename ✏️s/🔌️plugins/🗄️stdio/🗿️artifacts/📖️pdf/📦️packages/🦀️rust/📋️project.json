@@ -53,6 +53,19 @@
         "{projectRoot}/../../🏅️standards/**/*"
       ]
     },
+    "verify-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*"
+      ]
+    },
     "test-snapshot-sqlite-source": {
       "executor": "nx:run-commands",
       "cache": false,

@@ -13,7 +13,7 @@ test("the neutral ownership and original portable laws execute without products,
   mkdirSync(output, { recursive: true });
   const workspace = mkdtempSync(resolve(output, "decode-absence-"));
   try {
-    for (const owner of ["🧰️framework/🔨️modules/🌱️value", "🧰️framework/🔨️modules/🧬️schema/✅️validator"]) {
+    for (const owner of ["🧰️framework/🔨️modules/🌱️value", "🧰️framework/🔨️modules/🧬️schema/✅️validator", "🧰️framework/🔨️modules/⏳️async/🪃️continuation"]) {
       const target = resolve(workspace, owner);
       mkdirSync(resolve(target, ".."), { recursive: true });
       cpSync(resolve(root, owner), target, { recursive: true, dereference: false, filter: (path) => { if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path); return true; } });

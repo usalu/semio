@@ -27,6 +27,7 @@ const VIEW_ZOOM: f64 = 8.0;
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::bitmap::create_bitmap_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WFC_BITMAP_VIEW_WINDOW_OUTPUT.into(),
         label: LocalizedLabel::native("Output", "Ausgabe"),
         body_key: BODY_KEY.into(),

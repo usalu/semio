@@ -996,12 +996,12 @@ pub async fn preflight_composer_entries(entries: &'static [ComposerEntry]) -> Re
 
 /// 🔬️ Verifies independently declared static composers as one atomic candidate set.
 pub async fn preflight_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = semio_framework_schema_registry::assembly::begin().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     preflight_composer_entry_refs_in_assembly(&assembly, entries).await
 }
 
 /// 🔬️ Verifies composers while one artifact assembly owns the shared publication barrier.
-pub async fn preflight_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+pub async fn preflight_composer_entry_refs_in_assembly(_assembly: &semio_framework_schema_registry::assembly::Transaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     let proposed = composer_entries_by_key(entries.iter().copied())?;
     let registry = io_registry().read().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
     validate_composer_entries(&registry, &proposed)
@@ -1015,12 +1015,12 @@ pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<()
 
 /// 📌️ Registers independently declared static composers as one all-or-nothing candidate set.
 pub fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = semio_framework_schema_registry::assembly::begin().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     register_composer_entry_refs_in_assembly(&assembly, entries)
 }
 
 /// 📌️ Publishes preflighted composers while one artifact assembly owns the shared barrier.
-pub fn register_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
+pub fn register_composer_entry_refs_in_assembly(_assembly: &semio_framework_schema_registry::assembly::Transaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     let proposed = composer_entries_by_key(entries.iter().copied())?;
     let mut reg = io_registry().write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
     validate_composer_entries(&reg, &proposed)?;
@@ -1271,24 +1271,24 @@ fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static Subs
 
 /// 🔬️ Verifies subset-validator entries without changing their established owners.
 pub async fn preflight_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = semio_framework_schema_registry::assembly::begin().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     preflight_subset_validators_in_assembly(&assembly, entries).await
 }
 
 /// 🔬️ Verifies subset validators while one artifact assembly owns the shared publication barrier.
-pub async fn preflight_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+pub async fn preflight_subset_validators_in_assembly(_assembly: &semio_framework_schema_registry::assembly::Transaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let registry = subset_validator_registry().read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
     validate_subset_validators(&registry, entries)
 }
 
 /// 📌️ Registers subset-validator entries only when the entire candidate set is conflict-free.
 pub fn register_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = semio_framework_schema_registry::assembly::begin().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     register_subset_validators_in_assembly(&assembly, entries)
 }
 
 /// 📌️ Publishes preflighted subset validators while one artifact assembly owns the shared barrier.
-pub fn register_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+pub fn register_subset_validators_in_assembly(_assembly: &semio_framework_schema_registry::assembly::Transaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let mut reg = subset_validator_registry().write().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
     validate_subset_validators(&reg, entries)?;
     for entry in entries {
@@ -1696,12 +1696,12 @@ fn format_catalog() -> &'static RwLock<BTreeMap<String, FormatDescriptor>> {
 /// 📌️ Registers format rows atomically. Identity, extension, and non-empty MIME claims are each
 /// globally singular; equal duplicate rows are idempotent and never replace an established owner.
 pub async fn register_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = semio_framework_schema_registry::assembly::begin().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     register_format_descriptors_in_assembly(&assembly, descriptors)
 }
 
 /// 📌️ Publishes preflighted format rows while one artifact assembly owns the shared barrier.
-pub fn register_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
+pub fn register_format_descriptors_in_assembly(_assembly: &semio_framework_schema_registry::assembly::Transaction, descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
     let (proposed, proposed_by_kind) = index_format_descriptors(descriptors).map_err(FormatRegistryError::Conflict)?;
     let mut registry = format_catalog().write().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)?;
@@ -1713,12 +1713,12 @@ pub fn register_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemb
 
 /// 🔬️ Verifies format rows against the catalog without mutating their global ownership.
 pub async fn preflight_format_descriptors(rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = semio_framework_schema_registry::assembly::begin().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     preflight_format_descriptors_in_assembly(&assembly, rows)
 }
 
 /// 🔬️ Verifies format rows while one artifact assembly owns the shared publication barrier.
-pub fn preflight_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
+pub fn preflight_format_descriptors_in_assembly(_assembly: &semio_framework_schema_registry::assembly::Transaction, rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
     let (proposed, proposed_by_kind) = index_format_descriptors(rows.iter().cloned()).map_err(FormatRegistryError::Conflict)?;
     let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)
@@ -1878,7 +1878,7 @@ impl ArtifactAssemblyRegistryPlan {
 /// 🚫️ An all-registry assembly cannot acquire its locks or pass preflight.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ArtifactAssemblyRegistryError {
-    Transaction(store::ArtifactAssemblyTransactionError),
+    Transaction(semio_framework_schema_registry::assembly::Error),
     Composer(Box<IoRegistryRegistrationError>),
     SubsetValidator(SubsetValidatorRegistryError),
     Format(FormatRegistryError),
@@ -1903,21 +1903,21 @@ impl std::error::Error for ArtifactAssemblyRegistryError {}
 
 /// 🧰️ Publishes an imperative native codec and its exact snapshot dialect atomically.
 pub fn register_native_snapshot_codec(dialect: Dialect, codec: store::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(ArtifactAssemblyRegistryError::Transaction)?;
+    let assembly = semio_framework_schema_registry::assembly::begin().map_err(ArtifactAssemblyRegistryError::Transaction)?;
     let plan = ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![io_mechanism::NativeSnapshotRegistration { dialect: dialect.into(), codec }], ..Default::default() };
     commit_artifact_assembly_registry_plan(&assembly, plan)
 }
 
 /// 📦️ Publishes a native document codec and any actual owner-declared relational capability.
 pub fn register_native_document_codec(dialect: Dialect, codec: store::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
-    let assembly = store::begin_artifact_assembly().map_err(ArtifactAssemblyRegistryError::Transaction)?;
+    let assembly = semio_framework_schema_registry::assembly::begin().map_err(ArtifactAssemblyRegistryError::Transaction)?;
     let plan = ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: io_mechanism::NativeSnapshotRegistration::from_capability(dialect.into(), codec).into_iter().collect(), ..Default::default() };
     commit_artifact_assembly_registry_plan(&assembly, plan)
 }
 
 /// 📌️ Acquires every affected write lock, preflights every candidate, then commits without any
 /// fallible operation after the first registry mutation.
-pub fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssemblyTransaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
+pub fn commit_artifact_assembly_registry_plan(assembly: &semio_framework_schema_registry::assembly::Transaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
     let mut store_guards = store::acquire_artifact_assembly_store_registry_guards(assembly).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;
     let mut composers = io_registry().write().map_err(|_| ArtifactAssemblyRegistryError::Composer(Box::new(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))))?;
     let mut subset_validators = subset_validator_registry().write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
@@ -2218,7 +2218,7 @@ pub mod io_mechanism {
     }
 
     /// 🧭️ Publishes native snapshot identities under an already acquired assembly barrier.
-    pub fn register_native_snapshots_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, registrations: &[NativeSnapshotRegistration]) -> Result<(), IoRegistryError> {
+    pub fn register_native_snapshots_in_assembly(_assembly: &semio_framework_schema_registry::assembly::Transaction, registrations: &[NativeSnapshotRegistration]) -> Result<(), IoRegistryError> {
         let mut registry = native_snapshot_registry().write().map_err(|_| IoRegistryError::Unavailable)?;
         let proposed = propose_native_snapshots(&registry, registrations)?;
         registry.extend(proposed);
@@ -2420,7 +2420,7 @@ pub mod io_mechanism {
         Ok(())
     }
 
-    /// 📌️ Registers `entries` atomically under the SAME `store::begin_artifact_assembly()`
+    /// 📌️ Registers `entries` atomically under the SAME `semio_framework_schema_registry::assembly::begin()`
     /// publication barrier `register_composer_entries` (the OLD mechanism, above) uses, so a
     /// plugin's old- and new-mechanism registrations never interleave. A duplicate `(from, into)`
     /// key for a genuinely DIFFERENT entry is a typed error and leaves the registry unchanged
@@ -2428,7 +2428,7 @@ pub mod io_mechanism {
     /// `registration_is_all_or_nothing` below); re-registering the identical static entry is
     /// idempotent, mirroring `register_composer_entries`.
     pub fn io_register(entries: &'static [IoEntry]) -> Result<(), IoRegistryError> {
-        let _assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryError::Unavailable)?;
+        let _assembly = semio_framework_schema_registry::assembly::begin().map_err(|_| IoRegistryError::Unavailable)?;
         let proposed = build_proposed(&entries.iter().collect::<Vec<_>>())?;
         let mut registry = io_mechanism_registry().write().map_err(|_| IoRegistryError::Unavailable)?;
         validate_against(&registry, &proposed)?;

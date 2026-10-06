@@ -52,7 +52,7 @@ fn question(step: usize, index: usize) -> FormQuestion {
         schema: None,
         src: None,
         accept: None,
-        fixture_slug: None,
+        example_id: None,
         params: None,
         condition: None,
     }

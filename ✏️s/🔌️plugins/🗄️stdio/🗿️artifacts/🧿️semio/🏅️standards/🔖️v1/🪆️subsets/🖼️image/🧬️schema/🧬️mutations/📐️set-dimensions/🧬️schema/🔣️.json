@@ -17,12 +17,48 @@
     "width": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "Width of every frame.",
+          "de": "Breite jedes Einzelbilds."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "softMax": 16384,
+        "group": "value",
+        "order": 10
+      }
     },
     "height": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "description": {
+          "en": "Height of every frame.",
+          "de": "Höhe jedes Einzelbilds."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "softMax": 16384,
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

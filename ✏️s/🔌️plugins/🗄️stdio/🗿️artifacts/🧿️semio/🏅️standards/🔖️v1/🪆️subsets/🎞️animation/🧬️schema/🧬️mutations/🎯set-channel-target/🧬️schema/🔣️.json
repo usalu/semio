@@ -17,14 +17,57 @@
     },
     "timelineIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Timeline",
+          "de": "Zeitleiste"
+        },
+        "description": {
+          "en": "Index of the timeline, counted from 0.",
+          "de": "Index der Zeitleiste, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Channel",
+          "de": "Kanal"
+        },
+        "description": {
+          "en": "Index of the channel within the timeline, counted from 0.",
+          "de": "Index des Kanals innerhalb der Zeitleiste, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "target": {
-      "$ref": "#/$defs/AnimTarget"
+      "$ref": "#/$defs/AnimTarget",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Target",
+          "de": "Ziel"
+        },
+        "description": {
+          "en": "Entity and property the channel animates.",
+          "de": "Entität und Eigenschaft, die der Kanal animiert."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

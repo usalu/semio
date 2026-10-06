@@ -186,8 +186,8 @@ pub(crate) fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAdd
 struct DocxPreparationFactory;
 
 impl app_store::ArtifactStoreOneItemPreparationFactory<DocxSnapshot, DocxMutation> for DocxPreparationFactory {
-    fn preflight(&self, mutation: &DocxMutation, description: Option<&str>, lane: app_store::HistoryLane) -> Result<app_store::ArtifactStoreOneItemFootprint, String> {
-        if lane != app_store::HistoryLane::Document || description.is_some_and(|value| value.len() > app_store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+    fn preflight(&self, mutation: &DocxMutation, lane: app_store::HistoryLane) -> Result<app_store::ArtifactStoreOneItemFootprint, String> {
+        if lane != app_store::HistoryLane::Document {
             return Err(format!("{PREFIX}.lane"));
         }
         let mutation_bytes = measure_mutation(mutation)?;
@@ -216,7 +216,6 @@ impl app_store::ArtifactStoreOneItemPreparationFactory<DocxSnapshot, DocxMutatio
             xml_parts_cursor: crate::schema::snapshot::DocxXmlParts::retained_clone_cursor(),
             xml_parts: None,
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             inverse: None,
             post: None,
@@ -239,7 +238,6 @@ struct DocxPreparation {
     xml_parts_cursor: <crate::schema::snapshot::DocxXmlParts as RetainedClone>::Cursor,
     xml_parts: Option<crate::schema::snapshot::DocxXmlParts>,
     mutation: Option<DocxMutation>,
-    description: Option<String>,
     authority: Option<Arc<app_store::ArtifactStoreOneItemLiveAuthority>>,
     inverse: Option<DocxMutation>,
     post: Option<Arc<DocxSnapshot>>,
@@ -481,10 +479,6 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
             self.external_retirement = Some(semio_framework_value::retirement::owned_retirement(value));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if let Some(description) = self.description.take() {
-            self.external_retirement = Some(semio_framework_value::retirement::owned_retirement(description));
-            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("{PREFIX}.base-return")));
@@ -507,7 +501,7 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
             && self.xml_parts_cursor.terminal_is_empty()
             && self.xml_parts.is_none()
             && self.mutation.is_none()
-            && self.description.is_none()
+           
             && self.authority.is_none()
             && self.inverse.is_none()
             && self.post.is_none()

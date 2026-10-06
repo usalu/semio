@@ -23,7 +23,7 @@
 //! (see `../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️.rs`).
 //!
 //! @see ../../🔮️oracles/🔣️.json — the three oracle registrations this binary reuses (pinned to the
-//!      exact same versions) and the `fixtureManifests`/`probes` entries this binary's output feeds.
+//!      exact same versions) and the `testEvidence`/`probes` entries this binary's output feeds.
 //! @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️note-layout-carrier-oracle-findings.md
 //!      — the 16-witnessable/17-un-oracled split this corpus covers (16, no more, no less).
 

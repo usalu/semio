@@ -14,7 +14,7 @@ use semio_repo_test_host::Adapter;
 mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_wfc_bitmap::examples::{flowers_24, rooms_16};
-    use semio_s_artifact_wfc_bitmap::schema::snapshot::text::{parse_dsl, print_dsl};
+    use semio_s_artifact_wfc_bitmap::io::text::snapshot::{parse_dsl, print_dsl};
     use semio_s_artifact_wfc_bitmap::{artifact_kind, editor, inferences, mutations, viewer};
 
     const CONTRACT: &str = "shared://🧩️mount-contract/🔣️.json";
@@ -41,7 +41,7 @@ mod subject {
     }
 
     pub fn surface_ids(ctx: &Context) -> Result<Outcome, String> {
-        let contract = ctx.fixture_json(CONTRACT)?;
+        let contract = ctx.input_json(CONTRACT)?;
         let measured = [
             ("editorAppId", text(&editor::bitmap::create_bitmap_editor().id)),
             ("viewerAppId", text(&viewer::bitmap::create_bitmap_viewer().id)),
@@ -55,7 +55,7 @@ mod subject {
     }
 
     pub fn window_kinds(ctx: &Context) -> Result<Outcome, String> {
-        let committed = Json::Array(ctx.fixture_json(CONTRACT)?.array("windowKindIds"));
+        let committed = Json::Array(ctx.input_json(CONTRACT)?.array("windowKindIds"));
         let editor = texts(&editor::bitmap::create_bitmap_editor().window_kinds.iter().map(|window| window.id.clone()).collect::<Vec<_>>());
         let viewer = texts(&viewer::bitmap::create_bitmap_viewer().window_kinds.iter().map(|window| window.id.clone()).collect::<Vec<_>>());
         agree("editor window kinds", &editor, committed.clone())?;
@@ -65,12 +65,12 @@ mod subject {
 
     pub fn mutation_vocabulary(ctx: &Context) -> Result<Outcome, String> {
         let kinds = texts(&mutations::KINDS.iter().map(|kind| kind.to_string()).collect::<Vec<_>>());
-        agree("mutation roster", &kinds, Json::Array(ctx.fixture_json(CONTRACT)?.array("mutationKinds")))?;
+        agree("mutation roster", &kinds, Json::Array(ctx.input_json(CONTRACT)?.array("mutationKinds")))?;
         Ok(answer(vec![("mutationKinds", kinds)]))
     }
 
     pub fn examples(ctx: &Context) -> Result<Outcome, String> {
-        let committed = ctx.fixture_json(CONTRACT)?.array("examples");
+        let committed = ctx.input_json(CONTRACT)?.array("examples");
         let mut rows = Vec::new();
         for (id, snapshot) in [("rooms-16", rooms_16::snapshot()), ("flowers-24", flowers_24::snapshot())] {
             let reparsed = parse_dsl(&print_dsl(&snapshot)).map_err(|error| format!("{id}: the printed DSL does not parse back: {error:?}"))?;

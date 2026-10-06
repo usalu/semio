@@ -11,13 +11,8 @@
 
 use framework_schema::ArtifactSchema;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;
-#[path = "🚦️native/🦀️.rs"]
-mod sqlite_native;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+
+
 
 //#region 🔖️Ids
 pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";
@@ -86,61 +81,21 @@ pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
 //#endregion 🔖️Sniff
 
 //#region 🔖️SnapshotCodec
-/// 📥️ Decodes TSV text via a byte-exact split on the file's own line ending, then `\t` per line
-/// — no quoting, no escaping, no coercion (matches the real W0 fixture's own `verify_tsv.py`
-/// verification method exactly: split on `\n`, then each line on `\t`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_tsv(text: &str) -> TsvSnapshot {
-    let line_ending = if text.contains("\r\n") { LineEnding::Crlf } else { LineEnding::Lf };
-    let sep = line_ending.as_str();
-    let trailing_newline = text.ends_with(sep);
-    let body = if trailing_newline { &text[..text.len() - sep.len()] } else { text };
-    let records: Vec<Vec<String>> = if body.is_empty() { Vec::new() } else { body.split(sep).map(|line| line.split('\t').map(|s| s.to_string()).collect()).collect() };
-    TsvSnapshot { schema: STDIO_TSV_DOCUMENT_SCHEMA.into(), records, trailing_newline, line_ending }
-}
 
-/// 📤️ Encodes via a byte-exact rejoin: `\t` within a row, the snapshot's own `line_ending`
-/// between rows, plus a final terminator iff `trailing_newline` is set.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_tsv(snap: &TsvSnapshot) -> String {
-    let sep = snap.line_ending.as_str();
-    let mut out = snap.records.iter().map(|r| r.join("\t")).collect::<Vec<_>>().join(sep);
-    if snap.trailing_newline {
-        out.push_str(sep);
-    }
-    out
-}
 
-/// 📄️ The persisted document (`semio iana.tsv.dsl v1` envelope + body) through the artifact's own `ArtifactDsl` codec,
-/// reachable for a caller that cannot name the trait.
-pub fn parse_tsv_document(text: &str) -> Result<TsvSnapshot, String> {
-    <TsvSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
-}
 
-/// 📄️ The inverse of [`parse_tsv_document`]: the snapshot printed as its enveloped document.
-pub fn print_tsv_document(snapshot: &TsvSnapshot) -> String {
-    <TsvSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
-}
+
+
+
+
 //#endregion 🔖️SnapshotCodec
 
 //#region 🔖️HandcraftedArtifactCodecs
-/// 📥️ Reads authored TSV files or the declared logical Text document.
-pub fn read_tsv_source_text(text:&str)->Result<TsvSnapshot,semio_framework_diagnostic::TextError>{if text.starts_with("semio "){<TsvSnapshot as store::ArtifactDsl>::parse_dsl(text)}else{Ok(decode_tsv(text))}}
-/// 📥️ Reads the logical Pack document or authored UTF-8 TSV bytes.
-pub fn read_tsv_source_binary(bytes:&[u8])->Result<TsvSnapshot,store::PackError>{if bytes.starts_with(&[137,83,69,77,13,10,26,10]){<TsvSnapshot as store::ArtifactPack>::decode_pack(bytes)}else{let text=std::str::from_utf8(bytes).map_err(|error|store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string())))?;read_tsv_source_text(text).map_err(store::PackError::from)}}
 
-impl store::ArtifactDsl for TsvSnapshot{
- const EXTENSION:&'static str="tsv";
- fn envelope_id()->&'static str{"stdio.tsv"}
- fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error.into_value_error(),semio_framework_diagnostic::TextSpan::at(1,1)))?;if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"TSV logical Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}Self::__dsl_from_record(&semio_framework_dsl_record::parse_exact(body,&Self::__dsl_spec(),&Default::default())?)}
- fn print_dsl(&self)->String{let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared TSV logical envelope");store::semio_format::wrap_text(&envelope,&body)}
-}
-impl store::ArtifactPack for TsvSnapshot{
- fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
- fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
- fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let body=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))}
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"TSV logical Pack envelope mismatch")))}Self::__dsl_from_record(&store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?.0).map_err(store::PackError::from)}
-}
+
+
+
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🧪️Tests

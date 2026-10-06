@@ -129,7 +129,7 @@ async fn act(app: &mut VcsArtifactApp<ModuleApp>, action: &str, args: Option<&Ds
 }
 
 fn payload_json(params: Value) -> String {
-    to_json_string(&ModuleRenderPayload { fixture_slug: "hexagonal-mushroom-column".into(), params: json_to_dsl_value(&params), question_id: "q".into(), controller_id: "forms-play".into(), surface: "try".into(), interactive: true })
+    to_json_string(&ModuleRenderPayload { example_id: "hexagonal-mushroom-column".into(), params: json_to_dsl_value(&params), question_id: "q".into(), controller_id: "forms-play".into(), surface: "try".into(), interactive: true })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -319,7 +319,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ModuleRenderPayload, ModulePayloadMutation>());
     let mut payload = default_payload();
     payload.interactive = false;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], description: None, transaction: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], transaction: None }).await.expect("apply");
     let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     while !store.close_owned_terminal_is_empty() {
@@ -380,7 +380,7 @@ async fn instance_geometry_replays_durable_sources_and_preserves_preview_authori
         assert!(!params_as_json(&payload.params).get("__solidExport").unwrap().get("error").is_some());
         assert_eq!(json_to_string(&stored), before);
     }
-    let snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(HEX_COLUMN_FIXTURE_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(HEX_COLUMN_LEARNING_PROGRAM_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for params in fixture["parameters"].as_array().expect("preview variants") {
         let params = parse_json(&params.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let (meshes, instances) = evaluated_preview_payload(&mut first, &snapshot, &params);

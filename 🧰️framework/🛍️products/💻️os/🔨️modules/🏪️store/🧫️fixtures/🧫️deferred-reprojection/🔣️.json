@@ -1,206 +1,895 @@
 {
-  "$schema": "../../🧬️schema/🔣️deferred-reprojection/🔣️.json",
   "family": "demo",
   "cases": [
     {
       "name": "interior-steps-of-a-long-history-wait-for-their-turns",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "local", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 39 }
+        {
+          "author": "local",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 39
+        }
       ],
       "budget": 4,
       "steps": [
-        { "command": { "kind": "undo" }, "expected": { "replayed": 39, "waits": true, "turns": 9, "refused": null, "state": { "n": 39 }, "applied": 39, "supersessions": 0 } },
-        { "command": { "kind": "redo" }, "expected": { "replayed": 40, "waits": true, "turns": 10, "refused": null, "state": { "n": 40 }, "applied": 40, "supersessions": 0 } },
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 100 } },
-          "expected": { "replayed": 40, "waits": true, "turns": 10, "refused": null, "state": { "n": 139 }, "applied": 40, "supersessions": 1 }
+          "command": {
+            "kind": "undo"
+          },
+          "expected": {
+            "replayed": 39,
+            "waits": true,
+            "turns": 9,
+            "refused": null,
+            "state": {
+              "n": 39
+            },
+            "applied": 39,
+            "supersessions": 0
+          }
         },
         {
-          "command": { "kind": "alternative", "name": "variant", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 50 } },
-          "expected": { "replayed": 40, "waits": true, "turns": 10, "refused": null, "state": { "n": 89 }, "applied": 40, "supersessions": 1 }
+          "command": {
+            "kind": "redo"
+          },
+          "expected": {
+            "replayed": 40,
+            "waits": true,
+            "turns": 10,
+            "refused": null,
+            "state": {
+              "n": 40
+            },
+            "applied": 40,
+            "supersessions": 0
+          }
         },
-        { "command": { "kind": "trunk" }, "expected": { "replayed": 40, "waits": true, "turns": 10, "refused": null, "state": { "n": 139 }, "applied": 40, "supersessions": 1 } }
+        {
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 100
+            }
+          },
+          "expected": {
+            "replayed": 40,
+            "waits": true,
+            "turns": 10,
+            "refused": null,
+            "state": {
+              "n": 139
+            },
+            "applied": 40,
+            "supersessions": 1
+          }
+        },
+        {
+          "command": {
+            "kind": "alternative",
+            "name": "variant",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 50
+            }
+          },
+          "expected": {
+            "replayed": 40,
+            "waits": true,
+            "turns": 10,
+            "refused": null,
+            "state": {
+              "n": 89
+            },
+            "applied": 40,
+            "supersessions": 1
+          }
+        },
+        {
+          "command": {
+            "kind": "trunk"
+          },
+          "expected": {
+            "replayed": 40,
+            "waits": true,
+            "turns": 10,
+            "refused": null,
+            "state": {
+              "n": 139
+            },
+            "applied": 40,
+            "supersessions": 1
+          }
+        }
       ]
     },
     {
       "name": "steps-shorter-than-a-budget-adopt-inside-their-dispatch",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "other", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 4 },
-        { "author": "local", "edit": [{ "operation": "addN", "delta": 5 }], "times": 1 }
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 4
+        },
+        {
+          "author": "local",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 5
+            }
+          ],
+          "times": 1
+        }
       ],
       "budget": 8,
       "steps": [
-        { "command": { "kind": "undo" }, "expected": { "replayed": 0, "waits": false, "turns": 0, "refused": null, "state": { "n": 5 }, "applied": 5, "supersessions": 0 } },
-        { "command": { "kind": "redo" }, "expected": { "replayed": 1, "waits": false, "turns": 0, "refused": null, "state": { "n": 10 }, "applied": 6, "supersessions": 0 } },
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 3 } },
-          "expected": { "replayed": 6, "waits": false, "turns": 0, "refused": null, "state": { "n": 12 }, "applied": 6, "supersessions": 1 }
+          "command": {
+            "kind": "undo"
+          },
+          "expected": {
+            "replayed": 0,
+            "waits": false,
+            "turns": 0,
+            "refused": null,
+            "state": {
+              "n": 5
+            },
+            "applied": 5,
+            "supersessions": 0
+          }
+        },
+        {
+          "command": {
+            "kind": "redo"
+          },
+          "expected": {
+            "replayed": 1,
+            "waits": false,
+            "turns": 0,
+            "refused": null,
+            "state": {
+              "n": 10
+            },
+            "applied": 6,
+            "supersessions": 0
+          }
+        },
+        {
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 3
+            }
+          },
+          "expected": {
+            "replayed": 6,
+            "waits": false,
+            "turns": 0,
+            "refused": null,
+            "state": {
+              "n": 12
+            },
+            "applied": 6,
+            "supersessions": 1
+          }
         }
       ]
     },
     {
       "name": "a-replay-of-exactly-one-budget-waits-one-more-turn",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "local", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 7 }
+        {
+          "author": "local",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 7
+        }
       ],
       "budget": 8,
       "steps": [
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 10 } },
-          "expected": { "replayed": 8, "waits": true, "turns": 1, "refused": null, "state": { "n": 17 }, "applied": 8, "supersessions": 1 }
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 10
+            }
+          },
+          "expected": {
+            "replayed": 8,
+            "waits": true,
+            "turns": 1,
+            "refused": null,
+            "state": {
+              "n": 17
+            },
+            "applied": 8,
+            "supersessions": 1
+          }
         }
       ]
     },
     {
       "name": "a-replay-one-under-its-budget-adopts-inside-its-dispatch",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "local", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 7 }
+        {
+          "author": "local",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 7
+        }
       ],
       "budget": 9,
       "steps": [
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 10 } },
-          "expected": { "replayed": 8, "waits": false, "turns": 0, "refused": null, "state": { "n": 17 }, "applied": 8, "supersessions": 1 }
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 10
+            }
+          },
+          "expected": {
+            "replayed": 8,
+            "waits": false,
+            "turns": 0,
+            "refused": null,
+            "state": {
+              "n": 17
+            },
+            "applied": 8,
+            "supersessions": 1
+          }
         }
       ]
     },
     {
       "name": "multi-operation-edits-close-without-spending-the-budget",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "local", "edit": [{ "operation": "setN", "n": 1 }, { "operation": "addN", "delta": 2 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }, { "operation": "addN", "delta": 1 }, { "operation": "addN", "delta": 1 }], "times": 5 }
+        {
+          "author": "local",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            },
+            {
+              "operation": "addN",
+              "delta": 2
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            },
+            {
+              "operation": "addN",
+              "delta": 1
+            },
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 5
+        }
       ],
       "budget": 5,
       "steps": [
-        { "command": { "kind": "undo" }, "expected": { "replayed": 15, "waits": true, "turns": 3, "refused": null, "state": { "n": 15 }, "applied": 5, "supersessions": 0 } },
-        { "command": { "kind": "redo" }, "expected": { "replayed": 17, "waits": true, "turns": 3, "refused": null, "state": { "n": 18 }, "applied": 6, "supersessions": 0 } }
+        {
+          "command": {
+            "kind": "undo"
+          },
+          "expected": {
+            "replayed": 15,
+            "waits": true,
+            "turns": 3,
+            "refused": null,
+            "state": {
+              "n": 15
+            },
+            "applied": 5,
+            "supersessions": 0
+          }
+        },
+        {
+          "command": {
+            "kind": "redo"
+          },
+          "expected": {
+            "replayed": 17,
+            "waits": true,
+            "turns": 3,
+            "refused": null,
+            "state": {
+              "n": 18
+            },
+            "applied": 6,
+            "supersessions": 0
+          }
+        }
       ]
     },
     {
       "name": "a-waiting-finalize-discards-with-zero-trace",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "local", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 15 }
+        {
+          "author": "local",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 15
+        }
       ],
       "budget": 4,
       "steps": [
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 100 } },
-          "interrupt": { "after": 0, "discard": true },
-          "expected": { "replayed": 16, "waits": true, "turns": 0, "refused": null, "state": { "n": 16 }, "applied": 16, "supersessions": 0 }
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 100
+            }
+          },
+          "interrupt": {
+            "after": 0,
+            "discard": true
+          },
+          "expected": {
+            "replayed": 16,
+            "waits": true,
+            "turns": 0,
+            "refused": null,
+            "state": {
+              "n": 16
+            },
+            "applied": 16,
+            "supersessions": 0
+          }
         },
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 100 } },
-          "interrupt": { "after": 3, "discard": true },
-          "expected": { "replayed": 16, "waits": true, "turns": 0, "refused": null, "state": { "n": 16 }, "applied": 16, "supersessions": 0 }
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 100
+            }
+          },
+          "interrupt": {
+            "after": 3,
+            "discard": true
+          },
+          "expected": {
+            "replayed": 16,
+            "waits": true,
+            "turns": 0,
+            "refused": null,
+            "state": {
+              "n": 16
+            },
+            "applied": 16,
+            "supersessions": 0
+          }
         },
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 100 } },
-          "expected": { "replayed": 16, "waits": true, "turns": 4, "refused": null, "state": { "n": 115 }, "applied": 16, "supersessions": 1 }
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 100
+            }
+          },
+          "expected": {
+            "replayed": 16,
+            "waits": true,
+            "turns": 4,
+            "refused": null,
+            "state": {
+              "n": 115
+            },
+            "applied": 16,
+            "supersessions": 1
+          }
         }
       ]
     },
     {
       "name": "an-edit-while-a-step-waits-restarts-its-replay",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "local", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 15 }
+        {
+          "author": "local",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 15
+        }
       ],
       "budget": 4,
       "steps": [
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 100 } },
-          "interrupt": { "after": 1, "edit": [{ "operation": "addN", "delta": 1000 }] },
-          "expected": { "replayed": 16, "waits": true, "turns": 5, "refused": null, "interruptedState": { "n": 1016 }, "state": { "n": 1115 }, "applied": 17, "supersessions": 1 }
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 100
+            }
+          },
+          "interrupt": {
+            "after": 1,
+            "edit": [
+              {
+                "operation": "addN",
+                "delta": 1000
+              }
+            ]
+          },
+          "expected": {
+            "replayed": 16,
+            "waits": true,
+            "turns": 5,
+            "refused": null,
+            "interruptedState": {
+              "n": 1016
+            },
+            "state": {
+              "n": 1115
+            },
+            "applied": 17,
+            "supersessions": 1
+          }
         }
       ]
     },
     {
       "name": "a-blocking-finalize-is-refused-once-replayed",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "local", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 11 }
+        {
+          "author": "local",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 11
+        }
       ],
       "budget": 4,
       "steps": [
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "deleteN" } },
-          "expected": { "replayed": 12, "waits": true, "turns": 3, "refused": "rejected", "state": { "n": 12 }, "applied": 12, "supersessions": 0 }
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "deleteN"
+            }
+          },
+          "expected": {
+            "replayed": 12,
+            "waits": true,
+            "turns": 3,
+            "refused": "rejected",
+            "state": {
+              "n": 12
+            },
+            "applied": 12,
+            "supersessions": 0
+          }
         }
       ]
     },
     {
       "name": "a-remote-supersession-waits-for-its-turns",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "other", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 9 }
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 9
+        }
       ],
       "budget": 3,
       "steps": [
         {
-          "command": { "kind": "remoteSupersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 10 } },
-          "expected": { "replayed": 10, "waits": true, "turns": 3, "refused": null, "state": { "n": 19 }, "applied": 10, "supersessions": 1 }
+          "command": {
+            "kind": "remoteSupersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 10
+            }
+          },
+          "expected": {
+            "replayed": 10,
+            "waits": true,
+            "turns": 3,
+            "refused": null,
+            "state": {
+              "n": 19
+            },
+            "applied": 10,
+            "supersessions": 1
+          }
         }
       ]
     },
     {
       "name": "a-cancelled-remote-replay-restarts-from-its-start",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "other", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 9 }
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 9
+        }
       ],
       "budget": 3,
       "steps": [
         {
-          "command": { "kind": "remoteSupersede", "target": { "edit": 0, "op": 0 }, "replacement": { "operation": "setN", "n": 10 } },
-          "interrupt": { "after": 2, "cancel": true },
-          "expected": { "replayed": 10, "waits": true, "turns": 4, "refused": null, "state": { "n": 19 }, "applied": 10, "supersessions": 1 }
+          "command": {
+            "kind": "remoteSupersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 10
+            }
+          },
+          "interrupt": {
+            "after": 2,
+            "cancel": true
+          },
+          "expected": {
+            "replayed": 10,
+            "waits": true,
+            "turns": 4,
+            "refused": null,
+            "state": {
+              "n": 19
+            },
+            "applied": 10,
+            "supersessions": 1
+          }
         }
       ]
     },
     {
       "name": "a-remote-withdrawal-replays-its-downstream",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "other", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 9 }
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 9
+        }
       ],
       "budget": 5,
       "steps": [
         {
-          "command": { "kind": "remoteSupersede", "target": { "edit": 0, "op": 0 }, "replacement": "withdrawn" },
-          "expected": { "replayed": 10, "waits": true, "turns": 2, "refused": null, "state": { "n": 9 }, "applied": 10, "supersessions": 1 }
+          "command": {
+            "kind": "remoteSupersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": "withdrawn"
+          },
+          "expected": {
+            "replayed": 10,
+            "waits": true,
+            "turns": 2,
+            "refused": null,
+            "state": {
+              "n": 9
+            },
+            "applied": 10,
+            "supersessions": 1
+          }
         }
       ]
     },
     {
       "name": "an-undeferred-store-adopts-inside-every-dispatch",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "history": [
-        { "author": "local", "edit": [{ "operation": "setN", "n": 1 }], "times": 1 },
-        { "author": "other", "edit": [{ "operation": "addN", "delta": 1 }], "times": 19 }
+        {
+          "author": "local",
+          "edit": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "times": 1
+        },
+        {
+          "author": "other",
+          "edit": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "times": 19
+        }
       ],
       "budget": null,
       "steps": [
-        { "command": { "kind": "undo" }, "expected": { "replayed": 19, "waits": false, "turns": 0, "refused": null, "state": { "n": 19 }, "applied": 19, "supersessions": 0 } },
-        { "command": { "kind": "redo" }, "expected": { "replayed": 20, "waits": false, "turns": 0, "refused": null, "state": { "n": 20 }, "applied": 20, "supersessions": 0 } },
         {
-          "command": { "kind": "supersede", "target": { "edit": 0, "op": 0 }, "replacement": "withdrawn" },
-          "expected": { "replayed": 20, "waits": false, "turns": 0, "refused": null, "state": { "n": 19 }, "applied": 20, "supersessions": 1 }
+          "command": {
+            "kind": "undo"
+          },
+          "expected": {
+            "replayed": 19,
+            "waits": false,
+            "turns": 0,
+            "refused": null,
+            "state": {
+              "n": 19
+            },
+            "applied": 19,
+            "supersessions": 0
+          }
+        },
+        {
+          "command": {
+            "kind": "redo"
+          },
+          "expected": {
+            "replayed": 20,
+            "waits": false,
+            "turns": 0,
+            "refused": null,
+            "state": {
+              "n": 20
+            },
+            "applied": 20,
+            "supersessions": 0
+          }
+        },
+        {
+          "command": {
+            "kind": "supersede",
+            "target": {
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": "withdrawn"
+          },
+          "expected": {
+            "replayed": 20,
+            "waits": false,
+            "turns": 0,
+            "refused": null,
+            "state": {
+              "n": 19
+            },
+            "applied": 20,
+            "supersessions": 1
+          }
         }
       ]
     }

@@ -9,7 +9,21 @@
   ],
   "properties": {
     "namespace": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Drawing namespace",
+          "de": "Zeichnungsnamensraum"
+        },
+        "description": {
+          "en": "Namespace URI the conformance class prescribes for the DrawingML main vocabulary.",
+          "de": "Namensraum-URI, die die Konformitätsklasse für das DrawingML-Hauptvokabular vorschreibt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

@@ -78,7 +78,7 @@ mod subject {
 
     /// 📬️ An open materialises the folder and emits.
     pub fn an_open_materialises_the_folder_and_emits(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let world = world(&vectors);
         let outcome = opened(&world, &vectors)?;
         Ok(Outcome::projection(Json::Object(vec![("outcome".to_string(), outcome_json(&outcome)), ("paths".to_string(), strings(world.store.paths())), ("events".to_string(), events(&world))])))
@@ -86,7 +86,7 @@ mod subject {
 
     /// 📪️ A close consumes the important document.
     pub fn a_close_consumes_the_important_document(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let world = world(&vectors);
         opened(&world, &vectors)?;
         let outcome = service(&world).close(&parse_close_request(&text_of(&vectors, "close")).map_err(|error| error.message)?).map_err(|error| error.message)?;
@@ -95,7 +95,7 @@ mod subject {
 
     /// 🔓️ A reopen restores the important document.
     pub fn a_reopen_restores_the_important_document(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let world = world(&vectors);
         opened(&world, &vectors)?;
         service(&world).close(&parse_close_request(&text_of(&vectors, "close")).map_err(|error| error.message)?).map_err(|error| error.message)?;
@@ -105,7 +105,7 @@ mod subject {
 
     /// ♻️ A change renames the folder.
     pub fn a_change_renames_the_folder(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let world = world(&vectors);
         opened(&world, &vectors)?;
         let outcome = service(&world).change(&parse_change_request(&text_of(&vectors, "change")).map_err(|error| error.message)?).map_err(|error| error.message)?;
@@ -114,7 +114,7 @@ mod subject {
 
     /// ⚠️ A close of a ticket that is not open is refused.
     pub fn a_close_refuses_a_ticket_that_is_not_open(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let world = world(&vectors);
         opened(&world, &vectors)?;
         let valid = parse_close_request(&text_of(&vectors, "close")).map_err(|error| error.message)?;
@@ -137,14 +137,14 @@ mod subject {
 
     /// 📝️ File inputs are normalised before they are recorded.
     pub fn file_inputs_are_normalised_before_they_are_recorded(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let close = parse_close_request(&text_of(&vectors, "close")).map_err(|error| error.message)?;
         Ok(Outcome::projection(Json::Object(vec![("input".to_string(), strings(close.files.clone())), ("normalised".to_string(), strings(normalize_ticket_file_inputs(&close.files)))])))
     }
 
     /// 🧹️ An oversized artifact is purged.
     pub fn an_oversized_artifact_is_purged(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let world = world(&vectors);
         let outcome = opened(&world, &vectors)?;
         let id = TicketId::parse(&outcome.id).map_err(|error| error.message)?;

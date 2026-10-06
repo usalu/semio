@@ -319,7 +319,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
             let base = base([1.0, 1.0, 1.0]);
             let mut store = crate::store_fixture::document_store(base.clone()).await;
             for mutation in &log {
-                store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the gesture applies");
+                store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the gesture applies");
             }
             let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
             let target = ids[edited_at].clone();
@@ -359,7 +359,7 @@ async fn a_gesture_edited_onto_a_missing_target_blocks_finalizing() {
         let base = base([0.0; 3]);
         let mut store = crate::store_fixture::document_store(base.clone()).await;
         for mutation in [change_slider_value("height", 7.5), drag_transforms(vec![TRANSLATE.into()], [1.0, 0.0, 0.0])] {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None, transaction: None }).await.expect("the gesture applies");
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }).await.expect("the gesture applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::GENERATION_3D_SCHEMA.into(), payload: change_slider_value("ghost", 7.5).encode_op().expect("encodes") })].into_iter().collect();

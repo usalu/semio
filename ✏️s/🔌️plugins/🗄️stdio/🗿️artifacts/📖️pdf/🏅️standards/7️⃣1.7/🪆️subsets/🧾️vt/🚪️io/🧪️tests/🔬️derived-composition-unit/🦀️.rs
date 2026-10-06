@@ -2,11 +2,7 @@ mod tests {
     use super::*;
     use semio_framework_plugin::AnalyzeSource;
 
-    /// 🩹 The 1.7 writer (`encode_pdf`) deliberately does NOT re-emit `PdfSnapshot.objects` (see
-    /// its own doc comment — asserted structurally, not byte-for-byte), so a builder-seeded
-    /// OutputIntent/TrimBox/DPartRoot can never round-trip through `encode_pack`/`decode_pack`.
-    /// Hand-craft bytes and route through `AnalyzeSource::Text` instead (`decode_pdf` parses the
-    /// FULL real object graph) — same pattern `🗄️a`'s/`🖨️x`'s/`♿️ua`'s own composer tests use.
+    /// 🧾️ Handwritten PDF graph with real ICC bytes and terminal document-part ownership.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn minimal_conforming_vt_pdf() -> Vec<u8> {
         let mut body = Vec::new();
@@ -18,21 +14,22 @@ mod tests {
         let o3 = body.len();
         body.extend_from_slice(b"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /TrimBox [0 0 200 200] /Resources << >> >>\nendobj\n");
         let o4 = body.len();
-        body.extend_from_slice(b"4 0 obj\n<< /Type /OutputIntent /S /GTS_PDFX /OutputConditionIdentifier (sRGB IEC61966-2.1) /DestOutputProfile 5 0 R >>\nendobj\n");
+        body.extend_from_slice(b"4 0 obj\n<< /Type /OutputIntent /S /GTS_PDFX /OutputConditionIdentifier (sRGB2014) /DestOutputProfile 5 0 R >>\nendobj\n");
         let o5 = body.len();
-        body.extend_from_slice(b"5 0 obj\n<< /N 3 >>\nendobj\n");
+        let profile=include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🖼️assets/🌈️icc/🌈️sRGB2014.icc"));
+        body.extend_from_slice(format!("5 0 obj\n<< /Length {} /N 3 >>\nstream\n",profile.len()).as_bytes());
+        body.extend_from_slice(profile);
+        body.extend_from_slice(b"\nendstream\nendobj\n");
         let o6 = body.len();
-        body.extend_from_slice(b"6 0 obj\n<< /Type /DPartRoot /DParts [7 0 R] >>\nendobj\n");
+        body.extend_from_slice(b"6 0 obj\n<< /Type /DPartRoot /DPartRootNode 7 0 R >>\nendobj\n");
         let o7 = body.len();
-        body.extend_from_slice(b"7 0 obj\n<< /Type /DPart /DPM 8 0 R >>\nendobj\n");
-        let o8 = body.len();
-        body.extend_from_slice(b"8 0 obj\n<< >>\nendobj\n");
+        body.extend_from_slice(b"7 0 obj\n<< /Type /DPart /Parent 6 0 R /Start 3 0 R /DPM << >> >>\nendobj\n");
         let xref = body.len();
-        body.extend_from_slice(b"xref\n0 9\n0000000000 65535 f \n");
-        for off in [o1, o2, o3, o4, o5, o6, o7, o8] {
+        body.extend_from_slice(b"xref\n0 8\n0000000000 65535 f \n");
+        for off in [o1, o2, o3, o4, o5, o6, o7] {
             body.extend_from_slice(format!("{off:010} 00000 n \n").as_bytes());
         }
-        body.extend_from_slice(format!("trailer\n<< /Size 9 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
+        body.extend_from_slice(format!("trailer\n<< /Size 8 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
         body
     }
 

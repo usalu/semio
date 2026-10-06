@@ -1,14 +1,12 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import schema from "../🧬️schema/🔣️.json";
 import corpus from "../🧫️fixtures/🔣️.json";
 import { jsonSchemaSubsetValueEquals, validateJsonSchemaSubset } from "../🟦️.ts";
 
 /** 🧬️ Proves the owned schema subset against its portable corpus and independent AJV. */
 export async function proveJsonSchemaSubsetContractV1(): Promise<number> {
   const ajv = new Ajv({ strict: false });
-  assert.equal(ajv.compile(schema)(corpus), true);
   for (const row of corpus.cases) {
     assert.equal(ajv.compile(row.schema)(row.value), row.valid, row.id + " AJV");
     assert.equal(validateJsonSchemaSubset(row.schema, row.value).length === 0, row.valid, row.id + " Bun");

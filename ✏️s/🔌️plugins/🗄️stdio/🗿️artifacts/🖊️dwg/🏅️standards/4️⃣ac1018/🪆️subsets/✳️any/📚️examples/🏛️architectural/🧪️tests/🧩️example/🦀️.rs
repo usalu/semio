@@ -1,12 +1,14 @@
 //! 🧪️ Tests for example `🏛️architectural` — real fixture, real D1/D2 decode assertions.
 
-use crate::examples::architectural::{source, FIXTURE_BYTES};
+use crate::examples::architectural::{source, DOCUMENT_BYTES};
 use crate::schema::diff::DwgDiff;
 use crate::schema::mutations::{apply_dwg_mutation, set_snapshot, set_version_info, DwgMutation};
-use crate::schema::snapshot::{decode_dwg, encode_dwg, DwgSnapshot};
+use crate::schema::snapshot::{DwgSnapshot};
+use crate::standards::v_ac1024::subsets::any::io::binary::snapshot::{encode_dwg};
+use crate::standards::v_ac1024::subsets::any::io::binary::snapshot::{decode_dwg};
 use crate::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any as raw_export;
 use crate::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any as raw_import;
-use crate::standards::v_ac1024::subsets::any::schema::DwgAnalyzer;
+use crate::standards::v_ac1024::subsets::any::io::DwgAnalyzer;
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
 use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeSource, Dialect, StandardId, SubsetId};
@@ -14,20 +16,20 @@ use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA
 use store::{ArtifactDsl, ArtifactPack};
 
 async fn assert_fixture_bytes(actual: &[u8], label: &str) {
-    if actual == FIXTURE_BYTES {
+    if actual == DOCUMENT_BYTES {
         return;
     }
-    let offset = actual.iter().zip(FIXTURE_BYTES).position(|(left, right)| left != right).unwrap_or(actual.len().min(FIXTURE_BYTES.len()));
+    let offset = actual.iter().zip(DOCUMENT_BYTES).position(|(left, right)| left != right).unwrap_or(actual.len().min(DOCUMENT_BYTES.len()));
     let start = offset.saturating_sub(8);
     let actual_end = (offset + 8).min(actual.len());
-    let expected_end = (offset + 8).min(FIXTURE_BYTES.len());
-    panic!("{label}: bytes differ at offset {offset}; actual len={} window={:02x?}; expected len={} window={:02x?}", actual.len(), &actual[start..actual_end], FIXTURE_BYTES.len(), &FIXTURE_BYTES[start..expected_end]);
+    let expected_end = (offset + 8).min(DOCUMENT_BYTES.len());
+    panic!("{label}: bytes differ at offset {offset}; actual len={} window={:02x?}; expected len={} window={:02x?}", actual.len(), &actual[start..actual_end], DOCUMENT_BYTES.len(), &DOCUMENT_BYTES[start..expected_end]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn fixture_is_real_ac1024_not_a_stub() {
-    assert!(FIXTURE_BYTES.len() > 100_000, "architectural.dwg must be the real ~145KB fixture, got {} bytes", FIXTURE_BYTES.len());
-    assert_eq!(&FIXTURE_BYTES[0..6], b"AC1024", "fixture must start with the AC1024 version marker");
+    assert!(DOCUMENT_BYTES.len() > 100_000, "architectural.dwg must be the real ~145KB fixture, got {} bytes", DOCUMENT_BYTES.len());
+    assert_eq!(&DOCUMENT_BYTES[0..6], b"AC1024", "fixture must start with the AC1024 version marker");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -38,7 +40,7 @@ async fn source_nonempty() {
 /// 🧪️ The real file is projected into standard logical concepts without retaining its container.
 #[semio_framework_async_macros::async_test]
 async fn real_decode_projects_logical_state() {
-    let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
+    let snap = decode_dwg(DOCUMENT_BYTES).expect("real fixture must decode");
     assert_eq!(snap.version, "AC1024");
     assert_eq!(snap.schema, crate::STDIO_DWG_DOCUMENT_SCHEMA);
     assert!(snap.codepage > 0);
@@ -106,21 +108,21 @@ async fn real_decode_projects_logical_state() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_imported_object_has_a_typed_standard_body() {
-    let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
+    let snap = decode_dwg(DOCUMENT_BYTES).expect("real fixture must decode");
     let missing = snap.drawing.objects.iter().filter(|object| object.body.is_none()).map(|object| format!("{:#x}:{}", object.handle, object.class_name)).collect::<Vec<_>>();
     assert!(missing.is_empty(), "{} of 652 imported objects remain identity-only; first missing bodies: {:?}", missing.len(), &missing[..missing.len().min(24)]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn real_decode_stays_lossless_on_reencode() {
-    let snap = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
+    let snap = decode_dwg(DOCUMENT_BYTES).expect("real fixture must decode");
     let reencoded = encode_dwg(&snap).expect("re-encode");
     assert_fixture_bytes(&reencoded, "re-encode").await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn snapshot_pack_preserves_signed_zero_semantics() {
-    let original = decode_dwg(FIXTURE_BYTES).expect("real fixture must decode");
+    let original = decode_dwg(DOCUMENT_BYTES).expect("real fixture must decode");
     let restored = DwgSnapshot::decode_pack(&original.encode_pack()).expect("snapshot pack roundtrip");
     let expected = semio_framework_pack_json::to_json_string(&original.drawing);
     let actual = semio_framework_pack_json::to_json_string(&restored.drawing);
@@ -130,7 +132,7 @@ async fn snapshot_pack_preserves_signed_zero_semantics() {
 
 #[semio_framework_async_macros::async_test]
 async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
-    let binary = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: FIXTURE_BYTES.to_vec() };
+    let binary = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: DOCUMENT_BYTES.to_vec() };
     let original = raw_import::deserialize(&binary).expect("raw DWG import");
     let exported = raw_export::serialize(&original).expect("raw DWG export").bytes;
     assert_fixture_bytes(&exported, "raw import/export").await;
@@ -248,7 +250,7 @@ async fn persisted_dwg_facets_have_no_parallel_entity_projection() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_metadata_edits_materialize_from_logical_content() {
-    let original = decode_dwg(FIXTURE_BYTES).expect("decode exact fixture");
+    let original = decode_dwg(DOCUMENT_BYTES).expect("decode exact fixture");
     let mut changed = original.clone();
     changed.summary.title = "Architectural Example".into();
     let mutation = DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(changed) });

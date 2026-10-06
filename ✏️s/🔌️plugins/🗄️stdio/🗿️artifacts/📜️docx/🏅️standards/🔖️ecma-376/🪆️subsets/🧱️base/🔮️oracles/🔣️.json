@@ -623,9 +623,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "no-mutation-no-op",
       "class": "third-party-generated",
       "target": {
@@ -674,7 +673,6 @@
       "notes": "The identity element — `DocxMutation::NoMutation => DocxDiff::default()` — so before and after are the same document, byte for byte."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "bolds-the-tower-run-of-the-opening-paragraph",
       "class": "third-party-generated",
       "target": {
@@ -725,7 +723,6 @@
       "notes": "Same scenario id and opening paragraph as the committed set-snapshot/🧪️tests fixture: the second run of the opening paragraph is bolded, nothing else moves."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-no-op-identical-snapshot",
       "class": "third-party-generated",
       "target": {
@@ -776,7 +773,6 @@
       "notes": "`set-snapshot`'s own diff leaf explicitly warns `mutation.no-op` and returns `DocxDiff::default()` when the new snapshot is identical to the current one."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-block-appends-a-pricing-table",
       "class": "third-party-generated",
       "target": {
@@ -827,7 +823,6 @@
       "notes": "Appends a 2×2 table as the body's third (final) block — also the corpus's one exercise of table/row/cell serialization and projection."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-block-rejected-invalid-index",
       "class": "third-party-generated",
       "target": {
@@ -871,7 +866,6 @@
       "notes": "Inserting at index 99 of a 2-block body is outside the final collection — `apply_indexed`'s `mutation.apply.invalid-index`. No legal after-state exists, so only `⬅️before.docx` is carried."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-drops-the-closing-paragraph",
       "class": "third-party-generated",
       "target": {
@@ -922,7 +916,6 @@
       "notes": "Removes the second (closing) paragraph, leaving the opening paragraph alone."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-rejected-missing-index",
       "class": "third-party-generated",
       "target": {
@@ -966,7 +959,6 @@
       "notes": "Removing block index 5 of a 2-block body does not exist — `apply_indexed`'s `mutation.apply.missing-target`. Before-only."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-content-replaces-the-closing-paragraph",
       "class": "third-party-generated",
       "target": {
@@ -1017,7 +1009,6 @@
       "notes": "Replaces the closing paragraph's full content with different text via the same style."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-content-no-op-unchanged-content",
       "class": "third-party-generated",
       "target": {
@@ -1068,7 +1059,6 @@
       "notes": "Replacing a block with structurally identical content: `diff_block(old,new)` returns `None`, so `diff_set_block_content` returns `DocxDiff::default()`."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-text-rewrites-the-closing-paragraph",
       "class": "third-party-generated",
       "target": {
@@ -1119,7 +1109,6 @@
       "notes": "Rewrites the closing paragraph's single run's literal text."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-text-no-op-identical-text",
       "class": "third-party-generated",
       "target": {
@@ -1170,7 +1159,6 @@
       "notes": "`diff_set_run_text` explicitly checks `run.text == text` and returns `DocxDiff::default()` when the new text is identical to the current one."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-formatting-italicizes-the-closing-paragraph",
       "class": "third-party-generated",
       "target": {
@@ -1221,7 +1209,6 @@
       "notes": "Sets the closing paragraph's single run to italic; bold/underline stay false."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-formatting-no-op-identical-flags",
       "class": "third-party-generated",
       "target": {
@@ -1272,7 +1259,6 @@
       "notes": "`diff_set_run_formatting` returns `DocxDiff::default()` when bold/italic/underline all already match the requested flags."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-style-adds-a-quote-style",
       "class": "third-party-generated",
       "target": {
@@ -1323,7 +1309,6 @@
       "notes": "Inserts a new `Quote` style, based on `Body`, at the end of the style table."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-style-rejected-duplicate-id",
       "class": "third-party-generated",
       "target": {
@@ -1367,7 +1352,6 @@
       "notes": "The before-state already carries a `Quote` style; inserting another with the same id is `apply_named`'s `mutation.apply.duplicate-target`. Before-only."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-style-drops-the-quote-style",
       "class": "third-party-generated",
       "target": {
@@ -1418,7 +1402,6 @@
       "notes": "Removes the `Quote` style, leaving `Heading1`/`Body`."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-style-rejected-missing-id",
       "class": "third-party-generated",
       "target": {
@@ -1462,7 +1445,6 @@
       "notes": "The before-state has no `Quote` style; removing it is `apply_named`'s `mutation.apply.missing-target`. Before-only."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-name-renames-the-body-style",
       "class": "third-party-generated",
       "target": {
@@ -1513,7 +1495,6 @@
       "notes": "Renames the `Body` style from \"Body Text\" to \"Body Copy\"."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-name-rejected-missing-id",
       "class": "third-party-generated",
       "target": {
@@ -1557,7 +1538,6 @@
       "notes": "The before-state has no `Quote` style; renaming it is a named modification against a missing target. Before-only."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-based-on-reparents-the-quote-style",
       "class": "third-party-generated",
       "target": {
@@ -1608,7 +1588,6 @@
       "notes": "Reparents `Quote` from `basedOn: Body` to `basedOn: Heading1`."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-based-on-rejected-missing-id",
       "class": "third-party-generated",
       "target": {
@@ -1652,7 +1631,6 @@
       "notes": "The before-state has no `Quote` style; setting its `basedOn` is a named modification against a missing target. Before-only."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-part-adds-core-properties",
       "class": "third-party-generated",
       "target": {
@@ -1703,7 +1681,6 @@
       "notes": "Inserts a real `docProps/core.xml` part (content this typed layer doesn't model) that did not exist before."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-part-no-op-identical-content",
       "class": "third-party-generated",
       "target": {
@@ -1754,7 +1731,6 @@
       "notes": "Setting a part to content-type+bytes identical to what is already there: `diff_part` returns `None`, so `diff_set_part` returns `DocxDiff::default()`."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-part-drops-core-properties",
       "class": "third-party-generated",
       "target": {
@@ -1805,7 +1781,6 @@
       "notes": "Removes the `docProps/core.xml` part that existed in the before-state."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-part-rejected-missing-path",
       "class": "third-party-generated",
       "target": {
@@ -1849,7 +1824,6 @@
       "notes": "The before-state carries no `docProps/core.xml` part; removing it targets a part that is not in the package. Before-only."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -1900,7 +1874,6 @@
       "notes": "The README's body and style table replaced by the row's three blocks (heading, mixed-run paragraph, 2-cell table) and three styles; docProps parts untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-block-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -1951,7 +1924,6 @@
       "notes": "An italic TableCell paragraph inserted at index 1 of body table 359, row 1, cell 0."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-block-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2002,7 +1974,6 @@
       "notes": "The only block of body table 359, row 2, cell 0 removed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-block-content-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2053,7 +2024,6 @@
       "notes": "Body block 4 (the NOTE admonition paragraph) replaced by one italic Normal paragraph."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-text-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2104,7 +2074,6 @@
       "notes": "Run 0 of body paragraph 177 rewritten."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-formatting-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2155,7 +2124,6 @@
       "notes": "Run 0 of body paragraph 177: bold off, italic and underline on."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-style-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2206,7 +2174,6 @@
       "notes": "A Callout paragraph style based on Normal appended to the style table."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-style-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2257,7 +2224,6 @@
       "notes": "The last declared style, TableCell, removed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-name-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2308,7 +2274,6 @@
       "notes": "Heading2 renamed to Section Heading."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-based-on-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2359,7 +2324,6 @@
       "notes": "Heading3 re-based from Normal onto Heading1."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-part-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2410,7 +2374,6 @@
       "notes": "docProps/app.xml replaced by the row's extended-properties XML (same content type)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-part-readme-applied",
       "class": "third-party-generated",
       "target": {
@@ -2461,7 +2424,6 @@
       "notes": "The package relationship to docProps/core.xml dropped, so the part is no longer written."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-snapshot-readme-applied",
       "class": "third-party-generated",
       "target": {

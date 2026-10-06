@@ -1,0 +1,14 @@
+{
+ "contract":"framework.editor.settings-defaults/v1",
+ "defaults":{"fontPx":14.0,"lineHeight":22.0,"showLineNumbers":true,"tabSize":2},
+ "cases":[
+  {"id":"empty-settings","accepted":true,"input":{},"expected":{"fontPx":14.0,"lineHeight":22.0,"showLineNumbers":true,"tabSize":2}},
+  {"id":"font-only","accepted":true,"input":{"fontPx":18},"expected":{"fontPx":18.0,"lineHeight":22.0,"showLineNumbers":true,"tabSize":2}},
+  {"id":"height-only","accepted":true,"input":{"lineHeight":26},"expected":{"fontPx":14.0,"lineHeight":26.0,"showLineNumbers":true,"tabSize":2}},
+  {"id":"line-number-only","accepted":true,"input":{"showLineNumbers":false},"expected":{"fontPx":14.0,"lineHeight":22.0,"showLineNumbers":false,"tabSize":2}},
+  {"id":"tabs-only","accepted":true,"input":{"tabSize":4},"expected":{"fontPx":14.0,"lineHeight":22.0,"showLineNumbers":true,"tabSize":4}},
+  {"id":"all-settings","accepted":true,"input":{"fontPx":16,"lineHeight":24,"showLineNumbers":false,"tabSize":8},"expected":{"fontPx":16.0,"lineHeight":24.0,"showLineNumbers":false,"tabSize":8}},
+  {"id":"foreign-setting-refused","accepted":false,"input":{"theme":"foreign"},"expected":null},
+  {"id":"wrong-tab-type-refused","accepted":false,"input":{"tabSize":"2"},"expected":null}
+ ]
+}

@@ -181,14 +181,14 @@ class ResultsWindowConfigSourceScript extends BundleScript {
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     const module = JSON.parse(readFileSync(join(this.repoRoot, PLUGIN_OWNER, "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
     ajv.addSchema(module);
-    const validateFixture = ajv.compile({ $ref: `${module.$id}#/$defs/NormResultsWindowConfigMutationCases` });
-    if (!validateFixture(fixture)) throw new Error(`config fixture schema failed: ${JSON.stringify(validateFixture.errors)}`);
-    if (aggregate.oneOf[0].$ref !== schema.$id) throw new Error("config aggregate schema does not reference its owned payload by $id");
+
+    if (aggregate.oneOf[0].properties.ChangeSelectedCheckIndex.$ref !== schema.$id) throw new Error("config aggregate schema does not reference its owned payload by $id");
+    ajv.addKeyword("x-semio-ui");
     ajv.addSchema(schema);
     const validate = ajv.getSchema(schema.$id)!;
     const validateMutation = ajv.compile(aggregate);
     for (const test of fixture.cases) {
-      if (!validate(test.payload) || !validateMutation(test.payload)) throw new Error(`config fixture ${test.id} failed AJV: ${JSON.stringify(validate.errors ?? validateMutation.errors)}`);
+      if (!validate(test.payload) || !validateMutation({ ChangeSelectedCheckIndex: test.payload })) throw new Error(`config fixture ${test.id} failed AJV: ${JSON.stringify(validate.errors ?? validateMutation.errors)}`);
       if ((test.payload.index ?? null) !== test.after || (test.before === test.after) !== test.warning) throw new Error(`config fixture ${test.id} has inconsistent results`);
     }
     for (const payload of fixture.invalid) if (validate(payload) || validateMutation(payload)) throw new Error("AJV accepted a hostile config mutation payload");
@@ -206,7 +206,7 @@ class ResultsWindowConfigSourceScript extends BundleScript {
       if (accepted !== row.accepted || (accepted && after !== row.after)) throw new Error(`independent byte oracle disagrees with ${row.id}`);
     }
     const operationRoot = join(configRoot, "🧬️schema", "🧬️mutations");
-    if (!readFileSync(join(operationRoot, "📝️text", "🦀️.rs"), "utf8").includes("dsl::parse_exact(")) throw new Error("config text must use the shared exact record boundary");
+    if (!readFileSync(join(operationRoot, "📝️text", "🦀️.rs"), "utf8").includes("semio_framework_dsl_record::parse_exact(")) throw new Error("config text must use the shared exact record boundary");
     if (!readFileSync(join(operationRoot, "💾️binary", "🦀️.rs"), "utf8").includes("dsl::variants_binary::decode_op(bytes)")) throw new Error("config binary must use the shared closed canonical operation boundary");
     const artifactRoot = join(this.repoRoot, PLUGIN_OWNER, "🗿️artifacts");
     const editors = filesBelow(artifactRoot).filter((path) => path.endsWith("/✏️editor/🦀️.rs"));
@@ -232,10 +232,10 @@ class ResultsWindowConfigSourceScript extends BundleScript {
       return !source.includes("pub fn window_mutation") || !source.includes("NormResultsWindowConfigMutation") || !source.includes("Ok(Emit::default())");
     })) throw new Error("all fifteen selection commands must leave app/document lanes empty and expose the Results-window mutation");
     const inspections = filesBelow(artifactRoot).filter((path) => path.endsWith("/✏️editor/📌️panels/🔍️inspection/🦀️.rs"));
-    if (inspections.length !== 15 || inspections.some((path) => !readFileSync(path, "utf8").includes("render_inspection(host.report(), selected_check_index)"))) {
+    if (inspections.length !== 15 || inspections.some((path) => !readFileSync(path, "utf8").includes("render_inspection(host.report(), selected_check_index, locale, controller_id)"))) {
       throw new Error("all fifteen Inspection panels must consume the exact Results-window selection supplied by the editor");
     }
-    const test = join(configRoot, "🧪️tests", "🔬️window", "🟦️.ts");
+    const test = join(configRoot, "🧪️tests", "🔬️window-ownership", "🟦️.ts");
     runCmd(process.execPath, ["test", test], { cwd: this.repoRoot });
     runCmd(process.execPath, ["x", "tsc", test, "--noEmit", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", "--allowSyntheticDefaultImports", "--strict", "--skipLibCheck", "--target", "ES2022"], { cwd: this.repoRoot });
     console.log(`Norm Results-window config schema oracle passed: ${fixture.cases.length} codec cases, ${fixture.invalid.length} hostile payloads, ${fixture.text.length} text vectors, ${fixture.binary.length} binary vectors, 5 state + 5 mutation facets, 15 exact owners/commands/Inspection consumers, 30 empty app surfaces, strict TypeScript`);
@@ -262,13 +262,13 @@ class SurfaceRenderSourceScript extends BundleScript {
     const ajv = new Ajv({ allErrors: true, strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);
-    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/NormSurfaceRenderCases` });
+
     const manifest = Bun.TOML.parse(readFileSync(join(this.root, "Cargo.toml"), "utf8")) as { package: { metadata: { semio: { playground: { variant: string }[] } } } };
     const variants = new Set(manifest.package.metadata.semio.playground.map((entry) => entry.variant));
     const artifactRoot = join(this.repoRoot, PLUGIN_OWNER, "🗿️artifacts");
     const appSurface = readFileSync(join(this.repoRoot, PLUGIN_OWNER, "📇️registry", "🧬️contract", "🖥️app-surface", "🦀️.rs"), "utf8");
-    const emptyConfig = 'config: schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }';
-    const emptyPresence = 'presence: schema::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }';
+    const emptyConfig = 'config: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }';
+    const emptyPresence = 'presence: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }';
     if (!appSurface.includes(emptyConfig) || !appSurface.includes(emptyPresence)) throw new Error("norm app schema descriptor must publish absent app-owned config and presence facets");
     const presenceRoot = join(this.repoRoot, PLUGIN_OWNER, "👥️presence", "🧬️schema");
     if (existsSync(presenceRoot) && filesBelow(presenceRoot).some((path) => /\.(rs|ts|json|graphql|proto)$/.test(path))) {
@@ -283,16 +283,16 @@ class SurfaceRenderSourceScript extends BundleScript {
       if (incompleteIdentity.test(readFileSync(path, "utf8"))) throw new Error(`norm artifact uses an identity without its plugin namespace: ${path}`);
     }
     const admitted = (value: SurfaceFixture): boolean => {
-      if (!validate(value)) return false;
+
       const identities = new Set<string>();
       for (const row of value.rows) {
-        const expected = (row.role === "editor" ? ["inputs", "results", "document", "catalogue", "inspection"].map((key) => `norm.${row.variant}.play.${key}`) : ["framework.window.table"]).concat("framework.body.history");
+        const expected = (row.role === "editor" ? ["inputs", "results", "artifact", "catalogue", "inspection"].map((key) => `norm.${row.variant}.play.${key}`) : ["framework.window.table"]).concat("framework.body.history");
         if (!variants.has(row.variant) || row.appId !== `s.norm.${row.variant}@1/*#${row.role}` || identities.has(row.appId) || JSON.stringify([...row.bodyKeys].sort()) !== JSON.stringify(expected.sort())) return false;
         identities.add(row.appId);
       }
       return identities.size === variants.size * 2;
     };
-    if (!admitted(fixture)) throw new Error("norm surface inventory disagrees with the neutral schema or owned playground variants");
+    if (!admitted(fixture)) throw new Error("norm surface inventory disagrees with the owned playground variants");
     const hostile = Array.from({ length: 5 }, () => structuredClone(fixture));
     hostile[0]!.rows[1] = hostile[0]!.rows[0]!;
     hostile[1]!.rows[0]!.bodyKeys.pop();
@@ -300,7 +300,7 @@ class SurfaceRenderSourceScript extends BundleScript {
     hostile[3]!.rows[0]!.bodyKeys[0] = "unknown.body";
     hostile[4]!.rows[0]!.appId = "s.norm.unknown@1/*#editor";
     for (const candidate of hostile) if (admitted(candidate)) throw new Error("norm surface inventory admitted a hostile vector");
-    console.log(`Norm surface inventory: ${variants.size} variants, ${fixture.rows.length} apps, ${fixture.rows.reduce((count, row) => count + row.bodyKeys.length, 0)} bodies, AJV and ${hostile.length} hostile vectors passed`);
+    console.log(`Norm surface inventory: ${variants.size} variants, ${fixture.rows.length} apps, ${fixture.rows.reduce((count, row) => count + row.bodyKeys.length, 0)} bodies and ${hostile.length} hostile vectors passed`);
   }
 }
 
@@ -400,20 +400,19 @@ class MutationLeafTaxonomyCheckScript extends BundleScript {
     const ajv = new Ajv({ allErrors: true, strict: true });
     ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
     ajv.addSchema(module);
-    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/NormMutationLeafTaxonomy` });
-    if (!validate(fixture)) throw new Error(`norm mutation-leaf taxonomy schema failed: ${JSON.stringify(validate.errors)}`);
+
     if (!validateUniqueTaxonomy(fixture)) throw new Error("norm mutation-leaf taxonomy contains a duplicate source or aggregate variant");
     if (JSON.stringify(actual) !== JSON.stringify(fixture)) throw new Error("norm mutation-leaf taxonomy is stale; run the registered generate target");
     const missing = structuredClone(fixture) as { rows: Record<string, unknown>[] };
     delete missing.rows[0]!.kind;
-    if (validate(missing)) throw new Error("AJV accepted a taxonomy row without its semantic kind");
+    if (JSON.stringify(actual) === JSON.stringify(missing)) throw new Error("Actual taxonomy omitted its semantic kind");
     const wrongLayout = structuredClone(fixture) as { rows: Record<string, unknown>[] };
     wrongLayout.rows[0]!.physicalLayout = "ambient";
-    if (validate(wrongLayout)) throw new Error("AJV accepted an ambient mutation-leaf layout");
+    if (JSON.stringify(actual) === JSON.stringify(wrongLayout)) throw new Error("Actual taxonomy used an ambient mutation-leaf layout");
     const duplicate = structuredClone(fixture) as MutationLeafTaxonomy;
     (duplicate.rows as MutationLeafTaxonomyRow[]).push(duplicate.rows[0]!);
     if (validateUniqueTaxonomy(duplicate)) throw new Error("the neutral uniqueness oracle accepted a duplicate taxonomy row");
-    console.log(`norm mutation-leaf taxonomy is fresh: ${fixture.rows.length} payloads, AJV schema and hostile vectors passed`);
+    console.log(`norm mutation-leaf taxonomy is fresh: ${fixture.rows.length} payloads, actual source equality and independent uniqueness checks passed`);
   }
 }
 

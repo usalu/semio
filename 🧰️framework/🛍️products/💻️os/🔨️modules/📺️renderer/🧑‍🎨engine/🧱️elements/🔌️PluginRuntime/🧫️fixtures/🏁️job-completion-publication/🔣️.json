@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"id": "completed", "job": "17", "operation": "9", "revision": "3", "outcome": "done", "message": "Applied", "continuations": 0, "handoffStatus": "idle"},
+    {"id": "failed", "job": "18", "operation": "10", "revision": "3", "outcome": "failed", "message": "Refused", "continuations": 0, "handoffStatus": "idle"},
+    {"id": "exact-authority", "job": "18446744073709551615", "operation": "18446744073709551614", "revision": "18446744073709551613", "outcome": "done", "message": "Angewendet", "continuations": 0, "handoffStatus": "idle"},
+    {"id": "continued-publication", "job": "19", "operation": "11", "revision": "4", "outcome": "done", "message": "Continued", "continuations": 129, "handoffStatus": "more-work"}
+  ]
+}

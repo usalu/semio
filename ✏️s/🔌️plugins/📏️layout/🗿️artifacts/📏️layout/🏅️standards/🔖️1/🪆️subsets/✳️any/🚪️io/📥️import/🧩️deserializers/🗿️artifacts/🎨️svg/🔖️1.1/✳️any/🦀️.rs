@@ -3,7 +3,7 @@
 //! drawing itself becomes the document's background (`layout_document_json_from_drawing`).
 //!
 //! 🔖 `IoFidelity::Lossy`: frames, stories and styles are not recovered from line work.
-use crate::io::layout_document_json_from_drawing;
+use crate::standards::v1::subsets::any::io::layout_document_json_from_drawing;
 use crate::LayoutSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{decode_drawing, SemioDrawingFormat};
 

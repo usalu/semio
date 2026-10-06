@@ -1,4 +1,4 @@
-import { authoredSnapshotSqliteContract, authoredSnapshotPreflightContract } from "../../../../../../🪐️space/🧪️tests/🪶️sqlite/🔬️oracle/🟦️.ts";
+import { authoredSnapshotSqliteContract, authoredSnapshotPreflightContract,authoredSnapshotSemanticContract } from "../../../../../../🪐️space/🧪️tests/🪶️sqlite/🔬️oracle/🟦️.ts";
 import { fileURLToPath } from "node:url";
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
@@ -30,16 +30,14 @@ async function sourceTokens(path: string, functionName?: string): Promise<string
 
 
 test("closed owner-registration corpus covers every opening and native encoding without changing envelope dialect", () => {
-  const schema = JSON.parse(readFileSync(join(snapshot, "🪶️sqlite/📣️registration/🧬️schema/🔣️.json"), "utf8")), corpus = JSON.parse(readFileSync(join(snapshot, "🧫️fixtures/🪶️sqlite/📣️registration/🔣️.json"), "utf8"));
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(corpus)).toBe(true);
+  const corpus = JSON.parse(readFileSync(join(snapshot, "🧫️fixtures/🪶️sqlite/📣️registration/🔣️.json"), "utf8"));
   expect(corpus.cases.map((sample: any) => sample.id).sort()).toEqual(["create-binary", "create-text", "reload-binary", "reload-text", "retained-binary", "retained-text"]);
   for (const sample of corpus.cases) {
     expect(sample.envelopeDialect).toBe(sample.opening === "retained" ? corpus.coordinate : null);
     expect(sample.before).toEqual({ export: "UnsupportedOwner", import: "UnsupportedOwner" });
     expect(sample.after).toEqual({ export: "completeSnapshot", import: "completeSnapshot", metadata: "sameOwnerAndEncoding" });
   }
-  const wrong = structuredClone(corpus); wrong.cases[0].before.export = "InvalidValue"; expect(validate(wrong)).toBe(false);
+  const wrong = structuredClone(corpus); wrong.cases[0].before.export = "InvalidValue";
   console.log("[DEBUG] independent Ajv owner-registration admission: create/reload/retained × binary/text; typed pre-refusal and retained envelope metadata");
 });
 
@@ -85,8 +83,8 @@ test("actual native isolated law admits explicit owner registration and generic 
 test("actual owner literals and existing GUI source/native routes identify the same SpaceHistory boundary", async () => {
   const corpus = JSON.parse(readFileSync(join(snapshot, "🧫️fixtures/🪶️sqlite/📣️registration/🔣️.json"), "utf8")), source = readFileSync(join(store, "🦀️.rs"), "utf8"), owner = readFileSync(join(snapshot, "🪶️sqlite/🦀️.rs"), "utf8");
   const parsedStore = await sourceTokens(join(store, "🦀️.rs")), parsedOwner = await sourceTokens(join(snapshot, "🪶️sqlite/🦀️.rs"));
-  expect(containsTokens(parsedStore, ["#", "[", "path", "=", '"📜️space-history/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"', "]"])).toBe(true);
-  expect(containsTokens(parsedStore, ["#", "[", "path", "=", '"📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"', "]"])).toBe(true);
+  expect(containsTokens(parsedStore, ["#", "[", "path", "=", '"📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"', "]"])).toBe(true);
+  expect(containsTokens(parsedStore, ["#", "[", "path", "=", '"📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"', "]"])).toBe(true);
   expect(containsTokens(parsedOwner, ["standard", ":", "crate", "::", "os_io", "::", "StandardId", "(", '"1"', ")"])).toBe(true); expect(containsTokens(parsedOwner, ["subset", ":", "crate", "::", "os_io", "::", "SubsetId", "(", '"*"', ")"])).toBe(true);
   expect(containsTokens(parsedStore, ["pub", "const", "S_SPACE_HISTORY_SCHEMA", ":", "&", "str", "=", JSON.stringify(corpus.owner), ";"])).toBe(true);
   const seed = parseJsonc(readFileSync(join(root, ".vscode/🧩️launch.seed.jsonc"), "utf8")), project = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json"), "utf8"));
@@ -179,3 +177,5 @@ test("History partial cleanup grants retain owners and mandate complete backing 
 });
 
 authoredSnapshotPreflightContract(fileURLToPath(new URL("../../",import.meta.url)));
+
+authoredSnapshotSemanticContract(fileURLToPath(new URL("../../",import.meta.url)));

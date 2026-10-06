@@ -17,7 +17,7 @@ use crate::standards::v1::subsets::base::schema::triples::{self, IndexAdded, Ind
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
 /// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::MutationDiff;
 
 //#region 🔖️IndexTransport
@@ -412,285 +412,47 @@ pub fn diff_set_snapshot(base: &SemioAudioSnapshot, snapshot: &SemioAudioSnapsho
 /// hex. Worked example: `rate=44100 format=f32 channels{[];[1:[1,[3f800000]]];[]}
 /// tags{[0];[];[0:[74697465,6669727374]]}`.
 //#region 🔖️Primitives
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode_string(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    triples::split_top_level(s, sep)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
-    triples::strip_brackets(s)
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
-    match opt {
-        None => "[0]".to_string(),
-        Some(v) => format!("[1,{}]", enc(v)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
-        ["0"] => Ok(None),
-        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
-        other => Err(format!("option decode: bad shape {other:?}")),
-    }
-}
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️Primitives
 
 //#region 🔖️ValueCodecs
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_format(f: SemioAudioFormat) -> &'static str {
-    match f {
-        SemioAudioFormat::Pcm8 => "pcm8",
-        SemioAudioFormat::Pcm16 => "pcm16",
-        SemioAudioFormat::Pcm24 => "pcm24",
-        SemioAudioFormat::Pcm32 => "pcm32",
-        SemioAudioFormat::Float32 => "f32",
-        SemioAudioFormat::Float64 => "f64",
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
-    match s {
-        "pcm8" => Ok(SemioAudioFormat::Pcm8),
-        "pcm16" => Ok(SemioAudioFormat::Pcm16),
-        "pcm24" => Ok(SemioAudioFormat::Pcm24),
-        "pcm32" => Ok(SemioAudioFormat::Pcm32),
-        "f32" => Ok(SemioAudioFormat::Float32),
-        "f64" => Ok(SemioAudioFormat::Float64),
-        other => Err(format!("bad audio format {other:?}")),
-    }
-}
 
-/// 🔢️ Exact-round-trip `f32` list — `to_bits()` hex tokens inside a bracket, never decimal
-/// text (sidesteps float-formatting precision loss and NaN/-0.0 print-ambiguity entirely).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_f32_list(v: &[f32]) -> String {
-    format!("[{}]", v.iter().map(|f| format!("{:08x}", f.to_bits())).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
-    let inner = strip_brackets(s)?;
-    if inner.is_empty() {
-        return Ok(Vec::new());
-    }
-    split_top_level(inner, ',').into_iter().map(|tok| u32::from_str_radix(tok, 16).map(f32::from_bits).map_err(|e| e.to_string())).collect()
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_channel(c: &SemioAudioChannel) -> String {
-    enc_f32_list(&c.samples)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
-    Ok(SemioAudioChannel { samples: dec_f32_list(s)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_channel_diff(d: &SemioAudioChannelDiff) -> String {
-    encode_option(&d.samples, |v| enc_f32_list(v))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_channel_diff(s: &str) -> Result<SemioAudioChannelDiff, String> {
-    Ok(SemioAudioChannelDiff { samples: decode_option(s, dec_f32_list)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_tag(t: &SemioAudioTag) -> String {
-    format!("[{},{}]", hex_encode(t.key.as_bytes()), hex_encode(t.value.as_bytes()))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [key, value] = parts.as_slice() else { return Err(format!("tag: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioAudioTag { key: hex_decode_string(key)?, value: hex_decode_string(value)? })
-}
 
-/// 🧩️ Full bracket encoding of a snapshot — used both by [`protocol::DiffCodec`]'s `SetSnapshot`
-/// payload (via the mutations module) and directly nowhere else; kept here alongside its sibling
-/// value codecs.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_snapshot(s: &SemioAudioSnapshot) -> String {
-    format!("[{},{},{},[{}],[{}]]", hex_encode(s.schema.as_bytes()), s.sample_rate, enc_format(s.format), s.channels.iter().map(enc_channel).collect::<Vec<_>>().join(","), s.tags.iter().map(enc_tag).collect::<Vec<_>>().join(","),)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_snapshot(s: &str) -> Result<SemioAudioSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema_hex, sample_rate, format, channels_s, tags_s] = parts.as_slice() else {
-        return Err(format!("snapshot: expected 5 fields, got {}", parts.len()));
-    };
-    let channels = split_top_level(strip_brackets(channels_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_channel).collect::<Result<Vec<_>, String>>()?;
-    let tags = split_top_level(strip_brackets(tags_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_tag).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioAudioSnapshot { schema: hex_decode_string(schema_hex)?, sample_rate: parse_u32(sample_rate)?, format: dec_format(format)?, channels, tags })
-}
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️TopLevel
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_audio_diff(d: &SemioAudioDiff) -> String {
-    let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = d.sample_rate {
-        tokens.push(format!("rate={v}"));
-    }
-    if let Some(v) = d.format {
-        tokens.push(format!("format={}", enc_format(v)));
-    }
-    if let Some(v) = &d.channels {
-        tokens.push(format!("channels{{{}}}", triples::enc_indexed_triple(v, enc_channel_diff, enc_channel)));
-    }
-    if let Some(v) = &d.tags {
-        tokens.push(format!("tags{{{}}}", triples::enc_indexed_triple(v, enc_tag, enc_tag)));
-    }
-    tokens.join(" ")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_audio_diff(line: &str) -> Result<SemioAudioDiff, String> {
-    let mut d = SemioAudioDiff::default();
-    if line.is_empty() {
-        return Ok(d);
-    }
-    for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("rate=") {
-            d.sample_rate = Some(parse_u32(rest)?);
-        } else if let Some(rest) = token.strip_prefix("format=") {
-            d.format = Some(dec_format(rest)?);
-        } else if let Some(rest) = token.strip_prefix("channels{") {
-            let body = rest.strip_suffix('}').ok_or_else(|| "channels: missing closing brace".to_string())?;
-            d.channels = Some(triples::dec_indexed_triple(body, dec_channel_diff, dec_channel)?);
-        } else if let Some(rest) = token.strip_prefix("tags{") {
-            let body = rest.strip_suffix('}').ok_or_else(|| "tags: missing closing brace".to_string())?;
-            d.tags = Some(triples::dec_indexed_triple(body, dec_tag, dec_tag)?);
-        } else {
-            return Err(format!("audio diff: unknown token {token:?}"));
-        }
-    }
-    Ok(d)
-}
 
-/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers this subset's own `📸️snapshot` facet's `ArtifactPack` uses)
-/// backing the real `DiffCodec::encode_diff`/`decode_diff` below.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    store::pack_rt::write_varint_u64(out, s.len() as u64);
-    out.extend_from_slice(s.as_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
-    String::from_utf8(bytes).map_err(|e| e.to_string())
-}
 
-impl DiffCodec for SemioAudioDiff {
-    fn print_diff(&self) -> String {
-        print_audio_diff(self)
-    }
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_audio_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
-    /// shortcut. `format u8` + `presence u8` (bit0=`sample_rate` bit1=`format` bit2=`channels`
-    /// bit3=`tags`) are two REAL fixed fields; each present field then follows as its own
-    /// varint-length-prefixed opaque text blob (the same per-field `rate=`/`format=`/
-    /// `enc_indexed_triple`-based text `print_diff` already produces) — independently-delimited
-    /// segments rather than one bare trailing `bytes` because there can be 0-4 of them (chaining a
-    /// `Cond` per-segment hits the `protocol-cond-cannot-chain` gap: a second `if`-guard on a field
-    /// that was itself only conditionally decoded hard-errors `eval_cond` — see `🌊️flow`'s/
-    /// `🖼️image`'s pilot reports).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        let mut presence = 0u8;
-        if self.sample_rate.is_some() {
-            presence |= 0b0001;
-        }
-        if self.format.is_some() {
-            presence |= 0b0010;
-        }
-        if self.channels.is_some() {
-            presence |= 0b0100;
-        }
-        if self.tags.is_some() {
-            presence |= 0b1000;
-        }
-        let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(v) = self.sample_rate {
-            write_str_lp(&mut out, &v.to_string());
-        }
-        if let Some(v) = self.format {
-            write_str_lp(&mut out, enc_format(v));
-        }
-        if let Some(v) = &self.channels {
-            write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_channel_diff, enc_channel));
-        }
-        if let Some(v) = &self.tags {
-            write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_tag, enc_tag));
-        }
-        Ok(out)
-    }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        if bytes.len() < 2 {
-            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
-        }
-        if bytes[0] != DIFF_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
-        }
-        let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
-        let sample_rate = if presence & 0b0001 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate blob", offset: 2, detail: e })?;
-            Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        let format = if presence & 0b0010 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format blob", offset: 2, detail: e })?;
-            Some(dec_format(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        let channels = if presence & 0b0100 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels blob", offset: 2, detail: e })?;
-            Some(triples::dec_indexed_triple(&text, dec_channel_diff, dec_channel).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        let tags = if presence & 0b1000 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags blob", offset: 2, detail: e })?;
-            Some(triples::dec_indexed_triple(&text, dec_tag, dec_tag).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags text", offset: 2, detail: e })?)
-        } else {
-            None
-        };
-        Ok(SemioAudioDiff { sample_rate, format, channels, tags })
-    }
-}
+
+
+
+
+
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 

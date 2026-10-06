@@ -1,0 +1,7 @@
+# Native48 Terminal And Rewriting Readback
+
+The retained [cohort log](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-complementary-forty-eight-native-complete-current-after-provider-and-public-closures.log:1015957) is terminal exit1. All 48 declared owners started; 46 reached genuine runtime summaries, while Block3d and VCS remained compiler-only in this original cohort. Later repair receipts must remain separate.
+
+The final four summaries close the former unstarted set: Layout 11/11 at line964077; EN1990 11/11 at981468; Block5d13/13 at999479; ISO16757 18/18 at1015952. These receipts establish those selected owning scopes only. The final failure list still includes the ten runtime-failed owners and the two compiler-only owners; this is not a green48 qualification.
+
+A fresh scoped source search of the [Rewriting artifact](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs:860) finds no old two-segment literal for child-refused, child-projection, window-required, graph-window-required, lod or viewport. All six declarations and their producers now use `trinity.rewriting.*`. Producers span the artifact root, content read, editor root, set-viewport, set-lod and window config; the seventh file is the content declaration. This closes the concrete static manifest syntax cause identified in the original public law, but requires a fresh owning replay for runtime qualification.

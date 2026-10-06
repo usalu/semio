@@ -1,4 +1,5 @@
 /** 🗂️ Retained preparation of centered raster layers for the shared compositor. */
+import type {WorkRetirement} from "../../../◻️2d/🧹️retire/🟦️.ts";
 import {validateExtent,validateImage,type PixelImage,type PixelProgress} from "../../✍️editing/🟦️.ts";
 import {CompositeJob,inverse,multiply,type CompositeAffine,type CompositeBlend,type CompositeLayer,type CompositeMask} from "../🟦️.ts";
 
@@ -32,7 +33,7 @@ export class RasterStackJob {
   private readonly preparations:Preparation[]=[];
   private readonly origin:readonly[number,number];
   private readonly empty:boolean;
-  private composite:CompositeJob|null;
+  private composite:CompositeJob|null;private compositeRetirement:WorkRetirement|null=null;private output:PixelImage|null=null;private compositeCompleted=0;private compositeTotal=0;private done=false;
   private preparation=0;
   private prepared=0;
   private preparationTotal=0;
@@ -101,7 +102,7 @@ export class RasterStackJob {
     };
     const layers=compile(input.layers,identity,0,true);
     this.empty=minX===Infinity;this.origin=this.empty?[0,0]:[minX,minY];
-    this.composite=new CompositeJob({width:this.empty?1:Math.max(1,Math.ceil(maxX-minX)),height:this.empty?1:Math.max(1,Math.ceil(maxY-minY)),origin:this.origin,layers,images});
+    this.composite=new CompositeJob({width:this.empty?1:Math.max(1,Math.ceil(maxX-minX)),height:this.empty?1:Math.max(1,Math.ceil(maxY-minY)),origin:this.origin,layers,images});this.compositeTotal=this.composite.progress().total;
   }
 
   advance(budget=65536):PixelProgress {
@@ -116,13 +117,14 @@ export class RasterStackJob {
       }
       if(end===prep.coverage.length)this.preparation++;
     }
-    const progress=budget>0?this.composite!.advance(budget):this.composite!.progress();
-    return {completed:this.prepared+progress.completed,total:this.preparationTotal+progress.total,done:progress.done};
+    if(this.composite&&budget>0){const progress=this.composite.advance(budget);budget-=progress.completed-this.compositeCompleted;this.compositeCompleted=progress.completed;if(progress.done){const retired=this.composite.intoRetirement();this.compositeRetirement=retired.job;this.output=retired.output!;this.composite=null;}}
+    while(budget-->0&&this.compositeRetirement){if(!this.compositeRetirement.terminalIsEmpty())this.compositeRetirement.advance(1);else{this.compositeRetirement=null;this.done=true;}}
+    return {completed:this.prepared+this.compositeCompleted,total:this.preparationTotal+this.compositeTotal,done:this.done};
   }
 
   result():RasterStackResult {
     if(this.aborted)throw new DOMException("Raster stack cancelled","AbortError");
-    return {image:this.composite!.result(),origin:[...this.origin],empty:this.empty};
+    if(!this.done)throw Error("Raster stack is incomplete");return {image:this.output!,origin:[...this.origin],empty:this.empty};
   }
-  cancel():void {this.aborted=true;this.composite?.cancel();this.composite=null;this.preparations.length=0;}
+  cancel():void {this.aborted=true;this.composite?.cancel();this.composite=null;this.compositeRetirement=null;this.output=null;this.preparations.length=0;}
 }

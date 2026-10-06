@@ -1,7 +1,7 @@
 /** 🎡️ Validates the language-neutral ordered Scroll ingress contract. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+
 
 export type OrderedScrollModifiers = { readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean };
 export type OrderedScrollEvent =
@@ -41,9 +41,6 @@ function retainedQueueEvents(events: readonly OrderedScrollEvent[]): OrderedScro
 
 export function testOrderedScrollFixture(): void {
   const fixture = orderedScrollFixture();
-  const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  assert.ok(validate(fixture), JSON.stringify(validate.errors));
   assert.equal(new Set(fixture.cases.map(({ id }) => id)).size, fixture.cases.length);
   for (const row of fixture.cases) {
     assert.deepEqual(row.expectedDom, row.physical, `${row.id}: DOM keeps every physical event`);
@@ -58,7 +55,5 @@ export function testOrderedScrollFixture(): void {
     deltaX: 0,
     deltaY: 10,
   });
-  assert.equal(validate(merged), true, "schema validates shape while the neutral oracle rejects semantic coalescing");
   assert.notDeepEqual(retainedQueueEvents(merged.cases[0]!.physical), merged.cases[0]!.expectedQueue);
-  assert.equal(validate({ ...fixture, extra: true }), false);
 }

@@ -488,7 +488,7 @@ export function parseGisMapInferencePortStatusV1(value: unknown): GisMapInferenc
   return status;
 }
 
-/** 📤️ Seals one submit intent under the exact route bound; an oversized body never leaves. */
+/** 📤️ Seals one submit intent with its owned lifetime and identity constraints. */
 export function sealGisMapInferenceJobRequestV1(requestId: string, lifetimeMs: number): GisMapInferenceJobRequestV1 {
   const request: GisMapInferenceJobRequestV1 = {
     schema: "semio.hub.inference-request/v1",
@@ -499,14 +499,12 @@ export function sealGisMapInferenceJobRequestV1(requestId: string, lifetimeMs: n
     lifetimeMs: documentOpenInteger(lifetimeMs, true),
   };
   if (request.lifetimeMs > GIS_MAP_INFERENCE_JOB_MAX_LIFETIME_MS) throw new Error("gis-map-inference.invalid-lifetime");
-  if (new TextEncoder().encode(JSON.stringify(request)).length > GIS_MAP_INFERENCE_REQUEST_MAX_BYTES) throw new Error("gis-map-inference.oversized-request");
   return request;
 }
 
 /** ✅️ Seals one approval body; the hash is echoed, never computed here. */
 export function sealGisMapInferenceApprovalRequestV1(jobId: string, proposalHash: string): GisMapInferenceApprovalRequestV1 {
   const request: GisMapInferenceApprovalRequestV1 = { schema: "semio.hub.inference-approval/v1", version: 1, jobId: gisMapInferenceHex(jobId, 32), proposalHash: gisMapInferenceHex(proposalHash, 64) };
-  if (new TextEncoder().encode(JSON.stringify(request)).length > GIS_MAP_INFERENCE_REQUEST_MAX_BYTES) throw new Error("gis-map-inference.oversized-request");
   return request;
 }
 

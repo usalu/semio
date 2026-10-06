@@ -16,7 +16,7 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.trinity.jack` parent document, of its `.dsl.semio` carrier and of its one parent-lane mutation `set-query`, in Python, at `../../../../../🧪️tests/🔌️mutate-jack-1/🐍️.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` and `../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`; it imports nothing from this repository and transliterates none of its Rust. The scene (nodes with ports, edges over `node@port` endpoints) lives in the composed `content` child (`s.stdio.semio@v1/graph`, design §20.15): its edits are that shared graph vocabulary's leaves and are adjudicated by the graph subset's own oracles, not here. A third-party library was declined: no graph library reads this carrier or models the document's query member. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.",
+      "rationale": "A second implementation of the `s.trinity.jack` parent document, of its `.dsl.semio` carrier and of its one parent-lane mutation `set-query`, in Python, at `../../../../../🧪️tests/🔌️mutate-jack-1/🐍️.py`. Written from `../🧬️schema/📸️snapshot/🔣️.json` and `../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio`; it imports nothing from this repository and transliterates none of its Rust. The scene (nodes with ports, edges over `node@port` endpoints) lives in the composed `content` child (`s.stdio.semio@v1/graph`, design §20.15): its edits are that shared graph vocabulary's leaves and are adjudicated by the graph subset's own oracles, not here. A third-party library was declined: no graph library reads this carrier or models the document's query member. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -40,7 +40,7 @@
         },
         "subjectImplementationLanguage": "rust",
         "secondImplementationLanguage": "python",
-        "specificationSource": ".dsl.semio; ../🧬️schema/📸️snapshot/🔣️.json; ../🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio; ../🧬️schema/🧬️mutations/🔣️.json; 🔒️dependencies.json",
+        "specificationSource": ".dsl.semio; ../🧬️schema/📸️snapshot/🔣️.json; ../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio; ../🧬️schema/🧬️mutations/🔣️.json; 🔒️dependencies.json",
         "fixtureCoverage": {
           "vectors": 9,
           "capabilitiesCovered": [

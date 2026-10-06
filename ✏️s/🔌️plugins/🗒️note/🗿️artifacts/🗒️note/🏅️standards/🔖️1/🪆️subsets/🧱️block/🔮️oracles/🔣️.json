@@ -452,9 +452,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "creates-an-ink-block",
       "class": "third-party-generated",
       "target": {
@@ -522,7 +521,6 @@
       "notes": "Witnesses create-block via the dxf+svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "deletes-the-intro-text-block",
       "class": "third-party-generated",
       "target": {
@@ -590,7 +588,6 @@
       "notes": "Witnesses delete-block via the svg+pdf carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "deletes-the-ink-and-text-blocks",
       "class": "third-party-generated",
       "target": {
@@ -672,7 +669,6 @@
       "notes": "Witnesses delete-blocks via the dxf+svg+pdf carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "duplicates-the-ink-block",
       "class": "third-party-generated",
       "target": {
@@ -740,7 +736,6 @@
       "notes": "Witnesses duplicate-block via the dxf+svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "duplicates-the-ink-and-text-blocks",
       "class": "third-party-generated",
       "target": {
@@ -822,7 +817,6 @@
       "notes": "Witnesses duplicate-blocks via the dxf+svg+pdf carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "drags-the-callout-group-subtree",
       "class": "third-party-generated",
       "target": {
@@ -876,7 +870,6 @@
       "notes": "Witnesses drag-blocks via the svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "moves-the-math-block",
       "class": "third-party-generated",
       "target": {
@@ -930,7 +923,6 @@
       "notes": "Witnesses move-block via the svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "resizes-the-image-block",
       "class": "third-party-generated",
       "target": {
@@ -984,7 +976,6 @@
       "notes": "Witnesses resize-block via the svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "hides-the-intro-text-block",
       "class": "third-party-generated",
       "target": {

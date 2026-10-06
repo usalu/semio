@@ -1,0 +1,1493 @@
+[
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "point",
+      "point": [
+        0.5,
+        0.5
+      ],
+      "tolerance": 0,
+      "requiredFlatness": 0.001
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "point",
+      "point": [
+        3.5,
+        3.5
+      ],
+      "tolerance": 0,
+      "requiredFlatness": 0.001
+    },
+    "expected": []
+  },
+  {
+    "source": "native pixel cell hole",
+    "query": {
+      "kind": "point",
+      "point": [
+        0.5,
+        0.5
+      ],
+      "tolerance": 0,
+      "requiredFlatness": 0.001
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "source": "native pixel cell hole",
+    "query": {
+      "kind": "point",
+      "point": [
+        1.5,
+        1.5
+      ],
+      "tolerance": 0,
+      "requiredFlatness": 0.001
+    },
+    "expected": []
+  },
+  {
+    "source": "actual traced geometry is a Boolean operand",
+    "query": {
+      "kind": "point",
+      "point": [
+        10.5,
+        4.5
+      ],
+      "tolerance": 0,
+      "requiredFlatness": 0.001
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "source": "actual traced geometry is a Boolean operand",
+    "query": {
+      "kind": "point",
+      "point": [
+        9.5,
+        5.5
+      ],
+      "tolerance": 0,
+      "requiredFlatness": 0.001
+    },
+    "expected": []
+  },
+  {
+    "source": "shared asset geometry",
+    "query": {
+      "kind": "point",
+      "point": [
+        0.125,
+        0.25
+      ],
+      "tolerance": 0,
+      "requiredFlatness": 0.001
+    },
+    "expected": [
+      "b"
+    ]
+  },
+  {
+    "source": "shared asset geometry",
+    "query": {
+      "kind": "point",
+      "point": [
+        1.5,
+        0.5
+      ],
+      "tolerance": 0,
+      "requiredFlatness": 0.001
+    },
+    "expected": [
+      "a"
+    ]
+  },
+  {
+    "source": "text stays explicit",
+    "query": {
+      "kind": "point",
+      "point": [
+        4.5,
+        5.5
+      ],
+      "tolerance": 0,
+      "requiredFlatness": 0.001
+    },
+    "expected": [
+      "a"
+    ]
+  },
+  {
+    "source": "hidden ancestor retains child",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        -100,
+        -100
+      ],
+      "end": [
+        100,
+        100
+      ],
+      "crossing": false
+    },
+    "expected": []
+  },
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        10,
+        10
+      ],
+      "crossing": false
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        8,
+        8
+      ],
+      "end": [
+        12,
+        12
+      ],
+      "crossing": true
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        8,
+        8
+      ],
+      "end": [
+        12,
+        12
+      ],
+      "crossing": false
+    },
+    "expected": []
+  },
+  {
+    "source": "native pixel cell hole",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          -1,
+          -1
+        ],
+        [
+          4,
+          -1
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          -1,
+          4
+        ]
+      ]
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        3.25,
+        3.25
+      ],
+      "end": [
+        3.75,
+        3.75
+      ],
+      "crossing": true
+    },
+    "expected": []
+  },
+  {
+    "source": "native pixel cell hole",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        1.25,
+        1.25
+      ],
+      "end": [
+        1.75,
+        1.75
+      ],
+      "crossing": true
+    },
+    "expected": []
+  },
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        0.25,
+        0.25
+      ],
+      "end": [
+        0.75,
+        0.75
+      ],
+      "crossing": true
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        2.25,
+        2.25
+      ],
+      "end": [
+        7.25,
+        7.25
+      ],
+      "crossing": true
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        -1,
+        -1
+      ],
+      "end": [
+        11,
+        11
+      ],
+      "crossing": true
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "rectangle",
+      "start": [
+        3.75,
+        3.75
+      ],
+      "end": [
+        3.25,
+        3.25
+      ],
+      "crossing": true
+    },
+    "expected": []
+  },
+  {
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          22,
+          34
+        ],
+        [
+          26,
+          34
+        ],
+        [
+          27,
+          37
+        ],
+        [
+          23,
+          37
+        ]
+      ]
+    },
+    "expected": [
+      "child"
+    ]
+  },
+  {
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          23,
+          37
+        ],
+        [
+          27,
+          37
+        ],
+        [
+          26,
+          34
+        ],
+        [
+          22,
+          34
+        ]
+      ]
+    },
+    "expected": [
+      "child"
+    ]
+  },
+  {
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          22,
+          34
+        ],
+        [
+          26,
+          34
+        ],
+        [
+          26,
+          34
+        ],
+        [
+          27,
+          37
+        ],
+        [
+          23,
+          37
+        ],
+        [
+          22,
+          34
+        ]
+      ]
+    },
+    "expected": [
+      "child"
+    ]
+  },
+  {
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          22,
+          34
+        ],
+        [
+          26,
+          34
+        ],
+        [
+          27,
+          36.5
+        ],
+        [
+          23,
+          36.5
+        ]
+      ]
+    },
+    "expected": []
+  },
+  {
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          21,
+          33
+        ],
+        [
+          28,
+          33
+        ],
+        [
+          28,
+          38
+        ],
+        [
+          25.5,
+          38
+        ],
+        [
+          25.5,
+          35
+        ],
+        [
+          24.5,
+          35
+        ],
+        [
+          24.5,
+          38
+        ],
+        [
+          21,
+          38
+        ]
+      ]
+    },
+    "expected": []
+  },
+  {
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          21,
+          33
+        ],
+        [
+          28,
+          33
+        ],
+        [
+          28,
+          38
+        ],
+        [
+          25.5,
+          38
+        ],
+        [
+          25.5,
+          37.5
+        ],
+        [
+          24.5,
+          37.5
+        ],
+        [
+          24.5,
+          38
+        ],
+        [
+          21,
+          38
+        ]
+      ]
+    },
+    "expected": [
+      "child"
+    ]
+  },
+  {
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          22,
+          34
+        ],
+        [
+          26,
+          34
+        ],
+        [
+          27,
+          37
+        ],
+        [
+          23,
+          37
+        ],
+        [
+          22,
+          34
+        ],
+        [
+          21,
+          33
+        ],
+        [
+          22,
+          34
+        ]
+      ]
+    },
+    "expected": [
+      "child"
+    ]
+  },
+  {
+    "source": "shared asset geometry",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          -1,
+          2
+        ]
+      ]
+    },
+    "expected": [
+      "b",
+      "a"
+    ]
+  },
+  {
+    "source": "shared asset geometry",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          -0.1,
+          -0.1
+        ],
+        [
+          0.3,
+          -0.1
+        ],
+        [
+          0.3,
+          0.6
+        ],
+        [
+          -0.1,
+          0.6
+        ]
+      ]
+    },
+    "expected": [
+      "b"
+    ]
+  },
+  {
+    "source": "hidden ancestor retains child",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          -100,
+          -100
+        ],
+        [
+          100,
+          -100
+        ],
+        [
+          100,
+          100
+        ],
+        [
+          -100,
+          100
+        ]
+      ]
+    },
+    "expected": []
+  },
+  {
+    "source": "affine image selection",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          5,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          6,
+          10
+        ]
+      ]
+    },
+    "expected": [
+      "a"
+    ],
+    "oracle": [
+      {
+        "id": "a",
+        "d": "M0 0H2V1H0Z",
+        "matrix": [
+          2,
+          0,
+          1,
+          3,
+          5,
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "source": "affine image selection",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          5,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          10,
+          9.5
+        ],
+        [
+          6,
+          9.5
+        ]
+      ]
+    },
+    "expected": [],
+    "oracle": [
+      {
+        "id": "a",
+        "d": "M0 0H2V1H0Z",
+        "matrix": [
+          2,
+          0,
+          1,
+          3,
+          5,
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "source": "affine text fallback selection",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          5,
+          7
+        ],
+        [
+          17,
+          7
+        ],
+        [
+          23,
+          25
+        ],
+        [
+          11,
+          25
+        ]
+      ]
+    },
+    "expected": [
+      "a"
+    ],
+    "oracle": [
+      {
+        "id": "a",
+        "d": "M0 0H6V6H0Z",
+        "matrix": [
+          2,
+          0,
+          1,
+          3,
+          5,
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "source": "affine text fallback selection",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          5,
+          7
+        ],
+        [
+          17,
+          7
+        ],
+        [
+          23,
+          24.5
+        ],
+        [
+          11,
+          24.5
+        ]
+      ]
+    },
+    "expected": [],
+    "oracle": [
+      {
+        "id": "a",
+        "d": "M0 0H6V6H0Z",
+        "matrix": [
+          2,
+          0,
+          1,
+          3,
+          5,
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "name": "internal affine exclusion",
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          21,
+          33
+        ],
+        [
+          28,
+          33
+        ],
+        [
+          28,
+          38
+        ],
+        [
+          21,
+          38
+        ],
+        [
+          21,
+          33
+        ],
+        [
+          24,
+          35
+        ],
+        [
+          25,
+          35
+        ],
+        [
+          25,
+          36
+        ],
+        [
+          24,
+          36
+        ],
+        [
+          24,
+          35
+        ],
+        [
+          21,
+          33
+        ]
+      ]
+    },
+    "expected": []
+  },
+  {
+    "name": "reversed internal affine exclusion",
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          21,
+          33
+        ],
+        [
+          24,
+          35
+        ],
+        [
+          24,
+          36
+        ],
+        [
+          25,
+          36
+        ],
+        [
+          25,
+          35
+        ],
+        [
+          24,
+          35
+        ],
+        [
+          21,
+          33
+        ],
+        [
+          21,
+          38
+        ],
+        [
+          28,
+          38
+        ],
+        [
+          28,
+          33
+        ],
+        [
+          21,
+          33
+        ]
+      ]
+    },
+    "expected": []
+  },
+  {
+    "name": "lasso hole outside affine paint",
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          21,
+          33
+        ],
+        [
+          28,
+          33
+        ],
+        [
+          28,
+          38
+        ],
+        [
+          21,
+          38
+        ],
+        [
+          21,
+          33
+        ],
+        [
+          21.1,
+          34
+        ],
+        [
+          21.5,
+          34
+        ],
+        [
+          21.5,
+          35
+        ],
+        [
+          21.1,
+          35
+        ],
+        [
+          21.1,
+          34
+        ],
+        [
+          21,
+          33
+        ]
+      ]
+    },
+    "expected": [
+      "child"
+    ]
+  },
+  {
+    "name": "retraced bridge inside affine paint",
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          21,
+          33
+        ],
+        [
+          28,
+          33
+        ],
+        [
+          28,
+          38
+        ],
+        [
+          21,
+          38
+        ],
+        [
+          21,
+          33
+        ],
+        [
+          24,
+          35
+        ],
+        [
+          21,
+          33
+        ]
+      ]
+    },
+    "expected": [
+      "child"
+    ]
+  },
+  {
+    "name": "twice traced island cancels",
+    "source": "group full affine",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          21,
+          33
+        ],
+        [
+          28,
+          33
+        ],
+        [
+          28,
+          38
+        ],
+        [
+          21,
+          38
+        ],
+        [
+          21,
+          33
+        ],
+        [
+          24,
+          35
+        ],
+        [
+          25,
+          35
+        ],
+        [
+          25,
+          36
+        ],
+        [
+          24,
+          36
+        ],
+        [
+          24,
+          35
+        ],
+        [
+          25,
+          35
+        ],
+        [
+          25,
+          36
+        ],
+        [
+          24,
+          36
+        ],
+        [
+          24,
+          35
+        ],
+        [
+          21,
+          33
+        ]
+      ]
+    },
+    "expected": [
+      "child"
+    ]
+  },
+  {
+    "name": "lasso hole in Boolean void",
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          -1,
+          -1
+        ],
+        [
+          11,
+          -1
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          -1,
+          11
+        ],
+        [
+          -1,
+          -1
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          -1,
+          -1
+        ]
+      ]
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "name": "lasso hole crosses Boolean paint",
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          -1,
+          -1
+        ],
+        [
+          11,
+          -1
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          -1,
+          11
+        ],
+        [
+          -1,
+          -1
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          -1,
+          -1
+        ]
+      ]
+    },
+    "expected": []
+  },
+  {
+    "name": "lasso island inside Boolean paint",
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          -1,
+          -1
+        ],
+        [
+          11,
+          -1
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          -1,
+          11
+        ],
+        [
+          -1,
+          -1
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          -1,
+          -1
+        ]
+      ]
+    },
+    "expected": []
+  },
+  {
+    "name": "lasso hole touches Boolean void boundary",
+    "source": "complete referenced difference",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          -1,
+          -1
+        ],
+        [
+          11,
+          -1
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          -1,
+          11
+        ],
+        [
+          -1,
+          -1
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          -1,
+          -1
+        ]
+      ]
+    },
+    "expected": [
+      "result"
+    ]
+  },
+  {
+    "name": "internal image exclusion preserves other layer",
+    "source": "shared asset geometry",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          -1,
+          -1
+        ],
+        [
+          3,
+          -1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          -1,
+          2
+        ],
+        [
+          -1,
+          -1
+        ],
+        [
+          1,
+          0.25
+        ],
+        [
+          1.5,
+          0.25
+        ],
+        [
+          1.5,
+          0.75
+        ],
+        [
+          1,
+          0.75
+        ],
+        [
+          1,
+          0.25
+        ],
+        [
+          -1,
+          -1
+        ]
+      ]
+    },
+    "expected": [
+      "b"
+    ]
+  },
+  {
+    "name": "affine image internal exclusion",
+    "source": "affine image selection",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          4,
+          6
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          4,
+          6
+        ]
+      ]
+    },
+    "expected": [],
+    "oracle": [
+      {
+        "id": "a",
+        "d": "M0 0H2V1H0Z",
+        "matrix": [
+          2,
+          0,
+          1,
+          3,
+          5,
+          7
+        ]
+      }
+    ]
+  },
+  {
+    "name": "affine text fallback internal exclusion",
+    "source": "affine text fallback selection",
+    "query": {
+      "kind": "lasso",
+      "points": [
+        [
+          4,
+          6
+        ],
+        [
+          24,
+          6
+        ],
+        [
+          24,
+          26
+        ],
+        [
+          4,
+          26
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          14,
+          12
+        ],
+        [
+          16,
+          12
+        ],
+        [
+          16,
+          14
+        ],
+        [
+          14,
+          14
+        ],
+        [
+          14,
+          12
+        ],
+        [
+          4,
+          6
+        ]
+      ]
+    },
+    "expected": [],
+    "oracle": [
+      {
+        "id": "a",
+        "d": "M0 0H6V6H0Z",
+        "matrix": [
+          2,
+          0,
+          1,
+          3,
+          5,
+          7
+        ]
+      }
+    ]
+  }
+]

@@ -10,7 +10,7 @@ use crate::editor::puzzle5d::modes::edit::tools::fill::run_definition;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d as world3d_window};
 use crate::editor::puzzle5d::unit_tests::context::{app_with_registry, close_app, dispatch, meta, projection_of, render_body, window_view, Puzzle5dApp};
 use crate::editor::puzzle5d::{capsule_dream_example_document, concrete_forest_example_document, nakagin_example_document};
-use crate::standards::v1::subsets::any::schema::mutations::text::Puzzle5dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dPlaySnapshot;
 use semio_framework_job::{CancelToken, Generation, InteractiveStage, OperationId, StepBudget};
 use semio_framework_plugin::{ActionMeta, ArtifactApp, ArtifactInstanceOperationOwnerHandle, PluginApp, ToolRunJobPort, ToolRunJobPurpose, ToolRunTraceKeys};
 use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunStep, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_FINALIZE_ACTION_ID, TOOL_RUN_START_ACTION_ID};

@@ -9,9 +9,7 @@ mod tests {
     use semio_framework_value_derive::FromValue;
     use serde::Deserialize;
 
-    // 🧫 The corpus index is this scope's `ConformanceCatalogFixture` export, decoded through the Rust
-    // half `🧬️schema/🦀️.rs` declares rather than through a shape restated here.
-    use crate::schema_metadata::ConformanceCatalogFixture;
+    use crate::schema_metadata::examples::ConformanceCatalogExamples;
 
     //#region 🗂️Corpus
     /// 📂️ `🧫️fixtures/🧪️conformance/`, resolved from this crate's own manifest dir so the harness
@@ -24,8 +22,8 @@ mod tests {
     const GROUPS_WITHOUT_PATCH: &[&str] = &["🧩️component", "🖥️composite", "📐️layout", "♿️accessibility"];
     const GROUPS_WITH_PATCH: &[&str] = &["🩹️patch", "🚫️rejection"];
 
-    fn catalog() -> &'static ConformanceCatalogFixture {
-        static CATALOG: OnceLock<ConformanceCatalogFixture> = OnceLock::new();
+    fn catalog() -> &'static ConformanceCatalogExamples {
+        static CATALOG: OnceLock<ConformanceCatalogExamples> = OnceLock::new();
         CATALOG.get_or_init(|| read_json(&corpus_dir().join("📇️catalog.json")))
     }
 

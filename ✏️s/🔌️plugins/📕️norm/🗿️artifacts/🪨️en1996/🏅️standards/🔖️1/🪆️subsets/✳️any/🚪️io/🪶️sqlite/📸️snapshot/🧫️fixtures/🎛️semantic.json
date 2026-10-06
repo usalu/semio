@@ -1,0 +1,22 @@
+{
+  "schemaBytes": 5683,
+  "tableWidths": {
+    "en1996_concentrated_load": 13,
+    "en1996_document": 5,
+    "en1996_load_case": 30,
+    "en1996_opening": 13,
+    "en1996_wall": 70
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 9,
+      "valueBytes": 1952
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 1,
+      "valueBytes": 31
+    }
+  ]
+}

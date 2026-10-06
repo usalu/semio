@@ -14,10 +14,6 @@ pub struct InsertOtherSegmentMutation {
 //#endregion Payload
 
 //#region Facets
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion Facets
 
 //#region Semantics
@@ -53,10 +49,7 @@ pub fn contribute(base: &JpgSnapshot, index: usize, segment: JpgSegment) -> JpgD
 }
 //#endregion Semantics
 
-#[cfg(test)]
-pub(crate) fn test_case() -> JpgMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-other/🎯️direct/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-other-segment payload")
-}
+
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

@@ -696,6 +696,7 @@ fn table_row_item(record: &UiNodeRecord) -> Option<UiTreeItemNode> {
 fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, controller: &str, depth: usize) -> UiTreeItemNode {
     let ui_contract::Component::TreeItem(props) = &record.component else {
         return UiTreeItemNode {
+            tone: None,
             window: None,
             granularity: None,
             id: record.key.as_str().to_string(),
@@ -749,7 +750,14 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
         detail,
         dimmed: props.dimmed,
         menu: menu_ref(record),
+        tone: tree_row_tone(record.style.tone),
     }
+}
+
+/// 🚦️ The semantic tone a tree row paints: the four outcome roles (React's `TREE_ROW_TONE_CLASSES`); the neutral tone and
+/// the brand roles paint nothing.
+fn tree_row_tone(tone: ui_contract::Tone) -> Option<ui_contract::Tone> {
+    matches!(tone, ui_contract::Tone::Info | ui_contract::Tone::Success | ui_contract::Tone::Warning | ui_contract::Tone::Danger).then_some(tone)
 }
 
 /// 🎞️ Rehydrates the Tree row's explicitly related engine Surface without treating it as a nested row.

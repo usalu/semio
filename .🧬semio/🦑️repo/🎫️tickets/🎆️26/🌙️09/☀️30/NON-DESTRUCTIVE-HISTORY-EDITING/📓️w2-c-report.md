@@ -1468,3 +1468,493 @@ Agent: S4-WGPU (Opus executor), successor of S3-W2C. Scratch: `🗑️generated/
   `🌐️server` member registration, then re-seal catalog + counts + taxonomy pin + ledger row in ONE write.
 - Other TS this hour: wgpu `test-browser` **92/0** (`vitest-browser-2.txt`); `test-preview-generated` **27/29** (`vitest-preview-3.txt`), both ✘
   are a peer's `🚪️io/🪶️sqlite-snapshot/🟦️.ts` importing `⏳️async/🪃️continuation/🟦️.ts`, not schema-owned for the WGPU browser build.
+
+## Session 5 — 2026-10-05
+
+Agent: S5-WGPU (Opus executor), successor of S4-WGPU. Scratch: `🗑️generated/s5-wgpu/`. Brief: coordinator launch message (P1–P8 = the wgpu rows of
+`📓️audit-s5-parity.md` §4 + design §22.2/§22.7), `📓️s5-resume.md` §1.6. Rules 1–54.
+
+### S5.1 Repair-first check (rule 46, 00:20–00:30)
+
+- `git diff HEAD --stat -- 🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer`: **empty** — every S4 wave of this WP
+  is inside commit 670 (10-04 19:39). All mtimes read 10-04 18:27 (the stash/pop incident), so mtimes prove nothing; the index is the evidence.
+  No half-finished edit found. One staged peer file in the UI crate: `🖱️ui/🌐️locale/🏷️label/🦀️.rs` (not mine).
+- State at launch: `landing` + `serve` HELD by COORDINATOR-ACTIVATION (00:14) → no save under `🧰️framework/**`; reading and staging only.
+- Still owed from S4 (unchanged): native `cargo check -p semio-framework-os-renderer-wgpu --lib` after S4.9 (History scroll region), every renderer
+  `cargo test` batch of `📓️s5-resume.md` §1.6.
+
+### S5.2 Wave 1 (P1 + the projection halves of P2/P6) — STAGED, anchors verified, not landed (landing HELD) — 00:55
+
+Staged as one exact-anchor script: `🗑️generated/s5-wgpu/wave1/land.py` (`--check` / `--land` / `--revert`; 21 files, +1085/−155 lines; pre-wave bytes are
+saved to `wave1/orig/` at landing). `--check` at 00:52: **21 files planned, 0 anchor failures**.
+
+Findings that shaped it (read on disk, not in the audit):
+- The mirror's `Value` path was also wrong in UNITS: the mirror speaks display units (`value_now` = stored × `displayFactor`), the engine clamped the
+  typed text against STORED bounds — a degree dial written "90" through the mirror committed 90 rad clamped to π.
+- A native `<input type=range>` cannot hold a text outside its travel (the browser sanitises; Playwright's `fill` throws "Malformed value"), so a typed
+  out-of-bounds slider value can only go through the typed readout. The readout existed in the mirror only while a canvas double-click had opened it.
+- The canvas stepper path was not §18-complete: Home/End moved the caret, Shift+Arrow was one rung, Arrow bypassed `ui_number_key_value`, and a key after a
+  refused draft started from the refused text and kept the stale refusal. Number `Input`s answered only PageUp/PageDown.
+
+What the wave does:
+1. **One typed path** (`🖱️ui/🎯️targets/🧊️wgpu/⚡️events`): a mirror `Value` on an `Input`/`IconSelect`/`NumberStepper` writes the edit buffer as typed and runs
+   the canvas keystroke path (`normalize_stepper_edit` → `push_buffer_change`: `typed_number` → refusal or exact dispatch, press semantics included); on a
+   `Slider` it runs the typed-readout law (`finish_slider_readout_edit`: display units read back, a detent kept exactly, beyond the soft travel admitted
+   while the limits admit it, beyond a hard limit refused with the draft kept). No clamp is left on the mirror path.
+2. **Field-key law** `number_field_key` (twin of `uiNumberFieldKey`): stepper keys = `ui_number_key_value` for ArrowUp/ArrowDown (Shift = ten rungs),
+   PageUp/PageDown, Home/End toward a bound the stepper has; every press reports (absolute: the law's value; delta: step × rungs, or the move); the law's
+   value is shown and an earlier refusal cleared. Number `Input`s answer the same keys in their buffer. A refused draft is never a stepper's live value.
+3. **Slider readout always addressable**: an enabled bound slider projects `<key>::editor` (spinbutton, Tab stop only while a draft is open, min/max = the
+   hard limits in display units); focus opens the draft on the shown value, a value replaces it, Enter commits/refuses, Escape reverts, blur drops an
+   unrefused draft — the existing canvas law. The engine gate that refused the address while no edit was open is removed.
+4. **Projection fields** (contract region 🔖️AccessibilityProjection, coordinator GO 00:4x): `value_step` (display units; declared step, else 10^-precision,
+   else 1 for slider/stepper), `invalid` (a refused open draft), `set_size`/`pos_in_set` (a windowed row's place in the WHOLE list: section rows, nested
+   rows of a windowed row, table rows), `tone` (tree rows: info/success/warning/danger); `AccessibilityValue.step`; TS twin; shared fixture rows.
+   Every row action is projected (`<row>::row-action::<i>`), Menu-placed ones included (gap 5).
+5. **DOM mirror + keyboard wire** (`♿️accessibility-mirror`, `🎮️input-wire`): `step` (else `any`), `aria-invalid`, `aria-setsize`/`aria-posinset`,
+   `data-tone`; a control that publishes its step lists its engine-owned keys in `data-engine-keys` (slider: arrows/page/Home/End; stepper: ArrowUp/Down,
+   PageUp/Down, Home/End toward a bound, Enter, Escape; `::editor`: Enter, Escape). Those keys are forwarded to the engine instead of the browser, after the
+   mirror re-asserts `accessibility-focus` on the same lossless lane (so an engine-side blur — Enter on a stepper — cannot leave a dead key).
+6. **Shared corpus first** (`🧫️number-controls`, schema then rows): `fieldKeys` (15 rows: the law key a physical key names) and `valueStep` on every
+   `valueTexts` row; `⌨️browser-keyboard-scope` gains target `mirror-number` + 9 cases.
+
+Laws written (run after landing): UI crate `🔬️targets-wgpu-events-unit` region 🪞️MirroredNumberLawTests — `every_field_key_row_names_the_law_key_the_shared_corpus_declares`,
+`stepper_keys_answer_the_shared_keyboard_law_rows`, `a_mirrored_stepper_value_takes_the_typed_path_of_the_canvas`, `a_mirrored_slider_value_takes_the_typed_readout_path`;
+`🔬️targets-wgpu-accessibility-projection` — `windowed_rows_project_their_place_in_the_whole_list` + step/invalid/tone assertions; contract Rust + TS
+twin laws read `valueStep`/`tone`/`fieldKeys`; TS `⌨️browser-keyboard-scope` — the 9 fixture cases + one mirror/wire integration test.
+
+Pre-landing verification that needs no save (bun, staged files against the LIVE twins): `bun 🗑️generated/s5-wgpu/wave1/precheck.ts` — number-controls
+fixture valid against its staged schema, **15/15** `fieldKeys` rows = `uiNumberFieldKey`, keyboard-scope fixture valid (33 cases);
+`bun …/precheck2.ts` — staged contract TS twins over the staged fixtures: accessibility-projection **315 checks**, number-controls **296 checks**, 0 failures.
+Rust is unverified until the lock frees (no build is possible outside the live tree).
+
+Mirror contract changes for the probe (sent to `main` 00:4x): the refusal is the CONTROL node's description + `aria-invalid` (never the `.row`'s);
+sliders are typed through `<key>::editor` then Enter; rows carry `aria-setsize`/`aria-posinset` (wgpu totals are now readable); Menu-placed row actions
+(Backwards) appear as `<entry row>::row-action::<i>` buttons.
+
+### S5.3 Wave 1 LANDED (05:00–05:15) — native + TS verified; wasm32 and Rust tests running next
+
+Timeline: staged 00:55; the lock was unreachable until 04:59 (activation hold, five first-come losses, then FIFO rule 60, the 02:40–04:22 usage cut, the
+BUILDING warm-up). Since staging the wave grew by: P3 (stable band `status` + separate `progressbar` nodes, both projected beside a modal), the live React
+findings F2 (band controls ≥ 24 × 24 px: `CHROME_BAND_CONTROL_MIN`) and O5-surface (the band fill is composited opaque over the menu surface;
+a Warning band was a 10 % tint over the canvas), and an exclusive-bound readout law. Anchors re-checked against the tree after S5-UI v1 and S5-RUNTIME A–C: 0 failures.
+
+| Step | Command | Result |
+|---|---|---|
+| part a (12 Rust files) under `landing` 04:59:39 → 05:11:41 | `python3 wave1/land.py --land a` | landed |
+| native verifying check (gate v5, `CARGO_BUILD_JOBS=3`; cold after the 04:22 prune) | `cargo check -p semio-framework-ui-contract -p semio-framework-ui -p semio-framework-os-renderer-wgpu -p semio-framework-plugin --lib --message-format=short` (`check-native-s5-1.txt`, 04:59:58 → 05:11:17) | **exit 0**, `Finished` in 11m 18s; warnings present (ui 48, renderer 274, plugin 283 — the type-check ran); no new warning in my files |
+| part b (11 TS/JSON files) under `serve` 05:11:56 → 05:14:49 | `python3 wave1/land.py --land b` | landed |
+| contract TS twins on the landed files | `bun …/🧪️tests/🔬️accessibility-projection/🟦️.ts`; `bun -e 'numberControlsSelfTests()'` | **315 checks**, **296 checks**, 0 failures |
+| wgpu mirror suites | `bun ./📜️script.ts test-browser ⌨️ ♿️ --reporter=verbose` (wgpu TS package; `vitest-browser-s5-3.txt`) | **48 ✔ / 0 ✘** (`♿️wgpu-accessibility-interaction` 27, `⌨️os-command-shortcuts` 23… 2 files) |
+| keyboard wire + mirror law | `bun ./📜️script.ts test long browser-keyboard-scope --reporter=verbose` (React renderer package owns that suite; `vitest-keyboard-scope-s5-2.txt`) | **47 ✔ / 0 ✘** incl. the 9 new `number-*` corpus cases and `hands a mirrored number control's law keys to the renderer…` |
+| strict tsc of the 4 edited TS files | `bunx tsc --noEmit -p 🗑️generated/s5-wgpu/tsc-wave1.json` | **exit 0, 0 errors** |
+
+Files (23): contract `♿️accessibility/{🦀️.rs,🟦️.ts}`, `🧪️tests/{🔬️accessibility-unit/🦀️.rs,🔬️accessibility-projection/🟦️.ts,🧪️number-controls/🟦️.ts,🔬️component-unit/🦀️.rs}`,
+`🧫️fixtures/{♿️accessibility-projection.json,🧫️number-controls/🔣️.json,🧫️number-controls/🧬️schema/🔣️.json}`; UI target `🎯️targets/🧊️wgpu/{⚡️events,⚙️engine,♿️accessibility}/🦀️.rs`,
+`🧪️tests/{🔬️targets-wgpu-events-unit,🔬️targets-wgpu-accessibility-projection}/🦀️.rs`; renderer `🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs` (8 literals),
+`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs` (4 literals + band nodes), `🐚️Shell/🎯️targets/🧊️wgpu/⏪️time-travel/🦀️.rs`, `🐚️Shell/🧪️tests/🧪️wgpu-time-travel/🦀️.rs`,
+`🎯️targets/🧊️wgpu/{♿️accessibility-mirror,🎮️input-wire}/🟦️.ts`, `🧬️schema/⌨️browser-keyboard-scope/🔣️.json`, `🧫️fixtures/⌨️browser-keyboard-scope/🔣️.json`,
+`🧪️tests/⌨️browser-keyboard-scope/🟦️.ts`. Pre-wave bytes: `🗑️generated/s5-wgpu/wave1/orig/`.
+
+### S5.4 After wave 1 (05:15–05:40): wasm32 green, UI test build blocked by a peer red, waves 2 + 3 staged
+
+- Renderer wasm32: `CARGO_BUILD_JOBS=3 cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown --message-format=short`
+  (`check-wasm-s5-1.txt`, 05:20:18 → 05:24:05) **exit 0**, 241 warnings. With S5.3: "WGPU WAVE 1 GREEN" at `--lib` level, sent to `main` 05:25.
+  (Correction to S5.3: the `test-browser ⌨️ ♿️` run is 2 files / **48 tests**, `⌨️os-command-shortcuts` + `♿️wgpu-accessibility-interaction`; the per-file counts quoted there were line counts.)
+- UI-crate laws: `RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/⚡️cache/cargo/target-nde-s5-wgpu cargo test -p semio-framework-ui --features testkit --lib --message-format=short -- events:: accessibility conformance_corpus row_action table_row scrub control_commit dispatch_accessibility`
+  (`test-ui-s5-1.txt`, 05:24:55 → 05:26:46) **did not build**: `semio-framework-pixels` `🔲️pixels/🧩️compositing/🗂️layers/🦀️.rs:125:76` E0599 (no method `into_result` on
+  `compositing::CompositeJob`) — a peer's crate the ui TEST build reaches and the `--lib` check does not. Reported to `main`. **OWED**: the same command once pixels is green.
+- Staged `🗑️generated/s5-wgpu/wave2/land.py` (`--check a|b`: 12 Rust + 1 generated TS, 0 anchor failures at 05:35), two modules:
+  - `edits_tone` (P2, gap 2): `UiTreeItemNode.tone` (the four outcome roles), `reconcile::tree_row_tone`, `Theme::tone_ink` (info = token `colors::INFO`,
+    success/warning/danger = the theme's outcome inks), both row painters colour label and icon, every literal without a `..base` spread gains
+    `tone: None` (component 8, reconcile 1, 4 UI tests, playbook 3 — counts asserted), the generated manifest TS twin; law `a_tree_row_carries_only_a_semantic_tone`.
+  - `edits_copy` (P4 + P5, gap 7, coordinator relays 05:10/05:27): the shell embeds the shared corpus `🧫️time-travel-band` and resolves `band_label(key, locale)`
+    from its `labels` table and the refusal table from its `refusals` rows — every hand-written EN/DE band string in `⏪️time-travel/🦀️.rs` is deleted
+    (`TimeTravelVerb::label`, band lines, indicator, severity words, peers, `HISTORY_REFUSALS`); `TimeTravelVerb::NextProblem`
+    (`shell.time-travel.next-problem`, `historyEditBegin {mutationId, store?}` from the session's own `next_problem`, offered first in a blocked review);
+    `TimeTravelTransition.scroll_to` (the edge into a review that names its first blocking mutation reveals the panel again and names
+    `framework.history.mutation.<id>`); `history_refusal_is_silent` guards both notice sites (`timeTravel.stale`); band controls are `Theme::size_large()`
+    (9 × ui spacing = 28.8 px) on both axes. Laws updated: captions and every corpus label read from the corpus, controls compared with `controlId`/`args`,
+    transitions with `scrollTo`, peers copy.
+- Not in these waves (wave 4): the `beginner` label tier (the functions still take `(terminology, locale)`; the driver's `label_tier` is not read yet),
+  scrolling the named row into view, a reserved band row above the footer (O5 layout half), keyed retained control state across a snapshot refresh (React F1 twin).
+
+### S5.5 Waves 2 + 3 LANDED (05:42–05:52), first renderer law run, wave 4 staged (06:30)
+
+| Step | Command | Result |
+|---|---|---|
+| part a (12 Rust files) under `landing` 05:42:40 → 05:52:12 | `python3 wave2/land.py --land a` | landed |
+| native verifying check | `CARGO_BUILD_JOBS=3 cargo check -p semio-framework-ui -p semio-framework-os-renderer-wgpu -p semio-framework-artifact-playbook-playbook -p semio-framework-plugin --lib --message-format=short` (`check-native-s5-2.txt`, 05:46:49 → 05:48:17) | **exit 0**, renderer 276 warnings |
+| renderer wasm32 | `… cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown` (`check-wasm-s5-2.txt`, 05:50:06 → 05:52:04) | **exit 0**, 243 warnings |
+| part b (generated manifest TS twin) under `serve` 05:52:13 → 05:52:23 | `python3 wave2/land.py --land b`; `bunx tsc --noEmit -p 🗑️generated/s5-wgpu/tsc-wave2.json` | landed; **exit 0, 0 errors** |
+| renderer laws type-check (mine + S5-RUNTIME's literals) | `… cargo check -p semio-framework-os-renderer-wgpu --lib --tests` (`check-tests-s5-1.txt`, 05:53:02 → 05:54:35) | **exit 0** (lib test: 938 warnings) |
+| renderer laws, filter `time_travel` | `RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=…/⚡️cache/cargo/target-nde-s5-wgpu cargo test -p semio-framework-os-renderer-wgpu --lib --message-format=short -- time_travel` (`test-renderer-s5-1.txt`, finished 06:08) | **34 ✔ / 3 ✘** (1624 filtered out) |
+
+Green among the 34 (all on the landed waves 1–3): `the_shared_band_corpus_holds_on_wgpu` (new copy, `controlId`, `nextProblem` args), `the_shared_band_transitions_hold_on_wgpu`
+(`scrollTo`), `every_control_reads_reacts_caption_and_names_its_reserved_action` (every corpus label + silent refusals), `the_band_announces_its_message_politely`
+(stable status + progress child), `every_history_reprojection_is_announced_outside_the_history_panel`, `the_band_lays_out_above_the_footer_with_its_buttons_in_stage_order`
+(`size-large`, opaque), `the_shared_peer_history_edit_corpus_holds_on_wgpu`, `history_refusals_are_localized_notices_carrying_their_code`, `the_finalize_prompt_is_operated_by_keyboard_alone`,
+the S4 laws never run before: `a_decoded_video_is_a_cancellable_task_that_frees_a_started_stream`, `a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_the_mirror`,
+`beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection`, `every_staged_number_row_carries_the_shared_corpus_facets`.
+
+The 3 ✘ (none asserts anything waves 1–3 changed; all three are inherited laws that had never passed):
+1. `a_panel_body_is_one_scroll_region_under_its_rows` (S4.9) — harness: `ui-doc begin refused … fault=Deadline`, then "retained presented input candidate could not be sealed".
+2. `the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason` (S3/S4.9) — "`m-100` never scrolled into the History body", with `begin refused … fault=InterruptedClose` repeated.
+   Both look like the stepped document ingress missing its deadline under fleet load (parallel test threads, ~10 rustc); a single-threaded re-run was started at 06:12 and
+   did not build — S5-CHANNEL's wave B was in flight (`🌊️flow/🖥️host/🦀️.rs:2448` E0063 missing field `description`, theirs). **OWED** after "LOCKS OPEN":
+   `… cargo test -p semio-framework-os-renderer-wgpu --lib -- a_panel_body_is_one_scroll_region the_guest_history_body_opens_pages the_guest_editor_offers_list --test-threads=1`.
+3. `the_guest_editor_offers_list_and_chip_edits_within_their_bounds` — "the list row names its count and ceiling": the row description the guest publishes no longer contains
+   `Items: 2 · Maximum 2 items`; wave 4 makes the law print the row so the next run names the guest's actual text (owner of the copy: S5-RUNTIME's editor rows).
+
+Wave 4 staged (`🗑️generated/s5-wgpu/wave4/land.py`, 3 files, 0 anchor failures at 06:28; lands after "LOCKS OPEN"): the `beginner` label tier — `BandTongue { locale, beginner }`,
+every band-copy function takes `impl Into<BandTongue>` (a bare `Locale` = `normal`, so no existing caller changes meaning), `ShellState::band_tongue()` reads the UI driver's
+`label_tier` (`UiDriverLabelTier` re-exported from the UI target), the corpus table keeps all four texts per key; law: every key × locale reads its `beginner` text and the
+painted Accept caption follows the driver.
+
+Still open after wave 4 (in priority order): (1) whatever the first wgpu probe run reports; (2) design §22.7 wgpu half — Segmented (contract projection `radiogroup` + always-projected
+`radio` options, engine activation without the popup, segment paint), multi-line text (`text_input_key` law: Enter = newline, Ctrl/Cmd+Enter = commit, Escape = revert; multi-line
+layout/paint/caret), IconSelect already a first-class retained control; (3) the reserved subfooter row (bands under the footer; needs one `ShellState::subfooter_height` read by `body_rect`,
+the footer step and the three band plans — session, reprojection, folder offer — and the position asserts of `🧪️wgpu-time-travel` + `🧪️wgpu-local-folders`); (4) scrolling the row a
+blocked review names into view (`TimeTravelTransition.scroll_to` is computed and pinned; nothing consumes it yet); (5) a law that an open readout draft and focus survive a snapshot
+refresh keyed by node KEY; (6) the automatic check-in twin (S5-LOAD corpus `🧫️automatic-checkin`).
+
+### S5.6 Wave 4 LANDED across the 07:45 usage cut (07:38 landed, 07:49 green, lock released 09:36); wave 5 staged
+
+- **Repair-first after the cut (rule 64, 09:36):** I still held `landing` (07:38:48). Evidence on disk: `wave4/orig/` holds the 6 pre-wave files, every wave-4 marker is
+  present in its file (`BandTongue` ×21 and `subfooter_height` in `⏪️time-travel/🦀️.rs`, 3 `subfooter_height` reads in the shell, 0 `TIME_TRAVEL_BAND_GAP` left,
+  `UiDriverLabelTier` re-exported, the folder plan on `height`), and the verifying check had finished before the cut:
+  `CARGO_BUILD_JOBS=3 cargo check -p semio-framework-ui -p semio-framework-os-renderer-wgpu -p semio-framework-plugin --lib --message-format=short`
+  (`check-native-s5-3.txt`, 07:39 → 07:49) **exit 0**, `Finished` in 2m 20s, renderer 276 warnings. Nothing was half-written; nothing restored. Lock released 09:36:44,
+  "LANDING RELEASED" sent to `main`.
+- **Wave 4 content** (6 Rust files: UI target `🦀️.rs` re-export, `⏪️time-travel/🦀️.rs`, shell `🦀️.rs`, `📎️local-folders/🦀️.rs`, laws `🧪️wgpu-time-travel`, `🧪️wgpu-local-folders`):
+  (a) `beginner` label tier — `BandTongue { locale, beginner }`, every band-copy function takes `impl Into<BandTongue>`, `ShellState::band_tongue()` reads the UI driver's `label_tier`,
+  the corpus table keeps `normal`/`beginner` × en/de per key; (b) the reserved subfooter row — `chrome_band_layout` puts a band's lower edge on its floor, the session band's floor is the
+  screen bottom, the reprojection band stacks on it, the folder offer on both; `ShellState::subfooter_height` is subtracted by `body_rect`, the footer step and the error line;
+  laws `the_bands_reserve_the_subfooter_row_under_the_footer` (desktop + phone: body, footer, band never overlap; the body gives exactly the reserved row) and the tier law; the list-row
+  law now prints the row it read.
+- **OWED for wave 4** (no verdict yet): renderer wasm32 `--lib` (my 09:37 attempt never left the old gate loop — the Codex peer's private-dir cargos kept `pgrep -x cargo` ≥ 4; stopped at 09:56,
+  no cargo started); it is folded into wave 5's verification (same crate, same target). Coordinator action when green: "re-activate wgpu" with build B2 (waves 4 + 5).
+- **Wave 5 staged** (`🗑️generated/s5-wgpu/wave5/land.py`, 5 Rust + 3 non-Rust files, anchors verified 09:57 against the tree with wave 4 in it) — design §22.7 Segmented, wgpu half:
+  contract role `radiogroup` for `SelectProps.appearance == Segmented` and no `expanded` (Rust + TS twin + one shared fixture row); the wgpu walk always projects the options as `radio`
+  nodes (`<key>::option::<value>`, checked, `aria-setsize/posinset`, ONE Tab stop = the chosen option, the first while none is chosen), the group itself no Tab stop, no listbox;
+  the engine admits a radio's activation without an open popup; ArrowRight/ArrowDown and ArrowLeft/ArrowUp move the choice from the published one (wrapping, RTL-mirrored) and dispatch
+  `Change` at once; the DOM mirror moves focus and activates on arrows/Enter/Space inside a radio group; law `a_segmented_select_projects_a_radio_group_with_one_tab_stop`
+  (projection + mirror activation + arrow keys, no popup opened). Not in wave 5: the canvas still paints a segmented select as its menu trigger (segment-row paint and pointer hit are open).
+- Gate v6 (rule 66) from here on: `zsh T/🚦️gate.sh && CARGO_BUILD_JOBS=3 cargo …`; test builds `zsh T/🚦️gate.sh 3 25 && …` on the SHARED target (no private `CARGO_TARGET_DIR`).
+
+### S5.7 Waves 5–9 LANDED (10:1x–11:13): live faults F10 + F11 on wgpu, the publication lane, loud drain faults
+
+| wave | train line | files | what | verified by a run of mine |
+|---|---|---|---|---|
+| 5 segmented | (S5.6) | 8 | `radiogroup` + `radio` options, one Tab stop | wasm32 `--lib` exit 0 (`check-wasm-s5-3.txt`, 17 m 58 s, 244 renderer warnings) |
+| 6 text keyboard law + total `band_label` | `10:2x wave6` | 6 `.rs` | `text_field_key` consumes `ui_contract::text_input_key`; multi-line Enter inserts, Ctrl/⌘+Enter commits, Escape reverts; caret-line view; `band_label` total (`BAND_LABEL_MISSING` = U+FFFD is a law failure) | same wasm32 run, exit 0; train FRAMEWORK GREEN 10:37:26 |
+| 7 F10 | `10:47:49 wave7-F10` | 2 `.rs` | `resolve_language_axes`: locale = lock → stored → host locale; terminology = lock → stored valid id → `Native` (React's seed). A fresh profile boots | train GREEN 10:50:43 (native `--lib`); law `a_first_visit_derives_both_language_axes_and_boots` **not run** |
+| 8 F11 boot | `10:49:47 wave8-F11b` | 4 `.rs` | `settle_boot` → `announce_session_example()` (React's `useInitialExampleReadiness`), `apply_boot_example` deleted | train GREEN 10:50:43; source-shape law **not run** |
+| 9a publications (Rust) | `11:12:29 wave9a-publications` | 4 `.rs` | see below | train FRAMEWORK GREEN 11:17:45 (coordinator relay); wasm32 + laws **not run** (rule 68, activation B2) |
+| 9b publications (TS + corpus) | `11:12:51 wave9b-publications` | 4 | see below | `tsc -p 🧪️w2-c-typecheck-progress-bridge.tsconfig.json` exit 0, 0 errors (`tsc-wave9-1.txt`); `bun ./📜️script.ts test-preview-generated` **29 ✔ / 0 ✘** (`vitest-preview-s5-9.txt`) |
+
+**F11, read from code and from `s5-e2e/wgpu/wgpu-contact-console.txt`.** Two independent causes, plus one silence:
+
+1. *Boot never announced the example* (wave 8). The wgpu shell resolved the boot example for its own picker only; React
+   dispatches `setActiveExample` for every session whose document is not initialized. Evidence: one
+   `plugin_exchange entry instance=1 command=true` at 5.2 s and no `setActiveExample` in the boot console.
+2. *The host dropped everything a typed operation publishes after its host call* (wave 9). A typed operation's admitting
+   reply carries no outcome; its `AppFrame::OperationCompleted` is the only carrier of the final `UiDirtyScope` and
+   command-log delta. On wgpu that frame reached `turnOutcomes`, matched no waiter in
+   `AppChannelClient.pumpOutcomes`, and `publishOperationCompletion` returned at `completionListeners.size === 0` — this
+   target subscribed nowhere. The uncorrelated UI-progress `Invocation` of the standing drain went to the leftover
+   ledger (`pendingTurnEffects`), folded only by the NEXT dispatch; only its history patch was carried per frame
+   (`stashProgressHistoryPatch`). An example load (~370 one-item steps, far past `WGPU_TYPED_OPERATION_SETTLE_LIMIT = 64`)
+   therefore changed the document and left the surface and the History rows at the pre-load render. The replay behind
+   an accepted history edit takes the same drain: same hole by construction (read from code, not observed live).
+3. *A drain failure was silence.* `drainTypedOperations`' `catch` pushed `{ instanceId, error }` onto `turnOutcomes`;
+   the pump does `this.pending.shift()?.reject(error)` — with no waiter nothing, with an unrelated in-flight command a
+   misattributed rejection. In-call throws were already loud (they reject the waiter → `note_dispatch_fault`).
+   A second silence sat in Rust: `take_progress_history_patches_js` ended in `.unwrap_or_default()`.
+
+**Wave 9 mechanism.** One per-instance lane replaces the history-only progress queue:
+`WgpuOperationPublication { completed, uiScope?, historyPatch?, fault?, resync? }` (bridge) ↔
+`program_bridge::OperationPublication` (Rust), JS door `takeOperationPublications` (was `takeProgressHistoryPatches`).
+
+- Completions: the bridge subscribes the channel at `createApp`
+  (`channel.onOperationCompleted(… stashOperationPublication(instanceId, operationCompletionPublication(completion)))`),
+  so every completion that reaches `turnOutcomes` — in a host call, on the standing drain, from a job drain, from a
+  backbone turn's `unsolicited` frames — is delivered by the pump's own classification. `shellFrameAnswersACaller` is
+  unchanged (the coordinator's sketch flipped it; the subscription needs no reroute and keeps `Ephemeral` on the frame lane).
+- Progress: the standing drain hands each uncorrelated `Invocation` (scope + patch) to the lane
+  (`stashOperationProgress`) and CONSUMES a frame that says nothing else, so it is no longer folded a second time over
+  the next dispatch's own scope; a frame with an output, diagnostics or mutations keeps its place in the leftover.
+- Bounded at 64 entries. A history patch is a delta, so overflow never drops the oldest: the queue collapses into one
+  `{ uiScope: full, resync: true }` and the shell re-reads `read_history` (`reread_history_projection`, split out of
+  `seed_history_snapshot`).
+- Shell: `pump_sync_events` → `drain_operation_publications`: each patch through `observe_invocation_history`, the
+  union of `operation_publication_refresh(publication)` to `owe_refresh` — the settle lane refreshes with no further
+  dispatch. A completion with a patch and no scope owes `framework.body.history` (React's
+  `typedOperationCompletionRefreshV1`); progress with a patch alone re-renders nothing.
+- Loud: the drain `catch` does `console.error` and queues a `fault` publication → `note_dispatch_fault` (notice) +
+  `[TRACE]` log; an unreadable bridge answer is a fault publication with `resync`.
+- Shared corpus (schema-first, language-agnostic): `🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json`
+  + `🧬️schema/🔣️operation-publication/🔣️.json`, 8 rows; read by the TS law (producer: what is queued) and the Rust law
+  (consumer: what is read back and owed). React is not wired to it.
+
+**Canonical re-encode checks on guest packs in the wgpu host: none.** `grep -i 'noncanonical|canonical('` over
+`🎯️targets/🧊️wgpu/**`, `🌉️ProgramBridge` and the wgpu `🐚️Shell`: 0 hits. The bridge decodes with `decodePackWire`
+(decode + exact-JSON projection), Rust re-parses JSON with `JsonMemberPolicy::Reject` (unknown members, not key order).
+The one canonical check on the path is the shared worker's `historyPatchBytes`
+(`🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts`), S5-CHANNEL's wave C.
+
+**New laws (written, NOT run — rule 68 closed the gate at 11:18):** `🧪️wgpu-time-travel`:
+`a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_rows`,
+`a_refused_completion_is_told_as_a_notice`, `every_operation_publication_owes_what_the_shared_corpus_says`,
+`unsolicited_progress_patches_move_the_band_between_dispatches` (re-based on the lane). The wasm32 check of waves 7–9
+never started: my gated shell waited from 11:15:56, the activation flag appeared at 11:18, I killed the waiting shell and
+its gate at 11:26 before any cargo ran.
+
+**Known cost, not measured:** a completion that arrives inside its host call and carries a scope refreshes once more one
+frame after the dispatch's own refresh (React has the same double pass). **Not covered:** the native `Wasm` backend
+takes nothing from the lane (its exchange folds such frames into the next reply) — a long typed operation on the native
+shell was not examined; leftover host effects of drain turns still wait for the next host call (React carries them on the
+completion as `requestedEffects`).
+
+**Owed after "SERVE UP (B2)" (exact commands):**
+- `zsh T/🚦️gate.sh && CARGO_BUILD_JOBS=3 cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown --message-format=short`
+- `zsh T/🚦️gate.sh 3 18 && RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 cargo test -p semio-framework-os-renderer-wgpu --lib --message-format=short -- operation_publication a_typed_operation_that_ends a_refused_completion unsolicited_progress a_first_visit_derives the_boot_example_query time_travel`
+- the three inherited single-threaded re-runs and the UI-crate laws of S5.5.
+
+### S5.8 USAGE STOP (11:3x) — state at the stop
+- On disk, complete, no half-applied wave: waves 1–9 (wave 9 = 4 `.rs` via the train 11:12:29 + bridge TS, corpus, schema, package law under `serve` 11:12:51). Restore of wave 9: `(cd T/🗑️generated/s5-wgpu/wave9 && python3 land.py --revert a)` / `--revert b`.
+- STAGED AND NOT LANDED: nothing. The four items of the 11:2x brief are NOT started: (1) ARIA findings (`aria-expanded` on `role=group` ×3, `aria-valuetext` on `role=combobox` ×2, mirrored bottom panels, sync chip after attach), (2) `FolderReadBackRouteV1` twin, (3) §22.31 board names, (4) Ctrl/⌘+Enter + Escape in the mirror textarea.
+- RUN for wave 9: tsc 0 errors, `test-preview-generated` 29 ✔ / 0 ✘. NOT RUN: every Rust law of waves 7–9 and the wasm32 check of waves 7–9 (rule 68; no cargo of mine is running — the waiting gate shell was killed at 11:26).
+- OWED 1: `zsh T/🚦️gate.sh && CARGO_BUILD_JOBS=3 cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown --message-format=short` (B2's own wasm build answers the same question first).
+- OWED 2: `zsh T/🚦️gate.sh 3 18 && RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 cargo test -p semio-framework-os-renderer-wgpu --lib --message-format=short -- operation_publication a_typed_operation_that_ends a_refused_completion unsolicited_progress a_first_visit_derives the_boot_example_query time_travel`
+- OWED 3: `… cargo test -p semio-framework-ui --features testkit --lib --message-format=short -- events:: accessibility conformance_corpus row_action table_row scrub control_commit dispatch_accessibility reconcile`; the three single-threaded re-runs of S5.5.
+- Live proof still missing: boot (announce → long load → board filled, Commands row present) and Accept replay completion on wgpu — B2 / Run 7.
+
+### S5.9 After the 11:34 reboot (16:40–17:10): live faults F14, F16, F17, F18, O-w3 on build B2
+
+B2 proved waves 7–9 live (S5-E2E: fresh profile boots, 180 nodes / 179 edges at boot, History lists the example load).
+
+| wave | train line | files | what | run by me |
+|---|---|---|---|---|
+| 10 F14 | `16:53:31 wave10-F14` | 6 `.rs` | `settle_board_pointer_authority_into` before every board input | none (native `--lib` covered by train FRAMEWORK GREEN 17:07:19) |
+| 11a F17 + F18 | `17:07:32 wave11a-rail` | 4 `.rs` | pane republish after rail presses; row `actionable` | none (native `--lib` covered by train FRAMEWORK GREEN 17:09:18, through `wave11b-rail`) |
+| 11b F18 | `17:08:09 wave11b-rail` | mirror TS + law | Enter / Space on an actionable row | `test-browser ♿️` **27 ✔ / 0 ✘** (`vitest-browser-s5-11.txt`); `tsc` exit 0 (`tsc-wave11-1.txt`) |
+
+**F14 — "board retained authority faulted" on the first click.** Read from the trace (`s5-e2e/wgpu/b2-click`, 18.8 s: PointerMove +
+PointerDown + PointerUp dispatched in ONE input drain, fault at 19.5 s) and the code; not reproduced by a run of mine.
+Every idle move is a retained commit: `plan_hover_pointer` (`♾️infinite/🎲️board/…/➕️normal/🦀️.rs`) always answers a
+`Hover` plan, `requires_retained_commit()` is `!Idle`, so the wgpu host calls `begin_pointer_commit` and the frame steps it
+later, in `AppFrameTransactionPhase::BoardAuthority`. The press goes direct (`pointer_down_screen`) and bumps
+`interaction_revision`; `step_pointer_commit` then finds `interaction_revision != plan.revision` at phase 0 and answers
+`Fault`. The same hole, read from code: a wheel after a move (`commit_wheel` bumps the revision), a double click (press
+under the first release's `FinishDrag`), a release with no gesture open (`commit_pointer`), a key chord, the pinch
+takeover; and a release that shares a drain with an area-select or pan move is refused (`begin_pointer_commit` chains
+`DragMove` → `DragMove | FinishDrag` only) and lost. None of the four suspects named in the brief is on this path.
+
+Fix (wgpu host only; engine and renderer phase untouched): `settle_board_pointer_authority_into(surface_id, input)` in
+`⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` runs the frame phase's own ladder in place — `drive_board_authority_step` to
+`Complete`, `publish_board_pointer_step` through the commit's pre-reserved claim, `release_board_pointer_claim` on
+`Cancelled`, `Err(Structure)` on `Fault` or after `8 × BOARD_POINTER_ITEM_CAPACITY + 64` steps — and is the first call of
+every board input entry (press, move, release, leave, wheel, key chord, pinch takeover). Order is kept: the pending
+commit's events leave before the new input's. Changed signatures: `puzzle_board_pointer_down` →
+`puzzle_board_pointer_down_into(…, input) -> Result<(), _>`, `puzzle_board_yield_to_pinch` → `…_into`,
+`scenes::puzzle_board_pointer_down` → `…_into`, `scenes::puzzle_board_touch_pointer_down` → `…_into`.
+The coordinator approved a per-surface FIFO replayed by the BoardAuthority phase; I changed the mechanism and said so
+before landing (same law; the FIFO would have covered pointers only and needed owned key payloads in the close ladder).
+Not covered: the paint-time `sync_board_engine` setters bump the same revision; I read no interleaving with a pending
+commit there and did not prove it.
+
+Laws, written and NOT run (`🧪️tests/🔬️wgpu-board2d-engine`): `a_direct_press_under_a_pending_pointer_commit_faults_the_engine`
+(the cause, on the bare engine), `a_click_dispatched_in_one_input_drain_selects_the_node`,
+`a_double_click_dispatched_in_one_input_drain_keeps_the_authority`, `a_wheel_after_a_move_in_one_input_drain_keeps_the_authority`;
+three existing laws re-pointed to the new signatures.
+
+**F16 — rail "Select All" selects nothing: guest, not wgpu.** `InteractionVerb::SelectAll` (`🔌️plugin/🦀️.rs` ≈ :30134)
+selects `resolve_domain_topology(def).ordered` and only `if !ids.is_empty()`; puzzle 2d's `vortex` domain is
+`HierarchyProvider::Flat` (`◻️2d/…/✏️editor/🦀️.rs:310`), which answers an empty topology. The verb still answers its
+declared scope, hence the refresh in the trace. Same on every renderer. Read from code only.
+
+**F17 — "Move…" opens no form.** `setActionExpanded` / `stageActionArg` / `resetActionArgs` / `toggleSearchPossibles`
+changed shell state and returned; the pane documents are republished inside a refresh pass and nothing owed one. Fix:
+`ShellState::republish_window_action_panes()` after each. Law (not run):
+`a_press_on_an_arg_carrying_row_republishes_the_pane_with_its_staged_form` — the published revision
+(`window_measures_minted`) changes on the press, on a staged argument, returns on reset and on the second press.
+
+**F18 — rail rows not operable through the mirror.** (1) a row's click is `RowTarget.activation`, the contract projection
+derives `actionable` from record bindings only → no `data-actionable`, no forwarded click. The wgpu walk
+(`🖱️ui/🎯️targets/🧊️wgpu/♿️accessibility/🦀️.rs`) now stamps it for a `TreeItem` with a target activation that is not
+disabled; the engine already fires a leaf row's activation on `AccessibilityUiEvent::Activate` (rows mount as activatable
+`Stack`s, `reconcile::row_activation`). (2) the mirror handled Enter / Space for native buttons, tabs and radios only;
+`accessibilityMirrorActivatesByKey` adds every other actionable, focusable element. Laws:
+`a_row_with_an_activation_projects_actionable` (Rust, not run), "activates an actionable tree row by click, Enter and
+Space…" (TS, ✔). Open: table rows; the contract function itself (S5-UI's file) still reads such a row as inert; inside the
+canvas the engine's own focus order still skips leaf rows (`is_focusable`).
+
+**O-w3 — the unasked "Commit Checkpoint" row** is the automatic check-in: `poll_auto_checkin` dispatches
+`commitCheckpoint { message: "auto" }` 20 s after the last uncommitted edit (the boot example load), React's constants.
+The row is the guest's. Open on wgpu: the "waits while loading or attached-and-unbound" twin; the full refresh it costs.
+
+**Owed (disk was 15–16 GiB free, below the gate's 18 GiB test floor — no cargo started by me since the reboot):**
+- `zsh T/🚦️gate.sh 2 18 && RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 cargo test -p semio-framework-os-renderer-wgpu --lib --message-format=short -- one_input_drain a_direct_press_under saturated_graph_and_board the_wgpu_rotate_ring board_and_map_two_touch a_press_on_an_arg_carrying_row operation_publication a_typed_operation_that_ends a_refused_completion unsolicited_progress a_first_visit_derives the_boot_example_query`
+- `zsh T/🚦️gate.sh 2 18 && RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0 cargo test -p semio-framework-ui --features testkit --lib --message-format=short -- a_row_with_an_activation accessibility events:: conformance_corpus row_action`
+- `zsh T/🚦️gate.sh && CARGO_BUILD_JOBS=3 cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown --message-format=short` (waves 7–11; an activation answers it first).
+- Not started: F15 (`aria-pressed` on chrome tabs with no panel shown), O-w2 (History panel paints bottom-up, labels twice).
+
+### S5.10 F15 and O-w2 (17:10–17:25): one withdrawn fix, one open finding
+
+**F15 — `aria-pressed=true` on Artifact / Inspection / Display / Tool / Settings at boot with no panel shown: parity with
+React, NOT a wgpu defect. Nothing landed.** The mirror takes the state from `ShellState::chrome_accessibility_pressed`
+(tab on its anchor's path, whether or not the anchor is open). I staged a fix (`anchor_open && on path`) and withdrew it
+before landing: React's `PanelTabBar` sets `aria-pressed={isActive}` from the path selection and uses `visible` for the
+fill only (`🧭️PanelTabBar/🟦️.tsx:434`, `showActiveColor={visible}`), the shared fixture pins it
+(`🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json` `settingsTabStrip.pressedFollowsSelectionWhenFolded: true`), and the
+wgpu law `accessibility_activation_updates_settings_pressed_button_projection` asserts exactly that ("folding removes the
+active fill while retaining React's pressed selection"). Whether a folded tab should read pressed is one decision for both
+renderers (S5-UI: React + fixture + wgpu together).
+
+**O-w2 — History panel bottom-up, labels twice: cause half found, not fixed.**
+- Bottom-up and right-aligned: the wgpu shell hands the docked panel's retained document its anchor flow
+  (`set_ui_document_flow(window, anchor.flow())`, shell ≈ :28380; `UiFlow::for_anchor(BottomEnd)` = inline RTL, block Up),
+  and the UI target lays the whole document out in it. React's `Panel` also sets `dir="rtl"`, `flex-col-reverse` and a
+  `FlowProvider` for that anchor (`🖼️Panel/🟦️.tsx:546–566`), yet React's own screenshot
+  (`s5-e2e/run5/probe-react-…-s6-undo-redo.png`) shows the History tree top-down and left-aligned. Where React keeps the
+  tree body out of the mirrored flow I did not find; without that rule a wgpu change would be a guess.
+- Label twice: every action row paints its label and, beside it, its `control` — a button carrying the same label (a
+  select for Filter). React shows a control on Redo and Filter only. The rule that hides the others was not identified.
+- Needed to finish: the React DOM (`outerHTML`) of the open History panel at the bottom-right anchor, from S5-E2E.
+
+### S5.11 Build B2w (18:05–18:55): F22 measured and fixed, F24 fixed, number inputs are spinbuttons, the owed laws RUN
+
+B2w proved waves 10 + 11 live (S5-E2E: click selects, drag moves, 0 hard faults; first history edit on wgpu).
+
+| wave | train line | files | what |
+|---|---|---|---|
+| 12 F22 | `18:25:23 wave12-F22` (serve) | mirror TS + law | `refresh()` is O(1) while a pull is owed |
+| 13 F24 | `18:29:39 wave13-F24` | canvas `.rs` + law file | every published board row passes the delivery table |
+| 14a number input | `18:43:08 wave14a-number-input` | 3 `.rs` | contract role `spinbutton` for `Input(kind: number)`; wgpu draft as `valueNow` |
+| 14b number input | `18:43:09 wave14b-number-input` (serve) | TS twin + corpus row | `uiAccessibilityRoleV1`; `a-number-input-is-a-spinbutton` |
+
+**F22 — measured before anything was changed.** `🗑️generated/s5-wgpu/f22/census.ts` (Playwright on the live lane; result
+`f22/census.json`, console `f22/census-console.txt`) takes 12 s windows with a main-thread CPU profile, a census of worker
+messages by kind (count, bytes, handler time), animation-frame gaps, mirror rebuilds and page-read latency:
+
+| window | `frame` messages from the worker | main-thread self time in mirror `refresh` | mirror nodes | rAF gaps > 50 ms | page read max |
+|---|---|---|---|---|---|
+| idle, no session | 145 105 (24.7 MB) | 2 597 ms of 12.5 s | 75 | 0 | 26 ms |
+| after one drag | 156 912 | 3 240 ms | 75 | 0 | 25 ms |
+| History open | 153 898 | 5 830 ms | 108 | 0 | 68 ms |
+| session open #1 | 143 726 | 6 168 ms | 115 | 0 | 31 ms |
+| session open #2 | 153 002 | 6 413 ms of 12.7 s | 115 | 24 (1 883 ms) | 103 ms |
+
+The frame worker posts one `frame` message per frame STEP (`runFrameTurn` after every `runtime.tick`): ~12 000 a second,
+~195 per animation frame, in every state. Each runs `onDirectives` → `accessibility.refresh()`, and `refresh()` walked the
+whole mirror (`querySelectorAll("[data-node-id]")` + `domOwns` per node) before its own 400 ms throttle. Cost = mirror
+nodes × 12 000/s; with the History rows F24 added and the editor the main thread stops draining its queue — the 5–27 s page
+reads. My run stayed below that point (115 nodes), so the 27 s stall itself is extrapolated, not reproduced. Not found: a
+mirror rebuild storm (0–1 per window), a `resync` loop, a per-frame history read, a worker refresh storm.
+
+Fix: `refresh()` returns at once while a pull is owed; the ownership walk (`retireOwned`) runs on the first call of a
+burst and when the owed pull starts. The existing law "synchronously retires duplicate canvas AX ownership" holds.
+Law: "spends one ownership walk and one projection pull on a storm of refresh calls". NOT fixed: the 12 000 messages/s
+themselves (≈ 1.5 s of main thread per 12.5 s after the fix, independent of mirror size) — a frame-protocol change.
+
+**F24 — "Apply Board Events" rows for hover and preview.** Two wgpu publication paths sent raw rows: the retained pointer
+page (`begin_board_pointer_commit` / `publish_board_pointer_step`: every idle move's `hover`, every `preselect`, brush
+preview, link ring → its own `applyBoardEvents`) and the frame pump (`publish_board_event_step`: one raw engine event per
+step). Only the direct lane coalesced. Fix: `board_page_dispatch_rows` (transient and `camera` rows out, the rest in
+order and byte for byte) before claim and publish; the frame pump is the buffered coalesced flush. Three unreachable
+raw-publish tails deleted. Old gap now visible: the board hover reaches the framework hover lane only on leave.
+
+**Number inputs.** dx / dy are `Input(kind: number)`; the contract said `textbox` for every input, React's
+`<input type="number">` is a `spinbutton`. Both twins and the shared role table now say so; the mirror therefore builds
+`<input type="number">` with value, bounds, step and the number-law keys for every number field.
+
+**Runs (gate v6 `2 12`, shared target, one cargo at a time):**
+
+| run | result |
+|---|---|
+| `cargo test -p semio-framework-os-renderer-wgpu --lib -- board2d_engine_tests saturated_graph_and_board board_and_map_two_touch a_press_on_an_arg_carrying_row operation_publication a_typed_operation_that_ends a_refused_completion unsolicited_progress a_first_visit_derives the_boot_example_query` (`test-renderer-s5-3.txt`, build 10 m 53 s) | **23 ✔ / 0 ✘** — every new law of waves 7–13, incl. `a_direct_press_under_a_pending_pointer_commit_faults_the_engine` (F14's cause on the bare engine) and the 18-case delivery corpus |
+| `cargo test -p semio-framework-ui --features testkit --lib -- accessibility a_row_with_an_activation a_number_input every_component_implies events:: conformance_corpus row_action table_row scrub control_commit reconcile` (`test-ui-s5-2.txt`) | **171 ✔ / 0 ✘** — the UI-crate laws owed since wave 1 |
+| `cargo test -p semio-framework-ui-contract --lib -- accessibility every_component_implies` (`test-contract-s5-1.txt`) | **15 ✔ / 0 ✘** |
+| `bun ./📜️script.ts test-browser ♿️ 🎬️` after wave 12 (`vitest-browser-s5-12.txt`) | **55 ✔ / 0 ✘** |
+| `test-browser ♿️` after wave 14 (`vitest-browser-s5-14.txt`); contract TS twin; `tsc` | **28 ✔ / 0 ✘**; 319 checks; 0 errors |
+
+**Still owed / open:** wasm32 `--lib` check of waves 7–14 (an activation answers it); the three inherited single-threaded
+renderer laws of S5.5 and the full `time_travel` filter (not in this build's filter); live re-measure of F22 after
+activation (`bun T/🗑️generated/s5-wgpu/f22/census.ts <url> <outDir> 12` from the dev TS package). Not started: F21 (f32
+pointer coordinates: `ui_render` events carry `x, y: f32`; the engine offset is exact only if the pointer crosses the
+host in f64), F23 / O-w2 (needs React's panel DOM in `s5-e2e/react-panel-dom/`), F20 (row expansion through the mirror).
+
+**F23 / O-w2, the flow half — diagnosed from React's saved DOM (`s5-e2e/react-panel-dom/react-panel-history-bottom-right.html`), not fixed.**
+React's bottom-right panel mirrors its CHROME only: the panel root is `dir="rtl"` + `flex-col-reverse` (tab bar at the
+bottom, chips from the right), but the body's scroll viewport is `flex min-h-full flex-col justify-end` and the tree inside is
+`dir="auto"` — rows in authored order, top-down, read left-to-right, and the whole body bottom-aligned when it is shorter than
+the panel. The wgpu shell hands the BODY document the anchor's whole flow (`set_ui_document_flow(window, anchor.flow())`,
+shell ≈ :28380 → inline RTL, block Up), so the UI target lays the History tree out bottom-up and right-aligned. The fix is the
+body flow of a docked panel (authored order, content direction, bottom alignment) while the tab bar keeps the anchor flow;
+it changes every bottom- or right-docked panel on wgpu and existing wgpu laws pin the mirrored body, so it is its own wave.
+The overlap half (editor controls over the Commands rows) was not examined.
+
+### S5.12 Wave 15 (21:27–): the wgpu text-editor host takes the editor engine's typed scene
+
+**Why.** At 19:59 an outside peer replaced the editor engine's scene API: `EditorHost::sync_from_scene_json` /
+`sync_from_scene_pack` (a JSON object of `*Json` string members, each re-parsed leniently inside the engine) are gone;
+the engine now takes `EditorHost::synchronize_scene(EditorScene)`, and an `EditorScene` (`✍️editor/🧬️scene/🦀️.rs`, typed
+members, `deny_unknown_fields`) is constructed only by decoding its canonical document
+(`framework_editor::scene::from_json` / `scene::decode` under a `NativeDecodeControl`). The wgpu canvas called the removed
+method at three sites (`⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`: scene sync, resync after a refused edit, discard of an
+explicit draft) → train FRAMEWORK RED 20:36:13, three E0599.
+
+**What the source of that scene is today (read, not changed).** The UI contract's `TextEditorScene`
+(`🖱️ui/🎬️scene/🎬️scenes/🦀️.rs`, untouched since 10-04) STILL carries its members as `*Json` strings (`selectionJson`,
+`tokensJson`, `diagnosticsJson`, `placeholdersJson`, `occurrencesJson` — an object of two further encoded strings —,
+`extraCaretsJson`, `selectableSpansJson`, `settingsJson`, `cameraJson`, `overlaysJson`, `hoverJson`). The peer's React twin
+(`🧱️elements/✏️TextEditor/🟦️.tsx`, in their working tree) builds the typed document from those strings in one function,
+`textEditorScenePacket`, and calls the wasm binding `synchronizeScene(pack, 0, 16_777_216, 16_777_216, progress)`.
+
+**The wgpu twin.** One builder beside `EditorSyncCache`, region `✍️EditorSceneDocument`:
+- `text_editor_scene_document(editor, carries_text) -> (String, Vec<String>)` — the canonical document
+  (`EditorSceneDocument`, serde) from the contract scene; every `*Json` member is expanded
+  (`store::pack_rt::scene_field_json_text`, React's `parseSceneJsonField`) and read into its typed form in this one place.
+- `synchronize_text_editor_host(host, editor, carries_text)` — builder → `framework_editor::scene::from_json` under
+  `NativeDecodeControl::new(TEXT_EDITOR_SCENE_OWNED_BYTES = 16_777_216, …)` → `host.synchronize_scene`. All three sites
+  call it; `engine_canvas_fault_log` (console ERROR on wasm, stderr natively) tells every refusal — no `let _ =` left.
+
+Decisions inside the builder, each different from "pass the strings through":
+- **Settings are projected.** `settingsJson` also carries the HOST's members (`readOnly`, `commit`, `editAction`, the
+  explicit-draft labels — `text_editor_explicit_draft_settings` reads them); the canonical scene refuses any member it does
+  not declare, so only `fontPx`, `lineHeight`, `showLineNumbers`, `tabSize` cross. React's `textEditorScenePacket` passes
+  the whole settings object: for a scene with explicit-draft settings its decode would be refused (read from the two
+  files, not run) — the peer's side.
+- **An echo carries no text.** Where the old code re-applied the host's own text and caret for a scene that only echoes
+  the host's edit, the document now leaves `buffer` and `selection` out (omission = unchanged), React's
+  `sceneWithoutEchoedTextV1`.
+- **An unreadable member is named and left out**, the rest of the scene is committed; the document's own rule makes an
+  omitted member "unchanged". The old engine dropped such a member silently; refusing the whole scene instead would stop
+  the editor on one malformed adornment.
+- Kept from the old engine: a caret-only selection is a collapsed range, a camera without `y` scrolls to 0, a hover that
+  is not a full range clears.
+
+**Laws** (`⚙️EngineCanvas/🧪️tests/🖌️wgpu-paint2d-engine`, region `✍️EditorSceneDocumentLaws`):
+`the_contract_scene_builds_the_editor_engines_canonical_scene` — over the editor engine's own corpus
+(`✍️editor/🧬️scene/🧫️fixtures/🔣️.json`, every accepted case): the contract scene carrying the case's members as `*Json`
+strings (plus host settings members) builds exactly that document, the engine decodes it, and the echo form drops buffer
+and selection; `the_editor_host_takes_the_typed_scene_and_names_what_it_cannot_read`.
+
+**Wave 15 — landed and runs (21:34–22:05).** Train line `21:34:41 S5-WGPU wave15-editor-scene`, 2 `.rs`
+(`⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`, `🧪️tests/🖌️wgpu-paint2d-engine/🦀️.rs`). Restore:
+`(cd T/🗑️generated/s5-wgpu/wave15 && python3 land.py --revert a)`.
+
+| run | result |
+|---|---|
+| `zsh T/🚦️gate.sh 2 10 && CARGO_BUILD_JOBS=4 cargo check -p semio-framework-os-renderer-wgpu --lib --message-format=short` (`check-native-s5-15.txt`, 21:34:48 → 21:42:19) | **exit 0**, `Finished` in 7 m 31 s; the renderer crate was checked (277 warnings), `semio-framework-editor` checked before it |
+| train FRAMEWORK lane | **GREEN 21:37:57** through `21:34:41 S5-WGPU wave15-editor-scene` |
+| the same check with `--target wasm32-unknown-unknown` | **NOT RUN**: the gate stayed closed for its whole 900 s (21:42:32 → 21:57:33, "shared-cargo=1 free=9GiB") — `coord/activation.flag` is present and the disk is at 9 GiB, under the 10 GiB floor. No cargo of mine started. |
+| the text-editor laws (one test build) | **NOT RUN**, same reason |
+
+The only target-gated line of the wave is `engine_canvas_fault_log`'s wasm arm (`web_sys::console::error_1`, beside the
+existing `log_1`); everything else is target-neutral. That is a reading, not a compile.
+
+**Owed, exact (after the flag is gone and the disk is ≥ 10 GiB):**
+- `zsh T/🚦️gate.sh 2 10 && CARGO_BUILD_JOBS=4 cargo check -p semio-framework-os-renderer-wgpu --lib --target wasm32-unknown-unknown --message-format=short`
+- `zsh T/🚦️gate.sh 2 10 && RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=4 CARGO_INCREMENTAL=0 cargo test -p semio-framework-os-renderer-wgpu --lib --message-format=short -- paint2d_engine_tests text_editor_tests text_editor populated_graph_map_editor_surface_closes`

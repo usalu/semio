@@ -5,7 +5,7 @@ use super::*;
 /// real `between()` result (`f6-recon-report.md` §9 STEP-3's mandated shape).
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::DiffCodec;
+    use protocol::{DiffBinary,DiffCodec,DiffText};
 
     for d in demo_diff_cases() {
         let printed = d.print_diff();

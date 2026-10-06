@@ -19,8 +19,8 @@ import {rewritingToJsonValue} from "../../../🚪️io/📤️export/🧵️seri
 /** 🪪️ Checks nested dynamic values, exact layout records and rejection of window-owned fields. */
 export function testRewritingDocumentContractOracle(): void {
   const ajv = semioSchemaAjvV1({ allErrors: true });
-  const specification = JSON.parse(readFileSync(new URL("../../📸️snapshot/🧫️fixtures/🪶️sqlite/🌳️typed/🔣️.json", import.meta.url), "utf8"));
-  const specificationOwner = new URL("../../📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts", import.meta.url);
+  const specification = JSON.parse(readFileSync(new URL("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🌳️typed/🔣️.json", import.meta.url), "utf8"));
+  const specificationOwner = new URL("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", import.meta.url);
   for (const path of specification.schemaDocuments) ajv.addSchema(JSON.parse(readFileSync(new URL(path, specificationOwner), "utf8")));
   for (const schema of [valueSchema, mapSchema, propertySchema, artifactSchema]) if (!ajv.getSchema(schema.$id)) ajv.addSchema(schema);
   const base = { ...specification.snapshot, parameterBindings: {}, ruleLayout: { node: { x: {bits:"3ff0000000000000"}, y: {bits:"4000000000000000"} } } };

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "format": "rgba8-unorm",
+  "usage": ["storage-binding", "texture-binding"],
+  "depthOrArrayLayers": 1,
+  "mipLevelCount": 1,
+  "sampleCount": 1,
+  "dimension": "2d",
+  "viewFormats": [],
+  "cases": [
+    {"id":"single-pixel","width":1,"height":1,"bytes":"4","refusal":null},
+    {"id":"rectangular","width":36,"height":24,"bytes":"3456","refusal":null},
+    {"id":"zero-width","width":0,"height":8,"bytes":null,"refusal":"empty-target"},
+    {"id":"zero-height","width":8,"height":0,"bytes":null,"refusal":"empty-target"},
+    {"id":"maximum-width","width":4294967295,"height":1,"bytes":"17179869180","refusal":null},
+    {"id":"maximum-height","width":1,"height":4294967295,"bytes":"17179869180","refusal":null},
+    {"id":"large-square","width":65536,"height":65536,"bytes":"17179869184","refusal":null},
+    {"id":"byte-overflow","width":4294967295,"height":4294967295,"bytes":null,"refusal":"target-byte-overflow"}
+  ]
+}

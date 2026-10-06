@@ -15,7 +15,7 @@
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Vectors
-#[path = "🧫️fixtures/🦀️.rs"]
+#[path = "🧩️support/🦀️.rs"]
 mod committed_vectors;
 use committed_vectors::{fixture_text, VECTORS};
 //#endregion 🔖️Vectors

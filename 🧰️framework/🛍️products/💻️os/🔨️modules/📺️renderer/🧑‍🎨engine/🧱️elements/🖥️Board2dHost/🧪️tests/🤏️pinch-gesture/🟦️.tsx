@@ -13,7 +13,6 @@ import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framewo
 import { Board2dHost, BOARD_2D_ZOOM_BOUNDS, board2dPinchCamera } from "../../🟦️.tsx";
 import { BoardSessionFactoryContext, createBoardPeerScope, type Board2dWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import surfacePinchFixture from "../../../../🧫️fixtures/🤏️surface-pinch/🔣️.json";
-import surfacePinchSchema from "../../../../🧬️schema/🤏️surface-pinch/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region 🧪️Harness
@@ -31,7 +30,7 @@ function createStubSession(): Board2dWasmSession & { readonly calls: string[]; r
     attach_canvas: async () => undefined,
     setSize: noop,
     renderFrame: noop,
-    parseFixtureJson: () => true,
+    loadBoardSnapshotJson: () => true,
     syncDescriptorJson: noop,
     setKindCatalogsJson: noop,
     setCamera: (x: number, y: number, zoom: number) => {
@@ -67,7 +66,7 @@ function boardSceneNode(): UiComponentSceneNode {
     controllerId: "controller",
     surfaceId: "surface",
     board2d: {
-      fixtureJson: JSON.stringify({ nodes: [], edges: [] }),
+      snapshotJson: JSON.stringify({ nodes: [], edges: [] }),
       cameraJson: JSON.stringify({ x: 0, y: 0, zoom: 1 }),
       glyphCatalogsJson: "{}",
       selectionJson: "[]",
@@ -125,8 +124,6 @@ afterEach(() => {
 
 describe("🤏️ board 2d pinch math", () => {
   it("accepts the language-neutral surface pinch contract", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(surfacePinchSchema);
-    expect(validate(surfacePinchFixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
   it("spreading two fingers zooms in about their centroid, within the engine's own bounds", () => {

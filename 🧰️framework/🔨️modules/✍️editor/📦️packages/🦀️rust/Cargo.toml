@@ -34,7 +34,8 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-pack = { workspace = true }
+semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 infinite_canvas = { path = "../../../../🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 # 🧬️ The value derive resolves its default types through the General Value owner.
@@ -49,3 +50,11 @@ serde_json = { workspace = true }
 js-sys = "0.3.83"
 wasm-bindgen = { workspace = true }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
+
+[dev-dependencies]
+semio-framework-pack = { workspace = true }
+semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+
+[[test]]
+name = "canonical-editor-scene"
+path = "../../🧬️scene/🧪️tests/🦀️.rs"

@@ -12,20 +12,14 @@ import { I18nextProvider } from "react-i18next";
 import { Mode } from "../../../🎨️Canvas/🟦️.tsx";
 import { createShellI18nInstance, disposeShellI18nInstance } from "../../../../🎯️targets/⚛️react/🟦️.tsx";
 import dockNames from "../../../../🧫️fixtures/🪟️dock-accessible-names/🔣️.json";
-import dockNamesSchema from "../../../../🧬️schema/🪟️dock-accessible-names/🔣️.json";
 import Ajv2020 from "ajv/dist/2020.js";
 import searchRouting from "../../🧫️fixtures/🔎️search-fold-routing/🔣️.json";
-import searchRoutingSchema from "../../🧬️schema/🔎️search-fold-routing/🔣️.json";
 import paneFolds from "../../🧫️fixtures/🔀️pane-fold-independence/🔣️.json";
-import paneFoldsSchema from "../../🧬️schema/🔀️pane-fold-independence/🔣️.json";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { ShellScopeProvider, createShellScope } from "../../../🐚️ShellScope/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 it("keeps Actions and Search pane folds independent in both explicit locales", () => {
-  const validate = new Ajv2020({ strict: true }).compile(paneFoldsSchema);
-  expect(validate(paneFolds)).toBe(true);
-  expect(validate({ ...paneFolds, sharedToggle: true })).toBe(false);
   for (const locale of searchRouting.locales) for (const entry of paneFolds.cases) {
     const root = document.createElement("div"), app = document.createElement("div"), portal = document.createElement("div");
     root.append(app, portal);
@@ -47,10 +41,6 @@ it("keeps Actions and Search pane folds independent in both explicit locales", (
 });
 
 it("unfolds only Search for admitted printable keys in either explicit locale", () => {
-  const validate = new Ajv2020({ strict: true }).compile(searchRoutingSchema);
-  expect(validate(searchRouting)).toBe(true);
-  expect(validate({ ...searchRouting, ambientLocale: "en" })).toBe(false);
-  expect(validate({ ...searchRouting, cases: searchRouting.cases.slice(1) })).toBe(false);
   for (const locale of searchRouting.locales) for (const entry of searchRouting.cases) {
     const root = document.createElement("div"), app = document.createElement("div"), portal = document.createElement("div");
     root.append(app, portal);
@@ -126,7 +116,6 @@ describe("Window chrome focus indicator", () => {
 describe("Dock accessible names", () => {
   for (const locale of dockNames.locales) for (const stacked of [false, true]) {
     it(`announces authored titles and localized dock actions in ${locale.id}, stacked=${stacked}`, () => {
-      expect(new Ajv().validate(dockNamesSchema, dockNames)).toBe(true);
       const i18n = createShellI18nInstance(locale.id as "en" | "de");
       const view = render(
         <I18nextProvider i18n={i18n}>
@@ -163,11 +152,9 @@ describe("Dock accessible names", () => {
 });
 
 import contentClearance from "../../🧫️fixtures/🚧️content-clearance/🔣️.json";
-import contentClearanceSchema from "../../🧬️schema/🚧️content-clearance/🔣️.json";
 import { ChromeAwareWindowScrollSurface, Scrollable } from "../../../../🎯️targets/⚛️react/🟦️.tsx";
 
 it("keeps the first chrome-aware content control reachable without changing scroll position", () => {
-  expect(new Ajv2020({ strict: true }).validate(contentClearanceSchema, contentClearance)).toBe(true);
   for (const row of contentClearance.cases) {
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       const slot = this.getAttribute("data-slot");

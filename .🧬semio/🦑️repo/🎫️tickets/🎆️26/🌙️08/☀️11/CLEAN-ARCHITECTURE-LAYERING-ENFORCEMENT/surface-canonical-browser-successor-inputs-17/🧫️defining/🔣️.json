@@ -1,0 +1,32 @@
+{
+  "cases": [
+    {
+      "id": "held-identical",
+      "path": "owner.rs",
+      "held": "x",
+      "current": "x",
+      "refused": false
+    },
+    {
+      "id": "qualified-current-advance",
+      "path": "🧰️framework/🔨️modules/🌱️value/🦀️.rs",
+      "held": "pub mod native_decoding;\na",
+      "current": "pub mod native_decoding;\nb",
+      "refused": false
+    },
+    {
+      "id": "held-module-missing",
+      "path": "🧰️framework/🔨️modules/🌱️value/🦀️.rs",
+      "held": "pub mod other;",
+      "current": "pub mod native_decoding;",
+      "refused": true
+    },
+    {
+      "id": "foreign-provider-advance",
+      "path": "owner.rs",
+      "held": "a",
+      "current": "b",
+      "refused": true
+    }
+  ]
+}

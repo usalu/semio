@@ -1,0 +1,20 @@
+import{readFileSync,writeFileSync,existsSync,mkdirSync}from"node:fs";import{dirname,join}from"node:path";
+const root="/Users/ueli/Documents/semio",input=dirname(import.meta.path),base="✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch",json="🧰️framework/🔨️modules/🎒️pack/🔤️json";
+type Pair={path:string,before:string,after:string};const read=(path:string)=>existsSync(join(root,path))?readFileSync(join(root,path),"utf8"):"";
+const replace=(text:string,before:string,after:string)=>{if(text.split(before).length!==2)throw Error("exact original reader anchor "+before);return text.replace(before,after)};
+function save(name:string,pairs:Pair[],mount:boolean){writeFileSync(join(input,name),JSON.stringify(pairs,null,2)+"\n");if(mount){for(const pair of pairs)if(read(pair.path)!==pair.before)throw Error("fresh guard "+pair.path);for(const pair of pairs){mkdirSync(dirname(join(root,pair.path)),{recursive:true});writeFileSync(join(root,pair.path),pair.after)}}console.log("[DEBUG] "+JSON.stringify({paths:pairs.length,mounted:mount}))}
+const command=process.argv[2];
+if(command==="demand"){
+ const path=base+"/🧪️tests/🦀️.rs",before=read(path);if(before.includes("retained_snapshot_patch_reader_moves_original_cells"))throw Error("demand already mounted");const fixturePath=base+"/🧫️fixtures/📦️operation-read.json";save("demand-guarded-pairs.json",[{path,before,after:before+"\n"+readFileSync(join(input,"law.rs"),"utf8")},{path:fixturePath,before:read(fixturePath),after:readFileSync(join(input,"fixture.json"),"utf8")}],true);
+}else if(command==="stage-provider"){
+ const path=base+"/📦️codec/🫳️borrowed/🦀️.rs",before=read(path),after=before+'\n#[path="../📥️decode/🫳️borrowed/🦀️.rs"]\nmod borrowed_operation_read;\npub use borrowed_operation_read::SnapshotPatchReadCursor;\n';
+ const rootPath=base+"/🦀️.rs",rootBefore=read(rootPath),rootAfter=replace(rootBefore,"mod borrowed_operation_source;","mod borrowed_operation_source;\npub use borrowed_operation_source::SnapshotPatchReadCursor;");
+ const readerPath=base+"/📦️codec/📥️decode/🫳️borrowed/🦀️.rs";save("provider-held-pairs.json",[{path,before,after},{path:rootPath,before:rootBefore,after:rootAfter},{path:readerPath,before:read(readerPath),after:readFileSync(join(input,"reader.rs"),"utf8")}],false);
+}else if(command==="retirement-authority-repair"){
+ const jsonPath=json+"/📥️decode/🫳️borrowed/🦀️.rs",jsonBefore=read(jsonPath),jsonAfter=replace(jsonBefore,'\nimpl<S:JsonReadSource+Copy,V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonSourceCursor<S,V>{fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.parser)}}\n','');
+ const path=base+"/📦️codec/📥️decode/🫳️borrowed/🦀️.rs",before=read(path),after=readFileSync(join(input,"reader.rs"),"utf8");save("retirement-authority-repair-guarded-pairs.json",[{path,before,after},{path:jsonPath,before:jsonBefore,after:jsonAfter}],true);
+}else if(command==="current-capsule"){
+ const initial=JSON.parse(readFileSync(join(input,"provider-guarded-pairs.json"),"utf8"))as Pair[];const current=initial.filter(pair=>pair.path!==json+"/📥️decode/🫳️borrowed/🦀️.rs").map(pair=>({...pair,after:read(pair.path)}));const jsonPair=initial.find(pair=>pair.path===json+"/📥️decode/🫳️borrowed/🦀️.rs");if(jsonPair&&read(jsonPair.path)!==jsonPair.before)throw Error("source view must have no borrowed static retirement residue");save("current-production-readback-pairs.json",current,false);
+}else if(command==="law-readback"){
+ const initial=JSON.parse(readFileSync(join(input,"demand-guarded-pairs.json"),"utf8"))as Pair[];const pair=initial[0],before=pair.after,after=read(pair.path);if(!after.endsWith(readFileSync(join(input,"law.rs"),"utf8")))throw Error("exact corrected owning law suffix");save("law-or-pattern-guarded-readback.json",[{path:pair.path,before,after}],false);
+}else if(command==="provider")save("provider-guarded-pairs.json",JSON.parse(readFileSync(join(input,"provider-held-pairs.json"),"utf8")),true);else throw Error("exact demand, stage-provider or provider required");

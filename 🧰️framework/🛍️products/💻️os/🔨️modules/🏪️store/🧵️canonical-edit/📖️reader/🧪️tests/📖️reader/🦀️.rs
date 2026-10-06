@@ -81,7 +81,7 @@ fn canonical_reader_large_borrowed_map_matches_serde_and_transfers_exact_root() 
     for bytes in [1, 7, 4096] {
         let (mut reader, fixture, lifetime) = make_reader();
         let address = Arc::as_ptr(reader.owned.root.as_ref().unwrap());
-        let expected = serde_json::to_vec(&test_support::SerdeValue(&reader.owned.root.as_ref().unwrap().as_ref().to_value())).unwrap();
+        let expected = serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::component::CursorRevisionAccumulator::revision_value(reader.owned.root.as_ref().unwrap().as_ref()))).unwrap();
         assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
         assert_eq!(expected.len() as u64, reader_fixture["expectedByteLength"].as_u64().unwrap());
         assert!(reader.take_root().is_none());
@@ -336,7 +336,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             value["edit"]["inverse"] = serde_json::json!([]);
             let mut oracle = Edit::<DslValue>::from_value(value["edit"].take().into()).unwrap();
             oracle.forwards.push(serde_json::json!([fixture["text"], null]).into());
-            let expected = serde_json::to_string(&test_support::SerdeValue(&oracle.to_value())).unwrap();
+            let expected = serde_json::to_string(&test_support::SerdeValue(&crate::os_store::component::CursorRevisionAccumulator::revision_value(&oracle))).unwrap();
             let prefix = &expected.as_bytes()[..expected.find("null]").unwrap()];
             let edit = Edit {
                 line: oracle.line,
@@ -345,7 +345,6 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
                 forwards: vec![ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed, error: ErrorLeaf }],
                 inverse: Vec::new(),
                 mutation_meta: oracle.mutation_meta,
-                description: oracle.description,
                 verb: oracle.verb,
                 sequence_number: oracle.sequence_number,
                 started_at: oracle.started_at,

@@ -47,9 +47,9 @@ const OS_BOOT_STUDIO_ID: &str = "default";
 //#endregion 🔖️Constants
 
 //#region 🔖️Fixtures
-#[path = "🧫️fixtures/🦀️.rs"]
-pub mod fixtures;
-pub use fixtures::{prepare_space_fixture_sources, register_space_fixture_sources, SpaceFixtureCodec, SpaceFixtureFormat, SpaceFixtureSource};
+#[path = "📄️documents/🦀️.rs"]
+pub mod documents;
+pub use documents::{prepare_space_document_sources, SpaceDocumentCodec, SpaceDocumentFormat, SpaceDocumentSource};
 
 /// 🌱️ Parses the packaged demo studio fixture into a full `OsWorkflowArtifactDocument` envelope —
 /// shared by the Home editor's catalog seed and the Studio app's `initial_snapshot`. The fixture
@@ -630,7 +630,6 @@ struct SpaceOneItemPreparation<P, M> {
     maximum_bytes: usize,
     base: Option<store::SnapshotRead<P>>,
     mutation: Option<M>,
-    description: Option<String>,
     authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -644,9 +643,9 @@ where
     P: Send + Sync + 'static,
     M: ::protocol::Mutation<P> + ::protocol::OpBinary + Send + 'static,
 {
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("s.space.retained.lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("s.space.retained.lane".into());
         }
         admit_space_retained_mutation::<P, M>(mutation, self.maximum_bytes)
     }
@@ -667,7 +666,6 @@ where
             maximum_bytes: self.maximum_bytes,
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -731,9 +729,6 @@ where
         if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        if self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "s.space.retained.base-retirement-rejected"));
@@ -747,7 +742,7 @@ where
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 

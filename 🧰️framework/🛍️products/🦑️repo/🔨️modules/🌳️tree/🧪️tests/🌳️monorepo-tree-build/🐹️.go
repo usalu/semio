@@ -51,7 +51,7 @@ func (stub) ArtifactID(kind string, data map[string]any) string {
 
 // 📥️ records is the committed record set every scenario projects.
 func records(ctx *host.Context) (*tree.MemoryTreeSource, error) {
-	raw, err := ctx.FixtureBytes("shared://🌳️tree-source.json")
+	raw, err := ctx.InputBytes("shared://🌳️tree-source.json")
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func records(ctx *host.Context) (*tree.MemoryTreeSource, error) {
 
 // 📥️ fixtureObject decodes a JSON fixture into a generic object.
 func fixtureObject(ctx *host.Context, uri string) (map[string]any, error) {
-	raw, err := ctx.FixtureBytes(uri)
+	raw, err := ctx.InputBytes(uri)
 	if err != nil {
 		return nil, err
 	}

@@ -105,7 +105,7 @@ impl PngNativePaint {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1_2::subsets::any::schema::PngAnalyzer;
+    use crate::standards::v1_2::subsets::any::io::PngAnalyzer;
     use crate::PngSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -1160,7 +1160,7 @@ fn native_rows_controlled(
         phase.set(PngNativePaintPhase::Decode);
     }
     let expected = expected_native_raw_bytes(layout)?;
-    let raw = semio_s_artifact_stdio_deflate::schema::snapshot::decompress_zlib(&compressed, expected, control)?;
+    let raw = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::decompress_zlib(&compressed, expected, control)?;
     if raw.len() != expected {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("png: decompressed extent {} differs from expected {expected}", raw.len())));
     }
@@ -1348,8 +1348,8 @@ pub struct PngNativePaintWorkOperation {
     idat_last_index: usize,
     region: PngRegion,
     paint: PngNativePaint,
-    decoder: Option<semio_s_artifact_stdio_deflate::io::RetainedZlibDecoder>,
-    encoder: Option<semio_s_artifact_stdio_deflate::io::RetainedZlibEncoder>,
+    decoder: Option<semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibDecoder>,
+    encoder: Option<semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibEncoder>,
     raw: Vec<u8>,
     rows: Vec<NativePassRow>,
     decode_row: Option<NativePassRow>,
@@ -1430,7 +1430,7 @@ impl PngNativePaintWorkOperation {
             .and_then(|bytes| bytes.checked_add(revision.capacity()))
             .ok_or("png: retained paint scaffold ownership overflow")?;
         let remaining = maximum_owned_bytes.checked_sub(scaffold).ok_or("png: retained paint scaffold exceeds caller ownership limit")?;
-        let decoder = semio_s_artifact_stdio_deflate::io::RetainedZlibDecoder::try_new(compressed, expected, remaining).map_err(ValueError::into_message)?;
+        let decoder = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibDecoder::try_new(compressed, expected, remaining).map_err(ValueError::into_message)?;
         Ok(Self {
             revision,
             layout,
@@ -1765,9 +1765,9 @@ impl PngNativePaintWorkOperation {
                     if self.raw.is_empty() {
                         let decoder = self.decoder.as_mut().ok_or("png: retained decoder is missing")?;
                         match decoder.advance(context).map_err(ValueError::into_message)? {
-                            semio_s_artifact_stdio_deflate::io::RetainedZlibStep::Yield => return Ok(PngNativePaintWorkStep::Yield(self.progress())),
-                            semio_s_artifact_stdio_deflate::io::RetainedZlibStep::Cancelled => return Ok(PngNativePaintWorkStep::Cancelled),
-                            semio_s_artifact_stdio_deflate::io::RetainedZlibStep::Complete => {
+                            semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Yield => return Ok(PngNativePaintWorkStep::Yield(self.progress())),
+                            semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Cancelled => return Ok(PngNativePaintWorkStep::Cancelled),
+                            semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Complete => {
                                 self.raw = decoder.take_output().map_err(ValueError::into_message)?;
                                 let row_count = native_row_count(&self.layout).map_err(ValueError::into_message)?;
                                 self.rows.try_reserve_exact(row_count).map_err(|_| "png: retained row table allocation failed")?;
@@ -1796,7 +1796,7 @@ impl PngNativePaintWorkOperation {
                     if self.cursor == self.rows.len() {
                         let raw = std::mem::take(&mut self.raw);
                         let remaining = self.maximum_owned_bytes.checked_sub(self.retained_owned_bytes()?).ok_or("png: retained filter ownership exceeds caller limit")?;
-                        self.encoder = Some(semio_s_artifact_stdio_deflate::io::RetainedZlibEncoder::try_new(raw, self.maximum_owned_bytes, remaining).map_err(ValueError::into_message)?);
+                        self.encoder = Some(semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibEncoder::try_new(raw, self.maximum_owned_bytes, remaining).map_err(ValueError::into_message)?);
                         if self.retained_owned_bytes()? > self.maximum_owned_bytes {
                             return Err("png: retained encoder exceeds caller ownership limit".into());
                         }
@@ -1810,9 +1810,9 @@ impl PngNativePaintWorkOperation {
                 RetainedNativePaintPhase::Encode => {
                     let encoder = self.encoder.as_mut().ok_or("png: retained encoder is missing")?;
                     match encoder.advance(context).map_err(ValueError::into_message)? {
-                        semio_s_artifact_stdio_deflate::io::RetainedZlibStep::Yield => return Ok(PngNativePaintWorkStep::Yield(self.progress())),
-                        semio_s_artifact_stdio_deflate::io::RetainedZlibStep::Cancelled => return Ok(PngNativePaintWorkStep::Cancelled),
-                        semio_s_artifact_stdio_deflate::io::RetainedZlibStep::Complete => {
+                        semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Yield => return Ok(PngNativePaintWorkStep::Yield(self.progress())),
+                        semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Cancelled => return Ok(PngNativePaintWorkStep::Cancelled),
+                        semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::RetainedZlibStep::Complete => {
                             self.compressed = encoder.take_output().map_err(ValueError::into_message)?;
                             self.phase = RetainedNativePaintPhase::Assemble;
                             self.initialize_assembly(snapshot)?;
@@ -1972,7 +1972,7 @@ impl PngNativePaintOperation {
         let mut control = NativeEncodeControl::new(remaining, &mut callback);
         let raw = encode_native_rows_controlled(&self.rows, &self.layout, &mut control).map_err(ValueError::into_message)?;
         phase.set(PngNativePaintPhase::Encode);
-        let compressed = semio_s_artifact_stdio_deflate::schema::snapshot::compress_zlib(&raw, self.maximum_owned_bytes, &mut control).map_err(ValueError::into_message)?;
+        let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::compress_zlib(&raw, self.maximum_owned_bytes, &mut control).map_err(ValueError::into_message)?;
         let first_index = self.layout.chunks.iter().position(|chunk| chunk.kind == *b"IDAT").ok_or("png: missing IDAT")?;
         let last_index = self.layout.chunks.iter().rposition(|chunk| chunk.kind == *b"IDAT").expect("nonempty IDAT list");
         let idat = &self.layout.chunks[first_index..=last_index];
@@ -2532,7 +2532,7 @@ pub fn project_png(data: &[u8]) -> Result<PngProjection, String> {
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Relocated verbatim from `⚙️engine` (rule 3: `io_registry`/`ComposerEntry` live in `🚪️io/`).
 pub mod io_registry {
-    use crate::standards::v1_2::subsets::any::schema::PngComposer as PngRawAnyComposer;
+    use crate::standards::v1_2::subsets::any::io::PngComposer as PngRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -2553,3 +2553,157 @@ mod codec_tests;
 
 #[path="🚦️native/🦀️.rs"]
 pub mod native;
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{PngDiff, PngMutation, PngSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.png` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct PngBuilderConstruction {
+        snapshot: PngSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for PngBuilderConstruction {
+        type Snapshot = PngSnapshot;
+        type Mutation = PngMutation;
+        type Diff = PngDiff;
+        fn empty() -> Self {
+            Self { snapshot: PngSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<PngSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<PngSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::schema::mutations::apply_png_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <PngDiff as protocol::MutationDiff<PngSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::PngSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.png` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct PngParts {
+        pub snapshot: Option<PngSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.png` (1.2/✳️any) sources.
+    pub struct PngAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for PngAnalyzerAnalysis {
+        type Parts = PngParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            const SIG: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    if bytes.len() >= 8 && bytes[0..8] == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    // 🔍 stdio.png's text envelope is a hex dump of the raw bytes after the
+                    // `semio ...` preamble line — decode the first 8 bytes to sniff the real signature.
+                    let body = match store::semio_format::split_text_preamble(text) {
+                        Ok((_, rest)) => rest,
+                        Err(_) => text,
+                    };
+                    let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(16).collect();
+                    if hex.len() < 16 {
+                        return IoConfidence::Low;
+                    }
+                    let mut decoded = [0u8; 8];
+                    for (i, byte) in decoded.iter_mut().enumerate() {
+                        match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
+                            Ok(b) => *byte = b,
+                            Err(_) => return IoConfidence::Low,
+                        }
+                    }
+                    if decoded == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = PngParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <PngSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <PngSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec PngBuilderFacets {
+        construction: PngBuilderConstruction,
+        analysis: PngAnalyzerAnalysis,
+        composition: crate::standards::v1_2::subsets::any::io::derived_composition::PngComposerComposition,
+    }
+    builder: PngBuilder,
+    analyzer: PngAnalyzer,
+    composer: PngComposer,
+);

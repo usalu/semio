@@ -5,7 +5,7 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
-    use crate::standards::iana::subsets::any::schema::TsvAnalyzer;
+    use crate::standards::iana::subsets::any::io::TsvAnalyzer;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tsv", standard: StandardId("iana"), subset: SubsetId("*") };
@@ -68,7 +68,7 @@ pub use derived_composition::*;
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure `ComposerEntry` aggregation, no
 /// engine needed.
 pub mod io_registry {
-    use crate::standards::iana::subsets::any::schema::TsvComposer as TsvRawAnyComposer;
+    use crate::standards::iana::subsets::any::io::TsvComposer as TsvRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -80,3 +80,132 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::standards::iana::subsets::any::schema::diff::TsvDiff;
+    use crate::standards::iana::subsets::any::schema::mutations::{apply_tsv_mutation, TsvMutation};
+    use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct TsvBuilderConstruction {
+        snapshot: TsvSnapshot,
+    }
+
+    impl ArtifactBuilder for TsvBuilderConstruction {
+        type Snapshot = TsvSnapshot;
+        type Mutation = TsvMutation;
+        type Diff = TsvDiff;
+        fn empty() -> Self {
+            Self { snapshot: TsvSnapshot::default() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(crate::standards::iana::subsets::any::io::text::snapshot::read_tsv_source_text(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(crate::standards::iana::subsets::any::io::binary::snapshot::read_tsv_source_binary(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = apply_tsv_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <TsvDiff as protocol::MutationDiff<TsvSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            Ok(self.snapshot)
+        }
+    }
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::standards::iana::subsets::any::schema::snapshot;
+    use crate::standards::iana::subsets::any::schema::snapshot::{TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct TsvParts {
+        pub snapshot: Option<TsvSnapshot>,
+    }
+
+    pub struct TsvAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for TsvAnalyzerAnalysis {
+        type Parts = TsvParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tsv", standard: StandardId("iana"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    if snapshot::sniff_real_bytes(bytes) {
+                        return IoConfidence::High;
+                    }
+                    let marker = STDIO_TSV_DOCUMENT_SCHEMA.as_bytes();
+                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    if snapshot::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_TSV_DOCUMENT_SCHEMA) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = TsvParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match crate::standards::iana::subsets::any::io::text::snapshot::read_tsv_source_text(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match crate::standards::iana::subsets::any::io::binary::snapshot::read_tsv_source_binary(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec TsvBuilderFacets {
+        construction: TsvBuilderConstruction,
+        analysis: TsvAnalyzerAnalysis,
+        composition: crate::standards::iana::subsets::any::io::derived_composition::TsvComposerComposition,
+    }
+    builder: TsvBuilder,
+    analyzer: TsvAnalyzer,
+    composer: TsvComposer,
+);

@@ -5,19 +5,19 @@ use semio_framework_job::{StepBudget, root_cancel_token};
 use semio_framework_schema_composition::{ArtifactCompositionFields, ChildRefFields, ChildRefVisitor, ChildSlotSpec};
 use std::cell::Cell;
 
-struct FixtureNode {
+struct SnapshotNode {
     reference: ArtifactRef,
     owner: Option<OwnerRef>,
     children: Vec<ChildRef>,
 }
 struct FixtureSource {
     generation: Cell<u64>,
-    root: FixtureNode,
-    members: Vec<FixtureNode>,
+    root: SnapshotNode,
+    members: Vec<SnapshotNode>,
     projections: Cell<usize>,
 }
 
-impl ArtifactCompositionFields for FixtureNode {
+impl ArtifactCompositionFields for SnapshotNode {
     fn child_slots() -> &'static [ChildSlotSpec] {
         &[
             ChildSlotSpec { name: "objects", kind: "s.stdio.semio", many: true },
@@ -61,8 +61,8 @@ impl OwnedDocumentClosureSource for FixtureSource {
 }
 
 fn fixture_source(input: &serde_json::Value) -> FixtureSource {
-    fn node(row: &serde_json::Value) -> FixtureNode {
-        FixtureNode {
+    fn node(row: &serde_json::Value) -> SnapshotNode {
+        SnapshotNode {
             reference: semio_framework_pack_json::from_json_str(&row["reference"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),
             owner: row.get("owner").map(|owner| semio_framework_pack_json::from_json_str(&owner.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()),
             children: semio_framework_pack_json::from_json_str(&row["children"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(),
@@ -82,8 +82,8 @@ fn chain(count: usize) -> FixtureSource {
     FixtureSource {
         generation: Cell::new(7),
         projections: Cell::new(0),
-        root: FixtureNode { reference: reference(0), owner: None, children: children(0) },
-        members: (1..=count).map(|index| FixtureNode { reference: reference(index), owner: Some(OwnerRef { parent: reference(index - 1), slot: "children".into(), child_id: format!("node-{index}") }), children: children(index) }).collect(),
+        root: SnapshotNode { reference: reference(0), owner: None, children: children(0) },
+        members: (1..=count).map(|index| SnapshotNode { reference: reference(index), owner: Some(OwnerRef { parent: reference(index - 1), slot: "children".into(), child_id: format!("node-{index}") }), children: children(index) }).collect(),
     }
 }
 

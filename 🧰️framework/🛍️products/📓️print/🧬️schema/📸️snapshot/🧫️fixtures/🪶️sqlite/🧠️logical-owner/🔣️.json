@@ -1,0 +1,29 @@
+{
+  "contract": "print-chart-native-owner-v1",
+  "cases": [
+    {
+      "id": "full-domain",
+      "index": 0,
+      "text": "🗣️0.dsl.semio",
+      "pack": "🎒️0.pack.semio"
+    },
+    {
+      "id": "explicit-language-minimal",
+      "index": 1,
+      "text": "🗣️1.dsl.semio",
+      "pack": "🎒️1.pack.semio"
+    },
+    {
+      "id": "authored-default-without-language",
+      "index": 2,
+      "text": "🗣️2.dsl.semio",
+      "pack": "🎒️2.pack.semio"
+    },
+    {
+      "id": "present-empty-optionals",
+      "index": 3,
+      "text": "🗣️3.dsl.semio",
+      "pack": "🎒️3.pack.semio"
+    }
+  ]
+}

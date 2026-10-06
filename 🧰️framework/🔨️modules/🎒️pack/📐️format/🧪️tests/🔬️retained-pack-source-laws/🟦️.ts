@@ -1,12 +1,9 @@
 import assert from "node:assert/strict";
-import Ajv2020 from "ajv/dist/2020.js";
+
 import { applyPatch, type Operation } from "fast-json-patch";
 import corpus from "../../../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 
 export function testRetainedPackPhysicalOwnership(): void {
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert(validate(corpus), JSON.stringify(validate.errors));
   assert(corpus.physicalOwnership.pageItemMinimumBytes > corpus.admission.pageBytes);
   assert.equal(corpus.physicalOwnership.zeroGrant.mutates, false);
   const events = [

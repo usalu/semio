@@ -6,19 +6,21 @@
 //! `🛠️tool-machine` runner. Every selection transform — a board gesture record, `translateSelection`, the HUD
 //! `move`/`rotate`/`scale`, a keyboard nudge, an inspector `delta` — enters as a [`Puzzle2dSelectionRecord`]
 //! and leaves as ONE `ToolTransaction`: the parametric `drag-`/`rotate-`/`scale-selection` leaf plus the
-//! `connect-handles` its drop lands, targets and edge ids literal. Tool state is never history; the yielded
+//! `connect-handles` its drop lands, targets and edge ids literal, each stating the proximity tolerance it was
+//! recorded under (design §22.13). Tool state is never history; the yielded
 //! mutations are (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §8).
 #![allow(unexpected_cfgs)]
 
 use crate::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_pairs;
-use crate::editor::puzzle2d::{fixture_nodes, puzzle2d_occupied_handles, puzzle2d_push_edge, PUZZLE2D_PROXIMITY_GESTURE_MAX};
-use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, connect_handles, drag_selection, rotate_selection, scale_selection, Puzzle2dMutation};
+use crate::editor::puzzle2d::{board_snapshot_nodes, puzzle2d_occupied_handles, puzzle2d_push_edge, PUZZLE2D_PROXIMITY_GESTURE_MAX};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_puzzle2d_mutation, connect_handles_in_proximity, drag_selection, puzzle2d_handle_distance, rotate_selection, scale_selection, Puzzle2dMutation};
+use crate::standards::v1::subsets::any::io::text::mutations::{puzzle2d_declared_precision};
 use crate::Puzzle2dSnapshot;
 use machine::Command;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
-use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
+use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolMachineRunner, ToolStep, ToolYield};
 use serde_json::{json, Value};
 use std::sync::Arc;
 
@@ -255,35 +257,11 @@ machine::statechart! {
     }
 }
 
-/// 🎚️ Where one dispatch of a selection transform sits in a select-tool gesture: a one-shot `Once`, a `Stream`
-/// tick into the window's open transaction, the `Commit` that ends it, or a host `Abort` with its reason.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Puzzle2dSelectPhase {
-    Once,
-    Stream,
-    Commit,
-    Abort(ToolAbortReason),
-}
-
-impl Puzzle2dSelectPhase {
-    /// 🧩️ Reads a transform verb's `phase` (`stream` | `commit` | `abort`, absent = one-shot) and an abort's
-    /// `reason` (`blur`, `captureLost`, `baseMoved`, `frozen`, `retired`; absent = `tool`); `None` for an unknown one.
-    pub fn from_args(args: Option<&Value>) -> Option<Self> {
-        let text = |key: &str| args.and_then(|args| args.get(key)).and_then(Value::as_str);
-        match text("phase") {
-            None => Some(Self::Once),
-            Some("stream") => Some(Self::Stream),
-            Some("commit") => Some(Self::Commit),
-            Some("abort") => text("reason").map_or(Some(ToolAbortReason::Tool), ToolAbortReason::parse).map(Self::Abort),
-            Some(_) => None,
-        }
-    }
-}
-
-/// 🧯️ A host abort of a persisted gesture: the open transaction vanishes with zero trace. Answers whether a gesture
-/// was open.
-pub fn puzzle2d_select_tool_abort(state: &Puzzle2dSelectToolState, reason: ToolAbortReason) -> bool {
-    Puzzle2dSelectTool::resume(state).is_ok_and(|mut tool| matches!(tool.abort(reason), ToolStep::Aborted(..)))
+/// 🎚️ Reads a transform verb's `phase` (`stream` | `commit` | `abort`, absent = one-shot) and an abort's `reason`
+/// (`blur`, `captureLost`, `baseMoved`, `frozen`, `retired`; absent = `tool`); `None` for an unknown one.
+pub fn puzzle2d_gesture_phase(args: Option<&Value>) -> Option<GesturePhase> {
+    let text = |key: &str| args.and_then(|args| args.get(key)).and_then(Value::as_str);
+    GesturePhase::parse(text("phase"), text("reason"))
 }
 
 /// 🔑️ The transaction key of a gesture's parametric leaf — the one key every record and stream tick upserts, so an
@@ -304,100 +282,43 @@ impl machine::Host<select_tool::SelectTool> for SelectToolHost {
     }
 }
 
-/// 🧷️ One provisional entry of a persisted select-tool transaction, its mutation in value form so the window
-/// transient retires it like any other value.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dSelectToolEntry {
-    pub key: String,
-    pub mutation: semio_framework_value::DslValue,
-}
+/// 🧭️ The select tool on the framework gesture runner: a streamed transform is the window's ONE gesture in its
+/// gesture slot — started, resumed, persisted, previewed and ended there, never by this editor. A resumed stream
+/// recovers its net transform from the open transaction's one leaf and whether its drop connects from the context it
+/// persisted.
+impl GestureChart for select_tool::SelectTool {
+    type Tick = SelectToolRequest;
+    type Host = SelectToolHost;
 
-/// 💾️ A window's in-flight select-tool gesture, persisted in its window transient between dispatches — ephemeral
-/// local tool state, never history: the statechart configuration by stable ids, the admission and document
-/// revision it opened on, whether its drop connects, and the open transaction's provisional entries.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle2dSelectToolState {
-    pub states: Vec<String>,
-    pub verb: String,
-    pub authoring_seed: String,
-    pub base_revision: String,
-    pub connect: bool,
-    pub transaction: protocol::TransactionRef,
-    pub entries: Vec<Puzzle2dSelectToolEntry>,
-}
-
-semio_framework_value::artifact_retire_struct!(Puzzle2dSelectToolEntry { key, mutation });
-semio_framework_value::artifact_retire_struct!(Puzzle2dSelectToolState { states, verb, authoring_seed, base_revision, connect, transaction, entries });
-
-/// 🛠️ One window's select tool for one dispatch: started at rest, or resumed from the gesture its window
-/// transient persisted, driven by one event or one host abort, and persisted back while its transaction is open.
-pub struct Puzzle2dSelectTool {
-    runner: ToolMachineRunner<select_tool::SelectTool, SelectToolHost>,
-    verb: String,
-    authoring_seed: String,
-    base_revision: String,
-}
-
-impl Puzzle2dSelectTool {
-    /// 🚀️ The tool at rest, for `<appId>#<verb>` under this admission's seed and document revision.
-    pub fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
-        let runner = ToolMachineRunner::start(format!("{PUZZLE2D_EDITOR_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), SelectToolContext::default(), SelectToolHost)?;
-        Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
+    fn tool(verb: &str) -> String {
+        format!("{PUZZLE2D_EDITOR_APP_ID}#{verb}")
     }
 
-    /// ⏯️ The gesture a window transient persisted, restored by stable ids with its open transaction; a state the
-    /// current chart cannot restore is refused (`Closed`), so the caller drops it with zero trace.
-    pub fn resume(state: &Puzzle2dSelectToolState) -> Result<Self, ToolRefusal> {
-        let definition = <select_tool::SelectTool as machine::Machine>::definition();
-        let persisted = machine::PersistedSnapshot { version: 1, fingerprint: definition.fingerprint, states: state.states.clone(), history: Vec::new(), done: false };
-        let entries = state.entries.iter().map(|entry| Ok((entry.key.clone(), semio_framework_value::FromValue::from_value(entry.mutation.clone()).map_err(|_| ToolRefusal::Closed)?))).collect::<Result<Vec<(String, Puzzle2dMutation)>, ToolRefusal>>()?;
-        let stream = entries.iter().find(|(key, _)| key == PUZZLE2D_SELECT_TOOL_LEAF_KEY).and_then(|(_, leaf)| Puzzle2dSelectionRecord::from_leaf(leaf, state.connect));
-        let snapshot = machine::restore::<select_tool::SelectTool, machine::NoMigrations>(&persisted, SelectToolContext { stream }, &[]).map_err(|_| ToolRefusal::Closed)?;
-        let transaction = ToolTransaction::resume(state.transaction.clone(), entries);
-        let runner = ToolMachineRunner::resume(format!("{PUZZLE2D_EDITOR_APP_ID}#{}", state.verb), protocol::ActorId(state.authoring_seed.clone()), SelectToolContext::default(), snapshot, Some(transaction), SelectToolHost)?;
-        Ok(Self { runner, verb: state.verb.clone(), authoring_seed: state.authoring_seed.clone(), base_revision: state.base_revision.clone() })
+    fn host() -> SelectToolHost {
+        SelectToolHost
     }
 
-    /// 📐️ The document revision the open gesture was opened on.
-    pub fn base_revision(&self) -> &str {
-        &self.base_revision
+    fn input() -> SelectToolContext {
+        SelectToolContext::default()
     }
 
-    /// 🏷️ The transform verb whose gesture the tool drives.
-    pub fn verb(&self) -> &str {
-        &self.verb
+    fn restore(entries: &[(String, Puzzle2dMutation)], context: &semio_framework_value::DslValue) -> Option<SelectToolContext> {
+        let connect = matches!(context, semio_framework_value::DslValue::Bool(true));
+        Some(SelectToolContext { stream: entries.iter().find(|(key, _)| key == PUZZLE2D_SELECT_TOOL_LEAF_KEY).and_then(|(_, leaf)| Puzzle2dSelectionRecord::from_leaf(leaf, connect)) })
     }
 
-    /// 🛋️ Whether the tool rests (no gesture in flight).
-    pub fn at_rest(&self) -> bool {
-        self.runner.at_rest()
+    fn context(context: &SelectToolContext) -> semio_framework_value::DslValue {
+        semio_framework_value::DslValue::Bool(context.stream.as_ref().is_some_and(|stream| stream.connect))
     }
 
-    /// 📨️ Runs one event on the host clock.
-    pub fn send(&mut self, event: select_tool::Event) -> Result<ToolStep<Puzzle2dMutation>, ToolRefusal> {
-        self.runner.send(event, semio_framework_tool_machine::authoring_clock(0))
-    }
-
-    /// 🧯️ Host abort: the open transaction vanishes with zero trace and the tool rests.
-    pub fn abort(&mut self, reason: ToolAbortReason) -> ToolStep<Puzzle2dMutation> {
-        self.runner.abort(reason)
-    }
-
-    /// 💾️ The state to persist in the window transient: `Some` only while a transaction is open.
-    pub fn persist(self) -> Option<Puzzle2dSelectToolState> {
-        let (snapshot, transaction) = self.runner.into_parts();
-        let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
-        Some(Puzzle2dSelectToolState {
-            states: machine::persist(&snapshot).states,
-            verb: self.verb,
-            authoring_seed: self.authoring_seed,
-            base_revision: self.base_revision,
-            connect: snapshot.context.stream.as_ref().is_some_and(|stream| stream.connect),
-            transaction: transaction.reference().clone(),
-            entries: transaction.entries().iter().map(|(key, mutation)| Puzzle2dSelectToolEntry { key: key.clone(), mutation: semio_framework_value::ToValue::to_value(mutation) }).collect(),
-        })
+    fn event(phase: GesturePhase, at_rest: bool, tick: Option<SelectToolRequest>) -> Option<select_tool::Event> {
+        let request = tick?;
+        match phase {
+            GesturePhase::Stream => Some(select_tool::Event::Stream(request)),
+            GesturePhase::Commit if !at_rest => Some(select_tool::Event::Finish(request)),
+            GesturePhase::Once | GesturePhase::Commit => Some(select_tool::Event::Records(request)),
+            GesturePhase::Abort(_) => None,
+        }
     }
 }
 
@@ -412,29 +333,21 @@ pub fn puzzle2d_select_tool_commit(verb: &str, authoring_seed: &str, clock: prot
     }
 }
 
-/// 👁️ The document a window paints while its select tool holds an open transaction: the provisional entries
-/// applied to `document` — a preview only this window sees, never history. An entry the preview refuses paints nothing (a
-/// preview shows only what applies) and its refusal is never lost: the commit that lands the same entry on the committed
-/// document reports it as the history row's outcome.
-pub fn puzzle2d_select_tool_preview(document: &Puzzle2dSnapshot, state: &Puzzle2dSelectToolState) -> Puzzle2dSnapshot {
-    let mut preview = document.clone();
-    for mutation in state.entries.iter().filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()) {
-        let _refused_paints_nothing = apply_puzzle2d_mutation(&mut preview, &mutation);
-    }
-    preview
-}
-
 /// 🧮️ What the select tool yields for `records` on `base`, keyed: each movable record's parametric leaf, then the
 /// `connect-handles` its drop lands — the handle pairs the board recorded first, then (for a drop) the proximity
 /// search over the moved state — until the gesture's [`PUZZLE2D_PROXIMITY_GESTURE_MAX`] budget is spent. Every
-/// edge id is minted HERE, deterministically from its pair and the document, so a replay never mints again.
+/// edge id is minted HERE, deterministically from its pair and the document, so a replay never mints again. Every
+/// connection states the tolerance it was recorded under: `radius`, widened to the two handles' distance on the
+/// moved state where the board paired them from farther away — the precondition a replay checks instead of searching
+/// again. Every leaf is committed at the precision its inputs declare ([`puzzle2d_declared_precision`]); a motion that
+/// rounds to the identity yields nothing.
 pub fn puzzle2d_selection_yields(base: &Puzzle2dSnapshot, records: &[Puzzle2dSelectionRecord], radius: f64) -> Vec<(String, Puzzle2dMutation)> {
     let mut state = base.clone();
     let mut yields = Vec::new();
     let mut connects = 0usize;
     for (index, record) in records.iter().enumerate() {
-        let leaf = record.mutation();
-        if !record.applies_to(&state) || apply_puzzle2d_mutation(&mut state, &leaf).is_err() {
+        let leaf = puzzle2d_declared_precision(record.mutation());
+        if !record.applies_to(&state) || !Puzzle2dSelectionRecord::from_leaf(&leaf, false).is_some_and(|committed| committed.moves()) || apply_puzzle2d_mutation(&mut state, &leaf).is_err() {
             continue;
         }
         yields.push((format!("selection:{index}"), leaf));
@@ -463,7 +376,8 @@ pub fn puzzle2d_selection_yields(base: &Puzzle2dSnapshot, records: &[Puzzle2dSel
                 break;
             }
             let id = puzzle2d_minted_edge_id(&state, &source, &target);
-            let connect = connect_handles(id.clone(), source, target, None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None);
+            let tolerance = puzzle2d_handle_distance(&state, &source, &target).map_or(radius.max(0.0), |distance| distance.max(radius));
+            let connect = connect_handles_in_proximity(id.clone(), source, target, tolerance);
             if apply_puzzle2d_mutation(&mut state, &connect).is_ok() {
                 yields.push((format!("connect:{id}"), connect));
                 connects += 1;
@@ -473,11 +387,11 @@ pub fn puzzle2d_selection_yields(base: &Puzzle2dSnapshot, records: &[Puzzle2dSel
     yields
 }
 
-/// 🔌️ Whether `source` → `target` can still connect on `fixture`: two distinct handles on two distinct nodes,
+/// 🔌️ Whether `source` → `target` can still connect on `snapshot`: two distinct handles on two distinct nodes,
 /// neither already carrying an edge.
-fn puzzle2d_handles_open(fixture: &Value, source: &str, target: &str) -> bool {
-    let owner = |handle_id: &str| fixture_nodes(fixture).iter().find(|node| node.get("handles").and_then(Value::as_array).is_some_and(|handles| handles.iter().any(|handle| handle.get("id").and_then(Value::as_str) == Some(handle_id)))).and_then(|node| node.get("id").and_then(Value::as_str));
-    let occupied = puzzle2d_occupied_handles(fixture);
+fn puzzle2d_handles_open(snapshot: &Value, source: &str, target: &str) -> bool {
+    let owner = |handle_id: &str| board_snapshot_nodes(snapshot).iter().find(|node| node.get("handles").and_then(Value::as_array).is_some_and(|handles| handles.iter().any(|handle| handle.get("id").and_then(Value::as_str) == Some(handle_id)))).and_then(|node| node.get("id").and_then(Value::as_str));
+    let occupied = puzzle2d_occupied_handles(snapshot);
     source != target && !occupied.contains(source) && !occupied.contains(target) && matches!((owner(source), owner(target)), (Some(from), Some(to)) if from != to)
 }
 

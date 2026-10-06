@@ -1,11 +1,13 @@
 //! 🦀️ Rust side of the result-parsing case: every runner dialect folded into one outcome model.
 
 use semio_framework_repo_test_runner as subject;
+#[path = "../../🧪️testing/🦀️.rs"]
+mod examples;
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Support
-fn vectors(ctx: &Context) -> Result<subject::TranscriptVectors, String> {
-    subject::parse_transcript_vectors(&ctx.fixture_bytes("shared://📜️runner-transcripts.json")?)
+fn vectors(ctx: &Context) -> Result<examples::TranscriptVectors, String> {
+    examples::parse_transcript_vectors(&ctx.input_bytes("shared://📜️runner-transcripts.json")?)
 }
 
 fn outcome_json(outcome: &subject::TestOutcome) -> Result<Json, String> {

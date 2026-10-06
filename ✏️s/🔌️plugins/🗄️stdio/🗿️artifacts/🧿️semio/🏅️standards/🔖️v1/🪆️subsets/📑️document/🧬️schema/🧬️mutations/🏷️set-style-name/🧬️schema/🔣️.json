@@ -15,10 +15,41 @@
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Style",
+          "de": "Formatvorlage"
+        },
+        "description": {
+          "en": "Id of the style.",
+          "de": "Kennung der Formatvorlage."
+        },
+        "ref": {
+          "kind": "style"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Style name",
+          "de": "Name der Formatvorlage"
+        },
+        "description": {
+          "en": "Display name of the style.",
+          "de": "Anzeigename der Formatvorlage."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

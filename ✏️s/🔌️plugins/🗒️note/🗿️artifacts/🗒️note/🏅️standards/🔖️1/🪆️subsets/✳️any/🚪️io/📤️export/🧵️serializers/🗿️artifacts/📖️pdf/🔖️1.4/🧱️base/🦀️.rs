@@ -1,6 +1,6 @@
 //! 📤️ Exports note text onto one PDF 1.4 page.
 
-use crate::io::note_document_bounds;
+use crate::standards::v1::subsets::any::io::note_document_bounds;
 use crate::schema::flatten_blocks;
 use crate::{NoteBlockNode, NoteSnapshot};
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};

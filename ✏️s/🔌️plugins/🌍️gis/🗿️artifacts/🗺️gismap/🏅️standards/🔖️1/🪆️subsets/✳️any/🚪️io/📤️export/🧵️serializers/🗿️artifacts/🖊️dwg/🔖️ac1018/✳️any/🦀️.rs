@@ -11,5 +11,5 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_d
 pub fn register() {}
 
 pub fn serialize_bytes(snapshot: &GisMapSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    encode_drawing(&gis_map_snapshot_to_world_drawing(snapshot), SemioDrawingFormat::Dwg).map_err(|error| semio_framework_diagnostic::TextError::new(format!("gismap→dwg: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
+    encode_drawing(&gis_map_snapshot_to_world_drawing(snapshot), SemioDrawingFormat::Dwg).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("gismap→dwg: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }

@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle
@@ -39,8 +39,8 @@ const logLines = (vectors: StoreVectors): string =>
     )
     .join("\n") + "\n";
 
-const readVectors = (ctx: { fixtureBytes(uri: string): Uint8Array }): StoreVectors =>
-  JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://🗄️store-vectors.json")));
+const readVectors = (ctx: { inputBytes(uri: string): Uint8Array }): StoreVectors =>
+  JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://🗄️store-vectors.json")));
 //#endregion 🔮️Oracle
 
 //#region 🧭️Adapter

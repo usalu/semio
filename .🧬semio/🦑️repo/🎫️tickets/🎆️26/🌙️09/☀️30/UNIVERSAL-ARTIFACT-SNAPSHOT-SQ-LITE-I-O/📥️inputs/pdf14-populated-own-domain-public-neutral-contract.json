@@ -1,0 +1,48 @@
+{
+  "codecSchema": "stdio.pdf",
+  "structuralSchema": "s.stdio.pdf",
+  "dialect": {
+    "artifact_kind": "s.stdio.pdf",
+    "standard": "1.4",
+    "subset": "*"
+  },
+  "owner": {
+    "schema": "stdio.pdf",
+    "pages": [
+      {
+        "width": 200,
+        "height": 300,
+        "text": "First page"
+      },
+      {
+        "width": 400,
+        "height": 500,
+        "text": "Second page"
+      }
+    ]
+  },
+  "editedOwner": {
+    "schema": "stdio.pdf",
+    "pages": [
+      {
+        "width": 200,
+        "height": 300,
+        "text": "First page"
+      },
+      {
+        "width": 8,
+        "height": 9,
+        "text": "Independent page edit"
+      }
+    ]
+  },
+  "geometryPolicy": "finite-only",
+  "publicMetadataColumns": [
+    "id",
+    "schema_version",
+    "artifact_kind",
+    "standard",
+    "subset",
+    "native_encoding"
+  ]
+}

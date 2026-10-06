@@ -5,7 +5,6 @@ use crate::{Edge, EntityRef, Graph, Node, PropertyValue};
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ast::{Clause, Expr, Pattern, Query, QueryResult, ReturnItem};
-use crate::language_service::parse;
 
 /// 🎯️ Variable binding in a match row.
 #[derive(Clone, Debug, Default)]
@@ -30,11 +29,42 @@ pub enum GraphEffect {
 
 #[path = "🪜️execution/🦀️.rs"]
 mod execution;
-pub use execution::{QueryExecution, QueryExecutionPreparation, QueryPreparationStep};
-pub(crate) use execution::QUERY_OUTPUT_MAXIMUM_BYTES;
+pub use execution::{QueryExecution, QueryExecutionPreparation, QueryPreparationStep, QUERY_RESULT_MAXIMUM_OWNED_BYTES};
 use execution::{emit_create_operations_from_graph, emit_set_operation_from_graph};
 
-/// ▶️ Executes a jack query against a graph and returns the effects its mutating clauses apply.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// #endregion 🔖️Executor
+// #region 🔖️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+// #endregion 🔖️Tests
+
+
+
 pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<GraphEffect>), String> {
     let mut view = graph.clone();
     let mut bindings: Vec<Binding> = vec![Binding::default()];
@@ -90,21 +120,7 @@ pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<GraphEf
     Ok((QueryResult::table(vec![], vec![]), effects))
 }
 
-/// ▶️ Parses and executes jack in one step, applying its effects to `graph`.
-pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
-    let query = parse(source)?;
-    let (result, effects) = execute(graph, &query)?;
-    crate::apply_graph_effects(graph, &effects).map_err(|e| e.to_string())?;
-    Ok(result)
-}
-
-/// ▶️ Executes jack and returns the JSON result.
-pub fn run_json(graph: &mut Graph, source: &str) -> Result<String, String> {
-    let result = run(graph, source)?;
-    Ok(semio_framework_pack_json::to_json_string(&result))
-}
-
-fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
+pub(crate) fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
     let mut bindings = vec![Binding::default()];
     for pattern in patterns {
         let mut next = Vec::new();
@@ -116,7 +132,7 @@ fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, S
     Ok(bindings)
 }
 
-fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, String> {
+pub(crate) fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec<Binding>, String> {
     let left = pattern.nodes.first().ok_or_else(|| "empty pattern".to_string())?;
     if let Some(edge_pat) = &pattern.edge {
         let mut out = Vec::new();
@@ -170,11 +186,11 @@ fn match_pattern(graph: &Graph, pattern: &Pattern, base: &Binding) -> Result<Vec
     Ok(out)
 }
 
-fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
+pub(crate) fn binding_conflicts(base: &Binding, var: &str, node_id: &str) -> bool {
     base.nodes.get(var).is_some_and(|existing| existing != node_id)
 }
 
-fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
+pub(crate) fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
     match expr {
         Expr::Eq { var, prop, value } => binding_value(graph, binding, var, prop) == Some(value.clone()),
         Expr::Ne { var, prop, value } => binding_value(graph, binding, var, prop) != Some(value.clone()),
@@ -183,7 +199,7 @@ fn eval_expr(graph: &Graph, binding: &Binding, expr: &Expr) -> bool {
     }
 }
 
-fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
+pub(crate) fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Option<PropertyValue> {
     let node_id = binding.nodes.get(var)?;
     let node = graph.node(node_id)?;
     match prop {
@@ -194,18 +210,18 @@ fn binding_value(graph: &Graph, binding: &Binding, var: &str, prop: &str) -> Opt
     }
 }
 
-fn binding_has_entity(binding: &Binding, var: &str) -> bool {
+pub(crate) fn binding_has_entity(binding: &Binding, var: &str) -> bool {
     binding.nodes.contains_key(var) || binding.edges.contains_key(var)
 }
 
-fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
+pub(crate) fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
     items.iter().any(|item| {
         let ReturnItem::Var(v) = item else { return false };
         bindings.iter().any(|b| binding_has_entity(b, v))
     })
 }
 
-fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
+pub(crate) fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeSet<String>, BTreeSet<String>) {
     let mut node_ids = BTreeSet::new();
     let mut edge_ids = BTreeSet::new();
     for binding in bindings {
@@ -223,7 +239,7 @@ fn collect_graph_entities(bindings: &[Binding], items: &[ReturnItem]) -> (BTreeS
     (node_ids, edge_ids)
 }
 
-fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
+pub(crate) fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> QueryResult {
     let columns: Vec<String> = items
         .iter()
         .map(|item| match item {
@@ -233,8 +249,8 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
         .collect();
     if return_items_want_graph(items, bindings) {
         let (node_ids, edge_ids) = collect_graph_entities(bindings, items);
-        let graph_fixture = graph.subgraph_fixture(&node_ids, &edge_ids);
-        return QueryResult::graph(columns, graph_fixture);
+        let graph_snapshot = graph.subgraph_snapshot(&node_ids, &edge_ids);
+        return QueryResult::graph(columns, graph_snapshot);
     }
     let mut rows = Vec::new();
     for binding in bindings {
@@ -250,10 +266,3 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
     }
     QueryResult::table(columns, rows)
 }
-
-// #endregion 🔖️Executor
-// #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-// #endregion 🔖️Tests

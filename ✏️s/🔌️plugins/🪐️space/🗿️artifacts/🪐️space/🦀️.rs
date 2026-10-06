@@ -120,17 +120,11 @@ pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_f
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                                pub mod text;
                                 #[path = "."]
                                 pub mod create_artifact {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/💾️binary/🦀️.rs"]
-                                    pub mod binary;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🔺️diff/🦀️.rs"]
                                     pub mod diff;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/↩️inverse/🦀️.rs"]
@@ -138,16 +132,12 @@ pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_f
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🧪️appends/🦀️.rs"]
                                     mod tests_appends_artifact_3_to_the_index;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/📝️text/🦀️.rs"]
-                                    pub mod text;
                                 }
                                 #[path = "."]
                                 pub mod delete_artifact {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/💾️binary/🦀️.rs"]
-                                    pub mod binary;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🔺️diff/🦀️.rs"]
                                     pub mod diff;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/↩️inverse/🦀️.rs"]
@@ -155,16 +145,12 @@ pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_f
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🧪️tests/🧪️removes/🦀️.rs"]
                                     mod tests_removes_artifact_2_from_the_index;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/📝️text/🦀️.rs"]
-                                    pub mod text;
                                 }
                                 #[path = "."]
                                 pub mod rename_artifact {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/💾️binary/🦀️.rs"]
-                                    pub mod binary;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/🔺️diff/🦀️.rs"]
                                     pub mod diff;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/↩️inverse/🦀️.rs"]
@@ -172,16 +158,12 @@ pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_f
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/🧪️tests/🧪️renames-artifact-1/🦀️.rs"]
                                     mod tests_renames_artifact_1;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-artifact/📝️text/🦀️.rs"]
-                                    pub mod text;
                                 }
                                 #[path = "."]
                                 pub mod touch_artifact {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/💾️binary/🦀️.rs"]
-                                    pub mod binary;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🔺️diff/🦀️.rs"]
                                     pub mod diff;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/↩️inverse/🦀️.rs"]
@@ -189,8 +171,6 @@ pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_f
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🧪️tests/🧪️stamps/🦀️.rs"]
                                     mod tests_stamps_artifact_1_with_a_new_editor;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/📝️text/🦀️.rs"]
-                                    pub mod text;
                                 }
                             }
                         }

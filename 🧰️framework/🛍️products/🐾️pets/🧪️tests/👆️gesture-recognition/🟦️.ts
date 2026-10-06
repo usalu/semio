@@ -155,7 +155,7 @@ export type Vectors = {
 
 /** 📂️ The committed vectors of a plan. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** 🧵️ The points of a path, one per tick, in quanta. */

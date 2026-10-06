@@ -1,0 +1,11 @@
+# Surface Explicit Codec Owner
+
+The current source1 proposal is eight exact current pairs: NodeGraph root, five owned diagnostic implementation/corpus files, Surface normal Pack dependency and the original whole unit-law body. It retains the Canvas19 authored caller/resource cuts and current full production preimages. No production or Cargo invocation occurred.
+
+The public error enum exposing serde, OS Pack and Product DAG variants becomes owned NodeGraphErrorKind plus a private standard Error cause. Original Display text and source diagnostics remain exact. All producer error maps declare their original category explicitly; no public external From implementation or alias remains. The original three category assertions still assert exactly Json/Json/Dag.
+
+GraphHost intrinsic decoding now requires the actual General Body/Document format, DecodeOptions and caller-owned cumulative NativeDecodeControl. It calls the defining General intrinsic decoder once and derives the existing payload under the same control, rather than retrying another frame or converting through Store. The browser ABI caller supplies explicit framing, finite input/ownership limits and actual progress cancellation; its generated TypeScript ABI and actual frontend callers still need composition.
+
+The original document law keeps its input encoder, node data and assertion, adding explicit Document/options/control arguments. No corpus or expected node result changes. Six closed neutral error vectors cover every category, empty and Unicode/NUL messages; owned TS and independent installed SQLite observations agree, and owned schema validation agrees with Ajv. The genuine RED77008 ended1 at the missing owned category accessor after those controls. Stage68616 ended0, with92 original function observations and a conserved full Rust grammar frontier.
+
+Full SourceReady remains false: eight nested Store packed-field expansion calls, public serde input, real Product DAG owner, generated/browser ABI and original native whole execution remain. This bounded source does not retire all three Specific dependencies or prove broader Generic-only physical deletion. Exact authority: generated/surface-codec-owner/source-1.json; RED: error-owner-red-1.json.

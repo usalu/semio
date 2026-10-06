@@ -137,20 +137,12 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                                pub mod text;
                             }
                             #[path = "."]
                             pub mod inferences {
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                                pub mod text;
                                 #[path = "."]
                                 pub mod digest {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🆔digest/🦀️.rs"]
@@ -163,11 +155,6 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                                pub mod text;
-                                pub use text::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                                pub mod binary;
                             }
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🦀️.rs"]
                             pub mod operations;
@@ -176,10 +163,6 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
                                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                                pub mod binary;
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                                pub mod text;
                                 #[path = "."]
                                 pub mod change_catalog_generation {
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🦀️.rs"]
@@ -189,13 +172,9 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     pub use component::*;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/💾️binary/🦀️.rs"]
-                                    pub mod binary;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/🧪️bumps/🦀️.rs"]
                                     mod tests_bumps_the_catalog_generation_to_7;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-catalog-generation/📝️text/🦀️.rs"]
-                                    pub mod text;
                                 }
                             }
                         }
@@ -469,3 +448,5 @@ pub mod presence {
         }
     }
 }
+
+pub use crate::standards::v1::subsets::any::io::{HomeBuilderConstruction, SHomeParts, SHomeAnalyzerAnalysis, HomeBuilderFacets, HomeBuilder, SHomeAnalyzer, SHomeComposer};

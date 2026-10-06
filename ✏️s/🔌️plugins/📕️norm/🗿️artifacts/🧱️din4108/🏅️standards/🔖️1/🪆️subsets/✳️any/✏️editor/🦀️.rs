@@ -11,7 +11,7 @@ use crate::editor::din4108::commands::{apply_remedy, evaluate, insert_item, remo
 use crate::editor::din4108::modes::edit as edit_mode;
 use crate::editor::din4108::modes::edit::windows::{inputs, results};
 use crate::editor::din4108::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::op::Din4108Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Din4108Mutation;
 use crate::Din4108Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::InteractiveJobClassification;
@@ -147,7 +147,7 @@ impl ArtifactEditor for Din4108PlayApp {
     /// the three verbs were already `Migrated`, retained and proven, and were still inert in the shell.
     /// `setSnapshot` carries the whole compliance document, so its argument is that document's own
     /// camelCase JSON projection (exactly what the Inputs window renders).
-    semio_s_artifact_norm_contract::norm_command_from_action!(Din4108Command, crate::standards::v1::subsets::any::schema::snapshot::decode_din4108_snapshot_json);
+    semio_s_artifact_norm_contract::norm_command_from_action!(Din4108Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_din4108_snapshot_json);
 
     fn handle(
         command: &Din4108Command,

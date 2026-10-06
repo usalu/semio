@@ -11,7 +11,7 @@ async fn inference_determinism_law() {
     use protocol::Inference;
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = crate::document_dsl::parse_dsl(text).expect("demo asset parses as a forms snapshot");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("demo asset parses as a forms snapshot");
     let inference = crate::standards::v1::subsets::any::schema::inferences::FormsInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::FormsInference::infer(&snapshot).expect("valid materialized inference fixture"));
 

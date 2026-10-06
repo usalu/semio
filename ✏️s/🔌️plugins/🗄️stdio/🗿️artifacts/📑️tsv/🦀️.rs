@@ -168,20 +168,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod outline {
                             #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧾outline/🦀️.rs"]
@@ -194,23 +186,24 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
-            }
+            
+#[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+pub mod io;
+
+#[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+pub mod io;
+
+#[path = "🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
+pub mod io;
+}
         }
     }
 }
@@ -297,3 +290,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::iana::subsets::any::io::{TsvBuilderConstruction, TsvParts, TsvAnalyzerAnalysis, TsvBuilderFacets, TsvBuilder, TsvAnalyzer, TsvComposer};

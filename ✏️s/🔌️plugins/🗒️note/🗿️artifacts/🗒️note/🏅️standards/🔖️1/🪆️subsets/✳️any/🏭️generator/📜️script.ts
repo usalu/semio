@@ -11,21 +11,21 @@
 // links `dxf` 0.6, `quick-xml` 0.42 and `lopdf` 0.44 DIRECTLY (the SAME crates already registered as
 // this subset's oracle in `../🔮️oracles/🔣️.json`), never note's own (currently non-building)
 // production serializers. This file only marshals: it shells out to `cargo run`, computes digests
-// over what the crate wrote, and emits/merges the `fixtureManifests` index — exactly the split
+// over what the crate wrote, and emits/merges the `testEvidence` index — exactly the split
 // `…✳️mesh/🏭️generator/📜️script.ts` and `…✳️cad/🏭️generator/📜️script.ts` already use.
 //
 // Generation and execution are SEPARATE operations: a normal test run must never be able to rewrite
 // the expectation it is measured against.
 //
 //   bun 📜️script.ts generate [--only <recipe-id>]...   — writes each subset's handpicked physical fixture paths
-//   bun 📜️script.ts manifests [--only <recipe-id>]...  — emits the fixtureManifests block to stdout
+//   bun 📜️script.ts manifests [--only <recipe-id>]...  — emits the testEvidence block to stdout
 //
 // `SEMIO_FIXTURE_OUT` (set by `test fixture generate|reproduce`) is a FIXTURES ROOT; every recipe
 // writes `<root>/<recipe>/<file>`. Absent it, the committed 🧫️fixtures directory is the root.
 //
 // @see ./🔁️codec/🧫️recipes/🦀️.rs — the 16 recipes (one per witnessable mutation)
 // @see ../🔬️probes/📜️script.ts — the sibling that reads/compares what this file writes
-// @see ../🔮️oracles/🔣️.json — the fixtureManifests this file's `manifests` output is pasted into
+// @see ../🔮️oracles/🔣️.json — the testEvidence this file's `manifests` output is pasted into
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️note-1-any-fixture-corpus.md
 
 //#endregion 🧲️Header
@@ -37,7 +37,7 @@ import { dirname, join } from "node:path";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-type FixtureFile = { role: string; path: string; mediaType: string; sha256: string; bytes: number };
+type EvidenceFile = { role: string; path: string; mediaType: string; sha256: string; bytes: number };
 type Recipe = { id: string; mutation: string; subset: string; subsetDirectoryName: string; directoryName: string; files: readonly { carrier: "dxf" | "svg" | "pdf"; before: string; after: string }[] };
 
 /** 🎯️ id, mutation kind, and which of dxf/svg/pdf carriers this recipe covers — MIRRORS
@@ -93,7 +93,7 @@ function runCodec(args: readonly string[]): { status: number | null; stderr: str
 
 async function fixtureManifestFor(recipe: Recipe, outDir: string, committed: boolean): Promise<Record<string, unknown>> {
   const dir = committed ? join(outDir, recipe.subsetDirectoryName, "🧫️fixtures", recipe.directoryName) : join(outDir, recipe.id);
-  const files: FixtureFile[] = [];
+  const files: EvidenceFile[] = [];
   for (const physical of recipe.files) {
     const carrier = physical.carrier;
     for (const label of ["before", "after"] as const) {
@@ -105,7 +105,6 @@ async function fixtureManifestFor(recipe: Recipe, outDir: string, committed: boo
   }
   const primaryCarrier = recipe.files[0]!.carrier;
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.note.note", standard: "1", subset: recipe.subset },
@@ -188,7 +187,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const indexed = committed
     ? manifests.map((manifest) => {
         const recipe = RECIPES.find(({ id }) => id === manifest.id)!;
-        return { ...manifest, files: (manifest.files as FixtureFile[]).map((file) => ({ ...file, path: file.path.replace("../🧫️fixtures", `../../${recipe.subsetDirectoryName}/🧫️fixtures/`) })) };
+        return { ...manifest, files: (manifest.files as EvidenceFile[]).map((file) => ({ ...file, path: file.path.replace("../🧫️fixtures", `../../${recipe.subsetDirectoryName}/🧫️fixtures/`) })) };
       })
     : manifests;
   const produced = new Set(indexed.map((m) => m.id as string));

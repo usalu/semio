@@ -10,7 +10,7 @@ pub(crate) mod context {
     /// here so a step-budget law measures the exact unit the host drives rather than a wider one.
     pub const RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP: usize = 4_096;
     
-    /// 📏️ What the cooperative-maintenance units of one fixture released, per fixed maintenance stage, against the grant
+    /// 📏️ What the cooperative-maintenance units of one scene_snapshot released, per fixed maintenance stage, against the grant
     /// each unit was handed. A unit is bounded by its grant (`maximum_items`, `maximum_bytes`), not by the wall clock: the
     /// count is the same on an idle and a saturated machine, where the same unit that costs 19us alone was seen costing
     /// 14571us. Fixed capacity: the round robin has exactly [`MAINTENANCE_STAGES`] stages.
@@ -56,21 +56,21 @@ pub(crate) mod context {
         }
     }
 
-    /// 🧪️ The one puzzle3d fixture app. Wraps the raw wrapper so every fixture drains its stores on the
+    /// 🧪️ The one puzzle3d scene_snapshot app. Wraps the raw wrapper so every scene_snapshot drains its stores on the
     /// way out: a registry-backed `VcsArtifactApp` installs framework-owned `ArtifactStoreCursorDisposer`
     /// members whose own `Drop` asserts terminal-empty ownership (`🏪️store/🦀️.rs`), so a bare drop panics
     /// inside a destructor. `Drop` here therefore NEVER panics and never asserts: a second panic while a
     /// failing assertion is already unwinding is a non-unwinding abort that kills the whole test binary
     /// and hides the assertion that actually failed. A drain that cannot reach the witness leaks the raw
-    /// app instead ([`std::mem::forget`]) — leaking a fixture inside a test process costs nothing, and the
+    /// app instead ([`std::mem::forget`]) — leaking a scene_snapshot inside a test process costs nothing, and the
     /// close contract itself is stated exactly once, explicitly, by [`close_witness`].
     /// 📦️ The raw app is boxed on purpose: `Puzzle3dRawApp` is 42 KiB by value, and a law's `#[async_test]` future — which
-    /// `#[async_test]` pins ON THE STACK — moves the fixture through every frame of the harness. The default test thread
-    /// has 2 MiB, and the app-fixture laws in this crate already spend most of it inside the framework's own construction
+    /// `#[async_test]` pins ON THE STACK — moves the scene_snapshot through every frame of the harness. The default test thread
+    /// has 2 MiB, and the app-scene_snapshot laws in this crate already spend most of it inside the framework's own construction
     /// chain.
     pub struct Puzzle3dApp {
         raw: Option<Box<Puzzle3dRawApp>>,
-        /// 🪪️ The instance identity this fixture bound ([`next_fixture_instance_id`]) and therefore the receiver
+        /// 🪪️ The instance identity this scene_snapshot bound ([`next_fixture_instance_id`]) and therefore the receiver
         /// `take_typed_operation_result_page` answers for and the key of its session registry slot.
         pub instance_id: u32,
         /// 🏛️ The HOST's own session state, owned here because the host owns it in production: the live
@@ -78,10 +78,10 @@ pub(crate) mod context {
         /// (`📓️2026-09-09-peer-config-runtime-split.md` §1(d)). `setActiveTool`/`setActiveUtility` are
         /// dispatched by the framework as an empty `Emit` (`🔌️plugin/🦀️.rs` `dispatch_action`), so the app
         /// writes nothing and the ONLY thing that can carry an activation to the next call is this record.
-        /// Minting a fresh `ViewModel` per call — what this fixture used to do — made every activation
+        /// Minting a fresh `ViewModel` per call — what this scene_snapshot used to do — made every activation
         /// unobservable one call later, which is a state no real host can be in.
         view: ViewModel,
-        /// 📏️ Every cooperative-maintenance unit this fixture drove, audited against its grant per fixed stage.
+        /// 📏️ Every cooperative-maintenance unit this scene_snapshot drove, audited against its grant per fixed stage.
         pub maintenance: Box<MaintenanceStageGrants>,
     }
     
@@ -94,18 +94,18 @@ pub(crate) mod context {
     impl std::ops::Deref for Puzzle3dApp {
         type Target = Puzzle3dRawApp;
         fn deref(&self) -> &Self::Target {
-            self.raw.as_deref().expect("fixture app was already consumed by close_witness")
+            self.raw.as_deref().expect("scene_snapshot app was already consumed by close_witness")
         }
     }
     
     impl std::ops::DerefMut for Puzzle3dApp {
         fn deref_mut(&mut self) -> &mut Self::Target {
-            self.raw.as_deref_mut().expect("fixture app was already consumed by close_witness")
+            self.raw.as_deref_mut().expect("scene_snapshot app was already consumed by close_witness")
         }
     }
     
     impl Puzzle3dApp {
-        /// 🪟️ Registers one window instance in the fixture's live roster, exactly as the shell's own
+        /// 🪟️ Registers one window instance in the scene_snapshot's live roster, exactly as the shell's own
         /// `sessionWindowInstances` grows the moment a pane is opened or split. Idempotent.
         fn ensure_window(&mut self, window_id: &str) {
             if !self.view.window_instances.iter().any(|instance| instance.id == window_id) {
@@ -116,7 +116,7 @@ pub(crate) mod context {
         /// 🎯️ The exact per-call projection a host sends: the whole live session — roster, mode-wide tool,
         /// per-window utility map — addressed at ONE concrete window instance through the framework's own
         /// `ViewModel::for_window_instance`, which is what stamps `active_utility_id` for that pane.
-        /// 🗣️ Names the host's live label axes for every later render/measures call on this fixture. The
+        /// 🗣️ Names the host's live label axes for every later render/measures call on this scene_snapshot. The
         /// app resolves its label set from `ViewModel.locale`/`.terminology` and fails closed on an axis it
         /// never authored (`puzzle3d_labels`), so a test that asserts German or reuse text has to say so —
         /// there is no default language to fall back to.
@@ -139,7 +139,7 @@ pub(crate) mod context {
         }
     
         /// 🛠️🧰️ The shell's own activation branches (`🏛️ShellHost/🟦️.tsx`'s `SET_ACTIVE_TOOL_ACTION_ID`
-        /// and `SET_ACTIVE_UTILITY_ACTION_ID`), applied to this fixture's session BEFORE the verb is
+        /// and `SET_ACTIVE_UTILITY_ACTION_ID`), applied to this scene_snapshot's session BEFORE the verb is
         /// forwarded — the same order the shell uses, so the plugin call already sees the new activation.
         /// A tool and a window utility are mutually exclusive interaction owners: activating a tool clears
         /// every window's utility, activating a utility clears the tool.
@@ -171,12 +171,19 @@ pub(crate) mod context {
         /// stale stage.
         pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             let stage = self.next_maintenance_stage();
-            let step = PluginApp::maintenance_step(self.raw.as_deref_mut().expect("fixture app was already consumed by close_witness"), maximum_items, maximum_bytes);
+            let step = PluginApp::maintenance_step(self.raw.as_deref_mut().expect("scene_snapshot app was already consumed by close_witness"), maximum_items, maximum_bytes);
             self.maintenance.record(stage, maximum_items, maximum_bytes, &step);
             step
         }
+
+        /// 🪪️ A local-actor `ActionMeta` addressed at THIS scene_snapshot's bound instance. The framework refuses a typed
+        /// command whose meta names any other instance (`interactive-job.live-instance`), and every scene_snapshot binds its
+        /// own process-unique id ([`next_fixture_instance_id`]).
+        pub fn meta(&self, actor: &str) -> ActionMeta {
+            ActionMeta { instance_id: self.instance_id, ..artifact_app_laws::meta(actor) }
+        }
     }
-    
+
     /// 🧹️ Drives `app` through the real `PluginApp` close state machine, one item and one envelope page
     /// per turn exactly as a host actor tick does, and returns the terminal-empty witness or the fault
     /// that stopped it. Bounded only as a runaway guard: this app carries five stores plus its retained
@@ -206,11 +213,11 @@ pub(crate) mod context {
         }
     }
     
-    /// 🧹️ Consumes one fixture app through its real close state machine and reports the outcome, so the
+    /// 🧹️ Consumes one scene_snapshot app through its real close state machine and reports the outcome, so the
     /// close contract is asserted by a test rather than by a destructor. `Err` carries the framework's own
     /// fault; `Ok(false)` means the machine reported `Complete` without reaching terminal-empty ownership.
     pub fn close_witness(mut app: Puzzle3dApp) -> Result<bool, Fault> {
-        let mut raw = app.raw.take().expect("fixture app was already consumed by close_witness");
+        let mut raw = app.raw.take().expect("scene_snapshot app was already consumed by close_witness");
         match drain_close(&mut raw) {
             Ok(true) => Ok(true),
             other => {
@@ -232,10 +239,6 @@ pub(crate) mod context {
         }
     }
     
-    pub fn meta(actor: &str) -> ActionMeta {
-        artifact_app_laws::meta(actor)
-    }
-    
     /// 🌉️ `new_app_with_registry`'s `manifest: fn() -> App` shape predates the `AppDefinition`-returning
     /// `create_puzzle3d_app()` convention (contract §2.4 / SDK gap 3) — this tiny local wrapper bridges
     /// the two, mirroring `📓️w2-cad-report.md`'s recipe step 7.
@@ -245,7 +248,7 @@ pub(crate) mod context {
 
     semio_framework_plugin::history_edit_acceptance_law!("puzzle", Puzzle3dPlayApp, puzzle3d_manifest_for_tests, "../..");
     
-    /// 🧰️ The registry-backed, instance-bound fixture app — the ONLY constructor this plugin can use.
+    /// 🧰️ The registry-backed, instance-bound scene_snapshot app — the ONLY constructor this plugin can use.
     /// puzzle3d declares `bounded_first_step_tool_proofs!`, so `VcsArtifactApp::with_registry_on_bus`'s
     /// `registry.tool_job_registration::<A>(…)` join needs the manifest's migrated generated
     /// declarations; the registry-less `artifact_app_laws::new_app` carries an `AppActionRegistry::default()` and
@@ -277,7 +280,7 @@ pub(crate) mod context {
         app.activate(semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utility_id })), main::WINDOW_KIND_ID);
     }
     
-    /// 🪪️ A process-unique instance identity per fixture app. The puzzle 3d session registry is process-global
+    /// 🪪️ A process-unique instance identity per scene_snapshot app. The puzzle 3d session registry is process-global
     /// and keyed by instance id, so fixtures sharing one id would adopt, evict and re-key each other's caches
     /// (and the standing mesh re-upload set inside them) across concurrently running laws.
     pub fn next_fixture_instance_id() -> u32 {
@@ -289,7 +292,7 @@ pub(crate) mod context {
     /// host would have forwarded to the shell. A registry-backed `VcsArtifactApp` does NOT apply a retained
     /// tool job inline — `dispatch_typed` mints a `ToolOperationSpec` whose worker, store publication,
     /// result page and outboxes are advanced only by later continuation turns, which is why the
-    /// registry-less fixture used to see mutations land synchronously and this one does not. One turn is
+    /// registry-less scene_snapshot used to see mutations land synchronously and this one does not. One turn is
     /// exactly the host's own: `maintenance_step` (worker + retirement stages), one
     /// `advance_typed_operation_publication` unit, the result page for the bound receiver plus its
     /// mandatory ACK, then one effect, one event, one COMPLETION witness and one UI scope. The ACK is what
@@ -300,7 +303,7 @@ pub(crate) mod context {
     /// (`🧰️framework/…/🔌️plugin/🦀️.rs`) takes it between the event and the UI scope and forwards it as
     /// `AppFrame::OperationCompleted`. It is not optional bookkeeping: every terminal typed operation
     /// pushes one into a 64-slot outbox that ONLY this take drains, and `has_pending_typed_operations`
-    /// counts it, so a fixture that skips it can never observe quiescence again after its first
+    /// counts it, so a scene_snapshot that skips it can never observe quiescence again after its first
     /// completed operation.
     pub async fn settle(app: &mut Puzzle3dApp) -> Puzzle3dSettled {
         settle_with_items(app, 1).await
@@ -494,7 +497,7 @@ pub(crate) mod context {
     /// 🛰️ Wave B7: a framework-reserved verb is a TWO-half gesture since `dispatch_framework_reserved_action`
     /// began answering every non-clipboard route with `Effect::SpawnJob { kind: FRAMEWORK_RESERVED_JOB_KIND }`.
     /// `handle_action` only ADMITS it; the document changes when the host drives that Isolated job to a
-    /// terminal step and hands the bytes back through `complete_reserved_spawned_job`. A fixture that stopped
+    /// terminal step and hands the bytes back through `complete_reserved_spawned_job`. A scene_snapshot that stopped
     /// at the admission observed `undo`/`interactionSelect`/`interactionHover` succeeding while the store and
     /// the interaction snapshot never moved — the exact silent no-op shape wave B5 reported. [`settle_reserved`]
     /// plays that host half, and is a no-op for the clipboard routes that still commit inline.
@@ -515,7 +518,7 @@ pub(crate) mod context {
     pub async fn dispatch_action_reporting(app: &mut Puzzle3dApp, action: &str, args: &semio_framework_value::DslValue) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
         let window_id = main::WINDOW_KIND_ID;
         app.ensure_window(window_id);
-        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
+        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
         let answered = app.handle_action(action, Some(args), &action_meta).await;
         settle_into_reporting_with_items(app, answered, 1).await
     }
@@ -536,7 +539,7 @@ pub(crate) mod context {
         if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID) {
             app.activate(action, args, window_id);
         }
-        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
+        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
         // 🕰️ Framework-reserved verbs stay on `handle_action`: this is exactly the `skip` set
         // `PluginBuilder`'s own declared-action bridge check uses (`🧰️framework/…/🔌️plugin/🦀️.rs`), i.e. every
         // verb the framework injects and handles itself. A reserved verb sent down the typed channel faults
@@ -582,12 +585,12 @@ pub(crate) mod context {
     /// 📤 `dispatch` up to the point the host has minted the typed operation and NOT one continuation
     /// turn further: the operation is mounted, its worker session holds one of the process-wide
     /// [`semio_framework_job::WORKER_JOB_SESSION_SLOTS`] admissions, and nothing has retired it. Dropping
-    /// the fixture here is exactly what a closed tab, a cancelled command or a torn-down app does, which
+    /// the scene_snapshot here is exactly what a closed tab, a cancelled command or a torn-down app does, which
     /// is the ONLY way a law can witness the retirement array a live app is expected to give back.
     pub async fn dispatch_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
         let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
         app.ensure_window(window_id);
-        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
+        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
         let command = Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}"));
         app.dispatch_typed(command, &action_meta).await
     }
@@ -615,7 +618,7 @@ pub(crate) mod context {
     pub async fn dispatch_reserved_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
         let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
         app.ensure_window(window_id);
-        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..meta("local") };
+        let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
         let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
         app.handle_action(action, dsl_args.as_ref(), &action_meta).await
     }
@@ -960,17 +963,17 @@ pub(crate) mod context {
     /// Answers the action's output (`{"toolRun": effect}` or `{"rejected": code}`).
     pub async fn tool_run_action(app: &mut Puzzle3dApp, action: &str, args: Value) -> Value {
         app.ensure_window(main::WINDOW_KIND_ID);
-        let action_meta = ActionMeta { view_state: Some(app.window_view(main::WINDOW_KIND_ID)), ..meta("local") };
+        let action_meta = ActionMeta { view_state: Some(app.window_view(main::WINDOW_KIND_ID)), ..app.meta("local") };
         let result = app.handle_action(action, Some(&semio_framework_pack_json::to_dsl_value(&args)), &action_meta).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
         semio_framework_pack_json::from_dsl_value(&result.output)
     }
 
-    /// 🎬️ Registers the lifecycle fixture's cube meshes, then starts a fill run through the panel action.
+    /// 🎬️ Registers the lifecycle scene_snapshot's cube meshes, then starts a fill run through the panel action.
     pub async fn start_fill_run(app: &mut Puzzle3dApp) -> Value {
-        let fixture = puzzle3d_fixture_from_snapshot(app.snapshot().expect("live fill fixture").typed());
+        let scene_snapshot = puzzle3d_scene_snapshot_from_document(app.snapshot().expect("live fill scene_snapshot").typed());
         let (positions, indices) = puzzle3d_fallback_mesh_buffers();
-        for url in collect_mesh_urls(&fixture) {
-            assert!(crate::editor::puzzle3d::precompute::derive_brush_mesh(&url, &positions, &indices).is_some(), "fixture mesh {url}");
+        for url in collect_mesh_urls(&scene_snapshot) {
+            assert!(crate::editor::puzzle3d::precompute::derive_brush_mesh(&url, &positions, &indices).is_some(), "scene_snapshot mesh {url}");
         }
         tool_run_action(app, semio_framework_tool_run::TOOL_RUN_START_ACTION_ID, object([(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID.to_string(), Value::from(fill_tool::TOOL_ID))])).await
     }
@@ -1313,7 +1316,8 @@ async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
     for example in [PUZZLE3D_EXAMPLE_CONCRETE_FOREST, PUZZLE3D_EXAMPLE_NAKAGIN] {
         let mut app = app().await;
         let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": example })), None).expect("setActiveExample is a declared puzzle3d command");
-        app.dispatch_typed(command, &meta("local")).await.expect("setActiveExample mints its retained whole-document operation");
+        let action_meta = app.meta("local");
+        app.dispatch_typed(command, &action_meta).await.expect("setActiveExample mints its retained whole-document operation");
         for _ in 0..MAINTENANCE_BUDGET_TURNS {
             if !app.has_pending_typed_operations() {
                 break;
@@ -1352,8 +1356,8 @@ async fn measured_host_turn(app: &mut Puzzle3dApp) {
 
 #[test]
 fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
-    let fixture: Value = parse(include_str!("../../../🧫️fixtures/🗄️retained-jobs/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Puzzle3D retained route fixture");
-    assert_eq!(fixture.get("toolIds"), Some(&Value::Array(PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
+    let scene_snapshot: Value = parse(include_str!("../../../🧫️fixtures/🗄️retained-jobs/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Puzzle3D retained route scene_snapshot");
+    assert_eq!(scene_snapshot.get("toolIds"), Some(&Value::Array(PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
     let manifest = create_puzzle3d_app();
     for tool_id in PUZZLE3D_RETAINED_TOOL_IDS {
         let actions = action_declarations(&manifest, tool_id);
@@ -1597,11 +1601,11 @@ fn set_active_example_hostile_static_law_rejects_whole_document_reset() {
 #[test]
 fn world_relocate_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
     let work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
-    let pages = NAKAGIN_EXAMPLE_FIXTURE.objects.len().div_ceil(utilities::transform::PUZZLE3D_RELOCATE_SCAN_PAGE);
+    let pages = NAKAGIN_EXAMPLE_SNAPSHOT.objects.len().div_ceil(utilities::transform::PUZZLE3D_RELOCATE_SCAN_PAGE);
     assert_eq!(work.extent(&command, &snapshot, &interaction), Some(2 + pages), "a relocate reads its gesture, scans one page per step, then commits it");
     assert!(2 + pages <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
 }
@@ -1611,7 +1615,7 @@ fn world_relocate_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1645,7 +1649,7 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
 #[test]
 fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1673,7 +1677,7 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn create_attraction_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "nonexistent-a", "attracted": "nonexistent-b" })), None).expect("createAttraction command decodes");
     let work = Puzzle3dCreateAttractionWork::default();
@@ -1684,7 +1688,7 @@ fn create_attraction_extent_fits_within_cap_for_nakagin() {
 /// 🔁️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2 (coordinator follow-up): drives the real
 /// `Attracting`/`Attracted` full-document vortex scans instead of only checking the bound fits
 /// under the cap. `attracting`/`attracted` name a genuine compatible pair already present in the
-/// Nakagin fixture — `25b0dba0-…:link` (kind "door capsule right", object index 27 in DSL
+/// Nakagin scene_snapshot — `25b0dba0-…:link` (kind "door capsule right", object index 27 in DSL
 /// declaration order) and `5f0266bc-…:sl0_d0` (kind "door tambour right", object index 64) — which
 /// `kind-compatibility` marks bidirectionally compatible, so `step()` runs every real stage
 /// (`Existing → Attracting → Attracted → Compatibility → Publish`) to a genuine success instead of
@@ -1692,7 +1696,7 @@ fn create_attraction_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1729,7 +1733,7 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("acceptSuggestion", None, None).expect("acceptSuggestion command decodes");
     let work = Puzzle3dAcceptSuggestionWork::default();
@@ -1745,7 +1749,7 @@ fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1790,7 +1794,7 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex" })), None).expect("patchInspector command decodes");
     let work = Puzzle3dPatchInspectorWork::default();
@@ -1816,7 +1820,7 @@ fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
 #[test]
 fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
-    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into());
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1843,7 +1847,7 @@ fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
 
 /// 🧵️ ticket 26/09/02/PUZZLE-3D-END-TO-END: direct functional proof that the previously-dead
 /// `Puzzle3dSetActiveExampleWork` state machine actually walks its own stages across MULTIPLE
-/// bounded `step()` calls for a real fixture (not a single-shot reducer), accumulating exactly
+/// bounded `step()` calls for a real scene_snapshot (not a single-shot reducer), accumulating exactly
 /// one mutation per deleted/created item and only publishing them all in the final `Complete`
 /// emit — the same turn-by-turn contract `crate::retained_command::RetainedPuzzleCommandJob`
 /// relies on when it drives an app-owned `PuzzleCommandWork` (`🎮️commands/🧵️retained/🦀️.rs`,
@@ -1872,7 +1876,7 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
     assert!(progress_steps > 1, "setActiveExample must require multiple bounded step() calls for the nakagin example, not a single-shot reducer; observed {progress_steps}");
     assert!(emit.artifact_mutations.len() > 1, "the completed emit must carry every incrementally-collected mutation, one per deleted/created item; observed {}", emit.artifact_mutations.len());
     // 🏷️ Example loading publishes exactly ONE config row, and it moves exactly ONE field: the id of
-    // the example just loaded, which is what `export_fixture` names its download after. The user's own
+    // the example just loaded, which is what `export_snapshot` names its download after. The user's own
     // shared preferences (fill count, contact tolerance, kind weights) ride through untouched.
     let Some(Puzzle3dConfigMutation::Snapshot { config: published }) = emit.config_mutations.first().cloned() else {
         panic!("example loading must stamp the active example id on the shared config: {:?}", emit.config_mutations);
@@ -2072,7 +2076,7 @@ fn app_config_serialization_excludes_operation_and_window_state() {
     let spr = to_json_string(&config);
     let oracle: serde_json::Value = serde_json::from_str(&spr).expect("third-party JSON oracle accepts Puzzle 3D config");
     // 🧮️ Five shared preferences: the four fill/distribution ones, plus `activeExampleId` — document
-    // identity rather than a preference, and the only thing `export_fixture` can name its download after
+    // identity rather than a preference, and the only thing `export_snapshot` can name its download after
     // (wave B26). Everything per-WINDOW or per-OPERATION still stays out, which is what this law is for.
     assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(5));
     assert!(spr.contains("activeExampleId"));
@@ -2091,13 +2095,13 @@ async fn renders_world_scene() {
 #[semio_framework_async_macros::async_test]
 async fn initial_snapshot_is_the_concrete_forest_fixture() {
     let app = app().await;
-    assert_eq!(projection_of(&app).get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
-    assert!(object_count(&app) > 0, "the concrete-forest default fixture ships with objects");
+    assert_eq!(projection_of(&app).get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_SCENE_SNAPSHOT_SCHEMA));
+    assert!(object_count(&app) > 0, "the concrete-forest default scene_snapshot ships with objects");
 }
 
 /// 📦️ `Puzzle3dPlaySnapshot`'s pack encoding round-trips through the same `(RecordSpec,
 /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
-/// `serde_json::Value` bridge impls), reusing the default concrete-forest fixture.
+/// `serde_json::Value` bridge impls), reusing the default concrete-forest scene_snapshot.
 #[semio_framework_async_macros::async_test]
 async fn puzzle3d_play_projection_pack_round_trips() {
     let app = app().await;
@@ -2117,7 +2121,7 @@ async fn play_snapshot_typed_authority_survives_every_store_round_trip() {
     let app = app().await;
     let snapshot = app.snapshot().expect("projection");
     let objects = snapshot.value().get("objects").and_then(serde_json::Value::as_array).map(Vec::len).unwrap_or(0);
-    assert!(objects > 0, "the boot fixture ships objects");
+    assert!(objects > 0, "the boot scene_snapshot ships objects");
     assert_eq!(snapshot.typed().objects.len(), objects, "the live snapshot's typed authority must carry the projection's objects");
     let via_pack = Puzzle3dPlaySnapshot::decode_pack(&snapshot.encode_pack()).expect("pack decode");
     assert_eq!(via_pack.typed().objects.len(), objects, "a store pack round trip must not empty the typed authority");
@@ -2127,16 +2131,16 @@ async fn play_snapshot_typed_authority_survives_every_store_round_trip() {
     assert_eq!(via_value.typed().objects.len(), objects, "rebuilding from the projection must not empty the typed authority");
 }
 
-/// 🕳️ Wave B9 lane 2: an ABSENT fixture-meta member must project as absent, never as `Null`. The
+/// 🕳️ Wave B9 lane 2: an ABSENT scene_snapshot-meta member must project as absent, never as `Null`. The
 /// persisted twin types `meta.kindCompatibility` as a real array and refuses a `Null` for it, and
 /// `Puzzle3dPlaySnapshot`'s decode is all-or-nothing — so one `null` member replaced the ENTIRE typed
 /// authority with an empty document while the projection kept every object. `PartialEq` compares the
 /// typed half alone, so no round-trip law above can see it; the object count on BOTH halves can.
 #[test]
 fn an_absent_fixture_meta_member_never_empties_the_typed_authority() {
-    let mut seeded = empty_fixture();
-    seeded.objects.clone_from(&CONCRETE_FOREST_EXAMPLE_FIXTURE.objects);
-    assert!(seeded.meta.kind_catalogs.is_none() && seeded.meta.kind_compatibility.is_none(), "this law is about the meta-less fixture shape");
+    let mut seeded = empty_scene_snapshot();
+    seeded.objects.clone_from(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.objects);
+    assert!(seeded.meta.kind_catalogs.is_none() && seeded.meta.kind_compatibility.is_none(), "this law is about the meta-less scene_snapshot shape");
     let projection: serde_json::Value = (&semio_framework_value::ToValue::to_value(&seeded)).into();
     let meta = projection.get("meta").expect("the projection carries a meta object");
     assert!(!meta.get("kindCatalogs").is_some_and(serde_json::Value::is_null), "an absent kind catalog must be absent, not null: {meta}");
@@ -2151,8 +2155,8 @@ fn an_absent_fixture_meta_member_never_empties_the_typed_authority() {
 /// browser's first pick landed on the leftover and then vanished from the Inspection panel.
 #[test]
 fn interaction_topology_names_every_id_the_world_lane_paints() {
-    let mut divergent = empty_fixture();
-    divergent.objects.clone_from(&CONCRETE_FOREST_EXAMPLE_FIXTURE.objects);
+    let mut divergent = empty_scene_snapshot();
+    divergent.objects.clone_from(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.objects);
     divergent.meta.kind_compatibility = Some(semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::object([("target".to_string(), semio_framework_value::DslValue::String("b-l".to_string()))])]));
     let projection: serde_json::Value = (&semio_framework_value::ToValue::to_value(&divergent)).into();
     let snapshot = Puzzle3dPlaySnapshot::new(projection);
@@ -2161,7 +2165,7 @@ fn interaction_topology_names_every_id_the_world_lane_paints() {
     let doc = ArtifactView::new(&snapshot, &history);
     let config = Puzzle3dConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    let topology = Puzzle3dPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction fixture");
+    let topology = Puzzle3dPlayApp::interaction_topology(&doc, &cfg).expect("valid retained interaction scene_snapshot");
     let domain = topology.domains.get(PUZZLE3D_INTERACTION_DOMAIN).expect("the vortex domain is declared");
     let ids: Vec<&str> = domain.ordered.iter().map(|node| node.id.as_str()).collect();
     for object in &divergent.objects {
@@ -2229,7 +2233,7 @@ async fn nakagin_example_loads_via_operations() {
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin");
     let projection = projection_of(&app);
-    assert_eq!(projection.get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
+    assert_eq!(projection.get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_SCENE_SNAPSHOT_SCHEMA));
     assert!(projection.get("objects").and_then(|value| value.as_array()).is_some_and(|objects| !objects.is_empty()));
 }
 
@@ -2280,14 +2284,14 @@ async fn document_and_inspector_panels_render() {
 /// `Mutation<Value>` bridge impl) is what the CW7 law is about.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::standards::v1::subsets::any::schema::mutations::binary::{close_puzzle3d_store, puzzle3d_store};
+    use crate::standards::v1::subsets::any::io::binary::mutations::{close_puzzle3d_store, puzzle3d_store};
     use crate::{Puzzle3dObject as TypedObject, PUZZLE_3D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{create_document_envelope, ArtifactCommand};
 
     let mut store = puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None)).await.expect("store");
     let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)], description: None, transaction: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)], transaction: None }).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
@@ -2478,7 +2482,7 @@ async fn patch_inspector_origin_axis_delta_offsets_each_selected_object_from_its
     let id_a = first_object_id(&app);
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [10.0, 0.0, 0.0] })), None).await.expect("addObjectKind");
     let id_b = projection_of(&app).get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("added object id").to_string();
-    assert_ne!(id_a, id_b, "the added object must be distinct from the first fixture object");
+    assert_ne!(id_a, id_b, "the added object must be distinct from the first scene_snapshot object");
     let x_a_before = object_origin_x(&app, &id_a);
     let x_b_before = object_origin_x(&app, &id_b);
     assert_ne!(x_a_before, x_b_before, "the two objects must start at different x values for this test to prove per-object offset preservation");
@@ -2900,7 +2904,7 @@ async fn accept_suggestion_appends_an_object_and_closes_the_menu() {
 #[semio_framework_async_macros::async_test]
 async fn accept_suggestion_closes_menu_even_when_placement_fails() {
     // 🕹️ `hover_id` dispatches through the real `interactionHover` verb, which resolves the
-    // `vortex` domain against `self.registry` — the fixture `app()` is registry-backed for exactly
+    // `vortex` domain against `self.registry` — the scene_snapshot `app()` is registry-backed for exactly
     // this reason (see its own doc comment).
     let mut app = app().await;
     let vortex = first_vortex_full_id(&app);
@@ -2933,7 +2937,7 @@ async fn the_world_scene_names_built_in_meshes_by_reference_and_fits_its_fixed_c
     let live_meshes = scene_meshes_of(&node);
     let (payload, capacity) = world_surface_payload_bytes(&mut app, main::BODY_KEY).await;
     assert!(payload <= capacity, "the popup-open world scene packs to {payload} bytes, over the fixed surface capacity {capacity}");
-    for meshes in [live_meshes, parse(&main::world_meshes_json(&nakagin_fixture()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("nakagin meshes").as_array().cloned().expect("mesh array")] {
+    for meshes in [live_meshes, parse(&main::world_meshes_json(&nakagin_scene_snapshot()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("nakagin meshes").as_array().cloned().expect("mesh array")] {
         assert!(!meshes.is_empty(), "a world scene always declares its meshes");
         assert!(to_json_string(&meshes).len() <= PUZZLE3D_SCENE_MESH_REFERENCE_BUDGET, "mesh references must stay a rounding error against the {capacity}-byte surface payload; observed {}", to_json_string(&meshes).len());
         for mesh in &meshes {
@@ -2957,7 +2961,8 @@ const PUZZLE3D_WORLD3D_LANE_CONTRACT: &str = include_str!("../../../../../../../
 async fn nakagin_app() -> Puzzle3dApp {
     let mut app = app().await;
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample is a declared puzzle3d command");
-    app.dispatch_typed(command, &meta("local")).await.expect("setActiveExample mints its retained whole-document operation");
+    let action_meta = app.meta("local");
+    app.dispatch_typed(command, &action_meta).await.expect("setActiveExample mints its retained whole-document operation");
     settle(&mut app).await;
     app
 }
@@ -3252,7 +3257,7 @@ fn the_brush_utility_declares_a_read_only_tool_run_through_the_manifest() {
     assert!(!actions.contains(&"suggestionsTick"), "the suggestions tick loop is gone");
     assert!(actions.contains(&"targetBrushSuggestions"));
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
-    let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
     assert_eq!(find_measure_select(&main::window_measures(&scene, labels), "puzzle3d-brush-placement"), None, "the candidate search's readout is the framework ToolRun panel, not a picker");
 }
 
@@ -3643,7 +3648,7 @@ async fn set_camera_is_per_window_and_leaves_sibling_windows_and_the_document_un
 async fn vortex_show_window_option_defaults_to_selected_and_switches_to_always() {
     let mut app = app().await;
     let all_vortex_ids = vortex_full_ids(&app);
-    assert!(!all_vortex_ids.is_empty(), "fixture must expose vortices");
+    assert!(!all_vortex_ids.is_empty(), "scene_snapshot must expose vortices");
     let view = app.window_view(main::WINDOW_KIND_ID);
     let measures = app.window_measures(&view).await;
     let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
@@ -3672,7 +3677,7 @@ async fn vortex_direction_window_option_defaults_to_outwards_and_switches_to_inw
 
     dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).await.expect("setVortexShow always");
     let outwards_vortices = vortices_of(&render_composite(&mut app).await);
-    assert!(!outwards_vortices.is_empty(), "fixture must expose vortices");
+    assert!(!outwards_vortices.is_empty(), "scene_snapshot must expose vortices");
     assert!(outwards_vortices.iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS)));
 
     dispatch(&mut app, "setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), None).await.expect("setVortexDirection inwards");
@@ -3935,7 +3940,7 @@ async fn fill_count_is_shared_across_split_panes() {
 /// is live.
 #[test]
 fn fill_count_measure_is_an_unbounded_number_entry_reporting_the_requested_count() {
-    let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot: nakagin_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
     match fill_tool::count_measure(&scene, &Puzzle3dLabels::NATIVE_EN, None) {
         WindowMeasure::Number { label: Some(label), value, min, max, ready, loading, .. } => {
             assert_eq!(label, Puzzle3dLabels::NATIVE_EN.count.as_str());
@@ -4010,14 +4015,14 @@ async fn puzzle3d_vortex_measure_exposes_joint_weight_scaled_by_object() {
 
 #[semio_framework_async_macros::async_test]
 async fn puzzle3d_distribution_lists_global_vortices_and_joints_sum_to_one() {
-    let fixture = nakagin_fixture();
-    let object_ids = puzzle3d_kind_ids(&fixture, "objects");
-    let vortex_ids = puzzle3d_kind_ids(&fixture, "vortices");
-    assert!(object_ids.len() >= 2, "default fixture needs multiple object kinds");
-    assert!(vortex_ids.len() >= 2, "default fixture needs multiple vortex kinds");
+    let scene_snapshot = nakagin_scene_snapshot();
+    let object_ids = puzzle3d_kind_ids(&scene_snapshot, "objects");
+    let vortex_ids = puzzle3d_kind_ids(&scene_snapshot, "vortices");
+    assert!(object_ids.len() >= 2, "default scene_snapshot needs multiple object kinds");
+    assert!(vortex_ids.len() >= 2, "default scene_snapshot needs multiple vortex kinds");
     let object_kind_weights = puzzle3d_uniform_kind_weights(&object_ids);
     let vortex_kind_weights = puzzle3d_uniform_kind_weights(&vortex_ids);
-    let scene = Puzzle3dScene { fixture, runtime: Puzzle3dRuntime { object_kind_weights, vortex_kind_weights, ..Puzzle3dRuntime::default() }, active_utility: fill_tool::TOOL_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot, runtime: Puzzle3dRuntime { object_kind_weights, vortex_kind_weights, ..Puzzle3dRuntime::default() }, active_utility: fill_tool::TOOL_ID.into() };
     let distribution_children = puzzle3d_distribution_children(&scene, Some(true));
     assert_eq!(distribution_children.len(), object_ids.len());
     let mut joint_sum = 0.0;
@@ -4077,14 +4082,14 @@ async fn puzzle3d_vortex_joint_edit_redistributes_siblings_and_preserves_object_
 #[semio_framework_async_macros::async_test]
 async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
-    let fixture = nakagin_fixture();
-    let object_ids = puzzle3d_kind_ids(&fixture, "objects");
-    assert!(!object_ids.is_empty(), "default fixture must expose object kinds");
+    let scene_snapshot = nakagin_scene_snapshot();
+    let object_ids = puzzle3d_kind_ids(&scene_snapshot, "objects");
+    assert!(!object_ids.is_empty(), "default scene_snapshot must expose object kinds");
     let zeroed_id = object_ids[0].clone();
     let mut object_kind_weights = puzzle3d_uniform_kind_weights(&object_ids);
     object_kind_weights = puzzle3d_normalize_kind_weight_group(&object_kind_weights, &object_ids, &zeroed_id, 0.0);
     assert!(object_kind_weights.get(&zeroed_id).copied().unwrap_or(1.0) <= f64::EPSILON);
-    let scene = Puzzle3dScene { fixture, runtime: Puzzle3dRuntime { object_kind_weights, ..Puzzle3dRuntime::default() }, active_utility: fill_tool::TOOL_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot, runtime: Puzzle3dRuntime { object_kind_weights, ..Puzzle3dRuntime::default() }, active_utility: fill_tool::TOOL_ID.into() };
     let fill_measures = fill_tool::measures(&scene, labels, None);
     let distribution_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution");
     let distribution_children = fill_measures
@@ -4119,7 +4124,7 @@ async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
 async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
     {
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
-    let fill_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
+    let fill_scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
     let fill_measures = fill_tool::measures(&fill_scene, labels, None);
     let distribution_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution");
     assert!(!fill_measures.iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id == "puzzle3d-play-tool-options-fill")), "fill must not wrap its options in a nested Fill group — the tool toggle already owns that row");
@@ -4154,13 +4159,13 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
         !main::window_measures(&fill_scene, labels).iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id.contains("fill"))),
         "fill must no longer surface in window_measures — it is a mode-level tool, not a window utility"
     );
-    let volume_brush_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::volume_brush::UTILITY_ID.into() };
+    let volume_brush_scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::volume_brush::UTILITY_ID.into() };
     let volume_brush_measures = main::window_measures(&volume_brush_scene, labels);
     assert_eq!(measure_group_tag(&volume_brush_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-volume-brush")), Some(Some(utilities::volume_brush::UTILITY_ID.into())));
     assert!(find_measure_slider(&volume_brush_measures, "puzzle3d-voxel-w").is_some(), "volume brush utility exposes voxel width slider");
     let fill_engagement = main::engagement(&fill_scene, &Puzzle3dLabels::NATIVE_EN, None);
     assert!(fill_engagement.control.is_none() && fill_engagement.controls.is_none(), "fill engagement HUD must no longer carry the relocated controls");
-    let brush_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
+    let brush_scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::brush::UTILITY_ID.into() };
     assert_eq!(measure_group_tag(&main::window_measures(&brush_scene, labels), &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-brush")), Some(Some(utilities::brush::UTILITY_ID.into())));
     let brush_engagement = main::engagement(&brush_scene, &Puzzle3dLabels::NATIVE_EN, None);
     assert!(brush_engagement.control.is_none() && brush_engagement.controls.is_none(), "brush engagement HUD must no longer carry the relocated control");
@@ -4343,7 +4348,7 @@ async fn set_fill_count_declares_the_fill_options_ui_scope() {
 async fn set_object_kind_weight_declares_fill_options_ui_scope() {
     let mut app = app().await;
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
-    let object_ids = puzzle3d_kind_ids(&nakagin_fixture(), "objects");
+    let object_ids = puzzle3d_kind_ids(&nakagin_scene_snapshot(), "objects");
     let kind_id = object_ids.first().expect("object kind");
     let result = dispatch(&mut app, "setObjectKindWeight", Some(&json!({ "kindId": kind_id.as_str(), "value": 0.75 })), None).await.expect("setObjectKindWeight");
     match result.ui_scope {
@@ -4408,8 +4413,8 @@ async fn add_object_kind_materializes_the_declared_kind_default() {
 /// its fill/brush candidates read `mesh-unavailable`.
 #[semio_framework_async_macros::async_test]
 async fn adding_a_catalogued_concrete_forest_kind_places_an_object_carrying_its_mesh_url() {
-    let fixture = crate::editor::puzzle3d::default_fixture();
-    let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects").first().cloned().expect("the default document catalogues object kinds");
+    let scene_snapshot = crate::editor::puzzle3d::default_scene_snapshot();
+    let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&scene_snapshot, "objects").first().cloned().expect("the default document catalogues object kinds");
     let kind_id = entry.get("id").and_then(semio_framework_value::DslValue::as_str).expect("catalogued kind id").to_string();
     let expected = entry
         .get("representations")
@@ -4436,8 +4441,8 @@ async fn adding_a_catalogued_concrete_forest_kind_places_an_object_carrying_its_
 /// use. Pins the real seats of a real shipped kind.
 #[test]
 fn catalogued_kind_templates_seed_vortices_at_their_catalog_points() {
-    let fixture = crate::editor::puzzle3d::default_fixture();
-    let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&fixture, "objects").first().cloned().expect("the default document catalogues object kinds");
+    let scene_snapshot = crate::editor::puzzle3d::default_scene_snapshot();
+    let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&scene_snapshot, "objects").first().cloned().expect("the default document catalogues object kinds");
     let seats = crate::editor::puzzle3d::puzzle3d_vortices_from_kind_template(&entry);
     let templates = entry.get("vortices").and_then(semio_framework_value::DslValue::as_array).expect("the catalogued kind declares vortex templates");
     assert_eq!(seats.len(), templates.len(), "one seeded vortex per declared template");
@@ -4450,14 +4455,14 @@ fn catalogued_kind_templates_seed_vortices_at_their_catalog_points() {
 
 /// 🛍️ Both doors onto the default document carry the same catalogue: the INITIAL snapshot the app
 /// boots with, and `setActiveExample("concrete-forest")` — which replaces the catalogs through their
-/// own `replace_kind_catalogs` mutation and could therefore drop them independently of the fixture.
+/// own `replace_kind_catalogs` mutation and could therefore drop them independently of the scene_snapshot.
 #[semio_framework_async_macros::async_test]
 async fn the_initial_snapshot_and_set_active_example_both_carry_the_concrete_forest_catalogue() {
-    let declared: Vec<String> = crate::editor::puzzle3d::puzzle3d_catalog_entries(&crate::editor::puzzle3d::default_fixture(), "objects")
+    let declared: Vec<String> = crate::editor::puzzle3d::puzzle3d_catalog_entries(&crate::editor::puzzle3d::default_scene_snapshot(), "objects")
         .iter()
         .filter_map(|entry| entry.get("id").and_then(semio_framework_value::DslValue::as_str).map(str::to_string))
         .collect();
-    assert!(!declared.is_empty(), "the concrete-forest fixture catalogues object kinds");
+    assert!(!declared.is_empty(), "the concrete-forest scene_snapshot catalogues object kinds");
     let catalogued = |app: &Puzzle3dApp| -> Vec<String> {
         projection_of(app).pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).map(|rows| rows.iter().filter_map(|row| row.get("id").and_then(Value::as_str).map(str::to_string)).collect()).unwrap_or_default()
     };
@@ -4545,7 +4550,7 @@ async fn engagement_exposes_no_utility_switch_options() {
     // 🧰️ select/brush/fill switching lives only on the framework utility bar; the engagement HUD
     // must not duplicate it as options. Object placement is catalogue drag-and-drop plus the shell
     // menu row `openAddObjectDialog`, not a per-viewport quick-action chip.
-    let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
+    let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let engagement = main::engagement(&scene, &Puzzle3dLabels::NATIVE_EN, None);
     let options = engagement.options.as_deref().unwrap_or(&[]);
     assert!(options.is_empty(), "the puzzle3d engagement must not publish window quick-action options");
@@ -4554,7 +4559,7 @@ async fn engagement_exposes_no_utility_switch_options() {
 
 #[semio_framework_async_macros::async_test]
 async fn transform_engagement_does_not_block_background_deselect() {
-    let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
     assert_eq!(main::engagement(&scene, &Puzzle3dLabels::NATIVE_EN, None).session_active, Some(false));
 }
 
@@ -4681,7 +4686,7 @@ async fn world_pick_locked_object_clears_like_background() {
 async fn world_vortices_reveal_in_selected_mode_only_for_the_selected_object() {
     let mut app = app().await;
     let all_vortex_ids = vortex_full_ids(&app);
-    assert!(!all_vortex_ids.is_empty(), "fixture must expose vortices");
+    assert!(!all_vortex_ids.is_empty(), "scene_snapshot must expose vortices");
     assert!(vortices_of(&render_composite(&mut app).await).is_empty(), "Selected mode with nothing selected reveals no vortex marker");
     let object_id = first_object_id(&app);
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select object");
@@ -4755,7 +4760,7 @@ async fn world_vortex_select_clears_object_selection() {
 async fn world_vortex_click_replaces_until_invertive_mode_is_selected() {
     let mut app = app().await;
     let vortices = vortex_full_ids(&app);
-    assert!(vortices.len() >= 2, "fixture must expose two vortices");
+    assert!(vortices.len() >= 2, "scene_snapshot must expose two vortices");
     select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortices[0]).await.expect("select first vortex");
     select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortices[1]).await.expect("replace with second vortex");
     let replaced = app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
@@ -5033,7 +5038,7 @@ async fn transform_utility_is_local_to_the_window_instance_not_shared_across_spl
 #[semio_framework_async_macros::async_test]
 async fn transform_utility_options_expose_move_and_rotate_flags() {
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
-    let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
     let measures = main::window_measures(&scene, labels);
     assert_eq!(measure_group_tag(&measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-transform")), Some(Some(utilities::transform::UTILITY_ID.into())));
     assert_eq!(find_measure_toggle(&measures, "puzzle3d-transform-move"), Some(true));
@@ -5165,13 +5170,13 @@ async fn a_gumball_drag_carries_its_attracted_objects_in_the_same_transaction() 
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin");
     dispatch(&mut app, "createAttraction", Some(&json!({ "attracting": "25b0dba0-8f81-423a-94a1-b911a6031010:link", "attracted": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d0" })), None).await.expect("attract the compatible door pair");
-    let fixture = puzzle3d_fixture_from_projection(&projection_of(&app));
+    let scene_snapshot = puzzle3d_scene_snapshot_from_projection(&projection_of(&app));
     let owner = |full_id: &str| full_id.split(':').next().unwrap_or_default().to_string();
-    let (parent, child) = fixture
+    let (parent, child) = scene_snapshot
         .attractions
         .iter()
         .map(|attraction| (owner(&attraction.attracting), owner(&attraction.attracted)))
-        .find(|(parent, child)| parent != child && fixture.objects.iter().any(|object| &object.id == child && !object.locked) && fixture.objects.iter().any(|object| &object.id == parent && !object.locked))
+        .find(|(parent, child)| parent != child && scene_snapshot.objects.iter().any(|object| &object.id == child && !object.locked) && scene_snapshot.objects.iter().any(|object| &object.id == parent && !object.locked))
         .expect("Nakagin carries an attraction between two unlocked objects");
     let (parent_start, child_start) = (object_origin(&app, &parent), object_origin(&app, &child));
     let (result, settled) = dispatch_reporting(&mut app, "translateSelection", Some(&json!({ "ids": [parent.as_str()], "dx": 0.0, "dy": 0.0, "dz": 2.0 })), None).await;
@@ -5196,7 +5201,7 @@ async fn a_motionless_gumball_release_leaves_zero_trace() {
 
 /// 🛠️ LAW (audit Z4) — the World3d host corpus' LOCAL one-shot cases (`🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json`,
 /// `live: false`, the protocol puzzle 3d speaks: one net delta on release, no stream phase): every verb dispatch the host
-/// owes for a scripted gesture, sent with its exact wire args (the targets swapped for the fixture's own object), publishes
+/// owes for a scripted gesture, sent with its exact wire args (the targets swapped for the scene_snapshot's own object), publishes
 /// exactly the case's guest edits and moves the object by its offset; a gesture that dispatches nothing publishes nothing.
 #[semio_framework_async_macros::async_test]
 async fn the_world3d_local_gumball_cases_land_as_their_guest_edits() {
@@ -5233,7 +5238,7 @@ async fn the_world3d_local_gumball_cases_land_as_their_guest_edits() {
 /// leaves target volumes, undeclared kinds and unknown ids to the framework's generic `<Kind> <short id>`.
 #[test]
 fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
-    use crate::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT};
+    use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT};
     let mut snapshot = parse_dsl(PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("the example parses");
     let object = snapshot.objects[0].id.clone();
     let vortex = puzzle3d_vortex_full_id(&object, &snapshot.objects[0].vortices[0].id);
@@ -5408,17 +5413,17 @@ async fn fixture_app_reaches_its_terminal_empty_close_witness() {
 //#endregion 🔖️Close
 
 /// 🎟️ Wave W-P: `Puzzle3dPlayApp` used to be rebuilt from `default()` on every dispatch and every render,
-/// so `geometry_cache` was structurally unable to observe two calls in a row and the whole fixture was
+/// so `geometry_cache` was structurally unable to observe two calls in a row and the whole scene_snapshot was
 /// re-serialized every time (`📓️2026-09-08-performance-architecture-audit.md` §1, fix #1). With a session
 /// slot keyed by `app_instance_id`, the second call for the same document must serialize NOTHING.
 #[test]
 fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializing() {
     let config = Puzzle3dRuntime::default();
-    let fixture = default_fixture();
-    let fingerprint = main::fixture_geometry_fingerprint(&fixture);
+    let scene_snapshot = default_scene_snapshot();
+    let fingerprint = main::scene_geometry_fingerprint(&scene_snapshot);
     let session = Some((4_001_u32, Some("document-geometry".to_string())));
     let cold = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
-    let first = with_puzzle3d_app_for(session.clone(), &config, |app| app.geometry_jsons(&fixture, &std::collections::BTreeSet::new(), &[]));
+    let first = with_puzzle3d_app_for(session.clone(), &config, |app| app.geometry_jsons(&scene_snapshot, &std::collections::BTreeSet::new(), &[]));
     let after_first = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
     assert_eq!(after_first - cold, 1, "the first call for a cold instance serializes exactly once");
     let second = with_puzzle3d_app_for(session, &config, |app| {
@@ -5426,7 +5431,7 @@ fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializ
         assert_eq!(cached.as_ref().map(|(cached, _)| *cached), Some(fingerprint), "the session slot handed the warm cache to a brand-new app object");
         drop(cached);
         assert_eq!(app.instance_residency.lock().expect("instance residency").as_ref().map(|residency| residency.revision()), Some(1), "the per-object instance residency came back with the slot too");
-        app.geometry_jsons(&fixture, &std::collections::BTreeSet::new(), &[])
+        app.geometry_jsons(&scene_snapshot, &std::collections::BTreeSet::new(), &[])
     });
     assert_eq!(PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get), after_first, "the second call on the same instance must not re-serialize anything");
     assert_eq!(first, second, "a cache hit returns byte-identical instance and mesh json");
@@ -5496,7 +5501,7 @@ fn a_session_check_in_over_the_process_byte_ceiling_is_dropped() {
 }
 
 /// 📐️ Wave W-P: the session row is a fixed 64-slot array, so one slot's inline size is multiplied by 64
-/// every time the registry is constructed. Anything multi-kilobyte by value (a `BuiltNode`, a fixture)
+/// every time the registry is constructed. Anything multi-kilobyte by value (a `BuiltNode`, a scene_snapshot)
 /// belongs behind a pointer, not inline — a fat slot is how a fixed row turns into a stack overflow.
 #[test]
 fn one_session_slot_stays_small_enough_for_a_fixed_row() {
@@ -5607,7 +5612,7 @@ fn measured_view_state() -> semio_framework_plugin::ViewModel {
 }
 
 fn measured_nakagin_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into())
+    Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&NAKAGIN_EXAMPLE_SNAPSHOT.clone())).into())
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END: `openVortexSuggestions` syncs the whole precompute session
@@ -5639,7 +5644,7 @@ fn accept_suggestion_every_step_stays_below_the_interactive_ceiling_for_nakagin(
 }
 
 fn measured_concrete_forest_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_FIXTURE.clone())).into())
+    Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone())).into())
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3: swapping the Concrete Forest document for the
@@ -5658,24 +5663,24 @@ fn set_active_example_every_step_stays_below_the_interactive_ceiling_for_nakagin
 
 /// 🌉️ Differential law for W-P3's typed `scene_from_snapshot`: the derived `ToValue`/`FromValue`
 /// machinery is an independent implementation of the same structural-twin translation, so the typed
-/// fixture must equal what the persisted-projection bridge produced for every shipped document. A
+/// scene_snapshot must equal what the persisted-projection bridge produced for every shipped document. A
 /// disagreement here is a real behaviour change, not a performance one — the semantic document delta
-/// every editing action publishes is taken against exactly this fixture.
+/// every editing action publishes is taken against exactly this scene_snapshot.
 ///
 /// 🪪️ Each snapshot is canonicalized first (rebuilt from its OWN typed authority) because that is the
 /// only projection production ever hands the app: a store-driven `Puzzle3dPlaySnapshot` carries the
 /// typed document and materializes `value()` from it, so `value()` is by construction
-/// `ToValue(typed())`. Feeding a raw editor-side fixture straight into `new()` can hand the two halves
-/// different content — `empty_fixture()`'s `meta` serializes both members as `Null`, which the typed
+/// `ToValue(typed())`. Feeding a raw editor-side scene_snapshot straight into `new()` can hand the two halves
+/// different content — `empty_scene_snapshot()`'s `meta` serializes both members as `Null`, which the typed
 /// decode refuses, and `new()` silently falls back to `Puzzle3dSnapshot::default()`; see this wave's
 /// report §6.
 #[test]
 fn puzzle3d_next_object_label_increments_from_the_authored_seed_name() {
-    let fixture = CONCRETE_FOREST_EXAMPLE_FIXTURE.clone();
+    let scene_snapshot = CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone();
     let kind = "Hexagonal Cut Concrete Forest Left";
-    let next = puzzle3d_next_object_label(&fixture.objects, &fixture, kind);
+    let next = puzzle3d_next_object_label(&scene_snapshot.objects, &scene_snapshot, kind);
     assert_eq!(next, "Hexagonal Cut Concrete Forest Left 2");
-    let mut peers = fixture.objects.clone();
+    let mut peers = scene_snapshot.objects.clone();
     peers.push(Puzzle3dObject {
         id: "fill-1".into(),
         label: Some("Hexagonal Cut Concrete Forest Left 2".into()),
@@ -5688,32 +5693,32 @@ fn puzzle3d_next_object_label_increments_from_the_authored_seed_name() {
         hidden: false,
         locked: false,
     });
-    assert_eq!(puzzle3d_next_object_label(&peers, &fixture, kind), "Hexagonal Cut Concrete Forest Left 3");
+    assert_eq!(puzzle3d_next_object_label(&peers, &scene_snapshot, kind), "Hexagonal Cut Concrete Forest Left 3");
 }
 
 /// 🗝️ The two untyped `meta` members are compared as the TYPED catalogs they stand for
 /// (`Puzzle3dKindCatalogs` / `Vec<Puzzle3dKindCompatibility>` — lossless, and what every reader of
 /// those members ultimately decodes them into), because raw `DslValue` equality would compare key
 /// ORDER: the bridge inherits the persisted projection's own `serde_json` map order and the typed
-/// construction emits declaration order, for byte-identical content. Every typed member of the fixture
+/// construction emits declaration order, for byte-identical content. Every typed member of the scene_snapshot
 /// is compared directly, unnormalized.
 #[test]
 fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
-    for (label, fixture) in [("empty", empty_fixture()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_FIXTURE.clone()), ("nakagin", NAKAGIN_EXAMPLE_FIXTURE.clone())] {
-        let seed = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&fixture)).into());
+    for (label, scene_snapshot) in [("empty", empty_scene_snapshot()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()), ("nakagin", NAKAGIN_EXAMPLE_SNAPSHOT.clone())] {
+        let seed = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&scene_snapshot)).into());
         let snapshot = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(seed.typed())).into());
         let bridged = scene_from_projection(&puzzle3d_projection_value(snapshot.value()), Puzzle3dRuntime::default(), "utility");
         let typed = scene_from_snapshot(snapshot.typed(), Puzzle3dRuntime::default(), "utility");
-        assert_eq!(typed.fixture.schema, bridged.fixture.schema, "{label}: schema disagrees");
-        assert_eq!(typed.fixture.domain, bridged.fixture.domain, "{label}: domain disagrees");
-        assert_eq!(typed.fixture.objects, bridged.fixture.objects, "{label}: objects disagree");
-        assert_eq!(typed.fixture.attractions, bridged.fixture.attractions, "{label}: attractions disagree");
-        assert_eq!(typed.fixture.target_volumes, bridged.fixture.target_volumes, "{label}: target volumes disagree");
-        assert_eq!(typed.fixture.references, bridged.fixture.references, "{label}: references disagree");
-        let catalogs = |meta: &Puzzle3dFixtureMeta| -> crate::Puzzle3dKindCatalogs { meta.kind_catalogs.clone().map_or_else(crate::Puzzle3dKindCatalogs::default, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind catalogs decode")) };
-        let compatibility = |meta: &Puzzle3dFixtureMeta| -> Vec<crate::Puzzle3dKindCompatibility> { meta.kind_compatibility.clone().map_or_else(Vec::new, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind compatibility decodes")) };
-        assert_eq!(catalogs(&typed.fixture.meta), catalogs(&bridged.fixture.meta), "{label}: kind catalogs disagree");
-        assert_eq!(compatibility(&typed.fixture.meta), compatibility(&bridged.fixture.meta), "{label}: kind compatibility disagrees");
+        assert_eq!(typed.scene_snapshot.schema, bridged.scene_snapshot.schema, "{label}: schema disagrees");
+        assert_eq!(typed.scene_snapshot.domain, bridged.scene_snapshot.domain, "{label}: domain disagrees");
+        assert_eq!(typed.scene_snapshot.objects, bridged.scene_snapshot.objects, "{label}: objects disagree");
+        assert_eq!(typed.scene_snapshot.attractions, bridged.scene_snapshot.attractions, "{label}: attractions disagree");
+        assert_eq!(typed.scene_snapshot.target_volumes, bridged.scene_snapshot.target_volumes, "{label}: target volumes disagree");
+        assert_eq!(typed.scene_snapshot.references, bridged.scene_snapshot.references, "{label}: references disagree");
+        let catalogs = |meta: &Puzzle3dSceneMetadata| -> crate::Puzzle3dKindCatalogs { meta.kind_catalogs.clone().map_or_else(crate::Puzzle3dKindCatalogs::default, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind catalogs decode")) };
+        let compatibility = |meta: &Puzzle3dSceneMetadata| -> Vec<crate::Puzzle3dKindCompatibility> { meta.kind_compatibility.clone().map_or_else(Vec::new, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind compatibility decodes")) };
+        assert_eq!(catalogs(&typed.scene_snapshot.meta), catalogs(&bridged.scene_snapshot.meta), "{label}: kind catalogs disagree");
+        assert_eq!(compatibility(&typed.scene_snapshot.meta), compatibility(&bridged.scene_snapshot.meta), "{label}: kind compatibility disagrees");
         assert_eq!(typed.active_utility, bridged.active_utility, "{label}: active utility disagrees");
     }
 }
@@ -5724,22 +5729,22 @@ fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
 /// document whose attractions multiply with its placements.
 #[test]
 fn world_attraction_segments_match_the_vortex_position_resolver_for_every_example() {
-    let mut grown = NAKAGIN_EXAMPLE_FIXTURE.clone();
+    let mut grown = NAKAGIN_EXAMPLE_SNAPSHOT.clone();
     let ends: Vec<String> = grown.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| crate::editor::puzzle3d::puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
     assert!(ends.len() > 2, "nakagin declares vortices to attract");
     grown.attractions = ends.windows(2).enumerate().map(|(index, pair)| Puzzle3dAttraction { id: format!("a{index}"), attracting: pair[0].clone(), attracted: pair[1].clone(), ..Default::default() }).collect();
     grown.attractions.push(Puzzle3dAttraction { id: "dangling".into(), attracting: ends[0].clone(), attracted: "no-such-object:no-such-vortex".into(), ..Default::default() });
-    for (label, fixture) in [("empty", empty_fixture()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_FIXTURE.clone()), ("nakagin", NAKAGIN_EXAMPLE_FIXTURE.clone()), ("nakagin-dangling", grown)] {
-        let expected: Vec<Value> = fixture
+    for (label, scene_snapshot) in [("empty", empty_scene_snapshot()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()), ("nakagin", NAKAGIN_EXAMPLE_SNAPSHOT.clone()), ("nakagin-dangling", grown)] {
+        let expected: Vec<Value> = scene_snapshot
             .attractions
             .iter()
             .filter_map(|attraction| {
-                let from = crate::editor::puzzle3d::resolve_vortex_world_position(&fixture, &attraction.attracting)?;
-                let to = crate::editor::puzzle3d::resolve_vortex_world_position(&fixture, &attraction.attracted)?;
+                let from = crate::editor::puzzle3d::resolve_vortex_world_position(&scene_snapshot, &attraction.attracting)?;
+                let to = crate::editor::puzzle3d::resolve_vortex_world_position(&scene_snapshot, &attraction.attracted)?;
                 Some(json!({ "id": attraction.id, "from": from, "to": to, "color": "#60a5fa" }))
             })
             .collect();
-        let rendered = parse(&main::world_attractions_json(&fixture), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("attractions json");
+        let rendered = parse(&main::world_attractions_json(&scene_snapshot), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("attractions json");
         let rendered = rendered.as_array().cloned().unwrap_or_default();
         assert_eq!(rendered.len(), expected.len(), "{label}: exactly the resolvable attractions render");
         for (segment, resolved) in rendered.iter().zip(&expected) {
@@ -5756,12 +5761,12 @@ fn world_attraction_segments_match_the_vortex_position_resolver_for_every_exampl
 /// verdict, so equality here is exactly the property the precompute session reads.
 #[test]
 fn puzzle3d_typed_scene_config_matches_the_value_bridge_for_every_example() {
-    for (label, fixture) in [("empty", empty_fixture()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_FIXTURE.clone()), ("nakagin", NAKAGIN_EXAMPLE_FIXTURE.clone())] {
+    for (label, scene_snapshot) in [("empty", empty_scene_snapshot()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()), ("nakagin", NAKAGIN_EXAMPLE_SNAPSHOT.clone())] {
         let mut runtime = Puzzle3dRuntime::default();
         runtime.contact_tolerance = 0.375;
         runtime.object_kind_weights.insert("capsule".into(), 0.25);
         runtime.vortex_kind_weights.insert("rim".into(), 0.75);
-        let envelope = Puzzle3dScene { fixture, runtime, active_utility: "utility".into() };
+        let envelope = Puzzle3dScene { scene_snapshot, runtime, active_utility: "utility".into() };
         let bridged: crate::standards::v1::subsets::any::schema::SceneConfig = semio_framework_value::FromValue::from_value(scene_config_value(&envelope)).expect("value bridge decodes");
         let typed = scene_config(&envelope).expect("typed scene config builds");
         assert_eq!(typed, bridged, "{label}: typed engine scene disagrees with the value bridge");
@@ -5772,10 +5777,10 @@ fn puzzle3d_typed_scene_config_matches_the_value_bridge_for_every_example() {
 /// object of every shipped document, and `collect_mesh_urls` still returns the same SET of identities.
 #[test]
 fn puzzle3d_kind_mesh_index_matches_a_per_object_catalog_scan() {
-    for (label, fixture) in [("empty", empty_fixture()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_FIXTURE.clone()), ("nakagin", NAKAGIN_EXAMPLE_FIXTURE.clone())] {
-        let index = Puzzle3dKindMeshIndex::of(&fixture.meta);
-        for object in &fixture.objects {
-            let scanned = fixture
+    for (label, scene_snapshot) in [("empty", empty_scene_snapshot()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()), ("nakagin", NAKAGIN_EXAMPLE_SNAPSHOT.clone())] {
+        let index = Puzzle3dKindMeshIndex::of(&scene_snapshot.meta);
+        for object in &scene_snapshot.objects {
+            let scanned = scene_snapshot
                 .meta
                 .kind_catalogs
                 .as_ref()
@@ -5787,7 +5792,7 @@ fn puzzle3d_kind_mesh_index_matches_a_per_object_catalog_scan() {
             let expected = object.mesh_url.as_deref().filter(|url| !url.is_empty()).or(scanned);
             assert_eq!(index.resolve(object), expected, "{label}: {} resolved to a different mesh identity", object.id);
         }
-        let indexed: std::collections::BTreeSet<String> = collect_mesh_urls(&fixture).into_iter().collect();
+        let indexed: std::collections::BTreeSet<String> = collect_mesh_urls(&scene_snapshot).into_iter().collect();
         assert!(indexed.iter().all(|url| !url.is_empty()), "{label}: an empty mesh identity was collected");
     }
 }
@@ -5868,9 +5873,9 @@ async fn every_context_menu_row_dispatches_a_declared_action() {
 async fn the_add_object_dialog_offers_every_object_kind_of_both_examples() {
     use semio_framework_plugin::ArgSchema;
     let definition = create_puzzle3d_app();
-    let expected: Vec<String> = [&*CONCRETE_FOREST_EXAMPLE_FIXTURE, &*NAKAGIN_EXAMPLE_FIXTURE]
+    let expected: Vec<String> = [&*CONCRETE_FOREST_EXAMPLE_SNAPSHOT, &*NAKAGIN_EXAMPLE_SNAPSHOT]
         .into_iter()
-        .flat_map(|fixture| puzzle3d_kind_ids(fixture, "objects"))
+        .flat_map(|scene_snapshot| puzzle3d_kind_ids(scene_snapshot, "objects"))
         .fold(Vec::new(), |mut ids, id| {
             if !ids.contains(&id) {
                 ids.push(id);
@@ -5936,7 +5941,7 @@ async fn exactly_one_add_object_row_is_menu_vocabulary_and_it_opens_the_dialog()
 async fn every_advertised_engagement_verb_is_implemented() {
     use crate::editor::puzzle3d::commands::engagement_submit::PUZZLE3D_ENGAGEMENT_VERBS;
     let mut app = app().await;
-    let envelope = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
+    let envelope = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let placeholder = main::engagement(&envelope, &Puzzle3dLabels::NATIVE_EN, None).input.and_then(|input| input.placeholder).unwrap_or_default();
     for verb in PUZZLE3D_ENGAGEMENT_VERBS {
         assert!(placeholder.contains(verb), "the engagement placeholder must advertise {verb}: {placeholder}");
@@ -6472,12 +6477,12 @@ async fn cut_undoes_as_one_step() {
     assert_eq!(object_count(&app), before, "one undo restores the cut");
 }
 
-/// ⬇️ Wave W-Y: export carries the full round-trippable fixture JSON.
+/// ⬇️ Wave W-Y: export carries the full round-trippable scene_snapshot JSON.
 #[semio_framework_async_macros::async_test]
-async fn export_fixture_downloads_round_trippable_json() {
+async fn export_snapshot_downloads_round_trippable_json() {
     let mut app = app().await;
     let before = projection_of(&app);
-    let result = dispatch(&mut app, "exportFixture", None, None).await.expect("export");
+    let result = dispatch(&mut app, "exportSnapshot", None, None).await.expect("export");
     let data = result.requested_effects.iter().find_map(|effect| match effect {
         Effect::DownloadMediaExport { filename, mime_type, data, .. } => {
             assert_eq!(filename, "concrete-forest.json", "a fresh session exports under the example its document was seeded from");
@@ -6487,11 +6492,11 @@ async fn export_fixture_downloads_round_trippable_json() {
         _ => None,
     }).expect("export must emit DownloadMediaExport");
     let exported: Value = parse(&data, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("export JSON parses");
-    assert_eq!(exported.get("schema"), before.get("schema"), "export schema must match the live fixture");
+    assert_eq!(exported.get("schema"), before.get("schema"), "export schema must match the live scene_snapshot");
     assert_eq!(exported.get("objects").and_then(Value::as_array).map(Vec::len), before.get("objects").and_then(Value::as_array).map(Vec::len));
 }
 
-/// 🧬️ Identity of imported objects without fixture/snapshot projection twins (anchor / null scale).
+/// 🧬️ Identity of imported objects without scene_snapshot/snapshot projection twins (anchor / null scale).
 fn object_cores(value: &Value) -> Vec<(String, String, String, Value, Vec<String>)> {
     value
         .get("objects")
@@ -6517,12 +6522,12 @@ fn object_cores(value: &Value) -> Vec<(String, String, String, Value, Vec<String
 
 /// 📥️ Wave W-Y: importing that JSON reproduces the document as one Mutation edit.
 #[semio_framework_async_macros::async_test]
-async fn import_fixture_reproduces_the_exported_document() {
+async fn import_snapshot_reproduces_the_exported_document() {
     let mut app = app().await;
     let source = projection_of(&app);
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     assert_eq!(object_count(&app), 0);
-    let (imported, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&source) })), None).await;
+    let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&source) })), None).await;
     imported.expect("import");
     assert_eq!(history_rows(&settled), 1, "import must be one mutation edit");
     assert_eq!(object_cores(&projection_of(&app)), object_cores(&source), "import reproduces the exported objects");
@@ -6530,7 +6535,7 @@ async fn import_fixture_reproduces_the_exported_document() {
     assert_eq!(object_count(&app), 0, "one undo restores the empty document");
 }
 
-/// 📥️ Wave W-AB: workspace Import is `openImportFixture` (file picker). `importFixture` stays
+/// 📥️ Wave W-AB: workspace Import is `openImportSnapshot` (file picker). `importSnapshot` stays
 /// dispatchable for the host re-dispatch after the pick, but is not a file-menu row.
 #[test]
 fn file_menu_import_row_opens_the_file_picker() {
@@ -6540,25 +6545,25 @@ fn file_menu_import_row_opens_the_file_picker() {
         .filter(|action| action.category.as_deref() == Some("file"))
         .map(|action| (action.id.as_str(), action.in_palette))
         .collect();
-    assert!(file.iter().any(|(id, _)| *id == "exportFixture"), "file menu keeps Export: {file:?}");
-    assert!(file.iter().any(|(id, in_palette)| *id == "openImportFixture" && *in_palette), "file menu Import is openImportFixture: {file:?}");
-    assert!(!file.iter().any(|(id, _)| *id == "importFixture"), "importFixture is the picker completion, not a menu row: {file:?}");
-    let import = dispatchable_actions(&definition).into_iter().find(|action| action.id == "importFixture").expect("importFixture stays dispatchable");
+    assert!(file.iter().any(|(id, _)| *id == "exportSnapshot"), "file menu keeps Export: {file:?}");
+    assert!(file.iter().any(|(id, in_palette)| *id == "openImportSnapshot" && *in_palette), "file menu Import is openImportSnapshot: {file:?}");
+    assert!(!file.iter().any(|(id, _)| *id == "importSnapshot"), "importSnapshot is the picker completion, not a menu row: {file:?}");
+    let import = dispatchable_actions(&definition).into_iter().find(|action| action.id == "importSnapshot").expect("importSnapshot stays dispatchable");
     assert!(!import.in_palette);
     assert_eq!(import.category.as_deref(), None);
 }
 
-/// 📥️ Wave W-AB: activating Import requests a file open; completing it with fixture JSON imports.
+/// 📥️ Wave W-AB: activating Import requests a file open; completing it with scene_snapshot JSON imports.
 #[semio_framework_async_macros::async_test]
-async fn open_import_fixture_requests_file_open_then_import_applies_payload() {
+async fn open_import_snapshot_requests_file_open_then_import_applies_payload() {
     let mut app = app().await;
     let source = projection_of(&app);
-    let opened = dispatch(&mut app, "openImportFixture", None, None).await.expect("openImportFixture");
+    let opened = dispatch(&mut app, "openImportSnapshot", None, None).await.expect("openImportSnapshot");
     let req = opened.requested_effects.iter().find_map(|effect| match effect {
         Effect::RequestFileOpen { accept, read_as, import_action, multiple, .. } => {
             assert!(accept.contains("json"), "picker accepts JSON: {accept}");
             assert_eq!(read_as.as_deref(), Some("text"));
-            assert_eq!(import_action, "importFixture");
+            assert_eq!(import_action, "importSnapshot");
             assert!(!*multiple);
             Some(())
         }
@@ -6567,41 +6572,41 @@ async fn open_import_fixture_requests_file_open_then_import_applies_payload() {
     assert!(req.is_some(), "Import must emit RequestFileOpen: {:?}", opened.requested_effects);
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     assert_eq!(object_count(&app), 0);
-    let (imported, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&source) })), None).await;
+    let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&source) })), None).await;
     imported.expect("import");
     assert_eq!(history_rows(&settled), 1, "import must be one mutation edit");
     assert_eq!(object_cores(&projection_of(&app)), object_cores(&source), "picked payload reproduces the exported objects");
 }
 
-/// 📥️ Wave W-AB: re-importing the live fixture is a store identity, not a guest payload dedupe.
-/// `import_fixture` always assigns. The store folds equal content into no edit, so the admitting
-/// settle carries one unapplied `importFixture` row (`ops=0`) — the empty-emit command log — and
+/// 📥️ Wave W-AB: re-importing the live scene_snapshot is a store identity, not a guest payload dedupe.
+/// `import_snapshot` always assigns. The store folds equal content into no edit, so the admitting
+/// settle carries one unapplied `importSnapshot` row (`ops=0`) — the empty-emit command log — and
 /// the object cores do not move.
 #[semio_framework_async_macros::async_test]
-async fn import_fixture_of_the_live_document_records_whether_identical_content_is_an_edit() {
+async fn import_snapshot_of_the_live_document_records_whether_identical_content_is_an_edit() {
     let mut app = app().await;
     let source = projection_of(&app);
-    let (imported, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&source) })), None).await;
+    let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&source) })), None).await;
     imported.expect("reimport");
     let objects_after = object_cores(&projection_of(&app));
     assert_eq!(objects_after, object_cores(&source), "identical payload must not rewrite object cores");
     let rows = history_row_labels(&settled);
-    assert_eq!(history_rows(&settled), 1, "identical live fixture logs the command and no edit: {rows:?}");
-    assert!(rows.iter().all(|row| row.contains("importFixture") && row.contains("applied=false") && row.contains("ops=0")), "{rows:?}");
+    assert_eq!(history_rows(&settled), 1, "identical live scene_snapshot logs the command and no edit: {rows:?}");
+    assert!(rows.iter().all(|row| row.contains("importSnapshot") && row.contains("applied=false") && row.contains("ops=0")), "{rows:?}");
 }
 
-/// 📥️ Wave W-AB #44: leftover `importFixture` against a one-object live fixture applies a distinct two-object JSON.
+/// 📥️ Wave W-AB #44: leftover `importSnapshot` against a one-object live scene_snapshot applies a distinct two-object JSON.
 #[semio_framework_async_macros::async_test]
-async fn import_fixture_of_a_distinct_two_object_json_against_a_one_object_live_fixture_emits_operations() {
+async fn import_snapshot_of_a_distinct_two_object_json_against_a_one_object_live_fixture_emits_operations() {
     let source = include_str!("../../🦀️.rs");
     assert!(
-        source.contains(r#""importFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
-        "importFixture must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
+        source.contains(r#""importSnapshot" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
+        "importSnapshot must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
     );
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [0.0, 0.0, 0.0] })), None).await.expect("seed");
-    assert_eq!(object_count(&app), 1, "live fixture must start as one object");
+    assert_eq!(object_count(&app), 1, "live scene_snapshot must start as one object");
     let live_id = first_object_id(&app);
     let one = projection_of(&app);
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).await.expect("distinct");
@@ -6609,10 +6614,10 @@ async fn import_fixture_of_a_distinct_two_object_json_against_a_one_object_live_
     let cores = object_cores(&two);
     assert_eq!(cores.len(), 2, "distinct payload must carry two objects");
     let distinct_id = cores.iter().map(|row| row.0.as_str()).find(|id| *id != live_id).expect("distinct object id").to_string();
-    dispatch(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&one) })), None).await.expect("restore one-object live fixture");
-    assert_eq!(object_count(&app), 1, "live fixture is one object before import");
+    dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&one) })), None).await.expect("restore one-object live scene_snapshot");
+    assert_eq!(object_count(&app), 1, "live scene_snapshot is one object before import");
     assert_eq!(first_object_id(&app), live_id);
-    let (imported, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&two) })), None).await;
+    let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&two) })), None).await;
     imported.expect("import distinct");
     assert_eq!(history_rows(&settled), 1, "distinct two-object import must emit operations");
     let after = object_cores(&projection_of(&app));
@@ -6620,8 +6625,8 @@ async fn import_fixture_of_a_distinct_two_object_json_against_a_one_object_live_
     assert!(after.iter().any(|row| row.0 == distinct_id), "after-snapshot must contain the distinct object id {distinct_id}");
 }
 
-/// 📥️ Wave B9 lane 3: the picker's REAL round trip — the bytes `exportFixture` hands the host's
-/// download are the bytes the file chooser hands `importFixture` back. A distinct export must upsert
+/// 📥️ Wave B9 lane 3: the picker's REAL round trip — the bytes `exportSnapshot` hands the host's
+/// download are the bytes the file chooser hands `importSnapshot` back. A distinct export must upsert
 /// its objects and record one history row; re-importing the SAME file against the document it
 /// describes must stay an identity no-op. The browser measured `effects:0 historyUpserts:0` on the
 /// distinct half, which is also exactly what a silently-dropped refusal notice looks like — so this
@@ -6636,7 +6641,7 @@ async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_i
                 Effect::DownloadMediaExport { data, .. } => Some(data.clone()),
                 _ => None,
             })
-            .expect("exportFixture emits one DownloadMediaExport")
+            .expect("exportSnapshot emits one DownloadMediaExport")
     };
     let notices = |result: &semio_framework_plugin::InvocationResult| -> Vec<String> {
         result
@@ -6649,20 +6654,20 @@ async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_i
             .collect()
     };
     let mut app = app().await;
-    let one_object = exported(&dispatch(&mut app, "exportFixture", None, None).await.expect("export the boot document"));
+    let one_object = exported(&dispatch(&mut app, "exportSnapshot", None, None).await.expect("export the boot document"));
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).await.expect("seed a second object");
-    let two_objects = exported(&dispatch(&mut app, "exportFixture", None, None).await.expect("export the distinct document"));
+    let two_objects = exported(&dispatch(&mut app, "exportSnapshot", None, None).await.expect("export the distinct document"));
     assert_ne!(one_object, two_objects, "the two exports must be distinct files");
-    let restored = dispatch(&mut app, "importFixture", Some(&json!({ "payload": one_object.as_str(), "name": "puzzle-3d.json" })), None).await.expect("restore the one-object document");
+    let restored = dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": one_object.as_str(), "name": "puzzle-3d.json" })), None).await.expect("restore the one-object document");
     assert!(notices(&restored).is_empty(), "restoring an exported file must not refuse: {:?}", notices(&restored));
     assert_eq!(object_count(&app), 1, "the live document is one object before the distinct import");
-    let (distinct, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": two_objects.as_str(), "name": "puzzle-3d-distinct.json" })), None).await;
+    let (distinct, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": two_objects.as_str(), "name": "puzzle-3d-distinct.json" })), None).await;
     let distinct = distinct.expect("import the distinct file");
     assert!(notices(&distinct).is_empty(), "a distinct exported file must not refuse: {:?}", notices(&distinct));
     assert_eq!(history_rows(&settled), 1, "a distinct exported file must record one history row");
     assert_eq!(object_count(&app), 2, "a distinct exported file must upsert its objects");
     let after_distinct = object_cores(&projection_of(&app));
-    let again = dispatch(&mut app, "importFixture", Some(&json!({ "payload": two_objects.as_str(), "name": "puzzle-3d-distinct.json" })), None).await.expect("re-import the same file");
+    let again = dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": two_objects.as_str(), "name": "puzzle-3d-distinct.json" })), None).await.expect("re-import the same file");
     assert!(notices(&again).is_empty(), "re-importing the same file must not refuse: {:?}", notices(&again));
     assert_eq!(object_cores(&projection_of(&app)), after_distinct, "re-importing the file the document already IS is an identity on the document");
 }
@@ -6670,16 +6675,16 @@ async fn exported_fixture_bytes_reimport_as_a_distinct_document_and_then_as_an_i
 /// 🔢️ The payload an import actually receives was written by a BROWSER, not by this crate's own writer:
 /// the file chooser hands back whatever `JSON.stringify` produced, which spells a whole float as `1` (no
 /// `.0`), a tiny one in exponent form (`-5.551115123125783e-17`), an absent optional as `null`, and a
-/// non-ASCII label as a `\u` escape. The law above only ever fed `import_fixture` this crate's own export
+/// non-ASCII label as a `\u` escape. The law above only ever fed `import_snapshot` this crate's own export
 /// text, so none of those spellings was under test — and the browser's `import-distinct` read
-/// `effects:0 historyUpserts:0` with NO refusal notice, which is exactly what `import_fixture`'s
+/// `effects:0 historyUpserts:0` with NO refusal notice, which is exactly what `import_snapshot`'s
 /// `ctx.abort` path looks like when `parse` rejects the text it was handed (ticket
 /// 26/09/02/PUZZLE-3D-END-TO-END wave B57 §2). One unreadable spelling is a silently dropped document.
 #[semio_framework_async_macros::async_test]
 async fn a_browser_serialized_fixture_payload_imports_every_json_number_spelling() {
     let mut app = app().await;
-    let payload = r#"{"schema":"puzzle.3d.fixture","domain":"architecture","objects":[{"id":"browser-clone","label":"Distinct Capsule J · cs_sl1","objectKind":"Object","origin":[-16.75,-3.6499999999999986,0],"orientation":[-5.551115123125783e-17,5.551115123125783e-17,0.7071067811865475,0.7071067811865475],"scale":null,"vortices":[{"id":"browser-clone:v0","position":[1,0,2]}],"hidden":false,"locked":false}],"attractions":[],"targetVolumes":[],"references":[]}"#;
-    let (imported, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": payload, "name": "browser-stringify.json" })), None).await;
+    let payload = r#"{"schema":"puzzle.3d.scene.v1","domain":"architecture","objects":[{"id":"browser-clone","label":"Distinct Capsule J · cs_sl1","objectKind":"Object","origin":[-16.75,-3.6499999999999986,0],"orientation":[-5.551115123125783e-17,5.551115123125783e-17,0.7071067811865475,0.7071067811865475],"scale":null,"vortices":[{"id":"browser-clone:v0","position":[1,0,2]}],"hidden":false,"locked":false}],"attractions":[],"targetVolumes":[],"references":[]}"#;
+    let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": payload, "name": "browser-stringify.json" })), None).await;
     let imported = imported.expect("import a browser-serialized payload");
     let notices: Vec<String> = imported
         .requested_effects
@@ -6696,7 +6701,7 @@ async fn a_browser_serialized_fixture_payload_imports_every_json_number_spelling
     assert_eq!(objects.first().map(|(id, ..)| id.as_str()), Some("browser-clone"), "the payload's own object id survives the import: {objects:?}");
 }
 
-/// 🧱️ Wave B59: the payload the browser hands `importFixture` for a REAL example is 145 714 B — the
+/// 🧱️ Wave B59: the payload the browser hands `importSnapshot` for a REAL example is 145 714 B — the
 /// Nakagin Capsule Tower export, 180 objects — and the live `import-distinct` verdict read
 /// `paneObjects=180→180` with no notice at all (wave B57 §2.3). Every import law before this one fed a
 /// payload of a few hundred bytes, so the size class the product actually imports was never under test.
@@ -6710,11 +6715,11 @@ async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_s
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
     let seeded = object_count(&app);
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [220.0, 0.0, 0.0] })), None).await.expect("seed one more object");
-    let distinct = crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&puzzle3d_fixture_from_projection(&projection_of(&app)));
+    let distinct = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_projection(&projection_of(&app)));
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("return to the example document");
     assert_eq!(object_count(&app), seeded, "the document is back at the example census before the import");
     assert!(distinct.len() > 140_000, "the payload under test must be the product's own size class; observed {} B", distinct.len());
-    let (result, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": distinct.as_str(), "name": "nakagin-capsule-tower-distinct.json" })), None).await;
+    let (result, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": distinct.as_str(), "name": "nakagin-capsule-tower-distinct.json" })), None).await;
     let result = result.expect("a product-sized import inside the budget is admitted");
     let notices: Vec<String> = result
         .requested_effects
@@ -6733,21 +6738,21 @@ async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_s
 /// 🧩️ The framework half of an import, end to end for this app: the host's chunk envelope
 /// (`semio_framework::kernel::import_chunk_arguments`) goes through the SDK's own action dispatch, whose
 /// instance-scoped `ImportStaging` stages every chunk but the last — no command, no edit — and hands
-/// `importFixture` the whole file once the run closes: ONE applied history row, the census moved.
+/// `importSnapshot` the whole file once the run closes: ONE applied history row, the census moved.
 #[semio_framework_async_macros::async_test]
-async fn a_chunked_pick_reaches_import_fixture_as_one_whole_file_through_the_framework_staging() {
+async fn a_chunked_pick_reaches_import_snapshot_as_one_whole_file_through_the_framework_staging() {
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
     let seeded = object_count(&app);
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [220.0, 0.0, 0.0] })), None).await.expect("seed one more object");
-    let distinct = crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&puzzle3d_fixture_from_projection(&projection_of(&app)));
+    let distinct = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&puzzle3d_scene_snapshot_from_projection(&projection_of(&app)));
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("return to the example document");
     let chunks = semio_framework::kernel::import_payload_chunks(&distinct);
     assert!(chunks.len() > 1, "a product-sized payload spans several host chunks; observed {}", chunks.len());
     let mut applied = 0usize;
     for chunk in &chunks {
         let args = semio_framework::kernel::import_chunk_arguments("nakagin-capsule-tower-distinct.json", chunk, None);
-        let (result, settled) = dispatch_action_reporting(&mut app, "importFixture", &args).await;
+        let (result, settled) = dispatch_action_reporting(&mut app, "importSnapshot", &args).await;
         result.expect("every chunk of a product-sized pick is admitted");
         let rows = history_row_labels(&settled);
         if chunk.chunk + 1 < chunk.chunk_count {
@@ -6769,7 +6774,7 @@ async fn an_import_above_the_export_budget_refuses_with_a_notice() {
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("load the nakagin example");
     let seeded = object_count(&app);
     let oversized = "x".repeat(PUZZLE_IMPORT_TOTAL_BYTES + 1);
-    let (result, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": oversized.as_str(), "name": "oversized.json" })), None).await;
+    let (result, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": oversized.as_str(), "name": "oversized.json" })), None).await;
     let result = result.expect("an over-budget import is an ANSWER, never a fault");
     let notices: Vec<String> = result
         .requested_effects
@@ -6782,40 +6787,40 @@ async fn an_import_above_the_export_budget_refuses_with_a_notice() {
     assert_eq!(notices.len(), 1, "an over-budget import publishes exactly one notice: {notices:?}");
     let rows = history_row_labels(&settled);
     assert_eq!(history_rows(&settled), 1, "a refused import logs the command and no edit: {rows:?}");
-    assert!(rows.iter().all(|row| row.contains("importFixture") && row.contains("applied=false") && row.contains("ops=0")), "{rows:?}");
+    assert!(rows.iter().all(|row| row.contains("importSnapshot") && row.contains("applied=false") && row.contains("ops=0")), "{rows:?}");
     assert_eq!(object_count(&app), seeded, "a refused import leaves the document alone");
 }
 
 /// 📤️📥️ LAW: the Nakagin export re-imports as the very document it came from — the whole exported file,
-/// read by `puzzle3d_import_value`, rebuilds a fixture whose own export is byte-identical.
+/// read by `puzzle3d_import_value`, rebuilds a scene_snapshot whose own export is byte-identical.
 #[test]
 fn the_nakagin_export_reimports_byte_for_byte() {
-    use crate::editor::puzzle3d::commands::import_fixture::puzzle3d_import_value;
-    let payload = crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&NAKAGIN_EXAMPLE_FIXTURE.clone());
+    use crate::editor::puzzle3d::commands::import_snapshot::puzzle3d_import_value;
+    let payload = crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&NAKAGIN_EXAMPLE_SNAPSHOT.clone());
     assert!(payload.len() > semio_framework::kernel::IMPORT_CHUNK_BYTES, "the payload under test spans several host chunks: {} B", payload.len());
     let root = puzzle3d_import_value(&json!({ "payload": payload.as_str(), "name": "nakagin.json" })).expect("the whole export is a puzzle 3D document");
     assert_eq!(
-        crate::editor::puzzle3d::commands::export_fixture::puzzle3d_export_json(&Puzzle3dFixture::from_value(semio_framework_pack_json::to_dsl_value(&root)).expect("the imported root IS a puzzle 3D document")),
+        crate::editor::puzzle3d::commands::export_snapshot::puzzle3d_export_json(&Puzzle3dSceneSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&root)).expect("the imported root IS a puzzle 3D document")),
         payload,
         "the import is byte-identical to the document that was exported"
     );
 }
 
-/// 📥️ Wave B16: leftover `exportFixture` must emit `DownloadMediaExport`.
+/// 📥️ Wave B16: leftover `exportSnapshot` must emit `DownloadMediaExport`.
 /// 🏷️ Wave B30: a fresh session's document IS the Concrete Forest example
 /// (`ArtifactApp::initial_snapshot`), and since the config lane says so from the first render the
 /// boot download is named after it. The app-generic `puzzle-3d.json` belongs to a document that came
-/// from no example at all — see `export_fixture_names_the_download_after_the_active_example`, which
+/// from no example at all — see `export_snapshot_names_the_download_after_the_active_example`, which
 /// reaches that state by clearing the picker.
 #[semio_framework_async_macros::async_test]
-async fn leftover_export_fixture_downloads_the_boot_example_json() {
+async fn leftover_export_snapshot_downloads_the_boot_example_json() {
     let source = include_str!("../../🦀️.rs");
     assert!(
-        source.contains(r#""exportFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
-        "exportFixture must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
+        source.contains(r#""exportSnapshot" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
+        "exportSnapshot must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
     );
     let mut app = app().await;
-    let result = dispatch(&mut app, "exportFixture", None, None).await.expect("leftover export");
+    let result = dispatch(&mut app, "exportSnapshot", None, None).await.expect("leftover export");
     let filename = result.requested_effects.iter().find_map(|effect| match effect {
         Effect::DownloadMediaExport { filename, .. } => Some(filename.as_str()),
         _ => None,
@@ -6829,12 +6834,12 @@ async fn leftover_export_fixture_downloads_the_boot_example_json() {
 /// from no example at all keeps the app-generic `puzzle-3d.json`. Both picker aliases (`concrete`,
 /// `nakagin`) resolve to the canonical id, so the filename never depends on how the row was spelled.
 #[semio_framework_async_macros::async_test]
-async fn export_fixture_names_the_download_after_the_active_example() {
+async fn export_snapshot_names_the_download_after_the_active_example() {
     /// 🏷️ The name is asserted across BOTH publication lanes, because the lane is chosen by payload size
     /// and the naming contract is not: an over-budget example publishes a segmented handle rather than an
     /// inline `DownloadMediaExport`, and it must carry the same filename (wave B38).
     async fn exported_filename(app: &mut Puzzle3dApp) -> String {
-        let (result, settled) = dispatch_reporting(app, "exportFixture", None, None).await;
+        let (result, settled) = dispatch_reporting(app, "exportSnapshot", None, None).await;
         result.expect("export");
         let inline = settled.effects.iter().find_map(|effect| match effect {
             Effect::DownloadMediaExport { filename, .. } => Some(filename.clone()),
@@ -6863,7 +6868,7 @@ async fn export_fixture_names_the_download_after_the_active_example() {
 /// `Fault`. The refusal names the file, its size and the budget, so the answer is readable.
 #[test]
 fn export_refuses_a_payload_above_the_declared_segmented_budget_with_a_notice() {
-    use crate::editor::puzzle3d::commands::export_fixture::{puzzle3d_export_refusal, puzzle3d_export_segmented, puzzle3d_export_segmented_budget_bytes};
+    use crate::editor::puzzle3d::commands::export_snapshot::{puzzle3d_export_refusal, puzzle3d_export_segmented, puzzle3d_export_segmented_budget_bytes};
     use crate::retained_command::PUZZLE_COMMAND_OUTPUT_BYTES;
     use semio_framework_plugin::app::ArtifactOutputChunks;
     let budget = puzzle3d_export_segmented_budget_bytes().expect("the declared output budget is within the framework cap");
@@ -6876,7 +6881,7 @@ fn export_refuses_a_payload_above_the_declared_segmented_budget_with_a_notice() 
 }
 
 /// ⬇️ Wave B38: an export larger than one wire page must reach the user as ONE download carrying the WHOLE
-/// fixture, through the framework's segmented lane — never as an inline effect field.
+/// scene_snapshot, through the framework's segmented lane — never as an inline effect field.
 ///
 /// 🧊️ The lane is picked by size against the guest's own contiguous-request ceiling
 /// (`GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`, one wasm page), derived from the wire constant rather than
@@ -6889,7 +6894,7 @@ fn export_refuses_a_payload_above_the_declared_segmented_budget_with_a_notice() 
 /// document — so a lane that publishes a handle but loses, reorders or truncates chunks fails here.
 #[semio_framework_async_macros::async_test]
 async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_the_whole_fixture() {
-    use crate::editor::puzzle3d::commands::export_fixture::{puzzle3d_export_inline_budget_bytes, puzzle3d_export_json};
+    use crate::editor::puzzle3d::commands::export_snapshot::{puzzle3d_export_inline_budget_bytes, puzzle3d_export_json};
     assert_eq!(
         puzzle3d_export_inline_budget_bytes(),
         semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
@@ -6898,9 +6903,9 @@ async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_t
     let mut app = app().await;
 
     // 🌲️ Below the budget: the inline lane, unchanged, and NO segmented handle at all.
-    let (small, small_settled) = dispatch_reporting(&mut app, "exportFixture", None, None).await;
+    let (small, small_settled) = dispatch_reporting(&mut app, "exportSnapshot", None, None).await;
     small.expect("concrete forest export");
-    let small_bytes = puzzle3d_export_json(&puzzle3d_fixture_from_snapshot(app.snapshot().expect("live snapshot").typed())).len();
+    let small_bytes = puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("live snapshot").typed())).len();
     assert!(small_bytes <= puzzle3d_export_inline_budget_bytes(), "Concrete Forest must sit under the inline budget, got {small_bytes} B");
     assert!(small_settled.downloads.is_empty(), "a payload that fits one page must not open a segmented handle: {:?}", small_settled.downloads);
     let inline = small_settled.effects.iter().find_map(|effect| match effect {
@@ -6911,9 +6916,9 @@ async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_t
 
     // 🏢️ Above the budget: one segmented handle, no inline payload, and the full JSON on drain.
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "nakagin" })), None).await.expect("load nakagin");
-    let expected = puzzle3d_export_json(&puzzle3d_fixture_from_snapshot(app.snapshot().expect("live snapshot").typed()));
+    let expected = puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("live snapshot").typed()));
     assert!(expected.len() > puzzle3d_export_inline_budget_bytes(), "Nakagin must exceed the inline budget, got {} B", expected.len());
-    let (large, large_settled) = dispatch_reporting(&mut app, "exportFixture", None, None).await;
+    let (large, large_settled) = dispatch_reporting(&mut app, "exportSnapshot", None, None).await;
     large.expect("nakagin export");
     assert!(
         !large_settled.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })),
@@ -6935,20 +6940,20 @@ async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_t
     assert_eq!(reassembled.get("schema"), live.get("schema"));
 }
 
-/// 📥️ Wave B16: leftover `openImportFixture` must emit the file picker that completes as `importFixture`.
+/// 📥️ Wave B16: leftover `openImportSnapshot` must emit the file picker that completes as `importSnapshot`.
 #[semio_framework_async_macros::async_test]
-async fn leftover_open_import_fixture_requests_file_open() {
+async fn leftover_open_import_snapshot_requests_file_open() {
     let source = include_str!("../../🦀️.rs");
     assert!(
-        source.contains(r#""openImportFixture" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
-        "openImportFixture must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
+        source.contains(r#""openImportSnapshot" => Box::new(Puzzle3dWindowCommandWork::new(tool_id))"#),
+        "openImportSnapshot must leftover-commit through Puzzle3dWindowCommandWork, not BoundedFirstStep"
     );
     let mut app = app().await;
-    let opened = dispatch(&mut app, "openImportFixture", None, None).await.expect("leftover openImportFixture");
+    let opened = dispatch(&mut app, "openImportSnapshot", None, None).await.expect("leftover openImportSnapshot");
     let req = opened.requested_effects.iter().find_map(|effect| match effect {
         Effect::RequestFileOpen { accept, import_action, .. } => {
             assert!(accept.contains("json"), "picker accepts JSON: {accept}");
-            assert_eq!(import_action, "importFixture");
+            assert_eq!(import_action, "importSnapshot");
             Some(())
         }
         _ => None,
@@ -6956,20 +6961,20 @@ async fn leftover_open_import_fixture_requests_file_open() {
     assert!(req.is_some(), "leftover Import must emit RequestFileOpen: {:?}", opened.requested_effects);
 }
 
-/// 📥️ Wave B16: leftover `importFixture` of a distinct two-object JSON replaces the live one-object document.
+/// 📥️ Wave B16: leftover `importSnapshot` of a distinct two-object JSON replaces the live one-object document.
 #[semio_framework_async_macros::async_test]
-async fn leftover_import_fixture_replaces_live_document_with_distinct_two_object_json() {
+async fn leftover_import_snapshot_replaces_live_document_with_distinct_two_object_json() {
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [0.0, 0.0, 0.0] })), None).await.expect("seed");
-    assert_eq!(object_count(&app), 1, "live fixture must start as one object");
+    assert_eq!(object_count(&app), 1, "live scene_snapshot must start as one object");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).await.expect("distinct");
     let two = projection_of(&app);
     assert_eq!(object_cores(&two).len(), 2, "distinct payload must carry two objects");
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty again");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [0.0, 0.0, 0.0] })), None).await.expect("one-object live");
-    assert_eq!(object_count(&app), 1, "live fixture is one object before import");
-    let (imported, settled) = dispatch_reporting(&mut app, "importFixture", Some(&json!({ "payload": to_json_string(&two), "name": "puzzle-3d-distinct.json" })), None).await;
+    assert_eq!(object_count(&app), 1, "live scene_snapshot is one object before import");
+    let (imported, settled) = dispatch_reporting(&mut app, "importSnapshot", Some(&json!({ "payload": to_json_string(&two), "name": "puzzle-3d-distinct.json" })), None).await;
     imported.expect("leftover distinct import");
     assert_eq!(history_rows(&settled), 1, "distinct leftover import must upsert history");
     assert_eq!(object_count(&app), 2, "distinct leftover import must replace objects after_objects=2");
@@ -7015,8 +7020,8 @@ async fn gumball_scale_on_locked_volume_refuses_without_edit() {
 /// 📋️ leftover vortex-granularity selection still captures the object, and paste clones it with a new id.
 #[test]
 fn leftover_copy_paste_clones_selected_object() {
-    let mut fixture = empty_fixture();
-    fixture.objects.push(Puzzle3dObject {
+    let mut scene_snapshot = empty_scene_snapshot();
+    scene_snapshot.objects.push(Puzzle3dObject {
         id: "seed-left-001".into(),
         label: Some("seed".into()),
         object_kind: Some("Object".into()),
@@ -7034,12 +7039,12 @@ fn leftover_copy_paste_clones_selected_object() {
         hovered: Vec::new(),
         referenced: Vec::new(),
     };
-    let objects = puzzle3d_selected_objects_from(&marks, &fixture);
+    let objects = puzzle3d_selected_objects_from(&marks, &scene_snapshot);
     assert_eq!(objects.len(), 1, "leftover selected object id must copy even when granularity is vortex: {objects:?}");
     assert_eq!(objects[0].id, "seed-left-001");
     assert_eq!(objects[0].origin, [1.0, 2.0, 3.0]);
-    let fragment = puzzle3d_copy_fragment_from(&fixture, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations_on(&fixture, &fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
+    let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
+    let mutations = puzzle3d_paste_operations_on(&scene_snapshot, &fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {
@@ -7057,8 +7062,8 @@ fn leftover_copy_paste_clones_selected_object() {
 /// 📋️ leftover selected vortex uuid (not object.id) still captures the parent object for copy.
 #[test]
 fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
-    let mut fixture = empty_fixture();
-    fixture.objects.push(Puzzle3dObject {
+    let mut scene_snapshot = empty_scene_snapshot();
+    scene_snapshot.objects.push(Puzzle3dObject {
         id: "seed-left-001".into(),
         label: Some("seed".into()),
         object_kind: Some("Object".into()),
@@ -7084,11 +7089,11 @@ fn leftover_copy_paste_clones_object_from_selected_vortex_uuid() {
         hovered: Vec::new(),
         referenced: Vec::new(),
     };
-    let objects = puzzle3d_selected_objects_from(&marks, &fixture);
+    let objects = puzzle3d_selected_objects_from(&marks, &scene_snapshot);
     assert_eq!(objects.len(), 1, "leftover selected vortex uuid must resolve to the parent object: {objects:?}");
     assert_eq!(objects[0].id, "seed-left-001");
-    let fragment = puzzle3d_copy_fragment_from(&fixture, objects).expect("copy fragment");
-    let mutations = puzzle3d_paste_operations_on(&fixture, &fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
+    let fragment = puzzle3d_copy_fragment_from(&scene_snapshot, objects).expect("copy fragment");
+    let mutations = puzzle3d_paste_operations_on(&scene_snapshot, &fragment, &semio_framework_plugin::kernel::PastePlacement::default()).expect("paste");
     let created: Vec<_> = mutations
         .iter()
         .filter_map(|op| match op {
@@ -7498,8 +7503,8 @@ fn object_flag(app: &Puzzle3dApp, object_id: &str, flag: &str) -> Option<bool> {
 #[semio_framework_async_macros::async_test]
 async fn shipped_object_kinds_are_the_two_examples_own_catalog_rows() {
     let mut derived: Vec<(String, String)> = Vec::new();
-    for fixture in [&*CONCRETE_FOREST_EXAMPLE_FIXTURE, &*NAKAGIN_EXAMPLE_FIXTURE] {
-        for entry in puzzle3d_catalog_entries(fixture, "objects") {
+    for scene_snapshot in [&*CONCRETE_FOREST_EXAMPLE_SNAPSHOT, &*NAKAGIN_EXAMPLE_SNAPSHOT] {
+        for entry in puzzle3d_catalog_entries(scene_snapshot, "objects") {
             if derived.len() >= PUZZLE3D_OBJECT_KIND_OPTIONS_MAX {
                 break;
             }
@@ -7522,17 +7527,17 @@ async fn shipped_object_kinds_are_the_two_examples_own_catalog_rows() {
 /// this app pays for it — each mount, and every `codec` call a hub makes to create or validate a document, where
 /// the interpreter multiplies it — so it must never build a scene, sync a precompute session or parse an example
 /// the document does not read. Weighed by this thread's heap peak (`HeapWitness`), deterministic and independent
-/// of other laws: the snapshot may peak no higher than converting the default fixture itself, within 4 KiB.
+/// of other laws: the snapshot may peak no higher than converting the default scene_snapshot itself, within 4 KiB.
 #[test]
 fn the_initial_snapshot_costs_only_its_document() {
-    let _ = default_fixture();
+    let _ = default_scene_snapshot();
     let peak_of = |work: &dyn Fn()| {
         let before = semio_framework_trace::retained_heap_bytes_on_this_thread();
         semio_framework_trace::reset_heap_peak_on_this_thread();
         work();
         semio_framework_trace::peak_heap_bytes_on_this_thread() - before
     };
-    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&default_fixture())).into())));
+    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&default_scene_snapshot())).into())));
     let snapshot = peak_of(&|| drop(<Puzzle3dPlayApp as ArtifactEditor>::initial_snapshot()));
     assert!(document > 0, "the witness weighs the document conversion: {document}");
     assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");

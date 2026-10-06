@@ -42,7 +42,7 @@ type idVectorFile struct {
 // materializeTree writes the committed tree into a private directory, points the repository root at
 // it and drops every cache the global-root Go implementation keeps.
 func materializeTree(ctx *host.Context) (string, error) {
-	data, err := ctx.FixtureBytes("shared://📡️repo-tree.json")
+	data, err := ctx.InputBytes("shared://📡️repo-tree.json")
 	if err != nil {
 		return "", err
 	}
@@ -69,7 +69,7 @@ func materializeTree(ctx *host.Context) (string, error) {
 }
 
 func loadIDVectors(ctx *host.Context) (idVectorFile, error) {
-	data, err := ctx.FixtureBytes("shared://📡️artifact-id-vectors.json")
+	data, err := ctx.InputBytes("shared://📡️artifact-id-vectors.json")
 	if err != nil {
 		return idVectorFile{}, err
 	}

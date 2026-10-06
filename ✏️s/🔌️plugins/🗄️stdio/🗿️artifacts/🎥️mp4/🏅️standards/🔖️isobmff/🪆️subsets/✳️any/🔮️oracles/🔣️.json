@@ -281,9 +281,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-sample-applied",
       "class": "handcrafted",
       "target": {
@@ -326,7 +325,6 @@
       "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). InsertSample{trackIndex:0,index:1,sample} inserts a real NAL-unit-shaped H.264 sample between the two existing samples, matching the committed set-snapshot leaf's own AVC track."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-track-applied",
       "class": "handcrafted",
       "target": {
@@ -369,7 +367,6 @@
       "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). InsertTrack{index:1,track} appends a second, identically-shaped video track and bumps movie.nextTrackId — the field the box header itself must stay consistent with."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-track-applied",
       "class": "handcrafted",
       "target": {
@@ -412,7 +409,6 @@
       "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). RemoveTrack{index:1} drops the second track, restoring the single-track document."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-sample-sync-applied",
       "class": "handcrafted",
       "target": {
@@ -455,7 +451,6 @@
       "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetSampleSync{trackIndex:0,index:1,sync:true} promotes the second sample to a sync (key) frame in place — the exact mutation this subset's own committed set-snapshot fixture's scenario name describes."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-track-codec-applied",
       "class": "handcrafted",
       "target": {
@@ -498,7 +493,6 @@
       "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetTrackCodec{trackIndex:0,codec} replaces the SPS/PPS NAL units in place with a different real High-profile AVC parameter set, leaving nalLengthSize (the ISOBMFF avcC length-prefix size) unchanged."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-ftyp-applied",
       "class": "handcrafted",
       "target": {
@@ -541,7 +535,6 @@
       "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetFtyp replaces the whole ftyp box — major brand, minor version and compatible-brands list — with a different real ISOBMFF brand combination."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-track-dimensions-applied",
       "class": "handcrafted",
       "target": {
@@ -584,7 +577,6 @@
       "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetTrackDimensions{trackIndex:0,width:32,height:24} overwrites the track header's presentation width/height (tkhd) in place."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-sample-applied",
       "class": "handcrafted",
       "target": {
@@ -627,7 +619,6 @@
       "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). RemoveSample{trackIndex:0,index:0} drops the first (sync) sample, leaving the second."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-snapshot-applied",
       "class": "handcrafted",
       "target": {

@@ -249,7 +249,7 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
     controllerId: "puzzle2d-story",
     componentKind: "board-2d",
     board2d: {
-      fixtureJson: JSON.stringify(fixture),
+      snapshotJson: JSON.stringify(fixture),
       cameraJson: JSON.stringify(fixture.camera),
       glyphCatalogsJson: storyBoardKindCatalogsJson(fixture),
       selectionJson: JSON.stringify(runtime.selectedIds),
@@ -269,7 +269,7 @@ function buildStorySceneNode(state: StoryPuzzle2dState, interactive: boolean): U
 
 //#region Fixtures
 const STORY_DEFAULT_FIXTURE: StoryPuzzle2dFixture = {
-  schema: "puzzle.2d.fixture",
+  schema: "board.ports.directed.v1",
   camera: { x: 140, y: 60, zoom: 1 },
   nodes: [
     { id: "alpha", nodeKind: "seed", shape: "circle", x: 0, y: 0, radius: 44, text: "alpha", handles: [{ id: "alpha:v0", handleKind: "port", angle: 0, radius: 6 }] },
@@ -288,7 +288,7 @@ const STORY_BRUSH_FIXTURE: StoryPuzzle2dFixture = {
 
 /** 🖌️ Same board as `STORY_BRUSH_FIXTURE` but `alpha` carries a second, unconnected `port` handle (`alpha:v1`) so the brush has a free slot to preview and commit into, and the `seed` node kind declares a handle template so `brush_compatible_candidates` has something to offer. Catalogs stay in the **document** `nodes`/`🐙️handles` shape — `storyBoardKindCatalogsJson` does the translation, exactly as production does. */
 const STORY_BRUSH_OPEN_SLOT_FIXTURE: StoryPuzzle2dFixture = {
-  schema: "puzzle.2d.fixture",
+  schema: "board.ports.directed.v1",
   camera: { x: 140, y: 60, zoom: 1 },
   nodes: [
     {

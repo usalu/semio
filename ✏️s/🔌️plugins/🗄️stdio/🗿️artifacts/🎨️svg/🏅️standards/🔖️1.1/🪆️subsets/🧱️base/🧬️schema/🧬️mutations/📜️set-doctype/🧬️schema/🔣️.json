@@ -13,7 +13,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Document type",
+          "de": "Dokumenttyp"
+        },
+        "description": {
+          "en": "The DOCTYPE declaration; cleared, the document carries none.",
+          "de": "Die DOCTYPE-Deklaration; geleert trägt das Dokument keine."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

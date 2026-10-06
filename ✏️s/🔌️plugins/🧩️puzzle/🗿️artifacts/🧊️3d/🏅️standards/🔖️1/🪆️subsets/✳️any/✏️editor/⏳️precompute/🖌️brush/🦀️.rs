@@ -2,13 +2,13 @@
 //! (port shape, single-letter family, the manifest's explicit `kindCompatibility` rows, the
 //! host-specific tambour/capsule rules), how the surviving candidates are ranked and weighted, how
 //! the fill lane's targets and candidates are sampled without replacement, and how one accepted
-//! candidate becomes a concrete `BrushPreviewState`/placement spliced into a `Fixture`. Rehomed from
+//! candidate becomes a concrete `BrushPreviewState`/placement spliced into a `EngineSceneSnapshot`. Rehomed from
 //! the former `⚙️engine/🖌️brush` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this
 //! is the interactive brush tool's own decision logic, so it lives with the app, not the artifact.
 
 use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
 use crate::standards::v1::subsets::any::schema::{
-    AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, Fixture, FixtureObject, KindCatalogBundle, KindCompatEntry, ObjectKind,
+    AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneSnapshot, EngineSceneObject, KindCatalogBundle, KindCompatEntry, ObjectKind,
     ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps,
 };
 use crate::editor::puzzle3d::precompute::geometry::{
@@ -60,17 +60,17 @@ impl BrushCatalogView for KindCatalogBundle {
     }
 }
 
-pub(crate) trait BrushFixtureView {
+pub(crate) trait BrushSceneView {
     fn object_count(&self) -> usize;
-    fn find_object_kind(&self, kind_id: &str) -> Option<&FixtureObject>;
+    fn find_object_kind(&self, kind_id: &str) -> Option<&EngineSceneObject>;
 }
 
-impl BrushFixtureView for Fixture {
+impl BrushSceneView for EngineSceneSnapshot {
     fn object_count(&self) -> usize {
         self.objects.len()
     }
 
-    fn find_object_kind(&self, kind_id: &str) -> Option<&FixtureObject> {
+    fn find_object_kind(&self, kind_id: &str) -> Option<&EngineSceneObject> {
         self.objects.iter().find(|object| object.object_kind.as_deref() == Some(kind_id))
     }
 }
@@ -299,20 +299,20 @@ pub(crate) fn catalog_object_kind_by_id<'a>(catalogs: &'a impl BrushCatalogView,
     catalogs.objects().iter().find(|k| k.id == id)
 }
 
-pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &impl BrushCatalogView, fixture: &impl BrushFixtureView) -> Option<String> {
+pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &impl BrushCatalogView, scene_snapshot: &impl BrushSceneView) -> Option<String> {
     if let Some(kind) = catalog_object_kind_by_id(catalogs, kind_id) {
         if let Some(url) = kind.representations.iter().map(|r| r.url.trim()).find(|u| !u.is_empty()) {
             return Some(url.to_string());
         }
     }
-    fixture.find_object_kind(kind_id).and_then(|object| object.mesh_url.clone())
+    scene_snapshot.find_object_kind(kind_id).and_then(|object| object.mesh_url.clone())
 }
 
 /// 🥽️ The mesh identity a PLACED object renders and collides with: its own non-empty `meshUrl`, else its
 /// kind's. The same law as the renderer's `Puzzle3dKindMeshIndex::resolve`; resolving a placed object by kind
 /// alone found the first object of that kind instead, so a body carrying its own mesh was never indexed.
-pub(crate) fn resolve_placed_object_mesh_url(object: &FixtureObject, catalogs: &impl BrushCatalogView, fixture: &impl BrushFixtureView) -> Option<String> {
-    object.mesh_url.as_deref().map(str::trim).filter(|url| !url.is_empty()).map(str::to_string).or_else(|| resolve_object_kind_mesh_url(object.object_kind.as_deref().unwrap_or(""), catalogs, fixture))
+pub(crate) fn resolve_placed_object_mesh_url(object: &EngineSceneObject, catalogs: &impl BrushCatalogView, scene_snapshot: &impl BrushSceneView) -> Option<String> {
+    object.mesh_url.as_deref().map(str::trim).filter(|url| !url.is_empty()).map(str::to_string).or_else(|| resolve_object_kind_mesh_url(object.object_kind.as_deref().unwrap_or(""), catalogs, scene_snapshot))
 }
 
 pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules) -> Vec<BrushCompatibleCandidate> {
@@ -372,7 +372,7 @@ pub(crate) fn blocked_vortex_full_ids(attractions: &[AttractionProps]) -> std::c
     s
 }
 
-pub(crate) fn vortex_world_from_object(obj: &FixtureObject, vortex_index: usize) -> Option<(Vec3, Vec3)> {
+pub(crate) fn vortex_world_from_object(obj: &EngineSceneObject, vortex_index: usize) -> Option<(Vec3, Vec3)> {
     let vortex = obj.vortices.get(vortex_index)?;
     let orientation = obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
     let position = vec3_add(obj.origin, quat_rotate_vec(orientation, vortex.position));
@@ -381,10 +381,10 @@ pub(crate) fn vortex_world_from_object(obj: &FixtureObject, vortex_index: usize)
 }
 
 #[cfg(test)]
-pub(crate) fn enumerate_brush_fill_vortex_targets(fixture: &Fixture) -> Vec<BrushFillVortexTarget> {
-    let blocked = blocked_vortex_full_ids(&fixture.attractions);
+pub(crate) fn enumerate_brush_fill_vortex_targets(scene_snapshot: &EngineSceneSnapshot) -> Vec<BrushFillVortexTarget> {
+    let blocked = blocked_vortex_full_ids(&scene_snapshot.attractions);
     let mut out = Vec::new();
-    for obj in &fixture.objects {
+    for obj in &scene_snapshot.objects {
         for (i, vortex) in obj.vortices.iter().enumerate() {
             let full_id = puzzle3d_vortex_full_id(&obj.id, &vortex.id);
             if !blocked.contains(&full_id) {
@@ -531,11 +531,11 @@ pub(crate) fn brush_preview_from_candidate(
     target: &AttractionVortexContext,
     world: TargetVortexWorld,
     catalogs: &impl BrushCatalogView,
-    fixture: &impl BrushFixtureView,
+    scene_snapshot: &impl BrushSceneView,
 ) -> Option<BrushPreviewState> {
     let kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)?;
     let template = kind.vortices.get(candidate.source_vortex_index)?;
-    let mesh_url = resolve_object_kind_mesh_url(&candidate.object_kind_id, catalogs, fixture)?;
+    let mesh_url = resolve_object_kind_mesh_url(&candidate.object_kind_id, catalogs, scene_snapshot)?;
     let source_vk = template.vortex_kind.as_deref().unwrap_or("");
     let use_host = brush_placement_uses_host_orientation(target, source_vk, &candidate.object_kind_id);
     let (origin, orientation) = compute_brush_placement_pose(template.point, template.direction.unwrap_or([0.0, 0.0, -1.0]), &kind.scale, world.position, world.direction, world.reference_orientation, use_host);
@@ -543,19 +543,19 @@ pub(crate) fn brush_preview_from_candidate(
 }
 
 /// 🧱️ Splices one accepted brush placement (the new object plus the attraction docking it onto the
-/// pre-existing target vortex) into `fixture`; returns `fixture` unchanged when the kind/template/
+/// pre-existing target vortex) into `scene_snapshot`; returns `scene_snapshot` unchanged when the kind/template/
 /// mesh cannot be resolved or the target vortex is already attracting something.
-pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlacePayload, catalogs: &KindCatalogBundle) -> Fixture {
+pub fn apply_brush_placement_to_snapshot(scene_snapshot: &EngineSceneSnapshot, payload: &BrushPlacePayload, catalogs: &KindCatalogBundle) -> EngineSceneSnapshot {
     let Some(kind) = catalog_object_kind_by_id(catalogs, &payload.object_kind_id) else {
-        return fixture.clone();
+        return scene_snapshot.clone();
     };
     let Some(template) = kind.vortices.get(payload.source_vortex_index) else {
-        return fixture.clone();
+        return scene_snapshot.clone();
     };
-    let Some(mesh_url) = resolve_object_kind_mesh_url(&payload.object_kind_id, catalogs, fixture) else {
-        return fixture.clone();
+    let Some(mesh_url) = resolve_object_kind_mesh_url(&payload.object_kind_id, catalogs, scene_snapshot) else {
+        return scene_snapshot.clone();
     };
-    let object_id = brush_object_id(fixture, payload);
+    let object_id = brush_object_id(scene_snapshot, payload);
     let vortices: Vec<VortexProps> = kind.vortices.iter().enumerate().map(|(index, entry)| VortexProps { id: format!("{object_id}:v{index}"), vortex_kind: entry.vortex_kind.clone(), position: entry.point, direction: entry.direction }).collect();
     // 🌲️ The new object attaches as `attracted`: the pre-existing target vortex it's docking onto stays the
     // resolution root. Params start at zero (a bare port-to-port docking); the app's
@@ -563,12 +563,12 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
     // merge, so the object never visibly jumps when the directed-attraction resolver runs.
     let attracted = puzzle3d_vortex_full_id(&object_id, &vortices[payload.source_vortex_index].id);
     let attraction_id = format!("attraction-{}-{attracted}", payload.target_vortex_full_id);
-    let mut next = fixture.clone();
+    let mut next = scene_snapshot.clone();
     if next.attractions.iter().any(|a| a.attracting == payload.target_vortex_full_id || a.attracted == attracted) {
-        return fixture.clone();
+        return scene_snapshot.clone();
     }
     next.attractions.push(AttractionProps { id: attraction_id, attracting: payload.target_vortex_full_id.clone(), attracted, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
-    next.objects.push(FixtureObject {
+    next.objects.push(EngineSceneObject {
         id: object_id,
         object_kind: Some(kind.id.clone()),
         anchor: Default::default(),
@@ -582,12 +582,12 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
     next
 }
 
-/// 🪪️ Content-addressed brush object id — keyed by fixture size and placement payload (no global counter).
-pub(crate) fn brush_object_id(fixture: &impl BrushFixtureView, payload: &BrushPlacePayload) -> String {
+/// 🪪️ Content-addressed brush object id — keyed by scene_snapshot size and placement payload (no global counter).
+pub(crate) fn brush_object_id(scene_snapshot: &impl BrushSceneView, payload: &BrushPlacePayload) -> String {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     let mut hasher = DefaultHasher::new();
-    fixture.object_count().hash(&mut hasher);
+    scene_snapshot.object_count().hash(&mut hasher);
     payload.target_vortex_full_id.hash(&mut hasher);
     payload.object_kind_id.hash(&mut hasher);
     payload.source_vortex_index.hash(&mut hasher);
@@ -857,10 +857,10 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
                 false
             }
             BrushSuggestionsPhase::Placed(cursor) => {
-                self.phase = match self.scene.fixture.objects.get(cursor) {
+                self.phase = match self.scene.scene_snapshot.objects.get(cursor) {
                     Some(object) => {
                         precompute_work(1);
-                        if let Some(mesh_url) = resolve_placed_object_mesh_url(object, &self.catalogs, &self.scene.fixture) {
+                        if let Some(mesh_url) = resolve_placed_object_mesh_url(object, &self.catalogs, &self.scene.scene_snapshot) {
                             let world = pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale);
                             let bounds = CollisionAabb::from_body(self.meshes.get(&mesh_url).unwrap_or(&self.fallback), &world);
                             self.placed.push(BrushSuggestionsPlaced { object_id: object.id.clone(), mesh_url, world, bounds });
@@ -886,8 +886,8 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
         };
         let mut found = BrushSuggestionsFound { writer: self.writer_run(), target: target.clone(), previews: Vec::new(), verdicts: Vec::new(), done: true };
         let scene = Arc::clone(&self.scene);
-        let host = scene.fixture.objects.iter().find_map(|object| object.vortices.iter().position(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == target).map(|index| (object, index)));
-        precompute_work(scene.fixture.objects.len());
+        let host = scene.scene_snapshot.objects.iter().find_map(|object| object.vortices.iter().position(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == target).map(|index| (object, index)));
+        precompute_work(scene.scene_snapshot.objects.len());
         let refusal = match host {
             None => Some(BrushSuggestionsRunReason::TargetMissing),
             Some((host, index)) if !brush_target_vortex_allows_suggestion(host.vortices[index].vortex_kind.as_deref(), &scene.weights) => Some(BrushSuggestionsRunReason::SuggestionsBlocked),
@@ -898,7 +898,7 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
                     let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
                     let candidates = brush_compatible_candidates(&context, &self.catalogs, &scene.kind_compatibility, &scene.host_rules);
                     precompute_work(candidates.len());
-                    found.previews = candidates.iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &self.catalogs) > 0.0).map(|candidate| brush_preview_from_candidate(&target, candidate, &context, world, &self.catalogs, &scene.fixture)).collect();
+                    found.previews = candidates.iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &self.catalogs) > 0.0).map(|candidate| brush_preview_from_candidate(&target, candidate, &context, world, &self.catalogs, &scene.scene_snapshot)).collect();
                     found.verdicts = vec![BrushSuggestionVerdict::Pending; found.previews.len()];
                     found.done = false;
                     None

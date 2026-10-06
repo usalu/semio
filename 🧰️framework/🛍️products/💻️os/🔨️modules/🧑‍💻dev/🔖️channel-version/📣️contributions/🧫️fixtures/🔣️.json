@@ -40,7 +40,8 @@
                 "occurrences": 2,
                 "hostileValues": [
                   13
-                ]
+                ],
+                "hostileOccurrences": 1
               }
             ]
           }
@@ -50,6 +51,48 @@
       "paths": [
         "future/owner/schema.json"
       ]
+    },
+    {
+      "id": "hostile-values-without-their-count-refuse",
+      "input": [
+        {
+          "ownerRoot": "future/owner",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "schema.json",
+                "occurrences": 2,
+                "hostileValues": [
+                  13
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
+    },
+    {
+      "id": "hostile-count-without-values-refuses",
+      "input": [
+        {
+          "ownerRoot": "future/owner",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "schema.json",
+                "occurrences": 2,
+                "hostileOccurrences": 1
+              }
+            ]
+          }
+        }
+      ],
+      "accepted": false,
+      "paths": []
     },
     {
       "id": "deleted-owner-removes-contribution",
@@ -495,7 +538,8 @@
                 "occurrences": 1,
                 "hostileValues": [
                   13
-                ]
+                ],
+                "hostileOccurrences": 1
               }
             ]
           }
@@ -532,6 +576,68 @@
       ],
       "files": {
         "future/wire.json": "{\"appChannelVersion\":7}"
+      },
+      "expected": []
+    },
+    {
+      "id": "stale-pin-equal-to-a-hostile-value-refuses",
+      "pin": 21,
+      "owners": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.json",
+                "occurrences": 3,
+                "hostileValues": [
+                  20,
+                  22
+                ],
+                "hostileOccurrences": 2
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [
+        "future/wire.json"
+      ],
+      "files": {
+        "future/wire.json": "{\"appChannelVersion\":20,\"channelVersion\":22,\"executionProtocol\":20}"
+      },
+      "expected": [
+        "hostile"
+      ]
+    },
+    {
+      "id": "hostile-rows-beside-the-pin-are-admitted",
+      "pin": 21,
+      "owners": [
+        {
+          "ownerRoot": "future",
+          "document": {
+            "schema": "semio.os.channel-version-consumers/v1",
+            "consumers": [
+              {
+                "path": "wire.json",
+                "occurrences": 3,
+                "hostileValues": [
+                  20,
+                  22
+                ],
+                "hostileOccurrences": 2
+              }
+            ]
+          }
+        }
+      ],
+      "candidates": [
+        "future/wire.json"
+      ],
+      "files": {
+        "future/wire.json": "{\"appChannelVersion\":20,\"channelVersion\":22,\"executionProtocol\":21}"
       },
       "expected": []
     }

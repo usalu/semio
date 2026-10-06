@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "artifactKind": {
+    "id": "kit.catalog",
+    "label": {
+      "native": {
+        "en": "Kit Catalog",
+        "de": "Bausatzkatalog"
+      },
+      "reuse": {
+        "en": "Kit Catalog",
+        "de": "Bausatzkatalog"
+      }
+    },
+    "sourceFormat": "kit.catalog",
+    "componentKind": "kit-catalog",
+    "dimension": "3d",
+    "mediaCapability": "meshOnly",
+    "mediaType": {
+      "class": "kit",
+      "form": "type"
+    },
+    "schema": "kit.catalog",
+    "exportFormats": [],
+    "importFormats": [],
+    "exportStdioKinds": [],
+    "importStdioKinds": []
+  }
+}

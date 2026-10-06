@@ -14,7 +14,3 @@ pub struct PatchSnapshot {
 
 semio_s_artifact_stdio_contract::snapshot_patch_leaf! { leaf: PatchSnapshot, snapshot: BmpSnapshot, mutation: BmpMutation, diff: BmpDiff, snapshot_schema: "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/snapshot.json" }
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;

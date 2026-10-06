@@ -85,162 +85,11 @@ pub fn pptx_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 }
 //#endregion Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::schema::snapshot::{PptxParagraph, PptxRun};
-    use crate::{PptxDiff, PptxMutation, PptxSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    //#region 🔖️Builder
-    /// 🏗️ Builds a `stdio.pptx` snapshot.
-    #[derive(Clone, Debug, Default)]
-    pub struct PptxBuilderConstruction {
-        snapshot: PptxSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for PptxBuilderConstruction {
-        type Snapshot = PptxSnapshot;
-        type Mutation = PptxMutation;
-        type Diff = PptxDiff;
-        fn empty() -> Self {
-            Self { snapshot: PptxSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            match snapshot.presentation() {
-                Ok(_) => Self { snapshot, diagnostics: Vec::new() },
-                Err(error) => Self { snapshot, diagnostics: vec![semio_framework_diagnostic::Diagnostic::error("stdio.pptx.builder.presentation", semio_framework_diagnostic::TextSpan::at(1, 1), error)] },
-            }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::schema::mutations::apply_pptx_mutation(&mut self.snapshot, &mutation);
-            (Self::from_snapshot(self.snapshot), diff)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <PptxDiff as protocol::MutationDiff<PptxSnapshot>>::apply(&diff, &self.snapshot)?;
-            Ok(Self::from_snapshot(self.snapshot))
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-    //#endregion 🔖️Builder
-
-    //#region 🔖️TypedConstructors
-    /// 🧱️ Typed content constructors — build a presentation from slides of paragraphs/runs with
-    /// basic formatting (bold/italic), the same shape as `docx::DocxBuilder`'s constructors.
-    impl PptxBuilderConstruction {
-        /// ➕️ Appends a new (initially empty) slide and makes it the active slide for `add_paragraph`.
-        pub async fn add_slide(mut self) -> Self {
-            if self.diagnostics.is_empty() {
-                if let Err(error) = super::construction::append_slide(&mut self.snapshot) {
-                    self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.pptx.builder.add-slide", semio_framework_diagnostic::TextSpan::at(1, 1), error));
-                }
-            }
-            self
-        }
-
-        /// ➕️ Appends a paragraph to the active slide's active `TextBox` shape (the most recently
-        /// added one), creating a fresh `TextBox` shape first if the slide has none yet or its last
-        /// shape isn't one.
-        pub async fn add_paragraph(mut self, paragraph: PptxParagraph) -> Self {
-            if self.diagnostics.is_empty() {
-                if let Err(error) = super::construction::append_paragraph(&mut self.snapshot, paragraph) {
-                    self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.pptx.builder.add-paragraph", semio_framework_diagnostic::TextSpan::at(1, 1), error));
-                }
-            }
-            self
-        }
-
-        /// ➕️ Appends a single-run plain-text paragraph to the active slide.
-        pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
-            self.add_paragraph(PptxParagraph::text(text.into())).await
-        }
-
-        /// ➕️ Appends a paragraph made of the given runs (basic bold/italic formatting).
-        pub async fn add_runs(self, runs: Vec<PptxRun>) -> Self {
-            self.add_paragraph(PptxParagraph { runs }).await
-        }
-    }
-    //#endregion 🔖️TypedConstructors
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::PptxSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    //#region 🔖️Parts
-    /// 🧩 Analyzed `stdio.pptx` parts.
-    #[derive(Clone, Debug, Default)]
-    pub struct PptxParts {
-        pub snapshot: Option<PptxSnapshot>,
-    }
-    //#endregion 🔖️Parts
-
-    //#region 🔖️Analyzer
-    /// 🧐️ Analyzes `stdio.pptx` (ecma-376/🧱️base) sources.
-    pub struct PptxAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for PptxAnalyzerAnalysis {
-        type Parts = PptxParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
-
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
-            // `ppt/` — disambiguates from docx/xlsx, which share the same zip magic and OPC shape.
-            match source {
-                AnalyzeSource::Binary(bytes) if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) => IoConfidence::High,
-                AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
-            }
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = PptxParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <PptxSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => {
-                        let result = if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) {
-                            crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx(bytes).map_err(|err| err.to_string())
-                        } else {
-                            <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
-                        };
-                        match result {
-                            Ok(snapshot) => parts.snapshot = Some(snapshot),
-                            Err(err) => {
-                                confidence = IoConfidence::Low;
-                                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err));
-                            }
-                        }
-                    }
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-    //#endregion 🔖️Analyzer
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🔖️DocumentHelpers
@@ -316,16 +165,7 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec PptxBuilderFacets {
-        construction: PptxBuilderConstruction,
-        analysis: PptxAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::PptxComposerComposition,
-    }
-    builder: PptxBuilder,
-    analyzer: PptxAnalyzer,
-    composer: PptxComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🧪️Tests

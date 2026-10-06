@@ -1,0 +1,11 @@
+# Current Scalar Constant Path Owner
+
+The existing General compiler inspector admits a whole first literal path argument. A same-file scalar constant used as that argument is currently invisible to the repository runtime direction consumer. The requested cut adds owned constant declaration provenance and retires the literal-only API name.
+
+The authored contract covers literal scalar const initializers, lexical module and block visibility, self/super/local inline module paths, local declaration timing, function parameter shadowing and nested item capture boundaries. The reference span remains the actual call argument; a constant origin separately records its defining name and source span. A file's textual root does not establish the crate namespace for an externally mounted module, so crate-qualified resolution needs explicit caller-owned crate-root context.
+
+Arrays, dynamic collections, external/import aliases and associated constants remain named unsupported scope. No complete path dependency or deletion closure is inferred from this finite scalar cut. Schema-first cases, the independent tree-sitter scope oracle, the TypeScript owning tests and original Rust compiler native route are required before guarded source publication.
+
+Source3 actual Nx8750 exits0. Its 14 full owning rows and three defining frames bind 64 language-neutral compiler cases and 18 runtime direction cases. Five Bun tests execute with 244 expectations, including the independent tree-sitter scope oracle, AJV admission and independent glob policy. The stage retains 17 full Rust function bodies and two syntax endpoints. Source2 remains a historical 60-case input; Source3 explicitly adds closure parameter boundaries and separate module/value namespace resolution. Schema2 independently writes the exact current 64-case authored fixture assets.
+
+The runtime executor resolves crate-qualified constants only when every captured defining context identifies this file as its crate root, has a root mount and has empty source scope. Other mounts remain file-scoped and unresolved for crate paths. The genuine original Rust compiler native route and independent Source3 gate remain required; no native, runtime direction closure or publication claim follows from the Bun result.

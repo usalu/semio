@@ -4,7 +4,7 @@
 //! the lib tests pin the bare host, where the demo's operators are unknown.
 use semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::io::export::serializers::artifacts::{dxf::v_r12::any as dxf_out, pdf::v1_4::any as pdf_out, png::v1_2::any as png_out, svg::v1_1::any as svg_out};
 use semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::io::generation2d_drawing;
-use semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::schema::default_snapshot;
+use semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::io::text::snapshot::default_snapshot;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn installed() {
@@ -28,7 +28,7 @@ fn bundled_example_exports_its_evaluated_rectangle_to_every_page_format() {
     assert!(svg.starts_with("<svg") || svg.contains("<svg "), "{svg}");
     assert_eq!(svg.matches("<path").count(), 1, "{svg}");
     assert!(pdf_out::serialize_bytes(&example).expect("pdf").starts_with(b"%PDF-1.4"));
-    let png = semio_s_artifact_stdio_png::io::project_png(&png_out::serialize_bytes(&example).expect("png")).expect("decodes as png");
+    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&png_out::serialize_bytes(&example).expect("png")).expect("decodes as png");
     assert_eq!((png.width, png.height), (62, 42));
     assert!(png.pixels.chunks(4).filter(|px| px[3] > 0).count() >= 2 * (30 + 10), "the rectangle outline is painted");
     let alpha = |x: u32, y: u32| png.pixels[((y * png.width + x) * 4 + 3) as usize];

@@ -1,6 +1,7 @@
 //! ↗️ Preserve SVG transform lists in the owned editable affine representation.
 use crate::DrawingTransform;
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{parse_transform_list,Matrix2D,TransformOp};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{Matrix2D, TransformOp};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_transform_list};
 pub fn parse_editable_svg_transform(source:&str)->Result<DrawingTransform,String> {
     validate_transform_grammar(source)?;
     let mut matrix=Matrix2D::identity();

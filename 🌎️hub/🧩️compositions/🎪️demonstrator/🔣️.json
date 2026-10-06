@@ -23466,7 +23466,7 @@
             }
           },
           {
-            "id": "exportFixture",
+            "id": "exportSnapshot",
             "label": {
               "native": {
                 "en": "Export",
@@ -23518,7 +23518,7 @@
             }
           },
           {
-            "id": "importFixture",
+            "id": "importSnapshot",
             "label": {
               "native": {
                 "en": "Import",
@@ -23572,7 +23572,7 @@
             }
           },
           {
-            "id": "openImportFixture",
+            "id": "openImportSnapshot",
             "label": {
               "native": {
                 "en": "Import",

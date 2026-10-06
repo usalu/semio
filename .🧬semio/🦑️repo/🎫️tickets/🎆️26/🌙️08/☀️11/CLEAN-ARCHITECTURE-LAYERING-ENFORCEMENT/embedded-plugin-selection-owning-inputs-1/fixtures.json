@@ -1,0 +1,53 @@
+[
+  {
+    "id": "exact",
+    "input": [
+      "test-browser",
+      "long",
+      "🧪️tests/🧩️embedded-selection/🟦️.ts"
+    ],
+    "accepted": true
+  },
+  {
+    "id": "quick",
+    "input": [
+      "test-browser",
+      "quick",
+      "🧪️tests/🧩️embedded-selection/🟦️.ts"
+    ],
+    "accepted": false
+  },
+  {
+    "id": "native",
+    "input": [
+      "test-native",
+      "long",
+      "🧪️tests/🧩️embedded-selection/🟦️.ts"
+    ],
+    "accepted": false
+  },
+  {
+    "id": "foreign",
+    "input": [
+      "test-browser",
+      "long",
+      "foreign"
+    ],
+    "accepted": false
+  },
+  {
+    "id": "empty",
+    "input": [],
+    "accepted": false
+  },
+  {
+    "id": "extra",
+    "input": [
+      "test-browser",
+      "long",
+      "🧪️tests/🧩️embedded-selection/🟦️.ts",
+      "other"
+    ],
+    "accepted": false
+  }
+]

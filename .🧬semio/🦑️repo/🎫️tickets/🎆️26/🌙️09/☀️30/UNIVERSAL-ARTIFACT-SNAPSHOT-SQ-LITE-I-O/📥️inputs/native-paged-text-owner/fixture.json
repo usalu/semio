@@ -1,0 +1,81 @@
+{
+  "schema": "native-text/paged-owner/v1",
+  "payloadBytes": 8194,
+  "pageBytes": 4096,
+  "maximumCloseItems": 1,
+  "maximumCloseBytes": 4096,
+  "maximumAllocationBytes": 131072,
+  "initialAllocationBytes": 4096,
+  "ascii": {
+    "byte": 120,
+    "repetitions": 8194
+  },
+  "unicode": {
+    "prefixByte": 120,
+    "prefixRepetitions": 4095,
+    "middle": "🧩",
+    "suffixByte": 120,
+    "suffixRepetitions": 4093,
+    "tail": "Ω"
+  },
+  "cancelAt": 256,
+  "cases": [
+    {
+      "id": "ascii",
+      "mode": "success",
+      "source": "ascii",
+      "error": null,
+      "logical": 8194
+    },
+    {
+      "id": "unicode-cross-page",
+      "mode": "success",
+      "source": "unicode",
+      "error": null,
+      "logical": 8194
+    },
+    {
+      "id": "initial4096",
+      "mode": "initial",
+      "source": "ascii",
+      "error": "ownership",
+      "logical": 0
+    },
+    {
+      "id": "cancel-validation",
+      "mode": "validate-cancel",
+      "source": "ascii",
+      "error": "canceled",
+      "logical": 0
+    },
+    {
+      "id": "cancel-partial8194",
+      "mode": "materialize-cancel",
+      "source": "ascii",
+      "error": "canceled",
+      "logical": 256
+    }
+  ],
+  "invalidUtf8": [
+    [
+      192,
+      128
+    ],
+    [
+      237,
+      160,
+      128
+    ],
+    [
+      244,
+      144,
+      128,
+      128
+    ],
+    [
+      240,
+      159
+    ]
+  ]
+}
+

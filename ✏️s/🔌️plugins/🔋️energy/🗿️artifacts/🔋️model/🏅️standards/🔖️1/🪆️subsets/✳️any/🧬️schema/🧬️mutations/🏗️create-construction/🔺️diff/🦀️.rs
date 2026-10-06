@@ -17,6 +17,6 @@ pub fn diff(payload: &super::CreateConstruction, base: &EnergyModelSnapshot) -> 
     }
     let mut model = base.model.clone();
     model.constructions.insert(payload.index as usize, crate::model::Construction { id: payload.id, name: payload.name.clone(), layer_material_ids: payload.layer_material_ids.clone() });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

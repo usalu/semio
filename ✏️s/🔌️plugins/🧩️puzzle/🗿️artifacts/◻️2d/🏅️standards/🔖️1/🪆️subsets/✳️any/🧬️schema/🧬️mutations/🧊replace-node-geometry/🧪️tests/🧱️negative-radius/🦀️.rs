@@ -1,4 +1,4 @@
-//! 🧪️ `replace-node-geometry` fixture — `🧱️negative-radius`.
+//! 🧪️ `replace-node-geometry` snapshot — `🧱️negative-radius`.
 //!
 //! A negative radius is what the schema's `exclusiveMinimum: 0` forbids: a Fatal `mutation.invariant`, the node keeps its extent.
 //!

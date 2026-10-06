@@ -41,15 +41,7 @@ pub enum DrawingMutation {
 pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mutation::{update_text, UpdateText};
 
 //#region 🔖️FieldPatch
-/// ⌨️ Decode inspector input according to its field, preserving numeric-looking text.
-pub fn parse_layer_field_input(field: &str, value: &str) -> semio_framework_value::DslValue {
-    let parsed = semio_framework_pack_json::parse(value, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|parsed| semio_framework_pack_json::to_dsl_value(&parsed));
-    if matches!(field, "textContent" | "name" | "blendMode" | "fillColor" | "fillRule" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" | "booleanOperation") {
-        if let Some(semio_framework_value::DslValue::String(text)) = parsed { return semio_framework_value::DslValue::String(text); }
-        return semio_framework_value::DslValue::String(value.into());
-    }
-    parsed.unwrap_or_else(|| semio_framework_value::DslValue::String(value.into()))
-}
+
 
 /// 🎛️ Generic single-field layer editor bridge (properties panel / bulk patch commands) — maps a
 /// wire `field` name + JSON `value` onto the one semantic mutation that owns that field. Returns
@@ -199,15 +191,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🌉️ExternalCodecBridge
-/// 🧩️ Decodes one committed `📸️snapshot/⬅️before/🔣️.json` document together with the
-/// `🦠️mutation/🔣️.json` payload beside it — the same bytes the leaf's own fixture test
-/// reads — into real typed values.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(DrawingSnapshot, DrawingMutation), String> {
-    let snapshot: DrawingSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed drawing snapshot JSON does not decode: {error}"))?;
-    let mutation: DrawingMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed drawing mutation JSON does not decode: {error}"))?;
-    Ok((snapshot, mutation))
-}
+
 
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
@@ -222,13 +206,7 @@ fn bridge_step(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result
     }
 }
 
-/// 📤️ The bridge's answer shape: the resulting document beside the codes it raised, so a caller
-/// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_render(snapshot: &DrawingSnapshot, messages: &[String]) -> String {
-    let report = semio_framework_value::DslValue::object([("snapshot".to_string(), semio_framework_value::ToValue::to_value(snapshot)), ("messages".to_string(), semio_framework_value::ToValue::to_value(messages))]);
-    semio_framework_pack_json::to_json_string(&report)
-}
+
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
 /// `{"snapshot": …, "messages": [ … ]}`.
@@ -261,18 +239,7 @@ pub fn undo_drawing_mutation_json(snapshot_json: &str, mutation_json: &str) -> R
     Ok(bridge_render(&current, &messages))
 }
 
-/// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering
-/// `{"printed": …, "snapshot": …, "reparsed": …}` so a caller can weigh the identity law's two
-/// halves — the bytes against the committed artifact, and the projection against itself.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn round_trip_drawing_dsl(text: &str) -> Result<String, String> {
-    use store::ArtifactDsl;
-    let parsed = <DrawingSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed drawing example does not parse: {error:?}"))?;
-    let printed = <DrawingSnapshot as ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <DrawingSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted drawing document does not parse: {error:?}"))?;
-    let report = semio_framework_value::DslValue::object([("printed".to_string(), semio_framework_value::ToValue::to_value(&printed)), ("snapshot".to_string(), semio_framework_value::ToValue::to_value(&parsed)), ("reparsed".to_string(), semio_framework_value::ToValue::to_value(&reparsed))]);
-    Ok(semio_framework_pack_json::to_json_string(&report))
-}
+
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Kinds

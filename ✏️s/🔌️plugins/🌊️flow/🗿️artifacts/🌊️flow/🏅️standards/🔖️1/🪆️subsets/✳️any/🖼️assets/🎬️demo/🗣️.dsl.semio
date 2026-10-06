@@ -9,7 +9,7 @@ widgets {
   output-preview id=preview expanded=[ ]
 }
 layout={
-  add=x=120 y=-40 preview=x=240 y=-40 slider=x=40 y=-40
+  add={ x=120 y=-40 } preview={ x=240 y=-40 } slider={ x=40 y=-40 }
 }
 synapses [id:TEXT link:WIRE] {
   s1 slider@number->add@a

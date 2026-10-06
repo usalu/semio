@@ -1,5 +1,4 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "note": "The alternatives list of the history body (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, follow-up 2 item 4): every alternative in declaration order (the trunk first, with the empty name the history body localizes), current when it is the active one, authored by the first Branch transition naming it (actor and HLC wall time as RFC 3339 UTC, milliseconds only when nonzero), and edited when a Supersede transition is scoped to it. The Rust `history_alternative_views` and its TypeScript twin must reach each expected list.",
   "cases": [
     {

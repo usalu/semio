@@ -1,0 +1,20 @@
+{
+  "name": "@semio-tech/ui-introduction",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{projectRoot}/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎓️introduction",
+        "command": "bun ./📜️script.ts test"
+      }
+    }
+  }
+}

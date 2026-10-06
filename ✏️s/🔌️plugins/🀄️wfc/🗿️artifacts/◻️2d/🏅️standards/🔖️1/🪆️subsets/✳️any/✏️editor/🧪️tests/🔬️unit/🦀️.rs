@@ -177,7 +177,7 @@ fn node_graph_rows_follow_the_shared_contract() {
         let result = graph_edit(serde_json::json!([case["row"].clone()]));
         match case["row"]["operation"].as_str() {
             Some("setSlider" | "insertPort") => assert_eq!(result.err().map(|fault| fault.code.0), Some("wfc2d.node-graph.row".into()), "{}", case["id"]),
-            _ => assert!(result.is_ok(), "{}: {result:?}", case["id"]),
+            _ => assert!(result.is_ok(), "{}: {:?}", case["id"], result.as_ref().err()),
         }
     }
     for case in fixture["refused"].as_array().expect("refused rows") {

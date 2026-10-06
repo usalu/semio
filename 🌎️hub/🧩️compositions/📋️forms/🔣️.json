@@ -3955,7 +3955,7 @@
             }
           },
           {
-            "id": "exportFixture",
+            "id": "exportSnapshot",
             "label": {
               "native": {
                 "en": "Export Form",

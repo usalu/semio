@@ -14,7 +14,7 @@ import { BenchBudgetDefinition, benchWebSkippedRow } from "../📋️plan/🟦�
 
 import { benchWebMeasuredRow } from "../📏️measured-row/🟦️.ts";
 
-import { ScaleFixtureRegistry } from "../../../../../🧫️fixtures/⚖️scale/📽️projection/🟦️.ts";
+import { ScaleFixtureRegistry } from "../../../../../🧪️testing/⚖️scale/📽️projection/🟦️.ts";
 
 
 

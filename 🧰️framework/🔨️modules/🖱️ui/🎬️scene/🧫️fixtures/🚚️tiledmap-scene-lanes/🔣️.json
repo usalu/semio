@@ -1,5 +1,5 @@
 {
-  "$comment": "🚚️ The one language-neutral declaration of the tiled-map scene lane carrier — the map twin of 🚚️board2d-scene-lanes. Rust pins TiledMapSceneLane / TILEDMAP_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins TILEDMAP_SCENE_LANES / tiledMapSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. The mapFixture lane always publishes: the gis demo map's 152 positions and 149 routes encode to 59 667 bytes, nearly twice the 32 KiB UiFixedBytes surface doc, which refused the whole surface at scene-surface.encode so the window never published.",
+  "$comment": "🚚️ The one language-neutral declaration of the tiled-map scene lane carrier — the map twin of 🚚️board2d-scene-lanes. Rust pins TiledMapSceneLane / TILEDMAP_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins TILEDMAP_SCENE_LANES / tiledMapSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. The mapDescriptor lane always publishes: the gis demo map's 152 positions and 149 routes encode to 59 667 bytes, nearly twice the 32 KiB UiFixedBytes surface doc, which refused the whole surface at scene-surface.encode so the window never published.",
   "schema": "tiled-map@1",
   "laneKeyPrefix": "framework.scene.tiledmap.",
   "spineFields": [
@@ -19,15 +19,15 @@
   ],
   "lanes": [
     {
-      "lane": "mapFixture",
-      "field": "mapFixtureJson",
-      "bodyKey": "framework.scene.tiledmap.mapFixture",
+      "lane": "mapDescriptor",
+      "field": "mapDescriptorJson",
+      "bodyKey": "framework.scene.tiledmap.mapDescriptor",
       "optional": false
     }
   ],
   "roundTrip": {
     "assembled": {
-      "mapFixtureJson": "{\"positions\":[{\"id\":\"p1\",\"lon\":5.5818,\"lat\":50.603}],\"routes\":[],\"regions\":[]}",
+      "mapDescriptorJson": "{\"positions\":[{\"id\":\"p1\",\"lon\":5.5818,\"lat\":50.603}],\"routes\":[],\"regions\":[]}",
       "cameraJson": "{\"lon\":5.58,\"lat\":50.6,\"zoom\":12}",
       "renderMode": "combined",
       "vectorStyle": "colored",
@@ -42,10 +42,10 @@
       "selectionMode": "default"
     },
     "laneTexts": {
-      "framework.scene.tiledmap.mapFixture": "{\"positions\":[{\"id\":\"p1\",\"lon\":5.5818,\"lat\":50.603}],\"routes\":[],\"regions\":[]}"
+      "framework.scene.tiledmap.mapDescriptor": "{\"positions\":[{\"id\":\"p1\",\"lon\":5.5818,\"lat\":50.603}],\"routes\":[],\"regions\":[]}"
     },
     "spine": {
-      "mapFixtureJson": "",
+      "mapDescriptorJson": "",
       "cameraJson": "{\"lon\":5.58,\"lat\":50.6,\"zoom\":12}",
       "renderMode": "combined",
       "vectorStyle": "colored",
@@ -60,7 +60,7 @@
       "selectionMode": "default",
       "lanes": [
         {
-          "lane": "mapFixture",
+          "lane": "mapDescriptor",
           "bytes": 78,
           "hash": "89d18b1418fd712b"
         }

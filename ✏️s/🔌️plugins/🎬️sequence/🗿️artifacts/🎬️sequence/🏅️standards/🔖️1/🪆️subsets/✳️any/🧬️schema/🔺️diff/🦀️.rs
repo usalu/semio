@@ -21,3 +21,63 @@ pub struct SequenceDiff {
     pub content: Option<SequenceContentChild>,
 }
 //#endregion 🔖️Diff
+
+use crate::schema::SequenceArtifact;
+use crate::SequenceSnapshot;
+use protocol::MutationDiff;
+
+impl SequenceDiff {
+    /// 🧬️ Applies sparse document fields onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &SequenceArtifact) -> protocol::MutationApplyResult<SequenceArtifact> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok((**replacement).clone());
+            }
+            let mut next = artifact.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            next
+        })
+    }
+}
+
+impl MutationDiff<SequenceSnapshot> for SequenceDiff {
+    fn apply(&self, snapshot: &SequenceSnapshot) -> protocol::MutationApplyResult<SequenceSnapshot> {
+        Ok({
+            if let Some(replacement) = &self.artifact {
+                return Ok(replacement.to_snapshot());
+            }
+            let mut next = snapshot.clone();
+            if let Some(schema) = &self.schema {
+                next.schema = schema.clone();
+            }
+            if let Some(content) = &self.content {
+                next.content = content.clone();
+            }
+            next
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.artifact.is_some() {
+            *self = other;
+            return;
+        }
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(schema);
+        take!(content);
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

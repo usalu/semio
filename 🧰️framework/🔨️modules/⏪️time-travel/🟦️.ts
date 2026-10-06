@@ -7,10 +7,13 @@
  * `🧫️fixtures/🧫️lifecycle-law/🔣️.json`; contract:
  * `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §4.
  *
- * Driver contract: `begin` carries the target position resolved at the session base; every store
- * generation change is sent as `baseMoved` with the re-resolved positions of every session target
- * (in every stage; an unchanged base is `timeTravel.stale`); every other event except `begin` and
- * `exit` carries the session generation. {@link timeTravelReview} classifies `reviewing`: nothing
+ * Driver contract: `begin` carries the target position resolved at the session base; `beginWithdrawn`
+ * is a history row's Withdraw (`begin` whose pending draft starts withdrawn, legal exactly where
+ * `begin` is); `restore` is a row's Restore (it takes one accepted draft back while `reviewing`); every
+ * change of the store's content revision is sent as `baseMoved` with the re-resolved positions of every
+ * session target (in every stage; an unchanged base is `timeTravel.stale`; the store's local generation is
+ * no part of the base); every other event except `begin`,
+ * `beginWithdrawn` and `exit` carries the session generation. {@link timeTravelReview} classifies `reviewing`: nothing
  * accepted is "no changes" (the preview is the committed head); drafts without a report (a cancelled
  * or faulted replay) "need a replay", which `rerun` starts. A malformed fault code or alternative
  * name is `timeTravel.illegal`.
@@ -64,6 +67,12 @@ export const TIME_TRAVEL_COMMIT_FAILED_CODE = "timeTravel.commit-failed";
 /** 🧩️ Driver fault: the composed member store the session edits was closed mid-session. */
 export const TIME_TRAVEL_MEMBER_GONE_CODE = "timeTravel.member-gone";
 
+/** 🪨️ Host refusal: the store's supersede law does not admit withdrawing the mutation. */
+export const TIME_TRAVEL_NOT_WITHDRAWABLE_CODE = "timeTravel.not-withdrawable";
+
+/** 🥅️ Host refusal: a draft verb arrived while no draft editor is open on the session's mutation. */
+export const TIME_TRAVEL_EDITOR_CLOSED_CODE = "timeTravel.editor-closed";
+
 const utf8Length = (text: string): number => new TextEncoder().encode(text).length;
 
 /** 🔣️ A fault code is non-empty, free of Unicode `White_Space` and at most {@link TIME_TRAVEL_TEXT_MAX_BYTES}. */
@@ -100,8 +109,8 @@ export function compareCodePoints(left: string, right: string): number {
 //#endregion 🔖️Protocol
 
 //#region 🔖️Identity
-/** 🧭️ The store state a session last observed. */
-export type TimeTravelBase = { readonly storeGeneration: bigint; readonly contentRevision: Uint8Array };
+/** 🧭️ The store state a session last observed: the content revision of its history (never the store's local generation). */
+export type TimeTravelBase = { readonly contentRevision: Uint8Array };
 
 /** 🎯️ A mutation the session addresses and its applied position at the session base. */
 export type TimeTravelTarget = { readonly mutation: string; readonly position: number };
@@ -112,7 +121,7 @@ export function compareTimeTravelTargets(left: TimeTravelTarget, right: TimeTrav
 }
 
 function baseEquals(left: TimeTravelBase, right: TimeTravelBase): boolean {
-  return left.storeGeneration === right.storeGeneration && left.contentRevision.length === right.contentRevision.length && left.contentRevision.every((byte, index) => byte === right.contentRevision[index]);
+  return left.contentRevision.length === right.contentRevision.length && left.contentRevision.every((byte, index) => byte === right.contentRevision[index]);
 }
 //#endregion 🔖️Identity
 
@@ -151,9 +160,10 @@ export function timeTravelSession(base: TimeTravelBase): TimeTravelSession {
 export type TimeTravelChoice = { readonly kind: "overwrite" } | { readonly kind: "alternative"; readonly name: string };
 
 export type TimeTravelEvent =
-  | { readonly type: "begin"; readonly target: TimeTravelTarget; readonly original: InputReplacement }
+  | { readonly type: "begin" | "beginWithdrawn"; readonly target: TimeTravelTarget; readonly original: InputReplacement }
   | { readonly type: "draft"; readonly generation: number; readonly replacement: InputReplacement }
   | { readonly type: "withdraw" | "accept" | "discard" | "replayCancelled" | "rerun" | "requestFinalize" | "back" | "finalized"; readonly generation: number }
+  | { readonly type: "restore"; readonly generation: number; readonly target: string }
   | { readonly type: "replayProgressed"; readonly generation: number; readonly done: number; readonly total: number }
   | { readonly type: "replayCompleted"; readonly generation: number; readonly report: ReplayReport }
   | { readonly type: "replayFaulted" | "finalizeFaulted"; readonly generation: number; readonly code: string }
@@ -163,10 +173,12 @@ export type TimeTravelEvent =
 
 export const TIME_TRAVEL_EVENT_KEYS = [
   "begin",
+  "beginWithdrawn",
   "draft",
   "withdraw",
   "accept",
   "discard",
+  "restore",
   "replayProgressed",
   "replayCompleted",
   "replayCancelled",
@@ -189,7 +201,7 @@ export function timeTravelEventKey(event: TimeTravelEvent): TimeTravelEventKey {
   return event.type;
 }
 
-/** 🧿️ The generation an event is addressed to; `null` for `begin`, `baseMoved` and `exit`. */
+/** 🧿️ The generation an event is addressed to; `null` for `begin`, `beginWithdrawn`, `baseMoved` and `exit`. */
 export function timeTravelEventGeneration(event: TimeTravelEvent): number | null {
   return "generation" in event ? event.generation : null;
 }
@@ -250,13 +262,21 @@ export function timeTravelFinalizeRefusal(session: TimeTravelSession): TimeTrave
   return null;
 }
 
-/** ✏️ Why `begin` would be refused, `null` when it would open (or switch) the draft editor: legal from `inactive` and
- * `reviewing`, from `editing` only while the pending draft still equals its start (`timeTravel.blocked` otherwise), and
- * `timeTravel.illegal` while replaying, choosing or finalizing. Mirrors Rust `TimeTravelSession::begin_refusal`. */
+/** ✏️ Why `begin` (and `beginWithdrawn`) would be refused, `null` when it would open (or switch) the draft editor: legal
+ * from `inactive` and `reviewing`, from `editing` only while the pending draft still equals its start
+ * (`timeTravel.blocked` otherwise), and `timeTravel.illegal` while replaying, choosing or finalizing — what a host
+ * disables a row's Edit and Withdraw controls by. Mirrors Rust `TimeTravelSession::begin_refusal`. */
 export function timeTravelBeginRefusal(session: TimeTravelSession): TimeTravelRefusal | null {
   if (session.stage === "inactive" || session.stage === "reviewing") return null;
   if (session.stage === "editing" && session.pending !== null) return timeTravelUnchanged(session, session.pending) ? null : "timeTravel.blocked";
   return "timeTravel.illegal";
+}
+
+/** 🔙️ Why `restore` of `mutation` would be refused, `null` when it would take the mutation's accepted draft back: it needs
+ * `reviewing` and an accepted draft of that mutation — what a host disables a row's Restore control by. Mirrors Rust
+ * `TimeTravelSession::restore_refusal`. */
+export function timeTravelRestoreRefusal(session: TimeTravelSession, mutation: string): TimeTravelRefusal | null {
+  return session.stage === "reviewing" && timeTravelAcceptedDraft(session, mutation) !== undefined ? null : "timeTravel.illegal";
 }
 
 /** 🔁️ Why `rerun` would be refused, `null` when it would start a replay: it needs `reviewing`, accepted drafts, and either no report or a fault. */
@@ -296,11 +316,6 @@ type Step = { readonly session: TimeTravelSession; readonly effects: readonly Ti
 
 const bump = (generation: number): number => (generation + 1) >>> 0;
 
-function begin(session: TimeTravelSession, target: TimeTravelTarget, original: InputReplacement, returnStage: TimeTravelStage, id: bigint): Step {
-  const replacement = timeTravelAcceptedDraft(session, target.mutation)?.replacement ?? original;
-  return { session: { ...session, id, stage: "editing", generation: bump(session.generation), pending: { target, original, replacement, returnStage } }, effects: [{ type: "showPreview", target: target.mutation, replacement }] };
-}
-
 function settle(session: TimeTravelSession): Step {
   const cleared = { ...session, report: null, progress: null };
   const first = session.accepted[0];
@@ -335,6 +350,18 @@ function reposition(session: TimeTravelSession, positions: readonly TimeTravelTa
 const refuse = (rejection: TimeTravelRefusal): TimeTravelApplyResult => ({ ok: false, rejection });
 const admit = (step: Step): TimeTravelApplyResult => ({ ok: true, session: step.session, effects: step.effects });
 
+/** 🔦️ Opens (or retargets) the draft editor on `target` where {@link timeTravelBeginRefusal} admits it: the pending draft
+ * starts as `draft`, else as the target's accepted draft, else as `original`, and returns to the stage the session was
+ * opened from; a session opened from `inactive` is the next one. */
+function open(session: TimeTravelSession, target: TimeTravelTarget, original: InputReplacement, draft: InputReplacement | null): TimeTravelApplyResult {
+  const refusal = timeTravelBeginRefusal(session);
+  if (refusal !== null) return refuse(refusal);
+  const returnStage = session.pending?.returnStage ?? session.stage;
+  const id = session.stage === "inactive" ? (session.id + 1n) & 0xffff_ffff_ffff_ffffn : session.id;
+  const replacement = draft ?? timeTravelAcceptedDraft(session, target.mutation)?.replacement ?? original;
+  return admit({ session: { ...session, id, stage: "editing", generation: bump(session.generation), pending: { target, original, replacement, returnStage } }, effects: [{ type: "showPreview", target: target.mutation, replacement }] });
+}
+
 /** ⚖️ Pure §4 reducer: generation fence first, then the law; the input session is never mutated. */
 export function applyTimeTravel(session: TimeTravelSession, event: TimeTravelEvent): TimeTravelApplyResult {
   const generation = timeTravelEventGeneration(event);
@@ -343,10 +370,9 @@ export function applyTimeTravel(session: TimeTravelSession, event: TimeTravelEve
   const { stage, pending } = session;
   switch (event.type) {
     case "begin":
-      if (stage === "inactive") return admit(begin(session, event.target, event.original, "inactive", (session.id + 1n) & 0xffff_ffff_ffff_ffffn));
-      if (stage === "reviewing") return admit(begin(session, event.target, event.original, "reviewing", session.id));
-      if (stage === "editing" && pending !== null) return timeTravelUnchanged(session, pending) ? admit(begin(session, event.target, event.original, pending.returnStage, session.id)) : refuse("timeTravel.blocked");
-      return refuse("timeTravel.illegal");
+      return open(session, event.target, event.original, null);
+    case "beginWithdrawn":
+      return open(session, event.target, event.original, { kind: "withdrawn" });
     case "draft":
     case "withdraw": {
       if (stage !== "editing" || pending === null) return refuse("timeTravel.illegal");
@@ -357,6 +383,12 @@ export function applyTimeTravel(session: TimeTravelSession, event: TimeTravelEve
       return stage === "editing" && pending !== null ? admit(accept({ ...session, pending: null }, pending)) : refuse("timeTravel.illegal");
     case "discard":
       return stage === "editing" && pending !== null ? admit(resume({ ...session, pending: null }, pending.returnStage)) : refuse("timeTravel.illegal");
+    case "restore": {
+      const refusal = timeTravelRestoreRefusal(session, event.target);
+      if (refusal !== null) return refuse(refusal);
+      const accepted = session.accepted.filter((draft) => draft.target.mutation !== event.target);
+      return admit(accepted.length === 0 ? close(session, []) : settle({ ...session, accepted }));
+    }
     case "replayProgressed":
       return stage === "replaying" ? admit({ session: { ...session, progress: { done: event.done, total: event.total } }, effects: [] }) : refuse("timeTravel.illegal");
     case "replayCompleted":
@@ -422,8 +454,8 @@ export function timeTravelHexToBytes(hex: string): Uint8Array {
 
 type Json = any;
 
-const baseFromJson = (json: Json): TimeTravelBase => ({ storeGeneration: BigInt(json.storeGeneration), contentRevision: timeTravelHexToBytes(json.contentRevision) });
-const baseToJson = (base: TimeTravelBase): Json => ({ storeGeneration: Number(base.storeGeneration), contentRevision: timeTravelBytesToHex(base.contentRevision) });
+const baseFromJson = (json: Json): TimeTravelBase => ({ contentRevision: timeTravelHexToBytes(json.contentRevision) });
+const baseToJson = (base: TimeTravelBase): Json => ({ contentRevision: timeTravelBytesToHex(base.contentRevision) });
 const draftFromJson = (json: Json): TimeTravelDraft => ({ target: { ...json.target }, replacement: json.replacement });
 const draftToJson = (draft: TimeTravelDraft): Json => ({ target: { ...draft.target }, replacement: draft.replacement });
 const inputToJson = (input: SupersededInput): Json => ({ target: input.target, replacement: input.replacement });
@@ -460,7 +492,8 @@ export function timeTravelSessionToJson(session: TimeTravelSession): Json {
 export function timeTravelEventFromJson(json: Json): TimeTravelEvent {
   switch (json.type) {
     case "begin":
-      return { type: "begin", target: { ...json.target }, original: json.original };
+    case "beginWithdrawn":
+      return { type: json.type, target: { ...json.target }, original: json.original };
     case "baseMoved":
       return { type: "baseMoved", base: baseFromJson(json.base), positions: json.positions.map((target: Json) => ({ ...target })) };
     default:
@@ -524,6 +557,9 @@ export const TIME_TRAVEL_LABELS = {
   outcomeIntroduced: { en: "New since this edit", de: "Neu durch diese Bearbeitung" },
   refusalMemberGone: { en: "The part this history edit targets was closed", de: "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen" },
   memberEdited: { en: "History of a composed part edited", de: "Verlauf eines eingebetteten Teils bearbeitet" },
+  refusalNotWithdrawable: { en: "This mutation cannot be withdrawn here", de: "Diese Mutation kann hier nicht zurückgezogen werden" },
+  refusalEditorClosed: { en: "The draft editor is closed: open the mutation again", de: "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen" },
+  refusalReadOnly: { en: "History cannot be edited in a read-only view", de: "Der Verlauf kann in einer schreibgeschützten Ansicht nicht bearbeitet werden" },
 } as const satisfies Record<string, { en: string; de: string }>;
 export type TimeTravelLabelKey = keyof typeof TIME_TRAVEL_LABELS;
 
@@ -557,6 +593,8 @@ export const TIME_TRAVEL_CODE_LABELS = [
   [TIME_TRAVEL_REPLAY_FAULTED_CODE, "replayFaulted"],
   [TIME_TRAVEL_COMMIT_FAILED_CODE, "commitFailed"],
   [TIME_TRAVEL_MEMBER_GONE_CODE, "refusalMemberGone"],
+  [TIME_TRAVEL_NOT_WITHDRAWABLE_CODE, "refusalNotWithdrawable"],
+  [TIME_TRAVEL_EDITOR_CLOSED_CODE, "refusalEditorClosed"],
 ] as const satisfies readonly (readonly [string, TimeTravelLabelKey])[];
 
 /** 🩹️ Label key of every `timeTravel.*` code a host shows ({@link TIME_TRAVEL_CODE_LABELS}); `undefined` for any other code. */

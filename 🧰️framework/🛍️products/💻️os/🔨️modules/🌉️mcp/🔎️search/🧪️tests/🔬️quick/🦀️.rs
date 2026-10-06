@@ -200,7 +200,7 @@ fn the_capability_audit_catches_an_undeclared_gesture_route_and_an_unmarked_dest
 #[test]
 fn user_path_writes_and_document_replacement_gate_on_approval() {
     let catalog = compile(&source_builders::note_cad_and_draw_source(), Locale::En, Terminology::Native).expect("compiles");
-    for id in ["draw.s.draw.drawing@1/*#editor.exportDocument", "note.editor.saveDownload", "note.editor.setFixtureJson"] {
+    for id in ["draw.s.draw.drawing@1/*#editor.exportDocument", "note.editor.saveDownload", "note.editor.loadDocumentJson"] {
         let capability = catalog.get(id).unwrap_or_else(|| panic!("{id} is published"));
         assert!(capability.effects.destructive, "{id} must be destructive");
         assert_eq!(capability.policy.approval, semio_framework::manifest::ApprovalMode::WhenDestructive, "{id} must gate on approval");

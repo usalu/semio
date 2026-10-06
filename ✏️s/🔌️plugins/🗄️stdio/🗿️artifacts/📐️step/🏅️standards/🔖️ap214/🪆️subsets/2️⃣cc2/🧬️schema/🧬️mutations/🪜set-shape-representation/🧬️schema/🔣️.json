@@ -10,7 +10,24 @@
   "properties": {
     "id": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shape representation",
+          "de": "Formrepräsentation"
+        },
+        "description": {
+          "en": "Instance name (#id) of the SHAPE_REPRESENTATION entity.",
+          "de": "Instanzname (#id) der Entität SHAPE_REPRESENTATION."
+        },
+        "ref": {
+          "kind": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "representation": {
       "anyOf": [
@@ -20,7 +37,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Representation",
+          "de": "Repräsentation"
+        },
+        "description": {
+          "en": "Type, name, items and context the shape representation carries; cleared, it is removed.",
+          "de": "Typ, Name, Elemente und Kontext der Formrepräsentation; geleert wird sie entfernt."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

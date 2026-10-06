@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{DiffCodec, MutationDiff};
+use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
 
 #[semio_framework_async_macros::async_test]
 async fn canonical_xml_and_opc_diff_text_binary_replay_is_exact() {

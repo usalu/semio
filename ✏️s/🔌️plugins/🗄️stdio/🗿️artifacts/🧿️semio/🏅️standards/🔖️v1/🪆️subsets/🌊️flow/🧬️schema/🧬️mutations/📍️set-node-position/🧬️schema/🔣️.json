@@ -15,10 +15,40 @@
       "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Id of the node.",
+          "de": "Kennung des Knotens."
+        },
+        "ref": {
+          "kind": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "position": {
-      "$ref": "#/$defs/SemioPoint2"
+      "$ref": "#/$defs/SemioPoint2",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Canvas position of the node as x and y.",
+          "de": "Position des Knotens auf der Leinwand als x und y."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

@@ -9,7 +9,7 @@ use crate::editor::fem2d::interaction::gumball::{fem2d_gumball_tick, set_gumball
 use crate::editor::fem2d::modes::edit::windows::{model as model_window, results as results_window};
 use crate::editor::fem2d::transient::{fem_gumball_drive, FemGumballTransientMutation};
 use crate::editor::fem2d::Fem2dPlayApp;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
 use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, NoConfig, NoConfigMutation, ViewModel};
@@ -52,7 +52,7 @@ pub fn gumball_step(
     let window = context.and_then(|context| context.view_state.as_ref()).and_then(|view| view.window_id.clone()).unwrap_or_default();
     let transient = context.map(|context| context.transient.as_ref().clone()).unwrap_or_default();
     let base_revision: String = operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect();
-    let drive = fem_gumball_drive::<Fem2dGumballTool>(&transient, &window, verb, phase, tick, &operation.authoring_seed, &base_revision);
+    let drive = fem_gumball_drive::<Fem2dGumballTool>(&transient, &window, verb, phase, tick, &operation.authoring_seed, &base_revision)?;
     let emit = match drive.committed {
         Some((reference, mutations)) if !operation.authoring_seed.is_empty() => Emit { ui_scope: fem2d_gumball_scope(), ..Emit::commit_transaction(reference, mutations) },
         Some((_, mutations)) => Emit { ui_scope: fem2d_gumball_scope(), ..Emit::mutations(mutations) },
@@ -72,7 +72,7 @@ fn gumball_once(verb: &str, motion: Fem2dGumballMotion, ids: &[String], phase: O
     }
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
     let tick = fem2d_gumball_tick(doc.snapshot, ids, motion);
-    let drive = fem_gumball_drive::<Fem2dGumballTool>(&Default::default(), "", verb, GesturePhase::Once, tick, &seed, "");
+    let drive = fem_gumball_drive::<Fem2dGumballTool>(&Default::default(), "", verb, GesturePhase::Once, tick, &seed, "")?;
     Ok(match drive.committed {
         Some((reference, mutations)) if !seed.is_empty() => Emit { ui_scope: fem2d_gumball_scope(), ..Emit::commit_transaction(reference, mutations) },
         Some((_, mutations)) => Emit { ui_scope: fem2d_gumball_scope(), ..Emit::mutations(mutations) },

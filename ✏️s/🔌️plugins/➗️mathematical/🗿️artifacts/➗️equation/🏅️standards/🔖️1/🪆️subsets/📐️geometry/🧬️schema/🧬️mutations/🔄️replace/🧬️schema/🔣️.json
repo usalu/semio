@@ -20,10 +20,38 @@
         ],
         "properties": {
           "x": {
-            "type": "number"
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "X",
+                "de": "X"
+              },
+              "description": {
+                "en": "Horizontal coordinate of the point.",
+                "de": "Horizontale Koordinate des Punkts."
+              },
+              "step": 1,
+              "precision": 2
+            }
           },
           "y": {
-            "type": "number"
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "Y",
+                "de": "Y"
+              },
+              "description": {
+                "en": "Vertical coordinate of the point.",
+                "de": "Vertikale Koordinate des Punkts."
+              },
+              "step": 1,
+              "precision": 2
+            }
           }
         }
       },

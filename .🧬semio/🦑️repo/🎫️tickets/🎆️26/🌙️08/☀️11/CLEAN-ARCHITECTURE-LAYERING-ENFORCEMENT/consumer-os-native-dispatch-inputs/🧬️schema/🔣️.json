@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "routes",
+    "rootWorkspace",
+    "scope",
+    "sourceProjection",
+    "owningExecutor",
+    "jsonCodec",
+    "snapshotAssets",
+    "actualRetainedSources",
+    "unselected"
+  ],
+  "properties": {
+    "routes": {
+      "const": [
+        {
+          "argv": [
+            "test-native"
+          ],
+          "extra": [
+            "--lib",
+            "--features",
+            "sync,ureq"
+          ]
+        }
+      ]
+    },
+    "rootWorkspace": {
+      "const": {
+        "before": "root",
+        "after": "held"
+      }
+    },
+    "scope": {
+      "const": "whole"
+    },
+    "sourceProjection": {
+      "const": {
+        "changes": [
+          {
+            "path": "unit.rs",
+            "before": "old",
+            "after": "new"
+          }
+        ]
+      }
+    },
+    "owningExecutor": {
+      "const": {
+        "source": "held helper"
+      }
+    },
+    "jsonCodec": {
+      "const": {
+        "source": "held codec"
+      }
+    },
+    "snapshotAssets": {
+      "const": [
+        {
+          "path": "unit.rs",
+          "source": "discarded full body",
+          "sha256": "abc",
+          "byteCount": 4
+        }
+      ]
+    },
+    "actualRetainedSources": {
+      "const": [
+        {
+          "path": "unit.rs",
+          "source": "discarded full predecessor",
+          "sha256": "def",
+          "byteCount": 3
+        }
+      ]
+    },
+    "unselected": {
+      "const": {
+        "source": "discarded"
+      }
+    }
+  }
+}

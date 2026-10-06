@@ -29,6 +29,7 @@ pub const SURFACE_ID: &str = "layout.view.preview";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::layout::create_layout_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: BODY_KEY.into(),

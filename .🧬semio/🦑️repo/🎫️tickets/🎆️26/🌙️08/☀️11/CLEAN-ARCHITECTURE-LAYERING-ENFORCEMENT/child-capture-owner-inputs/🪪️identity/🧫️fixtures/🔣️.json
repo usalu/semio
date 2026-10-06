@@ -1,0 +1,17 @@
+{
+  "contract": "child-capture-target-identity/v1",
+  "slot": "workingGraph",
+  "childId": "member-key\u0000引用😀",
+  "target": "artifact-address\u0000引用😀",
+  "replacement": "replacement-artifact-address",
+  "dialect": {"artifactKind": "s.test.child", "standard": "native", "subset": "*"},
+  "cases": [
+    {"id": "original-target", "requestedTarget": "artifact-address\u0000引用😀", "accepted": true},
+    {"id": "replacement-target", "requestedTarget": "replacement-artifact-address", "accepted": false},
+    {"id": "member-key-is-not-target", "requestedTarget": "member-key\u0000引用😀", "accepted": false},
+    {"id": "empty-target-is-not-original", "requestedTarget": "", "accepted": false}
+  ],
+  "previewRetainsOriginal": true,
+  "rejectedRetirementRetainsOriginal": true,
+  "digestBindsTarget": true
+}

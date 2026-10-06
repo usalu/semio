@@ -3,8 +3,9 @@
 //! `deleteFeature` are the per-feature editing vocabulary the Actions rail can stage.
 
 use crate::mutations::replace_route_data;
-use crate::op::GisMapMutation;
-use crate::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
+use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use crate::schema::{positions_operations, regions_operations, routes_operations};
+use crate::standards::v1::subsets::any::io::text::snapshot::{gis_map_document_from_descriptor_json};
 use crate::{GisMapSnapshot, MapFeature};
 use semio_framework_value::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

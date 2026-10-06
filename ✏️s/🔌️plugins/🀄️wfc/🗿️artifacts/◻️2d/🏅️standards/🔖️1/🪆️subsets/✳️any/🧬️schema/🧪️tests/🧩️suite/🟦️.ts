@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "bun:test";
 
 import { applyWfc2dDiff } from "../../🔺️diff/🟦️.ts";
-import { fixtureSnapshot, fixtureDiff, fixtureMutation } from "./🧫️fixtures/🟦️.ts";
+import { fixtureSnapshot, fixtureDiff, fixtureMutation } from "./🧰️support/🟦️.ts";
 import { applyWfc2dMutation, wfc2dDiff, wfc2dInverse, WFC_2D_MUTATION_KINDS, type Wfc2dMessage } from "../../🧬️mutations/🟦️.ts";
 
 const here = fileURLToPath(new URL(".", import.meta.url));

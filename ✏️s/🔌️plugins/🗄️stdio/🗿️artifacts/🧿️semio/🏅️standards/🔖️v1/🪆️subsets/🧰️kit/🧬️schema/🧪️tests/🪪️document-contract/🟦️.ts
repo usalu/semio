@@ -8,7 +8,7 @@ import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
 import * as mutationContract from "../../🧬️mutations/🟦️.ts";
-import {transformFixture} from "../../../../✉️base/🧬️schema/🧮️geometry/🧪️tests/🧫️fixtures/🟦️.ts";
+import {transformFixture} from "../../../../✉️base/🧬️schema/🧮️geometry/🧪️tests/🧰️support/🟦️.ts";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 function pinFixture(value:any):any{return value?.kind==="snapshot"&&value.blob!==null&&typeof value.blob==="object"?{...value,blob:{...value.blob,size:typeof value.blob.size==="number"?BigInt(value.blob.size):value.blob.size}}:value;}

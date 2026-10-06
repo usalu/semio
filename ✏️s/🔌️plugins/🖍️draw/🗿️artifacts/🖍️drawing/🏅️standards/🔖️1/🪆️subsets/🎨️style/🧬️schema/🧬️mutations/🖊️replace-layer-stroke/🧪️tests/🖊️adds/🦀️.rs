@@ -89,11 +89,11 @@ async fn declared_outcome_holds() {
     let produced = <DrawingMutation as protocol::Mutation<DrawingSnapshot>>::diff(&mutation(), &before());
     assert!(produced.messages().is_empty(), "replace-layer-stroke/adds-a-dashed-stroke: None differs from Some(..), so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("replace-layer-stroke's diff pins a layers delta");
-    assert!(delta.patched[0].patch.stroke_json.is_some(), "the stroke patch field must be populated");
-    assert_eq!(delta.patched[0].patch.fill_json, None, "a stroke replace must leave the fill patch field empty");
+    assert!(delta.patched[0].patch.stroke.is_some(), "the stroke patch field must be populated");
+    assert_eq!(delta.patched[0].patch.fill, None, "a stroke replace must leave the fill patch field empty");
 }
 
-/// 🔺️ The produced diff is EXACTLY the committed one. `strokeJson` holds a serialized `Option`, so an
+/// 🔺️ The produced diff is EXACTLY the committed one. `stroke` holds a serialized `Option`, so an
 /// absent stroke would be the literal string `"null"` rather than an absent lane — this case is the
 /// `Some(..)` side, and the optional `dash` array survives inside the blob.
 #[semio_framework_async_macros::async_test]
@@ -104,11 +104,10 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "replace-layer-stroke/adds-a-dashed-stroke: produced diff differs from the committed 🔺️diff/🔣️.json");
     let delta = outcome.diff().layers.clone().expect("replace-layer-stroke pins a layers delta");
     let patch = &delta.patched[0].patch;
-    let blob = patch.stroke_json.as_deref().expect("the stroke lane is populated");
-    let stroke: Option<crate::StrokeStyle> = serde_json::from_str(blob).expect("the stroke blob is itself valid JSON");
+    let stroke = patch.stroke.as_ref().expect("typed stroke patch").value.clone();
     let stroke = stroke.expect("this case installs a stroke rather than clearing one");
     assert_eq!(stroke.dash, Some(vec![4.0, 2.0]), "the optional dash pattern survives inside the blob");
-    assert!(patch.fill_json.is_none(), "a stroke swap must leave the fill lane empty");
+    assert!(patch.fill.is_none(), "a stroke swap must leave the fill lane empty");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

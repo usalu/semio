@@ -8,11 +8,6 @@
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite_snapshot;
-#[path = "🚦️native/🦀️.rs"]
-mod native;
-
 //#region 🔖️BrepModelReexport
 /// 🧱 The BrepMesh analyzer types live with the derived view in `engine::brep`, not here — the
 /// snapshot only stores the generic graph. Re-exported for pre-existing call sites' convenience.
@@ -192,6 +187,26 @@ impl Default for StepSnapshot {
         Self { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header: StepHeader::default(), entities: Vec::new() }
     }
 }
+
+/// 🏭️ Authors an AP214 product identity with complete context and reference relationships.
+pub fn initial_ap214_snapshot()->StepSnapshot{
+ use StepValue::{Aggregate,Integer,Reference,String as Text};
+ let entity=|id,name:&str,args|StepEntity{id,name:name.into(),args,complex:Vec::new()};
+ StepSnapshot{
+  schema:STDIO_STEP_DOCUMENT_SCHEMA.into(),
+  header:StepHeader{file_schema:StepFileSchema{schemas:vec!["AUTOMOTIVE_DESIGN".into()]},..StepHeader::default()},
+  entities:vec![
+   entity(1,"APPLICATION_CONTEXT",vec![Text("automotive_design".into())]),
+   entity(2,"APPLICATION_PROTOCOL_DEFINITION",vec![Text("international standard".into()),Text("automotive_design".into()),Integer(1994),Reference(1)]),
+   entity(3,"PRODUCT_CONTEXT",vec![Text(String::new()),Reference(1),Text("mechanical".into())]),
+   entity(4,"PRODUCT",vec![Text(String::new()),Text(String::new()),Text(String::new()),Aggregate(vec![Reference(3)])]),
+   entity(5,"PRODUCT_DEFINITION_FORMATION",vec![Text(String::new()),Text(String::new()),Reference(4)]),
+   entity(6,"PRODUCT_DEFINITION_CONTEXT",vec![Text("part definition".into()),Reference(1),Text("design".into())]),
+   entity(7,"PRODUCT_DEFINITION",vec![Text(String::new()),Text(String::new()),Reference(5),Reference(6)]),
+  ],
+ }
+}
+
 //#endregion 🔖️Snapshot
 
 //#region 🔖️Part21Conversion
@@ -363,25 +378,13 @@ impl StepSnapshot {
 //#endregion 🔖️Part21Conversion
 
 //#region 🔖️NativeCodec
-impl store::ArtifactDsl for StepSnapshot {
-    const EXTENSION: &'static str = "step";
-    fn envelope_id() -> &'static str { STDIO_STEP_DOCUMENT_SCHEMA }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { native::parse_text(text) }
-    fn print_dsl(&self) -> String { native::print_text(self) }
-}
 
-impl store::ArtifactPack for StepSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as semio_framework_os_kernel::ArtifactSqliteSnapshot>::sqlite_codec()) }
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { native::encode_pack(self, options) }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { native::decode_pack(bytes, options) }
-}
+
+
 //#endregion 🔖️NativeCodec
 
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;
 //#endregion 🧪️Tests

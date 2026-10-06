@@ -21,7 +21,8 @@
         "description": {
           "en": "Tag 262, e.g. 0 = white is zero, 1 = black is zero, 2 = RGB, 3 = palette.",
           "de": "Tag 262, z. B. 0 = Weiß ist null, 1 = Schwarz ist null, 2 = RGB, 3 = Palette."
-        }
+        },
+        "step": 1
       }
     }
   }

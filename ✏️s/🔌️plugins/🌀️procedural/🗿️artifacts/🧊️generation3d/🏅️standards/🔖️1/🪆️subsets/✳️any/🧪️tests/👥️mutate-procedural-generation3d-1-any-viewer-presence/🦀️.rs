@@ -53,7 +53,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::generation3d_view_presence_mutation_report_json;
+    use semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::component::io::text::mutations::generation3d_view_presence_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         generation3d_view_presence_mutation_report_json(committed.before, committed.mutation, committed.after)

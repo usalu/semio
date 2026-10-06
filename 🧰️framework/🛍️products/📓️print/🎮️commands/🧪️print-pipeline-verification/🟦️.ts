@@ -1,10 +1,10 @@
 import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { TEST_LEVELS } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
+import { TEST_LEVELS } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 
 import { verifyVizChartInferences } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/📜️script.ts";
 import { BundleScript } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
-import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🔬️probes/🟦️.ts";
+import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts";
 import { verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipelineQuick, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";
 
 //#region 🧪️PrintPipelineVerification

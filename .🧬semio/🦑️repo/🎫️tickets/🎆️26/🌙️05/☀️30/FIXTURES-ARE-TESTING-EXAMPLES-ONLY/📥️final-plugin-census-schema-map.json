@@ -1,0 +1,1540 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/artifact-definition/schema.json",
+      "type": "object",
+      "required": [
+        "id",
+        "artifact",
+        "mutations",
+        "inferences"
+      ],
+      "properties": {
+        "id": {
+          "const": "s.stdio.gltf"
+        },
+        "artifact": {
+          "const": "gltf"
+        },
+        "mutations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "not": {
+                  "pattern": "\\.(no-mutation\\.|set-snapshot\\.|set-)"
+                }
+              }
+            }
+          }
+        },
+        "inferences": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "not": {
+                  "pattern": "\\.(no-mutation\\.|set-snapshot\\.|set-)"
+                }
+              }
+            }
+          }
+        }
+      },
+      "$defs": {}
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/📝️text/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "semio.stdio.gltf.canonical-json-bytes/v1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.gltf.canonical-json-bytes/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1024,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "bytes",
+              "canonical"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bytes": {
+                "type": "array",
+                "maxItems": 1024,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                }
+              },
+              "canonical": {
+                "type": "string",
+                "minLength": 2
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🎛️semantic/🔣️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaBytes",
+        "tableWidths",
+        "cases",
+        "publicIo"
+      ],
+      "properties": {
+        "schemaBytes": {
+          "const": 966
+        },
+        "tableWidths": {
+          "const": {
+            "semio_audio_document": 4,
+            "semio_audio_channel": 3,
+            "semio_audio_sample": 5,
+            "semio_audio_tag": 5
+          }
+        },
+        "cases": {
+          "const": [
+            {
+              "id": "full_pcm8",
+              "format": "pcm8",
+              "empty": false,
+              "rows": 14,
+              "valueBytes": 515
+            },
+            {
+              "id": "empty_pcm8",
+              "format": "pcm8",
+              "empty": true,
+              "rows": 3,
+              "valueBytes": 115
+            },
+            {
+              "id": "full_pcm16",
+              "format": "pcm16",
+              "empty": false,
+              "rows": 14,
+              "valueBytes": 516
+            },
+            {
+              "id": "empty_pcm16",
+              "format": "pcm16",
+              "empty": true,
+              "rows": 3,
+              "valueBytes": 116
+            },
+            {
+              "id": "full_pcm24",
+              "format": "pcm24",
+              "empty": false,
+              "rows": 14,
+              "valueBytes": 516
+            },
+            {
+              "id": "empty_pcm24",
+              "format": "pcm24",
+              "empty": true,
+              "rows": 3,
+              "valueBytes": 116
+            },
+            {
+              "id": "full_pcm32",
+              "format": "pcm32",
+              "empty": false,
+              "rows": 14,
+              "valueBytes": 516
+            },
+            {
+              "id": "empty_pcm32",
+              "format": "pcm32",
+              "empty": true,
+              "rows": 3,
+              "valueBytes": 116
+            },
+            {
+              "id": "full_f32",
+              "format": "f32",
+              "empty": false,
+              "rows": 14,
+              "valueBytes": 514
+            },
+            {
+              "id": "empty_f32",
+              "format": "f32",
+              "empty": true,
+              "rows": 3,
+              "valueBytes": 114
+            },
+            {
+              "id": "full_f64",
+              "format": "f64",
+              "empty": false,
+              "rows": 14,
+              "valueBytes": 514
+            },
+            {
+              "id": "empty_f64",
+              "format": "f64",
+              "empty": true,
+              "rows": 3,
+              "valueBytes": 114
+            }
+          ]
+        },
+        "publicIo": {
+          "const": {
+            "schemaBytes": 1259,
+            "tableWidths": {
+              "semio_audio_document": 4,
+              "semio_audio_channel": 3,
+              "semio_audio_sample": 5,
+              "semio_audio_tag": 5,
+              "semio_snapshot": 6
+            },
+            "cases": [
+              {
+                "id": "full_pcm8",
+                "rows": 15,
+                "valueBytes": {
+                  "binary": 557,
+                  "text": 555
+                }
+              },
+              {
+                "id": "empty_pcm8",
+                "rows": 4,
+                "valueBytes": {
+                  "binary": 157,
+                  "text": 155
+                }
+              },
+              {
+                "id": "full_pcm16",
+                "rows": 15,
+                "valueBytes": {
+                  "binary": 558,
+                  "text": 556
+                }
+              },
+              {
+                "id": "empty_pcm16",
+                "rows": 4,
+                "valueBytes": {
+                  "binary": 158,
+                  "text": 156
+                }
+              },
+              {
+                "id": "full_pcm24",
+                "rows": 15,
+                "valueBytes": {
+                  "binary": 558,
+                  "text": 556
+                }
+              },
+              {
+                "id": "empty_pcm24",
+                "rows": 4,
+                "valueBytes": {
+                  "binary": 158,
+                  "text": 156
+                }
+              },
+              {
+                "id": "full_pcm32",
+                "rows": 15,
+                "valueBytes": {
+                  "binary": 558,
+                  "text": 556
+                }
+              },
+              {
+                "id": "empty_pcm32",
+                "rows": 4,
+                "valueBytes": {
+                  "binary": 158,
+                  "text": 156
+                }
+              },
+              {
+                "id": "full_f32",
+                "rows": 15,
+                "valueBytes": {
+                  "binary": 556,
+                  "text": 554
+                }
+              },
+              {
+                "id": "empty_f32",
+                "rows": 4,
+                "valueBytes": {
+                  "binary": 156,
+                  "text": 154
+                }
+              },
+              {
+                "id": "full_f64",
+                "rows": 15,
+                "valueBytes": {
+                  "binary": 556,
+                  "text": 554
+                }
+              },
+              {
+                "id": "empty_f64",
+                "rows": 4,
+                "valueBytes": {
+                  "binary": 156,
+                  "text": 154
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/dev/fixture-sweep/component.json",
+      "title": "SFixtureSweepContracts",
+      "$defs": {
+        "SFixtureSweepOwnershipV1": {
+          "title": "S Fixture Sweep Ownership",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "package",
+            "target",
+            "targetPath",
+            "moduleSha256",
+            "mounts",
+            "laws",
+            "workspaceDependencies",
+            "pathDependencies",
+            "kernelDependencies",
+            "cases",
+            "rendererBoundary"
+          ],
+          "properties": {
+            "schema": {
+              "const": "semio.test.s-fixture-sweep-ownership/v1"
+            },
+            "package": {
+              "const": "semio-s-fixture-sweep"
+            },
+            "target": {
+              "const": "fixture_sweep"
+            },
+            "targetPath": {
+              "const": "✏️s/🧑‍💻dev/🧹️fixture-sweep/🧪️tests/🔬️fleet-example-sweep/🦀️.rs"
+            },
+            "moduleSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "mounts": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 0,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "path"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9_]+$"
+                  },
+                  "path": {
+                    "type": "string",
+                    "pattern": "^\\.\\./.+/🦀️\\.rs$"
+                  }
+                }
+              }
+            },
+            "laws": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9_]+::[a-z0-9_]+$"
+              }
+            },
+            "workspaceDependencies": {
+              "type": "array",
+              "minItems": 54,
+              "maxItems": 54,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^semio-[a-z0-9-]+$"
+              }
+            },
+            "pathDependencies": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 0,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "alias",
+                  "package",
+                  "path",
+                  "features",
+                  "defaultFeatures"
+                ],
+                "properties": {
+                  "alias": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "package": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "features": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "defaultFeatures": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "kernelDependencies": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 12,
+              "maxItems": 12,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              }
+            },
+            "rendererBoundary": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "package",
+                "owner",
+                "implementationEdges",
+                "puzzleGuestEdges"
+              ],
+              "properties": {
+                "package": {
+                  "const": "semio-framework-os-renderer-wgpu"
+                },
+                "owner": {
+                  "const": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust"
+                },
+                "implementationEdges": {
+                  "const": 0
+                },
+                "puzzleGuestEdges": {
+                  "const": 0
+                }
+              }
+            }
+          },
+          "x-semio-formats": [
+            "🔣️jsonschema"
+          ]
+        },
+        "SFixtureSweepReportCase": {
+          "type": "object",
+          "required": [
+            "id",
+            "assertions",
+            "output"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "assertions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "output": {
+              "type": "string"
+            }
+          },
+          "x-semio-formats": [
+            "🔣️jsonschema"
+          ]
+        },
+        "SFixtureSweepReportCaseWithExpected": {
+          "type": "object",
+          "required": [
+            "id",
+            "assertions",
+            "output",
+            "expected"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "assertions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "output": {
+              "type": "string"
+            },
+            "expected": {
+              "type": "object",
+              "required": [
+                "directories",
+                "fixtures",
+                "checks",
+                "registered",
+                "unmapped",
+                "covered",
+                "skipped"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "directories": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "fixtures": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "checks": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "registered": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "unmapped": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "covered": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "skipped": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "x-semio-formats": [
+            "🔣️jsonschema"
+          ]
+        },
+        "SFixtureSweepReportV1": {
+          "type": "object",
+          "required": [
+            "schemaVersion",
+            "valid",
+            "hostile"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "valid": {
+              "$ref": "#/$defs/SFixtureSweepReportCaseWithExpected"
+            },
+            "hostile": {
+              "type": "array",
+              "minItems": 8,
+              "items": {
+                "$ref": "#/$defs/SFixtureSweepReportCase"
+              }
+            }
+          },
+          "x-semio-formats": [
+            "🔣️jsonschema"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📇️contributions/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/contribution-removal/schema.json",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases",
+        "registrationCases",
+        "receiptCases",
+        "validationCases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.contribution-removal/v1"
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "selected",
+              "remove",
+              "accepted",
+              "remaining"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "selected": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "remove": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "accepted": {
+                "type": "boolean"
+              },
+              "remaining": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "registrationCases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "first",
+              "second",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "first": {
+                "type": "string"
+              },
+              "second": {
+                "type": "string"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "receiptCases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "authoredFactory",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "authoredFactory": {
+                "type": "boolean"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "validationCases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "constraint",
+              "mimes",
+              "accepted"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "constraint": {
+                "type": "boolean"
+              },
+              "mimes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧬️schema/🔣️.json",
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/flow/snapshot/binary/schema.json",
+      "$defs": {
+        "FlowRetainedSnapshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "semio.flow.retained-snapshot/v1"
+            },
+            "limits": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "nodes": {
+                  "const": 256
+                },
+                "edges": {
+                  "const": 512
+                },
+                "paramsPerNode": {
+                  "const": 64
+                },
+                "stringBytes": {
+                  "const": 4096
+                },
+                "totalStringBytes": {
+                  "const": 1048576
+                }
+              },
+              "required": [
+                "nodes",
+                "edges",
+                "paramsPerNode",
+                "stringBytes",
+                "totalStringBytes"
+              ]
+            },
+            "valid": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "enum": [
+                      "empty",
+                      "unicode"
+                    ]
+                  },
+                  "snapshot": {
+                    "$ref": "#/$defs/snapshot"
+                  },
+                  "hex": {
+                    "type": "string",
+                    "pattern": "^(?:[0-9a-f]{2})+$"
+                  }
+                },
+                "required": [
+                  "id",
+                  "snapshot",
+                  "hex"
+                ]
+              }
+            },
+            "invalid": {
+              "type": "array",
+              "minItems": 12,
+              "maxItems": 12,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "hex": {
+                    "type": "string",
+                    "pattern": "^(?:[0-9a-f]{2})+$"
+                  },
+                  "reason": {
+                    "enum": [
+                      "malformed",
+                      "identity",
+                      "capacity"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "hex",
+                  "reason"
+                ]
+              }
+            }
+          },
+          "required": [
+            "schema",
+            "limits",
+            "valid",
+            "invalid"
+          ],
+          "$defs": {
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schema": {
+                  "const": "stdio.semio.flow"
+                },
+                "nodes": {
+                  "type": "array",
+                  "maxItems": 256,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "maxLength": 4096
+                      },
+                      "kind": {
+                        "type": "string",
+                        "maxLength": 4096
+                      },
+                      "label": {
+                        "type": "string",
+                        "maxLength": 4096
+                      },
+                      "params": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "key": {
+                              "type": "string",
+                              "maxLength": 4096
+                            },
+                            "value": {
+                              "type": "string",
+                              "maxLength": 4096
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "value"
+                          ]
+                        }
+                      },
+                      "position": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "kind",
+                      "label",
+                      "params",
+                      "position"
+                    ]
+                  }
+                },
+                "edges": {
+                  "type": "array",
+                  "maxItems": 512,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "maxLength": 4096
+                      },
+                      "from": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "node": {
+                            "type": "string",
+                            "maxLength": 4096
+                          },
+                          "port": {
+                            "type": "string",
+                            "maxLength": 4096
+                          }
+                        },
+                        "required": [
+                          "node",
+                          "port"
+                        ]
+                      },
+                      "to": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "node": {
+                            "type": "string",
+                            "maxLength": 4096
+                          },
+                          "port": {
+                            "type": "string",
+                            "maxLength": 4096
+                          }
+                        },
+                        "required": [
+                          "node",
+                          "port"
+                        ]
+                      },
+                      "kind": {
+                        "type": "string",
+                        "maxLength": 4096
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "from",
+                      "to",
+                      "kind"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "schema",
+                "nodes",
+                "edges"
+              ]
+            }
+          },
+          "title": "FlowRetainedSnapshot"
+        },
+        "FlowRetainedSnapshotLifecycle": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "semio.flow.retained-snapshot-lifecycle/v1"
+            },
+            "request": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "artifactId": {
+                  "const": "flow-member"
+                },
+                "artifactKind": {
+                  "const": "s.stdio.semio"
+                },
+                "standard": {
+                  "const": "v1"
+                },
+                "subset": {
+                  "const": "flow"
+                },
+                "identityBytes": {
+                  "const": 30
+                }
+              },
+              "required": [
+                "artifactId",
+                "artifactKind",
+                "standard",
+                "subset",
+                "identityBytes"
+              ]
+            },
+            "admission": {
+              "type": "array",
+              "minItems": 5,
+              "maxItems": 5,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "enum": [
+                      "live",
+                      "unadmitted",
+                      "closing",
+                      "retired",
+                      "foreign"
+                    ]
+                  },
+                  "state": {
+                    "enum": [
+                      "admitted",
+                      "unadmitted",
+                      "closing",
+                      "retired"
+                    ]
+                  },
+                  "subset": {
+                    "enum": [
+                      "flow",
+                      "text"
+                    ]
+                  },
+                  "reason": {
+                    "enum": [
+                      null,
+                      "unsealed",
+                      "stale",
+                      "identity"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "state",
+                  "subset",
+                  "reason"
+                ]
+              }
+            },
+            "multiPage": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "unicode"
+                },
+                "nodeIndex": {
+                  "const": 0
+                },
+                "labelScalar": {
+                  "const": "🧬"
+                },
+                "labelRepeats": {
+                  "const": 1024
+                },
+                "wireBytes": {
+                  "const": 4249
+                },
+                "inputBytes": {
+                  "const": 4252
+                },
+                "inputPages": {
+                  "const": 2
+                },
+                "snapshotRetiredBytes": {
+                  "const": 4190
+                },
+                "totalRetiredBytes": {
+                  "const": 8472
+                }
+              },
+              "required": [
+                "source",
+                "nodeIndex",
+                "labelScalar",
+                "labelRepeats",
+                "wireBytes",
+                "inputBytes",
+                "inputPages",
+                "snapshotRetiredBytes",
+                "totalRetiredBytes"
+              ]
+            },
+            "retirementGrants": {
+              "const": [
+                [
+                  1
+                ],
+                [
+                  7
+                ],
+                [
+                  1,
+                  3,
+                  4096,
+                  2
+                ]
+              ]
+            }
+          },
+          "required": [
+            "schema",
+            "request",
+            "admission",
+            "multiPage",
+            "retirementGrants"
+          ],
+          "title": "FlowRetainedSnapshotLifecycle"
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/🧪️tests/🧫️fixtures/🪶️sqlite/🧵️hex-utf8/🧬️.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "positive",
+        "negative"
+      ],
+      "properties": {
+        "role": {
+          "const": "borrowedHexUtf8LiteralAuthority"
+        },
+        "positive": {
+          "type": "array",
+          "minItems": 13,
+          "maxItems": 13,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "hex",
+              "text"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "empty",
+                  "nul",
+                  "asciiBoundary",
+                  "twoByteMinimum",
+                  "twoByteMaximumUppercase",
+                  "threeByteMinimum",
+                  "beforeSurrogate",
+                  "afterSurrogate",
+                  "threeByteMaximum",
+                  "fourByteMinimum",
+                  "maximumScalar",
+                  "bomRetained",
+                  "unicodeNul"
+                ]
+              },
+              "hex": {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[0-9a-fA-F]*$"
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 32
+              }
+            }
+          }
+        },
+        "negative": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "hex",
+              "kind"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "loneContinuation",
+                  "overlongTwo",
+                  "invalidLeadC1",
+                  "overlongThree",
+                  "surrogate",
+                  "overlongFour",
+                  "aboveMaximum",
+                  "invalidLeadF5",
+                  "invalidLeadFF",
+                  "asciiInsteadOfContinuation",
+                  "truncatedTwo",
+                  "truncatedThree",
+                  "truncatedFour",
+                  "oddHex",
+                  "nonDigit",
+                  "interiorWhitespace"
+                ]
+              },
+              "hex": {
+                "type": "string",
+                "maxLength": 32
+              },
+              "kind": {
+                "enum": [
+                  "utf8",
+                  "hex"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️semantic.json",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "schemaBytes",
+        "tableWidths",
+        "cases",
+        "publicIo"
+      ],
+      "properties": {
+        "role": {
+          "const": "originalNativeMatchedVideoCells"
+        },
+        "schemaBytes": {
+          "const": 865
+        },
+        "tableWidths": {
+          "const": {
+            "semio_video_document": 2,
+            "semio_video_sample": 6,
+            "semio_video_stream": 9
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "rows",
+              "valueBytes",
+              "snapshot"
+            ],
+            "properties": {
+              "id": {
+                "enum": [
+                  "full",
+                  "metadataRetainingEmpty",
+                  "existingZeroDenominatorIntermediate"
+                ]
+              },
+              "rows": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "valueBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "snapshot": {
+                "$ref": "#/$defs/snapshot"
+              }
+            }
+          }
+        },
+        "publicIo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "coordinate",
+            "schemaBytes",
+            "tableWidths",
+            "metadataValueBytes",
+            "cases"
+          ],
+          "properties": {
+            "coordinate": {
+              "const": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "video"
+              }
+            },
+            "schemaBytes": {
+              "const": 1158
+            },
+            "tableWidths": {
+              "const": {
+                "semio_snapshot": 6,
+                "semio_video_document": 2,
+                "semio_video_sample": 6,
+                "semio_video_stream": 9
+              }
+            },
+            "metadataValueBytes": {
+              "const": {
+                "binary": 42,
+                "text": 40
+              }
+            },
+            "cases": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "rows",
+                  "valueBytes"
+                ],
+                "properties": {
+                  "id": {
+                    "enum": [
+                      "full",
+                      "metadataRetainingEmpty",
+                      "existingZeroDenominatorIntermediate"
+                    ]
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "valueBytes": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "binary",
+                      "text"
+                    ],
+                    "properties": {
+                      "binary": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "text": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "$defs": {
+        "snapshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "streams"
+          ],
+          "properties": {
+            "schema": {
+              "type": "string"
+            },
+            "streams": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "codec",
+                  "width",
+                  "height",
+                  "rate",
+                  "samples"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "video",
+                      "audio",
+                      "subtitle"
+                    ]
+                  },
+                  "codec": {
+                    "type": "string"
+                  },
+                  "width": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 4294967295
+                  },
+                  "rate": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "num",
+                      "den"
+                    ],
+                    "properties": {
+                      "num": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+$",
+                        "maxLength": 20
+                      },
+                      "den": {
+                        "type": "string",
+                        "pattern": "^-?[0-9]+$",
+                        "maxLength": 20
+                      }
+                    }
+                  },
+                  "samples": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "pts",
+                        "key",
+                        "data"
+                      ],
+                      "properties": {
+                        "pts": {
+                          "type": "string",
+                          "pattern": "^[0-9]+$",
+                          "maxLength": 20
+                        },
+                        "key": {
+                          "type": "boolean"
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 255
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]

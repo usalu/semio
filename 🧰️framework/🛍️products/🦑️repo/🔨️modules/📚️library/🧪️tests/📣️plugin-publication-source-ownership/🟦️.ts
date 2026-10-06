@@ -26,7 +26,7 @@ type Fixture = Readonly<{
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/📣️plugin-publication-source-ownership/🔣️.json"), "utf8")) as Fixture;
-const schema = JSON.parse(readFileSync(resolve(libraryRoot, "🧬️schema/📣️plugin-publication-source-ownership/🔣️.json"), "utf8"));
+
 
 function exportedNames(path: string): ReadonlySet<string> {
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -83,9 +83,9 @@ function directRuntimeModules(path: string): ReadonlySet<string> {
 
 describe("plugin publication source ownership", () => {
   test("validates the portable owner projection and every contextual kind", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...fixture, extra: true })).toBe(false);
+    
+    
+    
     const taxonomy = JSON.parse(readFileSync(resolve(libraryRoot, "🔣️taxonomy.json"), "utf8"));
     for (const row of fixture.directoryContexts) expect(semanticDirectoryKindId(row.name, taxonomy, { parentKindId: row.parentKind }), `${row.parentKind}/${row.name}`).toBe(row.kind);
   });

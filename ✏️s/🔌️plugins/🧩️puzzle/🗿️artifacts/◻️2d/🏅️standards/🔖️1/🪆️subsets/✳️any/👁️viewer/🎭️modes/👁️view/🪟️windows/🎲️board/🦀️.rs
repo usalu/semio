@@ -21,7 +21,7 @@ const PUZZLE2D_VIEW_RECTANGLE_MESH_KIND: &str = "box";
 const PUZZLE2D_VIEW_DEFAULT_RADIUS: f64 = 24.0;
 const PUZZLE2D_VIEW_DEFAULT_WIDTH: f64 = 48.0;
 const PUZZLE2D_VIEW_DEFAULT_HEIGHT: f64 = 48.0;
-/// 👁️ A thin but visible extrusion along the flattened axis — the fixture itself carries no depth.
+/// 👁️ A thin but visible extrusion along the flattened axis — the snapshot itself carries no depth.
 const PUZZLE2D_VIEW_FLAT_DEPTH: f64 = 4.0;
 /// 👁️ Read-only default overhead camera looking straight down the flattened board — a viewer has no
 /// persisted per-session camera (`Config = NoConfig`), unlike the editor's `Puzzle2dConfig` runtime.

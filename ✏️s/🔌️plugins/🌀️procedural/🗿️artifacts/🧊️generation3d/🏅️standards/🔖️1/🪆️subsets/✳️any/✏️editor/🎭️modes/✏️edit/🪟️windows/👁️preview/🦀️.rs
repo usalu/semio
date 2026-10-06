@@ -29,6 +29,7 @@ const GENERATION_3D_PLAY_SURFACE_PREVIEW: &str = "procedural.play.preview";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GENERATION_3D_PLAY_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: GENERATION_3D_PLAY_BODY_PREVIEW.into(),

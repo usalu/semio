@@ -1,0 +1,101 @@
+{
+  "note": "Descriptor packs are canonical by the descriptor layer: the members of every object in UTF-8 key-byte order, at every depth, whatever order the descriptor was authored in. `expectedPackHex` is the TypeScript pack encoder's output; the Rust emitter must produce the same bytes for both member orders.",
+  "cases": [
+    {
+      "id": "nested-members-in-reverse-declaration-order",
+      "authored": {
+        "role": "plugin",
+        "packageId": "semio:alpha",
+        "manifest": {
+          "version": "1.0.0",
+          "pluginId": "alpha",
+          "label": "Alpha",
+          "apps": [
+            {
+              "windowKind": "editor",
+              "label": {
+                "en": "Board",
+                "de": "Brett"
+              },
+              "id": "alpha.board"
+            },
+            {
+              "label": {
+                "en": "Board",
+                "de": "Brett"
+              },
+              "id": "alpha.viewer",
+              "windowKind": "viewer"
+            }
+          ]
+        },
+        "hashes": {
+          "wasmSha256": "",
+          "descriptorSha256": "",
+          "coreWasmSha256": ""
+        },
+        "execution": "isolated",
+        "budget": {
+          "weight": 0.5,
+          "enabled": true,
+          "note": null
+        }
+      },
+      "canonical": {
+        "budget": {
+          "enabled": true,
+          "note": null,
+          "weight": 0.5
+        },
+        "execution": "isolated",
+        "hashes": {
+          "coreWasmSha256": "",
+          "descriptorSha256": "",
+          "wasmSha256": ""
+        },
+        "manifest": {
+          "apps": [
+            {
+              "id": "alpha.board",
+              "label": {
+                "de": "Brett",
+                "en": "Board"
+              },
+              "windowKind": "editor"
+            },
+            {
+              "id": "alpha.viewer",
+              "label": {
+                "de": "Brett",
+                "en": "Board"
+              },
+              "windowKind": "viewer"
+            }
+          ],
+          "label": "Alpha",
+          "pluginId": "alpha",
+          "version": "1.0.0"
+        },
+        "packageId": "semio:alpha",
+        "role": "plugin"
+      },
+      "expectedPackHex": "0d0005312e302e3005416c70686105426f61726405427265747405616c7068610b616c7068612e626f6172640c616c7068612e76696577657206656469746f720869736f6c6174656406706c7567696e0b73656d696f3a616c706861067669657765720101111006070662756467657410030707656e61626c65640207046e6f746512070677656967687405000000000000e03f0709657865637574696f6e060907066861736865731003070e636f72655761736d5368613235360600071064657363726970746f725368613235360600070a7761736d536861323536060007086d616e696665737410040704617070730c02100307026964060607056c6162656c10020702646506040702656e0603070a77696e646f774b696e640608100307026964060707056c6162656c10020702646506040702656e0603070a77696e646f774b696e64060c07056c6162656c06020708706c7567696e49640605070776657273696f6e060107097061636b6167654964060b0704726f6c65060a"
+    },
+    {
+      "id": "member-names-order-by-utf8-bytes-not-utf16-units",
+      "authored": {
+        "😀": 1.5,
+        "～": 2.5,
+        "a": 0.5,
+        "Z": 3.5
+      },
+      "canonical": {
+        "Z": 3.5,
+        "a": 0.5,
+        "～": 2.5,
+        "😀": 1.5
+      },
+      "expectedPackHex": "00010111100407015a050000000000000c4007016105000000000000e03f0703efbd9e0500000000000004400704f09f988005000000000000f83f"
+    }
+  ]
+}

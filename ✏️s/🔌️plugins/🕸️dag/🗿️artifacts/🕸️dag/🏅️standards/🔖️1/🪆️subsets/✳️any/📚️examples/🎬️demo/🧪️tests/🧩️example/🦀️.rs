@@ -12,8 +12,8 @@ async fn every_bundled_example_parses_and_prints_canonically() {
     assert!(!examples.is_empty(), "the dag subset bundles at least the demo example");
     for example in examples {
         let text = example.document();
-        let parsed = crate::standards::v1::subsets::any::schema::snapshot::parse_dag_dsl(&text).unwrap_or_else(|error| panic!("bundled example {} must parse: {error}", example.id()));
-        assert_eq!(crate::standards::v1::subsets::any::schema::snapshot::print_dag_dsl(&parsed), text, "bundled example {} must be the codec's own canonical output", example.id());
+        let parsed = crate::standards::v1::subsets::any::io::text::snapshot::parse_dag_dsl(&text).unwrap_or_else(|error| panic!("bundled example {} must parse: {error}", example.id()));
+        assert_eq!(crate::standards::v1::subsets::any::io::text::snapshot::print_dag_dsl(&parsed), text, "bundled example {} must be the codec's own canonical output", example.id());
     }
 }
 

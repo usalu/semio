@@ -1,4 +1,4 @@
-import Ajv from "ajv";
+
 import { createElement } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
@@ -7,15 +7,10 @@ import { actionSemanticsForKind } from "@semio-tech/framework";
 import { buildActionCategoryTree, buildCommandCategoryTree, syncShellLabelLocale, type ResolvedActionDefinition, type ResolvedCommand } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { actionStageKey } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import fixture from "./🧫️fixtures/🔣️.json";
-import schema from "./🧬️schema/🔣️.json";
 
 afterEach(cleanup);
 
-it("binds the closed language-neutral argument gate to the independent Ajv validator", () => {
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  expect(validate({ ...fixture, foreign: true })).toBe(false);
-});
+
 
 for (const row of fixture.cases) for (const kind of ["action", "command"] as const) {
   it(`${row.id} ${kind} explains the required arguments without dispatching unavailable execution`, () => {

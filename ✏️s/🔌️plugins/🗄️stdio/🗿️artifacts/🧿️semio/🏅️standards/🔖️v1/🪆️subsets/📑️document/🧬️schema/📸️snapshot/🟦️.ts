@@ -2,7 +2,7 @@
  * `🦀️.rs` for the source of truth). Block tree: Paragraph/Heading/List/Table/Code/
  * Quote/Image/PageBreak, discriminated on `kind`. */
 
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export interface RunStyle {
   bold: boolean;
   italic: boolean;

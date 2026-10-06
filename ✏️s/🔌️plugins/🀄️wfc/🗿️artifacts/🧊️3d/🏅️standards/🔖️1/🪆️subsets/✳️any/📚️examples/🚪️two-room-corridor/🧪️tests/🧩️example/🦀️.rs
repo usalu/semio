@@ -1,7 +1,7 @@
 //! 🧪️ The committed asset IS the print of the authored spec, and nothing else.
 
 use super::{snapshot, PRIMARY_TEXT, SEED};
-use crate::schema::snapshot::text::{parse_dsl, print_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 
 #[test]
 fn committed_asset_is_the_print_of_the_authored_spec() {
@@ -15,8 +15,8 @@ fn committed_asset_parses_back_to_the_authored_spec() {
 
 #[test]
 fn the_pack_codec_round_trips_the_same_document() {
-    let bytes = crate::schema::snapshot::binary::encode(&snapshot());
-    assert_eq!(crate::schema::snapshot::binary::decode(&bytes).expect("committed document decodes"), snapshot());
+    let bytes = crate::standards::v1::subsets::any::io::binary::snapshot::encode(&snapshot());
+    assert_eq!(crate::standards::v1::subsets::any::io::binary::snapshot::decode(&bytes).expect("committed document decodes"), snapshot());
 }
 
 #[test]

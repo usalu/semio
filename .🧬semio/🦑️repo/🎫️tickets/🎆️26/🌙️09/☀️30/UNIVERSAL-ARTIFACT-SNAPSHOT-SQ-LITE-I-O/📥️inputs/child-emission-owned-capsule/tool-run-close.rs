@@ -1,29 +1,29 @@
-            if everything{
-                if maximum_items==0||maximum_bytes==0{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
-                member.retired_emits.extend(member.emit.take());
-                member.retired_emission_owners.extend(member.emission_owner.take());
-                if !member.ops.is_empty()||member.ops.capacity()!=0{member.retired_ops.push_back(std::mem::take(&mut member.ops));}
-            }
-            if let Some(owner)=member.retired_emission_owners.front_mut(){
+            let queued_owner=!member.retired_emission_owners.is_empty();
+            let owner=if queued_owner{member.retired_emission_owners.front_mut()}else if everything{member.emission_owner.as_mut()}else{None};
+            if let Some(owner)=owner{
                 if maximum_items==0||maximum_bytes==0{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
                 if owner.is_empty(){
                     let bytes=std::mem::size_of_val(owner.as_ref());
                     if bytes>maximum_bytes{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
-                    member.retired_emission_owners.pop_front();
+                    if queued_owner{member.retired_emission_owners.pop_front();}else{member.emission_owner.take();}
                     return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:bytes}));
                 }
-                let step=match children.get(&(member.slot.clone(),member.child_id.clone())){
+                let step=match children.entries().find(|child|child.owner.slot==member.slot&&child.owner.child_id==member.child_id){
                     Some(child)=>child.member.visit_member(ToolRunMemberEmissionRetire{owner:owner.as_mut(),maximum_bytes})?,
                     None=>owner.close_step(1,maximum_bytes)?,
                 };
                 return Ok(Some(step));
             }
-            if let Some(emit)=member.retired_emits.front_mut(){
+            let queued_emit=!member.retired_emits.is_empty();
+            let emit=if queued_emit{member.retired_emits.front_mut()}else if everything{member.emit.as_mut()}else{None};
+            if let Some(emit)=emit{
                 let step=emit.close_one(maximum_items.min(1),maximum_bytes);
-                if step==PluginCloseStep::Complete{member.retired_emits.pop_front();return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:0}));}
+                if step==PluginCloseStep::Complete{if queued_emit{member.retired_emits.pop_front();}else{member.emit.take();}return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:0}));}
                 return Ok(Some(step));
             }
-            if let Some(ops)=member.retired_ops.front_mut(){
+            let queued_ops=!member.retired_ops.is_empty();
+            let ops=if queued_ops{member.retired_ops.front_mut()}else if everything&&(!member.ops.is_empty()||member.ops.capacity()!=0){Some(&mut member.ops)}else{None};
+            if let Some(ops)=ops{
                 if maximum_items==0||maximum_bytes==0{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
                 if let Some(operation)=ops.last(){
                     let bytes=operation.capacity();
@@ -32,7 +32,7 @@
                 }
                 let bytes=ops.capacity().checked_mul(std::mem::size_of::<Vec<u8>>()).expect("allocated member operation layout");
                 if bytes>maximum_bytes{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
-                *ops=Vec::new();member.retired_ops.pop_front();return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:bytes}));
+                *ops=Vec::new();if queued_ops{member.retired_ops.pop_front();}return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:bytes}));
             }
             macro_rules! close_member_backing{
                 ($field:ident,$item:ty)=>{

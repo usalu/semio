@@ -71,7 +71,7 @@ impl ArtifactViewer for XlsxStrictViewer {
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> XlsxSnapshot {
-        XlsxSnapshot::default()
+        <crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction::new(crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook::default())).expect("valid authored strict XLSX initial owner")
     }
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

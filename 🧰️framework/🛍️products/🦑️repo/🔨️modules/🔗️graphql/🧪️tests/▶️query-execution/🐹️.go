@@ -24,7 +24,7 @@ type corpus struct {
 
 // 🗄️ Builds the context every query of the corpus runs against.
 func newContext(ctx *host.Context) (*graphql.RecordingContext, error) {
-	raw, err := ctx.FixtureBytes("shared://🔣️repo-records.json")
+	raw, err := ctx.InputBytes("shared://🔣️repo-records.json")
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func newContext(ctx *host.Context) (*graphql.RecordingContext, error) {
 
 // 📥️ Reads the query corpus.
 func readCorpus(ctx *host.Context) (corpus, error) {
-	raw, err := ctx.FixtureBytes("shared://▶️query-execution/🔣️queries.json")
+	raw, err := ctx.InputBytes("shared://▶️query-execution/🔣️queries.json")
 	if err != nil {
 		return corpus{}, err
 	}

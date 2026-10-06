@@ -2,5 +2,3 @@
 export * from "./📸️snapshot/🟦️.ts";
 export type {Block5dSnapshot as Block5dArtifact} from "./📸️snapshot/🟦️.ts";
 export {parseBlock5dSnapshot as parseBlock5dArtifact} from "./📸️snapshot/🟦️.ts";
-
-export {block5dSnapshotToSqliteDatabase,block5dSnapshotFromSqliteDatabase} from "./📸️snapshot/🪶️sqlite/🟦️.ts";

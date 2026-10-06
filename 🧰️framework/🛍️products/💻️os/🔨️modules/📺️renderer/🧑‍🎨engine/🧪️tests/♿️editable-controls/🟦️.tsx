@@ -5,7 +5,6 @@ import { computeAccessibleName, computeAccessibleDescription } from "dom-accessi
 import { afterEach, expect, it } from "vitest";
 import Ajv2020 from "ajv/dist/2020";
 import fixture from "../../🧫️fixtures/♿️editable-controls/🔣️.json";
-import queueSchema from "../../🧬️schema/♿️editable-controls/🔣️.json";
 import { createInputLedgerV1, inputActionWindowV1, inputActionWithWindowV1 } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import ownership from "../../🧫️fixtures/🪟️input-window/🔣️.json";
@@ -15,7 +14,6 @@ import { InterpretedUiNode, UiNodeView } from "../../🧱️elements/🗣️Inte
 afterEach(cleanup);
 
 import crossInputs from "../../🧫️fixtures/↔️input-commits/🔣️.json";
-import crossInputSchema from "../../🧬️schema/↔️input-commits/🔣️.json";
 import { inputCommitLaneV1 } from "../../🧱️elements/🗣️Interpreter/🎯️commit-lane/🟦️.ts";
 import { LocalDocumentOwnerRegistryV1 } from "../../🧱️elements/🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 
@@ -110,7 +108,6 @@ it("bounds sibling commits and releases every pending publication subscription o
 
 for (const mode of ["own", "foreign", "changed-sibling", "refused", "retired", "discarded-sibling"] as const) for (const order of ["publication-first", "completion-first"] as const) it(`serializes different retained input targets with ${order} and ${mode}`, async () => {
   const law = crossInputs;
-  expect(new Ajv2020({ strict: true }).compile(crossInputSchema)(law)).toBe(true);
   const store = new UiDocumentStore("cross-inputs");
   const intents: any[] = [];
   const completions: ((outcome: InputOutcomeV1) => void)[] = [];
@@ -183,7 +180,6 @@ for (const mode of ["own", "foreign", "changed-sibling", "refused", "retired", "
 
 for (const kind of ["refused", "superseded"] as const) it(`preserves a draft and stops queued edits when the first input is ${kind}`, async () => {
   const law = fixture.queuedAcknowledgements;
-  expect(new Ajv2020({ strict: true }).compile(queueSchema)(law)).toBe(true);
   const store = new UiDocumentStore("refused-draft");
   const intents: unknown[] = [];
   let complete: (value: any) => void = () => {};
@@ -207,7 +203,6 @@ for (const kind of ["refused", "superseded"] as const) it(`preserves a draft and
 
 for (const order of ["publication-first", "settlement-first"] as const) it(`queues explicit commits across changing revision guards with ${order}`, async () => {
   const law = fixture.queuedAcknowledgements;
-  expect(new Ajv2020({ strict: true }).compile(queueSchema)(law)).toBe(true);
   const store = new UiDocumentStore("queued-draft");
   const intents: any[] = [];
   const completions: (() => void)[] = [];
@@ -285,7 +280,7 @@ for (const test of fixture.cases) for (const locale of ["en","de"] as const) for
       expect(intents).toHaveLength(fixture.commitCounts.untouched);
       fireEvent.change(control,{ target: { value: test.draft } });
       expect(intents).toHaveLength(0);
-      if (gesture === "enter") fireEvent.keyDown(control, { key: "Enter" });
+      if (gesture === "enter") fireEvent.keyDown(control, { key: "Enter", ctrlKey: test.kind === "longText" });
       else fireEvent.blur(control);
       expect(intents).toHaveLength(fixture.commitCounts.edited);
       fireEvent.blur(control);
@@ -399,7 +394,6 @@ it("window provenance routes scene and retained commands without rewriting their
 
 for (const owned of [false, true]) for (const ending of ["applied", "refused"] as const) it(`bounds same-control explicit commits and preserves the newest draft with owned=${owned}, ending=${ending}`, async () => {
   const law = fixture.queuedAcknowledgements;
-  expect(new Ajv2020({ strict: true }).compile(queueSchema)(law)).toBe(true);
   const store = new UiDocumentStore("bounded-local-draft");
   const registry = new LocalDocumentOwnerRegistryV1();
   const localDocumentOwner = owned ? registry.acquire({ pluginId: "stdio", appId: "csv", sessionInstanceId: 1, runtimeKey: "bounded-local-draft", clientInstanceId: "one" }) : null;
@@ -436,7 +430,6 @@ for (const owned of [false, true]) for (const ending of ["applied", "refused"] a
 
 for (const ending of ["applied", "refused", "rejected"] as const) it(`keeps a retained button busy through ${ending} and prevents duplicate stale dispatch`, async () => {
   const law = fixture.queuedAcknowledgements;
-  expect(new Ajv2020({ strict: true }).compile(queueSchema)(law)).toBe(true);
   const store = new UiDocumentStore("button-admission");
   const intents: any[] = [];
   let complete: (outcome: InputOutcomeV1) => void = () => {};

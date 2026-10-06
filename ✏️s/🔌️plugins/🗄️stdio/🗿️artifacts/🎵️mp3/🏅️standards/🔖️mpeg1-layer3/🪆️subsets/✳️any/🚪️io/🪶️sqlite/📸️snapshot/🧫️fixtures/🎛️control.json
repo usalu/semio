@@ -1,0 +1,35 @@
+{
+  "largeOctetBytes": 196608,
+  "cancelAt": 256,
+  "maxOwnedBytes": 65536,
+  "semanticCells": {
+    "tableWidths": {
+      "mp3_document": 2,
+      "mp3_id3v2_tag": 4,
+      "mp3_id3v2_frame": 5,
+      "mp3_id3v2_frame_octet": 4,
+      "mp3_id3v1_tag": 1,
+      "mp3_id3v1_octet": 4,
+      "mp3_audio_frame": 15,
+      "mp3_audio_payload_octet": 4
+    },
+    "schemaBytes": 2342,
+    "cases": [
+      {
+        "id": "complete",
+        "rows": 18,
+        "valueBytes": 733
+      },
+      {
+        "id": "absent",
+        "rows": 1,
+        "valueBytes": 25
+      },
+      {
+        "id": "presentEmpty",
+        "rows": 3,
+        "valueBytes": 65
+      }
+    ]
+  }
+}

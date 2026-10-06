@@ -606,12 +606,11 @@ struct RasterStorePreparationFactory;
 struct RasterStorePreparation {
     base: Option<store::SnapshotRead<RasterSnapshot>>,
     mutation: Option<RasterMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<RasterSnapshot, RasterMutation>>,
     /// 🧮 The clone-free stepwise apply (`RasterOneItemApply`), live from the first `advance` until
     /// the post snapshot is handed over, or closed through its own retirement on cancel/fault.
-    apply: Option<crate::spr::RasterOneItemApply>,
+    apply: Option<crate::standards::v1::subsets::any::io::binary::mutations::RasterOneItemApply>,
     /// 🧹️ A cancelled/faulted item's mutation may carry a populated owned map (a `create-layer` of an
     /// adjustment with params) that must never reach `Drop` — it retires through the mutation
     /// retirement factory instead.
@@ -626,9 +625,9 @@ struct RasterStorePreparation {
 const RASTER_ONE_ITEM_APPLY_FUEL: u64 = 256;
 
 impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutation> for RasterStorePreparationFactory {
-    fn preflight(&self, mutation: &RasterMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Raster Store preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &RasterMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Raster Store preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -650,7 +649,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutatio
         Ok(Box::new(RasterStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             apply: None,
@@ -678,7 +676,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
         // retained candidate authority builds the post snapshot one owned value at a time instead.
         let post = {
             let mutation = self.mutation.as_ref().ok_or_else(|| "Raster preparation lost its mutation owner".to_string())?;
-            let apply = self.apply.get_or_insert_with(crate::spr::RasterOneItemApply::new);
+            let apply = self.apply.get_or_insert_with(crate::standards::v1::subsets::any::io::binary::mutations::RasterOneItemApply::new);
             match apply.advance(base.get(), mutation, authority.operation(), authority.generation(), RASTER_ONE_ITEM_APPLY_FUEL).map_err(semio_framework_value::ValueError::into_message)? {
                 Some(post) => post,
                 None => return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint)),
@@ -725,7 +723,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
             });
         }
         if let Some(mutation) = self.mutation.take() {
-            self.mutation_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::spr::RasterMutationRetirementFactory, mutation));
+            self.mutation_retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&crate::standards::v1::subsets::any::io::binary::mutations::RasterMutationRetirementFactory, mutation));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(retirement) = self.mutation_retirement.as_mut() {
@@ -738,7 +736,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
                 other => other,
             });
         }
-        if self.prepared.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -758,7 +756,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.apply.is_none() && self.mutation_retirement.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.apply.is_none() && self.mutation_retirement.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 
@@ -771,7 +769,6 @@ struct RasterConfigStorePreparationFactory;
 struct RasterConfigStorePreparation {
     base: Option<store::SnapshotRead<RasterConfig>>,
     mutation: Option<RasterConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<RasterConfig, RasterConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -780,9 +777,9 @@ struct RasterConfigStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<RasterConfig, RasterConfigMutation> for RasterConfigStorePreparationFactory {
-    fn preflight(&self, mutation: &RasterConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Raster config preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &RasterConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Raster config preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -802,7 +799,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<RasterConfig, RasterConfigMut
         Ok(Box::new(RasterConfigStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -853,7 +849,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterConfig, RasterConfigMutation> 
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -873,7 +869,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterConfig, RasterConfigMutation> 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation
@@ -889,7 +885,7 @@ const RASTER_IMPORT_PORT: &str = "image:in";
 /// unbounded one-shot seam is no longer on any live route. Two bounded steps: decode the incoming
 /// base64 PNG into this artifact's own `(asset_id, asset, layer)` triple, then publish the two real
 /// semantic mutations (`add-layer-asset` then `create-layer`, in dependency order) through the
-/// completion authority. The decode itself is `crate::io::raster_image_layer_and_asset` — the SAME
+/// completion authority. The decode itself is `crate::standards::v1::subsets::any::io::raster_image_layer_and_asset` — the SAME
 /// function the pure seam used — so the import's meaning lives in one place.
 struct RasterImportJob {
     port: String,
@@ -939,7 +935,7 @@ impl RasterImportJob {
             return Some(raster_job_fault(cx, "raster import lost its snapshot authority"));
         };
         let index = snapshot.layers.len();
-        let (asset_id, asset, layer) = crate::io::raster_image_layer_and_asset(media_json);
+        let (asset_id, asset, layer) = crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(media_json);
         self.mutations = vec![
             RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
             RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index, layer: Box::new(layer) }),
@@ -1180,11 +1176,11 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::raster_envelope_decode_owner_bundle())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::raster_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::raster_document_store_owners())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_owners())
     }
 
     fn build_document_store_initialization_job(
@@ -1192,7 +1188,7 @@ impl ArtifactEditor for RasterPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::spr::raster_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1276,7 +1272,7 @@ impl ArtifactEditor for RasterPlayApp {
     /// use). Found at the first react boots of ticket 26/09/05/RASTER-PLUGIN-END-TO-END
     /// (2026-09-16).
     fn initial_snapshot() -> RasterSnapshot {
-        crate::standards::v1::subsets::any::schema::empty_raster_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1322,7 +1318,7 @@ impl ArtifactEditor for RasterPlayApp {
         let MediaPayload::Structured { json: png_base64, .. } = &media.payload else {
             return Err(MediaError::Payload(port.to_string(), "image:in only accepts a Structured (base64 PNG) payload".into()));
         };
-        let (asset_id, asset, layer) = crate::io::raster_image_layer_and_asset(png_base64);
+        let (asset_id, asset, layer) = crate::standards::v1::subsets::any::io::raster_image_layer_and_asset(png_base64);
         Ok(Emit::mutations(vec![
             RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
             RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index: doc.snapshot.layers.len(), layer: Box::new(layer) }),
@@ -1471,8 +1467,8 @@ pub fn raster_image_out_port() -> semio_framework::MediaPortSpec {
 
 /// 🖼️ Publishes the canonical layer composite as a PNG image port payload.
 pub fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, MediaError> {
-    let image=crate::io::raster_composite_image(document).map_err(|error|MediaError::Payload("image:out".into(),error))?;
-    let bytes=crate::io::png_bytes_from_semio_image(&image).map_err(|error|MediaError::Payload("image:out".into(),error))?;
+    let image=crate::standards::v1::subsets::any::io::raster_composite_image(document).map_err(|error|MediaError::Payload("image:out".into(),error))?;
+    let bytes=crate::standards::v1::subsets::any::io::png_bytes_from_semio_image(&image).map_err(|error|MediaError::Payload("image:out".into(),error))?;
     let png_base64=base64_codec::base64_standard_encode(bytes);
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }

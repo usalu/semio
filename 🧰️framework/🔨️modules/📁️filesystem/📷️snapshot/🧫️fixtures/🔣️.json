@@ -1,0 +1,797 @@
+{
+  "cases": [
+    {
+      "id": "untouched-source",
+      "files": {
+        "a.rs": "original"
+      },
+      "changes": [],
+      "requests": [
+        "a.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "a.rs": "original"
+        },
+        "inverse": []
+      }
+    },
+    {
+      "id": "addition",
+      "files": {},
+      "changes": [
+        {
+          "path": "new.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [
+        "new.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "new.rs": "new"
+        },
+        "inverse": [
+          {
+            "path": "new.rs",
+            "before": "new",
+            "after": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "replacement",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": "new"
+        }
+      ],
+      "requests": [
+        "a.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "a.rs": "new"
+        },
+        "inverse": [
+          {
+            "path": "a.rs",
+            "before": "new",
+            "after": "old"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unchanged-authority",
+      "files": {
+        "a.rs": "same"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "same",
+          "after": "same"
+        }
+      ],
+      "requests": [
+        "a.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "a.rs": "same"
+        },
+        "inverse": [
+          {
+            "path": "a.rs",
+            "before": "same",
+            "after": "same"
+          }
+        ]
+      }
+    },
+    {
+      "id": "deletion",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        }
+      ],
+      "requests": [
+        "a.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "a.rs": null
+        },
+        "inverse": [
+          {
+            "path": "a.rs",
+            "before": null,
+            "after": "old"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repeated-retain-cannot-resurrect",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        }
+      ],
+      "requests": [
+        "a.rs",
+        "a.rs",
+        "a.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "a.rs": null
+        },
+        "inverse": [
+          {
+            "path": "a.rs",
+            "before": null,
+            "after": "old"
+          }
+        ]
+      }
+    },
+    {
+      "id": "empty-source-is-present",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": ""
+        }
+      ],
+      "requests": [
+        "a.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "a.rs": ""
+        },
+        "inverse": [
+          {
+            "path": "a.rs",
+            "before": "",
+            "after": "old"
+          }
+        ]
+      }
+    },
+    {
+      "id": "empty-source-addition",
+      "files": {},
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": null,
+          "after": ""
+        }
+      ],
+      "requests": [
+        "a.rs"
+      ],
+      "references": [
+        {
+          "from": "root",
+          "target": "a.rs",
+          "kind": "root"
+        }
+      ],
+      "expected": {
+        "files": {
+          "a.rs": ""
+        },
+        "inverse": [
+          {
+            "path": "a.rs",
+            "before": "",
+            "after": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "unicode-body-and-path",
+      "files": {
+        "🧬️/ä.rs": "before\n"
+      },
+      "changes": [
+        {
+          "path": "🧬️/ä.rs",
+          "before": "before\n",
+          "after": "nachher\u0000"
+        }
+      ],
+      "requests": [
+        "🧬️/ä.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "🧬️/ä.rs": "nachher\u0000"
+        },
+        "inverse": [
+          {
+            "path": "🧬️/ä.rs",
+            "before": "nachher\u0000",
+            "after": "before\n"
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-optional-source",
+      "files": {},
+      "changes": [],
+      "requests": [
+        "missing.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "missing.rs": null
+        },
+        "inverse": []
+      }
+    },
+    {
+      "id": "addition-over-existing",
+      "files": {
+        "a.rs": "foreign"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "predecessor-mismatch",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "replacement-with-missing-predecessor",
+      "files": {},
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "predecessor-mismatch",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "deletion-with-missing-predecessor",
+      "files": {},
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "predecessor-mismatch",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "changed-predecessor",
+      "files": {
+        "a.rs": "foreign"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "predecessor-mismatch",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "absent-to-absent",
+      "files": {},
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": null,
+          "after": null
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "empty-change",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "duplicate-change",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        },
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "duplicate-change",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "deleted-manifest-reference",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        }
+      ],
+      "requests": [],
+      "references": [
+        {
+          "from": "consumer.rs",
+          "target": "a.rs",
+          "kind": "manifest"
+        }
+      ],
+      "expected": {
+        "refusal": {
+          "code": "deleted-reference",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "deleted-module-reference",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        }
+      ],
+      "requests": [],
+      "references": [
+        {
+          "from": "consumer.rs",
+          "target": "a.rs",
+          "kind": "module"
+        }
+      ],
+      "expected": {
+        "refusal": {
+          "code": "deleted-reference",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "deleted-include-reference",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        }
+      ],
+      "requests": [],
+      "references": [
+        {
+          "from": "consumer.rs",
+          "target": "a.rs",
+          "kind": "include"
+        }
+      ],
+      "expected": {
+        "refusal": {
+          "code": "deleted-reference",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "deleted-runtime-reference",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        }
+      ],
+      "requests": [],
+      "references": [
+        {
+          "from": "consumer.rs",
+          "target": "a.rs",
+          "kind": "runtime"
+        }
+      ],
+      "expected": {
+        "refusal": {
+          "code": "deleted-reference",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "deleted-root-reference",
+      "files": {
+        "a.rs": "old"
+      },
+      "changes": [
+        {
+          "path": "a.rs",
+          "before": "old",
+          "after": null
+        }
+      ],
+      "requests": [],
+      "references": [
+        {
+          "from": "consumer.rs",
+          "target": "a.rs",
+          "kind": "root"
+        }
+      ],
+      "expected": {
+        "refusal": {
+          "code": "deleted-reference",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "missing-required-source",
+      "files": {},
+      "changes": [],
+      "requests": [],
+      "references": [
+        {
+          "from": "root",
+          "target": "a.rs",
+          "kind": "root"
+        }
+      ],
+      "expected": {
+        "refusal": {
+          "code": "missing-reference",
+          "path": "a.rs"
+        }
+      }
+    },
+    {
+      "id": "reference-to-added-source",
+      "files": {},
+      "changes": [
+        {
+          "path": "new.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [
+        "new.rs"
+      ],
+      "references": [
+        {
+          "from": "consumer.rs",
+          "target": "new.rs",
+          "kind": "module"
+        }
+      ],
+      "expected": {
+        "files": {
+          "new.rs": "new"
+        },
+        "inverse": [
+          {
+            "path": "new.rs",
+            "before": "new",
+            "after": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordered-inverse",
+      "files": {
+        "z.rs": "old",
+        "a.rs": "before"
+      },
+      "changes": [
+        {
+          "path": "z.rs",
+          "before": "old",
+          "after": null
+        },
+        {
+          "path": "a.rs",
+          "before": "before",
+          "after": "after"
+        }
+      ],
+      "requests": [
+        "z.rs",
+        "a.rs"
+      ],
+      "references": [],
+      "expected": {
+        "files": {
+          "z.rs": null,
+          "a.rs": "after"
+        },
+        "inverse": [
+          {
+            "path": "z.rs",
+            "before": null,
+            "after": "old"
+          },
+          {
+            "path": "a.rs",
+            "before": "after",
+            "after": "before"
+          }
+        ]
+      }
+    },
+    {
+      "id": "invalid-path-24",
+      "files": {},
+      "changes": [
+        {
+          "path": "",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "invalid-path",
+          "path": ""
+        }
+      }
+    },
+    {
+      "id": "invalid-path-25",
+      "files": {},
+      "changes": [
+        {
+          "path": "/a.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "invalid-path",
+          "path": "/a.rs"
+        }
+      }
+    },
+    {
+      "id": "invalid-path-26",
+      "files": {},
+      "changes": [
+        {
+          "path": "../a.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "invalid-path",
+          "path": "../a.rs"
+        }
+      }
+    },
+    {
+      "id": "invalid-path-27",
+      "files": {},
+      "changes": [
+        {
+          "path": "a/../b.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "invalid-path",
+          "path": "a/../b.rs"
+        }
+      }
+    },
+    {
+      "id": "invalid-path-28",
+      "files": {},
+      "changes": [
+        {
+          "path": "a//b.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "invalid-path",
+          "path": "a//b.rs"
+        }
+      }
+    },
+    {
+      "id": "invalid-path-29",
+      "files": {},
+      "changes": [
+        {
+          "path": "./a.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "invalid-path",
+          "path": "./a.rs"
+        }
+      }
+    },
+    {
+      "id": "invalid-path-30",
+      "files": {},
+      "changes": [
+        {
+          "path": "a\\b.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "invalid-path",
+          "path": "a\\b.rs"
+        }
+      }
+    },
+    {
+      "id": "invalid-path-31",
+      "files": {},
+      "changes": [
+        {
+          "path": "C:/a.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "invalid-path",
+          "path": "C:/a.rs"
+        }
+      }
+    },
+    {
+      "id": "invalid-path-32",
+      "files": {},
+      "changes": [
+        {
+          "path": "a\u0000.rs",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "requests": [],
+      "references": [],
+      "expected": {
+        "refusal": {
+          "code": "invalid-path",
+          "path": "a\u0000.rs"
+        }
+      }
+    }
+  ]
+}

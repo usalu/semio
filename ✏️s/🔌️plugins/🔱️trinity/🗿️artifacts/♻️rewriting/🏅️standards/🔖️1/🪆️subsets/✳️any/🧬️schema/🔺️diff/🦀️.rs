@@ -29,14 +29,70 @@ pub struct RewritingDiff {
 #[path = "🧪️tests/🗂️map-ownership/🦀️.rs"]
 mod map_ownership_tests;
 
-/// 📤️ Renders the sparse typed delta using its declared word and property roles.
-pub fn encode_rewriting_diff_json(value:&RewritingDiff)->Result<String,semio_framework_value::ValueError>{
- let value=crate::standards::v1::subsets::any::schema::snapshot::json::diff(semio_framework_value::ToValue::to_value(value),false)?;
- Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&value)))
+use crate::standards::v1::subsets::any::schema::RewritingArtifact;
+use crate::RewritingSnapshot;
+use protocol::MutationDiff;
+use super::*;
+
+impl RewritingDiff {
+    /// 🧬️ Applies document-owned sparse entries onto the artifact.
+    pub fn apply_to_artifact(&self, artifact: &RewritingArtifact) -> protocol::MutationApplyResult<RewritingArtifact> {
+        Ok({
+            let mut next = artifact.clone();
+            if let Some(value) = &self.working_graph {
+                next.working_graph = value.clone();
+            }
+            if let Some(value) = &self.lhs {
+                next.lhs = value.clone();
+            }
+            if let Some(value) = &self.rhs {
+                next.rhs = value.clone();
+            }
+            if let Some(bindings) = &self.parameter_bindings {
+                bindings.apply_to(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
+            }
+            if let Some(layout) = &self.rule_layout {
+                layout.apply_to(&mut next.rule_layout).map_err(|error| error.under(["ruleLayout"]))?;
+            }
+            next
+        })
+    }
 }
-/// 📥️ Binds the sparse typed delta from its closed declared JSON fields.
-pub fn decode_rewriting_diff_json(text:&str)->Result<RewritingDiff,semio_framework_value::ValueError>{
- let parsed=semio_framework_pack_json::parse(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))?;
- let value=crate::standards::v1::subsets::any::schema::snapshot::json::diff(semio_framework_pack_json::to_dsl_value(&parsed),true)?;
- semio_framework_value::FromValue::from_value(value)
+
+impl MutationDiff<RewritingSnapshot> for RewritingDiff {
+    fn apply(&self, snapshot: &RewritingSnapshot) -> protocol::MutationApplyResult<RewritingSnapshot> {
+        Ok({
+            let mut next = snapshot.clone();
+            if let Some(value) = &self.working_graph {
+                next.working_graph = value.clone();
+            }
+            if let Some(value) = &self.lhs {
+                next.lhs = value.clone();
+            }
+            if let Some(value) = &self.rhs {
+                next.rhs = value.clone();
+            }
+            if let Some(bindings) = &self.parameter_bindings {
+                bindings.apply_to(&mut next.parameter_bindings).map_err(|error| error.under(["parameterBindings"]))?;
+            }
+            if let Some(layout) = &self.rule_layout {
+                layout.apply_to(&mut next.rule_layout).map_err(|error| error.under(["ruleLayout"]))?;
+            }
+            next
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(working_graph);
+        take!(lhs);
+        take!(rhs);
+        MapDelta::absorb_optional(&mut self.parameter_bindings, other.parameter_bindings);
+        MapDelta::absorb_optional(&mut self.rule_layout, other.rule_layout);
+    }
 }

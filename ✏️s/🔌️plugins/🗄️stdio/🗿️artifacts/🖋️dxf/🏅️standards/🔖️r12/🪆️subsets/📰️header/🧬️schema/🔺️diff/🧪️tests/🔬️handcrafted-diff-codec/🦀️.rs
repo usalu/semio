@@ -1,5 +1,5 @@
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 /// 🧪️ `DiffCodec` text/binary round-trip laws over every `demo_diff_cases()` fixture (`#region
 /// 🔖️DemoCases` above) — the empty diff, a single-collection sparse diff, and the rich case

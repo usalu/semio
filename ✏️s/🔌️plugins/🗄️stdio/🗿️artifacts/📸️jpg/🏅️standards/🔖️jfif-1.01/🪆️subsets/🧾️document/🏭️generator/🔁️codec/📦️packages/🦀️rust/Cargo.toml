@@ -3,6 +3,12 @@
 # — never joins the repository's root workspace or its Cargo.lock, and never links against
 # `semio-s-plugin-stdio` (currently non-compiling, unrelated peer migration).
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "jpeg-jfif-codec"

@@ -26,7 +26,7 @@
   "comparisonPipelines": [],
   "toleranceProfiles": [],
   "mutationManifests": [],
-  "fixtureManifests": [],
+  "testEvidence": [],
   "oracleHostPackages": [],
   "migrationStatus": {
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test": "protocol-v2"

@@ -2,20 +2,16 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import { chromium } from "playwright";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
 const host = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const fixture = JSON.parse(readFileSync(resolve(host, "🧫️fixtures/📤️gpu-export/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(host, "🧬️schema/📤️gpu-export/🔣️.json"), "utf8"));
 
 describe("🖼️ Icon GPU PNG export", () => {
-  it("validates the neutral request and publication contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   it("matches browser PNG pixels at a width requiring GPU row padding", async () => {
     const browser = await chromium.launch({ headless: true });

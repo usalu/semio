@@ -21,7 +21,8 @@
         },
         "widget": "stepper",
         "unit": "m",
-        "precision": 0
+        "precision": 0,
+        "step": 10
       }
     }
   }

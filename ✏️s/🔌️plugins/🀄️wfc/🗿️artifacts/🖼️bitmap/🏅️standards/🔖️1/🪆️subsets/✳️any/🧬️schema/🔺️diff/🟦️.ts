@@ -3,14 +3,14 @@
  * languages can genuinely disagree: lane order, the pad rule of a resize, and the index a pin is
  * restored at are all decisions, and the cross-language oracle is what pins them. */
 
-import { decodeBase64, encodeBase64, pinKey, type BitmapColor, type BitmapOutputSpec, type BitmapOverlappingModel, type BitmapPinnedPixel, type BitmapSnapshot } from "../📸️snapshot/🟦️.ts";
+import { pinKey, type BitmapColor, type BitmapOutputSpec, type BitmapOverlappingModel, type BitmapPinnedPixel, type BitmapSnapshot } from "../📸️snapshot/🟦️.ts";
 
 export interface BitmapPixelRegion {
   x: number;
   y: number;
   width: number;
   height: number;
-  pixels: string;
+  pixels: Uint8Array;
 }
 
 export interface BitmapDiff {
@@ -18,7 +18,7 @@ export interface BitmapDiff {
   seed?: bigint | null;
   inputWidth?: number | null;
   inputHeight?: number | null;
-  inputPixels?: string | null;
+  inputPixels?: Uint8Array | null;
   inputRegions: BitmapPixelRegion[];
   palette?: BitmapColor[] | null;
   output?: BitmapOutputSpec | null;
@@ -40,11 +40,11 @@ export function resizedBuffer(buffer: Uint8Array, fromWidth: number, fromHeight:
 /** 🩹 Carries `before` to `after`. Lane order is load-bearing: a resize relays the buffer out, a
  * whole-buffer replacement supersedes it, and only then do the sparse region writes land. */
 export function applyBitmapDiff(base: BitmapSnapshot, diff: BitmapDiff): BitmapSnapshot {
-  const next: BitmapSnapshot = JSON.parse(JSON.stringify(base)) as BitmapSnapshot;
+  const next: BitmapSnapshot = structuredClone(base);
   if (diff.schema != null) next.schema = diff.schema;
   if (diff.seed != null) next.seed = diff.seed;
 
-  let buffer = decodeBase64(next.input.pixels);
+  let buffer: Uint8Array = next.input.pixels.slice();
   if (buffer.length !== next.input.width * next.input.height) throw new Error("the base input pixel buffer is not width * height bytes");
   if (diff.inputWidth != null || diff.inputHeight != null) {
     const width = diff.inputWidth ?? next.input.width;
@@ -55,7 +55,7 @@ export function applyBitmapDiff(base: BitmapSnapshot, diff: BitmapDiff): BitmapS
     next.input.height = height;
   }
   if (diff.inputPixels != null) {
-    const replacement = decodeBase64(diff.inputPixels);
+    const replacement = diff.inputPixels.slice();
     if (replacement.length !== next.input.width * next.input.height) throw new Error("the replacement buffer does not match the input size");
     buffer = replacement;
   }
@@ -64,7 +64,7 @@ export function applyBitmapDiff(base: BitmapSnapshot, diff: BitmapDiff): BitmapS
     next.input.palette = diff.palette.map((color) => ({ ...color }));
   }
   for (const region of diff.inputRegions ?? []) {
-    const pixels = decodeBase64(region.pixels);
+    const pixels = region.pixels;
     if (region.width <= 0 || region.height <= 0 || pixels.length !== region.width * region.height) throw new Error("a region payload does not match its own extent");
     if (region.x + region.width > next.input.width || region.y + region.height > next.input.height) throw new Error("a region write falls outside the input bitmap");
     for (let row = 0; row < region.height; row += 1) {
@@ -72,7 +72,7 @@ export function applyBitmapDiff(base: BitmapSnapshot, diff: BitmapDiff): BitmapS
       buffer.set(pixels.subarray(row * region.width, (row + 1) * region.width), start);
     }
   }
-  next.input.pixels = encodeBase64(buffer);
+  next.input.pixels = buffer;
 
   if (diff.output != null) next.output = { ...diff.output };
   if (diff.model != null) next.model = { ...diff.model };

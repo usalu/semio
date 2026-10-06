@@ -1,0 +1,81 @@
+{
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-caps/🔣️.json": [
+    "boundedLeaf"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️fault-notices-gate/🔣️.json": [
+    "finding",
+    "count"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-input-declarations/🔣️.json": [
+    "source",
+    "pointer",
+    "code",
+    "finding",
+    "declaration",
+    "resolvedInput",
+    "resolvedLeaf",
+    "leafShowsInput",
+    "numericDeclared",
+    "labelResolved",
+    "widgetDeclared",
+    "multilineControlled"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🧬️schema/🔣️.json": [
+    "request"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧬️schema-rust-entries/🔣️.json": [
+    "Scope",
+    "Dump"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json": [
+    "DependencyDirections",
+    "GraphScope"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️cargo-dependency-direction/🔣️.json": [
+    "Policy",
+    "Dependency",
+    "Package",
+    "Violation",
+    "Problem"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📣️typescript-declaration-facts/💥️malformed/🔣️.json": [
+    "compilerDiagnostic"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📣️typescript-declaration-facts/🔣️.json": [
+    "span",
+    "structure",
+    "declaration",
+    "alias",
+    "expected",
+    "diagnostic"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️rust-source-direction/🧾️attributes/🔣️.json": [
+    "reference",
+    "inputs",
+    "result"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️rust-source-direction/🔣️.json": [
+    "moduleMetadataProblem",
+    "moduleScopeFact",
+    "moduleScopeProof",
+    "report",
+    "macroScope",
+    "compileExpansion",
+    "moduleMount",
+    "participationProjection"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧬️schema-scope-catalog/🔣️.json": [
+    "Scope"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧩️child-kind-metadata/🔣️.json": [
+    "artifactKind"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📋️mutation-inventory/🎭️source-roster-roles/🔣️.json": [
+    "digest",
+    "rosterRecord",
+    "inventory"
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📋️process-table/🔣️.json": [
+    "row"
+  ]
+}

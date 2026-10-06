@@ -98,3 +98,6 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: GisMapViewe
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

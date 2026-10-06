@@ -1,0 +1,7 @@
+# Block3d Borrowed Wire Boundary
+
+[Actual Snapshot declaration14](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs:14) root fields are schema0 Text; object_kind1 Block; representations2 Table; catalog3 ArtifactChild Record; vortex_kind_extra4/vortices5/compatibility6/attributes7/authors8 Tables; camera3d9/meta10 Blocks. Keep actual declaration order/layout and root envelope. Child is child_id0 Text and target1 ArtifactRef Record.
+
+[Actual ArtifactChild DslField3934](/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3934) has ordinary/controlled Record shape and paid controlled producer/binder, but no projection_view implementation through its complete impl ending3992. Therefore those methods do not establish borrowed FieldProjectionSource eligibility. A derived parent field cannot claim supported child projection from controlled to_record. Use an actual firstparty borrowed child field-view hook or an owner-authored field source over the literal child/target fields plus authentic BorrowedRecordSpec. Do not construct a RecordValue/SqliteDatabase shadow to obtain physical forecast authority.
+
+Physical's existing Block3d independent inline SQLite oracle explicitly uses NULL0; its Source all-word693NaN authority is preserved. My earlier assumption that it consumed shared NULL1 was incorrect and is retracted. No owning gate or production edit by Low; remaining kind/camera/meta nested specs still require actual field producer readback.

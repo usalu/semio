@@ -23,8 +23,8 @@ mod subject {
     use super::{DERIVED_ASSET, DSL_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
-    use semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::snapshot::fem3d_identity_report_json;
+    use semio_s_artifact_fem_3d::standards::v1::subsets::any::io::text::mutations::fem3d_mutation_report_json;
+    use semio_s_artifact_fem_3d::standards::v1::subsets::any::io::text::snapshot::fem3d_identity_report_json;
 
     fn member<'a>(report: &'a Json, key: &str) -> Result<&'a Json, String> {
         report.get(key).ok_or_else(|| format!("the report carries no {key:?} member"))
@@ -60,7 +60,7 @@ mod subject {
     /// The MODEL identity is what the Python reference can also produce: the nine members this
     /// subset's own JSON codec reads out of the derived real frame.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let committed = ctx.fixture_bytes(DSL_ASSET)?;
+        let committed = ctx.input_bytes(DSL_ASSET)?;
         let text_value = String::from_utf8(committed.clone()).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
         let report = parse_json(&fem3d_identity_report_json(&text_value).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
         let parsed = member(&report, "parsed")?;
@@ -69,7 +69,7 @@ mod subject {
         if let Some(first) = law::divergence(member(&report, "packDecoded")?, parsed) {
             return Err(format!("identity-round-trip: the binary codec decodes to a different document than the text codec — {first}"));
         }
-        let derived = String::from_utf8(ctx.fixture_bytes(DERIVED_ASSET)?).map_err(|error| format!("identity-round-trip: the derived model is not UTF-8: {error}"))?;
+        let derived = String::from_utf8(ctx.input_bytes(DERIVED_ASSET)?).map_err(|error| format!("identity-round-trip: the derived model is not UTF-8: {error}"))?;
         let probe = report_of("identity-round-trip", &derived, IDENTITY_PROBE, &derived)?;
         let base = member(&probe, "base")?;
         Ok(Outcome::with_raw(base.to_string().into_bytes(), base.clone()))

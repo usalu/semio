@@ -623,7 +623,7 @@ fn production_reachability_fixture_and_hostile_source_census_reject_the_old_rout
         assert!(host.contains(symbol));
         assert!(packaged_host.contains(symbol));
     }
-    for legacy in ["loadFixtureJson", "resyncFixtureJson", "fixtureJson"] {
+    for legacy in ["loadSnapshotJson", "resyncFixtureJson", "snapshotJson"] {
         assert!(!schema.contains(legacy));
         assert!(!host.contains(legacy));
         assert!(!packaged_host.contains(legacy));

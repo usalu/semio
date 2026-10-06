@@ -46,7 +46,7 @@ type fileIntegrateVectors struct {
 
 // 📥️ vectors decodes the shared vector set of this case.
 func vectors(ctx *host.Context) (*fileIntegrateVectors, error) {
-	raw, err := ctx.FixtureBytes("shared://📥️file-integrate-trees.json")
+	raw, err := ctx.InputBytes("shared://📥️file-integrate-trees.json")
 	if err != nil {
 		return nil, err
 	}

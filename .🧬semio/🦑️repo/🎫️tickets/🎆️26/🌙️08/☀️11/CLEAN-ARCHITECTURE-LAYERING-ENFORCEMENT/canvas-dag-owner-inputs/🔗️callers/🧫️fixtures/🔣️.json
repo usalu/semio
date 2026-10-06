@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "from": ["crate::infinite::canvas", "infinite::canvas"],
+  "to": "ui_wgpu::canvas",
+  "cases": [
+    {"id":"crate-path","source":"fn f() { crate::infinite::canvas::Scene::new(); }","after":"fn f() { ui_wgpu::canvas::Scene::new(); }","cuts":1},
+    {"id":"self-crate-alias","source":"fn f() { infinite::canvas::Color::new([0,0,0,0]); }","after":"fn f() { ui_wgpu::canvas::Color::new([0,0,0,0]); }","cuts":1},
+    {"id":"private-binding","source":"use crate::infinite::canvas;","after":"use ui_wgpu::canvas;","cuts":1},
+    {"id":"string-preserved","source":"fn f() { let x = \"infinite::canvas\"; }","after":"fn f() { let x = \"infinite::canvas\"; }","cuts":0},
+    {"id":"comment-preserved","source":"// infinite::canvas\nfn f() {}","after":"// infinite::canvas\nfn f() {}","cuts":0},
+    {"id":"raw-string-preserved","source":"fn f() { let x = r#\"crate::infinite::canvas\"#; }","after":"fn f() { let x = r#\"crate::infinite::canvas\"#; }","cuts":0},
+    {"id":"foreign-nested-owner","source":"fn f() { another::infinite::canvas::Scene::new(); }","after":"fn f() { another::infinite::canvas::Scene::new(); }","cuts":0},
+    {"id":"two-distinct-paths","source":"fn f() { crate::infinite::canvas::Point::new(0,0); infinite::canvas::Rect::ZERO; }","after":"fn f() { ui_wgpu::canvas::Point::new(0,0); ui_wgpu::canvas::Rect::ZERO; }","cuts":2}
+  ]
+}

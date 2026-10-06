@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🏅️badges/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type Badge, type Quiz, type RunResult, earnedBadges } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://🏅️badge-rules/🔣️.json";
@@ -12,7 +12,7 @@ type Vectors = { readonly quizzes: readonly Quiz[]; readonly badges: readonly Ba
 
 /** 🗃️ The newly earned badges of every committed vector. */
 function awards(ctx: AdapterContext): Record<string, string[]> {
-  const committed = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  const committed = JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
   return Object.fromEntries(committed.vectors.map((vector) => [vector.id, earnedBadges(committed.badges, committed.quizzes, vector.results, vector.held)]));
 }
 

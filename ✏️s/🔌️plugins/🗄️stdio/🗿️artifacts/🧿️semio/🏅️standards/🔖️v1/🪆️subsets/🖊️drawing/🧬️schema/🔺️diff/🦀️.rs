@@ -11,11 +11,26 @@
 //! implementation instead of two near-duplicates.
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, split_top_level, strip_brackets, IndexAdded, IndexModified, NamedModified};
-use crate::standards::v1::subsets::drawing::schema::snapshot::{
-    dec_layer, dec_list, dec_node, dec_path_segment, dec_point2, dec_rgba, dec_style, dec_transform, enc_layer, enc_list, enc_node, enc_path_segment, enc_point2, enc_rgba, enc_style, enc_transform, DrawCanvas, DrawLayer, DrawNode, DrawStyle,
-    PathSegment, SemioDrawingSnapshot,
-};
+use crate::standards::v1::subsets::base::schema::triples::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple, IndexAdded, IndexModified, NamedModified};
+
+
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -847,288 +862,41 @@ pub fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale
 /// were on pre-wave. One source of truth for the entity encoding across `📸️snapshot`/`🔺️diff`/
 /// `🧬️mutations`, not three independently-invented copies.
 //#region 🔖️Primitives
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
-    match opt {
-        None => "[0]".to_string(),
-        Some(v) => format!("[1,{}]", enc(v)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
-        ["0"] => Ok(None),
-        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
-        other => Err(format!("option decode: bad shape {other:?}")),
-    }
-}
+
+
+
+
+
+
 //#endregion 🔖️Primitives
 
 //#region 🔖️NodeValueCodec
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_node_diff(d: &DrawNodeDiff) -> String {
-    match d {
-        DrawNodeDiff::Path(p) => format!("P[{},{}]", encode_option(&p.segments, |v| enc_list(v, enc_path_segment)), encode_option(&p.style, |v| encode_option(v, |s| enc_str(s)))),
-        DrawNodeDiff::Text(t) => format!("T[{},{},{}]", encode_option(&t.value, |v| enc_str(v)), encode_option(&t.at, enc_point2), encode_option(&t.style, |v| encode_option(v, |s| enc_str(s)))),
-        DrawNodeDiff::Group(g) => format!(
-            "G[{},{}]",
-            encode_option(&g.transform, enc_transform),
-            match &g.children {
-                Some(c) => format!("[1,{}]", enc_indexed_triple(c, enc_node_diff, enc_node)),
-                None => "[0]".to_string(),
-            }
-        ),
-        DrawNodeDiff::Image(i) => {
-            format!("I[{},{},{},{},{}]", encode_option(&i.at, enc_point2), encode_option(&i.width, |v| v.to_string()), encode_option(&i.height, |v| v.to_string()), encode_option(&i.mime, |v| enc_str(v)), encode_option(&i.bytes, |v| hex_encode(v)),)
-        }
-        DrawNodeDiff::Replace { node } => format!("R[{}]", enc_node(node)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_node_diff(s: &str) -> Result<DrawNodeDiff, String> {
-    let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    match tag {
-        "P" => {
-            let parts = split_top_level(inner, ',');
-            let [segments, style] = parts.as_slice() else { return Err(format!("path diff: expected 2 fields, got {}", parts.len())) };
-            Ok(DrawNodeDiff::Path(DrawPathDiff { segments: decode_option(segments, |v| dec_list(v, dec_path_segment))?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
-        }
-        "T" => {
-            let parts = split_top_level(inner, ',');
-            let [value, at, style] = parts.as_slice() else { return Err(format!("text diff: expected 3 fields, got {}", parts.len())) };
-            Ok(DrawNodeDiff::Text(DrawTextDiff { value: decode_option(value, dec_str)?, at: decode_option(at, dec_point2)?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
-        }
-        "G" => {
-            let parts = split_top_level(inner, ',');
-            let [transform_s, children_s] = parts.as_slice() else { return Err(format!("group diff: expected 2 fields, got {}", parts.len())) };
-            let transform = decode_option(transform_s, dec_transform)?;
-            let children = match split_top_level(strip_brackets(children_s)?, ',').as_slice() {
-                ["0"] => None,
-                [tag, rest @ ..] if *tag == "1" => Some(dec_indexed_triple(&rest.join(","), dec_node_diff, dec_node)?),
-                other => return Err(format!("group children: bad shape {other:?}")),
-            };
-            Ok(DrawNodeDiff::Group(DrawGroupDiff { transform, children }))
-        }
-        "I" => {
-            let parts = split_top_level(inner, ',');
-            let [at, width, height, mime, bytes] = parts.as_slice() else { return Err(format!("image diff: expected 5 fields, got {}", parts.len())) };
-            Ok(DrawNodeDiff::Image(DrawImageDiff {
-                at: decode_option(at, dec_point2)?,
-                width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
-                height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
-                mime: decode_option(mime, dec_str)?,
-                bytes: decode_option(bytes, hex_decode)?,
-            }))
-        }
-        "R" => Ok(DrawNodeDiff::Replace { node: dec_node(inner)? }),
-        other => Err(format!("node diff: unknown tag {other:?}")),
-    }
-}
+
+
 //#endregion 🔖️NodeValueCodec
 
 //#region 🔖️TopLevelCodec
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_canvas(c: &DrawCanvasDiff) -> String {
-    format!("[{},{},{}]", encode_option(&c.width, |v| v.to_string()), encode_option(&c.height, |v| v.to_string()), encode_option(&c.background, |v| encode_option(v, enc_rgba)))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_canvas(s: &str) -> Result<DrawCanvasDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [width, height, background] = parts.as_slice() else { return Err(format!("canvas diff: expected 3 fields, got {}", parts.len())) };
-    Ok(DrawCanvasDiff {
-        width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
-        height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
-        background: decode_option(background, |v| decode_option(v, dec_rgba))?,
-    })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_style_diff(d: &DrawStyleDiff) -> String {
-    format!(
-        "[{},{},{},{}]",
-        encode_option(&d.fill, |v| encode_option(v, enc_rgba)),
-        encode_option(&d.stroke, |v| encode_option(v, enc_rgba)),
-        encode_option(&d.stroke_width, |v| encode_option(v, |x| x.to_string())),
-        encode_option(&d.opacity, |v| encode_option(v, |x| x.to_string())),
-    )
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_style_diff(s: &str) -> Result<DrawStyleDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [fill, stroke, stroke_width, opacity] = parts.as_slice() else { return Err(format!("style diff: expected 4 fields, got {}", parts.len())) };
-    Ok(DrawStyleDiff {
-        fill: decode_option(fill, |v| decode_option(v, dec_rgba))?,
-        stroke: decode_option(stroke, |v| decode_option(v, dec_rgba))?,
-        stroke_width: decode_option(stroke_width, |v| decode_option(v, |x| x.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())))?,
-        opacity: decode_option(opacity, |v| decode_option(v, |x| x.parse::<f32>().map_err(|e: std::num::ParseFloatError| e.to_string())))?,
-    })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_layer_diff(d: &DrawLayerDiff) -> String {
-    format!("[{},{},{},{}]", encode_option(&d.id, |v| enc_str(v)), encode_option(&d.name, |v| enc_str(v)), encode_option(&d.visible, |v| if *v { "1".to_string() } else { "0".to_string() }), encode_option(&d.root, enc_node_diff))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_layer_diff(s: &str) -> Result<DrawLayerDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, name, visible, root] = parts.as_slice() else { return Err(format!("layer diff: expected 4 fields, got {}", parts.len())) };
-    Ok(DrawLayerDiff { id: decode_option(id, dec_str)?, name: decode_option(name, dec_str)?, visible: decode_option(visible, |v| Ok(v == "1"))?, root: decode_option(root, dec_node_diff)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_drawing_diff(d: &SemioDrawingDiff) -> String {
-    let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.canvas {
-        tokens.push(format!("canvas={}", enc_canvas(v)));
-    }
-    if let Some(v) = &d.styles {
-        tokens.push(format!("styles={}", enc_named_triple(v, |k: &String| enc_str(k), enc_style_diff, enc_style)));
-    }
-    if let Some(v) = &d.layers {
-        tokens.push(format!("layers={}", enc_indexed_triple(v, enc_layer_diff, enc_layer)));
-    }
-    tokens.join(" ")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_drawing_diff(line: &str) -> Result<SemioDrawingDiff, String> {
-    let mut d = SemioDrawingDiff::default();
-    if line.is_empty() {
-        return Ok(d);
-    }
-    for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("canvas=") {
-            d.canvas = Some(dec_canvas(rest)?);
-        } else if let Some(rest) = token.strip_prefix("styles=") {
-            d.styles = Some(dec_named_triple(rest, dec_str, dec_style_diff, dec_style)?);
-        } else if let Some(rest) = token.strip_prefix("layers=") {
-            d.layers = Some(dec_indexed_triple(rest, dec_layer_diff, dec_layer)?);
-        } else {
-            return Err(format!("drawing diff: unknown token {token:?}"));
-        }
-    }
-    Ok(d)
-}
 
-/// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
-/// shortcut. `format u8` + `presence u8` (bit0=`canvas`, bit1=`styles`, bit2=`layers`) are two REAL
-/// fixed header fields; past that, 0-3 varint-length-prefixed opaque blobs follow (one per present
-/// collection, reusing the same `enc_canvas`/`enc_named_triple`/`enc_indexed_triple` text this
-/// facet's own `print_diff` already emits) -- one opaque blob per present field rather than
-/// per-segment `Cond`-guards (`protocol-cond-cannot-chain`: a second `if`-guard on a field that's
-/// itself only conditionally decoded hard-errors `eval_cond`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
 
-impl protocol::DiffCodec for SemioDrawingDiff {
-    fn print_diff(&self) -> String {
-        print_drawing_diff(self)
-    }
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_drawing_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        let mut presence = 0u8;
-        if self.canvas.is_some() {
-            presence |= 1;
-        }
-        if self.styles.is_some() {
-            presence |= 2;
-        }
-        if self.layers.is_some() {
-            presence |= 4;
-        }
-        let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(c) = &self.canvas {
-            write_bytes_lp(&mut out, enc_canvas(c).as_bytes());
-        }
-        if let Some(s) = &self.styles {
-            write_bytes_lp(&mut out, enc_named_triple(s, |k: &String| enc_str(k), enc_style_diff, enc_style).as_bytes());
-        }
-        if let Some(l) = &self.layers {
-            write_bytes_lp(&mut out, enc_indexed_triple(l, enc_layer_diff, enc_layer).as_bytes());
-        }
-        Ok(out)
-    }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::ByteReader::new(bytes);
-        let format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
-        if format != DIFF_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {format}") });
-        }
-        let presence = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff presence", offset: 1, detail: e.to_string() })?;
-        let map_err = |what: &'static str| move |e: String| protocol::ProtocolError::Malformed { what, offset: 2, detail: e };
-        let canvas = if presence & 1 != 0 {
-            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff canvas blob"))?;
-            let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff canvas utf8", offset: 2, detail: e.to_string() })?;
-            Some(dec_canvas(text).map_err(map_err("diff canvas"))?)
-        } else {
-            None
-        };
-        let styles = if presence & 2 != 0 {
-            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff styles blob"))?;
-            let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles utf8", offset: 2, detail: e.to_string() })?;
-            Some(dec_named_triple(text, dec_str, dec_style_diff, dec_style).map_err(map_err("diff styles"))?)
-        } else {
-            None
-        };
-        let layers = if presence & 4 != 0 {
-            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff layers blob"))?;
-            let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers utf8", offset: 2, detail: e.to_string() })?;
-            Some(dec_indexed_triple(text, dec_layer_diff, dec_layer).map_err(map_err("diff layers"))?)
-        } else {
-            None
-        };
-        Ok(SemioDrawingDiff { canvas, styles, layers })
-    }
-}
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️TopLevelCodec
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️Demo
-/// 🌱 `sweep_a`/`sweep_b`, promoted to module scope so both this facet's own tests AND
-/// `🎹️composer/🦀️.rs`'s conformance-law tests can build representative diffs from them
-/// (a private item of `#[cfg(test)] mod tests` below is not visible to the sibling `composer`
-/// module — same real, first-hit variant of this pattern brep's own report flags).
-#[cfg(test)]
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn transform(tx: f64) -> SemioTransform {
-    SemioTransform {
-        translation: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: tx, y: 0.0, z: 0.0 },
-        rotation: crate::standards::v1::subsets::base::schema::geometry::SemioQuaternion::default(),
-        scale: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
-    }
-}
+
 
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1214,3 +982,17 @@ mod tests;
 pub use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
 pub use crate::standards::v1::subsets::base::schema::triples::NamedTripleDiff;
 //#endregion 🔁️Re-exports
+
+/// 🌱 `sweep_a`/`sweep_b`, promoted to module scope so both this facet's own tests AND
+/// `🎹️composer/🦀️.rs`'s conformance-law tests can build representative diffs from them
+/// (a private item of `#[cfg(test)] mod tests` below is not visible to the sibling `composer`
+/// module — same real, first-hit variant of this pattern brep's own report flags).
+#[cfg(test)]
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn transform(tx: f64) -> SemioTransform {
+    SemioTransform {
+        translation: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: tx, y: 0.0, z: 0.0 },
+        rotation: crate::standards::v1::subsets::base::schema::geometry::SemioQuaternion::default(),
+        scale: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
+    }
+}

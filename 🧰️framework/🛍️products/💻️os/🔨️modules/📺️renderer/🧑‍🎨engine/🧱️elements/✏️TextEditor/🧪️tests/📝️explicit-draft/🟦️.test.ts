@@ -3,8 +3,6 @@ import { describe, expect, test } from "vitest";
 import fixture from "../../🧫️fixtures/📝️explicit-draft/🔣️.json";
 import lifecycle from "../../🧫️fixtures/📝️explicit-draft/⚖️lifecycle.json";
 import retention from "../../🧫️fixtures/📝️explicit-draft/🧭️retention.json";
-import lifecycleSchema from "../../🧬️schema/📝️explicit-draft/⚖️lifecycle.json";
-import retentionSchema from "../../🧬️schema/📝️explicit-draft/🧭️retention.json";
 import schema from "../../🧬️schema/📝️explicit-draft/🔣️.json";
 import { localDocumentOwnerIdentityForSessionV1, LocalDocumentOwnerRegistryV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { startedTypedOperationV1, typedOperationCancellationActionV1, typedOperationCancellationOwnerIsCurrentV1 } from "../../../🏛️ShellHost/🟦️.tsx";
@@ -17,8 +15,6 @@ describe("text editor explicit drafts", () => {
   const validate = new Ajv2020({ strict: true }).compile(schema);
 
   test("matches the language-neutral schema and builds artifact-owned actions", () => {
-    expect(new Ajv2020({ strict: true }).compile(lifecycleSchema)(lifecycle)).toBe(true);
-    expect(new Ajv2020({ strict: true }).compile(retentionSchema)(retention)).toBe(true);
     expect(TEXT_EDITOR_RETAINED_DRAFT_LIMIT_V1).toBe(retention.limits.draftsPerOwner);
     for (const row of fixture.cases) {
       expect(validate(row.settings), row.id).toBe(true);

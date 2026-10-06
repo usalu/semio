@@ -8,7 +8,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 #[cfg(feature = "sut")]
 fn stored_documents_round_trip(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_goals as goals;
-    let file = ctx.fixture_json("shared://🎯️goal-documents.json")?;
+    let file = ctx.input_json("shared://🎯️goal-documents.json")?;
     let mut documents = Vec::new();
     let mut members = Vec::new();
     for entry in file.array("documents") {

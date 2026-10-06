@@ -10,7 +10,8 @@
 //! import; rings come back without the closing position RFC 7946 adds and wound by the right-hand rule,
 //! a region's `points` member comes back as `ring`.
 use crate::{GisMapSnapshot, MapFeature};
-use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::schema::{write_geojson, GeoJsonFeature, GeoJsonGeometry, GeoJsonId, GeoJsonPosition};
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::schema::{GeoJsonFeature, GeoJsonGeometry, GeoJsonId, GeoJsonPosition};
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::io::text::snapshot::{write_geojson};
 use serde_json::Value;
 
 /// 🧬️ The payload members that carry a map feature's geometry and identity, never its properties.

@@ -113,7 +113,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
         mutations::{apply_mp4_mutation, Mp4Mutation},
         Mp4AnalyzerAnalysis,
     };
-    use protocol::{DiffCodec, Mutation, OpBinary, OpText};
+    use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, OpBinary, OpText};
     use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
 
     let bytes = include_bytes!("../../../🧫️fixtures/🎬️.mp4").to_vec();

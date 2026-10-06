@@ -18,10 +18,35 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/SemioValuePathSegment"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Path",
+          "de": "Pfad"
+        },
+        "description": {
+          "en": "Map keys and list indices leading from the root to the value that is set; empty for the root.",
+          "de": "Zuordnungsschlüssel und Listenindizes von der Wurzel bis zum Wert, der gesetzt wird; leer für die Wurzel."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "value": {
-      "$ref": "#/$defs/SemioValue"
+      "$ref": "#/$defs/SemioValue",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "The typed value written: null, boolean, integer, number, text, bytes, list, map or reference.",
+          "de": "Der geschriebene typisierte Wert: null, Wahrheitswert, Ganzzahl, Zahl, Text, Bytes, Liste, Zuordnung oder Referenz."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

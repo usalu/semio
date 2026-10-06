@@ -1,0 +1,196 @@
+{
+  "cases": [
+    {
+      "name": "the first paint announces both windows, the panel and all four sections",
+      "surfaces": {
+        "windows": [
+          {
+            "key": "drawing-composite",
+            "bodyKey": "composite"
+          },
+          {
+            "key": "drawing-layers",
+            "bodyKey": "layers"
+          }
+        ],
+        "panels": [
+          {
+            "key": "framework.panel.inspection",
+            "bodyKey": "inspection"
+          }
+        ]
+      },
+      "turn": "mount",
+      "visible": [
+        {
+          "surface": "drawing-composite",
+          "bodyKey": "composite",
+          "context": "window"
+        },
+        {
+          "surface": "drawing-layers",
+          "bodyKey": "layers",
+          "context": "window"
+        },
+        {
+          "surface": "framework.panel.inspection",
+          "bodyKey": "inspection",
+          "context": "panel"
+        },
+        {
+          "surface": "framework.section.engagements",
+          "bodyKey": "framework.section.engagements",
+          "context": "section"
+        },
+        {
+          "surface": "framework.section.measures",
+          "bodyKey": "framework.section.measures",
+          "context": "section"
+        },
+        {
+          "surface": "framework.section.tools",
+          "bodyKey": "framework.section.tools",
+          "context": "section"
+        },
+        {
+          "surface": "framework.section.catalogue",
+          "bodyKey": "framework.section.catalogue",
+          "context": "section"
+        }
+      ]
+    },
+    {
+      "name": "an own edit repaints every window, the panel and the live sections, never the static catalogue",
+      "surfaces": {
+        "windows": [
+          {
+            "key": "drawing-composite",
+            "bodyKey": "composite"
+          },
+          {
+            "key": "drawing-layers",
+            "bodyKey": "layers"
+          }
+        ],
+        "panels": [
+          {
+            "key": "framework.panel.inspection",
+            "bodyKey": "inspection"
+          }
+        ]
+      },
+      "turn": "repaint",
+      "visible": [
+        {
+          "surface": "drawing-composite",
+          "bodyKey": "composite",
+          "context": "window"
+        },
+        {
+          "surface": "drawing-layers",
+          "bodyKey": "layers",
+          "context": "window"
+        },
+        {
+          "surface": "framework.panel.inspection",
+          "bodyKey": "inspection",
+          "context": "panel"
+        },
+        {
+          "surface": "framework.section.engagements",
+          "bodyKey": "framework.section.engagements",
+          "context": "section"
+        },
+        {
+          "surface": "framework.section.measures",
+          "bodyKey": "framework.section.measures",
+          "context": "section"
+        },
+        {
+          "surface": "framework.section.tools",
+          "bodyKey": "framework.section.tools",
+          "context": "section"
+        }
+      ]
+    },
+    {
+      "name": "a remote edit refreshes the panel and the live sections; the guest re-renders its windows itself",
+      "surfaces": {
+        "windows": [
+          {
+            "key": "drawing-composite",
+            "bodyKey": "composite"
+          }
+        ],
+        "panels": [
+          {
+            "key": "framework.panel.inspection",
+            "bodyKey": "inspection"
+          },
+          {
+            "key": "framework.panel.history",
+            "bodyKey": "history"
+          }
+        ]
+      },
+      "turn": "refresh",
+      "visible": [
+        {
+          "surface": "framework.panel.inspection",
+          "bodyKey": "inspection",
+          "context": "panel"
+        },
+        {
+          "surface": "framework.panel.history",
+          "bodyKey": "history",
+          "context": "panel"
+        },
+        {
+          "surface": "framework.section.engagements",
+          "bodyKey": "framework.section.engagements",
+          "context": "section"
+        },
+        {
+          "surface": "framework.section.measures",
+          "bodyKey": "framework.section.measures",
+          "context": "section"
+        },
+        {
+          "surface": "framework.section.tools",
+          "bodyKey": "framework.section.tools",
+          "context": "section"
+        }
+      ]
+    },
+    {
+      "name": "an app without panels still carries its sections on a refresh",
+      "surfaces": {
+        "windows": [
+          {
+            "key": "note-composite",
+            "bodyKey": "composite"
+          }
+        ],
+        "panels": []
+      },
+      "turn": "refresh",
+      "visible": [
+        {
+          "surface": "framework.section.engagements",
+          "bodyKey": "framework.section.engagements",
+          "context": "section"
+        },
+        {
+          "surface": "framework.section.measures",
+          "bodyKey": "framework.section.measures",
+          "context": "section"
+        },
+        {
+          "surface": "framework.section.tools",
+          "bodyKey": "framework.section.tools",
+          "context": "section"
+        }
+      ]
+    }
+  ]
+}

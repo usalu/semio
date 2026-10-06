@@ -1,10 +1,7 @@
 //! 📸️ Authored chart snapshot shared by mutation replay and print inference.
-use protocol::{DslValue, FromValue, ToValue};
+use semio_framework_value::DslValue;
+use semio_framework_value_derive::{FromValue,ToValue};
 
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
-#[path="🚦️native/🦀️.rs"]
-mod sqlite_native;
 
 #[derive(Clone, Debug, ToValue, FromValue,semio_framework_dsl_record_derive::DslRecord)]
 #[value(deny_unknown_fields)]

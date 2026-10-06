@@ -1,7 +1,7 @@
 import type { ChannelVersionConsumerV1 } from "../📣️contributions/🟦️.ts";
 
 /** 📌️ The pin that owns the number, relative to the repository root. */
-export const CHANNEL_VERSION_PIN_PATH = "🧰️framework/🛍️products/💻️os/🧫️fixtures/📡️channel/🔖️channel-version.json";
+export const CHANNEL_VERSION_PIN_PATH = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📌️pin/🔣️.json";
 
 /** 🔎️ Every shape a channel version literal takes in Rust, TypeScript and JSON; group 1 is the number. */
 export const CHANNEL_VERSION_LITERAL_PATTERNS: readonly RegExp[] = [
@@ -51,10 +51,10 @@ export function channelVersionCensusRoots(owners: readonly { ownerRel: string }[
 }
 
 /** 🧾️ One census finding: a file that states the version where it must not, or states it wrongly. */
-export type ChannelVersionFindingV1 = Readonly<{ path: string; problem: "unregistered" | "missing" | "occurrences" | "drift"; detail: string }>;
+export type ChannelVersionFindingV1 = Readonly<{ path: string; problem: "unregistered" | "missing" | "occurrences" | "hostile" | "drift"; detail: string }>;
 
-/** 🔎️ The census: every candidate file is a registered consumer, holds exactly its declared literals, and every literal that
- * is not a declared hostile value (or arbitrary) equals the pin. */
+/** 🔎️ The census: every candidate file is a registered consumer, holds exactly its declared literals and exactly its declared
+ * hostile ones (a stale pin that equals a hostile value is otherwise invisible), and every other literal equals the pin. */
 export function channelVersionCensus(source: ChannelVersionSourceViewV1): Readonly<{ pin: number; findings: readonly ChannelVersionFindingV1[] }> {
   const pin = source.pin;
   const findings: ChannelVersionFindingV1[] = [];
@@ -74,6 +74,8 @@ export function channelVersionCensus(source: ChannelVersionSourceViewV1): Readon
     const literals = channelVersionLiterals(text);
     if (literals.length !== consumer.occurrences) findings.push({ path: consumer.path, problem: "occurrences", detail: `declares ${consumer.occurrences} version literal(s), holds ${literals.length}` });
     if (consumer.arbitrary) continue;
+    const hostile = literals.filter((literal) => (consumer.hostileValues ?? []).includes(literal.value)).length;
+    if (hostile !== (consumer.hostileOccurrences ?? 0)) findings.push({ path: consumer.path, problem: "hostile", detail: `declares ${consumer.hostileOccurrences ?? 0} hostile literal(s), holds ${hostile}: a literal equal to a hostile value is a stale pin or an undeclared vector` });
     const drifted = literals.filter((literal) => literal.value !== pin && !(consumer.hostileValues ?? []).includes(literal.value));
     if (drifted.length > 0) findings.push({ path: consumer.path, problem: "drift", detail: `${drifted.length} literal(s) at ${[...new Set(drifted.map((literal) => literal.value))].join(", ")}, the pin is ${pin}${consumer.derived ? `; derived values to recompute by the owner: ${consumer.derived}` : ""}` });
   }
@@ -81,7 +83,7 @@ export function channelVersionCensus(source: ChannelVersionSourceViewV1): Readon
 }
 
 /** ✍️ Writes the pin into every drifted literal of every consumer the caller may rewrite: never an arbitrary or hostile
- * literal, a guest-linked consumer only with `guest`, and never a consumer with derived values (those are reported). */
+ * literal, never a file whose hostile literal count differs from its declaration, a guest-linked consumer only with `guest`, and never a consumer with derived values (those are reported). */
 export function writeChannelVersionConsumers(source: ChannelVersionSourceViewV1, options: Readonly<{ guest: boolean; writeText: (path: string, text: string) => void }>): Readonly<{ written: readonly string[]; refused: readonly string[] }> {
   const pin = source.pin;
   const written: string[] = [];
@@ -89,7 +91,12 @@ export function writeChannelVersionConsumers(source: ChannelVersionSourceViewV1,
   for (const consumer of source.consumers) {
     if (consumer.arbitrary) continue;
     const text = source.readText(consumer.path);
-    const drifted = channelVersionLiterals(text).filter((literal) => literal.value !== pin && !(consumer.hostileValues ?? []).includes(literal.value));
+    const literals = channelVersionLiterals(text);
+    if (literals.filter((literal) => (consumer.hostileValues ?? []).includes(literal.value)).length !== (consumer.hostileOccurrences ?? 0)) {
+      refused.push(`${consumer.path}: holds another number of hostile literals than declared, set the stale pin literal by hand`);
+      continue;
+    }
+    const drifted = literals.filter((literal) => literal.value !== pin && !(consumer.hostileValues ?? []).includes(literal.value));
     if (drifted.length === 0) continue;
     if (consumer.derived || drifted.some((literal) => literal.encoded) || (consumer.guest && !options.guest)) {
       refused.push(`${consumer.path}: ${consumer.derived ? `derived values (${consumer.derived}) must be recomputed by its owner` : drifted.some((literal) => literal.encoded) ? "Pack-encoded versions must be re-derived by its owner" : "guest-linked, rewrite inside a landing window with --guest"}`);

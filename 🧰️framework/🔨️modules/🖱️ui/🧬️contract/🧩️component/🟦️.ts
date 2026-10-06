@@ -1,4 +1,4 @@
-import type { UiNumberBound, UiNumberLimits, UiNumberScale } from "@semio-tech/framework";
+import type { InputKind, UiNumberBound, UiNumberLimits, UiNumberScale } from "@semio-tech/framework";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../🔢️number-format/🟦️.ts";
 
 /** 🧿️ Share of a slider's axis within which a pointer value is pulled onto a detent — the twin of `SLIDER_SNAP_RADIUS`. */
@@ -103,6 +103,36 @@ export function sliderPointerValue(value: number, min: number, max: number, step
 export function sliderAdjacentSnap(current: number, snaps: readonly number[], forward: boolean): number | null {
   const candidates = snaps.filter((snap) => (forward ? snap > current : snap < current));
   return candidates.length === 0 ? null : forward ? Math.min(...candidates) : Math.max(...candidates);
+}
+
+/** ⏎️ The keys the draft of a text field answers — the twin of `TextInputKey`. */
+export type TextInputKey = "enter" | "escape";
+
+/** 🗜️ The modifiers held with a {@link TextInputKey}: `primary` is the platform's command modifier (Ctrl, ⌘ on macOS) — the twin of `TextInputModifiers`. */
+export type TextInputModifiers = { readonly primary: boolean; readonly shift: boolean; readonly alt: boolean };
+
+/** ✍️ What a text field does with a key of its draft — the twin of `TextInputKeyAction`: `newline` (the field inserts a line
+ * break, nothing is dispatched), `commit` (the draft is dispatched without waiting for focus to leave), `revert` (the draft
+ * is dropped). */
+export type TextInputKeyAction = "newline" | "commit" | "revert";
+
+/** 🖊️ The keyboard law of every text field that holds a draft (`commit: "blur"`) — the twin of `text_input_key`, the text
+ * counterpart of {@link uiNumberKeyValue} (ticket 26/09/30 design §22.7), pinned by `🧫️text-controls`. Escape reverts the
+ * draft. A single-line field commits on Enter. A multi-line field (`longText`) inserts a line on Enter, with or without
+ * Shift, and commits on Ctrl/⌘+Enter. A single-line Shift+Enter and every Alt chord are not the field's (`null`): Alt+Enter
+ * is a shell chord and never reaches a draft. */
+export function uiTextInputKey(kind: InputKind, key: TextInputKey, modifiers: TextInputModifiers): TextInputKeyAction | null {
+  if (modifiers.alt) return null;
+  if (key === "escape") return "revert";
+  if (kind === "longText") return modifiers.primary ? "commit" : "newline";
+  return modifiers.shift ? null : "commit";
+}
+
+/** 🎼️ The law input a key press on a text field names: Enter or Escape with the modifiers held (`primary` = Ctrl or ⌘), and
+ * `null` for every other key. */
+export function uiTextInputKeyOf(event: { readonly key: string; readonly ctrlKey: boolean; readonly metaKey: boolean; readonly shiftKey: boolean; readonly altKey: boolean }): { readonly key: TextInputKey; readonly modifiers: TextInputModifiers } | null {
+  const key = event.key === "Enter" ? "enter" : event.key === "Escape" ? "escape" : null;
+  return key === null ? null : { key, modifiers: { primary: event.ctrlKey || event.metaKey, shift: event.shiftKey, alt: event.altKey } };
 }
 
 /** 📄️ How many steps a large arrow or a page key with no detent ahead moves a numeric control — the twin of `SLIDER_PAGE_STEPS`. */

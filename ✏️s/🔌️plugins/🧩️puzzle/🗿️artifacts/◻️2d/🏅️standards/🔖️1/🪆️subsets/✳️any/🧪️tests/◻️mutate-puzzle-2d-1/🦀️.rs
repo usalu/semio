@@ -6,7 +6,7 @@
 //! document and `Puzzle2dMutation` IS its specification, so there is nothing third-party to register. What
 //! stands in for an oracle is named there and exercised here: the committed
 //! `(before, mutation, diff, outcome, after)` quintets under
-//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/<fixture>/`, replayed
+//! `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/<kind>/<snapshot>/`, replayed
 //! through the platform, plus two metamorphic laws asserted IN ROLE.
 //!
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner
@@ -23,7 +23,7 @@
 //! subset's own codec can establish: the committed diff's collection arms record removals as bare
 //! ids, so a removed record is not reconstructable from the diff alone and the full law
 //! `apply(inverse(m), apply(m, base)) == base` stays with the production `inverse()` implementation
-//! and the per-leaf fixture tests that already exercise it. `spec-vector-<id>` carries every vector
+//! and the per-leaf snapshot tests that already exercise it. `spec-vector-<id>` carries every vector
 //! the two exhaustive tables cannot: the refusals, whose declared code and contract-D6
 //! `🔺️diff/🚫️.absent` sentinel it checks and which have no diff to measure a footprint against, and
 //! the second and third vectors of a kind, which cannot ride a `mutate-<kind>` id because the
@@ -200,11 +200,11 @@ fn vector(ctx: &Context) -> Result<Vector, String> {
     }
     Ok(Vector {
         kind,
-        before: ctx.fixture_json(&spec.str("before"))?,
-        mutation: ctx.fixture_json(&spec.str("mutation"))?,
-        diff: ctx.fixture_json(&spec.str("diff"))?,
-        after: ctx.fixture_json(&spec.str("after"))?,
-        outcome: ctx.fixture_json(&spec.str("outcome"))?,
+        before: ctx.input_json(&spec.str("before"))?,
+        mutation: ctx.input_json(&spec.str("mutation"))?,
+        diff: ctx.input_json(&spec.str("diff"))?,
+        after: ctx.input_json(&spec.str("after"))?,
+        outcome: ctx.input_json(&spec.str("outcome"))?,
     })
 }
 
@@ -220,7 +220,7 @@ fn declared_kind(mutation: &Json) -> String {
     mutation.str("mutation")
 }
 
-/// 🚦️ Whether the committed outcome itself declares this vector a no-op — the fixture's own record
+/// 🚦️ Whether the committed outcome itself declares this vector a no-op — the snapshot's own record
 /// that the mutation had nothing to do, which inverts what the observability law must demand.
 fn declares_no_op(outcome: &Json) -> bool {
     outcome.array("messages").iter().any(|message| message.str("code") == "mutation.no-op")
@@ -370,10 +370,10 @@ fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
         return Err(format!("scenario doc string names {kind:?}, which is not a declared Puzzle2dMutation kind"));
     }
     let verdict = spec.str("verdict");
-    let before = ctx.fixture_json(&spec.str("before"))?;
-    let after = ctx.fixture_json(&spec.str("after"))?;
-    let outcome = ctx.fixture_json(&spec.str("outcome"))?;
-    let mutation = ctx.fixture_json(&spec.str("mutation"))?;
+    let before = ctx.input_json(&spec.str("before"))?;
+    let after = ctx.input_json(&spec.str("after"))?;
+    let outcome = ctx.input_json(&spec.str("outcome"))?;
+    let mutation = ctx.input_json(&spec.str("mutation"))?;
     let declared = declared_kind(&mutation);
     if declared != discriminant(&kind) {
         return Err(format!("the committed mutation payload filed under {kind:?} declares {declared:?} — the vector does not exercise the kind this row claims"));
@@ -387,7 +387,7 @@ fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
             if outcome.str("code").is_empty() {
                 return Err(format!("the {kind:?} refusal vector declares no machine-readable code, so nothing states WHICH refusal it pins"));
             }
-            if !spec.str("diff").ends_with("🚫️.absent") || !ctx.fixture_bytes(&spec.str("diff"))?.is_empty() {
+            if !spec.str("diff").ends_with("🚫️.absent") || !ctx.input_bytes(&spec.str("diff"))?.is_empty() {
                 return Err(format!("contract D6: the {kind:?} refusal vector must commit an EMPTY 🔺️diff/🚫️.absent sentinel instead of an invented empty patch"));
             }
             if !changed_fields(&before, &after).is_empty() {
@@ -398,13 +398,13 @@ fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
             if status != "no-op" || !declares_no_op(&outcome) {
                 return Err(format!("the {kind:?} no-op vector must declare the no-op outcome class carrying mutation.no-op, got {status:?}"));
             }
-            no_op_law(&Vector { kind: kind.clone(), before: before.clone(), mutation, diff: ctx.fixture_json(&spec.str("diff"))?, after: after.clone(), outcome })?;
+            no_op_law(&Vector { kind: kind.clone(), before: before.clone(), mutation, diff: ctx.input_json(&spec.str("diff"))?, after: after.clone(), outcome })?;
         }
         "applied" => {
             if status != "applied" || declares_no_op(&outcome) {
                 return Err(format!("the {kind:?} applied vector must declare an applied outcome with no mutation.no-op, got {status:?}"));
             }
-            let vector = Vector { kind: kind.clone(), before: before.clone(), mutation, diff: ctx.fixture_json(&spec.str("diff"))?, after: after.clone(), outcome };
+            let vector = Vector { kind: kind.clone(), before: before.clone(), mutation, diff: ctx.input_json(&spec.str("diff"))?, after: after.clone(), outcome };
             law::mutation_is_observable(&vector.kind, &vector.after, &vector.before, &[])?;
             footprint_law(&vector)?;
         }
@@ -420,8 +420,8 @@ fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
 /// caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
     const SNAPSHOT: &str = "shared://🧬️mutations/🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json";
-    let committed = ctx.fixture_bytes(SNAPSHOT)?;
-    let parsed = ctx.fixture_json(SNAPSHOT)?;
+    let committed = ctx.input_bytes(SNAPSHOT)?;
+    let parsed = ctx.input_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();
     law::reparsed_not_copied(reserialized.as_bytes(), &committed)?;
     let reparsed = semio_repo_test_host::parse_json(&reserialized)?;

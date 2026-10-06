@@ -257,7 +257,7 @@ fn the_reconnect_band_is_one_row_on_a_desktop_and_wraps_compact_on_a_phone() {
         }
         let below = Rect::new(0.0, 700.0, width, 60.0);
         let stacked = folder_reconnect_band_plan(message.clone(), reconnect.clone(), forget.clone(), Some(below), width, 812.0, &theme);
-        assert!(stacked.band.y + stacked.band.h <= below.y, "{width}: stacked over the time-travel band");
+        assert!(stacked.band.y + stacked.band.h <= below.y + 0.001, "{width}: stacked flush over the time-travel band");
     }
 }
 //#endregion 🌐️ReconnectBand

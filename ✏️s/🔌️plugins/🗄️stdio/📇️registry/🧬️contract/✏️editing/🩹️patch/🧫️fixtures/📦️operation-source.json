@@ -1,0 +1,22 @@
+{
+  "word": "x",
+  "payloadBytes": 8194,
+  "allocationBytes": 65536,
+  "maximumCloseItems": 1,
+  "maximumCloseBytes": 4096,
+  "closeStepScaffold": 128,
+  "cancelAt": 1024,
+  "cases": [
+    "{\"operation\":\"set\",\"path\":\"/title\",\"value\":{\"z\":1,\"a\":null}}",
+    "{\"operation\":\"set\",\"path\":\"/title\",\"value\":[18446744073709551615,-9223372036854775808,-0.0,2.5]}",
+    "{\"operation\":\"insert\",\"path\":\"/entry\",\"value\":\"ä🧩\\n\\\"\\\\\"}",
+    "{\"operation\":\"insert\",\"path\":\"/entry\",\"value\":false,\"index\":2}",
+    "{\"operation\":\"remove\",\"path\":\"/entry\"}",
+    "{\"operation\":\"move\",\"from\":\"/old\",\"path\":\"/new\"}",
+    "{\"operation\":\"move\",\"from\":\"/old\",\"path\":\"/new\",\"index\":1}",
+    "{\"operation\":\"rename\",\"path\":\"/entry\",\"key\":\"renamed\"}",
+    "{\"operation\":\"splice\",\"path\":\"/array\",\"offset\":1,\"remove\":2,\"value\":[true]}",
+    "{\"operation\":\"splice\",\"path\":\"/array\",\"offset\":1,\"remove\":2,\"value\":[true],\"continued\":true}"
+  ],
+  "refusedAllocationBytes": 1024
+}

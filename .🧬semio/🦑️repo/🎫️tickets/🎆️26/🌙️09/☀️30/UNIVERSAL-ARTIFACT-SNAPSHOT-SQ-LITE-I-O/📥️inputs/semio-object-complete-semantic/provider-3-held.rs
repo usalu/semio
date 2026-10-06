@@ -1,0 +1,38 @@
+//! 📦️ Controlled spatial placement and literal persisted child identities.
+use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+use crate::standards::v1::subsets::object::schema::snapshot::{SemioObjectSnapshot,STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA};
+use crate::standards::v1::subsets::base::schema::{snapshot::native_decoding as native,child::validate_semio_child_identity,geometry::{SemioPoint3,SemioQuaternion}};
+use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value::{ValueError,ValueRefusalKind};
+use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
+/// 🛬️ Separates complete SQL cells from the same caller's actual native allocation backing.
+pub(crate)fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioObjectSnapshot,ValueError>{
+ let limits=control.limits();crate::standards::v1::subsets::object::io::sqlite::snapshot::admit_layout(limits)?;
+ let size=match payload{store::os_io::IoPayload::Binary(value)=>value.len(),store::os_io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Object native input exceeds file limit"))}
+ control.allocation_stage(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+  let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_control=NativeDecodeControl::new(remaining,&mut callback);
+  let result=(||->Result<SemioObjectSnapshot,ValueError>{let result=match payload{
+   store::os_io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,&mut native_control,limits)?},
+   store::os_io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,&mut native_control,limits)?}
+  };let result=native::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();(result,native_control.owned_bytes())
+ })?
+}
+
+fn binary_child<S>(reader:&mut store::ByteReader<'_>,subset:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<Option<store::ArtifactChild<S>>,ValueError>{
+ match reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?{0=>Ok(None),1=>{native::entities(entities,2,limits)?;let child_id=native::text(reader,control)?;let target=store::os_io::ArtifactRef{artifact_id:native::text(reader,control)?,dialect:store::os_io::ArtifactDialect{artifact_kind:native::text(reader,control)?,standard:native::text(reader,control)?,subset:native::text(reader,control)?}};validate_semio_child_identity(&child_id,&target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;Ok(Some(store::ArtifactChild::new(child_id,target)))},_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Object native optional child presence"))}
+}
+pub(crate) fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioObjectSnapshot,ValueError>{
+ crate::standards::v1::subsets::object::io::sqlite::snapshot::admit_binary(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Object native format"))}
+ let schema=native::text(&mut reader,control)?;let transform=crate::standards::v1::subsets::drawing::io::binary::snapshot::read_transform(&mut reader).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let mut owner=native::Owned::new(SemioObjectSnapshot{schema,transform,brep:None,mesh:None,properties:None});
+ owner.get_mut().brep=binary_child(&mut reader,"brep",control,limits,&mut entities)?;owner.get_mut().mesh=binary_child(&mut reader,"mesh",control,limits,&mut entities)?;owner.get_mut().properties=binary_child(&mut reader,"value",control,limits,&mut entities)?;
+ if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Object native trailing bytes"))}owner.get_mut().validate().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;Ok(owner.take())
+}
+fn text_child<S>(value:&str,subset:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<Option<store::ArtifactChild<S>>,ValueError>{
+ if value=="[]"{return Ok(None)}native::entities(entities,2,limits)?;let[id,target]=native::record(value,control)?;let[artifact_id,kind,standard,declared_subset]=native::record(target,control)?;
+ let child_id=native::hex_text(id,control)?;let target=store::os_io::ArtifactRef{artifact_id:native::hex_text(artifact_id,control)?,dialect:store::os_io::ArtifactDialect{artifact_kind:native::hex_text(kind,control)?,standard:native::hex_text(standard,control)?,subset:native::hex_text(declared_subset,control)?}};validate_semio_child_identity(&child_id,&target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;Ok(Some(store::ArtifactChild::new(child_id,target)))
+}
+pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioObjectSnapshot,ValueError>{
+ crate::standards::v1::subsets::object::io::sqlite::snapshot::admit_document(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","transform","brep","mesh","properties"],control)?;let schema=native::hex_text(fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Object native schema missing"))?,control)?;
+ let[tx,ty,tz,rx,ry,rz,rw,sx,sy,sz]=native::record(fields[1].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Object native transform missing"))?,control)?;let transform=SemioTransform{translation:SemioPoint3{x:native::float(tx,control)?,y:native::float(ty,control)?,z:native::float(tz,control)?},rotation:SemioQuaternion{x:native::float(rx,control)?,y:native::float(ry,control)?,z:native::float(rz,control)?,w:native::float(rw,control)?},scale:SemioPoint3{x:native::float(sx,control)?,y:native::float(sy,control)?,z:native::float(sz,control)?}};
+ let mut owner=native::Owned::new(SemioObjectSnapshot{schema,transform,brep:None,mesh:None,properties:None});owner.get_mut().brep=text_child(fields[2].unwrap_or("[]"),"brep",control,limits,&mut entities)?;owner.get_mut().mesh=text_child(fields[3].unwrap_or("[]"),"mesh",control,limits,&mut entities)?;owner.get_mut().properties=text_child(fields[4].unwrap_or("[]"),"value",control,limits,&mut entities)?;owner.get_mut().validate().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;Ok(owner.take())
+}

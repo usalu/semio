@@ -44,10 +44,34 @@
       ],
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Artifact Id",
+              "de": "Artefakt-ID"
+            },
+            "description": {
+              "en": "Identity of the new artifact; no other artifact may carry it.",
+              "de": "Identität des neuen Artefakts; kein anderes Artefakt darf sie tragen."
+            }
+          }
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Name",
+              "de": "Name"
+            },
+            "description": {
+              "en": "Display name of the artifact.",
+              "de": "Anzeigename des Artefakts."
+            }
+          }
         },
         "kindId": {
           "type": "string",

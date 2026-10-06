@@ -14,5 +14,5 @@ pub fn relocate_target_region(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Val
     if region_id.is_empty() {
         return;
     }
-    puzzle2d_relocate_target_region(&mut ctx.scene.fixture, region_id, after);
+    puzzle2d_relocate_target_region(&mut ctx.scene.board_snapshot, region_id, after);
 }

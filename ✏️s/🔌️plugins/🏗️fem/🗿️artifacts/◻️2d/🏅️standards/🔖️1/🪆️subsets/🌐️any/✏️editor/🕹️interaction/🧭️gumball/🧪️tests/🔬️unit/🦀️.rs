@@ -57,7 +57,7 @@ fn ticks_compose_into_one_net_leaf() {
 
 /// 🛠️ Drives the tool the way the retained route does, on window `window` of `transient`.
 fn drive(transient: &FemGumballTransient, window: &str, phase: GesturePhase, tick: Option<MoveSelection>, base: &str) -> crate::editor::fem2d::transient::FemGumballDrive<Fem2dMutation> {
-    crate::editor::fem2d::transient::fem_gumball_drive::<Fem2dGumballTool>(transient, window, "translateSelection", phase, tick, "seed", base)
+    crate::editor::fem2d::transient::fem_gumball_drive::<Fem2dGumballTool>(transient, window, "translateSelection", phase, tick, "seed", base).expect("the gumball tool accepts the dispatch")
 }
 
 /// 💾️ LAW: a one-shot dispatch is ONE committed transaction holding the one leaf, and leaves no transient behind.
@@ -132,7 +132,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let mut store = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new(store::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(crate::FEM_2D_SCHEMA, "gumball-time-travel", base.clone(), None)).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Fem2dSnapshot, Fem2dMutation>());
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the edit applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = tick(Fem2dGumballMotion::Translate { dx: -0.5, dy: 3.0 });

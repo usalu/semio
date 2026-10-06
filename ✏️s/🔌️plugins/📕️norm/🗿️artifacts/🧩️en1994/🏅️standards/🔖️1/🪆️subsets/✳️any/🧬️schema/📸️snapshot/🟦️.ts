@@ -136,5 +136,3 @@ export const parseCompositeColumn: NormWireReader<CompositeColumn> = normWireObj
 export const parseCompositeSlab: NormWireReader<CompositeSlab> = normWireObject<CompositeSlab>({ id: normWireRequired(normWireString), spanM: normWireRequired(normWireNumber), support: normWireRequired(normWireString), sheeting: normWireRequired(normWireRef(() => parseProfiledSheeting)), concreteThicknessM: normWireRequired(normWireNumber), fCkPa: normWireRequired(normWireNumber), mFactor: normWireRequired(normWireNumber), kFactor: normWireRequired(normWireNumber), asM2PerM: normWireRequired(normWireNumber), actions: normWireRequired(normWireArray(normWireRef(() => parseCharacteristicAction))) });
 export const parseColumnAction: NormWireReader<ColumnAction> = normWireObject<ColumnAction>({ id: normWireRequired(normWireString), kind: normWireRequired(normWireString), category: normWireRequired(normWireString), stage: normWireRequired(normWireString), nKN: normWireRequired(normWireNumber), mKNm: normWireRequired(normWireNumber) });
 export const parseAnnexChoice: NormWireReader<AnnexChoice> = normWireLiteral("En", "De");
-
-export * from "./🪶️sqlite/🟦️.ts";

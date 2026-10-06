@@ -1,0 +1,701 @@
+{
+  "qualification": "Current source-only; no edits or runtime proof. Real v1_4 Snapshot differs from root v1_7 public export.",
+  "sources": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 9,
+          "text": "use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};"
+        },
+        {
+          "line": 45,
+          "text": "    type Mutation = PdfMutation;"
+        },
+        {
+          "line": 55,
+          "text": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;"
+        },
+        {
+          "line": 58,
+          "text": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 2,
+          "text": "//! single-window layout, hosting `main`'s `DocumentWindowKit` surface, no edit affordances."
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 3,
+          "text": "//! `DocumentWindowKit` (contract §2.6). One `DocumentPage` per `PdfPage`: the page's real `MediaBox`/"
+        },
+        {
+          "line": 8,
+          "text": "use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;"
+        },
+        {
+          "line": 9,
+          "text": "use crate::PdfSnapshot;"
+        },
+        {
+          "line": 10,
+          "text": "use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};"
+        },
+        {
+          "line": 16,
+          "text": "pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;"
+        },
+        {
+          "line": 17,
+          "text": "pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;"
+        },
+        {
+          "line": 24,
+          "text": "    WindowKindDefinition { label: LocalizedLabel::native(\"Pages\", \"Seiten\"), icon_id: \"file-text\".into(), ..DocumentWindowKit::window_kind() }"
+        },
+        {
+          "line": 41,
+          "text": "    DocumentWindowKit::render(&DocumentView { pages })"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 2,
+          "text": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 3,
+          "text": "//! their real subsets) share ONE unified logical object model -- `crate::PdfSnapshot`/"
+        },
+        {
+          "line": 4,
+          "text": "//! `PdfMutation`, canonically the 1.7-shaped page/object/trailer graph (1.7 folds 1.0-1.7 in"
+        },
+        {
+          "line": 6,
+          "text": "//! and its own `document_codec_bare::<PdfSnapshot, PdfMutation>(...)` call binds them to the 1.7"
+        },
+        {
+          "line": 11,
+          "text": "//! real window, `main` (`DocumentWindowKit`) -- see its own module doc comment for the render/"
+        },
+        {
+          "line": 16,
+          "text": "use crate::standards::v1_7::subsets::base::schema::mutations::set_snapshot;"
+        },
+        {
+          "line": 17,
+          "text": "use crate::standards::v1_7::subsets::base::schema::mutations::patch_snapshot;"
+        },
+        {
+          "line": 18,
+          "text": "use crate::{page_text_edit_mutation, PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};"
+        },
+        {
+          "line": 106,
+          "text": "    type Mutation = PdfMutation;"
+        },
+        {
+          "line": 118,
+          "text": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;"
+        },
+        {
+          "line": 131,
+          "text": "            Pdf14XEditorCommand::PageEdit { action, .. } => crate::editor::page::static_action(action),"
+        },
+        {
+          "line": 136,
+          "text": "        crate::page_text_agent_revision(doc.snapshot, args)"
+        },
+        {
+          "line": 144,
+          "text": "            other if crate::editor::page::is_page_action(other) => {"
+        },
+        {
+          "line": 145,
+          "text": "                let edit = crate::editor::page::edit_from_action(other, args)?;"
+        },
+        {
+          "line": 153,
+          "text": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()"
+        },
+        {
+          "line": 169,
+          "text": "                let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };"
+        },
+        {
+          "line": 173,
+          "text": "                crate::editor::page::emit_page_edit(doc.snapshot, action, payload)"
+        },
+        {
+          "line": 182,
+          "text": "            crate::editor::page::INSPECTOR_BODY_KEY => crate::editor::page::render_inspector(doc.snapshot, None, \"s.stdio.pdf@1.4/x#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree),"
+        },
+        {
+          "line": 204,
+          "text": "            return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);"
+        },
+        {
+          "line": 206,
+          "text": "        if body_key == crate::editor::page::INSPECTOR_BODY_KEY {"
+        },
+        {
+          "line": 207,
+          "text": "            let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);"
+        },
+        {
+          "line": 208,
+          "text": "            return crate::editor::page::render_inspector(doc.snapshot, selected, \"s.stdio.pdf@1.4/x#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree);"
+        },
+        {
+          "line": 223,
+          "text": "        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PdfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))"
+        },
+        {
+          "line": 234,
+          "text": "                let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };"
+        },
+        {
+          "line": 238,
+          "text": "                crate::editor::page::emit_page_edit(snapshot, action, payload)"
+        },
+        {
+          "line": 256,
+          "text": "    let builder = builder.window_kind_def(crate::editor::page::inspector_window_definition());"
+        },
+        {
+          "line": 258,
+          "text": "    let builder = builder.default_layout(crate::editor::page::document_layout(main::WINDOW_KIND_ID));"
+        },
+        {
+          "line": 260,
+          "text": "    crate::editor::page::install_object_interaction(&mut definition);"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 1,
+          "text": "//! ✏️ PDF/X Document (1.4) editor -- the `edit` mode: a single-window layout hosting `main`'s `DocumentWindowKit`"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 3,
+          "text": "use crate::editor::page;"
+        },
+        {
+          "line": 4,
+          "text": "use crate::PdfSnapshot;"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 2,
+          "text": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;"
+        },
+        {
+          "line": 19,
+          "text": "fn render_paints_the_page_text_on_the_canvas() {"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 9,
+          "text": "use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};"
+        },
+        {
+          "line": 45,
+          "text": "    type Mutation = PdfMutation;"
+        },
+        {
+          "line": 55,
+          "text": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;"
+        },
+        {
+          "line": 58,
+          "text": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 2,
+          "text": "//! single-window layout, hosting `main`'s `DocumentWindowKit` surface, no edit affordances."
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 3,
+          "text": "//! `DocumentWindowKit` (contract §2.6). One `DocumentPage` per `PdfPage`: the page's real `MediaBox`/"
+        },
+        {
+          "line": 8,
+          "text": "use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;"
+        },
+        {
+          "line": 9,
+          "text": "use crate::PdfSnapshot;"
+        },
+        {
+          "line": 10,
+          "text": "use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};"
+        },
+        {
+          "line": 16,
+          "text": "pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;"
+        },
+        {
+          "line": 17,
+          "text": "pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;"
+        },
+        {
+          "line": 24,
+          "text": "    WindowKindDefinition { label: LocalizedLabel::native(\"Pages\", \"Seiten\"), icon_id: \"file-text\".into(), ..DocumentWindowKit::window_kind() }"
+        },
+        {
+          "line": 41,
+          "text": "    DocumentWindowKit::render(&DocumentView { pages })"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 2,
+          "text": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 3,
+          "text": "//! their real subsets) share ONE unified logical object model -- `crate::PdfSnapshot`/"
+        },
+        {
+          "line": 4,
+          "text": "//! `PdfMutation`, canonically the 1.7-shaped page/object/trailer graph (1.7 folds 1.0-1.7 in"
+        },
+        {
+          "line": 6,
+          "text": "//! and its own `document_codec_bare::<PdfSnapshot, PdfMutation>(...)` call binds them to the 1.7"
+        },
+        {
+          "line": 11,
+          "text": "//! real window, `main` (`DocumentWindowKit`) -- see its own module doc comment for the render/"
+        },
+        {
+          "line": 16,
+          "text": "use crate::standards::v1_7::subsets::base::schema::mutations::set_snapshot;"
+        },
+        {
+          "line": 17,
+          "text": "use crate::standards::v1_7::subsets::base::schema::mutations::patch_snapshot;"
+        },
+        {
+          "line": 18,
+          "text": "use crate::{page_text_edit_mutation, PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};"
+        },
+        {
+          "line": 106,
+          "text": "    type Mutation = PdfMutation;"
+        },
+        {
+          "line": 118,
+          "text": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;"
+        },
+        {
+          "line": 131,
+          "text": "            Pdf14EditorCommand::PageEdit { action, .. } => crate::editor::page::static_action(action),"
+        },
+        {
+          "line": 136,
+          "text": "        crate::page_text_agent_revision(doc.snapshot, args)"
+        },
+        {
+          "line": 144,
+          "text": "            other if crate::editor::page::is_page_action(other) => {"
+        },
+        {
+          "line": 145,
+          "text": "                let edit = crate::editor::page::edit_from_action(other, args)?;"
+        },
+        {
+          "line": 153,
+          "text": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()"
+        },
+        {
+          "line": 169,
+          "text": "                let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };"
+        },
+        {
+          "line": 173,
+          "text": "                crate::editor::page::emit_page_edit(doc.snapshot, action, payload)"
+        },
+        {
+          "line": 182,
+          "text": "            crate::editor::page::INSPECTOR_BODY_KEY => crate::editor::page::render_inspector(doc.snapshot, None, \"s.stdio.pdf@1.4/*#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree),"
+        },
+        {
+          "line": 204,
+          "text": "            return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);"
+        },
+        {
+          "line": 206,
+          "text": "        if body_key == crate::editor::page::INSPECTOR_BODY_KEY {"
+        },
+        {
+          "line": 207,
+          "text": "            let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);"
+        },
+        {
+          "line": 208,
+          "text": "            return crate::editor::page::render_inspector(doc.snapshot, selected, \"s.stdio.pdf@1.4/*#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree);"
+        },
+        {
+          "line": 223,
+          "text": "        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PdfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))"
+        },
+        {
+          "line": 234,
+          "text": "                let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };"
+        },
+        {
+          "line": 238,
+          "text": "                crate::editor::page::emit_page_edit(snapshot, action, payload)"
+        },
+        {
+          "line": 256,
+          "text": "    let builder = builder.window_kind_def(crate::editor::page::inspector_window_definition());"
+        },
+        {
+          "line": 258,
+          "text": "    let builder = builder.default_layout(crate::editor::page::document_layout(main::WINDOW_KIND_ID));"
+        },
+        {
+          "line": 260,
+          "text": "    crate::editor::page::install_object_interaction(&mut definition);"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 1,
+          "text": "//! ✏️ PDF Document (1.4) editor -- the `edit` mode: a single-window layout hosting `main`'s `DocumentWindowKit`"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 3,
+          "text": "use crate::editor::page;"
+        },
+        {
+          "line": 4,
+          "text": "use crate::PdfSnapshot;"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 2,
+          "text": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;"
+        },
+        {
+          "line": 19,
+          "text": "fn render_paints_the_page_text_on_the_canvas() {"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 9,
+          "text": "use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};"
+        },
+        {
+          "line": 45,
+          "text": "    type Mutation = PdfMutation;"
+        },
+        {
+          "line": 55,
+          "text": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;"
+        },
+        {
+          "line": 58,
+          "text": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 2,
+          "text": "//! single-window layout, hosting `main`'s `DocumentWindowKit` surface, no edit affordances."
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 3,
+          "text": "//! `DocumentWindowKit` (contract §2.6). One `DocumentPage` per `PdfPage`: the page's real `MediaBox`/"
+        },
+        {
+          "line": 8,
+          "text": "use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;"
+        },
+        {
+          "line": 9,
+          "text": "use crate::PdfSnapshot;"
+        },
+        {
+          "line": 10,
+          "text": "use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};"
+        },
+        {
+          "line": 16,
+          "text": "pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;"
+        },
+        {
+          "line": 17,
+          "text": "pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;"
+        },
+        {
+          "line": 24,
+          "text": "    WindowKindDefinition { label: LocalizedLabel::native(\"Pages\", \"Seiten\"), icon_id: \"file-text\".into(), ..DocumentWindowKit::window_kind() }"
+        },
+        {
+          "line": 41,
+          "text": "    DocumentWindowKit::render(&DocumentView { pages })"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 2,
+          "text": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 3,
+          "text": "//! their real subsets) share ONE unified logical object model -- `crate::PdfSnapshot`/"
+        },
+        {
+          "line": 4,
+          "text": "//! `PdfMutation`, canonically the 1.7-shaped page/object/trailer graph (1.7 folds 1.0-1.7 in"
+        },
+        {
+          "line": 6,
+          "text": "//! and its own `document_codec_bare::<PdfSnapshot, PdfMutation>(...)` call binds them to the 1.7"
+        },
+        {
+          "line": 11,
+          "text": "//! real window, `main` (`DocumentWindowKit`) -- see its own module doc comment for the render/"
+        },
+        {
+          "line": 16,
+          "text": "use crate::standards::v1_7::subsets::base::schema::mutations::set_snapshot;"
+        },
+        {
+          "line": 17,
+          "text": "use crate::standards::v1_7::subsets::base::schema::mutations::patch_snapshot;"
+        },
+        {
+          "line": 18,
+          "text": "use crate::{page_text_edit_mutation, PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};"
+        },
+        {
+          "line": 106,
+          "text": "    type Mutation = PdfMutation;"
+        },
+        {
+          "line": 118,
+          "text": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;"
+        },
+        {
+          "line": 131,
+          "text": "            Pdf14AEditorCommand::PageEdit { action, .. } => crate::editor::page::static_action(action),"
+        },
+        {
+          "line": 136,
+          "text": "        crate::page_text_agent_revision(doc.snapshot, args)"
+        },
+        {
+          "line": 144,
+          "text": "            other if crate::editor::page::is_page_action(other) => {"
+        },
+        {
+          "line": 145,
+          "text": "                let edit = crate::editor::page::edit_from_action(other, args)?;"
+        },
+        {
+          "line": 153,
+          "text": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()"
+        },
+        {
+          "line": 169,
+          "text": "                let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };"
+        },
+        {
+          "line": 173,
+          "text": "                crate::editor::page::emit_page_edit(doc.snapshot, action, payload)"
+        },
+        {
+          "line": 182,
+          "text": "            crate::editor::page::INSPECTOR_BODY_KEY => crate::editor::page::render_inspector(doc.snapshot, None, \"s.stdio.pdf@1.4/a#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree),"
+        },
+        {
+          "line": 204,
+          "text": "            return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);"
+        },
+        {
+          "line": 206,
+          "text": "        if body_key == crate::editor::page::INSPECTOR_BODY_KEY {"
+        },
+        {
+          "line": 207,
+          "text": "            let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);"
+        },
+        {
+          "line": 208,
+          "text": "            return crate::editor::page::render_inspector(doc.snapshot, selected, \"s.stdio.pdf@1.4/a#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree);"
+        },
+        {
+          "line": 223,
+          "text": "        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PdfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))"
+        },
+        {
+          "line": 234,
+          "text": "                let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };"
+        },
+        {
+          "line": 238,
+          "text": "                crate::editor::page::emit_page_edit(snapshot, action, payload)"
+        },
+        {
+          "line": 256,
+          "text": "    let builder = builder.window_kind_def(crate::editor::page::inspector_window_definition());"
+        },
+        {
+          "line": 258,
+          "text": "    let builder = builder.default_layout(crate::editor::page::document_layout(main::WINDOW_KIND_ID));"
+        },
+        {
+          "line": 260,
+          "text": "    crate::editor::page::install_object_interaction(&mut definition);"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 1,
+          "text": "//! ✏️ PDF/A Document (1.4) editor -- the `edit` mode: a single-window layout hosting `main`'s `DocumentWindowKit`"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 3,
+          "text": "use crate::editor::page;"
+        },
+        {
+          "line": 4,
+          "text": "use crate::PdfSnapshot;"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "authorityReferences": [
+        {
+          "line": 2,
+          "text": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;"
+        },
+        {
+          "line": 19,
+          "text": "fn render_paints_the_page_text_on_the_canvas() {"
+        }
+      ],
+      "proposedJoin": "Own v1_4 base Snapshot/mutations; implement 1.4 page projection/revision/render and mutation intent against PageDoc, preserve dialect-specific editor IDs and explicit registration."
+    }
+  ]
+}

@@ -11,7 +11,7 @@ use crate::editor::en1990::commands::{apply_remedy, evaluate, insert_item, remov
 use crate::editor::en1990::modes::edit as edit_mode;
 use crate::editor::en1990::modes::edit::windows::{inputs, results};
 use crate::editor::en1990::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::op::En1990Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::En1990Mutation;
 use crate::En1990Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::AppIo;
@@ -140,7 +140,7 @@ impl ArtifactEditor for En1990PlayApp {
         command.command_id()
     }
 
-    semio_s_artifact_norm_contract::norm_command_from_action!(En1990Command, text, crate::standards::v1::subsets::any::schema::snapshot::decode_en1990_snapshot_json);
+    semio_s_artifact_norm_contract::norm_command_from_action!(En1990Command, text, crate::standards::v1::subsets::any::io::text::snapshot::decode_en1990_snapshot_json);
 
     fn handle(
         command: &En1990Command,

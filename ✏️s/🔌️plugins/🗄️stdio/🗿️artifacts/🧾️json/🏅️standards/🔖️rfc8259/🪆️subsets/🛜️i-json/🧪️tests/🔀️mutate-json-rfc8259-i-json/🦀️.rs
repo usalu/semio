@@ -25,7 +25,9 @@ const INPUT: &str = "shared://🔣️.json";
 mod subject {
     use super::INPUT;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{parse_json_text, write_json_text, JsonSnapshot, JsonValue};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonSnapshot, JsonValue};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{write_json_text};
+    use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_json::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::i_json::schema::mutations::{apply_json_i_json_mutation, is_safe_number_lexeme, is_unicode_noncharacter, JsonIJsonMutation};
@@ -34,7 +36,7 @@ mod subject {
     //#region 🔖️Input
     /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
     pub fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-        let copy = ctx.copy_fixture(INPUT, Some("input.json"))?;
+        let copy = ctx.copy_input(INPUT, Some("input.json"))?;
         std::fs::read(&copy).map_err(|error| error.to_string())
     }
 

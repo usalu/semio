@@ -72,3 +72,35 @@ fn fresh_ids_avoid_every_collection() {
     assert_eq!(snapshot.fresh_id("F"), "F2");
     assert_eq!(snapshot.fresh_id("Im"), "Im2");
 }
+
+#[test]
+fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
+    use pack::record as pack_rt;
+    let owner = <crate::editor::pdf17::Pdf17Editor as semio_framework_plugin::ArtifactEditor>::initial_snapshot();
+    let original_spec = super::snapshot_text::spec();
+    let original_record = super::snapshot_text::to_record(&owner);
+    let maximum = semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;
+    let mut observer = |_| true;
+    let mut native = semio_framework_value::NativeEncodeControl::new(maximum, &mut observer);
+    let paid_spec = super::snapshot_text::spec_producer().encode(&mut native).unwrap();
+    let paid_record = super::snapshot_text::to_record_controlled(&owner, &mut native).unwrap();
+    let options = pack_rt::EncodeOptions::default();
+    let original = pack_rt::encode_document(&original_spec, &original_record, &options).unwrap();
+    let record_join = pack_rt::encode_document(&original_spec, &paid_record, &options).unwrap();
+    let spec_join = pack_rt::encode_document(&paid_spec, &original_record, &options).unwrap();
+    let controlled = pack_rt::encode_document_controlled(&paid_spec, &paid_record, &options, &mut native).unwrap();
+    for (label,bytes) in [("record", &record_join),("spec", &spec_join),("controlled", &controlled)] {
+        let first = original.iter().zip(bytes.iter()).position(|(left,right)|left != right);
+        eprintln!("[DEBUG] pdf17 body {label} original={} candidate={} first={first:?}",original.len(),bytes.len());
+    }
+    let original_decoded = pack_rt::decode_document(&original,&original_spec,&pack_rt::DecodeOptions::default()).unwrap().0;
+    let controlled_decoded = pack_rt::decode_document(&controlled,&original_spec,&pack_rt::DecodeOptions::default()).unwrap().0;
+    eprintln!("[DEBUG] pdf17 record equal={} decoded equal={} original={:?} controlled={:?}",original_record == paid_record,original_decoded == controlled_decoded,original_record,paid_record);
+    assert_eq!(original_record,paid_record,"real initial owner RecordValue changed");
+    assert_eq!(original,record_join,"paid RecordValue changes ordinary body");
+    assert_eq!(original,spec_join,"paid RecordSpec changes ordinary body");
+    assert_eq!(original,controlled,"controlled encoder changes exact body");
+    let shipped = semio_framework_os_kernel::pack_rt::encode_document(&original_spec,&original_record,&semio_framework_os_kernel::PackEncodeOptions::default()).unwrap();
+    eprintln!("[DEBUG] actual shipped Record authority original={} core={} first={:?}",shipped.len(),original.len(),shipped.iter().zip(&original).position(|(left,right)|left!=right));
+    assert_eq!(shipped,original,"actual shipped ArtifactPack runtime must use the same intrinsic Record authority as SQLite");
+}

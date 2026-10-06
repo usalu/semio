@@ -20,7 +20,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Optional content",
+          "de": "Optionaler Inhalt"
+        },
+        "description": {
+          "en": "Optional content groups and their default configuration; cleared, the document has none.",
+          "de": "Gruppen optionalen Inhalts und ihre Standardkonfiguration; geleert hat das Dokument keine."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

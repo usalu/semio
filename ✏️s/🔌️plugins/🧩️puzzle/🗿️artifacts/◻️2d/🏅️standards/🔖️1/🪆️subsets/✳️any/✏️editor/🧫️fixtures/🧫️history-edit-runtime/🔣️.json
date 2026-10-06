@@ -1,8 +1,8 @@
 {
   "schema": "s.puzzle2d.history-edit-runtime.v1",
-  "description": "⏪️ Runtime acceptance of non-destructive history editing with puzzle 2d as the witness (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §4, §7, §16). One board; each scenario authors `log` (one edit per leaf, oldest first; `row` indices address these edits), edits it in a history session through the reserved `historyEdit*` verbs and checks the session, the per-mutation outcomes, the history-edit rows and the document head at each step. `heads` name documents: the board with `log` folded after replacing or dropping the leaves `edits` names; the Rust law (`🧪️tests/🧪️history-edit-runtime/🦀️.rs`) checks the app's head against them and against a fresh app folding that edited log, and the Python oracle (`🐍️.py` beside it) re-folds them independently with shapely and validates every leaf against its payload schema.",
+  "description": "⏪️ Runtime acceptance of non-destructive history editing with puzzle 2d as the witness (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §4, §7, §16). One board, unless a scenario states its own; each scenario authors `log` (the leaves of its edits, oldest first; `row` addresses an edit and `mutation` a leaf inside a tool transaction's edit), edits it in a history session through the reserved `historyEdit*` verbs and checks the session, the per-mutation outcomes, the history-edit rows and the document head at each step. `heads` name documents: the board with `log` folded after replacing or dropping the leaves `edits` names, with the `edges` it holds and the `outcomes` that fold reports (log index, code, target); a step's `head` is the committed document and its `preview` the document a review paints; the Rust law (`🧪️tests/🧪️history-edit-runtime/🦀️.rs`) checks the app's head against them and against a fresh app folding that edited log, and the Python oracle (`🐍️.py` beside it) re-folds them independently with shapely and validates every leaf against its payload schema.",
   "board": {
-    "schema": "puzzle.2d.fixture",
+    "schema": "board.ports.directed.v1",
     "nodes": [
       { "id": "left", "shape": "circle", "x": -200.0, "y": 0.0, "radius": 24.0, "text": "Left", "handles": [] },
       { "id": "mid", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Middle", "handles": [] },
@@ -155,6 +155,48 @@
         { "finalize": { "alternative": "Fixed" }, "expect": { "stage": null, "head": "fixed", "alternative": "Fixed", "historyEdits": [{ "en": "History edited — alternative Fixed: 3 mutations", "de": "Verlauf bearbeitet — Alternative Fixed: 3 Mutationen" }] } },
         { "undo": null, "expect": { "head": "original", "alternative": "Fixed" } },
         { "redo": null, "expect": { "head": "fixed", "alternative": "Fixed" } }
+      ]
+    },
+    {
+      "id": "a-drifted-proximity-connect-warns-and-is-withdrawn",
+      "board": {
+        "schema": "board.ports.directed.v1",
+        "nodes": [
+          { "id": "left", "shape": "circle", "x": -200.0, "y": 0.0, "radius": 24.0, "text": "Left", "handles": [{ "id": "left-east", "angle": 0.0 }] },
+          { "id": "mid", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Middle", "handles": [{ "id": "mid-west", "angle": 3.141592653589793 }] }
+        ],
+        "edges": []
+      },
+      "log": [
+        { "mutation": "dragSelection", "targets": ["left"], "dx": 144.0, "dy": 0.0 },
+        { "mutation": "connectHandles", "id": "edge-mid-west-left-east", "source": "mid-west", "target": "left-east", "edgeKind": null, "gap": 0.0, "shift": 0.0, "rise": 0.0, "rotation": 0.0, "turn": 0.0, "tilt": 0.0, "x": 0.0, "y": 0.0, "sourceTip": null, "targetTip": null, "tolerance": 12.0 }
+      ],
+      "heads": {
+        "connected": { "edits": [], "nodes": { "left": { "x": -56.0, "y": 0.0 }, "mid": { "x": 0.0, "y": 0.0 } }, "edges": ["edge-mid-west-left-east"], "outcomes": [] },
+        "drifted": {
+          "edits": [{ "index": 0, "leaf": { "mutation": "dragSelection", "targets": ["left"], "dx": -100.0, "dy": 0.0 } }],
+          "nodes": { "left": { "x": -300.0, "y": 0.0 }, "mid": { "x": 0.0, "y": 0.0 } },
+          "edges": ["edge-mid-west-left-east"],
+          "outcomes": [{ "index": 1, "code": "mutation.precondition-drifted", "target": ["mid-west", "left-east"] }]
+        },
+        "apart": {
+          "edits": [{ "index": 0, "leaf": { "mutation": "dragSelection", "targets": ["left"], "dx": -100.0, "dy": 0.0 } }, { "index": 1, "withdrawn": true }],
+          "nodes": { "left": { "x": -300.0, "y": 0.0 }, "mid": { "x": 0.0, "y": 0.0 } },
+          "edges": [],
+          "outcomes": []
+        }
+      },
+      "steps": [
+        { "translate": { "select": ["left"], "dx": 1.0, "dy": 0.0, "step": 144.0 }, "expect": { "rows": 1, "head": "connected" } },
+        { "begin": { "row": 0 }, "expect": { "stage": "editing" } },
+        { "input": { "path": "/dx", "value": -100.0 } },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "worst": "warning", "acceptedCount": 1, "preview": "drifted", "outcomes": [{ "row": 0, "mutation": 1, "worst": "warning", "code": "mutation.precondition-drifted", "target": ["mid-west", "left-east"], "introduced": true }], "words": { "row": 0, "en": "Precondition drifted", "de": "Vorbedingung nicht mehr erfüllt" } } },
+        { "begin": { "row": 0, "mutation": 1 }, "expect": { "stage": "editing", "acceptedCount": 1 } },
+        { "withdraw": null },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "acceptedCount": 2, "preview": "apart" } },
+        { "finalize": "overwrite", "expect": { "stage": null, "head": "apart", "historyEdits": [{ "en": "History edited — overwrite: 2 mutations", "de": "Verlauf bearbeitet — überschrieben: 2 Mutationen" }] } },
+        { "undo": null, "expect": { "head": "connected" } },
+        { "redo": null, "expect": { "head": "apart" } }
       ]
     }
   ]

@@ -6,7 +6,7 @@
 //! out of this ticket's writable scope — see this report's `notes`), so `edit` is used instead; a
 //! future framework spine change could register `paint-stroke` and this triad would rename to match.
 
-use crate::mutations::PixelRun;
+use crate::schema::PixelRun;
 use crate::{LowpolyMutation, LowpolySnapshot};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

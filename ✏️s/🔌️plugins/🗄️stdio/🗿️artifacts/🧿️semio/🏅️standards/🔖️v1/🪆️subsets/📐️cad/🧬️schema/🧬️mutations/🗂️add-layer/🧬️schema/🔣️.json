@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     },
     "layer": {
-      "$ref": "#/$defs/CadLayer"
+      "$ref": "#/$defs/CadLayer",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Layer",
+          "de": "Layer"
+        },
+        "description": {
+          "en": "Name, colour index, line type and visibility of the layer that is added.",
+          "de": "Name, Farbindex, Linientyp und Sichtbarkeit des Layers, der hinzugefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

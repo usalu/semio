@@ -27,7 +27,7 @@ type ignoreVectorFile struct {
 }
 
 func loadIgnoreVectors(ctx *host.Context) (ignoreVectorFile, error) {
-	data, err := ctx.FixtureBytes("shared://📡️ignore-vectors.json")
+	data, err := ctx.InputBytes("shared://📡️ignore-vectors.json")
 	if err != nil {
 		return ignoreVectorFile{}, err
 	}

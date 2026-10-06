@@ -120,11 +120,24 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001
           }
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Flat width b",
+              "de": "Ebene Breite b"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1,
+            "step": 0.001
+          }
         },
         "span": {
           "type": "number",
@@ -135,7 +148,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "welded": {
@@ -223,13 +237,13 @@
           "type": "number",
           "x-semio-ui": {
             "label": {
-              "en": "Buckling axis",
-              "de": "Knickachse"
+              "en": "System length L",
+              "de": "Systemlänge L"
             },
-            "description": {
-              "en": "y, z, t (torsional) or ltb (lateral-torsional); anything else sets y.",
-              "de": "y, z, t (Drillknicken) oder ltb (Biegedrillknicken); jeder andere Wert setzt y."
-            }
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2,
+            "step": 0.05
           }
         },
         "support": {
@@ -250,7 +264,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "bucklingLengthZ": {
@@ -262,7 +277,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "bucklingLengthT": {
@@ -274,7 +290,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "ltbLength": {
@@ -286,7 +303,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "c1": {
@@ -297,7 +315,8 @@
               "de": "Momentenbeiwert C₁"
             },
             "widget": "stepper",
-            "precision": 3
+            "precision": 3,
+            "step": 0.01
           }
         },
         "restrainedLtb": {
@@ -377,10 +396,34 @@
           "type": "string"
         },
         "height": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Section depth h",
+              "de": "Profilhöhe h"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1,
+            "step": 0.001
+          }
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Section width b",
+              "de": "Profilbreite b"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1,
+            "step": 0.001
+          }
         },
         "flangeThickness": {
           "type": "number",
@@ -393,7 +436,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001
           }
         },
         "webThickness": {
@@ -407,7 +451,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001
           }
         },
         "outerDiameter": {
@@ -421,7 +466,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "elements": {
@@ -491,7 +537,8 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 1000000
           }
         },
         "deltaSigmaEd": {
@@ -505,7 +552,8 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 1000000
           }
         },
         "nCycles": {
@@ -516,7 +564,13 @@
               "de": "Lastspielzahl n_i"
             },
             "widget": "stepper",
-            "precision": 0
+            "precision": 0,
+            "step": 10000,
+            "snaps": [
+              2000000,
+              5000000,
+              100000000
+            ]
           }
         },
         "m1": {
@@ -527,7 +581,8 @@
               "de": "Neigung m₁"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1
           }
         },
         "m2": {
@@ -538,7 +593,8 @@
               "de": "Neigung m₂"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1
           }
         }
       },
@@ -652,7 +708,8 @@
             },
             "widget": "stepper",
             "unit": "°C",
-            "precision": 0
+            "precision": 0,
+            "step": 10
           }
         },
         "durationS": {
@@ -666,7 +723,18 @@
             "unit": "s",
             "displayUnit": "min",
             "displayFactor": 0.016666666666666666,
-            "precision": 0
+            "precision": 0,
+            "step": 60,
+            "snaps": [
+              900,
+              1800,
+              2700,
+              3600,
+              5400,
+              7200,
+              10800,
+              14400
+            ]
           }
         }
       },
@@ -744,7 +812,17 @@
           }
         },
         "radius": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Mid-surface radius r",
+              "de": "Radius der Mittelfläche r"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "precision": 2,
+            "step": 0.05
+          }
         },
         "thickness": {
           "type": "number",
@@ -757,7 +835,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0001
           }
         },
         "length": {
@@ -769,7 +848,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "actions": {
@@ -845,7 +925,8 @@
             "unit": "N/m",
             "displayUnit": "kN/m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "qKLine": {
@@ -859,7 +940,8 @@
             "unit": "N/m",
             "displayUnit": "kN/m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "nK": {
@@ -873,7 +955,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "vYK": {
@@ -887,7 +970,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "vZK": {
@@ -901,7 +985,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "mYK": {
@@ -915,7 +1000,8 @@
             "unit": "N·m",
             "displayUnit": "kN·m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         },
         "mZK": {
@@ -929,7 +1015,8 @@
             "unit": "N·m",
             "displayUnit": "kN·m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 100
           }
         }
       },
@@ -958,7 +1045,19 @@
           "type": "string"
         },
         "width": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Flat width b",
+              "de": "Ebene Breite b"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "mm",
+            "displayFactor": 1000,
+            "precision": 1,
+            "step": 0.001
+          }
         },
         "thickness": {
           "type": "number",
@@ -1006,7 +1105,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         }
       },
@@ -1047,7 +1147,17 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001,
+            "snaps": [
+              0.006,
+              0.008,
+              0.01,
+              0.012,
+              0.016,
+              0.02,
+              0.024
+            ]
           }
         },
         "rows": {
@@ -1087,7 +1197,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005
           }
         },
         "pitch": {
@@ -1101,7 +1212,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005
           }
         },
         "gauge": {
@@ -1115,7 +1227,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005
           }
         },
         "plateThickness": {
@@ -1129,7 +1242,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.0005
           }
         }
       },
@@ -1193,7 +1307,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005
           }
         },
         "betaW": {
@@ -1204,7 +1319,8 @@
               "de": "Korrelationsbeiwert β_w"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.01
           }
         },
         "hazExtent": {
@@ -1218,7 +1334,14 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.005,
+            "snaps": [
+              0.02,
+              0.03,
+              0.035,
+              0.04
+            ]
           }
         }
       },

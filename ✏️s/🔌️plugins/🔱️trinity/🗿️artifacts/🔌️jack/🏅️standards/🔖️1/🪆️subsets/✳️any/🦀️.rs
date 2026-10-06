@@ -24,7 +24,7 @@
 
 use crate::editor::jack as editor;
 use crate::standards::v1::subsets::any::schema;
-use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::viewer::jack as viewer;
 use crate::{JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};
@@ -71,5 +71,5 @@ pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
 }
 
 #[cfg(test)]
-#[path = "🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚪️io/🦀️.rs"]
+#[path = "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🚪️io/🦀️.rs"]
 mod sqlite_snapshot_declaration_tests;

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectSynapse` — a real id-keyed upsert into the fixture's synapse
 //! collection helper (never a whole-snapshot capture).
 
-use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, Generation2dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, Generation2dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::{widget_id, Generation2dSnapshot};
 
 pub fn diff(payload: &super::ConnectSynapse, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
@@ -18,5 +18,5 @@ pub fn diff(payload: &super::ConnectSynapse, base: &Generation2dSnapshot) -> pro
     if base.host_snapshot.synapses.iter().any(|entry| entry.from == synapse.from && entry.from_port == synapse.from_port && entry.to == synapse.to && entry.to_port == synapse.to_port) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("\"{}\" is already connected to \"{}\"; parallel synapses are not allowed.", synapse.from, synapse.to));
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(payload.index, synapse.clone())] }, &LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![], set: vec![(payload.index, synapse.clone())] }, &LayoutDiff::default(), None, None))
 }

@@ -18,7 +18,7 @@ pub fn handle(payload: &AddNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &Con
     let scene = crate::dag_scene(doc)?;
     let id = crate::schema::next_node_id(&scene);
     let node = crate::schema::default_node_for_kind(&payload.kind, &id, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0));
-    Ok(crate::dag_child_emit(doc.snapshot, &[crate::create_node_leaf(&node)]))
+    Ok(crate::dag_child_emit(doc.snapshot, vec![crate::create_node_leaf(&node)]))
 }
 
 //#region 🧪️Tests

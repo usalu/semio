@@ -6,7 +6,7 @@ use crate::mutations::change_asset_url::ChangeAssetUrl;
 use crate::mutations::create_asset::CreateAsset;
 use crate::mutations::rename_asset::RenameAsset;
 use crate::mutations::set_active_asset::SetActiveAsset as SetActiveAssetMutation;
-use crate::op::ShootingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::standards::v1::subsets::any::schema::next_shooting_id;
 use crate::{ShootingAsset, ShootingSnapshot};
 use semio_framework_pack_json::json;

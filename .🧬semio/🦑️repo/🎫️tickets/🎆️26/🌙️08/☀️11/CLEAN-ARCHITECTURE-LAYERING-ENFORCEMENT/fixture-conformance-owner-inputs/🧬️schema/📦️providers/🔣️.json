@@ -1,0 +1,22 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"https://semio.tech/schema/dsl/conformance-provider",
+  "type":"object","additionalProperties":false,"required":["schema-version","law-targets"],
+  "properties":{
+    "schema-version":{"const":1},
+    "law-targets":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/target"}}
+  },
+  "$defs":{
+    "target":{
+      "type":"object","additionalProperties":false,
+      "required":["target-kind","target-name","laws","features","default-features"],
+      "properties":{
+        "target-kind":{"enum":["lib","test","bin"]},
+        "target-name":{"type":"string","minLength":1},
+        "laws":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","pattern":"^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$"}},
+        "features":{"type":"array","uniqueItems":true,"items":{"type":"string","pattern":"^[A-Za-z0-9_-]+$"}},
+        "default-features":{"type":"boolean"}
+      }
+    }
+  }
+}

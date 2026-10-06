@@ -29,7 +29,7 @@ fn text(value: &Json) -> String {
 
 #[cfg(feature = "sut")]
 fn the_leading_emoji_grapheme_is_unicodes(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📡️emoji-vectors.json")?;
+    let file = ctx.input_json("shared://📡️emoji-vectors.json")?;
     let graphemes: Vec<Json> = file
         .array("graphemes")
         .iter()

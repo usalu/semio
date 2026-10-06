@@ -149,7 +149,7 @@ impl Default for EquationGeometry {
 }
 
 pub use crate::editor::equation::modes::edit::windows::graph::config::EquationCamera;
-pub use crate::snapshot::schema::{EquationExprSnapshot, EquationFixture};
+pub use crate::snapshot::schema::{EquationExprSnapshot, EquationCarrierSnapshot};
 //#endregion 🔖️Document
 
 //#region 🔖️Composition
@@ -280,8 +280,8 @@ pub fn genesis_equation_child_pack(snapshot: &EquationSnapshot, slot: &str, chil
 }
 
 /// 📤️ Every equation field for a foreign carrier.
-pub fn equation_fixture(snapshot: &EquationSnapshot) -> EquationFixture {
-    EquationFixture { graph: snapshot.graph.clone(), geometry: snapshot.geometry.clone(), equation: snapshot.equation.clone() }
+pub fn equation_carrier_snapshot(snapshot: &EquationSnapshot) -> EquationCarrierSnapshot {
+    EquationCarrierSnapshot { graph: snapshot.graph.clone(), geometry: snapshot.geometry.clone(), equation: snapshot.equation.clone() }
 }
 
 /// 🏗️ A full `EquationSnapshot` from a `(graph, geometry)` pair with its derived handles and the default equation.
@@ -291,7 +291,7 @@ pub fn equation_snapshot_with_state(graph: &EquationGraph, geometry: &EquationGe
 }
 
 /// 📥️ A full `EquationSnapshot` from a complete carrier fixture.
-pub fn equation_snapshot_from_host_snapshot(fixture: EquationFixture) -> EquationSnapshot {
+pub fn equation_snapshot_from_host_snapshot(fixture: EquationCarrierSnapshot) -> EquationSnapshot {
     let mut snapshot = equation_snapshot_with_state(&fixture.graph, &fixture.geometry);
     snapshot.equation = fixture.equation;
     snapshot
@@ -360,8 +360,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "equation.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(io::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("equation.diff"),
@@ -553,34 +553,6 @@ pub mod standards {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
@@ -960,30 +932,19 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
+
 pub mod op {
-    pub use crate::standards::v1::subsets::any::io::mutations::text::*;
     pub use crate::standards::v1::subsets::any::schema::mutations::EquationMutation;
 }
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-}
-pub mod pack {
-    pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-}
+
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::diff::text::*;
-    }
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
@@ -992,9 +953,7 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-    }
+
 }
 pub use crate::standards::v1::subsets::any::schema::diff::EquationDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::EquationMutation;

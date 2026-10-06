@@ -356,7 +356,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
 pub(super) fn every_command() -> Vec<EquationCommand> {
     vec![
-        EquationCommand::SetArtifact(set_artifact::SetArtifact { graph: crate::document_dsl::math_graph_to_dsl(&EquationGraph::default()), geometry: EquationGeometry::default() }),
+        EquationCommand::SetArtifact(set_artifact::SetArtifact { graph: crate::standards::v1::subsets::any::io::text::snapshot::math_graph_to_dsl(&EquationGraph::default()), geometry: EquationGeometry::default() }),
         EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: "bfs".into(), seed: Some("a".into()) }),
         EquationCommand::SetDirected(set_directed::SetDirected { directed: true }),
         EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"move","gestureId":"node-drag:1","nodeIds":["a"],"dx":12.0,"dy":34.0}]"#.into() }),
@@ -543,7 +543,7 @@ async fn a_staged_json_text_operations_argument_survives_command_from_action() {
 async fn the_store_preparation_derives_its_footprint_from_the_leaf() {
     use crate::standards::v1::subsets::graph::schema::mutations::{delete_node::DeleteNode, disconnect_nodes::DisconnectNodes};
     let factory = EquationStorePreparationFactory::<EquationSnapshot, EquationMutation>::default();
-    let rows = |mutation: EquationMutation| store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &mutation, None, store::HistoryLane::Document).expect("admitted").work_items;
+    let rows = |mutation: EquationMutation| store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &mutation, store::HistoryLane::Document).expect("admitted").work_items;
     assert_eq!(rows(EquationMutation::DisconnectNodes(DisconnectNodes { id: "edge".into() })), store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     assert_eq!(rows(EquationMutation::DeleteNode(DeleteNode { id: "node".into() })), 1 + 1 + EQUATION_MAX_EDGES);
 }

@@ -29,7 +29,7 @@
 // `../🧫️fixtures/`, and its output is reviewed and committed before any test reads it.
 //
 //   bun 📜️script.ts generate  [--only <recipe-id>]     # (re)builds the engine, writes fixture(s)
-//   bun 📜️script.ts manifests [--only <recipe-id>]     # prints the fixtureManifests block (JSON array)
+//   bun 📜️script.ts manifests [--only <recipe-id>]     # prints the testEvidence block (JSON array)
 //
 // @see ./🧫️fixtures/🦀️.rs — the actual codec; `build <recipe-id> <out-dir>` and
 //      `project <path>` are its only two data-producing commands (plus `list-recipes`).
@@ -50,7 +50,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
+const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
 const FIXTURE_PATH_PREFIX = "../🧫️fixtures";
 const READER_ORACLE_ID = "dxf-crate-r12-mutate-reader";
@@ -189,7 +189,6 @@ async function manifestForSingle(recipe: Recipe, outDir: string): Promise<Record
   engineBuild(recipe.id, dir);
   const bytes = readFileSync(join(dir, filename));
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     family: "mechanical",
@@ -214,7 +213,6 @@ async function manifestForPair(recipe: Recipe, outDir: string): Promise<Record<s
   }
 
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.dxf", standard: "r12", subset: SUBSET_IDS[subset] },

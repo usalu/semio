@@ -1,4 +1,4 @@
-import {out,wordFromDsl} from "../../../../../../../../../../../🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
+import {out,wordFromDsl} from "../../../../../../../../../../../../../🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
 import {block2dFromJsonValue} from "../../../../../../🔣️json/🟦️.ts";
 /** 🔤️ Declared Block2d Text reader with exact words and canonical typed admission. */
 import type { Block2dSnapshot } from "../../../../../../../🧬️schema/📸️snapshot/🟦️";

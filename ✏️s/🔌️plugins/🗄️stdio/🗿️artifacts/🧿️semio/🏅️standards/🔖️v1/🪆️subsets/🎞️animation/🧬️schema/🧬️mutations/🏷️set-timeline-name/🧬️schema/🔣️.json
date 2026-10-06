@@ -15,7 +15,22 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Timeline",
+          "de": "Zeitleiste"
+        },
+        "description": {
+          "en": "Index of the timeline, counted from 0.",
+          "de": "Index der Zeitleiste, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "name": {
       "anyOf": [
@@ -25,7 +40,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "description": {
+          "en": "Display name of the timeline; cleared, it has none.",
+          "de": "Anzeigename der Zeitleiste; geleert hat sie keinen."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

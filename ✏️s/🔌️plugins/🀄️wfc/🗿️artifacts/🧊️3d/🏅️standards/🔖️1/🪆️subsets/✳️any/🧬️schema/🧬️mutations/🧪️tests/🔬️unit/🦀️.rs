@@ -158,7 +158,7 @@ fn a_duplicate_id_is_fatal() {
 }
 //#endregion 🔖️Laws
 
-//#region 🏭️FixtureGenerator
+//#region 🏭️EvidenceGenerator
 /// 🏭️ Writes every case's committed quintet from the SAME table the laws above read. Ignored by
 /// default: it authors files, it does not assert. Run with
 /// `cargo test -p semio-s-artifact-wfc-3d --lib -- --ignored regenerate_committed_fixture_quintets`.
@@ -193,4 +193,4 @@ fn regenerate_committed_fixture_quintets() {
         std::fs::write(directory.join("🎯️outcome/🔣️.json"), outcome).expect("write outcome");
     }
 }
-//#endregion 🏭️FixtureGenerator
+//#endregion 🏭️EvidenceGenerator

@@ -1060,3 +1060,139 @@ export function runInterfaceImportCensus(repoRoot: string, signal: AbortSignal, 
 }
 //#endregion 🧮️SourceCensus
 
+//#region 🪢️ArtifactNeutrality
+/** 🧽️ `text` with every doc comment blanked — each character but a line break becomes a space, so lines and columns hold: a Rust
+ * `///` or `//!` line comment, and a `/** … *\/` block (in Rust also `/*! … *\/`). `////`, `/***` and `/**\/` are plain comments
+ * and stay, as every plain comment does. String literals are honoured: a doc-comment opener inside a quoted, raw or template
+ * string is text. */
+export function sourceWithoutDocComments(path: string, text: string): string {
+  const rust = path.endsWith(".rs");
+  const blank = (from: number, to: number): string => text.slice(from, to).replace(/[^\n]/gu, " ");
+  let out = "";
+  let index = 0;
+  while (index < text.length) {
+    const char = text[index]!;
+    let end = index + 1;
+    let kept = true;
+    if (char === "/" && text[index + 1] === "/") {
+      const stop = text.indexOf("\n", index);
+      end = stop < 0 ? text.length : stop;
+      kept = !(rust && /^\/\/[/!](?!\/)/u.test(text.slice(index, index + 4)));
+    } else if (char === "/" && text[index + 1] === "*") {
+      const close = text.indexOf("*/", index + 2);
+      end = close < 0 ? text.length : close + 2;
+      kept = !((text[index + 2] === "*" && text[index + 3] !== "*" && text[index + 3] !== "/") || (rust && text[index + 2] === "!"));
+    } else if (rust && char === "r" && /^r#*"/u.test(text.slice(index, index + 34)) && !/[\p{L}\p{N}_]/u.test(text[index - 1] ?? "")) {
+      const hashes = /^r(#*)"/u.exec(text.slice(index, index + 34))![1]!;
+      const close = text.indexOf(`"${hashes}`, index + hashes.length + 2);
+      end = close < 0 ? text.length : close + hashes.length + 1;
+    } else if (char === '"' || (!rust && (char === "'" || char === "`"))) {
+      while (end < text.length && text[end] !== char && (rust || char === "`" || text[end] !== "\n")) end += text[end] === "\\" ? 2 : 1;
+      end = Math.min(end + 1, text.length);
+    } else if (rust && char === "'") {
+      end = index + (/^'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]{1,6}\}|.)|[^\\'\n])'/u.exec(text.slice(index, index + 12))?.[0].length ?? 1);
+    }
+    out += kept ? text.slice(index, end) : blank(index, end);
+    index = end;
+  }
+  return out;
+}
+
+/** 🕵️ The artifact names no framework code may carry (design §22.31): the framework is artifact-neutral, an artifact's facts
+ * reach it as declarations. Matched case-insensitively anywhere in a word (`Puzzle2dHost`, `PUZZLE2D_EVENTS`, `"vortex"`). */
+export const FRAMEWORK_ARTIFACT_NAMES: readonly string[] = ["puzzle", "vortex"];
+
+/** 🪢️ One line of framework code that carries an artifact name outside a doc comment. */
+export type ArtifactNameHit = Readonly<{ path: string; line: number; name: string; text: string }>;
+
+/** 🧲️ Every line of one source that carries one of `names` outside its doc comments ({@link sourceWithoutDocComments}) —
+ * identifiers, string literals and plain comments all count — with the first name found on it. */
+export function artifactNameHitsOfText(path: string, text: string, names: readonly string[] = FRAMEWORK_ARTIFACT_NAMES): ArtifactNameHit[] {
+  const pattern = new RegExp(names.join("|"), "iu");
+  const raw = text.split("\n");
+  return sourceWithoutDocComments(path, text).split("\n").flatMap((line, index) => {
+    const found = pattern.exec(line);
+    return found === null ? [] : [{ path, line: index + 1, name: found[0].toLowerCase(), text: raw[index]!.trim().slice(0, 160) }];
+  });
+}
+
+/** 🚪️ The census's own rule vocabulary — this module names the words it looks for. */
+export const ARTIFACT_NAME_CENSUS_EXEMPT: readonly string[] = ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts"];
+
+const ARTIFACT_NAME_SCOPE_EXCLUDED = /(^|\/)(🧪️tests|tests|🧫️fixtures|benches|examples|🔮️oracles|🤖️generated|🗑️generated)\/|\.(test|spec)\.tsx?$/u;
+
+/** 🧹️ The artifact-neutrality census (design §22.31 c) over every tracked Rust / TypeScript source under `🧰️framework/` outside
+ * tests, fixtures, oracles, generated trees, declaration files and {@link ARTIFACT_NAME_CENSUS_EXEMPT}: every line that names an
+ * artifact outside a doc comment. Cross-checked file by file against `git grep -c -i` (the oracle counts every line carrying a
+ * name, doc comments included): the scanner never finds more lines in a file than the oracle, and never a file it does not list. */
+export function runArtifactNameCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const scope = ["--", "🧰️framework/*.rs", "🧰️framework/*.ts", "🧰️framework/*.tsx", ":!*.d.ts", ...ARTIFACT_NAME_CENSUS_EXEMPT.map((path) => `:!${path}`)];
+  const counted = spawnSync("git", ["grep", "-c", "-I", "-i", "-E", FRAMEWORK_ARTIFACT_NAMES.join("|"), ...scope], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const oracle = new Map(counted.stdout.split("\n").filter(Boolean).map((row) => [row.slice(0, row.lastIndexOf(":")).replace(/^"|"$/gu, ""), Number(row.slice(row.lastIndexOf(":") + 1))] as const).filter(([path]) => !ARTIFACT_NAME_SCOPE_EXCLUDED.test(path)));
+  const hits: ArtifactNameHit[] = [];
+  const disagreements: string[] = [];
+  for (const [index, [path, lines]] of [...oracle].entries()) {
+    if (signal.aborted) throw new Error("artifact-name census cancelled");
+    if (index % 200 === 0) onProgress(`${index}/${oracle.size} naming sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    const found = artifactNameHitsOfText(path, text);
+    if (found.length > lines) disagreements.push(`${path}: scanner ${found.length} > git grep ${lines}`);
+    hits.push(...found);
+  }
+  onProgress(`${oracle.size}/${oracle.size} naming sources scanned`);
+  return { files: oracle.size, hits, disagreements };
+}
+
+/** 🛠️ The machine vocabulary of the framework tool-machine module (`🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs`): the traits a
+ * tool implements to be a machine and the drivers that run one inside a transaction (design §22.32). */
+export const TOOL_MACHINE_VOCABULARY: readonly string[] = ["ToolMachine", "ToolMachineRunner", "GestureTool", "GestureChart", "drive_gesture", "drive_press"];
+
+/** 🧰️ One artifact that declares utilities: its tree (`✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>`), how often its code names
+ * `UtilityDefinition`, and the machine vocabulary its code uses. */
+export type UtilityArtifact = Readonly<{ artifact: string; utilities: number; machine: readonly string[] }>;
+
+/** 🎻️ Every artifact among `sources` whose production code (outside test paths and doc comments) names `UtilityDefinition`, with the
+ * {@link TOOL_MACHINE_VOCABULARY} words — whole identifiers — its production code uses; an artifact with utilities and no machine
+ * word runs its tools outside the transactional state machines (design §22.32 d). By artifact path. */
+export function utilityArtifactsOfSources(sources: readonly Readonly<{ path: string; text: string }>[]): UtilityArtifact[] {
+  const found = new Map<string, { utilities: number; machine: Set<string> }>();
+  const word = (name: string): RegExp => new RegExp(`(?<![A-Za-z0-9_])${name}(?![A-Za-z0-9_])`, "gu");
+  for (const { path, text } of sources) {
+    const segments = path.split("/");
+    const at = segments.indexOf("🗿️artifacts");
+    if (at < 0 || at + 2 >= segments.length || TEST_SEGMENT.test(path)) continue;
+    const artifact = segments.slice(0, at + 2).join("/");
+    const row = found.get(artifact) ?? { utilities: 0, machine: new Set<string>() };
+    found.set(artifact, row);
+    const code = sourceWithoutDocComments(path, text);
+    row.utilities += [...code.matchAll(word("UtilityDefinition"))].length;
+    for (const name of TOOL_MACHINE_VOCABULARY) if (word(name).test(code)) row.machine.add(name);
+  }
+  return [...found].filter(([, row]) => row.utilities > 0).map(([artifact, row]) => ({ artifact, utilities: row.utilities, machine: [...row.machine].sort() })).sort((left, right) => left.artifact.localeCompare(right.artifact));
+}
+
+/** 🗃️ The utility-machine census (design §22.32 d) over every tracked plugin Rust source that names `UtilityDefinition` or a
+ * {@link TOOL_MACHINE_VOCABULARY} word: every artifact with utilities, and among them the offenders without machine vocabulary. */
+export function runUtilityMachineCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const listed = spawnSync("git", ["grep", "-l", "-z", "-I", "-E", ["UtilityDefinition", ...TOOL_MACHINE_VOCABULARY].join("|"), "--", "✏️s/🔌️plugins/*.rs"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  const paths = listed.stdout.split("\0").filter(Boolean);
+  const sources: { path: string; text: string }[] = [];
+  for (const [index, path] of paths.entries()) {
+    if (signal.aborted) throw new Error("utility-machine census cancelled");
+    if (index % 200 === 0) onProgress(`${index}/${paths.length} tool sources read`);
+    try {
+      sources.push({ path, text: readFileSync(join(repoRoot, path), "utf8") });
+    } catch {
+      continue;
+    }
+  }
+  const artifacts = utilityArtifactsOfSources(sources);
+  onProgress(`${paths.length}/${paths.length} tool sources read`);
+  return { files: paths.length, artifacts, offenders: artifacts.filter((artifact) => artifact.machine.length === 0) };
+}
+//#endregion 🪢️ArtifactNeutrality

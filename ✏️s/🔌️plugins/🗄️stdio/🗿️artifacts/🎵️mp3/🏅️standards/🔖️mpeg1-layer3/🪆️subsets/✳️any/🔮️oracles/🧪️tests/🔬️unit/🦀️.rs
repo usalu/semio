@@ -5,7 +5,7 @@ use super::*;
 /// derived once from the repository's own real camera-captured video and encoded by `lame`, a
 /// real third-party encoder. Provenance and the exact derivation command are in the case's
 /// feature description and in the ticket's `mp3-fixture-derive/🐍️derive-real-mp3-fixture.py`.
-/// The gherkin case reads the same file through `ctx.copy_fixture`.
+/// The gherkin case reads the same file through `ctx.copy_input`.
 fn fixture() -> Vec<u8> {
     include_bytes!("../../../🧫️fixtures/🔊️.mp3").to_vec()
 }

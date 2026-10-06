@@ -612,7 +612,6 @@
     ],
     "dependencyOutput": "**/🎮️playgrounds/🟦️.ts"
   },
-  "$schema": "semio.framework.wgpu.boot-cache-inputs/v1",
   "refusals": [
     {
       "axis": "search",

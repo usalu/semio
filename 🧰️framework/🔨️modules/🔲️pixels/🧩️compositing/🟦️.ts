@@ -1,4 +1,5 @@
 /** 🧩️ Isolated RGBA compositing following https://www.w3.org/TR/compositing-1/. */
+import {UnitRetirement,type WorkRetirement} from "../../◻️2d/🧹️retire/🟦️.ts";
 import {validateExtent,validateImage,type PixelImage,type PixelProgress} from "../✍️editing/🟦️.ts";
 
 export type CompositeAffine = readonly [number,number,number,number,number,number];
@@ -88,11 +89,11 @@ function sourceOver(target:Float64Array,index:number,front:Rgb,alpha:number,mode
 
 /** 🧱️ Bounded tile job; input pixel and coverage buffers must remain immutable until completion. */
 export class CompositeJob {
-  private readonly commands:Command[]=[];
-  private readonly buffers:Float64Array[]=[];
+  private commands:Command[]=[];
+  private buffers:Float64Array[]=[];
   private readonly width:number;
   private readonly height:number;
-  private readonly origin:readonly[number,number];
+  private origin:readonly[number,number]|null;
   private readonly count:number;
   private readonly total:number;
   private pixels:Uint8Array|null;
@@ -100,7 +101,7 @@ export class CompositeJob {
   private command=0;
   private offset=0;
   private completed=0;
-  private aborted=false;
+  private aborted=false;private transferred=false;private outputExposed=false;
 
   constructor(input:CompositeInput){
     this.count=validateExtent(input.width,input.height);this.width=input.width;this.height=input.height;
@@ -152,7 +153,7 @@ export class CompositeJob {
     if(!Number.isInteger(budget)||budget<1||budget>1048576)invalid("Compositing grant must be between 1 and 1048576");
     while(budget-->0&&this.tile<this.count){
       const command=this.commands[this.command]!,p=this.tile+this.offset,index=this.offset*4;
-      const x=this.origin[0]+p%this.width+0.5,y=this.origin[1]+Math.floor(p/this.width)+0.5,target=this.buffers[command.depth]!;
+      const x=this.origin![0]+p%this.width+0.5,y=this.origin![1]+Math.floor(p/this.width)+0.5,target=this.buffers[command.depth]!;
       if(command.kind==="begin")target.fill(0,index,index+4);
       else if(command.kind==="commit"){
         for(let c=0;c<4;c++)this.pixels![p*4+c]=Math.round(clamp(target[index+c]!)*255);
@@ -178,11 +179,23 @@ export class CompositeJob {
   }
 
   progress():PixelProgress {return {completed:this.completed,total:this.total,done:this.completed===this.total};}
-  cancel():void {this.aborted=true;this.pixels=null;this.buffers.length=0;this.commands.length=0;}
+  cancel():void {this.aborted=true;if(this.outputExposed)this.pixels=null;}
   result():PixelImage {
     if(this.aborted)cancelled();
     if(this.completed!==this.total)throw new Error("Compositing is incomplete");
-    return {width:this.width,height:this.height,pixels:this.pixels!};
+    this.outputExposed=true;return {width:this.width,height:this.height,pixels:this.pixels!};
+  }
+  intoRetirement():{job:WorkRetirement;output:PixelImage|null}{
+    if(this.transferred)throw Error("Compositor owner already transferred");this.transferred=true;
+    const output=!this.aborted&&this.completed===this.total?{width:this.width,height:this.height,pixels:this.pixels!}:null;
+    if(output)this.pixels=null;this.aborted=true;let slot=0;
+    const job=new UnitRetirement(()=>{
+      if(slot===0){if(this.commands.length){this.commands.pop();return false;}this.commands=[];}
+      else if(slot===1){if(this.buffers.length){this.buffers.pop();return false;}this.buffers=[];}
+      else if(slot===2)this.pixels=null;
+      else this.origin=null;
+      slot++;return slot===4;
+    });return{job,output};
   }
 }
 
@@ -198,5 +211,5 @@ export async function compositeImage(input:CompositeInput,options:CompositeOptio
       if(progress.done)return job.result();
       await new Promise<void>(resolve=>setTimeout(resolve,0));
     }
-  }catch(error){job.cancel();throw error;}
+  }catch(error){job.cancel();throw error;}finally{const retired=job.intoRetirement().job,grant=Number.isSafeInteger(options.chunkPixels)&&options.chunkPixels!>0?options.chunkPixels!:65536;while(!retired.terminalIsEmpty()){retired.advance(grant);if(!retired.terminalIsEmpty())await new Promise<void>(resolve=>setTimeout(resolve,0));}}
 }

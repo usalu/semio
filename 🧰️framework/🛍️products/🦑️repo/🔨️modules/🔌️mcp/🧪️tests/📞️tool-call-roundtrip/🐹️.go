@@ -23,7 +23,7 @@ type callVector struct {
 
 // 🧫️vectors reads the golden call vectors the whole case is stated against.
 func vectors(ctx *host.Context) ([]callVector, error) {
-	raw, err := ctx.FixtureBytes("shared://2️⃣g2-contract.json")
+	raw, err := ctx.InputBytes("shared://2️⃣g2-contract.json")
 	if err != nil {
 		return nil, err
 	}

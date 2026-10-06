@@ -214,7 +214,7 @@ impl ArtifactEditor for Ifc2x3SavEditor {
             return Ok(None);
         }
         if ifc2x3SavEditor_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-example-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,
@@ -253,7 +253,7 @@ impl ArtifactEditor for Ifc2x3SavEditor {
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { ifc2x3SavEditor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Ifc2x3Snapshot {
-        Ifc2x3Snapshot::default()
+        <crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction::new()).expect("valid authored IFC2x3 sav initial owner")
     }
 
     fn handle(

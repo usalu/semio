@@ -74,135 +74,13 @@ pub fn semio_presentation_artifact_schema_descriptor() -> semio_framework_schema
     }
 }
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::standards::v1::subsets::presentation::schema::diff::SemioPresentationDiff;
-    #[cfg(test)]
-    use crate::standards::v1::subsets::presentation::schema::mutations::insert_master;
-    use crate::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
-    use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct SemioPresentationBuilderConstruction {
-        snapshot: SemioPresentationSnapshot,
-    }
-
-    impl ArtifactBuilder for SemioPresentationBuilderConstruction {
-        type Snapshot = SemioPresentationSnapshot;
-        type Mutation = SemioPresentationMutation;
-        type Diff = SemioPresentationDiff;
-        fn empty() -> Self {
-            Self { snapshot: SemioPresentationSnapshot::default() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_semio_presentation_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <SemioPresentationDiff as protocol::MutationDiff<SemioPresentationSnapshot>>::apply(&diff, &self.snapshot)?;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            Ok(self.snapshot)
-        }
-    }
-
-    //#region 🧪️Tests
-    #[cfg(test)]
-    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
-    //#endregion 🧪️Tests
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct SemioPresentationParts {
-        pub snapshot: Option<SemioPresentationSnapshot>,
-    }
-
-    pub struct SemioPresentationAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for SemioPresentationAnalyzerAnalysis {
-        type Parts = SemioPresentationParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
-
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            match source {
-                AnalyzeSource::Binary(bytes) => {
-                    let marker = STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA.as_bytes();
-                    if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
-                        IoConfidence::High
-                    } else {
-                        IoConfidence::Low
-                    }
-                }
-                AnalyzeSource::Text(text) => {
-                    if text.contains(STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA) {
-                        IoConfidence::High
-                    } else {
-                        IoConfidence::Low
-                    }
-                }
-            }
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = SemioPresentationParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-
-    //#region 🧪️Tests
-    #[cfg(test)]
-    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
-    //#endregion 🧪️Tests
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec SemioPresentationBuilderFacets {
-        construction: SemioPresentationBuilderConstruction,
-        analysis: SemioPresentationAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::SemioPresentationComposerComposition,
-    }
-    builder: SemioPresentationBuilder,
-    analyzer: SemioPresentationAnalyzer,
-    composer: SemioPresentationComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets

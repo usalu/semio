@@ -9,10 +9,18 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets, IndexAdded, IndexModified, NamedModified};
-use crate::standards::v1::subsets::image::schema::diff::{
-    dec_colorspace, dec_frame, dec_metadata_entry, decode_option, diff_set_snapshot, enc_colorspace, enc_frame, enc_metadata_entry, encode_option, SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff,
-};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
+
+
+use crate::standards::v1::subsets::image::schema::diff::{diff_set_snapshot, SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
+
+
+
+
+
+
+
+
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioImageMutation` below calls
@@ -177,132 +185,18 @@ pub(crate) fn agg_inverse(this: &SemioImageMutation, base: &SemioImageSnapshot) 
 //#endregion 🔖️MutationTrait
 
 //#region 🔖️OpCodecs
-/// 🎙️ Hand-rolled `OpText`/`OpBinary` — same reasoning as `SemioImageDiff`'s hand-rolled
-/// `DiffCodec` (see that module's doc comment): `SetIcc`'s `Option<Vec<u8>>` payload is the same
-/// bare-`Option` shape the `dsl` derive machinery cannot bind, and per this ticket's own
-/// instruction ("hand-roll all diff/op codecs — do not fight the derive"), every variant is
-/// handcrafted rather than mixed derive/hand-roll. One space-free token per op: `tag` then `:`
-/// then comma-separated positional fields (bracket-depth-aware, reusing the shared
-/// `engine::triples` split/strip helpers so a nested `[...]` payload — e.g. `SetSnapshot`'s whole
-/// snapshot — never confuses the top-level split).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_snapshot(s: &SemioImageSnapshot) -> String {
-    let frames = s.frames.iter().map(enc_frame).collect::<Vec<_>>().join(",");
-    let metadata = s.metadata.iter().map(enc_metadata_entry).collect::<Vec<_>>().join(",");
-    format!("[{},{},{},{},{},[{}],[{}]]", s.width, s.height, enc_colorspace(s.colorspace), s.bit_depth, encode_option(&s.icc, |b| b.iter().map(|x| format!("{x:02x}")).collect::<String>()), frames, metadata,)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_snapshot(s: &str) -> Result<SemioImageSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [width, height, colorspace, bit_depth, icc, frames, metadata] = parts.as_slice() else {
-        return Err(format!("snapshot: expected 7 fields, got {}", parts.len()));
-    };
-    let frames = split_top_level(strip_brackets(frames)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_frame).collect::<Result<Vec<_>, String>>()?;
-    let metadata = split_top_level(strip_brackets(metadata)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_metadata_entry).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioImageSnapshot {
-        schema: crate::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
-        width: width.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        height: height.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        colorspace: dec_colorspace(colorspace)?,
-        bit_depth: bit_depth.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        icc: decode_option(icc, |h| (0..h.len()).step_by(2).map(|i| u8::from_str_radix(&h[i..i + 2], 16).map_err(|e| e.to_string())).collect())?,
-        frames,
-        metadata,
-    })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_bytes(b: &[u8]) -> String {
-    b.iter().map(|x| format!("{x:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_str(s: &str) -> String {
-    s.bytes().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(dec_bytes(s)?).map_err(|e| e.to_string())
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_image_mutation(m: &SemioImageMutation) -> String {
-    match m {
-        SemioImageMutation::PatchSnapshot(payload) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(&payload.patch),
-        SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("setSnapshot:{}", enc_snapshot(snapshot)),
-        SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }) => format!("setDimensions:{width},{height}"),
-        SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace }) => format!("setColorspace:{}", enc_colorspace(*colorspace)),
-        SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth }) => format!("setBitDepth:{bit_depth}"),
-        SemioImageMutation::SetIcc(set_icc::SetIcc { icc }) => format!("setIcc:{}", encode_option(icc, |b| enc_bytes(b))),
-        SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) => format!("insertFrame:{index},{}", enc_frame(frame)),
-        SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index }) => format!("removeFrame:{index}"),
-        SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }) => format!("moveFrame:{from},{to}"),
-        SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index, delay_ms }) => format!("setFrameDelay:{index},{delay_ms}"),
-        SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index, rgba8 }) => format!("setFramePixels:{index},{}", enc_bytes(rgba8)),
-        SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value }) => format!("setMetadataEntry:{},{}", enc_str(key), enc_str(value)),
-        SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }) => format!("removeMetadataEntry:{}", enc_str(key)),
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioImageMutation::PatchSnapshot(crate::standards::v1::subsets::image::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
-    let (tag, rest) = line.split_once(':').ok_or_else(|| format!("mutation: missing tag separator in {line:?}"))?;
-    match tag {
-        "setSnapshot" => Ok(SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(rest)? })),
-        "setDimensions" => {
-            let parts = split_top_level(rest, ',');
-            let [w, h] = parts.as_slice() else { return Err(format!("setDimensions: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: w.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, height: h.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }))
-        }
-        "setColorspace" => Ok(SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace: dec_colorspace(rest)? })),
-        "setBitDepth" => Ok(SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth: rest.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })),
-        "setIcc" => Ok(SemioImageMutation::SetIcc(set_icc::SetIcc { icc: decode_option(rest, dec_bytes)? })),
-        "insertFrame" => {
-            let (idx, frame) = rest.split_once(',').ok_or_else(|| "insertFrame: missing comma".to_string())?;
-            Ok(SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, frame: dec_frame(frame)? }))
-        }
-        "removeFrame" => Ok(SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index: rest.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })),
-        "moveFrame" => {
-            let parts = split_top_level(rest, ',');
-            let [from, to] = parts.as_slice() else { return Err(format!("moveFrame: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioImageMutation::MoveFrame(move_frame::MoveFrame { from: from.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, to: to.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }))
-        }
-        "setFrameDelay" => {
-            let parts = split_top_level(rest, ',');
-            let [idx, delay] = parts.as_slice() else { return Err(format!("setFrameDelay: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, delay_ms: delay.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }))
-        }
-        "setFramePixels" => {
-            let (idx, rgba) = rest.split_once(',').ok_or_else(|| "setFramePixels: missing comma".to_string())?;
-            Ok(SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, rgba8: dec_bytes(rgba)? }))
-        }
-        "setMetadataEntry" => {
-            let parts = split_top_level(rest, ',');
-            let [key, value] = parts.as_slice() else { return Err(format!("setMetadataEntry: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: dec_str(key)?, value: dec_str(value)? }))
-        }
-        "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key: dec_str(rest)? })),
-        other => Err(format!("mutation: unknown tag {other:?}")),
-    }
-}
 
-impl OpText for SemioImageMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_image_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        print_image_mutation(self)
-    }
-}
+
+
+
+
+
+
+
+
+
 
 /// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
 const TEXT_KEYWORDS: [(&str, &str); 12] = [
@@ -319,88 +213,12 @@ const TEXT_KEYWORDS: [(&str, &str); 12] = [
     ("set-metadata-entry", "setMetadataEntry"),
     ("remove-metadata-entry", "removeMetadataEntry"),
 ];
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `SemioImageMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
-const TAG_SET_DIMENSIONS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-dimensions");
-const TAG_SET_COLORSPACE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-colorspace");
-const TAG_SET_BIT_DEPTH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-bit-depth");
-const TAG_SET_ICC: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-icc");
-const TAG_INSERT_FRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-frame");
-const TAG_REMOVE_FRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-frame");
-const TAG_MOVE_FRAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-frame");
-const TAG_SET_FRAME_DELAY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-frame-delay");
-const TAG_SET_FRAME_PIXELS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-frame-pixels");
-const TAG_SET_METADATA_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-metadata-entry");
-const TAG_REMOVE_METADATA_ENTRY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-metadata-entry");
-//#endregion 🏷️WireTags
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn wire_tag(m: &SemioImageMutation) -> u8 {
-    match m {
-        SemioImageMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioImageMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
-        SemioImageMutation::SetDimensions(_) => TAG_SET_DIMENSIONS,
-        SemioImageMutation::SetColorspace(_) => TAG_SET_COLORSPACE,
-        SemioImageMutation::SetBitDepth(_) => TAG_SET_BIT_DEPTH,
-        SemioImageMutation::SetIcc(_) => TAG_SET_ICC,
-        SemioImageMutation::InsertFrame(_) => TAG_INSERT_FRAME,
-        SemioImageMutation::RemoveFrame(_) => TAG_REMOVE_FRAME,
-        SemioImageMutation::MoveFrame(_) => TAG_MOVE_FRAME,
-        SemioImageMutation::SetFrameDelay(_) => TAG_SET_FRAME_DELAY,
-        SemioImageMutation::SetFramePixels(_) => TAG_SET_FRAME_PIXELS,
-        SemioImageMutation::SetMetadataEntry(_) => TAG_SET_METADATA_ENTRY,
-        SemioImageMutation::RemoveMetadataEntry(_) => TAG_REMOVE_METADATA_ENTRY,
-    }
-}
-/// ✂️ Just the argument tail of `print_image_mutation` — the binary frame's `tag` byte already
-/// carries the keyword, so the text keyword itself (and its `:` separator) is redundant in the
-/// binary payload.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_image_mutation_args(m: &SemioImageMutation) -> String {
-    match print_image_mutation(m).split_once(':') {
-        Some((_, rest)) => rest.to_string(),
-        None => String::new(),
-    }
-}
 
-/// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut.
-/// `format u8` (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two REAL fixed fields; the variant's own argument payload follows as one
-/// opaque trailing `bytes` chain — reuses the already-real, already-tested `print_image_mutation`/
-/// `parse_image_mutation` text codec rather than re-deriving a second independent encoding.
-impl protocol::OpBinary for SemioImageMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
-        out.extend_from_slice(print_image_mutation_args(self).as_bytes());
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        if bytes.len() < 2 {
-            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
-        }
-        if bytes[0] != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
-        }
-        if bytes[1] == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::image::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
-        }
-        let tag = bytes[1];
-        let kind = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
-        let keyword = TEXT_KEYWORDS.iter().find(|(record, _)| *record == kind).map(|(_, keyword)| *keyword).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("record {kind} has no text keyword") })?;
-        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
-        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword}:{args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
-    }
-}
+
+
+
+
 //#endregion 🔖️OpCodecs
 
 //#region 🔖️Demo

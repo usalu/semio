@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-06T01:58:16.112Z",
+  "session": 76215,
+  "terminal": false,
+  "owners": [
+    {
+      "project": "@semio-tech/norm-en1995-rs",
+      "pass": 29,
+      "fail": 0,
+      "markers": [
+        "@semio-tech/norm-en1995-rs:  29 pass",
+        "@semio-tech/norm-en1995-rs:  0 fail",
+        "@semio-tech/norm-en1995-rs:  155 expect() calls",
+        "@semio-tech/norm-en1995-rs: Ran 29 tests across 1 file. [21.05s]"
+      ]
+    }
+  ],
+  "scope": "Actual entered EN1995 repaired original namespace law; remaining four unentered here"
+}

@@ -22,6 +22,6 @@ pub fn diff(payload: &super::CreateConstantSchedule, base: &EnergyModelSnapshot)
     }
     let mut model = base.model.clone();
     model.schedules.constants.insert(payload.index as usize, crate::schedule::ConstantSchedule { id: payload.id, value: payload.value });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

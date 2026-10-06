@@ -32,6 +32,7 @@ const GRID_LINE_BEHIND_SPACING: f64 = 0.35;
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SOURCING_CURATION_WINDOW_GRID.into(),
         label: LocalizedLabel::native("Grid", "Raster"),
         body_key: SOURCING_CURATION_BODY_GRID.into(),

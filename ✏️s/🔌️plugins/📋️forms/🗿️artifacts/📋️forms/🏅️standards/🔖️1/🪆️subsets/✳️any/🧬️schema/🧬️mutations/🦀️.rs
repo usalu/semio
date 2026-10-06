@@ -102,42 +102,12 @@ pub fn inverse_form_mutation_steps(mutation: &FormMutation, base: &FormsSnapshot
     })
 }
 
-/// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
-/// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
-// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
-pub fn decode_form_mutation_json(text: &str) -> Result<FormMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.into_message())
-}
 
-/// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
-// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
-pub fn decode_form_snapshot_json(text: &str) -> Result<FormsSnapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.into_message())
-}
 
-/// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
-/// projection an external test host compares through.
-// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
-pub fn encode_form_snapshot_json(snapshot: &FormsSnapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
-/// 🌱 Seeds the working-scene cache behind this snapshot's composed `s.stdio.semio.value` `structure` child handle from a committed
-/// `[FormStep]` JSON document, and hands back what it decoded.
-///
-/// This subset's persisted snapshot holds only the child HANDLE; the live rows behind it are an
-/// ephemeral, session-side scene that a fresh process has never populated. A committed
-/// `📸️snapshot/⬅️before/🔣️.json` vector is therefore only HALF of a before-state, and the
-/// other half lives today in each leaf's own `🧪️tests/<fixture>/🦀️.rs` as a Rust literal.
-/// An external conformance host cannot reach that, so this bridge lets the scene half travel as
-/// DATA — the exhaustive `🌵️mutate-forms-1` case carries it in its own `Examples` table, with the leaf
-/// it was read from cited there. The right long-term fix is to commit the scene beside the snapshot
-/// as a fixture file of its own; until then this is the seam that makes the vectors runnable.
-// 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-pub fn seed_form_scene_json(snapshot: &mut FormsSnapshot, steps_json: &str) -> Result<Vec<crate::FormStep>, String> {
-    let steps: Vec<crate::FormStep> = semio_framework_pack_json::from_json_str(steps_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.into_message())?;
-    crate::replace_forms_steps(snapshot, steps.clone());
-    Ok(steps)
-}
+
+
+
+
 //#endregion 🔖️Kinds
 
 //#region 🧪️KindsCatalog

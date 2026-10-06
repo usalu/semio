@@ -6,7 +6,7 @@ use super::set_active_example;
 /// a committed example whose content child id drifts from that one loads as `InvalidReference`.
 #[semio_framework_async_macros::async_test]
 async fn committed_example_carries_the_genesis_content_child() {
-    let document = crate::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("committed example parses");
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("committed example parses");
     let genesis = neural_engine::ColdOwner::new(crate::snapshot::schema::default_snapshot());
     assert_eq!(document.content.child_id, genesis.content.child_id);
     assert_eq!(document.content.child_id, document.content.target.artifact_id);

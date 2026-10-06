@@ -1,119 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/type/fixture.json",
-  "type": "object",
-  "properties": {
-    "schemaVersion": {
-      "const": 1
-    },
-    "types": {
-      "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "type": {
-            "$ref": "#/$defs/valueType"
-          }
-        },
-        "required": [
-          "id",
-          "type"
-        ],
-        "additionalProperties": false
-      }
-    },
-    "kinds": {
-      "type": "array",
-      "minItems": 9,
-      "maxItems": 9,
-      "items": {
-        "$ref": "#/$defs/valueKind"
-      }
-    },
-    "cases": {
-      "type": "array",
-      "minItems": 63,
-      "maxItems": 63,
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "type": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 6
-          },
-          "kind": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 8
-          },
-          "accepted": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "name",
-          "type",
-          "kind",
-          "accepted"
-        ],
-        "additionalProperties": false
-      }
-    },
-    "wire": {
-      "type": "array",
-      "minItems": 8,
-      "items": {
-        "$ref": "#/$defs/valueType"
-      }
-    },
-    "refused": {
-      "type": "array",
-      "minItems": 10
-    },
-    "nativeControls": {
-      "type": "object",
-      "properties": {
-        "depth": {
-          "const": 300
-        },
-        "longSchema": {
-          "const": "引用😀"
-        },
-        "repeat": {
-          "const": 20000
-        },
-        "cancelAt": {
-          "const": 256
-        }
-      },
-      "required": [
-        "depth",
-        "longSchema",
-        "repeat",
-        "cancelAt"
-      ],
-      "additionalProperties": false
-    }
-  },
-  "required": [
-    "schemaVersion",
-    "types",
-    "kinds",
-    "cases",
-    "wire",
-    "refused",
-    "nativeControls"
-  ],
-  "additionalProperties": false,
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/type/schema.json",
   "$defs": {
     "valueType": {
       "oneOf": [
@@ -206,5 +93,6 @@
         }
       ]
     }
-  }
+  },
+  "$ref": "#/$defs/valueType"
 }

@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeDaylightZoneIlluminanceTarget, base: &EnergyM
     if let Some(item) = model.daylight_zones.iter_mut().find(|item| item.id == payload.id) {
         item.illuminance_target_lux = payload.new_illuminance_target_lux;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

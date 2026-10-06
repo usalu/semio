@@ -103,7 +103,7 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     let mut source = Box::pin(store::ArtifactStore::new(genesis)).await.expect("source store");
     source.install_document_store_owners_exact(bounded_document_store_owners::<TestSnapshot, ReloadCountedOp>());
     for value in 1..=240 {
-        Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![ReloadCountedOp(TestMutation::SetCount(SetCount { value }))], description: None, transaction: None })).await.expect("source edit");
+        Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![ReloadCountedOp(TestMutation::SetCount(SetCount { value }))], transaction: None })).await.expect("source edit");
     }
     let first = source.mutation_ops().expect("source operations")[0].mutation_id.clone();
     let inputs = vec![store::SupersedeInput { target: first, replacement: Some(ReloadCountedOp(TestMutation::SetCount(SetCount { value: 1000 }))) }];

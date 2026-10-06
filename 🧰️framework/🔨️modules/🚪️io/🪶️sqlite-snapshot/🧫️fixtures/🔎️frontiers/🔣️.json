@@ -19,5 +19,6 @@
   "tableCount": 257,
   "tableFrontier": 256,
   "indexPhase": "indexTables",
-  "refusal": "canceled"
+  "refusal": "canceled",
+  "referenceSpacing": "  "
 }

@@ -1,0 +1,1876 @@
+{
+  "checkedAt": "2026-10-06T00:57:03.978Z",
+  "owners": [
+    {
+      "name": "🪵️en1995",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "961229c8b41a766b709531602064e6aed20e6c191ceb92c9d3c167d63d07c970",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "e41e1054522b49d4e7f9b71b416da5b67b0598eb5219407fc229d72e1abe7e8b",
+          "registrationLines": [
+            {
+              "line": 83,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 84,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 87,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 88,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "0b3cb4834e01be0e56d3aa64b98d4bc0f7f970a540b45f6853175b231ad69834",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_en1995_owned_native_decoder_controls_both_physical_payloads",
+            "sqlite_snapshot_en1995_actual_bare_factory_exposes_owned_relational_capability",
+            "sqlite_snapshot_en1995_all_neutral_fields_agree_with_serde_and_empty_domains",
+            "sqlite_snapshot_en1995_native_unsigned_widths_and_all_choices_agree_with_serde",
+            "sqlite_snapshot_en1995_every_numeric_domain_preserves_all_neutral_binary64_words",
+            "sqlite_snapshot_en1995_independent_sqlite_joins_and_domain_edits",
+            "sqlite_snapshot_en1995_refuses_malformed_choices_widths_booleans_ordinals_parents_and_words",
+            "sqlite_snapshot_en1995_initial_and_nested_operations_support_cancellation_and_native_admission",
+            "sqlite_snapshot_en1995_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+            "sqlite_snapshot_en1995_actual_erased_codec_and_declaration_preserve_all_owned_words",
+            "sqlite_snapshot_en1995_genuine_output_admits_exact_row_and_file_frontiers",
+            "sqlite_snapshot_en1995_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_en1995_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_en1995_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "33a558bab544f8df5908e80ae02acb313724ac5110ffea34bcb67c9a40108dc0",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "33a558bab544f8df5908e80ae02acb313724ac5110ffea34bcb67c9a40108dc0",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "🪶️en1999",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "3e24825bd3744debc3abffad201fa6edf11d9b567d8e3b9e4a63eb41ff844447",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "a27831f2b1a8935aed63460cd7293c5ff9f8232b9f4d0854475cd19f389b1b4e",
+          "registrationLines": [
+            {
+              "line": 100,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 101,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 104,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 105,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "f17e2a625e39561edd880b0310183a31b9af940fc94a200c23ac286fc23e4ac3",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_en1999_all_owned_fields_and_legal_invalid_references",
+            "sqlite_snapshot_en1999_independent_sqlite_queries_and_semantic_edit",
+            "sqlite_snapshot_en1999_malformed_ownership_flags_and_native_widths",
+            "sqlite_snapshot_en1999_all_binary64_states_preserve_native_words",
+            "sqlite_snapshot_en1999_limits_and_cancellation_precede_large_native_copies",
+            "sqlite_snapshot_en1999_actual_bare_capability_erased_encodings_and_coordinate_refusal",
+            "sqlite_snapshot_en1999_actual_declaration_typed_io_uses_no_native_encoding",
+            "sqlite_snapshot_en1999_all_sixty_four_fields_have_independent_exact_word_oracle",
+            "sqlite_snapshot_en1999_empty_annex_variants_need_exact_one_domain_row",
+            "sqlite_snapshot_en1999_scalar_query_word_class_and_annex_are_consistent",
+            "sqlite_snapshot_en1999_every_ieee_word_survives_actual_erased_native_encodings",
+            "sqlite_snapshot_en1999_controlled_native_owner_admits_physical_and_typed_state",
+            "sqlite_snapshot_en1999_controlled_output_has_exact_wire_and_real_interior_admission",
+            "sqlite_snapshot_en1999_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_en1999_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_en1999_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "391c224d49c7f250a2ba980c12590c548893a8176d6a864f36b4b395012b7bca",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "391c224d49c7f250a2ba980c12590c548893a8176d6a864f36b4b395012b7bca",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "🧱️din4108",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "b5338b58d2bb7040bfa5177745e0a98e6ea18fe903a872690863c22fa3ac4360",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "c070d22c51f11bf11fd694ca0d3a8248198f374883f8ec3c02e72a4c52c8aa6c",
+          "registrationLines": [
+            {
+              "line": 71,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 75,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 76,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "1be8c5ffb75e17ad124521f30c72e8affa61293356ecbad4da2db3b2ab3a2c4d",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_din4108_owned_native_decoder_controls_both_physical_payloads",
+            "sqlite_snapshot_din4108_actual_bare_factory_exposes_owned_relational_capability",
+            "sqlite_snapshot_din4108_all_neutral_fields_agree_with_serde_and_empty_domains",
+            "sqlite_snapshot_din4108_all_climate_choices_agree_with_independent_serde",
+            "sqlite_snapshot_din4108_every_numeric_domain_retains_every_neutral_binary64_word",
+            "sqlite_snapshot_din4108_independent_sqlite_nested_joins_and_domain_edits",
+            "sqlite_snapshot_din4108_refuses_malformed_choice_boolean_parent_ordinal_word_and_identity",
+            "sqlite_snapshot_din4108_initial_and_nested_operations_support_cancellation_and_native_admission",
+            "sqlite_snapshot_din4108_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+            "sqlite_snapshot_din4108_actual_erased_codec_and_declaration_preserve_all_owned_words",
+            "sqlite_snapshot_din4108_genuine_output_admits_exact_row_and_file_frontiers",
+            "sqlite_snapshot_din4108_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_din4108_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_din4108_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "66e59c1c9c84fdecfcb0be369215c727cd2d765362665387d7ac4ab1b611f85c",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "66e59c1c9c84fdecfcb0be369215c727cd2d765362665387d7ac4ab1b611f85c",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "🏋️en1991",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "255283391101e9ac4d55f0ee8b82d3cb89e804974d966218b9b48519859934e5",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "0c592b7799927f361d26390ed3a3dd5111a0230cb4dd467589be1a356fb783e6",
+          "registrationLines": [
+            {
+              "line": 150,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 151,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 154,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 155,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "df23410eb52ec348e6349bb3a5e3ef058858ae6c35ac65041632f55364b32168",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_en1991_actual_bare_factory_exposes_owned_relational_capability",
+            "sqlite_snapshot_en1991_owned_native_decoder_controls_both_physical_payloads",
+            "sqlite_snapshot_en1991_all_neutral_fields_and_empty_owned_domains",
+            "sqlite_snapshot_en1991_neutral_unsigned8_widths_and_choices_agree_with_serde",
+            "sqlite_snapshot_en1991_every_numeric_domain_retains_each_neutral_binary64_word",
+            "sqlite_snapshot_en1991_independent_sqlite_joins_and_full_domain_edits",
+            "sqlite_snapshot_en1991_refuses_malformed_choices_widths_relationships_and_words",
+            "sqlite_snapshot_en1991_initial_and_nested_operations_support_cancellation_and_native_admission",
+            "sqlite_snapshot_en1991_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+            "sqlite_snapshot_en1991_actual_erased_codec_and_declaration_preserve_all_owned_words",
+            "sqlite_snapshot_en1991_genuine_output_admits_exact_row_and_file_frontiers",
+            "sqlite_snapshot_en1991_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_en1991_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_en1991_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "6a3eaf7c639cf8f1e1956365d31290f6694187d05e2142b1f59c50bd054aa8c9",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "6a3eaf7c639cf8f1e1956365d31290f6694187d05e2142b1f59c50bd054aa8c9",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "⚖️en1990",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "3f5051fb0b4db8c2091f5be3af43c6066bc81854a509dfd7a92d9280d47e2633",
+          "registrationLines": [
+            {
+              "line": 35,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 75,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 89,
+              "text": "#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]"
+            },
+            {
+              "line": 90,
+              "text": "mod tests;"
+            },
+            {
+              "line": 92,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 93,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 95,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 96,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 98,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 99,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "9150036604292adb1f742dcbc9483e381db3025f149f745076371b07e4636520",
+          "registrationLines": [
+            {
+              "line": 194,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 195,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 198,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 199,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "614cb2fd260768aa275b662a39b28d0fea1a46cdd34976f20898795d5e82654c",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_en1990_actual_bare_factory_exposes_owned_relational_capability",
+            "sqlite_snapshot_en1990_owned_native_decoder_controls_both_physical_payloads",
+            "sqlite_snapshot_en1990_all_neutral_fields_and_empty_owned_domains",
+            "sqlite_snapshot_en1990_neutral_unsigned8_widths_agree_with_serde",
+            "sqlite_snapshot_en1990_every_numeric_domain_retains_each_neutral_binary64_word",
+            "sqlite_snapshot_en1990_independent_sqlite_joins_and_full_domain_edits",
+            "sqlite_snapshot_en1990_refuses_malformed_choice_coverage_and_semantic_relationships",
+            "sqlite_snapshot_en1990_initial_cancellation_and_borrowed_native_admission",
+            "sqlite_snapshot_en1990_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+            "sqlite_snapshot_en1990_actual_erased_codec_and_declaration_preserve_all_owned_words",
+            "sqlite_snapshot_en1990_genuine_output_admits_exact_row_and_file_frontiers",
+            "sqlite_snapshot_en1990_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_en1990_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_en1990_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "6ba8b39b3a86adacacb797e8217dc600ab7a27fe9b3b15ff63de48c61caf5339",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "6ba8b39b3a86adacacb797e8217dc600ab7a27fe9b3b15ff63de48c61caf5339",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "🪨️en1996",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "34a99b098ff3d2dc8ad4a02286ad321cd492ef8abd7684fc0a0158aa3fa1e20d",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "28cc1aa90b5a07db62af48b035d6507e756cf5170f45bd2b26a38a3f7827b71f",
+          "registrationLines": [
+            {
+              "line": 101,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 102,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 105,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 106,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "f3e76c9e18614adc7690aac1d4d16ffe3c2c915941eb5d03a040d6dfd69645e7",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_en1996_owned_native_decoder_controls_both_physical_payloads",
+            "sqlite_snapshot_en1996_actual_bare_factory_exposes_owned_relational_capability",
+            "sqlite_snapshot_en1996_all_neutral_fields_agree_with_serde_and_empty_domains",
+            "sqlite_snapshot_en1996_native_unsigned_widths_and_all_choices_agree_with_serde",
+            "sqlite_snapshot_en1996_every_numeric_domain_preserves_all_neutral_binary64_words",
+            "sqlite_snapshot_en1996_independent_sqlite_joins_and_domain_edits",
+            "sqlite_snapshot_en1996_refuses_malformed_choices_widths_booleans_ordinals_parents_and_words",
+            "sqlite_snapshot_en1996_initial_and_nested_operations_support_cancellation_and_native_admission",
+            "sqlite_snapshot_en1996_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+            "sqlite_snapshot_en1996_actual_erased_codec_and_declaration_preserve_all_owned_words",
+            "sqlite_snapshot_en1996_genuine_output_admits_exact_row_and_file_frontiers",
+            "sqlite_snapshot_en1996_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_en1996_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_en1996_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "d6b4830ee93bbfb673adba09c2466af6ff5b9363aa8fd4d231a6bfecae61e5d8",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "d6b4830ee93bbfb673adba09c2466af6ff5b9363aa8fd4d231a6bfecae61e5d8",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "🧩️en1994",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "e6273203411163c2b3d3da8b9eea13a98feeea5936213de05180c1cda5432ca1",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "ce518b01eaa2d2b8ced4ddcb2904aec7482586f3d4aa7485eb0510967acba05f",
+          "registrationLines": [
+            {
+              "line": 79,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 80,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 83,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 84,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "cefabccf46d86ef587cd452e416135797ce43649bff958947afdcb3ea96d74fe",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_en1994_owned_native_decoder_controls_both_physical_payloads",
+            "sqlite_snapshot_en1994_actual_bare_factory_exposes_full_owned_capability",
+            "sqlite_snapshot_en1994_neutral_complete_subject_agrees_with_serde_and_empty_domains",
+            "sqlite_snapshot_en1994_all_annex_choices_and_unsigned_studs_agree_with_independent_serde",
+            "sqlite_snapshot_en1994_every_complete_numeric_domain_retains_every_neutral_raw_word",
+            "sqlite_snapshot_en1994_independent_sqlite_queries_all_components_and_applies_semantic_edits",
+            "sqlite_snapshot_en1994_refuses_malformed_shape_width_boolean_parent_ordinal_word_and_missing_mandatory_entities",
+            "sqlite_snapshot_en1994_initial_and_nested_operations_support_cancellation_and_borrowed_native_admission",
+            "sqlite_snapshot_en1994_large_owned_text_cancels_before_projection_reconstruction_and_native_encoding_copy",
+            "sqlite_snapshot_en1994_actual_erased_codec_and_declaration_preserve_every_owned_word",
+            "sqlite_snapshot_en1994_genuine_output_admits_exact_row_and_file_frontiers",
+            "sqlite_snapshot_en1994_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_en1994_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_en1994_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "7c14476d72af504b639ceb16ee276c3d572df1f639c178208f7e942392b51d40",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "7c14476d72af504b639ceb16ee276c3d572df1f639c178208f7e942392b51d40",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "🌬️din16798",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "e7f406c059d139afe80764f08854790a458795a527f132e85011d7d6e258699a",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "78ca7bfda6030978461e35a5c18cb855d97ed3fcca8b4b4897e6c493f453ccba",
+          "registrationLines": [
+            {
+              "line": 62,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 63,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 66,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 67,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "1124c78a7e54e0354d77a0412e1971ee93e639087a0f167c368eeeb11f42a8b4",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_din16798_owned_native_decoder_controls_both_physical_payloads",
+            "sqlite_snapshot_din16798_actual_bare_factory_exposes_owned_relational_capability",
+            "sqlite_snapshot_din16798_all_neutral_fields_agree_with_serde_and_empty_domains",
+            "sqlite_snapshot_din16798_native_unsigned_widths_and_annex_agree_with_serde",
+            "sqlite_snapshot_din16798_every_numeric_domain_preserves_all_neutral_binary64_words",
+            "sqlite_snapshot_din16798_independent_sqlite_joins_and_domain_edits",
+            "sqlite_snapshot_din16798_refuses_malformed_annex_widths_ordinals_parents_and_words",
+            "sqlite_snapshot_din16798_initial_and_nested_operations_support_cancellation_and_native_admission",
+            "sqlite_snapshot_din16798_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+            "sqlite_snapshot_din16798_actual_erased_codec_and_declaration_preserve_all_owned_words",
+            "sqlite_snapshot_din16798_genuine_output_admits_exact_row_and_file_frontiers",
+            "sqlite_snapshot_din16798_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_din16798_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_din16798_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "ce1a37db83c11e06f75fc8c1db43827582e96ebf9a91ccefdf4bcec52dcf8731",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "ce1a37db83c11e06f75fc8c1db43827582e96ebf9a91ccefdf4bcec52dcf8731",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "⚡️din18599",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "bf01183599a4be68e7e323c7ef044c76cd0d18ce655f3e10163f69ee51d82e5d",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "370cff9d83f10ea287bad2b448346b86e98b0e2ae029395acb03fcfcdf91af52",
+          "registrationLines": [
+            {
+              "line": 80,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 81,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 84,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 85,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "c4f0feeb458ba9dc3d6a57966409e268ad286e4bef87fe5d74fc75528e731bd5",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_din18599_owned_native_decoder_controls_both_physical_payloads",
+            "sqlite_snapshot_din18599_actual_bare_factory_exposes_owned_relational_capability",
+            "sqlite_snapshot_din18599_all_neutral_fields_agree_with_serde_and_empty_domains",
+            "sqlite_snapshot_din18599_all_native_choices_and_unsigned32_widths_agree_with_serde",
+            "sqlite_snapshot_din18599_every_numeric_domain_retains_each_neutral_binary64_word",
+            "sqlite_snapshot_din18599_independent_sqlite_joins_climate_identity_and_plant_edits",
+            "sqlite_snapshot_din18599_refuses_malformed_choices_widths_parents_ordinals_and_word_companions",
+            "sqlite_snapshot_din18599_initial_and_nested_operations_support_cancellation_and_native_admission",
+            "sqlite_snapshot_din18599_large_child_identity_cancels_before_any_encoding_or_semantic_copy",
+            "sqlite_snapshot_din18599_actual_erased_codec_and_declaration_preserve_all_owned_words",
+            "sqlite_snapshot_din18599_genuine_output_admits_exact_row_and_file_frontiers",
+            "sqlite_snapshot_din18599_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_din18599_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_din18599_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "f4052de55209f19aef74b4821bdcc76a793f6cd4b6ed5a548db7e1adc01c3c59",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "f4052de55209f19aef74b4821bdcc76a793f6cd4b6ed5a548db7e1adc01c3c59",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "🔩️en1993",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "a5903787eb295be021f81c562e63cd4de4b017b60f038f3cf04f6624b3105fd5",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "eff4754c4e7c2137d16ee4f8d8c69545ab128c750d58a5194b7e581cfd2e8378",
+          "registrationLines": [
+            {
+              "line": 112,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 113,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 116,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 117,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "33389f85a716be24edf7e717f92228a6c7479d724ca51d63f56f8bbd00ea0803",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_en1993_all_entities_and_independent_sqlite_edit",
+            "sqlite_snapshot_en1993_ownership_order_width_and_ieee_guards",
+            "sqlite_snapshot_en1993_limits_and_large_copy_cancellation",
+            "sqlite_snapshot_en1993_actual_bare_erased_encodings_and_coordinates",
+            "sqlite_snapshot_en1993_actual_declaration_typed_io_has_no_native_encoding",
+            "sqlite_snapshot_en1993_empty_collections_and_annex_variants",
+            "sqlite_snapshot_en1993_all_ninety_six_fields_have_independent_exact_word_oracle",
+            "sqlite_snapshot_en1993_every_ieee_word_survives_actual_erased_native_encodings",
+            "sqlite_snapshot_en1993_collection_progress_cancellation",
+            "sqlite_snapshot_en1993_controlled_native_owner_admits_physical_and_typed_state",
+            "sqlite_snapshot_en1993_controlled_output_has_exact_wire_and_real_interior_admission",
+            "sqlite_snapshot_en1993_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_en1993_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_en1993_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "ca985878f576cc29fbac96fa0af6dc3174afb84f5f1e1a31e43ab97a1bb25f11",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "ca985878f576cc29fbac96fa0af6dc3174afb84f5f1e1a31e43ab97a1bb25f11",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "🏭️vdi3805",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "63de743c1c426f0b159af9344ae26e865c1d1ade5fc7aac58c01db7518f62500",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 80,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 95,
+              "text": "#[path = \"🧪️tests/🔬️json-serializers/🦀️.rs\"]"
+            },
+            {
+              "line": 96,
+              "text": "mod json_serializers_tests;"
+            },
+            {
+              "line": 99,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 100,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 102,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 103,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 105,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 106,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "a89cd84e0d3523742372c848f42e57b6fffbb6e67573e6693ed4f06282b2e532",
+          "registrationLines": [
+            {
+              "line": 107,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 108,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 111,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 112,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "13507e4ac111106b989fcf025ab9be54253e9f81c26102003918ab6f6670a4e1",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_vdi3805_native_sheet_id_refuses_every_out_of_width_word",
+            "sqlite_snapshot_vdi3805_owned_native_decoder_controls_physical_and_typed_construction",
+            "sqlite_snapshot_vdi3805_controlled_native_binding_preserves_every_neutral_numeric_word",
+            "sqlite_snapshot_vdi3805_controlled_attribute_binding_admits_before_owned_copy_and_cancels_inside_entries",
+            "sqlite_snapshot_vdi3805_complete_native_fixture_agrees_with_independent_serde",
+            "sqlite_snapshot_vdi3805_actual_bare_factory_exposes_complete_owned_capability",
+            "sqlite_snapshot_vdi3805_all_fields_and_empty_independent_catalogue_subjects_survive_sqlite",
+            "sqlite_snapshot_vdi3805_every_complete_numeric_domain_retains_all_neutral_raw_words",
+            "sqlite_snapshot_vdi3805_all_neutral_unsigned64_security_words_retain_native_width",
+            "sqlite_snapshot_vdi3805_all_neutral_quantity_and_edition_choices_retain_exact_identity",
+            "sqlite_snapshot_vdi3805_shared_independent_sql_corpus_refuses_lost_native_ownership",
+            "sqlite_snapshot_vdi3805_independent_sqlite_queries_complete_entities_and_applies_semantic_edits",
+            "sqlite_snapshot_vdi3805_refuses_malformed_choices_widths_booleans_parents_ordinals_maps_words_and_mandatory_subjects",
+            "sqlite_snapshot_vdi3805_initial_and_nested_operations_support_cancellation_and_borrowed_native_admission",
+            "sqlite_snapshot_vdi3805_large_owned_text_cancels_before_projection_reconstruction_and_encoding_copy",
+            "sqlite_snapshot_vdi3805_actual_erased_codec_and_declaration_preserve_every_owned_word",
+            "sqlite_snapshot_vdi3805_genuine_output_admits_exact_row_and_file_frontiers",
+            "sqlite_snapshot_vdi3805_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_vdi3805_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_vdi3805_borrowed_complete_gate_copied_limits_exact_and_one_short",
+            "sqlite_snapshot_vdi3805_duplicate_literal_maps_admit_only_last_winning_semantic_cells"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "29900f5eedc3fbdf86ebe8eda675115eda6200ccea112251697aa0af51121e3c",
+          "registrationLines": [],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "29900f5eedc3fbdf86ebe8eda675115eda6200ccea112251697aa0af51121e3c",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "🌍️en1997",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "432411b64ecc37e5208b8120c51ec5d6dce4d3215a81efdc4762ffe9747ccdc8",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "pub mod derived_composition {"
+            },
+            {
+              "line": 55,
+              "text": "pub mod io_registry {"
+            },
+            {
+              "line": 68,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 69,
+              "text": "pub mod binary;"
+            },
+            {
+              "line": 71,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 72,
+              "text": "pub mod text;"
+            },
+            {
+              "line": 74,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 75,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "85826b4193fe9db87bf09f0fa57ff4da0b0a6ee254947ec796e932dc960190d7",
+          "registrationLines": [
+            {
+              "line": 72,
+              "text": "#[path=\"🛂️admission/🦀️.rs\"]"
+            },
+            {
+              "line": 73,
+              "text": "pub(in crate::standards::v1::subsets::any)mod admission;"
+            },
+            {
+              "line": 76,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 77,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "e3cd9e6af9fee2ff59212691b2904c49d016e767790f2844b2a0a588a8e6c1b2",
+          "registrationLines": [],
+          "testIdentities": [
+            "sqlite_snapshot_en1997_every_owned_field_and_independent_engine_edit",
+            "sqlite_snapshot_en1997_ownership_ordinals_widths_and_scalar_consistency",
+            "sqlite_snapshot_en1997_limits_and_large_copy_cancellation",
+            "sqlite_snapshot_en1997_actual_bare_erased_encodings_and_owned_coordinates",
+            "sqlite_snapshot_en1997_actual_declaration_typed_io_has_no_native_encoding",
+            "sqlite_snapshot_en1997_empty_collections_and_annex_variants_need_one_domain_row",
+            "sqlite_snapshot_en1997_all_fifty_five_fields_have_independent_exact_word_oracle",
+            "sqlite_snapshot_en1997_every_ieee_word_survives_actual_erased_native_encodings",
+            "sqlite_snapshot_en1997_controlled_native_owner_admits_physical_and_typed_state",
+            "sqlite_snapshot_en1997_controlled_output_has_exact_wire_and_real_interior_admission",
+            "sqlite_snapshot_en1997_independent_complete_nested_edit_both_annex_public_io",
+            "sqlite_snapshot_en1997_original_native_semantic_extent_has_independent_exact_boundaries",
+            "sqlite_snapshot_en1997_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_en1997_complete_independent_copied_columns_admission",
+            "sqlite_snapshot_en1997_borrowed_complete_gate_copied_limits_exact_and_one_short"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "40dce82b53dce88faac0c9cc658d5729d9ab0035b8a60b2a52fe6b8bd3cba510",
+          "registrationLines": [
+            {
+              "line": 239,
+              "text": "#[path = \"🧪️tests/🔬️regen-assets/🦀️.rs\"]"
+            },
+            {
+              "line": 240,
+              "text": "mod regen_assets;"
+            }
+          ],
+          "testIdentities": []
+        }
+      ],
+      "currentSchemaRoot": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+        "sha256": "40dce82b53dce88faac0c9cc658d5729d9ab0035b8a60b2a52fe6b8bd3cba510",
+        "staleSqliteTestInclude": false
+      }
+    },
+    {
+      "name": "step",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+          "sha256": "35bf7938aa8db1748cf82be5509561025dc2e221c0324ccff2e4c564b6f1cc01",
+          "registrationLines": [
+            {
+              "line": 5,
+              "text": "#[path = \"🧱️brep/🦀️.rs\"]"
+            },
+            {
+              "line": 9,
+              "text": "#[path = \"🪜️ladder/🦀️.rs\"]"
+            },
+            {
+              "line": 94,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 97,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 100,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 101,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "ba87a702156fb82a154ad1afc6efc0cf7c83d54cffe15f102aba6fe804c13477",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot,StepHeader,StepFileDescription,StepFileName,StepFileSchema,StepEntity,StepComplexType,StepValue};"
+            },
+            {
+              "line": 5,
+              "text": "#[path = \"📏️encoding/💰️backing/🦀️.rs\"]"
+            },
+            {
+              "line": 7,
+              "text": "#[path = \"🛬️reconstruction/🦀️.rs\"]"
+            },
+            {
+              "line": 9,
+              "text": "#[path=\"🧮️semantic/🦀️.rs\"]"
+            },
+            {
+              "line": 86,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 87,
+              "text": "mod tests;"
+            },
+            {
+              "line": 90,
+              "text": "#[path = \"🧫️fixtures/🦀️.rs\"]"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "4a4b07b1691125ba24c30b53c15b7e8bcbb13e422f2d3b387ddf0c66a86a8ae9",
+          "registrationLines": [
+            {
+              "line": 1,
+              "text": "use crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::*;"
+            }
+          ],
+          "testIdentities": [
+            "sqlite_snapshot_step_native_preflight_and_bare_binary_text_admission",
+            "sqlite_snapshot_step_all_seven_actual_declaration_owned_routes_preserve_words_and_warnings",
+            "sqlite_snapshot_step_large_scalar_before_copy_controls_and_borrowed_profile_budgets",
+            "sqlite_snapshot_step_full_model_all_ieee_words_and_native_state",
+            "sqlite_snapshot_step_rejects_structural_reference_scalar_corruption_and_controls",
+            "sqlite_snapshot_step_independent_sqlite_joins_and_header_edit",
+            "sqlite_snapshot_step_exact_typed_profiles_refuse_wrong_coordinates_and_preserve_diagnostics",
+            "sqlite_snapshot_step_cohort_controlled_input_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_step_cohort_controlled_output_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_step_cohort_semantic_words_match_independent_sqlite_dataview",
+            "sqlite_snapshot_step_surrogate_root_header_ids_are_relationships_not_fixed_ones",
+            "sqlite_snapshot_step_controlled_native_owned_frame_preserves_literal_schema_and_all_variants",
+            "sqlite_snapshot_step_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_step_complete_independent_copied_columns_admission"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "471da67c2637808cc6c10d414de8cc458562dc8fc082b310581e265bc6b48cc0",
+          "registrationLines": [
+            {
+              "line": 11,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 12,
+              "text": "pub mod sqlite_snapshot;"
+            },
+            {
+              "line": 13,
+              "text": "#[path = \"🚦️native/🦀️.rs\"]"
+            },
+            {
+              "line": 393,
+              "text": "#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]"
+            },
+            {
+              "line": 394,
+              "text": "mod tests;"
+            },
+            {
+              "line": 396,
+              "text": "#[path = \"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 397,
+              "text": "mod sqlite_snapshot_tests;"
+            }
+          ],
+          "testIdentities": []
+        }
+      ],
+      "retainedNativeTest": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🚦️native/🧪️tests/💰️backing/🦀️.rs",
+        "testIdentities": [
+          "sqlite_snapshot_step_inline_root_and_typed_box_have_only_concrete_backing"
+        ]
+      }
+    },
+    {
+      "name": "ifc4",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "sha256": "1173f28324943fc7186336253b1dfdcf67f7acebe5a442b56b4bcd51066ea390",
+          "registrationLines": [
+            {
+              "line": 12,
+              "text": "#[path = \"🏛️spatial/🦀️.rs\"]"
+            },
+            {
+              "line": 62,
+              "text": "#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]"
+            },
+            {
+              "line": 63,
+              "text": "mod tests;"
+            },
+            {
+              "line": 82,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 85,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 88,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 89,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "1062d6f5f85e2007a99a3868d5dc378d4e91a51e3c075ee4050a4e35c03127d5",
+          "registrationLines": [
+            {
+              "line": 2,
+              "text": "use crate::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot,IfcHeader,IfcEntity,IfcComplexType,IfcValue};"
+            },
+            {
+              "line": 4,
+              "text": "#[path=\"📏️encoding/💰️backing/🦀️.rs\"]"
+            },
+            {
+              "line": 6,
+              "text": "#[path=\"🛬️reconstruction/🦀️.rs\"]"
+            },
+            {
+              "line": 8,
+              "text": "#[path=\"🧮️semantic/🦀️.rs\"]"
+            },
+            {
+              "line": 58,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 59,
+              "text": "mod tests;"
+            },
+            {
+              "line": 62,
+              "text": "#[path = \"🧫️fixtures/🦀️.rs\"]"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "dd188aad9d668fc8c5d246906a99b61e0a897e77a3cd99759cd4354c64464794",
+          "registrationLines": [
+            {
+              "line": 1,
+              "text": "use crate::standards::v4::subsets::any::io::sqlite::snapshot::*;"
+            }
+          ],
+          "testIdentities": [
+            "sqlite_snapshot_ifc4_actual_declaration_preserves_every_ieee_word_in_owned_encodings",
+            "sqlite_snapshot_ifc4_native_preflight_and_erased_binary_text",
+            "sqlite_snapshot_ifc4_rejects_corrupt_ownership_reference_words_ieee_and_controls",
+            "sqlite_snapshot_ifc4_every_header_value_variant_full_width_and_ieee_word",
+            "sqlite_snapshot_ifc4_independent_sqlite_full_value_query_and_edit",
+            "sqlite_snapshot_ifc4_cohort_controlled_input_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_ifc4_cohort_controlled_output_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_ifc4_cohort_semantic_words_match_independent_sqlite_dataview",
+            "sqlite_snapshot_ifc4_surrogate_root_header_ids_are_relationships_not_fixed_ones",
+            "sqlite_snapshot_ifc4_controlled_native_owned_frame_preserves_literal_schema_and_all_variants",
+            "sqlite_snapshot_ifc4_actual_removal_keeps_literal_references_through_erased_native_and_sqlite_file",
+            "sqlite_snapshot_ifc4_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_ifc4_complete_independent_copied_columns_admission"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "c6aaad67daad501bc960f49d7d0c1d3d9d7eda0a6d585d02286f7020fcf5c509",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "#[path=\"🚦️native/🦀️.rs\"]"
+            },
+            {
+              "line": 17,
+              "text": "#[path=\"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 18,
+              "text": "pub mod sqlite_snapshot;"
+            },
+            {
+              "line": 20,
+              "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 21,
+              "text": "mod sqlite_snapshot_tests;"
+            },
+            {
+              "line": 278,
+              "text": "#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]"
+            },
+            {
+              "line": 279,
+              "text": "mod tests;"
+            }
+          ],
+          "testIdentities": []
+        }
+      ],
+      "retainedNativeTest": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚦️native/🧪️tests/💰️backing/🦀️.rs",
+        "testIdentities": [
+          "sqlite_snapshot_ifc4_inline_root_has_only_concrete_backing"
+        ]
+      }
+    },
+    {
+      "name": "ifc2x3",
+      "sources": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+          "sha256": "a46dc90c8bd4445d9ef44bf96ecd4d46cd96648202ee43db77bcf7985da5de18",
+          "registrationLines": [
+            {
+              "line": 12,
+              "text": "use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};"
+            },
+            {
+              "line": 103,
+              "text": "    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;"
+            },
+            {
+              "line": 143,
+              "text": "#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]"
+            },
+            {
+              "line": 144,
+              "text": "mod tests;"
+            },
+            {
+              "line": 166,
+              "text": "#[path = \"💾️binary/🦀️.rs\"]"
+            },
+            {
+              "line": 169,
+              "text": "#[path = \"📝️text/🦀️.rs\"]"
+            },
+            {
+              "line": 172,
+              "text": "#[path = \"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 173,
+              "text": "pub mod sqlite;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/🦀️.rs",
+          "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e",
+          "registrationLines": [
+            {
+              "line": 3,
+              "text": "#[path = \"📸️snapshot/🦀️.rs\"]"
+            },
+            {
+              "line": 4,
+              "text": "pub mod snapshot;"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+          "sha256": "d8e69146fe8cd7722d7cfda49349891cef2593ae53f9eec7adbd967e3595c4ea",
+          "registrationLines": [
+            {
+              "line": 2,
+              "text": "use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3Snapshot,Ifc2x3EdmPreamble};"
+            },
+            {
+              "line": 6,
+              "text": "#[path=\"🔎️mvd/💰️diagnostics/🦀️.rs\"]"
+            },
+            {
+              "line": 9,
+              "text": "#[path=\"🛬️reconstruction/🦀️.rs\"]"
+            },
+            {
+              "line": 11,
+              "text": "#[path=\"🧮️semantic/🦀️.rs\"]"
+            },
+            {
+              "line": 13,
+              "text": "#[path=\"📏️encoding/💰️backing/🦀️.rs\"]"
+            },
+            {
+              "line": 86,
+              "text": "#[path = \"🧪️tests/🦀️.rs\"]"
+            },
+            {
+              "line": 87,
+              "text": "mod tests;"
+            },
+            {
+              "line": 90,
+              "text": "#[path = \"🧫️fixtures/🦀️.rs\"]"
+            }
+          ],
+          "testIdentities": []
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+          "sha256": "004244f812cc5d1673368f69e8eceedb6ed6cc379b908dd32ccebf089cc9e741",
+          "registrationLines": [
+            {
+              "line": 1,
+              "text": "use crate::standards::v2x3::subsets::base::io::sqlite::snapshot::*;"
+            }
+          ],
+          "testIdentities": [
+            "sqlite_snapshot_ifc2x3_all_four_actual_declaration_routes_preserve_decimals_and_warnings",
+            "sqlite_snapshot_ifc2x3_native_literal_decimal_preflight_and_erased_encodings",
+            "sqlite_snapshot_ifc2x3_exact_owned_mvd_diagnostics_and_coordinates",
+            "sqlite_snapshot_ifc2x3_owned_view_preflight_budgets_and_cancellation",
+            "sqlite_snapshot_ifc2x3_refuses_corrupt_decimal_optional_owner_forests_and_limits",
+            "sqlite_snapshot_ifc2x3_exact_decimal_components_optional_edm_and_header_graph",
+            "sqlite_snapshot_ifc2x3_independent_sqlite_decimal_and_edm_field_edit",
+            "sqlite_snapshot_ifc2x3_cohort_controlled_input_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_ifc2x3_cohort_controlled_output_preserves_actual_carrier_and_cancels_inside_copy",
+            "sqlite_snapshot_ifc2x3_owned_decimal_coefficients_survive_semantic_files_without_display",
+            "sqlite_snapshot_ifc2x3_surrogate_root_header_ids_are_relationships_not_fixed_ones",
+            "sqlite_snapshot_ifc2x3_controlled_native_owned_frame_preserves_literal_schema_and_all_variants",
+            "sqlite_snapshot_ifc2x3_owned_decimal_coefficient_is_literal_state_not_exchange_validation",
+            "sqlite_snapshot_ifc2x3_actual_removal_keeps_literal_references_through_erased_native_and_sqlite_file",
+            "sqlite_snapshot_ifc2x3_complete_independent_native_semantic_limits",
+            "sqlite_snapshot_ifc2x3_complete_independent_copied_columns_admission"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+          "sha256": "04690a2b16fccfd6b9ae0ec34b4e9bafd6c342bd25e3bc83fa0b8d0c0f3f9b57",
+          "registrationLines": [
+            {
+              "line": 15,
+              "text": "#[path=\"🚦️native/🦀️.rs\"]"
+            },
+            {
+              "line": 17,
+              "text": "#[path=\"🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 18,
+              "text": "pub mod sqlite_snapshot;"
+            },
+            {
+              "line": 20,
+              "text": "#[path=\"🧪️tests/🪶️sqlite/🦀️.rs\"]"
+            },
+            {
+              "line": 21,
+              "text": "mod sqlite_snapshot_tests;"
+            }
+          ],
+          "testIdentities": []
+        }
+      ],
+      "retainedNativeTest": {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🚦️native/🧪️tests/💰️backing/🦀️.rs",
+        "testIdentities": [
+          "sqlite_snapshot_ifc2x3_inline_root_and_mvd_consumers_follow_concrete_backing_roles"
+        ]
+      }
+    }
+  ]
+}

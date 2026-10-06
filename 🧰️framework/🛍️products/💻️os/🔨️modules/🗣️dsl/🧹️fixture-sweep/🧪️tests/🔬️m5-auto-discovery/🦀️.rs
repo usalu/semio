@@ -2,7 +2,7 @@ use super::pilot_resolve;
 use std::path::{Path, PathBuf};
 
 //#region 🔖️Types
-/// 🧩️ One discovered `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`.
+/// 🧩️ One discovered `🚪️io/📝️text/📸️snapshot/📖️.grammar.semio`.
 #[derive(Clone, Debug)]
 pub struct DiscoveredGrammarFacet {
     pub plugin: String,
@@ -20,9 +20,9 @@ pub struct DiscoveredGrammarFacet {
 /// 🧩️ Which sibling-fixture convention a discovered protocol facet expects.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ProtocolFacetKind {
-    /// `🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` + sibling `.pack.semio`.
+    /// `🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio` + sibling `.pack.semio`.
     Pack,
-    /// `🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio` + sibling `.spr.semio`.
+    /// `🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio` + sibling `.spr.semio`.
     Spr,
 }
 
@@ -90,7 +90,7 @@ async fn discovery_roots(repo_root: &Path) -> Vec<PathBuf> {
 
 /// 🔎️ True when `path`'s immediate parent/grandparent/great-grandparent directory names
 /// are exactly `chain` (in that order, nearest first) — the structural fingerprint of one facet
-/// location (e.g. `.../🧬️schema/📸️snapshot/📝️text/<file>`).
+/// location (e.g. `.../🚪️io/📝️text/📸️snapshot/<file>`).
 async fn parent_chain_is(path: &Path, chain: &[&str]) -> bool {
     let mut ancestor = path.parent();
     for expected in chain {
@@ -161,7 +161,7 @@ async fn derive_identity(file_path: &Path, repo_root: &Path) -> Option<(String, 
     Some((plugin, artifact, standard, is_stdio, artifact_rel, label))
 }
 
-/// 📖️ Every `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` under [`discovery_roots`].
+/// 📖️ Every `🚪️io/📝️text/📸️snapshot/📖️.grammar.semio` under [`discovery_roots`].
 pub async fn discover_grammar_snapshot_facets() -> Vec<DiscoveredGrammarFacet> {
     let repo_root = pilot_resolve::repo_root().await;
     let mut hits = RawHits::default();
@@ -178,8 +178,8 @@ pub async fn discover_grammar_snapshot_facets() -> Vec<DiscoveredGrammarFacet> {
     out
 }
 
-/// 📡️ Every `🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio` (pack) and
-/// `🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio` (spr) under [`discovery_roots`].
+/// 📡️ Every `🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio` (pack) and
+/// `🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio` (spr) under [`discovery_roots`].
 pub async fn discover_protocol_facets() -> Vec<DiscoveredProtocolFacet> {
     let repo_root = pilot_resolve::repo_root().await;
     let mut hits = RawHits::default();

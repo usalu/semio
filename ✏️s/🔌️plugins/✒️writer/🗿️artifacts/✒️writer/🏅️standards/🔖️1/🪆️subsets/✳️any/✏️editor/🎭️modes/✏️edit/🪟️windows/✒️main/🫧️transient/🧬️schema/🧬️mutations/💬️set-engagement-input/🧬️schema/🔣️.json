@@ -5,9 +5,36 @@
   "type": "object",
   "properties": {
     "kind": {
-      "const": "set-engagement-input"
+      "const": "set-engagement-input",
+      "x-semio-ui": {
+        "role": "discriminator",
+        "label": {
+          "en": "Change",
+          "de": "Änderung"
+        },
+        "description": {
+          "en": "Names the window setting this change writes; fixed for the leaf.",
+          "de": "Benennt die Fenstereinstellung, die diese Änderung schreibt; für das Blatt fest."
+        }
+      }
     },
-    "value": { "type": "string" }
+    "value": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Input",
+          "de": "Eingabe"
+        },
+        "description": {
+          "en": "Draft text of the window's engagement input.",
+          "de": "Entwurfstext der Interaktionseingabe des Fensters."
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
   },
   "required": ["kind","value"],
   "additionalProperties": false

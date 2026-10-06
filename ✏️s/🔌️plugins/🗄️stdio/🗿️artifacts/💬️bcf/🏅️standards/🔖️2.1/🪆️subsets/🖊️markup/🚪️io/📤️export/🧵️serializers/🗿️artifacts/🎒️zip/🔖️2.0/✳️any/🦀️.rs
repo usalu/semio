@@ -11,7 +11,7 @@ pub fn register() {}
 /// 🎒️ Encode BcfSnapshot as ZIP container bytes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &BcfSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::io::encode_bcf(from).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+    let bytes = crate::standards::v2_1::subsets::any::io::encode_bcf(from).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 

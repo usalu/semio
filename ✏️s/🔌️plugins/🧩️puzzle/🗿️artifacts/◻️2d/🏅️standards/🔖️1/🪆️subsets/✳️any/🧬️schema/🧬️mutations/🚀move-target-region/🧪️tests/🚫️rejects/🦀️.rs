@@ -1,4 +1,4 @@
-//! 🧪️ `move-target-region` fixture — `🚫️rejects`.
+//! 🧪️ `move-target-region` snapshot — `🚫️rejects`.
 //!
 //! Moving a region the board never held is an Error-level `mutation.target-missing`.
 //!
@@ -54,7 +54,7 @@ fn the_refusal_is_the_declared_one() {
 /// ↩️ `move-target-region`'s inverse is BASE-derived: with no entry to read there is no prior position to restore.
 #[test]
 fn inverse_of_a_refusal() {
-    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse snapshot");
     assert_eq!(inverse.len(), 0, "move-target-region/rejects-moving-a-region-the-board-never-held: got {inverse:?}");
 }
 

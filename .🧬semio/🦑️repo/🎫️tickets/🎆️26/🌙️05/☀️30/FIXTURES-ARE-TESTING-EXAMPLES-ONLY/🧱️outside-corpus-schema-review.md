@@ -1,0 +1,304 @@
+# Corpus Wrapper Candidates Outside Collections
+
+- `🧰️framework/🔨️modules/✍️editor/⚠️error/🧬️schema/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/✍️editor/🧬️scene/🧬️schema/🔣️.json` —  — ['contract', 'cases'] — 
+- `🧰️framework/🔨️modules/⚠️diagnostic/🚧️text-error/🧬️schema/🔣️.json` —  — ['cases', 'wireCases', 'limits'] — 
+- `🧰️framework/🔨️modules/⚠️diagnostic/🧬️schema/🎛️controlled/🔣️.json` —  — ['cases', 'stress', 'duplicateCases', 'refusalKinds'] — 
+- `🧰️framework/🔨️modules/⚠️diagnostic/🧬️schema/🧯️fault/🔣️.json` —  — ['maximumInlineBytes', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🧬️schema/🔣️.json` — UiTranslationTotalityLaws — ['cases'] — 
+- `🧰️framework/🔨️modules/🎠️kernel/🫧️transient/🧬️schema/🔣️.json` —  — ['schemaVersion', 'cases'] — 
+- `🧰️framework/🔨️modules/🔏️hash/🧬️schema/🧮️blake3/🔣️.json` — Independent BLAKE3 Reference Vectors — ['$schema', 'schema', 'source', 'vectors'] — 
+- `🧰️framework/🔨️modules/🧪️test/🧬️schema/🔌️adapter-ownership/🔣️.json` —  — ['schemaVersion', 'cases', 'removedFiles', 'removedExports'] — 
+- `🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📤️generation/🧬️schema/🔣️.json` —  — ['schemaVersion', 'cases', 'unsupported', 'authoredMacros'] — 
+- `🧰️framework/🔨️modules/🪪️identity/🧩️grapheme/🧬️schema/🔣️.json` —  — ['schemaVersion', 'cases', 'removal'] — 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🧬️schema/🔣️.json` —  — ['contract', 'cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/📥️source/🧬️schema/🔣️.json` —  — ['cases', 'admissions'] — 
+- `🧰️framework/🔨️modules/🎒️pack/📐️format/🧭️producer/🗂️catalog/🧬️schema/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧬️schema/🔣️.json` —  — ['schemaVersion', 'cases', 'unsupported', 'oracle'] — 
+- `🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🧬️schema/🔣️.json` —  — ['schemaVersion', 'roots', 'cases', 'invalidRoots'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧬️schema/🃏️glob/🔣️.json` —  — ['$schema', 'cases'] — 
+- `🧰️framework/🔨️modules/🗜️deflate/🧬️schema/🛫️controlled/🔣️.json` —  — ['cases', 'random', 'cancelAt', 'deniedBytes', 'maximumBytes'] — 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🚦️refusals/🔣️.json` —  — ['cases', 'symbols', 'orderedSymbols'] — 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🧬️schema/🎞️intrinsic-media/🌲️depth/🔣️.json` —  — ['contract', 'leafWord', 'cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/🚦️provider/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/👥️context/💥️lifecycle/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/👥️context/🧾️claim/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/👥️context/🎛️policy/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/👥️context/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔌️capture/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/📋️paged/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/🔣️.json` —  — ['status', 'cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/📡️codec/🔣️.json` —  — ['retainedAdmission', 'cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/⚠️refusal/🔣️.json` —  — ['format', 'package', 'dependencies', 'variant', 'retiredVariant', 'cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/🧬️schema/📍️text-refusal/🔣️.json` —  — ['variant', 'cases'] — 
+- `🧰️framework/🔨️modules/🏃️process/⏱️budget/🧬️schema/🔣️.json` —  — ['schema', 'cases'] — 
+- `🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🧩️host-slots/🔣️.json` — Host Extension Resolution Cases — ['hostExtensionIds', 'cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🌳️intrinsic/🧬️schema/🔣️.json` —  — ['schema', 'field', 'cases', 'refusals', 'controls', 'document', 'integerCarrier'] — 
+- `🧰️framework/🔨️modules/🎠️kernel/🧬️schema/🔣️history-reprojection/🔣️.json` — HistoryReprojectionStatusFixture — ['$schema', 'note', 'labels', 'cases'] — 
+- `🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json` —  — ['version', 'owner', 'cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🧬️schema/🧫️members/🔣️.json` —  — ['cases', 'comparison', 'ownership'] — 
+- `🧰️framework/🔨️modules/🏃️process/📋️context/🧬️schema/🚫️paths/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🎓️introduction/🧬️schema/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🔨️modules/🏃️process/🪓️termination/🧬️schema/🔣️.json` —  — ['tree', 'spawnDeadlineMs', 'settleDeadlineMs', 'cases'] — 
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧬️schema/🔣️.json` —  — ['contract', 'cases'] — 
+- `🧰️framework/🔨️modules/🏃️process/🔒️leases/🧬️schema/🔣️.json` —  — ['repetitions', 'cases'] — 
+- `🧰️framework/🔨️modules/🏃️process/🧭️routing/🧬️schema/🔣️.json` —  — ['cases', 'mainCases', 'workspaceCases'] — 
+- `🧰️framework/🔨️modules/🏃️process/📥️capture/🧬️schema/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/🔣️.json` —  — ['cases', 'progress'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪜️stepper-pointer-commit/🔣️.json` — Stepper Pointer Commit — ['cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/📤️prepared-readback/🔣️.json` —  — ['alignment', 'maxSide', 'maxPixels', 'srgbClear', 'cases', 'admission'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/♿️retained-toggle-semantics/🔣️.json` — Retained Toggle Semantics — ['schemaVersion', 'checkboxPaint', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔽️retained-select-origin/🔣️.json` — Retained Select Origin Geometry — ['schemaVersion', 'viewport', 'sideOffset', 'collisionPadding', 'row', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎚️slider-presentation/🔣️.json` —  — ['provenance', 'tokens', 'cases', 'unit', 'pointer'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-pointer-transfer/🔣️.json` — Canvas catalogue pointer transfer fixture — ['version', 'mime', 'surface', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🛟️panel-window-reservation/🔣️.json` —  — ['version', 'spacing', 'cases', 'pointerCases', 'retainedWorld'] — 
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧬️schema/🔣️.json` — ExactCargoLawFixture — ['stageEnvironment', 'nativeArguments', 'capturedOutput', 'activeLease', 'schema', 'package', 'target', 'laws', 'executableBytesHex', 'executableSha256', 'cases', 'lawLimitVectors', 'compilerStorageDirectory'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎚️numeric-press-input/🔣️.json` —  — ['lifecycle', 'cases'] — 
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🧬️schema/🔣️.json` —  — ['schema', 'levels', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/⌨️table-stepper-keyboard/🔣️.json` — Table Stepper Keyboard — ['schemaVersion', 'cell', 'action', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪪️fixture-ownership/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🧬️schema/🔣️.json` —  — ['schema', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/♿️tree-disclosure/🔣️.json` — Tree disclosure accessibility — ['schema', 'branches', 'leaves', 'expected'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🔽️select-popup-geometry/🔣️.json` — Select Popup Geometry — ['schemaVersion', 'optionCount', 'triggerWidth', 'minimumContentWidth', 'borderWidth', 'scrollBandHeight', 'sideOffset', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/↔️panel-resize/🔣️.json` —  — ['$comment', 'widthUiSpacing', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🪪️window-surface-owner/🔣️.json` —  — ['focusSequence', 'lateBlur', 'panel', 'version', 'previousWindow', 'typed', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖼️icon-render-camera/🔣️.json` —  — ['schema', 'tolerance', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧭️native-command/🔣️.json` — UI Native Command Dispatch Corpus — ['version', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json` — Inline Tree Resolution Controls — ['conflict', 'rowId', 'controls', 'expected'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/📣️engagement-status/🔣️.json` —  — ['schema', 'role', 'live', 'atomic', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🆚️diff-view-produced-surface/🔣️.json` —  — ['schema', 'before', 'after', 'mode', 'language', 'expected', 'conflicts', 'selectedConflictId', 'producer'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-terminal/🔣️.json` — Canvas catalogue terminal fixture — ['version', 'mime', 'surface', 'frameOwner', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎛️retained-control-commit/🔣️.json` —  — ['provenance', 'rules', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/⌨️text-owner-lifecycle/🔣️.json` —  — ['version', 'owner', 'value', 'sequence', 'expected'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖥️prepared-gpu-clip-pieces/🔣️.json` — Prepared GPU Clip Piece Fixture — ['schema', 'surface', 'cases'] — 
+- `🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json` — Shared Paint Editing Semantic Corpus — ['cases', 'maskCases', 'selectionTransport', 'selectionEditing'] — 
+- `🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧬️schema/🚦️refusals/🔣️.json` —  — ['identity', 'cases'] — 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json` — Mutation Source Authority Domains — ['schemaVersion', 'mutationRoot', 'domains', 'cases'] — 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/⚠️value-refusals/🔣️.json` —  — ['cases', 'controlledKinds'] — 
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🔣️transaction-ref/🔣️.json` — Semio Transaction Ref Mint Vectors — ['schema', 'mint', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-caps/🔣️.json` — MutationCapsGateFixture — ['$schema', 'description', 'cases'] — 
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🏛️ownership/🔣️.json` —  — ['owner', 'definition', 'requiredExports', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️fault-notices-gate/🔣️.json` — FaultNoticesGateFixture — ['$schema', 'description', 'cases', 'plugin'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🚷️discovery-boundaries/🔣️.json` —  — ['schemaVersion', 'features', 'expected', 'links', 'candidateCases', 'authorityCases'] — 
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧬️schema/🔎️frontiers/📏️schema/🔣️.json` — Long Authored SQL Literal And Formatting Validation — ['literalUnit', 'literalLength', 'literalTail', 'mismatchTail', 'formatSpacing', 'schemaFrontier', 'refusal', 'cancellation', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-input-declarations/🔣️.json` — MutationInputDeclarationsGateFixture — ['$schema', 'description', 'documents', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema/🎨️world3d-inline-surface/🔣️.json` —  — ['schema', 'mesh', 'expected', 'contract', 'pixelCases', 'statusCases', 'jpegPublication', 'alphaCutoffCase'] — 
+- `🧰️framework/🔨️modules/📡️replication/📡️wire/🧬️schema/🖱️typed-field-order/🔣️.json` —  — ['version', 'rootFields', 'selectionFields', 'limits', 'cases'] — 
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧬️schema/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧬️schema/🔣️.json` — Initial Window Utility Contract Cases — ['cases'] — 
+- `🧰️framework/🔨️modules/📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json` — Semio Replay Report — ['schema', 'law', 'cases'] — 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🔣️history-transition/🔣️.json` — Semio History Transition Payload Cases — ['schema', 'diffSchema', 'idClock', 'cases', 'trunks', 'shapes'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🧬️schema/🔎️search-fold-routing/🔣️.json` —  — ['version', 'locales', 'cases'] — 
+- `🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🧮️document-backbone-batch-v1/🔣️.json` — Semio Document Backbone Envelope Batch — ['schema', 'wire', 'retention', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🧬️schema/🔀️pane-fold-independence/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🧬️schema/🚧️content-clearance/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/⌨️caret-cadence/🧬️schema/🔣️.json` —  — ['halfPeriodMs', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧬️schema/📏️row-anchor/🔣️.json` —  — ['version', 'inheritedRowPx', 'uiSpacingPx', 'indentPx', 'togglePx', 'directions', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧬️schema/🪟️window-requests/🔣️.json` —  — ['$comment', 'budget', 'overscan', 'rowExtentPx', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🎮️command/🧬️schema/🔣️.json` —  — ['schema', 'vectors'] — 
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🧬️schema/🔣️.json` — Drawing Text Line Fixtures — ['cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧬️schema/🔣️.json` — Replaceable Control Deadline Contract — ['sources', 'version', 'cases', 'bridges'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧬️schema/🔣️.json` —  — ['schemaVersion', 'cases', 'freshness'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🧬️schema/🎯️stack-drop-destination/🔣️.json` —  — ['schema', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/👆️cursor/🧬️schema/🔣️.json` — WGPU Browser Cursor Presentation — ['contractVersion', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📁️runtime/🧬️schema/🔣️.json` —  — ['schemaVersion', 'roots', 'rules', 'cases', 'physicalCases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/🧬️schema/🔣️.json` —  — ['version', 'cases', 'ownerSource', 'activationCases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/🧬️schema/🔣️.json` —  — ['schemaVersion', 'cases', 'nativeCases', 'mountCase', 'scopeCases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🪆️nested-owners/🔣️.json` —  — ['schemaVersion', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📈️reference-coordinate-progress/🔣️.json` —  — ['schemaVersion', 'contract', 'semantics', 'registration', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/♻️taxonomy-pattern-compiler-reuse/🔣️.json` —  — ['schemaVersion', 'contractId', 'factory', 'rounds', 'uniqueNormalizedPatterns', 'normalization', 'integration', 'oracle', 'cases', 'invalidPatterns'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📦️extension-installation-owner/🔣️.json` —  — ['schema', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧬️schema-rust-entries/🔣️.json` — SchemaRustEntryCases — ['contract', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧾️canonical-json/🔣️.json` —  — ['schemaVersion', 'contractId', 'cases', 'runtimeCases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🪶️artifact-empty-facet-authoring/📨️request/🔣️.json` —  — ['schemaVersion', 'contractId', 'readBytes', 'readChunkBytes', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🪶️artifact-empty-facet-authoring/🔣️.json` —  — ['schemaVersion', 'contractId', 'sourceContractId', 'subsetSegments', 'leaf', 'customContent', 'customMode', 'directoryMode', 'surfaceLayout', 'subsetLayout', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🪶️snapshot-test-groups/🔣️.json` —  — ['sources', 'budgetMs', 'cases', 'invalidGroups'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧼️clean/🔣️.json` —  — ['version', 'ticketsRoot', 'tickets', 'special', 'cases', 'reopened'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🖍️draw-source-scenario/🛟️residue-recovery/🔣️.json` — Draw Residue Durable Recovery Scenarios — ['schemaVersion', 'contractId', 'childExitCode', 'foreignInput', 'generatorStarts', 'inverseState', 'preservation', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🖍️draw-source-scenario/🛫️preflight-context/🔣️.json` —  — ['schemaVersion', 'contractId', 'ticketDir', 'transactionDirectory', 'planPath', 'sourcePath', 'foreignPath', 'unrelatedPath', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🐹️canonical-go-discovery/🔣️.json` —  — ['contract', 'module', 'dependency', 'layout', 'cases', 'nativePackages', 'opaqueCases', 'expectedPackages', 'expectedSources', 'expectedTests'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🚚️text-editor-lanes/🔣️.json` —  — ['schema', 'laneKey', 'field', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🎯️component-source/🔣️.json` — Original Mesh Component Source — ['schema', 'source', 'references', 'cases', 'invalidLabels'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️dependency-direction/🔣️.json` —  — ['schemaVersion', 'cases', 'graphCases', 'graphScope', 'inventoryCases', 'resolutionCases', 'removabilityCases', 'publicExportCases', 'typeCases', 'infrastructureCases', 'policyOwners', 'policyCases', 'constructionCases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🌳️workspace-taxonomy/🔣️.json` —  — ['schemaVersion', 'canonicalLocator', 'childLocator', 'cases', 'startCases', 'anchorCases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/✂️node-native-typescript/🔣️.json` — Node Native TypeScript Surface — ['schemaVersion', 'configImportSpecifiers', 'nativeEntries', 'vectors'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📋️mutation-inventory/🎫️ticket-role-routing/🔣️.json` —  — ['schemaVersion', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📋️mutation-inventory/🧾️source-file-facts/🔣️.json` —  — ['schemaVersion', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📋️mutation-inventory/📸️source-index-capture/🔣️.json` —  — ['schemaVersion', 'expectedRoots', 'existingEvidence', 'cases', 'unknownPath', 'cancelFile', 'cancelProbePath'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🥒️gherkin-description-inline-code/🔣️.json` — Gherkin Feature description inline-code span extraction — ['schemaVersion', 'contract', 'cases', 'corpus'] — 
+- `🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🧬️schema/🔣️.json` — Scoped Allocation Request Corpus — ['cases', 'unwindProbeBytes', 'overflowProbeBytes'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️mutation-leaf-identity/🔣️.json` — MutationLeafIdentityVectors — ['contract', 'descriptor', 'leafKindId', 'vectorKindId', 'retiredRegistries', 'cases'] — 
+- `🧰️framework/🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧬️schema/🔣️.json` — Ordered Scroll Ingress — ['version', 'capacity', 'cases', 'overflow'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/↪️rust-divergence-callback/🔣️.json` —  — ['schemaVersion', 'contract', 'semantics', 'cases', 'oracle', 'retention', 'registration', 'attributeCompilerCases', 'scope'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔗️markdown-inline-references/🔣️.json` — Bounded Markdown inline reference extraction — ['schemaVersion', 'contractId', 'grammar', 'extraction', 'oracle', 'limits', 'cases', 'cacheSequence', 'stress'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/⚡️workspace-negation-closure/🔣️.json` —  — ['version', 'projectRoot', 'files', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/✍️rust-writable-path-authority/🔣️.json` —  — ['schemaVersion', 'contract', 'semantics', 'cases', 'batch', 'spanIntegrity', 'registration', 'retention'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🥤️rust-finite-target-consumption/🔣️.json` —  — ['schemaVersion', 'contract', 'semantics', 'cases', 'correlated', 'writable', 'registration', 'retention'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️cargo-dependency-direction/🔣️.json` —  — ['schemaVersion', 'policy', 'cases', 'corruptions', 'policyCorruptions'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🤝️package-language-kind-handoff/🖥️ui-host-package/🔣️.json` — UI Host Source-Only Package Metadata — ['schemaVersion', 'contractId', 'ownerPath', 'packagePath', 'packageFiles', 'cargo', 'members', 'sourceOracles', 'sourceCases', 'browserHost', 'abi', 'project', 'imports', 'nativeCases', 'checks', 'rejectedSegments', 'internalDependencies', 'launch', 'prohibitedChanges', 'moduleImports'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🤝️package-language-kind-handoff/🔣️.json` —  — ['schemaVersion', 'contractId', 'semantics', 'oracleCompilation', 'languages', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📣️typescript-declaration-facts/🚫️unsupported/🔣️.json` — Valid Unsupported TypeScript Declaration Cases — ['schemaVersion', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📣️typescript-declaration-facts/💥️malformed/🔣️.json` —  — ['schemaVersion', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📣️typescript-declaration-facts/🔣️.json` —  — ['schemaVersion', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🟢️readme-current-source-activation/🔣️.json` — Reviewed README Raw Source Activation — ['schemaVersion', 'contract', 'scope', 'execution', 'contractId', 'revisionId', 'revisionInput', 'revisionInputSha256', 'taxonomyPath', 'catalogPath', 'catalogSha256', 'catalogCaseIndex', 'baseline', 'expectedRevisionDigest', 'shippedPublication', 'unregisteredPath', 'generatorIsolation', 'laws', 'cases', 'driftCases', 'frozenBindingCases', 'schemaSnapshotCases', 'catalogCases', 'runDirectory'] — 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧬️schema/🔣️.json` —  — ['version', 'owner', 'entry', 'manifest', 'binding', 'types', 'fields', 'controls', 'cases', 'sourceCases'] — 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧬️schema/⚠️refusal/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️rust-source-direction/🪵️root/🔣️.json` —  — ['schemaVersion', 'cases', 'native', 'freshness'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️rust-source-direction/🧾️attributes/🔣️.json` —  — ['schemaVersion', 'cases', 'featureCases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️rust-source-direction/🔣️.json` —  — ['graphAuthority', 'schemaVersion', 'cases', 'rules', 'directions', 'mounts', 'unsupported', 'targets', 'escapes', 'ownerCases', 'contribution', 'ownerRejections', 'inlineScopes', 'inlineRejections', 'traversals', 'referenceRejections', 'macroScopes', 'macroRejections', 'macroOwners', 'attributeOrigins'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🌐️registry-import-language/🧪️imported-data/🔣️.json` — Registry Compiler Input Dependency Authority — ['schemaVersion', 'contractId', 'selection', 'dataGrammar', 'fallback', 'cases', 'graph'] — 
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧬️schema/🧩️composition/🔣️.json` —  — ['format', 'cases', 'ownedFronts', 'higherFronts'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧬️mutation-scenario-identities/🔣️.json` —  — ['contract', 'scenarioSchema', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🧬️schema/🧩️execution-target-module-resolution-v1/🔣️.json` — Execution-target module resolution — ['schemaVersion', 'corpus', 'eviction', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🧬️schema/🌱️space-artifact-creation-generation-v1/🔣️.json` —  — ['schema', 'catalogGenerationId', 'rotatedCatalogGenerationId', 'request', 'accepted', 'ready', 'initialPostConflict', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔤️taxonomy-leading-grapheme/🔣️.json` —  — ['schemaVersion', 'contractId', 'helper', 'segmenter', 'semantics', 'rounds', 'oracle', 'cases', 'scalingCases', 'oracleDivergences'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧬️schema/📋️owner-command-policy/🔣️.json` — Native Owner Command Policy Corpus — ['version', 'cases'] — 
+- `🧰️framework/🔨️modules/🏗️mesh-engine/🧬️schema/🎨️attributes/🔣️.json` — Portable Mesh Attribute Corpus — ['mesh', 'expected', 'invalidCases', 'remapping', 'normalTransform', 'indexedMesh', 'indexedExpected', 'orientation', 'expandedAttributeJobs', 'filledAttributeJob', 'deletedAttributeJob', 'decimatedAttributeJob', 'beveledAttributeJob'] — 
+- `🧰️framework/🔨️modules/📁️filesystem/📷️snapshot/🧬️schema/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🏭️generated-source-topology/🔣️.json` —  — ['schemaVersion', 'kindLeaves', 'cases'] — 
+- `🧰️framework/🔨️modules/📁️filesystem/🔎️discovery/🧬️schema/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧲️rust-physical-reference-context/🧬️join-provenance/🔣️.json` — Rust String Collection Join Provenance — ['contract', 'ownership', 'retention', 'cases'] — 
+- `🧰️framework/🔨️modules/🧬️schema/✅️validator/🧬️schema/🔣️.json` —  — ['cases', 'comparisons'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🏎️nextest/🔣️.json` —  — ['schema', 'cases', 'rejected'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/✅️mutation-test-presence/🔣️.json` —  — ['schemaVersion', 'mutationRoot', 'leaf', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧬️schema-scope-catalog/🔣️.json` — SchemaScopeCatalogCases — ['contract', 'cases'] — 
+- `🧰️framework/🔨️modules/⏳️async/🔂️poll/🧬️schema/🔣️.json` —  — ['format', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/📦️semantic-package-source-manifest-identity/🔣️.json` —  — ['schemaVersion', 'scope', 'api', 'row', 'facts', 'cases', 'phases', 'syntaxGaps'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧬️mutation-case-pair/🔣️.json` —  — ['contract', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️owned-script-routes/🔣️.json` —  — ['routes', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🖼️runtime-taxonomy-asset-paths/🔣️.json` —  — ['contract', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🏛️canonical-execution/🔣️.json` —  — ['schema', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧩️child-kind-metadata/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🧬️schema/🔣️.json` —  — ['contract', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔏️path-emoji-statutes/🔣️.json` —  — ['schemaVersion', 'mutationCatalogSourceOwnership', 'gltfFixtureCoordinates', 'assetLogoKeyframes', 'assetDocumentation', 'assetIconPaths', 'taxonomyEmojiIdentities', 'selectorFreeZwjOwners', 'mutationPayloadOwnership', 'mutationDomainContract', 'projectionOracleDirectories', 'subsetDirectoryOverrides', 'semanticManifestFilenameOverrides', 'projectionScenarios', 'nextEntryNames', 'graphManifestNames', 'authoredSubtreeNames', 'storyNames', 'normalization', 'genericEmojiIdentities', 'cases', 'tsvMutationPayloadCases'] — 
+- `🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🧬️schema/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🔨️modules/⏳️async/🔐️publication/🛂️checkpoint/🧬️schema/🔣️.json` — Owned Publication Checkpoint Laws — ['version', 'cases'] — 
+- `🧰️framework/🔨️modules/⏳️async/🔐️publication/🧬️schema/🔣️.json` — Neutral Publication Admission Laws — ['version', 'tokenNodeCeiling', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧬️schema/🔣️channel-handshake/🔣️.json` — Guest Host Channel Handshake Law — ['$schema', 'law', 'code', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧬️schema/🔣️document-archive-load-host/🔣️.json` — Document Archive Load Host Law — ['$schema', 'law', 'firstSequence', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🧪️fixtures/📦️lifecycle/🧬️schema/🔣️.json` —  — ['grant', 'largeCapacity', 'handoff', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json` —  — ['version', 'owner', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🧬️schema/🔣️.json` —  — ['version', 'files', 'cases', 'snapshot', 'authorities', 'imports'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧬️schema/document-echo-suppression/🔣️.json` — Document Echo Suppression V1 — ['schema', 'hubCatchUpOrigin', 'vectors'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧬️schema/🔣️folder-archive-presence/🔣️.json` — Folder archive presence corpus — ['$schema', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🧬️schema/🔣️.json` —  — ['environment', 'expected'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️schema/🔣️scope-closure/🔣️.json` — TaxonomyScopeClosureFixture — ['$schema', 'description', 'cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️schema/🚪️source-admission/🧪️io/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️schema/🔣️taxonomy-input/🔣️.json` —  — ['schemaVersion', 'cases', 'witnessCases'] — 
+- `🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🧩️consumption/🔣️.json` — Explicit Graph Manifest Consumption Corpus — ['cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧬️schema/🔣️cold-pair-loading/🔣️.json` — Cold pair loading corpus — ['schema', 'policy', 'cursor', 'cases', 'backpressure'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️supersede-replay/🔣️.json` — Supersede replay corpus — ['$schema', 'family', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️viewer-head/🔣️.json` — Viewer head corpus — ['$schema', 'family', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧬️schema/🌿️branch-provenance/🔣️.json` —  — ['schema', 'vectors'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧬️schema/📸️paged-history-stack/🔣️.json` —  — ['schema', 'vectors'] — 
+- `🧰️framework/🔨️modules/🌱️value/🔁️codec/🧬️schema/🛬️controlled/🔗️borrowed-keys.json` —  — ['unit', 'repeat', 'cases', 'expectedKind', 'maximumOwnedBytes', 'indexAuthority', 'canonicalRetirement'] — 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🧬️schema/🏠️parent-return.json` —  — ['schema', 'wire', 'paddingByte', 'paddingBytes', 'wireBytes', 'maximumItems', 'maximumBytes', 'parentSlots', 'parentTotalBytes', 'lawTurns', 'cases'] — 
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🧬️schema/⚠️refusal/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🤏️inline-text-stream/🔣️.json` —  — ['schema', 'inlineBytes', 'shortText', 'prefix', 'payloadByte', 'payloadBytes', 'sourceBytes', 'maximumAllocationBytes', 'initialAllocationBytes', 'maximumItems', 'maximumBytes', 'cases', 'knownShortText'] — 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🧾️semantic-text-retirement/🔣️.json` —  — ['schema', 'text', 'textBytes', 'maximumItems', 'maximumBytes', 'maximumAllocationBytes', 'partialScalars', 'fields', 'cases', 'expected'] — 
+- `🧰️framework/🔨️modules/🌱️value/📦️paged/🧬️schema/🔣️.json` —  — ['version', 'vectors'] — 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🪆️stage/🔣️.json` —  — ['schema', 'cases', 'refusals'] — 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🫴️recipient.json` —  — ['schema', 'slots', 'logicalBytes', 'pageBytes', 'pages', 'maximumItems', 'maximumBytes', 'maximumOwnerWords', 'cases', 'maximumAllocation', 'initialAllocation'] — 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🌊️text-stream/🔣️.json` —  — ['schema', 'prefix', 'payloadByte', 'payloadBytes', 'sourceBytes', 'maximumAllocationBytes', 'initialAllocationBytes', 'maximumItems', 'maximumBytes', 'cases'] — 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/📝️paged-text.json` —  — ['schema', 'payloadBytes', 'pageBytes', 'maximumCloseItems', 'maximumCloseBytes', 'maximumAllocationBytes', 'initialAllocationBytes', 'ascii', 'unicode', 'cancelAt', 'cases', 'invalidUtf8'] — 
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🔣️.json` —  — ['schema', 'workload', 'cases', 'copyWorkload', 'nestedStage', 'utf8'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/📤️outbound-announcement/🔣️.json` — Outbound Announcement V1 — ['schema', 'vectors'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/⚡️hot-path/🔣️.json` — Store Hot Path V1 — ['schema', 'vectors'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️deferred-reprojection/🔣️.json` — Deferred reprojection corpus — ['$schema', 'family', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️tool-transaction/🔣️.json` — Tool transaction corpus — ['$schema', 'family', 'tool', 'codec', 'cases'] — 
+- `🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️graphql/🔢️int64/🧬️schema/🔣️.json` —  — ['scalar', 'semanticOwner', 'wireRepresentation', 'valid', 'invalidDecimal', 'invalidVariableKinds', 'invalidAstKinds'] — 
+- `🧰️framework/🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json` —  — ['schemaVersion', 'types', 'kinds', 'cases', 'wire', 'refused', 'nativeControls'] — 
+- `🧰️framework/🔨️modules/🌱️value/🧬️schema/🧩️neutral-owner/🔣️.json` —  — ['version', 'grant', 'vectors', 'compilerStorage'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/🧬️schema/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔤️utf8/🧬️schema/🔣️.json` —  — ['schemaVersion', 'owner', 'borrowedSource', 'ownedSource', 'refusalKind', 'messageClassification', 'cases'] — 
+- `🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json` —  — ['valid', 'invalid', 'controls', 'longMessage'] — 
+- `🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧬️schema/🔣️.json` —  — ['cases', 'jsonCases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🚪️document-mount/🧬️schema/🔐️pool-use/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/📣️registration/🧬️schema/🔣️.json` —  — ['owner', 'coordinate', 'registrationFunction', 'nativeLaw', 'isolationVariable', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️schema/⚔️concurrent-write/🔣️.json` — Concurrent Write Grading V1 — ['schema', 'vectors'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/🧬️schema/🚦️refusals/🔣️.json` —  — ['cases', 'symbols', 'orderedSymbols'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🚦️control/🧬️schema/🔣️.json` —  — ['maximumTransportBytes', 'payload', 'cancelCommand', 'readPageBytes', 'cases', 'textTransfer'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🆔️ids/🧬️schema/⚠️error/🎒️pack/🔣️.json` —  — ['schemaVersion', 'owner', 'definingErrorOwner', 'rule', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📍️output/🧬️schema/🔣️.json` —  — ['schema', 'stagingRoot', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🧬️.schema.json` —  — ['schema', 'timeoutMs', 'initializationTimeoutMs', 'bootstrapTimeoutMs', 'maximumPending', 'close', 'cases', 'accepted'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⏱️frame-latency/🔣️.json` —  — ['schemaVersion', 'productionCapacity', 'oracleCapacity', 'requiredStages', 'observations', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/↔️input-commits/🔣️.json` —  — ['owner', 'baseRevision', 'firstRevision', 'secondRevision', 'foreignRevision', 'fields', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎬️row-action-admission/🔣️.json` —  — ['schema', 'owner', 'initial', 'replacement', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️world3d-glb-material/🔣️.json` —  — ['schema', 'asset', 'primitiveOrder', 'publication', 'cases', 'textureRoles'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🕸️node-graph-domain-interaction/🔣️.json` —  — ['schemaVersion', 'interactionDomain', 'identity', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧬️schema/🔔️deferred-wake/🔣️.json` —  — ['schema', 'capacity', 'dispatch', 'refusal', 'retryEpoch', 'shutdown', 'cases', 'runtimeMarkers'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️world3d-glb-outline/🔣️.json` —  — ['schema', 'thresholdAngleDegrees', 'outlineScale', 'positionWeldPrecisionDecimals', 'semanticEdgeIds', 'derivation', 'iconStrokeCases', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎓️host-introduction/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧵️kernel-pool-future/🔣️.json` —  — ['cases', 'responses', 'admissions', 'turnFairness'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🌳️ui-contract-presentation/🔣️.json` —  — ['contractVersion', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🌳️window-measures-tree-parity/🔣️.json` —  — ['schema', 'windowId', 'body', 'measures', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🖼️reference-image-decode/🔣️.json` — Reference Image Decode Contract — ['decodedByteCapacity', 'sourcePixelCapacity', 'readbackStripByteCapacity', 'readbackMode', 'yieldAfterEveryStrip', 'pixelFormat', 'colorSpaceConversion', 'alpha', 'orientation', 'resampling', 'oracle', 'cases', 'browserMetadataFormats', 'browserWorkerBitmapFormats', 'browserPageBitmapFormats', 'browserPageDecodeCapacity', 'nativeDecodeFormats', 'reactRoutedExtensions', 'reactRoutedMediaTypes', 'unimplementedWgpuFormats'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/💬️chat-input-accessibility/🔣️.json` — Chat Input Accessibility Contract — ['contractVersion', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️icon-svg-lighting/🔣️.json` —  — ['schema', 'profile', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧊️wgpu-browser-boot-cache-inputs/🔣️.json` —  — ['$schema', 'defaultVariant', 'ambientVariants', 'cases', 'generator', 'refusals'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⌨️dock-tab-keyboard/🔣️.json` —  — ['schema', 'projection', 'stacks', 'cases', 'stale'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♿️native-accessibility-tree/🔣️.json` — Native accessibility tree — ['schema', 'title', 'windows', 'expected', 'roles', 'actions'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎬️surface-behavior/🔣️.json` —  — ['schemaVersion', 'owner', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🪆️embedded-mount/🔣️.json` —  — ['version', 'roots', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🔗️hub-projection/🔣️.json` —  — ['schemaVersion', 'cases', 'workspace', 'footerPresentation', 'operationOwnership', 'transport'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/♻️tiled-map-gesture-lifecycle/🔣️.json` —  — ['schemaVersion', 'owner', 'cases', 'retirement', 'ledger'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⌨️browser-keyboard-scope/🔣️.json` — Browser Keyboard Scope — ['version', 'cases', 'focusLossCases', 'retirementCases', 'fullscreenCases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🛑️scene-pointer-cancellation/🔣️.json` —  — ['schemaVersion', 'owner', 'tiledMap', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🖱️wheel-application-point/🔣️.json` — Owned Scroll Dispatch Fixture — ['schema', '$comment', 'rule', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🖋️ink-canvas-domain-interaction/🔣️.json` —  — ['schemaVersion', 'scene', 'viewport', 'document', 'identity', 'forbiddenActions', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧬️schema/🔣️.json` —  — ['schema', 'erasedDispatch', 'metadataAdmission', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️agent-credential/🧬️schema/🔣️.json` —  — ['schema', 'vectors'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-encoding/🧬️schema/🔣️.json` —  — ['exactEncodingAdmission', 'schema', 'cases', 'interiorEncoding', 'typedProjection', 'physicalLiteralTexts', 'physicalBytes', 'physicalText'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧬️schema/🔣️.json` —  — ['schema', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧬️schema/🏁️job-completion-publication/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧬️schema/🛬️construction/🔣️.json` —  — ['cases', 'controlledRefusals'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧬️schema/🌐️browser-acceptance/🔣️.json` —  — ['version', 'target', 'selectors', 'template', 'cases', 'widgets'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/🧬️schema/🔣️.json` —  — ['version', 'evidence', 'capacities', 'cases', 'grantLaws', 'freshnessLaws', 'admissionLaws', 'publicationLaws', 'laneTrace', 'rawPageLaws', 'faultLaws', 'closeLaws', 'download'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🧬️schema/🎨️layout/🔣️.json` — Event Feed Visual Layout — ['version', 'viewport', 'surfaceId', 'controllerId', 'activateAction', 'entries', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🧬️schema/♿️accessible-entry/🔣️.json` — EventFeed Accessible Entry — ['schema', 'hostId', 'surfaceId', 'controllerId', 'acceptedTimeLabel', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🌐️grid-visual/🔣️.json` —  — ['$schema', 'schema', 'reference', 'themes', 'cases', 'pixelOracle'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🎯️analytic-vertex-picking/🔣️.json` —  — ['schema', 'instance', 'handle', 'revision', 'label', 'expected', 'mesh', 'camera'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/🎯️analytic-component-picking/🔣️.json` —  — ['mesh', 'camera', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧬️schema/📤️asset-cancellation/🔣️.json` — Exact Asset Request Cancellation — ['requests', 'stages', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️schema/🏁️job-completion-ownership/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🪶️sqlite/🧬️schema/💰️release/🔣️.json` —  — ['format', 'owner', 'counts', 'encodings', 'directions', 'cases', 'requests', 'incoming', 'diagnostic', 'released', 'caller', 'cancellation', 'census'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️fixtures/⏰️chrome-deadline/🧬️schema/🔣️.json` —  — ['$schema', 'version', 'timing', 'text', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎬️initial-example/🧬️schema/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/🪟️maximize-resync/🔣️.json` —  — ['windows', 'maximized', 'initialWeights', 'cases', 'localeRetitle', 'ingressCases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/🎯️spawned-document-routing/🔣️.json` —  — ['host', 'spawned', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️schema/🪪️pack-identity/🔣️.json` —  — ['windowKind', 'schema', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/🧬️schema/🎯️checkpoint-hit/🔣️.json` — Graph Timeline Checkpoint Hit Regions — ['version', 'hostId', 'controllerId', 'surfaceId', 'bounds', 'columns', 'cases', 'accessibility'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/🧬️schema/🎨️layout/🔣️.json` — Graph Timeline Layout — ['version', 'viewport', 'columns', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧬️schema/🔣️time-travel-band/🔣️.json` — Time Travel Band — ['description', 'controllerId', 'axes', 'chords', 'labels', 'cases', 'rowActions', 'refusals', 'transitions', 'editorKeys'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧰️utility-assignment/🧬️schema/🔣️.json` — Window Utility Assignment Cases — ['windowIds', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧬️schema/🔣️float32-decimal/🔣️.json` — Board2dFloat32DecimalCorpus — ['schema', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧬️schema/🔣️board-event-coalescing/🔣️.json` — Board event coalescing corpus — ['cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/🧬️schema/🔣️.json` — PresentedMediaSlotLaws — ['slotCapacity', 'descriptorBytes', 'cases', 'occlusionCases', 'tokenIdentity', 'token', 'identityTransitions', 'descriptorBudget'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖱️context-menu/🧬️schema/🔣️.json` — Context-menu selection glossary and phrase cases — ['schema', 'kinds', 'labels', 'cases', 'deleteRows'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧬️schema/🪟️canvas-clearance/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/📥️command-ingress/🧬️schema/🔣️.json` —  — ['version', 'owner', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/🧬️schema/🧭️navigator-camera/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎛️UtilityTree/🧬️schema/📐️bounded-palette/🔣️.json` — Bounded Utility Palette — ['directions', 'widths', 'utilities', 'selection', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/🏷️status/🔣️.json` —  — ['schema', 'diagnostic', 'locales', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/⭕️svg-mask/🔣️.json` —  — ['cases', 'samples'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/📤️export-batch/🔣️.json` —  — ['version', 'invalid', 'expected', 'labels', 'queueCases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/🚚️request/🔣️.json` —  — ['version', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/📥️download/🔣️.json` — Icon Download Cases — ['version', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/📤️svg-export/🔣️.json` — Icon SVG Export — ['width', 'height', 'shape', 'background', 'camera', 'geometry', 'lighting', 'material', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/🖼️frame-presentation/🔣️.json` —  — ['schema', 'tolerance', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🧬️schema/🔣️seed-reconcile/🔣️.json` — Launch seed reconciliation corpus — ['seedFormatting', 'format', 'seed', 'targets', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧬️schema/📤️png-export/🔣️.json` —  — ['maximumPixelsPerStep', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪟️mounted-window-refresh/🧬️schema/🔣️.json` —  — ['cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧬️schema/🔣️.json` —  — ['archive', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧬️schema/📮️delivery/🔣️.json` — Text Editor Delivery — ['schema', 'cases', 'spliceCases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧬️schema/📝️explicit-draft/🧭️retention.json` —  — ['schema', 'owner', 'replacementOwner', 'initialSession', 'openedDocument', 'windowId', 'draftScope', 'base', 'draft', 'published', 'baseRevision', 'ownRevision', 'operation', 'limits', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🧬️schema/📝️explicit-draft/⚖️lifecycle.json` —  — ['schema', 'source', 'otherSource', 'base', 'draft', 'normalized', 'newerDraft', 'baseRevision', 'ownRevision', 'foreignRevision', 'operation', 'operationGeneration', 'cancellation', 'orders', 'failures', 'expected', 'selectAllChords'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🏗️component-instantiation/🔣️.json` — Semio OS Plugin Component Instantiation Fixture — ['component', 'calls', 'expected'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📊️Table/🧬️schema/🔘️button-accessibility/🔣️.json` — Table Button Accessibility — ['schema', 'hostId', 'surfaceId', 'controllerId', 'columns', 'row', 'expected', 'geometryCases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🧾️transaction-command-close/🔣️.json` —  — ['schemaVersion', 'layoutPolicy', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🤝️cooperative-pump/🔣️.json` —  — ['schemaVersion', 'hostSource', 'nativeOwner', 'module', 'nativeLaw', 'neutralSources', 'neutralRouter', 'cases', 'neutralLaws'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧬️schema/🔣️gumball-live-protocol/🔣️.json` — Gumball Live Protocol — ['why', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧬️schema/🔣️.json` —  — ['schema', 'descriptor', 'hashKeys', 'cases', 'localTransport'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧬️schema/🔣️path-paint/🔣️.json` — Canvas2d path paint corpus — ['margin', 'cases'] — 
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧬️schema/🔣️gumball-dispatch/🔣️.json` — Canvas2d gumball dispatch corpus — ['tolerance', 'cases'] — 

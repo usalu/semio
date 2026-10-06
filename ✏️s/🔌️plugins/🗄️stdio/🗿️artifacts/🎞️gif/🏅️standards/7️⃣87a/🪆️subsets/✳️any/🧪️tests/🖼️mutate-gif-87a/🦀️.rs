@@ -40,7 +40,7 @@ fn spec(ctx: &Context) -> Result<Json, String> {
 /// the projection — nothing is exempt — so the exemption list is empty and stays empty: a kind that
 /// stops moving it is a regression in the oracle or the projection, not a fact about GIF87a.
 fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = ctx.fixture_bytes(INPUT)?;
+    let input = ctx.input_bytes(INPUT)?;
     let forward = spec(ctx)?;
     let before = project_gif_87a(&input)?;
     let bytes = oracle_apply_mutation(&input, &forward)?;
@@ -55,7 +55,7 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// the parity phase: a scenario that only re-serializes and returns would pass whenever `gif` did
 /// not error.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = ctx.fixture_bytes(INPUT)?;
+    let input = ctx.input_bytes(INPUT)?;
     let before = project_gif_87a(&input)?;
     let forward = spec(ctx)?;
     let mutated = oracle_apply_mutation(&input, &forward)?;
@@ -69,7 +69,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// and a reference that writes the file anyway is the failure. Any other error fails the scenario too.
 fn refuse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let attempt = spec(ctx)?;
-    match oracle_apply_mutation(&ctx.fixture_bytes(INPUT)?, &attempt) {
+    match oracle_apply_mutation(&ctx.input_bytes(INPUT)?, &attempt) {
         Err(reason) if reason.starts_with("refused: ") => Ok(Outcome::projection(Json::Object(vec![("rejected".to_string(), Json::Bool(true))]))),
         Err(reason) => Err(format!("the reference failed {} for a reason other than the raster rules: {reason}", attempt.str("kind"))),
         Ok(bytes) => Err(format!("expected {} to be refused, but the reference wrote {} byte(s)", attempt.str("kind"), bytes.len())),
@@ -81,8 +81,8 @@ fn refuse_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// alone, so the bytes must change (its own LZW writer and block layout are not the fixture's) while
 /// the semantic projection must not.
 fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let small = round_trip_oracle_once(&ctx.fixture_bytes(SMALL_INPUT)?)?;
-    let large = round_trip_oracle_once(&ctx.fixture_bytes(INPUT)?)?;
+    let small = round_trip_oracle_once(&ctx.input_bytes(SMALL_INPUT)?)?;
+    let large = round_trip_oracle_once(&ctx.input_bytes(INPUT)?)?;
     Ok(Outcome::with_raw(large.0, Json::Object(vec![("small".to_string(), small.1), ("large".to_string(), large.1)])))
 }
 
@@ -120,7 +120,7 @@ mod subject {
     /// 🧫️ Copies the immutable fixture into the work directory and decodes the mutable copy through
     /// the repository's own, complete GIF87a parser.
     fn original_snapshot(ctx: &Context) -> Result<GifSnapshot, String> {
-        let copy = ctx.copy_fixture(INPUT, Some("input.gif"))?;
+        let copy = ctx.copy_input(INPUT, Some("input.gif"))?;
         let bytes = std::fs::read(&copy).map_err(|error| error.to_string())?;
         decode_gif(&bytes)
     }
@@ -166,7 +166,7 @@ mod subject {
 
     /// 🔁️ The probe itself, over one GIF87a document.
     fn round_trip_once(ctx: &Context, uri: &str, name: &str) -> Result<(Vec<u8>, Json), String> {
-        let copy = ctx.copy_fixture(uri, Some(name))?;
+        let copy = ctx.copy_input(uri, Some(name))?;
         let input = std::fs::read(&copy).map_err(|error| error.to_string())?;
         let snapshot = decode_gif(&input)?;
         let output = encode_gif(&snapshot)?;

@@ -1,0 +1,97 @@
+{
+  "qualification": "Independent planned four-domain-part strict package blueprint, not captured runtime oracle output. Exact lexical part names/root attributes must reconcile Root handcrafted mounted source before fixture mount.",
+  "oracleKeys": [
+    "format",
+    "mainPart",
+    "mainRootName",
+    "mainRootAttributes",
+    "parts",
+    "namespaces",
+    "relationshipTypes",
+    "alternateContentParts"
+  ],
+  "plannedProjection": {
+    "format": "pptx",
+    "mainPart": "ppt/presentation.xml",
+    "mainRootName": "p:presentation",
+    "mainRootAttributes": "Exact sorted {name,value} rows from independently authored root literal; do not invent until Root source available",
+    "parts": [
+      {
+        "path": "[Content_Types].xml",
+        "contentType": "application/xml"
+      },
+      {
+        "path": "_rels/.rels",
+        "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+      },
+      {
+        "path": "ppt/_rels/presentation.xml.rels",
+        "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+      },
+      {
+        "path": "ppt/presentation.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"
+      },
+      {
+        "path": "ppt/slideLayouts/_rels/slideLayout1.xml.rels",
+        "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+      },
+      {
+        "path": "ppt/slideLayouts/slideLayout1.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"
+      },
+      {
+        "path": "ppt/slideMasters/_rels/slideMaster1.xml.rels",
+        "contentType": "application/vnd.openxmlformats-package.relationships+xml"
+      },
+      {
+        "path": "ppt/slideMasters/slideMaster1.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"
+      },
+      {
+        "path": "ppt/theme/theme1.xml",
+        "contentType": "application/vnd.openxmlformats-officedocument.theme+xml"
+      }
+    ],
+    "namespaces": [
+      "http://purl.oclc.org/ooxml/drawingml/main",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships",
+      "http://purl.oclc.org/ooxml/presentationml/main"
+    ],
+    "relationshipTypes": [
+      "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships/slideLayout",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships/theme"
+    ],
+    "alternateContentParts": []
+  },
+  "separateRelationshipWitness": [
+    {
+      "source": "package",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument",
+      "target": "ppt/presentation.xml"
+    },
+    {
+      "source": "ppt/presentation.xml",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster",
+      "target": "ppt/slideMasters/slideMaster1.xml"
+    },
+    {
+      "source": "ppt/slideMasters/slideMaster1.xml",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slideLayout",
+      "target": "ppt/slideLayouts/slideLayout1.xml"
+    },
+    {
+      "source": "ppt/slideMasters/slideMaster1.xml",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/theme",
+      "target": "ppt/theme/theme1.xml"
+    },
+    {
+      "source": "ppt/slideLayouts/slideLayout1.xml",
+      "type": "http://purl.oclc.org/ooxml/officeDocument/relationships/slideMaster",
+      "target": "ppt/slideMasters/slideMaster1.xml"
+    }
+  ],
+  "oracleLimit": "project() exposes distinct sorted relationshipTypes, not IDs/targets/parent cardinality. Separate quick-xml relationship rows/FK target checks required. Package namespace is not included by OOXML-family namespace filter."
+}

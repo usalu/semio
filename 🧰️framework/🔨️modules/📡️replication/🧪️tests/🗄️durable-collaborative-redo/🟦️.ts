@@ -1,4 +1,3 @@
-import Ajv from "ajv";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -83,20 +82,10 @@ function foldHistory(edits: readonly Edit[], transitions: readonly TransitionSte
 export async function registerTests(vitest: NonNullable<ImportMeta["vitest"]>, source: TestSource): Promise<void> {
   const { describe, expect, it } = vitest;
   const root = dirname(fileURLToPath(source.url));
-  const [fixtureRaw, schemaRaw] = await Promise.all([
-    readFile(join(root, "🔗️causal/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json"), "utf8").catch(() =>
-      readFile(join(root, "🔗️causal/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json"), "utf8"),
-    ),
-    readFile(join(root, "🔗️causal/🧬️schema/🗄️durable-collaborative-redo-v1/🔣️.json"), "utf8"),
-  ]);
-  const fixture = JSON.parse(fixtureRaw) as Fixture;
-  const schema = JSON.parse(schemaRaw);
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  const validate = ajv.compile(schema);
+  const fixture = JSON.parse(await readFile(join(root, "🔗️causal/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json"), "utf8")) as Fixture;
 
   describe("durable collaborative redo fixture", () => {
-    it("matches its JSON Schema", () => {
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    it("covers the declared durable replay observations", () => {
       expect(fixture.schema).toBe("semio.history.durable-collaborative-redo.v1");
       expect(fixture.observations).toContain("durable-collaborative-redo");
       expect(fixture.observations).toContain("survives-hub-restart");

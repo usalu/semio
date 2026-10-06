@@ -33,7 +33,20 @@
     },
     "toIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Target position",
+          "de": "Zielposition"
+        },
+        "description": {
+          "en": "The position the step moves to.",
+          "de": "Die Position, an die der Schritt rückt."
+        },
+        "widget": "stepper",
+        "role": "value",
+        "step": 1
+      }
     }
   }
 }

@@ -11,7 +11,7 @@ use crate::editor::en1998::commands::{apply_remedy, evaluate, insert_item, remov
 use crate::editor::en1998::modes::edit as edit_mode;
 use crate::editor::en1998::modes::edit::windows::{inputs, results};
 use crate::editor::en1998::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::op::En1998Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::En1998Mutation;
 use crate::En1998Snapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::InteractiveJobClassification;
@@ -145,7 +145,7 @@ impl ArtifactEditor for En1998PlayApp {
         command.command_id()
     }
 
-    semio_s_artifact_norm_contract::norm_command_from_action!(En1998Command, crate::standards::v1::subsets::any::schema::snapshot::decode_en1998_snapshot_json);
+    semio_s_artifact_norm_contract::norm_command_from_action!(En1998Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_en1998_snapshot_json);
 
     fn handle(
         command: &En1998Command,

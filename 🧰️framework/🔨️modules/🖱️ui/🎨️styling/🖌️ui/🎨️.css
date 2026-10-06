@@ -3914,6 +3914,18 @@
     transform: translateY(-0.4px);
   }
 }
+@keyframes icon-cloud-download {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(2px);
+  }
+  70% {
+    transform: translateY(-0.4px);
+  }
+}
 @keyframes icon-arrow-left {
   0%,
   100% {
@@ -6408,6 +6420,7 @@
 [data-icon="arrow-down"] { --icon-animation: icon-arrow-down; }
 [data-icon="external-link"] { --icon-animation: none; --icon-part-1-anim: icon-external-link-arrow; --icon-part-2-anim: icon-external-link-arrow; }
 [data-icon="download"] { --icon-animation: none; --icon-part-1-anim: icon-download-drop; --icon-part-3-anim: icon-download-drop; }
+[data-icon="cloud-download"] { --icon-animation: icon-cloud-download; }
 [data-icon="hard-drive"] { --icon-animation: none; --icon-part-3-anim: icon-hard-drive-led-a; --icon-part-3-duration: 600ms; --icon-part-4-anim: icon-hard-drive-led-b; --icon-part-4-duration: 600ms; }
 [data-icon="settings-2"] { --icon-animation: none; --icon-part-3-anim: icon-settings-2-knob-a; --icon-part-4-anim: icon-settings-2-knob-b; }
 [data-icon="image-up"] { --icon-animation: none; --icon-part-2-anim: icon-image-up-arrow; --icon-part-3-anim: icon-image-up-arrow; }

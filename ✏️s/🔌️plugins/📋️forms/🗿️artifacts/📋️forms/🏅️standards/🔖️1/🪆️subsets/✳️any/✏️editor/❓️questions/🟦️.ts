@@ -7,7 +7,7 @@ import { parseCondition } from "../../🧬️schema/📝️definition/🟦️.ts
 /** ✏️ Returns a validated field edit and leaves the source question untouched. */
 export function patchQuestion(question: FormQuestion, field: string, value: unknown): FormQuestion {
   let next = parseFormsDefinition({steps:[{id:"step",title:"",blocks:[question]}]}).steps[0]!.blocks[0]!;
-  const optionalText = ["description", "placeholder", "text", "unit", "schema", "src", "accept", "fixtureSlug"] as const;
+  const optionalText = ["description", "placeholder", "text", "unit", "schema", "src", "accept", "exampleId"] as const;
   if (field === "label") {
     if (typeof value !== "string") throw new Error("invalid-value");
     next.label = value;

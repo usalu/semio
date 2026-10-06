@@ -1,9 +1,10 @@
 /** 🖼️ Affine sampling with premultiplied bilinear and per-cell area filtering. */
 import {validateExtent,validateImage,type PixelImage} from "../../✍️editing/🟦️.ts";
 import {CoverageJob,type CoverageMask} from "../../🖊️coverage/🟦️.ts";
+import {UnitRetirement,type WorkRetirement} from "../../../◻️2d/🧹️retire/🟦️.ts";
 export type AffineSampling="nearest"|"bilinear"|"area"|"auto";
 export type AffineImageInput={source:PixelImage;width:number;height:number;origin:readonly[number,number];transform:readonly number[];sampling:AffineSampling};
-export type AffineImageProgress={phase:"coverage"|"sampling"|"complete";completed:number;total:number;sampled:number;sampleTotal:number;work:number;done:boolean};
+export type AffineImageProgress={phase:"coverage"|"coverageCleanup"|"sampling"|"complete";completed:number;total:number;sampled:number;sampleTotal:number;work:number;done:boolean};
 export type AffineImageOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:AffineImageProgress)=>void};
 const coordinate=(v:number)=>Number.isFinite(v)&&Math.abs(v)<=1e9;
 const byte=(v:number)=>Math.round(Math.max(0,Math.min(255,v)));
@@ -11,6 +12,7 @@ const invalid=(message:string):never=>{throw new RangeError(message);};
 /** ⏱️ Exact image boundary coverage with one source-cell visit per reduction work unit. */
 export class AffineImageJob {
  private source:PixelImage|null;private output:PixelImage;private coverage:CoverageJob|null;private mask:CoverageMask|null=null;
+ private coverageRetirement:WorkRetirement|null=null;private coverageContour:[number,number][]|null=null;private outputExposed=false;private transferred=false;
  private inverse:number[]|null=null;private determinant=0;private filter:AffineSampling;
  private phase:AffineImageProgress["phase"]="coverage";private at=0;private work=0;private cancelled=false;private failed:unknown=null;
  private sampled=0;private sampleTotal=0;private active=false;private x=0;private y=0;private left=0;private right=0;private bottom=0;
@@ -25,7 +27,7 @@ export class AffineImageJob {
    const inverse=[d/det,-b/det,-c/det,a/det,(c*f-d*e)/det,(b*e-a*f)/det];
    if(!inverse.every(Number.isFinite))invalid("Affine inverse exceeds numeric limits");this.inverse=inverse;
    if(this.filter==="auto"){const u=inverse[0]!*inverse[0]!+inverse[1]!*inverse[1]!,v=inverse[2]!*inverse[2]!+inverse[3]!*inverse[3]!,cross=inverse[0]!*inverse[2]!+inverse[1]!*inverse[3]!;this.filter=(u+v+Math.hypot(u-v,2*cross))/2>1+1e-12?"area":"bilinear";}
-   const w=input.source.width,h=input.source.height;this.coverage=new CoverageJob({width:input.width,height:input.height,transform:m,rule:"nonzero",contours:[[[0,0],[w,0],[w,h],[0,h]]]});
+   const w=input.source.width,h=input.source.height;this.coverageContour=[[0,0],[w,0],[w,h],[0,h]];this.coverage=new CoverageJob({width:input.width,height:input.height,transform:m,rule:"nonzero",contours:[this.coverageContour]});
   }else {this.coverage=null;this.phase="sampling";}
  }
  private point(x:number,y:number):[number,number] {const m=this.inverse!;const p:[number,number]=[m[0]!*x+m[2]!*y+m[4]!,m[1]!*x+m[3]!*y+m[5]!];if(!p.every(Number.isFinite))invalid("Sample footprint exceeds numeric limits");return p;}
@@ -49,7 +51,8 @@ export class AffineImageJob {
   let area=0;for(let i=1;i+1<count;i++)area+=(a[i*2]!-a[0]!)*(a[(i+1)*2+1]!-a[1]!)-(a[i*2+1]!-a[1]!)*(a[(i+1)*2]!-a[0]!);return Math.abs(area)/2;
  }
  private step():void {
-  if(this.phase==="coverage"){if(this.coverage!.advance(1).done){this.mask=this.coverage!.result();this.coverage=null;this.phase="sampling";}return;}
+  if(this.phase==="coverage"){if(this.coverage!.advance(1).done){const retired=this.coverage!.intoRetirement();this.mask=retired.output;this.coverageRetirement=retired.job;this.coverage=null;this.phase="coverageCleanup";}return;}
+  if(this.phase==="coverageCleanup"){if(this.coverageRetirement){if(!this.coverageRetirement.terminalIsEmpty())this.coverageRetirement.advance(1);else this.coverageRetirement=null;}else if(this.coverageContour){if(this.coverageContour.length)this.coverageContour.pop();else this.coverageContour=null;}else this.phase="sampling";return;}
   if(this.active) {
    this.accumulate(this.x,this.y,this.area(this.x,this.y));this.sampled++;this.x++;
    if(this.x>=this.right){this.x=this.left;this.y++;}if(this.y>=this.bottom)this.write(this.sums[3]!*this.determinant);return;
@@ -70,16 +73,36 @@ export class AffineImageJob {
  }
  advance(budget:number):AffineImageProgress {
   if(!Number.isSafeInteger(budget)||budget<=0)invalid("Affine sample work grant must be a positive integer");
-  this.check();try{for(let i=0;i<budget&&this.phase!=="complete";i++){this.step();this.work++;}}catch(error){this.failed=error;this.release();throw error;}
+  this.check();try{for(let i=0;i<budget&&this.phase!=="complete";i++){this.step();this.work++;}}catch(error){this.failed=error;throw error;}
   return {phase:this.phase,completed:this.at,total:this.output.width*this.output.height,sampled:this.sampled,sampleTotal:this.sampleTotal,work:this.work,done:this.phase==="complete"};
  }
  private check():void {if(this.cancelled)throw new DOMException("Affine sample job cancelled","AbortError");if(this.failed)throw this.failed;}
- private release():void {this.coverage?.cancel();this.coverage=null;this.mask=null;this.source=null;this.output={...this.output,pixels:new Uint8Array(0)};}
- cancel():void {this.cancelled=true;this.release();}
- result():PixelImage {this.check();if(this.phase!=="complete")throw Error("Affine sample job is incomplete");return this.output;}
+ cancel():void {this.cancelled=true;if(this.outputExposed)this.output={...this.output,pixels:new Uint8Array(0)};}
+ result():PixelImage {this.check();if(this.phase!=="complete")throw Error("Affine sample job is incomplete");this.outputExposed=true;return this.output;}
+ /** 🧹️ Moves complete pixels and grants the genuine coverage and sampling owners. */
+ intoRetirement():{job:WorkRetirement;output:PixelImage|null}{
+  if(this.transferred)throw Error("Affine sample ownership was already transferred");this.transferred=true;
+  const output=!this.cancelled&&!this.failed&&this.phase==="complete"?this.output:null;if(output)this.output={...this.output,pixels:new Uint8Array(0)};
+  this.cancelled=true;if(this.coverage){this.coverage.cancel();this.coverageRetirement=this.coverage.intoRetirement().job;this.coverage=null;}
+  let slot=0;
+  const job=new UnitRetirement(()=>{
+   if(slot===0){if(this.coverageRetirement){if(!this.coverageRetirement.terminalIsEmpty()){this.coverageRetirement.advance(1);return false;}this.coverageRetirement=null;}}
+   else if(slot===1){if(this.coverageContour?.length){this.coverageContour.pop();return false;}this.coverageContour=null;}
+   else if(slot===2)this.mask=null;
+   else if(slot===3)this.source=null;
+   else if(slot===4)this.output={...this.output,pixels:new Uint8Array(0)};
+   else if(slot===5)this.inverse=null;
+   else if(slot===6)this.quad=new Float64Array(0);
+   else if(slot===7)this.scratchA=new Float64Array(0);
+   else if(slot===8)this.scratchB=new Float64Array(0);
+   else if(slot===9)this.sums=new Float64Array(0);
+   else{this.failed=null;this.active=false;}
+   slot++;return slot===11;
+  });return{job,output};
+ }
 }
 /** 🕰️ Yields between grants and exposes only a completed image. */
 export async function sampleAffineImage(input:AffineImageInput,options:AffineImageOptions={}):Promise<PixelImage> {
  const abort=()=>{if(options.signal?.aborted)throw new DOMException("Affine sample job cancelled","AbortError");};abort();const job=new AffineImageJob(input);
- try{for(;;){abort();const progress=job.advance(options.workBudget??4096);options.onProgress?.(progress);abort();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}
+ try{for(;;){abort();const progress=job.advance(options.workBudget??4096);options.onProgress?.(progress);abort();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{const retired=job.intoRetirement().job,grant=Number.isSafeInteger(options.workBudget)&&options.workBudget!>0?options.workBudget!:4096;while(!retired.terminalIsEmpty()){retired.advance(grant);if(!retired.terminalIsEmpty())await new Promise<void>(resolve=>setTimeout(resolve,0));}}
 }

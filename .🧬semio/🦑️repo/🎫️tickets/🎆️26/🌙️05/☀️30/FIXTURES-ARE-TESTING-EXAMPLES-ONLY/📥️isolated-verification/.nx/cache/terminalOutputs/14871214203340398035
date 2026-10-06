@@ -1,0 +1,22 @@
+> bun ./📜️script.ts test-owner-command "🌎️hub/📦️packages/🦀️rust/📜️script.ts" space-artifact-creation-check source
+
+[DEBUG] isolated Nx verification test-owner-command
+55 | function schemaCatalog(repoRoot: string): Readonly<Record<string, SchemaCatalogScope>> {
+56 |   if (schemaCatalogScopes) return schemaCatalogScopes;
+57 |   const scopes = (JSON.parse(readFileSync(join(repoRoot, SCHEMA_CATALOG_PATH), "utf8")) as { readonly scopes: Record<string, SchemaCatalogScope> }).scopes;
+58 |   const catalogued = new Set(Object.values(scopes).map((scope) => scope.path));
+59 |   for (const module of hubSchemaModuleDirectories(repoRoot)) {
+60 |     if (!catalogued.has(module)) throw new Error(`hub schema module ${module} is absent from ${SCHEMA_CATALOG_PATH}; regenerate it with \`bun ./📜️script.ts schema generate\``);
+                                                ^
+error: hub schema module 🌎️hub/🧩️compositions/🪐️space/🏛️ownership/🧮️compute/🧬️schema is absent from 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json; regenerate it with `bun ./📜️script.ts schema generate`
+      at schemaCatalog (/Users/ueli/Documents/semio/🌎️hub/🤝️integration-harness/🟦️.ts:60:44)
+      at schemaModulePath (/Users/ueli/Documents/semio/🌎️hub/🤝️integration-harness/🟦️.ts:68:17)
+      at schemaModuleId (/Users/ueli/Documents/semio/🌎️hub/🤝️integration-harness/🟦️.ts:111:59)
+      at hubSchemaExport (/Users/ueli/Documents/semio/🌎️hub/🤝️integration-harness/🟦️.ts:126:14)
+      at proveSpaceArtifactCreationContractV1 (/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:15634:20)
+      at run (/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:15802:5)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts:74:71)
+      at async runScriptMain (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts:15:16)
+
+Bun v1.3.14 (macOS arm64)
+Warning: command "bun ./📜️script.ts test-owner-command "🌎️hub/📦️packages/🦀️rust/📜️script.ts" space-artifact-creation-check source" exited with non-zero status code

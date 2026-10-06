@@ -1,4 +1,4 @@
-//! 🧪️ `add-node-handle` fixture — `🚫️rejects`.
+//! 🧪️ `add-node-handle` snapshot — `🚫️rejects`.
 //!
 //! One committed specification vector for this kind, derived from a shipped example board.
 //!
@@ -57,7 +57,7 @@ fn the_refusal_is_the_declared_one() {
 /// ↩️ `add-node-handle`'s inverse is PAYLOAD-derived, so a refused add still answers a `remove-node-handle` of the handle it was asked to add.
 #[test]
 fn inverse_of_a_refusal() {
-    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse snapshot");
     assert_eq!(inverse.len(), 1, "add-node-handle/rejects-adding-a-door-to-a-capsule-the-board-never-held: got {inverse:?}");
 }
 

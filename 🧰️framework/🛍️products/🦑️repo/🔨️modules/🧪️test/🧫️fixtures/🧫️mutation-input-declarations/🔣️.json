@@ -1,0 +1,1273 @@
+{
+  "description": "🎛️ The declaration rules of the schema-mutation-input-ui gate (design §22.8), one planted case per rule next to the inputs each rule leaves alone: interactive numbers with and without step or snapping points (own annotation, $ref target, inherited by array items, the numeric transport, a reference, a hidden input, a vector, a non-number widget), labels declared in every locale, in one locale with and without a glossary row, through the glossary alone (counted, never refused) and not at all, a root union's selector, a widget outside the strict vocabulary, multiline inputs with and without the multi-line control, editable leaves that show no input (none at all, every one hidden), and a withdraw-only leaf whose inputs no rule judges.",
+  "documents": [
+    {
+      "$id": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json",
+      "$defs": {
+        "Angle": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360,
+          "x-semio-ui": {
+            "widget": "dial",
+            "step": 15,
+            "unit": "deg",
+            "label": {
+              "en": "Angle",
+              "de": "Winkel"
+            }
+          }
+        },
+        "Caption": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Caption",
+              "de": "Beschriftung"
+            }
+          }
+        },
+        "Word": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bits"
+          ],
+          "properties": {
+            "bits": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "an interactive number declares its step or its snapping points",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "mutation": {
+            "const": "plant"
+          },
+          "bare": {
+            "type": "number",
+            "x-semio-ui": {
+              "label": {
+                "en": "Bare",
+                "de": "Blank"
+              }
+            }
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "label": {
+                "en": "Count",
+                "de": "Anzahl"
+              }
+            }
+          },
+          "ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "x-semio-ui": {
+              "widget": "slider",
+              "step": 0.05,
+              "label": {
+                "en": "Ratio",
+                "de": "Verhältnis"
+              }
+            }
+          },
+          "turn": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json#/$defs/Angle"
+          },
+          "gap": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "stepper",
+              "snapSource": {
+                "config": "gridFactor"
+              },
+              "label": {
+                "en": "Gap",
+                "de": "Abstand"
+              }
+            }
+          },
+          "detent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10,
+            "x-semio-ui": {
+              "widget": "dial",
+              "snaps": [
+                0,
+                5,
+                10
+              ],
+              "label": {
+                "en": "Detent",
+                "de": "Raste"
+              }
+            }
+          },
+          "empty": {
+            "type": "number",
+            "x-semio-ui": {
+              "role": "value",
+              "snaps": [],
+              "label": {
+                "en": "Empty",
+                "de": "Leer"
+              }
+            }
+          },
+          "layer": {
+            "type": "integer",
+            "x-semio-ui": {
+              "ref": {
+                "kind": "layer"
+              },
+              "label": {
+                "en": "Layer",
+                "de": "Ebene"
+              }
+            }
+          },
+          "seed": {
+            "type": "integer",
+            "x-semio-ui": {
+              "widget": "hidden"
+            }
+          },
+          "weights": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "x-semio-ui": {
+              "step": 0.1,
+              "label": {
+                "en": "Weights",
+                "de": "Gewichte"
+              }
+            }
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Samples",
+                "de": "Stichproben"
+              }
+            }
+          },
+          "size": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Size",
+                "de": "Größe"
+              }
+            }
+          },
+          "frame": {
+            "type": "object",
+            "x-semio-ui": {
+              "label": {
+                "en": "Frame",
+                "de": "Rahmen"
+              }
+            },
+            "properties": {
+              "width": {
+                "type": "number",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Width",
+                    "de": "Breite"
+                  }
+                }
+              },
+              "depth": {
+                "anyOf": [
+                  {
+                    "$ref": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json#/$defs/Word"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "x-semio-ui": {
+                  "step": 1,
+                  "label": {
+                    "en": "Depth",
+                    "de": "Tiefe"
+                  }
+                }
+              }
+            }
+          },
+          "level": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-semio-ui": {
+              "widget": "stepper",
+              "step": 0.5,
+              "label": {
+                "en": "Level",
+                "de": "Stufe"
+              }
+            }
+          },
+          "tint": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "select",
+              "label": {
+                "en": "Tint",
+                "de": "Tönung"
+              }
+            }
+          }
+        }
+      },
+      "declarations": [
+        {
+          "pointer": "/bare",
+          "key": "bare",
+          "type": "number",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "absent",
+          "snaps": false
+        },
+        {
+          "pointer": "/count",
+          "key": "count",
+          "type": "integer",
+          "widget": "stepper",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "inferred",
+          "snaps": false
+        },
+        {
+          "pointer": "/ratio",
+          "key": "ratio",
+          "type": "number",
+          "widget": "slider",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "declared",
+          "snaps": false
+        },
+        {
+          "pointer": "/turn",
+          "key": "turn",
+          "type": "number",
+          "widget": "dial",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "declared",
+          "snaps": false
+        },
+        {
+          "pointer": "/gap",
+          "key": "gap",
+          "type": "number",
+          "widget": "stepper",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "absent",
+          "snaps": true
+        },
+        {
+          "pointer": "/detent",
+          "key": "detent",
+          "type": "number",
+          "widget": "dial",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "absent",
+          "snaps": true
+        },
+        {
+          "pointer": "/empty",
+          "key": "empty",
+          "type": "number",
+          "widget": null,
+          "role": "value",
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "absent",
+          "snaps": false
+        },
+        {
+          "pointer": "/layer",
+          "key": "layer",
+          "type": "integer",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/seed",
+          "key": "seed",
+          "type": "integer",
+          "widget": "hidden",
+          "role": null,
+          "label": null,
+          "step": "inferred",
+          "snaps": false
+        },
+        {
+          "pointer": "/weights",
+          "key": "weights",
+          "type": "array",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/weights/-",
+          "key": "-",
+          "type": "number",
+          "widget": null,
+          "role": null,
+          "label": null,
+          "step": "declared",
+          "snaps": false
+        },
+        {
+          "pointer": "/samples",
+          "key": "samples",
+          "type": "array",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/samples/-",
+          "key": "-",
+          "type": "integer",
+          "widget": null,
+          "role": null,
+          "label": null,
+          "step": "inferred",
+          "snaps": false
+        },
+        {
+          "pointer": "/size",
+          "key": "size",
+          "type": "array",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/frame",
+          "key": "frame",
+          "type": "object",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/frame/width",
+          "key": "width",
+          "type": "number",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "absent",
+          "snaps": false
+        },
+        {
+          "pointer": "/frame/depth",
+          "key": "depth",
+          "type": "number",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "declared",
+          "snaps": false
+        },
+        {
+          "pointer": "/level",
+          "key": "level",
+          "type": "number",
+          "widget": "stepper",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "declared",
+          "snaps": false
+        },
+        {
+          "pointer": "/tint",
+          "key": "tint",
+          "type": "number",
+          "widget": "select",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "absent",
+          "snaps": false
+        }
+      ],
+      "findings": [
+        [
+          "numericUndeclared",
+          "/bare"
+        ],
+        [
+          "numericUndeclared",
+          "/count"
+        ],
+        [
+          "numericUndeclared",
+          "/empty"
+        ],
+        [
+          "numericUndeclared",
+          "/samples/-"
+        ],
+        [
+          "numericUndeclared",
+          "/frame/width"
+        ]
+      ]
+    },
+    {
+      "id": "a shown label resolves in every locale, from its own annotation or the glossary",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string",
+            "x-semio-ui": {
+              "label": {
+                "en": "Position"
+              }
+            }
+          },
+          "radius": {
+            "type": "string",
+            "x-semio-ui": {
+              "label": {
+                "native": {
+                  "en": "Radius",
+                  "de": "Radius"
+                },
+                "reuse": {
+                  "en": "Radius",
+                  "de": "Halbmesser"
+                }
+              }
+            }
+          },
+          "plantedKey": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string",
+            "x-semio-ui": {
+              "label": {
+                "en": "Caption"
+              }
+            }
+          },
+          "text": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/test/mutation-input-declarations/shared.json#/$defs/Caption"
+          },
+          "index": {
+            "type": "integer",
+            "x-semio-ui": {
+              "widget": "hidden"
+            }
+          },
+          "zone": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            }
+          },
+          "version": {
+            "type": "string",
+            "x-semio-ui": {
+              "label": {
+                "en": "Version",
+                "de": ""
+              }
+            }
+          }
+        }
+      },
+      "declarations": [
+        {
+          "pointer": "/name",
+          "key": "name",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "inferred",
+            "de": "inferred"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/position",
+          "key": "position",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "inferred"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/radius",
+          "key": "radius",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/plantedKey",
+          "key": "plantedKey",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "absent",
+            "de": "absent"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/caption",
+          "key": "caption",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "absent"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/text",
+          "key": "text",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/index",
+          "key": "index",
+          "type": "integer",
+          "widget": "hidden",
+          "role": null,
+          "label": null,
+          "step": "inferred",
+          "snaps": false
+        },
+        {
+          "pointer": "/zone",
+          "key": "zone",
+          "type": "object",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "inferred",
+            "de": "inferred"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/zone/id",
+          "key": "id",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "inferred",
+            "de": "inferred"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/version",
+          "key": "version",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "inferred"
+          },
+          "step": null,
+          "snaps": null
+        }
+      ],
+      "findings": [
+        [
+          "labelAbsent",
+          "/plantedKey"
+        ],
+        [
+          "labelAbsent",
+          "/caption"
+        ]
+      ]
+    },
+    {
+      "id": "a root union reads its discriminator as the selector and every variant's fields",
+      "schema": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "circle"
+              },
+              "radius": {
+                "type": "number",
+                "x-semio-ui": {
+                  "step": 0.5,
+                  "label": {
+                    "en": "Radius",
+                    "de": "Radius"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "square"
+              },
+              "side": {
+                "type": "number",
+                "x-semio-ui": {
+                  "label": {
+                    "en": "Side",
+                    "de": "Seite"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "declarations": [
+        {
+          "pointer": "/kind",
+          "key": "kind",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "inferred",
+            "de": "inferred"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/radius",
+          "key": "radius",
+          "type": "number",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "declared",
+          "snaps": false
+        },
+        {
+          "pointer": "/side",
+          "key": "side",
+          "type": "number",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "absent",
+          "snaps": false
+        }
+      ],
+      "findings": [
+        [
+          "numericUndeclared",
+          "/side"
+        ]
+      ]
+    },
+    {
+      "id": "a widget lies inside the strict vocabulary",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "newFields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "x-semio-ui": {
+              "widget": "dictionary",
+              "label": {
+                "en": "Fields",
+                "de": "Felder"
+              }
+            }
+          },
+          "notes": {
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "multiline",
+              "label": {
+                "en": "Notes",
+                "de": "Notizen"
+              }
+            }
+          }
+        }
+      },
+      "declarations": [
+        {
+          "pointer": "/newFields",
+          "key": "newFields",
+          "type": "object",
+          "widget": "dictionary",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/notes",
+          "key": "notes",
+          "type": "string",
+          "widget": "multiline",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        }
+      ],
+      "findings": [
+        [
+          "widgetUndeclared",
+          "/newFields"
+        ]
+      ]
+    },
+    {
+      "id": "a multiline input is handed the multi-line control once the reader has one",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "multiline",
+              "label": {
+                "en": "Notes",
+                "de": "Notizen"
+              }
+            }
+          },
+          "summary": {
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "multiline",
+              "label": {
+                "en": "Summary",
+                "de": "Zusammenfassung"
+              }
+            }
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "x-semio-ui": {
+                "widget": "multiline"
+              }
+            },
+            "x-semio-ui": {
+              "label": {
+                "en": "Lines",
+                "de": "Zeilen"
+              }
+            }
+          }
+        }
+      },
+      "controls": {
+        "/notes": "multiline",
+        "/summary": "text",
+        "/lines": "text"
+      },
+      "declarations": [
+        {
+          "pointer": "/notes",
+          "key": "notes",
+          "type": "string",
+          "widget": "multiline",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/summary",
+          "key": "summary",
+          "type": "string",
+          "widget": "multiline",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/lines",
+          "key": "lines",
+          "type": "array",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/lines/-",
+          "key": "-",
+          "type": "string",
+          "widget": "multiline",
+          "role": null,
+          "label": null,
+          "step": null,
+          "snaps": null
+        }
+      ],
+      "findings": [
+        [
+          "multilineUncontrolled",
+          "/summary"
+        ],
+        [
+          "multilineUncontrolled",
+          "/lines/-"
+        ]
+      ]
+    },
+    {
+      "id": "an input that states every fact is declared",
+      "schema": {
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "x-semio-ui": {
+              "widget": "toggle",
+              "label": {
+                "en": "Enabled",
+                "de": "Aktiviert"
+              }
+            }
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fast",
+              "exact"
+            ],
+            "x-semio-ui": {
+              "widget": "segmented",
+              "label": {
+                "en": "Mode",
+                "de": "Modus"
+              },
+              "options": {
+                "fast": {
+                  "en": "Fast",
+                  "de": "Schnell"
+                },
+                "exact": {
+                  "en": "Exact",
+                  "de": "Exakt"
+                }
+              }
+            }
+          },
+          "color": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "x-semio-ui": {
+              "widget": "color",
+              "label": {
+                "en": "Colour",
+                "de": "Farbe"
+              }
+            }
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "x-semio-ui": {
+              "role": "target",
+              "ref": {
+                "kind": "piece"
+              },
+              "label": {
+                "en": "Pieces",
+                "de": "Teile"
+              }
+            }
+          },
+          "offset": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "stepper",
+              "step": 0.25,
+              "snapSource": {
+                "step": true
+              },
+              "unit": "m",
+              "label": {
+                "en": "Offset",
+                "de": "Versatz"
+              }
+            }
+          }
+        }
+      },
+      "declarations": [
+        {
+          "pointer": "/enabled",
+          "key": "enabled",
+          "type": "boolean",
+          "widget": "toggle",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/mode",
+          "key": "mode",
+          "type": "string",
+          "widget": "segmented",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/color",
+          "key": "color",
+          "type": "array",
+          "widget": "color",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/targets",
+          "key": "targets",
+          "type": "array",
+          "widget": null,
+          "role": "target",
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/offset",
+          "key": "offset",
+          "type": "number",
+          "widget": "stepper",
+          "role": null,
+          "label": {
+            "en": "declared",
+            "de": "declared"
+          },
+          "step": "declared",
+          "snaps": true
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "an editable leaf whose every input is hidden shows no input",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "mutation": {
+            "const": "replace"
+          },
+          "snapshot": {
+            "type": "object",
+            "properties": {
+              "width": {
+                "type": "number"
+              }
+            },
+            "x-semio-ui": {
+              "widget": "hidden"
+            }
+          }
+        }
+      },
+      "declarations": [
+        {
+          "pointer": "/snapshot",
+          "key": "snapshot",
+          "type": "object",
+          "widget": "hidden",
+          "role": null,
+          "label": null,
+          "step": null,
+          "snaps": null
+        }
+      ],
+      "findings": [
+        [
+          "inputless",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "an editable leaf without any input shows no input",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "mutation": {
+            "const": "clear"
+          }
+        }
+      },
+      "declarations": [],
+      "findings": [
+        [
+          "inputless",
+          ""
+        ]
+      ]
+    },
+    {
+      "id": "a withdraw-only leaf is not judged",
+      "editable": false,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "mutation": {
+            "const": "set-snapshot"
+          },
+          "snapshot": {
+            "type": "object",
+            "properties": {
+              "width": {
+                "type": "number"
+              },
+              "plantedKey": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "declarations": [
+        {
+          "pointer": "/snapshot",
+          "key": "snapshot",
+          "type": "object",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "inferred",
+            "de": "inferred"
+          },
+          "step": null,
+          "snaps": null
+        },
+        {
+          "pointer": "/snapshot/width",
+          "key": "width",
+          "type": "number",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "inferred",
+            "de": "inferred"
+          },
+          "step": "absent",
+          "snaps": false
+        },
+        {
+          "pointer": "/snapshot/plantedKey",
+          "key": "plantedKey",
+          "type": "string",
+          "widget": null,
+          "role": null,
+          "label": {
+            "en": "absent",
+            "de": "absent"
+          },
+          "step": null,
+          "snaps": null
+        }
+      ],
+      "findings": []
+    }
+  ]
+}

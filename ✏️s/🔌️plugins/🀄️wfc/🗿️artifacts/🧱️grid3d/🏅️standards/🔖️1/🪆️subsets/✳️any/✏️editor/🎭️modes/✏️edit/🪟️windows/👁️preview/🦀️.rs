@@ -12,6 +12,10 @@
 use crate::editor::grid3d::modes::edit::tools::fill::{self, Grid3dFillPayload};
 use crate::editor::grid3d::window::Grid3dWindowConfig;
 use crate::schema::inferences::{solve, Grid3dAssignment};
+
+
+
+
 use crate::schema::scene_internals;
 use crate::Grid3dSnapshot;
 use semio_framework_plugin::world3d_camera_json;
@@ -40,6 +44,7 @@ pub const SURFACE_ID: &str = "wfc.grid3d.preview";
 /// shows it.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: BODY_KEY.into(),

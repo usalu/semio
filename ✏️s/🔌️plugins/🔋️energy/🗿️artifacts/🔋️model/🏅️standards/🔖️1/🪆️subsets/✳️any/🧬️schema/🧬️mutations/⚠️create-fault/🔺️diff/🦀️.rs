@@ -27,6 +27,6 @@ pub fn diff(payload: &super::CreateFault, base: &EnergyModelSnapshot) -> protoco
     model
         .faults
         .insert(payload.index as usize, crate::model::FaultDefinition { id: payload.id, target_equipment_id: payload.target_equipment_id, fault_type: payload.fault_type, severity: payload.severity, start_schedule_id: payload.start_schedule_id });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

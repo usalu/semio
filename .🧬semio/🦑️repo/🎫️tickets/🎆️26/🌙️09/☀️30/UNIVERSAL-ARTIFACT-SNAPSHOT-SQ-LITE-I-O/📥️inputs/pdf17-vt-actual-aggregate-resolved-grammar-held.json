@@ -1,0 +1,20 @@
+{
+  "qualification": "HELD actual aggregate grammar closure only; each terminal resolved; semantic length/schema admission remains actual codec authority. No grammar compiler or runtime credit.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/📝️text/🔤️.ebnf",
+      "before": null,
+      "after": "(* 🧾️ Actual PDF/VT aggregate frame. Decoded UTF-8 JSON is admitted by the aggregate mutation schema; the new typed graph payload is not a Snapshot carrier. *)\npdf vt mutation = \"pdf-vt-mutation payload=\", hex bytes ;\nhex bytes = { hex byte } ;\nhex byte = hex digit, hex digit ;\nhex digit = \"0\" | \"1\" | \"2\" | \"3\" | \"4\" | \"5\" | \"6\" | \"7\" | \"8\" | \"9\" | \"a\" | \"b\" | \"c\" | \"d\" | \"e\" | \"f\" ;\n(* Payload is at most 262144 decoded bytes; empty JSON, unknown identity and invalid typed members are refused by semantic admission. *)\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio",
+      "before": null,
+      "after": "dialect grammar\ngrammar stdio.pdf.1.7.vt.mutations\nstart op\ncomment none\n\n# 🧾️ Exact aggregate prefix and resolved lower-case even hexadecimal terminals.\nop = \"pdf-vt-mutation payload=\" hex-byte*\nhex-byte = hex-digit hex-digit\nhex-digit = \"0\" | \"1\" | \"2\" | \"3\" | \"4\" | \"5\" | \"6\" | \"7\" | \"8\" | \"9\" | \"a\" | \"b\" | \"c\" | \"d\" | \"e\" | \"f\"\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/💾️binary/🔠️.abnf",
+      "before": null,
+      "after": "; 🧾️ Existing format1 and original tags0-17 plus RestoreDpartGraph18.\nmutation = format tag length payload\nformat = %x01\ntag = %x00-12\nlength = *3continuation final\ncontinuation = %x80-FF\nfinal = %x00-7F\npayload = *OCTET\nOCTET = %x00-FF\n; Length is unsigned little-endian base128, equals payload octet count, and must not exceed262144.\n; Exact end-of-input, tag/JSON identity agreement, UTF-8 and typed mutation admission are semantic requirements.\n"
+    }
+  ]
+}

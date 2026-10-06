@@ -614,19 +614,28 @@ fn primitives_from_json(entry: &DslValue) -> Vec<CadPrimitiveSlot> {
 //#endregion 🔖️KernelBuild
 
 //#region 🔖️ModelBridge
-/// 🌉️ WRITE direction: one `CadObject` → one `SemioModelElement`, the shape a composed
-/// `s.stdio.semio.model` CHILD actually stores. `typology` round-trips losslessly through
-/// `ElementClass::Other{name}` — the same convention `model_element_from_solid_handle` (in the
-/// parent `🚪️io/🦀️.rs`) already established for its own native-geometry imports.
-/// `origin`/`orientation`/`scale` map onto `SemioTransform` field-for-field; `solid_handle` maps
-/// onto `GeometryRef::Brep`. `label`/`visible`/`locked`/`extent`/`mesh_url` have no counterpart in
-/// this subset (a `model` element carries no UI-authoring state) and are intentionally dropped —
-/// `cad_object_from_model_element` restores real, computed values for them on the way back in,
-/// never a fabricated echo of the original.
+/// 🏷️ The property set a cad object's authoring state rides in on its composed model element — label, visibility, lock,
+/// mesh URL, extent and authored primitive slots have no `SemioModelElement` field of their own, and the child is the
+/// pane's only source of truth (design §20.15), so the bridge is lossless both ways.
+pub(crate) const CAD_OBJECT_PSET: &str = "cad";
+
+/// 🌉️ WRITE direction: one `CadObject` → one `SemioModelElement`, exactly invertible by
+/// [`cad_object_from_model_element`]. `typology` rides `ElementClass::Other{name}`, `origin`/`orientation`/`scale` the
+/// placement, `solid_handle` `GeometryRef::Brep`, and every authoring field the [`CAD_OBJECT_PSET`] property set.
 pub(crate) fn model_element_from_cad_object(object: &CadObject) -> SemioModelElement {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{Property, PropertySet, PsetValue};
     let [ox, oy, oz] = object.origin;
     let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
     let scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
+    let text = |key: &str, value: &str| Property { key: key.into(), value: PsetValue::Text { value: value.into() } };
+    let flag = |key: &str, value: bool| Property { key: key.into(), value: PsetValue::Boolean { value } };
+    let number = |key: &str, value: f64| Property { key: key.into(), value: PsetValue::Number { value } };
+    let mut properties = vec![text("label", &object.label), flag("visible", object.visible), flag("locked", object.locked), flag("hasOrientation", object.orientation.is_some()), flag("hasScale", object.scale.is_some())];
+    properties.extend(object.mesh_url.as_deref().map(|url| text("meshUrl", url)));
+    properties.extend(object.extent.into_iter().flat_map(|[x, y, z]| [number("extentX", x), number("extentY", y), number("extentZ", z)]));
+    if !object.primitives.is_empty() {
+        properties.push(text("primitives", &semio_framework_pack_json::to_json_string(&object.primitives)));
+    }
     SemioModelElement {
         id: object.id.clone(),
         class: ElementClass::Other { name: object.typology.clone() },
@@ -637,7 +646,7 @@ pub(crate) fn model_element_from_cad_object(object: &CadObject) -> SemioModelEle
         },
         geometry: object.solid_handle.clone().map_or(GeometryRef::None, |brep_id| GeometryRef::Brep { brep_id }),
         spatial_id: None,
-        psets: Vec::new(),
+        psets: vec![PropertySet { name: CAD_OBJECT_PSET.into(), properties }],
     }
 }
 
@@ -647,9 +656,12 @@ pub(crate) fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioM
     SemioModelSnapshot { schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(), spatial: Vec::new(), elements: objects.iter().map(model_element_from_cad_object).collect(), relations: Vec::new() }
 }
 
-/// 🌉️ READ direction: the inverse of `model_element_from_cad_object` — a resolved child's
-/// `SemioModelElement` back into the app's ephemeral `CadObject` working shape.
+/// 🌉️ READ direction: the inverse of `model_element_from_cad_object`. An element without the [`CAD_OBJECT_PSET`] (one
+/// an IFC import or another editor wrote) reads computed authoring state — its id's last segment as label, visible,
+/// unlocked, one solid slot per brep — never a fabricated echo. A placement a relative child leaf turned or scaled
+/// reads as set even when the object recorded none.
 pub(crate) fn cad_object_from_model_element(element: &SemioModelElement) -> CadObject {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::PsetValue;
     let typology = match &element.class {
         ElementClass::Other { name } => name.clone(),
         ElementClass::Wall => "building.building.wall".into(),
@@ -667,26 +679,44 @@ pub(crate) fn cad_object_from_model_element(element: &SemioModelElement) -> CadO
         GeometryRef::Mesh { mesh_id } => Some(mesh_id.clone()),
         GeometryRef::None => None,
     };
-    let primitives = solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
+    let authored = element.psets.iter().find(|set| set.name == CAD_OBJECT_PSET).map_or(&[][..], |set| set.properties.as_slice());
+    let value = |key: &str| authored.iter().find(|property| property.key == key).map(|property| &property.value);
+    let text = |key: &str| match value(key) {
+        Some(PsetValue::Text { value }) => Some(value.clone()),
+        _ => None,
+    };
+    let flag = |key: &str| match value(key) {
+        Some(PsetValue::Boolean { value }) => Some(*value),
+        _ => None,
+    };
+    let number = |key: &str| match value(key) {
+        Some(PsetValue::Number { value }) => Some(*value),
+        _ => None,
+    };
     let t = &element.placement;
+    let rotation = [t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w];
+    let scale = [t.scale.x, t.scale.y, t.scale.z];
+    let primitives = text("primitives")
+        .and_then(|json| semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok())
+        .unwrap_or_else(|| solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default());
     CadObject {
         id: element.id.clone(),
-        label: object_label_from_id(&element.id),
+        label: text("label").unwrap_or_else(|| object_label_from_id(&element.id)),
         typology,
-        visible: true,
-        locked: false,
+        visible: flag("visible").unwrap_or(true),
+        locked: flag("locked").unwrap_or(false),
         origin: [t.translation.x, t.translation.y, t.translation.z],
-        orientation: Some([t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w]),
-        scale: Some([t.scale.x, t.scale.y, t.scale.z]),
-        mesh_url: None,
-        extent: None,
+        orientation: (flag("hasOrientation").unwrap_or(true) || rotation != [0.0, 0.0, 0.0, 1.0]).then_some(rotation),
+        scale: (flag("hasScale").unwrap_or(true) || scale != [1.0, 1.0, 1.0]).then_some(scale),
+        mesh_url: text("meshUrl"),
+        extent: number("extentX").zip(number("extentY")).zip(number("extentZ")).map(|((x, y), z)| [x, y, z]),
         solid_handle,
         primitives,
     }
 }
 
 /// 🌉️ READ direction: every element in a resolved `SemioModelSnapshot` child → this pane's
-/// `CadObject` list — what `crate::cad_working_scene_from_models` calls per pane.
+/// `CadObject` list — what `crate::CadComposedPanes::compose` calls per pane.
 pub(crate) fn objects_from_model_snapshot(model: &SemioModelSnapshot) -> Vec<CadObject> {
     model.elements.iter().map(cad_object_from_model_element).collect()
 }

@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::default_document;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 
 #[semio_framework_async_macros::async_test]
 async fn the_host_mirrors_the_document_features_and_the_config_camera() {

@@ -7,7 +7,19 @@
   "required": ["mutation","address"],
   "properties": {
     "address": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-address.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-address.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cell",
+          "de": "Zelle"
+        },
+        "description": {
+          "en": "Worksheet and reference (for example B7) of the cell.",
+          "de": "Arbeitsblatt und Bezug (zum Beispiel B7) der Zelle."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "mutation": {
       "const": "removeCell",

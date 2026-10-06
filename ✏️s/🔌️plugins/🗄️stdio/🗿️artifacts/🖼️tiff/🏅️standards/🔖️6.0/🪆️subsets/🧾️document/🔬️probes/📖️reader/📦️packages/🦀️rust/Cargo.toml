@@ -5,6 +5,12 @@
 # correct to the host byte order automatically". The order survives only on the `Decoder` itself, via
 # the public `byte_order()` accessor.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "tiff-6-0-byte-order-reader"

@@ -23,15 +23,63 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Id",
+              "de": "ID"
+            }
+          }
         }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Node id",
+          "de": "Knoten-ID"
+        },
+        "description": {
+          "en": "Id the new node carries.",
+          "de": "Kennung, die der neue Knoten trägt."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "kind": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Kind",
+          "de": "Art"
+        },
+        "description": {
+          "en": "Kind of the node, as the graph's manifest names it.",
+          "de": "Art des Knotens, wie sie das Manifest des Graphen benennt."
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "label": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label",
+          "de": "Beschriftung"
+        },
+        "description": {
+          "en": "Text shown on the node.",
+          "de": "Text, der auf dem Knoten angezeigt wird."
+        },
+        "group": "value",
+        "order": 30
+      }
     },
     "position": {
       "type": "object",
@@ -59,7 +107,20 @@
             {
               "type": "number"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "step": 1,
+            "precision": 2,
+            "snapSource": {
+              "config": "gridFactor"
+            }
+          }
         },
         "y": {
           "anyOf": [
@@ -79,8 +140,34 @@
             {
               "type": "number"
             }
-          ]
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "step": 1,
+            "precision": 2,
+            "snapSource": {
+              "config": "gridFactor"
+            }
+          }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Canvas position of the node's origin.",
+          "de": "Position des Knotenursprungs auf der Leinwand."
+        },
+        "group": "value",
+        "order": 40
       }
     },
     "width": {
@@ -101,7 +188,27 @@
         {
           "type": "number"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "Width of the node on the canvas.",
+          "de": "Breite des Knotens auf der Leinwand."
+        },
+        "step": 1,
+        "precision": 2,
+        "softMin": 0,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "value",
+        "order": 50
+      }
     },
     "height": {
       "anyOf": [
@@ -121,7 +228,27 @@
         {
           "type": "number"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "description": {
+          "en": "Height of the node on the canvas.",
+          "de": "Höhe des Knotens auf der Leinwand."
+        },
+        "step": 1,
+        "precision": 2,
+        "softMin": 0,
+        "snapSource": {
+          "config": "gridFactor"
+        },
+        "group": "value",
+        "order": 60
+      }
     },
     "ports": {
       "type": "array",
@@ -143,10 +270,42 @@
               "in",
               "out",
               "inOut"
-            ]
+            ],
+            "x-semio-ui": {
+              "widget": "segmented",
+              "label": {
+                "en": "Direction",
+                "de": "Richtung"
+              },
+              "options": {
+                "in": {
+                  "en": "Input",
+                  "de": "Eingang"
+                },
+                "out": {
+                  "en": "Output",
+                  "de": "Ausgang"
+                },
+                "inOut": {
+                  "en": "Bidirectional",
+                  "de": "Bidirektional"
+                }
+              }
+            }
           },
           "category": {
-            "type": "string"
+            "type": "string",
+            "x-semio-ui": {
+              "widget": "text",
+              "label": {
+                "en": "Category",
+                "de": "Kategorie"
+              },
+              "description": {
+                "en": "Category of the port, as the graph's manifest names it.",
+                "de": "Kategorie des Anschlusses, wie sie das Manifest des Graphen benennt."
+              }
+            }
           },
           "properties": {
             "type": "array",
@@ -168,6 +327,19 @@
             }
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Ports",
+          "de": "Anschlüsse"
+        },
+        "description": {
+          "en": "Named connection points of the node with their direction, category and properties.",
+          "de": "Benannte Anschlusspunkte des Knotens mit Richtung, Kategorie und Eigenschaften."
+        },
+        "group": "value",
+        "order": 70
       }
     },
     "properties": {
@@ -187,6 +359,19 @@
             "$ref": "#/$defs/SemioValue"
           }
         }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Properties",
+          "de": "Eigenschaften"
+        },
+        "description": {
+          "en": "Keyed typed entries attached to the node.",
+          "de": "Einträge mit Schlüssel und typisiertem Wert, die am Knoten hängen."
+        },
+        "group": "value",
+        "order": 80
       }
     },
     "at": {

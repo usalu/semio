@@ -1,0 +1,1997 @@
+{
+  "family": "demo",
+  "cases": [
+    {
+      "name": "a-new-alternative-moves-only-its-author",
+      "initial": {
+        "n": 0
+      },
+      "steps": [
+        {
+          "at": "a",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "setN",
+                "n": 1
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": []
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "addN",
+                "delta": 2
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": []
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "authored"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": []
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "alternative",
+            "name": "variant",
+            "target": {
+              "by": "a",
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 10
+            }
+          },
+          "expect": {
+            "a": {
+              "line": "variant",
+              "checkpoint": null,
+              "state": {
+                "n": 12
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "reversed"
+          },
+          "expect": {
+            "a": {
+              "line": "variant",
+              "checkpoint": null,
+              "state": {
+                "n": 12
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "switch",
+            "to": "variant"
+          },
+          "expect": {
+            "a": {
+              "line": "variant",
+              "checkpoint": null,
+              "state": {
+                "n": 12
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            },
+            "b": {
+              "line": "variant",
+              "checkpoint": null,
+              "state": {
+                "n": 12
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "switch",
+            "to": "trunk"
+          },
+          "expect": {
+            "a": {
+              "line": "variant",
+              "checkpoint": null,
+              "state": {
+                "n": 12
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "reload",
+            "through": "spr"
+          },
+          "expect": {
+            "a": {
+              "line": "variant",
+              "checkpoint": null,
+              "state": {
+                "n": 12
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "reload",
+            "through": "spr"
+          },
+          "expect": {
+            "a": {
+              "line": "variant",
+              "checkpoint": null,
+              "state": {
+                "n": 12
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "reload",
+            "through": "ops"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "switch",
+            "to": "variant"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            },
+            "b": {
+              "line": "variant",
+              "checkpoint": null,
+              "state": {
+                "n": 12
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "variant"
+              ]
+            }
+          }
+        }
+      ],
+      "converged": {
+        "alternatives": [
+          "",
+          "variant"
+        ],
+        "lines": {
+          "trunk": {
+            "state": {
+              "n": 3
+            },
+            "applied": 2,
+            "supersessions": 0
+          },
+          "variant": {
+            "state": {
+              "n": 12
+            },
+            "applied": 2,
+            "supersessions": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "replicas-on-different-alternatives-edit-side-by-side",
+      "initial": {
+        "n": 0
+      },
+      "steps": [
+        {
+          "at": "a",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "setN",
+                "n": 1
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": []
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "commit"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "authored"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "alternative",
+            "name": "left",
+            "target": {
+              "by": "a",
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 5
+            }
+          },
+          "expect": {
+            "a": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 5
+              },
+              "applied": 1,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "addN",
+                "delta": 2
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 5
+              },
+              "applied": 1,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "addN",
+                "delta": 10
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 15
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "authored"
+          },
+          "expect": {
+            "a": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 15
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "receive",
+            "from": "b",
+            "order": "reversed"
+          },
+          "expect": {
+            "a": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 15
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "switch",
+            "to": "left"
+          },
+          "expect": {
+            "a": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 15
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 15
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "addN",
+                "delta": 100
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 15
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 115
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "commit"
+          },
+          "expect": {
+            "a": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 15
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 115
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "receive",
+            "from": "b",
+            "order": "authored"
+          },
+          "expect": {
+            "a": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 115
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 115
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "switch",
+            "to": "trunk"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 115
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "reload",
+            "through": "spr"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 3
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            },
+            "b": {
+              "line": "left",
+              "checkpoint": null,
+              "state": {
+                "n": 115
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "left"
+              ]
+            }
+          }
+        }
+      ],
+      "converged": {
+        "alternatives": [
+          "",
+          "left"
+        ],
+        "lines": {
+          "trunk": {
+            "state": {
+              "n": 3
+            },
+            "applied": 2,
+            "supersessions": 0
+          },
+          "left": {
+            "state": {
+              "n": 115
+            },
+            "applied": 3,
+            "supersessions": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "an-explicit-checkpoint-is-a-local-head-too",
+      "initial": {
+        "n": 0
+      },
+      "steps": [
+        {
+          "at": "a",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "setN",
+                "n": 1
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": []
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "commit"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "addN",
+                "delta": 1
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "commit"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "authored"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "checkout",
+            "checkpoint": 0
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": 0,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "addN",
+                "delta": 5
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 7
+              },
+              "applied": 3,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": 0,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "authored"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 7
+              },
+              "applied": 3,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": 0,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "reload",
+            "through": "spr"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 7
+              },
+              "applied": 3,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": 0,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "switch",
+            "to": "trunk"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 7
+              },
+              "applied": 3,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 7
+              },
+              "applied": 3,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "supersede",
+            "scope": "document",
+            "target": {
+              "by": "a",
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 3
+            }
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 9
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 7
+              },
+              "applied": 3,
+              "supersessions": 0,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "reversed"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 9
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 9
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "checkout",
+            "checkpoint": 0
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 9
+              },
+              "applied": 3,
+              "supersessions": 1,
+              "alternatives": [
+                ""
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": 0,
+              "state": {
+                "n": 3
+              },
+              "applied": 1,
+              "supersessions": 1,
+              "alternatives": [
+                ""
+              ]
+            }
+          }
+        }
+      ],
+      "converged": {
+        "alternatives": [
+          ""
+        ],
+        "lines": {
+          "trunk": {
+            "state": {
+              "n": 9
+            },
+            "applied": 3,
+            "supersessions": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "finalizes-on-both-replicas-keep-their-own-heads",
+      "initial": {
+        "n": 0
+      },
+      "steps": [
+        {
+          "at": "a",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "setN",
+                "n": 1
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 1
+              },
+              "applied": 1,
+              "supersessions": 0,
+              "alternatives": []
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "edit",
+            "edit": [
+              {
+                "operation": "addN",
+                "delta": 1
+              }
+            ]
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": []
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 0
+              },
+              "applied": 0,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "authored"
+          },
+          "expect": {
+            "a": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": []
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "alternative",
+            "name": "red",
+            "target": {
+              "by": "a",
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 10
+            }
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 11
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "red"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": []
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "reversed"
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 11
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "red"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 2
+              },
+              "applied": 2,
+              "supersessions": 0,
+              "alternatives": [
+                "",
+                "red"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "alternative",
+            "name": "blue",
+            "target": {
+              "by": "a",
+              "edit": 1,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "addN",
+              "delta": 5
+            }
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 11
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "red"
+              ]
+            },
+            "b": {
+              "line": "blue",
+              "checkpoint": null,
+              "state": {
+                "n": 6
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "receive",
+            "from": "b",
+            "order": "authored"
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 11
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            },
+            "b": {
+              "line": "blue",
+              "checkpoint": null,
+              "state": {
+                "n": 6
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "supersede",
+            "scope": "line",
+            "target": {
+              "by": "a",
+              "edit": 1,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "addN",
+              "delta": 7
+            }
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 17
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            },
+            "b": {
+              "line": "blue",
+              "checkpoint": null,
+              "state": {
+                "n": 6
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "receive",
+            "from": "a",
+            "order": "authored"
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 17
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            },
+            "b": {
+              "line": "blue",
+              "checkpoint": null,
+              "state": {
+                "n": 6
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "supersede",
+            "scope": "document",
+            "target": {
+              "by": "a",
+              "edit": 0,
+              "op": 0
+            },
+            "replacement": {
+              "operation": "setN",
+              "n": 100
+            }
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 17
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            },
+            "b": {
+              "line": "blue",
+              "checkpoint": null,
+              "state": {
+                "n": 105
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "receive",
+            "from": "b",
+            "order": "reversed"
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 107
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            },
+            "b": {
+              "line": "blue",
+              "checkpoint": null,
+              "state": {
+                "n": 105
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            }
+          }
+        },
+        {
+          "at": "a",
+          "do": {
+            "kind": "reload",
+            "through": "spr"
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 107
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            },
+            "b": {
+              "line": "blue",
+              "checkpoint": null,
+              "state": {
+                "n": 105
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "reload",
+            "through": "spr"
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 107
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            },
+            "b": {
+              "line": "blue",
+              "checkpoint": null,
+              "state": {
+                "n": 105
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            }
+          }
+        },
+        {
+          "at": "b",
+          "do": {
+            "kind": "reload",
+            "through": "ops"
+          },
+          "expect": {
+            "a": {
+              "line": "red",
+              "checkpoint": null,
+              "state": {
+                "n": 107
+              },
+              "applied": 2,
+              "supersessions": 2,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            },
+            "b": {
+              "line": "trunk",
+              "checkpoint": null,
+              "state": {
+                "n": 101
+              },
+              "applied": 2,
+              "supersessions": 1,
+              "alternatives": [
+                "",
+                "red",
+                "blue"
+              ]
+            }
+          }
+        }
+      ],
+      "converged": {
+        "alternatives": [
+          "",
+          "red",
+          "blue"
+        ],
+        "lines": {
+          "trunk": {
+            "state": {
+              "n": 101
+            },
+            "applied": 2,
+            "supersessions": 1
+          },
+          "red": {
+            "state": {
+              "n": 107
+            },
+            "applied": 2,
+            "supersessions": 2
+          },
+          "blue": {
+            "state": {
+              "n": 105
+            },
+            "applied": 2,
+            "supersessions": 2
+          }
+        }
+      }
+    }
+  ]
+}

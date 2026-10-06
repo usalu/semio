@@ -30,11 +30,11 @@ function physical(root: string, path: string): string {
 const read = (root: string, path: string): Record<string, any> => object(Bun.TOML.parse(readFileSync(physical(root, path), "utf8")));
 const scope = (directory: string, workspace: Record<string, any>): CargoWorkspaceScope => {
   const admission = workspace.metadata?.semio?.repository;
-  if (admission !== undefined && (Object.keys(object(admission)).some(k => !["schema-version", "owner-manifests", "member-manifests"].includes(k)) || admission["schema-version"] !== 1)) throw new Error(`Unknown repository workspace admission at ${directory}`);
+  if (admission !== undefined && (Object.keys(object(admission)).some(k => !["schema-version", "owner-manifests", "member-manifests", "exclude-patterns"].includes(k)) || admission["schema-version"] !== 1)) throw new Error(`Unknown repository workspace admission at ${directory}`);
   const memberManifests = admission?.["member-manifests"];
   if (!Array.isArray(memberManifests) || !memberManifests.length || memberManifests.some(p => !pathPattern(p) || !p.endsWith("Cargo.toml")) || new Set(memberManifests).size !== memberManifests.length) throw new Error(`Invalid native member manifest authority: ${directory}`);
   const prefix = directory === "." ? "" : `${directory}/`;
-  return { directory, manifest: `${prefix}Cargo.toml`, lock: `${prefix}Cargo.lock`, memberManifests, contribution: parseCargoWorkspaceContribution({ schemaVersion: 1, members: workspace.members, exclude: workspace.exclude ?? [] }) };
+  return { directory, manifest: `${prefix}Cargo.toml`, lock: `${prefix}Cargo.lock`, memberManifests, contribution: parseCargoWorkspaceContribution({ schemaVersion: 1, members: workspace.members, exclude: admission["exclude-patterns"] }) };
 };
 
 /** 🗂️ Discovers only present, explicitly authored repository workspaces through physical Cargo documents. */
@@ -42,7 +42,20 @@ export function discoverCargoWorkspaces(root: string): readonly CargoWorkspaceSc
   const rootDocument = read(root, "Cargo.toml");
   const patterns = rootDocument.workspace?.metadata?.semio?.repository?.["owner-manifests"] ?? [];
   if (!Array.isArray(patterns) || patterns.some(p => !pathPattern(p) || !p.endsWith("Cargo.toml")) || new Set(patterns).size !== patterns.length) throw new Error("Invalid repository workspace owner patterns");
-  const files = [...new Set(["Cargo.toml", ...patterns.flatMap(pattern => [...new Bun.Glob(pattern).scanSync({ cwd: root, dot: true, onlyFiles: true, followSymlinks: false })])])];
+  const files = ["Cargo.toml"], matchers=patterns.map(pattern=>new Bun.Glob(pattern)), opaque=new Set(["node_modules","target","dist","build","🤖️generated","🗑️generated","coverage","temp","compose"]);
+  const prefixes=patterns.map(pattern=>pattern.split(/[*?\[{]/u)[0]!.replace(/\/$/u,""));
+  const walk=(directory:string):void=>{
+    if(directory && !prefixes.some(prefix=>!prefix || directory===prefix || directory.startsWith(prefix+"/") || prefix.startsWith(directory+"/")))return;
+    const depth=directory?directory.split("/").length:0;
+    if(!patterns.some(pattern=>pattern.split("/").includes("**") || depth<pattern.split("/").length))return;
+    for(const entry of readdirSync(join(root,directory),{withFileTypes:true})){
+      if(entry.name.startsWith(".") || opaque.has(entry.name) || entry.isSymbolicLink())continue;
+      const path=directory?directory+"/"+entry.name:entry.name;
+      if(entry.isDirectory())walk(path);
+      else if(entry.isFile() && entry.name==="Cargo.toml" && matchers.some(pattern=>pattern.match(path)))files.push(path);
+    }
+  };
+  walk("");
   const found: CargoWorkspaceScope[] = [];
   for (const path of files.sort()) {
     if (path.split("/").some(p => p.startsWith(".") || ["node_modules", "target", "dist", "build", "🤖️generated", "coverage", "temp", "compose"].includes(p))) continue;
@@ -63,6 +76,7 @@ export function cargoWorkspaceMembers(root: string, owner: CargoWorkspaceScope):
   const opaque = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "coverage", "🗑️generated"]);
   const walk = (directory: string): void => {
     if (directory && !prefixes.some(prefix => !prefix || directory.startsWith(prefix + "/") || prefix === directory || prefix.startsWith(directory + "/"))) return;
+    if(directory){const manifest=join(cwd,directory,"Cargo.toml");if(existsSync(manifest) && read(root,slash(relative(root,manifest))).workspace!==undefined)return;}
     if (directory && leaves.some(pattern => pattern.match(directory))) {
       const manifest = join(cwd, directory, "Cargo.toml");
       if (existsSync(manifest)) { physical(root, slash(relative(root,manifest))); paths.add(slash(relative(root,manifest))); return; }
@@ -75,6 +89,10 @@ export function cargoWorkspaceMembers(root: string, owner: CargoWorkspaceScope):
       else if(entry.isFile() && name==="Cargo.toml" && local!=="Cargo.toml" && patterns.some(pattern=>pattern.match(local)) && !excluded.some(pattern=>pattern.match(slash(dirname(local)))))paths.add(slash(relative(root,join(cwd,local))));
     }
   };
+  if (patterns.some(pattern => pattern.match("Cargo.toml")) && !excluded.some(pattern => pattern.match(".") || pattern.match("./") || pattern.match("Cargo.toml"))) {
+    const manifest = slash(relative(root, join(cwd, "Cargo.toml")));
+    if (read(root, manifest).package !== undefined) paths.add(manifest);
+  }
   walk("");
   if (!paths.size) throw new Error(`Cargo workspace has no current source-bound members: ${owner.manifest}`);
   const names = new Set<string>();
@@ -147,29 +165,25 @@ export function selectedCargoArguments(root: string, args: readonly string[]): s
 
 /** 📣️ Publishes only the admitted current member array, preserving every other Cargo declaration. */
 export function publishCargoWorkspaceMembership(root: string, owner: CargoWorkspaceScope, mode: "check" | "write"): boolean {
-  const path = physical(root, owner.manifest), source = readFileSync(path, "utf8");
-  const members = cargoWorkspaceMembers(root, owner).map(row => slash(relative(resolve(root, owner.directory), resolve(root, row.directory))));
-  const document = object(Bun.TOML.parse(source)), actual = document.workspace?.members;
-  if (JSON.stringify(actual) === JSON.stringify(members)) return false;
-  if (mode === "check") throw new Error(`Cargo source membership is stale: ${owner.manifest}`);
-  const heading = /^\[workspace\]\r?$/m.exec(source);
-  if (!heading) throw new Error(`Cargo workspace table is absent: ${owner.manifest}`);
-  const bodyStart = heading.index + heading[0].length, next = /^\[/m.exec(source.slice(bodyStart));
-  const section = source.slice(bodyStart, next ? bodyStart + next.index : source.length), field = /^members\s*=\s*\[/m.exec(section);
-  if (!field) throw new Error(`Cargo workspace member field is absent: ${owner.manifest}`);
-  const start = bodyStart + field.index;
-  let end = bodyStart + field.index + field[0].length, quote = "", escaped = false;
-  for (; end < source.length; end++) {
-    const character = source[end]!;
-    if (quote) { if (escaped) escaped = false; else if (quote === '"' && character === "\\") escaped = true; else if (character === quote) quote = ""; }
-    else if (character === '"' || character === "'") quote = character;
-    else if (character === "]") { end++; break; }
+  const path=physical(root,owner.manifest),source=readFileSync(path,"utf8"),document=object(Bun.TOML.parse(source));
+  const members=cargoWorkspaceMembers(root,owner).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory))) || ".");
+  const children=discoverCargoWorkspaces(root).filter(row=>row.directory!==owner.directory && (owner.directory==="." || row.directory.startsWith(owner.directory+"/"))).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory))));
+  const exclude=[...new Set([...owner.contribution.exclude,...children])].sort();
+  if(JSON.stringify(document.workspace.members)===JSON.stringify(members) && JSON.stringify(document.workspace.exclude??[])===JSON.stringify(exclude))return false;
+  if(mode==="check")throw Error(`Cargo source membership is stale: ${owner.manifest}`);
+  let after=source;
+  for(const [name,values] of [["members",members],["exclude",exclude]] as const){
+    const heading=/^\[workspace\]\r?$/m.exec(after);if(!heading)throw Error(`Cargo workspace table is absent: ${owner.manifest}`);
+    const bodyStart=heading.index+heading[0].length,next=/^\[/m.exec(after.slice(bodyStart)),section=after.slice(bodyStart,next?bodyStart+next.index:after.length),field=new RegExp("^"+name+"\\s*=\\s*\\[","m").exec(section);
+    const replacement=name+" = [\n"+values.map(value=>"    "+JSON.stringify(value)+",").join("\n")+"\n]";
+    if(!field){after=after.slice(0,bodyStart)+"\n"+replacement+after.slice(bodyStart);continue;}
+    const start=bodyStart+field.index;let end=start+field[0].length,quote="",escaped=false;
+    for(;end<after.length;end++){const character=after[end]!;if(quote){if(escaped)escaped=false;else if(quote==='"' && character==="\\")escaped=true;else if(character===quote)quote="";}else if(character==='"' || character==="'")quote=character;else if(character==="]"){end++;break;}}
+    if(end>=after.length)throw Error(`Unterminated Cargo workspace array: ${owner.manifest}`);
+    after=after.slice(0,start)+replacement+after.slice(end);
   }
-  if (end >= source.length) throw new Error(`Unterminated Cargo workspace member array: ${owner.manifest}`);
-  const replacement = `members = [\n${members.map(path => `    ${JSON.stringify(path)},`).join("\n")}\n]`;
-  if (readFileSync(physical(root, owner.manifest), "utf8") !== source) throw new Error(`Cargo workspace changed during member discovery: ${owner.manifest}`);
-  writeFileSync(path, source.slice(0,start) + replacement + source.slice(end));
-  return true;
+  if(readFileSync(physical(root,owner.manifest),"utf8")!==source)throw Error(`Cargo workspace changed during member discovery: ${owner.manifest}`);
+  writeFileSync(path,after);return true;
 }
 
 export type CargoPreparationV1 = Readonly<{ script: string; command: readonly string[] }>;
@@ -196,15 +210,15 @@ export function cargoCommandRequiresOwnerPreparationV1(command: string): boolean
 }
 
 /** 🛠️ Refreshes the selected native workspace before each repository Cargo operation. */
-export function prepareCargoWorkspaceInvocation(root: string, args: readonly string[], cwd: string): void {
+export function prepareCargoWorkspaceInvocation(root: string, args: readonly string[], cwd: string, environment: Readonly<Record<string,string|undefined>> = process.env): void {
   if (!cargoCommandRequiresOwnerPreparationV1(args[0] ?? "")) return;
   const index = args.indexOf("--manifest-path"), inline = args.find(arg => arg.startsWith("--manifest-path="));
   const selected = index >= 0 ? args[index+1] : inline?.slice(16);
   const path = selected ? resolve(cwd, selected) : join(cwd, "Cargo.toml");
-  if (process.env.SEMIO_CARGO_PREPARATION_ACTIVE) throw new Error(`Cargo recursion in owner preparation: ${process.env.SEMIO_CARGO_PREPARATION_ACTIVE}`);
+  if (environment.SEMIO_CARGO_PREPARATION_ACTIVE) throw new Error(`Cargo recursion in owner preparation: ${environment.SEMIO_CARGO_PREPARATION_ACTIVE}`);
   const owner = cargoWorkspaceForManifest(root, slash(relative(root, path))), source = read(root, owner.manifest);
   if (source.workspace?.metadata?.semio?.repository !== undefined) {
-    const result=Bun.spawnSync([process.execPath,fileURLToPath(new URL("./📜️script.ts",import.meta.url)),"prepare","--manifest",owner.manifest],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"inherit"});
+    const result=Bun.spawnSync([process.execPath,fileURLToPath(new URL("./🛠️preparation/📜️script.ts",import.meta.url)),"prepare","--manifest",owner.manifest],{cwd:root,env:{...environment,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"inherit"});
     if (result.stdout.byteLength) process.stderr.write(result.stdout);
     if(result.exitCode!==0)throw new Error(`Selected Cargo preparation failed: ${owner.manifest} (${result.exitCode})`);
   }

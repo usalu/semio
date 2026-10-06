@@ -139,194 +139,21 @@ pub(crate) fn agg_inverse(this: &StlMutation, base: &StlSnapshot) -> Result<Vec<
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🧪️ F6: hand-rolled `OpText`/`OpBinary` grammar — see this file's top doc comment for why (the
-/// same real, reproduced `dsl`-derive bug that forced `StlDiff`'s hand-roll also reaches here via
-/// `SetSnapshot`/`InsertTriangle`/`SetTriangleVertices`'s `[[f64; 3]; 3]` payload).
-///
-/// **Grammar**: `<keyword> arg=value ...` — one space-separated `key=value` token per argument
-/// (every variant's args are ALWAYS present, unlike `StlDiff`'s sparse tokens). `index`/floats
-/// print via `Display`; `name`/`solid_name` are lowercase hex; `normal`/`vertices`/`triangle`/
-/// `snapshot` reuse `🔺️diff::component`'s `pub(crate)` value codecs verbatim (`enc_vec3`,
-/// `enc_vertices`, `enc_triangle`) plus this file's own `enc_snapshot` (the one type `🔺️diff`
-/// doesn't need — only `SetSnapshot`'s payload does).
-fn enc_snapshot(s: &StlSnapshot) -> String {
-    let stl_triangle_separator = ",";
-    format!("[{},{},[{}]]", diff::hex_encode_str(&s.schema), diff::hex_encode_str(&s.solid_name), s.triangles.iter().map(diff::enc_triangle).collect::<Vec<_>>().join(stl_triangle_separator),)
-}
-fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
-    let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
-    let [schema, solid_name, triangles] = parts.as_slice() else {
-        return Err(format!("snapshot: expected 3 fields, got {}", parts.len()));
-    };
-    let triangles = diff::split_top_level(diff::strip_brackets(triangles)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_triangle).collect::<Result<Vec<_>, String>>()?;
-    Ok(StlSnapshot { schema: diff::hex_decode_str(schema)?, solid_name: diff::hex_decode_str(solid_name)?, triangles })
-}
 
-fn print_stl_op(m: &StlMutation) -> String {
-    match m {
-        StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
-        StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
-        StlMutation::SetSolidName(set_solid_name::SetSolidName { name }) => format!("set-solid-name name={}", diff::hex_encode_str(name)),
-        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle }) => format!("insert-triangle index={index} triangle={}", diff::enc_triangle(triangle)),
-        StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index }) => format!("remove-triangle index={index}"),
-        StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index, normal }) => format!("set-triangle-normal index={index} normal={}", diff::enc_vec3(normal)),
-        StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index, vertices }) => format!("set-triangle-vertices index={index} vertices={}", diff::enc_vertices(vertices)),
-    }
-}
-fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
-    let mut tokens = line.split(' ');
-    let keyword = tokens.next().ok_or_else(|| "stl op: empty line".to_string())?;
-    let args: Vec<&str> = tokens.collect();
-    let get = |key: &str| -> Result<&str, String> {
-        let probe = format!("{key}=");
-        args.iter().find_map(|t| t.strip_prefix(probe.as_str())).ok_or_else(|| format!("stl op: missing '{key}=' in {line:?}"))
-    };
-    match keyword {
-        "set-snapshot" => Ok(StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(get("snapshot")?)? })),
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-solid-name" => Ok(StlMutation::SetSolidName(set_solid_name::SetSolidName { name: diff::hex_decode_str(get("name")?)? })),
-        "insert-triangle" => Ok(StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: diff::parse_usize(get("index")?)?, triangle: diff::dec_triangle(get("triangle")?)? })),
-        "remove-triangle" => Ok(StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: diff::parse_usize(get("index")?)? })),
-        "set-triangle-normal" => Ok(StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: diff::parse_usize(get("index")?)?, normal: diff::dec_vec3(get("normal")?)? })),
-        "set-triangle-vertices" => Ok(StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index: diff::parse_usize(get("index")?)?, vertices: diff::dec_vertices(get("vertices")?)? })),
-        other => Err(format!("stl op: unknown keyword {other:?}")),
-    }
-}
 
-impl OpText for StlMutation {
-    fn print_op(&self) -> String {
-        print_stl_op(self)
-    }
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_stl_op(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-}
+
+
+
+
+
 
 //#region 🔖️OpBinaryCodec
-/// 🧪️ P2-FG1-FIX: real recursive binary twin of [`enc_snapshot`]/[`dec_snapshot`] above —
-/// `StlSnapshot` is genuinely flat (`Vec<StlTriangle>`, no self-recursion), so this is real
-/// varint-framed binary all the way down, reusing `diff`'s `pub(crate)` binary value codecs
-/// (`enc_triangle_bin`/`dec_triangle_bin`) rather than duplicating them — same intra-artifact
-/// reuse pattern this file's own text `enc_snapshot` already establishes over `diff::enc_triangle`.
-fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
-    diff::write_str_bin(out, &s.schema);
-    diff::write_str_bin(out, &s.solid_name);
-    store::pack_rt::write_varint_u64(out, s.triangles.len() as u64);
-    for t in &s.triangles {
-        diff::enc_triangle_bin(t, out);
-    }
-}
-fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, String> {
-    let schema = diff::read_str_bin(reader)?;
-    let solid_name = diff::read_str_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut triangles = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        triangles.push(diff::dec_triangle_bin(reader)?);
-    }
-    Ok(StlSnapshot { schema, solid_name, triangles })
-}
 
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `StlMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
-const TAG_SET_SOLID_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-solid-name");
-const TAG_INSERT_TRIANGLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-triangle");
-const TAG_REMOVE_TRIANGLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-triangle");
-const TAG_SET_TRIANGLE_NORMAL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-triangle-normal");
-const TAG_SET_TRIANGLE_VERTICES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-triangle-vertices");
-//#endregion 🏷️WireTags
 
-/// 🧪️ P2-FG1-FIX: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
-/// upgraded from the prior `print_stl_op(self).into_bytes()` text-as-binary shortcut. `tag` is
-/// the `StlMutation` variant's declaration-order ordinal (1=`SetSnapshot` .. 6=
-/// `SetTriangleVertices`, same order `enum StlMutation` declares them; `0` is retired along with
-/// `NoMutation`, not reused). Every variant's payload is real field-by-field binary
-/// (`write_varint_u64` for `index: usize`, `write_f64_bin`/`enc_vec3_bin`/`enc_vertices_bin`/
-/// `enc_triangle_bin`/`enc_snapshot_bin` for the rest) — `StlMutation`'s payload tree has ZERO
-/// self-recursion, so nothing here is opaque at the Rust layer; only the protocol-dialect file
-/// still frames the payload as one opaque trailing chain (`SetSnapshot`'s `Vec<StlTriangle>` is a
-/// variable-length vector-of-records, the same `protocol-array-of-records` `walk_protocol` gap the
-/// sibling diff protocol file documents).
-impl OpBinary for StlMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
-        let tag: u8 = match self {
-            StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
-                enc_snapshot_bin(snapshot, &mut out);
-                TAG_SET_SNAPSHOT
-            }
-            StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => {
-                out.extend(patch.encode_op()?);
-                TAG_PATCH_SNAPSHOT
-            }
-            StlMutation::SetSolidName(set_solid_name::SetSolidName { name }) => {
-                diff::write_str_bin(&mut out, name);
-                TAG_SET_SOLID_NAME
-            }
-            StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle }) => {
-                store::pack_rt::write_varint_u64(&mut out, *index as u64);
-                diff::enc_triangle_bin(triangle, &mut out);
-                TAG_INSERT_TRIANGLE
-            }
-            StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index }) => {
-                store::pack_rt::write_varint_u64(&mut out, *index as u64);
-                TAG_REMOVE_TRIANGLE
-            }
-            StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index, normal }) => {
-                store::pack_rt::write_varint_u64(&mut out, *index as u64);
-                diff::enc_vec3_bin(normal, &mut out);
-                TAG_SET_TRIANGLE_NORMAL
-            }
-            StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index, vertices }) => {
-                store::pack_rt::write_varint_u64(&mut out, *index as u64);
-                diff::enc_vertices_bin(vertices, &mut out);
-                TAG_SET_TRIANGLE_VERTICES
-            }
-        };
-        out[1] = tag;
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
-        let tag = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: e.to_string() })?;
-        match tag {
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: reader.position() as u64, detail: e })?;
-                Ok(StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
-            TAG_PATCH_SNAPSHOT => semio_s_artifact_stdio_contract::editing::SnapshotPatch::decode_op(&bytes[reader.position()..]).map(|patch| StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-            TAG_SET_SOLID_NAME => {
-                let name = diff::read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op name", offset: reader.position() as u64, detail: e })?;
-                Ok(StlMutation::SetSolidName(set_solid_name::SetSolidName { name }))
-            }
-            TAG_INSERT_TRIANGLE => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
-                let triangle = diff::dec_triangle_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op triangle", offset: reader.position() as u64, detail: e })?;
-                Ok(StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle }))
-            }
-            TAG_REMOVE_TRIANGLE => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
-                Ok(StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index }))
-            }
-            TAG_SET_TRIANGLE_NORMAL => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
-                let normal = diff::dec_vec3_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op normal", offset: reader.position() as u64, detail: e })?;
-                Ok(StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index, normal }))
-            }
-            TAG_SET_TRIANGLE_VERTICES => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
-                let vertices = diff::dec_vertices_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op vertices", offset: reader.position() as u64, detail: e })?;
-                Ok(StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index, vertices }))
-            }
-            other => Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),
-        }
-    }
-}
+
+
+
+
 //#endregion 🔖️OpBinaryCodec
 //#endregion OpCodecs
 

@@ -44,6 +44,7 @@ const REMODELING_VIEW_VIEWPORT: store::Viewport3dOrbit = store::Viewport3dOrbit 
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Model", "Modell"),
         body_key: BODY_KEY.into(),

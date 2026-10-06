@@ -311,9 +311,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-slide-applied",
       "class": "third-party-generated",
       "target": {
@@ -364,7 +363,6 @@
       "notes": "A second blank slide appended to the presentation."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-slide-applied",
       "class": "third-party-generated",
       "target": {
@@ -415,7 +413,6 @@
       "notes": "The second slide removed from the presentation, inverse of insert-slide."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-slide-applied",
       "class": "third-party-generated",
       "target": {
@@ -466,7 +463,6 @@
       "notes": "Slide order reversed, [A, B] -> [B, A], via the presentation's own slide-id list."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-shape-applied",
       "class": "third-party-generated",
       "target": {
@@ -517,7 +513,6 @@
       "notes": "A second textbox shape added to the slide."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-shape-applied",
       "class": "third-party-generated",
       "target": {
@@ -568,7 +563,6 @@
       "notes": "The second textbox shape removed, inverse of insert-shape."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-shape-position-applied",
       "class": "third-party-generated",
       "target": {
@@ -619,7 +613,6 @@
       "notes": "The shape's left/top offset changed (1in,1in) -> (2in,2in)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-shape-text-applied",
       "class": "third-party-generated",
       "target": {

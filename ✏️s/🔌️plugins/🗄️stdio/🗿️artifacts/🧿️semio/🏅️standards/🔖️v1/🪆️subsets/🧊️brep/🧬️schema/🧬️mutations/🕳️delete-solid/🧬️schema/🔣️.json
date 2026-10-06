@@ -10,7 +10,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Solid",
+          "de": "Körper"
+        },
+        "description": {
+          "en": "Id of the solid that is deleted.",
+          "de": "Kennung des Körpers, der gelöscht wird."
+        },
+        "ref": {
+          "kind": "solid"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

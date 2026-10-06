@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-05T18:06:30.853Z",
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/outside-equation-writer-native-artifacts' bun run nx run-many --target=test-snapshot-sqlite-native --projects=@semio-tech/writer-writer-rs,@semio-tech/mathematical-equation-rs --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies >'/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-equation-writer-registered-native-replay.log' 2>&1",
+  "scope": [
+    "@semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+    "@semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native"
+  ],
+  "reason": "Equation obsolete original trait-call arity corrected; Writer previous compiler-only missing dependency output directory, no source repair or runtime claim"
+}

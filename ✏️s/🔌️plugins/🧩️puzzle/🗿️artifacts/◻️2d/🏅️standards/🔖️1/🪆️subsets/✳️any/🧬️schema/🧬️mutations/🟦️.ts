@@ -119,6 +119,7 @@ export interface ConnectHandles {
   y: number;
   sourceTip: string | null;
   targetTip: string | null;
+  tolerance?: number | null;
 }
 
 /** ✂️ `disconnect-handles` payload. */

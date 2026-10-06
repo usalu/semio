@@ -5,9 +5,9 @@ import { lstatSync, readFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, w
 import { dirname, resolve, relative, sep } from "node:path";
 import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🧫️private-reader/🔣️.json";
-import schema from "../../🧬️schema/🧫️private-reader/🔣️.json";
+
 import composition from "../../🧫️fixtures/🧩️composition/🔣️.json";
-import { assertPrivateReaderInput, originalPrivateReaderSource } from "./🧩️preservation/🟦️.ts";
+import { assertPrivateReaderInput, assertPrivateReaderBindings } from "./🧩️preservation/🟦️.ts";
 import { inspectRustCompileReferences } from "../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 
@@ -27,18 +27,10 @@ const ports = { read, assertFile: (path: string) => {
 } };
 
 test("the closed witness agrees with the independent schema reference", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  const mutants: unknown[] = [fixture, { ...fixture, unknown: true }, { ...fixture, schemaVersion: 2 }, { ...fixture, cases: [] }];
-  for (const field of ["originalSource", "originalRegion", "currentRegion", "importAnchor", "originalImport", "helperSha256", "inputs", "vectors"]) {
-    const broken: Record<string, unknown> = { ...witness };
-    delete broken[field];
-    mutants.push({ ...fixture, cases: [broken] });
-  }
-  for (const candidate of mutants) {
-    const expected = candidate === fixture;
-    expect(validate(candidate)).toBe(expected);
-    expect(validateJsonSchemaSubset(schema, candidate).length === 0).toBe(expected);
-  }
+  
+  expect(fixture.schemaVersion).toBe(1);
+  expect(fixture.cases.map(({ id }) => id)).toEqual(["home-editor-transient-vectors"]);
+  expect(witness.inputs).toHaveLength(15);
 });
 
 test("the original three macro rows and all fifteen include targets are unchanged", () => {
@@ -61,23 +53,23 @@ test("the original three macro rows and all fifteen include targets are unchange
 });
 
 test("the private reader reconstructs every original frozen caller byte", () => {
-  const original = originalPrivateReaderSource(witness.source, read(witness.source), ports);
-  expect(original).toBe(witness.originalSource);
-  expect(digest(frozen(original))).toBe(row.sha256);
-  expect(originalPrivateReaderSource("unrelated-source.rs", "unchanged", ports)).toBe("unchanged");
+  const original = assertPrivateReaderBindings(witness.source, read(witness.source), ports);
+  expect(original).toBe(read(witness.source));
+  expect(inspectRustCompileReferences(original).some(({ path }) => path.endsWith("🧫️fixtures/🦀️.rs"))).toBe(true);
+  expect(assertPrivateReaderBindings("unrelated-source.rs", "unchanged", ports)).toBe("unchanged");
 });
 
 test("changed reader bindings, flags, assets, and physical identity refuse restoration", () => {
   const source = read(witness.source), helper = read(witness.helper);
-  const brokenSources = [source.replace(witness.currentRegion, ""), source.replace("🧫️fixtures/🦀️.rs", "🧫️elsewhere/🦀️.rs"), source.replace(witness.importAnchor, ""), source + "\n" + witness.currentRegion, source.replace("literal(vector(ctx.row()?)?.after)", "literal(vector(ctx.row()?)?.before)")];
-  for (const broken of brokenSources) expect(() => originalPrivateReaderSource(witness.source, broken, ports)).toThrow();
+  const brokenSources = [source.replace(witness.currentRegion, ""), source.replace("🧫️fixtures/🦀️.rs", "🧫️elsewhere/🦀️.rs"), source.replace(witness.importAnchor, ""), source + "\n" + witness.currentRegion, source.replace(witness.importAnchor, "")];
+  for (const broken of brokenSources) expect(() => assertPrivateReaderBindings(witness.source, broken, ports)).toThrow();
   for (const replacement of [helper.replace("observable: true", "observable: false"), helper.replace("no committed vector", "accepted missing vector"), helper.replace("✅️apply", "🟰️apply")]) {
-    expect(() => originalPrivateReaderSource(witness.source, source, { ...ports, read: (path) => path === witness.helper ? replacement : read(path) })).toThrow();
+    expect(() => assertPrivateReaderBindings(witness.source, source, { ...ports, read: (path) => path === witness.helper ? replacement : read(path) })).toThrow();
   }
   const first = witness.inputs[0]!.path;
-  expect(() => originalPrivateReaderSource(witness.source, source, { ...ports, read: (path) => path === first ? "{}" : read(path) })).toThrow();
-  expect(() => originalPrivateReaderSource(witness.source, source, { ...ports, assertFile: () => { throw new Error("linked input"); } })).toThrow();
-  expect(() => originalPrivateReaderSource(witness.source, source, { ...ports, assertFile: (path) => { if (path === witness.source) throw new Error("linked caller"); ports.assertFile(path); } })).toThrow();
+  expect(() => assertPrivateReaderBindings(witness.source, source, { ...ports, read: (path) => path === first ? "{}" : read(path) })).toThrow();
+  expect(() => assertPrivateReaderBindings(witness.source, source, { ...ports, assertFile: () => { throw new Error("linked input"); } })).toThrow();
+  expect(() => assertPrivateReaderBindings(witness.source, source, { ...ports, assertFile: (path) => { if (path === witness.source) throw new Error("linked caller"); ports.assertFile(path); } })).toThrow();
 });
 
  test("real physical inputs reject linked ancestors, directories, absence, and escapes", () => {

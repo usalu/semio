@@ -1,4 +1,4 @@
-//! 🧪️ `scale-selection` fixture — `⚠️skips-locked-ghost`.
+//! 🧪️ `scale-selection` scene_snapshot — `⚠️skips-locked-ghost`.
 //!
 //! `volume-1` halves; the absent `object-ghost` and the locked `object-c` are skipped with one `mutation.partial` per reason.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "scale-selection/skips-locked-ghost: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

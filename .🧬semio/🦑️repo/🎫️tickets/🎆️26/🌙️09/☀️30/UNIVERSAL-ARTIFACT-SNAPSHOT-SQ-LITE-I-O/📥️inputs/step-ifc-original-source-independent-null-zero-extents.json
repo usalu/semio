@@ -1,0 +1,1256 @@
+[
+  {
+    "owner": "step",
+    "id": "originalSourceFull",
+    "input": {
+      "schema": "stdio.step",
+      "header": {
+        "fileDescription": {
+          "description": [
+            "English",
+            "Deutsch",
+            "",
+            "文\u0000"
+          ],
+          "implementationLevel": "2;1"
+        },
+        "fileName": {
+          "name": "assembly.step",
+          "timestamp": "2026-10-01T00:00:00",
+          "author": [
+            "A",
+            "A"
+          ],
+          "organization": [
+            "Semio",
+            ""
+          ],
+          "preprocessorVersion": "authored",
+          "originatingSystem": "owned",
+          "authorization": ""
+        },
+        "fileSchema": {
+          "schemas": [
+            "AUTOMOTIVE_DESIGN",
+            "AUTOMOTIVE_DESIGN"
+          ]
+        }
+      },
+      "entities": [
+        {
+          "id": {
+            "exactWord": "1"
+          },
+          "name": "PRIMARY",
+          "args": [
+            "unset",
+            "derived",
+            {
+              "integer": {
+                "exactWord": "-9223372036854775808"
+              }
+            },
+            {
+              "integer": {
+                "exactWord": "9223372036854775807"
+              }
+            },
+            {
+              "real": {
+                "bits": {
+                  "exactWord": "0"
+                }
+              }
+            },
+            {
+              "real": {
+                "bits": {
+                  "exactWord": "9223372036854775808"
+                }
+              }
+            },
+            {
+              "real": {
+                "bits": {
+                  "exactWord": "1"
+                }
+              }
+            },
+            {
+              "real": {
+                "bits": {
+                  "exactWord": "9218868437227405312"
+                }
+              }
+            },
+            {
+              "real": {
+                "bits": {
+                  "exactWord": "18442240474082181120"
+                }
+              }
+            },
+            {
+              "real": {
+                "bits": {
+                  "exactWord": "9221120237041090626"
+                }
+              }
+            },
+            {
+              "real": {
+                "bits": {
+                  "exactWord": "9218868437227405313"
+                }
+              }
+            },
+            {
+              "real": {
+                "bits": {
+                  "exactWord": "18446744073709551615"
+                }
+              }
+            },
+            {
+              "string": "English Deutsch\u0000文"
+            },
+            {
+              "enum": "UNKNOWN"
+            },
+            {
+              "reference": {
+                "exactWord": "18446744073709551615"
+              }
+            },
+            {
+              "aggregate": []
+            },
+            {
+              "typedValue": {
+                "typeName": "LENGTH_MEASURE",
+                "value": {
+                  "aggregate": [
+                    {
+                      "integer": {
+                        "exactWord": "1"
+                      }
+                    },
+                    {
+                      "string": ""
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "complex": [
+            {
+              "name": "COMPLEX",
+              "args": [
+                {
+                  "reference": {
+                    "exactWord": "1"
+                  }
+                },
+                {
+                  "aggregate": [
+                    "derived",
+                    "unset"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": {
+            "exactWord": "18446744073709551615"
+          },
+          "name": "TARGET",
+          "args": [
+            {
+              "reference": {
+                "exactWord": "1"
+              }
+            }
+          ],
+          "complex": []
+        }
+      ]
+    },
+    "rows": 65,
+    "valueBytes": 1916,
+    "schemaBytes": 3437,
+    "tables": [
+      {
+        "table": "step_aggregate_element",
+        "width": 4,
+        "rows": 4,
+        "semanticBytes": 128
+      },
+      {
+        "table": "step_argument",
+        "width": 5,
+        "rows": 20,
+        "semanticBytes": 640
+      },
+      {
+        "table": "step_author",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 50
+      },
+      {
+        "table": "step_complex_type",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 31
+      },
+      {
+        "table": "step_description",
+        "width": 4,
+        "rows": 4,
+        "semanticBytes": 114
+      },
+      {
+        "table": "step_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 26
+      },
+      {
+        "table": "step_entity",
+        "width": 5,
+        "rows": 2,
+        "semanticBytes": 82
+      },
+      {
+        "table": "step_header",
+        "width": 7,
+        "rows": 1,
+        "semanticBytes": 56
+      },
+      {
+        "table": "step_organization",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 53
+      },
+      {
+        "table": "step_schema_identifier",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 82
+      },
+      {
+        "table": "step_typed_value",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 38
+      },
+      {
+        "table": "step_value",
+        "width": 10,
+        "rows": 25,
+        "semanticBytes": 616
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "owner": "step",
+    "id": "emptyEntitiesRetainHeader",
+    "input": {
+      "schema": "stdio.step",
+      "header": {
+        "fileDescription": {
+          "description": [
+            "English",
+            "Deutsch",
+            "",
+            "文\u0000"
+          ],
+          "implementationLevel": "2;1"
+        },
+        "fileName": {
+          "name": "assembly.step",
+          "timestamp": "2026-10-01T00:00:00",
+          "author": [
+            "A",
+            "A"
+          ],
+          "organization": [
+            "Semio",
+            ""
+          ],
+          "preprocessorVersion": "authored",
+          "originatingSystem": "owned",
+          "authorization": ""
+        },
+        "fileSchema": {
+          "schemas": [
+            "AUTOMOTIVE_DESIGN",
+            "AUTOMOTIVE_DESIGN"
+          ]
+        }
+      },
+      "entities": []
+    },
+    "rows": 12,
+    "valueBytes": 381,
+    "schemaBytes": 3437,
+    "tables": [
+      {
+        "table": "step_aggregate_element",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "step_argument",
+        "width": 5,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "step_author",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 50
+      },
+      {
+        "table": "step_complex_type",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "step_description",
+        "width": 4,
+        "rows": 4,
+        "semanticBytes": 114
+      },
+      {
+        "table": "step_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 26
+      },
+      {
+        "table": "step_entity",
+        "width": 5,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "step_header",
+        "width": 7,
+        "rows": 1,
+        "semanticBytes": 56
+      },
+      {
+        "table": "step_organization",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 53
+      },
+      {
+        "table": "step_schema_identifier",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 82
+      },
+      {
+        "table": "step_typed_value",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "step_value",
+        "width": 10,
+        "rows": 0,
+        "semanticBytes": 0
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "owner": "ifc4",
+    "id": "originalSourceFull",
+    "input": {
+      "schema": "stdio.ifc",
+      "header": {
+        "fileDescription": [
+          {
+            "kind": "aggregate",
+            "value": [
+              {
+                "kind": "string",
+                "value": "description"
+              }
+            ]
+          },
+          {
+            "kind": "typedValue",
+            "value": {
+              "name": "HEADER_CUSTOM",
+              "items": []
+            }
+          }
+        ],
+        "fileName": [
+          {
+            "kind": "reference",
+            "value": {
+              "exactWord": "0"
+            }
+          },
+          {
+            "kind": "real",
+            "value": {
+              "bits": {
+                "exactWord": "9218868437227405313"
+              }
+            }
+          }
+        ],
+        "fileSchema": [
+          {
+            "kind": "aggregate",
+            "value": [
+              {
+                "kind": "string",
+                "value": "IFC4"
+              },
+              {
+                "kind": "string",
+                "value": "IFC4"
+              }
+            ]
+          }
+        ]
+      },
+      "entities": [
+        {
+          "id": {
+            "exactWord": "0"
+          },
+          "name": "IFCWALL",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "derived"
+            },
+            {
+              "kind": "integer",
+              "value": {
+                "exactWord": "-9223372036854775808"
+              }
+            },
+            {
+              "kind": "integer",
+              "value": {
+                "exactWord": "9223372036854775807"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": {
+                  "exactWord": "0"
+                }
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": {
+                  "exactWord": "9223372036854775808"
+                }
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": {
+                  "exactWord": "1"
+                }
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": {
+                  "exactWord": "9218868437227405312"
+                }
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": {
+                  "exactWord": "18442240474082181120"
+                }
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": {
+                  "exactWord": "9221120237041090626"
+                }
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": {
+                  "exactWord": "9218868437227405313"
+                }
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": {
+                  "exactWord": "18446744073709551615"
+                }
+              }
+            },
+            {
+              "kind": "string",
+              "value": "English Deutsch\u0000文"
+            },
+            {
+              "kind": "enum",
+              "value": "UNKNOWN"
+            },
+            {
+              "kind": "reference",
+              "value": {
+                "exactWord": "18446744073709551615"
+              }
+            },
+            {
+              "kind": "aggregate",
+              "value": []
+            },
+            {
+              "kind": "typedValue",
+              "value": {
+                "name": "IFCLENGTHMEASURE",
+                "items": [
+                  {
+                    "kind": "integer",
+                    "value": {
+                      "exactWord": "1"
+                    }
+                  },
+                  {
+                    "kind": "aggregate",
+                    "value": [
+                      {
+                        "kind": "derived"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCROOT",
+              "args": [
+                {
+                  "kind": "reference",
+                  "value": {
+                    "exactWord": "0"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": {
+            "exactWord": "18446744073709551615"
+          },
+          "name": "TARGET",
+          "args": [
+            {
+              "kind": "reference",
+              "value": {
+                "exactWord": "0"
+              }
+            }
+          ],
+          "complex": []
+        }
+      ]
+    },
+    "rows": 65,
+    "valueBytes": 1869,
+    "schemaBytes": 3250,
+    "tables": [
+      {
+        "table": "ifc_aggregate_element",
+        "width": 4,
+        "rows": 4,
+        "semanticBytes": 128
+      },
+      {
+        "table": "ifc_argument",
+        "width": 5,
+        "rows": 19,
+        "semanticBytes": 608
+      },
+      {
+        "table": "ifc_complex_type",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 31
+      },
+      {
+        "table": "ifc_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 25
+      },
+      {
+        "table": "ifc_entity",
+        "width": 5,
+        "rows": 2,
+        "semanticBytes": 82
+      },
+      {
+        "table": "ifc_file_description_argument",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "ifc_file_name_argument",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "ifc_file_schema_argument",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 32
+      },
+      {
+        "table": "ifc_header",
+        "width": 1,
+        "rows": 1,
+        "semanticBytes": 8
+      },
+      {
+        "table": "ifc_typed_argument",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "ifc_value",
+        "width": 11,
+        "rows": 30,
+        "semanticBytes": 763
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "owner": "ifc4",
+    "id": "emptyEntitiesRetainHeader",
+    "input": {
+      "schema": "stdio.ifc",
+      "header": {
+        "fileDescription": [
+          {
+            "kind": "aggregate",
+            "value": [
+              {
+                "kind": "string",
+                "value": "description"
+              }
+            ]
+          },
+          {
+            "kind": "typedValue",
+            "value": {
+              "name": "HEADER_CUSTOM",
+              "items": []
+            }
+          }
+        ],
+        "fileName": [
+          {
+            "kind": "reference",
+            "value": {
+              "exactWord": "0"
+            }
+          },
+          {
+            "kind": "real",
+            "value": {
+              "bits": {
+                "exactWord": "9218868437227405313"
+              }
+            }
+          }
+        ],
+        "fileSchema": [
+          {
+            "kind": "aggregate",
+            "value": [
+              {
+                "kind": "string",
+                "value": "IFC4"
+              },
+              {
+                "kind": "string",
+                "value": "IFC4"
+              }
+            ]
+          }
+        ]
+      },
+      "entities": []
+    },
+    "rows": 18,
+    "valueBytes": 456,
+    "schemaBytes": 3250,
+    "tables": [
+      {
+        "table": "ifc_aggregate_element",
+        "width": 4,
+        "rows": 3,
+        "semanticBytes": 96
+      },
+      {
+        "table": "ifc_argument",
+        "width": 5,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "ifc_complex_type",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "ifc_document",
+        "width": 3,
+        "rows": 1,
+        "semanticBytes": 25
+      },
+      {
+        "table": "ifc_entity",
+        "width": 5,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "ifc_file_description_argument",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "ifc_file_name_argument",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "ifc_file_schema_argument",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 32
+      },
+      {
+        "table": "ifc_header",
+        "width": 1,
+        "rows": 1,
+        "semanticBytes": 8
+      },
+      {
+        "table": "ifc_typed_argument",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "ifc_value",
+        "width": 11,
+        "rows": 8,
+        "semanticBytes": 167
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "owner": "ifc2x3",
+    "id": "originalSourceFull",
+    "input": {
+      "schema": "stdio.ifc.2x3",
+      "document": {
+        "header": {
+          "fileDescription": [
+            {
+              "kind": "list",
+              "values": [
+                {
+                  "kind": "str",
+                  "value": "ViewDefinition [CoordinationView, StructuralAnalysisView, FMHandOverView]"
+                }
+              ]
+            },
+            {
+              "kind": "typed",
+              "typeName": "HEADER_CUSTOM",
+              "values": []
+            }
+          ],
+          "fileName": [
+            {
+              "kind": "ref",
+              "value": {
+                "exactWord": "0"
+              }
+            }
+          ],
+          "fileSchema": [
+            {
+              "kind": "list",
+              "values": [
+                {
+                  "kind": "str",
+                  "value": "IFC2X3"
+                },
+                {
+                  "kind": "str",
+                  "value": "IFC2X3"
+                }
+              ]
+            }
+          ]
+        },
+        "instances": [
+          {
+            "id": {
+              "exactWord": "0"
+            },
+            "entities": [
+              {
+                "typeName": "IFCWALL",
+                "arguments": [
+                  {
+                    "kind": "unset"
+                  },
+                  {
+                    "kind": "derived"
+                  },
+                  {
+                    "kind": "int",
+                    "value": {
+                      "exactWord": "-9223372036854775808"
+                    }
+                  },
+                  {
+                    "kind": "int",
+                    "value": {
+                      "exactWord": "9223372036854775807"
+                    }
+                  },
+                  {
+                    "kind": "real",
+                    "value": {
+                      "negative": true,
+                      "coefficient": "000000000",
+                      "scale": 4294967295
+                    }
+                  },
+                  {
+                    "kind": "real",
+                    "value": {
+                      "negative": false,
+                      "coefficient": "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
+                      "scale": 12,
+                      "exponent": -2147483648
+                    }
+                  },
+                  {
+                    "kind": "real",
+                    "value": {
+                      "negative": true,
+                      "coefficient": "00123400",
+                      "scale": 4,
+                      "exponent": 2147483647
+                    }
+                  },
+                  {
+                    "kind": "real",
+                    "value": {
+                      "negative": false,
+                      "coefficient": "0",
+                      "scale": 0,
+                      "exponent": 0
+                    }
+                  },
+                  {
+                    "kind": "str",
+                    "value": "English Deutsch\u0000文"
+                  },
+                  {
+                    "kind": "enum",
+                    "value": "UNKNOWN"
+                  },
+                  {
+                    "kind": "ref",
+                    "value": {
+                      "exactWord": "18446744073709551615"
+                    }
+                  },
+                  {
+                    "kind": "list",
+                    "values": []
+                  },
+                  {
+                    "kind": "typed",
+                    "typeName": "IFCLENGTHMEASURE",
+                    "values": [
+                      {
+                        "kind": "int",
+                        "value": {
+                          "exactWord": "1"
+                        }
+                      },
+                      {
+                        "kind": "list",
+                        "values": [
+                          {
+                            "kind": "derived"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "typeName": "IFCROOT",
+                "arguments": [
+                  {
+                    "kind": "ref",
+                    "value": {
+                      "exactWord": "0"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": {
+              "exactWord": "18446744073709551615"
+            },
+            "entities": [
+              {
+                "typeName": "TARGET",
+                "arguments": [
+                  {
+                    "kind": "ref",
+                    "value": {
+                      "exactWord": "0"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "edmPreamble": {
+        "producer": "producer",
+        "module": "module",
+        "creationDate": "creation",
+        "host": "host",
+        "database": "database",
+        "databaseVersion": "version",
+        "databaseCreationDate": "database creation",
+        "schema": "IFC2X3",
+        "model": "model",
+        "modelCreationDate": "model creation",
+        "headerModel": "header model",
+        "headerModelCreationDate": "header creation",
+        "user": "user",
+        "group": "group",
+        "license": "license",
+        "options": "\u0000文"
+      }
+    },
+    "rows": 58,
+    "valueBytes": 1847,
+    "schemaBytes": 4006,
+    "tables": [
+      {
+        "table": "ifc2x3_document",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 37
+      },
+      {
+        "table": "ifc2x3_edm_preamble",
+        "width": 17,
+        "rows": 1,
+        "semanticBytes": 138
+      },
+      {
+        "table": "ifc2x3_entity_argument",
+        "width": 4,
+        "rows": 15,
+        "semanticBytes": 480
+      },
+      {
+        "table": "ifc2x3_entity_type",
+        "width": 4,
+        "rows": 3,
+        "semanticBytes": 92
+      },
+      {
+        "table": "ifc2x3_file_description_argument",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "ifc2x3_file_name_argument",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 32
+      },
+      {
+        "table": "ifc2x3_file_schema_argument",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 32
+      },
+      {
+        "table": "ifc2x3_header",
+        "width": 1,
+        "rows": 1,
+        "semanticBytes": 8
+      },
+      {
+        "table": "ifc2x3_instance",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 69
+      },
+      {
+        "table": "ifc2x3_list_element",
+        "width": 4,
+        "rows": 4,
+        "semanticBytes": 128
+      },
+      {
+        "table": "ifc2x3_typed_argument",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "ifc2x3_value",
+        "width": 12,
+        "rows": 25,
+        "semanticBytes": 703
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  },
+  {
+    "owner": "ifc2x3",
+    "id": "emptyEntitiesRetainHeader",
+    "input": {
+      "schema": "stdio.ifc.2x3",
+      "document": {
+        "header": {
+          "fileDescription": [
+            {
+              "kind": "list",
+              "values": [
+                {
+                  "kind": "str",
+                  "value": "ViewDefinition [CoordinationView, StructuralAnalysisView, FMHandOverView]"
+                }
+              ]
+            },
+            {
+              "kind": "typed",
+              "typeName": "HEADER_CUSTOM",
+              "values": []
+            }
+          ],
+          "fileName": [
+            {
+              "kind": "ref",
+              "value": {
+                "exactWord": "0"
+              }
+            }
+          ],
+          "fileSchema": [
+            {
+              "kind": "list",
+              "values": [
+                {
+                  "kind": "str",
+                  "value": "IFC2X3"
+                },
+                {
+                  "kind": "str",
+                  "value": "IFC2X3"
+                }
+              ]
+            }
+          ]
+        },
+        "instances": []
+      },
+      "edmPreamble": {
+        "producer": "producer",
+        "module": "module",
+        "creationDate": "creation",
+        "host": "host",
+        "database": "database",
+        "databaseVersion": "version",
+        "databaseCreationDate": "database creation",
+        "schema": "IFC2X3",
+        "model": "model",
+        "modelCreationDate": "model creation",
+        "headerModel": "header model",
+        "headerModelCreationDate": "header creation",
+        "user": "user",
+        "group": "group",
+        "license": "license",
+        "options": "\u0000文"
+      }
+    },
+    "rows": 17,
+    "valueBytes": 587,
+    "schemaBytes": 4006,
+    "tables": [
+      {
+        "table": "ifc2x3_document",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 37
+      },
+      {
+        "table": "ifc2x3_edm_preamble",
+        "width": 17,
+        "rows": 1,
+        "semanticBytes": 138
+      },
+      {
+        "table": "ifc2x3_entity_argument",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "ifc2x3_entity_type",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "ifc2x3_file_description_argument",
+        "width": 4,
+        "rows": 2,
+        "semanticBytes": 64
+      },
+      {
+        "table": "ifc2x3_file_name_argument",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 32
+      },
+      {
+        "table": "ifc2x3_file_schema_argument",
+        "width": 4,
+        "rows": 1,
+        "semanticBytes": 32
+      },
+      {
+        "table": "ifc2x3_header",
+        "width": 1,
+        "rows": 1,
+        "semanticBytes": 8
+      },
+      {
+        "table": "ifc2x3_instance",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "ifc2x3_list_element",
+        "width": 4,
+        "rows": 3,
+        "semanticBytes": 96
+      },
+      {
+        "table": "ifc2x3_typed_argument",
+        "width": 4,
+        "rows": 0,
+        "semanticBytes": 0
+      },
+      {
+        "table": "ifc2x3_value",
+        "width": 12,
+        "rows": 7,
+        "semanticBytes": 180
+      }
+    ],
+    "integrity": [
+      {
+        "integrity_check": "ok"
+      }
+    ],
+    "foreignKeys": []
+  }
+]

@@ -1,0 +1,7 @@
+# PDF17 VT Primary DPart Graph Authority
+
+The [PDF Association Arlington DPartRoot model](https://raw.githubusercontent.com/pdf-association/arlington-pdf-model/master/tsv/latest/DPartRoot.tsv) identifies DPartRootNode as the required indirect DPart dictionary. Root-level DParts is not that model's root relation. Its version expression includes the PDF/VT extension and PDF2.0; this is evidence about the actual graph vocabulary, not a complete ISO profile certificate.
+
+The [PDF Association DPart model](https://raw.githubusercontent.com/pdf-association/arlington-pdf-model/master/tsv/latest/DPart.tsv) distinguishes Parent from child DParts and requires a page Start for a leaf without child parts. DPM is optional dictionary metadata. A new zero-page seed with a terminal node carrying neither a page Start nor child parts cannot be called a complete graph from this evidence. Existing shared independent reader's DPartRootNode agrees with the primary model; the current production seed/root scan DParts relation requires a genuine schema-first correction, not a dual-key compatibility graph.
+
+Open design demand: independently authored genuine initial VT graph with an actual owned blank page, Page Start and Parent relations, full typed/raw agreement, exact retained ICC payload, both public SQLite forms and original profile predicates. Every original constructor/caller/fixture affected by initial page semantics must be coherently handcrafted and executed. No production graph or conformance success is credited by this research.

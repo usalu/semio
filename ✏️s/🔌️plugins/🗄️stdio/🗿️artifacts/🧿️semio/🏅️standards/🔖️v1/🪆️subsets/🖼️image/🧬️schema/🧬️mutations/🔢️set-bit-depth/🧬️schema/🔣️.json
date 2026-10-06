@@ -23,7 +23,15 @@
           "en": "Bit depth",
           "de": "Bittiefe"
         },
-        "unit": "bit"
+        "unit": "bit",
+        "step": 1,
+        "snaps": [
+          1,
+          2,
+          4,
+          8,
+          16
+        ]
       }
     }
   }

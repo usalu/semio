@@ -78,7 +78,7 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_round_trips_the_identity_slot() {
     let decoded: SemioPresentationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed presentation diff decodes");
-    let bytes = <SemioPresentationDiff as protocol::DiffCodec>::encode_diff(&decoded).expect("presentation diff encodes");
-    let reread = <SemioPresentationDiff as protocol::DiffCodec>::decode_diff(&bytes).expect("presentation diff decodes");
+    let bytes = <SemioPresentationDiff as protocol::DiffBinary>::encode_diff(&decoded).expect("presentation diff encodes");
+    let reread = <SemioPresentationDiff as protocol::DiffBinary>::decode_diff(&bytes).expect("presentation diff decodes");
     assert_eq!(reread, decoded, "semio-presentation/set-snapshot: the slide identity slot did not survive the diff codec");
 }

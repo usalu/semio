@@ -1,0 +1,59 @@
+{
+  "qualification": "HELD design source only, no execution or full general helper claim",
+  "anchors": [
+    {
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬆️lower/🦀️.rs",
+      "line": 177,
+      "authority": "lower_page_standalone receives original Snapshot/PdfPage/index/exact Page and Pages refs/next id/actual resource and widget parent maps; returns generated objects and annotation refs",
+      "qualification": "passing empty maps is not general full Page publication"
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+      "line": 993,
+      "authority": "carry_graph_edit reads before/after graphs and updates changed typed lanes",
+      "qualification": "can replace exact caller pages; must not blindly apply after append"
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+      "line": 376,
+      "authority": "reconcile attempts graft then regenerate",
+      "qualification": "fallback can rewrite Root/page identities, not approved arbitrary from_snapshot identity seam"
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+      "line": 735,
+      "authority": "Graft::insert_page uses actual reading resources and direct lower/adopt",
+      "qualification": "explicit false for widgets and missing defined resource mapping; no false->regenerate allowed by held identity requirement"
+    },
+    {
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+      "line": 830,
+      "authority": "restate_page_tree flattens root and rewrites all original Page Parent references",
+      "qualification": "not appropriate if retained original hierarchy and IDs must stay identical"
+    }
+  ],
+  "requiredTransaction": [
+    "borrow original trailerRoot Catalog/Pages and validated DPartRootNode tree before changing owner",
+    "derive final terminal node from validated nested arrays in declaration order, not id11",
+    "obtain genuine oldPage refs from original graph, preserving all IDs and generation fields",
+    "fallibly allocate disjoint new object IDs above actual max, no unchecked rollover",
+    "lower exact supplied PdfPage with real resource targets and actual widget field ownership maps",
+    "stage all new objects and only changed original Pages Kids/Count +last terminal End; preserve unrelated raw graph/trailer/typed fields",
+    "if no previous pages, set terminal Start=new genuinePage; otherwise retain Start and set End=new appendedPage",
+    "publish only after complete success; keep exact original typed page fields, no encode/decode replacement",
+    "retain original owner on error and carry actual typed failure into build; no silent mutation or fabricated page",
+    "new(FOGRA39)+one add_page stays one page; empty explicit blank page stays one"
+  ],
+  "missingConcreteAuthority": [
+    "existing public lower helper does not supply general real widget-parent map",
+    "existing builder add_page returns Self; explicit typed pending error ownership needed if staged helper refuses",
+    "existing Graft reserve/new use unchecked u32 increment; new general fallible ID authority must not assume arbitrary imported max safe"
+  ],
+  "freshNativeDemand": [
+    "arbitrary non1/4/11 Root/Pages/terminal IDs and nonzero generations preserved",
+    "nested DParts array-of-arrays finds last terminal and exact End extension",
+    "full supplied Page fields/annotations/resources retained plus unrelated typed/raw lanes",
+    "malformed from_snapshot remains rejected; no baseline roundtrip replacement",
+    "two pages original constructor cardinality and initial default unchanged"
+  ]
+}

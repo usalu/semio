@@ -1,0 +1,448 @@
+{
+  ".": {
+    "root": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.structural-catalog-test": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.structural-catalog-test.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.structural-catalog-test.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.structural-catalog-test.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.structural-catalog-test.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.structural-catalog-test.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-test": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-test.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-test.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-test.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-test.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-test.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-command.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-command.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-command.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-command.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-command.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.schema": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.schema.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.schema.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.schema.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.schema.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.schema.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.verify": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.verify.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.verify.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.verify.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.verify.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.verify.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.tests": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.tests.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.tests.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.tests.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.tests.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.tests.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.parity": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.parity.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.parity.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.parity.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.parity.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.parity.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-corpus": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-corpus.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-corpus.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-corpus.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-corpus.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.owner-command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.owner-command.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.owner-command.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.owner-command.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.owner-command.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.owner-command.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.trinity-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.trinity-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.trinity-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.trinity-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.trinity-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.flow-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.flow-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.flow-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.flow-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.flow-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle2d-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle2d-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle2d-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle2d-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle2d-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle5d-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle5d-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle5d-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle5d-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.puzzle5d-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-native": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-native.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-native.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-native.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.kernel-native.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-production": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-production.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-production.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-production.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.stdio-production.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.print-measurement": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.print-measurement.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.print-measurement.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.print-measurement.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.print-measurement.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cad-geometry-source": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cad-geometry-source.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cad-geometry-source.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cad-geometry-source.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.cad-geometry-source.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-broker": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-broker.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-broker.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-broker.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-broker.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-creation": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-creation.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-creation.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-creation.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.hub-creation.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.repo-test-long": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.repo-test-long.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.repo-test-long.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.repo-test-long.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.repo-test-long.options": [
+      "project.json",
+      "nx/core/project-json"
+    ]
+  }
+}

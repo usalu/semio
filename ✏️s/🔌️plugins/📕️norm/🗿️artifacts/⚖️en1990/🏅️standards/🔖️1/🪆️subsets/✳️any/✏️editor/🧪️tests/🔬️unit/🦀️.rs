@@ -244,7 +244,7 @@ async fn report_out_exports_the_computed_check_report() {
 #[semio_framework_async_macros::async_test]
 async fn the_declared_snapshot_argument_carries_the_documents_json() {
     let expected = En1990Snapshot::default();
-    let after = crate::standards::v1::subsets::any::schema::snapshot::encode_en1990_snapshot_json(&expected);
+    let after = crate::standards::v1::subsets::any::io::text::snapshot::encode_en1990_snapshot_json(&expected);
     let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&format!("{{\"snapshot\":{after}}}"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rail arguments");
     let command = <En1990PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");
     let En1990Command::ReplaceSnapshot(payload) = &command else { panic!("setSnapshot resolves to ReplaceSnapshot, got {command:?}") };

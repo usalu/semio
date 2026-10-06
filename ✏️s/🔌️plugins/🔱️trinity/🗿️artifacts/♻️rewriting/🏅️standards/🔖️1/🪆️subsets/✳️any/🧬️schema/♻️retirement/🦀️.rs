@@ -11,7 +11,7 @@ semio_framework_value::artifact_retire_struct!(RuleLayoutPlacement { key, x, y }
 impl RetireOwned for RewriteRuleMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::EditBeforeFixture(value) => value.new_working_graph.retirement(),
+            Self::EditWorkingGraph(value) => value.new_working_graph.retirement(),
             Self::EditLhs(value) => value.new_lhs.retirement(),
             Self::EditRhs(value) => value.new_rhs.retirement(),
             Self::ChangeParameterBinding(value) => (value.key, value.new_value).retirement(),

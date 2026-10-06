@@ -32,7 +32,7 @@ where
         let mut store = ArtifactStore::<P, Mu>::new(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None)).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
         store.install_document_store_owners_exact(bounded_document_store_owners::<P, Mu>());
         for leaf in log {
-            store.dispatch(ArtifactCommand::Apply { mutations: vec![leaf.clone()], description: None, transaction: None }).await.unwrap_or_else(|error| panic!("{guest}: a logged leaf applies: {error:?}"));
+            store.dispatch(ArtifactCommand::Apply { mutations: vec![leaf.clone()], transaction: None }).await.unwrap_or_else(|error| panic!("{guest}: a logged leaf applies: {error:?}"));
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().unwrap_or_else(|error| panic!("{guest}: the applied operations read: {error:?}")).into_iter().map(|operation| operation.mutation_id).collect();
         let target = ids.get(*index).cloned().unwrap_or_else(|| panic!("{guest}: edit #{index} names no logged leaf of {}", ids.len()));

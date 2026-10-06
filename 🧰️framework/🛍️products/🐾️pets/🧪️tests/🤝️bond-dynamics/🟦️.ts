@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🧠️behavior/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { ACTIVITIES, type Activity, type Bond, type Menagerie, type Needs, type Rapport, type Slug, type Temperament } from "../../🧬️schema/🟦️.ts";
 import { affinityOf, needsAfter, needsOf, rapportAfter, rapportFaded } from "../../🔨️modules/🧠️behavior/🟦️.ts";
 
@@ -20,7 +20,7 @@ type Vectors = {
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** 🎪️ A menagerie that carries nothing but bonds. */

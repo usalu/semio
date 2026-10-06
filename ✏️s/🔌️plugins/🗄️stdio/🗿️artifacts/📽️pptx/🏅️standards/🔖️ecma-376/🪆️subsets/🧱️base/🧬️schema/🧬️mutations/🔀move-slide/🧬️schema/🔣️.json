@@ -19,8 +19,17 @@
       "minimum": 0,
       "maximum": 9007199254740991,
       "x-semio-ui": {
-        "label": { "en": "Destination position", "de": "Zielposition" },
-        "description": { "en": "Zero-based final position of the slide.", "de": "Nullbasierte endgültige Position der Folie." }
+        "widget": "stepper",
+        "label": {
+          "en": "Destination position",
+          "de": "Zielposition"
+        },
+        "description": {
+          "en": "Zero-based final position of the slide.",
+          "de": "Nullbasierte endgültige Position der Folie."
+        },
+        "step": 1,
+        "precision": 0
       }
     }
   }

@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::text::mutations::bridge_decode_pair;
 use super::*;
 use crate::{Frame, LayoutBounds, LayoutRect, TextStory};
 use protocol::{Mutation, MutationDiff, SemanticMutation};
@@ -494,10 +495,10 @@ async fn frame_selection_leaves_are_editable_through_their_payload_value() {
 #[semio_framework_async_macros::async_test]
 async fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::standards::v1::subsets::any::schema::mutations::binary::new_layout_store(store::create_document_envelope::<LayoutSnapshot, LayoutMutation>(crate::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None)).await.expect("the store opens");
+    let mut store = crate::standards::v1::subsets::any::io::binary::mutations::new_layout_store(store::create_document_envelope::<LayoutSnapshot, LayoutMutation>(crate::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None)).await.expect("the store opens");
     let log = [drag_frames(&["frame-1"], 10.0, 0.0), rotate_frames(&["frame-1"], (40.0, 30.0), std::f64::consts::FRAC_PI_2), scale_frames(&["frame-1"], (40.0, 30.0), 2.0, 2.0)];
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a frame transform applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("a frame transform applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), 3, "one applied op per gesture");

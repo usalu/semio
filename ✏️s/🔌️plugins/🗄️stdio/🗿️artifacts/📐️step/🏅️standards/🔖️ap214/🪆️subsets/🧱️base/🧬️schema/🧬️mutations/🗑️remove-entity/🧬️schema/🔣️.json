@@ -15,7 +15,24 @@
     },
     "id": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "Instance name (#id) of the entity.",
+          "de": "Instanzname (#id) der Entität."
+        },
+        "ref": {
+          "kind": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

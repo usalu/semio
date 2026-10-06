@@ -37,7 +37,7 @@ type sectionMoveVectors struct {
 
 // 📥️ vectors decodes the shared vector set of this case.
 func vectors(ctx *host.Context) (*sectionMoveVectors, error) {
-	raw, err := ctx.FixtureBytes("shared://📑️section-move-trees.json")
+	raw, err := ctx.InputBytes("shared://📑️section-move-trees.json")
 	if err != nil {
 		return nil, err
 	}

@@ -8,15 +8,15 @@
 
 //#region 🔌️Adapters
 import micromatch from "micromatch";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔖️Vectors
 type GlobVector = { name: string; pattern: string; path: string };
 
 /** 🃏️ One verdict per vector of the named set, rendered the way every implementation reports it. */
-const globVerdicts = (ctx: { fixtureBytes: (reference: string) => Uint8Array }, set: string): string[] => {
-  const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://📡️glob-vectors.json"))) as Record<string, GlobVector[]>;
+const globVerdicts = (ctx: { inputBytes: (reference: string) => Uint8Array }, set: string): string[] => {
+  const file = JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://📡️glob-vectors.json"))) as Record<string, GlobVector[]>;
   return file[set].map((vector) => `${vector.name}=${micromatch.isMatch(vector.path, vector.pattern)}`);
 };
 //#endregion 🔖️Vectors

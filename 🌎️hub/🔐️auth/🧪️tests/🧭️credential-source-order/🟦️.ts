@@ -90,7 +90,7 @@ function ordered(body: string, steps: readonly string[]): boolean {
 
 /** 🖥️ Checks the current WGPU entrypoint and its direct TypeScript process-owner chain. */
 export function nativeCredentialSourceOrderConforms(source: NativeCredentialSourcePopulation): boolean {
-  const mains = sourceDefinitionBodies(source.entrypoint, /\bfn\s+main\s*\([^)]*\)\s*/gu);
+  const mains = sourceDefinitionBodies(source.entrypoint, /\bfn\s+run_native_entrypoint\s*\([^)]*\)\s*/gu);
   const main = mains.filter((body) => body.includes('claim_inherited_local_hub_credential("native")'));
   const classes = sourceDefinitionBodies(source.runner, /\bclass\s+RunScript\b[^\{]*/gu);
   const run = classes.flatMap((body) => sourceDefinitionBodies(body, /\basync\s+run\s*\([^)]*\)\s*(?::[^\{]+)?/gu));
@@ -139,7 +139,7 @@ function mcpLeaseClaimsAreHubIssued(workspace: string): boolean {
 
 /** 🌉️ Checks the one current MCP runner and permits only its pure schemas-return preflight. */
 export function mcpCredentialSourceOrderConforms(source: McpCredentialSourcePopulation): boolean {
-  const mains = sourceDefinitionBodies(source.entrypoint, /\bfn\s+main\s*\([^)]*\)\s*/gu);
+  const mains = sourceDefinitionBodies(source.entrypoint, /\bfn\s+run_mcp_entrypoint\s*\([^)]*\)\s*/gu);
   const main = mains.filter((body) => body.includes('claim_inherited_local_hub_credential("mcp")'));
   if (main.length !== 1) return false;
   const claim = main[0]!.indexOf('claim_inherited_local_hub_credential("mcp")');

@@ -3441,15 +3441,15 @@
             }
           },
           {
-            "id": "setFixtureJson",
+            "id": "loadDocumentJson",
             "label": {
               "native": {
-                "en": "Set Fixture Json",
-                "de": "Fixture-JSON festlegen"
+                "en": "Load Document JSON",
+                "de": "Dokument-JSON laden"
               },
               "reuse": {
-                "en": "Set Fixture Json",
-                "de": "Fixture-JSON festlegen"
+                "en": "Load Document JSON",
+                "de": "Dokument-JSON laden"
               }
             },
             "kind": "mutation",

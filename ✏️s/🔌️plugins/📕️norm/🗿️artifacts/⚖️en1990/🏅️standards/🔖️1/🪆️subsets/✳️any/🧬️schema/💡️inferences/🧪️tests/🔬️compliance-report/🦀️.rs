@@ -31,7 +31,7 @@ async fn high_consequence_office_fails_with_multiple_checks() {
 #[semio_framework_async_macros::async_test]
 async fn high_consequence_office_dsl_asset_decodes_and_fails() {
     let text = crate::standards::v1::subsets::any::examples::high_consequence_office::PRIMARY_TEXT;
-    let doc = crate::standards::v1::subsets::any::schema::snapshot::decode_en1990_dsl(text).expect("dsl");
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1990_dsl(text).expect("dsl");
     assert_eq!(doc.consequence_class, 3);
     let report = evaluate(&doc);
     assert!(report.summary.fail >= 2, "fail_count={}", report.summary.fail);
@@ -40,7 +40,7 @@ async fn high_consequence_office_dsl_asset_decodes_and_fails() {
 #[semio_framework_async_macros::async_test]
 async fn default_office_dsl_asset_decodes_and_complies() {
     let text = include_str!("../../../../🖼️assets/🏢️default-office/🏢️default-office/🗣️.dsl.semio");
-    let doc = crate::standards::v1::subsets::any::schema::snapshot::decode_en1990_dsl(text).expect("dsl");
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1990_dsl(text).expect("dsl");
     assert!(evaluate(&doc).complies());
 }
 

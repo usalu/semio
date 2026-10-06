@@ -1,6 +1,6 @@
 //! Norm command — `set-field`.
 
-use crate::op::En1994Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::En1994Mutation;
 use crate::En1994Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -1,8 +1,8 @@
 /** 🧱️ Admits executable and interactive input containers through the actual source producer. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv/dist/2020.js";
-import {parse,type ParseError} from "jsonc-parser";
 import schema from "../../🧬️schema/🧱️placement/🔣️.json";
+import {parse,type ParseError} from "jsonc-parser";
 import fixture from "../../🧫️fixtures/🧱️placement/🔣️.json";
 
 const marker=',\n\n  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated\n  // output); see 🚀️launch/🟦️.ts readSeed() for the exact split contract this marker line supports.\n  "devLaunchers": ';
@@ -10,7 +10,7 @@ const raw=(document:unknown):string=>JSON.stringify(document,null,2).trimEnd().s
 
 test("every language-neutral placement row matches independent strict schema admission",()=>{
  const validate=new Ajv({strict:true}).compile(schema);
- for(const row of fixture.cases)expect(validate(row.document),row.id).toBe(row.valid);
+ for(const row of fixture.cases) expect(validate(row.document),row.id).toBe(row.valid);
 });
 
 test("owned placement admission rejects every hostile row before accepting a source document",async()=>{

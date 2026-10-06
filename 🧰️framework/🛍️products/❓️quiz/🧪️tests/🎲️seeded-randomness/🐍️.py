@@ -87,7 +87,7 @@ def shuffle(generator, items):
 # region 🔖️Handlers
 def committed(ctx):
     """🧫️ The committed vectors."""
-    return json.loads(ctx.fixture_bytes(VECTORS))
+    return json.loads(ctx.input_bytes(VECTORS))
 
 
 def agree(scenario, produced, vectors, field):

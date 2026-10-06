@@ -156,3 +156,6 @@ pub mod payload_op_binary {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path="🪶️sqlite/🫳️admission/🦀️.rs"]
+pub mod sqlite_native;

@@ -10954,24 +10954,24 @@ pub struct Board2dSurface {
     pub surface_id: String,
     pub bounds: Rect,
     pub controller_id: String,
-    pub fixture_json: String,
+    pub snapshot_json: String,
     pub window_id: String,
 }
 
-pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
-    engine_canvas::puzzle_board_pointer_down(surface_id, inner, x, y, button, shift, ctrl_or_meta);
+pub fn puzzle_board_pointer_down_into(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    engine_canvas::puzzle_board_pointer_down_into(surface_id, inner, x, y, button, shift, ctrl_or_meta, input)
 }
 
 /// 🤏️ Transfers a board's first-touch lane to pinch ownership when contact two lands.
-pub fn puzzle_board_touch_pointer_down(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32) -> bool {
+pub fn puzzle_board_touch_pointer_down_into(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     match touch_pointer_down(surface_id, pointer_id, sx, sy) {
-        GestureVerdict::Single => false,
+        GestureVerdict::Single => Ok(false),
         GestureVerdict::PinchBegin(_) => {
-            engine_canvas::puzzle_board_yield_to_pinch(surface_id, sx, sy);
-            true
+            engine_canvas::puzzle_board_yield_to_pinch_into(surface_id, sx, sy, input)?;
+            Ok(true)
         }
-        _ => true,
+        _ => Ok(true),
     }
 }
 
@@ -11066,8 +11066,8 @@ fn puzzle2d_entity_flag(entity: &Value, key: &str) -> bool {
 }
 
 /// 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors `buildPuzzle2dSelectionMenuItems` in the React host.
-pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[String]) -> Vec<Puzzle2dSelectionMenuItem> {
-    let fixture: Value = serde_json::from_str(fixture_json).unwrap_or(Value::Null);
+pub fn build_puzzle2d_selection_menu_items(snapshot_json: &str, selection_ids: &[String]) -> Vec<Puzzle2dSelectionMenuItem> {
+    let fixture: Value = serde_json::from_str(snapshot_json).unwrap_or(Value::Null);
     if selection_ids.is_empty() {
         return vec![Puzzle2dSelectionMenuItem { id: "selectAll".into(), label: "Select all".into(), icon: "maximize-2".into(), action: "selectAll".into(), args: None, disabled: false, destructive: false }];
     }

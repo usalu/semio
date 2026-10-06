@@ -1,8 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/replication/replay-report.json",
-  "title": "Semio Replay Report",
-  "description": "A policy-independent Report-mode suffix replay, keyed by replica-independent mutation id (the `ToValue` shape of `protocol::ReplayReport`), with the finalize-gate verdict each report implies.",
+  "title": "Mutation Replay Report",
   "definitions": {
     "Severity": {
       "enum": [
@@ -12,8 +11,112 @@
         "fatal"
       ]
     },
-    "OptionalSeverity": {
-      "oneOf": [
+    "MutationReplayOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mutationId": {
+          "type": "string"
+        },
+        "editId": {
+          "type": "string"
+        },
+        "opIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "worst": {
+          "anyOf": [
+            {
+              "enum": [
+                "info",
+                "warning",
+                "error",
+                "fatal"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MutationMessage"
+          }
+        },
+        "superseded": {
+          "type": "boolean"
+        },
+        "withdrawn": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mutationId",
+        "editId",
+        "opIndex",
+        "worst",
+        "messages",
+        "superseded",
+        "withdrawn"
+      ]
+    },
+    "MutationMessage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "enum": [
+            "info",
+            "warning",
+            "error",
+            "fatal"
+          ]
+        },
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "opIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      },
+      "required": [
+        "level",
+        "code",
+        "message"
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "fromPosition": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "outcomes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MutationReplayOutcome"
+      }
+    },
+    "worst": {
+      "anyOf": [
         {
           "enum": [
             "info",
@@ -26,165 +129,11 @@
           "type": "null"
         }
       ]
-    },
-    "Message": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "level",
-        "code",
-        "message"
-      ],
-      "properties": {
-        "level": {
-          "$ref": "#/definitions/Severity"
-        },
-        "code": {
-          "enum": [
-            "mutation.target-missing",
-            "mutation.target-referenced",
-            "mutation.target-mismatch",
-            "mutation.no-op",
-            "mutation.partial",
-            "mutation.clamped",
-            "mutation.duplicate-id",
-            "mutation.invariant",
-            "mutation.cascade"
-          ]
-        },
-        "message": {
-          "type": "string"
-        },
-        "target": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string"
-          }
-        },
-        "opIndex": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
-    "Outcome": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutationId",
-        "editId",
-        "opIndex",
-        "worst",
-        "messages",
-        "superseded",
-        "withdrawn"
-      ],
-      "properties": {
-        "mutationId": {
-          "type": "string",
-          "minLength": 1
-        },
-        "editId": {
-          "type": "string",
-          "minLength": 1
-        },
-        "opIndex": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "worst": {
-          "$ref": "#/definitions/OptionalSeverity"
-        },
-        "messages": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Message"
-          }
-        },
-        "superseded": {
-          "type": "boolean"
-        },
-        "withdrawn": {
-          "type": "boolean"
-        }
-      }
-    },
-    "Report": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "fromPosition",
-        "outcomes",
-        "worst"
-      ],
-      "properties": {
-        "fromPosition": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "outcomes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Outcome"
-          }
-        },
-        "worst": {
-          "$ref": "#/definitions/OptionalSeverity"
-        }
-      }
-    },
-    "Case": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "report",
-        "expect"
-      ],
-      "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "report": {
-          "$ref": "#/definitions/Report"
-        },
-        "expect": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "blocksFinalize"
-          ],
-          "properties": {
-            "blocksFinalize": {
-              "type": "boolean"
-            }
-          }
-        }
-      }
     }
   },
-  "type": "object",
-  "additionalProperties": false,
   "required": [
-    "schema",
-    "law",
-    "cases"
-  ],
-  "properties": {
-    "schema": {
-      "const": "semio.replication.replay-report"
-    },
-    "law": {
-      "type": "string"
-    },
-    "cases": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "$ref": "#/definitions/Case"
-      }
-    }
-  }
+    "fromPosition",
+    "outcomes",
+    "worst"
+  ]
 }

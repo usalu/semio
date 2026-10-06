@@ -1,18 +1,20 @@
 //! 💡️ Native chart inference compiles authored values into the existing LaTeX grammar.
 use crate::ChartSnapshot;
-use protocol::{DslValue, FromValue, ToValue, Inference, InferenceSpec, InferenceFieldSpec};
+use semio_framework_value::DslValue;
+use semio_framework_value_derive::{FromValue,ToValue};
+use protocol::{Inference, InferenceSpec, InferenceFieldSpec};
 #[path="🎨theme/🦀️.rs"]
 pub mod paint;
 
 pub fn validate_chart(snapshot: &ChartSnapshot) -> Result<(), String> {
     static VALIDATOR: std::sync::OnceLock<Result<semio_framework_schema_validator::OwnedJsonSchemaValidator, String>> = std::sync::OnceLock::new();
     let validator = VALIDATOR.get_or_init(|| semio_framework_schema_validator::OwnedJsonSchemaValidator::compile_with_documents(include_str!("../📸️snapshot/🔣️.json"), &[include_str!("../🔣️.json")]).map_err(|error| error.to_string()));
-    validator.as_ref().map_err(Clone::clone)?.validate_json(&pack::json::to_json_string(snapshot)).map(|_| ()).map_err(|error| error.to_string())
+    validator.as_ref().map_err(Clone::clone)?.validate_json(&semio_framework_pack_json::to_json_string(snapshot)).map(|_| ()).map_err(|error| error.to_string())
 }
 
 pub fn catalog() -> Result<&'static DslValue, String> {
     static CATALOG: std::sync::OnceLock<Result<DslValue, String>> = std::sync::OnceLock::new();
-    CATALOG.get_or_init(|| pack::json::from_json_str(include_str!("../../🖼️assets/🔣️viz-catalog.json")).map_err(|error| error.to_string())).as_ref().map_err(Clone::clone)
+    CATALOG.get_or_init(|| semio_framework_pack_json::from_json_str(include_str!("../../🖼️assets/🔣️viz-catalog.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())).as_ref().map_err(Clone::clone)
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -23,14 +25,14 @@ pub struct ChartInference {
     pub diagnostics: Vec<ChartDiagnostic>,
     pub complete: bool,
 }
-impl Default for ChartInference { fn default()->Self{Self::infer(&ChartSnapshot::default())} }
+impl Default for ChartInference { fn default()->Self{Self::infer(&ChartSnapshot::default()).expect("chart inference encodes domain diagnostics")} }
 
 impl Inference<ChartSnapshot> for ChartInference {
-    fn infer(snapshot: &ChartSnapshot) -> Self {
-        match infer_chart_controlled(snapshot, &mut |_| Ok(())) {
+    fn infer(snapshot: &ChartSnapshot) -> Result<Self,semio_framework_value::ValueError> {
+        Ok(match infer_chart_controlled(snapshot, &mut |_| Ok(())) {
             Ok(tikz) => Self { tikz, diagnostics: Vec::new(),complete:true },
             Err(message) => Self { tikz: String::new(), diagnostics: vec![ChartDiagnostic{code:"print.chart.inference".into(),path:"chart".into(),message}],complete:false },
-        }
+        })
     }
 }
 

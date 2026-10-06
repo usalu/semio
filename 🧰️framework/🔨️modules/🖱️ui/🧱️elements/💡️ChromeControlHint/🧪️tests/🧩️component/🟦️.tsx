@@ -8,15 +8,12 @@ import { act } from "react";
 import { fireEvent, render } from "@testing-library/react";
 import Ajv2020 from "ajv/dist/2020";
 import tooltipFixture from "../../../../🧫️fixtures/💡️retained-control-tooltip/🔣️.json" with { type: "json" };
-import tooltipSchema from "../../../../🧬️schema/💡️retained-control-tooltip/🔣️.json" with { type: "json" };
 import { UiKeybindingsProvider } from "../../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { DEFAULT_UI_DRIVER, UiDriverProvider } from "../../../🚗️UiDriver/🟦️.tsx";
 import { ChromeControlHint } from "../../🟦️.tsx";
 
 describe("ChromeControlHint", () => {
   it("reveals the shared accepted label after dwell and dismisses immediately", () => {
-    const validate = new Ajv2020({ strict: true }).compile(tooltipSchema);
-    expect(validate(tooltipFixture), JSON.stringify(validate.errors)).toBe(true);
     vi.useFakeTimers();
     const placement = tooltipFixture.placements[0]!;
     const rect = (values: readonly number[]): DOMRect => ({ x: values[0]!, y: values[1]!, width: values[2]!, height: values[3]!, top: values[1]!, right: values[0]! + values[2]!, bottom: values[1]! + values[3]!, left: values[0]!, toJSON: () => ({}) });

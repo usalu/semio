@@ -27,6 +27,7 @@ const SHOOTING_PLAY_SURFACE_ICON: &str = "shooting.play.icon";
 /// [`window_measures`], not frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SHOOTING_PLAY_WINDOW_ICON.into(),
         label: LocalizedLabel::native("Icon", "Symbol"),
         body_key: SHOOTING_PLAY_BODY_ICON.into(),

@@ -1516,7 +1516,7 @@ impl TrustedCatalogLoader {
         context: &OperationContext<'_>,
     ) -> Result<VerifiedTrustedCatalog, AuthorityError> {
         let (catalog, registration_codecs) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, verifications, context).await?;
-        let assembly = os_store::begin_artifact_assembly().map_err(catalog_error)?;
+        let assembly = semio_framework_schema_registry::assembly::begin().map_err(catalog_error)?;
         os_store::preflight_document_codecs_in_assembly(&assembly, &registration_codecs).map_err(catalog_error)?;
         context.checkpoint()?;
         os_store::register_document_codecs_in_assembly(&assembly, registration_codecs).map_err(catalog_error)?;

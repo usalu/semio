@@ -8,9 +8,9 @@ use store::ArtifactPack;
 #[test]
 fn the_example_round_trips_through_dsl_and_pack() {
     let snapshot = super::snapshot();
-    let text = crate::schema::snapshot::text::print_dsl(&snapshot);
+    let text = crate::io::text::snapshot::print_dsl(&snapshot);
     assert!(!text.trim().is_empty());
-    assert_eq!(crate::schema::snapshot::text::parse_dsl(&text).expect("dsl"), snapshot);
+    assert_eq!(crate::io::text::snapshot::parse_dsl(&text).expect("dsl"), snapshot);
     let pack = ArtifactPack::encode_pack(&snapshot);
     assert_eq!(<Grid3dSnapshot as ArtifactPack>::decode_pack(&pack).expect("pack"), snapshot);
 }

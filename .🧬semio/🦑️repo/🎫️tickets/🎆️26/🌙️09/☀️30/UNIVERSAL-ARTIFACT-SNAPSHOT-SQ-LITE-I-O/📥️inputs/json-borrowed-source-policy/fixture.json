@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"id": "each-nested-array", "source": "[[0,1],[2,3]]", "maximumItems": 2, "maximumDepth": 8, "accept": true},
+    {"id": "object-keys-once", "source": "{\"a\":1,\"b\":2}", "maximumItems": 2, "maximumDepth": 8, "accept": true},
+    {"id": "second-array-item", "source": "[0,1]", "maximumItems": 1, "maximumDepth": 8, "accept": false, "kind": "WorkLimit"},
+    {"id": "second-object-member", "source": "{\"a\":1,\"b\":2}", "maximumItems": 1, "maximumDepth": 8, "accept": false, "kind": "WorkLimit"},
+    {"id": "empty-array-zero", "source": "[]", "maximumItems": 0, "maximumDepth": 0, "accept": true},
+    {"id": "empty-object-zero", "source": "{}", "maximumItems": 0, "maximumDepth": 0, "accept": true},
+    {"id": "nested-depth", "source": "[[0]]", "maximumItems": 2, "maximumDepth": 1, "accept": false, "kind": "DepthLimit"}
+  ],
+  "largeStringBytes": 8194,
+  "refusedAllocationBytes": 1024,
+  "decodeAllocationBytes": 131072
+}

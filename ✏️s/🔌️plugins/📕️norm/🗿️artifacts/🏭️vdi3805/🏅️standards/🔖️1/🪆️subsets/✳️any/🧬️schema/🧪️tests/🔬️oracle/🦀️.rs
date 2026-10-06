@@ -3,7 +3,8 @@
 #[cfg(test)]
 mod tests {
     use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-    use crate::standards::v1::subsets::any::schema::{attributes_from_records, sync_typed_attributes_into_records};
+    use crate::standards::v1::subsets::any::schema::{sync_typed_attributes_into_records};
+    use crate::standards::v1::subsets::any::schema::snapshot::{attributes_from_records};
     use crate::{all_conforming_blatt_examples, conforming_blatt_dataset, conforming_valve_dataset, nonconforming_blatt_dataset, nonconforming_valve_dataset, ASSESSED_BLATT_SHEETS, SheetAttributes, Vdi3805Snapshot};
     use std::path::PathBuf;
     use std::process::Command;

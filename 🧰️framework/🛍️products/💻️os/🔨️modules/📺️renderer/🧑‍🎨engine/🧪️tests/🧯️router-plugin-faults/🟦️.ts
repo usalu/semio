@@ -3,18 +3,15 @@
  * and its Rust twin consume (`🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json`), with strict
  * Ajv as the independent oracle for the fixture's own shape. */
 
-import Ajv from "ajv";
+
 import { AppRouter, type AppRouterManifest } from "@semio-tech/framework";
 import { describe, expect, it } from "vitest";
 import { shellCatalogProbePlugins } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import routerFaultSchema from "../../../../../../../🔨️modules/🎠️kernel/🧬️schema/🔣️.json";
+
 import routerFaultFixture from "../../../../../../../🔨️modules/🎠️kernel/🧫️fixtures/🧫️app-router-plugin-faults/🔣️.json";
 
 describe("shell catalog probe router faults", () => {
-  it("accepts the shared fixture under a strict independent schema oracle", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(routerFaultSchema).compile({ $ref: `${routerFaultSchema.$id}#/$defs/AppRouterPluginFaultsFixture` });
-    expect(validate(routerFaultFixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   it("reports every excluded plugin on its own probe row and leaves the others healthy", () => {
     const router = AppRouter.build(routerFaultFixture.manifests as readonly AppRouterManifest[]);

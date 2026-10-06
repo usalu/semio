@@ -1,0 +1,3 @@
+# Surface16 Failed Owning WASM Observation
+
+Genuine original WASM build exits one with ten E0433 missing GPU/render namespace diagnostics and three secondary E0277 unsized-str diagnostics. Native272/272 checkpoint remains exact. Complete raw pre/terminal/helper/codec/checkpoint/tool/origin hashes agree; all18,891 final non-output source endpoints join actual pre and admitted floor, with independently rehashed current physical bytes. Five complete generated frames match their exact held preimages, hashes, byte counts and inverses and were not freshly written. No actual Graph ABI or publication release is admitted. Terminal Root full unknown pair is preserved; no atomic compiler-origin claim is made.

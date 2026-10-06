@@ -283,7 +283,7 @@
       "tolerance": 0.1
     },
     "steps": 2,
-    "work": 3,
+    "work": 4,
     "output": null
   },
   {
@@ -360,6 +360,40 @@
     },
     "steps": 7,
     "work": 7,
+    "output": null
+  },
+  {
+    "phase": "cancelled",
+    "name": "completed unpublished cancellation",
+    "input": {
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        }
+      ],
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "tolerance": 0.1
+    },
+    "steps": 4096,
+    "work": 4,
     "output": null
   }
 ]

@@ -16,6 +16,7 @@ const FORMS_PLAY_SURFACE_BLUEPRINT: &str = "forms.play.blueprint";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: FORMS_PLAY_WINDOW_BLUEPRINT.into(),
         label: LocalizedLabel::native("Design", "Entwurf"),
         body_key: FORMS_PLAY_BODY_BLUEPRINT.into(),

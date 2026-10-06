@@ -36,6 +36,16 @@ class OperationScript extends BundleScript {
  }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-operation",OperationScript).register("test-refusal", RefusalScript).register("test-native", NativeScript);
+/** 🏛️ Checks the single neutral SQLite owner and complete public transfer contract. */
+class OwnershipScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-ownership accepts no arguments");
+  const source=resolve(this.root,"../../🧪️tests/🏛️ownership/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+ }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test-ownership",OwnershipScript).register("test-operation",OperationScript).register("test-refusal", RefusalScript).register("test-native", NativeScript);
 await runScriptMain(router, { defaultCommand: "test-refusal" });
 

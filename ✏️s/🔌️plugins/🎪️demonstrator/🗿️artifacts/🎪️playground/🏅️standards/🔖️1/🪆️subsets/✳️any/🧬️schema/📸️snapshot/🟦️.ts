@@ -66,5 +66,3 @@ export function parsePlaygroundSnapshot(value: unknown, at = "$"): PlaygroundSna
     schema: demonstratorPlaygroundSnapshotGuardString(row["schema"], `${at}.schema`),
   };
 }
-
-export { playgroundSnapshotToSqliteDatabase, playgroundSnapshotFromSqliteDatabase, validatePlaygroundSnapshotSqliteDialect, PLAYGROUND_SQLITE_SCHEMA } from "./🪶️sqlite/🟦️.ts";

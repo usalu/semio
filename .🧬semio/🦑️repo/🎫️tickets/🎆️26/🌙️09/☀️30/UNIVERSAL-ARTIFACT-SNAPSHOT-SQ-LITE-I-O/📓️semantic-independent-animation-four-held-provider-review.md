@@ -1,0 +1,11 @@
+# Animation Four Held Provider Review
+
+All four held BEFORE guards match current source (the new semantic module is absent). No malformed canonical native path or private geometry alias remains in these candidates. Static inspection found no definite API/signature blocker; Native compilation and runtime remain unqualified.
+
+The shared visitor uses actual RowWriter::new(schema,control) and borrowed(control,phase), with explicit three-argument float insertion. Companion indices match physical fields: keyframe and weight3, scalar1, vector1–3, quaternion1–4. Cell bases are document8+schema, timeline24+nullable name, channel24+node+property+optional custom+interpolation, keyframe24+timeIEEE+kind, scalar/vector/quaternion8+each IEEE, weight24+IEEE. Finite22, infinity32 and NaN11 preserve NULL0. Translation/rotation/scale/weights/custom lengths11/8/5/7/6 and interpolation6/4/12 match actual SQL text. Empty weights keep their keyframe and emit no detail rows.
+
+Borrowed binary tags0/1/2/3 and document S/V/Q/W match the current typed decoder; timeline optional tags0/1 and custom c: grammar remain unchanged. Document timelines omission retains the original empty default. Both traversals use caller NativeDecodeControl, scoped nested stages, bounded borrow_text or shared hex_text_extent, and no owned Snapshot/SQL mirror. Typed constructors follow admission. The outer wrapper retains original remaining physical allocation credit, input file check, Owned terminal transfer, cumulative owned_bytes settlement and real preamble dispatch. Encode depends on held Text shared encode_admitted; this review does not qualify that dependency.
+
+Schema count8/max13 and canonical statement+name calculation align with retained independent2217 bytes. Reconstruction still contains original BTreeMap/BTreeSet/Vec owners and is not physically qualified by this semantic correction. Graph complete borrowed census remains pending, even though its shared RowWriter dependency was reviewed separately.
+
+[Four candidate authority](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/semio-graph-animation-complete-semantic/animation-held-pairs.json).

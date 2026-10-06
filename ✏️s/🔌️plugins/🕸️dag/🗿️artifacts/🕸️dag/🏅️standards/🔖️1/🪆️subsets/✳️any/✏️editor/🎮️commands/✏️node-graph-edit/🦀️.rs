@@ -109,7 +109,7 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg
     }
     Ok(match gesture {
         Some(gesture) => dag_node_drag_emit(doc, NODE_GRAPH_EDIT_VERB, &gesture, leaves),
-        None => crate::dag_child_emit(doc.snapshot, &leaves),
+        None => crate::dag_child_emit(doc.snapshot, leaves),
     })
 }
 

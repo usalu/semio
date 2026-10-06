@@ -42,7 +42,7 @@ pub struct EquationSnapshot {
 /// are derived addresses, not equation content, so exports use this projection instead.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
 #[value(rename_all = "camelCase")]
-pub struct EquationFixture {
+pub struct EquationCarrierSnapshot {
     pub graph: EquationGraph,
     pub geometry: EquationGeometry,
     pub equation: EquationExprSnapshot,
@@ -269,37 +269,7 @@ impl Default for EquationSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🌉️IdentityBridge
-/// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
-/// language-neutral test adapter. Same reachability wall as `equation_mutation_report_json`:
-/// `store::ArtifactDsl`/`store::ArtifactPack` and their error types are unnameable outside this
-/// crate, so the identity law's evidence has to be produced here and handed over as text.
-///
-/// `canonicalText` is `print_dsl` of the parsed document and `canonicalTextAgain` is `print_dsl` of
-/// re-parsing that — [`store::ArtifactDsl`]'s own documented LAW is that canonical output is a
-/// `parse_dsl` fixpoint (hand-written text may normalize on the way in), so the two must be
-/// byte-identical while neither is required to equal the committed file. `packDecoded` comes back
-/// through a SEPARATE binary codec, so agreeing on one snapshot cannot be achieved by carrying text
-/// bytes across.
-pub fn equation_identity_report_json(dsl_text: &str) -> Result<String, String> {
-    let parsed = <EquationSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
-    let canonical = <EquationSnapshot as store::ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <EquationSnapshot as store::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
-    let canonical_again = <EquationSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
-    let packed = <EquationSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
-    let unpacked = <EquationSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = semio_framework_pack_json::object([
-        ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&parsed.to_value())),
-        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&reparsed.to_value())),
-        ("packDecoded".to_string(), semio_framework_pack_json::from_dsl_value(&unpacked.to_value())),
-        ("canonicalText".to_string(), semio_framework_pack_json::Value::String(canonical)),
-        ("canonicalTextAgain".to_string(), semio_framework_pack_json::Value::String(canonical_again)),
-    ]);
-    Ok(semio_framework_pack_json::to_string(&report))
-}
+
 //#endregion 🌉️IdentityBridge
 
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+

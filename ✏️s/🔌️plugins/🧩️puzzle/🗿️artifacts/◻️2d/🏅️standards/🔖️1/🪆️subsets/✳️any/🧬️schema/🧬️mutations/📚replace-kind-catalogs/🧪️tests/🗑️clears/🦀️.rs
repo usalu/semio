@@ -1,4 +1,4 @@
-//! 🧪️ `replace-kind-catalogs` fixture — `🗑️clears`.
+//! 🧪️ `replace-kind-catalogs` snapshot — `🗑️clears`.
 //!
 //! The vector that settles the null argument: `replace-kind-catalogs` with `newCatalogs: null` is ACCEPTED and REMOVES the member, so the inverse of an install is a real clear rather than an inexpressible one.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

@@ -1,7 +1,7 @@
 import {ValueError} from "../../🌱️value/⚠️refusal/🟦️.ts";
 import type {ValueRefusalCodecControl} from "../../🌱️value/⚠️refusal/🔁️codec/🟦️.ts";
 import type {IntrinsicValue,IntrinsicMember} from "../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
-import {binary64Value} from "../../🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "../../🌱️value/🔢️ieee754/🟦️.ts";
 import type {TextSpan} from "../📍️span/🟦️.ts";
 /** 🧾️ Source-positioned data uses the closed owned Diagnostic schema. */
 export interface Diagnostic {code:string;severity:"info"|"warning"|"error"|"fatal";span:TextSpan;message:string;expected?:ExpectedSet;scope:FaultScope}

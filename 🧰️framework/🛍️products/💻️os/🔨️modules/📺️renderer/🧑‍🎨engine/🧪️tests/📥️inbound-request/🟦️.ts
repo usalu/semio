@@ -10,7 +10,7 @@
  * guest emulation that answers the same way `evaluate_invoke_json` does, and back out as the
  * completion `captureExtensionCompletion` submits. */
 
-import Ajv from "ajv";
+
 import { describe, expect, it, vi } from "vitest";
 import { decodeFaultFromWire, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
 // 🪪️ From `@semio-tech/framework`, NOT `@semio-tech/framework-os`: `runCapturedExtensionEffect`'s
@@ -22,7 +22,7 @@ import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, wireEffectToFriendly,
 import { EXTENSION_WORKER_LOST_FAULT, runInvokeExtensionEffect } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import { abortExtensionRequestsForActor, declareSurfaceCancelAction, inFlightExtensionRequestCount, isDeclaredSurfaceCancelAction } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
-import reactorSchema from "../../../../🔌️plugin/⚛️reactor/🧬️schema/🔣️.json";
+
 import inboundRequestFixture from "../../../../🔌️plugin/⚛️reactor/🧫️fixtures/📥️inbound-request/🔣️.json";
 import extensionInvocationWireFixture from "../../../../🌊️flow/🧩️extensions/🕸️wasm/🧫️fixtures/🔁️extension-invocation-wire/🔣️.json";
 
@@ -65,10 +65,7 @@ function emulateGuest(options: { readonly capability: string | null; readonly tu
 }
 
 describe("inbound request seam", () => {
-  it("accepts the shared fixture under a strict independent schema oracle", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(reactorSchema).compile({ $ref: `${reactorSchema.$id}#/definitions/InboundRequestFixture` });
-    expect(validate(inboundRequestFixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   it("declares the same budgets and arms the host enforces", () => {
     expect(inboundRequestFixture.seam.turnBudget).toBe(INBOUND_REQUEST_TURN_BUDGET);

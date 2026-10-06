@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "state",
+    "ownerIdentity",
+    "carrier",
+    "borrowedCapability",
+    "requiredProducer",
+    "requiredDecoder",
+    "fixture",
+    "laws",
+    "heldSeams",
+    "forbidden"
+  ],
+  "properties": {
+    "schema": {
+      "const": "child-paged-source-carrier/v1"
+    },
+    "state": {
+      "const": "held-until-complete-coherent-caller-family"
+    },
+    "ownerIdentity": {
+      "const": "ChildEmit owns encoded operation pages; decoded typed text and borrowed source views have independent owners"
+    },
+    "carrier": {
+      "const": "PagedList<OwnedOperationBytes,MAXIMUM_OPERATIONS>"
+    },
+    "borrowedCapability": {
+      "const": {
+        "methods": [
+          "len()->usize",
+          "span(index)->Result<ByteSpan<'_>,ProtocolError>"
+        ],
+        "sourceRule": "Borrow exact retained source; no new payload owner"
+      }
+    },
+    "requiredProducer": {
+      "const": "fn encode_op_into(&self, options:&crate::codec::PackEncodeOptions, output:&mut dyn operation_bytes::OperationByteOutput, control:&mut crate::value::NativeEncodeControl<'_>)->Result<(),crate::ProtocolError>"
+    },
+    "requiredDecoder": {
+      "const": "fn decode_op_span(source:crate::codec::ByteSpan<'_>, options:&crate::codec::PackDecodeOptions, canonical_options:&crate::codec::PackEncodeOptions, decoding:&mut crate::value::NativeDecodeControl<'_>, encoding:&mut crate::value::NativeEncodeControl<'_>)->Result<Self,crate::ProtocolError>"
+    },
+    "fixture": {
+      "const": {
+        "wire": "17",
+        "paddingByte": 32,
+        "paddingBytes": 8192,
+        "wireBytes": 8194,
+        "maximumItems": 1,
+        "maximumBytes": 4096,
+        "loopAdditionalTurns": 128
+      }
+    },
+    "laws": {
+      "const": [
+        "literal-octets-and-extent-before-close",
+        "zero-grant-preserves-all-owner-identities",
+        "physical-credit-exact-deallocated-layout",
+        "parent-handoff-zero-physical-credit",
+        "missing-and-full-parent-retains-original-page",
+        "success-and-refusal-retain-typed-and-encoded-distinct-owners",
+        "all-nested-fields-terminal-empty",
+        "original-whole-child-loop-completes-under-fixed-grant",
+        "group-commit-undo-redo-borrows-same-source"
+      ]
+    },
+    "heldSeams": {
+      "const": [
+        "required-global-trait-all-authored-producers",
+        "paged-outer-operation-collection",
+        "ChildEmit-group-source-codec",
+        "SpaceMember-span-preview-and-command-dispatch",
+        "canonical-decoder-explicit-retirement-recipient",
+        "inverse-and-undo-redo-source-framing",
+        "Clone-ToValue-FromValue-source-capability-redesign"
+      ]
+    },
+    "forbidden": {
+      "const": [
+        "from-Vec-shadow",
+        "flattening-Clone",
+        "uncontrolled-ToValue-copy",
+        "refusal-only-positive",
+        "grant-increase",
+        "guessed-Drop-refund",
+        "selected-as-whole"
+      ]
+    }
+  }
+}
+

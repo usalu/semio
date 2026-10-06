@@ -13,10 +13,6 @@ pub struct ReplaceHuffmanTableMutation {
 //#endregion Payload
 
 //#region Facets
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion Facets
 
 //#region Semantics
@@ -67,10 +63,7 @@ pub fn contribute(base: &JpgSnapshot, table: JpgHuffmanTable) -> JpgDiff {
 }
 //#endregion Semantics
 
-#[cfg(test)]
-pub(crate) fn test_case() -> JpgMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🌳️replace-huffman/🎯️direct/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-huffman-table payload")
-}
+
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

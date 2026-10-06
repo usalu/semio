@@ -11,7 +11,6 @@ import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚�
 import { devToolingEnv, readStableBuildFile, resolveWorkspaceBin } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { createFreshComponentTests } from "../🧪️tests/🆕️fresh-component/🟦️.ts";
 import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { verifyFreshCatalogPackageV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_DESCRIPTOR_MAX_BYTES, FRESH_IO_CHUNK_BYTES, CRATE_NAME, extractPluginCore, freshWasmArtifactSize, pluginWasmArtifactPath } from "../🏗️component-build/🟦️.ts";
@@ -361,40 +360,3 @@ export class DescribeComponentScript extends BundleScript {
     process.exit(describeComponentDeliverable(this.repoRoot, segments[1]!));
   }
 }
-/** 🧬️ The exact bag handed to `createFreshComponentTests` — `typeof` of the live bindings, so it cannot drift. */
-export type FreshComponentTestDependencies = Readonly<{
-  readonly acquireCargoBuildLeaseV1: typeof acquireCargoBuildLeaseV1;
-  readonly repoCacheDirectory: typeof repoCacheDirectory;
-  readonly captureFreshComponentInputs: typeof captureFreshComponentInputs;
-  readonly captureFreshSourceEpochV1: typeof captureFreshSourceEpochV1;
-  readonly closeSync: typeof closeSync;
-  readonly createHash: typeof createHash;
-  readonly existsSync: typeof existsSync;
-  readonly FRESH_COMPONENT_MAX_BYTES: typeof FRESH_COMPONENT_MAX_BYTES;
-  readonly FRESH_IO_CHUNK_BYTES: typeof FRESH_IO_CHUNK_BYTES;
-  readonly FRESH_SOURCE_EPOCH_LIMITS: typeof FRESH_SOURCE_EPOCH_LIMITS;
-  readonly freshRun: typeof freshRun;
-  readonly freshSourceEpochBytesV1: typeof freshSourceEpochBytesV1;
-  readonly freshSourceOrderedJson: typeof freshSourceOrderedJson;
-  readonly freshStage: typeof freshStage;
-  readonly freshWasmArtifactSize: typeof freshWasmArtifactSize;
-  readonly isAbsolute: typeof isAbsolute;
-  readonly join: typeof join;
-  readonly mkdirSync: typeof mkdirSync;
-  readonly mkdtempSync: typeof mkdtempSync;
-  readonly openSync: typeof openSync;
-  readonly parseFreshRustDepInfoV1: typeof parseFreshRustDepInfoV1;
-  readonly readdirSync: typeof readdirSync;
-  readonly readFileSync: typeof readFileSync;
-  readonly readStableBuildFile: typeof readStableBuildFile;
-  readonly renameSync: typeof renameSync;
-  readonly resolve: typeof resolve;
-  readonly rmSync: typeof rmSync;
-  readonly semanticOwnedInputFileSnapshot: typeof semanticOwnedInputFileSnapshot;
-  readonly stageFreshComponentInputs: typeof stageFreshComponentInputs;
-  readonly writeFileSync: typeof writeFileSync;
-}>;
-const createFreshComponentTestsInstance = createFreshComponentTests({ acquireCargoBuildLeaseV1, repoCacheDirectory, captureFreshComponentInputs, captureFreshSourceEpochV1, closeSync, createHash, existsSync, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, FRESH_SOURCE_EPOCH_LIMITS, freshRun, freshSourceEpochBytesV1, freshSourceOrderedJson, freshStage, freshWasmArtifactSize, isAbsolute, join, mkdirSync, mkdtempSync, openSync, parseFreshRustDepInfoV1, readdirSync, readFileSync, readStableBuildFile, renameSync, resolve, rmSync, semanticOwnedInputFileSnapshot, stageFreshComponentInputs, writeFileSync }, { directory: resolve(import.meta.dir, "../📦️packages/🦀️rust"), url: import.meta.url });
-export const testFreshComponentSourceEpochV1 = createFreshComponentTestsInstance.testFreshComponentSourceEpochV1;
-export const testFreshComponentStagingV1 = createFreshComponentTestsInstance.testFreshComponentStagingV1;
-export const testFreshComponentProcessV1 = createFreshComponentTestsInstance.testFreshComponentProcessV1;

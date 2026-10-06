@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/empty-state.json",
+  "title": "EmptyStateRecordV1",
+  "$ref": "#/$defs/EmptyStateRecordV1",
+  "$defs": {
+    "EmptyStateRecordV1": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "EmptyStateTextV1": {
+      "type": "string",
+      "pattern": "^\\s*$"
+    },
+    "EmptyStatePackV1": {
+      "type": "array",
+      "maxItems": 0
+    }
+  }
+}

@@ -1,0 +1,3 @@
+# Editor Default GREEN 5 Whole Audit
+
+The actual original Nextest run completed all 89 selected tests across two binaries: 89 passed, zero skipped. The independently parsed raw roster contains every ordinal exactly once, including the original canonical scene corpus and the new controlled-default/Serde cancellation suite. All 16,557 terminal snapshot checks match and the retained Root lock remains unchanged. The checkpoint binds full plan, metadata, source/provider admission, native terminal, Source11, Source11 proof, and original raw log. It permits review of the original WASM successor; generated ABI and publication remain unobserved.

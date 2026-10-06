@@ -12,6 +12,10 @@
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { Mode, type ModeWindowDescriptor, type WindowLayoutNode } from "@semio-tech/ui-react";
 import { afterEach, describe, expect, it } from "vitest";
+import Ajv from "ajv";
+import initialUtilityCases from "../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🧫️fixtures/🔣️.json";
+import viewContextSchema from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
+import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -19,6 +23,7 @@ import {
   focusedProgramKeyV1,
   focusedProgramV1,
   guestActiveUtilityByWindowIdV1,
+  programKeyedEntriesV1,
   guestWindowIdV1,
   createProgramHistoryStoreV1,
   programHistoryKeyV1,
@@ -88,6 +93,25 @@ describe("🪟️ spawned window identity", () => {
     const shellWide = { "s-home-main": "select", "draw-1::draw-main": "pencil", "note-2::note-main": "bold" };
     expect(guestActiveUtilityByWindowIdV1(shellWide, "draw-1", ["draw-1", "note-2"])).toEqual({ "draw-main": "pencil" });
     expect(guestActiveUtilityByWindowIdV1(shellWide, null, ["draw-1", "note-2"])).toEqual({ "s-home-main": "select" });
+  });
+
+  it.each(["en", "de"] as const)("scoped utility projections preserve explicit clears and exclude foreign windows (%s)", (locale) => {
+    const validate = new Ajv({ strict: true }).compile(viewContextSchema);
+    for (const row of initialUtilityCases.cases) {
+      const source = row.activeUtilityByWindowId;
+      const scoped = programKeyedEntriesV1("draw-1", source);
+      const shellWide = { ...source, ...scoped, "note-2::note-main": "bold" };
+      const actual = guestActiveUtilityByWindowIdV1(shellWide, "draw-1", ["draw-1", "note-2"]);
+      expect(actual, row.id).toEqual(source);
+      const parent = guestActiveUtilityByWindowIdV1(shellWide, null, ["draw-1", "note-2"]);
+      expect(parent, row.id).toEqual(source);
+      const context = { locale, terminology: "native", activeUtilityByWindowId: actual };
+      expect(validate(context), JSON.stringify(validate.errors)).toBe(true);
+      expect(parseResolvedPluginViewState(context).activeUtilityByWindowId).toEqual(source);
+    }
+    expect(validate({ locale, terminology: "native", activeUtilityByWindowId: { canvas: "" } })).toBe(false);
+    expect(() => parseResolvedPluginViewState({ locale, terminology: "native", activeUtilityByWindowId: { canvas: "" } })).toThrow();
+    console.log(`[DEBUG] React ${locale} scoped utility projection and independent Ajv preserve twelve neutral maps, including explicit clears, and refuse empty identifiers`);
   });
 });
 

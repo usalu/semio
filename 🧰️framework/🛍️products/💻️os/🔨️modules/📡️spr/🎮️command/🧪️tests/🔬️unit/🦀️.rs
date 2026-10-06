@@ -1,5 +1,6 @@
 use super::mutation_laws_fixture::{foreign_step_fixture, AddCounter, AddCounterFourTimes, AddCounterThenNotifyForeign, AddCounterTwice, CounterDiff, CounterMutation};
 use super::*;
+use crate::os_spr::io::text::OpText;
 
 fn json_oracle<T: protocol::value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("independent JSON parser accepts first-party value encoding")
@@ -151,8 +152,7 @@ fn edit_value_round_trip_matches_serde_oracle() {
             group_id: None,
             origin: MutationOrigin::Owner,
             transaction: None,
-        }],
-        description: Some("two adds".into()), verb: None,
+        }], verb: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
@@ -358,7 +358,7 @@ fn mutation_descriptor_semantics_participate_in_immutable_identity() {
 fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     use super::registry_fixture::*;
     let base = MiniDoc { name: "a".into() };
-    let witness: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📔️registry/🧬️mutations/📛️rename-mini/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")).unwrap();
+    let witness: serde_json::Value = serde_json::from_str(include_str!("../../🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json")).unwrap();
     let mutation: MiniMutation = semio_framework_pack_json::from_json_str(&witness.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-mini wire witness");
     assert_eq!(mutation, RenameMini { new_name: "b".into() }.into());
     assert_eq!(json_oracle(&mutation), witness);
@@ -378,7 +378,7 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     let descriptor = mutation_descriptor("mini.doc#rename-mini").unwrap();
     assert_eq!(descriptor.semantics(), mutation.semantics());
     assert_eq!(descriptor.leaf(), mutation.descriptor());
-    let declared: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📔️registry/🧬️mutations/📛️rename-mini/🔣️.json")).unwrap();
+    let declared: serde_json::Value = serde_json::from_str(include_str!("../../🧪️testing/📔️registry/🧬️mutations/📛️rename-mini/🔣️.json")).unwrap();
     assert_eq!(json_oracle(descriptor.leaf()), declared);
     assert!(register_mini_mutation_descriptors(semio_framework_schema_state::StateClass::Config).is_err());
     assert_eq!(mutation_descriptor("mini.doc#rename-mini"), Some(descriptor));

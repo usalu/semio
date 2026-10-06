@@ -5,4 +5,3 @@ export type VizAuthoredChartSpecification = Omit<VizChartSpecification,"language
 export type VizChartSnapshot = { readonly chart: VizAuthoredChartSpecification };
 export type VizChartValue = null | boolean | number | string | readonly VizChartValue[] | { readonly [key: string]: VizChartValue };
 
-export {CHART_SQLITE_SCHEMA,chartToSqliteDatabase,chartFromSqliteDatabase} from "./🪶️sqlite/🟦️.ts";

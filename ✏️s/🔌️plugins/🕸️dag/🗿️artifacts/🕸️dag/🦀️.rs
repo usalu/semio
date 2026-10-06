@@ -197,11 +197,11 @@ pub fn dag_scene(doc: &semio_framework_plugin::ArtifactView<'_, DagSnapshot>) ->
 }
 
 /// 🧬️ Publishes child `leaves` as ONE edit of the exact composed `content` child; no leaf is the empty emit.
-pub fn dag_child_emit<C, D>(snapshot: &DagSnapshot, leaves: &[SemioGraphMutation]) -> semio_framework_plugin::Emit<DagMutation, C, D> {
+pub fn dag_child_emit<C, D>(snapshot: &DagSnapshot, leaves: Vec<SemioGraphMutation>) -> semio_framework_plugin::Emit<DagMutation, C, D> {
     if leaves.is_empty() {
         return semio_framework_plugin::Emit::default();
     }
-    semio_framework_plugin::Emit { child_emits: vec![semio_framework_plugin::app::ChildEmit::of::<SemioGraphSnapshot, _>("content", &snapshot.content.child_id, leaves)], ..Default::default() }
+    semio_framework_plugin::Emit { child_preparations: std::collections::VecDeque::from([semio_framework_plugin::app::ChildEmitPreparation::of::<SemioGraphSnapshot, _>("content", &snapshot.content.child_id, leaves)]), ..Default::default() }
 }
 
 /// 🌱️ The content a document's `content` child derives without a member store: the bundled demo graph or the empty graph;
@@ -439,27 +439,6 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -535,23 +514,15 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-}
-pub mod pack {
-    pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-}
+
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::diff::text::*;
-    }
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
@@ -560,9 +531,7 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-    }
+
 }
 pub use crate::standards::v1::subsets::any::schema::diff::DagDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::DagMutation;

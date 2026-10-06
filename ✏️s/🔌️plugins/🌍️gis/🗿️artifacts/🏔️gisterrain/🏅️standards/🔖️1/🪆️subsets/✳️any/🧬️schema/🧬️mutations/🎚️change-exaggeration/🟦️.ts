@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🎚️ `change-exaggeration` mutation payload — sets the terrain's vertical exaggeration scalar. */
 export interface ChangeExaggeration {
   newExaggeration: Binary64;

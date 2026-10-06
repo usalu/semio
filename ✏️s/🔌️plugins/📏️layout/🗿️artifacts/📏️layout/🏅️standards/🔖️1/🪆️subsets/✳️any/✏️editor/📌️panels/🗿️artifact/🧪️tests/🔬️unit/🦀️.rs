@@ -66,7 +66,7 @@ fn frame_with_id(frame: &Frame, id: String) -> Frame {
 /// 120 links, 150 paragraph styles, 90 stories and 60 layers — the five genuinely open-ended
 /// collections of this tree.
 fn oversized() -> LayoutSnapshot {
-    let mut document = crate::standards::v1::subsets::any::schema::default_document();
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let page = document.pages.first_mut().expect("the demo document has a page");
     let seed_frame = page.frames.first().cloned().expect("the demo page has a frame");
     page.frames = (0..300).map(|index| frame_with_id(&seed_frame, format!("frame-{index:03}"))).collect();

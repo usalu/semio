@@ -121,7 +121,7 @@ func compacted(raw json.RawMessage) string {
 
 // 🤝️handshake performs the fixture's initialize against the binary and returns the reply.
 func handshake(ctx *host.Context) (map[string]json.RawMessage, string, error) {
-	raw, err := ctx.FixtureBytes("shared://🤝️initialize-lenient.json")
+	raw, err := ctx.InputBytes("shared://🤝️initialize-lenient.json")
 	if err != nil {
 		return nil, "", err
 	}
@@ -147,7 +147,7 @@ func handshake(ctx *host.Context) (map[string]json.RawMessage, string, error) {
 // 🔁️pipelinedHandshake delivers the initialized notification while the session is still connected —
 // the exact window a pipelining client opens — then initializes and pings over the same transport.
 func pipelinedHandshake(ctx *host.Context) (map[string]any, error) {
-	raw, err := ctx.FixtureBytes("shared://🤝️initialize-lenient.json")
+	raw, err := ctx.InputBytes("shared://🤝️initialize-lenient.json")
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +320,7 @@ func initializeEchoesASupportedVersion(ctx *host.Context) (host.Outcome, error) 
 // 🌊️burstRequests is the one burst both burst scenarios write: initialize, the initialized
 // notification and one ordinary request, in the order a pipelining client puts them on the wire.
 func burstRequests(ctx *host.Context) ([]string, error) {
-	raw, err := ctx.FixtureBytes("shared://🤝️initialize-lenient.json")
+	raw, err := ctx.InputBytes("shared://🤝️initialize-lenient.json")
 	if err != nil {
 		return nil, err
 	}

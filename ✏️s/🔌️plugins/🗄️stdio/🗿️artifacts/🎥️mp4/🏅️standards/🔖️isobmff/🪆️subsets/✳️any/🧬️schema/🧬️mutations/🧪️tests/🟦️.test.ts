@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import type { Mp4Mutation } from "../🟦️.ts";
-import type { Mp4Mutation as BinaryMp4Mutation } from "../💾️binary/🟦️.ts";
-import type { Mp4Mutation as TextMp4Mutation } from "../📝️text/🟦️.ts";
+import type { Mp4Mutation as BinaryMp4Mutation } from "../../../🚪️io/💾️binary/🧬️mutations/🟦️.ts";
+import type { Mp4Mutation as TextMp4Mutation } from "../../../🚪️io/📝️text/🧬️mutations/🟦️.ts";
 import {parseMp4Snapshot,type Mp4Snapshot,type Mp4Track} from "../../📸️snapshot/🟦️.ts";
 
 type Equal<Left, Right> = (<Value>() => Value extends Left ? 1 : 2) extends <Value>() => Value extends Right ? 1 : 2 ? true : false;

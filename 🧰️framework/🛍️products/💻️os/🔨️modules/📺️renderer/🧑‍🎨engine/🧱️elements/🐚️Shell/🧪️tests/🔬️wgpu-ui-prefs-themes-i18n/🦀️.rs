@@ -270,6 +270,26 @@ fn the_host_language_is_the_fallback_after_a_lock_and_the_stored_preference() {
     assert!(read("🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts").contains("semioWgpuSetHostLocale?.(window.navigator?.language"), "the embeddable door reads the page's own navigator");
 }
 
+/// 🌱️ LAW (live fault F10, the first wgpu probe run): a first visit — an empty profile, no lock — boots: the locale is
+/// the host's language read and the terminology React's `native` seed; stored preferences outrank the seeds and locks
+/// outrank those; a stored terminology this build does not know falls back to the seed; only a locale nobody named, or an
+/// unsupported lock, refuses.
+#[test]
+fn a_first_visit_derives_both_language_axes_and_boots() {
+    use semio_framework_ui_locale::{Locale, Terminology};
+    let fresh = UiPreferences::default();
+    for (host, locale) in [("en", Locale::En), ("de", Locale::De)] {
+        assert_eq!(resolve_language_axes(None, None, &fresh, Some(host)), Ok((locale, Terminology::Native)), "{host}: a fresh profile boots in the host's language with the native terminology");
+    }
+    let kept = UiPreferences { locale: Some(OsUiLocale::De), terminology: Some(Terminology::Reuse.as_str().to_string()), ..UiPreferences::default() };
+    assert_eq!(resolve_language_axes(None, None, &kept, Some("en")), Ok((Locale::De, Terminology::Reuse)), "stored preferences outrank the seeds");
+    assert_eq!(resolve_language_axes(Some("en".into()), Some(Terminology::Native.as_str().into()), &kept, Some("de")), Ok((Locale::En, Terminology::Native)), "locks outrank the stored preferences");
+    let stale = UiPreferences { terminology: Some("retired-terminology".into()), ..UiPreferences::default() };
+    assert_eq!(resolve_language_axes(None, None, &stale, Some("en")), Ok((Locale::En, Terminology::Native)), "a stored terminology this build does not know falls back to the seed");
+    assert!(resolve_language_axes(None, None, &fresh, None).is_err(), "no language is assumed: a locale nobody named refuses");
+    assert!(resolve_language_axes(None, Some("retired-terminology".into()), &fresh, Some("en")).is_err(), "an unsupported lock is a configuration fault");
+}
+
 /// 🗂️ A stored preference record carrying only a locale.
 fn stored(locale: Option<OsUiLocale>) -> UiPreferences {
     UiPreferences { locale, ..UiPreferences::default() }

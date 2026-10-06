@@ -41,7 +41,7 @@ pub struct Vdi3805Viewer;
 
 impl ArtifactViewer for Vdi3805Viewer {
     type Snapshot = Vdi3805Snapshot;
-    type Mutation = crate::op::Vdi3805Mutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Vdi3805Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

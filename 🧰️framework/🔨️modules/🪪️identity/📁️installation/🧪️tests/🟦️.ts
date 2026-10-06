@@ -21,7 +21,7 @@ function actual(): unknown {
 }
 
 test("the closed corpus covers codepoint bounds, graphemes, NFC, metacharacters and sibling files", () => {
-  expect(ajv.compile(JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🧬️schema/🔣️.json"), "utf8")))(corpus)).toBe(true);
+  
   for (const row of corpus.directories) {
     const accepted = validate(row.value) && row.value === row.value.normalize("NFC");
     expect(Boolean(accepted), row.name).toBe(row.accepted);

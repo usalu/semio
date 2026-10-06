@@ -1,4 +1,4 @@
-import type { Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export interface DwgLogicalLayer { name: string; color: number; }
 export type DwgLogicalGeometryKind = 'point' | 'line' | 'circle' | 'arc' | 'ellipse' | 'lwPolyline' | 'spline' | 'text' | 'face3d' | 'polyline3d' | 'polyfaceMesh';
 export interface DwgLogicalGeometry { kind: DwgLogicalGeometryKind; values: Binary64[]; indices: number[]; text: string; closed: boolean; }

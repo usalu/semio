@@ -4,7 +4,8 @@ use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::commands::{set_active_example, stock_from_catalogue};
 use crate::editor::sourcing::unit_tests::context::new_app;
 use crate::editor::sourcing::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID};
-use crate::schema::{SourcingModule, empty_document};
+use crate::schema::{SourcingModule};
+use crate::standards::v1::subsets::any::io::text::snapshot::{empty_document};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{HistoryView, PluginApp};
 
@@ -91,7 +92,7 @@ async fn set_artifact_json_emits_a_load_document_effect_for_the_parsed_snapshot(
     let cfg_snapshot = SourcingCurationConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let expected = empty_document();
-    let emit = handle(&SetArtifactJson { json: dsl::json::to_json_string(&expected) }, &doc, &cfg).expect("handle");
+    let emit = handle(&SetArtifactJson { json: semio_framework_pack_json::to_json_string(&expected) }, &doc, &cfg).expect("handle");
     assert_eq!(load_document_pack(&emit), expected);
 }
 

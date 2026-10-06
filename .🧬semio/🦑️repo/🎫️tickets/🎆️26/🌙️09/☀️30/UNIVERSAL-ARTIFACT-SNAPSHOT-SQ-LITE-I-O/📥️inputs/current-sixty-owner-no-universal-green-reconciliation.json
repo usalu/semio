@@ -1,0 +1,761 @@
+{
+  "qualification": "Read-only finite actual declaration roster, not universal denominator; do not treat unknown as missing",
+  "rows": [
+    {
+      "owner": "WriterSnapshot",
+      "nativeTarget": "@semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs"
+    },
+    {
+      "owner": "EquationSnapshot",
+      "nativeTarget": "@semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs"
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "nativeTarget": "@semio-tech/wfc-2d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 10,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🦀️.rs"
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "nativeTarget": "@semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 10,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🦀️.rs"
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "nativeTarget": "@semio-tech/wfc-bitmap-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 10,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🦀️.rs"
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "nativeTarget": "@semio-tech/wfc-3d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 9,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🦀️.rs"
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "nativeTarget": "@semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🦀️.rs"
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "nativeTarget": "@semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "current selected After green; not all48",
+      "currentSelectedPass": 14,
+      "originalInterruptedReceipt": {
+        "pass": 9,
+        "fail": 4,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs"
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "nativeTarget": "@semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "current selected After green; not all48",
+      "currentSelectedPass": 13,
+      "originalInterruptedReceipt": {
+        "pass": 10,
+        "fail": 1,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs"
+    },
+    {
+      "owner": "FlowSnapshot",
+      "nativeTarget": "@semio-tech/flow-flow-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs"
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "nativeTarget": "@semio-tech/gis-gisterrain-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs"
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "nativeTarget": "@semio-tech/gis-gismap-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs"
+    },
+    {
+      "owner": "VcsSnapshot",
+      "nativeTarget": "@semio-tech/vcs-vcs-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs"
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "nativeTarget": "@semio-tech/animate-presentation-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "current selected After green; not all48",
+      "currentSelectedPass": 12,
+      "originalInterruptedReceipt": {
+        "pass": 10,
+        "fail": 1,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs"
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "nativeTarget": "@semio-tech/shooting-shooting-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs"
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "nativeTarget": "@semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs"
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "nativeTarget": "@semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "current selected After green; not all48",
+      "currentSelectedPass": 13,
+      "originalInterruptedReceipt": {
+        "pass": 10,
+        "fail": 2,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs"
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "nativeTarget": "@semio-tech/fem-2d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 8,
+        "fail": 2,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs"
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "nativeTarget": "@semio-tech/fem-3d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 8,
+        "fail": 2,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs"
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "nativeTarget": "@semio-tech/architect-program-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "current selected After green; not all48",
+      "currentSelectedPass": 24,
+      "originalInterruptedReceipt": {
+        "pass": 21,
+        "fail": 1,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs"
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "nativeTarget": "@semio-tech/process-process3d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "current selected12/9/3 failed",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 11,
+        "fail": 1,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs"
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "nativeTarget": "@semio-tech/lowpoly-lowpoly-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 5,
+        "fail": 1,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs"
+    },
+    {
+      "owner": "WiresSnapshot",
+      "nativeTarget": "@semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs"
+    },
+    {
+      "owner": "FormsSnapshot",
+      "nativeTarget": "@semio-tech/forms-forms-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 13,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs"
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "nativeTarget": "@semio-tech/layout-layout-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "current selected After green; not all48",
+      "currentSelectedPass": 11,
+      "originalInterruptedReceipt": {
+        "pass": 10,
+        "fail": 1,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs"
+    },
+    {
+      "owner": "CadSnapshot",
+      "nativeTarget": "@semio-tech/cad-cad-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 14,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs"
+    },
+    {
+      "owner": "En1990Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1990-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs"
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "nativeTarget": "@semio-tech/norm-din18599-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs"
+    },
+    {
+      "owner": "En1997Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1997-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs"
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "nativeTarget": "@semio-tech/norm-din16798-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs"
+    },
+    {
+      "owner": "En1991Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1991-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs"
+    },
+    {
+      "owner": "En1992Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1992-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs"
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "nativeTarget": "@semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 17,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs"
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "nativeTarget": "@semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "current selected After green; not all48",
+      "currentSelectedPass": 18,
+      "originalInterruptedReceipt": {
+        "pass": 14,
+        "fail": 2,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs"
+    },
+    {
+      "owner": "En1993Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1993-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs"
+    },
+    {
+      "owner": "En1994Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1994-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 11,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs"
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "nativeTarget": "@semio-tech/norm-din4108-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 11,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs"
+    },
+    {
+      "owner": "En1996Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1996-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 11,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs"
+    },
+    {
+      "owner": "En1995Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1995-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 11,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs"
+    },
+    {
+      "owner": "En1999Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1999-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 13,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs"
+    },
+    {
+      "owner": "En1998Snapshot",
+      "nativeTarget": "@semio-tech/norm-en1998-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 11,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs"
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "nativeTarget": "@semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs"
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "nativeTarget": "@semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs"
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "nativeTarget": "@semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs"
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "nativeTarget": "@semio-tech/energy-model-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs"
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "nativeTarget": "@semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs"
+    },
+    {
+      "owner": "JackSnapshot",
+      "nativeTarget": "@semio-tech/trinity-jack-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 14,
+        "fail": 2,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs"
+    },
+    {
+      "owner": "DagSnapshot",
+      "nativeTarget": "@semio-tech/dag-dag-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs"
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "nativeTarget": "@semio-tech/draw-drawing-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 4,
+        "fail": 0,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs"
+    },
+    {
+      "owner": "RasterSnapshot",
+      "nativeTarget": "@semio-tech/raster-raster-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs"
+    },
+    {
+      "owner": "NoteSnapshot",
+      "nativeTarget": "@semio-tech/note-note-rs:verify-sqlite-snapshot-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs"
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "nativeTarget": "@semio-tech/puzzle-2d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs"
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "nativeTarget": "@semio-tech/puzzle-5d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs"
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "nativeTarget": "@semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs"
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "nativeTarget": "@semio-tech/block-2d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 11,
+        "fail": 2,
+        "compilerOnly": false
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs"
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "nativeTarget": "@semio-tech/block-5d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs"
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "nativeTarget": "@semio-tech/block-3d-rs:test-snapshot-sqlite-native",
+      "inComplementary48": true,
+      "sourceState": "current Source48 selected green plus owner-specific later receipts",
+      "nativeCurrentState": "final current48 unqualified; isolated historical/selected receipts do not confer fleetgreen",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": {
+        "pass": 0,
+        "fail": 0,
+        "compilerOnly": true
+      },
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs"
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "nativeTarget": "@semio-tech/space-home-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs"
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "nativeTarget": "@semio-tech/space-space-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs"
+    },
+    {
+      "owner": "CurationSnapshot",
+      "nativeTarget": "@semio-tech/sourcing-curation-rs:test-snapshot-sqlite-native",
+      "inComplementary48": false,
+      "sourceState": "outsideSource48; separate owning qualification",
+      "nativeCurrentState": "fresh current separate route unresolved",
+      "currentSelectedPass": null,
+      "originalInterruptedReceipt": null,
+      "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs"
+    }
+  ]
+}

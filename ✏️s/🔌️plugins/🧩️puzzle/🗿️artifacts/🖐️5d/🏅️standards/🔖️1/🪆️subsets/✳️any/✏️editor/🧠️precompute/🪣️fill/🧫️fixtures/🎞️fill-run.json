@@ -1,5 +1,4 @@
 {
-  "$schema": "semio.puzzle.puzzle5d.fill-run.fixture.v1",
   "planner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json#/$defs/Puzzle3dFillRun",
   "opsPerPlacement": 2,
   "opKinds": [

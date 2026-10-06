@@ -41,7 +41,7 @@ pub fn handle(
             Effect::DownloadMediaExport { filename: format!("{stem}.pdf"), mime_type: "application/pdf".into(), data: base64_codec::base64_standard_encode(&bytes), encoding: Some(MEDIA_EXPORT_BASE64_ENCODING.into()) }
         }
         "svg" => {
-            let (svg, _width, _height) = crate::io::drawing_document_to_svg(doc.snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.export.svg"), format!("SVG export failed: {error}")))?;
+            let (svg, _width, _height) = crate::standards::v1::subsets::any::io::drawing_document_to_svg(doc.snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("drawing.export.svg"), format!("SVG export failed: {error}")))?;
             Effect::DownloadMediaExport { filename: format!("{stem}.svg"), mime_type: "image/svg+xml".into(), data: svg, encoding: None }
         }
         other => return Err(Fault::new(FaultOrigin::App, FaultCode::new("drawing.export.format"), format!("Drawing exports to pdf or svg, not '{other}'"))),

@@ -193,3 +193,6 @@ pub fn required_clock<O: FemResultsWindowTransientOwner>(snapshot: Option<&Windo
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

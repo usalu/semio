@@ -1,0 +1,114 @@
+[
+  {
+    "name": "Fresh Coverage",
+    "source": "rotated diamond edge coverage",
+    "phase": "coverage",
+    "steps": 0,
+    "mode": "live"
+  },
+  {
+    "name": "Partial Coverage",
+    "source": "rotated diamond edge coverage",
+    "phase": "coverage",
+    "steps": 3,
+    "mode": "live"
+  },
+  {
+    "name": "Interrupted Coverage Cleanup",
+    "source": "rotated diamond edge coverage",
+    "phase": "coverageCleanup",
+    "steps": 1,
+    "mode": "live"
+  },
+  {
+    "name": "Area Pixel Setup",
+    "source": "nine pixel area mean",
+    "phase": "sampling",
+    "steps": 1,
+    "mode": "live"
+  },
+  {
+    "name": "Area Cell Accumulation",
+    "source": "nine pixel area mean",
+    "phase": "sampling",
+    "steps": 3,
+    "mode": "live"
+  },
+  {
+    "name": "Bilinear Sample",
+    "source": "bilinear enlargement",
+    "phase": "sampling",
+    "steps": 1,
+    "mode": "live"
+  },
+  {
+    "name": "Nearest Sample",
+    "source": "nearest enlargement",
+    "phase": "sampling",
+    "steps": 1,
+    "mode": "live"
+  },
+  {
+    "name": "Completed Area",
+    "source": "nine pixel area mean",
+    "phase": "complete",
+    "steps": 0,
+    "mode": "live"
+  },
+  {
+    "name": "Completed Bilinear",
+    "source": "bilinear enlargement",
+    "phase": "complete",
+    "steps": 0,
+    "mode": "live"
+  },
+  {
+    "name": "Completed Singular",
+    "source": "singular transform",
+    "phase": "complete",
+    "steps": 0,
+    "mode": "live"
+  },
+  {
+    "name": "Cancelled Coverage",
+    "source": "rotated diamond edge coverage",
+    "phase": "coverage",
+    "steps": 3,
+    "mode": "cancelled"
+  },
+  {
+    "name": "Cancelled Coverage Cleanup",
+    "source": "rotated diamond edge coverage",
+    "phase": "coverageCleanup",
+    "steps": 1,
+    "mode": "cancelled"
+  },
+  {
+    "name": "Cancelled Area Reduction",
+    "source": "nine pixel area mean",
+    "phase": "sampling",
+    "steps": 3,
+    "mode": "cancelled"
+  },
+  {
+    "name": "Unpublished Completed Cancellation",
+    "source": "rotated diamond edge coverage",
+    "phase": "complete",
+    "steps": 0,
+    "mode": "cancelled"
+  },
+  {
+    "name": "Published Completed Cancellation",
+    "source": "rotated diamond edge coverage",
+    "phase": "complete",
+    "steps": 0,
+    "mode": "published"
+  },
+  {
+    "name": "Sticky Coverage Failure",
+    "source": "rotated diamond edge coverage",
+    "phase": "coverage",
+    "steps": 0,
+    "mode": "failure"
+  }
+]

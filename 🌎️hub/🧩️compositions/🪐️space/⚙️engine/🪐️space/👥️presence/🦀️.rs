@@ -11,9 +11,9 @@ use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of studio view state (node selection, hover, camera, active/focused node).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
-#[dsl(extension = "space.presence")]
+#[artifact(extension = "space.presence")]
 #[dsl(layout = "lines")]
 #[derive(Default)]
 pub struct SpacePresence {
@@ -47,11 +47,11 @@ impl store::ArtifactDsl for SpacePresence {
         if body.trim().is_empty() {
             return Ok(Self::default());
         }
-        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: dsl::SourceMode::Document })?;
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
@@ -74,14 +74,14 @@ impl ArtifactPack for SpacePresence {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum SpacePresenceMutation {
     #[dsl(key = "snapshot")]
@@ -110,29 +110,29 @@ impl Mutation<SpacePresence> for SpacePresenceMutation {
         }
     }
 
-    fn inverse(&self, base: &SpacePresence) -> Vec<Self> {
-        vec![Self::Snapshot { presence: base.clone() }]
+    fn inverse(&self, base: &SpacePresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        Ok(vec![Self::Snapshot { presence: base.clone() }])
     }
 }
 
 impl protocol::OpText for SpacePresenceMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
                 let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = dsl::parse(body, &(spec_fn.ordinary)(), &dsl::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = semio_framework_dsl_record::parse(body, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown operation line '{line}'"),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = dsl::print(&record, &(spec_fn.ordinary)(), dsl::JoinMode::Inline);
+        let body = semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
         if body.is_empty() {
             keyword
         } else {

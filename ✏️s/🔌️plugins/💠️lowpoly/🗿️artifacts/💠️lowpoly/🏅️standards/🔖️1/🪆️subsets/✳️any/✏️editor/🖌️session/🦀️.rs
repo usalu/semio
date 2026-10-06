@@ -12,7 +12,7 @@
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::view::try_build_doc;
-use crate::op::LowpolyMutation;
+use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::schema::composite_layer_pixels;
 use crate::{LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
 use machine::Command;
@@ -590,10 +590,12 @@ pub struct LowpolyPaintDrive {
 }
 
 /// 🛞️ Drives `window`'s paint tool through ONE dispatch on the shared streamed-gesture runner
-/// ([`semio_framework_tool_machine::drive_gesture`]) against the gesture this transient holds for that window.
-pub fn lowpoly_paint_drive(transient: &LowpolyTransient, window: &str, phase: GesturePhase, tick: Option<LowpolyMutation>, authoring_seed: &str, base_revision: &str) -> LowpolyPaintDrive {
-    let drive = semio_framework_tool_machine::drive_gesture::<LowpolyPaintTool>(transient.paint(window), LOWPOLY_PAINT_VERB, phase, tick, authoring_seed, base_revision);
-    LowpolyPaintDrive { committed: drive.committed, transient: drive.next.map(|gesture| transient.with_paint(window, gesture)) }
+/// ([`semio_framework_tool_machine::drive_gesture`]) against the gesture this transient holds for that window; a refused
+/// start or tick raises its tool-transaction fault (`toolTransaction.closed` | `toolTransaction.unclosed`).
+pub fn lowpoly_paint_drive(transient: &LowpolyTransient, window: &str, phase: GesturePhase, tick: Option<LowpolyMutation>, authoring_seed: &str, base_revision: &str) -> Result<LowpolyPaintDrive, semio_framework_plugin::Fault> {
+    let drive = semio_framework_tool_machine::drive_gesture::<LowpolyPaintTool>(transient.paint(window), LOWPOLY_PAINT_VERB, phase, tick, authoring_seed, base_revision)
+        .map_err(|refusal| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, refusal.code(), "the paint tool refused the dispatch"))?;
+    Ok(LowpolyPaintDrive { committed: drive.committed, transient: drive.next.map(|gesture| transient.with_paint(window, gesture)) })
 }
 //#endregion 🛠️Tool
 

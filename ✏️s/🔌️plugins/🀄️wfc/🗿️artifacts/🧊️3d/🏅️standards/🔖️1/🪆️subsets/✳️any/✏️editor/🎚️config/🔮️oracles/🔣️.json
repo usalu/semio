@@ -120,9 +120,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-active-tile-applied",
       "class": "handcrafted",
       "target": {
@@ -187,7 +186,6 @@
       "notes": "Choosing the grass tile makes it the tile a pin gesture assigns in this pane."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -252,7 +250,6 @@
       "notes": "Panning and zooming the pane moves its camera and leaves the active tile alone."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-config-applied",
       "class": "handcrafted",
       "target": {

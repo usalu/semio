@@ -1,6 +1,6 @@
 //! 🩹️ Trinity Jack app command — `patch-nodes`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::JackSnapshot;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{change_node_label::ChangeNodeLabel, SemioGraphMutation};
@@ -30,5 +30,5 @@ pub(crate) fn patch_nodes(snapshot: &JackSnapshot, children: &semio_framework_pl
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the jack graph has no node {}", missing.join(", "))));
     }
     let leaves: Vec<SemioGraphMutation> = targets.iter().map(|id| SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: GraphNodeId::new(id.clone()), new_label: value.into() })).collect();
-    Ok(crate::jack_child_emit(snapshot, &leaves))
+    Ok(crate::jack_child_emit(snapshot, leaves))
 }

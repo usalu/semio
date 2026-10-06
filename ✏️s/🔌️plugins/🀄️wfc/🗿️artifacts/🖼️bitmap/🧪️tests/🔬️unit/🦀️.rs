@@ -1,7 +1,9 @@
 //! 🧪️ Bitmap artifact root — identity, the shared canvas layer builder, and the committed-fixture
 //! generator this artifact's quintets are produced by.
 
-use crate::schema::snapshot::{decode_base64, encode_base64, BitmapColor, BitmapPinnedPixel, BitmapSnapshot};
+use crate::schema::snapshot::{BitmapColor, BitmapPinnedPixel, BitmapSnapshot};
+use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64};
+use crate::standards::v1::subsets::any::io::text::snapshot::{encode_base64};
 
 #[test]
 fn the_dialect_agrees_with_the_document_schema() {
@@ -73,7 +75,7 @@ fn every_example_declares_a_distinct_id_and_a_localized_label() {
     assert_eq!(crate::examples::example_source_slice().len(), 2);
 }
 
-//#region 🧫️FixtureGenerator
+//#region 🧫️EvidenceGenerator
 /// 🧫️ The committed quintet generator. Every fixture under
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/` is emitted from THIS table, so a
 /// hand-edited fixture is a bug by construction: run `cargo test -p semio-s-artifact-wfc-bitmap
@@ -95,7 +97,7 @@ pub mod fixtures {
                 width: 4,
                 height: 3,
                 palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)],
-                pixels: encode_base64(&[0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0]),
+                pixels: ([0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0]).to_vec(),
             },
             output: BitmapOutputSpec { width: 6, height: 4, periodic: false },
             model: BitmapOverlappingModel { pattern_size: 2, symmetry: 1, periodic_input: true, ground: None },
@@ -122,7 +124,7 @@ pub mod fixtures {
         vec![
             ("🎲️change-seed", "🎲️reseeds", base(), change_seed(99)),
             ("📐️resize-input", "📐️grows", base(), resize_input(6, 4)),
-            ("🖌️set-input-pixels", "🖌️paints", base(), set_input_pixels(1, 0, 2, 2, encode_base64(&[1, 1, 1, 1]))),
+            ("🖌️set-input-pixels", "🖌️paints", base(), set_input_pixels(1, 0, 2, 2, ([1, 1, 1, 1]).to_vec())),
             ("🎨️add-palette-color", "🎨️appends", base(), add_palette_color(2, BitmapColor::opaque(200, 60, 60))),
             ("🖍️change-palette-color", "🖍️recolours", base(), change_palette_color(1, BitmapColor::opaque(240, 230, 200))),
             ("🧽️remove-palette-color", "🧽️drops", base_with_spare_colour(), remove_palette_color(2)),
@@ -135,7 +137,7 @@ pub mod fixtures {
         ]
     }
 }
-//#endregion 🧫️FixtureGenerator
+//#endregion 🧫️EvidenceGenerator
 
 //#region 🖨️FixtureEmitter
 /// 🖨️ Re-indents a compact JSON string WITHOUT reordering its keys — `serde_json`'s own pretty
@@ -234,15 +236,15 @@ fn emit_committed_fixtures() {
         let mut after = before.clone();
         apply_bitmap_mutation(&mut after, &mutation).unwrap_or_else(|error| panic!("{kind}/{case} applies: {error}"));
         let directory = root.join("🧫️fixtures/🧬️mutations").join(kind).join(case);
-        write_fixture(&directory, "📸️snapshot/⬅️before/🔣️.json", &reindent_json(&semio_framework_pack_json::to_json_string(&before)));
-        write_fixture(&directory, "📸️snapshot/➡️after/🔣️.json", &reindent_json(&semio_framework_pack_json::to_json_string(&after)));
-        write_fixture(&directory, "🦠️mutation/🔣️.json", &reindent_json(&semio_framework_pack_json::to_json_string(&mutation)));
-        write_fixture(&directory, "🔺️diff/🔣️.json", &reindent_json(&semio_framework_pack_json::to_json_string(outcome.diff())));
+        write_fixture(&directory, "📸️snapshot/⬅️before/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&before)));
+        write_fixture(&directory, "📸️snapshot/➡️after/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&after)));
+        write_fixture(&directory, "🦠️mutation/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&mutation)));
+        write_fixture(&directory, "🔺️diff/🔣️.json", &reindent_json(&crate::standards::v1::subsets::any::io::text::bitmap_json_encode(outcome.diff())));
         let messages: Vec<String> = outcome
             .messages()
             .iter()
             .map(|message| {
-                let level = semio_framework_pack_json::to_json_string(&message.level);
+                let level = crate::standards::v1::subsets::any::io::text::bitmap_json_encode(&message.level);
                 format!("{{\"level\":{level},\"code\":\"{}\"}}", message.code.0)
             })
             .collect();
@@ -250,8 +252,8 @@ fn emit_committed_fixtures() {
         write_fixture(&directory, "🎯️outcome/🔣️.json", &reindent_json(&body));
     }
     for (slug, text) in [
-        ("🚪️rooms-16", crate::schema::snapshot::text::print_dsl(&crate::examples::rooms_16::snapshot())),
-        ("🌸️flowers-24", crate::schema::snapshot::text::print_dsl(&crate::examples::flowers_24::snapshot())),
+        ("🚪️rooms-16", crate::io::text::snapshot::print_dsl(&crate::examples::rooms_16::snapshot())),
+        ("🌸️flowers-24", crate::io::text::snapshot::print_dsl(&crate::examples::flowers_24::snapshot())),
     ] {
         let path = root.join("📚️examples").join(slug).join("🖼️assets").join(slug).join("🗣️.dsl.semio");
         std::fs::create_dir_all(path.parent().expect("asset parent")).expect("asset directory");
@@ -268,7 +270,7 @@ fn emit_committed_fixtures() {
 #[cfg(feature = "component-app-assembly")]
 mod mount_contract {
     use crate::examples::{flowers_24, rooms_16};
-    use crate::schema::snapshot::text::{parse_dsl, print_dsl};
+    use crate::io::text::snapshot::{parse_dsl, print_dsl};
     use crate::{BitmapSnapshot, WFC_BITMAP_DIALECT};
     use store::ArtifactPack;
 

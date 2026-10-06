@@ -1,4 +1,4 @@
-//! 🧪️ `scale-selection` fixture — `🎯️scales`.
+//! 🧪️ `scale-selection` scene_snapshot — `🎯️scales`.
 //!
 //! A uniform factor 3 over an object AND a target volume, each about its own origin.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "scale-selection/scales: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

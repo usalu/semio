@@ -8,6 +8,6 @@ pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &DwgSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::schema::snapshot::encode_dwg(from).map_err(|e| store::PackError::from(semio_framework_value::ValueError::from(e)))?;
+    let bytes = crate::standards::v_ac1024::subsets::any::io::binary::snapshot::encode_dwg(from).map_err(|e| store::PackError::from(semio_framework_value::ValueError::from(e)))?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }

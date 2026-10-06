@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://s.puzzle.2d.1.any.editor.board-events",
+  "title": "PuzzleBoardEventFlush",
+  "$ref": "#/definitions/Flush",
+  "definitions": {
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "payload"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "regionCreate",
+            "regionResize",
+            "brushPlace",
+            "edgeCreate",
+            "edgeDelete",
+            "nodeDelete",
+            "hover",
+            "preselectCancel",
+            "select",
+            "brushCandidates"
+          ]
+        },
+        "payload": {
+          "type": "object"
+        }
+      }
+    },
+    "Flush": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Row"
+      }
+    },
+    "Rectangle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  }
+}

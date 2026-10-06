@@ -123,9 +123,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-config-applied",
       "class": "handcrafted",
       "target": {
@@ -190,7 +189,6 @@
       "notes": "The owner's committed contract vector for `replace-config` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-config-no-op",
       "class": "handcrafted",
       "target": {
@@ -255,7 +253,6 @@
       "notes": "Re-applying `replace-config` to the record its own contract vector produced is the leaf's warned no-op."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-output-applied",
       "class": "handcrafted",
       "target": {
@@ -320,7 +317,6 @@
       "notes": "The owner's committed contract vector for `set-run-output` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-run-output-no-op",
       "class": "handcrafted",
       "target": {
@@ -385,7 +381,6 @@
       "notes": "Re-applying `set-run-output` to the record its own contract vector produced is the leaf's warned no-op."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-contributions-applied",
       "class": "handcrafted",
       "target": {
@@ -450,7 +445,6 @@
       "notes": "The owner's committed contract vector for `set-contributions` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-contributions-no-op",
       "class": "handcrafted",
       "target": {

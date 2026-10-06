@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { Database } from "bun:sqlite";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import fixture from "../../🧫️fixtures/🪜️resumable-query/🔣️.json";
 
 /** 🔗️ The node half of an `<node>@<port>` endpoint — the whole value when it names no port. */
@@ -7,6 +9,24 @@ const endpointNode = (endpoint: string): string => endpoint.slice(0, endpoint.in
 
 /** 🔎️ SQLite independently validates the neutral graph-query results and mutation counts. */
 export function testResumableQueryOracle(): void {
+  const executor = readFileSync(resolve(import.meta.dir, "../../🦀️.rs"), "utf8");
+  const execution = readFileSync(resolve(import.meta.dir, "../../🪜️execution/🦀️.rs"), "utf8");
+  const text = readFileSync(resolve(import.meta.dir, "../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"), "utf8");
+  assert.match(executor, /pub fn execute\(/u);
+  assert.doesNotMatch(text, /fn (?:execute|match_patterns|match_pattern|eval_expr|build_return)\(/u);
+  assert.doesNotMatch(execution, /json_string_bytes|property_json_upper_bound|metadata_output_upper_bound|saturating_mul\(6\)/u);
+  const ownership = new Database(":memory:");
+  try {
+    const result = fixture.resultOwnership;
+    result.texts.forEach((text, index) => {
+      const cell = text.repeat(result.cellBytes);
+      const [owned, encoded] = ownership.query("SELECT length(CAST(? AS BLOB)), length(json_quote(?))").values(cell, cell)[0] as [number, number];
+      assert.equal(owned, result.cellBytes);
+      assert.equal(encoded <= result.maximumEncodedBytes, result.textAdmission[index]);
+      assert.equal(result.typedAdmission[index], true);
+      assert.equal(JSON.stringify(cell).length, encoded);
+    });
+  } finally { ownership.close(); }
   for (const test of fixture.cases) {
     const database = new Database(":memory:");
     try {
@@ -18,11 +38,14 @@ export function testResumableQueryOracle(): void {
       // type declares every statement OPTIONAL. `"mutate" in oracle` answers the key's presence but
       // leaves `oracle.mutate` `string | undefined`; reading it through a local binding is what makes
       // the absent case a branch the compiler can see rather than an `undefined` handed to SQLite.
-      const oracle: Partial<Record<"mutate" | "select" | "nodes" | "edges", string>> = test.oracle;
+      const oracle: Partial<Record<"cascade" | "mutate" | "select" | "nodes" | "edges", string>> = test.oracle;
+      if (oracle.cascade !== undefined) database.run(oracle.cascade);
       const mutations = oracle.mutate === undefined ? 0 : database.run(oracle.mutate).changes;
       const rows = oracle.select === undefined ? [] : database.query(oracle.select).values();
       assert.deepEqual(rows, test.rows, test.query);
       assert.equal(mutations, test.mutations, test.query);
+      if ("postNodeCount" in test) assert.equal(database.query("SELECT COUNT(*) FROM nodes").values()[0][0], test.postNodeCount);
+      if ("postEdgeCount" in test) assert.equal(database.query("SELECT COUNT(*) FROM edges").values()[0][0], test.postEdgeCount);
       if (oracle.nodes !== undefined && "nodeIds" in test) assert.deepEqual(database.query(oracle.nodes).values().flat(), test.nodeIds, test.query);
       if (oracle.edges !== undefined && "edgeIds" in test) assert.deepEqual(database.query(oracle.edges).values().flat(), test.edgeIds, test.query);
     } finally {
@@ -70,8 +93,11 @@ export function testResumableQueryOracle(): void {
     retained.run("WITH RECURSIVE rows(id) AS (SELECT 1 UNION ALL SELECT id + 1 FROM rows WHERE id < ?) INSERT INTO output_cells SELECT id, ? FROM rows", [output.rowCount, "x".repeat(output.cellBytes)]);
     const encodedCells = Number(retained.query("SELECT length(json_group_array(value)) FROM output_cells").values()[0][0]);
     assert.ok(encodedCells > output.maximumBytes);
+    const ownedText = Number(retained.query("SELECT sum(length(CAST(value AS BLOB))) FROM output_cells").values()[0][0]);
+    assert.ok(ownedText > output.maximumBytes);
     assert.equal(output.oversizedTableRejected, true);
   } finally {
     retained.close();
   }
+  console.log("[DEBUG] Jack query neutral ownership + graph mutations oracle=SQLite/JSON1");
 }

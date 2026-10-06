@@ -23,7 +23,7 @@ type storeVectors struct {
 
 func loadStoreVectors(ctx *host.Context) (storeVectors, error) {
 	var vectors storeVectors
-	data, err := ctx.FixtureBytes("shared://🗄️store-vectors.json")
+	data, err := ctx.InputBytes("shared://🗄️store-vectors.json")
 	if err != nil {
 		return vectors, err
 	}

@@ -1,4 +1,4 @@
-//! 🧪️ `drag-selection` fixture — `🎯️drags`.
+//! 🧪️ `drag-selection` scene_snapshot — `🎯️drags`.
 //!
 //! One drag over an object AND a target volume (ids classified by document membership): `object-a` and `volume-1` both lift by 3, and `object-b`, which `object-a` attracts, is re-placed from the lifted `object-a` (Info-level `mutation.cascade`).
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "drag-selection/drags: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

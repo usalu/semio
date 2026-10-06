@@ -25,7 +25,7 @@ fn svg_draws_the_visible_board() {
 #[test]
 fn page_formats_are_real_files() {
     assert!(pdf_out::serialize_bytes(&board()).expect("pdf").starts_with(b"%PDF-1.4"));
-    let png = semio_s_artifact_stdio_png::io::png_layout(&semio_s_artifact_stdio_png::io::decode_png(&png_out::serialize_bytes(&board()).expect("png")).expect("decodes as png")).expect("png header");
+    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::png_layout(&semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(&png_out::serialize_bytes(&board()).expect("png")).expect("decodes as png")).expect("png header");
     assert_eq!((png.width, png.height), (240 + 64, 120 + 64));
     let dxf = String::from_utf8(dxf_out::serialize_bytes(&board()).expect("dxf")).expect("dxf text");
     assert_eq!(dxf.matches("CIRCLE").count(), 1, "{dxf}");

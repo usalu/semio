@@ -1,8 +1,8 @@
 /** 🕸️ Complete managed halfedge topology and rich surface channels remain typed owned fields. */
-import type{Binary32}from"../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type{Binary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type{IntrinsicValue}from"../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
 import{parseIntrinsicValue}from"../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
-import{parseBinary32}from"../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {parseBinary32} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import{parseSchemaRecord}from"../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import{decodeIntrinsicJson}from"../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🔣️json/🟦️.ts";
 export interface LowpolyMeshState{vertices:LowpolyMeshVertex[];halfedges:LowpolyMeshHalfedge[];faces:LowpolyMeshFace[];uvSeams:number[];attributes:LowpolyMeshAttribute[];materials:LowpolyMeshMaterial[];textures:LowpolyMeshTexture[]}

@@ -1,0 +1,134 @@
+[
+  {
+    "id": "empty",
+    "input": {
+      "modules": [],
+      "baseUrl": "https://example.test/embed.html"
+    },
+    "expected": {
+      "variant": "",
+      "selection": "all"
+    }
+  },
+  {
+    "id": "one",
+    "input": {
+      "modules": [
+        {
+          "pluginId": "alpha",
+          "moduleUrl": "https://example.test/alpha.js"
+        }
+      ],
+      "baseUrl": "https://example.test/embed.html"
+    },
+    "expected": {
+      "variant": "alpha",
+      "selection": "all"
+    }
+  },
+  {
+    "id": "withdrawal",
+    "previous": [
+      {
+        "pluginId": "alpha",
+        "moduleUrl": "https://example.test/alpha.js"
+      }
+    ],
+    "input": {
+      "modules": [],
+      "baseUrl": "https://example.test/embed.html"
+    },
+    "expected": {
+      "variant": "",
+      "selection": "all"
+    }
+  },
+  {
+    "id": "two",
+    "input": {
+      "modules": [
+        {
+          "pluginId": "alpha",
+          "moduleUrl": "https://example.test/alpha.js"
+        },
+        {
+          "pluginId": "beta",
+          "moduleUrl": "https://example.test/beta.js"
+        }
+      ],
+      "baseUrl": "https://example.test/embed.html"
+    },
+    "expected": {
+      "variant": "alpha",
+      "selection": "all"
+    }
+  },
+  {
+    "id": "explicit",
+    "input": {
+      "modules": [
+        {
+          "pluginId": "alpha",
+          "moduleUrl": "https://example.test/alpha.js"
+        },
+        {
+          "pluginId": "beta",
+          "moduleUrl": "https://example.test/beta.js"
+        }
+      ],
+      "baseUrl": "https://example.test/embed.html",
+      "hash": "#semio-broker=abababababababababababababababababababababababababababababababab",
+      "overrides": {
+        "plugin": "beta",
+        "appId": "board",
+        "appRole": "viewer",
+        "appMode": "inspect",
+        "appExample": "sample",
+        "brandId": "neutral",
+        "brand": {
+          "windowTitle": "Frame",
+          "ephemeral": true,
+          "replayIntroductionOnLoad": true
+        },
+        "locks": {
+          "exampleId": "locked",
+          "locale": "de",
+          "terminology": "plain",
+          "themeId": "theme",
+          "appearance": "dark"
+        },
+        "defaults": {
+          "exampleId": "default"
+        },
+        "hub": {
+          "hubUrl": "https://example.test/hub",
+          "user": "member",
+          "dataDir": "data"
+        }
+      }
+    },
+    "expected": {
+      "variant": "beta",
+      "selection": "variant"
+    }
+  },
+  {
+    "id": "explicit-empty",
+    "input": {
+      "modules": [
+        {
+          "pluginId": "alpha",
+          "moduleUrl": "https://example.test/alpha.js"
+        }
+      ],
+      "baseUrl": "https://example.test/embed.html",
+      "overrides": {
+        "plugin": ""
+      }
+    },
+    "expected": {
+      "variant": "",
+      "selection": "variant"
+    }
+  }
+]

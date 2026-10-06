@@ -281,7 +281,7 @@ impl ArtifactEditor for BcfAnyEditor {
             return Ok(None);
         }
         if bcf_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-bcf-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-bcf-retained-command-tool-mismatch"));
         }
         let command_id = bcf_command_id(&request.command);
         let operation = AppOperationContext {

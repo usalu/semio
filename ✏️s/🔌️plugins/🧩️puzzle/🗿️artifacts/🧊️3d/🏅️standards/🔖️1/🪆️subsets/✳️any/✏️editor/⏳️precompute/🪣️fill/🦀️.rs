@@ -7,17 +7,17 @@
 use crate::editor::puzzle3d::modes::edit::windows::main::VORTEX_MARKER_MESH_KIND;
 use crate::editor::puzzle3d::precompute::brush::{
     brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, fill_rng, resolve_object_kind_mesh_url, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
-    BrushFillVortexTarget, BrushFixtureView, TargetVortexWorld,
+    BrushFillVortexTarget, BrushSceneView, TargetVortexWorld,
 };
 use crate::editor::puzzle3d::precompute::geometry::{
     pose_isometry, precompute_work, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionStepContext, CollisionIndexOwner, CollisionIndexRejectedOwner,
     CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
     Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
-use crate::editor::puzzle3d::{empty_fixture, puzzle3d_next_object_label, Puzzle3dFixture, Puzzle3dObject};
+use crate::editor::puzzle3d::{empty_scene_snapshot, puzzle3d_next_object_label, Puzzle3dSceneSnapshot, Puzzle3dObject};
 use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
 use crate::standards::v1::subsets::any::schema::{
-    AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, FixtureObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
+    AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
     KindCatalogBundle, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps,
 };
 use semio_framework_job::{CommitCandidate, Generation, InteractiveJob, JobFault, JobPayloadStream, Operation, OperationId, RetainedJobPayload, StepContext, StepOutcome};
@@ -208,7 +208,7 @@ fn weighted_pick(weights: &mut [f64], tree: &mut [f64], remaining: usize, rng_st
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum FillJobStage {
     RetractTail,
-    PrepareFixture,
+    PrepareScene,
     PrepareCatalogs,
     PrepareMeshes,
     PrepareEntries,
@@ -265,13 +265,13 @@ impl FillPreparationRoots {
 }
 
 #[derive(Debug)]
-pub(crate) struct FixedFixtureOwner {
-    pub(crate) objects: FixedOwnerVec<FixtureObject, DOCUMENT_OBJECT_SLOTS>,
+pub(crate) struct FixedSceneOwner {
+    pub(crate) objects: FixedOwnerVec<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>,
     pub(crate) attractions: FixedOwnerVec<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>,
     pub(crate) target_volumes: FixedOwnerVec<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>,
 }
 
-impl FixedFixtureOwner {
+impl FixedSceneOwner {
     fn new() -> Self {
         Self { objects: FixedOwnerVec::new(), attractions: FixedOwnerVec::new(), target_volumes: FixedOwnerVec::new() }
     }
@@ -305,26 +305,26 @@ impl BrushCatalogView for FixedCatalogOwner {
     }
 }
 
-struct FillFixtureView<'a> {
-    base: &'a FixedFixtureOwner,
-    appended: &'a [FixtureObject],
+struct FillSceneView<'a> {
+    base: &'a FixedSceneOwner,
+    appended: &'a [EngineSceneObject],
 }
 
-impl BrushFixtureView for FillFixtureView<'_> {
+impl BrushSceneView for FillSceneView<'_> {
     fn object_count(&self) -> usize {
         self.base.objects.len() + self.appended.len()
     }
 
-    fn find_object_kind(&self, kind_id: &str) -> Option<&FixtureObject> {
+    fn find_object_kind(&self, kind_id: &str) -> Option<&EngineSceneObject> {
         self.base.objects.iter().chain(self.appended).find(|object| object.object_kind.as_deref() == Some(kind_id))
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PreparationCapacityBranch {
-    FixtureObjects,
-    FixtureAttractions,
-    FixtureTargetVolumes,
+    EngineSceneObjects,
+    SceneAttractions,
+    SceneTargetVolumes,
     Meshes,
     CatalogObjects,
     CatalogVortices,
@@ -337,9 +337,9 @@ enum PreparationCapacityBranch {
 impl PreparationCapacityBranch {
     fn label(self) -> &'static str {
         match self {
-            Self::FixtureObjects => "fixture-objects",
-            Self::FixtureAttractions => "fixture-attractions",
-            Self::FixtureTargetVolumes => "fixture-target-volumes",
+            Self::EngineSceneObjects => "scene_snapshot-objects",
+            Self::SceneAttractions => "scene-attractions",
+            Self::SceneTargetVolumes => "scene-target-volumes",
             Self::Meshes => "meshes",
             Self::CatalogObjects => "catalog-objects",
             Self::CatalogVortices => "catalog-vortices",
@@ -374,9 +374,9 @@ impl PreparationCapacityRefusal {
 fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<PreparationCapacityRefusal> {
     let catalogs = roots.scene.kind_catalogs.as_ref();
     let (branch, capacity) = [
-        (PreparationCapacityBranch::FixtureObjects, roots.scene.fixture.objects.len(), DOCUMENT_OBJECT_SLOTS),
-        (PreparationCapacityBranch::FixtureAttractions, roots.scene.fixture.attractions.len(), DOCUMENT_ATTRACTION_SLOTS),
-        (PreparationCapacityBranch::FixtureTargetVolumes, roots.scene.fixture.target_volumes.len(), DOCUMENT_VOLUME_SLOTS),
+        (PreparationCapacityBranch::EngineSceneObjects, roots.scene.scene_snapshot.objects.len(), DOCUMENT_OBJECT_SLOTS),
+        (PreparationCapacityBranch::SceneAttractions, roots.scene.scene_snapshot.attractions.len(), DOCUMENT_ATTRACTION_SLOTS),
+        (PreparationCapacityBranch::SceneTargetVolumes, roots.scene.scene_snapshot.target_volumes.len(), DOCUMENT_VOLUME_SLOTS),
         (PreparationCapacityBranch::Meshes, roots.meshes.len(), DOCUMENT_KIND_SLOTS),
         (PreparationCapacityBranch::CatalogObjects, catalogs.map_or(0, |value| value.objects.len()), DOCUMENT_KIND_SLOTS),
         (PreparationCapacityBranch::CatalogVortices, catalogs.map_or(0, |value| value.vortices.len()), DOCUMENT_KIND_SLOTS),
@@ -391,7 +391,7 @@ fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<Preparat
 }
 
 pub(crate) struct FillBuilder {
-    pub(crate) base: FixedFixtureOwner,
+    pub(crate) base: FixedSceneOwner,
     preparation_roots: Option<FillPreparationRoots>,
     preparation_cursor: usize,
     preparation_inner_cursor: usize,
@@ -402,7 +402,7 @@ pub(crate) struct FillBuilder {
     preparation_capacity_refusal: Option<PreparationCapacityRefusal>,
     pub(crate) applied_count: usize,
     pub(crate) sequence: Vec<BrushPlacePayload>,
-    pub(crate) appended_objects: Vec<FixtureObject>,
+    pub(crate) appended_objects: Vec<EngineSceneObject>,
     pub(crate) appended_attractions: Vec<AttractionProps>,
     pub(crate) placed: Vec<PlacedCollisionEntry>,
     placed_lookup: FixedOwnerMap<String, usize, DOCUMENT_OBJECT_SLOTS>,
@@ -460,7 +460,7 @@ pub(crate) struct FillBuilder {
     accept_attraction_cursor: usize,
     accept_vortex_cursor: usize,
     pending_payload: Option<BrushPlacePayload>,
-    pending_object: Option<FixtureObject>,
+    pending_object: Option<EngineSceneObject>,
     pending_attraction: Option<AttractionProps>,
     pending_spatial: Option<CollisionIndexMutation>,
     last_rejection: Option<String>,
@@ -520,7 +520,7 @@ fn retained_joint_weight(weights: &RetainedBrushKindWeights, object_kind_id: &st
 
 enum FillRetiredOwner {
     String(String),
-    FixtureObject(FixtureObject),
+    EngineSceneObject(EngineSceneObject),
     Attraction(AttractionProps),
     WorldVolume(WorldVolumeProps),
     Payload(BrushPlacePayload),
@@ -617,7 +617,7 @@ fn retire_option_dsl(value: &mut Option<semio_framework_value::DslValue>) -> boo
     false
 }
 
-fn retire_fixture_object(value: &mut FixtureObject) -> bool {
+fn retire_scene_object(value: &mut EngineSceneObject) -> bool {
     if !retire_string(&mut value.id) || !retire_option_string(&mut value.object_kind) || !retire_option_string(&mut value.mesh_url) || !retire_option_dsl(&mut value.scale) {
         return false;
     }
@@ -708,7 +708,7 @@ fn retire_object_kind(value: &mut ObjectKind) -> bool {
 fn retire_retained_owner(owner: &mut FillRetiredOwner) -> bool {
     match owner {
         FillRetiredOwner::String(value) => retire_string(value),
-        FillRetiredOwner::FixtureObject(value) => retire_fixture_object(value),
+        FillRetiredOwner::EngineSceneObject(value) => retire_scene_object(value),
         FillRetiredOwner::Attraction(value) => retire_attraction(value),
         FillRetiredOwner::WorldVolume(value) => retire_world_volume(value),
         FillRetiredOwner::Payload(value) => retire_payload(value),
@@ -786,9 +786,9 @@ fn release_vec_backing<T>(values: &mut Vec<T>) -> bool {
     true
 }
 
-fn take_fixture_owner(value: &mut FixedFixtureOwner, current: &mut Option<FillRetiredOwner>) -> bool {
+fn take_scene_owner(value: &mut FixedSceneOwner, current: &mut Option<FillRetiredOwner>) -> bool {
     if let Some(value) = value.objects.pop() {
-        *current = Some(FillRetiredOwner::FixtureObject(value));
+        *current = Some(FillRetiredOwner::EngineSceneObject(value));
         return true;
     }
     if value.objects.retire_backing() {
@@ -817,7 +817,7 @@ fn take_sequence_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredO
         return true;
     }
     if let Some(value) = fill.appended_objects.pop() {
-        *current = Some(FillRetiredOwner::FixtureObject(value));
+        *current = Some(FillRetiredOwner::EngineSceneObject(value));
         return true;
     }
     if release_vec_backing(&mut fill.appended_objects) {
@@ -959,7 +959,7 @@ fn take_target_weight_owner(fill: &mut FillBuilder) -> bool {
     false
 }
 
-fn fixture_terminal_owners_empty(value: &FixedFixtureOwner) -> bool {
+fn scene_terminal_owners_empty(value: &FixedSceneOwner) -> bool {
     value.objects.terminal_owners_empty() && value.attractions.terminal_owners_empty() && value.target_volumes.terminal_owners_empty()
 }
 
@@ -969,9 +969,9 @@ impl FillBuilder {
         let refusal = self.preparation_capacity_refusal?;
         let roots = self.preparation_roots.as_ref()?;
         let (owner, weight) = match refusal.branch {
-            PreparationCapacityBranch::FixtureObjects => (roots.scene.fixture.objects.get(refusal.omitted_index)?.id.clone(), None),
-            PreparationCapacityBranch::FixtureAttractions => (roots.scene.fixture.attractions.get(refusal.omitted_index)?.id.clone(), None),
-            PreparationCapacityBranch::FixtureTargetVolumes => (roots.scene.fixture.target_volumes.get(refusal.omitted_index)?.id.clone(), None),
+            PreparationCapacityBranch::EngineSceneObjects => (roots.scene.scene_snapshot.objects.get(refusal.omitted_index)?.id.clone(), None),
+            PreparationCapacityBranch::SceneAttractions => (roots.scene.scene_snapshot.attractions.get(refusal.omitted_index)?.id.clone(), None),
+            PreparationCapacityBranch::SceneTargetVolumes => (roots.scene.scene_snapshot.target_volumes.get(refusal.omitted_index)?.id.clone(), None),
             PreparationCapacityBranch::Meshes => (roots.meshes.keys().nth(refusal.omitted_index)?.clone(), None),
             PreparationCapacityBranch::CatalogObjects => (roots.scene.kind_catalogs.as_ref()?.objects.get(refusal.omitted_index)?.id.clone(), None),
             PreparationCapacityBranch::CatalogVortices => (roots.scene.kind_catalogs.as_ref()?.vortices.get(refusal.omitted_index)?.id.clone(), None),
@@ -995,7 +995,7 @@ impl FillBuilder {
     /// without progress (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B42).
     pub(crate) fn terminal_owner_debt(&self) -> Option<&'static str> {
         [
-            ("fixture_terminal_owners_empty base", fixture_terminal_owners_empty(&self.base)),
+            ("scene_terminal_owners_empty base", scene_terminal_owners_empty(&self.base)),
             ("sequence.is_empty", self.sequence.is_empty()),
             ("sequence.capacity 0", self.sequence.capacity() == 0),
             ("appended_objects.is_empty", self.appended_objects.is_empty()),
@@ -1068,7 +1068,7 @@ impl FillBuilder {
         let seed = roots.scene.seed;
         let preparation_capacity_refusal = preparation_capacity_refusal(&roots);
         Self {
-            base: FixedFixtureOwner::new(),
+            base: FixedSceneOwner::new(),
             preparation_roots: Some(roots),
             preparation_cursor: 0,
             preparation_inner_cursor: 0,
@@ -1087,7 +1087,7 @@ impl FillBuilder {
             tail_floor: 0,
             ever_constructed: false,
             operation,
-            stage: FillJobStage::PrepareFixture,
+            stage: FillJobStage::PrepareScene,
             catalogs: FixedCatalogOwner::new(),
             weights: RetainedBrushKindWeights::new(),
             kind_compatibility: FixedOwnerVec::new(),
@@ -1151,7 +1151,7 @@ impl FillBuilder {
         }
         let mut current = None;
         let retired = match self.close_field {
-            0 => take_fixture_owner(&mut self.base, &mut current),
+            0 => take_scene_owner(&mut self.base, &mut current),
             1 => false,
             2 => take_sequence_owner(self, &mut current),
             3 => take_lookup_owner(self, &mut current),
@@ -1175,7 +1175,7 @@ impl FillBuilder {
                 true
             }),
             12 => self.pending_object.take().is_some_and(|value| {
-                current = Some(FillRetiredOwner::FixtureObject(value));
+                current = Some(FillRetiredOwner::EngineSceneObject(value));
                 true
             }),
             13 => self.pending_attraction.take().is_some_and(|value| {
@@ -1257,26 +1257,26 @@ impl FillBuilder {
         CollisionIndexOwner { operation: self.operation.operation.0, generation: self.operation.generation.0 }
     }
 
-    fn fixture_object(&self, index: usize) -> Option<&FixtureObject> {
+    fn scene_object(&self, index: usize) -> Option<&EngineSceneObject> {
         self.base.objects.get(index).or_else(|| self.appended_objects.get(index.saturating_sub(self.base.objects.len())))
     }
 
-    fn fixture_attraction(&self, index: usize) -> Option<&AttractionProps> {
+    fn scene_attraction(&self, index: usize) -> Option<&AttractionProps> {
         self.base.attractions.get(index).or_else(|| self.appended_attractions.get(index.saturating_sub(self.base.attractions.len())))
     }
 
-    fn fixture_view(&self) -> FillFixtureView<'_> {
-        FillFixtureView { base: &self.base, appended: &self.appended_objects }
+    fn scene_view(&self) -> FillSceneView<'_> {
+        FillSceneView { base: &self.base, appended: &self.appended_objects }
     }
 
-    fn label_catalog_fixture(&self) -> Puzzle3dFixture {
-        let mut fixture = empty_fixture();
+    fn label_catalog_snapshot(&self) -> Puzzle3dSceneSnapshot {
+        let mut scene_snapshot = empty_scene_snapshot();
         if let Some(roots) = self.preparation_roots.as_ref() {
             if let Some(catalogs) = roots.scene.kind_catalogs.as_ref() {
-                fixture.meta.kind_catalogs = Some(semio_framework_value::ToValue::to_value(catalogs));
+                scene_snapshot.meta.kind_catalogs = Some(semio_framework_value::ToValue::to_value(catalogs));
             }
         }
-        fixture
+        scene_snapshot
     }
 
     fn label_peers(&self) -> Vec<Puzzle3dObject> {
@@ -1393,7 +1393,7 @@ impl FillBuilder {
             return Ok(());
         }
         match self.stage {
-            FillJobStage::PrepareFixture => self.prepare_fixture_one(),
+            FillJobStage::PrepareScene => self.prepare_scene_one(),
             FillJobStage::PrepareCatalogs => self.prepare_catalog_one(),
             FillJobStage::PrepareMeshes => self.prepare_mesh_one(),
             FillJobStage::PrepareEntries => self.prepare_entry_one(),
@@ -1405,21 +1405,21 @@ impl FillBuilder {
         Ok(())
     }
 
-    fn prepare_fixture_one(&mut self) {
+    fn prepare_scene_one(&mut self) {
         let roots = self.preparation_roots.as_ref().expect("preparation roots");
-        let fixture = &roots.scene.fixture;
+        let scene_snapshot = &roots.scene.scene_snapshot;
         let value = match self.preparation_inner_cursor {
-            0 => fixture.attractions.get(self.preparation_cursor).map(|value| {
+            0 => scene_snapshot.attractions.get(self.preparation_cursor).map(|value| {
                 if let Err(owner) = self.base.attractions.try_push(value.clone()) {
                     self.fixed_rejection = Some(FillRetiredOwner::Attraction(owner));
                 }
             }),
-            1 => fixture.objects.get(self.preparation_cursor).map(|value| {
+            1 => scene_snapshot.objects.get(self.preparation_cursor).map(|value| {
                 if let Err(owner) = self.base.objects.try_push(value.clone()) {
-                    self.fixed_rejection = Some(FillRetiredOwner::FixtureObject(owner));
+                    self.fixed_rejection = Some(FillRetiredOwner::EngineSceneObject(owner));
                 }
             }),
-            _ => fixture.target_volumes.get(self.preparation_cursor).map(|value| {
+            _ => scene_snapshot.target_volumes.get(self.preparation_cursor).map(|value| {
                 if let Err(owner) = self.base.target_volumes.try_push(value.clone()) {
                     self.fixed_rejection = Some(FillRetiredOwner::WorldVolume(owner));
                 }
@@ -1493,8 +1493,8 @@ impl FillBuilder {
             return;
         };
         self.preparation_cursor += 1;
-        let fixture = FillFixtureView { base: &self.base, appended: &self.appended_objects };
-        let Some(mesh_url) = resolve_placed_object_mesh_url(object, &self.catalogs, &fixture) else {
+        let scene_snapshot = FillSceneView { base: &self.base, appended: &self.appended_objects };
+        let Some(mesh_url) = resolve_placed_object_mesh_url(object, &self.catalogs, &scene_snapshot) else {
             return;
         };
         if self.meshes.get(&mesh_url).is_none() {
@@ -1596,7 +1596,7 @@ impl FillBuilder {
                 }
             }
             TargetPreparePhase::Blocked => {
-                if let Some((attracting, attracted)) = self.fixture_attraction(self.target_attraction_cursor).map(|attraction| (attraction.attracting.clone(), attraction.attracted.clone())) {
+                if let Some((attracting, attracted)) = self.scene_attraction(self.target_attraction_cursor).map(|attraction| (attraction.attracting.clone(), attraction.attracted.clone())) {
                     for id in [attracting, attracted] {
                         match self.blocked_vortex_ids.try_insert(id) {
                             Ok(FixedOwnerSetInsert::Inserted) => {}
@@ -1615,7 +1615,7 @@ impl FillBuilder {
                 }
             }
             TargetPreparePhase::Enumerate => {
-                let Some(object) = self.fixture_object(self.target_object_cursor) else {
+                let Some(object) = self.scene_object(self.target_object_cursor) else {
                     self.targets_ready = true;
                     self.stage = FillJobStage::SelectTarget;
                     return;
@@ -1773,8 +1773,8 @@ impl FillBuilder {
         };
         let context = AttractionVortexContext { object_kind: target.object_kind.clone(), vortex_kind: target.vortex_kind.clone() };
         let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
-        let fixture = self.fixture_view();
-        let Some(preview) = brush_preview_from_candidate(&target.full_id, candidate, &context, world, &self.catalogs, &fixture) else {
+        let scene_snapshot = self.scene_view();
+        let Some(preview) = brush_preview_from_candidate(&target.full_id, candidate, &context, world, &self.catalogs, &scene_snapshot) else {
             self.reject_candidate("preview-unavailable");
             return;
         };
@@ -1903,12 +1903,12 @@ impl FillBuilder {
                     self.reject_candidate("placement-vortex-missing");
                     return StepOutcome::Yield;
                 }
-                let fixture = self.fixture_view();
-                let Some(mesh_url) = resolve_object_kind_mesh_url(&payload.object_kind_id, &self.catalogs, &fixture) else {
+                let scene_snapshot = self.scene_view();
+                let Some(mesh_url) = resolve_object_kind_mesh_url(&payload.object_kind_id, &self.catalogs, &scene_snapshot) else {
                     self.reject_candidate("placement-mesh-missing");
                     return StepOutcome::Yield;
                 };
-                let object_id = brush_object_id(&fixture, &payload);
+                let object_id = brush_object_id(&scene_snapshot, &payload);
                 let source_vortex_id = format!("{object_id}:v{}", payload.source_vortex_index);
                 let attracted = puzzle3d_vortex_full_id(&object_id, &source_vortex_id);
                 self.pending_attraction = Some(AttractionProps {
@@ -1924,7 +1924,7 @@ impl FillBuilder {
                     x: 0.0,
                     y: 0.0,
                 });
-                self.pending_object = Some(FixtureObject {
+                self.pending_object = Some(EngineSceneObject {
                     id: object_id,
                     object_kind: Some(kind.id.clone()),
                     anchor: Default::default(),
@@ -1945,7 +1945,7 @@ impl FillBuilder {
                     self.reject_candidate("placement-state-missing");
                     return StepOutcome::Yield;
                 };
-                if let Some(rejected) = self.fixture_attraction(self.accept_attraction_cursor).map(|attraction| attraction.attracting == pending_attracting || attraction.attracted == pending_attracted) {
+                if let Some(rejected) = self.scene_attraction(self.accept_attraction_cursor).map(|attraction| attraction.attracting == pending_attracting || attraction.attracted == pending_attracted) {
                     self.accept_attraction_cursor += 1;
                     if rejected {
                         self.reject_candidate("placement-rejected");
@@ -2246,7 +2246,7 @@ impl FillBuilder {
     pub(crate) fn stage_label(&self) -> &'static str {
         match self.stage {
             FillJobStage::RetractTail => "retract-tail",
-            FillJobStage::PrepareFixture => "prepare-fixture",
+            FillJobStage::PrepareScene => "prepare-scene_snapshot",
             FillJobStage::PrepareCatalogs => "prepare-catalogs",
             FillJobStage::PrepareMeshes => "prepare-meshes",
             FillJobStage::PrepareEntries => "prepare-entries",
@@ -2293,7 +2293,7 @@ impl FillBuilder {
                 }
                 None
             }
-            FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => {
+            FillJobStage::PrepareScene | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => {
                 if self.prepare_one().is_err() {
                     return StepOutcome::Fault(JobFault { detail: context.fault_payload(b"stale-spatial-index") });
                 }
@@ -2339,7 +2339,7 @@ impl FillBuilder {
             && matches!(
                 stage,
                 FillJobStage::RetractTail
-                    | FillJobStage::PrepareFixture
+                    | FillJobStage::PrepareScene
                     | FillJobStage::PrepareCatalogs
                     | FillJobStage::PrepareMeshes
                     | FillJobStage::PrepareEntries
@@ -2400,12 +2400,12 @@ pub(crate) fn fill_run_entity(object_id: &str) -> u64 {
 }
 
 /// 🧬️ The two `OpBinary` document ops one placement contributes, in append order.
-pub(crate) fn fill_run_ops(object: &FixtureObject, attraction: &AttractionProps, peers: &[Puzzle3dObject], catalog_fixture: &Puzzle3dFixture) -> Option<[Vec<u8>; 2]> {
+pub(crate) fn fill_run_ops(object: &EngineSceneObject, attraction: &AttractionProps, peers: &[Puzzle3dObject], catalog_snapshot: &Puzzle3dSceneSnapshot) -> Option<[Vec<u8>; 2]> {
     use crate::standards::v1::subsets::any::schema::mutations::{binary::encode_op, connect_vortices, create_object};
     let mut document: crate::Puzzle3dObject = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)).ok()?;
     let kind_id = object.object_kind.as_deref().unwrap_or("object");
     if document.label.as_deref().map(str::is_empty).unwrap_or(true) {
-        document.label = Some(puzzle3d_next_object_label(peers, catalog_fixture, kind_id));
+        document.label = Some(puzzle3d_next_object_label(peers, catalog_snapshot, kind_id));
     }
     let create = encode_op(&create_object(document, None)).ok()?;
     let connect = encode_op(&connect_vortices(attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(), attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y)).ok()?;
@@ -2423,7 +2423,7 @@ pub(crate) fn fill_run_placements(provisional: &[crate::standards::v1::subsets::
         .enumerate()
         .map(|(index, pair)| {
             let [Puzzle3dMutation::CreateObject(create), Puzzle3dMutation::ConnectVortices(connect)] = pair else { return None };
-            let object = <FixtureObject as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&create.object)).ok()?;
+            let object = <EngineSceneObject as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&create.object)).ok()?;
             let mesh = object.mesh_url.as_ref().and_then(|url| mesh_lane.iter().position(|entry| entry == url)).unwrap_or(0) as u32;
             let subject = ToolRunTraceSubject::Instance3d { mesh, position: object.origin.map(|value| value as f32), rotation: object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]).map(|value| value as f32), scale: fill_run_scale(&object.scale) };
             let attraction = AttractionProps { id: connect.id.clone(), attracting: connect.attracting.clone(), attracted: connect.attracted.clone(), gap: connect.gap, shift: connect.shift, rise: connect.rise, rotation: connect.rotation, turn: connect.turn, tilt: connect.tilt, x: connect.x, y: connect.y };
@@ -2438,7 +2438,7 @@ pub(crate) struct FillRunPlacement {
     pub(crate) key: u64,
     pub(crate) subject: ToolRunTraceSubject,
     pub(crate) entity: u64,
-    pub(crate) object: FixtureObject,
+    pub(crate) object: EngineSceneObject,
     pub(crate) attraction: AttractionProps,
 }
 
@@ -2447,7 +2447,7 @@ impl FillRunStage {
     fn of(stage: FillJobStage) -> Option<Self> {
         match stage {
             FillJobStage::RetractTail => Some(Self::Retract),
-            FillJobStage::PrepareFixture | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => Some(Self::Prepare),
+            FillJobStage::PrepareScene | FillJobStage::PrepareCatalogs | FillJobStage::PrepareMeshes | FillJobStage::PrepareEntries | FillJobStage::PrepareSpatial | FillJobStage::PrepareLookup | FillJobStage::PrepareConfiguration => Some(Self::Prepare),
             FillJobStage::PrepareTargets | FillJobStage::SelectTarget | FillJobStage::PrepareCandidates | FillJobStage::SelectCandidate => Some(Self::Search),
             FillJobStage::ConstructPreview | FillJobStage::QueryBroadPhase | FillJobStage::TestCollision => Some(Self::Test),
             FillJobStage::AcceptCandidate => Some(Self::Lock),
@@ -2803,8 +2803,8 @@ impl FillRunJob {
                         return Err(b"fill-run-placement-missing");
                     };
                     let peers = self.builder.label_peers();
-                    let catalog_fixture = self.builder.label_catalog_fixture();
-                    let Some(ops) = fill_run_ops(object, attraction, &peers, &catalog_fixture) else {
+                    let catalog_snapshot = self.builder.label_catalog_snapshot();
+                    let Some(ops) = fill_run_ops(object, attraction, &peers, &catalog_snapshot) else {
                         return Err(b"fill-run-op-encode");
                     };
                     let entity = fill_run_entity(&object.id);
@@ -3105,7 +3105,7 @@ impl FillRevalidateJob {
     }
 
     fn prepare_head_one(&mut self) {
-        let Some(object) = self.scene.fixture.objects.get(self.head_cursor) else {
+        let Some(object) = self.scene.scene_snapshot.objects.get(self.head_cursor) else {
             self.phase = FillRevalidatePhase::Placement;
             return;
         };
@@ -3115,7 +3115,7 @@ impl FillRevalidateJob {
             self.vortex_owners.insert(puzzle3d_vortex_full_id(&object.id, &vortex.id), object.id.clone());
         }
         let empty = KindCatalogBundle::default();
-        let mesh_url = resolve_placed_object_mesh_url(object, self.scene.kind_catalogs.as_ref().unwrap_or(&empty), &self.scene.fixture);
+        let mesh_url = resolve_placed_object_mesh_url(object, self.scene.kind_catalogs.as_ref().unwrap_or(&empty), &self.scene.scene_snapshot);
         if let Some(mesh_url) = mesh_url.filter(|url| self.meshes.contains_key(url)) {
             self.head.push(PlacedCollisionEntry { object_id: object.id.clone(), mesh_url, world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) });
         }
@@ -3133,7 +3133,7 @@ impl FillRevalidateJob {
         let index = self.cursor;
         let placement = &self.placements[index];
         if self.pair_cursor == 0 && self.collision.is_none() {
-            if self.head.len() < self.scene.fixture.objects.len() {
+            if self.head.len() < self.scene.scene_snapshot.objects.len() {
                 return Some(true);
             }
             if self.head_ids.contains(&placement.object.id) {
@@ -3213,13 +3213,13 @@ impl FillRevalidateJob {
         let Some(first) = self.conflicts.iter().position(|conflict| *conflict) else {
             return self.flush(context, None);
         };
-        let mut catalog_fixture = empty_fixture();
+        let mut catalog_snapshot = empty_scene_snapshot();
         if let Some(catalogs) = self.scene.kind_catalogs.as_ref() {
-            catalog_fixture.meta.kind_catalogs = Some(semio_framework_value::ToValue::to_value(catalogs));
+            catalog_snapshot.meta.kind_catalogs = Some(semio_framework_value::ToValue::to_value(catalogs));
         }
         let mut peers: Vec<Puzzle3dObject> = self
             .scene
-            .fixture
+            .scene_snapshot
             .objects
             .iter()
             .filter_map(|object| semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)).ok())
@@ -3227,12 +3227,12 @@ impl FillRevalidateJob {
         let mut ops = Vec::new();
         let mut entities = Vec::new();
         for (placement, _) in self.placements.iter().zip(&self.conflicts).skip(first).filter(|(_, conflict)| !**conflict) {
-            let Some([create, connect]) = fill_run_ops(&placement.object, &placement.attraction, &peers, &catalog_fixture) else {
+            let Some([create, connect]) = fill_run_ops(&placement.object, &placement.attraction, &peers, &catalog_snapshot) else {
                 return StepOutcome::Fault(JobFault { detail: FillStepContext::fault_payload(context, b"fill-revalidate-op-encode") });
             };
             if let Ok(mut peer) = <Puzzle3dObject as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&placement.object)) {
                 let kind_id = placement.object.object_kind.as_deref().unwrap_or("object");
-                peer.label = Some(puzzle3d_next_object_label(&peers, &catalog_fixture, kind_id));
+                peer.label = Some(puzzle3d_next_object_label(&peers, &catalog_snapshot, kind_id));
                 peers.push(peer);
             }
             ops.extend([create, connect]);

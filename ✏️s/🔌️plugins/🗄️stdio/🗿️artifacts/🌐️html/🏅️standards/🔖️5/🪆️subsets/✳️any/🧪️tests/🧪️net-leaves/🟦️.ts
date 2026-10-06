@@ -1,5 +1,4 @@
-/** 🧪️ Third-party oracle of the HTML net-leaves corpus (`🧫️fixtures/🧫️net-leaves`): ajv validates the corpus against its
- * schema, and parse5 (an independent HTML5 parser) parses both texts — every expected leaf must address a node that exists
+/** 🧪️ Third-party oracle of the HTML net-leaves corpus (`🧫️fixtures/🧫️net-leaves`): ajv validates individual mutation records, and parse5 (an independent HTML5 parser) parses both texts — every expected leaf must address a node that exists
  * where it says, of the kind it edits, and that really differs; an unchanged text must mean no leaf at all. The Rust editor
  * laws replay the same corpus against `html_net_mutations`. */
 import { describe, expect, test } from "bun:test";
@@ -25,9 +24,9 @@ function nodeAt(root: Node, path: readonly number[]): Node | undefined {
 const attributes = (node: Node | undefined) => JSON.stringify(node?.attrs ?? []);
 
 describe("html net leaves (parse5 oracle)", () => {
-  test("the corpus validates against its schema (ajv)", () => {
+  test("actual mutation records conform to their domain schema (ajv)", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+    for (const row of corpus.cases) for (const leaf of row.leaves ?? []) expect(validate(leaf), JSON.stringify(validate.errors)).toBe(true);
   });
 
   for (const row of corpus.cases) {

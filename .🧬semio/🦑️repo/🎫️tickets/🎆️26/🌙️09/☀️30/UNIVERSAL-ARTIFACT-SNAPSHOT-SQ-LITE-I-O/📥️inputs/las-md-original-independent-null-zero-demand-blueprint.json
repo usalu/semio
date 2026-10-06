@@ -1,0 +1,1025 @@
+[
+  {
+    "owner": "las",
+    "sourceBase": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot",
+    "canonicalSchemaBytes": 5875,
+    "tableCount": 8,
+    "maxColumns": 50,
+    "widths": [
+      {
+        "table": "las_document",
+        "width": 2
+      },
+      {
+        "table": "las_header",
+        "width": 50
+      },
+      {
+        "table": "las_point",
+        "width": 21
+      },
+      {
+        "table": "las_point_gps",
+        "width": 4
+      },
+      {
+        "table": "las_point_rgb",
+        "width": 4
+      },
+      {
+        "table": "las_return_histogram",
+        "width": 4
+      },
+      {
+        "table": "las_vlr",
+        "width": 6
+      },
+      {
+        "table": "las_vlr_octet",
+        "width": 4
+      }
+    ],
+    "cases": [
+      {
+        "name": "full",
+        "input": {
+          "schema": "stdio.las.semantic.sqlite",
+          "header": {
+            "versionMajor": 255,
+            "versionMinor": 255,
+            "systemIdentifier": "owned 🌠",
+            "generatingSoftware": "SQL",
+            "creationDayOfYear": 65535,
+            "creationYear": 65535,
+            "headerSize": 65535,
+            "offsetToPointData": 4294967295,
+            "numberOfVlrs": 4294967295,
+            "pointDataFormatId": 255,
+            "pointDataRecordLength": 65535,
+            "numberOfPointRecords": 4294967295,
+            "pointsByReturn": [
+              4294967295,
+              0,
+              17,
+              17,
+              1
+            ],
+            "xScale": {
+              "bits": {
+                "binary64Hex": "7ff0000000000001"
+              }
+            },
+            "yScale": {
+              "bits": {
+                "binary64Hex": "7ff8123456789abc"
+              }
+            },
+            "zScale": {
+              "bits": {
+                "binary64Hex": "fff0123456789abc"
+              }
+            },
+            "xOffset": {
+              "bits": {
+                "binary64Hex": "8000000000000000"
+              }
+            },
+            "yOffset": {
+              "bits": {
+                "binary64Hex": "7ff0000000000000"
+              }
+            },
+            "zOffset": {
+              "bits": {
+                "binary64Hex": "fff0000000000000"
+              }
+            },
+            "maxX": {
+              "bits": {
+                "binary64Hex": "3ff4000000000000"
+              }
+            },
+            "minX": {
+              "bits": {
+                "binary64Hex": "0000000000000001"
+              }
+            },
+            "maxY": {
+              "bits": {
+                "binary64Hex": "0000000000000000"
+              }
+            },
+            "minY": {
+              "bits": {
+                "binary64Hex": "7ff0000000000001"
+              }
+            },
+            "maxZ": {
+              "bits": {
+                "binary64Hex": "7ff8123456789abc"
+              }
+            },
+            "minZ": {
+              "bits": {
+                "binary64Hex": "fff0123456789abc"
+              }
+            }
+          },
+          "vlrs": [
+            {
+              "userId": "same 🌠",
+              "recordId": 65535,
+              "description": "first",
+              "data": [
+                0,
+                255,
+                17,
+                0
+              ]
+            },
+            {
+              "userId": "same 🌠",
+              "recordId": 65535,
+              "description": "second",
+              "data": []
+            }
+          ],
+          "points": [
+            {
+              "x": {
+                "bits": {
+                  "binary64Hex": "7ff0000000000001"
+                }
+              },
+              "y": {
+                "bits": {
+                  "binary64Hex": "8000000000000000"
+                }
+              },
+              "z": {
+                "bits": {
+                  "binary64Hex": "7ff0000000000000"
+                }
+              },
+              "intensity": 65535,
+              "returnNumber": 255,
+              "numberOfReturns": 255,
+              "scanDirectionFlag": true,
+              "edgeOfFlightLine": false,
+              "classification": 255,
+              "scanAngleRank": -128,
+              "userData": 255,
+              "pointSourceId": 65535
+            },
+            {
+              "x": {
+                "bits": {
+                  "binary64Hex": "7ff8123456789abc"
+                }
+              },
+              "y": {
+                "bits": {
+                  "binary64Hex": "0000000000000001"
+                }
+              },
+              "z": {
+                "bits": {
+                  "binary64Hex": "fff0000000000000"
+                }
+              },
+              "intensity": 0,
+              "returnNumber": 0,
+              "numberOfReturns": 0,
+              "scanDirectionFlag": false,
+              "edgeOfFlightLine": true,
+              "classification": 0,
+              "scanAngleRank": 127,
+              "userData": 0,
+              "pointSourceId": 0,
+              "gpsTime": {
+                "bits": {
+                  "binary64Hex": "7ff0000000000001"
+                }
+              }
+            },
+            {
+              "x": {
+                "bits": {
+                  "binary64Hex": "fff0123456789abc"
+                }
+              },
+              "y": {
+                "bits": {
+                  "binary64Hex": "3ff4000000000000"
+                }
+              },
+              "z": {
+                "bits": {
+                  "binary64Hex": "0000000000000000"
+                }
+              },
+              "intensity": 17,
+              "returnNumber": 1,
+              "numberOfReturns": 2,
+              "scanDirectionFlag": false,
+              "edgeOfFlightLine": false,
+              "classification": 17,
+              "scanAngleRank": 0,
+              "userData": 17,
+              "pointSourceId": 17,
+              "rgb": [
+                0,
+                65535,
+                17
+              ]
+            },
+            {
+              "x": {
+                "bits": {
+                  "binary64Hex": "8000000000000000"
+                }
+              },
+              "y": {
+                "bits": {
+                  "binary64Hex": "7ff0000000000000"
+                }
+              },
+              "z": {
+                "bits": {
+                  "binary64Hex": "fff0000000000000"
+                }
+              },
+              "intensity": 17,
+              "returnNumber": 7,
+              "numberOfReturns": 7,
+              "scanDirectionFlag": true,
+              "edgeOfFlightLine": true,
+              "classification": 255,
+              "scanAngleRank": -1,
+              "userData": 255,
+              "pointSourceId": 65535,
+              "gpsTime": {
+                "bits": {
+                  "binary64Hex": "8000000000000000"
+                }
+              },
+              "rgb": [
+                65535,
+                0,
+                65535
+              ]
+            }
+          ]
+        },
+        "rows": 21,
+        "semanticBytes": 1509,
+        "tables": [
+          {
+            "table": "las_document",
+            "rows": 1,
+            "semanticBytes": 33
+          },
+          {
+            "table": "las_header",
+            "rows": 1,
+            "semanticBytes": 327
+          },
+          {
+            "table": "las_point",
+            "rows": 4,
+            "semanticBytes": 655
+          },
+          {
+            "table": "las_point_gps",
+            "rows": 2,
+            "semanticBytes": 49
+          },
+          {
+            "table": "las_point_rgb",
+            "rows": 2,
+            "semanticBytes": 64
+          },
+          {
+            "table": "las_return_histogram",
+            "rows": 5,
+            "semanticBytes": 160
+          },
+          {
+            "table": "las_vlr",
+            "rows": 2,
+            "semanticBytes": 93
+          },
+          {
+            "table": "las_vlr_octet",
+            "rows": 4,
+            "semanticBytes": 128
+          }
+        ],
+        "integrity": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "name": "metadataRetainingEmpty",
+        "input": {
+          "schema": "stdio.las.semantic.sqlite",
+          "header": {
+            "versionMajor": 255,
+            "versionMinor": 255,
+            "systemIdentifier": "owned 🌠",
+            "generatingSoftware": "SQL",
+            "creationDayOfYear": 65535,
+            "creationYear": 65535,
+            "headerSize": 65535,
+            "offsetToPointData": 4294967295,
+            "numberOfVlrs": 4294967295,
+            "pointDataFormatId": 255,
+            "pointDataRecordLength": 65535,
+            "numberOfPointRecords": 4294967295,
+            "pointsByReturn": [
+              4294967295,
+              0,
+              17,
+              17,
+              1
+            ],
+            "xScale": {
+              "bits": {
+                "binary64Hex": "7ff0000000000001"
+              }
+            },
+            "yScale": {
+              "bits": {
+                "binary64Hex": "7ff8123456789abc"
+              }
+            },
+            "zScale": {
+              "bits": {
+                "binary64Hex": "fff0123456789abc"
+              }
+            },
+            "xOffset": {
+              "bits": {
+                "binary64Hex": "8000000000000000"
+              }
+            },
+            "yOffset": {
+              "bits": {
+                "binary64Hex": "7ff0000000000000"
+              }
+            },
+            "zOffset": {
+              "bits": {
+                "binary64Hex": "fff0000000000000"
+              }
+            },
+            "maxX": {
+              "bits": {
+                "binary64Hex": "3ff4000000000000"
+              }
+            },
+            "minX": {
+              "bits": {
+                "binary64Hex": "0000000000000001"
+              }
+            },
+            "maxY": {
+              "bits": {
+                "binary64Hex": "0000000000000000"
+              }
+            },
+            "minY": {
+              "bits": {
+                "binary64Hex": "7ff0000000000001"
+              }
+            },
+            "maxZ": {
+              "bits": {
+                "binary64Hex": "7ff8123456789abc"
+              }
+            },
+            "minZ": {
+              "bits": {
+                "binary64Hex": "fff0123456789abc"
+              }
+            }
+          },
+          "vlrs": [],
+          "points": []
+        },
+        "rows": 7,
+        "semanticBytes": 520,
+        "tables": [
+          {
+            "table": "las_document",
+            "rows": 1,
+            "semanticBytes": 33
+          },
+          {
+            "table": "las_header",
+            "rows": 1,
+            "semanticBytes": 327
+          },
+          {
+            "table": "las_point",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "las_point_gps",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "las_point_rgb",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "las_return_histogram",
+            "rows": 5,
+            "semanticBytes": 160
+          },
+          {
+            "table": "las_vlr",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "las_vlr_octet",
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "owner": "md",
+    "sourceBase": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "canonicalSchemaBytes": 3901,
+    "tableCount": 27,
+    "maxColumns": 4,
+    "widths": [
+      {
+        "table": "md_block",
+        "width": 2
+      },
+      {
+        "table": "md_block_inline",
+        "width": 4
+      },
+      {
+        "table": "md_block_quote",
+        "width": 1
+      },
+      {
+        "table": "md_code_block",
+        "width": 3
+      },
+      {
+        "table": "md_code_span",
+        "width": 2
+      },
+      {
+        "table": "md_document",
+        "width": 2
+      },
+      {
+        "table": "md_document_block",
+        "width": 4
+      },
+      {
+        "table": "md_emphasis",
+        "width": 1
+      },
+      {
+        "table": "md_emphasis_inline",
+        "width": 4
+      },
+      {
+        "table": "md_hard_break",
+        "width": 1
+      },
+      {
+        "table": "md_heading",
+        "width": 2
+      },
+      {
+        "table": "md_html_block",
+        "width": 2
+      },
+      {
+        "table": "md_html_inline",
+        "width": 2
+      },
+      {
+        "table": "md_image",
+        "width": 4
+      },
+      {
+        "table": "md_inline",
+        "width": 2
+      },
+      {
+        "table": "md_link",
+        "width": 3
+      },
+      {
+        "table": "md_link_text",
+        "width": 4
+      },
+      {
+        "table": "md_list",
+        "width": 4
+      },
+      {
+        "table": "md_list_item",
+        "width": 3
+      },
+      {
+        "table": "md_list_item_block",
+        "width": 4
+      },
+      {
+        "table": "md_paragraph",
+        "width": 1
+      },
+      {
+        "table": "md_quote_block",
+        "width": 4
+      },
+      {
+        "table": "md_soft_break",
+        "width": 1
+      },
+      {
+        "table": "md_strong",
+        "width": 1
+      },
+      {
+        "table": "md_strong_inline",
+        "width": 4
+      },
+      {
+        "table": "md_text",
+        "width": 2
+      },
+      {
+        "table": "md_thematic_break",
+        "width": 1
+      }
+    ],
+    "cases": [
+      {
+        "name": "full",
+        "input": {
+          "schema": "Independent CommonMark 世界",
+          "blocks": [
+            {
+              "kind": "heading",
+              "level": 255,
+              "inlines": [
+                {
+                  "kind": "text",
+                  "text": "Alpha 世界\u0000"
+                },
+                {
+                  "kind": "emphasis",
+                  "inlines": [
+                    {
+                      "kind": "strong",
+                      "inlines": [
+                        {
+                          "kind": "code",
+                          "literal": "a ` b"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "link",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "linked"
+                    }
+                  ],
+                  "url": "https://example.invalid/世界",
+                  "title": ""
+                },
+                {
+                  "kind": "image",
+                  "alt": "image 世界",
+                  "url": "relative/image.png"
+                },
+                {
+                  "kind": "softBreak"
+                },
+                {
+                  "kind": "hardBreak"
+                },
+                {
+                  "kind": "htmlInline",
+                  "raw": "<span data-x='1'>"
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "inlines": []
+            },
+            {
+              "kind": "list",
+              "ordered": false,
+              "start": 4294967295,
+              "tight": false,
+              "items": [
+                [],
+                [
+                  {
+                    "kind": "paragraph",
+                    "inlines": [
+                      {
+                        "kind": "image",
+                        "alt": "",
+                        "url": "",
+                        "title": ""
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "list",
+                    "ordered": true,
+                    "tight": true,
+                    "items": [
+                      [
+                        {
+                          "kind": "thematicBreak"
+                        }
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            },
+            {
+              "kind": "codeBlock",
+              "literal": "line one\nline two\u0000\n"
+            },
+            {
+              "kind": "codeBlock",
+              "info": "",
+              "literal": ""
+            },
+            {
+              "kind": "blockQuote",
+              "blocks": [
+                {
+                  "kind": "blockQuote",
+                  "blocks": []
+                },
+                {
+                  "kind": "htmlBlock",
+                  "raw": "<!-- owned raw HTML -->"
+                }
+              ]
+            },
+            {
+              "kind": "thematicBreak"
+            },
+            {
+              "kind": "htmlBlock",
+              "raw": "<section>世界</section>"
+            },
+            {
+              "kind": "paragraph",
+              "inlines": [
+                {
+                  "kind": "emphasis",
+                  "inlines": []
+                },
+                {
+                  "kind": "strong",
+                  "inlines": []
+                },
+                {
+                  "kind": "link",
+                  "text": [],
+                  "url": ""
+                }
+              ]
+            }
+          ]
+        },
+        "rows": 88,
+        "semanticBytes": 1879,
+        "tables": [
+          {
+            "table": "md_block",
+            "rows": 14,
+            "semanticBytes": 236
+          },
+          {
+            "table": "md_block_inline",
+            "rows": 11,
+            "semanticBytes": 352
+          },
+          {
+            "table": "md_block_quote",
+            "rows": 2,
+            "semanticBytes": 16
+          },
+          {
+            "table": "md_code_block",
+            "rows": 2,
+            "semanticBytes": 35
+          },
+          {
+            "table": "md_code_span",
+            "rows": 1,
+            "semanticBytes": 13
+          },
+          {
+            "table": "md_document",
+            "rows": 1,
+            "semanticBytes": 37
+          },
+          {
+            "table": "md_document_block",
+            "rows": 9,
+            "semanticBytes": 288
+          },
+          {
+            "table": "md_emphasis",
+            "rows": 2,
+            "semanticBytes": 16
+          },
+          {
+            "table": "md_emphasis_inline",
+            "rows": 1,
+            "semanticBytes": 32
+          },
+          {
+            "table": "md_hard_break",
+            "rows": 1,
+            "semanticBytes": 8
+          },
+          {
+            "table": "md_heading",
+            "rows": 1,
+            "semanticBytes": 16
+          },
+          {
+            "table": "md_html_block",
+            "rows": 2,
+            "semanticBytes": 64
+          },
+          {
+            "table": "md_html_inline",
+            "rows": 1,
+            "semanticBytes": 25
+          },
+          {
+            "table": "md_image",
+            "rows": 2,
+            "semanticBytes": 46
+          },
+          {
+            "table": "md_inline",
+            "rows": 14,
+            "semanticBytes": 198
+          },
+          {
+            "table": "md_link",
+            "rows": 2,
+            "semanticBytes": 46
+          },
+          {
+            "table": "md_link_text",
+            "rows": 1,
+            "semanticBytes": 32
+          },
+          {
+            "table": "md_list",
+            "rows": 2,
+            "semanticBytes": 56
+          },
+          {
+            "table": "md_list_item",
+            "rows": 3,
+            "semanticBytes": 72
+          },
+          {
+            "table": "md_list_item_block",
+            "rows": 3,
+            "semanticBytes": 96
+          },
+          {
+            "table": "md_paragraph",
+            "rows": 3,
+            "semanticBytes": 24
+          },
+          {
+            "table": "md_quote_block",
+            "rows": 2,
+            "semanticBytes": 64
+          },
+          {
+            "table": "md_soft_break",
+            "rows": 1,
+            "semanticBytes": 8
+          },
+          {
+            "table": "md_strong",
+            "rows": 2,
+            "semanticBytes": 16
+          },
+          {
+            "table": "md_strong_inline",
+            "rows": 1,
+            "semanticBytes": 32
+          },
+          {
+            "table": "md_text",
+            "rows": 2,
+            "semanticBytes": 35
+          },
+          {
+            "table": "md_thematic_break",
+            "rows": 2,
+            "semanticBytes": 16
+          }
+        ],
+        "integrity": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "name": "metadataRetainingEmpty",
+        "input": {
+          "schema": "Independent CommonMark 世界",
+          "blocks": []
+        },
+        "rows": 1,
+        "semanticBytes": 37,
+        "tables": [
+          {
+            "table": "md_block",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_block_inline",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_block_quote",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_code_block",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_code_span",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_document",
+            "rows": 1,
+            "semanticBytes": 37
+          },
+          {
+            "table": "md_document_block",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_emphasis",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_emphasis_inline",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_hard_break",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_heading",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_html_block",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_html_inline",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_image",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_inline",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_link",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_link_text",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_list",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_list_item",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_list_item_block",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_paragraph",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_quote_block",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_soft_break",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_strong",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_strong_inline",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_text",
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "md_thematic_break",
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": [
+          {
+            "integrity_check": "ok"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ]
+  }
+]

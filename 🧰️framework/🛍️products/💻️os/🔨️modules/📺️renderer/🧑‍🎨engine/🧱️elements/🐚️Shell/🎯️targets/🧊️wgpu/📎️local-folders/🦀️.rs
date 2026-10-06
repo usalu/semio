@@ -198,11 +198,11 @@ pub(crate) struct FolderReconnectBandPlan {
 }
 
 /// 📐️ Lays the band out bottom-centre through the time-travel band's [`time_travel::chrome_band_layout`], stacked above
-/// the time-travel band when one shows (React stacks the folder offer first), else just above the footer: one row with
+/// the time-travel band when one shows (React stacks the folder offer first), else as the subfooter's last row under the footer: one row with
 /// the buttons right-aligned after the message, or on a phone-width viewport the message wrapped at its words with the
 /// buttons below it.
 pub(crate) fn folder_reconnect_band_plan(message: String, reconnect: String, forget: String, below: Option<Rect>, width: f32, height: f32, theme: &Theme) -> FolderReconnectBandPlan {
-    let floor = below.map_or(height - theme.footer_height, |rect| rect.y);
+    let floor = below.map_or(height, |rect| rect.y);
     let layout = time_travel::chrome_band_layout(&message, " ", &[reconnect.as_str(), forget.as_str()], floor, width, FOLDER_BAND_MAX_WIDTH, theme);
     let (reconnect_rect, forget_rect) = (layout.buttons[0], layout.buttons[1]);
     FolderReconnectBandPlan { band: layout.band, lines: layout.lines, buttons: [(FOLDER_RECONNECT_CONTROL_ID, FOLDER_RECONNECT_ACTION, reconnect, reconnect_rect), (FOLDER_FORGET_CONTROL_ID, FOLDER_FORGET_ACTION, forget, forget_rect)] }
@@ -505,7 +505,7 @@ impl ShellState {
     /// 📐️ This frame's band, localized.
     pub(crate) fn folder_reconnect_band_plan_for(&self, offer: &LocalFolderBinding, theme: &Theme) -> FolderReconnectBandPlan {
         let locale = self.active_locale();
-        let below = self.history_time_travel.as_ref().map(|status| self.time_travel_band_plan_for(status, theme).band);
+        let below = self.history_reprojection_band_plan_for(theme).map(|(_, plan)| plan.band).or_else(|| self.history_time_travel.as_ref().map(|status| self.time_travel_band_plan_for(status, theme).band));
         let message = local_folder_text(LocalFolderText::Message, local_folder_name(local_folder_path(offer)), locale);
         folder_reconnect_band_plan(message, local_folder_text(LocalFolderText::Attach, "", locale), local_folder_text(LocalFolderText::Forget, "", locale), below, self.screen_w, self.screen_h, theme)
     }

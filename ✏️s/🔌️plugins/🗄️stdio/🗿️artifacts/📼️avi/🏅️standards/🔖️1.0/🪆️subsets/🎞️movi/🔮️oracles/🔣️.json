@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-chunk-applied",
       "class": "third-party-generated",
       "target": {
@@ -58,7 +57,6 @@
       "notes": "A 4th movi chunk is appended to stream 0; strh.length is left stale at 3."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-chunk-rejected-missing-stream",
       "class": "third-party-generated",
       "target": {
@@ -102,7 +100,6 @@
       "notes": "Attempted stream_index does not exist — missing-target at the STREAMS level."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-chunk-applied",
       "class": "third-party-generated",
       "target": {
@@ -153,7 +150,6 @@
       "notes": "The middle movi chunk of stream 0 is removed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-chunk-rejected-missing-chunk",
       "class": "third-party-generated",
       "target": {
@@ -197,7 +193,6 @@
       "notes": "Valid stream, attempted chunk index does not exist — missing-target at the CHUNKS level."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-chunk-keyframe-applied",
       "class": "third-party-generated",
       "target": {
@@ -248,7 +243,6 @@
       "notes": "The last movi chunk of stream 0 flips its keyframe flag; chunk data is untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-chunk-keyframe-rejected-missing-chunk",
       "class": "third-party-generated",
       "target": {
@@ -292,7 +286,6 @@
       "notes": "Valid stream, attempted chunk index does not exist — missing-target at the CHUNKS level."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-unknown-chunk-applied",
       "class": "third-party-generated",
       "target": {
@@ -343,7 +336,6 @@
       "notes": "A second top-level unknown chunk is appended after the existing JUNK chunk."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-unknown-chunk-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {
@@ -387,7 +379,6 @@
       "notes": "Attempted insertion index exceeds the final collection length — invalid-index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-unknown-chunk-applied",
       "class": "third-party-generated",
       "target": {
@@ -438,7 +429,6 @@
       "notes": "The one top-level unknown (JUNK) chunk is removed, leaving none."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-unknown-chunk-rejected-missing",
       "class": "third-party-generated",
       "target": {

@@ -14,7 +14,21 @@
       "description": "Aggregate discriminator spliced in by PdfXMutation; absent when the payload stands alone."
     },
     "target": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Launch target",
+          "de": "Startziel"
+        },
+        "description": {
+          "en": "File or application the Launch action opens.",
+          "de": "Datei oder Anwendung, die die Launch-Aktion öffnet."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

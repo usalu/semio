@@ -3,7 +3,7 @@ use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_demo_app};
 use crate::editor::fem3d::Fem3dCommand;
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
+    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchNode) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {

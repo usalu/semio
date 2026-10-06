@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { proveEntityCatalogOwnership } from "../../🏷️entity-kinds/📏️ownership/🟦️.ts";
+import { proveEntityCatalogOwnership } from "./📏️ownership/🟦️.ts";
 import { entityKindIndexByEmoji, parseEntityKind, parseEntityKindCatalog } from "../../🟦️";
 import { ENTITY_KINDS, ENTITY_KIND_BY_EMOJI, entityKindByEmoji } from "../../🤖️generated/🏷️entity-kinds/🟦️";
 
@@ -112,7 +112,7 @@ describe("framework.schema entity-kind catalog facet", () => {
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📏️ownership/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🏷️entity-kinds/📏️ownership/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔣️.json",
     ];
     for (const input of required) expect(project.namedInputs.default).toContain(input);

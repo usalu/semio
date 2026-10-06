@@ -1,4 +1,4 @@
-//! 🧪️ `change-object-mesh` fixture — `🕸️repoints`.
+//! 🧪️ `change-object-mesh` scene_snapshot — `🕸️repoints`.
 //!
 //! Repoints `object-a` at a different mesh URL. Only `meshUrl` moves — the object keeps its kind,
 //! pose and every rim vortex.
@@ -45,7 +45,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -88,7 +88,7 @@ fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `change-object-mesh` produces is exactly the committed diff — the single most
-/// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
+/// load-bearing assertion in the scene_snapshot: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {

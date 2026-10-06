@@ -1,6 +1,7 @@
 use super::*;
 use crate::standards::v5::subsets::any::schema::diff::{HtmlChildAdded as HtmlChildAddedT, HtmlNodeDiff as HtmlNodeDiffT};
-use crate::standards::v5::subsets::any::schema::snapshot::{write_html_document, HtmlAttr, STDIO_HTML_DOCUMENT_SCHEMA};
+use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, STDIO_HTML_DOCUMENT_SCHEMA};
+use crate::standards::v5::subsets::any::io::text::snapshot::{write_html_document};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 

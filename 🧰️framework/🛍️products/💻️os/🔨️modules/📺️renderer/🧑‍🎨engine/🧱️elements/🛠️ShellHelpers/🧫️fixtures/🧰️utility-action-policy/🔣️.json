@@ -1,0 +1,60 @@
+{
+  "windowKind": "policy-canvas",
+  "actions": [
+    "mutateDocument",
+    "mutateSelection",
+    "mutateGeometry",
+    "mutateStyle",
+    "exportDocument"
+  ],
+  "utilities": [
+    {
+      "id": "allowedUtilityA",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityB",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityC",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityD",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityE",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityF",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityG",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityH",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityI",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityJ",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityK",
+      "allowsActionsWhileActive": true
+    },
+    {
+      "id": "allowedUtilityL",
+      "allowsActionsWhileActive": true
+    }
+  ]
+}

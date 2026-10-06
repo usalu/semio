@@ -221,6 +221,12 @@
       ]
     },
     {
+      "id": "s.stdio.xml.schema.schema-export-s-stdio-xml-document.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema-export:s.stdio.xml#document",
+      "claims": [{ "namespace": "schema-export", "value": "s.stdio.xml#document" }]
+    },
+    {
       "id": "s.stdio.xml.schema.schema-s-stdio-xml.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.xml",

@@ -1,0 +1,27 @@
+[
+  {
+    "content": "",
+    "columns": 0,
+    "lines": 1
+  },
+  {
+    "content": "Grüße 😀",
+    "columns": 7,
+    "lines": 1
+  },
+  {
+    "content": "A\r\n😀B\n",
+    "columns": 2,
+    "lines": 3
+  },
+  {
+    "content": "a\rb\nc\r\nD",
+    "columns": 1,
+    "lines": 4
+  },
+  {
+    "content": "😀😀\r\r\n",
+    "columns": 2,
+    "lines": 3
+  }
+]

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "encodedTarget",
+    "pipelines",
+    "controls"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "encodedTarget": {
+      "const": "format: world_encoded_format, blend:"
+    },
+    "pipelines": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "world3d_pipeline",
+          "world3d_pipeline_translucent",
+          "world3d_line_pipeline",
+          "world3d_standard_translucent_pipeline",
+          "world3d_painted_pipeline",
+          "world3d_painted_pipeline_translucent",
+          "world3d_authored_front_pipeline",
+          "world3d_authored_double_translucent_pipeline",
+          "world3d_authored_painted_double_pipeline",
+          "world3d_authored_painted_double_translucent_pipeline",
+          "world3d_authored_painted_front_pipeline",
+          "world3d_authored_painted_front_translucent_pipeline",
+          "world3d_celebration_pipeline",
+          "world3d_celebration_pipeline_translucent",
+          "world3d_textured_pipeline",
+          "world3d_grid_pipeline",
+          "world_postprocess_pipeline"
+        ]
+      }
+    },
+    "controls": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "labels",
+          "targets",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

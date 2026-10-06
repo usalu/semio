@@ -32,13 +32,13 @@ const INPUT: &str = "shared://📜️example-readme.docx";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("example-readme.docx"))?;
+    let copy = ctx.copy_input(INPUT, Some("example-readme.docx"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
 /// 📸️ The committed after-document whose decoded snapshot the `set-snapshot` scenarios replace the README with.
 fn set_snapshot_document(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture("shared://🧾️readme-afters/📸️set-snapshot/➡️after.docx", Some("set-snapshot-after.docx"))?;
+    let copy = ctx.copy_input("shared://🧾️readme-afters/📸️set-snapshot/➡️after.docx", Some("set-snapshot-after.docx"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

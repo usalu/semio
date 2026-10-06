@@ -30,7 +30,7 @@ fn text(value: &Json) -> String {
 #[cfg(feature = "sut")]
 fn the_owned_codecs_round_trip(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_identity as id;
-    let file = ctx.fixture_json("shared://📡️emoji-vectors.json")?;
+    let file = ctx.input_json("shared://📡️emoji-vectors.json")?;
     let normalizations: Vec<Json> = file
         .array("normalizations")
         .iter()

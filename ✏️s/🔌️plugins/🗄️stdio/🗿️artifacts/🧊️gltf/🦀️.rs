@@ -219,7 +219,7 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
     let provenance = value.get("provenance").map(|provenance| semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(provenance))).into_iter().collect();
     let quality = value.get("quality").map_or_else(|| "unknown".into(), |quality| semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(quality)));
     let validity = value.get("validity").and_then(semio_framework_value::DslValue::as_str).unwrap_or("indeterminate").to_owned();
-    let envelope = io::inferences::text::GltfInferenceLeafEnvelope {
+    let envelope = io::text::inferences::GltfInferenceLeafEnvelope {
         id: id.into(),
         algorithm_version: descriptor.algorithm_version,
         policy_hash: policy_hash.clone(),
@@ -231,7 +231,7 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
         provenance,
         value,
     };
-    let canonical_payload = io::inferences::binary::encode_gltf_inference_leaf_binary(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-binary-encode", error.to_string()))?;
+    let canonical_payload = io::binary::inferences::encode_gltf_inference_leaf_binary(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-binary-encode", error.to_string()))?;
     Ok(ArtifactInferenceExecution { canonical_payload, diagnostics: Vec::new(), validity, quality: envelope.quality, complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
 }
 
@@ -589,28 +589,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.gltf",
                     extension: Some("gltf"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.gltf.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(io::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(io::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.gltf.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.diff"),
@@ -621,8 +621,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -631,8 +631,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(io::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(io::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.spr"),
                 },
             ]
@@ -728,20 +728,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod diff {
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
@@ -1065,20 +1057,6 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -1133,9 +1111,7 @@ pub mod schema {
 pub mod engine {
     pub use super::standards::v2_0::engine::*;
 }
-pub mod io {
-    pub use super::standards::v2_0::subsets::any::io::*;
-}
+
 
 #[path = "."]
 pub mod examples {
@@ -1233,3 +1209,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v2_0::subsets::any::io::{GltfBuilderConstruction, GltfAccessorSpec, GltfParts, GltfAnalyzerAnalysis, GltfBuilderFacets, GltfBuilder, GltfAnalyzer, GltfComposer};

@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "root", "selection", "hover", "contract"],
+  "properties": {
+    "version": {"const": 1},
+    "root": {"const": {"typed": ["selection", "hover", "activeMode", "activeGranularity"], "oracle": ["activeGranularity", "activeMode", "hover", "selection"]}},
+    "selection": {"const": {"typed": ["granularity", "ids", "anchorId"], "oracle": ["anchorId", "granularity", "ids"]}},
+    "hover": {"const": ["channel", "ids"]},
+    "contract": {"const": "declared-typed-record-fields-canonical;dynamic-object-occurrences-preserved"}
+  }
+}

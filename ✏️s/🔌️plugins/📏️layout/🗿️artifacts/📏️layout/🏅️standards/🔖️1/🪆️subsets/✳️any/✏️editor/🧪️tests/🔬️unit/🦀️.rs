@@ -639,7 +639,7 @@ async fn window_kind_actions_scope_authoring_to_blueprint_only() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn sample_fixture_parses() {
-    let doc = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
     assert_eq!(doc.schema, crate::LAYOUT_DOCUMENT_SCHEMA);
     assert!(!doc.pages.is_empty());
 }

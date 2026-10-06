@@ -1,0 +1,20 @@
+{
+  "schemaBytes": 1483,
+  "tableWidths": {
+    "stl_facet": 12,
+    "stl_solid": 3,
+    "stl_vertex": 12
+  },
+  "cases": [
+    {
+      "id": "originalSharedSourceNative",
+      "rows": 9,
+      "valueBytes": 762
+    },
+    {
+      "id": "emptyCollectionsRetainMetadata",
+      "rows": 1,
+      "valueBytes": 42
+    }
+  ]
+}

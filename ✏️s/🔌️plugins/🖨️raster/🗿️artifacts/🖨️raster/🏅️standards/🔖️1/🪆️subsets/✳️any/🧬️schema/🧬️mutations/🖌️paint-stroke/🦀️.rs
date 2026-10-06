@@ -8,7 +8,7 @@
 //! `🪣️fill-region`. Design §17.2, ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.
 
 use crate::diff::{RasterAssetsDelta, RasterDiff, RasterLayerPatchEntry, RasterLayersDelta};
-use crate::io::{raster_image_pack_asset, semio_image_from_rgba8};
+use crate::standards::v1::subsets::any::io::{raster_image_pack_asset, semio_image_from_rgba8};
 use crate::standards::v1::subsets::any::schema::{find_layer, flatten_raster_layers, layer_node_id, layer_protection};
 use crate::{RasterLayerMask, RasterLayerNode, RasterLayerPatch, RasterMaskContent, RasterMutation, RasterPixelContent, RasterSnapshot, RasterTransform, SemioImageSnapshot};
 use semio_framework_pixels::editing::{paint_stroke_in_place, validate_extent, PixelAlphaBrush, PixelBrush, PixelOperation};

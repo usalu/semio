@@ -61,7 +61,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_wfc_3d::editor::wfc3d::config::mutations::wfc3d_config_mutation_report_json;
+    use semio_s_artifact_wfc_3d::editor::wfc3d::config::io::text::mutations::wfc3d_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         wfc3d_config_mutation_report_json(committed.before, committed.mutation, committed.after)

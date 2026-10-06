@@ -10,13 +10,12 @@ async fn temp_path(name: &str) -> PathBuf {
     std::env::temp_dir().join(format!("protocol_cli_test_{}_{counter}_{name}", std::process::id()))
 }
 
-async fn sample_edit(id: &str, actor: Option<&str>, description: Option<&str>) -> crate::os_spr::HistoryEdit {
+async fn sample_edit(id: &str, actor: Option<&str>) -> crate::os_spr::HistoryEdit {
     crate::os_spr::HistoryEdit { line: None,
         id: id.to_string(),
         actor: actor.map(str::to_string),
         started_at: format!("2026-07-27T00:00:{id}Z", id = &id[id.len().saturating_sub(2)..]),
-        finished_at: None,
-        description: description.map(str::to_string), verb: None,
+        finished_at: None, verb: None,
         ops: vec![crate::os_spr::OpPayload { text: Some(format!("set {id} = 1")), binary: None }],
         inverse: Vec::new(),
         meta: None,
@@ -33,7 +32,7 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
     for i in 0..edit_count {
         let id = format!("e{i:02}");
         let actor = if i % 2 == 0 { Some("actor-a") } else { Some("actor-b") };
-        appender.append_edit(&sample_edit(&id, actor, Some("an edit")).await).await.unwrap();
+        appender.append_edit(&sample_edit(&id, actor).await).await.unwrap();
         appender.commit().await.unwrap();
         edit_ids.push(id);
     }
@@ -68,7 +67,7 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
 /// why `parse_ops_text`/`print_ops_text` are not directly reachable from this crate).
 async fn sample_ops_text() -> String {
     let mut appender = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
-    appender.append_edit(&sample_edit("e00", Some("actor-a"), Some("first edit")).await).await.unwrap();
+    appender.append_edit(&sample_edit("e00", Some("actor-a")).await).await.unwrap();
     appender.commit().await.unwrap();
     let bytes = appender.into_sink();
     crate::os_spr::decompile_ops(&bytes.await, &crate::os_spr::DecodeOptions::default()).await.unwrap()
@@ -300,13 +299,13 @@ async fn cli_diff_reports_identical_and_divergent_files() {
 #[semio_framework_async_macros::async_test]
 async fn cli_diff_reports_only_in_a_when_b_is_a_shorter_prefix() {
     let mut appender_a = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
-    appender_a.append_edit(&sample_edit("e00", Some("actor-a"), None).await).await.unwrap();
-    appender_a.append_edit(&sample_edit("e01", Some("actor-a"), None).await).await.unwrap();
+    appender_a.append_edit(&sample_edit("e00", Some("actor-a")).await).await.unwrap();
+    appender_a.append_edit(&sample_edit("e01", Some("actor-a")).await).await.unwrap();
     appender_a.commit().await.unwrap();
     let bytes_a = appender_a.into_sink();
 
     let mut appender_b = crate::os_spr::HistoryAppender::begin(Vec::new(), "doc-1", "schema-1", &crate::os_spr::WriteOptions::default()).await.unwrap();
-    appender_b.append_edit(&sample_edit("e00", Some("actor-a"), None).await).await.unwrap();
+    appender_b.append_edit(&sample_edit("e00", Some("actor-a")).await).await.unwrap();
     appender_b.commit().await.unwrap();
     let bytes_b = appender_b.into_sink();
 

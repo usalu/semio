@@ -1,14 +1,6 @@
 //! 🧭️ Kernel-only M5 grammar, protocol and fixture-discovery conformance.
 //! Fleet-owned real-example laws live in the dedicated fixture-sweep test package.
 
-//#region 🔖️ExampleAssetDiscovery
-/// 🖼️ Path-agnostic example-asset discovery for M5 pilots: prefers
-/// `📚️examples/<slug>/🖼️assets/*.<kind>.semio`, soft-falls back to legacy plural kind dirs.
-#[cfg(test)]
-#[path = "../🔬️example-asset-discovery/🦀️.rs"]
-mod example_asset_discovery;
-//#endregion 🔖️ExampleAssetDiscovery
-
 //#region 🧭️PilotResolve
 /// 🧭️ Path-agnostic example-asset resolution for M5 pilots.
 /// Prefers `📚️examples/<slug>/🖼️assets/*.<kind>.semio`; falls back to any `.semio` under the
@@ -25,9 +17,9 @@ mod pilot_resolve;
 /// replacing the pre-P2-M3 hardcoded one-`#[test]`-per-pilot list (6 `include_str!` grammar tests +
 /// 7 `include_str!` protocol tests, hand-added one at a time). This is the ownership keystone for
 /// every future STDIO fan-out wave (P1-P3/FG1-FG4 per the plan — the only kind of fan-out wave this
-/// program ever dispatches): a new stdio standard lands its own `🧬️schema/📸️snapshot/📝️text/
-/// 📖️.grammar.semio` + sibling `.dsl.semio` fixture (or `🧬️schema/📸️snapshot/💾️binary/
-/// 📡️.protocol.semio` + `.pack.semio`, or `🧬️schema/🧬️mutations/💾️binary/
+/// program ever dispatches): a new stdio standard lands its own `🚪️io/📝️text/📸️snapshot/
+/// 📖️.grammar.semio` + sibling `.dsl.semio` fixture (or `🚪️io/💾️binary/📸️snapshot/
+/// 📡️.protocol.semio` + `.pack.semio`, or `🚪️io/💾️binary/🧬️mutations/
 /// 📡️.protocol.semio` + `.spr.semio`, matching dag's pre-existing 7th hardcoded pilot
 /// check) and is enrolled automatically — ZERO edits to this framework file for discovery itself.
 /// The one thing an FG-wave DOES still touch here is the shrink-only stdio exemption list below,
@@ -47,7 +39,7 @@ mod m5_soft_skip;
 //#endregion 🔖️M5SoftSkip
 
 //#region 🔖️M5HandcraftedGrammar
-/// 📖️ P2-M3: m5 grammar conformance over EVERY auto-discovered `🧬️schema/📸️snapshot/📝️text/
+/// 📖️ P2-M3: m5 grammar conformance over EVERY auto-discovered `🚪️io/📝️text/📸️snapshot/
 /// 📖️.grammar.semio` under `✏️s/🔌️plugins` (see [`super::m5_auto_discovery`]) — replaces the
 /// pre-P2-M3 hardcoded 6-pilot `include_str!` list. One `#[test]` fn iterates every discovered pair
 /// and asserts each individually with a labeled failure message (chosen over N generated `#[test]`

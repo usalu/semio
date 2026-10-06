@@ -2,12 +2,14 @@
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Only `DxfEntity::Line` is
 //! mapped back to ink blocks — never a general DXF importer, so this hop is `IoFidelity::Lossy`.
 
-use crate::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
+use crate::schema::{create_note_id, NoteIdOwner};
+use crate::standards::v1::subsets::any::io::text::snapshot::{empty_note_snapshot};
 use crate::{NoteBlockNode, NoteSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_dxf::schema::snapshot::{parse_dxf_document, DxfEntity};
+use semio_s_artifact_stdio_dxf::schema::snapshot::{DxfEntity};
+use semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::{parse_dxf_document};
 
 pub const DXF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dxf", standard: StandardId("r12"), subset: SubsetId::ANY };
 

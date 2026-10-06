@@ -1,0 +1,522 @@
+{
+  "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🗺️duplicate-maps.json",
+  "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🗺️duplicate-maps/🧬️schema/🔣️.json",
+  "corpus": {
+    "schemaBytes": 10809,
+    "rows": 62,
+    "valueBytes": 2965,
+    "tables": 32,
+    "columns": 27,
+    "cases": [
+      {
+        "id": "catalogExtension",
+        "sourcePath": [
+          "catalog",
+          "extensions",
+          "fields"
+        ],
+        "nativePath": [
+          {
+            "f": 0
+          },
+          {
+            "f": 2
+          },
+          {
+            "f": 0
+          }
+        ],
+        "key": "",
+        "entries": [
+          [
+            "",
+            "discarded-catalog"
+          ],
+          [
+            "",
+            "catalogue"
+          ],
+          [
+            "__proto__",
+            "catalogue-owned"
+          ]
+        ]
+      },
+      {
+        "id": "fileExtension",
+        "sourcePath": [
+          "catalog",
+          "file",
+          "extensions",
+          "fields"
+        ],
+        "nativePath": [
+          {
+            "f": 0
+          },
+          {
+            "f": 0
+          },
+          {
+            "f": 6
+          },
+          {
+            "f": 0
+          }
+        ],
+        "key": "世界\u0000",
+        "entries": [
+          [
+            "世界\u0000",
+            "discarded-file"
+          ],
+          [
+            "",
+            "empty"
+          ],
+          [
+            "世界\u0000",
+            "file"
+          ],
+          [
+            "__proto__",
+            "owned"
+          ]
+        ]
+      },
+      {
+        "id": "productExtension",
+        "sourcePath": [
+          "catalog",
+          "products",
+          0,
+          "extensions",
+          "fields"
+        ],
+        "nativePath": [
+          {
+            "f": 0
+          },
+          {
+            "f": 1
+          },
+          {
+            "i": 0
+          },
+          {
+            "f": 8
+          },
+          {
+            "f": 0
+          }
+        ],
+        "key": "__proto__",
+        "entries": [
+          [
+            "__proto__",
+            "discarded-product"
+          ],
+          [
+            "",
+            "product"
+          ],
+          [
+            "__proto__",
+            "text"
+          ]
+        ]
+      },
+      {
+        "id": "recordExtension",
+        "sourcePath": [
+          "catalog",
+          "products",
+          0,
+          "records",
+          0,
+          "extensions",
+          "fields"
+        ],
+        "nativePath": [
+          {
+            "f": 0
+          },
+          {
+            "f": 1
+          },
+          {
+            "i": 0
+          },
+          {
+            "f": 4
+          },
+          {
+            "i": 0
+          },
+          {
+            "f": 2
+          },
+          {
+            "f": 0
+          }
+        ],
+        "key": "任意",
+        "entries": [
+          [
+            "任意",
+            "discarded-record"
+          ],
+          [
+            "任意",
+            "record"
+          ]
+        ]
+      },
+      {
+        "id": "edition",
+        "sourcePath": [
+          "editionProfile"
+        ],
+        "nativePath": [
+          {
+            "f": 1
+          }
+        ],
+        "key": "任意\u0000",
+        "entries": [
+          [
+            "任意\u0000",
+            "legacy"
+          ],
+          [
+            "",
+            "legacy"
+          ],
+          [
+            "任意\u0000",
+            "current"
+          ],
+          [
+            "__proto__",
+            "current"
+          ]
+        ]
+      },
+      {
+        "id": "geometry",
+        "sourcePath": [
+          "geometry"
+        ],
+        "nativePath": [
+          {
+            "f": 5
+          }
+        ],
+        "key": "",
+        "entries": [
+          [
+            "",
+            {
+              "id": "discarded-geometry",
+              "bbox": {
+                "minX": -1.5,
+                "minY": 2.25,
+                "minZ": -3.125,
+                "maxX": 4.5,
+                "maxY": -5.25,
+                "maxZ": 6.125
+              },
+              "connections": [],
+              "parameters": {}
+            }
+          ],
+          [
+            "",
+            {
+              "id": "independent-id",
+              "bbox": {
+                "minX": -1.5,
+                "minY": 2.25,
+                "minZ": -3.125,
+                "maxX": 4.5,
+                "maxY": -5.25,
+                "maxZ": 6.125
+              },
+              "connections": [
+                {
+                  "id": "duplicate",
+                  "medium": "任意\u0000",
+                  "position": [
+                    -1.25,
+                    2.5,
+                    -3.75
+                  ],
+                  "direction": [
+                    4.25,
+                    -5.5,
+                    6.75
+                  ],
+                  "diameterMm": -125.5
+                },
+                {
+                  "id": "duplicate",
+                  "medium": "",
+                  "position": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "direction": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "diameterMm": null
+                }
+              ],
+              "parameters": {
+                "": -0.75,
+                "__proto__": 1.625
+              }
+            }
+          ]
+        ]
+      },
+      {
+        "id": "geometryParameter",
+        "sourcePath": [
+          "geometry",
+          "",
+          "parameters"
+        ],
+        "nativePath": [
+          {
+            "f": 5
+          },
+          {
+            "k": ""
+          },
+          {
+            "f": 3
+          }
+        ],
+        "key": "__proto__",
+        "entries": [
+          [
+            "__proto__",
+            -8.5
+          ],
+          [
+            "",
+            -0.75
+          ],
+          [
+            "__proto__",
+            1.625
+          ]
+        ]
+      },
+      {
+        "id": "curve",
+        "sourcePath": [
+          "curves"
+        ],
+        "nativePath": [
+          {
+            "f": 6
+          }
+        ],
+        "key": "任意\u0000",
+        "entries": [
+          [
+            "任意\u0000",
+            {
+              "id": "discarded-curve",
+              "xUnit": {
+                "symbol": "任意",
+                "kind": "length",
+                "delta": true,
+                "siFactor": -0.625
+              },
+              "yUnit": {
+                "symbol": "",
+                "kind": "thermalConductivity",
+                "delta": false,
+                "siFactor": 1.875
+              },
+              "points": []
+            }
+          ],
+          [
+            "任意\u0000",
+            {
+              "id": "independent-curve",
+              "xUnit": {
+                "symbol": "任意",
+                "kind": "length",
+                "delta": true,
+                "siFactor": -0.625
+              },
+              "yUnit": {
+                "symbol": "",
+                "kind": "thermalConductivity",
+                "delta": false,
+                "siFactor": 1.875
+              },
+              "points": [
+                {
+                  "x": -0.25,
+                  "y": 2.5
+                },
+                {
+                  "x": -0.25,
+                  "y": -3.5
+                }
+              ]
+            }
+          ]
+        ]
+      }
+    ]
+  },
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schemaBytes",
+      "rows",
+      "valueBytes",
+      "tables",
+      "columns",
+      "cases"
+    ],
+    "properties": {
+      "schemaBytes": {
+        "const": 10809
+      },
+      "rows": {
+        "const": 62
+      },
+      "valueBytes": {
+        "const": 2965
+      },
+      "tables": {
+        "const": 32
+      },
+      "columns": {
+        "const": 27
+      },
+      "cases": {
+        "type": "array",
+        "minItems": 8,
+        "maxItems": 8,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "sourcePath",
+            "nativePath",
+            "key",
+            "entries"
+          ],
+          "properties": {
+            "id": {
+              "enum": [
+                "catalogExtension",
+                "fileExtension",
+                "productExtension",
+                "recordExtension",
+                "edition",
+                "geometry",
+                "geometryParameter",
+                "curve"
+              ]
+            },
+            "sourcePath": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                ]
+              }
+            },
+            "nativePath": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "f"
+                    ],
+                    "properties": {
+                      "f": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 65535
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "i"
+                    ],
+                    "properties": {
+                      "i": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "k"
+                    ],
+                    "properties": {
+                      "k": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "key": {
+              "type": "string"
+            },
+            "entries": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {}
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

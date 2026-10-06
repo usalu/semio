@@ -18,7 +18,7 @@
 //! literal (`0.42839899821678995` came back as `0.4283989982167899`) and made every example whose
 //! geometry needs full f64 precision fail its lossless-round-trip oracle.
 use crate::Puzzle5dSnapshot;
-use semio_s_artifact_stdio_json::schema::snapshot::parse_json_text;
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 
 pub fn register() {}

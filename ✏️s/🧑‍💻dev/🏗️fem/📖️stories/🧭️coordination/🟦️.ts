@@ -9,7 +9,7 @@
 // fem's `📦️packages/🦀️rust` crate is a WASM *component*, not a `wasm-bindgen` module, so there is no
 // browser-callable `parse_dsl` to reuse; this is a small TypeScript reader of the same text grammar and
 // deliberately a READER only — it never re-emits DSL, so it can never drift into a second authority.
-// Grammar (as emitted by `🧬️schema/📸️snapshot/📝️text/🦀️.rs` via the `dsl::DslArtifact` derive): a
+// Grammar (as emitted by `🚪️io/📝️text/📸️snapshot/🦀️.rs` via the `dsl::DslArtifact` derive): a
 // `semio <dialect> v<n>` banner, top-level `key=value` lines, `name { … }` statement blocks whose lines are
 // each `<keyword> key=value …` records (`elements`) or a bare assignment run (`analysis`), and
 // `name [col:TYPE …] { rows }` tables. fem rows go beyond block's flat rows in three ways this reader

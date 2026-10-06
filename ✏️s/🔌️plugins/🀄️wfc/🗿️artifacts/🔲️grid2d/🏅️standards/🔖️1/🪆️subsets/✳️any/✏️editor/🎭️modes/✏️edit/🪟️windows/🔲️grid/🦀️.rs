@@ -92,6 +92,7 @@ pub fn definition() -> WindowKindDefinition {
         action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
     }
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Grid", "Raster"),
         body_key: BODY_KEY.into(),

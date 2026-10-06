@@ -1,7 +1,7 @@
 //! 🔺️ `update-camera` sparse diff construction.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
 use crate::standards::v1::subsets::any::schema::mutations::update_camera::UpdateCamera;
 use crate::Generation3dSnapshot;
 
@@ -14,5 +14,5 @@ pub fn diff(payload: &UpdateCamera, base: &Generation3dSnapshot) -> protocol::Mu
     if base.host_snapshot.camera == payload.camera {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", "Camera is already in the requested state.");
     }
-    protocol::MutationOutcome::new(diff_fixture_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), Some(&payload.camera), None))
+    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), Some(&payload.camera), None))
 }

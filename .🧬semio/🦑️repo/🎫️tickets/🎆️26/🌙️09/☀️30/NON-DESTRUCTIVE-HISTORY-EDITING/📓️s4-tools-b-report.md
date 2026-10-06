@@ -272,3 +272,20 @@ KERNEL GREEN); no interim flow-node option; F2 stays OPEN and lands on top of §
   `store::PackError::{Schema, ValueRefusal}` to `store::PackError::Refusal(store::PackRefusal::Malformed { kind: InvalidValue,
   what: "pack", offset: 0, detail })` / `store::PackError::from` (kernel re-exports `PackError, PackRefusal`, `From<ValueError>`).
 - Checks 2 and 3 not started (same stdio closure). OWED as listed in S4.8, re-run on "stdio green".
+
+## Session 5 — 2026-10-05
+
+Executor S5-TOOLS inherits this WP together with S4-TOOLS-A; the session-5 record of both lives in
+`📓️s4-tools-a-report.md` § "Session 5 — 2026-10-05" (S5.1–S5.9). What concerns the TOOLS-B trees, with the runs I saw:
+
+- **Native `--lib` state at 02:20** (`cargo check --manifest-path ✏️s/Cargo.toml … --lib --keep-going`, output
+  `🗑️generated/s5-tools/check-mytrees-lib.txt`): forms, gisterrain, generation2d, playbook compiled; generation3d exit 0 at
+  01:53:33 (wave A caller batch). **energy-model RED (13 errors)** and **gis-gismap RED (38 errors)**, both peer-API fallout
+  (`dsl::json`, `os_dsl::{DslValue,ToValue,FromValue}`, the `ValueError::new` shape, `Result<_, String>` vs `ValueError`); the
+  file:line list is in § S5.8 there. Not fixed.
+- **Forms dictionary (P4)**: `🧬️schema/🧾️dictionary/🔣️.json` declares labels on `entries` and `questionId` (+ `widget: "text"`);
+  `schema mutation-inputs --under ✏️s/🔌️plugins/📋️forms` → 29/29 inputs of 15 leaves, 0 findings.
+- **generation3d gumball**: still on `drive_gesture` with its app-held `self.open` map and its own Frozen arm
+  (`E/🦀️.rs:2470-2476`); it now maps a refused start or tick to its `toolTransaction.*` fault (wave A). Moving it onto the
+  framework slot (`context.gesture()`, `ids` in `GestureChart::context`) is OWED (§ S5.7 there).
+- **D11 `settle_press` clock, D24 normalization, the hub wasip2 checks, playbook F2**: not started this session (§ S5.8 items 3, 6, 7).

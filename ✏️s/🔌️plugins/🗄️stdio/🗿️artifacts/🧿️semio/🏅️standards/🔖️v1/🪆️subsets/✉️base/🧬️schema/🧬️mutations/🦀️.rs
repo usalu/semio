@@ -204,23 +204,12 @@ pub fn semio_mutation_refusal_codes<D>(outcome: &protocol::MutationOutcome<D>) -
 /// envelope without naming any of the eighteen arms' snapshot types.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
-    crate::standards::v1::subsets::base::schema::snapshot::subset_tag(&snapshot.subset)
+    crate::standards::v1::subsets::base::io::text::snapshot::subset_tag(&snapshot.subset)
 }
 
-/// 📤️ The envelope mutation's JSON carrier, derived from `SemioMutation`'s own `ToValue` (adjacently
-/// tagged `{"mutation": "<camelCaseVariant>", "payload": …}`, each payload the wrapped arm's own
-/// mutation) and printed by the first-party `pack` JSON codec — the shape `🔣️.json` beside this file
-/// publishes. See <🔣️.json>.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_semio_mutation_json(mutation: &SemioMutation) -> String {
-    semio_framework_pack_json::to_json_string(mutation)
-}
 
-/// 📥️ The inverse of [`encode_semio_mutation_json`], through `SemioMutation`'s own `FromValue`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_mutation_json(text: &str) -> Result<SemioMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
+
 //#endregion 🔖️Mutation
 
 //#region 🔖️MutationTrait
@@ -324,247 +313,22 @@ pub(crate) fn agg_inverse(this: &SemioMutation, base: &SemioSnapshot) -> Result<
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🎙️ Real delegating text/binary op codec — replaces the old whole-enum `serde_json` passthrough.
-/// Text is one `tag:payload` line: `payload` for the 18 wrapped variants is exactly that subset's
-/// OWN already-real `OpText::print_op()`/`parse_op()` output (genuine reuse, never re-derived
-/// here); `setSnapshot`'s payload is hex(`SemioSnapshot::print_dsl`) — real delegation to this
-/// envelope's own now-real `ArtifactDsl` (📸️snapshot/🦀️.rs), hex-flattened to keep
-/// `print_op`'s one-physical-line contract.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn subset_mutation_tag(m: &SemioMutation) -> &'static str {
-    match m {
-        SemioMutation::SetSnapshot(_) => "setSnapshot",
-        SemioMutation::PatchSnapshot(_) => "patchSnapshot",
-        SemioMutation::ApplyBrep(_) => "brep",
-        SemioMutation::ApplyMesh(_) => "mesh",
-        SemioMutation::ApplyModel(_) => "model",
-        SemioMutation::ApplyValue(_) => "value",
-        SemioMutation::ApplyDocument(_) => "document",
-        SemioMutation::ApplyCad(_) => "cad",
-        SemioMutation::ApplyDrawing(_) => "drawing",
-        SemioMutation::ApplyImage(_) => "image",
-        SemioMutation::ApplyVideo(_) => "video",
-        SemioMutation::ApplyAudio(_) => "audio",
-        SemioMutation::ApplyAnimation(_) => "animation",
-        SemioMutation::ApplyPresentation(_) => "presentation",
-        SemioMutation::ApplyFlow(_) => "flow",
-        SemioMutation::ApplyText(_) => "text",
-        SemioMutation::ApplyTable(_) => "table",
-        SemioMutation::ApplyGraph(_) => "graph",
-        SemioMutation::ApplyObject(_) => "object",
-        SemioMutation::ApplyKit(_) => "kit",
-    }
-}
 
-/// 🏷️ Binary tag ordinal for [`SemioMutation`] — `0` = `SetSnapshot`, `1..=18` = the 18 wrapped
-/// subset kinds (enum declaration order).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn mutation_tag(m: &SemioMutation) -> u8 {
-    match m {
-        SemioMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
-        SemioMutation::ApplyBrep(_) => TAG_APPLY_BREP,
-        SemioMutation::ApplyMesh(_) => TAG_APPLY_MESH,
-        SemioMutation::ApplyModel(_) => TAG_APPLY_MODEL,
-        SemioMutation::ApplyValue(_) => TAG_APPLY_VALUE,
-        SemioMutation::ApplyDocument(_) => TAG_APPLY_DOCUMENT,
-        SemioMutation::ApplyCad(_) => TAG_APPLY_CAD,
-        SemioMutation::ApplyDrawing(_) => TAG_APPLY_DRAWING,
-        SemioMutation::ApplyImage(_) => TAG_APPLY_IMAGE,
-        SemioMutation::ApplyVideo(_) => TAG_APPLY_VIDEO,
-        SemioMutation::ApplyAudio(_) => TAG_APPLY_AUDIO,
-        SemioMutation::ApplyAnimation(_) => TAG_APPLY_ANIMATION,
-        SemioMutation::ApplyPresentation(_) => TAG_APPLY_PRESENTATION,
-        SemioMutation::ApplyFlow(_) => TAG_APPLY_FLOW,
-        SemioMutation::ApplyText(_) => TAG_APPLY_TEXT,
-        SemioMutation::ApplyTable(_) => TAG_APPLY_TABLE,
-        SemioMutation::ApplyGraph(_) => TAG_APPLY_GRAPH,
-        SemioMutation::ApplyObject(_) => TAG_APPLY_OBJECT,
-        SemioMutation::ApplyKit(_) => TAG_APPLY_KIT,
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_hex_snapshot(snapshot: &SemioSnapshot) -> String {
-    let text = <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot);
-    text.as_bytes().iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_hex_snapshot(hex: &str) -> Result<SemioSnapshot, String> {
-    if !hex.len().is_multiple_of(2) {
-        return Err("setSnapshot: odd hex length".to_string());
-    }
-    let mut bytes = Vec::with_capacity(hex.len() / 2);
-    let mut i = 0usize;
-    while i < hex.len() {
-        let byte = u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| format!("setSnapshot: invalid hex: {e}"))?;
-        bytes.push(byte);
-        i += 2;
-    }
-    let text = String::from_utf8(bytes).map_err(|e| format!("setSnapshot: utf8 decode: {e}"))?;
-    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|e| format!("setSnapshot: dsl decode: {e}"))
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_semio_mutation(m: &SemioMutation) -> String {
-    let tag = subset_mutation_tag(m);
-    match m {
-        SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("{tag}:{}", enc_hex_snapshot(snapshot)),
-        SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => format!("{tag}:{}", semio_s_artifact_stdio_contract::editing::snapshot_patch_hex(patch)),
-        SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyValue(apply_value::ApplyValue { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyImage(apply_image::ApplyImage { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyText(apply_text::ApplyText { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyTable(apply_table::ApplyTable { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyObject(apply_object::ApplyObject { mutation }) => format!("{tag}:{}", mutation.print_op()),
-        SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation }) => format!("{tag}:{}", mutation.print_op()),
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_semio_mutation(line: &str) -> Result<SemioMutation, String> {
-    let (tag, rest) = line.split_once(':').ok_or_else(|| format!("semio mutation: missing ':' in {line:?}"))?;
-    match tag {
-        "setSnapshot" => Ok(SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_hex_snapshot(rest)? })),
-        "patchSnapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(rest).map(|patch| SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "brep" => Ok(SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "mesh" => Ok(SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "model" => Ok(SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "value" => Ok(SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "document" => Ok(SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "cad" => Ok(SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "drawing" => Ok(SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation: SemioDrawingMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "image" => Ok(SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "video" => Ok(SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "audio" => Ok(SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "animation" => Ok(SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "presentation" => Ok(SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "flow" => Ok(SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "text" => Ok(SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "table" => Ok(SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "graph" => Ok(SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation: SemioGraphMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "object" => Ok(SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        "kit" => Ok(SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::parse_op(rest).map_err(|e| e.to_string())? })),
-        other => Err(format!("semio mutation: unknown tag {other:?}")),
-    }
-}
 
-impl OpText for SemioMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_semio_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        print_semio_mutation(self)
-    }
-}
 
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `SemioMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
-const TAG_APPLY_BREP: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-brep");
-const TAG_APPLY_MESH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-mesh");
-const TAG_APPLY_MODEL: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-model");
-const TAG_APPLY_VALUE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-value");
-const TAG_APPLY_DOCUMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-document");
-const TAG_APPLY_CAD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-cad");
-const TAG_APPLY_DRAWING: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-drawing");
-const TAG_APPLY_IMAGE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-image");
-const TAG_APPLY_VIDEO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-video");
-const TAG_APPLY_AUDIO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-audio");
-const TAG_APPLY_ANIMATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-animation");
-const TAG_APPLY_PRESENTATION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-presentation");
-const TAG_APPLY_FLOW: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-flow");
-const TAG_APPLY_TEXT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-text");
-const TAG_APPLY_TABLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-table");
-const TAG_APPLY_GRAPH: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-graph");
-const TAG_APPLY_OBJECT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-object");
-const TAG_APPLY_KIT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "apply-kit");
-//#endregion 🏷️WireTags
 
-impl OpBinary for SemioMutation {
-    /// ⚡️ Real delegating binary: `format u8` + `tag u8` ([`mutation_tag`]) as two genuine,
-    /// individually protocol-walkable fixed header fields, then ONE opaque trailing payload — for
-    /// the 18 wrapped variants, the wrapped subset's OWN real `OpBinary::encode_op()` bytes
-    /// (genuine reuse); for `SetSnapshot`, the wrapped snapshot's own real
-    /// `ArtifactPack::encode_pack()` bytes.
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, mutation_tag(self)];
-        let payload: Vec<u8> = match self {
-            SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <SemioSnapshot as store::ArtifactPack>::encode_pack(snapshot),
-            SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => patch.encode_op()?,
-            SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyModel(apply_model::ApplyModel { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyValue(apply_value::ApplyValue { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyImage(apply_image::ApplyImage { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyText(apply_text::ApplyText { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyTable(apply_table::ApplyTable { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyObject(apply_object::ApplyObject { mutation }) => mutation.encode_op()?,
-            SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation }) => mutation.encode_op()?,
-        };
-        out.extend_from_slice(&payload);
-        Ok(out)
-    }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        if bytes.len() < 2 {
-            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated".to_string() });
-        }
-        let format = bytes[0];
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported format {format}") });
-        }
-        let tag = bytes[1];
-        let payload = &bytes[2..];
-        Ok(match tag {
-            TAG_SET_SNAPSHOT => SemioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: <SemioSnapshot as store::ArtifactPack>::decode_pack(payload)? }),
-            TAG_PATCH_SNAPSHOT => SemioMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as OpBinary>::decode_op(payload)? }),
-            TAG_APPLY_BREP => SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::decode_op(payload)? }),
-            TAG_APPLY_MESH => SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::decode_op(payload)? }),
-            TAG_APPLY_MODEL => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::decode_op(payload)? }),
-            TAG_APPLY_VALUE => SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::decode_op(payload)? }),
-            TAG_APPLY_DOCUMENT => SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::decode_op(payload)? }),
-            TAG_APPLY_CAD => SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::decode_op(payload)? }),
-            TAG_APPLY_DRAWING => SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing { mutation: SemioDrawingMutation::decode_op(payload)? }),
-            TAG_APPLY_IMAGE => SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::decode_op(payload)? }),
-            TAG_APPLY_VIDEO => SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::decode_op(payload)? }),
-            TAG_APPLY_AUDIO => SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::decode_op(payload)? }),
-            TAG_APPLY_ANIMATION => SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::decode_op(payload)? }),
-            TAG_APPLY_PRESENTATION => SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::decode_op(payload)? }),
-            TAG_APPLY_FLOW => SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::decode_op(payload)? }),
-            TAG_APPLY_TEXT => SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::decode_op(payload)? }),
-            TAG_APPLY_TABLE => SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::decode_op(payload)? }),
-            TAG_APPLY_GRAPH => SemioMutation::ApplyGraph(apply_graph::ApplyGraph { mutation: SemioGraphMutation::decode_op(payload)? }),
-            TAG_APPLY_OBJECT => SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::decode_op(payload)? }),
-            TAG_APPLY_KIT => SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::decode_op(payload)? }),
-            other => return Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),
-        })
-    }
-}
+
+
+
+
+
+
+
+
 //#endregion OpCodecs
 
 //#region 🔖️Demo

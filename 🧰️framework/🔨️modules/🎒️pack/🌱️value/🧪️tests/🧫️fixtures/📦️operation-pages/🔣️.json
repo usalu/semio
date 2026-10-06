@@ -1,0 +1,130 @@
+{
+  "schema": "operation-record-pages-v1",
+  "payloadBytes": 8194,
+  "maximumPhysicalPageBytes": 4096,
+  "canceledKind": "canceled",
+  "exactNumberWords": [
+    "UInt:18446744073709551615",
+    "Int:-9223372036854775808",
+    "Float:8000000000000000"
+  ],
+  "knownPrefix": [
+    0,
+    2,
+    1,
+    8,
+    130,
+    64
+  ],
+  "preservedPrefix": [
+    0,
+    3,
+    1,
+    8,
+    130,
+    64
+  ],
+  "numberSuffix": [
+    2,
+    17,
+    12,
+    3,
+    4,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    1,
+    3,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    255,
+    1,
+    5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    128
+  ],
+  "unknownSuffix": [
+    99,
+    4,
+    7
+  ],
+  "terminalAllocatedBytes": 0,
+  "sourceRange": {
+    "payloadBytes": 8194,
+    "utf8Word": "ü",
+    "utf8Repetitions": 4097,
+    "malformedUtf8Record": [
+      0,
+      1,
+      2,
+      7,
+      2,
+      192,
+      128
+    ],
+    "malformedKind": "invalidValue"
+  },
+  "intrinsicSource": {
+    "fieldId": 1,
+    "prefix": [
+      0,
+      1,
+      1,
+      17,
+      8,
+      130,
+      64
+    ],
+    "maximumPhysicalPageBytes": 4096,
+    "terminalAllocatedBytes": 0
+  },
+  "prepaidRecord": {
+    "prefix": [
+      0,
+      1,
+      1,
+      8,
+      130,
+      64
+    ],
+    "fieldIndexAdmissionBytes": 4,
+    "maximumPhysicalPageBytes": 4096,
+    "terminalAllocatedBytes": 0
+  },
+  "borrowedSource": {
+    "prefix": [
+      0,
+      2,
+      1,
+      8,
+      130,
+      64
+    ],
+    "textHeader": [
+      2,
+      7,
+      130,
+      64
+    ],
+    "textUnit": "x",
+    "maximumMetadataBytes": 512
+  }
+}

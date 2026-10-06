@@ -1,18 +1,20 @@
 //! 🦀️ Rust side of the invocation-planning case: scope in, ordered argv out, nothing executed.
 
 use semio_framework_repo_test_runner as subject;
+#[path = "../../🧪️testing/🦀️.rs"]
+mod examples;
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 
 //#region 🔖️Support
-fn vectors(ctx: &Context) -> Result<subject::PlanningVectors, String> {
-    subject::parse_planning_vectors(&ctx.fixture_bytes("shared://🗺️planning-vectors.json")?)
+fn vectors(ctx: &Context) -> Result<examples::PlanningVectors, String> {
+    examples::parse_planning_vectors(&ctx.input_bytes("shared://🗺️planning-vectors.json")?)
 }
 
 fn plan_json(plan: &subject::InvocationPlan) -> Result<Json, String> {
     parse_json(&subject::plan_to_json_text(plan))
 }
 
-fn plan_of(fixture: &subject::PlanningVectors, id: &str) -> subject::InvocationPlan {
+fn plan_of(fixture: &examples::PlanningVectors, id: &str) -> subject::InvocationPlan {
     fixture
         .vectors
         .iter()

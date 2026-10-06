@@ -3,7 +3,8 @@ pub(crate) mod context {
     use super::super::*;
     use semio_framework_os::{ArtifactPresentation, MediaClass, MediaForm, PortMultiplicity, apply_workflow_operation, register_app_io};
     use semio_framework_os::{MediaPortDirection, MediaPortSpec, MediaType, WorkflowMediaPort, WorkflowNode};
-    use semio_framework_plugin::{App, AppIo, HistoryView, LocalizedLabel};
+    use semio_framework_ui_locale::{LocalizedLabel};
+use semio_framework_plugin::{App, AppIo, HistoryView};
     
     pub(crate) fn empty_history() -> HistoryView {
         HistoryView::empty()
@@ -168,11 +169,11 @@ use super::*;
 #[test]
 fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
     let base = SpaceConfig::default();
-    let base_value = semio_framework_pack_json::from_dsl_value(&dsl::ToValue::to_value(&base));
+    let base_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&base));
     let mut expected: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&base_value)).expect("third-party JSON decode");
     expected["workflowEngagementInput"] = serde_json::json!("draft");
     let (post, inverse, _) = prepare_space_config(&base, SpaceConfigMutation::SetWorkflowEngagementInput { value: "draft".into() }).expect("bounded config candidate");
-    let post_value = semio_framework_pack_json::from_dsl_value(&dsl::ToValue::to_value(&post));
+    let post_value = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&post));
     let post_oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&post_value)).expect("third-party JSON decode");
     assert_eq!(post_oracle, expected);
     assert!(matches!(inverse, SpaceConfigMutation::SetWorkflowEngagementInput { value } if value == base.workflow_engagement_input));
@@ -468,7 +469,7 @@ async fn space_workflow_context_menu_stays_within_budget_with_destructive_tail()
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
     let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let selected_node_ids = vec!["node-1".to_string()];
-    let items = space_workflow_context_menu_items(&registry, labels, false, None, &selected_node_ids).await;
+    let items = space_workflow_context_menu_items(&registry, labels, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), None, &selected_node_ids).await;
     assert!(items.len() <= 9, "top-level context menu rows must stay within budget: {} rows", items.len());
     let last = items.last().expect("non-empty menu");
     assert_eq!(last.id, "remove-instance");
@@ -486,7 +487,7 @@ async fn graph_hit_context_menu_owns_the_remove_target_argument() {
         selection: Vec::new(),
         text: None,
     };
-    let items = space_workflow_context_menu_items(&registry, labels, false, Some(&surface), &[]).await;
+    let items = space_workflow_context_menu_items(&registry, labels, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), Some(&surface), &[]).await;
     let remove = items.iter().find(|item| item.action.as_deref() == Some("removeAppInstance")).expect("remove item");
     assert_eq!(remove.args.as_ref().and_then(|args| args.get("nodeId")).and_then(DslValue::as_str), Some("instance-7"));
 }

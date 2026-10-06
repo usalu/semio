@@ -1309,7 +1309,7 @@ async fn recursive_member_envelope_with_history(reference: &ArtifactRef, owner: 
     Box::pin(member.set_owner(Some(owner.clone()))).await;
     match &mut member {
         RecursiveTestMembers::Branch(store) => {
-            Box::pin(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![RecursiveFixtureMutation { value }], description: Some("recursive historical member mutation".into()), transaction: None }))
+            Box::pin(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![RecursiveFixtureMutation { value }], transaction: None }))
                 .await
                 .expect("recursive historical member mutation");
         }
@@ -1403,7 +1403,6 @@ async fn recursive_parent_document_files(
     Box::pin(parent_store.apply_one(
         generation,
         RecursiveFixtureMutation { value: 7 },
-        Some("persisted recursive parent history".into()),
         protocol::HistoryLane::Document,
     ))
     .await
@@ -1741,9 +1740,10 @@ async fn retained_window_input_recursive_replacement_publishes_the_complete_nest
         let committed = app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.committed);
         if committed {
             assert_eq!(app.store.envelope().id, parent_id);
-            assert_eq!(app.child_content_root.slots().len(), 2);
+            assert_eq!(app.child_content_root.keys().len(), 2);
+            assert_eq!(app.child_content_root.slots(), vec![("slot".into(), "child-1".into())], "the document itself owns the branch alone");
             assert_eq!(app.child_content_root.typed_read::<RecursiveBranchSnapshot>("slot", "child-1").expect("published recursive branch").count, 23);
-            assert_eq!(app.child_content_root.typed_read::<RecursiveBranchSnapshot>("nested", "grandchild-1").expect("published recursive leaf").count, 47);
+            assert_eq!(app.child_content_root.typed_read_at::<RecursiveBranchSnapshot>(MemberKeyRef { owner: "child-1", slot: "nested", child_id: "grandchild-1" }).expect("published recursive leaf").count, 47);
             assert_eq!(app.composition.graph_mut().await.owner_of("child-1").await, Some(parent_id));
             assert_eq!(app.composition.graph_mut().await.owner_of("grandchild-1").await, Some("child-1"));
             assert!(app.pending_child_pins.is_empty());
@@ -1753,7 +1753,7 @@ async fn retained_window_input_recursive_replacement_publishes_the_complete_nest
             assert_eq!(app.store.envelope().id, old_parent_id);
             assert_eq!(app.child_content_root.slots(), vec![("slot".into(), "child-1".into())]);
             assert_eq!(app.child_content_root.typed_read::<RecursiveBranchSnapshot>("slot", "child-1").expect("retained live recursive branch").count, 0);
-            assert!(app.child_content_root.dialect("nested", "grandchild-1").is_none());
+            assert!(app.child_content_root.dialect_at(MemberKeyRef { owner: "child-1", slot: "nested", child_id: "grandchild-1" }).is_none());
             assert_eq!(app.child_content_generation, old_content_generation);
             assert_eq!(app.window_transient_store.document_generation(), old_window_generation);
         }
@@ -1784,7 +1784,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     assert_eq!(app.store.envelope().id, "archive-parent");
     assert_eq!(app.store.snapshot().expect("archive parent current snapshot").revision, 7);
     assert_eq!(app.child_content_root.typed_read::<RecursiveBranchSnapshot>("slot", "child-1").expect("archive branch content").count, 29);
-    assert_eq!(app.child_content_root.typed_read::<RecursiveBranchSnapshot>("nested", "grandchild-1").expect("archive leaf content").count, 53);
+    assert_eq!(app.child_content_root.typed_read_at::<RecursiveBranchSnapshot>(MemberKeyRef { owner: "child-1", slot: "nested", child_id: "grandchild-1" }).expect("archive leaf content").count, 53);
     let persisted = Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("recursive archive read");
     assert_eq!(persisted.members.len(), 2);
     assert_eq!(persisted.members[0].owner.parent.artifact_id, "archive-parent");

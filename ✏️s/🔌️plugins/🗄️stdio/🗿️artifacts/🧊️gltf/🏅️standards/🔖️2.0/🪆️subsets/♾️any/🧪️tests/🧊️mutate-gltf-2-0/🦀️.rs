@@ -19,7 +19,7 @@ const INPUT: &str = "shared://🧊️mutate-gltf-2-0/🌳️base-with-nested-nod
 /// 🧫️ Copies the derived-once fixture into the work directory and returns its bytes; the committed
 /// fixture itself is never written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.glb"))?;
+    let copy = ctx.copy_input(INPUT, Some("input.glb"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

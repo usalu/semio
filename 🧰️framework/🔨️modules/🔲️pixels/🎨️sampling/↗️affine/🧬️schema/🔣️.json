@@ -48,6 +48,31 @@
     }
   },
   "definitions": {
+    "grant": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "completed", "total", "sampled", "sampleTotal", "work", "done"],
+      "properties": {
+        "phase": {"enum": ["coverage", "coverageCleanup", "sampling", "complete"]},
+        "completed": {"type": "integer", "minimum": 0},
+        "total": {"type": "integer", "minimum": 1},
+        "sampled": {"type": "integer", "minimum": 0},
+        "sampleTotal": {"type": "integer", "minimum": 0},
+        "work": {"type": "integer", "minimum": 0},
+        "done": {"type": "boolean"}
+      }
+    },
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "work", "done"],
+      "properties": {
+        "phase": {"enum": ["closing", "complete"]},
+        "work": {"type": "integer", "minimum": 0},
+        "done": {"type": "boolean"}
+      }
+    },
     "coordinate": {
       "type": "number",
       "minimum": -1000000000,

@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn update_paragraph_style_changes_size_and_inverse_restores_it() {
-    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let style = base.paragraph_styles.iter().find(|style| style.id == "paragraph.body").unwrap();
     let mutation = LayoutMutation::UpdateParagraphStyle(UpdateParagraphStyle {
         id: style.id.clone(),

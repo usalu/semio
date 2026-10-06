@@ -42,7 +42,7 @@ fn started(section: &Section) -> Json {
 }
 
 fn read(ctx: &Context, name: &str) -> Result<String, String> {
-    let bytes = ctx.fixture_bytes(&format!("shared://{name}"))?;
+    let bytes = ctx.input_bytes(&format!("shared://{name}"))?;
     String::from_utf8(bytes).map_err(|e| e.to_string())
 }
 

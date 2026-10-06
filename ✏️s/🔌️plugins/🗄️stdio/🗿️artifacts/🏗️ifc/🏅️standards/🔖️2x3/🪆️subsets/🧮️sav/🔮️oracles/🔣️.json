@@ -193,9 +193,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-analysis-model-applied",
       "class": "third-party-generated",
       "target": {
@@ -246,7 +245,6 @@
       "notes": "Set #9200001 IfcStructuralAnalysisModel.Name via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-group-assignment-applied",
       "class": "third-party-generated",
       "target": {
@@ -297,7 +295,6 @@
       "notes": "Set #9200003 IfcRelAssignsToGroup.Name via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-load-group-applied",
       "class": "third-party-generated",
       "target": {
@@ -348,7 +345,6 @@
       "notes": "Set #9200002 IfcStructuralLoadGroup.Name via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-view-definition-applied",
       "class": "third-party-generated",
       "target": {
@@ -399,7 +395,6 @@
       "notes": "Replaced the header FILE_DESCRIPTION's view-definition text via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {

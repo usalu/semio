@@ -1,4 +1,4 @@
-import {binary64,binary64Value,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {wfc2dMediaEqual} from "../📸️snapshot/🟦️.ts";
 // 🧬️ WFC 2D mutations — the TypeScript twin of `🦀️.rs` and its seventeen triad leaves, ported branch
 // by branch from the Rust diff builders (never generated). This is the SECOND implementation the

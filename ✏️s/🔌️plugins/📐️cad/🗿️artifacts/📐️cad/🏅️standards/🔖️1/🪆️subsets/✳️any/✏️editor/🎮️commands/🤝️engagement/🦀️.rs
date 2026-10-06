@@ -1,12 +1,12 @@
 //! 🤝️ CAD play app commands — the engagement REPL: input, submit, keyed transitions, abort, and the two world-pointer events
 //! that drive a live construction interaction. Every step is per-frame state of the addressed world window — its transient,
 //! never config, never history (design §17.4 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING); only a commit lands, as
-//! ONE transform-tool transaction.
+//! ONE transform-tool transaction of child-lane leaves on the panes' composed model children (design §20.15).
 
 use crate::editor::cad::config::{CadConfig, CadConfigMutation};
 use crate::editor::cad::engine::interaction::{apply_event, inject_selection};
 use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::modes::edit::tools::transform::{cad_transform_tool_emit, CadToolEntry};
+use crate::editor::cad::modes::edit::tools::transform::{cad_pane_models, cad_transform_tool_emit, CadToolEntry};
 use crate::editor::cad::{cad_pane_id_from_suffix, engagement_submit_entries, publish_engagement, runtime_of, start_interaction_session, try_commit_session_entries, CadPlayRuntime};
 use crate::op::CadMutation;
 use crate::CadPaneId;
@@ -16,8 +16,8 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧵️ The emit every engagement command ends with: the step publishes the runtime's engagement state to the addressed
-/// window's transient, and a commit is ONE transform-tool transaction — the interaction's leaves as one document edit
-/// stamped with its `TransactionRef` (tool `<appId>#<interaction id>`).
+/// window's transient, and a commit is ONE transform-tool transaction — the interaction's child leaves as one composite
+/// group stamped with its `TransactionRef` (tool `<appId>#<interaction id>`).
 fn engagement_emit(doc: &ArtifactView<'_, CadSnapshot>, runtime: &CadPlayRuntime, entries: Vec<CadToolEntry>, ctx: &mut CadDispatchCtx) -> Emit<CadMutation, CadConfigMutation> {
     publish_engagement(runtime, ctx);
     if entries.is_empty() {
@@ -42,7 +42,7 @@ pub mod engagement_submit {
         if let Some(session) = runtime.engagement_session.as_mut() {
             inject_selection(session, &ctx.interaction.ids);
         }
-        let entries = engagement_submit_entries(doc.snapshot, &mut runtime, pane_id);
+        let entries = engagement_submit_entries(&cad_pane_models(doc.snapshot, &doc.children), &mut runtime, pane_id);
         Ok(engagement_emit(doc, &runtime, entries, ctx))
     }
 }
@@ -90,7 +90,7 @@ pub mod engagement_possible_select {
         });
         if let Some((step, snapshot)) = step {
             runtime.engagement_step = step;
-            let entries = try_commit_session_entries(doc.snapshot, &mut runtime, pane_id, &snapshot);
+            let entries = try_commit_session_entries(&cad_pane_models(doc.snapshot, &doc.children), &mut runtime, pane_id, &snapshot);
             return Ok(engagement_emit(doc, &runtime, entries, ctx));
         }
         if start_interaction_session(&mut runtime, pane_id, &payload.possible_id) {
@@ -164,7 +164,6 @@ pub mod world_pointer_down {
     }
 
     pub fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        let document = doc.snapshot;
         let mut runtime = runtime_of(cfg, &ctx.window_transient);
         let pane_id = payload.pane.as_deref().map(cad_pane_id_from_suffix).or_else(|| payload.surface_id.as_deref().and_then(|surface_id| surface_id.rsplit('/').next()).map(cad_pane_id_from_suffix)).unwrap_or(CadPaneId::Shape);
         // 📍️ `apply_event`'s payload for a pointer event is the raw position value itself
@@ -178,7 +177,7 @@ pub mod world_pointer_down {
         });
         if let Some((step, snapshot)) = commit {
             runtime.engagement_step = step;
-            let entries = try_commit_session_entries(document, &mut runtime, pane_id, &snapshot);
+            let entries = try_commit_session_entries(&cad_pane_models(doc.snapshot, &doc.children), &mut runtime, pane_id, &snapshot);
             return Ok(engagement_emit(doc, &runtime, entries, ctx));
         }
         Ok(Emit::default())

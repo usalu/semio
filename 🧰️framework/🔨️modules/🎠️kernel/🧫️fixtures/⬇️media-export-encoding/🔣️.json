@@ -25,7 +25,7 @@
     },
     {
       "id": "text-utf8-declared-encoding",
-      "note": "puzzle3d's `exportFixture` states `utf-8` EXPLICITLY; it must mean what an absent encoding means, and must not fall through an \"anything that is not base64 is text\" branch that would also swallow a genuinely unknown encoding",
+      "note": "puzzle3d's `exportSnapshot` states `utf-8` EXPLICITLY; it must mean what an absent encoding means, and must not fall through an \"anything that is not base64 is text\" branch that would also swallow a genuinely unknown encoding",
       "filename": "puzzle-3d.json",
       "mimeType": "application/json",
       "encoding": "utf-8",

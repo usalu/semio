@@ -20,7 +20,7 @@
 //! the snapshot's own DSL codec here avoids that precision loss entirely.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::op::Din18599Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Din18599Mutation;
 use crate::Din18599Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

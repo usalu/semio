@@ -25,6 +25,7 @@ const DAG_PLAY_SURFACE_MAIN: &str = "dag.play.main";
 /// empty here on purpose: this window has no chrome measures at all (no `🎚️options`).
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: DAG_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("DAG", "DAG"),
         body_key: DAG_PLAY_BODY_MAIN.into(),

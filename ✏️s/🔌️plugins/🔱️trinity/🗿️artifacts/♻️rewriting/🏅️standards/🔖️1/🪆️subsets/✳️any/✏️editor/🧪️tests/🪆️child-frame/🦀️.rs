@@ -3,14 +3,15 @@ use super::*;
 use semio_framework_plugin::PluginCloseStep;
 use store::os_io::{ArtifactDialect,ArtifactRef};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::{snapshot::SemioGraphSnapshot,mutations::SemioGraphMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{decode_semio_graph_snapshot_json,encode_semio_graph_snapshot_json};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::{decode_semio_graph_snapshot_json};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::{encode_semio_graph_snapshot_json};
 type RichFrameMembers=semio_s_artifact_stdio_semio::SemioMembers;
 type RichFrameApp=VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>,RichFrameMembers>;
 fn full_frame_contract()->serde_json::Value{
  serde_json::from_str(include_str!("../../../🧬️schema/📸️snapshot/🧫️fixtures/🪆️child/🧵️lifetime/🔣️.json")).expect("closed frame input")
 }
 fn full_frame_child(contract:&serde_json::Value,next:bool)->SemioGraphSnapshot{
- let mut vector:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🌳️typed/🔣️.json")).expect("rich owner input");
+ let mut vector:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🌳️typed/🔣️.json")).expect("rich owner input");
  let child=&mut vector["childSnapshot"];
  child["nodes"][0]["properties"].as_array_mut().expect("actual ordered properties").extend(contract["intrinsicValues"].as_array().expect("nine intrinsic inputs").iter().cloned());
  if next{child["nodes"][0]["label"]=serde_json::Value::String(format!("{}{}",contract["nextLiteral"].as_str().expect("next literal"),"x".repeat(contract["retainedTailBytes"].as_u64().expect("tail")as usize)));}
@@ -25,7 +26,7 @@ async fn full_frame_app()->RichFrameApp{
  let target=contract["target"]["artifactId"].as_str().expect("target").to_owned();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"graph".into()};
  parent.working_graph.content=store::ArtifactChild::new(logical.clone(),ArtifactRef{artifact_id:target.clone(),dialect:dialect.clone()});
- app.test_parent_store_mut().dispatch(store::ArtifactCommand::Apply{mutations:vec![schema::mutations::edit_before_fixture(parent.working_graph)],description:None,transaction:None}).await.expect("declare actual owner identity");
+ app.test_parent_store_mut().dispatch(store::ArtifactCommand::Apply{mutations:vec![schema::mutations::edit_working_graph(parent.working_graph)],transaction:None}).await.expect("declare actual owner identity");
  let mut envelope=store::create_document_envelope::<SemioGraphSnapshot,SemioGraphMutation>("stdio.semio",&target,full_frame_child(&contract,false),None);
  envelope.dialect=Some(dialect.clone());
  let mut child=store::ArtifactStore::new(envelope).await.expect("actual rich member store");
@@ -43,7 +44,7 @@ async fn sqlite_snapshot_rewriting_full_child_existing_registry_lifetime(){
  let expected=encode_semio_graph_snapshot_json(&old).expect("all words and fields");
  let key=("workingGraph".to_owned(),contract["childId"].as_str().expect("declared member key").to_owned());
  let RichFrameMembers::Graph(member)=app.test_child_member_mut(&key).expect("real member") else{panic!("workingGraph member must be the actual Semio Graph owner")};
- member.dispatch(store::ArtifactCommand::Apply{mutations:vec![SemioGraphMutation::SetSnapshot(semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::set_snapshot::SetSnapshot{snapshot:full_frame_child(&contract,true)})],description:None,transaction:None}).await.expect("actual next child publication");
+ member.dispatch(store::ArtifactCommand::Apply{mutations:vec![SemioGraphMutation::SetSnapshot(semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::set_snapshot::SetSnapshot{snapshot:full_frame_child(&contract,true)})],transaction:None}).await.expect("actual next child publication");
  app.test_publish_child_content(&key.0,&key.1).await.expect("real next root");
  assert_eq!(&*old as *const SemioGraphSnapshot,pointer);
  assert_eq!(encode_semio_graph_snapshot_json(&old).expect("old full owner"),expected);

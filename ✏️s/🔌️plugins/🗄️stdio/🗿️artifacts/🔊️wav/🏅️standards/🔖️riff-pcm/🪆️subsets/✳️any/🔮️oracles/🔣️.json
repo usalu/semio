@@ -193,9 +193,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-fmt-applied",
       "class": "handcrafted",
       "target": {
@@ -238,7 +237,6 @@
       "notes": "SetFmt replaces the whole `fmt ` chunk — mono 44.1kHz becomes real stereo 48kHz, with byteRate/blockAlign recomputed consistently, as RIFF-PCM's own fmt chunk requires."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-other-chunks-applied",
       "class": "handcrafted",
       "target": {
@@ -281,7 +279,6 @@
       "notes": "SetOtherChunks replaces the non-fmt/non-data RIFF chunk list with a real LIST/INFO chunk."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-data-applied",
       "class": "handcrafted",
       "target": {
@@ -324,7 +321,6 @@
       "notes": "SetData replaces the whole `data` chunk with a longer real PCM16 sample sequence."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-data-applied",
       "class": "handcrafted",
       "target": {
@@ -367,7 +363,6 @@
       "notes": "PatchData{index:1,removeCount:2,data:pcm16[7,-7,9]} splices three PCM16 samples over the two at indices 1..3 — the recording grows by one sample while fmt, otherChunks and chunkOrder stay untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-snapshot-applied",
       "class": "handcrafted",
       "target": {

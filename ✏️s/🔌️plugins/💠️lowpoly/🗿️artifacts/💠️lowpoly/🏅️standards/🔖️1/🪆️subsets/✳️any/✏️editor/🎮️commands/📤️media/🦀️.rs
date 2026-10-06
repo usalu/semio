@@ -7,9 +7,9 @@
 
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
-use crate::io::export::serializers::artifacts::{obj::v3_0::any as obj_export, ply::v1_0::any as ply_export, stl::v_ascii::any as stl_export};
-use crate::io::import::deserializers::artifacts::{obj::v3_0::any as obj_import, ply::v1_0::any as ply_import, stl::v_ascii::any as stl_import};
-use crate::op::LowpolyMutation;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{obj::v3_0::any as obj_export, ply::v1_0::any as ply_export, stl::v_ascii::any as stl_export};
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{obj::v3_0::any as obj_import, ply::v1_0::any as ply_import, stl::v_ascii::any as stl_import};
+use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::LowpolySnapshot;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};

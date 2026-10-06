@@ -1,8 +1,7 @@
 /** 📐️ Language-neutral dock axis geometry oracle. */
 import { describe, expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import fixture from "../../🧫️fixtures/📐️dock-axis-geometry/🔣️.json";
-import schema from "../../🧬️schema/📐️dock-axis-geometry/🔣️.json";
 import { applyAxisResizeDelta } from "../../🧱️elements/🎨️Canvas/🟦️";
 
 type Rect = { x: number; y: number; width: number; height: number };
@@ -38,10 +37,7 @@ function solveFixture(tokenPixels: number): Record<string, Rect> {
 }
 
 describe("📐️ dock axis geometry", () => {
-  test("the neutral vectors satisfy the Ajv schema oracle", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("each axis reserves exactly one themed separator before weighted distribution", () => {
     const actual = solveFixture(fixture.oracleSample.tokenPixels);

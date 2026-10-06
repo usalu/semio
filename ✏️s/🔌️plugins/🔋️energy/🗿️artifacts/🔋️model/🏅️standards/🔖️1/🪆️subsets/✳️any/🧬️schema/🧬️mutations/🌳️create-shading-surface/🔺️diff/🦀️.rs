@@ -21,6 +21,6 @@ pub fn diff(payload: &super::CreateShadingSurface, base: &EnergyModelSnapshot) -
     let mut model = base.model.clone();
     let position = model.shading_surfaces.iter().position(|item| item.id > payload.id).unwrap_or(model.shading_surfaces.len());
     model.shading_surfaces.insert(position, crate::model::ShadingSurface { id: payload.id, name: payload.name.clone(), vertices_m: payload.vertices_m.clone(), transmittance_schedule_id: payload.transmittance_schedule_id });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

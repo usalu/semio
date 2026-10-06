@@ -24,6 +24,7 @@ pub const BLOCK5D_BODY_WORLD: &str = "block5d.play.world";
 /// 🧱️ Stitched into the app manifest by `crate::editor::block5d::create_block5d_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: BLOCK5D_WINDOW_WORLD.into(),
         label: LocalizedLabel::native("World", "Welt"),
         body_key: BLOCK5D_BODY_WORLD.into(),

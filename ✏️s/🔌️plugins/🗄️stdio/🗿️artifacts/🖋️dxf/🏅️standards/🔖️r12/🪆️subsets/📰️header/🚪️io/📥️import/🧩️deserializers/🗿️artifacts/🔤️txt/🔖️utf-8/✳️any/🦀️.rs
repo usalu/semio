@@ -11,7 +11,7 @@ pub fn register() {}
 /// 📥 Parse dxf text into a DxfSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &TxtSnapshot) -> Result<DxfSnapshot, semio_framework_diagnostic::TextError> {
-    crate::schema::snapshot::parse_dxf_document(&from.to_body()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
+    crate::standards::v_r12::subsets::any::io::text::snapshot::parse_dxf_document(&from.to_body()).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
 }
 
 /// 📥 Parse DSL/text bytes via txt then dxf.

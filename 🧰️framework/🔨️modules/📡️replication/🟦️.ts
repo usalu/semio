@@ -1143,7 +1143,7 @@ export type HistoryShape = "document" | "config";
 
 /** 🛂️ Twin of Rust `HistoryShape::admits`. */
 export function historyShapeAdmits(shape: HistoryShape, kind: HistoryTransitionKind): boolean {
-  return shape === "document" || kind === "revert" || kind === "reinstate";
+  return HISTORY_TRANSITION_KINDS.includes(kind) && (shape === "document" || shape === "config" && (kind === "revert" || kind === "reinstate"));
 }
 
 /** 🌳️ Twin of Rust `trunk_alternative_id`: the id of `documentId`'s trunk, the implicit root line every document starts
@@ -1232,8 +1232,10 @@ export const OUTCOME_CODES = Object.freeze([
   ["mutation.no-op", "warning"],
   ["mutation.partial", "warning"],
   ["mutation.clamped", "warning"],
+  ["mutation.precondition-drifted", "warning"],
   ["mutation.duplicate-id", "fatal"],
   ["mutation.invariant", "fatal"],
+  ["mutation.inverse-refused", "fatal"],
   ["mutation.cascade", "info"],
 ] as const satisfies readonly (readonly [string, ReplaySeverity])[]);
 

@@ -1,7 +1,7 @@
 /** 🧪️ Ajv and Immer independently validate and apply the shared path edit fixture. */
 import { expect, test } from "bun:test";
 import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import { produce } from "immer";
 import { applyPathGeometry } from "../../🦠️mutation/🟦️.ts";
 import { drawingPathFromGeometry, parseDrawingArtifact, type DrawingArtifact, type PathGeometrySegment } from "../../../../../../✳️any/🧬️schema/🟦️.ts";

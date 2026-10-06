@@ -1,0 +1,51 @@
+{
+  "manifest": {
+    "apps": [
+      {
+        "id": "fixture.scene@1/*#editor",
+        "breadcrumb": [
+          "workspace",
+          "examples",
+          "scene"
+        ],
+        "introduction": {
+          "title": {
+            "native": {
+              "en": "Scene Tour",
+              "de": "Szenenführung"
+            },
+            "reuse": {
+              "en": "Scene Tour",
+              "de": "Szenenführung"
+            }
+          },
+          "steps": [
+            {
+              "id": "welcome",
+              "title": {
+                "native": {
+                  "en": "Welcome",
+                  "de": "Willkommen"
+                },
+                "reuse": {
+                  "en": "Welcome",
+                  "de": "Willkommen"
+                }
+              },
+              "body": {
+                "native": {
+                  "en": "Explore the scene.",
+                  "de": "Erkunde die Szene."
+                },
+                "reuse": {
+                  "en": "Explore the scene.",
+                  "de": "Erkunde die Szene."
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+> bun ./📜️script.ts test-owner-command "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📜️script.ts" test-production-preparation
+
+[DEBUG] isolated Nx verification test-owner-command
+bun test v1.3.14 (0d9b296a)
+
+../🧩️composition/🧪️tests/🧱️production-preparation/🟦️.ts:
+[DEBUG] production preparation case=examples-absent contributions=36 apps=176 receipts=30 example-writes=0
+(pass) production preparation isolates examples: examples-absent [421.96ms]
+[DEBUG] production preparation case=examples-retained contributions=36 apps=176 receipts=30 example-writes=0
+(pass) production preparation isolates examples: examples-retained [136.82ms]
+
+ 2 pass
+ 0 fail
+ 10 expect() calls
+Ran 2 tests across 1 file. [621.00ms]

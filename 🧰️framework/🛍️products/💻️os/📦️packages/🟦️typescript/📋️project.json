@@ -163,12 +163,18 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️viewer-head/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-replay/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️tool-transaction/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️deferred-reprojection/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️viewer-head/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-law/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️supersede-replay/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️tool-transaction/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️deferred-reprojection/**/*"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️deferred-reprojection/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️viewer-head/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️supersede-law/**/*"
       ],
       "outputs": [],
       "options": {
@@ -184,6 +190,12 @@
         "default",
         "^default",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-archive-load-host/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️attached-document-replacement/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-port-control-turn/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-archive-persistence/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️folder-read-back/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🧫️fixtures/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️document-archive-load-host/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧬️schema/🔣️document-archive-load-host/**/*"
       ],

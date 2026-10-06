@@ -104,3 +104,8 @@ path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪�
 # 🔁️ The incremental re-evaluation lane: what ONE slider edit costs the chain, on the real hex
 # column with the packaged operators installed — dirty-set precision, the tessellation cache, the
 # painted evaluation and the hop's own UI scope.
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+semio-framework-plugin-host = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-framework-actor = { workspace = true }
+semio-framework-hash = { workspace = true }

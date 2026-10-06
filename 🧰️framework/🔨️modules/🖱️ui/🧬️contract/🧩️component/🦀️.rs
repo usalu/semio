@@ -468,7 +468,8 @@ fn is_default_input_kind(value: &InputKind) -> bool {
     *value == InputKind::default()
 }
 
-/// 🔽️ Props for `Component::Select`. `on_change` moved to the record's `bindings`.
+/// 🔽️ Props for `Component::Select`. `on_change` moved to the record's `bindings`. `appearance` only chooses how the one
+/// choice is shown ([`SelectAppearance`]); value, items and `Trigger::Change` are the same in both.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
@@ -478,6 +479,27 @@ pub struct SelectProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub placeholder: Option<Label>,
+    #[serde(default, skip_serializing_if = "SelectAppearance::is_menu")]
+    #[value(default, skip_serializing_if = "SelectAppearance::is_menu")]
+    pub appearance: SelectAppearance,
+}
+
+/// 🗳️ How a select shows its one choice: a `menu` that opens its options on demand, or `segmented` — every option
+/// visible at once as one row of mutually exclusive buttons (a radio group), for the few-option choices a descriptor
+/// declares segmented (`x-semio-ui.widget: "segmented"`). Arrow keys move the choice along a segmented row.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub enum SelectAppearance {
+    #[default]
+    Menu,
+    Segmented,
+}
+
+impl SelectAppearance {
+    pub fn is_menu(&self) -> bool {
+        matches!(self, Self::Menu)
+    }
 }
 
 /// 🔀️ Props for `Component::Toggle`. `on` is the explicit state this contract adds — the old
@@ -879,6 +901,51 @@ pub fn ui_number_key_value(current: f64, min: Option<f64>, max: Option<f64>, ste
         SliderKey::PageDown => slider_adjacent_snap(current, snaps.iter().copied(), false).map_or_else(|| walk(SLIDER_PAGE_STEPS, false), clamp),
         SliderKey::Home => min.unwrap_or(current),
         SliderKey::End => max.unwrap_or(current),
+    }
+}
+
+/// ⏎️ The keys the draft of a text field answers, once a renderer has read its physical key.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextInputKey {
+    Enter,
+    Escape,
+}
+
+/// 🗜️ The modifiers held with a [`TextInputKey`]: `primary` is the platform's command modifier (Ctrl, ⌘ on macOS).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct TextInputModifiers {
+    pub primary: bool,
+    pub shift: bool,
+    pub alt: bool,
+}
+
+/// ✍️ What a text field does with a key of its draft.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TextInputKeyAction {
+    /// ↵️ The field inserts a line break at the caret — its own editing, nothing is dispatched.
+    Newline,
+    /// ✅️ The draft is committed (`Trigger::Commit`) without waiting for focus to leave.
+    Commit,
+    /// ⏮️ The draft is dropped: the field shows the published value again.
+    Revert,
+}
+
+/// 🖊️ The keyboard law of every text field that holds a draft (`commit: "blur"`) — the text counterpart of
+/// [`ui_number_key_value`] (ticket 26/09/30 design §22.7), pinned by `🧫️text-controls`. Escape reverts the draft. A
+/// single-line field commits on Enter. A multi-line field ([`InputKind::LongText`]) inserts a line on Enter, with or
+/// without Shift, and commits on Ctrl/⌘+Enter. A single-line Shift+Enter and every Alt chord are not the field's
+/// (`None`): Alt+Enter is a shell chord and never reaches a draft. Leaving the field commits in both — that is the commit
+/// convention, not a key.
+pub fn text_input_key(kind: InputKind, key: TextInputKey, modifiers: TextInputModifiers) -> Option<TextInputKeyAction> {
+    if modifiers.alt {
+        return None;
+    }
+    match (key, kind == InputKind::LongText) {
+        (TextInputKey::Escape, _) => Some(TextInputKeyAction::Revert),
+        (TextInputKey::Enter, true) if modifiers.primary => Some(TextInputKeyAction::Commit),
+        (TextInputKey::Enter, true) => Some(TextInputKeyAction::Newline),
+        (TextInputKey::Enter, false) if modifiers.shift => None,
+        (TextInputKey::Enter, false) => Some(TextInputKeyAction::Commit),
     }
 }
 

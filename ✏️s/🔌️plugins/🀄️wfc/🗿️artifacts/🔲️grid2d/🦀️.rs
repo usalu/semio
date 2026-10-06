@@ -139,10 +139,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
 
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
@@ -160,10 +156,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
 
                         #[path = "."]
                         pub mod change_seed {
@@ -562,6 +554,9 @@ pub mod mutations {
 }
 pub mod inferences {
     pub use crate::standards::v1::subsets::any::schema::inferences::*;
+    pub use crate::host::inferences::*;
+    pub use crate::host::inferences::*;
+    pub use crate::host::inferences::*;
 }
 pub use crate::standards::v1::subsets::any::schema::diff::Grid2dDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::Grid2dMutation;
@@ -583,3 +578,8 @@ mod store_fixture;
 mod mount_contract;
 
 //#endregion 🧪️Tests
+
+#[path="🔨️modules/🏠️host/🦀️.rs"]
+pub mod host;
+
+pub use host::inferences::*;

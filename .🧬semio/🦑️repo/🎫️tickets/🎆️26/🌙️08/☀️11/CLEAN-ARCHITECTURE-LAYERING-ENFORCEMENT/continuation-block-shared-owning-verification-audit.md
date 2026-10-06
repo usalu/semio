@@ -1,0 +1,3 @@
+# Block Owning Verification Observation
+
+Original plugin shared-schema route actually passes one Bun test over eight logged record cases with19 expectations. Complete44 before/post frame bodies and original argv agree with the raw plan/terminal and admitted publication. Original native check2 (--offline) genuinely reaches compilation and fails eight E0433 DslRecord derive references to missing General diagnostic crate in the new plugin. All44 recorded post frames remain exact. Neither execution captures a full transitive live import/compiler dependency ledger, so no atomic source epoch or whole Root acceptance is inferred. No native assertion success is claimed.

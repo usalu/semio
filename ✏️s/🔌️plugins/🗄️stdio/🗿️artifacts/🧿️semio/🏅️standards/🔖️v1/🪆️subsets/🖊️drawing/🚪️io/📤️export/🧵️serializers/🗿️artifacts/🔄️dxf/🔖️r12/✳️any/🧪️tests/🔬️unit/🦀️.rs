@@ -43,8 +43,8 @@ async fn real_text_round_trip_through_dxf_codec() {
     assert!(matches!(dxf.entities[1], DxfEntity::Polyline { .. }));
     assert!(matches!(dxf.entities[2], DxfEntity::Text { .. }));
 
-    let text = semio_s_artifact_stdio_dxf::schema::snapshot::print_dxf_document(&dxf);
-    let reparsed = semio_s_artifact_stdio_dxf::schema::snapshot::parse_dxf_document(&text).expect("reparse real dxf text");
+    let text = semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::print_dxf_document(&dxf);
+    let reparsed = semio_s_artifact_stdio_dxf::standards::v_r12::subsets::any::io::text::snapshot::parse_dxf_document(&text).expect("reparse real dxf text");
     match &reparsed.entities[0] {
         DxfEntity::Circle { center, radius, .. } => {
             assert!((center[0] - 2.0).abs() < 1e-6);

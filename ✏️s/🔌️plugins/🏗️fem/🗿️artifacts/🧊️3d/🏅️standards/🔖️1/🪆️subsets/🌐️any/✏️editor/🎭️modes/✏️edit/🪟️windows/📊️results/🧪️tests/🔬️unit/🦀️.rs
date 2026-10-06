@@ -29,7 +29,7 @@ async fn results_window_surfaces_solver_error_without_panicking_3d() {
 /// cache API with an explicit key, the way the render reads it.
 #[semio_framework_async_macros::async_test]
 async fn results_cache_solves_one_revision_once_and_evicts_the_previous() {
-    let doc = <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
+    let doc = <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
     reset_results_cache();
     let key = Some((7_u32, [1_u8; 32]));
     for _ in 0..30 {
@@ -60,7 +60,7 @@ async fn results_cache_solves_one_revision_once_and_evicts_the_previous() {
 /// poses of the same solved revision, and a running window carries its transport read-out.
 #[semio_framework_async_macros::async_test]
 async fn playback_phase_moves_the_deformed_scene() {
-    let snapshot = <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
+    let snapshot = <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
     let interaction = Fem3dInteractionSnapshot::default();
     let instances = |node: &BuiltNode| {
         let surface = node.children[1].children.iter().find(|child| matches!(&child.component, semio_framework_ui_contract::Component::Surface(_))).expect("world surface child");
@@ -99,7 +99,7 @@ async fn results_window_renders_buckling_mode_shape_3d() {
 
 #[semio_framework_async_macros::async_test]
 async fn results_caption_column_grows_so_world_scene_fills_window_3d() {
-    let snapshot = <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
+    let snapshot = <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT).expect("default example snapshot");
     let config = Fem3dResultsWindowConfig::default();
     let node = render(&snapshot, &config, &Fem3dInteractionSnapshot::default(), None).expect("fixture surface admission");
     let stack_grows = |layout: &semio_framework_ui_contract::LayoutSpec| {

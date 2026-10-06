@@ -1,25 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.test/model.json",
-  "type": "object",
-  "required": ["schema", "spatial"],
-  "properties": {
-    "schema": { "const": "s.model" },
-    "spatial": {
-      "type": "array",
-      "maxItems": 4,
-      "items": {
-        "type": "object",
-        "required": ["id", "kind"],
-        "properties": {
-          "id": { "type": "string" },
-          "kind": {
-            "enum": ["site", "building"],
-            "x-semio-title": { "en": "Spatial kind", "de": "Räumliche Art" }
-          },
-          "name": { "type": "string", "default": "Untitled" }
-        }
-      }
-    }
-  }
+  "inertSchemaData": [
+    "🧾️schema-input.json"
+  ]
 }

@@ -3,7 +3,9 @@
 //! document's outlines, fills, strokes, shadings, text and images as real painting operators.
 
 use super::*;
-use crate::schema::{create_drawing_image_layer, create_drawing_path_layer, create_drawing_shape_layer_rect, create_drawing_text_layer, default_drawing_document, layer_base_mut};
+use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_text_layer, layer_base_mut};
+use crate::standards::v1::subsets::any::io::text::snapshot::{default_drawing_document};
+use crate::standards::v1::subsets::any::io::text::snapshot::{create_drawing_path_layer};
 use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode};
 
 fn find(haystack: &[u8], needle: &[u8], from: usize) -> Option<usize> {

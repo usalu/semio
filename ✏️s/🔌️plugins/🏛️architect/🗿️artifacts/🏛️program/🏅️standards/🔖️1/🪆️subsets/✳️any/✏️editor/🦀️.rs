@@ -23,7 +23,7 @@ use crate::editor::architect::modes::edit::windows::{adjacency as adjacency_wind
 use crate::editor::architect::modes::{report as report_mode, review as review_mode};
 use crate::editor::architect::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::architect::presence::{ArchitectPresence, ArchitectPresenceMutation};
-use crate::op::ProgramMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_PROGRAM_SCHEMA};
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling viewer surface's root `🦀️.rs`).
@@ -180,7 +180,7 @@ pub fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plug
 /// its former engine-topic file, just relocated.
 pub mod behavior {
     use crate::kernel::{EntityHeader, EntityId, PluginError, TextField, TraceKind, TraceLink};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::registers::{
         Activity, Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Relationship, RelationshipKind, ReportKind, ReportRecord, Requirement,
         RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile, ValidationStatus,

@@ -3511,7 +3511,7 @@ impl UiPipelines {
             cache: None,
         });
         let world_authored_painted_double_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("world3d_authored_painted_front_pipeline"),
+            label: Some("world3d_authored_painted_double_pipeline"),
             layout: Some(&world_authored_pipeline_layout),
             vertex: wgpu::VertexState { module: &world_authored_shader, entry_point: Some("vs_main"), buffers: &[world_surface_vertex_layout(), world_surface_instance_layout()], compilation_options: Default::default() },
             fragment: Some(wgpu::FragmentState {
@@ -3527,7 +3527,7 @@ impl UiPipelines {
             cache: None,
         });
         let world_authored_painted_double_translucent_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("world3d_authored_painted_front_translucent_pipeline"),
+            label: Some("world3d_authored_painted_double_translucent_pipeline"),
             layout: Some(&world_authored_pipeline_layout),
             vertex: wgpu::VertexState { module: &world_authored_shader, entry_point: Some("vs_main"), buffers: &[world_surface_vertex_layout(), world_surface_instance_layout()], compilation_options: Default::default() },
             fragment: Some(wgpu::FragmentState {

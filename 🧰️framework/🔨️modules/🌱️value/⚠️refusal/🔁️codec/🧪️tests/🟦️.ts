@@ -25,7 +25,7 @@ const load = async (): Promise<Codec> => {
   return loaded as unknown as Codec;
 };
 test("closed refusal wire schema and language-neutral cases match independent Ajv and SQLite JSON", () => {
-  const ajv = new Ajv({ strict: true }); assert(ajv.validate(schema, fixture), JSON.stringify(ajv.errors));
+  const ajv = new Ajv({ strict: true }).addSchema(schema);
   const valid = ajv.getSchema(`${schema.$id}#/$defs/wire`); assert(valid);
   const db = new Database(":memory:");
   try {

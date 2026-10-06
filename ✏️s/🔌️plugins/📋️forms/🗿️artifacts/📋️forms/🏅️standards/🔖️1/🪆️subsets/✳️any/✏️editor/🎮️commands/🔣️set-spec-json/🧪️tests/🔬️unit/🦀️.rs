@@ -3,7 +3,7 @@ use crate::forms_steps;
 use crate::editor::forms::commands::set_active_example::SetActiveExample;
 use crate::editor::forms::unit_tests::context::{dispatch, forms_app};
 use crate::editor::forms::FormsCommand;
-use crate::schema::onboarding_example_spec;
+use crate::standards::v1::subsets::any::io::text::snapshot::onboarding_example_spec;
 use SetSpecJson;
 
 #[semio_framework_async_macros::async_test]

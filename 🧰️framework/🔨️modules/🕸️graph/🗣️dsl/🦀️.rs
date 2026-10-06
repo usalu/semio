@@ -126,7 +126,7 @@ pub mod queryable {
         fn node_name(&self, id: &str) -> Option<String>;
         fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue>;
         fn edges(&self) -> Vec<QueryableEdge>;
-        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String>;
+        fn subgraph_snapshot_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String>;
     }
 
     pub fn manifest_node_kinds<G: QueryableGraph>(graph: &G) -> Vec<String> {
@@ -346,7 +346,7 @@ pub mod queryable {
             self.edges.clone()
         }
 
-        fn subgraph_fixture_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
+        fn subgraph_snapshot_json(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> Option<String> {
             let mut fixture = self.raw_fixture.clone();
             if let Some(nodes) = fixture.get_mut("nodes").and_then(|v| v.as_array_mut()) {
                 nodes.retain(|row| row.get("id").and_then(|v| v.as_str()).is_some_and(|id| node_ids.contains(id)));
@@ -645,16 +645,16 @@ pub struct QueryResult {
     pub columns: Vec<String>,
     pub rows: Vec<Vec<PropertyValue>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub graph_fixture_json: Option<String>,
+    pub graph_snapshot_json: Option<String>,
 }
 
 impl QueryResult {
     pub fn table(columns: Vec<String>, rows: Vec<Vec<PropertyValue>>) -> Self {
-        Self { kind: QueryResultKind::Table, columns, rows, graph_fixture_json: None }
+        Self { kind: QueryResultKind::Table, columns, rows, graph_snapshot_json: None }
     }
 
-    pub fn graph(columns: Vec<String>, graph_fixture_json: String) -> Self {
-        Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_fixture_json: Some(graph_fixture_json) }
+    pub fn graph(columns: Vec<String>, graph_snapshot_json: String) -> Self {
+        Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_snapshot_json: Some(graph_snapshot_json) }
     }
 }
 // #endregion 🔖️Ast
@@ -1607,7 +1607,7 @@ fn idiom_complete(text: &str, offset: usize) -> Vec<semio_framework_dsl::Complet
         fn edges(&self) -> Vec<QueryableEdge> {
             Vec::new()
         }
-        fn subgraph_fixture_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
+        fn subgraph_snapshot_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
             None
         }
     }
@@ -2230,7 +2230,7 @@ fn build_return<G: QueryableGraph>(graph: &G, bindings: &[Binding], items: &[Ret
         .collect();
     if return_items_want_graph(items, bindings) {
         let (node_ids, edge_ids) = collect_graph_entities(bindings, items);
-        if let Some(json) = graph.subgraph_fixture_json(&node_ids, &edge_ids) {
+        if let Some(json) = graph.subgraph_snapshot_json(&node_ids, &edge_ids) {
             return QueryResult::graph(columns, json);
         }
     }

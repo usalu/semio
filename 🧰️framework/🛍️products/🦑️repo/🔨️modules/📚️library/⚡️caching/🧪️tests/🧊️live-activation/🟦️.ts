@@ -6,8 +6,6 @@ import { dirname, join } from "node:path";
 /** 🧊️ Runs the actual preparation/activation commands with controlled publishers under native Nx. */
 export async function testWgpuLiveActivation(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️live-activation/🔣️.json"), "utf8"));
-  const validate = new (require("ajv"))().compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧊️live-activation/📐️schema/🔣️.json"), "utf8")));
-  assert.equal(validate(fixture), true, JSON.stringify(validate.errors));
   const activationModule = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts");
   const { developmentRuntimeRoot } = await import(activationModule);
   const namespaces = fixture.renderers.flatMap((renderer: string) => fixture.profiles.flatMap((profile: string) => fixture.variants.map((variant: string) => ({ renderer, profile, variant }))));

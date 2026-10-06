@@ -175,6 +175,7 @@ pub fn cad_app() -> AppDefinition {
         modes: Modes::one(ModeDefinition { id: "edit".to_string(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: IconName::from("pencil"), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".to_string(),
         window_kinds: WindowKinds::one(WindowKindDefinition {
+            initial_utility_id: None,
             id: "viewport".to_string(),
             label: LocalizedLabel::native("Viewport", "Ansicht"),
             body_key: "viewport".to_string(),
@@ -254,7 +255,7 @@ fn note_actions() -> Vec<ActionDefinition> {
         action("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren", ActionKind::Mutation).use_when(["duplicate the selection", "copy the selected items", "die auswahl duplizieren"]),
         action("patchBlocks", "Patch Blocks", "Blöcke anpassen", ActionKind::Mutation),
         action("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen", ActionKind::Mutation).destructive().use_when(["load a note example", "open a sketch template", "eine notizvorlage laden"]),
-        action("setFixtureJson", "Set Fixture JSON", "Fixture-JSON festlegen", ActionKind::Mutation).destructive().in_palette(false),
+        action("loadDocumentJson", "Load Document JSON", "Dokument-JSON laden", ActionKind::Mutation).destructive().in_palette(false),
         action("inkApplyEvents", "Apply Ink Events", "Zeichenereignisse anwenden", ActionKind::Mutation).input_event().in_palette(false),
         action("engagementSubmit", "Submit Engagement", "Eingabe abschließen", ActionKind::Mutation).input_event(),
         action("nudgeSelection", "Nudge Selection", "Auswahl anstoßen", ActionKind::Mutation),
@@ -289,6 +290,7 @@ pub fn note_app() -> AppDefinition {
         modes: Modes::one(ModeDefinition { id: "edit".to_string(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: IconName::from("pencil"), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".to_string(),
         window_kinds: WindowKinds::one(WindowKindDefinition {
+            initial_utility_id: None,
             id: "canvas".to_string(),
             label: LocalizedLabel::native("Canvas", "Leinwand"),
             body_key: "canvas".to_string(),
@@ -363,6 +365,7 @@ fn colliding_app(controller_id: &str) -> AppDefinition {
         modes: Modes::one(ModeDefinition { id: "edit".to_string(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: IconName::from("pencil"), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".to_string(),
         window_kinds: WindowKinds::one(WindowKindDefinition {
+            initial_utility_id: None,
             id: "surface".to_string(),
             label: LocalizedLabel::native("Surface", "Fläche"),
             body_key: "surface".to_string(),
@@ -507,6 +510,7 @@ pub fn draw_app() -> AppDefinition {
         modes: Modes::one(ModeDefinition { id: "edit".to_string(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: IconName::from("pencil"), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".to_string(),
         window_kinds: WindowKinds::one(WindowKindDefinition {
+            initial_utility_id: None,
             id: "canvas".to_string(),
             label: LocalizedLabel::native("Canvas", "Leinwand"),
             body_key: "canvas".to_string(),

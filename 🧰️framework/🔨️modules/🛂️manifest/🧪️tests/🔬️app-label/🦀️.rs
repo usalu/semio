@@ -380,6 +380,7 @@ pub(super) async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec
         modes: Modes::one(crate::ui::ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".into(),
         window_kinds: WindowKinds::one(WindowKindDefinition {
+            initial_utility_id: None,
             id: "main".into(),
             label: LocalizedLabel::data("Main"),
             body_key: "a.main".into(),
@@ -454,8 +455,8 @@ async fn window_kind_actions_join_the_app_roster_without_copying_it() {
     let mut app = app_with(vec![ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation)], vec![]).await;
     let owned = app.window_kinds.first().actions.clone();
     app.window_kinds = WindowKinds::new(
-        WindowKindDefinition { id: "main".into(), actions: owned.clone(), ..app.window_kinds.first().clone() },
-        vec![WindowKindDefinition { id: "side".into(), actions: Vec::new(), ..app.window_kinds.first().clone() }],
+        WindowKindDefinition { initial_utility_id: None, id: "main".into(), actions: owned.clone(), ..app.window_kinds.first().clone() },
+        vec![WindowKindDefinition { initial_utility_id: None, id: "side".into(), actions: Vec::new(), ..app.window_kinds.first().clone() }],
     );
     app.actions = vec![
         ActionDefinition::new("undo", LocalizedLabel::data("Undo"), ActionKind::History, "undo-2"),
@@ -482,8 +483,8 @@ async fn no_action_definition_is_stored_twice_inside_one_app() {
     let mut app = app_with(vec![ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation)], vec![]).await;
     let owned = app.window_kinds.first().actions.clone();
     app.window_kinds = WindowKinds::new(
-        WindowKindDefinition { id: "main".into(), actions: owned.clone(), ..app.window_kinds.first().clone() },
-        vec![WindowKindDefinition { id: "side".into(), actions: Vec::new(), ..app.window_kinds.first().clone() }],
+        WindowKindDefinition { initial_utility_id: None, id: "main".into(), actions: owned.clone(), ..app.window_kinds.first().clone() },
+        vec![WindowKindDefinition { initial_utility_id: None, id: "side".into(), actions: Vec::new(), ..app.window_kinds.first().clone() }],
     );
     app.actions = vec![ActionDefinition::new("undo", LocalizedLabel::data("Undo"), ActionKind::History, "undo-2")];
     let mut seen: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();

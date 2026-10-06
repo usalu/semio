@@ -1,7 +1,7 @@
 //! 🩹️ Fem2d play app command — `patch-region`: one-field edit of a meshed region (`name`, `thickness`, `meshSize`, `materialId`) → `ReplaceRegion`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_region;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

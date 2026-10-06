@@ -1,6 +1,6 @@
 
     use super::*;
-    use crate::editor::puzzle3d::{empty_fixture, PUZZLE3D_VORTEX_SHOW_SELECTED};
+    use crate::editor::puzzle3d::{empty_scene_snapshot, PUZZLE3D_VORTEX_SHOW_SELECTED};
 
     fn forest_table_object() -> Puzzle3dObject {
         let positions = [
@@ -35,10 +35,10 @@
         }
     }
 
-    fn forest_store() -> Puzzle3dFixture {
-        let mut fixture = empty_fixture();
-        fixture.objects.push(forest_table_object());
-        fixture
+    fn forest_store() -> Puzzle3dSceneSnapshot {
+        let mut scene_snapshot = empty_scene_snapshot();
+        scene_snapshot.objects.push(forest_table_object());
+        scene_snapshot
     }
 
     fn parse_records(json: &str) -> Vec<Value> {
@@ -47,32 +47,32 @@
 
     #[test]
     fn world_vortices_json_carries_store_vortices_when_show_is_always() {
-        let fixture = forest_store();
-        assert_eq!(fixture.objects[0].vortices.len(), 11, "Concrete Forest seed-left-001 ships 11 vortex records");
+        let scene_snapshot = forest_store();
+        assert_eq!(scene_snapshot.objects[0].vortices.len(), 11, "Concrete Forest seed-left-001 ships 11 vortex records");
         let mut runtime = Puzzle3dRuntime::default();
         runtime.vortex_show = PUZZLE3D_VORTEX_SHOW_ALWAYS.into();
-        let records = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), ""));
+        let records = parse_records(&world_vortices_json(&scene_snapshot, &runtime, &Puzzle3dInteractionSnapshot::default(), ""));
         assert_eq!(records.len(), 11);
     }
 
     #[test]
     fn world_vortices_json_carries_store_vortices_when_brush_is_armed() {
-        let fixture = forest_store();
+        let scene_snapshot = forest_store();
         let runtime = Puzzle3dRuntime::default();
         assert_eq!(runtime.vortex_show, PUZZLE3D_VORTEX_SHOW_SELECTED);
-        let brush = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "brush"));
+        let brush = parse_records(&world_vortices_json(&scene_snapshot, &runtime, &Puzzle3dInteractionSnapshot::default(), "brush"));
         assert_eq!(brush.len(), 11);
-        let volume = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "volumeBrush"));
+        let volume = parse_records(&world_vortices_json(&scene_snapshot, &runtime, &Puzzle3dInteractionSnapshot::default(), "volumeBrush"));
         assert_eq!(volume.len(), 11);
     }
 
     #[test]
     fn world_vortices_json_stays_empty_in_selected_mode_without_a_touch_or_brush() {
-        let fixture = forest_store();
+        let scene_snapshot = forest_store();
         let runtime = Puzzle3dRuntime::default();
-        let idle = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), ""));
+        let idle = parse_records(&world_vortices_json(&scene_snapshot, &runtime, &Puzzle3dInteractionSnapshot::default(), ""));
         assert_eq!(idle.len(), 0);
-        let transform = parse_records(&world_vortices_json(&fixture, &runtime, &Puzzle3dInteractionSnapshot::default(), "transform"));
+        let transform = parse_records(&world_vortices_json(&scene_snapshot, &runtime, &Puzzle3dInteractionSnapshot::default(), "transform"));
         assert_eq!(transform.len(), 0);
     }
 
@@ -85,7 +85,7 @@
         use crate::standards::v1::subsets::any::schema::BrushPreviewState;
         let session = Puzzle3dPrecomputeSession::new();
         let runtime = Puzzle3dRuntime { suggestion_menu: Some(Puzzle3dSuggestionMenu { x: 1.0, y: 2.0, window_id: WINDOW_KIND_ID.into(), vortex_full_id: "seed-left-001:v0".into(), submenu: false }), ..Puzzle3dRuntime::default() };
-        let envelope = Puzzle3dScene { fixture: forest_store(), runtime, active_utility: "select".into() };
+        let envelope = Puzzle3dScene { scene_snapshot: forest_store(), runtime, active_utility: "select".into() };
         let preview = |kind: &str, source: usize| Some(BrushPreviewState { target_vortex_full_id: "seed-left-001:v0".into(), object_kind_id: kind.into(), source_vortex_index: source, mesh_url: "/box.glb".into(), origin: [0.0; 3], orientation: [0.0, 0.0, 0.0, 1.0], scale: None });
         let menu = |found: Option<&BrushSuggestionsFound>| serde_json::from_str::<Value>(&world_interaction_json(&envelope, &session, &Puzzle3dInteractionSnapshot::default(), found)).expect("interactionJson")["suggestionMenu"].clone();
         let mut found = BrushSuggestionsFound { writer: (1, 0), target: "seed-left-001:v0".into(), previews: vec![preview("A", 0), preview("B", 1), preview("C", 0)], verdicts: vec![BrushSuggestionVerdict::Collision, BrushSuggestionVerdict::Pending, BrushSuggestionVerdict::Pending], done: false };
@@ -107,7 +107,7 @@
     #[test]
     fn world_interaction_json_carries_no_fill_run_state() {
         let session = Puzzle3dPrecomputeSession::new();
-        let envelope = Puzzle3dScene { fixture: forest_store(), runtime: Puzzle3dRuntime::default(), active_utility: "fill".into() };
+        let envelope = Puzzle3dScene { scene_snapshot: forest_store(), runtime: Puzzle3dRuntime::default(), active_utility: "fill".into() };
         let value: Value = serde_json::from_str(&world_interaction_json(&envelope, &session, &Puzzle3dInteractionSnapshot::default(), None)).expect("interactionJson");
         for retired in ["fillBuild", "revealCutoffs", "brushPreviewJson"] {
             assert!(value.get(retired).is_none(), "{retired}: a fill run shows its process through the framework tool run lane and panel only");
@@ -116,8 +116,8 @@
 
     #[test]
     fn world_references_json_carries_infinite_asset_urls_the_dev_server_can_serve() {
-        use crate::editor::puzzle3d::default_fixture;
-        let json = world_references_json(&default_fixture());
+        use crate::editor::puzzle3d::default_scene_snapshot;
+        let json = world_references_json(&default_scene_snapshot());
         let records: Vec<Value> = serde_json::from_str(&json).expect("referencesJson");
         let masterarbeit = records.iter().find(|row| row["id"] == "ref-masterarbeit").expect("ref-masterarbeit");
         assert_eq!(
@@ -130,13 +130,13 @@
 
     #[test]
     fn meshes_json_is_published_in_exactly_the_mesh_lane_order_trace_subjects_index() {
-        let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses");
-        let fixture = crate::editor::puzzle3d::puzzle3d_fixture_from_snapshot(&snapshot);
-        let lane = mesh_lane(&fixture);
+        let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses");
+        let scene_snapshot = crate::editor::puzzle3d::puzzle3d_scene_snapshot_from_document(&snapshot);
+        let lane = mesh_lane(&scene_snapshot);
         assert_eq!(&lane[..2], [PUZZLE3D_FALLBACK_MESH_KIND, VORTEX_MARKER_MESH_KIND]);
         assert!(lane[2..].windows(2).all(|pair| pair[0] < pair[1]), "mesh urls follow in one stable sorted order");
-        let meshes: Vec<Value> = serde_json::from_str(&world_meshes_json(&fixture)).expect("meshesJson");
+        let meshes: Vec<Value> = serde_json::from_str(&world_meshes_json(&scene_snapshot)).expect("meshesJson");
         let published: Vec<String> = meshes.iter().map(|mesh| mesh.get("url").or_else(|| mesh.get("kind")).and_then(Value::as_str).expect("mesh identity").to_string()).collect();
         assert_eq!(published, lane, "a trace subject's mesh index must name meshesJson[index]");
-        assert_eq!(mesh_lane(&fixture), lane, "the lane is deterministic across calls");
+        assert_eq!(mesh_lane(&scene_snapshot), lane, "the lane is deterministic across calls");
     }

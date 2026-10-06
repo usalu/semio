@@ -2,7 +2,7 @@
     use super::*;
     use crate::editor::puzzle3d::config::Puzzle3dRuntime;
     use crate::editor::puzzle3d::terminology::puzzle3d_labels;
-    use crate::editor::puzzle3d::{empty_fixture, Puzzle3dObject, Puzzle3dScene, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_VORTEX};
+    use crate::editor::puzzle3d::{empty_scene_snapshot, Puzzle3dObject, Puzzle3dScene, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_VORTEX};
     use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
     fn labels() -> &'static Puzzle3dLabels {
@@ -39,8 +39,8 @@
     }
 
     fn scene(ids: &[String]) -> (Puzzle3dScene, Puzzle3dInteractionSnapshot) {
-        let mut fixture = empty_fixture();
-        fixture.objects = ids
+        let mut scene_snapshot = empty_scene_snapshot();
+        scene_snapshot.objects = ids
             .iter()
             .map(|id| Puzzle3dObject {
                 id: id.clone(),
@@ -55,7 +55,7 @@
                 locked: false,
             })
             .collect();
-        let scene = Puzzle3dScene { fixture, runtime: Puzzle3dRuntime::default(), active_utility: String::new() };
+        let scene = Puzzle3dScene { scene_snapshot, runtime: Puzzle3dRuntime::default(), active_utility: String::new() };
         let interaction = Puzzle3dInteractionSnapshot { granularity: PUZZLE3D_GRANULARITY_OBJECT.into(), selected: ids.to_vec(), hovered: Vec::new(), referenced: Vec::new() };
         (scene, interaction)
     }
@@ -155,7 +155,7 @@
     #[test]
     fn leftover_selected_vortex_uuid_falls_through_to_object_fields() {
         let (mut scene, mut interaction) = scene(&["seed-left-001".into()]);
-        scene.fixture.objects[0].vortices.push(Puzzle3dVortex {
+        scene.scene_snapshot.objects[0].vortices.push(Puzzle3dVortex {
             id: "5de35caa-0f02-43d7-ae74-aa730efd3386".into(),
             vortex_kind: None,
             position: [0.0, 0.0, 0.0],
@@ -247,7 +247,7 @@
         assert_eq!(window_of(node_at(&tree, IDS_SECTION).expect("the ids section")), (1, 0), "{tree}");
 
         let (mut vortex_scene, mut vortex_interaction) = scene(&["object-0".into()]);
-        vortex_scene.fixture.objects[0].vortices.push(Puzzle3dVortex { id: "vortex-0".into(), vortex_kind: Some("edge".into()), ..Default::default() });
+        vortex_scene.scene_snapshot.objects[0].vortices.push(Puzzle3dVortex { id: "vortex-0".into(), vortex_kind: Some("edge".into()), ..Default::default() });
         vortex_interaction.granularity = PUZZLE3D_GRANULARITY_VORTEX.into();
         vortex_interaction.selected = vec!["object-0:vortex-0".into()];
         let tree = tree_of(&json_of(unhosted_body(&vortex_scene, &vortex_interaction)));

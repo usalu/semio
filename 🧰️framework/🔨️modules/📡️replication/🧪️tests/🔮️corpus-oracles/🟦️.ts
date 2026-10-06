@@ -1,0 +1,22 @@
+import { describe, expect, test } from "bun:test";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import * as replication from "../../🟦️.ts";
+import { registerOutcomeCodeTests } from "../🧪️outcome-code/🟦️.ts";
+import { registerReplayReportTests } from "../🧪️replay-report/🟦️.ts";
+import { registerTransactionRefTests } from "../🧪️transaction-ref/🟦️.ts";
+import { registerSupersedeFoldTests } from "../🧪️supersede-fold/🟦️.ts";
+import { registerTests2 } from "../🧪️document-backbone-envelope-batch/🟦️.ts";
+import { registerTests3 } from "../🧪️history-transition/🟦️.ts";
+import { registerTests } from "../🗄️durable-collaborative-redo/🟦️.ts";
+
+const suite = { describe, expect, it: test } as unknown as NonNullable<ImportMeta["vitest"]>;
+const url = new URL("../../🟦️.ts", import.meta.url).href;
+const source = { url, directory: dirname(fileURLToPath(url)) };
+await registerOutcomeCodeTests(suite, replication, source);
+await registerReplayReportTests(suite, replication, source);
+await registerTransactionRefTests(suite, replication, source);
+await registerSupersedeFoldTests(suite, replication, source);
+await registerTests2(suite, replication, source);
+await registerTests3(suite, source, replication.HISTORY_TRANSITION_DIFF_SCHEMA, replication);
+await registerTests(suite, source);

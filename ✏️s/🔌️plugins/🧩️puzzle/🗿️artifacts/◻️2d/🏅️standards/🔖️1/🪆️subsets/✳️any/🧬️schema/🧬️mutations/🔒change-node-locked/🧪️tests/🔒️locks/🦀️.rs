@@ -1,4 +1,4 @@
-//! 🧪️ `change-node-locked` fixture — `🔒️locks`.
+//! 🧪️ `change-node-locked` snapshot — `🔒️locks`.
 //!
 //! `locked` is recorded on the node and read by no other verb — deleting or moving a locked tambour still succeeds at the document layer.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

@@ -87,7 +87,7 @@ fn every_installed_plugin_gates_destructive_and_user_path_verbs_and_keeps_chrome
     let findings = audit_source(&installed_source());
     assert_eq!(findings, Vec::<CatalogAuditFinding>::new(), "{}", findings.iter().map(CatalogAuditFinding::message).collect::<Vec<_>>().join("\n"));
     let catalog = installed_catalog(Locale::En);
-    for (plugin, verb) in [("layout", "exportPdf"), ("layout", "exportPng"), ("draw", "exportDocument"), ("draw", "commitDocument"), ("draw", "setSnapshot"), ("note", "saveDownload"), ("forms", "exportFixture"), ("cad", "saveCurrent")] {
+    for (plugin, verb) in [("layout", "exportPdf"), ("layout", "exportPng"), ("draw", "exportDocument"), ("draw", "commitDocument"), ("draw", "setSnapshot"), ("note", "saveDownload"), ("forms", "exportSnapshot"), ("cad", "saveCurrent")] {
         let hits = published(&catalog, plugin, verb);
         assert!(!hits.is_empty(), "{plugin}.{verb} is published");
         for capability in hits {

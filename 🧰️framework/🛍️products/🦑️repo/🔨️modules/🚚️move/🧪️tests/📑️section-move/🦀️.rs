@@ -30,7 +30,7 @@ fn expect(name: &str, field: &str, expected: &Json, produced: &Json) -> Result<(
 
 #[cfg(feature = "sut")]
 fn markers_follow_the_new_name(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📑️section-move-trees.json")?;
+    let file = ctx.input_json("shared://📑️section-move-trees.json")?;
     let mut renamed = Vec::new();
     for vector in file.array("cases") {
         let name = vector.str("name");
@@ -45,7 +45,7 @@ fn markers_follow_the_new_name(ctx: &Context) -> Result<Outcome, String> {
 
 #[cfg(feature = "sut")]
 fn renaming_back_restores_the_file(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📑️section-move-trees.json")?;
+    let file = ctx.input_json("shared://📑️section-move-trees.json")?;
     let mut round_trips = Vec::new();
     for vector in file.array("cases") {
         let name = vector.str("name");
@@ -63,7 +63,7 @@ fn renaming_back_restores_the_file(ctx: &Context) -> Result<Outcome, String> {
 
 #[cfg(feature = "sut")]
 fn a_missing_file_is_refused(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📑️section-move-trees.json")?;
+    let file = ctx.input_json("shared://📑️section-move-trees.json")?;
     let workspace = semio_framework_repo_move::Workspace::new().with_file("present.ts", "// #region 🔖️Alpha\n// #endregion 🔖️Alpha\n");
     let mut refusals = Vec::new();
     for vector in file.array("errors") {

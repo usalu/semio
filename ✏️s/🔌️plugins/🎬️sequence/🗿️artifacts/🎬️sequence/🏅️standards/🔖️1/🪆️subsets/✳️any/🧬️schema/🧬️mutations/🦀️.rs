@@ -47,25 +47,9 @@ impl protocol::SemanticMutation<SequenceSnapshot> for SequenceMutation {
     }
 }
 
-/// 📝️ No parent operation line exists.
-impl protocol::OpText for SequenceMutation {
-    fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "a sequence has no parent-lane mutation; content edits are child-lane leaves", semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        match *self {}
-    }
-}
 
-/// 💾️ No parent operation record exists.
-impl protocol::OpBinary for SequenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        match *self {}
-    }
-    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Err(protocol::ProtocolError::Malformed { what: "sequence-mutation", offset: 0, detail: "a sequence has no parent-lane mutation; content edits are child-lane leaves".into() })
-    }
-}
+
+
 
 /// 🧊️ Nothing to retire: the vocabulary is uninhabited.
 impl neural_engine::ColdRetire for SequenceMutation {

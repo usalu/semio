@@ -1,6 +1,4 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio.os.renderer.wgpu-extension-dispatch/1",
   "title": "Wgpu Extension Dispatch Laws",
   "laws": {
     "pagedCompletion": {

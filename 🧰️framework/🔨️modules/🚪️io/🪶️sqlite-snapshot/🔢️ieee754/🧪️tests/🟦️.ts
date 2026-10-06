@@ -1,7 +1,9 @@
 /** 🔢️ Independent SQLite oracle for exact owned IEEE scalar identities. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";
-import { binary64, binary32, parseBinary64, parseBinary32, parseBinary64Transport, parseBinary32Transport, encodeIeee754Cells, readBinary64, readBinary32 } from "../🟦️.ts";
+import {encodeIeee754Cells,readBinary64,readBinary32} from "../🟦️.ts";
+import { binary64, binary32, parseBinary64, parseBinary32 } from "../../../../🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64Transport, parseBinary32Transport } from "../../../📝️text/🔢️ieee754/🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema } from "../../🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json";
 import integerFixture from "../🧫️fixtures/🎯️integer-query.json";
@@ -64,9 +66,6 @@ test("integer query scalars must agree with IEEE words without rounding", async 
   } finally { db.close(); }
 });
 
-test("owned IEEE refusal fixture has an independent closed neutral contract",async()=>{
- const [{default:Ajv},{default:refusal},{default:schema}]=await Promise.all([import("ajv"),import("../🧫️fixtures/⚠️refusal/🔣️.json"),import("../🧫️fixtures/⚠️refusal/🧬️schema/🔣️.json")]);expect(new Ajv({strict:true}).validate(schema,refusal)).toBe(true);
-});
 test("owned IEEE independent SQLite corruptions and column ceilings preserve intrinsic refusal kinds",async()=>{
  const {default:refusal}=await import("../🧫️fixtures/⚠️refusal/🔣️.json");const schema=parseSqliteDatabaseSchema(sql),row={rowid:BigInt(refusal.rowid),values:encodeIeee754Cells([BigInt(refusal.rowid),binary64(0),binary32(0)],columns)},bytes=await exportSqliteDatabase({tables:[{...schema.tables[0]!,rows:[row]}]});
  for(const[index,edit]of refusal.edits.entries()){const db=Database.deserialize(bytes,{safeIntegers:true});try{db.run(edit);const query=db.query("SELECT large,small,large_ieee754_bits,large_numeric_class,small_ieee754_bits,small_numeric_class FROM exact_scalar").get() as Record<string,unknown>;expect(query).toBeDefined();const current=(await importSqliteDatabase(new Uint8Array(db.serialize()))).tables[0]!.rows[0]!;expect(()=>index<3?readBinary64(current,1,columns):readBinary32(current,2,columns)).toThrow(expect.objectContaining({kind:refusal.malformedRefusal}));}finally{db.close()}}

@@ -289,9 +289,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-deflated-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -342,7 +341,6 @@
       "notes": "A new entry added with DEFLATE compression (yazl compress:true), ISO 21320's own permitted method 8."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "add-stored-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -393,7 +391,6 @@
       "notes": "A new entry added with STORED (no) compression (yazl compress:false), ISO 21320's own permitted method 0."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -444,7 +441,6 @@
       "notes": "The entry file2.txt removed from the archive."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "rename-entry-applied",
       "class": "third-party-generated",
       "target": {
@@ -495,7 +491,6 @@
       "notes": "The single entry's name changed old.txt -> new.txt, content untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-archive-comment-applied",
       "class": "third-party-generated",
       "target": {
@@ -546,7 +541,6 @@
       "notes": "The end-of-central-directory record's archive comment set."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entry-data-applied",
       "class": "third-party-generated",
       "target": {
@@ -597,7 +591,6 @@
       "notes": "The single entry's content replaced, Hello -> World, name untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {

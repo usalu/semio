@@ -1,0 +1,130 @@
+{
+  "qualification": "Actual newly mounted original providers; no paged source/control/adoption credit",
+  "rows": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📸️set-snapshot/💾️binary/🦀️.rs",
+      "implementations": [
+        "pub fn encode(mutation:&PdfMutation)->Option<Result<Vec<u8>,String>>",
+        "pub fn decode(bytes:&[u8])->Result<PdfMutation,String>"
+      ],
+      "source": "pdf14-own-set-patch-exact-domain-provider-root-held.json",
+      "sha256": "3953756847c364ede03fd02957ba2490ba54654d0577d7dd54dcbcf7e60d5142"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🩹️patch-snapshot/💾️binary/🦀️.rs",
+      "implementations": [
+        "pub fn encode(mutation:&PdfMutation)->Option<Result<Vec<u8>,String>>",
+        "pub fn decode(bytes:&[u8])->Result<PdfMutation,String>"
+      ],
+      "source": "pdf14-own-set-patch-exact-domain-provider-root-held.json",
+      "sha256": "c2861cddbe3a3976952a636fb0362678b3a85b09d095bc9f237f368871202301"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "implementations": [
+        "impl OpBinary for PdfMutation ",
+        "fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> ",
+        "fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> "
+      ],
+      "source": "pdf14-own-set-patch-exact-domain-provider-root-held.json",
+      "sha256": "6c3394c709e3aadb9b9d6682a68c1ed89b3b8737ef8b02d23a168920e43f8f6c"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "implementations": [
+        "fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> ",
+        "fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> "
+      ],
+      "source": "pdf14-own-set-patch-exact-domain-provider-root-held.json",
+      "sha256": "be9dd8d7a313f769229a341c327afc3242d978b627bd4c6615833b2623f18923"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "implementations": [
+        "fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> ",
+        "fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> "
+      ],
+      "source": "pdf14-own-set-patch-exact-domain-provider-root-held.json",
+      "sha256": "94cb92794cb2c3cab8bc10d3cab4d8002cbee337de21c79555347812ce9bcc4e"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🦀️.rs",
+      "implementations": [
+        "impl OpBinary for SnapshotPatch ",
+        "fn encode_op(&self) -> Result<Vec<u8>, kernel::ProtocolError> ",
+        "fn decode_op(bytes: &[u8]) -> Result<Self, kernel::ProtocolError> "
+      ],
+      "source": "pdf14-own-set-patch-exact-domain-provider-root-held.json",
+      "sha256": "a1bd9adbe0cf87b31eb525887c20e158b9680bb0d9961fd980c66334e942c639"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "implementations": [
+        "impl protocol::OpBinary for Pdf14EditorCommand ",
+        "fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> ",
+        "fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> "
+      ],
+      "source": "pdf14-own-domain-public-family-provider-held.json",
+      "sha256": "838ee78245f84e580256b991b9a8ae56a806166c60f42481887727e7d659bf45"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🦀️.rs",
+      "implementations": [
+        "impl protocol::OpBinary for Pdf14AEditorCommand ",
+        "fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> ",
+        "fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> "
+      ],
+      "source": "pdf14-own-domain-public-family-provider-held.json",
+      "sha256": "34fb1d0adc1e77c2de4017fc429096ac74af828589368832fa7d6442752d1b11"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+      "implementations": [
+        "impl protocol::OpBinary for Pdf14XEditorCommand ",
+        "fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> ",
+        "fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> "
+      ],
+      "source": "pdf14-own-domain-public-family-provider-held.json",
+      "sha256": "bf0bf644f65b9eb48e3fe72d90413fc127637ee91e8c3cc9f0438e09140db73c"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "implementations": [
+        "impl protocol::OpBinary for Pdf14ViewCommand ",
+        "fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> ",
+        "fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> "
+      ],
+      "source": "pdf14-own-domain-public-family-provider-held.json",
+      "sha256": "cef9a45e019f7ff8a2d773bcb0172868c9b95d020c79c7b36956ec8fab6f2f33"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🦀️.rs",
+      "implementations": [
+        "impl protocol::OpBinary for Pdf14AViewCommand ",
+        "fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> ",
+        "fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> "
+      ],
+      "source": "pdf14-own-domain-public-family-provider-held.json",
+      "sha256": "a1a9c8af1bcbed168c7107765e84033f3907f84445a541fa126ae4694ffdbbf5"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🦀️.rs",
+      "implementations": [
+        "impl protocol::OpBinary for Pdf14XViewCommand ",
+        "fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> ",
+        "fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> "
+      ],
+      "source": "pdf14-own-domain-public-family-provider-held.json",
+      "sha256": "a6621f069f03ae5b9eef7c48b24877132c23d29a1722cb4c27d622c495f9e454"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "implementations": [
+        "fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>)->Result<store::io_schema::IoPayload,ValueError>",
+        "fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>)->Result<Self,ValueError>"
+      ],
+      "source": "pdf14-own-domain-public-family-provider-held.json",
+      "sha256": "3d43cc19d9f9b8ce6eec4a990575d0580b67053dfb36281a0f7cc75a8d521212"
+    }
+  ]
+}

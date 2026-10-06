@@ -1943,7 +1943,7 @@ pub mod forms_bridge {
                 schema: None,
                 src: None,
                 accept: None,
-                fixture_slug: None,
+                example_id: None,
                 params: None,
                 condition: None,
             }),
@@ -1965,7 +1965,7 @@ pub mod forms_bridge {
                 schema: None,
                 src: None,
                 accept: None,
-                fixture_slug: None,
+                example_id: None,
                 params: None,
                 condition: None,
             }),
@@ -1987,7 +1987,7 @@ pub mod forms_bridge {
                 schema: None,
                 src: Some(src.clone()),
                 accept: None,
-                fixture_slug: None,
+                example_id: None,
                 params: None,
                 condition: None,
             }),
@@ -2012,7 +2012,7 @@ pub mod forms_bridge {
                     schema: Some(schema.clone()),
                     src: None,
                     accept: None,
-                    fixture_slug: None,
+                    example_id: None,
                     params: None,
                     condition: None,
                 })
@@ -2046,12 +2046,12 @@ pub mod forms_bridge {
         }
     }
 
-    pub fn apply_generation_values_to_host_snapshot(fixture_json: &str, values: &semio_framework_pack_json::Object) -> String {
-        let Ok(mut root) = semio_framework_pack_json::parse(fixture_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-            return fixture_json.to_string();
+    pub fn apply_generation_values_to_host_snapshot(snapshot_json: &str, values: &semio_framework_pack_json::Object) -> String {
+        let Ok(mut root) = semio_framework_pack_json::parse(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
+            return snapshot_json.to_string();
         };
         let Some(widgets) = root.get_mut("widgets").and_then(|entry| entry.as_array_mut()) else {
-            return fixture_json.to_string();
+            return snapshot_json.to_string();
         };
         for widget in widgets.iter_mut() {
             let Some(id) = widget.get("id").and_then(|entry| entry.as_str()) else {

@@ -1,0 +1,26 @@
+{
+  "schemaBytes": 5052,
+  "tableWidths": {
+    "en1990_accidental_action": 4,
+    "en1990_action": 5,
+    "en1990_bridge_sls": 24,
+    "en1990_document": 24,
+    "en1990_effect": 10,
+    "en1990_member": 36,
+    "en1990_permanent_action": 5,
+    "en1990_seismic_action": 5,
+    "en1990_variable_action": 5
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 25,
+      "valueBytes": 1996
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 1,
+      "valueBytes": 173
+    }
+  ]
+}

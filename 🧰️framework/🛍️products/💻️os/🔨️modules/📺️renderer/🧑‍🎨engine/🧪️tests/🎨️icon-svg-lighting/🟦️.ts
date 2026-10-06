@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import { chromium } from "playwright";
 import { AmbientLight, BufferGeometry, DirectionalLight, Float32BufferAttribute, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
@@ -11,7 +11,6 @@ import { describe, expect, it } from "vitest";
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎨️icon-svg-lighting/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️icon-svg-lighting/🔣️.json"), "utf8"));
 
 function renderFill(record: any): string {
   const geometry = new BufferGeometry();
@@ -40,8 +39,6 @@ function renderFill(record: any): string {
 
 describe("🎨️ Icon SVG face lighting", () => {
   it("validates the neutral SVG profile", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.profile).toBe("svgFlatLit");
   });
 

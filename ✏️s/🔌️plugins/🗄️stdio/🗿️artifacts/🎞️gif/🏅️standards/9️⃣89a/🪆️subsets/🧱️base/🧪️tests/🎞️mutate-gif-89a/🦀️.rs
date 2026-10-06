@@ -17,8 +17,8 @@ use semio_repo_test_host::law;
 /// outline the small animation a whole index buffer fits in — into the work directory and returns the mutable
 /// copy's bytes. The committed document itself is never written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
-    let copy = ctx.copy_fixture(&input, Some("input.gif"))?;
+    let input = ctx.step_input_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
+    let copy = ctx.copy_input(&input, Some("input.gif"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 

@@ -5,5 +5,5 @@ use serde_json::Value;
 
 pub fn add_node(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
-    add_node_to_host_snapshot(&mut ctx.scene.fixture, kind, args);
+    add_node_to_host_snapshot(&mut ctx.scene.board_snapshot, kind, args);
 }

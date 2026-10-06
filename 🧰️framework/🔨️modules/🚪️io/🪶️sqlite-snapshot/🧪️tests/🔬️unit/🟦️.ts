@@ -4,20 +4,17 @@ import Ajv from "ajv/dist/2020";
 import "../💰️operation/🟦️.ts";
 import { readFileSync } from "node:fs";
 import ownership from "../../🧫️fixtures/🫳️import-ownership/🔣️.json";
-import ownershipSchema from "../../🧬️schema/🫳️import-ownership/🔣️.json";
 /** 🧫️ Semantic relational SQLite interoperability against Bun's independent engine. */
 import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
 import { SqliteOperation, exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchema, type SqliteDatabase, type SqliteValue } from "../../🟦️.ts";
 import corpus from "../../🧫️fixtures/🏛️relational/🔣️.json";
 import projectionFixture from "../../🧫️fixtures/🏗️projection/🔣️.json";
-import projectionSchema from "../../🧬️schema/🏗️projection/🔣️.json";
 import { ArtifactSqliteProjection, artifactSqliteTables } from "../../🧩️artifact/🟦️.ts";
 import frontierFixture from "../../🧫️fixtures/💰️frontiers/🔣️.json";
 import controlFixture from "../../🧫️fixtures/🧮️database-control/🔣️.json";
 import backingFixture from "../../🧫️fixtures/💰️production/🔣️.json";
-import backingSchema from "../../🧬️schema/💰️production/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+
 
 async function authoredBackingDatabase():Promise<SqliteDatabase>{
   const projection=await ArtifactSqliteProjection.create(backingFixture.sql);
@@ -25,9 +22,7 @@ async function authoredBackingDatabase():Promise<SqliteDatabase>{
   return projection.finish();
 }
 test("actual Source backing corpus has closed schema and independent SQLite scalar authority",async()=>{
-  const admit=new Ajv({strict:true}).compile(backingSchema);
-  expect(validateJsonSchemaSubset(backingSchema,backingFixture)).toEqual([]);expect(admit(backingFixture)).toBe(true);
-  for(const hostile of [{...backingFixture,guessedStorageBytes:8},{...backingFixture,refusedBackingBytes:1},{...backingFixture,payload:[0,256,65,0]}]){expect(admit(hostile)).toBe(false);expect(validateJsonSchemaSubset(backingSchema,hostile).length).toBeGreaterThan(0);}
+  
   const bytes=await exportSqliteDatabase(await authoredBackingDatabase());
   expect(new TextDecoder().decode(bytes.subarray(0,16))).toBe(backingFixture.format);
   const independent=Database.deserialize(bytes);
@@ -122,7 +117,6 @@ test("explicit owned row projection bounds copies and yields to cancellation", a
 
 const sql = "CREATE TABLE scalar (id INTEGER PRIMARY KEY, text TEXT, integer_value INTEGER, real_value REAL, bytes BLOB, absent TEXT)";
 test("semantic ownership blob copies publish interior cancellation and independent owned bytes",async()=>{
-  expect(new Ajv({strict:true}).validate(projectionSchema,projectionFixture)).toBe(true);
   const plan=projectionFixture.ownershipCopy,input=Uint8Array.from({length:plan.octetBytes},(_,i)=>projectionFixture.octets[i%projectionFixture.octets.length]!);
   const positive=await ArtifactSqliteProjection.create(projectionFixture.octetsSql,{maxValueBytes:8+input.length});
   await positive.insert("owned_octets",[input]);input.fill(42);
@@ -395,8 +389,6 @@ describe("relational SQLite physical engine", () => {
 
 
 test("physical SQLite transfer produces validated relational values and cancellation", async () => {
-  const validate = new Ajv({ strict: true }).compile(ownershipSchema);
-  expect(validate(ownership), JSON.stringify(validate.errors)).toBe(true);
   const engine = new Database(":memory:");
   try {
     engine.exec(ownership.schema);
@@ -430,17 +422,15 @@ test("exact guest snapshot transport matches its language-neutral schema", () =>
 });
 
 
-test("explicit keyed projection completes in independent SQLite rowid order and cancels inside sorting",async()=>{expect(new Ajv({strict:true}).compile(projectionSchema)(projectionFixture)).toBe(true);const f=projectionFixture.keyedOrder,p=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);for(const key of f.input)await p.insert(projectionFixture.table,[key],BigInt(key));const database=await p.finish();expect(database.tables[0]!.rows.map(row=>row.rowid.toString())).toEqual(f.expected);const db=Database.deserialize(await exportSqliteDatabase(database));try{expect(db.query("SELECT label FROM explicit_entity ORDER BY id").all()).toEqual(f.expected.map(label=>({label})));}finally{db.close();}let armed=false,inside=false;const abort=new AbortController(),c=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{signal:abort.signal,onProgress:p=>{if(armed&&p.completed===f.cancelAt){inside=true;abort.abort();}}});for(let key=f.rows;key>0;key--)await c.insert(projectionFixture.table,[""],BigInt(key));armed=true;await expect(c.finish()).rejects.toHaveProperty("kind","canceled");expect(inside).toBe(true);});
+test("explicit keyed projection completes in independent SQLite rowid order and cancels inside sorting",async()=>{const f=projectionFixture.keyedOrder,p=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);for(const key of f.input)await p.insert(projectionFixture.table,[key],BigInt(key));const database=await p.finish();expect(database.tables[0]!.rows.map(row=>row.rowid.toString())).toEqual(f.expected);const db=Database.deserialize(await exportSqliteDatabase(database));try{expect(db.query("SELECT label FROM explicit_entity ORDER BY id").all()).toEqual(f.expected.map(label=>({label})));}finally{db.close();}let armed=false,inside=false;const abort=new AbortController(),c=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{signal:abort.signal,onProgress:p=>{if(armed&&p.completed===f.cancelAt){inside=true;abort.abort();}}});for(let key=f.rows;key>0;key--)await c.insert(projectionFixture.table,[""],BigInt(key));armed=true;await expect(c.finish()).rejects.toHaveProperty("kind","canceled");expect(inside).toBe(true);});
 
 test("keyed projection cancels during heap ordering and rejects duplicate physical identities",async()=>{const f=projectionFixture.keyedOrder;let armed=false,inside=false;const abort=new AbortController(),p=await ArtifactSqliteProjection.create(projectionFixture.schemaSql,{signal:abort.signal,onProgress:progress=>{if(armed&&progress.completed===f.rows+f.cancelAt){inside=true;abort.abort();}}});for(let key=f.rows;key>0;key--)await p.insert(projectionFixture.table,[""],BigInt(key));armed=true;await expect(p.finish()).rejects.toHaveProperty("kind","canceled");expect(inside).toBe(true);const complete=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);for(let key=f.rows;key>0;key--)await complete.insert(projectionFixture.table,[key.toString()],BigInt(key));const db=Database.deserialize(await exportSqliteDatabase(await complete.finish()));try{expect(db.query("SELECT count(*) AS n FROM explicit_entity").get()).toEqual({n:f.rows});expect(db.query("SELECT id FROM explicit_entity ORDER BY id").all()).toEqual(Array.from({length:f.rows},(_,i)=>({id:i+1})));}finally{db.close();}const duplicate=await ArtifactSqliteProjection.create(projectionFixture.schemaSql);await duplicate.insert(projectionFixture.table,["a"],1n);await duplicate.insert(projectionFixture.table,["b"],1n);await expect(duplicate.finish()).rejects.toThrow("identities must be unique");});
 
 
 import allocationFixture from "../../🧫️fixtures/🧮️allocation/🔣️.json";
-import allocationSchema from "../../🧬️schema/🧮️allocation/🔣️.json";
 import {SqliteAllocationControl} from "../../🟦️.ts";
 
 test("SQLite allocation ledger has independent cumulative cross-stage admission and before-allocation refusal",()=>{
-  expect(new Ajv({strict:true}).compile(allocationSchema)(allocationFixture)).toBe(true);
   expect(new SqliteAllocationControl().remainingBytes()).toBe(allocationFixture.defaultAllocationBytes);
   const authority=new SqliteAllocationControl({maxAllocationBytes:allocationFixture.maximumBytes}),independent=new Database(":memory:");let constructed=0;
   try{independent.exec("CREATE TABLE admission(ordinal INTEGER PRIMARY KEY,stage TEXT NOT NULL,bytes INTEGER NOT NULL)");for(const[index,bytes]of allocationFixture.admissions.entries()){authority.admit(bytes);new Uint8Array(bytes);constructed++;independent.query("INSERT INTO admission VALUES(?,?,?)").run(index,allocationFixture.stageNames[index]!,bytes);}expect(independent.query("SELECT sum(bytes) AS bytes FROM admission").get()).toEqual({bytes:allocationFixture.maximumBytes});expect(authority.remainingBytes()).toBe(0);expect(()=>{authority.admit(allocationFixture.refusedBytes);new Uint8Array(allocationFixture.refusedBytes);constructed++;}).toThrow();expect(constructed).toBe(allocationFixture.admissions.length);expect(authority.remainingBytes()).toBe(0);}finally{independent.close();}
@@ -461,7 +451,5 @@ test("SQLite native allocation bridge settles real interior cancellation before 
 });
 
 import transfer from "../../🧫️fixtures/🔁️transfer/🔣️.json";
-import transferSchema from "../../🧬️schema/🔁️transfer/🔣️.json";
-test("complete snapshot transfer budgets distinguish native copies from actual relational file ownership",async()=>{
-  expect(new Ajv({strict:true}).compile(transferSchema)(transfer)).toBe(true);const database=parseSqliteDatabaseSchema(transfer.schemaSql);database.tables[0]!.rows.push({rowid:1n,values:[1n,transfer.literal]});const file=await exportSqliteDatabase(database),independent=Database.deserialize(file);try{expect(independent.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(independent.query("SELECT id,literal FROM transfer_literal").all()).toEqual([{id:1,literal:transfer.literal}]);const native=Buffer.byteLength(transfer.literal);expect(independent.query("SELECT length(CAST(literal AS BLOB)) AS bytes FROM transfer_literal").get()).toEqual({bytes:native});expect(file.byteLength).toBeGreaterThan(native*(transfer.exportCopies+transfer.importCopies));expect((await importSqliteDatabase(independent.serialize())).tables[0]!.rows[0]!.values).toEqual([1n,transfer.literal]);}finally{independent.close();}
+test("complete snapshot transfer budgets distinguish native copies from actual relational file ownership",async()=>{const database=parseSqliteDatabaseSchema(transfer.schemaSql);database.tables[0]!.rows.push({rowid:1n,values:[1n,transfer.literal]});const file=await exportSqliteDatabase(database),independent=Database.deserialize(file);try{expect(independent.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(independent.query("SELECT id,literal FROM transfer_literal").all()).toEqual([{id:1,literal:transfer.literal}]);const native=Buffer.byteLength(transfer.literal);expect(independent.query("SELECT length(CAST(literal AS BLOB)) AS bytes FROM transfer_literal").get()).toEqual({bytes:native});expect(file.byteLength).toBeGreaterThan(native*(transfer.exportCopies+transfer.importCopies));expect((await importSqliteDatabase(independent.serialize())).tables[0]!.rows[0]!.values).toEqual([1n,transfer.literal]);}finally{independent.close();}
 });

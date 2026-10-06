@@ -44,7 +44,7 @@ fn fill_distribution_excludes_zero_weight_vortices() {
 
 #[test]
 fn brush_placement_emits_attraction_with_id_and_directed_root() {
-    let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
+    let scene_snapshot = EngineSceneSnapshot { attractions: vec![], objects: vec![], target_volumes: vec![] };
     let catalogs = KindCatalogBundle {
         objects: vec![ObjectKind {
             id: "Placed".to_string(),
@@ -56,7 +56,7 @@ fn brush_placement_emits_attraction_with_id_and_directed_root() {
         cables: vec![],
     };
     let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".to_string(), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [1.0, 2.0, 3.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    let next = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
+    let next = apply_brush_placement_to_snapshot(&scene_snapshot, &payload, &catalogs);
     assert_eq!(next.attractions.len(), 1, "brush placement should append exactly one attraction");
     let attraction = &next.attractions[0];
     assert!(!attraction.id.is_empty(), "brush-placed attraction must carry a non-empty id (regression: engine attractions with no id were silently dropped by fixture_from_engine_json)");
@@ -66,7 +66,7 @@ fn brush_placement_emits_attraction_with_id_and_directed_root() {
     assert_eq!(attraction.rotation, 0.0);
 }
 
-/// 🪪️ Regression: successive brush placements must mint distinct object ids when the fixture grows.
+/// 🪪️ Regression: successive brush placements must mint distinct object ids when the scene_snapshot grows.
 #[test]
 fn successive_brush_placements_never_collide_on_object_id() {
     let catalogs = KindCatalogBundle {
@@ -80,15 +80,15 @@ fn successive_brush_placements_never_collide_on_object_id() {
         cables: vec![],
     };
     let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".to_string(), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [1.0, 2.0, 3.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    let mut fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
+    let mut scene_snapshot = EngineSceneSnapshot { attractions: vec![], objects: vec![], target_volumes: vec![] };
     let mut ids = std::collections::HashSet::new();
     for i in 0..8 {
-        fixture = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
-        let placed = fixture.objects.last().expect("placement should append an object");
+        scene_snapshot = apply_brush_placement_to_snapshot(&scene_snapshot, &payload, &catalogs);
+        let placed = scene_snapshot.objects.last().expect("placement should append an object");
         assert!(ids.insert(placed.id.clone()), "brush placement #{i} minted a duplicate object id {:?}", placed.id);
         // Successive placements target the same fixed `host:v0`, so only the first actually attaches;
-        // reset attractions so every iteration re-exercises `apply_brush_placement_to_fixture` fresh.
-        fixture.attractions.clear();
+        // reset attractions so every iteration re-exercises `apply_brush_placement_to_snapshot` fresh.
+        scene_snapshot.attractions.clear();
     }
 }
 
@@ -263,8 +263,8 @@ fn resolve_object_kind_mesh_url_prefers_catalog_then_falls_back_to_fixture() {
         vortices: vec![],
         cables: vec![],
     };
-    let fixture = Fixture { attractions: vec![], target_volumes: vec![], objects: vec![] };
-    assert_eq!(resolve_object_kind_mesh_url("Kind", &catalogs, &fixture), Some("/catalog.glb".to_string()));
+    let scene_snapshot = EngineSceneSnapshot { attractions: vec![], target_volumes: vec![], objects: vec![] };
+    assert_eq!(resolve_object_kind_mesh_url("Kind", &catalogs, &scene_snapshot), Some("/catalog.glb".to_string()));
 
     let empty_catalogs = KindCatalogBundle {
         objects: vec![ObjectKind {
@@ -276,21 +276,21 @@ fn resolve_object_kind_mesh_url_prefers_catalog_then_falls_back_to_fixture() {
         vortices: vec![],
         cables: vec![],
     };
-    let fixture_with_object = Fixture {
+    let fixture_with_object = EngineSceneSnapshot {
         attractions: vec![],
         target_volumes: vec![],
-        objects: vec![FixtureObject {
+        objects: vec![EngineSceneObject {
             id: "o1".into(),
             object_kind: Some("Kind".into()),
             anchor: Default::default(),
-            mesh_url: Some("/fixture.glb".into()),
+            mesh_url: Some("/scene_snapshot.glb".into()),
             origin: [0.0, 0.0, 0.0],
             orientation: None,
             scale: None,
             vortices: vec![],
         }],
     };
-    assert_eq!(resolve_object_kind_mesh_url("Kind", &empty_catalogs, &fixture_with_object), Some("/fixture.glb".to_string()));
+    assert_eq!(resolve_object_kind_mesh_url("Kind", &empty_catalogs, &fixture_with_object), Some("/scene_snapshot.glb".to_string()));
     assert_eq!(resolve_object_kind_mesh_url("Missing", &empty_catalogs, &fixture_with_object), None);
 }
 
@@ -353,11 +353,11 @@ fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
     let blocked = blocked_vortex_full_ids(&attractions);
     assert!(blocked.contains("host:v0") && blocked.contains("guest:v0"));
 
-    let fixture = Fixture {
+    let scene_snapshot = EngineSceneSnapshot {
         attractions,
         target_volumes: vec![],
         objects: vec![
-            FixtureObject {
+            EngineSceneObject {
                 id: "host".into(),
                 object_kind: Some("Host".into()),
                 anchor: Default::default(),
@@ -367,7 +367,7 @@ fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
                 scale: None,
                 vortices: vec![VortexProps { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None }],
             },
-            FixtureObject {
+            EngineSceneObject {
                 id: "free".into(),
                 object_kind: Some("Free".into()),
                 anchor: Default::default(),
@@ -379,14 +379,14 @@ fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
             },
         ],
     };
-    let targets = enumerate_brush_fill_vortex_targets(&fixture);
+    let targets = enumerate_brush_fill_vortex_targets(&scene_snapshot);
     assert_eq!(targets.len(), 1);
     assert_eq!(targets[0].full_id, "free:v0");
 }
 
 #[test]
 fn vortex_world_from_object_none_for_missing_index() {
-    let object = FixtureObject { id: "o".into(), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [1.0, 2.0, 3.0], orientation: None, scale: None, vortices: vec![] };
+    let object = EngineSceneObject { id: "o".into(), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [1.0, 2.0, 3.0], orientation: None, scale: None, vortices: vec![] };
     assert!(vortex_world_from_object(&object, 0).is_none());
 }
 
@@ -449,15 +449,15 @@ fn brush_preview_from_candidate_none_branches() {
         vortices: vec![],
         cables: vec![],
     };
-    let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
+    let scene_snapshot = EngineSceneSnapshot { attractions: vec![], objects: vec![], target_volumes: vec![] };
     let target_ctx = AttractionVortexContext { object_kind: None, vortex_kind: None };
     let world = TargetVortexWorld { position: [0.0, 0.0, 0.0], direction: [0.0, 0.0, -1.0], reference_orientation: None };
 
     let missing_kind = BrushCompatibleCandidate { object_kind_id: "Missing".into(), source_vortex_index: 0 };
-    assert!(brush_preview_from_candidate("t", &missing_kind, &target_ctx, world, &catalogs, &fixture).is_none());
+    assert!(brush_preview_from_candidate("t", &missing_kind, &target_ctx, world, &catalogs, &scene_snapshot).is_none());
 
     let bad_index = BrushCompatibleCandidate { object_kind_id: "Kind".into(), source_vortex_index: 5 };
-    assert!(brush_preview_from_candidate("t", &bad_index, &target_ctx, world, &catalogs, &fixture).is_none());
+    assert!(brush_preview_from_candidate("t", &bad_index, &target_ctx, world, &catalogs, &scene_snapshot).is_none());
 
     let empty_mesh_catalogs = KindCatalogBundle {
         objects: vec![ObjectKind { id: "Kind".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }] }],
@@ -465,16 +465,16 @@ fn brush_preview_from_candidate_none_branches() {
         cables: vec![],
     };
     let ok_candidate = BrushCompatibleCandidate { object_kind_id: "Kind".into(), source_vortex_index: 0 };
-    assert!(brush_preview_from_candidate("t", &ok_candidate, &target_ctx, world, &empty_mesh_catalogs, &fixture).is_none(), "a missing mesh url must yield no preview");
+    assert!(brush_preview_from_candidate("t", &ok_candidate, &target_ctx, world, &empty_mesh_catalogs, &scene_snapshot).is_none(), "a missing mesh url must yield no preview");
 
-    let preview = brush_preview_from_candidate("t", &ok_candidate, &target_ctx, world, &catalogs, &fixture).expect("a valid candidate should produce a preview");
+    let preview = brush_preview_from_candidate("t", &ok_candidate, &target_ctx, world, &catalogs, &scene_snapshot).expect("a valid candidate should produce a preview");
     assert_eq!(preview.mesh_url, "/mesh.glb");
     assert_eq!(preview.object_kind_id, "Kind");
 }
 
 #[test]
-fn apply_brush_placement_to_fixture_rejects_missing_kind_template_or_mesh() {
-    let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
+fn apply_brush_placement_to_snapshot_rejects_missing_kind_template_or_mesh() {
+    let scene_snapshot = EngineSceneSnapshot { attractions: vec![], objects: vec![], target_volumes: vec![] };
     let catalogs = KindCatalogBundle {
         objects: vec![ObjectKind { id: "Kind".into(), representations: vec![], scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), point: [0.0, 0.0, 0.0], direction: None, ..Default::default() }] }],
         vortices: vec![],
@@ -482,17 +482,17 @@ fn apply_brush_placement_to_fixture_rejects_missing_kind_template_or_mesh() {
     };
 
     let missing_kind = BrushPlacePayload { target_vortex_full_id: "t:v0".into(), object_kind_id: "Missing".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    assert_eq!(apply_brush_placement_to_fixture(&fixture, &missing_kind, &catalogs).objects.len(), 0);
+    assert_eq!(apply_brush_placement_to_snapshot(&scene_snapshot, &missing_kind, &catalogs).objects.len(), 0);
 
     let missing_template = BrushPlacePayload { target_vortex_full_id: "t:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 9, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    assert_eq!(apply_brush_placement_to_fixture(&fixture, &missing_template, &catalogs).objects.len(), 0);
+    assert_eq!(apply_brush_placement_to_snapshot(&scene_snapshot, &missing_template, &catalogs).objects.len(), 0);
 
     let missing_mesh = BrushPlacePayload { target_vortex_full_id: "t:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    assert_eq!(apply_brush_placement_to_fixture(&fixture, &missing_mesh, &catalogs).objects.len(), 0, "no resolvable mesh url means the placement must be rejected");
+    assert_eq!(apply_brush_placement_to_snapshot(&scene_snapshot, &missing_mesh, &catalogs).objects.len(), 0, "no resolvable mesh url means the placement must be rejected");
 }
 
 #[test]
-fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
+fn apply_brush_placement_to_snapshot_rejects_duplicate_attraction_target() {
     let catalogs = KindCatalogBundle {
         objects: vec![ObjectKind {
             id: "Kind".into(),
@@ -504,12 +504,12 @@ fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
         cables: vec![],
     };
     let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
-    let fixture = Fixture {
+    let scene_snapshot = EngineSceneSnapshot {
         attractions: vec![AttractionProps { id: "a".into(), attracting: "host:v0".into(), attracted: "other:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 }],
         objects: vec![],
         target_volumes: vec![],
     };
-    let next = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
+    let next = apply_brush_placement_to_snapshot(&scene_snapshot, &payload, &catalogs);
     assert_eq!(next.objects.len(), 0, "a target vortex that is already attracting must reject the placement");
 }
 
@@ -546,11 +546,11 @@ fn brush_search_host_half_height() -> f64 {
     f64::from(crate::editor::puzzle3d::puzzle3d_fallback_mesh_buffers().0.chunks(3).map(|vertex| vertex[2]).fold(f32::MIN, f32::max))
 }
 
-/// 🧪️ The fixture scene: one host vortex on the bottom face of the host's (fallback box) body, two compatible kinds that
+/// 🧪️ The scene_snapshot scene: one host vortex on the bottom face of the host's (fallback box) body, two compatible kinds that
 /// dock flush under it, and optionally a body of the host's own kind carrying its own (larger) mesh parked at the host,
 /// whose volume reaches into where both candidates dock.
 fn brush_search_scene(blocker: bool) -> SceneConfig {
-    let mut objects = vec![FixtureObject {
+    let mut objects = vec![EngineSceneObject {
         id: "host".to_string(),
         object_kind: Some("Host".to_string()),
         anchor: Default::default(),
@@ -561,10 +561,10 @@ fn brush_search_scene(blocker: bool) -> SceneConfig {
         vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, -brush_search_host_half_height()], direction: Some([0.0, 0.0, -1.0]) }],
     }];
     if blocker {
-        objects.push(FixtureObject { id: "blocker".to_string(), mesh_url: Some("/test/blocker.glb".to_string()), vortices: vec![], ..objects[0].clone() });
+        objects.push(EngineSceneObject { id: "blocker".to_string(), mesh_url: Some("/test/blocker.glb".to_string()), vortices: vec![], ..objects[0].clone() });
     }
     SceneConfig {
-        fixture: Fixture { attractions: vec![], target_volumes: vec![], objects },
+        scene_snapshot: EngineSceneSnapshot { attractions: vec![], target_volumes: vec![], objects },
         kind_catalogs: Some(KindCatalogBundle {
             objects: vec![brush_search_kind("Near", "/test/near.glb"), brush_search_kind("Late", "/test/late.glb")],
             vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None, ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None, ..Default::default() }],
@@ -578,7 +578,7 @@ fn brush_search_scene(blocker: bool) -> SceneConfig {
     }
 }
 
-/// 🥽️ The fixture's mesh store: every registered test mesh is the cube, the host's own mesh is unknown.
+/// 🥽️ The scene_snapshot's mesh store: every registered test mesh is the cube, the host's own mesh is unknown.
 fn brush_search_meshes(url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
     (url != "/test/unregistered.glb").then(brush_search_cube)
 }
@@ -694,12 +694,12 @@ impl BrushRunMirror {
     }
 }
 
-/// ⚖️ LANGUAGE-NEUTRAL LAW: every fixture case reaches exactly its verdicts, free kinds, counters and steps; every
+/// ⚖️ LANGUAGE-NEUTRAL LAW: every scene_snapshot case reaches exactly its verdicts, free kinds, counters and steps; every
 /// candidate is first upserted `testing` and then decided exactly once; the link holds the same result.
 #[test]
 fn brush_suggestions_run_matches_the_language_neutral_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run fixture");
-    for case in fixture["cases"].as_array().expect("cases") {
+    let scene_snapshot: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run scene_snapshot");
+    for case in scene_snapshot["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("name");
         let mut scene = brush_search_scene(case["blocker"].as_bool().expect("blocker"));
         for (kind, weight) in case["vortexWeights"].as_object().expect("vortex weights") {
@@ -783,7 +783,7 @@ fn brush_suggestions_run_step_with_one_unit_of_fuel_decides_at_most_one_candidat
 fn brush_suggestions_run_follows_the_link_target_and_waits_while_settled() {
     let (owner, port) = (brush_run_owner(Some(BRUSH_SEARCH_TARGET)), ToolRunJobPort::default());
     let mut scene = brush_search_scene(false);
-    scene.fixture.objects[0].vortices.push(VortexProps { id: "v1".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 40.0, 0.0], direction: Some([0.0, 0.0, -1.0]) });
+    scene.scene_snapshot.objects[0].vortices.push(VortexProps { id: "v1".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 40.0, 0.0], direction: Some([0.0, 0.0, -1.0]) });
     let mut job = brush_run_job(&owner, &port, scene, brush_search_lane(), brush_search_meshes, 0);
     let mut mirror = BrushRunMirror::new(0);
     mirror.drive(&mut job, &port, u64::MAX);
@@ -825,15 +825,15 @@ fn a_closing_brush_suggestions_job_retires_only_its_own_result() {
 
 fn brush_run_example_scene(document: &str) -> (SceneConfig, Vec<String>, Vec<String>) {
     let text = match document {
-        "nakagin" => crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT,
-        "concrete-forest" => crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT,
+        "nakagin" => crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT,
+        "concrete-forest" => crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT,
         other => panic!("unknown example document {other}"),
     };
-    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example parses");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example parses");
     let envelope = crate::editor::puzzle3d::scene_from_snapshot(&snapshot, Default::default(), "brush");
     let scene = crate::editor::puzzle3d::scene_config(&envelope).expect("scene config");
-    let targets = scene.fixture.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
-    (scene, crate::editor::puzzle3d::modes::edit::windows::main::mesh_lane(&envelope.fixture), targets)
+    let targets = scene.scene_snapshot.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
+    (scene, crate::editor::puzzle3d::modes::edit::windows::main::mesh_lane(&envelope.scene_snapshot), targets)
 }
 
 fn brush_run_no_meshes(_url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
@@ -841,7 +841,7 @@ fn brush_run_no_meshes(_url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
 }
 
 /// ⚖️ ORACLE (`parry3d`): on Concrete Forest and Nakagin with the app's box fallback, every candidate the run decided for the
-/// fixture's targets is recomputed as an exact convex hull against EVERY placed body, the docking host included, and
+/// scene_snapshot's targets is recomputed as an exact convex hull against EVERY placed body, the docking host included, and
 /// `parry3d::query::contact` measures how deep they penetrate. A penetration of at least twice the scene's contact
 /// tolerance must be a collision, one of at most half of it (or separated hulls) must be free; a candidate whose own center
 /// lies inside a body (coincident hulls, where `contact` reads 0) collides. Every decisive verdict must agree.
@@ -849,8 +849,8 @@ fn brush_run_no_meshes(_url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
 fn brush_suggestions_run_collision_verdicts_agree_with_the_parry3d_oracle() {
     use parry3d::query::PointQuery;
     use parry3d::shape::Shape;
-    let fixture: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run fixture");
-    let law = &fixture["laws"]["parryOracle"];
+    let scene_snapshot: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run scene_snapshot");
+    let law = &scene_snapshot["laws"]["parryOracle"];
     let identity = parry3d::math::Isometry::identity();
     let (mut decisive, mut ambiguous, mut collisions, mut frees) = (0usize, 0usize, 0usize, 0usize);
     let mut disagreements = Vec::new();
@@ -863,7 +863,7 @@ fn brush_suggestions_run_collision_verdicts_agree_with_the_parry3d_oracle() {
             parry3d::shape::ConvexPolyhedron::from_convex_hull(&points).expect("box hull")
         };
         let catalogs = scene.kind_catalogs.clone().unwrap_or_default();
-        let placed: Vec<parry3d::shape::ConvexPolyhedron> = scene.fixture.objects.iter().filter(|object| resolve_placed_object_mesh_url(object, &catalogs, &scene.fixture).is_some()).map(|object| hull(&pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale))).collect();
+        let placed: Vec<parry3d::shape::ConvexPolyhedron> = scene.scene_snapshot.objects.iter().filter(|object| resolve_placed_object_mesh_url(object, &catalogs, &scene.scene_snapshot).is_some()).map(|object| hull(&pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale))).collect();
         let (owner, port) = (brush_run_owner(None), ToolRunJobPort::default());
         let mut job = brush_run_job(&owner, &port, scene.clone(), lane, brush_run_no_meshes, 0);
         for target in targets.iter().take(document["targets"].as_u64().expect("targets") as usize) {
@@ -903,14 +903,14 @@ fn brush_suggestions_run_collision_verdicts_agree_with_the_parry3d_oracle() {
     assert!(ambiguous * 10 <= decisive, "at most one in ten verdicts may fall inside the tolerance band: {ambiguous} of {decisive}");
 }
 
-/// ⏱️ LAW: hovering never blocks. On Nakagin, the largest example, the run is driven across the fixture's targets with the
+/// ⏱️ LAW: hovering never blocks. On Nakagin, the largest example, the run is driven across the scene_snapshot's targets with the
 /// thread's primitive-work meter as its clock ([`precompute_work_clock`]) and a slice of `budgetWork` units: every step —
 /// preparation, target listing and collision units alike — stays inside `stepWorkCeiling` units, so no unit between two
 /// deadline checks outgrows the slice. The count is deterministic: the same steps on an idle and a saturated machine.
 #[test]
 fn brush_suggestions_run_step_stays_below_the_interactive_ceiling_for_nakagin() {
-    let fixture: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run fixture");
-    let law = &fixture["laws"]["interactive"];
+    let scene_snapshot: serde_json::Value = serde_json::from_str(BRUSH_SUGGESTIONS_RUN_FIXTURE).expect("brush suggestions run scene_snapshot");
+    let law = &scene_snapshot["laws"]["interactive"];
     let (scene, lane, targets) = brush_run_example_scene(law["document"].as_str().expect("document"));
     let (budget, ceiling) = (law["budgetWork"].as_u64().expect("budget"), law["stepWorkCeiling"].as_u64().expect("ceiling"));
     let (owner, port) = (brush_run_owner(None), ToolRunJobPort::default());
@@ -929,7 +929,6 @@ fn brush_suggestions_run_step_stays_below_the_interactive_ceiling_for_nakagin() 
             steps += 1;
         }
     }
-    eprintln!("[DEBUG] brush suggestions nakagin: worst step {worst} units over {steps} steps (slice {budget})");
     assert!(worst <= ceiling, "the worst step cost {worst} units of primitive work over {steps} steps against a {ceiling}-unit ceiling (slice {budget})");
 }
 //#endregion ⏯️BrushSuggestionsRun

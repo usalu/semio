@@ -1,0 +1,61 @@
+{
+  "tableWidths": {
+    "tsv_document": 4,
+    "tsv_record": 3,
+    "tsv_field": 4
+  },
+  "cases": [
+    {
+      "id": "populated",
+      "snapshot": {
+        "schema": "stdio.tsv",
+        "records": [
+          [
+            "Name",
+            "City"
+          ],
+          [
+            "Bibliothek 🌠",
+            "Berlin"
+          ],
+          [
+            "",
+            ""
+          ]
+        ],
+        "trailingNewline": true,
+        "lineEnding": "crlf"
+      },
+      "rows": 10,
+      "bytes": 274
+    },
+    {
+      "id": "empty",
+      "snapshot": {
+        "schema": "stdio.tsv",
+        "trailingNewline": false,
+        "lineEnding": "lf",
+        "records": []
+      },
+      "rows": 1,
+      "bytes": 27
+    },
+    {
+      "id": "unicode",
+      "snapshot": {
+        "schema": "schema日本𐀀\u0000",
+        "trailingNewline": false,
+        "lineEnding": "crlf",
+        "records": [
+          [],
+          [
+            "日本𐀀\u0000",
+            "日本𐀀\u0000"
+          ]
+        ]
+      },
+      "rows": 5,
+      "bytes": 155
+    }
+  ]
+}

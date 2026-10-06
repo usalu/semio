@@ -13,7 +13,21 @@
       "const": "editText"
     },
     "text": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Document text",
+          "de": "Dokumenttext"
+        },
+        "description": {
+          "en": "The full text of the document after the edit.",
+          "de": "Der vollständige Text des Dokuments nach der Bearbeitung."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

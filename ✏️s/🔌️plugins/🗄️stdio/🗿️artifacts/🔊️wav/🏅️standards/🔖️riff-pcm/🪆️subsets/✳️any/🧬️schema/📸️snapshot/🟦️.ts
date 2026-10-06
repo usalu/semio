@@ -1,4 +1,5 @@
-import {type Binary32,parseBinary32Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { type Binary32 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary32 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🎚️ Typed primary WAV format chunk. */
 export type WavFmt = Readonly<{
   audioFormat: number;
@@ -38,7 +39,6 @@ export type WavSnapshot = Readonly<{
 }>;
 
 export const MAXIMUM_FMT_EXTENSION_BYTES = 65_535;
-export * from "./🪶️sqlite/🟦️.ts";
 
 export class stdioWavRiffpcmAnySnapshotGuardRefusal extends Error {
   constructor(readonly at: string, readonly why: string) {
@@ -77,7 +77,7 @@ export const parseWavData = (value: unknown, at: string): WavData => {
   const values = array(row.value, `${at}.value`);
   if (kind === "pcm16") return { kind, value: values.map((item, index) => integer(item, `${at}.value[${index}]`, -32_768, 32_767)) };
   if (kind === "pcm8" || kind === "raw") return { kind, value: bytes(values, `${at}.value`) };
-  if (kind === "float32") return { kind, value: values.map((item, index) => parseBinary32Transport(item)) };
+  if (kind === "float32") return { kind, value: values.map((item, index) => parseBinary32(item)) };
   return reject(`${at}.kind`, "unknown WAV data kind");
 };
 

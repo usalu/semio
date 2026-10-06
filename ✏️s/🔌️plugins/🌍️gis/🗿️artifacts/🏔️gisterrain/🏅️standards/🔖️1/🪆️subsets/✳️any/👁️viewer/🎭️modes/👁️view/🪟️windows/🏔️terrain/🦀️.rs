@@ -5,7 +5,8 @@
 //! exaggeration control, no selection, no camera persistence: a viewer has no utilities that edit and
 //! emits no mutations by construction (`ViewEmit`).
 
-use crate::schema::{build_terrain_scene_json, TerrainDescriptorJson};
+use crate::schema::{TerrainDescriptorJson};
+use crate::standards::v1::subsets::any::io::text::snapshot::{build_terrain_scene_json};
 use crate::standards::v1::subsets::any::schema::inferences::parse_descriptor;
 use crate::GisTerrainSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
@@ -34,6 +35,7 @@ const GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"position":[800.0,-800.0,
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::gisterrain::create_gisterrain_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Terrain", "Gelände"),
         body_key: BODY_KEY.into(),

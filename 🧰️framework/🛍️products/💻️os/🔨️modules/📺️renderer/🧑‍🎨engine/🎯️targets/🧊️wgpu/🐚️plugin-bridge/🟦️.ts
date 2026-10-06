@@ -85,42 +85,19 @@ import {
 } from "@semio-tech/framework";
 import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import { decodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
-import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
+import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1, splitDocumentBackboneControlTurnV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCodecAnswer, type ShardCodecRequest, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { OwnedUiPatchAcknowledgementEntry, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
-import { WORKER_STEP_BUDGET_MS, turnDiagnosticsEnabled } from "../⏱️turn-budget/🟦️.ts";
+import { WORKER_STEP_BUDGET_MS } from "../⏱️turn-budget/🟦️.ts";
 import { rendererResidentLedger } from "../../../💾️resident/🟦️.ts";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
 import { OwnedUiPatchIntake, RETAINED_UI_INTAKE_SLICE_STEPS, retainedUiIntakeStepCeiling } from "../../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts";
 import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import type { RetainedUiNodeRecord } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
-import {
-  applyUiPatchToRetained,
-  coerceTurnResult,
-  coerceWireBytes,
-  decodeWirePatchOps,
-  driveInboundRequest,
-  driveSpawnedJob,
-  INBOUND_REQUEST_TURN_BUDGET,
-  leftoverShellInvocationFrames,
-  drainTypedOperationTurns,
-  scanTypedOperationPages,
-  shellFrameBytes,
-  spawnedJobCompletedEvent,
-  typedOperationAcknowledgements,
-  wireEffectToFriendly,
-  wireSpawnJob,
-  wireTurnStatusTag,
-  type RetainedSurface,
-  type SpawnedJobPort,
-  type TypedOperationAckEvent,
-  type WireTurnResult,
-  type WireUiPatch,
-  type WireVariant,
-} from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { applyUiPatchToRetained, coerceTurnResult, coerceWireBytes, decodeWirePatchOps, driveInboundRequest, driveSpawnedJob, INBOUND_REQUEST_TURN_BUDGET, leftoverShellInvocationFrames, drainTypedOperationTurns, scanTypedOperationPages, shellFrameBytes, spawnedJobCompletedEvent, wireEffectToFriendly, wireSpawnJob, wireTurnStatusTag, type RetainedSurface, type SpawnedJobPort, type TypedOperationAckEvent, type WireTurnResult, type WireUiPatch, type WireVariant } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 // #endregion 🔌️Imports
 
 //#region 🧵️MainThreadShardWorkers
@@ -1057,32 +1034,78 @@ export class WgpuTypedOperationDrive {
  * right after its own `client.command()` call resolves. */
 const pendingTurnEffects = new Map<number, WireVariant[]>();
 
-/** ⏪️ Per-instance history patches the guest pushed on UNCORRELATED `Invocation` frames between two host calls — the
- * throttled UI-progress answers of a history-edit replay (`HistoryPatch.timeTravel` done/total, stage changes). React
- * receives them through `subscribeOperationProgress`; this target's typed-operation drain is where they surface, so the
- * drain queues them here and the Rust shell takes them every frame ({@link takeProgressHistoryPatches}) instead of
- * waiting for the next dispatch reply. Oldest first, bounded; the frame itself still reaches the leftover fold. */
-const pendingProgressHistoryPatches = new Map<number, unknown[]>();
+/** 🏁️ One guest publication that answers NO host call, as the shell takes it between two dispatches.
+ *
+ * ⚖️ A typed operation outlives the command that started it: the admitting reply carries no outcome, and the
+ * operation's own `UiDirtyScope` and command-log delta arrive turns later — on an `AppFrame::OperationCompleted`, the
+ * ONLY carrier of both, and on the throttled UI-progress `Invocation` frames a long run pushes meanwhile. React hears
+ * them through `subscribeOperationCompletions` and `subscribeOperationProgress`. This target heard neither: the
+ * completion matched no waiter and fell into the channel's completion lane nothing subscribed to, the progress scope
+ * waited in the leftover ledger for a dispatch that had no reason to come. An operation that ended on the standing
+ * drain — an example load of a few hundred one-item steps, the replay behind an accepted history edit — therefore
+ * changed the document and left the surface and the History rows as they were
+ * (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F11).
+ *
+ * The law of what each publication owes the shell is the shared corpus
+ * `🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json`. */
+export type WgpuOperationPublication = {
+  /** 🏁️ `true` for an `AppFrame::OperationCompleted`; `false` for a UI-progress frame and for the drain's own report. */
+  readonly completed: boolean;
+  readonly uiScope?: NonNullable<InvocationResponse["uiScope"]>;
+  readonly historyPatch?: NonNullable<InvocationResponse["historyPatch"]>;
+  /** 🧯️ Why the standing drain stopped — the shell tells it as a notice; a refused completion is never silence. */
+  readonly fault?: string;
+  /** 🧹️ The bounded lane gave up entries before this one: the shell re-reads the whole history projection. */
+  readonly resync?: true;
+};
 
-/** ⏪️ How many unread progress patches one instance keeps — each carries the whole session status, so the newest wins. */
-const WGPU_PROGRESS_HISTORY_PATCH_CAPACITY = 64;
+/** 🏁️ Per-instance publications the shell has not taken yet, oldest first ({@link takeOperationPublications}). */
+const pendingOperationPublications = new Map<number, WgpuOperationPublication[]>();
 
-/** ⏪️ Queues the history patch one uncorrelated shell `Invocation` frame carries, if it carries one. */
-export function stashProgressHistoryPatch(instanceId: number, frame: Uint8Array): void {
-  const decoded = decodeAppFrame(frame) as AppFrameValue;
-  if (!("Invocation" in decoded) || decoded.Invocation.history_patch.length === 0) return;
-  const patch = decodeInvocationPayloads(decoded.Invocation).historyPatch;
-  if (patch === undefined) return;
-  const queue = pendingProgressHistoryPatches.get(instanceId) ?? [];
-  queue.push(patch);
-  if (queue.length > WGPU_PROGRESS_HISTORY_PATCH_CAPACITY) queue.splice(0, queue.length - WGPU_PROGRESS_HISTORY_PATCH_CAPACITY);
-  pendingProgressHistoryPatches.set(instanceId, queue);
+/** 📏️ How many untaken publications one instance keeps. A history patch is a DELTA — its rows exist nowhere else — so
+ * a lane that outgrows this authority never drops its oldest entries: it collapses into one `resync` publication. */
+export const WGPU_OPERATION_PUBLICATION_CAPACITY = 64;
+
+/** 🏁️ Queues one publication for the shell's next take. A publication that dirtied nothing, patched no history and
+ * reports no fault is bookkeeping — a retained operation completes on every drain poll — and is not queued at all. */
+export function stashOperationPublication(instanceId: number, publication: WgpuOperationPublication): void {
+  if (publication.fault === undefined && publication.historyPatch === undefined && publication.resync !== true && (publication.uiScope === undefined || publication.uiScope.kind === "none")) return;
+  const queue = [...(pendingOperationPublications.get(instanceId) ?? []), publication];
+  if (queue.length <= WGPU_OPERATION_PUBLICATION_CAPACITY) {
+    pendingOperationPublications.set(instanceId, queue);
+    return;
+  }
+  const fault = queue.reduce<string | undefined>((last, entry) => entry.fault ?? last, undefined);
+  pendingOperationPublications.set(instanceId, [{ completed: queue.some((entry) => entry.completed), uiScope: { kind: "full" }, resync: true, ...(fault === undefined ? {} : { fault }) }]);
 }
 
-/** ⏪️ Hands the shell every progress patch queued for `instanceId` since its last take, oldest first. */
-export function takeProgressHistoryPatches(instanceId: number): readonly unknown[] {
-  const queue = pendingProgressHistoryPatches.get(instanceId) ?? [];
-  pendingProgressHistoryPatches.delete(instanceId);
+/** 🏁️ The publication one `AppChannelClient.onOperationCompleted` completion is — its scope and history patch, each
+ * only when the frame carried one. */
+export function operationCompletionPublication(completion: { readonly uiScope?: unknown; readonly historyPatch?: unknown }): WgpuOperationPublication {
+  const uiScope = completion.uiScope as InvocationResponse["uiScope"] | null;
+  const historyPatch = completion.historyPatch as InvocationResponse["historyPatch"] | null;
+  return { completed: true, ...(uiScope ? { uiScope } : {}), ...(historyPatch && typeof historyPatch === "object" ? { historyPatch } : {}) };
+}
+
+/** 🎞️ Queues the scope and history patch of one uncorrelated UI-progress `Invocation` frame the standing drain
+ * uncovered, and answers whether the lane now carries EVERYTHING that frame said. A frame with an output, diagnostics
+ * or mutations still owes the next dispatch its fold ({@link wgpuInvocationFromFrames}); a pure progress frame owes it
+ * nothing, and left in the leftover ledger it would be folded a second time over that dispatch's own scope. */
+export function stashOperationProgress(instanceId: number, frame: Uint8Array): boolean {
+  const decoded = decodeAppFrame(frame) as AppFrameValue;
+  if (!("Invocation" in decoded) || decoded.Invocation.in_reply_to !== 0) return false;
+  const carried = decoded.Invocation;
+  if (carried.ui_scope.length === 0 && carried.history_patch.length === 0) return false;
+  const uiScope = carried.ui_scope.length > 0 ? (decodePackWire(new Uint8Array(carried.ui_scope), "progress.uiScope") as InvocationResponse["uiScope"] | null) : null;
+  const historyPatch = carried.history_patch.length > 0 ? (decodePackWire(new Uint8Array(carried.history_patch), "progress.historyPatch") as InvocationResponse["historyPatch"] | null) : null;
+  stashOperationPublication(instanceId, { completed: false, ...(uiScope ? { uiScope } : {}), ...(historyPatch && typeof historyPatch === "object" ? { historyPatch } : {}) });
+  return carried.output.length === 0 && carried.diagnostics.length === 0 && carried.mutations.length === 0 && carried.inverse_group.length === 0;
+}
+
+/** 🏁️ Hands the shell every publication queued for `instanceId` since its last take, oldest first. */
+export function takeOperationPublications(instanceId: number): readonly WgpuOperationPublication[] {
+  const queue = pendingOperationPublications.get(instanceId) ?? [];
+  pendingOperationPublications.delete(instanceId);
   return queue;
 }
 
@@ -1231,9 +1254,10 @@ export interface WgpuPluginHandle extends MediaTransportPort {
   /** 👥️ The last `AppFrame::Ephemeral` this instance's guest appended to an answer (`AppChannelClient.ephemeral`),
    * or `null` — what the shell's presence heartbeat carries as the peer's app presence pack and interaction. */
   readonly ephemeralSnapshot: (instanceId: number) => WgpuEphemeralSnapshot | null;
-  /** ⏪️ The history patches the guest pushed on uncorrelated progress frames since the last take — the wgpu twin of
-   * React's `subscribeOperationProgress` history lane ({@link takeProgressHistoryPatches}). */
-  readonly takeProgressHistoryPatches: (instanceId: number) => readonly unknown[];
+  /** 🏁️ What the guest published between two host calls since the last take — typed-operation completions, UI-progress
+   * frames and the standing drain's own fault: the wgpu twin of React's `subscribeOperationCompletions` and
+   * `subscribeOperationProgress` ({@link takeOperationPublications}). */
+  readonly takeOperationPublications: (instanceId: number) => readonly WgpuOperationPublication[];
   readonly dispose: () => Promise<void>;
 }
 
@@ -1303,7 +1327,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     lifecycleByInstance.delete(instanceId);
     uiRouteByInstance.delete(instanceId);
     pendingTurnEffects.delete(instanceId);
-    pendingProgressHistoryPatches.delete(instanceId);
+    pendingOperationPublications.delete(instanceId);
     actorTurnChains.delete(actorId);
     closingInstances.delete(instanceId);
   };
@@ -1528,10 +1552,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             if (admitSpawnedJob(instanceId, effect)) continue;
             const frame = shellFrameBytes(effect, instanceId);
             if (frame && shellFrameAnswersACaller(frame)) frames.push(frame);
-            else {
-              if (frame) stashProgressHistoryPatch(instanceId, frame);
-              leftover.push(effect);
-            }
+            else if (!frame || !stashOperationProgress(instanceId, frame)) leftover.push(effect);
           }
           if (leftover.length > WGPU_TYPED_OPERATION_EFFECT_CAPACITY) throw new Error(`wgpu-bridge typed-operation host effects for instance ${instanceId} exceeded their ${WGPU_TYPED_OPERATION_EFFECT_CAPACITY}-entry authority`);
           pendingTurnEffects.set(instanceId, leftover);
@@ -1548,6 +1569,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       );
       drive.report(`drain polls=${outcome.polls} stopped=${outcome.stopped}`);
     } catch (error) {
+      console.error(`wgpu-bridge typed-operation drain failed for instance ${instanceId}`, error);
+      stashOperationPublication(instanceId, { completed: false, fault: error instanceof Error ? error.message : String(error) });
       turnOutcomes.push({ instanceId, error });
     } finally {
       drainingInstances.delete(instanceId);
@@ -1795,8 +1818,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const command = { schema: DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, operation, instanceId, bindingGeneration, uri };
     const control = encodeDocumentBackboneControlV1(command);
     const settled = await settleDocumentBackboneTurn(instanceId, [{ kind: "message", payload: { source: { tag: "shell", val: String(instanceId) }, payload: Array.from(control) } }]);
-    if (settled.frames.length !== 1) throw new Error(`actor-document-control.receipt-count:${settled.frames.length}`);
-    requireDocumentBackboneReceiptV1(settled.frames[0]!, command);
+    const { receipts, unsolicited } = splitDocumentBackboneControlTurnV1(settled.frames);
+    if (receipts.length !== 1) throw new Error(`actor-document-control.receipt-count:${receipts.length}`);
+    requireDocumentBackboneReceiptV1(receipts[0]!, command);
+    if (unsolicited.length > 0) turnOutcomes.push({ instanceId, frames: [...unsolicited] });
     return emptyInvocation(settled.effects);
   };
 
@@ -1839,7 +1864,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         requireOpening();
         await settleInstanceLifecycle(lifecycle, route, opened, execute, instanceId);
         requireOpening();
-        channelByInstance.set(instanceId, new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local"));
+        const channel = new AppChannelClient(channelHandle, channelRequests, instanceId, appId, "local");
+        channel.onOperationCompleted((completion) => stashOperationPublication(instanceId, operationCompletionPublication(completion)));
+        channelByInstance.set(instanceId, channel);
         return instanceId;
         } finally {
           phase.leave();
@@ -1918,7 +1945,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       throw new Error(failed ? faultDisplayMessage(failed.Error.fault, decodePackValue) : `readHistory(${instanceId}): no HistorySnapshot among ${frames.length} reply frame(s)`);
     },
     ephemeralSnapshot: (instanceId) => wgpuEphemeralSnapshot(channelByInstance.get(instanceId)?.ephemeral() ?? null),
-    takeProgressHistoryPatches,
+    takeOperationPublications,
     codec: async (request) => {
       const actorId = codecActorId();
       const answer: ShardCodecAnswer = await submitActorWork(actorId, () => shardClient.codec(actorId, request));
@@ -1980,8 +2007,8 @@ export interface WgpuJsBridge {
   readonly codecPrintMirror: (artifactKind: string, pack: Uint8Array, spr: Uint8Array) => Promise<readonly [string, string]>;
   /** 👥️ `WgpuPluginHandle.ephemeralSnapshot`, synchronous — read after every action and command. */
   readonly ephemeralSnapshot: (instanceId: number) => WgpuEphemeralSnapshot | null;
-  /** ⏪️ JSON array of `HistoryPatch` — synchronous, taken by the shell every frame; `u64` carriers cross as numbers. */
-  readonly takeProgressHistoryPatches: (instanceId: number) => string;
+  /** 🏁️ JSON array of `WgpuOperationPublication` — synchronous, taken by the shell every frame; `u64` carriers cross as numbers. */
+  readonly takeOperationPublications: (instanceId: number) => string;
 }
 
 /** 📦️ `handle_action_js`/`handle_command_js` pass the INVOCATION as `pk:`-prefixed pack too, for the
@@ -2044,7 +2071,7 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }).then((value) => codecBytes(value, "pack-schema-hash")),
     codecPrintMirror: (artifactKind, pack, spr) => handle.codec({ operation: "print-mirror", artifactKind, pair: { pack, spr } }).then((value) => codecMirror(value)),
     ephemeralSnapshot: (instanceId) => handle.ephemeralSnapshot(instanceId),
-    takeProgressHistoryPatches: (instanceId) => JSON.stringify(handle.takeProgressHistoryPatches(instanceId), (_key, value: unknown) => (typeof value === "bigint" ? Number(value) : value)),
+    takeOperationPublications: (instanceId) => JSON.stringify(handle.takeOperationPublications(instanceId), (_key, value: unknown) => (typeof value === "bigint" ? Number(value) : value)),
   };
 }
 

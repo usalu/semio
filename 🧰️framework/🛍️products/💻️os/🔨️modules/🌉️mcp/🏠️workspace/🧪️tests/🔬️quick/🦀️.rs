@@ -946,8 +946,8 @@ fn an_inference_without_a_published_contract_passes_its_payload_through() {
 #[test]
 fn a_composed_documents_child_heads_become_child_keyed_inference_dependencies() {
     let entries = vec![
-        store::ChildHeadPackEntry { slot: "content".into(), child_id: "flow-1".into(), dialect: "s.flow@1/*".into(), head_pack: vec![1, 2, 3] },
-        store::ChildHeadPackEntry { slot: "content".into(), child_id: "flow-2".into(), dialect: "s.flow@1/*".into(), head_pack: vec![4] },
+        store::ChildHeadPackEntry { slot: "content".into(), child_id: "flow-1".into(), dialect: "s.flow@1/*".into(), head_pack: vec![1, 2, 3], owner: String::new() },
+        store::ChildHeadPackEntry { slot: "content".into(), child_id: "flow-2".into(), dialect: "s.flow@1/*".into(), head_pack: vec![4], owner: String::new() },
     ];
     let dependencies = child_head_dependencies(entries);
     assert_eq!(dependencies, vec![("child:content/flow-1".to_string(), vec![1, 2, 3]), ("child:content/flow-2".to_string(), vec![4])]);

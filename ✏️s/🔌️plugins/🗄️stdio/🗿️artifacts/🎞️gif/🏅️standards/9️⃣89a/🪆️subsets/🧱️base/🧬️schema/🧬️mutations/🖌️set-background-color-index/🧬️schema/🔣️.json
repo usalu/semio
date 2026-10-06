@@ -27,6 +27,7 @@
           "en": "Index of the palette color, 0 to 255.",
           "de": "Index der Palettenfarbe, 0 bis 255."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 10

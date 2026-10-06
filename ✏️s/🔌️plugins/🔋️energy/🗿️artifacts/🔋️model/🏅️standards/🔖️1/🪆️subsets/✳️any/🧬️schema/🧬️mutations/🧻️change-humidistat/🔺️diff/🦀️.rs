@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeHumidistatDehumidifyingThrottleRange, base: &
     if let Some(item) = model.humidistats.iter_mut().find(|item| item.id == payload.id) {
         item.dehumidifying_throttle_range = payload.new_dehumidifying_throttle_range;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

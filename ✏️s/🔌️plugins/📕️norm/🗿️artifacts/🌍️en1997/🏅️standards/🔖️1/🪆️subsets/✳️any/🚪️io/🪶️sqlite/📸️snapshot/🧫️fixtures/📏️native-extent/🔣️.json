@@ -1,0 +1,82 @@
+{
+  "schema": "semio.en1997.sqlite.native-semantic-extent.v1",
+  "scalarPolicy": {
+    "integer": 8,
+    "real": 8,
+    "null": 0,
+    "text": "UTF-8",
+    "finiteBinary64": 22,
+    "nanBinary64": 11,
+    "infiniteBinary64": 32
+  },
+  "cases": [
+    {
+      "id": "mixed",
+      "rows": 9,
+      "valueBytes": 1602
+    },
+    {
+      "id": "empty",
+      "rows": 1,
+      "valueBytes": 112
+    },
+    {
+      "id": "0000000000000000",
+      "word": "0000000000000000",
+      "rows": 9,
+      "valueBytes": 1602
+    },
+    {
+      "id": "8000000000000000",
+      "word": "8000000000000000",
+      "rows": 9,
+      "valueBytes": 1602
+    },
+    {
+      "id": "7ff0000000000000",
+      "word": "7ff0000000000000",
+      "rows": 9,
+      "valueBytes": 2152
+    },
+    {
+      "id": "fff0000000000000",
+      "word": "fff0000000000000",
+      "rows": 9,
+      "valueBytes": 2152
+    },
+    {
+      "id": "7ff8000000000042",
+      "word": "7ff8000000000042",
+      "rows": 9,
+      "valueBytes": 997
+    },
+    {
+      "id": "7ff0000000000001",
+      "word": "7ff0000000000001",
+      "rows": 9,
+      "valueBytes": 997
+    },
+    {
+      "id": "0000000000000001",
+      "word": "0000000000000001",
+      "rows": 9,
+      "valueBytes": 1602
+    },
+    {
+      "id": "0010000000000000",
+      "word": "0010000000000000",
+      "rows": 9,
+      "valueBytes": 1602
+    }
+  ],
+  "annexes": [
+    "En",
+    "De"
+  ],
+  "boundaries": [
+    "exact",
+    "minusOne",
+    "cumulativeRows"
+  ],
+  "allocationPolicy": "independent native backing allowance"
+}

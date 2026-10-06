@@ -4,7 +4,7 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::op::ProgramMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 use crate::viewer::architect::modes::view;
 use crate::viewer::architect::modes::view::windows::register;
 use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_DIALECT, ARCHITECT_PROGRAM_SCHEMA};

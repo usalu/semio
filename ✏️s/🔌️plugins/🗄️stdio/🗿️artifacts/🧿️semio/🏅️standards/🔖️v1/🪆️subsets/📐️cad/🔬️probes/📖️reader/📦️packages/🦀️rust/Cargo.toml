@@ -4,6 +4,12 @@
 # this repository on purpose — an oracle that could reach the subject would stop being a reference.
 # Same pattern and same stated reason as `…📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️bridge/Cargo.toml`.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "semio-cad-oracle-probe"

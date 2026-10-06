@@ -25,6 +25,7 @@ const REMODELING_PLAY_SURFACE_FRAMES: &str = "remodeling.play.frames";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: REMODELING_PLAY_WINDOW_FRAMES.into(),
         label: LocalizedLabel::native("Frames", "Frames"),
         body_key: REMODELING_PLAY_BODY_FRAMES.into(),

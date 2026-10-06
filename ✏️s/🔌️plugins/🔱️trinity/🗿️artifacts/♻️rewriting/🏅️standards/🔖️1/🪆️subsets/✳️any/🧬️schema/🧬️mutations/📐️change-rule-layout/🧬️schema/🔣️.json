@@ -14,7 +14,20 @@
       "const": "changeRuleLayoutPoint"
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Layout point",
+          "de": "Layoutpunkt"
+        },
+        "description": {
+          "en": "Key of the rule layout point that is placed (the pattern variable it belongs to).",
+          "de": "Schlüssel des Layoutpunkts der Regel, der platziert wird (die Mustervariable, zu der er gehört)."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newPoint": {
       "type": "object",
@@ -25,10 +38,30 @@
       ],
       "properties": {
         "x": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "X",
+              "de": "X"
+            },
+            "step": 1,
+            "precision": 2
+          }
         },
         "y": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Y",
+              "de": "Y"
+            },
+            "step": 1,
+            "precision": 2
+          }
         }
       },
       "x-semio-ui": {

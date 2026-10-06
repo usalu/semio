@@ -46,5 +46,5 @@ pub use catalogue::*;
 mod package_tests;
 
 #[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+#[path = "./🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_snapshot_tests;

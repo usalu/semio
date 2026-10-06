@@ -1,30 +1,25 @@
+#[path = "../../../../../../../🔨️modules/📁️filesystem/🔎️discovery/🦀️.rs"]
+mod directory_discovery;
 use semio_framework_dsl::{LexOptions,lex};
 use super::*;
 
 
-/// 🌾️ Walks every handcrafted `📖️.grammar.semio` shipped under `✏️s/🔌️plugins` and
-/// asserts it parses and compiles into a `Recognizer`. This is the runtime guard for the
-/// normative grammar sources: it needs only `parse_grammar`/`Recognizer` from this crate, so
-/// unlike `🧹️fixture-sweep`'s `m5_handcrafted_grammar_conformance` it does not pull the plugin
-/// crates in as dev-dependencies and therefore stays runnable while those are mid-migration.
+/// 🌾️ Compiles every General-owned grammar; extension facets own their conformance laws.
 #[semio_framework_async_macros::async_test]
 async fn every_shipped_grammar_semio_parses_and_compiles() {
-    fn collect(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
-        let Ok(entries) = std::fs::read_dir(dir) else { return };
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                collect(&path, out);
-            } else if path.file_name().and_then(|n| n.to_str()).is_some_and(|name| name.ends_with(".grammar.semio")) {
-                out.push(path);
-            }
-        }
-    }
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../..");
-    let plugins = root.join("\u{270f}\u{fe0f}s/\u{1f50c}\u{fe0f}plugins");
-    let mut files = Vec::new();
-    collect(&plugins, &mut files);
-    assert!(!files.is_empty(), "found zero *.grammar.semio under {}", plugins.display());
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../..");
+    let grammar_root = root.join("🧰️framework");
+    let mut reported = usize::MAX;
+    let discovery = directory_discovery::discover(
+        grammar_root.clone(),
+        |directory| std::fs::canonicalize(directory),
+        |directory| std::fs::read_dir(directory)?.map(|entry| entry.map(|entry| { let path = entry.path(); directory_discovery::DiscoveryEntry { directory: path.is_dir(), value: path } })).collect(),
+        |path| path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name.ends_with(".grammar.semio")),
+        |count, directory| { if count != reported && count % 256 == 0 { println!("[DEBUG] grammar discovery: {count} physical directories, {}", directory.display()); reported = count; } true },
+    ).expect("grammar source discovery");
+    assert!(!discovery.cancelled, "grammar source discovery cancelled");
+    let files = discovery.files;
+    assert!(!files.is_empty(), "found zero *.grammar.semio under {}", grammar_root.display());
 
     let mut failures: Vec<String> = Vec::new();
     for file in &files {

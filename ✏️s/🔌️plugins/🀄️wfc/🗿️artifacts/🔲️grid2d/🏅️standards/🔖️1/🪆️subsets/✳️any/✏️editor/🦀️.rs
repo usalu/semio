@@ -495,6 +495,17 @@ impl Grid2dEditor {
         })
     }
 
+    /// 🪪️ The editor id every cell tool transaction is scoped by: `<appId>#<utility>`.
+    pub const TOOL_APP_ID: &'static str = "s.wfc.grid2d@1/*#editor";
+
+    /// 🎯️ One cell click of the ARMED utility as the framework's one-step tool (design §22.32 of ticket
+    /// 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): ONE tool transaction `<appId>#<utility>` of the leaf the click yields, so
+    /// the history lists the click as one row whose mutation stays editable; `select` yields nothing and leaves zero trace.
+    fn armed_tool(doc: &ArtifactView<'_, Grid2dSnapshot>, config: &Grid2dWindowConfig, utility: &str, x: u32, y: u32) -> Result<Emit<Grid2dMutation>, Fault> {
+        let leaves = Self::armed_pick(doc.snapshot, config, utility, x, y)?.into_iter().collect();
+        Ok(Emit::tool_once(Self::TOOL_APP_ID, utility, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), leaves))
+    }
+
     fn config_emit(view_state: Option<&ViewModel>, config: Grid2dWindowConfig) -> Result<Emit<Grid2dMutation>, Fault> {
         let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.window.required"), "wfc.grid2d.window.required"))?;
         let mutation = window::addressed_config(view, config)?;
@@ -520,7 +531,7 @@ impl Grid2dEditor {
                 change_tile_media(id.clone(), media)
             }
             Grid2dEditorCommand::CreateRule { id, tile_a_id, tile_b_id, direction, allowed } => {
-                let direction = crate::schema::snapshot::text::direction_from_token(direction).map_err(|error| Fault::from(format!("wfc-grid2d-invalid-direction:{error}")))?;
+                let direction = crate::io::text::snapshot::direction_from_token(direction).map_err(|error| Fault::from(format!("wfc-grid2d-invalid-direction:{error}")))?;
                 create_rule(WfcAdjacencyRule2d { id: id.clone(), tile_a_id: tile_a_id.clone(), tile_b_id: tile_b_id.clone(), direction, allowed: *allowed })
             }
             Grid2dEditorCommand::DeleteRule { id } => delete_rule(id.clone()),
@@ -530,10 +541,7 @@ impl Grid2dEditor {
             Grid2dEditorCommand::UnmaskCell { x, y } => unmask_cell(*x, *y),
             Grid2dEditorCommand::PickCell { x, y } => {
                 let utility = view_state.map_or(grid::UTILITY_SELECT, grid2d_active_utility);
-                match Self::armed_pick(doc.snapshot, &window_config, utility, *x, *y)? {
-                    Some(picked) => picked,
-                    None => return Ok(Emit::default()),
-                }
+                return Self::armed_tool(doc, &window_config, utility, *x, *y);
             }
             Grid2dEditorCommand::CanvasPointerDown { surface_id, x, y, width, height } => {
                 if !grid::owns_surface(surface_id) {
@@ -543,10 +551,7 @@ impl Grid2dEditor {
                 let Some((column, row)) = grid::cell_at(doc.snapshot, &window_config, *x, *y, *width, *height) else {
                     return Ok(Emit::default());
                 };
-                match Self::armed_pick(doc.snapshot, &window_config, utility, column, row)? {
-                    Some(picked) => picked,
-                    None => return Ok(Emit::default()),
-                }
+                return Self::armed_tool(doc, &window_config, utility, column, row);
             }
             Grid2dEditorCommand::CanvasGesture { .. } => return Ok(Emit::default()),
             Grid2dEditorCommand::SetActiveExample { example_id } => {

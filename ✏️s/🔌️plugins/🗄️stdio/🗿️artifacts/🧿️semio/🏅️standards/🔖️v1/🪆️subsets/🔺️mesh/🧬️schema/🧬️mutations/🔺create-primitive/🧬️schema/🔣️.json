@@ -10,10 +10,40 @@
   ],
   "properties": {
     "mesh_id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Mesh",
+          "de": "Netz"
+        },
+        "description": {
+          "en": "Id of the mesh.",
+          "de": "Kennung des Netzes."
+        },
+        "ref": {
+          "kind": "mesh"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "primitive": {
-      "$ref": "#/$defs/SemioPrimitive"
+      "$ref": "#/$defs/SemioPrimitive",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Primitive",
+          "de": "Primitiv"
+        },
+        "description": {
+          "en": "Id, topology, material and vertex data of the primitive that is created.",
+          "de": "Kennung, Topologie, Material und Vertexdaten des Primitivs, das erstellt wird."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

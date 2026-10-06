@@ -582,6 +582,14 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
             }
             ArtifactRetainedCommandPhase::Publish => {
                 cx.set_stage("retained-command-publish");
+                if let Some(emit)=self.emit.as_mut(){
+                    let bytes=emit.next_child_preparation_byte_demand().max(1);
+                    match emit.prepare_child_one(1,bytes){
+                        Ok(crate::app::ChildEmitPreparationStep::Ready)=>{},
+                        Ok(crate::app::ChildEmitPreparationStep::Pending)=>{cx.consume_fuel(1);return self.preview(cx,br#"{"en":"Preparing child operations","de":"Kindoperationen werden vorbereitet"}"#);},
+                        Ok(crate::app::ChildEmitPreparationStep::Refused(fault))|Err(fault)=>return self.reducer_fault(cx,&fault),
+                    }
+                }
                 let Some(completion) = self.completion.as_ref() else { return self.fault(cx, b"retained command completion owner is absent") };
                 if !completion.has_mounted_consumer() {
                     return self.fault(cx, b"retained command completion consumer is absent");

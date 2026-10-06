@@ -1,4 +1,4 @@
-//! 🧩️ Puzzle 2d artifact — the `puzzle.2d.fixture` document schema: the `Puzzle2dSnapshot`
+//! 🧩️ Puzzle 2d artifact — the `board.ports.directed.v1` document schema: the `Puzzle2dSnapshot`
 //! (schema/camera/nodes/edges/meta), its node/handle/edge/kind-compatibility records, and the
 //! `artifact_kind()` spec the play app's manifest binds. Sibling nodes: `🔺️diff`, `🔧️op`, `🗣️dsl`,
 //! `🎒️pack`, `📡️spr`. No `⚙️engine` sibling anymore (ticket
@@ -19,19 +19,22 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
+#[path = "../../🔨️modules/🎲️board/🎬️scene/🦀️.rs"]
+pub mod board_scene;
+
 #[cfg(feature = "component-app-assembly")]
 #[path = "../../🎮️commands/🧵️retained/🦀️.rs"]
 pub mod retained_command;
 
 #[cfg(all(test, feature = "component-app-assembly"))]
 fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {
-    ("puzzle2d", "puzzle.2d.fixture", editor::puzzle2d::PUZZLE2D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
+    ("puzzle2d", "board.ports.directed.v1", editor::puzzle2d::PUZZLE2D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
 }
 
-pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";
+pub const PUZZLE_2D_SCHEMA: &str = "board.ports.directed.v1";
 
 //#region 🔖️Document
-/// 🎥️ The canvas camera (pan/zoom) for a puzzle 2d fixture.
+/// 🎥️ The canvas camera (pan/zoom) for a puzzle 2d snapshot.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -99,8 +102,8 @@ pub enum Puzzle2dNodeAnchor {
 }
 
 /// 🔵️ One node — `shape: "circle"` (default, radius-sized) or `"rectangle"` (width/height-sized);
-/// `🐙️handles` are its rim ports. Mirrors `semio_framework_os_infinite::scene_json::FixtureJson`'s
-/// per-node fields, the canonical parser this fixture format round-trips through.
+/// `🐙️handles` are its rim ports. Mirrors `semio_framework_os_infinite::scene_json::BoardSnapshotJson`'s
+/// per-node fields, the canonical parser this snapshot format round-trips through.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -440,7 +443,7 @@ pub struct Puzzle2dCatalogWireKind {
     pub default_edge_kind: String,
 }
 
-/// 🗂️ Typed kind-catalog bundle carried on fixture meta.
+/// 🗂️ Typed kind-catalog bundle carried on snapshot meta.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -637,7 +640,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         // its extension claim from `<Puzzle2dPlaySnapshot as store::ArtifactDsl>::EXTENSION`
         // (`…/🧬️mutations/🦀️.rs`, the editor's real `Snapshot` type), which is
         // `"puzzle2d-play"`, not the base `Puzzle2dSnapshot`'s `"puzzle2d"`.
-        ("s.puzzle.puzzle2d.codec.document-1", "codec", "puzzle.2d.fixture:puzzle2d-play", &[("codec", "puzzle.2d.fixture"), ("codec-extension", "17:puzzle.2d.fixture:puzzle2d-play")], None),
+        ("s.puzzle.puzzle2d.codec.document-1", "codec", "board.ports.directed.v1:puzzle2d-play", &[("codec", "board.ports.directed.v1"), ("codec-extension", "17:board.ports.directed.v1:puzzle2d-play")], None),
         ("s.puzzle.puzzle2d.localization.en", "localization", "2D Puzzle", &[], Some(("en", "2D Puzzle"))),
         ("s.puzzle.puzzle2d.localization.de", "localization", "2D-Puzzle", &[], Some(("de", "2D-Puzzle"))),
     ];
@@ -679,20 +682,20 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "puzzle.puzzle2d",
                     extension: Some("puzzle2d"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("puzzle.puzzle2d"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "puzzle.puzzle2d.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("puzzle.puzzle2d.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -711,8 +714,8 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("2d.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -721,8 +724,8 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("2d.spr"),
                 },
             ]
@@ -731,7 +734,7 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 }
 //#endregion 🔖️Declaration
 
-pub use crate::standards::v1::subsets::any::schema::mutations::text::Puzzle2dPlaySnapshot;
+pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dPlaySnapshot;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -769,20 +772,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod flat_position {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛️flat-position/🦀️.rs"]
@@ -795,21 +790,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod create_node {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🦀️.rs"]
@@ -1830,12 +1816,12 @@ pub mod editor {
             pub mod rotate_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/🦀️.rs"]
             pub mod scale_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-fixture/🦀️.rs"]
-            pub mod export_fixture;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-fixture/🦀️.rs"]
-            pub mod import_fixture;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️open-import-fixture/🦀️.rs"]
-            pub mod open_import_fixture;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-snapshot/🦀️.rs"]
+            pub mod export_snapshot;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-snapshot/🦀️.rs"]
+            pub mod import_snapshot;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️open-import-snapshot/🦀️.rs"]
+            pub mod open_import_snapshot;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚩️set-selection-flag/🦀️.rs"]
             pub mod set_selection_flag;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️set-suggestion-offset/🦀️.rs"]
@@ -1963,3 +1949,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v1::subsets::any::io::{Puzzle2dBuilderConstruction, Puzzle2dParts, Puzzle2dAnalyzerAnalysis, Puzzle2dBuilderFacets, Puzzle2dBuilder, Puzzle2dAnalyzer, Puzzle2dComposer};

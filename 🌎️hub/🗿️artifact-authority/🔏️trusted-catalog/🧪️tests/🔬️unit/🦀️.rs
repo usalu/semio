@@ -674,7 +674,7 @@ fn attach_fixture_plugin_module(root: &Path, record: &mut serde_json::Value, des
     record["pluginModule"] = write_fixture_plugin_module(root, record["pluginId"].as_str().unwrap(), record["packageId"].as_str().unwrap(), record["version"].as_str().unwrap(), record["component"]["sha256"].as_str().unwrap(), descriptor).expect("fixture plugin module");
 }
 
-fn fixture_json() -> serde_json::Value {
+fn snapshot_json() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/👥️two-package/🔣️.json")).expect("trusted-catalog fixture")
 }
 
@@ -908,7 +908,7 @@ fn prepared_fixture() -> FixtureDirectory {
     std::fs::create_dir_all(root.join("descriptors")).expect("descriptor directory");
     std::fs::create_dir_all(root.join("browser")).expect("actor directory");
     std::fs::write(root.join("browser/closed-actor.mjs"), b"abc").expect("synthetic actor, never executed");
-    let mut fixture = fixture_json();
+    let mut fixture = snapshot_json();
     let mut bundle = fixture["bundle"].take();
     bundle["packages"][0]["nativeCodecs"][0]["artifactSchema"] = schema.clone().into();
     for target in bundle["packages"][0]["openTargets"].as_array_mut().expect("open targets") {
@@ -1244,7 +1244,7 @@ async fn selected_native_provider_descriptor_and_cancellation_fences_precede_pub
 
 #[tokio::test]
 async fn neutral_fixture_proves_dependency_order_hash_oracles_and_exact_limit_edges() {
-    let fixture = fixture_json();
+    let fixture = snapshot_json();
     let bundle: TrustedBundleV1 = serde_json::from_value(fixture["bundle"].clone()).expect("bundle shape");
     assert_eq!(validate_bundle(&bundle, "fixture").expect("valid closure").package_indices, vec![1, 0]);
     let bytes = fixture["componentHex"].as_str().expect("component hex").as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("hex pair"), 16).expect("hex byte")).collect::<Vec<_>>();
@@ -1277,11 +1277,11 @@ async fn loader_retains_exact_bytes_and_independent_identities_before_atomic_cod
     assert_eq!(catalog.packages().iter().map(VerifiedTrustedPackage::plugin_id).collect::<Vec<_>>(), vec!["fixture.base", "fixture.editor"]);
     let editor = &catalog.packages()[1];
     assert_eq!(editor.package_ref().package.0, "semio:fixture-editor");
-    assert_eq!(hex_lower(&editor.package_ref().hash.0), fixture_json()["componentBlake3"]);
+    assert_eq!(hex_lower(&editor.package_ref().hash.0), snapshot_json()["componentBlake3"]);
     assert_ne!(editor.plugin_id(), editor.package_ref().package.0);
     assert_eq!(editor.component().byte_length(), 3);
     assert_eq!(&*editor.component().read(&control.context()).await.expect("retained component rereads"), b"abc");
-    assert_eq!(hex_lower(editor.component_sha256()), fixture_json()["componentSha256"]);
+    assert_eq!(hex_lower(editor.component_sha256()), snapshot_json()["componentSha256"]);
     assert_eq!(editor.descriptor().manifest.plugin_id, editor.plugin_id());
     assert_eq!(editor.descriptor().manifest.version, editor.version());
     assert_eq!(Sha256::digest(editor.descriptor_bytes()), *editor.descriptor_sha256());
@@ -1297,7 +1297,7 @@ async fn loader_retains_exact_bytes_and_independent_identities_before_atomic_cod
             plugin_id: "fixture.editor".into(),
             package_id: "semio:fixture-editor".into(),
             version: "1.2.3".into(),
-            package_hash: fixture_json()["componentSha256"].as_str().expect("component sha256").into(),
+            package_hash: snapshot_json()["componentSha256"].as_str().expect("component sha256").into(),
         },
         pack_schema_hash: "11".repeat(32),
         bootstrap_version: 1,
@@ -1338,7 +1338,7 @@ async fn selected_execution_target_assets_are_generation_and_digest_bound() {
             plugin_id: "fixture.editor".into(),
             package_id: "semio:fixture-editor".into(),
             version: "1.2.3".into(),
-            package_hash: fixture_json()["componentSha256"].as_str().expect("component sha256").into(),
+            package_hash: snapshot_json()["componentSha256"].as_str().expect("component sha256").into(),
         },
         pack_schema_hash: "11".repeat(32),
         bootstrap_version: 1,
@@ -1393,7 +1393,7 @@ async fn verified_trusted_catalog_document_open_generation_and_resolution_are_ex
             plugin_id: "fixture.editor".into(),
             package_id: "semio:fixture-editor".into(),
             version: "1.2.3".into(),
-            package_hash: fixture_json()["componentSha256"].as_str().expect("component sha256").into(),
+            package_hash: snapshot_json()["componentSha256"].as_str().expect("component sha256").into(),
         },
         pack_schema_hash: "11".repeat(32),
         bootstrap_version: 1,
@@ -1428,7 +1428,7 @@ async fn verified_trusted_catalog_document_open_generation_and_resolution_are_ex
         let mut surface = "s.fixture.document@1/*#editor".to_owned();
         match case["change"].as_str().unwrap() {
             "none" => {}
-            "blake3-owner" => candidate.owner.package_hash = fixture_json()["componentBlake3"].as_str().unwrap().to_owned(),
+            "blake3-owner" => candidate.owner.package_hash = snapshot_json()["componentBlake3"].as_str().unwrap().to_owned(),
             "descriptor-owner" => candidate.owner.package_hash = hex_lower(catalog.packages()[1].descriptor_sha256()),
             "zero-owner" => candidate.owner.package_hash = "00".repeat(32),
             "bare-kind" => candidate.artifact_kind = "fixture.document".to_owned(),
@@ -1625,7 +1625,7 @@ fn trusted_catalog_relative_paths_match_the_neutral_no_link_corpus() {
 
 #[test]
 fn descriptor_projection_rejects_package_conflicts_unknown_fields_and_duplicate_fields() {
-    let fixture = fixture_json();
+    let fixture = snapshot_json();
     let bundle: TrustedBundleV1 = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
     let component_sha256 = fixture["componentSha256"].as_str().expect("sha256");
     let canonical = descriptor_bytes("fixture.editor", "semio:fixture-editor", "1.2.3", component_sha256, Some("fixture.document@1"), Some(("fixture.base", "1.0.0")));
@@ -2059,7 +2059,7 @@ fn descriptor_open_targets_follow_the_one_pairing_rule_and_validate_as_published
 
 #[test]
 fn bundle_rejects_incomplete_duplicate_conflicting_and_escaping_declarations() {
-    let fixture = fixture_json();
+    let fixture = snapshot_json();
     let mut bundle: TrustedBundleV1 = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
     bundle.packages.pop();
     assert!(validate_bundle(&bundle, "fixture").expect_err("incomplete closure").to_string().contains("incomplete"));
@@ -2087,7 +2087,7 @@ fn trusted_profile_generation_binds_zero_target_package_and_every_codec_row() {
         append_trusted_profile_dependencies(&mut encoded, &identities).unwrap();
         assert_eq!(hex_lower(&encoded), row["hex"].as_str().unwrap(), "{}", row["name"]);
     }
-    let fixture = fixture_json();
+    let fixture = snapshot_json();
     let bundle: TrustedBundleV1 = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
     let original = trusted_profile_generation(&bundle, &bundle.profiles[0]).expect("generation");
 
@@ -2439,7 +2439,7 @@ async fn a_verified_file_streams_its_exact_bytes_without_a_deadline_and_withhold
 /// when two declared dependencies declare the same exact codec.
 #[test]
 fn hosted_open_targets_bind_the_owner_codec_or_are_refused_by_name() {
-    let fixture = fixture_json();
+    let fixture = snapshot_json();
     let bundle: TrustedBundleV1 = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
     let mut host = bundle.packages[0].clone();
     let mut owner = bundle.packages[1].clone();
@@ -2525,7 +2525,7 @@ fn the_most_general_dialect_rule_answers_the_shared_fixture() {
 #[tokio::test]
 async fn a_hosted_multi_subset_kind_is_created_and_executed_by_its_hosts_most_general_editor() {
     let mut fixture = prepared_fixture();
-    let (schema, component_sha256) = (fixture.schema.clone(), fixture_json()["componentSha256"].as_str().expect("component sha256").to_owned());
+    let (schema, component_sha256) = (fixture.schema.clone(), snapshot_json()["componentSha256"].as_str().expect("component sha256").to_owned());
     let codecs = fixture.bundle["packages"][0]["nativeCodecs"].take();
     fixture.bundle["packages"][0]["nativeCodecs"] = serde_json::json!([]);
     fixture.bundle["packages"][1]["nativeCodecs"] = codecs;

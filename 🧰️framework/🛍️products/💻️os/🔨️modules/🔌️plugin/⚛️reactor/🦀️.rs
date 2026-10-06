@@ -180,19 +180,17 @@ impl JobRenderBindingRegistry {
         let generation = self.next_generation.checked_add(1).ok_or(())?;
         self.next_generation = generation;
         let binding = JobRenderBinding { job, instance, generation };
-        if let Some(previous) = self.current_by_instance[instance_slot] {
-            let previous_slot = previous.job as usize % REACTOR_TASK_SLOTS;
-            if self.by_job[previous_slot] == Some(previous) {
-                self.by_job[previous_slot] = None;
-            }
-        }
         self.by_job[job_slot] = Some(binding);
         self.current_by_instance[instance_slot] = Some(binding);
         Ok(binding)
     }
 
+    fn owned(&self, job: u64) -> Option<JobRenderBinding> {
+        self.by_job[job as usize % REACTOR_TASK_SLOTS].filter(|binding| binding.job == job)
+    }
+
     fn accepted(&self, job: u64) -> Option<JobRenderBinding> {
-        let binding = self.by_job[job as usize % REACTOR_TASK_SLOTS].filter(|binding| binding.job == job)?;
+        let binding = self.owned(job)?;
         self.current_by_instance[binding.instance as usize % REACTOR_TASK_SLOTS].filter(|current| *current == binding)
     }
 
@@ -209,11 +207,13 @@ impl JobRenderBindingRegistry {
 
     fn close_instance(&mut self, instance: u32) {
         let instance_slot = instance as usize % REACTOR_TASK_SLOTS;
-        let Some(binding) = self.current_by_instance[instance_slot].filter(|binding| binding.instance == instance) else { return };
-        self.current_by_instance[instance_slot] = None;
-        let job_slot = binding.job as usize % REACTOR_TASK_SLOTS;
-        if self.by_job[job_slot] == Some(binding) {
-            self.by_job[job_slot] = None;
+        if self.current_by_instance[instance_slot].is_some_and(|binding| binding.instance == instance) {
+            self.current_by_instance[instance_slot] = None;
+        }
+        for binding in &mut self.by_job {
+            if binding.is_some_and(|binding| binding.instance == instance) {
+                *binding = None;
+            }
         }
     }
 }

@@ -1611,6 +1611,24 @@ pub mod pdf_conformance {
             .collect()
     }
 
+    /// 🌈️ Reads actual destination profile component counts and decompressed bytes through the independent PDF graph.
+    pub fn output_profiles(input: &[u8]) -> Result<Vec<(i64, Vec<u8>)>, String> {
+        let document = load(input)?;
+        let catalog = catalog_dict(&document)?;
+        let intents = catalog.get(b"OutputIntents").map_err(|error| format!("no output intents: {error}"))?;
+        let intents = deref(&document, intents).and_then(|value| value.as_array().ok()).ok_or_else(|| "output intents do not resolve to an array".to_string())?;
+        let mut profiles = Vec::new();
+        for intent in intents {
+            let intent = deref_dict(&document, intent).ok_or_else(|| "output intent does not resolve to a dictionary".to_string())?;
+            let profile = intent.get(b"DestOutputProfile").map_err(|error| format!("no destination profile: {error}"))?;
+            let stream = deref(&document, profile).and_then(|value| value.as_stream().ok()).ok_or_else(|| "destination profile does not resolve to a stream".to_string())?;
+            let components = stream.dict.get(b"N").and_then(Object::as_i64).map_err(|error| format!("profile component count is absent: {error}"))?;
+            let bytes = stream.get_plain_content().map_err(|error| format!("profile stream decoding failed: {error}"))?;
+            profiles.push((components, bytes));
+        }
+        Ok(profiles)
+    }
+
     const FONT_PROGRAM_KEYS: [&str; 3] = ["FontFile", "FontFile2", "FontFile3"];
 
     /// 🔤️ Every `/Type /FontDescriptor` object, in object-number order — a stable ordinal space no

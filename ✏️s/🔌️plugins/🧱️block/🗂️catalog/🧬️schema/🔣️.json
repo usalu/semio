@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:s:block:catalog:conformance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactKind"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "artifactKind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "sourceFormat",
+        "componentKind",
+        "dimension",
+        "mediaCapability",
+        "mediaType",
+        "schema",
+        "exportFormats",
+        "importFormats",
+        "exportStdioKinds",
+        "importStdioKinds"
+      ],
+      "properties": {
+        "id": {
+          "const": "kit.catalog"
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "native",
+            "reuse"
+          ],
+          "properties": {
+            "native": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "const": "Kit Catalog"
+                },
+                "de": {
+                  "const": "Bausatzkatalog"
+                }
+              }
+            },
+            "reuse": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "en",
+                "de"
+              ],
+              "properties": {
+                "en": {
+                  "const": "Kit Catalog"
+                },
+                "de": {
+                  "const": "Bausatzkatalog"
+                }
+              }
+            }
+          }
+        },
+        "sourceFormat": {
+          "const": "kit.catalog"
+        },
+        "componentKind": {
+          "const": "kit-catalog"
+        },
+        "dimension": {
+          "const": "3d"
+        },
+        "mediaCapability": {
+          "const": "meshOnly"
+        },
+        "mediaType": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "class",
+            "form"
+          ],
+          "properties": {
+            "class": {
+              "const": "kit"
+            },
+            "form": {
+              "const": "type"
+            }
+          }
+        },
+        "schema": {
+          "const": "kit.catalog"
+        },
+        "exportFormats": {
+          "const": []
+        },
+        "importFormats": {
+          "const": []
+        },
+        "exportStdioKinds": {
+          "const": []
+        },
+        "importStdioKinds": {
+          "const": []
+        }
+      }
+    }
+  }
+}

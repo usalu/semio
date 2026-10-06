@@ -27,7 +27,7 @@ mod subject {
 
     /// 🧫️ The committed vectors.
     fn vectors(ctx: &Context<'_>) -> Result<Value, String> {
-        serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))
+        serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))
     }
 
     /// 📚️ A list the document or one of its vectors carries.

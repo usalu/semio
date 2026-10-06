@@ -511,7 +511,7 @@ def findings(definition, document):
 # region 🔖️Handlers
 def vectors(ctx):
     """🧫️ The committed vectors."""
-    return json.loads(ctx.fixture_bytes(VECTORS))
+    return json.loads(ctx.input_bytes(VECTORS))
 
 
 def accepted_documents(ctx):

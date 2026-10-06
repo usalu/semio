@@ -7,7 +7,7 @@ fn operation(value: i32) -> Std2AnyMutation {
 
 #[test]
 fn actual_leaf_descriptor_and_provenance() {
-    assert_metadata::<Std2AnySnapshot, Std2AnyMutation, SetValue>(include_str!("../../🧫️fixtures/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🔣️.json"), operation);
+    assert_metadata::<Std2AnySnapshot, Std2AnyMutation, SetValue>(include_str!("../../🧪️testing/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/📝️set-value/🔣️.json"), operation);
 }
 
 #[test]

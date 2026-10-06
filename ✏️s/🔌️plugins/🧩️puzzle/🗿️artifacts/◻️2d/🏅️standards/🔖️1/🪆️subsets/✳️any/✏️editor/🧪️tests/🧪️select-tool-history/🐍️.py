@@ -1,6 +1,6 @@
 """🐍️ Independent oracle of the select-tool history corpus (`🧫️fixtures/🧫️select-tool-history/🔣️.json`).
 
-Validates the corpus against its JSON Schema and every leaf against its puzzle 2d payload schema with `jsonschema`, then
+Validates actual history records and every leaf against its puzzle 2d payload schema with `jsonschema`, then
 re-folds each scenario's edited log (`log` with its `drafts`, withdrawn leaves dropped) over the board with shapely's
 affine transforms and requires the scenario's `head`. Written from the leaf schemas and design §8, not from the Rust:
 locked and missing targets are skipped, a rotation turns positions about the recorded pivot, a scaling spreads them.
@@ -86,7 +86,16 @@ def fold(board, log):
 
 def main():
     corpus = load(pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else EDITOR / "🧫️fixtures" / "🧫️select-tool-history" / "🔣️.json")
-    jsonschema.Draft7Validator(load(EDITOR / "🧬️schema" / "🔣️select-tool-history" / "🔣️.json")).validate(corpus)
+    domain = load(EDITOR / "🧮️history" / "🧬️schema" / "🔣️.json")
+    for scenario in corpus["scenarios"]:
+        for outcome in scenario.get("report", []):
+            jsonschema.validate(outcome, {**domain, "$ref": "#/definitions/SelectionOutcome"})
+        for step in scenario["steps"]:
+            expected = step.get("expect", {})
+            for outcome in expected.get("outcomes", []):
+                jsonschema.validate(outcome, {**domain, "$ref": "#/definitions/SelectionOutcome"})
+            for value in expected.get("inputs", []):
+                jsonschema.validate(value, {**domain, "$ref": "#/definitions/MutationInput"})
     checked = 0
     for scenario in corpus["scenarios"]:
         for leaf in leaves(scenario):

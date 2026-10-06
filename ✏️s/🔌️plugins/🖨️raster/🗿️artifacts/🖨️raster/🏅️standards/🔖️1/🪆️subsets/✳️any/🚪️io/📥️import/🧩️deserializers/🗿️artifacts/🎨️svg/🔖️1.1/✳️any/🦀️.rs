@@ -14,6 +14,6 @@ pub fn deserialize_bytes(bytes: &[u8]) -> Result<RasterSnapshot, String> {
     let svg = std::str::from_utf8(bytes).map_err(|error| format!("svg import: payload is not UTF-8 XML: {error}"))?;
     let rendered = semio_framework_os::rasterize_svg_to_png_base64(svg, 0, 0)?;
     let raw = base64_codec::base64_standard_decode(rendered.as_bytes()).map_err(|error| error.to_string())?;
-    let image = crate::io::semio_image_from_png_bytes(&raw)?;
-    crate::io::raster_document_from_semio_image(&image, "svg-import", "Imported svg")
+    let image = crate::standards::v1::subsets::any::io::semio_image_from_png_bytes(&raw)?;
+    crate::standards::v1::subsets::any::io::raster_document_from_semio_image(&image, "svg-import", "Imported svg")
 }

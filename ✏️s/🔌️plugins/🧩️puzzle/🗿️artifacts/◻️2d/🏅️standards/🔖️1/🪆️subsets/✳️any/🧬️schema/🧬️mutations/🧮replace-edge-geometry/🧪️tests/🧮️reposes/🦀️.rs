@@ -1,4 +1,4 @@
-//! 🧪️ `replace-edge-geometry` fixture — `🧮️reposes`.
+//! 🧪️ `replace-edge-geometry` snapshot — `🧮️reposes`.
 //!
 //! A whole-value swap of the connection pose: all eight members are rewritten, seven of them back to the value they already carried.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

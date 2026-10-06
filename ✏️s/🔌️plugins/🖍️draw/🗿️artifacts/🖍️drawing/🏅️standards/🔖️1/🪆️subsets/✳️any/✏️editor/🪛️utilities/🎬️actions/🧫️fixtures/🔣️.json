@@ -1,0 +1,18 @@
+{
+ "windowKind": "drawing-composite",
+ "actions": ["addLayer", "editSelection", "editPath", "editFill", "exportDocument"],
+ "utilities": [
+  {"id": "selectMarquee", "allowsActionsWhileActive": true},
+  {"id": "selectLasso", "allowsActionsWhileActive": true},
+  {"id": "selectDirect", "allowsActionsWhileActive": true},
+  {"id": "editNodes", "allowsActionsWhileActive": true},
+  {"id": "pen", "allowsActionsWhileActive": true},
+  {"id": "shapeRect", "allowsActionsWhileActive": true},
+  {"id": "shapeEllipse", "allowsActionsWhileActive": true},
+  {"id": "shapeLine", "allowsActionsWhileActive": true},
+  {"id": "shapePolygon", "allowsActionsWhileActive": true},
+  {"id": "booleanCombine", "allowsActionsWhileActive": true},
+  {"id": "trace", "allowsActionsWhileActive": true},
+  {"id": "transformMove", "allowsActionsWhileActive": true}
+ ]
+}

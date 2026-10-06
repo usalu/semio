@@ -23,5 +23,5 @@ mod host_kind_admission_tests;
 pub const DAG_DEMO_TEXT: &str = include_str!("🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 #[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+#[path = "./🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_snapshot_tests;

@@ -1,0 +1,22 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "urn:semio:draw:utility-action-policy",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["windowKind", "actions", "utilities"],
+ "properties": {
+  "windowKind": {"const": "drawing-composite"},
+  "actions": {"type": "array", "minItems": 1, "maxItems": 32, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+  "utilities": {
+   "type": "array", "minItems": 12, "maxItems": 12, "uniqueItems": true,
+   "items": {
+    "type": "object", "additionalProperties": false,
+    "required": ["id", "allowsActionsWhileActive"],
+    "properties": {
+     "id": {"enum": ["selectMarquee", "selectLasso", "selectDirect", "editNodes", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"]},
+     "allowsActionsWhileActive": {"const": true}
+    }
+   }
+  }
+ }
+}

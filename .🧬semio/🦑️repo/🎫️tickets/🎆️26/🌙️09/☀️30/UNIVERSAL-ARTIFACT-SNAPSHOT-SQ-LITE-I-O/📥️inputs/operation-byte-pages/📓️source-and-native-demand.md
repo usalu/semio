@@ -1,0 +1,9 @@
+# Operation Byte Pages Source And Native Demand
+
+The exact closed demand retains the existing member-publication first operation: UTF-8 `17` plus 8192 ASCII space bytes, a fixed 4096-byte grant and the existing 8322-turn close bound. It changes the owning source contract so no oversized contiguous byte allocation is produced in the first place. The source page reserve and physical return must each be separately observable and no larger than the same fixed grant.
+
+The existing first-party PagedList of primitive u8 has independently admitted payload and metadata backing, with real complete allocation release APIs. It provides the physical floor without the 4096-plus-length cell of RetainedPackPage. The proposed operation owner will expose genuine reserve, append and reader frontiers; it will never adapt an already produced large Vec into pages. Logical byte removal returns zero physical bytes; a separate empty backing return reports the measured actual layout.
+
+The production integration needs a paged sink and reader in Core/Replication, direct OpBinary and OS DSL producer methods, ChildEmit wire/storage serialization, actual Store member publication transport and worker ownership joins. Ordinary canonical wire words and all current encoding/control policies remain exact. Chart custom producers are owned by Physical; their exact paths and ordinary operation-four/Core-forty-eight evidence are coordinated before mount.
+
+The source fixture and independent Serde projection establish the complete octet demand. Native requested/released allocation observation is required for physical credit. Paged primitive storage alone does not prove codec, current parent/capture authority, transport cancellation or terminal return of arbitrary custom factory payloads. The global immutable-frame 34-path family stays held.

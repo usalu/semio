@@ -1,4 +1,4 @@
-//! 🧪️ `change-edge-locked` fixture — `🔒️locks-edge-1`.
+//! 🧪️ `change-edge-locked` snapshot — `🔒️locks-edge-1`.
 //!
 //! Sets `edge-1`'s tri-state `locked` flag to `Some(true)`, producing an ordinary edge patch —
 //! locking is a document edit here, not a presence or config lane change.
@@ -45,7 +45,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -88,7 +88,7 @@ fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `change-edge-locked` produces is exactly the committed diff — the single most
-/// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
+/// load-bearing assertion in the snapshot: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {

@@ -2,7 +2,7 @@
 use super::{PngEditCommand, PngEditor, PngNativeEditCommand};
 use crate::schema::mutations::{PatchPixelsMutation, PngMutation};
 use crate::schema::snapshot::PngSnapshot;
-use crate::io::{png_layout, png_revision, project_png};
+use crate::standards::v1_2::subsets::any::io::{png_layout, png_revision, project_png};
 use semio_s_artifact_stdio_contract::editing::raster::{RasterRegion, RasterRegionError, RasterRegionLimits, RasterRegionPlan};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};

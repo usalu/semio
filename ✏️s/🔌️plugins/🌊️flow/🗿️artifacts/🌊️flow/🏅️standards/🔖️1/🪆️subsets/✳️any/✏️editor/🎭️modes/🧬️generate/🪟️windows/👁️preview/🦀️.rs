@@ -22,6 +22,7 @@ const FLOW_PLAY_PREVIEW_PLACEHOLDER: &str = "(evaluate a generation to preview o
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: FLOW_PLAY_WINDOW_GENERATE_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: FLOW_PLAY_BODY_GENERATE_PREVIEW.into(),

@@ -1,0 +1,20 @@
+{
+  "qualification": "HELD source-only; preserves original independent generator/projection checks and allows manifests --out to observe exactly the staged generated root. No generated fixture or independent execution credit.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+      "before": "async function manifests(): Promise<void> {",
+      "after": "async function manifests(root: string): Promise<void> {"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+      "before": "    const dir = join(FIXTURES_DIR, directory);",
+      "after": "    const dir = join(root, directory);"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🏭️generator/📜️script.ts",
+      "before": "    await manifests();",
+      "after": "    await manifests(outRoot);"
+    }
+  ]
+}

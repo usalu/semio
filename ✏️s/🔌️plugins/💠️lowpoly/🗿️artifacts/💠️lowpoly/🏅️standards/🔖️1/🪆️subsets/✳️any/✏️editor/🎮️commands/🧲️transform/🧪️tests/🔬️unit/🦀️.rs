@@ -62,7 +62,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let moved = |offset: [f32; 3]| LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), offset });
     let log = [moved([1.0, 0.0, 0.0]), LowpolyMutation::ScaleSelection(ScaleSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), pivot: [0.0; 3], factor: [2.0, 1.0, 1.0] }), LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: vec![0], offset: [0.0, 0.5, 0.0] })];
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the edit applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = moved([0.0, 0.0, -2.0]);

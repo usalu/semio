@@ -1,0 +1,9 @@
+# Controlled JSON Syntax Ownership
+
+The canonical General lossless JSON reader now has a ticket-only successor with required caller-owned `JsonSyntaxWorkspace`, explicit unit and owned-byte limits, asynchronous progress, and retained source, partial string/container, decoded-node, duplicate replacement, result and refusal owners. Its one production consumer, General schema source closure, requires the same parser ownership authority. No production source was written.
+
+The actual original syntax and schema-reference laws remain meaningful. The missing workspace RED executed 15 original laws successfully and refused the three new ownership laws. The first staged test recorded 17 passing laws and one test-owned AJV duplicate-schema-ID failure. Its correction then executed 18 laws with 4,318 assertions and zero failures. The two original public API strict compiler checks also passed. All 22 captured input and snapshot bodies remained exact after execution.
+
+Language-neutral ownership cases cover neutral containers, replacement retention, work/owned-byte refusal, partial malformed/string refusals, duplicate rejection and number spelling. Independent jsonc-parser positions and AJV schema validation remain test-only providers. Cancellation was exercised at each actual progress callback; every refusal retained the identical previous partial owner prefix.
+
+Exact artifacts are `🗑️generated/json-syntax-ownership/source-3.json`, `red-1.json`, `test-1.json` and `test-2.json`. Full Cargo caller closure, protocol typed admission, native parser ownership counterpart, allocator/native string seal bounds and complete payload retirement remain unresolved. Schema-reference closure projection backing is separately unresolved. These observations do not establish complete source, native, runtime or publication readiness.

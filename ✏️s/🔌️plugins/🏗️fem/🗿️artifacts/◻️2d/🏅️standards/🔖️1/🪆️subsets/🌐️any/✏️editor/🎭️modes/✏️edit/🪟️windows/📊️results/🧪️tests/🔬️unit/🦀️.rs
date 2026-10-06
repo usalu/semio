@@ -14,7 +14,7 @@ fn results_scene(doc: &Fem2dSnapshot, display: &ResultDisplay, window: &config::
 }
 
 fn demo() -> Fem2dSnapshot {
-    crate::standards::v1::subsets::any::schema::default_fem2d_snapshot()
+    crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -26,7 +26,7 @@ async fn renders_fem2d_results_scene() {
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_surfaces_solver_error_without_panicking_2d() {
-    let empty = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
+    let empty = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let node = render(&empty, &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, FEM2D_UTILITY_SELECT_DIRECT).expect("a refused analysis still admits a surface");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(!json.is_empty(), "a document the solver refuses surfaces its message instead of panicking");
@@ -34,7 +34,7 @@ async fn results_window_surfaces_solver_error_without_panicking_2d() {
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
-    let doc = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
     let camera = Viewport2d::default();
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&doc, &display, &camera, &config::Fem2dResultsWindowConfig::default(), &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, FEM2D_UTILITY_SELECT_DIRECT).expect("fixture surface admission"))).expect("fixture projection");
@@ -133,7 +133,7 @@ async fn clip_by_value_keeps_only_the_requested_half_plane() {
 use crate::app_surface::{FemResultsAnimation, FemWaveform};
 
 fn animated_scene(animation: FemResultsAnimation, mode: DisplayMode) -> Canvas2dScene {
-    let doc = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let window = config::Fem2dResultsWindowConfig { animation, ..config::Fem2dResultsWindowConfig::default() };
     let display = ResultDisplay { source_id: Some("dead".into()), mode };
     let node = render(&doc, &display, &Viewport2d::default(), &window, &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, FEM2D_UTILITY_SELECT_DIRECT).expect("fixture surface admission");
@@ -198,7 +198,7 @@ async fn results_window_mode_shapes_carry_the_transport_caption_while_playing() 
 /// revision drops the old entry instead of growing a second one.
 #[semio_framework_async_macros::async_test]
 async fn results_cache_solves_one_revision_once_and_evicts_the_previous() {
-    let doc = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     reset_results_cache();
     let key = Some((7_u32, [1_u8; 32]));
     for _ in 0..30 {

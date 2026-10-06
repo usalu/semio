@@ -1,4 +1,4 @@
-//! 🧪️ `change-node-kind` fixture — `🏷️reassigns`.
+//! 🧪️ `change-node-kind` snapshot — `🏷️reassigns`.
 //!
 //! Repoints `node-a` at the `node-kind-c` catalog row. Only `nodeKind` moves; the node's pose,
 //! geometry and handles are carried through the replacement untouched.
@@ -45,7 +45,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -88,7 +88,7 @@ fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `change-node-kind` produces is exactly the committed diff — the single most
-/// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
+/// load-bearing assertion in the snapshot: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {

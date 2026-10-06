@@ -1,0 +1,28 @@
+{
+  "commands": [
+    [
+      "bun",
+      "run",
+      "nx",
+      "run-many",
+      "--target=test-snapshot-sqlite-source",
+      "--projects=@semio-tech/framework-space-space-rs,@semio-tech/framework-space-collection-rs",
+      "--parallel=2",
+      "--skip-nx-cache",
+      "--outputStyle=stream",
+      "--excludeTaskDependencies"
+    ],
+    [
+      "bun",
+      "run",
+      "nx",
+      "run",
+      "@semio-tech/framework-os-kernel:test-space-history-sqlite-source",
+      "--skip-nx-cache",
+      "--outputStyle=stream",
+      "--excludeTaskDependencies"
+    ]
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-framework-three-independent-semantic-source-before-provider.log",
+  "status": "schema-first corpus and independent SQL oracle mounted; providers/Native originals unchanged"
+}

@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { ListPromptsRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Oracle
@@ -24,8 +24,8 @@ type Surface = {
 
 /** 📋️ Loads the authored surface table and the authored description table. */
 function authored(ctx: AdapterContext): { surface: Surface; describe: (profile: string, key: string) => string } {
-  const surface = JSON.parse(readFileSync(ctx.fixture("shared://📋️surface.json"), "utf8")) as Surface;
-  const table = JSON.parse(readFileSync(ctx.fixture("asset://🔣️descriptions.json"), "utf8")) as { descriptions: Record<string, Record<string, string>> };
+  const surface = JSON.parse(readFileSync(ctx.input("shared://📋️surface.json"), "utf8")) as Surface;
+  const table = JSON.parse(readFileSync(ctx.input("asset://🔣️descriptions.json"), "utf8")) as { descriptions: Record<string, Record<string, string>> };
   const describe = (profile: string, key: string): string => table.descriptions[key]?.[profile] || table.descriptions[key]?.generic || "";
   return { surface, describe };
 }

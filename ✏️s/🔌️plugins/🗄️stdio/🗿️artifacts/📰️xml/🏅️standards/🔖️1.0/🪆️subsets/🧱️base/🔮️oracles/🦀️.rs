@@ -220,7 +220,7 @@ mod oracles {
     /// 🔓️ Resolves one `Event::GeneralRef` (`&name;` or `&#NNN;`) to its literal text — numeric
     /// character references via `resolve_char_ref`, the five predefined XML entities via
     /// `resolve_xml_entity`, anything else a hard parse error. Exactly the same 5-entity-plus-numeric
-    /// scope `crate::schema::snapshot::xml_unescape_text` narrows production to.
+    /// scope `crate::standards::v1_0::subsets::base::io::text::snapshot::xml_unescape_text` narrows production to.
     fn resolve_general_ref(reference: &BytesRef) -> Result<String, String> {
         if let Some(ch) = reference.resolve_char_ref().map_err(|error| error.to_string())? {
             return Ok(ch.to_string());
@@ -306,7 +306,7 @@ mod oracles {
     /// 📜️ Parses the DOCTYPE content `quick-xml`'s `Event::DocType` hands back (everything between
     /// `<!DOCTYPE` and the matching `>`) into `name (SYSTEM "sysid" | PUBLIC "pubid" "sysid")? ([
     /// <!ENTITY (%)? name "value"> ... ])?`, the same narrowed scope
-    /// `crate::schema::snapshot::parse_doctype` models. Independent hand-rolled
+    /// `crate::standards::v1_0::subsets::base::io::text::snapshot::parse_doctype` models. Independent hand-rolled
     /// parser (this crate never depends on that production module).
     fn parse_doctype(raw: &str) -> Result<XDoctype, String> {
         let mut pos = 0usize;

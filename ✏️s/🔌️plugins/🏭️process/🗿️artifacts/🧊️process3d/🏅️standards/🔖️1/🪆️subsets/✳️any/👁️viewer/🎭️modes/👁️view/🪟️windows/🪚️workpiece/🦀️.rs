@@ -36,6 +36,7 @@ const PROCESS3D_VIEW_FALLBACK_MESH_KIND: &str = "box";
 /// body shape, no chrome measures (no sun toggle: the sun is a hardcoded default here).
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: PROCESS3D_VIEW_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Workpiece", "Werkstück"),
         body_key: PROCESS3D_VIEW_BODY_MAIN.into(),

@@ -1,0 +1,21 @@
+import{readFileSync,writeFileSync}from"node:fs";import{join}from"node:path";import assert from"node:assert/strict";
+const path="/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts";
+const before=readFileSync(path,"utf8");let after=before.replace("ArtifactSqliteProjection,artifactSqliteTables","ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables").replace('import type{SqliteDatabase,SqliteRow,SqliteValue}', 'import{sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue}');
+after=after.replace("const tables=await artifactSqliteTables(database,sql,options),total=", "options=sqliteOperation(options);const tables=await artifactSqliteTables(database,sql,options),total=");
+const start=after.indexOf(" const groups=async"),end=after.indexOf(" const port=(row:",start);assert(start>=0&&end>start);
+const replacement=` const names=["workflow_document","workflow_graph","workflow_node","workflow_port","workflow_edge","workflow_contract","workflow_parameter","workflow_numeric","workflow_categorical","workflow_category_option","workflow_toggle","workflow_text","workflow_parameter_binding","workflow_input","workflow_input_binding","workflow_output_binding"],columns=[2,3,22,13,8,10,6,14,3,4,3,3,6,8,6,6];let checked=0;
+ for(let at=0;at<tables.length;at++)for(const row of tables[at]!){alias(row,columns[at]!);if(++checked%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",checked,total)}
+ const index=await ArtifactSqliteRowIndex.create(database.tables,options);await index.take(document);await index.take(graph);
+ const ordered=async(rows:readonly SqliteRow[],column:number):Promise<SqliteRow[]>=>artifactSqliteOrderedRowsControlled(rows,column,options);
+ const single=async(table:number,id:bigint):Promise<SqliteRow>=>{const rows=await index.grouped(names[table]!,id,null);if(rows.length!==1)throw Error("Workflow requires one matching branch entity");const row=rows[0]!;await index.take(row);await advance();return row};
+`;
+after=after.slice(0,start)+replacement+after.slice(end);
+after=after.replace("const documentRows=async(index:number,columns:number,parent:bigint)","const documentRows=async(table:number,columns:number,parent:bigint)").replace("const result=await ordered(tables[index]!,2)","const result=await index.grouped(names[table]!,parent)");
+after=after.replace('for(const member of ports.get(row.rowid)??[])','for(const member of await index.grouped(names[3]!,row.rowid,null))').replace("ports.delete(row.rowid);","");
+after=after.replace("inputs.push(port(member));await advance()","inputs.push(port(member));await index.take(member);await advance()").replace("outputs.push(port(member));await advance()","outputs.push(port(member));await index.take(member);await advance()");
+for(const[name,table]of[["contracts",5],["numeric",7],["categorical",8],["toggles",10],["texts",11]]as const)after=after.replaceAll("single("+name+",","single("+table+",");
+after=after.replace("await take(optionsByCategory,member.rowid,2)","await index.grouped(names[9]!,member.rowid)").replace("options.push(artifactSqliteText(item,3));await advance()","options.push(artifactSqliteText(item,3));await index.take(item);await advance()");
+after=after.replaceAll("});await advance()}","});await index.take(row);await advance()}").replace('}await advance()}', '}await index.take(row);await advance()}');
+after=after.replace('if([ports,contracts,numeric,categorical,optionsByCategory,toggles,texts].some(map=>map.size)||completed!==total)', 'await index.finish();if(completed!==total)');
+assert(!after.includes("new Map"));assert(!after.includes("new Set"));assert(!after.includes("ports."));assert(after.includes("await index.finish()"));
+writeFileSync(join(import.meta.dir,"held-provider-pairs.json"),JSON.stringify([{path,before,after}],null,2)+"\n");console.log("[DEBUG] Workflow complete Source row-position backing HELD paths=1 production_mutations=0");

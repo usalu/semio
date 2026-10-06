@@ -1,0 +1,30 @@
+{
+  "qualification": "HELD actual derived catalog and ordered registry closure. Keeps original18 PDF operation catalog exact; new contract separately empty. Original tags/order0..17 retained, new18 appended. No test/compiler runtime.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "before": "pub const BINARY_TAG_REGISTRY: &[(&str, &str, u8)] = &[\n    (\"RestoreDpartGraph\", \"restoreDpartGraph\", super::restore_dpart_graph::binary::BINARY_TAG),\n",
+      "after": "pub const BINARY_TAG_REGISTRY: &[(&str, &str, u8)] = &[\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/💾️binary/🦀️.rs",
+      "before": "    (\"RemoveDpartMetadata\", \"removeDpartMetadata\", super::remove_dpart_metadata::binary::BINARY_TAG),\n];",
+      "after": "    (\"RemoveDpartMetadata\", \"removeDpartMetadata\", super::remove_dpart_metadata::binary::BINARY_TAG),\n    (\"RestoreDpartGraph\", \"restoreDpartGraph\", super::restore_dpart_graph::binary::BINARY_TAG),\n];"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "before": "pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[\n    (\"RestoreDpartGraph\", super::restore_dpart_graph::text::TEXT_OPCODE),\n",
+      "after": "pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/📝️text/🦀️.rs",
+      "before": "    (\"RemoveDpartMetadata\", super::remove_dpart_metadata::text::TEXT_OPCODE),\n];",
+      "after": "    (\"RemoveDpartMetadata\", super::remove_dpart_metadata::text::TEXT_OPCODE),\n    (\"RestoreDpartGraph\", super::restore_dpart_graph::text::TEXT_OPCODE),\n];"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+      "before": "use super::*;\n\n#[test]\nfn derived_catalog_matches_the_language_neutral_oracle_catalog() {\n    let mutation_root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations\");\n    let manifest = std::fs::read_to_string(mutation_root.join(\"../../🔮️oracles/🔣️.json\")).expect(\"language-neutral oracle catalog\");\n    let needle = \"\\\"kinds\\\": [\";\n    let start = manifest.find(needle).expect(\"manifest declares a kinds array\") + needle.len();\n    let end = start + manifest[start..].find(']').expect(\"kinds array is closed\");\n    let declared: Vec<String> = manifest[start..end].split(',').map(|entry| entry.trim().trim_matches('\"').to_string()).filter(|entry| !entry.is_empty()).collect();\n    let derived: Vec<&str> = pdf_vt_mutation_kinds().iter().map(|descriptor| descriptor.kind).collect();\n    assert_eq!(declared, derived);\n    assert_eq!(text::TEXT_OPCODE_REGISTRY.iter().map(|(_, kind)| *kind).collect::<Vec<_>>(), derived);\n    assert_eq!(binary::BINARY_TAG_REGISTRY.iter().map(|(_, _, tag)| *tag).collect::<Vec<_>>(), (0..derived.len() as u8).collect::<Vec<_>>());\n}\n",
+      "after": "use super::*;\n\n#[test]\nfn derived_catalog_matches_the_language_neutral_oracle_catalog() {\n    use semio_framework_pack_json::{JsonMemberPolicy, Value};\n    let mutation_root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations\");\n    let manifest = std::fs::read_to_string(mutation_root.join(\"../../🔮️oracles/🔣️.json\")).expect(\"language-neutral oracle catalog\");\n    let manifest = semio_framework_pack_json::parse(&manifest, JsonMemberPolicy::Reject).unwrap();\n    let catalogs = manifest.get(\"mutationCatalogs\").and_then(Value::as_array).expect(\"operation catalogs\");\n    assert_eq!(catalogs.len(), 2);\n    let kinds = |catalog: &Value| catalog.get(\"kinds\").and_then(Value::as_array).unwrap().iter().map(|kind| kind.as_str().unwrap().to_string()).collect::<Vec<_>>();\n    assert_eq!(kinds(&catalogs[0]), vec![\"insert-encryption-dictionary\", \"remove-encryption-dictionary\", \"set-output-intent\", \"remove-output-intent\", \"set-trim-box\", \"remove-trim-box\", \"embed-font-file\", \"remove-font-file\", \"insert-javascript-action\", \"remove-javascript-action\", \"insert-launch-action\", \"remove-launch-action\", \"insert-media-annotation\", \"remove-media-annotation\", \"set-dpart-root\", \"remove-dpart-root\", \"set-dpart-metadata\", \"remove-dpart-metadata\"].into_iter().map(str::to_string).collect::<Vec<_>>());\n    assert_eq!(kinds(&catalogs[1]), vec![\"restore-dpart-graph\"]);\n    assert!(catalogs[1].get(\"vectors\").and_then(Value::as_array).unwrap().is_empty(), \"new contract has no invented qualified vectors\");\n    let declared = catalogs.iter().flat_map(kinds).collect::<Vec<_>>();\n    let derived: Vec<&str> = pdf_vt_mutation_kinds().iter().map(|descriptor| descriptor.kind).collect();\n    assert_eq!(declared, derived);\n    assert_eq!(text::TEXT_OPCODE_REGISTRY.iter().map(|(_, kind)| *kind).collect::<Vec<_>>(), derived);\n    assert_eq!(binary::BINARY_TAG_REGISTRY.iter().map(|(_, _, tag)| *tag).collect::<Vec<_>>(), (0..derived.len() as u8).collect::<Vec<_>>());\n}\n"
+    }
+  ]
+}

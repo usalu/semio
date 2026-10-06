@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/✋️drag-elements",
+  "semanticKind": "drag-elements",
+  "displayName": "Drag Elements",
+  "emoji": "✋️",
+  "aggregateVariant": "DragElements",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "drag-elements",
+  "binaryTag": 11,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

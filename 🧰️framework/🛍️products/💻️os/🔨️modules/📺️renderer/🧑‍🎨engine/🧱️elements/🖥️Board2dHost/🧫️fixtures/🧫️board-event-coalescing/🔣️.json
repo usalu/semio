@@ -3,7 +3,7 @@
     {
       "name": "an empty batch dispatches nothing",
       "rows": [],
-      "expect": { "flushNow": false, "events": [] }
+      "expect": { "flushNow": false, "camera": null, "events": [] }
     },
     {
       "name": "live-preview frames, chrome and hover never dispatch",
@@ -16,18 +16,18 @@
         { "name": "linkCompatibleNodes", "payload": { "source": "node-a:h0", "nodeIds": [] } },
         { "name": "linkTargetRing", "payload": { "source": "node-a:h0", "nodeId": null, "handleIds": [] } }
       ],
-      "expect": { "flushNow": false, "events": [] }
+      "expect": { "flushNow": false, "camera": null, "events": [] }
     },
     {
-      "name": "only the latest camera leads the batch and a camera alone waits",
+      "name": "a pan is camera rows only: its latest camera leaves on the view lane, no board row, and it waits",
       "rows": [
         { "name": "camera", "payload": { "x": 1, "y": 1, "zoom": 1 } },
         { "name": "camera", "payload": { "x": 2, "y": 3, "zoom": 1.5 } }
       ],
-      "expect": { "flushNow": false, "events": [{ "name": "camera", "payload": { "x": 2, "y": 3, "zoom": 1.5 } }] }
+      "expect": { "flushNow": false, "camera": { "x": 2, "y": 3, "zoom": 1.5 }, "events": [] }
     },
     {
-      "name": "an untagged select flushes at once behind the latest camera",
+      "name": "an untagged select flushes at once and the latest camera leaves beside it",
       "rows": [
         { "name": "camera", "payload": { "x": 1, "y": 1, "zoom": 1 } },
         { "name": "select", "payload": { "ids": ["node-a"], "exitHighlightIds": [] } },
@@ -35,10 +35,8 @@
       ],
       "expect": {
         "flushNow": true,
-        "events": [
-          { "name": "camera", "payload": { "x": 4, "y": 4, "zoom": 2 } },
-          { "name": "select", "payload": { "ids": ["node-a"], "exitHighlightIds": [] } }
-        ]
+        "camera": { "x": 4, "y": 4, "zoom": 2 },
+        "events": [{ "name": "select", "payload": { "ids": ["node-a"], "exitHighlightIds": [] } }]
       }
     },
     {
@@ -51,6 +49,7 @@
       ],
       "expect": {
         "flushNow": true,
+        "camera": null,
         "events": [
           { "name": "select", "payload": { "ids": ["node-a", "node-b"], "exitHighlightIds": [], "gestureId": "gesture-1" } },
           { "name": "gesture", "payload": { "gestureId": "gesture-1", "kind": "drag", "targets": ["node-a", "node-b"], "dx": 80, "dy": 40, "proximity": [{ "source": "node-a:h0", "target": "node-c:h1" }] } }
@@ -63,7 +62,7 @@
         { "name": "select", "payload": { "ids": ["node-a"], "exitHighlightIds": [], "gestureId": "gesture-2" } },
         { "name": "nodeMove", "payload": { "id": "node-a", "x": 5, "y": 5 } }
       ],
-      "expect": { "flushNow": false, "events": [{ "name": "select", "payload": { "ids": ["node-a"], "exitHighlightIds": [], "gestureId": "gesture-2" } }] }
+      "expect": { "flushNow": false, "camera": null, "events": [{ "name": "select", "payload": { "ids": ["node-a"], "exitHighlightIds": [], "gestureId": "gesture-2" } }] }
     },
     {
       "name": "another gesture's record does not release an open gesture's select but flushes itself",
@@ -73,6 +72,7 @@
       ],
       "expect": {
         "flushNow": true,
+        "camera": null,
         "events": [
           { "name": "select", "payload": { "ids": ["node-a"], "exitHighlightIds": [], "gestureId": "gesture-3" } },
           { "name": "gesture", "payload": { "gestureId": "gesture-4", "kind": "drag", "targets": ["region-1"], "dx": 8, "dy": 0, "proximity": [] } }
@@ -88,13 +88,14 @@
       ],
       "expect": {
         "flushNow": true,
+        "camera": null,
         "events": [{ "name": "gesture", "payload": { "gestureId": "gesture-5", "kind": "rotate", "targets": ["node-a"], "pivotX": 0, "pivotY": 0, "angle": 0.5, "proximity": [] } }]
       }
     },
     {
       "name": "a scale record flushes like every gesture record",
       "rows": [{ "name": "gesture", "payload": { "gestureId": "gesture-6", "kind": "scale", "targets": ["node-a", "region-1"], "pivotX": 10, "pivotY": 10, "factor": 2, "proximity": [] } }],
-      "expect": { "flushNow": true, "events": [{ "name": "gesture", "payload": { "gestureId": "gesture-6", "kind": "scale", "targets": ["node-a", "region-1"], "pivotX": 10, "pivotY": 10, "factor": 2, "proximity": [] } }] }
+      "expect": { "flushNow": true, "camera": null, "events": [{ "name": "gesture", "payload": { "gestureId": "gesture-6", "kind": "scale", "targets": ["node-a", "region-1"], "pivotX": 10, "pivotY": 10, "factor": 2, "proximity": [] } }] }
     },
     {
       "name": "a region grip drag stays one resize row behind its untagged select",
@@ -104,6 +105,7 @@
       ],
       "expect": {
         "flushNow": true,
+        "camera": null,
         "events": [
           { "name": "select", "payload": { "ids": ["region-1"], "exitHighlightIds": [] } },
           { "name": "regionResize", "payload": { "id": "region-1", "x": 0, "y": 0, "width": 40, "height": 20 } }
@@ -118,6 +120,7 @@
       ],
       "expect": {
         "flushNow": true,
+        "camera": null,
         "events": [
           { "name": "edgeCreate", "payload": { "id": "edge-link-1", "source": "node-a:h0", "target": "node-b:h0" } },
           { "name": "proximityConnect", "payload": { "id": "edge-link-1", "source": "node-a:h0", "target": "node-b:h0" } }
@@ -127,37 +130,37 @@
     {
       "name": "a companion row alone waits",
       "rows": [{ "name": "indirectConnect", "payload": { "id": "edge-link-2", "source": "node-a:h1", "target": "node-b:h1" } }],
-      "expect": { "flushNow": false, "events": [{ "name": "indirectConnect", "payload": { "id": "edge-link-2", "source": "node-a:h1", "target": "node-b:h1" } }] }
+      "expect": { "flushNow": false, "camera": null, "events": [{ "name": "indirectConnect", "payload": { "id": "edge-link-2", "source": "node-a:h1", "target": "node-b:h1" } }] }
     },
     {
       "name": "preselectCancel flushes",
       "rows": [{ "name": "preselectCancel", "payload": { "ids": ["node-a"] } }],
-      "expect": { "flushNow": true, "events": [{ "name": "preselectCancel", "payload": { "ids": ["node-a"] } }] }
+      "expect": { "flushNow": true, "camera": null, "events": [{ "name": "preselectCancel", "payload": { "ids": ["node-a"] } }] }
     },
     {
       "name": "brushCandidates flushes",
       "rows": [{ "name": "brushCandidates", "payload": { "sourceHandleId": "node-a:h0", "candidates": [], "index": 0, "suggestionsActive": false } }],
-      "expect": { "flushNow": true, "events": [{ "name": "brushCandidates", "payload": { "sourceHandleId": "node-a:h0", "candidates": [], "index": 0, "suggestionsActive": false } }] }
+      "expect": { "flushNow": true, "camera": null, "events": [{ "name": "brushCandidates", "payload": { "sourceHandleId": "node-a:h0", "candidates": [], "index": 0, "suggestionsActive": false } }] }
     },
     {
       "name": "brushPlace flushes",
       "rows": [{ "name": "brushPlace", "payload": { "nodeId": "puzzle2d.brush.1", "edgeId": "puzzle2d.brush.edge.1", "nodeKind": "beam", "sourceHandleId": "node-a:h0", "targetHandleIndex": 0, "x": 1, "y": 2, "shape": "circle", "radius": 4, "handles": [] } }],
-      "expect": { "flushNow": true, "events": [{ "name": "brushPlace", "payload": { "nodeId": "puzzle2d.brush.1", "edgeId": "puzzle2d.brush.edge.1", "nodeKind": "beam", "sourceHandleId": "node-a:h0", "targetHandleIndex": 0, "x": 1, "y": 2, "shape": "circle", "radius": 4, "handles": [] } }] }
+      "expect": { "flushNow": true, "camera": null, "events": [{ "name": "brushPlace", "payload": { "nodeId": "puzzle2d.brush.1", "edgeId": "puzzle2d.brush.edge.1", "nodeKind": "beam", "sourceHandleId": "node-a:h0", "targetHandleIndex": 0, "x": 1, "y": 2, "shape": "circle", "radius": 4, "handles": [] } }] }
     },
     {
       "name": "edgeDelete flushes",
       "rows": [{ "name": "edgeDelete", "payload": { "id": "edge-1" } }],
-      "expect": { "flushNow": true, "events": [{ "name": "edgeDelete", "payload": { "id": "edge-1" } }] }
+      "expect": { "flushNow": true, "camera": null, "events": [{ "name": "edgeDelete", "payload": { "id": "edge-1" } }] }
     },
     {
       "name": "nodeDelete flushes",
       "rows": [{ "name": "nodeDelete", "payload": { "id": "node-a" } }],
-      "expect": { "flushNow": true, "events": [{ "name": "nodeDelete", "payload": { "id": "node-a" } }] }
+      "expect": { "flushNow": true, "camera": null, "events": [{ "name": "nodeDelete", "payload": { "id": "node-a" } }] }
     },
     {
       "name": "regionCreate flushes",
       "rows": [{ "name": "regionCreate", "payload": { "x": 0, "y": 0, "width": 16, "height": 16 } }],
-      "expect": { "flushNow": true, "events": [{ "name": "regionCreate", "payload": { "x": 0, "y": 0, "width": 16, "height": 16 } }] }
+      "expect": { "flushNow": true, "camera": null, "events": [{ "name": "regionCreate", "payload": { "x": 0, "y": 0, "width": 16, "height": 16 } }] }
     }
   ]
 }

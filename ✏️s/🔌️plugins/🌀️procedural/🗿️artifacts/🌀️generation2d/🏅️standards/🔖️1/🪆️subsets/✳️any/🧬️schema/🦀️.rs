@@ -80,117 +80,15 @@ pub fn generation2d_artifact_schema_descriptor() -> ::semio_framework_schema_reg
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{Generation2dDiff, Generation2dMutation, Generation2dSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Generation2dBuilderConstruction {
-        snapshot: Generation2dSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for Generation2dBuilderConstruction {
-        type Snapshot = Generation2dSnapshot;
-        type Mutation = Generation2dMutation;
-        type Diff = Generation2dDiff;
-        fn empty() -> Self {
-            Self { snapshot: Generation2dSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<Generation2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Generation2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <Generation2dDiff as protocol::MutationDiff<Generation2dSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::Generation2dSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Generation2dParts {
-        pub snapshot: Option<Generation2dSnapshot>,
-    }
-
-    pub struct Generation2dAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for Generation2dAnalyzerAnalysis {
-        type Parts = Generation2dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation2d", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = Generation2dParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <Generation2dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <Generation2dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec Generation2dBuilderFacets {
-        construction: Generation2dBuilderConstruction,
-        analysis: Generation2dAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::Generation2dComposerComposition,
-    }
-    builder: Generation2dBuilder,
-    analyzer: Generation2dAnalyzer,
-    composer: Generation2dComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
@@ -226,11 +124,11 @@ pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut Flow
 /// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
 /// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
 #[cfg(feature = "component-app-assembly")]
-pub fn host_operations(host_snapshot: &FlowHostSnapshot, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation> {
+pub fn host_operations(host_snapshot: &FlowHostSnapshot, mutate: impl FnOnce(&mut FlowHost)) -> Vec<crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation> {
     with_host(host_snapshot, |host| {
         let baseline = host.host_snapshot.clone();
         mutate(host);
-        let operations = crate::standards::v1::subsets::any::schema::mutations::text::generation2d_host_snapshot_operations(&baseline, &host.host_snapshot);
+        let operations = crate::standards::v1::subsets::any::schema::mutations::generation2d_host_snapshot_operations(&baseline, &host.host_snapshot);
         baseline.retire_cold();
         operations
     })
@@ -269,100 +167,15 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<No
     (nodes, edges)
 }
 
-#[cfg(feature = "component-app-assembly")]
-pub fn collect_drawing_handles_from_eval(value: &semio_framework_pack_json::Value, handles: &mut Vec<String>) {
-    match value {
-        semio_framework_pack_json::Value::Object(map) => {
-            if map.get("$schema").and_then(|entry| entry.as_str()) == Some("draw.drawing") {
-                if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
-                    handles.push(handle.into());
-                }
-            }
-            for (_, entry) in map.iter() {
-                collect_drawing_handles_from_eval(entry, handles);
-            }
-        }
-        semio_framework_pack_json::Value::Array(items) => {
-            for item in items {
-                collect_drawing_handles_from_eval(item, handles);
-            }
-        }
-        _ => {}
-    }
-}
 
-#[cfg(feature = "component-app-assembly")]
-pub fn affine_transform_array(value: &semio_framework_pack_json::Value) -> [f64; 6] {
-    if let Some(matrix) = value.as_array() {
-        let mut out = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
-        for (index, entry) in matrix.iter().take(6).enumerate() {
-            out[index] = entry.as_f64().unwrap_or(if index == 0 || index == 3 { 1.0 } else { 0.0 });
-        }
-        return out;
-    }
-    if let Some(matrix) = value.get("0").and_then(|entry| entry.as_array()) {
-        let wrapped = semio_framework_pack_json::Value::Array(matrix.clone());
-        return affine_transform_array(&wrapped);
-    }
-    [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
-}
 
-#[cfg(feature = "component-app-assembly")]
-pub fn path_segments_from_node(node: &semio_framework_pack_json::Value) -> Vec<semio_framework_pack_json::Value> {
-    if let Some(segments) = node.get("segments").and_then(|entry| entry.as_array()) {
-        return segments.clone();
-    }
-    for key in ["path", "shape", "line", "polyline", "rect", "ellipse", "circle", "polygon"] {
-        if let Some(inner) = node.get(key) {
-            if let Some(segments) = inner.get("segments").and_then(|entry| entry.as_array()) {
-                return segments.clone();
-            }
-        }
-    }
-    Vec::new()
-}
 
-#[cfg(feature = "component-app-assembly")]
-pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<semio_framework_pack_json::Value> {
-    let scene_json = render_scene_json(handle);
-    let Ok(scene) = semio_framework_pack_json::parse(&scene_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-        return Vec::new();
-    };
-    if scene.get("error").is_some() {
-        return Vec::new();
-    }
-    let Some(nodes) = scene.get("nodes").and_then(|entry| entry.as_array()) else {
-        return Vec::new();
-    };
-    nodes
-        .iter()
-        .enumerate()
-        .map(|(index, node)| {
-            let node_body = node.get("node").unwrap_or(node);
-            let transform: Vec<semio_framework_pack_json::Value> = affine_transform_array(node.get("transform").unwrap_or(&semio_framework_pack_json::Value::Null)).into_iter().map(semio_framework_pack_json::Value::from).collect();
-            let mut object = semio_framework_pack_json::Object::new();
-            object.insert("id", semio_framework_pack_json::Value::from(format!("{prefix}-{handle}-{index}")));
-            object.insert("transform", semio_framework_pack_json::Value::from(transform));
-            object.insert("segments", semio_framework_pack_json::Value::from(path_segments_from_node(node_body)));
-            object.insert("fill", node.get("fill").cloned().unwrap_or(semio_framework_pack_json::Value::Null));
-            object.insert("stroke", node.get("stroke").cloned().unwrap_or(semio_framework_pack_json::Value::Null));
-            object.insert("opacity", semio_framework_pack_json::Value::from(node.get("opacity").and_then(|entry| entry.as_f64()).unwrap_or(1.0)));
-            object.insert("blendMode", semio_framework_pack_json::Value::from("normal"));
-            object.insert("visible", semio_framework_pack_json::Value::from(true));
-            object.insert("needsKernel", semio_framework_pack_json::Value::from(false));
-            semio_framework_pack_json::Value::Object(object)
-        })
-        .collect()
-}
 
-#[cfg(feature = "component-app-assembly")]
-pub fn generation_preview_host(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> FlowHost {
-    let fixture_json = semio_framework_pack_json::to_json_string(host_snapshot);
-    let object: semio_framework_pack_json::Object = values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect();
-    let patched = apply_generation_values_to_host_snapshot(&fixture_json, &object);
-    let patched_fixture = FlowHost::parse_host_snapshot_json(&patched).unwrap_or_else(|_| host_snapshot.clone());
-    FlowHost::from_host_snapshot(patched_fixture)
-}
+
+
+
+
+
 
 #[cfg(feature = "component-app-assembly")]
 pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
@@ -372,58 +185,13 @@ pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &se
     evaluated
 }
 
-/// 📤️ The drawings a program OUTPUTS: every drawing a synapse delivers into an output widget
-/// (`output-preview`, `output-export`), read off the evaluation at the synapse's source port, in
-/// synapse order without repeats. Intermediate drawings (a shape before its style) are not outputs.
-#[cfg(feature = "component-app-assembly")]
-pub fn output_drawing_handles(host_snapshot: &FlowHostSnapshot, outputs: &semio_framework_pack_json::Value) -> Vec<String> {
-    use semio_framework_artifact_flow_flow::Widget;
-    let is_output = |id: &str| host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::OutputPreview { id: output, .. } | Widget::OutputExport { id: output, .. } if output == id));
-    let mut handles = Vec::new();
-    for synapse in host_snapshot.synapses.iter().filter(|synapse| is_output(&synapse.to)) {
-        let Some(out) = outputs.get(&synapse.from).and_then(|node| node.get("out")) else { continue };
-        let delivered = if synapse.from_port.is_empty() { Some(out) } else { out.get(&synapse.from_port) };
-        let mut found = Vec::new();
-        if let Some(value) = delivered {
-            collect_drawing_handles_from_eval(value, &mut found);
-        }
-        for handle in found {
-            if !handles.contains(&handle) {
-                handles.push(handle);
-            }
-        }
-    }
-    handles
-}
 
-/// 🖼️ [`output_drawing_handles`] as the scene layers the `drawing:out` port publishes.
-#[cfg(feature = "component-app-assembly")]
-pub fn generation_output_layers(host_snapshot: &FlowHostSnapshot, eval_json: &str) -> String {
-    let layers: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|outputs| output_drawing_handles(host_snapshot, &outputs).iter().flat_map(|handle| scene_layers_from_drawing_handle(handle, "generation2d-drawing-out")).collect()).unwrap_or_default();
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(layers))
-}
 
-#[cfg(feature = "component-app-assembly")]
-pub fn generation_preview_layers(eval_json: &str) -> String {
-    let prefix = "generation2d-generate-preview";
-    let mut layers = Vec::new();
-    if let Ok(outputs) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-        let mut handles = Vec::new();
-        collect_drawing_handles_from_eval(&outputs, &mut handles);
-        handles.sort();
-        handles.dedup();
-        for handle in handles {
-            layers.extend(scene_layers_from_drawing_handle(&handle, prefix));
-        }
-    }
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(layers))
-}
 
-/// 📄️ The `procedural2d-play` "default" document — parsed from the bundled `.generation2d` example
-/// host_snapshot, falling back to the empty document if the fixture ever fails to parse.
-pub fn default_snapshot() -> Generation2dSnapshot {
-    Generation2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::GENERATION2D_EXAMPLE_TEXT).unwrap_or_default()
-}
+
+
+
+
 
 pub fn empty_generation2d_snapshot() -> Generation2dSnapshot {
     Generation2dSnapshot::default()

@@ -53,7 +53,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_playbook_playbook::editor::playbook::config::playbook_config_mutation_report_json;
+    use semio_s_artifact_playbook_playbook::editor::playbook::config::component::io::text::mutations::playbook_config_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         playbook_config_mutation_report_json(committed.before, committed.mutation, committed.after)

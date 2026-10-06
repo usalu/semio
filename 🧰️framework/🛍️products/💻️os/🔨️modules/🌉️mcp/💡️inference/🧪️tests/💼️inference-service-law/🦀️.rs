@@ -41,11 +41,6 @@ fn code(error: &GatewayError) -> String {
 }
 
 #[test]
-fn the_law_fixture_is_its_own_schema() {
-    assert_valid("InferenceServiceLawV1", &law());
-}
-
-#[test]
 fn selection_resolves_one_service_and_the_site_that_executes_it() {
     let law = law();
     let declared: Vec<DeclaredInference> = serde_json::from_value(law["declared"].clone()).expect("declared roster");

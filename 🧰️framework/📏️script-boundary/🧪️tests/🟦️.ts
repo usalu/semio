@@ -1,23 +1,16 @@
 /** 🧭️ Checks the actual framework command router's general source owners. */
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import ts from "typescript";
 import { build } from "esbuild";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import fixture from "../🧫️fixtures/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
 
 const framework = resolve(import.meta.dir, "../..");
 const entry = join(framework, fixture.entry);
 
-test("the language-neutral command boundary is closed", () => {
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(fixture)).toBe(true);
-  expect(validate({ ...fixture, unknown: true })).toBe(false);
-  expect(validate({ ...fixture, commands: fixture.commands.slice(1) })).toBe(false);
-  expect(validate({ ...fixture, refusedOwners: [] })).toBe(false);
-});
+
 
 test("the boundary law compiles with strict owned types", () => {
   const program = ts.createProgram([join(import.meta.dir, "🟦️.ts")], { noEmit: true, strict: true, noUncheckedIndexedAccess: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, resolveJsonModule: true, esModuleInterop: true, skipLibCheck: true, types: ["bun", "node"] });

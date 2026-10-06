@@ -1,0 +1,3 @@
+# General Conformance Native Preparer 2 Audit
+
+Both six-case owning route laws agree with their independent schema oracles and exact retained helper/codec bindings. The preparer retains historical publication pairs separately from full current body/null qualifications, requires current captured-positive joins and null guards, and records actual lexical resolution refusals/missing inputs explicitly. Original Value and Kernel script/project witnesses remain mandatory. Capture is admitted as a current observation; native closure completeness and full original runtime execution require separate source/provider/dispatch evidence.

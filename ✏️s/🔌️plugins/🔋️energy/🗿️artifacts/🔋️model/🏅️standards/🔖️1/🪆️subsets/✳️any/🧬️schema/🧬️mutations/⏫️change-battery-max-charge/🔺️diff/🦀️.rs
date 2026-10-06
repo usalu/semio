@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeBatteryMaxCharge, base: &EnergyModelSnapshot)
     if let Some(item) = model.battery_storage.iter_mut().find(|item| item.id == payload.id) {
         item.max_charge_w = payload.new_max_charge_w;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

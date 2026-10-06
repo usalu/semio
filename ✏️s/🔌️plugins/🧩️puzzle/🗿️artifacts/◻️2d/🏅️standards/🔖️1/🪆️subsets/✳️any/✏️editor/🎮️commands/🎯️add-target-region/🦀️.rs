@@ -16,5 +16,5 @@ pub fn add_target_region(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
     };
     let size = pair("size").unwrap_or((ctx.scene.runtime.area_brush_width, ctx.scene.runtime.area_brush_height));
     let grid_factor = ctx.scene.runtime.grid_factor;
-    puzzle2d_paint_target_region(&mut ctx.scene.fixture, origin, size, grid_factor);
+    puzzle2d_paint_target_region(&mut ctx.scene.board_snapshot, origin, size, grid_factor);
 }

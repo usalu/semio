@@ -81,9 +81,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -148,7 +147,6 @@
       "notes": "Panning the canvas replaces the window camera."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-no-op",
       "class": "handcrafted",
       "target": {

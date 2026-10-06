@@ -282,9 +282,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "declare-doctype-applied",
       "class": "third-party-generated",
       "target": {
@@ -335,7 +334,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-external-subset-applied",
       "class": "third-party-generated",
       "target": {
@@ -386,7 +384,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "rename-document-element-applied",
       "class": "third-party-generated",
       "target": {
@@ -437,7 +434,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-standalone-applied",
       "class": "third-party-generated",
       "target": {
@@ -488,7 +484,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-text-applied",
       "class": "third-party-generated",
       "target": {
@@ -539,7 +534,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -590,7 +584,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "declare-entity-applied",
       "class": "handcrafted",
       "target": {
@@ -633,7 +626,6 @@
       "notes": "General entity foo declared in the internal subset. HANDCRAFTED: lxml's docinfo.doctype demonstrably drops internal-subset content on serialization (verified live this session -- round-tripping `<!DOCTYPE root [<!ENTITY foo \"bar\">]>` through etree.parse+tostring yields bare `<!DOCTYPE root>`, the entity declaration silently gone), so lxml cannot be the writer for this specific mutation even though it is registered as this subset's reader oracle."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-internal-subset-applied",
       "class": "handcrafted",
       "target": {

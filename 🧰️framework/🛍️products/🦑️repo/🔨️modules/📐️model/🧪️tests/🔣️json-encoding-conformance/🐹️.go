@@ -85,7 +85,7 @@ var domainTypes = map[string]func() any{
 const goldensURI = "shared://🔣️json-encoding-conformance/🔣️goldens.json"
 
 func goldenDocumentsRoundTrip(ctx *host.Context) (host.Outcome, error) {
-	raw, err := ctx.FixtureBytes(goldensURI)
+	raw, err := ctx.InputBytes(goldensURI)
 	if err != nil {
 		return host.Outcome{}, err
 	}

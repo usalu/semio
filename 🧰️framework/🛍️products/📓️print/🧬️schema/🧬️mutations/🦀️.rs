@@ -1,9 +1,8 @@
 //! 🧬️ Editable chart values use the existing event-sourced mutation protocol.
 use crate::{ChartSnapshot, ChartDiff, ChartEdit};
-use protocol::{DslValue, FromValue, ToValue, Mutation, MutationDiff, MutationOutcome, MutationLeafDescriptor, MutationInvertibility, MutationDiffParticipation, MutationOutcomeClass, MutationComposition, MutationLanguageSurface};
+use semio_framework_value::{DslValue,FromValue,ToValue};
+use protocol::{Mutation, MutationDiff, MutationOutcome, MutationLeafDescriptor, MutationInvertibility, MutationDiffParticipation, MutationOutcomeClass, MutationComposition, MutationLanguageSurface};
 
-#[path="📦️codec/🦀️.rs"]
-mod codec;
 
 #[derive(Clone, Debug, PartialEq,semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword="change-chart-value")]
@@ -46,11 +45,11 @@ impl Mutation<ChartSnapshot> for ChangeChartValue {
             Err(error) => MutationOutcome::error(error.code, error.message, error.target),
         }
     }
-    fn inverse(&self, base: &ChartSnapshot) -> Vec<Self> {
-        if self.diff(base).diff().edits.is_empty() { return Vec::new(); }
+    fn inverse(&self, base: &ChartSnapshot) -> Result<Vec<Self>,semio_framework_value::ValueError> {
+        if self.diff(base).diff().edits.is_empty() { return Ok(Vec::new()); }
         let array_parent = self.path.len() > 1 && matches!(crate::diff::read_path(&base.chart, &self.path[..self.path.len()-1]), Some(DslValue::Array(_)));
         let path = if array_parent { self.path[..self.path.len()-1].to_vec() } else { self.path.clone() };
-        vec![Self { value: crate::diff::read_path(&base.chart, &path).cloned(), path }]
+        Ok(vec![Self { value: crate::diff::read_path(&base.chart, &path).cloned(), path }])
     }
     fn conflict_target(&self) -> Vec<String> { std::iter::once("chart".into()).chain(self.path.clone()).collect() }
 }

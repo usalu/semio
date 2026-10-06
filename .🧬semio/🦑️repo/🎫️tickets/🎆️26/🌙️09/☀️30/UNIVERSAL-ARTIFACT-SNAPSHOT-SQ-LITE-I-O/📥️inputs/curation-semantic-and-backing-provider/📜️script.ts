@@ -1,0 +1,88 @@
+import {readFileSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import assert from "node:assert/strict";
+const repo="/Users/ueli/Documents/semio",root=join(repo,"✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite");
+const cells=String.raw`//! 📏️ Exact Curation domain SQL cells are distinct from native backing requests.
+use super::{CurationSnapshot,GeometryRecipe,ValueError,invalid};
+use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
+use semio_framework_dsl_record::{FieldValue,RecordValue};
+struct Extent{bytes:usize,maximum:usize}
+impl Extent{
+ fn add(&mut self,bytes:usize)->Result<(),ValueError>{self.bytes=self.bytes.checked_add(bytes).filter(|bytes|*bytes<=self.maximum).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"Curation semantic SQL cell bytes exceed caller limit"))?;Ok(())}
+ fn text(&mut self,value:&str)->Result<(),ValueError>{self.add(value.len())}
+ fn ieee(&mut self,value:f64)->Result<(),ValueError>{self.add(if value.is_nan(){11}else if value.is_infinite(){32}else{22})}
+}
+pub(super) fn typed(snapshot:&CurationSnapshot,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{
+ let mut extent=Extent{bytes:0,maximum:control.limits().max_value_bytes};extent.add(24)?;let target=&snapshot.catalog.target;for text in[&snapshot.catalog.child_id,&target.artifact_id,&target.dialect.artifact_kind,&target.dialect.standard,&target.dialect.subset]{extent.text(text)?;}
+ let total=snapshot.stock_extra.len().checked_add(snapshot.curated.len()).ok_or_else(||invalid("Curation semantic traversal overflow"))?;control.checkpoint(phase,0,total)?;
+ for(index,extra)in snapshot.stock_extra.iter().enumerate(){extent.add(32)?;for text in[&extra.id,&extra.name,&extra.module_id]{extent.text(text)?;}for(ordinal,segment)in extra.typology_path.iter().enumerate(){extent.add(24)?;extent.text(segment)?;if(ordinal+1)%256==0{control.checkpoint(phase,ordinal+1,extra.typology_path.len())?;}}
+  let kind=match extra.geometry.as_ref(){GeometryRecipe::Box{..}=>"box",GeometryRecipe::Frame{..}=>"frame",GeometryRecipe::Slab{..}=>"slab",GeometryRecipe::Mesh{..}=>"mesh",GeometryRecipe::Glb{..}=>"glb"};extent.add(32)?;extent.text(kind)?;
+  match extra.geometry.as_ref(){GeometryRecipe::Box{width,height,depth}=>for value in[*width,*height,*depth]{extent.ieee(value)?;},GeometryRecipe::Frame{width,height,depth,profile}=>for value in[*width,*height,*depth,*profile]{extent.ieee(value)?;},GeometryRecipe::Slab{width,depth,thickness}=>for value in[*width,*depth,*thickness]{extent.ieee(value)?;},GeometryRecipe::Glb{url,extent:value}=>{extent.text(url)?;extent.ieee(*value)?;},GeometryRecipe::Mesh{positions,normals,indices}=>{for values in[positions,normals]{for(ordinal,value)in values.iter().enumerate(){extent.add(24)?;extent.ieee(f64::from(*value))?;if(ordinal+1)%256==0{control.checkpoint(phase,ordinal+1,values.len())?;}}}for ordinal in 0..indices.len(){extent.add(32)?;if(ordinal+1)%256==0{control.checkpoint(phase,ordinal+1,indices.len())?;}}}}
+  if(index+1)%256==0{control.checkpoint(phase,index+1,total)?;}
+ }
+ for(index,item)in snapshot.curated.iter().enumerate(){extent.add(32)?;extent.text(&item.object_id)?;if(index+1)%256==0{control.checkpoint(phase,index+1,snapshot.curated.len())?;}}
+ control.check_value_bytes(extent.bytes)?;control.checkpoint(phase,total,total)
+}
+fn record(value:Option<&FieldValue>)->Result<&RecordValue,ValueError>{match value{Some(FieldValue::Record(value))=>Ok(value),_=>Err(invalid("Curation semantic cell owner requires a literal Record"))}}
+fn text(value:Option<&FieldValue>)->Result<&str,ValueError>{match value{Some(FieldValue::Text(value))=>Ok(value),_=>Err(invalid("Curation semantic cell owner requires literal Text"))}}
+fn scalar(value:Option<&FieldValue>)->Result<f64,ValueError>{match value{Some(FieldValue::Float(value))=>Ok(*value),_=>Err(invalid("Curation semantic cell owner requires native Float"))}}
+pub(super) fn borrowed(value:&RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,maximum:usize)->Result<(),ValueError>{
+ let mut extent=Extent{bytes:0,maximum};extent.add(24)?;let child=record(value.get(0))?;extent.text(text(child.get(0))?)?;let target=record(child.get(1))?;for field in 0..4{extent.text(text(target.get(field))?)?;}
+ let stock=super::list(value.get(1))?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(stock.len())?;for value in stock{let row=record(Some(value))?;extent.add(32)?;for field in 0..3{extent.text(text(row.get(field))?)?;}
+  let path=super::list(row.get(3))?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(path.len())?;for segment in path{extent.add(24)?;extent.text(text(Some(segment))?)?;native.step()?;}Ok(())})?;
+  let Some(FieldValue::Statements(recipes))=row.get(5)else{return Err(invalid("Curation semantic cell owner requires one recipe statement"))};let[(kind,recipe)]=recipes.as_slice()else{return Err(invalid("Curation semantic cell owner requires one complete recipe"))};extent.add(32)?;extent.text(kind)?;
+  match kind.as_str(){"box"|"slab"=>for field in 0..3{extent.ieee(scalar(recipe.get(field))?)?;},"frame"=>for field in 0..4{extent.ieee(scalar(recipe.get(field))?)?;},"glb"=>{extent.text(text(recipe.get(0))?)?;extent.ieee(scalar(recipe.get(1))?)?;},"mesh"=>{for field in 0..3{let values=super::list(recipe.get(field))?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(values.len())?;for value in values{if field==2{extent.add(32)?;}else{extent.add(24)?;extent.ieee(f64::from(scalar(Some(value))? as f32))?;}native.step()?;}Ok(())})?;}},_=>return Err(invalid("Curation semantic recipe kind is undeclared"))}native.step()?;}Ok(())})?;
+ let curated=super::list(value.get(2))?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(curated.len())?;for value in curated{let row=record(Some(value))?;extent.add(32)?;extent.text(text(row.get(0))?)?;native.step()?;}Ok(())})?;native.checkpoint()
+}
+`;
+const backing=String.raw`//! 💰️ Curation indexes retain paid borrowed rows and reconstruct under the same allocation authority.
+use super::{CurationSnapshot,ObjectKindExtra,GeometryRecipe,CuratedItem,ValueError,invalid,literal_catalog,uint,BOX,FRAME,GLB,MESH,read_binary64,read_binary32};
+use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,transfer::{reserve,heap_sort},validate_sqlite_database_schema_controlled};
+const PHASE:SqliteSnapshotPhase=SqliteSnapshotPhase::ReconstructSnapshot;
+const TABLES:[(&str,usize);14]=[("curation_document",1),("curation_catalog",7),("curation_stock_extra",7),("curation_typology_segment",4),("curation_geometry",3),("curation_box",11),("curation_frame",14),("curation_slab",11),("curation_mesh",2),("curation_glb",6),("curation_mesh_position",6),("curation_mesh_normal",6),("curation_mesh_index",4),("curation_curated",5)];
+struct Rows<'a>{tables:[Vec<&'a SqliteRow>;14]}
+impl<'a>Rows<'a>{
+ fn new(database:&'a SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+  let mut tables:[Vec<&SqliteRow>;14]=std::array::from_fn(|_|Vec::new());
+  for(index,(name,columns))in TABLES.iter().enumerate(){let source=&database.table(name)?.rows;let mut rows=reserve(source.len(),control)?;for(ordinal,row)in source.iter().enumerate(){if row.rowid<=0||row.values.len()!=*columns||row.integer(0)?!=row.rowid{return Err(invalid("Curation requires complete positive aliased entities"))}rows.push(row);if(ordinal+1)%256==0{control.checkpoint(PHASE,ordinal+1,source.len())?;}}heap_sort(&mut rows,PHASE,control,|a,b,_|Ok(a.rowid.cmp(&b.rowid)))?;for(ordinal,pair)in rows.windows(2).enumerate(){if pair[0].rowid==pair[1].rowid{return Err(invalid("Curation entity identities must be unique"))}if(ordinal+1)%256==0{control.checkpoint(PHASE,ordinal+1,rows.len())?;}}tables[index]=rows;}
+  if tables[0].len()!=1||tables[0][0].rowid!=1||tables[1].len()!=1{return Err(invalid("Curation requires one document and one mandatory Kit catalog"))}
+  for(index,parent)in[(1,0),(2,0),(3,2),(4,2),(5,4),(6,4),(7,4),(8,4),(9,4),(10,8),(11,8),(12,8),(13,0)]{for(ordinal,row)in tables[index].iter().enumerate(){let key=row.integer(1)?;let parent_index=tables[parent].binary_search_by_key(&key,|row|row.rowid).map_err(|_|invalid("Curation relationship has an unknown parent"))?;if let Some(kind)=match index{5=>Some("box"),6=>Some("frame"),7=>Some("slab"),8=>Some("mesh"),9=>Some("glb"),_=>None}{if tables[parent][parent_index].text(2)?!=kind{return Err(invalid("Curation recipe entity belongs to a different declared branch"))}}if(ordinal+1)%256==0{control.checkpoint(PHASE,ordinal+1,tables[index].len())?;}}}
+  for index in[1,4,5,6,7,8,9]{heap_sort(&mut tables[index],PHASE,control,|a,b,_|Ok(a.integer(1)?.cmp(&b.integer(1)?)))?;for(ordinal,pair)in tables[index].windows(2).enumerate(){if pair[0].integer(1)?==pair[1].integer(1)?{return Err(invalid("Curation requires one matching recipe entity"))}if(ordinal+1)%256==0{control.checkpoint(PHASE,ordinal+1,tables[index].len())?;}}}
+  if tables[4].len()!=tables[2].len(){return Err(invalid("Curation requires one geometry for every stock entity"))}let recipes=tables[5..10].iter().try_fold(0usize,|sum,rows|sum.checked_add(rows.len()).ok_or_else(||invalid("Curation recipe count overflow")))?;if recipes!=tables[4].len(){return Err(invalid("Curation requires exactly one declared recipe per geometry"))}
+  for index in[2,3,10,11,12,13]{heap_sort(&mut tables[index],PHASE,control,|a,b,_|Ok((a.integer(1)?,a.integer(2)?).cmp(&(b.integer(1)?,b.integer(2)?))))?;let mut previous=None;let mut ordinal=0i64;for(completed,row)in tables[index].iter().enumerate(){let parent=row.integer(1)?;if previous!=Some(parent){previous=Some(parent);ordinal=0;}if row.integer(2)?!=ordinal{return Err(invalid("Curation relationship ordinals must be dense and unique"))}ordinal=ordinal.checked_add(1).ok_or_else(||invalid("Curation ordinal overflow"))?;if(completed+1)%256==0{control.checkpoint(PHASE,completed+1,tables[index].len())?;}}}
+  Ok(Self{tables})
+ }
+ fn one(&self,table:usize,parent:i64)->Result<&'a SqliteRow,ValueError>{let rows=&self.tables[table];let index=rows.binary_search_by_key(&parent,|row|row.integer(1).expect("validated Curation parent INTEGER")).map_err(|_|invalid("Curation requires one complete matching recipe"))?;Ok(rows[index])}
+ fn members(&self,table:usize,parent:i64)->&[&'a SqliteRow]{let rows=&self.tables[table];let start=rows.partition_point(|row|row.integer(1).expect("validated Curation parent INTEGER")<parent);let end=rows.partition_point(|row|row.integer(1).expect("validated Curation parent INTEGER")<=parent);&rows[start..end]}
+}
+fn retire(value:CurationSnapshot){semio_framework_dsl_record::DslField::retire_decoded(value)}
+fn construct(rows:&Rows<'_>,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<semio_framework_dsl_record::__rt::DecodedFieldOwner<CurationSnapshot>,ValueError>{
+ native.begin_stage(rows.tables[2].len().checked_add(rows.tables[13].len()).ok_or_else(||invalid("Curation native workload overflow"))?)?;let catalog=literal_catalog(rows.one(1,1)?,native)?;
+ let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(CurationSnapshot{catalog,stock_extra:Vec::new(),curated:Vec::new()},retire);let value=owner.as_mut();value.stock_extra=native.allocate_vec(rows.tables[2].len())?;
+ for row in&rows.tables[2]{let recipe=rows.one(4,row.rowid)?;let geometry=match recipe.text(2)?{
+  "box"=>{let r=rows.one(5,recipe.rowid)?;GeometryRecipe::Box{width:read_binary64(r,2,BOX)?,height:read_binary64(r,3,BOX)?,depth:read_binary64(r,4,BOX)?}},
+  "frame"=>{let r=rows.one(6,recipe.rowid)?;GeometryRecipe::Frame{width:read_binary64(r,2,FRAME)?,height:read_binary64(r,3,FRAME)?,depth:read_binary64(r,4,FRAME)?,profile:read_binary64(r,5,FRAME)?}},
+  "slab"=>{let r=rows.one(7,recipe.rowid)?;GeometryRecipe::Slab{width:read_binary64(r,2,BOX)?,depth:read_binary64(r,3,BOX)?,thickness:read_binary64(r,4,BOX)?}},
+  "glb"=>{let r=rows.one(9,recipe.rowid)?;GeometryRecipe::Glb{url:native.copy_text(r.text(2)?)?,extent:read_binary64(r,3,GLB)?}},
+  "mesh"=>{let r=rows.one(8,recipe.rowid)?;let pr=rows.members(10,r.rowid);let nr=rows.members(11,r.rowid);let ir=rows.members(12,r.rowid);let mut positions=native.allocate_vec(pr.len())?;let mut normals=native.allocate_vec(nr.len())?;let mut indices=native.allocate_vec(ir.len())?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(pr.len().checked_add(nr.len()).and_then(|n|n.checked_add(ir.len())).ok_or_else(||invalid("Curation mesh workload overflow"))?)?;for row in pr{positions.push(read_binary32(row,3,MESH)?);native.step()?;}for row in nr{normals.push(read_binary32(row,3,MESH)?);native.step()?;}for row in ir{indices.push(uint(row,3)?);native.step()?;}Ok(())})?;GeometryRecipe::Mesh{positions,normals,indices}},
+  _=>return Err(invalid("Curation recipe discriminant is undeclared"))
+ };let path=rows.members(3,row.rowid);let mut typology_path=native.allocate_vec(path.len())?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(path.len())?;for row in path{typology_path.push(native.copy_text(row.text(3)?)?);native.step()?;}Ok(())})?;native.charge(std::mem::size_of::<GeometryRecipe>())?;value.stock_extra.push(ObjectKindExtra{id:native.copy_text(row.text(3)?)?,name:native.copy_text(row.text(4)?)?,module_id:native.copy_text(row.text(5)?)?,availability:uint(row,6)?,typology_path,geometry:Box::new(geometry)});native.step()?;}
+ value.curated=native.allocate_vec(rows.tables[13].len())?;for row in&rows.tables[13]{value.curated.push(CuratedItem{object_id:native.copy_text(row.text(3)?)?,count:uint(row,4)?});native.step()?;}value.validate().map_err(invalid)?;native.checkpoint()?;Ok(owner)
+}
+pub(super) fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<CurationSnapshot,ValueError>{
+ validate_sqlite_database_schema_controlled(database,<CurationSnapshot as store::ArtifactSqliteSnapshot>::SQLITE_SCHEMA,PHASE,control)?;control.check_database(database,PHASE)?;let rows=Rows::new(database,control)?;
+ let owner=control.allocation_stage(PHASE,|remaining,progress|{let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native=semio_framework_value::NativeDecodeControl::new(remaining,&mut callback);let result=construct(&rows,&mut native);(result,native.owned_bytes())})??;control.checkpoint(PHASE,rows.tables[2].len(),rows.tables[2].len())?;Ok(owner.take())
+}
+`;
+const pairs=[{path:join(root,"📏️cells/🦀️.rs"),before:null,after:cells},{path:join(root,"💰️backing/🦀️.rs"),before:null,after:backing}];
+const rust=join(root,"🦀️.rs"),before=readFileSync(rust,"utf8");let after=before;
+after=after.replace('use std::collections::{BTreeMap,BTreeSet};\n','');after=after.replace(',validate_sqlite_database_schema,artifact:',',artifact:');
+assert(after.includes("type Single<'a>="));after=after.replace(/type Single<'a>=[^\n]+;\ntype Members<'a>=[^\n]+;\n/, '#[path="📏️cells/🦀️.rs"]mod cells;\n#[path="💰️backing/🦀️.rs"]mod backing;\n');
+const start=after.indexOf("fn table<'a>"),end=after.indexOf("fn uint(",start);assert(start>=0&&end>start);after=after.slice(0,start)+after.slice(end);
+const encode='self.validate().map_err(invalid)?;row_count(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native';assert.equal(after.split(encode).length,2);after=after.replace(encode,'self.validate().map_err(invalid)?;row_count(self,control,SqliteSnapshotPhase::EncodeNative)?;cells::typed(self,control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native');
+after=after.replace('control.check_rows(2)?;let maximum=control.limits().max_rows;store::decode_sqlite_snapshot_record_native','control.check_rows(2)?;control.check_value_bytes(24)?;let maximum=control.limits().max_rows;let value_maximum=control.limits().max_value_bytes;store::decode_sqlite_snapshot_record_native');after=after.replace('native_rows(record,native,maximum)?;let result=', 'native_rows(record,native,maximum)?;cells::borrowed(record,native,value_maximum)?;let result=');
+after=after.replace('row_count(self,control,SqliteSnapshotPhase::EncodeNative)?;let mut bound=', 'row_count(self,control,SqliteSnapshotPhase::EncodeNative)?;cells::typed(self,control,SqliteSnapshotPhase::EncodeNative)?;let mut bound=');
+const reconstruct=after.indexOf(' fn from_sqlite_database(');assert(reconstruct>0);after=after.slice(0,reconstruct)+' fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<\'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}\n}\n';pairs.push({path:rust,before,after});
+const source=join(root,"🟦️.ts"),sourceBefore=readFileSync(source,"utf8");let sourceAfter=sourceBefore;sourceAfter=sourceAfter.replace(',artifactSqliteValueBudget,type ArtifactSqliteOptions',',type ArtifactSqliteOptions');sourceAfter=sourceAfter.replace('let owned=0,completed=2;', 'let completed=2;');sourceAfter=sourceAfter.replace(' const charge=(bytes:number):void=>{owned+=bytes;artifactSqliteValueBudget(owned,options);};charge(total*512);\n','');sourceAfter=sourceAfter.replace('charge(rows.length*8);','');assert.notEqual(sourceAfter,sourceBefore);assert(!sourceAfter.includes('charge('));pairs.push({path:source,before:sourceBefore,after:sourceAfter});
+writeFileSync(join(import.meta.dir,"held-provider-pairs.json"),JSON.stringify(pairs,null,2)+"\n");
+console.log("[DEBUG] Curation exact typed/borrowed14table semantic cell provider staged production_mutations=0");

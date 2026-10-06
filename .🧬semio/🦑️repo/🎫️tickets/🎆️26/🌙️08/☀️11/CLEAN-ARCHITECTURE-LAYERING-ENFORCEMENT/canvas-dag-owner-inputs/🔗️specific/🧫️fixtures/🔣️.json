@@ -1,0 +1,13 @@
+{
+  "version":1,"from":"infinite_canvas","to":"semio_framework_ui::canvas",
+  "cases":[
+    {"id":"value","source":"fn a(){infinite_canvas::Point::new(1.,2.);}","after":"fn a(){semio_framework_ui::canvas::Point::new(1.,2.);}","cuts":1},
+    {"id":"use-list","source":"use infinite_canvas::{Scene,Color};","after":"use semio_framework_ui::canvas::{Scene,Color};","cuts":1},
+    {"id":"camera","source":"use infinite_canvas::camera::{Camera,Viewport};","after":"use semio_framework_ui::canvas::camera::{Camera,Viewport};","cuts":1},
+    {"id":"type","source":"fn a()->infinite_canvas::Point{todo!()}","after":"fn a()->semio_framework_ui::canvas::Point{todo!()}","cuts":1},
+    {"id":"string","source":"const A:&str=\"infinite_canvas::Point\";","after":"const A:&str=\"infinite_canvas::Point\";","cuts":0},
+    {"id":"raw","source":"const A:&str=r#\"infinite_canvas::Point\"#;","after":"const A:&str=r#\"infinite_canvas::Point\"#;","cuts":0},
+    {"id":"comment","source":"// infinite_canvas::Point\nfn a(){}","after":"// infinite_canvas::Point\nfn a(){}","cuts":0},
+    {"id":"other-scope","source":"use another::infinite_canvas::Point;","after":"use another::infinite_canvas::Point;","cuts":0}
+  ]
+}

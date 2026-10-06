@@ -23,8 +23,15 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::mutations::{apply_en1990_mutation, decode_en1990_mutation_json, inverse_en1990_mutation};
-    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::snapshot::{decode_en1990_dsl, decode_en1990_pack, decode_en1990_snapshot_json, encode_en1990_dsl, encode_en1990_pack, encode_en1990_snapshot_json, En1990Snapshot};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::mutations::{apply_en1990_mutation, inverse_en1990_mutation};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::io::text::mutations::{decode_en1990_mutation_json};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::snapshot::{En1990Snapshot};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::io::binary::snapshot::{encode_en1990_pack};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::io::binary::snapshot::{decode_en1990_pack};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::io::text::snapshot::{encode_en1990_dsl};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::io::text::snapshot::{decode_en1990_dsl};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::io::text::snapshot::{decode_en1990_snapshot_json};
+    use semio_s_artifact_norm_en1990::standards::v1::subsets::any::io::text::snapshot::{encode_en1990_snapshot_json};
     use semio_repo_test_host::law;
 
     /// 🗣️ The real committed EN 1990 document the identity scenario declares.
@@ -35,8 +42,8 @@ mod subject {
     //#region 🔖️FixtureDecode
     /// 🧫️ One committed vector file the scenario's steps declare, found by its bundle-relative suffix.
     fn committed(ctx: &Context, kind: &str, suffix: &str) -> Result<String, String> {
-        let uri = ctx.step_fixture_uris().into_iter().find(|uri| uri.ends_with(suffix)).ok_or_else(|| format!("mutate-en1990-1: the {kind:?} scenario declares no committed …/{suffix}"))?;
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("mutate-en1990-1: {uri} is not UTF-8: {error}"))
+        let uri = ctx.step_input_uris().into_iter().find(|uri| uri.ends_with(suffix)).ok_or_else(|| format!("mutate-en1990-1: the {kind:?} scenario declares no committed …/{suffix}"))?;
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("mutate-en1990-1: {uri} is not UTF-8: {error}"))
     }
 
     fn snapshot(ctx: &Context, kind: &str, suffix: &str) -> Result<En1990Snapshot, String> {
@@ -142,7 +149,7 @@ mod subject {
     /// hand-written DSL grammar, the binary pack protocol and the JSON projection all agree on what it parsed to — a
     /// shortcut that handed back its input bytes could not survive the pack leg.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed EN 1990 artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed EN 1990 artifact is not UTF-8: {error}"))?;
         let parsed = decode_en1990_dsl(&text)?;
         let reprinted = encode_en1990_dsl(&parsed);
         law::carrier_is_exact(reprinted.as_bytes(), text.as_bytes())?;
@@ -157,7 +164,7 @@ mod subject {
         if rejson != parsed {
             return Err(disagreement("identity-round-trip: encoding the document to JSON and decoding it back lost content", &rejson, &parsed));
         }
-        let twin = decode_en1990_pack(&ctx.fixture_bytes(PACK_ASSET)?)?;
+        let twin = decode_en1990_pack(&ctx.input_bytes(PACK_ASSET)?)?;
         if twin != parsed {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different document than the committed text artifact", &twin, &parsed));
         }

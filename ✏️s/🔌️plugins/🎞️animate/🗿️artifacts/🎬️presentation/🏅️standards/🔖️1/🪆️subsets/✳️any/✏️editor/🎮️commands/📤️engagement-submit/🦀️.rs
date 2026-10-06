@@ -6,7 +6,7 @@ use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutat
 use crate::editor::animate::{interaction_select_effect, new_tile_id, tile_morph_prompt_effect, PresentationDispatchCtx};
 use crate::mutations::create_tile::CreateTile;
 use crate::mutations::replace_tiles::ReplaceTiles;
-use crate::op::PresentationMutation;
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::{parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
 use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

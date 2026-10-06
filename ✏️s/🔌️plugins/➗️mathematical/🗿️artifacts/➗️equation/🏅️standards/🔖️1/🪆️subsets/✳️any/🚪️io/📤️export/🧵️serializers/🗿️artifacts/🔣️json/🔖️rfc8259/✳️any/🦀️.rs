@@ -1,7 +1,7 @@
 //! 🚪️ equation -> json. The exact carrier is `{graph, geometry, equation}`; composed-child
 //! handles are persistence references and never stand in for their materialized content.
 
-use crate::{equation_fixture, EquationSnapshot};
+use crate::{equation_carrier_snapshot, EquationSnapshot};
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -16,6 +16,6 @@ impl Serializer<EquationSnapshot> for EquationIntoJson {
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &EquationSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
         let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-        Ok(IoOutcome::clean(IoPayload::Binary(semio_framework_pack_json::to_json_string(&equation_fixture(from)).into_bytes())))
+        Ok(IoOutcome::clean(IoPayload::Binary(semio_framework_pack_json::to_json_string(&equation_carrier_snapshot(from)).into_bytes())))
     }
 }

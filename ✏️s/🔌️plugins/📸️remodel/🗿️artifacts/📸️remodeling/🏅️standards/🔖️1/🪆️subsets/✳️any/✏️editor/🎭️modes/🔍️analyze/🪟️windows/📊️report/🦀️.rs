@@ -26,6 +26,7 @@ const REMODELING_PLAY_SURFACE_REPORT: &str = "remodeling.play.report";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: REMODELING_PLAY_WINDOW_REPORT.into(),
         label: LocalizedLabel::native("Report", "Bericht"),
         body_key: REMODELING_PLAY_BODY_REPORT.into(),

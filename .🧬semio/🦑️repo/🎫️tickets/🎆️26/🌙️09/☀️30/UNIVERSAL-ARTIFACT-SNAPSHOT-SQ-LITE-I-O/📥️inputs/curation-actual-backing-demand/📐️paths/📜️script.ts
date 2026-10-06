@@ -1,0 +1,10 @@
+import {readFileSync,writeFileSync} from "node:fs";
+import assert from "node:assert/strict";
+const path="/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs";
+const before=readFileSync(path,"utf8"),after=before.replaceAll("\\uFE0F","\\u{FE0F}");
+assert.equal(before.split("\\uFE0F").length-1,6);
+assert.notEqual(after,before);
+writeFileSync(import.meta.dir+"/guarded-pairs.json",JSON.stringify([{path,before,after}],null,2)+"\n");
+assert.equal(readFileSync(path,"utf8"),before);
+writeFileSync(path,after);
+console.log("[DEBUG] Curation test-only System backing demand Rust path spelling repaired paths=1");

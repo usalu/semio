@@ -43,10 +43,15 @@ mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::{apply_semio_drawing_mutation, decode_semio_drawing_mutation_json, inverse_semio_drawing_mutation, SemioDrawingMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{
-        decode_semio_drawing_pack, decode_semio_drawing_snapshot_json, encode_semio_drawing_pack, encode_semio_drawing_snapshot_json, parse_semio_drawing_dsl, print_semio_drawing_dsl, SemioDrawingSnapshot,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::{apply_semio_drawing_mutation, inverse_semio_drawing_mutation, SemioDrawingMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::text::mutations::{decode_semio_drawing_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::binary::snapshot::{decode_semio_drawing_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::binary::snapshot::{encode_semio_drawing_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::text::snapshot::{print_semio_drawing_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::text::snapshot::{parse_semio_drawing_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::text::snapshot::{decode_semio_drawing_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::text::snapshot::{encode_semio_drawing_snapshot_json};
 
     //#region 🔖️Input
     /// 🖍️ The real derived drawing — the committed `mouse.svg` and `qr-code.svg` read once by an
@@ -58,11 +63,11 @@ mod subject {
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order. The feature is
     /// the single place those paths are written down; both adapters read them from there.
     fn step_uris(ctx: &Context, prefix: &str) -> Vec<String> {
-        ctx.step_fixture_uris().into_iter().filter(|uri| uri.starts_with(prefix)).collect()
+        ctx.step_input_uris().into_iter().filter(|uri| uri.starts_with(prefix)).collect()
     }
 
     fn fixture_text(ctx: &Context, uri: &str) -> Result<String, String> {
-        String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
     }
 
     /// 🖍️ The real derived drawing, parsed through this repository's own DSL codec.
@@ -77,7 +82,7 @@ mod subject {
     }
 
     fn vector(ctx: &Context, position: usize, label: &str) -> Result<String, String> {
-        let uri = ctx.step_fixture_uris().into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
+        let uri = ctx.step_input_uris().into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} asset", ctx.scenario.id))?;
         fixture_text(ctx, &uri)
     }
 
@@ -212,7 +217,7 @@ mod subject {
     /// written by the other implementation, and the digests of what each side emitted are what the
     /// runner compares.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let dsl_bytes = ctx.fixture_bytes(ARTIFACT_DSL)?;
+        let dsl_bytes = ctx.input_bytes(ARTIFACT_DSL)?;
         let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: the derived drawing artifact is not UTF-8: {error}"))?;
         let parsed = parse_semio_drawing_dsl(&text)?;
         let printed = print_semio_drawing_dsl(&parsed);
@@ -221,7 +226,7 @@ mod subject {
         if reparsed != parsed {
             return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
         }
-        let pack_bytes = ctx.fixture_bytes(ARTIFACT_PACK)?;
+        let pack_bytes = ctx.input_bytes(ARTIFACT_PACK)?;
         let unpacked = decode_semio_drawing_pack(&pack_bytes)?;
         if unpacked != parsed {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different drawing than the committed text artifact", &unpacked, &parsed));

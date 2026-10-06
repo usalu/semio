@@ -76,7 +76,7 @@ pub mod compiler {
         let deck_json = semio_framework_pack_json::to_string_pretty(&deck_value);
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         let index_snapshot = index_html_snapshot(&deck_json);
-        let index_text = semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::write_html_document(&index_snapshot);
+        let index_text = semio_s_artifact_stdio_html::standards::v5::subsets::any::io::text::snapshot::write_html_document(&index_snapshot);
         fs::write(output_dir.join("🌐️.html"), index_text).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("styles.css"), styles_css()).map_err(|error| PresentationCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("manifest.json"), semio_framework_pack_json::to_string_pretty(&site_manifest(deck))).map_err(|error| PresentationCompileError::new(error.to_string()))?;

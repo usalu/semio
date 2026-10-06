@@ -14,6 +14,6 @@ pub fn diff(payload: &super::AddOutputVariable, base: &EnergyModelSnapshot) -> p
     }
     let mut model = base.model.clone();
     model.output_variables.push(crate::model::OutputVariableSpec { name: payload.name.clone(), key: payload.key.clone(), reporting_frequency: payload.reporting_frequency });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

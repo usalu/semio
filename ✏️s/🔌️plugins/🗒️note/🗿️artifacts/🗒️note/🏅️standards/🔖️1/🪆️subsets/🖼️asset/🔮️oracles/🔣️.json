@@ -127,9 +127,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "adds-the-diagram-asset",
       "class": "third-party-generated",
       "target": {
@@ -183,7 +182,6 @@
       "notes": "Witnesses create-asset via the svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "swaps-the-logo-payload",
       "class": "third-party-generated",
       "target": {
@@ -237,7 +235,6 @@
       "notes": "Witnesses replace-asset-payload via the svg carrier(s) — see 📓️note-1-any-fixture-corpus.md for why exactly these carriers and not the others declared for this mutation kind."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "removes-the-logo-asset",
       "class": "third-party-generated",
       "target": {

@@ -7,7 +7,7 @@ use semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA;
 pub fn register() {}
 
 pub fn serialize(snapshot: &ProgramSnapshot) -> Result<ZipSnapshot, semio_framework_diagnostic::TextError> {
-    let tables = crate::io::program_export_tables(snapshot).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let tables = crate::standards::v1::subsets::any::io::program_export_tables(snapshot).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     let entries = tables
         .into_iter()
         .map(|table| {

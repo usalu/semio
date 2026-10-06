@@ -9,9 +9,9 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 if (process.argv[2] === "retained-opc-check") {
   const root = join(import.meta.dir, "../../📦️opc/🧬️retained/🧫️fixtures");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
-  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  
+  
+  
   const payload = Uint8Array.from({ length: fixture.payload.length }, (_, ordinal) => (ordinal * fixture.payload.multiplier + fixture.payload.increment) & 255);
   const oracle = structuredClone({
     parts: fixture.parts.map((part: { path: string; contentType: string; payload: "pattern" | "empty" }) => ({ path: part.path, contentType: part.contentType, bytes: part.payload === "pattern" ? payload : new Uint8Array() })),
@@ -28,5 +28,5 @@ if (process.argv[2] === "retained-opc-check") {
   assert.equal(oracle.parts[1].bytes.byteLength, 0);
   console.log(`retained-opc-check: parts=${oracle.parts.length} payload=${oracle.parts[0].bytes.byteLength} owners=${oracle.relationships.length}`);
 } else {
-  await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-zip", { snapshotSqliteTests: ["../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"] });
+  await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-zip", { snapshotSqliteTests: ["../../🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
 }

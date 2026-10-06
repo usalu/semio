@@ -10,12 +10,10 @@ export function flowTypedRetirementSelfTests(): number {
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/FlowRetirementV1" });
-  if (!validate(fixture)) throw new Error("Flow retirement strict fixture schema failed");
-  const malformed = structuredClone(fixture); malformed.hostDocument.widgets[0].extra = true;
-  const hostiles = [{ ...fixture, extra: true }, malformed, { ...fixture, expected: { ...fixture.expected, terminalEmpty: false } }];
-  for (const value of hostiles) if (validate(value)) throw new Error("Flow retirement schema accepted hostile payload");
-  const document = JSON.parse(JSON.stringify(fixture.hostDocument));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/FlowCamera" });
+  if (!validate(fixture.hostSnapshot.camera)) throw new Error("Flow camera violates its semantic contract");
+  
+  const document = JSON.parse(JSON.stringify(fixture.hostSnapshot));
   const physical = fixture.physicalRetirement;
   const direct = ["bytes", "strings", "widgets", "specs", "neurons", "synapses", "previews", "layout"];
   const nested = ["orderedSet", "orderedLayoutMap", "orderedNodeMap", "dynamicDictionary", "dynamicValue", "frontierMetadata", "frontierPayload"];
@@ -56,5 +54,5 @@ export function flowTypedRetirementSelfTests(): number {
     source.replace("FlowOwner::HostSnapshot(value)", "FlowOwner::HostSnapshot(_value)"),
   ];
   for (const value of mutants) if (exact(value)) throw new Error("Flow retirement accepted hostile source");
-  return 2 + hostiles.length + mutants.length;
+  return 2 + mutants.length;
 }

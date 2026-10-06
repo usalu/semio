@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangePvSystemAzimuth, base: &EnergyModelSnapshot) 
     if let Some(item) = model.pv_systems.iter_mut().find(|item| item.id == payload.id) {
         item.azimuth_deg = payload.new_azimuth_deg;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

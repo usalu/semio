@@ -20,7 +20,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Open action",
+          "de": "Öffnen-Aktion"
+        },
+        "description": {
+          "en": "Destination or action performed when the document is opened; cleared, there is none.",
+          "de": "Ziel oder Aktion beim Öffnen des Dokuments; geleert gibt es keine."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

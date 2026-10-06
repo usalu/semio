@@ -1,0 +1,26 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches/📸️snapshot/⬅️before/🔣️.json",
+    "sha256": "447ca8c1e3717e5a0e0a87ae8537aa4968bc075430082341a44955c77e1438b9"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/📸️snapshot/➡️after/🔣️.json",
+    "sha256": "bb489fafd40e8cb13c9dcdac744655192c7eea16d1e059c3c76786265d76748d"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches/🦠️mutation/🔣️.json",
+    "sha256": "0cfe9d4c8f0b53da902216478e9a91ca7161844c618f4acc1c2c9e7fa2241352"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches/📸️snapshot/⬅️before/🔣️.json",
+    "sha256": "aee17735ac9d45e9c4df6877a1d646872aee1dcddd6d430babcb584020f21fab"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/📸️snapshot/➡️after/🔣️.json",
+    "sha256": "aee17735ac9d45e9c4df6877a1d646872aee1dcddd6d430babcb584020f21fab"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches/🦠️mutation/🔣️.json",
+    "sha256": "276dd4eac70cc01557194208ee898e415538863ce933293a57c9162c562efe84"
+  }
+]

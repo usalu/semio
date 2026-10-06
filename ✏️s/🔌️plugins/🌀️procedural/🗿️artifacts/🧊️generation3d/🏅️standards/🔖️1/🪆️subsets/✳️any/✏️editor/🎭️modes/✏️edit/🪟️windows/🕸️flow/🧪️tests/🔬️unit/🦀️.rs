@@ -19,7 +19,7 @@ fn flow_graph_node_status_is_localized() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn the_node_graph_canvas_declares_the_activate_binding_the_keyboard_fixture_states() {
+async fn the_node_graph_canvas_declares_the_activate_binding_the_keyboard_snapshot_states() {
     let _serial = crate::test_serial::lock();
     let fixture: serde_json::Value = serde_json::from_str(KEYBOARD_REACHABILITY_FIXTURE_JSON).expect("keyboard fixture");
     let row = fixture["surfaceBindings"].as_array().expect("surfaceBindings").iter().find(|row| row["surface"].as_str() == Some(GENERATION_3D_PLAY_SURFACE_MAIN)).expect("the node-graph canvas has a surface-binding row");

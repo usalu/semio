@@ -140,6 +140,36 @@ impl LocalizedLabel {
         self.cells.iter_mut().flatten().map(Cow::to_mut)
     }
 
+    /// ♻️ Returns one existing cell without materializing borrowed locale text.
+    pub fn close_owned_cell_one(&mut self,maximum_bytes:usize)->Result<Option<usize>,usize>{
+        for cell in self.cells.iter_mut().flatten(){
+            let bytes=match cell{Cow::Owned(text)=>text.capacity(),Cow::Borrowed(_)=>0};
+            if cell.is_empty()&&bytes==0{continue;}
+            if bytes>maximum_bytes{return Err(bytes);}
+            *cell=Cow::Borrowed("");
+            return Ok(Some(bytes));
+        }
+        Ok(None)
+    }
+
+    /// 🎟️ Hands one existing locale cell's genuine allocation to its explicit parent without materializing borrowed text.
+    pub fn return_owned_cell_one<const N:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<N>,maximum_items:usize)->Result<Option<bool>,semio_framework_value::ValueError>{
+        if maximum_items==0{return Ok(Some(false));}
+        for cell in self.cells.iter_mut().flatten(){
+            match cell{
+                Cow::Owned(text) if text.capacity()!=0=>{if !parent.return_text(text,maximum_items)?{return Ok(Some(false));}*cell=Cow::Borrowed("");return Ok(Some(true));},
+                Cow::Borrowed(text) if !text.is_empty()=>{*cell=Cow::Borrowed("");return Ok(Some(true));},
+                _=>{},
+            }
+        }
+        Ok(None)
+    }
+
+    /// 📏️ Exact first owned cell capacity required for its physical return.
+    pub fn next_owned_close_byte_demand(&self)->usize{
+        self.cells.iter().flatten().find_map(|cell|match cell{Cow::Owned(text) if text.capacity()!=0=>Some(text.capacity()),Cow::Borrowed(text) if !text.is_empty()=>Some(0),_=>None}).unwrap_or(0)
+    }
+
     /// 📏️ Retained bytes of the WHOLE matrix. A label is a locale × terminology matrix now, so an
     /// artifact's fixed retained envelope pays for every cell, not for one string: a caller that
     /// used to admit `label.len()` admits this instead, and never under-counts the envelope by

@@ -263,7 +263,7 @@ async fn boots_on_the_forest_left_example_document() {
     assert_eq!(booted.node_kind.id, "Hexagonal Cut Concrete Forest Left");
     assert_eq!(booted.handles.len(), 11);
     assert!(!booted.handle_kinds.is_empty());
-    assert_ne!(booted, crate::standards::v1::subsets::any::schema::empty_block2d_snapshot());
+    assert_ne!(booted, crate::standards::v1::subsets::any::io::text::snapshot::empty_block2d_snapshot());
     assert!(context::render(&mut app, board::BLOCK2D_BODY_BOARD).await.contains("Hexagonal Cut Concrete Forest Left"));
 }
 

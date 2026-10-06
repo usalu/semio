@@ -30,7 +30,7 @@ const DELETE_KINDS: &[&str] = &["delete-material", "delete-texture", "delete-ima
 /// `💎️material`). Copies into the work directory; the committed fixture itself is never written to.
 fn mutable_input(ctx: &Context, kind: &str) -> Result<Vec<u8>, String> {
     let uri = format!("shared://{kind}-applied/before.gltf");
-    let copy = ctx.copy_fixture(&uri, Some("input.gltf"))?;
+    let copy = ctx.copy_input(&uri, Some("input.gltf"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

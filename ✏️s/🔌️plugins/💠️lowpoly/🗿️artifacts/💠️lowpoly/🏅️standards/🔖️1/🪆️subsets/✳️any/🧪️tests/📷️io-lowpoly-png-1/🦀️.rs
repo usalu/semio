@@ -7,15 +7,15 @@ use semio_repo_test_host::{Adapter, Context, Outcome};
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_artifact_lowpoly_lowpoly::io::export::serializers::artifacts::png::v1_2::any as export;
-    use semio_s_artifact_lowpoly_lowpoly::io::import::deserializers::artifacts::png::v1_2::any as import;
+    use semio_s_artifact_lowpoly_lowpoly::standards::v1::subsets::any::io::export::serializers::artifacts::png::v1_2::any as export;
+    use semio_s_artifact_lowpoly_lowpoly::standards::v1::subsets::any::io::import::deserializers::artifacts::png::v1_2::any as import;
     use semio_s_artifact_lowpoly_lowpoly::LowpolySnapshot;
 
     /// 🧫️ Reads the fixture named by the scenario rather than duplicating its document in Rust.
     fn document(ctx: &Context) -> Result<LowpolySnapshot, String> {
         let spec = ctx.doc_json()?;
         let uri = spec.str("document");
-        let bytes = ctx.fixture_bytes(&uri)?;
+        let bytes = ctx.input_bytes(&uri)?;
         serde_json::from_slice::<LowpolySnapshot>(&bytes).map_err(|error| format!("fixture {uri} is not a valid LowpolySnapshot: {error}"))
     }
 

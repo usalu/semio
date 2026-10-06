@@ -971,8 +971,9 @@ export async function registrySchemaValidator(exportId: string): Promise<SchemaV
 export async function nativeCatalogSelectionOracleV1(): Promise<void> {
   const fixtureRoot = join(import.meta.dir, "..", "🧫️fixtures/📦️native-catalog-selection");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const validate = await registrySchemaValidator("NativeCatalogSelectionV1");
-  if (!validate(fixture)) throw new Error(`native catalog selection fixture denied: ${JSON.stringify(validate.errors)}`);
+  const validateInput = await registrySchemaValidator("NativeCatalogSelectionInputV1");
+  const validate = (value: any): boolean => validateInput({ packages: value.packages, profiles: value.profiles, availableProviders: value.availableProviders });
+  if (!validate(fixture)) throw new Error("native catalog domain input was denied");
   const neutral = (candidate: any, profileId: string, mutation: string): { code: string; receiptCount: number; calls: string[] } => {
     const denied = (calls: string[] = []) => ({ code: "denied", receiptCount: 0, calls });
     if (!validate(candidate)) return denied();

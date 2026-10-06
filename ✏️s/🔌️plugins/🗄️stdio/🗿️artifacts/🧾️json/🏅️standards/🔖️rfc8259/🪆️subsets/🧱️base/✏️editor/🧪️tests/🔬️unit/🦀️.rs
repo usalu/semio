@@ -37,7 +37,7 @@ async fn editor_declares_the_tree_window() {
 #[test]
 fn natural_file_route_exports_json_and_reopens_through_one_mutation() {
     let source = r#"{"title":"Natural Open Save","edited":true,"count":3}"#;
-    let edited = JsonSnapshot::from_value(crate::schema::snapshot::parse_json_text(source).expect("JSON fixture"));
+    let edited = JsonSnapshot::from_value(crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(source).expect("JSON fixture"));
     let bytes = <JsonAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("JSON natural bytes");
     let independent: serde_json::Value = serde_json::from_slice(&bytes).expect("serde_json reads exported JSON");
     assert_eq!(independent["title"], "Natural Open Save");
@@ -101,7 +101,7 @@ async fn set_node_preserves_every_json_value_kind_and_rejects_invalid_source() {
         let command = JsonAnyEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), revision, value: source.into() };
         let emit = json_any_emit(&command, &snapshot, None).expect("valid JSON value");
         let next = protocol::MutationDiff::apply(<JsonMutation as protocol::Mutation<JsonSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact node patch applies");
-        let native = crate::schema::snapshot::parse_json_text(source).expect("JSON file parser");
+        let native = crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(source).expect("JSON file parser");
         let expected = serde_json::from_str::<serde_json::Value>(source).expect("serde_json oracle");
         assert_eq!(next.value, native);
         assert_eq!(serde_json::Value::from(&next.value), expected);
@@ -212,7 +212,7 @@ async fn source_edit_reaches_the_document_through_the_retained_event_route() {
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
     dispatch_settled(&mut app, "set-node", &[("nodeId", main::JSON_ROOT_NODE_ID), ("revision", &revision), ("value", source)]).await.expect("source edit settles");
     let after = app.snapshot().expect("json snapshot");
-    assert_eq!(after, JsonSnapshot { schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(), value:crate::schema::snapshot::parse_json_text(source).expect("expected source") });
+    assert_eq!(after, JsonSnapshot { schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(), value:crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(source).expect("expected source") });
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🪟️KitVerbLaws

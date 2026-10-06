@@ -1,0 +1,5 @@
+# Frozen Product Import Helper 1
+
+The draft retains exact failed Product floor/metadata/terminal authority and appends only absent literal TypeScript imports. AST selection and independent preProcessFile/Ajv controls, linked-source before-read checks, full canonical frames/readbacks, explicit held-null refusal, and missing/dynamic/external qualifications are present. The actual original package bootstrap and owning script are required seed witnesses.
+
+Preparation is not admitted yet. Both the initial held-floor checks and final checks read destination paths without linked-ancestor refusal. The final full-source guards protect the new original source and frame paths, but a replaced snapshot destination may resolve through a link while returning equal bytes. Add linked destination guards before every held/final read in a separate immutable successor. Any device/inode conservation claim must also retain and compare actual destination identity. Nonliteral and bare/CJS loader completeness remain qualified rather than inferred.

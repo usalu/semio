@@ -7,7 +7,7 @@
 
 use super::*;
 
-const FIXTURE: &str = include_str!("../../../../../../📇️directory/🔐️sign-in/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../../📇️directory/🧫️fixtures/🔐️sign-in/🔣️.json");
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(FIXTURE).expect("the shared sign-in fixture is valid JSON")

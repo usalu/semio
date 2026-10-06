@@ -66,7 +66,7 @@ type Crowd = { readonly id: string; readonly restings: readonly Mood[]; readonly
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** 📋️ Every table and constant of the module, under the names the oracle uses. */

@@ -1,0 +1,75 @@
+{
+  "contract": "framework.pack.intrinsic-decoding/v1",
+  "cases": [
+    {
+      "id": "null",
+      "kind": "json",
+      "expected": null
+    },
+    {
+      "id": "true",
+      "kind": "json",
+      "expected": true
+    },
+    {
+      "id": "false",
+      "kind": "json",
+      "expected": false
+    },
+    {
+      "id": "unsigned",
+      "kind": "json",
+      "expected": 7
+    },
+    {
+      "id": "signed",
+      "kind": "json",
+      "expected": -7
+    },
+    {
+      "id": "fraction",
+      "kind": "json",
+      "expected": 2.5
+    },
+    {
+      "id": "u64-maximum",
+      "kind": "json",
+      "expected": 18446744073709551615
+    },
+    {
+      "id": "unicode",
+      "kind": "json",
+      "expected": "café 日本語 🧰"
+    },
+    {
+      "id": "array",
+      "kind": "json",
+      "expected": [
+        null,
+        true,
+        3,
+        "text"
+      ]
+    },
+    {
+      "id": "object",
+      "kind": "json",
+      "expected": {
+        "count": 3,
+        "name": "value",
+        "nested": {
+          "ready": true
+        }
+      }
+    },
+    {
+      "id": "octets",
+      "kind": "bytes",
+      "expected": [
+        0,
+        127,
+        255
+      ]
+    }
+  ]
+}

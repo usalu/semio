@@ -208,7 +208,7 @@ export function findUtilityGroupPath(nodes: readonly UtilityNode[], targetId: st
   return null;
 }
 
-function UtilityRibbonItems({ items, onAction }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
+function UtilityRibbonItems({ items, onAction, stacked }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void; readonly stacked: boolean }): ReactElement {
   const sorted = useMemo(() => [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0)), [items]);
   // 🎯️ The toggle the user's press landed on (set by the item's own `onClick`, consumed by the group's
   // `onValueChange`). A toggle group's `onValueChange` hands back the WHOLE next value set, and the old
@@ -226,8 +226,8 @@ function UtilityRibbonItems({ items, onAction }: { readonly items: readonly Util
       const run = buttonRun;
       buttonRun = [];
       rendered.push(
-        <RibbonItem key={`buttons-${run.map((entry) => entry.id).join("-")}`}>
-          <ButtonGroup>
+        <RibbonItem key={`buttons-${run.map((entry) => entry.id).join("-")}`} className={stacked ? "h-auto w-full max-w-full" : undefined}>
+          <ButtonGroup className={stacked ? "h-auto w-full max-w-full flex-wrap" : undefined}>
             {run.map((entry) => {
               const action = resolveLeafAction(entry);
               if (!action) return null;
@@ -254,8 +254,9 @@ function UtilityRibbonItems({ items, onAction }: { readonly items: readonly Util
       const run = toggleRun;
       toggleRun = [];
       rendered.push(
-        <RibbonItem key={`toggles-${run.map((entry) => entry.id).join("-")}`}>
+        <RibbonItem key={`toggles-${run.map((entry) => entry.id).join("-")}`} className={stacked ? "h-auto w-full max-w-full" : undefined}>
           <ToggleGroup
+            className={stacked ? "h-auto w-full max-w-full flex-wrap" : undefined}
             kind="multiple"
             value={run.filter((entry) => entry.pressed).map((entry) => entry.id)}
             onValueChange={(values) => {
@@ -273,6 +274,7 @@ function UtilityRibbonItems({ items, onAction }: { readonly items: readonly Util
             items={run.map((entry) => ({
               value: entry.id,
               id: entry.id,
+              disabled: entry.disabled,
               icon: <Icon icon={entry.iconId as IconName} size="small" />,
               text: entry.text ?? entry.label,
               onClick: () => {
@@ -305,9 +307,9 @@ function UtilityRibbonItems({ items, onAction }: { readonly items: readonly Util
     }
     flushRuns();
     return rendered;
-  }, [onAction, sorted]);
+  }, [onAction, sorted, stacked]);
 
-  return <RibbonGroup>{nodes}</RibbonGroup>;
+  return <RibbonGroup className={stacked ? "h-auto w-full max-w-full flex-wrap items-start" : undefined}>{nodes}</RibbonGroup>;
 }
 
 function utilityRibbonSegmentKey(segment: UtilityRibbonSegment, index: number): string {
@@ -361,8 +363,9 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
   // click). An unpressed chip's press still arrives as `onValueChange(<id>)` and only drills the path.
   const renderSegment = (segment: UtilityRibbonSegment): ReactNode =>
     segment.kind === "picker" ? (
-      <RibbonItem>
+      <RibbonItem className={direction !== "inline" ? "h-auto w-full max-w-full" : undefined}>
         <ToggleGroup
+          className={direction !== "inline" ? "h-auto w-full max-w-full flex-wrap" : undefined}
           kind="single"
           value={activePath[segment.depth] ?? ""}
           onValueChange={(value) => {
@@ -383,7 +386,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
         />
       </RibbonItem>
     ) : (
-      <UtilityRibbonItems items={segment.items} onAction={onAction} />
+      <UtilityRibbonItems items={segment.items} onAction={onAction} stacked={direction !== "inline"} />
     );
 
   const windowId = id.startsWith("ui.utilities.") ? id.slice("ui.utilities.".length) : "";
@@ -409,7 +412,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
       : Array.from(
           segments.reduce((byDepth, segment, index) => {
             const zones = byDepth.get(segment.depth) ?? [];
-            zones.push(<RibbonZone key={utilityRibbonSegmentKey(segment, index)}>{renderSegment(segment)}</RibbonZone>);
+            zones.push(<RibbonZone key={utilityRibbonSegmentKey(segment, index)} variableHeight className="w-full max-w-full items-start">{renderSegment(segment)}</RibbonZone>);
             byDepth.set(segment.depth, zones);
             return byDepth;
           }, new Map<number, ReactElement[]>()),
@@ -421,8 +424,8 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
     rows.push({
       key: "row-utility-options",
       content: (
-        <RibbonZone variableHeight className="items-start">
-          <RibbonItem className="h-auto items-start">{utilityOptions}</RibbonItem>
+        <RibbonZone variableHeight className="w-full max-w-full items-start">
+          <RibbonItem className="h-auto w-full max-w-full items-start">{utilityOptions}</RibbonItem>
         </RibbonZone>
       ),
     });
@@ -430,8 +433,8 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
     rows.push({
       key: "row-selection-options",
       content: (
-        <RibbonZone variableHeight className="items-start">
-          <RibbonItem className="h-auto items-start">
+        <RibbonZone variableHeight className="w-full max-w-full items-start">
+          <RibbonItem className="h-auto w-full max-w-full items-start">
             <SelectionUtilityOptions activeUtilityId={activeSelectionUtility.id} windowId={windowId} onAction={onAction} generation={expectedGenerationOf(findSetActiveUtilityDescriptor(utilities))} />
           </RibbonItem>
         </RibbonZone>
@@ -439,6 +442,6 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
     });
   }
 
-  return <Ribbon id={id} direction={direction} rows={rows} />;
+  return <Ribbon id={id} direction={direction} rows={rows} className={direction !== "inline" ? "w-full items-stretch [&>[data-slot=ribbon-row]]:flex-wrap" : undefined} />;
 }
 //#endregion 🔖️utility-tree

@@ -1,0 +1,275 @@
+{
+  "rows": [
+    {
+      "artifact": "obj",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "tsv",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "csv",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "gltf",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "gif",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "las",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "pdf",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "docx",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "ply",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "xlsx",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "json",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "dwg",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "png",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "binary",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs",
+      "hasPublicArtifactTree": true,
+      "subsets": [
+        {
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🦀️.rs",
+          "dialect": {
+            "kind": "s.stdio.binary",
+            "standard": "raw",
+            "subset": "*"
+          },
+          "ioSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "nativeCodecLines": [
+            {
+              "line": 77,
+              "text": "    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.binary\", standard: semio_framework_plugin::StandardId(\"raw\"), subset: semio_framework_plugin::SubsetId(\"*\") }, store::ArtifactCodec::of::<crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(crate::STDIO_BINARY_DOCUMENT_SCHEMA))"
+            },
+            {
+              "line": 168,
+              "text": "/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4)."
+            },
+            {
+              "line": 201,
+              "text": "            codec: store::ArtifactCodec::of::<BinarySnapshot, BinaryMutation>(crate::STDIO_BINARY_DOCUMENT_SCHEMA.to_string()),"
+            }
+          ],
+          "qualification": "Literal subset source; owning root standard selection must match; no execution"
+        }
+      ]
+    },
+    {
+      "artifact": "txt",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs",
+      "hasPublicArtifactTree": true,
+      "subsets": [
+        {
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🦀️.rs",
+          "dialect": {
+            "kind": "s.stdio.txt",
+            "standard": "utf-8",
+            "subset": "*"
+          },
+          "ioSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+          "nativeCodecLines": [
+            {
+              "line": 50,
+              "text": "use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};"
+            },
+            {
+              "line": 63,
+              "text": "    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_plugin::Dialect { artifact_kind: \"s.stdio.txt\", standard: semio_framework_plugin::StandardId(\"utf-8\"), subset: semio_framework_plugin::SubsetId(\"*\") }, store::ArtifactCodec::of::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA)).expect(\"static Stdio registration must be available and conflict-free\");"
+            },
+            {
+              "line": 151,
+              "text": "/// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING)."
+            },
+            {
+              "line": 190,
+              "text": "            codec: store::ArtifactCodec::of::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA),"
+            }
+          ],
+          "qualification": "Literal subset source; owning root standard selection must match; no execution"
+        }
+      ]
+    },
+    {
+      "artifact": "tiff",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "md",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "xml",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "pptx",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "step",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "zip",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "deflate",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "html",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "semio",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "jpg",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "svg",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "mp3",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "bmp",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "wav",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "epw",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "ifc",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "dxf",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "avi",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "stl",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "mp4",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    },
+    {
+      "artifact": "bcf",
+      "rootSource": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🦀️.rs",
+      "hasPublicArtifactTree": false,
+      "subsets": []
+    }
+  ],
+  "qualification": "Static exact literal declaration locators, no inferred coordinates"
+}

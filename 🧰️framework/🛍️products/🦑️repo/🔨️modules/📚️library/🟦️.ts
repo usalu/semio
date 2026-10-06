@@ -917,7 +917,7 @@ export function dispatchSubcommand(segments: string[], handlers: Record<string, 
 
 
 
-/** ⏱️Hard wall-clock budget (ms) per test level — authoritative values live in `fixtures/test-level-budgets` (schema-validated). */
+/** ⏱️Hard wall-clock budget (ms) per test level — the process testing budget owner supplies the limits. */
 
 
 /** ⏱️Per-package quick/long/exhaustive floors for plugin crates whose suites exceed the level default. */
@@ -1129,7 +1129,7 @@ export function canonicalGoPlan(moduleRoot: string, layout: CanonicalGoLayout = 
 }
 
 /** 🧪️Runs canonical Go cases through the standard toolchain without authored legacy filenames. */
-export async function runCanonicalGoTests(moduleRoot: string, args: string[], opts: { env?: NodeJS.ProcessEnv; budgetMs?: number; packages?: readonly string[] } = {}): Promise<void> {
+export async function runCanonicalGoTests(moduleRoot: string, args: string[], opts: { env?: NodeJS.ProcessEnv; budgetMs?: number; packages?: readonly string[]; signal?: AbortSignal } = {}): Promise<void> {
   const plan = canonicalGoPlan(moduleRoot);
   const packages = opts.packages ?? plan.packages;
   if (packages.length === 0) throw new Error(`No canonical Go inputs found below ${realpathSync(moduleRoot)}`);
@@ -1142,7 +1142,7 @@ export async function runCanonicalGoTests(moduleRoot: string, args: string[], op
   writeFileSync(overlay, `${JSON.stringify({ Replace: plan.replacements }, null, 2)}\n`);
   process.once("exit", cleanup);
   try {
-    await runRepositoryTestCommand("go", ["test", `-overlay=${overlay}`, ...args, ...packages], { cwd: moduleRoot, env: { ...(opts.env ?? process.env), SEMIO_GO_OVERLAY_OWNER: owner }, budgetMs: opts.budgetMs, throwOnFailure: true });
+    await runRepositoryTestCommand("go", ["test", `-overlay=${overlay}`, ...args, ...packages], { cwd: moduleRoot, env: { ...(opts.env ?? process.env), SEMIO_GO_OVERLAY_OWNER: owner }, budgetMs: opts.budgetMs, signal: opts.signal, throwOnFailure: true });
   } finally {
     process.off("exit", cleanup);
     cleanup();
@@ -1212,7 +1212,7 @@ function killBudgetTree(pid: number): void {
  * optional `chromium-bidi`. Runtime behaviour is identical. */
 
 /** 🦀️ Composes repository Cargo preparation with neutral bounded test execution. */
-export async function runRepositoryTestCommand(command: string, args: string[], options: { cwd?: string; env?: Readonly<Record<string, string | undefined>>; budgetMs?: number; onTimeoutHint?: string; throwOnFailure?: boolean } = {}): Promise<void> {
+export async function runRepositoryTestCommand(command: string, args: string[], options: { cwd?: string; env?: Readonly<Record<string, string | undefined>>; budgetMs?: number; signal?: AbortSignal; onTimeoutHint?: string; throwOnFailure?: boolean } = {}): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
   if (command === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, cwd);
   await runBudgetedTestCommand(command, args, { ...options, cwd, budgetMs: options.budgetMs ?? testLevelBudgetMs() });

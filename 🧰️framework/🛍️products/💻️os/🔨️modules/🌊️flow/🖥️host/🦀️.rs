@@ -2445,7 +2445,7 @@ impl FlowHost {
             let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.host_snapshot.clone());
             let fixture = self.host_snapshot.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None, transaction: None }));
+                let _ = ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], transaction: None }));
             }
         }
     }
@@ -2512,7 +2512,7 @@ impl FlowHost {
             }
             let fixture = self.host_snapshot.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], description: None, transaction: None }));
+                let _ = ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowHostSnapshot(ReplaceFlowHostSnapshot { host_snapshot: fixture })], transaction: None }));
             }
         }
     }

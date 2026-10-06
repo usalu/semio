@@ -369,6 +369,18 @@ fn a_patch_input_schema_types_the_value_by_the_snapshot_sub_schema_and_reads_as_
 }
 
 #[test]
+fn a_patch_input_schema_declares_the_inverse_rows_its_leaf_answers() {
+    let fixture = fixture();
+    let documents = location_documents(&fixture);
+    let resolve = location_resolver(&documents);
+    let snapshot = fixture["locations"]["snapshot"].as_str().unwrap();
+    for patch in [SnapshotPatch::Remove { path: "/title".into() }, SnapshotPatch::Rename { path: "/metadata/k".into(), key: "j".into() }, SnapshotPatch::Move { from: "/list/0".into(), path: "/list/1".into(), index: None }] {
+        let schema: serde_json::Value = serde_json::from_str(&snapshot_patch_input_schema_text(snapshot, &patch, &resolve).unwrap()).unwrap();
+        assert_eq!(schema["x-semio-inverse-rows"]["bounded"].as_u64(), Some(SNAPSHOT_PATCH_MAX_INVERSE_PARTS as u64), "{patch:?}");
+    }
+}
+
+#[test]
 fn every_operation_round_trips_its_wire_and_labels_itself_in_every_locale() {
     let fixture = fixture();
     for (id, row) in fixture["patches"].as_object().unwrap() {
@@ -538,4 +550,82 @@ fn a_continued_part_defers_the_whole_snapshot_invariant_to_the_run_end() {
     let empty = DslValue::Object(vec![("rows".into(), DslValue::Array(Vec::new()))]);
     assert!(apply_snapshot_patch_checked(&empty, &part(0, false), refuse).is_err());
     assert!(apply_snapshot_patch_checked(&empty, &part(0, true), refuse).is_ok());
+}
+
+#[test]
+fn paged_snapshot_patch_original_json_source_keeps_every_variant_and_owned_prefix(){
+    use kernel::operation_bytes::{OwnedOperationBytes,OperationByteMeasurement,OperationBytePreparation,OperationByteCloseStep};
+    use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️operation-source.json")).unwrap();
+    let mut operations=Vec::new();
+    for case in fixture["cases"].as_array().unwrap(){let text=case.as_str().unwrap();let patch=SnapshotPatch::parse_op(text).unwrap();assert_eq!(patch.encode_op().unwrap(),text.as_bytes());assert_eq!(serde_json::from_str::<serde_json::Value>(&patch.print_op()).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());operations.push(patch);}
+    operations.push(SnapshotPatch::Set{path:"/title".into(),value:DslValue::String(fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize))});
+    let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;let items=fixture["maximumCloseItems"].as_u64().unwrap()as usize;let bytes=fixture["maximumCloseBytes"].as_u64().unwrap()as usize;
+    let close=|owner:&mut OwnedOperationBytes,maximum_steps:usize|{let mut released=0;for _ in 0..maximum_steps{match owner.close_one(items,bytes).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=bytes);released+=released_bytes;}}}assert!(owner.terminal_is_empty());assert_eq!(owner.allocated_bytes(),0);released};
+    let kind=|error:kernel::ProtocolError|match error{kernel::ProtocolError::Pack(kernel::PackError::Refusal(refusal))=>refusal.kind(),error=>panic!("expected genuine typed Pack refusal, got {error:?}")};
+    for patch in &operations{
+        let expected=patch.encode_op().unwrap();let steps=expected.len()+fixture["closeStepScaffold"].as_u64().unwrap()as usize;let mut options=kernel::codec::PackEncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
+        let mut measure=OperationByteMeasurement::new(options.limits.max_file_len);let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(0,&mut allow);
+        patch.encode_op_into(&options,&mut measure,&mut encoding).unwrap();assert_eq!(measure.exact_length().unwrap(),expected.len());assert_eq!(encoding.owned_bytes(),0);
+        let mut preparation=OperationBytePreparation::try_new(expected.len(),allocation).unwrap();let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allow);
+        for _ in 0..steps{preparation.fund_one(items,bytes,&mut encoding).unwrap();if preparation.is_funded(){break;}}assert!(preparation.is_funded());let paid=encoding.owned_bytes();let backing=preparation.allocated_bytes();
+        patch.encode_op_into(&options,&mut preparation,&mut encoding).unwrap();assert_eq!(encoding.owned_bytes(),paid);assert_eq!(preparation.allocated_bytes(),backing);
+        let mut owner=preparation.take_ready().unwrap();assert!(owner.iter().eq(expected.iter().copied()));assert_eq!(serde_json::to_value(&owner).unwrap(),serde_json::to_value(&expected).unwrap());assert_eq!(owner.close_one(0,bytes).unwrap(),OperationByteCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!(owner.len(),expected.len());assert!(close(&mut owner,steps)>=expected.len());
+        let mut short=options.clone();short.limits.max_file_len-=1;let mut prefix=OwnedOperationBytes::try_new(expected.len(),allocation).unwrap();let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allow);
+        assert_eq!(kind(patch.encode_op_into(&short,&mut prefix,&mut encoding).unwrap_err()),ValueRefusalKind::OwnershipLimit);assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix,steps);
+    }
+    let patch=operations.last().unwrap();let expected=patch.encode_op().unwrap();let mut prefix=OwnedOperationBytes::try_new(expected.len(),allocation).unwrap();let mut options=kernel::codec::PackEncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
+    let mut cancel=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|progress.completed<fixture["cancelAt"].as_u64().unwrap()as usize;let mut encoding=NativeEncodeControl::new(allocation,&mut cancel);
+    assert_eq!(kind(patch.encode_op_into(&options,&mut prefix,&mut encoding).unwrap_err()),ValueRefusalKind::Canceled);assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix,expected.len()+fixture["closeStepScaffold"].as_u64().unwrap()as usize);
+    println!("[DEBUG] All six original SnapshotPatch JSON variants preserve authored occurrences, optional omissions and neutral Serde values; direct8194 source and exact refused prefix return all page allocations under fixed4096 grants");
+}
+
+#[test]
+fn paged_snapshot_patch_original_json_source_honors_paid_allocation_policy(){
+    use kernel::operation_bytes::{OperationBytePreparation,OperationByteCloseStep};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️operation-source.json")).unwrap();
+    let patch=SnapshotPatch::Set{path:"/title".into(),value:DslValue::String(fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize))};
+    let expected=patch.encode_op().unwrap();let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;let items=fixture["maximumCloseItems"].as_u64().unwrap()as usize;let bytes=fixture["maximumCloseBytes"].as_u64().unwrap()as usize;let steps=expected.len()+fixture["closeStepScaffold"].as_u64().unwrap()as usize;
+    let mut preparation=OperationBytePreparation::try_new(expected.len(),allocation).unwrap();let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(allocation,&mut allow);
+    for _ in 0..steps{preparation.fund_one(items,bytes,&mut encoding).unwrap();if preparation.is_funded(){break;}}assert!(preparation.is_funded());let paid=encoding.owned_bytes();let backing=preparation.allocated_bytes();
+    let mut options=kernel::codec::PackEncodeOptions::default();options.limits.max_file_len=expected.len()as u64;options.limits.max_total_alloc=fixture["refusedAllocationBytes"].as_u64().unwrap();assert!(paid>options.limits.max_total_alloc as usize);
+    let result=patch.encode_op_into(&options,&mut preparation,&mut encoding);let accepted=preparation.accepted_prefix().unwrap().len();assert_eq!(encoding.owned_bytes(),paid);assert_eq!(preparation.allocated_bytes(),backing);assert_eq!(encoding.maximum_bytes(),allocation);
+    for _ in 0..steps{match preparation.close_one(items,bytes).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=bytes);}}}assert!(preparation.terminal_is_empty());assert_eq!(preparation.allocated_bytes(),0);
+    let error=result.expect_err("original caller allocation policy must reject already-admitted backing before accepting source bytes");let kernel::ProtocolError::Pack(kernel::PackError::Refusal(refusal))=error else{panic!("expected exact typed Pack allocation refusal")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(accepted,0);
+    println!("[DEBUG] Original8194 source and prepaid operation backing retained on caller allocation-policy refusal; same cumulative control restored and every page physically returned under fixed4096 grants");
+}
+
+#[test]
+fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candidate(){
+    use kernel::operation_bytes::{OwnedOperationBytes,OperationByteOutput,OperationByteComparison,OperationByteCloseStep};
+    use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️operation-source.json")).unwrap();
+    let read_fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/📦️operation-read.json")).unwrap();
+    let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;let cleanup=read_fixture["maximumCleanupBytes"].as_u64().unwrap()as usize;
+    let close_source=|source:&mut OwnedOperationBytes|{for _ in 0..source.len()+128{match source.close_one(1,4096).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=4096);}}}assert!(source.terminal_is_empty());};
+    let mut cases=fixture["cases"].as_array().unwrap().iter().map(|case|case.as_str().unwrap().to_owned()).collect::<Vec<_>>();
+    cases.push(serde_json::json!({"operation":"set","path":"/title","value":fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize)}).to_string());
+    for text in &cases{
+        let mut source=OwnedOperationBytes::try_new(text.len(),allocation).unwrap();let mut allowed=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allowed);source.write_bytes(text.as_bytes(),&mut encoding).unwrap();
+        let span=kernel::codec::ByteSpan::from_source(&source);assert!(span.contiguous().is_none());let pointer=span.get(0).unwrap()as *const u8;
+        let mut options=kernel::codec::PackDecodeOptions::default();options.limits.max_file_len=text.len()as u64;options.limits.max_total_alloc=allocation as u64;
+        let mut reader=SnapshotPatchReadCursor::new(span,&options).unwrap();let live=std::cell::Cell::new(true);let mut allowed=|_|live.get();let mut decode=NativeDecodeControl::new(allocation,&mut allowed);
+        assert!(!reader.step(0,&mut decode).unwrap());let before=reader.position();live.set(false);assert_eq!(reader.step(1,&mut decode).unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(reader.position(),before);live.set(true);
+        while !reader.step(1,&mut decode).unwrap(){}let paid=decode.owned_bytes();
+        let value_pointer=match reader.candidate(){Some(DslValue::Object(fields))=>fields.iter().find_map(|(key,value)|if key=="value"{match value{DslValue::String(text)=>Some(text.as_ptr()),_=>None}}else{None}),_=>None};
+        live.set(false);assert_eq!(reader.admit_patch(&mut decode).unwrap_err().kind,ValueRefusalKind::Canceled);assert!(reader.candidate().is_some());assert!(reader.take_patch().is_none());assert_eq!(decode.owned_bytes(),paid);live.set(true);
+        reader.admit_patch(&mut decode).unwrap();assert_eq!(decode.owned_bytes(),paid);let patch=reader.take_patch().unwrap();assert!(reader.take_patch().is_none());assert_eq!(patch,SnapshotPatch::decode_op(text.as_bytes()).unwrap());
+        if let Some(pointer)=value_pointer{let (SnapshotPatch::Set{value:DslValue::String(value),..}|SnapshotPatch::Insert{value:DslValue::String(value),..})= &patch else{panic!("original text value moved")};assert_eq!(value.as_ptr(),pointer);}
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&patch.print_op()).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());assert_eq!(span.get(0).unwrap()as *const u8,pointer);
+        let mut close=reader.into_retirement();while !close.terminal_is_empty(){close.close_step(1,cleanup).unwrap();}
+        let mut canonical=kernel::codec::PackEncodeOptions::default();canonical.limits.max_file_len=patch.encode_op().unwrap().len()as u64;let canonical_text=patch.encode_op().unwrap();let mut comparison=OperationByteComparison::new(kernel::codec::ByteSpan::from_slice(&canonical_text));let mut allowed=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allowed);patch.encode_op_into(&canonical,&mut comparison,&mut encoding).unwrap();comparison.finish().unwrap();
+        let mut close=semio_framework_value::retirement::owned_retirement(patch);while !close.terminal_is_empty(){close.close_step(1,cleanup).unwrap();}close_source(&mut source);
+    }
+    for row in read_fixture["invalid"].as_array().unwrap(){
+        let text=row["source"].as_str().unwrap();assert!(serde_json::from_str::<serde_json::Value>(text).is_ok());assert!(SnapshotPatch::decode_op(text.as_bytes()).is_err());
+        let mut options=kernel::codec::PackDecodeOptions::default();options.limits.max_file_len=text.len()as u64;options.limits.max_total_alloc=allocation as u64;let mut reader=SnapshotPatchReadCursor::new(kernel::codec::ByteSpan::from_slice(text.as_bytes()),&options).unwrap();let mut allowed=|_|true;let mut decode=NativeDecodeControl::new(allocation,&mut allowed);while !reader.step(1,&mut decode).unwrap(){}let paid=decode.owned_bytes();
+        assert_eq!(reader.admit_patch(&mut decode).unwrap_err().kind,ValueRefusalKind::InvalidValue);assert!(reader.candidate().is_some());assert!(reader.take_patch().is_none());assert_eq!(decode.owned_bytes(),paid);
+        assert_eq!(serde_json::Value::from(reader.candidate().unwrap()),serde_json::from_str::<serde_json::Value>(text).unwrap());let mut close=reader.into_retirement();while !close.terminal_is_empty(){close.close_step(1,cleanup).unwrap();}
+    }
+    eprintln!("[DEBUG] original six-kind Patch reader retains paged source, cancellation/refused candidate and semantic pointer through typed admission;8194 value moves once with no paid mirror");
 }

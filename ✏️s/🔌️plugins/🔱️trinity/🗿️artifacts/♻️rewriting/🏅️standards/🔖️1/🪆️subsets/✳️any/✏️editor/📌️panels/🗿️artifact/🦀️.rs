@@ -1,4 +1,4 @@
-//! 📄️ Trinity Rewriting app — Document panel (before-fixture node tree).
+//! 📄️ Trinity Rewriting app — Document panel (working-graph node tree).
 
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
 use crate::RewritingSnapshot;
@@ -27,7 +27,7 @@ fn node_row(node: &semio_s_artifact_trinity_jack::Node) -> semio_framework_plugi
 }
 
 pub(crate) fn render(state: &RewritingSnapshot, _cfg: &NoConfig, labels: &TrinityRewritingLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let nodes = state.working_graph.nodes().map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.fixture.invalid",error.into_message()))?;
+    let nodes = state.working_graph.nodes().map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.graph.invalid",error.into_message()))?;
     PanelTreeBuilder::new("trinity-document")?
         .window_section(windows, "trinity-document.nodes", Some(crate::editor::rewriting::ui_label(labels.pieces.as_str())?), true, &nodes, node_row)?
         .interaction_domain(crate::editor::rewriting::TRINITY_REWRITING_PLAY_CONTROLLER_ID, "graph")?

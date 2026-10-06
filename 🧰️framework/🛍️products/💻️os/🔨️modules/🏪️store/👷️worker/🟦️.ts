@@ -54,51 +54,7 @@ import type {
   SocketGrantReceiptV1,
 } from "../../../🟦️";
 import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_BATCH_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, encodeClientCommandsFrameExact, decodePresenceHistoryEdit, decodePresenceInteraction, decodePresencePeer, decodePresenceToolRun, decodeServerFrame, decodeDocumentBackboneEnvelopeBatchExact, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
-import {
-  DEV_STREAM_ROUTES,
-  DirectoryClient,
-  DirectoryCommandError,
-  DirectoryHttpError,
-  DOCUMENT_LINK_ACCESS_REFUSED_STATUSES,
-  admitRemoteEnvelopes,
-  noteAuthoredEnvelopeIds,
-  hubCommandRejectionV1,
-  hubTransientApplyRefusalV1,
-  localCommandRejectionV1,
-  HUB_RECONNECT_MAX_MS,
-  HUB_RECONNECT_MIN_MS,
-  createSocketGrantIssuerV1,
-  documentLinkExpiresAtMs,
-  documentLinkStatus,
-  documentLinkTransition,
-  decodeBackboneMessage,
-  decodeBackboneWorkerRequest,
-  decodeBackboneWorkerResponse,
-  decodeDocumentArchiveBytes,
-  decodeAppCommand,
-  decodePackWire,
-  decodePackValue, packValueToExactJson,
-  faultDisplayMessage,
-  documentRuntimeKeyV1,
-  encodeBackboneMessage,
-  encodeBackboneWorkerRequest,
-  encodeBackboneWorkerResponse,
-  encodeDocumentArchiveBytes,
-  encodeAppCommand,
-  encodePackValue,
-  isPackInteger,
-  packUIntSafeOrNull,
-  packWireNatural,
-  BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
-  DOCUMENT_ARCHIVE_MAXIMUM_BYTES,
-  HUB_SESSION_CAPABILITY_PATTERN_V1,
-  parseHubSessionPortRequestV1,
-  parseDocumentBackboneMessage,
-  parseInboundDocumentBackboneMessage,
-  parseDocumentSocketGrantReceiptV1,
-  parseSocketGrantReceiptV1,
-  socketGrantProtocolsV1,
-} from "../../../🟦️";
+import { DEV_STREAM_ROUTES, DirectoryClient, DirectoryCommandError, DirectoryHttpError, DOCUMENT_LINK_ACCESS_REFUSED_STATUSES, admitRemoteEnvelopes, noteAuthoredEnvelopeIds, hubCommandRejectionV1, hubTransientApplyRefusalV1, localCommandRejectionV1, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, documentLinkExpiresAtMs, documentLinkStatus, documentLinkTransition, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentArchiveBytes, decodeAppCommand, decodePackWire, decodePackValue, packValueToExactJson, faultDisplayMessage, documentRuntimeKeyV1, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeAppCommand, encodePackValue, isPackInteger, packUIntSafeOrNull, packWireNatural, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, HUB_SESSION_CAPABILITY_PATTERN_V1, parseHubSessionPortRequestV1, parseDocumentBackboneMessage, parseInboundDocumentBackboneMessage, parseDocumentSocketGrantReceiptV1, parseSocketGrantReceiptV1 } from "../../../🟦️";
 import type { PackValue } from "../../../🟦️";
 import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1, sealSpaceArtifactCreateV1, type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1 } from "../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
@@ -117,19 +73,7 @@ import { ActorDocumentBindingV1, documentBackboneEffectV1, encodeDocumentBackbon
 import { parseBrowserActorViewStateRequest } from "../../🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
 import { panelTabKindId, panelViewContext, sectionViewContext, windowViewContext, type PanelTabKind, type ResolvedPluginViewState } from "../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { BROWSER_ACTOR_VISIBLE_SURFACES_V1, browserActorVisibleSurfacesV1, type BrowserActorVisibleTurnV1 } from "./🪟️visible-surfaces/🟦️.ts";
-import type {
-  DirectoryCommandErrorCodeV1,
-  DirectoryCommandOutcomeV1,
-  DirectoryCommandReceiptV1,
-  DirectoryCommandRequestV1,
-  DirectoryCommandResultV1,
-  DirectorySpaceAdministrationPageV1,
-  DocumentExecutionTargetLeaseFieldsV1,
-  DocumentExecutionTargetProgressV1,
-  DocumentExecutionTargetStatusCodeV1,
-  DocumentOpenIntentV1,
-  DocumentOpenPlanV1,
-} from "../../📇️directory/🧬️schema/🟦️.ts";
+import type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectorySpaceAdministrationPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1, DocumentOpenIntentV1, DocumentOpenPlanV1 } from "../../📇️directory/🧬️schema/🟦️.ts";
 import {
   DOCUMENT_CHECK_IN_MAX_BYTES,
   DOCUMENT_CHECK_IN_SCHEMA_V1,
@@ -175,7 +119,7 @@ import {
 import { blake3Hex } from "@semio-tech/framework";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
-import type { OpeningPreferences, UiNodeRecord } from "@semio-tech/framework";
+import type { OpeningPreferences } from "@semio-tech/framework";
 /** 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-backbone): the shared event-driven primitives
  * from packet `web-glue` — full-jitter reconnect backoff, single-flight revalidation, and a fetch
  * with a composed timeout. Reused rather than reimplemented (see this file's `🔖️Folder`/`🔖️Hub`
@@ -576,6 +520,9 @@ export type ArtifactState = {
    * external change, so it replaces nothing (a replace would reload the guest from a state older than every edit made
    * since the write). */
   folderArchive: Uint8Array | null;
+  /** 🪹️ Whether this open's first folder read was answered, or an archive was read or written: no later read announces
+   * an absent archive (`documentArchiveAbsent`). */
+  folderBootstrapped: boolean;
   reconnectDelayMs: number;
   /** 🗃️ Outbound mutations not yet sent on a LIVE hub socket (finding 5) — distinct from
    * `pendingBatches`, which holds the one batch already sent and awaiting its `Ack`. Every relay
@@ -4124,19 +4071,32 @@ async function retireCurrentFolderCanonicalBootstrapMirror(state: ArtifactState)
  * `latestWins` wrapper by every caller (SSE wake, sanity-poll tick, `externalChanged`), never
  * called directly, so it can never overlap itself (finding 1). Aborts with the document
  * ({@link ArtifactState.docAbort}, finding 3); an abort is a clean shutdown, not a failure, so it
- * is swallowed without logging. */
+ * is swallowed without logging. The first answered read of an open that finds no archive, with none read or written
+ * before, announces `documentArchiveAbsent` once; a later empty answer only forgets the archive the folder held, unless a
+ * write landed while that read was in flight. */
 async function pollFolderOnce(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>): Promise<void> {
   try {
+    const held = state.folderArchive;
     const response = (await fetchWithTimeout(folderEnvelopeUrl(binding, state.config.documentId), undefined, {
       timeoutMs: FOLDER_FETCH_TIMEOUT_MS,
       signal: state.docAbort.signal,
     })) as BinaryFetchTimeoutResponse;
-    if (response.status === 204 || response.status === 404) return;
+    if (response.status === 204 || response.status === 404) {
+      if (state.folderArchive !== held) return;
+      if (!state.folderBootstrapped) emitEvent(state, { kind: "documentArchiveAbsent" });
+      state.folderBootstrapped = true;
+      if (held !== null) {
+        state.folderArchive = null;
+        setStatus(state, { persisted: false });
+      }
+      return;
+    }
     if (!response.ok) throw new Error(`folder backbone read failed (${response.status})`);
     const archive = new Uint8Array(await response.arrayBuffer());
     decodeDocumentArchiveBytes(archive);
     const echo = state.folderArchive !== null && equalByteArrays(state.folderArchive, archive);
     state.folderArchive = archive;
+    state.folderBootstrapped = true;
     if (!echo) emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
     setStatus(state, { persisted: true });
   } catch (error) {
@@ -4204,6 +4164,7 @@ async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBin
   const bytes = Uint8Array.from(archive);
   if (bytes.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document archive exceeds its fixed byte authority");
   decodeDocumentArchiveBytes(bytes);
+  if (state.folderArchive !== null && equalByteArrays(state.folderArchive, bytes)) return;
   const response = await fetchWithTimeout(
     folderEnvelopeUrl(binding, state.config.documentId),
     { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: bytes },
@@ -4211,6 +4172,7 @@ async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBin
   );
   if (!response.ok) throw new Error(`folder backbone write failed (${response.status})`);
   state.folderArchive = bytes;
+  state.folderBootstrapped = true;
   setStatus(state, { persisted: true });
 }
 //#endregion 🔖️Folder
@@ -6844,6 +6806,7 @@ function newArtifactState(config: ArtifactActorConfig, runtimeKey: string, chann
     watchHealthy: false,
     revalidateFolder: async () => {},
     folderArchive: null,
+    folderBootstrapped: false,
     reconnectDelayMs: HUB_RECONNECT_MIN_MS,
     outbox: [],
     pendingMutations: [],

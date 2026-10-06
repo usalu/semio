@@ -1338,7 +1338,7 @@ async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<Mutat
     for (index, id) in ids.iter().enumerate() {
         let point = directory::DslValue::object([("lon".into(), directory::DslValue::float(7.0 + index as f64)), ("lat".into(), directory::DslValue::float(47.0))]);
         let mutation = GisMapMutation::CreatePosition(CreatePosition { index, item: MapFeature { id: format!("check-in-{id}"), data: point } });
-        if let Err(error) = store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], description: None, transaction: None }).await {
+        if let Err(error) = store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }).await {
             applied = Err(error);
             break;
         }
@@ -1522,7 +1522,6 @@ async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope>
     let applied = store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![GisMapMutation::CreatePosition(CreatePosition { index: 0, item: target.positions[0].clone() }), GisMapMutation::CreateRoute(CreateRoute { index: 0, item: target.routes[0].clone() })],
-            description: None,
             transaction: None,
         })
         .await;
@@ -4502,7 +4501,7 @@ fn concurrent_supersessions_through_the_hub_converge_both_replicas() {
             let mut bob = SupersedeAuthor::open(&state, &url, &document, &bob_token).await;
             let mut edits = Vec::new();
             for (index, id) in ["p0", "p1", "p2", "p3"].into_iter().enumerate() {
-                edits.extend(seed.author(ArtifactCommand::Apply { mutations: vec![supersede_position(index, id, 7.0 + index as f64)], description: None, transaction: None }).await);
+                edits.extend(seed.author(ArtifactCommand::Apply { mutations: vec![supersede_position(index, id, 7.0 + index as f64)], transaction: None }).await);
             }
             assert!(matches!(seed.submit(&edits).await, ApplyOutcome::Accepted), "{policy:?}: the seed edits commit");
             for author in [&mut alice, &mut bob] {

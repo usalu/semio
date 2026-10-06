@@ -100,9 +100,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-show-mode-applied",
       "class": "handcrafted",
       "target": {
@@ -167,7 +166,6 @@
       "notes": "Switching this viewer to points replaces the shading mode it broadcasts."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-preview-camera-applied",
       "class": "handcrafted",
       "target": {

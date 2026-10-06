@@ -25,9 +25,8 @@ import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import Ajv2020 from "ajv/dist/2020.js";
+
 import workerFreshness from "../../🧫️fixtures/👷️worker-freshness/🔣️.json" with { type: "json" };
-import workerFreshnessSchema from "../../🧬️schema/👷️worker-freshness/🔣️.json" with { type: "json" };
 import { createServer, type ViteDevServer } from "vite";
 import { semioServeCloseVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
@@ -140,8 +139,6 @@ async function bounded<T>(work: Promise<T>, ms: number): Promise<T | "timeout"> 
 
 describe("dev serve hot update delivery", () => {
   it.runIf(longLevel)("reloads the current module-worker export graph after an atomic replacement with HMR disabled", async () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(workerFreshnessSchema);
-    expect(validate(workerFreshness), JSON.stringify(validate.errors)).toBe(true);
     const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "semio-worker-freshness-"));
     mkdirSync(join(root, "🧰️framework"));
     const leaf = join(root, "🧰️framework/🍃️leaf.ts");

@@ -1,4 +1,4 @@
-//! 🧪️ `rotate-selection` fixture — `⏸️keeps-a-zero-angle`.
+//! 🧪️ `rotate-selection` scene_snapshot — `⏸️keeps-a-zero-angle`.
 //!
 //! A zero angle is a Warning-level `mutation.no-op`: the default diff, nothing to undo.
 //!
@@ -104,5 +104,5 @@ fn declared_outcome_holds() {
 /// ↩️ Nothing moved, so nothing is undone.
 #[test]
 fn inverse_is_empty() {
-    assert!(inverse_puzzle3d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture").is_empty(), "rotate-selection/keeps-a-zero-angle: a no-op must yield no inverse step");
+    assert!(inverse_puzzle3d_mutation(&before(), &mutation()).expect("valid retained mutation inverse scene_snapshot").is_empty(), "rotate-selection/keeps-a-zero-angle: a no-op must yield no inverse step");
 }

@@ -1,0 +1,27 @@
+# Live Selection Status
+
+The Draw request-context window engagement currently ignores the framework-owned InteractionView and displays zero selected. Its status and engagement placeholder are English literals even when the addressed window explicitly uses German.
+
+A schema-first corpus now defines top-level layer counts and framework layer-selection counts, with English and German singular/plural output and select/replace/clear sequences. Both Native and Reuse terminology must produce their explicitly authored labels; no ambient locale is allowed. The native regression drives real reserved framework selection admission and publication, requests actual registered-app window engagements, verifies the document is unchanged and closes the app. It targets 32 transitions across the two locale and terminology axes.
+
+Initial native attempt 14874 ended with exit 1 because the fixture include went up one directory too far; no regression assertion ran. Initial TypeScript attempt 19567 had the corresponding import-path error. Both test paths are corrected. Current native RED owner 13776 is compiling the unchanged production window-status projection; no assertion outcome is claimed yet.
+
+The TypeScript formatter is now implemented with codebase-owned label types and no runtime dependency. Corrected focused TypeScript owner 19315 is terminal exit 0: two tests, no failures, 68 assertions and strict compilation. The independent test uses the same corpus and existing i18next plural/interpolation as a third-party oracle, plus strict schema validation. It matched sixteen bilingual transitions and rejected invalid counts without choosing an ambient locale. The native app status projection is still unchanged. Existing Draw script and launch configuration expose the focused status selector; source whitespace validation passed.
+
+The rebuilt preview remains the earlier accepted crossing-area/ownership component. No status repair has been published there. Browser reload of its connection-error tab was refused by security policy; manual opening was requested, and no alternate browser route was attempted.
+
+The existing React Engagement status host at UI react target lines 8201 onward is a plain div without a live status role. Updating the count text alone does not establish screen-reader announcements. Accessible status semantics need a shared host test and actual UI acceptance as a subsequent gate.
+
+## Current Native and Full TypeScript Acceptance
+
+Corrected native RED 13776 is terminal exit 1 with an actual production assertion: the registered framework selection had one layer, but the addressed engagement displayed "1 layer · 0 selected" instead of "1 layer · 1 selected". The production request-context projection now passes the exact framework layer-selection count to the shared status builder. Count labels and engagement placeholder are explicitly authored in English/German for both terminology axes. No second selection store is introduced.
+
+Native GREEN 1704 is terminal exit 0: one selected law passed, 577 filtered skips, 32 actual bilingual/terminology selection transitions, unchanged documents and closed app owners. The runtime diagnostic records those 32 transitions. Full Draw TypeScript 81901 is terminal exit 0: the new status invocation passed two tests/68 assertions, then the existing suite passed 613 tests/2,795,019 assertions with zero skips and strict production compilation. The existing native PDF oracle directory was reused; no fresh PDF emission is claimed. These are source/runtime test gates, not a rebuilt browser status journey.
+
+A neutral shared UI announcement corpus and React host test define a persistent polite atomic status region across six bilingual updates. Initial UI owner 44489 ended before assertions because the target's explicit test include list lacked the new file. Registered RED 35950 is terminal exit 1 with an actual missing accessible status role. The shared host now declares status, polite live updates and atomic text. GREEN 33190 passed one test. Final diagnostic gate 61925 also passed one test, recording six actual bilingual DOM transitions with the same retained status element. Runtime stderr carries the prefixed witness. Scoped whitespace checks passed.
+
+This establishes shared React DOM announcement semantics, not native renderer accessibility or an actual screen-reader session. Current component describe 16904 is terminal exit 0 after 5m20s, with WASM hash f190a32011eb7d7fad8d4d3950346365533a2a82d916062663a9890aba78a9e6 and descriptor hash bb4fb2b7029e1c66dce1e243fac88ced59998aab04a6e2c5d3ad8d0f80aa506a. Materialization 26146 ended exit 0 after 43.1s. Activation 45771 ended successfully with exit 0 after 1m14s. The prior preview 96339/PID 32217 was deliberately closed gracefully after this activation, with terminal exit 0. Fresh preview 17117/PID 53255 now serves port 6064 and reports the staged component matching source and activation receipt. Browser status/history acceptance remains pending. The complete Draw goal remains active. See the [authored source catalog](📎️selection-status-files.md).
+
+## Launch Persistence
+
+The repository generator overwrites the generated launch file from its authoritative seed. The four scene-picking, bilingual TypeScript/native status and React announcement commands now live in both the seed and generated output. Registered generator-inputs owner 79701 ended exit 0 after 17.6s; all four entries persisted in both files after regeneration. Scoped whitespace validation passed for all sixteen authored paths.

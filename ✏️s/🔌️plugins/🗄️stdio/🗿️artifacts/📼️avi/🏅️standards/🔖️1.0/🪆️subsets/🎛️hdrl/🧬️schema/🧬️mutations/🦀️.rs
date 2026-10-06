@@ -156,31 +156,11 @@ pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) ->
 //#endregion 🔖️Mutation
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` — plain `pack::json` round-trip (see mp4's identical
-/// module-doc rationale: f6-final-summary.md §4.4, no generic collection-diff `DslField` bridge).
-impl OpText for AviMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let parsed = semio_framework_pack_json::parse(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e.into_value_error(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self)))
-    }
-}
 
-//#region 🏷️WireTags
-/// 🏷️ `AviMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-//#endregion 🏷️WireTags
 
-impl OpBinary for AviMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
-    }
-}
+
+
+
 //#endregion OpCodecs
 
 //#region 🔖️Tests

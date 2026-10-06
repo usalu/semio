@@ -11,7 +11,7 @@ pub fn register() {}
 /// 📤️ Encode dxf into a TxtSnapshot.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &DxfSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let text = crate::schema::snapshot::print_dxf_document(from);
+    let text = crate::standards::v_r12::subsets::any::io::text::snapshot::print_dxf_document(from);
     Ok(TxtSnapshot::from_body(&text))
 }
 

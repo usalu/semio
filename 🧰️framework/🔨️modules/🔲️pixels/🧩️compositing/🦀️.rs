@@ -1,5 +1,6 @@
 //! 🧩️ Isolated RGBA compositing following https://www.w3.org/TR/compositing-1/.
 use crate::{editing::{validate_extent,validate_image,PixelEditError,PixelProgress},RasterImage};
+use semio_framework_2d::retirement::{WorkRetirementCounter,WorkRetirementProgress};
 use std::{collections::BTreeMap,sync::Arc};
 
 pub type CompositeAffine = [f64;6];
@@ -200,13 +201,37 @@ impl CompositeJob {
         }
         Ok(PixelProgress {completed:self.completed,total:self.total,done:self.completed==self.total})
     }
-    pub fn cancel(&mut self){self.cancelled=true;self.candidate=None;self.buffers.clear();self.commands.clear();}
+    pub fn cancel(&mut self){self.cancelled=true;}
     pub fn result(&self)->Result<&RasterImage,PixelEditError> {
         if self.cancelled{return Err(PixelEditError::Cancelled);}
         if self.completed!=self.total{return Err(PixelEditError::Incomplete);}
         Ok(self.candidate.as_ref().unwrap())
     }
-    pub fn into_result(mut self)->Result<RasterImage,PixelEditError> {self.result()?;Ok(self.candidate.take().unwrap())}
+    pub fn into_retirement(mut self)->(CompositeRetirement,Option<RasterImage>){
+        let output=if !self.cancelled&&self.completed==self.total{self.candidate.take()}else{None};self.cancelled=true;
+        (CompositeRetirement{job:Some(self),slot:0,counter:WorkRetirementCounter::default()},output)
+    }
+}
+
+
+/// 🧹️ Consumes genuine compiled records, tile buffers and the private candidate under structural grants.
+pub struct CompositeRetirement{job:Option<CompositeJob>,slot:u8,counter:WorkRetirementCounter}
+impl CompositeRetirement{
+    pub fn terminal_is_empty(&self)->bool{self.job.is_none()}
+    fn step(&mut self){
+        let Some(job)=self.job.as_mut()else{return;};
+        match self.slot{
+            0=>{if job.commands.pop().is_some(){return;}job.commands=Vec::new();}
+            1=>{if job.buffers.pop().is_some(){return;}job.buffers=Vec::new();}
+            2=>job.candidate=None,
+            3=>{},
+            _=>unreachable!(),
+        }
+        self.slot+=1;if self.slot==4{self.job=None;}
+    }
+    pub fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,PixelEditError>{
+        let mut counter=self.counter;let progress=counter.advance(grant,||{self.step();self.terminal_is_empty()});self.counter=counter;progress.map_err(PixelEditError::Invalid)
+    }
 }
 
 #[cfg(test)]

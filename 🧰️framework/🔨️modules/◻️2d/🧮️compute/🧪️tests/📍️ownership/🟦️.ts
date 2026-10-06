@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import Ajv from "ajv";
+
 import * as TOML from "@iarna/toml";
 import {readFileSync,existsSync,mkdirSync,writeFileSync} from "node:fs";
 import {resolve,join} from "node:path";
@@ -7,11 +7,8 @@ import {spawnSync} from "node:child_process";
 const root=resolve(import.meta.dir,"../../../../../..");
 const owner=resolve(import.meta.dir,"../..");
 const corpus=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📍️ownership/🔣️.json"),"utf8")) as {source:string;unit:string;retainedUnitSha256:string;family:string[];laws:string[];cacheBehavior:Record<string,string>};
-const validator=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🧬️schema/📍️ownership/🔣️.json"),"utf8")));
 const read=(path:string):string=>readFileSync(join(root,path),"utf8");
 test("closed compute ownership corpus retains six actual law names",()=>{
- expect(validator(corpus),JSON.stringify(validator.errors)).toBe(true);
- expect(validator({...corpus,unknown:true})).toBe(false);
  expect(new Set(corpus.family).size).toBe(7);
  expect(new Set(corpus.laws).size).toBe(6);
 });

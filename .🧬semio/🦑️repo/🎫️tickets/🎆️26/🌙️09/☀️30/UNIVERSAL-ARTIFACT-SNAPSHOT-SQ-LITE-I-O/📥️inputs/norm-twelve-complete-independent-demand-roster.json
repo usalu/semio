@@ -1,0 +1,504 @@
+[
+  {
+    "artifact": "🪵️en1995",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 5814,
+      "tableWidths": {
+        "en1995_connection": 37,
+        "en1995_connection_action": 9,
+        "en1995_document": 2,
+        "en1995_member": 73,
+        "en1995_member_action": 28
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 9,
+          "valueBytes": 2293
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 10
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.members=[];source.connections=[];",
+      "native": "source.members.clear();source.connections.clear();"
+    },
+    "tables": 5,
+    "columns": 73
+  },
+  {
+    "artifact": "🪶️en1999",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 10086,
+      "tableWidths": {
+        "en1999_bolt_group": 19,
+        "en1999_cold_formed_sheet": 15,
+        "en1999_connection": 7,
+        "en1999_connection_action": 28,
+        "en1999_document": 2,
+        "en1999_fatigue_detail": 21,
+        "en1999_fire_scenario": 11,
+        "en1999_material": 5,
+        "en1999_member": 26,
+        "en1999_member_action": 28,
+        "en1999_plate_element": 15,
+        "en1999_section": 20,
+        "en1999_sheet_action": 28,
+        "en1999_shell": 14,
+        "en1999_shell_action": 28,
+        "en1999_weld_group": 14
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 17,
+          "valueBytes": 2391
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 10
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.materials=[];source.sections=[];source.members=[];source.connections=[];source.fireScenarios=[];source.fatigueDetails=[];source.coldFormed=[];source.shells=[];",
+      "native": "source.materials.clear();source.sections.clear();source.members.clear();source.connections.clear();source.fire_scenarios.clear();source.fatigue_details.clear();source.cold_formed.clear();source.shells.clear();"
+    },
+    "tables": 16,
+    "columns": 28
+  },
+  {
+    "artifact": "🧱️din4108",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 4374,
+      "tableWidths": {
+        "din4108_document": 14,
+        "din4108_element": 25,
+        "din4108_layer": 22,
+        "din4108_segment": 17,
+        "din4108_thermal_bridge": 11,
+        "din4108_window": 17,
+        "din4108_zone": 9
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 13,
+          "valueBytes": 1764
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 126
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.zones=[];source.elements=[];source.thermalBridges=[];",
+      "native": "source.zones.clear();source.elements.clear();source.thermal_bridges.clear();"
+    },
+    "tables": 7,
+    "columns": 25
+  },
+  {
+    "artifact": "🏋️en1991",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 10368,
+      "tableWidths": {
+        "en1991_accidental_case": 4,
+        "en1991_document": 152,
+        "en1991_explosion": 12,
+        "en1991_floor": 17,
+        "en1991_impact": 12,
+        "en1991_roof": 25,
+        "en1991_self_weight": 11,
+        "en1991_wind_face": 29
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 17,
+          "valueBytes": 2930
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 1140
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.floors=[];source.selfWeightElements=[];source.roofs=[];source.windFaces=[];source.accidentalCases=[];",
+      "native": "source.floors.clear();source.self_weight_elements.clear();source.roofs.clear();source.wind_faces.clear();source.accidental_cases.clear();"
+    },
+    "tables": 8,
+    "columns": 152
+  },
+  {
+    "artifact": "⚖️en1990",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 5052,
+      "tableWidths": {
+        "en1990_accidental_action": 4,
+        "en1990_action": 5,
+        "en1990_bridge_sls": 24,
+        "en1990_document": 24,
+        "en1990_effect": 10,
+        "en1990_member": 36,
+        "en1990_permanent_action": 5,
+        "en1990_seismic_action": 5,
+        "en1990_variable_action": 5
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 25,
+          "valueBytes": 1996
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 173
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.permanents=[];source.variables=[];source.accidentals=[];source.seismics=[];source.members=[];source.bridgeSls=[];source.effects=[];",
+      "native": "source.permanents.clear();source.variables.clear();source.accidentals.clear();source.seismics.clear();source.members.clear();source.bridge_sls.clear();source.effects.clear();"
+    },
+    "tables": 9,
+    "columns": 36
+  },
+  {
+    "artifact": "🪨️en1996",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 5683,
+      "tableWidths": {
+        "en1996_concentrated_load": 13,
+        "en1996_document": 5,
+        "en1996_load_case": 30,
+        "en1996_opening": 13,
+        "en1996_wall": 70
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 9,
+          "valueBytes": 1952
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 31
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.walls=[];",
+      "native": "source.walls.clear();"
+    },
+    "tables": 5,
+    "columns": 70
+  },
+  {
+    "artifact": "🧩️en1994",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 8227,
+      "tableWidths": {
+        "en1994_beam": 39,
+        "en1994_beam_action": 19,
+        "en1994_beam_sheeting": 13,
+        "en1994_beam_steel": 27,
+        "en1994_beam_studs": 16,
+        "en1994_column": 36,
+        "en1994_column_action": 13,
+        "en1994_document": 11,
+        "en1994_slab": 23,
+        "en1994_slab_action": 19,
+        "en1994_slab_sheeting": 13
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 12,
+          "valueBytes": 1763
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 71
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.beams=[];source.columns=[];source.slabs=[];",
+      "native": "source.beams.clear();source.columns.clear();source.slabs.clear();"
+    },
+    "tables": 11,
+    "columns": 39
+  },
+  {
+    "artifact": "🌬️din16798",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 4535,
+      "tableWidths": {
+        "din16798_document": 23,
+        "din16798_vent_system": 38,
+        "din16798_zone": 48
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 5,
+          "valueBytes": 1499
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 164
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.zones=[];source.ventSystems=[];",
+      "native": "source.zones.clear();source.vent_systems.clear();"
+    },
+    "tables": 3,
+    "columns": 48
+  },
+  {
+    "artifact": "⚡️din18599",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 6819,
+      "tableWidths": {
+        "din18599_climate_child": 7,
+        "din18599_climate_month": 8,
+        "din18599_cooling": 2,
+        "din18599_cooling_plant": 6,
+        "din18599_dhw": 12,
+        "din18599_document": 18,
+        "din18599_element": 27,
+        "din18599_heating": 15,
+        "din18599_lighting": 5,
+        "din18599_renewables": 11,
+        "din18599_ventilation": 11,
+        "din18599_zone": 26
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 25,
+          "valueBytes": 2213
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 21,
+          "valueBytes": 1405
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.zones=[];source.elements=[];",
+      "native": "source.zones.clear();source.elements.clear();"
+    },
+    "tables": 12,
+    "columns": 27
+  },
+  {
+    "artifact": "🔩️en1993",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 15263,
+      "tableWidths": {
+        "en1993_bridge_fatigue": 16,
+        "en1993_cold_formed_action": 8,
+        "en1993_cold_formed_member": 22,
+        "en1993_crane_action": 8,
+        "en1993_crane_runway": 20,
+        "en1993_document": 2,
+        "en1993_fatigue_band": 10,
+        "en1993_fatigue_detail": 7,
+        "en1993_fire_exposure": 27,
+        "en1993_joint": 52,
+        "en1993_joint_action": 11,
+        "en1993_load_case": 7,
+        "en1993_material": 19,
+        "en1993_member": 32,
+        "en1993_member_action": 24,
+        "en1993_pile": 15,
+        "en1993_pile_action": 8,
+        "en1993_plated_action": 8,
+        "en1993_plated_panel": 19,
+        "en1993_section": 57,
+        "en1993_silo_shell": 22,
+        "en1993_tension_action": 8,
+        "en1993_tension_component": 10,
+        "en1993_tower_action": 8,
+        "en1993_tower_leg": 11
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 25,
+          "valueBytes": 3236
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 10
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.materials=[];source.sections=[];source.members=[];source.loadCases=[];source.memberActions=[];source.joints=[];source.fatigueDetails=[];source.fireExposures=[];source.coldFormedMembers=[];source.platedPanels=[];source.siloShells=[];source.tensionComponents=[];source.bridgeFatigue=[];source.towerLegs=[];source.piles=[];source.craneRunways=[];",
+      "native": "source.materials.clear();source.sections.clear();source.members.clear();source.load_cases.clear();source.member_actions.clear();source.joints.clear();source.fatigue_details.clear();source.fire_exposures.clear();source.cold_formed_members.clear();source.plated_panels.clear();source.silo_shells.clear();source.tension_components.clear();source.bridge_fatigue.clear();source.tower_legs.clear();source.piles.clear();source.crane_runways.clear();"
+    },
+    "tables": 25,
+    "columns": 57
+  },
+  {
+    "artifact": "🏭️vdi3805",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 10809,
+      "tableWidths": {
+        "vdi3805_accessory": 6,
+        "vdi3805_building_system": 5,
+        "vdi3805_catalogue": 2,
+        "vdi3805_catalogue_extension": 4,
+        "vdi3805_component": 5,
+        "vdi3805_configuration": 5,
+        "vdi3805_connection": 27,
+        "vdi3805_curve": 4,
+        "vdi3805_curve_point": 9,
+        "vdi3805_curve_unit": 9,
+        "vdi3805_document": 4,
+        "vdi3805_edition": 4,
+        "vdi3805_file": 7,
+        "vdi3805_file_extension": 4,
+        "vdi3805_function_ref": 4,
+        "vdi3805_generic": 2,
+        "vdi3805_generic_entry": 6,
+        "vdi3805_geometry": 22,
+        "vdi3805_geometry_parameter": 6,
+        "vdi3805_heat_generator": 12,
+        "vdi3805_index_entry": 6,
+        "vdi3805_index_tag": 4,
+        "vdi3805_limits": 6,
+        "vdi3805_product": 8,
+        "vdi3805_product_extension": 4,
+        "vdi3805_pump": 17,
+        "vdi3805_radiator": 18,
+        "vdi3805_record": 4,
+        "vdi3805_record_extension": 4,
+        "vdi3805_record_field": 4,
+        "vdi3805_title": 5,
+        "vdi3805_valve": 14
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 62,
+          "valueBytes": 2965
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 5,
+          "valueBytes": 163
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.catalog.products=[];source.catalog.extensions={fields:{}};source.catalog.file.extensions={fields:{}};source.editionProfile={};source.index.entries=[];source.geometry={};source.curves={};",
+      "native": "source.catalog.products.clear();source.catalog.extensions.fields.clear();source.catalog.file.extensions.fields.clear();source.edition_profile.clear();source.index.entries.clear();source.geometry.clear();source.curves.clear();"
+    },
+    "tables": 32,
+    "columns": 27
+  },
+  {
+    "artifact": "🌍️en1997",
+    "source": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "native": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+    "fixturePath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic.json",
+    "schemaPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🎛️semantic/🧬️schema/🔣️.json",
+    "contract": {
+      "schemaBytes": 8324,
+      "tableWidths": {
+        "en1997_document": 12,
+        "en1997_footing": 19,
+        "en1997_foundation_load_case": 23,
+        "en1997_pile": 33,
+        "en1997_pile_test_profile": 10,
+        "en1997_retaining_wall": 42,
+        "en1997_slope": 14,
+        "en1997_soil_layer": 38,
+        "en1997_uplift_case": 19
+      },
+      "cases": [
+        {
+          "id": "full",
+          "rows": 9,
+          "valueBytes": 1602
+        },
+        {
+          "id": "emptyCollections",
+          "rows": 1,
+          "valueBytes": 112
+        }
+      ]
+    },
+    "empty": {
+      "source": "source.layers=[];source.footings=[];source.piles=[];source.retainingWalls=[];source.slopes=[];source.upliftCases=[];",
+      "native": "source.layers.clear();source.footings.clear();source.piles.clear();source.retaining_walls.clear();source.slopes.clear();source.uplift_cases.clear();"
+    },
+    "tables": 9,
+    "columns": 42
+  }
+]

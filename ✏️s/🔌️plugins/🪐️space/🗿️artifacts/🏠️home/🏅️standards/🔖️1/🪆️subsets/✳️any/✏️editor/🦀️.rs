@@ -60,7 +60,7 @@ fn require_session_identity(view_state: Option<&semio_framework_plugin::ViewMode
 app_commands! {
     /// 🎯️ `HomeApp::Command` — the SOLE dispatch surface for the Home launcher's own behavior, one
     /// variant per action declared in `create_home_app`'s manifest.
-    pub enum HomeCommand for SHomeSnapshot, crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfig, HomeConfigMutation {
+    pub enum HomeCommand for SHomeSnapshot, crate::standards::v1::subsets::any::schema::mutations::SHomeMutation, HomeConfig, HomeConfigMutation {
         "applyDirectoryEventPage" as "apply-directory-event-page" => apply_directory_event_page::ApplyDirectoryEventPage,
         "applyLocalCatalogDocument" as "apply-local-catalog-document" => apply_local_catalog_document::ApplyLocalCatalogDocument,
         "createStudio" as "create-studio" => create_studio::CreateStudio,
@@ -157,7 +157,7 @@ fn home_retained_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
     operation: &AppOperationContext,
-) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
     let identity = require_session_identity(context.and_then(|context| context.view_state.as_ref()))?;
     if home_retained_extent(command, snapshot, _interaction).is_none() {
         return Err(Fault::from("space-home-retained-route-mismatch"));
@@ -349,7 +349,7 @@ impl ArtifactEditor for HomeApp {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = SHomeSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
     type Config = HomeConfig;
     type ConfigMutation = HomeConfigMutation;
     type Draft = NoDraft;
@@ -575,7 +575,7 @@ impl ArtifactEditor for HomeApp {
         _interaction: &InteractionView<'_>, view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
-    ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
+    ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
         let identity = require_session_identity(view_state)?;
         match command {
             HomeCommand::CreateStudio(payload) => create_studio::handle_with_identity(payload, doc, cfg, identity),

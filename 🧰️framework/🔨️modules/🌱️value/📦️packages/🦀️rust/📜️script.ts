@@ -20,6 +20,15 @@ class TestScript extends BundleScript {
   }
 }
 /** 🛬️ Exercises canonical borrowed construction, allocation admission and owner retirement. */
+/** 🧮️ Executes closed Int64 scalar transport and actual test-only GraphQL mapping. */
+class GraphqlInt64SourceTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-graphql-int64-source");
+  const tests=resolve(this.root,"../../🧬️schema/🔗️graphql/🔢️int64/🧪️tests/🟦️.ts");
+  await runOwnedCommand(process.execPath,["test","--timeout","30000",tests],this.repoRoot,"value:graphql:int64:source",30000);
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",tests],this.repoRoot,"value:graphql:int64:types",30000);
+ }
+}
 class ControlledValueTestScript extends BundleScript {
   async run(args:string[]):Promise<void>{
     const {rest}=resolveTestLevel(args);
@@ -70,4 +79,4 @@ class DecodeOwnershipTestScript extends BundleScript {
  }
 }
 
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-decode-ownership", DecodeOwnershipTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-controlled-construction", ControlledValueTestScript).register("test-controlled-encoding",ControlledEncodingTestScript).register("test-refusal-portable", RefusalPortableTestScript).register("test-refusal-codec",RefusalCodecTestScript), { defaultCommand: "test" });
+await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-decode-ownership", DecodeOwnershipTestScript).register("test-graphql-int64-source",GraphqlInt64SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-controlled-construction", ControlledValueTestScript).register("test-controlled-encoding",ControlledEncodingTestScript).register("test-refusal-portable", RefusalPortableTestScript).register("test-refusal-codec",RefusalCodecTestScript), { defaultCommand: "test" });

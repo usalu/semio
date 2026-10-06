@@ -373,6 +373,30 @@ func TestCanonicalGoTestDispatcherSpawnError(t *testing.T) {
 	}
 }
 
+func TestCanonicalGoTestDispatcherNestedBudgetPreparation(t *testing.T) {
+	root := os.Getenv("SEMIO_GO_CANCELLATION_ROOT")
+	if root == "" {
+		t.Skip("nested budget preparation requires an owned artifact root")
+	}
+	vector := readGoDispatchVector(t)
+	moduleRoot, testFile := materializeGoDispatchVectorAt(t, vector, filepath.Join(root, "fixture"))
+	name := "cancellation.test"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	t.Setenv("GOWORK", "off")
+	t.Setenv("SEMIO_TEST_BUDGET_MS", "30000")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := &command.Command{}
+	cmd.SetContext(ctx)
+	cmd.SetOut(os.Stdout)
+	cmd.SetErr(os.Stderr)
+	if err := runCanonicalGoTestDispatch(moduleRoot, testFile, []string{"-c", "-o", filepath.Join(root, name)}, cmd); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCanonicalGoTestDispatcherNestedBudgetProbe(t *testing.T) {
 	root := os.Getenv("SEMIO_GO_CANCELLATION_ROOT")
 	if root == "" {

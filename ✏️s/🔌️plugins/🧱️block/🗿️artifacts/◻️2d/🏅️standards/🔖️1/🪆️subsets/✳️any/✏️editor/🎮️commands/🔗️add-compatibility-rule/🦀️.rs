@@ -1,6 +1,6 @@
 //! 🔗️ 🔗️ Block 2D play app commands command — `add-compatibility-rule`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 use crate::Block2dSnapshot;
 use crate::editor::block2d::config::{Block2dConfig, Block2dConfigMutation};
 use crate::BlockCompatibilityRule;

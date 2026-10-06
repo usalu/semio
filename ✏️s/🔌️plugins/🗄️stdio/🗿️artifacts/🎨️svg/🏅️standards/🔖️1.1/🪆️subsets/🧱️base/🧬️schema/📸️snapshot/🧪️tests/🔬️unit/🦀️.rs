@@ -1,3 +1,9 @@
+use crate::standards::v1_1::subsets::base::io::text::snapshot::parse_style_decls;
+use crate::standards::v1_1::subsets::base::io::text::snapshot::parse_path_data;
+use crate::standards::v1_1::subsets::base::io::text::snapshot::parse_transform_list;
+use crate::standards::v1_1::subsets::base::io::text::snapshot::parse_points;
+use crate::standards::v1_1::subsets::base::io::text::snapshot::parse_view_box;
+use crate::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
 use super::*;
 use protocol::MutationDiff;
 use semio_framework_plugin::ArtifactBuilder;
@@ -76,12 +82,12 @@ async fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
         include_str!("../../🦀️.rs"),
         include_str!("../../🟦️.ts"),
         include_str!("../../🔣️.json"),
-        include_str!("../../📝️text/🔗️.graphql"),
-        include_str!("../../📝️text/🛰️.proto"),
-        include_str!("../../../🔺️diff/📝️text/📖️.grammar.semio"),
-        include_str!("../../../🔺️diff/💾️binary/📡️.protocol.semio"),
-        include_str!("../../../🧬️mutations/📝️text/📖️.grammar.semio"),
-        include_str!("../../../🧬️mutations/💾️binary/📡️.protocol.semio"),
+        include_str!("../../../../🚪️io/📝️text/📸️snapshot/🔗️.graphql"),
+        include_str!("../../../../🚪️io/📝️text/📸️snapshot/🛰️.proto"),
+        include_str!("../../../../🚪️io/📝️text/🔺️diff/📖️.grammar.semio"),
+        include_str!("../../../../🚪️io/💾️binary/🔺️diff/📡️.protocol.semio"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio"),
+        include_str!("../../../../🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio"),
     ];
     for facet in facets {
         for forbidden in [concat!("pub doctype: Option<", "String>"), concat!("raw ", "doctype"), concat!("source-", "field"), concat!("source-", "tok"), concat!("artifact-", "source"), concat!("semantic-", "blake3")] {
@@ -90,26 +96,26 @@ async fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
     }
 
     let persistence_facets = [
-        include_str!("../../../🔺️diff/📝️text/🔤️.ebnf"),
-        include_str!("../../../🔺️diff/📝️text/🅰️.g4"),
-        include_str!("../../../🔺️diff/📝️text/🔗️.graphql"),
-        include_str!("../../../🔺️diff/📝️text/🔣️.json"),
-        include_str!("../../../🔺️diff/📝️text/🛰️.proto"),
-        include_str!("../../../🔺️diff/📝️text/🟦️.ts"),
-        include_str!("../../../🔺️diff/💾️binary/🌶️.spicy"),
-        include_str!("../../../🔺️diff/💾️binary/🥋️.ksy"),
-        include_str!("../../../🔺️diff/💾️binary/🔠️.abnf"),
-        include_str!("../../../🔺️diff/💾️binary/🟦️.ts"),
-        include_str!("../../../🧬️mutations/📝️text/🔤️.ebnf"),
-        include_str!("../../../🧬️mutations/📝️text/🅰️.g4"),
-        include_str!("../../../🧬️mutations/📝️text/🔗️.graphql"),
-        include_str!("../../../🧬️mutations/📝️text/🔣️.json"),
-        include_str!("../../../🧬️mutations/📝️text/🛰️.proto"),
-        include_str!("../../../🧬️mutations/📝️text/🟦️.ts"),
-        include_str!("../../../🧬️mutations/💾️binary/🌶️.spicy"),
-        include_str!("../../../🧬️mutations/💾️binary/🥋️.ksy"),
-        include_str!("../../../🧬️mutations/💾️binary/🔠️.abnf"),
-        include_str!("../../../🧬️mutations/💾️binary/🟦️.ts"),
+        include_str!("../../../../🚪️io/📝️text/🔺️diff/🔤️.ebnf"),
+        include_str!("../../../../🚪️io/📝️text/🔺️diff/🅰️.g4"),
+        include_str!("../../../../🚪️io/📝️text/🔺️diff/🔗️.graphql"),
+        include_str!("../../../../🚪️io/📝️text/🔺️diff/🔣️.json"),
+        include_str!("../../../../🚪️io/📝️text/🔺️diff/🛰️.proto"),
+        include_str!("../../../../🚪️io/📝️text/🔺️diff/🟦️.ts"),
+        include_str!("../../../../🚪️io/💾️binary/🔺️diff/🌶️.spicy"),
+        include_str!("../../../../🚪️io/💾️binary/🔺️diff/🥋️.ksy"),
+        include_str!("../../../../🚪️io/💾️binary/🔺️diff/🔠️.abnf"),
+        include_str!("../../../../🚪️io/💾️binary/🔺️diff/🟦️.ts"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🔤️.ebnf"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🅰️.g4"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🔗️.graphql"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🔣️.json"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🛰️.proto"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🟦️.ts"),
+        include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🌶️.spicy"),
+        include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🥋️.ksy"),
+        include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🔠️.abnf"),
+        include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🟦️.ts"),
     ];
     for facet in persistence_facets {
         // 🧾️ A JSON-Schema facet necessarily names `json-schema.org` in `$schema` and carries a

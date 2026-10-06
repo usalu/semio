@@ -16,7 +16,7 @@
 
 //#region 🔌️Adapters
 import { buildSchema, execute, parse } from "graphql";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔤️Identity
@@ -402,10 +402,10 @@ type Corpus = { queries: { id: string; source: string; variables?: Record<string
 
 /** ⚙️ Executes the corpus through the reference executor over the committed SDL. */
 function runCorpus(ctx: any, keep: (entry: Corpus["queries"][number]) => boolean): { projection: unknown } {
-  const schema = buildSchema(Buffer.from(ctx.fixtureBytes("shared://📜️served-schema/🔗️.graphql")).toString("utf8"));
-  const records = JSON.parse(Buffer.from(ctx.fixtureBytes("shared://🔣️repo-records.json")).toString("utf8")) as Row;
+  const schema = buildSchema(Buffer.from(ctx.inputBytes("shared://📜️served-schema/🔗️.graphql")).toString("utf8"));
+  const records = JSON.parse(Buffer.from(ctx.inputBytes("shared://🔣️repo-records.json")).toString("utf8")) as Row;
   const rootValue = sources(records);
-  const corpus = JSON.parse(Buffer.from(ctx.fixtureBytes("shared://▶️query-execution/🔣️queries.json")).toString("utf8")) as Corpus;
+  const corpus = JSON.parse(Buffer.from(ctx.inputBytes("shared://▶️query-execution/🔣️queries.json")).toString("utf8")) as Corpus;
   const queries = corpus.queries.filter(keep).map((entry) => {
     const result = execute({ schema, document: parse(entry.source), rootValue, variableValues: entry.variables ?? {} });
     if ("then" in (result as object)) throw new Error(`${entry.id}: the reference executor went asynchronous`);

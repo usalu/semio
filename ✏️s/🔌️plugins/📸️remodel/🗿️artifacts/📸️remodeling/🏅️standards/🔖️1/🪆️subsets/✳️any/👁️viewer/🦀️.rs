@@ -52,7 +52,7 @@ pub struct RemodelingViewer;
 
 impl ArtifactViewer for RemodelingViewer {
     type Snapshot = RemodelingSnapshot;
-    type Mutation = crate::op::RemodelingMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -69,7 +69,7 @@ impl ArtifactViewer for RemodelingViewer {
     /// sole command is `Noop`), so the artifact's own `default_remodeling_scene()` is only the fallback for
     /// example text that no longer parses, never the ordinary boot.
     fn initial_snapshot() -> RemodelingSnapshot {
-        crate::snapshot::text::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| default_remodeling_scene())
+        crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| default_remodeling_scene())
     }
 
     /// 👁️ Structurally read-only: the sole `RemodelingViewCommand::Noop` variant never carries a config

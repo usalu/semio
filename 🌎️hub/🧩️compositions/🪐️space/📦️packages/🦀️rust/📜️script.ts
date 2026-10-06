@@ -19,14 +19,15 @@ function homeExactCargoEnvironment(): { env: NodeJS.ProcessEnv; nativeEnv: NodeJ
   };
 }
 
-/** 🧫️ Compiles one scope-owned retained-command export against the shared plugin shape. */
-function compileRetainedCommandLimits(repoRoot: string, scopeRoot: string, exportId: string) {
-  const retainedCommand = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json"), "utf8"));
-  const module = JSON.parse(readFileSync(join(scopeRoot, "🧬️schema/🔣️.json"), "utf8"));
-  const ajv = new Ajv({ strict: false, allErrors: true });
-  ajv.addSchema(retainedCommand);
-  ajv.addSchema(module);
-  return ajv.compile({ $ref: `${module.$id}#/$defs/${exportId}` });
+/** 🧵️ Validates genuine command budgets, route records, and publication records at their shared owner. */
+function retainedCommandValidators(repoRoot: string) {
+  const document = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(document);
+  return {
+    budget: ajv.compile({ $ref: `${document.$id}#/$defs/RetainedCommandBudget` }),
+    route: ajv.compile({ $ref: `${document.$id}#/$defs/RetainedCommandRoute` }),
+    publication: ajv.compile({ $ref: `${document.$id}#/$defs/RetainedCommandPublicationContract` }),
+  };
 }
 
 class TestScript extends BundleScript {
@@ -46,8 +47,8 @@ function homeDirectoryProjectionPersistenceOracle(repoRoot: string): number {
   const ajv = new Ajv({ strict: false, allErrors: true });
   ajv.addSchema(directory);
   ajv.addSchema(module);
-  const validate = ajv.compile({ $ref: `${module.$id}#/$defs/HomeDirectoryProjectionWire` });
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const validate = ajv.compile({ $ref: `${module.$id}#/$defs/HomeDirectoryProjectionV1` });
+  assert(validate(fixture.wire), JSON.stringify(validate.errors));
   const validateTransient = ajv.compile({ $ref: module.$id });
   assert(validateTransient({ sessionBindingSha256: "", authorizationGeneration: 0, receiptSha256: "", directory: fixture.wire }), JSON.stringify(validateTransient.errors));
   assert.equal(validateTransient({ sessionBindingSha256: "", authorizationGeneration: 0, receiptSha256: "", directory: { ...fixture.wire, cursor: -1 } }), false);
@@ -69,10 +70,10 @@ function homeDirectoryProjectionPersistenceOracle(repoRoot: string): number {
   for (const malformed of fixture.malformed) assert.throws(() => decode(malformed));
   const hostileFixture = structuredClone(fixture);
   delete hostileFixture.wire.spaces["space-α"].documents;
-  assert.equal(validate(hostileFixture), false);
+  assert.equal(validate(hostileFixture.wire), false);
   const missingIndexFixture = structuredClone(fixture);
   delete missingIndexFixture.wire.spaces["space-α"].indexedDocuments;
-  assert.equal(validate(missingIndexFixture), false);
+  assert.equal(validate(missingIndexFixture.wire), false);
   const source = readFileSync(join(base, "🫧️transient/🦀️.rs"), "utf8");
   const config = readFileSync(join(base, "🎚️config/🦀️.rs"), "utf8");
   const exactSource = (text: string, configText: string): boolean => text.includes("documents: Vec<store::os_directory::DocumentDescriptor>")
@@ -81,7 +82,7 @@ function homeDirectoryProjectionPersistenceOracle(repoRoot: string): number {
     && text.includes("indexed_documents: space.indexed_documents.clone()")
     && text.includes("documents: space.documents,")
     && text.includes("indexed_documents: space.indexed_documents }")
-    && text.includes("fn from_wire(wire: HomeTransientWire) -> Result<Self, protocol::ValueError>")
+    && text.includes("fn from_wire(wire: HomeTransientWire) -> Result<Self, semio_framework_value::ValueError>")
     && text.includes("if !directory.resume_state_is_valid()")
     && !text.includes("unwrap_or_default")
     && !configText.includes("directory_json")
@@ -141,8 +142,9 @@ function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
     assert.equal(validateConfig({ retiredLocalStudioIds }), false, `config schema accepted a ${name} tombstone set`);
   }
   const retainedFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🧫️retained-command-limits/🔣️.json"), "utf8"));
-  const validateRetained = compileRetainedCommandLimits(repoRoot, join(base, ".."), "HomeRetainedCommandLimits");
-  assert(validateRetained(retainedFixture), JSON.stringify(validateRetained.errors));
+  const retained = retainedCommandValidators(repoRoot);
+  assert(retained.budget(retainedFixture.limits), JSON.stringify(retained.budget.errors));
+  for (const route of retainedFixture.routes) assert(retained.route(route), JSON.stringify(retained.route.errors));
   const directoryRoute = retainedFixture.routes.find((route: any) => route.id === "applyDirectoryEventPage");
   assert.equal(directoryRoute?.disposition, "Migrated");
   assert.deepEqual(directoryRoute?.lanes, ["Transient"]);
@@ -244,7 +246,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
   ]);
   const homeOperations = readFileSync(join(base, "🧬️schema/⚙️operations/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
-  const homeBinary = readFileSync(join(base, "🧬️schema/🧬️mutations/💾️binary/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  const homeBinary = readFileSync(join(base, "🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
   const spaceOperations = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
   const spaceEditor = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏠️main/🦀️.rs"), "utf8");
   const spaceViewer = readSources([
@@ -385,7 +387,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   const fixedPanelFixtures = `${inspectionPanel}\n${parametersPanel}`;
   assert(!fixedPanelFixtures.includes("pack::to_json_string(&node)") && fixedPanelFixtures.match(/project_and_retire_fixture_tree\(semio_framework_plugin::ComponentTree \{ root: node \}\)/g)?.length === 3, "Space panel fixtures serialize retained BuiltNode owners instead of projecting and retiring them");
   assert(spaceShared.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 3 && homeViewerApp.match(/assert_(?:viewer_never_mutates|editor_and_viewer_share_dialect)::<[^;]+>\(\)\.await;/g)?.length === 1, "Home or Space surface tests leave the async test context future unpolled");
-  assert(createStudio.includes("resolve_ready(crate::register_studio_port(&entry.id, port))") && exportMedia.includes("resolve_ready(crate::ensure_space_fixtures_registered())") && setAppRegistrations.includes("resolve_ready(crate::engine::space::engine::apply_app_registrations(&payload.json))"), "Synchronous Space command handlers leave an async registry side effect unpolled");
+  assert(createStudio.includes("resolve_ready(crate::register_studio_port(&entry.id, port))") && exportMedia.includes("payload.document_json.parse::<Value>()") && setAppRegistrations.includes("resolve_ready(crate::engine::space::engine::apply_app_registrations(&payload.json))"), "Synchronous Space command handlers leave an async registry side effect unpolled");
   for (const law of [
     "editor::home::modes::explore::windows::main::component::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions",
     "editor::home::modes::explore::windows::main::component::tests::spectator_and_unbound_hub_rows_only_carry_open",
@@ -483,11 +485,12 @@ function spacePluginIdentityOracle(repoRoot: string): number {
  * descriptor is regenerated only by a full `wasm32-wasip2` build (`describe`), so a stale one is
  * expected — what is NOT tolerated is a descriptor that carries `interactiveJob` and disagrees. */
 function interactiveJobCatalogOracle(repoRoot: string): number {
-  const plugin = join(repoRoot, "✏️s/🔌️plugins/🪐️space");
+  const plugin = join(repoRoot, "🌎️hub/🧩️compositions/🪐️space");
+  const artifactPlugin = join(repoRoot, "✏️s/🔌️plugins/🪐️space");
   const surfaces = [
-    { appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), scope: plugin, export: "SpacePlayRetainedCommandLimits", source: join(plugin, "⚙️engine/🪐️space/🦀️.rs"), shape: "status" as const, factory: "SpaceCommandJobFactory" },
-    { appId: "s.space.home@1/*#editor", owner: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "HomeRetainedCommandLimits", source: join(plugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "disposition" as const, factory: "HomeRetainedCommandJobFactory" },
-    { appId: "s.space.space@1/*#editor", owner: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "SpaceIndexRetainedCommandLimits", source: join(plugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "status" as const, factory: "SpaceIndexRetainedCommandJobFactory" },
+    { appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), source: join(plugin, "⚙️engine/🪐️space/🦀️.rs"), shape: "status" as const, factory: "SpaceCommandJobFactory" },
+    { appId: "s.space.home@1/*#editor", owner: join(artifactPlugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(artifactPlugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "HomeRetainedCommandLimits", source: join(artifactPlugin, "🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "disposition" as const, factory: "HomeRetainedCommandJobFactory" },
+    { appId: "s.space.space@1/*#editor", owner: join(artifactPlugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"), scope: join(artifactPlugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any"), export: "SpaceIndexRetainedCommandLimits", source: join(artifactPlugin, "🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"), shape: "status" as const, factory: "SpaceIndexRetainedCommandJobFactory" },
   ];
   const descriptor = JSON.parse(readFileSync(join(plugin, "🔣️.json"), "utf8"));
   let checks = spacePluginIdentityOracle(repoRoot);
@@ -495,8 +498,10 @@ function interactiveJobCatalogOracle(repoRoot: string): number {
   for (const surface of surfaces) {
     const fixtureRoot = join(surface.owner, "🧫️fixtures/🧫️retained-command-limits");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const validate = compileRetainedCommandLimits(repoRoot, surface.scope, surface.export);
-    assert(validate(fixture), `${surface.appId} fixture violates ${surface.export}: ${JSON.stringify(validate.errors)}`);
+    const retained = retainedCommandValidators(repoRoot);
+    assert(retained.budget(fixture.limits), JSON.stringify(retained.budget.errors));
+    for (const route of fixture.routes) assert(retained.route(route), JSON.stringify(retained.route.errors));
+    for (const publication of fixture.publicationContracts ?? []) assert(retained.publication(publication), JSON.stringify(retained.publication.errors));
     checks += 1;
     const migrated: string[] = fixture.routes.filter((route: any) => (surface.shape === "status" ? route.status === "Migrated" : route.disposition === "Migrated")).map((route: any) => route.id);
     const lanes = new Map<string, string[]>(
@@ -537,6 +542,28 @@ class PluginIdentityCheckScript extends BundleScript {
   }
 }
 
+/** 🪶️ Reads the actual two-owner composition census and runs its registered owning Native law. */
+class SnapshotOwnerCensusScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if(segments.length!==1 || !["source","native"].includes(segments[0]!)) throw Error("snapshot-owner-census requires source or native");
+    const fixtureRoot=join(this.repoRoot,"🌎️hub/🧩️compositions/🪐️space/🧫️fixtures/🪶️snapshot-owner-census");
+    const fixture=JSON.parse(readFileSync(join(fixtureRoot,"🔣️.json"),"utf8")) as {package:string,owners:{package:string,kind:string,sqlPath:string,tables:string[]}[]};
+    const manifest=parseToml(readFileSync(join(this.root,"Cargo.toml"),"utf8")) as {package:{name:string},dependencies:Record<string,unknown>};
+    assert.equal(manifest.package.name,fixture.package);
+    const {Database}=await import("bun:sqlite");
+    for(const owner of fixture.owners){
+      assert(Object.hasOwn(manifest.dependencies,owner.package));
+      const db=new Database(":memory:");
+      try{db.exec(readFileSync(join(this.repoRoot,owner.sqlPath),"utf8"));assert.deepEqual(db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all(),owner.tables.map(name=>({name})));assert.deepEqual(db.query("PRAGMA integrity_check").all(),[{integrity_check:"ok"}]);assert.deepEqual(db.query("PRAGMA foreign_key_check").all(),[]);}finally{db.close();}
+      console.log("[DEBUG] independent Hub Space census owner "+owner.kind+" package="+owner.package+" authored_SQL_tables="+owner.tables.length);
+    }
+    if(segments[0]==="native"){
+      const receipts=await runRepositoryExactCargoLaws({cwd:this.root,env:{...process.env,RUST_MIN_STACK:"268435456"},groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}],progress(event){console.log("[DEBUG] Hub Space census Native "+event.stage+" "+(event.law??""));}});
+      console.log("[DEBUG] Hub Space census Native receipts "+JSON.stringify(receipts));
+    }
+  }
+}
+
 class InteractiveJobCatalogCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("interactive-job-catalog-check accepts only --native");
@@ -555,6 +582,7 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
             "interactive_job_catalog_tests::manifest_plugin_id_matches_the_cargo_component_package",
             "interactive_job_catalog_tests::plugin_assembly_succeeds_and_registers_all_five_surfaces",
             "interactive_job_catalog_tests::every_app_instance_constructs_against_its_registered_proof_catalog",
+            "interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census",
           ],
         }],
         progress(event) { console.log(`interactive-job-catalog ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
@@ -606,7 +634,7 @@ class PersistenceDataClassCheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript).register("plugin-identity-check", PluginIdentityCheckScript).register("persistence-data-class-check", PersistenceDataClassCheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript).register("snapshot-owner-census", SnapshotOwnerCensusScript).register("plugin-identity-check", PluginIdentityCheckScript).register("persistence-data-class-check", PersistenceDataClassCheckScript);
 
 registerPlaygroundSiteBuildCommands(router);
 

@@ -1480,6 +1480,7 @@ pub fn edit_mode_definition() -> ModeDefinition {
 /// engagement, actions or utilities, so only id/label/body/icon vary.
 pub fn window_definition(id: &str, label: LocalizedLabel, body_key: &str, icon_id: &str) -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: id.into(),
         label,
         body_key: body_key.into(),
@@ -2242,7 +2243,7 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
     }
     let tool_id = A::command_id(&request.command);
     if tool_id != request.tool_id {
-        return Err(Fault::from("norm-command-tool-mismatch"));
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "norm-command-tool-mismatch"));
     }
     let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<A>>> = if tool_id == "evaluate" {
         Box::new(NormEvaluateCommandWork::<A>::new(tool_id))

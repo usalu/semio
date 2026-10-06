@@ -1,6 +1,6 @@
 /** 🔣️ Declared Block2d JSON boundary over its canonical complete parent. */
 import * as m from "../../🧬️schema/📸️snapshot/🟦️.ts";
-import * as p from "../../../../../../🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
+import * as p from "../../../../../../../../🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
 /** 🔵️ Construct every native optional presentation field. */
 function presentation(v:unknown):m.Block2dPresentation{const r=v===undefined?{}:p.row(v);return{shape:p.optionalText(r.shape),radius:p.optionalWord(r.radius),width:p.optionalWord(r.width),height:p.optionalWord(r.height),color:p.optionalText(r.color),iconKind:p.optionalText(r.iconKind)}}
 /** 🔘️ Construct the five required literal kind fields. */

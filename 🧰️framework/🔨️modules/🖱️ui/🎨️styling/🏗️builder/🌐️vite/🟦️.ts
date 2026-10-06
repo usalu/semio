@@ -5,12 +5,12 @@
 
 // #region 🔌️Adapters
 import { ephemeralMap } from "@semio-tech/framework";
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { copyFileSync, cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { type IncomingMessage, type ServerResponse } from "node:http";
+import { copyFileSync, cpSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { tmpdir } from "node:os";
-import { fileURLToPath } from "node:url";
+
+
 import {
   type OwnedBuildConfig,
   type OwnedBuildMiddleware,
@@ -20,10 +20,10 @@ import { parseTileProxyAssetSpecV1, TILE_PROXY_TRANSPORT_LIMITS_V1, type TilePro
 import type { AssetDeliveryDeclarationV1, AssetDeliveryModeV1, AssetDeliveryProviderV1 } from "../../../../🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
 import providerSchema from "./🧬️schema/🔣️.json" with { type: "json" };
-import { parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset, type MeshDeliveryCatalog } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
+import { parseMeshDeliveryCatalog, type MeshDeliveryCatalog } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
 import { assetPathFromRequest, SEMIO_ASSET_DIRECTORY, SEMIO_ASSET_ROUTE } from "../../../../🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 import faviconDelivery from "../../🌐️favicon/🔣️.json" with { type: "json" };
-import { playgroundIframeEmbedHeadersPlugin } from "../../🌐️iframe/🟦️.ts";
+
 // #endregion 🔌️Adapters
 
 export { playgroundIframeEmbedHeadersPlugin };
@@ -132,7 +132,7 @@ const dagLodScaleJson = () => ${JSON.stringify(
 )};
 export default async function initWasm() {}
 export const initSync = () => {};
-export class FlowSession { lodScaleJson() { return dagLodScaleJson(); } attachCanvas() { return Promise.resolve(); } setSize() {} renderFrame() {} loadFixtureJson() {} fixtureJson() { return "{}"; } setCatalogueJson() {} catalogueJson() { return "[]"; } setNeuronKindInfosJson() {} setComputingProgress() {} setAutomaticLod() {} setForcedDrawLodLabel() {} setCanvasThemeJson() {} setCamera() {} viewport() { return { x: 0, y: 0, zoom: 1 }; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScreen() {} labelOverlayPaintStateJson() { return '{"labels":[]}'; } sliderOverlayStateJson() { return '{"sliders":[]}'; } selectionUnionBoundsScreenJson() { return "{}"; } selectionPreviewPointsJson() { return "[]"; } selectionPreviewCrossing() { return false; } selectedWidgetIds() { return "[]"; } hoveredWidgetId() { return undefined; } hoveredChannelJson() { return "{}"; } pickTargetsAtScreenJson() { return "[]"; } previewText() { return ""; } preselectWidgetIdsJson() { return "[]"; } previewOffWidgetIds() { return "[]"; } alignSelection() {} undo() { return false; } redo() { return false; } selectAll() {} deleteSelection() {} addWidget() { return ""; } setGhostWidget() {} clearGhostWidget() {} worldFromScreen() { return '{"x":0,"y":0}'; } applyEvalOutputsJson() {} setSliderValue() {} setNeuronParams() {} setSelection() {} setPreviewOff() {} syncFromSceneJson() {}}
+export class FlowSession { lodScaleJson() { return dagLodScaleJson(); } attachCanvas() { return Promise.resolve(); } setSize() {} renderFrame() {} loadSnapshotJson() {} snapshotJson() { return "{}"; } setCatalogueJson() {} catalogueJson() { return "[]"; } setNeuronKindInfosJson() {} setComputingProgress() {} setAutomaticLod() {} setForcedDrawLodLabel() {} setCanvasThemeJson() {} setCamera() {} viewport() { return { x: 0, y: 0, zoom: 1 }; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScreen() {} labelOverlayPaintStateJson() { return '{"labels":[]}'; } sliderOverlayStateJson() { return '{"sliders":[]}'; } selectionUnionBoundsScreenJson() { return "{}"; } selectionPreviewPointsJson() { return "[]"; } selectionPreviewCrossing() { return false; } selectedWidgetIds() { return "[]"; } hoveredWidgetId() { return undefined; } hoveredChannelJson() { return "{}"; } pickTargetsAtScreenJson() { return "[]"; } previewText() { return ""; } preselectWidgetIdsJson() { return "[]"; } previewOffWidgetIds() { return "[]"; } alignSelection() {} undo() { return false; } redo() { return false; } selectAll() {} deleteSelection() {} addWidget() { return ""; } setGhostWidget() {} clearGhostWidget() {} worldFromScreen() { return '{"x":0,"y":0}'; } applyEvalOutputsJson() {} setSliderValue() {} setNeuronParams() {} setSelection() {} setPreviewOff() {} syncFromSceneJson() {}}
 export class GraphSession { lodScaleJson() { return dagLodScaleJson(); } syncFromSceneJson() {} syncFromScenePack() {} labelOverlayPaintStateJson() { return '{"labels":[]}'; } selectionUnionBoundsScreenJson() { return '{}'; } selectionPreviewPointsJson() { return '[]'; } selectionPreviewCrossing() { return false; } selectionPreviewMethod() { return 'rectangle'; } selectedNodeIdsJson() { return '[]'; } hoveredNodeId() { return null; } hoveredChannelJson() { return '{}'; } viewport() { return { x: 0, y: 0, zoom: 1 }; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScreen() {} }
 export class EditorSession { syncFromSceneJson() {} syncFromScenePack() {} setText() {} text() { return ''; } caret() { return 0; } anchor() { return 0; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScrollScreen() {} insertText() {} backspace() {} deleteForward() {} selectAll() {} replaceSelection() {} selectionText() { return ''; } hoverTokenRangeJson() { return 'null'; } setHoverRange() {} cameraJson() { return '{}'; } }
 export class DagSession { lodScaleJson() { return dagLodScaleJson(); } }
@@ -158,8 +158,8 @@ export const ruleQueryJson = wasmJson;
 export const boardComputeEdgeBezier = wasmJson;
 export const boardHandlePositionCircle = wasmJson;
 export const boardHandlePositionRectangle = wasmJson;
-export const boardRedrawHandlesFixtureJson = wasmJson;
-export const boardRedrawLayoutFixtureJson = wasmJson;
+export const boardRedrawHandlesSnapshotJson = wasmJson;
+export const boardRedrawLayoutSnapshotJson = wasmJson;
 `;
 
 function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, subpath: string | undefined): string[] {

@@ -1,0 +1,1507 @@
+[
+  {
+    "name": "gif87",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "input": {
+      "schema": "stdio.gif",
+      "width": 2,
+      "height": 1,
+      "gct": {
+        "sorted": true,
+        "colors": [
+          {
+            "r": 255,
+            "g": 0,
+            "b": 17
+          },
+          {
+            "r": 0,
+            "g": 255,
+            "b": 128
+          }
+        ]
+      },
+      "backgroundColorIndex": 1,
+      "pixelAspectRatio": 42,
+      "images": [
+        {
+          "left": 0,
+          "top": 0,
+          "width": 2,
+          "height": 1,
+          "interlace": true,
+          "lct": null,
+          "indices": [
+            0,
+            1
+          ]
+        },
+        {
+          "left": 4294967295,
+          "top": 17,
+          "width": 1,
+          "height": 1,
+          "interlace": false,
+          "lct": {
+            "sorted": false,
+            "colors": []
+          },
+          "indices": [
+            255
+          ]
+        }
+      ]
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 10,
+        "valueBytes": 401,
+        "schemaBytes": 2215,
+        "tableCount": 7,
+        "maxColumns": 8,
+        "tables": [
+          {
+            "table": "gif87_document",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 49
+          },
+          {
+            "table": "gif87_global_color",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 96
+          },
+          {
+            "table": "gif87_global_palette",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 16
+          },
+          {
+            "table": "gif87_image",
+            "width": 8,
+            "rows": 2,
+            "semanticBytes": 128
+          },
+          {
+            "table": "gif87_local_color",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gif87_local_palette",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 16
+          },
+          {
+            "table": "gif87_pixel",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 96
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyFramesRetainedMetadata",
+        "rows": 4,
+        "valueBytes": 161,
+        "schemaBytes": 2215,
+        "tableCount": 7,
+        "maxColumns": 8,
+        "tables": [
+          {
+            "table": "gif87_document",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 49
+          },
+          {
+            "table": "gif87_global_color",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 96
+          },
+          {
+            "table": "gif87_global_palette",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 16
+          },
+          {
+            "table": "gif87_image",
+            "width": 8,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gif87_local_color",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gif87_local_palette",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gif87_pixel",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "gif89",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot",
+    "input": {
+      "schema": "stdio.gif.89a",
+      "width": 2,
+      "height": 1,
+      "gct": {
+        "sorted": true,
+        "colors": [
+          {
+            "r": 255,
+            "g": 0,
+            "b": 17
+          },
+          {
+            "r": 0,
+            "g": 255,
+            "b": 128
+          }
+        ]
+      },
+      "backgroundColorIndex": 1,
+      "pixelAspectRatio": 42,
+      "loopCount": 65535,
+      "frames": [
+        {
+          "left": 0,
+          "top": 0,
+          "width": 2,
+          "height": 1,
+          "interlace": true,
+          "lct": null,
+          "indices": [
+            0,
+            1
+          ],
+          "delayCs": 65535,
+          "disposal": "restoreToPrevious",
+          "transparentIndex": 1,
+          "userInput": true,
+          "plainText": {
+            "left": 4294967295,
+            "top": 17,
+            "width": 70000,
+            "height": 1,
+            "cellWidth": 8,
+            "cellHeight": 12,
+            "fgColorIndex": 1,
+            "bgColorIndex": 0,
+            "text": "Grüße 世界\n"
+          }
+        },
+        {
+          "left": 1,
+          "top": 0,
+          "width": 0,
+          "height": 0,
+          "interlace": false,
+          "lct": {
+            "sorted": false,
+            "colors": []
+          },
+          "indices": [],
+          "delayCs": 0,
+          "disposal": "unspecified",
+          "transparentIndex": null,
+          "userInput": false,
+          "plainText": null
+        }
+      ],
+      "comments": [
+        "Grüße 世界",
+        "",
+        "duplicate",
+        "duplicate"
+      ],
+      "appExtensions": [
+        {
+          "identifier": [
+            65,
+            66,
+            67,
+            68,
+            0,
+            255,
+            17,
+            128
+          ],
+          "authCode": [
+            0,
+            255,
+            42
+          ],
+          "data": [
+            0,
+            255,
+            17,
+            128
+          ]
+        },
+        {
+          "identifier": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "authCode": [
+            0,
+            0,
+            0
+          ],
+          "data": []
+        }
+      ]
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 20,
+        "valueBytes": 1018,
+        "schemaBytes": 4772,
+        "tableCount": 11,
+        "maxColumns": 14,
+        "tables": [
+          {
+            "table": "gif89_application",
+            "width": 14,
+            "rows": 2,
+            "semanticBytes": 224
+          },
+          {
+            "table": "gif89_application_byte",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          },
+          {
+            "table": "gif89_comment",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          },
+          {
+            "table": "gif89_document",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 61
+          },
+          {
+            "table": "gif89_frame",
+            "width": 12,
+            "rows": 2,
+            "semanticBytes": 198
+          },
+          {
+            "table": "gif89_global_color",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 96
+          },
+          {
+            "table": "gif89_global_palette",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 16
+          },
+          {
+            "table": "gif89_local_color",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gif89_local_palette",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 16
+          },
+          {
+            "table": "gif89_pixel",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 64
+          },
+          {
+            "table": "gif89_plain_text",
+            "width": 10,
+            "rows": 1,
+            "semanticBytes": 87
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyFramesRetainedMetadata",
+        "rows": 14,
+        "valueBytes": 653,
+        "schemaBytes": 4772,
+        "tableCount": 11,
+        "maxColumns": 14,
+        "tables": [
+          {
+            "table": "gif89_application",
+            "width": 14,
+            "rows": 2,
+            "semanticBytes": 224
+          },
+          {
+            "table": "gif89_application_byte",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          },
+          {
+            "table": "gif89_comment",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          },
+          {
+            "table": "gif89_document",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 61
+          },
+          {
+            "table": "gif89_frame",
+            "width": 12,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gif89_global_color",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 96
+          },
+          {
+            "table": "gif89_global_palette",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 16
+          },
+          {
+            "table": "gif89_local_color",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gif89_local_palette",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gif89_pixel",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gif89_plain_text",
+            "width": 10,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "gltf",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot",
+    "input": {
+      "schema": "s.stdio.gltf@2.0/*",
+      "sourceForm": "glb",
+      "document": {
+        "asset": {
+          "version": "2.0",
+          "generator": "Semio 🧊",
+          "copyright": "owned",
+          "minVersion": "2.0",
+          "extras": null
+        },
+        "scene": 0,
+        "scenes": [
+          {
+            "name": "Scene",
+            "nodes": [
+              0
+            ],
+            "extras": {
+              "empty": []
+            }
+          }
+        ],
+        "nodes": [
+          {
+            "name": "Root",
+            "mesh": 0,
+            "camera": 0,
+            "skin": 0,
+            "children": [
+              1
+            ],
+            "translation": [
+              1,
+              2,
+              3
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "scale": [
+              1,
+              1,
+              1
+            ],
+            "matrix": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "weights": [
+              0.5
+            ],
+            "extensions": {
+              "retained": "root"
+            }
+          },
+          {
+            "name": "Child"
+          }
+        ],
+        "meshes": [
+          {
+            "name": "Mesh",
+            "weights": [
+              0.25,
+              0.75
+            ],
+            "primitives": [
+              {
+                "attributes": {
+                  "POSITION": 0,
+                  "NORMAL": 1
+                },
+                "indices": 2,
+                "material": 0,
+                "mode": 4,
+                "targets": [
+                  {
+                    "POSITION": 1
+                  }
+                ],
+                "extras": "primitive"
+              }
+            ]
+          }
+        ],
+        "buffers": [
+          {
+            "byteLength": 64,
+            "uri": "declared.bin",
+            "name": "Declared"
+          }
+        ],
+        "bufferViews": [
+          {
+            "buffer": 0,
+            "byteOffset": 2,
+            "byteLength": 12,
+            "byteStride": 4,
+            "target": 34962,
+            "name": "View"
+          }
+        ],
+        "accessors": [
+          {
+            "bufferView": 0,
+            "byteOffset": 1,
+            "componentType": 5126,
+            "normalized": false,
+            "count": 1,
+            "type": "VEC3",
+            "max": [
+              3,
+              4,
+              5
+            ],
+            "min": [],
+            "sparse": {
+              "count": 1,
+              "indices": {
+                "bufferView": 0,
+                "byteOffset": 3,
+                "componentType": 5121
+              },
+              "values": {
+                "bufferView": 0,
+                "byteOffset": 4
+              }
+            },
+            "name": "Positions"
+          },
+          {
+            "componentType": 5126,
+            "count": 1,
+            "type": "VEC3",
+            "name": "Normals"
+          },
+          {
+            "componentType": 5123,
+            "count": 3,
+            "type": "SCALAR"
+          }
+        ],
+        "materials": [
+          {
+            "name": "Material",
+            "pbrMetallicRoughness": {
+              "baseColorFactor": [
+                1,
+                0.5,
+                0.25,
+                1
+              ],
+              "baseColorTexture": {
+                "index": 0,
+                "texCoord": 1
+              },
+              "metallicFactor": 0.25,
+              "roughnessFactor": 0.75,
+              "metallicRoughnessTexture": {
+                "index": 0,
+                "texCoord": 0
+              }
+            },
+            "normalTexture": {
+              "index": 0,
+              "texCoord": 2,
+              "scale": 0.5
+            },
+            "occlusionTexture": {
+              "index": 0,
+              "texCoord": 3,
+              "strength": 0.75
+            },
+            "emissiveTexture": {
+              "index": 0,
+              "texCoord": 4
+            },
+            "emissiveFactor": [
+              0.25,
+              0.5,
+              0.75
+            ],
+            "alphaMode": "MASK",
+            "alphaCutoff": 0.125,
+            "doubleSided": true
+          }
+        ],
+        "textures": [
+          {
+            "sampler": 0,
+            "source": 0,
+            "name": "Texture"
+          }
+        ],
+        "images": [
+          {
+            "uri": "texture.png",
+            "mimeType": "image/png",
+            "bufferView": 0,
+            "name": "Image"
+          }
+        ],
+        "samplers": [
+          {
+            "magFilter": 9729,
+            "minFilter": 9987,
+            "wrapS": 33071,
+            "wrapT": 33648,
+            "name": "Sampler"
+          }
+        ],
+        "skins": [
+          {
+            "inverseBindMatrices": 0,
+            "skeleton": 0,
+            "joints": [
+              0,
+              1
+            ],
+            "name": "Skin"
+          }
+        ],
+        "animations": [
+          {
+            "name": "Animation",
+            "samplers": [
+              {
+                "input": 0,
+                "output": 1,
+                "interpolation": "CUBICSPLINE"
+              }
+            ],
+            "channels": [
+              {
+                "sampler": 0,
+                "target": {
+                  "node": 0,
+                  "path": "translation",
+                  "extras": null
+                },
+                "extras": true
+              }
+            ]
+          }
+        ],
+        "cameras": [
+          {
+            "name": "Perspective",
+            "type": "perspective",
+            "perspective": {
+              "aspectRatio": 1.5,
+              "yfov": 0.5,
+              "zfar": 1000,
+              "znear": 0.125,
+              "extras": []
+            }
+          },
+          {
+            "name": "Ortho",
+            "type": "orthographic",
+            "orthographic": {
+              "xmag": 3,
+              "ymag": 4,
+              "zfar": 100,
+              "znear": 0.25
+            }
+          }
+        ],
+        "extensionsUsed": [
+          "EXT_retained",
+          "EXT_retained"
+        ],
+        "extensionsRequired": [
+          "EXT_retained"
+        ],
+        "extras": {
+          "empty": {},
+          "nested": [
+            null,
+            true,
+            3.25,
+            "value 🌟"
+          ]
+        }
+      },
+      "buffers": [
+        [
+          0,
+          255,
+          1
+        ],
+        [],
+        [
+          9
+        ]
+      ]
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 114,
+        "valueBytes": 4887,
+        "schemaBytes": 28579,
+        "tableCount": 57,
+        "maxColumns": 21,
+        "tables": [
+          {
+            "table": "gltf_accessor",
+            "width": 15,
+            "rows": 3,
+            "semanticBytes": 262
+          },
+          {
+            "table": "gltf_accessor_max",
+            "width": 1,
+            "rows": 1,
+            "semanticBytes": 8
+          },
+          {
+            "table": "gltf_accessor_max_component",
+            "width": 6,
+            "rows": 3,
+            "semanticBytes": 138
+          },
+          {
+            "table": "gltf_accessor_min",
+            "width": 1,
+            "rows": 1,
+            "semanticBytes": 8
+          },
+          {
+            "table": "gltf_accessor_min_component",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_animation",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 33
+          },
+          {
+            "table": "gltf_animation_channel",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 48
+          },
+          {
+            "table": "gltf_animation_channel_target",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 43
+          },
+          {
+            "table": "gltf_animation_sampler",
+            "width": 10,
+            "rows": 1,
+            "semanticBytes": 67
+          },
+          {
+            "table": "gltf_asset",
+            "width": 8,
+            "rows": 1,
+            "semanticBytes": 45
+          },
+          {
+            "table": "gltf_base_color_texture",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 40
+          },
+          {
+            "table": "gltf_buffer",
+            "width": 9,
+            "rows": 1,
+            "semanticBytes": 60
+          },
+          {
+            "table": "gltf_buffer_view",
+            "width": 16,
+            "rows": 1,
+            "semanticBytes": 108
+          },
+          {
+            "table": "gltf_camera",
+            "width": 7,
+            "rows": 2,
+            "semanticBytes": 87
+          },
+          {
+            "table": "gltf_camera_orthographic",
+            "width": 15,
+            "rows": 1,
+            "semanticBytes": 96
+          },
+          {
+            "table": "gltf_camera_perspective",
+            "width": 15,
+            "rows": 1,
+            "semanticBytes": 104
+          },
+          {
+            "table": "gltf_document",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 53
+          },
+          {
+            "table": "gltf_emissive_texture",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 40
+          },
+          {
+            "table": "gltf_extension_required",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 36
+          },
+          {
+            "table": "gltf_extension_used",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 72
+          },
+          {
+            "table": "gltf_image",
+            "width": 10,
+            "rows": 1,
+            "semanticBytes": 65
+          },
+          {
+            "table": "gltf_json_array_element",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          },
+          {
+            "table": "gltf_json_object_member",
+            "width": 5,
+            "rows": 4,
+            "semanticBytes": 152
+          },
+          {
+            "table": "gltf_json_value",
+            "width": 7,
+            "rows": 16,
+            "semanticBytes": 278
+          },
+          {
+            "table": "gltf_material",
+            "width": 20,
+            "rows": 1,
+            "semanticBytes": 132
+          },
+          {
+            "table": "gltf_mesh",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 28
+          },
+          {
+            "table": "gltf_mesh_weight",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 92
+          },
+          {
+            "table": "gltf_metallic_roughness_texture",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 40
+          },
+          {
+            "table": "gltf_morph_attribute",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 48
+          },
+          {
+            "table": "gltf_morph_target",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 24
+          },
+          {
+            "table": "gltf_node",
+            "width": 12,
+            "rows": 2,
+            "semanticBytes": 113
+          },
+          {
+            "table": "gltf_node_child",
+            "width": 5,
+            "rows": 1,
+            "semanticBytes": 40
+          },
+          {
+            "table": "gltf_node_matrix",
+            "width": 1,
+            "rows": 1,
+            "semanticBytes": 8
+          },
+          {
+            "table": "gltf_node_matrix_component",
+            "width": 6,
+            "rows": 16,
+            "semanticBytes": 736
+          },
+          {
+            "table": "gltf_node_rotation",
+            "width": 1,
+            "rows": 1,
+            "semanticBytes": 8
+          },
+          {
+            "table": "gltf_node_rotation_component",
+            "width": 6,
+            "rows": 4,
+            "semanticBytes": 184
+          },
+          {
+            "table": "gltf_node_scale",
+            "width": 1,
+            "rows": 1,
+            "semanticBytes": 8
+          },
+          {
+            "table": "gltf_node_scale_component",
+            "width": 6,
+            "rows": 3,
+            "semanticBytes": 138
+          },
+          {
+            "table": "gltf_node_translation",
+            "width": 1,
+            "rows": 1,
+            "semanticBytes": 8
+          },
+          {
+            "table": "gltf_node_translation_component",
+            "width": 6,
+            "rows": 3,
+            "semanticBytes": 138
+          },
+          {
+            "table": "gltf_node_weight",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 46
+          },
+          {
+            "table": "gltf_normal_texture",
+            "width": 10,
+            "rows": 1,
+            "semanticBytes": 62
+          },
+          {
+            "table": "gltf_occlusion_texture",
+            "width": 10,
+            "rows": 1,
+            "semanticBytes": 62
+          },
+          {
+            "table": "gltf_pbr_metallic_roughness",
+            "width": 21,
+            "rows": 1,
+            "semanticBytes": 140
+          },
+          {
+            "table": "gltf_primitive",
+            "width": 11,
+            "rows": 1,
+            "semanticBytes": 80
+          },
+          {
+            "table": "gltf_primitive_attribute",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 94
+          },
+          {
+            "table": "gltf_resolved_buffer",
+            "width": 3,
+            "rows": 3,
+            "semanticBytes": 72
+          },
+          {
+            "table": "gltf_resolved_byte",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          },
+          {
+            "table": "gltf_sampler",
+            "width": 14,
+            "rows": 1,
+            "semanticBytes": 95
+          },
+          {
+            "table": "gltf_scene",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 37
+          },
+          {
+            "table": "gltf_scene_node",
+            "width": 5,
+            "rows": 1,
+            "semanticBytes": 40
+          },
+          {
+            "table": "gltf_skin",
+            "width": 10,
+            "rows": 1,
+            "semanticBytes": 60
+          },
+          {
+            "table": "gltf_skin_joint",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 80
+          },
+          {
+            "table": "gltf_sparse_accessor",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 24
+          },
+          {
+            "table": "gltf_sparse_indices",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 48
+          },
+          {
+            "table": "gltf_sparse_values",
+            "width": 5,
+            "rows": 1,
+            "semanticBytes": 40
+          },
+          {
+            "table": "gltf_texture",
+            "width": 10,
+            "rows": 1,
+            "semanticBytes": 63
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyDomainRetainedMetadata",
+        "recipe": {
+          "clearDocumentArrays": [
+            "scenes",
+            "nodes",
+            "meshes",
+            "buffers",
+            "bufferViews",
+            "accessors",
+            "materials",
+            "textures",
+            "images",
+            "samplers",
+            "skins",
+            "animations",
+            "cameras"
+          ],
+          "clearRootBuffers": true,
+          "sceneAbsent": true,
+          "preserve": "schema,sourceForm,asset,extensionsUsed,extensionsRequired,extras"
+        },
+        "rows": 19,
+        "valueBytes": 541,
+        "schemaBytes": 28579,
+        "tableCount": 57,
+        "maxColumns": 21,
+        "tables": [
+          {
+            "table": "gltf_accessor",
+            "width": 15,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_accessor_max",
+            "width": 1,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_accessor_max_component",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_accessor_min",
+            "width": 1,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_accessor_min_component",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_animation",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_animation_channel",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_animation_channel_target",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_animation_sampler",
+            "width": 10,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_asset",
+            "width": 8,
+            "rows": 1,
+            "semanticBytes": 45
+          },
+          {
+            "table": "gltf_base_color_texture",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_buffer",
+            "width": 9,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_buffer_view",
+            "width": 16,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_camera",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_camera_orthographic",
+            "width": 15,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_camera_perspective",
+            "width": 15,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_document",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 37
+          },
+          {
+            "table": "gltf_emissive_texture",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_extension_required",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 36
+          },
+          {
+            "table": "gltf_extension_used",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 72
+          },
+          {
+            "table": "gltf_image",
+            "width": 10,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_json_array_element",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          },
+          {
+            "table": "gltf_json_object_member",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 75
+          },
+          {
+            "table": "gltf_json_value",
+            "width": 7,
+            "rows": 8,
+            "semanticBytes": 148
+          },
+          {
+            "table": "gltf_material",
+            "width": 20,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_mesh",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_mesh_weight",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_metallic_roughness_texture",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_morph_attribute",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_morph_target",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node",
+            "width": 12,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_child",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_matrix",
+            "width": 1,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_matrix_component",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_rotation",
+            "width": 1,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_rotation_component",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_scale",
+            "width": 1,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_scale_component",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_translation",
+            "width": 1,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_translation_component",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_node_weight",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_normal_texture",
+            "width": 10,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_occlusion_texture",
+            "width": 10,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_pbr_metallic_roughness",
+            "width": 21,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_primitive",
+            "width": 11,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_primitive_attribute",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_resolved_buffer",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_resolved_byte",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_sampler",
+            "width": 14,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_scene",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_scene_node",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_skin",
+            "width": 10,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_skin_joint",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_sparse_accessor",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_sparse_indices",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_sparse_values",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "gltf_texture",
+            "width": 10,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  }
+]

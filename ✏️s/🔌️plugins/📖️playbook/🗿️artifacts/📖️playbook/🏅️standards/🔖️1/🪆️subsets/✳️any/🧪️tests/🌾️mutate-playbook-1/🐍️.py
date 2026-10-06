@@ -129,7 +129,7 @@ def uri_in(ctx, needle):
 
 def json_fixture(ctx, needle):
     """🧫️ The declared JSON fixture this scenario names."""
-    return json.loads(ctx.fixture_bytes(uri_in(ctx, needle)).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri_in(ctx, needle)).decode("utf-8"))
 
 
 def payload_of(ctx, kind):
@@ -199,7 +199,7 @@ def refuse_carrier(ctx):
     none of which the grammar mentions. Four more subsets — `📋️forms`, `📏️layout`, `🖍️draw` and
     `🖨️raster` — carry the same canvas grammar over four equally unrelated documents, differing from
     this one only in the `grammar`, `extension` and `artifact-mark` lines."""
-    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio"))
+    committed = ctx.input_bytes(uri_in(ctx, "🗣️.dsl.semio"))
     raise AssertionError(
         "identity-round-trip: this subset's `.dsl.semio` carrier cannot be read by a second implementation. Its committed grammar describes a "
         "DIFFERENT document — the generic `family-scene` canvas grammar, `doc-body = schema-line layers-block` with shape/path/text layers and "

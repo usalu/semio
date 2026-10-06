@@ -64,7 +64,7 @@ def adapter():
         return Outcome(projection, raw=json.dumps(projection, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
 
     def statement(ctx):
-        return json.loads(ctx.fixture_bytes("shared://🧩️mount-contract/🔣️.json").decode("utf-8"))
+        return json.loads(ctx.input_bytes("shared://🧩️mount-contract/🔣️.json").decode("utf-8"))
 
     def surface_ids(ctx):
         contract = statement(ctx)

@@ -6,7 +6,7 @@ use crate::Block5dSnapshot;
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_json::schema::snapshot::write_json_text;
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_text;
 use semio_s_artifact_stdio_json::JsonSnapshot;
 
 /// 🎯️ The foreign dialect this leaf writes.

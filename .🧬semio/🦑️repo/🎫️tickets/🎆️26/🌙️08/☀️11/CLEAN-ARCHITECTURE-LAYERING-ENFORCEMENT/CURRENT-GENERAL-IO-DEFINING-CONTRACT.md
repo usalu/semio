@@ -1,0 +1,49 @@
+
+
+Initial exact defining-owner audit: General IO still takes `store::ArtifactAssemblyTransaction` in registry preflight/commit APIs (lines1004,1023,1279,1291,1704,1721,1920,2221), obtains the same barrier at2431, and exposes Product-defined codec/capability types at1866–1867,1905–1912,2053,2179,2547–2559. Physical vocabulary mounting alone does not close this product type dependency.
+
+The smallest self-contained extraction is the complete Store ArtifactAssembly region2522–2552: transaction holds only `std::sync::MutexGuard<'static,()>`; its owned one-variant error, Display/Error, private OnceLock mutex and begin function have no Product fields. The static lock must have ONE compiled defining owner. Copying this implementation into separate General/Product modules would create distinct locks and break all-registry publication identity even though type bodies look equal. The dependency-free existing General Schema Registry crate is physically defined by `schema/registry/🦀️.rs` through its two-parent package glue, with no normal dependencies. It is a possible neutral registry ownership site; deciding a dedicated assembly taxonomy must preserve one physical owner and direct normal providers for every registry.
+
+The broader ArtifactCodec extraction is not the same pure cut: its function table mentions Store Pack/TextFiles, VcsError, SPR MutationEnvelope and apply/replay futures. ArtifactSqliteSnapshot has General SQLite database/control/value/IO payload types but default codec constructors also require ArtifactDsl+ArtifactPack and private owned retirement. A coherent next cut must separately own those precise capability and erased carrier contracts, then attach Store-backed implementations; merely moving a mount or replacing its prefix leaves Product type closure. Channel DocumentArchivePack is another real typed carrier, not a string path. Full initial source/provider frames are retained at `🗑️generated/general-io-contract/current-frames-1.json`; native deletion/runtime equivalence remains unproved.
+
+
+Assembly source1 finite proposal admitted: sixteen complete current pairs/inverses exact. General Schema Registry public assembly mount owns the single std mutex; old Store region is fully retired and production old API heads are absent. Existing normal registry providers resolve for GeneralFacade, OSKernel, MCP, Plugin, Hub and Forms. Hub lib→artifact_authority→trusted_catalog literal mounts and Forms declared two-parent lib→inline snapshot→cfg(test) SQLite law mounts positively proven; full twelve provider/mount frames retained in proof. Closed two-vector exclusion/release corpus has independent Tokio test-only control; blocking begin and poison refusal remain original barrier contracts. Native compilation/behavior still pending. Proof: `🗑️generated/general-assembly-owner/source-independent-1.json`.
+
+
+Assembly source2 supersedes unpublished source1 lifetime probe: twenty current full pairs verified; original fifteen other pairs unchanged, four new explicit canonical clients added. Current compiler probe directly mounts captured defining assembly body and reads handcrafted clients, retaining baseline/original clients unchanged and separate currentClientSHA. Runtime client.replaceAll translation is absent. The twelve positive provider/mount frames from proof1 remain retained. Source-only Ready20; genuine native compile/runtime remains pending.
+
+
+Actual assembly law-only4 publication independently verified: four current after bodies exact source2 unchanged source1 law pairs. Corrected receipt2 preserves prior rawreceipt bytes/base64/SHA and original journal rows unchanged; full before/inverse descriptive metadata now matches immutable authority. Source1/source2 independent pins exact. Production assembly relocation remains unpublished; native RED/GREEN pending.
+
+
+Further exact carrier closure: Store VcsError is a direct reexport of Product OS VCS (os package literal mount ../../modules/vcs, error definition1477). It includes MutationApplyError and structured SPR MergePolicy/MutationMessage/HistoryShape/HistoryTransitionKind, so it is not an isolated string error that can move beside the pure mutex unchanged. Channel DocumentArchivePack is physically defined at OS SPR/channel line167, mounted under os_spr::channel, and passed through General IO from_archive at2053. These full defining/module bodies are retained at `general-io-contract/current-carrier-frames-2.json`. A neutral codec boundary should specify only the required owned capability outcomes and let Product implementations consume/project real VCS causes; copying the whole VcsError or retaining a Product public carrier would keep the upward closure. No replacement implementation or native equivalence is inferred.
+
+
+Assembly source3: independent installed Rust AST comparison confirms all 48 defining public top-level heads exactly match the explicit package export list, including assembly. Original source2 twenty pairs remain exact; all four published law endpoints and seventeen pending production predecessors match current files. Source-only proof: generated/general-assembly-owner/source-independent-3.json. Original owning whole verification remains required.
+
+
+Registry original whole observation helper source admission seals `assembly-native-whole-inputs/📜️script.ts` and the bounded codec, source3/proof3 and actual law publication2 hashes in `generated/general-assembly-owner/whole-helper-source-independent-1.json`. It observes current law-after/production-before endpoints and preserves the registered default whole route, without proposal overlays; fresh actual source/provider/metadata proof remains required before execution.
+
+
+Registry live capture source1 independently verifies all 996 full source bodies against their exact byte length/SHA and current physical bytes, including its one defining package provider. Fresh metadata is still pending; this captured-source observation does not authorize or establish native execution. Bound partial observation is assembly-native-whole/epoch-1/independent-captured-source-observation-1.json.
+
+
+Registry epoch1 preparation is independently Ready: 996 full captured source frames, one defining provider, exact original package/default rest-empty TestScript and registration, two actual ordinary/locked metadata phases zero, raw UTF8 byte hashes/lengths exact, no external advances, current Root lock unchanged, and exact captured/current helper+codec bodies. Proof `generated/assembly-native-whole/epoch-1/independent-source-provider-admission-1.json` permits the original owning whole RED; no result is inferred before execution.
+
+
+The single GREEN immutable Registry helper is source Ready, bound to source3, the exact actual original RED capture/metadata and codec in green-whole-helper-source-independent-1.json. It retains all inherited current source frames, applies all 21 proposals to the snapshot, closes literal/executor imports and uses the original Registry default/rest-empty whole route. Product consumer proposal rows are source-only; preparation and actual native execution remain separately gated.
+
+
+Actual Registry original whole RED is independently sealed: sole E0432 missing public assembly, no runtime roster; 15 units/150 compiled length+BLAKE inputs verify available pre/current bodies and full-frame SHA. Twelve exact bindings pin source3/proof3/law publication and original execution/physical receipts. The subsequent immutable GREEN preparation admits 1734 snapshot assets/one defining provider/all21 authored pairs, all996 original captured predecessors unchanged, exact actual ordinary/locked metadata zero and helper/codec/Rootlock joins. Proofs are assembly-native-whole/epoch-1/independent-red-source-checkpoint-1.json and assembly-green-whole/epoch-1/independent-plan-provider-admission-1.json. Original GREEN runtime and Product consumer compilation remain pending.
+
+
+Actual Registry original whole GREEN is independently Ready: all12 indexed laws PASS, official12/12 acrossfour binaries, portable/Tokio/poison DEBUG evidence; 15units152checks compiled length/BLAKE and full-frameSHA exact, pre/current/snapshot gaps zero. Final13 bindings seal assembly-green-whole/epoch-1/independent-green-whole-source-checkpoint-1.json. Product consumers remain source-only.
+
+
+Assembly production publication plan1 is independently Ready: 21 exact current before/after/inverse pairs (17 writes/four published-law noops),20 readonly defining/provider contexts and25 original RED/GREEN raw bindings rehashed. Exact publisher/raw plan guard, fsynced immutable intents, evidence/context repeats and final sameFD/path-inode checks follow the admitted protocol. All old public definitions plus assembly remain in the explicit package list. Product consumer compilation remains separate; no atomic shared-directory protection is claimed. Proof production-publication-plan-independent-1.json.
+
+
+Actual Assembly production publication1 is independently Ready:21 current full after bodies,17 intent/inverse writes/four law noops,20 current provider/defining contexts, exact reviewedplan/journal/receipt and25 original native bindings verified. Canonical once-lock owner/public exports now match the proposal; owning Registry12/12 floor retained. Product consumer/runtime and atomic shared-directory identity remain separate. Proof production-publication-independent-1.json.
+
+
+Actual original lifetime owner independently Ready:6/6 laws29expects/strictTSC, exact rawbyteSHA, four complete compiler receipts and33 exact artifactbyte bindings,21 current productionframes20contexts exact. Eight original/current rustc probes and valid runtime stdout concern the extracted assembly plus Storeborrowed declarations with adjacent provider stubs, not all consumer suites. Initial env-absent refusal remains retained; atomic execution identity is false. Proof original-lifetime-independent-2.json.

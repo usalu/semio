@@ -1,0 +1,15 @@
+{
+  "mountedAt": "2026-10-06T00:13:54.286Z",
+  "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/📏️encoding/💰️backing/🦀️.rs",
+  "review": "📓️semantic-independent-part21-single-paid-frontier-regression-design.md",
+  "before": {
+    "nextestRunId": "39ca967c-11e7-486e-8d5f-28a0836f36f5",
+    "run": 15,
+    "passed": 14,
+    "failed": 1,
+    "remainingActual": 536869552,
+    "remainingExpected": 536870736,
+    "extraCumulativeBytes": 1184
+  },
+  "afterRuntimeQualified": false
+}

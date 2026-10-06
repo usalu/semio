@@ -1,7 +1,7 @@
 //! 🔐️ The publication door onto this binary's ONE serial lock ([`crate::test_serial`]).
 //!
 //! The lease table is a PROCESS-GLOBAL fixed registry of `GENERATION3D_PUBLICATION_SLOTS` (4)
-//! entries (`🧬️schema/🧬️mutations/💾️binary/🦀️.rs`) whose admission is a `try_lock`, so two laws
+//! entries (`🚪️io/💾️binary/🧬️mutations/🦀️.rs`) whose admission is a `try_lock`, so two laws
 //! holding leases at the same time saturate it and the loser fails with
 //! `generation3d-publication.contended` — an order- and thread-count-dependent failure that has
 //! nothing to do with what either law asserts (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).

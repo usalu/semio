@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn shooting_window_actions_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️window-actions.json")).expect("neutral window vectors");
-    let document = crate::standards::v1::subsets::any::schema::default_snapshot();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
         let view_state = semio_framework_plugin::ViewModel { locale, ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native) };
         let labels = shooting_play_labels(&view_state);

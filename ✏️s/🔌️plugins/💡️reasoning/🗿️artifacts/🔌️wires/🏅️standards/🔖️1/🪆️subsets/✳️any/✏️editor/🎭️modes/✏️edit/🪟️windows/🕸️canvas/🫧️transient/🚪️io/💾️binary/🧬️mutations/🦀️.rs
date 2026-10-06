@@ -1,0 +1,19 @@
+//! 🚪️ Artifact representation codecs.
+
+#[allow(unused_imports)]
+mod mutations_codec {
+use super::*;
+use crate::editor::wires::component::window_transient::mutations::*;
+use crate::editor::wires::component::window_transient::*;
+use set_drag::SetDrag;
+
+impl protocol::OpBinary for WiresCanvasTransientMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_op(self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_op(bytes)
+    }
+}
+}
+pub use mutations_codec::*;

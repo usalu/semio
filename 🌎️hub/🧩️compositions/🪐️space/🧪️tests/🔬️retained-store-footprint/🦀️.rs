@@ -15,9 +15,9 @@ use semio_s_artifact_space_home::{SHomeMutation, SHomeSnapshot};
 fn space_retained_preflight_declares_both_staged_rows_of_a_point_invertible_item() {
     let factory = space_retained_store_preparation::<SHomeSnapshot, SHomeMutation>("space-home-artifact-retained-law", 128 * 1024).expect("space lanes always supply a preparation factory");
     let mutation = semio_s_artifact_space_home::standards::v1::subsets::any::schema::mutations::change_catalog_generation::change_catalog_generation(7);
-    let footprint = factory.preflight(&mutation, None, store::HistoryLane::Document).expect("a bounded home mutation is admissible");
+    let footprint = factory.preflight(&mutation, store::HistoryLane::Document).expect("a bounded home mutation is admissible");
     let base = SHomeSnapshot::default();
-    let inverse_rows = ::protocol::Mutation::inverse(&mutation, &base).len();
+    let inverse_rows = ::protocol::Mutation::inverse(&mutation, &base).expect("valid genuine Home inverse").len();
     assert_eq!(inverse_rows, 1, "the home catalog-generation mutation is point-invertible");
     assert!(
         footprint.work_items >= inverse_rows + 1,

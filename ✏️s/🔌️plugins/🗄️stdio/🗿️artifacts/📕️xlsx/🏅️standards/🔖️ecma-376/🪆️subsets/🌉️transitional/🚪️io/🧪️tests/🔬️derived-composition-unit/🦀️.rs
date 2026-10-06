@@ -4,7 +4,7 @@ mod tests {
     use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
     use crate::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace;
     use crate::standards::v_ecma_376::subsets::transitional::schema::CODE_NAMESPACE_MISMATCH;
-    use crate::standards::v_ecma_376::subsets::transitional::schema::XlsxTransitionalBuilderConstruction as XlsxTransitionalBuilder;
+    use crate::standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalBuilderConstruction as XlsxTransitionalBuilder;
     use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
 
     #[semio_framework_async_macros::async_test]

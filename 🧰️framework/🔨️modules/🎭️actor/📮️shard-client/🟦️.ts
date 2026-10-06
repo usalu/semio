@@ -1,3 +1,4 @@
+import { SHARD_LIVENESS_POLICY } from "./🫀️liveness/🟦️.ts";
 /** 🧵️ `ShardClient` — the web `ShardTransport` (design-runtime.md §1 `ShardTransport` /
  * §3 "Web shard"): a bounded pool of `🟨️shard-worker.js` Web Workers multiplexed by `actorId`,
  * replacing one-Worker-per-plugin (`PluginWorkerClient`, deleted from `🎠️kernel/🟦️.ts` in
@@ -481,22 +482,7 @@ type InboundMessage =
 //#endregion 📨️WireMessages
 
 //#region ⏱️Heartbeat
-/** 🫀️ THE shard liveness policy — one record every liveness clock in the system reads, so a value can
- * never drift between the host watchdog here, the generated `🟨️shard-worker.js` progress ticker
- * (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`'s `shardWorkerSource`, which interpolates
- * `progressIntervalMs` straight out of the fixture below) and the shell's per-plugin load deadline
- * (`🛠️ShellHelpers/🟦️.tsx`'s `loadPluginModuleResilient`). Language-agnostic owner:
- * `🧬️schema/🔣️.json` (`https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/schema.json#/$defs/ShardClient`) + `🧫️fixtures/🔣️.json`'s `policy` block; this
- * mirror is asserted field-for-field equal to that fixture by this file's own in-source suite, so a
- * literal edited here alone fails closed rather than silently diverging. */
-export const SHARD_LIVENESS_POLICY = Object.freeze({
-  heartbeatTimeoutMs: 5000,
-  missedLimit: 3,
-  progressIntervalMs: 1000,
-  firstTurnTimeoutMs: 30_000,
-  pluginLoadIdleTimeoutMs: 30_000,
-  pluginLoadCeilingMs: 300_000,
-});
+export { SHARD_LIVENESS_POLICY } from "./🫀️liveness/🟦️.ts";
 /** 🚦️ terra-shard-effect-bridge: default cap on CONCURRENT unresolved `effect-request`s per actor —
  * see {@link ShardClientOptions.maxOutstandingEffectsPerActor}'s own doc for why this mirrors
  * `QuotaSchema.outstanding_requests` without being it. */

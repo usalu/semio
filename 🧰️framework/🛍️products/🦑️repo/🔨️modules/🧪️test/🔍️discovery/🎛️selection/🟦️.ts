@@ -1,4 +1,4 @@
-import { type FixtureManifest, type Implementation } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type TestEvidence, type Implementation } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type CoverageRow, type DiscoveredCase, type MutationManifest, discoverTestCases } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🎛️ Narrows discovery to the cases a command was pointed at (`--case`, `--owner`, `--project`). */
@@ -80,7 +80,7 @@ export function matchesTarget(manifest: Pick<MutationManifest, "artifact" | "sta
   );
 }
 
-export function matchesFixture(fixture: Pick<FixtureManifest, "mutation" | "outcome" | "class" | "family"> & { readonly target: Pick<FixtureManifest["target"], "artifact" | "standard" | "subset"> }, selectors: Selectors): boolean {
+export function matchesFixture(fixture: Pick<TestEvidence, "mutation" | "outcome" | "class" | "family"> & { readonly target: Pick<TestEvidence["target"], "artifact" | "standard" | "subset"> }, selectors: Selectors): boolean {
   return (
     (selectors.artifact === null || fixture.target.artifact === selectors.artifact || fixture.target.artifact.endsWith(`.${selectors.artifact}`)) &&
     (selectors.standard === null || fixture.target.standard === selectors.standard) &&

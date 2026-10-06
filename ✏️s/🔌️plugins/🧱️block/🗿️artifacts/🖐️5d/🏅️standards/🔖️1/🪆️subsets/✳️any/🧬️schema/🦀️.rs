@@ -146,137 +146,21 @@ pub fn block5d_artifact_schema_descriptor() -> ::semio_framework_schema_registry
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{Block5dDiff, Block5dMutation, Block5dSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Block5dBuilderConstruction {
-        snapshot: Block5dSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for Block5dBuilderConstruction {
-        type Snapshot = Block5dSnapshot;
-        type Mutation = Block5dMutation;
-        type Diff = Block5dDiff;
-        fn empty() -> Self {
-            Self { snapshot: Block5dSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Block5dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::Block5dSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Block5dParts {
-        pub snapshot: Option<Block5dSnapshot>,
-    }
-
-    pub struct Block5dAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for Block5dAnalyzerAnalysis {
-        type Parts = Block5dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.block.block5d", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = Block5dParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <Block5dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec Block5dBuilderFacets {
-        construction: Block5dBuilderConstruction,
-        analysis: Block5dAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::Block5dComposerComposition,
-    }
-    builder: Block5dBuilder,
-    analyzer: Block5dAnalyzer,
-    composer: Block5dComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
-/// 📸️ A fresh, empty `Block5dSnapshot` (all fields at their `Default`).
-pub fn empty_block5d_snapshot() -> Block5dSnapshot {
-    Block5dSnapshot::default()
-}
 
-/// 📄️ The block5d boot document — parsed from the bundled `hexagonal-cut-concrete-forest-left`
-/// example fixture (the same DSL text `setActiveExample` loads), falling back to the empty snapshot
-/// only when that fixture fails to parse. Shared by `Block5dPlayApp` and `Block5dViewer`.
-///
-/// 🪪️ The sibling `nakagin-capsule` fixture carries a mesh too, but booting on it would strand
-/// `part_kind.id` at `"Capsule J"` for the rest of the session: `Block5dMutation` deliberately has no
-/// id verb (see `🧬️mutations/🦀️.rs`'s `KINDS`), so `setActiveExample`'s whole-document load can never
-/// carry identity across examples. Booting on the same fixture the id assertions name keeps the boot
-/// document and its own identity consistent.
-pub fn default_block5d_snapshot() -> Block5dSnapshot {
-    super::snapshot::text::parse_dsl(super::snapshot::text::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_block5d_snapshot())
-}
+
+
 
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
 pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {

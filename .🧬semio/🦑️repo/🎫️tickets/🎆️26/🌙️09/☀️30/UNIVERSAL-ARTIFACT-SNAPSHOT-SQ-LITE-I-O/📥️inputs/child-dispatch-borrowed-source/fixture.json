@@ -1,0 +1,10 @@
+{
+  "schema": "child-dispatch-borrow/v1",
+  "parent": "borrow-parent",
+  "child": "borrow-child",
+  "slot": "borrow-slot",
+  "invalidN": -1,
+  "opSchema": "demo/v1",
+  "label": "borrowed-rejection",
+  "expectedPolicy": "normal"
+}

@@ -3,7 +3,7 @@ use semio_framework_plugin::HistoryView;
 
 #[test]
 fn dropping_a_pdf_links_the_native_artifact_on_an_image_frame() {
-    let document = crate::standards::v1::subsets::any::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let config = NoConfig::default();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -24,7 +24,7 @@ fn dropping_a_pdf_links_the_native_artifact_on_an_image_frame() {
 
 #[test]
 fn every_placeable_artifact_kind_links_its_native_dialect() {
-    let document = crate::standards::v1::subsets::any::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let config = NoConfig::default();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
@@ -54,7 +54,7 @@ fn a_drop_payload_keeps_the_native_preview_image() {
     assert_eq!(payload.kind, "png");
     assert_eq!(payload.artifact_ref, "shot");
     assert_eq!(payload.proxy_data_url, "data:image/png;base64,AA==");
-    let document = crate::standards::v1::subsets::any::schema::default_document();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let config = NoConfig::default();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);

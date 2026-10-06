@@ -20,7 +20,7 @@ import type { BrowserContext, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
-import { devServePortV1, ensureDevServe, type DevServeFixtureV1 } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
+import { devServePortV1, ensureDevServe, type DevServerV1 } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 import { awaitBeacon } from "../🧮️program-matrix/🟦️.ts";
 
 //#region 🧾️Budget
@@ -249,7 +249,7 @@ export async function runBootBudgetCli(repoRoot: string, defaultOutDir: string, 
       mkdirSync(outDir, { recursive: true });
       const fixture = readBootBudgetFixtureV1();
       let serveReadyMs: number | null = null;
-      const serve: DevServeFixtureV1 | Error = await ensureDevServe({
+      const serve: DevServerV1 | Error = await ensureDevServe({
         repoRoot,
         port: devServePortV1(serveUrl),
         hubUrl,

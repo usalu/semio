@@ -10,7 +10,7 @@
 use super::*;
 use semio_framework_os_kernel::os_directory::{MemberSpaceViewV1, PublicSpaceViewV1};
 
-const FIXTURE: &str = include_str!("../../../../../../📇️directory/🏘️spaces/🔣️.json");
+const FIXTURE: &str = include_str!("../../../../../../📇️directory/🧫️fixtures/🏘️spaces/🔣️.json");
 const DIRECTORY_SCHEMA_SOURCE: &str = include_str!("../../../../../../📇️directory/🧬️schema/🦀️.rs");
 
 fn fixture() -> serde_json::Value {

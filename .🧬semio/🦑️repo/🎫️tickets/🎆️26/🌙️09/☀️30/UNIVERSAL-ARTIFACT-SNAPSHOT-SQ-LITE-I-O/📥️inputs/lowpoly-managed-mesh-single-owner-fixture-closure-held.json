@@ -1,0 +1,14 @@
+{
+  "qualification": "Held fixture-only assignment to its already-declared meshState key. All original full seven-field, public binary/text and independent SQL assertions remain unchanged. Runtime AFTER pending.",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🕸️mesh/🦀️.rs",
+      "regions": [
+        {
+          "before": "object.push((\"meshState\".into(),DslValue::from(&neutral[\"mesh\"])));",
+          "after": "object.iter_mut().find(|(name,_)|name==\"meshState\").expect(\"single authored managed mesh field\").1=DslValue::from(&neutral[\"mesh\"]);"
+        }
+      ]
+    }
+  ]
+}

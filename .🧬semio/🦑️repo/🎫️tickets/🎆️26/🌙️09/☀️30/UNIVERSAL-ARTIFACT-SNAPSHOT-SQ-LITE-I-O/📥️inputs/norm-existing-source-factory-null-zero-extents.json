@@ -1,0 +1,1706 @@
+[
+  {
+    "artifact": "🪵️en1995",
+    "case": "full",
+    "clearedRootCollections": [
+      "members",
+      "connections"
+    ],
+    "rows": 9,
+    "valueBytes": 2293,
+    "tables": [
+      {
+        "table": "en1995_connection",
+        "rows": 2,
+        "semanticBytes": 584,
+        "nullCells": 0
+      },
+      {
+        "table": "en1995_connection_action",
+        "rows": 2,
+        "semanticBytes": 158,
+        "nullCells": 0
+      },
+      {
+        "table": "en1995_document",
+        "rows": 1,
+        "semanticBytes": 10,
+        "nullCells": 0
+      },
+      {
+        "table": "en1995_member",
+        "rows": 2,
+        "semanticBytes": 1115,
+        "nullCells": 0
+      },
+      {
+        "table": "en1995_member_action",
+        "rows": 2,
+        "semanticBytes": 426,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🪵️en1995",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "members",
+      "connections"
+    ],
+    "rows": 1,
+    "valueBytes": 10,
+    "tables": [
+      {
+        "table": "en1995_connection",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1995_connection_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1995_document",
+        "rows": 1,
+        "semanticBytes": 10,
+        "nullCells": 0
+      },
+      {
+        "table": "en1995_member",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1995_member_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🪶️en1999",
+    "case": "full",
+    "clearedRootCollections": [
+      "materials",
+      "sections",
+      "members",
+      "connections",
+      "fireScenarios",
+      "fatigueDetails",
+      "coldFormed",
+      "shells"
+    ],
+    "rows": 17,
+    "valueBytes": 2391,
+    "tables": [
+      {
+        "table": "en1999_bolt_group",
+        "rows": 1,
+        "semanticBytes": 147,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_cold_formed_sheet",
+        "rows": 1,
+        "semanticBytes": 128,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_connection",
+        "rows": 1,
+        "semanticBytes": 89,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_connection_action",
+        "rows": 1,
+        "semanticBytes": 213,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_document",
+        "rows": 1,
+        "semanticBytes": 10,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_fatigue_detail",
+        "rows": 1,
+        "semanticBytes": 181,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_fire_scenario",
+        "rows": 1,
+        "semanticBytes": 94,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_material",
+        "rows": 2,
+        "semanticBytes": 156,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_member",
+        "rows": 1,
+        "semanticBytes": 228,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_member_action",
+        "rows": 1,
+        "semanticBytes": 235,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_plate_element",
+        "rows": 1,
+        "semanticBytes": 111,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_section",
+        "rows": 1,
+        "semanticBytes": 155,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_sheet_action",
+        "rows": 1,
+        "semanticBytes": 208,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_shell",
+        "rows": 1,
+        "semanticBytes": 120,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_shell_action",
+        "rows": 1,
+        "semanticBytes": 208,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_weld_group",
+        "rows": 1,
+        "semanticBytes": 108,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🪶️en1999",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "materials",
+      "sections",
+      "members",
+      "connections",
+      "fireScenarios",
+      "fatigueDetails",
+      "coldFormed",
+      "shells"
+    ],
+    "rows": 1,
+    "valueBytes": 10,
+    "tables": [
+      {
+        "table": "en1999_bolt_group",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_cold_formed_sheet",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_connection",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_connection_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_document",
+        "rows": 1,
+        "semanticBytes": 10,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_fatigue_detail",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_fire_scenario",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_material",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_member",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_member_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_plate_element",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_section",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_sheet_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_shell",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_shell_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1999_weld_group",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🧱️din4108",
+    "case": "full",
+    "clearedRootCollections": [
+      "zones",
+      "elements",
+      "thermalBridges"
+    ],
+    "rows": 13,
+    "valueBytes": 1764,
+    "tables": [
+      {
+        "table": "din4108_document",
+        "rows": 1,
+        "semanticBytes": 126,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_element",
+        "rows": 2,
+        "semanticBytes": 411,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_layer",
+        "rows": 2,
+        "semanticBytes": 354,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_segment",
+        "rows": 2,
+        "semanticBytes": 263,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_thermal_bridge",
+        "rows": 2,
+        "semanticBytes": 179,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_window",
+        "rows": 2,
+        "semanticBytes": 267,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_zone",
+        "rows": 2,
+        "semanticBytes": 164,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🧱️din4108",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "zones",
+      "elements",
+      "thermalBridges"
+    ],
+    "rows": 1,
+    "valueBytes": 126,
+    "tables": [
+      {
+        "table": "din4108_document",
+        "rows": 1,
+        "semanticBytes": 126,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_element",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_layer",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_segment",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_thermal_bridge",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_window",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "din4108_zone",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🏋️en1991",
+    "case": "full",
+    "clearedRootCollections": [
+      "floors",
+      "selfWeightElements",
+      "roofs",
+      "windFaces",
+      "accidentalCases"
+    ],
+    "rows": 17,
+    "valueBytes": 2930,
+    "tables": [
+      {
+        "table": "en1991_accidental_case",
+        "rows": 3,
+        "semanticBytes": 94,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_document",
+        "rows": 1,
+        "semanticBytes": 1140,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_explosion",
+        "rows": 2,
+        "semanticBytes": 180,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_floor",
+        "rows": 2,
+        "semanticBytes": 254,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_impact",
+        "rows": 3,
+        "semanticBytes": 270,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_roof",
+        "rows": 2,
+        "semanticBytes": 379,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_self_weight",
+        "rows": 2,
+        "semanticBytes": 187,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_wind_face",
+        "rows": 2,
+        "semanticBytes": 426,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🏋️en1991",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "floors",
+      "selfWeightElements",
+      "roofs",
+      "windFaces",
+      "accidentalCases"
+    ],
+    "rows": 1,
+    "valueBytes": 1140,
+    "tables": [
+      {
+        "table": "en1991_accidental_case",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_document",
+        "rows": 1,
+        "semanticBytes": 1140,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_explosion",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_floor",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_impact",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_roof",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_self_weight",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1991_wind_face",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "⚖️en1990",
+    "case": "full",
+    "clearedRootCollections": [
+      "permanents",
+      "variables",
+      "accidentals",
+      "seismics",
+      "members",
+      "bridgeSls",
+      "effects"
+    ],
+    "rows": 25,
+    "valueBytes": 1996,
+    "tables": [
+      {
+        "table": "en1990_accidental_action",
+        "rows": 1,
+        "semanticBytes": 30,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_action",
+        "rows": 8,
+        "semanticBytes": 268,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_bridge_sls",
+        "rows": 2,
+        "semanticBytes": 333,
+        "nullCells": 1
+      },
+      {
+        "table": "en1990_document",
+        "rows": 1,
+        "semanticBytes": 173,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_effect",
+        "rows": 3,
+        "semanticBytes": 183,
+        "nullCells": 4
+      },
+      {
+        "table": "en1990_member",
+        "rows": 3,
+        "semanticBytes": 774,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_permanent_action",
+        "rows": 2,
+        "semanticBytes": 71,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_seismic_action",
+        "rows": 4,
+        "semanticBytes": 128,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_variable_action",
+        "rows": 1,
+        "semanticBytes": 36,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "⚖️en1990",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "permanents",
+      "variables",
+      "accidentals",
+      "seismics",
+      "members",
+      "bridgeSls",
+      "effects"
+    ],
+    "rows": 1,
+    "valueBytes": 173,
+    "tables": [
+      {
+        "table": "en1990_accidental_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_bridge_sls",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_document",
+        "rows": 1,
+        "semanticBytes": 173,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_effect",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_member",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_permanent_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_seismic_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1990_variable_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🪨️en1996",
+    "case": "full",
+    "clearedRootCollections": [
+      "walls"
+    ],
+    "rows": 9,
+    "valueBytes": 1952,
+    "tables": [
+      {
+        "table": "en1996_concentrated_load",
+        "rows": 2,
+        "semanticBytes": 198,
+        "nullCells": 0
+      },
+      {
+        "table": "en1996_document",
+        "rows": 1,
+        "semanticBytes": 31,
+        "nullCells": 0
+      },
+      {
+        "table": "en1996_load_case",
+        "rows": 2,
+        "semanticBytes": 457,
+        "nullCells": 0
+      },
+      {
+        "table": "en1996_opening",
+        "rows": 2,
+        "semanticBytes": 204,
+        "nullCells": 0
+      },
+      {
+        "table": "en1996_wall",
+        "rows": 2,
+        "semanticBytes": 1062,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🪨️en1996",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "walls"
+    ],
+    "rows": 1,
+    "valueBytes": 31,
+    "tables": [
+      {
+        "table": "en1996_concentrated_load",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1996_document",
+        "rows": 1,
+        "semanticBytes": 31,
+        "nullCells": 0
+      },
+      {
+        "table": "en1996_load_case",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1996_opening",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1996_wall",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🧩️en1994",
+    "case": "full",
+    "clearedRootCollections": [
+      "beams",
+      "columns",
+      "slabs"
+    ],
+    "rows": 12,
+    "valueBytes": 1763,
+    "tables": [
+      {
+        "table": "en1994_beam",
+        "rows": 1,
+        "semanticBytes": 281,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_beam_action",
+        "rows": 2,
+        "semanticBytes": 267,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_beam_sheeting",
+        "rows": 1,
+        "semanticBytes": 96,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_beam_steel",
+        "rows": 1,
+        "semanticBytes": 199,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_beam_studs",
+        "rows": 1,
+        "semanticBytes": 120,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_column",
+        "rows": 1,
+        "semanticBytes": 259,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_column_action",
+        "rows": 1,
+        "semanticBytes": 90,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_document",
+        "rows": 1,
+        "semanticBytes": 71,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_slab",
+        "rows": 1,
+        "semanticBytes": 165,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_slab_action",
+        "rows": 1,
+        "semanticBytes": 118,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_slab_sheeting",
+        "rows": 1,
+        "semanticBytes": 97,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🧩️en1994",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "beams",
+      "columns",
+      "slabs"
+    ],
+    "rows": 1,
+    "valueBytes": 71,
+    "tables": [
+      {
+        "table": "en1994_beam",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_beam_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_beam_sheeting",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_beam_steel",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_beam_studs",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_column",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_column_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_document",
+        "rows": 1,
+        "semanticBytes": 71,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_slab",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_slab_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1994_slab_sheeting",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🌬️din16798",
+    "case": "full",
+    "clearedRootCollections": [
+      "zones",
+      "ventSystems"
+    ],
+    "rows": 5,
+    "valueBytes": 1499,
+    "tables": [
+      {
+        "table": "din16798_document",
+        "rows": 1,
+        "semanticBytes": 164,
+        "nullCells": 0
+      },
+      {
+        "table": "din16798_vent_system",
+        "rows": 2,
+        "semanticBytes": 581,
+        "nullCells": 0
+      },
+      {
+        "table": "din16798_zone",
+        "rows": 2,
+        "semanticBytes": 754,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🌬️din16798",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "zones",
+      "ventSystems"
+    ],
+    "rows": 1,
+    "valueBytes": 164,
+    "tables": [
+      {
+        "table": "din16798_document",
+        "rows": 1,
+        "semanticBytes": 164,
+        "nullCells": 0
+      },
+      {
+        "table": "din16798_vent_system",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "din16798_zone",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "⚡️din18599",
+    "case": "full",
+    "clearedRootCollections": [
+      "zones",
+      "elements"
+    ],
+    "rows": 25,
+    "valueBytes": 2213,
+    "tables": [
+      {
+        "table": "din18599_climate_child",
+        "rows": 1,
+        "semanticBytes": 72,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_climate_month",
+        "rows": 12,
+        "semanticBytes": 720,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_cooling",
+        "rows": 1,
+        "semanticBytes": 16,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_cooling_plant",
+        "rows": 1,
+        "semanticBytes": 55,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_dhw",
+        "rows": 1,
+        "semanticBytes": 82,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_document",
+        "rows": 1,
+        "semanticBytes": 134,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_element",
+        "rows": 2,
+        "semanticBytes": 416,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_heating",
+        "rows": 1,
+        "semanticBytes": 124,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_lighting",
+        "rows": 1,
+        "semanticBytes": 38,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_renewables",
+        "rows": 1,
+        "semanticBytes": 82,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_ventilation",
+        "rows": 1,
+        "semanticBytes": 82,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_zone",
+        "rows": 2,
+        "semanticBytes": 392,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "⚡️din18599",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "zones",
+      "elements"
+    ],
+    "rows": 21,
+    "valueBytes": 1405,
+    "tables": [
+      {
+        "table": "din18599_climate_child",
+        "rows": 1,
+        "semanticBytes": 72,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_climate_month",
+        "rows": 12,
+        "semanticBytes": 720,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_cooling",
+        "rows": 1,
+        "semanticBytes": 16,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_cooling_plant",
+        "rows": 1,
+        "semanticBytes": 55,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_dhw",
+        "rows": 1,
+        "semanticBytes": 82,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_document",
+        "rows": 1,
+        "semanticBytes": 134,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_element",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_heating",
+        "rows": 1,
+        "semanticBytes": 124,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_lighting",
+        "rows": 1,
+        "semanticBytes": 38,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_renewables",
+        "rows": 1,
+        "semanticBytes": 82,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_ventilation",
+        "rows": 1,
+        "semanticBytes": 82,
+        "nullCells": 0
+      },
+      {
+        "table": "din18599_zone",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🔩️en1993",
+    "unmeasured": "Error: No existing owned factory found"
+  },
+  {
+    "artifact": "🏭️vdi3805",
+    "case": "full",
+    "clearedRootCollections": [],
+    "rows": 62,
+    "valueBytes": 2965,
+    "tables": [
+      {
+        "table": "vdi3805_accessory",
+        "rows": 2,
+        "semanticBytes": 100,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_building_system",
+        "rows": 1,
+        "semanticBytes": 30,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_catalogue",
+        "rows": 1,
+        "semanticBytes": 16,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_catalogue_extension",
+        "rows": 2,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_component",
+        "rows": 1,
+        "semanticBytes": 41,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_configuration",
+        "rows": 5,
+        "semanticBytes": 151,
+        "nullCells": 3
+      },
+      {
+        "table": "vdi3805_connection",
+        "rows": 2,
+        "semanticBytes": 397,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve",
+        "rows": 1,
+        "semanticBytes": 40,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve_point",
+        "rows": 2,
+        "semanticBytes": 136,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve_unit",
+        "rows": 2,
+        "semanticBytes": 139,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_document",
+        "rows": 1,
+        "semanticBytes": 32,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_edition",
+        "rows": 3,
+        "semanticBytes": 84,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_file",
+        "rows": 1,
+        "semanticBytes": 37,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_file_extension",
+        "rows": 3,
+        "semanticBytes": 78,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_function_ref",
+        "rows": 3,
+        "semanticBytes": 90,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_generic",
+        "rows": 1,
+        "semanticBytes": 16,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_generic_entry",
+        "rows": 3,
+        "semanticBytes": 103,
+        "nullCells": 2
+      },
+      {
+        "table": "vdi3805_geometry",
+        "rows": 1,
+        "semanticBytes": 162,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_geometry_parameter",
+        "rows": 2,
+        "semanticBytes": 85,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_heat_generator",
+        "rows": 1,
+        "semanticBytes": 89,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_index_entry",
+        "rows": 2,
+        "semanticBytes": 92,
+        "nullCells": 1
+      },
+      {
+        "table": "vdi3805_index_tag",
+        "rows": 3,
+        "semanticBytes": 79,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_limits",
+        "rows": 1,
+        "semanticBytes": 48,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_product",
+        "rows": 5,
+        "semanticBytes": 199,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_product_extension",
+        "rows": 2,
+        "semanticBytes": 52,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_pump",
+        "rows": 1,
+        "semanticBytes": 130,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_radiator",
+        "rows": 1,
+        "semanticBytes": 132,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record",
+        "rows": 1,
+        "semanticBytes": 37,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record_extension",
+        "rows": 1,
+        "semanticBytes": 28,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record_field",
+        "rows": 3,
+        "semanticBytes": 79,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_title",
+        "rows": 3,
+        "semanticBytes": 101,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_valve",
+        "rows": 1,
+        "semanticBytes": 97,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🏭️vdi3805",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [],
+    "rows": 62,
+    "valueBytes": 2965,
+    "tables": [
+      {
+        "table": "vdi3805_accessory",
+        "rows": 2,
+        "semanticBytes": 100,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_building_system",
+        "rows": 1,
+        "semanticBytes": 30,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_catalogue",
+        "rows": 1,
+        "semanticBytes": 16,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_catalogue_extension",
+        "rows": 2,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_component",
+        "rows": 1,
+        "semanticBytes": 41,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_configuration",
+        "rows": 5,
+        "semanticBytes": 151,
+        "nullCells": 3
+      },
+      {
+        "table": "vdi3805_connection",
+        "rows": 2,
+        "semanticBytes": 397,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve",
+        "rows": 1,
+        "semanticBytes": 40,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve_point",
+        "rows": 2,
+        "semanticBytes": 136,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve_unit",
+        "rows": 2,
+        "semanticBytes": 139,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_document",
+        "rows": 1,
+        "semanticBytes": 32,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_edition",
+        "rows": 3,
+        "semanticBytes": 84,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_file",
+        "rows": 1,
+        "semanticBytes": 37,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_file_extension",
+        "rows": 3,
+        "semanticBytes": 78,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_function_ref",
+        "rows": 3,
+        "semanticBytes": 90,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_generic",
+        "rows": 1,
+        "semanticBytes": 16,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_generic_entry",
+        "rows": 3,
+        "semanticBytes": 103,
+        "nullCells": 2
+      },
+      {
+        "table": "vdi3805_geometry",
+        "rows": 1,
+        "semanticBytes": 162,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_geometry_parameter",
+        "rows": 2,
+        "semanticBytes": 85,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_heat_generator",
+        "rows": 1,
+        "semanticBytes": 89,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_index_entry",
+        "rows": 2,
+        "semanticBytes": 92,
+        "nullCells": 1
+      },
+      {
+        "table": "vdi3805_index_tag",
+        "rows": 3,
+        "semanticBytes": 79,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_limits",
+        "rows": 1,
+        "semanticBytes": 48,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_product",
+        "rows": 5,
+        "semanticBytes": 199,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_product_extension",
+        "rows": 2,
+        "semanticBytes": 52,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_pump",
+        "rows": 1,
+        "semanticBytes": 130,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_radiator",
+        "rows": 1,
+        "semanticBytes": 132,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record",
+        "rows": 1,
+        "semanticBytes": 37,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record_extension",
+        "rows": 1,
+        "semanticBytes": 28,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record_field",
+        "rows": 3,
+        "semanticBytes": 79,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_title",
+        "rows": 3,
+        "semanticBytes": 101,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_valve",
+        "rows": 1,
+        "semanticBytes": 97,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🌍️en1997",
+    "case": "full",
+    "clearedRootCollections": [
+      "layers",
+      "footings",
+      "piles",
+      "retainingWalls",
+      "slopes",
+      "upliftCases"
+    ],
+    "rows": 9,
+    "valueBytes": 1602,
+    "tables": [
+      {
+        "table": "en1997_document",
+        "rows": 1,
+        "semanticBytes": 112,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_footing",
+        "rows": 1,
+        "semanticBytes": 141,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_foundation_load_case",
+        "rows": 1,
+        "semanticBytes": 160,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_pile",
+        "rows": 1,
+        "semanticBytes": 245,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_pile_test_profile",
+        "rows": 1,
+        "semanticBytes": 72,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_retaining_wall",
+        "rows": 1,
+        "semanticBytes": 319,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_slope",
+        "rows": 1,
+        "semanticBytes": 121,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_soil_layer",
+        "rows": 1,
+        "semanticBytes": 292,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_uplift_case",
+        "rows": 1,
+        "semanticBytes": 140,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🌍️en1997",
+    "case": "emptyRootCollections",
+    "clearedRootCollections": [
+      "layers",
+      "footings",
+      "piles",
+      "retainingWalls",
+      "slopes",
+      "upliftCases"
+    ],
+    "rows": 1,
+    "valueBytes": 112,
+    "tables": [
+      {
+        "table": "en1997_document",
+        "rows": 1,
+        "semanticBytes": 112,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_footing",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_foundation_load_case",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_pile",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_pile_test_profile",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_retaining_wall",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_slope",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_soil_layer",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1997_uplift_case",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  }
+]

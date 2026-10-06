@@ -1,5 +1,8 @@
 //! 🛬️ Cumulative ownership admission shared by native parsers and typed field construction.
-use crate::{ValueError, ValueRefusalKind};
+use crate::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement};
+#[path = "🫴️recipient/🦀️.rs"]
+mod recipient;
+pub use recipient::NativeDecodeRetirementRecipient;
 
 /// ⏱️ Decoder work units and admitted owned bytes at one cancellation boundary.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -9,9 +12,25 @@ pub struct NativeDecodeProgress { pub completed:usize, pub total:usize, pub owne
 pub struct NativeDecodeContinuation { maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, stage:u64 }
 
 /// 🧮️ One caller-owned budget persists from input scanning through final typed construction.
-pub struct NativeDecodeControl<'a> { maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool }
+pub struct NativeDecodeControl<'a> { retirement:Option<&'a mut NativeDecodeRetirementRecipient>, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool }
 
 impl<'a> NativeDecodeControl<'a> {
+    /// 🫴️ Installs one explicit caller recipient before any retained decoder ownership is created.
+    pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{
+        if self.retirement.is_some()||!recipient.terminal_is_empty(){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native decode requires one empty explicit retirement recipient"));}
+        self.retirement=Some(recipient);Ok(())
+    }
+    /// 🪑️ Pre-admits the return slot and exact immediate wrapper allocations, preserving every refusal owner.
+    pub fn with_retirement_owner<T,E:From<ValueError>>(&mut self,wrapper_bytes:usize,operation:impl FnOnce(&mut Self)->(Result<T,E>,Option<Box<dyn crate::ErasedSnapshotRetirement>>))->Result<T,E>{
+        if self.retirement.as_ref().is_none_or(|recipient|recipient.reserved||recipient.owner.is_some()){return Err(E::from(ValueError::new(ValueRefusalKind::OwnershipLimit,"native decode has no available explicit retirement slot")));}
+        self.charge(wrapper_bytes)?;self.checkpoint()?;
+        self.retirement.as_mut().unwrap().reserved=true;
+        let(result,owner)=operation(self);
+        let recipient=self.retirement.as_mut().unwrap();recipient.owner=owner;recipient.reserved=false;
+        result
+    }
+
+
     /// ⏸️ Transfers cumulative admission without retaining the current hop's callback.
     pub fn pause(self)->Result<NativeDecodeContinuation,ValueError>{
         if self.depth!=0||self.owned_bytes>self.maximum_bytes||(self.total!=0&&self.completed>self.total){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
@@ -20,11 +39,11 @@ impl<'a> NativeDecodeControl<'a> {
     /// ▶️ Rebinds a moved operation receipt to the current hop's cancellation callback.
     pub fn resume(receipt:NativeDecodeContinuation,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Result<Self,ValueError>{
         if receipt.owned_bytes>receipt.maximum_bytes||(receipt.total!=0&&receipt.completed>receipt.total){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"native decode continuation has invalid cumulative accounting"));}
-        Ok(Self{maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback})
+        Ok(Self{retirement:None,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback})
     }
 
     /// 🚦️ Binds the explicit allocation ceiling and cancellation callback.
-    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self { Self{maximum_bytes,owned_bytes:0,completed:0,total:0,started:false,stage:0,depth:0,callback} }
+    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self { Self{retirement:None,maximum_bytes,owned_bytes:0,completed:0,total:0,started:false,stage:0,depth:0,callback} }
     /// 🪆️ Bounds recursive typed construction independently of physical input parsing.
     pub fn scoped_depth<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{
         if self.depth>=maximum{return Err(E::from(ValueError::new(ValueRefusalKind::DepthLimit, "native typed construction exceeds depth limit")))}

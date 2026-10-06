@@ -63,10 +63,8 @@ pub struct En1990Snapshot {
     pub effects: Vec<MemberEffect>,
 }
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
-crate::impl_norm_artifact_record!(En1990Snapshot, extension = "en1990", envelope_id = "norm.en1990", sqlite = sqlite::sqlite_codec);
+crate::impl_norm_artifact_record!(En1990Snapshot, extension = "en1990", envelope_id = "norm.en1990", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
 
 impl Default for En1990Snapshot {
     fn default() -> Self {
@@ -124,37 +122,16 @@ impl Default for En1990Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ Canonical JSON projection of [`En1990Snapshot`].
-pub fn encode_en1990_snapshot_json(snapshot: &En1990Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ Inverse of [`encode_en1990_snapshot_json`].
-pub fn decode_en1990_snapshot_json(text: &str) -> Result<En1990Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📖️ Parses committed `.dsl.semio` into [`En1990Snapshot`].
-pub fn decode_en1990_dsl(text: &str) -> Result<En1990Snapshot, String> {
-    <En1990Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-/// 🖨️ Prints [`En1990Snapshot`] to canonical `.dsl.semio`.
-pub fn encode_en1990_dsl(snapshot: &En1990Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
 
-/// 📦️ Decodes `.pack.semio` into [`En1990Snapshot`].
-pub fn decode_en1990_pack(bytes: &[u8]) -> Result<En1990Snapshot, String> {
-    <En1990Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
 
-/// 📦️ Encodes [`En1990Snapshot`] to `.pack.semio`.
-pub fn encode_en1990_pack(snapshot: &En1990Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge
 
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;

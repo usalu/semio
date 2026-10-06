@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "id": "exact",
+      "before": "#[path=\"📝️text/📦️paged/🦀️.rs\"]",
+      "after": "#[path=\"🧺️collection/🦀️.rs\"]\npub mod collection;\n\n#[path=\"📝️text/📦️paged/🦀️.rs\"]"
+    },
+    {
+      "id": "foreign-prefix",
+      "before": "pub fn foreign() {}\n#[path=\"📝️text/📦️paged/🦀️.rs\"]",
+      "after": "pub fn foreign() {}\n#[path=\"🧺️collection/🦀️.rs\"]\npub mod collection;\n\n#[path=\"📝️text/📦️paged/🦀️.rs\"]"
+    },
+    {
+      "id": "foreign-suffix",
+      "before": "#[path=\"📝️text/📦️paged/🦀️.rs\"]\npub fn other() {}",
+      "after": "#[path=\"🧺️collection/🦀️.rs\"]\npub mod collection;\n\n#[path=\"📝️text/📦️paged/🦀️.rs\"]\npub fn other() {}"
+    },
+    {
+      "id": "missing",
+      "before": "pub mod value;",
+      "after": null
+    },
+    {
+      "id": "duplicate",
+      "before": "#[path=\"📝️text/📦️paged/🦀️.rs\"]\n#[path=\"📝️text/📦️paged/🦀️.rs\"]",
+      "after": null
+    },
+    {
+      "id": "already-owned",
+      "before": "#[path=\"🧺️collection/🦀️.rs\"]\npub mod collection;\n\n#[path=\"📝️text/📦️paged/🦀️.rs\"]",
+      "after": null
+    }
+  ]
+}

@@ -20,18 +20,14 @@ pub struct PaintDirectRegion {
     pub alpha: u8,
 }
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for PaintDirectRegion {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "direct-region", kind: "paint-direct-region", record: "PaintDirectRegion" };
 
     fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
-        let region = crate::io::BmpRegion { x: self.x, y: self.y, width: self.width, height: self.height };
-        let color = crate::io::BmpColor { red: self.red, green: self.green, blue: self.blue, alpha: self.alpha };
-        match crate::io::paint_direct_region_controlled(base, &self.revision, region, color, &mut |_, _| true) {
+        let region = crate::standards::v_v3::subsets::any::io::BmpRegion { x: self.x, y: self.y, width: self.width, height: self.height };
+        let color = crate::standards::v_v3::subsets::any::io::BmpColor { red: self.red, green: self.green, blue: self.blue, alpha: self.alpha };
+        match crate::standards::v_v3::subsets::any::io::paint_direct_region_controlled(base, &self.revision, region, color, &mut |_, _| true) {
             Ok(next) => protocol::MutationOutcome::new(BmpDiff::between(base, &next)),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["direct-region"]),
         }

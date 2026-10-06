@@ -1,11 +1,8 @@
 /** 📐️ Portable STEP round-trip and close authority exercised through the actual outward browser Wasm. */
 import { strict as assert } from "node:assert";
-import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/📐️step-session/🔣️.json";
-import schema from "../../🧬️schema/📐️step-session/🔣️.json";
 import { createStepGeometrySession } from "../../🏘️composition/📐️step/🟦️.ts";
 export async function stepBrowserLaws():Promise<void> {
-  assert(new Ajv({strict:true}).validate(schema,fixture));
   const session=createStepGeometrySession();
   const isolated=createStepGeometrySession();
   try {

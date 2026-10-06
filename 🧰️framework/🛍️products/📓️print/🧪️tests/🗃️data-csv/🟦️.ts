@@ -6,7 +6,7 @@
 // #region 🔌️Adapters
 import { csvParse, dsvFormat } from "d3-dsv";
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { compileVizProbe, probeProjection, type ProbeProjection } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -16,7 +16,7 @@ const FIXTURE = "shared://🗃️data-csv/data-csv.tex";
 
 /** 📄️ The committed file the probe reads, as d3-dsv sees it. */
 function source(ctx: AdapterContext, name: string): string {
-  return readFileSync(ctx.fixture(`shared://🗃️data-csv/${name}`), "utf8");
+  return readFileSync(ctx.input(`shared://🗃️data-csv/${name}`), "utf8");
 }
 
 /** 🧵️ One parsed column in the transport encoding the probe uses, empty cells dropped. */
@@ -26,7 +26,7 @@ function column(rows: readonly Record<string, string | undefined>[], name: strin
 
 /** 🎯️ Compiles the committed fixture and projects the records of one scenario. */
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = await compileVizProbe(ctx.fixture(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id, extraSources: ["cities.csv", "places.tsv"] });
+  const records = await compileVizProbe(ctx.input(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id, extraSources: ["cities.csv", "places.tsv"] });
   return { projection: probeProjection(records, ctx.scenario.id) };
 }
 // #endregion 🧫️Vectors

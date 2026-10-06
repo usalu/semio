@@ -14,10 +14,38 @@
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Text path",
+          "de": "Textpfad"
+        },
+        "description": {
+          "en": "Child indices leading from the root element to the text node, each counted from 0.",
+          "de": "Kindindizes vom Wurzelelement bis zum Textknoten, jeweils ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
       }
     },
     "text": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "description": {
+          "en": "Character data the text node holds afterwards.",
+          "de": "Zeichendaten, die der Textknoten danach enthält."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

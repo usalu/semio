@@ -1,7 +1,7 @@
 //! 🩹️ Fem2d play app command — `patch-load`: one-field edit of a load (`nodeId`, `dof`, `value`, `elementId`, `wx`, `wy`, `regionId`, `pressure`) → `ReplaceLoad`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_load;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::editor::fem2d::interaction::fem2d_load_owner;
 use crate::{FemDof, FemLoad};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

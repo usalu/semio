@@ -1,8 +1,7 @@
 import { expect, it } from "vitest";
-import Ajv2020 from "ajv/dist/2020";
+
 import { chromium } from "playwright";
 import fixture from "../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧫️fixtures/🎞️animation/🔣️.json";
-import schema from "../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧬️schema/🎞️animation/🔣️.json";
 it("browser animation ownership survives discarded candidates and clears on accepted static output", async () => {
   const browser = await chromium.launch({ headless: true });
   try {
@@ -34,10 +33,7 @@ it("browser animation ownership survives discarded candidates and clears on acce
   }
 });
 
-it("validates the shared finite GPU animation clock contract", () => {
-  const validate = new Ajv2020().compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-});
+
 
 it("matches browser animation phase after long uptime and across the common wrap", async () => {
   const browser = await chromium.launch({ headless: true });

@@ -1,7 +1,7 @@
 //! 📚️ 📚️ FEM 3D app commands command — `set-active-example`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::Fem3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -16,7 +16,7 @@ pub struct SetActiveExample {
 /// 📚️ Loads the chosen example through the host document replacement effect while preserving exact-window preferences.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let text = match payload.example_id.as_str() {
-        id if id == crate::examples::demo::ID => Some(crate::standards::v1::subsets::any::schema::snapshot::text::FEM3D_EXAMPLE_TEXT),
+        id if id == crate::examples::demo::ID => Some(crate::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT),
         id if id == crate::examples::concrete_forest::ID => Some(crate::examples::concrete_forest::PRIMARY_TEXT),
         id if id == crate::examples::house::ID => Some(crate::examples::house::PRIMARY_TEXT),
         _ => None,

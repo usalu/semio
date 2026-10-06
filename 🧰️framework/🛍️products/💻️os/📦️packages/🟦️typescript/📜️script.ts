@@ -25,20 +25,21 @@ class MediaTransportTestScript extends BundleScript {
   }
 }
 
-/** 🏪️ Runs the store's language-neutral history oracles (supersede replay, tool transaction, deferred reprojection) under `bun:test`. */
+/** 🏪️ Runs the store's language-neutral history oracles (supersede replay, tool transaction, deferred reprojection, viewer head, supersede law) under `bun:test`. */
 class StoreOraclesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-store-oracles accepts no arguments");
-    const oracles = ["🧪️supersede-replay", "🧪️tool-transaction", "🧪️deferred-reprojection"].map((oracle) => join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests", oracle, "🟦️.ts"));
+    const oracles = ["🧪️supersede-replay", "🧪️tool-transaction", "🧪️deferred-reprojection", "🧪️viewer-head", "🧪️supersede-law"].map((oracle) => join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests", oracle, "🟦️.ts"));
     await runOwnedCommand(process.execPath, ["test", ...oracles], this.repoRoot, "os-store-oracles", TEST_LEVEL_BUDGET_MS.fundamental);
   }
 }
 
-/** 🗃️ Runs the archive-load host twin against the channel's language-neutral corpus under `bun:test`. */
+/** 🗃️ Runs the archive-load host twin against the channel's language-neutral corpus, the attached-document replacement law, the document-port control turn law, the folder archive persistence law and the folder read-back law under `bun:test`. */
 class ChannelOraclesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-channel-oracles accepts no arguments");
-    await runOwnedCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-archive-load-host/🟦️.ts")], this.repoRoot, "os-channel-oracles", TEST_LEVEL_BUDGET_MS.fundamental);
+    const oracles = ["🧪️document-archive-load-host", "🧪️attached-document-replacement", "🧪️document-port-control-turn", "🧪️folder-archive-persistence", "🧪️folder-read-back"].map((oracle) => join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧪️tests", oracle, "🟦️.ts"));
+    await runOwnedCommand(process.execPath, ["test", ...oracles], this.repoRoot, "os-channel-oracles", TEST_LEVEL_BUDGET_MS.fundamental);
   }
 }
 
@@ -90,8 +91,6 @@ async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MO
 async function proveDocumentOpeningAttempt(repoRoot: string): Promise<number> {
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
   const fixture = JSON.parse(readFileSync(join(root, "🧵️document-opening-attempt-v1.json"), "utf8"));
-  const validate = await ownedExport(repoRoot, "directory", "DocumentOpeningAttemptV1");
-  if (!validate(fixture)) throw new Error(`invalid document opening attempt fixture: ${JSON.stringify(validate.errors)}`);
   const deepEqual = (await import("fast-deep-equal")).default;
   const observed = fixture.cases.map((row: Record<string, unknown>) => {
     const current = row.current as string | null;

@@ -2,16 +2,20 @@
   "version": 1,
   "facadeExports": [
     "DslArtifact",
-    "DslDiff",
     "MutationLeaf",
-    "Mutations"
+    "Mutations",
+    "diff_binary",
+    "diff_text"
   ],
   "registeredDerives": [
     "CompositeMutation",
     "DslArtifact",
-    "DslDiff",
     "MutationLeaf",
     "Mutations"
   ],
-  "traitOnly": []
+  "traitOnly": [],
+  "registeredMacros": [
+    "diff_binary",
+    "diff_text"
+  ]
 }

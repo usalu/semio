@@ -1,0 +1,16 @@
+{
+  "path": [
+    "title"
+  ],
+  "word": "x",
+  "payloadBytes": 8194,
+  "header": [
+    1,
+    1
+  ],
+  "metadataBytes": 512,
+  "allocationBytes": 65536,
+  "maximumCloseSteps": 8322,
+  "maximumCloseItems": 1,
+  "maximumCloseBytes": 4096
+}

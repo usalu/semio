@@ -20,7 +20,7 @@ pub fn question_fields(kind: &str) -> Vec<&'static str> {
         "note" => &["text"],
         "image" => &["src"],
         "file" => &["accept"],
-        _ => &["fixtureSlug", "params"],
+        _ => &["exampleId", "params"],
     });
     fields.push("condition");
     fields

@@ -139,6 +139,118 @@ fn an_editing_unit_slider_projects_its_live_spoken_value_and_numeric_spinbutton(
     let editor = projection.iter().find(|node| node.key == "gain::editor").expect("numeric editor");
     assert_eq!((editor.role.as_str(), editor.label.as_deref(), editor.value_min, editor.value_now, editor.value_max, editor.value_text.as_deref()), ("spinbutton", Some("Gain"), Some(0.0), Some(4.4), Some(10.0), Some("4.4")));
     assert!(editor.focusable && editor.tabbable && editor.actionable && editor.editable && editor.focused);
+    assert_eq!((thumb.value_step, editor.value_step, thumb.invalid, editor.invalid), (Some(0.5), Some(0.5), false, false), "both announce the step and an admitted draft is valid");
+
+    tree.node_mut(mounted).expect("live Slider").state.number_refusal = Some("Must be at most 10 mm".into());
+    let refused = accessibility_projection(&tree);
+    for key in ["gain", "gain::editor"] {
+        let node = refused.iter().find(|node| node.key == key).expect("refused control");
+        assert!(node.invalid, "{key}: a refused draft is invalid");
+        assert_eq!(node.description.as_deref(), Some("Must be at most 10 mm"), "{key}: the refusal is its description");
+    }
+
+    let idle = tree.node_mut(mounted).expect("live Slider");
+    idle.state.edit = None;
+    idle.state.number_refusal = None;
+    let closed = accessibility_projection(&tree);
+    assert!(closed.iter().all(|node| node.key != "gain::editor"), "a slider nothing is bound to offers no typed readout");
+}
+
+/// 🔘️ A segmented select is a radio group: the group is no Tab stop and has no disclosure, its options are always
+/// projected as radios in order — the chosen one checked and the ONE Tab stop — and an option chosen through the mirror
+/// or by an arrow key dispatches its value without any popup.
+#[test]
+fn a_segmented_select_projects_a_radio_group_with_one_tab_stop() {
+    let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 0,
+        "key": "mode",
+        "component": { "type": "select", "value": "b", "items": [{ "value": "a", "label": "Alpha" }, { "value": "b", "label": "Beta" }, { "value": "c", "label": "Gamma" }], "appearance": "segmented" },
+        "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Mode" },
+        "bindings": [{ "trigger": "change", "action": { "scope": "procedural", "name": "setMode", "version": 1 } }]
+    }))
+    .expect("segmented Select record");
+    let header = UiDocumentLeaseHeader { generation: FIXTURE_GENERATION, surface: SurfaceId::try_from("select.segmented").expect("surface"), revision: UiRevision(0), root: record.id, layout_epoch: 0, node_count: 1 };
+    let mut document = UiDocumentTree::new(header).expect("header");
+    document.try_upsert_record(record).expect("record");
+    let mut tree = UiTree::new();
+    tree.publish_document(document);
+    let mut cursor = UiDocumentReconcileCursor::default();
+    cursor.rearm(FIXTURE_GENERATION);
+    for _ in 0..64 {
+        if matches!(tree.step_document_reconcile(&mut cursor, "procedural-main", "generation3d"), UiDocumentReconcileStep::Complete) {
+            break;
+        }
+    }
+    let projection = accessibility_projection(&tree);
+    let group = projection.iter().find(|node| node.key == "mode").expect("the group");
+    assert_eq!((group.role.as_str(), group.label.as_deref(), group.tabbable, group.expanded), ("radiogroup", Some("Mode"), false, None));
+    let radios: Vec<_> = projection.iter().filter(|node| node.role == "radio").map(|node| (node.key.as_str(), node.label.as_deref(), node.checked, node.tabbable, node.pos_in_set, node.set_size, node.depth)).collect();
+    assert_eq!(
+        radios,
+        [
+            ("mode::option::a", Some("Alpha"), Some(false), false, Some(1), Some(3), 1),
+            ("mode::option::b", Some("Beta"), Some(true), true, Some(2), Some(3), 1),
+            ("mode::option::c", Some("Gamma"), Some(false), false, Some(3), Some(3), 1),
+        ],
+        "every option is a radio, the chosen one the one Tab stop"
+    );
+    assert!(projection.iter().all(|node| node.role != "listbox" && node.role != "option"), "no popup is projected for a segmented select");
+
+    let mounted = tree.document_node(UiNodeId(0)).expect("mounted Select");
+    let mut router = crate::wgpu::events::EventRouter::new("main");
+    let values = |commands: Vec<crate::wgpu::events::UiCommand>| -> Vec<semio_framework_value::DslValue> {
+        commands
+            .into_iter()
+            .filter_map(|command| match command {
+                crate::wgpu::events::UiCommand::App { intent, .. } => intent.payload(),
+                _ => None,
+            })
+            .collect()
+    };
+    let picked = |value: &str| semio_framework_value::DslValue::Object(vec![("value".into(), semio_framework_value::DslValue::String(value.into()))]);
+    assert_eq!(values(router.dispatch_accessibility_select_option(&mut tree, mounted, "c", &crate::wgpu::events::AccessibilityUiEvent::Activate)), vec![picked("c")], "a radio chosen through the mirror dispatches its value with no popup open");
+    let _ = router.dispatch_accessibility(&mut tree, mounted, &crate::wgpu::events::AccessibilityUiEvent::Focus);
+    for (key, value) in [("ArrowRight", "c"), ("ArrowLeft", "a")] {
+        let commands = router.dispatch(&mut tree, mounted, &crate::wgpu::events::UiEvent::KeyDown { key: key.into(), modifiers: Default::default() });
+        assert_eq!(values(commands), vec![picked(value)], "{key} moves the choice from the published one");
+    }
+    assert!(!tree.node(mounted).expect("live Select").state.open, "no popup opened");
+}
+
+/// 🪟️ A windowed row carries its place in the WHOLE list, not in the materialised slice: `pos_in_set` counts from the window's
+/// offset and `set_size` is its total, for a section's rows and for the rows nested in a windowed row alike; a child that is
+/// no row carries none.
+#[test]
+fn windowed_rows_project_their_place_in_the_whole_list() {
+    let record = |id: u64, key: &str, component: serde_json::Value, children: serde_json::Value| -> UiNodeRecord {
+        serde_json::from_value(serde_json::json!({ "id": id, "key": key, "component": component, "layout": { "kind": "leaf", "width": "fill", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {}, "children": children })).expect("window record")
+    };
+    let records = vec![
+        record(0, "commands", serde_json::json!({ "type": "treeSection", "label": "Commands", "window": { "total": 120, "offset": 40, "rowExtent": "standard" } }), serde_json::json!([1, 2, 3])),
+        record(1, "entry.41", serde_json::json!({ "type": "treeItem", "label": "Row 41" }), serde_json::json!([])),
+        record(2, "entry.42", serde_json::json!({ "type": "treeItem", "label": "Row 42", "window": { "total": 7, "offset": 5, "rowExtent": "standard" } }), serde_json::json!([4, 5])),
+        record(3, "caption", serde_json::json!({ "type": "text", "value": "120 commands" }), serde_json::json!([])),
+        record(4, "mutation.6", serde_json::json!({ "type": "treeItem", "label": "Mutation 6" }), serde_json::json!([])),
+        record(5, "mutation.7", serde_json::json!({ "type": "treeItem", "label": "Mutation 7" }), serde_json::json!([])),
+    ];
+    let header = UiDocumentLeaseHeader { generation: FIXTURE_GENERATION, surface: SurfaceId::try_from("history.window").expect("surface"), revision: UiRevision(0), root: UiNodeId(0), layout_epoch: 0, node_count: records.len() };
+    let mut document = UiDocumentTree::new(header).expect("header");
+    for record in records {
+        document.try_upsert_record(record).expect("record");
+    }
+    let mut tree = UiTree::new();
+    tree.publish_document(document);
+    let projection = accessibility_projection(&tree);
+    let place = |key: &str| projection.iter().find(|node| node.key == key).map(|node| (node.pos_in_set, node.set_size)).expect("projected node");
+    assert_eq!(place("commands"), (None, None), "the list itself is no row");
+    assert_eq!(place("entry.41"), (Some(41), Some(120)));
+    assert_eq!(place("entry.42"), (Some(42), Some(120)));
+    assert_eq!(place("caption"), (None, None), "a child that is no row has no place");
+    assert_eq!(place("mutation.6"), (Some(6), Some(7)));
+    assert_eq!(place("mutation.7"), (Some(7), Some(7)));
 }
 
 /// ♿️ The headline: a mounted document answers the FULL projection the shared fixture declares, in
@@ -158,6 +270,8 @@ fn a_mounted_document_publishes_the_accessibility_tree_the_shared_fixture_declar
         assert_eq!(node.label.as_deref(), row["label"].as_str(), "{}: label", node.key);
         assert_eq!(node.description.as_deref(), row["description"].as_str(), "{}: description", node.key);
         assert_eq!(node.live, row["live"].as_str().expect("fixture live"), "{}: live region", node.key);
+        assert_eq!(node.value_step, row["valueStep"].as_f64(), "{}: step", node.key);
+        assert_eq!(node.tone.as_deref(), row["tone"].as_str(), "{}: tone", node.key);
         assert_eq!(node.shortcut.as_deref(), row["shortcut"].as_str(), "{}: shortcut", node.key);
         assert_eq!(node.hidden, row["hidden"].as_bool().expect("fixture hidden"), "{}: hidden", node.key);
         assert_eq!(node.focusable, row["focusable"].as_bool().expect("fixture focusable"), "{}: focusable", node.key);
@@ -249,4 +363,61 @@ fn real_settings_fields_inherit_labels_and_explicit_control_names_win() {
     law["document"]["nodes"][2]["accessibility"]["label"] = serde_json::json!("Explicit control name");
     let projection = accessibility_projection(&mounted_tree(&law));
     assert_eq!(projection.iter().find(|node| node.node_id == 2).unwrap().label.as_deref(), Some("Explicit control name"));
+}
+
+/// ♿️ LAW (live fault F18): a tree row whose own click is its target's activation (`RowTarget::activation`, never a record
+/// binding) is ACTIONABLE in the projection — the mirror forwards a click, Enter and Space on it as its activation — while
+/// a row without one, and a disabled row, are not.
+#[test]
+fn a_row_with_an_activation_projects_actionable() {
+    let record = |id: u64, key: &str, component: serde_json::Value, disabled: bool, children: serde_json::Value| -> UiNodeRecord {
+        serde_json::from_value(serde_json::json!({ "id": id, "key": key, "component": component, "layout": { "kind": "leaf", "width": "fill", "height": "hug" }, "style": {}, "activity": "idle", "disabled": disabled, "accessibility": {}, "children": children })).expect("row record")
+    };
+    let target = serde_json::json!({ "scope": "app.editor", "version": 1, "activation": "selectAll" });
+    let records = vec![
+        record(0, "actions", serde_json::json!({ "type": "treeSection", "label": "Actions" }), false, serde_json::json!([1, 2, 3])),
+        record(1, "action.selectAll", serde_json::json!({ "type": "treeItem", "label": "Select All", "target": target }), false, serde_json::json!([])),
+        record(2, "action.caption", serde_json::json!({ "type": "treeItem", "label": "180 nodes" }), false, serde_json::json!([])),
+        record(3, "action.gated", serde_json::json!({ "type": "treeItem", "label": "Delete Selection", "target": target }), true, serde_json::json!([])),
+    ];
+    let header = UiDocumentLeaseHeader { generation: FIXTURE_GENERATION, surface: SurfaceId::try_from("pane.actions").expect("surface"), revision: UiRevision(0), root: UiNodeId(0), layout_epoch: 0, node_count: records.len() };
+    let mut document = UiDocumentTree::new(header).expect("header");
+    for record in records {
+        document.try_upsert_record(record).expect("record");
+    }
+    let mut tree = UiTree::new();
+    tree.publish_document(document);
+    let projection = accessibility_projection(&tree);
+    let actionable = |key: &str| projection.iter().find(|node| node.key == key).map(|node| (node.role.as_str(), node.actionable)).expect("projected row");
+    assert_eq!(actionable("action.selectAll"), ("treeitem", true), "a row with an activation is activated through the mirror");
+    assert_eq!(actionable("action.caption"), ("treeitem", false), "a row without one is read, never activated");
+    assert_eq!(actionable("action.gated"), ("treeitem", false), "a disabled row activates nothing");
+}
+
+/// ♿️ LAW (live finding on the history editor's dx / dy): a number input projects the `spinbutton` React's
+/// `<input type="number">` is — with its value, bounds and step, so the mirror builds a number field that follows the
+/// number-control law — while a text input stays a `textbox`.
+#[test]
+fn a_number_input_projects_a_spinbutton_with_its_value_bounds_and_step() {
+    let record = |id: u64, key: &str, component: serde_json::Value, children: serde_json::Value| -> UiNodeRecord {
+        serde_json::from_value(serde_json::json!({ "id": id, "key": key, "component": component, "layout": { "kind": "leaf", "width": "fill", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {}, "children": children })).expect("field record")
+    };
+    let records = vec![
+        record(0, "editor", serde_json::json!({ "type": "container" }), serde_json::json!([1, 2])),
+        record(1, "editor.dx", serde_json::json!({ "type": "input", "kind": "number", "value": "60", "min": -500, "max": 500, "step": 1 }), serde_json::json!([])),
+        record(2, "editor.name", serde_json::json!({ "type": "input", "value": "Drag" }), serde_json::json!([])),
+    ];
+    let header = UiDocumentLeaseHeader { generation: FIXTURE_GENERATION, surface: SurfaceId::try_from("history.editor").expect("surface"), revision: UiRevision(0), root: UiNodeId(0), layout_epoch: 0, node_count: records.len() };
+    let mut document = UiDocumentTree::new(header).expect("header");
+    for record in records {
+        document.try_upsert_record(record).expect("record");
+    }
+    let mut tree = UiTree::new();
+    tree.publish_document(document);
+    let projection = accessibility_projection(&tree);
+    let dx = projection.iter().find(|node| node.key == "editor.dx").expect("the number field is projected");
+    assert_eq!(dx.role, "spinbutton", "a number input is a spinbutton");
+    assert_eq!((dx.value_now, dx.value_min, dx.value_max, dx.value_step), (Some(60.0), Some(-500.0), Some(500.0), Some(1.0)), "with its value, bounds and step");
+    assert!(dx.focusable && dx.tabbable, "and it takes focus");
+    assert_eq!(projection.iter().find(|node| node.key == "editor.name").map(|node| node.role.as_str()), Some("textbox"), "a text input stays a textbox");
 }

@@ -6,6 +6,12 @@
 # directly in this subset's own JSON export, so `insert-image`, `remove-image` and `set-image-bytes` are
 # carrier-level facts a third-party JSON implementation can witness in full.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "semio-document-json-engine"

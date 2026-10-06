@@ -10,7 +10,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Texture",
+          "de": "Textur"
+        },
+        "description": {
+          "en": "Id of the texture.",
+          "de": "Kennung der Textur."
+        },
+        "ref": {
+          "kind": "texture"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "new_bytes": {
       "type": "array",

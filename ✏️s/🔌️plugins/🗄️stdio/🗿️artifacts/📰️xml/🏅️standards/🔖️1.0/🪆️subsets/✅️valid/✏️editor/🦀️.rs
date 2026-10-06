@@ -444,7 +444,7 @@ impl ArtifactEditor for XmlValidEditor {
             return Ok(None);
         }
         if xml_valid_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-xml-valid-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-xml-valid-retained-command-tool-mismatch"));
         }
         let tool_id = xml_valid_command_id(&request.command);
         let operation = AppOperationContext {

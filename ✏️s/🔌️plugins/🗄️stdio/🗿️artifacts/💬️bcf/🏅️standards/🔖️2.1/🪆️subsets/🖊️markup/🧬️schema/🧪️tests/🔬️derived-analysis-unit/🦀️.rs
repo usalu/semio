@@ -3,7 +3,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn sniff_bumps_to_high_when_bcf_version_entry_name_is_present() {
         let snap = BcfSnapshot { schema: "stdio.bcf".into(), version: "2.1".into(), topics: Vec::new(), parts: Vec::new() };
-        let bytes = crate::io::encode_bcf(&snap).expect("encode");
+        let bytes = crate::standards::v2_1::subsets::any::io::encode_bcf(&snap).expect("encode");
         assert_eq!(BcfAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
     }
 

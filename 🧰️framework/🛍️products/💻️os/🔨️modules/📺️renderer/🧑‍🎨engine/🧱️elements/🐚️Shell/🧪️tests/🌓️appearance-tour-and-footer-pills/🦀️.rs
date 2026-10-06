@@ -100,8 +100,12 @@ fn the_browser_appearance_door_is_wired_end_to_end() {
     assert!(worker.contains("semioWgpuSetHostAppearance?.(message.appearance.preference, message.appearance.systemDark)"), "the frame Worker forwards the boot value AND live changes");
     assert!(worker.contains("host-appearance"), "the live message kind is handled");
     let page = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts")).expect("browser boot source");
+    assert!(page.contains("from \"../🌐️browser-host/🟦️.ts\""), "the page imports the canonical browser host");
+    assert!(page.contains("await mountWgpuBrowserHost(root,"), "the page mounts the canonical browser host");
+    assert!(page.contains("pageBindings: true"), "the page enables live browser bindings");
+    let host = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts")).expect("browser host source");
     for needle in ["resolveWgpuHostAppearance(window)", "WGPU_PREFERS_DARK_MEDIA_QUERY", "\"storage\", republishAppearance"] {
-        assert!(page.contains(needle), "the page thread makes the reads and keeps them live: {needle}");
+        assert!(host.contains(needle), "the browser host makes the reads and keeps them live: {needle}");
     }
     let descriptor = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts")).expect("boot descriptor source");
     assert!(descriptor.contains("os.config.ui-preferences"), "the page replays React's own persisted event log, not a private key");
@@ -122,6 +126,7 @@ pub(crate) fn tour_app(introduction: Option<semio_framework::IntroductionDefinit
         modes: semio_framework::Modes::one(semio_framework::ModeDefinition { id: "default".into(), label: LocalizedLabel::data("Default"), icon_id: "pencil".into(), tools: vec![], layout_id: None, commands: vec![] }),
         default_mode_id: "default".into(),
         window_kinds: semio_framework::WindowKinds::try_from(vec![semio_framework::WindowKindDefinition {
+            initial_utility_id: None,
             id: "main".into(),
             label: LocalizedLabel::data("Main"),
             body_key: "main.body".into(),

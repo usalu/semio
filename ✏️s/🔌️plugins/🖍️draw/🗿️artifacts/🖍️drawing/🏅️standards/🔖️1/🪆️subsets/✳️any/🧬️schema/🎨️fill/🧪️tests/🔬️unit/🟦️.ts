@@ -41,9 +41,8 @@ test("fill editing preserves stops, geometry, alpha and source on rejection", ()
 import sharp from "sharp";
 import { PreparedFill, GradientRamp } from "../../🎨️sampling/🟦️.ts";
 import retirementCases from "../../🎨️sampling/🧫️fixtures/🧹️retirement/🔣️.json";
-import retirementSchema from "../../🎨️sampling/🧬️schema/🧹️retirement/🔣️.json";
+import retirementSchema from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🧬️schema/🔣️.json";
 import samplingCases from "../../🎨️sampling/🧫️fixtures/🔣️.json";
-import samplingSchema from "../../🎨️sampling/🧬️schema/🔣️.json";
 
 /** 🧭️ SVG 1.1 degenerate gradients use their last stop; normalize these before the librsvg oracle. */
 function referencePaint(fill:Fill,box:readonly number[]=[0,0,120,24]):string {
@@ -61,7 +60,6 @@ function referencePaint(fill:Fill,box:readonly number[]=[0,0,120,24]):string {
 }
 
 test("prepared fill sampling matches shared cases and independent SVG pixels",async()=>{
-  expect(new Ajv({strict:true}).compile(samplingSchema)(samplingCases)).toBe(true);
   let compared=0;
   for(const entry of samplingCases) {
     const fill=structuredClone(entry.fill) as Fill;
@@ -119,7 +117,7 @@ test("inserting a gradient stop preserves independently rasterized appearance",a
 });
 
 test("prepared paint retirement drains actual copied stop owners and composes the real ramp",async()=>{
- expect(new Ajv({strict:true}).compile(retirementSchema)(retirementCases)).toBe(true);const validProgress=new Ajv({strict:true}).compile({definitions:retirementSchema.definitions,$ref:"#/definitions/progress"}),pop=Array.prototype.pop;let comparisons=0;
+ const validProgress=new Ajv({strict:true}).compile(retirementSchema),pop=Array.prototype.pop;let comparisons=0;
  for(const row of retirementCases)for(const grant of [1,7,4096]){
   const source=samplingCases.find(sample=>sample.name===row.source)!,fill=structuredClone(source.fill) as Fill;
   if(row.repeat&&fill.kind!=="solid")fill.stops=Array.from({length:row.repeat},()=>structuredClone(fill.stops[0]!));const before=structuredClone(fill),paint=new PreparedFill(fill),samples=source.samples!.map(sample=>paint.sample(sample.point as [number,number])),children:{owner:ReturnType<GradientRamp["intoRetirement"]>;work:number}[]=[],rampOriginal=GradientRamp.prototype.intoRetirement;

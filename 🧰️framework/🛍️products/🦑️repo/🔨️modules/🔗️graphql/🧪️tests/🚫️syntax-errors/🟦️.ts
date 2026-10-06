@@ -11,7 +11,7 @@
 
 //#region 🔌️Adapters
 import { parse } from "graphql";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Adapter
@@ -23,7 +23,7 @@ export default defineTestAdapter({
   scenarios: {
     "malformed-inputs-are-rejected": {
       oracle: (ctx) => {
-        const corpus = JSON.parse(Buffer.from(ctx.fixtureBytes("shared://🚫️syntax-errors/🔣️malformed.json")).toString("utf8")) as Corpus;
+        const corpus = JSON.parse(Buffer.from(ctx.inputBytes("shared://🚫️syntax-errors/🔣️malformed.json")).toString("utf8")) as Corpus;
         return {
           projection: {
             inputs: corpus.inputs.map((entry) => {

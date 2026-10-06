@@ -181,7 +181,7 @@
           "kind",
           "description",
           "required",
-          "fixtureSlug",
+          "exampleId",
           "params",
           "condition"
         ]

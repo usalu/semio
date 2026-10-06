@@ -1,0 +1,9 @@
+# Controlled Cargo Discovery Caller Census
+
+The current General Cargo owner is `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts`. Its physical ownership and nested workspace admission have been published and independently checked. Discovery, member expansion, nearest-owner selection and manifest parsing still execute synchronously; publication evidence does not establish cancellation or bounded parser ownership.
+
+Local source search found direct package-inventory consumers in the General repository library, discovery/admission, Cargo dependency direction, component composition, caching dependency tests, inventory providers and the Specific StdIo Rust script. Repository-package selection and selected Cargo arguments also call this inventory. Related synchronous discovery/preparation calls appear in process capture, owned execution, package/native orchestration, native build, bootstrap dependency scripts, workspace preparation and their original tests. These callers must migrate together when their canonical interfaces become asynchronous; retaining a second synchronous inventory would preserve the architectural defect.
+
+The execution agent responsible for conformance composition now owns this API and caller migration. The required operation explicitly supplies abort signal, unit and retained-byte limits, progress and continuation yield. A caller-owned workspace must retain partial inventory plus source/parser/metadata/backing owners on refusal. Package metadata must come from the same bounded admitted manifest read. Invoking callbacks around `readFileSync` or `Bun.TOML.parse` does not prove inner cancellation, bounded heap ownership or retirement.
+
+No controlled API or caller migration has been published as of this census. Current whole-root Cargo direction is still running its original owner preparation route; no graph acceptance is inferred from elapsed time.

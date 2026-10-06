@@ -1,4 +1,4 @@
-//! 🧪️ `change-target-region-hidden` fixture — `🙈️hides`.
+//! 🧪️ `change-target-region-hidden` snapshot — `🙈️hides`.
 //!
 //! Hiding the board's only region stops it constraining fill — `puzzle2d_regions_contain_bounds` reads visible regions only, so a board whose every region is hidden is unconstrained again.
 //!
@@ -45,7 +45,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

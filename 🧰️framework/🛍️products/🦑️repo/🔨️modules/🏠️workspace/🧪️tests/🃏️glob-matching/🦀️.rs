@@ -26,13 +26,13 @@ fn verdicts_for(vectors: &[Json]) -> Vec<Json> {
 
 #[cfg(feature = "sut")]
 fn vectors_match_the_same_way(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📡️glob-vectors.json")?;
+    let file = ctx.input_json("shared://📡️glob-vectors.json")?;
     Ok(Outcome::projection(Json::Object(vec![("verdicts".to_string(), Json::Array(verdicts_for(&file.array("vectors"))))])))
 }
 
 #[cfg(feature = "sut")]
 fn brace_alternation_expands_the_same_way(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📡️glob-vectors.json")?;
+    let file = ctx.input_json("shared://📡️glob-vectors.json")?;
     Ok(Outcome::projection(Json::Object(vec![("verdicts".to_string(), Json::Array(verdicts_for(&file.array("braceVectors"))))])))
 }
 

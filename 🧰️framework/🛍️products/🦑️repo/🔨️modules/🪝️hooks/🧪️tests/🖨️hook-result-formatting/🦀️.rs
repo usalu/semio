@@ -15,7 +15,7 @@ mod subject {
     const WRAPPING_CLIENT: &str = "copilot-chat";
 
     fn vectors(ctx: &Context) -> Result<Value, String> {
-        let bytes = ctx.fixture_bytes(VECTORS)?;
+        let bytes = ctx.input_bytes(VECTORS)?;
         serde_json::from_slice(&bytes).map_err(|error| error.to_string())
     }
 

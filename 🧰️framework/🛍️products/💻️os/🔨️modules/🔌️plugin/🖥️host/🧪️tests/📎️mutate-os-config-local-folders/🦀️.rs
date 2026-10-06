@@ -214,8 +214,8 @@ mod subject {
         let (before, _mutation, _after, _outcome) = super::fixture_text("detach-local-folder");
         let bindings = bindings_of(before, "before", "detach-local-folder")?;
         let ids: Vec<&str> = bindings.bindings.iter().map(|entry| entry.document_id.as_str()).collect();
-        if ids != ["cad.drawing.fixture", "puzzle.2d.fixture"] || bindings.bindings[1].folder != (LocalFolderRef::Path { path: "/Users/ada/Documents/puzzles".to_string() }) {
-            return Err(format!("local-folders-round-trip: the committed bindings attach cad.drawing.fixture and puzzle.2d.fixture to /Users/ada/Documents/puzzles, but the decoded value holds {}", encode_local_folder_bindings_json(&bindings)));
+        if ids != ["cad.drawing.fixture", "board.ports.directed.v1"] || bindings.bindings[1].folder != (LocalFolderRef::Path { path: "/Users/ada/Documents/puzzles".to_string() }) {
+            return Err(format!("local-folders-round-trip: the committed bindings attach cad.drawing.fixture and board.ports.directed.v1 to /Users/ada/Documents/puzzles, but the decoded value holds {}", encode_local_folder_bindings_json(&bindings)));
         }
         let reencoded = encode_local_folder_bindings_json(&bindings);
         let reparsed = bindings_of(&reencoded, "re-encoded", "detach-local-folder")?;

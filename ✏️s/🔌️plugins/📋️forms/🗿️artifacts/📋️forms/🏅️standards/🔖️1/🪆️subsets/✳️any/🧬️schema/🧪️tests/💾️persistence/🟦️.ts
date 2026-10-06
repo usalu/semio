@@ -1,4 +1,4 @@
-import{parseFormsJsonArtifact,formsArtifactJson}from"../../🌱️value/🔣️json/🟦️.ts";
+import {parseFormsJsonArtifact,formsArtifactJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/💾️persistence/🔣️.json";

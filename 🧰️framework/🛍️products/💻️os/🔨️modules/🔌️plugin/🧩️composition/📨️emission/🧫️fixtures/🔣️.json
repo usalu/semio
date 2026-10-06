@@ -12,5 +12,56 @@
     "acceptedOperations": 1,
     "acceptedLabels": 1,
     "failedAppendPublishes": false
+  },
+  "ownedPreparation": {
+    "operations": [
+      {
+        "value": -2147483648,
+        "refuse": false,
+        "payload": [
+          0,
+          255,
+          17,
+          128
+        ]
+      },
+      {
+        "value": 2147483647,
+        "refuse": true,
+        "payload": [
+          255,
+          0,
+          34,
+          127
+        ]
+      },
+      {
+        "value": -1,
+        "refuse": false,
+        "payload": [
+          128,
+          17,
+          0,
+          255
+        ]
+      }
+    ],
+    "expected": {
+      "acceptedOperations": 1,
+      "retiredBeforeRefusal": 1,
+      "retainedAfterRefusal": 2,
+      "retiredAfterZeroGrant": 1,
+      "retiredAfterClose": 3,
+      "providerReturnedToCaller": true
+    },
+    "maximumPumpSteps": 256,
+    "maximumCloseSteps": 512,
+    "maximumAllocationGrant": 65536,
+    "retirementRefusal": {
+      "kind": "UnsupportedOwner",
+      "message": "actual accepted mutation retirement refusal",
+      "retainsAcceptedPrefix": true,
+      "providerReturnedToCaller": true
+    }
   }
 }

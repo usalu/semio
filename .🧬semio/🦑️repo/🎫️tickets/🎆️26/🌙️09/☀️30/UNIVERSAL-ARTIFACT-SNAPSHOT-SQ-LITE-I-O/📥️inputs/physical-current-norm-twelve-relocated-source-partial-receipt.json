@@ -1,0 +1,95 @@
+{
+  "at": "2026-10-06T01:30:27.713Z",
+  "session": 80118,
+  "terminal": false,
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-norm-twelve-relocated-source.log",
+  "owners": [
+    {
+      "project": "@semio-tech/norm-en1995-rs",
+      "pass": 28,
+      "fail": 1,
+      "errors": [
+        "@semio-tech/norm-en1995-rs: error: expect(received).toBe(expected)"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1999-rs",
+      "pass": 9,
+      "fail": 0,
+      "errors": []
+    },
+    {
+      "project": "@semio-tech/norm-din4108-rs",
+      "pass": null,
+      "fail": null,
+      "errors": [
+        "@semio-tech/norm-din4108-rs: error: Invalid Cargo workspace member patterns",
+        "@semio-tech/norm-din4108-rs: error: Selected Cargo preparation failed: ✏️s/Cargo.toml (1)"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1991-rs",
+      "pass": null,
+      "fail": null,
+      "errors": [
+        "@semio-tech/norm-en1991-rs: error: Invalid Cargo workspace member patterns",
+        "@semio-tech/norm-en1991-rs: error: Selected Cargo preparation failed: ✏️s/Cargo.toml (1)"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1990-rs",
+      "pass": null,
+      "fail": null,
+      "errors": [
+        "@semio-tech/norm-en1990-rs: error: Invalid Cargo workspace member patterns",
+        "@semio-tech/norm-en1990-rs: error: Selected Cargo preparation failed: ✏️s/Cargo.toml (1)"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1996-rs",
+      "pass": null,
+      "fail": null,
+      "errors": [
+        "@semio-tech/norm-en1996-rs: error: Invalid Cargo workspace member patterns",
+        "@semio-tech/norm-en1996-rs: error: Selected Cargo preparation failed: ✏️s/Cargo.toml (1)"
+      ]
+    },
+    {
+      "project": "@semio-tech/norm-en1994-rs",
+      "pass": 21,
+      "fail": 0,
+      "errors": []
+    },
+    {
+      "project": "@semio-tech/norm-din16798-rs",
+      "pass": 22,
+      "fail": 0,
+      "errors": []
+    },
+    {
+      "project": "@semio-tech/norm-din18599-rs",
+      "pass": 36,
+      "fail": 0,
+      "errors": []
+    },
+    {
+      "project": "@semio-tech/norm-en1993-rs",
+      "pass": 31,
+      "fail": 0,
+      "errors": []
+    },
+    {
+      "project": "@semio-tech/norm-vdi3805-rs",
+      "pass": null,
+      "fail": null,
+      "errors": []
+    },
+    {
+      "project": "@semio-tech/norm-en1997-rs",
+      "pass": 10,
+      "fail": 0,
+      "errors": []
+    }
+  ],
+  "scope": "Actual runtime where pass/fail counters present only; no completion from static declarations or preparation errors"
+}

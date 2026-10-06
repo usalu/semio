@@ -17,6 +17,6 @@ pub fn diff(payload: &super::CreateBattery, base: &EnergyModelSnapshot) -> proto
         payload.index as usize,
         crate::model::BatteryAssignment { id: payload.id, capacity_kwh: payload.capacity_kwh, max_charge_w: payload.max_charge_w, max_discharge_w: payload.max_discharge_w, round_trip_efficiency: payload.round_trip_efficiency },
     );
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

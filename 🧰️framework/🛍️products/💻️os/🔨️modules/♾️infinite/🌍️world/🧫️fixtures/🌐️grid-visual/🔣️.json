@@ -1,5 +1,4 @@
 {
-  "$schema": "../../🧬️schema/🌐️grid-visual/🔣️.json",
   "schema": "framework.world3d.grid-visual/v1",
   "reference": {
     "threeRevision": "182",

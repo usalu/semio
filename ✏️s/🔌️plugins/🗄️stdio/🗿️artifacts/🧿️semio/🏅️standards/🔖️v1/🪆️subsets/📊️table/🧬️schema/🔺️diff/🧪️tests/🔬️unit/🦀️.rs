@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn one_col_row(name: &str, kind: SemioTableCellKind, value: SemioValue) -> SemioTableSnapshot {

@@ -1,4 +1,4 @@
-import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 // 🗺️ Example `terrain-ring` — the TypeScript twin of `🦀️.rs`'s builder, including the same
 // palette-indexed 8×8 raster payloads (built the same way, so the base64 matches byte for byte).
 

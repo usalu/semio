@@ -1,5 +1,4 @@
 {
-  "$schema": "../../🧬️schema/🔣️history-patch/🔣️.json#/definitions/HistoryPatchFixture",
   "note": "🧾️ The history wire every host folds (design §10 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). Every `valid` patch decodes identically through the Rust serde and value paths, re-encodes to itself, validates against the schema with a third-party validator, and its rows fold under `keys` (`edit:<editId>`, else `transition:<transitionId>`, else `seq:<seq>`). Every `invalid` patch is refused by the Rust decoder and by the schema.",
   "valid": [
     {
@@ -7,29 +6,170 @@
       "patch": {
         "cursor": 9,
         "upserts": [
-          { "seq": 9, "transitionId": "t-undo", "author": "bob", "actionId": "historyEditCommit", "label": { "native": { "en": "History edit undone — overwrite: 1 mutation", "de": "Verlaufsbearbeitung rückgängig — überschrieben: 1 Mutation" }, "reuse": { "en": "History edit undone — overwrite: 1 mutation", "de": "Verlaufsbearbeitung rückgängig — überschrieben: 1 Mutation" } }, "kind": "history", "timestamp": "1790000009000", "applied": true, "count": 1 },
-          { "seq": 8, "transitionId": "t-edit", "author": "bob", "actionId": "historyEditCommit", "label": { "native": { "en": "History edited — alternative Edited history: 1 mutation", "de": "Verlauf bearbeitet — Alternative Edited history: 1 Mutation" }, "reuse": { "en": "History edited — alternative Edited history: 1 mutation", "de": "Verlauf bearbeitet — Alternative Edited history: 1 Mutation" } }, "kind": "history", "timestamp": "1790000008000", "applied": false, "revertible": false, "count": 1 },
-          { "seq": 2, "editId": "e-2", "author": "alice", "actionId": "apply", "label": { "native": { "en": "Set count", "de": "Anzahl setzen" }, "reuse": { "en": "Set count", "de": "Anzahl setzen" } }, "kind": "mutation", "timestamp": "1790000002000", "applied": true, "count": 1, "mutations": [{ "mutationId": "e-2#0", "position": 1, "opIndex": 0, "label": { "native": { "en": "Set count to 4", "de": "Anzahl auf 4 setzen" }, "reuse": { "en": "Set count to 4", "de": "Anzahl auf 4 setzen" } }, "superseded": true, "editable": true }] }
+          {
+            "seq": 9,
+            "transitionId": "t-undo",
+            "author": "bob",
+            "actionId": "historyEditCommit",
+            "label": {
+              "native": {
+                "en": "History edit undone — overwrite: 1 mutation",
+                "de": "Verlaufsbearbeitung rückgängig — überschrieben: 1 Mutation"
+              },
+              "reuse": {
+                "en": "History edit undone — overwrite: 1 mutation",
+                "de": "Verlaufsbearbeitung rückgängig — überschrieben: 1 Mutation"
+              }
+            },
+            "kind": "history",
+            "timestamp": "1790000009000",
+            "applied": true,
+            "count": 1
+          },
+          {
+            "seq": 8,
+            "transitionId": "t-edit",
+            "author": "bob",
+            "actionId": "historyEditCommit",
+            "label": {
+              "native": {
+                "en": "History edited — alternative Edited history: 1 mutation",
+                "de": "Verlauf bearbeitet — Alternative Edited history: 1 Mutation"
+              },
+              "reuse": {
+                "en": "History edited — alternative Edited history: 1 mutation",
+                "de": "Verlauf bearbeitet — Alternative Edited history: 1 Mutation"
+              }
+            },
+            "kind": "history",
+            "timestamp": "1790000008000",
+            "applied": false,
+            "revertible": false,
+            "count": 1
+          },
+          {
+            "seq": 2,
+            "editId": "e-2",
+            "author": "alice",
+            "actionId": "apply",
+            "label": {
+              "native": {
+                "en": "Set count",
+                "de": "Anzahl setzen"
+              },
+              "reuse": {
+                "en": "Set count",
+                "de": "Anzahl setzen"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "1790000002000",
+            "applied": true,
+            "count": 1,
+            "mutations": [
+              {
+                "mutationId": "e-2#0",
+                "position": 1,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "Set count to 4",
+                    "de": "Anzahl auf 4 setzen"
+                  },
+                  "reuse": {
+                    "en": "Set count to 4",
+                    "de": "Anzahl auf 4 setzen"
+                  }
+                },
+                "superseded": true,
+                "editable": true
+              }
+            ]
+          }
         ],
         "canUndo": true,
         "canRedo": true,
         "commandFilter": "all"
       },
-      "keys": ["transition:t-undo", "transition:t-edit", "edit:e-2"]
+      "keys": [
+        "transition:t-undo",
+        "transition:t-edit",
+        "edit:e-2"
+      ]
     },
     {
       "id": "plain-log-without-a-session",
       "patch": {
         "cursor": 3,
         "upserts": [
-          { "seq": 3, "actionId": "undo", "label": { "native": { "en": "Undo", "de": "Rückgängig" }, "reuse": { "en": "Undo", "de": "Rückgängig" } }, "kind": "history", "timestamp": "2026-09-30T10:00:03Z", "count": 1 },
-          { "seq": 2, "editId": "e-2", "actionId": "setCount", "label": { "native": { "en": "Set count", "de": "Anzahl setzen" }, "reuse": { "en": "Set count", "de": "Anzahl setzen" } }, "kind": "mutation", "timestamp": "2026-09-30T10:00:02Z", "opLines": ["set-count value=4"], "opCount": 1, "applied": false, "revertible": false, "count": 1, "mutations": [{ "mutationId": "e-2#0", "position": 1, "opIndex": 0, "label": { "native": { "en": "Set count to 4", "de": "Anzahl auf 4 setzen" }, "reuse": { "en": "Set count to 4", "de": "Anzahl auf 4 setzen" } }, "editable": true }] }
+          {
+            "seq": 3,
+            "actionId": "undo",
+            "label": {
+              "native": {
+                "en": "Undo",
+                "de": "Rückgängig"
+              },
+              "reuse": {
+                "en": "Undo",
+                "de": "Rückgängig"
+              }
+            },
+            "kind": "history",
+            "timestamp": "2026-09-30T10:00:03Z",
+            "count": 1
+          },
+          {
+            "seq": 2,
+            "editId": "e-2",
+            "actionId": "setCount",
+            "label": {
+              "native": {
+                "en": "Set count",
+                "de": "Anzahl setzen"
+              },
+              "reuse": {
+                "en": "Set count",
+                "de": "Anzahl setzen"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "2026-09-30T10:00:02Z",
+            "opLines": [
+              "set-count value=4"
+            ],
+            "opCount": 1,
+            "applied": false,
+            "revertible": false,
+            "count": 1,
+            "mutations": [
+              {
+                "mutationId": "e-2#0",
+                "position": 1,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "Set count to 4",
+                    "de": "Anzahl auf 4 setzen"
+                  },
+                  "reuse": {
+                    "en": "Set count to 4",
+                    "de": "Anzahl auf 4 setzen"
+                  }
+                },
+                "editable": true
+              }
+            ]
+          }
         ],
         "canUndo": true,
         "canRedo": true,
         "commandFilter": "all"
       },
-      "keys": ["seq:3", "edit:e-2"]
+      "keys": [
+        "seq:3",
+        "edit:e-2"
+      ]
     },
     {
       "id": "transaction-row-with-outcomes",
@@ -39,20 +179,80 @@
           {
             "seq": 7,
             "editId": "e-7",
-            "transaction": { "id": "tx-0123456789abcdef", "tool": "puzzle.2d#select" },
+            "transaction": {
+              "id": "tx-0123456789abcdef",
+              "tool": "puzzle.2d#select"
+            },
             "actionId": "select",
-            "label": { "native": { "en": "Drag selection", "de": "Auswahl ziehen" }, "reuse": { "en": "Drag selection", "de": "Auswahl ziehen" } },
+            "label": {
+              "native": {
+                "en": "Drag selection",
+                "de": "Auswahl ziehen"
+              },
+              "reuse": {
+                "en": "Drag selection",
+                "de": "Auswahl ziehen"
+              }
+            },
             "kind": "mutation",
             "timestamp": "2026-09-30T10:00:07Z",
-            "opLines": ["drag-selection targets=[a] dx=2 dy=0", "connect-handles a=h1 b=h2"],
+            "opLines": [
+              "drag-selection targets=[a] dx=2 dy=0",
+              "connect-handles a=h1 b=h2"
+            ],
             "opCount": 2,
             "applied": true,
             "revertible": true,
             "count": 1,
             "worst": "warning",
             "mutations": [
-              { "mutationId": "e-7#0", "position": 4, "opIndex": 0, "label": { "native": { "en": "Drag 1 piece", "de": "1 Teil ziehen" }, "reuse": { "en": "Drag 1 piece", "de": "1 Teil ziehen" } }, "worst": "warning", "messages": [{ "level": "warning", "code": "mutation.partial", "message": "1 of 2 targets moved", "target": ["nodes", "b"], "opIndex": 0 }], "superseded": true, "editable": true, "edited": true },
-              { "mutationId": "e-7#1", "position": 4, "opIndex": 1, "label": { "native": { "en": "Connect handles", "de": "Griffe verbinden" }, "reuse": { "en": "Connect handles", "de": "Griffe verbinden" } }, "editable": true }
+              {
+                "mutationId": "e-7#0",
+                "position": 4,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "Drag 1 piece",
+                    "de": "1 Teil ziehen"
+                  },
+                  "reuse": {
+                    "en": "Drag 1 piece",
+                    "de": "1 Teil ziehen"
+                  }
+                },
+                "worst": "warning",
+                "messages": [
+                  {
+                    "level": "warning",
+                    "code": "mutation.partial",
+                    "message": "1 of 2 targets moved",
+                    "target": [
+                      "nodes",
+                      "b"
+                    ],
+                    "opIndex": 0
+                  }
+                ],
+                "superseded": true,
+                "editable": true,
+                "edited": true
+              },
+              {
+                "mutationId": "e-7#1",
+                "position": 4,
+                "opIndex": 1,
+                "label": {
+                  "native": {
+                    "en": "Connect handles",
+                    "de": "Griffe verbinden"
+                  },
+                  "reuse": {
+                    "en": "Connect handles",
+                    "de": "Griffe verbinden"
+                  }
+                },
+                "editable": true
+              }
             ]
           }
         ],
@@ -61,27 +261,93 @@
         "activeAlternativeId": "main",
         "commandFilter": "onlyMutations"
       },
-      "keys": ["edit:e-7"]
+      "keys": [
+        "edit:e-7"
+      ]
     },
     {
       "id": "editing-session-marks-downstream-pending",
       "patch": {
         "cursor": 7,
         "upserts": [
-          { "seq": 5, "editId": "e-5", "actionId": "setLabel", "label": { "native": { "en": "Set label", "de": "Bezeichnung setzen" }, "reuse": { "en": "Set label", "de": "Bezeichnung setzen" } }, "kind": "mutation", "timestamp": "2026-09-30T10:00:05Z", "applied": true, "count": 1, "mutations": [{ "mutationId": "e-5#0", "position": 3, "opIndex": 0, "label": { "native": { "en": "Set label to b", "de": "Bezeichnung auf b setzen" }, "reuse": { "en": "Set label to b", "de": "Bezeichnung auf b setzen" } }, "editable": true, "pending": true }] }
+          {
+            "seq": 5,
+            "editId": "e-5",
+            "actionId": "setLabel",
+            "label": {
+              "native": {
+                "en": "Set label",
+                "de": "Bezeichnung setzen"
+              },
+              "reuse": {
+                "en": "Set label",
+                "de": "Bezeichnung setzen"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "2026-09-30T10:00:05Z",
+            "applied": true,
+            "count": 1,
+            "mutations": [
+              {
+                "mutationId": "e-5#0",
+                "position": 3,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "Set label to b",
+                    "de": "Bezeichnung auf b setzen"
+                  },
+                  "reuse": {
+                    "en": "Set label to b",
+                    "de": "Bezeichnung auf b setzen"
+                  }
+                },
+                "editable": true,
+                "pending": true
+              }
+            ]
+          }
         ],
         "canUndo": true,
         "commandFilter": "all",
-        "timeTravel": { "sessionId": "1", "generation": 1, "stage": "editing", "target": "e-4#0", "targetLabel": { "native": { "en": "Set count to 2", "de": "Anzahl auf 2 setzen" }, "reuse": { "en": "Set count to 2", "de": "Anzahl auf 2 setzen" } }, "blocking": false, "acceptedCount": 0 }
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 1,
+          "stage": "editing",
+          "target": "e-4#0",
+          "targetLabel": {
+            "native": {
+              "en": "Set count to 2",
+              "de": "Anzahl auf 2 setzen"
+            },
+            "reuse": {
+              "en": "Set count to 2",
+              "de": "Anzahl auf 2 setzen"
+            }
+          },
+          "blocking": false,
+          "acceptedCount": 0
+        }
       },
-      "keys": ["edit:e-5"]
+      "keys": [
+        "edit:e-5"
+      ]
     },
     {
       "id": "replaying-session-reports-progress",
       "patch": {
         "cursor": 7,
         "commandFilter": "all",
-        "timeTravel": { "sessionId": "1", "generation": 2, "stage": "replaying", "done": 3, "total": 8, "blocking": false, "acceptedCount": 1 }
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 2,
+          "stage": "replaying",
+          "done": 3,
+          "total": 8,
+          "blocking": false,
+          "acceptedCount": 1
+        }
       },
       "keys": []
     },
@@ -90,28 +356,73 @@
       "patch": {
         "cursor": 7,
         "commandFilter": "all",
-        "timeTravel": { "sessionId": "1", "generation": 2, "stage": "reviewing", "worst": "fatal", "blocking": true, "acceptedCount": 2, "review": "blocked", "rerunnable": false }
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 2,
+          "stage": "reviewing",
+          "worst": "fatal",
+          "blocking": true,
+          "acceptedCount": 2,
+          "review": "blocked",
+          "rerunnable": false,
+          "nextProblem": {
+            "mutationId": "e-3#0"
+          }
+        }
       },
       "keys": []
     },
     {
       "id": "a-remote-change-replays-before-it-is-adopted",
-      "patch": { "cursor": 12, "commandFilter": "all", "reprojection": { "done": 40, "total": 200 } },
+      "patch": {
+        "cursor": 12,
+        "commandFilter": "all",
+        "reprojection": {
+          "done": 40,
+          "total": 200
+        }
+      },
       "keys": []
     },
     {
       "id": "a-local-history-step-replays-before-it-is-adopted",
-      "patch": { "cursor": 14, "commandFilter": "all", "reprojection": { "done": 256, "total": 600, "kind": "step" }, "editCount": 64 },
+      "patch": {
+        "cursor": 14,
+        "commandFilter": "all",
+        "reprojection": {
+          "done": 256,
+          "total": 600,
+          "kind": "step"
+        },
+        "editCount": 64
+      },
       "keys": []
     },
     {
       "id": "a-whole-document-load-replays-before-it-is-adopted",
-      "patch": { "cursor": 15, "commandFilter": "all", "reprojection": { "done": 12, "total": 241, "kind": "load" } },
+      "patch": {
+        "cursor": 15,
+        "commandFilter": "all",
+        "reprojection": {
+          "done": 12,
+          "total": 241,
+          "kind": "load"
+        }
+      },
       "keys": []
     },
     {
       "id": "a-paused-remote-replay-names-its-refusal",
-      "patch": { "cursor": 13, "commandFilter": "all", "reprojection": { "done": 0, "total": 200, "paused": true, "fault": "history.transition-refused" } },
+      "patch": {
+        "cursor": 13,
+        "commandFilter": "all",
+        "reprojection": {
+          "done": 0,
+          "total": 200,
+          "paused": true,
+          "fault": "history.transition-refused"
+        }
+      },
       "keys": []
     },
     {
@@ -119,20 +430,88 @@
       "patch": {
         "cursor": 9,
         "upserts": [
-          { "seq": 4, "editId": "e-4", "actionId": "setLabel", "label": { "native": { "en": "Set label to b", "de": "Beschriftung auf b setzen" }, "reuse": { "en": "Set label to b", "de": "Beschriftung auf b setzen" } }, "kind": "mutation", "timestamp": "2026-10-01T10:00:04Z", "applied": true, "revertible": true, "count": 1, "worst": "warning", "mutations": [{ "mutationId": "e-4#0", "position": 3, "opIndex": 0, "label": { "native": { "en": "Set label to b", "de": "Beschriftung auf b setzen" }, "reuse": { "en": "Set label to b", "de": "Beschriftung auf b setzen" } }, "worst": "warning", "messages": [{ "level": "warning", "code": "mutation.no-op", "message": "the label already reads b", "opIndex": 0 }], "editable": true, "introduced": true }] }
+          {
+            "seq": 4,
+            "editId": "e-4",
+            "actionId": "setLabel",
+            "label": {
+              "native": {
+                "en": "Set label to b",
+                "de": "Beschriftung auf b setzen"
+              },
+              "reuse": {
+                "en": "Set label to b",
+                "de": "Beschriftung auf b setzen"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "2026-10-01T10:00:04Z",
+            "applied": true,
+            "revertible": true,
+            "count": 1,
+            "worst": "warning",
+            "mutations": [
+              {
+                "mutationId": "e-4#0",
+                "position": 3,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "Set label to b",
+                    "de": "Beschriftung auf b setzen"
+                  },
+                  "reuse": {
+                    "en": "Set label to b",
+                    "de": "Beschriftung auf b setzen"
+                  }
+                },
+                "worst": "warning",
+                "messages": [
+                  {
+                    "level": "warning",
+                    "code": "mutation.no-op",
+                    "message": "the label already reads b",
+                    "opIndex": 0
+                  }
+                ],
+                "editable": true,
+                "introduced": true
+              }
+            ]
+          }
         ],
         "canUndo": true,
         "commandFilter": "all",
-        "timeTravel": { "sessionId": "2", "generation": 4, "stage": "reviewing", "worst": "warning", "blocking": false, "acceptedCount": 1, "review": "ready", "rerunnable": false }
+        "timeTravel": {
+          "sessionId": "2",
+          "generation": 4,
+          "stage": "reviewing",
+          "worst": "warning",
+          "blocking": false,
+          "acceptedCount": 1,
+          "review": "ready",
+          "rerunnable": false
+        }
       },
-      "keys": ["edit:e-4"]
+      "keys": [
+        "edit:e-4"
+      ]
     },
     {
       "id": "a-cancelled-replay-needs-a-rerun",
       "patch": {
         "cursor": 8,
         "commandFilter": "all",
-        "timeTravel": { "sessionId": "1", "generation": 3, "stage": "reviewing", "blocking": false, "fault": "timeTravel.cancelled", "acceptedCount": 1, "review": "needsReplay", "rerunnable": true }
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 3,
+          "stage": "reviewing",
+          "blocking": false,
+          "fault": "timeTravel.cancelled",
+          "acceptedCount": 1,
+          "review": "needsReplay",
+          "rerunnable": true
+        }
       },
       "keys": []
     },
@@ -140,22 +519,411 @@
       "id": "composed-child-transaction-row-names-its-member-store",
       "patch": {
         "cursor": 11,
-        "upserts": [{ "seq": 11, "transaction": { "id": "tx-00112233445566ff", "tool": "s.flow.flow@1/*#editor#nodeGraphEdit" }, "actionId": "nodeGraphEdit", "label": { "native": { "en": "Drag 2 nodes by (80, 40.5)", "de": "2 Knoten um (80; 40,5) ziehen" }, "reuse": { "en": "Drag 2 nodes by (80, 40.5)", "de": "2 Knoten um (80; 40,5) ziehen" } }, "kind": "mutation", "timestamp": "1790000011000", "applied": true, "revertible": true, "count": 1, "mutations": [{ "mutationId": "c-7", "position": 3, "opIndex": 0, "label": { "native": { "en": "Drag 2 nodes by (80, 40.5)", "de": "2 Knoten um (80; 40,5) ziehen" }, "reuse": { "en": "Drag 2 nodes by (80, 40.5)", "de": "2 Knoten um (80; 40,5) ziehen" } }, "editable": true, "store": "content/flow-content-1" }] }]
+        "upserts": [
+          {
+            "seq": 11,
+            "transaction": {
+              "id": "tx-00112233445566ff",
+              "tool": "s.flow.flow@1/*#editor#nodeGraphEdit"
+            },
+            "actionId": "nodeGraphEdit",
+            "label": {
+              "native": {
+                "en": "Drag 2 nodes by (80, 40.5)",
+                "de": "2 Knoten um (80; 40,5) ziehen"
+              },
+              "reuse": {
+                "en": "Drag 2 nodes by (80, 40.5)",
+                "de": "2 Knoten um (80; 40,5) ziehen"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "1790000011000",
+            "applied": true,
+            "revertible": true,
+            "count": 1,
+            "mutations": [
+              {
+                "mutationId": "c-7",
+                "position": 3,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "Drag 2 nodes by (80, 40.5)",
+                    "de": "2 Knoten um (80; 40,5) ziehen"
+                  },
+                  "reuse": {
+                    "en": "Drag 2 nodes by (80, 40.5)",
+                    "de": "2 Knoten um (80; 40,5) ziehen"
+                  }
+                },
+                "editable": true,
+                "withdrawable": true,
+                "store": "content/flow-content-1"
+              }
+            ]
+          }
+        ]
       },
-      "keys": ["seq:11"]
+      "keys": [
+        "seq:11"
+      ]
+    },
+    {
+      "id": "a-blocked-review-of-a-composed-member-names-its-store",
+      "patch": {
+        "cursor": 12,
+        "commandFilter": "all",
+        "timeTravel": {
+          "sessionId": "3",
+          "generation": 5,
+          "stage": "reviewing",
+          "worst": "error",
+          "blocking": true,
+          "acceptedCount": 1,
+          "review": "blocked",
+          "rerunnable": false,
+          "nextProblem": {
+            "mutationId": "c-7",
+            "store": "content/flow-content-1"
+          }
+        }
+      },
+      "keys": []
     }
   ],
   "invalid": [
-    { "id": "reprojection-without-total", "patch": { "cursor": 1, "reprojection": { "done": 3 } }, "reason": "a reprojection names how many operations it replays" },
-    { "id": "edit-count-negative", "patch": { "cursor": 1, "editCount": -1 }, "reason": "an edit count is a u32" },
-    { "id": "reprojection-kind-unknown", "patch": { "cursor": 1, "reprojection": { "done": 0, "total": 3, "kind": "local" } }, "reason": "a reprojection is a remote change, this replica's own step or a whole-document load" },
-    { "id": "introduced-not-a-boolean", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "editId": "e-1", "actionId": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "mutationId": "e-1#0", "position": 0, "opIndex": 0, "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "introduced": "yes" }] }] }, "reason": "introduced is a boolean" },
-    { "id": "unknown-severity", "patch": { "cursor": 1, "timeTravel": { "sessionId": "1", "generation": 0, "stage": "reviewing", "worst": "catastrophic" } }, "reason": "worst is one of info, warning, error, fatal" },
-    { "id": "unknown-stage", "patch": { "cursor": 1, "timeTravel": { "sessionId": "1", "generation": 0, "stage": "inactive" } }, "reason": "an inactive session is an absent timeTravel, never a stage" },
-    { "id": "mutation-row-without-id", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "editId": "e-1", "actionId": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "position": 0, "opIndex": 0, "label": { "native": { "en": "x", "de": "x" }, "reuse": { "en": "x", "de": "x" } } }] }] }, "reason": "a mutation row carries its mutationId" },
-    { "id": "unknown-review", "patch": { "cursor": 1, "timeTravel": { "sessionId": "1", "generation": 0, "stage": "reviewing", "review": "maybe" } }, "reason": "a review is one of noChanges, needsReplay, blocked, ready" },
-    { "id": "session-without-id", "patch": { "cursor": 1, "timeTravel": { "generation": 0, "stage": "editing" } }, "reason": "a session carries its sessionId" },
-    { "id": "message-with-unknown-level", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "editId": "e-1", "actionId": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "mutationId": "e-1#0", "position": 0, "opIndex": 0, "label": { "native": { "en": "x", "de": "x" }, "reuse": { "en": "x", "de": "x" } }, "messages": [{ "level": "loud", "code": "mutation.partial", "message": "m" }] }] }] }, "reason": "a message level is a severity" },
-    { "id": "member-store-not-a-string", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "actionId": "nodeGraphEdit", "label": { "native": { "en": "Drag", "de": "Ziehen" }, "reuse": { "en": "Drag", "de": "Ziehen" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "mutationId": "c-1", "position": 0, "opIndex": 0, "label": { "native": { "en": "x", "de": "x" }, "reuse": { "en": "x", "de": "x" } }, "store": 7 }] }] }, "reason": "a member store is its `<slot>/<childId>` text" }
+    {
+      "id": "reprojection-without-total",
+      "patch": {
+        "cursor": 1,
+        "reprojection": {
+          "done": 3
+        }
+      },
+      "reason": "a reprojection names how many operations it replays"
+    },
+    {
+      "id": "edit-count-negative",
+      "patch": {
+        "cursor": 1,
+        "editCount": -1
+      },
+      "reason": "an edit count is a u32"
+    },
+    {
+      "id": "reprojection-kind-unknown",
+      "patch": {
+        "cursor": 1,
+        "reprojection": {
+          "done": 0,
+          "total": 3,
+          "kind": "local"
+        }
+      },
+      "reason": "a reprojection is a remote change, this replica's own step or a whole-document load"
+    },
+    {
+      "id": "introduced-not-a-boolean",
+      "patch": {
+        "cursor": 1,
+        "upserts": [
+          {
+            "seq": 1,
+            "editId": "e-1",
+            "actionId": "apply",
+            "label": {
+              "native": {
+                "en": "Apply",
+                "de": "Anwenden"
+              },
+              "reuse": {
+                "en": "Apply",
+                "de": "Anwenden"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "t",
+            "mutations": [
+              {
+                "mutationId": "e-1#0",
+                "position": 0,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "Apply",
+                    "de": "Anwenden"
+                  },
+                  "reuse": {
+                    "en": "Apply",
+                    "de": "Anwenden"
+                  }
+                },
+                "introduced": "yes"
+              }
+            ]
+          }
+        ]
+      },
+      "reason": "introduced is a boolean"
+    },
+    {
+      "id": "unknown-severity",
+      "patch": {
+        "cursor": 1,
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 0,
+          "stage": "reviewing",
+          "worst": "catastrophic"
+        }
+      },
+      "reason": "worst is one of info, warning, error, fatal"
+    },
+    {
+      "id": "unknown-stage",
+      "patch": {
+        "cursor": 1,
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 0,
+          "stage": "inactive"
+        }
+      },
+      "reason": "an inactive session is an absent timeTravel, never a stage"
+    },
+    {
+      "id": "mutation-row-without-id",
+      "patch": {
+        "cursor": 1,
+        "upserts": [
+          {
+            "seq": 1,
+            "editId": "e-1",
+            "actionId": "apply",
+            "label": {
+              "native": {
+                "en": "Apply",
+                "de": "Anwenden"
+              },
+              "reuse": {
+                "en": "Apply",
+                "de": "Anwenden"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "t",
+            "mutations": [
+              {
+                "position": 0,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "x",
+                    "de": "x"
+                  },
+                  "reuse": {
+                    "en": "x",
+                    "de": "x"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "reason": "a mutation row carries its mutationId"
+    },
+    {
+      "id": "unknown-review",
+      "patch": {
+        "cursor": 1,
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 0,
+          "stage": "reviewing",
+          "review": "maybe"
+        }
+      },
+      "reason": "a review is one of noChanges, needsReplay, blocked, ready"
+    },
+    {
+      "id": "session-without-id",
+      "patch": {
+        "cursor": 1,
+        "timeTravel": {
+          "generation": 0,
+          "stage": "editing"
+        }
+      },
+      "reason": "a session carries its sessionId"
+    },
+    {
+      "id": "message-with-unknown-level",
+      "patch": {
+        "cursor": 1,
+        "upserts": [
+          {
+            "seq": 1,
+            "editId": "e-1",
+            "actionId": "apply",
+            "label": {
+              "native": {
+                "en": "Apply",
+                "de": "Anwenden"
+              },
+              "reuse": {
+                "en": "Apply",
+                "de": "Anwenden"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "t",
+            "mutations": [
+              {
+                "mutationId": "e-1#0",
+                "position": 0,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "x",
+                    "de": "x"
+                  },
+                  "reuse": {
+                    "en": "x",
+                    "de": "x"
+                  }
+                },
+                "messages": [
+                  {
+                    "level": "loud",
+                    "code": "mutation.partial",
+                    "message": "m"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "reason": "a message level is a severity"
+    },
+    {
+      "id": "member-store-not-a-string",
+      "patch": {
+        "cursor": 1,
+        "upserts": [
+          {
+            "seq": 1,
+            "actionId": "nodeGraphEdit",
+            "label": {
+              "native": {
+                "en": "Drag",
+                "de": "Ziehen"
+              },
+              "reuse": {
+                "en": "Drag",
+                "de": "Ziehen"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "t",
+            "mutations": [
+              {
+                "mutationId": "c-1",
+                "position": 0,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "x",
+                    "de": "x"
+                  },
+                  "reuse": {
+                    "en": "x",
+                    "de": "x"
+                  }
+                },
+                "store": 7
+              }
+            ]
+          }
+        ]
+      },
+      "reason": "a member store is its `<slot>/<childId>` text"
+    },
+    {
+      "id": "withdrawable-not-a-boolean",
+      "patch": {
+        "cursor": 1,
+        "upserts": [
+          {
+            "seq": 1,
+            "editId": "e-1",
+            "actionId": "apply",
+            "label": {
+              "native": {
+                "en": "Apply",
+                "de": "Anwenden"
+              },
+              "reuse": {
+                "en": "Apply",
+                "de": "Anwenden"
+              }
+            },
+            "kind": "mutation",
+            "timestamp": "t",
+            "mutations": [
+              {
+                "mutationId": "e-1#0",
+                "position": 0,
+                "opIndex": 0,
+                "label": {
+                  "native": {
+                    "en": "x",
+                    "de": "x"
+                  },
+                  "reuse": {
+                    "en": "x",
+                    "de": "x"
+                  }
+                },
+                "withdrawable": "yes"
+              }
+            ]
+          }
+        ]
+      },
+      "reason": "withdrawable is a boolean"
+    },
+    {
+      "id": "next-problem-without-mutation",
+      "patch": {
+        "cursor": 1,
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 0,
+          "stage": "reviewing",
+          "blocking": true,
+          "nextProblem": {
+            "store": "content/flow-content-1"
+          }
+        }
+      },
+      "reason": "a next problem names its mutation"
+    },
+    {
+      "id": "next-problem-not-an-object",
+      "patch": {
+        "cursor": 1,
+        "timeTravel": {
+          "sessionId": "1",
+          "generation": 0,
+          "stage": "reviewing",
+          "blocking": true,
+          "nextProblem": "e-3#0"
+        }
+      },
+      "reason": "a next problem is its mutation id and store, the arguments of historyEditBegin"
+    }
   ]
 }

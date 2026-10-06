@@ -207,7 +207,7 @@ def _reference_uri(case):
 
 def _parameters_for(case):
     def handler(ctx: Context) -> Outcome:
-        model = json.loads(ctx.fixture_bytes(_model_uri(case)).decode("utf-8"))
+        model = json.loads(ctx.input_bytes(_model_uri(case)).decode("utf-8"))
         derived = derive_parameters(case, model)
         assert_matches_the_standard(case, derived, model)
         return Outcome(projection=derived, raw=json.dumps(derived, sort_keys=True, separators=(",", ":")).encode("utf-8"))
@@ -219,7 +219,7 @@ def _reference_for(case):
     def handler(ctx: Context) -> Outcome:
         uri = _reference_uri(case)
         try:
-            raw = ctx.fixture_bytes(uri)
+            raw = ctx.input_bytes(uri)
         except Exception as error:  # noqa: BLE001 — the message is the whole point
             raise AssertionError(
                 f"case {case}: no committed EnergyPlus reference at {uri} ({error}). "

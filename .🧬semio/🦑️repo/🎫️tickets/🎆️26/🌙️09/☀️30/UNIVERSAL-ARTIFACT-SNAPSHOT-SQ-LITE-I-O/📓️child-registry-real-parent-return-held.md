@@ -1,0 +1,14 @@
+# Registry Real Parent Return
+
+The accepted-ledger registry currently has native10/10 qualification for scalar identities, source pointer retention, logical acceptance/displacement and explicit physical drain. The complete Child family additionally requires actual parent page handback. The schema-first held contract requires an authored `RetainedOwnerParentReturn` capability on each concrete retained owner; it grants no generic Erased default.
+
+The held implementation delegates each absent original to that explicit concrete capability. An accepted original is skipped and remains borrowed. Open tombstones retain their actual paged metadata, preserving monotone addressing. Committed originals extract before reconciliation. Only explicit closing permits empty tombstones and genuine registry backing to hand off. Child/registry handback returns zero physical disposal credit; the pre-admitted real parent remains the sole physical disposer under1/4096.
+
+No provider or demand is mounted yet, no compiler/runtime credit. Planned owning traces preserve two distinct original8194 source pointers, unchanged64k, accepted ledger identity through other-source handoff, a full one-slot parent frontier, real token full-layout disposal, and terminal child/registry/parent owners. Inputs: `registry-parent-return-contract-held.json`, `registry-parent-return-methods-held.rs`.
+
+Whole real press publication and its typed member/config/window mutation ownership remain required; this generic capability is neither a semantic String exemption nor a global ChildEmit/Fault-family activation.
+# Closed Source Oracle And Concrete Owning Demand
+
+The actual current test-local registry source has a guarded full provider capsule. Two literal8194 sources retain IDs1/2; accepted2 remains authoritative while1 transfers to a one-slot real parent. Strict Ajv/TextEncoder/SQLite independently validated the immutable identities, full parent refusal and exact4096/4096/2 payload token sequence totaling16388. Source oracle gives no native wrapper/pointer/physical allocator credit.
+
+The held owning law uses actual ScrubLedger, actual PagedChildOwner, the explicit authored parent-return trait, and real ParentAllocationReturn. It preserves all original literal octets, original64k, one logical item and4096 physical bytes. It tests a full one-slot actual page frontier, pointer survival of accepted source2, first original complete handback with open tombstones still retained, committed original extraction before empty accepted reconcile, and terminal actual parent disposal of all nested source and registry layouts. Neither law nor registry provider is mounted yet; genuine MissingBefore remains required. Inputs `registry-parent-return-{fixture,schema}.json`, `registry-parent-return-law-held.rs`, `registry-parent-return-provider-held{-pairs.json,.rs}`.

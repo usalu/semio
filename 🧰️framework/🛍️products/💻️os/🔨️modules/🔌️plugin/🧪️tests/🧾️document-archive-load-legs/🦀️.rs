@@ -260,7 +260,7 @@ async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state(
     let mut source = Box::pin(store::ArtifactStore::new(genesis)).await.expect("source store");
     source.install_document_store_owners_exact(bounded_document_store_owners::<TestSnapshot, TestMutation>());
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {
-        Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None, transaction: None })).await.expect("source edit");
+        Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], transaction: None })).await.expect("source edit");
     }
     let ids: Vec<protocol::MutationId> = source.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
     let inputs = vec![store::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }, store::SupersedeInput { target: ids[1].clone(), replacement: None }];
@@ -304,8 +304,8 @@ fn archive_history_rows(history: &semio_framework::kernel::HistoryPatch) -> Vec<
 async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
     use crate::test_app_mutation_fixture::{SetCount, SetLabel};
     let mut source = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp)).await;
-    for (operation, description) in [(TestMutation::SetCount(SetCount { value: 1 }), "Set one"), (TestMutation::SetLabel(SetLabel { value: "edited".into() }), "Relabel"), (TestMutation::SetCount(SetCount { value: 2 }), "Set two")] {
-        Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(description.into()), transaction: None })).await.expect("source edit");
+    for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "edited".into() }), TestMutation::SetCount(SetCount { value: 2 })] {
+        Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], transaction: None })).await.expect("source edit");
     }
     let ids: Vec<protocol::MutationId> = source.store.mutation_ops().expect("source operations").into_iter().map(|operation| operation.mutation_id).collect();
     Box::pin(source.store.dispatch(store::ArtifactCommand::Supersede { scope: None, inputs: vec![store::SupersedeInput { target: ids[0].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 5 })) }] })).await.expect("history edit");
@@ -313,13 +313,13 @@ async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
     Box::pin(source.store.dispatch(store::ArtifactCommand::Redo)).await.expect("reinstate");
     Box::pin(source.store.dispatch(store::ArtifactCommand::CreateAlternativeWithSupersede { name: "c".into(), inputs: vec![store::SupersedeInput { target: ids[2].clone(), replacement: Some(TestMutation::SetCount(SetCount { value: 7 })) }] })).await.expect("history edit as a new alternative");
     Box::pin(source.store.dispatch(store::ArtifactCommand::CreateAlternativeWithSupersede { name: "b".into(), inputs: vec![store::SupersedeInput { target: ids[1].clone(), replacement: Some(TestMutation::SetLabel(SetLabel { value: "alternative".into() })) }] })).await.expect("a second history edit as a new alternative");
-    Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "branched".into() })], description: Some("On the alternative".into()), transaction: None })).await.expect("edit on the alternative");
-    Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 9 })], description: Some("Again on the alternative".into()), transaction: None })).await.expect("a second edit on the alternative");
+    Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "branched".into() })], transaction: None })).await.expect("edit on the alternative");
+    Box::pin(source.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 9 })], transaction: None })).await.expect("a second edit on the alternative");
     let expected = source.snapshot().expect("source projection");
     let before = archive_history_rows(&Box::pin(source.history_snapshot()).await.expect("source history"));
     let archive = Box::pin(PluginApp::document_archive(&source)).await.expect("source archive");
     let mut target = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp)).await;
-    Box::pin(target.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], description: Some("Set Active Example".into()), transaction: None })).await.expect("target example");
+    Box::pin(target.store.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 42 })], transaction: None })).await.expect("target example");
     let replaced = archive_history_rows(&Box::pin(target.history_snapshot()).await.expect("target history before the load"));
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
     let target_id = target.store.envelope().id.clone();

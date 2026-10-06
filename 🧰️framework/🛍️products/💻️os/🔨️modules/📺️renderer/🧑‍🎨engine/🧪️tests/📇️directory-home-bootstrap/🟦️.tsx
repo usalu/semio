@@ -135,10 +135,11 @@ describe("retained visible Home directory bootstrap", () => {
     const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(directorySchema);
     const receipt = ajv.compile({ $ref: `${directorySchema.$id}#/$defs/DirectoryProjectionReceiptV1` });
     const identity = ajv.compile({ $ref: `${directorySchema.$id}#/$defs/DirectoryHomeIdentityV1` });
-    const step = ajv.compile({ $ref: `${directorySchema.$id}#/$defs/DirectoryHomeBootstrapStepV1` });
+    const action = ajv.compile({ $ref: `${directorySchema.$id}#/$defs/DirectoryHomeBootstrapActionV1` });
+    const outcome = ajv.compile({ $ref: `${directorySchema.$id}#/$defs/DirectoryHomeBootstrapOutcomeV1` });
     const labels = ajv.compile({ $ref: `${directorySchema.$id}#/$defs/DirectoryHomeBootstrapLabelsV1` });
     const validate = (value: typeof fixture): boolean =>
-      receipt(value.receipt) && Object.values(value.identities).every((row) => identity(row)) && value.lifecycle.every((row) => step(row)) && labels(value.labels);
+      receipt(value.receipt) && Object.values(value.identities).every((row) => identity(row)) && value.lifecycle.every((row) => action(row.action) && outcome(row.expected)) && labels(value.labels);
     expect(validate(fixture)).toBe(true);
     expect(parseDirectoryProjectionReceiptV1(fixture.receipt)).toEqual(fixture.receipt);
     for (const row of fixture.hostile) {
@@ -149,7 +150,8 @@ describe("retained visible Home directory bootstrap", () => {
 
   it("reads only the typed-operation handle out of an admitting reply", () => {
     expect(startedDirectoryOperationIdV1(ADMISSION)).toBe(ADMISSION_OPERATION);
-    expect(startedDirectoryOperationIdV1({ operationId: 7, generation: "0" })).toBe(7);
+    expect(startedDirectoryOperationIdV1({ operationId: "7", generation: "0" })).toBe(7n);
+    expect(startedDirectoryOperationIdV1({ operationId: 7, generation: "0" })).toBeNull();
     expect(startedDirectoryOperationIdV1(fixture.receipt)).toBeNull();
     for (const refused of [null, undefined, "64", 64, [], { generation: "0" }, { operationId: "-1" }, { operationId: "1.5" }, { operationId: "" }, { operationId: Number.NaN }])
       expect(startedDirectoryOperationIdV1(refused), JSON.stringify(refused ?? null)).toBeNull();

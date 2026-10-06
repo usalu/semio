@@ -1,0 +1,31 @@
+dialect protocol
+protocol rewriting.mutations
+version 1
+schema trinity.rewriting.mutations
+start record
+framing record
+
+# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
+# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
+# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+header fixed 2
+field format u8
+field tag varint
+record edit-working-graph tag=0
+field payload bytes
+record edit-lhs tag=1
+field payload bytes
+record edit-rhs tag=2
+field payload bytes
+record change-parameter-binding tag=3
+field payload bytes
+record remove-parameter-binding tag=4
+field payload bytes
+record change-rule-layout-point tag=5
+field payload bytes
+record remove-rule-layout-point tag=6
+field payload bytes
+record drag-rule-nodes tag=7
+field payload bytes
+record set-rule-layout-points tag=8
+field payload bytes

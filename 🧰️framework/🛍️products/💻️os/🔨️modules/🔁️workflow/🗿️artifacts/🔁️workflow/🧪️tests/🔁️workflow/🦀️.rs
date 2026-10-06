@@ -112,7 +112,7 @@ async fn workflow_media_port_id_format() {
 #[semio_framework_async_macros::async_test]
 async fn media_contract_dsl_round_trips() {
     let contract = MediaContract {
-        kind_id: "puzzle.2d.fixture".into(),
+        kind_id: "board.ports.directed.v1".into(),
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         wire: MediaWireFormat::Binary { format_kind: "svg".into() },
         conversion: Some((MediaForm::Brep, MediaForm::Mesh)),
@@ -404,7 +404,7 @@ async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
     assert_eq!(code(WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into()], dx: 0.0, dy: 0.0 })).as_deref(), Some("mutation.no-op"));
     assert_eq!(code(WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "a".into()], dx: 1.0, dy: 1.0 })).as_deref(), Some("mutation.invariant"));
     let label = mutation.label();
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Move 2 workflow node(s) by (40, -12.5)");
-    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Arbeitsablaufknoten um (40; -12,5) verschieben");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Move 2 workflow node(s) by (40, -12.5)");
+    assert_eq!(label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "2 Arbeitsablaufknoten um (40; -12,5) verschieben");
 }
 //#endregion 🔖️GestureLeaves

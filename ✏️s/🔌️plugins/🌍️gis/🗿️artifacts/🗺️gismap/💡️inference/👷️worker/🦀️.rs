@@ -2,7 +2,7 @@
 use crate::inference_schema::*;
 use semio_framework_os_kernel::os_directory::schema::{DocumentScope,mint_directory_command_request_id};
 use semio_framework_os_kernel::os_directory::client::{InstalledServiceContributionV1,InstalledServiceDriverV1,InstalledServiceTurnV1,DocumentHttpPortCodeV1};
-use semio_framework_os_kernel::os_dsl::{DslValue,ToValue,FromValue};
+use semio_framework_value::{DslValue,ToValue,FromValue};
 
 /// 💡️ Pure finite driver for one host-owned ephemeral inference port. It performs NO I/O: every
 /// turn returns the single bounded action the shell should take next, and every completed action is

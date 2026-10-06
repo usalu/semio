@@ -16,10 +16,38 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the elements at which it is inserted, counted from 0.",
+          "de": "Position unter den Elementen, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "element": {
-      "$ref": "#/$defs/PlyElement"
+      "$ref": "#/$defs/PlyElement",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Element",
+          "de": "Element"
+        },
+        "description": {
+          "en": "Name, properties and rows of the element that is added.",
+          "de": "Name, Eigenschaften und Zeilen des Elements, das hinzugefügt wird."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

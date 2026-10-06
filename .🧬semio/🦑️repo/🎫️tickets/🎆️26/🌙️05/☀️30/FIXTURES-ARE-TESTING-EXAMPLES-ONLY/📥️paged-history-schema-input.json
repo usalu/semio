@@ -1,0 +1,170 @@
+{
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧬️schema/📸️paged-history-stack/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "semio.framework.vcs.paged-history-stack/v1",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schema",
+      "vectors"
+    ],
+    "properties": {
+      "schema": {
+        "const": "semio.framework.vcs.paged-history-stack/v1"
+      },
+      "vectors": {
+        "type": "array",
+        "minItems": 3,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pushes",
+            "removeLogical",
+            "replacement",
+            "directions",
+            "expected",
+            "remaining",
+            "forward",
+            "reverse"
+          ],
+          "properties": {
+            "pushes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32768
+            },
+            "removeLogical": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "replacement": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "directions": {
+              "type": "array",
+              "maxItems": 32768,
+              "items": {
+                "enum": [
+                  "front",
+                  "back"
+                ]
+              }
+            },
+            "expected": {
+              "type": "array",
+              "maxItems": 32768,
+              "items": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "remaining": {
+              "type": "array",
+              "maxItems": 32768,
+              "items": {
+                "type": "string"
+              }
+            },
+            "forward": {
+              "type": "array",
+              "maxItems": 32768,
+              "items": {
+                "type": "string"
+              }
+            },
+            "reverse": {
+              "type": "array",
+              "maxItems": 32768,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧬️schema/🌿️branch-provenance/🔣️.json": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schema",
+      "vectors"
+    ],
+    "properties": {
+      "schema": {
+        "const": "semio.framework.history.branch-provenance/v1"
+      },
+      "vectors": {
+        "type": "array",
+        "minItems": 4,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "edit",
+            "valid"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "edit": {
+              "type": "object"
+            },
+            "valid": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "$defs": {
+      "Edit": {
+        "type": "object",
+        "required": [
+          "id",
+          "line",
+          "forwards",
+          "inverse",
+          "sequenceNumber",
+          "startedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "line": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "forwards": {
+            "type": "array"
+          },
+          "inverse": {
+            "type": "array"
+          },
+          "sequenceNumber": {
+            "type": "integer"
+          },
+          "startedAt": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@ import regionSchema from "../../../../../../../../../../../../../../🧰️frame
 import curveSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🧬️schema/🔣️.json";
 import traceSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔍️trace/🧬️schema/🔣️.json";
 import booleanSchema from "../../../🔀️booleans/🧬️schema/🔣️.json";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {DocumentSceneJob,DocumentRasterJob,rasterizeDocument,resolvedSceneInput} from "../../../📋️prepare/🟦️.ts";
 import {DocumentBooleanJob} from "../../../🔀️booleans/🟦️.ts";
 import {RasterSceneJob} from "../../../📷️raster/🟦️.ts";

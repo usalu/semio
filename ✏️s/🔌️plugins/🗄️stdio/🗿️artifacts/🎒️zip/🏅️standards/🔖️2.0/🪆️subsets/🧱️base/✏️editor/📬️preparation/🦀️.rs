@@ -24,9 +24,8 @@ struct ZipPreparationFactory {
 }
 
 impl app_store::ArtifactStoreOneItemPreparationFactory<ZipSnapshot, ZipMutation> for ZipPreparationFactory {
-    fn preflight(&self, mutation: &ZipMutation, description: Option<&str>, lane: app_store::HistoryLane) -> Result<app_store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &ZipMutation, lane: app_store::HistoryLane) -> Result<app_store::ArtifactStoreOneItemFootprint, String> {
         let admitted = lane == app_store::HistoryLane::Document
-            && description.is_none_or(|value| value.len() <= app_store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES)
             && match mutation {
                 ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => !name.is_empty() && name != new_name && name.len() <= MAXIMUM_TEXT_BYTES && !new_name.is_empty() && new_name.len() <= MAXIMUM_TEXT_BYTES,
                 ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, .. }) => comment.len() <= MAXIMUM_TEXT_BYTES,
@@ -58,7 +57,6 @@ impl app_store::ArtifactStoreOneItemPreparationFactory<ZipSnapshot, ZipMutation>
             prefix: self.prefix,
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             inverse_copy: ZipInverseCopy::default(),
             inverse: None,
@@ -78,7 +76,6 @@ struct ZipPreparation {
     prefix: &'static str,
     base: Option<app_store::SnapshotRead<ZipSnapshot>>,
     mutation: Option<ZipMutation>,
-    description: Option<String>,
     authority: Option<Arc<app_store::ArtifactStoreOneItemLiveAuthority>>,
     inverse_copy: ZipInverseCopy,
     inverse: Option<ZipMutation>,
@@ -222,10 +219,6 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
             self.external_retirement = Some(app_store::ArtifactOwnedValueRetirementFactory::retire_owned(&ZipMutationRetirementFactory, value));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if let Some(description) = self.description.take() {
-            self.external_retirement = Some(semio_framework_value::retirement::owned_retirement(description));
-            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("{}-base-return", self.prefix)));
@@ -242,7 +235,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
         self.closing
             && self.base.is_none()
             && self.mutation.is_none()
-            && self.description.is_none()
+           
             && self.authority.is_none()
             && self.inverse.is_none()
             && self.inverse_copy.terminal_is_empty()

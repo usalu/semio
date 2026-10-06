@@ -17,12 +17,8 @@ const ajv = new Ajv({ strict: true, allErrors: true });
 ajv.addSchema(schema);
 const schemaId = schema.$id;
 const validatePatch = ajv.getSchema(`${schemaId}#/definitions/HistoryPatch`)!;
-const validateFixture = ajv.getSchema(`${schemaId}#/definitions/HistoryPatchFixture`)!;
 
 describe("history patch wire", () => {
-  it("the fixture itself satisfies the fixture schema", () => {
-    expect(validateFixture(fixture), JSON.stringify(validateFixture.errors)).toBe(true);
-  });
 
   it("accepts every valid patch and folds its rows under the fixture keys", () => {
     for (const valid of fixture.valid as readonly ValidCase[]) {

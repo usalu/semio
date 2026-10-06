@@ -1,4 +1,4 @@
-//! 🧪️ `change-manifest-id` fixture — `📦️repoints-manifest`.
+//! 🧪️ `change-manifest-id` snapshot — `📦️repoints-manifest`.
 //!
 //! `meta.manifestId` is a document-root singleton, so the builder has no missing-target branch: it
 //! clones the whole `meta` block, rewrites the one field, and publishes `meta` wholesale.
@@ -44,7 +44,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -87,7 +87,7 @@ fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `change-manifest-id` produces is exactly the committed diff — the single most
-/// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
+/// load-bearing assertion in the snapshot: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {

@@ -1,8 +1,7 @@
 {
-  "$schema": "semio.puzzle.retained-command.fixture.v1",
   "owner": "puzzle2d",
-  "documentSchema": "puzzle.2d.fixture",
-  "payloadSchema": "puzzle.2d.fixture.tool-command.v1",
+  "documentSchema": "board.ports.directed.v1",
+  "payloadSchema": "board.ports.directed.v1.tool-command.v1",
   "toolIds": [
     "setActiveExample",
     "forceLayout",
@@ -43,9 +42,9 @@
     "translateSelection",
     "rotateSelection",
     "scaleSelection",
-    "exportFixture",
-    "importFixture",
-    "openImportFixture",
+    "exportSnapshot",
+    "importSnapshot",
+    "openImportSnapshot",
     "setSelectionFlag",
     "setSelectionHidden",
     "setSelectionLocked",

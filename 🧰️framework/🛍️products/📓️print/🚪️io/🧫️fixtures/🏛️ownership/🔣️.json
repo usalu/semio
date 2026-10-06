@@ -1,0 +1,4 @@
+{
+  "semanticOwners": ["🧬️schema/📸️snapshot/🦀️.rs", "🧬️schema/🧬️mutations/🦀️.rs", "🧬️schema/📸️snapshot/🟦️.ts"],
+  "ioOwners": ["🚪️io/📝️text/📸️snapshot/🦀️.rs", "🚪️io/📝️text/🧬️mutations/🦀️.rs", "🚪️io/💾️binary/📸️snapshot/🦀️.rs", "🚪️io/💾️binary/🧬️mutations/🦀️.rs", "🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs", "🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"]
+}

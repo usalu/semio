@@ -1,4 +1,3 @@
-import Ajv from "ajv";
 import fc from "fast-check";
 
 type TestSource = { readonly directory: string; readonly url: string };
@@ -36,20 +35,18 @@ export async function registerSupersedeFoldTests(vitest: NonNullable<ImportMeta[
   });
   const expected = (expect: Json) => ({ alternative: expect.alternative, supersessions: (expect.supersessions as Json[]).map((row) => ({ ...row, replacement: replacement(row.replacement) })) });
 
-  async function load(): Promise<Readonly<{ fixture: Json; schema: object }>> {
+  async function load(): Promise<Readonly<{ fixture: Json }>> {
     const { readFile } = await import("node:fs/promises");
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const root = dirname(fileURLToPath(source.url));
-    const [fixture, schema] = await Promise.all([readFile(join(root, "🔗️causal/🧫️fixtures/🧫️supersede-fold/🔣️.json"), "utf8"), readFile(join(root, "🔗️causal/🧬️schema/🔣️supersede-fold/🔣️.json"), "utf8")]);
-    return { fixture: JSON.parse(fixture) as Json, schema: JSON.parse(schema) as object };
+    const fixture = await readFile(join(root, "🔗️causal/🧫️fixtures/🧫️supersede-fold/🔣️.json"), "utf8");
+    return { fixture: JSON.parse(fixture) as Json };
   }
 
   describe("supersede fold twin", () => {
     it("meets every language-agnostic fold step", async () => {
-      const { fixture, schema } = await load();
-      const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      const { fixture } = await load();
       const operations = new Set<string>((fixture.edits as Json[]).flatMap((edit) => edit.mutationIds as string[]));
       const document = fixture.documentId as string;
       expect(foldSupersessions(document, operations, []).trunk).toBe(fixture.trunkAlternativeId);

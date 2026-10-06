@@ -49,7 +49,7 @@ fn flow_retirement_typed_serde_oracle_and_exact_bytes_survive_worker_transfer() 
 fn flow_retirement_populated_drop_is_guarded_and_unwind_does_not_double_panic() {
     let mut retirement = FlowRetirement::default();
     retirement.push(FlowOwner::Bytes(vec![0; 8192]));
-    assert!(std::panic::catch_unwind(|| drop(retirement)).is_err());
+    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(retirement))).is_err());
     assert!(std::thread::spawn(|| {
         let mut retirement = FlowRetirement::default();
         retirement.push(FlowOwner::Bytes(vec![0; 8192]));

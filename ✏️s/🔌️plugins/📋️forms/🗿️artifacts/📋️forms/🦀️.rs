@@ -229,8 +229,8 @@ fn semio_value_from_block(block: &FormQuestion) -> SemioValue {
     if let Some(v) = &block.accept {
         entries.push(SemioValueEntry { key: "accept".into(), value: SemioValue::Str { value: v.clone() } });
     }
-    if let Some(v) = &block.fixture_slug {
-        entries.push(SemioValueEntry { key: "fixtureSlug".into(), value: SemioValue::Str { value: v.clone() } });
+    if let Some(v) = &block.example_id {
+        entries.push(SemioValueEntry { key: "exampleId".into(), value: SemioValue::Str { value: v.clone() } });
     }
     if let Some(v) = &block.params {
         entries.push(SemioValueEntry { key: "params".into(), value: semio_value_from_dsl(v) });
@@ -269,7 +269,7 @@ fn block_from_semio_value(value: &SemioValue) -> FormQuestion {
         schema: semio_str(semio_value_map_get(value, "schema")),
         src: semio_str(semio_value_map_get(value, "src")),
         accept: semio_str(semio_value_map_get(value, "accept")),
-        fixture_slug: semio_str(semio_value_map_get(value, "fixtureSlug")),
+        example_id: semio_str(semio_value_map_get(value, "exampleId")),
         params: semio_value_map_get(value, "params").map(dsl_from_semio_value),
         condition: semio_value_map_get(value, "condition").and_then(expr_from_semio_value),
     }
@@ -314,9 +314,9 @@ pub fn forms_steps_from_structure(structure: &SemioValueSnapshot) -> Vec<FormSte
 /// 📊️ A normalized response table preserves each answer's original field label and typed JSON value.
 pub fn forms_results_from_responses(responses: &[schema::response::FormsResponse]) -> SemioTableSnapshot {
     let rows = responses.iter().flat_map(|response| response.answers.iter().map(move |answer| SemioTableRow {
-        cells: schema::response::export::response_row(response, answer).into_iter().map(|value| SemioValue::Str { value }).collect(),
+        cells: standards::v1::subsets::any::io::text::snapshot::response::export::response_row(response, answer).into_iter().map(|value| SemioValue::Str { value }).collect(),
     })).collect();
-    SemioTableSnapshot { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: schema::response::export::RESPONSE_COLUMNS.into_iter().map(|name| SemioTableColumn { name: name.into(), kind: SemioTableCellKind::Str }).collect(), rows }
+    SemioTableSnapshot { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: standards::v1::subsets::any::io::text::snapshot::response::export::RESPONSE_COLUMNS.into_iter().map(|name| SemioTableColumn { name: name.into(), kind: SemioTableCellKind::Str }).collect(), rows }
 }
 
 /// 🪆️ Response content has its own projection identity independent of definition edits.
@@ -666,34 +666,6 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -793,27 +765,18 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
+
 pub mod op {
-    pub use crate::standards::v1::subsets::any::io::mutations::text::*;
     pub use crate::standards::v1::subsets::any::schema::mutations::{apply_form_edit_mutation, inverse_form_mutation, FormMutation};
 }
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-}
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::diff::text::*;
-    }
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
@@ -822,9 +785,7 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-    }
+
 }
 
 #[path = "."]
@@ -875,8 +836,8 @@ pub mod editor {
             pub mod add_vector_field;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫳️drop-question-kind/🦀️.rs"]
             pub mod drop_question_kind;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-fixture/🦀️.rs"]
-            pub mod export_fixture;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-snapshot/🦀️.rs"]
+            pub mod export_snapshot;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-responses/🦀️.rs"]
             pub mod export_responses;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↩️discard-response/🦀️.rs"]

@@ -1,4 +1,5 @@
-import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ ObjArtifact schema facet — mirrors 🦀️.rs field-for-field (same shape as
  * ObjSnapshot; see 📸️snapshot/🟦️.ts for the per-field doc comments). */
 export interface ObjVertex { x: Binary64; y: Binary64; z: Binary64; w?: Binary64; }
@@ -93,28 +94,28 @@ export function parseObjArtifact(value: unknown, at = "$"): ObjArtifact {
 export function parseObjVertex(value: unknown, at = "$"): ObjVertex {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
-    x: parseBinary64Transport(row["x"]),
-    y: parseBinary64Transport(row["y"]),
-    z: parseBinary64Transport(row["z"]),
-    w: row["w"] === undefined ? undefined : parseBinary64Transport(row["w"]),
+    x: parseBinary64(row["x"]),
+    y: parseBinary64(row["y"]),
+    z: parseBinary64(row["z"]),
+    w: row["w"] === undefined ? undefined : parseBinary64(row["w"]),
   };
 }
 
 export function parseObjTexCoord(value: unknown, at = "$"): ObjTexCoord {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
-    u: parseBinary64Transport(row["u"]),
-    v: parseBinary64Transport(row["v"]),
-    w: row["w"] === undefined ? undefined : parseBinary64Transport(row["w"]),
+    u: parseBinary64(row["u"]),
+    v: parseBinary64(row["v"]),
+    w: row["w"] === undefined ? undefined : parseBinary64(row["w"]),
   };
 }
 
 export function parseObjNormal(value: unknown, at = "$"): ObjNormal {
   const row = stdioObj30GeometryArtifactGuardObject(value, at);
   return {
-    x: parseBinary64Transport(row["x"]),
-    y: parseBinary64Transport(row["y"]),
-    z: parseBinary64Transport(row["z"]),
+    x: parseBinary64(row["x"]),
+    y: parseBinary64(row["y"]),
+    z: parseBinary64(row["z"]),
   };
 }
 

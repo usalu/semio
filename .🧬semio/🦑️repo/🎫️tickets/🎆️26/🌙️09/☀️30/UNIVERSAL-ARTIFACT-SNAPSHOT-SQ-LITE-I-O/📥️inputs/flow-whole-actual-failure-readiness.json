@@ -1,0 +1,692 @@
+{
+  "qualification": "Actual retained full owning Flow panic blocks; no gates executed. High emission ownership excluded from Low repair scope.",
+  "log": "physical-flow-complete-original-owning-package-native-after-root-owner-closure.log",
+  "failures": [
+    {
+      "law": "art_flow_demo_tests::inference_determinism_law",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs:59:68:",
+      "reason": [
+        "demo fixture parses: TextError { kind: InvalidValue, message: \"expected LBrace, found Ident 'x'\", span: TextSpan { line: 11, column: 7, length: 1 }, expected: None }"
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs",
+          "line": 56,
+          "body": [
+            "async fn inference_determinism_law() {",
+            "    use protocol::Inference;",
+            "    let text = include_str!(\"../../../../🖼️assets/🎬️demo/🗣️.dsl.semio\");",
+            "    let snapshot = crate::examples::demo::snapshot_from_text(text).expect(\"demo fixture parses\");",
+            "    let inference = crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot).expect(\"valid materialized inference fixture\");",
+            "    assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::FlowInference::infer(&snapshot).expect(\"valid materialized inference fixture\"));",
+            "}",
+            "",
+            "#[semio_framework_async_macros::async_test]",
+            "async fn inference_default_law() {"
+          ]
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 13,
+          "body": [
+            "async fn inference_determinism_law() {",
+            "    let snapshot = chain_snapshot();",
+            "    assert_eq!(FlowInference::infer(&snapshot).expect(\"valid materialized inference fixture\"), FlowInference::infer(&snapshot).expect(\"valid materialized inference fixture\"));",
+            "}",
+            "",
+            "#[semio_framework_async_macros::async_test]",
+            "async fn inference_default_law() {",
+            "    assert_eq!(FlowInference::infer(&FlowSnapshot::default()).expect(\"valid materialized inference fixture\"), FlowInference::default());",
+            "}",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "law": "art_flow_demo_tests::demo_example_ships_the_laid_out_default_graph_as_its_content_genesis",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs:30:5:",
+      "reason": [
+        "assertion `left == right` failed: demo asset drifted from demo_host_snapshot(); re-run `--ignored zzz_write_demo_example_asset`",
+        "left: \"semio flow.flow.dsl v1\\nschema=flow.host_snapshot\\ncamera {\\n  x=0 y=0 zoom=1\\n}\\nwidgets {\\n  input-slider id=slider label=Number value=3 min=0 max=10 step=0.1\\n  neuron id=add neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]\\n  output-preview id=preview expanded=[ ]\\n}\\nlayout={\\n  add=x=120 y=-40 preview=x=240 y=-40 slider=x=40 y=-40\\n}\\nsynapses [id:TEXT link:WIRE] {\\n  s1 slider@number->add@a\\n  s2 add@sum->preview\\n}\\n\"",
+        "right: \"semio flow.flow.dsl v1\\nschema=flow.host_snapshot\\ncamera {\\n  x=0 y=0 zoom=1\\n}\\nwidgets {\\n  input-slider id=slider label=Number value=3 min=0 max=10 step=0.1\\n  neuron id=add neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]\\n  output-preview id=preview expanded=[ ]\\n}\\nlayout={\\n  add={ x=120 y=-40 } preview={ x=240 y=-40 } slider={ x=40 y=-40 }\\n}\\nsynapses [id:TEXT link:WIRE] {\\n  s1 slider@number->add@a\\n  s2 add@sum->preview\\n}\\n\""
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs",
+          "line": 28,
+          "body": [
+            "async fn demo_example_ships_the_laid_out_default_graph_as_its_content_genesis() {",
+            "    let host = demo_host_snapshot();",
+            "    assert_eq!(crate::examples::demo::PRIMARY_TEXT, demo_text(&host), \"demo asset drifted from demo_host_snapshot(); re-run `--ignored zzz_write_demo_example_asset`\");",
+            "    host.retire_cold();",
+            "    let snapshot = crate::examples::demo::snapshot_from_text(crate::examples::demo::PRIMARY_TEXT).expect(\"demo parses\");",
+            "    let scene = snapshot.to_host_snapshot();",
+            "    let ids: Vec<&str> = scene.widgets.iter().map(crate::schema::widget_id).collect();",
+            "    assert_eq!(ids, [\"slider\", \"add\", \"preview\"]);",
+            "    assert_eq!(scene.synapses.len(), 2);",
+            "    assert!(scene.synapses.iter().all(|synapse| ids.contains(&synapse.from.as_str()) && ids.contains(&synapse.to.as_str())));"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::disconnect::tests::disconnecting_an_unknown_synapse_is_refused_by_name",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✂️disconnect/🧪️tests/🔬️unit/🦀️.rs:11:5:",
+      "reason": [
+        "disconnect found no synapse \"nope\""
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✂️disconnect/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 6,
+          "body": [
+            "async fn disconnecting_an_unknown_synapse_is_refused_by_name() {",
+            "    let mut app = flow_app().await;",
+            "    let result = dispatch(&mut app, FlowCommand::Disconnect(Disconnect { synapse_id: \"nope\".into() })).await;",
+            "    assert!(result.mutations.is_empty());",
+            "    let refusal = settle_refusal(&mut app).await;",
+            "    assert!(refusal.contains(\"mutation.target-missing\") && refusal.contains(\"\\\"nope\\\"\"), \"{refusal}\");",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::node_graph_edit::tests::a_node_drag_is_one_child_transaction_row_naming_its_member_store",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 295,
+          "body": [
+            "async fn a_node_drag_is_one_child_transaction_row_naming_its_member_store() {",
+            "    let mut app = flow_app_closing().await;",
+            "    let content_id = app.snapshot().expect(\"snapshot\").content.child_id.clone();",
+            "    release_drag(&mut app, &[\"add\"], 284.0, 48.0).await;",
+            "    assert_eq!(node_position(&content_snapshot(&app).await, \"add\"), (284.0, 48.0));",
+            "    let rows = member_rows(&mut app).await;",
+            "    assert_eq!(rows.len(), 1, \"one drag is one row: {rows:?}\");",
+            "    let row = &rows[0];",
+            "    let transaction = row.transaction.as_ref().expect(\"the drag row carries its transaction\");",
+            "    assert_eq!(transaction.tool, \"s.flow.flow@1/*#editor#nodeGraphEdit\");"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::node_graph_edit::tests::a_blocking_member_replay_refuses_to_finalize_and_exits_with_zero_trace",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 435,
+          "body": [
+            "async fn a_blocking_member_replay_refuses_to_finalize_and_exits_with_zero_trace() {",
+            "    let mut app = flow_app_closing().await;",
+            "    let store = format!(\"content/{}\", app.snapshot().expect(\"snapshot\").content.child_id);",
+            "    let before: Vec<String> = content_snapshot(&app).await.nodes.iter().map(|node| node.id.clone()).collect();",
+            "    app.handle_action(\"addWidget\", Some(&semio_framework_value::DslValue::from(serde_json::json!({ \"kind\": \"inputNote\", \"x\": 40.0, \"y\": 40.0 }))), &meta(\"add-widget\")).await.expect(\"addWidget admission\");",
+            "    settle_registered_typed_operation(&mut *app, meta(\"local\").instance_id).await.expect(\"addWidget publication\");",
+            "    let added = content_snapshot(&app).await.nodes.iter().map(|node| node.id.clone()).find(|id| !before.contains(id)).expect(\"the added node\");",
+            "    release_drag(&mut app, &[added.as_str()], 10.0, 0.0).await;",
+            "    let rows = member_rows(&mut app).await;",
+            "    let insert = rows.iter().flat_map(|row| row.mutations.iter()).find(|mutation| mutation.editable && rows.last().is_some_and(|last| !last.mutations.iter().any(|drag| drag.mutation_id == mutation.mutation_id))).expect(\"the insert's mutation row\").mutation_id.clone();"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::node_graph_edit::tests::a_release_that_wires_and_drags_is_labelled_by_the_drag",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 317,
+          "body": [
+            "async fn a_release_that_wires_and_drags_is_labelled_by_the_drag() {",
+            "    let mut app = flow_app_closing().await;",
+            "    let args = semio_framework_value::DslValue::from(serde_json::json!({ \"operations\": [",
+            "        { \"operation\": \"connect\", \"sourceNodeId\": \"slider\", \"sourcePortId\": \"number\", \"targetNodeId\": \"add\", \"targetPortId\": \"b\" },",
+            "        { \"operation\": \"move\", \"gestureId\": \"node-drag:4\", \"nodeIds\": [\"add\"], \"dx\": 10.0, \"dy\": 0.0 }",
+            "    ] }));",
+            "    app.handle_action(\"nodeGraphEdit\", Some(&args), &meta(\"renderer-node-drag\")).await.expect(\"wire and drag admission\");",
+            "    settle_registered_typed_operation(&mut *app, meta(\"local\").instance_id).await.expect(\"wire and drag publication\");",
+            "    let rows = member_rows(&mut app).await;",
+            "    assert_eq!(rows.len(), 1, \"one release is one row: {rows:?}\");"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::node_graph_edit::tests::a_member_finalize_reaches_the_other_replica_on_the_member_lane",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 386,
+          "body": [
+            "async fn a_member_finalize_reaches_the_other_replica_on_the_member_lane() {",
+            "    use store::MemoryBackbone;",
+            "    let mut instance_a = crate::editor::flow::unit_tests::context::flow_app_with_registry().await;",
+            "    let mut instance_b = crate::editor::flow::unit_tests::context::flow_app_with_registry().await;",
+            "    let metadata_a = semio_framework_plugin::ActionMeta { instance_id: 73, ..meta(\"actor-a\") };",
+            "    let metadata_b = semio_framework_plugin::ActionMeta { instance_id: 74, ..meta(\"actor-b\") };",
+            "    instance_a.bind_instance_id(metadata_a.instance_id).await;",
+            "    instance_b.bind_instance_id(metadata_b.instance_id).await;",
+            "    let (backbone_a, backbone_b) = MemoryBackbone::pair(\"mem://flow-member-history\", \"mem://flow-member-history\").await;",
+            "    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect(\"attach a\");"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::node_graph_edit::tests::editing_a_node_drag_offset_replays_the_member_and_the_parent_scene_follows",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 335,
+          "body": [
+            "async fn editing_a_node_drag_offset_replays_the_member_and_the_parent_scene_follows() {",
+            "    let mut app = flow_app_closing().await;",
+            "    let store = format!(\"content/{}\", app.snapshot().expect(\"snapshot\").content.child_id);",
+            "    release_drag(&mut app, &[\"add\"], 284.0, 48.0).await;",
+            "    let mutation = member_rows(&mut app).await[0].mutations[0].mutation_id.clone();",
+            "    let begun = history_edit(&mut app, \"historyEditBegin\", vec![(\"mutationId\", semio_framework_value::DslValue::String(mutation)), (\"store\", semio_framework_value::DslValue::String(store.clone()))]).await;",
+            "    assert!(begun.get(\"rejected\").is_none(), \"{begun:?}\");",
+            "    let input = history_edit(&mut app, \"historyEditInput\", vec![(\"path\", semio_framework_value::DslValue::String(\"/dx\".into())), (\"value\", semio_framework_value::DslValue::float(100.0))]).await;",
+            "    assert!(input.get(\"rejected\").is_none(), \"{input:?}\");",
+            "    assert_eq!(published_host_snapshot(&mut app).await[\"layout\"][\"add\"], serde_json::json!({ \"x\": 100.0, \"y\": 48.0 }), \"the main window renders the member's preview\");"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::node_graph_edit::tests::node_graph_move_wire_publishes_the_requested_widget_layout",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 174,
+          "body": [
+            "async fn node_graph_move_wire_publishes_the_requested_widget_layout() {",
+            "    let mut app = flow_app_closing().await;",
+            "    let content_id = app.snapshot().expect(\"snapshot before nodeGraphEdit move\").content.child_id.clone();",
+            "    let initial = app.snapshot().expect(\"snapshot before nodeGraphEdit move\").to_host_snapshot();",
+            "    assert!(initial.widgets.iter().any(|widget| crate::schema::widget_id(widget) == \"add\"), \"the real starter graph must contain the renderer's move target\");",
+            "    let initial_position = initial.layout.get(\"add\").map_or((0.0, 0.0), |layout| (layout.x, layout.y));",
+            "    initial.retire_cold();",
+            "    assert_eq!(initial_position, (0.0, 0.0), \"the move law must observe the target's actual starting position\");",
+            "    let args = semio_framework_value::DslValue::from(serde_json::json!({",
+            "        \"operations\": [{ \"operation\": \"move\", \"gestureId\": \"node-drag:3\", \"nodeIds\": [\"add\"], \"dx\": 284.0, \"dy\": 48.0 }]"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::node_graph_edit::tests::finalizing_a_member_edit_as_a_new_alternative_branches_the_member_and_keeps_the_live_child",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 365,
+          "body": [
+            "async fn finalizing_a_member_edit_as_a_new_alternative_branches_the_member_and_keeps_the_live_child() {",
+            "    let mut app = flow_app_closing().await;",
+            "    let store = format!(\"content/{}\", app.snapshot().expect(\"snapshot\").content.child_id);",
+            "    release_drag(&mut app, &[\"add\"], 284.0, 48.0).await;",
+            "    let line = member_alternative(&app).await;",
+            "    let mutation = member_rows(&mut app).await[0].mutations[0].mutation_id.clone();",
+            "    edit_drag_offset(&mut app, &meta(\"history-edit\"), &store, mutation).await;",
+            "    finalize_as_alternative(&mut app, &meta(\"history-edit\"), \"Closer\").await;",
+            "    assert_eq!(store, format!(\"content/{}\", app.snapshot().expect(\"snapshot\").content.child_id), \"the parent never re-mints the live child\");",
+            "    let branch = member_alternative(&app).await;"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::node_graph_edit::tests::withdrawing_a_node_drag_in_history_puts_the_node_back",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 415,
+          "body": [
+            "async fn withdrawing_a_node_drag_in_history_puts_the_node_back() {",
+            "    let mut app = flow_app_closing().await;",
+            "    let store = format!(\"content/{}\", app.snapshot().expect(\"snapshot\").content.child_id);",
+            "    release_drag(&mut app, &[\"add\"], 284.0, 48.0).await;",
+            "    let mutation = member_rows(&mut app).await[0].mutations[0].mutation_id.clone();",
+            "    history_edit(&mut app, \"historyEditBegin\", vec![(\"mutationId\", semio_framework_value::DslValue::String(mutation)), (\"store\", semio_framework_value::DslValue::String(store))]).await;",
+            "    history_edit(&mut app, \"historyEditWithdraw\", Vec::new()).await;",
+            "    history_edit(&mut app, \"historyEditAccept\", Vec::new()).await;",
+            "    pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;",
+            "    history_edit(&mut app, \"historyEditFinalize\", Vec::new()).await;"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::set_active_example::tests::set_active_example_demo_loads_the_published_demo_graph",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs:12:88:",
+      "reason": [
+        "demo parses: TextError { kind: InvalidValue, message: \"expected Record, found Absent\", span: TextSpan { line: 1, column: 1, length: 0 }, expected: None }"
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 10,
+          "body": [
+            "async fn set_active_example_demo_loads_the_published_demo_graph() {",
+            "    let mut app = flow_app().await;",
+            "    let expected = <FlowSnapshot as store::ArtifactDsl>::parse_dsl(demo::PRIMARY_TEXT).expect(\"demo parses\").to_host_snapshot();",
+            "    let before = composed_scene(&app).await;",
+            "    assert_ne!(before, expected, \"the live default document must differ from the demo so a demo load is observable\");",
+            "    before.retire_cold();",
+            "    dispatch(&mut app, FlowCommand::SetActiveExample(SetActiveExample { example_id: demo::ID.into() })).await;",
+            "    settle(&mut app).await;",
+            "    let after = composed_scene(&app).await;",
+            "    assert_eq!(after, expected, \"setActiveExample demo must load the published demo graph\");"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::toggle_extension::unit::an_unknown_extension_action_id_is_refused_by_name",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔌️toggle-extension/🧪️tests/🔬️unit/🦀️.rs:30:5:",
+      "reason": [
+        "runExtensionAction has no extension action \"third.party.nope\""
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔌️toggle-extension/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 25,
+          "body": [
+            "async fn an_unknown_extension_action_id_is_refused_by_name() {",
+            "    let mut app = flow_app().await;",
+            "    let result = dispatch(&mut app, FlowCommand::RunExtensionAction(crate::editor::flow::commands::run_extension_action::RunExtensionAction { action_id: \"third.party.nope\".into() })).await;",
+            "    assert!(result.mutations.is_empty());",
+            "    let refusal = settle_refusal(&mut app).await;",
+            "    assert!(refusal.contains(\"flow.extension-action-unknown\") && refusal.contains(\"third.party.nope\"), \"{refusal}\");",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::commands::toggle_extension::unit::toggle_extension_and_run_action_reorganizes_fixture",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔌️toggle-extension/🧪️tests/🔬️unit/🦀️.rs:14:5:",
+      "reason": [
+        "a disabled automation action is refused by name: runExtensionAction \"flow.extension.reorganize\" belongs to the disabled extension \"auto-layout\""
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔌️toggle-extension/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 6,
+          "body": [
+            "async fn toggle_extension_and_run_action_reorganizes_fixture() {",
+            "    let mut app = flow_app().await;",
+            "    let before_snapshot = composed_scene(&app).await;",
+            "    let before = before_snapshot.widgets.len();",
+            "    before_snapshot.retire_cold();",
+            "    let refused = dispatch(&mut app, FlowCommand::RunExtensionAction(crate::editor::flow::commands::run_extension_action::RunExtensionAction { action_id: \"flow.extension.reorganize\".into() })).await;",
+            "    assert!(refused.mutations.is_empty(), \"a disabled automation action publishes nothing\");",
+            "    let refusal = settle_refusal(&mut app).await;",
+            "    assert!(refusal.contains(\"flow.extension-disabled\"), \"a disabled automation action is refused by name: {refusal}\");",
+            "    dispatch(&mut app, FlowCommand::ToggleExtension(ToggleExtension { id: \"auto-layout\".into(), enabled: true })).await;"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::component::declared_verb_laws::every_declared_flow_verb_honours_its_declaration",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️.rs:8570:129:",
+      "reason": [
+        "the app's own boot example must settle: Fault { origin: App, code: FaultCode(\"app.message\"), severity: Error, message: \"expected LBrace, found Ident 'x' at 11:7\", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: None, causes: [], params: None, retryable: false }"
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️declared-verbs/🦀️.rs",
+          "line": 15,
+          "body": [
+            "async fn every_declared_flow_verb_honours_its_declaration() {",
+            "    crate::editor::flow::unit_tests::context::install_first_party_light_flow_extensions_for_tests();",
+            "    let probes = assert_declared_verbs_honour_their_declarations::<semio_framework_plugin::EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_flow_app, Some(include_str!(\"../../🧫️fixtures/⚖️declared-verb-examples.json\"))).await;",
+            "    assert_eq!(probes.len(), 28, \"declared verbs\");",
+            "    assert_eq!(declared_verb_agent_divergences(&probes), [\"evaluate\", \"focusSelection\"], \"agent-lane divergences\");",
+            "    let evaluate = probes.iter().find(|probe| probe.verb == \"evaluate\").expect(\"evaluate is a declared verb\");",
+            "    assert!(evaluate.windows.iter().all(|window| matches!(&window.staged, DeclaredVerbOutcome::Settled(effect) if !effect.is_silent())), \"evaluate acts on the shell lane: {:?}\", evaluate.windows.iter().map(|window| &window.staged).collect::<Vec<_>>());",
+            "    assert!(matches!(&evaluate.agent, Some(DeclaredVerbOutcome::Unreachable { code, .. }) if code == \"interactive-job.agent-lane-uncarried\"), \"the agent lane refuses evaluate by name: {:?}\", evaluate.agent);",
+            "}",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::component::declared_verb_laws::the_content_child_is_the_one_scene_every_verb_and_window_reads",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️declared-verbs/🦀️.rs:40:5:",
+      "reason": [
+        "the main window renders the widget the child edit added"
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️declared-verbs/🦀️.rs",
+          "line": 29,
+          "body": [
+            "async fn the_content_child_is_the_one_scene_every_verb_and_window_reads() {",
+            "    use crate::editor::flow::unit_tests::context::{composed_scene, dispatch, flow_app, render, settle};",
+            "    use crate::editor::flow::commands::{add_widget::AddWidget, remove_widget::RemoveWidget};",
+            "    let mut app = flow_app().await;",
+            "    let coordinate = app.snapshot().expect(\"snapshot\").content.child_id.clone();",
+            "    dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: \"inputNote\".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0), label: None, action: None, format: None })).await;",
+            "    settle(&mut app).await;",
+            "    let added = composed_scene(&app).await;",
+            "    let note = added.widgets.iter().map(|widget| crate::schema::widget_id(widget).to_string()).find(|id| id.starts_with(\"note\")).expect(\"addWidget lands one note in the content child\");",
+            "    added.retire_cold();"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::component::unit_tests::action_cohort_fixtures_match_the_exact_route_census",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:337:9:",
+      "reason": [
+        "assertion `left == right` failed: NotePlayApp: the retained route index must exactly name the migrated groups",
+        "left: [\"setGridVisible\", \"setGridSpacing\", \"setGridSubdivisions\", \"setGridOpacity\", \"setSnapEnabled\", \"setSnapGridSpacing\", \"setPencilWidth\", \"setEraserRadius\", \"addBlock\", \"moveBlock\", \"deleteBlock\", \"deleteSelection\", \"duplicateBlock\", \"duplicateSelection\", \"patchBlocks\", \"nudgeSelection\", \"nudgeSelectionUp\", \"nudgeSelectionDown\", \"nudgeSelectionLeft\", \"nudgeSelectionRight\", \"nudgeSelectionUpFast\", \"nudgeSelectionDownFast\", \"nudgeSelectionLeftFast\", \"nudgeSelectionRightFast\", \"setActiveExample\", \"setFixtureJson\", \"navigatorEngagementInput\", \"saveDownload\", \"inkApplyEvents\", \"engagementSubmit\", \"setCamera\", \"setCameraZoom\", \"engagementInput\"]",
+        "right: [\"setGridVisible\", \"setGridSpacing\", \"setGridSubdivisions\", \"setGridOpacity\", \"setSnapEnabled\", \"setSnapGridSpacing\", \"setPencilWidth\", \"setEraserRadius\", \"addBlock\", \"moveBlock\", \"deleteBlock\", \"deleteSelection\", \"duplicateBlock\", \"duplicateSelection\", \"patchBlocks\", \"setActiveExample\", \"setFixtureJson\", \"navigatorEngagementInput\", \"saveDownload\", \"inkApplyEvents\", \"engagementSubmit\", \"nudgeSelection\", \"nudgeSelectionUp\", \"nudgeSelectionDown\", \"nudgeSelectionLeft\", \"nudgeSelectionRight\", \"nudgeSelectionUpFast\", \"nudgeSelectionDownFast\", \"nudgeSelectionLeftFast\", \"nudgeSelectionRightFast\", \"setCamera\", \"setCameraZoom\", \"engagementInput\"]"
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 329,
+          "body": [
+            "fn action_cohort_fixtures_match_the_exact_route_census() {",
+            "    let flow: Value = serde_json::from_str(include_str!(\"../../../../../../../../../🧫️fixtures/🎬️action-cohort/🔣️.json\")).expect(\"Flow action-cohort fixture must be valid JSON\");",
+            "    let note: Value = serde_json::from_str(include_str!(\"../../../../../../../../../../🗒️note/🧫️fixtures/🧪️action-cohort/🔣️.json\")).expect(\"Note action-cohort fixture must be valid JSON\");",
+            "    for (fixture, owner) in [(&flow, \"FlowPlayApp\"), (&note, \"NotePlayApp\")] {",
+            "        assert_eq!(fixture[\"owner\"], owner);",
+            "        let routes: Vec<&str> = fixture[\"groups\"].as_array().expect(\"groups\").iter().flat_map(|group| group[\"routes\"].as_array().expect(\"routes\")).map(|route| route.as_str().expect(\"route id\")).collect();",
+            "        let retained: Vec<&str> = fixture[\"retainedRoutes\"].as_array().expect(\"retained routes\").iter().map(|route| route.as_str().expect(\"retained route id\")).collect();",
+            "        let migrated: Vec<&str> = fixture[\"groups\"].as_array().expect(\"groups\").iter().filter(|group| group[\"status\"] == \"migrated\").flat_map(|group| group[\"routes\"].as_array().expect(\"routes\")).map(|route| route.as_str().expect(\"route id\")).collect();",
+            "        assert_eq!(retained, migrated, \"{owner}: the retained route index must exactly name the migrated groups\");",
+            "        let mut unique = routes.clone();"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::component::unit_tests::context::history_edits_end_to_end",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:629:48:",
+      "reason": [
+        "flow: none of the 0 committed and 0 derived editable case(s) under /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.. exercises a history edit end to end (0 skip(s), first 0):",
+        ""
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": []
+    },
+    {
+      "law": "editor::flow::component::interactive_job_tests::every_graph_operation_route_is_admitted_by_its_own_retained_factory",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️interactive-job/🦀️.rs",
+          "line": 153,
+          "body": [
+            "async fn every_graph_operation_route_is_admitted_by_its_own_retained_factory() {",
+            "    use crate::editor::flow::unit_tests::context::{dispatch, settle};",
+            "    let mut app = flow_app_closing().await;",
+            "    dispatch(&mut app, FlowCommand::ToggleExtension(toggle_extension::ToggleExtension { id: \"auto-layout\".into(), enabled: true })).await;",
+            "    settle(&mut app).await;",
+            "    let commands = [",
+            "        FlowCommand::Reorganize(reorganize::Reorganize {}),",
+            "        FlowCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: \"slider\".into(), source_port_id: \"number\".into(), target_node_id: \"add\".into(), target_port_id: \"b\".into() }),",
+            "        FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: \"preview\".into(), value: \"graph-operation-probe\".into() }),",
+            "        FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: \"flow.extension.reorganize\".into() }),"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::component::unit_tests::retained_move_media_node_preserves_absolute_drop_and_undo",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 521,
+          "body": [
+            "async fn retained_move_media_node_preserves_absolute_drop_and_undo() {",
+            "    use semio_framework_plugin::app::TypedOperationResultLane;",
+            "    use semio_framework_plugin::artifact_app_laws::{settle_history_verb, settle_registered_typed_operation};",
+            "    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;",
+            "    use store::{ArtifactPack, SpaceMember};",
+            "",
+            "    let mut app = flow_app_with_registry().await;",
+            "    let receiver = meta(\"local\").instance_id;",
+            "    let parent = app.snapshot().expect(\"Flow parent\");",
+            "    let child_id = parent.content.child_id.clone();"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::component::unit_tests::context::documents_reload_identically",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../.././🧪️tests/🧪️history-edit-acceptance/🦀️.rs:823:28:",
+      "reason": [
+        "flow: the example demo document does not survive save and load: the document does not load: Fault { origin: Module, code: FaultCode(\"module.dsl.text\"), severity: Error, message: \"expected Record, found Absent\", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: Some(TextSpan { line: 1, column: 1, length: 0 }), causes: [], params: None, retryable: false }"
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": []
+    },
+    {
+      "law": "flow-window-config-turn-law",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🦀️.rs:251:25:",
+      "reason": [
+        "Flow two window-config commands in one turn: \"two window-config commands in one turn published 1 window-config pages instead of 2 — the second was dropped without a page or a fault\""
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": []
+    },
+    {
+      "law": "editor::flow::modes::edit::windows::main::config::tests::flow_two_window_config_commands_in_one_turn_both_land",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🦀️.rs:256:10:",
+      "reason": [
+        "Flow one-turn window config law thread: Any { .. }",
+        ""
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🦀️.rs",
+          "line": 185,
+          "body": [
+            "fn flow_two_window_config_commands_in_one_turn_both_land() {",
+            "    std::thread::Builder::new()",
+            "        .name(\"flow-window-config-turn-law\".into())",
+            "        .stack_size(8 * 1024 * 1024)",
+            "        .spawn(|| {",
+            "            block_on_flow_window_ownership(async {",
+            "                use crate::editor::flow::commands::{set_grid_factor, set_grid_visible};",
+            "                use crate::editor::flow::{create_flow_app, FlowCommand, FlowPlayApp};",
+            "                use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "law": "flow-window-ownership-law",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🦀️.rs:158:25:",
+      "reason": [
+        "Flow exact-window ownership runtime law: \"Fault { origin: Plugin, code: FaultCode(\\\"plugin.internal.document-archive-replacement.closure-rejected\\\"), severity: Error, message: \\\"document archive replacement failed its closure leg: recursive ownership closure validation rejected the candidate (Incomplete)\\\", scope: FaultScope { plugin_id: None, app_id: None, instance_id: None, module: None, body_key: None }, span: None, causes: [], params: None, retryable: false }\""
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": []
+    },
+    {
+      "law": "editor::flow::modes::edit::windows::main::config::tests::flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🦀️.rs:163:10:",
+      "reason": [
+        "Flow window ownership law thread: Any { .. }",
+        ""
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🦀️.rs",
+          "line": 18,
+          "body": [
+            "fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {",
+            "    std::thread::Builder::new()",
+            "        .name(\"flow-window-ownership-law\".into())",
+            "        .stack_size(8 * 1024 * 1024)",
+            "        .spawn(|| {",
+            "            block_on_flow_window_ownership(async {",
+            "                use crate::editor::flow::commands::{node_graph_viewport, set_grid_factor, set_grid_visible};",
+            "                use crate::editor::flow::modes::generate::commands::add_generation;",
+            "                use crate::editor::flow::{create_flow_app, FlowCommand, FlowPlayApp, FLOW_PLAY_BODY_MAIN};",
+            "                use semio_framework_artifact_flow_flow::CameraJson;"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::snapshot::binary::tests::pack_round_trips_and_agrees_with_dsl",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🧪️tests/🔬️unit/🦀️.rs:6:59:",
+      "reason": [
+        "parse default snapshot: TextError { kind: InvalidValue, message: \"expected child_id, found Some(Absent)\", span: TextSpan { line: 1, column: 1, length: 0 }, expected: None }"
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 5,
+          "body": [
+            "async fn pack_round_trips_and_agrees_with_dsl() {",
+            "    let snapshot = dsl::parse_dsl(dsl::FLOW_EXAMPLE_TEXT).expect(\"parse default snapshot\");",
+            "    store::os_store::test_support::assert_dsl_pack_equivalence(&snapshot);",
+            "    let bytes = encode(&snapshot);",
+            "    assert_eq!(decode(&bytes).expect(\"decode\"), snapshot);",
+            "}",
+            "",
+            "#[semio_framework_async_macros::async_test]",
+            "async fn pack_protocol_names_snapshot_segment() {",
+            "    assert!(COMPONENT_PROTOCOL_SEMIO.contains(\"segment payload\"));"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "standards::v1::subsets::any::schema::snapshot::text::tests::example_fixture_dsl_round_trips",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🧪️tests/🔬️unit/🦀️.rs:5:49:",
+      "reason": [
+        "parse default snapshot: TextError { kind: InvalidValue, message: \"expected child_id, found Some(Absent)\", span: TextSpan { line: 1, column: 1, length: 0 }, expected: None }"
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 4,
+          "body": [
+            "async fn example_fixture_dsl_round_trips() {",
+            "    let snapshot = parse_dsl(FLOW_EXAMPLE_TEXT).expect(\"parse default snapshot\");",
+            "    store::os_store::test_support::assert_dsl_round_trip(&snapshot);",
+            "}",
+            "",
+            "#[semio_framework_async_macros::async_test]",
+            "async fn default_snapshot_dsl_round_trips() {",
+            "    store::os_store::test_support::assert_dsl_round_trip(&FlowSnapshot::default());",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "viewer::flow::modes::view::windows::main::tests::renders_node_graph_scene_for_the_default_document",
+      "location": "🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/../.././././././🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌊️main/🧪️tests/🔬️unit/🦀️.rs:14:45:",
+      "reason": [
+        "render json: Error(\"BuiltChildren requires retained page transport\", line: 0, column: 0)"
+      ],
+      "scope": "Low domain/source readiness",
+      "currentLawAnchors": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌊️main/🧪️tests/🔬️unit/🦀️.rs",
+          "line": 11,
+          "body": [
+            "async fn renders_node_graph_scene_for_the_default_document() {",
+            "    let document = FlowSnapshot::default();",
+            "    let node = render(&document).expect(\"render\");",
+            "    let json = serde_json::to_string(&node).expect(\"render json\");",
+            "    assert!(json.contains(\"node-graph\"));",
+            "}"
+          ]
+        }
+      ]
+    },
+    {
+      "law": "editor::flow::component::unit_tests::context::child_history_edits_end_to_end",
+      "location": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🧩️composition/📨️emission/📦️preparation/🦀️.rs:65:24:",
+      "reason": [
+        "child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired"
+      ],
+      "scope": "High emission owner",
+      "currentLawAnchors": []
+    }
+  ],
+  "distinctSchemaInvariant": {
+    "plugin": "s.flow.flow",
+    "framework": "flow.host_snapshot",
+    "bridge": "from_host_snapshot explicitly preserves arbitrary host.schema;Default explicitly assigns plugin constant"
+  }
+}

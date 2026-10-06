@@ -84,6 +84,7 @@ pub fn run_period_action() -> ActionDefinition {
 
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Energy simulation", "Energiesimulation"),
         body_key: BODY_KEY.into(),

@@ -7,11 +7,26 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::video::schema::diff::{
-    dec_bool, dec_kind, dec_list, dec_rational, dec_sample, dec_str, dec_stream, diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_snapshot, diff_set_stream_meta,
-    enc_bool, enc_kind, enc_list, enc_rational, enc_sample, enc_str, enc_stream, hex_decode, hex_encode, parse_usize, SemioVideoDiff,
-};
+
+
+use crate::standards::v1::subsets::video::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_snapshot, diff_set_stream_meta, SemioVideoDiff};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
@@ -97,14 +112,7 @@ pub fn inverse_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioV
     })
 }
 
-/// 📥️ Decodes this subset's internally tagged (`{"mutation": "<camelCaseVariant>", ...}`) wire value — the shape
-/// `🎥️mutate-semio-video`'s committed specification vectors and doc strings carry — into a real [`SemioVideoMutation`]. A thin
-/// `pack::from_json_str` wrapper over `ToValue`/`FromValue`, so the test adapter reads the committed wire value instead of
-/// re-declaring it field by field beside it.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_video_mutation_json(text: &str) -> Result<SemioVideoMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
@@ -182,158 +190,20 @@ pub(crate) fn agg_inverse(this: &SemioVideoMutation, base: &SemioVideoSnapshot) 
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🎙️ Hand-rolled `OpText`/`OpBinary` for `SemioVideoMutation` — reuses the diff module's
-/// `pub(crate)` grammar primitives (`hex_encode`/`enc_stream`/`enc_sample`/`split_top_level`/...)
-/// rather than duplicating them a second time in this file. Grammar: `keyword arg=value ...`
-/// (space-separated), same shape docx's own hand-rolled op codec uses.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_semio_video_snapshot(s: &SemioVideoSnapshot) -> String {
-    format!("[{},{}]", enc_str(&s.schema), enc_list(&s.streams, enc_stream))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_semio_video_snapshot(s: &str) -> Result<SemioVideoSnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [schema, streams] = parts.as_slice() else { return Err(format!("snapshot: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioVideoSnapshot { schema: dec_str(schema)?, streams: dec_list(streams, dec_stream)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
-    match m {
-        SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_semio_video_snapshot(snapshot)),
-        SemioVideoMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
-        SemioVideoMutation::InsertStream(insert_stream::InsertStream { index, stream }) => format!("insert-stream index={} stream={}", index, enc_stream(stream)),
-        SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index }) => format!("remove-stream index={index}"),
-        SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index, kind, codec, width, height, rate }) => {
-            format!("set-stream-meta index={} kind={} codec={} width={} height={} rate={}", index, enc_kind(kind), enc_str(codec), width, height, enc_rational(rate))
-        }
-        SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index, index, sample }) => format!("insert-sample stream-index={} index={} sample={}", stream_index, index, enc_sample(sample)),
-        SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index, index }) => format!("remove-sample stream-index={stream_index} index={index}"),
-        SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index, index, data }) => format!("set-sample-data stream-index={} index={} data={}", stream_index, index, hex_encode(data)),
-        SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index, index, pts, key }) => format!("set-sample-flags stream-index={} index={} pts={} key={}", stream_index, index, pts, enc_bool(key)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, String> {
-    if let Some(source) = line.strip_prefix("patch-snapshot patch=") {
-        let patch = semio_s_artifact_stdio_contract::editing::snapshot_patch_from_hex(source)?;
-        return Ok(SemioVideoMutation::PatchSnapshot(crate::standards::v1::subsets::video::schema::mutations::patch_snapshot::PatchSnapshot { patch }));
-    }
-    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> =
-        rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio video mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
-    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio video mutation: missing arg '{k}' for '{keyword}'"));
-    let usize_arg = |k: &str| -> Result<usize, String> { parse_usize(arg(k)?) };
-    match keyword {
-        "set-snapshot" => Ok(SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_semio_video_snapshot(arg("snapshot")?)? })),
-        "insert-stream" => Ok(SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: usize_arg("index")?, stream: dec_stream(arg("stream")?)? })),
-        "remove-stream" => Ok(SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: usize_arg("index")? })),
-        "set-stream-meta" => Ok(SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta {
-            index: usize_arg("index")?,
-            kind: dec_kind(arg("kind")?)?,
-            codec: dec_str(arg("codec")?)?,
-            width: arg("width")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-            height: arg("height")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-            rate: dec_rational(arg("rate")?)?,
-        })),
-        "insert-sample" => Ok(SemioVideoMutation::InsertSample(insert_sample::InsertSample { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, sample: dec_sample(arg("sample")?)? })),
-        "remove-sample" => Ok(SemioVideoMutation::RemoveSample(remove_sample::RemoveSample { stream_index: usize_arg("stream-index")?, index: usize_arg("index")? })),
-        "set-sample-data" => Ok(SemioVideoMutation::SetSampleData(set_sample_data::SetSampleData { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, data: hex_decode(arg("data")?)? })),
-        "set-sample-flags" => Ok(SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags {
-            stream_index: usize_arg("stream-index")?,
-            index: usize_arg("index")?,
-            pts: arg("pts")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-            key: dec_bool(arg("key")?)?,
-        })),
-        other => Err(format!("semio video mutation: unknown keyword {other:?}")),
-    }
-}
 
-impl OpText for SemioVideoMutation {
-    fn print_op(&self) -> String {
-        print_semio_video_mutation(self)
-    }
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_semio_video_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-}
 
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `SemioVideoMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
-const TAG_INSERT_STREAM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-stream");
-const TAG_REMOVE_STREAM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-stream");
-const TAG_SET_STREAM_META: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-stream-meta");
-const TAG_INSERT_SAMPLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-sample");
-const TAG_REMOVE_SAMPLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-sample");
-const TAG_SET_SAMPLE_DATA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-sample-data");
-const TAG_SET_SAMPLE_FLAGS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-sample-flags");
-//#endregion 🏷️WireTags
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn wire_tag(m: &SemioVideoMutation) -> u8 {
-    match m {
-        SemioVideoMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-        SemioVideoMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
-        SemioVideoMutation::InsertStream(_) => TAG_INSERT_STREAM,
-        SemioVideoMutation::RemoveStream(_) => TAG_REMOVE_STREAM,
-        SemioVideoMutation::SetStreamMeta(_) => TAG_SET_STREAM_META,
-        SemioVideoMutation::InsertSample(_) => TAG_INSERT_SAMPLE,
-        SemioVideoMutation::RemoveSample(_) => TAG_REMOVE_SAMPLE,
-        SemioVideoMutation::SetSampleData(_) => TAG_SET_SAMPLE_DATA,
-        SemioVideoMutation::SetSampleFlags(_) => TAG_SET_SAMPLE_FLAGS,
-    }
-}
-/// ✂️ Just the `key=value ...` argument tail of `print_semio_video_mutation` — the binary frame's
-/// `tag` byte already carries the keyword, so the text keyword itself is redundant in the binary
-/// payload.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
-    match print_semio_video_mutation(m).split_once(' ') {
-        Some((_, rest)) => rest.to_string(),
-        None => String::new(),
-    }
-}
 
-/// ⚡️ Real binary op frame, replacing the old `print_op().into_bytes()` text-as-binary shortcut
-/// (same treatment flow's/mesh's own upgraded mutations facets use). `format u8`
-/// (`OP_BINARY_FORMAT` convention) + `tag u8` (its kind's record tag in `💾️binary/📡️.protocol.semio`) are two
-/// REAL fixed fields; the variant's own `key=value ...` argument payload follows as one opaque
-/// trailing `bytes` chain — reusing the already-real, already-tested `print_semio_video_mutation`/
-/// `parse_semio_video_mutation` text codec rather than re-deriving a second independent encoding.
-impl OpBinary for SemioVideoMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        if let Self::PatchSnapshot(payload) = self {
-            let mut out = vec![1, TAG_PATCH_SNAPSHOT];
-            out.extend(protocol::OpBinary::encode_op(&payload.patch)?);
-            return Ok(out);
-        }
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, wire_tag(self)];
-        out.extend_from_slice(print_semio_video_mutation_args(self).as_bytes());
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        if bytes.len() < 2 {
-            return Err(protocol::ProtocolError::Malformed { what: "op header", offset: 0, detail: "truncated (need format+tag)".to_string() });
-        }
-        if bytes[0] != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {}", bytes[0]) });
-        }
-        if bytes[1] == TAG_PATCH_SNAPSHOT {
-            return Ok(Self::PatchSnapshot(crate::standards::v1::subsets::video::schema::mutations::patch_snapshot::PatchSnapshot { patch: protocol::OpBinary::decode_op(&bytes[2..])? }));
-        }
-        let tag = bytes[1];
-        let keyword = dsl::protocol_record::kind(WIRE_PROTOCOL, u64::from(tag)).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} names no record of 📡️.protocol.semio") })?;
-        let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
-        let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
-    }
-}
+
+
+
+
+
+
+
+
+
 //#endregion OpCodecs
 
 //#region 🔖️Demo

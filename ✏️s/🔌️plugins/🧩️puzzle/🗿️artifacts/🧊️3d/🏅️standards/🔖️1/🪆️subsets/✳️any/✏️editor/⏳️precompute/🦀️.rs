@@ -9,7 +9,7 @@
 //! that schema, not artifact behaviour.
 
 //#region 🔖️Reexports
-pub use crate::editor::puzzle3d::precompute::brush::apply_brush_placement_to_fixture;
+pub use crate::editor::puzzle3d::precompute::brush::apply_brush_placement_to_snapshot;
 //#endregion 🔖️Reexports
 
 //#region 🔖️Constants
@@ -31,7 +31,7 @@ use crate::editor::puzzle3d::precompute::geometry::{
 };
 use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
 use crate::standards::v1::subsets::any::schema::{
-    BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, Fixture, FixtureObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
+    BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, EngineSceneSnapshot, EngineSceneObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
     SceneConfig,
 };
 use crate::Puzzle3dError;
@@ -437,12 +437,12 @@ impl Puzzle3dSceneInvalidation {
             || previous.seed != next.seed
             || previous.host_rules != next.host_rules
             || previous.weights != next.weights
-            || previous.fixture.attractions != next.fixture.attractions
-            || previous.fixture.target_volumes != next.fixture.target_volumes;
-        let before: HashMap<&str, &FixtureObject> = previous.fixture.objects.iter().map(|object| (object.id.as_str(), object)).collect();
-        let after: HashMap<&str, &FixtureObject> = next.fixture.objects.iter().map(|object| (object.id.as_str(), object)).collect();
+            || previous.scene_snapshot.attractions != next.scene_snapshot.attractions
+            || previous.scene_snapshot.target_volumes != next.scene_snapshot.target_volumes;
+        let before: HashMap<&str, &EngineSceneObject> = previous.scene_snapshot.objects.iter().map(|object| (object.id.as_str(), object)).collect();
+        let after: HashMap<&str, &EngineSceneObject> = next.scene_snapshot.objects.iter().map(|object| (object.id.as_str(), object)).collect();
         let mut invalidation = Self { stale: std::collections::HashSet::new(), pending: Vec::new(), topology: false, plan };
-        for object in &next.fixture.objects {
+        for object in &next.scene_snapshot.objects {
             match before.get(object.id.as_str()) {
                 Some(retained) if **retained == *object => continue,
                 Some(retained) => invalidation.mark_stale(retained),
@@ -451,7 +451,7 @@ impl Puzzle3dSceneInvalidation {
             invalidation.mark_stale(object);
             invalidation.pending.extend(Self::vortex_ids(object));
         }
-        for object in &previous.fixture.objects {
+        for object in &previous.scene_snapshot.objects {
             if after.contains_key(object.id.as_str()) {
                 continue;
             }
@@ -461,11 +461,11 @@ impl Puzzle3dSceneInvalidation {
         invalidation
     }
 
-    fn mark_stale(&mut self, object: &FixtureObject) {
+    fn mark_stale(&mut self, object: &EngineSceneObject) {
         self.stale.extend(Self::vortex_ids(object));
     }
 
-    fn vortex_ids(object: &FixtureObject) -> impl Iterator<Item = String> + '_ {
+    fn vortex_ids(object: &EngineSceneObject) -> impl Iterator<Item = String> + '_ {
         object.vortices.iter().map(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id))
     }
 }
@@ -526,7 +526,7 @@ pub(crate) struct Puzzle3dCollision {
     brush_index_sync: Option<BrushIndexSync>,
     brush_index_ready: bool,
     /// 🧊️ World placement of every indexed owner, so a broad-phase candidate id resolves to its pose
-    /// and mesh in constant time instead of a scan over the fixture.
+    /// and mesh in constant time instead of a scan over the scene_snapshot.
     brush_placed: HashMap<String, PlacedCollisionEntry>,
 }
 
@@ -637,14 +637,14 @@ impl Puzzle3dCollision {
             sync.mutation = None;
             return true;
         }
-        let Some(object) = scene.fixture.objects.get(sync.object_cursor) else {
+        let Some(object) = scene.scene_snapshot.objects.get(sync.object_cursor) else {
             sync.stage = BrushIndexSyncStage::CollectStale;
             return true;
         };
         sync.object_cursor += 1;
         let empty_catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
         let catalogs = scene.kind_catalogs.as_ref().unwrap_or(&empty_catalogs);
-        let Some(mesh_url) = resolve_placed_object_mesh_url(object, catalogs, &scene.fixture) else { return true };
+        let Some(mesh_url) = resolve_placed_object_mesh_url(object, catalogs, &scene.scene_snapshot) else { return true };
         let world = pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale);
         let Some(bounds) = self.meshes.get(&mesh_url).map(|body| CollisionAabb::from_body(body, &world)) else { return true };
         sync.seen.insert(object.id.clone());
@@ -675,7 +675,7 @@ impl Puzzle3dCollision {
             self.brush_queue_preparing = false;
             return;
         };
-        let Some(object) = scene.fixture.objects.get(self.brush_prepare_object_cursor) else {
+        let Some(object) = scene.scene_snapshot.objects.get(self.brush_prepare_object_cursor) else {
             self.brush_queue_preparing = false;
             return;
         };
@@ -943,7 +943,7 @@ impl Puzzle3dCollision {
         };
         let empty_catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
         let catalogs = scene.kind_catalogs.as_ref().unwrap_or(&empty_catalogs);
-        let target = scene.fixture.objects.iter().find_map(|object| object.vortices.iter().position(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == target_full_id).map(|index| (object, index)));
+        let target = scene.scene_snapshot.objects.iter().find_map(|object| object.vortices.iter().position(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == target_full_id).map(|index| (object, index)));
         let Some((host, vortex_index)) = target else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: false, resume_candidate_index: 0 };
         };
@@ -960,7 +960,7 @@ impl Puzzle3dCollision {
                 return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: index };
             }
             let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
-            let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, catalogs, &scene.fixture) else {
+            let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, catalogs, &scene.scene_snapshot) else {
                 continue;
             };
             if !self.meshes.contains_key(&preview.mesh_url) {
@@ -982,7 +982,7 @@ impl Puzzle3dCollision {
 
     /// 🗺️ Broad phase for ONE brush preview: the persistent spatial index resolves the candidate page
     /// its own world bounds actually overlap, so the narrow phase never sees an object from a distant
-    /// cell. Replaces the former full-fixture rebuild plus linear scan per candidate.
+    /// cell. Replaces the former full-scene_snapshot rebuild plus linear scan per candidate.
     fn preview_collides_indexed(&self, preview: &BrushPreviewState, contact_tolerance: f64, deadline_us: u64) -> Option<bool> {
         let (page, _) = self.brush_broad_phase_page(preview, deadline_us)?;
         Self::preview_collides(&self.meshes, preview, &page, contact_tolerance, deadline_us)
@@ -1023,7 +1023,7 @@ impl Puzzle3dCollision {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 };
         };
         let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
-        let target_obj = scene.fixture.objects.iter().find_map(|o| {
+        let target_obj = scene.scene_snapshot.objects.iter().find_map(|o| {
             o.vortices.iter().enumerate().find_map(|(i, v)| {
                 let full_id = puzzle3d_vortex_full_id(&o.id, &v.id);
                 if full_id == target_full_id {
@@ -1056,7 +1056,7 @@ impl Puzzle3dCollision {
         }
         let candidate = &result.free[candidate_index % result.free.len()];
         let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
-        let target_obj = scene.fixture.objects.iter().find_map(|object| {
+        let target_obj = scene.scene_snapshot.objects.iter().find_map(|object| {
             object.vortices.iter().enumerate().find_map(|(index, vortex)| {
                 let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
                 if full_id == target_full_id {
@@ -1070,7 +1070,7 @@ impl Puzzle3dCollision {
         let (position, direction) = vortex_world_from_object(host, vortex_index)?;
         let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
         let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
-        brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, &catalogs, &scene.fixture)
+        brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, &catalogs, &scene.scene_snapshot)
     }
 
     pub(crate) fn precompute_step(&mut self, budget: u32) -> bool {
@@ -1109,7 +1109,7 @@ impl Puzzle3dCollision {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
         };
         let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
-        let target_obj = scene.fixture.objects.iter().find_map(|o| {
+        let target_obj = scene.scene_snapshot.objects.iter().find_map(|o| {
             o.vortices.iter().enumerate().find_map(|(i, v)| {
                 let full_id = puzzle3d_vortex_full_id(&o.id, &v.id);
                 if full_id == target_full_id {
@@ -1144,15 +1144,15 @@ impl Puzzle3dCollision {
         self.brush_cache.len() + self.brush_index.entry_len()
     }
 
-    pub(crate) fn apply_brush_placement(&mut self, payload: &BrushPlacePayload) -> Option<Fixture> {
+    pub(crate) fn apply_brush_placement(&mut self, payload: &BrushPlacePayload) -> Option<EngineSceneSnapshot> {
         let catalogs = self.scene.as_ref()?.kind_catalogs.as_ref()?.clone();
-        let fixture = &self.scene.as_ref()?.fixture;
-        let next = apply_brush_placement_to_fixture(fixture, payload, &catalogs);
-        if next.objects.len() == fixture.objects.len() {
+        let scene_snapshot = &self.scene.as_ref()?.scene_snapshot;
+        let next = apply_brush_placement_to_snapshot(scene_snapshot, payload, &catalogs);
+        if next.objects.len() == scene_snapshot.objects.len() {
             return None;
         }
         if let Some(scene) = &mut self.scene {
-            Arc::make_mut(scene).fixture = next.clone();
+            Arc::make_mut(scene).scene_snapshot = next.clone();
         }
         self.rebuild_queue();
         Some(next)
@@ -1228,7 +1228,7 @@ impl Puzzle3dCollisionSession {
         let meshes = self.mesh_sources.values().map(|mesh| mesh.url.len().saturating_add(mesh.positions.len().saturating_mul(4)).saturating_add(mesh.indices.len().saturating_mul(4))).fold(0_usize, usize::saturating_add);
         self.scene_synced
             .as_ref()
-            .map_or(0, |scene| scene.fixture.objects.len().saturating_mul(size_of::<crate::standards::v1::subsets::any::schema::FixtureObject>()))
+            .map_or(0, |scene| scene.scene_snapshot.objects.len().saturating_mul(size_of::<crate::standards::v1::subsets::any::schema::EngineSceneObject>()))
             .saturating_add(meshes)
             .saturating_add(self.brush_placed.len().saturating_mul(size_of::<PlacedCollisionEntry>()))
             .saturating_add(self.brush_index.entry_len().saturating_mul(size_of::<CollisionAabb>()))
@@ -1368,8 +1368,8 @@ impl Puzzle3dPrecomputeSession {
                 Ok(Puzzle3dEngineOutcome::Unit)
             }
             Puzzle3dEngineCommand::ApplyBrushPlacement { payload } => {
-                let fixture = self.engine.apply_brush_placement(&payload).ok_or(Puzzle3dError::BrushPlacementRejected)?;
-                Ok(Puzzle3dEngineOutcome::Fixture(fixture))
+                let scene_snapshot = self.engine.apply_brush_placement(&payload).ok_or(Puzzle3dError::BrushPlacementRejected)?;
+                Ok(Puzzle3dEngineOutcome::EngineSceneSnapshot(scene_snapshot))
             }
             Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights } => {
                 self.engine.update_kind_weights(object_weights, vortex_weights);

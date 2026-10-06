@@ -4,7 +4,7 @@
 #[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;
 
-use crate::document_dsl::REUSE_TERRAIN_EXAMPLE_TEXT;
+use crate::standards::v1::subsets::any::io::text::snapshot::REUSE_TERRAIN_EXAMPLE_TEXT;
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_surface::terrain::tiles;
@@ -90,136 +90,21 @@ pub fn gisterrain_artifact_schema_descriptor() -> ::semio_framework_schema_regis
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{GisTerrainDiff, GisTerrainMutation, GisTerrainSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct GisterrainBuilderConstruction {
-        snapshot: GisTerrainSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for GisterrainBuilderConstruction {
-        type Snapshot = GisTerrainSnapshot;
-        type Mutation = GisTerrainMutation;
-        type Diff = GisTerrainDiff;
-        fn empty() -> Self {
-            Self { snapshot: GisTerrainSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<GisTerrainSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <GisTerrainDiff as protocol::MutationDiff<GisTerrainSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::GisTerrainSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct GisTerrainParts {
-        pub snapshot: Option<GisTerrainSnapshot>,
-    }
-
-    pub struct GisTerrainAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for GisTerrainAnalyzerAnalysis {
-        type Parts = GisTerrainParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.gis.gisterrain", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = GisTerrainParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <GisTerrainSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec GisterrainBuilderFacets {
-        construction: GisterrainBuilderConstruction,
-        analysis: GisTerrainAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::GisTerrainComposerComposition,
-    }
-    builder: GisterrainBuilder,
-    analyzer: GisTerrainAnalyzer,
-    composer: GisTerrainComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
-/// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
-/// `GisTerrainSnapshot`, no app-state dependency — an artifact must never depend on an app.
-pub fn empty_gis_terrain_snapshot() -> GisTerrainSnapshot {
-    let exaggeration = 1.0;
-    let imported_map = None;
-    let mesh = Some(gis_terrain_mesh_child_handle(&gis_terrain_mesh_content_key(exaggeration, imported_map.as_ref())));
-    GisTerrainSnapshot { exaggeration, imported_map, mesh }
-}
 
-/// 🗺️ The default terrain document, seeded from the bundled reuse example's `gisterrain
-/// exaggeration=...` header (see `crate::GisTerrainSnapshot`'s
-/// derive-generated `.gisterrain` DSL).
-pub fn default_terrain_document() -> GisTerrainSnapshot {
-    <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_terrain_snapshot())
-}
+
+
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️TerrainDescriptor
@@ -271,33 +156,9 @@ fn default_exaggeration() -> f64 {
 
 pub const GIS_3D_TERRAIN_TILE_URL_TEMPLATE: &str = "/dem/{z}/{x}/{y}.png";
 
-#[derive(ToValue)]
-#[value(rename_all = "camelCase")]
-struct TerrainSceneStyleJson<'a> {
-    tile_url_template: &'a str,
-    project_origin_lon: f64,
-    project_origin_lat: f64,
-    exaggeration: f64,
-    color_ramp: &'a str,
-    min_zoom: u32,
-    max_zoom: u32,
-}
 
-/// 🏔️ Builds the `World3dScene.terrain_json` payload for a descriptor — the one place gis needs to
-/// reach into `semio_framework_surface::terrain` beyond the wasm session itself (for the generic engine's
-/// tile zoom bounds).
-pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
-    let style = TerrainSceneStyleJson {
-        tile_url_template: GIS_3D_TERRAIN_TILE_URL_TEMPLATE,
-        project_origin_lon: descriptor.project_origin.lon,
-        project_origin_lat: descriptor.project_origin.lat,
-        exaggeration: descriptor.exaggeration,
-        color_ramp: "hypsometric",
-        min_zoom: tiles::TERRAIN_TILE_MIN_ZOOM,
-        max_zoom: tiles::TERRAIN_TILE_MAX_ZOOM,
-    };
-    semio_framework_pack_json::to_json_string(&style)
-}
+
+
 //#endregion 🔖️TerrainDescriptor
 
 //#region 🧪️Tests

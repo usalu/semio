@@ -1,0 +1,3 @@
+# Specific Selection1 Finite Source Audit
+
+Ordered reconstruction of seven cuts over Discovery3 yields all28 full endpoints. All hashes and three current defining bodies match; 13 original native functions are byte-exact and two new selector/law functions are fully associated. Three recorded syntax endpoints bind their exact after hashes. Fourteen closed corpus cases match the handwritten native tuples, independently executed exact proposed TypeScript selector, and independent SQLite eligibility query. Retained actual2 Bun tests/64 expects and strict TypeScript zero diagnostics agree. Specific runner/static55-edge retirement, owning native execution and controlled Cargo composition remain explicit held gaps.

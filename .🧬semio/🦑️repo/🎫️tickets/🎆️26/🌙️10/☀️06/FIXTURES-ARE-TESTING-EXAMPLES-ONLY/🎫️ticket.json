@@ -1,0 +1,11 @@
+{
+  "title": "Fixtures Are Testing Examples Only",
+  "emoji": "🧫️",
+  "status": "closed",
+  "description": "End to end fixture canonicalization. Fixtures exclusively testing examples; never assets, runtime data or implementation, or separate schemas. Remove duplicate wrapper schemas, extract test support and canonical runtime ownership, update tests and enforce boundaries. Existing separation ticket vanished from disk during attempted MCP reopen; creating current continuation. Requested models GPT 6.1 Sol xhigh/high/low; MCP registry uses permitted codex identity.",
+  "summary": "Duplicate diagnostic ticket superseded by the reopened canonical ticket26/05/30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY. All implementation, verification, and durable reports are tracked there.",
+  "goal": "🎯runningframework🎯runningproducts🎯runningrepo",
+  "sessions": [
+    "⚪f8bb69c73d9345b7af7f336216de578d"
+  ]
+}

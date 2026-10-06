@@ -1,0 +1,145 @@
+//! 🎥️ Actual native ownership laws before handwritten relational opt-in.
+use crate::standards::v1::subsets::any::io::sqlite::snapshot::ShootingSnapshot;
+fn fixture()->ShootingSnapshot{let laws:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();semio_framework_pack_json::from_json_str(&laws["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
+
+#[test]
+fn sqlite_snapshot_shooting_neutral_native_json_has_exact_optional_field_presence(){let laws:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let snapshot=fixture();let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap();assert_eq!(json_numeric_semantics(actual),json_numeric_semantics(laws["snapshot"].clone()));}
+
+fn json_numeric_semantics(value:serde_json::Value)->serde_json::Value{match value{serde_json::Value::Number(number)=>serde_json::Value::Number(serde_json::Number::from_f64(number.as_f64().unwrap()).unwrap()),serde_json::Value::Array(values)=>serde_json::Value::Array(values.into_iter().map(json_numeric_semantics).collect()),serde_json::Value::Object(values)=>serde_json::Value::Object(values.into_iter().map(|(key,value)|(key,json_numeric_semantics(value))).collect()),value=>value}}
+
+#[test]
+fn sqlite_snapshot_shooting_canonical_native_codec_and_actual_declaration_expose_owned_relational_capability(){let _declaration=crate::declaration().expect("actual Shooting declaration");let codec=store::ArtifactCodec::bare::<ShootingSnapshot,crate::ShootingMutation>(crate::SHOOTING_DOCUMENT_SCHEMA);assert!(codec.snapshot_sqlite.is_some(),"Shooting canonical native codec lacks owned SQLite snapshot capability");}
+
+#[test]
+fn sqlite_snapshot_shooting_both_authored_native_examples_match_the_literal_snapshot_printer(){for text in[include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio"),include_str!("../../../../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut/🗣️.dsl.semio")]{let snapshot=<ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text).unwrap();assert_eq!(store::ArtifactDsl::print_dsl(&snapshot).trim(),text.trim(),"authored examples must use the exact literal snapshot grammar");}}
+
+#[test]
+fn sqlite_snapshot_shooting_complete_native_fields_retain_every_literal_emblem_component(){
+ let expected=fixture();assert_eq!(expected.shots[0].height,u32::MAX);assert_eq!(expected.assets[0].id,expected.assets[1].id);assert_eq!(expected.shots[0].camera_id.as_deref(),Some("unresolved!@/"));
+ for text in["","!@/\0世界","😀"]{let mut expected=expected.clone();expected.emblem=Some(store::ArtifactChild::new(text.into(),store::io_schema::ArtifactRef{artifact_id:text.into(),dialect:store::io_schema::ArtifactDialect{artifact_kind:text.into(),standard:text.into(),subset:text.into()}}));for encoding in[false,true]{let actual=if encoding{<ShootingSnapshot as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&expected)).unwrap()}else{<ShootingSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&expected)).unwrap()};assert_eq!(actual,expected);}}
+}
+
+#[test]
+fn sqlite_snapshot_shooting_all_native_geometry_fields_preserve_independent_raw_words(){
+ let laws:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let mut expected=fixture();expected.emblem=None;
+ for hex in laws["binary64Words"].as_array().unwrap(){let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let word=f64::from_bits(bits);let asset=&mut expected.assets[0];asset.origin=[word;3];asset.orientation=Some([word;4]);asset.scale=Some([word;3]);let c=&mut expected.saved_cameras[0].camera;c.position=[word;3];c.target=[word;3];c.zoom=word;c.fov=word;c.up=Some([word;3]);let scene=&mut expected.scene;scene.sun.azimuth=word;scene.sun.elevation=word;scene.sun.intensity=word;scene.ambient.intensity=word;scene.shadow.opacity=word;scene.shadow.softness=word;scene.material.metalness=word;scene.material.roughness=word;scene.material.emissive_intensity=word;
+  for encoding in[false,true]{let actual=if encoding{<ShootingSnapshot as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&expected)).unwrap()}else{<ShootingSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&expected)).unwrap()};let a=&actual.assets[0];let c=&actual.saved_cameras[0].camera;let s=&actual.scene;let words=a.origin.into_iter().chain(a.orientation.unwrap()).chain(a.scale.unwrap()).chain(c.position).chain(c.target).chain([c.zoom,c.fov]).chain(c.up.unwrap()).chain([s.sun.azimuth,s.sun.elevation,s.sun.intensity,s.ambient.intensity,s.shadow.opacity,s.shadow.softness,s.material.metalness,s.material.roughness,s.material.emissive_intensity]);for word in words{assert_eq!(word.to_bits(),bits,"{hex}: native geometry ownership");}}
+ }
+}
+
+
+use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
+fn laws()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn database(snapshot:&ShootingSnapshot)->SqliteDatabase{snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
+fn restore(database:&SqliteDatabase)->ShootingSnapshot{ShootingSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap()}
+fn file(snapshot:&ShootingSnapshot)->Vec<u8>{export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
+fn native(snapshot:&ShootingSnapshot,encoding:SnapshotEncoding)->store::io_schema::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot))}}
+fn dialect()->store::io_schema::ArtifactDialect{store::io_schema::ArtifactDialect{artifact_kind:"s.shooting.shooting".into(),standard:"1".into(),subset:"*".into()}}
+fn geometry(snapshot:&ShootingSnapshot)->Vec<u64>{let a=&snapshot.assets[0];let c=&snapshot.saved_cameras[0].camera;let s=&snapshot.scene;a.origin.into_iter().chain(a.orientation.unwrap()).chain(a.scale.unwrap()).chain(c.position).chain(c.target).chain([c.zoom,c.fov]).chain(c.up.unwrap()).chain([s.sun.azimuth,s.sun.elevation,s.sun.intensity,s.ambient.intensity,s.shadow.opacity,s.shadow.softness,s.material.metalness,s.material.roughness,s.material.emissive_intensity]).map(f64::to_bits).collect()}
+fn set_geometry(snapshot:&mut ShootingSnapshot,value:f64){let a=&mut snapshot.assets[0];a.origin=[value;3];a.orientation=Some([value;4]);a.scale=Some([value;3]);let c=&mut snapshot.saved_cameras[0].camera;c.position=[value;3];c.target=[value;3];c.zoom=value;c.fov=value;c.up=Some([value;3]);let s=&mut snapshot.scene;s.sun.azimuth=value;s.sun.elevation=value;s.sun.intensity=value;s.ambient.intensity=value;s.shadow.opacity=value;s.shadow.softness=value;s.material.metalness=value;s.material.roughness=value;s.material.emissive_intensity=value;}
+
+#[test]
+fn sqlite_snapshot_shooting_queryable_all_owned_fields_and_complete_optional_presence(){
+ let expected=fixture();let d=database(&expected);assert_eq!(d.tables.len(),6);assert_eq!(restore(&import_sqlite_database(&file(&expected),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()),expected);assert_eq!(semio_framework_pack_json::to_json_string(&restore(&d)),semio_framework_pack_json::to_json_string(&expected));
+ let mut absent=expected.clone();absent.assets.clear();absent.saved_cameras.clear();absent.shots.clear();absent.emblem=None;assert_eq!(restore(&database(&absent)),absent);assert!(database(&absent).table("shooting_emblem").unwrap().rows.is_empty());
+}
+
+#[test]
+fn sqlite_snapshot_shooting_every_geometry_word_survives_both_erased_native_directions(){
+ let codec=store::ArtifactCodec::bare::<ShootingSnapshot,crate::ShootingMutation>(crate::SHOOTING_DOCUMENT_SCHEMA);let provider=codec.snapshot_sqlite.unwrap();
+ for hex in laws()["binary64Words"].as_array().unwrap(){let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let mut expected=fixture();set_geometry(&mut expected,f64::from_bits(bits));
+  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let d=(provider.export)(&codec.schema,&dialect(),&native(&expected,encoding),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;let bytes=export_sqlite_database(&d,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let d=import_sqlite_database(&bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!(geometry(&restore(&d)),vec![bits;30]);let payload=(provider.import)(&codec.schema,&dialect(),d,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;let actual=ShootingSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert_eq!(geometry(&actual),vec![bits;30]);assert_eq!(actual.emblem,expected.emblem);assert_eq!(actual.shots,expected.shots);}
+ }
+}
+
+#[test]
+fn sqlite_snapshot_shooting_independent_queries_and_surrogate_edits_retain_semantics(){
+ use std::{io::Write,process::{Command,Stdio}};let mut expected=fixture();
+ let script=r#"import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()),{safeIntegers:true});if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const a=db.query('SELECT origin_x_bits,origin_x_class,orientation_x_bits,scale_x_bits FROM shooting_asset ORDER BY ordinal').all();const word=Buffer.alloc(8);word.writeDoubleBE(0);if(a[0].origin_x_bits!==word.readBigInt64BE()||a[0].origin_x_class!=='finite'||a[1].orientation_x_bits!==null||a[1].scale_x_bits!==null)throw Error('native geometry query');const shots=db.query('SELECT width,height,camera_id FROM shooting_shot ORDER BY ordinal').all();if(shots[0].width!==0n||shots[0].height!==4294967295n||shots[1].width!==4294967295n||shots[1].height!==0n||shots[0].camera_id!=='unresolved!@/')throw Error('native unsigned bounds');db.run('UPDATE shooting_document SET schema=?',['edited 世界']);db.run('UPDATE shooting_asset SET id=id+99,name=?',['new asset']);db.run('UPDATE shooting_saved_camera SET id=id+99,label=?',['new camera']);db.run('UPDATE shooting_shot SET id=id+99,label=?',['new shot']);db.run('UPDATE shooting_emblem SET id=id+99,artifact_id=?',['new target']);await Bun.write(Bun.stdout,db.serialize());db.close();"#;
+ let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&file(&expected)).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));expected.schema="edited 世界".into();for asset in &mut expected.assets{asset.name="new asset".into()}for camera in &mut expected.saved_cameras{camera.label="new camera".into()}for shot in &mut expected.shots{shot.label="new shot".into()}expected.emblem.as_mut().unwrap().target.artifact_id="new target".into();assert_eq!(restore(&import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap()),expected);
+}
+
+#[test]
+fn sqlite_snapshot_shooting_independent_malformed_sql_refuses_owned_shapes(){
+ use std::{io::Write,process::{Command,Stdio}};let bytes=file(&fixture());let script=r#"import{Database}from'bun:sqlite';const input=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(new Uint8Array(input.bytes));db.run('PRAGMA ignore_check_constraints=ON');db.run(input.sql);await Bun.write(Bun.stdout,db.serialize());db.close();"#;
+ for sql in laws()["malformedSql"].as_array().unwrap(){let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(serde_json::json!({"bytes":bytes,"sql":sql}).to_string().as_bytes()).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{sql}: {}",String::from_utf8_lossy(&output.stderr));assert!(import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).and_then(|d|ShootingSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()))).is_err(),"{sql}");}
+}
+
+#[test]
+fn sqlite_snapshot_shooting_exact_row_and_file_and_owned_limits_precede_all_construction(){
+ let snapshot=fixture();let d=database(&snapshot);let limits=SqliteDatabaseLimits::default();assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:9,..limits})).is_ok());assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:8,..limits})).is_err());assert!(ShootingSnapshot::from_sqlite_database(&d,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:1,..limits})).is_err());
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{for restricted in[SqliteDatabaseLimits{max_rows:8,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits},SqliteDatabaseLimits{max_file_bytes:1,..limits}]{assert!(ShootingSnapshot::decode_sqlite_snapshot_native(&native(&snapshot,encoding),&mut SqliteSnapshotControl::new(&mut |_|true,restricted)).is_err());}assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..limits})).is_err());}
+}
+
+#[test]
+fn sqlite_snapshot_shooting_initial_and_large_utf8_cancellation_reaches_native_phases(){
+ let mut snapshot=fixture();let limits=SqliteDatabaseLimits::default();for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative,SqliteSnapshotPhase::DecodeNative]{let mut cancel=|_|false;let mut control=SqliteSnapshotControl::new(&mut cancel,limits);let rejected=match phase{SqliteSnapshotPhase::ProjectSnapshot=>snapshot.to_sqlite_database(&mut control).is_err(),SqliteSnapshotPhase::ReconstructSnapshot=>ShootingSnapshot::from_sqlite_database(&database(&snapshot),&mut control).is_err(),SqliteSnapshotPhase::EncodeNative=>snapshot.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Text,&mut control).is_err(),_=>ShootingSnapshot::decode_sqlite_snapshot_native(&native(&snapshot,SnapshotEncoding::Text),&mut control).is_err()};assert!(rejected,"{phase:?}");}
+ snapshot.assets[0].url="😀".repeat(laws()["control"]["largeTextBytes"].as_u64().unwrap()as usize);let d=database(&snapshot);
+ for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative,SqliteSnapshotPhase::DecodeNative]{let mut reached=false;let mut progress=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase==phase&&event.completed>0&&(event.total==0||event.total>=65536){reached=true;false}else{true}};let mut control=SqliteSnapshotControl::new(&mut progress,limits);let rejected=match phase{SqliteSnapshotPhase::ProjectSnapshot=>snapshot.to_sqlite_database(&mut control).is_err(),SqliteSnapshotPhase::ReconstructSnapshot=>ShootingSnapshot::from_sqlite_database(&d,&mut control).is_err(),SqliteSnapshotPhase::EncodeNative=>snapshot.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Text,&mut control).is_err(),_=>ShootingSnapshot::decode_sqlite_snapshot_native(&native(&snapshot,SnapshotEncoding::Text),&mut control).is_err()};assert!(rejected,"{phase:?}");assert!(reached,"{phase:?}");}
+}
+
+#[test]
+fn sqlite_snapshot_shooting_cancellation_reaches_interior_actual_asset_traversal(){
+ let mut snapshot=fixture();snapshot.assets=vec![snapshot.assets[0].clone();laws()["control"]["collectionLength"].as_u64().unwrap()as usize];let d=database(&snapshot);let limits=SqliteDatabaseLimits::default();
+ for phase in[SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot,SqliteSnapshotPhase::EncodeNative,SqliteSnapshotPhase::DecodeNative]{let mut reached=false;let mut progress=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase==phase&&event.completed>=256{reached=true;false}else{true}};let mut control=SqliteSnapshotControl::new(&mut progress,limits);let rejected=match phase{SqliteSnapshotPhase::ProjectSnapshot=>snapshot.to_sqlite_database(&mut control).is_err(),SqliteSnapshotPhase::ReconstructSnapshot=>ShootingSnapshot::from_sqlite_database(&d,&mut control).is_err(),SqliteSnapshotPhase::EncodeNative=>snapshot.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Binary,&mut control).is_err(),_=>ShootingSnapshot::decode_sqlite_snapshot_native(&native(&snapshot,SnapshotEncoding::Binary),&mut control).is_err()};assert!(rejected,"{phase:?}");assert!(reached,"{phase:?}");}
+}
+
+#[semio_framework_async_macros::async_test]
+async fn sqlite_snapshot_shooting_actual_artifact_declaration_mount_routes_queryable_files(){
+ use store::io::io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot};semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("shooting").label("Shooting owned SQLite").version("0.0.1").package_id("semio:shooting").artifact(crate::declaration().unwrap()).try_build().unwrap();assert!(store::document_codec(crate::SHOOTING_DOCUMENT_SCHEMA).await.unwrap().unwrap().snapshot_sqlite.is_some());let expected=fixture();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect(),&expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));assert_eq!(io_import_sqlite_snapshot::<ShootingSnapshot>(&dialect(),&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value,expected);}
+}
+
+/// 🔬️ Queries every independently authored Shooting cell and edits a complete geometry companion triple.
+fn shooting_independent_complete_sqlite_oracle(bytes:&[u8],mode:&str,encoding:&str)->Vec<u8>{
+ use std::{io::Write,process::{Command,Stdio}};
+ let directory=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../🚪️io/🪶️sqlite/📸️snapshot/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🔬️independent");
+ let script=r#"import{Database}from'bun:sqlite';import{deepStrictEqual,ok}from'node:assert';import Ajv from'ajv';
+const expected=await Bun.file(process.argv[1]).json(),schema=await Bun.file(process.argv[2]).json(),mode=process.argv[3],encoding=process.argv[4];
+const validate=new Ajv({strict:true}).compile(schema);ok(validate(expected),JSON.stringify(validate.errors));
+const database=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()),{safeIntegers:true});
+const names=expected.tables.map(table=>table.name).sort(),metadata=expected.metadata;
+function verify(){
+ deepStrictEqual(database.query('PRAGMA integrity_check').all(),[{integrity_check:'ok'}]);deepStrictEqual(database.query('PRAGMA foreign_key_check').all(),[]);
+ const roster=names.slice();if(encoding!=='none'){ok(['binary','text'].includes(encoding));roster.push(metadata.table);deepStrictEqual(database.query('PRAGMA table_info('+metadata.table+')').all().map(row=>row.name),metadata.columns);const actual=database.query('SELECT '+metadata.columns.join(',')+' FROM '+metadata.table+' ORDER BY id').all().map(row=>metadata.columns.map(column=>typeof row[column]==='bigint'?Number(row[column]):row[column]));deepStrictEqual(actual,metadata.rowsByEncoding[encoding==='binary'?'Binary':'Text']);}
+ deepStrictEqual(database.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all().map(row=>row.name),roster.sort());
+ let totalRows=0,totalCells=0;
+ for(const table of expected.tables){
+  deepStrictEqual(database.query('PRAGMA table_info('+table.name+')').all().map(row=>row.name),table.columns);
+  const ordered=table.columns.includes('ordinal'),rows=database.query('SELECT rowid AS __rowid,'+table.columns.join(',')+' FROM '+table.name+' ORDER BY '+(ordered?'ordinal':'id')).all();
+  deepStrictEqual(rows.length,table.count);deepStrictEqual(new Set(rows.map(row=>String(row.id))).size,rows.length);
+  const values=rows.map((row,index)=>{
+   ok(row.id>0n);deepStrictEqual(row.__rowid,row.id);
+   if(ordered)deepStrictEqual(row.ordinal,BigInt(index));
+   let identity;if(table.name==='shooting_document'){deepStrictEqual(row.id,1n);identity='document';}else if(table.name==='shooting_scene'){deepStrictEqual(row.id,1n);identity='scene';}else if(table.name==='shooting_emblem')identity='emblem';else identity=({shooting_asset:'asset',shooting_saved_camera:'camera',shooting_shot:'shot'})[table.name]+row.ordinal;
+   return table.columns.map(column=>{const value=row[column];if(column==='id')return identity;if(column==='document_id'){deepStrictEqual(value,1n);return'document';}if(value===null)return null;if(column.endsWith('_bits'))return String(value);if(typeof value==='bigint')return Number(value);if(typeof value==='number'&&value===0)return 0;return value;});
+  });
+  deepStrictEqual(values,table.rows,table.name+' all semantic cells');totalRows+=rows.length;totalCells+=rows.length*table.columns.length;
+ }
+ deepStrictEqual(totalRows,expected.totalRows);deepStrictEqual(totalCells,expected.totalCells);
+ console.error('[DEBUG] Shooting independent complete SQLite tables='+names.length+' rows='+totalRows+' cells='+totalCells+' mode='+mode+' encoding='+encoding);
+}
+function edited(){const table=expected.tables.find(table=>table.name===expected.edit.table);deepStrictEqual(table.rows[0],expected.edit.before);table.rows[0]=expected.edit.after;}
+try{if(mode==='edited'){edited();verify();}else{verify();if(mode==='edit'){deepStrictEqual(Number(database.query("UPDATE shooting_asset SET origin_x=8.0,origin_x_bits=4620693217682128896,origin_x_class='finite' WHERE document_id=1 AND ordinal=0").run().changes),1);deepStrictEqual(database.query('SELECT origin_x,origin_x_bits,origin_x_class FROM shooting_asset WHERE document_id=1 AND ordinal=0').get(),{origin_x:8,origin_x_bits:4620693217682128896n,origin_x_class:'finite'});edited();verify();}else deepStrictEqual(mode,'original');}await Bun.write(Bun.stdout,database.serialize());}finally{database.close();}"#;
+ let mut child=Command::new("bun").args(["-e",script]).arg(directory.join("🔣️.json")).arg(directory.join("🧬️schema/🔣️.json")).arg(mode).arg(encoding).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+ child.stdin.take().unwrap().write_all(bytes).unwrap();let output=child.wait_with_output().unwrap();let diagnostics=String::from_utf8(output.stderr).unwrap();assert!(output.status.success(),"{diagnostics}");eprintln!("{diagnostics}");output.stdout
+}
+
+/// 🎯️ Preserves all literal owned fields after an independent geometry edit through both genuine public native routes.
+#[semio_framework_async_macros::async_test]
+async fn sqlite_snapshot_shooting_independent_complete_geometry_edit_public_io(){
+ use store::io::io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_route,io_run_with_snapshot_control};
+ let source=fixture();let mut expected=fixture();expected.assets[0].origin[0]=8.0;
+ let raw=shooting_independent_complete_sqlite_oracle(&file(&source),"edit","none");let raw_database=import_sqlite_database(&raw,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();let actual=restore(&raw_database);assert_eq!(actual,expected);assert_eq!(geometry(&actual),geometry(&expected));shooting_independent_complete_sqlite_oracle(&file(&actual),"edited","none");
+ semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("shooting").label("Shooting complete independent SQLite").version("0.0.1").package_id("semio:shooting").artifact(crate::declaration().unwrap()).try_build().unwrap();
+ let dialect=dialect();let sqlite=store::io_schema::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);let into=io_route(&dialect,&sqlite,1).await.unwrap().value;let from=io_route(&sqlite,&dialect,1).await.unwrap().value;
+ for route in [&into,&from]{assert_eq!(route.hops.len(),1);assert_eq!(route.fidelity,store::io_schema::IoFidelity::Exact);}
+ let codec=store::document_codec(crate::SHOOTING_DOCUMENT_SCHEMA).await.unwrap().unwrap();assert_eq!(codec.snapshot_sqlite.as_ref().unwrap().snapshot_type,Some(std::any::TypeId::of::<ShootingSnapshot>()));assert_eq!(codec.snapshot_sqlite.as_ref().unwrap().schema.as_ref(),ShootingSnapshot::SQLITE_SCHEMA);
+ for(encoding,label)in[(SnapshotEncoding::Binary,"binary"),(SnapshotEncoding::Text,"text")]{
+  let payload=native(&expected,encoding);let controlled=expected.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert_eq!(controlled,payload);let decoded=ShootingSnapshot::decode_sqlite_snapshot_native(&controlled,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert_eq!(decoded,expected);assert_eq!(geometry(&decoded),geometry(&expected));assert_eq!(native(&decoded,encoding),payload);
+  let public=io_export_sqlite_snapshot(&dialect,&source,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert!(public.starts_with(b"SQLite format 3\0"));let edited=shooting_independent_complete_sqlite_oracle(&public,"edit",label);
+  let imported=io_import_sqlite_snapshot::<ShootingSnapshot>(&dialect,&edited,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert_eq!(imported,expected);assert_eq!(geometry(&imported),geometry(&expected));
+  let restored_native=io_run_with_snapshot_control(&from,store::io_schema::IoPayload::Binary(edited),SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert_eq!(restored_native,payload);
+  let public=io_run_with_snapshot_control(&into,restored_native,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let store::io_schema::IoPayload::Binary(bytes)=public else{panic!("public Shooting SQLite file")};shooting_independent_complete_sqlite_oracle(&bytes,"edited",label);
+  eprintln!("[DEBUG] Shooting complete independently edited public owner encoding={label} tables=6 rows=9 cells=222 native_exact=true");
+ }
+}

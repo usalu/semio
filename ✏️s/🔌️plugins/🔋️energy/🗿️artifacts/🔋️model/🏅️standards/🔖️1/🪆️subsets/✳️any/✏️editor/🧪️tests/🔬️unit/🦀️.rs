@@ -1022,12 +1022,12 @@ async fn the_material_and_thermostat_diffs_cover_their_reference_fields() {
     let mut edited = base.clone();
     edited.materials[0].name = "Cedar Siding".into();
     use protocol::SemanticMutation as _;
-    let emit = model_edit("rename-material", &base, &edited, "rename".into()).expect("the rename diffs");
+    let emit = model_edit("rename-material", &base, &edited).expect("the rename diffs");
     assert_eq!(emit.artifact_mutations.iter().map(|mutation| mutation.semantics().kind).collect::<Vec<_>>(), vec!["rename-material"]);
     let mut rehomed = base.clone();
     rehomed.zones.push(Zone { id: EntityId(2), name: "Attic".into(), volume_m3: 40.0, multiplier: 1, conditioned: false, part_of_total_floor_area: true });
     rehomed.thermostats[0].zone_id = EntityId(2);
-    let emit = model_edit("change-thermostat-zone", &base, &rehomed, "rehome".into()).expect("the re-homing diffs");
+    let emit = model_edit("change-thermostat-zone", &base, &rehomed).expect("the re-homing diffs");
     assert!(emit.artifact_mutations.iter().any(|mutation| mutation.semantics().kind == "change-thermostat-zone"), "a thermostat's zone is no longer masked");
 }
 
@@ -1244,7 +1244,7 @@ async fn the_four_projected_collections_emit_a_step_for_every_field_they_carry()
 /// 🔬️ Runs the mutation seam directly over a (base, edited) pair and names the steps it emitted.
 fn model_edit_kinds(base: &crate::model::Model, edited: &crate::model::Model) -> Vec<String> {
     use protocol::SemanticMutation as _;
-    super::model_edit("probe", base, edited, "probe".into()).expect("the seam names every edited field").artifact_mutations.iter().map(|mutation| mutation.semantics().kind.to_string()).collect()
+    super::model_edit("probe", base, edited).expect("the seam names every edited field").artifact_mutations.iter().map(|mutation| mutation.semantics().kind.to_string()).collect()
 }
 //#endregion 🧱️MaterialAndConstructionVerbs
 

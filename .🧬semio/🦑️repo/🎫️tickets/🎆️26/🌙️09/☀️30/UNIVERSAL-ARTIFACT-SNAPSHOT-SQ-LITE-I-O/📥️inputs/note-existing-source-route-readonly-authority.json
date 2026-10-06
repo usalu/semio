@@ -1,0 +1,12 @@
+{
+  "qualification": "Existing registered Source route; no production change required",
+  "project": "@semio-tech/note-note-js",
+  "target": "test-snapshot-sqlite",
+  "command": "bun nx run @semio-tech/note-note-js:test-snapshot-sqlite --skip-nx-cache --outputStyle=static --excludeTaskDependencies",
+  "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/📋️project.json",
+  "scriptAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/📜️script.ts",
+  "launchAuthority": "/Users/ueli/Documents/semio/.vscode/launch.json:11438",
+  "law": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🧪️tests/🟦️.ts",
+  "neutralLawCount": 6,
+  "changesRequired": []
+}

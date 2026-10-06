@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::mutations::create_gcp;
-use crate::op::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use crate::schema::mint_remodeling_id;
 use crate::{GroundControlPoint, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

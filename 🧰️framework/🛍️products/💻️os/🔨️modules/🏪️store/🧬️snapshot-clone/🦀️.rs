@@ -40,7 +40,7 @@ pub(crate) trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
 /// 🪪 Admits and creates the domain cursor while the Store retains publication authority.
 pub(crate) trait RetainedCloneEdit<P: RetainedClone, M>: Send + Sync + 'static {
     type Cursor: RetainedCloneEditCursor<P, M>;
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
+    fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
     fn begin(&self) -> Self::Cursor;
 }
 
@@ -67,16 +67,16 @@ where
     M: ArtifactCanonicalJson + Send + Sync + 'static,
     E: RetainedCloneEdit<P, M>,
 {
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
-        self.edit.preflight(mutation, description, lane)
+    fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+        self.edit.preflight(mutation, lane)
     }
 
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, M>>, ArtifactStoreOneItemPreparationRequest<P, M>> {
-        let footprint = match self.edit.preflight(&request.mutation, request.description.as_deref(), request.lane) {
+        let footprint = match self.edit.preflight(&request.mutation, request.lane) {
             Ok(footprint) if footprint.is_admissible() => footprint,
             _ => return Err(request),
         };
-        let ArtifactStoreOneItemPreparationRequest { operation: _, generation: _, base_revision: _, lane: _, authority, description, base, mutation } = request;
+        let ArtifactStoreOneItemPreparationRequest { operation: _, generation: _, base_revision: _, lane: _, authority, base, mutation } = request;
         Ok(Box::new(RetainedClonePreparation::<P, M, E> {
             source: Some(RetainedCloneSource::from_authority(Arc::clone(base.owner.as_ref().expect("live snapshot read owner is present")), base)),
             clone_cursor: Some(P::retained_clone_cursor()),
@@ -85,7 +85,6 @@ where
             edit_cursor: self.edit.begin(),
             inverse: None,
             mutation: Some(mutation),
-            description,
             authority: Some(authority),
             sealer: None,
             mutation_retirement: Some(Arc::clone(&self.mutation_retirement)),
@@ -122,7 +121,6 @@ struct RetainedClonePreparation<P: RetainedClone, M, E: RetainedCloneEdit<P, M>>
     edit_cursor: E::Cursor,
     inverse: Option<Vec<M>>,
     mutation: Option<M>,
-    description: Option<String>,
     authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
     sealer: Option<ArtifactStoreOneItemSealer<P, M>>,
     mutation_retirement: Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,
@@ -225,7 +223,6 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
                 origin: Default::default(),
                 transaction: None,
             }],
-            description: self.description.take(),
             verb: None,
             sequence_number: authority.next_sequence_number(),
             started_at: String::new(),
@@ -471,10 +468,6 @@ where
             );
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        if let Some(description) = self.description.take() {
-            self.active_retirement = Some(owned_retirement(description));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
         if let Some(authority) = self.authority.take() {
             self.active_retirement = Some(authority.retire());
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -497,7 +490,7 @@ where
             && self.copied.is_none()
             && self.inverse.is_none()
             && self.mutation.is_none()
-            && self.description.is_none()
+           
             && self.authority.is_none()
             && self.sealer.is_none()
             && self.active_retirement.is_none()

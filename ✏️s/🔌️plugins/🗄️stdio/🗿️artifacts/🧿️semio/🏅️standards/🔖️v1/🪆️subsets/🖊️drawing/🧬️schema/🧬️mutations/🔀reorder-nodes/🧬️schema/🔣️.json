@@ -11,15 +11,57 @@
   ],
   "properties": {
     "parent": {
-      "$ref": "#/$defs/NodePath"
+      "$ref": "#/$defs/NodePath",
+      "x-semio-ui": {
+        "label": {
+          "en": "Parent",
+          "de": "Übergeordneter Knoten"
+        },
+        "description": {
+          "en": "Layer index and child indices of the group (or the layer itself) that holds the nodes, each counted from 0.",
+          "de": "Ebenenindex und Kindindizes der Gruppe (oder der Ebene selbst), die die Knoten enthält, jeweils ab 0 gezählt."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "from": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Index of the node that moves among its siblings, counted from 0.",
+          "de": "Index des Knotens, der unter seinen Geschwistern verschoben wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "to": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Destination",
+          "de": "Zielposition"
+        },
+        "description": {
+          "en": "Position the node holds among its siblings afterwards, counted from 0.",
+          "de": "Position, die der Knoten danach unter seinen Geschwistern einnimmt, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 30
+      }
     }
   },
   "$defs": {

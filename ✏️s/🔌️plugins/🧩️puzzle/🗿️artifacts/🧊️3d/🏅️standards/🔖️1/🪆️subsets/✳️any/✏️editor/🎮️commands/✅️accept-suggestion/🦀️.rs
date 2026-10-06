@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 use crate::editor::puzzle3d::sync_precompute_session;
-use crate::editor::puzzle3d::fixture_from_engine_fixture;
+use crate::editor::puzzle3d::scene_from_engine_snapshot;
 use crate::editor::puzzle3d::puzzle3d_brush_target_vortex;
 use crate::editor::puzzle3d::puzzle3d_rederive_all_attractions;
 use crate::editor::puzzle3d::resolve_puzzle3d_attractions;
@@ -43,20 +43,20 @@ pub fn accept_suggestion(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
     let Some(preview) = preview else {
         return ctx.notice(|labels| labels.placement_unavailable.as_str());
     };
-    let before: Vec<String> = ctx.scene.fixture.objects.iter().map(|object| object.id.clone()).collect();
+    let before: Vec<String> = ctx.scene.scene_snapshot.objects.iter().map(|object| object.id.clone()).collect();
     let outcome = ctx.app.precompute.borrow_mut().dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload: BrushPlacePayload::from(preview) });
     let placed_scene = match outcome {
-        Ok(Puzzle3dEngineOutcome::Fixture(fixture)) => fixture_from_engine_fixture(ctx.scene, &fixture),
+        Ok(Puzzle3dEngineOutcome::EngineSceneSnapshot(scene_snapshot)) => scene_from_engine_snapshot(ctx.scene, &scene_snapshot),
         _ => None,
     };
     match placed_scene {
         Some(next) => {
             *ctx.scene = next;
-            puzzle3d_rederive_all_attractions(&mut ctx.scene.fixture);
-            resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
+            puzzle3d_rederive_all_attractions(&mut ctx.scene.scene_snapshot);
+            resolve_puzzle3d_attractions(&mut ctx.scene.scene_snapshot);
             // ✅️ One-shot place finished — leave the scene idle (no sticky menu).
             ctx.scene.runtime.suggestion_menu = None;
-            let placed: Vec<String> = ctx.scene.fixture.objects.iter().map(|object| object.id.clone()).filter(|id| !before.contains(id)).collect();
+            let placed: Vec<String> = ctx.scene.scene_snapshot.objects.iter().map(|object| object.id.clone()).filter(|id| !before.contains(id)).collect();
             ctx.replace_selection(PUZZLE3D_GRANULARITY_OBJECT, placed);
         }
         None => ctx.notice(|labels| labels.placement_rejected.as_str()),

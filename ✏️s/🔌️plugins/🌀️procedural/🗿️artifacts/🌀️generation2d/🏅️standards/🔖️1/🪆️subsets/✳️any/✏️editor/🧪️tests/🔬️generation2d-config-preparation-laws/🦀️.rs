@@ -5,11 +5,10 @@ use store::{ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFact
 fn admitted_maximum_and_production_grant_make_bounded_progress() {
     let factory = Generation2dConfigPreparationFactory;
     let maximum = Generation2dConfigMutation::SetShowMode { value: "x".repeat(GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES) };
-    assert_eq!(factory.preflight(&maximum, None, store::HistoryLane::Document).expect("maximum admission").retained_bytes, 4_096);
+    assert_eq!(factory.preflight(&maximum, store::HistoryLane::Document).expect("maximum admission").retained_bytes, 4_096);
     let overflow = Generation2dConfigMutation::SetShowMode { value: "x".repeat(GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES + 1) };
-    assert!(factory.preflight(&overflow, None, store::HistoryLane::Document).is_err());
-    assert!(factory.preflight(&maximum, Some(&"x".repeat(65)), store::HistoryLane::Document).is_err());
-    let mut work = Generation2dConfigPreparation { base: None, mutation: Some(maximum), description: None, authority: None, prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false };
+    assert!(factory.preflight(&overflow, store::HistoryLane::Document).is_err());
+    let mut work = Generation2dConfigPreparation { base: None, mutation: Some(maximum), authority: None, prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false };
     assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4_096 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
     assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_095 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
     work.cancel();

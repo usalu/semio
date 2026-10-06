@@ -1,0 +1,39 @@
+{
+  "$schema": "../../🧬️schema/🔣️automatic-checkin/🔣️.json",
+  "note": "When an AUTOMATIC check-in is dispatched (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live finding O4): an automatic action never surfaces a refusal, so it waits while the document cannot take a checkpoint — it is loading, or it is attached and its port is not bound — and is asked for again one idle period later; nothing is lost and nothing is told. `waits` are the document states and whether an automatic check-in waits in them. `timelines` replay one editor session: `notify` reports the uncommitted-edit count, `advance` lets time pass (ms), `document` changes the document's state; `dispatched` and `deferred` are the times (ms from the start) at which the scheduler dispatched a check-in or deferred one. Every shell's automatic check-in reaches exactly these times.",
+  "idleMs": 20000,
+  "threshold": 200,
+  "waits": [
+    { "id": "a-document-at-rest-takes-the-checkpoint", "document": { "loading": false, "attached": false, "bound": false }, "waits": false },
+    { "id": "an-attached-and-bound-document-takes-it", "document": { "loading": false, "attached": true, "bound": true }, "waits": false },
+    { "id": "a-loading-document-waits", "document": { "loading": true, "attached": true, "bound": true }, "waits": true },
+    { "id": "a-loading-document-that-is-not-attached-waits", "document": { "loading": true, "attached": false, "bound": false }, "waits": true },
+    { "id": "an-attached-document-whose-port-is-not-bound-waits", "document": { "loading": false, "attached": true, "bound": false }, "waits": true }
+  ],
+  "timelines": [
+    {
+      "id": "an-idle-edit-is-checked-in-once",
+      "events": [{ "notify": 1 }, { "advance": 20000 }, { "advance": 60000 }],
+      "dispatched": [20000],
+      "deferred": []
+    },
+    {
+      "id": "a-check-in-due-during-a-load-is-deferred-and-dispatched-after-it",
+      "events": [{ "notify": 1 }, { "document": { "loading": true, "attached": true, "bound": false } }, { "advance": 20000 }, { "advance": 20000 }, { "document": { "loading": false, "attached": true, "bound": true } }, { "advance": 20000 }, { "advance": 60000 }],
+      "dispatched": [60000],
+      "deferred": [20000, 40000]
+    },
+    {
+      "id": "the-edit-threshold-during-a-load-is-deferred-not-refused",
+      "events": [{ "document": { "loading": true, "attached": false, "bound": false } }, { "notify": 200 }, { "advance": 5000 }, { "document": { "loading": false, "attached": false, "bound": false } }, { "advance": 15000 }],
+      "dispatched": [20000],
+      "deferred": [0]
+    },
+    {
+      "id": "a-landed-check-in-while-one-is-deferred-asks-for-nothing-more",
+      "events": [{ "notify": 3 }, { "document": { "loading": false, "attached": true, "bound": false } }, { "advance": 20000 }, { "notify": 0 }, { "advance": 60000 }],
+      "dispatched": [],
+      "deferred": [20000]
+    }
+  ]
+}

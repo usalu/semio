@@ -6,8 +6,37 @@
   "additionalProperties": false,
   "required": ["mutation","address", "value"],
   "properties": {
-    "address": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-address.json" },
-    "value": { "$ref": "#/$defs/XlsxCellValue" },
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-address.json",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cell",
+          "de": "Zelle"
+        },
+        "description": {
+          "en": "Worksheet and reference (for example B7) of the cell.",
+          "de": "Arbeitsblatt und Bezug (zum Beispiel B7) der Zelle."
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "value": {
+      "$ref": "#/$defs/XlsxCellValue",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cell value",
+          "de": "Zellwert"
+        },
+        "description": {
+          "en": "Typed content of the cell: number, shared string, inline string, boolean, error, formula or empty.",
+          "de": "Typisierter Inhalt der Zelle: Zahl, gemeinsame Zeichenfolge, Inline-Zeichenfolge, Wahrheitswert, Fehler, Formel oder leer."
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
     "mutation": {
       "const": "setCell",
       "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."

@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/framework-plugin-host-test-component",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test-snapshot-sqlite-source": "nx run @semio-tech/framework-plugin-host-test-component:test-snapshot-sqlite-source",
+    "test-snapshot-sqlite-release-native": "nx run @semio-tech/framework-plugin-host-test-component:test-snapshot-sqlite-release-native",
+    "test-snapshot-sqlite-native": "nx run @semio-tech/framework-plugin-host-test-component:test-snapshot-sqlite-native"
+  }
+}

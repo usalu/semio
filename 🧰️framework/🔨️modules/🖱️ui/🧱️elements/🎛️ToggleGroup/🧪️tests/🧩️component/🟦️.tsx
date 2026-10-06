@@ -34,6 +34,24 @@ describe("ToggleGroup", () => {
     expect(beta.getAttribute("aria-pressed")).toBe("false");
   });
 
+  it("is a radio group under radio semantics: one checked option, arrows move the choice, and the chosen one never presses off", () => {
+    const changes = vi.fn();
+    const { getByRole, getAllByRole, queryAllByRole } = render(<ToggleGroup semantics="radio" defaultValue="alpha" onValueChange={changes} items={items} aria-label="Axis" />);
+    const group = getByRole("radiogroup", { name: "Axis" });
+    const radios = getAllByRole("radio");
+    expect([group.getAttribute("data-slot"), radios.map((radio) => [radio.getAttribute("aria-checked"), radio.hasAttribute("aria-pressed")]), queryAllByRole("button")]).toEqual(["toggle-group", [["true", false], ["false", false], ["false", false], ["false", false]], []]);
+    const [alpha, , beta, gamma] = radios as [HTMLElement, HTMLElement, HTMLElement, HTMLElement];
+    fireEvent.click(alpha);
+    expect(changes, "the chosen option cannot be pressed off").not.toHaveBeenCalled();
+    act(() => alpha.focus());
+    fireEvent.keyDown(alpha, { key: "ArrowRight" });
+    expect([document.activeElement, changes.mock.calls, beta.getAttribute("aria-checked"), alpha.getAttribute("aria-checked")], "an arrow moves the choice with the focus, past a disabled option").toEqual([beta, [["beta"]], "true", "false"]);
+    fireEvent.keyDown(beta, { key: "End" });
+    expect([document.activeElement, changes.mock.calls.at(-1), gamma.getAttribute("aria-checked")]).toEqual([gamma, ["gamma"], "true"]);
+    fireEvent.click(beta);
+    expect([changes.mock.calls.at(-1), radios.map((radio) => radio.tabIndex)], "a press chooses, and only the chosen option is a Tab stop").toEqual([["beta"], [-1, -1, 0, -1]]);
+  });
+
   it("emits controlled single lag proposals without duplicate callbacks or local mutation", () => {
     const changes = vi.fn();
     const { getByRole, rerender } = render(<ToggleGroup value="alpha" onValueChange={changes} items={items} />);

@@ -5,9 +5,40 @@
   "type": "object",
   "properties": {
     "kind": {
-      "const": "set-lint-generation"
+      "const": "set-lint-generation",
+      "x-semio-ui": {
+        "role": "discriminator",
+        "label": {
+          "en": "Change",
+          "de": "Änderung"
+        },
+        "description": {
+          "en": "Names the window setting this change writes; fixed for the leaf.",
+          "de": "Benennt die Fenstereinstellung, die diese Änderung schreibt; für das Blatt fest."
+        }
+      }
     },
-    "value": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+    "value": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Lint generation",
+          "de": "Prüfstand"
+        },
+        "description": {
+          "en": "Counter of the lint run whose findings the window shows.",
+          "de": "Zähler des Prüflaufs, dessen Befunde das Fenster zeigt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
+    }
   },
   "required": ["kind","value"],
   "additionalProperties": false

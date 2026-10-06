@@ -29,7 +29,7 @@ for(const row of cases)test(`authored fill rule: ${row.name}`,()=>{
 });
 test("fill rule refuses unknown values",()=>{for(const value of ["evenOdd","NONZERO","",null,0]){expect(validate(value)).toBe(false);expect(()=>parseFillRule(value)).toThrow();}});
 
-import {applyFillRuleEdit} from "../../../../../../\ud83c\udfa8\ufe0fstyle/\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations/\ud83c\udf00\ufe0fset-layer-fill-rule/\ud83e\udda0\ufe0fmutation/\ud83d\udfe6\ufe0f.ts";
+import {applyFillRuleEdit} from "../../../../../../🎨️style/🧬️schema/🧬️mutations/🌀️set-layer-fill-rule/🦠️mutation/🟦️.ts";
 import {applyPatch} from "fast-json-patch";
 import before from "../../../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/⬅️before/🔣️.json";
 import after from "../../../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/➡️after/🔣️.json";

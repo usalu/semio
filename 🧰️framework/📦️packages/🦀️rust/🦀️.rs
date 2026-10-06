@@ -16,6 +16,9 @@ use semio_framework_ui_locale::Terminology;
 pub mod schema_metadata;
 //#endregion 🧬️SchemaMetadata
 
+#[path = "../../🔨️modules/📁️filesystem/📷️snapshot/🦀️.rs"]
+pub mod source_projection;
+
 #[path = "../../🔨️modules/🎯️action-bus/🦀️.rs"]
 pub mod action_bus;
 
@@ -26,7 +29,7 @@ pub use semio_framework_os_kernel::{compose_thunk, io_run_thunk, io_sniff_thunk}
 pub mod abi;
 
 pub use semio_framework_io_schema as io_schema;
-pub use semio_framework_os_kernel::sqlite_snapshot;
+pub use semio_framework_io_sqlite_snapshot as sqlite_snapshot;
 
 #[path = "../../🔨️modules/🖥️platform/🦀️.rs"]
 pub mod platform;

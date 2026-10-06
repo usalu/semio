@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "description": {
+          "en": "Id of the edge.",
+          "de": "Kennung der Kante."
+        },
+        "ref": {
+          "kind": "edge"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

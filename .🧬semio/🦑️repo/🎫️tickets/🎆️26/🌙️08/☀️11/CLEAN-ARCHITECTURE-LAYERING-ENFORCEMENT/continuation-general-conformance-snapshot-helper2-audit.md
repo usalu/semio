@@ -1,0 +1,5 @@
+# General Conformance Held Snapshot Preparation
+
+Separate helper2 SHA 6c2f3c79a2b33f252903bf28494b5af8339d5fda624a5f089a7d7714a2930808 corrects the held helper1 cancellation gaps: each declaring target and relative dependency append checks cancellation and yields; each final supplemental source/frame guard does likewise. The captured-source loop and final held endpoint checks retain their bounded yields. Both owners have six recorded closed encoding cases bound to this exact helper and codec.
+
+Preparation-only admission binds each original source, metadata and honest current refusal. Captured canonical bytes/counts are guarded and retained; live differences remain full unknown pairs. Explicit null model endpoints cannot be restored. Current declarations and static imports are separately captured additions without historical preidentity. Missing and dynamic imports remain explicit. Neither source admission nor complete Rust closure/native execution is inferred: sealed held plan and fresh owning metadata require separate provider admission before dispatch. Production writes remain zero.

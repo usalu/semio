@@ -60,7 +60,7 @@ fn settle(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
 }
 
 async fn apply(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, n: i32) {
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], description: None, transaction: None }).await.expect("a plain edit applies");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], transaction: None }).await.expect("a plain edit applies");
     settle(store);
 }
 

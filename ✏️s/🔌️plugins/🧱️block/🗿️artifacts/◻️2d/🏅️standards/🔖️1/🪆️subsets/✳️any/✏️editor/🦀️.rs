@@ -7,7 +7,7 @@
 //! app's own typed media I/O surface + plugin registration (below — constitutional: general, an
 //! artifact must never depend on an app, so both live here rather than under `🗿️artifacts`).
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 use crate::{artifact_kind, Block2dSnapshot, BLOCK_2D_SCHEMA};
 use crate::editor::block2d::commands::patch_node_kind;
 use crate::editor::block2d::commands::{add_compatibility_rule, remove_compatibility_rule};
@@ -66,7 +66,7 @@ pub const BLOCK2D_GRANULARITY_HANDLE: &str = "handle";
 pub const BLOCK2D_GRANULARITY_HANDLE_KIND: &str = "handleKind";
 /// 🗂️ The `s/plugin/puzzle` 2d catalog artifact kind block2d's `"catalog:out"` port produces — see
 /// `block2d_io` and `Block2dPlayApp::export_media`.
-use crate::KIT_CATALOG_ARTIFACT_ID;
+use semio_s_plugin_block_catalog::ARTIFACT_ID;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎮️commands/*`)? builds its `on_change`/item actions with.
@@ -280,7 +280,6 @@ struct Block2dStorePreparationFactory;
 struct Block2dStorePreparation {
     base: Option<store::SnapshotRead<Block2dSnapshot>>,
     mutation: Option<Block2dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Block2dSnapshot, Block2dMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -289,9 +288,9 @@ struct Block2dStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Block2dSnapshot, Block2dMutation> for Block2dStorePreparationFactory {
-    fn preflight(&self, mutation: &Block2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Block2d Store preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &Block2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Block2d Store preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -321,7 +320,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block2dSnapshot, Block2dMutat
         Ok(Box::new(Block2dStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -362,7 +360,7 @@ impl store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation> fo
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -378,7 +376,7 @@ impl store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation> fo
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation
@@ -478,7 +476,7 @@ impl ArtifactEditor for Block2dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id || block2d_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-            return Err(Fault::from("block2d-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "block2d-retained-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, block2d_retained_reduce, block2d_retained_extent));
@@ -506,9 +504,9 @@ impl ArtifactEditor for Block2dPlayApp {
 
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document (the same DSL
     /// `setActiveExample` parses), so every window renders real content instead of the all-`Default`
-    /// empty node kind — see `crate::standards::v1::subsets::any::schema::default_block2d_snapshot`.
+    /// empty node kind — see `crate::standards::v1::subsets::any::io::text::snapshot::default_block2d_snapshot`.
     fn initial_snapshot() -> Block2dSnapshot {
-        crate::standards::v1::subsets::any::schema::default_block2d_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_block2d_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -603,7 +601,7 @@ impl ArtifactEditor for Block2dPlayApp {
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::standards::v1::subsets::any::schema::inferences::puzzle2d_manifest_fragment(doc.snapshot);
-        Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
+        Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
 //#endregion 🔖️Block2dPlayApp
@@ -615,7 +613,7 @@ pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle2d catalog artifact this app's new `"catalog:out"` port produces — see
             // `block2d_io`/`Block2dPlayApp::export_media`.
-            .artifact_kind(crate::kit_catalog_artifact_kind())
+            .artifact_kind(semio_s_plugin_block_catalog::artifact_kind())
             .icon_id("layout-grid")
             .mode_def(edit_mode::definition())
             .default_mode_id(edit_mode::BLOCK2D_PLAY_MODE_EDIT)

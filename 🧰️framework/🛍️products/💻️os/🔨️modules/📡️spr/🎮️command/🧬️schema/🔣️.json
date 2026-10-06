@@ -136,6 +136,11 @@
           "items": {
             "$ref": "#/$defs/MutationLanguageSurface"
           }
+        },
+        "editable": {
+          "description": "Whether the history editor may edit this leaf's inputs. Absent or true: the leaf is editable and shows at least one input. False declares it withdraw-only (design §22.20): #[derive(MutationLeaf)] answers input_schema() == None, no gate judges its inputs, and its history row offers Withdraw only.",
+          "type": "boolean",
+          "default": true
         }
       }
     },
@@ -163,211 +168,6 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/MutationLawsI64"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "VerbVocabularyV1": {
-      "title": "Mutation Verb Vocabulary",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schemaVersion",
-        "cases"
-      ],
-      "properties": {
-        "schemaVersion": {
-          "const": 1
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "verb",
-              "record"
-            ],
-            "properties": {
-              "verb": {
-                "type": "string",
-                "minLength": 1
-              },
-              "record": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "minLength": 1
-              }
-            }
-          }
-        }
-      }
-    },
-    "MutationLeafDescriptorVectorsV1": {
-      "title": "Mutation Leaf Descriptor Vectors",
-      "type": "object",
-      "required": [
-        "schemaVersion",
-        "descriptor",
-        "enumWireValues",
-        "binaryTagVectors",
-        "ownerBoundaryVectors",
-        "rosterVectors"
-      ],
-      "properties": {
-        "schemaVersion": {
-          "const": 1
-        },
-        "descriptor": {
-          "$ref": "#/$defs/MutationLeafDescriptor"
-        },
-        "enumWireValues": {
-          "type": "object",
-          "required": [
-            "invertibility",
-            "diffParticipation",
-            "outcomeClasses",
-            "composition",
-            "requiredLanguageSurfaces"
-          ],
-          "properties": {
-            "invertibility": {
-              "type": "array",
-              "items": {
-                "enum": [
-                  "self",
-                  "explicit-mutation",
-                  "plan",
-                  "non-invertible"
-                ]
-              }
-            },
-            "diffParticipation": {
-              "type": "array",
-              "items": {
-                "enum": [
-                  "detect",
-                  "apply-only",
-                  "plan",
-                  "none"
-                ]
-              }
-            },
-            "outcomeClasses": {
-              "type": "array",
-              "items": {
-                "enum": [
-                  "applied",
-                  "info",
-                  "warning",
-                  "error",
-                  "fatal"
-                ]
-              }
-            },
-            "composition": {
-              "type": "array",
-              "items": {
-                "enum": [
-                  "atomic",
-                  "composite"
-                ]
-              }
-            },
-            "requiredLanguageSurfaces": {
-              "type": "array",
-              "items": {
-                "enum": [
-                  "rust",
-                  "typescript",
-                  "graphql",
-                  "protobuf",
-                  "json-schema",
-                  "text",
-                  "binary"
-                ]
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        "binaryTagVectors": {
-          "type": "array",
-          "minItems": 8,
-          "items": {
-            "type": "object",
-            "required": [
-              "name",
-              "expected"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1
-              },
-              "value": {},
-              "missing": {
-                "const": true
-              },
-              "expected": {
-                "type": "boolean"
-              }
-            },
-            "additionalProperties": false
-          }
-        },
-        "ownerBoundaryVectors": {
-          "type": "array",
-          "minItems": 5,
-          "items": {
-            "type": "object",
-            "required": [
-              "name",
-              "owner",
-              "expected"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1
-              },
-              "owner": {
-                "type": "string"
-              },
-              "expected": {
-                "type": "boolean"
-              }
-            },
-            "additionalProperties": false
-          }
-        },
-        "rosterVectors": {
-          "type": "array",
-          "minItems": 20,
-          "items": {
-            "type": "object",
-            "required": [
-              "name",
-              "expected"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1
-              },
-              "expected": {
-                "type": "boolean"
-              },
-              "field": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "additionalProperties": false
           }
         }
       },
@@ -699,5 +499,6 @@
         }
       ]
     }
-  }
+  },
+  "$ref": "#/$defs/MutationLeafDescriptor"
 }

@@ -1,0 +1,18 @@
+{
+  "version":1,
+  "tables":{"emoji":{"shared":"🎨","🙂":"nul\u0000value"},"themed":{"shared":"theme.svg","themed":"引用.svg","case":"lower.svg"},"catalog":{"shared":"catalog.svg","themed":"ignored.svg","catalog":"plain.svg","constructor":"owned.svg"}},
+  "cases":[
+    {"id":"precedence-emoji","code":"shared","expected":{"kind":"emoji","value":"🎨"}},
+    {"id":"precedence-theme","code":"themed","expected":{"kind":"themed","value":"引用.svg"}},
+    {"id":"catalog","code":"catalog","expected":{"kind":"catalog","value":"plain.svg"}},
+    {"id":"trim-ascii","code":" \t\nshared\r ","expected":{"kind":"emoji","value":"🎨"}},
+    {"id":"trim-unicode","code":"\u00a0themed\u2003","expected":{"kind":"themed","value":"引用.svg"}},
+    {"id":"empty","code":"","expected":null},
+    {"id":"whitespace","code":" \t\n","expected":null},
+    {"id":"case-sensitive","code":"Case","expected":null},
+    {"id":"nul-not-trimmed","code":"shared\u0000","expected":null},
+    {"id":"unicode-key-and-nul-value","code":"🙂","expected":{"kind":"emoji","value":"nul\u0000value"}},
+    {"id":"own-constructor-key","code":"constructor","expected":{"kind":"catalog","value":"owned.svg"}},
+    {"id":"no-prototype-fallback","code":"toString","expected":null}
+  ]
+}

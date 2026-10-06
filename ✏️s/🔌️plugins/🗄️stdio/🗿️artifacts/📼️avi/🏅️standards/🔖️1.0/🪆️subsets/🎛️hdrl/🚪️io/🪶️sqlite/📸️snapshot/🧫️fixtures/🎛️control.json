@@ -1,0 +1,34 @@
+{
+  "largeBlobBytes": 65537,
+  "entityCount": 2000,
+  "cancelAt": 256,
+  "semanticCells": {
+    "tableWidths": {
+      "avi_document": 3,
+      "avi_main_header": 11,
+      "avi_main_reserved": 4,
+      "avi_stream": 4,
+      "avi_stream_header": 20,
+      "avi_bitmap_info": 12,
+      "avi_wave_format": 8,
+      "avi_raw_format": 2,
+      "avi_stream_chunk": 6,
+      "avi_stream_extra": 5,
+      "avi_unknown_chunk": 5,
+      "avi_hdrl_extra": 5
+    },
+    "schemaBytes": 5237,
+    "cases": [
+      {
+        "id": "full",
+        "rows": 27,
+        "valueBytes": 1362
+      },
+      {
+        "id": "empty",
+        "rows": 2,
+        "valueBytes": 128
+      }
+    ]
+  }
+}

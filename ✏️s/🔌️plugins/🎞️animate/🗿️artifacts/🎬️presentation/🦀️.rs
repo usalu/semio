@@ -561,35 +561,6 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
-                    }
-                    #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {
@@ -686,60 +657,35 @@ pub mod standards {
 }
 
 // ---- Shims: keep pre-migration module paths resolving for external callers ----
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
-pub mod op {
-    pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-}
+
+
+
 pub mod diff {
-    pub use crate::standards::v1::subsets::any::io::diff::text::*;
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::diff::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::diff::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::io::diff::binary::*;
-    }
+
+
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::mutations::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
-    }
+
+
+
 }
 pub mod snapshot {
     pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
-    }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-    }
-    pub mod binary {
-        pub use crate::standards::v1::subsets::any::io::snapshot::binary::*;
-    }
+
+
+
 }
 
 #[path = "."]

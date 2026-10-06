@@ -9,7 +9,7 @@ use serde_json::json;
 fn puzzle2d_delta_ops_are_granular_and_round_trip() {
     let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "anchor": "fixed", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "anchor": "fixed", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
     let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "anchor": "fixed", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
-    let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle2dSnapshot>(value.clone()).expect("typed puzzle2d fixture")).expect("canonical puzzle2d JSON");
+    let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle2dSnapshot>(value.clone()).expect("typed puzzle2d snapshot")).expect("canonical puzzle2d JSON");
     let operations = puzzle2d_document_delta_operations(&before, &after).expect("both sides decode");
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::MoveNode(_))));
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::CreateNode(_))));
@@ -19,7 +19,7 @@ fn puzzle2d_delta_ops_are_granular_and_round_trip() {
     let mut forward = before.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse fixture"));
+        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse snapshot"));
         forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward).expect("valid mutation diff");
     }
     assert_eq!(forward, canonical(&after));
@@ -102,6 +102,50 @@ fn connect_disconnect_handles_inverse_law() {
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_tips("e1".into(), Some("arrow".into()), Some("dot".into()))));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_visible("e1".into(), Some(false))));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_locked("e1".into(), Some(true))));
+}
+
+/// 🧲️ LAW (design §22.13): a connection that states the tolerance it was recorded under connects on ANY base. Within
+/// the tolerance it reports nothing; once a handle moved away, or is on no node, it still adds its edge and warns
+/// `mutation.precondition-drifted` naming both handles; a negative or non-finite tolerance is what the schema forbids.
+#[test]
+fn a_recorded_proximity_connect_warns_once_its_handles_drift_apart() {
+    use crate::{Puzzle2dHandle, Puzzle2dNode};
+    let node = |id: &str, x: f64, handle: &str, angle: f64| Puzzle2dNode { id: id.into(), x, radius: Some(24.0), handles: vec![Puzzle2dHandle { id: handle.into(), angle, ..Default::default() }], ..Default::default() };
+    let mut base = empty_puzzle2d_snapshot();
+    base.nodes = vec![node("a", 0.0, "ha", 0.0), node("b", 56.0, "hb", std::f64::consts::PI)];
+    assert_eq!(puzzle2d_handle_position(&base, "ha"), Some((24.0, 0.0)), "a circle's handle sits on the rim at its east-zero angle");
+    let apart = puzzle2d_handle_distance(&base, "ha", "hb").expect("both handles are on a node");
+    assert!((apart - 8.0).abs() < 1e-9, "{apart}");
+    assert_eq!(puzzle2d_handle_distance(&base, "ha", "ghost"), None);
+    let recorded = connect_handles_in_proximity("e1".into(), "ha".into(), "hb".into(), 12.0);
+    let near = recorded.diff(&base);
+    assert!(near.messages().is_empty(), "within the tolerance nothing is reported: {:?}", near.messages());
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &recorded));
+    let mut moved = base.clone();
+    moved.nodes[1].x = 300.0;
+    let mut gone = base.clone();
+    gone.nodes.remove(1);
+    for (state, what) in [(&moved, "moved away"), (&gone, "on no node")] {
+        let outcome = recorded.diff(state);
+        let reported: Vec<(semio_framework_diagnostic::Severity, &str, Vec<String>)> = outcome.messages().iter().map(|message| (message.level, message.code.0.as_str(), message.target.clone())).collect();
+        assert_eq!(reported, vec![(semio_framework_diagnostic::Severity::Warning, "mutation.precondition-drifted", vec!["ha".to_string(), "hb".to_string()])], "{what}");
+        assert!(outcome.messages()[0].message.contains("\"ha\"") && outcome.messages()[0].message.contains("\"hb\""), "{what}: the words name both handles: {}", outcome.messages()[0].message);
+        let connected = MutationDiff::<Puzzle2dSnapshot>::apply(outcome.diff(), state).expect("a drifted connection still applies");
+        assert!(connected.edges.iter().any(|edge| edge.id == "e1" && edge.source == "ha" && edge.target == "hb"), "{what}: the edge is there");
+    }
+    let unconditional = connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None);
+    assert!(unconditional.diff(&moved).messages().is_empty(), "a connection that states no tolerance has no precondition");
+    for forbidden in [-1.0, f64::NAN, f64::INFINITY] {
+        let outcome = connect_handles_in_proximity("e1".into(), "ha".into(), "hb".into(), forbidden).diff(&base);
+        ::semio_framework_async::poll::resolve_ready(assert_fatal_never_applies(&outcome));
+        assert_eq!(outcome.messages()[0].code.0, "mutation.invariant", "tolerance {forbidden}");
+    }
+    let line = <Puzzle2dMutation as protocol::OpText>::print_op(&recorded);
+    assert_eq!(<Puzzle2dMutation as protocol::OpText>::parse_op(&line).expect("the text form parses"), recorded, "{line}");
+    let bytes = <Puzzle2dMutation as protocol::OpBinary>::encode_op(&recorded).expect("the binary form encodes");
+    assert_eq!(<Puzzle2dMutation as protocol::OpBinary>::decode_op(&bytes).expect("the binary form decodes"), recorded);
+    let value = semio_framework_value::ToValue::to_value(&unconditional);
+    assert!(serde_json::Value::from(value).get("tolerance").is_none(), "a connection with no precondition states none");
 }
 
 #[test]
@@ -256,7 +300,7 @@ fn identity_selection_transforms_are_no_ops() {
         let outcome = mutation.diff(&base);
         assert_eq!(outcome.diff(), &Puzzle2dDiff::default(), "{mutation:?}");
         assert_eq!(outcome.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), vec!["mutation.no-op"], "{mutation:?}");
-        assert!(inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture").is_empty(), "{mutation:?}: nothing moved, nothing to undo");
+        assert!(inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot").is_empty(), "{mutation:?}: nothing moved, nothing to undo");
     }
 }
 

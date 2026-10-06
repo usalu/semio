@@ -1,0 +1,69 @@
+{
+  "schemaBytes": 1155,
+  "tableCount": 4,
+  "maxColumns": 12,
+  "cases": [
+    {
+      "key": "nativeMatchedFull",
+      "rows": 6,
+      "semanticBytes": 320,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 176
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "nodesEdgesEmpty",
+      "rows": 1,
+      "semanticBytes": 24,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    }
+  ]
+}

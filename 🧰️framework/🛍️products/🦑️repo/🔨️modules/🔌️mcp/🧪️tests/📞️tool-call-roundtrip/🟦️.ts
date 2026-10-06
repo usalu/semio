@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, GetPromptRequestSchema, ListPromptsRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema, ReadResourceRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Oracle
@@ -46,7 +46,7 @@ async function referenceCallServer(): Promise<(request: unknown) => Promise<Reco
 }
 
 function vectors(ctx: AdapterContext): Vector[] {
-  return (JSON.parse(readFileSync(ctx.fixture("shared://2️⃣g2-contract.json"), "utf8")) as { vectors: Vector[] }).vectors;
+  return (JSON.parse(readFileSync(ctx.input("shared://2️⃣g2-contract.json"), "utf8")) as { vectors: Vector[] }).vectors;
 }
 
 /** 📞️ Dispatches one vector against a freshly initialized reference server. */

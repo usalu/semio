@@ -32,6 +32,7 @@ pub const ARCHITECT_BODY_ADJACENCY: &str = "architect.adjacency";
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: ARCHITECT_WINDOW_ADJACENCY.into(),
         label: LocalizedLabel::native("Adjacency", "Adjazenz"),
         body_key: ARCHITECT_BODY_ADJACENCY.into(),

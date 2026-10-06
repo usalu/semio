@@ -2980,7 +2980,7 @@
             }
           },
           {
-            "id": "resetFixture",
+            "id": "resetSnapshot",
             "label": {
               "native": {
                 "en": "Reset Fixture",

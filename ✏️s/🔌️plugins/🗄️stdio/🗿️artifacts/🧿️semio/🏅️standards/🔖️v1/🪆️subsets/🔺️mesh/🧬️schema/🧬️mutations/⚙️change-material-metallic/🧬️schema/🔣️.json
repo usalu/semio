@@ -10,12 +10,29 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Material"
+        },
+        "description": {
+          "en": "Id of the material.",
+          "de": "Kennung des Materials."
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "new_metallic": {
       "type": "number",
       "x-semio-ui": {
-        "widget": "stepper",
+        "widget": "slider",
         "label": {
           "en": "Metallic",
           "de": "Metallizität"
@@ -23,7 +40,11 @@
         "description": {
           "en": "PBR metalness, 0 dielectric to 1 metal.",
           "de": "PBR-Metallizität, 0 Dielektrikum bis 1 Metall."
-        }
+        },
+        "step": 0.01,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 1
       }
     }
   }

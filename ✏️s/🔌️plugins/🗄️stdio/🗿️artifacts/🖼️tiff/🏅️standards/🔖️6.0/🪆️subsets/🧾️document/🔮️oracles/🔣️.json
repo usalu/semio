@@ -671,9 +671,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-ifd-applied",
       "class": "third-party-generated",
       "target": {
@@ -724,7 +723,6 @@
       "notes": "A second, smaller IFD is appended after the first — ifdCount 1 -> 2."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-ifd-applied",
       "class": "third-party-generated",
       "target": {
@@ -775,7 +773,6 @@
       "notes": "The second IFD of a two-IFD document is dropped — ifdCount 2 -> 1."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-tag-applied",
       "class": "third-party-generated",
       "target": {
@@ -826,7 +823,6 @@
       "notes": "IFD 0's ImageDescription tag value changes; every other tag and the raster are untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-tag-applied",
       "class": "third-party-generated",
       "target": {
@@ -877,7 +873,6 @@
       "notes": "IFD 0's ImageDescription tag is omitted entirely on encode."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-pixels-applied",
       "class": "third-party-generated",
       "target": {
@@ -926,7 +921,6 @@
       "notes": "IFD 0 keeps its dimensions/tags; the raster bytes are wholly different."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "byte-order-change-byte-order",
       "class": "third-party-generated",
       "target": {
@@ -975,7 +969,6 @@
       "comparisonPipeline": "tiff-6-0-byte-order-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -1018,7 +1011,6 @@
       "notes": "SetSnapshot replaces the whole document: the 2x2 RGBA raster of IFD 0 is reversed while its tags stay as the replacement states them."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-snapshot-applied",
       "class": "handcrafted",
       "target": {

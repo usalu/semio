@@ -201,7 +201,7 @@ fn a_written_document_reads_back_entity_for_entity_and_re_encodes_byte_for_byte(
     let drawing = every_entity_kind();
     let bytes = dwg_to_bytes(&drawing).expect("this subset writes the DWG");
     assert_eq!(ours(&dwg_from_bytes(&bytes).expect("drawing reader")), ours(&drawing));
-    let snapshot = crate::schema::snapshot::decode_dwg(&bytes).expect("lossless AC1024 decoder");
+    let snapshot = crate::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg(&bytes).expect("lossless AC1024 decoder");
     let written = crate::DwgSnapshot::from_drawing(&drawing).expect("new document");
     for (read, expected) in snapshot.drawing.objects.iter().zip(&written.drawing.objects) {
         assert_eq!(read, expected);
@@ -215,5 +215,5 @@ fn a_written_document_reads_back_entity_for_entity_and_re_encodes_byte_for_byte(
     assert_eq!(snapshot.preview, written.preview);
     assert_eq!(snapshot.application_history, written.application_history);
     assert_eq!(crate::DwgSnapshot { drawing: written.drawing.clone(), ..snapshot.clone() }, written);
-    assert_eq!(crate::schema::snapshot::encode_dwg(&snapshot).expect("re-encode"), bytes);
+    assert_eq!(crate::standards::v_ac1024::subsets::any::io::binary::snapshot::encode_dwg(&snapshot).expect("re-encode"), bytes);
 }

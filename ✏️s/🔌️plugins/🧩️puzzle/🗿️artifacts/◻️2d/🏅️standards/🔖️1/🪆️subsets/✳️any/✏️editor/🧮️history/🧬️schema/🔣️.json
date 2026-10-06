@@ -1,0 +1,221 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://s.puzzle.2d.1.any.editor.history",
+  "title": "PuzzleHistoryOutcome",
+  "$ref": "#/definitions/RuntimeOutcome",
+  "definitions": {
+    "OutcomeSeverity": {
+      "enum": [
+        "info",
+        "warning",
+        "error",
+        "fatal"
+      ]
+    },
+    "Ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "LocalizedLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "SelectionOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "worst",
+        "code",
+        "target"
+      ],
+      "properties": {
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "worst": {
+          "$ref": "#/definitions/OutcomeSeverity"
+        },
+        "code": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/definitions/Ids"
+        },
+        "introduced": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RuntimeOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row",
+        "worst",
+        "code"
+      ],
+      "properties": {
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mutation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "worst": {
+          "$ref": "#/definitions/OutcomeSeverity"
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^mutation\\."
+        },
+        "target": {
+          "$ref": "#/definitions/Ids"
+        },
+        "introduced": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MutationInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "control"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "control": {
+          "enum": [
+            "reference",
+            "stepper",
+            "dial",
+            "slider"
+          ]
+        },
+        "domain": {
+          "type": "string"
+        },
+        "granularity": {
+          "type": "string"
+        },
+        "many": {
+          "type": "boolean"
+        },
+        "snapSource": {
+          "type": "string"
+        },
+        "step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "scale": {
+          "enum": [
+            "linear",
+            "log"
+          ]
+        },
+        "snaps": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "component": {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "description": "A subset of the UI contract component the history editor renders for the input (every facet the descriptor carries: appearance, scale, travel, step, detents, units, display factor, precision, hard limits with their refusals)."
+        }
+      }
+    },
+    "HistoryEdit": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "index",
+            "leaf"
+          ],
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "leaf": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/mutations.json"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "index",
+            "withdrawn"
+          ],
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "withdrawn": {
+              "const": true
+            }
+          }
+        }
+      ]
+    },
+    "FoldedOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "code",
+        "target"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^mutation\\."
+        },
+        "target": {
+          "$ref": "#/definitions/Ids"
+        }
+      }
+    }
+  }
+}

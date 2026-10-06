@@ -1,0 +1,29 @@
+{
+  "chunkBytes": [
+    1,
+    2,
+    7,
+    65536
+  ],
+  "cases": [
+    {
+      "name": "Retained Routes And Skipped Escapes",
+      "source": "{\"assets\": [{\"path\": \"🧬😀\", \"sha256\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"byteCount\": 9, \"source\": \"discard\\\\\\\"\\n\\t😀\", \"foreign\": {\"nested\": [\"discard\"]}}], \"routes\": [{\"rows\": [{\"source\": \"keep 😀\"}], \"scriptArgv\": [\"test\"], \"policy\": {\"level\": \"long\"}}], \"rootWorkspace\": {\"before\": \"keep\"}, \"executor\": {\"source\": \"keep\"}, \"authority\": {\"sha256\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}, \"sourceProof\": {\"sha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}, \"ignored\": {\"large\": \"discard\"}}"
+    },
+    {
+      "name": "Duplicate Keys System Semantics",
+      "source": "{\"assets\":[{\"path\":\"old\",\"path\":\"new\",\"sha256\":\"a\",\"byteCount\":0,\"source\":\"discard\"}],\"routes\":[],\"rootWorkspace\":{},\"executor\":{},\"authority\":{},\"sourceProof\":{}}"
+    },
+    {
+      "name": "Null Arrays Escaped Keys",
+      "source": "{\"assets\":[],\"routes\":[null,true,42,\"keep\"],\"rootWorkspace\":{\"__proto__\":{\"retained\":true}},\"executor\":{},\"authority\":{},\"sourceProof\":{},\"ignored\":[[\"escaped\\u0041\"]]}"
+    }
+  ],
+  "invalid": [
+    "{\"ignored\":\"\\q\"}",
+    "{\"ignored\":\"\\uZZZZ\"}",
+    "{\"ignored\":\"unfinished}",
+    "{\"assets\":[]} trailing",
+    "{\"ignored\":\"\u0001\"}"
+  ]
+}

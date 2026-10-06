@@ -1,9 +1,10 @@
 //! 🥞️ Render visible artwork privately, then replace the layer tree in one undoable operation.
 use crate::editor::raster::{RasterCommand,RasterPlayApp};
 use crate::editor::raster::config::{RasterConfig,RasterConfigMutation};
-use crate::standards::v1::subsets::any::schema::{create_pixel_layer,layer_node_id};
+use crate::standards::v1::subsets::any::schema::{layer_node_id};
+use crate::standards::v1::subsets::any::io::text::snapshot::{create_pixel_layer};
 use crate::{RasterImageAsset,RasterLayerNode,RasterMutation,RasterSnapshot};
-use crate::io::RasterStackPreparation;
+use crate::standards::v1::subsets::any::io::RasterStackPreparation;
 use semio_framework_pixels::{compositing::layers::RasterStackJob,png_encoding::{EncodedPngImage,PngEncodeJob}};
 use semio_framework_plugin::{ArtifactView,ConfigView,EditorApp,Emit,Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs,ArtifactCommandWork,ArtifactCommandWorkStep};

@@ -28,6 +28,7 @@ pub const LAYOUT_PLAY_SURFACE_BLUEPRINT: &str = "layout.play.blueprint";
 /// stays empty: layout declares no config-derived chrome measures for this window.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: LAYOUT_PLAY_WINDOW_BLUEPRINT.into(),
         label: LocalizedLabel::native("Blueprint", "Entwurf"),
         body_key: LAYOUT_PLAY_BODY_BLUEPRINT.into(),

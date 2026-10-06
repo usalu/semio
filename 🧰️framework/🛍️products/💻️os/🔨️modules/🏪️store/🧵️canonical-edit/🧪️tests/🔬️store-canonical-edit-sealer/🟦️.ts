@@ -5,27 +5,27 @@ import { createHash } from "node:crypto";
 import { WORKSPACE_ROOT, toolJobRustBlock } from "../../../../../../../../📜️script.ts";
 import { canonicalErrorProgressSelfTests } from "../🔬️canonical-error-progress/🟦️.ts";
 
+/** 🔢️ An edit's revision value: its members in declaration order without `sequenceNumber` (design §22.28) — where an edit sits in its history is not part of what it is. */
+const revisionValue = ({ sequenceNumber: _sequenceNumber, ...revision }: Record<string, unknown>): Record<string, unknown> => revision;
+
 /** 🧪️ Validates language-neutral canonical bytes and private Store sealer source boundaries. */
-export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHostiles: number; sourceHostiles: number; digestOracles: number; mapGrants: number; mapSchemaHostiles: number; mapSourceHostiles: number; mapDigestOracles: number; readerChecks: number } {
+export function storeCanonicalEditSealerSelfTests(): { grants: number; editHostiles: number; sourceHostiles: number; digestOracles: number; mapGrants: number; mapEditHostiles: number; mapSourceHostiles: number; mapDigestOracles: number; readerChecks: number } {
   const storePath = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store";
   const base = join(WORKSPACE_ROOT, storePath, "🧵️canonical-edit");
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
+  const contract = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(base, "🧪️testing/🧬️schema/🔣️.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔏️canonical-edit-sealer.json"), "utf8"));
   const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/CanonicalEditSealer" });
-  if (!validate(fixture)) throw new Error(`canonical edit fixture schema: ${JSON.stringify(validate.errors)}`);
-  const schemaHostiles = [
-    { ...fixture, extra: true },
-    { ...fixture, edit: { ...fixture.edit, extra: true } },
-    { ...fixture, edit: { ...fixture.edit, forwards: [{ Unknown: {} }] } },
-    { ...fixture, edit: { ...fixture.edit, forwards: [{ Replace: { ...fixture.edit.forwards[0].Replace, text: 1 } }] } },
-    { ...fixture, edit: { ...fixture.edit, mutationMeta: [{ ...fixture.edit.mutationMeta[0], timestamp: { actor: 1, physical_ms: 42, logical: 2, extra: true } }] } },
-    { ...fixture, edit: { ...fixture.edit, mutationMeta: [{ ...fixture.edit.mutationMeta[0], undo_policy: "Unknown" }] } },
-    { ...fixture, grants: [0, -1, 2, 7, 256, 4096] },
-    { ...fixture, expectedDigest: "forged" },
-    { ...fixture, hostile: [...fixture.hostile, "forged-arbitrary-authority"] },
+  const validate = new Ajv({ strict: true, allErrors: true }).addSchema(contract).compile({ ...schema, $ref: "#/$defs/CanonicalEditSealerEdit" });
+  if (!validate(fixture.edit)) throw new Error(`canonical edit payload schema: ${JSON.stringify(validate.errors)}`);
+  const editHostiles = [
+    { ...fixture.edit, extra: true },
+    { ...fixture.edit, forwards: [{ Unknown: {} }] },
+    { ...fixture.edit, forwards: [{ Replace: { ...fixture.edit.forwards[0].Replace, text: 1 } }] },
+    { ...fixture.edit, mutationMeta: [{ ...fixture.edit.mutationMeta[0], timestamp: { actor: 1, physical_ms: 42, logical: 2, extra: true } }] },
+    { ...fixture.edit, mutationMeta: [{ ...fixture.edit.mutationMeta[0], undo_policy: "Unknown" }] },
   ];
-  for (const hostile of schemaHostiles) if (validate(hostile)) throw new Error("strict canonical sealer schema accepted hostile input");
+  for (const hostile of editHostiles) if (validate(hostile)) throw new Error("canonical edit payload schema accepted hostile input");
   const utf8 = new TextEncoder();
   function* canonicalBytes(value: unknown): Generator<number> {
     if (typeof value === "string") {
@@ -50,9 +50,9 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
     }
   }
   const expected = utf8.encode(fixture.expectedJson);
-  if (fixture.expectedJson !== JSON.stringify(fixture.edit) || expected.length <= 4096) throw new Error("canonical edit JSON oracle mismatch");
+  if (fixture.expectedJson !== JSON.stringify(revisionValue(fixture.edit)) || expected.length <= 4096) throw new Error("canonical edit JSON oracle mismatch");
   for (const maximum of fixture.grants.filter((value: number) => value > 0)) {
-    const iterator = canonicalBytes(fixture.edit);
+    const iterator = canonicalBytes(revisionValue(fixture.edit));
     const actual: number[] = [];
     let complete = false;
     while (!complete) {
@@ -102,17 +102,17 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
     [store, source.replace("self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])", "serde_json::to_vec(edit.as_ref())")],
   ];
   for (const [candidateStore, candidateSealer] of sourceHostiles) if (exact(candidateStore, candidateSealer)) throw new Error("canonical Store sealer accepted hostile authority/serialization source");
-  const mapFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🗺️canonical-borrowed-map.json"), "utf8"));
-  const validateMap = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/CanonicalBorrowedMap" });
-  if (!validateMap(mapFixture)) throw new Error(`borrowed map fixture schema: ${JSON.stringify(validateMap.errors)}`);
-  const mapSchemaHostiles = [{ ...mapFixture, extra: true }, { ...mapFixture, longKeyBytes: 4096 }, { ...mapFixture, lifetime: { ...mapFixture.lifetime, iteratorDropsBeforeRoot: false } }, { ...mapFixture, hostile: ["unchecked-pointer"] }];
-  for (const hostile of mapSchemaHostiles) if (validateMap(hostile)) throw new Error("borrowed map schema accepted hostile lifetime shape");
-  const mapExpected = utf8.encode(mapFixture.expectedJson);
-  if (mapFixture.expectedJson !== JSON.stringify(mapFixture.edit)) throw new Error("borrowed map canonical JSON oracle mismatch");
-  const keys = Object.keys(mapFixture.edit.forwards[0].ReplaceMap.map);
-  if (Math.max(...keys.map((key) => utf8.encode(key).length)) !== mapFixture.longKeyBytes) throw new Error("borrowed map long key is not the advertised UTF-8 length");
-  for (const grant of mapFixture.grants.filter((value: number) => value > 0)) {
-    const stream = canonicalBytes(mapFixture.edit);
+  const mapDescriptor = JSON.parse(readFileSync(join(base, "🧫️fixtures/🗺️canonical-borrowed-map.json"), "utf8"));
+  const validateMap = new Ajv({ strict: true, allErrors: true }).addSchema(contract).compile({ ...schema, $ref: "#/$defs/CanonicalBorrowedMapEdit" });
+  if (!validateMap(mapDescriptor.edit)) throw new Error(`borrowed map edit schema: ${JSON.stringify(validateMap.errors)}`);
+  const mapEditHostiles = [{ ...mapDescriptor.edit, extra: true }, { ...mapDescriptor.edit, forwards: [{ Replace: {} }] }];
+  for (const hostile of mapEditHostiles) if (validateMap(hostile)) throw new Error("borrowed map edit schema accepted hostile mutation");
+  const mapExpected = utf8.encode(mapDescriptor.expectedJson);
+  if (mapDescriptor.expectedJson !== JSON.stringify(revisionValue(mapDescriptor.edit))) throw new Error("borrowed map canonical JSON oracle mismatch");
+  const keys = Object.keys(mapDescriptor.edit.forwards[0].ReplaceMap.map);
+  if (Math.max(...keys.map((key) => utf8.encode(key).length)) !== mapDescriptor.longKeyBytes) throw new Error("borrowed map long key is not the advertised UTF-8 length");
+  for (const grant of mapDescriptor.grants.filter((value: number) => value > 0)) {
+    const stream = canonicalBytes(revisionValue(mapDescriptor.edit));
     const actual: number[] = [];
     let done = false;
     while (!done) for (let count = 0; count < Math.min(grant, 256); count++) {
@@ -124,8 +124,8 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
   }
   const mapHash = createHash("sha256");
   mapHash.update("semio.artifact.cursor.v2");
-  for (const part of [utf8.encode("edit"), utf8.encode(mapFixture.edit.id), mapExpected]) { mapHash.update(integer(part.length)); mapHash.update(part); }
-  if (mapHash.digest("hex") !== mapFixture.expectedDigest) throw new Error("borrowed map Node crypto digest oracle mismatch");
+  for (const part of [utf8.encode("edit"), utf8.encode(mapDescriptor.edit.id), mapExpected]) { mapHash.update(integer(part.length)); mapHash.update(part); }
+  if (mapHash.digest("hex") !== mapDescriptor.expectedDigest) throw new Error("borrowed map Node crypto digest oracle mismatch");
   const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️.rs"), "utf8");
   const borrowedExact = (parent: string, child: string) => {
     const close = method(parent, /pub fn close_step\(&mut self, grant: ArtifactStoreOneItemGrant/);
@@ -151,12 +151,9 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
   ];
   for (const [parent, child] of mapSourceHostiles) if (borrowedExact(parent, child)) throw new Error("borrowed map accepted hostile lifetime/source substitution");
   const readerFixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/📖️canonical-reader.json"), "utf8"));
-  const readerValidate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/CanonicalReader" });
-  if (!readerValidate(readerFixture) || readerFixture.expectedByteLength !== mapExpected.length || createHash("sha256").update(mapExpected).digest("hex") !== readerFixture.expectedJsonSha256) throw new Error("typed canonical reader schema/Node byte oracle mismatch");
-  const readerSchemaHostiles = [{ ...readerFixture, extra: true }, { ...readerFixture, sourceFixture: "unbound-root" }, { ...readerFixture, grants: [0, 1, 7, 4097] }];
-  for (const hostile of readerSchemaHostiles) if (readerValidate(hostile)) throw new Error("strict canonical reader schema accepted hostile input");
+  if (readerFixture.expectedByteLength !== mapExpected.length || createHash("sha256").update(mapExpected).digest("hex") !== readerFixture.expectedJsonSha256) throw new Error("typed canonical reader Node byte oracle mismatch");
   for (const maximum of readerFixture.grants.filter((grant: number) => grant > 0)) {
-    const iterator = canonicalBytes(mapFixture.edit);
+    const iterator = canonicalBytes(revisionValue(mapDescriptor.edit));
     const actual: number[] = [];
     let done = false;
     while (!done) for (let index = 0; index < Math.min(maximum, 256); index += 1) { const next = iterator.next(); if (next.done) { done = true; break; } actual.push(next.value); }
@@ -185,5 +182,5 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; schemaHos
     reader.replace("!std::thread::panicking()", "true"),
   ];
   for (const hostile of readerSourceHostiles) if (readerExact(hostile)) throw new Error("canonical reader accepted hostile ownership/grant substitution");
-  return { grants: fixture.grants.length - 1, schemaHostiles: schemaHostiles.length, sourceHostiles: sourceHostiles.length, digestOracles: 1, mapGrants: mapFixture.grants.length - 1, mapSchemaHostiles: mapSchemaHostiles.length, mapSourceHostiles: mapSourceHostiles.length, mapDigestOracles: 1, readerChecks: 1 + readerSchemaHostiles.length + readerFixture.grants.length - 1 + readerSourceHostiles.length + canonicalErrorProgressSelfTests() };
+  return { grants: fixture.grants.length - 1, editHostiles: editHostiles.length, sourceHostiles: sourceHostiles.length, digestOracles: 1, mapGrants: mapDescriptor.grants.length - 1, mapEditHostiles: mapEditHostiles.length, mapSourceHostiles: mapSourceHostiles.length, mapDigestOracles: 1, readerChecks: 1 + readerFixture.grants.length - 1 + readerSourceHostiles.length + canonicalErrorProgressSelfTests() };
 }

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "media_contract_spec",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+    "line": 235,
+    "source": "fn media_contract_spec() -> semio_framework_dsl_record::RecordSpec {\n    semio_framework_dsl_record::RecordSpec::new(\n        None,\n        semio_framework_dsl_record::RecordLayout::Inline,\n        vec![\n            semio_framework_dsl_record::FieldSpec::new(0, \"kind_id\", semio_framework_dsl_record::Shape::Text),\n            semio_framework_dsl_record::FieldSpec::new(1, \"class\", semio_framework_dsl_record::Shape::Enum(media_class_variants())),\n            semio_framework_dsl_record::FieldSpec::new(2, \"form\", semio_framework_dsl_record::Shape::Enum(media_form_variants())),\n            semio_framework_dsl_record::FieldSpec::new(3, \"wire_kind\", semio_framework_dsl_record::Shape::Text),\n            semio_framework_dsl_record::FieldSpec::new(4, \"wire_format\", semio_framework_dsl_record::Shape::Text).optional(),\n            semio_framework_dsl_record::FieldSpec::new(5, \"wire_schema\", semio_framework_dsl_record::Shape::Text).optional(),\n            semio_framework_dsl_record::FieldSpec::new(6, \"conversion_from\", semio_framework_dsl_record::Shape::Enum(media_form_variants())).optional(),\n            semio_framework_dsl_record::FieldSpec::new(7, \"conversion_to\", semio_framework_dsl_record::Shape::Enum(media_form_variants())).optional(),\n        ],\n    )\n}"
+  },
+  {
+    "name": "workflow_media_port_spec",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+    "line": 483,
+    "source": "fn workflow_media_port_spec() -> semio_framework_dsl_record::RecordSpec {\n    semio_framework_dsl_record::RecordSpec::new(\n        None,\n        semio_framework_dsl_record::RecordLayout::Inline,\n        vec![\n            semio_framework_dsl_record::FieldSpec::new(0, \"id\", semio_framework_dsl_record::Shape::Text),\n            semio_framework_dsl_record::FieldSpec::new(1, \"port_id\", semio_framework_dsl_record::Shape::Text),\n            semio_framework_dsl_record::FieldSpec::new(2, \"label\", semio_framework_dsl_record::Shape::Text),\n            semio_framework_dsl_record::FieldSpec::new(3, \"direction\", semio_framework_dsl_record::Shape::Enum(media_port_direction_variants())),\n            semio_framework_dsl_record::FieldSpec::new(4, \"class\", semio_framework_dsl_record::Shape::Enum(media_class_variants())),\n            semio_framework_dsl_record::FieldSpec::new(5, \"form\", semio_framework_dsl_record::Shape::Enum(media_form_variants())),\n            semio_framework_dsl_record::FieldSpec::new(6, \"kind_id\", semio_framework_dsl_record::Shape::Text).optional(),\n            semio_framework_dsl_record::FieldSpec::new(7, \"required\", semio_framework_dsl_record::Shape::Bool),\n            semio_framework_dsl_record::FieldSpec::new(8, \"multiplicity\", semio_framework_dsl_record::Shape::Enum(port_multiplicity_variants())),\n        ],\n    )\n}"
+  },
+  {
+    "name": "workflow_input_spec",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+    "line": 1105,
+    "source": "fn workflow_input_spec() -> semio_framework_dsl_record::RecordSpec {\n    semio_framework_dsl_record::RecordSpec::new(\n        None,\n        semio_framework_dsl_record::RecordLayout::Inline,\n        vec![\n            semio_framework_dsl_record::FieldSpec::new(0, \"id\", semio_framework_dsl_record::Shape::Text),\n            semio_framework_dsl_record::FieldSpec::new(1, \"kind_id\", semio_framework_dsl_record::Shape::Text),\n            semio_framework_dsl_record::FieldSpec::new(2, \"selector\", semio_framework_dsl_record::Shape::Text),\n            semio_framework_dsl_record::FieldSpec::new(3, \"required\", semio_framework_dsl_record::Shape::Bool),\n            semio_framework_dsl_record::FieldSpec::new(4, \"multiplicity\", semio_framework_dsl_record::Shape::Enum(port_multiplicity_variants())),\n        ],\n    )\n}"
+  },
+  {
+    "name": "run_trigger_spec",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🦀️.rs",
+    "line": 153,
+    "source": "fn run_trigger_spec() -> semio_framework_dsl_record::RecordSpec {\n    semio_framework_dsl_record::RecordSpec::new(\n        None,\n        semio_framework_dsl_record::RecordLayout::Inline,\n        vec![\n            semio_framework_dsl_record::FieldSpec::new(0, \"kind\", semio_framework_dsl_record::Shape::Text),\n            semio_framework_dsl_record::FieldSpec::new(1, \"actor\", semio_framework_dsl_record::Shape::Text).optional(),\n            semio_framework_dsl_record::FieldSpec::new(2, \"automation_ref\", semio_framework_dsl_record::Shape::Text).optional(),\n            semio_framework_dsl_record::FieldSpec::new(3, \"event_fingerprint\", semio_framework_dsl_record::Shape::Text).optional(),\n        ],\n    )\n}"
+  },
+  {
+    "name": "media_class_variants",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+    "line": 93,
+    "source": "fn media_class_variants() -> Vec<(String, u32)> {\n    vec![(\"twoD\".to_string(), 0), (\"threeD\".to_string(), 1), (\"text\".to_string(), 2), (\"data\".to_string(), 3), (\"graph\".to_string(), 4), (\"kit\".to_string(), 5), (\"computation\".to_string(), 6), (\"presentation\".to_string(), 7)]\n}"
+  },
+  {
+    "name": "media_form_variants",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+    "line": 142,
+    "source": "fn media_form_variants() -> Vec<(String, u32)> {\n    vec![\n        (\"any\".to_string(), 0),\n        (\"vector\".to_string(), 1),\n        (\"raster\".to_string(), 2),\n        (\"brep\".to_string(), 3),\n        (\"mesh\".to_string(), 4),\n        (\"document\".to_string(), 5),\n        (\"value\".to_string(), 6),\n        (\"dag\".to_string(), 7),\n        (\"trinity\".to_string(), 8),\n        (\"type\".to_string(), 9),\n        (\"design\".to_string(), 10),\n        (\"kit\".to_string(), 11),\n        (\"flow\".to_string(), 12),\n        (\"sequence\".to_string(), 13),\n        (\"procedure\".to_string(), 14),\n        (\"deck\".to_string(), 15),\n    ]\n}"
+  },
+  {
+    "name": "media_port_direction_variants",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+    "line": 441,
+    "source": "fn media_port_direction_variants() -> Vec<(String, u32)> {\n    vec![(\"in\".to_string(), 0), (\"out\".to_string(), 1)]\n}"
+  },
+  {
+    "name": "port_multiplicity_variants",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+    "line": 462,
+    "source": "fn port_multiplicity_variants() -> Vec<(String, u32)> {\n    vec![(\"one\".to_string(), 0), (\"many\".to_string(), 1)]\n}"
+  },
+  {
+    "name": "run_status_variants",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🦀️.rs",
+    "line": 41,
+    "source": "fn run_status_variants() -> Vec<(String, u32)> {\n    vec![(\"pending\".to_string(), 0), (\"running\".to_string(), 1), (\"succeeded\".to_string(), 2), (\"failed\".to_string(), 3), (\"canceled\".to_string(), 4)]\n}"
+  },
+  {
+    "name": "run_node_status_variants",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🦀️.rs",
+    "line": 94,
+    "source": "fn run_node_status_variants() -> Vec<(String, u32)> {\n    vec![(\"computed\".to_string(), 0), (\"cacheHit\".to_string(), 1), (\"failed\".to_string(), 2)]\n}"
+  }
+]

@@ -5,7 +5,7 @@
 //! and the position.
 
 use crate::content::{read, working_child_emit};
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use semio_framework_plugin::app::ChildContentView;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
@@ -35,5 +35,5 @@ pub(crate) fn add_working_node_command(state: &RewritingSnapshot, children: &Chi
     let id = first_free_node_id(&work.nodes.iter().map(|node| node.id.value.clone()).collect::<Vec<_>>());
     let label = name.map(str::trim).filter(|name| !name.is_empty()).map_or_else(|| id.clone(), str::to_string);
     let leaf = SemioGraphMutation::CreateNode(CreateNode { id: GraphNodeId::new(id), kind, label, position: SemioPoint2 { x, y }, width: 0.0, height: 0.0, ports: Vec::new(), properties: Vec::new(), at: None });
-    Ok(working_child_emit(state, &[leaf]))
+    Ok(working_child_emit(state, vec![leaf]))
 }

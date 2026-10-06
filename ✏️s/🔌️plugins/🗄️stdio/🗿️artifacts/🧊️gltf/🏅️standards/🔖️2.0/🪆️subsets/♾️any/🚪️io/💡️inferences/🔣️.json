@@ -1,9 +1,0 @@
-{
-  "x-semio": {
-    "kind": "collection",
-    "members": [
-      { "directory": "💾️binary", "id": "s.stdio.gltf.inference.io.binary", "kind": "io", "responsibility": "Deterministic glTF inference binary codec.", "io": { "format": "s.stdio.gltf.inference.binary", "direction": "export" } },
-      { "directory": "📝️text", "id": "s.stdio.gltf.inference.io.text", "kind": "io", "responsibility": "Deterministic glTF inference text codec.", "io": { "format": "s.stdio.gltf.inference.text", "direction": "export" } }
-    ]
-  }
-}

@@ -1,4 +1,4 @@
-//! 🧪️ `change-domain` fixture — `⚙️architecture`.
+//! 🧪️ `change-domain` scene_snapshot — `⚙️architecture`.
 //!
 //! `domain` is a document-root scalar, so the builder has no missing-target branch and no
 //! collection delta: it publishes the new string on the diff's own `domain` field.
@@ -44,7 +44,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -87,7 +87,7 @@ fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `change-domain` produces is exactly the committed diff — the single most
-/// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
+/// load-bearing assertion in the scene_snapshot: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {

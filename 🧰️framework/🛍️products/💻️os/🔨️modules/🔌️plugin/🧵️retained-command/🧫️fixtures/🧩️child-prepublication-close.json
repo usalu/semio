@@ -1,7 +1,8 @@
 {
   "schema": "retained-command-child-prepublication-close/v1",
   "maximumItems": 1,
-  "maximumBytes": 4,
+  "maximumBytes": 65536,
+  "shortByteGrantPreservesExactAllocation": true,
   "children": [
     { "id": "first", "slot": "slot-ä", "childId": "child-α", "value": "雪" },
     { "id": "second", "slot": "slot-β", "childId": "child-二", "value": "💥" }

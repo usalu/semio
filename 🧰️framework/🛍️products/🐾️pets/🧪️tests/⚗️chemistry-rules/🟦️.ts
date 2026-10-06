@@ -23,7 +23,7 @@ type Vectors = {
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** 🧬️ One species of the menagerie the vectors carry. */
@@ -183,6 +183,6 @@ export default defineTestAdapter({
         return { projection: Object.fromEntries(document.reactions.map((vector) => [vector.id, story(document.menagerie, vector)])) };
       },
     },
-    sample: { subject: (ctx) => ({ projection: { sample: rehearsal((JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(SAMPLE))) as { menagerie: { species?: readonly Partial<Species>[]; bonds?: Menagerie["bonds"]; chemistry?: readonly Reaction[] } }).menagerie) } }) },
+    sample: { subject: (ctx) => ({ projection: { sample: rehearsal((JSON.parse(new TextDecoder().decode(ctx.inputBytes(SAMPLE))) as { menagerie: { species?: readonly Partial<Species>[]; bonds?: Menagerie["bonds"]; chemistry?: readonly Reaction[] } }).menagerie) } }) },
   },
 });

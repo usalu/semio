@@ -1,0 +1,19 @@
+[
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/🚪️source-admission/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🧫️fixtures/🦀️inputs/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🦀️cleanup-boundary/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🔁️graph-revision/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🧬️generator-ownership/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🎯️selected-runtime/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🎨️styling-outputs/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🧊️browser-serving/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🧊️live-activation/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🧊️wasm-outputs/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🧊️native-runtime/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🎨️styling-outputs/🐍️python/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/🧊️native-renderer-outputs/📐️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🔍️filesystem/🔣️.json"
+]

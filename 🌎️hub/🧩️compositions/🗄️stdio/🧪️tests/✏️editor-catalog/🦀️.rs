@@ -1,6 +1,7 @@
 //! ✏️ Every catalog editor declares, parses, and replays the complete editing contract.
 
-use semio_framework_os_kernel::{ArtifactDsl, ArtifactPack, DslValue, Mutation, MutationDiff, OpBinary, OpText, ToValue};
+use semio_framework_os_kernel::{ArtifactDsl, ArtifactPack, Mutation, MutationDiff, OpBinary, OpText};
+use semio_framework_value::{DslValue, ToValue};
 use semio_framework_plugin::app::EditorSurfaceApp;
 use semio_framework_plugin::{artifact_app_laws, AppActionRegistry, AppDefinition, ArtifactEditor, EditorApp, InteractiveJobClassification, PluginApp};
 use semio_s_artifact_stdio_contract::editing::{SnapshotEditingEditor, SNAPSHOT_EDIT_ACTION_IDS};
@@ -108,7 +109,7 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
         let binary = mutation.encode_op().expect("native mutation binary encoding");
         assert_eq!(E::Mutation::decode_op(&binary).expect("native mutation binary replay").encode_op().unwrap(), binary);
         assert_eq!(E::Mutation::parse_op(&mutation.print_op()).expect("native mutation text replay").encode_op().unwrap(), binary);
-        inverses.push(mutation.inverse(&projected));
+        inverses.push(mutation.inverse(&projected).expect("valid native detail inverse"));
         projected = mutation.diff(&projected).diff().apply(&projected).expect("native detail diff applies");
     }
     assert_eq!(snapshot_json(&projected), after, "{} native event must preserve every other detail", definition.id);
@@ -119,7 +120,7 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
     }
     assert_eq!(snapshot_json(&projected), before, "{} inverse restores the complete snapshot", definition.id);
     app.bind_instance_id(artifact_app_laws::meta("local").instance_id).await;
-    for locale in [semio_framework_plugin::Locale::En, semio_framework_plugin::Locale::De] {
+    for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
         let view = semio_framework_plugin::ViewModel {
             active_mode_id: Some(definition.default_mode_id.clone()),
             active_window_kind_id: Some(details.into()),
@@ -127,7 +128,7 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
             focused_window_id: Some("editor-catalog-details".into()),
             window_instances: vec![semio_framework::ViewWindowInstance { id: "editor-catalog-details".into(), window_kind_id: details.into() }],
             locale,
-            ..Default::default()
+            ..semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native)
         };
         let tree = app.render(semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY, None, &view).await.expect("real localized details render");
         let projection = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("details have valid bounded UI structure");
@@ -177,17 +178,33 @@ fn neutral_catalog_requires_each_edit_operation_once() {
     assert_eq!(fixture["editorCount"].as_u64().unwrap() as usize, EDITOR_COUNT);
 }
 
+/// 🗄️ Confirms each public exported file through SQLite independently of its native provider.
+fn independent_sqlite_catalog_file(bytes: &[u8], native: &semio_framework::io_schema::ArtifactDialect, encoding: &str) {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/✏️editor-catalog/🪶️sqlite/🔣️.json")).expect("neutral physical SQLite contract");
+    let script = r#"import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));try{console.log(JSON.stringify({integrity:db.query('PRAGMA integrity_check').all(),foreignKeys:db.query('PRAGMA foreign_key_check').all(),metadata:db.query('SELECT artifact_kind,standard,subset,schema_version,native_encoding FROM semio_snapshot ORDER BY id').all(),domainTables:db.query("SELECT name FROM sqlite_schema WHERE type='table' AND name NOT IN ('semio_snapshot','sqlite_sequence') ORDER BY name").all()}));}finally{db.close();}"#;
+    let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().expect("independent SQLite reader");
+    child.stdin.take().unwrap().write_all(bytes).expect("physical exported file sent to independent reader");
+    let output = child.wait_with_output().expect("independent SQLite reader completion");
+    assert!(output.status.success(), "{} independent SQLite reader: {}", native.to_coordinate(), String::from_utf8_lossy(&output.stderr));
+    let actual: serde_json::Value = serde_json::from_slice(&output.stdout).expect("independent physical SQLite evidence");
+    assert_eq!(actual["integrity"], law["integrity"]);
+    assert_eq!(actual["foreignKeys"], law["foreignKeys"]);
+    assert_eq!(actual["metadata"], serde_json::json!([{"artifact_kind":native.artifact_kind,"standard":native.standard,"subset":native.subset,"schema_version":law["schemaVersion"],"native_encoding":encoding}]));
+    let tables = actual["domainTables"].as_array().unwrap();
+    assert!(tables.len() >= law["minimumDomainTables"].as_u64().unwrap() as usize, "{} must expose authored domain tables", native.to_coordinate());
+    eprintln!("[DEBUG] Stdio catalog physical SQLite dialect={} native={} bytes={} domain_tables={} integrity=ok foreign_keys=0", native.to_coordinate(), encoding, bytes.len(), tables.len());
+}
+
 async fn assert_sqlite_snapshot_editor<E: ArtifactEditor>() {
     use semio_framework::io::io_mechanism::{io_entries, io_identify, io_route, io_run};
     use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, SQLITE_SNAPSHOT};
     stdio_packages_assembled();
-    let native = E::DIALECT.into();
+    let native: semio_framework::io_schema::ArtifactDialect = E::DIALECT.into();
     let sqlite = SQLITE_SNAPSHOT.into();
     let entries = io_entries();
-    if E::Snapshot::sqlite_snapshot_codec().is_none() {
-        assert!(!entries.iter().any(|entry| (entry.from == native && entry.into == sqlite) || (entry.from == sqlite && entry.into == native)), "undeclared relational capability must publish no SQLite route");
-        return;
-    }
+    assert!(E::Snapshot::sqlite_snapshot_codec().is_some(), "every shipped artifact snapshot must declare a semantic SQLite owner: {}", native.to_coordinate());
     assert!(entries.iter().any(|entry| entry.from == native && entry.into == sqlite && entry.fidelity == IoFidelity::Exact));
     assert!(entries.iter().any(|entry| entry.from == sqlite && entry.into == native && entry.fidelity == IoFidelity::Exact));
     let export = io_route(&native, &sqlite, 1).await.expect("shipped editor SQLite export route").value;
@@ -198,8 +215,24 @@ async fn assert_sqlite_snapshot_editor<E: ArtifactEditor>() {
         let database = io_run(&export, payload.clone()).await.expect("shipped editor SQLite export").value;
         let IoPayload::Binary(bytes) = &database else { panic!("SQLite snapshot file is binary") };
         assert!(bytes.starts_with(b"SQLite format 3\0"), "snapshot export must be a SQLite file");
+        independent_sqlite_catalog_file(bytes, &native, match &payload { IoPayload::Binary(_) => "binary", IoPayload::Text(_) => "text" });
         assert_eq!(io_identify(&database).await, vec![(sqlite.clone(), Confidence::High)]);
         let restored = io_run(&import, database).await.expect("shipped editor SQLite import").value;
+        if restored != payload {
+            use semio_framework_os_kernel as store;
+            if let (IoPayload::Binary(before),IoPayload::Binary(after))=(&payload,&restored){
+                let (before_envelope,before_body)=store::semio_format::unwrap_binary(before).unwrap();
+                let (after_envelope,after_body)=store::semio_format::unwrap_binary(after).unwrap();
+                eprintln!("[DEBUG] catalog native seam coordinate={} envelopes_equal={} original_body={} restored_body={} first={:?}",native.to_coordinate(),before_envelope==after_envelope,before_body.len(),after_body.len(),before_body.iter().zip(&after_body).position(|(left,right)|left!=right));
+                if let Some(spec)=E::Snapshot::record_spec(){
+                    let original_record=pack::record::decode_document(&before_body,&spec,&pack::record::DecodeOptions::default()).unwrap().0;
+                    let restored_record=pack::record::decode_document(&after_body,&spec,&pack::record::DecodeOptions::default()).unwrap().0;
+                    eprintln!("[DEBUG] catalog Record equal={} original={:?} restored={:?}",original_record==restored_record,original_record,restored_record);
+                }
+                let decoded=E::Snapshot::decode_pack(after).unwrap();
+                eprintln!("[DEBUG] catalog full typed owner equal={} coordinate={}",snapshot_json(&decoded)==original,native.to_coordinate());
+            }
+        }
         assert_eq!(restored, payload);
         let decoded = match restored {
             IoPayload::Binary(bytes) => E::Snapshot::decode_pack(&bytes).expect("restored native pack"),

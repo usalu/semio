@@ -10,7 +10,7 @@
 //! - **hub** — a service the bound hub executes server-side and publishes in its readiness
 //!   (`features.inferenceServices[]`), relayed through the route family the hub publishes with it.
 //!
-//! Schema: `🧬️schema/🔣️.json` (`InferenceJobPageV1`, `HubInferenceServiceV1`, `InferenceServiceLawV1`).
+//! Schema: `🧬️schema/🔣️.json` (`InferenceJobPageV1`, `HubInferenceServiceV1`).
 //! Law: `🧫️fixtures/💼️inference-service-law.json`, replayed by `🧪️tests/💼️inference-service-law`.
 
 use super::{DeclaredInference, InferenceJobStateV1, InferenceProposalStateV1, HubInferenceEventPageV1, HubInferenceJobReceiptV1};

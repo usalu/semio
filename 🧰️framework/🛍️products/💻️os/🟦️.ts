@@ -16,7 +16,7 @@ export type { InstalledServiceOperationV1, InstalledServiceStatusV1, InstalledSe
 // #endregion Header
 
 import type { AppRef, AppRole, AppRouter, ArtifactDialect, ArtifactDiff, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, InverseMutation, KernelMutation, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, Severity, PluginDispatchHintV1, PluginViewState, PluginWasmHandle, TurnOutcome, UndoGroup, UndoPolicy, UtilityLeaf } from "@semio-tech/framework";
-import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, fetchWithTimeout, mergePolicyAsU8, parseDialectCoordinate, parseSurfaceAppId, resolveOpeningApp, retryWithJitteredBackoff, viewContextWithIntegerCarriers } from "@semio-tech/framework";
+import { conflictResolutionAsU8, dialectCoordinate, fetchWithTimeout, mergePolicyAsU8, parseDialectCoordinate, parseSurfaceAppId, resolveOpeningApp, retryWithJitteredBackoff, viewContextWithIntegerCarriers } from "@semio-tech/framework";
 /** 📇️ Directory event/command/DTO types (contract-freeze §C1/§C6) — imported once here for
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
  * file's `🔖️HubBinding` region; never redeclared (lane 0-A owns the type source). */
@@ -25,17 +25,17 @@ import { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 
 import { documentCheckInStatusFromValueV1, type DocumentCheckInStatusV1 } from "./🔨️modules/📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
 import { closeHubSocketV1 } from "./🔨️modules/📇️directory/🔌️client/🚪️socket-close/🟦️.ts";
 export { parseDirectorySessionAuthorityJsonV1, type DirectorySessionAuthorityV1 } from "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
-import { parseInferencePortClosedV1, parseInferencePortOpeningRequestV1, parseInferencePortOpeningResultV1, type InferencePortClosedV1, type InferencePortOpeningResultV1 } from "./🔨️modules/💡️inference/🚪️opening/🟦️.ts";
+import { parseInferencePortClosedV1, parseInferencePortOpeningResultV1, type InferencePortClosedV1, type InferencePortOpeningResultV1 } from "./🔨️modules/💡️inference/🚪️opening/🟦️.ts";
 import type { ArtifactFrontier, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEventPageV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_PREFERENCE_PAGE_PATH_V1, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, parseDirectoryEventPageV1, parseDirectoryEventV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_PREFERENCE_PAGE_PATH_V1, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, canonicalDirectoryCommandV1, directoryCommandErrorFromStatus, directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryEventPageV1, parseDirectoryEventV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1, directoryAdministrationCommandAllowedV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 📡️ The replication wire contract lives in `🧰️framework/🔨️modules/📡️replication` — os speaks it,
  * it is not os-owned. Frames/envelopes/presence peers all come from there. */
-import type { ArtifactPresencePeer, ClientFrame, ExactWireMutationEnvelope, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireMutationEnvelope } from "@semio-tech/framework-replication";
-import { decodeClientFrame, decodeLocalInteractionQueryCommand, decodeLocalInteractionQueryReply, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodeLocalInteractionQueryCommand, encodeLocalInteractionQueryReply, encodePresencePeer, encodeServerFrame, localInteractionIdentityEquals, mutationEnvelopeFromWire, mutationEnvelopeToWire } from "@semio-tech/framework-replication";
+import type { ArtifactPresencePeer, ExactWireMutationEnvelope, LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryCommand, LocalInteractionQueryReply, LocalInteractionQueryToken, MutationEnvelope } from "@semio-tech/framework-replication";
+import { decodeServerFrame, encodeServerFrame, decodeLocalInteractionQueryCommand, decodeLocalInteractionQueryReply, encodeClientFrame, encodeLocalInteractionQueryCommand, encodeLocalInteractionQueryReply, encodePresencePeer, localInteractionIdentityEquals, mutationEnvelopeFromWire, mutationEnvelopeToWire } from "@semio-tech/framework-replication";
 /** 🔢️ Shared byte-codec floor — the same primitives the wire frames are built from; os reuses them
  * for its backbone-envelope and app-channel codecs rather than keeping a second copy. */
-import { decodeCausalEnvelopeBatch, decodeDocumentBackboneEnvelopeBatchExact, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readHash32, readStr, readU8, readVarintU64, readVarintU64Exact, readVecBytes, readVecEnvelope, readVecStr, writeBool, writeBytes, writeF64, writeHash32, writeStr, writeVarintU64, writeVarintU64Exact, writeVecBytes, writeVecEnvelope, writeVecStr } from "@semio-tech/framework-replication";
+import { decodeCausalEnvelopeBatch, decodeDocumentBackboneEnvelopeBatchExact, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readStr, readU8, readVarintU64, readVarintU64Exact, readVecBytes, readVecEnvelope, writeBool, writeBytes, writeF64, writeStr, writeVarintU64, writeVarintU64Exact, writeVecBytes, writeVecEnvelope } from "@semio-tech/framework-replication";
 import { parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
 import { parseBrowserActorActionRequestV1, parseBrowserActorActionResultV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { parseBrowserActorViewStateRequest, type BrowserActorViewStateRequest } from "./🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🟦️.ts";
@@ -726,6 +726,9 @@ export type ArtifactEvent =
   | { readonly kind: "remoteMutations"; readonly envelopes: readonly MutationEnvelope[] }
   | { readonly kind: "documentBackbone"; readonly message: Uint8Array }
   | { readonly kind: "documentArchiveReplaced"; readonly archive: readonly number[] }
+  /** 🫙️ The bound folder holds no archive of this document: once per open, from the bootstrap folder read alone, never
+   * after an archive was read or written — mirrors Rust `ArtifactEvent::DocumentArchiveAbsent`. */
+  | { readonly kind: "documentArchiveAbsent" }
   | ({ readonly kind: "status" } & ArtifactSyncStatus)
   | { readonly kind: "presence"; readonly peers: readonly ArtifactPresencePeer[] }
   /** 🎨️ The hub's one-time session color assignment (`ServerFrame::Session`) — mirrors Rust
@@ -1481,6 +1484,10 @@ function parseArtifactEvent(event: Record<string, unknown>): ArtifactEvent {
     decodeDocumentArchiveBytes(archive);
     return { kind: "documentArchiveReplaced", archive: Array.from(archive) };
   }
+  if (event.kind === "documentArchiveAbsent") {
+    if (Object.keys(event).join(",") !== "kind") throw new Error("backbone worker response: invalid document archive absence");
+    return { kind: "documentArchiveAbsent" };
+  }
   if (event.kind === "commandOutcome") {
     const batchId = commandBatchIdOfValueV1(event.batchId);
     const outcome = commandAckOutcomeOfValueV1(event.outcome);
@@ -1547,14 +1554,6 @@ export type WorkflowDelivery = {
   readonly producerPortId: string;
   readonly consumerInstanceId: string;
   readonly consumerPortId: string;
-};
-
-/** 🔬️ TS twin of Rust `WorkflowFixture` — decoded from the shared `.dsl`/`.spk` fixture pairs via wasm, never JSON. */
-export type WorkflowFixture = {
-  readonly name: string;
-  readonly graph: OsWorkflow;
-  readonly dirtyInstanceIds: readonly string[];
-  readonly expectedDeliveries: readonly WorkflowDelivery[];
 };
 
 /**
@@ -2592,16 +2591,16 @@ if (import.meta.vitest) {
  */
 
 //#region 🔖️Types
-export type ChildPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly envelope_pack: readonly number[] };
+export type ChildPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly envelope_pack: readonly number[]; readonly owner: string };
 /** 🪆️ One owned child's CURRENT head snapshot pack — twin of the Rust `ChildHeadPackEntry` (`AppFrame::ChildHeads`). */
-export type ChildHeadPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly head_pack: readonly number[] };
+export type ChildHeadPackEntry = { readonly slot: string; readonly child_id: string; readonly dialect: string; readonly head_pack: readonly number[]; readonly owner: string };
 export type WindowConfigPackEntry = { readonly window_id: string; readonly window_kind_id: string; readonly envelope_pack: readonly number[] };
 export type DocumentArchiveArtifactRef = { readonly artifact_id: string; readonly artifact_kind: string; readonly standard: string; readonly subset: string };
 export type DocumentArchiveOwnerRef = { readonly parent: DocumentArchiveArtifactRef; readonly slot: string; readonly child_id: string };
 export type OwnedDocumentMemberPackEntry = { readonly ordinal: number; readonly reference: DocumentArchiveArtifactRef; readonly owner: DocumentArchiveOwnerRef; readonly envelope_pack: readonly number[] };
 export type DocumentArchivePack = { readonly parent_pack: readonly number[]; readonly parent_spr: readonly number[]; readonly members: readonly OwnedDocumentMemberPackEntry[] };
 export type DocumentArchiveLoadState = "pending" | "running" | "ready" | "cancelled" | "fault";
-export type DocumentArchiveLoadStatus = { readonly operation: number; readonly state: DocumentArchiveLoadState; readonly completed: number; readonly total: number; readonly fault: readonly number[] };
+export type DocumentArchiveLoadStatus = { readonly operation: number; readonly state: DocumentArchiveLoadState; readonly completed: number; readonly total: number; readonly ahead: number; readonly fault: readonly number[] };
 
 /** 🎞️ Exact authority of one revision-scoped resumable media export. */
 export type MediaExportHandle = { readonly app_instance_id: number; readonly parent_document_id: string; readonly operation_id: bigint; readonly base_revision: bigint; readonly generation: bigint };
@@ -2624,6 +2623,7 @@ export type AppCommandValue =
   | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly MutationEnvelope[] } }
   | { readonly ReadDocument: { readonly seq: number } }
   | { readonly LoadDocumentArchive: { readonly seq: number; readonly archive: DocumentArchivePack } }
+  | { readonly MergeDocumentArchive: { readonly seq: number; readonly archive: DocumentArchivePack } }
   | { readonly ReadDocumentArchive: { readonly seq: number } }
   | { readonly PollDocumentArchiveLoad: { readonly seq: number; readonly operation: number } }
   | { readonly CancelDocumentArchiveLoad: { readonly seq: number; readonly operation: number } }
@@ -2784,9 +2784,10 @@ function writeChildPackEntry(out: number[], entry: ChildPackEntry): void {
   writeStr(out, entry.child_id);
   writeStr(out, entry.dialect);
   writeBytes(out, entry.envelope_pack);
+  writeStr(out, entry.owner);
 }
 function readChildPackEntry(bytes: Uint8Array, pos: [number]): ChildPackEntry {
-  return { slot: readStr(bytes, pos), child_id: readStr(bytes, pos), dialect: readStr(bytes, pos), envelope_pack: readBytes(bytes, pos) };
+  return { slot: readStr(bytes, pos), child_id: readStr(bytes, pos), dialect: readStr(bytes, pos), envelope_pack: readBytes(bytes, pos), owner: readStr(bytes, pos) };
 }
 function writeVecChildPackEntry(out: number[], entries: readonly ChildPackEntry[]): void {
   writeVarintU64(out, entries.length);
@@ -2803,12 +2804,13 @@ function writeVecChildHeadPackEntry(out: number[], entries: readonly ChildHeadPa
     writeStr(out, entry.child_id);
     writeStr(out, entry.dialect);
     writeBytes(out, entry.head_pack);
+    writeStr(out, entry.owner);
   }
 }
 function readVecChildHeadPackEntry(bytes: Uint8Array, pos: [number]): ChildHeadPackEntry[] {
   const count = readVarintU64(bytes, pos);
   if (count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS) throw new Error("decodeAppFrame: child head count exceeds the member authority");
-  return Array.from({ length: count }, () => ({ slot: readStr(bytes, pos), child_id: readStr(bytes, pos), dialect: readStr(bytes, pos), head_pack: readBytes(bytes, pos) }));
+  return Array.from({ length: count }, () => ({ slot: readStr(bytes, pos), child_id: readStr(bytes, pos), dialect: readStr(bytes, pos), head_pack: readBytes(bytes, pos), owner: readStr(bytes, pos) }));
 }
 export const DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS = 1_024;
 function writeDocumentArchive(out: number[], archive: DocumentArchivePack): void {
@@ -2920,7 +2922,7 @@ const APP_COMMAND_TAGS = {
   setMergePolicy: 25, resolveConflict: 26, readConflicts: 27,
   presence: 28, LocalInteractionQuery: 29, LoadWindowConfig: 30, ReadWindowConfigs: 31, LoadDocumentArchive: 32, ReadDocumentArchive: 33,
   PollDocumentArchiveLoad: 34, CancelDocumentArchiveLoad: 35, AcknowledgeDocumentArchiveLoad: 36,
-  SubmitMediaExport: 37, PollMediaExport: 38, CancelMediaExport: 39, TakeMediaExportChunk: 40, ReadDocumentIdentity: 41, ReadChildHeads: 42,
+  SubmitMediaExport: 37, PollMediaExport: 38, CancelMediaExport: 39, TakeMediaExportChunk: 40, ReadDocumentIdentity: 41, ReadChildHeads: 42, MergeDocumentArchive: 43,
 } as const;
 const APP_FRAME_TAGS = {
   Done: 0, Invocation: 1, DocumentChanged: 2, Document: 3,
@@ -2998,6 +3000,10 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     out.push(APP_COMMAND_TAGS.LoadDocumentArchive);
     writeVarintU64(out, cmd.LoadDocumentArchive.seq);
     writeDocumentArchive(out, cmd.LoadDocumentArchive.archive);
+  } else if ("MergeDocumentArchive" in cmd) {
+    out.push(APP_COMMAND_TAGS.MergeDocumentArchive);
+    writeVarintU64(out, cmd.MergeDocumentArchive.seq);
+    writeDocumentArchive(out, cmd.MergeDocumentArchive.archive);
   } else if ("ReadDocumentArchive" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadDocumentArchive);
     writeVarintU64(out, cmd.ReadDocumentArchive.seq);
@@ -3174,6 +3180,8 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       return { ReadWindowConfigs: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.LoadDocumentArchive:
       return { LoadDocumentArchive: { seq: readVarintU64(bytes, pos), archive: readDocumentArchive(bytes, pos) } };
+    case APP_COMMAND_TAGS.MergeDocumentArchive:
+      return { MergeDocumentArchive: { seq: readVarintU64(bytes, pos), archive: readDocumentArchive(bytes, pos) } };
     case APP_COMMAND_TAGS.ReadDocumentArchive:
       return { ReadDocumentArchive: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.PollDocumentArchiveLoad:
@@ -3355,6 +3363,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     out.push(["pending", "running", "ready", "cancelled", "fault"].indexOf(frame.DocumentArchiveLoad.status.state));
     writeVarintU64(out, frame.DocumentArchiveLoad.status.completed);
     writeVarintU64(out, frame.DocumentArchiveLoad.status.total);
+    writeVarintU64(out, frame.DocumentArchiveLoad.status.ahead);
     writeBytes(out, frame.DocumentArchiveLoad.status.fault);
   } else if ("Config" in frame) {
     out.push(APP_FRAME_TAGS.Config);
@@ -3545,7 +3554,7 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       const states = ["pending", "running", "ready", "cancelled", "fault"] as const;
       const state = states[bytes[pos[0]++]!];
       if (state === undefined) throw new Error("document archive load state: unknown state");
-      return { DocumentArchiveLoad: { in_reply_to, status: { operation, state, completed: readVarintU64(bytes, pos), total: readVarintU64(bytes, pos), fault: readBytes(bytes, pos) } } };
+      return { DocumentArchiveLoad: { in_reply_to, status: { operation, state, completed: readVarintU64(bytes, pos), total: readVarintU64(bytes, pos), ahead: readVarintU64(bytes, pos), fault: readBytes(bytes, pos) } } };
     }
     case APP_FRAME_TAGS.Config: {
       const in_reply_to = readVarintU64(bytes, pos);
@@ -3720,11 +3729,11 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
 }
 
 /** 📡️ TS twin of `protocol_channel::CHANNEL_VERSION`. Both constants are pinned against
- * `🧫️fixtures/📡️channel/🔖️channel-version.json`, which owns the number — this one sat at 8 while Rust
+ * `🔨️modules/🧑‍💻dev/🔖️channel-version/📌️pin/🔣️.json`, which owns the number — this one sat at 8 while Rust
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on; since v21 every host admits a guest
  * against it through {@link admitGuestChannelVersion} before any frame. */
-export const APP_CHANNEL_VERSION = 21;
+export const APP_CHANNEL_VERSION = 23;
 
 /** 🤝️ Fault code of a guest compiled for another app-channel version than its host — TS twin of Rust `CHANNEL_MISMATCH_CODE`. */
 export const CHANNEL_MISMATCH_CODE = "plugin.channel-mismatch";
@@ -3830,6 +3839,28 @@ export type DocumentArchiveLoadStep = { readonly kind: "send"; readonly seq: num
  * the guest's encoded refusal, or a frame that answers another command. */
 export type DocumentArchiveLoadAnswer = { readonly kind: "status"; readonly status: DocumentArchiveLoadStatus | null } | { readonly kind: "refused"; readonly fault: readonly number[] } | { readonly kind: "unanswered" };
 
+/** 🔀️ How one read-back merge ended (design §22.22): `merged` events of the archive joined the program's log and the program
+ * holds `ahead` events the archive lacks — or the program cannot merge the archive into the document it shows and `code` is
+ * its own refusal ({@link DOCUMENT_ARCHIVE_UNMERGEABLE_CODES}); nothing was touched, and loading the archive is the way on. */
+export type DocumentArchiveMergeV1 = { readonly kind: "merged"; readonly merged: number; readonly ahead: number } | { readonly kind: "unmergeable"; readonly code: string };
+
+/** 🧯️ A whole-document load or merge the program refused or faulted. `fault` is the program's own fault when its bytes decode
+ * — its code names the notice a person is told — and `message` keeps the engineering text for a log, never for a person. */
+export class DocumentArchiveFaultError extends Error {
+  readonly fault: Fault | null;
+
+  constructor(message: string, fault: Fault | null) {
+    super(message);
+    this.name = "DocumentArchiveFaultError";
+    this.fault = fault;
+  }
+}
+
+/** 🚫️ The guest's refusals of a read-back merge that leave a load as the way on: the archive is another document's, or its
+ * members differ from the live ones (twins of `DOCUMENT_LOAD_OTHER_DOCUMENT_CODE` and `DOCUMENT_LOAD_MEMBERS_DIFFER_CODE`,
+ * `🔨️modules/🔌️plugin/🦀️.rs`). */
+export const DOCUMENT_ARCHIVE_UNMERGEABLE_CODES: readonly string[] = ["plugin.document-load.other-document", "plugin.document-load.members-differ"];
+
 type DocumentArchiveLoadSent = "admit" | "poll" | "cancel" | "acknowledge";
 
 /** 🗃️ The host half of the stepped, ACK-owned whole-document load: the TS twin of the Rust `DocumentArchiveLoadHost`
@@ -3837,7 +3868,8 @@ type DocumentArchiveLoadSent = "admit" | "poll" | "cancel" | "acknowledge";
  * (`🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️document-archive-load-host/🔣️.json`). The admission's own sequence is the operation, a
  * host's sequence is minted only for a command that is sent, and steps and answers alternate. A cancel before admission sends nothing; after admission it is sent once and polling goes on
  * until the guest's terminal status says whether the previous document was restored (a refused cancel lost the race). A
- * cancelled terminal whose acknowledgement is refused still owns retained input, so it is polled again. */
+ * cancelled terminal whose acknowledgement is refused still owns retained input, so it is polled again. A read-back of the
+ * document the program already shows is a merge ({@link merging}): the same exchange under its own admission command. */
 export class DocumentArchiveLoadHost {
   private archive: DocumentArchivePack | null;
   private admitted: number | null = null;
@@ -3846,9 +3878,20 @@ export class DocumentArchiveLoadHost {
   private cancelSent = false;
   private terminal: DocumentArchiveLoadStatus | null = null;
   private outcome: DocumentArchiveLoadOutcome | null = null;
+  private merge = false;
+  private aheadOfArchive = 0;
 
   constructor(archive: DocumentArchivePack) {
     this.archive = archive;
+  }
+
+  /** 🔀️ A read-back merge of the document the program already shows (design §22.22): admitted with `MergeDocumentArchive`,
+   * then polled, cancelled and acknowledged exactly like a load. Its events join the program's log and nothing is
+   * replaced; {@link ahead} answers what the program then holds that the archive lacks. */
+  static merging(archive: DocumentArchivePack): DocumentArchiveLoadHost {
+    const host = new DocumentArchiveLoadHost(archive);
+    host.merge = true;
+    return host;
   }
 
   /** 🎞️ A load the guest admitted itself under `operation`, the host sequence of the command that started it (a `MediaIn` of a
@@ -3865,6 +3908,12 @@ export class DocumentArchiveLoadHost {
     return this.admitted;
   }
 
+  /** ⏭️ The events the program holds that the archive lacks, as its acknowledged ready terminal counted them: what a writer
+   * persists again for. 0 for a replacement and before the operation ended ready. */
+  get ahead(): number {
+    return this.aheadOfArchive;
+  }
+
   /** 🛑️ Asks for the load to stop; idempotent, and a no-op once a terminal status is known. */
   requestCancel(): void {
     this.cancelRequested = true;
@@ -3879,8 +3928,9 @@ export class DocumentArchiveLoadHost {
     if (this.outcome) return { kind: "finished", outcome: this.outcome };
     const seq = nextSeq();
     const operation = this.admitted;
+    const archive = this.archive ?? { parent_pack: [], parent_spr: [], members: [] };
     const [kind, command]: readonly [DocumentArchiveLoadSent, AppCommandValue] =
-      operation === null ? ["admit", { LoadDocumentArchive: { seq, archive: this.archive ?? { parent_pack: [], parent_spr: [], members: [] } } }]
+      operation === null ? ["admit", this.merge ? { MergeDocumentArchive: { seq, archive } } : { LoadDocumentArchive: { seq, archive } }]
       : this.terminal ? ["acknowledge", { AcknowledgeDocumentArchiveLoad: { seq, operation } }]
       : this.cancelRequested && !this.cancelSent ? ["cancel", { CancelDocumentArchiveLoad: { seq, operation } }]
       : ["poll", { PollDocumentArchiveLoad: { seq, operation } }];
@@ -3904,6 +3954,7 @@ export class DocumentArchiveLoadHost {
         const terminal = this.terminal;
         if (!terminal) return { kind: "unanswered" };
         this.terminal = null;
+        if (terminal.state === "ready") this.aheadOfArchive = terminal.ahead;
         this.outcome = terminal.state === "ready" ? { kind: "ready" } : terminal.state === "cancelled" ? { kind: "cancelled" } : { kind: "fault", fault: terminal.fault };
       }
       return { kind: "status", status: null };
@@ -4371,31 +4422,72 @@ export class AppChannelClient {
    * {@link DocumentArchiveLoadHost}: `progress` hears every polled status, `signal` cancels. A cancel before admission sends
    * nothing; after it the guest restores the previous document, and the load rejects with the signal's reason — or an
    * `AbortError` when the guest cancelled on its own (a person's Cancel in the history body). A cancel that lost the race
-   * resolves, because the document did load. A refusal or a guest fault rejects with the guest's own fault text. */
+   * resolves, because the document did load. A refusal or a guest fault rejects with the guest's own fault text. Driven by
+   * {@link driveDocumentArchive}, like a merge. */
   async loadDocumentArchive(
     archive: DocumentArchivePack,
     signal?: AbortSignal,
     progress?: (status: DocumentArchiveLoadStatus) => void,
   ): Promise<void> {
-    const load = new DocumentArchiveLoadHost(archive);
     const root = { pack: Uint8Array.from(archive.parent_pack), spr: Uint8Array.from(archive.parent_spr) };
+    await this.driveDocumentArchive("loadDocumentArchive", new DocumentArchiveLoadHost(archive), [], signal, progress);
+    this.cachedPack = root.pack;
+    this.cachedSpr = root.spr;
+  }
+
+  /** 🔀️ Merges a read-back of the document this program already shows (design §22.22), stepped through
+   * {@link DocumentArchiveLoadHost.merging}: the archive's events join the program's log, nothing is replaced, an open history
+   * edit and the program's viewed alternative stay. Resolves `merged` with the events it took and the events the program is
+   * `ahead` of the archive by — the cached root pair is dropped when it took any — or `unmergeable` with the guest's code
+   * ({@link DOCUMENT_ARCHIVE_UNMERGEABLE_CODES}), which touched nothing. Cancels, refusals and every other fault reject like
+   * {@link loadDocumentArchive}'s. */
+  async mergeDocumentArchive(
+    archive: DocumentArchivePack,
+    signal?: AbortSignal,
+    progress?: (status: DocumentArchiveLoadStatus) => void,
+  ): Promise<DocumentArchiveMergeV1> {
+    const merge = DocumentArchiveLoadHost.merging(archive);
+    const ended = await this.driveDocumentArchive("mergeDocumentArchive", merge, DOCUMENT_ARCHIVE_UNMERGEABLE_CODES, signal, progress);
+    if ("code" in ended) return { kind: "unmergeable", code: ended.code };
+    if (ended.completed > 0) {
+      this.cachedPack = null;
+      this.cachedSpr = null;
+    }
+    return { kind: "merged", merged: ended.completed, ahead: merge.ahead };
+  }
+
+  /** 🚶️ Drives one whole-document load or merge to its acknowledged end: resolves with the count its ready terminal completed,
+   * or with the guest's fault code when it is one of `unmergeable`. A cancelled operation rejects with the signal's reason
+   * (an `AbortError` when the guest cancelled on its own); a refusal and every other fault reject with a
+   * {@link DocumentArchiveFaultError} carrying the guest's own fault, a reply that answers nothing with a plain error. */
+  private async driveDocumentArchive(
+    name: string,
+    host: DocumentArchiveLoadHost,
+    unmergeable: readonly string[],
+    signal?: AbortSignal,
+    progress?: (status: DocumentArchiveLoadStatus) => void,
+  ): Promise<{ readonly completed: number } | { readonly code: string }> {
+    let completed = 0;
     for (;;) {
-      if (signal?.aborted) load.requestCancel();
-      const step = load.step(() => this.nextSeq());
+      if (signal?.aborted) host.requestCancel();
+      const step = host.step(() => this.nextSeq());
       if (step.kind === "finished") {
-        if (step.outcome.kind === "cancelled") throw signal?.reason ?? new DOMException(`AppChannelClient.loadDocumentArchive(${this.appId}): cancelled`, "AbortError");
-        if (step.outcome.kind === "fault") throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(step.outcome.fault, decodePackValue)}`);
-        this.cachedPack = root.pack;
-        this.cachedSpr = root.spr;
-        return;
+        if (step.outcome.kind === "ready") return { completed };
+        if (step.outcome.kind === "cancelled") throw signal?.reason ?? new DOMException(`AppChannelClient.${name}(${this.appId}): cancelled`, "AbortError");
+        const code = decodeFaultFromWire(step.outcome.fault, decodePackValue)?.code;
+        if (typeof code === "string" && unmergeable.includes(code)) return { code };
+        throw new DocumentArchiveFaultError(`AppChannelClient.${name}(${this.appId}): ${faultDisplayMessage(step.outcome.fault, decodePackValue)}`, decodeFaultFromWire(step.outcome.fault, decodePackValue));
       }
       const seq = step.seq;
       const replyFrames = await this.sendCommand(step.command);
       const frame = documentArchiveLoadReplyV1(replyFrames, seq);
-      const answer: DocumentArchiveLoadAnswer = frame ? load.answer(seq, frame) : { kind: "unanswered" };
-      if (answer.kind === "refused") throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): ${faultDisplayMessage(answer.fault, decodePackValue)}`);
-      if (answer.kind === "unanswered") throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): no answer to seq ${seq} of operation ${load.operation}`);
-      if (answer.status) progress?.(answer.status);
+      const answer: DocumentArchiveLoadAnswer = frame ? host.answer(seq, frame) : { kind: "unanswered" };
+      if (answer.kind === "refused") throw new DocumentArchiveFaultError(`AppChannelClient.${name}(${this.appId}): ${faultDisplayMessage(answer.fault, decodePackValue)}`, decodeFaultFromWire(answer.fault, decodePackValue));
+      if (answer.kind === "unanswered") throw new Error(`AppChannelClient.${name}(${this.appId}): no answer to seq ${seq} of operation ${host.operation}`);
+      if (answer.status) {
+        completed = answer.status.completed;
+        progress?.(answer.status);
+      }
       if (answer.status ? answer.status.state === "pending" || answer.status.state === "running" : frame !== undefined && "Error" in frame) await nextArchivePollTurnV1();
     }
   }
@@ -4596,6 +4688,8 @@ export class AppChannelClient {
 
 //#region 🧪️Tests
 if (import.meta.vitest) {
+  const { createTurnOutcomeBroadcast } = await import("@semio-tech/framework");
+  const { decodePresencePeer, encodePresencePeer } = await import("@semio-tech/framework-replication");
   const { registerTests2 } = await import("./🧪️tests/🧪️backbone-envelope-io/🟦️.ts");
   await registerTests2(import.meta.vitest, { APP_CHANNEL_VERSION, CHANNEL_MISMATCH_CODE, admitGuestChannelVersion, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow }, { directory: import.meta.dir, url: import.meta.url });
 }
@@ -4638,7 +4732,7 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
 // package's `🧪️tests/🟦️.ts` (`include`/`includeSource` list only THIS file and
 // `🏪️store/👷️worker/🟦️.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
 import { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind, parseDirectorySpaceAdministrationPageV1 } from "./🔨️modules/📇️directory/🟦️.ts";
-import type { DirectoryReadModel, DocumentDescriptor } from "./🔨️modules/📇️directory/🟦️.ts";
+
 
 export type {
   AdminConnectionSnapshotV1,

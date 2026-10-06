@@ -19,7 +19,7 @@ type corpus struct {
 }
 
 func readCorpus(ctx *host.Context) (corpus, error) {
-	bytes, err := ctx.FixtureBytes("shared://📃️document-parsing/🔣️documents.json")
+	bytes, err := ctx.InputBytes("shared://📃️document-parsing/🔣️documents.json")
 	if err != nil {
 		return corpus{}, err
 	}

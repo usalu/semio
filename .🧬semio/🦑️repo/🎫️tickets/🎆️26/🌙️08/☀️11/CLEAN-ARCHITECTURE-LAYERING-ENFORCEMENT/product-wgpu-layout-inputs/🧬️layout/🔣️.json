@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "two-fields-padding",
+      "text": "print-type-size type: `Owner`: 32 bytes, alignment: 8 bytes\nprint-type-size     field `a`: 8 bytes\nprint-type-size     padding: 8 bytes\nprint-type-size     field `b`: 16 bytes\n",
+      "expected": {
+        "owner": "Owner",
+        "bytes": 32,
+        "align": 8,
+        "fields": [
+          {
+            "name": "a",
+            "offset": 0,
+            "bytes": 8
+          },
+          {
+            "name": "b",
+            "offset": 16,
+            "bytes": 16
+          }
+        ],
+        "padding": 8
+      }
+    },
+    {
+      "id": "empty",
+      "text": "print-type-size type: `Empty`: 0 bytes, alignment: 1 bytes\n",
+      "expected": {
+        "owner": "Empty",
+        "bytes": 0,
+        "align": 1,
+        "fields": [],
+        "padding": 0
+      }
+    },
+    {
+      "id": "end-padding",
+      "text": "print-type-size type: `Tail`: 8 bytes, alignment: 4 bytes\nprint-type-size     field `x`: 3 bytes\nprint-type-size     end padding: 5 bytes\n",
+      "expected": {
+        "owner": "Tail",
+        "bytes": 8,
+        "align": 4,
+        "fields": [
+          {
+            "name": "x",
+            "offset": 0,
+            "bytes": 3
+          }
+        ],
+        "padding": 5
+      }
+    },
+    {
+      "id": "invalid-cardinality",
+      "text": "print-type-size type: `Broken`: 8 bytes, alignment: 4 bytes\nprint-type-size     field `x`: 9 bytes\n",
+      "expected": {
+        "refusal": "LAYOUT_SUM"
+      }
+    }
+  ]
+}

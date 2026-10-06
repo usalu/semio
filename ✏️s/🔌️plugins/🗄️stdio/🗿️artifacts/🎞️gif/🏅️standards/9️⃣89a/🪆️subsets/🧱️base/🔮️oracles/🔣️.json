@@ -870,9 +870,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "pattern-strip",
       "class": "third-party-generated",
       "target": {
@@ -911,7 +910,6 @@
       "notes": "A single base input document exercising all 21 declared gif@89a mutation kinds (global colour table, per-frame local palette, disposal/transparency/interlace/delay variety, loop-count extension, comment extension, application extension) — mirroring the shape of the already-committed mutate-gif-89a gherkin case, which uses one real-world document (💃️dancing.gif, borrowed from the 87a sibling) the same way. 751 units, 62 prefixes is schema-required but not semantically meaningful for a raster/animation format;  and  are placeholders, not claims."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "no-mutation-no-op",
       "class": "third-party-generated",
       "target": {
@@ -960,7 +958,6 @@
       "notes": "Identity — before and after bytes are the same document; no-mutation's diff is unconditionally a no-op."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -1011,7 +1008,6 @@
       "notes": "Whole-document replace: screen size, palette, background index, loop count and frames all change together."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-no-op",
       "class": "third-party-generated",
       "target": {
@@ -1062,7 +1058,6 @@
       "notes": "Replacement snapshot is byte-identical to the current one — the dispatch's own documented no-op/warn branch."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-screen-size-applied",
       "class": "third-party-generated",
       "target": {
@@ -1113,7 +1108,6 @@
       "notes": "Only the logical screen width/height change."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-global-color-table-applied",
       "class": "third-party-generated",
       "target": {
@@ -1164,7 +1158,6 @@
       "notes": "The global colour table is replaced with a different palette."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-background-color-index-applied",
       "class": "third-party-generated",
       "target": {
@@ -1215,7 +1208,6 @@
       "notes": "Only the background colour index scalar changes — readable via Decoder::bg_color, a real public getter, even though the encoder has no setter for it."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-frame-applied",
       "class": "third-party-generated",
       "target": {
@@ -1266,7 +1258,6 @@
       "notes": "A fourth frame is appended."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-frame-applied",
       "class": "third-party-generated",
       "target": {
@@ -1317,7 +1308,6 @@
       "notes": "The middle (index 1) frame is removed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "move-frame-applied",
       "class": "third-party-generated",
       "target": {
@@ -1368,7 +1358,6 @@
       "notes": "The first frame is moved to the end."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-frame-geometry-applied",
       "class": "third-party-generated",
       "target": {
@@ -1419,7 +1408,6 @@
       "notes": "Frame 0's left/top offset changes; width/height/pixels untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-frame-pixels-applied",
       "class": "third-party-generated",
       "target": {
@@ -1470,7 +1458,6 @@
       "notes": "Frame 0's palette-index buffer is replaced, same geometry."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-frame-interlace-applied",
       "class": "third-party-generated",
       "target": {
@@ -1521,7 +1508,6 @@
       "notes": "Frame 0's interlace flag flips; rows are re-stored in GIF's 4-pass order. The reader recovers the flag via Decoder::next_frame_info (before pixel decode)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "aspect-set-pixel-aspect-ratio",
       "class": "third-party-generated",
       "target": {

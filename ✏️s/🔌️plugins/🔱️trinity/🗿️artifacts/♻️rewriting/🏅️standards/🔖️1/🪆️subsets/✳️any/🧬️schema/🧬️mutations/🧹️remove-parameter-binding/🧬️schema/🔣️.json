@@ -13,7 +13,20 @@
       "const": "removeParameterBinding"
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Parameter",
+          "de": "Parameter"
+        },
+        "description": {
+          "en": "Name of the parameter whose binding is removed.",
+          "de": "Name des Parameters, dessen Bindung entfernt wird."
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

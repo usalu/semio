@@ -8,7 +8,7 @@
 //! exist in this dialect at all, and the remap drops them for that reason. A raster composite is a
 //! single still frame, so only transparency is materially lost — a fully transparent source pixel
 //! is normalized to opaque black by the 89a quantizer's own documented rule.
-use crate::io::{gif87a, raster_composite_image, semio_image_to_format, GIF89A_DIALECT};
+use crate::standards::v1::subsets::any::io::{gif87a, raster_composite_image, semio_image_to_format, GIF89A_DIALECT};
 use crate::RasterSnapshot;
 use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot as Gif89aSnapshot;
 pub fn register() {}

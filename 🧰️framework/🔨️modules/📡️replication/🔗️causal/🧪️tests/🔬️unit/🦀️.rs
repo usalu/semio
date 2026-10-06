@@ -78,7 +78,7 @@ impl crate::mutation::Mutation<i64> for CausalAddOp {
 }
 /// 🎯️ Hand-written (no `os_dsl::DslOps` derive in this dependency-free fixture): `format
 /// u8 (=1) | delta i64 LE`.
-impl crate::mutation::OpBinary for CausalAddOp {
+impl crate::io::OpBinary for CausalAddOp {
     fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError> {
         let mut out = vec![1u8];
         out.extend_from_slice(&self.delta.to_le_bytes());
@@ -279,8 +279,7 @@ mod quick {
     /// 🔁️ Diamond DAG (A none; B,C dep A; D dep B,C) inserted in every hand-picked
     /// topological order converges to the same final applied set and drained envelope count —
     /// the "permutation-convergence" law the amendment's testing note asks for at the `quick`
-    /// tier. True topological orders never hit the `insert`-classification quirk documented on
-    /// `MutationDag` above (every dependency is already `applied`, not merely known, by induction).
+    /// tier. In a true topological order every dependency is already `applied` when its dependent arrives.
     fn diamond(id_a: &str, id_b: &str, id_c: &str, id_d: &str) -> [(&'static str, MutationEnvelope); 4] {
         [("a", sample_envelope(id_a, vec![])), ("b", sample_envelope(id_b, vec![id_a])), ("c", sample_envelope(id_c, vec![id_a])), ("d", sample_envelope(id_d, vec![id_b, id_c]))]
     }
@@ -297,6 +296,20 @@ mod quick {
         let mut ids: Vec<String> = drained.iter().map(|e| e.mutation_id.0.clone()).collect();
         ids.sort();
         assert_eq!(ids, vec!["A".to_string(), "B".to_string(), "C".to_string(), "D".to_string()]);
+        retire_dag_shell(&mut dag);
+    }
+
+    /// ⛓️ A chain whose middle arrives first (b, c, a) stays in causal order: c names b, which is buffered but still waits
+    /// for a, so c waits too, and a's arrival releases b and then c. Taking a merely buffered dependency for a met one
+    /// applied c before b — a `Branch` folded before the `Commit` it names.
+    #[test]
+    fn a_dependency_that_is_buffered_but_pending_keeps_its_dependent_pending() {
+        let mut dag = MutationDag::new();
+        assert_eq!(dag.insert(sample_envelope("b", vec!["a"])).unwrap(), InsertResult::Pending);
+        assert_eq!(dag.insert(sample_envelope("c", vec!["b"])).unwrap(), InsertResult::Pending);
+        assert_eq!(dag.insert(sample_envelope("a", vec![])).unwrap(), InsertResult::Applied);
+        let drained: Vec<String> = take_applied(&mut dag).into_iter().map(|envelope| envelope.mutation_id.0).collect();
+        assert_eq!(drained, vec!["a".to_string(), "b".to_string(), "c".to_string()]);
         retire_dag_shell(&mut dag);
     }
 
@@ -442,8 +455,7 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
                 origin: crate::mutation::MutationOrigin::Owner,
                 transaction: Some(crate::mutation::TransactionRef { id: "tx-0011223344556677".into(), tool: "app#select".into() }),
             },
-        ],
-        description: None, verb: None, line: None,
+        ], verb: None, line: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
@@ -460,8 +472,8 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
     assert_eq!(envelopes[0].document_id, document_id);
     assert_eq!(envelopes[0].timestamp, crate::ids::HybridLogicalTimestamp::new(1, 1000));
     assert_eq!(envelopes[0].diff.schema, schema);
-    assert_eq!(envelopes[0].diff.payload, crate::mutation::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
-    assert_eq!(envelopes[0].inverse.payload, crate::mutation::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
+    assert_eq!(envelopes[0].diff.payload, crate::io::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
+    assert_eq!(envelopes[0].inverse.payload, crate::io::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
 
     // Second op's meta has no author_id -> falls back to `edit.actor`, not "unknown".
     assert_eq!(envelopes[1].mutation_id, crate::ids::MutationId("op-b".into()));
@@ -477,8 +489,7 @@ fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_wi
         actor: None,
         forwards: vec![CausalAddOp { delta: 5 }],
         inverse: vec![],
-        mutation_meta: vec![],
-        description: None, verb: None, line: None,
+        mutation_meta: vec![], verb: None, line: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
@@ -502,8 +513,7 @@ fn mutation_envelope_from_edit_propagates_an_encode_failure() {
         actor: None,
         forwards: vec![CausalAddOp { delta: 1 }],
         inverse: vec![],
-        mutation_meta: vec![],
-        description: None, verb: None, line: None,
+        mutation_meta: vec![], verb: None, line: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,

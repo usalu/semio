@@ -467,6 +467,17 @@
       ]
     },
     {
+      "id": "s.stdio.semio.schema.schema-export-s-stdio-semio-brep-inference.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema-export:s.stdio.semio#brep-inference",
+      "claims": [
+        {
+          "namespace": "schema-export",
+          "value": "s.stdio.semio#brep-inference"
+        }
+      ]
+    },
+    {
       "id": "s.stdio.semio.schema.schema-export-s-stdio-semio-child.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema-export:s.stdio.semio#child",

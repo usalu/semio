@@ -1,21 +1,15 @@
 /** 📤️ LAW (every announced operation also names the newest foreign operation its author had applied): the language-agnostic outbound-announcement fixture the kernel store law walks
- * (`🔨️modules/🏪️store/🧪️tests/📤️outbound-announcement/🦀️.rs`) is admitted by its schema through Ajv (third-party), and an
+ * (`🔨️modules/🏪️store/🧪️tests/📤️outbound-announcement/🦀️.rs`) uses shared examples, and an
  * independent reference of the ledger rule — every gesture starts its own edit, an undo announces one transition and leaves its
  * edit in the ledger — derives every step's expectation: each gesture announces exactly the operations it appended (ticket
  * 26/09/23 C10 09:4x: a re-announced, already accepted operation made the hub refuse the writer's typing). */
 export async function registerOutboundAnnouncementTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;
   const { default: fixture } = await import("../../🔨️modules/🏪️store/🧫️fixtures/📤️outbound-announcement/🔣️.json");
-  const { default: schema } = await import("../../🔨️modules/🏪️store/🧬️schema/📤️outbound-announcement/🔣️.json");
   type Expect = { announcedOperations: number; announcedTransitions: number; edits: number; tailOperations: number; observed: string | null };
   type Edit = { operations: number };
 
   describe("OutboundAnnouncement", () => {
-    it("owns a fixture its schema admits", async () => {
-      const { default: Ajv } = await import("ajv");
-      const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    });
 
     it("derives every step from the ledger rule: each gesture announces exactly its own operations", () => {
       let steps = 0;

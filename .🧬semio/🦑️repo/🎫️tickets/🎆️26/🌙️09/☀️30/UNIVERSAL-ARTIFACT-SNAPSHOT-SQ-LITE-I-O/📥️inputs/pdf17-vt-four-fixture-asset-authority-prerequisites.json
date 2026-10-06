@@ -1,0 +1,67 @@
+{
+  "qualification": "Not a mount capsule. Exact current8-file asset guard census; actual generated after bytes and manifest digests absent.",
+  "assets": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧫️fixtures/🗂️set-dpart-root/⬅️before.pdf",
+      "beforeSha256": "19889d8d4cc3cf1adfe12b367247ba537eba0c787e2071a01aeec2b217eb440a",
+      "beforeBytes": 864,
+      "after": "UNRESOLVED: requires authentic independent existing-generator execution; no invented byte replacement"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧫️fixtures/🗂️set-dpart-root/➡️after.pdf",
+      "beforeSha256": "314f61c3ffb8fa44057669b4314b371225e5560dc1571e9dda8b6921ac4c2615",
+      "beforeBytes": 1124,
+      "after": "UNRESOLVED: requires authentic independent existing-generator execution; no invented byte replacement"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧫️fixtures/🧹️remove-dpart-root/⬅️before.pdf",
+      "beforeSha256": "dab44f63d04cf7c7c6303510bc0fff6879d2201dfdb60fe84a39494ef511ed7b",
+      "beforeBytes": 1124,
+      "after": "UNRESOLVED: requires authentic independent existing-generator execution; no invented byte replacement"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧫️fixtures/🧹️remove-dpart-root/➡️after.pdf",
+      "beforeSha256": "c9126b562f40b602f32dfca69e00e5eb01ff84ff703b21e0f9b63e6f7d3d901b",
+      "beforeBytes": 1112,
+      "after": "UNRESOLVED: requires authentic independent existing-generator execution; no invented byte replacement"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧫️fixtures/🏷️set-dpart-metadata/⬅️before.pdf",
+      "beforeSha256": "19889d8d4cc3cf1adfe12b367247ba537eba0c787e2071a01aeec2b217eb440a",
+      "beforeBytes": 864,
+      "after": "UNRESOLVED: requires authentic independent existing-generator execution; no invented byte replacement"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧫️fixtures/🏷️set-dpart-metadata/➡️after.pdf",
+      "beforeSha256": "803ecb383729d52651203cc12bdaaf81228a38fdba531404851b26b567046a5d",
+      "beforeBytes": 1124,
+      "after": "UNRESOLVED: requires authentic independent existing-generator execution; no invented byte replacement"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧫️fixtures/🗑️remove-dpart-metadata/⬅️before.pdf",
+      "beforeSha256": "dab44f63d04cf7c7c6303510bc0fff6879d2201dfdb60fe84a39494ef511ed7b",
+      "beforeBytes": 1124,
+      "after": "UNRESOLVED: requires authentic independent existing-generator execution; no invented byte replacement"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧫️fixtures/🗑️remove-dpart-metadata/➡️after.pdf",
+      "beforeSha256": "85d27a62644496cd25243465fdfe400e728ff2dd9325e273c88aab2a6ee5e931",
+      "beforeBytes": 1113,
+      "after": "UNRESOLVED: requires authentic independent existing-generator execution; no invented byte replacement"
+    }
+  ],
+  "manifestPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🔮️oracles/🔣️.json",
+  "manifestBeforeSha256": "897a1e451ea0587b639ac92b3d4d5b3cdbec597a2a5c5a8f9e2b7883e45a85ac",
+  "manifestEntryIds": [
+    "vt-set-dpart-root",
+    "vt-remove-dpart-root",
+    "vt-set-dpart-metadata",
+    "vt-remove-dpart-metadata"
+  ],
+  "expectedChanges": [
+    "DPM.Job replaces XML metadata role, no alternate fallback.",
+    "Partition Start references retained first genuine Page and Parent references actual DPartRoot.",
+    "Set metadata uses existing partition owner; removal retains Parent/Start structure.",
+    "Original third-party observability/provenance/full fixture predicates remain; Restore independent vectors stay zero."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schemaBytes": 4535,
+  "tableWidths": {
+    "din16798_document": 23,
+    "din16798_vent_system": 38,
+    "din16798_zone": 48
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 5,
+      "valueBytes": 1499
+    },
+    {
+      "id": "emptyCollections",
+      "rows": 1,
+      "valueBytes": 164
+    }
+  ]
+}

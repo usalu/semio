@@ -16,10 +16,38 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Point",
+          "de": "Punkt"
+        },
+        "description": {
+          "en": "Index of the point record, counted from 0.",
+          "de": "Index des Punktdatensatzes, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "point": {
-      "$ref": "#/$defs/LasPoint"
+      "$ref": "#/$defs/LasPoint",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Point record",
+          "de": "Punktdatensatz"
+        },
+        "description": {
+          "en": "Coordinates, intensity, return numbers, classification and optional GPS time and colour the point takes.",
+          "de": "Koordinaten, Intensität, Rückkehrnummern, Klassifizierung sowie optional GPS-Zeit und Farbe, die der Punkt erhält."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeIdealLoadsSystemZone, base: &EnergyModelSnaps
     if let Some(item) = model.ideal_loads.iter_mut().find(|item| item.id == payload.id) {
         item.zone_id = payload.new_zone_id;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

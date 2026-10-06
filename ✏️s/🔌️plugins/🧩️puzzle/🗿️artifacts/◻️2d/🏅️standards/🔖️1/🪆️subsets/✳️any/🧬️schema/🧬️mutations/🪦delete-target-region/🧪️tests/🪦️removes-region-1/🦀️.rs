@@ -1,4 +1,4 @@
-//! 🧪️ `delete-target-region` fixture — `🪦️removes-region-1`.
+//! 🧪️ `delete-target-region` snapshot — `🪦️removes-region-1`.
 //!
 //! Removing the board's only region leaves `targetRegions` empty — and an empty collection is OMITTED from the committed `after`, never written as `[]`, so a board that never had a region and a board whose last one was deleted have the same wire form.
 //!
@@ -44,7 +44,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

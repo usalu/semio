@@ -69,7 +69,7 @@ pub fn dag_host_snapshot_from_document(document: &DagSnapshot, camera: DagCamera
 // `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs:9-11`) and directly consumed as a live,
 // load-bearing dependency by that plugin's own already-landed `🧬️mutations` facet: its
 // `apply_nodes_delta`/`apply_edges_delta`/`apply_identified_delta` helpers
-// (`…/🧬️schema/🔺️diff/📝️text/🦀️.rs`) are generic over `T: Identified<String> + Patchable<P>`
+// (`…/🚪️io/📝️text/🔺️diff/🦀️.rs`) are generic over `T: Identified<String> + Patchable<P>`
 // and call `.apply_patch(...)` on `DagNodeSpec`/`DagHostSnapshotEdge` using exactly these impls. Deleting
 // them would compile-break that plugin's facet, which is the same "boundary that separates a
 // definition from its registration is a race" failure this ticket's own doctrine warns against —
@@ -496,69 +496,14 @@ fn close_dag_test_store(mut store: DagStore) {
 }
 
 //#region 🔖️Dsl
-/// 📜️ The actual persisted owner uses its own literal record factories.
-impl crate::os_store::ArtifactDsl for DagSnapshot {
- const EXTENSION:&'static str=Self::__DSL_EXTENSION;
- fn envelope_id()->&'static str{Self::__DSL_ENVELOPE_ID}
- fn parse_dsl(text:&str)->Result<Self,crate::os_store::TextError>{
-  let body=match crate::os_store::semio_format::split_text_preamble(text){Ok((_,rest))=>rest,Err(_)=>text};
-  let record=semio_framework_dsl_record::parse(body,&Self::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;
-  Self::__dsl_from_record(&record)
- }
- fn print_dsl(&self)->String{
-  let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);
-  let envelope=crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(),crate::os_store::semio_format::Component::Dsl,1).expect("valid actual DAG envelope");
-  crate::os_store::semio_format::wrap_text(&envelope,&body)
- }
-}
-/// 📦️ Direct actual persisted fields provide ordinary and paid native endpoints.
-impl crate::os_store::ArtifactPack for DagSnapshot {
- fn sqlite_snapshot_codec()->Option<crate::os_store::ArtifactSqliteSnapshotCodec>{Some(<Self as crate::os_store::ArtifactSqliteSnapshot>::sqlite_codec())}
- fn encode_pack_with(&self,options:&crate::os_store::PackEncodeOptions)->Result<Vec<u8>,crate::os_store::PackError>{
-  let inner=crate::os_store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
-  let envelope=crate::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as crate::os_store::ArtifactDsl>::envelope_id(),crate::os_store::semio_format::Component::Pack,1).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
-  Ok(crate::os_store::semio_format::wrap_binary(&envelope,&inner))
- }
- fn decode_pack_with(bytes:&[u8],options:&crate::os_store::PackDecodeOptions)->Result<Self,crate::os_store::PackError>{
-  let(envelope,inner)=crate::os_store::semio_format::unwrap_binary(bytes).map_err(|error| crate::os_store::PackError::from(error.into_value_error()))?;
-  if !envelope.matches_identity(<Self as crate::os_store::ArtifactDsl>::envelope_id(),crate::os_store::semio_format::Component::Pack,1){return Err(crate::os_store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "actual DAG pack envelope mismatch")))}
-  let(record,_)=crate::os_store::pack_rt::decode_document(&inner,&Self::__dsl_spec(),options)?;
-  Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
- }
- fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
-}
+
+
 //#endregion 🔖️Dsl
 
 //#region 🔖️OpText
-impl crate::os_spr::OpText for DagMutation {
-    fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
-                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
-    }
 
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
-        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
-    }
-}
 
-impl crate::os_spr::OpBinary for DagMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
+
 //#endregion 🔖️OpText
 
 #[cfg(test)]
@@ -569,3 +514,6 @@ mod dag_vcs_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️dag-direct/🦀️.rs"]
 mod dag_direct_tests;
+
+#[path = "../🚪️io/🦀️.rs"]
+pub mod io;

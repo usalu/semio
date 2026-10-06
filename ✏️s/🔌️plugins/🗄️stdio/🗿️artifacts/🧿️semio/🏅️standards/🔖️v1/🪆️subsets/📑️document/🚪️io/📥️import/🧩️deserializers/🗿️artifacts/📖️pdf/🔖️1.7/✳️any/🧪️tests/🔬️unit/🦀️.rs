@@ -2,7 +2,7 @@ use super::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn sample_pdf() -> PdfSnapshot {
-    semio_s_artifact_stdio_pdf::io::text_document(&[(612.0, 792.0, "Page one text."), (612.0, 792.0, "Page two text.")])
+    semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::text_document(&[(612.0, 792.0, "Page one text."), (612.0, 792.0, "Page two text.")])
 }
 
 #[semio_framework_async_macros::async_test]

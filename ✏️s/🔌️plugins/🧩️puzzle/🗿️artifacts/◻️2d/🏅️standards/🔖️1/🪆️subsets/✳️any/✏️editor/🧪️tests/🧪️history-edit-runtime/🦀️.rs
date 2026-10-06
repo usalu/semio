@@ -8,7 +8,10 @@
 //! - A Warning that an edit introduces stays on its row after finalize, after a text reload and after a pack reload.
 //! - Fatal and Error outcomes block finalizing while Next problem walks them. They are resolved by withdrawing and by
 //!   editing targets through "Use selection", then finalized as an overwrite and as a new alternative, each undone and redone.
-//! - Every head equals a fresh app folding the edited log.
+//! - A drag whose drop recorded a proximity connection is edited far away: the connection still lands, carries a NEW
+//!   `mutation.precondition-drifted` Warning that names both handles, the review paints it, and withdrawing the connection
+//!   leaves a clean review (design §22.13).
+//! - Every head equals a fresh app folding the edited log, and that fold reports exactly the outcomes the head states.
 //!
 //! Two laws need many operations and two replicas, so they run outside the corpus:
 //! - Replay progress rides the UI frames.
@@ -43,7 +46,7 @@ fn ids(value: &Value) -> Vec<String> {
 /// 🧱️ A registered app holding `board` as its one seed edit.
 fn seeded_app(board: &Value) -> Puzzle2dApp {
     let mut app = app_with_registry();
-    dispatch(&mut app, "importFixture", Some(&json!({ "json": board })), None).expect("seed the board");
+    dispatch(&mut app, "importSnapshot", Some(&json!({ "payload": board })), None).expect("seed the board");
     app
 }
 
@@ -126,21 +129,25 @@ fn reload(app: &mut Puzzle2dApp, form: &str, what: &str) {
     close_app(&mut previous);
 }
 
-/// ✏️ The scenario's log with `head`'s edits applied: a replaced leaf takes its slot, a withdrawn one is dropped.
-fn edited_log(scenario: &Value, head: &Value) -> Vec<Value> {
+/// 🎲️ The board a scenario runs on: its own, else the corpus board.
+fn board<'a>(corpus: &'a Value, scenario: &'a Value) -> &'a Value {
+    scenario.get("board").unwrap_or(&corpus["board"])
+}
+
+/// ✏️ The scenario's log with `head`'s edits applied, every leaf with its index in the log: a replaced leaf takes its
+/// slot, a withdrawn one is dropped.
+fn edited_log(scenario: &Value, head: &Value) -> Vec<(usize, Value)> {
     let edits = head["edits"].as_array().expect("edits");
     scenario["log"].as_array().expect("log").iter().enumerate().filter_map(|(index, logged)| match edits.iter().find(|edit| edit["index"].as_u64() == Some(index as u64)) {
-        Some(edit) => edit.get("leaf").cloned(),
-        None => Some(logged.clone()),
+        Some(edit) => edit.get("leaf").cloned().map(|leaf| (index, leaf)),
+        None => Some((index, logged.clone())),
     }).collect()
 }
 
-/// 🎯️ The app's head is the named corpus head: its nodes where the corpus places them, its absent ids absent, and every
-/// node record exactly what a fresh app folding the head's edited log holds.
-fn check_head(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, name: &str, what: &str) {
-    let head = &scenario["heads"][name];
-    let fixture = fixture_of(app);
-    let nodes = fixture_nodes(&fixture);
+/// 📍️ `document` places the named corpus head: its nodes where the corpus puts them, its absent ids absent and, where
+/// the head states them, exactly its edges.
+fn check_placement(document: &Value, head: &Value, name: &str, what: &str) {
+    let nodes = board_snapshot_nodes(document);
     for (id, expected) in head["nodes"].as_object().expect("head nodes") {
         let node = nodes.iter().find(|node| node["id"] == id.as_str()).unwrap_or_else(|| panic!("{what}: {id} is in the {name} head"));
         assert_eq!((node["x"].as_f64(), node["y"].as_f64(), node["locked"].as_bool().unwrap_or(false)), (expected["x"].as_f64(), expected["y"].as_f64(), expected["locked"].as_bool().unwrap_or(false)), "{what}: {id} in the {name} head");
@@ -148,12 +155,51 @@ fn check_head(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, name: &st
     for id in head["absent"].as_array().into_iter().flatten() {
         assert!(nodes.iter().all(|node| node["id"] != *id), "{what}: {id} is absent from the {name} head");
     }
-    let mut fresh = seeded_app(&corpus["board"]);
-    for logged in edited_log(scenario, head) {
-        block_on(fresh.ingest_operations_text(&leaf(&logged).print_op())).unwrap_or_else(|fault| panic!("{what}: the edited log folds: {fault:?}"));
+    if let Some(edges) = head.get("edges") {
+        let held: std::collections::BTreeSet<&str> = board_snapshot_edges(document).iter().filter_map(|edge| edge["id"].as_str()).collect();
+        assert_eq!(held, edges.as_array().expect("head edges").iter().filter_map(Value::as_str).collect(), "{what}: the edges of the {name} head");
     }
-    assert_eq!(nodes, fixture_nodes(&fixture_of(&fresh)), "{what}: the {name} head equals a fresh fold of its edited log");
+}
+
+/// 🌱️ The document a fresh app holds after folding the named head's edited log over the scenario's board. Where the head
+/// states `outcomes`, that fold reported exactly those messages: the leaf's index in the log, the code and the target.
+fn folded_head(corpus: &Value, scenario: &Value, name: &str, what: &str) -> Value {
+    let head = &scenario["heads"][name];
+    let mut fresh = seeded_app(board(corpus, scenario));
+    let seed = edits(&mut fresh).len();
+    let log = edited_log(scenario, head);
+    for (_, logged) in &log {
+        block_on(fresh.ingest_operations_text(&leaf(logged).print_op())).unwrap_or_else(|fault| panic!("{what}: the edited log folds: {fault:?}"));
+    }
+    if let Some(outcomes) = head.get("outcomes") {
+        let rows = edits(&mut fresh).split_off(seed);
+        assert_eq!(rows.len(), log.len(), "{what}: every leaf of the {name} head's edited log is one edit");
+        let reported: Vec<Value> = rows.iter().zip(&log).flat_map(|(row, (index, _))| row.mutations.iter().flat_map(|mutation| &mutation.messages).map(|message| json!({ "index": index, "code": message.code, "target": message.target })).collect::<Vec<_>>()).collect();
+        assert_eq!(&Value::Array(reported), outcomes, "{what}: the outcomes the {name} head's edited log folds to");
+    }
+    let document = fixture_of(&fresh);
     close_app(&mut fresh);
+    document
+}
+
+/// 🎯️ The app's head is the named corpus head: placed as the corpus states, and every node and edge record exactly what a
+/// fresh app folding the head's edited log holds.
+fn check_head(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, name: &str, what: &str) {
+    let document = fixture_of(app);
+    check_placement(&document, &scenario["heads"][name], name, what);
+    let folded = folded_head(corpus, scenario, name, what);
+    assert_eq!(board_snapshot_nodes(&document), board_snapshot_nodes(&folded), "{what}: the {name} head equals a fresh fold of its edited log");
+    assert_eq!(board_snapshot_edges(&document), board_snapshot_edges(&folded), "{what}: the edges of the {name} head equal a fresh fold of its edited log");
+}
+
+/// 🖼️ The review paints the named corpus head: placed as the corpus states, every node where a fresh app folding the
+/// head's edited log holds it.
+fn check_preview(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, name: &str, what: &str) {
+    let painted = painted_fixture(app);
+    check_placement(&painted, &scenario["heads"][name], name, what);
+    let folded = folded_head(corpus, scenario, name, what);
+    let places = |document: &Value| board_snapshot_nodes(document).iter().map(|node| (node["id"].clone(), node["x"].as_f64(), node["y"].as_f64())).collect::<Vec<_>>();
+    assert_eq!(places(&painted), places(&folded), "{what}: the painted {name} preview places every node where a fresh fold of its edited log does");
 }
 //#endregion 🧰️Harness
 
@@ -172,7 +218,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
         "begin" => {
             let mutation = match spec.as_str() {
                 Some("nextProblem") => app.time_travel_ledger().panel().and_then(|panel| panel.next_problem.clone()).unwrap_or_else(|| panic!("{what}: a next problem")),
-                _ => edits(app)[seed + spec["row"].as_u64().expect("row") as usize].mutations[0].mutation_id.clone(),
+                _ => edits(app)[seed + spec["row"].as_u64().expect("row") as usize].mutations[spec["mutation"].as_u64().unwrap_or(0) as usize].mutation_id.clone(),
             };
             history_edit(app, "historyEditBegin", json!({ "mutationId": mutation }), what);
         }
@@ -225,7 +271,7 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
     }
     for outcome in expect["outcomes"].as_array().into_iter().flatten() {
         let row = &rows[outcome["row"].as_u64().expect("outcome row") as usize];
-        let mutation = serde_json::to_value(row.mutations.first().expect("the row's mutation")).expect("mutation row serializes");
+        let mutation = serde_json::to_value(row.mutations.get(outcome["mutation"].as_u64().unwrap_or(0) as usize).expect("the row's mutation")).expect("mutation row serializes");
         assert_eq!(mutation["worst"], outcome["worst"], "{what}: worst of {mutation}");
         if let Some(introduced) = outcome.get("introduced") {
             assert_eq!(&mutation["introduced"], introduced, "{what}: whether the edit made the outcome new: {mutation}");
@@ -249,6 +295,9 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
     }
     if let Some(name) = expect["head"].as_str() {
         check_head(app, corpus, scenario, name, what);
+    }
+    if let Some(name) = expect["preview"].as_str() {
+        check_preview(app, corpus, scenario, name, what);
     }
     if let Some(labels) = expect["historyEdits"].as_array() {
         let wanted: Vec<(String, String)> = labels.iter().map(|label| (label["en"].as_str().expect("en").to_string(), label["de"].as_str().expect("de").to_string())).collect();
@@ -279,13 +328,13 @@ fn check(app: &mut Puzzle2dApp, corpus: &Value, scenario: &Value, seed: usize, e
 /// - the history-edit rows in English and German;
 /// - the active alternative;
 /// - the outcome named in words on its row;
-/// - the named head, which equals a fresh fold of its edited log.
+/// - the named head, which equals a fresh fold of its edited log, and the head a review paints.
 #[test]
 fn every_corpus_scenario_reaches_its_session_outcomes_rows_and_heads() {
     let corpus = corpus();
     for scenario in corpus["scenarios"].as_array().expect("scenarios") {
         let id = scenario["id"].as_str().expect("scenario id");
-        let mut app = seeded_app(&corpus["board"]);
+        let mut app = seeded_app(board(&corpus, scenario));
         let seed = edits(&mut app).len();
         for (index, step) in scenario["steps"].as_array().expect("steps").iter().enumerate() {
             let what = format!("{id} step {index}");
@@ -335,7 +384,7 @@ fn replay_progress_rides_the_ui_frames_over_a_long_downstream() {
         }
     }
     assert!(stages.contains(&HistoryTimeTravelStage::Replaying) && stages.last() == Some(&HistoryTimeTravelStage::Reviewing), "the replay ships its progress, then its completion: {stages:?}");
-    let left = fixture_nodes(&painted_fixture(&mut app)).iter().find(|node| node["id"] == "left").map(|node| node["x"].as_f64().expect("x")).expect("left is painted");
+    let left = board_snapshot_nodes(&painted_fixture(&mut app)).iter().find(|node| node["id"] == "left").map(|node| node["x"].as_f64().expect("x")).expect("left is painted");
     assert_eq!(left, -200.0 + 30.0 + 900.0, "the reviewed head replays the 900 downstream drags over the edited one");
     run(&mut app, seed, &json!({ "exit": null }), "exit");
     close_app(&mut app);
@@ -344,7 +393,7 @@ fn replay_progress_rides_the_ui_frames_over_a_long_downstream() {
 /// 🎨️ The document the overview paints: the time-travel preview while a session is open.
 fn painted_fixture(app: &mut Puzzle2dApp) -> Value {
     let body: Value = serde_json::from_str(&render_body(app, overview::BODY_KEY)).expect("board body");
-    serde_json::from_str(body["board2d"]["fixtureJson"].as_str().expect("painted fixture lane")).expect("painted fixture parses")
+    serde_json::from_str(body["board2d"]["snapshotJson"].as_str().expect("painted snapshot lane")).expect("painted snapshot parses")
 }
 
 /// 🔀️ Every event batch `from` published since the last relay, delivered into `to` through its probe `into` and ingested.
@@ -376,7 +425,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
         block_on(local.ingest_operations_text(&long_drags(&["mid"], 120))).expect("a long downstream edit");
         relay(&mut local_probe, &mut remote_probe, &mut remote);
     }
-    assert_eq!(fixture_nodes(&fixture_of(&remote)), fixture_nodes(&fixture_of(&local)), "the remote replica holds the history");
+    assert_eq!(board_snapshot_nodes(&fixture_of(&remote)), board_snapshot_nodes(&fixture_of(&local)), "the remote replica holds the history");
     let before = fixture_of(&remote);
     for step in [json!({ "begin": { "row": 0 } }), json!({ "input": { "path": "/dx", "value": 30.0 } }), json!({ "accept": null }), json!({ "finalize": "overwrite" })] {
         run(&mut local, seed, &step, "the local history edit");
@@ -397,7 +446,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     let resumed = block_on(remote.handle_action("historyEditRerun", Some(&semio_framework_value::DslValue::from(&json!({}))), &meta)).expect("rerun");
     assert!(resumed.output.get("rejected").is_none(), "{:?}", resumed.output);
     pump(&mut remote, "the remote change is adopted", |app| block_on(app.history_snapshot()).expect("history").reprojection.is_none());
-    assert_eq!(fixture_nodes(&fixture_of(&remote)), fixture_nodes(&fixture_of(&local)), "the adoption equals the author's head");
+    assert_eq!(board_snapshot_nodes(&fixture_of(&remote)), board_snapshot_nodes(&fixture_of(&local)), "the adoption equals the author's head");
     block_on(local.detach_backbone()).expect("local releases its backbone");
     block_on(remote.detach_backbone()).expect("remote releases its backbone");
     close_app(&mut local);
@@ -407,7 +456,7 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
 /// history rows.
 fn board_trace(app: &mut Puzzle2dApp) -> (Vec<Value>, Option<String>, usize) {
     let patch = block_on(app.history_snapshot()).expect("history");
-    (fixture_nodes(&fixture_of(app)).to_vec(), patch.active_alternative_id, patch.upserts.len())
+    (board_snapshot_nodes(&fixture_of(app)).to_vec(), patch.active_alternative_id, patch.upserts.len())
 }
 
 /// ⚖️ LAW (gap N17): switching to an alternative whose 360 drags are not applied is a local history step, which the
@@ -432,7 +481,7 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
         for _ in 0..3 {
             block_on(app.ingest_operations_text(&long_drags(&["mid"], 120))).expect("a long edit on the alternative");
         }
-        let long_nodes = fixture_nodes(&fixture_of(&app)).to_vec();
+        let long_nodes = board_snapshot_nodes(&fixture_of(&app)).to_vec();
         dispatch(&mut app, "switchAlternative", Some(&json!({ "alternativeId": trunk })), None).expect("back to the trunk");
         pump(&mut app, "the trunk is shown", |app| !app.time_travel_ledger().has_pending_work() && block_on(app.history_snapshot()).expect("history").reprojection.is_none());
         let before = board_trace(&mut app);

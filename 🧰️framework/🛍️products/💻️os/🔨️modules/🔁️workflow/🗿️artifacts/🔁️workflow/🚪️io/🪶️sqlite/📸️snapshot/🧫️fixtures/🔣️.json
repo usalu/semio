@@ -1,0 +1,284 @@
+{
+  "snapshot": {
+    "schema": "os.workflow",
+    "graph": {
+      "schema": "workflow.graph",
+      "nodes": [
+        {
+          "id": "",
+          "pluginId": "./!@",
+          "appId": "\u0000😀",
+          "label": "世界",
+          "yields": "",
+          "artifactRef": "unresolved\u0000",
+          "configRef": "",
+          "x": 0,
+          "y": 1.25,
+          "width": -2,
+          "height": 0,
+          "inputs": [
+            {
+              "id": "",
+              "spec": {
+                "id": "",
+                "label": "\u0000世界",
+                "direction": "out",
+                "mediaType": {
+                  "class": "data",
+                  "form": "procedure"
+                },
+                "kindId": "",
+                "required": true,
+                "multiplicity": "many"
+              }
+            },
+            {
+              "id": "",
+              "spec": {
+                "id": "./!@",
+                "label": "",
+                "direction": "in",
+                "mediaType": {
+                  "class": "twoD",
+                  "form": "vector"
+                },
+                "required": false,
+                "multiplicity": "one"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "\u0000😀",
+              "spec": {
+                "id": "",
+                "label": "",
+                "direction": "in",
+                "mediaType": {
+                  "class": "presentation",
+                  "form": "deck"
+                },
+                "kindId": "unresolved",
+                "required": false,
+                "multiplicity": "many"
+              }
+            }
+          ]
+        },
+        {
+          "id": "",
+          "pluginId": "",
+          "appId": "",
+          "label": "",
+          "yields": "",
+          "artifactRef": "",
+          "configRef": "",
+          "x": 2,
+          "y": 3,
+          "width": 4,
+          "height": 5,
+          "inputs": [],
+          "outputs": []
+        }
+      ],
+      "edges": [
+        {
+          "id": "",
+          "sourceNodeId": "missing",
+          "sourcePortId": "",
+          "targetNodeId": "",
+          "targetPortId": "./!@",
+          "contract": {
+            "kindId": "",
+            "mediaType": {
+              "class": "computation",
+              "form": "flow"
+            },
+            "wire": {
+              "kind": "binary",
+              "format_kind": "\u0000😀"
+            },
+            "conversion": [
+              "procedure",
+              "deck"
+            ]
+          }
+        },
+        {
+          "id": "",
+          "sourceNodeId": "",
+          "sourcePortId": "",
+          "targetNodeId": "unknown\u0000世界",
+          "targetPortId": "",
+          "contract": {
+            "kindId": "./!@",
+            "mediaType": {
+              "class": "data",
+              "form": "value"
+            },
+            "wire": {
+              "kind": "document",
+              "schema": ""
+            },
+            "conversion": null
+          }
+        }
+      ]
+    },
+    "parameters": [
+      {
+        "type": "numeric",
+        "id": "",
+        "name": "\u0000😀",
+        "value": 1.25,
+        "min": null,
+        "max": -2,
+        "step": 0
+      },
+      {
+        "type": "categorical",
+        "id": "",
+        "name": "",
+        "value": "\u0000世界",
+        "options": [
+          "",
+          "",
+          "\u0000😀"
+        ]
+      },
+      {
+        "type": "toggle",
+        "id": "",
+        "name": "",
+        "value": true
+      },
+      {
+        "type": "text",
+        "id": "",
+        "name": "",
+        "value": "\u0000世界"
+      }
+    ],
+    "parameter_bindings": [
+      {
+        "parameterId": "",
+        "nodeId": "unresolved",
+        "fieldPath": ""
+      },
+      {
+        "parameterId": "",
+        "nodeId": "unresolved",
+        "fieldPath": "\u0000😀"
+      }
+    ],
+    "inputs": [
+      {
+        "id": "",
+        "kindId": "",
+        "selector": "\u0000世界",
+        "required": true,
+        "multiplicity": "one"
+      },
+      {
+        "id": "",
+        "kindId": "./!@",
+        "selector": "",
+        "required": false,
+        "multiplicity": "many"
+      }
+    ],
+    "input_bindings": [
+      {
+        "inputId": "",
+        "nodeId": "missing",
+        "portId": ""
+      },
+      {
+        "inputId": "",
+        "nodeId": "",
+        "portId": "\u0000😀"
+      }
+    ],
+    "output_bindings": [
+      {
+        "nodeId": "",
+        "portId": "",
+        "pathTemplate": ""
+      },
+      {
+        "nodeId": "missing",
+        "portId": "",
+        "pathTemplate": "\u0000世界"
+      }
+    ]
+  },
+  "binary64Words": [
+    "0000000000000000",
+    "8000000000000000",
+    "0000000000000001",
+    "000fffffffffffff",
+    "7fefffffffffffff",
+    "7ff0000000000000",
+    "fff0000000000000",
+    "7ff8000000000011",
+    "7ff0000000000007"
+  ],
+  "mediaClasses": [
+    "twoD",
+    "threeD",
+    "text",
+    "data",
+    "graph",
+    "kit",
+    "computation",
+    "presentation"
+  ],
+  "mediaForms": [
+    "any",
+    "vector",
+    "raster",
+    "brep",
+    "mesh",
+    "document",
+    "value",
+    "dag",
+    "trinity",
+    "type",
+    "design",
+    "kit",
+    "flow",
+    "sequence",
+    "procedure",
+    "deck"
+  ],
+  "malformedSql": [
+    "DELETE FROM workflow_document",
+    "INSERT INTO workflow_graph VALUES (2,1,'extra')",
+    "UPDATE workflow_node SET ordinal=2 WHERE id=1",
+    "UPDATE workflow_port SET node_id=999 WHERE id=1",
+    "UPDATE workflow_port SET collection='unknown' WHERE id=1",
+    "UPDATE workflow_port SET direction=2 WHERE id=1",
+    "UPDATE workflow_port SET media_form=16 WHERE id=1",
+    "UPDATE workflow_contract SET conversion_to=NULL WHERE id=1",
+    "UPDATE workflow_contract SET format_kind=NULL WHERE id=1",
+    "DELETE FROM workflow_contract WHERE id=1",
+    "UPDATE workflow_contract SET edge_id=2 WHERE id=1",
+    "UPDATE workflow_parameter SET kind='text' WHERE id=1",
+    "DELETE FROM workflow_numeric",
+    "UPDATE workflow_numeric SET min_bits=1 WHERE id=1",
+    "UPDATE workflow_numeric SET value_class='nan' WHERE id=1",
+    "UPDATE workflow_category_option SET ordinal=3 WHERE id=1",
+    "UPDATE workflow_category_option SET categorical_id=999 WHERE id=1",
+    "UPDATE workflow_toggle SET value=2 WHERE id=1",
+    "UPDATE workflow_input SET multiplicity=2 WHERE id=1",
+    "UPDATE workflow_output_binding SET document_id=999 WHERE id=1"
+  ],
+  "control": {
+    "collectionLength": 2048,
+    "largeCharacters": 65537,
+    "cancelAfterBytes": 65536,
+    "maxOwnedBytes": 200000,
+    "tinyFileBytes": 4096,
+    "maxLookupBackingBytes": 16384
+  }
+}

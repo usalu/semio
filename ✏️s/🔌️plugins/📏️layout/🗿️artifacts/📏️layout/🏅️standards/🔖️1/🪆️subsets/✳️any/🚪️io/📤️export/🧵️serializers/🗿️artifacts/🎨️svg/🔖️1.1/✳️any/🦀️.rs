@@ -3,7 +3,7 @@
 //! SVG 1.1 by `s.stdio.semio/v1/drawing`'s own export leaf.
 //!
 //! 🔖 `IoFidelity::Lossy`: a picture of the spreads — story text, styles and links are not drawn.
-use crate::io::layout_snapshot_to_semio_drawing;
+use crate::standards::v1::subsets::any::io::layout_snapshot_to_semio_drawing;
 use crate::LayoutSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_drawing, SemioDrawingFormat};
 

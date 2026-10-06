@@ -169,13 +169,12 @@ impl HistoryLogGen {
             let started_at = next_timestamp(&mut rng, profile.adversarial).await;
             let finished_at = if rng.next_bool().await { Some(next_timestamp(&mut rng, profile.adversarial).await) } else { None };
             let actor = if rng.next_bool().await { Some(next_ident(&mut rng, "actor", i, profile.adversarial).await) } else { None };
-            let description = if rng.next_bool().await { Some(next_text(&mut rng, profile.adversarial).await) } else { None };
             let op_count = if profile.adversarial && rng.next_bool().await { 0 } else { rng.next_range(profile.max_ops_per_edit as u64 + 1).await as usize };
             let mut ops = Vec::with_capacity(op_count);
             for _ in 0..op_count {
                 ops.push(crate::os_spr::OpPayload { text: Some(next_text(&mut rng, profile.adversarial).await), binary: None });
             }
-            edits.push(crate::os_spr::HistoryEdit { line: None, id, actor, started_at, finished_at, description, verb: None, ops, inverse: Vec::new(), meta: None, lane: None });
+            edits.push(crate::os_spr::HistoryEdit { line: None, id, actor, started_at, finished_at, verb: None, ops, inverse: Vec::new(), meta: None, lane: None });
         }
 
         let mut transitions: Vec<crate::os_spr::HistoryTransitionRecord> = Vec::new();

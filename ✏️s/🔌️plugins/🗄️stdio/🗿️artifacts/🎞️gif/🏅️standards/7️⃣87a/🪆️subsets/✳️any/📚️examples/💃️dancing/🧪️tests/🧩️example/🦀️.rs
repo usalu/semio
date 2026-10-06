@@ -5,11 +5,11 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING's inference laws,
 //! exercised against this same real fixture.
 
-use crate::standards::v89a::engine::{decode_gif, encode_gif};
+use crate::subsets::any::io::{decode_gif, encode_gif};
 use crate::standards::v89a::subsets::any::schema::inferences::GifInference;
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
-use crate::standards::v89a::subsets::any::schema::GifAnalyzer;
-use crate::standards::v89a::subsets::any::schema::GifBuilderConstruction as GifBuilder;
+use crate::standards::v89a::subsets::any::io::GifAnalyzer;
+use crate::standards::v89a::subsets::any::io::GifBuilderConstruction as GifBuilder;
 use protocol::Inference;
 use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder};
 

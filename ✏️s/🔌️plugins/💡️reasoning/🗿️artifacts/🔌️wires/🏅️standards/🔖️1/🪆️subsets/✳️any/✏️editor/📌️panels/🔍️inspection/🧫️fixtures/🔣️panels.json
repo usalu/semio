@@ -7,7 +7,7 @@
       "identityKinds": "Identity kinds",
       "relationshipKinds": "Relationship kinds",
       "summary": [
-        "Schema: reasoning.wires.fixture",
+        "Schema: reasoning.wires.identity.snapshot",
         "Identities: 0",
         "Relationships: 0",
         "Board nodes: 0"
@@ -20,7 +20,7 @@
       "identityKinds": "Identitätsarten",
       "relationshipKinds": "Beziehungsarten",
       "summary": [
-        "Schema: reasoning.wires.fixture",
+        "Schema: reasoning.wires.identity.snapshot",
         "Identitäten: 0",
         "Beziehungen: 0",
         "Knoten auf der Leinwand: 0"

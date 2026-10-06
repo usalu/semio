@@ -1,0 +1,70 @@
+{
+  "schemaBytes": 1205,
+  "tableCount": 4,
+  "maxColumns": 7,
+  "metadataPreservingEmpty": "clear frames only; preserve schema,width,height,colorspace,bitDepth,ICC,metadata",
+  "cases": [
+    {
+      "key": "nativeMatchedFull",
+      "rows": 21,
+      "semanticBytes": 835,
+      "tables": [
+        {
+          "table": "semio_image_document",
+          "rows": 1,
+          "semanticBytes": 61
+        },
+        {
+          "table": "semio_image_frame",
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "semio_image_metadata",
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "semio_image_sample",
+          "rows": 16,
+          "semanticBytes": 640
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "framesOnlyEmpty",
+      "rows": 3,
+      "semanticBytes": 131,
+      "tables": [
+        {
+          "table": "semio_image_document",
+          "rows": 1,
+          "semanticBytes": 61
+        },
+        {
+          "table": "semio_image_frame",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_image_metadata",
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "semio_image_sample",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    }
+  ]
+}

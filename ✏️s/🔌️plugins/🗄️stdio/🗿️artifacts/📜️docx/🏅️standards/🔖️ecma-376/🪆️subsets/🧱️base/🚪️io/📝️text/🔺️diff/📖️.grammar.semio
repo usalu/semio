@@ -1,0 +1,21 @@
+dialect grammar
+grammar stdio.docx.diff
+extension docx
+start document
+comment none
+string double backslash
+
+# Real one-line `DiffCodec::print_diff` shape of `../../../🧬️schema/🦀️.rs` (`🔖️TopLevel` region): the RFC 8259 JSON of
+# `DocxDiff`'s `ToValue` (`dsl::json::to_json_string`) -- one object whose members are the diff's present
+# top-level fields (`opc`, `xmlParts`; an absent field is skipped, so the empty diff prints `{}`).
+document = "{" "}" | "{" diff-field {"," diff-field}* "}"
+diff-field = "opc" ":" object | "xmlParts" ":" object
+
+# ── RFC 8259 value syntax, restated from `🧾️json`'s own snapshot grammar: `string double backslash`
+# decodes every `"..."` TEXT token's escapes, whitespace is lexer trivia, `{...}*` is the only grouping. ──
+value = object | array | json-string | number | "true" | "false" | "null"
+object = "{" "}" | "{" member {"," member}* "}"
+member = json-string ":" value
+array = "[" "]" | "[" value {"," value}* "]"
+json-string = TEXT
+number = INT | FLOAT

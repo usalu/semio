@@ -31,7 +31,7 @@ const INPUT: &str = "shared://📕️reuse-marketplaces.xlsx";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.xlsx"))?;
+    let copy = ctx.copy_input(INPUT, Some("input.xlsx"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 

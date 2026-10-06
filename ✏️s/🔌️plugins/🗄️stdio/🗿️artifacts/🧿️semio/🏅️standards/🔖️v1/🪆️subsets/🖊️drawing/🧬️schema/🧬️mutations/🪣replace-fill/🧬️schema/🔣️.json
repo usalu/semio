@@ -9,7 +9,24 @@
   ],
   "properties": {
     "style_name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Style",
+          "de": "Stil"
+        },
+        "description": {
+          "en": "Name of the drawing style.",
+          "de": "Name des Zeichenstils."
+        },
+        "ref": {
+          "kind": "style"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "new_fill": {
       "anyOf": [

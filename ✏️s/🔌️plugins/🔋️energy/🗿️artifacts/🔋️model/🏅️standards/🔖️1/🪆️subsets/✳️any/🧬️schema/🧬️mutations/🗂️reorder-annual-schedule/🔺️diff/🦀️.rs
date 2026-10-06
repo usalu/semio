@@ -20,6 +20,6 @@ pub fn diff(payload: &super::ReorderAnnualScheduleRules, base: &EnergyModelSnaps
         let rule = item.rules.remove(payload.from as usize);
         item.rules.insert(payload.to as usize, rule);
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

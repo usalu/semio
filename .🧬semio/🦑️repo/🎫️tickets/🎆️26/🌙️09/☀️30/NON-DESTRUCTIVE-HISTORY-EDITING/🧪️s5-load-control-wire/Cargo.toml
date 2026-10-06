@@ -1,0 +1,19 @@
+# 🥇️ S5-LOAD (live fault F9): a standalone crate that reads the document-port binding fixture's golden control bytes
+# (`codec.control`, written by the TypeScript closed grammar) through the plugin crate's PUBLIC Rust codec — the same law as
+# the binding's unit law `document_backbone_control_maps_are_the_golden_wire_bytes`, runnable without a save in the tree.
+#   zsh T/🚦️gate.sh 3 25 && CARGO_BUILD_JOBS=3 cargo test --manifest-path T/🧪️s5-load-control-wire/Cargo.toml --offline -- --nocapture
+[package]
+name = "s5-load-control-wire"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+
+[[test]]
+name = "control_wire"
+path = "tests/control_wire.rs"

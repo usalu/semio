@@ -4,7 +4,7 @@ use super::*;
 fn typed_wire_neutral_component_defaults_match_serde() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let rows = fixture["components"].as_array().expect("component vectors");
-    assert_eq!(rows.len(), 27);
+    assert_eq!(rows.len(), 28);
     for row in rows {
         let sparse: Component = serde_json::from_value(row["wire"].clone()).expect("native sparse component");
         let normalized: Component = serde_json::from_value(row["expected"].clone()).expect("native normalized component");
@@ -75,7 +75,8 @@ fn every_component_variant_round_trips() {
     component_round_trips(Component::Button(ButtonProps { icon: ui_text("plus"), label: label("Add") }));
     component_round_trips(Component::Separator(SeparatorProps {}));
     component_round_trips(Component::Input(InputProps { kind: InputKind::Number, value: ui_text("3"), placeholder: None, commit: Some(ui_text("blur")), min: Some(0.0), max: Some(10.0), step: Some(1.0), accept: None, precision: Some(2), snaps: Default::default(), display_factor: None, limits: None, draft_target: Some(ui_text("fixture.number/value")), publication_revision: Some(crate::UiPublicationRevision(5)) }));
-    component_round_trips(Component::Select(SelectProps { value: ui_text("a"), items: crate::UiFixedList::default(), placeholder: None }));
+    component_round_trips(Component::Select(SelectProps { value: ui_text("a"), items: crate::UiFixedList::default(), placeholder: None, appearance: SelectAppearance::Menu }));
+    component_round_trips(Component::Select(SelectProps { value: ui_text("a"), items: crate::UiFixedList::default(), placeholder: None, appearance: SelectAppearance::Segmented }));
     component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Button, on: true, icon: ui_text("toggle-left"), text: Some(label("Enabled")) }));
     component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Checkbox, on: true, icon: ui_text("check"), text: Some(label("Enabled")) }));
     component_round_trips(Component::KeyValueList(KeyValueListProps { entries: crate::UiFixedList::default() }));
@@ -376,7 +377,7 @@ fn number_controls_fixture_pins_the_detent_pointer_key_and_precision_laws() {
         let component: Component = serde_json::from_value(row["component"].clone()).expect("value text component");
         let value = crate::accessibility_value(&component);
         assert_eq!(value.text.as_deref(), row["valueText"].as_str(), "{}", row["case"]);
-        for (field, spoken) in [("valueNow", value.now), ("valueMin", value.min), ("valueMax", value.max)] {
+        for (field, spoken) in [("valueNow", value.now), ("valueMin", value.min), ("valueMax", value.max), ("valueStep", value.step)] {
             if let Some(expected) = row.get(field) {
                 assert_eq!(spoken, expected.as_f64(), "{}: {field}", row["case"]);
             }
@@ -425,6 +426,42 @@ fn number_controls_fixture_pins_the_detent_pointer_key_and_precision_laws() {
             }
         }
         component_round_trips(snapshot.nodes[0].component.credited_clone().expect("credited copy"));
+    }
+}
+
+#[test]
+fn a_select_states_its_appearance_only_when_it_is_segmented() {
+    use protocol::value::{FromValue, ToValue};
+    let menu = SelectProps { value: ui_text("a"), items: crate::UiFixedList::default(), placeholder: None, appearance: SelectAppearance::Menu };
+    let segmented = SelectProps { appearance: SelectAppearance::Segmented, ..menu.clone() };
+    assert!(serde_json::to_value(Component::Select(menu.clone())).expect("menu wire").get("appearance").is_none());
+    assert_eq!(serde_json::to_value(Component::Select(segmented.clone())).expect("segmented wire")["appearance"], "segmented");
+    let sparse: Component = serde_json::from_value(serde_json::json!({ "type": "select", "value": "a", "items": [] })).expect("a select without an appearance");
+    assert_eq!(sparse, Component::Select(menu.clone()));
+    for props in [menu, segmented] {
+        assert_eq!(SelectProps::from_value(props.to_value()).expect("typed value round trip"), props);
+    }
+}
+
+#[test]
+fn text_controls_fixture_pins_the_draft_key_law() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️text-controls/🔣️.json")).expect("text-controls fixture");
+    let rows = fixture["keys"].as_array().expect("key rows");
+    assert!(rows.len() >= 12);
+    for row in rows {
+        let kind: InputKind = serde_json::from_value(row["kind"].clone()).expect("input kind");
+        let key = match row["key"].as_str().expect("key") {
+            "enter" => crate::TextInputKey::Enter,
+            "escape" => crate::TextInputKey::Escape,
+            other => panic!("unknown text key {other}"),
+        };
+        let modifiers = crate::TextInputModifiers { primary: row["primary"].as_bool().expect("primary"), shift: row["shift"].as_bool().expect("shift"), alt: row["alt"].as_bool().expect("alt") };
+        let action = crate::text_input_key(kind, key, modifiers).map(|action| match action {
+            crate::TextInputKeyAction::Newline => "newline",
+            crate::TextInputKeyAction::Commit => "commit",
+            crate::TextInputKeyAction::Revert => "revert",
+        });
+        assert_eq!(action, row["action"].as_str(), "{}", row["case"]);
     }
 }
 

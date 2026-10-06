@@ -2,7 +2,7 @@
 
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::schema::generation_preview_layers;
+use crate::standards::v1::subsets::any::io::text::snapshot::generation_preview_layers;
 use semio_framework_plugin::built_text_node;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Canvas2dScene;
@@ -23,6 +23,7 @@ const GENERATION2D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "generation2d.play.gene
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: GENERATION2D_PLAY_BODY_GENERATE_PREVIEW.into(),

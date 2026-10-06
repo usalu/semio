@@ -5,7 +5,8 @@
 use crate::editor::bitmap::modes::edit::tools::fill::{self as fill_tool, BitmapFillPayload};
 use crate::editor::bitmap::modes::edit::windows::output::config::BitmapOutputWindowConfig;
 use crate::editor::bitmap::transient::BitmapTransient;
-use crate::schema::snapshot::{decode_base64, BitmapColor};
+use crate::schema::snapshot::{BitmapColor};
+use crate::standards::v1::subsets::any::io::text::snapshot::{decode_base64};
 use crate::BitmapSnapshot;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::ActionArgDef;
@@ -31,6 +32,7 @@ const SURFACE_ID: &str = "wfc.bitmap.output";
 /// 🧩 Stitched into the editor manifest by `crate::editor::bitmap::create_bitmap_editor`.
 pub fn definition() -> WindowKindDefinition {
     let mut definition = WindowKindDefinition {
+        initial_utility_id: None,
         id: WFC_BITMAP_WINDOW_OUTPUT.into(),
         label: LocalizedLabel::native("Output", "Ausgabe"),
         body_key: BODY_KEY.into(),

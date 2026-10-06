@@ -23,6 +23,7 @@
           "en": "Index of the mesh, counted from 0.",
           "de": "Index des Netzes, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -41,6 +42,7 @@
           "en": "Index of the primitive within the mesh, counted from 0.",
           "de": "Index des Primitivs im Netz, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 20
@@ -59,6 +61,7 @@
           "en": "0 points, 1 lines, 2 line loop, 3 line strip, 4 triangles, 5 triangle strip, 6 triangle fan.",
           "de": "0 Punkte, 1 Linien, 2 Linienschleife, 3 Linienzug, 4 Dreiecke, 5 Dreiecksstreifen, 6 Dreiecksfächer."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 30

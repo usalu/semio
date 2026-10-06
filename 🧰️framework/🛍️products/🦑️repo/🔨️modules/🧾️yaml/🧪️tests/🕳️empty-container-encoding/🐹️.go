@@ -24,7 +24,7 @@ type codecVectorFile struct {
 }
 
 func loadVectors(ctx *host.Context) ([]codecVector, error) {
-	data, err := ctx.FixtureBytes("shared://📡️codec-vectors.json")
+	data, err := ctx.InputBytes("shared://📡️codec-vectors.json")
 	if err != nil {
 		return nil, err
 	}

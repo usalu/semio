@@ -194,7 +194,7 @@ impl JackQueryWork {
         leaves: Vec<SemioGraphMutation>,
     ) -> ArtifactCommandWorkStep<Owner> {
         self.finished = true;
-        let mut emit = crate::jack_child_emit(input.snapshot, &leaves);
+        let mut emit = crate::jack_child_emit(input.snapshot, leaves);
         emit.artifact_mutations = self.adopts_query.then(|| set_query(self.source.as_ref().expect("query source is retained").clone())).into_iter().collect();
         ArtifactCommandWorkStep::CompleteWithEphemeral {
             emit,

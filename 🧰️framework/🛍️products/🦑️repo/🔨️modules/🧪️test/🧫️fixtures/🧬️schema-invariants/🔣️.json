@@ -1,6 +1,4 @@
 {
-  "$schema": "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
-  "schema": "semio.repository-test.schema-invariant-cases/v4",
   "checkOnlyDiagnosticCodes": [
     "schema-export-id-duplicate",
     "schema-export-id-invalid",
@@ -495,10 +493,6 @@
       ],
       "expect": [
         {
-          "code": "schema-placement-outside-module",
-          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📥️parser-corpus/🧾️draft-07-subject.json"
-        },
-        {
           "code": "schema-fixture-defines-schema",
           "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📥️parser-corpus/🧾️draft-07-subject.json"
         }
@@ -621,6 +615,142 @@
         {
           "code": "schema-dialect-not-draft-07",
           "path": "🌎️hub/💡️inference/🧬️schema/🔣️.json"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-document-json-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🔣️.json"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json",
+          "json": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-fixture-sql-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🪶️.sql"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🪶️.sql",
+          "json": {
+            "source": "CREATE TABLE example (id TEXT);\n"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🪶️.sql"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-fixture-graphql-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🔗️.graphql"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔗️.graphql",
+          "json": {
+            "source": "type Example { id: ID! }\n"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔗️.graphql"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-fixture-protobuf-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🛰️.proto"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🛰️.proto",
+          "json": {
+            "source": "syntax = \"proto3\"; message Example { string id = 1; }\n"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🛰️.proto"
+        }
+      ]
+    },
+    {
+      "id": "invalid-inert-fixture-interface-schema-facet",
+      "title": "Inert parser input never authorizes a schema contract facet",
+      "invariant": "fixture-isolation",
+      "files": [
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json",
+          "json": {
+            "inertSchemaData": [
+              "🧬️schema/🟦️.ts"
+            ]
+          }
+        },
+        {
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🟦️.ts",
+          "json": {
+            "source": "export interface Example { id: string }\n"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "code": "schema-fixture-defines-schema",
+          "path": "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🟦️.ts"
         }
       ]
     }

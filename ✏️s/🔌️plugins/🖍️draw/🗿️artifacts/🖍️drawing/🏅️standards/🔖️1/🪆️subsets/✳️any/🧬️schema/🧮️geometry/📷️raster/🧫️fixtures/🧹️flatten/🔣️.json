@@ -1,0 +1,8 @@
+[
+ {"source":"opaque solid rectangle","work":3},
+ {"source":"fill then stroke source over","work":3},
+ {"source":"dashed stroke","work":3},
+ {"source":"even odd duplicated ring","work":3},
+ {"source":"no appearance","work":3},
+ {"source":"singular affine","work":3}
+]

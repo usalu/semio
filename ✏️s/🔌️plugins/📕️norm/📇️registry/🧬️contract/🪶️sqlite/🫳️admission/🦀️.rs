@@ -1,0 +1,53 @@
+//! 🫳️ Borrowed native field primitives for handwritten norm SQL entity admission.
+use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
+use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
+use store::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteSnapshotProgress,artifact::{Cell,RowWriter}};
+fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+/// 📌️ Required authored slot; defaults do not create missing native fields.
+pub fn field(r:&R,id:u16)->Result<&F,ValueError>{r.get(id).ok_or_else(||invalid("required norm native slot is absent"))}
+/// 🧱️ A real record or declared block, borrowed from the controlled CST.
+pub fn record(value:&F)->Result<&R,ValueError>{match value{F::Record(r)=>Ok(r),F::Block(value)=>record(value),_=>Err(invalid("norm native record required"))}}
+/// 📋️ A declared sequence in the controlled CST.
+pub fn list(value:&F)->Result<&[F],ValueError>{match value{F::List(values)=>Ok(values),_=>Err(invalid("norm native list required"))}}
+/// 🔤️ Exact borrowed UTF8 owner bytes.
+pub fn text(value:&F)->Result<&str,ValueError>{match value{F::Text(value)=>Ok(value),_=>Err(invalid("norm native text required"))}}
+/// 🔢️ An intrinsic binary64 word, with SQL IEEE columns emitted by RowWriter.
+pub fn real(value:&F)->Result<f64,ValueError>{match value{F::Float(value)=>Ok(*value),_=>Err(invalid("norm native binary64 required"))}}
+/// 🧮️ A declared unsigned integer with its intrinsic width.
+pub fn unsigned(value:&F,maximum:u64)->Result<i64,ValueError>{match value{F::UInt(value)if *value<=maximum=>i64::try_from(*value).map_err(|_|invalid("norm SQL integer out of range")),_=>Err(invalid("norm native unsigned integer required"))}}
+/// ☑️ A declared Boolean.
+pub fn boolean(value:&F)->Result<i64,ValueError>{match value{F::Bool(value)=>Ok(i64::from(*value)),_=>Err(invalid("norm native Boolean required"))}}
+/// 🏷️ Authored native ordinal to the actual SQL text literal.
+pub fn enumeration<'a>(value:&F,values:&'a[&'a str])->Result<&'a str,ValueError>{match value{F::Enum(index)=>values.get(*index as usize).copied().ok_or_else(||invalid("norm native enum ordinal is outside the authored domain")),_=>Err(invalid("norm native enum required"))}}
+/// ◻️ Only declared optional text is nullable.
+pub fn optional(value:&F)->Result<Cell<'_>,ValueError>{match value{F::Absent=>Ok(Cell::Null),value=>text(value).map(Cell::Text)}}
+/// 🔢️ Dense authored relationship ordinal.
+pub fn ordinal(index:usize)->Result<Cell<'static>,ValueError>{i64::try_from(index).map(Cell::Integer).map_err(|_|invalid("norm relationship ordinal out of range"))}
+/// 📏️ Copied authored physical schema limits precede typed ownership.
+pub fn schema(schema:&str,tables:usize,columns:usize,control:&SqliteSnapshotControl<'_>)->Result<(),ValueError>{check_schema(schema,tables,columns,control.limits())}
+/// 🛂️ Fixed copied physical metadata is checked before allocating a real borrowed frontier.
+pub fn check_schema(schema:&str,tables:usize,columns:usize,limits:SqliteDatabaseLimits)->Result<(),ValueError>{let mut extent=0usize;let mut count=0usize;for statement in schema.split(';').map(str::trim).filter(|value|!value.is_empty()){let name=statement.strip_prefix("CREATE TABLE ").and_then(|value|value.split_once('(').map(|(name,_)|name.trim())).ok_or_else(||invalid("norm authored SQL table declaration differs"))?;if name.is_empty()||!name.bytes().all(|value|value.is_ascii_alphanumeric()||value==b'_'){return Err(invalid("norm authored SQL table name differs"))}extent=extent.checked_add(statement.len()).and_then(|value|value.checked_add(name.len())).ok_or_else(||invalid("norm authored schema extent overflow"))?;count=add(count,1)?;}if count!=tables{return Err(invalid("norm authored schema table count differs"))}if schema.len().max(extent)>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"norm authored schema exceeds caller limit"))}if tables>limits.max_tables||columns>limits.max_columns{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"norm authored table or column extent exceeds caller limit"))}Ok(())}
+/// 🧮️ Checked entity count includes all relationship rows.
+pub fn add(total:usize,rows:usize)->Result<usize,ValueError>{total.checked_add(rows).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"norm semantic row extent overflow"))}
+/// 🛂️ Same caller progress and fixed copied limits over actual borrowed semantic cells.
+pub fn admit<'r>(root:&'r R,native:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,ddl:&str,tables:usize,columns:usize,total:usize,write:impl FnOnce(&'r R,&mut RowWriter<'_,'_>)->Result<(),ValueError>)->Result<(),ValueError>{
+ native.scoped_stage(|native|{native.begin_stage(total)?;let mut progress=|event:SqliteSnapshotProgress|native.scoped_stage(|native|{native.begin_stage(event.total)?;native.advance(event.completed)}).is_ok();let mut control=SqliteSnapshotControl::new(&mut progress,limits);schema(ddl,tables,columns,&control)?;control.check_rows(total)?;let mut out=RowWriter::borrowed(&mut control,SqliteSnapshotPhase::DecodeNative)?;write(root,&mut out)?;out.checkpoint_total(total)?;out.finish_borrowed()})
+}
+
+/// 🗂️ Authored primitive field roles for a single physical norm entity.
+#[derive(Clone,Copy)]
+pub enum Column{Text(u16),Real(u16),Unsigned(u16,u64),Boolean(u16),Enumeration(u16,&'static[&'static str]),OptionalText(u16)}
+/// 🧮️ Fixed stack cells borrowed from declared slots; never a typed owner or Record mirror.
+pub fn cells<const N:usize>(root:&R,roles:[Column;N])->Result<[Cell<'_>;N],ValueError>{let mut result=[Cell::Null;N];for(index,role)in roles.into_iter().enumerate(){result[index]=match role{Column::Text(id)=>Cell::Text(text(field(root,id)?)?),Column::Real(id)=>Cell::Real(real(field(root,id)?)?),Column::Unsigned(id,maximum)=>Cell::Integer(unsigned(field(root,id)?,maximum)?),Column::Boolean(id)=>Cell::Integer(boolean(field(root,id)?)?),Column::Enumeration(id,values)=>Cell::Text(enumeration(field(root,id)?,values)?),Column::OptionalText(id)=>optional(field(root,id)?)?}}Ok(result)}
+
+/// 🧱️ Emit actual parent and dense ordinal cells with a fixed norm-family stack workspace.
+pub fn entity(out:&mut RowWriter<'_,'_>,table:&str,parent:i64,index:usize,cells:&[Cell<'_>],floats:&'static[store::sqlite_snapshot::artifact::FloatColumn])->Result<i64,ValueError>{let length=cells.len().checked_add(2).ok_or_else(||invalid("norm cell extent overflow"))?;let mut row=[Cell::Null;152];if length>row.len(){return Err(invalid("norm entity exceeds its authored family column extent"))}row[0]=Cell::Integer(parent);row[1]=ordinal(index)?;row[2..length].copy_from_slice(cells);out.insert_float(table,&row[..length],floats)}
+
+/// 🔑️ A keyed nested owner retains its actual authored parent cell.
+pub fn keyed(out:&mut RowWriter<'_,'_>,table:&str,parent:i64,cells:&[Cell<'_>],floats:&'static[store::sqlite_snapshot::artifact::FloatColumn])->Result<(),ValueError>{let length=cells.len().checked_add(1).ok_or_else(||invalid("norm keyed cell extent overflow"))?;let mut row=[Cell::Null;152];if length>row.len(){return Err(invalid("norm keyed entity exceeds its authored family column extent"))}row[0]=Cell::Integer(parent);row[1..length].copy_from_slice(cells);out.insert_key_float(table,parent,&row[..length],floats)?;Ok(())}
+
+/// 📐️ A declared fixed numeric tuple keeps its exact intrinsic arity.
+pub fn tuple(value:&F,length:usize)->Result<&[F],ValueError>{match value{F::Tuple(values)if values.len()==length=>Ok(values),_=>Err(invalid("norm native tuple arity differs"))}}
+
+/// 🗺️ Actual authored map entries, borrowed without reconstructing a dictionary.
+pub fn map(value:&F)->Result<&[(String,F)],ValueError>{match value{F::Map(values)=>Ok(values),_=>Err(invalid("norm native map required"))}}

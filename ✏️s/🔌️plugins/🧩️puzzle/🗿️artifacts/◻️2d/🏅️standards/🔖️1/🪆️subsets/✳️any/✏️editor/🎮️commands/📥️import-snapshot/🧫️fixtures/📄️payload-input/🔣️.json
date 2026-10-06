@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "args": {
+        "payload": {
+          "nodes": [],
+          "edges": []
+        }
+      },
+      "accepted": true
+    },
+    {
+      "args": {
+        "payload": "{\"nodes\":[],\"edges\":[]}"
+      },
+      "accepted": true
+    },
+    {
+      "args": {
+        "json": {
+          "nodes": []
+        }
+      },
+      "accepted": false
+    },
+    {
+      "args": {
+        "fixture": {
+          "nodes": []
+        }
+      },
+      "accepted": false
+    },
+    {
+      "args": {},
+      "accepted": false
+    }
+  ]
+}

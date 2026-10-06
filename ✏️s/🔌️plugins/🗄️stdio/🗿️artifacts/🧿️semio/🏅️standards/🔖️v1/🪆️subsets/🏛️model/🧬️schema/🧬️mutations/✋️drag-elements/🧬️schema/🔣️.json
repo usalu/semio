@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/model/mutation/drag-elements/schema.json",
+  "title": "DragElements",
+  "description": "The `drag-elements` mutation record — internally tagged `\"mutation\": \"dragElements\"`: a set of model elements moved by one relative world offset.",
+  "x-semio-inverse-rows": {
+    "perTarget": {
+      "targets": 1
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "offset"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "dragElements",
+      "x-semio-ui": {
+        "widget": "hidden",
+        "role": "discriminator",
+        "label": {
+          "en": "Mutation",
+          "de": "Mutation"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Elements",
+          "de": "Elemente"
+        },
+        "description": {
+          "en": "Elements to drag; ones the model lacks are skipped.",
+          "de": "Zu ziehende Elemente; im Modell fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "cad",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "offset": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Offset",
+          "de": "Versatz"
+        },
+        "description": {
+          "en": "World offset every element moves by.",
+          "de": "Weltversatz, um den jedes Element verschoben wird."
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 3,
+        "group": "offset",
+        "order": 20,
+        "snapSource": {
+          "step": true
+        }
+      }
+    }
+  }
+}

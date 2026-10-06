@@ -34,12 +34,12 @@ fn history(value: &Value) -> time_travel::MemberEditHistory {
         superseded: false,
         withdrawn: false,
         editable: true,
+        withdrawable: true,
         store: Some(store.clone()),
     });
     time_travel::MemberEditHistory {
         store,
         edit_id: text(&value["editId"]).to_string(),
-        description: value["description"].as_str().map(str::to_string),
         started_at: text(&value["startedAt"]).to_string(),
         timestamp: Some(protocol::HybridLogicalTimestamp { actor: 0, physical_ms: value["at"].as_u64().expect("moment"), logical: 0 }),
         transaction: value["transaction"].as_str().map(|id| protocol::TransactionRef { id: id.to_string(), tool: "s.test@1/*#editor#drag".into() }),
@@ -50,7 +50,7 @@ fn history(value: &Value) -> time_travel::MemberEditHistory {
 }
 
 /// ⚖️ LAW: every fixture case backfills exactly its expected attachments and rows, in moment order, labelled in English and
-/// German from the first leaf, the description, or the first printed operation.
+/// German from the first leaf or the first printed operation.
 #[test]
 fn member_backfill_answers_every_fixture_case() {
     let fixture: Value = serde_json::from_str(COMPOSED_CHILD_HISTORY_FIXTURE_JSON).expect("composed-child history fixture parses");

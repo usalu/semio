@@ -1,0 +1,420 @@
+{
+  "qualification": "Current registered source commands/launch locators only; no execution. Existing receipt report retains actual counts.",
+  "owners": [
+    {
+      "owner": "EquationSnapshot",
+      "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-artifact-mathematical-equation",
+      "selected": {
+        "target": "@semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native",
+        "selector": [
+          "--lib",
+          "sqlite_snapshot_",
+          "--no-fail-fast"
+        ],
+        "features": []
+      },
+      "project": "@semio-tech/mathematical-equation-rs",
+      "script": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/📜️script.ts",
+      "targets": [
+        {
+          "target": "test",
+          "command": "bun ./📜️script.ts test"
+        },
+        {
+          "target": "test-snapshot-sqlite",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        },
+        {
+          "target": "test-snapshot-sqlite-native",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        },
+        {
+          "target": "test-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      ],
+      "launchLocators": [
+        {
+          "line": 5461,
+          "text": "\"command\": \"bun nx run @semio-tech/mathematical-equation-rs:test-snapshot-sqlite --skip-nx-cache\","
+        },
+        {
+          "line": 5477,
+          "text": "\"command\": \"bun nx run @semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native --skip-nx-cache\","
+        }
+      ]
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "manifest": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-artifact-wfc-grid3d",
+      "selected": {
+        "target": "@semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-native",
+        "selector": [
+          "--lib",
+          "sqlite_snapshot_",
+          "--no-fail-fast"
+        ],
+        "features": []
+      },
+      "project": "@semio-tech/wfc-grid3d-rs",
+      "script": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📜️script.ts",
+      "targets": [
+        {
+          "target": "test",
+          "command": "bun ./📜️script.ts test"
+        },
+        {
+          "target": "test-snapshot-sqlite",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        },
+        {
+          "target": "test-snapshot-sqlite-native",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        },
+        {
+          "target": "test-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        }
+      ],
+      "launchLocators": [
+        {
+          "line": 6585,
+          "text": "\"command\": \"bun nx run @semio-tech/wfc-grid3d-rs:test-snapshot-sqlite --skip-nx-cache\","
+        },
+        {
+          "line": 6599,
+          "text": "\"command\": \"bun nx run @semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-native --skip-nx-cache\","
+        },
+        {
+          "line": 6613,
+          "text": "\"command\": \"bun nx run @semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-source --skip-nx-cache\","
+        }
+      ]
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "manifest": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-artifact-shooting-shooting",
+      "selected": {
+        "target": "@semio-tech/shooting-shooting-rs:test-snapshot-sqlite-native",
+        "selector": [
+          "--lib",
+          "sqlite_snapshot_",
+          "--no-fail-fast"
+        ],
+        "features": []
+      },
+      "project": "@semio-tech/shooting-shooting-rs",
+      "script": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/📜️script.ts",
+      "targets": [
+        {
+          "target": "verify-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+        },
+        {
+          "target": "test-snapshot-sqlite",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        },
+        {
+          "target": "test-snapshot-sqlite-native",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        },
+        {
+          "target": "test-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        {
+          "target": "test",
+          "command": "bun ./📜️script.ts test"
+        }
+      ],
+      "launchLocators": [
+        {
+          "line": 7864,
+          "text": "\"command\": \"bun nx run @semio-tech/shooting-shooting-rs:verify-snapshot-sqlite-source\","
+        },
+        {
+          "line": 7875,
+          "text": "\"command\": \"bun nx run @semio-tech/shooting-shooting-rs:test-snapshot-sqlite\","
+        },
+        {
+          "line": 7886,
+          "text": "\"command\": \"bun nx run @semio-tech/shooting-shooting-rs:test-snapshot-sqlite-native\","
+        },
+        {
+          "line": 7897,
+          "text": "\"command\": \"bun nx run @semio-tech/shooting-shooting-rs:test-snapshot-sqlite-source\","
+        }
+      ]
+    },
+    {
+      "owner": "RasterSnapshot",
+      "manifest": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-artifact-raster-raster",
+      "selected": {
+        "target": "@semio-tech/raster-raster-rs:test-snapshot-sqlite-native",
+        "selector": [
+          "--lib",
+          "sqlite_snapshot_",
+          "--no-fail-fast"
+        ],
+        "features": []
+      },
+      "project": "@semio-tech/raster-raster-rs",
+      "script": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/📜️script.ts",
+      "targets": [
+        {
+          "target": "test",
+          "command": "bun ./📜️script.ts test"
+        },
+        {
+          "target": "test-snapshot-sqlite",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        },
+        {
+          "target": "test-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        {
+          "target": "test-snapshot-sqlite-native",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        }
+      ],
+      "launchLocators": [
+        {
+          "line": 4686,
+          "text": "\"command\": \"bun nx run @semio-tech/raster-raster-rs:test-snapshot-sqlite --skip-nx-cache\","
+        },
+        {
+          "line": 4702,
+          "text": "\"command\": \"bun nx run @semio-tech/raster-raster-rs:test-snapshot-sqlite-native --skip-nx-cache\","
+        },
+        {
+          "line": 4718,
+          "text": "\"command\": \"bun nx run @semio-tech/raster-raster-rs:test-snapshot-sqlite-source --skip-nx-cache\","
+        },
+        {
+          "line": 14230,
+          "text": "\"command\": \"bun nx run @semio-tech/raster-raster-rs:test\","
+        }
+      ]
+    },
+    {
+      "owner": "NoteSnapshot",
+      "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-artifact-note-note",
+      "selected": {
+        "target": "@semio-tech/note-note-rs:verify-sqlite-snapshot-native",
+        "selector": [
+          "quick",
+          "--lib",
+          "--no-fail-fast",
+          "standards::v1::subsets::any::schema::snapshot::component::sqlite::tests::sqlite_snapshot_note_"
+        ],
+        "features": []
+      },
+      "project": "@semio-tech/note-note-rs",
+      "script": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/📜️script.ts",
+      "targets": [
+        {
+          "target": "test",
+          "command": "bun ./📜️script.ts test"
+        },
+        {
+          "target": "verify-sqlite-snapshot-guest",
+          "command": "bun ./📜️script.ts verify sqlite-snapshot-guest"
+        },
+        {
+          "target": "verify-sqlite-snapshot-native",
+          "command": "bun ./📜️script.ts verify sqlite-snapshot-native"
+        }
+      ],
+      "launchLocators": [
+        {
+          "line": 9591,
+          "text": "\"command\": \"bun nx run @semio-tech/note-note-rs:verify-snapshot-guest\","
+        },
+        {
+          "line": 9617,
+          "text": "\"command\": \"bun nx run @semio-tech/note-note-rs:verify-sqlite-snapshot-guest\","
+        },
+        {
+          "line": 10376,
+          "text": "\"command\": \"bun nx run @semio-tech/note-note-rs:verify-note-empty-config-ownership\","
+        },
+        {
+          "line": 33747,
+          "text": "\"command\": \"bun nx run @semio-tech/note-note-rs:verify-sqlite-snapshot-native\","
+        }
+      ]
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-artifact-puzzle-5d",
+      "selected": {
+        "target": "@semio-tech/puzzle-5d-rs:test-snapshot-sqlite-native",
+        "selector": [
+          "--lib",
+          "sqlite_snapshot_",
+          "--no-fail-fast"
+        ],
+        "features": []
+      },
+      "project": "@semio-tech/puzzle-5d-rs",
+      "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+      "targets": [
+        {
+          "target": "test",
+          "command": "bun ./📜️script.ts test"
+        },
+        {
+          "target": "test-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        {
+          "target": "verify-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+        },
+        {
+          "target": "test-snapshot-sqlite",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        },
+        {
+          "target": "test-snapshot-sqlite-native",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        }
+      ],
+      "launchLocators": [
+        {
+          "line": 6115,
+          "text": "\"command\": \"bun nx run @semio-tech/puzzle-5d-rs:test-snapshot-sqlite-native --skip-nx-cache\","
+        },
+        {
+          "line": 6131,
+          "text": "\"command\": \"bun nx run @semio-tech/puzzle-5d-rs:test-snapshot-sqlite --skip-nx-cache\","
+        },
+        {
+          "line": 6285,
+          "text": "\"command\": \"bun nx run @semio-tech/puzzle-5d-rs:verify-snapshot-sqlite-source --skip-nx-cache\","
+        },
+        {
+          "line": 6301,
+          "text": "\"command\": \"bun nx run @semio-tech/puzzle-5d-rs:test-snapshot-sqlite-source --skip-nx-cache\","
+        }
+      ]
+    },
+    {
+      "owner": "Workflow",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-framework-artifact-workflow-workflow",
+      "selected": {
+        "selector": [
+          "--lib",
+          "sqlite_",
+          "--no-fail-fast"
+        ],
+        "mode": "native"
+      },
+      "project": "@semio-tech/framework-workflow-workflow-rs",
+      "script": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust/📜️script.ts",
+      "targets": [
+        {
+          "target": "test-snapshot-sqlite",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        },
+        {
+          "target": "test-snapshot-sqlite-native",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        },
+        {
+          "target": "test-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        {
+          "target": "verify-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+        },
+        {
+          "target": "test",
+          "command": "bun ./📜️script.ts test"
+        }
+      ],
+      "launchLocators": [
+        {
+          "line": 7123,
+          "text": "\"command\": \"bun nx run @semio-tech/framework-workflow-workflow-rs:test-snapshot-sqlite\","
+        },
+        {
+          "line": 7137,
+          "text": "\"command\": \"bun nx run @semio-tech/framework-workflow-workflow-rs:test-snapshot-sqlite-native\","
+        },
+        {
+          "line": 7151,
+          "text": "\"command\": \"bun nx run @semio-tech/framework-workflow-workflow-rs:test-snapshot-sqlite-source\","
+        },
+        {
+          "line": 7165,
+          "text": "\"command\": \"bun nx run @semio-tech/framework-workflow-workflow-rs:verify-snapshot-sqlite-source\","
+        }
+      ]
+    },
+    {
+      "owner": "Run",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-framework-artifact-workflow-run",
+      "selected": {
+        "selector": [
+          "--lib",
+          "sqlite_",
+          "--no-fail-fast"
+        ],
+        "mode": "native"
+      },
+      "project": "@semio-tech/framework-workflow-run-rs",
+      "script": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust/📜️script.ts",
+      "targets": [
+        {
+          "target": "test-snapshot-sqlite",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite"
+        },
+        {
+          "target": "test-snapshot-sqlite-native",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        },
+        {
+          "target": "test-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+        },
+        {
+          "target": "verify-snapshot-sqlite-source",
+          "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+        },
+        {
+          "target": "test",
+          "command": "bun ./📜️script.ts test"
+        }
+      ],
+      "launchLocators": [
+        {
+          "line": 7179,
+          "text": "\"command\": \"bun nx run @semio-tech/framework-workflow-run-rs:test-snapshot-sqlite\","
+        },
+        {
+          "line": 7193,
+          "text": "\"command\": \"bun nx run @semio-tech/framework-workflow-run-rs:test-snapshot-sqlite-native\","
+        },
+        {
+          "line": 7207,
+          "text": "\"command\": \"bun nx run @semio-tech/framework-workflow-run-rs:test-snapshot-sqlite-source\","
+        },
+        {
+          "line": 7221,
+          "text": "\"command\": \"bun nx run @semio-tech/framework-workflow-run-rs:verify-snapshot-sqlite-source\","
+        }
+      ]
+    }
+  ]
+}

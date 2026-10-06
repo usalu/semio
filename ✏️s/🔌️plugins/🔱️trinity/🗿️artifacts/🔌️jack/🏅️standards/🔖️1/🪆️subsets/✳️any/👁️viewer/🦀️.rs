@@ -4,10 +4,10 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::viewer::jack::modes::view;
 use crate::viewer::jack::modes::view::windows::graph;
-use crate::{empty_trinity_graph_fixture, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
+use crate::{empty_trinity_graph_snapshot, JackSnapshot, TRINITY_GRAPH_SCHEMA, TRINITY_JACK_DIALECT};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -75,11 +75,11 @@ impl ArtifactViewer for TrinityJackViewer {
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::mutations::binary::jack_document_store_owners())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::jack_document_store_owners())
     }
 
     fn initial_snapshot() -> JackSnapshot {
-        empty_trinity_graph_fixture()
+        empty_trinity_graph_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `TrinityJackViewCommand::Noop` variant never carries a

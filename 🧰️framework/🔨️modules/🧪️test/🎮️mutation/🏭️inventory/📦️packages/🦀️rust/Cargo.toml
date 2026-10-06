@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-test-mutation-inventory"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Controlled production-owned mutation inventory collection"
+
+[package.metadata.semio]
+role = "framework"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+default = []
+replication = ["dep:protocol"]
+
+[dependencies]
+protocol = { package = "semio-framework-replication", path = "../../../../../📡️replication/📦️packages/🦀️rust", optional = true }
+
+[dev-dependencies]
+serde_json = "1.0.140"

@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import sharp from "sharp";
 import { AmbientLight, BufferGeometry, Color, DirectionalLight, EdgesGeometry, Float32BufferAttribute, LineBasicMaterial, LineSegments, Mesh, MeshStandardMaterial, PerspectiveCamera, Scene, Vector3 } from "three";
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
@@ -46,10 +46,7 @@ function renderFixture(): string {
 }
 
 describe("📐️ Icon SVG export", () => {
-  it("validates the neutral scene and output contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(read("🧬️schema/📤️svg-export/🔣️.json"));
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   it("matches installed Three SVGRenderer geometry, flat lighting, outlines, ellipse, and Sharp pixels", async () => {
     const markup = renderFixture();

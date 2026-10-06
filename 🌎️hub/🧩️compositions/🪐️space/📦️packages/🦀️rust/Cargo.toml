@@ -49,9 +49,11 @@ semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl = { path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-schema-state = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-s-artifact-draw-drawing = { path = "../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust" }
-semio-s-artifact-writer-writer = { path = "../../../../../✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -81,6 +83,8 @@ semio-framework-os = { workspace = true, features = ["space-guest"] }
 semio-framework-os = { workspace = true, features = ["os-host-full"] }
 
 [dev-dependencies]
+semio-s-artifact-draw-drawing = { path = "../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust" }
+semio-s-artifact-writer-writer = { path = "../../../../../✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-hash = { workspace = true }

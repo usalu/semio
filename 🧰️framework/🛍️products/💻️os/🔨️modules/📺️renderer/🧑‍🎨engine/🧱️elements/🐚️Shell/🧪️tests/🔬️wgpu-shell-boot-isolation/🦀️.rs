@@ -18,6 +18,7 @@ fn boot_app(app_id: &str) -> AppDefinition {
         modes: Modes::one(ModeDefinition { id: "default".into(), label: LocalizedLabel::data("Default"), icon_id: "pencil".into(), tools: vec![], layout_id: None, commands: vec![] }),
         default_mode_id: "default".into(),
         window_kinds: WindowKinds::try_from(vec![WindowKindDefinition {
+            initial_utility_id: None,
             id: "main".into(),
             label: LocalizedLabel::data("Main"),
             body_key: "main.body".into(),

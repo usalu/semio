@@ -1,6 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
-use crate::standards::v1::subsets::any::schema::{example_snapshot, PROCEDURAL_EXAMPLE_HEX_COLUMN};
+use crate::standards::v1::subsets::any::schema::{PROCEDURAL_EXAMPLE_HEX_COLUMN};
+use crate::standards::v1::subsets::any::io::text::snapshot::{example_snapshot};
 
 const GRAPH_KEYBOARD_FIXTURE_JSON: &str = include_str!("../../../../../🧫️fixtures/🧭️graph-keyboard-navigation.json");
 

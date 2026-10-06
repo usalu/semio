@@ -25,7 +25,18 @@
       "minimum": 1,
       "maximum": 4294967295,
       "x-semio-ui": {
-        "label": {"en": "PNG gamma", "de": "PNG-Gamma"},
+        "widget": "stepper",
+        "label": {
+          "en": "PNG gamma",
+          "de": "PNG-Gamma"
+        },
+        "step": 1,
+        "precision": 0,
+        "snaps": [
+          45455,
+          55556,
+          100000
+        ],
         "group": "metadata",
         "order": 20
       }

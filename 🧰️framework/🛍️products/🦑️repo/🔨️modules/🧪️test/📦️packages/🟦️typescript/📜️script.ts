@@ -15,6 +15,12 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "fixture-isolation") {
+      if (segments.length !== 1) throw new Error("Expected test fixture-isolation");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️schema-invariants/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source, "-t", "placement, ownership and fixture isolation|schema protocol|module-member carve-out|repository that declares no submodules|every generator case"], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "fixture-isolation"), budgetMs: 30_000 });
+      return;
+    }
     if (segments[0] === "discovery-boundaries") {
       if (segments.length !== 1) throw new Error("Expected test discovery-boundaries");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts");

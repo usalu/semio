@@ -1,0 +1,52 @@
+# Next Stdio Owner Admission Blueprints
+
+Read-only actual provider/binder/DDL review. [Independent authored SQL and declared-law authority](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/stdio-next-owner-authored-role-and-law-authority.json) records every ordered physical column/type/nullability/identity, exact project authority/targets and original main test-file law names. Declared names are not selected runtime denominators: additional cohort modules and cfg features must remain in owning replay. [Original package router77](/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts:77) uses --lib sqlite_snapshot_ --no-fail-fast with actual owner features. Preserve that selector, whole original laws, grants, cancellation, timeout and public publication scope. No Native runtime failure is claimed from this source audit.
+
+|Schema owner|Canonical schema bytes|Tables|maxColumns|Registered project|
+|---|---:|---:|---:|---|
+|ZIP|3963|12|11|@semio-tech/stdio-zip-rs|
+|PNG|7206|24|9|@semio-tech/stdio-png-rs|
+|TIFF|3886|16|6|@semio-tech/stdio-tiff-rs|
+|OBJ|6231|14|15|@semio-tech/stdio-obj-rs|
+|STL|1483|3|12|@semio-tech/stdio-stl-rs|
+|STEP|3437|12|10|@semio-tech/stdio-step-rs|
+|IFC4|3250|11|11|@semio-tech/stdio-ifc-rs|
+|IFC2x3|4006|12|17|Same IFC project, separate schema owner|
+|LAS|5875|8|50|@semio-tech/stdio-las-rs|
+|Markdown|3901|27|4|@semio-tech/stdio-md-rs|
+
+Every listed project has registered test-snapshot-sqlite-native and test-snapshot-sqlite-source; exact absolute project paths are in the input. Canonical bytes were queried from instantiated authored DDL sqlite_schema.sql plus UTF8 table names, not raw SQL length. Source controls for a specific variant must retain that variant denominator; IFC4 and2x3 cannot be merged into one schema receipt. NULL semantic cost0 throughout; IEEE NaN11, finite22, infinity32 when the usual signed-word INTEGER8/class/query roles apply.
+
+## ZIP
+
+[Actual borrowed gate](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪶️sqlite/🚦️native/🦀️.rs:17) admits rows only before typed binding; complete admit_snapshot runs afterward. It accepts default/Absent entries and metadata. Root document costs16+schema+comment. Entry row40+name; payload and every legacy octet row32. Local header48; central80+comment. Extra-field rows32 plus nested octet32 each. Pretyped callback must visit exact root/entry/metadata/local/central roles before controlled copies, preserve default local+central rows when metadata absent, retain actual Bytes64 versus legacy List shapes and checked counts/cancellation. Share typed literal rows through RowWriter, admit static3963/12/11 before parser/schema ownership. Do not use compressed archive byte length as SQL semantic bytes.
+
+## PNG
+
+[Actual root declaration188](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs:188) has only schema0 Text and bytes1 Bytes64. [Current native7](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🚦️native/🦀️.rs:7) constructs typed PngSnapshot then guards it and admits interpreted semantic rows. [Backing interpret14/admit17](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/💰️backing/🦀️.rs:14) already pays actual chunk/deflate/scanline parse models with cumulative native allocation; syntax failure intentionally selects literal-octet projection, while control refusal remains refusal. Preserve this distinction: arbitrary invalid raw bytes are valid literal snapshot state. A full borrowed root gate must reuse actual borrowed byte spans and interpreted-row authority without creating an owned PngSnapshot solely to forecast. Static7206/24/9 gate precedes interpretation. Full rows include document role, chunks/IHDR/palette/transparency/background/gamma/chromaticity/physical metadata, zlib/deflate blocks/lengths/tokens with optional NULL0 distance cells, scanlines/samples/remainder/tail and raw unknown payloads. All are in ordered DDL input; byte count alone cannot represent this semantic family. Preserve existing conservative file bound separately.
+
+## TIFF
+
+[Current decode25](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs:25) constructs all typed fields before semantic admission. Crucial [handwritten native root30–45](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/📝️text/🦀️.rs:30) uses IDs1 schema Text,2 FieldValue::Value byteOrder,3 FieldValue::Value ifds—not a0-based derived Record. Borrowed gate must follow exact inner DslValue typed role maps before TiffByteOrder/Vec<TiffIfd>::from_value_controlled, without a typed shadow. Sixteen tables comprise document/schema/order, IFD storage kind/word types, ordered tag id/type, stored strip/tile blobs, and twelve exact value variants. Byte/Ascii/Short/Long/SByte/Undefined/SShort/SLong values cost32 per ordered integer row; Rational/SRational40; Float/Double24+IEEE companion/query cost. Native byte sizes1/2/4/8 are physical transport widths, not SQL cell cost. Preserve raw binary32/64 words, signed primitive widths, arbitrary ASCII octets, exact rational numerator/denominator and optional storage-word metadata. Static3886/16/6 and semantic gate precede copies, separate original physical file forecast unchanged.
+
+## OBJ And STL
+
+[OBJ borrowed reconstruction7](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/📦️pack/🦀️.rs:7) counts rows then immediately binds typed fields; SQL values are admitted afterward. Root face4/group5/object6 and collections1/2/3/4/5/6/8/9/10; face child0/group+object occurrence-list1. Preserve positions, optional component w, all IEEE companions, source-index logical integers and separately resolved nullable aliases, mtllib optional, material/order occurrence rows and repeated named groups/objects. Complete borrowed census must calculate actual14 table roles rather than add every native primitive generically. Static6231/14/15.
+
+[STL exact declared transport5–12](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs:5) root schema0/solidName1/triangles2; Facet normal0/vertex0=1/vertex1=2/vertex2=3; each Point Record x0/y1/z2, not Tuple. [Binder35](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️pack/🦀️.rs:35) only counts4*facets+1 before private typed Snapshot binding and final typed triangle-vector construction. Solid8+schema+name; facet and each of three vertex rows24+three exact IEEE costs. Empty still has solid row. Add static1483/3/12 and full borrowed roles before either typed constructor. Do not change actual Point Record transport to a guessed coordinate Tuple.
+
+## STEP And IFC
+
+[STEP binding census](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🚦️native/🪆️binding/🦀️.rs:21) counts rows only. Root13 fields: schema0; description1; implementationLevel2; fileName3; timestamp4; author5; organization6; preprocessor7; originatingSystem8; authorization9; fileSchema10; entities11; flat values12. Entity Record4 is unsigned64 id0/name1/argument indices2/complex list3; Complex2 name0/argument indices1; Node7 kind0/optional integer1/real2/text3/reference4/name5/children6. Pretyped full-cell census must retain actual kind-specific inactive NULL0 cells, u64 logical IDs as exact decimal SQL text, resolved nullable reference alias, IEEE real companions and all ordered header/aggregate/typed/entity links. Static3437/12/10. No typed recursive syntax reconstruction solely for a census.
+
+IFC4 similarly uses flat Node7 and Entity4 with full header argument/value graph; typed cells differ from STEP and must use its literal eleven tables. Value kind strings are unset/derived/integer/real/string/enum/reference/aggregate/typedValue; reference logical id exact decimal and resolved nullable alias both count. Argument row has exactly one active entity/complex owner. Static3250/11/11.
+
+IFC2x3 is a separate decimal authority: root7 and Node10 (kind0/integer1/reference2/text3/name4/negative5/coefficient6/scale7/exponent8/children9), instances/types and optional EDM preamble. SQL real is exact sign Bool/coefficient UTF8/scale UInt32/optional signed exponent—not IEEE64. Preserve all original decimal lexemes, arbitrary preamble fields, unset/derived and typed/list graph ownership. Native current borrowed census counts rows, then binds owned fields. Static4006/12/17. Never route it through IFC4's float census.
+
+## LAS And Markdown
+
+Earlier detailed [LAS/Markdown source report](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📓️semantic-independent-file-only-and-las-markdown-review.md) remains the role blueprint. New independent DDL confirms LAS5875/8/50 and Markdown3901/27/4. Both have rows-only borrowed gates before typed binding; preserve flat Markdown transport and LAS exact twelve header/three coordinate/optional GPS IEEE roles. Markdown unpaid projection/forecast frontier still requires paid actual references, separate from original file forecast.
+
+## Genuine Demand Expectations
+
+For each owner construct the existing actual Source factory, export genuine SQLite and independently query every actual physical column with NULL0/INTEGER8/REAL8/UTF8/BLOB costs. Pin language-neutral full/empty or all actual branch extents; Native fixture must match those exact semantic fields. Before claims require owning execution. Existing copied schema/table/column short demands should expose missing early admission, while exact semantic positives may currently hit rough preflight max_value forecasts; that is a hypothesis to verify, not a recorded failure. Add scoped borrowed semantic traversal before binder with all five copied limits; never increase original grants or replace actual physical file/allocation enforcement with semantic costs.

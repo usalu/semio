@@ -16,14 +16,55 @@
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     },
     "path": {
-      "$ref": "#/$defs/DocBlockPath"
+      "$ref": "#/$defs/DocBlockPath",
+      "x-semio-ui": {
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "Path of the block: the steps into nested containers and its index there, counted from 0.",
+          "de": "Pfad des Blocks: die Schritte in verschachtelte Container und sein Index dort, ab 0 gezählt."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "run_index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Run",
+          "de": "Textlauf"
+        },
+        "description": {
+          "en": "Index of the run within the paragraph, counted from 0.",
+          "de": "Index des Textlaufs innerhalb des Absatzes, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "text": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Text",
+          "de": "Text"
+        },
+        "description": {
+          "en": "Text the run holds afterwards.",
+          "de": "Text, den der Textlauf danach enthält."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

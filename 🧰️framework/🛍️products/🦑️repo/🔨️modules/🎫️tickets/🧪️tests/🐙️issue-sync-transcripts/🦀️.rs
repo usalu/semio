@@ -34,7 +34,7 @@ mod subject {
 
     /// 🆕️ A new ticket creates one issue.
     pub fn a_new_ticket_creates_one_issue(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let recorder = tracker(&vectors, "a-new-ticket-creates-one-issue")?;
         let milestone = milestone_number_for_title(&recorder, &vectors.str("goal"));
         let outcome = sync_open_issue(&recorder, "", &vectors.str("title"), &vectors.str("prompt"), "", milestone, false);
@@ -48,7 +48,7 @@ mod subject {
 
     /// 🔓️ An existing open issue is left alone.
     pub fn an_existing_open_issue_is_left_alone(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let recorder = tracker(&vectors, "an-existing-open-issue-is-left-alone")?;
         let outcome = sync_open_issue(&recorder, &vectors.str("issueUrl"), &vectors.str("title"), &vectors.str("prompt"), "", None, true);
         Ok(Outcome::projection(Json::Object(vec![("calls".to_string(), strings(recorder.calls())), ("issue".to_string(), Json::String(outcome.issue)), ("warnings".to_string(), strings(outcome.warnings))])))
@@ -56,7 +56,7 @@ mod subject {
 
     /// ♻️ A closed issue is reopened.
     pub fn a_closed_issue_is_reopened(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let recorder = tracker(&vectors, "a-closed-issue-is-reopened")?;
         let outcome = sync_open_issue(&recorder, &vectors.str("issueUrl"), &vectors.str("title"), &vectors.str("prompt"), "", None, true);
         Ok(Outcome::projection(Json::Object(vec![("calls".to_string(), strings(recorder.calls())), ("issue".to_string(), Json::String(outcome.issue)), ("warnings".to_string(), strings(outcome.warnings))])))
@@ -64,7 +64,7 @@ mod subject {
 
     /// 📪️ A close comments, labels and closes.
     pub fn a_close_comments_labels_and_closes(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let normal = tracker(&vectors, "a-close-comments-labels-and-closes")?;
         let bulk = tracker(&vectors, "a-close-comments-labels-and-closes")?;
         let labels = label_list(&vectors);
@@ -80,7 +80,7 @@ mod subject {
 
     /// ⚠️ Every failure becomes a warning.
     pub fn every_failure_becomes_a_warning(ctx: &Context) -> Result<Outcome, String> {
-        let vectors = ctx.fixture_json(VECTORS)?;
+        let vectors = ctx.input_json(VECTORS)?;
         let creating = tracker(&vectors, "every-failure-becomes-a-warning")?;
         let reopening = tracker(&vectors, "every-failure-becomes-a-warning")?;
         let closing = tracker(&vectors, "every-failure-becomes-a-warning")?;

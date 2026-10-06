@@ -29,13 +29,13 @@ const UTTYPE_INPUT: &str = "shared://🍎️macos-uttype-plist/🏷️.xml";
 
 /// 🧫️ Copies the immutable real document into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("reuse-marketplaces.plist.xml"))?;
+    let copy = ctx.copy_input(INPUT, Some("reuse-marketplaces.plist.xml"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
 /// 🧫️ The same, for the UTType declaration the round-trip scenario additionally reads.
 fn mutable_uttype_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(UTTYPE_INPUT, Some("uttype.plist.xml"))?;
+    let copy = ctx.copy_input(UTTYPE_INPUT, Some("uttype.plist.xml"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

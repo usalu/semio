@@ -24,6 +24,7 @@ const SEQUENCE_PLAY_SURFACE_MAIN: &str = "sequence.play.main";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SEQUENCE_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Sequence", "Sequenz"),
         body_key: SEQUENCE_PLAY_BODY_MAIN.into(),

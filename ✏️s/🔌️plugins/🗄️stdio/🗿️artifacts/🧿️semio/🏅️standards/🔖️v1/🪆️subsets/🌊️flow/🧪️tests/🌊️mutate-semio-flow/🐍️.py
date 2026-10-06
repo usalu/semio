@@ -586,7 +586,7 @@ def doc_string(ctx: Context) -> str:
 
 def tower(ctx: Context) -> dict:
     """🏗️ The real 180-node capsule network, read through this implementation's own DSL parser."""
-    return parse_dsl(ctx.fixture_bytes(TOWER_DSL).decode("utf-8"))
+    return parse_dsl(ctx.input_bytes(TOWER_DSL).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input
@@ -618,7 +618,7 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
     what the verb means, independent of both implementations."""
-    vector = json.loads(ctx.fixture_bytes(ctx.step_fixture_uris()[0]).decode("utf-8"))
+    vector = json.loads(ctx.input_bytes(ctx.step_input_uris()[0]).decode("utf-8"))
     applied = apply_mutation(vector["before"], vector["mutation"])
     if applied != vector["after"]:
         raise AssertionError("%s: the applied flow does not match the vector's after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(vector["after"])))
@@ -640,23 +640,23 @@ def identity_round_trip(ctx: Context) -> Outcome:
     emitted: the pipeline's two files were written by the Rust codec and are reproduced here from the
     grammar alone, while the capsule network's two files were written by this implementation and the
     Rust codec has to reproduce THOSE."""
-    pipeline_dsl = ctx.fixture_bytes(PIPELINE_DSL)
+    pipeline_dsl = ctx.input_bytes(PIPELINE_DSL)
     pipeline = parse_dsl(pipeline_dsl.decode("utf-8"))
     printed = print_dsl(pipeline).encode("utf-8")
     if printed != pipeline_dsl:
         raise AssertionError("re-printing the demo pipeline did not reproduce the committed DSL bytes (%d vs %d bytes)" % (len(printed), len(pipeline_dsl)))
-    pipeline_pack = ctx.fixture_bytes(PIPELINE_PACK)
+    pipeline_pack = ctx.input_bytes(PIPELINE_PACK)
     if parse_pack(pipeline_pack) != pipeline:
         raise AssertionError("the demo pipeline's binary twin decodes to a different flow than its text")
     repacked = pack_bytes(pipeline)
     if repacked != pipeline_pack:
         raise AssertionError("re-encoding the demo pipeline did not reproduce the committed pack bytes (%d vs %d bytes)" % (len(repacked), len(pipeline_pack)))
-    tower_dsl = ctx.fixture_bytes(TOWER_DSL)
+    tower_dsl = ctx.input_bytes(TOWER_DSL)
     document = parse_dsl(tower_dsl.decode("utf-8"))
     tower_printed = print_dsl(document).encode("utf-8")
     if tower_printed != tower_dsl:
         raise AssertionError("re-printing the capsule network did not reproduce its committed DSL bytes (%d vs %d bytes)" % (len(tower_printed), len(tower_dsl)))
-    committed_tower_pack = ctx.fixture_bytes(TOWER_PACK)
+    committed_tower_pack = ctx.input_bytes(TOWER_PACK)
     if parse_pack(committed_tower_pack) != document:
         raise AssertionError("the capsule network's binary twin decodes to a different flow than its text")
     tower_repacked = pack_bytes(document)

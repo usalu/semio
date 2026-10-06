@@ -685,7 +685,7 @@ pub(crate) mod fixture {
         use semio_framework::sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotPhase};
         const TYPED: Dialect = Dialect { artifact_kind: "s.testkit.typed-fixture", standard: StandardId("1"), subset: SubsetId("*") };
         let codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.typed-fixture/v1");
-        let assembly = store::begin_artifact_assembly().unwrap();
+        let assembly = semio_framework_schema_registry::assembly::begin().unwrap();
         semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![NativeSnapshotRegistration { dialect: TYPED.into(), codec }], ..Default::default() }).unwrap();
         drop(assembly);
         let snapshot = Std1AnySnapshot { value: 42 };
@@ -710,7 +710,7 @@ pub(crate) mod fixture {
     #[semio_framework_async_macros::async_test]
     #[ignore = "activate mandatory document capability enforcement after the semantic provider roster is complete"]
     async fn sqlite_snapshot_missing_document_owner_capability_is_rejected_before_publication(){
-        let schema="semio.testkit.missing-sqlite-owner/v1";let mut codec=store::ArtifactCodec::of::<Std1AnySnapshot,Std1AnyMutation>(schema);codec.snapshot_sqlite=None;let mut plan=semio_framework::io::ArtifactAssemblyRegistryPlan::new().await;plan.document_codecs.push(codec);let assembly=store::begin_artifact_assembly().unwrap();assert!(semio_framework::io::commit_artifact_assembly_registry_plan(&assembly,plan).is_err());drop(assembly);assert!(store::document_codec(schema).await.unwrap().is_none());
+        let schema="semio.testkit.missing-sqlite-owner/v1";let mut codec=store::ArtifactCodec::of::<Std1AnySnapshot,Std1AnyMutation>(schema);codec.snapshot_sqlite=None;let mut plan=semio_framework::io::ArtifactAssemblyRegistryPlan::new().await;plan.document_codecs.push(codec);let assembly=semio_framework_schema_registry::assembly::begin().unwrap();assert!(semio_framework::io::commit_artifact_assembly_registry_plan(&assembly,plan).is_err());drop(assembly);assert!(store::document_codec(schema).await.unwrap().is_none());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -724,7 +724,7 @@ pub(crate) mod fixture {
         let mut plan = ArtifactAssemblyRegistryPlan::new().await;
         plan.document_codecs.push(codec.clone());
         plan.native_snapshots.push(NativeSnapshotRegistration { dialect: HEADLESS.into(), codec });
-        let assembly = store::begin_artifact_assembly().expect("headless assembly barrier");
+        let assembly = semio_framework_schema_registry::assembly::begin().expect("headless assembly barrier");
         commit_artifact_assembly_registry_plan(&assembly, plan).expect("headless atomic commit");
         drop(assembly);
         let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);
@@ -738,7 +738,7 @@ pub(crate) mod fixture {
         let mut rejected = ArtifactAssemblyRegistryPlan::new().await;
         rejected.document_codecs.push(rejected_codec.clone());
         rejected.native_snapshots.push(NativeSnapshotRegistration { dialect: REJECTED.into(), codec: rejected_codec });
-        let assembly = store::begin_artifact_assembly().expect("rejected assembly barrier");
+        let assembly = semio_framework_schema_registry::assembly::begin().expect("rejected assembly barrier");
         assert!(commit_artifact_assembly_registry_plan(&assembly, rejected).is_err());
         drop(assembly);
         assert!(store::document_codec("semio.testkit.rejected-headless/v1").await.expect("codec registry").is_none());

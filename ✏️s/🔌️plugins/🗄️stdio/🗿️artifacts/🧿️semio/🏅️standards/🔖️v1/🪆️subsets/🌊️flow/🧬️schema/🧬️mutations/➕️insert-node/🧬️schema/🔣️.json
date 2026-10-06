@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioFlowMutation; absent when the payload stands alone."
     },
     "node": {
-      "$ref": "#/$defs/FlowNode"
+      "$ref": "#/$defs/FlowNode",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Id, kind, label, position, ports and parameters of the node that is inserted.",
+          "de": "Kennung, Art, Beschriftung, Position, Anschlüsse und Parameter des Knotens, der eingefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

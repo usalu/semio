@@ -10,7 +10,7 @@
       }
     },
     {
-      "documentId": "puzzle.2d.fixture",
+      "documentId": "board.ports.directed.v1",
       "pluginId": "puzzle2d",
       "appId": "s.puzzle.puzzle2d@1/*#editor",
       "folder": {

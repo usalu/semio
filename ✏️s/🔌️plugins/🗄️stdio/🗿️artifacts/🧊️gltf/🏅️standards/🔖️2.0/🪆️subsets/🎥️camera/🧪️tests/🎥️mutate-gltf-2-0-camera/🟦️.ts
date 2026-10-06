@@ -7,7 +7,7 @@
  *  nothing: each row's expected document is the COMMITTED fixture — `➡️after.gltf` for a mutation, `⬅️before.gltf` for
  *  its inverse — handed to the `gltf-2-0-three-compare-v1` pipeline as `expected-gltf`, where three's GLTFLoader reads it
  *  and the subject's `actual-gltf`. */
-import { defineTestAdapter } from "../../../../../../../../../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 /** 🟦️ glTF 2.0 `🎥️camera` mutation case — the ORACLE half, `three-gltf-2-0-mutate-reader`. A reader oracle computes
  *  nothing: each row's expected document is the COMMITTED fixture — `➡️after.gltf` for a mutation, `⬅️before.gltf` for
  *  its inverse — handed to the `gltf-2-0-three-compare-v1` pipeline as `expected-gltf`, where three's GLTFLoader reads it

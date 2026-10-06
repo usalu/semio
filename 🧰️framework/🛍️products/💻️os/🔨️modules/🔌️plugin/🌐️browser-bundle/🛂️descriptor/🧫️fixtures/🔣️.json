@@ -1,0 +1,52 @@
+{
+  "expected": {
+    "reactor": [
+      "stageCommandPage",
+      "stageColdPairPage",
+      "poll",
+      "channelVersion"
+    ],
+    "jobs": [
+      "startJob",
+      "stepJob",
+      "cancelJob",
+      "takeSegmentedDownloadChunk"
+    ],
+    "checkpoint": [
+      "checkpoint",
+      "restore"
+    ],
+    "describe": [
+      "describe"
+    ],
+    "codec": [
+      "sqliteSchema",
+      "sqliteExport",
+      "sqliteImport",
+      "packSchemaHash",
+      "genesis",
+      "printMirror",
+      "applyOps",
+      "replayEnvelopes"
+    ]
+  },
+  "cases": [
+    {
+      "source": "package sample:actor; interface reactor { record ignored { nested: u32, } poll: async func(); channel-version: func() -> u64; } world actor { export reactor; }",
+      "expected": {
+        "reactor": [
+          "poll",
+          "channelVersion"
+        ]
+      }
+    },
+    {
+      "source": "/* world actor { export decoy; } */ interface jobs { // decoy: func();\n start-job: func(); } world actor { export jobs; }",
+      "expected": {
+        "jobs": [
+          "startJob"
+        ]
+      }
+    }
+  ]
+}

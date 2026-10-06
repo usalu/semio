@@ -1,0 +1,5 @@
+> bun ./📜️script.ts kernel-command paged-history-stack-check
+
+[DEBUG] isolated Nx verification kernel-command
+paged-history-canonical-oracles: {"grants":5,"editHostiles":5,"sourceHostiles":6,"digestOracles":1,"mapGrants":4,"mapEditHostiles":2,"mapSourceHostiles":6,"mapDigestOracles":1,"readerChecks":29}
+paged-history-stack-check: vectors=3 independent-array/Ajv=passed

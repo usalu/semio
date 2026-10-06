@@ -1,0 +1,100 @@
+[
+  {
+    "id": "original",
+    "input": {
+      "project": "@semio-tech/ui-rs",
+      "target": "test-wgpu-engine",
+      "registeredCommand": "bun ./📜️script.ts test wgpu-engine",
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "rest": [],
+      "level": "long"
+    },
+    "accepted": true
+  },
+  {
+    "id": "missing-lib",
+    "input": {
+      "project": "@semio-tech/ui-rs",
+      "target": "test-wgpu-engine",
+      "registeredCommand": "bun ./📜️script.ts test wgpu-engine",
+      "extraArgs": [
+        "--features",
+        "wgpu-engine"
+      ],
+      "rest": [],
+      "level": "long"
+    },
+    "accepted": false
+  },
+  {
+    "id": "filtered",
+    "input": {
+      "project": "@semio-tech/ui-rs",
+      "target": "test-wgpu-engine",
+      "registeredCommand": "bun ./📜️script.ts test wgpu-engine",
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "rest": [
+        "slot"
+      ],
+      "level": "long"
+    },
+    "accepted": false
+  },
+  {
+    "id": "other-owner",
+    "input": {
+      "project": "@semio-tech/framework-renderer-wgpu",
+      "target": "test-wgpu-engine",
+      "registeredCommand": "bun ./📜️script.ts test wgpu-engine",
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "rest": [],
+      "level": "long"
+    },
+    "accepted": false
+  },
+  {
+    "id": "short-level",
+    "input": {
+      "project": "@semio-tech/ui-rs",
+      "target": "test-wgpu-engine",
+      "registeredCommand": "bun ./📜️script.ts test wgpu-engine",
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "rest": [],
+      "level": "quick"
+    },
+    "accepted": false
+  },
+  {
+    "id": "additional",
+    "input": {
+      "project": "@semio-tech/ui-rs",
+      "target": "test-wgpu-engine",
+      "registeredCommand": "bun ./📜️script.ts test wgpu-engine",
+      "extraArgs": [
+        "--features",
+        "wgpu-engine",
+        "--lib"
+      ],
+      "rest": [],
+      "level": "long",
+      "compat": true
+    },
+    "accepted": false
+  }
+]

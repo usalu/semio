@@ -23,6 +23,7 @@ pub const LAYOUT_PLAY_SURFACE_PREVIEW: &str = "layout.play.preview";
 /// stays empty: layout declares no config-derived chrome measures for this window.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: LAYOUT_PLAY_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: LAYOUT_PLAY_BODY_PREVIEW.into(),

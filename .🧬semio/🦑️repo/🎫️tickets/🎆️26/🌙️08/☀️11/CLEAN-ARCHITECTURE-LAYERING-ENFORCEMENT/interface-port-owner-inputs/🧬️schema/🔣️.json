@@ -1,0 +1,14 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,"required":["contract","cases"],
+  "properties":{
+    "contract":{"const":"separate-surface-port/v1"},
+    "cases":{"type":"array","minItems":6,"maxItems":6,"items":{
+      "type":"object","additionalProperties":false,"required":["id","kind","parent","required","accepted"],
+      "properties":{
+        "id":{"type":"string"},"kind":{"enum":["canvas","graph","editor","flow"]},
+        "parent":{"enum":[null,"canvas","graph"]},"required":{"type":"array","items":{"type":"string"},"uniqueItems":true},"accepted":{"type":"boolean"}
+      }
+    }}
+  }
+}

@@ -7,7 +7,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/block-js:test"
+    "test": "bun nx run @semio-tech/block-js:test",
+    "shared-schema": "bun nx run @semio-tech/block-js:shared-schema"
   },
   "dependencies": {},
   "devDependencies": {

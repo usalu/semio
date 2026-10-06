@@ -1,0 +1,265 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "controls",
+    "leases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.mutation-inventory.execution-laws/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "code",
+          "stdout",
+          "stderr"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "stdout": {
+            "type": "string"
+          },
+          "stderr": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "controls": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "source",
+              "reason",
+              "maximumCaptureBytes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "const": "capture"
+              },
+              "source": {
+                "type": "string"
+              },
+              "reason": {
+                "const": "capture-budget"
+              },
+              "maximumCaptureBytes": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "source",
+              "reason",
+              "budgetMs"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "const": "deadline"
+              },
+              "source": {
+                "type": "string"
+              },
+              "reason": {
+                "const": "deadline"
+              },
+              "budgetMs": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "source",
+              "reason"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "const": "cancel"
+              },
+              "source": {
+                "type": "string"
+              },
+              "reason": {
+                "const": "cancelled"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "source",
+              "reason",
+              "maximumUnits"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "const": "units"
+              },
+              "source": {
+                "type": "string"
+              },
+              "reason": {
+                "const": "work-budget"
+              },
+              "maximumUnits": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "source",
+              "reason",
+              "maximumOwnedBytes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "const": "bytes"
+              },
+              "source": {
+                "type": "string"
+              },
+              "reason": {
+                "const": "byte-budget"
+              },
+              "maximumOwnedBytes": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    "leases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "reason"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "const": "cargo"
+              },
+              "reason": {
+                "const": "exit"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "reason",
+              "budgetMs",
+              "queued"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "const": "held"
+              },
+              "reason": {
+                "const": "deadline"
+              },
+              "budgetMs": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "queued": {
+                "const": true
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -6,8 +6,39 @@
   "additionalProperties": false,
   "required": ["target", "pin", "role"],
   "properties": {
-    "target": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef" },
+    "target": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Artifact",
+          "de": "Artefakt"
+        },
+        "description": {
+          "en": "The artifact that is bound as a representation: kind, standard, subset and location.",
+          "de": "Das Artefakt, das als Repräsentation gebunden wird: Art, Standard, Teilmenge und Speicherort."
+        },
+        "group": "value",
+        "order": 10
+      }
+    },
     "pin": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link/schema.json#/$defs/LinkPin", "x-semio-ui": { "label": { "en": "Version Pin", "de": "Versionsfixierung" }, "description": { "en": "Which version the representation follows: the live head, a checkpoint, or a stored snapshot.", "de": "Welcher Version die Darstellung folgt: dem aktuellen Stand, einem Prüfpunkt oder einem gespeicherten Schnappschuss." } } },
-    "role": { "type": "string" }
+    "role": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Role",
+          "de": "Rolle"
+        },
+        "description": {
+          "en": "What the representation stands for in the kit, for example a type's geometry.",
+          "de": "Wofür die Repräsentation im Bausatz steht, zum Beispiel die Geometrie eines Typs."
+        },
+        "group": "value",
+        "order": 30
+      }
+    }
   }
 }

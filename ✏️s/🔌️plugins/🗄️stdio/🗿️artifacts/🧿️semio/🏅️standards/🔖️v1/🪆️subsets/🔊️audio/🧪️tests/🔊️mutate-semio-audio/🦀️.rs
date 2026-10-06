@@ -34,8 +34,11 @@ mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, decode_semio_audio_mutation_json, inverse_semio_audio_mutation, set_snapshot, SemioAudioMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::snapshot::{parse_semio_audio_dsl, print_semio_audio_dsl, SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, inverse_semio_audio_mutation, set_snapshot, SemioAudioMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::io::text::mutations::{decode_semio_audio_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::io::text::snapshot::{print_semio_audio_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::io::text::snapshot::{parse_semio_audio_dsl};
 
     /// 🎤️ The document every mutation row runs on: the first real second of the real committed
     /// "Bauen mit Bestand" recording — 8 000 real 16-bit PCM samples at the file's own 8 000 Hz —
@@ -164,7 +167,7 @@ mod subject {
     //#region 🔖️Inputs
     /// 🎤️ The real recording, parsed by this repository's own DSL codec.
     fn tone(ctx: &Context) -> Result<SemioAudioSnapshot, String> {
-        let bytes = ctx.fixture_bytes(RECORDING_DSL)?;
+        let bytes = ctx.input_bytes(RECORDING_DSL)?;
         let source = String::from_utf8(bytes).map_err(|error| format!("the recording artifact must be UTF-8: {error}"))?;
         parse_semio_audio_dsl(&source)
     }
@@ -218,7 +221,7 @@ mod subject {
     /// existed rather than replaced by it.
     pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
         let kind = ctx.row()?;
-        let vector = ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://🔊️mutate-semio-audio/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)?;
+        let vector = ctx.input_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://🔊️mutate-semio-audio/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)?;
         let expected = snapshot_of(vector.get("after").ok_or_else(|| "specification vector is missing its \"after\" member".to_string())?)?;
         let mut current = snapshot_of(vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?)?;
         let mutation = mutation_of(vector.get("mutation").ok_or_else(|| "specification vector is missing its \"mutation\" member".to_string())?, &current)?;
@@ -241,7 +244,7 @@ mod subject {
     /// exported for it — so the byte claim is about the text carrier alone.
     /// 🔁️ One document, re-emitted from the parsed snapshot and required back byte for byte.
     fn carrier_once(ctx: &Context, uri: &str, what: &str) -> Result<(SemioAudioSnapshot, Json), String> {
-        let committed = ctx.fixture_bytes(uri)?;
+        let committed = ctx.input_bytes(uri)?;
         let source = String::from_utf8(committed.clone()).map_err(|error| format!("{what} must be UTF-8: {error}"))?;
         let once = parse_semio_audio_dsl(&source)?;
         let printed = print_semio_audio_dsl(&once);
@@ -260,7 +263,7 @@ mod subject {
 
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let (tone, tone_report) = carrier_once(ctx, TONE_DSL, "the committed tone")?;
-        let vector = ctx.fixture_json("shared://🔊️mutate-semio-audio/⏸️no-mutation/🦠️mutation/🔣️.json")?;
+        let vector = ctx.input_json("shared://🔊️mutate-semio-audio/⏸️no-mutation/🦠️mutation/🔣️.json")?;
         let declared = snapshot_of(vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?)?;
         if tone != declared {
             return Err(disagreement("identity-round-trip: the real committed tone artifact does not decode to the before-snapshot every specification vector starts from", &tone, &declared));

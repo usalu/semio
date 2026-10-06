@@ -20,6 +20,8 @@ default = []
 component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
 
 [dependencies]
+semio-s-plugin-block-catalog = { path = "../../../../🗂️catalog/📦️packages/🦀️rust" }
+semio-s-plugin-block = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
@@ -32,7 +34,6 @@ semio-framework-schema-state = { path = "../../../../../../../🧰️framework/�
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-artifact-block-2d = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -48,9 +49,9 @@ semio-framework-dispatch-macros = { workspace = true, optional = true }
 semio-framework-ui-contract = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-s-plugin-block = { path = "../../../../📦️packages/🦀️rust", features = ["test-serde"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
-semio-s-artifact-block-2d = { workspace = true, features = ["test-serde"] }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

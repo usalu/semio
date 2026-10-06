@@ -36,6 +36,15 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/model/mutation/set-relation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/model/mutation/drag-elements/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/model/mutation/rotate-elements/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/model/mutation/scale-elements/schema.json"
     }
   ]
 }

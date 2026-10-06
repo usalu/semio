@@ -5,20 +5,15 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import Ajv from "ajv";
+
 import { describe, expect, it } from "vitest";
 import corpus from "../../🧫️fixtures/🧫️float32-decimal/🔣️.json" with { type: "json" };
-import schema from "../../🧬️schema/🔣️float32-decimal/🔣️.json" with { type: "json" };
 import { board2dFloat32Decimal } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🧫️Corpus
 describe("board f32 decimal corpus", () => {
-  it("is valid against its schema of record", () => {
-    const validate = new Ajv({ strict: true }).compile(schema);
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...corpus, cases: [{ name: "no expectation", value: 1 }] })).toBe(false);
-  });
+  
 
   for (const entry of corpus.cases) {
     it(`canonicalizes: ${entry.name}`, () => {

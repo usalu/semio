@@ -112,101 +112,19 @@ impl Pattern {
     }
 }
 
-fn pattern_to_match_clause(pattern: &Pattern) -> String {
-    let p = pattern.to_jack_pattern();
-    let left = format!("({}:{} )", p.nodes[0].var, p.nodes[0].kind).replace(" )", ")");
-    if let Some(edge) = &p.edge {
-        let edge_mid = match (&edge.var, &edge.kind) {
-            (Some(v), Some(k)) => format!("[{v}:{k}]"),
-            (Some(v), None) => format!("[{v}]"),
-            (None, Some(k)) => format!("[:{k}]"),
-            (None, None) => "[]".into(),
-        };
-        format!("({}:{} )-{edge_mid}->({}:{} )", p.nodes[0].var, p.nodes[0].kind, edge.right.var, edge.right.kind).replace(" )", ")")
-    } else {
-        left
-    }
-}
 
-pub(crate) fn parse_bindings_json(bindings_json: &str) -> Result<semio_framework_graph::manifest::PropertyBag, TrinityRewritingError> {
-    if bindings_json.trim().is_empty() {
-        return Ok(semio_framework_graph::manifest::PropertyBag::new());
-    }
-    Ok(semio_framework_pack_json::from_json_str(bindings_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?)
-}
 
-fn parameter_defaults(rule: &Rule) -> semio_framework_graph::manifest::PropertyBag {
-    let mut defaults = semio_framework_graph::manifest::PropertyBag::new();
-    for param in &rule.rhs.parameters {
-        defaults.insert(param.name.clone(), param.default.clone());
-    }
-    defaults
-}
 
-fn effective_bindings(rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag) -> semio_framework_graph::manifest::PropertyBag {
-    let mut merged = parameter_defaults(rule);
-    for (key, value) in bindings {
-        merged.insert(key.clone(), value.clone());
-    }
-    merged
-}
 
-fn resolve_parameter_value(rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag, value: &PropertyValue) -> PropertyValue {
-    if let PropertyValue::String(s) = value {
-        if let Some(name) = s.strip_prefix('$') {
-            if !name.is_empty() {
-                if let Some(resolved) = bindings.get(name) {
-                    return resolved.clone();
-                }
-                for param in &rule.rhs.parameters {
-                    if param.name == name {
-                        return param.default.clone();
-                    }
-                }
-            }
-        }
-    }
-    value.clone()
-}
 
-/// 🩹️ unified syntax law: string literals PRINT double-quoted (never single-quoted) — matches the
-/// shared `🫀️core` jack lexer/wire-literal printer, which accepts either quote style on parse but
-/// always emits `"..."`.
-fn assignment_value_jack(rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag, value: &PropertyValue) -> String {
-    let resolved = resolve_parameter_value(rule, bindings, value);
-    match resolved {
-        PropertyValue::Null => "null".into(),
-        PropertyValue::Bool(b) => b.to_string(),
-        PropertyValue::Number(n) => n.to_string(),
-        PropertyValue::String(s) => format!("\"{s}\""),
-        PropertyValue::Array(_) | PropertyValue::Object(_) => semio_framework_pack_json::to_json_string(&resolved),
-    }
-}
 
-/// 🧵️ Build the Jack query string for a rewrite rule without executing it.
-pub fn build_rule_query(rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag) -> String {
-    let effective = effective_bindings(rule, bindings);
-    let mut query = format!("MATCH {}", pattern_to_match_clause(&rule.lhs.pattern));
-    if let Some(where_clause) = &rule.lhs.where_clause {
-        if !where_clause.trim().is_empty() {
-            query.push_str(&format!(" WHERE {where_clause}"));
-        }
-    }
-    for del in &rule.rhs.delete {
-        query.push_str(&format!(" DELETE {del}"));
-    }
-    for set in &rule.rhs.set {
-        let val = assignment_value_jack(rule, &effective, &set.value);
-        query.push_str(&format!(" SET {}.{} = {val}", set.var, set.prop));
-    }
-    for create in &rule.rhs.create {
-        query.push_str(&format!(" CREATE {}", pattern_to_match_clause(create)));
-    }
-    for merge in &rule.rhs.merge {
-        query.push_str(&format!(" MERGE {}", pattern_to_match_clause(merge)));
-    }
-    query
-}
+
+
+
+
+
+
+
 
 /// ♻️ Apply a rewrite rule to a graph.
 pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag) -> Result<QueryResult, TrinityRewritingError> {
@@ -217,26 +135,14 @@ pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &semio_framework_gra
     Ok(result)
 }
 
-/// ♻️ Apply a rewrite rule from JSON.
-pub fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewritingError> {
-    let rule: Rule = semio_framework_pack_json::from_json_str(rule_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
-    let bindings = parse_bindings_json(bindings_json)?;
-    let result = apply_rule(graph, &rule, &bindings)?;
-    Ok(semio_framework_pack_json::to_json_string(&ApplyRuleResult { fixture: graph.host_snapshot_json()?, query: result }))
-}
 
-/// 🧵️ Build a rewrite rule Jack query from JSON without a graph.
-pub fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewritingError> {
-    let rule: Rule = semio_framework_pack_json::from_json_str(rule_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
-    let bindings = parse_bindings_json(bindings_json)?;
-    let query = build_rule_query(&rule, &bindings);
-    Ok(semio_framework_pack_json::to_json_string(&RuleQueryResult { query }))
-}
+
+
 
 #[derive(value_derive::ToValue)]
 #[value(rename_all = "camelCase")]
 pub struct ApplyRuleResult {
-    pub fixture: String,
+    pub snapshot_json: String,
     pub query: QueryResult,
 }
 
@@ -286,117 +192,15 @@ mod rule_application_tests;
 //#endregion 🧪️RuleApplicationTests
 
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{RewriteRuleMutation, RewritingDiff, RewritingSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct RewritingBuilderConstruction {
-        snapshot: RewritingSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for RewritingBuilderConstruction {
-        type Snapshot = RewritingSnapshot;
-        type Mutation = RewriteRuleMutation;
-        type Diff = RewritingDiff;
-        fn empty() -> Self {
-            Self { snapshot: RewritingSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<RewritingSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<RewritingSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <RewritingDiff as protocol::MutationDiff<RewritingSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::RewritingSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct RewritingParts {
-        pub snapshot: Option<RewritingSnapshot>,
-    }
-
-    pub struct RewritingAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for RewritingAnalyzerAnalysis {
-        type Parts = RewritingParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.trinity.rewriting", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = RewritingParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <RewritingSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <RewritingSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec RewritingBuilderFacets {
-        construction: RewritingBuilderConstruction,
-        analysis: RewritingAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::RewritingComposerComposition,
-    }
-    builder: RewritingBuilder,
-    analyzer: RewritingAnalyzer,
-    composer: RewritingComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports

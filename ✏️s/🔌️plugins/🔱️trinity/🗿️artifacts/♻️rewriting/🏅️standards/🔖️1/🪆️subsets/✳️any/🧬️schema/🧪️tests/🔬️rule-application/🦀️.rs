@@ -1,9 +1,15 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::rule_query_json;
+use crate::standards::v1::subsets::any::io::text::snapshot::apply_rule_json;
+use crate::standards::v1::subsets::any::io::text::snapshot::build_rule_query;
+use crate::standards::v1::subsets::any::io::text::snapshot::assignment_value_jack;
+use crate::standards::v1::subsets::any::io::text::snapshot::resolve_parameter_value;
+use crate::standards::v1::subsets::any::io::text::snapshot::pattern_to_match_clause;
+use crate::standards::v1::subsets::any::io::text::snapshot::parse_bindings_json;
 use super::*;
-use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot::text::NAKAGIN_EXAMPLE_TEXT;
 use store::ArtifactDsl;
 
 fn nakagin_graph() -> Graph {
-    Graph::from_snapshot(semio_s_artifact_trinity_jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap()
+    Graph::from_snapshot(crate::editor::rewriting::fixture_rule_state().working_graph).unwrap()
 }
 
 fn empty_rule() -> Rule {
@@ -65,15 +71,15 @@ async fn rewrite_rule_parameter_substitution() {
 
 #[semio_framework_async_macros::async_test]
 async fn rewriting_labeled_fixture_reloads() {
-    let mut g = Graph::from_snapshot(semio_s_artifact_trinity_jack::JackSnapshot::parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap()).unwrap();
+    let mut g = Graph::from_snapshot(crate::editor::rewriting::fixture_rule_state().working_graph).unwrap();
     let rule = Rule {
         name: "label-core".into(),
         lhs: Lhs { pattern: Pattern { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
         rhs: Rhs { create: vec![], delete: vec![], set: vec![Assignment { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
     };
     apply_rule(&mut g, &rule, &semio_framework_graph::manifest::PropertyBag::new()).unwrap();
-    let fixture_json = g.host_snapshot_json().unwrap();
-    let reloaded = Graph::load_json(&fixture_json).unwrap();
+    let snapshot_json = g.host_snapshot_json().unwrap();
+    let reloaded = Graph::load_json(&snapshot_json).unwrap();
     let core = reloaded.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
     assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
 }

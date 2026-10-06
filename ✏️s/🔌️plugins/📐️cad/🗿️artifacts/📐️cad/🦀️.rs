@@ -53,6 +53,11 @@ impl CadPaneId {
     pub fn all() -> [Self; 4] {
         [Self::Shape, Self::Building, Self::Energy, Self::StructureClassic]
     }
+
+    /// 🔢️ The pane's position in [`Self::all`].
+    pub fn index(self) -> usize {
+        self as usize
+    }
 }
 
 /// 🧩️ Fixed per-pane composed `s.stdio.semio.model` child slot — one of the four fields the
@@ -86,14 +91,11 @@ pub fn cad_drawing_child_from_uri(child_id: &str, target_uri: &str) -> Result<Ca
 }
 
 //#region 🔖️WorkingScene
-/// 🧱 EPHEMERAL, per-invocation working representation of the document's per-pane object content —
-/// never persisted, never a `CadSnapshot` field (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
-/// wave 3, following the `EngineRep` contract in `⚙️engine/🦀️.rs`: wholly derived, dropped
-/// at the end of the call that built it). `CadSnapshot` composes only child HANDLES
-/// (`CadModelChild` — two strings, no content); this is what the app derives from a resolved
-/// child's actual content (`cad_working_scene_from_models`, the READ direction) or from literal
-/// input before any child is even minted (the WRITE direction — see `🚪️io/🦀️.rs`'s
-/// `cad_document_from_dwg`/`scene_from_spatial_payload`), to actually edit/render a pane.
+/// 🧱️ EPHEMERAL working representation of per-pane object content and raw geometry — never persisted, never a
+/// `CadSnapshot` field and never attached to a child handle: `CadSnapshot` composes only child HANDLES (`CadModelChild`,
+/// two strings). It is what an importer derives from literal input before any child exists (the WRITE direction —
+/// `🚪️io/🦀️.rs`'s `cad_document_from_dwg`/`scene_from_spatial_payload`) and what the bundled genesis catalogue holds per
+/// pane ([`cad_bundled_pane_scene`]); readers see a pane through [`CadComposedPanes`].
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CadWorkingScene {
@@ -113,25 +115,6 @@ pub struct CadWorkingScene {
     pub(crate) energy_geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
     #[value(default)]
     pub(crate) structure_classic_geometry: Option<standards::v1::subsets::any::io::geometry_import::CadGeometry>,
-}
-
-/// 🌉 READ direction: resolved `s.stdio.semio.model` child content (once a real resolver hands it
-/// over — see `store::LinkResolver`/`ChildStoreFactory` in `🏪️store/🦀️.rs`'s
-/// `🔖️Composition` region) → this document's `CadWorkingScene`. Each pane is independent: a `None`
-/// (child not yet resolved/composed) leaves that pane's object list empty rather than fabricating
-/// placeholder content. Real per-element conversion lives in `geometry_import::objects_from_model_snapshot`.
-pub fn cad_working_scene_from_models(shape: Option<&SemioModelSnapshot>, building: Option<&SemioModelSnapshot>, energy: Option<&SemioModelSnapshot>, structure_classic: Option<&SemioModelSnapshot>) -> CadWorkingScene {
-    use crate::standards::v1::subsets::any::io::geometry_import::objects_from_model_snapshot;
-    CadWorkingScene {
-        objects: shape.map(objects_from_model_snapshot).unwrap_or_default(),
-        building_objects: building.map(objects_from_model_snapshot).unwrap_or_default(),
-        energy_objects: energy.map(objects_from_model_snapshot).unwrap_or_default(),
-        structure_classic_objects: structure_classic.map(objects_from_model_snapshot).unwrap_or_default(),
-        geometry: None,
-        building_geometry: None,
-        energy_geometry: None,
-        structure_classic_geometry: None,
-    }
 }
 
 /// 🌉 WRITE direction: a deterministic, content-addressed `s.stdio.semio.model` CHILD HANDLE for
@@ -158,29 +141,37 @@ fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
     }
 }
 
-/// 🪆️ The pane's in-process materialization: the `CadWorkingScene` the composed child handle carries
-/// as its `ArtifactChild::local_owner`. Every reader (world scene, document tree, object mutation
-/// diff, archive genesis) goes through this one accessor. A wire-decoded handle carries no owner —
-/// a whole-document load (`setActiveExample` → `Effect::LoadDocument` → the host's archive door)
-/// hands the store pack bytes, never the in-process owner — so such a handle resolves its
-/// content-addressed `child_id` against the bundled example catalogue
-/// ([`cad_bundled_pane_scene`]); a handle neither carries nor names reads `None` rather than a
-/// fabricated scene.
-pub fn cad_pane_local_scene(document: &CadSnapshot, pane: CadPaneId) -> Option<std::sync::Arc<CadWorkingScene>> {
-    let child = cad_pane_model(document, pane)?;
-    child.local_owner::<CadWorkingScene>().or_else(|| cad_bundled_pane_scene(&child.child_id))
+/// 🪪️ The STABLE composed model child of `pane` in the bundled document `document_id`: a NAME (`<document>-<pane>-model`),
+/// never a digest of content — a child's content changes with every child-lane edit while its id stays (design §20.15),
+/// so the genesis catalogue, the shipped assets and every reload agree on it and nothing is re-sealed when the model
+/// bridge changes.
+pub fn cad_named_pane_child(document_id: &str, pane: CadPaneId) -> CadModelChild {
+    let child_id = format!("{document_id}-{}-model", cad_model_child_pane_slug(pane));
+    let dialect = store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
+    let target = store::os_io::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    store::ArtifactChild::new(child_id, target)
 }
 
-/// 📚️ The immutable, content-addressed catalogue of every bundled example's pane materializations,
-/// keyed by the pane child's `child_id`. A `child_id` is a digest of the pane's exact model content
-/// ([`cad_model_child_handle`]), so a hit is by construction the same content the example minted —
-/// this resolves shipped assets, it never shares one live document's state with another.
-pub fn cad_bundled_pane_scene(child_id: &str) -> Option<std::sync::Arc<CadWorkingScene>> {
+/// 🈳️ The composed model child an EMPTY pane of a new document is born with, so the document composes every pane from
+/// its first render and an object gesture always has a child lane to land on (design §20.15). Its genesis is the empty
+/// scene of the catalogue ([`cad_bundled_pane_scene`]).
+pub fn cad_empty_pane_child(pane: CadPaneId) -> CadModelChild {
+    cad_named_pane_child("cad", pane)
+}
+
+/// 📚️ The immutable catalogue of every pane genesis scene the plugin ships, keyed by the pane child's stable `child_id`
+/// ([`cad_named_pane_child`]): the bundled examples' panes and the four empty panes ([`cad_empty_pane_child`]). A hit is
+/// the scene the document was born with: its objects are the child's genesis content and its raw geometry is what
+/// `SemioModelSnapshot` has no field for. This resolves shipped assets; it never shares one live document's state with
+/// another.
+pub(crate) fn cad_bundled_pane_scene(child_id: &str) -> Option<std::sync::Arc<CadWorkingScene>> {
     static CATALOGUE: std::sync::OnceLock<Vec<(String, std::sync::Arc<CadWorkingScene>)>> = std::sync::OnceLock::new();
     CATALOGUE
         .get_or_init(|| {
             let forest = standards::v1::subsets::any::schema::inferences::forest_play_scene();
-            CadPaneId::all().into_iter().filter_map(|pane| cad_pane_model(&forest, pane).and_then(|child| Some((child.child_id.clone(), child.local_owner::<CadWorkingScene>()?)))).collect()
+            let empty = std::sync::Arc::new(CadWorkingScene::default());
+            let bundled = CadPaneId::all().into_iter().filter_map(|pane| Some((cad_pane_model(&forest, pane)?.child_id.clone(), standards::v1::subsets::any::schema::inferences::forest_pane_scene(pane))));
+            bundled.chain(CadPaneId::all().into_iter().map(|pane| (cad_empty_pane_child(pane).child_id, empty.clone()))).collect()
         })
         .iter()
         .find(|(id, _)| id == child_id)
@@ -197,17 +188,27 @@ pub fn cad_pane_model_slot(pane: CadPaneId) -> &'static str {
     }
 }
 
-/// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack`: the composed `s.stdio.semio.model` pack
-/// each pane child is derived from — the same `semio_model_snapshot_from_objects` projection its
-/// content-addressed handle was minted from. The React shell's `loadDocumentPair` sends
-/// `members: []`, so a whole-document load derives every model slot here; without it the archive
-/// closure completes `Incomplete` (`document-archive-replacement.closure-rejected`).
+/// 🗂️ The composed `#[child]` slot name the document's drawing children live under.
+pub const CAD_DRAWINGS_SLOT: &str = "drawings";
+
+/// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack`: the pack an owned child the snapshot declares is born with
+/// when no store carries it (design §20.15, §22.36). A pane model child whose stable id names a catalogue scene
+/// ([`cad_bundled_pane_scene`]) is born with that scene's objects; every other declared child — the one a
+/// `create-*-model` or `create-drawing` leaf hands out — is born EMPTY, because a handle is two strings: content reaches
+/// a child only as an archive member or as child-lane leaves, never through its name. So a parent decoded from pack or
+/// text with no archive members (the React shell's `loadDocumentPair` sends `members: []`) composes every declared
+/// child, and a fresh instance plus a creation leaf is a loadable document. A child the snapshot does not declare has
+/// no genesis.
 pub fn cad_genesis_child_pack(snapshot: &CadSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
     use store::ArtifactPack;
+    if slot == CAD_DRAWINGS_SLOT {
+        return snapshot.drawings.iter().any(|child| child.child_id == child_id).then(|| <SemioDrawingSnapshot as ArtifactPack>::encode_pack(&SemioDrawingSnapshot::default()));
+    }
     let pane = CadPaneId::all().into_iter().find(|pane| cad_pane_model_slot(*pane) == slot)?;
     cad_pane_model(snapshot, pane).filter(|child| child.child_id == child_id)?;
-    let scene = cad_pane_local_scene(snapshot, pane)?;
-    Some(<SemioModelSnapshot as ArtifactPack>::encode_pack(&standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(cad_scene_pane_objects(&scene, pane))))
+    let genesis = cad_bundled_pane_scene(child_id);
+    let objects = genesis.as_deref().map_or(&[][..], |scene| cad_scene_pane_objects(scene, pane));
+    Some(<SemioModelSnapshot as ArtifactPack>::encode_pack(&standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(objects)))
 }
 
 /// 🧬️ The bounded projection of this snapshot's composed child handles, as both surfaces hand it to
@@ -216,7 +217,7 @@ pub fn cad_child_restore_projection(snapshot: &CadSnapshot) -> Result<store::Chi
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("cad child projection failed: {error}")))
 }
 
-/// 🧱️ One pane's slice of a working scene.
+/// 🧱️ One pane's objects in a working scene.
 pub(crate) fn cad_scene_pane_objects(scene: &CadWorkingScene, pane: CadPaneId) -> &[standards::v1::subsets::any::io::geometry_import::CadObject] {
     match pane {
         CadPaneId::Shape => &scene.objects,
@@ -226,41 +227,59 @@ pub(crate) fn cad_scene_pane_objects(scene: &CadWorkingScene, pane: CadPaneId) -
     }
 }
 
-/// 🧱️ `scene` with `pane`'s slice replaced — the other three panes keep their own handles (and thus
-/// their own owners), so only the edited pane's child is ever re-minted.
-pub(crate) fn cad_scene_with_pane_objects(scene: &CadWorkingScene, pane: CadPaneId, objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>) -> CadWorkingScene {
-    let mut next = scene.clone();
+/// 📐️ One pane's raw geometry in a working scene.
+pub(crate) fn cad_scene_pane_geometry(scene: &CadWorkingScene, pane: CadPaneId) -> Option<&standards::v1::subsets::any::io::geometry_import::CadGeometry> {
     match pane {
-        CadPaneId::Shape => next.objects = objects,
-        CadPaneId::Building => next.building_objects = objects,
-        CadPaneId::Energy => next.energy_objects = objects,
-        CadPaneId::StructureClassic => next.structure_classic_objects = objects,
+        CadPaneId::Shape => scene.geometry.as_ref(),
+        CadPaneId::Building => scene.building_geometry.as_ref(),
+        CadPaneId::Energy => scene.energy_geometry.as_ref(),
+        CadPaneId::StructureClassic => scene.structure_classic_geometry.as_ref(),
     }
-    next
 }
 
-/// 🪆️ THE RE-MATERIALIZATION SEAM. An object edit on `pane` produces a new object list; this mints
-/// the pane's content-addressed `s.stdio.semio.model` child handle from it (`semio_model_snapshot_from_objects`
-/// — the same WRITE bridge `forest_play_document` uses) and attaches the updated `CadWorkingScene` as
-/// the handle's local owner, so the very next render of that pane tessellates the edited geometry.
-/// A pane edited down to nothing mints no child — `None` is the vacate-the-slot signal, exactly what
-/// `delete-<pane>-model` expresses.
-pub(crate) fn cad_pane_rematerialized_child(scene: &CadWorkingScene, pane: CadPaneId, objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>) -> Option<CadModelChild> {
-    if objects.is_empty() {
-        return None;
-    }
-    let next = std::sync::Arc::new(cad_scene_with_pane_objects(scene, pane, objects));
-    let content_json = semio_framework_pack_json::to_json_string(&standards::v1::subsets::any::io::geometry_import::semio_model_snapshot_from_objects(cad_scene_pane_objects(&next, pane)));
-    Some(cad_model_child_handle(pane, &content_json).with_local_owner(next))
+/// 🪆️ One pane as every reader sees it: its objects read out of the pane's composed `s.stdio.semio@v1/model` child, over
+/// the immutable genesis scene its stable child id names ([`cad_bundled_pane_scene`]) — the raw geometry the model has no
+/// field for, and the `Arc` whose identity keys the pane's tessellation cache.
+#[derive(Clone, Debug, Default)]
+pub(crate) struct CadComposedPane {
+    pub(crate) objects: Vec<standards::v1::subsets::any::io::geometry_import::CadObject>,
+    pub(crate) genesis: Option<std::sync::Arc<CadWorkingScene>>,
 }
 
-/// 🪆️ Writes a re-materialized child handle into `pane`'s slot of a `CadDiff`-shaped option bag.
-pub(crate) fn cad_pane_child_diff_slot(diff: &mut CadDiff, pane: CadPaneId, child: Option<CadModelChild>) {
-    match pane {
-        CadPaneId::Shape => diff.shape_model = Some(child),
-        CadPaneId::Building => diff.building_model = Some(child),
-        CadPaneId::Energy => diff.energy_model = Some(child),
-        CadPaneId::StructureClassic => diff.structure_classic_model = Some(child),
+impl CadComposedPane {
+    /// 📐️ The pane's raw genesis geometry, when its child id names a bundled scene.
+    pub(crate) fn geometry(&self, pane: CadPaneId) -> Option<&standards::v1::subsets::any::io::geometry_import::CadGeometry> {
+        self.genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane))
+    }
+}
+
+/// 🪆️ The four panes every reader works on (design §20.15): each pane's composed child read through the child view only.
+/// The child is the pane's one source of truth, so an edit, an undo, a remote change or a reload is seen the moment its
+/// child store has it; a pane whose child is not composed yet reads the genesis content its stable id names, and a pane
+/// without a handle has no objects.
+#[derive(Clone, Debug, Default)]
+pub(crate) struct CadComposedPanes([CadComposedPane; 4]);
+
+impl CadComposedPanes {
+    /// 🪆️ Composes `snapshot`'s pane handles with their live child content.
+    pub(crate) fn compose(snapshot: &CadSnapshot, children: &semio_framework_plugin::ChildContentView) -> Self {
+        use standards::v1::subsets::any::io::geometry_import::objects_from_model_snapshot;
+        Self(CadPaneId::all().map(|pane| {
+            let Some(handle) = cad_pane_model(snapshot, pane) else { return CadComposedPane::default() };
+            let slot = cad_pane_model_slot(pane);
+            let genesis = cad_bundled_pane_scene(&handle.child_id);
+            let modelled = children.dialect(slot, &handle.child_id).is_some_and(|dialect| dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == "model");
+            let objects = match modelled.then(|| children.typed_read::<SemioModelSnapshot>(slot, &handle.child_id).ok()).flatten() {
+                Some(content) => objects_from_model_snapshot(&content),
+                None => genesis.as_deref().map(|scene| cad_scene_pane_objects(scene, pane).to_vec()).unwrap_or_default(),
+            };
+            CadComposedPane { objects, genesis }
+        }))
+    }
+
+    /// 🔎️ `pane` as composed.
+    pub(crate) fn pane(&self, pane: CadPaneId) -> &CadComposedPane {
+        &self.0[pane.index()]
     }
 }
 //#endregion 🔖️WorkingScene
@@ -583,7 +602,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
 /// 🧪️ Shared sample records for every cad artifact node's tests (diff/op/dsl/pack/spr) — one
 /// definition instead of the four byte-identical copies the old per-module crates each carried.
 #[cfg(test)]
-#[path = "🧫️fixtures/🧩️sample-scene/🦀️.rs"]
+#[path = "🧪️tests/🧩️sample-scene/🦀️.rs"]
 pub(crate) mod sample_scene_fixture;
 //#endregion 🧫️Fixtures
 
@@ -596,9 +615,9 @@ pub use interaction_spec::*;
 // mounting the same source twice creates two non-unified module instances with
 // conflicting trait impls and mismatched types of the "same" struct. Re-export the
 // ALREADY-mounted schema-tree module instead of re-compiling the file a second time.
-pub use standards::v1::subsets::any::schema::mutations::binary as spr;
-pub use standards::v1::subsets::any::schema::mutations::text as op;
-pub use standards::v1::subsets::any::schema::snapshot::text as document_dsl;
+pub use standards::v1::subsets::any::io::binary::mutations as spr;
+pub use standards::v1::subsets::any::io::text::mutations as op;
+pub use standards::v1::subsets::any::io::text::snapshot as document_dsl;
 
 #[path = "."]
 pub mod standards {
@@ -627,20 +646,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod bounds {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
@@ -653,21 +664,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod create_node {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-node/🦀️.rs"]
@@ -784,104 +786,6 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎replace-references/🧪️tests/🔄️swaps/🦀️.rs"]
                             mod tests_swaps_the_shape_reference_list;
-                        }
-                        #[path = "."]
-                        pub mod create_object {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-object/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-object/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-object/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-object/🧪️tests/🌱️appends-a-box-to-the-shape-pane/🦀️.rs"]
-                            mod tests_appends_a_box_to_the_shape_pane;
-                        }
-                        #[path = "."]
-                        pub mod delete_object {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-object/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-object/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-object/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-object/🧪️tests/🚫️removes-the-shape-pane-object/🦀️.rs"]
-                            mod tests_removes_the_shape_pane_object;
-                        }
-                        #[path = "."]
-                        pub mod move_objects {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚move-objects/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚move-objects/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚move-objects/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚move-objects/🧪️tests/📍️moves-the-shape-pane-object/🦀️.rs"]
-                            mod tests_moves_the_shape_pane_object;
-                        }
-                        #[path = "."]
-                        pub mod rotate_objects {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-objects/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-objects/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-objects/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod scale_objects {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️scale-objects/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️scale-objects/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️scale-objects/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod drag_selection {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/✋️drags-two-objects/🦀️.rs"]
-                            mod tests_drags_two_objects;
-                        }
-                        #[path = "."]
-                        pub mod rotate_selection {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🔄️turns-two-objects/🦀️.rs"]
-                            mod tests_turns_two_objects;
-                        }
-                        #[path = "."]
-                        pub mod scale_selection {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                            #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🔍️scales-two-objects/🦀️.rs"]
-                            mod tests_scales_two_objects;
                         }
                         #[path = "."]
                         pub mod create_shape_model {
@@ -1074,9 +978,7 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
+
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
 }
@@ -1085,17 +987,13 @@ pub mod diff {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-    }
+
 }
 pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-    }
+
 }
 
 /// ✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the mutation-capable surface, migrated
@@ -1285,3 +1183,5 @@ pub mod viewer {
 //#region 📚️Examples
 pub use standards::v1::subsets::any::examples;
 //#endregion 📚️Examples
+
+pub use crate::standards::v1::subsets::any::io::{CadBuilderConstruction, CadParts, CadAnalyzerAnalysis, CadBuilderFacets, CadBuilder, CadAnalyzer, CadComposer};

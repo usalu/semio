@@ -13,7 +13,7 @@ use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::{decode_still_image, payload_from_data_url};
 use crate::mutations::{add_stream_frame, create_asset, create_stream};
-use crate::op::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use crate::schema::mint_remodeling_id;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};

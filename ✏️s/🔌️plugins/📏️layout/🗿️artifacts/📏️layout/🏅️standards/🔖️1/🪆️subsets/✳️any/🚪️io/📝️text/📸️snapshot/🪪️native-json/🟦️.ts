@@ -1,0 +1,27 @@
+/** 🪪️ Literal Layout native JSON boundary alongside its exact owned words and SQLite relations. */
+import {parseLayoutArtifact,type LayoutArtifact} from "../../../../🧬️schema/🟦️.ts";
+import {binary64,binary32,binary64Value,binary32Value,type Binary64,type Binary32} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {semioDrawingSnapshotFromNativeJson,semioDrawingSnapshotNativeJson} from "../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
+import{formDictionaryNativeJson,formDictionaryFromNativeJson}from"../../../../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧾️dictionary/🪪️native-json/🟦️.ts";
+export const row=(v:unknown):Record<string,unknown>=>{if(v===null||typeof v!=="object"||Array.isArray(v))throw Error("Layout native JSON record");return v as Record<string,unknown>;};
+export const array=(v:unknown):unknown[]=>{if(!Array.isArray(v))throw Error("Layout native JSON array");return v;};
+const nativeNumber=(v:unknown):number=>{if(typeof v!=="number"||!Number.isFinite(v))throw Error("Layout native JSON finite number");return v;};
+const word=(v:unknown,out:boolean)=>out?nativeNumber(binary64Value(v as Binary64)):binary64(nativeNumber(v));
+const float=(v:unknown,out:boolean)=>out?nativeNumber(binary32Value(v as Binary32)):binary32(nativeNumber(v));
+const wide=(v:unknown,out:boolean):number|bigint=>{if(out){if(typeof v!=="bigint"||v<0n||v>0xffffffffffffffffn)throw Error("Layout owned unsigned64 range");if(v>BigInt(Number.MAX_SAFE_INTEGER))throw Error("Layout native JSON unsigned64 exceeds JavaScript numeric boundary");return Number(v);}if(typeof v!=="number"||!Number.isSafeInteger(v)||v<0)throw Error("Layout native JSON unsigned64 number");return BigInt(v);};
+export function fields(value:unknown,keys:readonly string[],out:boolean):Record<string,unknown>{const r={...row(value)};for(const key of keys)if(r[key]!=null)r[key]=word(r[key],out);return r;}
+function rgba(v:unknown,out:boolean):unknown{return array(v).map(c=>float(c,out));}
+export function paragraph(v:unknown,out:boolean):unknown{return fields(v,["fontSize","leading","tracking"],out);}
+export function character(v:unknown,out:boolean):unknown{const r=fields(v,["fontSize","tracking"],out);if(r.color!=null)r.color=rgba(r.color,out);return r;}
+export function run(v:unknown,out:boolean):unknown{const r={...row(v)};r.start=wide(r.start,out);r.end=wide(r.end,out);return r;}
+export function story(v:unknown,out:boolean):unknown{const r={...row(v)};r.styleRuns=array(r.styleRuns).map(v=>run(v,out));return r;}
+export function frame(v:unknown,out:boolean):unknown{const r={...row(v)};r.bounds=fields(r.bounds,["x","y","w","h","rotation"],out);switch(r.kind){case"rect":if(r.fill!=null)r.fill=rgba(r.fill,out);if(r.stroke!=null)r.stroke=rgba(r.stroke,out);break;case"text":r.inset=fields(r.inset,["x","y","w","h"],out);break;case"image":break;default:throw Error("Layout native JSON frame kind");}return r;}
+export function page(v:unknown,out:boolean,parent:boolean):unknown{const r=fields(v,["width","height"],out);r.frames=array(r.frames).map(v=>frame(v,out));if(!parent){r.margins=fields(r.margins,["top","right","bottom","left"],out);r.columns=fields(r.columns,["gutter"],out);r.guides=array(r.guides).map(v=>fields(v,["x","y","w","h"],out));r.overrides=array(r.overrides).map(v=>{const x={...row(v)};if(x.bounds!=null)x.bounds=fields(x.bounds,["x","y","w","h","rotation"],out);return x;});}return r;}
+export function child(v:unknown,out:boolean):unknown{const r={...row(v)};r.content=out?semioDrawingSnapshotNativeJson(r.content as Parameters<typeof semioDrawingSnapshotNativeJson>[0]):semioDrawingSnapshotFromNativeJson(r.content);return r;}
+export function link(v:unknown,out:boolean):unknown{const r={...row(v)},pin={...row(r.pin)};if(pin.kind==="snapshot"){const blob={...row(pin.blob)};blob.size=wide(blob.size,out);pin.blob=blob;}r.pin=pin;return r;}
+export function image(v:unknown,out:boolean):unknown{const r={...row(v)};if(out){if(r.artifactKind==="")delete r.artifactKind;if(r.artifactRef==="")delete r.artifactRef;}else{r.artifactKind??="";r.artifactRef??="";}return r;}
+export function artifact(v:unknown,out:boolean):unknown{const r={...row(v)};r.grid=fields(r.grid,["baselineGrid","baselineOffset"],out);r.paragraphStyles=array(r.paragraphStyles).map(v=>paragraph(v,out));r.characterStyles=array(r.characterStyles).map(v=>character(v,out));r.stories=array(r.stories).map(v=>story(v,out));r.links=array(r.links).map(v=>image(v,out));r.parentPages=array(r.parentPages).map(v=>page(v,out,true));r.pages=array(r.pages).map(v=>page(v,out,false));if(r.dataFields!==undefined)r.dataFields=out?formDictionaryNativeJson(r.dataFields as Parameters<typeof formDictionaryNativeJson>[0]):formDictionaryFromNativeJson(r.dataFields);if(r.backgroundDrawing!==undefined)r.backgroundDrawing=child(r.backgroundDrawing,out);if(r.referencedModel!==undefined)r.referencedModel=link(r.referencedModel,out);return r;}
+/** 📥️ Parses the actual native JSON facet into the one complete owned snapshot model. */
+export function layoutArtifactFromNativeJson(value:unknown):LayoutArtifact{return parseLayoutArtifact(artifact(value,false));}
+/** 📤️ Names the existing finite native JSON projection; complete IEEE state remains owned. */
+export function layoutArtifactNativeJson(value:LayoutArtifact):unknown{return artifact(value,true);}

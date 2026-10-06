@@ -15,10 +15,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🎯️outcome/🔣️.json");
 
 fn before() -> JackSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::decode_jack_snapshot_json(BEFORE).expect("before snapshot decodes")
+    crate::standards::v1::subsets::any::io::text::snapshot::decode_jack_snapshot_json(BEFORE).expect("before snapshot decodes")
 }
 fn after() -> JackSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::decode_jack_snapshot_json(AFTER).expect("after snapshot decodes")
+    crate::standards::v1::subsets::any::io::text::snapshot::decode_jack_snapshot_json(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> TrinityGraphMutation {
     semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -87,8 +87,8 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: JackSnapshot = crate::standards::v1::subsets::any::schema::snapshot::decode_jack_snapshot_json(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::schema::snapshot::encode_jack_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses as JSON");
+        let decoded: JackSnapshot = crate::standards::v1::subsets::any::io::text::snapshot::decode_jack_snapshot_json(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::any::io::text::snapshot::encode_jack_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses as JSON");
         assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(text).expect("snapshot reparses"), "set-query: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation())).expect("mutation encodes");

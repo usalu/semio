@@ -1,0 +1,5 @@
+{
+  "command": "SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/pdf17-current-relocated-source-artifacts' bun run nx run @semio-tech/stdio-pdf-rs:test-snapshot-sqlite-source --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-pdf17-relocated-source-owning.log' 2>&1",
+  "at": "2026-10-06T02:10:53.394Z",
+  "scope": "Actual registered current owning Source13files, unchanged originalquick source command grant and tests; read-only routerauthority retained separately, noNative inference"
+}

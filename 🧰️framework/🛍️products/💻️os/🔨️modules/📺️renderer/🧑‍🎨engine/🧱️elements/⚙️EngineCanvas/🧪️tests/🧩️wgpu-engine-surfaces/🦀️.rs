@@ -81,7 +81,7 @@ fn world3d_preview_scene_with_selection(surface_id: &str, fixture: &Value, selec
 fn tiled_map_scene(surface_id: &str, fixture: &Value) -> UiComponentSceneNode {
     let map = &fixture["tiledMap"];
     let mut scene = scene_shell(surface_id, SurfaceKind::TiledMap);
-    scene.tiled_map = Some(TiledMapScene { selection_json: json_text(&map["selectionJson"]), hover_json: json_text(&map["hoverJson"]), ..TiledMapScene::base(json_text(&map["mapFixtureJson"]), json_text(&map["cameraJson"])) });
+    scene.tiled_map = Some(TiledMapScene { selection_json: json_text(&map["selectionJson"]), hover_json: json_text(&map["hoverJson"]), ..TiledMapScene::base(json_text(&map["mapDescriptorJson"]), json_text(&map["cameraJson"])) });
     scene
 }
 
@@ -233,7 +233,7 @@ pub(super) fn close_retained_surface_fixture(window_id: &str) {
 fn board2d_scene(surface_id: &str, fixture: &Value) -> UiComponentSceneNode {
     let board = &fixture["board2d"];
     let mut scene = scene_shell(surface_id, SurfaceKind::Board2d);
-    scene.board2d = Some(Board2dScene { selection_json: json_text(&board["selectionJson"]), ..Board2dScene::base(json_text(&board["fixtureJson"]), json_text(&board["cameraJson"]), true) });
+    scene.board2d = Some(Board2dScene { selection_json: json_text(&board["selectionJson"]), ..Board2dScene::base(json_text(&board["snapshotJson"]), json_text(&board["cameraJson"]), true) });
     scene
 }
 
@@ -652,7 +652,7 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
     assert_eq!(
         board_selection,
         board_expect["selectedIds"].as_array().expect("selected").iter().map(|id| id.as_str().expect("id").to_owned()).collect::<Vec<_>>(),
-        "parse_fixture_json resets selection, so the sync re-applies it silently right after — React's applyFixtureToSession rule"
+        "load_board_snapshot_json resets selection, so the sync re-applies it silently right after — React's applySnapshotToSession rule"
     );
     let board_key = engine_raster_key(&board_host_id).expect("bounded engine raster key");
     assert!(board_draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).any(|(key, _)| key == &board_key), "the painted board is composited into the window draw list under {board_key}");
@@ -707,7 +707,7 @@ fn a_board_window_paints_its_tool_run_trace_lane_and_echoes_the_cursor() {
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
 #[test]
 fn engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/⏳️async/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
@@ -877,21 +877,21 @@ fn board_and_map_two_touch_gestures_share_camera_math_but_keep_distinct_transfer
     let board_id = board_frame.owner.host_id.clone();
     let board_window = board_frame.owner.window_id.clone();
     assert!(puzzle_board_set_camera_silent(&board_id, [0.0, 0.0, 1.0]));
-    assert!(!crate::scenes::puzzle_board_touch_pointer_down(&board_id, bounds, down[0].0, down[0].1, down[0].2));
-    crate::scenes::puzzle_board_pointer_down(&board_id, bounds, down[0].1, down[0].2, 0, false, false);
+    let mut board_input = InputState::default();
+    assert_eq!(crate::scenes::puzzle_board_touch_pointer_down_into(&board_id, bounds, down[0].0, down[0].1, down[0].2, &mut board_input), Ok(false));
+    crate::scenes::puzzle_board_pointer_down_into(&board_id, bounds, down[0].1, down[0].2, 0, false, false, &mut board_input).expect("an idle board takes the press");
     assert!(crate::scenes::board2d_drag_active(&board_id));
-    assert!(crate::scenes::puzzle_board_touch_pointer_down(&board_id, bounds, down[1].0, down[1].1, down[1].2));
+    assert_eq!(crate::scenes::puzzle_board_touch_pointer_down_into(&board_id, bounds, down[1].0, down[1].1, down[1].2, &mut board_input), Ok(true));
     assert!(!crate::scenes::board2d_drag_active(&board_id), "board transfer cancels the area-select lane and synthesizes its one pointer-up");
     assert!(crate::scenes::puzzle_board_touch_pointer_move(&board_id, bounds, moves[0].0, moves[0].1, moves[0].2));
     assert!(crate::scenes::puzzle_board_touch_pointer_move(&board_id, bounds, moves[1].0, moves[1].1, moves[1].2));
     close_camera(puzzle_board_camera(&board_id).expect("board camera"), [0.0, 0.0, 2.0]);
-    let mut board_input = InputState::default();
     assert_eq!(crate::scenes::puzzle_board_touch_pointer_up_into(&board_id, "touch.board", down[0].0, &mut board_input), Ok(true));
     assert!(crate::collect_fixture_actions(&mut board_input).is_empty(), "the first board lift is silent");
     assert_eq!(crate::scenes::puzzle_board_touch_pointer_up_into(&board_id, "touch.board", down[1].0, &mut board_input), Ok(true));
     let board_actions = crate::collect_fixture_actions(&mut board_input);
     assert_eq!(board_actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setCamera"]);
-    assert!(!crate::scenes::puzzle_board_touch_pointer_down(&board_id, bounds, ui_render::PointerId(3), 400.0, 300.0), "the successor board touch is fresh");
+    assert_eq!(crate::scenes::puzzle_board_touch_pointer_down_into(&board_id, bounds, ui_render::PointerId(3), 400.0, 300.0, &mut board_input), Ok(false), "the successor board touch is fresh");
 
     close_retained_surface_fixture(&map_window);
     close_retained_surface_fixture(&board_window);

@@ -23,7 +23,7 @@ type script struct {
 
 // 🗄️ Builds the context the whole script runs against.
 func newContext(ctx *host.Context) (*graphql.RecordingContext, error) {
-	raw, err := ctx.FixtureBytes("shared://🔣️repo-records.json")
+	raw, err := ctx.InputBytes("shared://🔣️repo-records.json")
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func newContext(ctx *host.Context) (*graphql.RecordingContext, error) {
 
 // 📥️ Reads the write script.
 func readScript(ctx *host.Context) (script, error) {
-	raw, err := ctx.FixtureBytes("shared://✏️mutation-execution/🔣️mutations.json")
+	raw, err := ctx.InputBytes("shared://✏️mutation-execution/🔣️mutations.json")
 	if err != nil {
 		return script{}, err
 	}

@@ -24,7 +24,7 @@
 // that writes into `../🧫️fixtures/`, and its output is reviewed and committed before any test reads it.
 //
 //   bun 📜️script.ts generate [--out <dir>]   # (re)builds the engine, writes every recipe, prints digests
-//   bun 📜️script.ts manifests                 # prints the fixtureManifests entries for the committed corpus
+//   bun 📜️script.ts manifests                 # prints the testEvidence entries for the committed corpus
 //
 // @see ../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️pilot-playbook.md
 
@@ -103,7 +103,6 @@ async function manifests(): Promise<void> {
     const mutatedPath = join(dir, AFTER_FILE);
     if (!existsSync(basePath) || !existsSync(mutatedPath)) throw new Error(`${dir} does not exist — run "generate" first`);
     entries.push({
-      schema: "semio.repository-test.fixture/v2",
       id: `${kind}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.pdf", standard: "1.4", subset: SUBSET },

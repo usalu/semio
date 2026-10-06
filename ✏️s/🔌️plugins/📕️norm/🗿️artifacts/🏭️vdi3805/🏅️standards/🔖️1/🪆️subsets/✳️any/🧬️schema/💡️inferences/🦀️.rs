@@ -64,9 +64,8 @@ mod tests;
 
 //#region 🔖️ComplianceReport
 use crate::document::{CheckReport, CheckResult, CheckStatus, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
-use crate::standards::v1::subsets::any::schema::{
-    attributes_from_records, clause, subject_dataset, subject_product, validate_structure, valve_min_kvs_m3_h, ANNEX, RADIATOR_N_MAX, RADIATOR_N_MIN, VALVE_DN_SERIES,
-};
+use crate::standards::v1::subsets::any::schema::{clause, subject_dataset, subject_product, validate_structure, valve_min_kvs_m3_h, ANNEX, RADIATOR_N_MAX, RADIATOR_N_MIN, VALVE_DN_SERIES};
+use crate::standards::v1::subsets::any::schema::snapshot::{attributes_from_records};
 use crate::*;
 use std::collections::{BTreeMap, BTreeSet};
 

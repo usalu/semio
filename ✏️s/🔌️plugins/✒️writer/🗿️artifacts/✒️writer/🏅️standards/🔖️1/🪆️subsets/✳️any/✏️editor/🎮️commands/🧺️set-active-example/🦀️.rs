@@ -1,6 +1,6 @@
 //! ✍️ ✍️ Writer play app commands command — `set-active-example`.
 
-use crate::document_dsl::{dag_jack_example_document, jack_example_document};
+use crate::standards::v1::subsets::any::io::text::snapshot::{dag_jack_example_document, jack_example_document};
 use crate::editor::writer::reset_document_effect;
 use crate::op::WriterMutation;
 use crate::WriterSnapshot;

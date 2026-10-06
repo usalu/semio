@@ -58,8 +58,4 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️Facets
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion 🔖️Facets

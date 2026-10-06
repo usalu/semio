@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {"id":"grammar-text", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"ready","specimenStatus":"ready"},"expected":"ready"},
+    {"id":"protocol-binary", "input":{"id":"beta","ownerPresent":true,"facet":"protocol","specimen":"binary","specificationStatus":"ready","specimenStatus":"ready"},"expected":"ready"},
+    {"id":"withdrawn-owner", "input":{"id":"alpha","ownerPresent":false,"facet":"grammar","specimen":"text","specificationStatus":"ready","specimenStatus":"ready"},"expected":"owner-absent"},
+    {"id":"grammar-binary-needs-owner-projection", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"binary","specificationStatus":"ready","specimenStatus":"ready"},"expected":"kind-mismatch"},
+    {"id":"protocol-text", "input":{"id":"beta","ownerPresent":true,"facet":"protocol","specimen":"text","specificationStatus":"ready","specimenStatus":"ready"},"expected":"kind-mismatch"},
+    {"id":"missing-specification", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"missing","specimenStatus":"ready"},"expected":"specification-missing"},
+    {"id":"empty-specification", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"empty","specimenStatus":"ready"},"expected":"specification-empty"},
+    {"id":"stub-specification", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"stub","specimenStatus":"ready"},"expected":"specification-stub"},
+    {"id":"invalid-specification", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"invalid","specimenStatus":"ready"},"expected":"specification-invalid"},
+    {"id":"missing-specimen", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"ready","specimenStatus":"missing"},"expected":"specimen-missing"},
+    {"id":"empty-specimen", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"ready","specimenStatus":"empty"},"expected":"specimen-empty"},
+    {"id":"stub-specimen", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"ready","specimenStatus":"stub"},"expected":"specimen-stub"},
+    {"id":"invalid-specimen", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"ready","specimenStatus":"invalid"},"expected":"specimen-invalid"},
+    {"id":"owner-refusal-precedes-file-refusal", "input":{"id":"alpha","ownerPresent":false,"facet":"grammar","specimen":"text","specificationStatus":"missing","specimenStatus":"missing"},"expected":"owner-absent"},
+    {"id":"specification-refusal-precedes-specimen", "input":{"id":"alpha","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"invalid","specimenStatus":"missing"},"expected":"specification-invalid"},
+    {"id":"protocol-stub-is-a-refusal", "input":{"id":"beta","ownerPresent":true,"facet":"protocol","specimen":"binary","specificationStatus":"stub","specimenStatus":"ready"},"expected":"specification-stub"},
+    {"id":"protocol-empty-is-a-refusal", "input":{"id":"beta","ownerPresent":true,"facet":"protocol","specimen":"binary","specificationStatus":"ready","specimenStatus":"empty"},"expected":"specimen-empty"},
+    {"id":"projected-owner-text", "input":{"id":"owner-part","ownerPresent":true,"facet":"grammar","specimen":"text","specificationStatus":"ready","specimenStatus":"ready"},"expected":"ready"}
+  ]
+}

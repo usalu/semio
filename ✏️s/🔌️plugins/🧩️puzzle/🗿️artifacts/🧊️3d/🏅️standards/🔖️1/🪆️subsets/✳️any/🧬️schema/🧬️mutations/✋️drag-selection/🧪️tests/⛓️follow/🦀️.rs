@@ -1,4 +1,4 @@
-//! 🧪️ `drag-selection` fixture — `⛓️follow`.
+//! 🧪️ `drag-selection` scene_snapshot — `⛓️follow`.
 //!
 //! Drags the chain root `object-a` up by 1: `object-b` and `object-d`, which hang off it, are re-placed from their moved parents with unchanged attractions; the LOCKED `object-c` stays, so `attraction-bc` is re-derived — one Info-level `mutation.cascade` names both followers and the re-derived attraction.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "drag-selection/follow: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

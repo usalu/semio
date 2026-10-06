@@ -51,7 +51,7 @@ fn tree_of(scene: CadSnapshot, view_state: &ViewModel) -> BuiltNode {
     build_document_tree(&view(scene, CadPlayRuntime::default()), cad_labels(view_state), &TreeWindows::for_body(view_state, CAD_PLAY_BODY_ARTIFACT)).expect("document tree")
 }
 
-fn fixture_json(node: BuiltNode) -> String {
+fn snapshot_json(node: BuiltNode) -> String {
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("fixture projection")
 }
 
@@ -73,7 +73,7 @@ async fn document_lists_nodes() {
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
     let node = render_direct(&app, CAD_PLAY_BODY_ARTIFACT, &doc, &CadConfig::default(), &wide_view_state(Locale::En)).expect("CAD UI assembly");
-    let json = fixture_json(node);
+    let json = snapshot_json(node);
     assert!(json.contains("cad-node:node-root"), "{json}");
     assert!(json.contains("Concrete Forest Left"));
 }
@@ -103,7 +103,7 @@ async fn document_lists_every_pane_object_bound_to_the_cad_domain() {
         listed += rows.len();
     }
     assert!(listed > 0, "a wide viewport lists objects");
-    let json = fixture_json(tree);
+    let json = snapshot_json(tree);
     assert!(json.contains("interactionSelect"), "rows pick through the framework domain");
     assert!(!json.contains(".more"), "no continuation row survives virtualisation: {json}");
 }
@@ -121,7 +121,7 @@ async fn an_oversized_document_stamps_the_full_total_and_materialises_only_its_s
     assert_eq!(window.total as usize, nodes, "the section reports every node it logically holds");
     assert!(section.children.len() <= ui::UI_BUILT_CHILDREN_MAX, "a built node fans out at most one host child list: {}", section.children.len());
     assert!(section.children.len() < nodes, "the first paint materialises a window, not the document");
-    let json = fixture_json(tree);
+    let json = snapshot_json(tree);
     assert!(!json.contains(".more"), "no continuation key survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
 }
@@ -235,7 +235,7 @@ async fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node
     unique.dedup();
     assert_eq!(unique.len(), keys.len(), "every node key in this body is unique ({} of {} distinct)", unique.len(), keys.len());
     assert!(records <= ui::UI_DOCUMENT_NODES, "the whole open document must reconcile inside one surface arena, spent {records} of {}", ui::UI_DOCUMENT_NODES);
-    let json = fixture_json(tree);
+    let json = snapshot_json(tree);
     assert!(!json.contains(".more"), "no continuation row closes an exhausted container: {json}");
     assert!(!json.contains("\"+"), "and no `+N` label either: {json}");
 }
@@ -280,7 +280,7 @@ async fn object_tree_item_streams_its_primitive_children_on_expand() {
     let view_state = windowed(vec![request(object.id.as_str(), Some(true), 0, 8)]);
     let opened = object_tree_item(&TreeWindows::for_body(&view_state, CAD_PLAY_BODY_ARTIFACT), "shape", &object, labels).expect("opened object row");
     assert_eq!(window_of(&opened).total, 1);
-    let json = fixture_json(opened);
+    let json = snapshot_json(opened);
     assert!(json.contains("cad-primitive:"), "{json}");
 }
 
@@ -308,7 +308,7 @@ async fn cad_labels_translate_document_tree_panes_in_german() {
     let doc = ArtifactView::new(&scene, &history);
     let config = CadConfig::default();
     let node = render_direct(&app, CAD_PLAY_BODY_ARTIFACT, &doc, &config, &wide_view_state(Locale::De)).expect("CAD UI assembly");
-    let json = fixture_json(node);
+    let json = snapshot_json(node);
     assert!(json.contains("\"Form\""));
     assert!(json.contains("Gebäude"));
     assert!(json.contains("Energie"));

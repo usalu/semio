@@ -14,7 +14,7 @@ fn decode<T: semio_framework_value::FromValue>(text: &str) -> T {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("add-edge-property fixture decodes")
 }
 fn snapshot(text: &str) -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot fixture decodes")
+    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot fixture decodes")
 }
 fn json(text: &str) -> serde_json::Value {
     serde_json::from_str(text).expect("add-edge-property fixture parses")
@@ -48,7 +48,7 @@ async fn the_undo_restores_the_before_snapshot_byte_for_byte() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for text in [BEFORE, AFTER] {
-        assert_eq!(json(&crate::standards::v1::subsets::graph::schema::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "add-edge-property/⚖️inserts: a committed snapshot is not canonical");
+        assert_eq!(json(&crate::standards::v1::subsets::graph::io::text::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "add-edge-property/⚖️inserts: a committed snapshot is not canonical");
     }
     assert_eq!(json(&semio_framework_pack_json::to_json_string(&decode::<SemioGraphMutation>(MUTATION))), json(MUTATION), "add-edge-property/⚖️inserts: the committed mutation is not canonical");
 }

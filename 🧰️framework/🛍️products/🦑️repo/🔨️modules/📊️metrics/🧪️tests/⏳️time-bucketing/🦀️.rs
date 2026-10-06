@@ -21,7 +21,7 @@ mod subject {
 
     /// 🧩️ The recorded commit stream every scenario groups.
     fn commits(ctx: &Context) -> Result<Vec<metrics::CommitDelta>, String> {
-        let recorded = metrics::GitTranscript::from_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://🎞️git-transcript.json")?))?;
+        let recorded = metrics::GitTranscript::from_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://🎞️git-transcript.json")?))?;
         let weights = metrics::make_numstat_lang_set(&metrics::DEFAULT_CODE_LANGUAGES.iter().map(|value| (*value).to_string()).collect::<Vec<String>>());
         Ok(metrics::parse_numstat_log(recorded.logs.get("").map(String::as_str).unwrap_or(""), &weights, None))
     }

@@ -1,0 +1,34 @@
+//! 📜️ Individually authored Procedure parent and independently addressed child handles.
+use crate::standards::v1::subsets::any::schema::snapshot::ProcedureSnapshot;
+use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,RowWriter,Reconstruction}}};
+use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl};
+use semio_framework_dsl_record::{FieldValue,RecordValue};
+fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
+fn extent(limits:SqliteDatabaseLimits)->Result<(),ValueError>{if ProcedureSnapshot::SQLITE_SCHEMA.len()>limits.max_schema_bytes||limits.max_tables<3||limits.max_columns<6||limits.max_rows<3{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Procedure authored schema extent exceeds caller limits"))}Ok(())}
+fn child<S>(table:&str,child:&store::ArtifactChild<S>,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{let target=&child.target;let dialect=&target.dialect;p.insert(table,&[Cell::Text(&child.child_id),Cell::Text(&target.artifact_id),Cell::Text(&dialect.artifact_kind),Cell::Text(&dialect.standard),Cell::Text(&dialect.subset)])?;Ok(())}
+fn visit(source:&ProcedureSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{p.insert("procedure_document",&[Cell::Text(&source.schema)])?;child("procedure_flow_child",&source.flow,p)?;child("procedure_text_child",&source.text,p)}
+fn admit(source:&ProcedureSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{extent(c.limits())?;let mut p=RowWriter::borrowed(c,SqliteSnapshotPhase::ProjectSnapshot)?;visit(source,&mut p)?;p.finish_borrowed()}
+fn shape(value:&RecordValue,count:u16)->Result<(),ValueError>{if value.fields.keys().copied().eq(0..count){Ok(())}else{Err(invalid("Procedure native record field map differs"))}}
+fn text(value:&RecordValue,id:u16)->Result<&str,ValueError>{match value.fields.get(&id){Some(FieldValue::Text(value))=>Ok(value),_=>Err(invalid("Procedure required native text role differs"))}}
+fn record(value:Option<&FieldValue>)->Result<&RecordValue,ValueError>{match value{Some(FieldValue::Record(value))=>Ok(value),_=>Err(invalid("Procedure required native record role differs"))}}
+fn add(left:usize,right:usize)->Result<usize,ValueError>{left.checked_add(right).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Procedure semantic extent overflow"))}
+fn admit_record(source:&RecordValue,limits:SqliteDatabaseLimits,n:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
+ extent(limits)?;shape(source,3)?;n.step()?;let mut bytes=add(24,text(source,0)?.len())?;
+ for id in[1,2]{let child=record(source.fields.get(&id))?;shape(child,2)?;bytes=add(bytes,text(child,0)?.len())?;let target=record(child.fields.get(&1))?;shape(target,4)?;for id in 0..4{n.step()?;bytes=add(bytes,text(target,id)?.len())?;}}
+ if bytes>limits.max_value_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Procedure semantic value limit exceeded"))}Ok(())
+}
+
+impl ArtifactSqliteSnapshot for ProcedureSnapshot{
+ const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{admit(self,c)}
+ fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let limits=c.limits();extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::schema::snapshot::ProcedurePackRecord::__dsl_spec_producer(),|record,n|{admit_record(record,limits,n)?;crate::standards::v1::subsets::any::schema::snapshot::ProcedurePackRecord::__dsl_from_record_controlled(record,n)?.into_snapshot_controlled(n)},c)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::schema::snapshot::ProcedurePackRecord::__dsl_spec_producer(),|n|crate::standards::v1::subsets::any::schema::snapshot::ProcedurePackRecord::snapshot_record_controlled(self,n),c)}
+ fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{extent(c.limits())?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;visit(self,&mut p)?;p.finish()}
+ fn from_sqlite_database(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(d,Self::SQLITE_SCHEMA,c.limits())?;c.check_database(d,SqliteSnapshotPhase::ReconstructSnapshot)?;let p=d.table("procedure_document")?.single_row()?;let f=d.table("procedure_flow_child")?.single_row()?;let t=d.table("procedure_text_child")?.single_row()?;if p.rowid!=1||f.rowid!=1||t.rowid!=1||p.integer(0)?!=1||f.integer(0)?!=1||t.integer(0)?!=1||p.values.len()!=2||f.values.len()!=6||t.values.len()!=6{return Err(invalid("Procedure requires exact identity-1 parent and child rows"))}let mut r=Reconstruction::new(c)?;let schema=r.text(p.text(1)?)?;let flow=store::ArtifactChild::new(r.text(f.text(1)?)?,store::os_io::ArtifactRef{artifact_id:r.text(f.text(2)?)?,dialect:store::os_io::ArtifactDialect{artifact_kind:r.text(f.text(3)?)?,standard:r.text(f.text(4)?)?,subset:r.text(f.text(5)?)?}});let text=store::ArtifactChild::new(r.text(t.text(1)?)?,store::os_io::ArtifactRef{artifact_id:r.text(t.text(2)?)?,dialect:store::os_io::ArtifactDialect{artifact_kind:r.text(t.text(3)?)?,standard:r.text(t.text(4)?)?,subset:r.text(t.text(5)?)?}});r.checkpoint()?;Ok(Self{schema,flow,text})}
+ fn validate_sqlite_snapshot_subset(&self,dialect:&store::os_io::ArtifactDialect,d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1).map_err(store::io_schema::IoError::from_value_error)?;if dialect.artifact_kind!="s.imperative.procedure"||dialect.standard!="1"||dialect.subset!="*"{return Err(store::io_schema::IoError::from_value_error(invalid("Procedure dialect differs from its owned wildcard")))}if d.table("procedure_document").map_err(store::io_schema::IoError::from_value_error)?.single_row().map_err(store::io_schema::IoError::from_value_error)?.text(1).map_err(store::io_schema::IoError::from_value_error)?!=self.schema{return Err(store::io_schema::IoError::from_value_error(invalid("Procedure projected schema differs")))}c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1).map_err(store::io_schema::IoError::from_value_error)?;Ok(store::io_schema::IoOutcome::clean(()))}
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;
+

@@ -67,3 +67,9 @@ message PathSegment {
     PathClose close = 6;
   }
 }
+
+message DrawingGradientStop { double offset=1;repeated double color=2; }
+message DrawingSolidFill { repeated double color=1; }
+message DrawingLinearGradientFill { double x1=1;double y1=2;double x2=3;double y2=4;repeated DrawingGradientStop stops=5; }
+message DrawingRadialGradientFill { double cx=1;double cy=2;double r=3;repeated DrawingGradientStop stops=4; }
+message FillStyle { oneof value { DrawingSolidFill solid=1;DrawingLinearGradientFill linear_gradient=2;DrawingRadialGradientFill radial_gradient=3; } }

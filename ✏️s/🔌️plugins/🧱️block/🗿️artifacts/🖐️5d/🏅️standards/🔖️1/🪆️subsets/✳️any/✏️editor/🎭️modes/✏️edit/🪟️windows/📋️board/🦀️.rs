@@ -24,6 +24,7 @@ pub const BLOCK5D_BODY_BOARD: &str = "block5d.play.board";
 /// 🧱️ Stitched into the app manifest by `crate::editor::block5d::create_block5d_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: BLOCK5D_WINDOW_BOARD.into(),
         label: LocalizedLabel::native("Board", "Board"),
         body_key: BLOCK5D_BODY_BOARD.into(),

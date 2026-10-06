@@ -241,7 +241,7 @@ async fn op_text_binary_roundtrip_law() {
 /// nested positional-tuple `snapshot-value` production.
 #[semio_framework_async_macros::async_test]
 async fn ops_grammar_conformance_law() {
-    let grammar_text = crate::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO;
+    let grammar_text = crate::standards::v_rfc4180::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO;
     let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse mutations grammar");
     let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
 

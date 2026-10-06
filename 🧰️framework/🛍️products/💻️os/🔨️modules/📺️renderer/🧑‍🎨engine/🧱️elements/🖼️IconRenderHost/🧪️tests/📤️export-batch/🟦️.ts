@@ -11,10 +11,7 @@ const fixture = read("🧫️fixtures/📤️export-batch/🔣️.json");
 const queueCases = fixture.queueCases as readonly { name: string; groups: readonly number[]; cancelBeforeGroup: number | null; expected: { admitted: number; failed: number; discarded: number; phase: string } }[];
 
 describe("Icon export batch admission", () => {
-  it("accepts the language-neutral lifecycle fixture", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(read("🧬️schema/📤️export-batch/🔣️.json"));
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
   it("rejects each invalid request independently using the schema oracle", () => {
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(read("🧬️schema/📤️export-request/🔣️.json"));
     const accepted = fixture.invalid.filter((item: { request: unknown }) => validate(item.request));

@@ -92,9 +92,5 @@ impl std::fmt::Debug for Generation2dSnapshotRead {
     }
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;
 
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

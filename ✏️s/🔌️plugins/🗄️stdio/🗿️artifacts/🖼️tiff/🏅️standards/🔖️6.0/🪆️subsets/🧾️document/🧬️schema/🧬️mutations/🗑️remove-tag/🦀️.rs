@@ -14,10 +14,6 @@ pub struct RemoveTagMutation {
 //#endregion Payload
 
 //#region Facets
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion Facets
 
 //#region Semantics
@@ -60,10 +56,7 @@ pub fn contribute(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffDiff {
 }
 //#endregion Semantics
 
-#[cfg(test)]
-pub(crate) fn test_case() -> TiffMutation {
-    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-tag payload")
-}
+
 #[cfg(test)]
 #[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
 mod tests_direct_behavior;

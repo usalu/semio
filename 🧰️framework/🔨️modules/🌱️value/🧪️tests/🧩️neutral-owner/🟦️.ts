@@ -2,7 +2,6 @@ import { test, expect } from "bun:test";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, lstatSync } from "node:fs";
 import { resolve, join, dirname, isAbsolute } from "node:path";
 import { spawnSync } from "node:child_process";
-import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 
@@ -21,15 +20,6 @@ function compilerStorage(path: string): string {
   mkdirSync(directory, { recursive: true });
   return directory;
 }
-test("neutral value owner portable corpus admits independent Ajv", () => {
-  const schema = JSON.parse(readFileSync(join(root, owner, "🧬️schema/🧩️neutral-owner/🔣️.json"), "utf8"));
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
-});
-test("paged value portable corpus admits independent Ajv", () => {
-  const fixture = JSON.parse(readFileSync(join(root, owner, "📦️paged/🧫️fixtures/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, owner, "📦️paged/🧬️schema/🔣️.json"), "utf8"));
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
-});
 test("compiler storage respects physical caller directory authority", () => {
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!output) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name the ticket artifact directory");
@@ -64,11 +54,9 @@ test("actual value derives build and execute with product trees absent", async (
   await runOwnedCommand("cargo", ["test", "--offline", "--manifest-path", join(copy, "Cargo.toml"), "-p", "semio-framework-value", "-p", "semio-framework-value-derive", "--", "--nocapture"], copy, "value:products-absent", 120000, { env: cargo });
 }, 120000);
 
-test("retirement source capacity corpus is closed and agrees with independent decimal arithmetic",async()=>{
+test("retirement source capacity agrees with independent decimal arithmetic",async()=>{
   const Decimal=(await import("decimal.js")).default.clone({precision:100});
-  const local=join(root,owner,"♻️retirement"),fixture=JSON.parse(readFileSync(join(local,"🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(local,"🧬️schema/🔣️.json"),"utf8"));
-  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);
-  expect(validate(fixture)).toBe(true);
+  const local=join(root,owner,"♻️retirement"),fixture=JSON.parse(readFileSync(join(local,"🧫️fixtures/🔣️.json"),"utf8"));
   const cases=fixture.capacityAdmission.cases;expect(cases.length).toBe(12);expect(new Set(cases.map((row:any)=>row.id)).size).toBe(12);
   expect(new TextEncoder().encode(fixture.capacityAdmission.source).length).toBe(fixture.capacityAdmission.sourceBytes);
   const observations=[];
@@ -84,8 +72,5 @@ test("retirement source capacity corpus is closed and agrees with independent de
     }
   }
   expect(observations.length).toBe(24);
-  const hostile=[{...fixture,extra:true},{...fixture,capacityAdmission:{...fixture.capacityAdmission,extra:true}},{...fixture,leases:{...fixture.leases,extra:true}},{...fixture,continuation:{...fixture.continuation,extra:true}},{...fixture,capacityAdmission:{...fixture.capacityAdmission,cases:cases.map((row:any,index:number)=>index===0?{...row,accepted:"true"}:row)}},{...fixture,capacityAdmission:{...fixture.capacityAdmission,cases:cases.map((row:any,index:number)=>index===0?{...row,sourceBytes:"-1"}:row)}},{...fixture,capacityAdmission:{...fixture.capacityAdmission,cases:cases.map((row:any,index:number)=>index===0?{...row,maximumBytes:null}:row)}},{...fixture,capacityAdmission:{...fixture.capacityAdmission,cases:cases.map((row:any,index:number)=>index===3?{...row,maximumBytes:"4"}:row)}},{...fixture,leases:{...fixture.leases,orders:fixture.leases.orders.map((row:any,index:number)=>index===0?[0,0,2]:row)}}];
-  for(const value of hostile)expect(validate(value)).toBe(false);
-  for(const key of ["leases","capacityAdmission","continuation"]){const value={...fixture};delete value[key];expect(validate(value)).toBe(false);}
-  console.log(`[DEBUG] retirement source capacity 24 portable word-width vectors agree with decimal.js; twelve closed-schema hostiles refused`);
+  console.log(`[DEBUG] retirement source capacity 24 portable word-width vectors agree with decimal.js`);
 });

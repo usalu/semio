@@ -1,0 +1,14 @@
+{
+  "qualification":"source-only proposal; not mounted or executed",
+  "package":"semio-s-artifact-raster-raster",
+  "registeredTarget":"@semio-tech/raster-raster-rs:test-snapshot-sqlite-native",
+  "nativeLawModule":"✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+  "reuse":{"neutral":19,"ownerRetirement":20,"ordinaryPayload":22,"ordinaryDecode":23,"actualDeclarationPublicRoute":5},
+  "edits":[
+    {"sql":"UPDATE raster_layer SET name='independent pixel 日本' WHERE kind='pixel'","expected":"Pixel.name"},
+    {"sql":"UPDATE raster_scalar64 SET value=8.0,bits=4620693217682128896,class='finite' WHERE id=(SELECT x FROM raster_transform WHERE id=(SELECT id FROM raster_layer WHERE kind='pixel'))","expected":"Pixel.transform.x = 8.0 exact binary64"},
+    {"sql":"UPDATE raster_bytes SET value=x'ff007f'","expected":"Adjustment empty-key parameter Object member2 Array item3 Bytes=[255,0,127]"}
+  ],
+  "requiredOracles":["Bun integrity and FK","independent all-table columns and rows","complete typed edited owner","ordinary versus controlled native Binary/Text","actual declaration exact public reverse route and reexport"],
+  "excludedCredit":["asset child content capture","global34 immutable frame family","allocator census"]
+}

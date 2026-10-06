@@ -176,3 +176,58 @@ Consistent on disk: all production source above. Test tree is mid-conversion and
 5. Editor point gesture: none exists (points are edited through `setPoints`/inspector); `move-points` is reachable from history,
    the inspector (x-semio-ui) and agents.
 
+## Session 5 — 2026-10-05
+
+S5-GRAPHS-WIRES (successor of S4-WIRES-MATH; coordinator `⚪3f26aaa1…`). Main section: `📓️w3-t2-graphs-report.md`
+§ Session 5 (status log, foundation reds, input declarations). Scratch `🗑️generated/s5-graphs-wires/`.
+
+### M5.0 Status (kept current)
+
+- 01:10 rule 46 repair-first: eleven files are newer than S4's last section (21:50) and its 22:00 fixture pass — seven
+  test files at 22:05–22:06, the pack `🛫️encode` / `🛬️decode` at 22:07 and the snapshot `🪶️sqlite` module + test at 22:15
+  (author not established: S4-WIRES-MATH after its last log line, or the sqlite / pack peer). The production ones
+  type-check (`--lib` below); the test files are covered only once `--lib --tests` runs.
+- 01:11–01:17 mathematical `--lib` re-verified in the seven-crate batch: **0 errors, 32 warnings** (33 on 10-04 21:42).
+- 01:26 / 01:31 the `--lib --tests` batch gave no verdict twice (foundation red, Codex pack peer).
+- 01:3x design §22.8: the 25 inferred equation inputs declare `x-semio-ui` (M5.1).
+
+### M5.1 Changes
+
+Nine leaf payload schemas under `SUB` (applied by `python3 T/🧪️s5-graphs-input-declarations.py --apply`):
+
+- `✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/…/🎥️set-camera`: `camera`, `x`, `y`, `zoom` (Camera / Pan X /
+  Pan Y / log Zoom slider).
+- `📐️geometry/…/➕️insert-point`: `index` (Position, stepper, precision 0), `x`, `y`; `➖️remove-point`: `index` as
+  `reference` + `target` with `ref.kind: point` (the convention of `move-points.indices`); `🔄️replace`: `points[].x`, `.y`.
+- `🕸️graph/…/🏷️change-node`: `newLabel`; `🔗️connect-nodes`: `id` (Connection Id), `index` (hidden discriminator,
+  undo-owned insert position); `➕️create-node`: `id`, `label`, `x`, `y`, `index` (hidden discriminator); `🕹️move-node`:
+  `x`, `y`; `🔁️replace-graph`: `nodes[].id`, `.label`, `.x`, `.y`, `edges[].id`.
+
+Every interactive number declares a `step`: coordinates and positions `step 1` / `precision 2` (the values `move-points`
+and `move-nodes` already declare), the insert position `precision 0`, the camera pan `precision 1`, the zoom slider
+`step 0.05`.
+
+### M5.2 Verification
+
+| Command | Result |
+| --- | --- |
+| seven-crate `cargo check … --lib --keep-going` (01:11–01:17, `check-lib-1.txt`) | mathematical 0 errors / 32 warnings |
+| `bun …/🧪️test/📜️script.ts schema mutation-inputs --under "✏️s/🔌️plugins/➗️mathematical" --inputs`, before → after | 17 declared + 17 inferred → **32 declared + 0 inferred**; residual 3 findings are catalogue rows (deleted `move-point`, uncatalogued `move-points` and `set-point-positions`) |
+| mathematical `--lib --tests` re-check (the schemas are embedded at compile time) | OWED (foundation red) |
+| `SEMIO_EQUATION_WRITE_FIXTURES=1 cargo test … committed_fixtures_carry_their_derived_handles`, then `cargo test --lib` | OWED |
+| hub `semio-hub-mathematical` wasip2 | OWED (last green 10-04 21:49) |
+
+### M5.3 Open
+
+Wave-B fallout found by the 07:35 batch (`check-tests-5.txt`, cut at 07:45): the lib type-checks (0 errors / 32 warnings),
+the lib-test target has **1 error** — `✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:546` calls
+`store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &mutation, None, store::HistoryLane::Document)` with four
+arguments, the function takes three since wave B. NOT fixed yet (the 16:50 resume was for the tool-run job only).
+
+The two anonymous refusals the gates census lists (`equation-command-capacity`, `equation-work-replay-drift`) are not
+named yet.
+
+### M5.4 Coordinator actions
+
+Central `schema generate` (stale `move-point` row, uncatalogued `move-points` / `set-point-positions`, nine changed
+catalogue hashes); describe mathematical.

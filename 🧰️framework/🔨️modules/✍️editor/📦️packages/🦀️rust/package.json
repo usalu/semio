@@ -7,5 +7,11 @@
     ".": "./pkg/framework_editor.js",
     "./pkg/framework_editor.js": "./pkg/framework_editor.js"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  },
+  "scripts": {
+    "test-owned-error": "nx run @semio-tech/framework-editor-rs:test-owned-error"
+  }
 }

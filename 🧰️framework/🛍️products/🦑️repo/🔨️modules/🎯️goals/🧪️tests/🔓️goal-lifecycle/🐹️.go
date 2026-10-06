@@ -47,7 +47,7 @@ func value(pointer *string) string {
 }
 
 func replay(ctx *host.Context, forceNoManagement bool) ([]string, []string, []string, []string, error) {
-	data, err := ctx.FixtureBytes("shared://🔓️lifecycle-script.json")
+	data, err := ctx.InputBytes("shared://🔓️lifecycle-script.json")
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}

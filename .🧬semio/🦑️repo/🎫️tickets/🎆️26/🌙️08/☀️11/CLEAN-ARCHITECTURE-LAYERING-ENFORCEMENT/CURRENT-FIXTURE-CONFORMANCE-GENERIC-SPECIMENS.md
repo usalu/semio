@@ -1,0 +1,9 @@
+# Current Fixture Conformance Generic Specimens
+
+The actual WorkflowSnapshot and CollectionSnapshot owners lacked canonical `.dsl.semio` specimens in the current standard/subset asset taxonomy. Root confirmed its separate General Fixture Source3 supplies unrelated neutral child/shell JSON and does not provide these specimens. Both original typed registry bindings remain conserved.
+
+Handcrafted closed-schema specimens now stage under each real Generic artifact's `🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🧹️conformance`. Workflow represents a complete empty persisted graph with all declared collections; Collection represents a folder tree with an owned document reference and blob metadata. They contain no Specific module dependency. Sidecar JSON is the language-neutral expected snapshot. General schema subset validation, independent Ajv and SQLite envelope/schema projection were executed, including explicit hostile extra-field/envelope/schema cases.
+
+The actual owner-absent RED executed exit1 only after those controls agreed. The source candidate adds each defining owner's real cfg(test) law mount and explicit package conformance metadata, preserving all existing function and assertion bodies in full. New laws invoke the original typed fixture helper and directly assert parse/print/reparse equality and print idempotence, plus first-party JSON projection against independently parsed JSON; Collection also compares its genuine serde JSON projection.
+
+`🗑️generated/fixture-conformance-owner/generics-source-1.json` is source input only. Actual typed DSL parsing, native compilation and assertions, controlled ArtifactDsl decode/encode, Generic-with-S-absent execution, withdrawal discovery and publication remain false. Existing older Generic specimen references remain held until the new actual native laws confirm their meaningful replacements; no older format support is introduced in new APIs.

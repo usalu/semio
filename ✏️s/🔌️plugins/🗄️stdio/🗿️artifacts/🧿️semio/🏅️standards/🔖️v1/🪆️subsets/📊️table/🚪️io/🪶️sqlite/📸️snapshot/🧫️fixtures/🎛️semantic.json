@@ -1,0 +1,147 @@
+{
+  "schemaBytes": 1683,
+  "tableWidths": {
+    "semio_table_document": 2,
+    "semio_table_column": 5,
+    "semio_table_row": 3,
+    "semio_table_cell": 4,
+    "semio_table_value": 8,
+    "semio_table_list_element": 4,
+    "semio_table_map_entry": 5
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 20,
+      "valueBytes": 595,
+      "sourceSnapshot": {
+        "schema": "s.stdio.semio.table",
+        "columns": [
+          {
+            "name": "null",
+            "kind": "null"
+          },
+          {
+            "name": "boolean",
+            "kind": "bool"
+          },
+          {
+            "name": "integer",
+            "kind": "int"
+          },
+          {
+            "name": "floating",
+            "kind": "float"
+          },
+          {
+            "name": "string",
+            "kind": "str"
+          },
+          {
+            "name": "binary",
+            "kind": "bytes"
+          }
+        ],
+        "rows": [
+          {
+            "cells": [
+              {
+                "kind": "null"
+              },
+              {
+                "kind": "bool",
+                "value": true
+              },
+              {
+                "kind": "int",
+                "lexeme": "-184467440737095516160001"
+              },
+              {
+                "kind": "float",
+                "lexeme": "1.234567890123456789e-99"
+              },
+              {
+                "kind": "str",
+                "value": "Grüße\u0000世界"
+              },
+              {
+                "kind": "bytes",
+                "value": [
+                  0,
+                  1,
+                  255
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "metadataRetainingEmpty",
+      "rows": 7,
+      "valueBytes": 233,
+      "sourceSnapshot": {
+        "schema": "s.stdio.semio.table",
+        "columns": [
+          {
+            "name": "null",
+            "kind": "null"
+          },
+          {
+            "name": "boolean",
+            "kind": "bool"
+          },
+          {
+            "name": "integer",
+            "kind": "int"
+          },
+          {
+            "name": "floating",
+            "kind": "float"
+          },
+          {
+            "name": "string",
+            "kind": "str"
+          },
+          {
+            "name": "binary",
+            "kind": "bytes"
+          }
+        ],
+        "rows": []
+      }
+    }
+  ],
+  "publicIo": {
+    "schemaBytes": 1976,
+    "tableWidths": {
+      "semio_table_document": 2,
+      "semio_table_column": 5,
+      "semio_table_row": 3,
+      "semio_table_cell": 4,
+      "semio_table_value": 8,
+      "semio_table_list_element": 4,
+      "semio_table_map_entry": 5,
+      "semio_snapshot": 6
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 21,
+        "valueBytes": {
+          "binary": 637,
+          "text": 635
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 275,
+          "text": 273
+        }
+      }
+    ]
+  }
+}

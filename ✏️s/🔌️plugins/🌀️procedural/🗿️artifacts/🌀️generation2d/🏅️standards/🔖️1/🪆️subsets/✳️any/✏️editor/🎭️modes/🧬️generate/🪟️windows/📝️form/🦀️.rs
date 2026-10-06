@@ -20,6 +20,7 @@ pub const GENERATION2D_PLAY_BODY_GENERATE_FORM: &str = "generation2d.play.genera
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GENERATION2D_PLAY_WINDOW_GENERATE_FORM.into(),
         label: LocalizedLabel::native("Form", "Formular"),
         body_key: GENERATION2D_PLAY_BODY_GENERATE_FORM.into(),

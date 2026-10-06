@@ -690,17 +690,7 @@ impl semio_framework_value::FromValue for Puzzle5dPlaySnapshot {
     }
 }
 
-impl store::ArtifactDsl for Puzzle5dPlaySnapshot {
-    const EXTENSION: &'static str = "puzzle5d-play";
 
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
-    }
-
-    fn print_dsl(&self) -> String {
-        <Puzzle5dSnapshot as store::ArtifactDsl>::print_dsl(self.typed())
-    }
-}
 
 /// 🧒️ Visits the literal persisted child owned by the typed Puzzle5d parent.
 impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle5dPlaySnapshot {
@@ -709,24 +699,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle5dP
     }
 }
 
-/// 📦️ Packs through the typed authority, so the play kind shares `Puzzle5dSnapshot`'s derived record
-/// layout and pack-schema identity.
-impl store::ArtifactPack for Puzzle5dPlaySnapshot {
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        self.typed().encode_pack_with(options)
-    }
 
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        <Puzzle5dSnapshot as store::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
-    }
-
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Puzzle5dSnapshot as store::ArtifactPack>::record_spec()
-    }
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
-}
 
 impl MutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
     fn apply(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle5dPlaySnapshot> {

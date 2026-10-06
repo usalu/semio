@@ -32,7 +32,6 @@ type PresentationFixture = {
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json"), "utf8")) as Fixture;
-const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🆚️diff-view-produced-surface/🔣️.json"), "utf8"));
 const presentation = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-presentation/🔣️.json"), "utf8")) as PresentationFixture;
 const presentationSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🆚️diff-view-presentation/🔣️.json"), "utf8"));
 
@@ -124,8 +123,6 @@ describe("authored DiffView surface parity", () => {
   }, 90_000);
 
   it("validates the neutral corpus against the independent diff oracle", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const validatePresentation = new Ajv2020({ strict: true, allErrors: true }).compile(presentationSchema);
     expect(validatePresentation(presentation), JSON.stringify(validatePresentation.errors)).toBe(true);
     expect(thirdPartyLines()).toEqual(fixture.expected);

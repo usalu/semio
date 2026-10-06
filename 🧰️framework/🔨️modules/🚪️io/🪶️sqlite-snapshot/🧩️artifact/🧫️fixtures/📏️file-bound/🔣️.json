@@ -1,0 +1,10 @@
+{
+  "chunks": [
+    8,
+    16
+  ],
+  "maxSemanticBytes": 0,
+  "maxFileBytes": 24,
+  "expectedBytes": 24,
+  "expectedOwnershipKind": "ownershipLimit"
+}

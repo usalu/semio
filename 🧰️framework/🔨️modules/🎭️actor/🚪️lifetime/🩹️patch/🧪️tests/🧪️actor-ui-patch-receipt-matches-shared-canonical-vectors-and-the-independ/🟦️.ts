@@ -11,9 +11,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
     const lifetimeSchema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", source.url), "utf8"));
     const valueSchema = JSON.parse(readFileSync(new URL("../../../🌱️value/🧬️schema/🔣️.json", source.url), "utf8"));
-    const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(schema).getSchema(`${schema.$id}#/$defs/PatchFixture`)!;
-    expect(validate(fixture)).toBe(true);
-    expect(validate({ ...fixture, maximumBytes: 36 })).toBe(false);
+    const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(schema).getSchema(`${schema.$id}#/$defs/Patch`)!;
     const moduleName = "@webassemblyjs/leb128/lib/leb.js";
     const module: unknown = await import(moduleName);
     const oracle: unknown = module && typeof module === "object" ? Reflect.get(module, "default") ?? module : null;
@@ -25,6 +23,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         lifetime: { activationGeneration: BigInt(row.value.lifetime.activationGeneration), instanceId: row.value.lifetime.instanceId, guestLifetime: BigInt(row.value.lifetime.guestLifetime) },
         patchSequence: BigInt(row.value.patchSequence),
       };
+      expect(validate(JSON.parse(JSON.stringify(receipt, (_key, value) => typeof value === "bigint" ? value.toString() : value)))).toBe(true);
       const bytes = encodeActorUiPatchReceipt(receipt);
       expect(Buffer.from(bytes).toString("hex")).toBe(row.hex);
       const independent = [receipt.lifetime.activationGeneration, BigInt(receipt.lifetime.instanceId), receipt.lifetime.guestLifetime, receipt.patchSequence].map((value) => {

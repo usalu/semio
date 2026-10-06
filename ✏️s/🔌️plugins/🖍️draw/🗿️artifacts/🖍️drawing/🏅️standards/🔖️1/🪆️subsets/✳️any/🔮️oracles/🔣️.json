@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution. `s.draw.drawing` is a semio-NATIVE artifact carried in `.dsl.semio`/`.pack.semio`, so no third party can serve as its reference — see the noOracleDecision below. ONE catalog covers this subset's two declared 🧬️mutations directories: `🧬️schema/🧬️mutations` holds the `DrawingMutation` enum, and `🚪️io/🧬️mutations` holds that SAME enum's text and binary wire codecs (`encode_op`/`decode_op`), not a second vocabulary — the completeness gate keys a catalog to the subset, and the subset has exactly one.\n\n[2026-09-02 subset split] All 14 s.draw.drawing@1 mutations moved to real semantic subset owners (structure/style/transform/metadata, see ../🔣️.json) so none is owned by the ✳️any wildcard any more -- mutationManifests here is now empty and fixtureManifests moved with their mutations. The `drawing-1-any` mutationCatalogs entry is KEPT here (kinds unchanged, vectors emptied) purely because `mutate-drawing-1`'s cross-language differential test still tags @mutations-drawing-1-any and exhaustiveness is checked against the catalog id's FIRST registry match (this file sorts first alphabetically among the subset owners) -- relocating that test is a later wave (see ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION).",
+  "_comment": "🧩️ This subset's own contribution. `s.draw.drawing` is a semio-NATIVE artifact carried in `.dsl.semio`/`.pack.semio`, so no third party can serve as its reference — see the noOracleDecision below. ONE catalog covers this subset's two declared 🧬️mutations directories: `🧬️schema/🧬️mutations` holds the `DrawingMutation` enum, and `🚪️io/🧬️mutations` holds that SAME enum's text and binary wire codecs (`encode_op`/`decode_op`), not a second vocabulary — the completeness gate keys a catalog to the subset, and the subset has exactly one.\n\n[2026-09-02 subset split] All 14 s.draw.drawing@1 mutations moved to real semantic subset owners (structure/style/transform/metadata, see ../🔣️.json) so none is owned by the ✳️any wildcard any more -- mutationManifests here is now empty and testEvidence moved with their mutations. The `drawing-1-any` mutationCatalogs entry is KEPT here (kinds unchanged, vectors emptied) purely because `mutate-drawing-1`'s cross-language differential test still tags @mutations-drawing-1-any and exhaustiveness is checked against the catalog id's FIRST registry match (this file sorts first alphabetically among the subset owners) -- relocating that test is a later wave (see ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION).",
   "oracles": [
     {
       "id": "quick-xml-drawing-1-mutate",
@@ -491,17 +491,17 @@
     {
       "id": "drawing-svg-exact",
       "description": "📏️ Near-exact, because a 2D vector carrier has no tessellation freedom. An SVG `d` attribute IS the curve and this bridge lowers one PathSegment to one command, so unlike a BRep there is no 'different but equally valid' re-encoding of the same path — only number formatting and attribute order, and the comparison already normalizes both by parsing. The floors here admit IEEE-754 round-tripping of a decimal literal and nothing else.",
-      "absoluteLength": 1e-09,
+      "absoluteLength": 1e-9,
       "relativeLength": 1e-12,
-      "absoluteArea": 1e-09,
+      "absoluteArea": 1e-9,
       "relativeArea": 1e-11,
-      "absoluteVolume": 1e-09,
+      "absoluteVolume": 1e-9,
       "relativeVolume": 1e-11,
-      "normalizedHausdorffMax": 1e-09,
+      "normalizedHausdorffMax": 1e-9,
       "normalizedCentroidDistanceMax": 1e-10,
       "maxOverrideFactor": 1
     }
   ],
   "mutationManifests": [],
-  "fixtureManifests": []
+  "testEvidence": []
 }

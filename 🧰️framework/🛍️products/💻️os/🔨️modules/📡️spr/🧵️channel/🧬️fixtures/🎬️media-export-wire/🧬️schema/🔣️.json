@@ -16,7 +16,7 @@
       "type": "string"
     },
     "channelVersion": {
-      "const": 21
+      "const": 23
     },
     "u64Encoding": {
       "const": "unsigned LEB128; JSON model values are canonical unsigned decimal strings"

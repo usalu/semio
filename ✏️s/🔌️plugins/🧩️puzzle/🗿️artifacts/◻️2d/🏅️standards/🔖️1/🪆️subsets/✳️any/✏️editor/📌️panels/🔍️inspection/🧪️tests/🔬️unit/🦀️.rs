@@ -26,7 +26,7 @@ fn labels() -> &'static Puzzle2dLabels {
 fn selected_scene(ids: usize) -> Puzzle2dScene {
     let nodes: Vec<Value> = (0..ids).map(|index| serde_json::json!({ "id": format!("node-{index}"), "text": format!("Node {index}"), "nodeKind": "capsule" })).collect();
     Puzzle2dScene {
-        fixture: serde_json::json!({ "schema": PUZZLE2D_FIXTURE_SCHEMA, "nodes": nodes, "edges": [] }),
+        board_snapshot: serde_json::json!({ "schema": PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": nodes, "edges": [] }),
         runtime: crate::editor::puzzle2d::config::Puzzle2dPlayRuntime::default(),
         active_utility: String::new(),
         interaction: Puzzle2dInteractionSnapshot { granularity: crate::editor::puzzle2d::PUZZLE2D_GRANULARITY_NODE.into(), selected: (0..ids).map(|index| format!("node-{index}")).collect(), ..Default::default() },

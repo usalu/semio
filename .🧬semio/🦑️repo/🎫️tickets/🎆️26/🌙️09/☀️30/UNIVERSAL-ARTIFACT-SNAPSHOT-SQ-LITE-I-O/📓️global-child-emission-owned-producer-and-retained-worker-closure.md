@@ -1,5 +1,9 @@
 # Owned Child Emission Producer And Retained Worker Closure
 
+The current finite production family is mounted and its owning Native emission gate is GREEN: all three selected laws passed, 1007 skipped, 0.101 seconds harness, 5m59s compiler and 6m36s Nx, exit zero. The actual log `🗑️generated/child-emission-current-owned-production-native-after-five-joins.log` contains both owning DEBUG confirmations. The original encoder refusal law now preserves the exact prior complete operation; the two owner laws confirm rejected/remaining payload retention, accepted-operation retirement refusal, zero/narrow grants and exact provider handback. The chronology below retains earlier RED and held-source evidence. Registered publication/caller runtime and physical/universal exclusions remain separate.
+
+## Historical Genuine Red And Authoring Boundaries
+
 The actual Plugin owning Native law now fails at assertion after compilation: an OpBinary encoder refusing its second operation leaves the prior complete operation followed by an empty byte vector. The unchanged producer mutates schema/labels before encoding, and uses unwrap_or_default. The genuine selected gate is retained in generated child-sealed-preview-plugin-consumers-and-emission-after-checked-positions.log; one law failed, 1007 skipped, 0.119 seconds harness, 3 minutes 57 seconds compiler, 4 minutes 12 seconds Nx.
 
 Actual ChildEmit::of borrows a mutation slice. Actual node_drag_child owns the released drag Vec, then passes its borrowed slice to of. Actual ToolRunMemberEmit owns each decoded operation temporarily, appends it and calls retire_cold before its next loop iteration. The existing held Result producer closes its prefix in an unbounded while close_one loop and retires node-drag leaves with an unbounded synchronous loop; that held candidate is explicitly unsuitable for publication.
@@ -25,3 +29,31 @@ Authored `📥️inputs/child-emission-owned-capsule/prefix-close.rs` returns co
 The closed neutral owner demand is `closed-ownership-demand-held-pair.json`; `owned-native-law-held-pair.json` preserves the genuine existing encoder assertion and adds a real typed payload continuation law. Its tracked operations refuse synchronous retire_cold or early Drop, verify the accepted complete prefix with the independent Serde projection, retain original ProtocolError words, refuse zero grants, and require all three real payload owners returned through their actual continuation. Neither demand nor producer is mounted yet.
 
 Remaining coherent activation work is explicit in the held pair: actual constructor import/test joins, generic ToolRun decoded owner handoff from its exact installed Store mutation factory, retained job and mounted publication/preview preparation pumps, typed close refusal retention, and genuine provider factory metadata return. No partial global metadata or emission producer has been mounted.
+
+## Current guarded finite production mount
+
+The exact `📥️inputs/child-emission-owned-capsule/producer-and-helpers-held-pairs.json` family mounted 46 paths and 104 guarded regions with 46 exact after-readbacks. The fresh parser accepted 44 Rust paths with zero syntax errors; this proves syntax only. Store keeps its concurrent typed refusal/Core joins. No global immutable metadata, frame capture or domain reader removal was mounted.
+
+The built-in typed retirement uses a function pointer with no provider Arc cell. A custom provider Arc remains manually owned until exact typed handback to its caller; no strong-count last-alias assumption funds provider destruction. The original encoder error and accepted-operation retirement ValueError stay with the preparation, alongside the accepted prefix, rejected operation and remaining vector. Terminal retirement Box cells and vector backing use separate full allocation grants; source-prefix labels close existing Cow cells without materialization.
+
+Actual ToolRun now borrows the installed Store issuer before detaching its decoded mutation. Member rebase/release retain the prefix, typed owner and encoded source queues. Member publication returns its prefix into its own retirement queue after dispatch. Close retires active owners in place and finds child identity by borrowing actual entries, without allocating destination queues or cloning identity Strings. Retained command publication, sequence import, mounted publication/cancellation and captured preview publication advance owned preparation before emitting wire bytes. Existing semantic assertions remain, with their callers advanced through bounded preparation.
+
+The owning Plugin Native command is active with `quick child_emission_ --no-fail-fast -- --nocapture`; log is `🗑️generated/child-emission-current-owned-production-native-after.log`. No compiler or runtime result is claimed until the command finishes.
+
+Opaque transport sources still answer AwaitingInput pending genuine provider retirement. Existing non-child Emit/ephemeral/completion retirement and allocator ledger admission remain excluded from physical/universal credit. Handback of a custom factory Arc proves source ownership transfer only.
+
+## Owning compiler qualification and required joins
+
+The first actual mounted Plugin owning Native replay exited one before assertions: five Rust diagnostics, zero assertions, 2m52s Nx. The genuine log is `🗑️generated/child-emission-current-owned-production-native-after.log`. The exact failures were two component-module paths, one explicit Emit destructuring field, and both generic node-drag eager constructors. The guarded two-path input `📥️inputs/child-emission-owned-capsule/native-five-diagnostic-joins-pair.json` repairs all five causes and retains typed owning preparation for both node-drag outcomes.
+
+`📥️inputs/child-emission-owned-capsule/registered-dispatch-owned-preparation-join-pair.json` joins registered direct dispatch through its existing exact route proof, admission, mounted worker/cancellation and revision permit before consuming a ready Emit. The explicit destructuring backstop demands an empty and deallocated pending preparation queue. Existing early admission rejection and non-child cleanup are not promoted to complete universal owner retirement.
+
+The actual unchanged selector completed with log `🗑️generated/child-emission-current-owned-production-native-after-five-joins.log`: three tests run, three passed, 1007 skipped, exit zero. Both new owner laws produced their actual DEBUG confirmations. This finite codec/capsule proof does not grant runtime credit to registered direct dispatch, member publication, global capture or physical allocator admission.
+
+## Required Existing Caller Replay
+
+The existing laws selected next cover retained prepublication close and rejected handoff, acknowledged parent/child publication and retirement, and real composite/agent child transactions. Their existing assertions are preserved. Codec success alone does not establish those callers; results will be recorded from the actual owning Plugin command.
+
+The unchanged `retained_` selector is active in `🗑️generated/child-emission-current-retained-callers-native-after.log`. Its initial Nx graph/shared Cargo wait cleared and actual Rust compilation is active. The independent mounted direct-dispatch readback is retained in `📓️child-emission-mounted-registered-dispatch-preparation-join.md`; it confirms the actual owning job/permit joins statically, with early proof/admission/permit rejection cleanup excluded.
+
+`📥️inputs/child-emission-owned-capsule/current-api-doc-joins.json` retains the exact documentation spans corrected after the finite codec run. The Emit and ChildEmit docstrings now name owned preparation and encoding-before-label admission. This changes documentation only. The fresh global held guard rebase also includes these docstrings.

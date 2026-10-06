@@ -1,0 +1,156 @@
+{
+  "changedPaths": [
+    "main"
+  ],
+  "addedPaths": [],
+  "cases": [
+    {
+      "id": "ExactOneWasmOwner",
+      "before": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "old"
+        },
+        {
+          "path": "other",
+          "before": "physical2",
+          "after": "same"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "new"
+        },
+        {
+          "path": "other",
+          "before": "physical2",
+          "after": "same"
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "ForeignOwner",
+      "before": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "old"
+        },
+        {
+          "path": "other",
+          "before": "physical2",
+          "after": "same"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "old"
+        },
+        {
+          "path": "other",
+          "before": "physical2",
+          "after": "changed"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "FalsePredecessor",
+      "before": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "old"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "foreign",
+          "after": "new"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "DuplicateOwner",
+      "before": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "old"
+        },
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "old"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "new"
+        },
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "old"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "MissingOwner",
+      "before": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "old"
+        },
+        {
+          "path": "other",
+          "before": "physical2",
+          "after": "same"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "new"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "UndeclaredAddition",
+      "before": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "old"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "physical",
+          "after": "new"
+        },
+        {
+          "path": "added",
+          "before": null,
+          "after": "new"
+        }
+      ],
+      "refused": true
+    }
+  ]
+}

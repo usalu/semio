@@ -23,18 +23,11 @@ const VALIDATED_ONLY: FacetLeaves = FacetLeaves { rust: "", typescript: "", grap
 const MODULE_JSON: &str = include_str!("🔣️.json");
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 12] = [
+const EXPORTS: [SchemaExport; 5] = [
     SchemaExport { id: "ArtifactCreationPhaseV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "ArtifactCreationFactKindV1", leaves: VALIDATED_ONLY },
-    SchemaExport { id: "ArtifactCreationOperationStateV1", leaves: VALIDATED_ONLY },
-    SchemaExport { id: "ArtifactCreationTransitionV1", leaves: VALIDATED_ONLY },
-    SchemaExport { id: "ArtifactCreationCancellationDecisionV1", leaves: VALIDATED_ONLY },
-    SchemaExport { id: "ArtifactCreationTransactionKindV1", leaves: VALIDATED_ONLY },
-    SchemaExport { id: "ArtifactCreationTransactionOutcomeV1", leaves: VALIDATED_ONLY },
-    SchemaExport { id: "ArtifactCreationAcceptedRecoveryV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "ArtifactCreationHttpLimitsV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "ArtifactCreationHttpRouteV1", leaves: VALIDATED_ONLY },
-    SchemaExport { id: "ArtifactCreationHttpAuthorityV1", leaves: VALIDATED_ONLY },
     SchemaExport { id: "ArtifactCreationHttpResponseV1", leaves: VALIDATED_ONLY },
 ];
 

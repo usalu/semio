@@ -123,6 +123,7 @@ fn height_arg() -> ActionArgDef {
 /// `Migrated`: a `BatchOnly` verb never reaches interactive dispatch and would be dead in the pane.
 pub fn definition() -> WindowKindDefinition {
     let mut definition = WindowKindDefinition {
+        initial_utility_id: None,
         id: WFC_GRAPH_WINDOW.into(),
         label: LocalizedLabel::native("Graph", "Graph"),
         body_key: WFC_GRAPH_BODY.into(),

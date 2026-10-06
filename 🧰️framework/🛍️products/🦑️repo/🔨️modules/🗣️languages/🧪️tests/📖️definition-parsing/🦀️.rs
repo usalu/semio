@@ -6,7 +6,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 // #region 🔖️Projection
 
 fn declarations(ctx: &Context, uri: &str) -> Result<Json, String> {
-    let bytes = ctx.fixture_bytes(uri)?;
+    let bytes = ctx.input_bytes(uri)?;
     let content = String::from_utf8(bytes).map_err(|e| e.to_string())?;
     let lines: Vec<&str> = content.split('\n').collect();
     let lang = language_by_name("typescript").ok_or("typescript is not registered")?;

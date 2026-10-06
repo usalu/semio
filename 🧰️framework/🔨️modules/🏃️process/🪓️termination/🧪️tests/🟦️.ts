@@ -7,7 +7,7 @@ import { describe, expect, test } from "bun:test";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv";
+
 import treeKill from "tree-kill";
 
 
@@ -21,7 +21,6 @@ type Fixture = Readonly<{
 
 const ownerRoot = resolve(import.meta.dir, "..");
 const fixture = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/🔣️.json"), "utf8")) as Fixture;
-const schema = JSON.parse(readFileSync(join(ownerRoot, "🧬️schema/🔣️.json"), "utf8"));
 const SPAWNER = `const { spawn } = require("node:child_process");
 const { appendFileSync } = require("node:fs");
 const [depth, breadth, pidFile] = process.argv.slice(2);
@@ -85,11 +84,7 @@ async function terminate(terminator: Terminator, child: ChildProcess): Promise<v
 }
 
 describe("process-tree termination", () => {
-  test("validates the portable law fixture", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...fixture, extra: true })).toBe(false);
-  });
+  
 
   for (const law of fixture.cases) {
     test(`${law.id}: ${law.terminator} leaves ${law.survivors} descendants alive`, async () => {

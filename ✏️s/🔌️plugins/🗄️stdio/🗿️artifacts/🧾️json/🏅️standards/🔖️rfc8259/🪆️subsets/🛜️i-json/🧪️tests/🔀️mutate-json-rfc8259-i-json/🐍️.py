@@ -116,7 +116,7 @@ def plain(value):
 
 def document(ctx: Context):
     """🧫️ The committed fixture, copied into the work directory first and decoded by the reference."""
-    with open(ctx.copy_fixture(DOCUMENT, "input.json"), "rb") as handle:
+    with open(ctx.copy_input(DOCUMENT, "input.json"), "rb") as handle:
         return parse(handle.read().decode("utf-8"))
 
 
@@ -391,7 +391,7 @@ def i_json_conformance(ctx: Context) -> Outcome:
     """🔮️ Every clause RFC 7493 adds to RFC 8259, checked against the real document by the reference.
     This scenario is what earns the feature's claim that the fixture is an I-JSON document — the
     duplicate-name clause is enforced inside `_pairs_hook` during the decode itself."""
-    with open(ctx.copy_fixture(DOCUMENT, "input.json"), "rb") as handle:
+    with open(ctx.copy_input(DOCUMENT, "input.json"), "rb") as handle:
         raw = handle.read()
     root = parse(raw.decode("utf-8"))
     if not isinstance(root, (dict, list)):
@@ -450,7 +450,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
     projection compared against the projection of the decoded original — projecting the in-memory
     model alone (which is what this handler used to return) can never catch a writer that drops or
     reshapes something on the way out."""
-    with open(ctx.copy_fixture(DOCUMENT, "input.json"), "rb") as handle:
+    with open(ctx.copy_input(DOCUMENT, "input.json"), "rb") as handle:
         raw = handle.read()
     root = parse(raw.decode("utf-8"))
     output = serialize(root)

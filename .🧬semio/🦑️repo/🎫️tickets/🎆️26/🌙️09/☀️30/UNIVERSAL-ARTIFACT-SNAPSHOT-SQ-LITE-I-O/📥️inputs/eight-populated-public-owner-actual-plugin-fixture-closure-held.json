@@ -1,0 +1,93 @@
+{
+  "qualification": "Test-only concrete first-party artifact/plugin authority correction; public admission unchanged",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "    fn register(){let _plugin=semio_framework_plugin::Plugin::<FemArtifactApps>::builder(\"fem2d-sqlite-owner\").label(\"FEM2d SQLite owner\").version(\"0.1.0\").package_id(\"semio:fem2d-sqlite-owner\").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}",
+          "after": "    fn register(){let _plugin=semio_framework_plugin::Plugin::<FemArtifactApps>::builder(\"fem\").label(\"FEM2d SQLite owner\").version(\"0.1.0\").package_id(\"semio:fem\").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}"
+        }
+      ],
+      "identity": "s.fem.fem2d",
+      "plugin": "fem"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "    fn register(){let _plugin=semio_framework_plugin::Plugin::<FemArtifactApps>::builder(\"fem3d-sqlite-owner\").label(\"FEM3d SQLite owner\").version(\"0.1.0\").package_id(\"semio:fem3d-sqlite-owner\").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}",
+          "after": "    fn register(){let _plugin=semio_framework_plugin::Plugin::<FemArtifactApps>::builder(\"fem\").label(\"FEM3d SQLite owner\").version(\"0.1.0\").package_id(\"semio:fem\").declare_artifact(crate::artifact::<FemArtifactApps>()).try_build().unwrap();}"
+        }
+      ],
+      "identity": "s.fem.fem3d",
+      "plugin": "fem"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "        let _plugin=semio_framework_plugin::Plugin::<RewritingArtifactApps>::builder(\"rewriting-sqlite-owner\").label(\"Rewriting SQLite owner\").version(\"0.1.0\").package_id(\"semio:rewriting-sqlite-owner\").declare_artifact(crate::artifact::<RewritingArtifactApps>()).try_build().unwrap();",
+          "after": "        let _plugin=semio_framework_plugin::Plugin::<RewritingArtifactApps>::builder(\"trinity\").label(\"Rewriting SQLite owner\").version(\"0.1.0\").package_id(\"semio:trinity\").declare_artifact(crate::artifact::<RewritingArtifactApps>()).try_build().unwrap();"
+        }
+      ],
+      "identity": "s.trinity.rewriting",
+      "plugin": "trinity"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"jack-public-sqlite\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:jack-public-sqlite\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}",
+          "after": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"trinity\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:trinity\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}"
+        }
+      ],
+      "identity": "s.trinity.jack",
+      "plugin": "trinity"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"puzzle3d-public-sqlite\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:puzzle3d-public-sqlite\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}",
+          "after": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"puzzle\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:puzzle\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}"
+        }
+      ],
+      "identity": "s.puzzle.puzzle3d",
+      "plugin": "puzzle"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"block2d-public-sqlite\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:block2d-public-sqlite\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}",
+          "after": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"block\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:block\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}"
+        }
+      ],
+      "identity": "s.block.block2d",
+      "plugin": "block"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"block3d-public-sqlite\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:block3d-public-sqlite\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}",
+          "after": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"block\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:block\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}"
+        }
+      ],
+      "identity": "s.block.block3d",
+      "plugin": "block"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "regions": [
+        {
+          "before": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"block5d-public-sqlite\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:block5d-public-sqlite\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}",
+          "after": "fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder(\"block\").label(\"Populated public SQLite\").version(\"0.0.1\").package_id(\"semio:block\").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}"
+        }
+      ],
+      "identity": "s.block.block5d",
+      "plugin": "block"
+    }
+  ]
+}

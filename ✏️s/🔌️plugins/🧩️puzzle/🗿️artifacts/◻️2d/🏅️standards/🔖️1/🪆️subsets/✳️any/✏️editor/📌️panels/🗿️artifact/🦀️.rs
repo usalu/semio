@@ -13,7 +13,7 @@
 //! keyed by its raw entity id, so a pick costs nothing of the argument arena.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, fixture_target_regions, puzzle2d_node_display_label, ui_label, Puzzle2dScene, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_GRANULARITY_TARGET_REGION, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle2d::{board_snapshot_edges, board_snapshot_nodes, snapshot_target_regions, puzzle2d_node_display_label, ui_label, Puzzle2dScene, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_GRANULARITY_TARGET_REGION, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, RowActionPlacement};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
@@ -58,14 +58,14 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Rows
 /// 🏷️ What one row reads — the shared authored-label / catalogue-name / id precedence, so an outliner
 /// row, a board glyph and the inspector all name the same node the same way.
-fn node_label(node: &Value, fixture: &Value) -> String {
-    puzzle2d_node_display_label(node, fixture)
+fn node_label(node: &Value, snapshot: &Value) -> String {
+    puzzle2d_node_display_label(node, snapshot)
 }
 
-fn edge_label(edge: &Value, fixture: &Value) -> String {
+fn edge_label(edge: &Value, snapshot: &Value) -> String {
     let source = edge.get("source").and_then(|value| value.as_str()).unwrap_or("?");
     let target = edge.get("target").and_then(|value| value.as_str()).unwrap_or("?");
-    let endpoint = |id: &str| fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).map_or_else(|| id.to_string(), |node| node_label(node, fixture));
+    let endpoint = |id: &str| board_snapshot_nodes(snapshot).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).map_or_else(|| id.to_string(), |node| node_label(node, snapshot));
     format!("{} → {}", endpoint(source), endpoint(target))
 }
 
@@ -145,16 +145,16 @@ fn pick_row(id: &str, label: String, description: Option<&str>, granularity: &st
     pick_item(id, label, description, granularity)?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row admission failed"))
 }
 
-fn node_row(node: &Value, fixture: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<BuiltNode> {
+fn node_row(node: &Value, snapshot: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<BuiltNode> {
     let id = node.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d node id is required"))?;
     let (hidden, locked) = (crate::editor::puzzle2d::puzzle2d_entity_hidden(node), flag(node, "locked"));
-    let item = pick_item(id, node_label(node, fixture), node.get("nodeKind").and_then(Value::as_str), PUZZLE2D_GRANULARITY_NODE)?.dimmed(hidden);
+    let item = pick_item(id, node_label(node, snapshot), node.get("nodeKind").and_then(Value::as_str), PUZZLE2D_GRANULARITY_NODE)?.dimmed(hidden);
     with_hide_lock_actions(item, node_flag_target(id, hidden, locked), hide_lock_actions(hidden, locked, labels, ["setSelectionHidden", "setSelectionLocked"])).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row admission failed"))
 }
 
-fn edge_row(edge: &Value, fixture: &Value) -> UiAssemblyResult<BuiltNode> {
+fn edge_row(edge: &Value, snapshot: &Value) -> UiAssemblyResult<BuiltNode> {
     let id = edge.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d edge id is required"))?;
-    pick_row(id, edge_label(edge, fixture), edge.get("edgeKind").and_then(Value::as_str), PUZZLE2D_GRANULARITY_EDGE)
+    pick_row(id, edge_label(edge, snapshot), edge.get("edgeKind").and_then(Value::as_str), PUZZLE2D_GRANULARITY_EDGE)
 }
 //#endregion 🔖️Rows
 
@@ -177,13 +177,13 @@ fn target_region_row(region: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResul
 
 //#region 🔖️Render
 pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let fixture = &envelope.fixture;
+    let snapshot = &envelope.board_snapshot;
     PanelTreeBuilder::new(ROOT)?
         .interaction_domain(PUZZLE2D_PLAY_CONTROLLER_ID, PUZZLE2D_INTERACTION_DOMAIN)?
-        .window_section_or_placeholder(windows, NODES_SECTION, Some(ui_label(labels.nodes.as_str())?), true, fixture_nodes(fixture), |node| node_row(node, fixture, labels), ui_label(labels.none.as_str())?)?
-        .window_section_or_placeholder(windows, EDGES_SECTION, Some(ui_label(labels.edges.as_str())?), false, fixture_edges(fixture), |edge| edge_row(edge, fixture), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, NODES_SECTION, Some(ui_label(labels.nodes.as_str())?), true, board_snapshot_nodes(snapshot), |node| node_row(node, snapshot, labels), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, EDGES_SECTION, Some(ui_label(labels.edges.as_str())?), false, board_snapshot_edges(snapshot), |edge| edge_row(edge, snapshot), ui_label(labels.none.as_str())?)?
         // 🎯️ Slice 2F's own section — collapsed by default, exactly as puzzle3d collapses its target volumes.
-        .window_section_or_placeholder(windows, TARGET_REGIONS_SECTION, Some(ui_label(labels.target_regions.as_str())?), false, fixture_target_regions(fixture), |region| target_region_row(region, labels), ui_label(labels.none.as_str())?)?
+        .window_section_or_placeholder(windows, TARGET_REGIONS_SECTION, Some(ui_label(labels.target_regions.as_str())?), false, snapshot_target_regions(snapshot), |region| target_region_row(region, labels), ui_label(labels.none.as_str())?)?
         .build()
 }
 //#endregion 🔖️Render

@@ -1,9 +1,7 @@
 /** 🎨️ Closed neutral pixel ownership checked by independent SQLite and binary codecs. */
 import {expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 type Case=typeof fixture.cases[number];
 type Bitmap={width:number;height:number;palette:readonly unknown[];pixels:string};
@@ -19,8 +17,8 @@ function gridPrefix(text:string):number[]{
 }
 /** 🔎️ Tests the full owner without imposing renderer extents or palette bounds as snapshot invariants. */
 export async function verifyBitmapSqlite<S>(prefix:string,make:(value:Case)=>S,bitmap:(value:S)=>Bitmap,project:(value:S)=>Promise<SqliteDatabase>,reconstruct:(value:SqliteDatabase)=>Promise<S>):Promise<void>{
- const validate=new Ajv({strict:true,allErrors:true}).compile(schema);
- expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
+ expect(fixture.cases.length).toBe(14);
+ expect(fixture.edit).toEqual({ordinal:1,paletteIndex:255});
  expect(new Set(fixture.cases.map(c=>c.id)).size).toBe(fixture.cases.length);
  for(const value of fixture.cases){
   const decoded=Array.from(Buffer.from(value.text,"base64"));

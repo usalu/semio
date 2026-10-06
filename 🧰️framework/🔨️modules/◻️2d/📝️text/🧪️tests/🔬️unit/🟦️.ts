@@ -4,7 +4,6 @@ import Ajv from "ajv";
 import { LinesAndColumns } from "lines-and-columns";
 import { drawingTextLines, drawingTextFallbackExtent } from "../../🟦️.ts";
 import fixture from "../../🧫️fixtures/🔣️.json";
-import schema from "../../🧬️schema/🔣️.json";
 
 test("text fixtures satisfy their neutral schema", () => expect(new Ajv().compile(schema)(fixture)).toBe(true));
 for (const item of fixture.cases) test(`line layout ${JSON.stringify(item.content)}`, () => {

@@ -5,7 +5,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type Quiz, catalogIssues, quizIssues } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const REJECTED = "shared://🧬️schema-conformance/🔣️.json";
@@ -62,7 +62,7 @@ export default defineTestAdapter({
       subject: (ctx) => {
         const projection: Record<string, Record<string, boolean>> = {};
         for (const row of rows(ctx).filter((candidate) => candidate.definition === "Quiz" || candidate.definition === "Catalog")) {
-          const document = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(row.fixture!)));
+          const document = JSON.parse(new TextDecoder().decode(ctx.inputBytes(row.fixture!)));
           const quizzes = row.quizzes === "-" ? [] : (matches(document, row.quizzes!)[0]?.[1] as Quiz[]);
           projection[row.id!] = Object.fromEntries(matches(document, row.pointer!).map(([path, value]) => [path, accepted(row.definition!, value, quizzes)]));
         }
@@ -85,7 +85,7 @@ export default defineTestAdapter({
     "rejected-quizzes": {
       subject: (ctx) => {
         type Vector = { id: string; definition: string; document: { quizzes?: unknown } };
-        const committed = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(REJECTED))) as { quizzes: Record<string, Quiz>; accepted: Vector[]; rejected: Vector[] };
+        const committed = JSON.parse(new TextDecoder().decode(ctx.inputBytes(REJECTED))) as { quizzes: Record<string, Quiz>; accepted: Vector[]; rejected: Vector[] };
         const quizzesOf = (document: Vector["document"]): Quiz[] => (Array.isArray(document.quizzes) ? document.quizzes.filter((path): path is string => typeof path === "string" && Object.hasOwn(committed.quizzes, path)).map((path) => committed.quizzes[path]!) : []);
         return { projection: Object.fromEntries([...committed.accepted, ...committed.rejected].map((vector) => [vector.id, accepted(vector.definition, vector.document, quizzesOf(vector.document))])) };
       },

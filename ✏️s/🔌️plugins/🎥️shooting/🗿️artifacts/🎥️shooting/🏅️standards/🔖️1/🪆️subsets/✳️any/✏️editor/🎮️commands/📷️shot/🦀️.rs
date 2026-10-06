@@ -9,7 +9,7 @@ use crate::mutations::change_shot_width::ChangeShotWidth;
 use crate::mutations::create_shot::CreateShot;
 use crate::mutations::rename_shot::RenameShot;
 use crate::mutations::set_active_shot::SetActiveShot as SetActiveShotMutation;
-use crate::op::ShootingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingShot;
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;

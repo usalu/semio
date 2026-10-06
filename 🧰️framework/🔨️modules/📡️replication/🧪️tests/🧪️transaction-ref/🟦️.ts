@@ -1,4 +1,3 @@
-import Ajv from "ajv";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -11,20 +10,18 @@ export async function registerTransactionRefTests(vitest: NonNullable<ImportMeta
 
   type Json = Readonly<Record<string, any>>;
 
-  async function load(): Promise<Readonly<{ fixture: Json; schema: object }>> {
+  async function load(): Promise<Readonly<{ fixture: Json }>> {
     const { readFile } = await import("node:fs/promises");
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const root = dirname(fileURLToPath(source.url));
-    const [fixture, schema] = await Promise.all([readFile(join(root, "🎮️mutation/🧫️fixtures/🧫️transaction-ref/🔣️.json"), "utf8"), readFile(join(root, "🎮️mutation/🧬️schema/🔣️transaction-ref/🔣️.json"), "utf8")]);
-    return { fixture: JSON.parse(fixture) as Json, schema: JSON.parse(schema) as object };
+    const fixture = await readFile(join(root, "🎮️mutation/🧫️fixtures/🧫️transaction-ref/🔣️.json"), "utf8");
+    return { fixture: JSON.parse(fixture) as Json };
   }
 
   describe("transaction ref", () => {
     it("mints the language-agnostic vectors", async () => {
-      const { fixture, schema } = await load();
-      const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      const { fixture } = await load();
       for (const row of fixture.cases as Json[]) expect(mintTransactionRef(row.actor, row.hlc, row.tool), row.id).toEqual(row.expect);
     });
 

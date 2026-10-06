@@ -1,0 +1,14 @@
+> bun ./📜️script.ts tests 🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🧪️tests/📏️ownership/🟦️.ts
+
+[DEBUG] isolated Nx verification tests
+bun test v1.3.14 (0d9b296a)
+
+🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🧪️tests/📏️ownership/🟦️.ts:
+[DEBUG] PDF measurement canonical-hash comparisons=6 noble-sha256=agreed
+(pass) PDF measurement uses the same canonical bytes across metadata and compression [22.85ms]
+(pass) actual gallery measurement reports agree with an independent validator [43.02ms]
+
+ 2 pass
+ 0 fail
+ 10 expect() calls
+Ran 2 tests across 1 file. [178.00ms]

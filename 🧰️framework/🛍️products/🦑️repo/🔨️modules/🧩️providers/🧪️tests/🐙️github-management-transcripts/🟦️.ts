@@ -12,7 +12,7 @@
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //#endregion 🧲️Header
 //#region 🔌️Adapters
-import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎞️Runner
@@ -40,7 +40,7 @@ class Replayer {
 const TRANSCRIPTS = "shared://🐙️github-management-transcripts/🎞️gh-transcripts.json";
 
 function replayer(ctx: AdapterContext): Replayer {
-  const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(TRANSCRIPTS))) as Record<string, { exchanges: Exchange[] }>;
+  const file = JSON.parse(new TextDecoder().decode(ctx.inputBytes(TRANSCRIPTS))) as Record<string, { exchanges: Exchange[] }>;
   const entry = file[ctx.scenario.id];
   if (entry === undefined) throw new Error(`transcript fixture carries no entry for scenario ${ctx.scenario.id}`);
   return new Replayer(entry.exchanges);

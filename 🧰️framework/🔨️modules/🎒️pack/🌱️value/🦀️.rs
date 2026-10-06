@@ -19,11 +19,25 @@ use std::collections::{HashMap, HashSet};
 #[path = "🛫️encode/🦀️.rs"]
 mod controlled_encoding;
 
+#[cfg(test)]
+#[path = "🧪️tests/📦️operation-pages/🦀️.rs"]
+mod operation_page_tests;
+
 /// 🛫️ Emits a terminal record under caller-owned allocation and interior cancellation.
 pub fn encode_record_body_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{controlled_encoding::record_body(spec,record,options,control)}
 
+/// 📦️ Appends one exact Record body after the caller's existing prefix and returns its body length.
+/// The caller retains every accepted byte across refusal; no operation header is reset or replaced.
+pub fn encode_record_body_into(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<usize,PackRefusal>{controlled_encoding::record_body_into(spec,record,options,output,control)}
+
+/// 🫳️ Emits exact canonical Record bytes directly from the immutable original ordinal source.
+pub fn encode_projected_record_body_into<T:semio_framework_dsl_record::native_encoding::FieldProjectionSource>(spec:&RecordSpec,source:&T,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<usize,PackRefusal>{controlled_encoding::projected_record_body_into(spec,source,options,output,control)}
+
 /// 🎞️ Encodes a borrowed complete intrinsic value without a synthetic owned record.
 pub fn encode_value_record_body_controlled(field_id:u16,value:&DslValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{controlled_encoding::value_record_body(field_id,value,options,control)}
+
+/// 🎞️ Appends one complete intrinsic body to the caller's sink under the same options and control.
+pub fn encode_value_record_body_into(field_id:u16,value:&DslValue,options:&EncodeOptions,output:&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<usize,PackRefusal>{controlled_encoding::value_record_body_into(field_id,value,options,output,control)}
 
 /// 📦️ Emits symbols, literal document frames, chunks and footer under one ownership budget.
 pub fn encode_document_controlled(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptions,control:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<Vec<u8>,PackRefusal>{controlled_encoding::document(spec,record,options,control)}
@@ -260,7 +274,7 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
                         if matches!(v, FieldValue::Absent) {
                             continue;
                         }
-                        if matches!(field.shape, Shape::Text) {
+                        if matches!(field.shape, Shape::Text | Shape::Ref(_)) {
                             if let FieldValue::Text(s) = v {
                                 force_symbol(counts, forced, s);
                             }
@@ -1984,6 +1998,15 @@ impl ValueMaterialization {
     }
 }
 
+/// 🧾️ Transfers octets after controlled validation of the same immutable source range.
+/// Both private admission owners use the exact span copy; the immutable borrow prevents its
+/// validated scalar words from changing between validation and owned transfer.
+fn copy_validated_span_utf8<M:MaterializationAdmission+?Sized>(materialization:&M,bytes:crate::ByteSpan<'_>,offset:u64,what:&'static str)->Result<String,PackRefusal>{
+    materialization.check_span_utf8(bytes,offset,what)?;
+    let bytes=materialization.copy_span_bytes(bytes)?;
+    Ok(unsafe{String::from_utf8_unchecked(bytes)})
+}
+
 trait MaterializationAdmission {
     fn schema(&self,producer:&RecordSpecProducer)->Result<RecordSpec,PackRefusal>{Ok((producer.ordinary)())}
     fn charge(&self,bytes:u64)->Result<(),PackRefusal>;
@@ -1992,6 +2015,31 @@ trait MaterializationAdmission {
     fn copy_text(&self,text:&str)->Result<String,PackRefusal>{self.charge(text.len() as u64)?;let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "decoded string allocation" })?;output.push_str(text);Ok(output)}
     fn copy_bytes(&self,bytes:&[u8])->Result<Vec<u8>,PackRefusal>{self.charge(bytes.len() as u64)?;let mut output=Vec::new();output.try_reserve_exact(bytes.len()).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "decoded octet allocation" })?;output.extend_from_slice(bytes);Ok(output)}
     fn octet_buffer(&self,count:usize)->Result<Vec<u8>,PackRefusal>{self.charge(count as u64)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_|PackRefusal::LimitExceeded { kind: ValueRefusalKind::AllocationFailed, limit: "decoded octet allocation" })?;Ok(output)}
+    fn copy_span_bytes(&self,bytes:crate::ByteSpan<'_>)->Result<Vec<u8>,PackRefusal>{
+        if let Some(bytes)=bytes.contiguous(){return self.copy_bytes(bytes)}
+        let mut output=self.octet_buffer(bytes.len())?;
+        for byte in bytes.iter(){self.step()?;output.push(byte);}
+        Ok(output)
+    }
+    fn check_span_utf8(&self,bytes:crate::ByteSpan<'_>,offset:u64,what:&'static str)->Result<(),PackRefusal>{
+        let invalid=||PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what,offset,detail:"invalid utf8"};
+        let mut position=0;
+        while position<bytes.len(){
+            self.step()?;
+            let first=bytes[position];
+            let length=match first{0..=127=>1,194..=223=>2,224..=239=>3,240..=244=>4,_=>return Err(invalid())};
+            if position+length>bytes.len(){return Err(invalid())}
+            let mut word=[0;4];
+            for(index,byte)in word[..length].iter_mut().enumerate(){*byte=bytes[position+index];}
+            std::str::from_utf8(&word[..length]).map_err(|_|invalid())?;
+            position+=length;
+        }
+        Ok(())
+    }
+    fn copy_span_utf8(&self,bytes:crate::ByteSpan<'_>,offset:u64,what:&'static str)->Result<String,PackRefusal>{
+        if let Some(bytes)=bytes.contiguous(){return self.copy_utf8(bytes,offset,what)}
+        copy_validated_span_utf8(self,bytes,offset,what)
+    }
     fn append_chunk(&self,_file:&crate::format::PackFile<&[u8]>,_id:ChunkId,_verification:crate::format::VerificationLevel,_output:&mut Vec<u8>)->Result<(),PackRefusal>{Err(PackRefusal::from(ValueError::new(ValueRefusalKind::UnsupportedOwner,"chunk owner has no controlled admission")))}
     fn expression(&self,text:&str,_maximum_depth:u16)->Result<semio_framework_dsl_record::ExprValue,PackRefusal>{semio_framework_dsl_record::parse_expr_text(text).map_err(PackRefusal::from)}
     fn copy_utf8(&self,bytes:&[u8],offset:u64,what:&'static str)->Result<String,PackRefusal>{let value=std::str::from_utf8(bytes).map_err(|_|PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what,offset,detail:"invalid utf8".into()})?;self.copy_text(value)}
@@ -2014,6 +2062,12 @@ impl MaterializationAdmission for ControlledMaterialization<'_,'_>{
     fn append_chunk(&self,file:&crate::format::PackFile<&[u8]>,id:ChunkId,verification:crate::format::VerificationLevel,output:&mut Vec<u8>)->Result<(),PackRefusal>{self.control.borrow_mut().scoped_stage(|control|::semio_framework_async::poll::resolve_ready(file.append_chunk_controlled(id,verification,output,control)))}
     fn expression(&self,text:&str,maximum_depth:u16)->Result<semio_framework_dsl_record::ExprValue,PackRefusal>{let maximum=usize::try_from(self.maximum).unwrap_or(usize::MAX);let mut limits=semio_framework_diagnostic::Limits::default();limits.max_depth=usize::from(maximum_depth);self.control.borrow_mut().scoped_maximum(maximum,|control|Ok::<_,ValueError>(semio_framework_dsl_record::parse_expr_text_controlled(text,&limits,control).map_err(PackRefusal::from))).map_err(PackRefusal::from)?}
     fn copy_utf8(&self,bytes:&[u8],_offset:u64,_what:&'static str)->Result<String,PackRefusal>{self.check(bytes.len() as u64)?;let mut control=self.control.borrow_mut();if bytes.len()>control.maximum_bytes().saturating_sub(control.owned_bytes()){return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::OwnershipLimit,"native text exceeds caller allowance")));}let value=control.borrow_text(bytes).map_err(PackRefusal::from)?;control.copy_text(value).map_err(PackRefusal::from)}
+    fn copy_span_utf8(&self,bytes:crate::ByteSpan<'_>,offset:u64,what:&'static str)->Result<String,PackRefusal>{
+        if let Some(bytes)=bytes.contiguous(){return self.copy_utf8(bytes,offset,what)}
+        self.check(bytes.len()as u64)?;
+        {let control=self.control.borrow();if bytes.len()>control.maximum_bytes().saturating_sub(control.owned_bytes()){return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::OwnershipLimit,"native text exceeds caller allowance")))}}
+        copy_validated_span_utf8(self,bytes,offset,what)
+    }
 }
 
 fn copy_decoded_string(value:&str,materialization:&dyn MaterializationAdmission)->Result<String,PackRefusal>{materialization.copy_text(value)}
@@ -2038,12 +2092,12 @@ fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackRefusal> 
 
 /// 📏️ Reads a `varint` length then that many raw bytes, rejecting an oversized length
 /// against `limits.max_segment_len` BEFORE allocating/slicing.
-fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits) -> Result<&'b [u8], PackRefusal> {
+fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits) -> Result<crate::ByteSpan<'b>, PackRefusal> {
     let len = reader.read_varint_u64()?;
     if len > limits.max_segment_len {
         return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "inline blob length exceeds max_segment_len" });
     }
-    reader.read_bytes(usize::try_from(len).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "inline blob byte length" })?)
+    reader.read_span(usize::try_from(len).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "inline blob byte length" })?)
 }
 
 fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackRefusal> {
@@ -2051,13 +2105,13 @@ fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<S
     // 🔁️ `reader.position()` is async now; `map_err`'s closure is sync (R10 residue shape 1), so
     // the position is read up front rather than awaited inside the closure.
     let offset = reader.position() as u64;
-    ctx.materialization.copy_utf8(bytes,offset,"text")
+    ctx.materialization.copy_span_utf8(bytes,offset,"text")
 }
 
 fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackRefusal> {
     let bytes=read_len_prefixed_bytes(reader,&ctx.limits)?;
     if bytes.len()as u64>ctx.limits.max_total_alloc{return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "decoded octets exceed max_total_alloc" });}
-    ctx.materialization.copy_bytes(bytes)
+    ctx.materialization.copy_span_bytes(bytes)
 }
 
 /// 🧱️ Reads `count` chunk ids and concatenates their decoded (and, per `verification`,
@@ -2543,7 +2597,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<RecordSpecProdu
         let field_id = reader.read_varint_u64()? as u16;
         let presence = reader.read_u8()?;
         let dense = presence == 0;
-        let bitmap = if dense { None } else { Some(reader.read_bytes(row_count.div_ceil(8))?) };
+        let bitmap = if dense { None } else { Some(reader.read_span(row_count.div_ceil(8))?) };
         let present = |index: usize| bitmap.is_none_or(|bitmap| bitmap[index / 8] & (1 << (index % 8)) != 0);
         let elem_tag = reader.read_u8()?;
         match elem_tag {
@@ -2584,7 +2638,7 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<RecordSpecProdu
                 }
             }
             ELEM_BOOL => {
-                let bitmap = reader.read_bytes(row_count.div_ceil(8))?;
+                let bitmap = reader.read_span(row_count.div_ceil(8))?;
                 for i in 0..row_count {
                     ctx.materialization.step()?;
                     if present(i) {
@@ -3005,40 +3059,8 @@ pub fn schema_hash_controlled<C:semio_framework_dsl_record::NativeSchemaControl>
 //#endregion 🔖️SchemaHash
 
 //#region 🔖️Document
-/// ⚙️ Knobs for [`encode_document`]. `canonical` gates only the `OPTIONAL_CANONICAL`
-/// header bit — the sorted-fields/omitted-Absent/sorted-map-keys/minimal-varint/exact-f64/
-/// interning/packed-numeric rules are applied unconditionally (the purity LAW demands determinism
-/// regardless of `HashMap` iteration order, so there is no looser "non-canonical" code path).
-#[derive(Clone, Debug)]
-pub struct EncodeOptions {
-    pub canonical: bool,
-    pub codec: CodecId,
-    pub chunk_threshold: u64,
-    pub chunk_size: u64,
-    pub frame_size: u64,
-    pub preserve_unknown: bool,
-    pub limits: PackLimits,
-}
-
-impl Default for EncodeOptions {
-    fn default() -> Self {
-        Self { canonical: true, codec: CodecId(1), chunk_threshold: 256 * 1024, chunk_size: 1024 * 1024, frame_size: 1024 * 1024, preserve_unknown: true, limits: PackLimits::default() }
-    }
-}
-
-/// ⚙️ Knobs for [`decode_document`].
-#[derive(Clone, Debug)]
-pub struct DecodeOptions {
-    pub verification: crate::format::VerificationLevel,
-    pub preserve_unknown: bool,
-    pub limits: PackLimits,
-}
-
-impl Default for DecodeOptions {
-    fn default() -> Self {
-        Self { verification: crate::format::VerificationLevel::Standard, preserve_unknown: true, limits: PackLimits::default() }
-    }
-}
+/// 🎛️ First-party Pack policy is owned by the shared transport contract.
+pub use protocol::codec::{PackEncodeOptions as EncodeOptions,PackDecodeOptions as DecodeOptions};
 
 /// 🩺️ What [`decode_document`] observed beyond the plain `RecordValue`: field ids present
 /// on the wire but absent from the caller's `RecordSpec`, any unrecognized segment kinds,
@@ -3189,6 +3211,20 @@ pub fn decode_record_body_exact_controlled(bytes:&[u8],spec:&RecordSpec,options:
     Ok(record)
 }
 
+/// 📖️ Decodes one terminal Record directly from a checked source range under the caller's control.
+pub fn decode_record_body_span_exact_controlled(bytes:crate::ByteSpan<'_>,spec:&RecordSpec,options:&DecodeOptions,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<RecordValue,PackRefusal>{
+    if bytes.len()as u64>options.limits.max_file_len{return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::WorkLimit,limit:"record body exceeds max_file_len"})}
+    control.begin_stage(0).map_err(PackRefusal::from)?;
+    let mut reader=ByteReader::from_span(bytes);
+    let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};
+    let symbols=decode_inline_symbols(&mut reader,&options.limits,&materialization)?;
+    let mut context=DecCtx{source:DecSource::Inline{symbols},limits:options.limits.clone(),verification:options.verification,preserve_unknown:false,unknown_field_ids:Vec::new(),materialization:&materialization};
+    let record=decode_record_fields(&mut reader,Some(spec),&mut context,0)?;
+    if reader.position()!=bytes.len(){return Err(PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"record body",offset:reader.position()as u64,detail:"trailing bytes after terminal record"})}
+    if !context.unknown_field_ids.is_empty(){return Err(PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"record body",offset:reader.position()as u64,detail:"unknown terminal record fields"})}
+    Ok(record)
+}
+
 fn decode_inline_symbols(reader: &mut ByteReader<'_>, limits: &PackLimits, materialization: &dyn MaterializationAdmission) -> Result<Vec<String>, PackRefusal> {
     let symbol_count = reader.read_varint_u64()?;
     if symbol_count > u64::from(limits.max_symbols) {
@@ -3204,9 +3240,9 @@ fn decode_inline_symbols(reader: &mut ByteReader<'_>, limits: &PackLimits, mater
         if len > limits.max_segment_len {
             return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "record-body symbol length exceeds max_segment_len" });
         }
-        let raw = reader.read_bytes(usize::try_from(len).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "wire symbol byte length" })?)?;
+        let raw = reader.read_span(usize::try_from(len).map_err(|_| PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "wire symbol byte length" })?)?;
         let symbol_offset = reader.position() as u64;
-        symbols.push(materialization.copy_utf8(raw,symbol_offset,"symbol")?);
+        symbols.push(materialization.copy_span_utf8(raw,symbol_offset,"symbol")?);
     }
     Ok(symbols)
 }
@@ -3235,6 +3271,12 @@ pub fn decode_value_record_body_exact(bytes: &[u8], field_id: u16, limits: &Pack
 pub fn decode_value_record_body_exact_controlled(bytes:&[u8],field_id:u16,options:&DecodeOptions,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
     if bytes.len() as u64>options.limits.max_file_len{return Err(PackRefusal::ValueRefusal(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"intrinsic wire exceeds max_file_len")));}
     control.scoped_stage(|control|{control.begin_stage(0).map_err(PackRefusal::ValueRefusal)?;let mut reader=ByteReader::new(bytes);let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};let symbols=decode_inline_symbols(&mut reader,&options.limits,&materialization)?;if reader.read_varint_u64()?!=1||reader.read_varint_u64()?!=u64::from(field_id)||reader.read_u8()?!=TAG_VALUE{return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"expected exactly one declared Value field".into()});}let mut ctx=DecCtx{source:DecSource::Inline{symbols},limits:options.limits.clone(),verification:options.verification,preserve_unknown:false,unknown_field_ids:Vec::new(),materialization:&materialization};let value=decode_dsl_value(&mut reader,&mut ctx,0)?;if reader.position()!=bytes.len(){return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"trailing bytes after terminal intrinsic value".into()});}materialization.control.borrow_mut().checkpoint().map_err(PackRefusal::ValueRefusal)?;Ok(value)})
+}
+
+/// 🎞️ Decodes one exact intrinsic body by borrowing the caller's complete immutable byte source.
+pub fn decode_value_record_body_span_exact_controlled(bytes:crate::ByteSpan<'_>,field_id:u16,options:&DecodeOptions,control:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
+    if bytes.len() as u64>options.limits.max_file_len{return Err(PackRefusal::ValueRefusal(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"intrinsic wire exceeds max_file_len")));}
+    control.scoped_stage(|control|{control.begin_stage(0).map_err(PackRefusal::ValueRefusal)?;let mut reader=ByteReader::from_span(bytes);let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};let symbols=decode_inline_symbols(&mut reader,&options.limits,&materialization)?;if reader.read_varint_u64()?!=1||reader.read_varint_u64()?!=u64::from(field_id)||reader.read_u8()?!=TAG_VALUE{return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"expected exactly one declared Value field".into()});}let mut ctx=DecCtx{source:DecSource::Inline{symbols},limits:options.limits.clone(),verification:options.verification,preserve_unknown:false,unknown_field_ids:Vec::new(),materialization:&materialization};let value=decode_dsl_value(&mut reader,&mut ctx,0)?;if reader.position()!=bytes.len(){return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"trailing bytes after terminal intrinsic value".into()});}materialization.control.borrow_mut().checkpoint().map_err(PackRefusal::ValueRefusal)?;Ok(value)})
 }
 
 fn decode_record_body_inner(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions, exact: bool) -> Result<(RecordValue, DecodeReport), PackRefusal> {

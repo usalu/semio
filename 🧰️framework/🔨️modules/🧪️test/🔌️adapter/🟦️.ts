@@ -32,7 +32,7 @@ export type FeatureScenario = Readonly<{
   line: number;
 }>;
 
-export type ResolvedFixture = Readonly<{ uri: string; scope: "shared" | "asset" | "schema"; name: string; path: string; digest: string }>;
+export type ResolvedTestInput = Readonly<{ uri: string; scope: "shared" | "asset" | "schema"; name: string; path: string; digest: string }>;
 
 export type SubjectRawInputs = Readonly<Record<string, Readonly<Partial<Record<Implementation, string>>>>>;
 
@@ -63,9 +63,9 @@ export type TestCasePlan = Readonly<{
   background: readonly FeatureStep[];
   scenarios: readonly FeatureScenario[];
   adapters: Readonly<Partial<Record<Implementation, string>>>;
-  fixtures: readonly ResolvedFixture[];
+  inputs: readonly ResolvedTestInput[];
   /** 🧫️ The full provenance record of every fixture this case reads — hosts never re-derive it. */
-  fixtureManifests: readonly FixtureManifest[];
+  testEvidence: readonly TestEvidence[];
   workDir: string;
   resultsPath: string;
   outputDir: string;
@@ -84,11 +84,11 @@ export type AdapterContext = Readonly<{
   repoRoot: string;
   workDir: string;
   /** 🧫️ Absolute path of a resolved fixture; throws for an unresolved URI rather than returning a silent default. */
-  fixture(uri: string): string;
+  input(uri: string): string;
   /** 🧫️ Bytes of a resolved fixture. */
-  fixtureBytes(uri: string): Uint8Array;
+  inputBytes(uri: string): Uint8Array;
   /** 🧫️ Copies an immutable fixture into the case's work directory and returns the mutable copy's path. */
-  copyFixture(uri: string, as?: string): string;
+  copyInput(uri: string, as?: string): string;
   /** 📥️ Bytes THIS scenario's subject host produced in `implementation`, for an `@oracle-input-subject-raw` oracle; throws when absent. */
   subjectRawBytes(implementation: Implementation): Uint8Array;
   /** 📦️ Directory a handler writes its produced artifact bundle into. */
@@ -135,40 +135,39 @@ export type MutationOutcomeClass = (typeof MUTATION_OUTCOME_CLASSES)[number];
 
 export type EngineFamily = Readonly<{ family: string; implementation: string; version: string }>;
 
-export type FixtureInvariants = Readonly<{ local?: readonly string[]; enclosing?: readonly string[] }>;
+export type EvidenceInvariants = Readonly<{ local?: readonly string[]; enclosing?: readonly string[] }>;
 
-export const FIXTURE_CLASSES = ["real-world", "handcrafted", "third-party-generated"] as const;
+export const EVIDENCE_CLASSES = ["real-world", "handcrafted", "third-party-generated"] as const;
 
-export type FixtureClass = (typeof FIXTURE_CLASSES)[number];
+export type EvidenceClass = (typeof EVIDENCE_CLASSES)[number];
 
-export type FixtureFile = Readonly<{ role: string; path: string; mediaType: string; sha256: string; bytes?: number }>;
+export type EvidenceFile = Readonly<{ role: string; path: string; mediaType: string; sha256: string; bytes?: number }>;
 
-export type FixtureGenerator = Readonly<{ oracle: string; packageVersion: string; engineFamily: string; engineVersion: string; command: string; seed?: string | number; platform: PlatformId; sourceDigest?: string; exportEngine?: EngineFamily }>;
+export type EvidenceGenerator = Readonly<{ oracle: string; packageVersion: string; engineFamily: string; engineVersion: string; command: string; seed?: string | number; platform: PlatformId; sourceDigest?: string; exportEngine?: EngineFamily }>;
 
-export type FixtureProvenance = Readonly<{ source: "generated" | "authored" | "downloaded" | "vendored"; license: string; acquiredAt?: string; attribution?: string; url?: string; security?: "scanned-clean" | "unscanned" | "quarantined"; privacy?: "no-personal-data" | "reviewed" | "unreviewed" }>;
+export type EvidenceProvenance = Readonly<{ source: "generated" | "authored" | "downloaded" | "vendored"; license: string; acquiredAt?: string; attribution?: string; url?: string; security?: "scanned-clean" | "unscanned" | "quarantined"; privacy?: "no-personal-data" | "reviewed" | "unreviewed" }>;
 
-export type FixtureUnits = Readonly<{ length: string; angle: string; handedness?: "right" | "left"; up?: "y" | "z" }>;
+export type EvidenceUnits = Readonly<{ length: string; angle: string; handedness?: "right" | "left"; up?: "y" | "z" }>;
 
 export type ToleranceOverride = Readonly<{ reason: string; measuredBaseline: number; factor: number; approvedBy: string }>;
 
-export type FixtureManifest = Readonly<{
-  schema: "semio.repository-test.fixture/v2";
+export type TestEvidence = Readonly<{
   id: string;
-  class: FixtureClass;
+  class: EvidenceClass;
   target: SubsetTarget;
   mutation?: string;
   outcome?: MutationOutcomeClass;
-  units: FixtureUnits;
-  files: readonly FixtureFile[];
-  generator?: FixtureGenerator;
-  provenance: FixtureProvenance;
+  units: EvidenceUnits;
+  files: readonly EvidenceFile[];
+  generator?: EvidenceGenerator;
+  provenance: EvidenceProvenance;
   comparisonProfile: string;
   toleranceProfile?: string;
   toleranceOverride?: ToleranceOverride;
   reproducible: boolean;
   family?: string;
   notes?: string;
-  invariants?: FixtureInvariants;
+  invariants?: EvidenceInvariants;
   comparisonPipeline?: string;
   reproducibilityDiffs?: readonly string[];
   /** 📁️ Repo-relative directory the manifest was read from; `files[].path` resolves against it. */

@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::empty_raster_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot;
 
 #[test]
 fn demo_example_media_operation_mints_the_emblem() {
@@ -16,7 +16,7 @@ fn demo_example_media_operation_mints_the_emblem() {
 /// a blank composite (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
 #[test]
 fn replacing_a_materialized_document_plants_the_example_media_it_just_removed() {
-    let current = crate::standards::v1::subsets::any::schema::semio_example_document();
+    let current = crate::standards::v1::subsets::any::schema::raster_image_test_snapshot();
     assert!(crate::raster_asset(&current.assets, "semio-emblem").is_some(), "the open document starts with real pixels");
     let example = raster_example_document(crate::examples::art_raster_demo::ID).expect("the demo example document");
     let operations = replace_document_operations(&current, example, crate::examples::art_raster_demo::ID);

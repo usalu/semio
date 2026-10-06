@@ -244,3 +244,56 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
     artifact_app_laws::close_registered_fixture_app(&mut home);
     artifact_app_laws::close_registered_fixture_app(&mut index);
 }
+
+/// 🪶️ Pins the two actual persisted Runtime owners independently of the five app surfaces.
+#[semio_framework_async_macros::async_test]
+async fn sqlite_snapshot_composed_owner_census() {
+    use semio_framework_os_kernel::{ArtifactCodec, ArtifactSqliteSnapshot};
+    use semio_framework::io::io_mechanism::{io_route, native_snapshot_sqlite_schema};
+    use semio_framework::io_schema::{ArtifactDialect, IoFidelity, SQLITE_SNAPSHOT};
+    use semio_s_artifact_space_home::{SHomeSnapshot,SHomeMutation};
+    use semio_s_artifact_space_space::{SSpaceSnapshot,SSpaceMutation};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️snapshot-owner-census/🔣️.json")).expect("closed neutral composed owner census");
+    let owners=fixture["owners"].as_array().unwrap();
+    assert_eq!(owners.len(),2);
+    let metadata=fixture["metadataOnlyDefinitions"].as_array().unwrap();
+    assert!(metadata.is_empty(),"this actual composition currently declares two Runtime owners");
+    let expected=owners.iter().map(|row|(row["kind"].as_str().unwrap().to_string(),row["standard"].as_str().unwrap().to_string(),row["subset"].as_str().unwrap().to_string(),row["schema"].as_str().unwrap().to_string())).collect::<BTreeSet<_>>();
+    let declarations=[semio_s_artifact_space_home::declaration().await.unwrap(),semio_s_artifact_space_space::declaration().unwrap()];
+    let declared_kinds=declarations.iter().map(|row|row.definition().identity().as_str().to_string()).collect::<BTreeSet<_>>();
+    assert_eq!(declared_kinds,owners.iter().map(|row|row["kind"].as_str().unwrap().to_string()).collect());
+    let bindings=declarations.iter().flat_map(|row|row.document_codec_bindings()).collect::<Vec<_>>();
+    assert_eq!(bindings.len(),2);
+    let actual=bindings.iter().map(|(dialect,codec)|(dialect.artifact_kind.to_string(),dialect.standard.0.to_string(),dialect.subset.0.to_string(),codec.schema.clone())).collect::<BTreeSet<_>>();
+    assert_eq!(actual,expected,"expected membership comes from direct declaration authority");
+    let plugin=assembled_plugin();
+    assert_eq!(plugin.manifest.plugin_id,fixture["plugin"].as_str().unwrap());
+    assert_eq!(plugin.artifact_definitions().definitions().map(|row|row.identity().as_str().to_string()).collect::<BTreeSet<_>>(),declared_kinds,"metadata traversal retains the actual complete definition roster");
+    let expected_hosted=fixture["hostedArtifactKinds"].as_array().unwrap().iter().map(|row|(row["kind"].as_str().unwrap().to_string(),row["schema"].as_str().unwrap().to_string())).collect::<BTreeSet<_>>();
+    assert_eq!(plugin.manifest.hosted_artifact_kinds.iter().map(|row|(row.id.clone(),row.schema.clone())).collect::<BTreeSet<_>>(),expected_hosted,"foreign hosted membership is independent of the two complete owned Runtime declarations");
+    let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
+    for(dialect,codec)in bindings {
+        let native=ArtifactDialect::from(dialect);
+        let declared=codec.snapshot_sqlite.as_ref().expect("every declared Snapshot owns its semantic SQLite provider");
+        let(type_id,sql,typed)=match native.artifact_kind.as_str(){
+            "s.space.home"=>(std::any::TypeId::of::<SHomeSnapshot>(),SHomeSnapshot::SQLITE_SCHEMA,ArtifactCodec::bare::<SHomeSnapshot,SHomeMutation>("s.home")),
+            "s.space.space"=>(std::any::TypeId::of::<SSpaceSnapshot>(),SSpaceSnapshot::SQLITE_SCHEMA,ArtifactCodec::bare::<SSpaceSnapshot,SSpaceMutation>("s.space")),
+            _=>panic!("undeclared Runtime owner")
+        };
+        assert_eq!(declared.snapshot_type,Some(type_id));
+        assert!(!sql.trim().is_empty());
+        assert_eq!(declared.schema.as_ref(),sql);
+        assert!(declared.identical_to(typed.snapshot_sqlite.as_ref().unwrap()),"typed owner and declared complete SQL/hooks differ");
+        let installed=semio_framework_os_kernel::document_codec(&codec.schema).await.unwrap().expect("the ordinary composition installs each actual document codec");
+        assert_eq!(installed.schema,codec.schema);
+        assert!(declared.identical_to(installed.snapshot_sqlite.as_ref().expect("installed semantic provider")));
+        assert_eq!(native_snapshot_sqlite_schema(&native).unwrap(),sql);
+        for(from,into)in[(&native,&sqlite),(&sqlite,&native)]{
+            let route=io_route(from,into,1).await.unwrap().value;
+            assert_eq!(route.hops.len(),1);
+            assert_eq!(route.fidelity,IoFidelity::Exact);
+        }
+        eprintln!("[DEBUG] Hub Space composed Snapshot owner dialect={} schema={} concrete_type={:?} sql_bytes={} installed_same_hooks=true direct_exact_directions=2",native.to_coordinate(),codec.schema,declared.snapshot_type,sql.len());
+    }
+    eprintln!("[DEBUG] Hub Space composed Snapshot census Runtime=2 metadataOnly=0 declaredBindings=2 genuineAppSurfaces={}",plugin.manifest.apps.len());
+}

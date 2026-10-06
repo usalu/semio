@@ -3,7 +3,7 @@
 
 pub mod select_register {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -24,7 +24,7 @@ pub mod add_register_item {
     use crate::editor::architect::behavior::apply_template;
     use crate::editor::architect::catalog::add_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::{EntityId, ProgramSnapshot};
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -59,7 +59,7 @@ use semio_framework_value::ToValue;
 pub mod remove_register_item {
     use crate::editor::architect::catalog::remove_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::editor::architect::catalog::find_register_for_entity;
     use crate::schema::mutations as leaves;
     use crate::{EntityId, ProgramSnapshot};
@@ -98,7 +98,7 @@ use semio_framework_value::ToValue;
 pub mod patch_register_item {
     use crate::editor::architect::catalog::patch_register_item_operation;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::{EntityId, ProgramSnapshot};
     use semio_framework_value::DslValue as Value;
     use semio_framework_value::FromValue;

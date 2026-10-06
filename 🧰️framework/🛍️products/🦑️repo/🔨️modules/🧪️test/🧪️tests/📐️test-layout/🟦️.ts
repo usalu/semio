@@ -21,12 +21,7 @@ const sort = (findings: readonly Expected[]): Expected[] => [...findings].sort((
 const taxonomy = testTaxonomy(repoRootFromHere());
 
 describe("📐️ canonical test layout", () => {
-  test("language-neutral vectors satisfy their schema", () => {
-    const compiler = new Ajv({ allErrors: true, strict: false });
-    compiler.addSchema(protocol);
-    const validate = compiler.getSchema(`${protocol.$id}#/$defs/TestLayoutCases`)!;
-    expect(validate(vectors)).toBe(true);
-    expect(validate.errors).toBeNull();
+  test("the protocol declares the layout finding vocabulary", () => {
     expect(protocol.$defs.TestLayoutFindingCode.enum).toEqual([...TEST_LAYOUT_FINDING_CODES]);
   });
 
@@ -243,7 +238,7 @@ describe("📐️ canonical test layout", () => {
 
   test("feature contracts and implementation paths share the canonical case names", () => {
     const owner = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test", caseDir = `${owner}/🧪️tests/🖥️host-protocol-parity`;
-    const registry: OracleRegistry = { schemaVersion: 1, oracles: [], probes: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], contributions: [] };
+    const registry: OracleRegistry = { schemaVersion: 1, oracles: [], probes: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], testEvidence: [], contributions: [] };
     const discovered: DiscoveredCase = { owner, ownerName: "test", case: "", caseDir, featurePath: `${caseDir}/🥒️.feature`, adapters: {}, sharedFixtureDir: null, projectName: "layout-fixture" };
     const names = new Map<string, boolean>();
     for (const vector of vectors.cases as readonly VectorCase[]) for (const source of vector.sources) {

@@ -1,6 +1,6 @@
 /** 🌱️ Forms consumes the complete canonical intrinsic value domain. */
 import type{DslValue}from"../🧬️mutations/🟦️.ts";
-import{binary64Value}from"../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export{parseIntrinsicValue as parseFormsValue}from"../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 /** 🔢️ Match the native intrinsic numeric projection without changing its stored identity. */
 export function formsValueNumber(value:DslValue):number|undefined{switch(value.kind){case"unsigned":case"signed":return Number(value.value);case"float":return binary64Value(value.value);default:return undefined;}}

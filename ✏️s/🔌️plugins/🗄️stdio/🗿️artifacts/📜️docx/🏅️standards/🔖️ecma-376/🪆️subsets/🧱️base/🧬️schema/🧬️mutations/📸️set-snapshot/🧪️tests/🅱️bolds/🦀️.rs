@@ -3,7 +3,7 @@ use crate::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, set_snapshot, DocxMutation};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxSnapshot, DocxStyle};
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec, Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpBinary, OpText};
 
 fn before() -> DocxSnapshot {
     build_minimal_docx(DocxDocument {

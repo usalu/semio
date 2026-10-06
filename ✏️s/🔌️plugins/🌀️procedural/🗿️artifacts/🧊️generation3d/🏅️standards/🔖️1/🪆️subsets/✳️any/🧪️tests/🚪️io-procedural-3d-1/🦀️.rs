@@ -67,7 +67,7 @@ fn signed_volume(vertices: &[[f64; 3]], triangles: &[[usize; 3]]) -> f64 {
 
 /// 🧊️ The committed cube, read out of its own vector.
 fn cube(ctx: &Context) -> Result<(Vec<[f64; 3]>, Vec<[usize; 3]>), String> {
-    let document = ctx.fixture_json(CUBE)?;
+    let document = ctx.input_json(CUBE)?;
     let flat = numbers(&document, "positions")?;
     let raw = numbers(&document, "indices")?;
     if flat.len() != 24 || raw.len() != 36 {
@@ -99,7 +99,7 @@ fn projection(format: &str, vertex_count: usize, vertices: &[[f64; 3]], triangle
 fn read_handler(format: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
     move |ctx: &Context| {
         let (_, uri, magic, token, records, vertex_count) = *FORMATS.iter().find(|entry| entry.0 == format).expect("registered format");
-        let bytes = ctx.fixture_bytes(uri)?;
+        let bytes = ctx.input_bytes(uri)?;
         let text = String::from_utf8(bytes.clone()).map_err(|error| format!("read-{format}: the committed encoding is not utf-8: {error}"))?;
         if !text.starts_with(magic) {
             return Err(format!("read-{format}: the committed encoding does not open with {magic:?}"));

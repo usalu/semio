@@ -135,10 +135,10 @@ pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowTransientSn
 }
 
 pub fn addressed(view: &semio_framework_plugin::ViewModel, transient: SequenceScriptWindowTransient) -> Result<semio_framework_plugin::WindowTransientMutation, semio_framework_plugin::Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("sequence-script-window-required"))?;
-    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("sequence-window-stale"))?;
+    let id = view.window_id.as_deref().ok_or_else(|| crate::editor::sequence::sequence_fault("sequence.window.unavailable", "sequence-script-window-required"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| crate::editor::sequence::sequence_fault("sequence.window.unavailable", "sequence-window-stale"))?;
     if kind != super::SEQUENCE_PLAY_WINDOW_SCRIPT {
-        return Err(semio_framework_plugin::Fault::from("sequence-script-window-kind-required"));
+        return Err(crate::editor::sequence::sequence_fault("sequence.window.unavailable", "sequence-script-window-kind-required"));
     }
     Ok(semio_framework_plugin::WindowTransientMutation::of::<SequenceScriptWindowTransientOwner>(id, SequenceScriptWindowTransientMutation::Snapshot { transient }))
 }

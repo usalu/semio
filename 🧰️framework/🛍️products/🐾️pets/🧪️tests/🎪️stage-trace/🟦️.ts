@@ -18,7 +18,7 @@
  * @see ../../🔨️modules/🧠️behavior/🟦️.ts — `MODE_LIMITS`, `followersOf`
  */
 import { AssertionError } from "node:assert";
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { ACTIVITIES, FOOTINGS, MOODS, type Activity, type Extent, type Footing, type Frame, type Menagerie, type Slug, type Stage, type StageEvent, type ToolFrame } from "../../🧬️schema/🟦️.ts";
 import { overlaps } from "../../🔨️modules/🚧️clearance/🟦️.ts";
 import { bodiesOf, extentOf } from "../../🔨️modules/📏️spacing/🟦️.ts";
@@ -203,7 +203,7 @@ function chunkedStage(menagerie: Menagerie, script: Script): Stage {
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 const replayed = new Map<string, { trace: Trace; stage: Stage }>();

@@ -9,7 +9,20 @@
   ],
   "properties": {
     "mesh": {
-      "$ref": "#/$defs/SemioMesh"
+      "$ref": "#/$defs/SemioMesh",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Mesh",
+          "de": "Netz"
+        },
+        "description": {
+          "en": "Id, name and primitives of the mesh that is created.",
+          "de": "Kennung, Name und Primitive des Netzes, das erstellt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

@@ -11,7 +11,7 @@ fn inference_determinism_law() {
     use protocol::Inference;
 
     let text = include_str!("../../🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio");
-    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
     assert_eq!(Generation3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Generation3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
     snapshot.retire_cold();
 }
@@ -24,7 +24,7 @@ fn inference_of_the_example_is_a_non_trivial_acyclic_topology() {
     use protocol::Inference;
 
     let text = include_str!("../../🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio");
-    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
     let inferred = Generation3dInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inferred.topology.node_count as usize, snapshot.host_snapshot.widgets.len());
     assert_eq!(inferred.topology.edge_count as usize, snapshot.host_snapshot.synapses.len());

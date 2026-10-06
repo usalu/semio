@@ -1,0 +1,25 @@
+{
+  "word": "x",
+  "payloadBytes": 8194,
+  "allocationBytes": 65536,
+  "maximumCloseItems": 1,
+  "maximumCloseBytes": 4096,
+  "closeStepScaffold": 128,
+  "cancelAt": 1024,
+  "patchJson": "{\"operation\":\"set\",\"path\":\"/title\",\"value\":null}",
+  "cases": [
+    {"tag": 0, "text": "set-snapshot snapshot=[73,[],[]]", "body": "snapshot=[73,[],[]]"},
+    {"tag": 1, "text": "insert-node node=[6e,6b,6c,[],[1,-0]]", "body": "node=[6e,6b,6c,[],[1,-0]]"},
+    {"tag": 2, "text": "remove-node id=6e", "body": "id=6e"},
+    {"tag": 3, "text": "set-node-kind id=6e kind=6b", "body": "id=6e kind=6b"},
+    {"tag": 4, "text": "set-node-label id=6e label=6c", "body": "id=6e label=6c"},
+    {"tag": 5, "text": "set-node-position id=6e position=[1,-0]", "body": "id=6e position=[1,-0]"},
+    {"tag": 6, "text": "set-node-param id=6e key=6b value=76", "body": "id=6e key=6b value=76"},
+    {"tag": 7, "text": "remove-node-param id=6e key=6b", "body": "id=6e key=6b"},
+    {"tag": 8, "text": "insert-edge edge=[65,[6e,70],[6d,71],6b]", "body": "edge=[65,[6e,70],[6d,71],6b]"},
+    {"tag": 9, "text": "remove-edge id=65", "body": "id=65"},
+    {"tag": 10, "text": "set-edge-endpoints id=65 from=[6e,70] to=[6d,71]", "body": "id=65 from=[6e,70] to=[6d,71]"},
+    {"tag": 11, "text": "set-edge-kind id=65 kind=6b", "body": "id=65 kind=6b"},
+    {"tag": 12, "text": "drag-nodes targets=[6e,6d] dx=0 dy=-0", "body": "targets=[6e,6d] dx=0 dy=-0"}
+  ]
+}

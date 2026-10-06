@@ -222,7 +222,7 @@ fn retained_route_partition_and_publication_are_exact() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
 
     // 🎯️ The generated command schema is the one count every other table must match — 46 since
-    // 2026-09-08 (`setActiveUtility` became framework-owned, `setFixtureJson` became
+    // 2026-09-08 (`setActiveUtility` became framework-owned, `loadDocumentJson` became
     // `replaceSnapshotJson`); the literal 47 these assertions carried was never re-run.
     let declared = LowpolyCommand::TOOL_JOB_IDS.len();
     let all = every_command();
@@ -607,8 +607,8 @@ async fn export_media_mesh_out_produces_mesh_document_payload() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_mesh_in_round_trips_into_a_reset_document_effect() {
     let mesh = semio_framework_plugin::mesh_from_kind("box");
-    let mesh_document = crate::schema::mesh_document_from_mesh(&mesh).expect("mesh document");
-    let json = serde_json::to_string(&mesh_document).expect("mesh document json");
+    let mesh_document = crate::schema::mesh_document_value(&mesh);
+    let json = semio_framework_pack_json::to_json_string(&mesh_document);
     let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "mesh.document".into(), json } };
     let projection = crate::schema::default_snapshot();
     let history = HistoryView::empty();

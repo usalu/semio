@@ -3,12 +3,6 @@
 use crate::{AccidentalCase, FloorArea, RoofArea, SelfWeightElement, WindFace};
 use framework_schema::ArtifactSchema;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
-
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1991 subject: site + building geometry + design load assumptions (SI: m, Pa, N, K, kg/m³).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -196,7 +190,7 @@ pub struct En1991Snapshot {
     pub accidental_cases: Vec<crate::AccidentalCase>,
 }
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1991Snapshot, extension = "en1991", envelope_id = "norm.en1991", sqlite = sqlite::sqlite_codec);
+crate::impl_norm_artifact_record!(En1991Snapshot, extension = "en1991", envelope_id = "norm.en1991", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1991Snapshot {
@@ -312,33 +306,15 @@ accidental_cases: vec![],
 //#endregion 🔖️Snapshot
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ Canonical JSON projection of [`En1991Snapshot`].
-pub fn encode_en1991_snapshot_json(snapshot: &En1991Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ Inverse of [`encode_en1991_snapshot_json`].
-pub fn decode_en1991_snapshot_json(text: &str) -> Result<En1991Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📖️ Parse committed `.dsl.semio` into [`En1991Snapshot`].
-pub fn decode_en1991_dsl(text: &str) -> Result<En1991Snapshot, String> {
-    <En1991Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-/// 🖨️ Print [`En1991Snapshot`] to canonical `.dsl.semio`.
-pub fn encode_en1991_dsl(snapshot: &En1991Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
 
-/// 📦️ Decode `.pack.semio` envelope.
-pub fn decode_en1991_pack(bytes: &[u8]) -> Result<En1991Snapshot, String> {
-    <En1991Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
 
-/// 📦️ Encode `.pack.semio` envelope.
-pub fn encode_en1991_pack(snapshot: &En1991Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge

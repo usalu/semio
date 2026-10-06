@@ -1,7 +1,8 @@
 //! 🔣️ Restores graph documents through the owning JSON grammar and first-party value protocol.
 use crate::Generation3dSnapshot;
 use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
-use semio_s_artifact_stdio_json::schema::snapshot::{parse_json_text, JsonSnapshot};
+use semio_s_artifact_stdio_json::schema::snapshot::{JsonSnapshot};
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
 
 pub fn register() {}
 

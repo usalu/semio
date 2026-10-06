@@ -1,0 +1,78 @@
+[
+  {
+    "name": "stl",
+    "type": "StlSnapshot",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "sourceEmpty": "source.triangles=[];",
+    "nativeEmpty": "source.triangles.clear();",
+    "factory": "fixture().1",
+    "tables": 3,
+    "columns": 12,
+    "contract": {
+      "schemaBytes": 1483,
+      "tableWidths": {
+        "stl_facet": 12,
+        "stl_solid": 3,
+        "stl_vertex": 12
+      },
+      "cases": [
+        {
+          "id": "originalSharedSourceNative",
+          "rows": 9,
+          "valueBytes": 762
+        },
+        {
+          "id": "emptyCollectionsRetainMetadata",
+          "rows": 1,
+          "valueBytes": 42
+        }
+      ]
+    }
+  },
+  {
+    "name": "obj",
+    "type": "ObjSnapshot",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot",
+    "sourceEmpty": "source.vertices=[];source.texcoords=[];source.normals=[];source.faces=[];source.groups=[];source.objects=[];source.usemtl=[];source.smoothingGroups=[];source.unknownStatements=[];",
+    "nativeEmpty": "source.vertices.clear();source.texcoords.clear();source.normals.clear();source.faces.clear();source.groups.clear();source.objects.clear();source.usemtl.clear();source.smoothing_groups.clear();source.unknown_statements.clear();",
+    "factory": "fixture()",
+    "tables": 14,
+    "columns": 15,
+    "contract": {
+      "schemaBytes": 6231,
+      "tableWidths": {
+        "obj_document": 3,
+        "obj_face": 3,
+        "obj_face_boundary": 4,
+        "obj_face_vertex": 9,
+        "obj_group": 4,
+        "obj_group_face": 6,
+        "obj_material_range": 7,
+        "obj_normal": 12,
+        "obj_object": 4,
+        "obj_object_face": 6,
+        "obj_smoothing_range": 7,
+        "obj_texcoord": 12,
+        "obj_unknown_statement": 6,
+        "obj_vertex": 15
+      },
+      "cases": [
+        {
+          "id": "originalSharedSourceNative",
+          "rows": 34,
+          "valueBytes": 1830
+        },
+        {
+          "id": "emptyCollectionsRetainMetadata",
+          "rows": 2,
+          "valueBytes": 60
+        },
+        {
+          "id": "originalSourceEmpty",
+          "rows": 2,
+          "valueBytes": 41
+        }
+      ]
+    }
+  }
+]

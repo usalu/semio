@@ -4,7 +4,8 @@
 //! mutation-capable surface — this file must not import through `crate::editor`
 //! (`policyViewerPurityBreaches`).
 
-use crate::schema::snapshot::{decode_palette_indices, Grid2dSnapshot, WfcColor, WfcPathSegment, WfcTile2d, WfcTileMedia2d};
+use crate::schema::snapshot::{Grid2dSnapshot, WfcColor, WfcPathSegment, WfcTile2d, WfcTileMedia2d};
+use crate::standards::v1::subsets::any::io::binary::snapshot::{decode_palette_indices};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::Canvas2dScene;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -49,6 +50,7 @@ fn canvas_actions() -> Vec<semio_framework_plugin::ActionDefinition> {
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::grid2d::create_grid2d_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: BODY_KEY.into(),

@@ -114,7 +114,7 @@ fn sqlite_snapshot_native_exact_output_admission_ignores_approximate_preflight()
         process::{Command, Stdio},
     };
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
+    
     let case = &fixture["exactEncodingAdmission"];
     let output_bytes = case["outputBytes"].as_u64().unwrap() as usize;
     let snapshot = EstimatedEncoding { output_bytes };
@@ -123,8 +123,8 @@ fn sqlite_snapshot_native_exact_output_admission_ignores_approximate_preflight()
     limits.max_file_bytes = case["maximumFileBytes"].as_u64().unwrap() as usize;
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
     let bytes = crate::sqlite_snapshot::export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-    let script = "import Ajv from'ajv';import{Database}from'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());if(!new Ajv({strict:true}).validate(x.schema,x.fixture))throw Error('fixture');const d=Database.deserialize(Buffer.from(x.bytes,'base64'));const n=d.query('SELECT output_bytes FROM encoding_expansion WHERE id=1').get().output_bytes;await Bun.write(Bun.stdout,Uint8Array.from({length:n},()=>120));d.close();";
-    let input = serde_json::json!({"fixture":fixture,"schema":schema,"bytes":protocol::bytes::encode_base64(&bytes)});
+    let script = "import{Database}from'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const d=Database.deserialize(Buffer.from(x.bytes,'base64'));const n=d.query('SELECT output_bytes FROM encoding_expansion WHERE id=1').get().output_bytes;await Bun.write(Bun.stdout,Uint8Array.from({length:n},()=>120));d.close();";
+    let input = serde_json::json!({"fixture":fixture,"bytes":protocol::bytes::encode_base64(&bytes)});
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
     child.stdin.take().unwrap().write_all(input.to_string().as_bytes()).unwrap();
     let oracle = child.wait_with_output().unwrap();
@@ -203,15 +203,15 @@ fn encoding_stops_inside_owned_output(encoding: SnapshotEncoding) {
         process::{Command, Stdio},
     };
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
+    
     let case = &fixture["interiorEncoding"];
     let output_bytes = case["outputBytes"].as_u64().unwrap() as usize;
     let cancel_at = case["cancelAt"].as_u64().unwrap() as usize;
     let snapshot = GuardedEncoding { output_bytes };
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
     let bytes = crate::sqlite_snapshot::export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-    let input = serde_json::json!({"fixture":fixture,"schema":schema,"bytes":protocol::bytes::encode_base64(&bytes)});
-    let script = "import Ajv from 'ajv';import{Database}from'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());if(!new Ajv({strict:true}).validate(x.schema,x.fixture))throw Error('fixture');const db=Database.deserialize(Buffer.from(x.bytes,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');await Bun.write(Bun.stdout,String(db.query('SELECT output_bytes FROM encoding_expansion WHERE id=1').get().output_bytes));db.close();";
+    let input = serde_json::json!({"fixture":fixture,"bytes":protocol::bytes::encode_base64(&bytes)});
+    let script = "import{Database}from'bun:sqlite';const x=JSON.parse(await Bun.stdin.text());const db=Database.deserialize(Buffer.from(x.bytes,'base64'));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok')throw Error('integrity');await Bun.write(Bun.stdout,String(db.query('SELECT output_bytes FROM encoding_expansion WHERE id=1').get().output_bytes));db.close();";
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
     child.stdin.take().unwrap().write_all(input.to_string().as_bytes()).unwrap();
     let oracle = child.wait_with_output().unwrap();

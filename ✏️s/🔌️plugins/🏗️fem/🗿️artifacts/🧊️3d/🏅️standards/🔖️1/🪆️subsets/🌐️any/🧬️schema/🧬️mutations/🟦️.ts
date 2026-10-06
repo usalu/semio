@@ -1,4 +1,5 @@
-import type {Binary64,FemNode,FemDof,FemAxis,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemSolid,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
+import type { FemNode, FemDof, FemAxis, FemElement, FemMaterial, FemSection, FemSupport, FemLoad, FemLoadCase, FemSolid, FemCombination, FemAnalysisSettings } from "../📸️snapshot/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type {FemNode,FemDof,FemAxis,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemSolid,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
 /** 🧩️ Direct mutations reuse the canonical persisted Snapshot entity types. */
 

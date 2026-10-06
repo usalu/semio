@@ -165,8 +165,4 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🪢️TaxonomyMounts
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion 🪢️TaxonomyMounts

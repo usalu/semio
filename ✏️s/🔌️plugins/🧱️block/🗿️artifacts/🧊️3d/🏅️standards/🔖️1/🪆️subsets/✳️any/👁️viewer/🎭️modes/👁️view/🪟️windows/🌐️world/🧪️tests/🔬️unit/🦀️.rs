@@ -21,7 +21,7 @@ async fn render_produces_a_scene_node_for_the_empty_document() {
 /// fit as the editor's world window (ticket 26/09/19 play-grid visual audit, class 1).
 #[semio_framework_async_macros::async_test]
 async fn render_stages_a_one_shot_fit_for_the_booted_example() {
-    let document = crate::standards::v1::subsets::any::schema::snapshot::text::block3d_boot_snapshot();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::block3d_boot_snapshot();
     assert!(!document.representations.is_empty(), "the booted example must carry the representation whose mesh this window frames");
     let node = render(&document).expect("the booted example assembles its world surface");
     let scene: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");

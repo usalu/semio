@@ -2,18 +2,18 @@ use crate::schema::mutations::{apply_bmp_mutation, BmpMutation, PaintDirectRegio
 use protocol::Mutation;
 
 fn direct() -> crate::BmpSnapshot {
-    crate::io::decode_bmp(include_bytes!("../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap()
+    crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap()
 }
 
 fn indexed() -> crate::BmpSnapshot {
-    crate::io::decode_bmp(include_bytes!("../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")).unwrap()
+    crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb4-duplicate-palette.bmp")).unwrap()
 }
 
 #[test]
 fn direct_region_mutation_is_revision_guarded_and_exactly_invertible() {
     let original = direct();
     let mutation = BmpMutation::PaintDirectRegion(PaintDirectRegion {
-        revision: crate::io::bmp_revision(&original),
+        revision: crate::standards::v_v3::subsets::any::io::bmp_revision(&original),
         x: 1,
         y: 0,
         width: 1,
@@ -42,7 +42,7 @@ fn direct_region_mutation_is_revision_guarded_and_exactly_invertible() {
 fn indexed_region_mutation_round_trips_text_binary_and_undo() {
     let original = indexed();
     let mutation = BmpMutation::PaintIndexedRegion(PaintIndexedRegion {
-        revision: crate::io::bmp_revision(&original),
+        revision: crate::standards::v_v3::subsets::any::io::bmp_revision(&original),
         x: 0,
         y: 0,
         width: 2,

@@ -128,11 +128,6 @@ impl MdSnapshot {
 }
 //#endregion 🔖️CommonMarkModel
 
-#[path="📦️pack/🦀️.rs"]
-mod owned_pack;
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
+
+

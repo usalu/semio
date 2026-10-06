@@ -30,7 +30,7 @@ export interface PlaybookBuilderBlock {
   schema?: string;
   src?: string;
   accept?: string;
-  fixtureSlug?: string;
+  exampleId?: string;
 }
 
 export interface PlaybookBuilderStep {

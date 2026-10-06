@@ -1053,11 +1053,11 @@ where
     S: Send + Sync + 'static,
     M: Send + Sync + 'static,
 {
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: semio_framework_plugin::plugin_app_close_prelude::store::HistoryLane) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &M, lane: semio_framework_plugin::plugin_app_close_prelude::store::HistoryLane) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemFootprint, String> {
         if (self.route.recognizes)(mutation) {
-            self.route.factory.preflight(mutation, description, lane)
+            self.route.factory.preflight(mutation, lane)
         } else {
-            self.fallback.preflight(mutation, description, lane)
+            self.fallback.preflight(mutation, lane)
         }
     }
 
@@ -1228,7 +1228,7 @@ pub fn build_bounded_native_edit_tool_job<E: BoundedNativeEditingEditor>(request
         return Ok(None);
     }
     if E::command_id(&request.command) != request.tool_id {
-        return Err(edit_fault("bounded-native-edit.tool-mismatch", "bounded native edit command does not match its addressed tool"));
+        return Err(edit_fault("app.command.tool-mismatch", "bounded native edit command does not match its addressed tool"));
     }
     admit_bounded_native_command(request.command.as_ref(), E::NATIVE_MAXIMUM_RAW_BYTES)?;
     let tool_id = E::command_id(&request.command);
@@ -1543,7 +1543,7 @@ pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: ArtifactO
         return Err(edit_fault("snapshot-edit.command-mismatch", "snapshot edit tool received a native command"));
     };
     if event.action_id() != request.tool_id {
-        return Err(edit_fault("snapshot-edit.tool-mismatch", "snapshot edit command does not match its addressed tool"));
+        return Err(edit_fault("app.command.tool-mismatch", "snapshot edit command does not match its addressed tool"));
     }
     let tool_id = event.action_id();
     let operation = AppOperationContext {

@@ -3,42 +3,100 @@
   "$id": "https://json.schemas.assets.semio-tech.com/os/mcp/workspace/component.json",
   "title": "Semio OS MCP Headless Workspace",
   "$defs": {
-    "Sha256Hex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-    "Sha256Etag": { "type": "string", "pattern": "^\"[0-9a-f]{64}\"$" },
-    "Base64": { "type": "string", "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$" },
-    "ScopeId": { "type": "string", "minLength": 1, "maxLength": 256 },
-    "Ordinal": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-    "Generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "Sha256Etag": {
+      "type": "string",
+      "pattern": "^\"[0-9a-f]{64}\"$"
+    },
+    "Base64": {
+      "type": "string",
+      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+    },
+    "ScopeId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "Ordinal": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "Generation": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
     "ArtifactSelectorV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["artifactKind", "artifactSchema"],
+      "required": [
+        "artifactKind",
+        "artifactSchema"
+      ],
       "properties": {
-        "artifactKind": { "type": "string", "minLength": 1, "maxLength": 256 },
-        "artifactSchema": { "type": "string", "minLength": 1, "maxLength": 256 }
+        "artifactKind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "artifactSchema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
       }
     },
     "CanonicalCheckpointPartV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["byteLength", "sha256"],
+      "required": [
+        "byteLength",
+        "sha256"
+      ],
       "properties": {
-        "byteLength": { "$ref": "#/$defs/Ordinal" },
-        "sha256": { "$ref": "#/$defs/Sha256Hex" }
+        "byteLength": {
+          "$ref": "#/$defs/Ordinal"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
       }
     },
     "CanonicalCheckpointUntrustedV1": {
       "allOf": [
-        { "$ref": "https://json.schemas.assets.semio-tech.com/os/mcp/component.json#/$defs/UntrustedContentV1" },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/mcp/component.json#/$defs/UntrustedContentV1"
+        },
         {
           "type": "object",
           "properties": {
-            "provenance": { "type": "object", "properties": { "source": { "const": "hub-checkpoint" } } },
+            "provenance": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "const": "hub-checkpoint"
+                }
+              }
+            },
             "content": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["packBase64", "sprBase64"],
-              "properties": { "packBase64": { "$ref": "#/$defs/Base64" }, "sprBase64": { "$ref": "#/$defs/Base64" } }
+              "required": [
+                "packBase64",
+                "sprBase64"
+              ],
+              "properties": {
+                "packBase64": {
+                  "$ref": "#/$defs/Base64"
+                },
+                "sprBase64": {
+                  "$ref": "#/$defs/Base64"
+                }
+              }
             }
           }
         }
@@ -47,212 +105,218 @@
     "CanonicalCheckpointFrontierV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainHash"],
+      "required": [
+        "documentId",
+        "headEditOrdinal",
+        "headEditId",
+        "lastCommitSeq",
+        "chainHash"
+      ],
       "properties": {
-        "documentId": { "$ref": "#/$defs/ScopeId" },
-        "headEditOrdinal": { "$ref": "#/$defs/Ordinal" },
-        "headEditId": { "type": "string", "maxLength": 256 },
-        "lastCommitSeq": { "$ref": "#/$defs/Ordinal" },
-        "chainHash": { "$ref": "#/$defs/Sha256Hex" }
+        "documentId": {
+          "$ref": "#/$defs/ScopeId"
+        },
+        "headEditOrdinal": {
+          "$ref": "#/$defs/Ordinal"
+        },
+        "headEditId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "lastCommitSeq": {
+          "$ref": "#/$defs/Ordinal"
+        },
+        "chainHash": {
+          "$ref": "#/$defs/Sha256Hex"
+        }
       }
     },
     "CanonicalCheckpointResourceValueV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "scope", "descriptorDigestV1", "activeCheckpointId", "etag", "authorityGeneration", "catalogGeneration", "frontier", "pack", "spr", "untrusted"],
+      "required": [
+        "schema",
+        "scope",
+        "descriptorDigestV1",
+        "activeCheckpointId",
+        "etag",
+        "authorityGeneration",
+        "catalogGeneration",
+        "frontier",
+        "pack",
+        "spr",
+        "untrusted"
+      ],
       "properties": {
-        "schema": { "const": "semio.mcp.canonical-checkpoint-resource/v1" },
+        "schema": {
+          "const": "semio.mcp.canonical-checkpoint-resource/v1"
+        },
         "scope": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["spaceId", "documentId"],
-          "properties": { "spaceId": { "$ref": "#/$defs/ScopeId" }, "documentId": { "$ref": "#/$defs/ScopeId" } }
-        },
-        "descriptorDigestV1": { "$ref": "#/$defs/Sha256Hex" },
-        "activeCheckpointId": { "$ref": "#/$defs/Sha256Hex" },
-        "etag": { "$ref": "#/$defs/Sha256Etag" },
-        "authorityGeneration": { "$ref": "#/$defs/Generation" },
-        "catalogGeneration": { "type": ["integer", "null"], "minimum": 1, "maximum": 9007199254740991 },
-        "frontier": { "$ref": "#/$defs/CanonicalCheckpointFrontierV1" },
-        "pack": { "$ref": "#/$defs/CanonicalCheckpointPartV1" },
-        "spr": { "$ref": "#/$defs/CanonicalCheckpointPartV1" },
-        "untrusted": { "$ref": "#/$defs/CanonicalCheckpointUntrustedV1" }
-      }
-    },
-    "CanonicalCheckpointResourceContractV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "limits", "resource", "hostile", "lifecycle"],
-      "properties": {
-        "schema": { "const": "semio.mcp.canonical-checkpoint-resource.fixture/v1" },
-        "limits": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["pairBytes", "textBytes", "metadataBytes"],
+          "required": [
+            "spaceId",
+            "documentId"
+          ],
           "properties": {
-            "pairBytes": { "const": 4194304 },
-            "textBytes": { "const": 6291456 },
-            "metadataBytes": { "const": 16384 }
+            "spaceId": {
+              "$ref": "#/$defs/ScopeId"
+            },
+            "documentId": {
+              "$ref": "#/$defs/ScopeId"
+            }
           }
         },
-        "resource": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["uri", "mimeType", "value"],
-          "properties": {
-            "uri": { "type": "string", "pattern": "^semio://workspace/scopes/[^/]+/[^/]+/checkpoint$" },
-            "mimeType": { "const": "application/json" },
-            "value": { "$ref": "#/$defs/CanonicalCheckpointResourceValueV1" }
-          }
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/Sha256Hex"
         },
-        "hostile": {
-          "type": "array",
-          "minItems": 12,
-          "uniqueItems": true,
-          "items": {
-            "enum": [
-              "same-document-other-space",
-              "wrong-descriptor-digest",
-              "wrong-checkpoint",
-              "wrong-etag",
-              "wrong-frontier",
-              "wrong-pack-length",
-              "wrong-pack-hash",
-              "wrong-pack-base64",
-              "wrong-spr-length",
-              "wrong-spr-hash",
-              "wrong-spr-base64",
-              "over-text-limit"
-            ]
-          }
+        "activeCheckpointId": {
+          "$ref": "#/$defs/Sha256Hex"
         },
-        "lifecycle": {
-          "type": "array",
-          "minItems": 4,
-          "uniqueItems": true,
-          "items": { "enum": ["cancel", "deadline", "revoke-before-publish", "descriptor-refresh-before-publish"] }
+        "etag": {
+          "$ref": "#/$defs/Sha256Etag"
+        },
+        "authorityGeneration": {
+          "$ref": "#/$defs/Generation"
+        },
+        "catalogGeneration": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "frontier": {
+          "$ref": "#/$defs/CanonicalCheckpointFrontierV1"
+        },
+        "pack": {
+          "$ref": "#/$defs/CanonicalCheckpointPartV1"
+        },
+        "spr": {
+          "$ref": "#/$defs/CanonicalCheckpointPartV1"
+        },
+        "untrusted": {
+          "$ref": "#/$defs/CanonicalCheckpointUntrustedV1"
         }
       }
     },
     "HubLiveCatalogPackageV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "componentSha256", "descriptorByteSha256", "executionProtocol"],
+      "required": [
+        "pluginId",
+        "packageId",
+        "version",
+        "componentSha256",
+        "descriptorByteSha256",
+        "executionProtocol"
+      ],
       "properties": {
-        "pluginId": { "$ref": "#/$defs/ScopeId" },
-        "packageId": { "$ref": "#/$defs/ScopeId" },
-        "version": { "$ref": "#/$defs/ScopeId" },
-        "componentSha256": { "$ref": "#/$defs/Sha256Hex" },
-        "descriptorByteSha256": { "$ref": "#/$defs/Sha256Hex" },
+        "pluginId": {
+          "$ref": "#/$defs/ScopeId"
+        },
+        "packageId": {
+          "$ref": "#/$defs/ScopeId"
+        },
+        "version": {
+          "$ref": "#/$defs/ScopeId"
+        },
+        "componentSha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "descriptorByteSha256": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
         "executionProtocol": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["appChannelVersion"],
-          "properties": { "appChannelVersion": { "const": 21 } }
+          "required": [
+            "appChannelVersion"
+          ],
+          "properties": {
+            "appChannelVersion": {
+              "const": 23
+            }
+          }
         }
       }
     },
     "HubLiveCatalogSelectionV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["scope", "descriptorDigestV1", "catalogGenerationId", "package", "expectedInferenceOwners"],
+      "required": [
+        "scope",
+        "descriptorDigestV1",
+        "catalogGenerationId",
+        "package"
+      ],
       "properties": {
         "scope": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["spaceId", "documentId"],
-          "properties": { "spaceId": { "$ref": "#/$defs/ScopeId" }, "documentId": { "$ref": "#/$defs/ScopeId" } }
-        },
-        "descriptorDigestV1": { "$ref": "#/$defs/Sha256Hex" },
-        "catalogGenerationId": { "$ref": "#/$defs/Sha256Hex" },
-        "package": { "$ref": "#/$defs/HubLiveCatalogPackageV1" },
-        "expectedInferenceOwners": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/ScopeId" } }
-      }
-    },
-    "HubLiveCatalogContractV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "selection", "localOnly", "states", "hostile"],
-      "properties": {
-        "schema": { "const": "semio.mcp.hub-live-catalog/v1" },
-        "selection": { "$ref": "#/$defs/HubLiveCatalogSelectionV1" },
-        "localOnly": { "$ref": "#/$defs/HubLiveCatalogPackageV1" },
-        "states": {
-          "type": "array",
-          "minItems": 3,
-          "maxItems": 3,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["binding", "selectedPlugins", "localFallback"],
-            "properties": {
-              "binding": { "enum": ["ready", "refreshing", "revoked"] },
-              "selectedPlugins": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/ScopeId" } },
-              "localFallback": { "const": false }
+          "required": [
+            "spaceId",
+            "documentId"
+          ],
+          "properties": {
+            "spaceId": {
+              "$ref": "#/$defs/ScopeId"
+            },
+            "documentId": {
+              "$ref": "#/$defs/ScopeId"
             }
           }
         },
-        "hostile": {
-          "type": "array",
-          "minItems": 5,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["name", "field", "value"],
-            "properties": {
-              "name": { "$ref": "#/$defs/ScopeId" },
-              "field": { "enum": ["scope", "descriptorDigestV1", "pluginId", "packageId", "version", "componentSha256", "descriptorByteSha256", "executionProtocol"] },
-              "value": {}
-            }
-          }
+        "descriptorDigestV1": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "catalogGenerationId": {
+          "$ref": "#/$defs/Sha256Hex"
+        },
+        "package": {
+          "$ref": "#/$defs/HubLiveCatalogPackageV1"
         }
       }
     },
     "SessionActivationPhaseV1": {
       "description": "One phase of activating a plugin session and reading its document: the component is resolved, read, content-hashed, its compiled code loaded or compiled in an isolated worker, its guest opened, a bound hub document loaded into it through the stepped archive load (its polled completed/total is the phase fraction), then the document read. Every job that activates a session reports these (inference_run's artifact binding, artifact_create). A phase a warm session already passed is skipped, never reported twice; every phase is interruptible.",
-      "enum": ["resolving-component", "reading-component", "hashing-component", "loading-compiled-code", "compiling-component", "opening-guest", "loading-document", "reading-document"]
+      "enum": [
+        "resolving-component",
+        "reading-component",
+        "hashing-component",
+        "loading-compiled-code",
+        "compiling-component",
+        "opening-guest",
+        "loading-document",
+        "reading-document"
+      ]
     },
     "SessionActivationPhaseRowV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["phase", "position"],
+      "required": [
+        "phase",
+        "position"
+      ],
       "properties": {
-        "phase": { "$ref": "#/$defs/SessionActivationPhaseV1" },
-        "position": { "type": "number", "minimum": 0, "exclusiveMaximum": 1, "description": "Where the phase starts within an activation; each job maps it onto its own progress span." }
+        "phase": {
+          "$ref": "#/$defs/SessionActivationPhaseV1"
+        },
+        "position": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 1,
+          "description": "Where the phase starts within an activation; each job maps it onto its own progress span."
+        }
       }
     },
     "SessionActivationPhasesV1": {
       "type": "array",
       "minItems": 8,
       "maxItems": 8,
-      "items": { "$ref": "#/$defs/SessionActivationPhaseRowV1" }
-    },
-    "ComponentCompileCancellationLawV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["$schema", "law", "cancelAnswerCeilingMs", "cases"],
-      "properties": {
-        "$schema": { "type": "string", "minLength": 1 },
-        "law": { "type": "string", "minLength": 1 },
-        "cancelAnswerCeilingMs": { "type": "integer", "minimum": 1, "maximum": 1000 },
-        "cases": {
-          "type": "array",
-          "minItems": 4,
-          "description": "Replayed in order against one component: a case that compiles leaves the compiled code for the next.",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["requesters", "cancel", "expected"],
-            "properties": {
-              "requesters": { "type": "integer", "minimum": 1, "maximum": 8, "description": "Requesters of the same content hash joined to one compile." },
-              "cancel": { "type": "array", "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 7 }, "description": "Indices of the requesters that cancel mid-compile." },
-              "expected": {
-                "enum": ["ABORTED", "DETACHED", "COMPILED", "WARM"],
-                "description": "ABORTED: every requester cancelled, the one worker was killed and reaped, and no compiled code or scratch output remains. DETACHED: the cancelling requesters were answered CANCELLED within the ceiling while the rest received the compiled code from the same single worker. COMPILED: an uncancelled cold compile ran one worker and left compiled code. WARM: the compiled code is served without starting a worker."
-              }
-            }
-          }
-        }
+      "items": {
+        "$ref": "#/$defs/SessionActivationPhaseRowV1"
       }
     }
   }

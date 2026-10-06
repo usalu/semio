@@ -1,0 +1,19 @@
+{
+  "schemaBytes": 420,
+  "tableWidths": {
+    "vcs_document": 6,
+    "vcs_tag": 4
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 7,
+      "valueBytes": 250
+    },
+    {
+      "id": "emptyTags",
+      "rows": 1,
+      "valueBytes": 72
+    }
+  ]
+}

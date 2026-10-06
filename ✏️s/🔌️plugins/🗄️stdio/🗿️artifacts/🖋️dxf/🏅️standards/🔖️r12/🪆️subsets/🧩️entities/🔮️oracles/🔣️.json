@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-entity-applied",
       "class": "third-party-generated",
       "target": {
@@ -58,7 +57,6 @@
       "notes": "A new entity is inserted at a valid middle index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-entity-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {
@@ -102,7 +100,6 @@
       "notes": "Index exceeds the evolving sequence length — invalid-add-index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-entity-applied",
       "class": "third-party-generated",
       "target": {
@@ -153,7 +150,6 @@
       "notes": "The entity at a valid middle index is removed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-entity-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -197,7 +193,6 @@
       "notes": "Index does not exist — invalid-remove-index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entity-applied",
       "class": "third-party-generated",
       "target": {
@@ -248,7 +243,6 @@
       "notes": "The entity at a present index is whole-value replaced (the genuine modify branch, not the insert fallback)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entity-rejected-out-of-bounds",
       "class": "third-party-generated",
       "target": {

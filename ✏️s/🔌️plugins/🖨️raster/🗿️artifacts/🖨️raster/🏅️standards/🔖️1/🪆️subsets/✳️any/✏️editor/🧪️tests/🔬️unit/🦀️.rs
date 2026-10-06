@@ -110,7 +110,7 @@ pub(crate) mod context {
     /// raster document owns a populated asset pool) asserts in `Drop` that the bounded protocol ran
     /// first, and only a store ever runs it. The artifact's own owner catalog retires it instead.
     pub fn retire_raster_envelope(envelope: store::ArtifactEnvelope<RasterSnapshot, RasterMutation>) {
-        let mut retirement = crate::spr::raster_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled raster owner catalog retires one envelope");
+        let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled raster owner catalog retires one envelope");
         // ⛽️ A `RasterOwnedMap` page backing is one 16 KiB allocation released whole.
         let grant = crate::RASTER_OWNED_MAP_PAGE_BACKING_BYTES;
         for _ in 0..1_000_000 {
@@ -124,7 +124,7 @@ pub(crate) mod context {
 
     pub async fn semio_app() -> RasterAppFixture {
         let mut app = app().await;
-        let document = crate::standards::v1::subsets::any::schema::semio_example_document();
+        let document = crate::standards::v1::subsets::any::schema::raster_image_test_snapshot();
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
         let files = store::print_document_pack(&envelope).await.expect("print document pack");
         retire_raster_envelope(envelope);
@@ -136,7 +136,8 @@ pub(crate) mod context {
 use context::*;
 use super::*;
 use crate::editor::raster::panels::{catalogue, document, inspection, masks};
-use crate::standards::v1::subsets::any::schema::{empty_raster_document, layer_name, layer_visible};
+use crate::standards::v1::subsets::any::schema::{layer_name, layer_visible};
+use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_document};
 use semio_framework_plugin::{artifact_app_laws, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
 use store::MemoryBackbone;
 
@@ -148,7 +149,7 @@ use store::MemoryBackbone;
 fn raster_envelope_wire() -> Vec<u8> {
     use store::ArtifactPack;
 
-    let snapshot = crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
@@ -169,7 +170,7 @@ fn raster_envelope_wire() -> Vec<u8> {
     ]))
     .into_bytes();
     let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-live-load", snapshot, None);
-    let mut retirement = crate::spr::raster_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = crate::standards::v1::subsets::any::io::binary::mutations::raster_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Raster fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {
@@ -295,10 +296,10 @@ async fn renders_navigator_scene() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn parses_semio_example_document() {
-    let document = crate::standards::v1::subsets::any::schema::semio_example_document();
+async fn parses_raster_image_test_snapshot() {
+    let document = crate::standards::v1::subsets::any::schema::raster_image_test_snapshot();
     assert!(!document.layers.is_empty());
-    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
+    crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -372,7 +373,7 @@ async fn composite_scene_syncs_document_and_assets() {
     // blank canvas (play pane measured blank on :6033, 2026-09-21).
     assert!(scene.assets_json.contains("semio-emblem"), "the reopened document keeps its asset entry: {}", scene.assets_json);
     assert!(scene.assets_json.contains("image/png"), "the semio fixture's embedded asset must resolve to real pixels: {}", scene.assets_json);
-    let document = crate::standards::v1::subsets::any::schema::semio_example_document();
+    let document = crate::standards::v1::subsets::any::schema::raster_image_test_snapshot();
     let sync_json = document_sync_json(&document);
     assert!(!sync_json.contains("\"assets\""), "sync json must omit assets");
     assert!(sync_json.contains("\"params\""), "adjustment params must survive document→sync roundtrip for the paint host");
@@ -380,7 +381,7 @@ async fn composite_scene_syncs_document_and_assets() {
     let layers = sync_value.get("layers").and_then(Value::as_array).expect("layers");
     assert!(layers.iter().any(|layer| layer.get("kind").and_then(Value::as_str) == Some("adjustment") && layer.get("params").is_some()));
     assert!(document.assets.contains_key("semio-emblem"));
-    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
+    crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot(document);
 }
 
 /// 🛡️ Play-grid boot regression (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP): the composite
@@ -390,7 +391,7 @@ async fn composite_scene_syncs_document_and_assets() {
 /// populated-map guard trapped the wasm guest right after boot.
 #[semio_framework_async_macros::async_test]
 async fn raster_scene_projects_populated_owned_maps_without_wholesale_serialization() {
-    let document = crate::standards::v1::subsets::any::schema::semio_example_document();
+    let document = crate::standards::v1::subsets::any::schema::raster_image_test_snapshot();
     assert!(!document.assets.is_empty(), "the regression needs a populated asset pool");
     let scene = raster_scene(&document, &crate::editor::raster::config::RasterConfig::default(), "brush", "composite", &[], None);
     let sync_value: Value = semio_framework_pack_json::parse(&scene.document_sync_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("sync json");
@@ -408,19 +409,19 @@ async fn raster_scene_projects_populated_owned_maps_without_wholesale_serializat
     assert_eq!(params.get("brightness").and_then(Value::as_f64), Some(0.12));
     assert_eq!(params.get("contrast").and_then(Value::as_f64), Some(0.08));
     assert!(matches!(semio_framework_pack_json::parse(&scene.assets_json, semio_framework_pack_json::JsonMemberPolicy::Reject), Ok(Value::Object(_))), "assets json stays a well-formed object");
-    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
+    crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn semio_example_preserves_adjustment_params() {
-    let document = crate::standards::v1::subsets::any::schema::semio_fixture_snapshot();
+    let document = crate::standards::v1::subsets::any::schema::raster_image_test_snapshot();
     let RasterLayerNode::Adjustment { params, adjustment_kind, .. } = document.layers.iter().find(|layer| matches!(layer, RasterLayerNode::Adjustment { id, .. } if id == "brighten")).expect("brighten adjustment") else {
         panic!("expected adjustment");
     };
     assert_eq!(adjustment_kind, "brightnessContrast");
     assert!(params.contains_key("brightness"), "fixture brightness must roundtrip");
     assert!(params.contains_key("contrast"), "fixture contrast must roundtrip");
-    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
+    crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot(document);
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: layer hover/selection dispatch
@@ -524,7 +525,7 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     let mut instance_b = app().await;
     // Seed both from an identical base projection (a background layer with a fixed id) so B's
     // rename targets the same layer A holds — per-instance `initial_snapshot` mints fresh ids.
-    let mut base = crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+    let mut base = crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     base.layers = vec![RasterLayerNode::Pixel {
         id: "bg".into(),
         name: "Background".into(),
@@ -1131,7 +1132,7 @@ async fn layer_tree_and_scene_keep_exact_domain_selection_ids() {
     let scene = raster_scene(&document, &RasterConfig::default(), "paintBrush", "composite", &selected, hovered);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.selection_json).unwrap(), fixture["selectedIds"]);
     assert_eq!(scene.hovered_id.as_deref(), hovered);
-    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
+    crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1140,7 +1141,7 @@ async fn inspector_patch_values_preserve_numeric_names_and_typed_controls() {
     dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() })).await;
     let snapshot = app.snapshot().unwrap();
     let id = crate::standards::v1::subsets::any::schema::layer_node_id(&snapshot.layers[0]).to_string();
-    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(snapshot);
+    crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot(snapshot);
     for (field, value) in [("name", serde_json::json!("123")), ("opacity", serde_json::json!(0.25)), ("visible", serde_json::json!(false))] {
         let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&serde_json::json!({"layerIds":[id],"field":field,"value":value}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
         let command = <RasterPlayApp as ArtifactEditor>::command_from_action("patchLayers", Some(&args)).unwrap();
@@ -1151,7 +1152,7 @@ async fn inspector_patch_values_preserve_numeric_names_and_typed_controls() {
     assert_eq!(crate::standards::v1::subsets::any::schema::layer_name(layer), "123");
     assert_eq!(crate::standards::v1::subsets::any::schema::layer_opacity(layer), 0.25);
     assert!(!crate::standards::v1::subsets::any::schema::layer_visible(layer));
-    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(snapshot);
+    crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot(snapshot);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1258,7 +1259,7 @@ async fn protection_controls_publish_and_restore_retained_history() {
 fn structural_commands_refuse_protected_sources_and_destination_parents() {
     use protocol::Mutation;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
-    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut document=crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();document.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let history=semio_framework_plugin::HistoryView::empty();let doc=ArtifactView::new(&document,&history);
     let config=RasterConfig::default();let cfg=semio_framework_plugin::ConfigView {snapshot:&config,window:None};
     for case in fixture["cases"].as_array().unwrap() {
@@ -1288,7 +1289,7 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     let edits = envelope.vcs.edits.len();
     let operation = semio_framework_job::OperationId(4_401);
     let generation = semio_framework_job::Generation(1);
-    let mut job = crate::spr::raster_document_store_initialization_job(envelope, operation, generation);
+    let mut job = crate::standards::v1::subsets::any::io::binary::mutations::raster_document_store_initialization_job(envelope, operation, generation);
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let mut steps = 0usize;

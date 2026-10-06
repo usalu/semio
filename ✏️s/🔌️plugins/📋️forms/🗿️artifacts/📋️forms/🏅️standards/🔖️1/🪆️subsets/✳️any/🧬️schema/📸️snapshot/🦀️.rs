@@ -2,13 +2,9 @@
 
 use crate::{forms_snapshot_with_state, FormsResultsChild, FormsStructureChild, FORMS_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[path="📦️pack/🦀️.rs"]pub(crate) mod native_pack;
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+
+
 
 //#region 🔖️Snapshot
 /// 📸️ Durable form definition and immutable responses with derived value/table child projections.

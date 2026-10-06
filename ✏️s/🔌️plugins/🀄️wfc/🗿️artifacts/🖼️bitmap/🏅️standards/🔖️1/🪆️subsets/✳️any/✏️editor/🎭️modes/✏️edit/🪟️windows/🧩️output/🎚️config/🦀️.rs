@@ -99,10 +99,10 @@ store::impl_whole_record_config!(BitmapOutputWindowConfig);
 
 impl protocol::OpText for BitmapOutputWindowConfigMutation {
     fn print_op(&self) -> String {
-        semio_framework_pack_json::to_json_string(self)
+        crate::standards::v1::subsets::any::io::text::bitmap_json_encode(self)
     }
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
+        crate::standards::v1::subsets::any::io::text::bitmap_json_decode(line).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
 }
 
@@ -112,7 +112,7 @@ impl protocol::OpBinary for BitmapOutputWindowConfigMutation {
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+        crate::standards::v1::subsets::any::io::text::bitmap_json_decode(text).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
     }
 }
 

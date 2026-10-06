@@ -2342,6 +2342,7 @@ fn golden_icon_select() {
 #[test]
 fn golden_tree() {
     let item = |id: &str, label: &str| UiTreeItemNode {
+        tone: None,
         window: None,
         granularity: None,
         id: id.into(),
@@ -2380,6 +2381,7 @@ fn retained_tree_action_rows_do_not_overpaint_their_labels() {
     for sample in samples.as_array().unwrap() {
         let label = sample["label"].as_str().unwrap();
         let item = UiTreeItemNode {
+            tone: None,
             window: None,
             granularity: None,
             id: sample["id"].as_str().unwrap().into(),
@@ -3089,7 +3091,7 @@ fn draw_text_overlay_on_writes_to_the_overlay_channel_not_the_main_one() {
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
 #[test]
 fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../⏳️async/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")

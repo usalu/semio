@@ -45,25 +45,11 @@ pub fn inverse_writer_mutation_steps(mutation: &WriterMutation, base: &WriterSna
     })
 }
 
-/// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
-/// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
-// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
-pub fn decode_writer_mutation_json(text: &str) -> Result<WriterMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
-// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
-pub fn decode_writer_snapshot_json(text: &str) -> Result<WriterSnapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
-/// projection an external test host compares through.
-// 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
-pub fn encode_writer_snapshot_json(snapshot: &WriterSnapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
+
+
+
 
 //#endregion ⚙️Operations
 

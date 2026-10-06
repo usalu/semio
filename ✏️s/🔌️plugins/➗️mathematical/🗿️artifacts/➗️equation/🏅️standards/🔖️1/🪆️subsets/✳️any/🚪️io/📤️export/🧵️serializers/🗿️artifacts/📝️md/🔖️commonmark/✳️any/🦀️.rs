@@ -1,6 +1,6 @@
 //! 🚪️ equation -> md. The complete carrier fixture is embedded in a canonical JSON code block.
 
-use crate::{equation_fixture, EquationSnapshot};
+use crate::{equation_carrier_snapshot, EquationSnapshot};
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
@@ -15,7 +15,7 @@ impl Serializer<EquationSnapshot> for EquationIntoMd {
     const INTO: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
     async fn serialize(from: &EquationSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
-        let md = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::CodeBlock { info: Some("json".into()), literal: semio_framework_pack_json::to_json_string(&equation_fixture(from)) }] };
+        let md = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::CodeBlock { info: Some("json".into()), literal: semio_framework_pack_json::to_json_string(&equation_carrier_snapshot(from)) }] };
         Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::ArtifactPack>::encode_pack(&md))))
     }
 }

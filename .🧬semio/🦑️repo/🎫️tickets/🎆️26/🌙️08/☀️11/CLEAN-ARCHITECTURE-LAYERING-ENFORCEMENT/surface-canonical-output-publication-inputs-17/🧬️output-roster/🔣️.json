@@ -1,0 +1,23 @@
+{
+  "type": "array",
+  "prefixItems": [
+    {
+      "const": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm"
+    },
+    {
+      "const": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.js"
+    },
+    {
+      "const": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface.d.ts"
+    },
+    {
+      "const": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/framework_surface_bg.wasm.d.ts"
+    },
+    {
+      "const": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/package.json"
+    }
+  ],
+  "items": false,
+  "minItems": 5,
+  "maxItems": 5
+}

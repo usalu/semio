@@ -12,7 +12,7 @@ use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::{lowpoly_tool_emit, LowpolyScratch};
 use crate::editor::lowpoly::view::try_build_doc;
 use crate::mutations::{move_selection::MoveSelection, rotate_selection::RotateSelection, scale_selection::ScaleSelection};
-use crate::op::LowpolyMutation;
+use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::LowpolySnapshot;
 use semio_framework_3d::mesh::VertexId;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

@@ -1,7 +1,7 @@
 //! 🗃️ 🗃️ Note play app commands command — `set-active-example`.
 
 use crate::op::NoteMutation;
-use crate::schema::semio_example_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::semio_example_snapshot;
 use crate::NoteSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

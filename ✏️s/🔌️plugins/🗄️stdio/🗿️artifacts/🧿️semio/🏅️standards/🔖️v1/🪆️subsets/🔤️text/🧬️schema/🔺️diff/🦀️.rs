@@ -74,139 +74,28 @@ impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec
-/// 🧪️ Hand-rolled `protocol::DiffCodec` — `text`'s single collection field prints as
-/// `runs=[<run>,...]` (empty string = no-op diff), reusing the snapshot facet's own real
-/// hex/bracket run/mark encoders (duplicated locally, same convention every sibling subset's
-/// `🔺️diff` facet already establishes — see that facet's own doc comment for why).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
 
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+
+
+
+
+
+
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_mark_kind(k: crate::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind) -> char {
-    crate::standards::v1::subsets::text::schema::snapshot::enc_mark_kind(k)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_mark_kind(s: &str) -> Result<crate::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind, String> {
-    crate::standards::v1::subsets::text::schema::snapshot::dec_mark_kind(s)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_mark(m: &SemioTextMark) -> String {
-    format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [kind, href] = parts.as_slice() else { return Err(format!("mark: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioTextMark { kind: dec_mark_kind(kind)?, href: dec_str(href)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_run(r: &SemioTextRun) -> String {
-    let marks = r.marks.iter().map(enc_mark).collect::<Vec<_>>().join(",");
-    format!("[{},{},[{}]]", enc_str(&r.language), enc_str(&r.content), marks)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_run(s: &str) -> Result<SemioTextRun, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [language, content, marks] = parts.as_slice() else { return Err(format!("run: expected 3 fields, got {}", parts.len())) };
-    let marks = split_top_level(strip_brackets(marks)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_mark).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioTextRun { language: dec_str(language)?, content: dec_str(content)?, marks })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_runs(list: &SemioTextRunList) -> String {
-    format!("[{}]", list.values.iter().map(enc_run).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_runs(s: &str) -> Result<SemioTextRunList, String> {
-    let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_run).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioTextRunList { values })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_text_diff(d: &SemioTextDiff) -> String {
-    match &d.runs {
-        Some(list) => format!("runs={}", enc_runs(list)),
-        None => String::new(),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_text_diff(line: &str) -> Result<SemioTextDiff, String> {
-    if line.is_empty() {
-        return Ok(SemioTextDiff::default());
-    }
-    let rest = line.strip_prefix("runs=").ok_or_else(|| format!("text diff: unknown token {line:?}"))?;
-    Ok(SemioTextDiff { runs: Some(dec_runs(rest)?) })
-}
 
-impl protocol::DiffCodec for SemioTextDiff {
-    fn print_diff(&self) -> String {
-        print_text_diff(self)
-    }
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_text_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
 
-    /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`runs`) are two REAL fixed
-    /// fields; when present, `runs` follows as a real varint count + per-run binary encoding
-    /// (reusing the snapshot facet's own `write_run`/`read_run`) rather than a text-blob-in-binary
-    /// shortcut — `text`'s diff has exactly one collection field, so no opaque multi-field payload
-    /// chain is needed.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::standards::v1::subsets::text::schema::snapshot::write_run;
-        let presence: u8 = if self.runs.is_some() { 0b0000_0001 } else { 0 };
-        let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(list) = &self.runs {
-            store::pack_rt::write_varint_u64(&mut out, list.values.len() as u64);
-            for r in &list.values {
-                write_run(&mut out, r);
-            }
-        }
-        Ok(out)
-    }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::standards::v1::subsets::text::schema::snapshot::read_run;
-        if bytes.len() < 2 {
-            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
-        }
-        if bytes[0] != DIFF_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
-        }
-        let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
-        let runs = if presence & 0b0000_0001 != 0 {
-            let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff runs count", offset: 2, detail: e.to_string() })?;
-            let mut values = Vec::with_capacity(count as usize);
-            for _ in 0..count {
-                values.push(read_run(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff run", offset: 2, detail: e })?);
-            }
-            Some(SemioTextRunList { values })
-        } else {
-            None
-        };
-        Ok(SemioTextDiff { runs })
-    }
-}
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️Demo
@@ -229,3 +118,31 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🔖️Tests
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

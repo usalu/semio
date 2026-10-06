@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/test/schema.json",
   "title": "Semio Framework Test Protocol v2",
-  "description": "🧬️ Schema-first contract shared by the test coordinator, every native host and every external probe. v2 makes the unit of coverage `artifact × standard × smallest owning subset × runtime mutation × expected outcome class × fixture × subject implementation × platform`, replaces the single-projection result with a multi-artifact bundle, and requires a QUALIFYING third-party oracle for every mutation. Ticket 26/08/27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING, baseline a8d1caf41f68204e73ff5e47ce40c5f543ed442d.",
+  "description": "🧬️ Shared test coordinator, native host and external probe protocol. Coverage identifies artifact, standard, subset, runtime mutation, expected outcome, test input, implementation and platform. Test evidence describes comparison and reproduction; plain examples have no independent schema or runtime identity.",
   "x-semio": {
     "owner": "🧰️framework/🔨️modules/🧪️test",
     "schemaVersion": 2,
@@ -63,10 +63,10 @@
     },
     "ArtifactRole": {
       "$ref": "#/$defs/Slug",
-      "description": "🎭️ What one produced or expected file IS inside a bundle — `expected-step`, `actual-step`, `subject-mesh`. Roles are the join key between a fixture manifest, an adapter result and a comparison stage's inputs, so nothing in the pipeline addresses a file by path."
+      "description": "🎭️ Semantic role of a produced or expected file in a comparison bundle. Roles join TestEvidence, adapter results and comparison stage inputs."
     },
     "MutationOutcomeClass": {
-      "description": "🎯️ The semantic class a fixture DECLARES for its mutation. A fixture that accepts any non-crash result measures nothing, so every fixture names exactly one of these.",
+      "description": "🎯️ Expected semantic outcome declared by a test execution plan and compared with the actual mutation result.",
       "enum": [
         "applied",
         "no-op",
@@ -733,7 +733,7 @@
           "minItems": 1
         },
         "invariants": {
-          "$ref": "#/$defs/FixtureInvariants"
+          "$ref": "#/$defs/EvidenceInvariants"
         },
         "normativeTopologyCounts": {
           "type": "boolean",
@@ -877,14 +877,14 @@
         }
       }
     },
-    "FixtureClass": {
+    "EvidenceClass": {
       "enum": [
         "real-world",
         "handcrafted",
         "third-party-generated"
       ]
     },
-    "FixtureFile": {
+    "EvidenceFile": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -913,7 +913,7 @@
         }
       }
     },
-    "FixtureGenerator": {
+    "EvidenceGenerator": {
       "type": "object",
       "additionalProperties": false,
       "description": "🏭️ Exactly how a third-party-generated fixture was produced, in enough detail to re-run it. A generated fixture with no reproducible generator record is a fixture nobody can audit.",
@@ -962,7 +962,7 @@
         }
       }
     },
-    "FixtureProvenance": {
+    "EvidenceProvenance": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1007,7 +1007,7 @@
         }
       }
     },
-    "FixtureUnits": {
+    "EvidenceUnits": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1049,12 +1049,11 @@
         }
       }
     },
-    "FixtureManifest": {
+    "TestEvidence": {
       "type": "object",
       "additionalProperties": false,
-      "description": "🧫️ One immutable fixture bundle. Updating a fixture creates a NEW identity and digest; the manifest is never edited in place.",
+      "description": "🧾️ Test-run evidence configuration that identifies plain example files, their provenance, comparison and reproduction. Examples have no independent schema or runtime identity.",
       "required": [
-        "schema",
         "id",
         "class",
         "target",
@@ -1065,14 +1064,11 @@
         "reproducible"
       ],
       "properties": {
-        "schema": {
-          "const": "semio.repository-test.fixture/v2"
-        },
         "id": {
           "$ref": "#/$defs/Slug"
         },
         "class": {
-          "$ref": "#/$defs/FixtureClass"
+          "$ref": "#/$defs/EvidenceClass"
         },
         "target": {
           "allOf": [
@@ -1089,20 +1085,20 @@
           "$ref": "#/$defs/MutationOutcomeClass"
         },
         "units": {
-          "$ref": "#/$defs/FixtureUnits"
+          "$ref": "#/$defs/EvidenceUnits"
         },
         "files": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/FixtureFile"
+            "$ref": "#/$defs/EvidenceFile"
           },
           "minItems": 1
         },
         "generator": {
-          "$ref": "#/$defs/FixtureGenerator"
+          "$ref": "#/$defs/EvidenceGenerator"
         },
         "provenance": {
-          "$ref": "#/$defs/FixtureProvenance"
+          "$ref": "#/$defs/EvidenceProvenance"
         },
         "comparisonProfile": {
           "type": "string",
@@ -1125,7 +1121,7 @@
           "type": "string"
         },
         "invariants": {
-          "$ref": "#/$defs/FixtureInvariants"
+          "$ref": "#/$defs/EvidenceInvariants"
         },
         "comparisonPipeline": {
           "$ref": "#/$defs/Slug",
@@ -1356,10 +1352,10 @@
         }
       }
     },
-    "FixtureRef": {
+    "TestInput": {
       "type": "object",
       "additionalProperties": false,
-      "description": "🧫️ How a scenario ADDRESSES a fixture. v2 requires the manifest id alongside the digest so a run is keyed by reviewed provenance and not merely by bytes.",
+      "description": "📥️ One explicitly resolved test input: an example file, a product asset under test, or a canonical schema export. These scopes remain distinct.",
       "required": [
         "uri",
         "scope",
@@ -1535,7 +1531,7 @@
         "comparison",
         "scenarios",
         "adapters",
-        "fixtures"
+        "inputs"
       ],
       "properties": {
         "schemaVersion": {
@@ -1622,16 +1618,10 @@
             }
           }
         },
-        "fixtures": {
+        "testEvidence": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/FixtureRef"
-          }
-        },
-        "fixtureManifests": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/FixtureManifest"
+            "$ref": "#/$defs/TestEvidence"
           }
         },
         "workDir": {
@@ -1657,6 +1647,12 @@
         },
         "platform": {
           "$ref": "#/$defs/Platform"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TestInput"
+          }
         }
       }
     },
@@ -2066,10 +2062,10 @@
             "$ref": "#/$defs/MutationManifest"
           }
         },
-        "fixtureManifests": {
+        "testEvidence": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/FixtureManifest"
+            "$ref": "#/$defs/TestEvidence"
           }
         },
         "comparisonProfiles": {
@@ -2217,7 +2213,7 @@
           "additionalProperties": false,
           "required": [
             "mutationManifestDigest",
-            "fixtureManifestDigest",
+            "testEvidenceDigest",
             "fixtureFileDigests",
             "oracleLockDigest",
             "oracleEngineDigest",
@@ -2231,7 +2227,7 @@
             "mutationManifestDigest": {
               "type": "string"
             },
-            "fixtureManifestDigest": {
+            "testEvidenceDigest": {
               "type": "string"
             },
             "fixtureFileDigests": {
@@ -2435,7 +2431,7 @@
           "type": "string"
         },
         "fixtureClass": {
-          "$ref": "#/$defs/FixtureClass"
+          "$ref": "#/$defs/EvidenceClass"
         },
         "oracle": {
           "type": "string"
@@ -2743,7 +2739,7 @@
         }
       }
     },
-    "SchemaBoundFixture": {
+    "SchemaTestExample": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -2851,527 +2847,6 @@
         }
       }
     },
-    "ContributionDirectoryOwnershipCases": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "directoryName",
-        "cases"
-      ],
-      "description": "🔮️ The neutral vector every canonical oracle-directory ownership implementation is measured against. It lives in the owning schema module; examples live under owner fixtures and test cases contain only their feature and implementations.",
-      "properties": {
-        "$schema": {
-          "type": "string"
-        },
-        "directoryName": {
-          "type": "string",
-          "minLength": 1
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "owner",
-              "path",
-              "owned"
-            ],
-            "properties": {
-              "owner": {
-                "type": "string",
-                "minLength": 1
-              },
-              "path": {
-                "type": "string",
-                "minLength": 1
-              },
-              "owned": {
-                "type": "boolean"
-              }
-            }
-          }
-        }
-      }
-    },
-    "SchemaInvariantCases": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema",
-        "checkOnlyDiagnosticCodes",
-        "eligibilityCases",
-        "exportPresenceCases",
-        "treeCases",
-        "resolutionCases",
-        "catalogCases",
-        "mutationLeafIdCases",
-        "validationCases",
-        "pipelineCases"
-      ],
-      "description": "🧬️ The language-agnostic vector every implementation of the scope-owned schema contract is measured against: who may own a contract, where a definition may live, how `schema://` resolves, what a mutation leaf's `$id` reads, what a draft-07 validator must decide, which stage a bound fixture fails at, and which codes belong to the other emitter and must never be raised here.",
-      "properties": {
-        "$schema": {
-          "type": "string"
-        },
-        "schema": {
-          "const": "semio.repository-test.schema-invariant-cases/v4"
-        },
-        "checkOnlyDiagnosticCodes": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "description": "🏭️ The codes the root `schema check` raises and a harness implementation never does. They are in the shared table because the table declares every code EITHER emitter raises; naming them here is what keeps a harness from inventing a finding it has no rule for.",
-          "items": {
-            "$ref": "#/$defs/SchemaDiagnosticCode"
-          }
-        },
-        "eligibilityCases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "path",
-              "eligible",
-              "level"
-            ],
-            "properties": {
-              "id": {
-                "$ref": "#/$defs/Slug"
-              },
-              "path": {
-                "type": "string",
-                "minLength": 1
-              },
-              "eligible": {
-                "type": "boolean"
-              },
-              "level": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              }
-            }
-          }
-        },
-        "exportPresenceCases": {
-          "type": "array",
-          "minItems": 1,
-          "description": "🔎️ Export PRESENCE per format, as source text and a verdict (execution contract §A). Rust admits a definition or a per-name `pub use` re-export and refuses a grouped or glob one; GraphQL admits six type-system keywords; TypeScript needs the type AND `parse<Export>()`. A second implementation of this rule set reads these instead of re-deriving the regexes.",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "format",
-              "export",
-              "source",
-              "present"
-            ],
-            "properties": {
-              "id": {
-                "$ref": "#/$defs/Slug"
-              },
-              "format": {
-                "$ref": "#/$defs/SchemaFormatId"
-              },
-              "export": {
-                "$ref": "#/$defs/SchemaExportId"
-              },
-              "source": {
-                "type": "string",
-                "minLength": 1,
-                "description": "🧾️The format source, verbatim. A presence rule is a statement about text, so the vector carries the text."
-              },
-              "present": {
-                "type": "boolean",
-                "description": "✅️Whether that source DECLARES the export under that name."
-              },
-              "parser": {
-                "type": "boolean",
-                "description": "🚪️Whether the source also carries the entry point the format's completeness requires. Only TypeScript has one; every other format answers true by construction."
-              }
-            }
-          }
-        },
-        "treeCases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "title",
-              "invariant",
-              "files",
-              "expect"
-            ],
-            "properties": {
-              "id": {
-                "$ref": "#/$defs/Slug"
-              },
-              "title": {
-                "type": "string",
-                "minLength": 1
-              },
-              "invariant": {
-                "enum": [
-                  "placement",
-                  "owner-eligibility",
-                  "completeness",
-                  "export-resolution",
-                  "fixture-isolation"
-                ]
-              },
-              "files": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "path",
-                    "json"
-                  ],
-                  "properties": {
-                    "path": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "json": {}
-                  }
-                }
-              },
-              "expect": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "code",
-                    "path"
-                  ],
-                  "properties": {
-                    "code": {
-                      "$ref": "#/$defs/SchemaDiagnosticCode"
-                    },
-                    "path": {
-                      "type": "string",
-                      "minLength": 1
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "resolutionCases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "uri",
-              "expect"
-            ],
-            "properties": {
-              "id": {
-                "$ref": "#/$defs/Slug"
-              },
-              "declareResolution": {
-                "type": "boolean"
-              },
-              "omitCatalog": {
-                "type": "boolean"
-              },
-              "duplicateScopeId": {
-                "$ref": "#/$defs/SchemaScopeId"
-              },
-              "aliasScopeId": {
-                "$ref": "#/$defs/SchemaScopeId"
-              },
-              "fixtureOwnedScope": {
-                "type": "boolean"
-              },
-              "uri": {
-                "type": "string",
-                "minLength": 1
-              },
-              "format": {
-                "$ref": "#/$defs/SchemaFormatId"
-              },
-              "expect": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "resolved",
-                  "codes"
-                ],
-                "properties": {
-                  "resolved": {
-                    "type": "boolean"
-                  },
-                  "path": {
-                    "type": "string"
-                  },
-                  "codes": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/$defs/SchemaDiagnosticCode"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "catalogCases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "expect"
-            ],
-            "properties": {
-              "id": {
-                "$ref": "#/$defs/Slug"
-              },
-              "recursiveRef": {
-                "type": "boolean"
-              },
-              "unresolvedLocalRef": {
-                "type": "boolean"
-              },
-              "crossScopeRef": {
-                "type": "boolean"
-              },
-              "declareDependency": {
-                "type": "boolean"
-              },
-              "filePathRef": {
-                "type": "boolean"
-              },
-              "dropRustExport": {
-                "type": "boolean"
-              },
-              "dropTypescriptExport": {
-                "type": "boolean"
-              },
-              "dropProtoExport": {
-                "type": "boolean"
-              },
-              "dropGraphqlExport": {
-                "type": "boolean"
-              },
-              "dropTypescriptParser": {
-                "type": "boolean",
-                "description": "🚪️ The TypeScript file declares the exported type and no `parse<Export>()` entry point."
-              },
-              "typescriptParserAsConst": {
-                "type": "boolean",
-                "description": "🚪️ The TypeScript entry point is written as `export const parse<Export> = …`, the arrow form."
-              },
-              "graphqlKeyword": {
-                "enum": [
-                  "type",
-                  "input",
-                  "enum",
-                  "interface",
-                  "union",
-                  "scalar"
-                ],
-                "description": "🔗️ The GraphQL type-system keyword the export is declared with."
-              },
-              "internalDefinitionsRef": {
-                "type": "boolean",
-                "description": "🔗️ The module keeps a helper in `definitions` and references it as `#/definitions/<helper>` — module-internal, never export-addressed, never a finding."
-              },
-              "unresolvedInternalRef": {
-                "type": "boolean",
-                "description": "🔗️ A `#/definitions/<helper>` pointer that lands on nothing."
-              },
-              "crossScopeDefinitionsRef": {
-                "type": "boolean",
-                "description": "🔗️ A cross-document reference into another module's private `definitions`, which addresses no export."
-              },
-              "mutationAggregate": {
-                "type": "boolean",
-                "description": "🧬️ A mutation aggregate whose branches reference their leaves by absolute leaf `$id`, the leaf being its own scope."
-              },
-              "restrictedFormats": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/$defs/SchemaFormatId"
-                },
-                "description": "🏷️ `x-semio-formats` written onto the export, declaring restricted format support."
-              },
-              "invalidRestrictedFormats": {
-                "description": "🏷️ A malformed `x-semio-formats` value, written verbatim onto the export."
-              },
-              "implementRestrictedFormats": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/$defs/SchemaFormatId"
-                },
-                "description": "🏗️ The formats whose files actually declare the export, when that must differ from what it declared."
-              },
-              "expect": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "code"
-                  ],
-                  "properties": {
-                    "code": {
-                      "$ref": "#/$defs/SchemaDiagnosticCode"
-                    },
-                    "format": {
-                      "$ref": "#/$defs/SchemaFormatId"
-                    }
-                  }
-                }
-              },
-              "rootExport": {
-                "type": "boolean"
-              }
-            }
-          }
-        },
-        "mutationLeafIdCases": {
-          "type": "array",
-          "minItems": 1,
-          "description": "🧬️ The `$id` a mutation leaf's schema module carries: `<root module $id scope path>/mutation/<semanticKind>/schema.json`. The semantic kind keys the leaf, never its directory path — a two-segment leaf directory is still one leaf with one id.",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "rootModuleId",
-              "semanticKind",
-              "leafDirectory",
-              "expected"
-            ],
-            "properties": {
-              "id": {
-                "$ref": "#/$defs/Slug"
-              },
-              "rootModuleId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "semanticKind": {
-                "type": "string",
-                "minLength": 1
-              },
-              "leafDirectory": {
-                "type": "string",
-                "minLength": 1,
-                "description": "📁️ The leaf directory relative to the root module's `🧬️mutations/`, one or two segments. It is recorded so a case states what the id is NOT derived from."
-              },
-              "expected": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          }
-        },
-        "validationCases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "schema",
-              "instance",
-              "valid"
-            ],
-            "properties": {
-              "id": {
-                "$ref": "#/$defs/Slug"
-              },
-              "schema": {
-                "type": "object"
-              },
-              "instance": {},
-              "valid": {
-                "type": "boolean"
-              }
-            }
-          }
-        },
-        "pipelineCases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "fixture",
-              "expect"
-            ],
-            "properties": {
-              "id": {
-                "$ref": "#/$defs/Slug"
-              },
-              "dropRustExport": {
-                "type": "boolean"
-              },
-              "fixture": {
-                "$ref": "#/$defs/SchemaBoundFixture"
-              },
-              "expect": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "outcome",
-                  "failedStage",
-                  "code"
-                ],
-                "properties": {
-                  "outcome": {
-                    "enum": [
-                      "passed",
-                      "failed"
-                    ]
-                  },
-                  "failedStage": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "code": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  }
-                }
-              },
-              "rootExport": {
-                "type": "boolean"
-              }
-            }
-          }
-        }
-      }
-    },
     "TestLayoutFindingCode": {
       "description": "🚨️ Closed language-neutral vocabulary emitted by every test-layout implementation.",
       "enum": [
@@ -3392,234 +2867,12 @@
         "obsolete-testing-category"
       ]
     },
-    "TestLayoutCases": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schemaVersion",
-        "cases",
-        "filenameOracle"
-      ],
-      "description": "📐️ The neutral test-layout vector every layout-scan implementation is measured against: each case names the source files and empty directories it plants and the findings they must produce, and `filenameOracle` pins the canonical implementation filenames the scan recognises. It lives in the owning schema module; examples live under owner fixtures and test cases contain only their feature and implementations.",
-      "properties": {
-        "$schema": {
-          "type": "string"
-        },
-        "schemaVersion": {
-          "const": 1
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "sources",
-              "expected"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "sources": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "path",
-                    "source"
-                  ],
-                  "properties": {
-                    "path": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "source": {
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              "directories": {
-                "type": "array",
-                "uniqueItems": true,
-                "items": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "expected": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "code",
-                    "path",
-                    "line"
-                  ],
-                  "properties": {
-                    "code": {
-                      "$ref": "#/$defs/TestLayoutFindingCode"
-                    },
-                    "path": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "line": {
-                      "type": [
-                        "integer",
-                        "null"
-                      ],
-                      "minimum": 1
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "filenameOracle": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "pattern",
-            "paths"
-          ],
-          "properties": {
-            "pattern": {
-              "type": "string",
-              "minLength": 1
-            },
-            "paths": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          }
-        }
-      }
-    },
-    "FixtureResolutionCases": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "files",
-        "cases"
-      ],
-      "properties": {
-        "files": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "cases": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "uri",
-              "path"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "uri": {
-                "type": "string"
-              },
-              "path": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "MutationFixtureCases": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schemaVersion",
-        "owner",
-        "mutation",
-        "scenario",
-        "files",
-        "cases"
-      ],
-      "properties": {
-        "schemaVersion": {
-          "const": 1
-        },
-        "owner": {
-          "type": "string"
-        },
-        "mutation": {
-          "type": "string"
-        },
-        "scenario": {
-          "type": "string"
-        },
-        "files": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "cases": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "remove",
-              "add",
-              "valid"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "remove": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "add": {
-                "type": "object",
-                "additionalProperties": {
-                  "type": "string"
-                }
-              },
-              "valid": {
-                "type": "boolean"
-              }
-            }
-          }
-        }
-      }
-    },
     "ProfileDirectoryName": {
       "type": "string",
       "pattern": "^(?:[0-9#*]\\uFE0F?\\u20E3|\\p{Extended_Pictographic})[\\uFE0F\\u200D\\p{Extended_Pictographic}\\p{Emoji_Modifier}]*[a-z0-9][a-z0-9.+-]*$",
       "description": "🪆️ A standards/subsets directory name: one owner-chosen semantic emoji, then the standard or subset slug. The exact spelling is bound to the owner path, and the emoji to the path-emoji statute, by the contract gate."
     },
-    "FixtureInvariants": {
+    "EvidenceInvariants": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -3715,7 +2968,7 @@
       "$ref": "#/$defs/RuntimeMutationInventory"
     },
     {
-      "$ref": "#/$defs/FixtureManifest"
+      "$ref": "#/$defs/TestEvidence"
     },
     {
       "$ref": "#/$defs/ProbeReport"
@@ -3731,15 +2984,6 @@
     },
     {
       "$ref": "#/$defs/SchemaFixtureReport"
-    },
-    {
-      "$ref": "#/$defs/SchemaInvariantCases"
-    },
-    {
-      "$ref": "#/$defs/ContributionDirectoryOwnershipCases"
-    },
-    {
-      "$ref": "#/$defs/TestLayoutCases"
     }
   ]
 }

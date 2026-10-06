@@ -1,5 +1,6 @@
+use crate::drawing::schema::diff::transform;
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 #[semio_framework_async_macros::async_test]
 async fn field_sweep_every_field_and_every_collection_shape() {

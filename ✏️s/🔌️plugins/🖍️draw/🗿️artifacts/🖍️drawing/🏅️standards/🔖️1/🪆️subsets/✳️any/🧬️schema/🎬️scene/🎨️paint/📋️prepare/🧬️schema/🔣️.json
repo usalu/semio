@@ -1,0 +1,343 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://s.draw.scene.paint.prepare",
+  "title": "Owned Prepared Painted Scene",
+  "$ref": "#/$defs/output",
+  "$defs": {
+    "limits": {
+      "type": "object",
+      "required": [
+        "maxNodes",
+        "maxSegments",
+        "maxPoints",
+        "maxContours",
+        "maxWork"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maxNodes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "maxSegments": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "maxPoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "maxContours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "maxWork": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "required": [
+        "phase",
+        "work",
+        "nodes",
+        "segments",
+        "points",
+        "contours",
+        "done"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "enum": [
+            "nodes",
+            "bounds",
+            "text",
+            "path",
+            "pathCleanup",
+            "complete"
+          ]
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000
+        },
+        "nodes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
+        },
+        "segments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "points": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 262144
+        },
+        "contours": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "done": {
+          "type": "boolean"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": [
+        "plan",
+        "geometry",
+        "flatness",
+        "counts"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "plan": {
+          "$ref": "https://semio.tech/s/draw/scene/prepare#/definitions/vectorPlan"
+        },
+        "flatness": {
+          "type": "number",
+          "minimum": 0.000001,
+          "maximum": 16
+        },
+        "counts": {
+          "type": "object",
+          "required": [
+            "nodes",
+            "segments",
+            "points",
+            "contours"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "nodes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1024
+            },
+            "segments": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65536
+            },
+            "points": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 262144
+            },
+            "contours": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65536
+            }
+          }
+        },
+        "geometry": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "type": "object",
+            "required": [
+              "geometryBounds",
+              "bounds",
+              "paint"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "geometryBounds": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  }
+                ]
+              },
+              "bounds": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  }
+                ]
+              },
+              "paint": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "empty"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "regions"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "const": "path"
+                      },
+                      "regions": {
+                        "type": "object",
+                        "required": [
+                          "flatness",
+                          "fillRule",
+                          "fill",
+                          "stroke",
+                          "bounds",
+                          "points",
+                          "contours"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "flatness": {
+                            "type": "number",
+                            "minimum": 0.000001,
+                            "maximum": 16
+                          },
+                          "fillRule": {
+                            "enum": [
+                              "nonzero",
+                              "evenodd"
+                            ]
+                          },
+                          "fill": {
+                            "type": "array",
+                            "maxItems": 65536,
+                            "items": {
+                              "type": "array",
+                              "maxItems": 262144,
+                              "items": {
+                                "type": "array",
+                                "items": {
+                                  "type": "number",
+                                  "minimum": -1000000000,
+                                  "maximum": 1000000000
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                              }
+                            }
+                          },
+                          "stroke": {
+                            "type": "array",
+                            "maxItems": 65536,
+                            "items": {
+                              "type": "array",
+                              "maxItems": 262144,
+                              "items": {
+                                "type": "array",
+                                "items": {
+                                  "type": "number",
+                                  "minimum": -1000000000,
+                                  "maximum": 1000000000
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                              }
+                            }
+                          },
+                          "bounds": {
+                            "anyOf": [
+                              {
+                                "type": "null"
+                              },
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "number"
+                                },
+                                "minItems": 4,
+                                "maxItems": 4
+                              }
+                            ]
+                          },
+                          "points": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 262144
+                          },
+                          "contours": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 65536
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "corners"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "image",
+                          "textFallback"
+                        ]
+                      },
+                      "corners": {
+                        "type": "array",
+                        "minItems": 4,
+                        "maxItems": 4,
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": -1000000000,
+                            "maximum": 1000000000
+                          },
+                          "minItems": 2,
+                          "maxItems": 2
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

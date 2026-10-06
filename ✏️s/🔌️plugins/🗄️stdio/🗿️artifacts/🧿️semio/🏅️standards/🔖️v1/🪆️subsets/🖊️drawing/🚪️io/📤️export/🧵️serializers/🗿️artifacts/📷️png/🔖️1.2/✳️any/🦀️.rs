@@ -555,8 +555,8 @@ fn paint_node(canvas: &mut Canvas, node: &DrawNode, styles: &[DrawStyle], matrix
             if mime != "image/png" || *width <= 0.0 || *height <= 0.0 {
                 return;
             }
-            let Ok(snapshot) = semio_s_artifact_stdio_png::io::decode_png(bytes) else { return };
-            let Ok(source) = semio_s_artifact_stdio_png::io::project_png(&snapshot.bytes) else { return };
+            let Ok(snapshot) = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(bytes) else { return };
+            let Ok(source) = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&snapshot.bytes) else { return };
             if source.width == 0 || source.height == 0 { return; }
             let placed = compose(matrix, &[1.0, 0.0, 0.0, 1.0, at.x, at.y]);
             let determinant = placed[0] * placed[3] - placed[1] * placed[2];
@@ -605,8 +605,8 @@ impl ArtifactSerializer for SemioDrawingToPng {
             text_chunks: Vec::new(), pixels: raster.rgba8,
             chunk_order: vec![PngChunkMarker::Ihdr, PngChunkMarker::Idat, PngChunkMarker::Iend], unknown_chunks: Vec::new(),
         };
-        let bytes = semio_s_artifact_stdio_png::io::author_png_projection(&projection).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
-        semio_s_artifact_stdio_png::io::decode_png(&bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
+        let bytes = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::author_png_projection(&projection).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
+        semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(&bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 //#endregion 🔖️Serializer

@@ -1,0 +1,90 @@
+{
+  "at": "2026-10-05T20:44:57.241Z",
+  "scope": "readback only, providers unmounted",
+  "paths": [
+    {
+      "input": "physical-current-block3d-json-exact-role-provider-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔢️transport/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": true
+    },
+    {
+      "input": "physical-current-block3d-json-exact-role-provider-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": false
+    },
+    {
+      "input": "physical-current-block3d-json-exact-role-provider-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": false
+    },
+    {
+      "input": "physical-current-block3d-json-exact-role-provider-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": false
+    },
+    {
+      "input": "physical-current-block3d-typed-catalog-and-complete-entry-provider-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": false
+    },
+    {
+      "input": "physical-current-block3d-typed-catalog-and-complete-entry-provider-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": false
+    },
+    {
+      "input": "physical-current-block3d-typed-catalog-and-complete-entry-provider-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": false
+    },
+    {
+      "input": "physical-current-block3d-typed-catalog-and-complete-entry-provider-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "currentMatchesHeldBefore": false,
+      "currentMatchesHeldAfter": false,
+      "heldNew": false
+    },
+    {
+      "input": "physical-current-block3d-complete-borrowed-cst-provider-held-pair.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🛂️admission/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": true
+    },
+    {
+      "input": "physical-current-block3d-canonical-wire-provider-held-pair.json",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/📏️preflight/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": true
+    },
+    {
+      "input": "physical-current-block3d-canonical-child-reference-projection-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": false
+    },
+    {
+      "input": "physical-current-block3d-canonical-child-reference-projection-held-pairs.json",
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "currentMatchesHeldBefore": true,
+      "currentMatchesHeldAfter": false,
+      "heldNew": false
+    }
+  ]
+}

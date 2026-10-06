@@ -12,7 +12,7 @@ async fn the_inspector_always_summarises_the_document() {
 
 #[test]
 fn selected_frame_page_and_document_expose_edit_inputs() {
-    let snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let config = LayoutWindowConfig { active_page_id: "page-1".into(), ..LayoutWindowConfig::default() };
     let interaction = LayoutInteractionSnapshot { ids: vec!["frame-1".into()], ..Default::default() };
     let labels = crate::editor::layout::terminology::layout_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));

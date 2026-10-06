@@ -1,7 +1,7 @@
 use super::translate_selection::{handle, TranslateSelection};
 use crate::editor::fem2d::unit_tests::context::{close, dispatch, dispatch_rows, fem2d_mounted_app, history_verb, render, Fem2dApp};
 use crate::editor::fem2d::Fem2dCommand;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
 use store::ArtifactDsl;

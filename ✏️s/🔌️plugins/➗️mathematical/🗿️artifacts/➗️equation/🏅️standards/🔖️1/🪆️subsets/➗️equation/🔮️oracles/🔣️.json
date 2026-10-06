@@ -269,9 +269,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "carrier-change-coefficient",
       "class": "third-party-generated",
       "target": {

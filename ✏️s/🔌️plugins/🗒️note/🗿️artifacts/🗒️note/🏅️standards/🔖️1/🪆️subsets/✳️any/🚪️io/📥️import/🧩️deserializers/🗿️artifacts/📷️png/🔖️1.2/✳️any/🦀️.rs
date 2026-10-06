@@ -3,7 +3,8 @@
 //! data-uri image asset/block — real pixel content is carried but not decomposed into note
 //! structure, so this hop is `IoFidelity::Lossy`.
 
-use crate::schema::{create_note_id, empty_note_snapshot, NoteIdOwner};
+use crate::schema::{create_note_id, NoteIdOwner};
+use crate::standards::v1::subsets::any::io::text::snapshot::{empty_note_snapshot};
 use crate::{NoteBlockNode, NoteImageAsset, NoteSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};

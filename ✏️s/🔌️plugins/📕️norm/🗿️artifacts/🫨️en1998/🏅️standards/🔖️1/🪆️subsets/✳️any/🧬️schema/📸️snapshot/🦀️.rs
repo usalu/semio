@@ -6,12 +6,8 @@ use crate::{
 };
 use framework_schema::ArtifactSchema;
 
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1998 project snapshot.
@@ -374,27 +370,15 @@ impl En1998Snapshot {
 
 }
 //#region 🌉️ExternalCodecBridge
-pub fn encode_en1998_snapshot_json(snapshot: &En1998Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-pub fn decode_en1998_snapshot_json(text: &str) -> Result<En1998Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-pub fn decode_en1998_dsl(text: &str) -> Result<En1998Snapshot, String> {
-    <En1998Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-pub fn encode_en1998_dsl(snapshot: &En1998Snapshot) -> String {
-    <En1998Snapshot as store::ArtifactDsl>::print_dsl(snapshot)
-}
 
-pub fn encode_en1998_pack(snapshot: &En1998Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
 
-pub fn decode_en1998_pack(bytes: &[u8]) -> Result<En1998Snapshot, String> {
-    <En1998Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge

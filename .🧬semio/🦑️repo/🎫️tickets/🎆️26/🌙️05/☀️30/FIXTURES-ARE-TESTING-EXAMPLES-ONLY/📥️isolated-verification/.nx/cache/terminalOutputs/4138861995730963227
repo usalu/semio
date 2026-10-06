@@ -1,0 +1,25 @@
+> bun ./📜️script.ts tests 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts
+
+[DEBUG] isolated Nx verification tests
+bun test v1.3.14 (0d9b296a)
+
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts:
+(pass) authored coordinate and prose vectors agree with independent JSON parser [5.17ms]
+(pass) independent Markdown oracle excludes commented and fenced decoys [29.26ms]
+(pass) README canonical owner tree matches raw source and independent Markdown structure [256.56ms]
+(pass) README exact inline coordinates resolve their declared current owners [35.71ms]
+(pass) README reviewed requirement and routing prose: case-phase-selection [208.27ms]
+(pass) README reviewed requirement and routing prose: selector-requirement-versus-routing [114.15ms]
+(pass) README reviewed requirement and routing prose: declarative-pipeline-requirement [55.13ms]
+(pass) README reviewed requirement and routing prose: pipeline-routing-status [53.43ms]
+(pass) README reviewed requirement and routing prose: atomic-publication-requirement-versus-routing [16.52ms]
+(pass) README no longer advertises obsolete coordinates or uniform runtime guarantees [0.31ms]
+(pass) README retains the concurrently authored protocol-v2 ownership and safety requirements [0.12ms]
+(pass) registry JSON parsers agree and its schema link names the current regular schema [6.16ms]
+(pass) documentation correction leaves the original forty-row authority and baseline preimage immutable [5.67ms]
+(pass) documentation gate registration matches the declared Nx route and both launch catalogs [968.71ms]
+
+ 14 pass
+ 0 fail
+ 91 expect() calls
+Ran 14 tests across 1 file. [3.83s]

@@ -45,7 +45,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_wfc_bitmap::editor::bitmap::transient::bitmap_transient_mutation_report_json;
+    use semio_s_artifact_wfc_bitmap::editor::bitmap::transient::component::io::text::mutations::bitmap_transient_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         bitmap_transient_mutation_report_json(committed.before, committed.mutation, committed.after)

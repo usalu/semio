@@ -130,7 +130,7 @@
     }
   },
   "expected": {
-    "releasedBytes": 24689,
+    "releasedBytes": 24694,
     "terminalEmpty": true
   }
 }

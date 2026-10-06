@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pattern",
+          "de": "Muster"
+        },
+        "description": {
+          "en": "Resource name of the pattern that is removed.",
+          "de": "Ressourcenname des Musters, die entfernt wird."
+        },
+        "ref": {
+          "kind": "pattern"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

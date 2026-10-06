@@ -744,9 +744,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "drafting-plate",
       "class": "third-party-generated",
       "target": {
@@ -787,7 +786,6 @@
       "notes": "A single base input document carrying, in ONE drawing, the starting state all 19 declared dxf@r12 mutation kinds need: a non-origin $INSBASE (so set-header-var/remove-header-var both move the projection), 3 LAYER rows with distinct colours and linetypes, 3 STYLE rows with distinct fonts, 5 LTYPE rows with distinct descriptions, 2 BLOCKs with different base points and different nested entity lists, and 7 order-significant top-level ENTITIES spanning all six typed kinds the subset models (line, line, circle, arc, solid, text, insert) across three layers. DXF R12 declares no drawing unit at all ($INSUNITS is R2000+ and the dxf crate never emits it for R12), so length is honestly unitless; DXF angles (group codes 50/51) are degrees. Verified against the reference library itself, not asserted: all 19 kinds move the semantic-dxf-r12-v1 projection on this fixture and every inverse restores it exactly; the gate accepts a byte-different dxf re-encode with 0 differences and rejects the same set-entity payload applied to the wrong index with 13. Byte-reproducible: dxf::Header::default stamps $TDCREATE/$TDUPDATE with chrono::Local::now(), the only non-content value in the output, and the generator replaces both with a fixed stamp parsed by dxf's own reader."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "no-mutation-no-op",
       "class": "third-party-generated",
       "target": {
@@ -836,7 +834,6 @@
       "notes": "Identity — before and after are the same document, encoded independently."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -887,7 +884,6 @@
       "notes": "Whole-document replace: $INSBASE, a new LAYER, and the circle entity's radius (the subset's own declared 'widens-the-circle-entity-radius' scenario) all change together."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-no-op",
       "class": "third-party-generated",
       "target": {
@@ -938,7 +934,6 @@
       "notes": "Replacement snapshot equals the base — DxfDiff::between is empty."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-rejected-duplicate-layer",
       "class": "third-party-generated",
       "target": {
@@ -982,7 +977,6 @@
       "notes": "Payload snapshot declares a layer name that collides with an existing base layer — invalid-add-target (🔺️diff/🦀️.rs:1571)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-header-var-applied",
       "class": "third-party-generated",
       "target": {
@@ -1033,7 +1027,6 @@
       "notes": "$INSBASE changes value — the one generic $VAR dxf's Header persists unconditionally on an R12 save."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-header-var-applied",
       "class": "third-party-generated",
       "target": {
@@ -1084,7 +1077,6 @@
       "notes": "$INSBASE resets to the origin."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-header-var-rejected-missing",
       "class": "third-party-generated",
       "target": {

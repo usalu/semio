@@ -1,0 +1,82 @@
+> bun ./📜️script.ts test-owner-command "🌎️hub/📦️packages/🦀️rust/📜️script.ts" browser-broker-check
+
+[DEBUG] isolated Nx verification test-owner-command
+
+> nx run @semio-tech/framework-os:test-quick --run -t browser broker proof ratchet
+
+> bun "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts" owner-command --cwd "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript" -- bun "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts" test quick --run -t "browser broker proof ratchet"
+
+
+ RUN  v4.1.10 /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript
+
+ ❯ |@semio-tech/framework-os| ../../🧪️tests/🧪️backbone-envelope-io/🟦️.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-os| ../../🧪️tests/🧪️backbone-envelope-io/🟦️.ts [ ../../🧪️tests/🧪️backbone-envelope-io/🟦️.ts ]
+Error: No test suite found in file /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️backbone-envelope-io/🟦️.ts
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 9 skipped (10)
+      Tests  510 skipped (510)
+   Start at  03:18:47
+   Duration  3.82s (transform 12.02s, setup 0ms, import 14.89s, tests 0ms, environment 1ms)
+
+38 |       child.once("close", (code, signal) => accept({ code, signal }));
+39 |     });
+40 |     const failure = reason === "timeout" ? `${command} exceeded its ${options.budgetMs}ms budget` : reason ? `${command} ${reason}` : signal ? `${command} was killed by ${signal}` : code !== 0 ? `${command} exited with status ${code}` : undefined;
+41 |     if (!failure) return;
+42 |     if (reason === "timeout") console.error(`[budget] ${command} ${args.join(" ")} exceeded ${options.budgetMs}ms — killed. ${options.onTimeoutHint ?? "Trim it, or assign it to a higher level (quick/long/exhaustive)."}`);
+43 |     if (options.throwOnFailure) throw Error(failure);
+                                           ^
+error: node exited with status 1
+      at runBudgetedTestCommand (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts:43:39)
+      at async runVitestV1 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts:40:9)
+      at async runVitest (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts:1966:9)
+      at async run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts:49:11)
+      at async run (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts:74:19)
+      at async runScriptMain (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts:15:16)
+
+Bun v1.3.14 (macOS arm64)
+66 |         accept(1);
+67 |       });
+68 |       child.once("close", (code) => accept(code ?? 1));
+69 |     });
+70 |     if (stopped) throw new Error(`${label} stopped: ${stopped}`);
+71 |     if (status !== 0) throw new Error(`${label} failed (${status})`);
+                                     ^
+error: process:owner-command failed (1)
+      at runOwnedCommand (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts:71:33)
+
+Bun v1.3.14 (macOS arm64)
+Warning: command "bun "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts" owner-command --cwd "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript" -- bun "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts" test quick --run -t "browser broker proof ratchet"" exited with non-zero status code
+
+
+ NX   Running target test-quick for project @semio-tech/framework-os failed
+
+Failed tasks:
+
+- @semio-tech/framework-os:test-quick
+
+Hint: run the command with --verbose for more details.
+
+  Run duration:      8.4s
+  Cache:             Skipped (--skip-nx-cache)
+  Critical path:     7.9s (1 task)
+  Recoverable time:  <1ms
+137 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+138 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+139 |  */
+140 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+141 |   const status = runCmdInternal(cmd, args, opts);
+142 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                    ^
+error: bun x --no-install nx run @semio-tech/framework-os:test-quick --skip-nx-cache -- --run -t browser broker proof ratchet exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts:142:31)
+      at run (/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/📜️script.ts:3847:5)
+      at async run (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts:74:19)
+      at async runScriptMain (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts:15:16)
+
+Bun v1.3.14 (macOS arm64)
+Warning: command "bun ./📜️script.ts test-owner-command "🌎️hub/📦️packages/🦀️rust/📜️script.ts" browser-broker-check" exited with non-zero status code

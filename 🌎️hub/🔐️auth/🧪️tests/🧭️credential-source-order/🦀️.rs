@@ -26,13 +26,13 @@ fn source(path: impl AsRef<Path>) -> String {
     read_to_string(path).expect("source must remain readable")
 }
 
-fn mains(source: &str) -> Vec<ItemFn> {
+fn functions_named(source: &str, name: &str) -> Vec<ItemFn> {
     syn::parse_file(source)
         .expect("Rust source must parse through syn")
         .items
         .into_iter()
         .filter_map(|item| match item {
-            Item::Fn(function) if function.sig.ident == "main" => Some(function),
+            Item::Fn(function) if function.sig.ident == name => Some(function),
             _ => None,
         })
         .collect()
@@ -74,21 +74,21 @@ fn hub_credential_source_order_syn_parity() {
     let fixture: Value = serde_json::from_str(&source(root.join("🌎️hub/🧫️fixtures/🧱️foundation-source/🔣️.json"))).expect("foundation fixture must parse");
     let hostile = fixture["sourceBoundary"]["rust"]["source"].as_str().expect("Rust hostile source");
     let expected = fixture["sourceBoundary"]["rust"]["expectedCalls"].as_array().expect("expected Rust calls").iter().map(|value| value.as_str().expect("call name")).collect::<Vec<_>>();
-    let hostile_mains = mains(hostile);
+    let hostile_mains = functions_named(hostile, "main");
     assert_eq!(hostile_mains.len(), fixture["sourceBoundary"]["rust"]["expectedBodies"].as_u64().expect("expected body count") as usize);
     let hostile_calls = calls(&hostile_mains[0]);
     assert!(ordered(&hostile_calls, &expected));
     assert_eq!(hostile_calls.iter().filter(|name| expected.contains(&name.as_str())).count(), expected.len());
 
     let mcp = source(root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs"));
-    let mcp_mains = mains(&mcp);
+    let mcp_mains = functions_named(&mcp, "run_mcp_entrypoint");
     assert_eq!(mcp_mains.len(), 1);
     assert!(schemas_preflight(&mcp_mains[0]));
     assert!(ordered(&calls(&mcp_mains[0]), &["claim_inherited_local_hub_credential", "parse_args", "run_stdio"]));
 
     let native = source(root.join("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"));
-    let native_mains = mains(&native);
-    assert_eq!(native_mains.len(), 2);
+    let native_mains = functions_named(&native, "run_native_entrypoint");
+    assert_eq!(native_mains.len(), 1);
     let serving = native_mains.iter().filter(|main| calls(main).iter().any(|name| name == "claim_inherited_local_hub_credential")).collect::<Vec<_>>();
     assert_eq!(serving.len(), 1);
     assert!(ordered(&calls(serving[0]), &["claim_inherited_local_hub_credential", "arg_value", "run_native"]));

@@ -1,6 +1,6 @@
-/** ⬅️ Trinity Rewriting editor — Before window: typed twin of `render_fixture_graph`'s node-graph
- * scene boundary over `before_fixture_json`, editable, with the viewport driven by the pane's own
- * live camera (`cfg.before_pane_camera`) rather than the fixture's own layout — unlike LHS/RHS. */
+/** ⬅️ Trinity Rewriting editor — Before window: typed twin of `render_graph_snapshot`'s node-graph
+ * scene boundary over `working_graph_snapshot_json`, editable, with the viewport driven by the pane's own
+ * live camera (`cfg.before_pane_camera`) rather than the snapshot's own layout — unlike LHS/RHS. */
 
 export interface TrinityRewritingEditBeforeNode {
   id: string;

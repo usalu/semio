@@ -1,0 +1,96 @@
+{
+  "cases": [
+    {
+      "id": "replace-exact",
+      "pairs": [
+        {
+          "path": "own/scene.rs",
+          "before": "before",
+          "after": "after",
+          "encoding": "utf8",
+          "beforeHash": "6db7d803e74f1ffa7d8f5adc0bf95b3e15bf4c8373fffadf546227cc6c6742cb",
+          "afterHash": "f39592393ef0859cb196a52693d2cea00fb2df784b3c04ae54aa7cadb8e562f8"
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "create-null-before",
+      "pairs": [
+        {
+          "path": "own/schema.json",
+          "before": null,
+          "after": "{}",
+          "encoding": "utf8",
+          "beforeHash": null,
+          "afterHash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "real-binary",
+      "pairs": [
+        {
+          "path": "own/editor.wasm",
+          "before": null,
+          "after": "AAECA//+",
+          "encoding": "base64",
+          "beforeHash": null,
+          "afterHash": "949fabd3ca6ec0c475dfba1d815764e879a8f2c87d60dd7510d646a3027647df"
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "refuse-duplicate",
+      "pairs": [
+        {
+          "path": "own/scene.rs",
+          "before": "before",
+          "after": "after",
+          "encoding": "utf8",
+          "beforeHash": "6db7d803e74f1ffa7d8f5adc0bf95b3e15bf4c8373fffadf546227cc6c6742cb",
+          "afterHash": "f39592393ef0859cb196a52693d2cea00fb2df784b3c04ae54aa7cadb8e562f8"
+        },
+        {
+          "path": "own/scene.rs",
+          "before": "before",
+          "after": "after",
+          "encoding": "utf8",
+          "beforeHash": "6db7d803e74f1ffa7d8f5adc0bf95b3e15bf4c8373fffadf546227cc6c6742cb",
+          "afterHash": "f39592393ef0859cb196a52693d2cea00fb2df784b3c04ae54aa7cadb8e562f8"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "refuse-path-escape",
+      "pairs": [
+        {
+          "path": "../foreign.rs",
+          "before": "before",
+          "after": "after",
+          "encoding": "utf8",
+          "beforeHash": "6db7d803e74f1ffa7d8f5adc0bf95b3e15bf4c8373fffadf546227cc6c6742cb",
+          "afterHash": "f39592393ef0859cb196a52693d2cea00fb2df784b3c04ae54aa7cadb8e562f8"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "refuse-wrong-full-body",
+      "pairs": [
+        {
+          "path": "own/scene.rs",
+          "before": "before",
+          "after": "after",
+          "encoding": "utf8",
+          "beforeHash": "6db7d803e74f1ffa7d8f5adc0bf95b3e15bf4c8373fffadf546227cc6c6742cb",
+          "afterHash": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "refused": true
+    }
+  ]
+}

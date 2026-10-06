@@ -1,0 +1,156 @@
+# Expanded Plugin Oracle Integrity
+
+Checked 43 saved exact TypeScript consumers against current source.
+
+## Parser And Named Declaration Integrity
+
+Zero parser errors or lost named declarations.
+
+## Empty Named Callbacks
+
+None.
+
+## Removed Or Replaced Assertions For Review
+
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts: if(!validate(fixture))thrownewError('invalidGISMapapprovalhistorycorpus:${JSON.stringify(validate.errors)}');`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts: if(validate({...fixture,cases:fixture.cases.slice(1)}))thrownewError("approvalhistoryschemaadmittedamissinglifecyclelaw");`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts: if(!validate(fixture))thrownewError('invalidGISMapinferenceportcorpus:${JSON.stringify(validate.errors)}');`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts: if(validate(candidate))thrownewError('GISMapinferenceportcorpusacceptedhostilemutation${index}');`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/📜️script.ts: if(!validate(fixture))thrownewError('invalidGISMappeerrebootstrapfixture:${JSON.stringify(validate.errors)}');`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(!validate(fixture))thrownewError('CADpresenceretirementschema:${JSON.stringify(validate.errors)}');`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(validate(hostile))thrownewError("CADpresenceschemaacceptedanenlargedproductiongrant");`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(!validateStore(storeFixture))thrownewError('presenceStoreretirementschema:${JSON.stringify(validateStore.errors)}');`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(readerAliases!==0||registryAliases!==1)thrownewError("readreturnprecedesexactaliasrelease");`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(!returned||readerAliases!==0)thrownewError("readregistrytakelacksexclusivepayloadauthority");`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(readerAliases!==0||registryAliases!==0)thrownewError("readownershiporacleretainsanalias");`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(validateStore(hostile))thrownewError("presencereadschemaacceptedprematurereturnorlosttransferauthority");`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(validateStore(hostile))thrownewError("Presencecloseschemaadmittedforeignorlostreturned-readownership");`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(!validateCommit(commitFixture))thrownewError("Presencepeercommitfixtureviolatesstrictschema");`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(validateCommit(hostile))thrownewError("Presencepeercommitschemaadmittedforgedfreshness");`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(!validatePeer(peerFixture))thrownewError('peeradmissionfixtureschema:${JSON.stringify(validatePeer.errors)}');`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(validatePeer({...peerFixture,requiresCapacitySizedByteGrant:true}))thrownewError("peeractorfixtureadmittedcapacity-sizedbytecredit");`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts: if(validatePeer({...peerFixture,factoryBinding:{...peerFixture.factoryBinding,expectedForeignRetirements:1}}))thrownewError("peerrejectionfixtureacceptedaforeignfactory");`
+- `✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts: expect(validate(parsed)).toBe(true);`
+- `✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts: if(!validate(parsed))thrownewError("GISMappeerrebootstrapfixtureisinvalid");`
+- `✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts: expect(valid(fixture),JSON.stringify(valid.errors)).toBe(true);`
+- `✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts: expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);`
+- `✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts: expect(corpus.cases.every((row:unknown)=>validateScope(row))&&validateFirstOpen(corpus.firstOpen),JSON.stringify([...validateScope.errors??[],...validateFirstOpen.errors??[]])).toBe(true);`
+- `🌎️hub/📦️packages/🦀️rust/📜️script.ts: if(!lifecycleOracle(lifecycleFixture)||lifecycleFixture.limits.bootstrapMaximumMs!==BROWSER_BROKER_BOOTSTRAP_PROOF_TTL_MS||lifecycleFixture.limits.activeMaximumMs!==BROWSER_BROKER_PROOF_TTL_MS||lifecycleFixture.delayedBootstrap.delayMs<=lifecycleFixture.delayedBootstrap.activeProofTtlMs||lifecycleFixture.delayedBootstrap.delayMs>=lifecycleFixture.delayedBootstrap.bootstrapProofTtlMs||lifecycleFixture.bootstrapExpiry.delayMs<=lifecycleFixture.bootstrapExpiry.bootstrapProofTtlMs)thrownewError('browserbrokerlifecyclefixtureinvalid:${JSON.stringify(lifecycleOracle.errors)}');`
+- `🌎️hub/📦️packages/🦀️rust/📜️script.ts: if(!validateBuilder(builderFixture))thrownewError("buildertopicfixtureviolatesitsowningscopecontract");`
+- `🌎️hub/📦️packages/🦀️rust/📜️script.ts: if(!admitsHttpAuthority(row))thrownewError('creationHTTPauthorityviolatesitsowningscopecontract:${row.id}');`
+- `🌎️hub/📦️packages/🦀️rust/📜️script.ts: if(!validateTransaction(row)||validateTransaction({...row,committed:!row.committed}))thrownewError('creationtransactionoraclediffers:${row.kind}');`
+- `🌎️hub/📦️packages/🦀️rust/📜️script.ts: if(!validateRecovery(row)||validateRecovery({...row,facts:row.facts+1}))thrownewError('creationacceptedrecoveryoraclediffers:${row.kind}');`
+- `🌎️hub/📦️packages/🦀️rust/📜️script.ts: if(!validateCancellation(row)||validateCancellation({...row,accepted:!row.accepted}))thrownewError('creationcancellationoraclediffers:${row.state}/${row.expectedRevision}');`
+- `🌎️hub/📦️packages/🦀️rust/📜️script.ts: if(!validateTransition(row)||validateTransition({...row,next:row.next===null?row.fact:null}))thrownewError('creationoperationtransitionoraclediffers:${row.state}/${row.fact}');`
+- `🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts: if(!validate(fixture))thrownewError('invalidGIScomponentcold-mapcorpus:${JSON.stringify(validate.errors)}');`
+- `🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-control/🟦️.ts: if(!validate(fixture))thrownewError('invalidGIScontrolledcorpus:${JSON.stringify(validate.errors)}');`
+- `🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts: if(!validateIdentity(identity))thrownewError('invalidGISidentityfixture:${JSON.stringify(validateIdentity.errors)}');`
+- `🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts: if(validateIdentity(candidate))thrownewError('GISidentityoracleadmitted${kind}');`
+- `🌎️hub/🧩️compositions/🌍️gis/🧪️tests/💡️inference-discovery/🟦️.ts: if(!validateControl(control))thrownewError('invalidGIScontrolfixture:${JSON.stringify(validateControl.errors)}');`
+- `🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts: if(!validate(fixture))thrownewError('invalidGISreceiptcorpus:${JSON.stringify(validate.errors)}');`
+- `🌎️hub/🧩️compositions/🌍️gis/🧪️tests/📇️native-codecs/🟦️.ts: if(!validateDocumentIds(documentIds))thrownewError('invalidartifactdocument-idcorpus:${JSON.stringify(validateDocumentIds.errors)}');`
+- `🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/📇️native-codecs/🟦️.ts: if(!validateDocumentIds(documentIds))thrownewError('invalidartifactdocument-idcorpus:${JSON.stringify(validateDocumentIds.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(validate(fixture),JSON.stringify(validate.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(!validate(mutant));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(validateClose(sessionClose),"retainedsessionclosefixturemustsatisfyitsownedcontract");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(!validateClose(mutant));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(validateRuntime(runtimeLifetime),"browserruntimelifetimefixturemustsatisfyitsownedcontract");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(!validateRuntime(mutant));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts: if(!validate(fixture))thrownewError("Flowselectedcopystrictschemafailed");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts: if(validate(value))thrownewError("Flowselectedcopyacceptedhostileschema");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts: if(!validate(fixture))thrownewError("Flowretirementstrictfixtureschemafailed");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts: if(validate(value))thrownewError("Flowretirementschemaacceptedhostilepayload");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts: assert.equal(validate(fixture),true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts: assert.equal(validate(bad),false);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts: if(!validate(fixture))thrownewError("generationrootfixturefailedstrictschema");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts: if(validate(value))thrownewError("generationrootschemaacceptedhostileinput");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts: expect(identity(hostBootstrapFixture.identity),JSON.stringify(identity.errors)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(tutorialSerialFixture.cases.every((row)=>rendererExport("SerialTutorialDriveTransitionV1")(row))).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(tutorialSeekFixture.cases.every((row)=>rendererExport("PausedTutorialSeekTransitionV1")(row))).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(tutorialRunFixture.cases.every((row)=>rendererExport("TutorialRunTransitionV1")(row))&&tutorialRunFixture.drives.every((row)=>rendererExport("TutorialDriveTransitionV1")(row))).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(admittedInstanceFixture.cases.every((row)=>rendererExport("AdmittedShellInstanceTransitionV1")(row))).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(tutorialRunFixture.cases.every((row)=>rendererExport("TutorialRunTransitionV1")(row))&&tutorialRunFixture.drives.every((row)=>rendererExport("TutorialDriveTransitionV1")(row))).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(directoryExport("SpaceArtifactCreationCatalogAuthorityV1")(artifactCreationCatalogAuthorityFixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(directoryExport("SpaceArtifactCreationCatalogAuthorityV1")(artifactCreationCatalogAuthorityFixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(directoryExport("SpaceArtifactCreationCatalogAuthorityV1")(artifactCreationCatalogAuthorityFixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(validate(tutorialInteractionFixture),JSON.stringify(validate.errors)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(validate({...tutorialInteractionFixture,observed:{...tutorialInteractionFixture.observed,selection:{mesh:{...tutorialInteractionFixture.observed.selection.mesh,ids:[7]}},},}),).toBe(false);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(validate(graphPickFixture),JSON.stringify(validate.errors)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(validate(hostile)).toBe(false);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(validate(graphParameterFixture),JSON.stringify(validate.errors)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(validate(flowBrowserRuntimeFixture),JSON.stringify(validate.errors)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(validate(labelResolutionFixture),JSON.stringify(validate.errors)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts: expect(validate({...labelResolutionFixture,matrix:{native:{en:"OnlyEnglish"},reuse:matrix.reuse}})).toBe(false);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts: expect(validate(artifactOpeningFixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts: expect(openingScopeFixture.cases.every((row)=>resolution(row))&&rendererExport("DocumentFirstOpenV1")(openingScopeFixture.firstOpen)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚪️opening/🟦️.ts: expect(validate(row),'${row.id}:${JSON.stringify(validate.errors)}').toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts: if(!validate(fixture))thrownewError('nativecatalogselectionfixturedenied:${JSON.stringify(validate.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts: if(!validate(fixture))thrownewError(JSON.stringify(validate.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts: if(!validate(fixture))thrownewError(JSON.stringify(validate.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/♻️relay-lifecycle/🟦️.ts: if(!validate(fixture))thrownewError('relaylifecyclefixtureschemaviolation:${JSON.stringify(validate.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-factory-proof-join/🟦️.ts: if(!validate(fixture))thrownewError('factoryruntimefixtureschema:${JSON.stringify(validate.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts: if(!validate(fixture))thrownewError('latest-winsschema:${JSON.stringify(validate.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts: if(validate(hostile))thrownewError("latest-winsschemaacceptedaforgedscopeorenlargedgrant");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts: if(!validateIntegration(integration))thrownewError('latest-winsintegrationschema:${JSON.stringify(validateIntegration.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts: if(validateIntegration(hostile))thrownewError("latest-winsintegrationschemaacceptedstaleauthority,collision,starvation,oramissingacceptedtarget");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts: if(!validateRaw(rawFixture))thrownewError('retainedrawallocationschema:${JSON.stringify(validateRaw.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts: if(!validateChildClose(childCloseFixture))thrownewError('retainedchildclosefixture:${JSON.stringify(validateChildClose.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-latest-wins/🟦️.ts: if(!validateDispatch(dispatchFixture))thrownewError('mounteddispatchfixture:${JSON.stringify(validateDispatch.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️reactor-contract-oracles/🟦️.ts: assert(validateReceipt(fixture),JSON.stringify(validateReceipt.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts: if(!validate(fixture))thrownewError('[verifyinteractivitytool-jobs]nativecheckpointfixture/schemamismatch:${JSON.stringify(validate.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts: if(validate(value))thrownewError('[verifyinteractivitytool-jobs]checkpointschemaadmitted${name}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts: if(!validate(fixture))thrownewError('ownerfactoryfixtureschema:${JSON.stringify(validate.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts: if(validate(hostile))thrownewError("ownerfactorystrictschemaacceptedanadversarialfixture");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts: if(!validate(fixture))thrownewError('scalarConfigfixtureschema:${JSON.stringify(validate.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts: if(validate(hostile))thrownewError("scalarConfigstrictschemaacceptedahostilefixture");`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert.equal(MOVED_EXPORTS.length,24);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert.equal(Object.keys(ui.definitions??{}).some((name)=>name.startsWith("retainedCommand")),false);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert.equal(Object.keys(ui.$defs).some((name)=>name.startsWith("RetainedCommand")),false);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert.equal(JSON.stringify(schema.$defs).includes('${UI_ID}#/$defs/RetainedCommand'),false);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert(ajvValid,'${target.definition}Ajv:${ajv.errorsText(ajvValidate.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert(jsonSchemaValid,'${target.definition}jsonschemarejectedthecanonicalfixture');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert.deepEqual([ajvValid,ajvHostile],[jsonSchemaValid,jsonSchemaHostile]);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert.equal(ajvHostile,false);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert(directAjv(directFixture),ajv.errorsText(directAjv.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts: assert(jsonSchema.validate(directFixture,{$ref:directRef}asany).valid);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts: assert(validate(fixture),JSON.stringify(validate.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts: assert(!validate(item));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(validate(fixture),JSON.stringify(validate.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(!validate(mutant));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(validateCache(cacheFixture),JSON.stringify(validateCache.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(!validateCache(mutant));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(validateEvaluation(evaluation),JSON.stringify(validateEvaluation.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts: assert(!validateEvaluation(mutant));`
+- `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts: assert(validate(fixture),JSON.stringify(validate.errors));`
+- `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts: assert.equal(validate(hostileFixture),false);`
+- `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts: assert.equal(validate(missingIndexFixture),false);`
+- `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts: assert(validateRetained(retainedFixture),JSON.stringify(validateRetained.errors));`
+- `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts: assert(validate(fixture),'${surface.appId}fixtureviolates${surface.export}:${JSON.stringify(validate.errors)}');`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts: expect(documentOpeningFixture.cases.every((row)=>transition(row))).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts: expect(documentOpeningFixture.admissions.every((row)=>admission(row))).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts: expect(documentOpeningFixture.closeFailures.every((row)=>closeFailure(row))).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️document-opening/🟦️.ts: expect(Object.values(documentOpeningFixture.backgroundSessions).every((row)=>background(row))).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts: expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/🟦️.ts: assert(validate(fixture),JSON.stringify(validate.errors));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/🟦️.ts: assert(fixture.facadeExports.every((name:string)=>names.includes(name)));`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/📤️macro-exports/🟦️.ts: assert(!validate(mutant));`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🟦️.ts: expect(validate(cases)).toBe(true);`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🟦️.ts: expect(newAjv({strict:true}).compile(retirementSchema)(phases)).toBe(true);`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🟦️.ts: expect(newAjv({strict:true}).compile(resolvedSchema)(resolvedRows)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts: assert(!validate(deniedSchema),"callercannotprovideselectedschema");`
+- `🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts: assert(!validate(deniedOwner),"callercannotprovidederivedowner");`
+- `🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/📜️script.ts: assert(!validate(deniedAuthority),"callercannotprovideapp-mintedoperationauthority");`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts: expect(newAjv2020Complete({strict:true}).compile(completeSemanticSchema)(completeSemanticContract)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(newAjv({strict:true}).addSchema(residentSchema).compile(schema)(fixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(newAjv({strict:true}).addSchema(residentSchema).compile(schema)(fixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(newAjv({strict:true}).addSchema(residentSchema).compile(schema)(fixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(ajv.addSchema(schema).getSchema('${schema.$id}#/$defs/Admission')!(contract)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(newAjv({strict:true}).validate(schema,fixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(validator.addSchema(schema).getSchema('${schema.$id}#/$defs/Builder')!(contract)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(validator.addSchema(schema).getSchema('${schema.$id}#/$defs/Release')!(contract)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(validator.addSchema(schema).getSchema('${schema.$id}#/$defs/Payload')!(contract)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(oracle.validate(schema,fixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(newAjv().validate(schema,row)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(newAjv({strict:true}).validate(schema,contractFixture)).toBe(true);`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts: expect(oracle.validate(schema,fixture)).toBe(true);`

@@ -1,0 +1,61 @@
+{
+  "schema": "press-child-source-registry/v1",
+  "sourceBytes": 8194,
+  "wire": "17",
+  "paddingBytes": 8192,
+  "maximumItems": 1,
+  "maximumBytes": 4096,
+  "identities": [
+    1,
+    2
+  ],
+  "events": [
+    {
+      "kind": "admit",
+      "identity": 1
+    },
+    {
+      "kind": "cloneScalar",
+      "identity": 1
+    },
+    {
+      "kind": "cloneScalar",
+      "identity": 1
+    },
+    {
+      "kind": "tickReplace",
+      "identity": 2
+    },
+    {
+      "kind": "retireDisplaced",
+      "identity": 1
+    },
+    {
+      "kind": "commit",
+      "identity": 2
+    },
+    {
+      "kind": "lateCommit",
+      "identity": 2
+    },
+    {
+      "kind": "closeRuntime"
+    }
+  ],
+  "expected": {
+    "createdOwners": 2,
+    "clonedOwners": 0,
+    "transferredOwners": 1,
+    "retiredOwners": 1,
+    "duplicateTransfers": 0,
+    "childPhysicalHandbackCredit": 0
+  },
+  "negative": [
+    "zero-grant-preserves-incoming",
+    "registry-full-preserves-incoming",
+    "cancelled-reference-scan-preserves-live-child",
+    "missing-identity-preserves-all-owners",
+    "duplicate-commit-preserves-tombstone",
+    "host-abort-clears-scalar-authority-before-retirement"
+  ]
+}

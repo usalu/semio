@@ -28,7 +28,19 @@
       }
     },
     "newLabel": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New Label",
+          "de": "Neue Beschriftung"
+        },
+        "description": {
+          "en": "Text the node shows from now on.",
+          "de": "Text, den der Knoten von nun an anzeigt."
+        }
+      }
     }
   }
 }

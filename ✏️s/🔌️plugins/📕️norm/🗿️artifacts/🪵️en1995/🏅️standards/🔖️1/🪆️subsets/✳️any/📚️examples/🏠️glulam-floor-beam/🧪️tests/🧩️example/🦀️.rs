@@ -1,5 +1,5 @@
 use crate::artifact_schema::evaluate_structure;
-use crate::artifact_schema::snapshot::decode_en1995_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::decode_en1995_dsl;
 use crate::En1995Snapshot;
 
 fn decoded() -> En1995Snapshot {

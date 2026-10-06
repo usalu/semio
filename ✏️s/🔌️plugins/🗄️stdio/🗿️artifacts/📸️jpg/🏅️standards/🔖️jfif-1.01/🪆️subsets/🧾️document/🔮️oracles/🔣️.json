@@ -1067,9 +1067,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-jfif-header-applied",
       "class": "third-party-generated",
       "target": {
@@ -1120,7 +1119,6 @@
       "notes": "APP0 density changes from the encoder's default to 300x300 DPI — a real byte difference `image`/zune-jpeg 0.5.15 write but have no decode-side getter for (verified: `ImageInfo.x_density`/`y_density` exist but their setters are never called anywhere in zune-jpeg's source)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-quant-table-applied",
       "class": "third-party-generated",
       "target": {
@@ -1171,7 +1169,6 @@
       "notes": "Byte-identical before/after: this subset's own production encoder regenerates DQT fresh from re_encode_quality on every write, so no encoder in this repository can carry a replaced quant table into the bytes."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-quant-table-applied",
       "class": "third-party-generated",
       "target": {
@@ -1222,7 +1219,6 @@
       "notes": "Byte-identical before/after, same reason as replace-quant-table."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-huffman-table-applied",
       "class": "third-party-generated",
       "target": {
@@ -1273,7 +1269,6 @@
       "notes": "Byte-identical before/after: production regenerates DHT fresh on every write."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-restart-interval-applied",
       "class": "third-party-generated",
       "target": {
@@ -1324,7 +1319,6 @@
       "notes": "Byte-identical before/after: production never emits a DRI/restart marker at all."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-other-segment-applied",
       "class": "third-party-generated",
       "target": {
@@ -1375,7 +1369,6 @@
       "notes": "An APP1 XMP segment is spliced in after APP0 — the one generic-segment payload shape `image`'s public `xmp_metadata()` accessor actually surfaces."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-other-segment-applied",
       "class": "third-party-generated",
       "target": {
@@ -1426,7 +1419,6 @@
       "notes": "The inverse of insert-other-segment: before carries the spliced APP1 XMP segment, after does not."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-pixels-applied",
       "class": "third-party-generated",
       "target": {
@@ -1477,7 +1469,6 @@
       "notes": "The gradient/checkerboard base raster is replaced with a uniform mid-grey fill — the decoded raster digest changes."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "change-re-encode-quality-applied",
       "class": "third-party-generated",
       "target": {
@@ -1528,7 +1519,6 @@
       "notes": "The same textured base raster re-encoded at quality 90 then quality 20 — quantization noise moves the decoded raster digest."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "marker-replace-quant-table",
       "class": "third-party-generated",
       "target": {
@@ -1577,7 +1567,6 @@
       "comparisonPipeline": "jpg-jfif-1-01-marker-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "marker-change-jfif-header",
       "class": "third-party-generated",
       "target": {
@@ -1626,7 +1615,6 @@
       "comparisonPipeline": "jpg-jfif-1-01-marker-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "marker-remove-quant-table",
       "class": "third-party-generated",
       "target": {
@@ -1675,7 +1663,6 @@
       "comparisonPipeline": "jpg-jfif-1-01-marker-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "libjpeg-change-restart-interval",
       "class": "third-party-generated",
       "target": {
@@ -1723,7 +1710,6 @@
       "notes": "A Pillow-written seed transcoded by jpegtran -restart 2. jpegtran is LOSSLESS, so the pair differs in its marker structure and not in the image — the generator asserts the Start-of-Frame line is unchanged. No library reader reaches these markers: image-rs decodes to pixels, Pillow's DRI handler is Skip and its Huffman accessors are empty and deprecated, and zune-jpeg keeps restart_interval pub(crate). djpeg -v -v prints them."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "libjpeg-replace-huffman-table",
       "class": "third-party-generated",
       "target": {
@@ -1771,7 +1757,6 @@
       "notes": "A Pillow-written seed transcoded by jpegtran -optimize. jpegtran is LOSSLESS, so the pair differs in its marker structure and not in the image — the generator asserts the Start-of-Frame line is unchanged. No library reader reaches these markers: image-rs decodes to pixels, Pillow's DRI handler is Skip and its Huffman accessors are empty and deprecated, and zune-jpeg keeps restart_interval pub(crate). djpeg -v -v prints them."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "libjpeg-remove-huffman-table",
       "class": "third-party-generated",
       "target": {
@@ -1827,7 +1812,6 @@
       "notes": "A Pillow-written seed encoded twice by cjpeg under 4️⃣four-tables.scan and 3️⃣three-tables.scan. The scan scripts differ by component 1's AC scan, so the table list differs by exactly one entry (AC chroma 0x11) — the generator asserts exactly one table is removed, that no new table appears, and that both halves still decode. HONEST LIMIT: the pair does NOT isolate the table from the scan. A JPEG defines a Huffman table BECAUSE a scan references it, so no conforming writer can emit a file whose table list differs by one entry while the scan list is identical; dropping the scan is the only way to drop the table. djpeg -verbose enumerates every DHT, which is what makes the table-list effect witnessable at all."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -1870,7 +1854,6 @@
       "notes": "SetSnapshot replaces the whole document: the 1x1 swatch's one pixel is repainted while its JFIF header, COM segment and re-encode quality stay as the replacement states them."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-snapshot-applied",
       "class": "handcrafted",
       "target": {

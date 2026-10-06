@@ -11,7 +11,7 @@
 //! `subsets::any::schema::snapshot`, unmoved).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1_0::subsets::base::schema::XmlAnalyzer;
+    use crate::standards::v1_0::subsets::base::io::XmlAnalyzer;
     use crate::XmlSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -55,8 +55,8 @@ pub use derived_composition::*;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v1_0::subsets::base::schema::XmlComposer as XmlRawAnyComposer;
-    use crate::standards::v1_0::subsets::valid::schema::XmlValidComposer;
+    use crate::standards::v1_0::subsets::base::io::XmlComposer as XmlRawAnyComposer;
+    use crate::standards::v1_0::subsets::valid::io::XmlValidComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -68,3 +68,128 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{XmlDiff, XmlMutation, XmlSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.xml` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct XmlBuilderConstruction {
+        snapshot: XmlSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for XmlBuilderConstruction {
+        type Snapshot = XmlSnapshot;
+        type Mutation = XmlMutation;
+        type Diff = XmlDiff;
+        fn empty() -> Self {
+            Self { snapshot: XmlSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<XmlSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::schema::mutations::apply_xml_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <XmlDiff as protocol::MutationDiff<XmlSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            let mut diagnostics = self.diagnostics;
+            if let Err(error) = crate::schema::snapshot::validate_xml_document_boundaries(&self.snapshot.doc) {
+                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.xml.boundary", semio_framework_diagnostic::TextSpan::at(1, 1), error));
+            }
+            if diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::XmlSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.xml` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct XmlParts {
+        pub snapshot: Option<XmlSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.xml` (1.0/✳️any) sources.
+    pub struct XmlAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for XmlAnalyzerAnalysis {
+        type Parts = XmlParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = XmlParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <XmlSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec XmlBuilderFacets {
+        construction: XmlBuilderConstruction,
+        analysis: XmlAnalyzerAnalysis,
+        composition: crate::standards::v1_0::subsets::base::io::derived_composition::XmlComposerComposition,
+    }
+    builder: XmlBuilder,
+    analyzer: XmlAnalyzer,
+    composer: XmlComposer,
+);

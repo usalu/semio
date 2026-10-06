@@ -524,7 +524,7 @@ async fn set_active_example_loads_capsule_fixture() {
     // load carries the kind's authored NAME and its whole catalogue, never a new identity. The
     // document therefore keeps the id it booted with while every authored field becomes the capsule's.
     assert_eq!(projection.object_kind.name, "Capsule J");
-    assert_eq!(projection.object_kind.id, crate::standards::v1::subsets::any::schema::snapshot::text::block3d_boot_snapshot().object_kind.id, "an example load never re-identifies the document");
+    assert_eq!(projection.object_kind.id, crate::standards::v1::subsets::any::io::text::snapshot::block3d_boot_snapshot().object_kind.id, "an example load never re-identifies the document");
     // 🥽️ One representation, not two: the former `"1:500"` row named `/mesh/capsule_J.1to500.glb`,
     // which no mesh delivery catalog ships, so `resolveMeshAsset` threw the instant the example
     // loaded. There is no 1:500 `.glb` anywhere in the repo (only a Rhino `.3dm` source), so the
@@ -587,6 +587,24 @@ async fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
     let projection = app.snapshot().expect("snapshot");
     assert!(!crate::vortex_kinds_of(&projection).is_empty());
     assert_eq!(projection.vortices.len(), 2);
+}
+
+/// 🎯️ LAW (design §22.32): one surface click is ONE tool transaction — whatever it had to create (the vortex, and the
+/// vortex kind of a document that has none) are the mutations of ONE edit stamped `block3d-play#worldSurfacePlace`, so the
+/// history lists the click as one row whose mutations stay editable.
+#[semio_framework_async_macros::async_test]
+async fn a_surface_click_is_one_tool_transaction_of_its_mutations() {
+    let mut app = new_app().await;
+    context::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
+    let edits = app.edit_transactions().len();
+    let vortices = app.snapshot().expect("snapshot").vortices.len();
+    context::dispatch(&mut app, Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] })).await;
+    let transactions = app.edit_transactions();
+    assert_eq!(transactions.len(), edits + 1, "one click, one edit");
+    let transaction = transactions.last().cloned().flatten().expect("the click's edit carries its tool transaction");
+    assert!(transaction.id.starts_with("tx-"), "{transaction:?}");
+    assert_eq!(transaction.tool, format!("{BLOCK3D_PLAY_APP_ID}#{}", place_vortex::PLACE_VORTEX_VERB));
+    assert_eq!(app.snapshot().expect("snapshot").vortices.len(), vortices + 1, "and the click placed its vortex");
 }
 
 #[semio_framework_async_macros::async_test]

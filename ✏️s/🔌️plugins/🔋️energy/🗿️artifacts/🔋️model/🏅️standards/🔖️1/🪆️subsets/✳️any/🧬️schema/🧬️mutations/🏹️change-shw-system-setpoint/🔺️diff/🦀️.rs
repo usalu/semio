@@ -23,6 +23,6 @@ pub fn diff(payload: &super::ChangeShwSystemSetpoint, base: &EnergyModelSnapshot
     if let Some(item) = model.shw_systems.iter_mut().find(|item| item.id == payload.id) {
         item.setpoint_c = payload.new_setpoint_c;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

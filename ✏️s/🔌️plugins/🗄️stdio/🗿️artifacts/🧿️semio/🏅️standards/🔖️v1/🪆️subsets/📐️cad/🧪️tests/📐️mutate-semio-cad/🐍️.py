@@ -650,12 +650,12 @@ def doc_string(ctx: Context) -> str:
 
 def drawing(ctx: Context) -> dict:
     """📐️ The real committed drawing, read through this implementation's own DSL parser."""
-    return parse_dsl(ctx.fixture_bytes(DRAWING_DSL).decode("utf-8"))
+    return parse_dsl(ctx.input_bytes(DRAWING_DSL).decode("utf-8"))
 
 
 def vector(ctx: Context, kind: str) -> dict:
     """🧫️ One committed `(before, mutation, after)` specification vector."""
-    return json.loads(ctx.fixture_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://📐️mutate-semio-cad/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
+    return json.loads(ctx.input_bytes(next(token for step in ctx.scenario["steps"] for token in step["text"].split() if token.startswith("shared://📐️mutate-semio-cad/") and token.endswith("%s/🦠️mutation/🔣️.json" % kind))).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input
@@ -702,7 +702,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
     agreeing with itself. The two encodings also cross-check each other — the binary twin has to
     decode to the same drawing the text does, which no single codec can arrange on its own.
     """
-    committed = ctx.fixture_bytes(DRAWING_DSL)
+    committed = ctx.input_bytes(DRAWING_DSL)
     snapshot = parse_dsl(committed.decode("utf-8"))
     printed = print_dsl(snapshot).encode("utf-8")
     if printed != committed:
@@ -711,7 +711,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
         raise AssertionError("re-parsing the printed drawing lost content")
     if snapshot["schema"] != DOCUMENT_SCHEMA:
         raise AssertionError("the committed drawing declares schema %r, expected %r" % (snapshot["schema"], DOCUMENT_SCHEMA))
-    committed_pack = ctx.fixture_bytes(DRAWING_PACK)
+    committed_pack = ctx.input_bytes(DRAWING_PACK)
     unpacked = parse_pack(committed_pack)
     if unpacked != snapshot:
         raise AssertionError("the committed binary twin decodes to a different drawing than the committed text\n     got: %s\nexpected: %s" % (json.dumps(unpacked), json.dumps(snapshot)))

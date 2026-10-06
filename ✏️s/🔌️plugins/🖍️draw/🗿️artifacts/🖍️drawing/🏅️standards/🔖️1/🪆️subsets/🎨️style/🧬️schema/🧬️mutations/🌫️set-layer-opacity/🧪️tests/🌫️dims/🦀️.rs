@@ -90,7 +90,7 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ The produced diff is EXACTLY the committed one: one `patched` entry setting `opacity`. The
-/// committed `"fillJson": null` is what pins layer opacity as a lane of its own — a diff that
+/// committed `"fill": null` is what pins layer opacity as a lane of its own — a diff that
 /// re-serialized the fill to fold the alpha in would be caught here and nowhere else.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
     let delta = outcome.diff().layers.clone().expect("set-layer-opacity pins a layers delta");
     let patch = &delta.patched[0].patch;
     assert_eq!(patch.opacity, Some(0.5), "the opacity lane carries the new scalar");
-    assert!(patch.fill_json.is_none(), "dimming a layer must not rewrite its fill to fold the alpha in");
+    assert!(patch.fill.is_none(), "dimming a layer must not rewrite its fill to fold the alpha in");
     assert!(patch.visible.is_none(), "a half-opaque layer is not a hidden one");
 }
 

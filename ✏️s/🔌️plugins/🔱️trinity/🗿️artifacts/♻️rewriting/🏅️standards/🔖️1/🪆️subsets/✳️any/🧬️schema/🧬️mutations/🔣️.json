@@ -4,7 +4,7 @@
   "title": "RewriteRuleMutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/edit-before-fixture/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/edit-working-graph/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/edit-lhs/schema.json"

@@ -25,7 +25,7 @@ pub(crate) async fn duplicate_nodes(source_ids: Vec<String>, projection: &Workfl
 //#endregion 🔖️DuplicateAndPaste
 
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "duplicate-app-instance")]
 pub struct DuplicateAppInstance {}
 

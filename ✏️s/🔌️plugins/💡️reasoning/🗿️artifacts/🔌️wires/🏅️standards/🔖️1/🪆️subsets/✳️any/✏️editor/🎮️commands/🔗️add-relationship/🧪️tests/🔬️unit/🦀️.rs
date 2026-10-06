@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::wires::commands::add_node;
 use crate::editor::wires::unit_tests::context::{dispatch, new_app};
 use crate::editor::wires::WiresCommand;
-use crate::schema::fixture_edges;
+use crate::schema::board_snapshot_edges;
 
 /// 🔗️ `addRelationship` connects the NAMED endpoints: two freshly added nodes, related `node-2 → node-1`
 /// (the reverse of creation order, so a hardcoded `node-1 → node-2` cannot pass).
@@ -14,7 +14,7 @@ async fn add_relationship_connects_the_named_nodes_and_selects_the_edge() {
     }
     dispatch(&mut app, WiresCommand::AddRelationship(AddRelationship { kind: "owns".into(), source_id: "node-2".into(), target_id: "node-1".into() })).await;
     let board = crate::editor::wires::unit_tests::context::board(&app);
-    let edges = fixture_edges(&board);
+    let edges = board_snapshot_edges(&board);
     assert_eq!(edges.len(), 1);
     assert_eq!(entity_id(&edges[0], "source"), Some("node-2"));
     assert_eq!(entity_id(&edges[0], "target"), Some("node-1"));
@@ -38,5 +38,5 @@ async fn add_relationship_refuses_missing_unknown_and_identical_endpoints_by_nam
         assert!(fault.message.contains(code) || fault.code.0 == code, "expected {code}, got {fault:?}");
     }
     let board = crate::editor::wires::unit_tests::context::board(&app);
-    assert!(fixture_edges(&board).is_empty(), "no refused invocation wrote an edge");
+    assert!(board_snapshot_edges(&board).is_empty(), "no refused invocation wrote an edge");
 }

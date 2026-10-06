@@ -73,7 +73,7 @@ fn expect(name: &str, field: &str, expected: &Json, produced: &Json) -> Result<(
 
 #[cfg(feature = "sut")]
 fn every_spelling_folds_the_same_way(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🔤️rename-vectors.json")?;
+    let file = ctx.input_json("shared://🔤️rename-vectors.json")?;
     let mut rewrites = Vec::new();
     for vector in file.array("tokenVectors") {
         let name = vector.str("name");
@@ -86,7 +86,7 @@ fn every_spelling_folds_the_same_way(ctx: &Context) -> Result<Outcome, String> {
 
 #[cfg(feature = "sut")]
 fn a_workspace_renames_deepest_first(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🔤️rename-vectors.json")?;
+    let file = ctx.input_json("shared://🔤️rename-vectors.json")?;
     let mut trees = Vec::new();
     for vector in file.array("trees") {
         let name = vector.str("name");
@@ -110,7 +110,7 @@ fn a_workspace_renames_deepest_first(ctx: &Context) -> Result<Outcome, String> {
 
 #[cfg(feature = "sut")]
 fn renaming_back_restores_the_workspace(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🔤️rename-vectors.json")?;
+    let file = ctx.input_json("shared://🔤️rename-vectors.json")?;
     let mut round_trips = Vec::new();
     for vector in file.array("trees") {
         let name = vector.str("name");
@@ -130,7 +130,7 @@ fn renaming_back_restores_the_workspace(ctx: &Context) -> Result<Outcome, String
 
 #[cfg(feature = "sut")]
 fn a_refused_rename_names_its_reason(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🔤️rename-vectors.json")?;
+    let file = ctx.input_json("shared://🔤️rename-vectors.json")?;
     let mut refusals = Vec::new();
     for vector in file.array("errors") {
         let name = vector.str("name");

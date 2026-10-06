@@ -24,6 +24,7 @@ pub(crate) const ARCHITECT_BODY_REPORT: &str = "architect.report";
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
 pub(crate) fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: ARCHITECT_WINDOW_REPORT.into(),
         label: LocalizedLabel::native("Report", "Bericht"),
         body_key: ARCHITECT_BODY_REPORT.into(),

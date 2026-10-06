@@ -21,7 +21,12 @@
         },
         "widget": "stepper",
         "unit": "a",
-        "precision": 0
+        "precision": 0,
+        "step": 1,
+        "snaps": [
+          1,
+          50
+        ]
       }
     }
   }

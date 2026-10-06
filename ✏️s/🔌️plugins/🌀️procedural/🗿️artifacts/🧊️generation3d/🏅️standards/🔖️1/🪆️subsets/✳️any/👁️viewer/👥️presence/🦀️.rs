@@ -88,3 +88,6 @@ impl ArtifactPack for Generation3dViewPresence {
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

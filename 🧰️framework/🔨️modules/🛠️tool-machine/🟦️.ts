@@ -267,25 +267,28 @@ export interface GestureTool<G, Tick, M> {
 
 export type GestureToolResult<G, Tick, M> = { readonly ok: true; readonly tool: GestureTool<G, Tick, M> } | { readonly ok: false; readonly refusal: ToolRefusal };
 
-/** 🪪️ How a streamed tool starts at rest, resumes its window's persisted gesture and tells two persisted gestures apart. */
+/** 🪪️ How a streamed tool starts at rest, resumes its window's persisted gesture, tells two persisted gestures apart, reads the document revision one is pinned to (empty: none) and reads or stamps the host press that owns one (the slot stamps it, never the tool). */
 export interface GestureToolKind<G, Tick, M> {
   start(verb: string, authoringSeed: string, baseRevision: string): GestureToolResult<G, Tick, M>;
   resume(gesture: G): GestureToolResult<G, Tick, M>;
   same(left: G, right: G): boolean;
+  baseRevision(gesture: G): string;
+  press(gesture: G): string | undefined;
+  withPress(gesture: G, press: string | undefined): G;
 }
 
 /** 📬️ The window's persisted gesture after a dispatch: unchanged, cleared, or the one to persist. */
 export type GestureNext<G> = { readonly kind: "unchanged" } | { readonly kind: "cleared" } | { readonly kind: "persist"; readonly gesture: G };
 
-/** 📮️ What one gesture dispatch did: the transaction it committed (publish it as ONE edit) and the window's next persisted gesture. */
-export type GestureDrive<G, M> = { readonly committed: { readonly transaction: TransactionRef; readonly mutations: M[] } | undefined; readonly next: GestureNext<G> };
+/** 📮️ What one gesture dispatch did: the transaction it committed (publish it as ONE edit), the window's next persisted gesture, and whether the dispatch `continued` the persisted gesture (resumed it, neither dropped nor interrupted). */
+export type GestureDrive<G, M> = { readonly committed: { readonly transaction: TransactionRef; readonly mutations: M[] } | undefined; readonly next: GestureNext<G>; readonly continued: boolean };
 
 export type GestureDriveResult<G, M> = { readonly ok: true; readonly drive: GestureDrive<G, M> } | { readonly ok: false; readonly refusal: ToolRefusal };
 
 /** 🚂️ Drives one window's streamed tool through ONE dispatch (`drive_gesture` in `🦀️.rs`, law `🧫️fixtures/🧫️gesture-drive-law`). `once` commits `tick` as one transaction; `stream` upserts it into the window's open transaction (opening it on the first tick), `commit` folds it in and commits the whole gesture, `abort` drops the open gesture with zero trace. A gesture whose base moved under it is aborted `baseMoved` (a stream tick or commit that found it is dropped with it, a one-shot commits fresh); otherwise another verb or a one-shot interrupts it (`captureLost`). A gesture its tool cannot restore is dropped with zero trace and the dispatch runs from rest; a refused start or tick faults the dispatch with no effect at all. */
 export function driveGesture<G, Tick, M>(kind: GestureToolKind<G, Tick, M>, persisted: G | undefined, verb: string, phase: GesturePhase, tick: Tick | undefined, authoringSeed: string, baseRevision: string): GestureDriveResult<G, M> {
   const rest: GestureNext<G> = { kind: persisted === undefined ? "unchanged" : "cleared" };
-  const dropped: GestureDriveResult<G, M> = { ok: true, drive: { committed: undefined, next: rest } };
+  const dropped: GestureDriveResult<G, M> = { ok: true, drive: { committed: undefined, next: rest, continued: false } };
   const restored = persisted === undefined ? undefined : kind.resume(persisted);
   const resumed = restored?.ok ? restored.tool : undefined;
   if (phase.kind === "abort") {
@@ -305,7 +308,141 @@ export function driveGesture<G, Tick, M>(kind: GestureToolKind<G, Tick, M>, pers
   if (interrupted !== undefined) resumed?.abort(interrupted);
   const gesture = opened.tool.persist();
   const next: GestureNext<G> = gesture === undefined ? rest : persisted !== undefined && kind.same(gesture, persisted) ? { kind: "unchanged" } : { kind: "persist", gesture };
-  return { ok: true, drive: { committed: sent.step.kind === "committed" ? { transaction: sent.step.transaction, mutations: sent.step.mutations } : undefined, next } };
+  return { ok: true, drive: { committed: sent.step.kind === "committed" ? { transaction: sent.step.transaction, mutations: sent.step.mutations } : undefined, next, continued: resumed !== undefined && interrupted === undefined } };
+}
+
+/** 🪪️ What one dispatch did to its window's slot: the transaction it committed, the slot's next gesture and the press the window closed with it. */
+export type GesturePressDrive<G, M> = { readonly committed: { readonly transaction: TransactionRef; readonly mutations: M[] } | undefined; readonly next: GestureNext<G>; readonly closed: string | undefined };
+
+export type GesturePressResult<G, M> = { readonly ok: true; readonly drive: GesturePressDrive<G, M> } | { readonly ok: false; readonly refusal: ToolRefusal };
+
+/** 🎫️ Drives one window's slot through ONE dispatch that may name its host `press` (`drive_press` in `🦀️.rs`, law `slots`). A gesture belongs to the press that opened it. A dispatch of the press the window last `closed` is dropped with zero trace; a dispatch of another press interrupts the open gesture first; a named gesture that ends — by anything — closes its press, and so does a named one-shot, commit or abort. A refused dispatch changes nothing. */
+export function drivePress<G, Tick, M>(kind: GestureToolKind<G, Tick, M>, held: G | undefined, closed: string | undefined, press: string | undefined, verb: string, phase: GesturePhase, tick: Tick | undefined, authoringSeed: string, baseRevision: string): GesturePressResult<G, M> {
+  const named = press === "" ? undefined : press;
+  if (named !== undefined && closed === named) return { ok: true, drive: { committed: undefined, next: { kind: "unchanged" }, closed: undefined } };
+  const owner = held === undefined ? undefined : kind.press(held);
+  const interrupts = named !== undefined && owner !== undefined && owner !== named;
+  const result = driveGesture(kind, interrupts ? undefined : held, verb, phase, tick, authoringSeed, baseRevision);
+  if (!result.ok) return result;
+  const { committed, next: driven, continued } = result.drive;
+  const after = driven.kind === "persist" ? kind.withPress(driven.gesture, continued ? owner : named) : driven.kind === "cleared" || interrupts ? undefined : held;
+  const next: GestureNext<G> = after === undefined ? { kind: held === undefined ? "unchanged" : "cleared" } : held !== undefined && kind.same(after, held) ? { kind: "unchanged" } : { kind: "persist", gesture: after };
+  const ended = owner !== undefined && (after === undefined || kind.press(after) !== owner) ? owner : undefined;
+  return { ok: true, drive: { committed, next, closed: named !== undefined && phase.kind !== "stream" ? named : ended } };
+}
+
+/** 📡️ The host facts that may end a window's open gesture: the window lost focus or its pointer capture, its utility switched, it is closing, a history edit froze the document, a remote edit moved the base. */
+export const GESTURE_HOST_EVENTS = ["blur", "captureLost", "utilityChanged", "retiring", "timeTravelFrozen", "baseMoved"] as const;
+export type GestureHostEvent = (typeof GESTURE_HOST_EVENTS)[number];
+
+/** 🧯️ The reason a host fact ends an open gesture with (law table `hostEvents`); `undefined` keeps the gesture: a moved base ends only one pinned to a base revision. */
+export function gestureHostAbortReason(event: GestureHostEvent, baseBound: boolean): ToolAbortReason | undefined {
+  switch (event) {
+    case "blur":
+      return "blur";
+    case "captureLost":
+      return "captureLost";
+    case "utilityChanged":
+    case "retiring":
+      return "retired";
+    case "timeTravelFrozen":
+      return "frozen";
+    case "baseMoved":
+      return baseBound ? "baseMoved" : undefined;
+  }
+}
+
+/** 💾️ One window's open gesture between dispatches — the framework-owned persisted form of a streamed statechart tool (twin of Rust `GestureState<M>`, `$defs/GestureState`): ephemeral, local-only, never history. */
+export type GestureState<M> = { readonly states: readonly string[]; readonly verb: string; readonly press: string; readonly authoringSeed: string; readonly baseRevision: string; readonly transaction: TransactionRef; readonly entries: ReadonlyArray<readonly [string, M]>; readonly context: unknown };
+
+/** 🪦️ A gesture a host fact ended with zero trace. */
+export type GestureEnd = { readonly window: string; readonly reason: ToolAbortReason };
+
+/** 🧾️ What one ledger dispatch did: the transaction it committed (publish it as ONE edit), or the refusal that left the ledger exactly as it was. */
+export type GestureLedgerResult<M> = { readonly ok: true; readonly committed: { readonly transaction: TransactionRef; readonly mutations: M[] } | undefined } | { readonly ok: false; readonly refusal: ToolRefusal };
+
+/** 🗂️ Every window's open gesture, at most one per window, and the press each window last closed: the ONE framework-owned window slot of a persisted gesture tool (twin of Rust `GestureLedger<M>`, law `slots`). Dispatches drive a window's slot through `drivePress`; host facts end it with zero trace and close its press. */
+export class GestureLedger<G, Tick, M> {
+  readonly #kind: GestureToolKind<G, Tick, M>;
+  readonly #windows = new Map<string, G>();
+  readonly #closed = new Map<string, string>();
+
+  constructor(kind: GestureToolKind<G, Tick, M>) {
+    this.#kind = kind;
+  }
+
+  isEmpty(): boolean {
+    return this.#windows.size === 0;
+  }
+
+  open(window: string): G | undefined {
+    return this.#windows.get(window);
+  }
+
+  /** 🪟️ The windows holding an open gesture, in window id order. */
+  windows(): string[] {
+    return [...this.#windows.keys()].sort();
+  }
+
+  /** 🚪️ The press `window` last closed: its late dispatches leave zero trace. */
+  closed(window: string): string | undefined {
+    return this.#closed.get(window);
+  }
+
+  /** 📕️ Every window's last closed press, in window id order. */
+  closedPresses(): Record<string, string> {
+    return Object.fromEntries([...this.#closed.entries()].sort(([left], [right]) => (left < right ? -1 : 1)));
+  }
+
+  /** 🔏️ Records the press `window` closed. */
+  close(window: string, press: string): void {
+    this.#closed.set(window, press);
+  }
+
+  /** ✍️ Keeps the gesture a dispatch driven against a copy of the slot decided (`undefined` clears it). */
+  settle(window: string, next: G | undefined): void {
+    if (next === undefined) this.#windows.delete(window);
+    else this.#windows.set(window, next);
+  }
+
+  /** 📨️ Drives `window`'s tool through ONE dispatch of `press` (`undefined`: the host named none) against its slot (`drivePress`); the slot and the closed press follow the drive, a refused dispatch leaves both as they were. */
+  drive(window: string, press: string | undefined, verb: string, phase: GesturePhase, tick: Tick | undefined, authoringSeed: string, baseRevision: string): GestureLedgerResult<M> {
+    const result = drivePress(this.#kind, this.#windows.get(window), this.#closed.get(window), press, verb, phase, tick, authoringSeed, baseRevision);
+    if (!result.ok) return result;
+    const { committed, next, closed } = result.drive;
+    if (next.kind !== "unchanged") this.settle(window, next.kind === "persist" ? next.gesture : undefined);
+    if (closed !== undefined) this.close(window, closed);
+    return { ok: true, committed };
+  }
+
+  /** 🧯️ Host cancel of `window`'s open gesture: zero trace, and its press is closed. */
+  abort(window: string, reason: ToolAbortReason): GestureEnd | undefined {
+    const gesture = this.#windows.get(window);
+    if (gesture === undefined) return undefined;
+    this.#windows.delete(window);
+    const press = this.#kind.press(gesture);
+    if (press !== undefined) this.close(window, press);
+    return { window, reason };
+  }
+
+  /** 📡️ A host fact of `window`: its open gesture ends with the fact's reason, or stays (`gestureHostAbortReason`). */
+  hostEvent(window: string, event: GestureHostEvent): GestureEnd | undefined {
+    const gesture = this.#windows.get(window);
+    const reason = gesture === undefined ? undefined : gestureHostAbortReason(event, this.#kind.baseRevision(gesture) !== "");
+    return reason === undefined ? undefined : this.abort(window, reason);
+  }
+
+  /** 🌐️ A host fact of every window (a history edit freezing the document), in window id order. */
+  hostEventAll(event: GestureHostEvent): GestureEnd[] {
+    return this.windows().flatMap((window) => this.hostEvent(window, event) ?? []);
+  }
+
+  /** 🪦️ Host cancel (`retired`) of the open gesture of every window `keep` refuses; their closed presses are forgotten. */
+  retainWindows(keep: (window: string) => boolean): GestureEnd[] {
+    const ended = this.windows().flatMap((window) => (keep(window) ? [] : (this.abort(window, "retired") ?? [])));
+    for (const window of [...this.#closed.keys()]) if (!keep(window)) this.#closed.delete(window);
+    return ended;
+  }
 }
 //#endregion 🌊️Gesture
 

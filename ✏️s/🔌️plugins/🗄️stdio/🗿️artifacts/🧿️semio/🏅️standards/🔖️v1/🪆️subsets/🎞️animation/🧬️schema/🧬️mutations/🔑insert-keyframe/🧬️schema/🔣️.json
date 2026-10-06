@@ -18,15 +18,60 @@
     },
     "timelineIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Timeline",
+          "de": "Zeitleiste"
+        },
+        "description": {
+          "en": "Index of the timeline, counted from 0.",
+          "de": "Index der Zeitleiste, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "channelIndex": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Channel",
+          "de": "Kanal"
+        },
+        "description": {
+          "en": "Index of the channel within the timeline, counted from 0.",
+          "de": "Index des Kanals innerhalb der Zeitleiste, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the keyframes of the channel at which it is inserted, counted from 0.",
+          "de": "Position unter den Schlüsselbildern des Kanals, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 30
+      }
     },
     "keyframe": {
       "$ref": "#/$defs/AnimKeyframe",

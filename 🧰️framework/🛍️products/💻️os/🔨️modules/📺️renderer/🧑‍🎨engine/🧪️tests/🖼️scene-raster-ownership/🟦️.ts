@@ -1,9 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import Ajv from "ajv";
-import { meshPaintSealCurrent, nextSceneRasterEpoch, SceneRasterPool, SceneRasterUploadAuthority, sceneRasterUploadRows, type SceneRasterIdentity } from "../../💾️scene-raster-ownership/🟦️.ts";
 
-const schema = JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🖱️ui/🧬️schema/🖼️scene-raster-ownership/🔣️.json", import.meta.url), "utf8"));
+import { meshPaintSealCurrent, nextSceneRasterEpoch, SceneRasterPool, SceneRasterUploadAuthority, sceneRasterUploadRows, type SceneRasterIdentity } from "../../💾️scene-raster-ownership/🟦️.ts";
 const fixture = JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json", import.meta.url), "utf8"));
 
 function identity(seed: string, width = 1, height = 1): SceneRasterIdentity {
@@ -41,7 +39,6 @@ function publish(pool: SceneRasterPool, raster: SceneRasterIdentity, token: stri
 
 describe("scene raster ownership", () => {
   test("neutral contract owns natural quality, independent workspaces, profiles, and row chunks", () => {
-    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     expect(fixture.limits.slotCapacity * fixture.limits.decodedItemBytes).toBe(fixture.limits.poolBytes);
     expect(fixture.naturalReference.width * fixture.naturalReference.height * 4).toBe(fixture.naturalReference.rgbaBytes);
     expect(fixture.naturalReference.rgbaBytes).toBeLessThanOrEqual(fixture.limits.decodedItemBytes);

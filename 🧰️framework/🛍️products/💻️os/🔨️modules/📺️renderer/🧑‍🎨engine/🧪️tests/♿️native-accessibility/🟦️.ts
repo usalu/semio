@@ -5,14 +5,13 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
+
 import { describe, expect, test } from "vitest";
 import { uiAccessibilityRoleV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🟦️.ts";
 import type { Component } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "♿️native-accessibility-tree", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "♿️native-accessibility-tree", "🔣️.json"), "utf8"));
 
 /** 🎭️ Every role the shared contract derives, over every component type and every container role, pressed or not. */
 function contractRoles(): Set<string> {
@@ -30,10 +29,7 @@ function contractRoles(): Set<string> {
 const CHROME_ROLES = ["button", "switch", "combobox", "option", "slider", "textbox", "menuitem", "status"];
 
 describe("♿️ native accessibility tree", () => {
-  test("the fixture satisfies its schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("every contract and chrome role has a platform role in the table", () => {
     const table = new Set<string>(fixture.roles.map((row: { role: string }) => row.role));

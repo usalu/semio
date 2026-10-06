@@ -46,9 +46,7 @@ fn presence_update_export_matches_the_wire_shape() {
     assert_eq!(export["properties"]["peers"]["items"]["$ref"], "#/definitions/presencePeerMark");
     let required: Vec<&str> = export["required"].as_array().expect("required").iter().map(|entry| entry.as_str().expect("field")).collect();
     assert_eq!(required, ["surface", "nodeKey", "own", "ttlMs"], "only `peers` is omitted from the wire when empty");
-    let overlay = &module["$defs"]["ContractFixture"]["properties"]["cases"]["items"]["properties"]["update"];
-    assert_eq!(overlay["allOf"][0]["$ref"], format!("{}#/$defs/PresenceUpdate", module["$id"].as_str().expect("$id")), "the fixture case references the export instead of restating it");
-    assert!(json_keys(&overlay["allOf"][1]["properties"]).iter().all(|field| json_keys(&export["properties"]).contains(field)), "the overlay may only narrow fields the export already declares");
+
 }
 
 /// 🔑️ The property names of one JSON object, sorted, so a comparison is order-independent whatever

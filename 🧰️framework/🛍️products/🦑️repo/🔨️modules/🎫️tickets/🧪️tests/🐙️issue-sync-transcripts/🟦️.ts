@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🎞️Recorder
@@ -21,7 +21,7 @@ type Vectors = { goal: string; issueUrl: string; title: string; prompt: string; 
 const VECTORS = "shared://🐙️issue-sync-transcripts/🐙️transcripts.json";
 
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(readFileSync(ctx.fixture(VECTORS), "utf8")) as Vectors;
+  return JSON.parse(readFileSync(ctx.input(VECTORS), "utf8")) as Vectors;
 }
 
 /** 🎞️ A second recorder of the same scripts, written from the port's contract. */

@@ -218,7 +218,7 @@ def uri_in(ctx, needle):
 
 def json_fixture(ctx, needle):
     """🧫️ The declared JSON fixture this scenario names."""
-    return json.loads(ctx.fixture_bytes(uri_in(ctx, needle)).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri_in(ctx, needle)).decode("utf-8"))
 
 
 def significant(value, digits=6):

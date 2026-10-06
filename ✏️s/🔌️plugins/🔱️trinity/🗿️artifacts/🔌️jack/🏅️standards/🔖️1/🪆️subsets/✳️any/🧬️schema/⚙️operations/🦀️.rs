@@ -21,7 +21,7 @@ pub fn create_trinity_graph_envelope(id: &str, snapshot: JackSnapshot) -> Trinit
 /// goes through here instead.
 pub async fn new_trinity_graph_store(envelope: TrinityGraphEnvelope) -> Result<OwnedTrinityGraphStore, store::VcsError> {
     let mut store = TrinityGraphStore::new(envelope).await?;
-    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::schema::mutations::binary::jack_document_store_owners());
+    store.install_document_store_owners_exact(crate::standards::v1::subsets::any::io::binary::mutations::jack_document_store_owners());
     Ok(OwnedTrinityGraphStore(store))
 }
 
@@ -295,7 +295,7 @@ pub async fn dispatch_trinity_graph_mutations(store: &mut TrinityGraphStore, ope
         validate_trinity_graph_operation(operation, &snapshot)?;
         apply_trinity_graph_mutation(&mut snapshot, operation)?;
     }
-    store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None, transaction: None }).await.map_err(crate::TrinityRamError::from).map(|_| ())
+    store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }).await.map_err(crate::TrinityRamError::from).map(|_| ())
 }
 //#endregion 🔖️BatchHelpers
 

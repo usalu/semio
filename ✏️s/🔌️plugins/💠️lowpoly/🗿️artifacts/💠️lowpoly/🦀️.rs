@@ -71,27 +71,12 @@ pub struct LowpolyPaintLayer {
     pub visible: bool,
     pub opacity: f32,
     pub blend_mode: String,
-    #[value(default = "empty_paint_pixels", with = "bytes_base64")]
+    #[value(default = "empty_paint_pixels", with = "semio_framework_value::bytes")]
     #[dsl(base64)]
     pub pixels: Vec<u8>,
 }
 
-/// 🔤️ Byte fields ride the value codec as standard base64 STRINGS — the same wire form the JSON/TS/
-/// proto/GraphQL schema facets, the DSL text codec (`#[dsl(base64)]`) and the serde paths already
-/// declare. Without this the derived `FromValue` wanted a JSON integer array, so every committed
-/// fixture carrying a paint layer or a pixel run failed to decode (98 tests, found 2026-09-17 in
-/// ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS). Same shape as raster's
-/// `asset_data_base64`.
-pub mod bytes_base64 {
-    pub fn to_value(bytes: &Vec<u8>) -> semio_framework_value::DslValue {
-        semio_framework_value::DslValue::String(base64_codec::base64_standard_encode(bytes))
-    }
 
-    pub fn from_value(value: semio_framework_value::DslValue) -> Result<Vec<u8>, semio_framework_value::ValueError> {
-        let semio_framework_value::DslValue::String(encoded) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a base64 string")) };
-        base64_codec::base64_standard_decode(encoded.as_bytes()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
-    }
-}
 
 impl LowpolyPaintLayer {
     pub fn new(name: &str) -> Self {
@@ -514,20 +499,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod bounds {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
@@ -540,21 +517,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        pub use text::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
 
                         #[path = "."]
                         pub mod create_object {
@@ -1110,26 +1078,16 @@ pub mod standards {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub mod io {
-    pub use super::standards::v1::subsets::any::io::*;
-}
-pub mod op {
-    pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-}
-pub mod document_dsl {
-    pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
-}
-pub mod spr {
-    pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
-}
+
+
+
+
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-    pub mod text {
-        pub use crate::standards::v1::subsets::any::schema::diff::text::*;
-    }
+
 }
 pub mod mutations {
     pub use crate::standards::v1::subsets::any::schema::mutations::*;
@@ -1138,9 +1096,7 @@ pub mod snapshot {
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-    pub mod pack {
-        pub use crate::standards::v1::subsets::any::schema::snapshot::binary::*;
-    }
+
 }
 
 #[path = "."]
@@ -1319,3 +1275,5 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v1::subsets::any::io::{LowpolyBuilderConstruction, LowpolyParts, LowpolyAnalyzerAnalysis, LowpolyBuilderFacets, LowpolyBuilder, LowpolyAnalyzer, LowpolyComposer};

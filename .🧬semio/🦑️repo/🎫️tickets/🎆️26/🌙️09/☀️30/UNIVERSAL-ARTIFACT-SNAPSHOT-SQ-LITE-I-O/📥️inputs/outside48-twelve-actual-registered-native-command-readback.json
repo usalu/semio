@@ -1,0 +1,185 @@
+[
+  {
+    "owner": "WriterSnapshot",
+    "historicalRoute": "@semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/writer-writer-rs",
+        "targets": [
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native",
+          "test-snapshot-sqlite-source"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "EquationSnapshot",
+    "historicalRoute": "@semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/mathematical-equation-rs",
+        "targets": [
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native",
+          "test-snapshot-sqlite-source"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "Grid3dSnapshot",
+    "historicalRoute": "@semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/wfc-grid3d-rs",
+        "targets": [
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native",
+          "test-snapshot-sqlite-source"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "FlowSnapshot",
+    "historicalRoute": "@semio-tech/flow-flow-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/flow-flow-rs",
+        "targets": [
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native",
+          "test-snapshot-sqlite-source"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "ShootingSnapshot",
+    "historicalRoute": "@semio-tech/shooting-shooting-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/shooting-shooting-rs",
+        "targets": [
+          "verify-snapshot-sqlite-source",
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native",
+          "test-snapshot-sqlite-source"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "En1997Snapshot",
+    "historicalRoute": "@semio-tech/norm-en1997-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/norm-en1997-rs",
+        "targets": [
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native",
+          "verify-snapshot-sqlite-source",
+          "test-snapshot-sqlite-source"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "RasterSnapshot",
+    "historicalRoute": "@semio-tech/raster-raster-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/raster-raster-rs",
+        "targets": [
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-source",
+          "test-snapshot-sqlite-native"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "NoteSnapshot",
+    "historicalRoute": "@semio-tech/note-note-rs:verify-sqlite-snapshot-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/note-note-rs",
+        "targets": [
+          "verify-sqlite-snapshot-guest",
+          "verify-sqlite-snapshot-native"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "Puzzle5dSnapshot",
+    "historicalRoute": "@semio-tech/puzzle-5d-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/puzzle-5d-rs",
+        "targets": [
+          "test-snapshot-sqlite-source",
+          "verify-snapshot-sqlite-source",
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "SHomeSnapshot",
+    "historicalRoute": "@semio-tech/space-home-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/space-home-rs",
+        "targets": [
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native",
+          "test-snapshot-sqlite-source"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "SSpaceSnapshot",
+    "historicalRoute": "@semio-tech/space-space-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/space-space-rs",
+        "targets": [
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native",
+          "test-snapshot-sqlite-source"
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "CurationSnapshot",
+    "historicalRoute": "@semio-tech/sourcing-curation-rs:test-snapshot-sqlite-native",
+    "projects": [
+      {
+        "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/📋️project.json",
+        "name": "@semio-tech/sourcing-curation-rs",
+        "targets": [
+          "test-snapshot-sqlite",
+          "test-snapshot-sqlite-native",
+          "test-snapshot-sqlite-source",
+          "verify-snapshot-sqlite-source"
+        ]
+      }
+    ]
+  }
+]

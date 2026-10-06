@@ -1,0 +1,92 @@
+{
+  "schema": "semio.architecture.specific-conformance/v2",
+  "target": "specific-dsl-conformance",
+  "moved": [
+    {
+      "module": "shipped_grammar",
+      "directory": "📖️grammar",
+      "source": "grammar-unit",
+      "laws": [
+        "every_shipped_grammar_semio_parses_and_compiles"
+      ],
+      "previousModule": "full_grammar",
+      "previousDirectory": "📖️grammar"
+    },
+    {
+      "module": "grammar_conformance",
+      "directory": "📖️grammar/✅️conformance",
+      "source": "sweep",
+      "laws": [
+        "all_discovered_snapshot_grammars_recognize_their_shipped_fixtures"
+      ],
+      "previousModule": "m5_handcrafted_grammar_conformance",
+      "previousDirectory": "🔬️m5-handcrafted-grammar-conformance"
+    },
+    {
+      "module": "protocol_conformance",
+      "directory": "📡️protocol/✅️conformance",
+      "source": "sweep",
+      "laws": [
+        "all_discovered_snapshot_protocols_walk_their_shipped_fixtures"
+      ],
+      "previousModule": "m5_handcrafted_protocol_conformance",
+      "previousDirectory": "🔬️m5-handcrafted-protocol-conformance"
+    },
+    {
+      "module": "grammar_rejection",
+      "directory": "📖️grammar/⛔️rejection",
+      "source": "sweep",
+      "laws": [
+        "all_non_stdio_grammars_reject_each_others_shipped_fixtures"
+      ],
+      "previousModule": "m5_cross_artifact_rejection",
+      "previousDirectory": "🔬️m5-cross-artifact-rejection"
+    },
+    {
+      "module": "grammar_coverage",
+      "directory": "📖️grammar/📊️coverage",
+      "source": "sweep",
+      "laws": [
+        "all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture"
+      ],
+      "previousModule": "m5_production_coverage",
+      "previousDirectory": "🔬️m5-production-coverage"
+    }
+  ],
+  "helpers": [
+    {
+      "module": "example_discovery",
+      "directory": "📚️examples/🔎️discovery",
+      "previousModule": "example_asset_discovery",
+      "previousDirectory": "🔬️example-asset-discovery"
+    },
+    {
+      "module": "example_resolution",
+      "directory": "📚️examples/🔍️resolution",
+      "previousModule": "pilot_resolve",
+      "previousDirectory": "🔬️pilot-resolve"
+    },
+    {
+      "module": "facet_discovery",
+      "directory": "🔎️discovery",
+      "previousModule": "m5_auto_discovery",
+      "previousDirectory": "🔬️m5-auto-discovery"
+    },
+    {
+      "module": "fixture_refusals",
+      "directory": "🛟️refusals",
+      "previousModule": "m5_soft_skip",
+      "previousDirectory": "🔬️m5-soft-skip"
+    }
+  ],
+  "retainedGrammar": [
+    "recognizer_matches_plain_arrow_via_registered_edge_macro",
+    "walk_protocol_shape_a_spk_like_buffer",
+    "verify_protocol_bytes_accepts_any_0x89_magic"
+  ],
+  "retainedEnvelope": [
+    "semio_envelope_protocol_parses_under_the_real_dialect",
+    "semio_envelope_protocol_walks_a_real_wrap_binary_payload",
+    "semio_envelope_protocol_walks_a_different_token_length_and_an_empty_payload"
+  ]
+}

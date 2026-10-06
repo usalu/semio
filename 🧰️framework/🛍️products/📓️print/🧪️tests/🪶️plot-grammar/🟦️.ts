@@ -6,7 +6,7 @@
  * for the pipeline as a whole.
  */
 import { scaleBand, scaleLinear } from "d3-scale";
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { planVizChart } from "../../🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts";
 import { type ProbeProjection, type ProbeRecord, compileVizProbe, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
@@ -36,7 +36,7 @@ function grid(values: readonly number[]): number[] {
 
 /** 🎯️ Compiles the committed fixture and returns the records of one scenario. */
 async function records(ctx: AdapterContext): Promise<ProbeRecord[]> {
-  return roundProbeNumbers(await compileVizProbe(ctx.fixture(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id }), DECIMALS);
+  return roundProbeNumbers(await compileVizProbe(ctx.input(FIXTURE), { workDir: ctx.workDir, caseName: CASE, scenario: ctx.scenario.id }), DECIMALS);
 }
 
 /** 📍️ The mapped rows of a probed plot, flattened as `x0, y0, x1, y1, …`. The mark kernel's own

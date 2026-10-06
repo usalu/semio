@@ -1,0 +1,83 @@
+# Named Suite Integrity Final
+
+Compared 468 changed framework/OS TypeScript files against HEAD, including staged changes. Removed named registrations are recorded below for review.
+
+- test (383 characters) `🧰️framework/📏️script-boundary/🧪️tests/🟦️.ts`: the language-neutral command boundary is closed
+- test (417 characters) `🧰️framework/🔨️modules/🌱️value/🏷️type/🧪️tests/🚮️absence/🟦️.ts`: the declared consumer absence corpus has independent closed admission
+- test (1477 characters) `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧩️ownership/🟦️.ts`: the closed ownership witness agrees with independent schema admission
+- test (863 characters) `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧩️ownership/🟦️.ts`: captured default value roots declare both neutral native laws
+- test (793 characters) `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧩️ownership/🟦️.ts`: every original control and law byte survives only its declared ownership edits
+- test (645 characters) `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧩️ownership/🟦️.ts`: the actual Cargo library root admits the captured neutral native law tree
+- test (343 characters) `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧩️ownership/🟦️.ts`: independent SQLite references retain every original byte except explicit owned binding arrays
+- test (259 characters) `🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts`: neutral value owner portable corpus admits independent Ajv
+- test (347 characters) `🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts`: paged value portable corpus admits independent Ajv
+- test (3044 characters) `🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts`: retirement source capacity corpus is closed and agrees with independent decimal arithmetic
+- it (393 characters) `🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧪️framework-notices/🟦️.ts`: the fixture satisfies its schema and refuses hostile rows
+- it (393 characters) `🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧪️history-notices/🟦️.ts`: the fixture satisfies its schema and refuses hostile rows
+- it (155 characters) `🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧪️history-patch/🟦️.ts`: the fixture itself satisfies the fixture schema
+- test (202 characters) `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts`: portable compiler corpus is admitted by independent Ajv
+- test (202 characters) `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts`: portable compiler corpus is admitted by independent Ajv
+- test (274 characters) `🧰️framework/🔨️modules/🏃️process/🪓️termination/🧪️tests/🟦️.ts`: validates the portable law fixture
+- test (314 characters) `🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧪️tests/🚮️absence/🟦️.ts`: closed Rust syntax absence authority has independent AJV admission
+- it (216 characters) `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🧪️tests/🔬️unit/🟦️.ts`: reads a fixture that satisfies its schema
+- test (226 characters) `🧰️framework/🔨️modules/🖱️ui/🧪️tests/📐️dock-axis-geometry/🟦️.ts`: the neutral vectors satisfy the Ajv schema oracle
+- it (468 characters) `🧰️framework/🔨️modules/🖱️ui/🧪️tests/📐️overlay-flow/🟦️.ts`: admits the closed Overlay/Absolute fixture and refuses foreign geometry metadata
+- it (200 characters) `🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔤️text-advances/🟦️.ts`: declares its contract
+- test (349 characters) `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️tests/🟦️.ts`: owned IEEE refusal fixture has an independent closed neutral contract
+- test (442 characters) `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/💰️frontiers/🟦️.ts`: shared authored-row frontier corpus is closed and independently admitted
+- test (136 characters) `🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️history-edit-actions/🟦️.ts`: the fixture validates against its schema
+- test (542 characters) `🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧪️history-edit-actions/🟦️.ts`: hostile fixtures are rejected
+- test (138 characters) `🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️conformance/🟦️.ts`: the fixture satisfies its schema
+- test (204 characters) `🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute/🧪️tests/🟦️.ts`: closed OS compute ownership fixture is exact
+- it (1327 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧪️tests/🧪️cold-pair-loading/🟦️.ts`: matches its schema and holds every case of the language-agnostic corpus
+- test (530 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts`: native allocation stages have a closed language-neutral contract
+- test (329 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🟦️.ts`: higher assembly ownership has a closed independent contract
+- test (255 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts`: 🧬️ the deferred-reprojection corpus satisfies its JSON Schema
+- test (250 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts`: 🧬️ the supersede-replay corpus satisfies its JSON Schema
+- test (250 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/🟦️.ts`: 🧬️ the tool-transaction corpus satisfies its JSON Schema
+- it (204 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️browser-keyboard-scope/🟦️.ts`: validates the language-neutral ownership cases
+- test (223 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️os-command-shortcuts/🟦️.ts`: the shared keymap satisfies its neutral schema
+- test (238 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️frame-latency/🟦️.ts`: the language-neutral aggregation vectors satisfy their schema
+- it (196 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⏱️gpu-animation-clock/🟦️.ts`: validates the shared finite GPU animation clock contract
+- it (295 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️action-argument-gate/🟦️.ts`: binds the closed language-neutral argument gate to the independent Ajv validator
+- test (209 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️native-accessibility/🟦️.ts`: the fixture satisfies its schema
+- test (280 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️settings-general-layout/🟦️.ts`: the language-neutral NumberStepper editing fixture satisfies its schema
+- test (279 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️settings-general-layout/🟦️.ts`: the language-neutral Slider readout editing fixture satisfies its schema
+- it (222 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️chrome-palette/🟦️.ts`: validates the neutral semantic CSS contract
+- it (226 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-inline-surface/🟦️.ts`: validates the neutral schema before constructing installed draw buffers
+- test (216 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/👕️canvas-presence/🟦️.ts`: the fixture satisfies its shared schema
+- it (222 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📤️asset-cancellation/🟦️.ts`: validates the neutral cancellation contract
+- it (342 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📥️inbound-request/🟦️.ts`: accepts the shared fixture under a strict independent schema oracle
+- test (216 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔗️hub-projection/🟦️.ts`: the fixture satisfies its shared schema
+- it (422 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`: validates the language-neutral response cases with the JSON schema oracle
+- it (1212 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`: keeps exportFixture and importFixture menu rows on the same leaf onSelect bind
+- it (262 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts`: validates the neutral editor delivery contract with Ajv
+- test (227 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚗️driver-editor/🟦️.ts`: the shared fixture satisfies the Ajv schema oracle
+- it (507 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🛑️scene-pointer-cancellation/🟦️.ts`: validates the six-family language-neutral contract with the independent JSON Schema oracle
+- it (285 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧭️current-contracts/🟦️.ts`: binds the closed neutral current renderer contracts to independent Ajv
+- it (348 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧯️router-plugin-faults/🟦️.ts`: accepts the shared fixture under a strict independent schema oracle
+- it (207 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts`: validates the neutral independent-owner lifecycle
+- it (417 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts`: validates neutral lifecycle and bounded progress with strict Ajv
+- it (221 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️mounted-window-fetch/🟦️.ts`: the skipped-window debt vectors satisfy an independent schema
+- test (226 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪟️window-lifecycle-template-drag/🟦️.ts`: the neutral vectors satisfy the Ajv schema oracle
+- it (603 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧪️tests/🧪️board-event-coalescing/🟦️.ts`: is valid against its schema of record, and the schema refuses a drag record without its offset
+- it (290 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧪️tests/🧪️float32-decimal/🟦️.ts`: is valid against its schema of record
+- it (228 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/⭕️svg-mask/🟦️.ts`: validates the neutral view-box and alpha contract
+- it (261 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️export-batch/🟦️.ts`: accepts the language-neutral lifecycle fixture
+- it (233 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️gpu-export/🟦️.ts`: validates the neutral request and publication contract
+- it (229 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️png-export/🟦️.ts`: validates the neutral alpha normalization contract
+- it (260 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️svg-export/🟦️.ts`: validates the neutral scene and output contract
+- test (247 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts`: Run neutral schema independently admits complete root ownership and both trigger branches
+- test (1588 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts`: Run small cells retain exact concrete ordinal backing and cumulative prior debt
+- test (222 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts`: Workflow independent neutral schema admits every persisted owner
+- test (560 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts`: Workflow reconstruction admits lookup workspace before creating maps
+- test (409 characters) `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖱️context-menu/🧪️tests/🟦️.ts`: the fixture is admitted by its schema
+- it (272 characters) `🧰️framework/🛍️products/💻️os/🧪️tests/⚔️concurrent-write/🟦️.ts`: owns a fixture its schema admits
+- it (272 characters) `🧰️framework/🛍️products/💻️os/🧪️tests/📤️outbound-announcement/🟦️.ts`: owns a fixture its schema admits
+- it (272 characters) `🧰️framework/🛍️products/💻️os/🧪️tests/🔁️document-echo-suppression/🟦️.ts`: owns a fixture its schema admits
+- it (216 characters) `🧰️framework/🛍️products/💻️os/🧪️tests/🧩️execution-target-module-resolution/🟦️.ts`: the fixture satisfies its schema
+- test (211 characters) `🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-archive-load-host/🟦️.ts`: the corpus is valid against its schema
+
+## Review
+
+No enclosing describe registration disappeared. Corpus admission leaves were intentionally removed. Actual renderer snapshot-menu binding behavior remains under its canonical exportSnapshot/importSnapshot title. Actual value capacity arithmetic remains under its decimal.js title, and actual Cargo ownership law remains under independent TOML admission. Old source-byte capture assertions were replaced by actual neutral ownership assertions by the runtime agent. The two previous small-cell/workspace Workflow SQL leaves were replaced by complete SQL frontier/domain coverage in a concurrent logical task, as confirmed by the main coordinator. No behavioral test omission caused by enclosing callback deletion remains.

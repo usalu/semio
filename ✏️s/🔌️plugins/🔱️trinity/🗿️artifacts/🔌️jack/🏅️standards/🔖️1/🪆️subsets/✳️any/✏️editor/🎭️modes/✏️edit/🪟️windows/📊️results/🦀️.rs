@@ -41,7 +41,7 @@ pub(crate) fn render(surface_id: &str, _controller_id: &str, result: Option<&Que
     let empty = QueryResult::table(Vec::new(), Vec::new());
     let result = result.unwrap_or(&empty);
     if result.kind == QueryResultKind::Graph {
-        if let Some(fixture) = &result.graph_fixture {
+        if let Some(fixture) = &result.graph_snapshot {
             let (nodes, edges, viewport) = crate::editor::jack::snapshot_to_workflow(fixture).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("trinity.child.unavailable",error.into_message()))?;
             return scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene::base(nodes, edges, viewport));
         }

@@ -1,0 +1,91 @@
+{
+  "tableWidths": {
+    "csv_document": 3,
+    "csv_record": 3,
+    "csv_field": 5
+  },
+  "cases": [
+    {
+      "id": "populated",
+      "snapshot": {
+        "schema": "stdio.csv",
+        "hasHeader": true,
+        "records": [
+          {
+            "fields": [
+              {
+                "value": "Name",
+                "quoted": false
+              },
+              {
+                "value": "Description",
+                "quoted": false
+              }
+            ]
+          },
+          {
+            "fields": [
+              {
+                "value": "Bibliothek 🌠",
+                "quoted": true
+              },
+              {
+                "value": "Grüße,\nLesesaal",
+                "quoted": true
+              }
+            ]
+          },
+          {
+            "fields": []
+          },
+          {
+            "fields": [
+              {
+                "value": "",
+                "quoted": true
+              }
+            ]
+          }
+        ]
+      },
+      "rows": 10,
+      "bytes": 328
+    },
+    {
+      "id": "empty",
+      "snapshot": {
+        "schema": "stdio.csv",
+        "hasHeader": false,
+        "records": []
+      },
+      "rows": 1,
+      "bytes": 25
+    },
+    {
+      "id": "unicode",
+      "snapshot": {
+        "schema": "schema日本𐀀\u0000",
+        "hasHeader": false,
+        "records": [
+          {
+            "fields": []
+          },
+          {
+            "fields": [
+              {
+                "value": "日本𐀀\u0000",
+                "quoted": true
+              },
+              {
+                "value": "日本𐀀\u0000",
+                "quoted": false
+              }
+            ]
+          }
+        ]
+      },
+      "rows": 5,
+      "bytes": 167
+    }
+  ]
+}

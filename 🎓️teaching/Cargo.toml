@@ -5,9 +5,14 @@ resolver = "2"
 members = [
     "🛂️proctor/📦️packages/🦀️rust",
 ]
-exclude = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽️guest/**"]
+exclude = [
+    "**/🏅️standards/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+]
 
 [workspace.metadata.semio.repository]
+exclude-patterns = ["**/🏅️standards/**","**/🔮️oracles/**","**/👽️guest/**"]
 schema-version = 1
 member-manifests = ["**/📦️packages/🦀️rust/Cargo.toml"]
 

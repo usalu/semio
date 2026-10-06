@@ -9,7 +9,21 @@
   ],
   "properties": {
     "value": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Conformance class",
+          "de": "Konformitätsklasse"
+        },
+        "description": {
+          "en": "Value of the `conformance` attribute on the root element: `strict` or `transitional`.",
+          "de": "Wert des Attributs `conformance` am Wurzelelement: `strict` oder `transitional`."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

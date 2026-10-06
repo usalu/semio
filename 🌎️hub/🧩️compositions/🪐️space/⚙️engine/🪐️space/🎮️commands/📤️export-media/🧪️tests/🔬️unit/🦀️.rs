@@ -7,7 +7,7 @@ use serde_json::json;
 
 #[semio_framework_async_macros::async_test]
 async fn space_command_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(ExportMedia { node_id: "n1".into(), format: "dwg".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ExportMedia(ExportMedia { node_id: "n1".into(), format: "dwg".into(), document_json: "{\"schema\":\"draw.document\"}".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMedia(crate::engine::space::commands::import_media::ImportMedia { node_id: "n1".into(), format: "dwg".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ImportMediaPayload(crate::engine::space::commands::import_media_payload::ImportMediaPayload { payload: "data:...".into() }));
 }
@@ -55,7 +55,7 @@ async fn export_media_emits_download_effect_and_import_requests_file_open() {
     let node = projection.graph.nodes.iter().find(|node| node.plugin_id == "draw").expect("draw node").clone();
     let config = SpaceConfig::default();
 
-    let export = studio_emit(&projection, &config, &SpaceCommand::ExportMedia(ExportMedia { node_id: node.id.clone(), format: DWG_FORMAT_ID.into() })).await.expect("handle");
+    let export = studio_emit(&projection, &config, &SpaceCommand::ExportMedia(ExportMedia { node_id: node.id.clone(), format: DWG_FORMAT_ID.into(), document_json: "{\"schema\":\"draw.document\",\"id\":\"user-document\"}".into() })).await.expect("handle");
     let (data, encoding) = export
         .effects
         .iter()
@@ -74,4 +74,14 @@ async fn export_media_emits_download_effect_and_import_requests_file_open() {
     let pending_config = apply_config(&config, &import.config_mutations).await;
     let payload = studio_emit(&projection, &pending_config, &SpaceCommand::ImportMediaPayload(crate::engine::space::commands::import_media_payload::ImportMediaPayload { payload: format!("data:image/vnd.dwg;base64,{data}") })).await.expect("handle");
     assert!(payload.artifact_mutations.is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn export_refuses_absent_or_invalid_user_documents_without_a_demo_substitute() {
+    let projection = demo_space_projection().await;
+    let node = projection.graph.nodes.first().expect("selected test node");
+    for document_json in ["", "{", "{}", "[]", "null"] {
+        let command = SpaceCommand::ExportMedia(ExportMedia { node_id: node.id.clone(), format: "dwg".into(), document_json: document_json.into() });
+        assert!(studio_emit(&projection, &SpaceConfig::default(), &command).await.is_err(), "{document_json}");
+    }
 }

@@ -864,3 +864,886 @@ Session 3's fleet was cut 10-03 ~12:07; its agent ids do not resolve here. Repo 
 - 22:23 TOOLS-B check 1: gen3d lib/tests + playbook tests green; blocker flow-extension-brep 🦀️.rs:2179 missing ')' (since 18:27/auto-commit 20:02) → TOOLS-B applies the one-char fix (FLOWCAD parked).
 - 22:27 PUZZLE GREEN (PACKFIX): hub-puzzle wasip2 + puzzle 2d/3d/5d native --lib; from_utf8 → ValueError::from in 24 editor/config files (incl. 2 forms). Puzzle --tests red on non-pack drift (2d 55, 5d 3: optional semio_framework_async in tests, PngSnapshot width/height, Result<_,String>, store::json) → S4-PUZZLE. Launched describe-activate s4-6.
 - 22:52 S4-PUZZLE: puzzle 3d/2d/5d --lib --tests (component-app-assembly) exit 0 — test-only drift fixed (locale types, ViewModel::new, png_layout dims, pack_json, ToolRunJobRequest member fields, 5d ctx/definition arity, InvocationResult path); script `🧪️s4-puzzle-test-drift.py`. Running 3d laws + D7 re-measure, then suites.
+- 10-04 23:23 session 1 (original coordinator, restarted as [03f18e]) STANDS DOWN: no fleet, no builds, no edits — session 5 [44118d] coordinates. Its 20 subagents died on the weekly limit 10-01; none of its detached processes survive.
+
+## Session 5 — coordinator `⚪3f26aaa19bd34400961809016712f15c` (2026-10-04 23:20)
+
+Session 4's fleet ids do not resolve here. Repo MCP `ticket_reopen` still returns a malformed result (`structuredContent` null) →
+bookkeeping manual (session appended to `🎫️ticket.json`). Peer session `[03f18e]` is the restarted session-1 coordinator: it confirmed
+it stays idle (no fleet, no activation, no edits). Stamps below come from `date`.
+- 23:21 state: disk 50 GiB free, load ~36 with 0 cargo (git/GitKraken/Cursor/Codex), guards alive: disk 80984, breaker 80991
+  (orphan-cargo + fingerprint guards not running). Activation s4-6 exit 12 at 23:15: describe + materialize-dev of puzzle PASSED;
+  activation failed on (a) `plugin-registry:generate` → `invalid launch seed at $.inputs[21]`, (b) root `Cargo.lock` and
+  (c) `🎓️teaching/Cargo.lock` stale under `--locked`.
+- 23:22 launched S5-RESUME (sonnet, read-only) → `📓️s5-resume.md` and S5-GOAL-AUDIT (sonnet, read-only) → `📓️audit-s5-goal.md`.
+- 23:23 (b)/(c): all four lockfiles pass `cargo metadata --locked --offline` now (relocked by a peer after 23:15). (a) root cause:
+  17 launch configurations (gate rows 900.06–900.1803) were duplicated into the seed's `inputs` container (deep-equal twins of
+  `configurations[461..477]`; committed `.vscode/launch.json` carries the same 17 in its inputs). Fix: `🧪️s5-launch-seed-inputs-dedupe.ts`
+  (byte-range removal, every removed row must have a deep-equal twin, placement validator re-run) → 47 → 30 inputs, diff = 187 deletions.
+- 23:25 launched `🔁️describe-activate-s4.sh 7` detached (pid 15958, log `🗑️generated/e2e/describe-activate-s4-7.log`, launch.json
+  snapshot `launch-before-s4-7.json`). Shared crates stay frozen for the fleet until ACTIVATION DONE.
+- 23:27 seed duplicates explained: ticket `26/10/04/SOLVE-ALL-MERGE-CONFLICTS` resolved the 18:27 stash-pop conflict of the seed as a
+  union by configuration name and inserted 17 configuration rows into `inputs`. Its nine paths are launch files, lockfiles, the
+  framework rust `📜️script.ts`, the repo library `🟨️.mjs`, the `◻️2d` test config and the UI oracle list — no history-editing source.
+- 23:29 launched S5-GATES-CENSUS (sonnet; bun/python gates only → `📓️s5-gates-census.md`) and S5-AUDIT-PARITY (sonnet, read-only React vs
+  wgpu parity → `📓️audit-s5-parity.md`). Fleet file `📓️fleet-5-agents.md`. Rules 46–50 appended to `📌️important/📝️.md`.
+  Opus executors start after ACTIVATION DONE (the activation holds the cargo build lease; describe took 37 min in s4-6).
+- 23:56 activation s4-7: describe + materialize-dev of puzzle PASSED again (23:47); activation exit 12 at `plugin-registry:generate` →
+  `seed file … is missing the devLaunchers marker`: the merge resolution (commit 5c7f51ee643) re-serialized the seed and stripped
+  its two generator-authored marker comments. Restored from commit 1011cc33cd1 by `🧪️s5-launch-seed-marker-restore.ts`.
+- 00:02 generator dry run (`preview-generated`, no writes) passes; it would have dropped 127 hand-added rows + 1 input from
+  `.vscode/launch.json` (CLEAN-ARCHITECTURE peer's pack/os "whole" gates). `🧪️s5-launch-seed-reconcile.ts` moved 118 rows + input
+  `standaloneNativeOsPlan` into the seed (neighbour-anchored; 9 body-equal renames skipped); second preview: 0 rows lost.
+- 00:03 launched `🔁️describe-activate-s4.sh 8` detached (pid 39216, log `describe-activate-s4-8.log`).
+- S5-RESUME done → `📓️s5-resume.md` (770 lines, 16-WP partition); S5-AUDIT-PARITY done → `📓️audit-s5-parity.md` (54 rows: 38 parity,
+  13 divergent, 1 React-only); S5-GATES-CENSUS done → `📓️s5-gates-census.md` (13 bun suites green; history-closure 9 bracket-verb,
+  editability 8 cad, payloads 11, fault notices history-editing 434, 529 real open findings).
+- 00:13 activation s4-7 also failed `workspace:deps-cargo`: `🎓️teaching/Cargo.lock` stale (the 23:23 probe used `--no-deps` and was blind);
+  relocked offline (+1 path package `semio-framework-pack-error`), all four workspaces pass `cargo metadata --locked --offline`.
+- 00:15 fleet locks `🔐️lock.sh` (rules 51–52): landing + serve held by `COORDINATOR-ACTIVATION` during an activation. Design §22
+  (13 session-5 decisions from the goal/parity/gates audits) recorded; rules 51–54 appended.
+- 00:18–00:21 wave 1 launched (9 opus): S5-RUNTIME, S5-STORE, S5-CHANNEL, S5-UI, S5-WGPU, S5-PUZZLE, S5-INFRA, S5-TOOLS, S5-AGNOSTIC
+  (ids in `📓️fleet-5-agents.md`); they start with repair-first reading while the locks are held. S5-GOAL-AUDIT done →
+  `📓️audit-s5-goal.md` (clauses 1, 2, 4, 6, 8 complete; 5, 12, 13 partial; top gaps: no live proof, cross-plugin law 9 plugins ever,
+  folder reload, unwithdrawable blockers, metadata coverage, alternative head moves every replica).
+- 00:30–00:45 contracts settled through `main` (design §22.14–18): `nextProblem?: {mutationId, store?}` (RUNTIME kernel field → UI corpus
+  row → WGPU), Withdraw row action = `historyEditWithdraw{mutationId?, store?}` + `withdrawable?`, new verb `historyEditRestore`,
+  foreign-step unit withdraw (STORE; `group_id` on the wire rides wave B), outcome-code wave by PUZZLE (+2 codes), band `labels` table
+  (UI) as the one copy source, WGPU lands the contract 🔖️AccessibilityProjection region. STORE: per-replica viewed alternative already
+  on disk (ticket 26/10/01) → §22.3 becomes proof + dead `Checkout` deletion. Served React TS for UI P1/P2/P5 waits for "REACT RUN 5 DONE".
+- 00:40 activation s4-8: `plugin-registry:generate`, `session-puzzle2d`, renderer/browser boot PASSED; wgpu lane RED at
+  `generate-frame-worker` ("WGPU browser import is not schema-owned": `⏳️async/🪃️continuation/🟦️.ts` imported by `🚪️io/🪶️sqlite-snapshot/🟦️.ts`,
+  arrived with merge commit 670). S5-INFRA fixes it under a coordinator exception (I keep the landing lock) and re-adopts 6 dropped +
+  5 reverted launch rows the 00:39 render lost (peer edits after the 00:02 reconcile). React lane still building.
+- 00:58 **REACT ACTIVATION GREEN** (s4-8: `prepare-puzzle2d-react-dev` + `activate-puzzle2d-react-dev` ✔, `deps-cargo` ✔; wgpu lane red at
+  `generate-frame-worker`). **SERVE UP 6012** (supervisor pid 78416 via `🚀️detach.py`, `curl` 200 at 00:59) — first live serve since
+  2026-09-30. Build "B0" = tree as activated, before any session-5 landing. Released the `serve` lock; `landing` stays held until
+  S5-INFRA's frame-worker fix is on disk.
+- 01:00 launched S5-E2E (opus, a74f81c5aa7ceb6fb): React Run 5 batches A–J en then de (holds `serve` per batch), reports each batch to
+  `main`; "REACT RUN 5 DONE" releases UI's staged React waves; then probe adaptation to the §22 contract changes; wgpu arm at SERVE UP 6112.
+- 01:02–01:10 wave 2 (first four): S5-GATES, S5-TEXT-STDIO, S5-GRAPHS-WIRES, S5-STROKES-NORM launched. Fleet = 14 opus. Queue: S5-FLOWCAD,
+  S5-LOAD, S5-NESTED. Decision: no wgpu B0 activation — after S5-INFRA's frame-worker fix the landing lock is released to the fleet; the
+  next activation (B1, React + wgpu) follows "REACT RUN 5 DONE" + the first landings + wave B (channel 22).
+- 01:04 activation s4-8 exit 12 (only `generate-frame-worker` failed; `framework-renderer-wgpu:wasm` ✔).
+- 01:05 **first live result (Run 5, React en, batch A): 14 PASS / 9 FAIL** — step 1 (boot + folder) 5/5; step 2: the drag moves both
+  nodes by (80, 40) but `exactly-one-new-history-row` FAILS (no matching row; Commands window total 6 → 14, i.e. +8 rows for one drag),
+  so steps 3–7 fail on their precondition. S5-E2E is separating probe fault from product fault (DOM dump).
+- 01:11 S5-INFRA frame-worker fix on disk (continuation module declared in the 3 lists; `generate-frame-worker` ✔ 12 s). **LANDING LOCK
+  RELEASED** — first landing window (staged: RUNTIME waves A/B/C, UI v1, WGPU wave 1, PUZZLE outcome codes + 3d test fix, CHANNEL fixture
+  literal + kernel --tests, TOOLS F21 drive + §22.10, STORE unit-withdraw, AGNOSTIC harness). Peer red reported by RUNTIME: flow
+  `🩹️patch-flow-widgets` imports `semio_framework_plugin::ChildEmitPreparation` (now under `::app`) → S5-FLOWCAD.
+- 01:13 launched S5-FLOWCAD + S5-LOAD (fleet = 16 opus). DISK/RAM ALERT: free disk 31 → 19 GiB in ten minutes; cause = swap 5 → 16 GiB
+  (16 agents + rustc + Chromium on 32 GB) plus the 46 GB shared build dir. Removed 33 nx workspace-data dirs idle > 24 h in other tickets'
+  `🗑️generated` (29 UNIVERSAL-ARTIFACT-SNAPSHOT, 4 RASTER; list `🗑️generated/coord/nx-stale-removed-0114.txt`) → 29 GiB. RULE 55 (build gate
+  v4: ≤ 4 cargo, rustc < 6, `CARGO_BUILD_JOBS=3`, test builds need ≥ 25 GiB free, lock holders first) broadcast to all 15 cargo-using agents.
+  Uplift dirs are not the consumer (98 dirs = 109 MiB; test executables stay in the shared build dir — S5-AGNOSTIC).
+- 01:16 **LIVE: Run 5 React/en batch A = 62 PASS / 9 FAIL (build B0)** after S5-E2E fixed three probe faults (windowed row DOM ids use
+  U+241F, chrome rows in the Commands total, `useSelection` row). Steps 1, 2, 4, 5, 6, 9 fully green live: boot + folder, drag = ONE
+  row, Edit → band / preview / editor / ARIA, dx → 120 + blocked-reason reveal + Accept → ready, Finalize prompt + Overwrite, Undo/Redo
+  chords, console clean. The 01:05 "+8 rows" reading was a probe fault (retracted to PUZZLE/AGNOSTIC). Open: step 7 — in a second
+  session on the overwritten drag the dy stepper did not take a click/fill (stayed 40.00) → Accept never reached reviewing (8 FAIL
+  downstream); E2E diagnosing probe vs product.
+- 01:16 S5-STORE first landing (hold 01:10:53–01:16:15): `admit_replacement` admits `Withdrawn` for every op, `unit_id`/`unit_operations`,
+  `VcsError::UnitSpansDocuments` → `history.unit-spans-documents`; kernel + plugin `--lib` check exit 0 (4m29s, 283 warnings);
+  `test-store-oracles` 22/0 (viewer-head + supersede-law corpora, 7948 expects). W2-B folder-restore fixes are on disk
+  (`folder archive restore` 5 pass). Rust laws wait for the kernel test target (S5-CHANNEL). 01:16 S5-RUNTIME holds landing + serve (wave A).
+- 01:23 S5-RUNTIME waves A + B landed (hold 01:16–01:23): `HistoryPatch.timeTravel.nextProblem`, notice row `history.unit-spans-documents`,
+  pure session `beginWithdrawn` + `restore` + codes `timeTravel.not-withdrawable` / `timeTravel.editor-closed` + `refusalReadOnly`;
+  check time-travel + semio-framework + plugin `--lib` exit 0; bun time-travel conformance 22/0, history-patch 3/0, notices 2/0.
+- 01:21–01:28 Codex pack peer mid-wave: replication `📦️bytes/🦀️.rs:191` red 01:21 → fixed by the peer 01:24; kernel `🗣️dsl/🦀️.rs:219`
+  (`EncodeOptions` type mismatch) still red for wasip2/--tests at 01:28 (blocks hub checks of STROKES-NORM, GRAPHS-WIRES, FLOWCAD) →
+  S5-CHANNEL takes it at 01:40 if the peer has not. Greens: norm 16/16 native, dag/sequence/space/home/wires/math `--lib` 0 errors
+  (dag first compile since §20.15), flow + cad `--lib` 0 errors (flow import fixed).
+- 01:27 Run 5 React/en batch A re-run: 58/71. Product candidates: (a) `n15-edit-is-refused-while-choosing-naming-why` — a row's Edit is
+  NOT disabled behind the finalize prompt; (b) `undone-and-redone-rows-appear` — no "History edit undone/redone — overwrite" rows after
+  the chords; (c) step 7 — in the second session the dy stepper is not present in the editor, so the alternative path never runs.
+  E2E still separating probe from product on (b), (c) and the step-2 row readings.
+- 01:28–01:35 foundation RED by the Codex pack peer (pack `🌱️value/🦀️.rs:3125…` 13× VerificationLevel, saved 01:28; kernel pack twin 01:29):
+  every WP's check dies in pack/kernel. RULE 56: S5-INFRA maintains `🗑️generated/coord/foundation.status`; agents read it before cargo.
+  RULE 57: every non-test `🟦️.ts(x)` under `🧰️framework/**` or puzzle needs the `serve` lock (a tool-machine TS twin saved 01:25 reloaded
+  the page under probe batch A). S5-TOOLS: F21 `drive` + §22.10 pure crate/corpus/TS twin on disk, tool-machine `--lib --tests` exit 0;
+  wave C (runtime Frozen mapping + window slot) blocked by the foundation red (restores at 01:38 if still red).
+- 01:33 S5-GATES P1 landed (bun): `schema mutation-inputs` measures declarations — 3698 declared / 1632 inferred of 5344 inputs; rule (b)
+  narrowed by decision to "label missing in a locale" (glossary in both locales = count, not finding); numericUndeclared routed
+  (stdio ≈ 2489, norm 822, …). Folder-reload law split: STORE = store/.spr/vcs + folder transport, LOAD = program-side route.
+- 01:34 **LIVE: Run 5 React/en batch A FINAL = 72 PASS / 0 FAIL, 0 uncaught, 0 hard faults** (B0 guest + RUNTIME's TS twins of 01:16):
+  steps 1–7 + 9 — boot + folder, drag = ONE row, Edit → band / preview (downstream not applied) / editor (dx/dy steppers, targets
+  reference list) / ARIA, dx → 120 + Accept → review ready, Finalize prompt → Overwrite, Undo/Redo, second session on the overwritten
+  drag → New alternative → "Main line" + alternative listed → switch both ways, console clean. The three 01:27 product candidates were
+  probe timing faults (withdrawn to RUNTIME). Watch: one `timeTravel.invalid-input` notice in this run. Batch B (folder reload) next.
+- 01:37 **LIVE: Run 5 React/en batch B = 67 PASS / 0 FAIL** — the 09-30 folder-reload failure (R2-2) and `local.backbone-scope-mismatch`
+  (R2-4) are GONE: after Overwrite → page reload → "Reconnect folder": positions, edit ids, document rows (incl. "History edited —
+  overwrite"), alternatives + main line + current alternative all restored; no notices.
+- 01:41 decision §22.19: descriptor emission canonicalizes itself (S5-CHANNEL), because the pack peer rewrote the kernel value twin at
+  01:29 and its contract keeps authored order for intrinsic objects. S5-TOOLS told to restore its blocked wave C and release `landing`
+  (held since 01:23:36 under the foundation red).
+- 01:43 foundation GREEN again (peer finished pack ~01:33; coordinator check pack + replication exit 0). **Cross-plugin acceptance law
+  PASSES on puzzle 2d on today's tree** (S5-AGNOSTIC 01:43: `history_edits_end_to_end`, `history_edit_inputs_resolve` 36 leaves,
+  payload law; representative leaf `change-node-anchor`).
+- 01:50 RULE 58: locks by tree (`landing` = framework Rust; new `stdio`, `puzzle`, `hub`; fixed order; coordinator takes all five for
+  an activation) — the single landing lock was a 16-WP queue (S5-TOOLS held it 01:23–… under the foundation red). Decisions §22.20
+  (editable or declared withdraw-only; `inputless` gate rule; 44 leaves) and §22.21 (a bound folder always holds the document; LOAD
+  fixes the React route, STORE adds `documentArchiveAbsent`). LOAD: §21.6 needs no new command/frame → nothing rides wave B.
+- 01:47 S5-TOOLS released `landing` (held 23.5 min) with waves A + B + C green: F21 `drive`, §22.10 pure crate + corpus + TS twin,
+  §22.10 runtime (one host-fact → abort mapping incl. Frozen, `GestureLedger` window slot); plugin `--lib --tests` check exit 0 01:46.
+  COMPOSITION GREEN flow + cad (hub wasip2, 01:48). S5-GATES: `inputless` rule landed (44 leaves), tool-mismatch codemod ready
+  (84 sites / 8 plugins; invocations relayed to owners).
+- 01:55 decisions §22.22 (folder read-back merges via `merge_persisted_pair`, never replaces; persist iff ahead) and §22.23 (descriptor
+  key `editable` read by the derive; GATES owns the derive region for it).
+- 02:00 RULE 59 gate v5 (cargo count alone: < 4, `CARGO_BUILD_JOBS=3`; the `rustc < 6` clause starved the fleet — INFRA's foundation pass
+  could not start for 14 min). §22.10 adoption list from S5-TOOLS relayed (PUZZLE after the probe run, STROKES-NORM, FLOWCAD).
+  GRAPHS-WIRES: dag/sequence/space/home/wires/mathematical `--lib --tests` 0 errors → AGNOSTIC. Wave-B rider approved:
+  `AppCommand::MergeDocumentArchive` + `DocumentArchiveLoadStatus.ahead` (LOAD → CHANNEL). Landing: LOAD holds since 01:47 (p1 + f1 + f12).
+- 02:00 S5-LOAD landed p1 (folder reload route law) + f1 (audit F1 caller half) + f12 (composed `artifact:out` carrier deleted)
+  (hold 01:47–02:00). 02:05 S5-UI vocabulary v1 on disk (`SelectAppearance`, `icon_select`, `text_input_key` + `🧫️text-controls`,
+  `ActionArgControl::Multiline`; five crates type-checked). 02:12 RULE 60: locks are first-in-first-out (tickets; ownerless-lock
+  healing; script replaced atomically) after S5-WGPU lost five first-come races since 00:55.
+- 02:14 **LIVE: Run 5 React/en batch C interim** — step 8 = 18/18: hard-minimum stepper refuses −1 naming the bound, Withdraw → review
+  BLOCKED ("Errors must be fixed or withdrawn"), Finalize disabled naming why, failing row "New since this edit · Error: Target
+  missing" → Next problem → Withdraw the drag → READY → Exit zero trace (goal clauses 6–7, the repair loop, proven live). Step 10 = 17–19
+  of 22 (dial ticks/detents, degrees, log-axis slider ticks, rotate/scale edits + overwrite). Product fault F1 → S5-UI: a typed
+  out-of-range value in the slider's readout editor closes without refusal (`🎚️Slider/🟦️.tsx` `commitTyped`/`handleEditBlur`).
+  Compositions green: norm, raster, remodel, wfc, process (hub wasip2 02:13); norm/process/wfc/remodel numericUndeclared → 0.
+- 02:22 RULE 61: `serve` covers every non-Rust, non-test file under `🧰️framework/**` and puzzle (assets/JSON too).
+- 02:22 Run 5 React/en step 10 alone = 22/22 (31/0): rotate/scale rows follow the EFFECTIVE input after an overwrite ("Rotate 2 items by
+  180° Replaced", "Scale 2 items by a factor of 2 Replaced"); F1 (slider readout refusal) NOT confirmed in isolation — it appears only
+  when step 8 ran before step 10 in the same document (something closes the readout editor) → UI holds its fix, E2E traces focus.
+  S5-RUNTIME holds `landing` since 02:16 (wave C); queue GATES, WGPU, AGNOSTIC, CHANNEL, STORE.
+- 02:25 S5-RUNTIME wave C landed (hold 02:16–02:25): row Withdraw (§22.1), `historyEditRestore` (§22.16), no editor with zero rows
+  (§22.20 runtime half), `.expect` → refusals (§22.6), guest arms Segmented / IconSelect / LongText (§22.7), `withdrawable`, blocking
+  rows first; check semio-framework + plugin `--lib` exit 0 ×2; time-travel crate tests 16/0; bun conformance 22/0.
+- 02:25 **LIVE: Run 5 React/en batch C FINAL = 48 PASS / 1 FAIL.** The one product fault F1 (S5-UI): the History tree's focus restore
+  after a body refresh takes focus back ~160 ms after a readout editor opened inside a row, closing it (typed value / refusal lost).
+- 02:30 S5-TOOLS' first turn ended (framework half of §22.10 landed and law-proven; own-plugin adoption, energy/gis reds, hub checks,
+  F21 emit/schema owed) → resumed 02:32 with the ordered list.
+- 02:32 plan change: `de` on B0 is skipped — after React/en D–J, E2E sends REACT RUN 5 DONE (en only); then staged React waves + wave B land, activation B1, full en + de on B1 (React, then wgpu).
+- 02:33 **LIVE: Run 5 React/en batch D = 44 PASS / 0 FAIL** — step 11 keep editing (ready review → Begin another mutation → Discard keeps
+  the accepted draft → Accept by button → "Accepted changes: 2" → Overwrite → ONE row "History edited — overwrite: 2 mutations"),
+  step 12 fatal loop repaired by EDITING targets (withdraw upstream create-node → downstream drag "Error: Target missing", blocked →
+  Next problem → Use selection → chips → Accept → ready → Overwrite). Note O3: transient `timeTravel.illegal` / `timeTravel.stale`
+  notices on a legal sequence (RUNTIME).
+- 02:31 S5-FLOWCAD `stage-model` landed (stdio-semio model leaves drag-/rotate-/scale-elements; hubs stdio + cad + flow wasip2 exit 0);
+  flow `--lib --tests` green. stdio-semio LIB-TEST has 14 pre-existing errors (tiff / presentation tests) → TEXT-STDIO.
+  S5-LOAD: `folder_reload_route` law 1/0; reds routed: `register_child` composed fixture (~20 tests) → S5-NESTED (launched 02:38,
+  fleet = 17), intrinsic-media fingerprint → pack peer, note descriptor → describe wave. RUNTIME's plugin TEST target red (2× E0502,
+  its own law) → told to save the tests-only fix without the lock.
+- 02:40 **USAGE LIMIT: all 17 executors cut** (session limit, reset 04:20). At the cut: `landing` held by S5-GATES (stage-r45 wave in
+  flight, since 02:25:46); E2E had finished React/en batches A (72/0), B (67/0), C (48/1), D (44/0) and was in E; serve 6012 stayed up.
+- 04:22 coordinator back. No cargo running, disk 16 GiB → `🧹️s4-one-off-prune.py` (5136 stale units) → 50 GiB. Rule 62 (resume protocol,
+  two groups). Resuming group 1 by SendMessage: GATES (finish its hold), INFRA, E2E, RUNTIME, UI, WGPU, CHANNEL, PUZZLE, STORE.
+- 04:27 group 1 resumed (9 agents). **LIVE: Run 5 React/en batch E = 35 PASS / 0 FAIL** — step 13: lock/unlock are history rows → drag →
+  Edit the upstream unlock → Withdraw → review READY, band "Worst outcome: Warning", drag row "New since this edit · Warning:
+  Partially applied" → Overwrite → the warning stays; reload + folder reconnect restores head, edit ids, rows, the warning row and
+  alternatives (goal: "new warnings are visible in the history", proven live). Notes for STORE: Alternatives section only after the
+  first checkpoint; O4 automatic checkpoint dispatched into a retired document port.
+- 04:28 **LIVE: Run 5 React/en batch F = 35 PASS / 2 FAIL** — phone 375×812 and tablet 768×1024 journeys green (tap select, touch
+  drag, band in viewport, ARIA clean, refused-Edit reason on tap, Accept by touch, Finalize prompt reachable, Overwrite by touch).
+  Product faults → S5-UI: F2 band controls 22.4 px high (< 24 px, WCAG 2.5.8); O5 the band has no opaque surface at phone width
+  (text over the panel rows; desktop: overlaps the footer status).
+- 04:37 **LIVE: Run 5 React/en batch G = 19 PASS / 1 FAIL** — long history: a 374-row tree window, the last mutation opens for editing;
+  Accept over 766 mutations shows `replaying` with progress (≈ 0.4–0.65 s); Cancel → "Replay cancelled" + "Replay again" offered →
+  completes; an Edit during replay is refused; Exit zero trace; no raw fault code. Product fault F3 (UI host / RUNTIME row action):
+  while replaying the row's Edit is natively `disabled` with no reason (choosing does it right: aria-disabled + "Not possible right now").
+- 04:36 post-prune flock cycle (5 childless cargos in `prebuild_lock_exclusive`, incl. GATES' landing check and RUNTIME's test check):
+  RULE 63 — `foundation.status` BUILDING = INFRA warms the closure alone, no cargo by anyone else; INFRA kills the fleet's stuck cargos.
+- 04:46 **LIVE: Run 5 React/en batch H = 18 PASS / 4 FAIL — first two-peer run ever; product fault F4**: two tabs on one folder diverge
+  silently when one edits history (A fetches B's write but never lists it, Accept reviews ready without it, A's finalize is never PUT
+  to the folder; final documents differ, nobody is told). Design §22.24 = the acceptance sequence; STORE (`merge_persisted_pair`),
+  LOAD (resumed 04:50: merge route + persist after finalize), RUNTIME (session half), CHANNEL (wave B rider). F3 (row Edit natively
+  disabled while replaying) = host pending state → UI's staged landing.
+- 04:47 S5-CHANNEL: WAVE B READY (181 files + 2 hot + 46 hand rows, channel 22 reseal, rider `MergeDocumentArchive` = tag 43 +
+  `ahead`); extended hold granted. S5-UI: served landing s1 staged (29 files: Tree remount fix F1, F2, O5/O1 via a new `superfooter`
+  layout slot, F3 host half, P1/P2/P4/P5 labels table, v2 TS twins) — lands at REACT RUN 5 DONE; s1r (Rust) after GREEN.
+  Foundation still BUILDING (INFRA warm-up after the flock cycle); GATES still holds `landing`.
+- 04:56 `foundation.status` GREEN (INFRA warm-up alone 04:49–04:56: pack/replication/kernel native, kernel wasip2, plugin lib, plugin
+  lib tests all exit 0 — includes GATES' interrupted 02:26 wave and RUNTIME's test fix). F4 triage (§22.25): store = no merge entry;
+  route = A's rejected read-back load kills its document port (LOAD lands `replaceAttachedDocumentV1` right after the React run);
+  session = editor-position bug after a base move (RUNTIME wave D) + two-replica law. STORE: PM wave staged with F4 as its law.
+- 04:59 S5-GATES released `landing` (held 02:25:46 across the cut): **NOTICE TABLE LANDED** (kernel `FRAMEWORK_FAULT_NOTICE_LABELS` 17 → 82
+  rows, Rust + TS + fixture; scoped fault-notice gate 434 → 270) and **EDITABLE MARKER ON DISK** (leaf descriptor `editable`, derive
+  emits `input_schema() -> None`; derive tests 3/0). GATES' turn ended 05:02. 04:59 S5-WGPU acquired `landing` (wave 1).
+  React/en batch I = 15/1 (05:00). Queue: STORE (PM wave = `merge_persisted_pair`), CHANNEL (describe canonicalization).
+- 05:11 S5-WGPU released `landing` (wave 1 part a, 04:59–05:11; part b under `serve`); S5-STORE acquired it (wave PM:
+  `merge_persisted_pair` + `merge_persisted_history` + `SpaceMember::merge_persisted_envelope` + `AppliedMutation.unit`).
+  F4 evidence: A's read-back load is REJECTED ("Document restore failed: actor-document-control.receipt-count"), silently in the
+  console; the shell then retires A's document port. INFRA: hub lockfile relocked (a peer edited the space composition manifests
+  without the lock); canary compile steps allowed at `cargo < 8` (peers' nx test builds occupy the gate). React/en batch I = 16/1 so far.
+- 05:20 **REACT RUN 5 DONE (en only), build B0: batches A–J = 376 PASS / 10 FAIL, 0 uncaught, 0 hard faults** (A 72/0, B 67/0, C 48/1,
+  D 44/0, E 35/0, F 35/2, G 19/1, H 18/4, I 19/1, J 19/1). Live-proven in React on puzzle 2d: drag = one row; Edit → time-travel band,
+  preview with downstream not applied, editor with steppers / dial / log slider / reference list; accept / discard; replay with
+  progress, cancel, replay again; warnings new-since-this-edit; fatal → blocked → Next problem → withdraw or edit targets → ready;
+  keep editing (several drafts → one row); finalize overwrite / new alternative, switch; undo/redo; folder reload; phone + tablet;
+  long history (374-row window, 766-mutation replay). Product faults: F1 Tree remount, F2 band touch size, F3 pending row action,
+  F5 load status outside the panel (→ S5-UI s1, landing now), F4 two peers diverge (→ STORE/LOAD/RUNTIME; route cause found: the
+  port-retire control turn carries the session's status frame → `receipt-count` → dead port), F6 cancelled load status never clears
+  (→ LOAD/STORE), F7 middle-button pan adds a Commands row (→ PUZZLE).
+- 05:20 **MERGE PAIR ON DISK** (S5-STORE: `merge_persisted_pair`, `merge_persisted_history`, `SpaceMember::merge_persisted_envelope`,
+  `AppliedMutation.unit`; kernel + plugin lib exit 0; laws staged, not yet run). RUNTIME owed laws: 5/0 and 65/2 (2 = harness helper).
+  Plan to B1: CHANNEL canonicalization → PUZZLE outcome codes → RUNTIME wave D → UI s1/s1r + LOAD attach (serve) → WAVE B GO → activation.
+- 05:21 **LABELS ON DISK**: S5-UI landed s1 (30 non-Rust files, `serve` 05:21–05:24): Tree remount fix (F1), band `aria-disabled` + reason,
+  `superfooter` layout slot with opaque band surface (O1/O5), touch size (F2), pending row action (F3), `nextProblem` control, corpus
+  `labels` table (55 keys × tier × en/de; `refusals[].silent` for `timeTravel.stale`), v2 TS twins; pre-verified tsc 0, ui-react
+  1063/1 (pre-existing), renderer 79/0. s1r (Rust projection strings) queued. S5-WGPU: WAVE 1 GREEN at lib level (native + wasm32;
+  mirror vitest 48/0, keyboard-scope 47/0); waves 2 (row tone) + 3 (band copy, nextProblem, touch size) aimed at B1.
+  S5-CHANNEL holds `landing` (describe canonicalization) since 05:20.
+- 05:27 S5-INFRA canary on today's tree: CLOSURE GREEN (lockfiles ×4, hub-puzzle wasip2 6m38s, renderer-wgpu wasm32 5m02s; seed synced
+  with the peer's new rows; "SYNC SEED" right before activation). §21.8 needs no wave-B rider. Decisions §22.26 (session base =
+  content revision alone → RUNTIME wave D; STORE wave RB) and §22.27 (stepped load reports and clears itself → UI r2, LOAD).
+  S5-LOAD holds `serve` (attach wave) since 05:28; S5-CHANNEL holds `landing` (describe canonicalization) since 05:20.
+- 05:29 S5-LOAD `attach` wave landed under `serve` (F4 route fix served: `splitDocumentBackboneControlTurnV1`, `replaceAttachedDocumentV1`,
+  loud read-back failure; channel oracles 9/0, tsc 0, actor-backbone 8/8). 05:30 S5-CHANNEL: §22.19 describe canonicalization on disk
+  (`CanonicalDescriptorValue`; TS oracle 2 cases) and **KERNEL GREEN incl. tests** (12 errors in `sqlite_snapshot_native_admission`
+  fixed). S5-PUZZLE: 3d laws 18/0; **D7 closed** — publication ladder identical at 1 and 180 objects (27 / 29 units), no store fix
+  owed; holds `landing` + `serve` since 05:30 for the outcome-code wave. E2E re-runs batch H on the live serve.
+- 05:35 **OUTCOME CODES LANDED** (S5-PUZZLE: `mutation.precondition-drifted` Warning, `mutation.inverse-refused` Fatal; 17 hunks / 9
+  files; replication + kernel + plugin lib exit 0; outcome-code laws 5/0; TS + label totality green). 05:35 S5-RUNTIME holds `landing`
+  (wave D). Queue reordered for B1: WGPU waves 2 + 3 next, then UI s1r, STORE RB + P2 + laws, then WAVE B GO; LOAD's f16 after wave B.
+  Peer red: `semio-framework-pixels` compositing (`into_result` on `CompositeJob`, 05:26) — INFRA checks whether the closure reaches it.
+- 05:39 **WAVE D LANDED** (S5-RUNTIME, + wave E): session base = content revision alone (Rust + TS + corpus + law
+  `a_backbone_attach_and_detach_while_editing_is_no_base_move`), editor-position fix on a base move, F4 law
+  `a_remote_edit_while_editing_keeps_the_draft_and_accept_replays_it_too`, harness repair, `row.unit`; E = session edges that do not
+  swap the shown document republish only the history body + chips. Plugin + time-travel `--lib --tests` check exit 0 ×2; K3 native
+  batch (12 crates) exit 0. 05:38 S5-UI r2 landed (F5 host feed). 05:40 S5-STORE holds `landing` (RB + P2 + laws).
+- 05:38 s1 smoke on the live serve (B0 guest + s1 host): A 76/0, C 52/2, F 35/5 — F1, F2, O1/O5 closed live. New F8 (s1 regression
+  at tablet width: the panel tab bar covers the band's first row) → S5-UI r3.
+- 05:41 **LIVE: F4 FIXED on the served attach wave — batch H = 27 PASS / 0 FAIL**: A lists B's edit "Not applied while editing" 12 s
+  after B's drag, the session survives, Accept replays B's edit too, A's finalize is PUT and B shows "History edited — overwrite"
+  11 s later; both peers converge (A = B) and B's drag survives; no restore alert, no `stale`, console errors 0. Leftover O4: an
+  automatic checkpoint dispatched into a loading document shows the person a notice (→ LOAD).
+- 05:42 **RB ON DISK** (S5-STORE: RB + P2 `mutation.inverse-refused` + viewer-head ×6 and supersede-law ×4 laws; kernel `--lib --tests`
+  check exit 0; test run in progress). 05:42 S5-WGPU holds `landing` (waves 2 + 3). INFRA: the closure reaches pixels (green again
+  05:41); census #2 so far green writer/vcs/forms/procedural/flow/shooting, red hub-gis + animate-presentation (→ TOOLS).
+  S5-E2E turn ended 05:45; resumes at SERVE UP (B1). Remaining before WAVE B GO: WGPU 2 + 3, PUZZLE (short), UI s1r.
+- 05:44 S5-STORE laws RAN: 8 PASS / 2 FAIL — PASS incl. F4 acceptance (`two_peers_on_one_folder_converge_through_an_open_history_edit`),
+  `a_read_back_pair_merges_its_log_and_never_moves_the_reader`, the persisted-pair reload law, RB, P2, supersede-law ×3. The 2 FAIL
+  are one real replication defect: `MutationDag::insert` treats a buffered-but-pending dependency as ready → a Branch is applied
+  before the Commit it names → a new-alternative batch arriving before its edits is refused. Fix staged (one line + DAG law); GO to
+  land it before wave B. S5-RUNTIME waves D + E laws: 68/2 (the 2 = N17 interior-undo deferral laws, under diagnosis with STORE).
+  S5-CHANNEL: WAVE B READY re-derived 05:47 (183 files + 2 hot + 46 hand rows + rider); describe canonicalization byte-exact on the
+  real puzzle component; describe laws 3/0.
+- 05:50 S5-UI r3 landed (F8: an open chrome-hosted bottom panel pulls its tab bar into the footer band, so the bands row is now the
+  LAST layout row `subfooter`, under the footer; law mounts the real Panel at 768 and 1440 with `elementFromPoint` per control; band
+  suite 62/0). 05:52 **WGPU WAVES 2 + 3 GREEN and on disk** (native + wasm32; row tone, corpus copy, next-problem, touch size, silent
+  stale). 05:52 S5-PUZZLE holds `landing` + `serve`. Queue: UI (s1r), STORE (DAG rule), then WAVE B GO.
+- 05:58 S5-LOAD `checkin` wave served (O4: an automatic check-in defers while the document loads or the port is unbound and re-arms;
+  a latent lost-latch after an open history edit fixed; scheduler tests 5/0). 06:01 S5-PUZZLE F7 landed for React (schema-first: the
+  board coalescing corpus states the camera beside the board rows; a camera-only flush dispatches `setCamera`, no Commands row;
+  corpus laws 29/0, board host 49/0); the wgpu half (two paths still publish a camera inside `applyBoardEvents`) is PUZZLE's, staged
+  for after B1 (known-open on wgpu). 06:01 S5-UI holds `landing` (s1r); STORE (DAG rule) next; then WAVE B GO.
+- 06:03 S5-UI s1r landed (ui-contract projection tables: `SelectAppearance`, `ActionArgControl` v3 `multiline`; typegen check exit 0).
+  06:08 S5-RUNTIME: N17 laws + RB commit clause green (4/0; the two reds were a harness fault). 06:11 S5-STORE released `landing`
+  (replication DAG pending rule). **06:12 WAVE B GO** — coordinator reserved all five locks (`COORDINATOR-WAVE-B`) and hands them to
+  S5-CHANNEL ticket by ticket; "STAND BACK" sent to RUNTIME, STORE, UI, WGPU, PUZZLE, LOAD, INFRA (no landings, no new cargo).
+  After "WAVE B LANDED": INFRA seed sync + canary → coordinator takes the locks → describe + activate B1 (React + wgpu).
+- 06:13 all five locks handed to S5-CHANNEL (wave B landing). 06:11 **DAG RULE LANDED** (S5-STORE: `MutationDag::insert` pending while a
+  dependency is not applied; replication causal tests 58/0; kernel store filters 97/0). S5-STORE plan "P3 widened" (no `"local"`
+  author literal; unauthored edits refused; RUNTIME sets the local actor on every route) for the quiet tree after B1. S5-PUZZLE: 3d
+  ceilings pinned, `[DEBUG]` lines removed, parallel run 25/0, D7 closed; staged F7-wgpu + §22.13. S5-UI turn ended 06:20: everything
+  landed; typegen law red on three foreign Rust-table rows (`member`, `reason`, `tone`) → no typegen generate before they are added.
+- 06:25 wave B in progress (S5-CHANNEL): driver 183 files + 46 hand rows + rider + channel 22 on disk; green so far: replication,
+  kernel, semio-framework, plugin, plugin-host, os, flow, infinite, mcp, run, renderer-wgpu libs; hub-puzzle wasip2 canary 06:22;
+  fixing 21 positional `description` call sites the driver could not see. Incident (S5-LOAD, repaired 06:25:21): a scratch mirror
+  script wrote staged merge-host text through symlinks into 5 tree files for two minutes during the wave-B hold; restored byte-exact.
+  RUNTIME and PUZZLE parked (turns ended); UI done.
+- 06:47 **WAVE B LANDED** (S5-CHANNEL, hold 06:12–06:47): `CHANNEL_VERSION` 22; store `description` deletion (192 files), 46 hand rows,
+  rider `MergeDocumentArchive` tag 43 + `DocumentArchiveLoadStatus.ahead`, derived fixtures resealed. Checks exit 0: native libs
+  (replication, kernel, framework, plugin, plugin-host, os, flow, infinite, mcp, run, renderer-wgpu), hub-puzzle wasip2, `--lib --tests`
+  of the core + puzzle 2d/3d/5d + stdio subset, TS OS twins 510/510, channel-version check pin 22. Owed by CHANNEL: 2 durable-group
+  fixture laws (reseal), 45 plugin crates outside the closure, os-hub (peer reds in kernel-db / hub-gis). Persisted documents of
+  earlier builds are refused on read (edit presence bits) → probe clears its folders/storage.
+- 06:48 coordinator took all five locks (`COORDINATOR-ACTIVATION`); lockfiles ×4 `--locked --offline` exit 0; registry dry run exit 0;
+  seed reconcile moved 2 peer rows. 06:48 launched **activation B1** = `🔁️describe-activate-s4.sh 9` detached (pid 46427,
+  log `🗑️generated/e2e/describe-activate-s4-9.log`): describe + materialize puzzle at channel 22, then React + wgpu.
+- 06:50 activation B1 attempt 9 FAILED in the describe stage after 2 min (exit 11): the Codex pack peer saved a multi-file wave at
+  06:49:48 INSIDE the closure while the build ran (replication `📦️bytes` new `with_operation_encode_policy` + callers in kernel dsl,
+  print, stdio contract, stdio-semio flow) → stdio-contract compiled against a kernel built seconds earlier (E0425). Not a fleet
+  fault (all five locks are the coordinator's). S5-INFRA's seed sync (+59 peer rows) landed 06:48:31.
+- 06:51 launched `🔁️activate-b1-loop.sh 10 14` detached (pid 48012): retries a describe-stage failure after 2 min (up to 5
+  attempts), stops at exit 0 or at an activation-stage failure.
+- 06:53 attempt 10 FAILED (exit 11) in 2 min: `semio-framework` lib `E0432 unresolved import semio_framework_io_sqlite_snapshot` — a
+  second peer wave mid-save (sqlite-snapshot crate). 06:54 retry loop restarted as `🔁️activate-b1-loop.sh 11 22` (pid 49818) with a
+  QUIET GATE: each attempt starts only after no Rust source / Cargo.toml of the closure was saved for 2 min (max wait 10 min).
+- 06:57 attempt 11 started after a quiet gate of 80 s; S5-INFRA relocked root + hub lockfiles (the peer made
+  `semio-framework-io-sqlite-snapshot` a dependency of semio-framework and the kernel). 07:02 `puzzle-plugin:component-dev` ✔ (both
+  peer waves compile), describe + materialize ✔, 07:08 `plugin-registry:generate` ✔, wgpu boot/frame-worker generation ✔,
+  `puzzle-plugin:wasm` ✔. 07:13 disk 14 GiB → removed 9 idle test executables (2.2 GiB, list `🗑️generated/coord/test-exe-candidates-0714.txt`)
+  and two unused, unlocked wasm profile dirs (`wasm32-wasip2/debug` census check units, `wasm32-unknown-unknown/release`) → 19 GiB.
+- 07:19 **ACTIVATION B1 GREEN** (attempt 11, exit 0, `activate-puzzle2d-react-dev` + `activate-puzzle2d-wgpu-dev` + 22 tasks on the wave-B
+  tree, channel 22; attempts 9 and 10 died on peer saves mid-build, attempt 11 started after the quiet gate). 07:20 React serve
+  recycled → 6012 = 200. The supervisor's wgpu branch was wrong (`serve … wgpu dev` is React-only): fixed to
+  `bun ../../🌐️server/📜️script.ts serve puzzle2d dev` in the wgpu TS package → **07:26 SERVE UP 6112 (wgpu) = 200 — the first wgpu
+  serve of this ticket**. S5-E2E resumed: React en + de A–K, then wgpu explore + A–K. 07:27 **LOCKS OPEN** (all five released).
+  Disk 13 GiB free (test builds stay closed below 25 GiB). S5-INFRA turn ended 07:25 (reconcile subcommand landed; census 17 green).
+- 07:27 disk 12 GiB → one-off prune with no cargo running (2799 stale units) → 27 GiB. 07:28–07:35 whole fleet resumed (17 executors;
+  GATES and INFRA parked/done). Decision: gesture press identity + closed-press memory are framework-owned in `GestureLedger`
+  (S5-TOOLS), raster adopts after.
+- 07:28 **LIVE B1: Run 6 React/en batch A = 75 PASS / 1 FAIL** (steps 1–7 green on the channel-22 guest with the session-5 host). The
+  FAIL: one unhandled rejection `actor-document-control.receipt-count` in the port retire at folder attach (→ S5-LOAD, first).
+- 07:30 S5-STORE laws on the wave-B tree: 9 PASS / 1 FAIL — the DAG rule fixed the new-alternative law; the last red is a second real
+  store defect (a remote merge renumbers every applied edit but re-digests only from the insertion point → a replica on an
+  alternative that ingests a peer's trunk edit names a content revision nobody else reproduces). Fix staged, lands with wave AA.
+  Decision §22.28: `sequence_number` leaves the revision digest (STORE + CHANNEL, after P3). 07:38 S5-CHANNEL: durable-group corpus
+  resealed (kernel `durable_group` 20/0), released `landing` + `serve` after a 10-min serve hold that blocked the probe.
+  07:38 S5-WGPU holds `landing`; S5-TEXT-STDIO holds `stdio`; E2E continues React/en on B1.
+
+### 07:45 → 09:35 — second usage cut, disk emergency (peer-caused), resume
+
+- 07:45 second usage-limit cut: every fleet agent died mid-turn. Stale holds left behind: `landing` (S5-WGPU since 07:38:48), `stdio`
+  (S5-TEXT-STDIO since 07:30:32, cut while applying five test fixes + the exporter fix). Both B1 serves survived (React :6012, wgpu :6112).
+  Run 6 on B1 at the cut: React/en A = 75/1 (unhandled `actor-document-control.receipt-count` in port retire at folder attach → S5-LOAD,
+  host TS), B = 59/9 with 2 uncaught (undiagnosed).
+- 09:22 (window reset 09:20): free disk 5 GiB. `🧹️s4-one-off-prune.py --emergency` on the shared build dir removed 1736 units
+  (→ 10.4 GiB); two nx workspace-data dirs idle > 24 h removed (`🗑️generated/coord/nx-stale-removed-0925.txt`). Disk kept falling
+  ~670 MiB/min: the consumers are NOT ours — ticket `26/09/30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated` (109 GiB, of which
+  `cargo-root-norm-owned/debug/build` 86 GiB, live `nx run-many --target=test-snapshot-sqlite-native`) and ticket
+  `26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated` (104 GiB: goal-stdio 44, consumer-os-native 25, goal-ts 13).
+- 09:35 at 5 GiB free: `🧹️s5-stale-unit-prune.py <peer build dir> 12 --apply` — per package the two newest units stay; an older unit went
+  only when its newest file was idle > 12 h AND its `.lock` could be taken exclusively without blocking AND the lock file itself was
+  idle > 12 h (every unit a cargo run touched in the last 12 h keeps a fresh lock file). 2704 units, 53.4 GiB, 102 locked units
+  skipped → 57 GiB free. Removed paths: `🗑️generated/coord/stale-units-removed.txt`. Regenerable cache only; nothing else in a peer
+  folder was touched. The CLEAN-ARCHITECTURE folder (104 GiB) is untouched and reported to the dev.
+- Rule 64 (DISK MODE) written at 09:28; lifted to "DISK OK" at 09:36 with a floor: test builds need ≥ 25 GiB free (rule 55 again).
+- 09:37–09:42 reduced tier resumed (12 executors, same ids; roster in `📓️fleet-5-agents.md`): E2E, WGPU, TEXT-STDIO, LOAD, STORE, CHANNEL,
+  NESTED, UI, RUNTIME, PUZZLE, AGNOSTIC, TOOLS. 09:36:44 S5-WGPU released the interrupted `landing` hold: wave 4 complete on disk
+  (beginner label tier, reserved subfooter row; check exit 0 at 07:49), wave 5 (segmented select) staged. Sonnet S5-GOAL-AUDIT-2
+  launched read-only → `📓️audit-s5-goal-2.md`.
+- Decisions 09:40: channel 23 = wave C, ONE bump (NESTED N2 owner path + STORE §22.28), coordinated by S5-CHANNEL, staged by 11:30 or
+  B2 goes with channel 22. NESTED's 8 `MemberPath` sites + P1 fixture ride N1.
+- Window plan (ends 14:20): landings until ~11:30 → wave C (if staged) → activation B2 (~11:45, quiet gate) → Run 7 on both
+  renderers en + de (~12:30–13:30) → final regeneration wave, audits, `[DEBUG]` sweep, close (~13:30–14:15).
+- B2 preflight 09:50: the four lockfiles resolve `--locked --offline`; launch seed markers present.
+- 09:49 FLOCK CYCLE (cause: my 09:22 unit prune left parts of the shared closure cold, and three fleet cargos — stdio-semio `--tests`,
+  kernel+plugin+wgpu `--lib`, puzzle test build with a private `CARGO_TARGET_DIR` but the shared build dir — started together): all
+  three childless for 12 min. Killed the puzzle test build and the kernel check; the third proceeded. The old breaker never fired
+  because the Codex peer's private-dir cargos always showed a compiling rustc. Fixes: `🔓️deadlock-breaker.py` v2 (shared build dir
+  only; ≥ 2 waiters stalled 7 min → youngest killed; lone waiter 15 min), `🚦️gate.sh` = gate v6 (counts shared-dir cargos only,
+  disk floor), rule 66. Every executor told.
+- 09:50 S5-TEXT-STDIO released `stdio` (interrupted wave complete: 5 stale stdio-semio tests + image→tiff exporter; lib-test green at
+  07:47; production defect fixed: `SemioImageToTiff` wrote 4-sample pages without `ExtraSamples` → export could not be re-imported).
+- 09:52 S5-TOOLS turn 1: §22.29 press wave STAGED (`🧪️s5-tools-press.py`, 8 files; slot corpus 30 scenarios, bun 14/0), energy/gis/
+  animate ports in source (unverified on channel 22), adoption census `📓️s5-tools-adoption.md`: 0 of 10 streamed gestures on the
+  framework slot, 7 pointer-driven files publish a plain edit (3 TOOLS, 4 stdio). Resumed with: owed reds → press wave → ports.
+- 09:53 S5-RUNTIME: wave H STAGED (actor identity: `LOCAL_ACTOR_ID`, `PluginApp::bind_actor`, admitted actor on every route) — must
+  land BEFORE STORE's P3 refusal (else every app with genesis edits panics at construction). Decisions: admitted `instance_actor`
+  always (no literal `local` fallback); codec `apply_ops` binds `LOCAL_ACTOR_ID` (no ABI change, STORE lands it with the refusal);
+  genesis stays `LOCAL_ACTOR_ID`. Wave I (laws §22.5/§22.6/§22.17) staged.
+- 09:55 S5-CHANNEL: wave C half staged (`🧪️s5-channel-wave-c.py`, pin 22 → 23, `hostOffset` handshake corpus both directions, 41 files
+  with generate + reseal). Ownership: STORE = digest rule + store Rust incl. the sealer; CHANNEL = canonical-edit schema/twin/reseal
+  + N2 codec from NESTED's field list. Cut-off 11:15 per half; landing order STORE → NESTED → CHANNEL reseal → bump → checks.
+  `landing` queue now: STORE (AA) → RUNTIME (H) → TOOLS (press) → UI rows / NESTED N1 / WGPU 5 / LOAD by ticket.
+- 09:58 **F9 (top fault for B2): folder persistence is dead on build B1.** S5-E2E Run 6 React/en batch B re-run 63/7 (+2 uncaught), no
+  probe fault, ONE cause: after Folder → Attach only GETs, never a PUT; `actor-document-control.receipt-count` in
+  `🔌️plugin/📡️backbone/🔗️binding/🟦️.ts #exchange ← retire`; both run-6 folders are empty. B0 + attach wave had B 67/0 and H 27/0 →
+  B1 regression (first build with wave B / channel 22). S5-LOAD served the host half 09:53 (failed bind rejects as itself, notice
+  `ui.sync.attachFailed` en + de, no unhandled rejection, law + corpus; channel oracles 12/0, control-turn law 6/6, 11/11 mutants).
+  Cause still unknown: the B1 guest's control turn carries no usable receipt. Routed: E2E sends the `[os-shell] sync attach failed`
+  line + one wgpu attach probe; CHANNEL checks wave B's diff for the control command / receipt frame; LOAD adds golden wire bytes and
+  a native reproduction. The merge route stays staged until F9 is understood (same control turn).
+- 09:58 S5-NESTED: N1 STAGED (`🧪️s5-nested-n1-keys.py`, 66 replacements, 7 files) — design correction accepted (§22.30: registry key =
+  owner edge `MemberKey { owner | "", slot, child_id }`, `MemberPath` = resolved public address). Wave C scope for N2 = layout half
+  (`BackboneMessage::Member.owner`, `ChildEmit.owner`, `ChildPackEntry.owner`, `ChildHeadPackEntry.owner`; all "" today) so channel
+  23 is the final wire shape and N3 needs no bump.
+- 10:02 LANDING TRAIN (rule 67): STORE's verified landing held `landing` 25 min (cold closure + the peer's 17 rustc) with five waves
+  queued. Holds are now apply-only (≤ 3 min); `🚂️train.sh` (running, detached) checks kernel + plugin + wgpu + ui `--lib` + puzzle 2d
+  after every line of `🗑️generated/coord/train.txt` and publishes `🗑️generated/coord/train.status`. Baseline pass started 09:59.
+  Every executor told. S5-NESTED: "N2 STAGED" 09:57 (`🧪️s5-nested-n2-wire.py`, 23 replacements, 4 files) → wave C has NESTED's half.
+- 10:00–10:07 TRAIN WORKS: apply-only holds of 10–60 s each — STORE AA+renumber (on disk since 09:37), UI typegen rows, PUZZLE
+  §22.13 half + codemod, AGNOSTIC P1 harness, NESTED N1+P1, WGPU wave 5a (+ 5b TS under `serve`: twin 317 checks, mirror vitest 26/0),
+  RUNTIME H+I ("H ON DISK" 10:06:50), TOOLS §22.29 press ("PRESS ON DISK" 10:07:12), GATES withdraw-only refusal 10:09:16.
+  Train pass 1: GREEN 10:05:05 for kernel + plugin + wgpu + ui `--lib` (tree of ~10:00: AA, UI rows); its puzzle check then sat in
+  a second flock cycle (RUNTIME's `transient` test ↔ CHANNEL's fallout batch, 17 min; breaker v2 matched the wrong frame name —
+  fixed to `prebuild_lock_exclusive`). Train moved to a private target + build dir (`🗑️generated/coord/train-target`), pass 2 since 10:10.
+- 10:09 **F9 CAUSE (S5-CHANNEL): the Codex peer's pack encoder stopped sorting intrinsic `DslValue::Object` keys**
+  (`💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs:566-572`, uncommitted since 05:52; B0 sorted, B1 does not). The guest's control receipt goes out
+  in struct order; `🔗️binding/🟦️.ts:102` re-encodes sorted and refuses `noncanonical`. Not wave B. DECISION: the control codec owns
+  its canonical form (sorts members by key bytes before `encode_wire_value`, both decode checks compare against it), TS unchanged,
+  golden bytes in Rust + TS — S5-LOAD lands it; visible only with B2 (guest wasm). CHANNEL lists other exposed readers/hashes
+  (126 `encode_wire_value(x.to_value())` sites, `📓️s4-bump-report.md` § S5.10); STORE checks its digests.
+- 10:10 Sonnet audit `📓️audit-s5-goal-2.md` (16 clauses: 1 MET, 10 MET ON REACT ONLY, 5 PARTIAL). Ranked gaps: (1) F9; (2) wgpu never
+  probed + `text_input_key` has no wgpu consumer; (3) no `de` run this session; (4) acceptance law 2 of 96 crates run; (5) tools outside
+  a transaction: puzzle 2d non-drag board tools (`apply-board-events:108-152`), wfc grid2d/3d, block 3d surface brush, architect
+  program graph; 9 of 13 machine tools keep private wrappers; (6) framework names puzzle: React `Board2dHost` (52 hits), Interpreter
+  `classifierKind === "puzzle2d"`, wgpu `puzzle_board_*`, runtime literal domain `"vortex"` (§22.9 not landed); (7) §22.11 replay
+  cost; (8) 599 bare inputs (546 stdio), 52 input-less editable leaves; (9) Accept always enabled; (12) legacy residue
+  (`edit_is_local`, `"local"` literals, dead `Checkout`, `.expect` at PTT:3513, `CommandText not yet wired`).
+- 10:10 S5-RUNTIME turn ended (H+I on disk, no verdict yet; owed: transient, fwt, kernel, w2a, s22, actor law after STORE's P3) —
+  resume on the train verdict. S5-GATES resumed 10:08 (withdraw-only refusal: TEXT-STDIO found the derive gap).
+- 10:18:38 TRAIN: FRAMEWORK GREEN (kernel + plugin + wgpu + ui `--lib`, 8m23s in the cold private dir) through the 10:09:16 line =
+  AA+renumber, UI rows, PUZZLE §22.13 + codemod + F7 wgpu half, AGNOSTIC P1, NESTED N1, WGPU 5a, RUNTIME H+I, TOOLS press (+ bound
+  fix), GATES withdraw-only refusal. 10:22 train split into two lanes (FRAMEWORK / PUZZLE lines in `train.status`, one private
+  target each; the puzzle workspace recompiled the whole closure a second time inside one pass).
+- 10:16 S5-PUZZLE: "BOARD CONTRACT WRITTEN" (`📓️s5-board-contract.md`: 20 event kinds × delivery, `DropPayload`, declared selection
+  domains, rename table for 52 Board2dHost hits + Interpreter + 16 wgpu functions) → handed to UI, WGPU, RUNTIME, GATES, TOOLS.
+  Drag leaf confirmed by schema + law text: `targets` = reference list, `dx` / `dy` = steppers (step 1, precision 2, snap gridFactor).
+- 10:18:03 S5-LOAD: "F9 FIX ON DISK" (guest `canonical_control_bytes`, golden wire fixture 6 rows, TS law 13/0; Rust laws written,
+  not run). 10:17 host wave `attach-told`: one `attachSyncTarget` for card / action / reconnect → console line + visible notice
+  (E2E re-probes). Reaches the browser with B2.
+- 10:20 S5-STORE: wave C answers (digest rule confirmed; §22.28 changes NO persisted or wire byte — replica-local digest; sealer
+  drops `sequenceNumber`; script `🧪️s5-store-revision-digest.py`), encoder-order exposure checked: none for digest / sealer / archive.
+- 10:21:37 S5-WGPU wave 6 on disk (multiline text keys via `ui_contract::text_input_key`, `<textarea aria-multiline>` mirror,
+  `band_label` total + law). 10:25 S5-CHANNEL: "WAVE C READY" (13 files / 61 rows dry-run clean, mirror-proven apply/verify/restore;
+  reseal 4 fixtures / 11 digests previewed; total 51 writes); waits for STORE's "C STAGED" (~10:50).
+- 10:25 turns ended and resumed on the verdict: RUNTIME (owed runs; builds the ONE plugin test binary others reuse; §22.33
+  `draftChanged` approved; runtime `"vortex"` literal), TOOLS (private build for plugin families; block 3d dep edges approved),
+  UI (typegen law → regenerate → icons by 11:30), GATES (F3 decision: no per-leaf cap+1 fixture, one corpus fixture + structural
+  rule; new gates §22.31 (c) + §22.32 (d); inputless list `📓️s5-gates-inputless.md` = 35 leaves).
+- Outside peer saves React host files (`ShellHelpers` with a `[DEBUG] Draw Actions dispatch` log, `Interpreter`, `PluginRuntime`)
+  without our `serve` lock → probe batches invalidated; E2E's probe now attributes HMR reloads and re-runs ≤ 3×. E2E on the wgpu arm.
+- 10:24–10:37 TRAIN (two lanes): FRAMEWORK GREEN 10:24:23 (through WGPU wave 6), 10:37:26 (through GATES framework leaves);
+  PUZZLE GREEN 10:36:53 (puzzle 2d `--lib`, all PUZZLE waves) → "PUZZLE READY FOR B2" accepted for the lib half.
+- 10:25 **FIRST LIVE wgpu RUN (B1 :6112, WebGPU adapter present) — two blockers:** F10 the wgpu shell does not boot in a fresh
+  profile (`worker-boot-failed: language-authority: missing explicit shell terminology authority`; React seeds it); F11 THE BOARD IS
+  EMPTY (0 nodes / 0 edges in all three windows, no Commands row; `setActiveExample branch=catalog` runs 1.2 s, nothing arrives, no
+  console error). Folder attach WORKS on wgpu (GET 204 → PUT 200) → F9 is the React host's TS receipt grammar. Mirror ARIA oracle:
+  5 structural findings; painted bottom panels mirrored against React. Owners: WGPU + PUZZLE, fix on disk by 11:15.
+- 10:30 S5-CHANNEL: F9 class, second site — every non-null history patch of a B1 guest leaves in struct order through
+  `encode_wire_serialized` (47 typed values) and `historyPatchBytes` (store worker) refuses it. Fix staged as `--with-funnel`
+  (members ordered by key bytes at every depth + law) → DECISION: rides wave C. Possible cause of F11 (typed-operation completion).
+- 10:34 S5-E2E: `attach-told` confirmed on React B1 (console line, visible notice "The document could not be attached", 0 uncaught).
+- 10:34 S5-UI: "TYPEGEN LAW GREEN" (2 laws, private build); typegen regenerate = no change (byte-identical); icon catalog landed
+  10:40 (7 files, `IconName::CloudDownload`). 10:36 S5-STORE: "C STAGED" (13 hunks, 6 files); new store defect found by the
+  viewer-head corpus and fixed (wave CL: a `Commit` on an alternative depends on the `Branch` that registered its line).
+  S5-NESTED turn ended: N1+P1 green in lib, N2 + N3 staged, tests owed (disk).
+- 10:34–10:40 DISK 34 → 13 GiB in 15 min (swap files 7.6 → 20 GiB under build memory pressure + the sqlite ticket's `nx run-many`
+  targets growing ~1 GiB/min). `🧹️s5-stale-unit-prune.py … 3 --apply` on its three private targets: 1080 units, 18.8 GiB → 34 GiB.
+  `🧹️s5-disk-keeper.sh` (detached) repeats that below 20 GiB (90-min bound below 14 GiB).
+- PLAN: "WAVE C GO" ~11:15 (channel 23 in host TS makes the React dev serve refuse the B1 guest until B2) — CHANNEL applies STORE's,
+  NESTED's and its own half incl. the funnel inside the coordinator's hold; then activation B2 (~11:25 → live ~11:55); Run 7 after.
+- 10:43–10:50 on disk via the train: LOAD f16 + f6 + merge-guest + merge-host + merge-law (17 files) and merge-shell (10 files,
+  served) = "MERGE ROUTE ON DISK" (lib GREEN; 5 route laws + golden laws written, not run); WGPU wave 7 (F10: fresh profile boots,
+  terminology seeded like React, locale from the page) and wave 8 (F11b: boot announces the resolved example like React);
+  PUZZLE 3d test dev-dependency (a Codex peer's test needed it) + `✏️s/Cargo.lock`; AGNOSTIC law v2 harness; TOOLS gesture
+  notice rows (row `toolGesture.slot-poisoned` breaks the notices schema pattern → TOOLS fixes forward); UI icon catalog.
+  PUZZLE: hub-puzzle wasip2 check exit 0 (22 min) → "PUZZLE READY FOR B2" (lib + wasip2).
+- 10:50–10:58 **F11 fully explained (S5-PUZZLE, from code):** (b) the wgpu boot dispatched `setActiveExample` only for `?example=`
+  (fixed, wave 8); (a) the wgpu host DROPS the completion of every typed operation that outlives its host call (> 64 settle turns;
+  the example load is ~370 steps): `drainTypedOperations` routes `OperationCompleted` (no `in_reply_to`) to a lane nobody
+  subscribes to; only the history patch is carried per frame, never the refresh scope. React has the consumer. Fix = WGPU wave 9
+  (the drain hands completion scope + patch to the shell per frame; law incl. the boot case; check the Accept replay completion
+  against the same drain). Must be in B2.
+- 10:43 S5-STORE: "P3 → B3" — the refusal has a run-time blast radius (≈ 190 unbound constructions + 9 production routes).
+  DECISION §22.34 (STORE writes it): the actor becomes a REQUIRED argument of `ArtifactStore::new(envelope, actor)`; compile-time
+  enforcement, no refusal path, no literal. Own wave after B2.
+- 10:50:18–10:59 **WAVE C ON DISK** (coordinator held `landing` + `serve`; S5-CHANNEL applied all halves): channel 23 = N2 owner
+  path (`BackboneMessage::Member.owner`, `ChildEmit.owner`, `ChildPackEntry.owner`, `ChildHeadPackEntry.owner`) + §22.28 digest
+  rule + sealer + 4 resealed fixtures + the key-ordered `encode_wire_serialized` funnel (F9 class, 47 typed values) + handshake law
+  both directions; 59 files. The train's 10:56:33 RED is the mid-apply snapshot (N2 before the frame fields); the pass through the
+  10:58:37 line decides. From now the React dev serve (live TS, 23) refuses the B1 guest (22) until B2.
+- 11:00–11:20 before B2: FRAMEWORK GREEN 11:02:30 (wave C), 11:10:31 (NESTED notice row: `interactive-job.child-emission-retirement-
+  refused`), 11:17:45 (WGPU wave 9a/9b = "WAVE 9 ON DISK": one `WgpuOperationPublication` lane — the bridge subscribes the channel's
+  completion lane, the standing drain hands UI-progress scope + patch to the shell per frame, `drain_operation_publications` owes the
+  union of scopes; swallowed drain errors are loud now; closes F11 (a) and the same hole for the Accept replay's completion).
+  CHANNEL: hub-puzzle wasip2 canary exit 0 on channel 23 (11:12:44). UI: second icon union (manifest `IconName`) fixed forward,
+  renderer-react tsc 0 errors. TEXT-STDIO: ALL staged families applied (1226 / 1226 inputs declared, 114 / 115 `editable: false`
+  markers, 72 / 72 codemod sites), private checks running. A transient PUZZLE RED 11:11:27 + the kernel test red at
+  `🏪️store/🧪️tests/🔬️unit/🦀️.rs:9712` were the Codex peer's `ChildDispatch<'wire>` wave mid-save (complete on disk 11:12:18).
+- 11:13 **S5-E2E Run 6 complete on React/en B1: A 75/1, B 63/7, C 52/2, D 45/0, E 29/6, F 40/0, G 20/1, H 18/6, J 20/0, K 18/0 =
+  380 PASS / 23 FAIL** (I not recorded). 21 FAILs = F9 (fixed in B2), 1 = F3 (Edit while replaying: no `aria-describedby` reason),
+  1 = F12 (first blocking row not revealed, unsettled read). GREEN live for the first time: K step 20 (every row Edit + Withdraw;
+  Withdraw → Restore; withdrawing the blocking row → ready; zero-trace Exit), next-problem-first, refused controls with reasons,
+  F1 / F2 / F7 / F8 closed, keep editing + Use selection. wgpu/en on B1: A 7/12 = F10 + F11 (both fixed in B2).
+- 11:18 DISK 16 GiB, swap 28 GiB (builds' memory pressure). Removed 98 of OUR idle private targets (≈ empty), pruned the sqlite
+  ticket's `cargo-root-norm-owned` at a 90-min bound (354 units, 11.3 GiB) → 41 GiB. Rule 68: ACTIVATION WINDOW (flag file closes
+  the gate; no closure / served saves, no cargo started; test floor 18 GiB; one shared plugin test binary).
+- **11:20:58 ACTIVATION B2 launched** (`🔁️activate-b1-loop.sh 12 16`, detached, quiet gate; all five locks COORDINATOR-ACTIVATION;
+  seed reconciled (`--adopt-edits`: 6+ peer rows adopted), four lockfiles `--locked --offline` OK). B2 = B1 + F9 guest fix + funnel
+  + channel 23 (N2 layout, §22.28) + merge route + WGPU 4–9 + PUZZLE §22.13 / F7 wgpu + RUNTIME H+I + TOOLS press + GATES
+  withdraw-only refusal + STORE AA / renumber / CL + UI rows / icons + NESTED N1.
+  After B2 (B3 content, staged): RUNTIME J+K (`draftChanged`, `timeTravel.unchanged`) + UI a1 (§22.33), NESTED N3 (recursion),
+  STORE §22.34 + §22.35 (required actor, document identity = stored genesis bytes), PUZZLE §22.31 / §22.32 (a), TOOLS §22.32 (b)(c),
+  GATES derive `payload` hunk + new gates + central `schema generate`, WGPU read-back twin + ARIA findings.
+
+### 11:27 → 15:40 — usage stop, machine reboot, activation B2 relaunched
+
+- 11:27 usage check: 82% of the 5-hour window used after 2 h 07 min (weekly all-models 75%). Every executor except S5-E2E told to write
+  its state and end its turn; the remaining budget was reserved for the activation and Run 7.
+- ~11:34 THE MACHINE REBOOTED (uptime at 15:36 = 4:02; no panic report file for today found) while activation attempt 12 was in
+  `describe` (21 rustc, swap 16–28 GiB in the minutes before). Attempt 12 has no exit record; every helper died (train lanes, deadlock
+  breaker, disk keeper, both serve supervisors); both serves are down; all fleet agents were stopped; the five locks + the activation
+  flag stayed (files). Nothing of the fleet ran between 11:34 and 15:36. The outside peers kept working (8 `*.rs` / `Cargo.toml` of
+  the closure changed since 11:30, load average 94 at 15:36).
+- 15:36 resumed in a fresh usage window (0% used, resets 20:30; weekly 76%). Breaker + disk keeper restarted; seed reconcile clean,
+  four lockfiles `--locked --offline` OK; **activation B2 relaunched 15:39 (attempts 13–17, quiet gate)** with the locks + flag still
+  held. Lesson for this window: the activation runs ALONE (no fleet cargo), executors come back one small group at a time.
+- 15:40–16:02 activation attempt 13: `describe` + `materialize-dev` ✔ (15 min), React lane ✔ (`activate-puzzle2d-react-dev`);
+  the wgpu lane ✖ in `trunk build`: `semio-framework-artifact-infinite-dag` E0433 ×4 `crate::os_store::io_schema` at
+  `♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🦀️.rs:517` — four uncommitted lines (`native_snapshot_registration`) an outside peer saved
+  at 16:02:32, mid-build (their sqlite-snapshot wave; not touched by us).
+- 16:06 **SERVE UP (B2) React :6012** (new supervisor, `serve` lock released). wgpu lane retried alone behind the quiet gate
+  (`🔁️activate-wgpu-loop.sh 4`, log `🗑️generated/e2e/activate-wgpu-<n>.log`); :6112 down until it passes. S5-E2E resumed for Run 7
+  (React en: F9 first, then B/E/H/I, then C/D/F/G/J/K; wgpu + de after the wgpu lane).
+- 16:10–16:12 **F9 CLOSED LIVE on React B2 (S5-E2E Run 7): batch A 76 / 0, batch B 71 / 0.** Attach on a fresh folder: GET 204 ×2 →
+  PUT 200 → GET 200, `/.semio/documents.db` written, reconnect band offered after reload, Reconnect attaches, positions persist with
+  drift 0, 0 uncaught. Evidence `🗑️generated/s5-e2e/run7-react-en-A.txt`, `run7-react-en-B.txt`.
+- 16:17:42 wgpu lane activated (the peer fixed its file at 16:13:43; four earlier attempts had died on it). **B2 is complete on both
+  renderers**: React :6012 + wgpu :6112 supervisors running; activation flag removed, all five locks released.
+- 16:12–16:25 **Run 7, React en on B2, folder group: A 76/0, B 71/0, E 36/0, H 24/0, I 21/1 = 228 PASS / 1 FAIL, 0 uncaught.**
+  F9, F4, F6 CLOSED LIVE: reload keeps edit ids / rows / the overwrite row; two peers on one folder CONVERGE through the merge
+  route (B's drag survives on both; B's edit reaches A in 1.9 s while A edits, listed "Not applied while editing", Accept replays
+  it); stepped load shows "Loading document: 0 of 1", Undo during it is refused with `document.loading`, Cancel keeps the previous
+  document and the status clears. NEW F13 (S5-LOAD host / S5-UI): a load the person CANCELLED is announced as a failure
+  (`role=alert` "Document restore failed: AppChannelClient.loadDocumentArchive(…): cancelled" + console.error) — a deliberate
+  cancel is not a fault and the text is the raw internal call. F5 half open (no shell status frame during a 190 ms load; not judged).
+- 16:20 resumed (economy mode: one cargo each, one report each): S5-RUNTIME builds the ONE shared plugin test binary and runs every
+  owner's filters on it → `📓️s5-plugin-law-run.md`; S5-STORE does the same for the kernel test binary → `📓️s5-kernel-law-run.md`.
+  S5-E2E continues with wgpu en (fresh profile), then React C–K, then `de`.
+- 16:27 **WGPU BOOTS + BOARD FILLED on B2 — F10 and F11 CLOSED LIVE** (S5-E2E): `wgpu-boots-in-a-fresh-browser-profile` PASS with no
+  localStorage seed (6 s, 3 windows), `wgpu-loads-the-example-at-boot` PASS (180 nodes, 179 edges). The probe's wgpu arm needs a
+  recalibration (mirror ids / timing changed against B1: History panel not opened, sync card not found) before A–K counts.
+  FRAMEWORK lane GREEN 16:26:37 on the tree after four hours of peer edits (train lane restarted).
+- 16:19–16:35 **KERNEL LAW RUN (S5-STORE, `📓️s5-kernel-law-run.md`): every fleet-owned law green.** viewer-head + supersede 13/0
+  (first run verifying wave C §22.28, CL, the renumber fix, both merge laws), canonical-edit 25/0 (CHANNEL's reseal agrees with the
+  sealer), replication `causal` 58/0 (DAG pending rule), `--features sync` archive presence 1/0 + `os_store::sync::` 88/0 (wave AA
+  Rust half), CHANNEL `os_spr::` 343/0 (handshake both directions, `…OfAMember` rows), LOAD `the_document_archive_load_host` 1/0.
+  Whole binary 1188/6: the 6 reds are the Codex peer's in-flight member-order work (4), one committed refusal-text law not touched
+  by any fleet wave, one test-isolation flake. One store defect found and fixed forward = wave LO (16:25: a live store listed
+  alternatives in ARRIVAL order where its reload and every peer list log order; `order_ledger_as` after `adopt_history_facts` + law)
+  — product change, NOT in B2. Harness note: a kernel test binary run directly needs `SEMIO_TEST_ARTIFACT_DIR` + the package dir as cwd.
+- 16:31 S5-RUNTIME wave H2 (fix-forward of H: the constructor binds no actor, genesis alone is authored local; actor law split).
+  FRAMEWORK GREEN 16:34:34 through it.
+- 16:37 **wgpu en on B2: F14 HARD BLOCKER** — the first pointer click on a board node kills the wgpu renderer ("worker-frame-failed:
+  board retained authority faulted", surface quarantined); deterministic in a fresh profile (`🗑️generated/s5-e2e/wgpu/b2-click/`).
+  Closed live on wgpu: F10, F11, History panel (en), folder attach. Also F15 (chrome tabs `aria-pressed=true` at boot with no panel),
+  O-w2 (History paints bottom-up, action rows draw their label twice). S5-WGPU resumed on F14; E2E tries one history edit on wgpu
+  without a board click (Actions rail), then React C–K.
+- 16:40 **PLUGIN LAW RUN (S5-RUNTIME, `📓️s5-plugin-law-run.md`, ONE shared test binary): 142 passed / 11 failed.** Green: RUNTIME
+  `transient_root` 4/0, wave I laws (§22.5 inverse refusal = one Fatal, §22.6 hostile input answered, §22.17, §22.20) 3/0, actor law
+  runtime half 1/0, `w2a` 79/1, `time_travel` module 66/1 (the 1 = `every_route_authors_as_its_acting_actor`, expected until STORE's
+  §22.34); TOOLS `gesture_laws` 4/0; GATES `a_blocking_ledger_replay` 1/0; CHANNEL funnel law 1/0; reducer crate 16/0; framework
+  notices / history patch 14/0. Red: LOAD 10/1 (one test's golden bytes older than f9's key order); NESTED 39/8 — five
+  `member_run_*` never settle + four non-member `tool_run_*` laws fail alike (tool-run family 33/9 → S5-GRAPHS-WIRES), and three
+  composed-document laws (persist + reload `closure-rejected`, a store dropped without its witness, group undo leaves 9 rows →
+  S5-NESTED). RUNTIME wave H2 fixed H's own regression (constructor bound `local` on every store).
+- 16:45 wgpu, F14 CAUSE (S5-WGPU, from code + trace): a press that arrives while the same input drain's HOVER commit is still
+  pending bumps `interaction_revision`; `step_pointer_commit` then faults the board authority. An ordering hole of the wgpu board
+  host, never hit before because no wgpu click had been probed. Fix: pointer intents wait in a bounded per-surface FIFO and are
+  replayed after the commit's terminal; laws for move + press + release and double click in one drain.
+  More wgpu faults from the rail attempt (no history edit reachable on wgpu yet): F16 Select All selects nothing, F17 Move… /
+  Rotate… open no form, F18 rail rows not activatable through the mirror (pointer only), O-w3 an unrequested "Commit Checkpoint"
+  row 5 s after Select All.
+- 16:50 usage 6% of the window after 70 min with four agents (weekly 77%). Resumed in economy mode: LOAD (red golden-bytes test,
+  F13 cancelled load ≠ failure, F5 remainder), NESTED (three composed-document reds), GRAPHS-WIRES (tool-run family 9 reds),
+  AGNOSTIC (acceptance families, private build dir, one at a time). Running: E2E (React C–K + goal-sentence batch L), WGPU (F14 →
+  F16–F18).
+- 16:53 **RUN 7, React en on B2, COMPLETE A–L: 444 PASS / 2 FAIL, 0 uncaught, 0 hard faults** (A 76/0 · B 71/0 · C 54/0 · D 45/0 ·
+  E 36/0 · F 40/0 · G 20/1 · H 24/0 · I 21/1 · J 20/0 · K 18/0 · L 19/0).
+  **THE GOAL SENTENCE IS PROVEN LIVE (batch L, 9/9):** one drag of a 2-node selection = ONE History row "Drag 2 items by (60, 40)"
+  with one mutation; Edit opens the band "Editing: Drag 2 items by (60, 40)"; the editor offers the SELECTION as a reference list
+  (chips with Remove + Use selection) and dx / dy as steppers (+ / −, step 1 = the grid snap); a step previews the new offset while
+  the DOWNSTREAM drag stays unapplied; Remove previews the drag without that node; Accept re-applies the downstream drag → "Ready
+  to finalize"; Exit leaves zero trace. Finalize → Overwrite (A / B), New alternative (E / I), warnings / fatal → Next problem →
+  resolve (C / F / G), row Withdraw / Restore (K) all green. Closed live: F9, F4, F6, F12.
+  Open on React: F3 (during a 751 ms replay Edit still reads enabled for ~170 ms; the reason reaches the DOM after the replay
+  ended; the press itself IS refused with `timeTravel.illegal`) → UI / RUNTIME; F13 (cancelled load announced as failure) → LOAD.
+- 16:53:31 S5-WGPU wave 10 (F14): "settle first" instead of a FIFO — every board input entry of the wgpu host (press, move,
+  release, leave, wheel, key chord, pinch takeover) first brings the board's retained pointer authority to its terminal through the
+  frame phase's own ladder; closes the same hole for wheel-after-move, release without gesture, pinch. Laws written, not run (disk).
+- 16:55 disk 15 → 21 GiB (stale units > 5 h in the shared build dir: 1522 units, 5 GiB; the shared build dir had grown to 38 GiB).
+- 17:15 **RUN 7 React `de` on B2 complete A–L: 447 PASS / 1 FAIL; React `en` (I re-run on the hot host): 447 PASS / 1 FAIL — the one
+  fail in both locales is F3.** The goal sentence passes 9/9 in en AND de ("2 Elemente um (60; 40) ziehen", band "Mutation wird
+  bearbeitet …", review "Bereit zum Abschließen"). F13 CLOSED LIVE (cancelled load: polite notice, no alert; a declined FIRST load
+  detaches the folder, keeps it remembered, writes nothing — decision (a), LOAD wave `detach`), F5 CLOSED LIVE (shell status frame
+  during a stepped load, with Cancel). React, puzzle 2d, en + de: one open fault (F3: during a ~750 ms replay a row's Edit reads
+  enabled for ~170 ms before its `aria-disabled` + reason arrive; the press itself is refused).
+- 17:09 S5-NESTED: composed laws 44 / 3 (was 39 / 8) — its three reds were test-side (dead `LoadChildren` route, undeclared child,
+  …); B2 does persist + reload composed documents. Remaining: one red = STORE §22.34 (every plain / group `Apply` is authored
+  `"local"`, so an instance opened as another actor cannot undo its own group gesture), two `member_run_*` = tool-run family.
+- 17:07–17:15 S5-WGPU: wave 11a/11b on disk (F17: rail presses republish the Actions pane so the staged form appears; F18: tree rows
+  with an activation are `actionable`, Enter / Space on the mirror row activate). Diagnosed, not wgpu: F16 (rail "Select All"
+  selects nothing on ANY renderer — puzzle 2d declares its domain `HierarchyProvider::Flat`, the framework verb has nothing to
+  enumerate → S5-PUZZLE), O-w3 (the "Commit Checkpoint" row = the automatic check-in 20 s after the last edit), F15 (matches React
+  + a shared fixture; no change). O-w2 half diagnosed. Every Rust law of waves 7–11 is OWED (disk floor).
+- 17:18:41 wgpu lane re-activated (tree of ~17:00: wave 10 = F14); second lane run started 17:24 to carry waves 11a + 11b too.
+- DISK stays at 14–21 GiB: other tickets' generated folders hold 139 GiB (CLEAN-ARCHITECTURE, grew 35 GiB today) and 56 GiB (sqlite
+  ticket); ours 8 GiB, the shared build dir 33 GiB. Test-build floor lowered to 12 GiB with at most two fleet cargos.
+- 17:33 S5-GRAPHS-WIRES: tool-run family 39 / 3 (was 33 / 9) — the nine were never-run laws + a starved settings watch + a stale
+  fixture, none from today's waves; wave `tool-run-settle` on disk (FRAMEWORK GREEN). Left: panel law (needs a rebuild), member
+  finalize row label (one arm staged in RUNTIME's region: `🧪️s5-graphs-tool-run-row-label.py --apply label`), member cap law
+  (`child-root-retirement-saturated` never settles, not root-caused).
+- 17:34:39 wgpu lane re-activated a second time (waves 10 + 11) and :6112 recycled = build **B2w**. S5-E2E told: click + drag +
+  the goal sentence on wgpu first, then A–K, then `de`.
+- 17:36 usage: 18% of the window, weekly 80%. Running: S5-E2E (wgpu), S5-AGNOSTIC (acceptance families). Everyone else ended its
+  turn. Summary written: `📓️s5-summary.md`.
+- 17:25 S5-AGNOSTIC, acceptance law v2 + v3 on the B2 tree: **puzzle 2d PASS, puzzle 3d PASS** (withdraw → accept → restore zero
+  trace, preview == document as of the edited mutation, overwrite + new alternative == fresh fold, both reloads; census 30 / 36
+  and 29 / 38 leaves exercised; number / boolean / option / text (+ vector in 3d) control kinds proven). puzzle 5d: a harness false
+  positive (drafted option == default), fixed in harness v4, not re-run. 93 of 96 crates NOT RUN (disk stopped the next family).
+- 17:44–18:00 DISK EMERGENCY again: free fell 13 → 4 GiB in 20 min. The CLEAN-ARCHITECTURE ticket's `🗑️generated` grew
+  139 → 156 GiB (whole per-experiment cargo targets: `editor-canonical-whole` 32, `consumer-os-native` 28, `surface-canonical-whole`
+  10, `product-wgpu-native-whole` 9 — all being written), the sqlite ticket holds 54 GiB. Keeper widened (every `debug/build` /
+  `wasm-dev/build` of the sqlite ticket + shared build dir; 1 h bound below 10 GiB). At 5 GiB free I REMOVED ONE WHOLE DIRECTORY of
+  the other ticket: `…/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-stdio/parent-avi-removal/target` — a cargo target
+  (cargo's own `CACHEDIR.TAG`), 27 GiB, no file newer than 24 h, no process naming it → 32 GiB free. Nothing else of that ticket
+  was touched. This is reported to the dev; the peers' targets will fill the disk again.
+- 17:45 wgpu en on B2w, first run of steps 1 / 21 / 9: 12 PASS / 2 FAIL, 0 uncaught, 0 hard faults — the click no longer kills the
+  renderer (F14 closed live), edits are PUT to the folder; failing: `goal-one-drag-of-the-selection-is-one-history-row` (being
+  diagnosed by S5-E2E) and `wgpu-pressed-panel-tabs-show-their-panel` (= F15, matches React).
+- 18:05 **FIRST LIVE HISTORY EDIT ON wgpu (B2w, S5-E2E): goal sentence 3 / 9.** PASS: click selects, drag moves, ONE drag row
+  "Drag 2 items by (60, 40)" with one mutation leaf; Edit → band "Editing a mutation · Editing: Drag 2 items by (60, 40)"; the
+  editor offers the selection as a reference list (chips, Remove, Use selection); Accept re-applies the downstream drag exactly,
+  review "Ready to finalize · Accepted changes: 1". F14 closed live. FAIL / new faults (→ S5-WGPU, resumed): steppers mirrored as
+  plain `input` (no spinbutton role / step / min / max); F21 a 60-unit drag records dx 59.99996 (f32 pointer math, no snap on the
+  recorded offset; React records 60 — host half WGPU, guest quantization PUZZLE); F22 the page's main thread stalls while a session
+  is open (page reads 5–27 s, growing) — A–K cannot run; F23 the History panel is overpainted while editing; F20 a History row
+  cannot be expanded through the mirror; F24 every hover / select adds an "Apply Board Events" row on wgpu (8 around one drag) —
+  transient events must not be history; Remove on a chip took > 10 s. `📓️s5-summary.md` updated accordingly (see below).
+- 18:25 **React final for Run 7 (S5-E2E, `📓️w3-e2e-report.md` § S5.10): en 466 / 1, de 465 / 1 — only F3 open.** New step 22 proves
+  §22.13 live, 8/8 in en and de: a drop beside a free handle = ONE row "Drag 1 item by (-72, -50) (+1)" with drag + connect;
+  editing dx → "New since this edit · Warning: Precondition drifted"; Withdraw on the connect → ready, no warning; overwrite.
+  Side find O6: Delete Selection from the Actions rail resets the camera.
+- 18:25 **wgpu en on B2w: goal sentence 5 PASS / 4 FAIL / 1 not reached** (§ S5.11). PASS: one drag row, Edit → band + editor,
+  selection as reference list, dx / dy steppers (mirror `<input type=number step=1>`), Accept → "Ready to finalize", downstream
+  re-applied exactly. FAIL: F21 (dx 59.99996) and three verdicts that DO apply but 45–90 s late (F22). wgpu A–K and de NOT RUN.
+- 18:25 S5-WGPU wave 12 (F22, measured): the frame worker posts one `frame` message per frame STEP (~12 000 / s) and each ran the
+  mirror's whole-DOM ownership walk before its own throttle — linear in mirror size; fixed (`refresh()` is O(1) while a pull is
+  owed; law; `test-browser` 55 / 0). Left open: the 12 000 messages / s themselves (~12% main thread; coalescing changes the frame
+  protocol). 18:29 wave 13 (F24): the two wgpu board publication paths that bypassed the delivery table (retained pointer page,
+  frame pump) now filter through it — hover / preselect rows no longer become `applyBoardEvents` edits.
+- 18:30 usage: 25% of the window, weekly 82%. From here only the wgpu critical path (WGPU → lane re-activation → E2E), S5-PUZZLE's
+  B3 guest wave and S5-AGNOSTIC's families run; nothing else is relaunched.
+- 18:27 S5-AGNOSTIC acceptance law on the live tree: **PASS 5 of 96** (puzzle 2d, 3d, 5d, stdio gltf, stdio pdf), FAIL 0, no mechanism
+  failure. gltf: 44 of 121 leaves exercised, 4 control kinds proven; pdf: representative only (fixtures are wire witnesses → harness
+  v5 sweeps shipped documents). Red beside the law in both stdio crates → S5-TEXT-STDIO: `semio_payload_law_*_mutation`
+  `patch-snapshot: answers 128 inverse row(s) where its leaf schema declares 1`. Next families: flow + cad.
+- 18:30:33 S5-PUZZLE `b3-guest` on disk (§22.32 (a): board tools + select on the gesture slot); PUZZLE GREEN 18:30:59, FRAMEWORK
+  GREEN 18:31:59 (also covers WGPU waves 12 + 13).
+- 18:43–18:55 S5-WGPU (turn ended): wave 14a/b on disk (a number input projects `spinbutton` in both contract twins + the shared
+  role table; the wgpu walk carries `valueNow`); **every owed Rust law of waves 7–14 RAN GREEN**: renderer 23 / 0 (F10, F11, the
+  wave-9 publication lane, F14 incl. the cause proven on the bare engine, F17, F24 with all 18 cases of the shared coalescing
+  corpus), UI crate 171 / 0 (laws owed since wave 1, F18, number input), contract 15 / 0, TS 55 / 0 + 319 twin checks. Not live yet
+  (needs the next activation). Not fixed: F23 flow half (cause known: React mirrors only the panel chrome for a bottom-right
+  anchor, wgpu hands the whole body the anchor flow — its own wave), F21 host half (pointer events cross the host as f32), F20,
+  the ~12 000 frame messages / s.
+- 18:46 S5-AGNOSTIC flow + cad: FAIL 2, not yet classified — cad: after editing `create-energy-model` (inputs name an owned child)
+  and finalize-overwrite the saved document is refused at load (`document-archive-replacement.closure-rejected`, Incomplete) — a
+  CANDIDATE mechanism failure, the control (same document unedited) runs on harness v6; flow: harness (example is a command
+  script) + a pending typed operation after `nodeGraphEdit move`. Totals PASS 5, FAIL 2, NOT RUN 89 of 96.
+- 18:45–18:54 S5-PUZZLE b3-guest fix1 (F16 topology withdrawn: domain `Flat` again) + fix2 (test-only); lanes GREEN 18:54.
+- 19:13 S5-AGNOSTIC acceptance law, harness v7: **PASS 7 of 96** (puzzle 2d / 3d / 5d, stdio gltf / pdf, sequence, wires), FAIL
+  (plugin) 3, mechanism failures 0, NOT RUN 86. First CHILD-LANE proofs: sequence, wires and flow edit a member-store mutation in
+  history end to end (begin with `store` → input → accept → replay → overwrite and new alternative; all three documents reload
+  identically). Plugin faults: dag `addNode` faults at publication ("typed-operation emitted a store lane absent from its exact
+  factory publication contract", same in the product → GRAPHS-WIRES); flow's own example asset does not parse ("expected LBrace,
+  found Ident 'x' at 11:7" → FLOWCAD); cad: six leaves hand out owned children and, applied through the store alone, leave a
+  document the loader refuses (→ FLOWCAD). Decision §22.36: inputs naming an owned child are identity (not editable) + finalize
+  checks the ownership closure (Fatal `mutation.ownership-incomplete`). Next family: strokes + layout + note.
+- 19:31 **S5-PUZZLE "READY FOR B3"** (`📓️w3-t-puzzle-report.md` § S5.16): §22.32 (a) IN — `regionCreate`, `regionResize`,
+  `brushPlace`, `edgeCreate`, `edgeDelete`, `nodeDelete` are one `board_tool` statechart; a run of rows of one kind = one release =
+  ONE `ToolTransaction` on the window's gesture slot, a release that changes nothing = zero trace; the select tool is a
+  `GestureChart` on the same slot; the private wrapper, its window-transient state, the preview fold and the whole `host_event` arm
+  (`TimeTravelFrozen` included) are deleted. F21 IN (committed leaves round to the declared precision: dx, dy, pivot, factor).
+  F16 IN (`vortex` declares `Topology`: nodes with handles, edges, regions). F24 guest law green; finding: a hover-only
+  `applyBoardEvents` commits nothing but the framework command log still upserts an un-applied row with 0 ops — the row wgpu lists
+  and React hides (→ RUNTIME / WGPU). RAN: 2d laws 63 / 0 (22 filters), board-tools oracle 16 / 16, hub-puzzle wasip2 exit 0.
+  Not in: press identity read, 3d / 5d tools on the slot, §22.31 puzzle half. Two long-history laws red by reading (not this wave).
+- 19:31 S5-AGNOSTIC parked: acceptance law ran on 10 of 96 crates — PASS 7, FAIL (plugin) 3 (dag, flow, cad), mechanism 0; census
+  154 of 294 editable leaves exercised; raster / drawing / layout / note built but not executed (disk). Runner commands per
+  remaining plugin in `📓️s5-agnostic-matrix.md`.
+- 19:30 usage: 32% of the window, weekly 84% → fleet wound down: no agent is running.
+- **19:40:42 ACTIVATION B3 launched** (attempts 14–17, all five locks + flag; seed clean, lockfiles OK). B3 = B2 + PUZZLE b3-guest
+  (tools as machines, F16, F21) + WGPU waves 10–14 (F14, F17, F18, F22, F24, spinbutton steppers) + STORE LO + RUNTIME H2 + GRAPHS
+  tool-run-settle + LOAD f13 / detach. Then ONE live run (S5-E2E Run 8): React regression + the new board-tool rows, wgpu goal
+  sentence + A–K.
+- 20:14 activation attempt 14: describe + materialize ✔, **React lane ✔ = B3 on React**; the wgpu lane ✖ — an outside peer saved its
+  editor module at 19:59 mid-build (`🧰️framework/🔨️modules/✍️editor/🦀️.rs`: `EditorHost::sync_from_scene_json` / `_pack` replaced by
+  `synchronize_scene(scene: EditorScene)`), and the wgpu `⚙️EngineCanvas` still calls the old method at four sites (their refactor
+  in flight; not ours to migrate blind). React serve :6012 recycled onto B3 (20:16); wgpu lane retried behind the quiet gate
+  (`🔁️activate-wgpu-loop.sh 6`); :6112 keeps serving B2w meanwhile.
+- 20:36 **wgpu B3 is BLOCKED by an outside peer's refactor in flight.** At 19:59 the peer replaced `EditorHost::sync_from_scene_json`
+  / `_pack` (JSON-in-JSON members `selectionJson`, `tokensJson`, …) by `synchronize_scene(EditorScene)` (typed members, decoded only
+  through `scene::from_json` / `scene::decode` under a `NativeDecodeControl`; fields are `pub(super)`). Our wgpu canvas
+  (`⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs` ≈ :3319, :6872, :7086) still feeds the text-editor host the old document shape →
+  the wgpu renderer does not compile, natively (train FRAMEWORK RED 20:36:13) or for wasm (activation attempt 14 wgpu lane, loop
+  attempt 1). A compile-only switch would make every text-editor scene on wgpu refuse at run time (shape changed), and writing the
+  old → new adapter is exactly the compatibility layer the repo rules forbid; the scene shape belongs to the peer's wave. The wgpu
+  retries are stopped; :6112 keeps serving B2w (without F22 / F24 / spinbutton fixes). React is unaffected for puzzle 2d (B3 React
+  lane built at 20:14); React text-editor surfaces of other plugins may hit the same API change at run time.
+- 20:16 S5-E2E resumed for Run 8 on React B3 (regression A–M + batch N "tools are machines").
+- 21:13 **RUN 8, React en on B3 (S5-E2E, `📓️w3-e2e-report.md` § S5.12): regression A–M 472 PASS / 1 FAIL (F3 only) — no B3
+  regression; new batch N "tools are machines" 27 PASS / 0 FAIL (17 verdicts).** Proven live: brush place = ONE row (Create node +
+  Connect), wire handle → handle = ONE row, delete a node with its edge = ONE row whose mutation replays on Accept of an upstream
+  edit, region create and resize = one row each; Escape mid-drag, a click on the empty board and a history edit begun mid-drag
+  leave no row; the streamed drag preview repaints every pane; rail Select All selects 180 / 180 and "Use selection" takes them
+  (F16 closed); Edit of a placed node offers 14 inputs; Withdraw → Restore. F21 guest half closed (a drop records exactly
+  (-72, -50)). Still open: F3; O6 (the board camera returns to the origin a few seconds after a history-edit session, a
+  duplicate, a wire, a delete or a brush place → PUZZLE / board host); `edgeDelete` has no gesture the probe found.
+- 21:20 state at the end of this window: no agent running; React :6012 = B3, wgpu :6112 = B2w (wgpu B3 blocked by the peer's
+  editor refactor); FRAMEWORK train lane RED on that refactor only; weekly usage 85%. Train lanes and the deadlock breaker
+  stopped (no fleet cargo runs); serve supervisors and the disk keeper keep running. Summary rewritten: `📓️s5-summary.md`.
+
+### 21:25 → — continuing after the stop hook (goal not met: wgpu, cross-plugin proof, F3)
+
+- 21:30 The dev's standing instruction ("other agents work on the same files — do not stop, work in conjunction") settles the
+  wgpu blocker: S5-WGPU resumed to migrate OUR wgpu canvas (three call sites + the wgpu text-editor twin) onto the peer's typed
+  `EditorScene` API, native + wasm32, then "WAVE 15 ON DISK" → wgpu lane activation (B3w) → S5-E2E wgpu run.
+- 21:30 S5-UI resumed for F3 (row actions derived from the session stage in the same commit; corpus row + component law) and a
+  cause line for O6 (camera reset).
+- 21:31 `🔁️acceptance-batch.sh` launched DETACHED (no agent): runs every remaining family command of `📓️s5-agnostic-matrix.md`
+  sequentially (private build dir, retries while the disk is under 12 GiB or an activation builds); events in
+  `🗑️generated/s5-agnostic/batch.events`, rows in `acceptance-results.tsv`, matrix refreshed after each family. Train FRAMEWORK lane
+  and the deadlock breaker restarted.
+- 21:33:51 S5-UI wave `f3` (served): **F3 fixed on the React host** — row actions (Begin, Withdraw, Restore) are refused from the
+  session stage the shell already holds (`rowActions` table in the band corpus: `replaying` / `finalizing` →
+  `ui.timeTravel.refusal.illegal`), in the same commit that shows the stage; component law red without the change; suites 269 / 0.
+  O6 cause: not the React board host — the guest publishes two view states in turn (→ PUZZLE / RUNTIME WindowConfig lane).
+- 21:34:41 S5-WGPU wave 15: the wgpu text-editor twin builds the typed scene document in ONE place (`text_editor_scene_document`)
+  and all three sites go through `synchronize_text_editor_host` (`scene::from_json` under a bounded `NativeDecodeControl` →
+  `synchronize_scene`); refusals are console errors. FRAMEWORK GREEN 21:37:57 (native). Note for the peer's React twin: the engine
+  refuses undeclared settings members; wgpu projects the four engine members.
+- 21:38–22:11 wgpu lane activation for B3w: attempt died on TWO more outside-peer states — a new standalone crate without a
+  `Cargo.lock` (`✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🎒️archive/…`; `cargo fetch --locked` refuses) and
+  `dependency.semio-framework-dsl-record` missing from the `✏️s` / hub workspace tables for ~10 minutes (their wave mid-save).
+  22:11: the workspace resolves again; `✏️s` + hub lockfiles relocked offline, the oracle crate's lockfile generated offline; the
+  lane retries.
+- Disk picture (22:00): volume 926 GiB, 872 used; `Documents/semio` 728 GiB of which `.🧬semio` 675 GiB (tickets 243 GiB — the
+  CLEAN-ARCHITECTURE ticket's `🗑️generated` alone ≈ 150 GiB —, repo cache 43 GiB; the remaining ~390 GiB under `.🧬semio` not
+  broken down). Our ticket: ~4 GiB. Free stays at 9–13 GiB; the unattended acceptance batch needs 12.
+- 22:40 lockfiles generated offline for the peer's seven new standalone oracle crates (`✏️s/🔌️plugins/🗄️stdio/🔮️oracles/{🔊️audio,
+  🖼️raster,🧊️mesh,📊️tabular,📃️document,📰markup,🔤️part21,🎒️archive}`); hub lockfile relocked again.
+- ~23:00 THE APP WAS QUIT while the wgpu lane's third attempt ran: every detached helper died again (serves, keeper, lane loop,
+  acceptance batch — the batch had not started a family: disk < 12 GiB). A command that would have removed 43 small peer cache
+  directories idle > 24 h was NOT executed (its permission request was pending when the app closed) and is not retried.
+- 23:05 resumed: disk 7 GiB free, weekly usage 87%, load average 133. Serves restarted (React :6012 = B3, wgpu :6112 = B2w);
+  the disk keeper restarted and from now touches ONLY this ticket's train targets and the shared build dir; the wgpu lane
+  activation relaunched (3 attempts). Other tickets' folders are not touched any more — their growth is the dev's call.
+- 23:30 the wgpu lane attempt sat in the repo's `cargo-preparation` queue behind the peers' runs while free disk fell 7 → 3 GiB
+  (the peers' test builds now also write the SHARED build dir). Lane loop stopped; our own private build dirs deleted
+  (`s5-agnostic/target`, both train targets: +3 GiB); the unattended acceptance batch stopped (it never got its 12 GiB).
+- 23:35 STATE: no agent, no build of ours. React :6012 = B3 (+ hot host waves `f3`, `f13`, `detach`), wgpu :6112 = B2w. wgpu B3
+  is complete in source (waves 10–15) and law-green, NOT activated. Disk 5 GiB free and falling; weekly usage 87%.
+  Blockers that need the dev: (1) disk — other tickets' `🗑️generated` folders (≈ 200 GiB) and the peers' builds on the shared build
+  dir; (2) the weekly usage budget. `📓️s5-summary.md` updated.
+- 23:46 **Run 9 (S5-E2E, React B3 + hot host waves): F3 CLOSED LIVE** — in the commit where the band first reads `replaying` the row's
+  Edit reads `aria-disabled` + reason; G en 22 / 0. Goal sentence in `de` after `f3`: L 20 / 0. Batch N (tools are machines) in
+  `de`: 26 / 1, 16 of 17 tool verdicts PASS; the one FAIL is a probe baseline fault (region row itself listed at once) — the region
+  verdict in `de` is owed. React, puzzle 2d: no open product fault; observations: O6 (camera returns to the origin), a row's Edit
+  reading disabled again 73 ms after a replay ended, one slow Withdraw (not reproduced).
+- 23:55 disk back at 12 GiB free → preflight (lockfiles) and the wgpu lane activation relaunched (3 attempts).
+
+### 2026-10-06 00:22 → — new goal: every single editor (design §23)
+
+- 00:22 the dev set a new goal: time-travel input editing with conflict resolution must be general and implemented for EVERY editor,
+  end to end. Definition of done per editor, the generic conflict ("cascade") case and the universal live journey: `📋️design.md` §23.
+- 00:22 `🔁️acceptance-batch.sh` relaunched unattended over all remaining families (runner floor lowered to 8 GiB, watchdog 5;
+  retries for ten hours); first family raster. The wgpu lane activation is still queued behind the peers' `cargo-preparation`
+  leases (no progress since 23:58). A peer serves the draw editor on :6064 — a second editor for the live journey at no build cost.
+- 00:42 **UNIVERSAL LIVE JOURNEY (batch U, §23.3) written and PASSING on two editors (S5-E2E, `📓️w3-e2e-report.md` § S5.14):**
+  puzzle 2d :6012 — 8 / 8 (rail "Add Node…" with staged defaults → row → Edit → band + editor, 13 controls: textbox 4, combobox 1,
+  spinbutton 6, slider 1, radiogroup 1 → change → Accept → ready → Overwrite; Withdraw → Restore zero trace); **draw :6064 (a
+  peer's serve, the first second-editor journey) — 8 / 8**, 9 controls (reference list 1, spinbutton 2, textbox 2, slider 1,
+  radiogroup 3), and the CONFLICT clause live: layer index 1 → 2 → Accept → review blocked "Worst outcome: Fatal" → Next problem →
+  Withdraw the blocker → ready → Finalize offers Overwrite AND New alternative → Overwrite. Limits: the edited row was the newest
+  (no downstream rows judged), one control per editor operated. Observations: the generic index stepper has min 0 but no max;
+  enumerations shown as free textboxes (draw `layer.kind` / `blendMode`, puzzle node kind / icon).
+  Run against any serve: `bun ./📜️script.ts verify time-travel --universal --serve "<url>" --renderer react --locales en --out <dir>`
+  (from the dev TS package) or `zsh T/🗑️generated/s5-e2e/batch-u.sh "<url>" <tag> en`.
+- 00:25 / 00:43 the wgpu lane keeps failing on the peers' moving manifests (hub lockfile stale again, five more standalone oracle
+  crates needing a relock: pdf, docx, pptx, xlsx, dxf — relocked offline 00:35); the loop continues.
+- 00:58:51 S5-AGNOSTIC law v8 "cascade" (§23.2) on disk: third acceptance test `conflict_history_edits_end_to_end` — withdraw /
+  edit a root, every downstream mutation classified, blocked review, `nextProblem`, resolve blockers in turn → ready, restore =
+  original report, finalize → reload == fresh fold; "no dependents" is a census line. Runner hardened (harness compile error →
+  restores v7 and repeats; a red shared framework crate → retry instead of NOT-RUN rows). Matrix columns added: Conflict (cascade),
+  Undeclared inputs (975, stdio 910), Input-less editable leaves (5, cad 4). New file `📓️s5-every-editor-faults.md`.
+- 01:00–01:10 the peers' tree churned: for some minutes 1075 tracked files read as deleted in the working tree (incl.
+  `🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/🧬️schema/🔣️.json` → the plugin crate red); by 01:15 only 10 remained (8 puzzle
+  `.rs` = our own deletions of the tool wrapper, 2 forms). Nothing restored by us except that one schema file (already back).
+- 01:17 first batch family on the v8 tree: raster FAIL (3 of 4 laws panic: v8 "the root's accepted draft is a withdrawal, not its
+  edited input"; inputs law; `history_edits_end_to_end` inside raster) → S5-AGNOSTIC triages harness vs mechanism vs plugin.
+  The batch continues with draw. The wgpu lane is still queued behind the peers' `cargo-preparation` leases.
+- 01:25 S5-AGNOSTIC triage of raster: (3) **MECHANISM failure, kernel store** — `ArtifactStore::replay_mutations` (≈ :22147) drops
+  its working snapshot by drop glue on a rejected apply (and on the `?` of `encode_op` / `diff.apply`); only the `InverseRefused`
+  branch retires it. A fail-closed snapshot (raster's Drop witness) therefore aborts the guest on any refused edit — exactly what
+  conflict resolution produces. → S5-STORE (resumed 01:40: one exit path that retires everything, kernel law over a fail-closed
+  test snapshot). (2) registry gap — shared framework schemas (`framework/value`, `os/store/child`) are not in an instance's
+  resolver, so leaves that `$ref` them cannot be resolved into controls → S5-RUNTIME (resumed 01:40: framework-owned registration
+  for every instance + law). (1) harness: v8's edit half withdrew the edited root when it was itself the blocker; v9 applied 01:21
+  (the withdraw half of the cascade PASSED on raster).
+- 01:30 DISK 3 GiB, swap 17 GiB (memory pressure from the peers' builds + our family build + the queued lane). Our batch and the
+  wgpu lane loop STOPPED again; our private build dir deleted → 9 GiB. Folder survey: **`.🧬semio/🌐hub/` holds 393 GiB**,
+  `.🧬semio/🦑️repo/🎫️tickets/` 258 GiB, `.🧬semio/🦑️repo/⚡️cache/` 43 GiB (volume 926 GiB). The hub store and the other tickets'
+  generated folders are not ours to delete; nothing of ours is left to free.
+- 01:37:18 S5-RUNTIME wave L: the framework value schema is part of the input-schema resolver and the OS publishes
+  `framework/io`, `os/store/child`, `…/child/owner`, `os/store/link`, `os/store/blob` at EVERY app construction
+  (`PluginRuntimeRegistry::publish_framework_schema_documents`); law `an_input_that_references_a_shared_framework_schema_resolves_
+  on_any_instance` written; `cargo check -p semio-framework-plugin --lib` exit 0; FRAMEWORK GREEN 01:41:42. Tests owed (disk).
+- 01:46:03 S5-STORE wave RR: one mechanism `ScratchOwner<T>` — `replay_mutations` holds projection / operations / inverses as
+  scratch owners on all four refusal exits; `apply_command`, `open_transaction_edit`, `append_transaction` adopt only what the
+  store takes; `replace_current_retained` retires what it refuses. FRAMEWORK GREEN 01:47:02 (compiles). Law staged
+  (`replay_retirement_tests`, 7-case corpus), not applied; no test ran (disk 3–6 GiB, swap 17–20 GiB).
+- 01:50 the acceptance batch relaunched unattended: it waits (every 3 min, up to 10 h) until 8 GiB are free and the shared
+  framework crates build, then continues with draw. The wgpu lane is NOT relaunched until there is disk.
+- DISK FACT for the dev: `.🧬semio/🌐hub/` = 393 GiB of overlay / scratch folders (`s15-ex1-overlay` 48, `s14-c13-overlay` 47,
+  `s14-c12-overlay-order` 47, `s15-rs1-overlay` 38, `s14-lb2-scratch` 31, …); tickets 258 GiB; repo cache 43 GiB.
+- 02:00 hub folder sizes (GiB, `du`): `s15-ex1-overlay` 48, `s14-c13-overlay` 47, `s14-c12-overlay-order` 47, `s15-rs1-overlay` 38,
+  `s14-lb2-scratch` 31, `s14-s20-overlay-faults` 30, `s14-s20-overlay-faults-p2` 30, `s15-ex1-scratch` 26, `s14-h14-overlay-r36` 12,
+  `s14-p9-build` 8, `s14-s20-overlay-build` 7, `s14-s20-overlay-build-p2` 6 — about 330 GiB in twelve overlay / scratch / build
+  folders of `.🧬semio/🌐hub/` (291 folders, 393 GiB in total). Not touched; reported to the dev.
+- 02:00 STATE: no agent running; the acceptance batch waits for 8 GiB free (6–7 now, swap 16–17 GiB); serves up (:6012 React B3,
+  :6112 wgpu B2w); weekly usage 89%; coordinator context 86%.
+- 02:10 hub survey (read-only): the large `.🧬semio/🌐hub/` folders are full repo overlays / scratch clones of sessions "s14" /
+  "s15", untouched for 6 days, no process names them; 45 cache directories in them carry cargo's `CACHEDIR.TAG` and are idle
+  > 3 days = 52.3 GiB (`s14-lb2-scratch/.lb2-build` 14.3, `s14-p9-build` 8.0, `s14-s20-overlay-build/build` 6.8, `s14-cd1-build`
+  5.5, `s14-s20-overlay-build-p2/build` 5.4, `s14-h14-overlay-r36/.h14-build` 4.9, `s14-sh2-build` 3.6, …). NOT deleted: I asked the
+  dev which folders may go and have no answer.
+- 02:12 work that needs no test build, resumed in economy mode: S5-E2E (batch U strengthened on puzzle 2d + draw: two rows before
+  the edit, every control role operated, `de`, conflict clause on both), S5-GRAPHS-WIRES (dag `addNode` publication fault + tool-run
+  row label), S5-FLOWCAD (flow example asset; cad §22.36 owned-child inputs + inputless leaves). The acceptance batch keeps waiting
+  for 8 GiB free.
+- 02:25 **the dev: "Clean on your own, everything end to end."** → 41 cache directories inside the idle hub overlays removed
+  (cargo `CACHEDIR.TAG`, no file newer than 3 days, no process): 7 → 50 GiB free. Every removal is listed in
+  `📓️s5-disk-cleanup.md`. Next tier if the disk falls under 20 GiB again: the stale `*-scratch` / `*-build` hub folders, then the
+  6-day-old `*-overlay` clones.
+- 02:27 the acceptance batch continues on its own (disk ≥ 8 GiB); the wgpu lane activation relaunched (4 attempts, lockfiles
+  checked). S5-GRAPHS-WIRES 02:04: dag's nine graph verbs now declare the Child publication lane (cause of `addNode` faulting: the
+  contracts still said `Artifact` after the §20.15 conversion) + law; tool-run row label arm applied; dag check owed.
+- 02:25 S5-FLOWCAD: flow demo asset fixed (the `layout` map's record values need braces) + law
+  `every_shipped_example_loads_through_set_active_example`; cad: genesis total over declared children, bundled documents use
+  stable named child ids, ten leaves `"editable": false` (§22.36 + inputless), reload + child-history laws wired; check of both
+  crates exit 0. Families owed (the batch reaches them last).
+- 02:28 batch: raster re-run FAIL (store wave RR + RUNTIME wave L were not yet both in its build), draw NOT-RUN (to be re-issued);
+  it continues with layout. S5-STORE resumed for its law + kernel tests.
+- 02:33 S5-STORE: **wave RR verified** — law `replay_retirement_tests::a_refused_apply_retires_everything_its_replay_built` in the
+  tree; kernel `replay_retirement_tests viewer_head_tests supersede_law_tests` 14 / 0; `os_store::` 517 / 1 (the peer's known red).
+  Raster re-run on the RR tree: no Drop abort any more (refused seed edits return `Rejected`); raster now fails only its census
+  (13 of 22 editable leaves exercised) → raster owner / AGNOSTIC.
+- 02:35 S5-E2E **batch U extended on both live React editors: puzzle 2d 21 / 0 in en AND de, draw 20 / 0 in en AND de** — two rows
+  with the OLDER one edited (later row reads "Not applied while editing"), every inventoried control role operated as its own
+  verdict (textbox, combobox, spinbutton, slider, radiogroup; draw also reference list), labels differ en / de, the conflict
+  clause through the universal route on both (puzzle: rename node → replay progress n / 182 → blocked on Error → Next problem →
+  Withdraw → ready → Overwrite; draw: Fatal cascade over two layers). Control inventories: `🗑️generated/s5-e2e/runU/*-controls.json`,
+  report § S5.15. New faults: U1 (a REFUSED text input keeps showing the refused text — `timeTravel.invalid-input` says "keeps its
+  previous value" but the field still reads the typed text → UI / RUNTIME), U2 (draw publishes enumerations `layer.kind` /
+  `layer.blendMode` as free text; `blendMode` accepts an invalid value into the draft → draw owner).
+- 02:31– the kernel is RED on the peers' wave in flight (`📡️spr/🦀️.rs:44` unresolved `os_spr::command::{DiffCodec, OpBinary,
+  OpText}`, `🗣️dsl/🦀️.rs` "cannot find `binary` in `io`"; saved 02:27): the batch reports FOUNDATION RED and retries every 3 min.
+- 02:27–03:11 the kernel was red on a peer's wave in flight (traits `OpText` / `OpBinary` / `DiffCodec` moved from
+  `os_spr::command` to `os_spr`; a new `🏪️store/🎚️config/📥️retained` module). Their side converged by ~03:05; the last red was in OUR
+  wgpu renderer (`🧊️renderer/🦀️.rs` two `impl store::os_spr::command::Op… for NativeSocketProbeMutation`) → paths updated by the
+  coordinator 03:10:52 (train line). **FRAMEWORK GREEN 03:11:23.** The acceptance batch (stuck on FOUNDATION RED at family layout)
+  and the wgpu lane loop continue on their own.
+- NEXT (for whoever resumes, see `📓️fleet-5-agents.md` § State 01:55 + this log): (1) watch `🗑️generated/s5-agnostic/batch.events`
+  / `acceptance-results.tsv`; resume S5-AGNOSTIC every few families to classify and to re-issue NOT-RUN rows (draw); route plugin
+  faults to owners; (2) when `🗑️generated/e2e/activate-wgpu-loop.exit` reads 0: kill the :6112 listener, resume S5-E2E for batch U
+  + A–N on wgpu (en, de); relaunch the loop if it ended non-zero; (3) open product faults: U1 (refused text input keeps the refused
+  text → UI / RUNTIME), U2 (draw enumerations as free text → draw owner), O6 (camera reset → PUZZLE), raster census (9 leaves),
+  dag check owed, flow / cad families owed, stdio `patch-snapshot` payload law; (4) disk: 53 GiB free; if it falls under 20 GiB
+  remove the stale hub `*-scratch` / `*-build` folders, then the 6-day-old `*-overlay` clones (dev: "Clean on your own"), logging
+  each in `📓️s5-disk-cleanup.md`; (5) more editors live: activate further variants (or the play serve :6033 with all apps) and run
+  `verify time-travel --universal --serve <url>` on each.
+- 03:14 both unattended loops keep hitting the peers' saves at night: the wgpu lane ("Invalid Cargo workspace member patterns" —
+  a manifest mid-save), the batch (`semio-framework-artifact-workflow-workflow` red in the sqlite ticket's
+  `🚪️io/🪶️sqlite/📸️snapshot` files). Lane loop relaunched with 40 attempts and a 4-minute pause after a failure; the batch retries
+  every 3 minutes for ten hours. Both continue without an agent.
+- 03:25 the batch's NOT-RUN rows are not editor faults: draw was blocked by the kernel red of 02:28, layout by
+  `semio-s-artifact-stdio-dwg` / `-txt` / `-deflate` — 1159 compile errors in the sqlite ticket's
+  `🚪️io/🪶️sqlite/📸️snapshot` files (their wave in flight). Nearly every editor depends on those stdio crates, so the batch would
+  only produce NOT-RUN rows now. Batch stopped; `🔁️wait-green-then-batch.sh` (detached) checks kernel + plugin + workflow artifact
+  + the stdio base crates every ten minutes in a private dir and launches the batch on the first green pass
+  (log `🗑️generated/coord/base-green.txt`).
+- 03:30 base check: kernel + plugin + workflow artifact compile; the stdio base crates (dwg, txt, deflate, semio) are RED with
+  2923 errors (first: stdio semio `🦀️.rs:1374` "the name `io` is defined multiple times"; 1159 in dwg's sqlite snapshot files).
+  Part is the sqlite ticket's wave in flight, part may be S5-TEXT-STDIO's unverified families of 10-05 → S5-TEXT-STDIO resumed
+  03:35 to triage by owner, fix ours forward, adapt our files to the peer's moves and name what only the peer can finish.
+  `🔁️wait-green-then-batch.sh` keeps checking every ten minutes and launches the acceptance batch on the first green base.
+- COORDINATOR CONTEXT NOTE (03:35): this session's context is nearly full; everything needed to continue is in this log (see the
+  NEXT entry of 03:11), `📓️fleet-5-agents.md` § State 01:55, `📋️design.md` §23, `📓️s5-summary.md`, `📓️s5-every-editor-faults.md`.

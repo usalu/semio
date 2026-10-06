@@ -4,7 +4,7 @@
 
 use crate::fem3d_engine::fem3d_solve_all;
 use crate::model::{Dof, StaticResult};
-use crate::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, print_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{element_id, FemElement, Fem3dSnapshot};
 use std::collections::HashMap;
 

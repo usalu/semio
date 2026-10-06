@@ -1,7 +1,7 @@
 {
   "cases": [
-    { "questionId": "column-a", "controllerId": "s.forms.forms@1/*#editor", "surface": "try", "interactive": true, "fixtureSlug": "hexagonal-mushroom-column", "params": { "height": 3, "radius": 0.4, "sides": 5 }, "windowId": "fill-a", "windowKindId": "forms-try" },
-    { "questionId": "column-b", "controllerId": "s.forms.forms@1/*#editor", "surface": "try", "interactive": true, "fixtureSlug": "hexagonal-mushroom-column", "params": { "height": 8, "radius": 0.8, "sides": 8 }, "windowId": "fill-b", "windowKindId": "forms-try" },
-    { "questionId": "column-c", "controllerId": "s.forms.forms@1/*#editor", "surface": "blueprint", "interactive": true, "fixtureSlug": "hexagonal-mushroom-column", "params": { "height": 4, "radius": 0.5, "sides": 6 } }
+    { "questionId": "column-a", "controllerId": "s.forms.forms@1/*#editor", "surface": "try", "interactive": true, "exampleId": "hexagonal-mushroom-column", "params": { "height": 3, "radius": 0.4, "sides": 5 }, "windowId": "fill-a", "windowKindId": "forms-try" },
+    { "questionId": "column-b", "controllerId": "s.forms.forms@1/*#editor", "surface": "try", "interactive": true, "exampleId": "hexagonal-mushroom-column", "params": { "height": 8, "radius": 0.8, "sides": 8 }, "windowId": "fill-b", "windowKindId": "forms-try" },
+    { "questionId": "column-c", "controllerId": "s.forms.forms@1/*#editor", "surface": "blueprint", "interactive": true, "exampleId": "hexagonal-mushroom-column", "params": { "height": 4, "radius": 0.5, "sides": 6 } }
   ]
 }

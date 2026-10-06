@@ -1,0 +1,96 @@
+{
+  "schema": "semio.artifact-mutation-producers/v1",
+  "cases": [
+    {
+      "crate": "semio-s-artifact-block-2d",
+      "dimension": "2d",
+      "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+      "snapshot": "standards::v1::subsets::any::schema::snapshot::Block2dSnapshot",
+      "mutation": "standards::v1::subsets::any::schema::mutations::Block2dMutation",
+      "transient": false,
+      "artifact": "s.block.2d",
+      "standard": "1",
+      "subset": "any",
+      "excludedSegments": [
+        "👁️viewer",
+        "✏️editor"
+      ],
+      "feature": "mutation-inventory",
+      "provider": {
+        "script": "../../🏭️bridge/📜️script.ts",
+        "roots": [
+          "../.."
+        ]
+      }
+    },
+    {
+      "crate": "semio-s-artifact-block-3d",
+      "dimension": "3d",
+      "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+      "snapshot": "standards::v1::subsets::any::schema::snapshot::Block3dSnapshot",
+      "mutation": "standards::v1::subsets::any::schema::mutations::Block3dMutation",
+      "transient": true,
+      "artifact": "s.block.3d",
+      "standard": "1",
+      "subset": "any",
+      "excludedSegments": [
+        "👁️viewer",
+        "✏️editor"
+      ],
+      "feature": "mutation-inventory",
+      "provider": {
+        "script": "../../🏭️bridge/📜️script.ts",
+        "roots": [
+          "../.."
+        ]
+      }
+    },
+    {
+      "crate": "semio-s-artifact-block-5d",
+      "dimension": "5d",
+      "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+      "snapshot": "standards::v1::subsets::any::schema::snapshot::Block5dSnapshot",
+      "mutation": "standards::v1::subsets::any::schema::mutations::Block5dMutation",
+      "transient": false,
+      "artifact": "s.block.5d",
+      "standard": "1",
+      "subset": "any",
+      "excludedSegments": [
+        "👁️viewer",
+        "✏️editor"
+      ],
+      "feature": "mutation-inventory",
+      "provider": {
+        "script": "../../🏭️bridge/📜️script.ts",
+        "roots": [
+          "../.."
+        ]
+      }
+    }
+  ],
+  "retiredParentFiles": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "🦀️.rs",
+    "📜️script.ts"
+  ],
+  "requiredFlags": [
+    "--maximum-units",
+    "--maximum-owned-bytes",
+    "--budget-ms"
+  ],
+  "host": {
+    "nativeSource": "fn main(){for argument in std::env::args().skip(1){println!(\"{argument}\");}}\n",
+    "removeDimension": "2d",
+    "expectedSurvivors": [
+      "3d",
+      "5d"
+    ],
+    "assertions": [
+      "general-import-without-specific",
+      "strict-entrypoint-types",
+      "selected-own-manifest-binary-arguments",
+      "remaining-entrypoints-after-leaf-deletion"
+    ]
+  }
+}

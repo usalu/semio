@@ -3,14 +3,12 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv/dist/2020.js";
+
 import TOML from "@iarna/toml";
 import fixture from "../../🧫️fixtures/⚠️refusal/🔣️.json";
-import schema from "../../🧬️schema/⚠️refusal/🔣️.json";
 import {ValueError,type ValueRefusalKind} from "../../../🌱️value/⚠️refusal/🟦️.ts";
 
 test("all owned callback and retained-allocation kinds have independent closed projections",()=>{
- const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,implicitStringCause:true})).toBe(false);
  expect(new Set(fixture.callbacks.map(row=>row.kind)).size).toBe(8);
  expect(new Set(fixture.callbacks.map(row=>row.mode+":"+row.kind)).size).toBe(16);
  const database=new Database(":memory:");

@@ -26,7 +26,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://stately.ai/docs/xstate",
-      "rationale": "Judges the tool machine in `🧪️tests/🧪️conformance` (design §5): every `🧫️transaction-law` chart built as an xstate machine against the TypeScript reducer, id minting and runner; in `🧪️tests/🧪️gesture-drive-law` the window's gesture slot (idle, open, unrestorable) as an xstate machine against `driveGesture` on every fixture row and random sequence."
+      "rationale": "Judges the tool machine in `🧪️tests/🧪️conformance` (design §5): every `🧫️transaction-law` chart built as an xstate machine against the TypeScript reducer, id minting and runner; in `🧪️tests/🧪️gesture-drive-law` the window's gesture slot (idle, open, unrestorable) as an xstate machine against `driveGesture` on every fixture row and random sequence, and against the per-window `GestureLedger` on every slot scenario and host fact."
     },
     {
       "id": "tool-machine-fast-check",

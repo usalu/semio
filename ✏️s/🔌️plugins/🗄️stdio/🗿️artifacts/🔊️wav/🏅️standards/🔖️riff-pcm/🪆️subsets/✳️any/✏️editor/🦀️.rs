@@ -561,7 +561,7 @@ impl ArtifactEditor for WavEditor {
         }
         if edit_audio::TOOL_IDS.contains(&request.tool_id.as_str()) {
             if wavEditor_command_id(&request.command) != request.tool_id {
-                return Err(Fault::from("stdio-wav-audio-tool-mismatch"));
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-wav-audio-tool-mismatch"));
             }
             let operation = AppOperationContext {
                 app_instance_id: request.app_instance_id,
@@ -595,7 +595,7 @@ impl ArtifactEditor for WavEditor {
             return Ok(None);
         }
         if wavEditor_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-example-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
             app_instance_id: request.app_instance_id,

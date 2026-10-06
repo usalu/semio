@@ -1,0 +1,68 @@
+//! 🗺️ Literal flat native records retain each intrinsic Value variant and durable child identity.
+use crate::standards::v1::subsets::any::schema::snapshot::*;
+use semio_framework_dsl_record::DslField;
+use semio_framework_value::Number;
+use semio_framework_value::ValueError;
+fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
+fn positioned(error:ValueError)->semio_framework_diagnostic::TextError{semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1))}
+#[derive(semio_framework_dsl_record_derive::DslRecord)]struct Child{child_id:String,artifact_id:String,artifact_kind:String,standard:String,subset:String}
+#[derive(semio_framework_dsl_record_derive::DslScalar)]enum Kind{Null,Boolean,Unsigned,Signed,Float,Text,Bytes,Array,Object}
+pub(crate) struct Octets(Vec<u8>);
+impl DslField for Octets{
+ fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Bytes64}
+ fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Bytes64)}
+ fn to_value(&self)->semio_framework_dsl_record::FieldValue{semio_framework_dsl_record::FieldValue::Bytes64(self.0.clone())}
+ fn from_value(value:&semio_framework_dsl_record::FieldValue)->Result<Self,String>{match value{semio_framework_dsl_record::FieldValue::Bytes64(v)=>Ok(Self(v.clone())),_=>Err("GIS native octets differ".to_string())}}
+ fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{match value{semio_framework_dsl_record::FieldValue::Bytes64(v)=>control.copy_bytes(v).map(Self),_=>Err(invalid("GIS native octets differ"))}}
+ fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.copy_bytes(&self.0).map(semio_framework_dsl_record::FieldValue::Bytes64)}
+}
+#[derive(semio_framework_dsl_record_derive::DslRecord)]struct Member{name:String,value:u64}
+#[derive(semio_framework_dsl_record_derive::DslRecord)]struct Value{kind:Kind,boolean:Option<bool>,unsigned:Option<u64>,signed:Option<i64>,float:Option<f64>,text:Option<String>,bytes:Option<Octets>,items:Vec<u64>,members:Vec<Member>}
+#[derive(semio_framework_dsl_record_derive::DslRecord)]struct Feature{id:String,value:u64}
+#[derive(semio_framework_dsl_record_derive::DslRecord)]#[dsl(extension="gismap")]struct Map{positions:Vec<Feature>,routes:Vec<Feature>,regions:Vec<Feature>,drawing:Child,image:Option<Child>,value:Child,values:Vec<Value>}
+#[path="🛫️encode/🦀️.rs"]mod controlled_output;
+#[path="../../../🪶️sqlite/📸️snapshot/📏️cells/🦀️.rs"]mod semantic_cells;
+pub(crate) fn decode_sqlite_native(payload:&store::os_io::IoPayload,c:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<GisMapSnapshot,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,"gis.gismap",Map::__dsl_spec_producer(),|record,native|{semantic_cells::admit_record(record,native,limits)?;reconstruct(Map::__dsl_from_record_controlled(record,native)?,native)},c)}
+pub(crate) fn encode_sqlite_native(snapshot:&GisMapSnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{let maximum=c.limits().max_rows;store::encode_sqlite_snapshot_record_native(encoding,"gis.gismap",Map::__dsl_spec_producer(),|native|controlled_output::project(snapshot,maximum,native),c)}
+fn child<S>(c:&store::ArtifactChild<S>)->Child{Child{child_id:c.child_id.clone(),artifact_id:c.target.artifact_id.clone(),artifact_kind:c.target.dialect.artifact_kind.clone(),standard:c.target.dialect.standard.clone(),subset:c.target.dialect.subset.clone()}}
+fn owned_child<S>(c:Child)->store::ArtifactChild<S>{store::ArtifactChild::new(c.child_id,store::os_io::ArtifactRef{artifact_id:c.artifact_id,dialect:store::os_io::ArtifactDialect{artifact_kind:c.artifact_kind,standard:c.standard,subset:c.subset}})}
+fn features<'a>(values:&'a[MapFeature],pending:&mut std::collections::VecDeque<&'a semio_framework_value::DslValue>,next:&mut u64)->Vec<Feature>{values.iter().map(|v|{let id=*next;*next+=1;pending.push_back(&v.data);Feature{id:v.id.clone(),value:id}}).collect()}
+impl Map{
+ pub(crate) fn from_snapshot(snapshot:&GisMapSnapshot)->Self{let mut pending=std::collections::VecDeque::new();let mut next=0;let positions=features(&snapshot.positions,&mut pending,&mut next);let routes=features(&snapshot.routes,&mut pending,&mut next);let regions=features(&snapshot.regions,&mut pending,&mut next);let mut values=Vec::new();while let Some(value)=pending.pop_front(){let mut node=Value{kind:Kind::Null,boolean:None,unsigned:None,signed:None,float:None,text:None,bytes:None,items:vec![],members:vec![]};match value{semio_framework_value::DslValue::Null=>{},semio_framework_value::DslValue::Bool(value)=>{node.kind=Kind::Boolean;node.boolean=Some(*value)},semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value))=>{node.kind=Kind::Unsigned;node.unsigned=Some(*value)},semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(value))=>{node.kind=Kind::Signed;node.signed=Some(*value)},semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(value))=>{node.kind=Kind::Float;node.float=Some(*value)},semio_framework_value::DslValue::String(value)=>{node.kind=Kind::Text;node.text=Some(value.clone())},semio_framework_value::DslValue::Bytes(value)=>{node.kind=Kind::Bytes;node.bytes=Some(Octets(value.clone()))},semio_framework_value::DslValue::Array(items)=>{node.kind=Kind::Array;for value in items{node.items.push(next);next+=1;pending.push_back(value)}},semio_framework_value::DslValue::Object(members)=>{node.kind=Kind::Object;for(name,value)in members{node.members.push(Member{name:name.clone(),value:next});next+=1;pending.push_back(value)}}}values.push(node);}Self{positions,routes,regions,drawing:child(&snapshot.drawing),image:snapshot.image.as_ref().map(child),value:child(&snapshot.value),values}}
+}
+pub(crate) fn retire_value(value:semio_framework_value::DslValue){let mut pending=vec![value];while let Some(value)=pending.pop(){match value{semio_framework_value::DslValue::Array(values)=>pending.extend(values),semio_framework_value::DslValue::Object(values)=>pending.extend(values.into_iter().map(|(_,value)|value)),_=>{}}}}
+pub(crate) fn retire(snapshot:GisMapSnapshot){for value in snapshot.positions.into_iter().chain(snapshot.routes).chain(snapshot.regions){retire_value(value.data)}}
+pub(crate) struct Values(Vec<Option<semio_framework_value::DslValue>>);
+impl Drop for Values{fn drop(&mut self){for value in self.0.iter_mut().filter_map(Option::take){retire_value(value)}}}
+pub(crate) struct Items(Vec<semio_framework_value::DslValue>);
+impl Drop for Items{fn drop(&mut self){for value in self.0.drain(..){retire_value(value)}}}
+pub(crate) struct Members(Vec<(String,semio_framework_value::DslValue)>);
+impl Drop for Members{fn drop(&mut self){for(_,value)in self.0.drain(..){retire_value(value)}}}
+pub(crate) struct Features(Vec<MapFeature>);
+impl Drop for Features{fn drop(&mut self){for feature in self.0.drain(..){retire_value(feature.data)}}}
+fn take(values:&mut Values,key:u64,parent:Option<usize>)->Result<semio_framework_value::DslValue,ValueError>{let key=usize::try_from(key).map_err(|_|invalid("GIS native Value index exceeds native domain"))?;if key>=values.0.len()||parent.is_some_and(|p|key<=p){return Err(invalid("GIS native Value topology differs"))}values.0[key].take().ok_or_else(||invalid("GIS native Value has repeated ownership"))}
+fn reconstruct(record:Map,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<GisMapSnapshot,ValueError>{let Map{positions,routes,regions,drawing,image,value,values}=record;let mut units=values.len();control.begin_stage(values.len())?;for node in&values{control.step()?;units=units.checked_add(node.items.len()).and_then(|v|v.checked_add(node.members.len())).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS native work count overflow"))?;}control.begin_stage(units)?;let mut owned=Values(control.allocate_vec::<Option<semio_framework_value::DslValue>>(values.len())?);owned.0.resize_with(values.len(),||None);
+ for(index,node)in values.into_iter().enumerate().rev(){control.step()?;let Value{kind,boolean,unsigned,signed,float,text,bytes,items,members}=node;let value=match(kind,boolean,unsigned,signed,float,text,bytes,items.is_empty(),members.is_empty()){
+ (Kind::Null,None,None,None,None,None,None,true,true)=>semio_framework_value::DslValue::Null,
+ (Kind::Boolean,Some(value),None,None,None,None,None,true,true)=>semio_framework_value::DslValue::Bool(value),
+ (Kind::Unsigned,None,Some(value),None,None,None,None,true,true)=>semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value)),
+ (Kind::Signed,None,None,Some(value),None,None,None,true,true)=>semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(value)),
+ (Kind::Float,None,None,None,Some(value),None,None,true,true)=>semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(value)),
+ (Kind::Text,None,None,None,None,Some(value),None,true,true)=>semio_framework_value::DslValue::String(value),
+ (Kind::Bytes,None,None,None,None,None,Some(value),true,true)=>semio_framework_value::DslValue::Bytes(value.0),
+ (Kind::Array,None,None,None,None,None,None,_,true)=>{let mut result=Items(control.allocate_vec::<semio_framework_value::DslValue>(items.len())?);for key in items{control.step()?;result.0.push(take(&mut owned,key,Some(index))?);}semio_framework_value::DslValue::Array(std::mem::take(&mut result.0))},
+ (Kind::Object,None,None,None,None,None,None,true,_)=>{let mut result=Members(control.allocate_vec::<(String,semio_framework_value::DslValue)>(members.len())?);for member in members{control.step()?;result.0.push((member.name,take(&mut owned,member.value,Some(index))?));}semio_framework_value::DslValue::Object(std::mem::take(&mut result.0))},_=>return Err(invalid("GIS native Value has unrelated variant fields"))};owned.0[index]=Some(value);
+ }
+ let count=positions.len().checked_add(routes.len()).and_then(|v|v.checked_add(regions.len())).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS feature count overflow"))?;control.begin_stage(count)?;
+ let mut restore=|features:Vec<Feature>|->Result<Features,ValueError>{let mut result=Features(control.allocate_vec::<MapFeature>(features.len())?);for feature in features{control.step()?;result.0.push(MapFeature{id:feature.id,data:take(&mut owned,feature.value,None)?});}Ok(result)};
+ let mut positions=restore(positions)?;let mut routes=restore(routes)?;let mut regions=restore(regions)?;if owned.0.iter().any(Option::is_some){return Err(invalid("GIS native Value has unowned records"))}control.checkpoint()?;Ok(GisMapSnapshot{positions:std::mem::take(&mut positions.0),routes:std::mem::take(&mut routes.0),regions:std::mem::take(&mut regions.0),drawing:owned_child(drawing),image:image.map(owned_child),value:owned_child(value)})
+}
+fn ordinary(record:Map)->Result<GisMapSnapshot,ValueError>{let mut callback=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut control=semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut callback);reconstruct(record,&mut control)}
+
+impl store::ArtifactPack for GisMapSnapshot{
+ fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
+ fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Map::__dsl_spec())}
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let raw=store::pack_rt::encode_document(&Map::__dsl_spec(),&Map::from_snapshot(self).__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1).map_err(|e| store::PackError::from(e.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&raw))}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,raw)=store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS map native Pack identity differs")))}let(record,_)=store::pack_rt::decode_document(&raw,&Map::__dsl_spec(),options)?;ordinary(Map::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?).map_err(store::PackError::from)}
+}
+

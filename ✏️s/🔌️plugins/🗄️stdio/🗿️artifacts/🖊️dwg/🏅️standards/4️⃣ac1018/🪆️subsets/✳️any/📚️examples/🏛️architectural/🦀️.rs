@@ -2,7 +2,7 @@
 //! ~145KB) for ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION.
 //! The DWG codec projects the real fixture into standard logical drawing and metadata concepts.
 
-use crate::schema::snapshot::decode_dwg;
+use crate::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg;
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -12,15 +12,15 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Architectural Example", "Architekturbeispiel")
 }
 pub const ICON: &str = "file";
-pub const FIXTURE_BYTES: &[u8] = include_bytes!("../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
+pub const DOCUMENT_BYTES: &[u8] = include_bytes!("../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decoded_summary_json() -> String {
-    match decode_dwg(FIXTURE_BYTES) {
+    match decode_dwg(DOCUMENT_BYTES) {
         Ok(snap) => {
             format!(
-                r#"{{"fixture":"architectural.dwg","bytes":{},"version":"{}","layerCount":{},"entityCount":{},"classCount":{},"dependencyCount":{}}}"#,
-                FIXTURE_BYTES.len(),
+                r#"{{"documentName":"architectural.dwg","bytes":{},"version":"{}","layerCount":{},"entityCount":{},"classCount":{},"dependencyCount":{}}}"#,
+                DOCUMENT_BYTES.len(),
                 snap.version,
                 snap.drawing.layers.len(),
                 snap.drawing.entities().len(),
@@ -28,7 +28,7 @@ fn decoded_summary_json() -> String {
                 snap.dependencies.len()
             )
         }
-        Err(e) => format!(r#"{{"fixture":"architectural.dwg","bytes":{},"error":"{e}"}}"#, FIXTURE_BYTES.len()),
+        Err(e) => format!(r#"{{"documentName":"architectural.dwg","bytes":{},"error":"{e}"}}"#, DOCUMENT_BYTES.len()),
     }
 }
 

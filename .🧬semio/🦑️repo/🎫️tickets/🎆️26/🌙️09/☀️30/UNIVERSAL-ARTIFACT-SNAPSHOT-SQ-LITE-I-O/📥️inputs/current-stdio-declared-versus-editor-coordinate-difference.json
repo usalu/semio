@@ -1,0 +1,1179 @@
+{
+  "qualification": "Source-only literal E::DIALECT resolution; no runtime credit",
+  "editors": [
+    {
+      "type": "BinaryEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "BINARY_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.binary",
+          "standard": "raw",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "TxtEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "TXT_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "XmlAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "XML_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.xml",
+          "standard": "1.0",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "XmlValidEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/✏️editor/🦀️.rs",
+      "expression": "XML_VALID_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.xml",
+          "standard": "1.0",
+          "subset": "valid",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "DeflateEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "DEFLATE_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.deflate",
+          "standard": "rfc1950",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "ZipAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "ZIP_ANY_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "ZipIso21320Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🦀️.rs",
+      "expression": "ZIP_ISO21320_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "iso21320",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "JsonAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "JSON_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "JsonIJsonEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/✏️editor/🦀️.rs",
+      "expression": "JSON_I_JSON_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "i-json",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "CsvEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "CSV_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.csv",
+          "standard": "rfc4180",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "MdEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "MD_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.md",
+          "standard": "commonmark",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "GltfAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/🦀️.rs",
+      "expression": "GLTF_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.gltf",
+          "standard": "2.0",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "ObjAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🦀️.rs",
+      "expression": "OBJ_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.obj",
+          "standard": "3.0",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "StlAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "STL_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.stl",
+          "standard": "ascii",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "PlyAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "PLY_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.ply",
+          "standard": "1.0",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "LasAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/✏️editor/🦀️.rs",
+      "expression": "LAS_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.las",
+          "standard": "1.0",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "StepAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "STEP_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.step",
+          "standard": "ap214",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "StepCc1Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🦀️.rs",
+      "expression": "STEP_CC1_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.step",
+          "standard": "ap214",
+          "subset": "cc1",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "StepCc2Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/🦀️.rs",
+      "expression": "STEP_CC2_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.step",
+          "standard": "ap214",
+          "subset": "cc2",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "StepCc3Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/🦀️.rs",
+      "expression": "STEP_CC3_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.step",
+          "standard": "ap214",
+          "subset": "cc3",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "StepCc4Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/🦀️.rs",
+      "expression": "STEP_CC4_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.step",
+          "standard": "ap214",
+          "subset": "cc4",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "StepCc5Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/🦀️.rs",
+      "expression": "STEP_CC5_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.step",
+          "standard": "ap214",
+          "subset": "cc5",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "StepCc6Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/🦀️.rs",
+      "expression": "STEP_CC6_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.step",
+          "standard": "ap214",
+          "subset": "cc6",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Ifc2x3AnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "IFC2X3_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.ifc",
+          "standard": "2x3",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Ifc2x3CobieEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/✏️editor/🦀️.rs",
+      "expression": "IFC2X3_COBIE_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.ifc",
+          "standard": "2x3",
+          "subset": "cobie",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Ifc2x3Cv20Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/✏️editor/🦀️.rs",
+      "expression": "IFC2X3_CV20_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.ifc",
+          "standard": "2x3",
+          "subset": "cv20",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Ifc2x3SavEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/✏️editor/🦀️.rs",
+      "expression": "IFC2X3_SAV_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.ifc",
+          "standard": "2x3",
+          "subset": "sav",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Ifc4AnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "IFC4_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.ifc",
+          "standard": "4",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "DwgAc1018Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "DWG_AC1018_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.dwg",
+          "standard": "ac1018",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "DwgAc1024Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "DWG_AC1024_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.dwg",
+          "standard": "ac1024",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "DxfAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🦀️.rs",
+      "expression": "DXF_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.dxf",
+          "standard": "r12",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SvgAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "SVG_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SvgBasicEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/✏️editor/🦀️.rs",
+      "expression": "SVG_BASIC_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "basic",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SvgTinyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/🦀️.rs",
+      "expression": "SVG_TINY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.svg",
+          "standard": "1.1",
+          "subset": "tiny",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "PngEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "PNG_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.png",
+          "standard": "1.2",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "JpgAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🦀️.rs",
+      "expression": "JPG_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.jpg",
+          "standard": "jfif-1.01",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "JpgBaselineEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/✏️editor/🦀️.rs",
+      "expression": "JPG_BASELINE_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.jpg",
+          "standard": "jfif-1.01",
+          "subset": "baseline",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Gif87aEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "GIF_87A_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.gif",
+          "standard": "87a",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Gif89aEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "GIF_89A_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.gif",
+          "standard": "89a",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "BmpEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "BMP_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.bmp",
+          "standard": "v3",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "TiffAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🦀️.rs",
+      "expression": "TIFF_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.tiff",
+          "standard": "6.0",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "TiffBaselineEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/✏️editor/🦀️.rs",
+      "expression": "TIFF_BASELINE_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.tiff",
+          "standard": "6.0",
+          "subset": "baseline",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Pdf14AEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🦀️.rs",
+      "expression": "PDF14A_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.4",
+          "subset": "a",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "Pdf14Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "PDF14_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.4",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "Pdf14XEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+      "expression": "PDF14X_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.4",
+          "subset": "x",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "Pdf17AEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/✏️editor/🦀️.rs",
+      "expression": "PDF17A_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.7",
+          "subset": "a",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "Pdf17Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "PDF17_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.7",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "Pdf17EEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/✏️editor/🦀️.rs",
+      "expression": "PDF17E_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.7",
+          "subset": "e",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "Pdf17HEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/✏️editor/🦀️.rs",
+      "expression": "PDF17H_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.7",
+          "subset": "h",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "Pdf17UaEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/✏️editor/🦀️.rs",
+      "expression": "PDF17UA_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.7",
+          "subset": "ua",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "Pdf17VtEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/✏️editor/🦀️.rs",
+      "expression": "PDF17VT_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.7",
+          "subset": "vt",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "Pdf17XEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+      "expression": "PDF17X_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pdf",
+          "standard": "1.7",
+          "subset": "x",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+          "kindAuthority": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs:26"
+        }
+      ]
+    },
+    {
+      "type": "DocxEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "DOCX_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.docx",
+          "standard": "ecma-376",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "DocxStrictEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/🦀️.rs",
+      "expression": "DOCX_STRICT_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.docx",
+          "standard": "ecma-376",
+          "subset": "strict",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "DocxTransitionalEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/✏️editor/🦀️.rs",
+      "expression": "DOCX_TRANSITIONAL_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.docx",
+          "standard": "ecma-376",
+          "subset": "transitional",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "PptxEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "PPTX_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pptx",
+          "standard": "ecma-376",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "PptxStrictEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🦀️.rs",
+      "expression": "PPTX_STRICT_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pptx",
+          "standard": "ecma-376",
+          "subset": "strict",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "PptxTransitionalEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🦀️.rs",
+      "expression": "PPTX_TRANSITIONAL_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.pptx",
+          "standard": "ecma-376",
+          "subset": "transitional",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "XlsxEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "expression": "XLSX_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.xlsx",
+          "standard": "ecma-376",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "XlsxStrictEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🦀️.rs",
+      "expression": "XLSX_STRICT_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.xlsx",
+          "standard": "ecma-376",
+          "subset": "strict",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "XlsxTransitionalEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🦀️.rs",
+      "expression": "XLSX_TRANSITIONAL_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.xlsx",
+          "standard": "ecma-376",
+          "subset": "transitional",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "BcfAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/✏️editor/🦀️.rs",
+      "expression": "BCF_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.bcf",
+          "standard": "2.1",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioBrepEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/🦀️.rs",
+      "expression": "SEMIO_BREP_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "brep",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioDrawingEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/✏️editor/🦀️.rs",
+      "expression": "SEMIO_DRAWING_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "drawing",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioGraphEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/🦀️.rs",
+      "expression": "SEMIO_GRAPH_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "graph",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioKitEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/🦀️.rs",
+      "expression": "SEMIO_KIT_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "kit",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioMeshEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/🦀️.rs",
+      "expression": "SEMIO_MESH_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "mesh",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioObjectEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/✏️editor/🦀️.rs",
+      "expression": "SEMIO_OBJECT_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "object",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioTableEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/✏️editor/🦀️.rs",
+      "expression": "SEMIO_TABLE_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "table",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioTextEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/✏️editor/🦀️.rs",
+      "expression": "SEMIO_TEXT_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "text",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioAnimationEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/🦀️.rs",
+      "expression": "SEMIO_ANIMATION_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "animation",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioAnyEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🦀️.rs",
+      "expression": "SEMIO_ANY_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioAudioEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/✏️editor/🦀️.rs",
+      "expression": "SEMIO_AUDIO_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "audio",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioCadEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/🦀️.rs",
+      "expression": "SEMIO_CAD_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "cad",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioDocumentEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/🦀️.rs",
+      "expression": "SEMIO_DOCUMENT_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "document",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioFlowEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/✏️editor/🦀️.rs",
+      "expression": "SEMIO_FLOW_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "flow",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioImageEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/🦀️.rs",
+      "expression": "SEMIO_IMAGE_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "image",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioModelEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/✏️editor/🦀️.rs",
+      "expression": "SEMIO_MODEL_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioPresentationEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/✏️editor/🦀️.rs",
+      "expression": "SEMIO_PRESENTATION_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "presentation",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioValueEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/✏️editor/🦀️.rs",
+      "expression": "SEMIO_VALUE_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "value",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "SemioVideoEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/✏️editor/🦀️.rs",
+      "expression": "SEMIO_VIDEO_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "video",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Mp4Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "MP4_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.mp4",
+          "standard": "isobmff",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "AviEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/✏️editor/🦀️.rs",
+      "expression": "AVI_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.avi",
+          "standard": "1.0",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "Mp3Editor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "MP3_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.mp3",
+          "standard": "mpeg1-layer3",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "WavEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "WAV_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.wav",
+          "standard": "riff-pcm",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "EpwEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "EPW_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.epw",
+          "standard": "energyplus",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "TsvEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "TSV_EDITOR_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.tsv",
+          "standard": "iana",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+        }
+      ]
+    },
+    {
+      "type": "HtmlEditor",
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "expression": "HTML_DIALECT",
+      "candidates": [
+        {
+          "kind": "s.stdio.html",
+          "standard": "5",
+          "subset": "*",
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🦀️.rs"
+        }
+      ]
+    }
+  ],
+  "declaredOutsideEditors": [
+    {
+      "line": 109,
+      "types": "JsonSnapshot, JsonMutation",
+      "schemaExpression": "STDIO_JSON_DOCUMENT_SCHEMA",
+      "dialect": {
+        "kind": "s.stdio.json",
+        "standard": "rfc8259",
+        "subset": "geojson"
+      },
+      "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+      "schemaLiteralCandidates": [
+        {
+          "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🦀️.rs",
+          "value": "stdio.json"
+        }
+      ]
+    }
+  ],
+  "editorsOutsideDeclared": []
+}

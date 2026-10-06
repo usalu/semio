@@ -4,7 +4,7 @@
 
 use crate::app_surface::FemResultsAnimation;
 use crate::editor::fem3d::modes::edit::windows::results;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowConfigMutation};
 pub use semio_s_artifact_fem_2d::editor::fem2d::commands::set_result_animation::{apply_field, merge, rearm_effect, set_result_animation_step, FemPlaybackStep, FemPlaybackTransport, SetResultAnimation, TICK_ACTION};
 

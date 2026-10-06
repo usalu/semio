@@ -1,0 +1,19 @@
+dialect grammar
+grammar stdio.pptx.mutations
+extension pptx
+start document
+comment none
+
+# 🧬 Real one-line `OpText::print_op`/`parse_op` shape: `../../../🧬️schema/🦀️.rs`'s `PptxMutationRecord`
+# (`#[derive(dsl::DslRecord)]` with `kind: String`, `value: dsl::DslValue`,
+# `snapshot: Option<PptxSnapshotRecord>`), printed through `dsl::print(.., JoinMode::Inline)`.
+# The keyword-per-variant form this file used to describe belonged to the hand-written
+# `print_pptx_mutation`, which the record derive replaced -- the printer wins, so this grammar
+# restates the record: a `kind` tag, then the generic `DslValue` payload (and, for `setSnapshot`,
+# the whole snapshot record) as the rest of the single physical line. Same honest restatement the
+# sibling `🎒️zip` artifact's own mutations grammar already uses for the same generic codec.
+document = "kind" "=" kind-tag "value" "=" REST
+
+# `"mutation"` carries the tagged `PptxMutation` value in `value=` and no `snapshot=`;
+# `"setSnapshot"` prints `value=null` and carries the whole snapshot in `snapshot=`.
+kind-tag = "setSnapshot" | "mutation"

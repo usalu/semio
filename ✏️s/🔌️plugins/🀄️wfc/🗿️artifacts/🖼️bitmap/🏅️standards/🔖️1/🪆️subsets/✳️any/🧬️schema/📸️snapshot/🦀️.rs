@@ -1,5 +1,5 @@
 //! 🖼️ BitmapSnapshot — the classic overlapping-model wave function collapse PROBLEM: an INPUT
-//! bitmap (palette + row-major palette indices, base64), an OUTPUT specification (size and
+//! bitmap (palette + owned row-major palette indices), an OUTPUT specification (size and
 //! periodicity), the OVERLAPPING MODEL parameters (pattern size `N`, D4 symmetry expansion,
 //! periodic input, optional ground colour), and per-pixel PINS the solve must respect. The solved
 //! output bitmap, the contradiction verdict and the entropy map are never stored here: they are an
@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub const WFC_BITMAP_DOCUMENT_SCHEMA: &str = "s.wfc.bitmap";
 
 /// 🎨️ The largest palette a document may carry — one byte per pixel is the whole point of the
-/// base64 index buffer, so index 255 is the ceiling and 256 entries the count.
+/// owned index buffer, so index 255 is the ceiling and 256 entries the count.
 pub const BITMAP_MAX_PALETTE: usize = 256;
 
 /// 🖼️ The largest input/output edge length. `512 × 512` is one quarter of a mebibyte of indices,
@@ -23,71 +23,7 @@ pub const BITMAP_MAX_PALETTE: usize = 256;
 pub const BITMAP_MAX_EDGE: u32 = 512;
 //#endregion 🔖️Ids
 
-//#region 🔖️Base64
-const BASE64_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/// 🔤️ RFC 4648 standard base64, padded — authored here rather than taken from
-/// `semio-framework-io-base64` because that crate carries no `[workspace.dependencies]` alias and
-/// this artifact must not widen the workspace manifest for forty lines of table lookup.
-pub fn encode_base64(bytes: &[u8]) -> String {
-    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let b0 = chunk[0] as u32;
-        let b1 = *chunk.get(1).unwrap_or(&0) as u32;
-        let b2 = *chunk.get(2).unwrap_or(&0) as u32;
-        let triple = (b0 << 16) | (b1 << 8) | b2;
-        out.push(BASE64_ALPHABET[(triple >> 18) as usize & 63] as char);
-        out.push(BASE64_ALPHABET[(triple >> 12) as usize & 63] as char);
-        out.push(if chunk.len() > 1 { BASE64_ALPHABET[(triple >> 6) as usize & 63] as char } else { '=' });
-        out.push(if chunk.len() > 2 { BASE64_ALPHABET[triple as usize & 63] as char } else { '=' });
-    }
-    out
-}
-
-fn base64_value(byte: u8) -> Option<u32> {
-    match byte {
-        b'A'..=b'Z' => Some(u32::from(byte - b'A')),
-        b'a'..=b'z' => Some(u32::from(byte - b'a') + 26),
-        b'0'..=b'9' => Some(u32::from(byte - b'0') + 52),
-        b'+' => Some(62),
-        b'/' => Some(63),
-        _ => None,
-    }
-}
-
-/// 🔤️ The exact inverse of [`encode_base64`]; a malformed buffer answers `None` rather than a
-/// silently truncated one, because a pixel buffer that does not decode is a fatal mutation outcome,
-/// never a best-effort render.
-pub fn decode_base64(text: &str) -> Option<Vec<u8>> {
-    let bytes = text.as_bytes();
-    if !bytes.len().is_multiple_of(4) {
-        return None;
-    }
-    let mut out = Vec::with_capacity(bytes.len() / 4 * 3);
-    for chunk in bytes.chunks(4) {
-        let pad = chunk.iter().filter(|byte| **byte == b'=').count();
-        if pad > 2 || (pad > 0 && chunk[3] != b'=') || (pad == 2 && chunk[2] != b'=') {
-            return None;
-        }
-        let mut triple = 0u32;
-        for (index, byte) in chunk.iter().enumerate() {
-            let value = if *byte == b'=' { 0 } else { base64_value(*byte)? };
-            if *byte == b'=' && index < 4 - pad {
-                return None;
-            }
-            triple |= value << (18 - 6 * index);
-        }
-        out.push((triple >> 16) as u8);
-        if pad < 2 {
-            out.push((triple >> 8) as u8);
-        }
-        if pad < 1 {
-            out.push(triple as u8);
-        }
-    }
-    Some(out)
-}
-//#endregion 🔖️Base64
 
 //#region 🔖️Color
 /// 🎨️ One straight-alpha sRGB palette entry, 0–255 per channel — integers, not floats, so a
@@ -114,30 +50,28 @@ impl BitmapColor {
 //#endregion 🔖️Color
 
 //#region 🔖️Input
-/// 🖼️ The authored INPUT bitmap the overlapping model learns its patterns from. `pixels` is base64
-/// of one palette index per pixel, row-major, `width * height` bytes — never an inline integer
-/// array, so a 128×128 sample stays a single bounded string rather than sixteen thousand DSL
-/// values.
+/// 🖼️ Authored row-major palette indices, exactly one owned octet per pixel.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct BitmapInput {
     pub width: u32,
     pub height: u32,
     pub palette: Vec<BitmapColor>,
-    pub pixels: String,
+    #[value(with = "semio_framework_value::bytes")]
+    pub pixels: Vec<u8>,
 }
 
 impl Default for BitmapInput {
     fn default() -> Self {
-        Self { width: 1, height: 1, palette: vec![BitmapColor::opaque(0, 0, 0)], pixels: encode_base64(&[0]) }
+        Self { width: 1, height: 1, palette: vec![BitmapColor::opaque(0, 0, 0)], pixels: vec![0] }
     }
 }
 
 impl BitmapInput {
-    /// 🖼️ The decoded index buffer, or `None` when the committed base64 does not decode to exactly
+    /// 🖼️ The owned index buffer, or `None` when its length does not match exactly
     /// `width * height` bytes.
     pub fn indices(&self) -> Option<Vec<u8>> {
-        let decoded = decode_base64(&self.pixels)?;
+        let decoded = self.pixels.clone();
         if decoded.len() == (self.width as usize) * (self.height as usize) {
             Some(decoded)
         } else {
@@ -282,26 +216,7 @@ pub fn used_palette_indices(snapshot: &BitmapSnapshot) -> Vec<u32> {
     used
 }
 
-/// 🖌️ Writes one rectangular region of palette indices into a decoded buffer. Out-of-bounds
-/// regions are refused rather than clipped: a clipped write cannot be inverted by writing the old
-/// bytes back over the same rectangle.
-#[allow(clippy::too_many_arguments)]
-pub fn write_region(buffer: &mut [u8], buffer_width: u32, buffer_height: u32, x: u32, y: u32, width: u32, height: u32, region: &[u8]) -> bool {
-    if width == 0 || height == 0 {
-        return false;
-    }
-    if x.saturating_add(width) > buffer_width || y.saturating_add(height) > buffer_height {
-        return false;
-    }
-    if region.len() != (width as usize) * (height as usize) {
-        return false;
-    }
-    for row in 0..height as usize {
-        let destination = ((y as usize + row) * buffer_width as usize) + x as usize;
-        buffer[destination..destination + width as usize].copy_from_slice(&region[row * width as usize..(row + 1) * width as usize]);
-    }
-    true
-}
+
 
 /// 🖌️ Reads one rectangular region of palette indices out of a decoded buffer — the shape an
 /// inverse `set-input-pixels` carries.
@@ -335,9 +250,22 @@ pub fn resized_buffer(buffer: &[u8], from_width: u32, from_height: u32, to_width
 mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+
+
+pub fn write_region(buffer: &mut [u8], buffer_width: u32, buffer_height: u32, x: u32, y: u32, width: u32, height: u32, region: &[u8]) -> bool {
+    if width == 0 || height == 0 {
+        return false;
+    }
+    if x.saturating_add(width) > buffer_width || y.saturating_add(height) > buffer_height {
+        return false;
+    }
+    if region.len() != (width as usize) * (height as usize) {
+        return false;
+    }
+    for row in 0..height as usize {
+        let destination = ((y as usize + row) * buffer_width as usize) + x as usize;
+        buffer[destination..destination + width as usize].copy_from_slice(&region[row * width as usize..(row + 1) * width as usize]);
+    }
+    true
+}

@@ -12,7 +12,7 @@ async fn empty_snapshot_matches_schema() {
 /// `structure`/`zones` child handles are real (non-empty ids) instead.
 #[semio_framework_async_macros::async_test]
 async fn example_fixture_parses() {
-    let document = crate::document_dsl::parse_dsl(crate::document_dsl::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT).expect("parse");
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::SEMIO_ENERGY_MODEL_EXAMPLE_TEXT).expect("parse");
     assert_eq!(document.schema, ENERGY_MODEL_DOCUMENT_SCHEMA);
     assert!(!document.structure.child_id.is_empty());
     assert!(!document.zones.child_id.is_empty());

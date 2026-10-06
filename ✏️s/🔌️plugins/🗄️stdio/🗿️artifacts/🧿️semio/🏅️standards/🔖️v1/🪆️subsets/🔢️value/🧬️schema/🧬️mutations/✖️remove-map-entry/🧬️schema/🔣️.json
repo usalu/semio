@@ -18,10 +18,35 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/SemioValuePathSegment"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Path",
+          "de": "Pfad"
+        },
+        "description": {
+          "en": "Map keys and list indices leading from the root to the map; empty for the root.",
+          "de": "Zuordnungsschlüssel und Listenindizes von der Wurzel bis zur Zuordnung; leer für die Wurzel."
+        },
+        "group": "target",
+        "order": 10
       }
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Key",
+          "de": "Schlüssel"
+        },
+        "description": {
+          "en": "Key of the map entry.",
+          "de": "Schlüssel des Zuordnungseintrags."
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   },
   "$defs": {

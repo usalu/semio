@@ -14,7 +14,21 @@
       "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
     },
     "title": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Title",
+          "de": "Titel"
+        },
+        "description": {
+          "en": "Document title written to the Info dictionary and shown in the viewer's title bar.",
+          "de": "Dokumenttitel, der in das Info-Wörterbuch geschrieben und in der Titelleiste des Betrachters angezeigt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

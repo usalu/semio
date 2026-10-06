@@ -397,6 +397,21 @@ fn every_retained_tool_id_is_migrated_contracted_and_served_by_one_factory() {
     }
 }
 
+/// ⚖️ LAW (design §20.15): the dag parent vocabulary is uninhabited, so no retained verb declares the `Artifact` lane, and
+/// every verb that edits the graph declares exactly the `Child` lane its `content` leaves are published on — the lane the
+/// typed-operation route holds an emission against before it publishes (`addNode` faulted there while it said `Artifact`).
+#[test]
+fn every_graph_verb_publishes_on_the_child_lane_and_none_on_the_artifact_lane() {
+    use semio_framework_plugin::ArtifactToolPublicationLane as Lane;
+    for contract in DAG_RETAINED_PUBLICATION_CONTRACTS {
+        assert!(!contract.lanes.contains(&Lane::Artifact), "{} declares the Artifact lane of an uninhabited vocabulary", contract.tool_id);
+    }
+    for tool_id in ["addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "patchDagNodes"] {
+        let contract = DAG_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == tool_id).expect("a graph verb has a publication contract");
+        assert_eq!(contract.lanes, &[Lane::Child], "{tool_id} publishes its content leaves on the Child lane");
+    }
+}
+
 /// 🌉️ The `{action,args}` bridge resolves every flat verb without a payload, including the example
 /// picker's `setActiveExample`, and decodes each structured canvas/inspector verb from the exact payload
 /// its host dispatches (`NodeGraph/🟦️.tsx` `nodeGraphActions.edit`, the inspector's blur commit). An

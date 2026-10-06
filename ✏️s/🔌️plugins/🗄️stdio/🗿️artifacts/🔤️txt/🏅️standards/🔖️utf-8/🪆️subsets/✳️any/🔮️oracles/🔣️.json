@@ -188,9 +188,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-line-applied",
       "class": "handcrafted",
       "target": {
@@ -233,7 +232,6 @@
       "notes": "InsertLineMutation{index:1,text:\"inserted line\"} inserts a real UTF-8 text line between the two existing ones."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-line-applied",
       "class": "handcrafted",
       "target": {
@@ -276,7 +274,6 @@
       "notes": "RemoveLineMutation{index:0} drops the first line."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-line-applied",
       "class": "handcrafted",
       "target": {
@@ -319,7 +316,6 @@
       "notes": "SetLineMutation{index:1,text:\"replaced second line\"} overwrites a line in place."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-line-ending-applied",
       "class": "handcrafted",
       "target": {
@@ -362,7 +358,6 @@
       "notes": "SetLineEndingMutation{value:crLf} switches the document's declared newline style from LF to CRLF, the spec's own two-value enumeration."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-trailing-newline-applied",
       "class": "handcrafted",
       "target": {

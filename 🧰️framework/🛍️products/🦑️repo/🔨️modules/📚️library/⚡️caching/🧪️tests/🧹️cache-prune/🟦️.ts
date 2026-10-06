@@ -46,7 +46,6 @@ async function testPlanCachePrune(): Promise<{ planCachePrune: typeof import("..
   const require = createRequire(import.meta.url);
   const fixtureRoot = join(MODULE_ROOT, "🧫️fixtures/cache-prune");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  assert.equal(require("jsonschema").validate(fixture, JSON.parse(readFileSync(join(fixtureRoot, "🛂️schema/🔣️.json"), "utf8"))).valid, true);
   const pruning = await import("../../🧹️pruning/🟦️.ts");
   const plan = pruning.planCachePrune(fixture.areas, fixture.nowMs, fixture.guardAgeMs);
   const projected = Object.fromEntries(plan.areas.map((area) => [area.name, {

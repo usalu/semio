@@ -3,7 +3,8 @@
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::editor::generation3d::Generation3dCommand;
 use crate::standards::v1::subsets::any::schema::generation_host_snapshot_for;
-use crate::standards::v1::subsets::any::schema::mutations::text::{generation_mutation_to_generation3d, Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{Generation3dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::{generation_mutation_to_generation3d};
 use crate::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, select_generation, selected_generation};

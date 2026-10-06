@@ -16,16 +16,53 @@
       "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
     },
     "id": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef",
+      "x-semio-ui": {
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "Object and generation number of the indirect object that holds the dictionary.",
+          "de": "Objekt- und Generationsnummer des indirekten Objekts, das das Wörterbuch enthält."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "path": {
       "type": "array",
       "items": {
         "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/diff.json#/$defs/PdfPathSegment"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Path",
+          "de": "Pfad"
+        },
+        "description": {
+          "en": "Keys and indices leading from the object to the nested dictionary; empty for the object's own dictionary.",
+          "de": "Schlüssel und Indizes vom Objekt zum verschachtelten Wörterbuch; leer für das Wörterbuch des Objekts selbst."
+        },
+        "group": "target",
+        "order": 20
       }
     },
     "key": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Key",
+          "de": "Schlüssel"
+        },
+        "description": {
+          "en": "Name of the dictionary entry.",
+          "de": "Name des Wörterbucheintrags."
+        },
+        "group": "target",
+        "order": 30
+      }
     }
   }
 }

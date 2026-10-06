@@ -81,9 +81,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-applied",
       "class": "handcrafted",
       "target": {

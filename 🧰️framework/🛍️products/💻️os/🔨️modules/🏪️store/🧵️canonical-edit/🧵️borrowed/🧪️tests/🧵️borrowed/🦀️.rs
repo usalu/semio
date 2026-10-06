@@ -219,7 +219,7 @@ fn close(owner: &mut ArtifactStoreOneItemSealer<u64, MapMutation>, lifetime: &Ma
 fn borrowed_map_long_unicode_keys_nested_and_empty_maps_match_serde_under_tiny_grants() {
     for maximum in [1, 7, 256, 4096] {
         let (mut owner, fixture, lifetime) = owner();
-        let expected = serde_json::to_vec(&test_support::SerdeValue(&owner.edit.as_ref().unwrap().as_ref().to_value())).unwrap();
+        let expected = serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::component::CursorRevisionAccumulator::revision_value(owner.edit.as_ref().unwrap().as_ref()))).unwrap();
         assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
         let before = owner.checkpoint();
         for (maximum_items, maximum_bytes) in [(0, maximum), (1, 0)] {

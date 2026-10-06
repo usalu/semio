@@ -276,7 +276,7 @@ fn build_deflate_text_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<De
         return Ok(None);
     }
     if deflate_command_id(&request.command) != request.tool_id {
-        return Err(Fault::from("stdio-deflate-text-command-tool-mismatch"));
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-deflate-text-command-tool-mismatch"));
     }
     let tool_id = deflate_command_id(&request.command);
     let operation = AppOperationContext {

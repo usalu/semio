@@ -1,0 +1,440 @@
+[
+  {
+    "name": "svg",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 41,
+        "valueBytes": 1030,
+        "schemaBytes": 2637,
+        "tableCount": 13,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "svg_attribute",
+            "width": 5,
+            "rows": 5,
+            "semanticBytes": 224
+          },
+          {
+            "table": "svg_cdata",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 27
+          },
+          {
+            "table": "svg_child",
+            "width": 4,
+            "rows": 8,
+            "semanticBytes": 256
+          },
+          {
+            "table": "svg_comment",
+            "width": 2,
+            "rows": 3,
+            "semanticBytes": 39
+          },
+          {
+            "table": "svg_declaration",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 30
+          },
+          {
+            "table": "svg_doctype",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 33
+          },
+          {
+            "table": "svg_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 25
+          },
+          {
+            "table": "svg_document_misc",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 76
+          },
+          {
+            "table": "svg_element",
+            "width": 2,
+            "rows": 5,
+            "semanticBytes": 57
+          },
+          {
+            "table": "svg_entity",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 49
+          },
+          {
+            "table": "svg_node",
+            "width": 2,
+            "rows": 11,
+            "semanticBytes": 175
+          },
+          {
+            "table": "svg_processing_instruction",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 19
+          },
+          {
+            "table": "svg_text",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 20
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 14,
+        "valueBytes": 393,
+        "schemaBytes": 2637,
+        "tableCount": 13,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "svg_attribute",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 97
+          },
+          {
+            "table": "svg_cdata",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "svg_child",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "svg_comment",
+            "width": 2,
+            "rows": 2,
+            "semanticBytes": 27
+          },
+          {
+            "table": "svg_declaration",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 30
+          },
+          {
+            "table": "svg_doctype",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 33
+          },
+          {
+            "table": "svg_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 25
+          },
+          {
+            "table": "svg_document_misc",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 76
+          },
+          {
+            "table": "svg_element",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 11
+          },
+          {
+            "table": "svg_entity",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 49
+          },
+          {
+            "table": "svg_node",
+            "width": 2,
+            "rows": 3,
+            "semanticBytes": 45
+          },
+          {
+            "table": "svg_processing_instruction",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "svg_text",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "xml",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 40,
+        "valueBytes": 1040,
+        "schemaBytes": 2637,
+        "tableCount": 13,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "xml_attribute",
+            "width": 5,
+            "rows": 3,
+            "semanticBytes": 88
+          },
+          {
+            "table": "xml_cdata",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 17
+          },
+          {
+            "table": "xml_child",
+            "width": 4,
+            "rows": 6,
+            "semanticBytes": 192
+          },
+          {
+            "table": "xml_comment",
+            "width": 2,
+            "rows": 3,
+            "semanticBytes": 41
+          },
+          {
+            "table": "xml_declaration",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 38
+          },
+          {
+            "table": "xml_doctype",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 70
+          },
+          {
+            "table": "xml_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 25
+          },
+          {
+            "table": "xml_document_misc",
+            "width": 5,
+            "rows": 4,
+            "semanticBytes": 152
+          },
+          {
+            "table": "xml_element",
+            "width": 2,
+            "rows": 3,
+            "semanticBytes": 40
+          },
+          {
+            "table": "xml_entity",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 100
+          },
+          {
+            "table": "xml_node",
+            "width": 2,
+            "rows": 11,
+            "semanticBytes": 205
+          },
+          {
+            "table": "xml_processing_instruction",
+            "width": 3,
+            "rows": 3,
+            "semanticBytes": 53
+          },
+          {
+            "table": "xml_text",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 19
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 21,
+        "valueBytes": 625,
+        "schemaBytes": 2637,
+        "tableCount": 13,
+        "maxColumns": 7,
+        "tables": [
+          {
+            "table": "xml_attribute",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 59
+          },
+          {
+            "table": "xml_cdata",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xml_child",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "xml_comment",
+            "width": 2,
+            "rows": 2,
+            "semanticBytes": 27
+          },
+          {
+            "table": "xml_declaration",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 38
+          },
+          {
+            "table": "xml_doctype",
+            "width": 7,
+            "rows": 1,
+            "semanticBytes": 70
+          },
+          {
+            "table": "xml_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 25
+          },
+          {
+            "table": "xml_document_misc",
+            "width": 5,
+            "rows": 4,
+            "semanticBytes": 152
+          },
+          {
+            "table": "xml_element",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 15
+          },
+          {
+            "table": "xml_entity",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 100
+          },
+          {
+            "table": "xml_node",
+            "width": 2,
+            "rows": 5,
+            "semanticBytes": 105
+          },
+          {
+            "table": "xml_processing_instruction",
+            "width": 3,
+            "rows": 2,
+            "semanticBytes": 34
+          },
+          {
+            "table": "xml_text",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "txt",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 4,
+        "valueBytes": 132,
+        "schemaBytes": 437,
+        "tableCount": 2,
+        "maxColumns": 4,
+        "tables": [
+          {
+            "table": "text_document",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 29
+          },
+          {
+            "table": "text_line",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 103
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 1,
+        "valueBytes": 29,
+        "schemaBytes": 437,
+        "tableCount": 2,
+        "maxColumns": 4,
+        "tables": [
+          {
+            "table": "text_document",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 29
+          },
+          {
+            "table": "text_line",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  }
+]

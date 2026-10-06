@@ -1,0 +1,235 @@
+{
+  "schema": "semio.authored.borrowed-schema.v1",
+  "record": {
+    "keyword": "owner",
+    "layout": "lines",
+    "fields": [
+      {
+        "id": 0,
+        "key": "identity",
+        "position": 0,
+        "kind": "Text",
+        "optional": false,
+        "defines": "owner"
+      },
+      {
+        "id": 1,
+        "key": "maybe",
+        "position": null,
+        "kind": "Int",
+        "optional": true,
+        "defines": null
+      },
+      {
+        "id": 2,
+        "key": "list",
+        "position": null,
+        "kind": "List(UInt)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 3,
+        "key": "tuple",
+        "position": null,
+        "kind": "Tuple(Float)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 4,
+        "key": "many",
+        "position": null,
+        "kind": "Statements",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 5,
+        "key": "nested",
+        "position": null,
+        "kind": "Block(Statements)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 6,
+        "key": "map",
+        "position": null,
+        "kind": "Map(Bool)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 7,
+        "key": "optional",
+        "position": null,
+        "kind": "Statements",
+        "optional": true,
+        "defines": null
+      },
+      {
+        "id": 8,
+        "key": "required",
+        "position": null,
+        "kind": "Statements",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 9,
+        "key": "bytes",
+        "position": null,
+        "kind": "Bytes64",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 10,
+        "key": "rows",
+        "position": null,
+        "kind": "Table",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 11,
+        "key": "length",
+        "position": null,
+        "kind": "Quantity(m)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 12,
+        "key": "rotation",
+        "position": null,
+        "kind": "Angle(°)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 13,
+        "key": "reference",
+        "position": null,
+        "kind": "Ref(owner)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 14,
+        "key": "language-key",
+        "position": null,
+        "kind": "Text",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 15,
+        "key": "code",
+        "position": null,
+        "kind": "EmbedFrom(language-key)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 16,
+        "key": "jack",
+        "position": null,
+        "kind": "Embed(jack)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 17,
+        "key": "coord",
+        "position": null,
+        "kind": "Coord(3)",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 18,
+        "key": "direction",
+        "position": null,
+        "kind": "Dir",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 19,
+        "key": "scalar",
+        "position": null,
+        "kind": "Enum",
+        "optional": false,
+        "defines": null
+      },
+      {
+        "id": 20,
+        "key": "recursive",
+        "position": null,
+        "kind": "Map(Record)",
+        "optional": false,
+        "defines": null
+      }
+    ]
+  },
+  "leaf": {
+    "keyword": "leaf",
+    "fields": [
+      {
+        "id": 0,
+        "key": "text",
+        "kind": "Text"
+      }
+    ]
+  },
+  "variants": [
+    {
+      "key": "document",
+      "ordinal": 0,
+      "recordKeyword": "document",
+      "fields": [
+        {
+          "id": 0,
+          "key": "text",
+          "kind": "Text"
+        }
+      ]
+    },
+    {
+      "key": "vacant",
+      "ordinal": 1,
+      "recordKeyword": "vacant",
+      "fields": []
+    },
+    {
+      "key": "alias",
+      "ordinal": 2,
+      "recordKeyword": "leaf",
+      "fields": [
+        {
+          "id": 0,
+          "key": "text",
+          "kind": "Text"
+        }
+      ]
+    }
+  ],
+  "scalar": [
+    {
+      "key": "ready",
+      "ordinal": 0
+    },
+    {
+      "key": "finished",
+      "ordinal": 1
+    }
+  ],
+  "readRepetitions": 256,
+  "expectedAllocatedBytes": 0,
+  "sourceBytes": 8194,
+  "maximumAllocationBytes": 65536,
+  "maximumItems": 1,
+  "maximumBytes": 4096
+}

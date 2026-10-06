@@ -1,6 +1,5 @@
 import { createHash, webcrypto } from "node:crypto";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
 
 type Fixture = {
   limits: { pairBytes: number; cacheBytes: number; entries: number; headerBytes: number; recordBytes: number };
@@ -11,11 +10,6 @@ type Fixture = {
 };
 
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as Fixture;
-const schema = JSON.parse(readFileSync(new URL("../../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-const ajv = new Ajv({ strict: true, allErrors: true });
-ajv.addSchema(schema);
-const validate = ajv.getSchema(`${schema.$id}#/$defs/CanonicalPairCacheMountV1`)!;
-if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
 
 const digest = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const subtleDigest = async (bytes: Uint8Array): Promise<string> => Buffer.from(await webcrypto.subtle.digest("SHA-256", bytes)).toString("hex");

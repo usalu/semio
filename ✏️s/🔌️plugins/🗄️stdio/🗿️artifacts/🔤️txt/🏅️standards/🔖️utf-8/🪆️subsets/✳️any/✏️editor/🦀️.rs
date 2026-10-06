@@ -491,7 +491,7 @@ impl ArtifactEditor for TxtEditor {
             return Ok(None);
         }
         if txt_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-txt-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-txt-retained-command-tool-mismatch"));
         }
         let tool_id = txt_command_id(&request.command);
         let operation = AppOperationContext {

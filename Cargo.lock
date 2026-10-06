@@ -5234,6 +5234,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-io-schema",
+ "semio-framework-io-sqlite-snapshot",
  "semio-framework-job",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
@@ -5471,6 +5472,7 @@ dependencies = [
  "rustybuzz",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
+ "semio-framework-pack-json",
  "semio-framework-value",
 ]
 
@@ -5543,8 +5545,10 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework-async",
+ "semio-framework-dsl-record",
  "semio-framework-os-infinite",
- "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
  "semio-framework-ui-styling",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -5863,6 +5867,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-io-schema",
+ "semio-framework-io-sqlite-snapshot",
  "semio-framework-job",
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-os-services",
@@ -6233,7 +6238,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-plugin-host-fixture"
+name = "semio-framework-plugin-host-test-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
@@ -6267,6 +6272,7 @@ dependencies = [
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
  "semio-framework-pack",
+ "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema-registry",
  "semio-framework-schema-validator",
@@ -6641,6 +6647,7 @@ name = "semio-framework-schema-registry"
 version = "0.1.0"
 dependencies = [
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
@@ -6701,6 +6708,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-test-mutation-inventory"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-time-travel"
 version = "0.1.0"
 dependencies = [
@@ -6727,7 +6742,7 @@ name = "semio-framework-tool-run"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
- "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-ui",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -6766,6 +6781,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-job",
+ "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",

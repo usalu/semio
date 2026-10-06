@@ -1,0 +1,305 @@
+{
+  "role": "originalNativeMatchedObjectCells",
+  "schemaBytes": 1851,
+  "tableWidths": {
+    "semio_object_brep_child": 4,
+    "semio_object_document": 32,
+    "semio_object_mesh_child": 4,
+    "semio_object_reference": 5,
+    "semio_object_value_child": 4
+  },
+  "cases": [
+    {
+      "id": "full_original",
+      "empty": false,
+      "word": null,
+      "rows": 7,
+      "valueBytes": 462
+    },
+    {
+      "id": "full_0000000000000000",
+      "empty": false,
+      "word": "0000000000000000",
+      "rows": 7,
+      "valueBytes": 462
+    },
+    {
+      "id": "full_8000000000000000",
+      "empty": false,
+      "word": "8000000000000000",
+      "rows": 7,
+      "valueBytes": 462
+    },
+    {
+      "id": "full_0000000000000001",
+      "empty": false,
+      "word": "0000000000000001",
+      "rows": 7,
+      "valueBytes": 462
+    },
+    {
+      "id": "full_000fffffffffffff",
+      "empty": false,
+      "word": "000fffffffffffff",
+      "rows": 7,
+      "valueBytes": 462
+    },
+    {
+      "id": "full_7ff0000000000000",
+      "empty": false,
+      "word": "7ff0000000000000",
+      "rows": 7,
+      "valueBytes": 472
+    },
+    {
+      "id": "full_fff0000000000000",
+      "empty": false,
+      "word": "fff0000000000000",
+      "rows": 7,
+      "valueBytes": 472
+    },
+    {
+      "id": "full_7ff8000000000011",
+      "empty": false,
+      "word": "7ff8000000000011",
+      "rows": 7,
+      "valueBytes": 451
+    },
+    {
+      "id": "full_7ff0000000000007",
+      "empty": false,
+      "word": "7ff0000000000007",
+      "rows": 7,
+      "valueBytes": 451
+    },
+    {
+      "id": "empty_original",
+      "empty": true,
+      "word": null,
+      "rows": 1,
+      "valueBytes": 246
+    },
+    {
+      "id": "empty_0000000000000000",
+      "empty": true,
+      "word": "0000000000000000",
+      "rows": 1,
+      "valueBytes": 246
+    },
+    {
+      "id": "empty_8000000000000000",
+      "empty": true,
+      "word": "8000000000000000",
+      "rows": 1,
+      "valueBytes": 246
+    },
+    {
+      "id": "empty_0000000000000001",
+      "empty": true,
+      "word": "0000000000000001",
+      "rows": 1,
+      "valueBytes": 246
+    },
+    {
+      "id": "empty_000fffffffffffff",
+      "empty": true,
+      "word": "000fffffffffffff",
+      "rows": 1,
+      "valueBytes": 246
+    },
+    {
+      "id": "empty_7ff0000000000000",
+      "empty": true,
+      "word": "7ff0000000000000",
+      "rows": 1,
+      "valueBytes": 256
+    },
+    {
+      "id": "empty_fff0000000000000",
+      "empty": true,
+      "word": "fff0000000000000",
+      "rows": 1,
+      "valueBytes": 256
+    },
+    {
+      "id": "empty_7ff8000000000011",
+      "empty": true,
+      "word": "7ff8000000000011",
+      "rows": 1,
+      "valueBytes": 235
+    },
+    {
+      "id": "empty_7ff0000000000007",
+      "empty": true,
+      "word": "7ff0000000000007",
+      "rows": 1,
+      "valueBytes": 235
+    }
+  ],
+  "publicIo": {
+    "coordinate": {
+      "artifactKind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "object"
+    },
+    "schemaBytes": 2144,
+    "tableWidths": {
+      "semio_snapshot": 6,
+      "semio_object_brep_child": 4,
+      "semio_object_document": 32,
+      "semio_object_mesh_child": 4,
+      "semio_object_reference": 5,
+      "semio_object_value_child": 4
+    },
+    "metadataValueBytes": {
+      "binary": 43,
+      "text": 41
+    },
+    "cases": [
+      {
+        "id": "full_original",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 505,
+          "text": 503
+        }
+      },
+      {
+        "id": "full_0000000000000000",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 505,
+          "text": 503
+        }
+      },
+      {
+        "id": "full_8000000000000000",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 505,
+          "text": 503
+        }
+      },
+      {
+        "id": "full_0000000000000001",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 505,
+          "text": 503
+        }
+      },
+      {
+        "id": "full_000fffffffffffff",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 505,
+          "text": 503
+        }
+      },
+      {
+        "id": "full_7ff0000000000000",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 515,
+          "text": 513
+        }
+      },
+      {
+        "id": "full_fff0000000000000",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 515,
+          "text": 513
+        }
+      },
+      {
+        "id": "full_7ff8000000000011",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 494,
+          "text": 492
+        }
+      },
+      {
+        "id": "full_7ff0000000000007",
+        "rows": 8,
+        "valueBytes": {
+          "binary": 494,
+          "text": 492
+        }
+      },
+      {
+        "id": "empty_original",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 289,
+          "text": 287
+        }
+      },
+      {
+        "id": "empty_0000000000000000",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 289,
+          "text": 287
+        }
+      },
+      {
+        "id": "empty_8000000000000000",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 289,
+          "text": 287
+        }
+      },
+      {
+        "id": "empty_0000000000000001",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 289,
+          "text": 287
+        }
+      },
+      {
+        "id": "empty_000fffffffffffff",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 289,
+          "text": 287
+        }
+      },
+      {
+        "id": "empty_7ff0000000000000",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 299,
+          "text": 297
+        }
+      },
+      {
+        "id": "empty_fff0000000000000",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 299,
+          "text": 297
+        }
+      },
+      {
+        "id": "empty_7ff8000000000011",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 278,
+          "text": 276
+        }
+      },
+      {
+        "id": "empty_7ff0000000000007",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 278,
+          "text": 276
+        }
+      }
+    ]
+  }
+}

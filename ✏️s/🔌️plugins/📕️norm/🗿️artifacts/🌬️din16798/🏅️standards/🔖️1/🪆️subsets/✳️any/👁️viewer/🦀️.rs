@@ -41,7 +41,7 @@ pub struct Din16798Viewer;
 
 impl ArtifactViewer for Din16798Viewer {
     type Snapshot = Din16798Snapshot;
-    type Mutation = crate::op::Din16798Mutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Din16798Mutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

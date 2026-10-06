@@ -73,7 +73,10 @@ const KINDS: &[&str] = &[
 mod subject {
     use super::Json;
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::mutations::{fem2d_analysis_report_json, fem2d_buckling_report_json, fem2d_modal_report_json, fem2d_mutated_analysis_report_json};
+    use semio_s_artifact_fem_2d::standards::v1::subsets::any::io::text::mutations::{fem2d_buckling_report_json};
+    use semio_s_artifact_fem_2d::standards::v1::subsets::any::io::text::mutations::{fem2d_modal_report_json};
+    use semio_s_artifact_fem_2d::standards::v1::subsets::any::io::text::mutations::{fem2d_mutated_analysis_report_json};
+    use semio_s_artifact_fem_2d::standards::v1::subsets::any::io::text::mutations::{fem2d_analysis_report_json};
 
     //#region 🔖️Read
     /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.
@@ -90,7 +93,7 @@ mod subject {
     /// 🧫️ The declared fixture's bytes as UTF-8 text.
     fn text(ctx: &Context, needle: &str) -> Result<String, String> {
         let uri = uri_in(ctx, needle)?;
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
     }
 
     /// 🧫️ The declared fixture parsed as JSON.

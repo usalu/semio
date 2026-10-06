@@ -1,6 +1,7 @@
 //! Deserialize layout via stdio.dwg.
 use crate::LayoutSnapshot;
-use semio_s_artifact_stdio_dwg::schema::snapshot::{decode_dwg, encode_dwg};
+use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::{encode_dwg};
+use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::{decode_dwg};
 use semio_s_artifact_stdio_dwg::{dwg_from_bytes, DwgDrawing, DwgSnapshot};
 
 pub fn register() {}
@@ -18,6 +19,6 @@ pub fn deserialize(from: &DwgSnapshot) -> Result<LayoutSnapshot, semio_framework
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<LayoutSnapshot, semio_framework_diagnostic::TextError> {
     let _meta = decode_dwg(bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     let drawing: DwgDrawing = dwg_from_bytes(bytes).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-    let value = crate::io::layout_document_json_from_dwg(&drawing).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let value = crate::standards::v1::subsets::any::io::layout_document_json_from_dwg(&drawing).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     <LayoutSnapshot as semio_framework_value::FromValue>::from_value(value).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e,semio_framework_diagnostic::TextSpan::at(1,1)))
 }

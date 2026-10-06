@@ -3,7 +3,7 @@
  * `StepValue` (unit variants serialize as a bare camelCase string; tuple/struct variants as a
  * single-key object). */
 
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 
 /** 🔤️ One typed Part-21 argument value with exact owned scalar widths. */
 export type StepValue =

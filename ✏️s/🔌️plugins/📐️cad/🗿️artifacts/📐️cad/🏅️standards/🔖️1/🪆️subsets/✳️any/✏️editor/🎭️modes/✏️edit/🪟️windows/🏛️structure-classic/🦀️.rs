@@ -31,6 +31,7 @@ pub const PANE: CadPaneId = CadPaneId::StructureClassic;
 /// never frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Structure Classic", "Tragwerk Klassisch"),
         body_key: BODY_KEY.into(),

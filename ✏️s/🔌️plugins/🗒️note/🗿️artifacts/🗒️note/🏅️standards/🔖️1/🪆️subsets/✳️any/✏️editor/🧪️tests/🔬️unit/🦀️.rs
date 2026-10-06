@@ -211,7 +211,7 @@ pub(super) fn every_command() -> Vec<NoteCommand> {
         NoteCommand::DuplicateSelection(duplicate_selection::DuplicateSelection {}),
         NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec!["b1".into()], field: "name".into(), value: "Renamed".into() }),
         NoteCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "semio".into() }),
-        NoteCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: "{\"schema\":\"note.document\"}".into() }),
+        NoteCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "{\"schema\":\"note.document\"}".into() }),
         NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: Some("commit".into()), reason: None, gesture_json: None, select_ids: None }),
         NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("Renamed".into()) }),
         NoteCommand::NudgeSelection(nudge_selection::NudgeSelection { dx: 1.0, dy: -1.0 }),

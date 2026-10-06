@@ -331,7 +331,16 @@ async fn import_media_creates_the_imported_step_on_the_flow_child() {
     let app = playbook_app().await;
     let spec = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
-    let emit = PlaybookPlayApp::import_media("chapters:in", &chapter_media("MATCH (a) RETURN a", "Jack Query"), &ArtifactView::with_children(&spec, &history, app.test_child_content_view())).expect("import chapters:in");
+    let mut emit = PlaybookPlayApp::import_media("chapters:in", &chapter_media("MATCH (a) RETURN a", "Jack Query"), &ArtifactView::with_children(&spec, &history, app.test_child_content_view())).expect("import chapters:in");
+    let mut prepared=false;
+    for _ in 0..4096{
+        match emit.prepare_child_one(1,65536).expect("bounded real child preparation"){
+            semio_framework_plugin::app::ChildEmitPreparationStep::Ready=>{prepared=true;break;},
+            semio_framework_plugin::app::ChildEmitPreparationStep::Pending=>{},
+            semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault)=>panic!("actual fixture child refused: {}",fault.message),
+        }
+    }
+    assert!(prepared,"closed fixture child prefix must complete within its authored bound");
     assert!(emit.artifact_mutations.is_empty(), "an import never writes the parent lane");
     assert_eq!(emit.child_emits.len(), 1);
     assert_eq!((emit.child_emits[0].slot.as_str(), emit.child_emits[0].child_id.as_str()), ("flow", spec.flow.child_id.as_str()));

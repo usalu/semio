@@ -69,7 +69,7 @@ def agreement(ctx):
     from semio_repo_test import Outcome
 
     produced = reference()
-    committed = {key: value for key, value in json.loads(ctx.fixture_bytes(VECTORS)).items() if key != "$comment"}
+    committed = {key: value for key, value in json.loads(ctx.input_bytes(VECTORS)).items() if key != "$comment"}
     if produced != committed:
         raise AssertionError(
             "the contract and its wire version disagree with the committed pair: the schema states %r, %s commits %r. "

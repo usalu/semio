@@ -1,0 +1,11 @@
+# Cargo Direction Oracle Discovery Audit
+
+The actual current Root gate exited 1 at the stdio TXT artifact local dev dependency target. The declared target is the isolated TXT oracle package with its own empty `[workspace]`, role `test`, and an original dev edge requesting feature `oracles`.
+
+Discovery enumerates only Root `owner-manifests` patterns and explicitly admitted `workspace.metadata.semio.repository` owners. Root owner patterns are `[!.]*/Cargo.toml`; the nested isolated oracle is outside them and has no repository admission. The Specific workspace explicitly excludes `**/🔮️oracles/**` (including individual oracle paths). `cargoWorkspaceForManifest` can identify this isolated workspace directly, but `discoverCargoWorkspaces` does not return it.
+
+The declaration inventory recursively adds every local normal/dev/build/target dependency, including this oracle. The owning executor runs `cargo metadata --no-deps --offline --locked` for discovered workspaces only. That metadata carries the local dev dependency declaration while excluding its external isolated package body. Graph validation requires every local declared target in the graph and fails before inventory parity or layer checks. This is an owner-discovery and graph-completeness failure, not evidence of a forbidden dependency direction. No validator rerun, Cargo composition, or production mutation was performed.
+
+Read-only discovery confirmed {"discoveredScopes":["✏️s/Cargo.toml","🌎️hub/Cargo.toml","🎓️teaching/Cargo.toml","Cargo.toml"],"oracleScope":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/📦️packages/🦀️rust/Cargo.toml","oracleDiscovered":false,"specificOracleExcluded":["**/🔮️oracles/**","🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/📦️packages/🦀️rust"],"oracleHasExplicitRepositoryAdmission":false,"metadataNoDeps":true,"sourceWrites":0}
+
+The full source witnesses and exact actual gate log are retained under generated/cargo-direction-discovery-audit/source-witnesses-1.json. Root independently owns four General fixture edge corrections. Two uncensused ticket include paths are foreign ongoing SQLIO work; this audit does not alter or suppress them. Literal-first-argument runtime scanning does not prove same-file constant or array mapper flows; those remain separately qualified scope gaps.

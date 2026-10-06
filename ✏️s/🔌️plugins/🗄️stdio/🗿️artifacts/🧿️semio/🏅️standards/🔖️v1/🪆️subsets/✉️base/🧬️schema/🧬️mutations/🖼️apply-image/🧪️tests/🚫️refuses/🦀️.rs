@@ -4,8 +4,10 @@
 //! bundle under `../../../../../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/`,
 //! whose `🔺️diff/🚫️.absent` records that no diff exists.
 
-use crate::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, decode_semio_mutation_json, semio_mutation_refusal_codes, SemioMutation};
-use crate::standards::v1::subsets::base::schema::snapshot::{decode_semio_snapshot_json, SemioSnapshot};
+use crate::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, semio_mutation_refusal_codes, SemioMutation};
+use crate::standards::v1::subsets::base::io::text::mutations::{decode_semio_mutation_json};
+use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot};
+use crate::standards::v1::subsets::base::io::text::snapshot::{decode_semio_snapshot_json};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/➡️after/🔣️.json");

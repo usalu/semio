@@ -413,3 +413,55 @@ and `unwrap_err().contains(` → `.to_string().contains(` (15 + 15 sites, norm-w
 - Ticket inputs: `🧪️s4-norm-din18599-climate.py`, `🧪️s4-norm-en1999-support.py`, `🧪️s4-norm-diff-schemas.py`, `🧪️s4-norm-diff-fixture-order.py`,
   `🧪️s4-norm-json-paths.py`, `🧪️s4-norm-dslfield-errors.py`, `🧪️s4-norm-field-meta-census.py`; edited `🧪️s2-norm-ts-twins.ts` (property pointers).
   Scratch `🗑️generated/s4-norm/` (6 MB, logs + the wire-twins overlay).
+
+## Session 5 — 2026-10-05
+
+Executor S5-STROKES-NORM (Opus, coordinator `⚪3f26aaa1…`, rules 1–55), successor of S4-NORM (and S4-STROKES: `📓️w3-t2-strokes-report.md` § Session 5).
+Scratch: `🗑️generated/s5-strokes-norm/`.
+
+### S5 status log (newest first)
+
+- 02:14 **COMPOSITION GREEN norm** (sent to `main`): `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-norm -p semio-hub-raster -p semio-hub-remodel
+  -p semio-hub-wfc -p semio-hub-process --lib --target wasm32-wasip2 --keep-going` (`check-hubs-1`, 02:08–02:13) **exit 0** — the 16 norm crates for wasm
+  with the S5.1 schema declarations and the tool-mismatch codemod (S5-GATES' `T/🧪️s5-gates-tool-mismatch.py --root ✏️s/🔌️plugins/📕️norm --apply`:
+  `📇️registry/🧬️contract/🖥️app-surface/🦀️.rs:2245` `norm-command-tool-mismatch` → framework code `app.command.tool-mismatch`; re-check "none left").
+  S4.9 item 1 is closed.
+- 01:26 hub norm wasip2 (`check-hub-norm-1`, 01:24–01:25): exit 101, 1 error in the kernel, not norm — `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs:219:71`
+  E0308 (`pack::record::EncodeOptions` vs `os_pack::value::EncodeOptions`, file mtime 01:21:57 = a peer landing in flight). Told `main`. Re-run OWED.
+- 01:20 **norm native GREEN against the pack-error API**: `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-norm-contract -p …-{en1990,
+  din18599,en1997,din16798,en1991,en1992,vdi3805,iso16757,en1993,en1994,din4108,en1996,en1995,en1999,en1998} --lib --keep-going` (`check-norm-1`,
+  01:13–01:20) **exit 0, 16/16 crates checked** (warnings: contract 4, en1990 3, din18599 26, en1997 3, din16798 8, en1991 14, en1992 29, vdi3805 65,
+  iso16757 66, en1993 25, en1994 10, din4108 5, en1996 26, en1998 22, en1999 22, en1995 0). The S4 "INFERRED unconfirmed" is closed for native.
+- 01:10 started. Rule 46: files newer than S4.11 (10-04 12:30): 2764 with mtime 18:2x (the 18:24–18:27 stash/pop incident rewrote the tree; content not diffed file by file — the 16-crate check above is the proof) and 3 at
+  21:19 (`⚖️compliance/🦀️.rs`, `🪟️results/🎚️config/🦀️.rs`, din18599 `📸️snapshot/🦀️.rs` — PACKFIX/peer pack-error conversions). No half-finished S4-NORM edit.
+
+### S5.1 §22.8 — every interactive norm quantity declares its step (and the points its norm tabulates) — 01:35–01:50
+
+Gate before (`schema mutation-inputs --under ✏️s/🔌️plugins/📕️norm`, S5-GATES' declaration rule): **579 `numericUndeclared`** (6 top-level, 573 nested
+object fields in 121 leaves) = **400 distinct properties** (en1993 91, en1998 55, en1999 43, en1994 37, en1995 33, en1992 31, en1997 28, din18599 26,
+en1990 25, en1991 21, din16798 5, din4108 3, vdi3805 2; en1996 and iso16757 were complete). Gate after: **exit 0, 0 findings** (555 leaves, 935 inputs:
+828 declared + 107 inferred non-numeric; 231 glossary labels are census only since 01:36).
+
+Input script `T/🧪️s5-strokes-norm-input-steps.py` (`census | declare | check`): the step of a property comes from its own `FIELD` row, else the artifact's
+class row, else the quantity class `(unit, displayUnit, precision)` — steps are in the STORED unit; a property without a rule fails the run. 19 files
+changed (13 snapshot schemas, 6 leaf schemas), `x-semio-ui` only.
+- **Quantity classes** (55 rows): detailing lengths m→mm 1 mm, system lengths 0.05 m, forces 1 kN (timber and aluminium 0.1 kN), moments 1 kN·m
+  (0.1), line loads 0.1 kN/m (the en1995 precedent), stresses 1 N/mm², pressures 0.5 kN/m², areas 0.1 cm², W 1 cm³, I 1 cm⁴, coefficients by their
+  precision, percentages by theirs, angles 1°/0.5°, set-points 0.5 °C, fire temperatures 10 °C, …
+- **From the norm (`FIELD`, 129 rows incl. remodel/process/wfc):** steel grades f_y 235/275/355/420/460 (EN 1993-1-1 Table 3.1) and cold-formed
+  220…350 (EN 1993-1-3); E = 210 000, G = 81 000 N/mm²; k_σ 0.43/4.0/7.81/23.9 (EN 1993-1-5 Tables 4.1/4.2); ψ −1/0/1; slip factor μ 0.2…0.5 and
+  k_s 0.63…1.0 (EN 1993-1-8 Tables 3.6/3.7); bolt series M12…M36, anchors M6…M30, stirrups ⌀6…16, aggregate d_g 8/16/22/32; concrete f_ck C20…C60
+  (EN 1994-1-1 3.1); reinforcement f_sk 400/500/600; crack width 0.2/0.3/0.4 mm; fatigue N_C/N_D/N_L 2·10⁶/5·10⁶/10⁸ (EN 1993-1-9); fire classes
+  R15…R240 in seconds; design working life 10/25/50/100 a and β 3.3…5.2 (EN 1990 Tables 2.1/B2); deck acceleration limits 3.5/5.0 m/s² (EN 1990
+  A2.4.4.2.1); C_e 0.8/1.0/1.2 (EN 1991-1-3 Table 5.1); roof pitch 5…75° and loaded areas 1/10 m² (EN 1991-1-4); partitions 0.5/0.8/1.2 kN/m²
+  (EN 1991-1-1 6.3.1.2); q₀ 1.5/2/3/4.5, α_u/α₁ 1.0…1.3, k_w, C_t 0.05/0.075/0.085, ν 0.4/0.5, e_ai 0.05/0.1 (EN 1998-1); r 1/1.5/2 (EN 1998-5
+  Table 7.1); b_haz 20/30/35/40 mm (EN 1999-1-1 6.1.6.3); DIN V 18599 orientations 0…315° and tilts 0/30/45/60/90; h_D/h 5/35 (EN 1992-3 Table 7.105).
+  Snaps are assisting ticks (the control still takes any value within the hard bounds). Tensile strengths f_u carry a 10 N/mm² step and NO snaps (I do
+  not trust my memory of every Table 3.1 f_u).
+- **Defects found on the way, fixed in the same schemas:** en1999 `AluminiumMember.length` carried the label/description of a removed `axis` field
+  ("Buckling axis … y, z, t or ltb") → "System length L" [m] (the Rust doc's meaning); nine quantities had NO annotation at all (en1991 `WindFace.z`,
+  en1993 `SiloShell.radius`, en1999 `ColdFormedSheet.width`, `AluminiumSection.height/width`, `PlateElement.width`, `AluminiumShell.radius`,
+  vdi3805 `CurvePoint.x/y`) → label en/de, unit, precision, step; thin-sheet thicknesses (en1993 `ColdFormedMember.thickness`, en1994
+  `ProfiledSheeting.thicknessM`) showed one decimal of a millimetre, which cannot show 0.75 or 0.88 mm → precision 2, step 0.01 mm, snaps
+  0.75/0.88/1.0/1.25/1.5 mm.
+- Open (not norm facts I can state): en1998 `kFoundation`/`kSoil` have no unit in schema or Rust (step 10 000 against example values 8·10⁵/3·10⁵).

@@ -18,7 +18,7 @@ fn wires_semantic_panels_match_the_json_oracle() {
         let tree = project(crate::editor::wires::panels::document::render(&composed, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["identities"]);
         assert_eq!(tree["children"][1]["component"]["label"], row["relationships"]);
-        let tree = project(crate::editor::wires::panels::catalogue::render(&document.wires_fixture, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue"));
+        let tree = project(crate::editor::wires::panels::catalogue::render(&document.wires_snapshot, labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue"));
         assert_eq!(tree["children"][0]["component"]["label"], row["identityKinds"]);
         assert_eq!(tree["children"][1]["component"]["label"], row["relationshipKinds"]);
         let tree = project(render(&composed, labels).expect("inspection"));
@@ -26,7 +26,7 @@ fn wires_semantic_panels_match_the_json_oracle() {
         assert_eq!(serde_json::Value::Array(lines), row["summary"]);
     }
     for node in [
-        crate::editor::wires::modes::edit::windows::canvas::render(&composed.board, &composed.fixture, &crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasWindowConfig::default()).expect("editor canvas"),
+        crate::editor::wires::modes::edit::windows::canvas::render(&composed.board, &composed.identity_snapshot, &crate::editor::wires::modes::edit::windows::canvas::config::WiresCanvasWindowConfig::default()).expect("editor canvas"),
         crate::viewer::wires::modes::view::windows::canvas::render(&composed).expect("viewer canvas"),
     ] {
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };

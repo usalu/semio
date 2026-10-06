@@ -25,7 +25,7 @@ const INPUT: &str = "asset://🧬️conformance-seed/🧬️conformance-seed.pdf
 /// page box and real page-1 text, so the single axis has something genuine to move in either
 /// direction.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("conformance-seed.pdf"))?;
+    let copy = ctx.copy_input(INPUT, Some("conformance-seed.pdf"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

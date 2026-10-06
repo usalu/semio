@@ -1,6 +1,6 @@
 //! Norm command — `apply-remedy`.
 
-use crate::op::Din18599Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Din18599Mutation;
 use crate::Din18599Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

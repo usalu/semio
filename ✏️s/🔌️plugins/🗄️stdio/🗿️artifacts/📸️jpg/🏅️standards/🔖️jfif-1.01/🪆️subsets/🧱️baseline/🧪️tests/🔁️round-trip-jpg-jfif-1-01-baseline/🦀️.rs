@@ -17,8 +17,9 @@ const SCAN: &str = "shared://🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_jpg::io::{decode_jpg, encode_jpg};
-    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{encode_jpg_baseline_projection_json, jpg_baseline_conformance_codes};
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::{decode_jpg, encode_jpg};
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{jpg_baseline_conformance_codes};
+    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::io::text::mutations::{encode_jpg_baseline_projection_json};
     use semio_s_artifact_stdio_jpg::JpgSnapshot;
     use semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation;
     use semio_repo_test_host::law;
@@ -28,7 +29,7 @@ mod subject {
     /// `stdio.jpg.baseline.no-frame` and certifies nothing without one, so a case that let a
     /// frameless snapshot through would be measuring the absence of the document.
     fn decoded(ctx: &Context) -> Result<JpgSnapshot, String> {
-        let snapshot = decode_jpg(&ctx.fixture_bytes(super::SCAN)?).map_err(|error| format!("mutate-jpg-jfif-1-01-baseline: the committed scan must decode: {error:?}"))?;
+        let snapshot = decode_jpg(&ctx.input_bytes(super::SCAN)?).map_err(|error| format!("mutate-jpg-jfif-1-01-baseline: the committed scan must decode: {error:?}"))?;
         let frame = snapshot.frame.as_ref().ok_or("mutate-jpg-jfif-1-01-baseline: the decode retained no SOF0 frame header, so no conformance axis exists to move")?;
         if frame.components.len() != 3 || snapshot.huffman_tables.len() != 4 {
             return Err(format!(
@@ -53,7 +54,7 @@ mod subject {
     /// repository's codec agreeing with itself, and the class verdict is required to survive the
     /// round trip — which is the strongest statement this subset can make about its own encoder.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = ctx.fixture_bytes(super::SCAN)?;
+        let input = ctx.input_bytes(super::SCAN)?;
         let base = decoded(ctx)?;
         let bytes = encode_jpg(&base).map_err(|error| format!("identity-round-trip: re-serializing the decoded scan failed: {error:?}"))?;
         law::reparsed_not_copied(&bytes, &input)?;

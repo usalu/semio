@@ -59,7 +59,7 @@ import {
 } from "@semio-tech/framework";
 import { packedTextLeaf } from "./🧳️packed-text/🟦️.ts";
 import type { MediaExportHandle, MediaExportStatus } from "@semio-tech/framework-os";
-import { AppChannelClient, AppChannelRequestSequence, type AppDocumentIdentity, type AppFrameValue, type DocumentArchiveLoadStatus, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppDocumentIdentity, type AppFrameValue, type DocumentArchiveLoadStatus, type DocumentArchiveMergeV1, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import {
   DOCUMENT_BACKBONE_RETENTION_LIMITS,
   decodeLocalInteractionCaptureJson,
@@ -117,7 +117,7 @@ import { drainTypedOperationTurns as driveTypedOperationDrain, driveInboundReque
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, decodeBackboneMessage } from "@semio-tech/framework-os";
-import { ActorDocumentBindingV1, type ActorDocumentMessagePortV1, type ActorDocumentSourceV1, encodeDocumentBackboneControlV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
+import { ActorDocumentBindingV1, type ActorDocumentMessagePortV1, type ActorDocumentSourceV1, bindActorDocumentV1, encodeDocumentBackboneControlV1, releaseActorDocumentBindingV1, splitDocumentBackboneControlTurnV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️plugin-runtime
@@ -210,6 +210,9 @@ export type PluginWasmHandle = {
   /** 🗃️ Atomically restores a complete recursive document archive; `signal` cancels the load, `progress` hears every
    * polled status (`completed` of `total`). */
   readonly loadAppDocumentArchive?: (instanceId: number, archive: DocumentArchivePack, signal?: AbortSignal, progress?: (status: DocumentArchiveLoadStatus) => void) => Promise<void>;
+  /** 🔀️ Merges a read-back of the document the instance already shows: its events join the instance's log and nothing is
+   * replaced; answers what was taken and what the instance is ahead by, or the code of an archive it cannot merge. */
+  readonly mergeAppDocumentArchive?: (instanceId: number, archive: DocumentArchivePack, signal?: AbortSignal, progress?: (status: DocumentArchiveLoadStatus) => void) => Promise<DocumentArchiveMergeV1>;
   /** 🪟️ Reads every concrete window's persisted-local config envelope. */
   readonly readWindowConfigPacks: (instanceId: number) => Promise<readonly WindowConfigPackEntry[]>;
   /** 🪟️ Restores one concrete window config envelope before its first render. */
@@ -2840,9 +2843,17 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       activation.assertActive();
       return settlePluginTurn(actorId, await submitTurn(actorId, [{ kind: "job-completed", payload }], { lane: "Background", activation }), "Background", new Set(), (turn) => acceptUiPatches(instanceId, turn), true, activation, call);
     });
-    const leftover = pendingTurnEffects.get(instanceId) ?? [];
-    for (const effect of routeHostEffects(instanceId, settled.effects, documentBindings.get(instanceId)?.port)) leftover.push(effect);
-    pendingTurnEffects.set(instanceId, leftover);
+    const frames: Uint8Array[] = [];
+    const leftover: WireVariant[] = [];
+    for (const effect of routeHostEffects(instanceId, settled.effects, documentBindings.get(instanceId)?.port)) {
+      const frame = shellFrameBytes(effect, instanceId);
+      if (frame) frames.push(frame);
+      else leftover.push(effect);
+    }
+    const pending = frames.some(frame => "OperationCompleted" in decodeAppFrame(frame)) ? pendingCompletionEffects : pendingTurnEffects;
+    pending.set(instanceId, [...(pending.get(instanceId) ?? []), ...leftover]);
+    if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
+    if (wireTurnStatusTag(settled.status) === "more-work") hostContinuations.schedule(() => void drainTypedOperations(instanceId), 0, `operation-wake#${instanceId}`);
   };
   const deliverJobCompletion = async (instanceId: number, actorId: string, job: bigint, outcome: ShardJobStep): Promise<void> => {
     await serializeCommandIngressForActor(actorId, () => deliverJobCompletionTurn(instanceId, actorId, job, outcome));
@@ -2941,10 +2952,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     }
   };
 
-  /** 💼️ Reserved-tool Isolated jobs are two dummy steps plus `job-completed` commit. The guest
-   * keeps one job-render binding per instance; a later hover/undo spawn steals it and
-   * `complete_reserved_spawned_job` never runs. Hold command-ingress through start/step/commit
-   * so the binding stays on this job until chrome undo publishes. */
+  /** 💼️ Drives a reserved job under its owning command ingress through terminal handoff so
+   * subsequent commands observe its commit and completion in actor order. */
   const commitReservedToolJobWhileSerialized = async (instanceId: number, actorId: string, job: bigint, kind: string, input: Uint8Array): Promise<void> => {
     const key = `${actorId}#${job}`;
     if (drivingJobs.has(key)) return;
@@ -3476,7 +3485,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const activation = shardClient.captureActorActivation(actorId);
     const previous = documentBindings.get(instanceId);
     if (previous && !previous.port.closing) throw new Error("actor-document-control.binding-live");
-    if (previous) await previous.port.retire();
+    if (previous) await releaseActorDocumentBindingV1(previous);
     if (documentBindings.get(instanceId) !== previous) throw new Error("actor-document-control.binding-collision");
     requireActorId(instanceId);
     activation.assertActive();
@@ -3493,12 +3502,14 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       send,
       exchange: async command => {
         const result = await settle([{ kind: "message", payload: { source: { tag: "shell", val: String(instanceId) }, payload: Array.from(encodeDocumentBackboneControlV1(command)) } }]);
-        return result.effects.flatMap(effect => {
+        const { receipts, unsolicited } = splitDocumentBackboneControlTurnV1(result.effects.flatMap(effect => {
           const bytes = shellFrameBytes(effect, instanceId);
           if (bytes) return [bytes];
           if (effect.tag === "send-message" && (effect.val as { target?: WireVariant } | undefined)?.target?.tag === "backbone") throw new Error("actor-document-control.data-before-receipt");
           return [];
-        });
+        }));
+        if (unsolicited.length > 0) turnOutcomes.push({ instanceId, frames: [...unsolicited] });
+        return receipts;
       },
       deliver: async payload => {
         const result = await settle([{ kind: "message", payload: { source: { tag: "backbone", val: binding.port.uri }, payload: Array.from(hotBytes(payload)) } }]);
@@ -3518,15 +3529,10 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     });
     documentBindings.set(instanceId, binding);
     documentBindingGenerations.set(instanceId, bindingGeneration);
-    try {
-      prepared?.(binding.port);
-      await binding.bind();
-      return binding.port;
-    } catch (error) {
-      await binding.port.retire();
-      if (documentBindings.get(instanceId) === binding) documentBindings.delete(instanceId);
-      throw error;
-    }
+    return bindActorDocumentV1(binding, prepared, (retirement) => {
+      if (retirement !== null) console.error("[plugin-runtime] a document port that failed to bind could not be retired", binding.port.uri, retirement.error);
+      else if (documentBindings.get(instanceId) === binding) documentBindings.delete(instanceId);
+    });
   };
 
   return { ...richHandle, refreshUi, captureExtensionCompletion, invoke, bindDocumentPort, subscribeSpawnedJobProgress };
@@ -3974,6 +3980,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     readAppDocumentArchive: (instanceId) => requireChannel(instanceId).readDocumentArchive(),
     readAppDocumentIdentity: (instanceId) => requireChannel(instanceId).readDocumentIdentity(),
     loadAppDocumentArchive: (instanceId, archive, signal, progress) => requireChannel(instanceId).loadDocumentArchive(archive, signal, progress),
+    mergeAppDocumentArchive: (instanceId, archive, signal, progress) => requireChannel(instanceId).mergeDocumentArchive(archive, signal, progress),
     readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
     loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),
     ephemeralSnapshot: async (instanceId) => requireChannel(instanceId).ephemeral(),

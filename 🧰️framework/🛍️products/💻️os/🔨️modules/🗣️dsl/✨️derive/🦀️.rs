@@ -360,15 +360,19 @@ struct MutationLeafJson {
     outcome_classes: Vec<MutationLeafOutcomeClass>,
     composition: MutationLeafComposition,
     required_language_surfaces: Vec<MutationLeafLanguageSurface>,
+    editable: bool,
 }
 
 const MUTATION_LEAF_DESCRIPTOR_KEYS: [&str; 14] = ["schemaVersion", "owner", "semanticKind", "displayName", "emoji", "aggregateVariant", "payloadSchema", "textOpcode", "binaryTag", "invertibility", "diffParticipation", "outcomeClasses", "composition", "requiredLanguageSurfaces"];
+
+/// ✏️ The one optional descriptor key: `false` declares the leaf withdraw-only (design §22.20); absent means editable.
+const MUTATION_LEAF_EDITABLE_KEY: &str = "editable";
 
 fn parse_mutation_leaf_descriptor(raw: &[u8], authority: &MutationSourceAuthority) -> Result<MutationLeafJson, String> {
     mutation_leaf_reject_duplicate_keys(raw)?;
     let value: serde_json::Value = serde_json::from_slice(raw).map_err(|error| format!("malformed mutation descriptor JSON: {error}"))?;
     let object = value.as_object().ok_or_else(|| "mutation descriptor must be an object".to_string())?;
-    if object.len() != MUTATION_LEAF_DESCRIPTOR_KEYS.len() || MUTATION_LEAF_DESCRIPTOR_KEYS.iter().any(|key| !object.contains_key(*key)) || object.keys().any(|key| !MUTATION_LEAF_DESCRIPTOR_KEYS.contains(&key.as_str())) { return Err("mutation descriptor must contain exactly the fourteen schema fields".to_string()); }
+    if MUTATION_LEAF_DESCRIPTOR_KEYS.iter().any(|key| !object.contains_key(*key)) || object.keys().any(|key| !MUTATION_LEAF_DESCRIPTOR_KEYS.contains(&key.as_str()) && key != MUTATION_LEAF_EDITABLE_KEY) { return Err("mutation descriptor must contain exactly the fourteen schema fields, and beside them only the optional editable".to_string()); }
     let string = |key| mutation_leaf_string(object.get(key).unwrap(), key);
     let schema_version = mutation_leaf_u32(object.get("schemaVersion").unwrap(), "schemaVersion")?;
     if schema_version != 1 { return Err("schemaVersion must equal 1".to_string()); }
@@ -389,7 +393,8 @@ fn parse_mutation_leaf_descriptor(raw: &[u8], authority: &MutationSourceAuthorit
     let outcome_classes = mutation_leaf_outcomes(object.get("outcomeClasses").unwrap())?;
     let composition = match string("composition")?.as_str() { "atomic" => MutationLeafComposition::Atomic, "composite" => MutationLeafComposition::Composite, _ => return Err("composition is not a schema enum value".to_string()) };
     let required_language_surfaces = mutation_leaf_surfaces(object.get("requiredLanguageSurfaces").unwrap())?;
-    Ok(MutationLeafJson { schema_version, owner, semantic_kind, display_name, emoji, aggregate_variant, payload_schema, text_opcode, binary_tag, invertibility, diff_participation, outcome_classes, composition, required_language_surfaces })
+    let editable = match object.get(MUTATION_LEAF_EDITABLE_KEY) { None => true, Some(serde_json::Value::Bool(value)) => *value, Some(_) => return Err("editable must be a boolean".to_string()) };
+    Ok(MutationLeafJson { schema_version, owner, semantic_kind, display_name, emoji, aggregate_variant, payload_schema, text_opcode, binary_tag, invertibility, diff_participation, outcome_classes, composition, required_language_surfaces, editable })
 }
 
 fn mutation_leaf_string(value: &serde_json::Value, key: &str) -> Result<String, String> { value.as_str().filter(|value| !value.is_empty()).map(str::to_owned).ok_or_else(|| format!("{key} must be a nonempty string")) }
@@ -545,6 +550,25 @@ fn mutation_leaf_workspace_token(authority: &MutationSourceAuthority) -> Result<
 
 fn mutation_leaf_include_path(path: &Path) -> Result<String, String> { mutation_leaf_portable_path(path) }
 
+/// 🚪️ The editing surface of a withdraw-only leaf (descriptor `editable: false`, design §22.20): `input_schema` is always `None`, so
+/// the history editor never opens on it, and `with_input_value` refuses every edited payload — the editable-payload law
+/// (`mutation_payload_round_trip_failures`) holds an inert leaf to that. `from_input_value` stays the trait's: feature rows and
+/// fixtures still decode the leaf from its payload. Such a leaf declares neither `payload` nor `input_schema` — both name an
+/// editable payload.
+fn mutation_leaf_withdraw_only(name: &syn::Ident, descriptor: &MutationLeafJson, attrs: &MutationLeafAttrs) -> syn::Result<Option<proc_macro2::TokenStream>> {
+    if descriptor.editable { return Ok(None); }
+    if let Some(variant) = &attrs.payload { return Err(syn::Error::new_spanned(variant, "a withdraw-only leaf (descriptor editable: false) declares no mutation_leaf payload")); }
+    if let Some(path) = &attrs.input_schema { return Err(syn::Error::new_spanned(path, "a withdraw-only leaf (descriptor editable: false) declares no mutation_leaf input_schema")); }
+    Ok(Some(quote! {
+        fn input_schema(&self) -> ::core::option::Option<&'static str> {
+            ::core::option::Option::None
+        }
+        fn with_input_value(&self, _value: ::semio_framework_value::DslValue) -> ::core::result::Result<Self, ::semio_framework_value::ValueError> {
+            ::core::result::Result::Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, ::std::format!("{} is withdraw-only", ::core::stringify!(#name))))
+        }
+    }))
+}
+
 pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     if matches!(input.data, Data::Union(_)) { return syn::Error::new_spanned(&input, "MutationLeaf does not support unions").to_compile_error().into(); }
@@ -590,6 +614,7 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
             #path(self)
         }
     });
+    let withdraw_only = match mutation_leaf_withdraw_only(&input.ident, &descriptor, &attrs) { Ok(tokens) => tokens, Err(error) => return error.to_compile_error().into() };
     let inverse_rows = mutation_leaf_inverse_rows_body(&inverse_rows, attrs.payload.as_ref());
     let owner = &authority.owner;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
@@ -605,6 +630,7 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
             const PAYLOAD_SCHEMA_DOCUMENTS: &'static [&'static str] = &[#(::core::include_str!(#referenced_documents)),*];
             #editable
             #instance_schema
+            #withdraw_only
             fn inverse_rows(&self) -> usize {
                 #inverse_rows
             }
@@ -811,15 +837,15 @@ pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
     }.into()
 }
 
-/// 🧩 Owns OS diff transport semantics over canonical Record projection and construction.
-pub fn expand_dsl_diff(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    if !matches!(input.data, Data::Struct(_)) {
-        return syn::Error::new_spanned(&input, "DslDiff only supports structs").to_compile_error().into();
-    }
-    let name = &input.ident;
+/// 📝️ Generates diff text I/O at its representation owner.
+pub fn expand_diff_text(input: TokenStream) -> TokenStream {
+    let name = parse_macro_input!(input as syn::Type);
+    diff_text_tokens(&name).into()
+}
+
+fn diff_text_tokens(name: &syn::Type) -> proc_macro2::TokenStream {
     quote! {
-        impl ::semio_framework_os_kernel::DiffCodec for #name {
+        impl ::semio_framework_os_kernel::DiffText for #name {
             fn print_diff(&self) -> String {
                 ::semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), ::semio_framework_dsl_record::JoinMode::Inline)
             }
@@ -827,6 +853,19 @@ pub fn expand_dsl_diff(input: TokenStream) -> TokenStream {
                 let record = ::semio_framework_dsl_record::parse(line, &Self::__dsl_spec(), &::semio_framework_dsl_record::ParseOptions { limits: ::semio_framework_diagnostic::Limits::default(), mode: ::semio_framework_dsl_record::SourceMode::Inline })?;
                 Self::__dsl_from_record(&record)
             }
+        }
+    }
+}
+
+/// 💾️ Generates diff binary I/O at its representation owner.
+pub fn expand_diff_binary(input: TokenStream) -> TokenStream {
+    let name = parse_macro_input!(input as syn::Type);
+    diff_binary_tokens(&name).into()
+}
+
+fn diff_binary_tokens(name: &syn::Type) -> proc_macro2::TokenStream {
+    quote! {
+        impl ::semio_framework_os_kernel::DiffBinary for #name {
             fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
                 ::semio_framework_os_kernel::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), &::semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)
             }
@@ -835,7 +874,7 @@ pub fn expand_dsl_diff(input: TokenStream) -> TokenStream {
                 Self::__dsl_from_record(&record).map_err(|error| ::semio_framework_os_kernel::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
             }
         }
-    }.into()
+    }
 }
 
 //#region 🔖️Mutations
@@ -1367,3 +1406,7 @@ fn to_kebab(name: &str) -> String {
 #[cfg(test)]
 #[path = "🧪️tests/🪆️record-owner/🦀️.rs"]
 mod canonical_product_macro_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🚪️diff-codecs/🦀️.rs"]
+mod diff_codec_tests;

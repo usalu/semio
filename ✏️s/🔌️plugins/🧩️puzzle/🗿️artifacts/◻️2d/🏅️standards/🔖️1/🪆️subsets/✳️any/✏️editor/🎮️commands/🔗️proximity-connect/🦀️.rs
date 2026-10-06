@@ -1,7 +1,7 @@
 //! 🔗️ `proximity-connect` command, and the proximity search the node drop and `translateSelection` share.
 
 use crate::editor::puzzle2d::{
-    fixture_nodes, new_edge_id, puzzle2d_entity_hidden, puzzle2d_handle_world_position, puzzle2d_kinds_compatible, puzzle2d_node_reach, puzzle2d_occupied_handles, puzzle2d_push_edge, Puzzle2dActionCtx, PUZZLE2D_PROXIMITY_CONNECT_MAX, PUZZLE2D_PROXIMITY_GESTURE_MAX,
+    board_snapshot_nodes, new_edge_id, puzzle2d_entity_hidden, puzzle2d_handle_world_position, puzzle2d_kinds_compatible, puzzle2d_node_reach, puzzle2d_occupied_handles, puzzle2d_push_edge, Puzzle2dActionCtx, PUZZLE2D_PROXIMITY_CONNECT_MAX, PUZZLE2D_PROXIMITY_GESTURE_MAX,
 };
 use serde_json::{json, Value};
 use std::collections::HashSet;
@@ -40,12 +40,12 @@ fn centre(node: &Value) -> (f64, f64) {
 /// [`puzzle2d_node_reach`] around its centre, so a node whose circle misses the query ball is
 /// rejected on its centre alone — and yields at most [`PUZZLE2D_PROXIMITY_CONNECT_MAX`] pairs, which
 /// is what `extent` prices. Each handle is claimed at most once across the whole result.
-pub fn puzzle2d_proximity_pairs(fixture: &Value, node_id: &str, radius: f64) -> Vec<Puzzle2dProximityPair> {
+pub fn puzzle2d_proximity_pairs(snapshot: &Value, node_id: &str, radius: f64) -> Vec<Puzzle2dProximityPair> {
     let radius = radius.max(0.0);
     if radius == 0.0 {
         return Vec::new();
     }
-    let nodes = fixture_nodes(fixture);
+    let nodes = board_snapshot_nodes(snapshot);
     let Some(moved) = nodes.iter().find(|node| node.get("id").and_then(Value::as_str) == Some(node_id)) else {
         return Vec::new();
     };
@@ -58,7 +58,7 @@ pub fn puzzle2d_proximity_pairs(fixture: &Value, node_id: &str, radius: f64) -> 
     }
     let (moved_x, moved_y) = centre(moved);
     let moved_reach = puzzle2d_node_reach(moved);
-    let mut claimed = puzzle2d_occupied_handles(fixture);
+    let mut claimed = puzzle2d_occupied_handles(snapshot);
     let mut reach: Vec<&Value> = Vec::new();
     for node in nodes {
         if node.get("id").and_then(Value::as_str) == Some(node_id) || puzzle2d_entity_hidden(node) {
@@ -83,7 +83,7 @@ pub fn puzzle2d_proximity_pairs(fixture: &Value, node_id: &str, radius: f64) -> 
         }
         let best = peers
             .iter()
-            .filter(|(peer_id, peer_kind, _, _)| !claimed.contains(peer_id) && *peer_id != id && puzzle2d_kinds_compatible(fixture, &kind, peer_kind))
+            .filter(|(peer_id, peer_kind, _, _)| !claimed.contains(peer_id) && *peer_id != id && puzzle2d_kinds_compatible(snapshot, &kind, peer_kind))
             .map(|(peer_id, _, peer_x, peer_y)| (peer_id, (peer_x - x).powi(2) + (peer_y - y).powi(2)))
             .filter(|(_, distance)| *distance <= squared)
             .min_by(|left, right| left.1.total_cmp(&right.1))
@@ -102,19 +102,19 @@ pub fn puzzle2d_proximity_pairs(fixture: &Value, node_id: &str, radius: f64) -> 
 /// `extent` prices, so a whole-selection move never claims more work than a single-node drop. The
 /// stationary peer stays `source`, so the pre-existing structure remains the resolution root exactly
 /// as puzzle3d's relocate auto-attract keeps it. Returns the number of edges created.
-pub fn puzzle2d_proximity_connect(fixture: &mut Value, node_ids: &[String], radius: f64) -> usize {
+pub fn puzzle2d_proximity_connect(snapshot: &mut Value, node_ids: &[String], radius: f64) -> usize {
     let mut created = 0usize;
     let mut seen: HashSet<String> = HashSet::new();
     for node_id in node_ids {
         if !seen.insert(node_id.clone()) {
             continue;
         }
-        for pair in puzzle2d_proximity_pairs(fixture, node_id, radius) {
+        for pair in puzzle2d_proximity_pairs(snapshot, node_id, radius) {
             if created >= PUZZLE2D_PROXIMITY_GESTURE_MAX {
                 return created;
             }
-            let id = new_edge_id(fixture);
-            puzzle2d_push_edge(fixture, json!({ "id": id, "source": pair.peer, "target": pair.moved }));
+            let id = new_edge_id(snapshot);
+            puzzle2d_push_edge(snapshot, json!({ "id": id, "source": pair.peer, "target": pair.moved }));
             created += 1;
         }
     }
@@ -134,7 +134,7 @@ pub fn proximity_connect(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
         return;
     }
     let radius = args.and_then(|value| value.get("radius")).and_then(Value::as_f64).filter(|radius| radius.is_finite()).unwrap_or(ctx.scene.runtime.proximity_radius);
-    puzzle2d_proximity_connect(&mut ctx.scene.fixture, &node_ids, radius);
+    puzzle2d_proximity_connect(&mut ctx.scene.board_snapshot, &node_ids, radius);
 }
 
 //#region 🧪️Tests

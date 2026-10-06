@@ -463,28 +463,6 @@
           "subset": "node"
         },
         {
-          "id": "create-object",
-          "capability": "cad-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "no-op",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "create-object",
-            "bridgeVersion": 1,
-            "variant": "CreateObject"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "cad-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "object"
-        },
-        {
           "id": "create-shape-model",
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -613,27 +591,6 @@
           "subset": "node"
         },
         {
-          "id": "delete-object",
-          "capability": "cad-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "delete-object",
-            "bridgeVersion": 1,
-            "variant": "DeleteObject"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "cad-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "object"
-        },
-        {
           "id": "delete-shape-model",
           "capability": "cad-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -674,50 +631,6 @@
             }
           ],
           "subset": "structure"
-        },
-        {
-          "id": "drag-selection",
-          "capability": "cad-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "no-op",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "drag-selection",
-            "bridgeVersion": 1,
-            "variant": "DragSelection"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "cad-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "object"
-        },
-        {
-          "id": "move-objects",
-          "capability": "cad-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "no-op",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "move-objects",
-            "bridgeVersion": 1,
-            "variant": "MoveObjects"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "cad-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "object"
         },
         {
           "id": "move-reference",
@@ -805,94 +718,6 @@
             }
           ],
           "subset": "reference"
-        },
-        {
-          "id": "rotate-objects",
-          "capability": "cad-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "no-op",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "rotate-objects",
-            "bridgeVersion": 1,
-            "variant": "RotateObjects"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "cad-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "object"
-        },
-        {
-          "id": "rotate-selection",
-          "capability": "cad-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "no-op",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "rotate-selection",
-            "bridgeVersion": 1,
-            "variant": "RotateSelection"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "cad-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "object"
-        },
-        {
-          "id": "scale-objects",
-          "capability": "cad-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "no-op",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "scale-objects",
-            "bridgeVersion": 1,
-            "variant": "ScaleObjects"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "cad-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "object"
-        },
-        {
-          "id": "scale-selection",
-          "capability": "cad-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "no-op",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "scale-selection",
-            "bridgeVersion": 1,
-            "variant": "ScaleSelection"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "cad-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "object"
         }
       ]
     }

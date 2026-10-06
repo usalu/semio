@@ -45,6 +45,7 @@ const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 /// [`window_measures`], not frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SHOOTING_PLAY_WINDOW_SCENE.into(),
         label: LocalizedLabel::native("Scene", "Szene"),
         body_key: SHOOTING_PLAY_BODY_SCENE.into(),

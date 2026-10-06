@@ -749,17 +749,7 @@ const SOURCING_CURATION_APP_ID: &str = "sourcing-curation";
 
 /// 🔌️ Refreshes contributed `sourcing.module` entries when the host pushes a new catalogue.
 //#region 🔖️SourcingModuleTopicPayload
-/// 🗂️ `topic_contribution.payload` shape for the `"sourcing.module"` topic.
-/// See `TopicContribution` in `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`.
-#[derive(semio_framework_value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-struct SourcingModuleTopicPayload {
-    app_id: String,
-    module_id: String,
-    label: String,
-    typology_json: String,
-    kinds_json: String,
-}
+
 //#endregion 🔖️SourcingModuleTopicPayload
 
 pub(crate) const SOURCING_JSON_MAX_BYTES: usize = 256 * 1024;
@@ -767,107 +757,13 @@ pub(crate) const SOURCING_JSON_MAX_DEPTH: usize = 32;
 pub(crate) const SOURCING_JSON_MAX_ITEMS: usize = 4 * 1024;
 pub(crate) const SOURCING_JSON_MAX_STRING_BYTES: usize = 4 * 1024;
 
-pub(crate) fn sourcing_json_envelope_is_bounded(input: &str) -> bool {
-    if input.len() > SOURCING_JSON_MAX_BYTES {
-        return false;
-    }
-    let mut depth = 0usize;
-    let mut items = 0usize;
-    let mut in_string = false;
-    let mut escaped = false;
-    let mut string_bytes = 0usize;
-    let mut in_scalar = false;
-    for byte in input.bytes() {
-        if in_string {
-            if escaped {
-                string_bytes = string_bytes.saturating_add(1);
-                escaped = false;
-            } else if byte == b'\\' {
-                string_bytes = string_bytes.saturating_add(1);
-                escaped = true;
-            } else if byte == b'"' {
-                in_string = false;
-            } else {
-                string_bytes = string_bytes.saturating_add(1);
-            }
-            if string_bytes > SOURCING_JSON_MAX_STRING_BYTES {
-                return false;
-            }
-            continue;
-        }
-        if in_scalar {
-            if byte.is_ascii_whitespace() || matches!(byte, b',' | b']' | b'}') {
-                in_scalar = false;
-            } else {
-                continue;
-            }
-        }
-        match byte {
-            b'"' => {
-                items = items.saturating_add(1);
-                in_string = true;
-                string_bytes = 0;
-            }
-            b'{' | b'[' => {
-                items = items.saturating_add(1);
-                depth = depth.saturating_add(1);
-                if depth > SOURCING_JSON_MAX_DEPTH {
-                    return false;
-                }
-            }
-            b'}' | b']' => {
-                let Some(next) = depth.checked_sub(1) else {
-                    return false;
-                };
-                depth = next;
-            }
-            b':' | b',' => {}
-            byte if byte.is_ascii_whitespace() => {}
-            _ => {
-                items = items.saturating_add(1);
-                in_scalar = true;
-            }
-        }
-        if items > SOURCING_JSON_MAX_ITEMS {
-            return false;
-        }
-    }
-    !in_string && !escaped && depth == 0
-}
+
 
 /// 🗂️ The one open-contribution topic this app consumes — the `sourcing-module-*` extension crates
 /// publish exactly this string (`✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/*/🦀️.rs`).
 pub const SOURCING_MODULE_TOPIC: &str = "sourcing.module";
 
-fn contributed_sourcing_modules(contributions_json: &str) -> Vec<ContributedSourcingModule> {
-    if !sourcing_json_envelope_is_bounded(contributions_json) {
-        return Vec::new();
-    }
-    let mut modules = Vec::new();
-    for entry in parse_contributions(contributions_json) {
-        let Some(payload) = entry.topic_contribution.as_ref().filter(|topic| topic.topic == SOURCING_MODULE_TOPIC).and_then(|topic| topic.decode::<SourcingModuleTopicPayload>().ok()) else {
-            continue;
-        };
-        let (app_id, module_id, label, typology_json, kinds_json) = (payload.app_id, payload.module_id, payload.label, payload.typology_json, payload.kinds_json);
-        if app_id != SOURCING_CURATION_APP_ID {
-            continue;
-        }
-        if !sourcing_json_envelope_is_bounded(&typology_json) || !sourcing_json_envelope_is_bounded(&kinds_json) {
-            continue;
-        }
-        let Ok(typology) = semio_framework_pack_json::from_json_str::<TypologyNode>(&typology_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-            continue;
-        };
-        let Ok(kinds) = semio_framework_pack_json::from_json_str::<Vec<ObjectKind>>(&kinds_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-            continue;
-        };
-        if kinds.len() > SOURCING_JSON_MAX_ITEMS {
-            continue;
-        }
-        modules.push(ContributedSourcingModule { module_id, label, typology, kinds });
-    }
-    modules
-}
+
 
 /// 🔢️ The most modules this app ever installs at once — three authored plus five contributed. Every
 /// module costs the pool's filter bar one toggle plus one `select` item per typology node, and that
@@ -875,64 +771,9 @@ fn contributed_sourcing_modules(contributions_json: &str) -> Vec<ContributedSour
 /// is an unbounded surface. A host pack past this cap installs its first modules and stops.
 pub const SOURCING_MAXIMUM_MODULES: usize = 8;
 
-/// 🧩️ Every sourcing module known to this crate, in stable order: the three authored ones first, then
-/// each contributed module whose id no module already serves — a `sourcing-module-beams` extension
-/// re-contributing the authored `beams` module installs nothing, it does not duplicate it.
-pub fn sourcing_modules(contributions_json: &str) -> Vec<SourcingModules> {
-    let mut modules: Vec<SourcingModules> = vec![beams::BeamsModule.into(), windows::WindowsModule.into(), slabs::SlabsModule.into(), reuse::ReuseModule.into()];
-    for module in contributed_sourcing_modules(contributions_json) {
-        if modules.len() >= SOURCING_MAXIMUM_MODULES {
-            break;
-        }
-        if modules.iter().any(|installed| installed.module_id() == module.module_id) {
-            continue;
-        }
-        modules.push(SourcingModules::from(module));
-    }
-    modules
-}
 
-/// ✂️ The INSTALLABLE share of one host `ProgramContributionEntry[]` pack, re-encoded — the only thing
-/// `setContributions` ever retains. A host pack is cut from the whole loaded closure and is unbounded;
-/// the app's retained config lane is a fixed envelope, so the app keeps exactly what it can act on:
-/// `sourcing.module` entries addressed to this app whose module id no installed module already serves,
-/// in host order, while the re-encoded roster still fits `maximum_bytes`. Everything else is dropped
-/// rather than retained — a duplicate module installs nothing anyway (see [`sourcing_modules`]), and
-/// the three shipped `sourcing-module-{beams,slabs,windows}` extensions re-contribute exactly the
-/// three modules this crate already authors, so the demonstrator's pack distills to `[]`.
-pub fn installable_contributions(contributions_json: &str, maximum_bytes: usize) -> String {
-    let empty = "[]".to_string();
-    if !sourcing_json_envelope_is_bounded(contributions_json) {
-        return empty;
-    }
-    let mut installed: Vec<String> = sourcing_modules("[]").iter().map(|module| module.module_id().to_string()).collect();
-    let mut kept: Vec<semio_framework::ProgramContributionEntry> = Vec::new();
-    for entry in parse_contributions(contributions_json) {
-        if installed.len() >= SOURCING_MAXIMUM_MODULES {
-            break;
-        }
-        let Some(module_id) = entry
-            .topic_contribution
-            .as_ref()
-            .filter(|topic| topic.topic == SOURCING_MODULE_TOPIC)
-            .and_then(|topic| topic.decode::<SourcingModuleTopicPayload>().ok())
-            .filter(|payload| payload.app_id == SOURCING_CURATION_APP_ID)
-            .map(|payload| payload.module_id)
-        else {
-            continue;
-        };
-        if installed.iter().any(|id| id == &module_id) {
-            continue;
-        }
-        kept.push(entry);
-        if semio_framework_pack_json::to_json_string(&kept).len() > maximum_bytes {
-            kept.pop();
-            continue;
-        }
-        installed.push(module_id);
-    }
-    if kept.is_empty() { empty } else { semio_framework_pack_json::to_json_string(&kept) }
-}
+
+
 
 /// 🔎️ Looks up a single module by id.
 pub fn module_for(contributions_json: &str, module_id: &str) -> Option<SourcingModules> {
@@ -990,24 +831,9 @@ pub fn demo_stock() -> Vec<ObjectKind> {
     sourcing_modules("[]").iter().flat_map(|module| module.demo_kinds()).collect()
 }
 
-/// 📄️ The demo-stock example, parsed once from `crate::dsl::DEMO_STOCK_TEXT` — the
-/// source of truth for every "demo stock" call site (`setActiveExample`, `initial_snapshot`, tests).
-/// The fixture's persisted `catalog` handle is content-addressed from `demo_stock()` (see
-/// `crate::catalog_child_handle`) — re-deriving the same stock here and seeding the
-/// working-scene cache with it resolves that exact handle, since a composed child is a handle only,
-/// never inline content, in the persisted DSL text itself.
-pub fn default_document() -> CurationSnapshot {
-    crate::validate_catalog_payload(&demo_stock());
-    <CurationSnapshot as store::ArtifactDsl>::parse_dsl(crate::document_dsl::DEMO_STOCK_TEXT).expect("authored demo stock must match the curation schema")
-}
 
-/// 📄️ The empty-curation example, parsed once from
-/// `crate::dsl::EMPTY_CURATION_TEXT` — empty stock, so its `catalog` handle is the
-/// same content-addressed empty-catalog handle `CurationSnapshot::default()` mints.
-pub fn empty_document() -> CurationSnapshot {
-    crate::validate_catalog_payload(&[]);
-    <CurationSnapshot as store::ArtifactDsl>::parse_dsl(crate::document_dsl::EMPTY_CURATION_TEXT).expect("authored empty curation must match the curation schema")
-}
+
+
 //#endregion 🔖️Fixtures
 
 //#region 🏗️Construction

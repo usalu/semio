@@ -15,9 +15,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 #[path = "♻️retirement/🦀️.rs"]
 mod retirement;
-#[path = "🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"]
-mod snapshot_sqlite;
-pub use snapshot_sqlite::{register_sqlite_snapshot,SQLITE_SNAPSHOT_DIALECT};
+pub use io::sqlite::snapshot::{register_sqlite_snapshot,SQLITE_SNAPSHOT_DIALECT};
 
 use serde::{Deserialize, Serialize};
 
@@ -194,39 +192,12 @@ pub enum SpaceMutation {
 }
 
 //#region 🔖️HandcraftedOpCodecs
-/// 🧬️ Encodes and parses space mutations as operation text.
-impl protocol::OpText for SpaceMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
-                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec");
-        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
-    }
-}
 
-/// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
-impl protocol::OpBinary for SpaceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
+
+
 //#endregion 🔖️HandcraftedOpCodecs
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslDiff)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 pub struct SpaceDiff {
     pub name: Option<String>,
     pub kind: Option<SpaceKind>,
@@ -712,50 +683,9 @@ impl protocol::Mutation<SpaceSnapshot> for SpaceMutation {
 //#endregion 🔖️SpaceMutation
 //#endregion 🔖️Space
 //#region 🔖️HandcraftedArtifactCodecs
-/// 🧬️ P6: `DslArtifact` emits helpers only — ArtifactDsl/ArtifactPack are handcrafted here.
-impl store::ArtifactDsl for SpaceSnapshot {
-    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    fn envelope_id() -> &'static str {
-        Self::__DSL_ENVELOPE_ID
-    }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-/// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::ArtifactPack for SpaceSnapshot {
-    fn native_snapshot_registration() -> Option<(store::os_io::Dialect, store::ArtifactCodec)> {
-        Some((SQLITE_SNAPSHOT_DIALECT, store::ArtifactCodec::bare::<Self, SpaceMutation>(S_SPACE_SCHEMA)))
-    }
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
-    }
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        Some(Self::__dsl_spec())
-    }
-}
+
+
 //#region 🔖️Laws
 /// 🔎️ Looks up a member's role in a space, if they are one.
 pub fn space_role_of(space: &SpaceSnapshot, user_id: &str) -> Option<SpaceRole> {
@@ -863,5 +793,8 @@ pub fn package_descriptor() -> Result<SpaceArtifactPackage, SpacePackageSchemaEr
 mod tests;
 
 #[cfg(test)]
-#[path="🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+#[path="🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_snapshot_baseline;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

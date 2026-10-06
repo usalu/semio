@@ -2,6 +2,20 @@
   "name": "@semio-tech/framework-editor-rs",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "test-owned-error": {
+     "executor": "nx:run-commands",
+     "cache": false,
+     "options": {
+       "cwd": "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+       "command": "bun ./📜️script.ts test-owned-error",
+       "forwardAllArgs": true
+     },
+     "inputs": [
+       "default",
+       "{workspaceRoot}/🧰️framework/🔨️modules/✍️editor/⚠️error/**/*",
+       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+     ]
+   },
     "wasm": {
       "executor": "nx:run-commands",
       "options": {

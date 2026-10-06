@@ -20,7 +20,7 @@
 // committed.
 //
 //   bun 📜️script.ts generate [--out <dir>] [--only <recipe-id>]
-//   bun 📜️script.ts manifests                     # emit the fixtureManifests block for 🔮️oracles
+//   bun 📜️script.ts manifests                     # emit the testEvidence block for 🔮️oracles
 //
 // @see ../🔣️oracle.json — the oracles these bytes are attributed to
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️document-subset-oracle.md
@@ -385,7 +385,7 @@ function synchronizeOracleFixtureCoordinates(manifests: readonly Record<string, 
   const oraclePath = join(import.meta.dir, "..", "🔮️oracles", "🔣️.json");
   const oracle = JSON.parse(readFileSync(oraclePath, "utf8")) as Record<string, unknown>;
   const generatedById = new Map(manifests.map((manifest) => [String(manifest.id), manifest]));
-  oracle.fixtureManifests = (oracle.fixtureManifests as Record<string, unknown>[]).map((manifest) => {
+  oracle.testEvidence = (oracle.testEvidence as Record<string, unknown>[]).map((manifest) => {
     const generated = generatedById.get(String(manifest.id));
     if (generated === undefined) return manifest;
     return { ...manifest, files: generated.files, generator: generated.generator };
@@ -423,7 +423,6 @@ async function generateOne(recipe: Recipe, outDir: string): Promise<Record<strin
       files.push({ role: `${variant}-${carrier}`, path: `${FIXTURE_PATH_PREFIX}${fixtureDirectory}/${filename}`, mediaType: spec.mediaType, sha256: await contentDigest(bytes), bytes: bytes.length });
     }
     manifests.push({
-      schema: "semio.repository-test.fixture/v2",
       id: `${recipe.id}-${carrier}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.semio", standard: "v1", subset: "document" },
@@ -548,7 +547,6 @@ async function main(argv: readonly string[]): Promise<number> {
         files.push({ role, path: `${FIXTURE_PATH_PREFIX}${fixtureDirectory}/${name}`, mediaType: "application/json", sha256: await contentDigest(bytes), bytes: bytes.length });
       }
       entries.push({
-        schema: "semio.repository-test.fixture/v2",
         id: `carrier-${kind}`,
         class: "third-party-generated",
         target: { artifact: "s.stdio.semio", standard: "v1", subset: "document" },

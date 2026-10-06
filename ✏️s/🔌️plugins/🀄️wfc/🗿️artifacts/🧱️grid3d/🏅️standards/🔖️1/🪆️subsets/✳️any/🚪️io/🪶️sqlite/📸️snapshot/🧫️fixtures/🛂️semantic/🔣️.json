@@ -1,0 +1,19 @@
+{
+  "schema": "s.wfc.grid3d.sqlite.semantic-admission/v1",
+  "rows": 21,
+  "columns": 9,
+  "valueBytes": 984,
+  "tableRows": {
+    "wfc_grid3d_document": 1,
+    "wfc_grid3d_cell_size": 5,
+    "wfc_grid3d_tile": 2,
+    "wfc_grid3d_mesh": 1,
+    "wfc_grid3d_position": 4,
+    "wfc_grid3d_index": 2,
+    "wfc_grid3d_color": 1,
+    "wfc_grid3d_mesh_child": 1,
+    "wfc_grid3d_rule": 1,
+    "wfc_grid3d_pin": 1,
+    "wfc_grid3d_mask": 2
+  }
+}

@@ -131,7 +131,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "embedment": {
@@ -156,7 +157,8 @@
             },
             "widget": "stepper",
             "unit": "°",
-            "precision": 1
+            "precision": 1,
+            "step": 0.5
           }
         },
         "settlementLimit": {
@@ -170,7 +172,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "loadCases": {
@@ -238,7 +241,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1
           }
         },
         "depthBottom": {
@@ -250,7 +254,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1
           }
         },
         "gamma": {
@@ -264,7 +269,8 @@
             "unit": "N/m³",
             "displayUnit": "kN/m³",
             "displayFactor": 0.001,
-            "precision": 1
+            "precision": 1,
+            "step": 500
           }
         },
         "gammaPrime": {
@@ -278,7 +284,8 @@
             "unit": "N/m³",
             "displayUnit": "kN/m³",
             "displayFactor": 0.001,
-            "precision": 1
+            "precision": 1,
+            "step": 500
           }
         },
         "phiPrimeDeg": {
@@ -305,7 +312,8 @@
             "unit": "Pa",
             "displayUnit": "kN/m²",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "cohesionUndrained": {
@@ -319,7 +327,8 @@
             "unit": "Pa",
             "displayUnit": "kN/m²",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "oedometricModulus": {
@@ -345,7 +354,8 @@
               "de": "Querdehnzahl ν"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.01
           }
         },
         "cptQc": {
@@ -359,7 +369,8 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 500000
           }
         },
         "sptN": {
@@ -370,7 +381,8 @@
               "de": "SPT-Schlagzahl N"
             },
             "widget": "stepper",
-            "precision": 0
+            "precision": 0,
+            "step": 1
           }
         }
       },
@@ -452,7 +464,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.01
           }
         },
         "length": {
@@ -489,7 +502,8 @@
               "de": "Mantelreibungsbeiwert α_s"
             },
             "widget": "stepper",
-            "precision": 2
+            "precision": 2,
+            "step": 0.01
           }
         },
         "unitShaftResistance": {
@@ -503,7 +517,8 @@
             "unit": "Pa",
             "displayUnit": "kN/m²",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "unitBaseResistance": {
@@ -517,7 +532,8 @@
             "unit": "Pa",
             "displayUnit": "N/mm²",
             "displayFactor": 1e-06,
-            "precision": 1
+            "precision": 1,
+            "step": 100000
           }
         },
         "compressionPermanent": {
@@ -531,7 +547,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "compressionVariable": {
@@ -545,7 +562,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "tensionPermanent": {
@@ -559,7 +577,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "tensionVariable": {
@@ -573,7 +592,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "testProfiles": {
@@ -638,7 +658,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "verticalVariable": {
@@ -652,7 +673,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "horizontalPermanent": {
@@ -666,7 +688,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "horizontalVariable": {
@@ -680,7 +703,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "momentPermanent": {
@@ -694,7 +718,8 @@
             "unit": "N·m",
             "displayUnit": "kN·m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "momentVariable": {
@@ -708,7 +733,8 @@
             "unit": "N·m",
             "displayUnit": "kN·m",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         }
       },
@@ -742,7 +768,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "baseResistance": {
@@ -756,7 +783,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         }
       },

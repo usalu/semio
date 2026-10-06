@@ -8,7 +8,7 @@
 //! constitutional: general, an artifact must never depend on an app, so it lives here rather than under
 //! `🗿️artifacts`).
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block5dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 use crate::{artifact_kind, Block5dSnapshot, BLOCK_5D_SCHEMA};
 use crate::editor::block5d::commands::patch_part_kind;
 use crate::editor::block5d::commands::{add_grip, remove_grip};
@@ -61,7 +61,7 @@ pub const BLOCK5D_GRANULARITY_GRIP: &str = "grip";
 pub const BLOCK5D_GRANULARITY_GRIP_KIND: &str = "gripKind";
 /// 🗂️ The `s/plugin/puzzle` 5d catalog artifact kind block5d's `"catalog:out"` port produces — see
 /// `block5d_io` and `Block5dPlayApp::export_media`.
-use semio_s_artifact_block_2d::KIT_CATALOG_ARTIFACT_ID;
+use semio_s_plugin_block_catalog::ARTIFACT_ID;
 
 /// 🎯️ One action binding addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎮️commands/*`)? builds its `on_change`/item actions with.
@@ -246,7 +246,6 @@ struct Block5dStorePreparationFactory;
 struct Block5dStorePreparation {
     base: Option<store::SnapshotRead<Block5dSnapshot>>,
     mutation: Option<Block5dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Block5dSnapshot, Block5dMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -255,9 +254,9 @@ struct Block5dStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Block5dSnapshot, Block5dMutation> for Block5dStorePreparationFactory {
-    fn preflight(&self, mutation: &Block5dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Block5d Store preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &Block5dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Block5d Store preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -288,7 +287,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block5dSnapshot, Block5dMutat
         Ok(Box::new(Block5dStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -329,7 +327,7 @@ impl store::ArtifactStoreOneItemPreparation<Block5dSnapshot, Block5dMutation> fo
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -345,7 +343,7 @@ impl store::ArtifactStoreOneItemPreparation<Block5dSnapshot, Block5dMutation> fo
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation
@@ -445,7 +443,7 @@ impl ArtifactEditor for Block5dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id || block5d_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-            return Err(Fault::from("block5d-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "block5d-retained-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, block5d_retained_reduce, block5d_retained_extent));
@@ -474,9 +472,9 @@ impl ArtifactEditor for Block5dPlayApp {
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document (the same DSL
     /// `setActiveExample` parses), so the board window shows a part kind and the World3d window a
     /// `mesh_url` instead of the all-`Default` empty part kind — see
-    /// `crate::standards::v1::subsets::any::schema::default_block5d_snapshot`.
+    /// `crate::standards::v1::subsets::any::io::text::snapshot::default_block5d_snapshot`.
     fn initial_snapshot() -> Block5dSnapshot {
-        crate::standards::v1::subsets::any::schema::default_block5d_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_block5d_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -572,7 +570,7 @@ impl ArtifactEditor for Block5dPlayApp {
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::standards::v1::subsets::any::schema::inferences::puzzle5d_catalog_fragment(doc.snapshot);
-        Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: KIT_CATALOG_ARTIFACT_ID.into(), json: fragment.to_string() } })
+        Ok(Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: MediaPayload::Structured { schema: ARTIFACT_ID.into(), json: fragment.to_string() } })
     }
 }
 //#endregion 🔖️Block5dPlayApp
@@ -594,7 +592,7 @@ pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle5d catalog artifact this app's new `"catalog:out"` port produces — see
             // `block5d_io`/`Block5dPlayApp::export_media`.
-            .artifact_kind(semio_s_artifact_block_2d::kit_catalog_artifact_kind())
+            .artifact_kind(semio_s_plugin_block_catalog::artifact_kind())
             .icon_id("layers")
             .mode_def(edit_mode::definition())
             .default_mode_id(edit_mode::BLOCK5D_PLAY_MODE_EDIT)

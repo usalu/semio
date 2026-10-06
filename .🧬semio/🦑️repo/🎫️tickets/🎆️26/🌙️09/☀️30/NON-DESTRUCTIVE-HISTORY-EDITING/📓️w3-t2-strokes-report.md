@@ -865,3 +865,160 @@ lives in `🧪️tests/🧫️fixtures/`, so the path is now `../🧫️fixtures
 **COMPOSITION GREEN raster, remodel, wfc, process** sent to `main` (22:18). This also verifies, natively and for wasip2, every source edit since 04:27: F5
 `GestureTool` (raster + bitmap), F9 notices / named codes, F15, pack-error conversion, raster deep-value retirement, remodel/wfc value-refusal fixes.
 Still OWED (rule 43, tests): raster/remodel/wfc/process3d lib tests, `--ignored emit_committed_fixtures`, renderer-wgpu `-- paint2d`.
+
+## Session 5 — 2026-10-05
+
+Executor S5-STROKES-NORM (Opus, coordinator `⚪3f26aaa1…`, rules 1–55), successor of S4-STROKES and S4-NORM. Owns raster, remodel, wfc ×5,
+process3d and the 16 norm crates with their hub compositions. Scratch: `🗑️generated/s5-strokes-norm/`. Norm half: `📓️s3-norm-report.md` § Session 5.
+
+### S5.0 Start (01:10) — rule 46 repair-first
+
+- Files newer than S4.12 (22:18): remodel, wfc, process **0**; raster **192** — all written by S4-STROKES itself AFTER its last report section
+  (unreported runs, logs in `🗑️generated/s4-strokes/`): `🧬️mutations/💾️binary/🦀️.rs` 22:37, `🖌️paint-stroke/🧪️tests/🦀️.rs` + 5 leaf schemas 22:38,
+  185 fixture files 22:50 (`--ignored emit_committed_fixtures`, `test-raster-emit-1.txt` **5/0**). No half-edit: every file is complete.
+- What those unreported runs say (predecessor's runs, NOT mine — re-run below before anything is called green):
+  `test-raster-5` 22:34 **372 / 16 failed**, no abort (the 1024-deep Drop panic is gone); `test-raster-6` 22:53 **375 / 13 failed**;
+  `payloads-raster-2` 54/54, 22/22 witnessed, **0** findings (was 4 unwitnessed); `inputs-raster-2` 55/55, 3 `leafUncatalogued` (central generate);
+  `test-others-1` 23:02 stopped at ONE compile error: wfc-bitmap lib test `✏️editor/🧪️tests/🔬️unit/🦀️.rs:87` E0308 (`command_mutation` returns
+  `Option<BitmapMutation>`, the test destructured a tuple) → **fixed 01:28** (source; compile below).
+- The 13 raster failures of `test-raster-6` (read from the log): 3 quintet prints (`apply-filter 🌈️inverts`, `fill-region 🧱️walls`,
+  `transform-image ↪️rotates-right`: the committed `➡️after` differs from the leaf's print — asset content ids, and for rotate the extent),
+  `pack_round_trips_representative_document` (composed image content beside its handle: `None` vs an empty image), 4 mounted document laws
+  (`editable_archive_restores_…`, `composite_scene_syncs_…` "reopened document keeps its asset entry: {}", `layer_baking_at_asset_capacity…`
+  "asset must be materialized before rendering", 3 `media_export` `job-session.terminal-fault`), `history_edit_inputs_resolve` (3 leaves `$ref`
+  `framework/value` + `os/store/child` schema documents nothing publishes — the S5-AGNOSTIC acceptance law), 2 store-close witnesses
+  (`protection_controls…`, `fill_tool_transactions…`: "document store close awaits a retained reader or owner").
+
+### S5.1 P1 — re-establish green (rule 55 gate v4 since 01:20)
+
+| Check | Result |
+|---|---|
+| `cargo check --manifest-path ✏️s/Cargo.toml -p <16 norm crates> --lib --keep-going` (`check-norm-1`, 01:13–01:20) | **exit 0, 16/16** (first confirmation against the pack-error API) |
+| `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-norm --lib --target wasm32-wasip2 --keep-going` (`check-hub-norm-1`, 01:24–01:25) | exit 101, **1 error, not mine**: kernel `🗣️dsl/🦀️.rs:219:71` E0308 `pack::record::EncodeOptions` vs `os_pack::value::EncodeOptions` (file mtime 01:21:57, a peer landing) — told `main` 01:26; re-run OWED |
+| `cargo check … -p <raster, remodel, wfc ×5, process3d> --lib --tests --keep-going` (`check-strokes-1`, 01:31) | exit 101 after 16 s, **not mine**: `semio-framework-pack` lib 13× E0308 `format::VerificationLevel` vs `protocol::VerificationLevel` (`🎒️pack/🌱️value/🦀️.rs:3125…`, Codex pack peer mid-wave; rule 56 foundation RED 01:32 → GREEN 01:43) — re-run below |
+| `cargo check --manifest-path ✏️s/Cargo.toml -p <raster, remodel, wfc-2d, wfc-3d, wfc-grid2d, wfc-grid3d, wfc-bitmap, process3d> --lib --tests --keep-going` (`check-strokes-2`, 01:58–02:04, gate starved 01:50–01:58) | **exit 0**, lib + lib-test of all 8 (warnings as proof: raster 23/107, remodel 43/87, wfc-2d 21/22, wfc-3d 17/18, grid2d 22/25, grid3d 15/16, bitmap ·/4, process3d 19/81) — includes S5-TOOLS' F21 `drive` call sites, the wfc-bitmap unit-test fix and the S5.2 schema edits |
+| `cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-norm -p semio-hub-raster -p semio-hub-remodel -p semio-hub-wfc -p semio-hub-process --lib --target wasm32-wasip2 --keep-going` (`check-hubs-1`, 02:08–02:13) | **exit 0** (82 crates checked) → **COMPOSITION GREEN norm, raster, remodel, wfc, process** sent to `main` 02:14 |
+
+### S5.2 §22.8 input declarations (bun only, while the foundation was red) — 01:35–01:50
+
+S5-GATES' `schema mutation-inputs` now fails an interactive numeric input that declares neither `x-semio-ui.step` nor `snaps`/`snapSource`.
+Input script `T/🧪️s5-strokes-norm-input-steps.py census|declare|check <gate --json> <plugin roots…>`: resolves every finding (leaf + payload pointer)
+through `$ref`/`properties`/`items`/nullable unions to the ONE property that owns the fact (almost always an artifact/snapshot `$defs` entry several
+leaves share), merges the declaration into its `x-semio-ui` (step in the STORED unit), re-prints the file in its own style (asserted byte-identical
+before the edit, inline scalar arrays kept by ordinal) and fails closed on a property without a rule or a stale table row.
+
+| plugin | before (`numericUndeclared`) | declared | gate after |
+|---|---|---|---|
+| remodel | 50 findings / 38 properties (artifact schema `$defs`: counts step 1; `fpsHint` snaps 24/25/30/50/60/120; `textureSize`/`orthoMaxPx` powers of two; lon/lat precision 6; `FrameRef.index`, `VideoSource.width/height` gained their label) | 38 in 1 file | **0 numeric**; 8 `inputless` (`replace-*`, `commit-reconstruction`) wait for the §22.20 `"editable": false` marker (coordinator relays) |
+| process | 5 / 5 (`index`/`toIndex` positions step 1 with en/de label; capability parameter `value` = tool size m→mm, step 1 mm) | 5 in 4 files | **exit 0, 0 findings** |
+| wfc | 1 / 1 (grid3d `change-cell-sizes` item: "Cell size", step 0.1) | 1 in 1 file | **exit 0, 0 findings** |
+| raster | 0 numeric; 3 `leafUncatalogued` (`apply-filter`, `transform-image`, `fill-selection` — central `schema generate`, coordinator) | — | unchanged |
+
+Norm (579 findings / 400 properties): `📓️s3-norm-report.md` § S5.1.
+
+### S5.3 P3 — remodel imports stay on design §15 (coordinator decision 02:00); what §15 gives, with the code
+
+Audit clause 11 / G11.3 reads remodel as "stamps transactions WITHOUT a `ToolMachineRunner`". That reading is correct as a census fact and
+is the design: `📋️design.md` §15 exists because the shared gesture runner CANNOT carry this tool. Shown from the code on disk (`RM` =
+`✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor`, `PLG`/`STORE`/`TM` as in `📓️s5-resume.md`):
+
+1. **Why not `ChartGesture` / the §22.10 window slot.** `drive_gesture` (`TM/🦀️.rs:514-545`) answers `GestureDrive.committed` only for
+   `ToolStep::Committed`; a `Stream` tick keeps every keyed mutation in `GestureState.entries` (`TM:596-604`, cloned on each resume `:677`) and the
+   runtime folds all of them on every overlay refresh (`GestureLedger::provisional`, `TM:768`). A video import yields up to 200 frames, 40–80 MB of
+   `create-asset` payloads: beyond the 256 KiB dispatch bound and `mutation.too-large` at the one commit, and quadratic in copies before it. The host
+   facts differ too: `GestureHostEvent::abort_reason` (`TM:580-588`) ends a gesture on blur and capture loss, an import must outlive both
+   (`RM/📼️…/🧪️tests/🔬️unit:187 other_host_facts_leave_an_import_running`); only its window closing ends it (`RM/🦀️.rs:871` `Retiring → importAbort`).
+2. **What the user gets is the same contract** — one transaction, one edit, one row, editable mutations, zero-trace abort:
+   - every op stamped: `Emit::stream_transaction(import_transaction(&stream_id), mutations)` (`RM/🎮️commands/📼️import-video-frame-payload/🦀️.rs:132`,
+     `🖼️import-frame-payload/🦀️.rs:136`) → `artifact_lane_commands` → `ArtifactCommand::AppendTransaction { mutations, transaction }` (`PLG:24629`)
+     → the store's open edit, each op carrying `MutationMeta.transaction` (`STORE:3138`, law `🏪️store/🧪️tests/🧪️tool-transaction/🦀️.rs:202
+     appends_and_a_commit_record_exactly_the_edit_one_apply_records`);
+   - one edit / one row: `Emit::commit_transaction(ref, [replace_stream_source])` (`✅️import-video-done/🦀️.rs:35`) → `AppendTransaction` +
+     `CommitTransaction` (`PLG:24630-24633`); framework law `PLG/🧪️tests/🧪️time-travel/🦀️.rs:609
+     a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none`; remodel laws `:90 a_still_import_is_one_edit_one_undo_and_one_redo`,
+     `:103 a_video_import_streams_its_frames_and_commits_one_edit`;
+   - zero trace: `Emit::abort_transaction(ref)` (`🛑️import-abort/🦀️.rs:25,27`) → `close_streamed_transaction_unit` → `abort_open_transaction` +
+     `retire_displaced_document_rows` (`PLG:28869-28889`); laws `:135 an_aborted_import_leaves_zero_trace`, `:169
+     the_importing_window_closing_aborts_its_import_with_zero_trace`, store `:239 an_aborted_transaction_leaves_no_trace_anywhere`;
+   - exclusive while open: `:118 an_open_import_refuses_every_other_document_verb` (`toolTransaction.open`), `historyEditBegin` answers
+     `timeTravel.busy` (`📓️api-transaction-amend.md` §2) — so no `Frozen` mapping is needed: a history edit cannot open under an import;
+   - history edits the mutations, never the tool: the committed row lists `create-asset` / `create-stream` / `add-stream-frame` /
+     `replace-stream-source` ops; the tool state (`RemodelingImport { streamId, done, total, rollingScores }`, `RM/🫧️transient/🦀️.rs:17-23`) is
+     window transient, never history. `add-stream-frame`, `create-stream` and `replace-stream-source` inputs now carry declared controls (S5.2).
+3. **Where it differs from a `ToolMachine`, stated plainly.** (a) The control flow is three states written as match arms over the window
+   transient (`None` = idle, `Some{stream_id: None}` = started, `Some{stream_id: Some}` = streaming — `handle_in_window` of the four import verbs),
+   not a `statechart!`; its cross-language law is the store/runtime transaction corpus, not the tool-machine corpus. (b) The ref is minted from the
+   stream the import builds (`import_transaction`, `📼️…/🦀️.rs:30-32`: `TransactionRef::mint(ActorId(stream_id), zero clock, "<app>#import")`), not
+   from (actor, clock): the stream id is itself content-addressed over the admission seed (`mint_remodeling_id`), so the ref is unique per import
+   and every tick, the done and the abort name it without tool state (law `:80 an_import_names_one_transaction_minted_from_its_stream`).
+4. **If the fleet wants ONE producer shape later** (G11.3's gate "every `Emit::*_transaction` caller owns a machine"): the missing framework piece
+   is a streamed drive, not a remodel rewrite — `ToolStep::Open` → `Emit::stream_transaction(ref, entries drained from the runner's open
+   transaction)`, `Committed|Empty` → `commit_transaction`, `Aborted` → `abort_transaction` — possible on today's public `ToolMachineRunner::
+   {into_parts, resume}` + `ToolTransaction::{into_parts, resume}` API, plus a host-fact policy per tool (an ingest ends on `Retiring` only).
+   Not started: it belongs to the tool-machine owner (S5-TOOLS) and no product step depends on it.
+
+### S5.4 §22.10 adoption — wfc bitmap brush on the framework gesture slot, process3d one-shot (02:15–02:42, cut 02:40; resumed 07:28)
+
+S5-TOOLS' framework half (host-fact → abort mapping incl. `Frozen`, `GestureLedger` window slot, `context.gesture()`, overlay fold) is on disk.
+
+**wfc bitmap (`B` = `✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor`) — DONE in source, compiled (below):**
+- `B/🎭️modes/✏️edit/🪟️windows/🖼️input/🪛️utilities/🖌️brush/🦀️.rs`: the `statechart!` chart stays; `impl GestureChart for brush_tool::BrushTool`
+  (`BASE_BOUND = false`, `tool(_) = <appId>#paint-stroke`, `restore` = the ONE entry `stroke:0` of the open transaction → `BrushToolContext`,
+  `event`: Once → `Stroke`, Stream → `Stream`, Commit → `Finish`, Abort → none: the runner aborts); `pub type BitmapBrush = ChartGesture<…>`.
+  **Deleted:** `BitmapBrushTool` (struct + `impl GestureTool` with start/resume/persist), `bitmap_brush_dispatch`, `bitmap_brush_preview`.
+- `B/🦀️.rs`: the retained step drives `input.context.gesture()` (`GestureSlot::detached()` without a context) and answers
+  `ArtifactCommandWorkStep::Complete(emit)` — no window-transient lane any more; `paint_stroke(command, doc, cfg, slot, interrupt)` =
+  `slot.drive::<BitmapBrush>(…)` + `gesture_emit(committed, seed)`; a fresh press over a stroke a lost release left open first drives
+  `Abort(captureLost)` on the same slot (`interrupt`, was: resume from a default transient); a stroke left OPEN on a detached slot is refused
+  `wfc.bitmap.stroke.window-required` (replaces the up-front "stream without a window" arm, which also refused a windowless stream that paints
+  nothing). **Deleted:** the `host_event` arm (blur / captureLost / utility / retiring / `TimeTravelFrozen` → abort command — the runtime's
+  `end_window_gesture` does it; a moved base keeps the stroke because the chart is not base-bound), `register_window_transient_owners`, the
+  preview fold in `render_bodies` (the runtime overlay folds the slot's entries).
+- **Deleted paths (rule 32)**: `B/🎭️modes/✏️edit/🪟️windows/🖼️input/🫧️transient/🦀️.rs` + its directory (`BitmapBrushToolState`,
+  `BitmapInputWindowTransient`, its `transient_root!` / `window_transient_owners!`), and the `pub mod transient;` row of the crate root. Zero-reference
+  proof before the delete: `git grep --untracked -e inputwindowtransient -e BitmapInputWindowTransient -e BitmapBrushToolState -e bitmap_brush_dispatch
+  -e bitmap_brush_preview -e 'BitmapBrushTool\b' -- ':!.🧬semio/🦑️repo/🎫️tickets'` → only the deleted file and the brush test (rewritten). No schema
+  twins existed (the transient was Rust-only); taxonomy / catalog / launch rows: none. The generated descriptor still lists the envelope
+  `s.wfc.bitmap.inputwindowtransient` until the describe wave (coordinator).
+- Laws rewritten (`B/🧪️tests/🧪️brush-tool/🦀️.rs`): the pure tool laws drive the real `GestureLedger` slot of the input window (one-shot through
+  `drive_chart_gesture`), same assertions as before (one transaction across ticks, every abort reason zero trace, no-cell stroke, one-shot
+  interrupts, tampered slot dropped, no repeated cell); NEW `host_facts_end_the_stroke_in_the_ledger_and_a_moved_base_keeps_it` (5 facts end, a
+  moved base keeps and the kept stroke commits), `the_open_stroke_offers_its_one_net_leaf_as_the_provisional_overlay`, mounted
+  `a_mounted_blur_ends_the_open_stroke_with_zero_trace` (the real `hostEvent` verb on an editor that answers none); removed with their subject:
+  `the_window_previews_committed_plus_the_open_stroke`, `the_brush_state_round_trips_the_window_transient_codecs`.
+
+**process3d one-shot** (`…/🧊️process3d/…/✏️editor/🎮️commands/🌍️world/🦀️.rs`): `impl GestureChart for world_tool::WorldTool`;
+`process3d_world_commit` = `drive_chart_gesture::<…>(None, verb, Once, …)?.committed` and answers `Result<Option<…>, ToolRefusal>` (a refusal is the
+dispatch's fault, no longer a silent `None`); `world_emit` → `Result<Emit, Fault>` over `gesture_emit`; hand-rolled `ToolMachineRunner::start` + `send`
+gone. Tests follow the new signatures.
+
+**Stale tests found by compiling the wfc editors WITH `--features component-app-assembly`** (the plain `--lib --tests` of S4.12 / S5.1 never
+compiled a wfc editor — the editor modules are feature-gated; every earlier "wfc `--lib --tests` green" was the schema half only): bitmap
+`🧪️tests/🔬️unit:87` (tuple destructure of `command_mutation`), grid2d `🧪️tests/🔬️unit:180-182` (`armed_pick` answers the mutation, not
+`(mutation, label)` — the law now reads the leaf's own en label; the pin label gained its tile: `Pin cell (x, y) to "<tile>"`), wfc 2d
+`🧪️tests/🔬️unit:180` (`{result:?}` over an `Emit`, which is not `Debug`).
+
+| Check (gate v5, `CARGO_BUILD_JOBS=3`) | Result |
+|---|---|
+| `cargo check PM -p wfc-bitmap --lib --tests` (`check-bitmap-slot-1`, 02:21) | exit 0 — but WITHOUT the feature: proves nothing about the editor |
+| `… -p wfc-bitmap -p wfc-grid2d -p wfc-2d -p wfc-3d -p wfc-grid3d --features <each>/component-app-assembly --lib --tests --keep-going` (`check-wfc-features-1`, 02:32–02:37) | bitmap, wfc-3d, grid3d lib + lib-test **0 errors**; grid2d + wfc-2d lib-test 1 error each (the stale tests above) |
+| `… -p wfc-grid2d -p wfc-2d -p process3d --features … --lib --tests --keep-going` (`check-wfc-features-2`, 02:38–02:42) | **exit 0** |
+
+**Raster — NOT adopted yet (coordinator decision 04:2x):** press identity and the closed-press memory become framework-owned in `GestureLedger`
+(S5-TOOLS; relay "GESTURE PRESS IDENTITY ON DISK"). Why raster cannot adopt on the verb-only slot: its ticks carry a host press id and all have one
+shape, so a late `stream`/`commit` of a press a host fact ended would find an empty slot, re-open and commit a PARTIAL stroke; today the editor's
+host arm records that press in `RasterCompositeWindowTransient.closed`. Fold cost (TOOLS' question): no opt-out needed — raster's own preview
+already applies the whole provisional leaf per render (`raster_stroke_preview` = `apply_raster_mutation`), the framework fold is one diff + apply
+per tick of the same order. The measurement is part of the owed raster law run.
+
+### S5.5 §22.20 — the eight remodel result leaves are withdraw-only (07:35)
+
+`T/🧪️s5-strokes-remodel-withdraw-only.py` (explicit list, `--check`; refuses a descriptor that does not re-print byte-identically or whose payload
+shows an input): `"editable": false` as the last key of the leaf descriptor `🧬️mutations/<leaf>/🔣️.json` of `replace-dense`,
+`replace-geo-products`, `replace-mesh-result`, `replace-qc`, `replace-sparse`, `replace-tracks`, `replace-trajectory`, `commit-reconstruction`
+(all eight: `#[mutation_leaf(contract = ::protocol)]`, no `payload` / `input_schema` attribute, every payload input `hidden`). The derive then
+emits `input_schema() -> None`: the row offers Withdraw/Restore only.
+
+Gate `schema mutation-inputs --under ✏️s/🔌️plugins/<plugin>` after it (07:36): **remodel exit 0** (36 leaves, 8 withdraw-only, 0 findings),
+**process exit 0**, **wfc exit 0**, **norm exit 0**; **raster exit 1 with 3 `leafUncatalogued`** (`apply-filter`, `transform-image`,
+`fill-selection` are not in the central leaf catalogue — clears with the coordinator's central `schema generate`, no raster edit).

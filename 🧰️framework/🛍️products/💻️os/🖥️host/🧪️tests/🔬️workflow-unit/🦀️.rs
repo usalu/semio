@@ -357,51 +357,34 @@ mod tests {
         assert!(crate::host::resolve_kernel_future(plan_workflow(&graph, &dirty_set(&["node-1"]))).is_empty());
     }
 
-    /// 🔬️ Shared fixtures replay (`framework/product/os/core/fixtures/*.dsl`) — the same files
-    /// drive `planWorkflow`'s vitest harness in `js/index.ts` (decoded there via the sibling
-    /// `.spk` through a wasm export), keeping the two implementations in lockstep. See
-    /// `framework/product/os/core/fixtures/README.md`.
-    fn workflow_fixture_dsl_paths() -> Vec<std::path::PathBuf> {
-        let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧫️fixtures");
-        let entries = std::fs::read_dir(&fixtures_dir).unwrap_or_else(|error| panic!("read fixtures dir {fixtures_dir:?}: {error}"));
-        let mut paths: Vec<std::path::PathBuf> = entries.map(|entry| entry.expect("dir entry").path()).filter(|path| path.extension().and_then(|extension| extension.to_str()) == Some("dsl")).collect();
-        paths.sort();
-        paths
+    #[derive(semio_framework_value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
+    struct PlannerCase {
+        name: String,
+        graph: Workflow,
+        dirty_node_ids: Vec<String>,
+        expected_deliveries: Vec<WorkflowDelivery>,
     }
 
     #[test]
-    fn workflow_fixtures_match_expected_deliveries() {
-        let paths = workflow_fixture_dsl_paths();
-        for path in &paths {
-            let contents = std::fs::read_to_string(path).unwrap_or_else(|error| panic!("read fixture {path:?}: {error}"));
-            let fixture = <WorkflowFixture as store::ArtifactDsl>::parse_dsl(&contents).unwrap_or_else(|error| panic!("parse fixture {path:?}: {error}"));
-            let dirty: HashSet<String> = fixture.dirty_node_ids.iter().cloned().collect();
-            let deliveries = crate::host::resolve_kernel_future(plan_workflow(&fixture.graph, &dirty));
-            assert_eq!(deliveries, fixture.expected_deliveries, "fixture {} mismatch", fixture.name);
-        }
-        assert!(paths.len() >= 5, "expected workflow fixtures in fixtures dir, found {}", paths.len());
-    }
-
-    /// 🧬️ Every fixture ships as a `.dsl`/`.spk` pair: both must decode to the identical
-    /// `WorkflowFixture`, the `.dsl` text must already be its own canonical `print_dsl`
-    /// fixpoint, and the `.spk` bytes must match a fresh canonical `encode_pack()` of the
-    /// parsed document byte-for-byte (canonical pack encoding is deterministic, independent of
-    /// field-map iteration order — see `store`'s pack facade docs).
-    #[test]
-    fn workflow_fixture_dsl_and_spk_pairs_are_canonical_and_equivalent() {
-        let paths = workflow_fixture_dsl_paths();
-        for dsl_path in &paths {
-            let file_name = dsl_path.file_name().and_then(|name| name.to_str()).unwrap_or_default();
-            let spk_name = if file_name.starts_with("🗣️") { file_name.replacen("🗣️", "📦️", 1).replace(".dsl", ".spk") } else { file_name.replace(".dsl", ".spk") };
-            let spk_path = dsl_path.with_file_name(spk_name);
-            let dsl_text = std::fs::read_to_string(dsl_path).unwrap_or_else(|error| panic!("read {dsl_path:?}: {error}"));
-            let spk_bytes = std::fs::read(&spk_path).unwrap_or_else(|error| panic!("read {spk_path:?}: {error}"));
-            let via_dsl = <WorkflowFixture as store::ArtifactDsl>::parse_dsl(&dsl_text).unwrap_or_else(|error| panic!("parse {dsl_path:?}: {error}"));
-            let via_pack = <WorkflowFixture as store::ArtifactPack>::decode_pack(&spk_bytes).unwrap_or_else(|error| panic!("decode {spk_path:?}: {error}"));
-            assert_eq!(via_dsl, via_pack, "{dsl_path:?} and {spk_path:?} decode to different documents");
-            assert_eq!(store::ArtifactDsl::print_dsl(&via_dsl), dsl_text, "{dsl_path:?} is not its own canonical print_dsl fixpoint");
-            assert_eq!(store::ArtifactPack::encode_pack(&via_dsl), spk_bytes, "{spk_path:?} does not match a fresh canonical encode_pack()");
-            store::test_support::assert_dsl_pack_equivalence(&via_dsl);
+    fn language_neutral_planner_witnesses_match_expected_deliveries() {
+        let examples = [
+            include_str!("../../../🧫️fixtures/➡️single-edge/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🔗️chain/🔣️.json"),
+            include_str!("../../../🧫️fixtures/💎️diamond/🔣️.json"),
+            include_str!("../../../🧫️fixtures/💤️no-dirty/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🛑️dead-end/🔣️.json"),
+        ];
+        for example in examples {
+            let oracle: serde_json::Value = serde_json::from_str(example).unwrap();
+            let witness: PlannerCase = semio_framework_pack_json::from_json_str(example, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            assert_eq!(oracle["name"].as_str(), Some(witness.name.as_str()));
+            let dirty = witness.dirty_node_ids.into_iter().collect();
+            let deliveries = crate::host::resolve_kernel_future(plan_workflow(&witness.graph, &dirty));
+            assert_eq!(deliveries, witness.expected_deliveries, "{}", witness.name);
+            let mut document = crate::host::resolve_kernel_future(empty_workflow_snapshot());
+            document.graph = witness.graph;
+            store::test_support::assert_dsl_pack_equivalence(&document);
         }
     }
     //#endregion 🔖️WorkflowPlanner

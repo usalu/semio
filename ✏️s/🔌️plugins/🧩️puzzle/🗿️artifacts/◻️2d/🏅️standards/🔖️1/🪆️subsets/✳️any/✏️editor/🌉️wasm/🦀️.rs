@@ -13,9 +13,9 @@
 #![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 
 use crate::editor::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
-use crate::editor::puzzle2d::engine::layout::redraw_layout_fixture_json;
+use crate::editor::puzzle2d::engine::layout::redraw_layout_snapshot_json;
 use crate::editor::puzzle2d::engine::{
-    apply_edge_handle_snap_to_fixture_v1_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json,
+    apply_edge_handle_snap_to_board_snapshot_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json,
     BoardHost, CubicBez, Point, SceneDescriptorJson,
 };
 use crate::Puzzle2dSnapshot;
@@ -61,17 +61,17 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
     vec![p.x, p.y]
 }
 
-#[wasm_bindgen(js_name = boardRedrawLayoutFixtureJson)]
-pub fn board_redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, JsValue> {
-    redraw_layout_fixture_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
+#[wasm_bindgen(js_name = boardRedrawLayoutSnapshotJson)]
+pub fn board_redraw_layout_snapshot_json(snapshot_json: &str, options_json: &str) -> Result<String, JsValue> {
+    redraw_layout_snapshot_json(snapshot_json, options_json).map_err(|e| JsValue::from_str(&e))
 }
 
-#[wasm_bindgen(js_name = boardRedrawHandlesFixtureJson)]
-pub fn board_redraw_handles_fixture_json(fixture_json: &str) -> Result<String, JsValue> {
-    apply_edge_handle_snap_to_fixture_v1_json(fixture_json).map_err(|e| JsValue::from_str(&e))
+#[wasm_bindgen(js_name = boardRedrawHandlesSnapshotJson)]
+pub fn board_redraw_handles_snapshot_json(snapshot_json: &str) -> Result<String, JsValue> {
+    apply_edge_handle_snap_to_board_snapshot_json(snapshot_json).map_err(|e| JsValue::from_str(&e))
 }
 
-/// 🔤️ Parses `.puzzle2d` DSL text (`Puzzle2dSnapshot`'s `dsl::DslArtifact` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.2d.json` fixture — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
+/// 🔤️ Parses `.puzzle2d` DSL text (`Puzzle2dSnapshot`'s `dsl::DslArtifact` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.2d.json` snapshot — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
 #[wasm_bindgen(js_name = puzzle2dParseDslJson)]
 pub fn puzzle2d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
     use store::ArtifactDsl;
@@ -216,9 +216,9 @@ impl BoardSession {
         self.state.borrow_mut().host.clear_icon_vector_cache();
     }
 
-    #[wasm_bindgen(js_name = parseFixtureJson)]
-    pub fn parse_fixture_json(&mut self, json: &str) -> bool {
-        self.state.borrow_mut().host.parse_fixture_json(json)
+    #[wasm_bindgen(js_name = loadBoardSnapshotJson)]
+    pub fn load_board_snapshot_json(&mut self, json: &str) -> bool {
+        self.state.borrow_mut().host.load_board_snapshot_json(json)
     }
 
     #[wasm_bindgen(js_name = setCamera)]
@@ -226,7 +226,7 @@ impl BoardSession {
         self.state.borrow_mut().host.set_camera(x, y, zoom);
     }
 
-    /// 🎥️ Sets the camera without enqueuing a `camera` event — for re-applying the framing camera after a fixture re-parse without echoing it back to the program.
+    /// 🎥️ Sets the camera without enqueuing a `camera` event — for re-applying the framing camera after a snapshot re-parse without echoing it back to the program.
     #[wasm_bindgen(js_name = setCameraSilent)]
     pub fn set_camera_silent_wasm(&mut self, x: f64, y: f64, zoom: f64) {
         self.state.borrow_mut().host.set_camera_silent(x, y, zoom);
@@ -432,14 +432,14 @@ impl BoardSession {
         let _ = self.state.borrow_mut().host.set_brush_session_mirror_json("");
     }
 
-    #[wasm_bindgen(js_name = setFixtureDropPreviewJson)]
-    pub fn set_fixture_drop_preview_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_fixture_drop_preview_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
+    #[wasm_bindgen(js_name = setDropPreviewJson)]
+    pub fn set_drop_preview_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.set_drop_preview_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
-    #[wasm_bindgen(js_name = clearFixtureDropPreview)]
-    pub fn clear_fixture_drop_preview_wasm(&mut self) {
-        let _ = self.state.borrow_mut().host.set_fixture_drop_preview_json("");
+    #[wasm_bindgen(js_name = clearDropPreview)]
+    pub fn clear_drop_preview_wasm(&mut self) {
+        let _ = self.state.borrow_mut().host.set_drop_preview_json("");
     }
 
     #[wasm_bindgen(js_name = setLinkSessionJson)]

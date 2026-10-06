@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { countUnifiedLocForFile } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔬️Reference aggregation
@@ -242,8 +242,8 @@ function history(transcript: Transcript, commits: Commit[]): unknown[] {
 //#endregion 🔬️Reference aggregation
 
 //#region 🧭️Adapter
-function read(ctx: { fixtureBytes(uri: string): Uint8Array }): Transcript {
-  return JSON.parse(Buffer.from(ctx.fixtureBytes("shared://🎞️git-transcript.json")).toString("utf8")) as Transcript;
+function read(ctx: { inputBytes(uri: string): Uint8Array }): Transcript {
+  return JSON.parse(Buffer.from(ctx.inputBytes("shared://🎞️git-transcript.json")).toString("utf8")) as Transcript;
 }
 
 function snapshot(transcript: Transcript): { snapshot: Record<string, Row> } {

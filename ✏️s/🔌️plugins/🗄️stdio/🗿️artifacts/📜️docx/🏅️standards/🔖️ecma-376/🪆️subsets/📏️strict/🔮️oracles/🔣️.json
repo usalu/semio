@@ -279,9 +279,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -332,7 +331,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-conformance-attribute-applied",
       "class": "handcrafted",
       "target": {
@@ -375,7 +373,6 @@
       "notes": "The root <w:document>'s conformance attribute set, absent -> \"strict\"."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-conformance-attribute-applied",
       "class": "handcrafted",
       "target": {
@@ -418,7 +415,6 @@
       "notes": "The root <w:document>'s conformance attribute removed, \"strict\" -> absent."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-main-namespace-applied",
       "class": "handcrafted",
       "target": {
@@ -461,7 +457,6 @@
       "notes": "The root <w:document>'s main xmlns:w namespace URI changed, Transitional (http://schemas.openxmlformats.org/wordprocessingml/2006/main) -> Strict (http://purl.oclc.org/ooxml/wordprocessingml/main)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-relationship-base-applied",
       "class": "handcrafted",
       "target": {
@@ -504,7 +499,6 @@
       "notes": "The root <w:document>'s relationships xmlns:r namespace URI changed, Transitional (http://schemas.openxmlformats.org/officeDocument/2006/relationships) -> Strict (http://purl.oclc.org/ooxml/officeDocument/relationships)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-vml-part-applied",
       "class": "handcrafted",
       "target": {
@@ -547,7 +541,6 @@
       "notes": "A legacy VML drawing part (word/vmlDrawing1.vml) added to the package, with its Content_Types.xml Default and a document.xml.rels relationship wiring it in."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-vml-part-applied",
       "class": "handcrafted",
       "target": {
@@ -590,7 +583,6 @@
       "notes": "The VML drawing part, its content-type default and its relationship removed from the package, inverse of insert-vml-part."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-alternate-content-applied",
       "class": "handcrafted",
       "target": {
@@ -633,7 +625,6 @@
       "notes": "An <mc:AlternateContent> markup-compatibility block (Choice/Fallback pair) inserted as the last child of <w:body>."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-alternate-content-applied",
       "class": "handcrafted",
       "target": {

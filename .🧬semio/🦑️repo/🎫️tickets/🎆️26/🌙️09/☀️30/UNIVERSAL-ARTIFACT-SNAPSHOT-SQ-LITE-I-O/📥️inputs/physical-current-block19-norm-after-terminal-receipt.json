@@ -1,0 +1,17 @@
+{
+  "block": {
+    "selected": 19,
+    "passed": 19,
+    "failed": 0,
+    "seconds": 0.73,
+    "outside": 356,
+    "nextestRunId": "07eb3737-2635-4d19-b3b5-6eea5e4dce1a"
+  },
+  "norm": {
+    "owners": 12,
+    "runtimeCredit": false,
+    "reason": "Actual selected Cargo preparation cannot find process/⏱️budget/🧬️schema/🔣️.json"
+  },
+  "exit": 1,
+  "log": "🗑️generated/physical-current-block19-norm-twelve-complete-native-after.log"
+}

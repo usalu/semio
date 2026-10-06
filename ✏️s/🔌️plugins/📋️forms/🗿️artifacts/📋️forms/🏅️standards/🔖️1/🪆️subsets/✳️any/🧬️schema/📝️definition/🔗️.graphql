@@ -57,7 +57,7 @@ type FormQuestion {
   schema: String
   src: String
   accept: String
-  fixtureSlug: String
+  exampleId: String
   params: DslValue
   condition: FormExpr
 }

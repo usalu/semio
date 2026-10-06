@@ -382,8 +382,8 @@ fn jsonschema_validates_compliant_and_noncompliant_snapshots() {
 fn bundled_dsl_examples_decode_and_evaluate() {
     let demo = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
     let failing = include_str!("../../../🖼️assets/⚠️noncompliant-office/🗣️.dsl.semio");
-    let compliant = crate::artifact_schema::snapshot::decode_din16798_dsl(demo).expect("demo dsl");
-    let noncompliant = crate::artifact_schema::snapshot::decode_din16798_dsl(failing).expect("failing dsl");
+    let compliant = crate::standards::v1::subsets::any::io::text::snapshot::decode_din16798_dsl(demo).expect("demo dsl");
+    let noncompliant = crate::standards::v1::subsets::any::io::text::snapshot::decode_din16798_dsl(failing).expect("failing dsl");
     assert!(check_full_environment(&compliant).complies());
     let fails = check_full_environment(&noncompliant).failing().count();
     assert!(fails >= 2, "noncompliant DSL must fail ≥2 checks, got {fails}");

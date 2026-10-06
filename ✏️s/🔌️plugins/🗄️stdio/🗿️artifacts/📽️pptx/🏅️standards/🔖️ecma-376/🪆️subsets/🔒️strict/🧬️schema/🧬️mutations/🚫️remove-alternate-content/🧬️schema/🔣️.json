@@ -9,7 +9,24 @@
   ],
   "properties": {
     "path": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Paketteil"
+        },
+        "description": {
+          "en": "Package part name of the part that carries the mc:AlternateContent block.",
+          "de": "Name des Paketteils, der den Block mc:AlternateContent trägt."
+        },
+        "ref": {
+          "kind": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

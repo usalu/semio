@@ -32,7 +32,7 @@
     },
     "tolerance": {
       "type": "number",
-      "minimum": 0.000001,
+      "minimum": 1e-06,
       "maximum": 16
     },
     "maxPixels": {
@@ -309,8 +309,11 @@
             "source",
             "bounds",
             "path",
+            "pathCleanup",
             "image",
+            "imageCleanup",
             "compositing",
+            "compositingCleanup",
             "complete"
           ]
         },

@@ -4,7 +4,6 @@
 
 use super::EditPaintLayer;
 use crate::diff::diff_paint_stroke;
-use crate::diff::schema::PixelRun as SchemaPixelRun;
 use crate::{LowpolyDiff, LowpolySnapshot};
 
 //#region 🔖️Diff
@@ -18,7 +17,7 @@ pub fn diff(payload: &EditPaintLayer, base: &LowpolySnapshot) -> protocol::Mutat
     if payload.runs.is_empty() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("No pixel runs to paint on layer {} of object \"{}\".", payload.layer_index, payload.object_id));
     }
-    let runs = payload.runs.iter().map(|run| SchemaPixelRun { offset: run.offset, bytes: run.bytes.clone() }).collect();
+    let runs = payload.runs.clone();
     protocol::MutationOutcome::new(diff_paint_stroke(payload.object_id.clone(), payload.layer_index, runs))
 }
 //#endregion 🔖️Diff

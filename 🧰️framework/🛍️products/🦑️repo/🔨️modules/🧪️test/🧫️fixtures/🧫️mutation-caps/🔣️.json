@@ -1,0 +1,138 @@
+{
+  "description": "🐘️ The structural cap rule (audit F3): a bounded leaf beside a derived non-generic aggregate passes; a bounded leaf whose aggregate is hand-written, generic, or lives only in a foreign artifact fails as capLawMissing; a leaf with per-target or no declared rows is not judged.",
+  "cases": [
+    {
+      "id": "a derived non-generic aggregate of the leaf's artifact wraps it",
+      "leaves": [
+        {
+          "directory": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🗑️delete-node",
+          "variant": "DeleteNode",
+          "schema": {
+            "type": "object",
+            "x-semio-inverse-rows": {
+              "bounded": 1025
+            },
+            "properties": {
+              "mutation": {
+                "const": "x"
+              }
+            }
+          }
+        }
+      ],
+      "aggregates": [
+        {
+          "path": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🦀️.rs",
+          "rust": "#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\npub enum AlphaMutation {\n    DeleteNode(DeleteNode),\n    MoveNode(MoveNode),\n}\n"
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "a hand-written aggregate runs no derived law",
+      "leaves": [
+        {
+          "directory": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🩹️patch-snapshot",
+          "variant": "PatchSnapshot",
+          "schema": {
+            "type": "object",
+            "x-semio-inverse-rows": {
+              "bounded": 128
+            },
+            "properties": {
+              "mutation": {
+                "const": "x"
+              }
+            }
+          }
+        }
+      ],
+      "aggregates": [
+        {
+          "path": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🦀️.rs",
+          "rust": "#[derive(Clone, Debug)]\npub enum AlphaMutation {\n    PatchSnapshot(PatchSnapshot),\n}\nimpl Mutation<Snapshot> for AlphaMutation {}\n"
+        }
+      ],
+      "findings": [
+        "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🩹️patch-snapshot"
+      ]
+    },
+    {
+      "id": "a generic aggregate gets no emitted law",
+      "leaves": [
+        {
+          "directory": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🗑️delete-node",
+          "variant": "DeleteNode",
+          "schema": {
+            "type": "object",
+            "x-semio-inverse-rows": {
+              "bounded": 65
+            },
+            "properties": {
+              "mutation": {
+                "const": "x"
+              }
+            }
+          }
+        }
+      ],
+      "aggregates": [
+        {
+          "path": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🦀️.rs",
+          "rust": "#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\npub enum AlphaMutation<K: Kind> {\n    DeleteNode(DeleteNode<K>),\n}\n"
+        }
+      ],
+      "findings": [
+        "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🗑️delete-node"
+      ]
+    },
+    {
+      "id": "a foreign artifact's aggregate is never borrowed, and unbounded leaves are not judged",
+      "leaves": [
+        {
+          "directory": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🗑️delete-node",
+          "variant": "DeleteNode",
+          "schema": {
+            "type": "object",
+            "x-semio-inverse-rows": {
+              "bounded": 2
+            },
+            "properties": {
+              "mutation": {
+                "const": "x"
+              }
+            }
+          }
+        },
+        {
+          "directory": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🚚️move-nodes",
+          "variant": "MoveNodes",
+          "schema": {
+            "type": "object",
+            "x-semio-inverse-rows": {
+              "perTarget": {
+                "ids": 1
+              }
+            }
+          }
+        },
+        {
+          "directory": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🎨️set-colour",
+          "variant": "SetColour",
+          "schema": {
+            "type": "object"
+          }
+        }
+      ],
+      "aggregates": [
+        {
+          "path": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅱️beta/🧬️schema/🧬️mutations/🦀️.rs",
+          "rust": "#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\npub enum BetaMutation {\n    DeleteNode(DeleteNode),\n    MoveNodes(MoveNodes),\n}\n"
+        }
+      ],
+      "findings": [
+        "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🧬️schema/🧬️mutations/🗑️delete-node"
+      ]
+    }
+  ]
+}

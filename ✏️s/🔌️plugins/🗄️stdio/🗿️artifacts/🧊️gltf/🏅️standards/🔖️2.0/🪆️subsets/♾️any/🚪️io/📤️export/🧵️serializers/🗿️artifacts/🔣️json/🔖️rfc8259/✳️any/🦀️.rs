@@ -2,7 +2,7 @@
 //! base64 data uri first (via the shared `.gltf` JSON codec), since plain `stdio.json` has nowhere
 //! else to carry those bytes -- same reasoning as `serialize_gltf_document`.
 use crate::GltfSnapshot;
-use semio_s_artifact_stdio_json::schema::snapshot::parse_json_text;
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}

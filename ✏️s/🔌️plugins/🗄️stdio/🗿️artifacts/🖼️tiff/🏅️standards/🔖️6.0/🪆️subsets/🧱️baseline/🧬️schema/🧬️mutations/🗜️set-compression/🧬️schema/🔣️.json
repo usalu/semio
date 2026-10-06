@@ -21,7 +21,8 @@
         "description": {
           "en": "Compression scheme code (tag 259), e.g. 1 = none, 5 = LZW, 8 = Deflate.",
           "de": "Code des Kompressionsverfahrens (Tag 259), z. B. 1 = keine, 5 = LZW, 8 = Deflate."
-        }
+        },
+        "step": 1
       }
     }
   }

@@ -29,6 +29,7 @@ const DAG_VIEW_SURFACE_MAIN: &str = "dag.view.main";
 /// the editor's own main window.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: DAG_VIEW_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("DAG", "DAG"),
         body_key: BODY_KEY.into(),

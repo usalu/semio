@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-viewpoint-applied",
       "class": "third-party-generated",
       "target": {
@@ -58,7 +57,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-viewpoint-applied",
       "class": "third-party-generated",
       "target": {
@@ -109,7 +107,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-viewpoint-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -153,7 +150,6 @@
       "notes": "Rejected-outcome recipe: carries only the ⬅️before.bcf state (the state a real subject would refuse to mutate further) — there is no legal after-state to author independently."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-viewpoint-camera-applied",
       "class": "third-party-generated",
       "target": {
@@ -204,7 +200,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-viewpoint-components-applied",
       "class": "third-party-generated",
       "target": {

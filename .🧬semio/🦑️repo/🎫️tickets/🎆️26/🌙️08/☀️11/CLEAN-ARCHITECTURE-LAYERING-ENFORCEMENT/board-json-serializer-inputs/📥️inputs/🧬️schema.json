@@ -1,0 +1,72 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "controls"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.board.json-serialization/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "input",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "lod",
+              "picks",
+              "highlights"
+            ]
+          },
+          "input": {
+            "type": "array"
+          },
+          "expected": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    "controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "reason"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "cancel",
+              "bytes"
+            ]
+          },
+          "reason": {
+            "enum": [
+              "Canceled",
+              "OwnershipLimit"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -5,9 +5,11 @@
 //! `faces.modified` entry whose `BrepFaceDiff` sets `surface` and leaves `outer_loop`,
 //! `inner_loops` AND `orientation` at `None` — three explicitly-untouched fields, the exact mirror
 //! of `replace-curve`'s two.
-use crate::standards::v1::subsets::brep::schema::diff::decode_semio_brep_diff_json;
-use crate::standards::v1::subsets::brep::schema::mutations::{decode_semio_brep_mutation_json, SemioBrepMutation};
-use crate::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_snapshot_json, SemioBrepSnapshot};
+use crate::standards::v1::subsets::brep::io::text::diff::decode_semio_brep_diff_json;
+use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation};
+use crate::standards::v1::subsets::brep::io::text::mutations::{decode_semio_brep_mutation_json};
+use crate::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot};
+use crate::standards::v1::subsets::brep::io::text::snapshot::{decode_semio_brep_snapshot_json};
 use pack::value::ToValue;
 use protocol::{Mutation, MutationDiff};
 

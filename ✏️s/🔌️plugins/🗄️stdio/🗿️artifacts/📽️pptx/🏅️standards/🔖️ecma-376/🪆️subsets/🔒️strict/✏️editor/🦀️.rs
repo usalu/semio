@@ -128,7 +128,7 @@ impl ArtifactEditor for PptxStrictEditor {
     }
 
     fn initial_snapshot() -> PptxSnapshot {
-        crate::standards::v_ecma_376::subsets::base::schema::blank_pptx_snapshot()
+        crate::standards::v_ecma_376::subsets::strict::schema::blank_strict_pptx_snapshot()
     }
 
     /// ✏️ Replaces the addressed text-bearing shape after its optimistic revision matches.

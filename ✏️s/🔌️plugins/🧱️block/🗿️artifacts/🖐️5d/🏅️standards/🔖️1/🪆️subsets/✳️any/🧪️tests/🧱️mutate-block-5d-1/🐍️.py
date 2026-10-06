@@ -381,7 +381,7 @@ def doc_json(ctx):
 
 def leaf(ctx, spec, name):
     """🧫️ One committed leaf of the vector the doc string addresses."""
-    return json.loads(ctx.fixture_bytes(spec[name]).decode("utf-8"))
+    return json.loads(ctx.input_bytes(spec[name]).decode("utf-8"))
 
 
 def uri_in(ctx, needle):
@@ -459,7 +459,7 @@ def identity_handler(ctx):
     that document: a 2d facet, a 3d facet, and at least one grip placed in BOTH spaces and bound to a
     grip kind the document declares. A codec that dropped one space could not satisfy it."""
     uri = uri_in(ctx, "⬅️before")
-    committed = ctx.fixture_bytes(uri)
+    committed = ctx.input_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
     validate(document, "identity-round-trip")
     if not document["grips"] or not document["gripKinds"] or not document["representations"]:

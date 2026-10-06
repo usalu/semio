@@ -2266,7 +2266,7 @@ impl FromValue for VirtualFileSystemScene {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TiledMapScene {
-    pub map_fixture_json: String,
+    pub map_descriptor_json: String,
     pub camera_json: String,
     #[serde(default = "tiled_map_default_render_mode")]
     pub render_mode: String,
@@ -2322,7 +2322,7 @@ impl SceneDoc for TiledMapScene {
 /// [`Board2dSceneLane`]/[`Paint2dSceneLane`], pinned against
 /// `🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json` on both sides.
 ///
-/// `map_fixture_json` is the whole map descriptor (`{ positions, routes, regions }`, one opaque
+/// `map_descriptor_json` is the whole map descriptor (`{ positions, routes, regions }`, one opaque
 /// payload per feature), so it scales with the DOCUMENT, not with the frame: the gis `demo` map's
 /// 152 positions and 149 routes encode to 59 667 bytes, nearly twice `UI_FIXED_BYTES` (32 KiB). A
 /// surface doc cannot page, so `scene_surface.encode` refused the whole surface and the gis window
@@ -2332,26 +2332,26 @@ impl SceneDoc for TiledMapScene {
 /// the spine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TiledMapSceneLane {
-    MapFixture,
+    MapDescriptor,
 }
 
 /// 🚚️ Reserved carrier-key namespace of the tiled-map lanes.
 pub const TILEDMAP_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.tiledmap.";
 
 /// 🚚️ Wire name of each [`TiledMapSceneLane`], in `TiledMapSceneLane::ALL` order.
-pub const TILEDMAP_SCENE_LANE_NAMES: [&str; 1] = ["mapFixture"];
+pub const TILEDMAP_SCENE_LANE_NAMES: [&str; 1] = ["mapDescriptor"];
 
 /// 🚚️ [`TiledMapScene`] field each lane carries, spelled as its serialized (camelCase) name.
-pub const TILEDMAP_SCENE_LANE_FIELDS: [&str; 1] = ["mapFixtureJson"];
+pub const TILEDMAP_SCENE_LANE_FIELDS: [&str; 1] = ["mapDescriptorJson"];
 
 /// 🚚️ Reserved carrier key of each lane.
-pub const TILEDMAP_SCENE_LANE_BODY_KEYS: [&str; 1] = ["framework.scene.tiledmap.mapFixture"];
+pub const TILEDMAP_SCENE_LANE_BODY_KEYS: [&str; 1] = ["framework.scene.tiledmap.mapDescriptor"];
 
 /// 🚚️ Whether each lane's [`TiledMapScene`] field is an `Option<String>`.
 pub const TILEDMAP_SCENE_LANE_OPTIONAL: [bool; 1] = [false];
 
 impl TiledMapSceneLane {
-    pub const ALL: [Self; 1] = [Self::MapFixture];
+    pub const ALL: [Self; 1] = [Self::MapDescriptor];
 
     /// 🏷️ See [`TILEDMAP_SCENE_LANE_NAMES`].
     // 🚫️async: E1 pure table lookup — see R9.
@@ -2393,7 +2393,7 @@ impl TiledMapSceneLane {
     // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn take(self, scene: &mut TiledMapScene) -> Option<String> {
         match self {
-            Self::MapFixture => Some(std::mem::take(&mut scene.map_fixture_json)),
+            Self::MapDescriptor => Some(std::mem::take(&mut scene.map_descriptor_json)),
         }
     }
 
@@ -2401,7 +2401,7 @@ impl TiledMapSceneLane {
     // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn put(self, scene: &mut TiledMapScene, payload: String) {
         match self {
-            Self::MapFixture => scene.map_fixture_json = payload,
+            Self::MapDescriptor => scene.map_descriptor_json = payload,
         }
     }
 }
@@ -2453,9 +2453,9 @@ pub fn tiled_map_default_selection_mode() -> String {
 
 impl TiledMapScene {
     /** 🗺️ Builds a tiled map scene with optional extensions unset. */
-    pub fn base(map_fixture_json: String, camera_json: String) -> Self {
+    pub fn base(map_descriptor_json: String, camera_json: String) -> Self {
         Self {
-            map_fixture_json,
+            map_descriptor_json,
             camera_json,
             render_mode: tiled_map_default_render_mode(),
             vector_style: tiled_map_default_vector_style(),
@@ -2476,7 +2476,7 @@ impl TiledMapScene {
 impl ToValue for TiledMapScene {
     fn to_value(&self) -> DslValue {
         let mut entries = Vec::new();
-        value_push(&mut entries, "mapFixtureJson", &self.map_fixture_json);
+        value_push(&mut entries, "mapDescriptorJson", &self.map_descriptor_json);
         value_push(&mut entries, "cameraJson", &self.camera_json);
         value_push(&mut entries, "renderMode", &self.render_mode);
         value_push(&mut entries, "vectorStyle", &self.vector_style);
@@ -2498,7 +2498,7 @@ impl FromValue for TiledMapScene {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         Ok(Self {
-            map_fixture_json: value_decode(&entries, "mapFixtureJson")?,
+            map_descriptor_json: value_decode(&entries, "mapDescriptorJson")?,
             camera_json: value_decode(&entries, "cameraJson")?,
             render_mode: value_decode_default(&entries, "renderMode", tiled_map_default_render_mode)?,
             vector_style: value_decode_default(&entries, "vectorStyle", tiled_map_default_vector_style)?,
@@ -2521,7 +2521,7 @@ impl FromValue for TiledMapScene {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Board2dScene {
-    pub fixture_json: String,
+    pub snapshot_json: String,
     pub camera_json: String,
     #[serde(default = "board2d_default_glyph_catalogs_json")]
     pub glyph_catalogs_json: String,
@@ -2592,7 +2592,7 @@ pub struct Board2dScene {
 }
 
 scene_pack_wire!(Board2dScenePack, Board2dScene {
-    fixture_json: String,
+    snapshot_json: String,
     camera_json: String,
     glyph_catalogs_json: String,
     selection_json: String,
@@ -2657,7 +2657,7 @@ impl SceneDoc for Board2dScene {
 pub enum Board2dSceneLane {
     /// 🧩️ The whole fixture graph — the one payload that outgrows the 32 KiB surface doc (Nakagin's
     /// 180-node puzzle 2d board is ~100 KiB of JSON), so it always rides as its own paged carrier.
-    Fixture,
+    Snapshot,
     ToolRunTrace,
 }
 
@@ -2665,19 +2665,19 @@ pub enum Board2dSceneLane {
 pub const BOARD2D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.board2d.";
 
 /// 🚚️ Wire name of each [`Board2dSceneLane`], in `Board2dSceneLane::ALL` order.
-pub const BOARD2D_SCENE_LANE_NAMES: [&str; 2] = ["fixture", "toolRunTrace"];
+pub const BOARD2D_SCENE_LANE_NAMES: [&str; 2] = ["snapshot", "toolRunTrace"];
 
 /// 🚚️ [`Board2dScene`] field each lane carries, spelled as its serialized (camelCase) name.
-pub const BOARD2D_SCENE_LANE_FIELDS: [&str; 2] = ["fixtureJson", "toolRunTrace"];
+pub const BOARD2D_SCENE_LANE_FIELDS: [&str; 2] = ["snapshotJson", "toolRunTrace"];
 
 /// 🚚️ Reserved carrier key of each lane.
-pub const BOARD2D_SCENE_LANE_BODY_KEYS: [&str; 2] = ["framework.scene.board2d.fixture", "framework.scene.board2d.toolRunTrace"];
+pub const BOARD2D_SCENE_LANE_BODY_KEYS: [&str; 2] = ["framework.scene.board2d.snapshot", "framework.scene.board2d.toolRunTrace"];
 
 /// 🚚️ Whether each lane's [`Board2dScene`] field is an `Option<String>`.
 pub const BOARD2D_SCENE_LANE_OPTIONAL: [bool; 2] = [false, true];
 
 impl Board2dSceneLane {
-    pub const ALL: [Self; 2] = [Self::Fixture, Self::ToolRunTrace];
+    pub const ALL: [Self; 2] = [Self::Snapshot, Self::ToolRunTrace];
 
     /// 🏷️ See [`BOARD2D_SCENE_LANE_NAMES`].
     // 🚫️async: E1 pure table lookup — see R9.
@@ -2719,7 +2719,7 @@ impl Board2dSceneLane {
     // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn take(self, scene: &mut Board2dScene) -> Option<String> {
         match self {
-            Self::Fixture => Some(std::mem::take(&mut scene.fixture_json)),
+            Self::Snapshot => Some(std::mem::take(&mut scene.snapshot_json)),
             Self::ToolRunTrace => scene.tool_run_trace.take(),
         }
     }
@@ -2728,7 +2728,7 @@ impl Board2dSceneLane {
     // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn put(self, scene: &mut Board2dScene, payload: String) {
         match self {
-            Self::Fixture => scene.fixture_json = payload,
+            Self::Snapshot => scene.snapshot_json = payload,
             Self::ToolRunTrace => scene.tool_run_trace = Some(payload),
         }
     }
@@ -2779,9 +2779,9 @@ pub fn board2d_default_lod_mode() -> String {
 
 impl Board2dScene {
     /** 🧩️ Builds a 2D board scene with optional extensions unset. */
-    pub fn base(fixture_json: String, camera_json: String, interactive: bool) -> Self {
+    pub fn base(snapshot_json: String, camera_json: String, interactive: bool) -> Self {
         Self {
-            fixture_json,
+            snapshot_json,
             camera_json,
             glyph_catalogs_json: board2d_default_glyph_catalogs_json(),
             selection_json: board2d_default_selection_json(),
@@ -2813,7 +2813,7 @@ impl Board2dScene {
 impl ToValue for Board2dScene {
     fn to_value(&self) -> DslValue {
         let mut entries = Vec::new();
-        value_push(&mut entries, "fixtureJson", &self.fixture_json);
+        value_push(&mut entries, "snapshotJson", &self.snapshot_json);
         value_push(&mut entries, "cameraJson", &self.camera_json);
         value_push(&mut entries, "glyphCatalogsJson", &self.glyph_catalogs_json);
         value_push(&mut entries, "selectionJson", &self.selection_json);
@@ -2848,7 +2848,7 @@ impl FromValue for Board2dScene {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = value.into_object()?;
         Ok(Self {
-            fixture_json: value_decode(&entries, "fixtureJson")?,
+            snapshot_json: value_decode(&entries, "snapshotJson")?,
             camera_json: value_decode(&entries, "cameraJson")?,
             glyph_catalogs_json: value_decode_default(&entries, "glyphCatalogsJson", board2d_default_glyph_catalogs_json)?,
             selection_json: value_decode_default(&entries, "selectionJson", board2d_default_selection_json)?,

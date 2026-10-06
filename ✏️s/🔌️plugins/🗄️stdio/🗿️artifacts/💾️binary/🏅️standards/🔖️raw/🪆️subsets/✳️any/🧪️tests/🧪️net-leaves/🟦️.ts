@@ -1,5 +1,4 @@
-/** 🧪️ Third-party oracle of the hex-window net-leaves corpus (`🧫️fixtures/🧫️net-leaves`): ajv validates the corpus against its
- * schema and jsdiff's array diff finds the bytes both buffers share at either end; the ONE range replacement an Apply means
+/** 🧪️ Third-party oracle of the hex-window net-leaves corpus (`🧫️fixtures/🧫️net-leaves`): ajv validates individual mutation records and jsdiff's array diff finds the bytes both buffers share at either end; the ONE range replacement an Apply means
  * follows from those ends alone, and an Apply that changes no byte means none (`null`). The Rust editor law replays the same
  * corpus through `binary_text_emit`. */
 import { describe, expect, test } from "bun:test";
@@ -27,9 +26,9 @@ function netLeaf(beforeHex: string, afterHex: string): Leaf | null {
 }
 
 describe("hex-window net leaf (jsdiff oracle)", () => {
-  test("the corpus validates against its schema (ajv)", () => {
+  test("actual mutation records conform to their domain schema (ajv)", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+    for (const row of corpus.cases) for (const leaf of row.leaf === null ? [] : [row.leaf]) expect(validate(leaf), JSON.stringify(validate.errors)).toBe(true);
   });
 
   for (const row of corpus.cases) {

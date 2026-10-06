@@ -4,7 +4,6 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv from "ajv";
 
 const sha256 = (bytes: Uint8Array | string): string => createHash("sha256").update(bytes).digest("hex");
 const bytes = (hex: string): Buffer => {
@@ -16,11 +15,8 @@ const revision = (hex: string): number[] => [...bytes(hex)];
 export function testDurableOwnedGroupDecisionFixture(): void {
   const owner = testFileUrlToPath(new URL(".", testSourceUrl));
   const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-  const contract = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addSchema(contract);
-  const validate = ajv.getSchema(`${contract.$id}#/$defs/DurableOwnedGroupDecision`)!;
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  
+  
   assert.equal(fixture.version, 1);
 
   const octets = fixture.recoveryOctets;

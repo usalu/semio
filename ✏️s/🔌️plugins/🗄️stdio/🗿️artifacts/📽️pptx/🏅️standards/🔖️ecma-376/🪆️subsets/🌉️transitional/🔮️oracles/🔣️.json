@@ -212,9 +212,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -265,7 +264,6 @@
       }
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-conformance-attribute-applied",
       "class": "handcrafted",
       "target": {
@@ -308,7 +306,6 @@
       "notes": "The root <p:presentation>'s conformance attribute set, absent -> \"transitional\"."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-conformance-attribute-applied",
       "class": "handcrafted",
       "target": {
@@ -351,7 +348,6 @@
       "notes": "The root <p:presentation>'s conformance attribute removed, \"transitional\" -> absent."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-main-namespace-applied",
       "class": "handcrafted",
       "target": {
@@ -394,7 +390,6 @@
       "notes": "The root <p:presentation>'s main xmlns:p namespace URI changed, Transitional (http://schemas.openxmlformats.org/presentationml/2006/main) -> Strict (http://purl.oclc.org/ooxml/presentationml/main)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-relationship-base-applied",
       "class": "handcrafted",
       "target": {
@@ -437,7 +432,6 @@
       "notes": "The root <p:presentation>'s relationships xmlns:r namespace URI changed, Transitional (http://schemas.openxmlformats.org/officeDocument/2006/relationships) -> Strict (http://purl.oclc.org/ooxml/officeDocument/relationships)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-drawing-namespace-applied",
       "class": "handcrafted",
       "target": {

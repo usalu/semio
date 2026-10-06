@@ -251,9 +251,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-array-element-applied",
       "class": "handcrafted",
       "target": {
@@ -296,7 +295,6 @@
       "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. InsertArrayElement{path:tags,index:2,value:\"c\"} appends a third I-JSON-safe array element."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-array-element-applied",
       "class": "handcrafted",
       "target": {
@@ -339,7 +337,6 @@
       "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. RemoveArrayElement{path:tags,index:0} drops the first array element."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-member-applied",
       "class": "handcrafted",
       "target": {
@@ -382,7 +379,6 @@
       "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. RemoveMember{path:root,key:meta} deletes an object member."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "rename-member-applied",
       "class": "handcrafted",
       "target": {
@@ -425,7 +421,6 @@
       "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. RenameMember{path:root,from:name,to:label} renames a member, preserving its value and the other members' order."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-safe-number-applied",
       "class": "handcrafted",
       "target": {
@@ -468,7 +463,6 @@
       "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetSafeNumber sets a member to the literal lexeme 9007199254740991 — the largest I-JSON-safe integer (2^53-1, RFC 7493 section 2.2) — proving the mutation is scoped to values that round-trip exactly through an IEEE 754 double, the whole point of I-JSON's number restriction."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -511,7 +505,6 @@
       "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetSnapshot replaces the whole document with a different, equally I-JSON-compliant document."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-string-applied",
       "class": "handcrafted",
       "target": {
@@ -554,7 +547,6 @@
       "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetString{path:name,value:\"renamed-widget\"} overwrites a string member in place."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-top-level-applied",
       "class": "handcrafted",
       "target": {
@@ -597,7 +589,6 @@
       "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetTopLevel replaces the root itself — an Object becomes an Array — the one mutation whose target is the document's own top-level shape, which I-JSON (RFC 7493 §2.1) restricts to Object or Array."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "upsert-member-applied",
       "class": "handcrafted",
       "target": {

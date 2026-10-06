@@ -8,7 +8,7 @@
 //! (`✏️editor/🦀️.rs:988`), and the owned document disposer walks the store to terminal-empty on the
 //! way out — this fixture does both (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
-use crate::standards::v1::subsets::any::schema::mutations::binary::generation3d_document_store_owners;
+use crate::host::generation3d_document_store_owners;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use semio_framework_plugin::ArtifactOwnedDisposer;

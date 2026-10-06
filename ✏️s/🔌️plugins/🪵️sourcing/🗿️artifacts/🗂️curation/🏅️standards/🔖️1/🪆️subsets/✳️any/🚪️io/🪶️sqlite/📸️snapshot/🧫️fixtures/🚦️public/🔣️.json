@@ -1,0 +1,43 @@
+{
+  "metadataColumns": [
+    "id",
+    "artifact_kind",
+    "standard",
+    "subset",
+    "schema_version",
+    "native_encoding"
+  ],
+  "metadata": {
+    "id": 1,
+    "artifact_kind": "s.sourcing.curation",
+    "standard": "1",
+    "subset": "*",
+    "schema_version": 1
+  },
+  "nativeEncodings": [
+    "binary",
+    "text"
+  ],
+  "domainTables": [
+    "curation_document",
+    "curation_catalog",
+    "curation_stock_extra",
+    "curation_typology_segment",
+    "curation_geometry",
+    "curation_box",
+    "curation_frame",
+    "curation_slab",
+    "curation_mesh",
+    "curation_glb",
+    "curation_mesh_position",
+    "curation_mesh_normal",
+    "curation_mesh_index",
+    "curation_curated"
+  ],
+  "entityIdentity": "positive-rowid",
+  "independentEdit": {
+    "sql": "UPDATE curation_stock_extra SET name=? WHERE ordinal=0",
+    "value": "Public SQLite 日本\u0000literal €"
+  },
+  "retirement": "explicit"
+}

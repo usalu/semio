@@ -47,7 +47,7 @@ type ProbeReport = {
 };
 
 /** 🧫️ One registered fixture manifest of this subset, reduced to what the reader consumes. */
-type FixtureManifest = { id: string; mutation: string; outcome?: string; files: { role: string; path: string }[] };
+type TestEvidence = { id: string; mutation: string; outcome?: string; files: { role: string; path: string }[] };
 
 /** 🧭️ The routed result the envelope law gives for one vector. */
 type Routed = { envelope: unknown; refused: string[] };
@@ -206,7 +206,7 @@ function canonical(value: unknown): string {
 function carrierReproduce(): ProbeReport {
   const started = Date.now();
   const contributionDir = join(SUBSET_DIR, "🔮️oracles");
-  const manifests = (readJson(join(contributionDir, "🔣️.json")) as { fixtureManifests: FixtureManifest[] }).fixtureManifests;
+  const manifests = (readJson(join(contributionDir, "🔣️.json")) as { testEvidence: TestEvidence[] }).testEvidence;
   const { snapshot, mutation, registered } = validators();
   const diagnostics: NonNullable<ProbeReport["diagnostics"]> = [];
   const rows = manifests.map((manifest) => {

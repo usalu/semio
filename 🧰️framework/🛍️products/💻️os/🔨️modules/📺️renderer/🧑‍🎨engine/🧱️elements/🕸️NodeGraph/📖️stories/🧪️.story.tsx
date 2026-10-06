@@ -2,7 +2,7 @@
 // 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📖️stories/🧪️.story.tsx
 // Specs: Host the framework renderer's `NodeGraphHost` against real prebuilt WASM engines — the workflow
 // `GraphSession` (`framework/surface/node-graph/rs`) for the default DAG variant, and the `FlowSession`
-// (`flow/core/rs`) for the flow-graph variant `isFlowGraphScene`/`fixtureJson` routes to.
+// (`flow/core/rs`) for the flow-graph variant `isFlowGraphScene`/`snapshotJson` routes to.
 // Summary: Two stories share one debug-readout host component; each sets `parameters.wasm` to the loader id
 // `NodeGraphHost`'s active branch needs so the `withWasm` decorator gates first paint until that engine's
 // wasm-bindgen module has booted.

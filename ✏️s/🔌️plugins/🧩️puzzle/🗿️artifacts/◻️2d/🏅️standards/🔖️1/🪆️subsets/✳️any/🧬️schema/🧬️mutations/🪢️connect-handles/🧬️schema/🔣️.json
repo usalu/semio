@@ -298,6 +298,31 @@
         "group": "appearance",
         "order": 140
       }
+    },
+    "tolerance": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Proximity tolerance",
+          "de": "Näherungstoleranz"
+        },
+        "description": {
+          "en": "Largest distance between the two handles this connection was recorded under. Empty for a connection that states no proximity.",
+          "de": "Größter Abstand der beiden Anschlüsse, unter dem diese Verbindung aufgezeichnet wurde. Leer bei einer Verbindung ohne Näherungsbedingung."
+        },
+        "step": 1,
+        "precision": 2,
+        "softMin": 0,
+        "softMax": 96,
+        "group": "precondition",
+        "order": 150
+      }
     }
   }
 }

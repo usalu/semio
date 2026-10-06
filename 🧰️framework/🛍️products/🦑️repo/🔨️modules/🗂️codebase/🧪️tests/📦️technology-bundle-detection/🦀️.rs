@@ -19,7 +19,7 @@ mod subject {
         if root.exists() {
             std::fs::remove_dir_all(&root).map_err(|error| error.to_string())?;
         }
-        for entry in ctx.fixture_json(TREE)?.array("entries") {
+        for entry in ctx.input_json(TREE)?.array("entries") {
             let path = root.join(entry.str("path"));
             if let Some(parent) = path.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| error.to_string())?;

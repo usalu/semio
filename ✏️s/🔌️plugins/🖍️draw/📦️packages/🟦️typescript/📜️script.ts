@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🖍️ Draw example twins plus the publication-authority law: every dispatchable route is declared once, in every place the framework joins. */
 import { join, resolve } from "node:path";
+import { runOwnedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { createRequire } from "node:module";
 import Ajv from "ajv";
 import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -115,6 +116,7 @@ function typecheckPathRaster(repoRoot:string,raster:string,ownedSources:string[]
 class TestScript extends BundleScript {
   async run(segments:string[]): Promise<void> {
     const subset = join(this.repoRoot, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any");
+    runCmd(process.execPath,["test",join(subset,"🚪️io/📝️text/🔺️diff/🧪️tests/🔬️unit/🟦️.ts")]);
     const raster=join(subset,"🧬️schema/🧮️geometry/📷️raster");
     const sceneRaster=join(subset,"🧬️schema/🎬️scene/📷️raster");
     const scenePrepare=join(subset,"🧬️schema/🎬️scene/📋️prepare");
@@ -123,35 +125,36 @@ class TestScript extends BundleScript {
     const sceneRetire=join(subset,"🧬️schema/🎬️scene/🧹️retire");
     const sceneIdentity=join(subset,"🧬️schema/🎬️scene/🪪️identity");
     const sceneView=join(subset,"🧬️schema/🎬️scene/👁️view");
+    const scenePaint=join(subset,"🧬️schema/🎬️scene/🎨️paint");
+    const scenePicking=join(scenePaint,"📋️prepare/🎯️query");
+    const selectionStatus=join(subset,"✏️editor/🧮️status");
     if(segments.length) {
-      if(segments.length!==1||!['path-raster','scene-raster'].includes(segments[0]!)) throw Error("Unknown Draw test selection "+segments.join(" "));
-      const selected=segments[0]==='scene-raster'?sceneRaster:raster;
+      if(segments.length!==1||!['path-raster','scene-raster','scene-paint','scene-picking','selection-status'].includes(segments[0]!)) throw Error("Unknown Draw test selection "+segments.join(" "));
+      const selected=segments[0]==='scene-raster'?sceneRaster:segments[0]==='scene-paint'?scenePaint:segments[0]==='scene-picking'?scenePicking:segments[0]==='selection-status'?selectionStatus:raster;
       runCmd(process.execPath,["test",join(selected,"🧪️tests/🔬️unit/🟦️.ts"),...(selected===sceneRaster?[join(sceneRaster,"🧪️tests/🔬️unit/🖼️images/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️assets/🟦️.ts"),join(scenePrepare,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneBooleans,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneTrace,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRetire,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneIdentity,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneView,"🧪️tests/🔬️unit/🟦️.ts")]:[])]);
-      typecheckPathRaster(this.repoRoot,selected,selected===sceneRaster?[join(scenePrepare,"🟦️.ts"),join(sceneBooleans,"🟦️.ts"),join(sceneTrace,"🟦️.ts"),join(sceneRetire,"🟦️.ts"),join(sceneIdentity,"🟦️.ts"),join(sceneIdentity,"🚦️admission/🟦️.ts"),join(sceneView,"🟦️.ts")]:[]);
+      typecheckPathRaster(this.repoRoot,selected,selected===sceneRaster?[join(scenePrepare,"🟦️.ts"),join(sceneBooleans,"🟦️.ts"),join(sceneTrace,"🟦️.ts"),join(sceneRetire,"🟦️.ts"),join(sceneIdentity,"🟦️.ts"),join(sceneIdentity,"🚦️admission/🟦️.ts"),join(sceneView,"🟦️.ts"),join(scenePaint,"🟦️.ts"),join(scenePaint,"📋️prepare/🟦️.ts"),join(scenePaint,"📋️prepare/🎯️query/🟦️.ts")]:[]);
       return;
     }
-    runCmd(process.execPath, ["test", join(scenePrepare,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneBooleans,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneTrace,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRetire,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneIdentity,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneView,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️images/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️assets/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "../🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/↗️transform/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🎨️fill/🌀️rule/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎯️picking/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎛️handles/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/↗️affine/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts"), join(subset, "../🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/📷️framing/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts"), join(subset, "✏️editor/🎮️commands/➕️add-layer/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/↔️translation/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🎨️fill/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎯️selection/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🧪️tests/🔬️canvas-tool/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️drag-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️rotate-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️scale-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️drag-path-points/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "../🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🧪️tests/📐️bounds/🟦️.ts"), join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")]);
-    typecheckPathRaster(this.repoRoot,raster,[join(scenePrepare,"🟦️.ts"),join(sceneBooleans,"🟦️.ts"),join(sceneTrace,"🟦️.ts"),join(sceneRetire,"🟦️.ts"),join(sceneIdentity,"🟦️.ts"),join(sceneIdentity,"🚦️admission/🟦️.ts"),join(sceneView,"🟦️.ts"),join(sceneRaster,"🟦️.ts"),join(subset,"🧬️schema/🟦️.ts"),join(subset,"🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts"),join(subset,"../🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🦠️mutation/🟦️.ts")]);
-    const plugin = resolve(this.root, "../..");
+    runCmd(process.execPath,["test",join(selectionStatus,"🧪️tests/🔬️unit/🟦️.ts")]);
+    typecheckPathRaster(this.repoRoot,selectionStatus);
+    runCmd(process.execPath, ["test", join(scenePrepare,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneBooleans,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneTrace,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRetire,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneIdentity,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneView,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️images/🟦️.ts"),join(sceneRaster,"🧪️tests/🔬️unit/🖼️assets/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "../🎨️style/🧬️schema/🧬️mutations/🧩️set-group-isolation/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/📄️document/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/↗️transform/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🎨️fill/🌀️rule/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🛤️path/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎯️picking/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎛️handles/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/↗️affine/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🕹️interaction/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🔬️kinds-catalog/🟦️.ts"), join(subset, "../🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "👁️viewer/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/📷️framing/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️window/🟦️.ts"), join(subset, "✏️editor/🎮️commands/➕️add-layer/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/↔️translation/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🎨️fill/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🖊️stroke/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🎯️selection/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🧪️tests/🔬️canvas-tool/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️drag-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️rotate-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️scale-layers/🟦️.ts"), join(subset, "🧬️schema/🧬️mutations/🧪️tests/🧪️drag-path-points/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/✏️editing/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "../🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "✏️editor/🎮️commands/🎛️edit-selection/🧪️tests/🔬️unit/🟦️.ts"), join(subset, "🧬️schema/🧮️geometry/🧪️tests/📐️bounds/🟦️.ts"), join(subset, "📚️examples/🎬️demo/🧪️tests/🧩️example/🟦️.ts"), join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")]);
+    typecheckPathRaster(this.repoRoot,raster,[join(scenePrepare,"🟦️.ts"),join(sceneBooleans,"🟦️.ts"),join(sceneTrace,"🟦️.ts"),join(sceneRetire,"🟦️.ts"),join(sceneIdentity,"🟦️.ts"),join(sceneIdentity,"🚦️admission/🟦️.ts"),join(sceneView,"🟦️.ts"),join(scenePaint,"🟦️.ts"),join(scenePaint,"📋️prepare/🟦️.ts"),join(scenePaint,"📋️prepare/🎯️query/🟦️.ts"),join(sceneRaster,"🟦️.ts"),join(subset,"🧬️schema/🟦️.ts"),join(subset,"🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🟦️.ts"),join(subset,"🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"),join(subset,"../🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🦠️mutation/🟦️.ts")]);
+    await proveDrawPublicationAuthority(this.root, subset);
+  }
+}
+/** 🔏️ Proves the current Drawing source authority and canonical field-patch outcomes. */
+async function proveDrawPublicationAuthority(packageRoot: string, subset: string): Promise<void> {
+    const plugin = resolve(packageRoot, "../..");
     const authority = resolve(plugin, "🧫️fixtures/🧪️publication-authority");
     const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
-    const module = await Bun.file(resolve(plugin, "🧬️schema", "🔣️.json")).json() as { $id: string };
     const ajv = new Ajv({ allErrors: true, strict: true });
-    ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-    ajv.addSchema(module);
-    const validate = ajv.compile({ $ref: `${module.$id}#/$defs/DrawPublicationAuthority` });
-    if (!validate(fixture)) throw new Error(`Draw fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
     const patchRoot = resolve(subset, "🧬️schema/🧬️mutations/🧫️fixtures/🎛️field-patch");
-    const validatePatch = ajv.compile(await Bun.file(resolve(patchRoot, "🧬️schema/🔣️.json")).json());
+    const validatePatch = ajv.compile(await Bun.file(resolve(subset, "🧬️schema/🧬️mutations/🎛️field-patch/🧬️schema/🔣️.json")).json());
     const patchCases = await Bun.file(resolve(patchRoot, "🔣️.json")).json() as { patch: unknown; accepted: boolean }[];
     for (const test of patchCases) if (validatePatch(test.patch) !== test.accepted) throw new Error(`Draw field-patch oracle disagrees: ${JSON.stringify(test)}`);
     console.error(`Draw independent Ajv field-patch oracle: ${patchCases.length} cases`);
     const admission = resolve(subset, "🧬️schema/🧰️owned/🧫️fixtures/🧮️mutation-admission");
-    const admissionSchema = await Bun.file(resolve(admission, "🧬️schema/🔣️.json")).json() as { $id: string };
     const admissionFixture = await Bun.file(resolve(admission, "🔣️.json")).json() as { cases: unknown[]; bootstrapYield: BootstrapYield };
-    ajv.addSchema(admissionSchema);
-    const validateAdmission = ajv.getSchema(admissionSchema.$id);
-    if (!validateAdmission?.(admissionFixture)) throw new Error(`Drawing mutation-admission fixture failed strict Ajv: ${JSON.stringify(validateAdmission?.errors)}`);
     bootstrapYieldOracle(admissionFixture.bootstrapYield);
     const sources = new Map<string, string>();
     for (const app of fixture.apps) sources.set(app.owner, await Bun.file(resolve(plugin, app.source)).text());
@@ -167,8 +170,16 @@ class TestScript extends BundleScript {
       hostile += 1;
       if (oracle(hostileFixture, sources)) throw new Error(`Draw accepted a hostile fixture mutation for ${app.owner}`);
     }
-    console.error(`validated Draw publication authority; apps=${fixture.apps.map((app) => `${app.owner}:${app.routes.length}`).join(",")}; schema=Ajv; oracle=owned; hostile=${hostile}; mutationAdmission=${admissionFixture.cases.length}`);
+    console.error(`validated Draw publication authority; apps=${fixture.apps.map((app) => `${app.owner}:${app.routes.length}`).join(",")}; oracle=owned; hostile=${hostile}; mutationAdmission=${admissionFixture.cases.length}`);
+}
+class PublicationAuthorityAuditScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("publication-authority-audit accepts no arguments");
+    await proveDrawPublicationAuthority(this.root, resolve(this.root, "../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any"));
   }
 }
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", TestScript);
+class UtilityActionPolicyScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{if(segments.length)throw Error("utility-action-policy accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🎬️actions/🧪️tests/🟦️.ts")],this.repoRoot,"draw-utility-action-policy",45000,{env:process.env});}
+}
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", PublicationAuthorityAuditScript).register("utility-action-policy",UtilityActionPolicyScript);
 await runScriptMain(router, { defaultCommand: "test" });

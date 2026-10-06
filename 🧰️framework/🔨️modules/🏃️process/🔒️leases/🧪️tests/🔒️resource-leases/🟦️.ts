@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { copyFileSync, linkSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
+
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -21,7 +21,6 @@ type ResourceLeaseChild = { process: Bun.Subprocess<"pipe", "pipe", "pipe">; out
 export async function testResourceLeases(generated: string): Promise<void> {
   const moduleRoot = join(dirname(fileURLToPath(import.meta.url)), "../.."), implementation = join(moduleRoot, "🟦️.ts");
   const fixture: ResourceLeaseFixture = JSON.parse(readFileSync(join(moduleRoot, "🧫️fixtures/🔣️.json"), "utf8"));
-  assert.ok(new (createRequire(import.meta.url)("ajv").default)().validate(JSON.parse(readFileSync(join(moduleRoot, "🧬️schema/🔣️.json"), "utf8")), fixture));
   const api = await import(pathToFileURL(implementation).href);
   const root = mkdtempSync(join(generated, "resource-leases-")), directory = join(root, "store");
   const worker = join(root, "📜️script.ts");

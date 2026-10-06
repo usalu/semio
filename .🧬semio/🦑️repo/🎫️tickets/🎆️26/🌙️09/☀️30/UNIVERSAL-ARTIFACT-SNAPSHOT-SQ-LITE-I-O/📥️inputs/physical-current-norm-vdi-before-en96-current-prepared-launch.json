@@ -1,0 +1,10 @@
+{
+  "command": "CARGO_TARGET_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' CARGO_BUILD_BUILD_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current' SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/norm-vdi-before-en96-current-artifacts' bun run nx run-many --target=test-snapshot-sqlite-native --projects='@semio-tech/norm-vdi3805-rs,@semio-tech/norm-en1996-rs' --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-norm-vdi-before-en96-current-native.log' 2>&1",
+  "projects": [
+    "@semio-tech/norm-vdi3805-rs",
+    "@semio-tech/norm-en1996-rs"
+  ],
+  "scope": "Prepared only, not executed: genuine VDI new-law Before after current exact Normcontract include correction; EN1996 original full owning After after current Grid3d authority and workspace95 qualification; original quick/grants/cache lane preserved",
+  "at": "2026-10-06T01:50:44.050Z",
+  "status": "prepared; single private Native lane occupied by66532"
+}

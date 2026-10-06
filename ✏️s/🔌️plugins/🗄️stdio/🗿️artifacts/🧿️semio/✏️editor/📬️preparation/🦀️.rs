@@ -46,8 +46,8 @@ where
     S: Send + Sync + 'static,
     M: app_store::ArtifactCanonicalJson + protocol::Mutation<S> + Send + Sync + 'static,
 {
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: app_store::HistoryLane) -> Result<app_store::ArtifactStoreOneItemFootprint, String> {
-        if !(self.recognizes)(mutation) || lane != app_store::HistoryLane::Document || description.is_some_and(|value| value.len() > app_store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+    fn preflight(&self, mutation: &M, lane: app_store::HistoryLane) -> Result<app_store::ArtifactStoreOneItemFootprint, String> {
+        if !(self.recognizes)(mutation) || lane != app_store::HistoryLane::Document {
             return Err(format!("{}-admission", self.prefix));
         }
         let retained_bytes = (self.preflight)(mutation)?;
@@ -63,7 +63,6 @@ where
             && request.generation == request.authority.generation()
             && request.base_revision == request.authority.base_revision()
             && request.authority.actor().len() <= app_store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-            && request.description.as_ref().is_none_or(|value| value.len() <= app_store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES)
             && (self.recognizes)(&request.mutation)
             && (self.preflight)(&request.mutation).is_ok_and(|bytes| bytes <= app_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
         if !admitted {
@@ -73,7 +72,6 @@ where
             prefix: self.prefix,
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             copy: Some((self.copy)()),
             mutation_retirement: Arc::clone(&self.mutation_retirement),
@@ -93,7 +91,6 @@ struct StructuralPreparation<S, M> {
     prefix: &'static str,
     base: Option<app_store::SnapshotRead<S>>,
     mutation: Option<M>,
-    description: Option<String>,
     authority: Option<Arc<app_store::ArtifactStoreOneItemLiveAuthority>>,
     copy: Option<Box<dyn StructuralMutationCopy<S, M>>>,
     mutation_retirement: Arc<dyn app_store::ArtifactOwnedValueRetirementFactory<M>>,
@@ -116,7 +113,7 @@ impl<S, M> StructuralPreparation<S, M> {
     }
 
     fn is_terminal_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.copy.is_none() && self.sealer.is_none() && self.external_retirement.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.copy.is_none() && self.sealer.is_none() && self.external_retirement.is_none()
     }
 }
 
@@ -246,10 +243,6 @@ where
         }
         if let Some(mutation) = self.mutation.take() {
             self.external_retirement = Some(self.mutation_retirement.retire_owned(mutation));
-            return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
-        }
-        if let Some(description) = self.description.take() {
-            self.external_retirement = Some(semio_framework_value::retirement::owned_retirement(description));
             return Ok(app_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {

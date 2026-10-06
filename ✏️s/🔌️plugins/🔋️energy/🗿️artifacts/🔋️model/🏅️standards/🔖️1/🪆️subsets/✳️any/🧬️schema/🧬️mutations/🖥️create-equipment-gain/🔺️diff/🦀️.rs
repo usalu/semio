@@ -28,6 +28,6 @@ pub fn diff(payload: &super::CreateEquipmentGain, base: &EnergyModelSnapshot) ->
         payload.index as usize,
         crate::model::EquipmentGain { id: payload.id, zone_id: payload.zone_id, schedule_id: payload.schedule_id, watts_per_area: payload.watts_per_area, radiant_fraction: payload.radiant_fraction, latent_fraction: payload.latent_fraction },
     );
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

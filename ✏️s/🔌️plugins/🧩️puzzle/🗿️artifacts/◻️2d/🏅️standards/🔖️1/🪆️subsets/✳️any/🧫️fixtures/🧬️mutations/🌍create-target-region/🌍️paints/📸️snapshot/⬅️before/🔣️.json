@@ -209,5 +209,5 @@
       "y": 93.53074909090908
     }
   ],
-  "schema": "puzzle.2d.fixture"
+  "schema": "board.ports.directed.v1"
 }

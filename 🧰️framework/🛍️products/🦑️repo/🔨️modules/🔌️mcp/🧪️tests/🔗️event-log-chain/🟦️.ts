@@ -7,7 +7,7 @@
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Oracle
@@ -97,7 +97,7 @@ function replay(jsonl: string): boolean {
 }
 
 function fixture(ctx: AdapterContext): { inputs: Input[]; hashes: string[]; jsonl: string } {
-  return JSON.parse(readFileSync(ctx.fixture("shared://🔗️event-chain.json"), "utf8")) as { inputs: Input[]; hashes: string[]; jsonl: string };
+  return JSON.parse(readFileSync(ctx.input("shared://🔗️event-chain.json"), "utf8")) as { inputs: Input[]; hashes: string[]; jsonl: string };
 }
 
 //#endregion 🧭️Oracle

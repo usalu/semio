@@ -1,0 +1,166 @@
+{
+  "cases": [
+    {
+      "name": "an-empty-folder-is-announced-absent-once",
+      "bootstrap": "absent",
+      "steps": [
+        {
+          "read": "absent"
+        },
+        {
+          "read": "absent"
+        }
+      ],
+      "expected": {
+        "absent": 1,
+        "puts": 0
+      }
+    },
+    {
+      "name": "a-held-archive-is-never-announced-absent",
+      "bootstrap": "a",
+      "steps": [
+        {
+          "read": "a"
+        }
+      ],
+      "expected": {
+        "absent": 0,
+        "puts": 0
+      }
+    },
+    {
+      "name": "a-folder-emptied-later-is-not-announced",
+      "bootstrap": "a",
+      "steps": [
+        {
+          "read": "absent"
+        },
+        {
+          "read": "absent"
+        }
+      ],
+      "expected": {
+        "absent": 0,
+        "puts": 0
+      }
+    },
+    {
+      "name": "the-first-archive-fills-an-absent-folder",
+      "bootstrap": "absent",
+      "steps": [
+        {
+          "write": "a"
+        },
+        {
+          "read": "a"
+        }
+      ],
+      "expected": {
+        "absent": 1,
+        "puts": 1
+      }
+    },
+    {
+      "name": "the-same-bytes-are-not-written-twice",
+      "bootstrap": "absent",
+      "steps": [
+        {
+          "write": "a"
+        },
+        {
+          "write": "a"
+        },
+        {
+          "write": "b"
+        },
+        {
+          "write": "b"
+        },
+        {
+          "write": "a"
+        }
+      ],
+      "expected": {
+        "absent": 1,
+        "puts": 3
+      }
+    },
+    {
+      "name": "bytes-the-folder-was-read-to-hold-are-not-written-back",
+      "bootstrap": "a",
+      "steps": [
+        {
+          "write": "a"
+        },
+        {
+          "read": "a"
+        },
+        {
+          "write": "a"
+        }
+      ],
+      "expected": {
+        "absent": 0,
+        "puts": 0
+      }
+    },
+    {
+      "name": "another-writers-bytes-are-replaced-by-a-new-archive",
+      "bootstrap": "a",
+      "steps": [
+        {
+          "write": "b"
+        },
+        {
+          "read": "b"
+        },
+        {
+          "write": "b"
+        }
+      ],
+      "expected": {
+        "absent": 0,
+        "puts": 1
+      }
+    },
+    {
+      "name": "bytes-another-writer-replaced-are-written-again",
+      "bootstrap": "absent",
+      "steps": [
+        {
+          "write": "a"
+        },
+        {
+          "read": "b"
+        },
+        {
+          "write": "a"
+        }
+      ],
+      "expected": {
+        "absent": 1,
+        "puts": 2
+      }
+    },
+    {
+      "name": "an-emptied-folder-takes-the-same-bytes-again",
+      "bootstrap": "absent",
+      "steps": [
+        {
+          "write": "a"
+        },
+        {
+          "read": "absent"
+        },
+        {
+          "write": "a"
+        }
+      ],
+      "expected": {
+        "absent": 1,
+        "puts": 2
+      }
+    }
+  ]
+}

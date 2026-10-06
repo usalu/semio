@@ -12,5 +12,5 @@ pub struct Disconnect {
 
 pub fn handle(payload: &Disconnect, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
     let present = crate::dag_scene(doc)?.edges.iter().any(|edge| edge.id == payload.edge_id);
-    Ok(if present { crate::dag_child_emit(doc.snapshot, &[crate::delete_edge_leaf(&payload.edge_id)]) } else { Emit::default() })
+    Ok(if present { crate::dag_child_emit(doc.snapshot, vec![crate::delete_edge_leaf(&payload.edge_id)]) } else { Emit::default() })
 }

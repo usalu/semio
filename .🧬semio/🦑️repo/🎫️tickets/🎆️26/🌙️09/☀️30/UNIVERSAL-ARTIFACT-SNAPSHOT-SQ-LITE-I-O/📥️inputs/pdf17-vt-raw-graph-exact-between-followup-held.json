@@ -1,0 +1,15 @@
+{
+  "qualification": "HELD exact raw COS frontier between support after RawGraph diff field. Raw COS uses decimal/integer/bytes and ordered Vec Eq, not IEEE numerical equality; typed sparse branches and global equality unchanged. Requires actual tests before mount.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "        PdfDiff {\n            raw_graph: None,\n            declared_version: (base.declared_version",
+      "after": "        let raw_graph = (base.objects != other.objects || base.catalog_extra != other.catalog_extra).then(|| PdfRawGraph { objects: other.objects.clone(), catalog_extra: other.catalog_extra.clone() });\n        let has_raw_graph = raw_graph.is_some();\n        PdfDiff {\n            raw_graph,\n            declared_version: (base.declared_version"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "            catalog_extra: dict(&base.catalog_extra, &other.catalog_extra),\n            objects,\n            trailer: dict(&base.trailer, &other.trailer),",
+      "after": "            catalog_extra: if has_raw_graph { None } else { dict(&base.catalog_extra, &other.catalog_extra) },\n            objects: if has_raw_graph { None } else { objects },\n            trailer: dict(&base.trailer, &other.trailer),"
+    }
+  ]
+}

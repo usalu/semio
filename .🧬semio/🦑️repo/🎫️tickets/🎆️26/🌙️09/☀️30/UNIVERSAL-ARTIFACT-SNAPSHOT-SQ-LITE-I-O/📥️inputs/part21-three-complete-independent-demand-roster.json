@@ -1,0 +1,118 @@
+[
+  {
+    "name": "step",
+    "type": "StepSnapshot",
+    "api": "step",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot",
+    "sourceEmpty": "source.entities=[];",
+    "nativeEmpty": "source.entities.clear();",
+    "tables": 12,
+    "columns": 10,
+    "contract": {
+      "schemaBytes": 3437,
+      "tableWidths": {
+        "step_aggregate_element": 4,
+        "step_argument": 5,
+        "step_author": 4,
+        "step_complex_type": 4,
+        "step_description": 4,
+        "step_document": 3,
+        "step_entity": 5,
+        "step_header": 7,
+        "step_organization": 4,
+        "step_schema_identifier": 4,
+        "step_typed_value": 4,
+        "step_value": 10
+      },
+      "cases": [
+        {
+          "id": "originalSourceFull",
+          "rows": 65,
+          "valueBytes": 1916
+        },
+        {
+          "id": "emptyEntitiesRetainHeader",
+          "rows": 12,
+          "valueBytes": 381
+        }
+      ]
+    }
+  },
+  {
+    "name": "ifc4",
+    "type": "IfcSnapshot",
+    "api": "ifc",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "sourceEmpty": "source.entities=[];",
+    "nativeEmpty": "source.entities.clear();",
+    "tables": 11,
+    "columns": 11,
+    "contract": {
+      "schemaBytes": 3250,
+      "tableWidths": {
+        "ifc_aggregate_element": 4,
+        "ifc_argument": 5,
+        "ifc_complex_type": 4,
+        "ifc_document": 3,
+        "ifc_entity": 5,
+        "ifc_file_description_argument": 4,
+        "ifc_file_name_argument": 4,
+        "ifc_file_schema_argument": 4,
+        "ifc_header": 1,
+        "ifc_typed_argument": 4,
+        "ifc_value": 11
+      },
+      "cases": [
+        {
+          "id": "originalSourceFull",
+          "rows": 65,
+          "valueBytes": 1869
+        },
+        {
+          "id": "emptyEntitiesRetainHeader",
+          "rows": 18,
+          "valueBytes": 456
+        }
+      ]
+    }
+  },
+  {
+    "name": "ifc2x3",
+    "type": "Ifc2x3Snapshot",
+    "api": "ifc2x3",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot",
+    "sourceEmpty": "source.document.instances=[];",
+    "nativeEmpty": "source.document.instances.clear();",
+    "tables": 12,
+    "columns": 17,
+    "contract": {
+      "schemaBytes": 4006,
+      "tableWidths": {
+        "ifc2x3_document": 4,
+        "ifc2x3_edm_preamble": 17,
+        "ifc2x3_entity_argument": 4,
+        "ifc2x3_entity_type": 4,
+        "ifc2x3_file_description_argument": 4,
+        "ifc2x3_file_name_argument": 4,
+        "ifc2x3_file_schema_argument": 4,
+        "ifc2x3_header": 1,
+        "ifc2x3_instance": 4,
+        "ifc2x3_list_element": 4,
+        "ifc2x3_typed_argument": 4,
+        "ifc2x3_value": 12
+      },
+      "cases": [
+        {
+          "id": "originalSourceFull",
+          "rows": 58,
+          "valueBytes": 1847
+        },
+        {
+          "id": "emptyEntitiesRetainHeader",
+          "rows": 17,
+          "valueBytes": 587
+        }
+      ]
+    }
+  }
+]

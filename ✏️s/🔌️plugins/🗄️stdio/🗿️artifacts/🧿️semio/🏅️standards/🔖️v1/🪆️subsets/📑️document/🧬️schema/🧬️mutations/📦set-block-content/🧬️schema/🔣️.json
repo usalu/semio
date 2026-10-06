@@ -15,10 +15,35 @@
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     },
     "path": {
-      "$ref": "#/$defs/DocBlockPath"
+      "$ref": "#/$defs/DocBlockPath",
+      "x-semio-ui": {
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "Path of the block: the steps into nested containers and its index there, counted from 0.",
+          "de": "Pfad des Blocks: die Schritte in verschachtelte Container und sein Index dort, ab 0 gezählt."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "block": {
-      "$ref": "#/$defs/DocBlock"
+      "$ref": "#/$defs/DocBlock",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "The block that takes the place of the addressed one.",
+          "de": "Der Block, der an die Stelle des adressierten tritt."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

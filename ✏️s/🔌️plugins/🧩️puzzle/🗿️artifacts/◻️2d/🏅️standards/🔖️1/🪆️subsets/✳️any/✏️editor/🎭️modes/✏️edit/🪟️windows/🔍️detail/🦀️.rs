@@ -18,6 +18,7 @@ pub const ZOOM_SCALE: f64 = 2.15;
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle2d::create_puzzle2d_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: puzzle2d_localized(|l| l.window_detail),
         body_key: BODY_KEY.into(),

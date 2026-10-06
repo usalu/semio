@@ -34,10 +34,12 @@ const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::mutations::{
-        apply_playbook_mutation_outcome, decode_playbook_mutation_json, decode_playbook_snapshot_json, encode_playbook_snapshot_json, inverse_playbook_mutation_steps, PlaybookMutation,
-    };
-    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::snapshot::{parse_playbook_dsl, print_playbook_dsl};
+    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::schema::mutations::{apply_playbook_mutation_outcome, inverse_playbook_mutation_steps, PlaybookMutation};
+    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::io::text::snapshot::{encode_playbook_snapshot_json};
+    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::io::text::snapshot::{decode_playbook_snapshot_json};
+    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::io::text::mutations::{decode_playbook_mutation_json};
+    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::io::text::snapshot::{print_playbook_dsl};
+    use semio_s_artifact_playbook_playbook::standards::v1::subsets::any::io::text::snapshot::{parse_playbook_dsl};
     use semio_s_artifact_playbook_playbook::PlaybookSnapshot;
     use semio_repo_test_host::law;
 
@@ -56,7 +58,7 @@ mod subject {
 
     fn text_at(ctx: &Context, vector: &str, leaf: &str) -> Result<String, String> {
         let uri = format!("{}/{vector}/{leaf}", super::VECTORS);
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("the committed vector {uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the committed vector {uri} is not UTF-8: {error}"))
     }
 
     fn snapshot_at(ctx: &Context, vector: &str, leaf: &str, kind: &str) -> Result<PlaybookSnapshot, String> {
@@ -137,7 +139,7 @@ mod subject {
     /// reproducing it is the correct answer and any drift between the committed artifact and the
     /// printer is the defect this scenario exists to catch.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let committed = ctx.fixture_bytes(super::EXAMPLE_ASSET)?;
+        let committed = ctx.input_bytes(super::EXAMPLE_ASSET)?;
         let text = String::from_utf8(committed.clone()).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
         let parsed = parse_playbook_dsl(&text)?;
         let printed = print_playbook_dsl(&parsed);

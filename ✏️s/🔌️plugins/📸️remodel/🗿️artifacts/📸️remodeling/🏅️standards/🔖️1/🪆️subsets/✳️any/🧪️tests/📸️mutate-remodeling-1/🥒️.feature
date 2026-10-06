@@ -26,7 +26,7 @@ Feature: Apply every typed remodeling-scene mutation to its committed specificat
   two differential outlines carries a `<vector>` — the `<kind directory>/<case directory>`
   pair as it stands ON DISK — and the scenario's doc string turns it into the three `asset://` URIs
   that address the committed leaf. Both implementations resolve those URIs through the test context
-  at RUN time (`ctx.fixture_json` in Rust, `ctx.fixture_bytes` in Python), so both read the same
+  at RUN time (`ctx.snapshot_json` in Rust, `ctx.fixture_bytes` in Python), so both read the same
   committed bytes, the plan pins their digests, and neither carries a transcribed copy of a fixture
   path that can drift away from the directory it names. That drift is not hypothetical: the
   2026-09-05 repo-wide path-shortening pass renamed every case directory here and left 99

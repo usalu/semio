@@ -121,17 +121,13 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/replication/replay-report.json#/definitions/Report"
     },
     "TimeTravelBase": {
-      "description": "The store state a session last observed.",
+      "description": "The store state a session last observed: the content revision of its history. The store's local generation is no part of it.",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "storeGeneration",
         "contentRevision"
       ],
       "properties": {
-        "storeGeneration": {
-          "$ref": "#/$defs/U64"
-        },
         "contentRevision": {
           "$ref": "#/$defs/Hash32"
         }
@@ -350,7 +346,10 @@
           ],
           "properties": {
             "type": {
-              "const": "begin"
+              "enum": [
+                "begin",
+                "beginWithdrawn"
+              ]
             },
             "target": {
               "$ref": "#/$defs/TimeTravelTarget"
@@ -519,6 +518,26 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "type",
+            "generation",
+            "target"
+          ],
+          "properties": {
+            "type": {
+              "const": "restore"
+            },
+            "generation": {
+              "$ref": "#/$defs/U32"
+            },
+            "target": {
+              "$ref": "#/$defs/MutationId"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
             "type"
           ],
           "properties": {
@@ -597,10 +616,12 @@
     "TimeTravelEventKey": {
       "enum": [
         "begin",
+        "beginWithdrawn",
         "draft",
         "withdraw",
         "accept",
         "discard",
+        "restore",
         "replayProgressed",
         "replayCompleted",
         "replayCancelled",
@@ -788,7 +809,10 @@
         "validCode",
         "invalidCode",
         "validName",
-        "invalidName"
+        "invalidName",
+        "restoreKeepsDrafts",
+        "restoreLastDraft",
+        "restoreUnaccepted"
       ]
     },
     "TimeTravelLabelKey": {
@@ -829,468 +853,11 @@
         "commitFailed",
         "outcomeIntroduced",
         "refusalMemberGone",
-        "memberEdited"
+        "memberEdited",
+        "refusalNotWithdrawable",
+        "refusalEditorClosed",
+        "refusalReadOnly"
       ]
-    },
-    "LifecycleLawFixture": {
-      "title": "LifecycleLawFixture",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema",
-        "stages",
-        "eventKeys",
-        "effectKinds",
-        "refusals",
-        "guards",
-        "reviewKinds",
-        "frozenCode",
-        "cancelledCode",
-        "limits",
-        "contexts",
-        "events",
-        "reviews",
-        "matrix",
-        "cases",
-        "scenarios",
-        "invariants",
-        "labels",
-        "codeLabels"
-      ],
-      "properties": {
-        "schema": {
-          "const": "semio.framework.time-travel.lifecycle-law.v1"
-        },
-        "stages": {
-          "type": "array",
-          "minItems": 6,
-          "maxItems": 6,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/TimeTravelStage"
-          }
-        },
-        "eventKeys": {
-          "type": "array",
-          "minItems": 18,
-          "maxItems": 18,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/TimeTravelEventKey"
-          }
-        },
-        "effectKinds": {
-          "type": "array",
-          "minItems": 7,
-          "maxItems": 7,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/TimeTravelEffectKind"
-          }
-        },
-        "refusals": {
-          "type": "array",
-          "minItems": 4,
-          "maxItems": 4,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/TimeTravelRefusal"
-          }
-        },
-        "guards": {
-          "type": "array",
-          "minItems": 24,
-          "maxItems": 24,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/TimeTravelGuard"
-          }
-        },
-        "reviewKinds": {
-          "type": "array",
-          "minItems": 4,
-          "maxItems": 4,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/TimeTravelReview"
-          }
-        },
-        "frozenCode": {
-          "const": "timeTravel.frozen"
-        },
-        "cancelledCode": {
-          "const": "timeTravel.cancelled"
-        },
-        "limits": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "textMaxBytes"
-          ],
-          "properties": {
-            "textMaxBytes": {
-              "const": 256
-            }
-          }
-        },
-        "contexts": {
-          "description": "Named canonical sessions; a matrix row names the one it is evaluated on.",
-          "type": "object",
-          "propertyNames": {
-            "pattern": "^[a-z]+(\\.[a-zA-Z]+)*$"
-          },
-          "additionalProperties": {
-            "$ref": "#/$defs/TimeTravelSession"
-          }
-        },
-        "events": {
-          "description": "The canonical event of every event key, addressed to the contexts' generation.",
-          "type": "object",
-          "minProperties": 18,
-          "maxProperties": 18,
-          "propertyNames": {
-            "$ref": "#/$defs/TimeTravelEventKey"
-          },
-          "additionalProperties": {
-            "$ref": "#/$defs/TimeTravelEvent"
-          }
-        },
-        "reviews": {
-          "description": "The review classification of every context (null outside reviewing).",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "context",
-              "review"
-            ],
-            "properties": {
-              "context": {
-                "type": "string",
-                "minLength": 1
-              },
-              "review": {
-                "anyOf": [
-                  {
-                    "$ref": "#/$defs/TimeTravelReview"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "matrix": {
-          "description": "Every (stage, event key) pair, split into guard branches: 6 × 18 pairs, 130 rows. A row is evaluated on its context with the canonical event of its key, or with its own input. A legal row names to/effects/generation/session; an illegal row names its refusal.",
-          "type": "array",
-          "minItems": 130,
-          "maxItems": 130,
-          "items": {
-            "oneOf": [
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "from",
-                  "event",
-                  "when",
-                  "context",
-                  "to",
-                  "effects",
-                  "generation",
-                  "session"
-                ],
-                "properties": {
-                  "from": {
-                    "$ref": "#/$defs/TimeTravelStage"
-                  },
-                  "event": {
-                    "$ref": "#/$defs/TimeTravelEventKey"
-                  },
-                  "when": {
-                    "$ref": "#/$defs/TimeTravelGuard"
-                  },
-                  "context": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "input": {
-                    "$ref": "#/$defs/TimeTravelEventInput"
-                  },
-                  "to": {
-                    "$ref": "#/$defs/TimeTravelStage"
-                  },
-                  "effects": {
-                    "type": "array",
-                    "maxItems": 2,
-                    "items": {
-                      "$ref": "#/$defs/TimeTravelEffectKind"
-                    }
-                  },
-                  "generation": {
-                    "enum": [
-                      "keep",
-                      "increment"
-                    ]
-                  },
-                  "session": {
-                    "enum": [
-                      "keep",
-                      "next"
-                    ]
-                  }
-                }
-              },
-              {
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "from",
-                  "event",
-                  "when",
-                  "context",
-                  "rejection"
-                ],
-                "properties": {
-                  "from": {
-                    "$ref": "#/$defs/TimeTravelStage"
-                  },
-                  "event": {
-                    "$ref": "#/$defs/TimeTravelEventKey"
-                  },
-                  "when": {
-                    "$ref": "#/$defs/TimeTravelGuard"
-                  },
-                  "context": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "input": {
-                    "$ref": "#/$defs/TimeTravelEventInput"
-                  },
-                  "rejection": {
-                    "$ref": "#/$defs/TimeTravelRefusal"
-                  }
-                }
-              }
-            ]
-          }
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "name",
-              "session",
-              "event",
-              "expect"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1
-              },
-              "session": {
-                "$ref": "#/$defs/TimeTravelSession"
-              },
-              "event": {
-                "$ref": "#/$defs/TimeTravelEventInput"
-              },
-              "expect": {
-                "oneOf": [
-                  {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "transition"
-                    ],
-                    "properties": {
-                      "transition": {
-                        "$ref": "#/$defs/TimeTravelTransition"
-                      }
-                    }
-                  },
-                  {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "rejection"
-                    ],
-                    "properties": {
-                      "rejection": {
-                        "$ref": "#/$defs/TimeTravelRefusal"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "scenarios": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "name",
-              "initial",
-              "steps",
-              "final"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1
-              },
-              "initial": {
-                "$ref": "#/$defs/TimeTravelSession"
-              },
-              "steps": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "event",
-                    "expect"
-                  ],
-                  "properties": {
-                    "event": {
-                      "$ref": "#/$defs/TimeTravelEventInput"
-                    },
-                    "expect": {
-                      "oneOf": [
-                        {
-                          "type": "object",
-                          "additionalProperties": false,
-                          "required": [
-                            "stage",
-                            "effects"
-                          ],
-                          "properties": {
-                            "stage": {
-                              "$ref": "#/$defs/TimeTravelStage"
-                            },
-                            "effects": {
-                              "type": "array",
-                              "items": {
-                                "$ref": "#/$defs/TimeTravelEffectKind"
-                              }
-                            }
-                          }
-                        },
-                        {
-                          "type": "object",
-                          "additionalProperties": false,
-                          "required": [
-                            "rejection"
-                          ],
-                          "properties": {
-                            "rejection": {
-                              "$ref": "#/$defs/TimeTravelRefusal"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              },
-              "final": {
-                "$ref": "#/$defs/TimeTravelSession"
-              }
-            }
-          }
-        },
-        "invariants": {
-          "description": "Session invariants every reachable session satisfies; each carries a session violating it first.",
-          "type": "array",
-          "minItems": 11,
-          "maxItems": 11,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "statement",
-              "violation"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "pattern": "^[a-z]+(-[a-z]+)*$"
-              },
-              "statement": {
-                "type": "string",
-                "minLength": 1
-              },
-              "violation": {
-                "$ref": "#/$defs/TimeTravelSession"
-              }
-            }
-          }
-        },
-        "labels": {
-          "type": "array",
-          "minItems": 37,
-          "maxItems": 37,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "key",
-              "en",
-              "de"
-            ],
-            "properties": {
-              "key": {
-                "$ref": "#/$defs/TimeTravelLabelKey"
-              },
-              "en": {
-                "type": "string",
-                "minLength": 1
-              },
-              "de": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          }
-        },
-        "codeLabels": {
-          "type": "array",
-          "minItems": 18,
-          "maxItems": 18,
-          "uniqueItems": true,
-          "description": "Every timeTravel.* code a history-edit verb or driver answers (session refusals, frozen, cancelled, the hosting runtime's refusals and driver faults) with the label key a host shows for it.",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "code",
-              "key"
-            ],
-            "properties": {
-              "code": {
-                "$ref": "#/$defs/FaultCode"
-              },
-              "key": {
-                "$ref": "#/$defs/TimeTravelLabelKey"
-              }
-            }
-          }
-        }
-      }
     }
   }
 }

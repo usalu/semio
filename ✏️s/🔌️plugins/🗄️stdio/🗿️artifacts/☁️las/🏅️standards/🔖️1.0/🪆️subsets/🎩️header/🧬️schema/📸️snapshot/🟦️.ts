@@ -1,5 +1,5 @@
 /** 🧬️ LasSnapshot schema with exact owned native binary64 scalars. */
-import type { Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type { Binary64 };
 export interface LasHeader {
   versionMajor: number;

@@ -25,7 +25,7 @@ pub const WINDOW_KIND_ID: &str = "puzzle5d-view-2d";
 pub const BODY_KEY: &str = "puzzle.5d.view.2d";
 pub const SURFACE_ID: &str = "puzzle.5d.view.2d";
 /// 🧬️ The board fixture schema tag the host's parser keys on — the same one the editor's board pane emits.
-const BOARD_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
+const BOARD_FIXTURE_SCHEMA: &str = "board.ports.directed.v1";
 /// 🔵️ Node radius for a part whose 2D projection never authored one.
 const DEFAULT_PART_RADIUS: f64 = 20.0;
 /// 🔘️ Handle radius for a grip whose 2D projection never authored one.
@@ -37,6 +37,7 @@ const DEFAULT_GRIP_RADIUS: f64 = 3.0;
 /// No utilities, no actions, no measures: everything this window offers is reading.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Puzzle 2D", "Puzzle 2D"),
         body_key: BODY_KEY.into(),
@@ -118,7 +119,7 @@ fn camera_value() -> Value {
     json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 })
 }
 
-pub fn board_fixture_json(document: &Puzzle5dSnapshot) -> String {
+pub fn board_snapshot_json(document: &Puzzle5dSnapshot) -> String {
     let nodes: Vec<Value> = document.parts.iter().map(node_value).collect();
     let edges: Vec<Value> = document.fasteners.iter().map(edge_value).collect();
     json!({
@@ -134,7 +135,7 @@ pub fn board_fixture_json(document: &Puzzle5dSnapshot) -> String {
 
 fn board_scene(document: &Puzzle5dSnapshot) -> Board2dScene {
     Board2dScene {
-        fixture_json: board_fixture_json(document),
+        snapshot_json: board_snapshot_json(document),
         camera_json: camera_value().to_string(),
         glyph_catalogs_json: json!({ "nodes": [], "handles": [], "edges": [], "wires": [] }).to_string(),
         selection_json: "[]".into(),

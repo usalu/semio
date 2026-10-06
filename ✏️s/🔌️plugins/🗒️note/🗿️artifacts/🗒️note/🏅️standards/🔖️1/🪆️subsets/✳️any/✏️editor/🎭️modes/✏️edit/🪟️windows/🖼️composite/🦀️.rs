@@ -29,6 +29,7 @@ const NOTE_PLAY_SURFACE_COMPOSITE: &str = "note.play.composite";
 /// [`window_measures`], not frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: NOTE_PLAY_WINDOW_COMPOSITE.into(),
         label: LocalizedLabel::native("Canvas", "Zeichenfläche"),
         body_key: NOTE_PLAY_BODY_COMPOSITE.into(),

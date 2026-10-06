@@ -1,6 +1,7 @@
 //! 📚️ Example `demo-session`.
 
-use semio_framework_plugin::{ExampleSource, LocalizedLabel};
+use semio_framework_ui_locale::{LocalizedLabel};
+use semio_framework_plugin::{ExampleSource};
 
 pub const ID: &str = "demo-session";
 pub async fn label() -> LocalizedLabel {

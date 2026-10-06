@@ -22,7 +22,7 @@ fn a_mounted_document_round_trips_through_both_envelopes() {
 fn decode_in_place_retires_the_displaced_document() {
     let mut live = crate::examples::two_room_corridor::document();
     let bytes = <Wfc2dSnapshot as store::ArtifactPack>::encode_pack(&crate::examples::hex_ring::document());
-    let mut retirement = crate::standards::v1::subsets::any::io::snapshot::binary::decode_into(&mut live, &bytes).expect("decode in place");
+    let mut retirement = crate::standards::v1::subsets::any::io::binary::snapshot::decode_into(&mut live, &bytes).expect("decode in place");
     assert_eq!(live, crate::examples::hex_ring::document());
     while !retirement.terminal_is_empty() {
         retirement.close_step(8, 1 << 16).expect("retirement steps");

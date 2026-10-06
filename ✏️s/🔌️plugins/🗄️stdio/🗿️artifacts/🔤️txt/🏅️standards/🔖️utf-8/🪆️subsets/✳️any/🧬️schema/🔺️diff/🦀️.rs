@@ -18,7 +18,7 @@ use std::collections::HashSet;
 /// sub-fields of its own, so "diff" of a line is just its replacement text).
 ///
 /// 🧪️ F6: `dsl::DslRecord` — gives this `DslField` so `Vec<TxtLineAdded>` can sit inside a
-/// `#[derive(dsl::DslDiff)]` struct's list field (`TxtLinesDiff::added` below).
+/// `#[derive(dsl::)]` struct's list field (`TxtLinesDiff::added` below).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct TxtLineAdded {
@@ -218,14 +218,14 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
 /// 🔺️ Diff for `stdio.txt`. Every mutable field is `Option<T>` (present = changed); `lines`
 /// is the one owned collection, an `Option<TxtLinesDiff>` triple.
 ///
-/// 🧪️ F6: `dsl::DslDiff` derive added — emits `protocol::DiffCodec` (print_diff/parse_diff/
+/// 🧪️ F6: `dsl::` derive added — emits `protocol::DiffCodec` (print_diff/parse_diff/
 /// encode_diff/decode_diff) from the same `RecordSpec` machinery `DslRecord` uses. Classified
 /// DERIVE per `f6-recon-report.md` §3's unified decision rule: no field here is `Option<Option<
 /// _>>` (every field is a single-layer `Option<T>` meaning "changed", never a tri-state
 /// nullable — `lines` composes VIA a triple, it does not itself carry removal-vs-absence), and
 /// the only enum in the walk (`LineEnding`) is unit-variant-only, so it binds via `DslScalar`
 /// (see the snapshot module) rather than blocking the derive like a data-carrying enum would.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslDiff)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt.diff")]
 pub struct TxtDiff {

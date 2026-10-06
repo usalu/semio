@@ -109,30 +109,6 @@ fn optional(value: &DslValue, key: &str, c: &mut NativeDecodeControl<'_>) -> Res
 fn string(value: &DslValue, key: &str, c: &mut NativeDecodeControl<'_>) -> Result<String, ValueError> {
     String::from_value_controlled(field(value, key)?, c)
 }
-fn census(value: &DslValue, maximum: usize, c: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> {
-    let checkpoints = list(field(value, "checkpoints")?)?;
-    let alternatives = list(field(value, "alternatives")?)?;
-    c.begin_stage(add(checkpoints.len(), alternatives.len())?)?;
-    let mut count = 1;
-    for row in checkpoints {
-        count = add(count, add(2, add(list(field(row, "authors")?)?.len(), list(field(row, "members")?)?.len())?)?)?;
-        if count > maximum {
-            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space history semantic row limit exceeded"));
-        }
-        c.step()?;
-    }
-    for row in alternatives {
-        count = add(count, add(1, list(field(row, "checkpointIds")?)?.len())?)?;
-        if count > maximum {
-            return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space history semantic row limit exceeded"));
-        }
-        c.step()?;
-    }
-    if count > maximum {
-        return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space history semantic row limit exceeded"));
-    }
-    Ok(())
-}
 fn construct(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<SpaceHistorySnapshot, ValueError> {
     c.begin_stage(0)?;
     c.charge(std::mem::size_of::<SpaceHistorySnapshot>())?;
@@ -270,7 +246,12 @@ pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, c
     })?
 }
 
-pub(super) fn decode(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<SpaceHistorySnapshot, ValueError> {
+pub(super) fn decode(payload:&crate::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SpaceHistorySnapshot,ValueError>{
+ let limits=control.limits();
+ decode_with(payload,control,|value,native|{admission::intrinsic(value,native,limits)?;construct(value,native)})
+}
+
+pub(crate) fn decode_with<T>(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, bind: impl FnOnce(&DslValue, &mut NativeDecodeControl<'_>)->Result<T,ValueError>) -> Result<T, ValueError> {
     let limits = control.limits();
     control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 0)?;
     let length = match payload {
@@ -287,15 +268,13 @@ pub(super) fn decode(payload: &crate::io_schema::IoPayload, control: &mut Sqlite
         let result = (|| match payload {
             crate::io_schema::IoPayload::Text(text) => {
                 let value = semio_framework_pack_json::from_json_str_controlled::<DslValue>(text, semio_framework_pack_json::JsonMemberPolicy::Reject, &mut c)?.guard_decoded();
-                census(value.get(), limits.max_rows, &mut c)?;
-                construct(value.get(), &mut c)
+                bind(value.get(), &mut c)
             }
             crate::io_schema::IoPayload::Binary(bytes) => {
                 let spec = spec(&mut c)?;
                 let (record, _) = pack::record::decode_document_controlled(bytes, &spec, &pack::record::DecodeOptions::default(), &mut c).map_err(crate::os_store::PackRefusal::into_value_error)?;
                 let Some(semio_framework_dsl_record::FieldValue::Value(value)) = record.get(1) else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space history native value field is missing")) };
-                census(&value, limits.max_rows, &mut c)?;
-                construct(&value, &mut c)
+                bind(&value, &mut c)
             }
         })();
         (result, c.owned_bytes())

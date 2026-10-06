@@ -1,0 +1,228 @@
+{
+  "windowIds": [
+    "pane-top",
+    "pane-perspective"
+  ],
+  "cases": [
+    {
+      "id": "repeated-guest-set-remains-armed",
+      "steps": [
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "repeated-user-press-toggles-off",
+      "steps": [
+        {
+          "kind": "press",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "press",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": null,
+            "pane-perspective": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-after-user-press-remains-armed",
+      "steps": [
+        {
+          "kind": "press",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "user-press-after-set-toggles-off",
+      "steps": [
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "press",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": null,
+            "pane-perspective": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "set-switches-without-toggling",
+      "steps": [
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.transform",
+          "expected": {
+            "pane-top": "pane.transform",
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.transform",
+          "expected": {
+            "pane-top": "pane.transform",
+            "pane-perspective": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "guest-clear-is-idempotent",
+      "steps": [
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "",
+          "expected": {
+            "pane-top": null,
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "",
+          "expected": {
+            "pane-top": null,
+            "pane-perspective": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "clear-on-unarmed-window-stays-empty",
+      "steps": [
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "",
+          "expected": {
+            "pane-top": null,
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "press",
+          "windowId": "pane-top",
+          "utilityId": "",
+          "expected": {
+            "pane-top": null,
+            "pane-perspective": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "assignments-are-scoped-to-window",
+      "steps": [
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        },
+        {
+          "kind": "set",
+          "windowId": "pane-perspective",
+          "utilityId": "pane.transform",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": "pane.transform"
+          }
+        },
+        {
+          "kind": "set",
+          "windowId": "pane-top",
+          "utilityId": "pane.brush",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": "pane.transform"
+          }
+        },
+        {
+          "kind": "set",
+          "windowId": "pane-perspective",
+          "utilityId": "",
+          "expected": {
+            "pane-top": "pane.brush",
+            "pane-perspective": null
+          }
+        }
+      ]
+    }
+  ]
+}

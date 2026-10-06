@@ -152,7 +152,7 @@
       ]
     },
     {
-      "toolId": "resetFixture",
+      "toolId": "resetSnapshot",
       "lanes": [
         "HostOnly"
       ]
@@ -364,7 +364,7 @@
       "feature": "decode and publish an unbounded asset payload through retained byte pages"
     },
     {
-      "id": "resetFixture",
+      "id": "resetSnapshot",
       "execution": "bounded",
       "admission": "Migrated",
       "feature": "encode and replace a complete fixture document through a retained cursor"
@@ -460,10 +460,10 @@
     "ownedInterface": "ShootingRetainedCatalogOracle",
     "runtimeDependency": false,
     "expected": {
-      "routes": 37,
-      "bounded": 36,
+      "routes": 36,
+      "bounded": 35,
       "resumable": 1,
-      "migrated": 36,
+      "migrated": 35,
       "failClosed": 1,
       "unique": true
     }

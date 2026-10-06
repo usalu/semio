@@ -17,7 +17,7 @@ impl Serializer<WriterSnapshot> for WriterIntoJson {
     /// 🪧️ Exact — see the sibling deserializer's doc comment.
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren) -> IoResult<IoPayload> {
-        let json = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&semio_framework_pack_json::to_json_string(from)).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("WriterIntoJson: {error}"))))?;
+        let json = JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(from)));
         Ok(IoOutcome { value: IoPayload::Text(store::ArtifactDsl::print_dsl(&json)), diagnostics: Vec::new() })
     }
 }

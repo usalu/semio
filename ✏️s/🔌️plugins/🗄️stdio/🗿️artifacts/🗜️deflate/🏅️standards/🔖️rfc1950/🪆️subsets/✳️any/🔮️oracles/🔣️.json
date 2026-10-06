@@ -146,9 +146,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-preset-dictionary-applied",
       "class": "handcrafted",
       "target": {
@@ -191,7 +190,6 @@
       "notes": "SetPresetDictionary{dictId:Some(0x12345678)} sets FDICT and the DICTID trailer, RFC1950 §2.2's own preset-dictionary mechanism."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-payload-applied",
       "class": "handcrafted",
       "target": {
@@ -234,7 +232,6 @@
       "notes": "SetPayload replaces the decompressed RFC1951 payload bytes in place."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-compression-params-applied",
       "class": "handcrafted",
       "target": {

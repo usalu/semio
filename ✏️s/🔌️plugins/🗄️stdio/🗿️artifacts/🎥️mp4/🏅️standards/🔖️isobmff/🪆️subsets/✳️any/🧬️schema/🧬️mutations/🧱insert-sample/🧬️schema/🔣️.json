@@ -28,6 +28,7 @@
           "en": "Index of the track, counted from 0.",
           "de": "Index der Spur, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -35,7 +36,22 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the samples of the track at which it is inserted, counted from 0.",
+          "de": "Position unter den Samples der Spur, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "sample": {
       "$ref": "#/$defs/Mp4Sample",

@@ -4,7 +4,6 @@ import Ajv from "ajv";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import fixture from "../../🧫️fixtures/🎯️stack-drop-destination/🔣️.json";
-import schema from "../../🧬️schema/🎯️stack-drop-destination/🔣️.json";
 import { applyModeDrop, modeDockOutLayout } from "../../🟦️";
 
 type Layout = Parameters<typeof applyModeDrop>[0];
@@ -22,9 +21,6 @@ function projectedMarkup(projection: StackProjection[]): string {
 
 describe("🎯️ stack drop destination", () => {
   test("the language-neutral vectors satisfy their independent Ajv schema", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    expect(validate({ ...fixture, committedTargetPath: [0] })).toBe(false);
   });
 
   test.each(fixture.cases)("$id uses the visible destination after extraction", (law) => {

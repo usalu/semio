@@ -1,0 +1,44 @@
+[
+  {
+    "from": "owner/packages/rust/lib.rs",
+    "path": "../../🦀️.rs",
+    "toml": "[lib]\npath = \"../../🦀️.rs\"",
+    "source": "#[path=\"../../🦀️.rs\"] mod component;",
+    "expected": "owner/🦀️.rs"
+  },
+  {
+    "from": "owner/packages/rust/lib.rs",
+    "path": "component.rs",
+    "toml": "[lib]\npath = \"component.rs\"",
+    "source": "#[path=\"component.rs\"] mod component;",
+    "expected": "owner/packages/rust/component.rs"
+  },
+  {
+    "from": "owner/packages/rust/lib.rs",
+    "path": "../shared.rs",
+    "toml": "[lib]\npath = \"../shared.rs\"",
+    "source": "#[path=\"../shared.rs\"] mod component;",
+    "expected": "owner/packages/shared.rs"
+  },
+  {
+    "from": "owner/packages/rust/lib.rs",
+    "path": "data.json",
+    "toml": "[lib]\npath = \"data.json\"",
+    "source": "#[path=\"data.json\"] mod component;",
+    "expected": "owner/packages/rust/data.json"
+  },
+  {
+    "from": "owner/packages/rust/lib.rs",
+    "path": "../fixtures/ä.rs",
+    "toml": "[lib]\npath = \"../fixtures/ä.rs\"",
+    "source": "#[path=\"../fixtures/ä.rs\"] mod component;",
+    "expected": "owner/packages/fixtures/ä.rs"
+  },
+  {
+    "from": "owner/packages/rust/lib.rs",
+    "path": "../../module/part.rs",
+    "toml": "[lib]\npath = \"../../module/part.rs\"",
+    "source": "#[path=\"../../module/part.rs\"] mod component;",
+    "expected": "owner/module/part.rs"
+  }
+]

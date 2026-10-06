@@ -29,6 +29,7 @@ pub(super) async fn fixture_app(id: &str, dialect: semio_framework::ArtifactDial
         modes: semio_framework::Modes::one(semio_framework::ModeDefinition { id: "edit".into(), label: semio_framework_ui_locale::LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".into(),
         window_kinds: semio_framework::WindowKinds::one(semio_framework::WindowKindDefinition {
+            initial_utility_id: None,
             id: id.into(),
             label: semio_framework_ui_locale::LocalizedLabel::data(id),
             body_key: id.into(),

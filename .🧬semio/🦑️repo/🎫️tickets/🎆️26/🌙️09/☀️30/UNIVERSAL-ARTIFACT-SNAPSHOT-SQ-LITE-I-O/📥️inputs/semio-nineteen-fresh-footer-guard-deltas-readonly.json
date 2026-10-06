@@ -1,0 +1,90 @@
+[
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeTail": "        }\n        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, total, total)?; Ok(database)\n    }\n}\n\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n\n#[cfg(test)]\n#[path = \"🧫️fixtures/🦀️.rs\"]\nmod fixtures;\n",
+    "currentTail": "            let id = integer(ordinal + 1)?; control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, completed, total)?;\n            database.table_mut(\"semio_text_run\")?.rows.push(SqliteRow { rowid: id, values: vec![SqliteValue::Integer(id), SqliteValue::Integer(1), SqliteValue::Integer(integer(ordinal)?), text(&run.language), text(&run.content)] }); completed += 1;\n            for (ordinal, mark) in run.marks.iter().enumerate() { if mark.href.len() > 65536 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, completed, total)?; } let rows = &mut database.table_mut(\"semio_text_mark\")?.rows; let mark_id = integer(rows.len() + 1)?; rows.push(SqliteRow { rowid: mark_id, values: vec![SqliteValue::Integer(mark_id), SqliteValue::Integer(id), SqliteValue::Integer(integer(ordinal)?), text(kind(mark.kind)), text(&mark.href)] }); completed += 1; if completed % 256 == 0 { control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, completed, total)?; } }\n        }\n        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, total, total)?; Ok(database)\n    }\n}\n\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n\n",
+    "beforeImports": [
+      "use semio_framework_value::{ValueError,ValueRefusalKind};",
+      "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;",
+      "use semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text;",
+      "use crate::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot};",
+      "use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};",
+      "use std::collections::{BTreeMap, BTreeSet};"
+    ],
+    "currentImports": [
+      "use semio_framework_value::{ValueError,ValueRefusalKind};",
+      "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;",
+      "use semio_framework_os_kernel::sqlite_snapshot::artifact::reconstruct_text;",
+      "use crate::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot};",
+      "use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};",
+      "use std::collections::{BTreeMap, BTreeSet};"
+    ]
+  },
+  {
+    "family": "audio",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeTail": "for(ordinal,channel)in self.channels.iter().enumerate(){let id=projection.insert(\"semio_audio_channel\",&[Cell::Integer(1),Cell::Integer(integer(ordinal)?)])?;for(ordinal,sample)in channel.samples.iter().enumerate(){projection.insert(\"semio_audio_sample\",&[Cell::Integer(id),Cell::Integer(integer(ordinal)?),if sample.is_nan(){Cell::Null}else{Cell::Real(f64::from(*sample))},Cell::Integer(i64::from(sample.to_bits()))])?;}}\nfor(ordinal,tag)in self.tags.iter().enumerate(){projection.insert(\"semio_audio_tag\",&[Cell::Integer(1),Cell::Integer(integer(ordinal)?),Cell::Text(&tag.key),Cell::Text(&tag.value)])?;}projection.finish()\n}\n}\n\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n\n#[cfg(test)]\n#[path = \"🧫️fixtures/🦀️.rs\"]\nmod fixtures;\n",
+    "currentTail": "/// 🧮️ Projects owned semantic rows under the caller's typed resource control.\npub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{\nlet mut projection=Projection::new(Self::SQLITE_SCHEMA,control)?;projection.insert_key(\"semio_audio_document\",1,&[Cell::Text(&self.schema),Cell::Integer(i64::from(self.sample_rate)),Cell::Text(format(self.format))])?;\nfor(ordinal,channel)in self.channels.iter().enumerate(){let id=projection.insert(\"semio_audio_channel\",&[Cell::Integer(1),Cell::Integer(integer(ordinal)?)])?;for(ordinal,sample)in channel.samples.iter().enumerate(){projection.insert(\"semio_audio_sample\",&[Cell::Integer(id),Cell::Integer(integer(ordinal)?),if sample.is_nan(){Cell::Null}else{Cell::Real(f64::from(*sample))},Cell::Integer(i64::from(sample.to_bits()))])?;}}\nfor(ordinal,tag)in self.tags.iter().enumerate(){projection.insert(\"semio_audio_tag\",&[Cell::Integer(1),Cell::Integer(integer(ordinal)?),Cell::Text(&tag.key),Cell::Text(&tag.value)])?;}projection.finish()\n}\n}\n\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n\n",
+    "beforeImports": [
+      "use semio_framework_value::{ValueError,ValueRefusalKind};",
+      "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;",
+      "use crate::audio::schema::snapshot::{SemioAudioSnapshot,SemioAudioFormat,SemioAudioChannel,SemioAudioTag};",
+      "use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,Projection,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};",
+      "use std::collections::{BTreeMap,BTreeSet};"
+    ],
+    "currentImports": [
+      "use semio_framework_value::{ValueError,ValueRefusalKind};",
+      "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;",
+      "use crate::audio::schema::snapshot::{SemioAudioSnapshot,SemioAudioFormat,SemioAudioChannel,SemioAudioTag};",
+      "use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,Projection,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};",
+      "use std::collections::{BTreeMap,BTreeSet};"
+    ]
+  },
+  {
+    "family": "video",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeTail": "impl SemioVideoSnapshot{\n/// 📏️ Bounds explicitly owned native fields before encoding.\npub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.streams.len())?;for stream in &self.streams{b.scalars(5)?;b.text(&stream.codec)?;b.entities(stream.samples.len())?;for sample in &stream.samples{b.scalars(2)?;b.bytes(&sample.data)?;}}Ok(())}\n}\n\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n\n#[cfg(test)]\n#[path = \"🧫️fixtures/🦀️.rs\"]\nmod fixtures;\n",
+    "currentTail": "    }\n}\n\nimpl SemioVideoSnapshot{\n/// 📏️ Bounds explicitly owned native fields before encoding.\npub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.streams.len())?;for stream in &self.streams{b.scalars(5)?;b.text(&stream.codec)?;b.entities(stream.samples.len())?;for sample in &stream.samples{b.scalars(2)?;b.bytes(&sample.data)?;}}Ok(())}\n}\n\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n\n",
+    "beforeImports": [
+      "use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};",
+      "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;",
+      "use crate::video::schema::snapshot::{SemioVideoSnapshot,SemioVideoStream,SemioVideoStreamKind,SemioVideoSample,SemioRational};",
+      "use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,Projection,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase}};",
+      "use std::collections::{BTreeMap,BTreeSet};"
+    ],
+    "currentImports": [
+      "use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};",
+      "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;",
+      "use crate::video::schema::snapshot::{SemioVideoSnapshot,SemioVideoStream,SemioVideoStreamKind,SemioVideoSample,SemioRational};",
+      "use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,Projection,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase}};",
+      "use std::collections::{BTreeMap,BTreeSet};"
+    ]
+  },
+  {
+    "family": "object",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "beforeTail": "/// 🧭️ Bounds the actual typed ArtifactRef fields in an owned Semio relationship.\npub fn native_reference(reference:&store::os_io::ArtifactRef,b:&mut Bound<'_, '_>)->Result<(),ValueError>{b.text(&reference.artifact_id)?;b.text(&reference.dialect.artifact_kind)?;b.text(&reference.dialect.standard)?;b.text(&reference.dialect.subset)?;Ok(())}\n/// 🪆️ Bounds a typed durable ArtifactChild identity and target without materializing its cache.\npub fn native_child<S>(child:&store::ArtifactChild<S>,b:&mut Bound<'_, '_>)->Result<(),ValueError>{b.entities(1)?;b.text(&child.child_id)?;native_reference(&child.target,b)}\n\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n\n#[cfg(test)]\n#[path = \"🧫️fixtures/🦀️.rs\"]\nmod fixtures;\n",
+    "currentTail": "pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.scalars(10)?;if let Some(child)=&self.brep{native_child(child,b)?;}if let Some(child)=&self.mesh{native_child(child,b)?;}if let Some(child)=&self.properties{native_child(child,b)?;}Ok(())}\n}\n\n/// 🧭️ Bounds the actual typed ArtifactRef fields in an owned Semio relationship.\npub fn native_reference(reference:&store::os_io::ArtifactRef,b:&mut Bound<'_, '_>)->Result<(),ValueError>{b.text(&reference.artifact_id)?;b.text(&reference.dialect.artifact_kind)?;b.text(&reference.dialect.standard)?;b.text(&reference.dialect.subset)?;Ok(())}\n/// 🪆️ Bounds a typed durable ArtifactChild identity and target without materializing its cache.\npub fn native_child<S>(child:&store::ArtifactChild<S>,b:&mut Bound<'_, '_>)->Result<(),ValueError>{b.entities(1)?;b.text(&child.child_id)?;native_reference(&child.target,b)}\n\n#[cfg(test)]\n#[path = \"🧪️tests/🦀️.rs\"]\nmod tests;\n\n",
+    "beforeImports": [
+      "use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};",
+      "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;",
+      "use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow,insert_ieee754,insert_key_ieee754};",
+      "use crate::object::schema::snapshot::{SemioObjectSnapshot,SemioTransform,SemioBrepSnapshot,SemioMeshSnapshot,SemioValueSnapshot};",
+      "use crate::standards::v1::subsets::base::schema::{geometry::{SemioPoint3,SemioQuaternion},child::validate_semio_child_identity};",
+      "use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,Projection,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};",
+      "use std::collections::BTreeMap;"
+    ],
+    "currentImports": [
+      "use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};",
+      "use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;",
+      "use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow,insert_ieee754,insert_key_ieee754};",
+      "use crate::object::schema::snapshot::SemioObjectSnapshot;",
+      "use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;",
+      "use crate::{brep::schema::snapshot::SemioBrepSnapshot,mesh::schema::snapshot::SemioMeshSnapshot,value::schema::snapshot::SemioValueSnapshot};",
+      "use crate::standards::v1::subsets::base::schema::{geometry::{SemioPoint3,SemioQuaternion},child::validate_semio_child_identity};",
+      "use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,Projection,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};",
+      "use std::collections::BTreeMap;"
+    ]
+  }
+]

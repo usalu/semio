@@ -244,15 +244,7 @@ mod tests;
 //#endregion 🧪️FixtureTests
 
 //#region 🌉️ExternalCodecBridge
-/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
-/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json`
-/// specification vectors carry — into a real [`Iso16757Mutation`]. The generated test host of
-/// `../../../../../🧪️tests/📇️mutate-iso16757-1` links only this crate, so `serde_json` is unreachable
-/// from that adapter and the bridge belongs here rather than there.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_iso16757_mutation_json(text: &str) -> Result<Iso16757Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
 /// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type

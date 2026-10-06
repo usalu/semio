@@ -6,7 +6,7 @@ use crate::Block3dSnapshot;
 use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{Dialect, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_artifact_stdio_json::schema::snapshot::write_json_text;
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_text;
 use semio_s_artifact_stdio_json::JsonSnapshot;
 
 /// 🎯️ The foreign dialect this leaf writes.
@@ -15,7 +15,9 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 /// 🔣️ This subset's snapshot as compact rfc8259 text — also the body the `🎒️zip` container leaf
 /// embeds, and the exact bytes the TypeScript mirror's parity test compares against.
 pub fn json_text(from: &Block3dSnapshot) -> String {
-    write_json_text(&JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(from))).value)
+    let mut value = semio_framework_value::ToValue::to_value(from);
+    crate::standards::v1::subsets::any::schema::snapshot::json_transport::convert(&mut value, false).expect("typed Block3d floating roles");
+    write_json_text(&JsonSnapshot::from_value(semio_framework_pack_json::from_dsl_value(&value)).value)
 }
 
 /// 🧵️ `s.block.block3d@1/*` → `s.stdio.json@rfc8259/*`.

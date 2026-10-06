@@ -41,10 +41,10 @@ fn large_raster_quality_edit_uses_compact_native_event() {
     let native_base = crate::schema::demo_jpg_snapshot();
     let native_emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect("native quality edit emits");
     let native_edited = protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native quality mutation applies");
-    let base_bytes = crate::io::encode_jpg(&native_base).expect("base JPEG encodes");
-    let edited_bytes = crate::io::encode_jpg(&native_edited).expect("edited JPEG encodes");
+    let base_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_base).expect("base JPEG encodes");
+    let edited_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_edited).expect("edited JPEG encodes");
     assert_ne!(edited_bytes, base_bytes, "the quality edit must affect the native JPEG export");
-    let reopened = crate::io::decode_jpg(&edited_bytes).expect("edited native JPEG reopens");
+    let reopened = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&edited_bytes).expect("edited native JPEG reopens");
     assert_eq!((reopened.width, reopened.height), (native_edited.width, native_edited.height));
 }
 

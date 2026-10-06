@@ -1,0 +1,24 @@
+{
+  "qualification": "Actual retained owning selected logs, no execution by Low. Three real initial owners only; no full package/catalog or public route claim.",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-stdio-initial-record-body-native-after-owning-feature-selection.log",
+  "receipt": [
+    " Nextest run ID ea5536dc-bdd0-4ed5-81d4-f59aae7e600e with nextest profile: quick",
+    "    Starting 1 test across 1 binary (710 tests skipped)",
+    "    [DEBUG] pdf17 body record original=493 candidate=493 first=None",
+    "    [DEBUG] pdf17 body spec original=493 candidate=493 first=None",
+    "    [DEBUG] pdf17 body controlled original=493 candidate=493 first=None",
+    "     Summary [   0.046s] 1 test run: 1 passed, 710 skipped",
+    " Nextest run ID 4c35721f-8792-4c64-b5c3-4c4f1f0476b8 with nextest profile: quick",
+    "    Starting 1 test across 1 binary (158 tests skipped)",
+    "    [DEBUG] jpg body record original=846 candidate=846 first=None",
+    "    [DEBUG] jpg body spec original=846 candidate=846 first=None",
+    "    [DEBUG] jpg body controlled original=846 candidate=846 first=None",
+    "     Summary [   0.026s] 1 test run: 1 passed, 158 skipped",
+    " Nextest run ID 20f593c1-6f15-4b4d-ac96-ade20fb295e3 with nextest profile: quick",
+    "    Starting 1 test across 1 binary (118 tests skipped)",
+    "    [DEBUG] tiff body record original=397 candidate=397 first=None",
+    "    [DEBUG] tiff body spec original=397 candidate=397 first=None",
+    "    [DEBUG] tiff body controlled original=397 candidate=397 first=None",
+    "     Summary [   0.020s] 1 test run: 1 passed, 118 skipped"
+  ]
+}

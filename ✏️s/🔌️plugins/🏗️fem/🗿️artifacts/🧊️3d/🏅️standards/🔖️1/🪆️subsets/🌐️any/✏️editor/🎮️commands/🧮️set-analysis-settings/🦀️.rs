@@ -2,7 +2,7 @@
 //! settings. The staged form speaks the TYPED optional fields; a results-panel control speaks
 //! `{field, value}` because the host merges a control's own scalar under `value`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use crate::{Fem3dSnapshot, FemAnalysisSettings};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

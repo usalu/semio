@@ -1,0 +1,2293 @@
+{
+  "qualification": "Actual Source corpus with Native every_word extension Float rewriting, independent SQLite extent; no Native gate credit",
+  "cases": [
+    {
+      "name": "nativeParityWord0000000000000000",
+      "word": "0000000000000000",
+      "tables": 55,
+      "rows": 208,
+      "semanticBytes": 7394,
+      "integrity": "ok",
+      "foreignKeyFailures": 0,
+      "perTable": [
+        {
+          "table": "iso16757_accessory",
+          "rows": 1,
+          "semanticBytes": 47
+        },
+        {
+          "table": "iso16757_accessory_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_catalogue_value",
+          "rows": 49,
+          "semanticBytes": 1343
+        },
+        {
+          "table": "iso16757_class_optional_property",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "iso16757_class_required_property",
+          "rows": 2,
+          "semanticBytes": 50
+        },
+        {
+          "table": "iso16757_composition",
+          "rows": 1,
+          "semanticBytes": 39
+        },
+        {
+          "table": "iso16757_composition_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_constraint_allowed",
+          "rows": 3,
+          "semanticBytes": 80
+        },
+        {
+          "table": "iso16757_controlled_context",
+          "rows": 1,
+          "semanticBytes": 31
+        },
+        {
+          "table": "iso16757_controlled_list",
+          "rows": 1,
+          "semanticBytes": 25
+        },
+        {
+          "table": "iso16757_controlled_value",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_descriptive_object",
+          "rows": 1,
+          "semanticBytes": 29
+        },
+        {
+          "table": "iso16757_dictionary_property",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_dictionary_relationship",
+          "rows": 1,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_dictionary_subject",
+          "rows": 2,
+          "semanticBytes": 164
+        },
+        {
+          "table": "iso16757_document",
+          "rows": 1,
+          "semanticBytes": 199
+        },
+        {
+          "table": "iso16757_domain_allowed_value",
+          "rows": 12,
+          "semanticBytes": 384
+        },
+        {
+          "table": "iso16757_extension_element",
+          "rows": 8,
+          "semanticBytes": 256
+        },
+        {
+          "table": "iso16757_extension_entry",
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "iso16757_extension_member",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_extension_value",
+          "rows": 12,
+          "semanticBytes": 234
+        },
+        {
+          "table": "iso16757_geometry_binding",
+          "rows": 2,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_geometry_child",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "iso16757_geometry_node",
+          "rows": 5,
+          "semanticBytes": 242
+        },
+        {
+          "table": "iso16757_geometry_object",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_index_tag",
+          "rows": 4,
+          "semanticBytes": 120
+        },
+        {
+          "table": "iso16757_name_alternative",
+          "rows": 2,
+          "semanticBytes": 63
+        },
+        {
+          "table": "iso16757_names",
+          "rows": 10,
+          "semanticBytes": 215
+        },
+        {
+          "table": "iso16757_parameter_domain",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_part_number_cell",
+          "rows": 2,
+          "semanticBytes": 55
+        },
+        {
+          "table": "iso16757_part_number_input",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_part_number_row",
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "iso16757_port",
+          "rows": 1,
+          "semanticBytes": 157
+        },
+        {
+          "table": "iso16757_primitive_kind",
+          "rows": 2,
+          "semanticBytes": 60
+        },
+        {
+          "table": "iso16757_primitive_kind_parameter",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_primitive_parameter",
+          "rows": 2,
+          "semanticBytes": 93
+        },
+        {
+          "table": "iso16757_product",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_class",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "iso16757_product_group",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_index",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_product_series",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_product_static_property",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_product_variant",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_property_definition",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_property_subject",
+          "rows": 2,
+          "semanticBytes": 62
+        },
+        {
+          "table": "iso16757_property_value",
+          "rows": 2,
+          "semanticBytes": 34
+        },
+        {
+          "table": "iso16757_selection_constraint",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "iso16757_series_property",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_space",
+          "rows": 1,
+          "semanticBytes": 180
+        },
+        {
+          "table": "iso16757_surface",
+          "rows": 1,
+          "semanticBytes": 157
+        },
+        {
+          "table": "iso16757_unit",
+          "rows": 8,
+          "semanticBytes": 536
+        },
+        {
+          "table": "iso16757_value_constraint",
+          "rows": 2,
+          "semanticBytes": 92
+        },
+        {
+          "table": "iso16757_value_element",
+          "rows": 30,
+          "semanticBytes": 960
+        },
+        {
+          "table": "iso16757_variant_parameter",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_variant_property",
+          "rows": 1,
+          "semanticBytes": 32
+        }
+      ]
+    },
+    {
+      "name": "nativeParityWord8000000000000000",
+      "word": "8000000000000000",
+      "tables": 55,
+      "rows": 208,
+      "semanticBytes": 7394,
+      "integrity": "ok",
+      "foreignKeyFailures": 0,
+      "perTable": [
+        {
+          "table": "iso16757_accessory",
+          "rows": 1,
+          "semanticBytes": 47
+        },
+        {
+          "table": "iso16757_accessory_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_catalogue_value",
+          "rows": 49,
+          "semanticBytes": 1343
+        },
+        {
+          "table": "iso16757_class_optional_property",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "iso16757_class_required_property",
+          "rows": 2,
+          "semanticBytes": 50
+        },
+        {
+          "table": "iso16757_composition",
+          "rows": 1,
+          "semanticBytes": 39
+        },
+        {
+          "table": "iso16757_composition_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_constraint_allowed",
+          "rows": 3,
+          "semanticBytes": 80
+        },
+        {
+          "table": "iso16757_controlled_context",
+          "rows": 1,
+          "semanticBytes": 31
+        },
+        {
+          "table": "iso16757_controlled_list",
+          "rows": 1,
+          "semanticBytes": 25
+        },
+        {
+          "table": "iso16757_controlled_value",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_descriptive_object",
+          "rows": 1,
+          "semanticBytes": 29
+        },
+        {
+          "table": "iso16757_dictionary_property",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_dictionary_relationship",
+          "rows": 1,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_dictionary_subject",
+          "rows": 2,
+          "semanticBytes": 164
+        },
+        {
+          "table": "iso16757_document",
+          "rows": 1,
+          "semanticBytes": 199
+        },
+        {
+          "table": "iso16757_domain_allowed_value",
+          "rows": 12,
+          "semanticBytes": 384
+        },
+        {
+          "table": "iso16757_extension_element",
+          "rows": 8,
+          "semanticBytes": 256
+        },
+        {
+          "table": "iso16757_extension_entry",
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "iso16757_extension_member",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_extension_value",
+          "rows": 12,
+          "semanticBytes": 234
+        },
+        {
+          "table": "iso16757_geometry_binding",
+          "rows": 2,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_geometry_child",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "iso16757_geometry_node",
+          "rows": 5,
+          "semanticBytes": 242
+        },
+        {
+          "table": "iso16757_geometry_object",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_index_tag",
+          "rows": 4,
+          "semanticBytes": 120
+        },
+        {
+          "table": "iso16757_name_alternative",
+          "rows": 2,
+          "semanticBytes": 63
+        },
+        {
+          "table": "iso16757_names",
+          "rows": 10,
+          "semanticBytes": 215
+        },
+        {
+          "table": "iso16757_parameter_domain",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_part_number_cell",
+          "rows": 2,
+          "semanticBytes": 55
+        },
+        {
+          "table": "iso16757_part_number_input",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_part_number_row",
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "iso16757_port",
+          "rows": 1,
+          "semanticBytes": 157
+        },
+        {
+          "table": "iso16757_primitive_kind",
+          "rows": 2,
+          "semanticBytes": 60
+        },
+        {
+          "table": "iso16757_primitive_kind_parameter",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_primitive_parameter",
+          "rows": 2,
+          "semanticBytes": 93
+        },
+        {
+          "table": "iso16757_product",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_class",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "iso16757_product_group",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_index",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_product_series",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_product_static_property",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_product_variant",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_property_definition",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_property_subject",
+          "rows": 2,
+          "semanticBytes": 62
+        },
+        {
+          "table": "iso16757_property_value",
+          "rows": 2,
+          "semanticBytes": 34
+        },
+        {
+          "table": "iso16757_selection_constraint",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "iso16757_series_property",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_space",
+          "rows": 1,
+          "semanticBytes": 180
+        },
+        {
+          "table": "iso16757_surface",
+          "rows": 1,
+          "semanticBytes": 157
+        },
+        {
+          "table": "iso16757_unit",
+          "rows": 8,
+          "semanticBytes": 536
+        },
+        {
+          "table": "iso16757_value_constraint",
+          "rows": 2,
+          "semanticBytes": 92
+        },
+        {
+          "table": "iso16757_value_element",
+          "rows": 30,
+          "semanticBytes": 960
+        },
+        {
+          "table": "iso16757_variant_parameter",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_variant_property",
+          "rows": 1,
+          "semanticBytes": 32
+        }
+      ]
+    },
+    {
+      "name": "nativeParityWord7ff0000000000000",
+      "word": "7ff0000000000000",
+      "tables": 55,
+      "rows": 208,
+      "semanticBytes": 7934,
+      "integrity": "ok",
+      "foreignKeyFailures": 0,
+      "perTable": [
+        {
+          "table": "iso16757_accessory",
+          "rows": 1,
+          "semanticBytes": 47
+        },
+        {
+          "table": "iso16757_accessory_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_catalogue_value",
+          "rows": 49,
+          "semanticBytes": 1513
+        },
+        {
+          "table": "iso16757_class_optional_property",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "iso16757_class_required_property",
+          "rows": 2,
+          "semanticBytes": 50
+        },
+        {
+          "table": "iso16757_composition",
+          "rows": 1,
+          "semanticBytes": 39
+        },
+        {
+          "table": "iso16757_composition_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_constraint_allowed",
+          "rows": 3,
+          "semanticBytes": 80
+        },
+        {
+          "table": "iso16757_controlled_context",
+          "rows": 1,
+          "semanticBytes": 31
+        },
+        {
+          "table": "iso16757_controlled_list",
+          "rows": 1,
+          "semanticBytes": 25
+        },
+        {
+          "table": "iso16757_controlled_value",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_descriptive_object",
+          "rows": 1,
+          "semanticBytes": 29
+        },
+        {
+          "table": "iso16757_dictionary_property",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_dictionary_relationship",
+          "rows": 1,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_dictionary_subject",
+          "rows": 2,
+          "semanticBytes": 164
+        },
+        {
+          "table": "iso16757_document",
+          "rows": 1,
+          "semanticBytes": 199
+        },
+        {
+          "table": "iso16757_domain_allowed_value",
+          "rows": 12,
+          "semanticBytes": 384
+        },
+        {
+          "table": "iso16757_extension_element",
+          "rows": 8,
+          "semanticBytes": 256
+        },
+        {
+          "table": "iso16757_extension_entry",
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "iso16757_extension_member",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_extension_value",
+          "rows": 12,
+          "semanticBytes": 244
+        },
+        {
+          "table": "iso16757_geometry_binding",
+          "rows": 2,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_geometry_child",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "iso16757_geometry_node",
+          "rows": 5,
+          "semanticBytes": 302
+        },
+        {
+          "table": "iso16757_geometry_object",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_index_tag",
+          "rows": 4,
+          "semanticBytes": 120
+        },
+        {
+          "table": "iso16757_name_alternative",
+          "rows": 2,
+          "semanticBytes": 63
+        },
+        {
+          "table": "iso16757_names",
+          "rows": 10,
+          "semanticBytes": 215
+        },
+        {
+          "table": "iso16757_parameter_domain",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_part_number_cell",
+          "rows": 2,
+          "semanticBytes": 55
+        },
+        {
+          "table": "iso16757_part_number_input",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_part_number_row",
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "iso16757_port",
+          "rows": 1,
+          "semanticBytes": 217
+        },
+        {
+          "table": "iso16757_primitive_kind",
+          "rows": 2,
+          "semanticBytes": 60
+        },
+        {
+          "table": "iso16757_primitive_kind_parameter",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_primitive_parameter",
+          "rows": 2,
+          "semanticBytes": 113
+        },
+        {
+          "table": "iso16757_product",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_class",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "iso16757_product_group",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_index",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_product_series",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_product_static_property",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_product_variant",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_property_definition",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_property_subject",
+          "rows": 2,
+          "semanticBytes": 62
+        },
+        {
+          "table": "iso16757_property_value",
+          "rows": 2,
+          "semanticBytes": 34
+        },
+        {
+          "table": "iso16757_selection_constraint",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "iso16757_series_property",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_space",
+          "rows": 1,
+          "semanticBytes": 240
+        },
+        {
+          "table": "iso16757_surface",
+          "rows": 1,
+          "semanticBytes": 217
+        },
+        {
+          "table": "iso16757_unit",
+          "rows": 8,
+          "semanticBytes": 616
+        },
+        {
+          "table": "iso16757_value_constraint",
+          "rows": 2,
+          "semanticBytes": 112
+        },
+        {
+          "table": "iso16757_value_element",
+          "rows": 30,
+          "semanticBytes": 960
+        },
+        {
+          "table": "iso16757_variant_parameter",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_variant_property",
+          "rows": 1,
+          "semanticBytes": 32
+        }
+      ]
+    },
+    {
+      "name": "nativeParityWordfff0000000000000",
+      "word": "fff0000000000000",
+      "tables": 55,
+      "rows": 208,
+      "semanticBytes": 7934,
+      "integrity": "ok",
+      "foreignKeyFailures": 0,
+      "perTable": [
+        {
+          "table": "iso16757_accessory",
+          "rows": 1,
+          "semanticBytes": 47
+        },
+        {
+          "table": "iso16757_accessory_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_catalogue_value",
+          "rows": 49,
+          "semanticBytes": 1513
+        },
+        {
+          "table": "iso16757_class_optional_property",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "iso16757_class_required_property",
+          "rows": 2,
+          "semanticBytes": 50
+        },
+        {
+          "table": "iso16757_composition",
+          "rows": 1,
+          "semanticBytes": 39
+        },
+        {
+          "table": "iso16757_composition_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_constraint_allowed",
+          "rows": 3,
+          "semanticBytes": 80
+        },
+        {
+          "table": "iso16757_controlled_context",
+          "rows": 1,
+          "semanticBytes": 31
+        },
+        {
+          "table": "iso16757_controlled_list",
+          "rows": 1,
+          "semanticBytes": 25
+        },
+        {
+          "table": "iso16757_controlled_value",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_descriptive_object",
+          "rows": 1,
+          "semanticBytes": 29
+        },
+        {
+          "table": "iso16757_dictionary_property",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_dictionary_relationship",
+          "rows": 1,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_dictionary_subject",
+          "rows": 2,
+          "semanticBytes": 164
+        },
+        {
+          "table": "iso16757_document",
+          "rows": 1,
+          "semanticBytes": 199
+        },
+        {
+          "table": "iso16757_domain_allowed_value",
+          "rows": 12,
+          "semanticBytes": 384
+        },
+        {
+          "table": "iso16757_extension_element",
+          "rows": 8,
+          "semanticBytes": 256
+        },
+        {
+          "table": "iso16757_extension_entry",
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "iso16757_extension_member",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_extension_value",
+          "rows": 12,
+          "semanticBytes": 244
+        },
+        {
+          "table": "iso16757_geometry_binding",
+          "rows": 2,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_geometry_child",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "iso16757_geometry_node",
+          "rows": 5,
+          "semanticBytes": 302
+        },
+        {
+          "table": "iso16757_geometry_object",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_index_tag",
+          "rows": 4,
+          "semanticBytes": 120
+        },
+        {
+          "table": "iso16757_name_alternative",
+          "rows": 2,
+          "semanticBytes": 63
+        },
+        {
+          "table": "iso16757_names",
+          "rows": 10,
+          "semanticBytes": 215
+        },
+        {
+          "table": "iso16757_parameter_domain",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_part_number_cell",
+          "rows": 2,
+          "semanticBytes": 55
+        },
+        {
+          "table": "iso16757_part_number_input",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_part_number_row",
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "iso16757_port",
+          "rows": 1,
+          "semanticBytes": 217
+        },
+        {
+          "table": "iso16757_primitive_kind",
+          "rows": 2,
+          "semanticBytes": 60
+        },
+        {
+          "table": "iso16757_primitive_kind_parameter",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_primitive_parameter",
+          "rows": 2,
+          "semanticBytes": 113
+        },
+        {
+          "table": "iso16757_product",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_class",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "iso16757_product_group",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_index",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_product_series",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_product_static_property",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_product_variant",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_property_definition",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_property_subject",
+          "rows": 2,
+          "semanticBytes": 62
+        },
+        {
+          "table": "iso16757_property_value",
+          "rows": 2,
+          "semanticBytes": 34
+        },
+        {
+          "table": "iso16757_selection_constraint",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "iso16757_series_property",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_space",
+          "rows": 1,
+          "semanticBytes": 240
+        },
+        {
+          "table": "iso16757_surface",
+          "rows": 1,
+          "semanticBytes": 217
+        },
+        {
+          "table": "iso16757_unit",
+          "rows": 8,
+          "semanticBytes": 616
+        },
+        {
+          "table": "iso16757_value_constraint",
+          "rows": 2,
+          "semanticBytes": 112
+        },
+        {
+          "table": "iso16757_value_element",
+          "rows": 30,
+          "semanticBytes": 960
+        },
+        {
+          "table": "iso16757_variant_parameter",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_variant_property",
+          "rows": 1,
+          "semanticBytes": 32
+        }
+      ]
+    },
+    {
+      "name": "nativeParityWord7ff8000000000042",
+      "word": "7ff8000000000042",
+      "tables": 55,
+      "rows": 208,
+      "semanticBytes": 6800,
+      "integrity": "ok",
+      "foreignKeyFailures": 0,
+      "perTable": [
+        {
+          "table": "iso16757_accessory",
+          "rows": 1,
+          "semanticBytes": 47
+        },
+        {
+          "table": "iso16757_accessory_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_catalogue_value",
+          "rows": 49,
+          "semanticBytes": 1156
+        },
+        {
+          "table": "iso16757_class_optional_property",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "iso16757_class_required_property",
+          "rows": 2,
+          "semanticBytes": 50
+        },
+        {
+          "table": "iso16757_composition",
+          "rows": 1,
+          "semanticBytes": 39
+        },
+        {
+          "table": "iso16757_composition_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_constraint_allowed",
+          "rows": 3,
+          "semanticBytes": 80
+        },
+        {
+          "table": "iso16757_controlled_context",
+          "rows": 1,
+          "semanticBytes": 31
+        },
+        {
+          "table": "iso16757_controlled_list",
+          "rows": 1,
+          "semanticBytes": 25
+        },
+        {
+          "table": "iso16757_controlled_value",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_descriptive_object",
+          "rows": 1,
+          "semanticBytes": 29
+        },
+        {
+          "table": "iso16757_dictionary_property",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_dictionary_relationship",
+          "rows": 1,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_dictionary_subject",
+          "rows": 2,
+          "semanticBytes": 164
+        },
+        {
+          "table": "iso16757_document",
+          "rows": 1,
+          "semanticBytes": 199
+        },
+        {
+          "table": "iso16757_domain_allowed_value",
+          "rows": 12,
+          "semanticBytes": 384
+        },
+        {
+          "table": "iso16757_extension_element",
+          "rows": 8,
+          "semanticBytes": 256
+        },
+        {
+          "table": "iso16757_extension_entry",
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "iso16757_extension_member",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_extension_value",
+          "rows": 12,
+          "semanticBytes": 223
+        },
+        {
+          "table": "iso16757_geometry_binding",
+          "rows": 2,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_geometry_child",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "iso16757_geometry_node",
+          "rows": 5,
+          "semanticBytes": 176
+        },
+        {
+          "table": "iso16757_geometry_object",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_index_tag",
+          "rows": 4,
+          "semanticBytes": 120
+        },
+        {
+          "table": "iso16757_name_alternative",
+          "rows": 2,
+          "semanticBytes": 63
+        },
+        {
+          "table": "iso16757_names",
+          "rows": 10,
+          "semanticBytes": 215
+        },
+        {
+          "table": "iso16757_parameter_domain",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_part_number_cell",
+          "rows": 2,
+          "semanticBytes": 55
+        },
+        {
+          "table": "iso16757_part_number_input",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_part_number_row",
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "iso16757_port",
+          "rows": 1,
+          "semanticBytes": 91
+        },
+        {
+          "table": "iso16757_primitive_kind",
+          "rows": 2,
+          "semanticBytes": 60
+        },
+        {
+          "table": "iso16757_primitive_kind_parameter",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_primitive_parameter",
+          "rows": 2,
+          "semanticBytes": 71
+        },
+        {
+          "table": "iso16757_product",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_class",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "iso16757_product_group",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_index",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_product_series",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_product_static_property",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_product_variant",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_property_definition",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_property_subject",
+          "rows": 2,
+          "semanticBytes": 62
+        },
+        {
+          "table": "iso16757_property_value",
+          "rows": 2,
+          "semanticBytes": 34
+        },
+        {
+          "table": "iso16757_selection_constraint",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "iso16757_series_property",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_space",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "iso16757_surface",
+          "rows": 1,
+          "semanticBytes": 91
+        },
+        {
+          "table": "iso16757_unit",
+          "rows": 8,
+          "semanticBytes": 448
+        },
+        {
+          "table": "iso16757_value_constraint",
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "iso16757_value_element",
+          "rows": 30,
+          "semanticBytes": 960
+        },
+        {
+          "table": "iso16757_variant_parameter",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_variant_property",
+          "rows": 1,
+          "semanticBytes": 32
+        }
+      ]
+    },
+    {
+      "name": "nativeParityWord7ff0000000000042",
+      "word": "7ff0000000000042",
+      "tables": 55,
+      "rows": 208,
+      "semanticBytes": 6800,
+      "integrity": "ok",
+      "foreignKeyFailures": 0,
+      "perTable": [
+        {
+          "table": "iso16757_accessory",
+          "rows": 1,
+          "semanticBytes": 47
+        },
+        {
+          "table": "iso16757_accessory_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_catalogue_value",
+          "rows": 49,
+          "semanticBytes": 1156
+        },
+        {
+          "table": "iso16757_class_optional_property",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "iso16757_class_required_property",
+          "rows": 2,
+          "semanticBytes": 50
+        },
+        {
+          "table": "iso16757_composition",
+          "rows": 1,
+          "semanticBytes": 39
+        },
+        {
+          "table": "iso16757_composition_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_constraint_allowed",
+          "rows": 3,
+          "semanticBytes": 80
+        },
+        {
+          "table": "iso16757_controlled_context",
+          "rows": 1,
+          "semanticBytes": 31
+        },
+        {
+          "table": "iso16757_controlled_list",
+          "rows": 1,
+          "semanticBytes": 25
+        },
+        {
+          "table": "iso16757_controlled_value",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_descriptive_object",
+          "rows": 1,
+          "semanticBytes": 29
+        },
+        {
+          "table": "iso16757_dictionary_property",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_dictionary_relationship",
+          "rows": 1,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_dictionary_subject",
+          "rows": 2,
+          "semanticBytes": 164
+        },
+        {
+          "table": "iso16757_document",
+          "rows": 1,
+          "semanticBytes": 199
+        },
+        {
+          "table": "iso16757_domain_allowed_value",
+          "rows": 12,
+          "semanticBytes": 384
+        },
+        {
+          "table": "iso16757_extension_element",
+          "rows": 8,
+          "semanticBytes": 256
+        },
+        {
+          "table": "iso16757_extension_entry",
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "iso16757_extension_member",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_extension_value",
+          "rows": 12,
+          "semanticBytes": 223
+        },
+        {
+          "table": "iso16757_geometry_binding",
+          "rows": 2,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_geometry_child",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "iso16757_geometry_node",
+          "rows": 5,
+          "semanticBytes": 176
+        },
+        {
+          "table": "iso16757_geometry_object",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_index_tag",
+          "rows": 4,
+          "semanticBytes": 120
+        },
+        {
+          "table": "iso16757_name_alternative",
+          "rows": 2,
+          "semanticBytes": 63
+        },
+        {
+          "table": "iso16757_names",
+          "rows": 10,
+          "semanticBytes": 215
+        },
+        {
+          "table": "iso16757_parameter_domain",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_part_number_cell",
+          "rows": 2,
+          "semanticBytes": 55
+        },
+        {
+          "table": "iso16757_part_number_input",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_part_number_row",
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "iso16757_port",
+          "rows": 1,
+          "semanticBytes": 91
+        },
+        {
+          "table": "iso16757_primitive_kind",
+          "rows": 2,
+          "semanticBytes": 60
+        },
+        {
+          "table": "iso16757_primitive_kind_parameter",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_primitive_parameter",
+          "rows": 2,
+          "semanticBytes": 71
+        },
+        {
+          "table": "iso16757_product",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_class",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "iso16757_product_group",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_index",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_product_series",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_product_static_property",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_product_variant",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_property_definition",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_property_subject",
+          "rows": 2,
+          "semanticBytes": 62
+        },
+        {
+          "table": "iso16757_property_value",
+          "rows": 2,
+          "semanticBytes": 34
+        },
+        {
+          "table": "iso16757_selection_constraint",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "iso16757_series_property",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_space",
+          "rows": 1,
+          "semanticBytes": 114
+        },
+        {
+          "table": "iso16757_surface",
+          "rows": 1,
+          "semanticBytes": 91
+        },
+        {
+          "table": "iso16757_unit",
+          "rows": 8,
+          "semanticBytes": 448
+        },
+        {
+          "table": "iso16757_value_constraint",
+          "rows": 2,
+          "semanticBytes": 70
+        },
+        {
+          "table": "iso16757_value_element",
+          "rows": 30,
+          "semanticBytes": 960
+        },
+        {
+          "table": "iso16757_variant_parameter",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_variant_property",
+          "rows": 1,
+          "semanticBytes": 32
+        }
+      ]
+    },
+    {
+      "name": "nativeParityWord0000000000000001",
+      "word": "0000000000000001",
+      "tables": 55,
+      "rows": 208,
+      "semanticBytes": 7394,
+      "integrity": "ok",
+      "foreignKeyFailures": 0,
+      "perTable": [
+        {
+          "table": "iso16757_accessory",
+          "rows": 1,
+          "semanticBytes": 47
+        },
+        {
+          "table": "iso16757_accessory_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_catalogue_value",
+          "rows": 49,
+          "semanticBytes": 1343
+        },
+        {
+          "table": "iso16757_class_optional_property",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "iso16757_class_required_property",
+          "rows": 2,
+          "semanticBytes": 50
+        },
+        {
+          "table": "iso16757_composition",
+          "rows": 1,
+          "semanticBytes": 39
+        },
+        {
+          "table": "iso16757_composition_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_constraint_allowed",
+          "rows": 3,
+          "semanticBytes": 80
+        },
+        {
+          "table": "iso16757_controlled_context",
+          "rows": 1,
+          "semanticBytes": 31
+        },
+        {
+          "table": "iso16757_controlled_list",
+          "rows": 1,
+          "semanticBytes": 25
+        },
+        {
+          "table": "iso16757_controlled_value",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_descriptive_object",
+          "rows": 1,
+          "semanticBytes": 29
+        },
+        {
+          "table": "iso16757_dictionary_property",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_dictionary_relationship",
+          "rows": 1,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_dictionary_subject",
+          "rows": 2,
+          "semanticBytes": 164
+        },
+        {
+          "table": "iso16757_document",
+          "rows": 1,
+          "semanticBytes": 199
+        },
+        {
+          "table": "iso16757_domain_allowed_value",
+          "rows": 12,
+          "semanticBytes": 384
+        },
+        {
+          "table": "iso16757_extension_element",
+          "rows": 8,
+          "semanticBytes": 256
+        },
+        {
+          "table": "iso16757_extension_entry",
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "iso16757_extension_member",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_extension_value",
+          "rows": 12,
+          "semanticBytes": 234
+        },
+        {
+          "table": "iso16757_geometry_binding",
+          "rows": 2,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_geometry_child",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "iso16757_geometry_node",
+          "rows": 5,
+          "semanticBytes": 242
+        },
+        {
+          "table": "iso16757_geometry_object",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_index_tag",
+          "rows": 4,
+          "semanticBytes": 120
+        },
+        {
+          "table": "iso16757_name_alternative",
+          "rows": 2,
+          "semanticBytes": 63
+        },
+        {
+          "table": "iso16757_names",
+          "rows": 10,
+          "semanticBytes": 215
+        },
+        {
+          "table": "iso16757_parameter_domain",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_part_number_cell",
+          "rows": 2,
+          "semanticBytes": 55
+        },
+        {
+          "table": "iso16757_part_number_input",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_part_number_row",
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "iso16757_port",
+          "rows": 1,
+          "semanticBytes": 157
+        },
+        {
+          "table": "iso16757_primitive_kind",
+          "rows": 2,
+          "semanticBytes": 60
+        },
+        {
+          "table": "iso16757_primitive_kind_parameter",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_primitive_parameter",
+          "rows": 2,
+          "semanticBytes": 93
+        },
+        {
+          "table": "iso16757_product",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_class",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "iso16757_product_group",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_index",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_product_series",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_product_static_property",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_product_variant",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_property_definition",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_property_subject",
+          "rows": 2,
+          "semanticBytes": 62
+        },
+        {
+          "table": "iso16757_property_value",
+          "rows": 2,
+          "semanticBytes": 34
+        },
+        {
+          "table": "iso16757_selection_constraint",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "iso16757_series_property",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_space",
+          "rows": 1,
+          "semanticBytes": 180
+        },
+        {
+          "table": "iso16757_surface",
+          "rows": 1,
+          "semanticBytes": 157
+        },
+        {
+          "table": "iso16757_unit",
+          "rows": 8,
+          "semanticBytes": 536
+        },
+        {
+          "table": "iso16757_value_constraint",
+          "rows": 2,
+          "semanticBytes": 92
+        },
+        {
+          "table": "iso16757_value_element",
+          "rows": 30,
+          "semanticBytes": 960
+        },
+        {
+          "table": "iso16757_variant_parameter",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_variant_property",
+          "rows": 1,
+          "semanticBytes": 32
+        }
+      ]
+    },
+    {
+      "name": "nativeParityWord8000000000000001",
+      "word": "8000000000000001",
+      "tables": 55,
+      "rows": 208,
+      "semanticBytes": 7394,
+      "integrity": "ok",
+      "foreignKeyFailures": 0,
+      "perTable": [
+        {
+          "table": "iso16757_accessory",
+          "rows": 1,
+          "semanticBytes": 47
+        },
+        {
+          "table": "iso16757_accessory_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_catalogue_value",
+          "rows": 49,
+          "semanticBytes": 1343
+        },
+        {
+          "table": "iso16757_class_optional_property",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "iso16757_class_required_property",
+          "rows": 2,
+          "semanticBytes": 50
+        },
+        {
+          "table": "iso16757_composition",
+          "rows": 1,
+          "semanticBytes": 39
+        },
+        {
+          "table": "iso16757_composition_group",
+          "rows": 2,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_constraint_allowed",
+          "rows": 3,
+          "semanticBytes": 80
+        },
+        {
+          "table": "iso16757_controlled_context",
+          "rows": 1,
+          "semanticBytes": 31
+        },
+        {
+          "table": "iso16757_controlled_list",
+          "rows": 1,
+          "semanticBytes": 25
+        },
+        {
+          "table": "iso16757_controlled_value",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_descriptive_object",
+          "rows": 1,
+          "semanticBytes": 29
+        },
+        {
+          "table": "iso16757_dictionary_property",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "iso16757_dictionary_relationship",
+          "rows": 1,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_dictionary_subject",
+          "rows": 2,
+          "semanticBytes": 164
+        },
+        {
+          "table": "iso16757_document",
+          "rows": 1,
+          "semanticBytes": 199
+        },
+        {
+          "table": "iso16757_domain_allowed_value",
+          "rows": 12,
+          "semanticBytes": 384
+        },
+        {
+          "table": "iso16757_extension_element",
+          "rows": 8,
+          "semanticBytes": 256
+        },
+        {
+          "table": "iso16757_extension_entry",
+          "rows": 2,
+          "semanticBytes": 77
+        },
+        {
+          "table": "iso16757_extension_member",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_extension_value",
+          "rows": 12,
+          "semanticBytes": 234
+        },
+        {
+          "table": "iso16757_geometry_binding",
+          "rows": 2,
+          "semanticBytes": 66
+        },
+        {
+          "table": "iso16757_geometry_child",
+          "rows": 3,
+          "semanticBytes": 96
+        },
+        {
+          "table": "iso16757_geometry_node",
+          "rows": 5,
+          "semanticBytes": 242
+        },
+        {
+          "table": "iso16757_geometry_object",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_index_tag",
+          "rows": 4,
+          "semanticBytes": 120
+        },
+        {
+          "table": "iso16757_name_alternative",
+          "rows": 2,
+          "semanticBytes": 63
+        },
+        {
+          "table": "iso16757_names",
+          "rows": 10,
+          "semanticBytes": 215
+        },
+        {
+          "table": "iso16757_parameter_domain",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_part_number_cell",
+          "rows": 2,
+          "semanticBytes": 55
+        },
+        {
+          "table": "iso16757_part_number_input",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_part_number_row",
+          "rows": 2,
+          "semanticBytes": 48
+        },
+        {
+          "table": "iso16757_port",
+          "rows": 1,
+          "semanticBytes": 157
+        },
+        {
+          "table": "iso16757_primitive_kind",
+          "rows": 2,
+          "semanticBytes": 60
+        },
+        {
+          "table": "iso16757_primitive_kind_parameter",
+          "rows": 3,
+          "semanticBytes": 74
+        },
+        {
+          "table": "iso16757_primitive_parameter",
+          "rows": 2,
+          "semanticBytes": 93
+        },
+        {
+          "table": "iso16757_product",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_class",
+          "rows": 1,
+          "semanticBytes": 67
+        },
+        {
+          "table": "iso16757_product_group",
+          "rows": 1,
+          "semanticBytes": 54
+        },
+        {
+          "table": "iso16757_product_index",
+          "rows": 2,
+          "semanticBytes": 72
+        },
+        {
+          "table": "iso16757_product_series",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_product_static_property",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_product_variant",
+          "rows": 1,
+          "semanticBytes": 33
+        },
+        {
+          "table": "iso16757_property_definition",
+          "rows": 1,
+          "semanticBytes": 68
+        },
+        {
+          "table": "iso16757_property_subject",
+          "rows": 2,
+          "semanticBytes": 62
+        },
+        {
+          "table": "iso16757_property_value",
+          "rows": 2,
+          "semanticBytes": 34
+        },
+        {
+          "table": "iso16757_selection_constraint",
+          "rows": 1,
+          "semanticBytes": 46
+        },
+        {
+          "table": "iso16757_series_property",
+          "rows": 1,
+          "semanticBytes": 36
+        },
+        {
+          "table": "iso16757_space",
+          "rows": 1,
+          "semanticBytes": 180
+        },
+        {
+          "table": "iso16757_surface",
+          "rows": 1,
+          "semanticBytes": 157
+        },
+        {
+          "table": "iso16757_unit",
+          "rows": 8,
+          "semanticBytes": 536
+        },
+        {
+          "table": "iso16757_value_constraint",
+          "rows": 2,
+          "semanticBytes": 92
+        },
+        {
+          "table": "iso16757_value_element",
+          "rows": 30,
+          "semanticBytes": 960
+        },
+        {
+          "table": "iso16757_variant_parameter",
+          "rows": 1,
+          "semanticBytes": 32
+        },
+        {
+          "table": "iso16757_variant_property",
+          "rows": 1,
+          "semanticBytes": 32
+        }
+      ]
+    }
+  ]
+}

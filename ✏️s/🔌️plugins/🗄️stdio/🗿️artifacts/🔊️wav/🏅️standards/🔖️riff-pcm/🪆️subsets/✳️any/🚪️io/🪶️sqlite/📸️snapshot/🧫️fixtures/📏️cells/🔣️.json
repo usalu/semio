@@ -1,0 +1,68 @@
+{
+  "tableWidths": [
+    [
+      "wav_chunk_order",
+      8
+    ],
+    [
+      "wav_data",
+      3
+    ],
+    [
+      "wav_document",
+      2
+    ],
+    [
+      "wav_float32_sample",
+      6
+    ],
+    [
+      "wav_format",
+      8
+    ],
+    [
+      "wav_format_extension",
+      1
+    ],
+    [
+      "wav_format_extension_byte",
+      4
+    ],
+    [
+      "wav_other_chunk",
+      5
+    ],
+    [
+      "wav_other_chunk_byte",
+      4
+    ],
+    [
+      "wav_pcm16_sample",
+      4
+    ],
+    [
+      "wav_pcm8_sample",
+      4
+    ],
+    [
+      "wav_raw_data_byte",
+      4
+    ]
+  ],
+  "sampleKinds": [
+    "pcm16",
+    "pcm8",
+    "float32",
+    "raw"
+  ],
+  "extensionStates": [
+    "absent",
+    "empty",
+    "present"
+  ],
+  "formatReferences": [
+    "format",
+    "samples"
+  ],
+  "fullFixtureRows": 22
+}

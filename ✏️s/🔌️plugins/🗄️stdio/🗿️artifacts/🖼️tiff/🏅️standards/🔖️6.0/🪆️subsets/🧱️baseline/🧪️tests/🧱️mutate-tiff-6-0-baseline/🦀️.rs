@@ -27,7 +27,7 @@ const SCAN: &str = "shared://🧪️abbau-aufbau-masterarbeit-grundriss/🖼️.
 //#region 🔖️Oracle
 /// 📖️ The scan's axes as the third-party reader sees them, carried through the row's `setup` step.
 fn prepared_axes(ctx: &Context, row: &Json) -> Result<Axes, String> {
-    let axes = read_axes(&ctx.fixture_bytes(SCAN)?)?;
+    let axes = read_axes(&ctx.input_bytes(SCAN)?)?;
     let setup = row.get("setup").cloned().unwrap_or(Json::Object(Vec::new()));
     match setup.str("kind").as_str() {
         "" => Ok(axes),
@@ -71,7 +71,8 @@ mod subject {
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_tiff::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot;
-    use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::baseline::schema::mutations::{apply_tiff_baseline_mutation, encode_tiff_baseline_projection_json, tiff_baseline_conformance_codes, TiffBaselineMutation};
+    use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::baseline::schema::mutations::{apply_tiff_baseline_mutation, tiff_baseline_conformance_codes, TiffBaselineMutation};
+    use semio_s_artifact_stdio_tiff::standards::v6_0::subsets::baseline::io::text::mutations::{encode_tiff_baseline_projection_json};
     use semio_repo_test_host::law;
 
     //#region 🔖️MutationFromSpec
@@ -88,7 +89,7 @@ mod subject {
     /// addressed at: `check_tiff_baseline_conformance` certifies nothing without an IFD, and a case
     /// that let an IFD-less snapshot through would be measuring the absence of the document.
     fn prepared(ctx: &Context, row: &Json) -> Result<TiffSnapshot, String> {
-        let mut snapshot = decode_tiff(&ctx.fixture_bytes(super::SCAN)?).map_err(|error| format!("mutate-tiff-6-0-baseline: the committed scan must decode: {error:?}"))?;
+        let mut snapshot = decode_tiff(&ctx.input_bytes(super::SCAN)?).map_err(|error| format!("mutate-tiff-6-0-baseline: the committed scan must decode: {error:?}"))?;
         if snapshot.ifds.is_empty() {
             return Err("mutate-tiff-6-0-baseline: the decode retained no IFD, so no conformance axis exists to move".to_string());
         }

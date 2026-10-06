@@ -134,5 +134,3 @@ export const parseCoolingPlant: NormWireReader<CoolingPlant> = normWireObject<Co
 export const parseDin18599UsageProfile: NormWireReader<Din18599UsageProfile> = normWireLiteral("WFH", "Office", "School");
 export const parseDin18599ElementKind: NormWireReader<Din18599ElementKind> = normWireLiteral("Wall", "Roof", "Floor", "Door", "Window");
 export const parseDin18599Adjacency: NormWireReader<Din18599Adjacency> = normWireLiteral("Outdoor", "Ground", "Unheated", "Heated");
-
-export * from "./🪶️sqlite/🟦️.ts";

@@ -56,7 +56,7 @@ pub(crate) mod context {
     
     impl Drop for SourcingTestApp {
         fn drop(&mut self) {
-            for _ in 0..1_000_000 {
+            for turn in 0usize..1_000_000 {
                 if self.0.close_terminal_is_empty() {
                     return;
                 }
@@ -77,7 +77,7 @@ pub(crate) mod context {
     /// 🏁️ Drains every pending typed operation for instance 1, returning the document effects it published.
     pub async fn settle(app: &mut SourcingApp) -> Vec<semio_framework::kernel::Effect> {
         let mut effects = Vec::new();
-        for _ in 0..100_000 {
+        for turn in 0usize..100_000 {
             app.maintenance_step(1, 4_096).expect("maintenance step");
             app.advance_typed_operation_publication().await.expect("typed operation publication");
             if let Some(page) = app.take_typed_operation_result_page(1) {
@@ -88,24 +88,52 @@ pub(crate) mod context {
             }
             app.take_typed_operation_event();
             app.take_typed_operation_ui_scope();
+            drain_auxiliary_outboxes(app).await;
             if !app.has_pending_typed_operations() {
                 break;
             }
             std::thread::yield_now();
         }
+        assert!(!app.has_pending_typed_operations(), "complete original typed operation settlement");
         effects
     }
     
+    pub(super) async fn drain_auxiliary_outboxes(app: &mut SourcingApp) {
+        while app.take_typed_operation_ui_progress().is_some() {}
+        while app.take_typed_operation_composed_result().is_some() {}
+        while app.take_typed_operation_completion().await.expect("typed operation completion").is_some() {
+        }
+        while let Some(reply) = app.take_local_interaction_query_reply() {
+            if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+                let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+                assert!(app.acknowledge_local_interaction_query(&token), "exact local interaction query acknowledgement");
+            }
+        }
+    }
+
     pub async fn render(app: &mut SourcingApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render").root).expect("render json")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("bounded retained fixture projection")
     }
 
     /// 📊️ The table scene a rendered pool/curated body carries — found anywhere in the tree, since the
     /// pool nests its surface under a filter row while the curated body is the surface itself.
     pub fn table_scene_of(node: &semio_framework_plugin::BuiltNode) -> Option<semio_framework_plugin::TableScene> {
         if let semio_framework_plugin::Component::Surface(props) = &node.component {
-            if let Ok(scene) = semio_framework_ui_scene::decode::<semio_framework_plugin::TableScene>(props) {
-                return Some(scene);
+            if props.kind == semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table {
+                let spine: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("typed table spine");
+                assert!(node.rejected_children.is_empty(), "exact retained table has no rejected children");
+                assert_eq!(spine.lanes.len(), 2, "complete table lane declarations");
+                assert_eq!(node.children.len(), spine.lanes.len(), "complete retained table carriers");
+                for (name, key) in [("columns", semio_framework_ui_scene::TABLE_COLUMNS_LANE_KEY), ("rows", semio_framework_ui_scene::TABLE_ROWS_LANE_KEY)] {
+                    let declared: Vec<_> = spine.lanes.iter().filter(|lane| lane.lane == name).collect();
+                    assert_eq!(declared.len(), 1, "one exact declared table lane {name}");
+                    let carriers: Vec<_> = node.children.iter().filter(|child| child.key.as_str() == key).collect();
+                    assert_eq!(carriers.len(), 1, "one exact retained table carrier {key}");
+                    let payload = semio_framework_plugin::artifact_app_laws::built_carrier_text(carriers[0]);
+                    assert_eq!(payload.len(), declared[0].bytes as usize, "complete lane UTF-8 bytes");
+                    assert_eq!(semio_framework_ui_scene::scene_lane_hash(&payload), declared[0].hash, "complete lane digest");
+                }
+                return Some(semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("complete first-party retained table scene"));
             }
         }
         node.children.iter().find_map(table_scene_of)
@@ -133,14 +161,14 @@ use semio_framework_plugin::plugin_app_close_prelude::TypedOperationResultLane;
 //#region 🧪️RetainedConfigOracle
 #[semio_framework_async_macros::async_test]
 async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners() {
-    let oracle: Vec<crate::ObjectKind> = dsl::json::from_json_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json")).unwrap();
+    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
         app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }).await.unwrap();
         let mut document = None;
         let mut terminal = false;
-        for _ in 0..100_000 {
+        for turn in 0usize..100_000 {
             app.maintenance_step(1, 4_096).unwrap();
             app.advance_typed_operation_publication().await.unwrap();
             if let Some(page) = app.take_typed_operation_result_page(7) {
@@ -159,11 +187,13 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
             }
             app.take_typed_operation_event();
             app.take_typed_operation_ui_scope();
+            context::drain_auxiliary_outboxes(&mut app).await;
             if !app.has_pending_typed_operations() {
                 break;
             }
             std::thread::yield_now();
         }
+        assert!(!app.has_pending_typed_operations(), "complete instance7 example settlement");
         assert!(terminal);
         let document = document.expect("retained example document effect");
         let stock = crate::stock_of(&document);
@@ -172,7 +202,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
         } else {
             assert!(stock.is_empty());
         }
-        for _ in 0..100_000 {
+        for turn in 0usize..100_000 {
             if app.close_terminal_is_empty() {
                 break;
             }
@@ -188,7 +218,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
 /// authored stock rather than trap the instance.
 #[semio_framework_async_macros::async_test]
 async fn example_load_settles_through_the_host_document_archive_door() {
-    let oracle: Vec<crate::ObjectKind> = dsl::json::from_json_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json")).unwrap();
+    let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut app = new_app().await;
     app.bind_instance_id(7).await;
     app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }).await.unwrap();
@@ -263,10 +293,10 @@ async fn a_saved_curation_archive_carries_its_catalog_member_and_reloads_with_it
 #[test]
 fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
     let base = SourcingCurationConfig::default();
-    let mut expected = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&base)).expect("JSON oracle base");
+    let mut expected = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&base)).expect("JSON oracle base");
     expected["filters"]["query"] = serde_json::json!("timber");
     let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery { value: "timber".into() }).expect("bounded config candidate");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&post)).expect("JSON oracle post"), expected);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&post)).expect("JSON oracle post"), expected);
     assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery { value } if value == &base.filters.query));
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES) }).is_ok());
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES + 1) }).is_err());
@@ -321,7 +351,7 @@ fn demonstrator_contributions_pack() -> String {
         entry("sourcing-module-windows", "sourcing.module", "sourcing-curation", 669),
         entry("sourcing-module-slabs", "sourcing.module", "sourcing-curation", 589),
     ];
-    semio_framework_os_kernel::json::to_json_string(&entries)
+    semio_framework_pack_json::to_json_string(&entries)
 }
 
 /// ⚖️ LAW: the REAL demonstrator pack crosses this app's registered `setContributions` admission and
@@ -334,7 +364,7 @@ fn demonstrator_contributions_pack() -> String {
 #[test]
 fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire() {
     let pack = demonstrator_contributions_pack();
-    let wire = semio_framework_os_kernel::json::to_json_string(&("setContributions", semio_framework::DslValue::object([("json".to_string(), semio_framework::DslValue::String(pack.clone()))])));
+    let wire = semio_framework_pack_json::to_json_string(&("setContributions", semio_framework::DslValue::object([("json".to_string(), semio_framework::DslValue::String(pack.clone()))])));
     println!("[STATS] sourcing demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
     assert!(pack.len() > SOURCING_CURATION_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope");
     assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
@@ -402,9 +432,9 @@ async fn every_rendered_action_bridges_through_the_framework_harness() {
 /// vocabularies are joined here and nowhere else.
 #[semio_framework_async_macros::async_test]
 async fn the_action_bridge_reads_the_declared_arg_names() {
-    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&protocol::DslValue::from(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID })))).expect("setActiveExample must convert");
+    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID })))).expect("setActiveExample must convert");
     assert_eq!(built, SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }));
-    let filter = <SourcingCurationApp as ArtifactEditor>::command_from_action("setFilterModule", Some(&protocol::DslValue::from(&serde_json::json!({ "moduleId": "walls", "enabled": true })))).expect("setFilterModule must convert");
+    let filter = <SourcingCurationApp as ArtifactEditor>::command_from_action("setFilterModule", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "moduleId": "walls", "enabled": true })))).expect("setFilterModule must convert");
     assert_eq!(filter, SourcingCurationCommand::SetFilterModule(set_filter_module::SetFilterModule { module_id: "walls".into(), enabled: true }));
     assert!(<SourcingCurationApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err(), "an undeclared action must fault, not silently no-op");
 }
@@ -421,7 +451,7 @@ async fn the_rail_stages_numeric_curation_counts_into_one_curated_edit() {
         let arg = action.args.iter().find(|arg| arg.id == id).unwrap_or_else(|| panic!("curationSetCount declares {id}"));
         assert!(matches!(arg.schema, semio_framework_plugin::ArgSchema::Number { .. }), "curationSetCount.{id} must be a number argument, found {:?}", arg.schema);
     }
-    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("curationSetCount", Some(&protocol::DslValue::from(&serde_json::json!({ "objectId": "beam-glulam-gl24h", "delta": 1 })))).expect("curationSetCount must convert");
+    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("curationSetCount", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "objectId": "beam-glulam-gl24h", "delta": 1 })))).expect("curationSetCount must convert");
     assert_eq!(built, SourcingCurationCommand::CurationSetCount(curation_set_count::CurationSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }));
 }
 
@@ -529,12 +559,12 @@ async fn app_definition_labels_resolve_german() {
 /// can act on installs nothing, and a real module survives verbatim.
 #[test]
 fn host_contributions_resolve_to_the_event_sourced_config_lane() {
-    let foreign = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&protocol::DslValue::from(&serde_json::json!({ "json": "[{\"id\":\"sourcing\"}]" }))))
+    let foreign = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "json": "[{\"id\":\"sourcing\"}]" }))))
         .expect("host configuration")
         .expect("sourcing contribution mutation");
     assert_eq!(foreign, SourcingCurationConfigMutation::SetContributions { json: "[]".into() }, "a pack with nothing this app installs is retained as an empty roster");
     let pack = crate::schema::installable_contributions(&sourcing_reuse_contribution(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
-    let installed = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&protocol::DslValue::from(&serde_json::json!({ "json": sourcing_reuse_contribution() }))))
+    let installed = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "json": sourcing_reuse_contribution() }))))
         .expect("host configuration")
         .expect("sourcing contribution mutation");
     assert_eq!(installed, SourcingCurationConfigMutation::SetContributions { json: pack });
@@ -553,12 +583,12 @@ fn sourcing_reuse_contribution() -> String {
                 ("moduleId".to_string(), semio_framework::DslValue::String("reuse".to_string())),
                 ("label".to_string(), semio_framework::DslValue::String("Reuse".to_string())),
                 ("iconId".to_string(), semio_framework::DslValue::String("recycle".to_string())),
-                ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&crate::schema::TypologyNode::new("reuse", "Reuse", vec![])))),
-                ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&vec![kind]))),
+                ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&crate::schema::TypologyNode::new("reuse", "Reuse", vec![])))),
+                ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_pack_json::to_json_string(&vec![kind]))),
             ]),
         )),
     };
-    dsl::json::to_json_string(&vec![entry])
+    semio_framework_pack_json::to_json_string(&vec![entry])
 }
 
 #[test]
@@ -602,7 +632,7 @@ async fn sourcing_curation_io_and_catalog_export_round_trip() {
             let fragment: serde_json::Value = serde_json::from_str(&json).unwrap();
             assert_eq!(fragment["objectKinds"].as_array().unwrap().len(), app.snapshot().expect("snapshot").stock_extra.len());
         }
-        MediaPayload::Binary { .. } => panic!("expected a Structured payload"),
+        MediaPayload::Binary { .. } | MediaPayload::Intrinsic { .. } => panic!("expected a Structured payload"),
     }
 }
 
@@ -625,4 +655,30 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     }
     assert!(json.contains(edit::SOURCING_CURATION_MODE_CURATION), "mode missing from the manifest");
     assert!(json.contains("catalogue.sourcing"), "artifact kind missing from the manifest");
+}
+
+
+#[test]
+fn retained_table_lanes_restore_complete_neutral_owner() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../\u{1f9eb}\u{fe0f}fixtures/\u{1f69a}\u{fe0f}retained-table/\u{1f523}\u{fe0f}.json")).unwrap();
+    let scene = semio_framework_plugin::TableScene::base(fixture["columnsJson"].as_str().unwrap(), fixture["rowsJson"].as_str().unwrap());
+    let node = semio_framework_plugin::scene_surface("neutral-retained-table", semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene).unwrap();
+    assert_eq!(node.children.len(), 2);
+    assert!(serde_json::to_string(&node).unwrap_err().to_string().contains("BuiltChildren requires retained page transport"));
+    let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("typed table surface") };
+    let spine: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).unwrap();
+    assert_eq!(props.doc_schema.as_str(), fixture["surfaceSchema"].as_str().unwrap());
+    assert!(spine.columns_json.is_empty() && spine.rows_json.is_empty());
+    assert_eq!(spine.lanes.len(), fixture["lanes"].as_array().unwrap().len());
+    for (actual, expected) in spine.lanes.iter().zip(fixture["lanes"].as_array().unwrap()) {
+        assert_eq!(actual.lane, expected["name"].as_str().unwrap());
+        assert_eq!(u64::from(actual.bytes), expected["bytes"].as_u64().unwrap());
+        assert_eq!(actual.hash, expected["hash"].as_str().unwrap());
+    }
+    let restored = context::table_scene_of(&node).expect("complete retained table");
+    assert_eq!(restored.columns_json, scene.columns_json);
+    assert_eq!(restored.rows_json, scene.rows_json);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&restored.columns_json).unwrap(), fixture["columns"]);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&restored.rows_json).unwrap(), fixture["rows"]);
+    eprintln!("[DEBUG] Curation retained table complete owner lanes=2 rows=3 bytes={} exact_utf8_digest=true", restored.rows_json.len());
 }

@@ -1,3 +1,5 @@
+use crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json;
+use crate::standards::v1::subsets::graph::io::text::snapshot::encode_semio_graph_snapshot_json;
 use super::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

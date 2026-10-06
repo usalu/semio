@@ -15,16 +15,19 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "transformJson": null,
-          "fillJson": null,
-          "strokeJson": null,
           "booleanOperation": null,
-          "traceParamsJson": "{\"threshold\":0.8,\"simplifyEpsilon\":0.25}",
-          "layerJson": null,
           "pathSegments": null,
           "textContent": null,
           "textSize": null,
-          "fillRule": null
+          "fillRule": null,
+          "transform": null,
+          "fill": null,
+          "stroke": null,
+          "traceParams": {
+            "threshold": 0.8,
+            "simplifyEpsilon": 0.25
+          },
+          "layer": null
         }
       }
     ],

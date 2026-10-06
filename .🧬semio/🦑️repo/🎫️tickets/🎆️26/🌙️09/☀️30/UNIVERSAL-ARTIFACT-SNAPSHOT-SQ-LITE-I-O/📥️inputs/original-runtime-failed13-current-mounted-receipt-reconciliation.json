@@ -1,0 +1,299 @@
+{
+  "qualification": "Read-only exact original failures vs mounted/current-selected receipts; no48GREEN claim",
+  "rows": [
+    {
+      "owner": "Fem2dSnapshot",
+      "project": "@semio-tech/fem-2d-rs",
+      "originalExecuted": 10,
+      "originalPass": 8,
+      "originalFail": 2,
+      "originalFailures": [
+        {
+          "line": 24045,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem2d_populated_public_independent_raw_sql_edit_and_retirement",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem2d_populated_public_independent_raw_sql_edit_and_retirement' (16937077) panicked at 🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:65:263:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+        },
+        {
+          "line": 24074,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem2d_populated_actual_app_public_binary_text_exact_owner",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem2d_populated_actual_app_public_binary_text_exact_owner' (16937078) panicked at 🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:65:263:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "original fixture/API repair mounted; actual owner After pending",
+      "currentSelectedReceipt": null
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "project": "@semio-tech/fem-3d-rs",
+      "originalExecuted": 10,
+      "originalPass": 8,
+      "originalFail": 2,
+      "originalFailures": [
+        {
+          "line": 47738,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem3d_populated_public_independent_raw_sql_edit_and_retirement",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem3d_populated_public_independent_raw_sql_edit_and_retirement' (16940181) panicked at 🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:65:263:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+        },
+        {
+          "line": 47767,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem3d_populated_actual_app_public_binary_text_exact_owner",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem3d_populated_actual_app_public_binary_text_exact_owner' (16940190) panicked at 🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:65:263:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "original fixture/API repair mounted; actual owner After pending",
+      "currentSelectedReceipt": null
+    },
+    {
+      "owner": "JackSnapshot",
+      "project": "@semio-tech/trinity-jack-rs",
+      "originalExecuted": 16,
+      "originalPass": 14,
+      "originalFail": 2,
+      "originalFailures": [
+        {
+          "line": 95093,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_jack_populated_actual_app_public_both_forms",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_jack_populated_actual_app_public_both_forms' (16949797) panicked at 🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:320:242:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+        },
+        {
+          "line": 95122,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_jack_populated_public_independent_edit_retirement",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_jack_populated_public_independent_edit_retirement' (16949802) panicked at 🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:320:242:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "original fixture/API repair mounted; actual owner After pending",
+      "currentSelectedReceipt": null
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "project": "@semio-tech/procedural-generation3d-rs",
+      "originalExecuted": 11,
+      "originalPass": 10,
+      "originalFail": 1,
+      "originalFailures": [
+        {
+          "line": 121570,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_procedural_generation3d_controlled_native_input_preserves_complete_owned_state",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_procedural_generation3d_controlled_native_input_preserves_complete_owned_state' (16966993) panicked at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/../../🦀️.rs:105:13:\n    final Dictionary ownership must be explicitly retired or owned by a cold boundary"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "current selected After green, broader48 not replayed",
+      "currentSelectedReceipt": [
+        13,
+        "physical-current-generation3d-owning-native-assembly-public-after.log"
+      ]
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "project": "@semio-tech/block-2d-rs",
+      "originalExecuted": 13,
+      "originalPass": 11,
+      "originalFail": 2,
+      "originalFailures": [
+        {
+          "line": 234119,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_block2d_populated_public_independent_edit_retirement",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_block2d_populated_public_independent_edit_retirement' (17030345) panicked at 🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:236:248:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+        },
+        {
+          "line": 234148,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_block2d_populated_actual_app_public_both_forms",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_block2d_populated_actual_app_public_both_forms' (17030339) panicked at 🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:236:248:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "original fixture/API repair mounted; actual owner After pending",
+      "currentSelectedReceipt": null
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "project": "@semio-tech/architect-program-rs",
+      "originalExecuted": 22,
+      "originalPass": 21,
+      "originalFail": 1,
+      "originalFailures": [
+        {
+          "line": 256083,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_architect_owned_budget_refuses_large_fields_in_both_native_directions",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_architect_owned_budget_refuses_large_fields_in_both_native_directions' (17041750) panicked at 🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:31:690:\n    assertion failed: ProgramSnapshot::decode_sqlite_snapshot_native(&input,"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "Parent reported authentic After24green; selected owning authority only",
+      "currentSelectedReceipt": null
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "project": "@semio-tech/lowpoly-lowpoly-rs",
+      "originalExecuted": 6,
+      "originalPass": 5,
+      "originalFail": 1,
+      "originalFailures": [
+        {
+          "line": 279765,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::managed_mesh::sqlite_snapshot_lowpoly_managed_mesh_complete_owner_and_independent_sql_edits",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::managed_mesh::sqlite_snapshot_lowpoly_managed_mesh_complete_owner_and_independent_sql_edits' (17063265) panicked at 🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🕸️mesh/🦀️.rs:11:2:\n    assertion `left == right` failed: actual owning construction must preserve all seven managed mesh fields"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "original fixture/API repair mounted; actual owner After pending",
+      "currentSelectedReceipt": null
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "project": "@semio-tech/animate-presentation-rs",
+      "originalExecuted": 11,
+      "originalPass": 10,
+      "originalFail": 1,
+      "originalFailures": [
+        {
+          "line": 303140,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_presentation_exact_caller_limits_precede_all_ownership",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_presentation_exact_caller_limits_precede_all_ownership' (17124364) panicked at 🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:80:225:\n    assertion failed: PresentationSnapshot::decode_sqlite_snapshot_native(&native(&snapshot,"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "current selected After green, broader48 not replayed",
+      "currentSelectedReceipt": [
+        12,
+        "physical-current-presentation-owning-native-after-semantic-public.log"
+      ]
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "project": "@semio-tech/procedural-generation2d-rs",
+      "originalExecuted": 13,
+      "originalPass": 9,
+      "originalFail": 4,
+      "originalFailures": [
+        {
+          "line": 401630,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedural_generation2d_controlled_native_output_preserves_exact_physical_bytes",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedural_generation2d_controlled_native_output_preserves_exact_physical_bytes' (17216808) panicked at 🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:50:653:\n    called `Result::unwrap()` on an `Err` value: ValueError { kind: OwnershipLimit, message: \"Pack output exceeds max_file_len\" }"
+        },
+        {
+          "line": 401656,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedural_generation2d_controlled_native_input_preserves_complete_owned_state",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedural_generation2d_controlled_native_input_preserves_complete_owned_state' (17216792) panicked at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/../../🦀️.rs:105:13:\n    final Dictionary ownership must be explicitly retired or owned by a cold boundary"
+        },
+        {
+          "line": 401722,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_generation_complete_semantic_cell_extent_matches_independent_sqlite",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_generation_complete_semantic_cell_extent_matches_independent_sqlite' (17216777) panicked at 🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:103:159:\n    called `Result::unwrap()` on an `Err` value: ValueError { kind: OwnershipLimit, message: \"relational SQLite resource limit: value bytes\" }"
+        },
+        {
+          "line": 401748,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_generation_native_row_frontier_matches_complete_relational_entities",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_generation_native_row_frontier_matches_complete_relational_entities' (17216781) panicked at 🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:32:707:\n    assertion `left == right` failed"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "current selected After green, broader48 not replayed",
+      "currentSelectedReceipt": [
+        14,
+        "physical-current-generation2d-owning-native-assembly-public-after.log"
+      ]
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "project": "@semio-tech/norm-iso16757-rs",
+      "originalExecuted": 16,
+      "originalPass": 14,
+      "originalFail": 2,
+      "originalFailures": [
+        {
+          "line": 595819,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_controlled_native_owner_admits_complete_and_exact_word_state",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_controlled_native_owner_admits_complete_and_exact_word_state' (17322351) panicked at 🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:27:906:\n    assertion failed: Iso16757Snapshot::decode_sqlite_snapshot_native(&payload,"
+        },
+        {
+          "line": 595906,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_iso16757_controlled_output_has_exact_wire_and_real_interior_admission",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_iso16757_controlled_output_has_exact_wire_and_real_interior_admission' (17322375) panicked at 🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:93:1791:\n    assertion failed: s.encode_sqlite_snapshot_native(encoding,"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "five-path provider mounted;18After active",
+      "currentSelectedReceipt": null
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "project": "@semio-tech/sequence-sequence-rs",
+      "originalExecuted": 12,
+      "originalPass": 10,
+      "originalFail": 2,
+      "originalFailures": [
+        {
+          "line": 742905,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_sequence_caller_limits_precede_complete_native_and_relational_ownership",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_sequence_caller_limits_precede_complete_native_and_relational_ownership' (17444725) panicked at 🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:74:225:\n    assertion failed: SequenceSnapshot::decode_sqlite_snapshot_native(&native(&expected, encoding),"
+        },
+        {
+          "line": 742932,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_sequence_genuine_output_admits_exact_row_and_file_frontiers",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_sequence_genuine_output_admits_exact_row_and_file_frontiers' (17444726) panicked at 🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:137:175:\n    Binary: SqliteDatabaseLimits { max_file_bytes: 285212672, max_value_bytes: 1, max_allocation_bytes: 536870912, max_schema_bytes: 4194304, max_rows: 1000000, max_columns: 1024, max_tables: 4096, max_pages: 1000000 }"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "current selected After green, broader48 not replayed",
+      "currentSelectedReceipt": [
+        13,
+        "physical-current-sequence-owning-native-after-semantic-public.log"
+      ]
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "project": "@semio-tech/process-process3d-rs",
+      "originalExecuted": 12,
+      "originalPass": 11,
+      "originalFail": 1,
+      "originalFailures": [
+        {
+          "line": 768474,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::native_semantic_census::sqlite_snapshot_process3d_native_exact_semantic_cells_both_directions",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::native_semantic_census::sqlite_snapshot_process3d_native_exact_semantic_cells_both_directions' (17539617) panicked at 🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🦀️.rs:20:5:\n    native decode must enforce full semantic cell grant 0/10791: Ok(Process3dSnapshot { workshop: Workshop { machines: [WorkshopMachine { id: \"\", label: \"independent\\\\literal\\0!@/😀\", icon_id: \"\", catalog_id: Some(\"\"), capabilities: [Capability { id: \"\", label: \"independent\\\\literal\\0!@/😀\", icon_id: \"\", recipe: DiscCut { diameter: \"independent\\\\literal\\0!@/😀\", kerf: \"\" }, parameters: [CapabilityParameter { id: \"independent\\\\literal\\0!@/😀\", label: \"\", value: 0.0 }], rules: [Min { quantity: Width, parameter: \"independent\\\\literal\\0!@/😀\", margin: 0.0 }, Max { quantity: Width, parameter: \"\", margin: 0.0 }, Min { quantity: Depth, parameter: \"independent\\\\literal\\0!@/😀\", margin: 0.0 }, Max { "
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "Physical semantic/public provider mounted;12After pending",
+      "currentSelectedReceipt": null
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "project": "@semio-tech/layout-layout-rs",
+      "originalExecuted": 11,
+      "originalPass": 10,
+      "originalFail": 1,
+      "originalFailures": [
+        {
+          "line": 795715,
+          "test": "standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::backing::sqlite_snapshot_layout_full_concrete_requests_preserve_every_owned_field",
+          "detail": "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::backing::sqlite_snapshot_layout_full_concrete_requests_preserve_every_owned_field' (17684147) panicked at 🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs:150:9:\n    assertion `left == right` failed: ReconstructSnapshot must settle full concrete allocator requests"
+        }
+      ],
+      "testAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "providerAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "currentState": "current selected After green, broader48 not replayed",
+      "currentSelectedReceipt": [
+        11,
+        "root-normal-flow-run-dag-actual-registration-after-layout-backing-and-iso-independent-diagnostic-before.log"
+      ]
+    }
+  ]
+}

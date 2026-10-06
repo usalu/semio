@@ -113,5 +113,90 @@
       "reference"
     ],
     "schemaHash": "85c1033fc3e56fd10679f16ffac53d38ba7b38e432076d2b4a20087e87f91a6f"
+  },
+  "tableStatements": {
+    "rowCount": 9,
+    "columns": [
+      [
+        "text",
+        5
+      ],
+      [
+        "flag",
+        1
+      ],
+      [
+        "signed",
+        2
+      ],
+      [
+        "unsigned",
+        3
+      ],
+      [
+        "real",
+        4
+      ],
+      [
+        "kind",
+        6
+      ],
+      [
+        "nested",
+        0
+      ]
+    ],
+    "sparseOrdinals": [
+      1,
+      4,
+      8
+    ],
+    "longText": {
+      "prefix": "forced.雪.",
+      "repeat": 257
+    },
+    "keywords": [
+      "append",
+      "remove",
+      "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
+    ],
+    "statementPayloads": [
+      "Grüße\u0000世界",
+      "",
+      "single long forced keyword"
+    ]
+  },
+  "logicalDepth": {
+    "tableStatements": 3,
+    "nestedRecord": 3,
+    "packedSignedList": 1,
+    "nestedText": "Grüße\u0000雪",
+    "signedWords": [
+      "-9223372036854775808",
+      "0",
+      "9223372036854775807"
+    ],
+    "referenceTarget": "document",
+    "rootAbsent": 0
+  },
+  "spatial": {
+    "coordinate": {
+      "shape": "coord",
+      "arity": 3,
+      "words": [
+        "8000000000000000",
+        "3ff599999999999a",
+        "c003333333333333"
+      ]
+    },
+    "direction": {
+      "shape": "dir",
+      "arity": 3,
+      "words": [
+        "7ff0000000000000",
+        "fff0000000000000",
+        "0000000000000001"
+      ]
+    }
   }
 }

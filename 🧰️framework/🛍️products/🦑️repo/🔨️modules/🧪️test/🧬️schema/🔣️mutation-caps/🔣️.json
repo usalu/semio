@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.repo.mutation-leaf-bounds/v1",
+  "$ref": "#/definitions/boundedLeaf",
+  "definitions": {
+    "boundedLeaf": {
+      "description": "A leaf payload schema that declares a positive integer cap on its inverse rows.",
+      "type": "object",
+      "required": [
+        "x-semio-inverse-rows"
+      ],
+      "properties": {
+        "x-semio-inverse-rows": {
+          "type": "object",
+          "required": [
+            "bounded"
+          ],
+          "properties": {
+            "bounded": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -175,7 +175,7 @@ async fn history_rows(app: &mut Fem3dApp) -> usize {
 /// nothing; no playback edit is ever a history row; and the batch route refuses a tick it has no transient for.
 #[semio_framework_async_macros::async_test]
 async fn playback_presses_are_one_config_edit_and_never_a_history_row() {
-    let doc = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
+    let doc = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let config = NoConfig::default();

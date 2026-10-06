@@ -19,7 +19,7 @@
 // it is measured against.
 //
 //   bun 📜️script.ts generate  [--only <fixture-id>]     # writes the handpicked physical fixture directory and role filenames
-//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the fixtureManifests block (JSON)
+//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the testEvidence block (JSON)
 //
 // @see ../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏭️generator/📜️script.ts — the sibling
 //      generator this file's CLI/recipe shape is mirrored from.
@@ -104,7 +104,6 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
   const files = [fileEntry("expected-before-xml", dir, BEFORE_FILE, directory), fileEntry("expected-after-xml", dir, AFTER_FILE, directory)];
 
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.xml", standard: "1.0", subset: "base" },

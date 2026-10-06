@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "declaredChildKind": "s.stdio.semio",
+  "cases": [
+    {
+      "id": "complete-snapshot",
+      "kind": "snapshot",
+      "value": {
+        "wiresSnapshot": {
+          "scene": "neutral values",
+          "numbers": [
+            0,
+            -1,
+            0.5
+          ],
+          "enabled": true
+        },
+        "content": {
+          "childId": "member 🧬\u0000",
+          "target": {
+            "artifactId": "independent target",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "1",
+              "subset": "graph"
+            }
+          }
+        },
+        "meta": null
+      },
+      "accepted": true
+    },
+    {
+      "id": "independent-child-identities",
+      "kind": "snapshot",
+      "value": {
+        "wiresSnapshot": [],
+        "content": {
+          "childId": "different member",
+          "target": {
+            "artifactId": "independent target",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "1",
+              "subset": "graph"
+            }
+          }
+        },
+        "meta": "ä 🪐\u0000"
+      },
+      "accepted": true
+    },
+    {
+      "id": "missing-content",
+      "kind": "snapshot",
+      "value": {
+        "wiresSnapshot": null,
+        "meta": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "extra-parent-field",
+      "kind": "snapshot",
+      "value": {
+        "wiresSnapshot": {
+          "scene": "neutral values",
+          "numbers": [
+            0,
+            -1,
+            0.5
+          ],
+          "enabled": true
+        },
+        "content": {
+          "childId": "member 🧬\u0000",
+          "target": {
+            "artifactId": "independent target",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "1",
+              "subset": "graph"
+            }
+          }
+        },
+        "meta": null,
+        "boardFixture": {}
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-target",
+      "kind": "snapshot",
+      "value": {
+        "wiresSnapshot": {
+          "scene": "neutral values",
+          "numbers": [
+            0,
+            -1,
+            0.5
+          ],
+          "enabled": true
+        },
+        "content": {
+          "childId": "member"
+        },
+        "meta": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "extra-child-field",
+      "kind": "snapshot",
+      "value": {
+        "wiresSnapshot": {
+          "scene": "neutral values",
+          "numbers": [
+            0,
+            -1,
+            0.5
+          ],
+          "enabled": true
+        },
+        "content": {
+          "childId": "member 🧬\u0000",
+          "target": {
+            "artifactId": "independent target",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "1",
+              "subset": "graph"
+            }
+          },
+          "extra": true
+        },
+        "meta": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "empty-parent-delta",
+      "kind": "diff",
+      "value": {},
+      "accepted": true
+    },
+    {
+      "id": "content-delta-is-child-owned",
+      "kind": "diff",
+      "value": {
+        "content": {}
+      },
+      "accepted": false
+    },
+    {
+      "id": "fixture-delta-is-absent",
+      "kind": "diff",
+      "value": {
+        "wiresSnapshot": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "meta-delta-is-absent",
+      "kind": "diff",
+      "value": {
+        "meta": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "nonrecord-delta",
+      "kind": "diff",
+      "value": [],
+      "accepted": false
+    },
+    {
+      "id": "parent-mutation-refused-0",
+      "kind": "mutation",
+      "value": {},
+      "accepted": false
+    },
+    {
+      "id": "parent-mutation-refused-1",
+      "kind": "mutation",
+      "value": null,
+      "accepted": false
+    },
+    {
+      "id": "parent-mutation-refused-2",
+      "kind": "mutation",
+      "value": [],
+      "accepted": false
+    },
+    {
+      "id": "parent-mutation-refused-3",
+      "kind": "mutation",
+      "value": true,
+      "accepted": false
+    },
+    {
+      "id": "parent-mutation-refused-4",
+      "kind": "mutation",
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "id": "parent-mutation-refused-5",
+      "kind": "mutation",
+      "value": "mutation",
+      "accepted": false
+    },
+    {
+      "id": "parent-mutation-refused-6",
+      "kind": "mutation",
+      "value": {
+        "kind": "move-node",
+        "nodeId": "n"
+      },
+      "accepted": false
+    },
+    {
+      "id": "parent-mutation-refused-7",
+      "kind": "mutation",
+      "value": {
+        "kind": "set-content",
+        "content": {
+          "childId": "member 🧬\u0000",
+          "target": {
+            "artifactId": "independent target",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "1",
+              "subset": "graph"
+            }
+          }
+        }
+      },
+      "accepted": false
+    }
+  ]
+}

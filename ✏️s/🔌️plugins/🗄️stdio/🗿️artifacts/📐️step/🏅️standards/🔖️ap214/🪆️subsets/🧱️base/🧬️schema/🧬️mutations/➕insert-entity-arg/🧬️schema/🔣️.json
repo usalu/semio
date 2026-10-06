@@ -17,7 +17,24 @@
     },
     "id": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "Instance name (#id) of the entity.",
+          "de": "Instanzname (#id) der Entität."
+        },
+        "ref": {
+          "kind": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "argIndex": {
       "type": "integer",
@@ -32,13 +49,27 @@
           "en": "Position of the argument in the entity's attribute list, counted from 0.",
           "de": "Position des Arguments in der Attributliste der Entität, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 20
       }
     },
     "value": {
-      "$ref": "#/$defs/StepValue"
+      "$ref": "#/$defs/StepValue",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Argument value",
+          "de": "Argumentwert"
+        },
+        "description": {
+          "en": "Typed Part 21 value of the argument: unset, derived, integer, real, string, enumeration, reference, aggregate or typed value.",
+          "de": "Typisierter Part-21-Wert des Arguments: nicht gesetzt, abgeleitet, Ganzzahl, Gleitkommazahl, Zeichenkette, Aufzählung, Referenz, Aggregat oder typisierter Wert."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

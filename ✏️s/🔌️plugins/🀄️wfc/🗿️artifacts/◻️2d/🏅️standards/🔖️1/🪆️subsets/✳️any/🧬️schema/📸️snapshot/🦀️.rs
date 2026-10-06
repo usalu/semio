@@ -223,9 +223,5 @@ pub fn relations(snapshot: &Wfc2dSnapshot) -> Vec<String> {
 mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
 
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+

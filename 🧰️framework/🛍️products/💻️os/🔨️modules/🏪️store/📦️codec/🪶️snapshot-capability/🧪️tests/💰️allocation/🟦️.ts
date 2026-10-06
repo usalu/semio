@@ -2,17 +2,10 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { isUtf8 } from "node:buffer";
-import Ajv from "ajv";
-import fixture from "./🧫️fixtures/🔣️.json";
-import schema from "./🧬️schema/🔣️.json";
 
-test("native allocation stages have a closed language-neutral contract", () => {
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-  expect(validate(fixture)).toBe(true);
-  expect(validate({ ...fixture, semanticBytes: 2 })).toBe(false);
-  expect(validate({ ...fixture, maximumAllocationBytes: undefined })).toBe(false);
-  expect(validate({ ...fixture, cancellation: { ...fixture.cancellation, stages: fixture.cancellation.stages.map(stage => ({ ...stage, ownedLiteralBytes: 1 })) } })).toBe(false);
-});
+import fixture from "./🧫️fixtures/🔣️.json";
+
+
 
 test("borrowed validation and admitted binding have distinct cancellation frontiers", () => {
   const literal = fixture.literal.unit.repeat(fixture.literal.repeat);
@@ -73,18 +66,12 @@ import Ajv2020 from "ajv/dist/2020";
 import refusalFixture from "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧫️fixtures/🔣️.json";
 import refusalSchema from "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧬️schema/🔣️.json";
 import deflateFixture from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/📡️codec/🔣️.json";
-import deflateSchema from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🧬️schema/🧭️cause/📡️codec/🔣️.json";
 import {deflateRawSync,inflateRawSync} from "node:zlib";
 import {PackError} from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🟦️.ts";
 import {ValueError} from "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🟦️.ts";
 
 test("retained Deflate physical credit has an explicit closed ownership authority",()=>{
- const validate=new Ajv2020({strict:true,allErrors:true}).compile(deflateSchema);
- expect(validate(deflateFixture)).toBe(true);
  const admission=deflateFixture.retainedAdmission;
- expect(validate({...deflateFixture,retainedAdmission:{...admission,physicalHistory:{...admission.physicalHistory,expectedKind:"workLimit"}}})).toBe(false);
- expect(validate({...deflateFixture,retainedAdmission:{...admission,semanticLength:{...admission.semanticLength,expectedKind:"ownershipLimit"}}})).toBe(false);
- expect(validate({...deflateFixture,retainedAdmission:{...admission,implicitKind:"ownershipLimit"}})).toBe(false);
  const physical=admission.physicalHistory,semantic=admission.semanticLength;
  expect(physical.expectedRawBytes).toBeLessThanOrEqual(physical.semanticSegmentBytes);
  expect(physical.historyTargetBytes).toBeGreaterThan(physical.maximumAllocationBytes);

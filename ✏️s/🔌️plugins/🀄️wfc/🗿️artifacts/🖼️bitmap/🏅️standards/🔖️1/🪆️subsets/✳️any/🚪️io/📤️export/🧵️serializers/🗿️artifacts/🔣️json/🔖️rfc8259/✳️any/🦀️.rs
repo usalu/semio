@@ -12,7 +12,7 @@ pub struct BitmapIntoJson;
 
 /// 🖨️ Typed encode of `BitmapSnapshot` into its canonical JSON text.
 pub fn serialize(from: &BitmapSnapshot) -> String {
-    semio_framework_pack_json::to_json_string(from)
+    crate::standards::v1::subsets::any::io::text::bitmap_json_encode(from)
 }
 
 impl Serializer<BitmapSnapshot> for BitmapIntoJson {

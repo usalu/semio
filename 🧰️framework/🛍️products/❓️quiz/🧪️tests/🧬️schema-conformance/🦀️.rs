@@ -98,7 +98,7 @@ mod subject {
             if field("definition") != "Quiz" && field("definition") != "Catalog" {
                 continue;
             }
-            let document: Value = serde_json::from_slice(&ctx.fixture_bytes(&field("fixture"))?).map_err(|error| error.to_string())?;
+            let document: Value = serde_json::from_slice(&ctx.input_bytes(&field("fixture"))?).map_err(|error| error.to_string())?;
             let quizzes = if field("quizzes") == "-" { Vec::new() } else { matches(&document, &field("quizzes")).first().and_then(|(_, quizzes)| quizzes.as_array().cloned()).unwrap_or_default() };
             let verdicts: Map<String, Value> = matches(&document, &field("pointer")).into_iter().map(|(path, value)| (path, Value::Bool(accepted(&field("definition"), &value, &quizzes)))).collect();
             projection.insert(field("id"), Value::Object(verdicts));
@@ -147,7 +147,7 @@ mod subject {
 
     /// 🚫️ The unbroken bases accepted and every rejected document rejected; every conforming typed instance must decode into its twin, which is checked and not projected.
     pub fn rejected_quizzes(ctx: &Context) -> Result<Outcome, String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(REJECTED)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(REJECTED)?).map_err(|error| error.to_string())?;
         for vector in vectors["instances"].as_array().ok_or("the vectors carry no instances")?.iter().filter(|vector| vector.get("violates").is_none()) {
             if !twin_decodes(vector["definition"].as_str().unwrap_or_default(), &vector["document"])? {
                 return Err(format!("instances/{}: the typed twin refuses a conforming {}", vector["id"], vector["definition"]));

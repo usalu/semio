@@ -7,11 +7,16 @@ the `.ops` header/command fields, `HistoryEdit.description`, the preparation req
 `preflight(…, description, lane)` parameter with each domain's description envelope check and retained description owner.
 Store/spr/canonical-edit get exact anchored edits (each asserted to match exactly as often as expected). Hot files
 (`🔌️plugin/🦀️.rs`, `🎮️mutation/🦀️.rs`) are reported, never written — they are edited with the Edit tool.
-Usage: python3 🧪️s4-bump-waveb.py [--apply]   (dry run prints every removal)
+Usage: python3 🧪️s4-bump-waveb.py [--list <file>] [--preview]            (dry run prints every removal)
+       python3 🧪️s4-bump-waveb.py --apply --files-from <file>           (explicit list from `--list`; the computed write set must
+                                                                         equal it, originals are kept under s5-channel/waveb-backup)
+       python3 🧪️s4-bump-waveb.py --restore                             (puts back every file that still holds the applied bytes)
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.util
+import json
 import pathlib
 import re
 import subprocess
@@ -52,6 +57,7 @@ EXACT: dict[str, list[tuple[str, str, int]]] = {
         ('        #[value(skip_serializing_if = "Option::is_none")]\n        description: Option<String>,\n        #[value(default)]\n        lane: HistoryLane,',
          '        #[value(default)]\n        lane: HistoryLane,', 1),
         ('    OwnedSchemaFieldSpec { id: 6, key: "description", required: false },\n', '', 1),
+        ('matches!(field_id, 2 | 6 | 10 | 11 | 12)', 'matches!(field_id, 2 | 10 | 11 | 12)', 1),
         ('            1 => Some(0),\n            2 => Some(1),\n            6 => Some(2),\n            9 => Some(3),\n            10 => Some(4),\n            11 => Some(5),\n            12 => Some(6),\n',
          '            1 => Some(0),\n            2 => Some(1),\n            9 => Some(2),\n            10 => Some(3),\n            11 => Some(4),\n            12 => Some(5),\n', 1),
         ('    strings: [std::mem::ManuallyDrop<Option<String>>; 7],\n    forwards: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,', '    strings: [std::mem::ManuallyDrop<Option<String>>; 6],\n    forwards: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,', 1),
@@ -65,7 +71,7 @@ EXACT: dict[str, list[tuple[str, str, int]]] = {
         ('                out.push(u8::from(description.is_some()) | (u8::from(transaction.is_some()) << 1));\n                if let Some(text) = description {\n                    write_command_str(&mut out, text);\n                }\n',
          '                out.push(u8::from(transaction.is_some()) << 1);\n', 2),
         ('                let presence = reader.read_u8()?;\n                let description = if presence & 0b01 != 0 { Some(read_command_str(reader)?) } else { None };\n                let transaction = read_command_transaction(reader, presence)?;',
-         '                let transaction = read_command_transaction(reader, reader.read_u8()?)?;', 2),
+         '                let presence = reader.read_u8()?;\n                let transaction = read_command_transaction(reader, presence)?;', 2),
         ('fn read_command_transaction(reader: &mut crate::os_pack::ByteReader<\'_>, presence: u8) -> Result<Option<protocol::TransactionRef>, crate::os_spr::ProtocolError> {\n    if presence & 0b10 == 0 {',
          'fn read_command_transaction(reader: &mut crate::os_pack::ByteReader<\'_>, presence: u8) -> Result<Option<protocol::TransactionRef>, crate::os_spr::ProtocolError> {\n    if presence & !0b10 != 0 {\n        return Err(crate::os_spr::ProtocolError::Malformed { what: "command presence", offset: 0, detail: format!("presence bits {presence:#04b} are unassigned beyond the 0b10 transaction bit") });\n    }\n    if presence & 0b10 == 0 {', 1),
         ('/// 🧾️ Binary twin of [`transaction_text`]: the id and tool strings after a `0b10` presence bit.', '/// 🧾️ Binary twin of [`transaction_text`]: the id and tool strings after a `0b10` presence bit; every other presence bit\n/// is unassigned and refused.', 1),
@@ -450,11 +456,71 @@ def candidates() -> list[str]:
 PREPARED_ALL: set[str] = set()
 
 
+SCRATCH = TICKET / "🗑️generated" / "s5-channel"
+BACKUP = SCRATCH / "waveb-backup"
+MANIFEST = SCRATCH / "waveb-manifest.json"
+
+
+def digest(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def flag_value(flag: str) -> str | None:
+    if flag not in sys.argv:
+        return None
+    index = sys.argv.index(flag) + 1
+    if index >= len(sys.argv) or sys.argv[index].startswith("--"):
+        raise SystemExit(f"[DEBUG] {flag} needs a path")
+    return sys.argv[index]
+
+
+def restore() -> None:
+    """♻️ Puts every written file back to its pre-apply bytes — only where the file still holds exactly what `--apply` wrote."""
+    if not MANIFEST.is_file():
+        raise SystemExit(f"[DEBUG] no manifest at {MANIFEST}: nothing was applied")
+    manifest = json.loads(MANIFEST.read_text())
+    if not manifest:
+        raise SystemExit("[DEBUG] empty manifest: refusing to restore")
+    restored, conflicts = 0, []
+    for path, row in manifest.items():
+        backup = BACKUP / path
+        current = (ROOT / path).read_text()
+        if digest(current) == row["before"]:
+            continue
+        if digest(current) != row["after"] or not backup.is_file() or digest(backup.read_text()) != row["before"]:
+            conflicts.append(path)
+            continue
+        (ROOT / path).write_text(backup.read_text())
+        restored += 1
+    print(f"[DEBUG] restored {restored} of {len(manifest)} files; {len(conflicts)} conflicts (edited since the apply, left untouched)")
+    for path in conflicts:
+        print(f"   CONFLICT {path}")
+    if conflicts:
+        raise SystemExit(1)
+
+
 def main() -> None:
+    if "--restore" in sys.argv:
+        return restore()
     apply = "--apply" in sys.argv
+    files_from = flag_value("--files-from")
+    list_to = flag_value("--list")
+    if apply and files_from is None:
+        raise SystemExit("[DEBUG] --apply needs --files-from <list written by a dry run with --list> (explicit file list, fail closed)")
+    expected: list[str] = []
+    if files_from is not None:
+        expected = [line for line in pathlib.Path(files_from).read_text().splitlines() if line]
+        if not expected:
+            raise SystemExit(f"[DEBUG] {files_from} is empty: refusing to run")
+    if not (ROOT / ".git").exists() or not (ROOT / "Cargo.toml").is_file():
+        raise SystemExit(f"[DEBUG] {ROOT} is not the repo root: refusing to run")
     writes: dict[str, str] = {}
+    sources: dict[str, str] = {}
     hot_logs: dict[str, list] = {}
+    hot_results: dict[str, str] = {}
     paths = [path for path in candidates() if (ROOT / path).is_file()]
+    if len(paths) < len(EXACT):
+        raise SystemExit(f"[DEBUG] only {len(paths)} candidate files: the candidate search is broken, refusing to run")
     for path in paths:
         source = (ROOT / path).read_text()
         if "request.description" in source:
@@ -471,8 +537,10 @@ def main() -> None:
             continue
         if path in HOT:
             hot_logs[path] = log
+            hot_results[path] = result
             continue
         writes[path] = result
+        sources[path] = source
         print(f"== {path} ({len(log)})")
         for line, what in log:
             print(f"   {line}: {what}")
@@ -489,13 +557,28 @@ def main() -> None:
     missing = [path for path in EXACT if path not in writes]
     if missing:
         raise SystemExit(f"[DEBUG] exact-edit files untouched: {missing}")
+    if files_from is not None and sorted(expected) != sorted(writes):
+        extra, lost = sorted(set(writes) - set(expected)), sorted(set(expected) - set(writes))
+        raise SystemExit(f"[DEBUG] the write set differs from {files_from}: {len(extra)} not listed {extra[:5]}, {len(lost)} listed but unchanged {lost[:5]} — re-run the dry run with --list and review")
+    if list_to is not None:
+        pathlib.Path(list_to).write_text("".join(f"{path}\n" for path in sorted(writes)))
     print(f"[DEBUG] {len(writes)} files {'written' if apply else 'would change'}; {len(hot_logs)} hot files reported")
     if apply:
+        drifted = [path for path, source in sources.items() if (ROOT / path).read_text() != source]
+        if drifted:
+            raise SystemExit(f"[DEBUG] {len(drifted)} files changed while the wave was computed, nothing written: {drifted[:5]}")
+        manifest = {}
+        for path, text in writes.items():
+            backup = BACKUP / path
+            backup.parent.mkdir(parents=True, exist_ok=True)
+            backup.write_text(sources[path])
+            manifest[path] = {"before": digest(sources[path]), "after": digest(text)}
+        MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=1))
         for path, text in writes.items():
             (ROOT / path).write_text(text)
     elif "--preview" in sys.argv:
-        for path, text in writes.items():
-            target = TICKET / "🗑️generated" / "s4-bump" / "waveb-preview" / path
+        for path, text in {**writes, **hot_results}.items():
+            target = SCRATCH / "waveb-preview" / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(text)
 

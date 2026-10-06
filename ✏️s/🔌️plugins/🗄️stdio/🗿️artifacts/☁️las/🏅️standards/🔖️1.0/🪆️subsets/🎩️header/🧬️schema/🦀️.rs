@@ -81,154 +81,15 @@ pub fn las_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{LasDiff, LasMutation, LasSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    //#region 🔖️Builder
-    /// 🏗️ Builds a `stdio.las` snapshot.
-    #[derive(Clone, Debug, Default)]
-    pub struct LasBuilderConstruction {
-        snapshot: LasSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for LasBuilderConstruction {
-        type Snapshot = LasSnapshot;
-        type Mutation = LasMutation;
-        type Diff = LasDiff;
-        fn empty() -> Self {
-            Self { snapshot: LasSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<LasSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<LasSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::schema::mutations::apply_las_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <LasDiff as protocol::MutationDiff<LasSnapshot>>::apply(&diff, &self.snapshot)?;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-    //#endregion 🔖️Builder
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::LasSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    //#region 🔖️Parts
-    /// 🧩 Analyzed `stdio.las` parts.
-    #[derive(Clone, Debug, Default)]
-    pub struct LasParts {
-        pub snapshot: Option<LasSnapshot>,
-    }
-    //#endregion 🔖️Parts
-
-    //#region 🔖️Analyzer
-    /// 🧐️ Analyzes `stdio.las` (1.0/🎩️header) sources.
-    pub struct LasAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for LasAnalyzerAnalysis {
-        type Parts = LasParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId("*") };
-
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            const SIG: [u8; 4] = *b"LASF";
-            match source {
-                AnalyzeSource::Binary(bytes) => {
-                    if bytes.len() >= 4 && bytes[0..4] == SIG {
-                        IoConfidence::High
-                    } else {
-                        IoConfidence::Low
-                    }
-                }
-                AnalyzeSource::Text(text) => {
-                    // 🔍 stdio.las's text envelope is a hex dump of the raw bytes after the
-                    // `semio ...` preamble line — decode the first 4 bytes to sniff the real signature.
-                    let body = match store::semio_format::split_text_preamble(text) {
-                        Ok((_, rest)) => rest,
-                        Err(_) => text,
-                    };
-                    let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(8).collect();
-                    if hex.len() < 8 {
-                        return IoConfidence::Low;
-                    }
-                    let mut decoded = [0u8; 4];
-                    for (i, byte) in decoded.iter_mut().enumerate() {
-                        match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
-                            Ok(b) => *byte = b,
-                            Err(_) => return IoConfidence::Low,
-                        }
-                    }
-                    if decoded == SIG {
-                        IoConfidence::High
-                    } else {
-                        IoConfidence::Low
-                    }
-                }
-            }
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = LasParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <LasSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <LasSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-    //#endregion 🔖️Analyzer
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec LasBuilderFacets {
-        construction: LasBuilderConstruction,
-        analysis: LasAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::LasComposerComposition,
-    }
-    builder: LasBuilder,
-    analyzer: LasAnalyzer,
-    composer: LasComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers

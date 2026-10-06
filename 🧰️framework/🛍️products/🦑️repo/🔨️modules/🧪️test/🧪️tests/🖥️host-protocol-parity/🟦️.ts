@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { existsSync } from "node:fs";
 import { join, sep } from "node:path";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { digest } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -21,7 +21,7 @@ export default defineTestAdapter({
     "digest-and-fixture-resolution": {
       subject: (ctx) => ({
         projection: {
-          vectorDigest: digest(ctx.fixtureBytes("shared://📡️protocol-vector.txt")),
+          vectorDigest: digest(ctx.inputBytes("shared://📡️protocol-vector.txt")),
           literalDigest: digest("semio"),
           fixtureName: "📡️protocol-vector.txt",
           seed: Number(ctx.seed),
@@ -34,7 +34,7 @@ export default defineTestAdapter({
       subject: (ctx) => {
         let reported = false;
         try {
-          ctx.fixture("shared://this-fixture-is-not-declared");
+          ctx.input("shared://this-fixture-is-not-declared");
         } catch {
           reported = true;
         }

@@ -6,7 +6,25 @@
   "additionalProperties": false,
   "required": ["index", "pin"],
   "properties": {
-    "index": { "type": "integer", "minimum": 0 },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Representation",
+          "de": "Repräsentation"
+        },
+        "description": {
+          "en": "Index of the bound representation, counted from 0.",
+          "de": "Index der gebundenen Repräsentation, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
     "pin": { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link/schema.json#/$defs/LinkPin", "x-semio-ui": { "label": { "en": "Version Pin", "de": "Versionsfixierung" }, "description": { "en": "Which version the representation follows: the live head, a checkpoint, or a stored snapshot.", "de": "Welcher Version die Darstellung folgt: dem aktuellen Stand, einem Prüfpunkt oder einem gespeicherten Schnappschuss." } } }
   }
 }

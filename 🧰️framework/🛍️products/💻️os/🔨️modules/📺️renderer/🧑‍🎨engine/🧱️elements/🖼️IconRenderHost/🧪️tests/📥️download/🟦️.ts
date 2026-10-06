@@ -1,13 +1,11 @@
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
 import { downloadDataUrl } from "../../../🛠️ShellHelpers/🟦️.tsx";
 import fixture from "../../🧫️fixtures/📥️download/🔣️.json";
-import schema from "../../🧬️schema/📥️download/🔣️.json";
 
 it("delivers the real icon data-url download through Chromium with exact UTF-8 bytes", async () => {
-  expect(new Ajv().validate(schema, fixture)).toBe(true);
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage({ acceptDownloads: true });

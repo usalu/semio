@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔏️Reference
@@ -46,7 +46,7 @@ export default defineTestAdapter({
   scenarios: {
     "the-digest-is-sha-256": {
       oracle: (ctx) => {
-        const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://🗜️breach-cache-envelope/🔣️vectors.json"))) as { digests: string[]; envelope: string };
+        const file = JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://🗜️breach-cache-envelope/🔣️vectors.json"))) as { digests: string[]; envelope: string };
         const encoder = new TextEncoder();
         return {
           projection: {
@@ -58,7 +58,7 @@ export default defineTestAdapter({
     },
     "a-member-inflates-anywhere": {
       oracle: (ctx) => {
-        const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://🗜️breach-cache-envelope/🔣️vectors.json"))) as { payloads: string[] };
+        const file = JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://🗜️breach-cache-envelope/🔣️vectors.json"))) as { payloads: string[] };
         const members = unframe(new Uint8Array(ctx.subjectRawBytes("rust")));
         return {
           projection: {

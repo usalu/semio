@@ -108,20 +108,20 @@ impl protocol::OpText for JsonIJsonIJsonEditorCommand {
     fn print_op(&self) -> String {
         match self {
             JsonIJsonIJsonEditorCommand::SetNode { node_id, revision, value } => {
-                format!("set-node node-id={} revision={} value={}", crate::schema::diff::hex_encode(node_id.as_bytes()), crate::schema::diff::hex_encode(revision.as_bytes()), crate::schema::diff::hex_encode(value.as_bytes()))
+                format!("set-node node-id={} revision={} value={}", crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_encode(node_id.as_bytes()), crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_encode(revision.as_bytes()), crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_encode(value.as_bytes()))
             }
-            JsonIJsonIJsonEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", crate::schema::diff::hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
-            JsonIJsonIJsonEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", crate::schema::diff::hex_encode(example_id.as_bytes())),
+            JsonIJsonIJsonEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
+            JsonIJsonIJsonEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_encode(example_id.as_bytes())),
         }
     }
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if let Some(rest) = line.strip_prefix("active-example id=") {
-            let bytes = crate::schema::diff::hex_decode(rest).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid id hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+            let bytes = crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_decode(rest).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid id hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             let example_id = String::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid id utf8: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             return Ok(JsonIJsonIJsonEditorCommand::SetActiveExample { example_id });
         }
         if let Some(raw) = line.strip_prefix("snapshot-edit event=") {
-            let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid snapshot edit hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+            let bytes = crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_decode(raw).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid snapshot edit hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             let event = <SnapshotEditEvent as protocol::OpBinary>::decode_op(&bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid snapshot edit: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             return Ok(JsonIJsonIJsonEditorCommand::EditSnapshot { event });
         }
@@ -133,15 +133,15 @@ impl protocol::OpText for JsonIJsonIJsonEditorCommand {
             let (key, raw) = token.split_once('=').ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json editor command: bad token {token:?}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
             match key {
                 "node-id" => {
-                    let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid node id hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+                    let bytes = crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_decode(raw).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid node id hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
                     node_id = Some(String::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid node id utf8: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?);
                 }
                 "value" => {
-                    let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid value hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+                    let bytes = crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_decode(raw).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid value hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
                     value = Some(String::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid value utf8: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?);
                 }
                 "revision" => {
-                    let bytes = crate::schema::diff::hex_decode(raw).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid revision hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+                    let bytes = crate::standards::v_rfc8259::subsets::base::io::text::diff::hex_decode(raw).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid revision hex: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
                     revision = Some(String::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("i-json editor command: invalid revision utf8: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?);
                 }
                 _ => {}
@@ -272,7 +272,7 @@ fn json_i_json_emit(command: &JsonIJsonIJsonEditorCommand, snapshot: &JsonSnapsh
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.i-json.stale-node-edit"), "the JSON document changed while this node draft was open"));
     }
     let path = decode_path_id(node_id).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.i-json.invalid-node-path"), detail))?;
-    let parsed = crate::schema::snapshot::parse_json_text(value)
+    let parsed = crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(value)
         .map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.i-json.invalid-node-value"), format!("value for node '{node_id}' is not valid JSON: {error}")))?;
     let event = SnapshotEditEvent::SetValue { path, value: semio_framework_value::ToValue::to_value(&parsed) };
     <JsonIJsonEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, snapshot)
@@ -374,12 +374,12 @@ impl ArtifactEditor for JsonIJsonEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        Ok(crate::schema::snapshot::write_json_text(&snapshot.value).into_bytes())
+        Ok(crate::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_text(&snapshot.value).into_bytes())
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
         let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
-        let snapshot = crate::schema::snapshot::parse_json_text(text)
+        let snapshot = crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(text)
             .map(JsonSnapshot::from_value)
             .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
         if let Some(diagnostic) = crate::standards::v_rfc8259::subsets::i_json::schema::check_i_json_conformance(&snapshot)
@@ -422,7 +422,7 @@ impl ArtifactEditor for JsonIJsonEditor {
             return Ok(None);
         }
         if json_i_json_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-json-i-json-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-json-i-json-retained-command-tool-mismatch"));
         }
         let tool_id = json_i_json_command_id(&request.command);
         let operation = AppOperationContext {

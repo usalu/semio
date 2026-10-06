@@ -964,7 +964,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 }
             }
             Event::JobCompleted { job, result } => {
-                let instance = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow().accepted(job).map(|binding| binding.instance));
+                let instance = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow().owned(job).map(|binding| binding.instance));
                 if let Some(binding) = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().complete(job)) {
                     dirty_background_surfaces(runtime, binding.instance, &mut dirty).await?;
                 }

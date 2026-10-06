@@ -1,0 +1,31 @@
+{
+  "$schema": "../../🧬️schema/🔣️supersede-law/🔣️.json",
+  "inputs": [
+    { "name": "a-plain-operation-is-withdrawn", "original": "plain", "replacement": "withdrawn", "admitted": true, "folds": "noOp" },
+    { "name": "a-plain-operation-takes-its-recorded-input", "original": "plain", "replacement": "recorded", "admitted": true, "folds": "replacement" },
+    { "name": "a-plain-operation-takes-another-plain-input", "original": "plain", "replacement": "plain", "admitted": true, "folds": "replacement" },
+    { "name": "a-plain-operation-takes-no-input-that-plans-foreign-steps", "original": "plain", "replacement": "foreignStep", "admitted": false, "folds": "fatalNoOp" },
+    { "name": "a-plain-operation-takes-no-input-of-another-schema", "original": "plain", "replacement": "otherSchema", "admitted": false, "folds": "fatalNoOp" },
+    { "name": "a-plain-operation-takes-no-bytes-that-are-no-operation", "original": "plain", "replacement": "garbage", "admitted": false, "folds": "fatalNoOp" },
+    { "name": "a-foreign-step-operation-is-withdrawn", "original": "foreignStep", "replacement": "withdrawn", "admitted": true, "folds": "noOp" },
+    { "name": "a-foreign-step-operation-takes-its-recorded-input-back", "original": "foreignStep", "replacement": "recorded", "admitted": true, "folds": "replacement" },
+    { "name": "a-foreign-step-operation-takes-no-plain-input", "original": "foreignStep", "replacement": "plain", "admitted": false, "folds": "fatalNoOp" },
+    { "name": "a-foreign-step-operation-takes-no-other-foreign-step-input", "original": "foreignStep", "replacement": "foreignStep", "admitted": false, "folds": "fatalNoOp" },
+    { "name": "a-foreign-step-operation-takes-no-input-of-another-schema", "original": "foreignStep", "replacement": "otherSchema", "admitted": false, "folds": "fatalNoOp" },
+    { "name": "a-foreign-step-operation-takes-no-bytes-that-are-no-operation", "original": "foreignStep", "replacement": "garbage", "admitted": false, "folds": "fatalNoOp" }
+  ],
+  "units": [
+    { "name": "a-plain-operation-is-its-own-unit", "operation": "plain", "origin": "owner", "group": false, "unit": "none", "supersede": "authored" },
+    { "name": "a-plain-operation-of-a-one-instance-gesture-is-its-own-unit", "operation": "plain", "origin": "owner", "group": true, "unit": "none", "supersede": "authored" },
+    { "name": "a-step-of-another-documents-operation-is-in-that-gestures-unit", "operation": "plain", "origin": "transaction", "group": true, "unit": "group", "supersede": "history.unit-spans-documents" },
+    { "name": "a-step-of-another-documents-operation-without-a-group-names-its-unit-itself", "operation": "plain", "origin": "transaction", "group": false, "unit": "operation", "supersede": "history.unit-spans-documents" },
+    { "name": "a-planner-that-planned-nothing-foreign-is-its-own-unit", "operation": "planner", "origin": "owner", "group": false, "unit": "none", "supersede": "authored" },
+    { "name": "a-planner-of-a-one-instance-gesture-is-its-own-unit", "operation": "planner", "origin": "owner", "group": true, "unit": "none", "supersede": "authored" },
+    { "name": "a-planner-received-as-a-step-is-in-that-gestures-unit", "operation": "planner", "origin": "transaction", "group": true, "unit": "group", "supersede": "history.unit-spans-documents" },
+    { "name": "a-planner-received-as-a-step-without-a-group-names-its-unit-itself", "operation": "planner", "origin": "transaction", "group": false, "unit": "operation", "supersede": "history.unit-spans-documents" },
+    { "name": "a-planner-with-foreign-steps-is-in-its-gestures-unit", "operation": "foreignPlanner", "origin": "owner", "group": true, "unit": "group", "supersede": "history.unit-spans-documents" },
+    { "name": "a-planner-with-foreign-steps-without-a-group-names-its-unit-itself", "operation": "foreignPlanner", "origin": "owner", "group": false, "unit": "operation", "supersede": "history.unit-spans-documents" },
+    { "name": "a-foreign-planner-received-as-a-step-is-in-that-gestures-unit", "operation": "foreignPlanner", "origin": "transaction", "group": true, "unit": "group", "supersede": "history.unit-spans-documents" },
+    { "name": "a-foreign-planner-received-as-a-step-without-a-group-names-its-unit-itself", "operation": "foreignPlanner", "origin": "transaction", "group": false, "unit": "operation", "supersede": "history.unit-spans-documents" }
+  ]
+}

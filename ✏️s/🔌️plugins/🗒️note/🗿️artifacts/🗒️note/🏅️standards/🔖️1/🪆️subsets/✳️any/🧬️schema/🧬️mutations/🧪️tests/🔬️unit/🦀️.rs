@@ -324,9 +324,9 @@ async fn delete_asset_missing_target_is_error() {
 /// fresh fold of the edited log (Error/Fatal leaves fold as no-ops), and a clean report overwrites to exactly that state.
 async fn replay_history_edit(base: &NoteSnapshot, log: &[NoteMutation], index: usize, edited: &NoteMutation) -> protocol::ReplayReport {
     use protocol::OpBinary;
-    let mut store = crate::standards::v1::subsets::any::io::snapshot::binary::new_note_store(store::create_document_envelope::<NoteSnapshot, NoteMutation>(crate::NOTE_DOCUMENT_SCHEMA, "drag-time-travel", base.clone(), None)).await.expect("the store opens");
+    let mut store = crate::standards::v1::subsets::any::io::binary::snapshot::new_note_store(store::create_document_envelope::<NoteSnapshot, NoteMutation>(crate::NOTE_DOCUMENT_SCHEMA, "drag-time-travel", base.clone(), None)).await.expect("the store opens");
     for mutation in log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a block edit applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("a block edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[index].clone(), protocol::InputReplacement::Input { schema: crate::NOTE_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();

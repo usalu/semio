@@ -502,6 +502,43 @@ async fn first_owned_codec(runtime: &OwnedRuntime, compiled: &CompiledHandle, pa
 /// both output files under `out_dir` — only after the kind-identity law and the codec census pass on the same
 /// compiled component ([`kind_identity_faults`], [`first_owned_codec`]). Returns the patched descriptor for the caller to print/verify.
 ///
+/// 🔤️ A descriptor value whose every object holds its members in UTF-8 key-byte order, at every depth (design §22.19 of
+/// ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the only value [`descriptor_pack`] encodes, so the emitted bytes are the
+/// canonical ones every verifier re-derives, whatever member order a value encoder keeps.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CanonicalDescriptorValue(semio_framework_value::DslValue);
+
+impl CanonicalDescriptorValue {
+    /// 🔃️ Orders the members of every object by key bytes; members of equal keys keep their authored order.
+    pub fn new(value: semio_framework_value::DslValue) -> Self {
+        Self(canonical_members(value))
+    }
+
+    /// 👁️ The canonical value itself.
+    pub fn value(&self) -> &semio_framework_value::DslValue {
+        &self.0
+    }
+}
+
+/// 🪜️ [`CanonicalDescriptorValue::new`] through every array and object of `value`.
+fn canonical_members(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
+    use semio_framework_value::DslValue;
+    match value {
+        DslValue::Array(items) => DslValue::Array(items.into_iter().map(canonical_members).collect()),
+        DslValue::Object(entries) => {
+            let mut entries: Vec<(String, DslValue)> = entries.into_iter().map(|(key, entry)| (key, canonical_members(entry))).collect();
+            entries.sort_by(|left, right| left.0.as_bytes().cmp(right.0.as_bytes()));
+            DslValue::Object(entries)
+        }
+        scalar => scalar,
+    }
+}
+
+/// 📦️ The pack bytes of a descriptor: its canonical value through the wire value encoder.
+pub fn descriptor_pack(value: &CanonicalDescriptorValue) -> Vec<u8> {
+    store::pack_rt::encode_wire_value(value.value())
+}
+
 /// 🪪️ `descriptor_sha256` self-hashes the descriptor's own encoded pack MINUS this very field
 /// (a self-referential hash cannot include itself) — encode once with an empty
 /// `descriptor_sha256`, hash THAT, then patch the real value in before the final write. Any
@@ -528,13 +565,12 @@ pub async fn describe_component(wasm_path: &Path, core_wasm_path: &Path, out_dir
     descriptor.hashes.wasm_sha256 = wasm_sha256;
     descriptor.hashes.core_wasm_sha256 = core_wasm_sha256;
     descriptor.hashes.descriptor_sha256 = String::new();
-    let prehash_value = semio_framework_value::ToValue::to_value(&descriptor);
-    let prehash_bytes = store::pack_rt::encode_wire_value(&prehash_value);
+    let prehash_bytes = descriptor_pack(&CanonicalDescriptorValue::new(semio_framework_value::ToValue::to_value(&descriptor)));
     descriptor.hashes.descriptor_sha256 = semio_framework_hash::sha256_hex(&prehash_bytes);
 
     let final_value = semio_framework_value::ToValue::to_value(&descriptor);
-    let final_bytes = store::pack_rt::encode_wire_value(&final_value);
     let final_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&final_value));
+    let final_bytes = descriptor_pack(&CanonicalDescriptorValue::new(final_value));
 
     if descriptor.manifest.plugin_id == ASSEMBLY_FAILED_PLUGIN_ID {
         return Err(DescribeError(format!("refusing to write a placeholder descriptor for {}: plugin assembly failed — {}", wasm_path.display(), descriptor.manifest.label)));

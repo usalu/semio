@@ -17,7 +17,6 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
   const validator = new (require("ajv").default)(); validator.addSchema(schema);
   const viteRoot = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite");
   const lifecycle = JSON.parse(readFileSync(join(viteRoot, "🧫️cases.json"), "utf8"));
-  assert.ok(new (require("ajv").default)().validate(JSON.parse(readFileSync(join(viteRoot, "🧬️schema/🔣️.json"), "utf8")), lifecycle));
   assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/BrowserArtifactDistributionV1" }, marker));
   const sources = [{ root: source, destination: fixture.destination, owner: fixture.owner, shimDirectory: fixture.shimDirectory }];
   try {

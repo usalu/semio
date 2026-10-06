@@ -44,7 +44,7 @@ OUTCOME_URI = f"{_ROOT}/🎯️outcome/🔣️.json"
 
 def _read_json(ctx: Context, uri: str):
     """🧫️ One declared fixture, parsed."""
-    return json.loads(ctx.fixture_bytes(uri))
+    return json.loads(ctx.input_bytes(uri))
 # endregion 🔖️Fixtures
 
 

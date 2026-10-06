@@ -1,5 +1,4 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "target": {
     "scope": "s.space.home@1/*#editor",
     "version": 1,

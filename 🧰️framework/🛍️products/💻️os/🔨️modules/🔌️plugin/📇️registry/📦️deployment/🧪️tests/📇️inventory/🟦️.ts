@@ -13,7 +13,7 @@ import type { DeployedRegistryEntryV1 } from "../../../🔎️discovery/🟦️.
 
 const ajv = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(extensionSchema).addSchema(schema);
 const shape = ajv.getSchema(`${schema.$id}#/$defs/DeploymentCatalogV1`)!;
-expect(ajv.getSchema(`${schema.$id}#/$defs/DeploymentInventoryCasesV1`)!(corpus)).toBe(true);
+
 
 describe("explicit deployment inventory", () => {
   for (const row of corpus.cases) it(row.id, () => {

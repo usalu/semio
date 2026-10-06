@@ -15,7 +15,22 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Face",
+          "de": "Fläche"
+        },
+        "description": {
+          "en": "Index of the face (`f` statement), counted from 0.",
+          "de": "Index der Fläche (`f`-Anweisung), ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

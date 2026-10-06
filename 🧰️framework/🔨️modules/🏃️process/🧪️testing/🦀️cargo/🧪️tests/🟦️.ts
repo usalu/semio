@@ -55,3 +55,14 @@ test("Cargo execution preserves exact owner policy and separates compilation fro
   expect(()=>api.partitionNextestExecutionFilters(["-E"])).toThrow();
   expect(()=>api.cargoTestPlanV1({manifestPath:"",packages:[],cwd:"/owner"},fixture.policies[0],"/owner/results/binaries.json")).toThrow();
 },10000);
+
+test("Cargo reporter options remain execution-owned with independent Node argument authority",async()=>{
+ const owner=resolve(import.meta.dir,".."), fixture=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/📣️reporting/🔣️.json"),"utf8")), base=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🔣️.json"),"utf8")).policies[0], require=createRequire(import.meta.url), api=await import("../🟦️.ts");
+ const program="const{parseArgs}=require('node:util');const args=JSON.parse(process.argv[1]);const p=parseArgs({args,options:{'status-level':{type:'string',multiple:true},'final-status-level':{type:'string',multiple:true}},strict:false,tokens:true});process.stdout.write(JSON.stringify(p.tokens.filter(t=>t.kind==='option'&&(t.name==='status-level'||t.name==='final-status-level')).map(t=>[t.name,t.value])));";
+ for(const item of fixture.cases){
+  const oracle=spawnSync("node",["-e",program,JSON.stringify(item.arguments.slice(0,item.arguments.includes("--")?item.arguments.indexOf("--"):item.arguments.length))],{encoding:"utf8"});expect(oracle.status).toBe(0);const reported=JSON.parse(oracle.stdout)as[string,string][],split=api.partitionNextestExecutionFilters(item.arguments);for(const[name,value]of reported){expect(split.executionArgs.some(arg=>arg===("--"+name)||arg===("--"+name+"="+value))).toBe(true);expect(split.buildArgs).not.toContain("--"+name);expect(split.buildArgs).not.toContain("--"+name+"="+value);expect(split.buildArgs).not.toContain(value);}
+  const plan=api.cargoTestPlanV1({manifestPath:base.manifestPath,packages:["owner-package"],cwd:"/owner",extraArgs:item.arguments},base,"/owner/results/binaries.json");expect(plan[0]!.args.some(arg=>arg.startsWith("--status-level")||arg.startsWith("--final-status-level"))).toBe(false);expect(plan[0]!.budgetMs).toBe(base.buildBudgetMs);expect(plan[1]!.budgetMs).toBe(base.assertionBudgets[base.level]);
+  const actual=spawnSync("node",["-e",program,JSON.stringify(plan[1]!.args.slice(0,plan[1]!.args.indexOf("--")))],{encoding:"utf8"});expect(actual.status).toBe(0);const values=JSON.parse(actual.stdout)as[string,string][];expect(values.filter(([name])=>name==="status-level")).toEqual([["status-level",item.status]]);expect(values.filter(([name])=>name==="final-status-level")).toEqual([["final-status-level",item.finalStatus]]);
+ }
+ for(const args of fixture.invalid)expect(()=>api.partitionNextestExecutionFilters(args)).toThrow();
+});

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "assembly": "Runtime",
+  "snapshot": "WriterSnapshot",
+  "dialect": {
+    "artifactKind": "s.writer.writer",
+    "standard": "1",
+    "subset": "*"
+  },
+  "schema": "writer.document",
+  "tables": [
+    "writer_document",
+    "writer_document_child"
+  ],
+  "requirements": {
+    "concreteSnapshotType": true,
+    "completeDeclaredInstalledHookIdentity": true,
+    "nonemptyExactAuthoredSql": true,
+    "nativeSqlLookup": true,
+    "oneHopExactRoutesBothDirections": true
+  }
+}

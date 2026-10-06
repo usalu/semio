@@ -1,0 +1,25 @@
+{
+  "qualification": "HELD normative inheritable MediaBox page admission, matching actual lift232/252. No default box or alternate key fallback; absent/duplicate/cyclic/ambiguous media owner refused. No runtime.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🏅️conformance-support/🦀️.rs",
+      "before": "    let roots = snapshot.trailer.iter().filter(|entry| entry.key == \"Root\").collect::<Vec<_>>();",
+      "after": "    fn inherited_media<'a>(snapshot: &'a PdfSnapshot, mut reference: ObjRef) -> Option<&'a [PdfObject]> {\n        let mut seen = std::collections::HashSet::new();\n        loop {\n            if !seen.insert(reference) { return None; }\n            let PdfObject::Dict(entries) = admitted_object(snapshot, reference)? else { return None; };\n            let mut values = entries.iter().filter(|entry| entry.key == \"MediaBox\");\n            if let Some(value) = values.next() { if values.next().is_some() { return None; } return value.value.as_array(); }\n            reference = entry(admitted_object(snapshot, reference)?, \"Parent\")?.as_ref()?;\n        }\n    }\n    let roots = snapshot.trailer.iter().filter(|entry| entry.key == \"Root\").collect::<Vec<_>>();"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🏅️conformance-support/🦀️.rs",
+      "before": "        let media = entry(admitted_object(snapshot, *reference)?, \"MediaBox\")?.as_array()?;",
+      "after": "        let media = inherited_media(snapshot, *reference)?;"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🏅️conformance-support/🟦️.ts",
+      "before": "  if(leaves.length!==snapshot.pages.length)return;",
+      "after": "  function inheritedMedia(reference:ObjRef):PdfObject|undefined {const visited=new Set<string>();while(true){const identity=key(reference);if(visited.has(identity))return;visited.add(identity);const value=objects.get(identity);if(value?.kind!=='dict')return;const values=value.value.filter(entry=>entry.key==='MediaBox');if(values.length>1)return;if(values.length===1)return values[0]!.value;const parent=referenceOfParent(value);if(!parent)return;reference=parent;}}\n  function referenceOfParent(value:PdfObject):ObjRef|undefined {return reference(entry(value,'Parent'));}\n  if(leaves.length!==snapshot.pages.length)return;"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🏅️conformance-support/🟦️.ts",
+      "before": "const media=entry(objects.get(key(leaves[index]!)),'MediaBox');",
+      "after": "const media=inheritedMedia(leaves[index]!);"
+    }
+  ]
+}

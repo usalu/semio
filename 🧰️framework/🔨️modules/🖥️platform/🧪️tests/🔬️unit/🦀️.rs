@@ -18,6 +18,7 @@ async fn adds_first_app_as_active() {
             modes: crate::ui::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
             default_mode_id: "edit".into(),
             window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
+                initial_utility_id: None,
                 id: "composite".into(),
                 label: LocalizedLabel::data("Canvas"),
                 body_key: "composite".into(),
@@ -71,6 +72,7 @@ async fn minimal_app(id: &str) -> AppDefinition {
         modes: crate::ui::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
         default_mode_id: "edit".into(),
         window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
+            initial_utility_id: None,
             id: "main".into(),
             label: LocalizedLabel::data("Main"),
             body_key: "main".into(),

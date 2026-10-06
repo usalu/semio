@@ -15,10 +15,44 @@
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     },
     "handle": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "Handle of the entity.",
+          "de": "Referenz (Handle) der Entität."
+        },
+        "ref": {
+          "kind": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "layer": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Layer",
+          "de": "Layer"
+        },
+        "description": {
+          "en": "Name of the layer the entity is assigned to.",
+          "de": "Name des Layers, dem die Entität zugeordnet wird."
+        },
+        "ref": {
+          "kind": "layer"
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

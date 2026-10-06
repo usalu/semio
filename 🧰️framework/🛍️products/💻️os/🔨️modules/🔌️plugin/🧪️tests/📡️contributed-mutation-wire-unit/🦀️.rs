@@ -5,7 +5,7 @@ use super::*;
 use protocol::{CompositeMutationKind, Mutation, MutationDiff, MutationLeaf, OpBinary};
 
 fn cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/📡️contributed-mutation-wire/🔣️.json")).expect("contributed wire neutral cases")
+    serde_json::from_str(include_str!("../../🧪️testing/📡️contributed-mutation-wire/🔣️.json")).expect("contributed wire neutral cases")
 }
 
 fn operation(delta: i32) -> WireTestMutation {
@@ -16,7 +16,7 @@ fn operation(delta: i32) -> WireTestMutation {
 fn descriptor_and_provenance_are_direct() {
     assert_eq!(
         serde_json::Value::from(semio_framework_value::ToValue::to_value(&AddValue::DESCRIPTOR)),
-        serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🔣️.json")).expect("owned descriptor JSON")
+        serde_json::from_str::<serde_json::Value>(include_str!("../../🧪️testing/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🔣️.json")).expect("owned descriptor JSON")
     );
     assert!(AddValue::DESCRIPTOR.validate().is_ok());
     assert_eq!(<WireTestMutation as Mutation<WireTestSnapshot>>::DESCRIPTORS, &[AddValue::DESCRIPTOR]);
@@ -98,6 +98,6 @@ fn serde_binary_and_composite_plan_match_the_leaf() {
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<WireTestMutation>(include_str!("../../🧫️fixtures/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<WireTestMutation>(include_str!("../../🧪️testing/📡️contributed-mutation-wire/🧬️mutations/➕️add-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️ContributedMutationWireLaws

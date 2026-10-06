@@ -1,0 +1,32 @@
+//! ⚖️ Playground artifact — state-patch-representation wire codec + laws.
+
+//#region 📡️SemioProtocol
+/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
+//#endregion 📡️SemioProtocol
+
+use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
+use protocol::OpBinary;
+
+/// 🧾️ Direct-owner binary tags in aggregate declaration order.
+pub const BINARY_TAG_REGISTRY: &[(&str, u32)] = &[("ChangeSchema", crate::standards::v1::subsets::any::schema::mutations::change_schema::BINARY_TAG)];
+
+/// 📦️ Encodes a `PlaygroundMutation` to its binary state-patch form.
+pub fn encode_op(operation: &PlaygroundMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+    operation.encode_op()
+}
+
+/// 📖️ Decodes a `PlaygroundMutation` from its binary state-patch form.
+pub fn decode_op(bytes: &[u8]) -> Result<PlaygroundMutation, protocol::ProtocolError> {
+    PlaygroundMutation::decode_op(bytes)
+}
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests
+
+#[path = "✒️change-schema/🦀️.rs"]
+pub mod change_schema;

@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "wire",
+    "paddingByte",
+    "paddingBytes",
+    "sourceBytes",
+    "secondSource",
+    "parent",
+    "slot",
+    "ordinal",
+    "childCases",
+    "invocationChildren",
+    "invocationOrders",
+    "maximumAllocationBytes",
+    "maximumItems",
+    "maximumBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "wire": {
+      "const": "17"
+    },
+    "paddingByte": {
+      "const": 32
+    },
+    "paddingBytes": {
+      "const": 8192
+    },
+    "sourceBytes": {
+      "const": 8194
+    },
+    "secondSource": {
+      "const": [
+        0,
+        127,
+        128,
+        255
+      ]
+    },
+    "parent": {
+      "const": "par\u0000ent"
+    },
+    "slot": {
+      "const": "slöt"
+    },
+    "ordinal": {
+      "const": 7
+    },
+    "childCases": {
+      "const": [
+        [],
+        [
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ]
+    },
+    "invocationChildren": {
+      "const": [
+        {
+          "id": "z-child",
+          "operations": [
+            0
+          ]
+        },
+        {
+          "id": "ä-child",
+          "operations": [
+            1
+          ]
+        },
+        {
+          "id": "a-child",
+          "operations": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "a-child",
+          "operations": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "invocationOrders": {
+      "const": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          1,
+          0,
+          2,
+          3
+        ],
+        [
+          1,
+          3,
+          0,
+          2
+        ],
+        [
+          3,
+          2,
+          1,
+          0
+        ]
+      ]
+    },
+    "maximumAllocationBytes": {
+      "const": 65536
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "const": 4096
+    }
+  }
+}

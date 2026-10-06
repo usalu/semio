@@ -656,28 +656,8 @@ fn resolve_manifest(raw: &RawManifest, symbols: &[String]) -> Result<Manifest, P
 //#endregion 🔖️Manifest
 
 //#region 🔖️Verify
-/// 🛡️ How much a read verifies as it goes: `Trusted` skips all checksums (fastest,
-/// for already-verified local data), `Standard` (default) verifies every segment's CRC-32C as
-/// it's read, `Full` additionally re-hashes chunk/document content against the blake3 hashes in
-/// the chunk table and footer.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub enum VerificationLevel {
-    Trusted,
-    #[default]
-    Standard,
-    Full,
-}
-
-impl VerificationLevel {
-    // 🚫️async: E1 pure enum-variant predicate — no I/O, no async call anywhere in the body.
-    fn checks_crc(self) -> bool {
-        !matches!(self, Self::Trusted)
-    }
-
-    fn checks_content_hash(self) -> bool {
-        matches!(self, Self::Full)
-    }
-}
+/// 🛡️ The exact shared Pack verification policy controls CRC and content hash checks.
+pub use crate::codec::PackVerificationLevel as VerificationLevel;
 //#endregion 🔖️Verify
 
 //#region 🔖️Writer

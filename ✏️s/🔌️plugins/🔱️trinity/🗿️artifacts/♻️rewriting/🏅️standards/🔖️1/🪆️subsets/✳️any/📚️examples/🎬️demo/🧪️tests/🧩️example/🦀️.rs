@@ -16,6 +16,6 @@ async fn inference_determinism_law() {
     use crate::standards::v1::subsets::any::schema::inferences::RewritingInference;
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let projection = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example dsl parses");
+    let projection = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
     assert_eq!(RewritingInference::infer(&projection).expect("valid materialized inference fixture"), RewritingInference::infer(&projection).expect("valid materialized inference fixture"));
 }

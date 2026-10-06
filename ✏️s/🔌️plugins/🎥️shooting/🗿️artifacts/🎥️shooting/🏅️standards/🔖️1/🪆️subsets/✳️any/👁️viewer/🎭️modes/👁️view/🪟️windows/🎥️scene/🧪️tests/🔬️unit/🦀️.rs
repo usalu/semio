@@ -9,7 +9,7 @@ async fn definition_declares_the_world_3d_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_scene_node_for_the_default_document() {
-    let snapshot = crate::standards::v1::subsets::any::schema::default_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let node = render(&snapshot).expect("viewer scene");
     let scene: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("assembled scene");
     assert!(scene.meshes_json.contains("/mesh/🧊️base.glb"));

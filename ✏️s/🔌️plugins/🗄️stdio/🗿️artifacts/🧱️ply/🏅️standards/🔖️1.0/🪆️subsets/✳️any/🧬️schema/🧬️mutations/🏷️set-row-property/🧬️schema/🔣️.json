@@ -42,7 +42,8 @@
         "description": {
           "en": "Zero-based row of the element.",
           "de": "Nullbasierte Zeile des Elements."
-        }
+        },
+        "step": 1
       }
     },
     "propertyName": {
@@ -60,7 +61,20 @@
       }
     },
     "value": {
-      "$ref": "#/$defs/PlyValue"
+      "$ref": "#/$defs/PlyValue",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "Typed scalar or list the property holds in this row.",
+          "de": "Typisierter Skalar oder Liste, die die Eigenschaft in dieser Zeile enthält."
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   },
   "$defs": {

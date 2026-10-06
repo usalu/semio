@@ -1654,9 +1654,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "commit-reconstruction-refused",
       "class": "handcrafted",
       "target": {

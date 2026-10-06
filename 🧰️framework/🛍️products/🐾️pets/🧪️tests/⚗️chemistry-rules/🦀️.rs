@@ -24,7 +24,7 @@ mod subject {
 
     /// 🧫️ The committed vectors.
     fn document(ctx: &Context<'_>) -> Result<Value, String> {
-        serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))
+        serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| format!("{VECTORS}: {error}"))
     }
 
     /// 🎪️ The menagerie the vectors carry.
@@ -299,7 +299,7 @@ mod subject {
 
     /// 🧸️ The sample menagerie of the product, rehearsed.
     pub fn sample(ctx: &Context<'_>) -> Result<Outcome, String> {
-        let document: Value = serde_json::from_slice(&ctx.fixture_bytes(SAMPLE)?).map_err(|error| format!("{SAMPLE}: {error}"))?;
+        let document: Value = serde_json::from_slice(&ctx.input_bytes(SAMPLE)?).map_err(|error| format!("{SAMPLE}: {error}"))?;
         let menagerie: Menagerie = serde_json::from_value(document["menagerie"].clone()).map_err(|error| format!("{SAMPLE} menagerie: {error}"))?;
         Ok(Outcome::projection(parse_json(&json!({ "sample": rehearsal(&menagerie)? }).to_string())?))
     }

@@ -1,3 +1,4 @@
+import { CargoMetadataCaptureBudget } from "./⏱️budget/🟦️.ts";
 import { startNativeProgress } from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { discoverCargoWorkspaces, prepareCargoWorkspaceInvocation } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { readFileSync } from "node:fs";
@@ -11,12 +12,13 @@ export async function verifyCargoDependencyDirection(repoRoot: string): Promise<
   const policy: CargoDirectionPolicy = { areaLayers: taxonomy.areaLayers, ...taxonomy.cargoDependencyDirections };
   const inventory = cargoDirectionInventory(repoRoot);
   console.log(`[cargo-dependency-direction] resolving all declaration kinds; inventoriedPackages=${inventory.length}`);
-  const metadata: unknown[] = [], deadline = Date.now() + 30_000;
+  const metadata: unknown[] = [], budget = new CargoMetadataCaptureBudget(30_000);
   for (const scope of discoverCargoWorkspaces(repoRoot)) {
     const args = ["metadata", "--format-version", "1", "--no-deps", "--offline", "--locked", "--manifest-path", join(repoRoot, scope.manifest)];
     prepareCargoWorkspaceInvocation(repoRoot, args, repoRoot);
-    const remaining = deadline - Date.now();
-    if (remaining <= 0) throw new Error("Cargo direction metadata timeout 30000ms");
+    const remaining = budget.remainingMs;
+    if (remaining <= 0) throw new Error("Cargo metadata capture budget exhausted");
+    const captureStarted = performance.now();
     const child = Bun.spawn(["cargo", ...args], { cwd: repoRoot, stdout: "pipe", stderr: "pipe" });
     let stopped = "";
     const stop = (reason: string): void => { stopped ||= reason; child.kill(); };
@@ -27,7 +29,7 @@ export async function verifyCargoDependencyDirection(repoRoot: string): Promise<
       const result = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
       if (stopped || result[2] !== 0) throw new Error(stopped || result[1] || "Cargo direction metadata scan failed");
       metadata.push(JSON.parse(result[0]));
-    } finally { clearTimeout(timeout); progress(); process.off("SIGINT", interrupt); process.off("SIGTERM", terminate); }
+    } finally { clearTimeout(timeout); progress(); process.off("SIGINT", interrupt); process.off("SIGTERM", terminate); budget.charge(performance.now() - captureStarted); }
   }
   const report = cargoDependencyDirectionReport(cargoDirectionMetadata(metadata, repoRoot), inventory, policy);
   for (const problem of report.problems) console.error(`[cargo-dependency-direction] ${problem.code}: ${problem.owner}`);

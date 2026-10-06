@@ -1,6 +1,6 @@
 [
   {
-    "schema": "reasoning.mindmap.fixture",
+    "schema": "board.normal.undirected.v1",
     "camera": { "x": 1.0, "y": 2.0, "zoom": 1.5 },
     "nodes": [
       { "id": "München", "x": 2.5, "y": 3.5, "shape": "circle", "radius": 10.0 },
@@ -9,7 +9,7 @@
     "edges": [{ "id": "edge-a-b", "source": "München", "target": "node-b" }]
   },
   {
-    "schema": "puzzle.2d.fixture",
+    "schema": "board.ports.directed.v1",
     "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
     "nodes": [],
     "edges": []

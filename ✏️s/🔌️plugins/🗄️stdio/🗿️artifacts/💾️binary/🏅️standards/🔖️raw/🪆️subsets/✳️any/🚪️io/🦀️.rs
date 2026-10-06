@@ -4,7 +4,7 @@
 //! level, called once from `🔌️plugin/🔧️setup`).
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_raw::subsets::any::schema::BinaryAnalyzer;
+    use crate::standards::v_raw::subsets::any::io::BinaryAnalyzer;
     use crate::BinarySnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -50,7 +50,7 @@ pub use derived_composition::*;
 /// a DIFFERENT return type (`&'static [&'static ComposerEntry]` vs this module's
 /// `&'static [ComposerEntry]`); a bare `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
-    use crate::standards::v_raw::subsets::any::schema::BinaryComposer as BinaryRawAnyComposer;
+    use crate::standards::v_raw::subsets::any::io::BinaryComposer as BinaryRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -109,28 +109,28 @@ pub fn register_pilot_languages() {
         id: "stdio.binary",
         extension: Some("bin"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v_raw::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v_raw::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v_raw::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_raw::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(crate::standards::v_raw::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v_raw::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary.diff",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(crate::standards::v_raw::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(crate::standards::v_raw::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.diff"),
@@ -141,8 +141,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v_raw::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_raw::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.pack"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -151,8 +151,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.spr"),
     });
 }
@@ -210,3 +210,125 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 #[path = "🧪️tests/🔬️carrier-law/🦀️.rs"]
 mod carrier_law;
 //#endregion 🧪️CarrierLaw
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{BinaryDiff, BinaryMutation, BinarySnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.binary` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct BinaryBuilderConstruction {
+        snapshot: BinarySnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for BinaryBuilderConstruction {
+        type Snapshot = BinarySnapshot;
+        type Mutation = BinaryMutation;
+        type Diff = BinaryDiff;
+        fn empty() -> Self {
+            Self { snapshot: BinarySnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<BinarySnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::schema::mutations::apply_binary_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <BinaryDiff as protocol::MutationDiff<BinarySnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::BinarySnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.binary` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct BinaryParts {
+        pub snapshot: Option<BinarySnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.binary` (raw/✳️any) sources.
+    pub struct BinaryAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for BinaryAnalyzerAnalysis {
+        type Parts = BinaryParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            // 👃️ Any byte sequence is a valid stdio.binary payload -- terminal format, always High.
+            IoConfidence::High
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = BinaryParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <BinarySnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <BinarySnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec BinaryBuilderFacets {
+        construction: BinaryBuilderConstruction,
+        analysis: BinaryAnalyzerAnalysis,
+        composition: crate::standards::v_raw::subsets::any::io::derived_composition::BinaryComposerComposition,
+    }
+    builder: BinaryBuilder,
+    analyzer: BinaryAnalyzer,
+    composer: BinaryComposer,
+);

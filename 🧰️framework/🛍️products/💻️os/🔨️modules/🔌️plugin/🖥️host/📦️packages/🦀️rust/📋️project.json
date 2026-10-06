@@ -29,7 +29,7 @@
         "@semio-tech/framework-os-dev:generate-scale-fixture",
         {
           "projects": [
-            "@semio-tech/framework-plugin-host-fixture"
+            "@semio-tech/framework-plugin-host-test-component"
           ],
           "target": "component-dev"
         }
@@ -97,7 +97,7 @@
       "dependsOn": [
         {
           "projects": [
-            "@semio-tech/framework-plugin-host-fixture"
+            "@semio-tech/framework-plugin-host-test-component"
           ],
           "target": "component-dev"
         }
@@ -110,7 +110,7 @@
         "command": "bun ./📜️script.ts count-component-check",
         "cwd": "{projectRoot}"
       },
-      "dependsOn": [{"projects": ["@semio-tech/framework-plugin-host-fixture"], "target": "component-dev"}],
+      "dependsOn": [{"projects": ["@semio-tech/framework-plugin-host-test-component"], "target": "component-dev"}],
       "cache": false
     },
     "sqlite-observation-check": {

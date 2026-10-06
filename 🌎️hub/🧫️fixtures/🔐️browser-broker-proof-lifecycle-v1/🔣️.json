@@ -1,5 +1,4 @@
 {
-  "schema": "semio.hub.browser-broker-proof-lifecycle-fixture/v1",
   "limits": {
     "bootstrapMaximumMs": 120000,
     "activeMaximumMs": 15000

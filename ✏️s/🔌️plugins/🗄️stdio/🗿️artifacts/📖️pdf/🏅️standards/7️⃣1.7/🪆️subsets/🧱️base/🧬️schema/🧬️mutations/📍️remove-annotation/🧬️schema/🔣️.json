@@ -16,11 +16,41 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "description": {
+          "en": "Index of the page, counted from 0.",
+          "de": "Index der Seite, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "at": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Annotation",
+          "de": "Anmerkung"
+        },
+        "description": {
+          "en": "Index of the annotation on the page, counted from 0.",
+          "de": "Index der Anmerkung auf der Seite, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

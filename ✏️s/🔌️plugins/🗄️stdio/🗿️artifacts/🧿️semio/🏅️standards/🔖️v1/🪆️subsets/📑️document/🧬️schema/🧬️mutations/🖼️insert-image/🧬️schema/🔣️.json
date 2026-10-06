@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     },
     "image": {
-      "$ref": "#/$defs/DocImage"
+      "$ref": "#/$defs/DocImage",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Image",
+          "de": "Bild"
+        },
+        "description": {
+          "en": "Id, media type and bytes of the image that is embedded.",
+          "de": "Kennung, Medientyp und Bytes des Bildes, das eingebettet wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

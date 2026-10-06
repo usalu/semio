@@ -1,0 +1,20 @@
+{
+  "retirement": {
+    "directories": 2,
+    "maximumUnits": 1,
+    "refusedIndex": 1,
+    "refusedCompleted": 1,
+    "resumedMaximumUnits": 2,
+    "resumedIndex": 2
+  },
+  "generation": {
+    "members": [
+      "current"
+    ],
+    "frames": 2,
+    "oldReadRefused": true,
+    "oldSourceConserved": true,
+    "sameSignal": true,
+    "budgetReset": false
+  }
+}

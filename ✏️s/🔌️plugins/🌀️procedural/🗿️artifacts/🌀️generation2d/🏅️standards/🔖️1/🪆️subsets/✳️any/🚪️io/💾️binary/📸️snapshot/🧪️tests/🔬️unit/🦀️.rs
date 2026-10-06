@@ -1,0 +1,59 @@
+use crate::standards::v1::subsets::any::io::binary::snapshot::*;
+use crate::standards::v1::subsets::any::io::text::snapshot as generation2d_dsl;
+use semio_framework_artifact_flow_flow::Widget;
+use semio_framework_os_kernel::os_store::test_support;
+
+#[test]
+fn dsl_pack_equivalence_empty_projection() {
+    test_support::assert_dsl_pack_equivalence_cold(&Generation2dSnapshot::default(), Generation2dSnapshot::retire_cold);
+}
+
+#[test]
+fn dsl_pack_equivalence_example_fixture() {
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(generation2d_dsl::parse_dsl(generation2d_dsl::GENERATION2D_EXAMPLE_TEXT).expect("parse 🌀️default.generation2d fixture"));
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
+}
+
+#[test]
+fn dsl_pack_equivalence_with_generation_state() {
+    let mut projection = Generation2dSnapshot::default();
+    let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = semio_framework_artifact_playbook_playbook::PlaybookValues::new();
+    // 🌱️ Fractional (not whole-number) so `semio_framework_value::FromValue::from_value`'s int-normalization of whole
+    // `DslValue::Number`s (an engine-owned behavior, see the sibling dsl test) doesn't make this
+    // round trip spuriously unequal.
+    values.insert("count".into(), semio_framework_value::DslValue::float(3.5));
+    projection.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
+    projection.generation.cold_builder_mut().expect("unique cold generation owner").selected_generation_id = Some("generation-1".into());
+    projection.generation.cold_builder_mut().expect("unique cold generation owner").preview_text = Some("42".into());
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
+}
+
+#[test]
+fn dsl_pack_equivalence_covers_every_widget_kind() {
+    let mut projection = Generation2dSnapshot::default();
+    projection.host_snapshot.widgets = vec![
+        Widget::InputSlider { id: "slider".into(), label: "Number".into(), value: 2.0, min: 0.0, max: 10.0, step: 0.5 },
+        Widget::InputImage { id: "image".into(), src: "data:image/png;base64,abc".into() },
+        Widget::Variable { id: "variable".into(), name: "value".into(), schema: "dictionary".into() },
+        Widget::OutputAction { id: "action".into(), action: "export".into() },
+        Widget::OutputExport { id: "export".into(), format: "svg".into() },
+        Widget::Cluster { id: "cluster".into(), name: "Group".into(), tree: Default::default(), flow: Default::default() },
+    ];
+    projection.host_snapshot.synapses = vec![];
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(projection);
+    test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation2dSnapshot::retire_cold);
+}
+
+#[test]
+fn pack_round_trips() {
+    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(generation2d_dsl::parse_dsl(generation2d_dsl::GENERATION2D_EXAMPLE_TEXT).expect("parse fixture"));
+    let bytes = encode(&projection);
+    assert!(bytes.starts_with(&GENERATION2D_MOUNTED_PREFIX), "a whole-document encode leads with this artifact's own mounted prefix");
+    assert!(bytes[GENERATION2D_MOUNTED_PREFIX.len()..].starts_with(&store::pack_rt::MAGIC), "the mounted prefix is followed by the `.spk` container it wraps");
+    let decoded = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(decode(&bytes).expect("decode"));
+    assert_eq!(*decoded, *projection, "pack round trip diverged");
+    let mut wrong = bytes;
+    wrong[..GENERATION2D_MOUNTED_PREFIX.len()].copy_from_slice(&[0; GENERATION2D_MOUNTED_PREFIX.len()]);
+    assert!(decode(&wrong).is_err(), "a corrupted container magic must be rejected");
+}

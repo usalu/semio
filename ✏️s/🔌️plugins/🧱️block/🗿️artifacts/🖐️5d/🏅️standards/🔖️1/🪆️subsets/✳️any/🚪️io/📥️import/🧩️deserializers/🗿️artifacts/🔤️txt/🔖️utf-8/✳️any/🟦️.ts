@@ -1,4 +1,4 @@
-import {out,wordFromDsl} from "../../../../../../../../../../../../◻️2d/🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
+import {out,wordFromDsl} from "../../../../../../../../../../../../../🧬️schema/🧱️shared/🚪️io/🔣️json/🟦️.ts";
 import {block5dFromJsonValue} from "../../../../../../🔣️json/🟦️.ts";
 /** 🔤️ Declared Block5d Text reader with exact words and canonical typed admission. */
 import type { Block5dSnapshot } from "../../../../../../../🧬️schema/📸️snapshot/🟦️";

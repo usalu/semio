@@ -36,7 +36,7 @@ type planVectorFile struct {
 
 func loadPlanVectors(ctx *host.Context) (planVectorFile, error) {
 	var file planVectorFile
-	raw, err := ctx.FixtureBytes(planVectors)
+	raw, err := ctx.InputBytes(planVectors)
 	if err != nil {
 		return file, err
 	}

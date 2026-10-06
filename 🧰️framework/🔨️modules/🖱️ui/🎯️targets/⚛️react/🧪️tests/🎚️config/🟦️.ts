@@ -22,6 +22,9 @@ export default defineConfig({
     environment: "jsdom",
     include: [
       "../../../../🧪️tests/📐️overlay-flow/🟦️.ts",
+      "../../../../🧪️tests/🛟️chrome-panel-safe-area/🟦️.ts",
+      "../../../../🧪️tests/🛟️chrome-panel-safe-area/🟦️.tsx",
+      "../../../../🧪️tests/📣️engagement-status/🟦️.tsx",
       "../../../../🧱️elements/📚️I18n/🧪️tests/🔬️translation-totality/🟦️.ts",
       "../../../../🧱️elements/🎨️Canvas/🧪️tests/🎯️stack-drop-destination/🟦️.tsx",
       "../../../../🧱️elements/☑️Checkbox/🧪️tests/🧩️component/🟦️.tsx",

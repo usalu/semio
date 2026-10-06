@@ -11,10 +11,38 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the rows at which it is inserted, counted from 0.",
+          "de": "Position unter den Zeilen, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "row": {
-      "$ref": "#/$defs/SemioTableRow"
+      "$ref": "#/$defs/SemioTableRow",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "description": {
+          "en": "Cell values of the inserted row, in column order.",
+          "de": "Zellwerte der eingefügten Zeile in Spaltenreihenfolge."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

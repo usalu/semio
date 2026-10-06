@@ -11,17 +11,56 @@
   ],
   "properties": {
     "parent": {
-      "$ref": "#/$defs/NodePath"
+      "$ref": "#/$defs/NodePath",
+      "x-semio-ui": {
+        "label": {
+          "en": "Parent",
+          "de": "Übergeordneter Knoten"
+        },
+        "description": {
+          "en": "Layer index and child indices of the group (or the layer itself) that holds the nodes, each counted from 0.",
+          "de": "Ebenenindex und Kindindizes der Gruppe (oder der Ebene selbst), die die Knoten enthält, jeweils ab 0 gezählt."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "indices": {
       "type": "array",
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Indices of the sibling nodes that are grouped, counted from 0.",
+          "de": "Indizes der Geschwisterknoten, die gruppiert werden, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
       }
     },
     "transform": {
-      "$ref": "#/$defs/SemioTransform"
+      "$ref": "#/$defs/SemioTransform",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Group transform",
+          "de": "Gruppentransformation"
+        },
+        "description": {
+          "en": "Translation, rotation (unit quaternion) and scale of the new group.",
+          "de": "Verschiebung, Drehung (Einheitsquaternion) und Skalierung der neuen Gruppe."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

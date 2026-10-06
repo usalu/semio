@@ -1,6 +1,6 @@
 //! 🌱️ 🌱️ Block 5D play app commands command — `add-grip`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block5dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 use crate::{Block5dGripTemplate, Block5dSnapshot};
 use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

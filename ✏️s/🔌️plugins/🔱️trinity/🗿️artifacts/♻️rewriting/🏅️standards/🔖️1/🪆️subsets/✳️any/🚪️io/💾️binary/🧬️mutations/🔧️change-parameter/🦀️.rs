@@ -1,0 +1,3 @@
+//! 💾️ Direct binary-codec identity for change-parameter-binding / ChangeParameterBinding.
+
+pub const BINARY_TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "change-parameter-binding");

@@ -68,7 +68,7 @@ pub struct En1993Snapshot {
     pub crane_runways: Vec<CraneRunway>,
 }
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1993Snapshot, extension = "en1993", envelope_id = "norm.en1993", sqlite = crate::snapshot::sqlite::codec);
+crate::impl_norm_artifact_record!(En1993Snapshot, extension = "en1993", envelope_id = "norm.en1993", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1993Snapshot {
@@ -452,57 +452,16 @@ pub fn rolled_heb_catalogue() -> Vec<SteelSection> {
 }
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ The canonical JSON projection of a [`En1993Snapshot`] — the surface
-/// `../../../../../🧪️tests/🔩️mutate-en1993-1` is compared through under `ordered-json-v1`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_en1993_snapshot_json(snapshot: &En1993Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ The `serde_json` inverse of [`encode_en1993_snapshot_json`] — decodes the committed
-/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`En1993Snapshot`] values, so the case adapter reads the committed
-/// fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
-/// adapter is impossible — the generated test host links only this crate — which is why the bridge
-/// belongs here.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_en1993_snapshot_json(text: &str) -> Result<En1993Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📖️ Parses the committed `.dsl.semio` artifact into a [`En1993Snapshot`]. Calls the `ArtifactDsl`
-/// trait method directly rather than the `📝️text` facet's async wrapper, because a test host has no
-/// async runtime to drive one.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_en1993_dsl(text: &str) -> Result<En1993Snapshot, String> {
-    <En1993Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-/// 🖨️ Prints a [`En1993Snapshot`] back to its canonical `.dsl.semio` body. Canonical is the operative
-/// word: the committed example assets ARE this function's own output, which is why the identity
-/// scenario asserts byte-exactness rather than the no-byte-pass-through inequality.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_en1993_dsl(snapshot: &En1993Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
 
-/// 📦️ Decodes a [`En1993Snapshot`] from the binary `.pack.semio` envelope — an independently written
-/// codec from the DSL grammar above, which is what makes their agreement evidence that the document
-/// was parsed rather than copied.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_en1993_pack(bytes: &[u8]) -> Result<En1993Snapshot, String> {
-    <En1993Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
 
-/// 📦️ Encodes a [`En1993Snapshot`] to its binary `.pack.semio` envelope.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_en1993_pack(snapshot: &En1993Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;

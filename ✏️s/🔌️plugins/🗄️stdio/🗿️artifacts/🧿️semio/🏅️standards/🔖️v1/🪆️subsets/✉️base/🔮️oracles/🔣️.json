@@ -553,9 +553,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-animation-applied",
       "class": "handcrafted",
       "target": {
@@ -606,7 +605,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-audio-applied",
       "class": "handcrafted",
       "target": {
@@ -657,7 +655,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-flow-applied",
       "class": "handcrafted",
       "target": {
@@ -708,7 +705,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-model-applied",
       "class": "handcrafted",
       "target": {
@@ -759,7 +755,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-presentation-applied",
       "class": "handcrafted",
       "target": {
@@ -810,7 +805,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-value-applied",
       "class": "handcrafted",
       "target": {
@@ -861,7 +855,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-video-applied",
       "class": "handcrafted",
       "target": {
@@ -912,7 +905,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-image-applied",
       "class": "handcrafted",
       "target": {
@@ -963,7 +955,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-text-applied",
       "class": "handcrafted",
       "target": {
@@ -1014,7 +1005,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-table-applied",
       "class": "handcrafted",
       "target": {
@@ -1065,7 +1055,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-graph-applied",
       "class": "handcrafted",
       "target": {
@@ -1116,7 +1105,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-object-applied",
       "class": "handcrafted",
       "target": {
@@ -1167,7 +1155,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-kit-applied",
       "class": "handcrafted",
       "target": {
@@ -1218,7 +1205,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-document-applied",
       "class": "handcrafted",
       "target": {
@@ -1269,7 +1255,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-cad-applied",
       "class": "handcrafted",
       "target": {
@@ -1320,7 +1305,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-brep-applied",
       "class": "handcrafted",
       "target": {
@@ -1371,7 +1355,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-mesh-applied",
       "class": "handcrafted",
       "target": {
@@ -1422,7 +1405,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-drawing-applied",
       "class": "handcrafted",
       "target": {
@@ -1473,7 +1455,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-replaces-the-envelope-wrapping-a-value-subset",
       "class": "handcrafted",
       "target": {
@@ -1538,7 +1519,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-reasserts-the-value-envelope-unchanged",
       "class": "handcrafted",
       "target": {
@@ -1603,7 +1583,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-retypes-a-value-envelope-to-an-empty-image",
       "class": "handcrafted",
       "target": {
@@ -1668,7 +1647,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "apply-image-refuses-a-value-envelope",
       "class": "handcrafted",
       "target": {
@@ -1726,7 +1704,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "patch-snapshot-edits-the-value-arm-of-the-envelope",
       "class": "handcrafted",
       "target": {

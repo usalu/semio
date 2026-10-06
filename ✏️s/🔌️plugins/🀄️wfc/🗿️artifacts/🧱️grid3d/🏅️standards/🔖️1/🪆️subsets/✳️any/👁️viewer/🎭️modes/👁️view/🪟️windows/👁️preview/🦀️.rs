@@ -30,6 +30,7 @@ pub const SURFACE_ID: &str = "wfc.grid3d.view";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: BODY_KEY.into(),

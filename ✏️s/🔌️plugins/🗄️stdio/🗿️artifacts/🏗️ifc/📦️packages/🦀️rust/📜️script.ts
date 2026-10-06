@@ -4,7 +4,7 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-ifc", {
   snapshotSqliteTestBudgetMs: 120000,
   snapshotSqliteTests: [
-    "../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
-    "../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+    "../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+    "../../🏅️standards/4️⃣4/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
   ],
 });

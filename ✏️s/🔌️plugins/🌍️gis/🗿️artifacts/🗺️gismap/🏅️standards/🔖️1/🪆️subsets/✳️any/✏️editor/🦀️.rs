@@ -15,8 +15,9 @@ use crate::editor::gis2d::modes::edit;
 use crate::editor::gis2d::modes::edit::windows::map;
 use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
 use crate::editor::gis2d::terminology::gis2d_labels;
-use crate::op::GisMapMutation;
-use crate::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
+use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use crate::schema::{positions_operations, regions_operations, routes_operations};
+use crate::standards::v1::subsets::any::io::text::snapshot::{gis_map_document_from_descriptor_json};
 use crate::{artifact_kind, GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
@@ -592,7 +593,6 @@ pub fn gis_map_value_stamped_one_item_preparation_factory(
 struct Gis2dOneItemPreparation<P, M> {
     base: Option<store::SnapshotRead<P>>,
     mutation: Option<M>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(P, Vec<M>, M)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
@@ -628,9 +628,9 @@ where
         self.stamp.as_ref().map(|stamp| stamp.mutation_id.clone())
     }
 
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("GIS map retained preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("GIS map retained preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -647,7 +647,6 @@ where
         Ok(Box::new(Gis2dOneItemPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             prepared: None,
@@ -724,7 +723,7 @@ where
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -744,7 +743,7 @@ where
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️OneItemPreparation
@@ -884,11 +883,11 @@ impl ArtifactEditor for Gis2dPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::gis_map_envelope_decode_owner_bundle())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::gis_map_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::gis_map_document_store_owners())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::gis_map_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -904,7 +903,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::spr::gis_map_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::standards::v1::subsets::any::io::binary::mutations::gis_map_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {

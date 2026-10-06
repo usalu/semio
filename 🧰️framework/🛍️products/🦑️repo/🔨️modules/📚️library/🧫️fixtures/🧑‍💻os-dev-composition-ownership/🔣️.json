@@ -298,14 +298,14 @@
     },
     {
       "id": "scale-fixture-projection",
-      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📽️projection/🟦️.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📽️projection/🟦️.ts",
       "exports": [
         "renderScaleFixtureArtifacts"
       ]
     },
     {
       "id": "scale-fixture-publication",
-      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📤️publication/🟦️.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📤️publication/🟦️.ts",
       "exports": [
         "ScaleFixtureGenerateScript",
         "ScaleFixturePreviewGeneratedScript",
@@ -1249,9 +1249,9 @@
     {
       "id": "scale-profile-source-doc",
       "mode": "source-data",
-      "path": "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/🎭️profile/🦀️.rs",
+      "path": "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/🎭️profile/🦀️.rs",
       "requiredTokens": [
-        "🧫️fixtures/⚖️scale/📽️projection/🟦️.ts"
+        "🧪️testing/⚖️scale/📽️projection/🟦️.ts"
       ],
       "forbiddenTokens": [
         "🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
@@ -1264,7 +1264,7 @@
       "inputs": [
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/{📇️registry/🔄️refresh,🏗️build,📊️size}/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/{📽️projection,📤️publication}/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/{📽️projection,📤️publication}/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts"

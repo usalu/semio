@@ -15,7 +15,7 @@ mod subject {
 
     fn keywords(ctx: &Context) -> Result<Vec<String>, String> {
         Ok(ctx
-            .fixture_json(VECTORS)?
+            .snapshot_json(VECTORS)?
             .array("keywords")
             .into_iter()
             .map(|item| match item {

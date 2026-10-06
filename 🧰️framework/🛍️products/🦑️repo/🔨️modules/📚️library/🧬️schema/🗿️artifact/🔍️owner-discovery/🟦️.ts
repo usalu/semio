@@ -13,7 +13,7 @@ export function policyDiscoverArtifactSchemaOwners(repoRoot: string, operations:
     pending = ["✏️s/🔌️plugins", "🧰️framework"];
   const directories = (path: string) => {
     const source = policySourceDirectory(repoRoot, path, operations);
-    if (source.state === "directory") return source.entries.filter((entry) => entry.isDirectory && !entry.isSymbolicLink && !entry.name.startsWith(".") && !POLICY_SKIP_DIRS.has(entry.name) && entry.name !== "🗑️generated");
+    if (source.state === "directory") return source.entries.filter((entry) => entry.isDirectory && !entry.isSymbolicLink && !entry.name.startsWith(".") && !POLICY_SKIP_DIRS.has(entry.name) && !["🗑️generated", "🧫️fixtures", "🧪️tests"].includes(entry.name));
     if (source.state !== "missing") issues.push({ path, state: source.state });
     return [];
   };

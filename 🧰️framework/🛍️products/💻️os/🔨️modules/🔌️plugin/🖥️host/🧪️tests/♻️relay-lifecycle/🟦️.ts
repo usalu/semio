@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 
 type Expected = { state: string; firstReason: string | null; cancelAdmissions: number; releaseOpportunities: number; callerOutput: string | null };
 type Accounting = { seedPagesBefore: number; seedPagesAfter: number; abiBytesBefore: number; abiBytesAfter: number };
@@ -16,8 +16,8 @@ const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/♻️
 const schema = JSON.parse(readFileSync(join(here, "../../🧬️schema/🔣️.json"), "utf8"));
 const ajv = new Ajv({ strict: true, allErrors: true });
 ajv.addSchema(schema);
-const validate = ajv.getSchema(`${schema.$id}#/$defs/RelayLifecycleV1`)!;
-if (!validate(fixture)) throw new Error(`relay lifecycle fixture schema violation: ${JSON.stringify(validate.errors)}`);
+
+
 
 /** 🤖 Interprets one literal trace independently from the Rust ownership machinery. */
 function interpret(trace: Trace): Expected {

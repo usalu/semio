@@ -14,7 +14,7 @@ async fn import_snapshot_json_replaces_the_whole_document() {
     let mut replacement=crate::snapshot_from_mesh_json("", "obj-x", "X");
     replacement.objects[0].mesh=Some(crate::managed_mesh_child_handle("obj-x",&mesh_json));
     replacement.objects[0].mesh_state=Some(mesh_json);
-    let json = serde_json::to_string(&Into::<serde_json::Value>::into(semio_framework_value::ToValue::to_value(&replacement))).unwrap();
+    let json = crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(&replacement);
     let snapshot = default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);

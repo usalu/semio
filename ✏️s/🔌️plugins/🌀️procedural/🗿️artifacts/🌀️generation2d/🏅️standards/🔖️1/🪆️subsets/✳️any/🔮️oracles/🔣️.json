@@ -531,9 +531,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "update-camera-applied",
       "class": "handcrafted",
       "target": {

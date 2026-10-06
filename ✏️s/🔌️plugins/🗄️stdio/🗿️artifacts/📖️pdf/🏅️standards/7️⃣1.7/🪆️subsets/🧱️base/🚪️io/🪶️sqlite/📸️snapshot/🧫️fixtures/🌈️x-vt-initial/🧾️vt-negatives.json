@@ -1,0 +1,17 @@
+{
+  "kind": "s.stdio.pdf",
+  "standard": "1.7",
+  "subset": "vt",
+  "cases": [
+    "root-node-missing",
+    "root-node-direct",
+    "root-type-wrong",
+    "leaf-parent-missing",
+    "leaf-parent-wrong",
+    "leaf-start-missing",
+    "leaf-start-dangling",
+    "leaf-start-outside-page-tree",
+    "child-cycle",
+    "duplicate-object-id"
+  ]
+}

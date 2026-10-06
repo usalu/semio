@@ -1,4 +1,4 @@
-//! 🧪️ `create-node` fixture — `🚫️rejects`.
+//! 🧪️ `create-node` snapshot — `🚫️rejects`.
 //!
 //! Re-creating a capsule the board already holds is a FATAL `mutation.duplicate-id`, not the Error-level miss the addressing verbs raise.
 //!
@@ -53,7 +53,7 @@ fn the_refusal_is_the_declared_one() {
 /// ↩️ `create-node`'s inverse is PAYLOAD-derived, so a refused create still answers a `delete-node` of the id it was asked to create.
 #[test]
 fn inverse_of_a_refusal() {
-    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse snapshot");
     assert_eq!(inverse.len(), 1, "create-node/rejects-a-capsule-id-the-tower-already-holds: got {inverse:?}");
 }
 

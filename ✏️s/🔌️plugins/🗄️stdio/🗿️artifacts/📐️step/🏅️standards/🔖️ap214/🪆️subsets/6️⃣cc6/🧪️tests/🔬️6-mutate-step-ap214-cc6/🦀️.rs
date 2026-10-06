@@ -37,7 +37,7 @@ const INPUT: &str = "shared://🌲️hexagonal-cut-concrete-forest-left-ap214/�
 /// 🧫️ Copies the immutable committed export into the work directory and returns the mutable copy's
 /// bytes; the committed fixture is never written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.stp"))?;
+    let copy = ctx.copy_input(INPUT, Some("input.stp"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

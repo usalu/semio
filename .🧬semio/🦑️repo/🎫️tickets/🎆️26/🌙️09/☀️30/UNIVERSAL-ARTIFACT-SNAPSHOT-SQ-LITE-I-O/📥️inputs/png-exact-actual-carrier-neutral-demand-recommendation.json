@@ -1,0 +1,78 @@
+{
+  "purpose": "Unimplemented closed neutral PNG exact-source demand recommendation; no runtime qualification",
+  "schemaBytes": 7206,
+  "tableWidths": {
+    "png_background": 4,
+    "png_chromaticity": 9,
+    "png_chunk": 4,
+    "png_deflate_block": 9,
+    "png_deflate_code": 4,
+    "png_deflate_length": 5,
+    "png_deflate_token": 7,
+    "png_document": 3,
+    "png_gamma": 2,
+    "png_idat": 3,
+    "png_ihdr": 8,
+    "png_inflated_tail": 4,
+    "png_literal_octet": 4,
+    "png_packed_remainder": 3,
+    "png_palette": 6,
+    "png_physical": 4,
+    "png_sample": 4,
+    "png_scanline": 9,
+    "png_srgb": 2,
+    "png_stream": 7,
+    "png_text": 7,
+    "png_time": 7,
+    "png_transparency": 4,
+    "png_unknown_octet": 4
+  },
+  "cases": [
+    {
+      "id": "nativeCanonicalAsset",
+      "asset": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png",
+      "sha256": "a9e37b14842b4e6c0413da868aa7214ce1cfceaa690bdc579119e997f5e5f392",
+      "rawBytes": 145,
+      "rows": 45,
+      "valueBytes": 1612,
+      "expectedRole": "native"
+    },
+    {
+      "id": "sourceJsonNativeImage",
+      "fixture": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+      "sha256": "a39b62ca21cda8572574a8d4c454c9d2f6f9eabd542b6ed44ef38b5f9e9d3a2f",
+      "rawBytes": 120,
+      "rows": 28,
+      "valueBytes": 1079,
+      "expectedRole": "native"
+    },
+    {
+      "id": "emptyLiteral",
+      "literalBytes": [],
+      "rawBytes": 0,
+      "rows": 1,
+      "valueBytes": 24,
+      "expectedRole": "literal"
+    },
+    {
+      "id": "invalidRawLiteral",
+      "literalBytes": [
+        0,
+        255,
+        1
+      ],
+      "rawBytes": 3,
+      "rows": 4,
+      "valueBytes": 120,
+      "expectedRole": "literal"
+    }
+  ],
+  "sourceConstructor": "{schema: literal stdio.png, bytes: actual case carrier bytes}; parsePngSnapshot as authored",
+  "nativeConstructor": "PngSnapshot {schema: literal stdio.png, bytes: actual same case carrier bytes}; preserve original decode_png canonical factory separately",
+  "requiredLaws": [
+    "all physical rows/cells/schema/widths equal independent BunSQLite literal authority",
+    "exact plus isolated one-short semantic rows/value/schema/tables/columns in SQL and BOTH native/public forms",
+    "byte-for-byte owner roundtrip including canonical IDAT partitions/private chunks and intentionally invalid/empty raw literal carriers",
+    "preserve all original physical grants/refusal/cancellation tests"
+  ]
+}

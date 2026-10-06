@@ -259,7 +259,7 @@ mod decode {
 mod subject {
     use super::{decode, number, numbers, significant, significant_relative, DOFS, STATIC_TOLERANCE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::fem3d_mutation_report_json;
+    use semio_s_artifact_fem_3d::standards::v1::subsets::any::io::text::mutations::fem3d_mutation_report_json;
     use crate::Fem3dSnapshot;
     use semio_s_artifact_fem_3d::model::{Dof, StaticResult};
     use semio_repo_test_host::law;
@@ -279,14 +279,14 @@ mod subject {
 
     /// 🧫️ The declared JSON fixture this scenario names.
     fn fixture(ctx: &Context, needle: &str) -> Result<Json, String> {
-        ctx.fixture_json(&uri_in(ctx, needle)?)
+        ctx.input_json(&uri_in(ctx, needle)?)
     }
 
     /// 🧫️ The declared fixture's bytes as UTF-8 text — needed where a production entry point takes
     /// the document as text rather than as a value.
     fn fixture_text(ctx: &Context, needle: &str) -> Result<String, String> {
         let uri = uri_in(ctx, needle)?;
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
     }
 
     /// 🔮️ This scenario's slice of the committed third-party reference — the answers `🐍️.py`

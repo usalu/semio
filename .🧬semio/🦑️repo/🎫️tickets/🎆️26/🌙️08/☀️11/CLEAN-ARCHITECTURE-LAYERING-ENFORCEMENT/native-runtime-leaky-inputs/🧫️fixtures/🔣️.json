@@ -1,0 +1,572 @@
+{
+  "cases": [
+    {
+      "name": "same-failed-attempt-immediate-final",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "final",
+          "status": "FAIL",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 1,
+        "executed": 1,
+        "passed": 0,
+        "failed": 1,
+        "uncompleted": 0,
+        "leaky": 0
+      }
+    },
+    {
+      "name": "same-passed-attempt-immediate-final",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "PASS",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "final",
+          "status": "PASS",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "uncompleted": 0,
+        "leaky": 0
+      }
+    },
+    {
+      "name": "real-retry-preserves-both-attempts",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 2,
+          "phase": "immediate",
+          "status": "PASS",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 2,
+          "phase": "final",
+          "status": "PASS",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 2,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "uncompleted": 0,
+        "leaky": 0
+      }
+    },
+    {
+      "name": "all-real-retries-fail",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 2,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 2,
+          "phase": "final",
+          "status": "FAIL",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 2,
+        "executed": 1,
+        "passed": 0,
+        "failed": 1,
+        "uncompleted": 0,
+        "leaky": 0
+      }
+    },
+    {
+      "name": "same-phase-repetition-is-ambiguous",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "refusal": "AMBIGUOUS_PRESENTATION"
+      }
+    },
+    {
+      "name": "same-attempt-status-conflict",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "final",
+          "status": "PASS",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "refusal": "CONFLICTING_ATTEMPT"
+      }
+    },
+    {
+      "name": "same-law-distinct-binaries",
+      "selected": 2,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "final",
+          "status": "PASS",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "integration",
+          "law": "x",
+          "index": 2,
+          "attempt": 1,
+          "phase": "final",
+          "status": "FAIL",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 2,
+        "executed": 2,
+        "passed": 1,
+        "failed": 1,
+        "uncompleted": 0,
+        "leaky": 0
+      }
+    },
+    {
+      "name": "retry-predecessor-is-not-invented",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 2,
+          "phase": "final",
+          "status": "PASS",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "refusal": "MISSING_ATTEMPT"
+      }
+    },
+    {
+      "name": "fail-fast-keeps-uncompleted",
+      "selected": 4,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "final",
+          "status": "FAIL",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 1,
+        "executed": 1,
+        "passed": 0,
+        "failed": 1,
+        "uncompleted": 3,
+        "leaky": 0
+      }
+    },
+    {
+      "name": "leaky-pass-remains-leaky",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "LEAK",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 1,
+        "executed": 1,
+        "passed": 1,
+        "leaky": 1,
+        "failed": 0,
+        "uncompleted": 0
+      }
+    },
+    {
+      "name": "duplicate-leaky-final-presentation",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "LEAK",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "final",
+          "status": "LEAK",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 1,
+        "executed": 1,
+        "passed": 1,
+        "leaky": 1,
+        "failed": 0,
+        "uncompleted": 0
+      }
+    },
+    {
+      "name": "pass-leak-same-attempt-conflict",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "PASS",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "final",
+          "status": "LEAK",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "refusal": "CONFLICTING_ATTEMPT"
+      }
+    },
+    {
+      "name": "failed-retry-leaky-success",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 2,
+          "phase": "immediate",
+          "status": "LEAK",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 2,
+          "phase": "final",
+          "status": "LEAK",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 2,
+        "executed": 1,
+        "passed": 1,
+        "leaky": 1,
+        "failed": 0,
+        "uncompleted": 0
+      }
+    },
+    {
+      "name": "leaky-retry-predecessor-missing",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 2,
+          "phase": "immediate",
+          "status": "LEAK",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "refusal": "MISSING_ATTEMPT"
+      }
+    },
+    {
+      "name": "leaky-phase-repetition-ambiguous",
+      "selected": 1,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "LEAK",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "LEAK",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "refusal": "AMBIGUOUS_PRESENTATION"
+      }
+    },
+    {
+      "name": "mixed-fail-fast-leaky-accounting",
+      "selected": 5,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "PASS",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "y",
+          "index": 2,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "LEAK",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "z",
+          "index": 3,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 3,
+        "executed": 3,
+        "passed": 2,
+        "leaky": 1,
+        "failed": 1,
+        "uncompleted": 2
+      }
+    },
+    {
+      "name": "same-law-distinct-run-binary-index",
+      "selected": 4,
+      "records": [
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "LEAK",
+          "duration": "1ms"
+        },
+        {
+          "run": "b",
+          "binary": "lib",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "PASS",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "integration",
+          "law": "x",
+          "index": 1,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "FAIL",
+          "duration": "1ms"
+        },
+        {
+          "run": "a",
+          "binary": "lib",
+          "law": "x",
+          "index": 2,
+          "attempt": 1,
+          "phase": "immediate",
+          "status": "LEAK",
+          "duration": "1ms"
+        }
+      ],
+      "expected": {
+        "attempts": 4,
+        "executed": 4,
+        "passed": 3,
+        "leaky": 2,
+        "failed": 1,
+        "uncompleted": 0
+      }
+    }
+  ]
+}

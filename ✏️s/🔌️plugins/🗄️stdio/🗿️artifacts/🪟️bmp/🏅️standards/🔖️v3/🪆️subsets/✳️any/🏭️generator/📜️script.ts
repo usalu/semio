@@ -25,7 +25,7 @@
 // rewrite the expectation it is measured against.
 //
 //   bun 📜️script.ts generate  [--only <fixture-id>]     # writes each handpicked fixture directory
-//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the fixtureManifests block (JSON)
+//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the testEvidence block (JSON)
 //
 // @see ../../../../../../../../📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🏭️generator/📜️script.ts —
 //      the sibling generator this file's CLI/recipe shape is mirrored from.
@@ -97,7 +97,6 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
   const files = [fileEntry("expected-before-bmp", dir, "⬅️before.bmp", recipe.directoryName), fileEntry("expected-after-bmp", dir, "➡️after.bmp", recipe.directoryName)];
 
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.bmp", standard: "v3", subset: "any" },
@@ -182,7 +181,6 @@ print(kind + ': written')
           files.push({ role, path: `${FIXTURE_PATH_PREFIX}${kind.directoryName}/${name}`, mediaType: "image/bmp", sha256: contentDigest(bytes), bytes: bytes.length });
         }
         entries.push({
-          schema: "semio.repository-test.fixture/v2",
           id: `header-${kind.id}`,
           class: "third-party-generated",
           target: { artifact: "s.stdio.bmp", standard: "v3", subset: "any" },

@@ -1,0 +1,12 @@
+import {readFileSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import assert from "node:assert/strict";
+const repo="/Users/ueli/Documents/semio";
+const path=join(repo,"✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs");
+const before=readFileSync(path,"utf8");
+assert.equal(before.split("protocol::DslValue").length,6);
+const after=before.replaceAll("protocol::DslValue","semio_framework_value::DslValue");
+writeFileSync(join(import.meta.dir,"guarded-pairs.json"),JSON.stringify([{path,before,after}],null,2)+"\n");
+assert.equal(readFileSync(path,"utf8"),before);
+writeFileSync(path,after);
+console.log("[DEBUG] Curation original five Protocol value fixture callers joined direct first-party identity paths=1 assertions_unchanged=true");

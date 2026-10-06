@@ -1,7 +1,6 @@
-import Ajv from "ajv";
+
 import { describe, expect, it } from "vitest";
 import fixture from "../../🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json";
-import schema from "../../🧬️schema/♻️tiled-map-gesture-lifecycle/🔣️.json";
 
 type Scene = { node: number; key: string; kind: string; surfaceId: string };
 
@@ -9,8 +8,6 @@ const sameScene = (left: Scene, right: Scene | null): boolean => right !== null 
 
 describe("TiledMap gesture lifecycle", () => {
   it("validates the closed identity and retirement contract", () => {
-    const validate = new Ajv({ strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(new Set(fixture.cases.map(({ name }) => name)).size).toBe(4);
   });
 

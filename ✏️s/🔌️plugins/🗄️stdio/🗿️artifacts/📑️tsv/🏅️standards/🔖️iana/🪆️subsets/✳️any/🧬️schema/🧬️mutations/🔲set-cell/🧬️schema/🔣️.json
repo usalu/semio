@@ -26,7 +26,8 @@
         "description": {
           "en": "Zero-based record (line) of the cell.",
           "de": "Nullbasierter Datensatz (Zeile) der Zelle."
-        }
+        },
+        "step": 1
       }
     },
     "fieldIndex": {
@@ -41,11 +42,26 @@
         "description": {
           "en": "Zero-based column of the cell.",
           "de": "Nullbasierte Spalte der Zelle."
-        }
+        },
+        "step": 1
       }
     },
     "value": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Field value",
+          "de": "Feldwert"
+        },
+        "description": {
+          "en": "Text the field holds afterwards; a tab or a line break cannot be part of a TSV field.",
+          "de": "Text, den das Feld danach enthält; Tabulator und Zeilenumbruch können nicht Teil eines TSV-Felds sein."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

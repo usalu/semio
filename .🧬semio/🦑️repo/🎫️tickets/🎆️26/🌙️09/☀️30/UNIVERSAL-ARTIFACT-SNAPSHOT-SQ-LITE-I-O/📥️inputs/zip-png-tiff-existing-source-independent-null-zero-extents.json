@@ -1,0 +1,1321 @@
+[
+  {
+    "schema": "stdio.png",
+    "id": "sourceJsonNativeImage",
+    "rows": 28,
+    "valueBytes": 1079,
+    "schemaBytes": 7206,
+    "tables": [
+      {
+        "table": "png_background",
+        "rows": 1,
+        "semanticBytes": 32,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_chromaticity",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_chunk",
+        "rows": 6,
+        "semanticBytes": 168,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_deflate_block",
+        "rows": 1,
+        "semanticBytes": 72,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_deflate_code",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_deflate_length",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "png_deflate_token",
+        "rows": 3,
+        "semanticBytes": 120,
+        "nullCells": 6,
+        "width": 7
+      },
+      {
+        "table": "png_document",
+        "rows": 1,
+        "semanticBytes": 23,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_gamma",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 2
+      },
+      {
+        "table": "png_idat",
+        "rows": 1,
+        "semanticBytes": 24,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_ihdr",
+        "rows": 1,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 8
+      },
+      {
+        "table": "png_inflated_tail",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_literal_octet",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_packed_remainder",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_palette",
+        "rows": 4,
+        "semanticBytes": 192,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "png_physical",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_sample",
+        "rows": 4,
+        "semanticBytes": 128,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_scanline",
+        "rows": 1,
+        "semanticBytes": 72,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_srgb",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 2
+      },
+      {
+        "table": "png_stream",
+        "rows": 1,
+        "semanticBytes": 56,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_text",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_time",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_transparency",
+        "rows": 4,
+        "semanticBytes": 128,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_unknown_octet",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      }
+    ],
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": [],
+    "asset": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png",
+    "sourceMatchesNativeAsset": false,
+    "rawBytes": 145
+  },
+  {
+    "schema": "stdio.png",
+    "id": "emptyLiteral",
+    "rows": 1,
+    "valueBytes": 24,
+    "schemaBytes": 7206,
+    "tables": [
+      {
+        "table": "png_background",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_chromaticity",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_chunk",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_deflate_block",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_deflate_code",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_deflate_length",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "png_deflate_token",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_document",
+        "rows": 1,
+        "semanticBytes": 24,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_gamma",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 2
+      },
+      {
+        "table": "png_idat",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_ihdr",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 8
+      },
+      {
+        "table": "png_inflated_tail",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_literal_octet",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_packed_remainder",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_palette",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "png_physical",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_sample",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_scanline",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_srgb",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 2
+      },
+      {
+        "table": "png_stream",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_text",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_time",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_transparency",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_unknown_octet",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      }
+    ],
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "schema": "stdio.png",
+    "id": "invalidRawLiteral",
+    "rows": 4,
+    "valueBytes": 120,
+    "schemaBytes": 7206,
+    "tables": [
+      {
+        "table": "png_background",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_chromaticity",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_chunk",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_deflate_block",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_deflate_code",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_deflate_length",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "png_deflate_token",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_document",
+        "rows": 1,
+        "semanticBytes": 24,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_gamma",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 2
+      },
+      {
+        "table": "png_idat",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_ihdr",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 8
+      },
+      {
+        "table": "png_inflated_tail",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_literal_octet",
+        "rows": 3,
+        "semanticBytes": 96,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_packed_remainder",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_palette",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "png_physical",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_sample",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_scanline",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_srgb",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 2
+      },
+      {
+        "table": "png_stream",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_text",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_time",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_transparency",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_unknown_octet",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      }
+    ],
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "schema": "stdio.tiff",
+    "id": "sourceAllValueKinds",
+    "rows": 59,
+    "valueBytes": 2222,
+    "schemaBytes": 3886,
+    "tables": [
+      {
+        "table": "tiff_ascii_value",
+        "rows": 8,
+        "semanticBytes": 256,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_byte_value",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_chunk",
+        "rows": 3,
+        "semanticBytes": 80,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_document",
+        "rows": 1,
+        "semanticBytes": 27,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "tiff_double_value",
+        "rows": 7,
+        "semanticBytes": 320,
+        "nullCells": 2,
+        "width": 6
+      },
+      {
+        "table": "tiff_float_value",
+        "rows": 7,
+        "semanticBytes": 320,
+        "nullCells": 2,
+        "width": 6
+      },
+      {
+        "table": "tiff_ifd",
+        "rows": 2,
+        "semanticBytes": 91,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "tiff_long_value",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_rational_value",
+        "rows": 2,
+        "semanticBytes": 80,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "tiff_short_value",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_signed_byte_value",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_signed_long_value",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_signed_rational_value",
+        "rows": 2,
+        "semanticBytes": 80,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "tiff_signed_short_value",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_tag",
+        "rows": 13,
+        "semanticBytes": 520,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "tiff_undefined_value",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      }
+    ],
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": [],
+    "factoryAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+  },
+  {
+    "schema": "stdio.tiff",
+    "id": "emptyIfds",
+    "rows": 1,
+    "valueBytes": 27,
+    "schemaBytes": 3886,
+    "tables": [
+      {
+        "table": "tiff_ascii_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_byte_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_chunk",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_document",
+        "rows": 1,
+        "semanticBytes": 27,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "tiff_double_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "tiff_float_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "tiff_ifd",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "tiff_long_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_rational_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "tiff_short_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_signed_byte_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_signed_long_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_signed_rational_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "tiff_signed_short_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "tiff_tag",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "tiff_undefined_value",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      }
+    ],
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "schema": "stdio.zip",
+    "id": "full",
+    "rows": 30,
+    "valueBytes": 1151,
+    "schemaBytes": 3963,
+    "tables": [
+      {
+        "table": "zip_archive",
+        "rows": 1,
+        "semanticBytes": 36,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_extra_field",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_extra_field_byte",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_header",
+        "rows": 2,
+        "semanticBytes": 175,
+        "nullCells": 0,
+        "width": 11
+      },
+      {
+        "table": "zip_central_legacy_comment_byte",
+        "rows": 5,
+        "semanticBytes": 160,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_legacy_name_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_entry",
+        "rows": 2,
+        "semanticBytes": 108,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "zip_entry_byte",
+        "rows": 4,
+        "semanticBytes": 128,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_local_extra_field",
+        "rows": 2,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_local_extra_field_byte",
+        "rows": 3,
+        "semanticBytes": 96,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_local_header",
+        "rows": 2,
+        "semanticBytes": 96,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "zip_local_legacy_name_byte",
+        "rows": 5,
+        "semanticBytes": 160,
+        "nullCells": 0,
+        "width": 4
+      }
+    ],
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "schema": "stdio.zip",
+    "id": "emptyEntries",
+    "rows": 1,
+    "valueBytes": 36,
+    "schemaBytes": 3963,
+    "tables": [
+      {
+        "table": "zip_archive",
+        "rows": 1,
+        "semanticBytes": 36,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_extra_field",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_extra_field_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_header",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 11
+      },
+      {
+        "table": "zip_central_legacy_comment_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_legacy_name_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_entry",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "zip_entry_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_local_extra_field",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_local_extra_field_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_local_header",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "zip_local_legacy_name_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      }
+    ],
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  },
+  {
+    "schema": "stdio.zip",
+    "id": "absentEntryMetadata",
+    "rows": 11,
+    "valueBytes": 528,
+    "schemaBytes": 3963,
+    "tables": [
+      {
+        "table": "zip_archive",
+        "rows": 1,
+        "semanticBytes": 36,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_extra_field",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_extra_field_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_header",
+        "rows": 2,
+        "semanticBytes": 160,
+        "nullCells": 0,
+        "width": 11
+      },
+      {
+        "table": "zip_central_legacy_comment_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_central_legacy_name_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_entry",
+        "rows": 2,
+        "semanticBytes": 108,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "zip_entry_byte",
+        "rows": 4,
+        "semanticBytes": 128,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_local_extra_field",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_local_extra_field_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "zip_local_header",
+        "rows": 2,
+        "semanticBytes": 96,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "zip_local_legacy_name_byte",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      }
+    ],
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": [],
+    "defaultMetadata": [
+      {
+        "compressionMethod": 8,
+        "local": {
+          "versionNeeded": 20,
+          "flags": 2048,
+          "modifiedTime": 0,
+          "modifiedDate": 33,
+          "extraFields": []
+        },
+        "central": {
+          "versionMadeBy": 45,
+          "versionNeeded": 20,
+          "flags": 2048,
+          "modifiedTime": 0,
+          "modifiedDate": 33,
+          "extraFields": [],
+          "comment": "",
+          "internalAttributes": 0,
+          "externalAttributes": 0
+        },
+        "dataDescriptorSignature": false
+      },
+      {
+        "compressionMethod": 8,
+        "local": {
+          "versionNeeded": 20,
+          "flags": 2048,
+          "modifiedTime": 0,
+          "modifiedDate": 33,
+          "extraFields": []
+        },
+        "central": {
+          "versionMadeBy": 45,
+          "versionNeeded": 20,
+          "flags": 2048,
+          "modifiedTime": 0,
+          "modifiedDate": 33,
+          "extraFields": [],
+          "comment": "",
+          "internalAttributes": 0,
+          "externalAttributes": 0
+        },
+        "dataDescriptorSignature": false
+      }
+    ]
+  },
+  {
+    "schema": "stdio.png",
+    "id": "nativeCanonicalAsset",
+    "asset": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png",
+    "rawBytes": 145,
+    "sourceFixtureBytes": 120,
+    "firstMismatch": 19,
+    "rows": 45,
+    "valueBytes": 1612,
+    "schemaBytes": 7206,
+    "tables": [
+      {
+        "table": "png_background",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_chromaticity",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_chunk",
+        "rows": 6,
+        "semanticBytes": 168,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_deflate_block",
+        "rows": 1,
+        "semanticBytes": 72,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_deflate_code",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_deflate_length",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 5
+      },
+      {
+        "table": "png_deflate_token",
+        "rows": 10,
+        "semanticBytes": 400,
+        "nullCells": 20,
+        "width": 7
+      },
+      {
+        "table": "png_document",
+        "rows": 1,
+        "semanticBytes": 23,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_gamma",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 2
+      },
+      {
+        "table": "png_idat",
+        "rows": 2,
+        "semanticBytes": 48,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_ihdr",
+        "rows": 1,
+        "semanticBytes": 64,
+        "nullCells": 0,
+        "width": 8
+      },
+      {
+        "table": "png_inflated_tail",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_literal_octet",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_packed_remainder",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 3
+      },
+      {
+        "table": "png_palette",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 6
+      },
+      {
+        "table": "png_physical",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_sample",
+        "rows": 8,
+        "semanticBytes": 256,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_scanline",
+        "rows": 1,
+        "semanticBytes": 72,
+        "nullCells": 0,
+        "width": 9
+      },
+      {
+        "table": "png_srgb",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 2
+      },
+      {
+        "table": "png_stream",
+        "rows": 1,
+        "semanticBytes": 56,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_text",
+        "rows": 1,
+        "semanticBytes": 37,
+        "nullCells": 1,
+        "width": 7
+      },
+      {
+        "table": "png_time",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 7
+      },
+      {
+        "table": "png_transparency",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0,
+        "width": 4
+      },
+      {
+        "table": "png_unknown_octet",
+        "rows": 13,
+        "semanticBytes": 416,
+        "nullCells": 0,
+        "width": 4
+      }
+    ],
+    "integrity": {
+      "integrity_check": "ok"
+    },
+    "foreignKeys": []
+  }
+]

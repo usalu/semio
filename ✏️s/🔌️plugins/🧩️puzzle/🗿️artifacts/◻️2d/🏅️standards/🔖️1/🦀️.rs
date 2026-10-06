@@ -2,7 +2,7 @@
 //! `📓️terra-fleet-trinity-recipe-report.md`), mounts subset `any`. `mimes`/`extensions`: no real MIME
 //! registration exists for `s.puzzle2d` outside the old `ArtifactDefinition`'s capability rows
 //! (`definition()`, kept — debt D1) — that channel only ever claimed a codec id
-//! (`puzzle.2d.fixture:puzzle2d-play`) and an extension (`puzzle2d-play`, the EDITOR's own
+//! (`board.ports.directed.v1:puzzle2d-play`) and an extension (`puzzle2d-play`, the EDITOR's own
 //! `Puzzle2dPlaySnapshot::EXTENSION`, not the base `Puzzle2dSnapshot`'s `"puzzle2d"` — see this
 //! artifact root's own `definition()` D2 comment), never a mime type.
 //! `mimes: ["application/vnd.semio.puzzle2d+json"]` is a documented synthesis (matches `🗒️note`/

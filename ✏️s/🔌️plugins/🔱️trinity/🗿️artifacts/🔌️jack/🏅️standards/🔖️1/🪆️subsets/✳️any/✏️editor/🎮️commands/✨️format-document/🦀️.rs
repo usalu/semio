@@ -2,7 +2,7 @@
 
 use crate::core;
 use crate::standards::v1::subsets::any::schema::mutations::set_query;
-use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use semio_framework_plugin::{Emit, NoConfigMutation};
 
 /// ✨️ Reformats the document's query as one undoable `set-query`; a query that does not parse, or is already formatted,

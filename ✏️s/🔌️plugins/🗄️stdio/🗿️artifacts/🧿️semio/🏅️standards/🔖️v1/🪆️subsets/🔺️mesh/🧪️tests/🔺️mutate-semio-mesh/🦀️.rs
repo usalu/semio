@@ -41,8 +41,15 @@ mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::mutations::{apply_semio_mesh_mutation, decode_semio_mesh_mutation_json, inverse_semio_mesh_mutation, SemioMeshMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{decode_mesh_pack, decode_semio_mesh_snapshot_json, encode_mesh_pack, encode_semio_mesh_snapshot_json, parse_mesh_dsl, print_mesh_dsl, SemioMeshSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::mutations::{apply_semio_mesh_mutation, inverse_semio_mesh_mutation, SemioMeshMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::mutations::{decode_semio_mesh_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::binary::snapshot::{decode_mesh_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::binary::snapshot::{encode_mesh_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::snapshot::{print_mesh_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::snapshot::{parse_mesh_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::snapshot::{decode_semio_mesh_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::snapshot::{encode_semio_mesh_snapshot_json};
 
     //#region 🔖️Input
     /// 🔺️ The real derived model — 271 meshes and 459 primitives read once out of the committed
@@ -67,21 +74,21 @@ mod subject {
 
     /// 🔺️ The real derived model, parsed through this repository's own DSL codec.
     fn artifact(ctx: &Context) -> Result<SemioMeshSnapshot, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(ARTIFACT_DSL)?).map_err(|error| format!("the derived model artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(ARTIFACT_DSL)?).map_err(|error| format!("the derived model artifact is not UTF-8: {error}"))?;
         parse_mesh_dsl(&text).map_err(|error| error.to_string())
     }
 
     /// 📜️ The scenario's own committed mutation payload — the feature owns the vector.
     fn payload(ctx: &Context) -> Result<SemioMeshMutation, String> {
         let uri = step_uris(ctx, "shared://🔺️mutate-semio-mesh/").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")).ok_or_else(|| format!("{}: the scenario names no mutation payload", ctx.scenario.id))?;
-        let text = String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))?;
         decode_semio_mesh_mutation_json(&text).map_err(|error| format!("{}: the mutation payload must decode: {error}", ctx.scenario.id))
     }
 
     /// 🧫️ One committed specification-vector file, read as text and decoded as a snapshot.
     fn vector(ctx: &Context, position: usize, label: &str) -> Result<String, String> {
         let uri = step_uris(ctx, "shared://🧬️mutations/").into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} fixture", ctx.scenario.id))?;
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("{uri} is not UTF-8: {error}"))
     }
 
     fn apply(current: &mut SemioMeshSnapshot, step: &SemioMeshMutation, what: &str) -> Result<(), String> {
@@ -248,7 +255,7 @@ mod subject {
     /// must match were written by the other implementation, and the digests of what each side
     /// emitted are what the runner compares.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let dsl_bytes = ctx.fixture_bytes(ARTIFACT_DSL)?;
+        let dsl_bytes = ctx.input_bytes(ARTIFACT_DSL)?;
         let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: the derived model artifact is not UTF-8: {error}"))?;
         let parsed = parse_mesh_dsl(&text).map_err(|error| error.to_string())?;
         let printed = print_mesh_dsl(&parsed);
@@ -257,7 +264,7 @@ mod subject {
         if reparsed != parsed {
             return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
         }
-        let pack_bytes = ctx.fixture_bytes(ARTIFACT_PACK)?;
+        let pack_bytes = ctx.input_bytes(ARTIFACT_PACK)?;
         let unpacked = decode_mesh_pack(&pack_bytes).map_err(|error| error.to_string())?;
         if unpacked != parsed {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different model than the committed text artifact", &unpacked, &parsed));

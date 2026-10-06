@@ -1,5 +1,4 @@
 {
-  "schema": "semio.framework.history.branch-provenance/v1",
   "vectors": [
     {
       "id": "trunk",

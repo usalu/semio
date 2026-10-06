@@ -1,0 +1,1045 @@
+{
+  "schemaVersion": 2,
+  "roots": [
+    "general",
+    "specific",
+    "specific/plugins",
+    "📝owner"
+  ],
+  "cases": [
+    {
+      "id": "method-join",
+      "source": "fn f() { let p = root.join(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 27,
+          "end": 42,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "method-push",
+      "source": "fn f() { root.push(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "push",
+          "context": "method",
+          "start": 19,
+          "end": 34,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "qualified-path",
+      "source": "fn f() { let p = std::path::Path::new(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "std::path::Path::new",
+          "context": "qualified",
+          "start": 38,
+          "end": 53,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "qualified-pathbuf",
+      "source": "fn f() { let p = std::path::PathBuf::from(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "std::path::PathBuf::from",
+          "context": "qualified",
+          "start": 42,
+          "end": 57,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "qualified-fs",
+      "source": "fn f() { std::fs::read_to_string(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "std::fs::read_to_string",
+          "context": "qualified",
+          "start": 33,
+          "end": 48,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "unicode-escape",
+      "source": "fn f() { root.join(\"\\u{1f4dd}owner/data\"); }",
+      "expected": [
+        {
+          "value": "📝owner/data",
+          "path": "📝owner/data",
+          "root": "📝owner",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 40,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "raw-hashes",
+      "source": "fn f() { root.join(r##\"specific/data\"##); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 39,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "byte-literal",
+      "source": "fn f() { root.join(b\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 35,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "raw-byte-literal",
+      "source": "fn f() { root.join(br#\"specific/data\"#); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 38,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "windows-separator",
+      "source": "fn f() { root.join(\"specific\\\\plugins\\\\data\"); }",
+      "expected": [
+        {
+          "value": "specific\\plugins\\data",
+          "path": "specific/plugins/data",
+          "root": "specific/plugins",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 44,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "relative-prefix",
+      "source": "fn f() { root.join(\"../.././specific/data\"); }",
+      "expected": [
+        {
+          "value": "../.././specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 42,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "longest-root",
+      "source": "fn f() { root.join(\"specific/plugins/data\"); }",
+      "expected": [
+        {
+          "value": "specific/plugins/data",
+          "path": "specific/plugins/data",
+          "root": "specific/plugins",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 42,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "traversal-after-owner",
+      "source": "fn f() { root.join(\"specific/../general/data\"); }",
+      "expected": [
+        {
+          "value": "specific/../general/data",
+          "path": "specific/../general/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 45,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "owner-directory",
+      "source": "fn f() { root.join(\"specific\"); }",
+      "expected": [
+        {
+          "value": "specific",
+          "path": "specific",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 19,
+          "end": 29,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "line-and-unicode",
+      "source": "fn f() {\n let x = \"🧪\"; root.join(\"specific/data\");\n}",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 34,
+          "end": 49,
+          "line": 2,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "nested-call",
+      "source": "fn f() { std::fs::read(root.join(\"specific/data\")); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 33,
+          "end": 48,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "only-first-fs-argument",
+      "source": "fn f() { std::fs::write(\"general/data\", \"specific/data\"); }",
+      "expected": [
+        {
+          "value": "general/data",
+          "path": "general/data",
+          "root": "general",
+          "call": "std::fs::write",
+          "context": "qualified",
+          "start": 24,
+          "end": 38,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "unresolved-custom-receiver",
+      "source": "fn f() { custom.join(\"specific/data\"); }",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 21,
+          "end": 36,
+          "line": 1,
+          "origin": {
+            "kind": "literal"
+          }
+        }
+      ],
+      "sourceScope": "file"
+    },
+    {
+      "id": "comment",
+      "source": "// root.join(\"specific/data\")\nfn f() { /* root.join(\"specific/data\"); /* nested */ */ }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "diagnostic",
+      "source": "fn f() { println!(\"specific/data\"); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "constant",
+      "source": "const LABEL: &str = \"specific/data\";",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "other-method",
+      "source": "fn f() { root.contains(\"specific/data\"); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "root-prefix",
+      "source": "fn f() { root.join(\"specificity/data\"); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "message-prefix",
+      "source": "fn f() { root.join(\"message specific/data\"); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "character",
+      "source": "fn f() { root.join('x'); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "dynamic-argument",
+      "source": "fn f() { root.join(path); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "dynamic-concat",
+      "source": "fn f() { root.join(concat!(\"specific\", \"/data\")); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "unresolved-import-alias",
+      "source": "fn f() { fs::read(\"specific/data\"); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "absolute-host-path",
+      "source": "fn f() { root.join(\"/host/specific/data\"); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "unknown-owner",
+      "source": "fn f() { root.join(\"other/data\"); }",
+      "expected": [],
+      "sourceScope": "file"
+    },
+    {
+      "id": "module-const",
+      "source": "const P: &str=\"specific/data\"; fn f(){root.join(P);}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 48,
+          "end": 49,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "forward-const",
+      "source": "fn f(){root.join(P);} const P: &str=\"specific/data\";",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 17,
+          "end": 18,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 28,
+              "end": 29,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "block-const",
+      "source": "const P:&str=\"general/data\";fn f(){const P:&str=\"specific/data\";root.join(P);}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 74,
+          "end": 75,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 41,
+              "end": 42,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "block-forward-const",
+      "source": "fn f(){root.join(P);const P:&str=r#\"specific/data\"#;}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 17,
+          "end": 18,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 26,
+              "end": 27,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "module-bare-no-parent",
+      "source": "const P:&str=\"specific/data\";mod nested{fn f(){root.join(P);}}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "module-own-const",
+      "source": "const P:&str=\"general/data\";mod nested{const P:&str=\"specific/data\";fn f(){root.join(P);}}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 85,
+          "end": 86,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 45,
+              "end": 46,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "module-self",
+      "source": "mod nested{const P:&str=\"specific/data\";fn f(){root.join(self::P);}}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 57,
+          "end": 64,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 17,
+              "end": 18,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "module-super",
+      "source": "const P:&str=\"specific/data\";mod nested{fn f(){root.join(super::P);}}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 57,
+          "end": 65,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "module-qualified",
+      "source": "mod nested{pub const P:&str=\"specific/data\";}fn f(){root.join(nested::P);}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 62,
+          "end": 71,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 21,
+              "end": 22,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "crate-qualified",
+      "source": "const P:&str=\"specific/data\";mod nested{fn f(){root.join(crate::P);}}",
+      "sourceScope": "crate",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 57,
+          "end": 65,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "unknown-crate-root",
+      "source": "const P:&str=\"specific/data\";fn f(){root.join(crate::P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "let-shadow",
+      "source": "const P:&str=\"specific/data\";fn f(){let P=dynamic;root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "let-initializer-outer",
+      "source": "const P:&str=\"specific/data\";fn f(){let P=root.join(P);root.join(P);}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 52,
+          "end": 53,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "parameter-shadow",
+      "source": "const P:&str=\"specific/data\";fn f(P:&str){root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "pattern-parameter-shadow",
+      "source": "const P:&str=\"specific/data\";fn f((P,q):(&str,&str)){root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "nested-function-no-let-capture",
+      "source": "const P:&str=\"specific/data\";fn f(){let P=dynamic;fn g(){root.join(P);}}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 67,
+          "end": 68,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested-function-block-const",
+      "source": "fn f(){const P:&str=\"specific/data\";fn g(){root.join(P);}}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 53,
+          "end": 54,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 13,
+              "end": 14,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "if-let-shadow",
+      "source": "const P:&str=\"specific/data\";fn f(){if let Some(P)=value{root.join(P);}}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "if-let-else-outer",
+      "source": "const P:&str=\"specific/data\";fn f(){if let Some(P)=value{root.join(P);}else{root.join(P);}}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 86,
+          "end": 87,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "for-shadow",
+      "source": "const P:&str=\"specific/data\";fn f(){for P in values{root.join(P);}}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "scalar-only-array",
+      "source": "const P:[&str;1]=[\"specific/data\"];fn f(){root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "scalar-only-alias",
+      "source": "const Q:&str=\"specific/data\";const P:&str=Q;fn f(){root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "scalar-only-expression",
+      "source": "const P:&str=concat!(\"specific\",\"/data\");fn f(){root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "scalar-byte-const",
+      "source": "const P:&[u8]=b\"specific/data\";fn f(){std::fs::read(P);}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "std::fs::read",
+          "context": "qualified",
+          "start": 52,
+          "end": 53,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "scalar-unicode-offset",
+      "source": "const P:&str=\"📝owner/data\";\nfn f(){let x=\"🧪\";root.push(P);}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "📝owner/data",
+          "path": "📝owner/data",
+          "root": "📝owner",
+          "call": "push",
+          "context": "method",
+          "start": 57,
+          "end": 58,
+          "line": 2,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "same-name-unsupported-shadows",
+      "source": "const P:&str=\"specific/data\";fn f(){const P:usize=1;root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "const-generic-shadow",
+      "source": "const P:&str=\"specific/data\";fn f<const P:usize>(){root.join(P);}fn g(){root.join(P);}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 82,
+          "end": 83,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "fn-trait-parameter-shadow",
+      "source": "const P:&str=\"specific/data\";fn f<F:Fn(&str)>(P:&str){root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "struct-parameter-shadow",
+      "source": "const P:&str=\"specific/data\";fn f(S{field:P}:S){root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "closure-parameter-shadow",
+      "source": "const P:&str=\"specific/data\";fn f(){let c=|P:&str|root.join(P);}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "closure-block-parameter-shadow",
+      "source": "const P:&str=\"specific/data\";fn f(){let c=|P|{root.join(P);};}",
+      "sourceScope": "file",
+      "expected": []
+    },
+    {
+      "id": "closure-outer-capture",
+      "source": "const P:&str=\"specific/data\";fn f(){let c=||root.join(P);}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 54,
+          "end": 55,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 6,
+              "end": 7,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "module-type-namespace",
+      "source": "mod nested{pub const P:&str=\"specific/data\";}fn f(){let nested=dynamic;root.join(nested::P);}",
+      "sourceScope": "file",
+      "expected": [
+        {
+          "value": "specific/data",
+          "path": "specific/data",
+          "root": "specific",
+          "call": "join",
+          "context": "method",
+          "start": 81,
+          "end": 90,
+          "line": 1,
+          "origin": {
+            "kind": "constant",
+            "definition": {
+              "name": "P",
+              "start": 21,
+              "end": 22,
+              "line": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "associated-not-bare",
+      "source": "impl Type{const P:&str=\"specific/data\";fn f(){root.join(P);root.join(Self::P);}}",
+      "sourceScope": "file",
+      "expected": []
+    }
+  ],
+  "invalidRoots": [
+    {
+      "id": "empty",
+      "roots": [
+        ""
+      ],
+      "refusal": "invalid-root"
+    },
+    {
+      "id": "parent",
+      "roots": [
+        "a/../b"
+      ],
+      "refusal": "invalid-root"
+    },
+    {
+      "id": "windows",
+      "roots": [
+        "a\\b"
+      ],
+      "refusal": "invalid-root"
+    },
+    {
+      "id": "absolute",
+      "roots": [
+        "/a"
+      ],
+      "refusal": "invalid-root"
+    },
+    {
+      "id": "duplicate",
+      "roots": [
+        "a",
+        "a"
+      ],
+      "refusal": "invalid-root"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# Mounted Six Hex UTF8 Demand Review
+
+Read-only actual six-path demand review. No owning Source/Native test execution.
+
+Text native payload preamble matches actual s.stdio.semio.text; Audio matches stdio.semio.audio. Text schema/runs empty and nested language/content/link-href position fixtures preserve exact three-field run/two-field mark grammar, including an empty hex field as an actual empty string field. Audio schema/sampleRate0/channels[]/tags[] and nested tag-key/value preserve exact two-field tag grammar and omit format intentionally; actual pcm16 assertion checks the original default. Native laws call existing decode_sqlite_snapshot_native directly at four Text and three Audio positions for all13 accepted/16 refused literals. No direct shared-helper test substitutes for those routes.
+
+Source laws are accurately scoped independent TextDecoder fatal+Buffer literal oracles and genuine owner relational projection/restoration at all text positions. They do not execute the Rust native document parser; their negative check is third-party hex/UTF8 validation only. ignoreBOM=true preserves BOM; exact byte roundtrip and upper/lowercase match retain the input authority. Their SQLite interpretation checks integrity/FKs and exact restored typed values, but it does not independently query each position before restoring; do not overstate that scope.
+
+Bounded inline validation resolved all four fixture/schema imports from the actual tests/sqlite directories to the real shared Base test authority. The same include_str paths therefore exist for Rust. Actual extensionless ajv/dist/2020 import resolved in Bun, and mounted schema/fixture passed strict Ajv. No definite compile/path or cardinality blocker was identified. Original staged cancellation/grants were not changed; these small literal cases themselves add no long-text interior cancellation witness. Existing queued owning gates must provide runtime qualification.

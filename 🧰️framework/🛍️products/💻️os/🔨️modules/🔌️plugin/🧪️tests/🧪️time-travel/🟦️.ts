@@ -11,7 +11,7 @@ import { applyTimeTravel, timeTravelFinalizeRefusal, timeTravelSession, type Tim
 import { replayReportBlocksFinalize, type InputReplacement, type ReplayReport } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
 
 type Step = Readonly<Record<string, unknown>>;
-type Scenario = Readonly<{ id: string; steps: readonly Step[]; status: Readonly<{ stage: string; blocking: boolean; acceptedCount: number }> | null; finalizeRefusal?: string | null }>;
+type Scenario = Readonly<{ id: string; steps: readonly Step[]; status: Readonly<{ stage: string; blocking: boolean; acceptedCount: number; nextProblem?: number }> | null; finalizeRefusal?: string | null }>;
 type Fixture = Readonly<{ scenarios: readonly Scenario[]; refusals: Readonly<Record<string, unknown>> }>;
 
 const PLUGIN_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin";
@@ -46,6 +46,13 @@ function step(session: TimeTravelSession, value: Step, scenario: string): TimeTr
     case "accept":
     case "discard":
       return apply(session, { type: name, generation }, scenario);
+    case "withdrawRow": {
+      const position = argument as number;
+      if (session.stage === "editing" && session.pending?.target.mutation === `m${position}`) return apply(session, { type: "withdraw", generation }, scenario);
+      return apply(session, { type: "beginWithdrawn", target: { mutation: `m${position}`, position }, original: input(`original-${position}`) }, scenario);
+    }
+    case "restore":
+      return apply(session, { type: "restore", generation, target: `m${argument as number}` }, scenario);
     case "replay":
       return session.stage === "replaying" ? apply(session, { type: "replayCompleted", generation, report: report(session, argument as string) }, scenario) : session;
     case "finalize":
@@ -71,7 +78,7 @@ export function timeTravelScenarioOracle(repoRoot: string): number {
   assert.ok(validate(fixture), JSON.stringify(validate.errors));
   assert.equal(validate({ ...fixture, scenarios: [{ ...fixture.scenarios[0], steps: [{ begin: 0, accept: null }] }] }), false, "a step names exactly one verb");
   assert.equal(validate({ ...fixture, refusals: { ...fixture.refusals, frozen: "timeTravel.busy" } }), false, "the frozen code is pinned");
-  const base = { storeGeneration: 0n, contentRevision: new Uint8Array(32) };
+  const base = { contentRevision: new Uint8Array(32) };
   for (const scenario of fixture.scenarios) {
     let session = timeTravelSession(base);
     for (const value of scenario.steps) session = step(session, value, scenario.id);
@@ -82,6 +89,8 @@ export function timeTravelScenarioOracle(repoRoot: string): number {
     assert.equal(session.stage, scenario.status.stage, `${scenario.id}: stage`);
     assert.equal(session.accepted.length, scenario.status.acceptedCount, `${scenario.id}: accepted drafts`);
     assert.equal(session.report !== null && replayReportBlocksFinalize(session.report), scenario.status.blocking, `${scenario.id}: blocking`);
+    const problem = session.report?.outcomes.find((outcome) => outcome.worst === "error" || outcome.worst === "fatal")?.mutationId;
+    assert.equal(problem, scenario.status.nextProblem === undefined ? undefined : `m${scenario.status.nextProblem}`, `${scenario.id}: next problem`);
     if (scenario.finalizeRefusal !== undefined) assert.equal(timeTravelFinalizeRefusal(session), scenario.finalizeRefusal, `${scenario.id}: finalize refusal`);
   }
   return fixture.scenarios.length;

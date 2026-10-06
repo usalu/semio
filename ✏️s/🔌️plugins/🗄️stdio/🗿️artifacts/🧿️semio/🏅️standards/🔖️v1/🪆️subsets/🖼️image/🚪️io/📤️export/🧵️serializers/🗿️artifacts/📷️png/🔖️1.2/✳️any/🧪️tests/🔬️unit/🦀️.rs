@@ -14,11 +14,11 @@ fn sample_semio() -> SemioImageSnapshot {
 async fn authors_a_valid_rgba8_png_with_metadata() {
     let semio = sample_semio();
     let png = ::semio_framework_async::poll::resolve_ready(SemioImageToPng::serialize(&semio)).unwrap();
-    let projection = semio_s_artifact_stdio_png::io::project_png(&png.bytes).unwrap();
+    let projection = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::project_png(&png.bytes).unwrap();
     assert_eq!((projection.width, projection.height, projection.bit_depth, projection.color_type), (2, 1, 8, PngColorType::Rgba));
     assert_eq!(projection.pixels, semio.frames[0].rgba8);
     assert_eq!((projection.text_chunks[0].keyword.as_str(), projection.text_chunks[0].value.as_str()), ("Title", "semio fixture"));
-    assert_eq!(semio_s_artifact_stdio_png::io::encode_png(&png).unwrap(), png.bytes);
+    assert_eq!(semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&png).unwrap(), png.bytes);
 }
 
 #[semio_framework_async_macros::async_test]

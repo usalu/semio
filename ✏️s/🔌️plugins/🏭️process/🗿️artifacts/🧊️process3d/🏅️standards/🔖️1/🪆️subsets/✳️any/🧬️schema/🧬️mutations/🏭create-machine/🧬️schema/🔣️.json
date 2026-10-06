@@ -15,7 +15,20 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Where the machine is inserted in the workshop.",
+          "de": "Wo die Maschine in der Werkstatt eingefügt wird."
+        },
+        "widget": "stepper",
+        "role": "value",
+        "step": 1
+      }
     },
     "machine": {
       "title": "WorkshopMachine",
@@ -499,7 +512,20 @@
                       "type": "string"
                     },
                     "value": {
-                      "type": "number"
+                      "type": "number",
+                      "x-semio-ui": {
+                        "label": {
+                          "en": "Size",
+                          "de": "Maß"
+                        },
+                        "widget": "stepper",
+                        "role": "value",
+                        "unit": "m",
+                        "displayUnit": "mm",
+                        "displayFactor": 1000,
+                        "precision": 1,
+                        "step": 0.001
+                      }
                     }
                   }
                 },

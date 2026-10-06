@@ -27,109 +27,6 @@
         }
       }
     },
-    "GraphParameterV1": {
-      "title": "Flow Graph Parameter Interaction",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema",
-        "cases",
-        "action",
-        "expected"
-      ],
-      "properties": {
-        "schema": {
-          "const": "semio.flow.graph-parameter.v1"
-        },
-        "action": {
-          "const": "nodeGraphEdit"
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 3,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "app",
-              "controllerId",
-              "surfaceId",
-              "widgetId",
-              "label",
-              "before",
-              "request",
-              "after"
-            ],
-            "properties": {
-              "app": {
-                "enum": [
-                  "flow",
-                  "generation2d",
-                  "generation3d"
-                ]
-              },
-              "controllerId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "surfaceId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "widgetId": {
-                "type": "string",
-                "minLength": 1
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1
-              },
-              "before": {
-                "$ref": "#/$defs/GraphParameterBound"
-              },
-              "request": {
-                "type": "number"
-              },
-              "after": {
-                "$ref": "#/$defs/GraphParameterBound"
-              }
-            }
-          }
-        },
-        "expected": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "documentJsonReads",
-            "wholeFixtureActions",
-            "gestureEndActions",
-            "commitTimerMs"
-          ],
-          "properties": {
-            "documentJsonReads": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 0
-            },
-            "wholeFixtureActions": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 0
-            },
-            "gestureEndActions": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 0
-            },
-            "commitTimerMs": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 0
-            }
-          }
-        }
-      }
-    },
     "GraphParameterCommand": {
       "description": "🎚️ The `nodeGraphEdit` command a slider gesture dispatches: exactly one widget, one numeric value, and optionally the surface it was raised on. No document or fixture payload may ride along.",
       "type": "object",
@@ -154,5 +51,6 @@
         }
       }
     }
-  }
+  },
+  "$ref": "#/$defs/GraphParameterBound"
 }

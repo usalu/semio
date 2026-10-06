@@ -1,0 +1,33 @@
+# PDF14 Populated Own Domain Public Held Demand
+
+HELD source only. Input pair appends a private sibling module in actual own14 Snapshot SQLite source. The literal owner has schema stdio.pdf, two PageDoc records and every actual field populated; edited literal changes page1 width/height/text. Native PDF encode/decode uses actual v1_4 base I/O, while Binary/Text SQLite typed public entrypoints use the actual test declaration publication. Exact comparison checks schema, cardinality, text and f64 raw words rather than PartialEq. ASCII native text intentionally avoids claiming general glyph/Unicode fidelity of the documented simple-font own14 writer. Both source and expected owner are independently authored; no default owner or expected projector.
+
+This capsule does not yet implement third-party physical database edit/reimport, envelope metadata checks, independent native PDF oracle or registered literal/schema loading. Those remain genuine required demand work; existing own14 erased fixtures/IEEE/Bun laws remain untouched. No build/runtime claim. The separate exact-bit diff capsule exposes finite signed-zero sparse loss without modifying geometry policy. Codec identity stdio.pdf and structural identity s.stdio.pdf remain distinct. Full helper/editor/viewer/mutation isolated regions are still held future work, not represented as mounted.
+
+## Current held region progression
+
+`pdf14-own-viewer-page-render-held-pairs.json` contains three guarded viewer windows using actual PageDoc and its exact width/height/text, preserving existing framework DocumentWindowKit and localized definitions; root types/tests must join before mount. `pdf14-own-page-target-helper-held-pair.json` proposes a new standard-local helper using actual framework EditableDocumentView fields and existing render_editable_windowed. It receives caller-owned UiPublicationRevision and Locale explicitly, checks checked ordinal conversion, item0 only, genuine text revision, and exact no-op before emitting actual own14 ReplacePageText. It supplies no invented default locale/publication. Geometry accessory and actual root publication extraction remain unresolved joins, explicitly not executable readiness claims.
+
+Original five own14 payloads remain InsertPage/RemovePage/MovePage/ResizePage/ReplacePageText. Current mutation enum schema is s.stdio.pdf.1.4; codec stdio.pdf and structural s.stdio.pdf are different authored authorities and must not be globally substituted. New SetSnapshot/PatchSnapshot require complete schema/text/Pack/diff/retirement/registration leaves and exact language-neutral laws before the generic SnapshotDetails editor macro can own this type. No proposed renderer primitive may add absent fonts/images/COS objects to PageDoc.
+
+## Additional genuine totality prerequisite
+
+Actual own14 PdfDiff carries only pages; apply clones base schema unchanged, between never compares schema, absorb has no schema lane. Adding generic SetSnapshot/PatchSnapshot would silently lose schema edits in the existing arbitrary-schema domain. Held demand `pdf14-sparse-schema-totality-demand-held-pair.json` checks schema-only nonempty, apply, inverse and sequential absorb with literal NUL/Unicode schemas and unchanged pages. Original fixture noncanonical-pdf14-schema remains valid. Clean provider needs optional schema diff lane across all authored facets/codecs/composition, not a fixed-schema guard. No provider change or test receipt.
+
+## Identity authority correction (supersedes preceding schema-totality proposal)
+
+The actual Diff doc line307 explicitly freezes schema identity. Shared editing/🦀️.rs:479–483 validates original identity then rejects changed identity with snapshot-edit.schema-identity; shared patch/🦀️.rs:723–735 does the same before/after patch. Root confirms preserve this policy. Therefore the proposed schema-changing diff demand is marked NOT APPLICABLE / DO NOT MOUNT; retained only for audit chronology. Do not add a schema Diff lane. Own14 Set/Patch must retain the base authored identity through exact shared policy. Arbitrary schema fixtures remain valid raw Snapshot/SQLite ownership witnesses; their presence does not authorize schema mutation by a registered editor. The finite signed-zero demand is independent and remains a genuine proposed page-field boundary.
+
+## Publication equality and direct mutation authority
+
+Actual generic SnapshotEditingEditor::snapshot_edit_emit (`editing/🦀️.rs:819–824`) skips emit when derived PartialEq equates expected with original. Own14 signed-zero PageDoc changes therefore need an end-to-end editor publication demand in addition to private Diff exact-bit demand; the held private provider change alone cannot prove it. No shared helper change or broader float policy is proposed.
+
+Actual snapshot_patch_leaf delegates apply_snapshot_patch_checked, which applies a detached patch and a package check but does not itself freeze schema identity (`editing/🩹️patch/🦀️.rs:594–613`). The public apply_snapshot_patch_for_dialect validates original identity and preserves it (`:722–735`). The future own14 leaf must distinguish direct mutation admission from already-validated editor publication rather than assuming the macro intrinsically enforces identity. Root must review this exact policy boundary before any Set/Patch held provider mount.
+
+## Nine-path held viewer slice
+
+`pdf14-own-viewer-three-subsets-held-pairs.json` now retains exact before/after files for base/A/X viewer root, main window and existing unit test each. Roots own v1_4 Snapshot/Mutation and document schema stdio.pdf; initial PageDoc is explicitly 612×792 empty authored blank. Windows summarize ordinal/width×height plus exact actual text as data, preserving native localized window definitions. Unit test constructs literal complete PageDoc, asserts exact scene buffer rather than old PDF17 MediaBox substring. No default/demo expected projector or Root17 alias. Original A/X schema-gap checker remains unchanged. The slice is source-only and must join actual owning declarations/editor family before coherent mounting; no compiler/runtime claim.
+
+## Whole replacement admission scope
+
+Root explicitly rejected adding whole-Set finite-only admission. That proposal is withdrawn from executable held source. SetSnapshot replacement/inverse must preserve every accepted full owner field and raw word, including nonfinite/signed-zero imported owners; original Resize finite-only policy is distinct and unchanged. Held own14 Set source now applies only original frozen schema identity, no new geometry policy. Neutral raw-word/inverse demands must precede provider mount.

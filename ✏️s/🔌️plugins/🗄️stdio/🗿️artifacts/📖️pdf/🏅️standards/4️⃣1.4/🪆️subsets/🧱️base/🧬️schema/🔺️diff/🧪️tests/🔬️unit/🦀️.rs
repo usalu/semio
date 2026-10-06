@@ -140,7 +140,7 @@ async fn field_sweep_every_field_present_in_diff() {
 /// (`encode_diff`/`decode_diff`) sides.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::DiffCodec;
+    use protocol::{DiffBinary,DiffCodec,DiffText};
     let (a, b) = (sweep_a(), sweep_b());
     let grown = snap(vec![page(612.0, 792.0, "base text"), page(1.0, 2.0, "added (with parens) and a comma,")]);
     let cases = vec![PdfDiff::between(&a, &b), PdfDiff::between(&a, &grown), PdfDiff::between(&grown, &a), PdfDiff::between(&a, &a)];

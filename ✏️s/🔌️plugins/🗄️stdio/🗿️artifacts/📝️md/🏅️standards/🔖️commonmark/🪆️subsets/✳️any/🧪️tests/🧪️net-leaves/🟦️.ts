@@ -1,5 +1,4 @@
-/** 🧪️ Third-party oracle of the markdown net-leaves corpus (`🧫️fixtures/🧫️net-leaves`): ajv validates the corpus against its
- * schema, markdown-it (an independent CommonMark parser) splits both texts into top-level blocks, and jsdiff's array diff finds
+/** 🧪️ Third-party oracle of the markdown net-leaves corpus (`🧫️fixtures/🧫️net-leaves`): ajv validates individual mutation records, markdown-it (an independent CommonMark parser) splits both texts into top-level blocks, and jsdiff's array diff finds
  * the blocks an Apply changed — every expected leaf must address a changed block of the right kind, and an unchanged text must
  * mean no leaf at all. The Rust editor laws replay the same corpus against `md_net_mutations`. */
 import { describe, expect, test } from "bun:test";
@@ -32,9 +31,9 @@ function unchangedEnds(before: readonly Block[], after: readonly Block[]): { rea
 }
 
 describe("markdown net leaves (markdown-it + jsdiff oracle)", () => {
-  test("the corpus validates against its schema (ajv)", () => {
+  test("actual mutation records conform to their domain schema (ajv)", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+    for (const row of corpus.cases) for (const leaf of row.leaves ?? []) expect(validate(leaf), JSON.stringify(validate.errors)).toBe(true);
   });
 
   for (const row of corpus.cases) {

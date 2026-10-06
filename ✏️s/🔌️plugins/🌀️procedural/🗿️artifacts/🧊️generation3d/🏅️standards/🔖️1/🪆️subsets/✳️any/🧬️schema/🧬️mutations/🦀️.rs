@@ -21,8 +21,6 @@
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
-pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
-pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
@@ -371,7 +369,7 @@ pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_fl
 /// Missing targets and targets of another kind are skipped (`mutation.partial`); none left is `target-missing` (no
 /// target exists) or `target-mismatch`; an identity gesture is `mutation.no-op`.
 pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_value::DslValue) -> Option<Vec<(&'static str, semio_framework_value::DslValue)>>) -> protocol::MutationOutcome<Generation3dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{diff_fixture_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+    use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
     if let Err(reason) = generation3d_targets_invariant(targets) {
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
     }
@@ -411,7 +409,7 @@ pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: 
         return protocol::MutationOutcome::empty().absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "the gesture is the identity transform").at(targets.to_vec())]));
     }
     let widgets = WidgetsDiff { removed: Vec::new(), set: composed };
-    let diff = diff_fixture_from_helpers(base, &widgets, &SynapsesDiff::default(), &LayoutDiff::default(), None, None);
+    let diff = diff_snapshot_from_helpers(base, &widgets, &SynapsesDiff::default(), &LayoutDiff::default(), None, None);
     for (_, widget) in widgets.set {
         widget.retire_cold();
     }

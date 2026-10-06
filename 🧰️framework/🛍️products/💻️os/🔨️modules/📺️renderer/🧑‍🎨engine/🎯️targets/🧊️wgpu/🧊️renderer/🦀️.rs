@@ -18629,7 +18629,10 @@ impl AppInteractionState {
             SurfaceKind::Board2d => self.shell.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 let touch_handled = pointer.kind == ui_render::PointerKind::Touch
                     && if down {
-                        scenes::puzzle_board_touch_pointer_down(host_id, surface.bounds, pointer.id, x, y)
+                        match scenes::puzzle_board_touch_pointer_down_into(host_id, surface.bounds, pointer.id, x, y, &mut self.input) {
+                            Ok(handled) => handled,
+                            Err(fault) => return Err(fault),
+                        }
                     } else {
                         match scenes::puzzle_board_touch_pointer_up_into(host_id, &surface.controller_id, pointer.id, &mut self.input) {
                             Ok(handled) => handled,
@@ -18639,8 +18642,7 @@ impl AppInteractionState {
                 if touch_handled {
                     Ok(())
                 } else if down {
-                    scenes::puzzle_board_pointer_down(host_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta());
-                    Ok(())
+                    scenes::puzzle_board_pointer_down_into(host_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &mut self.input)
                 } else {
                     scenes::puzzle_board_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
                 }
@@ -19172,7 +19174,7 @@ impl semio_framework_value::FromValue for NativeSocketProbeMutation {
 /// oracle — the first-party `ToValue` tree must equal what it serializes for the same values.
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_spr::command::OpText for NativeSocketProbeMutation {
+impl store::os_spr::OpText for NativeSocketProbeMutation {
     fn print_op(&self) -> String {
         let Self::Set(value) = self;
         value.clone()
@@ -19184,7 +19186,7 @@ impl store::os_spr::command::OpText for NativeSocketProbeMutation {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_spr::command::OpBinary for NativeSocketProbeMutation {
+impl store::os_spr::OpBinary for NativeSocketProbeMutation {
     fn encode_op(&self) -> Result<Vec<u8>, store::os_spr::ProtocolError> {
         let Self::Set(value) = self;
         Ok(value.as_bytes().to_vec())
@@ -19609,7 +19611,7 @@ pub fn boot_app_mode() -> Option<String> {
 /// 📚️ The boot-requested example id, or `None`. It already collapses `?example=`/`--example` over the
 /// `SEMIO_DEFAULT_EXAMPLE` seed the way React collapses the query over `VITE_SEMIO_DEFAULT_EXAMPLE`
 /// into ONE `defaults.exampleId`. An id the open DIALECT does not author is ignored by the reader
-/// (`ShellState::apply_boot_example`), never a boot failure.
+/// (`shell::resolve_boot_example_id`), never a boot failure.
 pub fn boot_app_example() -> Option<String> {
     boot_axis(|descriptor| &descriptor.app_example)
 }

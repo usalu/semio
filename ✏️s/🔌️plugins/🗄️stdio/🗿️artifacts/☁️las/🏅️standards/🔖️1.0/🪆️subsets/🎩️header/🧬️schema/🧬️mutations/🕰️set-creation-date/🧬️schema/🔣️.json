@@ -23,13 +23,32 @@
         "label": {
           "en": "Day of year",
           "de": "Tag im Jahr"
-        }
+        },
+        "step": 1
       }
     },
     "year": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 65535
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Year",
+          "de": "Jahr"
+        },
+        "description": {
+          "en": "Four-digit year the file was created in.",
+          "de": "Vierstelliges Jahr, in dem die Datei erstellt wurde."
+        },
+        "step": 1,
+        "precision": 0,
+        "softMin": 1970,
+        "softMax": 2100,
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

@@ -25,10 +25,31 @@
       ],
       "properties": {
         "pattern": {
-          "$ref": "#/$defs/Pattern"
+          "$ref": "#/$defs/Pattern",
+          "x-semio-ui": {
+            "label": {
+              "en": "Pattern",
+              "de": "Muster"
+            },
+            "description": {
+              "en": "The node, edge and node shape the rule looks for.",
+              "de": "Die Form aus Knoten, Kante und Knoten, nach der die Regel sucht."
+            }
+          }
         },
         "whereClause": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "multiline",
+            "label": {
+              "en": "Where clause",
+              "de": "Where-Klausel"
+            },
+            "description": {
+              "en": "Condition over the pattern's variables a match must satisfy.",
+              "de": "Bedingung über die Variablen des Musters, die ein Treffer erfüllen muss."
+            }
+          }
         }
       },
       "x-semio-state": "artifact"
@@ -48,12 +69,32 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Pattern"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Create",
+              "de": "Erzeugen"
+            },
+            "description": {
+              "en": "Patterns the rule adds to the graph.",
+              "de": "Muster, die die Regel dem Graphen hinzufügt."
+            }
           }
         },
         "delete": {
           "type": "array",
           "items": {
             "type": "string"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Delete",
+              "de": "Löschen"
+            },
+            "description": {
+              "en": "Variables whose nodes or edges the rule removes.",
+              "de": "Variablen, deren Knoten oder Kanten die Regel entfernt."
+            }
           }
         },
         "set": {
@@ -68,14 +109,46 @@
             ],
             "properties": {
               "var": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "label": {
+                    "en": "Variable",
+                    "de": "Variable"
+                  },
+                  "description": {
+                    "en": "Variable whose property is set.",
+                    "de": "Variable, deren Eigenschaft gesetzt wird."
+                  }
+                }
               },
               "prop": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "label": {
+                    "en": "Property",
+                    "de": "Eigenschaft"
+                  },
+                  "description": {
+                    "en": "Name of the property that is set.",
+                    "de": "Name der Eigenschaft, die gesetzt wird."
+                  }
+                }
               },
               "value": {
                 "$ref": "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/property-value.json"
               }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Set",
+              "de": "Setzen"
+            },
+            "description": {
+              "en": "Property assignments the rule performs.",
+              "de": "Eigenschaftszuweisungen, die die Regel ausführt."
             }
           }
         },
@@ -83,6 +156,16 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Pattern"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Merge",
+              "de": "Zusammenführen"
+            },
+            "description": {
+              "en": "Patterns the rule matches, or creates when they are absent.",
+              "de": "Muster, die die Regel abgleicht oder erzeugt, wenn sie fehlen."
+            }
           }
         },
         "parameters": {
@@ -97,18 +180,64 @@
             ],
             "properties": {
               "name": {
-                "type": "string"
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "label": {
+                    "en": "Name",
+                    "de": "Name"
+                  },
+                  "description": {
+                    "en": "Name the parameter is referenced by in the rule.",
+                    "de": "Name, über den der Parameter in der Regel referenziert wird."
+                  }
+                }
               },
               "kind": {
                 "enum": [
                   "string",
                   "number",
                   "boolean"
-                ]
+                ],
+                "x-semio-ui": {
+                  "widget": "segmented",
+                  "label": {
+                    "en": "Type",
+                    "de": "Typ"
+                  },
+                  "description": {
+                    "en": "Value type of the parameter.",
+                    "de": "Werttyp des Parameters."
+                  },
+                  "options": {
+                    "string": {
+                      "en": "Text",
+                      "de": "Text"
+                    },
+                    "number": {
+                      "en": "Number",
+                      "de": "Zahl"
+                    },
+                    "boolean": {
+                      "en": "Boolean",
+                      "de": "Wahrheitswert"
+                    }
+                  }
+                }
               },
               "default": {
                 "$ref": "https://json.schemas.assets.semio-tech.com/framework/graph/manifest/property-value.json"
               }
+            }
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Named values the rule takes when it is applied.",
+              "de": "Benannte Werte, die die Regel bei der Anwendung erhält."
             }
           }
         }
@@ -140,22 +269,88 @@
       ],
       "properties": {
         "leftVar": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Left variable",
+              "de": "Linke Variable"
+            },
+            "description": {
+              "en": "Name the left node is bound to.",
+              "de": "Name, an den der linke Knoten gebunden wird."
+            }
+          }
         },
         "leftKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Left node kind",
+              "de": "Linke Knotenart"
+            },
+            "description": {
+              "en": "Kind the left node has.",
+              "de": "Art, die der linke Knoten hat."
+            }
+          }
         },
         "edgeVar": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Edge variable",
+              "de": "Kantenvariable"
+            },
+            "description": {
+              "en": "Name the edge is bound to; without one the pattern is a single node.",
+              "de": "Name, an den die Kante gebunden wird; ohne ihn ist das Muster ein einzelner Knoten."
+            }
+          }
         },
         "edgeKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Edge kind",
+              "de": "Kantenart"
+            },
+            "description": {
+              "en": "Kind the edge has.",
+              "de": "Art, die die Kante hat."
+            }
+          }
         },
         "rightVar": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Right variable",
+              "de": "Rechte Variable"
+            },
+            "description": {
+              "en": "Name the right node is bound to.",
+              "de": "Name, an den der rechte Knoten gebunden wird."
+            }
+          }
         },
         "rightKind": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Right node kind",
+              "de": "Rechte Knotenart"
+            },
+            "description": {
+              "en": "Kind the right node has.",
+              "de": "Art, die der rechte Knoten hat."
+            }
+          }
         }
       }
     },

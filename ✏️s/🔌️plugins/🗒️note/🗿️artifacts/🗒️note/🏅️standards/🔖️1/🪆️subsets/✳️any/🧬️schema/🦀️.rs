@@ -149,7 +149,7 @@ pub fn note_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 //#region 🔖️DocumentHelpers
 /// 📄️ The `semio` example document, handcrafted in the `.note` DSL — {@link semio_example_snapshot}/
 /// {@link semio_example_json} are the only ways it should be consumed.
-const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT;
+const SEMIO_NOTE_EXAMPLE_TEXT: &str = crate::standards::v1::subsets::any::io::text::snapshot::SEMIO_NOTE_EXAMPLE_TEXT;
 
 /// 🆔️ Durable identifier cursor owned by one exact app operation or importer child.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
@@ -186,38 +186,11 @@ pub fn create_note_id(owner: &mut NoteIdOwner, prefix: &str) -> String {
     owner.allocate(prefix)
 }
 
-/// 📄️ The `semio` example, parsed once from {@link SEMIO_NOTE_EXAMPLE_TEXT} — the source of truth for
-/// every "semio" example call site (`setActiveExample`, tests). Falls back to the empty document if the
-/// fixture ever fails to parse, matching the old JSON fixture's failure behavior.
-pub fn semio_example_snapshot() -> crate::NoteSnapshot {
-    <crate::NoteSnapshot as store::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
-}
 
-/// 📄️ JSON re-serialization of {@link semio_example_snapshot}, for the framework-generic call sites that
-/// contractually require JSON text (`PluginApp::render`'s `projection_override_json`, `App::example`'s
-/// manifest `document_json`).
-pub fn semio_example_json() -> String {
-    semio_framework_pack_json::to_json_string(&semio_example_snapshot())
-}
 
-pub fn empty_note_snapshot() -> crate::NoteSnapshot {
-    crate::NoteSnapshot {
-        schema: NOTE_DOCUMENT_SCHEMA.into(),
-        id: "empty".into(),
-        title: None,
-        blocks: Vec::new(),
-        grid_visible: Some(true),
-        grid_spacing: Some(32.0),
-        grid_subdivisions: Some(4.0),
-        grid_opacity: Some(0.35),
-        snap_enabled: Some(false),
-        snap_grid_spacing: Some(8.0),
-        pencil_width: Some(3.0),
-        eraser_radius: Some(12.0),
-        assets: BTreeMap::new(),
-        linked_artifact: None,
-    }
-}
+
+
+
 
 pub fn block_id(block: &NoteBlockNode) -> &str {
     match block {

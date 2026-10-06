@@ -1,4 +1,4 @@
-//! 🧪️ `disconnect-kind-compatibility` fixture — `💔️withdraws`.
+//! 🧪️ `disconnect-kind-compatibility` snapshot — `💔️withdraws`.
 //!
 //! Withdrawing a pair runs no cascade over the edges that rely on it — this board's edges use door pairs, so nothing is orphaned here. The addressed row is the relation's LAST one, because `connect-kind-compatibility` appends and therefore only undoes a trailing row exactly.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

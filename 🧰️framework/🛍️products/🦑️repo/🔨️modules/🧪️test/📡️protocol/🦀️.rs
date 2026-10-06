@@ -336,7 +336,7 @@ pub fn sha256_hex(input: &[u8]) -> String {
 //#region 🔖️Plan
 /// 🧫️ One immutable fixture the coordinator resolved for this case.
 #[derive(Debug, Clone)]
-pub struct Fixture {
+pub struct TestInput {
     pub uri: String,
     pub scope: String,
     pub name: String,
@@ -408,14 +408,14 @@ pub struct Plan {
     pub artifact_dir: String,
     pub results_path: String,
     pub subject_raw_inputs: Vec<SubjectRawInput>,
-    pub fixtures: Vec<Fixture>,
+    pub inputs: Vec<TestInput>,
     pub scenarios: Vec<Scenario>,
 }
 
 impl Plan {
     /// 📋️ Reads a coordinator-written plan file.
     pub fn from_json(value: &Json) -> Plan {
-        let fixtures = value.array("fixtures").iter().map(|entry| Fixture { uri: entry.str("uri"), scope: entry.str("scope"), name: entry.str("name"), path: entry.str("path"), digest: entry.str("digest") }).collect();
+        let inputs = value.array("inputs").iter().map(|entry| TestInput { uri: entry.str("uri"), scope: entry.str("scope"), name: entry.str("name"), path: entry.str("path"), digest: entry.str("digest") }).collect();
         let scenarios = value
             .array("scenarios")
             .iter()
@@ -499,14 +499,14 @@ impl Plan {
             artifact_dir: value.str("artifactDir"),
             results_path: value.str("resultsPath"),
             subject_raw_inputs,
-            fixtures,
+            inputs,
             scenarios,
         }
     }
 
     /// 🧫️ Absolute path of a resolved fixture; an undeclared URI is an error, never a silent default.
-    pub fn fixture(&self, uri: &str) -> Result<std::path::PathBuf, String> {
-        let fixture = self.fixtures.iter().find(|entry| entry.uri == uri).ok_or_else(|| format!("fixture {} is not part of this plan — declare it in the feature file", uri))?;
+    pub fn input(&self, uri: &str) -> Result<std::path::PathBuf, String> {
+        let fixture = self.inputs.iter().find(|entry| entry.uri == uri).ok_or_else(|| format!("fixture {} is not part of this plan — declare it in the feature file", uri))?;
         Ok(std::path::PathBuf::from(&fixture.path))
     }
 

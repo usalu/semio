@@ -16,7 +16,7 @@ const vectorsURI = "shared://🧬️definition-kind-derivation/🔣️vectors.js
 var declaredKinds = []string{"implementation", "interface", "constant", "test"}
 
 func readKeywords(ctx *host.Context) ([]string, error) {
-	raw, err := ctx.FixtureBytes(vectorsURI)
+	raw, err := ctx.InputBytes(vectorsURI)
 	if err != nil {
 		return nil, err
 	}

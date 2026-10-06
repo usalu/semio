@@ -188,9 +188,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-record-applied",
       "class": "handcrafted",
       "target": {
@@ -233,7 +232,6 @@
       "notes": "InsertRecord{index:2,record} appends a real RFC 4180 record."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-record-applied",
       "class": "handcrafted",
       "target": {
@@ -276,7 +274,6 @@
       "notes": "RemoveRecord{index:1} drops the data record, leaving the header."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-field-applied",
       "class": "handcrafted",
       "target": {
@@ -319,7 +316,6 @@
       "notes": "SetField{recordIndex:1,fieldIndex:1,value:\"renamed-widget\",quoted:true} overwrites one field in place and marks it quoted, RFC 4180 rule 5's own lossless quoting record."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-has-header-applied",
       "class": "handcrafted",
       "target": {

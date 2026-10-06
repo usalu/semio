@@ -1,4 +1,4 @@
-//! 🧪️ `drag-selection` fixture — `⚠️skips-locked-ghost`.
+//! 🧪️ `drag-selection` snapshot — `⚠️skips-locked-ghost`.
 //!
 //! `node-b` moves by (2, 3); the absent `node-ghost` and the locked `node-c` and `region-2` are skipped with one Warning-level `mutation.partial` per reason.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     assert!(!inverse.is_empty(), "drag-selection/skips-locked-ghost: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");

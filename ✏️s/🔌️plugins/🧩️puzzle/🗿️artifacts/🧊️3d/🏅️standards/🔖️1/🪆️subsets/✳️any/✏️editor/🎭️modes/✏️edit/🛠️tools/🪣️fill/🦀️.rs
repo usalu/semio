@@ -10,7 +10,7 @@ use crate::editor::puzzle3d::precompute::fill::{fill_run_placements, FillPrepara
 use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, CollisionBody};
 use crate::editor::puzzle3d::precompute::{brush_mesh_digest, shared_brush_mesh};
 use crate::editor::puzzle3d::terminology::{puzzle3d_fill_run_counters, puzzle3d_fill_run_reasons, puzzle3d_fill_run_stages, puzzle3d_fill_run_unit, Puzzle3dLabels};
-use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, puzzle3d_fallback_mesh_buffers, puzzle3d_fixture_from_snapshot, scene_config, Puzzle3dPlayApp, Puzzle3dScene, PUZZLE3D_FALLBACK_MESH_KIND};
+use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, puzzle3d_fallback_mesh_buffers, puzzle3d_scene_snapshot_from_document, scene_config, Puzzle3dPlayApp, Puzzle3dScene, PUZZLE3D_FALLBACK_MESH_KIND};
 use crate::standards::v1::subsets::any::schema::{FillRunCheckpoint, SceneConfig};
 use semio_framework_job::{allocate_operation_id, Generation, InteractiveJob, InteractiveJobCloseStep, Operation, RevisionId, StepContext, StepOutcome};
 use semio_framework_plugin::ActionDescriptor;
@@ -113,9 +113,9 @@ pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle3dPlayApp>>)
     }
     let config = request.config.as_ref();
     let runtime = Puzzle3dRuntime { fill_count: config.fill_count, contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dRuntime::default() };
-    let envelope = Puzzle3dScene { fixture: puzzle3d_fixture_from_snapshot(request.snapshot.typed()), runtime, active_utility: TOOL_ID.into() };
+    let envelope = Puzzle3dScene { scene_snapshot: puzzle3d_scene_snapshot_from_document(request.snapshot.typed()), runtime, active_utility: TOOL_ID.into() };
     let scene = scene_config(&envelope).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("puzzle3d.fill.scene-unavailable"), "the fill run's document builds no engine scene"))?;
-    let lane = main::mesh_lane(&envelope.fixture);
+    let lane = main::mesh_lane(&envelope.scene_snapshot);
     let target = match request.purpose {
         ToolRunJobPurpose::Run => FillToolRunTarget::Run { requested: config.fill_count as usize, checkpoint: request.checkpoint.and_then(FillRunCheckpoint::decode), provisional: request.provisional.len() as u32 },
         ToolRunJobPurpose::Revalidate => {

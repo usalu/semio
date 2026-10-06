@@ -233,6 +233,12 @@
       ]
     },
     {
+      "id": "s.stdio.xlsx.schema.schema-export-s-stdio-xlsx-xml-document.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema-export:s.stdio.xlsx#xml-document",
+      "claims": [{ "namespace": "schema-export", "value": "s.stdio.xlsx#xml-document" }]
+    },
+    {
       "id": "s.stdio.xlsx.schema.schema-s-stdio-xlsx.v1",
       "category": "schema",
       "descriptor": "runtime-capability:schema:schema:s.stdio.xlsx",

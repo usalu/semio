@@ -1,4 +1,4 @@
-//! 🧪️ `delete-target-volume` fixture — `🚫️removes-volume-1`.
+//! 🧪️ `delete-target-volume` scene_snapshot — `🚫️removes-volume-1`.
 //!
 //! Removes `volume-1`. Nothing references a target volume, so unlike `delete-object` this builder
 //! has no cascade at all — the diff touches exactly one collection.
@@ -44,7 +44,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -87,7 +87,7 @@ fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `delete-target-volume` produces is exactly the committed diff — the single most
-/// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
+/// load-bearing assertion in the scene_snapshot: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {

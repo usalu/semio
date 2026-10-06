@@ -6,7 +6,8 @@ import fixture from "../../🧫️fixtures/💰️operation/🔣️.json";
 import schema from "../../🧬️schema/💰️operation/🔣️.json";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {exportSqliteDatabase,SqliteOperation} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {tiffSnapshotToSqliteDatabase,tiffSnapshotToSqliteFile,tiffSnapshotFromSqliteFile,type TiffSnapshot} from "../../🟦️.ts";
+import { type TiffSnapshot } from "../../🟦️.ts";
+import { tiffSnapshotToSqliteDatabase, tiffSnapshotToSqliteFile, tiffSnapshotFromSqliteFile } from "../../../../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 test("complete TIFF operation grant corpus is closed and independently admitted",()=>{const admit=new Ajv({strict:true}).compile(schema);expect(admit(fixture)).toBe(true);expect(validateJsonSchemaSubset(schema,fixture)).toEqual([]);for(const hostile of [{...fixture,extra:1},{...fixture,domain:{...fixture.domain,projectionRequests:[4]}}]){expect(admit(hostile)).toBe(false);expect(validateJsonSchemaSubset(schema,hostile).length).toBeGreaterThan(0);}});
 test("actual TIFF chunk projector and physical file share one complete operation grant",async()=>{
  const value:TiffSnapshot={schema:fixture.domain.schema,byteOrder:"littleEndian",ifds:fixture.domain.ifds as TiffSnapshot["ifds"]},projection=new SqliteOperation(),projected=await tiffSnapshotToSqliteDatabase(value,projection),physical=new SqliteOperation(),bytes=await exportSqliteDatabase(projected,physical);

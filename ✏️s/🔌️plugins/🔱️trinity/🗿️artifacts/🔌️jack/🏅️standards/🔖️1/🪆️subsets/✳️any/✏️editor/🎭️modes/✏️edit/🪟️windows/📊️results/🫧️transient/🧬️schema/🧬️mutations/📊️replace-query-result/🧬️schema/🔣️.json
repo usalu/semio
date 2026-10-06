@@ -6,7 +6,20 @@
   "additionalProperties": false,
   "required": ["kind", "executionId", "result", "error"],
   "properties": {
-    "kind": { "const": "replace-query-result" },
+    "kind": {
+      "const": "replace-query-result",
+      "x-semio-ui": {
+        "role": "discriminator",
+        "label": {
+          "en": "Change",
+          "de": "Änderung"
+        },
+        "description": {
+          "en": "Names the window setting this change writes; fixed for the leaf.",
+          "de": "Benennt die Fenstereinstellung, die diese Änderung schreibt; für das Blatt fest."
+        }
+      }
+    },
     "executionId": {
       "type": ["string", "null"],
       "x-semio-ui": {

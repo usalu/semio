@@ -58,7 +58,7 @@ def earned_badges(badges, quizzes, results, held):
 # region 🔖️Handlers
 def awards(ctx):
     """🗃️ Every committed (results, held) pair, judged and held to its committed awards."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))
+    vectors = json.loads(ctx.input_bytes(VECTORS))
     produced = {}
     for vector in vectors["vectors"]:
         produced[vector["id"]] = earned_badges(vectors["badges"], vectors["quizzes"], vector["results"], vector["held"])

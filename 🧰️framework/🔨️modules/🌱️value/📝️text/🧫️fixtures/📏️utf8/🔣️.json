@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "text": "",
+      "bytes": 0,
+      "accepted": true
+    },
+    {
+      "text": "A\u0000é文🌠",
+      "bytes": 11,
+      "accepted": true
+    },
+    {
+      "text": "\ud800",
+      "bytes": null,
+      "accepted": false
+    },
+    {
+      "text": "\udc00",
+      "bytes": null,
+      "accepted": false
+    },
+    {
+      "text": "\ud800A",
+      "bytes": null,
+      "accepted": false
+    },
+    {
+      "text": "🧬",
+      "bytes": 4,
+      "accepted": true
+    }
+  ]
+}

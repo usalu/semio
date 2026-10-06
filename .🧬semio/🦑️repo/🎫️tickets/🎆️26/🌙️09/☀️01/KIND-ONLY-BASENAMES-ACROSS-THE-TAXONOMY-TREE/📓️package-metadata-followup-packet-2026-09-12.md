@@ -36,10 +36,10 @@ This packet records evidence and future ownership work only. No source change or
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.lock`: has no exact fixed/configurable contract or allowed file-kind identity.
 - `🧫️fixtures`: is not a declared language.
 - `🗑️generated`: is not a declared language.
-- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library`: is not an allowed semantic package directory.
-- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/🧬️schema`: is not an allowed semantic package directory.
-- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit`: has no exact fixed/configurable contract or allowed file-kind identity.
-- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧫️fixtures/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.lock`: has no exact fixed/configurable contract or allowed file-kind identity.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/📚️library`: is not an allowed semantic package directory.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/🧬️schema`: is not an allowed semantic package directory.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/🧬️schema/📜️world.wit`: has no exact fixed/configurable contract or allowed file-kind identity.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️testing/🌊️actor-import/👽️guest/📦️packages/🦀️rust/Cargo.lock`: has no exact fixed/configurable contract or allowed file-kind identity.
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🧪️tests`: is not an allowed semantic package directory.
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🧪️tests/🧹️executable-source`: is not an allowed semantic package directory.
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🧹️executable-source`: is not an allowed semantic package directory.

@@ -1212,7 +1212,7 @@ def restores(kind, restored, base):
 # region 🔖️Handlers
 def read_json(ctx, uri):
     """🔣️ One committed JSON fixture, read through the plan so an undeclared URI is an error."""
-    return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
 def vector(subset, ctx, row):
@@ -1304,7 +1304,7 @@ def identity_handler(subset):
     sides project the digest and the length of what they emitted."""
 
     def handler(ctx):
-        text = ctx.fixture_bytes(subset.dsl_asset).decode("utf-8")
+        text = ctx.input_bytes(subset.dsl_asset).decode("utf-8")
         document = parse_dsl(subset.envelope, text)
         reprinted = print_dsl(document)
         if reprinted != text:

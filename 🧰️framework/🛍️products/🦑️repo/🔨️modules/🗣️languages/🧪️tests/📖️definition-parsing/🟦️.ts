@@ -1,6 +1,6 @@
 //#region 🔌️Adapters
 import ts from "typescript";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle
@@ -43,10 +43,10 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "typescript-top-level-declarations": {
-      oracle: (ctx) => ({ projection: declarations(new TextDecoder().decode(ctx.fixtureBytes("shared://🟦️sample.ts")), "🟦️sample.ts") }),
+      oracle: (ctx) => ({ projection: declarations(new TextDecoder().decode(ctx.inputBytes("shared://🟦️sample.ts")), "🟦️sample.ts") }),
     },
     "callable-const-is-a-function": {
-      oracle: (ctx) => ({ projection: declarations(new TextDecoder().decode(ctx.fixtureBytes("shared://📖️definition-parsing/🔤️callables.ts")), "🔤️callables.ts") }),
+      oracle: (ctx) => ({ projection: declarations(new TextDecoder().decode(ctx.inputBytes("shared://📖️definition-parsing/🔤️callables.ts")), "🔤️callables.ts") }),
     },
   },
 });

@@ -2,7 +2,7 @@
 //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgAnalyzer;
+    use crate::standards::v_jfif_1_01::subsets::document::io::JpgAnalyzer;
     use crate::JpgSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -1354,8 +1354,8 @@ mod tests;
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_jfif_1_01::subsets::baseline::schema::JpgBaselineComposer;
-    use crate::standards::v_jfif_1_01::subsets::document::schema::JpgComposer as JpgRawAnyComposer;
+    use crate::standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineComposer;
+    use crate::standards::v_jfif_1_01::subsets::document::io::JpgComposer as JpgRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -1367,3 +1367,157 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::{JpgDiff, JpgMutation, JpgSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.jpg` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct JpgBuilderConstruction {
+        snapshot: JpgSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for JpgBuilderConstruction {
+        type Snapshot = JpgSnapshot;
+        type Mutation = JpgMutation;
+        type Diff = JpgDiff;
+        fn empty() -> Self {
+            Self { snapshot: JpgSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<JpgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<JpgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let diff = crate::schema::mutations::apply_jpg_mutation(&mut self.snapshot, &mutation);
+            (self, diff)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <JpgDiff as protocol::MutationDiff<JpgSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::JpgSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.jpg` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct JpgParts {
+        pub snapshot: Option<JpgSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.jpg` (jfif-1.01/🧾️document) sources.
+    pub struct JpgAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for JpgAnalyzerAnalysis {
+        type Parts = JpgParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            const SIG: [u8; 2] = [0xFF, 0xD8]; // SOI
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    if bytes.len() >= 2 && bytes[0..2] == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    // 🔍 stdio.jpg's text envelope is a hex dump of the raw bytes after the
+                    // `semio ...` preamble line — decode the first 2 bytes to sniff the real SOI marker.
+                    let body = match store::semio_format::split_text_preamble(text) {
+                        Ok((_, rest)) => rest,
+                        Err(_) => text,
+                    };
+                    let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(4).collect();
+                    if hex.len() < 4 {
+                        return IoConfidence::Low;
+                    }
+                    let mut decoded = [0u8; 2];
+                    for (i, byte) in decoded.iter_mut().enumerate() {
+                        match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
+                            Ok(b) => *byte = b,
+                            Err(_) => return IoConfidence::Low,
+                        }
+                    }
+                    if decoded == SIG {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = JpgParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <JpgSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <JpgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec JpgBuilderFacets {
+        construction: JpgBuilderConstruction,
+        analysis: JpgAnalyzerAnalysis,
+        composition: crate::standards::v_jfif_1_01::subsets::document::io::derived_composition::JpgComposerComposition,
+    }
+    builder: JpgBuilder,
+    analyzer: JpgAnalyzer,
+    composer: JpgComposer,
+);

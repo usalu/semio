@@ -9,7 +9,21 @@
   ],
   "properties": {
     "text": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Page text",
+          "de": "Seitentext"
+        },
+        "description": {
+          "en": "Text the page shows afterwards.",
+          "de": "Text, den die Seite danach zeigt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

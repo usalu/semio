@@ -185,30 +185,7 @@ struct PptxMutationRecord {
     snapshot: Option<PptxSnapshotRecord>,
 }
 
-impl OpText for PptxMutation {
-    fn print_op(&self) -> String {
-        let record = match self {
-            PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
-                PptxMutationRecord { kind: "setSnapshot".into(), value: semio_framework_value::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) }
-            }
-            mutation => PptxMutationRecord { kind: "mutation".into(), value: semio_framework_value::ToValue::to_value(mutation), snapshot: None },
-        };
-        semio_framework_dsl_record::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Inline)
-    }
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let record =
-            semio_framework_dsl_record::parse(line, &PptxMutationRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 64 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Inline })?;
-        let model = PptxMutationRecord::__dsl_from_record(&record)?;
-        match (model.kind.as_str(), model.snapshot) {
-            ("setSnapshot", Some(snapshot)) => snapshot
-                .into_snapshot()
-                .map(|snapshot| PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-                .map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1))),
-            ("mutation", None) => semio_framework_value::FromValue::from_value(model.value).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))),
-            _ => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PPTX mutation record kind/payload mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))),
-        }
-    }
-}
+
 
 //#region 🔖️OpBinaryCodec
 /// 🧪️ FG-wave: real recursive binary primitives backing the upgraded `OpBinary` impl below --
@@ -224,25 +201,9 @@ impl OpText for PptxMutation {
 /// -iteration-order caveat those text forms document.
 /// 🌳 Full `PptxSnapshot`: `[schema,opc,xml-parts,slides]`, mirroring `enc_snapshot`'s text form above.
 //#endregion 🔖️OpBinaryCodec
-//#region 🏷️WireTags
-/// 🏷️ `PptxMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-//#endregion 🏷️WireTags
 
-/// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
-/// upgraded from F1's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
-/// `PptxMutation` variant ordinal, in the same 0-8 order `print_pptx_mutation`'s own keyword
-/// match uses.
-impl OpBinary for PptxMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
-    }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
-    }
-}
+
 //#endregion OpCodecs
 
 //#region 🔖️DemoCases

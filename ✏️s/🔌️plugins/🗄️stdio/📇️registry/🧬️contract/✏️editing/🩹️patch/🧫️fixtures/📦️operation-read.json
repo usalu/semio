@@ -1,0 +1,11 @@
+{
+  "maximumCleanupBytes": 131072,
+  "invalid": [
+    {"source": "{\"operation\":\"set\",\"path\":\"title\",\"value\":1}", "kind": "InvalidValue"},
+    {"source": "{\"operation\":\"move\",\"from\":\"/~2\",\"path\":\"/new\"}", "kind": "InvalidValue"},
+    {"source": "{\"operation\":\"rename\",\"path\":\"/old\",\"key\":\"new\",\"extra\":0}", "kind": "InvalidValue"},
+    {"source": "{\"operation\":\"insert\",\"path\":\"/entry\",\"value\":null,\"index\":9007199254740992}", "kind": "InvalidValue"},
+    {"source": "{\"operation\":\"splice\",\"path\":\"/array\",\"offset\":0,\"remove\":0,\"value\":false}", "kind": "InvalidValue"},
+    {"source": "{\"operation\":\"set\",\"path\":\"/entry\",\"value\":0,\"continued\":true}", "kind": "InvalidValue"}
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/print/visualization-gallery/testing/measurement/schema.json",
+  "title": "Gallery Measurement Contracts",
+  "$defs": {
+    "GalleryKindPage": {
+      "$comment": "📄️ Where one catalogue kind of a section landed: its one-based page and that page's extracted text.",
+      "type": "object",
+      "required": [
+        "page",
+        "text"
+      ],
+      "properties": {
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GalleryVariantMeasurement": {
+      "$comment": "📏️ One rendered gallery variant (section x theme x language): page count, per-kind page and page text, and the rebuild-stable PDF hash.",
+      "type": "object",
+      "required": [
+        "pages",
+        "kinds",
+        "hash"
+      ],
+      "properties": {
+        "pages": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "kinds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/GalleryKindPage"
+          }
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GalleryRenderEvidence": {
+      "$comment": "🖼️ Actual measurements emitted by the testing gallery renderer, keyed by section, theme and language.",
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "generatedBy",
+        "variants"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "generatedBy": {
+          "type": "string"
+        },
+        "variants": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9-]+/(light|dark)/(en|de)$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/GalleryVariantMeasurement"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

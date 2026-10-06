@@ -5,7 +5,7 @@
  * a catalogue entry makes is the specification, exactly as in `showcase-families`.
  */
 import assert from "node:assert/strict";
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { loadVizCatalog } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { type ProbeProjection, type ProbeRecord, compileVizProbe, roundProbeNumbers } from "../../🔨️modules/🧪️viz-probe/🟦️.ts";
 
@@ -66,7 +66,7 @@ export function infographicProjection(records: readonly ProbeRecord[], families:
  * which the platform discharges *inside* the scenario rather than by an oracle-versus-subject
  * comparison, so the specification has to be asserted here or the case would have no teeth. */
 async function subject(ctx: AdapterContext): Promise<{ projection: ProbeProjection }> {
-  const records = roundProbeNumbers(await compileVizProbe(ctx.fixture("shared://📰️infographic-kinds/infographic-kinds.tex"), { workDir: ctx.workDir, caseName: CASE }), DECIMALS);
+  const records = roundProbeNumbers(await compileVizProbe(ctx.input("shared://📰️infographic-kinds/infographic-kinds.tex"), { workDir: ctx.workDir, caseName: CASE }), DECIMALS);
   const projection = infographicProjection(records, FAMILIES);
   assert.deepEqual(projection, catalogueProjection(FAMILIES));
   return { projection };

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "core": "✏️s/🔌️plugins/🪐️space/🫀️core",
+  "host": "🧰️framework/🛍️products/💻️os/🖥️host",
+  "hub": "🌎️hub/🧩️compositions/🪐️space",
+  "owner": "🌎️hub/🧩️compositions/🪐️space/🧪️testing",
+  "lowerRust": "✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🦀️.rs",
+  "lowerTypescript": "✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🟦️.ts",
+  "examples": [
+    {
+      "id": "draw",
+      "slug": "🖍️semio.draw.json",
+      "package": "semio-s-artifact-draw-drawing",
+      "library": "semio_s_artifact_draw_drawing",
+      "snapshot": "DrawingSnapshot",
+      "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
+      "example": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs",
+      "exampleSha256": "a69f3f5fbf5d619e3136d6f44b287d612b62652856f6b248f1afaedd22910e5c",
+      "asset": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio",
+      "assetSha256": "747a31a8f3aed19638f3c660abe7e47d748f9e81f33715cf443d914458a42f69",
+      "assetBytes": 31335,
+      "expected": {
+        "schema": "drawing.document",
+        "id": "semio"
+      },
+      "format": "dsl",
+      "codec": "draw.snapshot.v1"
+    },
+    {
+      "id": "writer",
+      "slug": "✒️jack.writer.json",
+      "package": "semio-s-artifact-writer-writer",
+      "library": "semio_s_artifact_writer_writer",
+      "snapshot": "WriterSnapshot",
+      "owner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer",
+      "example": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs",
+      "exampleSha256": "a69f3f5fbf5d619e3136d6f44b287d612b62652856f6b248f1afaedd22910e5c",
+      "asset": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio",
+      "assetSha256": "3771413b465c864fd60515e5772714e4e4a052ee1eec559e4bb19b7387479622",
+      "assetBytes": 297,
+      "expected": {
+        "schema": "writer.document",
+        "id": "jack"
+      },
+      "format": "dsl",
+      "codec": "writer.snapshot.v1"
+    }
+  ],
+  "nativeProjects": [
+    "@semio-tech/framework-os-host-rs",
+    "@semio-tech/space-space-rs",
+    "@semio-tech/space-home-rs",
+    "@semio-tech/space-plugin"
+  ]
+}

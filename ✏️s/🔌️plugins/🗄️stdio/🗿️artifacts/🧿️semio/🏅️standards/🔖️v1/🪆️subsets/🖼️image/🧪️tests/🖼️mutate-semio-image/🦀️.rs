@@ -45,9 +45,11 @@ mod subject {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::mutations::{
         apply_semio_image_mutation, insert_frame, inverse_semio_image_mutation, move_frame, remove_frame, remove_metadata_entry, set_bit_depth, set_colorspace, set_dimensions, set_frame_delay, set_frame_pixels, set_icc, set_metadata_entry, set_snapshot, SemioImageMutation,
     };
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{
-        decode_semio_image_pack, encode_semio_image_pack, parse_semio_image_dsl, print_semio_image_dsl, SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::image::io::binary::snapshot::{encode_semio_image_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::image::io::binary::snapshot::{decode_semio_image_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::image::io::text::snapshot::{print_semio_image_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::image::io::text::snapshot::{parse_semio_image_dsl};
     use std::collections::BTreeSet;
 
     //#region 🔖️Input
@@ -60,7 +62,7 @@ mod subject {
     /// 🧫️ Every fixture URI of one scheme the scenario's steps name, in step order. The feature is
     /// the single place those paths are written down; both adapters read them from there.
     fn step_uris(ctx: &Context, prefix: &str) -> Vec<String> {
-        ctx.step_fixture_uris().into_iter().filter(|uri| uri.starts_with(prefix)).collect()
+        ctx.step_input_uris().into_iter().filter(|uri| uri.starts_with(prefix)).collect()
     }
 
     fn mutation_uri(ctx: &Context) -> Option<String> {
@@ -148,7 +150,7 @@ mod subject {
 
     /// 🎞️ The real derived animation, parsed through this repository's own DSL codec.
     fn artifact(ctx: &Context) -> Result<SemioImageSnapshot, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(ARTIFACT_DSL)?).map_err(|error| format!("the derived artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(ARTIFACT_DSL)?).map_err(|error| format!("the derived artifact is not UTF-8: {error}"))?;
         parse_semio_image_dsl(&text)
     }
 
@@ -157,7 +159,7 @@ mod subject {
     /// consulted for that sentinel's identity mapping.
     fn payload(ctx: &Context, base: &SemioImageSnapshot) -> Result<SemioImageMutation, String> {
         let json = match mutation_uri(ctx) {
-            Some(uri) => ctx.fixture_json(&uri)?,
+            Some(uri) => ctx.input_json(&uri)?,
             None => ctx.doc_json()?,
         };
         decode_mutation(&json, base).map_err(|error| format!("{}: {error}", ctx.scenario.id))
@@ -283,10 +285,10 @@ mod subject {
     /// no leaf, so its payload comes from the scenario's doc string and its expected answer is the
     /// before-snapshot itself.
     pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
-        let uris = ctx.step_fixture_uris();
-        let before = decode_snapshot(&ctx.fixture_json(uris.first().ok_or("the scenario names no before-snapshot")?)?)?;
+        let uris = ctx.step_input_uris();
+        let before = decode_snapshot(&ctx.input_json(uris.first().ok_or("the scenario names no before-snapshot")?)?)?;
         let (step, expected) = match uris.len() {
-            3 => (decode_mutation(&ctx.fixture_json(&uris[1])?, &before)?, decode_snapshot(&ctx.fixture_json(&uris[2])?)?),
+            3 => (decode_mutation(&ctx.input_json(&uris[1])?, &before)?, decode_snapshot(&ctx.input_json(&uris[2])?)?),
             _ => (decode_mutation(&ctx.doc_json()?, &before)?, before.clone()),
         };
         let mut current = before;
@@ -309,7 +311,7 @@ mod subject {
     /// must match were written by the other implementation, and the digests of what each side
     /// emitted are what the runner compares.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let dsl_bytes = ctx.fixture_bytes(ARTIFACT_DSL)?;
+        let dsl_bytes = ctx.input_bytes(ARTIFACT_DSL)?;
         let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: the derived artifact is not UTF-8: {error}"))?;
         let parsed = parse_semio_image_dsl(&text)?;
         let printed = print_semio_image_dsl(&parsed);
@@ -318,7 +320,7 @@ mod subject {
         if reparsed != parsed {
             return Err(disagreement("identity-round-trip: printing the snapshot back to DSL and reparsing it lost content", &reparsed, &parsed));
         }
-        let pack_bytes = ctx.fixture_bytes(ARTIFACT_PACK)?;
+        let pack_bytes = ctx.input_bytes(ARTIFACT_PACK)?;
         let unpacked = decode_semio_image_pack(&pack_bytes)?;
         if unpacked != parsed {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different animation than the committed text artifact", &unpacked, &parsed));

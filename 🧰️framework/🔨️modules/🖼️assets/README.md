@@ -45,6 +45,7 @@ Add or edit SVGs under `🔣️icons/`, then run the assets build launch configu
 - `clipboard-list`
 - `clock`
 - `cloud`
+- `cloud-download`
 - `code`
 - `columns`
 - `combine`

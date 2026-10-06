@@ -4,7 +4,7 @@ use super::*;
 use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
 
 fn cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔗️dependency-contribution/🔣️.json")).expect("neutral builder fixture cases")
+    serde_json::from_str(include_str!("../../🧪️testing/🔗️dependency-contribution/🔣️.json")).expect("neutral builder fixture cases")
 }
 fn operation(delta: i32) -> DependencyTestOp {
     DependencyTestOp::AddValue(AddValue { delta })
@@ -139,7 +139,7 @@ fn keyword_owned_record_codec_is_forwarded_once() {
     assert_eq!(spec.keyword.as_deref(), Some("add-value"));
     let variants = <DependencyTestOp as semio_framework_dsl_record::DslVariants>::variants();
     assert_eq!((variants[0].1.ordinary)().keyword, spec.keyword);
-    let rows: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️dependency-contribution/🔤️keywords/🔣️.json")).unwrap();
+    let rows: serde_json::Value = serde_json::from_str(include_str!("../../🧪️testing/🔗️dependency-contribution/🔤️keywords/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let delta = i32::try_from(row["delta"].as_i64().unwrap()).unwrap();
         let expected = row["text"].as_str().unwrap();
@@ -154,6 +154,6 @@ fn keyword_owned_record_codec_is_forwarded_once() {
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
-    ::store::os_store::test_support::assert_wire_witness::<DependencyTestOp>(include_str!("../../🧫️fixtures/🔗️dependency-contribution/🧬️mutations/➕️add-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<DependencyTestOp>(include_str!("../../🧪️testing/🔗️dependency-contribution/🧬️mutations/➕️add-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧪️DependencyContributionLaws

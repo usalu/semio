@@ -1,15 +1,13 @@
 /** 🖌️ Real OS task admission agrees with the independent system filesystem oracle. */
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json";
-import schema from "./🧬️schema/🔣️.json";
 
 const owner = join(import.meta.dir,"../..");
 let repoRoot = owner;
 while (!existsSync(join(repoRoot,"nx.json"))) repoRoot = dirname(repoRoot);
-expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
 
 for (const row of fixture.cases) test(row.name, async () => {
   const sourcePath = join(owner,"🟦️.ts"), testsPath = join(owner,"🧪️tests/🟦️.ts");

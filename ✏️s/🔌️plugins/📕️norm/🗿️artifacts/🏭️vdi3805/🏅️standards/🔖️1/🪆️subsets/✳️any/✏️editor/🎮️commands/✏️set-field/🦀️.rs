@@ -1,6 +1,6 @@
 //! Norm command — `set-field`.
 
-use crate::op::Vdi3805Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Vdi3805Mutation;
 use crate::Vdi3805Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

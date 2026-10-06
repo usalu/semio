@@ -37,6 +37,6 @@ pub fn patch_inspector(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     }
     let value = args.and_then(|value| value.get("value"));
     let delta = args.and_then(|value| value.get("delta"));
-    apply_puzzle3d_inspector_patch(&mut ctx.scene.fixture, entity, &ids, field, value, delta);
-    resolve_puzzle3d_attractions(&mut ctx.scene.fixture);
+    apply_puzzle3d_inspector_patch(&mut ctx.scene.scene_snapshot, entity, &ids, field, value, delta);
+    resolve_puzzle3d_attractions(&mut ctx.scene.scene_snapshot);
 }

@@ -95,7 +95,7 @@ async fn a_camera_gesture_without_a_concrete_window_is_refused_rather_than_writt
 
 #[semio_framework_async_macros::async_test]
 async fn the_args_bridge_canonicalizes_the_hosts_pose_and_refuses_a_foreign_action() {
-    let args = dsl::json::from_json_str::<semio_framework_value::DslValue>("{\"camera\":{\"position\":[12.0,-9.0,7.5],\"target\":[4.0,3.0,1.35],\"zoom\":1.0}}").expect("args");
+    let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>("{\"camera\":{\"position\":[12.0,-9.0,7.5],\"target\":[4.0,3.0,1.35],\"zoom\":1.0}}", semio_framework_pack_json::JsonMemberPolicy::Reject).expect("args");
     let command = command_from_action(model_window::SET_CAMERA_ACTION_ID, Some(&args)).expect("the bridge accepts the host's pose");
     let EnergyModelViewCommand::SetCamera { camera } = &command;
     assert!(camera.contains("\"position\":[12.0,-9.0,7.5]"), "the pose is canonicalized to the scene camera json: {camera}");

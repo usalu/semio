@@ -261,11 +261,11 @@ fn populated_graph_map_editor_surface_closes_one_fuel_turn_at_a_time() {
     let token = registry.reserve("all-cpu-owners").expect("fixed surface reservation");
     let mut surface = empty_engine_surface(800, 600);
     surface.node_graph = Some(NodeGraphEngine::Dag(GraphHost::default()));
-    surface.sync_cache.fixture_json = Some("x".repeat(8_192));
+    surface.sync_cache.snapshot_json = Some("x".repeat(8_192));
     surface.sync_cache.selection = Some(vec!["selected".repeat(512)]);
     surface.sync_cache.scene_pack = Some(vec![7; 8_192]);
     surface.map_host = Some(MapHost::new());
-    surface.map_sync_cache.map_fixture_json = Some("m".repeat(8_192));
+    surface.map_sync_cache.map_descriptor_json = Some("m".repeat(8_192));
     surface.editor = Some(EditorHost::default());
     surface.editor_scene_pack = Some(vec![11; 8_192]);
     assert!(registry.publish_reserved(token, surface).is_ok());
@@ -426,7 +426,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     assert_eq!(puzzle_board_wheel_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
     let board_after = with_board_host(board_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
     assert_eq!(board_after, board_before);
-    puzzle_board_pointer_down(board_id, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 100.0, 100.0, 1, false, false);
+    puzzle_board_pointer_down_into(board_id, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 100.0, 100.0, 1, false, false, &mut board_input).expect("an idle board takes the press");
     board_input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
     assert_eq!(puzzle_board_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
     assert!(with_board_host(board_id, |host| host.defers_descriptor_sync_from_js()).unwrap());

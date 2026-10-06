@@ -1,0 +1,26 @@
+[
+  {
+    "before": "one",
+    "after": "two"
+  },
+  {
+    "before": "retired",
+    "after": null
+  },
+  {
+    "before": "same",
+    "after": "same"
+  },
+  {
+    "before": "ä🔣",
+    "after": "ß"
+  },
+  {
+    "before": "",
+    "after": ""
+  },
+  {
+    "before": "old\nline",
+    "after": "new\nline"
+  }
+]

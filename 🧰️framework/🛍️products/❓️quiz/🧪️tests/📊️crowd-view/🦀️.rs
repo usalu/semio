@@ -22,7 +22,7 @@ mod subject {
 
     /// 🗃️ The crowd view of every committed vector.
     pub fn crowds(ctx: &Context) -> Result<Outcome, String> {
-        let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
+        let vectors: Value = serde_json::from_slice(&ctx.input_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         let quizzes = decode!(vectors["quizzes"], Vec<Quiz>)?;
         let mut projection = Map::new();
         for vector in vectors["vectors"].as_array().ok_or("the vectors carry no vectors")? {

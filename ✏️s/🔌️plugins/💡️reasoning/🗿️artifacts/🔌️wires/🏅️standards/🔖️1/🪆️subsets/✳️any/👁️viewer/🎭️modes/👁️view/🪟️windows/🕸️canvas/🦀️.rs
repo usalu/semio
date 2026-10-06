@@ -2,13 +2,13 @@
 //! independent of the sibling editor module (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
 //! contract §2.2) — never calls into it; duplicates the small, pure 2D-scene projection instead,
 //! built only from framework-level `build_canvas_2d_scene`/`Canvas2dScene` and artifact-level pure
-//! helpers (`wires_composed`, `fixture_camera`, `fixture_nodes`, `fixture_edges`,
+//! helpers (`wires_composed`, `board_snapshot_camera`, `board_snapshot_nodes`, `board_snapshot_edges`,
 //! `wires_relationships`, `dsl_to_json`) — the wires board is a general node/edge graph (cycles legal,
 //! see the artifact's own `topology.cycle_free` inference), so no SDK window kit (Text/Table/Tree/
 //! Image/Mesh/Document/Media) matches it directly; `TreeWindowKit` was checked and rejected for this
 //! reason before writing this render function by hand.
 
-use crate::schema::fixture_camera;
+use crate::schema::board_snapshot_camera;
 use crate::WiresComposed;
 use semio_framework_pack_json::Value;
 use semio_framework_plugin::BuiltNode;
@@ -29,6 +29,7 @@ const WIRES_VIEW_CANVAS_SURFACE_ID: &str = "reasoning.wires.view.composite";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::wires::create_wires_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WIRES_VIEW_WINDOW_CANVAS.into(),
         label: LocalizedLabel::native("Canvas", "Leinwand"),
         body_key: WIRES_VIEW_BODY_CANVAS.into(),
@@ -51,8 +52,8 @@ pub fn definition() -> WindowKindDefinition {
 /// 🖼️ The read-only canvas: the schema's own `wires_canvas_layers` projection — the viewer stays
 /// independent of the editor (contract §2.2) by sharing the schema, never an editor window.
 pub fn render(composed: &WiresComposed) -> UiAssemblyResult<BuiltNode> {
-    let (camera_x, camera_y, zoom) = fixture_camera(&composed.board);
-    let layers = crate::schema::wires_canvas_layers(&composed.board, &composed.fixture);
+    let (camera_x, camera_y, zoom) = board_snapshot_camera(&composed.board);
+    let layers = crate::schema::wires_canvas_layers(&composed.board, &composed.identity_snapshot);
     semio_framework_plugin::scene_surface(
         WIRES_VIEW_CANVAS_SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,

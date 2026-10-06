@@ -16,7 +16,7 @@ fn zip_is_a_real_archive_of_the_exact_document() {
     let bytes = zip_out::serialize_bytes(&assembly()).expect("zip export");
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes.clone())).expect("the zip crate opens the archive");
     let mut member = String::new();
-    archive.by_name(&semio_s_artifact_stdio_zip::io::document_archive_member::<Puzzle5dSnapshot>()).expect("dsl member").read_to_string(&mut member).expect("utf-8 member");
+    archive.by_name(&semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::document_archive_member::<Puzzle5dSnapshot>()).expect("dsl member").read_to_string(&mut member).expect("utf-8 member");
     assert_eq!(member, <Puzzle5dSnapshot as store::ArtifactDsl>::print_dsl(&assembly()));
     assert!(archive.by_name("snapshot.json").is_ok());
     assert_eq!(zip_in::deserialize_bytes(&bytes).expect("zip import"), assembly());
@@ -24,7 +24,7 @@ fn zip_is_a_real_archive_of_the_exact_document() {
 
 #[test]
 fn png_draws_the_board() {
-    let png = semio_s_artifact_stdio_png::io::png_layout(&semio_s_artifact_stdio_png::io::decode_png(&png_out::serialize_bytes(&assembly()).expect("png")).expect("decodes as png")).expect("png header");
+    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::png_layout(&semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(&png_out::serialize_bytes(&assembly()).expect("png")).expect("decodes as png")).expect("png header");
     assert!(png.width >= 64 && png.height >= 64);
 }
 

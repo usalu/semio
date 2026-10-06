@@ -78,7 +78,7 @@ func newPayload(name string) any {
 
 func loadVectors(ctx *host.Context) (payloadVectors, error) {
 	var vectors payloadVectors
-	data, err := ctx.FixtureBytes("shared://✉️payload-vectors.json")
+	data, err := ctx.InputBytes("shared://✉️payload-vectors.json")
 	if err != nil {
 		return vectors, err
 	}

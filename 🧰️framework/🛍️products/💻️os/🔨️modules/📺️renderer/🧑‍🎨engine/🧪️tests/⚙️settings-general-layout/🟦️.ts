@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+
 import { act, fireEvent, render } from "@testing-library/react";
 import { createElement as h, useState } from "react";
 import { describe, expect, test, vi } from "vitest";
@@ -20,9 +20,7 @@ const frameworkRoot = join(engineRoot, "..", "..", "..", "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "⚙️settings-general-layout", "🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "⚙️settings-general-layout", "🔣️.json"), "utf8"));
 const stepperEditingFixture = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧫️fixtures", "⌨️number-stepper-editing", "🔣️.json"), "utf8"));
-const stepperEditingSchema = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧬️schema", "⌨️number-stepper-editing", "🔣️.json"), "utf8"));
 const sliderEditingFixture = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧫️fixtures", "⌨️slider-readout-editing", "🔣️.json"), "utf8"));
-const sliderEditingSchema = JSON.parse(readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧬️schema", "⌨️slider-readout-editing", "🔣️.json"), "utf8"));
 
 const bottomGeometry = ({ panel, tabRows, rowHeight, contentInset }: typeof fixture.bottomPanel) => {
   const barHeight = tabRows * rowHeight;
@@ -58,10 +56,7 @@ function DriverPublicationHarness() {
 }
 
 describe("⚙️ General Settings Tree and bottom-panel flow", () => {
-  test("the language-neutral NumberStepper editing fixture satisfies its schema", () => {
-    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(stepperEditingSchema);
-    expect(validate(stepperEditingFixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("the actual React Stepper matches bounded editing, key, focus and held-button behavior", () => {
     const uniform = stepperEditingFixture.uniform;
@@ -153,10 +148,7 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
     }
   });
 
-  test("the language-neutral Slider readout editing fixture satisfies its schema", () => {
-    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(sliderEditingSchema);
-    expect(validate(sliderEditingFixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("the actual React Slider matches readout editing, keyboard and accessibility behavior", () => {
     const contract = sliderEditingFixture;

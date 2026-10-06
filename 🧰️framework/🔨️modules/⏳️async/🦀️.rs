@@ -1593,8 +1593,8 @@ impl FixedSlotTableBudget {
 /// to completion on a thread holding only `stack_bytes`.
 ///
 /// Callers supply `declared` from the [fixed-slot fixture](🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json) and `measured` from `size_of` at the
-/// one site where the private slot types are nameable; this function owns every assertion so the six
-/// crate-side guards stay four lines of JSON extraction each.
+/// one site where the private slot types are nameable; each caller owns its physical descriptor.
+/// This function owns the reusable assertions without enumerating callers.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn assert_fixed_slot_tables(guard: &str, stack_bytes: usize, threshold_bytes: usize, declared: &[FixedSlotTableBudget], measured: &[FixedSlotTableBudget], build: impl FnOnce() + Send + 'static) {
     assert!(!declared.is_empty(), "🧱️ guard '{guard}' owns no row in the committed fixed-slot-table budget");

@@ -1,0 +1,223 @@
+{
+  "cases": [
+    {
+      "name": "small-object",
+      "value": {
+        "a": 1,
+        "b": true,
+        "c": null
+      },
+      "chunkBytes": 64,
+      "mode": "success"
+    },
+    {
+      "name": "many-properties",
+      "value": {
+        "key0": {
+          "n": 0,
+          "text": "🧬é-0"
+        },
+        "key1": {
+          "n": 1,
+          "text": "🧬é-1"
+        },
+        "key2": {
+          "n": 2,
+          "text": "🧬é-2"
+        },
+        "key3": {
+          "n": 3,
+          "text": "🧬é-3"
+        },
+        "key4": {
+          "n": 4,
+          "text": "🧬é-4"
+        },
+        "key5": {
+          "n": 5,
+          "text": "🧬é-5"
+        },
+        "key6": {
+          "n": 6,
+          "text": "🧬é-6"
+        },
+        "key7": {
+          "n": 7,
+          "text": "🧬é-7"
+        },
+        "key8": {
+          "n": 8,
+          "text": "🧬é-8"
+        },
+        "key9": {
+          "n": 9,
+          "text": "🧬é-9"
+        },
+        "key10": {
+          "n": 10,
+          "text": "🧬é-10"
+        },
+        "key11": {
+          "n": 11,
+          "text": "🧬é-11"
+        },
+        "key12": {
+          "n": 12,
+          "text": "🧬é-12"
+        },
+        "key13": {
+          "n": 13,
+          "text": "🧬é-13"
+        },
+        "key14": {
+          "n": 14,
+          "text": "🧬é-14"
+        },
+        "key15": {
+          "n": 15,
+          "text": "🧬é-15"
+        },
+        "key16": {
+          "n": 16,
+          "text": "🧬é-16"
+        },
+        "key17": {
+          "n": 17,
+          "text": "🧬é-17"
+        },
+        "key18": {
+          "n": 18,
+          "text": "🧬é-18"
+        },
+        "key19": {
+          "n": 19,
+          "text": "🧬é-19"
+        },
+        "key20": {
+          "n": 20,
+          "text": "🧬é-20"
+        },
+        "key21": {
+          "n": 21,
+          "text": "🧬é-21"
+        },
+        "key22": {
+          "n": 22,
+          "text": "🧬é-22"
+        },
+        "key23": {
+          "n": 23,
+          "text": "🧬é-23"
+        },
+        "key24": {
+          "n": 24,
+          "text": "🧬é-24"
+        },
+        "key25": {
+          "n": 25,
+          "text": "🧬é-25"
+        },
+        "key26": {
+          "n": 26,
+          "text": "🧬é-26"
+        },
+        "key27": {
+          "n": 27,
+          "text": "🧬é-27"
+        },
+        "key28": {
+          "n": 28,
+          "text": "🧬é-28"
+        },
+        "key29": {
+          "n": 29,
+          "text": "🧬é-29"
+        },
+        "key30": {
+          "n": 30,
+          "text": "🧬é-30"
+        },
+        "key31": {
+          "n": 31,
+          "text": "🧬é-31"
+        }
+      },
+      "chunkBytes": 32,
+      "mode": "success"
+    },
+    {
+      "name": "unicode-byte-boundary",
+      "value": {
+        "message": "🧬😀ä漢字",
+        "array": [
+          "é",
+          "🌳"
+        ]
+      },
+      "chunkBytes": 2,
+      "mode": "success"
+    },
+    {
+      "name": "empty-object",
+      "value": {},
+      "chunkBytes": 64,
+      "mode": "success"
+    },
+    {
+      "name": "primitive",
+      "value": true,
+      "chunkBytes": 8,
+      "mode": "success"
+    },
+    {
+      "name": "partial-write",
+      "value": {
+        "body": "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc"
+      },
+      "chunkBytes": 8,
+      "partialBytes": 3,
+      "mode": "success"
+    },
+    {
+      "name": "zero-progress",
+      "value": {
+        "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "chunkBytes": 8,
+      "mode": "zero"
+    },
+    {
+      "name": "pre-cancellation",
+      "value": {
+        "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "chunkBytes": 8,
+      "mode": "pre"
+    },
+    {
+      "name": "mid-cancellation",
+      "value": {
+        "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "chunkBytes": 8,
+      "mode": "mid"
+    },
+    {
+      "name": "close-cancellation",
+      "value": {
+        "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "chunkBytes": 8,
+      "mode": "close"
+    },
+    {
+      "name": "concurrent-target",
+      "value": {
+        "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "chunkBytes": 8,
+      "mode": "foreign",
+      "foreign": "Exact foreign bytes 🧬"
+    }
+  ]
+}

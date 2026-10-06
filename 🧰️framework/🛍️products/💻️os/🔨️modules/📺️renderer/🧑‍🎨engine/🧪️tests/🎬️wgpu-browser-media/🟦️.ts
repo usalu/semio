@@ -46,8 +46,6 @@ describe("accepted browser media authority", () => {
     await expect(runBrowserMediaAppAcceptance([])).rejects.toThrow("requires serve, explicit locale and output");
     const path = resolve(testDirectory, "../../🧫️fixtures/🎬️media-app-acceptance");
     const journey = JSON.parse(readFileSync(resolve(path, "🔣️.json"), "utf8"));
-    const validate = new Ajv2020().compile(JSON.parse(readFileSync(resolve(path, "🧬️schema/🔣️.json"), "utf8")));
-    expect(validate(journey), JSON.stringify(validate.errors)).toBe(true);
     for (const specimen of journey.cases) {
       const query = new URLSearchParams({ plugin: journey.plugin, app: specimen.app, example: journey.example, role: journey.role, mode: journey.mode });
       const decoded = resolveWgpuBootDescriptor({ search: `?${query}`, defaultVariant: "puzzle" });

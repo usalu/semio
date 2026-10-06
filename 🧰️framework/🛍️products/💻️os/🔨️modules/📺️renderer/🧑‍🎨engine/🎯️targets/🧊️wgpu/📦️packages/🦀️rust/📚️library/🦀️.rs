@@ -21,3 +21,7 @@ mod native_entrypoint;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use native_entrypoint::run_native_entrypoint;
+
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🎨️wgpu-paint-policy/🦀️.rs"]
+mod paint_policy_tests;

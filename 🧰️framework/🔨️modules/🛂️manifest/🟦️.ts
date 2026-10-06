@@ -22,137 +22,7 @@ import { UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplayText } fr
 
 // #region 🧬️GeneratedMirror
 /** 🧬️ Types generated from `framework/core/rs/lib.rs` via the owned schema exporter (`bun nx run @semio-tech/framework:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
-import type {
-  ActionDescriptor as GeneratedActionDescriptor,
-  ActionKind as GeneratedActionKind,
-  ActionDefinition as GeneratedActionDefinition,
-  ActionAddress as GeneratedActionAddress,
-  ActionInvocation as GeneratedActionInvocation,
-  ActionArgDef as GeneratedActionArgDef,
-  ActionArgControl as GeneratedActionArgControl,
-  ActionArgOption as GeneratedActionArgOption,
-  // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
-  // `ArgSchema`/`ArgFormat`/`ArgPresentation` are the new stored-truth vocabulary behind
-  // `ActionArgDef.schema`/`.presentation` — `argControl()` below mirrors Rust `ActionArgDef::control()`.
-  ArgSchema as GeneratedArgSchema,
-  ArgFormat as GeneratedArgFormat,
-  ArgPresentation as GeneratedArgPresentation,
-  SnapSource as GeneratedSnapSource,
-  OptionSource as GeneratedOptionSource,
-  NumberScale as GeneratedNumberScale,
-  ReferenceIdType as GeneratedReferenceIdType,
-  // 🎯️ §3.1 `🔖️ActionSemantics` — effects/policy/execution + natural-language framing.
-  ResourceSelector as GeneratedResourceSelector,
-  CapabilityEffects as GeneratedCapabilityEffects,
-  ApprovalMode as GeneratedApprovalMode,
-  CapabilityPolicy as GeneratedCapabilityPolicy,
-  PreviewMode as GeneratedPreviewMode,
-  UndoMode as GeneratedUndoMode,
-  IdempotencyMode as GeneratedIdempotencyMode,
-  ExecutionClass as GeneratedExecutionClass,
-  CapabilityExecution as GeneratedCapabilityExecution,
-  ActionSemantics as GeneratedActionSemantics,
-  UtilityDefinition as GeneratedUtilityDefinition,
-  UtilityRef as GeneratedUtilityRef,
-  // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
-  // definition family (see `🕹️interaction/🦀️.rs`), typegen-mirrored here exactly like
-  // its `Action*`/`Utility*` neighbors above.
-  InteractionDefinition as GeneratedInteractionDefinition,
-  GranularityDefinition as GeneratedGranularityDefinition,
-  HierarchyProvider as GeneratedHierarchyProvider,
-  HoverSpec as GeneratedHoverSpec,
-  SelectionSpec as GeneratedSelectionSpec,
-  SelectionMode as GeneratedSelectionMode,
-  SelectionMethod as GeneratedSelectionMethod,
-  MergeMode as GeneratedMergeMode,
-  InteractionRef as GeneratedInteractionRef,
-  // 🕹️ W3a: `TutorialUiSnapshot.interactionSelection` carries this directly (see
-  // `TutorialUiChange` below) — the manifest-typegen twin of the hand-written runtime
-  // `DomainSelection` in `🕹️interaction/🟦️.ts`, same duplication shape as
-  // `HierarchyProvider`/`HoverSpec`/`SelectionSpec`/`MergeMode` above.
-  DomainSelection as GeneratedDomainSelection,
-  ToolDefinition as GeneratedToolDefinition,
-  ToolRef as GeneratedToolRef,
-  JobKindId as GeneratedJobKindId,
-  ToolRunCounterDefinition as GeneratedToolRunCounterDefinition,
-  ToolRunDefinition as GeneratedToolRunDefinition,
-  ToolRunReasonDefinition as GeneratedToolRunReasonDefinition,
-  ToolRunRebasePolicy as GeneratedToolRunRebasePolicy,
-  ToolRunReconfigurePolicy as GeneratedToolRunReconfigurePolicy,
-  ToolRunSettingsReads as GeneratedToolRunSettingsReads,
-  ToolRunStageDefinition as GeneratedToolRunStageDefinition,
-  ToolRunTraceKind as GeneratedToolRunTraceKind,
-  ToolRunVerdict as GeneratedToolRunVerdict,
-  CommandDefinition as GeneratedCommandDefinition,
-  CommandOwnerAddress as GeneratedCommandOwnerAddress,
-  CommandAddress as GeneratedCommandAddress,
-  CommandInvocation as GeneratedCommandInvocation,
-  OsDefinition as GeneratedOsDefinition,
-  Platform as GeneratedPlatform,
-  PlatformKeybinding as GeneratedPlatformKeybinding,
-  WindowMeasure as GeneratedWindowMeasure,
-  WindowEngagementOption as GeneratedWindowEngagementOption,
-  WindowEngagementInput as GeneratedWindowEngagementInput,
-  WindowEngagementStatus as GeneratedWindowEngagementStatus,
-  WindowEngagementPossible as GeneratedWindowEngagementPossible,
-  WindowEngagementRingOption as GeneratedWindowEngagementRingOption,
-  WindowEngagementToggleGroupOption as GeneratedWindowEngagementToggleGroupOption,
-  WindowEngagementSelectItem as GeneratedWindowEngagementSelectItem,
-  WindowEngagementControl as GeneratedWindowEngagementControl,
-  WindowEngagement as GeneratedWindowEngagement,
-  WindowEngagementSlot as GeneratedWindowEngagementSlot,
-  WindowOptions as GeneratedWindowOptions,
-  ActionRef as GeneratedActionRef,
-  PanelGroup as GeneratedPanelGroup,
-  PanelTabKind as GeneratedPanelTabKind,
-  PanelTabDefinition as GeneratedPanelTabDefinition,
-  ModeDefinition as GeneratedModeDefinition,
-  WindowKindDefinition as GeneratedWindowKindDefinition,
-  AppDefinition as GeneratedAppDefinition,
-  IntroductionDefinition as GeneratedIntroductionDefinition,
-  IntroductionStepDefinition as GeneratedIntroductionStepDefinition,
-  IntroductionPlacement as GeneratedIntroductionPlacement,
-  IntroductionInteraction as GeneratedIntroductionInteraction,
-  IntroductionInteractionKind as GeneratedIntroductionInteractionKind,
-  IntroductionLogo as GeneratedIntroductionLogo,
-  IntroductionPoint as GeneratedIntroductionPoint,
-  IntroductionGesture as GeneratedIntroductionGesture,
-  IntroductionKeyModifier as GeneratedIntroductionKeyModifier,
-  IntroductionPointerButton as GeneratedIntroductionPointerButton,
-  IntroductionCursor as GeneratedIntroductionCursor,
-  IntroductionDemonstration as GeneratedIntroductionDemonstration,
-  DialogChoice as GeneratedDialogChoice,
-  DialogDefinition as GeneratedDialogDefinition,
-  // 🎬️ `//#region 🔖️Tutorial` (`🛂️manifest/🦀️.rs`) — the timeline sibling of
-  // `IntroductionDefinition`, typegen-mirrored here exactly like its `Introduction*` neighbors above.
-  TutorialDocumentEvent as GeneratedTutorialDocumentEvent,
-  TutorialDocumentEventKind as GeneratedTutorialDocumentEventKind,
-  TutorialAssetSrc as GeneratedTutorialAssetSrc,
-  TutorialBase as GeneratedTutorialBase,
-  TutorialCameraKeyframe as GeneratedTutorialCameraKeyframe,
-  TutorialCameraState as GeneratedTutorialCameraState,
-  TutorialCaption as GeneratedTutorialCaption,
-  TutorialChapter as GeneratedTutorialChapter,
-  TutorialDefinition as GeneratedTutorialDefinition,
-  TutorialEasing as GeneratedTutorialEasing,
-  TutorialEvent as GeneratedTutorialEvent,
-  TutorialEventKind as GeneratedTutorialEventKind,
-  TutorialGestureCue as GeneratedTutorialGestureCue,
-  TutorialNarrationCue as GeneratedTutorialNarrationCue,
-  TutorialOverlayRect as GeneratedTutorialOverlayRect,
-  TutorialTracks as GeneratedTutorialTracks,
-  TutorialUiChange as GeneratedTutorialUiChange,
-  TutorialUiKeyframe as GeneratedTutorialUiKeyframe,
-  TutorialUiSample as GeneratedTutorialUiSample,
-  TutorialUiSnapshot as GeneratedTutorialUiSnapshot,
-  TutorialVideoCue as GeneratedTutorialVideoCue,
-  UiPresence as GeneratedUiPresence,
-  UiState as GeneratedUiState,
-  UiStatus as GeneratedUiStatus,
-  // 🎫️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION §C8.1: the
-  // `🔖️HostResolvedArgs` region below (`ArtifactKindChoice`/`SurfaceAppChoice`/`artifactKindChoices`)
-  // names all three by hand, unlike `ArgFormat`'s inline `roles: Array<AppRole>` above.
-} from "./🤖️generated/🪪️manifest/🟦️.ts";
+import type { ActionDescriptor as GeneratedActionDescriptor, ActionKind as GeneratedActionKind, ActionDefinition as GeneratedActionDefinition, ActionAddress as GeneratedActionAddress, ActionInvocation as GeneratedActionInvocation, ActionArgDef as GeneratedActionArgDef, ActionArgControl as GeneratedActionArgControl, ActionArgOption as GeneratedActionArgOption, ArgSchema as GeneratedArgSchema, ArgFormat as GeneratedArgFormat, ArgPresentation as GeneratedArgPresentation, SnapSource as GeneratedSnapSource, OptionSource as GeneratedOptionSource, NumberScale as GeneratedNumberScale, ReferenceIdType as GeneratedReferenceIdType, ResourceSelector as GeneratedResourceSelector, CapabilityEffects as GeneratedCapabilityEffects, ApprovalMode as GeneratedApprovalMode, CapabilityPolicy as GeneratedCapabilityPolicy, PreviewMode as GeneratedPreviewMode, UndoMode as GeneratedUndoMode, IdempotencyMode as GeneratedIdempotencyMode, ExecutionClass as GeneratedExecutionClass, CapabilityExecution as GeneratedCapabilityExecution, ActionSemantics as GeneratedActionSemantics, UtilityDefinition as GeneratedUtilityDefinition, UtilityRef as GeneratedUtilityRef, InteractionDefinition as GeneratedInteractionDefinition, GranularityDefinition as GeneratedGranularityDefinition, HierarchyProvider as GeneratedHierarchyProvider, HoverSpec as GeneratedHoverSpec, SelectionSpec as GeneratedSelectionSpec, SelectionMode as GeneratedSelectionMode, SelectionMethod as GeneratedSelectionMethod, MergeMode as GeneratedMergeMode, InteractionRef as GeneratedInteractionRef, DomainSelection as GeneratedDomainSelection, ToolDefinition as GeneratedToolDefinition, ToolRef as GeneratedToolRef, JobKindId as GeneratedJobKindId, ToolRunCounterDefinition as GeneratedToolRunCounterDefinition, ToolRunDefinition as GeneratedToolRunDefinition, ToolRunReasonDefinition as GeneratedToolRunReasonDefinition, ToolRunRebasePolicy as GeneratedToolRunRebasePolicy, ToolRunReconfigurePolicy as GeneratedToolRunReconfigurePolicy, ToolRunSettingsReads as GeneratedToolRunSettingsReads, ToolRunStageDefinition as GeneratedToolRunStageDefinition, ToolRunTraceKind as GeneratedToolRunTraceKind, ToolRunVerdict as GeneratedToolRunVerdict, CommandDefinition as GeneratedCommandDefinition, CommandOwnerAddress as GeneratedCommandOwnerAddress, CommandAddress as GeneratedCommandAddress, CommandInvocation as GeneratedCommandInvocation, OsDefinition as GeneratedOsDefinition, Platform as GeneratedPlatform, PlatformKeybinding as GeneratedPlatformKeybinding, WindowMeasure as GeneratedWindowMeasure, WindowEngagementOption as GeneratedWindowEngagementOption, WindowEngagementInput as GeneratedWindowEngagementInput, WindowEngagementStatus as GeneratedWindowEngagementStatus, WindowEngagementPossible as GeneratedWindowEngagementPossible, WindowEngagementRingOption as GeneratedWindowEngagementRingOption, WindowEngagementToggleGroupOption as GeneratedWindowEngagementToggleGroupOption, WindowEngagementSelectItem as GeneratedWindowEngagementSelectItem, WindowEngagementControl as GeneratedWindowEngagementControl, WindowEngagement as GeneratedWindowEngagement, WindowEngagementSlot as GeneratedWindowEngagementSlot, WindowOptions as GeneratedWindowOptions, ActionRef as GeneratedActionRef, PanelGroup as GeneratedPanelGroup, PanelTabKind as GeneratedPanelTabKind, PanelTabDefinition as GeneratedPanelTabDefinition, ModeDefinition as GeneratedModeDefinition, WindowKindDefinition as GeneratedWindowKindDefinition, AppDefinition as GeneratedAppDefinition, IntroductionDefinition as GeneratedIntroductionDefinition, IntroductionStepDefinition as GeneratedIntroductionStepDefinition, IntroductionPlacement as GeneratedIntroductionPlacement, IntroductionInteraction as GeneratedIntroductionInteraction, IntroductionInteractionKind as GeneratedIntroductionInteractionKind, IntroductionLogo as GeneratedIntroductionLogo, IntroductionPoint as GeneratedIntroductionPoint, IntroductionGesture as GeneratedIntroductionGesture, IntroductionKeyModifier as GeneratedIntroductionKeyModifier, IntroductionPointerButton as GeneratedIntroductionPointerButton, IntroductionCursor as GeneratedIntroductionCursor, IntroductionDemonstration as GeneratedIntroductionDemonstration, DialogChoice as GeneratedDialogChoice, DialogDefinition as GeneratedDialogDefinition, TutorialDocumentEvent as GeneratedTutorialDocumentEvent, TutorialDocumentEventKind as GeneratedTutorialDocumentEventKind, TutorialAssetSrc as GeneratedTutorialAssetSrc, TutorialBase as GeneratedTutorialBase, TutorialCameraKeyframe as GeneratedTutorialCameraKeyframe, TutorialCameraState as GeneratedTutorialCameraState, TutorialCaption as GeneratedTutorialCaption, TutorialChapter as GeneratedTutorialChapter, TutorialDefinition as GeneratedTutorialDefinition, TutorialEasing as GeneratedTutorialEasing, TutorialEvent as GeneratedTutorialEvent, TutorialEventKind as GeneratedTutorialEventKind, TutorialGestureCue as GeneratedTutorialGestureCue, TutorialNarrationCue as GeneratedTutorialNarrationCue, TutorialOverlayRect as GeneratedTutorialOverlayRect, TutorialUiChange as GeneratedTutorialUiChange, TutorialUiKeyframe as GeneratedTutorialUiKeyframe, TutorialUiSnapshot as GeneratedTutorialUiSnapshot, TutorialVideoCue as GeneratedTutorialVideoCue, UiPresence as GeneratedUiPresence, UiState as GeneratedUiState, UiStatus as GeneratedUiStatus } from "./🤖️generated/🪪️manifest/🟦️.ts";
 // #endregion 🧬️GeneratedMirror
 
 // #region 🧬️GeneratedUiContract
@@ -188,6 +58,7 @@ import type {
   SeparatorProps as GeneratedSeparatorProps,
   InputProps as GeneratedInputProps,
   SelectProps as GeneratedSelectProps,
+  SelectAppearance as GeneratedSelectAppearance,
   ToggleProps as GeneratedToggleProps,
   ToggleAppearance as GeneratedToggleAppearance,
   KeyValueListProps as GeneratedKeyValueListProps,
@@ -281,6 +152,7 @@ export type ButtonProps = GeneratedButtonProps;
 export type SeparatorProps = GeneratedSeparatorProps;
 export type InputProps = GeneratedInputProps;
 export type SelectProps = GeneratedSelectProps;
+export type SelectAppearance = GeneratedSelectAppearance;
 export type ToggleProps = GeneratedToggleProps;
 export type ToggleAppearance = GeneratedToggleAppearance;
 export type KeyValueListProps = GeneratedKeyValueListProps;
@@ -594,8 +466,8 @@ export function actionSemanticsForKind(kind: ActionKind): ActionSemantics {
 /** 🎛️ Mirrors Rust `ActionArgDef::control()` exactly (D6): derives the renderer-facing
  * `ActionArgControl` from `def.schema`/`def.presentation` — the ONLY place a TS reader should reach
  * for an argument's widget kind; never reconstructs `ActionArgControl` from `schema` by hand.
- * Priority matches Rust: non-empty `options` always wins Select (or Segmented); a number's presentation
- * wins, else an integer steps, else a fully bounded number slides, else it is a plain number field. */
+ * Priority matches Rust: non-empty `options` always wins Select (or Segmented); a plain string declared multiline is
+ * Multiline; a number's presentation wins, else an integer steps, else a fully bounded number slides, else it is a plain number field. */
 export function argControl(def: ActionArgDef): ActionArgControl {
   const schema = def.schema;
   switch (schema.kind) {
@@ -606,7 +478,7 @@ export function argControl(def: ActionArgDef): ActionArgControl {
       if (format?.kind === "iconId") return { kind: "iconSelect", classifierKind: "icon" };
       if (format?.kind === "artifactKind") return { kind: "artifactKind", roles: format.roles };
       if (format?.kind === "surfaceApp") return { kind: "surfaceApp", roles: format.roles, dialectArg: format.dialectArg };
-      return { kind: "text" };
+      return def.presentation?.kind === "multiline" ? { kind: "multiline" } : { kind: "text" };
     }
     case "number": {
       const facets = { step: schema.step, unit: schema.unit, precision: schema.precision, displayUnit: schema.displayUnit, displayFactor: schema.displayFactor };
@@ -1716,7 +1588,7 @@ export const HOST_EVENT_ACTION_ID = "hostEvent";
 export const HOST_EVENT_KINDS = ["blur", "captureLost", "retiring"] as const;
 export type HostEventKind = (typeof HOST_EVENT_KINDS)[number];
 
-/** ✏️ Mirrors Rust `HISTORY_EDIT_ACTION_IDS` — the twelve reserved history-edit verbs, host-driven on the instance's
+/** ✏️ Mirrors Rust `HISTORY_EDIT_ACTION_IDS` — the thirteen reserved history-edit verbs, host-driven on the instance's
  * one time-travel session. Every verb but `historyEditBegin`/`historyEditExit` may carry `generation`
  * ({@link HISTORY_EDIT_ARG_GENERATION}); without it the verb addresses the live session. */
 export const HISTORY_EDIT_ACTION_IDS = [
@@ -1726,6 +1598,7 @@ export const HISTORY_EDIT_ACTION_IDS = [
   "historyEditWithdraw",
   "historyEditAccept",
   "historyEditDiscard",
+  "historyEditRestore",
   "historyEditFinalize",
   "historyEditCommit",
   "historyEditBack",
@@ -1734,9 +1607,9 @@ export const HISTORY_EDIT_ACTION_IDS = [
   "historyEditRerun",
 ] as const;
 export type HistoryEditActionId = (typeof HISTORY_EDIT_ACTION_IDS)[number];
-/** 🪪️ `historyEditBegin`'s mutation id argument — mirrors Rust `HISTORY_EDIT_ARG_MUTATION_ID`. */
+/** 🪪️ The mutation id argument of `historyEditBegin`, of a row's `historyEditWithdraw` and of `historyEditRestore` — mirrors Rust `HISTORY_EDIT_ARG_MUTATION_ID`. */
 export const HISTORY_EDIT_ARG_MUTATION_ID = "mutationId";
-/** 🧩️ `historyEditBegin`'s member store argument (`<slot>/<childId>`), absent for the document's own store — mirrors Rust `HISTORY_EDIT_ARG_STORE`. */
+/** 🧩️ The member store argument (`<slot>/<childId>`) beside every `mutationId`, absent for the document's own store — mirrors Rust `HISTORY_EDIT_ARG_STORE`. */
 export const HISTORY_EDIT_ARG_STORE = "store";
 /** 🧭️ The input pointer argument — mirrors Rust `HISTORY_EDIT_ARG_PATH`. */
 export const HISTORY_EDIT_ARG_PATH = "path";
@@ -1763,7 +1636,7 @@ export type PluginViewState = {
   /** 🧰️ Per-call overlay: host-owned active utility for the window targeted by this render/action (`windowId`). */
   readonly activeUtilityId?: string;
   /** 🧰️ Host-owned active utility per window instance (never a document field, never a VCS operation). */
-  readonly activeUtilityByWindowId?: Readonly<Record<string, string>>;
+  readonly activeUtilityByWindowId?: Readonly<Record<string, string | null>>;
   /** 🛠️ Host-owned active tool of the active mode (never a document field, never a VCS operation) — mutually
    * exclusive with `activeUtilityId`: activating one clears the other. */
   readonly activeToolId?: string;
@@ -1911,7 +1784,7 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
   if (row.activeUtilityByWindowId !== undefined) {
     const entries = Object.entries(object(row.activeUtilityByWindowId));
     if (entries.length > 64) throw new Error("view context: utility capacity exceeded");
-    for (const [key, item] of entries) { identifier(key); identifier(item); }
+    for (const [key, item] of entries) { identifier(key); if (item !== null) identifier(item); }
   }
   if (row.windowInstances !== undefined) {
     if (!Array.isArray(row.windowInstances) || row.windowInstances.length > 64) throw new Error("view context: window capacity exceeded");
@@ -1997,7 +1870,7 @@ export function windowViewContext(view: PluginViewState, windowId: string): Plug
   const window = view.windowInstances?.find((window) => window.id === windowId);
   if (!window) return undefined;
   const utility = view.activeUtilityByWindowId;
-  return { ...view, windowId: window.id, activeWindowKindId: window.windowKindId, activeUtilityId: utility && Object.hasOwn(utility, windowId) ? utility[windowId] : undefined };
+  return { ...view, windowId: window.id, activeWindowKindId: window.windowKindId ?? undefined, activeUtilityId: utility && Object.hasOwn(utility, windowId) ? utility[windowId] ?? undefined : undefined };
 }
 
 /** 📌️ Projects app-level panels without binding their controls to a window. `focusedWindowId`

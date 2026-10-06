@@ -1,0 +1,1336 @@
+{
+  "qualification": "HELD source/guard map only. No production/test edits or gates. Every actual source guard must refresh when implementing; unknown renderer details are not fabricated executable code.",
+  "sources": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🦀️.rs",
+      "sha256": "673e88d515eb3ebe5fc4bfd82d840cd3d4a2be65b24e9c8ba46292652c7661b2",
+      "category": "manifest-root",
+      "role": "viewer",
+      "guardedLines": [
+        {
+          "line": 9,
+          "before": "use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 55,
+          "before": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 58,
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+      "sha256": "73c683f1109cb212ff0cc8d2b3d133947720a54fbf84f5dc6ba5c80b2a311cbb",
+      "category": "mode",
+      "role": "viewer",
+      "guardedLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+      "sha256": "e87983318c2a835f386ae7d913e0beab07355d939659f3b50962c4bedac4946a",
+      "category": "window-render",
+      "role": "viewer",
+      "guardedLines": [
+        {
+          "line": 3,
+          "before": "//! `DocumentWindowKit` (contract §2.6). One `DocumentPage` per `PdfPage`: the page's real `MediaBox`/",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 4,
+          "before": "//! `CropBox` geometry (never fabricated) followed by its own `text` field -- a genuine field of",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 8,
+          "before": "use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 9,
+          "before": "use crate::PdfSnapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 33,
+          "before": "    let crop = page.crop_box.map(|c| format!(\", CropBox [{:.1}, {:.1}, {:.1}, {:.1}]\", c[0], c[1], c[2], c[3])).unwrap_or_default();",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 35,
+          "before": "    format!(\"Page {} -- MediaBox [{:.1}, {:.1}, {:.1}, {:.1}]{}\\n{}\", index + 1, media[0], media[1], media[2], media[3], crop, text)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "cadb5c9ac3fe758517c98514b0fe42b86da4470f73577159be1213c87b22764d",
+      "category": "window-law",
+      "role": "viewer",
+      "guardedLines": [
+        {
+          "line": 2,
+          "before": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 19,
+          "before": "    assert!(page.buffer.contains(\"MediaBox\"));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
+      "sha256": "14cb4b9df204956710439040021c0e803530a36e1d67f40258cc565c4a3ee5c6",
+      "category": "manifest-root",
+      "role": "editor",
+      "guardedLines": [
+        {
+          "line": 3,
+          "before": "//! their real subsets) share ONE unified logical object model -- `crate::PdfSnapshot`/",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 16,
+          "before": "use crate::standards::v1_7::subsets::base::schema::mutations::set_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 17,
+          "before": "use crate::standards::v1_7::subsets::base::schema::mutations::patch_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 18,
+          "before": "use crate::{page_text_edit_mutation, PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 96,
+          "before": "semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf14XEditorCommand, [\"set-page\", \"set-text\", \"move\", \"resize\", \"delete\", \"set-fill\", \"set-stroke\", \"insert-text\", \"insert-rectangle\", \"insert-line\", \"insert-image\", \"insert-page\", \"remove-page\", \"move-page\", \"set-page-size\", \"set-info\", \"set-annotation\", \"set-image\", \"set-font\", \"set-outline\", \"set-page-rotation\", \"set-page-box\", \"set-page-user-unit\", \"set-language\", \"set-page-layout\", \"set-page-mode\", \"set-optional-content\", \"set-embedded-file\", \"remove-embedded-file\", \"set-named-destination\", \"remove-named-destination\", \"set-page-label\", \"set-mark-info\", \"set-metadata\", \"set-viewer-preferences\", \"set-encryption\", \"set-output-intent\", \"set-form-field\", \"set-open-action\", \"set-document-id\", \"set-font-program\", \"set-graphics-state\", \"set-pattern\", \"set-color-space\", \"set-properties\", \"set-font-metrics\", \"set-image-mask\", \"set-form-content\", \"set-page-transition\", \"set-catalog-entry\", \"set-trailer-entry\", \"set-annotation-appearance\", \"set-glyph\", \"set-indirect-object\", \"set-mesh-data\", \"set-info-field\", \"set-page-extra\", \"set-annotation-style\", \"set-annotation-border\", \"set-annotation-markup\", \"set-form-settings\", \"set-extra-entry\", \"set-annotation-kind\", \"set-field-data\", \"set-resource-detail\", \"canvasPointerDown\", \"canvasPointerMove\", \"canvasPointerUp\"]);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 118,
+          "before": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 131,
+          "before": "            Pdf14XEditorCommand::PageEdit { action, .. } => crate::editor::page::static_action(action),",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 136,
+          "before": "        crate::page_text_agent_revision(doc.snapshot, args)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 144,
+          "before": "            other if crate::editor::page::is_page_action(other) => {",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 145,
+          "before": "                let edit = crate::editor::page::edit_from_action(other, args)?;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 153,
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 169,
+          "before": "                let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 173,
+          "before": "                crate::editor::page::emit_page_edit(doc.snapshot, action, payload)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 182,
+          "before": "            crate::editor::page::INSPECTOR_BODY_KEY => crate::editor::page::render_inspector(doc.snapshot, None, \"s.stdio.pdf@1.4/x#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree),",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 204,
+          "before": "            return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 206,
+          "before": "        if body_key == crate::editor::page::INSPECTOR_BODY_KEY {",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 207,
+          "before": "            let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 208,
+          "before": "            return crate::editor::page::render_inspector(doc.snapshot, selected, \"s.stdio.pdf@1.4/x#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 223,
+          "before": "        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PdfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 229,
+          "before": "    tools: [\"set-page\", \"set-text\", \"move\", \"resize\", \"delete\", \"set-fill\", \"set-stroke\", \"insert-text\", \"insert-rectangle\", \"insert-line\", \"insert-image\", \"insert-page\", \"remove-page\", \"move-page\", \"set-page-size\", \"set-info\", \"set-annotation\", \"set-image\", \"set-font\", \"set-outline\", \"set-page-rotation\", \"set-page-box\", \"set-page-user-unit\", \"set-language\", \"set-page-layout\", \"set-page-mode\", \"set-optional-content\", \"set-embedded-file\", \"remove-embedded-file\", \"set-named-destination\", \"remove-named-destination\", \"set-page-label\", \"set-mark-info\", \"set-metadata\", \"set-viewer-preferences\", \"set-encryption\", \"set-output-intent\", \"set-form-field\", \"set-open-action\", \"set-document-id\", \"set-font-program\", \"set-graphics-state\", \"set-pattern\", \"set-color-space\", \"set-properties\", \"set-font-metrics\", \"set-image-mask\", \"set-form-content\", \"set-page-transition\", \"set-catalog-entry\", \"set-trailer-entry\", \"set-annotation-appearance\", \"set-glyph\", \"set-indirect-object\", \"set-mesh-data\", \"set-info-field\", \"set-page-extra\", \"set-annotation-style\", \"set-annotation-border\", \"set-annotation-markup\", \"set-form-settings\", \"set-extra-entry\", \"set-annotation-kind\", \"set-field-data\", \"set-resource-detail\", \"canvasPointerDown\", \"canvasPointerMove\", \"canvasPointerUp\"],",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 234,
+          "before": "                let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 238,
+          "before": "                crate::editor::page::emit_page_edit(snapshot, action, payload)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 256,
+          "before": "    let builder = builder.window_kind_def(crate::editor::page::inspector_window_definition());",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 258,
+          "before": "    let builder = builder.default_layout(crate::editor::page::document_layout(main::WINDOW_KIND_ID));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 260,
+          "before": "    crate::editor::page::install_object_interaction(&mut definition);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+      "sha256": "8d183bacfd721d93fd0a85c8aad7dbf0d8934f1c8edd98e84e668c0874fc94e6",
+      "category": "mode",
+      "role": "editor",
+      "guardedLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+      "sha256": "dad28f7fe1ff583cfde0726dd31727b0b22b2a1ad758a729bdb4e21dd03ca67b",
+      "category": "window-render",
+      "role": "editor",
+      "guardedLines": [
+        {
+          "line": 3,
+          "before": "use crate::editor::page;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 4,
+          "before": "use crate::PdfSnapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "297fdddd4fa4f3e69ccf7b206c6deedd9ef20987c4f33dd767ae92e542339ac8",
+      "category": "window-law",
+      "role": "editor",
+      "guardedLines": [
+        {
+          "line": 2,
+          "before": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 10,
+          "before": "    assert!(def.actions.iter().any(|action| action.id == \"insert-rectangle\"));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 11,
+          "before": "    assert!(def.actions.iter().any(|action| action.id == \"insert-image\"));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+      "sha256": "9f9616149562c43d72b97aa7193d0c62c0367f345ef42835b8c378cedc1d3c55",
+      "category": "manifest-root",
+      "role": "viewer",
+      "guardedLines": [
+        {
+          "line": 9,
+          "before": "use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 55,
+          "before": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 58,
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+      "sha256": "35832d69cfb6e35612e24330e006be80cbed6b645014bb805dae0541ad640778",
+      "category": "mode",
+      "role": "viewer",
+      "guardedLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+      "sha256": "1e627873adfaea0ffdbb4372ec9bcac7ba6e73c6b9f139407ba195300dab5d7c",
+      "category": "window-render",
+      "role": "viewer",
+      "guardedLines": [
+        {
+          "line": 3,
+          "before": "//! `DocumentWindowKit` (contract §2.6). One `DocumentPage` per `PdfPage`: the page's real `MediaBox`/",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 4,
+          "before": "//! `CropBox` geometry (never fabricated) followed by its own `text` field -- a genuine field of",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 8,
+          "before": "use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 9,
+          "before": "use crate::PdfSnapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 33,
+          "before": "    let crop = page.crop_box.map(|c| format!(\", CropBox [{:.1}, {:.1}, {:.1}, {:.1}]\", c[0], c[1], c[2], c[3])).unwrap_or_default();",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 35,
+          "before": "    format!(\"Page {} -- MediaBox [{:.1}, {:.1}, {:.1}, {:.1}]{}\\n{}\", index + 1, media[0], media[1], media[2], media[3], crop, text)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "cadb5c9ac3fe758517c98514b0fe42b86da4470f73577159be1213c87b22764d",
+      "category": "window-law",
+      "role": "viewer",
+      "guardedLines": [
+        {
+          "line": 2,
+          "before": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 19,
+          "before": "    assert!(page.buffer.contains(\"MediaBox\"));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+      "sha256": "101c527751f5876a3e78986e8d18ee9ee5f5572c55ffd2069ab0453e6d06bb71",
+      "category": "manifest-root",
+      "role": "editor",
+      "guardedLines": [
+        {
+          "line": 3,
+          "before": "//! their real subsets) share ONE unified logical object model -- `crate::PdfSnapshot`/",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 16,
+          "before": "use crate::standards::v1_7::subsets::base::schema::mutations::set_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 17,
+          "before": "use crate::standards::v1_7::subsets::base::schema::mutations::patch_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 18,
+          "before": "use crate::{page_text_edit_mutation, PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 96,
+          "before": "semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf14EditorCommand, [\"set-page\", \"set-text\", \"move\", \"resize\", \"delete\", \"set-fill\", \"set-stroke\", \"insert-text\", \"insert-rectangle\", \"insert-line\", \"insert-image\", \"insert-page\", \"remove-page\", \"move-page\", \"set-page-size\", \"set-info\", \"set-annotation\", \"set-image\", \"set-font\", \"set-outline\", \"set-page-rotation\", \"set-page-box\", \"set-page-user-unit\", \"set-language\", \"set-page-layout\", \"set-page-mode\", \"set-optional-content\", \"set-embedded-file\", \"remove-embedded-file\", \"set-named-destination\", \"remove-named-destination\", \"set-page-label\", \"set-mark-info\", \"set-metadata\", \"set-viewer-preferences\", \"set-encryption\", \"set-output-intent\", \"set-form-field\", \"set-open-action\", \"set-document-id\", \"set-font-program\", \"set-graphics-state\", \"set-pattern\", \"set-color-space\", \"set-properties\", \"set-font-metrics\", \"set-image-mask\", \"set-form-content\", \"set-page-transition\", \"set-catalog-entry\", \"set-trailer-entry\", \"set-annotation-appearance\", \"set-glyph\", \"set-indirect-object\", \"set-mesh-data\", \"set-info-field\", \"set-page-extra\", \"set-annotation-style\", \"set-annotation-border\", \"set-annotation-markup\", \"set-form-settings\", \"set-extra-entry\", \"set-annotation-kind\", \"set-field-data\", \"set-resource-detail\", \"canvasPointerDown\", \"canvasPointerMove\", \"canvasPointerUp\"]);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 118,
+          "before": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 131,
+          "before": "            Pdf14EditorCommand::PageEdit { action, .. } => crate::editor::page::static_action(action),",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 136,
+          "before": "        crate::page_text_agent_revision(doc.snapshot, args)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 144,
+          "before": "            other if crate::editor::page::is_page_action(other) => {",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 145,
+          "before": "                let edit = crate::editor::page::edit_from_action(other, args)?;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 153,
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 169,
+          "before": "                let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 173,
+          "before": "                crate::editor::page::emit_page_edit(doc.snapshot, action, payload)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 182,
+          "before": "            crate::editor::page::INSPECTOR_BODY_KEY => crate::editor::page::render_inspector(doc.snapshot, None, \"s.stdio.pdf@1.4/*#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree),",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 204,
+          "before": "            return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 206,
+          "before": "        if body_key == crate::editor::page::INSPECTOR_BODY_KEY {",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 207,
+          "before": "            let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 208,
+          "before": "            return crate::editor::page::render_inspector(doc.snapshot, selected, \"s.stdio.pdf@1.4/*#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 223,
+          "before": "        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PdfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 229,
+          "before": "    tools: [\"set-page\", \"set-text\", \"move\", \"resize\", \"delete\", \"set-fill\", \"set-stroke\", \"insert-text\", \"insert-rectangle\", \"insert-line\", \"insert-image\", \"insert-page\", \"remove-page\", \"move-page\", \"set-page-size\", \"set-info\", \"set-annotation\", \"set-image\", \"set-font\", \"set-outline\", \"set-page-rotation\", \"set-page-box\", \"set-page-user-unit\", \"set-language\", \"set-page-layout\", \"set-page-mode\", \"set-optional-content\", \"set-embedded-file\", \"remove-embedded-file\", \"set-named-destination\", \"remove-named-destination\", \"set-page-label\", \"set-mark-info\", \"set-metadata\", \"set-viewer-preferences\", \"set-encryption\", \"set-output-intent\", \"set-form-field\", \"set-open-action\", \"set-document-id\", \"set-font-program\", \"set-graphics-state\", \"set-pattern\", \"set-color-space\", \"set-properties\", \"set-font-metrics\", \"set-image-mask\", \"set-form-content\", \"set-page-transition\", \"set-catalog-entry\", \"set-trailer-entry\", \"set-annotation-appearance\", \"set-glyph\", \"set-indirect-object\", \"set-mesh-data\", \"set-info-field\", \"set-page-extra\", \"set-annotation-style\", \"set-annotation-border\", \"set-annotation-markup\", \"set-form-settings\", \"set-extra-entry\", \"set-annotation-kind\", \"set-field-data\", \"set-resource-detail\", \"canvasPointerDown\", \"canvasPointerMove\", \"canvasPointerUp\"],",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 234,
+          "before": "                let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 238,
+          "before": "                crate::editor::page::emit_page_edit(snapshot, action, payload)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 256,
+          "before": "    let builder = builder.window_kind_def(crate::editor::page::inspector_window_definition());",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 258,
+          "before": "    let builder = builder.default_layout(crate::editor::page::document_layout(main::WINDOW_KIND_ID));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 260,
+          "before": "    crate::editor::page::install_object_interaction(&mut definition);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+      "sha256": "47945ce22c93f78c0e684356b5fe728f69dc1c532003daa18aaf33d90aac9d3c",
+      "category": "mode",
+      "role": "editor",
+      "guardedLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+      "sha256": "dad28f7fe1ff583cfde0726dd31727b0b22b2a1ad758a729bdb4e21dd03ca67b",
+      "category": "window-render",
+      "role": "editor",
+      "guardedLines": [
+        {
+          "line": 3,
+          "before": "use crate::editor::page;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 4,
+          "before": "use crate::PdfSnapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "297fdddd4fa4f3e69ccf7b206c6deedd9ef20987c4f33dd767ae92e542339ac8",
+      "category": "window-law",
+      "role": "editor",
+      "guardedLines": [
+        {
+          "line": 2,
+          "before": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 10,
+          "before": "    assert!(def.actions.iter().any(|action| action.id == \"insert-rectangle\"));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 11,
+          "before": "    assert!(def.actions.iter().any(|action| action.id == \"insert-image\"));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🦀️.rs",
+      "sha256": "3d40343f111aa33203a35b125eff46811216e55abce5b98dc62718890291a38c",
+      "category": "manifest-root",
+      "role": "viewer",
+      "guardedLines": [
+        {
+          "line": 9,
+          "before": "use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 55,
+          "before": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 58,
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+      "sha256": "4cf1f9bca56085206e9ddf50b37f63ae6f4f51e5e9340fa8dd4348900e63a662",
+      "category": "mode",
+      "role": "viewer",
+      "guardedLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+      "sha256": "51805452373fe5145905809a553350559deeb90630cebd1637fdcf195fa26211",
+      "category": "window-render",
+      "role": "viewer",
+      "guardedLines": [
+        {
+          "line": 3,
+          "before": "//! `DocumentWindowKit` (contract §2.6). One `DocumentPage` per `PdfPage`: the page's real `MediaBox`/",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 4,
+          "before": "//! `CropBox` geometry (never fabricated) followed by its own `text` field -- a genuine field of",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 8,
+          "before": "use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 9,
+          "before": "use crate::PdfSnapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 33,
+          "before": "    let crop = page.crop_box.map(|c| format!(\", CropBox [{:.1}, {:.1}, {:.1}, {:.1}]\", c[0], c[1], c[2], c[3])).unwrap_or_default();",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 35,
+          "before": "    format!(\"Page {} -- MediaBox [{:.1}, {:.1}, {:.1}, {:.1}]{}\\n{}\", index + 1, media[0], media[1], media[2], media[3], crop, text)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "cadb5c9ac3fe758517c98514b0fe42b86da4470f73577159be1213c87b22764d",
+      "category": "window-law",
+      "role": "viewer",
+      "guardedLines": [
+        {
+          "line": 2,
+          "before": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 19,
+          "before": "    assert!(page.buffer.contains(\"MediaBox\"));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🦀️.rs",
+      "sha256": "15d2aed3014e814b8e3c800acafc4ebfadd57dba927bce3b4d48de1187f513ce",
+      "category": "manifest-root",
+      "role": "editor",
+      "guardedLines": [
+        {
+          "line": 3,
+          "before": "//! their real subsets) share ONE unified logical object model -- `crate::PdfSnapshot`/",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 16,
+          "before": "use crate::standards::v1_7::subsets::base::schema::mutations::set_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 17,
+          "before": "use crate::standards::v1_7::subsets::base::schema::mutations::patch_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 18,
+          "before": "use crate::{page_text_edit_mutation, PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 96,
+          "before": "semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf14AEditorCommand, [\"set-page\", \"set-text\", \"move\", \"resize\", \"delete\", \"set-fill\", \"set-stroke\", \"insert-text\", \"insert-rectangle\", \"insert-line\", \"insert-image\", \"insert-page\", \"remove-page\", \"move-page\", \"set-page-size\", \"set-info\", \"set-annotation\", \"set-image\", \"set-font\", \"set-outline\", \"set-page-rotation\", \"set-page-box\", \"set-page-user-unit\", \"set-language\", \"set-page-layout\", \"set-page-mode\", \"set-optional-content\", \"set-embedded-file\", \"remove-embedded-file\", \"set-named-destination\", \"remove-named-destination\", \"set-page-label\", \"set-mark-info\", \"set-metadata\", \"set-viewer-preferences\", \"set-encryption\", \"set-output-intent\", \"set-form-field\", \"set-open-action\", \"set-document-id\", \"set-font-program\", \"set-graphics-state\", \"set-pattern\", \"set-color-space\", \"set-properties\", \"set-font-metrics\", \"set-image-mask\", \"set-form-content\", \"set-page-transition\", \"set-catalog-entry\", \"set-trailer-entry\", \"set-annotation-appearance\", \"set-glyph\", \"set-indirect-object\", \"set-mesh-data\", \"set-info-field\", \"set-page-extra\", \"set-annotation-style\", \"set-annotation-border\", \"set-annotation-markup\", \"set-form-settings\", \"set-extra-entry\", \"set-annotation-kind\", \"set-field-data\", \"set-resource-detail\", \"canvasPointerDown\", \"canvasPointerMove\", \"canvasPointerUp\"]);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 118,
+          "before": "    const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 131,
+          "before": "            Pdf14AEditorCommand::PageEdit { action, .. } => crate::editor::page::static_action(action),",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 136,
+          "before": "        crate::page_text_agent_revision(doc.snapshot, args)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 144,
+          "before": "            other if crate::editor::page::is_page_action(other) => {",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 145,
+          "before": "                let edit = crate::editor::page::edit_from_action(other, args)?;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 153,
+          "before": "        crate::standards::v1_7::subsets::base::schema::snapshot::blank_pdf_snapshot()",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 169,
+          "before": "                let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 173,
+          "before": "                crate::editor::page::emit_page_edit(doc.snapshot, action, payload)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 182,
+          "before": "            crate::editor::page::INSPECTOR_BODY_KEY => crate::editor::page::render_inspector(doc.snapshot, None, \"s.stdio.pdf@1.4/a#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree),",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 204,
+          "before": "            return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 206,
+          "before": "        if body_key == crate::editor::page::INSPECTOR_BODY_KEY {",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 207,
+          "before": "            let selected = interaction.selection(crate::editor::page::OBJECT_DOMAIN).ids.first().map(String::as_str);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 208,
+          "before": "            return crate::editor::page::render_inspector(doc.snapshot, selected, \"s.stdio.pdf@1.4/a#editor\", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 223,
+          "before": "        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PdfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 229,
+          "before": "    tools: [\"set-page\", \"set-text\", \"move\", \"resize\", \"delete\", \"set-fill\", \"set-stroke\", \"insert-text\", \"insert-rectangle\", \"insert-line\", \"insert-image\", \"insert-page\", \"remove-page\", \"move-page\", \"set-page-size\", \"set-info\", \"set-annotation\", \"set-image\", \"set-font\", \"set-outline\", \"set-page-rotation\", \"set-page-box\", \"set-page-user-unit\", \"set-language\", \"set-page-layout\", \"set-page-mode\", \"set-optional-content\", \"set-embedded-file\", \"remove-embedded-file\", \"set-named-destination\", \"remove-named-destination\", \"set-page-label\", \"set-mark-info\", \"set-metadata\", \"set-viewer-preferences\", \"set-encryption\", \"set-output-intent\", \"set-form-field\", \"set-open-action\", \"set-document-id\", \"set-font-program\", \"set-graphics-state\", \"set-pattern\", \"set-color-space\", \"set-properties\", \"set-font-metrics\", \"set-image-mask\", \"set-form-content\", \"set-page-transition\", \"set-catalog-entry\", \"set-trailer-entry\", \"set-annotation-appearance\", \"set-glyph\", \"set-indirect-object\", \"set-mesh-data\", \"set-info-field\", \"set-page-extra\", \"set-annotation-style\", \"set-annotation-border\", \"set-annotation-markup\", \"set-form-settings\", \"set-extra-entry\", \"set-annotation-kind\", \"set-field-data\", \"set-resource-detail\", \"canvasPointerDown\", \"canvasPointerMove\", \"canvasPointerUp\"],",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 234,
+          "before": "                let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 238,
+          "before": "                crate::editor::page::emit_page_edit(snapshot, action, payload)",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 256,
+          "before": "    let builder = builder.window_kind_def(crate::editor::page::inspector_window_definition());",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 258,
+          "before": "    let builder = builder.default_layout(crate::editor::page::document_layout(main::WINDOW_KIND_ID));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 260,
+          "before": "    crate::editor::page::install_object_interaction(&mut definition);",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+      "sha256": "76768d49321be2cef0ba1fc87903b4bfc1c3b2ad50e7d68439416af35c66fc8f",
+      "category": "mode",
+      "role": "editor",
+      "guardedLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+      "sha256": "dad28f7fe1ff583cfde0726dd31727b0b22b2a1ad758a729bdb4e21dd03ca67b",
+      "category": "window-render",
+      "role": "editor",
+      "guardedLines": [
+        {
+          "line": 3,
+          "before": "use crate::editor::page;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 4,
+          "before": "use crate::PdfSnapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "297fdddd4fa4f3e69ccf7b206c6deedd9ef20987c4f33dd767ae92e542339ac8",
+      "category": "window-law",
+      "role": "editor",
+      "guardedLines": [
+        {
+          "line": 2,
+          "before": "use crate::standards::v1_7::subsets::base::schema::snapshot::demo_pdf17_snapshot;",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 10,
+          "before": "    assert!(def.actions.iter().any(|action| action.id == \"insert-rectangle\"));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        },
+        {
+          "line": 11,
+          "before": "    assert!(def.actions.iter().any(|action| action.id == \"insert-image\"));",
+          "proposal": "own v1_4 PageDoc/Snapshot/mutations and exact Pages projection; no root17 aliases"
+        }
+      ]
+    }
+  ],
+  "sourceFacets": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🟦️.ts",
+      "sha256": "0d0816c7f1b046a3e7a24d1aabd42ceb27c55aea35e954fa6c312d3e02e4d497",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 5,
+          "text": "export const PDF14X_VIEWER_DIALECT = { artifactKind: \"s.stdio.pdf\", standard: \"1.4\", subset: \"x\" } as const;"
+        },
+        {
+          "line": 7,
+          "text": "export const PDF14X_VIEW_MODE_ID = \"view\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🎚️config/🧬️schema/🔣️.json",
+      "sha256": "11ae3e09f44b200e9c2ba5fb5071e7c0e4efe32e04862d210ccb73a918d113c4",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🎚️config/🧬️schema/🟦️.ts",
+      "sha256": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/👥️presence/🧬️schema/🔣️.json",
+      "sha256": "7ae3df5d4f8ca203271c88739c22f6abf4c6c2d5669a4dd0d3ebe3c7b8ebd8b8",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/👥️presence/🧬️schema/🟦️.ts",
+      "sha256": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🟦️.ts",
+      "sha256": "d9558d8bd4497061ff7ebb7c967e73e400f1d32b4cc6ddf262ae2a218983c405",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 7,
+          "text": "export interface Pdf14XDocumentPage {"
+        },
+        {
+          "line": 13,
+          "text": "export interface Pdf14XDocumentViewModel {"
+        },
+        {
+          "line": 16,
+          "text": "  pages: Pdf14XDocumentPage[];"
+        },
+        {
+          "line": 19,
+          "text": "export const PDF14X_MAIN_WINDOW_KIND_ID = \"framework.window.document\" as const;"
+        },
+        {
+          "line": 20,
+          "text": "export const PDF14X_MAIN_BODY_KEY = \"framework.window.document\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🟦️.ts",
+      "sha256": "a222991f49af0698a7d33c31850604883d350997836989403806c6a9967318d5",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 4,
+          "text": "export const PDF14X_EDITOR_DIALECT = { artifactKind: \"s.stdio.pdf\", standard: \"1.4\", subset: \"x\" } as const;"
+        },
+        {
+          "line": 6,
+          "text": "export const PDF14X_EDIT_MODE_ID = \"edit\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎚️config/🧬️schema/🔣️.json",
+      "sha256": "11ae3e09f44b200e9c2ba5fb5071e7c0e4efe32e04862d210ccb73a918d113c4",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎚️config/🧬️schema/🟦️.ts",
+      "sha256": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/👥️presence/🧬️schema/🔣️.json",
+      "sha256": "7ae3df5d4f8ca203271c88739c22f6abf4c6c2d5669a4dd0d3ebe3c7b8ebd8b8",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/👥️presence/🧬️schema/🟦️.ts",
+      "sha256": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️.ts",
+      "sha256": "94cfff4bd4ec99c8f8c8f5581d9e8540548974d0eb981cf80d6350ed3ce630f9",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 3,
+          "text": " * (`MediaBox`/`CropBox` geometry plus the page's own extracted/authored `text`; see the Rust file's"
+        },
+        {
+          "line": 8,
+          "text": "export interface Pdf14XDocumentPage {"
+        },
+        {
+          "line": 14,
+          "text": "export interface Pdf14XDocumentViewModel {"
+        },
+        {
+          "line": 17,
+          "text": "  pages: Pdf14XDocumentPage[];"
+        },
+        {
+          "line": 21,
+          "text": "export interface Pdf14XSetPage {"
+        },
+        {
+          "line": 24,
+          "text": "  revision: string;"
+        },
+        {
+          "line": 28,
+          "text": "export const PDF14X_MAIN_WINDOW_KIND_ID = \"framework.window.document\" as const;"
+        },
+        {
+          "line": 29,
+          "text": "export const PDF14X_MAIN_BODY_KEY = \"framework.window.document\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🟦️.ts",
+      "sha256": "91df10ee744d8963a721fc1f5b66e86e1a4397f0dc71f5bfc23ba741f8a8a25d",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 5,
+          "text": "export const PDF14_VIEWER_DIALECT = { artifactKind: \"s.stdio.pdf\", standard: \"1.4\", subset: \"*\" } as const;"
+        },
+        {
+          "line": 7,
+          "text": "export const PDF14_VIEW_MODE_ID = \"view\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🔣️.json",
+      "sha256": "11ae3e09f44b200e9c2ba5fb5071e7c0e4efe32e04862d210ccb73a918d113c4",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🟦️.ts",
+      "sha256": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🔣️.json",
+      "sha256": "7ae3df5d4f8ca203271c88739c22f6abf4c6c2d5669a4dd0d3ebe3c7b8ebd8b8",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🟦️.ts",
+      "sha256": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🟦️.ts",
+      "sha256": "656437e6e299bdb8469d7b8d7bdb9a7641df639407d9254d39d55fe1626dc3db",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 7,
+          "text": "export interface Pdf14DocumentPage {"
+        },
+        {
+          "line": 13,
+          "text": "export interface Pdf14DocumentViewModel {"
+        },
+        {
+          "line": 16,
+          "text": "  pages: Pdf14DocumentPage[];"
+        },
+        {
+          "line": 19,
+          "text": "export const PDF14_MAIN_WINDOW_KIND_ID = \"framework.window.document\" as const;"
+        },
+        {
+          "line": 20,
+          "text": "export const PDF14_MAIN_BODY_KEY = \"framework.window.document\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🟦️.ts",
+      "sha256": "ac4135dcfecd3b8161791a7a3f083f698264ad9a397e69ba58e669fa5da504fb",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 4,
+          "text": "export const PDF14_EDITOR_DIALECT = { artifactKind: \"s.stdio.pdf\", standard: \"1.4\", subset: \"*\" } as const;"
+        },
+        {
+          "line": 6,
+          "text": "export const PDF14_EDIT_MODE_ID = \"edit\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🔣️.json",
+      "sha256": "11ae3e09f44b200e9c2ba5fb5071e7c0e4efe32e04862d210ccb73a918d113c4",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🟦️.ts",
+      "sha256": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🔣️.json",
+      "sha256": "7ae3df5d4f8ca203271c88739c22f6abf4c6c2d5669a4dd0d3ebe3c7b8ebd8b8",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🟦️.ts",
+      "sha256": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️.ts",
+      "sha256": "bae0773b90e5997a7834b9b268f813f4e851240bdf08825d61e35dd5d5eba8c9",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 3,
+          "text": " * (`MediaBox`/`CropBox` geometry plus the page's own extracted/authored `text`; see the Rust file's"
+        },
+        {
+          "line": 8,
+          "text": "export interface Pdf14DocumentPage {"
+        },
+        {
+          "line": 14,
+          "text": "export interface Pdf14DocumentViewModel {"
+        },
+        {
+          "line": 17,
+          "text": "  pages: Pdf14DocumentPage[];"
+        },
+        {
+          "line": 21,
+          "text": "export interface Pdf14SetPage {"
+        },
+        {
+          "line": 24,
+          "text": "  revision: string;"
+        },
+        {
+          "line": 28,
+          "text": "export const PDF14_MAIN_WINDOW_KIND_ID = \"framework.window.document\" as const;"
+        },
+        {
+          "line": 29,
+          "text": "export const PDF14_MAIN_BODY_KEY = \"framework.window.document\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🟦️.ts",
+      "sha256": "d48136153e775a5b65e7dfc86f34c114d351642cc4bb37a672aa40e32d86f984",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 5,
+          "text": "export const PDF14A_VIEWER_DIALECT = { artifactKind: \"s.stdio.pdf\", standard: \"1.4\", subset: \"a\" } as const;"
+        },
+        {
+          "line": 7,
+          "text": "export const PDF14A_VIEW_MODE_ID = \"view\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🎚️config/🧬️schema/🔣️.json",
+      "sha256": "11ae3e09f44b200e9c2ba5fb5071e7c0e4efe32e04862d210ccb73a918d113c4",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🎚️config/🧬️schema/🟦️.ts",
+      "sha256": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/👥️presence/🧬️schema/🔣️.json",
+      "sha256": "7ae3df5d4f8ca203271c88739c22f6abf4c6c2d5669a4dd0d3ebe3c7b8ebd8b8",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/👥️presence/🧬️schema/🟦️.ts",
+      "sha256": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🟦️.ts",
+      "sha256": "051c16b7d00270f27dbd02f53956f625bc034b7c7907fd47406846b880f7db55",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 7,
+          "text": "export interface Pdf14ADocumentPage {"
+        },
+        {
+          "line": 13,
+          "text": "export interface Pdf14ADocumentViewModel {"
+        },
+        {
+          "line": 16,
+          "text": "  pages: Pdf14ADocumentPage[];"
+        },
+        {
+          "line": 19,
+          "text": "export const PDF14A_MAIN_WINDOW_KIND_ID = \"framework.window.document\" as const;"
+        },
+        {
+          "line": 20,
+          "text": "export const PDF14A_MAIN_BODY_KEY = \"framework.window.document\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🟦️.ts",
+      "sha256": "821c4bc24362bb0c2a4e1a1cd9242b64ed7eeeb0ea2221ebeae1a105ce24fc64",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 4,
+          "text": "export const PDF14A_EDITOR_DIALECT = { artifactKind: \"s.stdio.pdf\", standard: \"1.4\", subset: \"a\" } as const;"
+        },
+        {
+          "line": 6,
+          "text": "export const PDF14A_EDIT_MODE_ID = \"edit\" as const;"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎚️config/🧬️schema/🔣️.json",
+      "sha256": "11ae3e09f44b200e9c2ba5fb5071e7c0e4efe32e04862d210ccb73a918d113c4",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎚️config/🧬️schema/🟦️.ts",
+      "sha256": "c70b12630ea3d48b153a0cc9f9df69c70432e561fe8a371ba762437c222e6d17",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/👥️presence/🧬️schema/🔣️.json",
+      "sha256": "7ae3df5d4f8ca203271c88739c22f6abf4c6c2d5669a4dd0d3ebe3c7b8ebd8b8",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/👥️presence/🧬️schema/🟦️.ts",
+      "sha256": "d82dc45197abb473e5b53c1ec7f7925aa891660ad87a4040e873b2cf38a5fdd6",
+      "classification": "preserve own config/presence schema unless domain changes",
+      "authorityLines": []
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🟦️.ts",
+      "sha256": "4bb091b561015882487f506e5015a53212d013b146fc3d396f4af958dbeb17b8",
+      "classification": "own14 Source window/manifest twin; update only actual view-model/action contract",
+      "authorityLines": [
+        {
+          "line": 3,
+          "text": " * (`MediaBox`/`CropBox` geometry plus the page's own extracted/authored `text`; see the Rust file's"
+        },
+        {
+          "line": 8,
+          "text": "export interface Pdf14ADocumentPage {"
+        },
+        {
+          "line": 14,
+          "text": "export interface Pdf14ADocumentViewModel {"
+        },
+        {
+          "line": 17,
+          "text": "  pages: Pdf14ADocumentPage[];"
+        },
+        {
+          "line": 21,
+          "text": "export interface Pdf14ASetPage {"
+        },
+        {
+          "line": 24,
+          "text": "  revision: string;"
+        },
+        {
+          "line": 28,
+          "text": "export const PDF14A_MAIN_WINDOW_KIND_ID = \"framework.window.document\" as const;"
+        },
+        {
+          "line": 29,
+          "text": "export const PDF14A_MAIN_BODY_KEY = \"framework.window.document\" as const;"
+        }
+      ]
+    }
+  ],
+  "preservedMutationLeaves": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📥️insert-page/🦀️.rs",
+      "fields": [
+        [
+          "index",
+          "usize"
+        ],
+        [
+          "page",
+          "PageDoc"
+        ]
+      ],
+      "preserve": "actual firstparty14 primitive, sparse page diff and inverse/labels/protocol laws unchanged"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗑️remove-page/🦀️.rs",
+      "fields": [
+        [
+          "index",
+          "usize"
+        ]
+      ],
+      "preserve": "actual firstparty14 primitive, sparse page diff and inverse/labels/protocol laws unchanged"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔀️move-page/🦀️.rs",
+      "fields": [
+        [
+          "from",
+          "usize"
+        ],
+        [
+          "to",
+          "usize"
+        ]
+      ],
+      "preserve": "actual firstparty14 primitive, sparse page diff and inverse/labels/protocol laws unchanged"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📐️resize-page/🦀️.rs",
+      "fields": [
+        [
+          "index",
+          "usize"
+        ],
+        [
+          "width",
+          "f64"
+        ],
+        [
+          "height",
+          "f64"
+        ]
+      ],
+      "preserve": "actual firstparty14 primitive, sparse page diff and inverse/labels/protocol laws unchanged"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/♻️replace-page-text/🦀️.rs",
+      "fields": [
+        [
+          "index",
+          "usize"
+        ],
+        [
+          "text",
+          "String"
+        ]
+      ],
+      "preserve": "actual firstparty14 primitive, sparse page diff and inverse/labels/protocol laws unchanged"
+    }
+  ],
+  "newSharedAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/📄️page/🦀️.rs",
+  "plan": [
+    "Own shared14 page module uses explicit PageDoc/PdfSnapshot14 and real DocumentWindowKit editable/read-only pages; does not adapt17 object renderer.",
+    "Own revision reads PageDoc.text through DocumentWindowKit::text_revision; page-index/current-token/item0 guards precede ReplacePageText; no-op returns original empty Emit.",
+    "Own actions map only genuine page primitives; rich17 object/image/font/catalog actions removed from14 authored manifests only with exact14 action admission/refusal/render tests replacing false17 expectations.",
+    "All3 editor/viewer Snapshot+Mutation and DOCUMENT_SCHEMA bind actual14; native originalpublic14 factory unchanged.",
+    "Generic SnapshotDetails cannot call17 PatchSnapshot/SetSnapshot. Preferred exact schema-first own14 PatchSnapshot leaf via existing contract macro, sparse PdfDiff14, genuine pointer input schema and inverse laws; introduces own6th mutation with text/binary/schema/protocol facets. Preserve original5.",
+    "Whole source replacement, if exposed, needs genuine own14 parse and ordered existing5primitive synthesis or explicitly authored own14 replacement mutation. Do not silently fake SetSnapshot alias; freeze schema identity and refuse foreign schema.",
+    "Six windowlaw files currently import demo17. Hand-author two-page14 fixture, assert real text/dimensions/order and edit token; preserve accessible edit semantics through stronger actual14 scene/draft/action predicates.",
+    "Source twins update text-document/editable payload geometry wording; config/presence schemas not automatically changed."
+  ],
+  "supportingFramework": [
+    "semio_framework_plugin::app::EditableDocumentPage",
+    "EditableDocumentView requires actual publication_revision",
+    "DocumentWindowKit::render_editable_windowed",
+    "DocumentWindowKit::text_revision",
+    "current contract window_kit_artifact_publication_revision(doc) supplies real published revision"
+  ],
+  "independentExpectedFixture": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/pdf14-own-domain-neutral-render-edit-contract.json",
+  "schemaAuthority": {
+    "documentCodecSchema": "stdio.pdf",
+    "artifactSchemaId": "s.stdio.pdf",
+    "source": "PDF root constants lines23/26; actual14 Snapshot default uses STDIO_PDF_DOCUMENT_SCHEMA"
+  }
+}

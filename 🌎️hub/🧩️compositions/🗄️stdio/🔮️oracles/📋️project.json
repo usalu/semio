@@ -62,6 +62,17 @@
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles",
         "command": "bun ./📜️script.ts test-type-ownership"
       }
+    },
+    "test-production-preparation": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles",
+        "command": "bun ./📜️script.ts test-production-preparation",
+        "forwardAllArgs": false
+      }
     }
   }
 }

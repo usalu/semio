@@ -16,10 +16,38 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the metadata tags at which it is inserted, counted from 0.",
+          "de": "Position unter den Metadaten-Tags, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "tag": {
-      "$ref": "#/$defs/SemioAudioTag"
+      "$ref": "#/$defs/SemioAudioTag",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tag",
+          "de": "Tag"
+        },
+        "description": {
+          "en": "Key and value of the metadata tag that is inserted.",
+          "de": "Schlüssel und Wert des Metadaten-Tags, das eingefügt wird."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

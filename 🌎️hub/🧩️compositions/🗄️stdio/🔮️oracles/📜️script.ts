@@ -5,11 +5,13 @@ import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃�
 import { runRepositoryTestCommand } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
 import contract from "./🧫️fixtures/🧩️composition/🔣️.json";
 import { resolve } from "node:path";
+import { repoTestArtifactEnvironment } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 
 /** 🧩️ Runs portable laws against the canonical oracle's actual source and contribution graph. */
 class CompositionTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    process.env.SEMIO_TEST_ARTIFACT_DIR = repoTestArtifactEnvironment(resolve(this.root, "../../../.."), "hub-stdio-oracles").SEMIO_TEST_ARTIFACT_DIR;
     await runRepositoryTestCommand(process.execPath, ["test", "--timeout", "30000", "./🧪️tests/🧩️composition/🟦️.ts", ...rest], { cwd: this.root, budgetMs: 120_000 });
   }
 }
@@ -18,6 +20,7 @@ class CompositionTestScript extends BundleScript {
 class DrawingReaderTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    process.env.SEMIO_TEST_ARTIFACT_DIR = repoTestArtifactEnvironment(resolve(this.root, "../../../.."), "hub-stdio-oracles").SEMIO_TEST_ARTIFACT_DIR;
     await runRepositoryTestCommand(process.execPath, ["test", "--timeout", "30000", "./🧪️tests/🖊️drawing-reader/🟦️.ts", ...rest], { cwd: this.root, budgetMs: 120_000 });
   }
 }
@@ -26,6 +29,7 @@ class DrawingReaderTestScript extends BundleScript {
 class PrivateReaderTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    process.env.SEMIO_TEST_ARTIFACT_DIR = repoTestArtifactEnvironment(resolve(this.root, "../../../.."), "hub-stdio-oracles").SEMIO_TEST_ARTIFACT_DIR;
     await runRepositoryTestCommand(process.execPath, ["test", "--timeout", "30000", "./🧪️tests/🧫️private-reader/🟦️.ts", ...rest], { cwd: this.root, budgetMs: 120_000 });
   }
 }
@@ -34,6 +38,7 @@ class PrivateReaderTestScript extends BundleScript {
 class NativeDrawingReaderTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    process.env.SEMIO_TEST_ARTIFACT_DIR = repoTestArtifactEnvironment(resolve(this.root, "../../../.."), "hub-stdio-oracles").SEMIO_TEST_ARTIFACT_DIR;
     if (rest.length) throw new Error("The complete lower Drawing native gate accepts no scenario filter.");
     const family = contract.families.find(({ module }) => module === "drawing");
     if (!family) throw new Error("The original lower Drawing cohort is not registered.");
@@ -46,6 +51,7 @@ class NativeDrawingReaderTestScript extends BundleScript {
 class NativeOracleTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    process.env.SEMIO_TEST_ARTIFACT_DIR = repoTestArtifactEnvironment(resolve(this.root, "../../../.."), "hub-stdio-oracles").SEMIO_TEST_ARTIFACT_DIR;
     if (rest.length) throw new Error("The complete native oracle gate accepts no cohort or scenario filter.");
     const root = resolve(this.root, "../../../..");
     const packages = [contract.neutralLaw.source.replace(/\/🦀️\.rs$/u, "/📦️packages/🦀️rust"), ...contract.providers.map(({ package: pkg }) => pkg.path), ...contract.families.map(({ package: pkg }) => pkg.path), contract.grammar.package.path, contract.package.path];
@@ -65,5 +71,14 @@ class TypeOwnershipTestScript extends BundleScript {
  }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-type-ownership", TypeOwnershipTestScript).register("test-private-reader", PrivateReaderTestScript).register("test-composition", CompositionTestScript).register("test-drawing-reader", DrawingReaderTestScript).register("test-native-drawing-reader", NativeDrawingReaderTestScript).register("test-native-oracles", NativeOracleTestScript);
+/** 🧱️ Checks production preparation against absent and present examples. */
+class ProductionPreparationTestScript extends BundleScript {
+ async run(args: string[]): Promise<void> {
+  if (args.length) throw Error("Expected test-production-preparation");
+  process.env.SEMIO_TEST_ARTIFACT_DIR ??= repoTestArtifactEnvironment(resolve(this.root, "../../../.."), "hub-stdio-production-preparation").SEMIO_TEST_ARTIFACT_DIR;
+  await runRepositoryTestCommand(process.execPath, ["test", "../🧩️composition/🧪️tests/🧱️production-preparation/🟦️.ts"], {cwd: this.root, budgetMs: 30000});
+ }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test-production-preparation", ProductionPreparationTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-private-reader", PrivateReaderTestScript).register("test-composition", CompositionTestScript).register("test-drawing-reader", DrawingReaderTestScript).register("test-native-drawing-reader", NativeDrawingReaderTestScript).register("test-native-oracles", NativeOracleTestScript);
 if (import.meta.main) await runScriptMain(router, { defaultCommand: "test-composition" });

@@ -13,13 +13,13 @@ pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Bachelor Thesis", "Bachelorarbeit")
 }
 pub const ICON: &str = "file";
-pub const FIXTURE_BYTES: &[u8] = include_bytes!("../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
+pub const DOCUMENT_BYTES: &[u8] = include_bytes!("../../🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf");
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decoded_summary_json() -> String {
-    match crate::standards::v1_7::subsets::base::io::decode_pdf(FIXTURE_BYTES) {
-        Ok(snap) => format!(r#"{{"fixture":"bachelor-thesis.pdf","bytes":{},"declaredVersion":"{}","pageCount":{},"objectCount":{}}}"#, FIXTURE_BYTES.len(), snap.declared_version, snap.pages.len(), snap.objects.len(),),
-        Err(e) => format!(r#"{{"fixture":"bachelor-thesis.pdf","bytes":{},"decodeError":"{}"}}"#, FIXTURE_BYTES.len(), e),
+    match crate::standards::v1_7::subsets::base::io::decode_pdf(DOCUMENT_BYTES) {
+        Ok(snap) => format!(r#"{{"documentName":"bachelor-thesis.pdf","bytes":{},"declaredVersion":"{}","pageCount":{},"objectCount":{}}}"#, DOCUMENT_BYTES.len(), snap.declared_version, snap.pages.len(), snap.objects.len(),),
+        Err(e) => format!(r#"{{"documentName":"bachelor-thesis.pdf","bytes":{},"decodeError":"{}"}}"#, DOCUMENT_BYTES.len(), e),
     }
 }
 

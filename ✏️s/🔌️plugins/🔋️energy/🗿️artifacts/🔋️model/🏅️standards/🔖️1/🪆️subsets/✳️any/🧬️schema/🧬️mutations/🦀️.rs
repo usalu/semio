@@ -1231,37 +1231,7 @@ pub const DIRECTORIES: &[(&str, &str)] = &[
 //#endregion 🔖️Aggregate
 
 //#region 🌉️TestBridge
-/// 🔮️ Reports the forward and inverse behavior of one committed language-neutral vector.
-pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    use semio_framework_value::ToValue;
-    let decode_snapshot = |text: &str| -> Result<EnergyModelSnapshot, String> { semio_framework_pack_json::from_json_str::<EnergyModelSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string()) };
-    let base = decode_snapshot(base_json)?;
-    let expected = decode_snapshot(after_json)?;
-    let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mut applied = base.clone();
-    let forward = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
-    let inverse = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
-    let mut undone = applied.clone();
-    let mut inverse_messages = Vec::new();
-    // ↩️ Reversed, as the store replays an inverse (`ArtifactStore::replay_mutations`).
-    for step in inverse.iter().rev() {
-        let outcome = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::diff(step, &undone).apply_to(&mut undone);
-        inverse_messages.extend(outcome.messages().iter().cloned());
-    }
-    let messages_json = semio_framework_pack_json::from_dsl_value(&forward.messages().to_value());
-    let inverse_messages_json = semio_framework_pack_json::from_dsl_value(&inverse_messages.to_value());
-    let report = semio_framework_pack_json::object([
-        ("base".to_string(), semio_framework_pack_json::from_dsl_value(&base.to_value())),
-        ("expectedSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&expected.to_value())),
-        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&applied.to_value())),
-        ("diff".to_string(), semio_framework_pack_json::from_dsl_value(&forward.diff().to_value())),
-        ("messages".to_string(), messages_json),
-        ("inverseSteps".to_string(), semio_framework_pack_json::from_dsl_value(&inverse.to_value())),
-        ("inverseSnapshot".to_string(), semio_framework_pack_json::from_dsl_value(&undone.to_value())),
-        ("inverseMessages".to_string(), inverse_messages_json),
-    ]);
-    Ok(semio_framework_pack_json::to_string(&report))
-}
+
 //#endregion 🌉️TestBridge
 
 //#region 🧵️WireProbes

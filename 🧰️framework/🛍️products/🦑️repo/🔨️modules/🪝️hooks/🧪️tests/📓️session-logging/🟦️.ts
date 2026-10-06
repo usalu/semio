@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import { basename, extname } from "node:path";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region ⚙️Configuration
@@ -257,7 +257,7 @@ function replay(session: Session, logging: Logging): Meta | null {
 type Vectors = { configs: { id: string; document: string }[]; sessions: Session[] };
 
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(readFileSync(ctx.fixture("shared://📓️session-logging/📓️sessions.json"), "utf8")) as Vectors;
+  return JSON.parse(readFileSync(ctx.input("shared://📓️session-logging/📓️sessions.json"), "utf8")) as Vectors;
 }
 
 function sessionById(all: Vectors, id: string): Session {

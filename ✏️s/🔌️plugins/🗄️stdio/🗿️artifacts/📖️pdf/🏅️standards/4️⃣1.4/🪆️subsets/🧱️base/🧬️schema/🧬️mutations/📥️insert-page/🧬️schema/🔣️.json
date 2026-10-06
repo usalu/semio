@@ -11,10 +11,38 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the pages at which it is inserted, counted from 0.",
+          "de": "Position unter den Seiten, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "page": {
-      "$ref": "#/$defs/PageDoc"
+      "$ref": "#/$defs/PageDoc",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "description": {
+          "en": "Size and content of the page that is inserted.",
+          "de": "Größe und Inhalt der Seite, die eingefügt wird."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

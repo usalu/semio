@@ -16,7 +16,7 @@
 // reviewed before it is committed.
 //
 //   bun 📜️script.ts generate [--out <dir>] [--only <fixture-id>]
-//   bun 📜️script.ts manifests                      # emit the fixtureManifests block for 🔮️oracles
+//   bun 📜️script.ts manifests                      # emit the testEvidence block for 🔮️oracles
 //
 // @see ../🔬️probes/📜️script.ts — the probes that measure what this generator produced
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️w4-brepjs-qualification.md
@@ -374,7 +374,6 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
   files.push({ role: "expected-measurements", path: `${directoryName}/📊️expected.metrics.json`, mediaType: "application/json", sha256: await contentDigest(metricsBody), bytes: Buffer.byteLength(metricsBody) });
 
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.step", standard: "ap214", subset: "cc6" },

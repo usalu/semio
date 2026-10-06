@@ -1,0 +1,10 @@
+{
+  "title": "Artifact Io Facets",
+  "status": "open",
+  "description": "Give every artifact a required 🚪️io facet so it is importable and exportable to the closed file-type catalog. Shape: 🚪️io/\u003cformat\u003e/📥️import|📤️export with framework-owned codecs behind seven neutral models and a MediaClass×MediaForm coverage lattice. Trim 📋️mimes.csv to open formats, rename OsMediaFormat→MediaFormat, replace scattered engine register_* handlers with ArtifactIo::register, and enforce via taxonomy twins plus policyArtifactIoBreaches.",
+  "summary": "Added required 🚪️io facet to all 54 artifacts with closed 26-format MediaFormat catalog, framework codecs, SDK ArtifactIo traits, note/cad pilots, unified OS handlers, TS bridges, and policyArtifactIoBreaches gate at 0.",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins",
+  "sessions": [
+    "⚪5a329b9a476f4f5196d8b018dbba179d"
+  ]
+}

@@ -116,5 +116,3 @@ export const parseEn1990MemberEffect: NormWireReader<En1990MemberEffect> = normW
 export const parseEn1990BridgeSls: NormWireReader<En1990BridgeSls> = normWireObject<En1990BridgeSls>({ id: normWireRequired(normWireString), memberId: normWireRequired(normWireString), deckAcceleration: normWireRequired(normWireNumber), deckAccelerationLimit: normWireRequired(normWireNumber), deckTwist: normWireRequired(normWireNumber), deckTwistLimit: normWireRequired(normWireNumber), bridgeDeflection: normWireRequired(normWireNumber), bridgeDeflectionLimit: normWireRequired(normWireNumber) });
 export const parseEn1990AnnexChoice: NormWireReader<En1990AnnexChoice> = normWireLiteral("En", "De");
 export const parseEn1990ImportanceClass: NormWireReader<En1990ImportanceClass> = normWireLiteral("I", "II", "III", "IV");
-
-export * from "./🪶️sqlite/🟦️.ts";

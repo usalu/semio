@@ -30,13 +30,13 @@ const MINIFIED_INPUT: &str = "shared://🏷️.xml";
 
 /// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("readme-document.xml"))?;
+    let copy = ctx.copy_input(INPUT, Some("readme-document.xml"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
 /// 🧫️ The same, for the minified part its own round-trip scenario reads.
 fn mutable_minified_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(MINIFIED_INPUT, Some("word-document.xml"))?;
+    let copy = ctx.copy_input(MINIFIED_INPUT, Some("word-document.xml"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 

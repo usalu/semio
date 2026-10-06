@@ -4,6 +4,7 @@ import Ajv from "ajv";
 import pc from "polygon-clipping";
 import sharp from "sharp";
 import rows from "../🧫️fixtures/🔣️.json";
+import endpointRows from "../🧫️fixtures/🔗️endpoints/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {BooleanJob,booleanRegions,type BooleanInput,type BooleanProgress} from "../🟦️.ts";
 import {pathSegmentsToSvgD,type PathSegment,type Vec2} from "../../🟦️.ts";
@@ -17,6 +18,15 @@ const cross=(a:Vec2,b:Vec2,c:Vec2)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[
 function area(ring:readonly Vec2[]):number{let sum=0;for(let at=1;at<ring.length-1;at++)sum+=cross(ring[0]!,ring[at]!,ring[at+1]!);return sum/2;}
 function filled(rings:readonly (readonly Vec2[])[],p:Vec2,rule="nonzero"):boolean{let winding=0;for(const ring of rings)for(let at=0;at<ring.length;at++){const a=ring[at]!,b=ring[(at+1)%ring.length]!,c=cross(a,b,p);if(a[1]<=p[1]&&b[1]>p[1]&&c>0)winding++;else if(a[1]>p[1]&&b[1]<=p[1]&&c<0)winding--;}return rule==="evenodd"?winding%2!==0:winding!==0;}
 const apply=(operation:string,a:boolean,b:boolean)=>operation==="union"?a||b:operation==="difference"?a&&!b:operation==="intersection"?a&&b:a!==b;
+test("translated stroke junctions preserve endpoint incidence and independent SVG coverage",async()=>{
+ expect(ajv.compile({$ref:schema.$id+"#/definitions/endpointCases"})(endpointRows)).toBe(true);
+ for(const row of endpointRows){const input=row.input as unknown as BooleanInput;let previous:PathSegment[]|undefined;
+  for(const grant of [1,7,4096]){const output=finish(input,grant),rings=contours(output);expect(rings).toHaveLength(1);expect(rings.reduce((sum,c)=>sum+area(c),0)).toBeGreaterThan(0);if(previous)expect(output).toEqual(previous);previous=output;const points=input.operands[0]!.contours.flat(),origin:[number,number]=[Math.min(...points.map(p=>p[0])),Math.min(...points.map(p=>p[1]))],svg=(c:readonly(readonly Vec2[])[])=>'<svg xmlns="http://www.w3.org/2000/svg" width="128" height="256" viewBox="-0.1 -0.1 1.1 2.3"><path d="'+c.map(r=>'M'+r.map(p=>[p[0]-origin[0],p[1]-origin[1]].join(" ")).join(" L")+" Z").join(" ")+'" fill="black"/></svg>';
+   const actual=await sharp(Buffer.from(svg(rings))).ensureAlpha().raw().toBuffer(),reference=await sharp(Buffer.from(svg(input.operands[0]!.contours))).ensureAlpha().raw().toBuffer();let maximum=0,different=0;for(let at=3;at<actual.length;at+=4){const delta=Math.abs(actual[at]!-reference[at]!);maximum=Math.max(maximum,delta);if(delta)different++;if(reference[at]===0||reference[at]===255)expect(delta).toBeLessThanOrEqual(1);}console.log("[DEBUG] Endpoint stroke SVG",row.name,"maximum_alpha_delta",maximum,"changed_pixels",different);expect(maximum).toBeLessThanOrEqual(row.raster.maxAlphaDelta);expect(different).toBeLessThanOrEqual(row.raster.maxChangedPixels);
+   console.log("[DEBUG] Endpoint-preserving translated stroke union",row.name,"grant",grant,"independent_SVG_within_bounds",true);
+  }
+ }
+});
 for(const row of rows)test(row.name,()=>{
  expect(valid(row.input)).toBe(true);const input=row.input as unknown as BooleanInput,before=structuredClone(input);let previous:PathSegment[]|null=null;
  for(const grant of [1,7,4096]){const result=finish(input,grant,p=>{if(p.done&&"maxPairs" in row.expected){expect(p.pairs).toBeLessThanOrEqual(row.expected.maxPairs as number);expect(p.work).toBeLessThanOrEqual(row.expected.maxWork as number);}}),rings=contours(result);if("segments" in row.expected)expect(result).toEqual(row.expected.segments);expect(rings).toHaveLength(row.expected.contours);const actual=rings.reduce((sum,ring)=>sum+area(ring),0);expect(Math.abs(actual-row.expected.area)).toBeLessThanOrEqual(Math.max(1e-18,row.input.epsilon*row.input.epsilon*16));if(previous)expect(result).toEqual(previous);previous=result;

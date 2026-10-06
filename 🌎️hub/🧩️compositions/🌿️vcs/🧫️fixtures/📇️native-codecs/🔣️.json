@@ -1,0 +1,13 @@
+{
+  "hostile": [
+    "missing",
+    "duplicate",
+    "foreign-package",
+    "wrong-version",
+    "bare-kind",
+    "legacy-schema",
+    "legacy-kind",
+    "wrong-extension",
+    "zero-hash"
+  ]
+}

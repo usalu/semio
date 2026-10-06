@@ -24,8 +24,8 @@ interface abi {
         // lifetime
         open,
         // document
-        load-fixture-json,
-        fixture-json,
+        load-document-json,
+        document-json,
         catalogue-json,
         // editing
         add-step,

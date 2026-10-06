@@ -62,7 +62,7 @@ impl ArtifactViewer for Generation2dViewer {
     }
 
     type Snapshot = Generation2dSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -78,11 +78,11 @@ impl ArtifactViewer for Generation2dViewer {
     /// retained `OrderedMap` roots that only this catalogue retires explicitly, and the framework's generic bounded
     /// owners dropped them plainly (`ordered-map root must be explicitly retired before drop`, S15 viewer matrix).
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_document_store_owners())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_document_store_owners())
     }
 
     fn initial_snapshot() -> Generation2dSnapshot {
-        crate::standards::v1::subsets::any::schema::default_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Generation2dViewCommand::Noop` variant never carries a

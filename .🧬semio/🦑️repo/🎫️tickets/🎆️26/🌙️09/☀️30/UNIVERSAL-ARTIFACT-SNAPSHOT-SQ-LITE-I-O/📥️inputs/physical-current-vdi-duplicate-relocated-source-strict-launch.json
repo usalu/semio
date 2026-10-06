@@ -1,0 +1,7 @@
+{
+  "command": "bun run nx exec --projects=@semio-tech/norm-vdi3805-rs --excludeTaskDependencies -- bun -e 'const{runBudgetedTestCommand}=await import('\\''/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts'\\'');await runBudgetedTestCommand(process.execPath,[Bun.resolveSync('\\''typescript/bin/tsc'\\'','\\''/Users/ueli/Documents/semio'\\''),'\\''--noEmit'\\'','\\''--strict'\\'','\\''--skipLibCheck'\\'','\\''--allowImportingTsExtensions'\\'','\\''--resolveJsonModule'\\'','\\''--esModuleInterop'\\'','\\''--target'\\'','\\''ESNext'\\'','\\''--module'\\'','\\''ESNext'\\'','\\''--moduleResolution'\\'','\\''bundler'\\'','\\''--types'\\'','\\''bun'\\'','\\''/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts'\\''],{cwd:'\\''/Users/ueli/Documents/semio'\\'',budgetMs:30000,throwOnFailure:true});console.log('\\''[DEBUG] VDI actual owning Source strict completed original30000ms grant'\\'');' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-vdi-duplicate-relocated-source-strict.log' 2>&1",
+  "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "budgetMs": 30000,
+  "at": "2026-10-06T01:43:23.792Z",
+  "scope": "Same original isolated strict command; only canonical relocated test path and generated output changed"
+}

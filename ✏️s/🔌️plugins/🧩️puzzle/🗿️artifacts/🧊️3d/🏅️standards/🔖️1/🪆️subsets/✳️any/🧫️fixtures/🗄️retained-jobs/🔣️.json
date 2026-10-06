@@ -1,5 +1,4 @@
 {
-  "$schema": "semio.puzzle.retained-command.fixture.v1",
   "owner": "puzzle3d",
   "documentSchema": "puzzle.3d",
   "payloadSchema": "puzzle.3d.tool-command.v1",
@@ -17,9 +16,9 @@
     "deleteSelection",
     "deleteTargetVolume",
     "duplicateSelection",
-    "exportFixture",
-    "importFixture",
-    "openImportFixture",
+    "exportSnapshot",
+    "importSnapshot",
+    "openImportSnapshot",
     "patchInspector",
     "rotateSelection",
     "scaleSelection",

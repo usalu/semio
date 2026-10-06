@@ -1,6 +1,6 @@
 //! 🧬️ Drawing diff schema — sparse field delta over the artifact + its `apply`/`absorb` pure
 //! transform (design.md rule 3: `🧬️schema` keeps types + pure transforms; the facet's grammar spec
-//! asset moved to `🚪️io/🔺️diff/📝️text/🦀️.rs`, but `apply`/`absorb` are not a byte-boundary
+//! asset moved to `🚪️io/📝️text/🔺️diff/🦀️.rs`, but `apply`/`absorb` are not a byte-boundary
 //! codec — they transform already-decoded `DrawingDiff`/`DrawingSnapshot` values — so they stayed here).
 
 use crate::schema::{insert_layer, layer_base_mut, remove_layer_from_tree, update_layer_in_tree, DrawingArtifact};
@@ -91,7 +91,19 @@ pub struct DrawingLayerPatchEntry {
     pub patch: DrawingLayerPatch,
 }
 
-/// 🩹 Sparse layer field patch (JSON blobs for complex nested values).
+/// 🩹 Explicit replacement preserving an absent patch and a cleared value.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(default)]
+pub struct DrawingFillPatch { pub value: Option<FillStyle> }
+
+/// 🩹 Explicit replacement preserving an absent patch and a cleared value.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(default)]
+pub struct DrawingStrokePatch { pub value: Option<StrokeStyle> }
+
+/// 🩹 Typed layer changes.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
@@ -106,12 +118,12 @@ pub struct DrawingLayerPatch {
     #[value(skip_serializing_if="Option::is_none")]
     #[cfg_attr(test,serde(skip_serializing_if="Option::is_none"))]
     pub isolation:Option<bool>,
-    pub transform_json: Option<String>,
-    pub fill_json: Option<String>,
-    pub stroke_json: Option<String>,
+    pub transform: Option<crate::DrawingTransform>,
+    pub fill: Option<DrawingFillPatch>,
+    pub stroke: Option<DrawingStrokePatch>,
     pub boolean_operation: Option<String>,
-    pub trace_params_json: Option<String>,
-    pub layer_json: Option<String>,
+    pub trace_params: Option<crate::DrawingTraceParams>,
+    pub layer: Option<DrawingLayerNode>,
     pub path_segments: Option<Vec<crate::PathSegment>>,
     pub text_content: Option<String>,
     pub text_size: Option<f64>,
@@ -250,10 +262,10 @@ fn apply_layer_patch_entry(layers: &mut [DrawingLayerNode], entry: &DrawingLayer
 }
 
 fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) -> protocol::MutationApplyResult<()> {
-    if let Some(layer_json) = &patch.layer_json {
-        let replacement = semio_framework_pack_json::from_json_str::<DrawingLayerNode>(layer_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("layer patch is not valid JSON: {error}")).at(["layerJson"]))?;
+    if let Some(layer) = &patch.layer {
+        let replacement = layer.clone();
         if crate::schema::layer_id(&replacement) != crate::schema::layer_id(layer) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch cannot change the target identity").at(["layerJson"]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch cannot change the target identity").at(["layer"]));
         }
         *layer = replacement;
         return Ok(());
@@ -293,14 +305,14 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         if !crate::DRAWING_BLEND_MODES.contains(&blend_mode.as_str()) { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Unsupported blend mode.").at(["blendMode"])); }
         base.blend_mode = blend_mode.clone();
     }
-    if let Some(transform_json) = &patch.transform_json {
-        base.transform = semio_framework_pack_json::from_json_str(transform_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("transform is not valid JSON: {error}")).at(["transformJson"]))?;
+    if let Some(transform) = &patch.transform {
+        base.transform = transform.clone();
     }
-    if let Some(fill_json) = &patch.fill_json {
-        base.attributes.fill = semio_framework_pack_json::from_json_str::<Option<FillStyle>>(fill_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("fill is not valid JSON: {error}")).at(["fillJson"]))?;
+    if let Some(fill) = &patch.fill {
+        base.attributes.fill = fill.value.clone();
     }
-    if let Some(stroke_json) = &patch.stroke_json {
-        base.attributes.stroke = semio_framework_pack_json::from_json_str::<Option<StrokeStyle>>(stroke_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("stroke is not valid JSON: {error}")).at(["strokeJson"]))?;
+    if let Some(stroke) = &patch.stroke {
+        base.attributes.stroke = stroke.value.clone();
     }
     if let Some(operation) = &patch.boolean_operation {
         let DrawingLayerNode::Boolean(boolean) = layer else {
@@ -308,11 +320,11 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         };
         boolean.operation = operation.clone();
     }
-    if let Some(params_json) = &patch.trace_params_json {
+    if let Some(params_json) = &patch.trace_params {
         let DrawingLayerNode::Trace(trace) = layer else {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "trace parameters patch requires a trace layer").at(["traceParamsJson"]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "trace parameters patch requires a trace layer").at(["traceParams"]));
         };
-        trace.params = semio_framework_pack_json::from_json_str(params_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("trace parameters are not valid JSON: {error}")).at(["traceParamsJson"]))?;
+        trace.params = params_json.clone();
     }
     Ok(())
 }
@@ -334,12 +346,12 @@ fn merge_layer_patch(dst: &mut DrawingLayerPatch, mut src: DrawingLayerPatch) {
     take!(blend_mode);
     take!(fill_rule);
     take!(isolation);
-    take!(transform_json);
-    take!(fill_json);
-    take!(stroke_json);
+    take!(transform);
+    take!(fill);
+    take!(stroke);
     take!(boolean_operation);
-    take!(trace_params_json);
-    take!(layer_json);
+    take!(trace_params);
+    take!(layer);
     take!(path_segments);
     take!(text_content);
     take!(text_size);
@@ -476,16 +488,9 @@ pub fn diff_set_layer_blend_mode(layer_id: &str, blend_mode: &str) -> DrawingDif
     layer_base_patch(layer_id, DrawingLayerPatch { blend_mode: Some(blend_mode.to_string()), ..Default::default() })
 }
 
-/// ↔️ Layer transform patch.
-pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::DrawingTransform) -> DrawingDiff {
-    layer_base_patch(layer_id, DrawingLayerPatch { transform_json: Some(semio_framework_pack_json::to_json_string(transform)), ..Default::default() })
-}
 
-/// ↔️ Several layers' transform patches in one sparse delta, in the given order.
-pub fn diff_set_layer_transforms(entries: impl IntoIterator<Item = (String, crate::DrawingTransform)>) -> DrawingDiff {
-    let patched = entries.into_iter().map(|(id, transform)| DrawingLayerPatchEntry { id, patch: DrawingLayerPatch { transform_json: Some(semio_framework_pack_json::to_json_string(&transform)), ..Default::default() } }).collect();
-    DrawingDiff { layers: Some(DrawingLayersDelta { patched, ..Default::default() }), ..Default::default() }
-}
+
+
 
 /// ✏️ Several paths' geometry patches in one sparse delta, in the given order.
 pub fn diff_set_path_geometries(entries: impl IntoIterator<Item = (String, Vec<crate::PathSegment>)>) -> DrawingDiff {
@@ -493,25 +498,16 @@ pub fn diff_set_path_geometries(entries: impl IntoIterator<Item = (String, Vec<c
     DrawingDiff { layers: Some(DrawingLayersDelta { patched, ..Default::default() }), ..Default::default() }
 }
 
-/// 🎨 Layer fill patch.
-pub fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawingDiff {
-    layer_base_patch(layer_id, DrawingLayerPatch { fill_json: Some(semio_framework_pack_json::to_json_string(fill)), ..Default::default() })
-}
 
-/// ✏️ Layer stroke patch.
-pub fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawingDiff {
-    layer_base_patch(layer_id, DrawingLayerPatch { stroke_json: Some(semio_framework_pack_json::to_json_string(stroke)), ..Default::default() })
-}
+
+
 
 /// 🔀 Boolean operation patch.
 pub fn diff_set_boolean_operation(layer_id: &str, boolean_operation: &str) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { boolean_operation: Some(boolean_operation.to_string()), ..Default::default() })
 }
 
-/// 🖼️ Trace params patch.
-pub fn diff_set_trace_params(layer_id: &str, params: &crate::DrawingTraceParams) -> DrawingDiff {
-    layer_base_patch(layer_id, DrawingLayerPatch { trace_params_json: Some(semio_framework_pack_json::to_json_string(params)), ..Default::default() })
-}
+
 
 /// 🌱️ Layer insertion at a real (parent, index) address — root when `parent_id` is `None`.
 pub fn diff_create_layer(parent_id: Option<&str>, index: usize, layer: DrawingLayerNode) -> DrawingDiff {
@@ -533,9 +529,7 @@ pub fn diff_reorder_layers(order: Vec<String>) -> DrawingDiff {
     DrawingDiff { layers: Some(DrawingLayersDelta { reordered: Some(order), ..Default::default() }), ..Default::default() }
 }
 
-fn layer_base_patch(layer_id: &str, patch: DrawingLayerPatch) -> DrawingDiff {
-    DrawingDiff { layers: Some(DrawingLayersDelta { patched: vec![DrawingLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
-}
+
 
 /// 🧬️ Whole-snapshot replacement when a sparse delta cannot express a tree edit.
 pub fn diff_from_snapshot(snapshot: &DrawingSnapshot) -> DrawingDiff {
@@ -562,3 +556,33 @@ pub fn diff_set_text(layer_id: &str, content: &str, size: f64) -> DrawingDiff {
 pub fn diff_set_layer_fill_rule(layer_id:&str,fill_rule:crate::FillRule)->DrawingDiff {layer_base_patch(layer_id,DrawingLayerPatch {fill_rule:Some(fill_rule),..Default::default()})}
 
 pub fn diff_set_group_isolation(layer_id:&str,isolation:bool)->DrawingDiff {layer_base_patch(layer_id,DrawingLayerPatch {isolation:Some(isolation),..Default::default()})}
+
+/// ↔️ Layer transform patch.
+pub fn diff_set_layer_transform(layer_id: &str, transform: &crate::DrawingTransform) -> DrawingDiff {
+    layer_base_patch(layer_id, DrawingLayerPatch { transform: Some(transform.clone()), ..Default::default() })
+}
+
+/// ↔️ Several layers' transform patches in one sparse delta, in the given order.
+pub fn diff_set_layer_transforms(entries: impl IntoIterator<Item = (String, crate::DrawingTransform)>) -> DrawingDiff {
+    let patched = entries.into_iter().map(|(id, transform)| DrawingLayerPatchEntry { id, patch: DrawingLayerPatch { transform: Some(transform), ..Default::default() } }).collect();
+    DrawingDiff { layers: Some(DrawingLayersDelta { patched, ..Default::default() }), ..Default::default() }
+}
+
+/// 🎨 Layer fill patch.
+pub fn diff_set_fill(layer_id: &str, fill: &Option<FillStyle>) -> DrawingDiff {
+    layer_base_patch(layer_id, DrawingLayerPatch { fill: Some(DrawingFillPatch { value: fill.clone() }), ..Default::default() })
+}
+
+/// ✏️ Layer stroke patch.
+pub fn diff_set_stroke(layer_id: &str, stroke: &Option<StrokeStyle>) -> DrawingDiff {
+    layer_base_patch(layer_id, DrawingLayerPatch { stroke: Some(DrawingStrokePatch { value: stroke.clone() }), ..Default::default() })
+}
+
+/// 🖼️ Trace params patch.
+pub fn diff_set_trace_params(layer_id: &str, params: &crate::DrawingTraceParams) -> DrawingDiff {
+    layer_base_patch(layer_id, DrawingLayerPatch { trace_params: Some(params.clone()), ..Default::default() })
+}
+
+pub(crate) fn layer_base_patch(layer_id: &str, patch: DrawingLayerPatch) -> DrawingDiff {
+    DrawingDiff { layers: Some(DrawingLayersDelta { patched: vec![DrawingLayerPatchEntry { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
+}

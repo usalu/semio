@@ -21,13 +21,31 @@
         "description": {
           "en": "Zero-based image file directory.",
           "de": "Nullbasiertes Bilddateiverzeichnis."
-        }
+        },
+        "step": 1
       }
     },
     "tag": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 65535
+      "maximum": 65535,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tag",
+          "de": "Tag"
+        },
+        "description": {
+          "en": "Numeric TIFF tag that is removed from the directory.",
+          "de": "Numerisches TIFF-Tag, das aus dem Verzeichnis entfernt wird."
+        },
+        "ref": {
+          "kind": "tag"
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

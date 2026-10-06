@@ -21,7 +21,7 @@ fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
         ],
         "attractions": [], "targetVolumes": [], "references": [],
     });
-    let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle3dSnapshot>(value.clone()).expect("typed puzzle3d fixture")).expect("canonical puzzle3d JSON");
+    let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle3dSnapshot>(value.clone()).expect("typed puzzle3d scene_snapshot")).expect("canonical puzzle3d JSON");
     let operations = puzzle3d_document_delta_operations(&before, &after);
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle3dMutation::MoveObject(_))));
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle3dMutation::CreateObject(_))));
@@ -29,7 +29,7 @@ fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
     let mut forward = before.clone();
     let mut inverses = Vec::new();
     for operation in &operations {
-        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse fixture"));
+        inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse scene_snapshot"));
         forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward).expect("valid mutation diff");
     }
     assert_eq!(forward, canonical(&after));
@@ -295,10 +295,10 @@ fn selection_leaves_are_editable_through_their_payload_value() {
 #[semio_framework_async_macros::async_test]
 async fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::standards::v1::subsets::any::schema::mutations::binary::puzzle3d_store(store::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(crate::PUZZLE_3D_SCHEMA, "selection-time-travel", selection_scene([0.0; 3]), None)).await.expect("the store opens");
+    let mut store = crate::standards::v1::subsets::any::io::binary::mutations::puzzle3d_store(store::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(crate::PUZZLE_3D_SCHEMA, "selection-time-travel", selection_scene([0.0; 3]), None)).await.expect("the store opens");
     let log = [drag_selection(vec!["o1".into()], [1.0, 0.0, 0.0]), rotate_selection(vec!["o1".into()], [0.0, 0.0, 1.0], std::f64::consts::FRAC_PI_2), drag_selection(vec!["o1".into(), "v1".into()], [0.0, 2.0, 0.0])];
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a selection gesture applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("a selection gesture applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = drag_selection(vec!["o1".into()], [5.0, 0.0, 0.0]);
@@ -319,7 +319,7 @@ async fn a_drag_edited_in_history_replays_its_downstream() {
     assert_eq!(fresh.objects[0].origin, [5.0, 2.0, 0.0], "the downstream drag lands on the edited pose");
     store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
-    crate::standards::v1::subsets::any::schema::mutations::binary::close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
+    crate::standards::v1::subsets::any::io::binary::mutations::close_puzzle3d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
 //#endregion 🔖️SelectionLaws
 

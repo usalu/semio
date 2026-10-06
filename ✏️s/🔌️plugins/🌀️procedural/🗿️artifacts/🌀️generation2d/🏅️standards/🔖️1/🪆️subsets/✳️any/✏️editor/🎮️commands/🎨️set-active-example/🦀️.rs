@@ -20,7 +20,7 @@ fn example_document(example_id: &str) -> Option<Generation2dSnapshot> {
         return Some(empty_generation2d_snapshot());
     }
     if example_id == crate::examples::demo::ID {
-        return crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::examples::demo::PRIMARY_TEXT).ok();
+        return crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).ok();
     }
     None
 }

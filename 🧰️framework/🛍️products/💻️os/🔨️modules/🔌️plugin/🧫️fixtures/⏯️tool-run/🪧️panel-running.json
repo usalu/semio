@@ -72,7 +72,7 @@
                     "version": 1
                   },
                   "args": {
-                    "generation": 0.0,
+                    "generation": 0,
                     "runId": "1"
                   },
                   "trigger": "activate"
@@ -108,7 +108,7 @@
                     "version": 1
                   },
                   "args": {
-                    "generation": 0.0,
+                    "generation": 0,
                     "runId": "1"
                   },
                   "trigger": "activate"
@@ -144,7 +144,7 @@
                     "version": 1
                   },
                   "args": {
-                    "generation": 0.0,
+                    "generation": 0,
                     "runId": "1"
                   },
                   "trigger": "activate"
@@ -180,7 +180,7 @@
                     "version": 1
                   },
                   "args": {
-                    "generation": 0.0,
+                    "generation": 0,
                     "runId": "1"
                   },
                   "trigger": "activate"

@@ -6,7 +6,7 @@
 
 use crate::editor::remodeling::commands::import_video_frame_payload::import_transaction;
 use crate::editor::remodeling::transient::RemodelingWindowTransient;
-use crate::op::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use crate::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

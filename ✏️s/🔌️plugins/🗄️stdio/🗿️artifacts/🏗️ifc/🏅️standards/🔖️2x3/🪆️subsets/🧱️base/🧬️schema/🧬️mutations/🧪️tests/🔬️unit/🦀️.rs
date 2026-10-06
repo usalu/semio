@@ -1,6 +1,6 @@
 use super::*;
 use protocol::os_spr::command::DiffAlgebra;
-use protocol::{DiffCodec, MutationDiff, OpBinary, OpText};
+use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff, OpBinary, OpText};
 use std::sync::OnceLock;
 async fn inst(id: u64, name: &str) -> Part21Instance {
     Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }

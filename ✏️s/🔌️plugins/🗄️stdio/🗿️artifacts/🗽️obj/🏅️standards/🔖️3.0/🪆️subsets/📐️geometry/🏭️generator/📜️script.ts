@@ -11,7 +11,7 @@
 // shape (`generate [--only <id>]`, `SEMIO_FIXTURE_OUT` read as a fixtures ROOT — every generator in
 // the repository writes `<root>/<recipe>/<file>`):
 //   * `pattern-shell` — the ORIGINAL single-fixture recipe (unchanged since it was first committed),
-//     built by `../🦀️engine` and admitted through `tobj` 4. Its own `fixtureManifests` entry's
+//     built by `../🦀️engine` and admitted through `tobj` 4. Its own `testEvidence` entry's
 //     `generator.command` still reads plain `generate` with no `--only`, so that exact invocation
 //     must keep producing exactly this one file — this script preserves that path byte-for-byte.
 //   * the 20 reader-oracle corpus recipes (`no-mutation-no-op`, `set-snapshot-applied`, …) — built by
@@ -25,7 +25,7 @@
 // that writes into `../🧫️fixtures/`, and its output is reviewed and committed before any test reads it.
 //
 //   bun 📜️script.ts generate [--only <recipe-id>] [--out <dir>]   # (re)builds + writes fixture(s)
-//   bun 📜️script.ts manifests [--only <recipe-id>]                 # prints the fixtureManifests entry/entries
+//   bun 📜️script.ts manifests [--only <recipe-id>]                 # prints the testEvidence entry/entries
 //   bun 📜️script.ts list-recipes                                   # every known recipe id
 //
 // @see ../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️obj-3-0-any-reader-oracle-retrofit.md
@@ -45,7 +45,7 @@ import { currentPlatform } from "../../../../../../../../../../🧰️framework/
 const HERE = import.meta.dir;
 const FIXTURES_DIR = join(HERE, "..", "🧫️fixtures");
 
-const LEGACY_ENGINE_DIR = join(HERE, "🧫️fixtures", "📦️packages", "🦀️rust");
+const REFERENCE_ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const LEGACY_ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
 const LEGACY_RECIPE = "pattern-shell";
 const LEGACY_DIRECTORY = "🐚️pattern-shell";
@@ -96,7 +96,7 @@ const DOCUMENT_COORDINATES: Readonly<Record<string, readonly [string, string]>> 
 
 //#region 🔨️Build
 function ensureLegacyBuilt(): void {
-  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", join(LEGACY_ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", join(REFERENCE_ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
   if (result.status !== 0) throw new Error(`cargo build (legacy engine) failed with status ${result.status}`);
 }
 
@@ -131,10 +131,10 @@ function generateReaderRecipe(recipe: ReaderRecipe, fixturesRoot: string): void 
 }
 
 /** 🚪️ `--only <id>` dispatches to whichever family owns that id; NO `--only` rebuilds ONLY the
- *  legacy `pattern-shell` recipe — the exact behavior its own committed `fixtureManifests` entry's
+ *  legacy `pattern-shell` recipe — the exact behavior its own committed `testEvidence` entry's
  *  `generator.command` (`generate`, no flags) has always invoked, unchanged. The 20 reader-oracle
  *  corpus recipes are only ever built when named explicitly via `--only` (each carries its own
- *  `fixtureManifests` entry whose `generator.command` always names one), so a bare `generate` never
+ *  `testEvidence` entry whose `generator.command` always names one), so a bare `generate` never
  *  grows to rebuild the whole corpus underneath the one recorded pattern-shell invocation. */
 async function generate(outFlagDir: string | null, only: string | null): Promise<void> {
   const fixtureOutRoot = process.env.SEMIO_FIXTURE_OUT;
@@ -162,7 +162,6 @@ async function manifestForLegacy(): Promise<Record<string, unknown>> {
   const outPath = join(dir, LEGACY_FIXTURE_FILE);
   if (!existsSync(outPath)) throw new Error(`${outPath} does not exist — run "generate" first`);
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: LEGACY_RECIPE,
     class: "third-party-generated",
     target: { artifact: "s.stdio.obj", standard: "3.0", subset: "geometry" },
@@ -183,7 +182,6 @@ async function manifestForReaderRecipe(recipe: ReaderRecipe): Promise<Record<str
   const files = [await fileEntry("expected-before-obj", dir, "⬅️before.obj", recipe.directoryName)];
   if (recipe.hasAfter) files.push(await fileEntry("expected-after-obj", dir, "➡️after.obj", recipe.directoryName));
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.obj", standard: "3.0", subset: "geometry" },
@@ -294,7 +292,6 @@ async function main(argv: readonly string[]): Promise<number> {
         files.push({ role, path: `../🧫️fixtures/${directoryName}/${name}`, mediaType: "model/obj", sha256: await sha256(path), bytes: statSync(path).size });
       }
       entries.push({
-        schema: "semio.repository-test.fixture/v2",
         id: `document-${kind}`,
         class: "handcrafted",
         target: { artifact: "s.stdio.obj", standard: "3.0", subset: subset === "🎨️material" ? "material" : "geometry" },

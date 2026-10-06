@@ -19,5 +19,5 @@ pub fn add_target_volume(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
     let [w, d, h] = ctx.scene.runtime.voxel_dims;
     let scale = semio_framework_value::ToValue::to_value(&[w as f64 * grid_spacing, d as f64 * grid_spacing, h as f64 * grid_spacing]);
     let id = format!("target-volume-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
-    ctx.scene.fixture.target_volumes.push(Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false });
+    ctx.scene.scene_snapshot.target_volumes.push(Puzzle3dTargetVolume { id, origin: snapped, orientation: None, scale: Some(scale), hidden: false, locked: false });
 }

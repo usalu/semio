@@ -6,10 +6,7 @@ use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[path="🛬️native/🦀️.rs"]
-mod native;
+
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted energy-model document snapshot (persistent fields of the artifact). Ticket
@@ -85,118 +82,28 @@ impl FromValue for EnergyModelSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️PackRecord
-/// 🔋️ Derived pack record of an `EnergyModelSnapshot` — every field as persisted, with the typed
-/// `model` carried as its first-party value.
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
-#[dsl(extension = "energy")]
-struct EnergyModelPackRecord {
-    schema: String,
-    model: DslValue,
-    structure: EnergyStructureChild,
-    zones: EnergyZonesChild,
-    referenced_model: Option<store::ArtifactLink>,
-    weather_link: Option<store::ArtifactLink>,
-}
 
-impl EnergyModelPackRecord {
-    fn from_snapshot(snapshot: &EnergyModelSnapshot) -> Self {
-        Self { schema: snapshot.schema.clone(), model: snapshot.model.to_value(), structure: snapshot.structure.clone(), zones: snapshot.zones.clone(), referenced_model: snapshot.referenced_model.clone(), weather_link: snapshot.weather_link.clone() }
-    }
 
-    fn into_snapshot(self) -> Result<EnergyModelSnapshot, String> {
-        let model = crate::model::Model::from_value(self.model).map_err(|error| error.to_string())?;
-        Ok(EnergyModelSnapshot { schema: self.schema, model, structure: self.structure, zones: self.zones, referenced_model: self.referenced_model, weather_link: self.weather_link })
-    }
-}
 
-/// 🖨️ The derived text body: the same `EnergyModelPackRecord` the pack encodes, printed by the spec-driven engine.
-pub(crate) fn print_pack_record_text(snapshot: &EnergyModelSnapshot) -> String {
-    semio_framework_dsl_record::print(&EnergyModelPackRecord::from_snapshot(snapshot).__dsl_to_record(), &EnergyModelPackRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document)
-}
 
-/// 📖️ Parses a derived text body back through `EnergyModelPackRecord`, with the same decode steps as the pack.
-pub(crate) fn parse_pack_record_text(body: &str) -> Result<EnergyModelSnapshot, semio_framework_diagnostic::TextError> {
-    let record = semio_framework_dsl_record::parse(body, &EnergyModelPackRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-    EnergyModelPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| semio_framework_diagnostic::TextError::new(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
-}
+
+
+
 //#endregion 🔖️PackRecord
 
 //#region 🔖️HandcraftedArtifactCodecs
-impl store::ArtifactDsl for EnergyModelSnapshot {
-    const EXTENSION: &'static str = "energy";
-    fn envelope_id() -> &'static str {
-        "energy.model"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        parse_pack_record_text(body)
-    }
-    fn print_dsl(&self) -> String {
-        let body = print_pack_record_text(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
 
-impl store::ArtifactPack for EnergyModelSnapshot {
-    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let inner = store::pack_rt::encode_document(&EnergyModelPackRecord::__dsl_spec(), &EnergyModelPackRecord::from_snapshot(self).__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &inner))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-        }
-        let (record, _report) = store::pack_rt::decode_document(&inner, &EnergyModelPackRecord::__dsl_spec(), options)?;
-        EnergyModelPackRecord::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.into_snapshot().map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error)))
-    }
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        Some(EnergyModelPackRecord::__dsl_spec())
-    }
-}
+
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️round-trip/🦀️.rs"]
 mod round_trip_tests;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;
+
 //#endregion 🧪️Tests
 
 //#region 🌉️IdentityBridge
-/// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
-/// language-neutral test adapter. Same reachability wall as `energy_model_mutation_report_json`:
-/// `store::ArtifactDsl`/`store::ArtifactPack` and their error types are unnameable outside this
-/// crate, so the identity law's evidence has to be produced here and handed over as text.
-///
-/// `canonicalText` is `print_dsl` of the parsed document and `canonicalTextAgain` is `print_dsl` of
-/// re-parsing that — [`store::ArtifactDsl`]'s own documented LAW is that canonical output is a
-/// `parse_dsl` fixpoint (hand-written text may normalize on the way in), so the two must be
-/// byte-identical while neither is required to equal the committed file. `packDecoded` comes back
-/// through a SEPARATE binary codec, so agreeing on one snapshot cannot be achieved by carrying text
-/// bytes across.
-pub fn energy_model_identity_report_json(dsl_text: &str) -> Result<String, String> {
-    let parsed = <EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
-    let canonical = <EnergyModelSnapshot as store::ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
-    let canonical_again = <EnergyModelSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
-    let packed = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
-    let unpacked = <EnergyModelSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = semio_framework_pack_json::object([
-        ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&parsed.to_value())),
-        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&reparsed.to_value())),
-        ("packDecoded".to_string(), semio_framework_pack_json::from_dsl_value(&unpacked.to_value())),
-        ("canonicalText".to_string(), semio_framework_pack_json::Value::String(canonical)),
-        ("canonicalTextAgain".to_string(), semio_framework_pack_json::Value::String(canonical_again)),
-    ]);
-    Ok(semio_framework_pack_json::to_string(&report))
-}
+
 //#endregion 🌉️IdentityBridge

@@ -123,102 +123,8 @@ export interface ReplaceReferences {
   references: CadReference[];
 }
 
-/** 🧱️ Public wire twin of the ephemeral working object `create-object` carries. */
-export interface CadObjectSpec {
-  id: string;
-  label: string;
-  typology: string;
-  visible: boolean;
-  locked: boolean;
-  origin: [number, number, number];
-  orientation: [number, number, number, number] | null;
-  scale: [number, number, number] | null;
-  meshUrl: string | null;
-  extent: [number, number, number] | null;
-  solidHandle: string | null;
-}
-
-/** 🧱️ One object's exact next origin — absolute, so the inverse restores it bit-for-bit. */
-export interface CadObjectOrigin {
-  objectId: string;
-  newOrigin: [number, number, number];
-}
-
-/** 🧱️ One object's exact next orientation quaternion. */
-export interface CadObjectOrientation {
-  objectId: string;
-  newOrientation: [number, number, number, number];
-}
-
-/** 🧱️ One object's exact next per-axis scale. */
-export interface CadObjectScale {
-  objectId: string;
-  newScale: [number, number, number];
-}
-
-/** 🪆️ The pane whose composed `s.stdio.semio.model` child an object mutation re-materializes. */
+/** 🪆️ The model pane a composed `s.stdio.semio@v1/model` child belongs to. */
 export type CadPaneId = "shape" | "building" | "energy" | "structure-classic";
-
-/** 🧱️ One authored primitive slot of an object. */
-export interface CadObjectPrimitive {
-  slot: string;
-  primitiveId: string;
-  kind: string;
-}
-
-/** 🆕️ `create-object` payload — brings one object into a pane's composed model child at `index`. */
-export interface CreateObject {
-  pane: CadPaneId;
-  index: number;
-  object: CadObjectSpec;
-  primitives: CadObjectPrimitive[];
-}
-
-/** ❌️ `delete-object` payload — removes one object from a pane's composed model child. */
-export interface DeleteObject {
-  pane: CadPaneId;
-  objectId: string;
-}
-
-/** 🚚️ `move-objects` payload — absolute next origins for the touched objects of one pane. */
-export interface MoveObjects {
-  pane: CadPaneId;
-  placements: CadObjectOrigin[];
-}
-
-/** 🌀️ `rotate-objects` payload — absolute next orientations for the touched objects of one pane. */
-export interface RotateObjects {
-  pane: CadPaneId;
-  placements: CadObjectOrientation[];
-}
-
-/** ⚖️ `scale-objects` payload — absolute next scales for the touched objects of one pane. */
-export interface ScaleObjects {
-  pane: CadPaneId;
-  placements: CadObjectScale[];
-}
-
-/** ✋️ `drag-selection` payload — one pane's objects moved by one relative world offset. */
-export interface DragSelection {
-  pane: CadPaneId;
-  targets: string[];
-  offset: [number, number, number];
-}
-
-/** 🔄️ `rotate-selection` payload — one pane's objects turned in place about one world axis by one angle (radians). */
-export interface RotateSelection {
-  pane: CadPaneId;
-  targets: string[];
-  axis: [number, number, number];
-  angle: number;
-}
-
-/** 🔍️ `scale-selection` payload — one pane's objects scaled in place by one relative factor per axis. */
-export interface ScaleSelection {
-  pane: CadPaneId;
-  targets: string[];
-  factors: [number, number, number];
-}
 
 export type CadMutation =
   | ({ mutation: "createShapeModel" } & CreateShapeModel)
@@ -239,12 +145,4 @@ export type CadMutation =
   | ({ mutation: "changeReferenceWidth" } & ChangeReferenceWidth)
   | ({ mutation: "moveReference" } & MoveReference)
   | ({ mutation: "replaceReferenceMedia" } & ReplaceReferenceMedia)
-  | ({ mutation: "replaceReferences" } & ReplaceReferences)
-  | ({ mutation: "createObject" } & CreateObject)
-  | ({ mutation: "deleteObject" } & DeleteObject)
-  | ({ mutation: "moveObjects" } & MoveObjects)
-  | ({ mutation: "rotateObjects" } & RotateObjects)
-  | ({ mutation: "scaleObjects" } & ScaleObjects)
-  | ({ mutation: "dragSelection" } & DragSelection)
-  | ({ mutation: "rotateSelection" } & RotateSelection)
-  | ({ mutation: "scaleSelection" } & ScaleSelection);
+  | ({ mutation: "replaceReferences" } & ReplaceReferences);

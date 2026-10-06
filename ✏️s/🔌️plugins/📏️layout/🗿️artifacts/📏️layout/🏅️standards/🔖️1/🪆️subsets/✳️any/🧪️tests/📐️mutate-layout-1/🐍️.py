@@ -104,7 +104,7 @@ WIRE_TAG_TO_KIND = {tag: kind for kind, (_root, tag) in VECTORS.items()}
 
 def _read_json(ctx: Context, root: str, leaf: str):
     """🧫️ One declared fixture, parsed."""
-    return json.loads(ctx.fixture_bytes(f"{root}/{leaf}/🔣️.json"))
+    return json.loads(ctx.input_bytes(f"{root}/{leaf}/🔣️.json"))
 
 
 def unwrap(wire):

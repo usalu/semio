@@ -1,0 +1,15 @@
+# Stdio Catalog: Constrained Initial Owner Repair Readiness
+
+Actual88selected63pass25fail receipt is the authority; this audit runs no gates. Closed exact source and diagnostic map: `📥️inputs/stdio-catalog-constrained-initial-owner-repair-readiness.json`.
+
+The unchanged Hub law at `🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/✏️editor-catalog/🦀️.rs:210` takes E::initial_snapshot, exports both ordinary Pack/Text payloads through real public routes, validates independent physical files and identity, requires exact restored payload equality, then compares full decoded Snapshot JSON. These assertions remain necessary and must not be bypassed.
+
+IFC2x3 CV20/COBIE/SAV initial_snapshot returns generic Ifc2x3Snapshot::default. Real measured refusals include IFC2X3 header and exact ViewDefinition absence; SAV also requires analysis model. Existing subset BuilderConstruction::new uses real seeded document and build validates hard subset requirements (CV20 schema87/148, COBIE63/110, SAV59/103). Use those genuine production authorities, preserving full record/reference/domain data and mandatory profile names; warnings are advisory, not permission to claim omitted full fixture families.
+
+STEP AP214 CC1–6 initial_snapshot returns StepSnapshot::default. Existing builders retain generic default in empty and reject hard profile violations on build. Existing composers ensure AUTOMOTIVE_DESIGN then check their complete CC predicate before stamping dialect. An initial-owner repair must handcraft actual Part21 header plus geometry/profile rows satisfying each existing ladder predicate; do not merely stamp the header or weaken validator. Exact per-subset source/gate anchors are in input.
+
+PPTX strict editor130 uses base blank_pptx_snapshot, measured as transitional XML main namespaces/relationships. Strict builder empty delegates base empty; from_snapshot/build is a validator, not namespace conversion. Genuine full initial strict OPC content must use PresentationML http://purl.oclc.org/ooxml/presentationml/main and officeDocument relationship base http://purl.oclc.org/ooxml/officeDocument/relationships consistently across all parts; preserve all typed presentation/package/XML fields and original profile bans.
+
+XLSX strict editor initial_snapshot returns XlsxSnapshot::default, measured workbook Transitional main/r namespace. Existing XlsxStrictBuilderConstruction::new(real workbook) calls actual minimal OPC serializer and stamp_strict_namespace, then build checks strict predicate. Its public constructor is a real production source candidate; ordinary default alone is not. Preserve full workbook fields, relationships and leaf XML rather than adapting catalog data.
+
+These11 selected failures are current genuine constrained-initial-owner refusals. Root separately owns PDF/JPG/TIFF envelope/equality failures. After a production initial-source repair, replay exact existing catalog laws; bare provider/Some metadata or successful builder source presence cannot substitute for both native/public full owner equalities.

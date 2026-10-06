@@ -93,7 +93,7 @@ async fn apply_rejects_invalid_splice_without_mutating_base() {
 /// 🧪️ F6-PILOT: `DiffCodec` round-trip laws (derived via `dsl::DslDiff`).
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::DiffCodec;
+    use protocol::{DiffBinary,DiffCodec,DiffText};
     for d in demo_diff_cases() {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

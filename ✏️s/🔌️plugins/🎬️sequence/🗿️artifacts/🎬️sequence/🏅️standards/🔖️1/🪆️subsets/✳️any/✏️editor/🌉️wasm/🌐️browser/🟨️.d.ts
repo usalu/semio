@@ -15,8 +15,8 @@ export interface SequenceTask<T> {
 }
 
 export interface SequenceDocumentFeatures {
-  loadFixtureJson(json: string): SequenceTask<Uint8Array>;
-  fixtureJson(): SequenceTask<string>;
+  loadSnapshotJson(json: string): SequenceTask<Uint8Array>;
+  snapshotJson(): SequenceTask<string>;
   catalogueJson(): SequenceTask<string>;
 }
 

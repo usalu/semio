@@ -21,7 +21,9 @@
 //! @see ../../../../../../🧪️tests/🔬️mutate-svg-1-1-tiny/🥒️.feature — the case that exercises it.
 
 use crate::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
+use crate::schema::snapshot::{element_attr, node_at, transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
+use crate::standards::v1_1::subsets::base::io::text::snapshot::{parse_transform_list};
+use crate::standards::v1_1::subsets::base::io::text::snapshot::{parse_view_box};
 use crate::SvgSnapshot;
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};

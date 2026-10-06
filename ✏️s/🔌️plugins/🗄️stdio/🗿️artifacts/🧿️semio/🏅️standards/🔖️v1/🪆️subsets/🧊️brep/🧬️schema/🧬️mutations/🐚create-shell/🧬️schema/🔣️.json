@@ -9,12 +9,39 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Shell id",
+          "de": "Schalen-ID"
+        },
+        "description": {
+          "en": "Id the new shell carries.",
+          "de": "Kennung, die die neue Schale trägt."
+        },
+        "group": "value",
+        "order": 10
+      }
     },
     "faces": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/BrepShellFace"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Faces",
+          "de": "Flächen"
+        },
+        "description": {
+          "en": "Faces of the shell, each with its orientation.",
+          "de": "Flächen der Schale, jeweils mit ihrer Orientierung."
+        },
+        "group": "value",
+        "order": 20
       }
     }
   },

@@ -17,6 +17,6 @@ pub fn diff(payload: &super::CreateThermalEnclosure, base: &EnergyModelSnapshot)
     }
     let mut model = base.model.clone();
     model.thermal_enclosures.insert(payload.index as usize, crate::model::ThermalEnclosure { id: payload.id, name: payload.name.clone(), zone_ids: payload.zone_ids.clone() });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

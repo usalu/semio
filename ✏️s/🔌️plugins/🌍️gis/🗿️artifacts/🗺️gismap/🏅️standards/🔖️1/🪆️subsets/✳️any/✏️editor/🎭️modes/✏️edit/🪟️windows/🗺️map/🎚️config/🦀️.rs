@@ -217,3 +217,6 @@ mod direct_mutation_tests;
 #[path = "🧪️tests/🔬️window/🦀️.rs"]
 mod window_ownership_tests;
 //#endregion 🧪️Tests
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

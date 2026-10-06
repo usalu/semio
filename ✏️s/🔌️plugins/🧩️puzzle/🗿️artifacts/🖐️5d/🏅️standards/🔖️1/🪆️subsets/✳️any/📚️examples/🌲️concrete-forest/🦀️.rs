@@ -29,7 +29,7 @@ pub const PACK_BYTES: &[u8] = include_bytes!("🖼️assets/🎒️.pack.semio")
 pub const SPR_BYTES: &[u8] = include_bytes!("🖼️assets/📡️forest.spr.semio");
 
 fn document_json() -> String {
-    let projection = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
+    let projection = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(DSL_TEXT).unwrap_or_else(|error| panic!("{ID} example dsl parses: {error}"));
     semio_framework_pack_json::to_json_string(&projection)
 }
 

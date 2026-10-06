@@ -32,7 +32,7 @@ fn an_evaluation_without_geometry_is_refused() {
 
 #[test]
 fn txt_is_the_exact_dsl_carrier() {
-    let document = crate::standards::v1::subsets::any::schema::default_snapshot();
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let bytes = txt_out::serialize_bytes(&document).expect("txt export");
     let back = txt_in::deserialize_bytes(&bytes).expect("txt import");
     assert_eq!(<crate::Generation2dSnapshot as store::ArtifactDsl>::print_dsl(&back), <crate::Generation2dSnapshot as store::ArtifactDsl>::print_dsl(&document));

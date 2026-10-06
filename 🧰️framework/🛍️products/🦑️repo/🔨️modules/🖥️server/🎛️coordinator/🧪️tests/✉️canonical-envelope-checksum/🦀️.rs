@@ -7,7 +7,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
 //#region 🔖️Vectors
 fn golden_event(ctx: &Context) -> Result<(coordinator::EventEnvelope, String), String> {
-    let bytes = ctx.fixture_bytes("shared://📜️g3-event-log.jsonl")?;
+    let bytes = ctx.input_bytes("shared://📜️g3-event-log.jsonl")?;
     let line = String::from_utf8(bytes).map_err(|error| error.to_string())?.trim_end_matches('\n').to_string();
     let event = coordinator::decode_event(&line).map_err(|error| error.to_string())?;
     Ok((event, line))
@@ -29,7 +29,7 @@ fn json_of(value: &SerdeJson) -> Json {
 fn golden_line_is_canonical(ctx: &Context) -> Result<Outcome, String> {
     let (event, line) = golden_event(ctx)?;
     let encoded = coordinator::encode_event(&event).trim_end_matches('\n').to_string();
-    let schema_bytes = ctx.fixture_bytes("schema://repo.server.coordinator/G3EventLogContract")?;
+    let schema_bytes = ctx.input_bytes("schema://repo.server.coordinator/G3EventLogContract")?;
     let declared: SerdeJson = serde_json::from_slice(&schema_bytes).map_err(|error| error.to_string())?;
     let declared_of = |key: &str| declared.pointer(&format!("/$defs/G3EventLogContract/properties/{key}/const")).map_or(Json::Null, json_of);
     Ok(Outcome::projection(Json::Object(vec![

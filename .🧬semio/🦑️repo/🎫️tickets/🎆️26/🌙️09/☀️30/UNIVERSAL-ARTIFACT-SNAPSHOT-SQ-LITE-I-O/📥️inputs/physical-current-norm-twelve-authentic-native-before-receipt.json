@@ -1,0 +1,117 @@
+{
+  "exitCode": 1,
+  "cohort": "12 actual registered owning Native routes",
+  "tests": 165,
+  "passed": 141,
+  "failed": 24,
+  "items": [
+    {
+      "project": "@semio-tech/norm-en1995-rs",
+      "runId": "26df29b8-476d-4b47-a40b-901bff91aacc",
+      "seconds": 0.324,
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "outside": 378
+    },
+    {
+      "project": "@semio-tech/norm-en1999-rs",
+      "runId": "6ea29f5c-5bee-4b41-bb02-7c337d61443a",
+      "seconds": 0.699,
+      "tests": 15,
+      "passed": 13,
+      "failed": 2,
+      "outside": 156
+    },
+    {
+      "project": "@semio-tech/norm-din4108-rs",
+      "runId": "9021b282-6c89-48da-ae68-c3a79902c903",
+      "seconds": 0.336,
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "outside": 160
+    },
+    {
+      "project": "@semio-tech/norm-en1991-rs",
+      "runId": "b1f6f2fd-dd69-4787-bfbc-d7d60c19f118",
+      "seconds": 1.537,
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "outside": 162
+    },
+    {
+      "project": "@semio-tech/norm-en1990-rs",
+      "runId": "48a23eb8-2122-486d-9a2a-8ef6592575a4",
+      "seconds": 0.216,
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "outside": 153
+    },
+    {
+      "project": "@semio-tech/norm-en1996-rs",
+      "runId": "e7ec7d1d-c88f-4139-9071-93ba2a17ae96",
+      "seconds": 0.268,
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "outside": 149
+    },
+    {
+      "project": "@semio-tech/norm-en1994-rs",
+      "runId": "cf2316fd-4c4a-4b23-8535-7952938db790",
+      "seconds": 0.504,
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "outside": 181
+    },
+    {
+      "project": "@semio-tech/norm-din16798-rs",
+      "runId": "008ae68a-4014-4a48-bf25-feda3cfd5873",
+      "seconds": 1.147,
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "outside": 94
+    },
+    {
+      "project": "@semio-tech/norm-din18599-rs",
+      "runId": "16ae2add-fa7b-4914-a1d3-8ce2d5bc9407",
+      "seconds": 0.387,
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "outside": 125
+    },
+    {
+      "project": "@semio-tech/norm-en1993-rs",
+      "runId": "85d582e9-5275-4cb6-b30e-686f395e6da5",
+      "seconds": 2.755,
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "outside": 357
+    },
+    {
+      "project": "@semio-tech/norm-vdi3805-rs",
+      "runId": "ea45ab69-fb8a-4197-aa28-6a89d1417a74",
+      "seconds": 1.555,
+      "tests": 19,
+      "passed": 17,
+      "failed": 2,
+      "outside": 229
+    },
+    {
+      "project": "@semio-tech/norm-en1997-rs",
+      "runId": "fa035d34-2fce-4989-844c-32105eccf692",
+      "seconds": 1.58,
+      "tests": 14,
+      "passed": 12,
+      "failed": 2,
+      "outside": 189
+    }
+  ]
+}

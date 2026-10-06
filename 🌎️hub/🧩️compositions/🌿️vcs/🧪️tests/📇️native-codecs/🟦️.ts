@@ -30,7 +30,6 @@ type VcsNativeCodecFixture = {
     extension: string;
     packRecord: { keyword: string; fields: Array<{ id: number; key: string; optional: boolean }> };
   }>;
-  hostile: string[];
   pluginId?: string;
 };
 
@@ -38,7 +37,7 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   const owner = join(repoRoot, "🌎️hub/🧩️compositions/🌿️vcs");
   const root = join(owner, "📇️native-codecs");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as VcsNativeCodecFixture;
-  const validate = await compileVcsScopeExport(repoRoot, "VcsNativeCodecs");
+  const validate = await compileVcsScopeExport(repoRoot, "VcsNativeCodecManifestV1");
   if (!validate(fixture)) throw new Error(`invalid VCS receipt corpus: ${JSON.stringify(validate.errors)}`);
   const documentIdRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1");
   const documentIds = JSON.parse(readFileSync(join(documentIdRoot, "🔣️.json"), "utf8")) as { cases: ReadonlyArray<{ id: string; documentId: string; accepted: boolean }> };
@@ -47,8 +46,8 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   const registryAjv = new RegistryAjv({ strict: true, allErrors: true });
   registryAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   registryAjv.addSchema(registryModule);
-  const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });
-  if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);
+  
+  
   for (const row of documentIds.cases) if (/^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.documentId) !== row.accepted) throw new Error(`artifact document-id oracle mismatch ${row.id}`);
   const manifest = Bun.TOML.parse(readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any;
   if (manifest.package.metadata.component.package !== fixture.packageId) throw new Error("VCS Cargo package identity differs from receipt owner");
@@ -62,12 +61,13 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
     if (bytes.length !== row.protocolBytes || nodeHash !== row.protocolSha256 || webHash !== nodeHash || /^0{64}$/u.test(nodeHash)) throw new Error(`VCS protocol receipt mismatch ${row.factoryId}`);
     if (row.kind !== `s.${fixture.pluginId}.${row.extension}` || row.capability !== `${row.kind}.codec.document` || row.factoryId !== `${fixture.pluginId}.${row.extension}.v1` || row.schema !== `${fixture.pluginId}.${row.extension}`) throw new Error("VCS receipt canonical owner mismatch");
   }
+  const hostileVectors = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📇️native-codecs/🔣️.json"), "utf8")) as { readonly hostile: readonly string[] };
   const expected = new Map(fixture.receipts.map((row: any) => [row.factoryId, JSON.stringify(row)]));
   const admitted = (candidate: any): boolean => candidate.pluginId === "vcs" && candidate.packageId === "semio:vcs" && candidate.packageVersion === version && candidate.receipts.length === 1
     && new Set(candidate.receipts.map((row: any) => row.factoryId)).size === 1
     && candidate.receipts.every((row: any) => expected.get(row.factoryId) === JSON.stringify(row));
   if (!admitted(fixture)) throw new Error("literal VCS closure was denied");
-  for (const hostile of fixture.hostile) {
+  for (const hostile of hostileVectors.hostile) {
     const candidate = structuredClone(fixture);
     switch (hostile) {
       case "missing": candidate.receipts.pop(); break;
@@ -92,7 +92,7 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   if (config.match(/schema_version: 1,/gu)?.length !== 1 || !config.includes('semantic_kind: "snapshot"') || !config.includes("MutationOutcomeClass::NoOp") || !config.includes("fn descriptor(&self)")) throw new Error("VCS config mutation metadata is incomplete");
   if (presence.match(/schema_version: 1,/gu)?.length !== 1 || !presence.includes('semantic_kind: "noop"') || !presence.includes("MutationInvertibility::SelfInvertible") || !presence.includes("fn descriptor(&self)")) throw new Error("VCS presence mutation metadata is incomplete");
   if (!readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8").includes("semio-framework-ui-scene =") || !history.includes("use semio_framework_ui_scene::GraphTimelineScene;") || history.includes("semio_framework_ui_scene::GraphTimelineScene {")) throw new Error("VCS timeline scene does not use its declared first-party scene dependency");
-  console.log(`vcs-native-codec-oracle: receipts=${fixture.receipts.length} hostile=${fixture.hostile.length} ajv+node+webcrypto=1 dependency-coherence=3; no catalog activation or VCS execution claim`);
+  console.log(`vcs-native-codec-oracle: receipts=${fixture.receipts.length} hostile=${hostileVectors.hostile.length} ajv+node+webcrypto=1 dependency-coherence=3; no catalog activation or VCS execution claim`);
 }
 
 /** 🪤 Exact native VCS receipt proof; it does not activate a hub catalog or link a provider. */

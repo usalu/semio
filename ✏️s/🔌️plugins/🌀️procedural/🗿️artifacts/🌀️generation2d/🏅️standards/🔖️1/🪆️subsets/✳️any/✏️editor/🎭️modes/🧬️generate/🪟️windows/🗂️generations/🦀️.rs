@@ -24,6 +24,7 @@ pub const GENERATION2D_PLAY_GENERATIONS_SECTION: &str = "procedural2d-play-gener
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: GENERATION2D_PLAY_WINDOW_GENERATIONS.into(),
         label: LocalizedLabel::native("Generations", "Generationen"),
         body_key: GENERATION2D_PLAY_BODY_GENERATIONS.into(),

@@ -1319,12 +1319,13 @@ pub struct SelectBuilder {
     value: crate::UiText,
     items: crate::UiFixedList<crate::SelectItem>,
     placeholder: Option<crate::Label>,
+    appearance: crate::SelectAppearance,
 }
 
 /// 🔽️ A select currently holding `value`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn select(value: crate::UiText) -> SelectBuilder {
-    SelectBuilder { base: NodeBase::leaf(), value, items: crate::UiFixedList::default(), placeholder: None }
+    SelectBuilder { base: NodeBase::leaf(), value, items: crate::UiFixedList::default(), placeholder: None, appearance: crate::SelectAppearance::Menu }
 }
 
 impl SelectBuilder {
@@ -1345,6 +1346,12 @@ impl SelectBuilder {
         self.placeholder = Some(placeholder);
         self
     }
+
+    /// 🗳️ Shows the choice as a menu (the default) or as one segmented row of its options.
+    pub fn appearance(mut self, appearance: crate::SelectAppearance) -> Self {
+        self.appearance = appearance;
+        self
+    }
 }
 
 impl HasBase for SelectBuilder {
@@ -1357,10 +1364,46 @@ impl HasBase for SelectBuilder {
 impl From<SelectBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: SelectBuilder) -> Self {
-        assemble(builder.base, crate::Component::Select(crate::SelectProps { value: builder.value, items: builder.items, placeholder: builder.placeholder }))
+        assemble(builder.base, crate::Component::Select(crate::SelectProps { value: builder.value, items: builder.items, placeholder: builder.placeholder, appearance: builder.appearance }))
     }
 }
 //#endregion 🔽️Select
+
+//#region 🖼️IconSelect
+/// 🖼️ A single-choice icon picker — `Component::IconSelect`. Build with [`icon_select`].
+pub struct IconSelectBuilder {
+    base: NodeBase,
+    value: crate::UiText,
+    uniform: bool,
+    classifier_kind: crate::UiText,
+}
+
+/// 🖼️ An icon picker currently holding the icon id `value`, offering the icons its host classifies as `classifier_kind`
+/// (`"icon"` is the whole catalogue — what a descriptor of format `iconId` asks for).
+pub fn icon_select(value: crate::UiText, classifier_kind: crate::UiText) -> IconSelectBuilder {
+    IconSelectBuilder { base: NodeBase::leaf(), value, uniform: true, classifier_kind }
+}
+
+impl IconSelectBuilder {
+    /// 🌫️ Marks the picker as showing a mixed selection: no icon is the current one.
+    pub fn mixed(mut self) -> Self {
+        self.uniform = false;
+        self
+    }
+}
+
+impl HasBase for IconSelectBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<IconSelectBuilder> for BuiltNode {
+    fn from(builder: IconSelectBuilder) -> Self {
+        assemble(builder.base, crate::Component::IconSelect(crate::IconSelectProps { value: builder.value, uniform: builder.uniform, classifier_kind: builder.classifier_kind }))
+    }
+}
+//#endregion 🖼️IconSelect
 
 //#region 🎚️Slider
 /// 🎚️ A continuous range control — `Component::Slider`. Build with [`slider`].

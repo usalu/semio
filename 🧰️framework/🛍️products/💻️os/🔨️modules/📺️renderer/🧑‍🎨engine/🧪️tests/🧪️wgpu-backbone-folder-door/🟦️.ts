@@ -46,7 +46,7 @@ describe("wgpu backbone folder door", () => {
         if (answer.response.error !== undefined) throw new TypeError(answer.response.error);
         return new Response(answer.response.body === undefined ? null : (base64Bytes(answer.response.body).slice().buffer as ArrayBuffer), { status: answer.response.status });
       }) as unknown as typeof fetch;
-      const request = { op: "backbone-folder", verb: answer.verb, uri: "folder:///Users/ada/drawings", documentId: "puzzle.2d.fixture", ...(answer.verb === "write" ? { schema: "s.puzzle.2d" } : {}) } as const;
+      const request = { op: "backbone-folder", verb: answer.verb, uri: "folder:///Users/ada/drawings", documentId: "board.ports.directed.v1", ...(answer.verb === "write" ? { schema: "s.puzzle.2d" } : {}) } as const;
       expect(await backboneFolderHop(request, answer.verb === "write" ? archive : null, fetchImpl), answer.name).toEqual(answer.page);
     }
   });

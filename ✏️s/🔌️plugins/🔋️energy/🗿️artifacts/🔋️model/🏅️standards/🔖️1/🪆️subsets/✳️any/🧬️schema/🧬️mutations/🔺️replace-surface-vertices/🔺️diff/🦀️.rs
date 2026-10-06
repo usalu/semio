@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ReplaceSurfaceVertices, base: &EnergyModelSnapshot)
     if let Some(item) = model.surfaces.iter_mut().find(|item| item.id == payload.id) {
         item.vertices_m = payload.new_vertices_m.clone();
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

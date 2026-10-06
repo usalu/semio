@@ -5,7 +5,7 @@ use crate::Din18599Snapshot;
 #[test]
 fn every_default_leaf_has_en_de_label() {
     let doc = Din18599Snapshot::default();
-    let json = crate::standards::v1::subsets::any::schema::snapshot::encode_din18599_snapshot_json(&doc);
+    let json = crate::standards::v1::subsets::any::io::text::snapshot::encode_din18599_snapshot_json(&doc);
     let value: serde_json::Value = serde_json::from_str(&json).expect("json");
     let mut missing = Vec::new();
     walk("", &value, &mut missing);

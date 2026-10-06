@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn update_spread_renames_and_inverse_restores_it() {
-    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let mutation = LayoutMutation::UpdateSpread(UpdateSpread { id: "spread-1".into(), name: "Opening".into() });
     let next = mutation.diff(&base).diff().apply(&base).expect("spread applies");
     assert_eq!(next.spreads[0].name, "Opening");

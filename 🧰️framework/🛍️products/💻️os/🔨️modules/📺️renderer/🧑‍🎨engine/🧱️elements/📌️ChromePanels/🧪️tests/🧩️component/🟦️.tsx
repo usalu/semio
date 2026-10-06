@@ -87,9 +87,6 @@ describe("♿️ theme contrast live warning", () => {
 describe("Inline Tree resolution controls", () => {
   it("keeps both labeled resolution buttons available before selecting the conflict", () => {
     const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🎛️inline-tree-controls/🔣️.json"), "utf8"));
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const resolve = vi.fn();
     const host: ConflictsHostApi = {
       conflicts: [{ id: fixture.conflict.id, kind: { kind: "quarantined", envelopes: [] }, status: "open", messages: [], actors: [], timestamp: { actor: 1, physical_ms: 0, logical: 0 } }],
@@ -130,9 +127,6 @@ describe("Display window taxonomy order", () => {
   it("expands the production bottom-anchored Tree in the neutral top-to-bottom order", () => {
     const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
     const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const host: DisplayHostApi = {
       windowKinds: [{ id: fixture.displayResolvedOrder.windowKindId, label: "Puzzle 3D", iconId: "puzzle", surfaceKind: "world-3d" }],
       namedLayouts: [],

@@ -137,7 +137,7 @@ pub fn playbook_child_leaves_emit<D>(snapshot: &PlaybookSnapshot, leaves: Vec<Se
     if leaves.is_empty() {
         return Emit::default();
     }
-    Emit { child_emits: vec![playbook_flow_emit(snapshot, &leaves)], ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }
+    Emit { child_preparations: std::collections::VecDeque::from([playbook_flow_emit(snapshot, leaves)]), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }
 }
 
 /// 🆔️ An id `doc`'s admitted operation mints under `prefix`: content-addressed over the admission's authoring seed and operation
@@ -332,7 +332,6 @@ impl<P, M> Default for PlaybookOneItemPreparationFactory<P, M> {
 struct PlaybookOneItemPreparation<P, M> {
     base: Option<store::SnapshotRead<P>>,
     mutation: Option<M>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(P, Vec<M>, M, usize)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<P, M>>,
@@ -360,9 +359,9 @@ where
     M: protocol::Mutation<P> + semio_framework_value::ToValue + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
-    fn preflight(&self, mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("Playbook retained preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("Playbook retained preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, playbook_bounded_serialized_bytes(mutation)?))
     }
@@ -379,7 +378,6 @@ where
         Ok(Box::new(PlaybookOneItemPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             prepared: None,
@@ -449,7 +447,7 @@ where
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -469,7 +467,7 @@ where
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️OneItemPreparation

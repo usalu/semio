@@ -1,0 +1,713 @@
+[
+  {
+    "name": "bcf",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot",
+    "input": {
+      "schema": "owned.bcf 世界\u0000",
+      "version": "2.1 custom",
+      "topics": [
+        {
+          "guid": "topic α",
+          "title": "Title 世界",
+          "description": "description\u0000",
+          "status": "Open",
+          "priority": "high",
+          "labels": [
+            "one",
+            "one",
+            ""
+          ],
+          "creationDate": "date",
+          "creationAuthor": "author",
+          "comments": [
+            {
+              "guid": "comment",
+              "date": "now",
+              "author": "me",
+              "text": "text\u0000世界",
+              "viewpointRef": "unresolved-native-reference"
+            },
+            {
+              "guid": "comment",
+              "date": "",
+              "author": "",
+              "text": "",
+              "viewpointRef": null
+            }
+          ],
+          "viewpoints": [
+            {
+              "guid": "view",
+              "camera": {
+                "kind": "perspective",
+                "viewPoint": {
+                  "x": 1.5,
+                  "y": 2.5,
+                  "z": 3.5
+                },
+                "direction": {
+                  "x": -1.5,
+                  "y": -2.5,
+                  "z": -3.5
+                },
+                "upVector": {
+                  "x": 4.5,
+                  "y": 5.5,
+                  "z": 6.5
+                },
+                "fieldOfView": 60.5
+              },
+              "components": {
+                "selection": [
+                  "selected",
+                  "selected"
+                ],
+                "visibility": {
+                  "defaultVisibility": false,
+                  "exceptions": [
+                    "hidden",
+                    ""
+                  ]
+                },
+                "coloring": [
+                  {
+                    "color": "FFFF0000",
+                    "components": [
+                      "colored",
+                      "colored"
+                    ]
+                  },
+                  {
+                    "color": "",
+                    "components": []
+                  }
+                ]
+              },
+              "snapshot": [
+                137,
+                80,
+                78,
+                71,
+                0,
+                255
+              ]
+            },
+            {
+              "guid": "view",
+              "camera": {
+                "kind": "orthogonal",
+                "viewPoint": {
+                  "x": 7.5,
+                  "y": 8.5,
+                  "z": 9.5
+                },
+                "direction": {
+                  "x": 0.5,
+                  "y": -0.5,
+                  "z": 0.25
+                },
+                "upVector": {
+                  "x": 0,
+                  "y": 1,
+                  "z": 0
+                },
+                "viewToWorldScale": 12.5
+              },
+              "components": {
+                "selection": [],
+                "visibility": {
+                  "defaultVisibility": true,
+                  "exceptions": []
+                },
+                "coloring": []
+              },
+              "snapshot": []
+            },
+            {
+              "guid": "empty",
+              "camera": null,
+              "components": null,
+              "snapshot": null
+            }
+          ]
+        },
+        {
+          "guid": "",
+          "title": "",
+          "description": "",
+          "status": "",
+          "priority": "",
+          "labels": [],
+          "creationDate": "",
+          "creationAuthor": "",
+          "comments": [],
+          "viewpoints": []
+        }
+      ],
+      "parts": [
+        {
+          "name": "project.bcfp",
+          "data": [
+            0,
+            255,
+            17
+          ]
+        },
+        {
+          "name": "project.bcfp",
+          "data": []
+        }
+      ]
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 29,
+        "valueBytes": 1259,
+        "schemaBytes": 3920,
+        "tableCount": 15,
+        "maxColumns": 29,
+        "tables": [
+          {
+            "table": "bcf_camera",
+            "width": 29,
+            "rows": 2,
+            "semanticBytes": 433
+          },
+          {
+            "table": "bcf_coloring",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 56
+          },
+          {
+            "table": "bcf_coloring_component",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 62
+          },
+          {
+            "table": "bcf_comment",
+            "width": 8,
+            "rows": 2,
+            "semanticBytes": 105
+          },
+          {
+            "table": "bcf_components",
+            "width": 2,
+            "rows": 2,
+            "semanticBytes": 32
+          },
+          {
+            "table": "bcf_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 35
+          },
+          {
+            "table": "bcf_orthogonal_camera",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 30
+          },
+          {
+            "table": "bcf_perspective_camera",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 30
+          },
+          {
+            "table": "bcf_raw_part",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 75
+          },
+          {
+            "table": "bcf_selection",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 64
+          },
+          {
+            "table": "bcf_snapshot_image",
+            "width": 2,
+            "rows": 2,
+            "semanticBytes": 22
+          },
+          {
+            "table": "bcf_topic",
+            "width": 10,
+            "rows": 2,
+            "semanticBytes": 98
+          },
+          {
+            "table": "bcf_topic_label",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 78
+          },
+          {
+            "table": "bcf_viewpoint",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 85
+          },
+          {
+            "table": "bcf_visibility_exception",
+            "width": 4,
+            "rows": 2,
+            "semanticBytes": 54
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "empty",
+        "rows": 3,
+        "valueBytes": 110,
+        "schemaBytes": 3920,
+        "tableCount": 15,
+        "maxColumns": 29,
+        "tables": [
+          {
+            "table": "bcf_camera",
+            "width": 29,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_coloring",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_coloring_component",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_comment",
+            "width": 8,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_components",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_document",
+            "width": 3,
+            "rows": 1,
+            "semanticBytes": 35
+          },
+          {
+            "table": "bcf_orthogonal_camera",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_perspective_camera",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_raw_part",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 75
+          },
+          {
+            "table": "bcf_selection",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_snapshot_image",
+            "width": 2,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_topic",
+            "width": 10,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_topic_label",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_viewpoint",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bcf_visibility_exception",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "bmp",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "input": {
+      "schema": "stdio.bmp",
+      "bytes": [
+        66,
+        77,
+        85,
+        0,
+        0,
+        0,
+        52,
+        18,
+        120,
+        86,
+        57,
+        0,
+        0,
+        0,
+        40,
+        0,
+        0,
+        0,
+        3,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        1,
+        0,
+        24,
+        0,
+        0,
+        0,
+        0,
+        0,
+        24,
+        0,
+        0,
+        0,
+        19,
+        11,
+        0,
+        0,
+        19,
+        11,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        222,
+        173,
+        190,
+        0,
+        255,
+        255,
+        255,
+        0,
+        255,
+        255,
+        255,
+        255,
+        170,
+        187,
+        204,
+        0,
+        0,
+        255,
+        0,
+        255,
+        0,
+        255,
+        0,
+        0,
+        17,
+        34,
+        51,
+        254,
+        237,
+        250,
+        206
+      ]
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 22,
+        "valueBytes": 1029,
+        "schemaBytes": 4342,
+        "tableCount": 12,
+        "maxColumns": 13,
+        "tables": [
+          {
+            "table": "bmp_channel_mask",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_document",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 29
+          },
+          {
+            "table": "bmp_file_header",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 48
+          },
+          {
+            "table": "bmp_gap_octet",
+            "width": 4,
+            "rows": 3,
+            "semanticBytes": 96
+          },
+          {
+            "table": "bmp_info_header",
+            "width": 13,
+            "rows": 1,
+            "semanticBytes": 104
+          },
+          {
+            "table": "bmp_literal_octet",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_palette_entry",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_pixel_index",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_pixel_sample",
+            "width": 8,
+            "rows": 6,
+            "semanticBytes": 384
+          },
+          {
+            "table": "bmp_row_padding_octet",
+            "width": 5,
+            "rows": 6,
+            "semanticBytes": 240
+          },
+          {
+            "table": "bmp_row_tail_bits",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_trailer_octet",
+            "width": 4,
+            "rows": 4,
+            "semanticBytes": 128
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "empty",
+        "rows": 1,
+        "valueBytes": 55,
+        "schemaBytes": 4342,
+        "tableCount": 12,
+        "maxColumns": 13,
+        "tables": [
+          {
+            "table": "bmp_channel_mask",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_document",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 55
+          },
+          {
+            "table": "bmp_file_header",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_gap_octet",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_info_header",
+            "width": 13,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_literal_octet",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_palette_entry",
+            "width": 7,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_pixel_index",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_pixel_sample",
+            "width": 8,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_row_padding_octet",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_row_tail_bits",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "bmp_trailer_octet",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "deflate",
+    "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+    "input": {
+      "schema": "stdio.deflate",
+      "compressionMethod": 8,
+      "windowBits": 7,
+      "compressionLevelHint": "maximum",
+      "dictId": 4294967295,
+      "payload": [
+        0,
+        65,
+        255,
+        128,
+        17
+      ]
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 6,
+        "valueBytes": 213,
+        "schemaBytes": 690,
+        "tableCount": 2,
+        "maxColumns": 6,
+        "tables": [
+          {
+            "table": "deflate_document",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 53
+          },
+          {
+            "table": "deflate_payload_byte",
+            "width": 4,
+            "rows": 5,
+            "semanticBytes": 160
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "empty",
+        "rows": 1,
+        "valueBytes": 53,
+        "schemaBytes": 690,
+        "tableCount": 2,
+        "maxColumns": 6,
+        "tables": [
+          {
+            "table": "deflate_document",
+            "width": 6,
+            "rows": 1,
+            "semanticBytes": 53
+          },
+          {
+            "table": "deflate_payload_byte",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  }
+]

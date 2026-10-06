@@ -29,7 +29,7 @@ fn input(value: &Value) -> CompositeInput {
 fn complete(input: CompositeInput, grant: usize) -> RasterImage {
     let mut job = CompositeJob::new(input).unwrap();
     while !job.advance(grant).unwrap().done {}
-    job.into_result().unwrap()
+    {let(mut retirement,output)=job.into_retirement();while !retirement.terminal_is_empty(){retirement.advance(1).unwrap();}output.unwrap()}
 }
 #[test]
 fn compositor_language_neutral_cases() {
@@ -61,7 +61,7 @@ fn compositor_bounds_grants_and_discards_cancelled_candidates() {
     let mut job=CompositeJob::new(source).unwrap();
     let first=job.advance(17).unwrap();assert_eq!(first.completed,17);assert!(!first.done);
     assert_eq!(job.result(),Err(PixelEditError::Incomplete));job.cancel();
-    assert_eq!(job.advance(1),Err(PixelEditError::Cancelled));assert_eq!(job.into_result(),Err(PixelEditError::Cancelled));
+    assert_eq!(job.advance(1),Err(PixelEditError::Cancelled));assert_eq!(job.result(),Err(PixelEditError::Cancelled));
 }
 #[test]
 fn compositor_validates_geometry_assets_and_depth() {
@@ -70,4 +70,27 @@ fn compositor_validates_geometry_assets_and_depth() {
     let mut nested=input(&fixture()["cases"][0]["input"]);
     for _ in 0..33 {let mut group=nested.layers[0].clone();group.content=CompositeContent::Group(nested.layers);nested.layers=vec![group];}
     assert!(CompositeJob::new(nested).is_err());
+}
+
+#[test]
+fn compositor_actual_owner_retirement_neutral_interruptions(){
+    let rows:Value=serde_json::from_str(include_str!("../🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
+    let fixture=fixture();
+    for row in rows.as_array().unwrap(){for grant in [1,7,4096]{
+        let source=fixture["cases"].as_array().unwrap().iter().chain(fixture["spatialCases"].as_array().unwrap()).find(|v|v["name"]==row["source"]).unwrap();
+        let parsed=input(&source["input"]);let shared=parsed.clone();let before:Vec<_>=shared.images.values().map(|v|v.pixels.clone()).collect();
+        let mut job=CompositeJob::new(parsed).unwrap();let mode=row["mode"].as_str().unwrap();
+        if matches!(mode,"complete"|"cancelledComplete"|"published"){while !job.advance(4096).unwrap().done{}}else{let steps=row["steps"].as_u64().unwrap() as usize;if steps>0{job.advance(steps).unwrap();}}
+        let commands=job.commands.len();let buffers=job.buffers.len();let candidate=job.candidate.as_ref().unwrap().pixels.as_ptr();
+        let published=(mode=="published").then(||job.result().unwrap().pixels.clone());
+        if mode.starts_with("cancelled")||published.is_some(){job.cancel();assert_eq!(job.commands.len(),commands);assert_eq!(job.buffers.len(),buffers);assert_eq!(job.candidate.as_ref().unwrap().pixels.as_ptr(),candidate);}
+        let(mut retired,output)=job.into_retirement();assert_eq!(output.is_some(),mode=="complete");if let Some(image)=&output{assert_eq!(image.pixels.as_ptr(),candidate);}
+        assert!(retired.advance(0).is_err());if usize::BITS>53{assert!(retired.advance(usize::MAX).is_err());}
+        let mut work=0;
+        while !retired.terminal_is_empty(){let owner=retired.job.as_ref().unwrap();let count=owner.commands.len()+owner.buffers.len();let p=retired.advance(grant).unwrap();assert!(p.work>work&&p.work-work<=grant as u64);if let Some(owner)=retired.job.as_ref(){assert!(count-owner.commands.len()-owner.buffers.len()<=grant);}work=p.work;}
+        assert!(retired.job.is_none());assert_eq!(work,(commands+buffers+4) as u64);let p=retired.advance(1).unwrap();assert_eq!(p.work,work);assert!(p.done);assert_eq!(p.phase,"complete");
+        for(image,bytes)in shared.images.values().zip(&before){assert_eq!(&image.pixels,bytes);assert_eq!(Arc::strong_count(image),1);}
+        if let Some(actual)=output.map(|v|v.pixels).or(published){let expected=if source["expected"].is_array(){bytes(&source["expected"])}else{source["runs"].as_array().unwrap().iter().flat_map(|r|bytes(&r["pixel"]).repeat(r["count"].as_u64().unwrap() as usize)).collect()};assert_eq!(actual,expected);}
+        eprintln!("[DEBUG] Actual native compositor retirement {}: grant={grant} work={work} terminal_empty=true commands={commands} buffers={buffers}",row["name"]);
+    }}
 }

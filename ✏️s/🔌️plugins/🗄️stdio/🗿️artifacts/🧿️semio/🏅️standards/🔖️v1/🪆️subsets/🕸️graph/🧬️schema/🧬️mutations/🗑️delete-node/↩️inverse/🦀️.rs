@@ -6,9 +6,13 @@ use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one `create-node` of the whole node record at its BASE index, then one `create-edge` per severed edge at
 /// its BASE index in ascending order, so undo restores the before-snapshot byte for byte (and its content address); nothing
-/// when the node is absent.
+/// when the node is absent or when its incident edges exceed the cascade bound the diff refuses, so the rows never exceed the
+/// leaf's declared `inverse_rows`.
 pub fn inverse(payload: &super::DeleteNode, base: &SemioGraphSnapshot) -> Result<Vec<SemioGraphMutation>, semio_framework_value::ValueError> {
     let Some(index) = base.nodes.iter().position(|node| node.id == payload.id) else { return Ok(Vec::new()) };
+    if base.edges.iter().filter(|edge| edge.source == payload.id || edge.target == payload.id).count() > super::diff::cascade_edges_maximum(payload) {
+        return Ok(Vec::new());
+    }
     let node = &base.nodes[index];
     let restore = SemioGraphMutation::CreateNode(CreateNode { id: node.id.clone(), kind: node.kind.clone(), label: node.label.clone(), position: node.position, width: node.width, height: node.height, ports: node.ports.clone(), properties: node.properties.clone(), at: Some(index) });
     let edges = base.edges.iter().enumerate().filter(|(_, edge)| edge.source == payload.id || edge.target == payload.id).map(|(at, edge)| {

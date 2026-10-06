@@ -42,7 +42,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA);
     codec.extension = "tiff";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
 }
 
@@ -145,28 +145,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.tiff",
                     extension: Some("tiff"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v6_0::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v6_0::subsets::document::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v6_0::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v6_0::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v6_0::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v6_0::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v6_0::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v6_0::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.tiff"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.tiff.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v6_0::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v6_0::subsets::document::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v6_0::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v6_0::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v6_0::subsets::document::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v6_0::subsets::document::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v6_0::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v6_0::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.tiff.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.tiff.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v6_0::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v6_0::subsets::document::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v6_0::subsets::document::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v6_0::subsets::document::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.tiff.diff"),
@@ -177,8 +177,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v6_0::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v6_0::subsets::document::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v6_0::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v6_0::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.tiff.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -187,8 +187,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v6_0::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v6_0::subsets::document::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v6_0::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v6_0::subsets::document::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.tiff.spr"),
                 },
             ]
@@ -236,9 +236,7 @@ pub mod standards {
                 // helpers), both siblings within this same `any` module — this stays an
                 // inline barrel so every existing `subsets::document::engine::*` path (reached
                 // from the `v6_0::engine`/root `engine::*` barrels above it) still resolves.
-                pub mod engine {
-                    pub use super::io::*;
-                }
+
                 #[path = "."]
                 pub mod examples {
                     #[path = "."]
@@ -258,20 +256,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod dimensions {
                             #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
@@ -284,10 +274,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
@@ -298,8 +284,6 @@ pub mod standards {
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
                         pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧭️change-byte-order/🦀️.rs"]
                         pub mod change_byte_order;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-ifd/🦀️.rs"]
@@ -312,8 +296,6 @@ pub mod standards {
                         pub mod replace_tag;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎨️paint-region/🦀️.rs"]
                         pub mod paint_region;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[cfg(test)]
                     #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧪️tests/🛡️mutation-regressions/🦀️.rs"]
@@ -380,7 +362,10 @@ pub mod standards {
                 pub mod io;
                 #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🦀️.rs"]
                 pub mod schema;
-            }
+            
+#[path = "🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🚪️io/🦀️.rs"]
+pub mod io;
+}
         }
         pub mod engine {
             pub use super::subsets::document::engine::*;
@@ -395,9 +380,7 @@ pub mod schema {
 pub mod engine {
     pub use super::standards::v6_0::subsets::document::engine::*;
 }
-pub mod io {
-    pub use super::standards::v6_0::subsets::document::io::*;
-}
+
 
 pub use standards::v6_0::subsets::document::examples;
 
@@ -546,3 +529,7 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v6_0::subsets::baseline::io::{TiffBaselineBuilderConstruction, TiffBaselineAnalyzerAnalysis, TiffBaselineBuilderFacets, TiffBaselineBuilder, TiffBaselineAnalyzer, TiffBaselineComposer};
+
+pub use crate::standards::v6_0::subsets::document::io::{TiffBuilderConstruction, TiffParts, TiffAnalyzerAnalysis, TiffBuilderFacets, TiffBuilder, TiffAnalyzer, TiffComposer};

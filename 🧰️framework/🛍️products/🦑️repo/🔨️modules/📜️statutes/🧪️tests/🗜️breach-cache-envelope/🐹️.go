@@ -22,7 +22,7 @@ type vectors struct {
 
 // 🧫️readVectors reads the committed vector file.
 func readVectors(ctx *host.Context) (vectors, error) {
-	raw, err := ctx.FixtureBytes("shared://🗜️breach-cache-envelope/🔣️vectors.json")
+	raw, err := ctx.InputBytes("shared://🗜️breach-cache-envelope/🔣️vectors.json")
 	if err != nil {
 		return vectors{}, err
 	}

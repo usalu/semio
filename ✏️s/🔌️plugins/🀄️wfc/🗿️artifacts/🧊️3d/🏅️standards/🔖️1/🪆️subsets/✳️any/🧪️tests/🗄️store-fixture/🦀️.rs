@@ -30,7 +30,7 @@ async fn a_store_opens_on_a_bundled_example_applies_an_edit_and_closes() {
     let mut store = open_store(document.clone()).await;
     assert_eq!(store.snapshot().expect("initial projection"), document);
 
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_seed(99)], description: None, transaction: None }).await.expect("the seed edit applies");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_seed(99)], transaction: None }).await.expect("the seed edit applies");
     assert_eq!(store.snapshot().expect("edited projection").seed, 99);
 
     store::os_store::test_support::assert_document_text_round_trip(&store).await;

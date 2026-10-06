@@ -1,0 +1,11 @@
+{
+  "contract": "separate-surface-port/v1",
+  "cases": [
+    {"id":"canvas","kind":"canvas","parent":null,"required":["attachCanvas","setSize","renderFrame"],"accepted":true},
+    {"id":"graph","kind":"graph","parent":"canvas","required":["synchronizeScene","pointerDownScreen","syncInteraction"],"accepted":true},
+    {"id":"editor","kind":"editor","parent":"canvas","required":["synchronizeScene","setText","setSelectionRange"],"accepted":true},
+    {"id":"editor-masquerades-as-graph","kind":"editor","parent":"graph","required":["synchronizeScene","setText"],"accepted":false},
+    {"id":"graph-without-controlled-scene","kind":"graph","parent":"canvas","required":["pointerDownScreen","syncInteraction"],"accepted":false},
+    {"id":"flow","kind":"flow","parent":null,"required":["attachCanvas","close","renderCanvas"],"accepted":true}
+  ]
+}

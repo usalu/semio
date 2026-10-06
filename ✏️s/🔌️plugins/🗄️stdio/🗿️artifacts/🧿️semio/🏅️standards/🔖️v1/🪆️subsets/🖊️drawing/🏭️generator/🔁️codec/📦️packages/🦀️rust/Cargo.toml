@@ -7,6 +7,12 @@
 # nesting (group/ungroup/flatten/unflatten). The fixtures are WRITTEN by quick-xml's own serializer and
 # READ back by `quick-xml-drawing-svg-reader`, so no part of the expectation passes through our code.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "drawing-v1-svg-engine"

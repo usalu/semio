@@ -22,7 +22,7 @@ pub use transition::*;
 //
 // 🎯️ W5: `payload`/`inverse_diff` flip from `serde_json::Value` to opaque `Vec<u8>` — the binary
 // twin of an operation crossing the wire, matching M-C's "communication AND storage both binary"
-// requirement. `payload` is the `crate::mutation::OpBinary` encoding of the op (or a
+// requirement. `payload` is the `crate::io::OpBinary` encoding of the op (or a
 // producer-defined encoding named by `schema` for a non-typed-op payload, e.g. `db`'s pathmap
 // convention); `schema` is a real `crate::ids::SchemaId`, no longer a `std::any::type_name`
 // placeholder (see `🔖️Bridge` below). `InverseMutation.inverse_diff` is renamed to `payload` for
@@ -499,8 +499,8 @@ impl MutationDag {
     }
 
     /// ➕️ Inserts one envelope. Returns `AlreadyApplied` if its id was applied before,
-    /// `Err(Duplicate)` if it's already buffered as pending, `Pending` if any dependency is wholly
-    /// unknown to this dag, else `Applied`.
+    /// `Err(Duplicate)` if it's already buffered as pending, `Pending` while any dependency is not
+    /// applied — unknown to this dag, or buffered and itself still pending — else `Applied`.
     ///
     /// ⛓️ The unblocking is a CASCADE, not one step. An accepted envelope can release a whole
     /// pending chain — `c` depends on `b` depends on `a`, all three arriving in reverse order — and a
@@ -524,7 +524,7 @@ impl MutationDag {
         if self.envelopes.len() + seeded_only == MUTATION_DAG_CAPACITY {
             return Err(MutationDagInsertRejected { error: MutationDagError::Capacity, envelope });
         }
-        let pending = envelope.dependencies.iter().any(|dependency| !self.applied.iter().any(|applied| applied == &dependency.0) && !self.envelopes.iter().any(|known| known.mutation_id.0 == dependency.0));
+        let pending = envelope.dependencies.iter().any(|dependency| !self.applied.iter().any(|applied| applied == &dependency.0));
         let id = envelope.mutation_id.0.clone();
         self.envelopes.push_reserved(envelope);
         if pending {
@@ -828,7 +828,7 @@ fn edit_operation_mutation_id<P, Op: crate::mutation::Mutation<P>>(edit: &crate:
     }
 }
 
-pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::mutation::OpBinary>(
+pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::io::OpBinary>(
     edit: &crate::mutation::Edit<Op>,
     document_id: &crate::ids::ArtifactId,
     schema: &crate::ids::SchemaId,
@@ -840,7 +840,7 @@ pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::
 /// [`mutation_envelope_from_edit`]'s answer, encoding only that tail. An edit that absorbs later
 /// operations (a coalesced typing run) is announced one appended range at a time, so re-encoding its
 /// whole history per keystroke would make a long run quadratic (ticket 26/09/23 LD item 1).
-pub fn mutation_envelopes_from_edit_since<P, Op: crate::mutation::Mutation<P> + crate::mutation::OpBinary>(
+pub fn mutation_envelopes_from_edit_since<P, Op: crate::mutation::Mutation<P> + crate::io::OpBinary>(
     edit: &crate::mutation::Edit<Op>,
     from: usize,
     document_id: &crate::ids::ArtifactId,
@@ -870,7 +870,7 @@ pub fn mutation_envelopes_from_edit_since<P, Op: crate::mutation::Mutation<P> + 
         };
         let payload = op.encode_op()?;
         let inverse_payload = match edit.inverse.get(index) {
-            Some(inv) => crate::mutation::OpBinary::encode_op(inv)?,
+            Some(inv) => crate::io::OpBinary::encode_op(inv)?,
             None => Vec::new(),
         };
         out.push(MutationEnvelope {

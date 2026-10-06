@@ -15,7 +15,7 @@ mod subject {
     /// 📥️ Reads the fixture with the crate's own JSON reader so the payloads reach the subject in
     /// exactly the shape an IDE would send.
     fn vectors(ctx: &Context) -> Result<Value, String> {
-        let bytes = ctx.fixture_bytes(VECTORS)?;
+        let bytes = ctx.input_bytes(VECTORS)?;
         serde_json::from_slice(&bytes).map_err(|error| error.to_string())
     }
 

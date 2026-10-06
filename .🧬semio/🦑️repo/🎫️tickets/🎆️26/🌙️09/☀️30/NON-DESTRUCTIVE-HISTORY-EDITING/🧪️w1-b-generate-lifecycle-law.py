@@ -1,8 +1,9 @@
 """⏪️ Writes `🧰️framework/🔨️modules/⏪️time-travel/🧫️fixtures/🧫️lifecycle-law/🔣️.json`.
 
 Independent of the Rust and TS reducers: the law table, the concrete cases and the scenarios below are
-transcribed by hand from `📋️design.md` §4 plus the approved W1-B interpretations (`📓️w1-b-report.md`).
-Run from the repo root: `python3 <this file>`.
+transcribed by hand from `📋️design.md` §4 plus the approved W1-B interpretations (`📓️w1-b-report.md`) and §22.1
+(`beginWithdrawn`: Withdraw as a history row action; `restore`: an accepted draft is taken back individually). Run from the repo root: `python3 <this file>`; importing it
+only builds `FIXTURE`/`TEXT` (the landing wave `🧪️s5-runtime-wave-b.py` reads `TEXT`).
 """
 
 import json
@@ -14,8 +15,8 @@ OUT = ROOT / "🧰️framework/🔨️modules/⏪️time-travel/🧫️fixtures/
 SCHEMA = "s.demo.op"
 G = 5
 ID = 3
-B1 = {"storeGeneration": 10, "contentRevision": "11" * 32}
-B2 = {"storeGeneration": 11, "contentRevision": "22" * 32}
+B1 = {"contentRevision": "11" * 32}
+B2 = {"contentRevision": "22" * 32}
 POS = {"a": 2, "b": 5, "c": 9}
 MOVED = {"a": 3, "b": 6, "c": 10}
 
@@ -66,9 +67,9 @@ def session(stage, accepted=(), pending=None, report=None, progress=None, fault=
 
 
 STAGES = ["inactive", "editing", "replaying", "reviewing", "choosing", "finalizing"]
-EVENT_KEYS = ["begin", "draft", "withdraw", "accept", "discard", "replayProgressed", "replayCompleted", "replayCancelled", "replayFaulted", "rerun", "requestFinalize", "chooseOverwrite", "chooseAlternative", "back", "finalized", "finalizeFaulted", "baseMoved", "exit"]
+EVENT_KEYS = ["begin", "beginWithdrawn", "draft", "withdraw", "accept", "discard", "restore", "replayProgressed", "replayCompleted", "replayCancelled", "replayFaulted", "rerun", "requestFinalize", "chooseOverwrite", "chooseAlternative", "back", "finalized", "finalizeFaulted", "baseMoved", "exit"]
 EFFECT_KINDS = ["showPreview", "startReplay", "cancelReplay", "openFinalizePrompt", "commitOverwrite", "commitAlternative", "close"]
-REFUSALS = ["timeTravel.illegal", "timeTravel.stale", "timeTravel.blocked", "timeTravel.empty"]
+REFUSALS = ["timeTravel.illegal", "timeTravel.stale", "timeTravel.blocked", "timeTravel.empty", "timeTravel.unchanged"]
 GUARDS = [
     "always",
     "newBase",
@@ -76,9 +77,6 @@ GUARDS = [
     "sameBase",
     "pendingUnchanged",
     "pendingChanged",
-    "unchangedReturnInactive",
-    "unchangedReturnReviewing",
-    "unchangedReturnReplaying",
     "changed",
     "changedToEmpty",
     "returnInactive",
@@ -94,6 +92,9 @@ GUARDS = [
     "invalidCode",
     "validName",
     "invalidName",
+    "restoreKeepsDrafts",
+    "restoreLastDraft",
+    "restoreUnaccepted",
 ]
 REVIEW_KINDS = ["noChanges", "needsReplay", "blocked", "ready"]
 CANCELLED = "timeTravel.cancelled"
@@ -115,6 +116,7 @@ CONTEXTS = {
     "reviewing.blocking": session("reviewing", accepted=["a", "b"], report=BLOCKING),
     "reviewing.noReport": session("reviewing", accepted=["a", "b"], fault="replay.targetMissing"),
     "reviewing.empty": session("reviewing"),
+    "reviewing.single": session("reviewing", accepted=["a"], report=CLEAN),
     "reviewing.atNextBase": session("reviewing", accepted=["a", "b"], report=CLEAN, base=B2),
     "reviewing.cancelled": session("reviewing", accepted=["a", "b"], fault=CANCELLED),
     "reviewing.faultAfterReport": session("reviewing", accepted=["a", "b"], report=CLEAN, fault="vcs.rejected"),
@@ -131,10 +133,12 @@ def gen_event(kind, generation=G, **fields):
 
 EVENTS = {
     "begin": {"type": "begin", "target": tgt("c", POS["c"]), "original": ORIG["c"]},
+    "beginWithdrawn": {"type": "beginWithdrawn", "target": tgt("c", POS["c"]), "original": ORIG["c"]},
     "draft": gen_event("draft", replacement=inp("0a0f")),
     "withdraw": gen_event("withdraw"),
     "accept": gen_event("accept"),
     "discard": gen_event("discard"),
+    "restore": gen_event("restore", target="a"),
     "replayProgressed": gen_event("replayProgressed", done=2, total=3),
     "replayCompleted": gen_event("replayCompleted", report=CLEAN),
     "replayCancelled": gen_event("replayCancelled"),
@@ -165,17 +169,17 @@ CLOSE = ok("inactive", ["close"], "increment")
 LAW = {
     "inactive": {
         "begin": [("always", "inactive", ok("editing", ["showPreview"], "increment", "next"))],
+        "beginWithdrawn": [("always", "inactive", ok("editing", ["showPreview"], "increment", "next"))],
         "baseMoved": [("newBase", "inactive", ok("inactive")), ("sameBase", "inactive.atNextBase", no("stale"))],
         "exit": [("always", "inactive", no("illegal"))],
     },
     "editing": {
         "begin": [("pendingUnchanged", "editing.fromReviewing.unchanged", ok("editing", ["showPreview"], "increment")), ("pendingChanged", "editing.fromReviewing.changed", no("blocked"))],
+        "beginWithdrawn": [("pendingUnchanged", "editing.fromReviewing.unchanged", ok("editing", ["showPreview"], "increment")), ("pendingChanged", "editing.fromReviewing.changed", no("blocked"))],
         "draft": [("always", "editing.fromInactive.unchanged", ok("editing", ["showPreview"]))],
         "withdraw": [("always", "editing.fromInactive.unchanged", ok("editing", ["showPreview"]))],
         "accept": [
-            ("unchangedReturnInactive", "editing.fromInactive.unchanged", CLOSE),
-            ("unchangedReturnReviewing", "editing.fromReviewing.unchanged", ok("reviewing")),
-            ("unchangedReturnReplaying", "editing.fromReviewing.unchanged.reportLost", REPLAY),
+            ("pendingUnchanged", "editing.fromInactive.unchanged", no("unchanged")),
             ("changed", "editing.fromReviewing.changed", REPLAY),
             ("changedToEmpty", "editing.fromReviewing.revertsOnlyDraft", ok("reviewing")),
         ],
@@ -197,6 +201,7 @@ LAW = {
     },
     "reviewing": {
         "begin": [("always", "reviewing.ready", ok("editing", ["showPreview"], "increment"))],
+        "beginWithdrawn": [("always", "reviewing.blocking", ok("editing", ["showPreview"], "increment"))],
         "requestFinalize": [
             ("ready", "reviewing.ready", ok("choosing", ["openFinalizePrompt"])),
             ("acceptedEmpty", "reviewing.empty", no("empty")),
@@ -204,6 +209,7 @@ LAW = {
             ("reportBlocking", "reviewing.blocking", no("blocked")),
         ],
         "rerun": [("needsReplay", "reviewing.noReport", REPLAY), ("acceptedEmpty", "reviewing.empty", no("empty")), ("reportCurrent", "reviewing.ready", no("illegal"))],
+        "restore": [("restoreKeepsDrafts", "reviewing.ready", REPLAY), ("restoreLastDraft", "reviewing.single", CLOSE), ("restoreUnaccepted", "reviewing.ready", no("illegal"), gen_event("restore", target="c"))],
         "baseMoved": [("newBase", "reviewing.ready", REPLAY), ("newBaseEmpty", "reviewing.empty", ok("reviewing")), ("sameBase", "reviewing.atNextBase", no("stale"))],
         "exit": [("always", "reviewing.ready", CLOSE)],
     },
@@ -284,6 +290,42 @@ CASES = [
         "expect": {"rejection": "timeTravel.blocked"},
     },
     {
+        "name": "begin withdrawn from inactive opens the next session on a withdrawn draft",
+        "session": CONTEXTS["inactive"],
+        "event": EVENTS["beginWithdrawn"],
+        "expect": transition(session("editing", pending=pend("c", WITHDRAWN, "inactive"), generation=G + 1, id=ID + 1), [show("c", WITHDRAWN)]),
+    },
+    {
+        "name": "begin withdrawn from a blocked review stacks a withdrawn draft on the failing mutation and keeps the report",
+        "session": CONTEXTS["reviewing.blocking"],
+        "event": {"type": "beginWithdrawn", "target": tgt("b", 5), "original": ORIG["b"]},
+        "expect": transition(session("editing", accepted=["a", "b"], pending=pend("b", WITHDRAWN, "reviewing"), report=BLOCKING, generation=G + 1), [show("b", WITHDRAWN)]),
+    },
+    {
+        "name": "begin withdrawn while the draft is unchanged switches target and keeps the return stage",
+        "session": CONTEXTS["editing.fromInactive.unchanged"],
+        "event": EVENTS["beginWithdrawn"],
+        "expect": transition(session("editing", pending=pend("c", WITHDRAWN, "inactive"), generation=G + 1), [show("c", WITHDRAWN)]),
+    },
+    {
+        "name": "begin withdrawn with a changed draft is blocked",
+        "session": CONTEXTS["editing.fromInactive.changed"],
+        "event": EVENTS["beginWithdrawn"],
+        "expect": {"rejection": "timeTravel.blocked"},
+    },
+    {
+        "name": "begin withdrawn while replaying is illegal",
+        "session": CONTEXTS["replaying"],
+        "event": EVENTS["beginWithdrawn"],
+        "expect": {"rejection": "timeTravel.illegal"},
+    },
+    {
+        "name": "accepting a withdrawal begun on an already accepted withdrawal is refused: nothing changed",
+        "session": session("editing", accepted=[draft("a", WITHDRAWN)], pending=pend("a", WITHDRAWN, "reviewing"), report=CLEAN),
+        "event": EVENTS["accept"],
+        "expect": {"rejection": "timeTravel.unchanged"},
+    },
+    {
         "name": "a draft replaces the pending replacement and previews it",
         "session": CONTEXTS["editing.fromInactive.unchanged"],
         "event": EVENTS["draft"],
@@ -320,9 +362,27 @@ CASES = [
         "expect": transition(session("replaying", accepted=["b"], generation=G + 1), [start([("b", DRAFT["b"])], "b")]),
     },
     {
-        "name": "accepting an unchanged draft from reviewing returns to the kept report",
+        "name": "accepting an unchanged draft opened from a review is refused: accept needs a change",
         "session": CONTEXTS["editing.fromReviewing.unchanged"],
         "event": EVENTS["accept"],
+        "expect": {"rejection": "timeTravel.unchanged"},
+    },
+    {
+        "name": "accepting an unchanged draft opened from nothing is refused: accept needs a change",
+        "session": CONTEXTS["editing.fromInactive.unchanged"],
+        "event": EVENTS["accept"],
+        "expect": {"rejection": "timeTravel.unchanged"},
+    },
+    {
+        "name": "accepting an unchanged draft after the base moved is refused too: discard replays the accepted drafts",
+        "session": CONTEXTS["editing.fromReviewing.unchanged.reportLost"],
+        "event": EVENTS["accept"],
+        "expect": {"rejection": "timeTravel.unchanged"},
+    },
+    {
+        "name": "discarding an unchanged draft opened from a review returns to the kept report",
+        "session": CONTEXTS["editing.fromReviewing.unchanged"],
+        "event": EVENTS["discard"],
         "expect": transition(session("reviewing", accepted=["b"], report=CLEAN), []),
     },
     {
@@ -330,6 +390,42 @@ CASES = [
         "session": CONTEXTS["editing.fromReviewing.unchanged.reportLost"],
         "event": EVENTS["discard"],
         "expect": transition(session("replaying", accepted=["b"], generation=G + 1), [start([("b", DRAFT["b"])], "b")]),
+    },
+    {
+        "name": "restore takes one accepted draft back and replays the rest",
+        "session": CONTEXTS["reviewing.blocking"],
+        "event": gen_event("restore", target="b"),
+        "expect": transition(session("replaying", accepted=["a"], generation=G + 1), [start([("a", DRAFT["a"])], "a")]),
+    },
+    {
+        "name": "restore of the only accepted draft leaves time travel with zero trace",
+        "session": CONTEXTS["reviewing.single"],
+        "event": EVENTS["restore"],
+        "expect": transition(cleared(G + 1), [{"type": "close"}]),
+    },
+    {
+        "name": "restore after a cancelled replay replays the remaining drafts and clears the fault",
+        "session": CONTEXTS["reviewing.cancelled"],
+        "event": EVENTS["restore"],
+        "expect": transition(session("replaying", accepted=["b"], generation=G + 1), [start([("b", DRAFT["b"])], "b")]),
+    },
+    {
+        "name": "restore of a mutation without an accepted draft is illegal",
+        "session": CONTEXTS["reviewing.ready"],
+        "event": gen_event("restore", target="c"),
+        "expect": {"rejection": "timeTravel.illegal"},
+    },
+    {
+        "name": "restore while a draft is being edited is illegal",
+        "session": CONTEXTS["editing.fromReviewing.unchanged"],
+        "event": gen_event("restore", target="b"),
+        "expect": {"rejection": "timeTravel.illegal"},
+    },
+    {
+        "name": "a stale restore is a silent no-op",
+        "session": CONTEXTS["reviewing.ready"],
+        "event": gen_event("restore", generation=G - 1, target="a"),
+        "expect": {"rejection": "timeTravel.stale"},
     },
     {
         "name": "a stale draft is a silent no-op",
@@ -542,6 +638,10 @@ def begin(mutation):
     return {"type": "begin", "target": tgt(mutation, POS[mutation]), "original": ORIG[mutation]}
 
 
+def begin_withdrawn(mutation):
+    return {"type": "beginWithdrawn", "target": tgt(mutation, POS[mutation]), "original": ORIG[mutation]}
+
+
 def at(kind, generation, **fields):
     return gen_event(kind, generation=generation, **fields)
 
@@ -584,6 +684,67 @@ SCENARIOS = [
         "final": cleared(6, id=1),
     },
     {
+        "name": "a blocking mutation is withdrawn from its history row, the review becomes ready and finalizes as overwrite",
+        "initial": INITIAL,
+        "steps": [
+            step(begin("a"), "editing", ["showPreview"]),
+            step(at("draft", 1, replacement=DRAFT["a"]), "editing", ["showPreview"]),
+            step(at("accept", 1), "replaying", ["startReplay"]),
+            step(at("replayCompleted", 2, report=BLOCKING), "reviewing"),
+            step(at("requestFinalize", 2), rejection="timeTravel.blocked"),
+            step(begin_withdrawn("b"), "editing", ["showPreview"]),
+            step(at("accept", 3), "replaying", ["startReplay"]),
+            step(at("replayCompleted", 4, report=CLEAN), "reviewing"),
+            step(at("requestFinalize", 4), "choosing", ["openFinalizePrompt"]),
+            step(at("choose", 4, choice={"kind": "overwrite"}), "finalizing", ["commitOverwrite"]),
+            step(at("finalized", 5), "inactive", ["close"]),
+        ],
+        "final": cleared(6, id=1),
+    },
+    {
+        "name": "a mutation withdrawn from its row with no session open is discarded and leaves time travel",
+        "initial": INITIAL,
+        "steps": [
+            step(begin_withdrawn("c"), "editing", ["showPreview"]),
+            step(begin("a"), rejection="timeTravel.blocked"),
+            step(at("discard", 1), "inactive", ["close"]),
+        ],
+        "final": cleared(2, id=1),
+    },
+    {
+        "name": "an accepted withdrawal is restored from its row and the review blocks again",
+        "initial": INITIAL,
+        "steps": [
+            step(begin("a"), "editing", ["showPreview"]),
+            step(at("draft", 1, replacement=DRAFT["a"]), "editing", ["showPreview"]),
+            step(at("accept", 1), "replaying", ["startReplay"]),
+            step(at("replayCompleted", 2, report=BLOCKING), "reviewing"),
+            step(begin_withdrawn("b"), "editing", ["showPreview"]),
+            step(at("restore", 3, target="a"), rejection="timeTravel.illegal"),
+            step(at("accept", 3), "replaying", ["startReplay"]),
+            step(at("replayCompleted", 4, report=CLEAN), "reviewing"),
+            step(at("restore", 4, target="b"), "replaying", ["startReplay"]),
+            step(at("replayCompleted", 5, report=BLOCKING), "reviewing"),
+            step(at("requestFinalize", 5), rejection="timeTravel.blocked"),
+            step(at("restore", 5, target="b"), rejection="timeTravel.illegal"),
+            step({"type": "exit"}, "inactive", ["close"]),
+        ],
+        "final": cleared(6, id=1),
+    },
+    {
+        "name": "restoring the only accepted draft leaves time travel",
+        "initial": INITIAL,
+        "steps": [
+            step(begin("a"), "editing", ["showPreview"]),
+            step(at("draft", 1, replacement=DRAFT["a"]), "editing", ["showPreview"]),
+            step(at("accept", 1), "replaying", ["startReplay"]),
+            step(at("replayCompleted", 2, report=CLEAN), "reviewing"),
+            step(at("restore", 2, target="a"), "inactive", ["close"]),
+            step({"type": "exit"}, rejection="timeTravel.illegal"),
+        ],
+        "final": cleared(3, id=1),
+    },
+    {
         "name": "a base move restarts the replay and fences the results of the old one",
         "initial": INITIAL,
         "steps": [
@@ -621,6 +782,22 @@ SCENARIOS = [
             step(at("draft", 1, replacement=ORIG["a"]), "editing", ["showPreview"]),
             step(begin("b"), "editing", ["showPreview"]),
             step(at("discard", 2), "inactive", ["close"]),
+        ],
+        "final": cleared(3, id=1),
+    },
+    {
+        "name": "accept needs a change: an untouched draft is refused until an input changes",
+        "initial": INITIAL,
+        "steps": [
+            step(begin("a"), "editing", ["showPreview"]),
+            step(at("accept", 1), rejection="timeTravel.unchanged"),
+            step(at("draft", 1, replacement=DRAFT["a"]), "editing", ["showPreview"]),
+            step(at("draft", 1, replacement=ORIG["a"]), "editing", ["showPreview"]),
+            step(at("accept", 1), rejection="timeTravel.unchanged"),
+            step(at("draft", 1, replacement=DRAFT["a"]), "editing", ["showPreview"]),
+            step(at("accept", 1), "replaying", ["startReplay"]),
+            step(at("replayCompleted", 2, report=CLEAN), "reviewing"),
+            step({"type": "exit"}, "inactive", ["close"]),
         ],
         "final": cleared(3, id=1),
     },
@@ -729,6 +906,7 @@ REVIEWS = {
     "reviewing.blocking": "blocked",
     "reviewing.noReport": "needsReplay",
     "reviewing.empty": "noChanges",
+    "reviewing.single": "ready",
     "reviewing.atNextBase": "ready",
     "reviewing.cancelled": "needsReplay",
     "reviewing.faultAfterReport": "ready",
@@ -745,6 +923,7 @@ LABELS = [
     ("refusalStale", "Outdated request ignored", "Veraltete Anfrage ignoriert"),
     ("refusalBlocked", "Blocked: resolve the pending change or the errors first", "Blockiert: zuerst die offene Änderung oder die Fehler auflösen"),
     ("refusalEmpty", "Nothing to finalize: no accepted changes", "Nichts abzuschließen: keine übernommenen Änderungen"),
+    ("refusalUnchanged", "Nothing to accept: the draft is unchanged", "Nichts zu übernehmen: der Entwurf ist unverändert"),
     ("frozen", "Editing is paused while history is being edited", "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird"),
     ("choiceOverwrite", "Overwrite history", "Verlauf überschreiben"),
     ("choiceOverwriteDescription", "Replaces the inputs in every alternative that contains these mutations", "Ersetzt die Eingaben in jeder Alternative, die diese Mutationen enthält"),
@@ -771,6 +950,10 @@ LABELS = [
     ("commitFailed", "Finalizing failed: the history is unchanged", "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"),
     ("outcomeIntroduced", "New since this edit", "Neu durch diese Bearbeitung"),
     ("refusalMemberGone", "The part this history edit targets was closed", "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"),
+    ("memberEdited", "History of a composed part edited", "Verlauf eines eingebetteten Teils bearbeitet"),
+    ("refusalNotWithdrawable", "This mutation cannot be withdrawn here", "Diese Mutation kann hier nicht zurückgezogen werden"),
+    ("refusalEditorClosed", "The draft editor is closed: open the mutation again", "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen"),
+    ("refusalReadOnly", "History cannot be edited in a read-only view", "Der Verlauf kann in einer schreibgeschützten Ansicht nicht bearbeitet werden"),
 ]
 
 CODE_LABELS = [
@@ -779,6 +962,7 @@ CODE_LABELS = [
     ("timeTravel.stale", "refusalStale"),
     ("timeTravel.blocked", "refusalBlocked"),
     ("timeTravel.empty", "refusalEmpty"),
+    ("timeTravel.unchanged", "refusalUnchanged"),
     ("timeTravel.cancelled", "replayCancelled"),
     ("timeTravel.busy", "refusalBusy"),
     ("timeTravel.unknown-mutation", "refusalUnknownMutation"),
@@ -792,6 +976,8 @@ CODE_LABELS = [
     ("timeTravel.replay-faulted", "replayFaulted"),
     ("timeTravel.commit-failed", "commitFailed"),
     ("timeTravel.member-gone", "refusalMemberGone"),
+    ("timeTravel.not-withdrawable", "refusalNotWithdrawable"),
+    ("timeTravel.editor-closed", "refusalEditorClosed"),
 ]
 
 FIXTURE = {
@@ -816,6 +1002,9 @@ FIXTURE = {
     "codeLabels": [{"code": code, "key": key} for code, key in CODE_LABELS],
 }
 
-OUT.parent.mkdir(parents=True, exist_ok=True)
-OUT.write_text(json.dumps(FIXTURE, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-print(f"wrote {OUT.relative_to(ROOT)}: {len(FIXTURE['matrix'])} matrix rows, {len(CASES)} cases, {len(SCENARIOS)} scenarios")
+TEXT = json.dumps(FIXTURE, indent=2, ensure_ascii=False) + "\n"
+
+if __name__ == "__main__":
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(TEXT, encoding="utf-8")
+    print(f"wrote {OUT.relative_to(ROOT)}: {len(FIXTURE['matrix'])} matrix rows, {len(CASES)} cases, {len(SCENARIOS)} scenarios")

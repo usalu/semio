@@ -158,6 +158,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 blake3 = "1.8.2"
 sha2 = "0.10.9"
 semio-framework-async-macros = { workspace = true }

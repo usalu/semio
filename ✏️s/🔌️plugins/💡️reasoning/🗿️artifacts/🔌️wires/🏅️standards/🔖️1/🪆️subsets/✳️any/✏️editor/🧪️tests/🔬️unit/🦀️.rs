@@ -112,7 +112,7 @@ pub(crate) mod context {
     }
 
     /// 📦️ Loads a parent and its explicit full graph child through the real recursive archive protocol.
-    pub async fn load_graph_fixture(app: &mut WiresApp, nodes: Vec<semio_framework_value::DslValue>, edges: Vec<semio_framework_value::DslValue>) -> Result<(), semio_framework_plugin::Fault> {
+    pub async fn load_graph_snapshot(app: &mut WiresApp, nodes: Vec<semio_framework_value::DslValue>, edges: Vec<semio_framework_value::DslValue>) -> Result<(), semio_framework_plugin::Fault> {
         let content = crate::wires_content_snapshot(&nodes, &edges);
         let snapshot = WiresSnapshot { content: crate::wires_content_handle(&content), ..crate::empty_wires_snapshot() };
         let handle = snapshot.content.clone();
@@ -334,11 +334,11 @@ async fn wires_labels_resolve_native_by_default() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn metabolism_board_fixture_uses_mindmap_schema() {
+async fn metabolism_board_snapshot_uses_mindmap_schema() {
     let app = metabolism_app().await;
     let board = context::board(&app);
     assert_eq!(board.get("schema").and_then(|value| value.as_str()), Some(crate::MINDMAP_BOARD_SCHEMA));
-    assert_eq!(crate::schema::fixture_nodes(&board).len(), 7);
+    assert_eq!(crate::schema::board_snapshot_nodes(&board).len(), 7);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -353,7 +353,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
         &mut app,
         WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
-        |app| crate::schema::fixture_nodes(&context::board(app)).len(),
+        |app| crate::schema::board_snapshot_nodes(&context::board(app)).len(),
         0,
         1,
     )
@@ -367,7 +367,7 @@ async fn a_redelivered_member_lane_is_idempotent() {
     use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
     use semio_framework_plugin::PluginApp;
     use store::{Backbone, BackboneMessage, MemoryBackbone};
-    let nodes = |app: &crate::editor::wires::unit_tests::context::WiresApp| crate::schema::fixture_nodes(&context::board(app)).len();
+    let nodes = |app: &crate::editor::wires::unit_tests::context::WiresApp| crate::schema::board_snapshot_nodes(&context::board(app)).len();
     let mut sender = new_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://wires-idempotent", "mem://wires-idempotent").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
@@ -415,8 +415,8 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
         &semio_framework_pack_json::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] }).to_string(),
         semio_framework_pack_json::JsonMemberPolicy::Reject,
     ).expect("neutral graph seed node");
-    context::load_graph_fixture(&mut instance_a, vec![seed_node("node-1"), seed_node("node-2")], Vec::new()).await.expect("load a and its graph child");
-    context::load_graph_fixture(&mut instance_b, vec![seed_node("node-1"), seed_node("node-2")], Vec::new()).await.expect("load b and its graph child");
+    context::load_graph_snapshot(&mut instance_a, vec![seed_node("node-1"), seed_node("node-2")], Vec::new()).await.expect("load a and its graph child");
+    context::load_graph_snapshot(&mut instance_b, vec![seed_node("node-1"), seed_node("node-2")], Vec::new()).await.expect("load b and its graph child");
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://mindmap-convergence", "mem://mindmap-convergence").await;
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
@@ -436,7 +436,7 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     // A's added node-3 survives on both.
     assert!(board_node(&projection_a, "node-3").is_some(), "A keeps its own node");
     assert!(board_node(&projection_b, "node-3").is_some(), "B converges on A's node");
-    let edges = |board: &semio_framework_value::DslValue| crate::schema::fixture_edges(board).len();
+    let edges = |board: &semio_framework_value::DslValue| crate::schema::board_snapshot_edges(board).len();
     assert_eq!(edges(&projection_a), 1, "A converges on B's relationship");
     assert_eq!(edges(&projection_b), 1, "B keeps its own relationship");
     instance_a.detach_backbone().await.expect("a releases its backbone");

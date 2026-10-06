@@ -1,0 +1,65 @@
+{
+  "metadataColumns": [
+    "id",
+    "artifact_kind",
+    "standard",
+    "subset",
+    "schema_version",
+    "native_encoding"
+  ],
+  "metadata": {
+    "id": 1,
+    "artifact_kind": "s.procedural.generation3d",
+    "standard": "1",
+    "subset": "*",
+    "schema_version": 1
+  },
+  "nativeEncodings": [
+    "binary",
+    "text"
+  ],
+  "domainTables": [
+    "generation_document",
+    "generation_host",
+    "generation_widget",
+    "generation_neuron_widget",
+    "generation_widget_port",
+    "generation_slider_widget",
+    "generation_note_widget",
+    "generation_image_widget",
+    "generation_variable_widget",
+    "generation_preview_widget",
+    "generation_widget_expanded",
+    "generation_action_widget",
+    "generation_export_widget",
+    "generation_cluster_widget",
+    "generation_host_synapse",
+    "generation_host_layout",
+    "generation_neural_dictionary",
+    "generation_neural_entry",
+    "generation_neural_value",
+    "generation_tree",
+    "generation_tree_neuron",
+    "generation_tree_synapse",
+    "generation_gui",
+    "generation_gui_node",
+    "generation_gui_plain",
+    "generation_gui_slider",
+    "generation_gui_note",
+    "generation_gui_image",
+    "generation_gui_variable",
+    "generation_gui_preview",
+    "generation_gui_expanded",
+    "generation_preset",
+    "generation_answer",
+    "generation_value",
+    "generation_array_element",
+    "generation_object_member"
+  ],
+  "entityIdentity": "positive-rowid",
+  "independentEdit": {
+    "sql": "UPDATE generation_note_widget SET text=?",
+    "value": "Public SQLite 日本\u0000literal €"
+  },
+  "retirement": "explicit"
+}

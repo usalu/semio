@@ -220,7 +220,7 @@ pub async fn media_port_label(port_id: &str, parameter_by_id: &HashMap<String, &
 /// 🕸️ Projects the workflow onto the generic port-directed-DAG fixture the Compiled DAG window
 /// renders — every `WorkflowNode` becomes one `DagNodeKind::AppInstance` directly (node IS instance
 /// now; no separate join through `OsAppInstance`).
-pub async fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagHostSnapshot {
+pub async fn workflow_to_dag_snapshot(projection: &WorkflowSnapshot) -> DagHostSnapshot {
     let mut parameter_by_id: HashMap<String, &WorkflowParameter> = HashMap::new();
     for row in &projection.parameters {
         parameter_by_id.insert(parameter_entity_id(row).await.to_string(), row);
@@ -265,7 +265,7 @@ pub async fn workflow_to_dag_fixture(projection: &WorkflowSnapshot) -> DagHostSn
 }
 
 pub async fn compiled_dag_wire_literal(projection: &WorkflowSnapshot) -> String {
-    let fixture = workflow_to_dag_fixture(projection).await;
+    let fixture = workflow_to_dag_snapshot(projection).await;
     dag_host_snapshot_to_wire_literal(&fixture)
 }
 //#endregion 🔖️CompiledDag

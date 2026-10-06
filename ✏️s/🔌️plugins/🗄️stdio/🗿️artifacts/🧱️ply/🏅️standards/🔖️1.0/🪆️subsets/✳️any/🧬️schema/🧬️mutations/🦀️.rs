@@ -22,10 +22,29 @@
 //! reusing the diff file's `pub(crate)` grammar primitives (`hex_encode`/`enc_element`/
 //! `split_top_level`/`encode_option`/...) rather than duplicating them a second time in this file.
 
-use crate::schema::diff::{
-    dec_element, dec_format, dec_row, dec_str, dec_value, diff_add_element, diff_insert_row, diff_remove_element, diff_remove_row, diff_set_comments, diff_set_format, diff_set_row_property, diff_set_snapshot, enc_element, enc_format, enc_row,
-    enc_str, enc_value, read_bin_element, read_bin_row, read_bin_snapshot, read_bin_str, read_bin_value, split_top_level, strip_brackets, write_bin_element, write_bin_row, write_bin_snapshot, write_bin_str, write_bin_value, PlyDiff,
-};
+use crate::schema::diff::{diff_add_element, diff_insert_row, diff_remove_element, diff_remove_row, diff_set_comments, diff_set_format, diff_set_row_property, diff_set_snapshot, PlyDiff};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use crate::schema::snapshot::{PlyElement, PlyFormat, PlyRow, PlyValue};
 use crate::PlySnapshot;
 use protocol::Mutation;
@@ -181,205 +200,21 @@ pub(crate) fn agg_inverse(this: &PlyMutation, base: &PlySnapshot) -> Result<Vec<
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `PlyMutation` (`#[derive(dsl::DslOps)]`
-/// confirmed rejected above) — reuses `PlyDiff`'s `pub(crate)` grammar primitives
-/// (`hex_encode`/`enc_element`/`enc_row`/`enc_value`/`split_top_level`/`encode_option`/...)
-/// rather than duplicating them a second time in this file. Grammar: `keyword arg=value ...`
-/// (space-separated, same shape the derive's own handcrafted-wrapper convention uses, and the
-/// same shape svg's hand-rolled `OpText` uses), one match arm per variant (no `DslVariants`
-/// scaffolding available since nothing here derives it).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_snapshot(s: &PlySnapshot) -> String {
-    format!("[{},{},[{}],[{}]]", enc_str(&s.schema), enc_format(s.format), s.comments.iter().map(|c| enc_str(c)).collect::<Vec<_>>().join(","), s.elements.iter().map(enc_element).collect::<Vec<_>>().join(","),)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_snapshot(s: &str) -> Result<PlySnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [schema, format, comments, elements] = parts.as_slice() else { return Err(format!("ply snapshot: expected 4 fields, got {}", parts.len())) };
-    Ok(PlySnapshot {
-        schema: dec_str(schema)?,
-        format: dec_format(format)?,
-        comments: split_top_level(strip_brackets(comments)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
-        elements: split_top_level(strip_brackets(elements)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_element).collect::<Result<Vec<_>, String>>()?,
-    })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_ply_mutation(m: &PlyMutation) -> String {
-    match m {
-        PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
-        PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
-        PlyMutation::SetFormat(set_format::SetFormat { format }) => format!("set-format format={}", enc_format(*format)),
-        PlyMutation::InsertComment(insert_comment::InsertComment { index, comment }) => format!("insert-comment index={index} comment={}", enc_str(comment)),
-        PlyMutation::RemoveComment(remove_comment::RemoveComment { index }) => format!("remove-comment index={index}"),
-        PlyMutation::AddElement(add_element::AddElement { index, element }) => format!("add-element index={index} element={}", enc_element(element)),
-        PlyMutation::RemoveElement(remove_element::RemoveElement { name }) => format!("remove-element name={}", enc_str(name)),
-        PlyMutation::InsertRow(insert_row::InsertRow { element_name, index, row }) => format!("insert-row element-name={} index={index} row={}", enc_str(element_name), enc_row(row)),
-        PlyMutation::RemoveRow(remove_row::RemoveRow { element_name, index }) => format!("remove-row element-name={} index={index}", enc_str(element_name)),
-        PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name, row_index, property_name, value }) => {
-            format!("set-row-property element-name={} row-index={row_index} property-name={} value={}", enc_str(element_name), enc_str(property_name), enc_value(value),)
-        }
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
-    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("ply mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
-    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("ply mutation: missing arg '{k}' for '{keyword}'"));
-    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
-    match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?)? })),
-        "set-format" => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: dec_format(arg("format")?)? })),
-        "insert-comment" => Ok(PlyMutation::InsertComment(insert_comment::InsertComment { index: usize_arg("index")?, comment: dec_str(arg("comment")?)? })),
-        "remove-comment" => Ok(PlyMutation::RemoveComment(remove_comment::RemoveComment { index: usize_arg("index")? })),
-        "add-element" => Ok(PlyMutation::AddElement(add_element::AddElement { index: usize_arg("index")?, element: dec_element(arg("element")?)? })),
-        "remove-element" => Ok(PlyMutation::RemoveElement(remove_element::RemoveElement { name: dec_str(arg("name")?)? })),
-        "insert-row" => Ok(PlyMutation::InsertRow(insert_row::InsertRow { element_name: dec_str(arg("element-name")?)?, index: usize_arg("index")?, row: dec_row(arg("row")?)? })),
-        "remove-row" => Ok(PlyMutation::RemoveRow(remove_row::RemoveRow { element_name: dec_str(arg("element-name")?)?, index: usize_arg("index")? })),
-        "set-row-property" => {
-            Ok(PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: dec_str(arg("element-name")?)?, row_index: usize_arg("row-index")?, property_name: dec_str(arg("property-name")?)?, value: dec_value(arg("value")?)? }))
-        }
-        other => Err(format!("ply mutation: unknown keyword {other:?}")),
-    }
-}
 
-impl OpText for PlyMutation {
-    fn print_op(&self) -> String {
-        print_ply_mutation(self)
-    }
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_ply_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-}
+
+
+
+
+
 
 //#region 🔖️RealBinaryOpFrame
-/// 🧪️ P2-FG3: real binary op frame — upgraded from the F6-era `print_op().into_bytes()`
-/// text-as-binary shortcut. Matches `../💾️binary/📡️.protocol.semio`'s `header fixed 2 |
-/// field format u8 | field tag u8 | chain payload bytes` shape exactly — `format` is
-/// `store::pack_rt::OP_BINARY_FORMAT`, `tag` is the `PlyMutation` variant ordinal in the SAME
-/// 0-8 order `print_ply_mutation`'s own match uses, then each variant's own payload real binary
-/// (reusing `PlyDiff`'s `pub(crate)` binary primitives — `write_bin_element`/`write_bin_row`/
-/// `write_bin_snapshot`/`write_bin_str`/`write_bin_value` — the same way this file's `OpText`
-/// already reuses the text-codec primitives).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn op_tag(m: &PlyMutation) -> u8 {
-    match m {
-        PlyMutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
-        PlyMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
-        PlyMutation::SetFormat(..) => TAG_SET_FORMAT,
-        PlyMutation::InsertComment(..) => TAG_INSERT_COMMENT,
-        PlyMutation::RemoveComment(..) => TAG_REMOVE_COMMENT,
-        PlyMutation::AddElement(..) => TAG_ADD_ELEMENT,
-        PlyMutation::RemoveElement(..) => TAG_REMOVE_ELEMENT,
-        PlyMutation::InsertRow(..) => TAG_INSERT_ROW,
-        PlyMutation::RemoveRow(..) => TAG_REMOVE_ROW,
-        PlyMutation::SetRowProperty(..) => TAG_SET_ROW_PROPERTY,
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn op_pack_err(e: &dsl::PackRefusal) -> protocol::ProtocolError {
-    protocol::ProtocolError::Malformed { what: "ply op binary", offset: 0, detail: e.to_string() }
-}
 
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `PlyMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
-const TAG_SET_FORMAT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-format");
-const TAG_INSERT_COMMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-comment");
-const TAG_REMOVE_COMMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-comment");
-const TAG_ADD_ELEMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "add-element");
-const TAG_REMOVE_ELEMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-element");
-const TAG_INSERT_ROW: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-row");
-const TAG_REMOVE_ROW: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-row");
-const TAG_SET_ROW_PROPERTY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-row-property");
-//#endregion 🏷️WireTags
 
-impl OpBinary for PlyMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new();
-        w.write_u8(store::pack_rt::OP_BINARY_FORMAT);
-        w.write_u8(op_tag(self));
-        match self {
-            PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => write_bin_snapshot(&mut w, snapshot),
-            PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => w.write_bytes(&protocol::OpBinary::encode_op(patch)?),
-            PlyMutation::SetFormat(set_format::SetFormat { format }) => {
-                crate::schema::diff::write_bin_format(&mut w, *format);
-            }
-            PlyMutation::InsertComment(insert_comment::InsertComment { index, comment }) => {
-                w.write_varint_u64(*index as u64);
-                write_bin_str(&mut w, comment);
-            }
-            PlyMutation::RemoveComment(remove_comment::RemoveComment { index }) => w.write_varint_u64(*index as u64),
-            PlyMutation::AddElement(add_element::AddElement { index, element }) => {
-                w.write_varint_u64(*index as u64);
-                write_bin_element(&mut w, element);
-            }
-            PlyMutation::RemoveElement(remove_element::RemoveElement { name }) => write_bin_str(&mut w, name),
-            PlyMutation::InsertRow(insert_row::InsertRow { element_name, index, row }) => {
-                write_bin_str(&mut w, element_name);
-                w.write_varint_u64(*index as u64);
-                write_bin_row(&mut w, row);
-            }
-            PlyMutation::RemoveRow(remove_row::RemoveRow { element_name, index }) => {
-                write_bin_str(&mut w, element_name);
-                w.write_varint_u64(*index as u64);
-            }
-            PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name, row_index, property_name, value }) => {
-                write_bin_str(&mut w, element_name);
-                w.write_varint_u64(*row_index as u64);
-                write_bin_str(&mut w, property_name);
-                write_bin_value(&mut w, value);
-            }
-        }
-        Ok(w.into_bytes())
-    }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = dsl::ByteReader::new(bytes);
-        let _format = r.read_u8().map_err(|error| op_pack_err(&error))?;
-        let tag = r.read_u8().map_err(|error| op_pack_err(&error))?;
-        match tag {
-            TAG_PATCH_SNAPSHOT => Ok(PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(r.read_bytes(r.remaining()).map_err(|error| op_pack_err(&error))?)? })),
-            TAG_SET_SNAPSHOT => Ok(PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? })),
-            TAG_SET_FORMAT => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: crate::schema::diff::read_bin_format(&mut r).map_err(|error| op_pack_err(&error))? })),
-            TAG_INSERT_COMMENT => {
-                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
-                let comment = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
-                Ok(PlyMutation::InsertComment(insert_comment::InsertComment { index, comment }))
-            }
-            TAG_REMOVE_COMMENT => Ok(PlyMutation::RemoveComment(remove_comment::RemoveComment { index: r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize })),
-            TAG_ADD_ELEMENT => {
-                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
-                let element = read_bin_element(&mut r).map_err(|error| op_pack_err(&error))?;
-                Ok(PlyMutation::AddElement(add_element::AddElement { index, element }))
-            }
-            TAG_REMOVE_ELEMENT => Ok(PlyMutation::RemoveElement(remove_element::RemoveElement { name: read_bin_str(&mut r).map_err(|error| op_pack_err(&error))? })),
-            TAG_INSERT_ROW => {
-                let element_name = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
-                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
-                let row = read_bin_row(&mut r).map_err(|error| op_pack_err(&error))?;
-                Ok(PlyMutation::InsertRow(insert_row::InsertRow { element_name, index, row }))
-            }
-            TAG_REMOVE_ROW => {
-                let element_name = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
-                let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
-                Ok(PlyMutation::RemoveRow(remove_row::RemoveRow { element_name, index }))
-            }
-            TAG_SET_ROW_PROPERTY => {
-                let element_name = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
-                let row_index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
-                let property_name = read_bin_str(&mut r).map_err(|error| op_pack_err(&error))?;
-                let value = read_bin_value(&mut r).map_err(|error| op_pack_err(&error))?;
-                Ok(PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name, row_index, property_name, value }))
-            }
-            other => Err(protocol::ProtocolError::Malformed { what: "ply op tag", offset: 1, detail: format!("unknown tag {other}") }),
-        }
-    }
-}
+
+
+
 //#endregion 🔖️RealBinaryOpFrame
 //#endregion OpCodecs
 

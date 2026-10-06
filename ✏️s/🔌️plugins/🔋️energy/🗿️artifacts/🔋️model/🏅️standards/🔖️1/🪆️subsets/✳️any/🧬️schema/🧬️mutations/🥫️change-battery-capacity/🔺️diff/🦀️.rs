@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ChangeBatteryCapacity, base: &EnergyModelSnapshot) 
     if let Some(item) = model.battery_storage.iter_mut().find(|item| item.id == payload.id) {
         item.capacity_kwh = payload.new_capacity_kwh;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

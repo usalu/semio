@@ -1,4 +1,4 @@
-//! 🧪️ `rotate-selection` fixture — `⚠️skips-locked-ghost`.
+//! 🧪️ `rotate-selection` scene_snapshot — `⚠️skips-locked-ghost`.
 //!
 //! `object-b` turns about +y while `object-a` stays, so `attraction-1` is re-derived (`mutation.cascade`); the absent `object-ghost` and the locked `volume-2` are skipped as `mutation.partial`.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "rotate-selection/skips-locked-ghost: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

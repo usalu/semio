@@ -180,53 +180,24 @@ pub struct DrawingCanvasLayerRecord {
 //#endregion 🔖️SceneTypes
 
 //#region 🔖️Tree
-fn drawing_id_hex(material: &[u8]) -> String {
-    let mut hasher = DefaultHasher::new();
-    material.hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
-}
 
-/// 🪪️ Content-addressed layer/object id — no process-wide counter.
-pub fn create_drawing_id(prefix: &str, material: &[u8]) -> String {
-    format!("{prefix}-{}", drawing_id_hex(material))
-}
+
+
 
 /// 📄️ Parses the handcrafted DSL fixture once per call — used both for `setActiveExample`'s in-plugin
 /// document load and to bridge into the framework's still-JSON-only `App::example`/render-override
 /// surfaces, so `SEMIO_DRAW_EXAMPLE_TEXT` stays the single source of truth for the fixture.
-const SEMIO_DRAW_EXAMPLE_TEXT: &str = crate::document_dsl::SEMIO_DRAW_EXAMPLE_TEXT;
+const SEMIO_DRAW_EXAMPLE_TEXT: &str = crate::standards::v1::subsets::any::io::text::snapshot::SEMIO_DRAW_EXAMPLE_TEXT;
 
-pub fn semio_drawing_example_document() -> DrawingSnapshot {
-    DrawingSnapshot::parse_dsl(SEMIO_DRAW_EXAMPLE_TEXT).unwrap_or_else(|_| empty_drawing_snapshot())
-}
 
-/// 🌉️ JSON bridge for `semio_framework_plugin`'s `App::example`/`VcsArtifactApp::render` override,
-/// which hardcode `serde_json::from_str` on their `document_json`/`projection_override_json`
-/// parameters (shared framework machinery, out of scope for this DSL migration) — derives the JSON
-/// from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
-pub fn semio_drawing_example_json() -> String {
-    semio_framework_pack_json::to_json_string(&semio_drawing_example_document())
-}
+
+
 
 pub fn default_layer_base(name: &str) -> DrawingLayerBase {
     DrawingLayerBase { id: create_drawing_id("layer", name.as_bytes()), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() }
 }
 
-pub fn create_drawing_path_layer(name: &str, segments: Vec<PathSegment>) -> DrawingLayerNode {
-    DrawingLayerNode::Path(DrawingPathBody {
-        base: DrawingLayerBase {
-            id: create_drawing_id("path", name.as_bytes()),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_drawing_transform(),
-            attributes: DrawingAttributes::default(),
-        },
-        segments,
-    })
-}
+
 
 pub fn create_drawing_group_layer(name: &str) -> DrawingLayerNode {
     DrawingLayerNode::Group(DrawingGroupBody {
@@ -337,20 +308,9 @@ pub fn create_drawing_image_layer(name: &str, image_key: &str) -> DrawingLayerNo
     })
 }
 
-pub fn default_drawing_document(id: &str, title: Option<&str>) -> DrawingSnapshot {
-    DrawingSnapshot {
-        schema: DRAWING_DOCUMENT_SCHEMA.into(),
-        id: id.into(),
-        title: title.map(str::to_string),
-        layers: vec![create_drawing_path_layer("Layer 1", Vec::new())],
-        assets: Default::default(),
-        artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }),
-    }
-}
 
-pub fn empty_drawing_snapshot() -> DrawingSnapshot {
-    default_drawing_document("empty", None)
-}
+
+
 
 pub fn layer_id(layer: &DrawingLayerNode) -> &str {
     match layer {
@@ -912,6 +872,8 @@ pub mod scene_booleans;
 pub mod scene_trace;
 #[path = "🎬️scene/🧹️retire/🦀️.rs"]
 pub mod scene_retirement;
+#[path = "🎬️scene/🎨️paint/🦀️.rs"]
+pub mod scene_paint;
 
 pub fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
     path_segments_bounds_with_matrix(segments,[1.0,0.0,0.0,1.0,0.0,0.0])

@@ -1,7 +1,7 @@
 import { lstatSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { canonicalGoPlan, runCanonicalGoTests } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { canonicalGoPlan, runCanonicalGoTests, runRepositoryTestCommand } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 export type GoInputSelectionOperations = Readonly<{
   realpath(path: string): string;
@@ -36,6 +36,17 @@ export function projectGoInputPackages(
 /** 🐹️ Executes one canonical Go module selection for native callers and Nx routes. */
 export class GoTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "binary") {
+      if (segments.length !== 4 || !/^Test[A-Za-z0-9_]+$/.test(segments[3]!)) throw new Error("Expected go-test binary <module-root> <owned-binary> <exact-test-name>");
+      const root = realpathSync(resolve(segments[1]!)), executable = realpathSync(resolve(segments[2]!));
+      const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
+      if (!artifacts) throw new Error("Go test binary requires caller-owned artifacts");
+      const within = relative(realpathSync(artifacts), executable);
+      if (!within || within === ".." || within.startsWith(`..${sep}`) || isAbsolute(within) || !lstatSync(executable).isFile()) throw new Error("Go test binary escapes caller-owned artifacts");
+      if (!canonicalGoPlan(root).packages.includes(".")) throw new Error("Go test binary has no canonical root package");
+      await runRepositoryTestCommand(executable, ["-test.v", "-test.count=1", `-test.run=^${segments[3]}$`], { cwd: root, env: process.env });
+      return;
+    }
     if (segments.length < 2) throw new Error("Expected go-test <module-root> <input-path|-> [go-test-args...]");
     const selection = projectGoInputPackages(segments[0]!, segments[1]!);
     await runCanonicalGoTests(selection.moduleRoot, segments.slice(2), { env: process.env, packages: selection.packages });

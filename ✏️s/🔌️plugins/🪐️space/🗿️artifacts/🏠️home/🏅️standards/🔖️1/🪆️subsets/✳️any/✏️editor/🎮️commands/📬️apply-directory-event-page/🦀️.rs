@@ -4,7 +4,7 @@
 //! projection its job captured at dispatch, answers the typed receipt the host acknowledges the page by, and hands the
 //! transient lane at most one [`ApplyDirectoryPage`] item — the page itself, never the projection, never an edit.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation, HOME_DIRECTORY_PAGE_BYTES};
 use crate::editor::home::transient::{ApplyDirectoryPage, DirectoryPageAdmission, DirectoryProjectionReceiptV1, HomeDirectoryProjection, HomeTransient, HomeTransientMutation};

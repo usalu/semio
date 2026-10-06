@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::schema::default_terrain_document;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
 use crate::viewer::gisterrain::modes::view;
 use crate::viewer::gisterrain::modes::view::windows::terrain;
 use crate::{GisTerrainSnapshot, GISTERRAIN_DIALECT, GIS_3D_TERRAIN_SCHEMA};
@@ -37,7 +37,7 @@ pub struct GisTerrainViewer;
 
 impl ArtifactViewer for GisTerrainViewer {
     type Snapshot = GisTerrainSnapshot;
-    type Mutation = crate::op::GisTerrainMutation;
+    type Mutation = crate::standards::v1::subsets::any::schema::mutations::GisTerrainMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

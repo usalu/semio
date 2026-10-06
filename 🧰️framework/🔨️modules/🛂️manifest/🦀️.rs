@@ -469,6 +469,9 @@ pub enum ActionArgControl {
         #[value(skip_serializing_if = "Option::is_none")]
         placeholder: Option<String>,
     },
+    /// 📜️ A multi-line text field (a plain string declared `presentation: Multiline`): Enter inserts a line,
+    /// Ctrl/⌘+Enter commits, Escape reverts — the text-control keyboard law (`semio_framework_ui_contract::text_input_key`).
+    Multiline,
     Number {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
@@ -784,7 +787,7 @@ impl ActionArgDef {
     }
 
     /// 🧬️ A JSON-text argument — a `String` wire field that actually carries a JSON document
-    /// (`patchLayer.value`, `setFixtureJson.json`), tagged `x-semio-format: json` so a client knows
+    /// (`patchLayer.value`, `loadDocumentJson.json`), tagged `x-semio-format: json` so a client knows
     /// to send JSON text rather than a bare word.
     pub fn json_text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::Json)))
@@ -856,8 +859,9 @@ impl ActionArgDef {
     /// `presentation` — D6 (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet
     /// P3-manifest-schema): `schema` is the ONLY persisted truth, this is computed fresh on every
     /// call, never cached/stored. Order matters: a non-empty `options` list always wins Select (or
-    /// Segmented) over any format; a number's presentation wins, else an integer steps, else a
-    /// fully-bounded number slides, else it is a plain number field. TypeScript twin: `argControl`.
+    /// Segmented) over any format; a plain string declared multiline is Multiline; a number's
+    /// presentation wins, else an integer steps, else a fully-bounded number slides, else it is a
+    /// plain number field. TypeScript twin: `argControl`.
     pub fn control(&self) -> ActionArgControl {
         match &self.schema {
             ArgSchema::String { options, option_source, format, .. } => {
@@ -871,6 +875,7 @@ impl ActionArgDef {
                     Some(ArgFormat::IconId) => ActionArgControl::IconSelect { classifier_kind: "icon".to_string() },
                     Some(ArgFormat::ArtifactKind { roles }) => ActionArgControl::ArtifactKind { roles: roles.clone() },
                     Some(ArgFormat::SurfaceApp { roles, dialect_arg }) => ActionArgControl::SurfaceApp { roles: roles.clone(), dialect_arg: dialect_arg.clone() },
+                    _ if self.presentation == Some(ArgPresentation::Multiline) => ActionArgControl::Multiline,
                     _ => ActionArgControl::Text { placeholder: None },
                 }
             }
@@ -1288,13 +1293,15 @@ pub fn mutation_input_audit(schema_json: &str, resolver: &dyn InputSchemaResolve
 
 /// 🧭️ The [`InputSchemaResolver`] over every JSON Schema document registered in the OS-wide `schema://` export registry
 /// (artifact facets and named scope exports) and every document a published mutation leaf references
-/// (`semio_framework_schema_registry::registered_referenced_schema_documents`): the document whose `$id` is `id`, or `None` when no plugin
-/// published it.
+/// (`semio_framework_schema_registry::registered_referenced_schema_documents`), and the framework's own shared documents
+/// ([`FRAMEWORK_INPUT_SCHEMA_DOCUMENTS`], held without any registration): the document whose `$id` is `id`, or `None`
+/// when nobody published it.
 pub fn registered_input_schema_document(id: &str) -> Option<DslValue> {
     let mut texts: Vec<&'static str> = semio_framework_schema_registry::with_schema_export_registry(|registry| {
         registry.entries().filter(|entry| entry.format == semio_framework_schema_registry::SchemaFormat::JsonSchema).filter_map(|entry| registry.resolve(entry.scope, entry.export, entry.format).ok()).filter(|text| text.contains(id)).collect()
     });
     texts.extend(semio_framework_schema_registry::registered_referenced_schema_documents().into_iter().filter(|text| text.contains(id)));
+    texts.extend(FRAMEWORK_INPUT_SCHEMA_DOCUMENTS.into_iter().filter(|text| text.contains(id)));
     texts.into_iter().find_map(|text| {
         let document = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?);
         (document.get("$id").and_then(semio_framework_value::DslValue::as_str) == Some(id)).then_some(document)
@@ -1337,6 +1344,11 @@ fn input_union(node: &DslValue) -> Option<&[DslValue]> {
 /// 🔢️ The framework value schema, whose `$defs/Binary64` (the exact binary64 word) and `$defs/Binary64Transport` (that word or a
 /// plain number) define the numeric transport the reader edits as a number wherever a carrier references or restates it.
 const INPUT_NUMERIC_TRANSPORT_SCHEMA_JSON: &str = include_str!("../🌱️value/🧬️schema/🔣️.json");
+
+/// 🪣️ The shared schema documents of the framework's own namespace an input schema of any plugin may `$ref`:
+/// [`registered_input_schema_document`] always holds them, so publishing them is never a plugin's duty (design §23).
+/// Today the framework value schema (`framework/value/schema.json`); the OS adds its own at every app construction.
+pub const FRAMEWORK_INPUT_SCHEMA_DOCUMENTS: [&str; 1] = [INPUT_NUMERIC_TRANSPORT_SCHEMA_JSON];
 
 /// 🏷️ Schema keys that annotate without constraining; a shape comparison ignores them (and every `x-` key).
 const INPUT_SHAPE_ANNOTATIONS: [&str; 6] = ["title", "description", "$comment", "examples", "default", "format"];
@@ -2654,12 +2666,16 @@ pub const HISTORY_EDIT_BEGIN_ACTION_ID: &str = "historyEditBegin";
 pub const HISTORY_EDIT_INPUT_ACTION_ID: &str = "historyEditInput";
 /// 🎯️ Sets the reference input at `path` from the current selection of its declared domain.
 pub const HISTORY_EDIT_USE_SELECTION_ACTION_ID: &str = "historyEditUseSelection";
-/// 🚫️ Drafts the edited mutation as withdrawn: it folds as a no-op.
+/// 🚫️ Drafts a mutation as withdrawn (it folds as a no-op): the one being edited, or — with `mutationId`, a history
+/// row's Withdraw — the named one, opening (or retargeting) the session on it; no input schema is needed.
 pub const HISTORY_EDIT_WITHDRAW_ACTION_ID: &str = "historyEditWithdraw";
 /// ✅️ Accepts the draft and replays everything downstream.
 pub const HISTORY_EDIT_ACCEPT_ACTION_ID: &str = "historyEditAccept";
 /// ↩️ Drops the draft and returns to the previous stage.
 pub const HISTORY_EDIT_DISCARD_ACTION_ID: &str = "historyEditDiscard";
+/// 🪃️ Takes the accepted draft of `mutationId` back while reviewing — the mutation applies with its recorded input again —
+/// and replays the rest; taking the only accepted draft back leaves history editing with nothing changed.
+pub const HISTORY_EDIT_RESTORE_ACTION_ID: &str = "historyEditRestore";
 /// 🏁️ Opens the finalize prompt once the replayed history is clean.
 pub const HISTORY_EDIT_FINALIZE_ACTION_ID: &str = "historyEditFinalize";
 /// 🌿️ Commits the accepted drafts: as a new alternative named `name`, or with `choice: overwrite` over every alternative.
@@ -2674,13 +2690,14 @@ pub const HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID: &str = "historyEditCancelReplay"
 pub const HISTORY_EDIT_RERUN_ACTION_ID: &str = "historyEditRerun";
 /// 🗂️ Every reserved history-edit verb, in lifecycle order. They are host-driven: applied to the session at the head of
 /// the dispatch, never queued behind guest work, never recorded as history rows.
-pub const HISTORY_EDIT_ACTION_IDS: [&str; 12] = [
+pub const HISTORY_EDIT_ACTION_IDS: [&str; 13] = [
     HISTORY_EDIT_BEGIN_ACTION_ID,
     HISTORY_EDIT_INPUT_ACTION_ID,
     HISTORY_EDIT_USE_SELECTION_ACTION_ID,
     HISTORY_EDIT_WITHDRAW_ACTION_ID,
     HISTORY_EDIT_ACCEPT_ACTION_ID,
     HISTORY_EDIT_DISCARD_ACTION_ID,
+    HISTORY_EDIT_RESTORE_ACTION_ID,
     HISTORY_EDIT_FINALIZE_ACTION_ID,
     HISTORY_EDIT_COMMIT_ACTION_ID,
     HISTORY_EDIT_BACK_ACTION_ID,
@@ -2688,10 +2705,11 @@ pub const HISTORY_EDIT_ACTION_IDS: [&str; 12] = [
     HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID,
     HISTORY_EDIT_RERUN_ACTION_ID,
 ];
-/// 🪪️ `historyEditBegin`'s mutation id argument (`<editId>#<opIndex>`).
+/// 🪪️ The mutation id argument (`<editId>#<opIndex>`) of `historyEditBegin`, of a row's `historyEditWithdraw` and of
+/// `historyEditRestore`.
 pub const HISTORY_EDIT_ARG_MUTATION_ID: &str = "mutationId";
-/// 🧩️ `historyEditBegin`'s member store argument (`<slot>/<childId>`): the composed member store that holds the mutation
-/// (design §12); absent for the document's own store.
+/// 🧩️ The member store argument (`<slot>/<childId>`) beside every `mutationId`: the composed member store that holds the
+/// mutation (design §12); absent for the document's own store.
 pub const HISTORY_EDIT_ARG_STORE: &str = "store";
 /// 🧭️ The RFC 6901 pointer of one input inside the edited mutation's payload.
 pub const HISTORY_EDIT_ARG_PATH: &str = "path";
@@ -2714,12 +2732,14 @@ pub const HISTORY_EDIT_CHOICE_OVERWRITE: &str = "overwrite";
 /// 🗳️ The framework-injected finalize dialog of a history edit.
 pub const HISTORY_EDIT_FINALIZE_DIALOG_ID: &str = "finalizeHistoryEdit";
 
-/// ✏️ The twelve reserved history-edit verbs, part of [`history_action_definitions`]: never in the palette, no chords
+/// ✏️ The thirteen reserved history-edit verbs, part of [`history_action_definitions`]: never in the palette, no chords
 /// (the hosts bind remappable `ui.timeTravel.*` chords), rejected on a viewer, agent-addressable like undo.
 pub fn history_edit_action_definitions() -> Vec<ActionDefinition> {
     let generation = || history_edit_hidden_arg(ActionArgDef::with_schema(HISTORY_EDIT_ARG_GENERATION, LocalizedLabel::native("Generation", "Generation"), ArgSchema::number(Some(0.0), None, Some(1.0), true)));
     let path = || ActionArgDef::text(HISTORY_EDIT_ARG_PATH, LocalizedLabel::native("Input", "Eingabe")).describe(LocalizedLabel::native("RFC 6901 pointer of the input inside the mutation payload, such as /dx.", "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx.")).required();
     let verb = |id: &str, en: &str, de: &str, icon: &str| ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(id, LocalizedLabel::native(en, de), ActionKind::History, icon) };
+    let mutation = || history_edit_hidden_arg(ActionArgDef::text(HISTORY_EDIT_ARG_MUTATION_ID, LocalizedLabel::native("Mutation", "Mutation")));
+    let store = || history_edit_hidden_arg(ActionArgDef::text(HISTORY_EDIT_ARG_STORE, LocalizedLabel::native("Member store", "Mitgliedsspeicher")));
     vec![
         verb(HISTORY_EDIT_BEGIN_ACTION_ID, "Edit Mutation", "Mutation bearbeiten", "pencil")
             .describe(LocalizedLabel::native(
@@ -2727,10 +2747,7 @@ pub fn history_edit_action_definitions() -> Vec<ActionDefinition> {
                 "Öffnet die Verlaufsbearbeitung für eine angewendete Mutation: Das Artefakt zeigt den Zustand direkt davor mit bearbeitbaren Eingaben, und nichts Späteres wird angewendet, bis der Entwurf übernommen ist.",
             ))
             .use_when(["edit an earlier step", "change a past operation", "fix a mutation in the history"])
-            .with_args([
-                history_edit_hidden_arg(ActionArgDef::text(HISTORY_EDIT_ARG_MUTATION_ID, LocalizedLabel::native("Mutation", "Mutation")).required()),
-                history_edit_hidden_arg(ActionArgDef::text(HISTORY_EDIT_ARG_STORE, LocalizedLabel::native("Member store", "Mitgliedsspeicher"))),
-            ]),
+            .with_args([mutation().required(), store()]),
         verb(HISTORY_EDIT_INPUT_ACTION_ID, "Set Mutation Input", "Mutationseingabe setzen", "sliders-horizontal")
             .describe(LocalizedLabel::native(
                 "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
@@ -2756,11 +2773,11 @@ pub fn history_edit_action_definitions() -> Vec<ActionDefinition> {
             .with_args([path(), generation()]),
         verb(HISTORY_EDIT_WITHDRAW_ACTION_ID, "Withdraw Mutation", "Mutation zurückziehen", "eye-off")
             .describe(LocalizedLabel::native(
-                "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
-                "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt.",
+                "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind.",
             ))
-            .use_when(["drop this step", "skip this operation"])
-            .with_args([generation()]),
+            .use_when(["drop this step", "skip this operation", "withdraw a mutation from the history"])
+            .with_args([mutation(), store(), generation()]),
         verb(HISTORY_EDIT_ACCEPT_ACTION_ID, "Accept Draft", "Entwurf übernehmen", "check")
             .describe(LocalizedLabel::native(
                 "Accepts the draft of the mutation being edited and replays every later mutation, reporting success, warnings and errors per mutation.",
@@ -2772,6 +2789,13 @@ pub fn history_edit_action_definitions() -> Vec<ActionDefinition> {
             .describe(LocalizedLabel::native("Drops the draft of the mutation being edited; accepted drafts stay.", "Verwirft den Entwurf der bearbeiteten Mutation; übernommene Entwürfe bleiben erhalten."))
             .use_when(["discard this draft"])
             .with_args([generation()]),
+        verb(HISTORY_EDIT_RESTORE_ACTION_ID, "Restore Mutation", "Mutation wiederherstellen", "undo-2")
+            .describe(LocalizedLabel::native(
+                "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung.",
+            ))
+            .use_when(["take this draft back", "bring the withdrawn step back", "undo one change of the history edit"])
+            .with_args([mutation().required(), store(), generation()]),
         verb(HISTORY_EDIT_FINALIZE_ACTION_ID, "Finalize History Edit", "Verlaufsbearbeitung abschließen", "list-checks")
             .describe(LocalizedLabel::native(
                 "Asks how to keep the edited history once no replayed mutation has an error: as a new alternative or by overwriting the existing history.",
@@ -3437,6 +3461,10 @@ impl UtilityDefinition {
 #[serde(transparent)]
 #[value(transparent)]
 pub struct UtilityRef(String);
+
+#[path = "🪛️utilities/🌅️initial/🦀️.rs"]
+mod initial_window_utility;
+pub use initial_window_utility::{InitialWindowUtilityInput, InitialWindowUtilityResolution, resolve_initial_window_utility};
 
 impl UtilityRef {
     pub fn new(id: impl Into<String>) -> Self {
@@ -5400,6 +5428,10 @@ pub struct WindowKindDefinition {
     #[serde(default)]
     #[value(default)]
     pub utilities: Vec<UtilityRef>,
+    /// 🌅️ The first arm of each new window instance, accepted by this window's utility roster.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub initial_utility_id: Option<UtilityRef>,
     /// 🕹️ Interaction domains this window kind accepts — references `AppDefinition.interactions` ids.
     /// Empty = no interactions.
     #[serde(default)]

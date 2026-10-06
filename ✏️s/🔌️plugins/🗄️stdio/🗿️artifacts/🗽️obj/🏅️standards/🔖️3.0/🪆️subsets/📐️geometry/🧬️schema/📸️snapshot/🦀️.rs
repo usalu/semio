@@ -190,12 +190,7 @@ impl Default for ObjSnapshot {
 //#region 🔖️HandcraftedArtifactCodecs
 // 🔗 Real grammar lives in `⚙️engine::encode_obj`/`decode_obj` — see
 // https://www.fileformat.info/format/wavefrontobj/egff.htm for the grammar this mirrors.
-#[path="📦️pack/🦀️.rs"]
-mod native_pack;
+
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-#[path = "🪶️sqlite/🦀️.rs"]
-mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+

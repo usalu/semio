@@ -1,3 +1,5 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::default_drawing_document;
+use crate::standards::v1::subsets::any::io::text::snapshot::create_drawing_path_layer;
 use super::*;
 use crate::DrawingCircle;
 

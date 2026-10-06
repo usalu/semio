@@ -1,5 +1,5 @@
 use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
-use semio_s_artifact_cad_cad::io::geometry_import::concrete_forest_left_shape_solid_face_loops;
+use semio_s_artifact_cad_cad::standards::v1::subsets::any::io::geometry_import::concrete_forest_left_shape_solid_face_loops;
 use std::collections::HashMap;
 
 /// Asserts every directed edge (by vertex id, after welding) has an opposite-winding counterpart, i.e. the
@@ -83,6 +83,6 @@ async fn export_concrete_forest_left_lowpoly_mesh_json() {
     eprintln!("LOWPOLY_FOREST_MESH_JSON_END");
     let snapshot = crate::snapshot_from_mesh_json(&json, "obj-1", "Hexagonal Cut Concrete Forest Left");
     eprintln!("LOWPOLY_FOREST_DSL_START");
-    eprintln!("{}", crate::standards::v1::subsets::any::schema::snapshot::text::print_dsl(&snapshot));
+    eprintln!("{}", crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(&snapshot));
     eprintln!("LOWPOLY_FOREST_DSL_END");
 }

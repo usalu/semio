@@ -45,38 +45,7 @@
         "brushCandidateIndex": {"type": "integer", "minimum": 0, "x-semio-state": "window-transient"},
         "brushCandidates": {"type": "array", "items": {}, "x-semio-state": "window-transient"},
         "brushCandidateSourceHandleId": {"type": "string", "x-semio-state": "window-transient"},
-        "suggestionMenu": {"anyOf": [{"$ref": "#/definitions/Puzzle2dSuggestionMenu"}, {"type": "null"}], "x-semio-state": "window-transient"},
-        "selectTool": {"anyOf": [{"$ref": "#/definitions/Puzzle2dSelectToolState"}, {"type": "null"}], "x-semio-state": "window-transient"}
-      }
-    },
-    "Puzzle2dSelectToolState": {
-      "description": "🛠️ A window's in-flight select-tool gesture between dispatches: the statechart configuration by stable ids, the admission and document revision it opened on, whether its drop connects, and the open tool transaction's provisional entries. Ephemeral tool state, never history.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["states", "verb", "authoringSeed", "baseRevision", "connect", "transaction", "entries"],
-      "properties": {
-        "states": {"type": "array", "items": {"type": "string", "minLength": 1}, "x-semio-state": "window-transient"},
-        "verb": {"type": "string", "minLength": 1, "x-semio-state": "window-transient"},
-        "authoringSeed": {"type": "string", "x-semio-state": "window-transient"},
-        "baseRevision": {"type": "string", "x-semio-state": "window-transient"},
-        "connect": {"type": "boolean", "x-semio-state": "window-transient"},
-        "transaction": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["id", "tool"],
-          "properties": {"id": {"type": "string", "minLength": 1}, "tool": {"type": "string", "minLength": 1}},
-          "x-semio-state": "window-transient"
-        },
-        "entries": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["key", "mutation"],
-            "properties": {"key": {"type": "string", "minLength": 1}, "mutation": { "description": "One provisional puzzle 2d mutation in value form — a branch of https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/mutations.json, internally tagged on `mutation` with the camelCase variant name.", "type": "object", "required": ["mutation"], "properties": { "mutation": { "type": "string", "minLength": 1 } } }}
-          },
-          "x-semio-state": "window-transient"
-        }
+        "suggestionMenu": {"anyOf": [{"$ref": "#/definitions/Puzzle2dSuggestionMenu"}, {"type": "null"}], "x-semio-state": "window-transient"}
       }
     }
   },

@@ -100,9 +100,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -167,7 +166,6 @@
       "notes": "Panning the jack graph window retains its camera and leaves the LOD mode alone."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-lod-mode-applied",
       "class": "handcrafted",
       "target": {

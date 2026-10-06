@@ -31,7 +31,7 @@ fn verdicts_for(vectors: &[Json]) -> Vec<Json> {
 
 #[cfg(feature = "sut")]
 fn vectors_are_ignored_the_same_way(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📡️ignore-vectors.json")?;
+    let file = ctx.input_json("shared://📡️ignore-vectors.json")?;
     Ok(Outcome::projection(Json::Object(vec![("verdicts".to_string(), Json::Array(verdicts_for(&file.array("vectors"))))])))
 }
 

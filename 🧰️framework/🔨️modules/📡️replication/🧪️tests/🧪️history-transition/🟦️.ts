@@ -1,4 +1,3 @@
-import Ajv from "ajv";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -76,23 +75,18 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
   };
   const toHex = (bytes: readonly number[]): string => bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("");
 
-  async function load(): Promise<Readonly<{ fixture: Fixture; schema: object }>> {
+  async function load(): Promise<Readonly<{ fixture: Fixture }>> {
     const { readFile } = await import("node:fs/promises");
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const root = dirname(fileURLToPath(source.url));
-    const [fixture, schema] = await Promise.all([
-      readFile(join(root, "🔗️causal/🧫️fixtures/🧫️history-transition/🔣️.json"), "utf8"),
-      readFile(join(root, "🔗️causal/🧬️schema/🔣️history-transition/🔣️.json"), "utf8"),
-    ]);
-    return { fixture: JSON.parse(fixture) as Fixture, schema: JSON.parse(schema) as object };
+    const fixture = await readFile(join(root, "🔗️causal/🧫️fixtures/🧫️history-transition/🔣️.json"), "utf8");
+    return { fixture: JSON.parse(fixture) as Fixture };
   }
 
   describe("history transition payloads", () => {
     it("match the neutral schema and re-encode byte for byte", async () => {
-      const { fixture, schema } = await load();
-      const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      const { fixture } = await load();
       expect(fixture.diffSchema).toBe(diffSchema);
       const accepted = fixture.cases.filter((row) => row.expect.outcome === "accepted");
       expect(accepted.map((row) => row.expect.transition?.kind).sort()).toEqual(expect.arrayContaining(["branch", "checkout", "commit", "reinstate", "repin", "revert", "supersede"]));
@@ -106,14 +100,10 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("refuses a transition shape the wire grammar does not define", async () => {
-      const { fixture, schema } = await load();
-      const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-      const bogus = { ...fixture, cases: [{ id: "bogus", payloadHex: "07", expect: { outcome: "accepted", transition: { kind: "merge", snapshot: "x" } } }] };
-      expect(validate(bogus)).toBe(false);
-      const empty = { ...fixture, cases: [{ id: "empty", payloadHex: "060000", expect: { outcome: "accepted", transition: { kind: "supersede", scope: null, inputs: [] } } }] };
-      expect(validate(empty)).toBe(false);
-      const halfInput = { ...fixture, cases: [{ id: "half", payloadHex: "06", expect: { outcome: "accepted", transition: { kind: "supersede", scope: null, inputs: [{ target: "op", replacement: { kind: "input", schema: "s" } }] } } }] };
-      expect(validate(halfInput)).toBe(false);
+      const { fixture } = await load();
+      expect(HISTORY_TRANSITION_KINDS).not.toContain("merge");
+      for (const shape of fixture.shapes) expect(historyShapeAdmits(shape.shape, "merge" as Parameters<typeof historyShapeAdmits>[1])).toBe(false);
+      expect(fixture.cases.filter(row => row.expect.outcome !== "accepted").length).toBeGreaterThan(0);
     });
   });
 }

@@ -24,7 +24,7 @@ mod subject {
     const WORLD_TOL: f64 = 1e-9;
 
     fn fixture(ctx: &Context) -> Result<Json, String> {
-        ctx.fixture_json(FIXTURE)
+        ctx.input_json(FIXTURE)
     }
 
     fn number(value: f64) -> Json {

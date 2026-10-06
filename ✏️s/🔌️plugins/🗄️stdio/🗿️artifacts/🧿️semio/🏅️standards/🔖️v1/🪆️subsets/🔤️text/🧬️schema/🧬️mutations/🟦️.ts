@@ -54,5 +54,5 @@ export type SemioTextMutation =
   | { ReorderRuns: ReorderRuns }
   | { AddMark: AddMark }
   | { RemoveMark: RemoveMark }
-  | { SetSnapshot: SetSnapshot };
+  | { SetSnapshot: SetSnapshot }
   | { readonly PatchSnapshot: { readonly patch: SnapshotPatch } }

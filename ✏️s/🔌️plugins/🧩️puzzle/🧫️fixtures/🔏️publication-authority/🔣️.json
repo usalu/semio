@@ -13,10 +13,10 @@
           ],
           "routes": [
             "copy",
-            "exportFixture",
+            "exportSnapshot",
             "lodScaleJson",
             "openAddNodeDialog",
-            "openImportFixture",
+            "openImportSnapshot",
             "setBrushNodeSize"
           ]
         },
@@ -33,7 +33,7 @@
             "deleteTargetRegion",
             "forceLayout",
             "import-media",
-            "importFixture",
+            "importSnapshot",
             "proximityConnect",
             "redrawHandles",
             "relocateTargetRegion",
@@ -178,9 +178,9 @@
             "host-only"
           ],
           "routes": [
-            "exportFixture",
+            "exportSnapshot",
             "openAddObjectDialog",
-            "openImportFixture",
+            "openImportSnapshot",
             "registerBrushMesh",
             "targetBrushSuggestions",
             "worldPointerDown"
@@ -229,7 +229,7 @@
             "createAttraction",
             "deleteAttraction",
             "deleteTargetVolume",
-            "importFixture",
+            "importSnapshot",
             "patchInspector",
             "relocateTargetVolume",
             "rotateSelection",
@@ -352,7 +352,7 @@
             "duplicateSelection",
             "editFastener",
             "import-media",
-            "importFixture",
+            "importSnapshot",
             "paste",
             "patchFastener",
             "patchGrip",
@@ -394,9 +394,9 @@
           "routes": [
             "canvasPointerDown",
             "copy",
-            "exportFixture",
+            "exportSnapshot",
             "openAddPartDialog",
-            "openImportFixture",
+            "openImportSnapshot",
             "registerBrushMesh",
             "targetBrushSuggestions",
             "worldPointerDown"

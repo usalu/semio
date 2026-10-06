@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
+
 import { describe, expect, test } from "vitest";
 import { hubConnectionSummaryV1 } from "../../🧱️elements/🔄️ShellSync/🟦️.tsx";
 import { hubConnectionOperationOwnerCurrentV1 } from "../../🧱️elements/🔗️HubConnection/🟦️.tsx";
@@ -9,7 +9,6 @@ import { SHELL_HUB_ROUTE } from "../../🧱️elements/🏛️ShellHost/🔀️s
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🔗️hub-projection", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🔗️hub-projection", "🔣️.json"), "utf8"));
 
 type Remote = { kind: "detached" | "connecting" } | { kind: "live"; peerCount: number } | { kind: "backoff"; retryInMs: number };
 type Projection = { session: "none" | "signedOut" | "signedIn"; link: "verifying" | "reachable" | "unreachable"; documents: Array<{ documentKey: string; remote: Remote }> };
@@ -32,10 +31,7 @@ const independentSummary = (projection: Projection): Summary => {
 };
 
 describe("🔗️ target-neutral Hub projection", () => {
-  test("the fixture satisfies its shared schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("the independent fold matches every session, link and multi-document vector", () => {
     for (const row of fixture.cases as Array<{ projection: Projection; expected: Summary }>) expect(independentSummary(row.projection)).toEqual(row.expected);

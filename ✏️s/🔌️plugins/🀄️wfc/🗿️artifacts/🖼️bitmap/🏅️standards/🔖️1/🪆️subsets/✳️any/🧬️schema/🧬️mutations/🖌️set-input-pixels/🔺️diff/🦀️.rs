@@ -2,12 +2,10 @@
 //! never a whole-buffer capture.
 
 use crate::diff::{BitmapDiff, BitmapPixelRegion};
-use crate::schema::snapshot::{decode_base64, read_region, BitmapSnapshot};
+use crate::schema::snapshot::{read_region, BitmapSnapshot};
 
 pub fn diff(payload: &super::SetInputPixels, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
-    let Some(region) = decode_base64(&payload.pixels) else {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "The region payload is not base64.".to_string(), ["pixels".to_string()]);
-    };
+    let region = &payload.pixels;
     if payload.width == 0 || payload.height == 0 || region.len() != (payload.width as usize) * (payload.height as usize) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("The region payload holds {} bytes, not {}×{}.", region.len(), payload.width, payload.height), ["pixels".to_string()]);
     }

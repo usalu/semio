@@ -452,9 +452,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-layer-fill-recolors-a-node",
       "class": "third-party-generated",
       "target": {
@@ -507,7 +506,6 @@
       "notes": "Only the fill channel changes; geometry, stroke and structure are untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-layer-stroke-changes-outline",
       "class": "third-party-generated",
       "target": {
@@ -560,7 +558,6 @@
       "notes": "Only the stroke color and width change; fill and geometry are untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-layer-opacity-fades-a-node",
       "class": "third-party-generated",
       "target": {
@@ -613,7 +610,6 @@
       "notes": "Only the opacity channel changes, on a Path layer where the leaf references the interned style; an Image-layer target would not be witnessable here (see this kind's own notes)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "carrier-set-layer-blend-mode",
       "class": "third-party-generated",
       "target": {

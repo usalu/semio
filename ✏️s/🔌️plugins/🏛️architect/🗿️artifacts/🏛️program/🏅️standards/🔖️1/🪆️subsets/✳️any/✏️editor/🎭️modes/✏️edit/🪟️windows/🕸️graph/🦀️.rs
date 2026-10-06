@@ -35,6 +35,7 @@ pub const ARCHITECT_GRAPH_MARGIN: f64 = 24.0;
 /// 🏛️ Stitched into the app manifest by `crate::editor::architect::create_architect_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: ARCHITECT_WINDOW_GRAPH.into(),
         label: LocalizedLabel::native("Graph", "Graph"),
         body_key: ARCHITECT_BODY_GRAPH.into(),

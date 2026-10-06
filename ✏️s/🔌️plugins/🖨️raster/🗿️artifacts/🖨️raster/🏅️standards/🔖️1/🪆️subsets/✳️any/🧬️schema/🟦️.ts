@@ -2,7 +2,8 @@
 import { parseDslValue, type DslValue, type IntrinsicValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
-import {type Binary64,type Binary32,parseBinary64Transport,parseBinary32Transport,binary64,binary64Value,binary32Value} from "../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { type Binary64, type Binary32, binary64, binary64Value, binary32Value } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64, parseBinary32 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 
 export interface RasterArtifact {
   schema: string;
@@ -161,7 +162,7 @@ export function parseRasterLayerNode(value: unknown, at = "$"): RasterLayerNode 
     name: rasterRasterArtifactGuardString(row["name"], `${at}.name`),
     visible: rasterRasterArtifactGuardBoolean(row["visible"], `${at}.visible`),
     locked: rasterRasterArtifactGuardBoolean(row["locked"], `${at}.locked`),
-    opacity: parseBinary32Transport(row["opacity"]),
+    opacity: parseBinary32(row["opacity"]),
     blendMode: rasterRasterArtifactGuardString(row["blendMode"], `${at}.blendMode`),
     transform: parseRasterTransform(row["transform"], `${at}.transform`),
   };
@@ -197,12 +198,12 @@ export function parseRasterLayerNode(value: unknown, at = "$"): RasterLayerNode 
 export function parseRasterTransform(value: unknown, at = "$"): RasterTransform {
   const row = rasterRasterArtifactGuardObject(value, at);
   return {
-    x: parseBinary64Transport(row["x"]),
-    y: parseBinary64Transport(row["y"]),
-    a: parseBinary64Transport(row["a"]),
-    b: parseBinary64Transport(row["b"]),
-    c: parseBinary64Transport(row["c"]),
-    d: parseBinary64Transport(row["d"]),
+    x: parseBinary64(row["x"]),
+    y: parseBinary64(row["y"]),
+    a: parseBinary64(row["a"]),
+    b: parseBinary64(row["b"]),
+    c: parseBinary64(row["c"]),
+    d: parseBinary64(row["d"]),
   };
 }
 

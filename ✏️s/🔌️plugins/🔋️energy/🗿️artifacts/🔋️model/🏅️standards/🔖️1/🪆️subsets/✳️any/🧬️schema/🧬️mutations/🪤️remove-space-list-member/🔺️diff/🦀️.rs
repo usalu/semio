@@ -16,6 +16,6 @@ pub fn diff(payload: &super::RemoveSpaceListMember, base: &EnergyModelSnapshot) 
     if let Some(item) = model.space_lists.iter_mut().find(|item| item.id == payload.id) {
         item.space_ids.retain(|candidate| *candidate != payload.space_id);
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

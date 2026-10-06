@@ -8,7 +8,7 @@ export interface Gis2dMapWindowViewModel {
   windowKindId: "gis2d-main";
   bodyKey: "gis2d.play.composite";
   surfaceId: "gis2d.play.composite";
-  mapFixtureJson: string;
+  mapDescriptorJson: string;
   cameraJson: string;
   renderMode: "image" | "vector" | "combined";
   vectorStyle: "colored" | "figureGround" | "invertedFigure";

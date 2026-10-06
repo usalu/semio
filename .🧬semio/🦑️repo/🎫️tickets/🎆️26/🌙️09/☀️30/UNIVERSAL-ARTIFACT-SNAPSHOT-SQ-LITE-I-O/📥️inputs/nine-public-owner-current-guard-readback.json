@@ -1,0 +1,125 @@
+{
+  "qualification": "Read-only source guards, not compilation/runtime",
+  "rows": [
+    {
+      "owner": "fem2d",
+      "guards": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "exactBeforeCurrent": true,
+          "appendOnly": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+          "exactBeforeCurrent": true,
+          "appendOnly": false
+        }
+      ]
+    },
+    {
+      "owner": "fem3d",
+      "guards": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "exactBeforeCurrent": true,
+          "appendOnly": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+          "exactBeforeCurrent": true,
+          "appendOnly": false
+        }
+      ]
+    },
+    {
+      "owner": "layout",
+      "guards": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "exactBeforeCurrent": true,
+          "appendOnly": true
+        }
+      ]
+    },
+    {
+      "owner": "rewriting",
+      "guards": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "exactBeforeCurrent": true,
+          "appendOnly": true
+        }
+      ]
+    },
+    {
+      "owner": "jack",
+      "guards": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "exactBeforeCurrent": true,
+          "appendOnly": true
+        }
+      ]
+    },
+    {
+      "owner": "puzzle3d",
+      "guards": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "exactBeforeCurrent": true,
+          "appendOnly": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+          "exactBeforeCurrent": true,
+          "appendOnly": false
+        }
+      ]
+    },
+    {
+      "owner": "block2d",
+      "guards": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "exactBeforeCurrent": true,
+          "appendOnly": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+          "exactBeforeCurrent": true,
+          "appendOnly": false
+        }
+      ]
+    },
+    {
+      "owner": "block3d",
+      "guards": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "exactBeforeCurrent": true,
+          "appendOnly": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+          "exactBeforeCurrent": true,
+          "appendOnly": false
+        }
+      ]
+    },
+    {
+      "owner": "block5d",
+      "guards": [
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+          "exactBeforeCurrent": true,
+          "appendOnly": true
+        },
+        {
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+          "exactBeforeCurrent": true,
+          "appendOnly": false
+        }
+      ]
+    }
+  ]
+}

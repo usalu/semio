@@ -2,7 +2,7 @@
 use crate::{PathSegment,FillRule,FillStyle,StrokeStyle};
 use crate::schema::DrawingSceneGroup;
 use semio_framework_pixels::{RasterImage,image_decoding::{ImageDecodeInput,ImageDecodeJob,ImageDecodeProgress}};
-use semio_framework_pixels::affine_sampling::{AffineImageJob,AffineImageInput,AffineSampling};
+use semio_framework_pixels::affine_sampling::{AffineImageJob,AffineImageInput,AffineSampling,AffineImageRetirement};
 use std::sync::Arc;
 #[derive(Clone,Debug)]
 pub struct RasterSceneAsset{pub id:String,pub mime:String,pub data:Arc<String>}
@@ -14,8 +14,8 @@ pub struct RasterSceneNode {pub id:String,pub groups:Vec<DrawingSceneGroup>,pub 
 pub struct RasterSceneInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub tolerance:f64,pub max_pixels:usize,pub max_source_bytes:usize,pub max_bytes:usize,pub max_chunks:usize,pub assets:Vec<RasterSceneAsset>,pub nodes:Vec<RasterSceneNode>}
 #[derive(Clone,Debug)]
 pub struct RasterSceneProgress {pub phase:&'static str,pub nodes:usize,pub total_nodes:usize,pub pixels:usize,pub assets:usize,pub total_assets:usize,pub source_bytes:usize,pub decodes:usize,pub decoding:Option<ImageDecodeProgress>,pub work:u64,pub done:bool}
-use crate::schema::geometry::{arc_geometry,raster::{PathRasterJob,PathRasterInput}};
-use semio_framework_pixels::{editing::{validate_extent,validate_image},compositing::{CompositeJob,CompositeInput,CompositeLayer,CompositeContent,CompositeBlend}};
+use crate::schema::geometry::{arc_geometry,raster::{PathRasterJob,PathRasterInput,PathRasterRetirement}};
+use semio_framework_pixels::{editing::{validate_extent,validate_image},compositing::{CompositeJob,CompositeRetirement,CompositeInput,CompositeLayer,CompositeContent,CompositeBlend}};
 use std::collections::{BTreeMap,BTreeSet,VecDeque};
 const IDENTITY:[f64;6]=[1.0,0.0,0.0,1.0,0.0,0.0];
 #[derive(Clone,Debug,PartialEq,Eq)]
@@ -40,14 +40,15 @@ pub struct RasterSceneJob {
  catalog:BTreeMap<String,RasterSceneAsset>,decoded:BTreeMap<String,Arc<RasterImage>>,decoder:Option<ImageDecodeJob>,decoder_key:String,decoder_charged:bool,decoding:Option<ImageDecodeProgress>,
  nodes:usize,group_at:usize,pixels:usize,work:u64,entries:usize,phase:&'static str,current:Option<RasterSceneNode>,
  stack:Vec<Scope>,root:Vec<CompositeLayer>,closed:BTreeSet<String>,ids:BTreeSet<String>,images:BTreeMap<String,Arc<RasterImage>>,
- segment:usize,from:[f64;2],start:[f64;2],contour:bool,bounds:[f64;4],crop:[f64;6],painter:Option<PathRasterJob>,sampler:Option<AffineImageJob>,compositor:Option<CompositeJob>,output:Option<RasterImage>,cancelled:bool,failure:Option<RasterSceneError>,
+ segment:usize,from:[f64;2],start:[f64;2],contour:bool,bounds:[f64;4],crop:[f64;6],painter:Option<PathRasterJob>,sampler:Option<AffineImageJob>,compositor:Option<CompositeJob>,compositor_retirement:Option<CompositeRetirement>,output:Option<RasterImage>,cancelled:bool,failure:Option<RasterSceneError>,
+ painter_retirement:Option<PathRasterRetirement>,painted:Option<RasterImage>,sampler_retirement:Option<AffineImageRetirement>,sampled:Option<RasterImage>,
 }
 impl RasterSceneJob {
  pub fn new(input:RasterSceneInput)->Result<Self,RasterSceneError>{
   validate_extent(input.width,input.height).map_err(invalid)?;
   if !input.origin.into_iter().all(coordinate)||!input.tolerance.is_finite()||!(1e-6..=16.0).contains(&input.tolerance)||!(1..=67_108_864).contains(&input.max_pixels)||input.nodes.len()>1024||input.assets.len()>1024||!(1..=268439552).contains(&input.max_source_bytes)||!(8..=67108864).contains(&input.max_bytes)||!(1..=65536).contains(&input.max_chunks){return Err(invalid("Invalid scene raster contract"));}
   let total_nodes=input.nodes.len();let total_assets=input.assets.len();
-  Ok(Self{width:input.width,height:input.height,origin:input.origin,tolerance:input.tolerance,max_pixels:input.max_pixels,total_nodes,source:input.nodes.into(),max_source_bytes:input.max_source_bytes,max_bytes:input.max_bytes,max_chunks:input.max_chunks,total_assets,asset_source:input.assets.into(),assets:0,source_bytes:0,decodes:0,catalog:BTreeMap::new(),decoded:BTreeMap::new(),decoder:None,decoder_key:String::new(),decoder_charged:false,decoding:None,nodes:0,group_at:0,pixels:0,work:0,entries:0,phase:"assets",current:None,stack:Vec::new(),root:Vec::new(),closed:BTreeSet::new(),ids:BTreeSet::new(),images:BTreeMap::new(),segment:0,from:[0.0;2],start:[0.0;2],contour:false,bounds:[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY],crop:IDENTITY,painter:None,sampler:None,compositor:None,output:None,cancelled:false,failure:None})
+  Ok(Self{width:input.width,height:input.height,origin:input.origin,tolerance:input.tolerance,max_pixels:input.max_pixels,total_nodes,source:input.nodes.into(),max_source_bytes:input.max_source_bytes,max_bytes:input.max_bytes,max_chunks:input.max_chunks,total_assets,asset_source:input.assets.into(),assets:0,source_bytes:0,decodes:0,catalog:BTreeMap::new(),decoded:BTreeMap::new(),decoder:None,decoder_key:String::new(),decoder_charged:false,decoding:None,nodes:0,group_at:0,pixels:0,work:0,entries:0,phase:"assets",current:None,stack:Vec::new(),root:Vec::new(),closed:BTreeSet::new(),ids:BTreeSet::new(),images:BTreeMap::new(),segment:0,from:[0.0;2],start:[0.0;2],contour:false,bounds:[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY],crop:IDENTITY,painter:None,painter_retirement:None,painted:None,sampler:None,sampler_retirement:None,sampled:None,compositor:None,compositor_retirement:None,output:None,cancelled:false,failure:None})
  }
  fn layers(&mut self)->&mut Vec<CompositeLayer>{self.stack.last_mut().map_or(&mut self.root,|s|&mut s.layers)}
  fn active(&self)->bool{let n=self.current.as_ref().unwrap();n.visible&&n.opacity>0.0&&self.stack.iter().all(|s|s.group.opacity>0.0)}
@@ -176,9 +177,12 @@ impl RasterSceneJob {
     },
    }
   }else if self.phase=="bounds"{self.bound()?;}
-  else if self.phase=="path"{if self.painter.as_mut().unwrap().advance(1).map_err(invalid)?.done{let image=self.painter.take().unwrap().into_result().map_err(invalid)?;self.add(Arc::new(image),self.crop)?;}}
-  else if self.phase=="image"{if self.sampler.as_mut().unwrap().advance(1).map_err(invalid)?.done{let image=self.sampler.take().unwrap().into_result().map_err(invalid)?;self.add(Arc::new(image),self.crop)?;}}
-  else if self.phase=="compositing"{if self.compositor.as_mut().unwrap().advance(1).map_err(invalid)?.done{self.output=Some(self.compositor.take().unwrap().into_result().map_err(invalid)?);self.current=None;self.phase="complete";}}
+  else if self.phase=="path"{if self.painter.as_mut().unwrap().advance(1).map_err(invalid)?.done{let(retired,image)=self.painter.take().unwrap().into_retirement();self.painter_retirement=Some(retired);self.painted=image;self.phase="pathCleanup";}}
+  else if self.phase=="pathCleanup"{if !self.painter_retirement.as_ref().unwrap().terminal_is_empty(){self.painter_retirement.as_mut().unwrap().advance(1).map_err(invalid)?;}else{self.painter_retirement=None;let image=self.painted.take().unwrap();self.add(Arc::new(image),self.crop)?;}}
+  else if self.phase=="image"{if self.sampler.as_mut().unwrap().advance(1).map_err(invalid)?.done{let(retired,image)=self.sampler.take().unwrap().into_retirement();self.sampler_retirement=Some(retired);self.sampled=image;self.phase="imageCleanup";}}
+  else if self.phase=="imageCleanup"{if !self.sampler_retirement.as_ref().unwrap().terminal_is_empty(){self.sampler_retirement.as_mut().unwrap().advance(1).map_err(invalid)?;}else{self.sampler_retirement=None;let image=self.sampled.take().unwrap();self.add(Arc::new(image),self.crop)?;}}
+  else if self.phase=="compositing"{if self.compositor.as_mut().unwrap().advance(1).map_err(invalid)?.done{let(retired,image)=self.compositor.take().unwrap().into_retirement();self.compositor_retirement=Some(retired);self.output=image;self.phase="compositingCleanup";}}
+  else if self.phase=="compositingCleanup"{if !self.compositor_retirement.as_ref().unwrap().terminal_is_empty(){self.compositor_retirement.as_mut().unwrap().advance(1).map_err(invalid)?;}else{self.compositor_retirement=None;self.current=None;self.phase="complete";}}
   Ok(())
  }
  pub fn advance(&mut self,budget:usize)->Result<RasterSceneProgress,RasterSceneError>{
@@ -187,7 +191,7 @@ impl RasterSceneJob {
   for _ in 0..budget{if self.phase=="complete"{break;}if let Err(error)=self.step(){self.failure=Some(error.clone());self.clear();return Err(error);}self.work+=1;}
   Ok(RasterSceneProgress{phase:self.phase,nodes:self.nodes,total_nodes:self.total_nodes,pixels:self.pixels,assets:self.assets,total_assets:self.total_assets,source_bytes:self.source_bytes,decodes:self.decodes,decoding:self.decoding,work:self.work,done:self.phase=="complete"})
  }
- fn clear(&mut self){if let Some(job)=&mut self.decoder{job.cancel();}self.decoder=None;self.decoder_key=String::new();self.decoding=None;self.asset_source=VecDeque::new();self.catalog=BTreeMap::new();self.decoded=BTreeMap::new();if let Some(job)=&mut self.painter{job.cancel();}if let Some(job)=&mut self.sampler{job.cancel();}if let Some(job)=&mut self.compositor{job.cancel();}self.painter=None;self.sampler=None;self.compositor=None;self.output=None;self.current=None;self.source=VecDeque::new();self.stack=Vec::new();self.root=Vec::new();self.images=BTreeMap::new();self.ids.clear();self.closed.clear();}
+ fn clear(&mut self){if let Some(job)=&mut self.decoder{job.cancel();}self.decoder=None;self.decoder_key=String::new();self.decoding=None;self.asset_source=VecDeque::new();self.catalog=BTreeMap::new();self.decoded=BTreeMap::new();if let Some(job)=&mut self.painter{job.cancel();}if let Some(job)=&mut self.sampler{job.cancel();}if let Some(job)=&mut self.compositor{job.cancel();}self.painter=None;self.painter_retirement=None;self.painted=None;self.sampler=None;self.sampler_retirement=None;self.sampled=None;self.compositor=None;self.compositor_retirement=None;self.output=None;self.current=None;self.source=VecDeque::new();self.stack=Vec::new();self.root=Vec::new();self.images=BTreeMap::new();self.ids.clear();self.closed.clear();}
  pub fn cancel(&mut self){self.cancelled=true;self.clear();}
  pub fn result(&self)->Result<&RasterImage,RasterSceneError>{if self.cancelled{return Err(RasterSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if self.phase!="complete"{return Err(RasterSceneError::Incomplete);}Ok(self.output.as_ref().unwrap())}
  pub fn into_result(mut self)->Result<RasterImage,RasterSceneError>{self.result()?;Ok(self.output.take().unwrap())}

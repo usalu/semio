@@ -287,7 +287,7 @@ pub fn scene_from_semio_cloud(semio: &SemioMeshSnapshot) -> Result<RemodelingSna
 /// 🖼️ One PNG file as a whole scene: a single-frame `MediaKind::ImageSequence` stream whose frame
 /// points at a real durable image asset, the same shape `📥️import-frames` builds for a photo set.
 pub fn scene_from_png_bytes(bytes: &[u8]) -> Result<RemodelingSnapshot, String> {
-    let png = semio_s_artifact_stdio_png::io::png_layout_bytes(bytes)?;
+    let png = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::png_layout_bytes(bytes)?;
     let asset = ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(bytes), width: png.width, height: png.height };
     let asset_id = "png-import-0".to_string();
     let mut scene = default_remodeling_scene();
@@ -342,7 +342,7 @@ fn ensure_stdio_semio_and_png_registered() {
 
 pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     ensure_stdio_semio_and_png_registered();
-    let png_snapshot = semio_s_artifact_stdio_png::io::decode_png(raw_png_bytes)?;
+    let png_snapshot = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(raw_png_bytes)?;
     let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
     let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }])).map_err(|error| error.message)?;
@@ -357,7 +357,7 @@ pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<V
     let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
     let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
-    semio_s_artifact_stdio_png::io::encode_png(&png_snapshot)
+    semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&png_snapshot)
 }
 
 /// 🧩️ Real bidirectional CHILD-CONTENT converters between `ImageAsset` (mime + base64 text, the
@@ -387,7 +387,7 @@ pub fn image_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Resu
 /// `📥️import` leaf's `deserialize_bytes`, all of which were cross-type `ArtifactPack` casts. Foreign
 /// dialects now reach this subset only through the typed `IoEntry` rows `io()` publishes.
 pub mod derived_composition {
-    use crate::standards::v1::subsets::any::schema::RemodelingAnalyzer;
+    use crate::standards::v1::subsets::any::io::RemodelingAnalyzer;
     use crate::RemodelingSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -429,7 +429,7 @@ pub use derived_composition::*;
 /// `compose_export_*` rows that sat beside it are deleted (see this file's module doc); every foreign
 /// hop now lives on the typed `io()` channel below.
 pub fn native_composer_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
-    use crate::standards::v1::subsets::any::schema::RemodelingComposer;
+    use crate::standards::v1::subsets::any::io::RemodelingComposer;
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>> = std::sync::OnceLock::new();
     ENTRIES.get_or_init(|| vec![semio_framework_plugin::composer_entry_of::<RemodelingComposer>()]).as_slice()
 }
@@ -457,20 +457,20 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     id: "remodeling.document",
                     extension: Some("remodeling"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("remodeling.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "remodeling.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("remodeling.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -489,8 +489,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("remodeling.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -499,8 +499,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("remodeling.spr"),
                 },
             ]
@@ -552,3 +552,122 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 #[path = "🧪️tests/🔬️io/🦀️.rs"]
 mod io_tests;
 //#endregion 🧪️Tests
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::schema::diff::RemodelingDiff;
+    use crate::schema::mutations::RemodelingMutation;
+    use crate::schema::snapshot::RemodelingSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug, Default)]
+    pub struct RemodelingBuilderConstruction {
+        snapshot: RemodelingSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for RemodelingBuilderConstruction {
+        type Snapshot = RemodelingSnapshot;
+        type Mutation = RemodelingMutation;
+        type Diff = RemodelingDiff;
+        fn empty() -> Self {
+            Self { snapshot: RemodelingSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<RemodelingSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
+            }
+            (self, outcome)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <RemodelingDiff as protocol::MutationDiff<RemodelingSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::RemodelingSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    #[derive(Clone, Debug, Default)]
+    pub struct RemodelingParts {
+        pub snapshot: Option<RemodelingSnapshot>,
+    }
+
+    pub struct RemodelingAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for RemodelingAnalyzerAnalysis {
+        type Parts = RemodelingParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
+
+        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+            IoConfidence::Medium
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = RemodelingParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => match <RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                    AnalyzeSource::Binary(bytes) => match <RemodelingSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
+                    },
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec RemodelingBuilderFacets {
+        construction: RemodelingBuilderConstruction,
+        analysis: RemodelingAnalyzerAnalysis,
+        composition: crate::standards::v1::subsets::any::io::derived_composition::RemodelingComposerComposition,
+    }
+    builder: RemodelingBuilder,
+    analyzer: RemodelingAnalyzer,
+    composer: RemodelingComposer,
+);

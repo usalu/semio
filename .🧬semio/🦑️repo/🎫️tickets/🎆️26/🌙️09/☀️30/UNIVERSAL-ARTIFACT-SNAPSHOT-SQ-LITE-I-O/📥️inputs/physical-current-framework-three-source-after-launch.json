@@ -1,0 +1,28 @@
+{
+  "commands": [
+    [
+      "bun",
+      "run",
+      "nx",
+      "run-many",
+      "--target=test-snapshot-sqlite-source",
+      "--projects=@semio-tech/framework-space-space-rs,@semio-tech/framework-space-collection-rs",
+      "--parallel=2",
+      "--skip-nx-cache",
+      "--outputStyle=stream",
+      "--excludeTaskDependencies"
+    ],
+    [
+      "bun",
+      "run",
+      "nx",
+      "run",
+      "@semio-tech/framework-os-kernel:test-space-history-sqlite-source",
+      "--skip-nx-cache",
+      "--outputStyle=stream",
+      "--excludeTaskDependencies"
+    ]
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-framework-three-source-after-complete-provider.log",
+  "status": "After complete domain providers and Root artifact-owned publication; original History Source predicates unchanged"
+}

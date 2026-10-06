@@ -9,7 +9,7 @@
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle
@@ -79,8 +79,8 @@ export default defineTestAdapter({
   scenarios: {
     "rewriting-a-line-and-reading-it-back-agrees": {
       oracle: (ctx) => {
-        const schema = JSON.parse(readFileSync(ctx.fixture("schema://repo.todos/Todo"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
-        const vectors = JSON.parse(readFileSync(ctx.fixture("shared://📝️line-vectors.json"), "utf8")) as Vectors;
+        const schema = JSON.parse(readFileSync(ctx.input("schema://repo.todos/Todo"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
+        const vectors = JSON.parse(readFileSync(ctx.input("shared://📝️line-vectors.json"), "utf8")) as Vectors;
         const ajv = new Ajv2020({ strict: false, allErrors: true });
         const validate = ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/LineVectors" });
         if (!validate(vectors)) throw new Error(`📝️line-vectors.json does not satisfy LineVectors: ${ajv.errorsText(validate.errors)}`);

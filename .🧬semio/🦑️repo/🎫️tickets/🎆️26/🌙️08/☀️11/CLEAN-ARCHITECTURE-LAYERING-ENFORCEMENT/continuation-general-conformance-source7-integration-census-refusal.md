@@ -1,0 +1,3 @@
+# General Conformance Source Seven Integration Census
+
+The ordered 24 include substitutions retain exact full-body inverses and declared relative owning targets. The unsupported-ticket-include detector only recognizes one exact concat/env macro spelling, however. Direct include literals and whitespace-formatted concat expressions can evade that regex. The distinct live integration protocol requires a comprehensive unsupported ticket-include refusal boundary before publication admission. No Ready Source7 proof is emitted until this scope is corrected or explicitly narrowed without claiming a complete census.

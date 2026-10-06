@@ -29,5 +29,5 @@ pub fn patch_inspector(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     if !matches!(field, "hidden" | "locked") && ctx.refuse_when_locked(&ids) {
         return;
     }
-    patch_inspector_nodes(&mut ctx.scene.fixture, &ids, field, value, delta);
+    patch_inspector_nodes(&mut ctx.scene.board_snapshot, &ids, field, value, delta);
 }

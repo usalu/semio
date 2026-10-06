@@ -8,8 +8,8 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 #[cfg(feature = "sut")]
 fn author_lines_resolve_to_aliases(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_contributors as contributors;
-    let documents = ctx.fixture_json("shared://🧑️‍💻️contributor-documents.json")?;
-    let log = ctx.fixture_json("shared://🏁️checkpoint-log.json")?;
+    let documents = ctx.input_json("shared://🧑️‍💻️contributor-documents.json")?;
+    let log = ctx.input_json("shared://🏁️checkpoint-log.json")?;
     let store = contributors::MemoryContributorStore::seeded(
         documents.array("documents").iter().map(|entry| (entry.str("directory"), entry.str("json"))).collect::<Vec<_>>(),
     );

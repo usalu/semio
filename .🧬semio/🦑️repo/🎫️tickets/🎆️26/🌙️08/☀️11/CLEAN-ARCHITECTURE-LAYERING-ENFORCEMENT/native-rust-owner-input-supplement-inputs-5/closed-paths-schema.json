@@ -1,0 +1,33 @@
+{
+  "type": "array",
+  "minItems": 6,
+  "maxItems": 6,
+  "items": {
+    "type": "object",
+    "required": [
+      "from",
+      "path",
+      "toml",
+      "source",
+      "expected"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "from": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "toml": {
+        "type": "string"
+      },
+      "source": {
+        "type": "string"
+      },
+      "expected": {
+        "type": "string"
+      }
+    }
+  }
+}

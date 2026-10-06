@@ -1,0 +1,852 @@
+[
+  {
+    "project": "@semio-tech/fem-2d-rs",
+    "start": 147,
+    "pass": 8,
+    "fail": 2,
+    "errors": [
+      [
+        24116,
+        "error: test run failed"
+      ],
+      [
+        24125,
+        "error: cargo exited with status 100"
+      ],
+      [
+        24137,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        24045,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem2d_populated_public_independent_raw_sql_edit_and_retirement' (16937077) panicked at 🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:65:263:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+      ],
+      [
+        24074,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem2d_populated_actual_app_public_binary_text_exact_owner' (16937078) panicked at 🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:65:263:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/fem-3d-rs",
+    "start": 24142,
+    "pass": 8,
+    "fail": 2,
+    "errors": [
+      [
+        47809,
+        "error: test run failed"
+      ],
+      [
+        47818,
+        "error: cargo exited with status 100"
+      ],
+      [
+        47830,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        47738,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem3d_populated_public_independent_raw_sql_edit_and_retirement' (16940181) panicked at 🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:65:263:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+      ],
+      [
+        47767,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::public_populated_owner::sqlite_snapshot_fem3d_populated_actual_app_public_binary_text_exact_owner' (16940190) panicked at 🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:65:263:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/draw-drawing-rs",
+    "start": 47835,
+    "pass": 4,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/trinity-jack-rs",
+    "start": 70963,
+    "pass": 14,
+    "fail": 2,
+    "errors": [
+      [
+        95172,
+        "error: test run failed"
+      ],
+      [
+        95181,
+        "error: cargo exited with status 100"
+      ],
+      [
+        95193,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        95093,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_jack_populated_actual_app_public_both_forms' (16949797) panicked at 🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:320:242:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+      ],
+      [
+        95122,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_jack_populated_public_independent_edit_retirement' (16949802) panicked at 🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:320:242:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/procedural-generation3d-rs",
+    "start": 95198,
+    "pass": 10,
+    "fail": 1,
+    "errors": [
+      [
+        121624,
+        "error: test run failed"
+      ],
+      [
+        121633,
+        "error: cargo exited with status 100"
+      ],
+      [
+        121650,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        121570,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_procedural_generation3d_controlled_native_input_preserves_complete_owned_state' (16966993) panicked at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/../../🦀️.rs:105:13:\n    final Dictionary ownership must be explicitly retired or owned by a cold boundary"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/energy-model-rs",
+    "start": 121655,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        142245,
+        "error[E0433]: cannot find `json` in `dsl`"
+      ],
+      [
+        142251,
+        "error[E0433]: cannot find `json` in `dsl`"
+      ],
+      [
+        142257,
+        "error[E0433]: cannot find `json` in `dsl`"
+      ],
+      [
+        143036,
+        "error[E0061]: this function takes 3 arguments but 4 arguments were supplied"
+      ],
+      [
+        143053,
+        "error[E0061]: this function takes 3 arguments but 4 arguments were supplied"
+      ],
+      [
+        143070,
+        "error[E0061]: this function takes 3 arguments but 4 arguments were supplied"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/gis-gismap-rs",
+    "start": 143131,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        165134,
+        "error[E0609]: no field `width` on type `PngSnapshot`"
+      ],
+      [
+        165142,
+        "error[E0609]: no field `height` on type `PngSnapshot`"
+      ],
+      [
+        165150,
+        "error[E0609]: no field `pixels` on type `PngSnapshot`"
+      ],
+      [
+        165160,
+        "error: could not compile `semio-s-artifact-gis-gismap` (lib test) due to 3 previous errors; 79 warnings emitted"
+      ],
+      [
+        165161,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-gis-gismap --lib` exited with code 101"
+      ],
+      [
+        165170,
+        "error: cargo exited with status 101"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/cad-cad-rs",
+    "start": 165187,
+    "pass": 14,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/forms-forms-rs",
+    "start": 191875,
+    "pass": 13,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/block-2d-rs",
+    "start": 216446,
+    "pass": 11,
+    "fail": 2,
+    "errors": [
+      [
+        234198,
+        "error: test run failed"
+      ],
+      [
+        234207,
+        "error: cargo exited with status 100"
+      ],
+      [
+        234219,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        234119,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_block2d_populated_public_independent_edit_retirement' (17030345) panicked at 🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:236:248:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+      ],
+      [
+        234148,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::populated_public_owner::sqlite_snapshot_block2d_populated_actual_app_public_both_forms' (17030339) panicked at 🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:236:248:\n    called `Result::unwrap()` on an `Err` value: PluginAssemblyError { code: \"plugin-assembly.artifact-owner\", message: \"artifact identity is not owned by the declaring plugin\" }"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/architect-program-rs",
+    "start": 234224,
+    "pass": 21,
+    "fail": 1,
+    "errors": [
+      [
+        256152,
+        "error: test run failed"
+      ],
+      [
+        256161,
+        "error: cargo exited with status 100"
+      ],
+      [
+        256172,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        256083,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_architect_owned_budget_refuses_large_fields_in_both_native_directions' (17041750) panicked at 🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:31:690:\n    assertion failed: ProgramSnapshot::decode_sqlite_snapshot_native(&input,"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/lowpoly-lowpoly-rs",
+    "start": 256177,
+    "pass": 5,
+    "fail": 1,
+    "errors": [
+      [
+        279808,
+        "error: test run failed"
+      ],
+      [
+        279817,
+        "error: cargo exited with status 100"
+      ],
+      [
+        279829,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        279765,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::managed_mesh::sqlite_snapshot_lowpoly_managed_mesh_complete_owner_and_independent_sql_edits' (17063265) panicked at 🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🕸️mesh/🦀️.rs:11:2:\n    assertion `left == right` failed: actual owning construction must preserve all seven managed mesh fields"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/animate-presentation-rs",
+    "start": 279834,
+    "pass": 10,
+    "fail": 1,
+    "errors": [
+      [
+        303164,
+        "error: test run failed"
+      ],
+      [
+        303173,
+        "error: cargo exited with status 100"
+      ],
+      [
+        303185,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        303140,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_presentation_exact_caller_limits_precede_all_ownership' (17124364) panicked at 🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:80:225:\n    assertion failed: PresentationSnapshot::decode_sqlite_snapshot_native(&native(&snapshot,"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/wfc-3d-rs",
+    "start": 303190,
+    "pass": 9,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/wfc-bitmap-rs",
+    "start": 321904,
+    "pass": 10,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/puzzle-3d-rs",
+    "start": 337454,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        357546,
+        "error[E0433]: cannot find module or crate `semio_framework_dispatch_macros` in this scope"
+      ],
+      [
+        357552,
+        "error[E0425]: cannot find type `PublicApps` in this scope"
+      ],
+      [
+        357563,
+        "error[E0425]: cannot find type `PublicApps` in this scope"
+      ],
+      [
+        359395,
+        "error: could not compile `semio-s-artifact-puzzle-3d` (lib test) due to 3 previous errors; 154 warnings emitted"
+      ],
+      [
+        359396,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-puzzle-3d --lib --features component-app-assembly` exited with code 101"
+      ],
+      [
+        359406,
+        "error: cargo exited with status 101"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/wfc-2d-rs",
+    "start": 359423,
+    "pass": 10,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/procedural-generation2d-rs",
+    "start": 378599,
+    "pass": 9,
+    "fail": 4,
+    "errors": [
+      [
+        401800,
+        "error: test run failed"
+      ],
+      [
+        401809,
+        "error: cargo exited with status 100"
+      ],
+      [
+        401821,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        401630,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedural_generation2d_controlled_native_output_preserves_exact_physical_bytes' (17216808) panicked at 🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:50:653:\n    called `Result::unwrap()` on an `Err` value: ValueError { kind: OwnershipLimit, message: \"Pack output exceeds max_file_len\" }"
+      ],
+      [
+        401656,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_procedural_generation2d_controlled_native_input_preserves_complete_owned_state' (17216792) panicked at /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust/../../🦀️.rs:105:13:\n    final Dictionary ownership must be explicitly retired or owned by a cold boundary"
+      ],
+      [
+        401722,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_generation_complete_semantic_cell_extent_matches_independent_sqlite' (17216777) panicked at 🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:103:159:\n    called `Result::unwrap()` on an `Err` value: ValueError { kind: OwnershipLimit, message: \"relational SQLite resource limit: value bytes\" }"
+      ],
+      [
+        401748,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_generation_native_row_frontier_matches_complete_relational_entities' (17216781) panicked at 🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:32:707:\n    assertion `left == right` failed"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/reasoning-wires-rs",
+    "start": 401826,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        420153,
+        "error[E0061]: this function takes 1 argument but 2 arguments were supplied"
+      ],
+      [
+        420367,
+        "error: could not compile `semio-framework-plugin` (lib) due to 1 previous error; 283 warnings emitted"
+      ],
+      [
+        420368,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-reasoning-wires --lib` exited with code 101"
+      ],
+      [
+        420377,
+        "error: cargo exited with status 101"
+      ],
+      [
+        420389,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/playbook-playbook-rs",
+    "start": 420394,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        436166,
+        "error[E0425]: cannot find function `drive_press` in crate `semio_framework_tool_machine`"
+      ],
+      [
+        439604,
+        "error[E0061]: this function takes 1 argument but 2 arguments were supplied"
+      ],
+      [
+        439723,
+        "error[E0599]: no method named `closed` found for struct `GestureLedger<M>` in the current scope"
+      ],
+      [
+        439735,
+        "error[E0599]: no method named `close` found for struct `GestureLedger<M>` in the current scope"
+      ],
+      [
+        439801,
+        "error: could not compile `semio-framework-plugin` (lib) due to 4 previous errors; 283 warnings emitted"
+      ],
+      [
+        439802,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-playbook-playbook --lib` exited with code 101"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/dag-dag-rs",
+    "start": 439828,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        458985,
+        "error[E0061]: this function takes 1 argument but 2 arguments were supplied"
+      ],
+      [
+        459161,
+        "error: could not compile `semio-framework-plugin` (lib) due to 1 previous error; 283 warnings emitted"
+      ],
+      [
+        459162,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-dag-dag --lib` exited with code 101"
+      ],
+      [
+        459171,
+        "error: cargo exited with status 101"
+      ],
+      [
+        459183,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/block-3d-rs",
+    "start": 459188,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        476425,
+        "error[E0061]: this function takes 1 argument but 2 arguments were supplied"
+      ],
+      [
+        476499,
+        "error: could not compile `semio-framework-plugin` (lib) due to 1 previous error; 283 warnings emitted"
+      ],
+      [
+        476500,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-block-3d --lib --features component-app-assembly` exited with code 101"
+      ],
+      [
+        476509,
+        "error: cargo exited with status 101"
+      ],
+      [
+        476521,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/gis-gisterrain-rs",
+    "start": 476526,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        494866,
+        "error[E0061]: this function takes 1 argument but 2 arguments were supplied"
+      ],
+      [
+        495026,
+        "error: could not compile `semio-framework-plugin` (lib) due to 1 previous error; 283 warnings emitted"
+      ],
+      [
+        495027,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-gis-gisterrain --lib` exited with code 101"
+      ],
+      [
+        495036,
+        "error: cargo exited with status 101"
+      ],
+      [
+        495048,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/vcs-vcs-rs",
+    "start": 495053,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        511921,
+        "error[E0061]: this function takes 1 argument but 2 arguments were supplied"
+      ],
+      [
+        511995,
+        "error: could not compile `semio-framework-plugin` (lib) due to 1 previous error; 283 warnings emitted"
+      ],
+      [
+        511996,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-vcs-vcs --lib` exited with code 101"
+      ],
+      [
+        512005,
+        "error: cargo exited with status 101"
+      ],
+      [
+        512017,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/demonstrator-playground-rs",
+    "start": 512022,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        528824,
+        "error[E0061]: this function takes 1 argument but 2 arguments were supplied"
+      ],
+      [
+        528898,
+        "error: could not compile `semio-framework-plugin` (lib) due to 1 previous error; 283 warnings emitted"
+      ],
+      [
+        528899,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-demonstrator-playground --lib` exited with code 101"
+      ],
+      [
+        528908,
+        "error: cargo exited with status 101"
+      ],
+      [
+        528920,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/norm-din16798-rs",
+    "start": 528925,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        545726,
+        "error[E0061]: this function takes 1 argument but 2 arguments were supplied"
+      ],
+      [
+        545800,
+        "error: could not compile `semio-framework-plugin` (lib) due to 1 previous error; 283 warnings emitted"
+      ],
+      [
+        545801,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-norm-din16798 --lib` exited with code 101"
+      ],
+      [
+        545810,
+        "error: cargo exited with status 101"
+      ],
+      [
+        545822,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/norm-en1991-rs",
+    "start": 545827,
+    "pass": 0,
+    "fail": 0,
+    "errors": [
+      [
+        562628,
+        "error[E0061]: this function takes 1 argument but 2 arguments were supplied"
+      ],
+      [
+        562703,
+        "error: could not compile `semio-framework-plugin` (lib) due to 1 previous error; 283 warnings emitted"
+      ],
+      [
+        562704,
+        "error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-artifact-norm-en1991 --lib` exited with code 101"
+      ],
+      [
+        562713,
+        "error: cargo exited with status 101"
+      ],
+      [
+        562725,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/norm-vdi3805-rs",
+    "start": 562730,
+    "pass": 17,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/norm-iso16757-rs",
+    "start": 579352,
+    "pass": 14,
+    "fail": 2,
+    "errors": [
+      [
+        595922,
+        "error: test run failed"
+      ],
+      [
+        595931,
+        "error: cargo exited with status 100"
+      ],
+      [
+        595943,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        595819,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_controlled_native_owner_admits_complete_and_exact_word_state' (17322351) panicked at 🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:27:906:\n    assertion failed: Iso16757Snapshot::decode_sqlite_snapshot_native(&payload,"
+      ],
+      [
+        595906,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_iso16757_controlled_output_has_exact_wire_and_real_interior_admission' (17322375) panicked at 🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:93:1791:\n    assertion failed: s.encode_sqlite_snapshot_native(encoding,"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/norm-en1994-rs",
+    "start": 595948,
+    "pass": 11,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/norm-din4108-rs",
+    "start": 613268,
+    "pass": 11,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/norm-en1996-rs",
+    "start": 630610,
+    "pass": 11,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/norm-en1995-rs",
+    "start": 648151,
+    "pass": 11,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/norm-en1999-rs",
+    "start": 665294,
+    "pass": 13,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/norm-en1998-rs",
+    "start": 682761,
+    "pass": 11,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/wfc-grid2d-rs",
+    "start": 700255,
+    "pass": 10,
+    "fail": 0,
+    "errors": [],
+    "panics": []
+  },
+  {
+    "project": "@semio-tech/sequence-sequence-rs",
+    "start": 719136,
+    "pass": 10,
+    "fail": 2,
+    "errors": [
+      [
+        742954,
+        "error: test run failed"
+      ],
+      [
+        742963,
+        "error: cargo exited with status 100"
+      ],
+      [
+        742975,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        742905,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_sequence_caller_limits_precede_complete_native_and_relational_ownership' (17444725) panicked at 🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:74:225:\n    assertion failed: SequenceSnapshot::decode_sqlite_snapshot_native(&native(&expected, encoding),"
+      ],
+      [
+        742932,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_sequence_genuine_output_admits_exact_row_and_file_frontiers' (17444726) panicked at 🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:137:175:\n    Binary: SqliteDatabaseLimits { max_file_bytes: 285212672, max_value_bytes: 1, max_allocation_bytes: 536870912, max_schema_bytes: 4194304, max_rows: 1000000, max_columns: 1024, max_tables: 4096, max_pages: 1000000 }"
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/process-process3d-rs",
+    "start": 742980,
+    "pass": 11,
+    "fail": 1,
+    "errors": [
+      [
+        768559,
+        "error: test run failed"
+      ],
+      [
+        768568,
+        "error: cargo exited with status 100"
+      ],
+      [
+        768579,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        768474,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::native_semantic_census::sqlite_snapshot_process3d_native_exact_semantic_cells_both_directions' (17539617) panicked at 🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🦀️.rs:20:5:\n    native decode must enforce full semantic cell grant 0/10791: Ok(Process3dSnapshot { workshop: Workshop { machines: [WorkshopMachine { id: \"\", label: \"independent\\\\literal\\0!@/😀\", icon_id: \"\", catalog_id: Some(\"\"), capabilities: [Capability { id: \"\", label: \"independent\\\\literal\\0!@/😀\", icon_id: \"\", recipe: DiscCut { diameter: \"independent\\\\literal\\0!@/😀\", kerf: \"\" }, parameters: [CapabilityParameter { id: \"independent\\\\literal\\0!@/😀\", label: \"\", value: 0.0 }], rules: [Min { quantity: Width, parameter: \"independent\\\\literal\\0!@/😀\", margin: 0.0 }, Max { quantity: Width, parameter: \"\", margin: 0.0 }, Min { quantity: Depth, parameter: \"independent\\\\literal\\0!@/😀\", margin: 0.0 }, Max { "
+      ]
+    ]
+  },
+  {
+    "project": "@semio-tech/layout-layout-rs",
+    "start": 768584,
+    "pass": 10,
+    "fail": 1,
+    "errors": [
+      [
+        795766,
+        "error: test run failed"
+      ],
+      [
+        795775,
+        "error: cargo exited with status 100"
+      ],
+      [
+        795787,
+        "error: native:owner-command failed (1)"
+      ]
+    ],
+    "panics": [
+      [
+        795715,
+        "    thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::backing::sqlite_snapshot_layout_full_concrete_requests_preserve_every_owned_field' (17684147) panicked at 🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs:150:9:\n    assertion `left == right` failed: ReconstructSnapshot must settle full concrete allocator requests"
+      ]
+    ]
+  }
+]

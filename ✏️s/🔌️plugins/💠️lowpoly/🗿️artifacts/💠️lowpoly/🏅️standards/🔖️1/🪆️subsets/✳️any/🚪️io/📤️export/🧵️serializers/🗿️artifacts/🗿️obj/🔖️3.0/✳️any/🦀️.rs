@@ -9,7 +9,7 @@
 //!
 //! 🔖 `IoFidelity::Lossy`: geometry and object names survive; paint, materials and the object
 //! transforms (already applied to the positions) do not.
-use crate::io::mesh_geometry::world_parts;
+use crate::standards::v1::subsets::any::io::mesh_geometry::world_parts;
 use crate::schema::snapshot::LowpolySnapshot;
 use semio_s_artifact_stdio_obj::engine::encode_obj;
 use semio_s_artifact_stdio_obj::schema::snapshot::{ObjFace, ObjFaceVertex, ObjObject, ObjVertex};
@@ -33,7 +33,7 @@ pub fn serialize(snapshot: &LowpolySnapshot) -> Result<ObjSnapshot, semio_framew
         obj.vertices.extend(part.positions.iter().map(|p| ObjVertex { x: p[0], y: p[1], z: p[2], w: None }));
         let mut object = ObjObject { name, faces: Vec::with_capacity(part.faces.len()) };
         for face in &part.faces {
-            object.faces.push(u64::try_from(obj.faces.len()).map_err(|_| crate::io::mesh_geometry::text_error("OBJ face occurrence exceeds u64"))?);
+            object.faces.push(u64::try_from(obj.faces.len()).map_err(|_| crate::standards::v1::subsets::any::io::mesh_geometry::text_error("OBJ face occurrence exceeds u64"))?);
             obj.faces.push(ObjFace { vertices: face.iter().map(|&v| ObjFaceVertex { vertex: v + offset, texcoord: None, normal: None }).collect() });
         }
         obj.objects.push(object);

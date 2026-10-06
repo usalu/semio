@@ -196,11 +196,6 @@ const Window: React.FC<WindowProps> = ({
     return Math.max(windowMeasuresMinWidthPx, Math.min(windowMeasuresMaxWidthPx, Math.round(bodyWidth) - 8));
   }, []);
   const measuresMaxWidthPx = readMeasuresMaxWidthPx();
-  // 🪟️ Window pane toggles (measures, engagement, search, utilities) stay on their authored anchors behind
-  // anchored chrome panels — panels paint above `z-window` and occlude overlap without shifting pane chrome.
-  // 🛟️ The folded engagement's quick-action rail is window CONTENT anchored into the top-LEFT corner, the
-  // same corner a `top-left` chrome panel occupies — so it reads its own safe area instead of painting
-  // under one. It floats, so it yields on whichever axis costs less.
   const quickActionsRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const quickActionsSafeArea = useChromePanelSafeArea({ hostRef: windowBodyRef, affordanceRef: quickActionsRef, anchor: "top-left", yieldAxis: "either", gapPx: uiSpacingPx(1), enabled: !mobile });
   const engagementVisible = !!(engagement || actionPane);
@@ -324,6 +319,7 @@ const Window: React.FC<WindowProps> = ({
               id={childElementId("framework.window", id, "measures")}
               overlaySlot="window-measures-overlay"
               overlayRef={measuresOverlayRef}
+              hostRef={windowBodyRef}
               anchor="top-right"
               icon={WINDOW_PANE_MEASURES_ICON}
               label={windowOptionsLabel}
@@ -367,6 +363,7 @@ const Window: React.FC<WindowProps> = ({
             <Pane
               id={childElementId("framework.window", id, "engagement")}
               overlaySlot="window-engagement-overlay"
+              hostRef={windowBodyRef}
               anchor="top-left"
               icon={WINDOW_PANE_ACTIONS_ICON}
               label={actionLabel}
@@ -386,6 +383,7 @@ const Window: React.FC<WindowProps> = ({
             <Pane
               id={childElementId("framework.window", id, "search")}
               overlaySlot="window-search-overlay"
+              hostRef={windowBodyRef}
               anchor="top-middle"
               icon={WINDOW_PANE_SEARCH_ICON}
               label={searchLabel}
@@ -406,6 +404,7 @@ const Window: React.FC<WindowProps> = ({
           <Pane
             id={childElementId("framework.window", id, "utilityBar")}
             overlaySlot="utility-bar-overlay"
+            hostRef={windowBodyRef}
             anchor="bottom-left"
             icon={WINDOW_PANE_UTILITIES_ICON}
             label={utilitiesLabel}

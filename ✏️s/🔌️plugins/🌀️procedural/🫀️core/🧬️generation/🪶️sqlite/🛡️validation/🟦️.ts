@@ -1,5 +1,5 @@
 /** 🛡️ Exact owned procedural primitive and variant admission without field reflection. */
-import{binary64,binary64Value,parseBinary64}from"../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value,parseBinary64} from "../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import{artifactSqliteCheckpoint,type ArtifactSqliteOptions}from"../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import type{ProceduralSnapshot,FlowHostSnapshot,GenerationPlayState,CameraJson,WidgetLayout,SynapseSpec,Widget,FormGeneration}from"../🧬️model/🟦️.ts";
 export{binary64,binary64Value,parseBinary64};

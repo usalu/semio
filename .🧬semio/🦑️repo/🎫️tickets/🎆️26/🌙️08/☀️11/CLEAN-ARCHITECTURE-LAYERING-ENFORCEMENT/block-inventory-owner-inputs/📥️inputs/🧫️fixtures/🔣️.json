@@ -1,0 +1,526 @@
+{
+  "cases": [
+    {
+      "name": "document-owner-and-lane-filtering",
+      "coordinate": {
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "surface": null,
+        "owner": "domain/document",
+        "excludedOwnerSegments": [
+          "view",
+          "edit"
+        ]
+      },
+      "sources": [
+        [
+          {
+            "owner": "domain/document/create",
+            "id": "create",
+            "variant": "Create",
+            "outcomes": [
+              "applied",
+              "rejected"
+            ]
+          },
+          {
+            "owner": "domain/document/edit/window/set",
+            "id": "set-transient",
+            "variant": "SetTransient",
+            "outcomes": [
+              "applied"
+            ]
+          },
+          {
+            "owner": "domain/documentary/create",
+            "id": "outside",
+            "variant": "Outside",
+            "outcomes": [
+              "applied"
+            ]
+          },
+          {
+            "owner": "domain/other/delete",
+            "id": "delete",
+            "variant": "Delete",
+            "outcomes": [
+              "applied"
+            ]
+          }
+        ]
+      ],
+      "expected": {
+        "schema": "semio.repository-test.runtime-inventory/v2",
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "bridgeVersion": 1,
+        "producedBy": "sample-inventory",
+        "mutations": [
+          {
+            "id": "create",
+            "variant": "Create",
+            "outcomes": [
+              "applied",
+              "rejected"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "surface-owner-selects-its-own-lane",
+      "coordinate": {
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "surface": "edit/window",
+        "owner": "domain/document/edit/window",
+        "excludedOwnerSegments": []
+      },
+      "sources": [
+        [
+          {
+            "owner": "domain/document/create",
+            "id": "create",
+            "variant": "Create",
+            "outcomes": [
+              "applied"
+            ]
+          },
+          {
+            "owner": "domain/document/edit/window/set",
+            "id": "set",
+            "variant": "Set",
+            "outcomes": [
+              "applied",
+              "no-op"
+            ]
+          }
+        ]
+      ],
+      "expected": {
+        "schema": "semio.repository-test.runtime-inventory/v2",
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "surface": "edit/window",
+        "bridgeVersion": 1,
+        "producedBy": "sample-inventory",
+        "mutations": [
+          {
+            "id": "set",
+            "variant": "Set",
+            "outcomes": [
+              "applied",
+              "no-op"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "first-eligible-duplicate-preserves-order",
+      "coordinate": {
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "surface": null,
+        "owner": "domain/document",
+        "excludedOwnerSegments": [
+          "view",
+          "edit"
+        ]
+      },
+      "sources": [
+        [
+          {
+            "owner": "foreign/create",
+            "id": "create",
+            "variant": "Foreign",
+            "outcomes": [
+              "rejected"
+            ]
+          },
+          {
+            "owner": "domain/document/create",
+            "id": "create",
+            "variant": "First",
+            "outcomes": [
+              "applied"
+            ]
+          },
+          {
+            "owner": "domain/document/delete",
+            "id": "delete",
+            "variant": "Delete",
+            "outcomes": [
+              "applied",
+              "empty"
+            ]
+          }
+        ],
+        [
+          {
+            "owner": "domain/document/duplicate",
+            "id": "create",
+            "variant": "First",
+            "outcomes": [
+              "applied"
+            ]
+          },
+          {
+            "owner": "domain/document/update",
+            "id": "update",
+            "variant": "Update",
+            "outcomes": [
+              "applied"
+            ]
+          }
+        ]
+      ],
+      "expected": {
+        "schema": "semio.repository-test.runtime-inventory/v2",
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "bridgeVersion": 1,
+        "producedBy": "sample-inventory",
+        "mutations": [
+          {
+            "id": "create",
+            "variant": "First",
+            "outcomes": [
+              "applied"
+            ]
+          },
+          {
+            "id": "delete",
+            "variant": "Delete",
+            "outcomes": [
+              "applied",
+              "empty"
+            ]
+          },
+          {
+            "id": "update",
+            "variant": "Update",
+            "outcomes": [
+              "applied"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "withdrawn-explicit-empty-sources",
+      "coordinate": {
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "surface": null,
+        "owner": "domain/document",
+        "excludedOwnerSegments": [
+          "view",
+          "edit"
+        ]
+      },
+      "sources": [],
+      "expected": {
+        "schema": "semio.repository-test.runtime-inventory/v2",
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "bridgeVersion": 1,
+        "producedBy": "sample-inventory",
+        "mutations": []
+      }
+    },
+    {
+      "name": "declared-empty-aggregate",
+      "coordinate": {
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "surface": null,
+        "owner": "domain/document",
+        "excludedOwnerSegments": [
+          "view",
+          "edit"
+        ]
+      },
+      "sources": [
+        []
+      ],
+      "expected": {
+        "schema": "semio.repository-test.runtime-inventory/v2",
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "bridgeVersion": 1,
+        "producedBy": "sample-inventory",
+        "mutations": []
+      }
+    },
+    {
+      "name": "unicode-and-json-escape-output",
+      "coordinate": {
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "surface": null,
+        "owner": "domain/document",
+        "excludedOwnerSegments": [
+          "view",
+          "edit"
+        ]
+      },
+      "sources": [
+        [
+          {
+            "owner": "domain/document/unicode",
+            "id": "unicode",
+            "variant": "🧭️ Quote \" line\n slash\\ tab\t",
+            "outcomes": [
+              "applied",
+              "no-op",
+              "empty",
+              "disjoint",
+              "rejected"
+            ]
+          }
+        ]
+      ],
+      "expected": {
+        "schema": "semio.repository-test.runtime-inventory/v2",
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "bridgeVersion": 1,
+        "producedBy": "sample-inventory",
+        "mutations": [
+          {
+            "id": "unicode",
+            "variant": "🧭️ Quote \" line\n slash\\ tab\t",
+            "outcomes": [
+              "applied",
+              "no-op",
+              "empty",
+              "disjoint",
+              "rejected"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "owner-itself-is-not-a-leaf",
+      "coordinate": {
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "surface": null,
+        "owner": "domain/document",
+        "excludedOwnerSegments": [
+          "view",
+          "edit"
+        ]
+      },
+      "sources": [
+        [
+          {
+            "owner": "domain/document",
+            "id": "root",
+            "variant": "Root",
+            "outcomes": [
+              "applied"
+            ]
+          },
+          {
+            "owner": "domain/document/viewer/set",
+            "id": "set",
+            "variant": "Viewer",
+            "outcomes": [
+              "applied"
+            ]
+          }
+        ]
+      ],
+      "expected": {
+        "schema": "semio.repository-test.runtime-inventory/v2",
+        "artifact": "sample.document",
+        "standard": "1",
+        "subset": "any",
+        "bridgeVersion": 1,
+        "producedBy": "sample-inventory",
+        "mutations": [
+          {
+            "id": "set",
+            "variant": "Viewer",
+            "outcomes": [
+              "applied"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "different-standard-and-subset-are-opaque",
+      "coordinate": {
+        "artifact": "sample.other",
+        "standard": "v2",
+        "subset": "base",
+        "surface": null,
+        "owner": "other/source",
+        "excludedOwnerSegments": []
+      },
+      "sources": [
+        [
+          {
+            "owner": "other/source/read",
+            "id": "read",
+            "variant": "Read",
+            "outcomes": [
+              "no-op",
+              "rejected"
+            ]
+          }
+        ]
+      ],
+      "expected": {
+        "schema": "semio.repository-test.runtime-inventory/v2",
+        "artifact": "sample.other",
+        "standard": "v2",
+        "subset": "base",
+        "bridgeVersion": 1,
+        "producedBy": "sample-inventory",
+        "mutations": [
+          {
+            "id": "read",
+            "variant": "Read",
+            "outcomes": [
+              "no-op",
+              "rejected"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "controls": [
+    {
+      "name": "work-limit",
+      "maximumUnits": 1,
+      "maximumOwnedBytes": 65536,
+      "cancelAtCallback": null,
+      "expected": "WorkBudget"
+    },
+    {
+      "name": "byte-limit",
+      "maximumUnits": 1000000,
+      "maximumOwnedBytes": 8,
+      "cancelAtCallback": null,
+      "expected": "ByteBudget"
+    },
+    {
+      "name": "mid-operation-cancellation",
+      "maximumUnits": 1000000,
+      "maximumOwnedBytes": 65536,
+      "cancelAtCallback": 10,
+      "expected": "Cancelled"
+    },
+    {
+      "name": "preallocation-cancellation",
+      "maximumUnits": 1000000,
+      "maximumOwnedBytes": 65536,
+      "cancelAtCallback": 1,
+      "expected": "Cancelled"
+    },
+    {
+      "name": "zero-work",
+      "maximumUnits": 0,
+      "maximumOwnedBytes": 65536,
+      "cancelAtCallback": null,
+      "expected": "Policy"
+    },
+    {
+      "name": "zero-bytes",
+      "maximumUnits": 1000000,
+      "maximumOwnedBytes": 0,
+      "cancelAtCallback": null,
+      "expected": "Policy"
+    },
+    {
+      "name": "admitted-control",
+      "maximumUnits": 1000000,
+      "maximumOwnedBytes": 65536,
+      "cancelAtCallback": null,
+      "expected": "Admitted"
+    }
+  ],
+  "commands": [
+    {
+      "name": "missing-policy",
+      "arguments": [
+        "list-mutations",
+        "sample.document",
+        "1",
+        "any"
+      ],
+      "contributions": 1,
+      "expected": "Policy"
+    },
+    {
+      "name": "withdrawn-contribution",
+      "arguments": [
+        "list-mutations",
+        "sample.document",
+        "1",
+        "any",
+        "--maximum-units",
+        "1000000",
+        "--maximum-owned-bytes",
+        "65536",
+        "--budget-ms",
+        "10000"
+      ],
+      "contributions": 0,
+      "expected": "Coordinate"
+    },
+    {
+      "name": "declared-empty-contribution",
+      "arguments": [
+        "list-mutations",
+        "sample.document",
+        "1",
+        "any",
+        "--maximum-units",
+        "1000000",
+        "--maximum-owned-bytes",
+        "65536",
+        "--budget-ms",
+        "10000"
+      ],
+      "contributions": 1,
+      "expected": "Admitted"
+    },
+    {
+      "name": "ambiguous-contributions",
+      "arguments": [
+        "list-mutations",
+        "sample.document",
+        "1",
+        "any",
+        "--maximum-units",
+        "1000000",
+        "--maximum-owned-bytes",
+        "65536",
+        "--budget-ms",
+        "10000"
+      ],
+      "contributions": 2,
+      "expected": "Coordinate"
+    }
+  ]
+}

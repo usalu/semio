@@ -1,0 +1,3 @@
+# Block Catalog Taxonomy Source 2 Audit
+
+All four current preimages, full pair hashes and inverses, two defining contexts, and captured publisher body match. Iarna independently confirms the sole manifest field change from plugin to library; all three ordered role cases agree and the original portable test body remains an exact prefix. The publisher uses complete write loops, durable intent before opening, the same opened descriptor with identity/preimage checks, source fsync/readback, and final guards on all four endpoints. This admits the concrete four-row publication, with no native or whole-root acceptance claim.

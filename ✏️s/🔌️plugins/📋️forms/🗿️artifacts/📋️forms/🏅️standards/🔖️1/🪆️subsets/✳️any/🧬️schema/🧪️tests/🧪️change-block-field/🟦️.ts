@@ -1,4 +1,5 @@
-import{parseFormsJsonChangeBlockField,formsBlockFieldJson,parseFormsJsonArtifact,formsArtifactJson}from"../../🌱️value/🔣️json/🟦️.ts";
+import {parseFormsJsonChangeBlockField,formsBlockFieldJson} from "../../../🚪️io/📝️text/🧬️mutations/🎛️change-block-field/🔣️json/🟦️.ts";
+import {parseFormsJsonArtifact,formsArtifactJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 /** 🎛️ Conformance of the `change-block-field` TS twin (`../../🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts`) against the
  * leaf's JSON Schema through a THIRD-PARTY validator (Ajv) and a property oracle (fast-check): the twin admits exactly what
  * the schema admits, reads every committed witness unchanged, and derives every committed quintet's diagnostic from the

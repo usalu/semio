@@ -2,7 +2,7 @@
 //! `materialId`, `sectionId`, `roll`) → `ReplaceElement`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_element;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::{element_id, FemElement};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

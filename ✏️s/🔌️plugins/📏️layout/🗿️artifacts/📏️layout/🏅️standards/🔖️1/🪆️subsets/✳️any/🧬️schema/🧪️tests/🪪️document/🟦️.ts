@@ -11,7 +11,8 @@ import dictionarySchema from "../../../../../../../../../../📋️forms/🗿️
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
-import {layoutArtifactFromNativeJson,layoutArtifactNativeJson,layoutDiffFromNativeJson,layoutDiffNativeJson} from "../../🪪️native-json/🟦️.ts";
+import {layoutArtifactFromNativeJson,layoutArtifactNativeJson} from "../../../🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
+import {layoutDiffFromNativeJson,layoutDiffNativeJson} from "../../../🚪️io/📝️text/🔺️diff/🪪️native-json/🟦️.ts";
 import { parseLayoutSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseLayoutDiff } from "../../🔺️diff/🟦️.ts";
 import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };

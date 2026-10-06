@@ -10,7 +10,21 @@
   ],
   "properties": {
     "value": {
-      "type": "boolean"
+      "type": "boolean",
+      "x-semio-ui": {
+        "widget": "toggle",
+        "role": "value",
+        "label": {
+          "en": "Trailing newline",
+          "de": "Abschließender Zeilenumbruch"
+        },
+        "description": {
+          "en": "Whether the file ends with a line break.",
+          "de": "Ob die Datei mit einem Zeilenumbruch endet."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

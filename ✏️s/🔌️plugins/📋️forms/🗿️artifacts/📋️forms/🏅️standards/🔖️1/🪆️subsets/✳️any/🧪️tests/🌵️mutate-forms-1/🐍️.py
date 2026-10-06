@@ -352,7 +352,7 @@ def tokenize(text):
 
 
 def camel(key):
-    """🐫 A carrier member name (`fixture-slug`, `child_id`) as its document member (`fixtureSlug`, `childId`)."""
+    """🐫 A carrier member name (`fixture-slug`, `child_id`) as its document member (`exampleId`, `childId`)."""
     head, *rest = re.split(r"[-_]", key)
     return head + "".join(part[:1].upper() + part[1:] for part in rest)
 
@@ -586,7 +586,7 @@ def uri_in(ctx, needle):
 
 def json_fixture(ctx, needle):
     """🧫️ The declared JSON fixture this scenario names."""
-    return json.loads(ctx.fixture_bytes(uri_in(ctx, needle)).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri_in(ctx, needle)).decode("utf-8"))
 
 
 def payload_of(ctx, kind):
@@ -655,7 +655,7 @@ def identity_handler(ctx):
     """🔁️ Reads the real committed `.dsl.semio` artifact through this implementation's own carrier reader and
     answers the document it holds. In role it also requires the document to be one this subset accepts and
     to exercise the survey records, the child handles and a nested value."""
-    committed = ctx.fixture_bytes(uri_in(ctx, "🗣️.dsl.semio")).decode("utf-8")
+    committed = ctx.input_bytes(uri_in(ctx, "🗣️.dsl.semio")).decode("utf-8")
     document = read_carrier(committed)
     validate(document, "identity-round-trip")
     blocks = [block for step in steps_of(document) for block in step["blocks"]]

@@ -33,8 +33,11 @@ mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, decode_semio_video_mutation_json, inverse_semio_video_mutation, set_snapshot, SemioVideoMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::snapshot::{parse_semio_video_dsl, print_semio_video_dsl, SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, inverse_semio_video_mutation, set_snapshot, SemioVideoMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::io::text::mutations::{decode_semio_video_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::io::text::snapshot::{print_semio_video_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::io::text::snapshot::{parse_semio_video_dsl};
 
     //#region 🔖️JsonReaders
     fn text(value: &Json, key: &str) -> Result<String, String> {
@@ -163,7 +166,7 @@ mod subject {
         Outcome::with_raw(projection.to_string().into_bytes(), projection)
     }
     fn vector(ctx: &Context, kind: &str) -> Result<Json, String> {
-        ctx.fixture_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://🎥️mutate-semio-video/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)
+        ctx.input_json(ctx.scenario.steps.iter().flat_map(|(_, text)| text.split_whitespace()).find(|uri| uri.starts_with("shared://🎥️mutate-semio-video/") && uri.ends_with(&format!("{kind}/🦠️mutation/🔣️.json"))).ok_or_else(|| format!("{}: no declared vector for {kind}", ctx.scenario.id))?)
     }
     /// 🧫️ The committed specification vector, decoded into typed values: the before-snapshot the
     /// kind is applied to, the mutation payload itself, and the after-snapshot the applied result
@@ -193,7 +196,7 @@ mod subject {
 
     /// 🎬️ The real recording, parsed by this repository's own DSL codec.
     fn artifact(ctx: &Context) -> Result<SemioVideoSnapshot, String> {
-        let bytes = ctx.fixture_bytes(RECORDING_DSL)?;
+        let bytes = ctx.input_bytes(RECORDING_DSL)?;
         let source = String::from_utf8(bytes).map_err(|error| format!("the recording artifact must be UTF-8: {error}"))?;
         parse_semio_video_dsl(&source)
     }
@@ -267,7 +270,7 @@ mod subject {
     /// is about the text carrier alone.
     /// 🔁️ One document, re-emitted from the parsed snapshot and required back byte for byte.
     fn carrier_once(ctx: &Context, uri: &str, what: &str) -> Result<(SemioVideoSnapshot, Json), String> {
-        let committed = ctx.fixture_bytes(uri)?;
+        let committed = ctx.input_bytes(uri)?;
         let source = String::from_utf8(committed.clone()).map_err(|error| format!("{what} must be UTF-8: {error}"))?;
         let once = parse_semio_video_dsl(&source)?;
         let printed = print_semio_video_dsl(&once);

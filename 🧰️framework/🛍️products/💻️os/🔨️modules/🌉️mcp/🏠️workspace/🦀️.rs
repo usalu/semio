@@ -1829,7 +1829,10 @@ impl PluginArtifactChannel {
             .map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None })
             .collect();
         let budget = headless_open_budget();
-        let mut guest = semio_framework_async::block_on(self.runtime.instantiate(&self.compiled, actor, &caps, &budget)).map_err(|error| Self::not_wired("instantiate", error))?;
+        let mut guest = semio_framework_async::block_on(self.runtime.instantiate(&self.compiled, actor, &caps, &budget)).map_err(|error| match error {
+            semio_framework_plugin_host::PluginHostError::Refused(fault) => Fault { code: fault.code.0.clone(), message: fault.message.clone() },
+            other => Self::not_wired("instantiate", other),
+        })?;
         let mut owed = vec![semio_framework::kernel::Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 },
             app_id: semio_framework::kernel::AppInstanceId(self.app_ref.app_id.clone()),
@@ -2228,6 +2231,7 @@ fn app_command_seq_mut(command: &mut store::AppCommand) -> &mut u64 {
         | store::AppCommand::CancelMediaExport { seq, .. }
         | store::AppCommand::ReadDocumentIdentity { seq }
         | store::AppCommand::ReadChildHeads { seq }
+        | store::AppCommand::MergeDocumentArchive { seq, .. }
         | store::AppCommand::TakeMediaExportChunk { seq, .. } => seq,
     }
 }
@@ -3243,7 +3247,7 @@ fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, dialect
         apply_ops_binary: guest_apply_ops_binary,
         replay_envelopes: guest_replay_envelopes,
     };
-    let assembly = store::begin_artifact_assembly().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
+    let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
     semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![semio_framework::io::io_mechanism::NativeSnapshotRegistration { dialect: dialect.clone(), codec }], ..Default::default() }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed semantic codec for `{artifact_schema}`: {error}")))?;
     routes.push(Arc::new(GuestCodecRoute { dialect, artifact_schema: artifact_schema.to_string(), plugin_id: plugin_id.to_string(), runtime: Arc::clone(&runtime), compiled }));
     Ok(pack_schema_hash)
@@ -4544,7 +4548,7 @@ impl HeadlessWorkspace {
         };
         if probe_store.applied_edit_ids().is_empty() {
             probe_store
-                .dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], description: Some("os.agent headless seed".to_string()), transaction: None })
+                .dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], transaction: None })
                 .await
                 .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("seeding `{artifact_id}`: {error}")))?;
             self.artifact_host.send_key(&self.origin.artifact_document_key(artifact_id), store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
@@ -4567,7 +4571,7 @@ impl HeadlessWorkspace {
         self.ensure_probe_artifact(artifact_id, serde_json::Value::Null).await?;
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("`{artifact_id}` was just ensured open but is missing from open_probes")))?;
-        let dispatched = probe_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], description: Some("os.agent headless mutation".to_string()), transaction: None }).await;
+        let dispatched = probe_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], transaction: None }).await;
         let applied_edit_ids = probe_store.applied_edit_ids();
         let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
         let cursor = applied_edit_ids.len().to_string();

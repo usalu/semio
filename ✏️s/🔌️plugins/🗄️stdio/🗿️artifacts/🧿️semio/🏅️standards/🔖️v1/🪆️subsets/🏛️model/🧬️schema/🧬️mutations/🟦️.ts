@@ -14,4 +14,7 @@ export type SemioModelMutation =
   | { mutation: "setElement"; id: string; class?: ElementClass; placement?: SemioTransform; geometry?: GeometryRef; spatialId?: string | null; psets?: PropertySet[] }
   | { mutation: "insertRelation"; relation: ModelRelation }
   | { mutation: "removeRelation"; id: string }
-  | { mutation: "setRelation"; id: string; kind?: RelationKind; from?: string; to?: string };
+  | { mutation: "setRelation"; id: string; kind?: RelationKind; from?: string; to?: string }
+  | { mutation: "dragElements"; targets: string[]; offset: [number, number, number] }
+  | { mutation: "rotateElements"; targets: string[]; axis: [number, number, number]; angle: number }
+  | { mutation: "scaleElements"; targets: string[]; factors: [number, number, number] };

@@ -21,6 +21,7 @@
           "en": "STEP instance id of the IfcStructuralLoadGroup.",
           "de": "STEP-Instanz-ID der IfcStructuralLoadGroup."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10

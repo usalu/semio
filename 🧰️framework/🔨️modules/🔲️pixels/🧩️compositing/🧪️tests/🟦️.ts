@@ -1,5 +1,5 @@
 /** 🧪️ Shared isolated-layer vectors checked against librsvg and libvips via Sharp. */
-import {expect,test} from "bun:test";
+import {expect,test,spyOn} from "bun:test";
 import Ajv from "ajv";
 import sharp from "sharp";
 import fixture from "../🧫️fixtures/🔣️.json";
@@ -80,4 +80,31 @@ test("compositor refuses invalid geometry, missing images and excessive depth",(
 test("async compositor exposes progress and observes cancellation",async()=>{
   const controller=new AbortController(),source=input(fixture.blendInput);source.width=64;source.height=64;
   await expect(compositeImage(source,{signal:controller.signal,chunkPixels:64,onProgress:()=>controller.abort()})).rejects.toThrow();
+});
+
+
+test("compositor retirement retains genuine private owners and preserves shared and published bytes",async()=>{
+  const rows=(await import("../🧫️fixtures/🧹️retirement/🔣️.json")).default;
+  
+  const check=new Ajv({strict:true}).compile({$defs:schema.$defs,$ref:"#/$defs/Retirement"});
+  for(const row of rows)for(const grant of [1,7,4096]){
+    const sourceRow=[...fixture.cases,...fixture.spatialCases].find(v=>v.name===row.source)!,source=input(sourceRow.input),before=structuredClone(source),job=new CompositeJob(source),state=job as any;
+    if(["complete","cancelledComplete","published"].includes(row.mode)){while(!job.advance(4096).done){}}else if(row.steps)job.advance(row.steps);
+    const commands=[...state.commands],buffers=[...state.buffers],pixels=state.pixels,published=row.mode==="published"?job.result():null;
+    if(row.mode.startsWith("cancelled")||published){job.cancel();expect(state.commands).toEqual(commands);expect(state.buffers).toEqual(buffers);expect(state.pixels).toBe(published?null:pixels);}
+    const retired=(job as any).intoRetirement();expect(retired.output!==null).toBe(row.mode==="complete");if(retired.output)expect(retired.output.pixels).toBe(pixels);
+    expect(()=>job.result()).toThrow(/cancel/);expect(()=>job.advance(1)).toThrow(/cancel/);expect(()=>(job as any).intoRetirement()).toThrow(/transferred/);
+    for(const invalid of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>retired.job.advance(invalid)).toThrow(/grant/i);
+    let work=0;for(let at=0;at<100000&&!retired.job.terminalIsEmpty();at++){const count=state.commands.length+state.buffers.length,p=retired.job.advance(grant);expect(check(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);expect(count-state.commands.length-state.buffers.length).toBeLessThanOrEqual(grant);work=p.work;}
+    expect(retired.job.terminalIsEmpty()).toBe(true);expect(work).toBe(commands.length+buffers.length+4);expect(state.commands.length).toBe(0);expect(state.buffers.length).toBe(0);expect(state.pixels).toBeNull();expect(state.origin).toBeNull();expect(retired.job.advance(1)).toEqual({phase:"complete",work,done:true});expect(source).toEqual(before);
+    const image=retired.output??published;if(image){const expected="expected" in sourceRow?sourceRow.expected:sourceRow.runs.flatMap(run=>Array.from({length:run.count},()=>run.pixel).flat());expect([...image.pixels]).toEqual(expected);if(source.width===1){const oracle=await sharp(oracleTree(source)).ensureAlpha().raw().toBuffer();for(let i=0;i<4;i++)expect(Math.abs(image.pixels[i]!-oracle[i]!)).toBeLessThanOrEqual(1);}}
+    console.error(`[DEBUG] Actual compositor retirement ${row.name}: grant=${grant} work=${work} terminal_empty=true commands=${commands.length} buffers=${buffers.length}`);
+  }
+});
+test("async composite finally consumes actual owners on success abort and callback failure",async()=>{
+  const original=(CompositeJob.prototype as any).intoRetirement;
+  for(const mode of ["success","abort","callback"]){const source=input(fixture.cases[0]!.input),before=structuredClone(source),controller=new AbortController();let adopted=0,work=0,closed:any=null;
+    const spy=spyOn(CompositeJob.prototype as any,"intoRetirement").mockImplementation(function(this:CompositeJob){adopted++;closed=original.call(this);const advance=closed.job.advance.bind(closed.job);closed.job.advance=(grant:number)=>{expect(grant).toBe(1);const p=advance(grant);expect(p.work-work).toBe(1);work=p.work;return p;};return closed;});
+    try{const pending=compositeImage(source,{signal:controller.signal,chunkPixels:1,onProgress:p=>{if(p.done){if(mode==="abort")controller.abort();if(mode==="callback")throw Error("composite completion callback failed");}}});if(mode==="success"){const image=await pending;expect(image.pixels).toBe(closed.output.pixels);expect([...image.pixels]).toEqual(fixture.cases[0]!.expected);}else{await expect(pending).rejects.toThrow(mode==="abort"?/cancel/:/completion callback failed/);expect(closed.output).toBeNull();}expect(adopted).toBe(1);expect(work).toBe(11);expect(closed.job.terminalIsEmpty()).toBe(true);expect(source).toEqual(before);console.error(`[DEBUG] Actual async composite ${mode}: one adoption and ${work} one-unit retirement grants`);}finally{spy.mockRestore();}
+  }
 });

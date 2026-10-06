@@ -9,9 +9,9 @@ pub fn parse(value:&str)->Result<Paint,String>{
     let value=value.trim().to_ascii_lowercase();
     let invalid=||format!("invalid colour: {value}");
     if value=="transparent"{return Ok(Paint{hex:"000000".into(),alpha:0.0});}
-    static NAMES:std::sync::OnceLock<protocol::DslValue>=std::sync::OnceLock::new();
-    let names=NAMES.get_or_init(||pack::json::from_json_str(include_str!("../../📸️snapshot/📊️chart/🎨️color/🔣️.json")).expect("authored color schema"));
-    let hex=names["x-semio-named-colors"].get(&value).and_then(protocol::DslValue::as_str).or_else(||value.strip_prefix('#'));
+    static NAMES:std::sync::OnceLock<semio_framework_value::DslValue>=std::sync::OnceLock::new();
+    let names=NAMES.get_or_init(||semio_framework_pack_json::from_json_str(include_str!("../../📸️snapshot/📊️chart/🎨️color/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored color schema"));
+    let hex=names["x-semio-named-colors"].get(&value).and_then(semio_framework_value::DslValue::as_str).or_else(||value.strip_prefix('#'));
     if let Some(hex)=hex{
         if ![3,4,6,8].contains(&hex.len())||!hex.chars().all(|c|c.is_ascii_hexdigit()){return Err(invalid());}
         let hex=if hex.len()<=4{hex.chars().flat_map(|c|[c,c]).collect::<String>()}else{hex.into()}.to_ascii_uppercase();

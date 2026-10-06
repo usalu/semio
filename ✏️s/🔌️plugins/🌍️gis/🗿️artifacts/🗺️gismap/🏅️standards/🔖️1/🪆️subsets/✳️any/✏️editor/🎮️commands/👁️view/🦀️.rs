@@ -1,7 +1,7 @@
 //! 👁️ GIS 2D play app commands — camera, layer visibility/weight and the render/style/LOD display
 //! vocabulary. Exact-window publication is performed by the retained app route.
 
-use crate::op::GisMapMutation;
+use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::GisMapSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

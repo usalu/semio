@@ -1,4 +1,4 @@
-//! 🧪️ `rotate-selection` fixture — `🚫️rejects-ghosts`.
+//! 🧪️ `rotate-selection` scene_snapshot — `🚫️rejects-ghosts`.
 //!
 //! The only target is absent: Error-level `mutation.target-missing`, nothing turns.
 //!
@@ -75,5 +75,5 @@ fn the_refusal_is_the_declared_one() {
 /// ↩️ Nothing moved, so nothing is undone.
 #[test]
 fn inverse_of_a_refusal_is_empty() {
-    assert!(inverse_puzzle3d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture").is_empty(), "rotate-selection/rejects-ghosts: a refusal must yield no inverse step");
+    assert!(inverse_puzzle3d_mutation(&before(), &mutation()).expect("valid retained mutation inverse scene_snapshot").is_empty(), "rotate-selection/rejects-ghosts: a refusal must yield no inverse step");
 }

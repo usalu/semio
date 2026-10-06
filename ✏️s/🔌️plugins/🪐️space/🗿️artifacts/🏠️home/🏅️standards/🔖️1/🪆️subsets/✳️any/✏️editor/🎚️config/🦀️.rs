@@ -274,7 +274,6 @@ pub struct HomeConfigPreparationFactory;
 struct HomeConfigPreparation {
     base: Option<store::SnapshotRead<HomeConfig>>,
     mutation: Option<HomeConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(HomeConfig, HomeConfigMutation, HomeConfigMutation)>,
     sealed_candidate: Option<(HomeConfig, protocol::Edit<HomeConfigMutation>)>,
@@ -320,11 +319,11 @@ fn home_config_retained_admission(mutation: &HomeConfigMutation) -> Option<(usiz
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutation> for HomeConfigPreparationFactory {
-    fn preflight(&self, mutation: &HomeConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &HomeConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         let Some((mutation_bytes, maximum_bytes)) = home_config_retained_admission(mutation) else {
             return Err("Space Home config preparation rejects non-retained mutations".into());
         };
-        if lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+        if lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes {
             return Err("Space Home config preparation rejected its lane or byte envelope".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, HOME_CONFIG_STEP_BYTES))
@@ -334,11 +333,11 @@ impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutatio
         let Some((mutation_bytes, maximum_bytes)) = home_config_retained_admission(&request.mutation) else {
             return Err(request);
         };
-        if request.lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        if request.lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err(request);
         }
         Ok(Box::new(HomeConfigPreparation {
-            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            base: Some(request.base), mutation: Some(request.mutation), authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
         }))
     }
@@ -409,7 +408,7 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
         // 🧹️ One retained owner per granted page, never more bytes than the page granted — the same
         // reasoning as `advance` above: an owner that answers `Blocked` until it is handed its whole
         // declared envelope never closes under the framework's 4 KiB pumps.
-        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: grant.maximum_bytes }); }
+        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: grant.maximum_bytes }); }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Space Home config preparation could not return its exact base root")); }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
@@ -422,7 +421,7 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
         }
         Ok(store::SnapshotRetirementStep::Complete)
     }
-    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none() }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none() }
 }
 //#endregion 📬️ConfigStorePreparation
 

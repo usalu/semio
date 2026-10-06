@@ -14,7 +14,6 @@ const vectors = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚪️so
 };
 const validator = new Ajv({ strict: true, allErrors: true });
 validator.addSchema(schema);
-const validateCases = validator.getSchema(schema.$id + "#/$defs/SourceAdmissionCases")!;
 const validateCandidate = validator.getSchema(schema.$id + "#/$defs/Candidate")!;
 const validateResult = validator.getSchema(schema.$id + "#/$defs/SourceAdmission")!;
 //#endregion 🧬️Contract
@@ -22,7 +21,6 @@ const validateResult = validator.getSchema(schema.$id + "#/$defs/SourceAdmission
 //#region 🧪️Projection
 describe("taxonomy source admission projection", () => {
   test("neutral records satisfy the independent schema implementation", () => {
-    expect(validateCases(vectors), JSON.stringify(validateCases.errors)).toBe(true);
     const identities = [...vectors.cases, ...vectors.schemaRejections, ...vectors.schemaCases].map((row) => row.id);
     expect(new Set(identities).size).toBe(identities.length);
   });

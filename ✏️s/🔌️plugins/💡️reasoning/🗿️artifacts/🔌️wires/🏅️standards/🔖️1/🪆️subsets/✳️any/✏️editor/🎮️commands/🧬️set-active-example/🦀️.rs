@@ -1,7 +1,7 @@
 //! 🧬️ Wires play app command — `set-active-example`.
 
 use crate::empty_wires_snapshot;
-use crate::schema::metabolism_wires_example_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot;
 use crate::WiresMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};

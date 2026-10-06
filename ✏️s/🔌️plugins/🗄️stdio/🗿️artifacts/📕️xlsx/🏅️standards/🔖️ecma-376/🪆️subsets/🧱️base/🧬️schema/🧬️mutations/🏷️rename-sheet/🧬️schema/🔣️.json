@@ -15,10 +15,41 @@
       "description": "Aggregate discriminator spliced in by XlsxMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Sheet",
+          "de": "Arbeitsblatt"
+        },
+        "description": {
+          "en": "Name of the worksheet.",
+          "de": "Name des Arbeitsblatts."
+        },
+        "ref": {
+          "kind": "sheet"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "Name the worksheet carries afterwards (at most 31 characters, none of \\ / ? * [ ]).",
+          "de": "Name, den das Arbeitsblatt danach trägt (höchstens 31 Zeichen, keines von \\ / ? * [ ])."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

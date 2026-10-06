@@ -15,16 +15,23 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "transformJson": "{\"x\":20.0,\"y\":-10.0,\"scaleX\":1.0,\"scaleY\":1.0,\"shear\":0.0,\"rotation\":0.0}",
-          "fillJson": null,
-          "strokeJson": null,
           "booleanOperation": null,
-          "traceParamsJson": null,
-          "layerJson": null,
           "pathSegments": null,
           "textContent": null,
           "textSize": null,
-          "fillRule": null
+          "fillRule": null,
+          "transform": {
+            "x": 20,
+            "y": -10,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "fill": null,
+          "stroke": null,
+          "traceParams": null,
+          "layer": null
         }
       },
       {
@@ -35,16 +42,23 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "transformJson": "{\"x\":20.0,\"y\":5.0,\"scaleX\":1.0,\"scaleY\":1.0,\"shear\":0.0,\"rotation\":0.0}",
-          "fillJson": null,
-          "strokeJson": null,
           "booleanOperation": null,
-          "traceParamsJson": null,
-          "layerJson": null,
           "pathSegments": null,
           "textContent": null,
           "textSize": null,
-          "fillRule": null
+          "fillRule": null,
+          "transform": {
+            "x": 20,
+            "y": 5,
+            "scaleX": 1,
+            "scaleY": 1,
+            "shear": 0,
+            "rotation": 0
+          },
+          "fill": null,
+          "stroke": null,
+          "traceParams": null,
+          "layer": null
         }
       }
     ],

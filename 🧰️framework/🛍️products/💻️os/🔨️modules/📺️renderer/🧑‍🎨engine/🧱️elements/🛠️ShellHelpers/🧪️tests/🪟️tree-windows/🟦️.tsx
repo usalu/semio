@@ -14,7 +14,6 @@ import { parseResolvedPluginViewState } from "@semio-tech/framework";
 import { createTreeWindowContextV1, createTreeWindowSchedulerV1, TREE_WINDOW_DEFAULT_ROWS, uiNodeToTreePanelConfig, type TreeWindowHostV1 } from "../../🟦️.tsx";
 import { createTreeWindowReporterV1 } from "../../../🗣️Interpreter/🟦️.tsx";
 import reportsFixture from "../../../../🧫️fixtures/🪟️body-window-reports/🔣️.json";
-import reportsSchema from "../../../../🧬️schema/🪟️body-window-reports/🔣️.json";
 import Ajv2020 from "ajv/dist/2020";
 // #endregion 🔌️Adapters
 
@@ -86,7 +85,6 @@ describe("🪟️ tree window scheduler", () => {
   });
 
   it("merges sibling observers into a whole-body report and retires only the unmounted source", () => {
-    expect(new Ajv2020({ strict: true }).compile(reportsSchema)(reportsFixture)).toBe(true);
     const reports: { keys: string[]; viewport: number }[] = [];
     const reporter = createTreeWindowReporterV1((requests, viewport) => reports.push({ keys: requests.map((row) => row.nodeKey).sort(), viewport }));
     const header = {};

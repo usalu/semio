@@ -1,6 +1,0 @@
-{
-  "reactor": ["poll", "channelVersion"],
-  "jobs": ["startJob", "stepJob", "cancelJob", "takeSegmentedDownloadChunk"],
-  "checkpoint": ["checkpoint", "restore"],
-  "describe": ["describe"]
-}

@@ -1,0 +1,63 @@
+{
+  "rows": [
+    {
+      "owner": "Workflow",
+      "type": "WorkflowSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/🦀️.rs",
+      "schema": "os.workflow",
+      "target": "@semio-tech/framework-workflow-workflow-rs",
+      "publication": "Public imperative register_native_document_codec demonstrated in owning law; ordinary host/store publication policy unresolved",
+      "receipt": "No current named receipt located in bounded current cache/log search",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "Run",
+      "type": "RunArtifact",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/🦀️.rs",
+      "schema": "os.run",
+      "target": "@semio-tech/framework-workflow-run-rs",
+      "publication": "Public imperative register_native_document_codec demonstrated in owning law; real bootstrap Store initialization exists",
+      "receipt": "No current named receipt located in bounded current cache/log search",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "Infinite DAG",
+      "type": "DagSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/🌿️vcs/🦀️.rs",
+      "schema": "dag.host_snapshot",
+      "publication": "create_dag_store real concrete owner; explicit factory registration laws, convenience initializer absence is not failure",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "FlowHost",
+      "type": "FlowHostSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/🦀️.rs",
+      "schema": "flow.host_snapshot",
+      "publication": "Real FlowStore concrete alias/host; explicit factory registration laws",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "Space",
+      "type": "SpaceSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "publication": "native_snapshot_registration + ordinary Store/hydration",
+      "receipt": "Retained named14/14 run6a99a96d-9b8c-4aac-9112-ec858612c888; exact locator in prior report",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "Collection",
+      "type": "CollectionSnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/🦀️.rs",
+      "publication": "native_snapshot_registration + ordinary Store/hydration",
+      "receipt": "Retained named13/13 run8af990af; one LEAKY qualifier retained",
+      "qualification": "Current source map; no executions here"
+    },
+    {
+      "owner": "SpaceHistory",
+      "type": "SpaceHistorySnapshot",
+      "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "publication": "Explicit register_sqlite_snapshot normative owning contract; no constructor side-effect requirement",
+      "qualification": "Current source map; no executions here"
+    }
+  ]
+}

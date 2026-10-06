@@ -3997,7 +3997,7 @@
               "class": "computation",
               "form": "flow"
             },
-            "schema": "flow.host_snapshot",
+            "schema": "s.flow.flow",
             "sourceFormat": "flow.artifact"
           }
         ],
@@ -4438,7 +4438,7 @@
             "class": "data",
             "form": "value"
           },
-          "artifactSchema": "flow.host_snapshot",
+          "artifactSchema": "s.flow.flow",
           "exportFormats": [],
           "importFormats": [],
           "ports": []
@@ -9229,7 +9229,7 @@
             "class": "data",
             "form": "value"
           },
-          "artifactSchema": "flow.host_snapshot",
+          "artifactSchema": "s.flow.flow",
           "exportFormats": [],
           "importFormats": [],
           "ports": []

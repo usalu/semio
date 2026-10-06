@@ -1,0 +1,20 @@
+/** 🗓️ Five distinct typed schedules with fixed hourly and weekday ownership. */
+import type {EnergyScheduleSet} from "../../../../🧬️schema/📸️snapshot/⚡️model/🟦️.ts";
+import {columns,emit,write,uint,optionalId,literal,type Reader,type Options} from "../🟦️.ts";
+import type {ArtifactSqliteProjection} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
+const VALUE=columns([4]),HOUR=columns([3]),LIMITS=columns([1,2]);
+export async function projectSchedules(s:EnergyScheduleSet,p:ArtifactSqliteProjection,o:Options):Promise<void>{
+ for(let n=0;n<s.constants.length;n++){const v=s.constants[n]!;await emit(p,"energy_constant_schedule",n,[uint(v.id),v.value],VALUE,o)}
+ for(let n=0;n<s.daily.length;n++){const v=s.daily[n]!,id=await emit(p,"energy_daily_schedule",n,[uint(v.id),literal(v.interpolation,["Continuous","Discrete"]as const)],[],o);if(v.hourly_values.length!==24)throw Error("Energy daily schedule has exactly24hours");for(let h=0;h<24;h++)await emit(p,"energy_daily_hour",h,[v.hourly_values[h]!],HOUR,o,id);if(v.limits!==null)await write(p,"energy_daily_limits",[v.limits.min,v.limits.max],LIMITS,o,id)}
+ for(let n=0;n<s.weekly.length;n++){const v=s.weekly[n]!,id=await emit(p,"energy_weekly_schedule",n,[uint(v.id)],[],o);if(v.daily_schedule_ids.length!==7)throw Error("Energy weekly schedule has exactly7days");for(let d=0;d<7;d++)await emit(p,"energy_weekly_day",d,[uint(v.daily_schedule_ids[d]!)],[],o,id)}
+ for(let n=0;n<s.annual.length;n++){const v=s.annual[n]!,id=await emit(p,"energy_annual_schedule",n,[uint(v.id),uint(v.default_daily_schedule_id),optionalId(v.holiday_daily_schedule_id)],[],o);for(let n=0;n<v.rules.length;n++){const rule=v.rules[n]!;await emit(p,"energy_annual_rule",n,[uint(rule.start_month,255),uint(rule.start_day,255),uint(rule.end_month,255),uint(rule.end_day,255),uint(rule.daily_schedule_id)],[],o,id)}for(let n=0;n<v.holiday_dates.length;n++){const date=v.holiday_dates[n]!;if(date.length!==3)throw Error("Energy holiday has exactly3components");await emit(p,"energy_annual_holiday",n,[uint(date[0],65535),uint(date[1],255),uint(date[2],255)],[],o,id)}}
+ for(let n=0;n<s.time_series.length;n++){const v=s.time_series[n]!,id=await emit(p,"energy_time_series_schedule",n,[uint(v.id),uint(v.timestep_seconds)],[],o);for(let n=0;n<v.values.length;n++)await emit(p,"energy_time_series_value",n,[v.values[n]!],HOUR,o,id)}
+}
+export async function reconstructSchedules(r:Reader):Promise<EnergyScheduleSet>{
+ const s:EnergyScheduleSet={constants:[],daily:[],weekly:[],annual:[],time_series:[]};
+ for(const v of await r.rows("energy_constant_schedule",1n,5,VALUE))s.constants.push({id:v.u(3),value:v.float(4)});
+ for(const v of await r.rows("energy_daily_schedule",1n,5,[])){const hours=await r.rows("energy_daily_hour",v.id,4,HOUR);if(hours.length!==24)throw Error("Energy daily schedule has exactly24hours");const limits=await r.optional("energy_daily_limits",v.id,3,LIMITS);s.daily.push({id:v.u(3),hourly_values:hours.map(h=>h.float(3)),interpolation:literal(v.text(4),["Continuous","Discrete"]as const),limits:limits===null?null:{min:limits.float(1),max:limits.float(2)}})}
+ for(const v of await r.rows("energy_weekly_schedule",1n,4,[])){const days=await r.rows("energy_weekly_day",v.id,4,[]);if(days.length!==7)throw Error("Energy weekly schedule has exactly7days");s.weekly.push({id:v.u(3),daily_schedule_ids:days.map(d=>d.u(3))})}
+ for(const v of await r.rows("energy_annual_schedule",1n,6,[]))s.annual.push({id:v.u(3),rules:(await r.rows("energy_annual_rule",v.id,8,[])).map(rule=>({start_month:rule.u(3,255n),start_day:rule.u(4,255n),end_month:rule.u(5,255n),end_day:rule.u(6,255n),daily_schedule_id:rule.u(7)})),default_daily_schedule_id:v.u(4),holiday_daily_schedule_id:v.optionalId(5),holiday_dates:(await r.rows("energy_annual_holiday",v.id,6,[])).map(h=>[h.u(3,65535n),h.u(4,255n),h.u(5,255n)])});
+ for(const v of await r.rows("energy_time_series_schedule",1n,5,[]))s.time_series.push({id:v.u(3),values:(await r.rows("energy_time_series_value",v.id,4,HOUR)).map(x=>x.float(3)),timestep_seconds:v.u(4)});return s;
+}

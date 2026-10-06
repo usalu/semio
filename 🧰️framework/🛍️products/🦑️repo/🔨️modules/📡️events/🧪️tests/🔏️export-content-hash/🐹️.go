@@ -32,7 +32,7 @@ func (source fixtureSource) ExportEntities() []events.ExportEntity { return sour
 
 func loadSource(ctx *host.Context) (fixtureSource, exportVectors, error) {
 	var vectors exportVectors
-	data, err := ctx.FixtureBytes("shared://📤️export-vectors.json")
+	data, err := ctx.InputBytes("shared://📤️export-vectors.json")
 	if err != nil {
 		return fixtureSource{}, vectors, err
 	}

@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {"id":"first-artifact","owner":"artifacts/alpha/editor","roots":["artifacts/alpha","artifacts/bravo"],"selected":0},
+    {"id":"second-artifact","owner":"artifacts/bravo","roots":["artifacts/alpha","artifacts/bravo"],"selected":1},
+    {"id":"deleted-first-survivor","owner":"artifacts/bravo/editor","roots":["artifacts/bravo"],"selected":0},
+    {"id":"missing-contribution","owner":"artifacts/alpha","roots":[],"selected":null},
+    {"id":"prefix-imposter","owner":"artifacts/alpha-imposter","roots":["artifacts/alpha"],"selected":null},
+    {"id":"ambiguous","owner":"artifacts/alpha/editor","roots":["artifacts/alpha","artifacts/alpha"],"selected":"refused"}
+  ]
+}

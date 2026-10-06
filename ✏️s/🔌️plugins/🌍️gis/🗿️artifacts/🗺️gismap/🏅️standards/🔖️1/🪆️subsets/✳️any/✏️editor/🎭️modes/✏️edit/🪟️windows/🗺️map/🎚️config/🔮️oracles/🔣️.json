@@ -187,9 +187,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-layer-visibility-applied",
       "class": "handcrafted",
       "target": {
@@ -254,7 +253,6 @@
       "notes": "Hiding the parcels layer flips its visibility entry and nothing else."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -319,7 +317,6 @@
       "notes": "Panning the map replaces the camera JSON."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-render-mode-applied",
       "class": "handcrafted",
       "target": {
@@ -384,7 +381,6 @@
       "notes": "Switching to vector rendering replaces the render mode."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-vector-style-applied",
       "class": "handcrafted",
       "target": {
@@ -449,7 +445,6 @@
       "notes": "Switching to the figure-ground style replaces the vector style."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-lod-mode-applied",
       "class": "handcrafted",
       "target": {
@@ -514,7 +509,6 @@
       "notes": "Pinning the fine LOD tier replaces the automatic one."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-layer-stroke-scale-applied",
       "class": "handcrafted",
       "target": {
@@ -579,7 +573,6 @@
       "notes": "Thickening the parcels strokes sets their multiplier to 2.5."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-layer-visibility-no-op",
       "class": "handcrafted",
       "target": {
@@ -644,7 +637,6 @@
       "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-no-op",
       "class": "handcrafted",
       "target": {
@@ -709,7 +701,6 @@
       "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-render-mode-no-op",
       "class": "handcrafted",
       "target": {
@@ -774,7 +765,6 @@
       "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-vector-style-no-op",
       "class": "handcrafted",
       "target": {
@@ -839,7 +829,6 @@
       "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-lod-mode-no-op",
       "class": "handcrafted",
       "target": {
@@ -904,7 +893,6 @@
       "notes": "Setting a map window field to the value it already holds is the leaf's warned no-op."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-layer-stroke-scale-no-op",
       "class": "handcrafted",
       "target": {

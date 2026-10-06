@@ -1,0 +1,19 @@
+# OPC Three Original Factory Extents
+
+Actual independent Source projection/export/Bun SQLite measurements, 2026-10-06; no owning test gate. [Closed literal input and per-table receipts](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/opc-three-original-independent-null-zero-extents.json).
+
+| Owner | Full rows/bytes | Metadata-retaining empty rows/bytes | Schema/tables/max columns |
+| --- | --- | --- | --- |
+| DOCX | 40/1147 | 12/412 | 4569/21/7 |
+| PPTX | 182/4378 | 12/402 | 4569/21/7 |
+| XLSX | 40/1116 | 12/399 | 4569/21/7 |
+
+All six actual files have integrity ok/FKs0. Independent typeof measurement uses NULL0 and actual sqlite_schema statement+name UTF8 extent without semicolons. Empty clears only opc.parts and xmlParts, preserving contentTypes defaults/overrides, relationship source-map entries, IDs/types/targets/modes, package comment and root schema. Dangling retained package targets are logical metadata; do not silently clear relationships to make the case smaller. These are measured logical Source cases, not inferred positive public-profile/native cases.
+
+Source DOCX original constructs each XML document with parseRetainedXmlDocument; Native original fixture explicitly converts retained doctype.prologPosition canonical decimal text into exact UInt64 before FromValue. This is a deliberate same-field representation seam, not ordinary JSON factory identity. Source PPTX uses parsePptxSnapshot of the same original fixture; Native strict pack JSON reads the same JSON. Source XLSX parses XmlDocument nodes; Native strict pack JSON reads the same JSON. Native complete extent parity must be confirmed using genuine exported SQLite, particularly retained versus ordinary XML string/root/doctype representation.
+
+Actual package routers are [DOCX](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust/📜️script.ts), [PPTX](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🦀️rust/📜️script.ts), [XLSX](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust/📜️script.ts). Each owns its ecma-376/base Snapshot/sqlite Source test path and requests component-app-assembly for the original Rust test route. Preserve the shared original selected Native filter and profiles; testFeatures alone is not evidence that an assembly-gated law is selected or executed.
+
+DOCX has a custom OpcNativeReader/Writer wire, not generic DslRecord: root schema string, actual OPC package, ordered XML part triples(path/contentType/document). [Native reader](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧩️native/🦀️.rs:22) constructs package/XML typed owners while reading. [Physical backing](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧩️native/💰️backing/🦀️.rs:25) checks actual file length and original NativeDecodeControl allocations but does not independently establish this full21-table copied-cell census before those owners. Do not replace the retained XML materialization lifecycle with a generic record mirror. Required next admission must traverse the actual custom borrowed protocol roles or existing borrowed XML/OPC views, retain physical controls, and measure all parent/ordinal/optional/BLOB/text identity cells.
+
+Public demand: retain each owning original declaration, both encodings and all ecma-376 domain/subset validators; independently validate complete21 domain tables plus six semio metadata fields, edit a genuine OPC/XML semantic cell, import into the actual public owner, and explicitly retire. Full/empty exact versus one-short schema/table/column/row/value laws must use the matched actual owner factory, not schema-registration census membership. No new runtime qualification is claimed here.

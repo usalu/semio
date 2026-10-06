@@ -1,0 +1,35 @@
+{
+  "contract": "registry-assembly-v1",
+  "scenarios": [
+    {
+      "id": "exclude-held",
+      "operations": [
+        "try",
+        "try",
+        "release",
+        "try"
+      ],
+      "expected": [
+        true,
+        false,
+        true,
+        true
+      ]
+    },
+    {
+      "id": "release-reacquire",
+      "operations": [
+        "try",
+        "release",
+        "try",
+        "release"
+      ],
+      "expected": [
+        true,
+        true,
+        true,
+        true
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schemaBytes": 3920,
+  "tableWidths": {
+    "bcf_camera": 29,
+    "bcf_coloring": 4,
+    "bcf_coloring_component": 4,
+    "bcf_comment": 8,
+    "bcf_components": 2,
+    "bcf_document": 3,
+    "bcf_orthogonal_camera": 4,
+    "bcf_perspective_camera": 4,
+    "bcf_raw_part": 5,
+    "bcf_selection": 4,
+    "bcf_snapshot_image": 2,
+    "bcf_topic": 10,
+    "bcf_topic_label": 4,
+    "bcf_viewpoint": 4,
+    "bcf_visibility_exception": 4
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 29,
+      "valueBytes": 1259
+    },
+    {
+      "id": "metadataRetainingEmpty",
+      "rows": 3,
+      "valueBytes": 110
+    }
+  ],
+  "publicIo": {
+    "schemaBytes": 4213,
+    "tableWidths": {
+      "bcf_camera": 29,
+      "bcf_coloring": 4,
+      "bcf_coloring_component": 4,
+      "bcf_comment": 8,
+      "bcf_components": 2,
+      "bcf_document": 3,
+      "bcf_orthogonal_camera": 4,
+      "bcf_perspective_camera": 4,
+      "bcf_raw_part": 5,
+      "bcf_selection": 4,
+      "bcf_snapshot_image": 2,
+      "bcf_topic": 10,
+      "bcf_topic_label": 4,
+      "bcf_viewpoint": 4,
+      "bcf_visibility_exception": 4,
+      "semio_snapshot": 6
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 30,
+        "valueBytes": {
+          "binary": 1296,
+          "text": 1294
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 4,
+        "valueBytes": {
+          "binary": 147,
+          "text": 145
+        }
+      }
+    ]
+  }
+}

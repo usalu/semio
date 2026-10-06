@@ -3,8 +3,10 @@
 //! declares exactly the outcome classes production dispatch reaches from its vectors. The independent Python engine is
 //! held to the same bundles by `🪨️mutate-en1996-1`.
 
-use super::{apply_en1996_mutation, decode_en1996_mutation_json, inverse_en1996_mutation, En1996Mutation, KINDS};
-use crate::standards::v1::subsets::any::schema::snapshot::{decode_en1996_snapshot_json, En1996Snapshot};
+use super::{apply_en1996_mutation, inverse_en1996_mutation, En1996Mutation, KINDS};
+use crate::standards::v1::subsets::any::io::text::mutations::{decode_en1996_mutation_json};
+use crate::standards::v1::subsets::any::schema::snapshot::{En1996Snapshot};
+use crate::standards::v1::subsets::any::io::text::snapshot::{decode_en1996_snapshot_json};
 use protocol::Mutation;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};

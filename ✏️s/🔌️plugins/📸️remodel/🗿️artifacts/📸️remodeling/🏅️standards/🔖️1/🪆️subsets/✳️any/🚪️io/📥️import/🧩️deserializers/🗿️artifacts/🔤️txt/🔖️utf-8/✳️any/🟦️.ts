@@ -1,15 +1,8 @@
 /** 🔤️ Declared Remodeling Text reader binds primitive words, record tables, nested braced cells, and literal references. */
 
-import {
-  REMODELING_SNAPSHOT_SPEC,
-  kebabOf,
-  type FieldSpec,
-  type RecordSpec,
-  type RemodelingSnapshot,
-  type ValueSpec,
-} from "../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import {REMODELING_SNAPSHOT_SPEC, kebabOf, type FieldSpec, type RecordSpec, type RemodelingSnapshot, type ValueSpec} from "../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 
-import {binary32,binary64} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary32,binary64} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 
 import {base64StandardDecode} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 

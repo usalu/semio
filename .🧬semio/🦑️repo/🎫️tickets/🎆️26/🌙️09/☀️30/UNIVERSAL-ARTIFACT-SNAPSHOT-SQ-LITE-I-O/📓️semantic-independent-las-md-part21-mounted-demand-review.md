@@ -1,0 +1,18 @@
+# LAS Markdown Part21 Mounted Demand Review
+
+Read-only current twenty mounted demand paths via [LAS/MD roster](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/las-md-complete-independent-demand-roster.json) and [Part21 roster](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/part21-three-complete-independent-demand-roster.json). No owning execution or edits performed.
+
+Two definite LAS demand defects were reported immediately:
+
+1. [LAS Source new law](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts) calls source=snapshot(), while original snapshot is imported const lasSnapshotFixture, not a function. Native snapshot() is valid. Source must freshly structuredClone(snapshot), preserving original fixture and every field before collection-only empty mutation.
+2. [LAS Native new complete law](/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:111) directly compares restored/decoded LasSnapshot to source. Actual Header and Point derive f64 PartialEq, original corpus contains NaNs, including mandatory header retained in empty. Use exact relational reprojection comparison already used by STEP/IFC4; do not change NaN words, grants or expected counts.
+
+Remaining bounded static review: all ten actual Source/Native independent semantic-extent relative imports/include_str paths resolve to existing first-party test-only engine. Native helper has complete function boundary, actual existing factory calls and both Binary/Text tests; isolated maxColumns laws leave other limits default. All canonical contracts match measured literal authority: LAS5875/8/50 full21/1509 empty7/520; MD3901/27/4 full88/1879 empty1/37; STEP3437/12/10 full65/1916 empty12/381; IFC43250/11/11 full65/1869 empty18/456; IFC2x34006/12/17 full58/1847 empty17/587. Complete widths remain authored constant-closed; NULL0 preserved.
+
+MD factory structuredClone(fixture) correctly preserves original carrier, Native fixture() uses same first-party strict JSON; empty clears blocks only. All three Part21 Source fixture() entrypoints exist and return fresh original structures. Native originals unchanged, empty clears entities/instances only, preserving headers and all16 EDM strings. STEP/IFC4 Native restored/decoded positives compare actual SQL databases after reproject, correctly avoiding f64 NaN PartialEq. IFC2x3 uses same reprojection without decimal rounding. Both IFC schemas remain under actual stdio-ifc-rs owning Source/native target; no invented second package. One-short schema/table/column/row/value controls and both native encodings remain, with no old assertions/grants/deadlines removed.
+
+This static review supplies no runtime qualification; Source scopes were active at review. Root must capture genuine provider Before/After after correcting the two demand defects.
+
+## Canonical Schema Correction
+
+2026-10-06 independent Bun SQLite DDL readback supersedes provisional semicolon-added metadata: LAS5875/MD3901. Earlier5883/3928 added one excluded separator per8/27 tables. Row/value extents unchanged. Exact table.sql+name byte authority is retained in 📥️inputs/las-md-part21-canonical-schema-sqlite-verification.json; Part213437/3250/4006 independently confirmed unchanged. Root was notified before provider repair; no production/grant change authorized by this research correction.

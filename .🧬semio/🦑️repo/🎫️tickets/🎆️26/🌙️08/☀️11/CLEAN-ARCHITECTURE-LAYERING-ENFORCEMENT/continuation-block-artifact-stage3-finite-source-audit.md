@@ -1,0 +1,5 @@
+# Block Artifact Stage3 Finite Source Audit
+
+All fourteen current preimages/inverses are exact. Three manifest contributions bind their own thin script/root scope, named native binary and mutation-inventory feature. Independent Iarna comparison conserves all unrelated fields; new optional General inventory dependency selects its first-party replication projection. Native descriptor scripts directly name only their own artifact types; 3D explicitly adds component-app-assembly to its feature for the transient descriptor. Four old parent bridge files remain physical and proposed for retirement only.
+
+Thin commands bind their own manifest and binary through the published General command port. Native collectors still collect argv and perform blocking stdout in the Specific process, while parent process controls own finite caps/termination; no standalone sink/cancellation guarantee is inferred. 1 later input/provider/producer origins are preserved as complete unknown pairs. Host-only tests, declaring target compilation, actual production descriptors and physical deletion remain separate. This finite source observation does not authorize publication.

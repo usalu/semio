@@ -18,6 +18,7 @@ trait ChildEmitPreparationOwner: Send {
     fn terminal_is_empty(&self)->bool;
     fn next_close_byte_demand(&mut self)->usize;
     fn refusal(&self)->Option<&::protocol::ProtocolError>;
+    fn retirement_refusal(&self)->Option<&semio_framework_value::ValueError>;
     fn accepted_prefix(&self)->Option<&ChildEmit>;
     fn retained_operation_count(&self)->usize;
 }
@@ -56,6 +57,7 @@ impl ChildEmitPreparation {
     pub fn owner_cell_bytes(&self)->usize{std::mem::size_of_val(self.owner.as_ref())}
     pub fn next_close_byte_demand(&mut self)->usize{self.owner.next_close_byte_demand()}
     pub fn refusal(&self)->Option<&::protocol::ProtocolError>{self.owner.refusal()}
+    pub fn retirement_refusal(&self)->Option<&semio_framework_value::ValueError>{self.owner.retirement_refusal()}
     pub fn accepted_prefix(&self)->Option<&ChildEmit>{self.owner.accepted_prefix()}
     pub fn retained_operation_count(&self)->usize{self.owner.retained_operation_count()}
 }
@@ -185,6 +187,7 @@ where M:Send+'static {
         self.cause.as_mut().and_then(|cause|protocol_owned_cause_text(cause).ok().flatten()).map(|text|text.capacity()).unwrap_or(1)
     }
     fn refusal(&self)->Option<&::protocol::ProtocolError>{self.cause.as_ref()}
+    fn retirement_refusal(&self)->Option<&semio_framework_value::ValueError>{self.close_refusal.as_ref()}
     fn accepted_prefix(&self)->Option<&ChildEmit>{self.prefix.as_ref()}
     fn retained_operation_count(&self)->usize{self.remaining.as_ref().map_or(0,ExactSizeIterator::len)+usize::from(self.current.is_some())+usize::from(self.retirement.is_some())}
 }

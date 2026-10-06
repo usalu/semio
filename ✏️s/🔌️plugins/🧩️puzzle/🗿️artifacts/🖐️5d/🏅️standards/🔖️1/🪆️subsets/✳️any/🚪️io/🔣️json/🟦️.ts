@@ -1,6 +1,6 @@
 /** 🔣️ Declared Puzzle5d JSON transport with literal native field bindings. */
 import * as model from "../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 type Row=Record<string,unknown>;
 const fail=(why:string):never=>{throw new Error("Puzzle5d JSON "+why)};
 const record=(v:unknown):Row=>v!==null&&typeof v==="object"&&!Array.isArray(v)?v as Row:fail("object required");

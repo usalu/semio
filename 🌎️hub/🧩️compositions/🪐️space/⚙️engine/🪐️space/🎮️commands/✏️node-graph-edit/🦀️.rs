@@ -13,7 +13,7 @@ pub const NODE_GRAPH_EDIT_VERB: &str = "nodeGraphEdit";
 
 /// 🧾️ `operations_json` is the JSON array of the host's `nodeGraphEdit` rows — the shared node-graph row vocabulary
 /// (design §13.3) — exactly as both hosts dispatch them.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "node-graph-edit")]
 pub struct NodeGraphEdit {
     pub operations_json: String,

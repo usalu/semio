@@ -77,8 +77,4 @@ pub use super::bounds::DxfBounds;
 //#endregion 🔁️Re-exports
 
 //#region 🪢️TaxonomyMounts
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion 🪢️TaxonomyMounts

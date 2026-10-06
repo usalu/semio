@@ -23,6 +23,7 @@
           "de": "Byte-Versatz"
         },
         "unit": "B",
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10

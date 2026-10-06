@@ -4,7 +4,7 @@
  * @see ../../🔨️modules/🧠️behavior/🟦️.ts
  * @see ../../🔨️modules/🎲️randomness/🟦️.ts — `randomPick`, `weightedIndex`
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { ACTIVITIES, type Activity, type Actor, type Cast, type Needs, type PetMode, type Species } from "../../🧬️schema/🟦️.ts";
 import { randomPick, weightedIndex } from "../../🔨️modules/🎲️randomness/🟦️.ts";
 import { MODE_LIMITS, activityWeights, castOf, dwellOf, encounterOf, encounterShares, followersOf } from "../../🔨️modules/🧠️behavior/🟦️.ts";
@@ -26,7 +26,7 @@ type Vectors = {
 
 /** 🧫️ The committed vectors. */
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  return JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
 }
 
 /** ⚖️ The weights of a committed situation: an actor with the committed needs and a species with or without a fidget. */

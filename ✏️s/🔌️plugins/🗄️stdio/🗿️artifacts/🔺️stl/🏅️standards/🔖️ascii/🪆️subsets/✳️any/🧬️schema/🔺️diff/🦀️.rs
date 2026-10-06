@@ -19,7 +19,7 @@
 //! (`dsl` is a shared framework module, out of this artifact's ownership boundary to fix). The
 //! grammar below sidesteps the bug entirely: `enc_vec3`/`enc_vertices` wrap EVERY array level in
 //! its own `[...]` (bracket-depth-aware `split_top_level`, same primitive `gif`89a's/`svg`'s
-//! hand-rolled `DiffCodec` use), so nesting is unambiguous.
+//! hand-rolled `DiffBinary,DiffCodec,DiffText` use), so nesting is unambiguous.
 
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
@@ -428,393 +428,67 @@ pub fn diff_set_triangle_vertices(index: usize, vertices: [[f64; 3]; 3]) -> StlD
 /// representation, guaranteed since Rust 1.0) — `str::parse::<f64>()` on the other end recovers
 /// the identical bit pattern.
 //#region 🔖️Primitives
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
 
-/// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
-/// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive (same
-/// technique `gif`89a's/`svg`'s hand-rolled `DiffCodec` use).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    if s.is_empty() {
-        return Vec::new();
-    }
-    let mut out = Vec::new();
-    let mut depth = 0i32;
-    let mut start = 0usize;
-    for (i, c) in s.char_indices() {
-        match c {
-            '[' => depth += 1,
-            ']' => depth -= 1,
-            c if c == sep && depth == 0 => {
-                out.push(&s[start..i]);
-                start = i + c.len_utf8();
-            }
-            _ => {}
-        }
-    }
-    out.push(&s[start..]);
-    out
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
-    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
-}
+
+
+
+
+
+
+
+
 //#endregion 🔖️Primitives
 
 //#region 🔖️BinaryPrimitives
-/// 🧪️ P2-FG1-FIX: real LEB128-varint-framed binary primitives backing the upgraded `OpBinary`
-/// (`../🧬️mutations/🦀️.rs`) and `DiffCodec` (below) frames — reuses
-/// `store::pack_rt::write_varint_u64`/`store::ByteReader` rather than reinventing varint encode/
-/// decode (same shape `dxf`'s own `BinaryPrimitives`/`ItemBinaryCodecs` regions use).
-/// `pub(crate)` so the mutations sibling reuses these rather than duplicating them a second time.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
-    store::pack_rt::write_varint_u64(out, s.len() as u64);
-    out.extend_from_slice(s.as_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
-    out.extend_from_slice(&v.to_le_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
-    match opt {
-        None => out.push(0),
-        Some(v) => {
-            out.push(1);
-            enc(v, out);
-        }
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(None),
-        1 => Ok(Some(dec(reader)?)),
-        other => Err(format!("option binary: unknown tag {other}")),
-    }
-}
+
+
+
+
+
+
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️ValueCodecs
-/// 📐️ One `[f64; 3]` level — the depth marker `dsl`'s own `Shape::Tuple` printer is missing.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vec3(v: &[f64; 3]) -> String {
-    format!("[{},{},{}]", v[0], v[1], v[2])
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vec3(s: &str) -> Result<[f64; 3], String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [x, y, z] = parts.as_slice() else { return Err(format!("vec3: expected 3 fields, got {}", parts.len())) };
-    Ok([parse_f64(x)?, parse_f64(y)?, parse_f64(z)?])
-}
-/// 📐️ The outer `[[f64; 3]; 3]` level — 3 `enc_vec3`-bracketed vertices inside one more `[...]`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vertices(vs: &[[f64; 3]; 3]) -> String {
-    format!("[{}]", vs.iter().map(enc_vec3).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vertices(s: &str) -> Result<[[f64; 3]; 3], String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [v0, v1, v2] = parts.as_slice() else { return Err(format!("vertices: expected 3 fields, got {}", parts.len())) };
-    Ok([dec_vec3(v0)?, dec_vec3(v1)?, dec_vec3(v2)?])
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_triangle(t: &StlTriangle) -> String {
-    format!("[{},{}]", enc_vec3(&t.normal), enc_vertices(&t.vertices))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_triangle(s: &str) -> Result<StlTriangle, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [normal, vertices] = parts.as_slice() else { return Err(format!("triangle: expected 2 fields, got {}", parts.len())) };
-    Ok(StlTriangle { normal: dec_vec3(normal)?, vertices: dec_vertices(vertices)? })
-}
+
+
+
+
+
+
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️ValueBinaryCodecs
-/// 🧪️ P2-FG1-FIX: real recursive binary twins of [`enc_vec3`]/[`enc_vertices`]/[`enc_triangle`]
-/// above — genuinely flat (no self-recursion, `StlTriangle` never references itself), so every
-/// level is real fixed/varint-framed binary, never an opaque byte-chain.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vec3_bin(v: &[f64; 3], out: &mut Vec<u8>) {
-    write_f64_bin(out, v[0]);
-    write_f64_bin(out, v[1]);
-    write_f64_bin(out, v[2]);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vec3_bin(reader: &mut store::ByteReader<'_>) -> Result<[f64; 3], String> {
-    Ok([read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?])
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vertices_bin(vs: &[[f64; 3]; 3], out: &mut Vec<u8>) {
-    for v in vs {
-        enc_vec3_bin(v, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vertices_bin(reader: &mut store::ByteReader<'_>) -> Result<[[f64; 3]; 3], String> {
-    Ok([dec_vec3_bin(reader)?, dec_vec3_bin(reader)?, dec_vec3_bin(reader)?])
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_triangle_bin(t: &StlTriangle, out: &mut Vec<u8>) {
-    enc_vec3_bin(&t.normal, out);
-    enc_vertices_bin(&t.vertices, out);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_triangle_bin(reader: &mut store::ByteReader<'_>) -> Result<StlTriangle, String> {
-    Ok(StlTriangle { normal: dec_vec3_bin(reader)?, vertices: dec_vertices_bin(reader)? })
-}
+
+
+
+
+
+
 //#endregion 🔖️ValueBinaryCodecs
 
 //#region 🔖️DiffValueCodecs
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_triangle_diff(d: &StlTriangleDiff) -> String {
-    let mut parts = Vec::new();
-    if let Some(v) = &d.normal {
-        parts.push(format!("N:{}", enc_vec3(v)));
-    }
-    if let Some(v) = &d.vertices {
-        parts.push(format!("V:{}", enc_vertices(v)));
-    }
-    format!("[{}]", parts.join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_triangle_diff(s: &str) -> Result<StlTriangleDiff, String> {
-    let inner = strip_brackets(s)?;
-    let mut d = StlTriangleDiff::default();
-    for entry in split_top_level(inner, ',') {
-        if entry.is_empty() {
-            continue;
-        }
-        let (tag, val) = entry.split_once(':').ok_or_else(|| format!("triangle diff: bad entry {entry:?}"))?;
-        match tag {
-            "N" => d.normal = Some(dec_vec3(val)?),
-            "V" => d.vertices = Some(dec_vertices(val)?),
-            other => return Err(format!("triangle diff: unknown tag {other:?}")),
-        }
-    }
-    Ok(d)
-}
 
-/// 🧭️ Generic-shaped 3-section `[removed];[modified];[added]` collection-triple printer/parser
-/// (same shape `gif`89a's hand-roll uses, ported here for `triangles`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize, String)], added: &[(usize, String)]) -> String {
-    let removed = removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
-    let modified = modified.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
-    let added = added.iter().map(|(i, v)| format!("{i}:{v}")).collect::<Vec<_>>().join(",");
-    format!("{name}{{[{removed}];[{modified}];[{added}]}}")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_collection_triple(body: &str) -> Result<IndexedDiffParts<String, String>, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
-        split_top_level(strip_brackets(s)?, ',')
-            .into_iter()
-            .filter(|s| !s.is_empty())
-            .map(|entry| {
-                let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("collection entry: bad entry {entry:?}"))?;
-                Ok((parse_usize(idx)?, rest.to_string()))
-            })
-            .collect()
-    };
-    Ok((removed, parse_entries(modified_s)?, parse_entries(added_s)?))
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_triangles_diff(d: &StlTrianglesDiff) -> String {
-    enc_collection_triple("triangles", &d.removed, &d.modified.iter().map(|m| (m.index, enc_triangle_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_triangle(&a.triangle))).collect::<Vec<_>>())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_triangles_diff(body: &str) -> Result<StlTrianglesDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body)?;
-    Ok(StlTrianglesDiff {
-        removed,
-        modified: modified.into_iter().map(|(index, enc)| Ok(StlTriangleModified { index, diff: dec_triangle_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-        added: added.into_iter().map(|(index, enc)| Ok(StlTriangleAdded { index, triangle: dec_triangle(&enc)? })).collect::<Result<Vec<_>, String>>()?,
-    })
-}
+
+
+
+
+
+
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️DiffValueBinaryCodecs
-/// 🧪️ P2-FG1-FIX: real recursive binary twin of [`enc_triangle_diff`]/[`dec_triangle_diff`] and
-/// [`enc_triangles_diff`]/[`dec_triangles_diff`] above — `StlTriangleDiff` has no enum/tri-state
-/// field (both `normal`/`vertices` are plain `Option<T>`), so [`write_option_bin`]/
-/// [`read_option_bin`] cover both. `StlTrianglesDiff` is the one genuinely variable-length,
-/// collection-of-records part of this frame (`removed: Vec<usize>`, `modified: Vec<{index,
-/// diff}>`, `added: Vec<{index, triangle}>`) — real varint-counted, recursively-encoded lists,
-/// same shape `md`'s own `enc_blocks_diff_bin`/`dec_blocks_diff_bin` uses for its collection
-/// triple.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_triangle_diff_bin(d: &StlTriangleDiff, out: &mut Vec<u8>) {
-    write_option_bin(out, &d.normal, enc_vec3_bin);
-    write_option_bin(out, &d.vertices, enc_vertices_bin);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_triangle_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StlTriangleDiff, String> {
-    let normal = read_option_bin(reader, dec_vec3_bin)?;
-    let vertices = read_option_bin(reader, dec_vertices_bin)?;
-    Ok(StlTriangleDiff { normal, vertices })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_triangles_diff_bin(d: &StlTrianglesDiff, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
-    for idx in &d.removed {
-        store::pack_rt::write_varint_u64(out, *idx as u64);
-    }
-    store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
-    for entry in &d.modified {
-        store::pack_rt::write_varint_u64(out, entry.index as u64);
-        enc_triangle_diff_bin(&entry.diff, out);
-    }
-    store::pack_rt::write_varint_u64(out, d.added.len() as u64);
-    for entry in &d.added {
-        store::pack_rt::write_varint_u64(out, entry.index as u64);
-        enc_triangle_bin(&entry.triangle, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_triangles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StlTrianglesDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut removed = Vec::with_capacity(removed_count as usize);
-    for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
-    }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut modified = Vec::with_capacity(modified_count as usize);
-    for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_triangle_diff_bin(reader)?;
-        modified.push(StlTriangleModified { index, diff });
-    }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut added = Vec::with_capacity(added_count as usize);
-    for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let triangle = dec_triangle_bin(reader)?;
-        added.push(StlTriangleAdded { index, triangle });
-    }
-    Ok(StlTrianglesDiff { removed, modified, added })
-}
+
+
+
+
 //#endregion 🔖️DiffValueBinaryCodecs
 
 //#region 🔖️TopLevel
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_stl_diff(d: &StlDiff) -> String {
-    let mut tokens: Vec<String> = Vec::new();
-    if let Some(v) = &d.solid_name {
-        tokens.push(format!("solid-name={}", hex_encode_str(v)));
-    }
-    if let Some(v) = &d.triangles {
-        tokens.push(enc_triangles_diff(v));
-    }
-    tokens.join(" ")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_stl_diff(line: &str) -> Result<StlDiff, String> {
-    let mut d = StlDiff::default();
-    if line.is_empty() {
-        return Ok(d);
-    }
-    for token in line.split(' ') {
-        if let Some(rest) = token.strip_prefix("solid-name=") {
-            d.solid_name = Some(hex_decode_str(rest)?);
-        } else if let Some(rest) = token.strip_prefix("triangles{") {
-            d.triangles = Some(dec_triangles_diff(rest.strip_suffix('}').ok_or_else(|| "triangles: missing closing brace".to_string())?)?);
-        } else {
-            return Err(format!("stl diff: unknown token {token:?}"));
-        }
-    }
-    Ok(d)
-}
 
-impl protocol::DiffCodec for StlDiff {
-    fn print_diff(&self) -> String {
-        print_stl_diff(self)
-    }
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_stl_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    /// 🧪️ P2-FG1-FIX: REAL binary frame (`format u8 | flags u8 | [solid_name] | [triangles]`),
-    /// matching `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload
-    /// bytes` shape — upgraded from the prior `print_diff().into_bytes()` text-as-binary
-    /// shortcut. `flags` is a 2-bit presence mask (bit0=`solid_name`, bit1=`triangles`) since
-    /// `StlDiff` has TWO independently optional top-level fields (unlike `MdDiff`'s single
-    /// `blocks`, which only needed one `has_value` byte). `StlDiff`'s own field tree has ZERO
-    /// self-recursion (`StlTriangleDiff`/`StlTrianglesDiff` never reference `StlDiff` or
-    /// themselves) — every present field is real field-by-field binary all the way down
-    /// (`enc_triangles_diff_bin` → `enc_triangle_diff_bin`/`enc_triangle_bin` →
-    /// `enc_vertices_bin`/`enc_vec3_bin`/`write_f64_bin`), never an opaque byte-chain at the Rust
-    /// layer. Only the protocol-DIALECT file (not the Rust code) still frames `triangles`'
-    /// payload as one opaque trailing `chain payload bytes`: `removed`/`modified`/`added` are
-    /// variable-length VECTORS OF RECORDS, which hits the same `protocol-array-of-records`
-    /// `walk_protocol` gap this wave's `dxf`/`md` upgrades independently document (the dialect's
-    /// `array-prim`/`record`-block constructs are unexercised anywhere in this codebase and
-    /// `Prim::Ref`-adjacent array-of-records framing is the documented, non-blocking
-    /// `mechanism_gaps` entry every collection-triple diff hits this wave).
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut flags = 0u8;
-        if self.solid_name.is_some() {
-            flags |= 0b01;
-        }
-        if self.triangles.is_some() {
-            flags |= 0b10;
-        }
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, flags];
-        if let Some(name) = &self.solid_name {
-            write_str_bin(&mut out, name);
-        }
-        if let Some(triangles) = &self.triangles {
-            enc_triangles_diff_bin(triangles, &mut out);
-        }
-        Ok(out)
-    }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
-        let flags = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff flags", offset: 1, detail: e.to_string() })?;
-        let solid_name = if flags & 0b01 != 0 { Some(read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solid_name", offset: reader.position() as u64, detail: e })?) } else { None };
-        let triangles = if flags & 0b10 != 0 { Some(dec_triangles_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff triangles", offset: reader.position() as u64, detail: e })?) } else { None };
-        Ok(StlDiff { solid_name, triangles })
-    }
-}
+
+
+
 //#endregion 🔖️TopLevel
 //#endregion 🔖️HandcraftedDiffCodec
 

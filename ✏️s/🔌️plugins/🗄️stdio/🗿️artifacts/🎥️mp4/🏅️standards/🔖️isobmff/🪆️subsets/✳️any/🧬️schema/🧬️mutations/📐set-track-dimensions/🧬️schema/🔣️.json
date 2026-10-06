@@ -28,6 +28,7 @@
           "en": "Index of the track, counted from 0.",
           "de": "Index der Spur, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -36,12 +37,63 @@
     "width": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "Presentation width of the track's visual content.",
+          "de": "Darstellungsbreite des Bildinhalts der Spur."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "softMax": 7680,
+        "snaps": [
+          640,
+          1280,
+          1920,
+          2560,
+          3840
+        ],
+        "group": "value",
+        "order": 20
+      }
     },
     "height": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "description": {
+          "en": "Presentation height of the track's visual content.",
+          "de": "Darstellungshöhe des Bildinhalts der Spur."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "softMax": 4320,
+        "snaps": [
+          360,
+          480,
+          720,
+          1080,
+          1440,
+          2160
+        ],
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

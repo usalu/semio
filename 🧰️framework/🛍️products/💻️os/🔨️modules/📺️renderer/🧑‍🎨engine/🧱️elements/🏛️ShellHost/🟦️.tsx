@@ -1,3 +1,4 @@
+import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
 import { DOCUMENT_SERVICE_TOPIC_V1, parseDocumentServiceDeclarationV1 } from "../../../../💡️inference/🔌️service/🟦️.ts";
 import { shellFooterNavbarItem } from "../🏛️ShellFooter/🟦️.tsx";
 import { prepareDocumentSurfaceV1 } from "./🔀️surface-switch/📄️document/🟦️.ts";
@@ -13,7 +14,7 @@ import { useInitialExampleReadiness } from "../🐚️Shell/🎬️initial-examp
 // #region 🔌️Adapters
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellDialogSessionIsCurrentV1, shellEffectOwnerIsCurrentV1, type ShellDialogOriginV1, type ShellDialogSessionV1, type ShellDialogV1 } from "./🗨️dialog-origin/🟦️.ts";
 import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.tsx";
-import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, restoreDocumentArchiveV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
+import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMountIsCurrentV1, DocumentAttachmentLaneV1, FolderArchivePersistenceV1, FolderReadBackRouteV1, LatestDocumentReplacementV1, parkDocumentOpeningReplacementV1, replaceAttachedDocumentV1, restoreDocumentArchiveV1, runDocumentOpeningAttemptV1, settleDocumentOpeningReplacementV1, type DocumentOpeningReceiptV1 } from "./🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { createArtifactCreationCatalogMountV1, runArtifactCreationReadyOpeningV1, type ArtifactCreationCatalogMountV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { isTerminalDocumentCheckInPhaseV1, type DocumentCheckInStatusV1 } from "../../../../📇️directory/🧬️schema/📌️document-check-in-v1/🟦️.ts";
 import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1, type DirectorySessionRefreshV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
@@ -181,6 +182,7 @@ import {
   decodeBackboneMessage,
   decodeBackboneWorkerResponse,
   decodeDocumentArchiveBytes,
+  DocumentArchiveFaultError,
   decodePackValue,
   decodePackWire,
   BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
@@ -441,6 +443,7 @@ import {
   InterpretedUiNode,
   PluginSurfaceActionsContext,
   ShellContextMenuFallbackContext,
+  RowActionRefusalsContext,
   TreeWindowContext,
   UiPresenceOverlayContext,
   wireLabel,
@@ -477,7 +480,6 @@ import {
   localProgramsV1,
   programPluginIdV1,
   sessionProgramsV1,
-  shouldAutoStartIntroduction,
   shouldPersistIntroductionSeen,
   shouldReplayIntroductionOnLoad,
   type SpacePanelState,
@@ -630,7 +632,10 @@ import {
   historyOutputNoticeV1,
   historyRefusalCodeV1,
   historyRefusalNoticeV1,
+  historySilentRefusalOfFaultV1,
+  historySilentRefusalOfOutputV1,
   importOpenedFilesV1,
+  programHistoryProjectionsWithLoadV1,
   type BrowserActorPanelHostV1,
   type TreeWindowHostV1,
   type TreeWindowSchedulerV1,
@@ -640,6 +645,7 @@ import {
   pluginShouldReceiveContributions,
   pluginShouldEstablishSession,
   AutoCheckinScheduler,
+  automaticCheckinWaitsV1,
   canCheckIn,
   checkinAbortText,
   checkinStatusText,
@@ -731,7 +737,7 @@ import {
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { toolRunPanelReveal, toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
-import { HistoryReprojectionStatus, TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, TimeTravelWindowIndicator, useTimeTravelRevealV1 } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
+import { HistoryReprojectionStatus, TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, timeTravelRowActionRefusalsV1, TimeTravelWindowIndicator, useTimeTravelRevealV1 } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { commitLocalFoldersConfigMutationV1, localFolderNameV1, LocalFolderReconnectBand, localFolderReconnectOfferV1, readLocalFolderBindingsV1, type LocalFolderIdentityV1 } from "./📎️local-folders/🟦️.tsx";
 import { attachLocalFolder, detachLocalFolder, type LocalFolderBinding, type LocalFolderBindings } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import { retireSkippedWindowBodies } from "./🪟️mounted-window-refresh/🟦️.ts";
@@ -921,7 +927,7 @@ const COMMAND_REJECTED_FAULT_CODE = "app.command.rejected";
  * never drive a claim loop. */
 const LOCAL_SESSION_RECLAIM_INTERVAL_MS = 30_000;
 
-/** ⚖️ Maps one of the frozen nine `mutation.*` codes (contract freeze §C2, extended 2026-09-30 by the two state-dependent
+/** ⚖️ Maps one of the frozen `mutation.*` codes (contract freeze §C2, extended 2026-09-30 by the two state-dependent
  * Error codes `mutation.target-referenced` and `mutation.target-mismatch` — no per-plugin codes, ever) onto its
  * `ui.mutation.code.*` label key, and the event log's own `history.foreign-transition` refusal (kernel-db
  * `FOREIGN_HISTORY_TRANSITION_CODE`) onto `ui.mutation.history.foreignTransition`, every history-edit refusal onto its
@@ -941,10 +947,14 @@ function mutationCodeLabelKey(code: string): UiTranslationKey {
       return "ui.mutation.code.partial";
     case "mutation.clamped":
       return "ui.mutation.code.clamped";
+    case "mutation.precondition-drifted":
+      return "ui.mutation.code.preconditionDrifted";
     case "mutation.duplicate-id":
       return "ui.mutation.code.duplicateId";
     case "mutation.invariant":
       return "ui.mutation.code.invariant";
+    case "mutation.inverse-refused":
+      return "ui.mutation.code.inverseRefused";
     case "mutation.cascade":
       return "ui.mutation.code.cascade";
     case "history.foreign-transition":
@@ -2246,6 +2256,16 @@ function logUnlessRetiredV1(what: string): (error: unknown) => void {
   };
 }
 
+/** 📎️ A sync attach that failed is told to the person and logged with its cause; the attach of a program retired under it
+ * is neither. Nothing is saved to a target that did not attach, so the failure is never left to the console alone. */
+function tellSyncAttachFailureV1(notice: (message: string, kind?: Severity, code?: string) => void): (error: unknown) => void {
+  return (error) => {
+    if (isPluginInstanceRetiredV1(error)) return;
+    console.error("[os-shell] sync attach failed", error);
+    notice(shellLabel("ui.sync.attachFailed"), "error", "sync.attach.failed");
+  };
+}
+
 /** 🔁️ One spawned program's refresh in flight: at most one pass runs per program, and a refresh asked for while it
  * runs only records the newest view state and that another pass is owed, which runs the moment this one lands — every
  * caller awaits the same `done`, and a newer refresh never discards an older one's result. The owed pass is always the
@@ -2990,7 +3010,8 @@ function FrameworkOsShellInner({
     pending: Uint8Array[];
     pendingBytes: number;
     replacements: LatestDocumentReplacementV1<DocumentArchivePack>;
-    archivePersistence: () => Promise<void>;
+    persistence: FolderArchivePersistenceV1;
+    readBack: FolderReadBackRouteV1<DocumentArchivePack>;
     creationMount: ArtifactCreationCatalogMountV1 | null;
     ready: Promise<void>;
     resolveReady(): void;
@@ -3017,7 +3038,7 @@ function FrameworkOsShellInner({
       lane = new DocumentAttachmentLaneV1(async () => {
         const ports = documentPortsRef.current.get(plugin);
         const port = ports?.get(instanceId);
-        await port?.retire();
+        await port?.retire().catch(logUnlessRetiredV1("[os-shell] a document port could not be retired"));
         if (port !== undefined && ports?.get(instanceId) === port) ports.delete(instanceId);
       });
       lanes.set(instanceId, lane);
@@ -3202,7 +3223,7 @@ function FrameworkOsShellInner({
         }
         entry.pending.push(message.slice());
         entry.pendingBytes += message.length;
-      } else void entry.port.receive({ runtimeKey, clientInstanceId: entry.clientInstanceId, scope: entry.scope ?? null }, message).catch(error => failDocumentBackbone(runtimeKey, entry, error));
+      } else void entry.persistence.ingested(entry.port.receive({ runtimeKey, clientInstanceId: entry.clientInstanceId, scope: entry.scope ?? null }, message)).catch(error => failDocumentBackbone(runtimeKey, entry, error));
     } catch (error) { failDocumentBackbone(runtimeKey, entry, error); }
   }, [failDocumentBackbone]);
   const bindDocumentBackbone = useCallback(async (runtimeKey: string, entry: OpenDocumentSession, admitted: () => boolean = () => true): Promise<void> => {
@@ -3218,7 +3239,7 @@ function FrameworkOsShellInner({
         if (!current() || backboneWorkerRef.current !== worker) return;
         if (documentBackboneEffectV1(message) === "remote-ingest-receipt") return;
         worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "documentBackbone", message } }) });
-        void entry.archivePersistence().catch(error => failDocumentBackbone(runtimeKey, entry, error));
+        void entry.persistence.published().catch(error => failDocumentBackbone(runtimeKey, entry, error));
       },
       merge: (conflicts, report) => { if (current()) applyRemoteMergeRef.current(conflicts, report); },
       prepared: port => {
@@ -3234,7 +3255,7 @@ function FrameworkOsShellInner({
       },
     }); } catch (error) {
       const candidate = preparation.port;
-      await candidate?.retire();
+      await candidate?.retire().catch(() => {});
       if (candidate !== undefined) {
         const ports = documentPortsRef.current.get(entry.plugin);
         if (ports?.get(entry.session.instanceId) === candidate) ports.delete(entry.session.instanceId);
@@ -3269,17 +3290,9 @@ function FrameworkOsShellInner({
     const retirement = entry.port?.retire();
     void retirement?.catch(() => {});
     entry.port = null;
-    return entry.replacements.replace(archive, async (candidate, latest) => {
+    return entry.replacements.replace(archive, (candidate, latest) => {
       const exact = () => latest() && current() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
-      await lane.replace(entry.clientInstanceId, exact, async () => {
-        await retirement;
-        if (!exact()) return;
-        try {
-          await load(instanceId, candidate, task?.signal, task?.progress);
-        } finally {
-          if (exact()) await bindDocumentBackbone(runtimeKey, entry, latest);
-        }
-      });
+      return replaceAttachedDocumentV1(lane, entry.clientInstanceId, exact, { retired: retirement, load: () => load(instanceId, candidate, task?.signal, task?.progress), bind: () => bindDocumentBackbone(runtimeKey, entry, latest) });
     });
   }, [bindDocumentBackbone, documentAttachmentLane]);
   const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean, task?: { readonly signal?: AbortSignal; readonly progress?: (status: DocumentArchiveLoadStatus) => void }): Promise<boolean> =>
@@ -3308,20 +3321,27 @@ function FrameworkOsShellInner({
   /** 🎭️ The owner of a pass a PROGRAM runs on its own — its operation progress and completions, its deferred effects:
    * the primary session presents it, the program is its source ({@link shellEffectOwnerIsCurrentV1}). */
   const captureProgramEffectOwner = useCallback((program: ActiveSession) => captureEffectOwner(program, captureDialogOrigin(shellStateRef.current.pluginRuntime.session)), [captureDialogOrigin, captureEffectOwner]);
-  /** 🗃️ Restores one archive into a program and hydrates it like a fresh load ({@link restoreDocumentArchiveV1}): the folder
-   * read-back of a re-attached document and a tutorial's restore both re-read the program's history and refresh every
-   * surface it renders, through the live session when the program is the primary one. */
-  const restoreDocumentArchive = useCallback((plugin: PluginWasmHandle, program: ActiveSession, archive: DocumentArchivePack, current: () => boolean): Promise<boolean> => {
+  /** 🚪️ What restoring an archive into a program drives ({@link restoreDocumentArchiveV1}, {@link FolderReadBackRouteV1}): the
+   * stepped load through the document's attachment lane — every polled status is the program's `load` status outside the
+   * History panel until the load ends, as for a file-open load — the program's history re-read and a full refresh of
+   * every surface it renders, through the live session when the program is the primary one. */
+  const documentArchivePorts = useCallback((plugin: PluginWasmHandle, program: ActiveSession, current: () => boolean) => {
     const live = (): ActiveSession => {
       const primary = sessionRef.current;
       return primary !== null && primary.pluginId === program.pluginId && primary.instanceId === program.instanceId ? primary : program;
     };
-    return restoreDocumentArchiveV1(archive, current, {
-      load: (value) => loadDocumentArchive(plugin, program.instanceId, value, current),
+    const showLoad = (load: { readonly completed: number; readonly total: number } | null) => historyStore.update((projections) => programHistoryProjectionsWithLoadV1(projections, programHistoryKeyV1(program), load));
+    return {
+      load: (value: DocumentArchivePack) => loadDocumentArchive(plugin, program.instanceId, value, current, { progress: showLoad }).finally(() => showLoad(null)),
       history: () => refreshHistorySnapshot(program),
       refresh: () => applyHostEffectsRef.current([], live(), { kind: "full" }, captureProgramEffectOwner(live())),
-    });
-  }, [captureProgramEffectOwner, loadDocumentArchive, refreshHistorySnapshot]);
+    };
+  }, [captureProgramEffectOwner, historyStore, loadDocumentArchive, refreshHistorySnapshot]);
+  /** 🗃️ Restores one archive into a program and hydrates it like a fresh load ({@link restoreDocumentArchiveV1}): a tutorial's
+   * restore replaces the program's document, re-reads its history and refreshes every surface it renders. A folder
+   * read-back goes through the document's own {@link FolderReadBackRouteV1} instead. */
+  const restoreDocumentArchive = useCallback((plugin: PluginWasmHandle, program: ActiveSession, archive: DocumentArchivePack, current: () => boolean): Promise<boolean> =>
+    restoreDocumentArchiveV1(archive, current, documentArchivePorts(plugin, program, current)), [documentArchivePorts]);
   const closeOwnedDialog = useCallback((openingId: number): boolean => {
     if (liveDialogRef.current?.openingId !== openingId) return false;
     liveDialogRef.current = null;
@@ -3917,7 +3937,30 @@ function FrameworkOsShellInner({
         void (async () => {
           try {
             const archive = decodeDocumentArchiveBytes(archiveBytes);
-            if (!await restoreDocumentArchive(entry.plugin, entry.session, archive, () => openDocumentSessionsRef.current.get(runtimeKey) === entry)) return;
+            const held = () => openDocumentSessionsRef.current.get(runtimeKey) === entry;
+            const merge = async (value: DocumentArchivePack) => {
+              if (!entry.plugin.mergeAppDocumentArchive) throw new Error("document-backbone.archive-merger-unavailable");
+              return entry.plugin.mergeAppDocumentArchive(entry.session.instanceId, value);
+            };
+            const file = resolveManifestLabel(entry.session.app.label, uiTerminologyRef.current, uiLocaleRef.current) || entry.session.app.id;
+            const detach = async (failure: Readonly<{ error: unknown }> | null): Promise<void> => {
+              if (!held()) return;
+              if (failure !== null) {
+                console.error("[os-shell] a folder read-back could not be restored", message.documentId, failure.error instanceof Error ? failure.error.message : String(failure.error));
+                const told = failure.error instanceof DocumentArchiveFaultError && failure.error.fault !== null ? appFaultNoticeV1(failure.error.fault, entry.session.app, uiTerminologyRef.current) : null;
+                if (told === null) documentTransferRef.current.notifyDocumentTransfer("load-failed", file, "error");
+                else showTransientNoticeRef.current(told.text, "error", told.code);
+              }
+              documentTransferRef.current.notifyDocumentTransfer("folder-detached", file, "info");
+              closeDocumentRef.current(runtimeKey, entry.clientInstanceId);
+              if (shellStateRef.current.sync.syncBackboneUri === `actor://${runtimeKey}`) {
+                dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
+                dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
+              }
+            };
+            const outcome = await entry.readBack.archive(archive, held, { ...documentArchivePorts(entry.plugin, entry.session, held), merge, cancelled: documentLoadCancelledV1, detach });
+            if (outcome === "cancelled" && held()) documentTransferRef.current.notifyDocumentTransfer("load-cancelled", file, "info");
+            if (outcome !== "held") return;
             if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
             const discarded = rebootstrapDiscardedSessionsRef.current.get(runtimeKey);
             if (discarded) {
@@ -3927,6 +3970,7 @@ function FrameworkOsShellInner({
             setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "snapshot-replaced", documentId: message.documentId, ...(message.scope === undefined ? {} : { scope: message.scope }) }));
           } catch (replacementError) {
             if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== message.clientInstanceId) return;
+            console.error("[os-shell] a folder read-back could not be restored", message.documentId, replacementError instanceof Error ? replacementError.message : String(replacementError));
             if (entry.creationMount !== null) {
               failDocumentBackbone(runtimeKey, entry, replacementError);
               return;
@@ -3938,11 +3982,14 @@ function FrameworkOsShellInner({
               clientInstanceId: message.clientInstanceId,
               ...(message.scope === undefined ? {} : { scope: message.scope }),
               code: "invalid-bootstrap",
-              message: (replacementError instanceof Error ? replacementError.message : String(replacementError)).slice(0, 4_096),
+              message: (replacementError instanceof DocumentArchiveFaultError && replacementError.fault !== null ? appFaultNoticeV1(replacementError.fault, entry.session.app, uiTerminologyRef.current)?.text : undefined)
+                ?? documentTransferNoticeTextV1("load-failed", resolveManifestLabel(entry.session.app.label, uiTerminologyRef.current, uiLocaleRef.current) || entry.session.app.id, uiLocaleRef.current),
               retryable: false,
             }));
           }
         })();
+      } else if (event.kind === "documentArchiveAbsent") {
+        void entry.readBack.absent().catch(error => failDocumentBackbone(runtimeKey, entry, error));
       } else if (event.kind === "commandOutcome") {
         // 🌐️ A refused or transformed batch — refused by the hub, or by the document's actor before it left this device: the
         // worker already discarded the refused edit (rollback, or a rebootstrap of the document's actor), so the human is TOLD,
@@ -3976,7 +4023,7 @@ function FrameworkOsShellInner({
     worker.addEventListener("messageerror", failBrowserActorActions);
     backboneWorkerRef.current = worker;
     return worker;
-  }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, collectSpaceDirectoryEvents, failDocumentBackbone, hubEnv, receiveDocumentBackbone, restoreDocumentArchive, retireBrowserActorUi]);
+  }, [cancelSpaceArtifactCreationsForRuntime, captureDialogOrigin, collectSpaceDirectoryEvents, failDocumentBackbone, hubEnv, documentArchivePorts, receiveDocumentBackbone, retireBrowserActorUi]);
 
   //#region 🗂️LocalCatalog
   useEffect(() => {
@@ -5287,7 +5334,7 @@ function FrameworkOsShellInner({
   const activeIntroductionRef = useRef(activeIntroduction);
   activeIntroductionRef.current = activeIntroduction;
   /** 🎓️ App ids whose tour this shell session has already offered AND had answered (Skip or Done) — the
-   * session-durable half of {@link shouldAutoStartIntroduction}, see its own reasoning for why the
+   * session-durable half of {@link shouldStartIntroduction}, see its own reasoning for why the
    * device-local seen flag alone cannot carry this. Lives for the shell mount, exactly the lifetime of
    * "this session", so a `replayIntroductionOnLoad` brand still replays on the next load. */
   const dismissedIntroductionAppIdsRef = useRef<Set<string>>(new Set());
@@ -5308,14 +5355,14 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
       return;
     }
-    const armable = shouldAutoStartIntroduction({
+    const armable = shouldStartIntroduction({
       appId: session.app.id,
       hasIntroduction: activeIntroduction != null,
       tutorialActive: shellState.tutorial.activeTutorialId != null,
       suppressed: suppressAutoIntroduction,
       replayOnLoad: replayIntroductionOnLoad,
       seenOnDevice: readStoredIntroductionSeen(scope.storage, introductionSeenKey),
-      dismissedAppIds: dismissedIntroductionAppIdsRef.current,
+      dismissedInSession: dismissedIntroductionAppIdsRef.current.has(session.app.id),
     });
     if (!armable) return;
     dispatch({ type: "AUTO_START_INTRODUCTION", key: introductionSeenKey });
@@ -6883,13 +6930,15 @@ function FrameworkOsShellInner({
             const sprBytes = coerceWireBytes(payload.spr);
             const file = resolveManifestLabel(baseSession.app.label, uiTerminologyRef.current, uiLocaleRef.current) || baseSession.app.id;
             const task = documentTransferRef.current.trackDocumentTransfer(file, baseSession.pluginId);
+            const showLoad = (load: { readonly completed: number; readonly total: number } | null) => historyStore.update((projections) => programHistoryProjectionsWithLoadV1(projections, programHistoryKeyV1(baseSession), load));
             try {
-              if (await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner), { signal: task.signal, progress: (status) => task.progress(status.completed, status.total > 0 ? status.total : null) })) await refreshHistorySnapshot(baseSession);
+              if (await loadDocumentPair(pluginEntry.handle, baseSession.instanceId, packBytes, sprBytes, () => isCurrentEffectOwner(effectOwner), { signal: task.signal, progress: (status) => { task.progress(status.completed, status.total > 0 ? status.total : null); showLoad(status); } })) await refreshHistorySnapshot(baseSession);
             } catch (error) {
               const cancelled = documentLoadCancelledV1(error, task.signal);
               console.warn(`[os-shell] ${documentTransferNoticeCodeV1(cancelled ? "load-cancelled" : "load-failed")} ${baseSession.pluginId}#${baseSession.instanceId}`, error);
               documentTransferRef.current.notifyDocumentTransfer(cancelled ? "load-cancelled" : "load-failed", file, cancelled ? "info" : "error");
             } finally {
+              showLoad(null);
               task.finish();
             }
           } else {
@@ -6949,7 +6998,7 @@ function FrameworkOsShellInner({
         }
         if ("requestFileOpen" in effect) {
           const { accept, readAs, importAction, multiple, args } = effect.requestFileOpen;
-          const resolvedImport = importAction || "importFixture";
+          const resolvedImport = importAction || "importSnapshot";
           const opened = await requestFileOpen(accept || ".spk,.dsl,.ops,application/octet-stream", readAs, multiple);
           if (opened.length > 0) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
@@ -7610,8 +7659,7 @@ function FrameworkOsShellInner({
       const ready = new Promise<void>((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
       void ready.catch(() => {});
       const persistToFolder = resolvedBindings.some((binding) => binding.kind === "folder");
-      const entry: OpenDocumentSession = { openingReference: { ...ref }, persistenceBindings: [...resolvedBindings], session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), archivePersistence: async () => {}, creationMount, ready, resolveReady, rejectReady };
-      entry.archivePersistence = latestWins(async () => {
+      const persistence = new FolderArchivePersistenceV1(async () => {
         if (!persistToFolder || openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
         if (!plugin.readAppDocumentArchive) throw new Error("document-backbone.archive-reader-unavailable");
         const archive = await plugin.readAppDocumentArchive(targetSession.instanceId);
@@ -7619,6 +7667,7 @@ function FrameworkOsShellInner({
         const archiveBytes = encodeDocumentArchiveBytes(archive);
         worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: { kind: "localDocumentArchive", archive: Array.from(archiveBytes) } }) });
       });
+      const entry: OpenDocumentSession = { openingReference: { ...ref }, persistenceBindings: [...resolvedBindings], session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }), port: null, pending: [], pendingBytes: 0, replacements: new LatestDocumentReplacementV1(), persistence, readBack: new FolderReadBackRouteV1<DocumentArchivePack>(persistence), creationMount, ready, resolveReady, rejectReady };
       const parked = parkDocumentOpeningReplacementV1({ runtimeKey, plugin, instanceId: targetSession.instanceId, background: target?.background === true }, openDocumentSessionsRef.current, entry);
       if (parked === null) return null;
       const predecessorActor = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
@@ -7845,6 +7894,11 @@ function FrameworkOsShellInner({
     },
     [loadedPlugins, openDocument, rememberLocalFolder, resolveSyncTargetSession],
   );
+  /** 📎️ Attaches the focused program's document to a sync target as the person's gesture. Every gesture goes through here —
+   * the card's Attach, the attach action, the reconnect offer — so a failure is told and logged
+   * ({@link tellSyncAttachFailureV1}) and never dropped as an unhandled rejection (live fault F9: the card's `onAttach`
+   * dropped the promise, so a document that did not attach said nothing). */
+  const attachSyncTarget = useCallback((target: SyncAttachTargetV1): Promise<void> => openSyncTarget(target).catch(tellSyncAttachFailureV1(showTransientNoticeRef.current)), [openSyncTarget]);
 
   /** ✂️ Detaches the attached document; a local folder binding is forgotten with it, so a reload offers nothing back. */
   const detachSyncBackbone = useCallback(() => {
@@ -7893,8 +7947,8 @@ function FrameworkOsShellInner({
   /** 📎️ The person's own gesture reattaches the remembered folder; its archive is restored like a fresh load. */
   const reconnectLocalFolder = useCallback((binding: LocalFolderBinding) => {
     setFolderReconnectBusy(true);
-    void openSyncTarget({ kind: "folder", path: binding.folder.path }).catch(logUnlessRetiredV1("[os-shell] folder reconnect failed")).finally(() => setFolderReconnectBusy(false));
-  }, [openSyncTarget]);
+    void attachSyncTarget({ kind: "folder", path: binding.folder.path }).finally(() => setFolderReconnectBusy(false));
+  }, [attachSyncTarget]);
 
   const browseSyncBackbonePath = useCallback(async (kind: "file" | "folder") => {
     const path = kind === "folder" ? await requestBackboneFolderPath() : await requestBackboneFilePath();
@@ -8242,7 +8296,7 @@ function FrameworkOsShellInner({
             const kind: SyncCardKind = args.kind === "remote" || args.kind === "folder" ? args.kind : "file";
             const target = syncAttachTargetV1(kind, "path" in args ? String(args.path ?? "") : syncDraftPath);
             if (target === null) return refuse("dispatch-failed", "sync attach: empty path");
-            void openSyncTarget(target);
+            void attachSyncTarget(target);
             return applied();
           }
           if (action.action === "detach") {
@@ -8442,11 +8496,11 @@ function FrameworkOsShellInner({
         // ever written the id down.
         lastDispatchedExampleIdRef.current = rememberedExampleIdFromDispatchV1(action, lastDispatchedExampleIdRef.current);
 
-        if (action.action === "openImportFixture") {
+        if (action.action === "openImportSnapshot") {
           void requestFileOpen("application/json,.json", "text", false)
             .then(async (opened) => {
               if (!opened[0]) return;
-              onAction({ controllerId: action.controllerId, action: "importFixture", args: { payload: opened[0].contents, name: opened[0].name }, provenance: { ...entry.provenance, origin: "user", causedBy: entry.provenance.inputSeq } });
+              onAction({ controllerId: action.controllerId, action: "importSnapshot", args: { payload: opened[0].contents, name: opened[0].name }, provenance: { ...entry.provenance, origin: "user", causedBy: entry.provenance.inputSeq } });
             })
             .catch((error) => undefined);
           return applied();
@@ -8499,6 +8553,8 @@ function FrameworkOsShellInner({
           applyLeftoverInteractionView(response.output, hostWindowId);
           const rejectedNotice = historyOutputNoticeV1(response.output, programHistoryProjectionV1(historyStore.get(), programHistoryKeyV1(targetSession), EMPTY_SHELL_HISTORY_PROJECTION_V1).editCount);
           if (rejectedNotice !== null) showTransientNotice(rejectedNotice.text, rejectedNotice.kind, rejectedNotice.code);
+          const ignoredRefusal = historySilentRefusalOfOutputV1(response.output);
+          if (ignoredRefusal !== null) console.debug(`[os-shell] ${action.action} was ignored: ${ignoredRefusal}`);
           const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
           if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
           const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
@@ -8520,6 +8576,7 @@ function FrameworkOsShellInner({
           let outcome: InputOutcomeV1;
           const diagnostic = actionError instanceof SemioFaultError ? inputDiagnosticV1(actionError.fault) : undefined;
           const historyNotice = actionError instanceof SemioFaultError ? historyFaultNoticeV1(actionError.fault, programHistoryProjectionV1(historyStore.get(), programHistoryKeyV1(targetSession), EMPTY_SHELL_HISTORY_PROJECTION_V1).editCount) : null;
+          const silentRefusal = actionError instanceof SemioFaultError ? historySilentRefusalOfFaultV1(actionError.fault) : null;
           const appNotice = actionError instanceof SemioFaultError ? appFaultNoticeV1(actionError.fault, targetSession.app, uiTerminologyRef.current) : null;
           if (isViewerReadOnlyFault(actionError)) {
             showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
@@ -8527,6 +8584,8 @@ function FrameworkOsShellInner({
           } else if (isMutationRejectedFault(actionError)) {
             showMutationRejectedNotice((actionError as SemioFaultError).fault);
             outcome = refuse("mutation-rejected", undefined, true, diagnostic);
+          } else if (silentRefusal !== null) {
+            outcome = refuse("dispatch-failed", silentRefusal, true, diagnostic);
           } else if (historyNotice !== null) {
             showTransientNotice(historyNotice.text, historyNotice.kind, historyNotice.code);
             outcome = refuse("dispatch-failed", historyNotice.code, true, diagnostic);
@@ -8568,7 +8627,7 @@ function FrameworkOsShellInner({
       isCurrentEffectOwner,
       applyHistoryPatch,
       applyLeftoverInteractionView,
-      openSyncTarget,
+      attachSyncTarget,
       browseSyncBackbonePath,
       clearAllWindowUtilities,
       detachSyncBackbone,
@@ -11000,6 +11059,8 @@ function FrameworkOsShellInner({
   const presencePeers = useMemo((): readonly ScopedPresencePeerV1[] => currentDocumentRuntimeKey === null ? [] : (presencePeersByRuntimeKey[currentDocumentRuntimeKey] ?? []), [currentDocumentRuntimeKey, presencePeersByRuntimeKey]);
   /** ⏪️👥️ Peers' open history edits, labelled from this program's own history rows: the roster chip says who edits
    * which mutation, and the history body's affected rows carry a note through the interpreter's presence overlay. */
+  const focusedTimeTravelStage = focusedTimeTravel?.stage ?? null;
+  const rowActionRefusals = useMemo(() => timeTravelRowActionRefusalsV1(focusedTimeTravelStage === null ? null : { stage: focusedTimeTravelStage }), [focusedTimeTravelStage, uiLocale]);
   const timeTravelPeers = useMemo(() => timeTravelPeerPresenceV1(presencePeers, Object.values(focusedHistoryEntries), { terminology: uiTerminology, locale: uiLocale }), [presencePeers, focusedHistoryEntries, uiTerminology, uiLocale]);
 
   const currentSyncStatus = currentDocumentRuntimeKey ? (syncStatusByDocumentId[currentDocumentRuntimeKey] ?? null) : null;
@@ -11136,17 +11197,23 @@ function FrameworkOsShellInner({
   }, []);
   const currentCheckIn = currentDocumentRuntimeKey === null ? undefined : documentCheckInUi[currentDocumentRuntimeKey];
   const dispatchCheckpoint = useCallback(
-    (message: string) => {
-      if (!session) return;
+    (message: string): boolean => {
+      if (!session) return false;
       const gate = checkpointGateV1(focusedHistoryV1().timeTravel, message);
       if (gate === "frozen") {
         const notice = historyRefusalNoticeV1("timeTravel.frozen");
         showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
       }
-      if (gate !== "dispatch") return;
+      if (gate !== "dispatch") return false;
+      if (message === "auto") {
+        const attached = [...openDocumentSessionsRef.current.values()].find((entry) => entry.session.pluginId === session.pluginId && entry.session.instanceId === session.instanceId);
+        const loading = focusedHistoryV1().reprojection?.kind === "load" || attached?.replacements.pending === true;
+        if (automaticCheckinWaitsV1({ loading, attached: attached !== undefined, bound: attached !== undefined && attached.port !== null && !attached.port.closing })) return false;
+      }
       checkpointDispatchedRef.current = true;
       const authors = identityRef.current ? [{ id: identityRef.current.userId, name: identityRef.current.displayName }] : [];
       onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint", args: { message, authors } });
+      return true;
     },
     [focusedHistoryV1, session, onAction],
   );
@@ -11180,7 +11247,9 @@ function FrameworkOsShellInner({
       autoCheckinSchedulerRef.current = null;
       return;
     }
-    const scheduler = new AutoCheckinScheduler(() => dispatchCheckpoint("auto"));
+    const scheduler: AutoCheckinScheduler = new AutoCheckinScheduler(() => {
+      if (!dispatchCheckpoint("auto")) scheduler.defer();
+    });
     autoCheckinSchedulerRef.current = scheduler;
     return () => scheduler.cancel();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -11280,7 +11349,7 @@ function FrameworkOsShellInner({
                     onAction={onAction}
                     onDraftPathChange={(value) => dispatch({ type: "SET_SYNC_DRAFT_PATH", value })}
                     onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
-                    onAttach={openSyncTarget}
+                    onAttach={attachSyncTarget}
                     onDetach={detachSyncBackbone}
                     onBrowsePath={() => (syncCardKind === "folder" ? browseSyncBackbonePath("folder") : syncCardKind === "file" ? browseSyncBackbonePath("file") : undefined)}
                   />
@@ -11291,7 +11360,7 @@ function FrameworkOsShellInner({
         ],
       },
     });
-  }, [openSyncTarget, browseSyncBackbonePath, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, syncPillState, quarantinedConflicts, uiLocale]);
+  }, [attachSyncTarget, browseSyncBackbonePath, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, syncPillState, quarantinedConflicts, uiLocale]);
   //#endregion 🔄️SyncLeaf
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
@@ -11562,6 +11631,11 @@ function FrameworkOsShellInner({
           }
           if (isMutationRejectedFault(error)) {
             showMutationRejectedNotice((error as SemioFaultError).fault);
+            return;
+          }
+          const silentRefusal = error instanceof SemioFaultError ? historySilentRefusalOfFaultV1(error.fault) : null;
+          if (silentRefusal !== null) {
+            console.debug(`[os-shell] a command was ignored: ${silentRefusal}`);
             return;
           }
           const historyNotice = error instanceof SemioFaultError ? historyFaultNoticeV1(error.fault, programHistoryProjectionV1(historyStore.get(), programHistoryKeyV1(session), EMPTY_SHELL_HISTORY_PROJECTION_V1).editCount) : null;
@@ -13295,6 +13369,7 @@ function FrameworkOsShellInner({
     <AppCatalogueContext.Provider value={appCatalogue}>
     <UiKeybindingsProvider bindings={controlKeybindings}>
     <UiPresenceOverlayContext.Provider value={timeTravelPeers.overlay}>
+    <RowActionRefusalsContext.Provider value={rowActionRefusals}>
     <PluginSurfaceActionsContext.Provider value={requestContextMenu}>
     <ShellContextMenuFallbackContext.Provider value={buildShellContextMenuItems}>
     <ShellFaultBoundary boundaryId="shell-root" fallbackLabel={shellLabel("ui.common.renderError")}>
@@ -13383,43 +13458,6 @@ function FrameworkOsShellInner({
                 inviteCapabilityStatus={spaceAdministration.inviteCapabilityStatus}
                 onIntent={dispatchSpaceAdministrationIntent}
               />
-            </div>
-          ) : null}
-          {/* ⏪️📌️ The persistent bottom bands: a live history-edit session of the focused program (whichever panel is
-           * open), the running or finished hub Check In of the current document and the offer to reconnect the folder this device
-           * remembers for the focused program's document, each with its own real controls. */}
-          {focusedTimeTravel !== null || currentCheckIn !== undefined || folderReconnectOffer !== null ? (
-            <div className="pointer-events-none absolute bottom-double left-1/2 z-40 flex max-w-[90vw] -translate-x-1/2 flex-col items-center gap-single">
-              {folderReconnectOffer === null ? null : (
-                <LocalFolderReconnectBand
-                  label={String(shellLabel("ui.sync.reconnect.label"))}
-                  message={String(shellLabel("ui.sync.reconnect.message", { folder: localFolderNameV1(folderReconnectOffer.folder.path) }))}
-                  reconnect={String(shellLabel("ui.sync.reconnect.attach"))}
-                  forget={String(shellLabel("ui.sync.reconnect.forget"))}
-                  busy={folderReconnectBusy}
-                  onReconnect={() => reconnectLocalFolder(folderReconnectOffer)}
-                  onForget={() => forgetLocalFolder(folderReconnectOffer.documentId)}
-                />
-              )}
-              {focusedTimeTravel === null || focusedApp === null ? null : <TimeTravelBand session={focusedTimeTravel} terminology={uiTerminology} locale={uiLocale} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
-              {focusedReprojection === null || focusedApp === null ? null : <HistoryReprojectionStatus reprojection={focusedReprojection} locale={uiLocale} sessionOpen={focusedTimeTravel !== null} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
-              {currentCheckIn === undefined || currentDocumentRuntimeKey === null ? null : (
-                <div role="status" aria-live="polite" data-semio-checkin-band={currentCheckIn.status.phase} className="pointer-events-auto flex flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">
-                  <span id="s-checkin-status">{checkinStatusText(currentCheckIn.status, uiLocale)}</span>
-                  {isTerminalDocumentCheckInPhaseV1(currentCheckIn.status.phase) ? (
-                    <button type="button" id="s-checkin-dismiss" className="underline" onClick={() => dismissHubCheckIn(currentDocumentRuntimeKey)}>
-                      {shellLabel("ui.common.close")}
-                    </button>
-                  ) : (
-                    <>
-                      {currentCheckIn.status.progress.totalUnits > 0 ? <progress value={currentCheckIn.status.progress.completedUnits} max={currentCheckIn.status.progress.totalUnits} aria-label={checkinStatusText(currentCheckIn.status, uiLocale)} /> : null}
-                      <button type="button" id="s-checkin-abort" className="underline" onClick={() => cancelHubCheckIn(currentDocumentRuntimeKey)}>
-                        {checkinAbortText(uiLocale)}
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
             </div>
           ) : null}
           {routeAdmissionNotice === null ? null : (
@@ -13527,6 +13565,46 @@ function FrameworkOsShellInner({
                 ) : undefined
               }
               footer={<Footer items={footerItems} />}
+              /* ⏪️📌️ The persistent bottom bands, in the layout's subfooter row — the last row of the shell, under the footer, where
+                 each reserves its own space and no docked panel's cap reaches, so none lies over or under other text: a live history-edit session of the focused program
+                 (whichever panel is open), a history change replaying before adoption, the running or finished hub Check In of the
+                 current document and the offer to reconnect the folder this device remembers, each with its own real controls. */
+              subfooter={
+                focusedTimeTravel !== null || focusedReprojection !== null || currentCheckIn !== undefined || folderReconnectOffer !== null ? (
+                  <div data-semio-bottom-bands="" className="flex flex-col items-center gap-single px-double py-single">
+                    {folderReconnectOffer === null ? null : (
+                      <LocalFolderReconnectBand
+                        label={String(shellLabel("ui.sync.reconnect.label"))}
+                        message={String(shellLabel("ui.sync.reconnect.message", { folder: localFolderNameV1(folderReconnectOffer.folder.path) }))}
+                        reconnect={String(shellLabel("ui.sync.reconnect.attach"))}
+                        forget={String(shellLabel("ui.sync.reconnect.forget"))}
+                        busy={folderReconnectBusy}
+                        onReconnect={() => reconnectLocalFolder(folderReconnectOffer)}
+                        onForget={() => forgetLocalFolder(folderReconnectOffer.documentId)}
+                      />
+                    )}
+                    {focusedTimeTravel === null || focusedApp === null ? null : <TimeTravelBand session={focusedTimeTravel} terminology={uiTerminology} locale={uiLocale} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
+                    {focusedReprojection === null || focusedApp === null ? null : <HistoryReprojectionStatus reprojection={focusedReprojection} locale={uiLocale} sessionOpen={focusedTimeTravel !== null} controllerId={focusedApp.controllerId} onAction={onActionStable} />}
+                    {currentCheckIn === undefined || currentDocumentRuntimeKey === null ? null : (
+                      <div role="status" aria-live="polite" data-semio-checkin-band={currentCheckIn.status.phase} className="pointer-events-auto flex flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">
+                        <span id="s-checkin-status">{checkinStatusText(currentCheckIn.status, uiLocale)}</span>
+                        {isTerminalDocumentCheckInPhaseV1(currentCheckIn.status.phase) ? (
+                          <button type="button" id="s-checkin-dismiss" className="underline" onClick={() => dismissHubCheckIn(currentDocumentRuntimeKey)}>
+                            {shellLabel("ui.common.close")}
+                          </button>
+                        ) : (
+                          <>
+                            {currentCheckIn.status.progress.totalUnits > 0 ? <progress value={currentCheckIn.status.progress.completedUnits} max={currentCheckIn.status.progress.totalUnits} aria-label={checkinStatusText(currentCheckIn.status, uiLocale)} /> : null}
+                            <button type="button" id="s-checkin-abort" className="underline" onClick={() => cancelHubCheckIn(currentDocumentRuntimeKey)}>
+                              {checkinAbortText(uiLocale)}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : undefined
+              }
               panels={Object.fromEntries(ANCHORS.map((anchor) => [anchor, buildPanelProps(anchor)])) as Record<Anchor, ReturnType<typeof buildPanelProps>>}
               canvasStatus={shellPluginCanvasStatus}
               canvasSkeleton={<CanvasSkeleton label={shellLabel("ui.common.loadingPlugins")} />}
@@ -13594,6 +13672,7 @@ function FrameworkOsShellInner({
     </ShellFaultBoundary>
     </ShellContextMenuFallbackContext.Provider>
     </PluginSurfaceActionsContext.Provider>
+    </RowActionRefusalsContext.Provider>
     </UiPresenceOverlayContext.Provider>
     </UiKeybindingsProvider>
     </AppCatalogueContext.Provider>

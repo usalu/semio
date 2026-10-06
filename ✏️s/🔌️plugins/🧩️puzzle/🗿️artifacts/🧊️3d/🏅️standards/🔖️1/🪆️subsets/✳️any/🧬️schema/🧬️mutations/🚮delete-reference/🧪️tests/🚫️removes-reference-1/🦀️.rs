@@ -1,4 +1,4 @@
-//! 🧪️ `delete-reference` fixture — `🚫️removes-reference-1`.
+//! 🧪️ `delete-reference` scene_snapshot — `🚫️removes-reference-1`.
 //!
 //! Unpins `reference-1`. Like the target-volume delete, nothing references a reference plane, so
 //! the builder emits a single removal with no cascade.
@@ -44,7 +44,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {
@@ -87,7 +87,7 @@ fn declared_outcome_holds() {
 }
 
 /// 🔺️ The sparse delta `delete-reference` produces is exactly the committed diff — the single most
-/// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
+/// load-bearing assertion in the scene_snapshot: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
 #[test]
 fn produces_committed_diff() {

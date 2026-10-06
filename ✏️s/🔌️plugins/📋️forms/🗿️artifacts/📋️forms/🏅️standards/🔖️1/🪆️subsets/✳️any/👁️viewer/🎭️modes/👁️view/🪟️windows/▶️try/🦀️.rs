@@ -24,6 +24,7 @@ pub const BODY_KEY: &str = "forms.view.try";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Try", "Testen"),
         body_key: BODY_KEY.into(),

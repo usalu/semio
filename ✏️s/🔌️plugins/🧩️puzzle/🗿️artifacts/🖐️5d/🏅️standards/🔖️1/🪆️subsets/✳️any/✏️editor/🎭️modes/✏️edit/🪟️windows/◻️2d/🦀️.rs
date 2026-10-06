@@ -12,7 +12,7 @@ use crate::editor::puzzle5d::modes::edit::windows::board2d::{options, utilities}
 use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_TWIN_BIT;
 use crate::editor::puzzle5d::terminology::{puzzle5d_localized, Puzzle5dLabels};
-use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, target_volume_flat_rect, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
+use crate::editor::puzzle5d::{puzzle5d_grip_full_id, puzzle5d_scene_mode, target_volume_flat_rect, Puzzle5dDocument, Puzzle5dPart, Puzzle5dScene, PUZZLE5D_BOARD_SNAPSHOT_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS};
 use semio_framework_plugin::{Board2dScene, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use semio_framework_ui_contract::BuiltNode;
 use serde_json::{json, Value};
@@ -27,6 +27,7 @@ pub const SURFACE_ID: &str = "puzzle.5d.play.2d";
 /// 🧱️ Declares localized metadata; resolved chrome is supplied by the actual host view.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: puzzle5d_localized(|l| l.window_2d),
         body_key: BODY_KEY.into(),
@@ -136,7 +137,7 @@ fn board_target_regions_value(document: &Puzzle5dDocument) -> Value {
     Value::Array(regions)
 }
 
-fn board_fixture_value(document: &Puzzle5dDocument, camera2d: &Puzzle5dCamera2d) -> Value {
+fn board_snapshot_value(document: &Puzzle5dDocument, camera2d: &Puzzle5dCamera2d) -> Value {
     let nodes: Vec<Value> = document.parts.iter().map(board_node_value).collect();
     let edges: Vec<Value> = document
         .fasteners
@@ -151,7 +152,7 @@ fn board_fixture_value(document: &Puzzle5dDocument, camera2d: &Puzzle5dCamera2d)
         })
         .collect();
     json!({
-        "schema": PUZZLE5D_BOARD_FIXTURE_SCHEMA,
+        "schema": PUZZLE5D_BOARD_SNAPSHOT_SCHEMA,
         "camera": board_camera_value(camera2d),
         "nodes": nodes,
         "edges": edges,
@@ -172,7 +173,7 @@ fn board_brush_weights_json(runtime: &Puzzle5dRuntime) -> String {
 /// can assert the board and world projections of ONE snapshot against each other.
 pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
     Board2dScene {
-        fixture_json: board_fixture_value(&envelope.document, &envelope.runtime.camera2d).to_string(),
+        snapshot_json: board_snapshot_value(&envelope.document, &envelope.runtime.camera2d).to_string(),
         camera_json: board_camera_value(&envelope.runtime.camera2d).to_string(),
         glyph_catalogs_json: board_kind_catalogs_value(&envelope.document).to_string(),
         // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection and hover both come

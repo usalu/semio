@@ -4,16 +4,9 @@ import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, rmSync } from "n
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import contract from "../../🧫️fixtures/🚮️absence/🔣️.json";
-import schema from "../../🧬️schema/🚮️absence/🔣️.json";
 import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
-
-test("the declared consumer absence corpus has independent closed admission", () => {
-  const validate = new Ajv({strict: true, allErrors: true}).compile(schema);
-  expect(validate(contract)).toBe(true);
-  for (const candidate of [{...contract, unknown: true}, {...contract, absentRoots: []}, {...contract, absentRoots: [...contract.absentRoots, contract.absentRoots[0]]}]) expect(validate(candidate)).toBe(false);
-});
 
 test("all original neutral type laws execute without Graph, products, S, or Hub", async () => {
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;

@@ -24,7 +24,7 @@ type transcriptVectors struct {
 }
 
 func loadTranscripts(ctx *host.Context) (transcriptVectors, error) {
-	data, err := ctx.FixtureBytes("shared://🐙️issue-sync-transcripts/🐙️transcripts.json")
+	data, err := ctx.InputBytes("shared://🐙️issue-sync-transcripts/🐙️transcripts.json")
 	if err != nil {
 		return transcriptVectors{}, err
 	}

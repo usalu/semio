@@ -91,11 +91,11 @@ async fn declared_outcome_holds() {
     assert!(produced.messages().is_empty(), "update-layer-trace-params/sharpens-the-trace: the params really change, so no no-op warning is expected, got {:?}", produced.messages());
     let delta = produced.diff().layers.clone().expect("update-layer-trace-params's diff pins a layers delta");
     assert_eq!(delta.patched[0].id, "trace-a", "the patch is addressed to the trace layer");
-    assert!(delta.patched[0].patch.trace_params_json.is_some(), "the params travel as one JSON-blob patch field");
+    assert!(delta.patched[0].patch.trace_params.is_some(), "the params travel as one JSON-blob patch field");
 }
 
 /// 🔺️ The produced diff is EXACTLY the committed one: both trace parameters ride together in a single
-/// `traceParamsJson` blob, and the trace's `sourceKey` appears nowhere in the diff — re-tuning a
+/// `traceParams` blob, and the trace's `sourceKey` appears nowhere in the diff — re-tuning a
 /// trace can never retarget its source image.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
@@ -106,11 +106,10 @@ async fn produces_committed_diff() {
     let delta = outcome.diff().layers.clone().expect("update-layer-trace-params pins a layers delta");
     assert_eq!(delta.patched[0].id, "trace-a", "the entry addresses the trace layer");
     let patch = &delta.patched[0].patch;
-    let blob = patch.trace_params_json.as_deref().expect("the trace-params lane is populated");
-    let params: crate::DrawingTraceParams = serde_json::from_str(blob).expect("the params blob is itself valid JSON");
+    let params = patch.trace_params.as_ref().expect("typed trace parameters patch");
     assert_eq!((params.threshold, params.simplify_epsilon), (0.8, 0.25), "both parameters ride in the one blob");
     assert!(patch.boolean_operation.is_none(), "the sibling variant-specific lane stays empty");
-    assert!(!blob.contains("sourceKey"), "the trace source is not part of the params facet");
+    assert!(serde_json::to_value(params).unwrap().get("sourceKey").is_none(), "the trace source is not part of the params facet");
 }
 
 /// 🔣️ The committed diff is itself canonical: it decodes to the artifact's own diff type and

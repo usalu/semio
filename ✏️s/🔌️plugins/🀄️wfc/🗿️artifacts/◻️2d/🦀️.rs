@@ -390,27 +390,6 @@ pub mod standards {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                    }
                 }
             }
         }
@@ -539,6 +518,9 @@ pub mod mutations {
 }
 pub mod inferences {
     pub use crate::standards::v1::subsets::any::schema::inferences::*;
+    pub use crate::host::inferences::*;
+    pub use crate::host::inferences::*;
+    pub use crate::host::inferences::*;
 }
 pub use crate::standards::v1::subsets::any::schema::diff::Wfc2dDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::Wfc2dMutation;
@@ -551,3 +533,8 @@ mod store_fixture;
 #[cfg(all(test, feature = "component-app-assembly"))]
 #[path = "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🦀️.rs"]
 mod mount_contract;
+
+#[path="🔨️modules/🏠️host/🦀️.rs"]
+pub mod host;
+
+pub use host::inferences::*;

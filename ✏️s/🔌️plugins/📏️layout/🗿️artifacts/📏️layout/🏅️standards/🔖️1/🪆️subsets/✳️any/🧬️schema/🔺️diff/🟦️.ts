@@ -1,12 +1,6 @@
 /** 🔺️ Canonical Layout diff with every native `ToValue` field present and nullable. */
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
-import {
-  parseFormDictionary,type FormDictionary, parseCharacterStyle, parseFrame, parseGridSettings, parseImageLink, parseLayoutArtifact, parseLayoutDrawingChild,
-  parseLayer, parseLayoutRect, parsePage, parsePageOverride, parseParagraphStyle, parseParentPage, parseSpread, parseTextStory, parseTextStyleRun,
-  type ArtifactLink, type CharacterStyle, type Frame, type GridSettings, type ImageLink, type Layer,
-  type LayoutArtifact, type LayoutDrawingChild, type LayoutRect, type Page, type PageOverride, type ParagraphStyle, type ParentPage,
-  type Spread, type TextStory, type TextStyleRun,
-} from "../🟦️.ts";
+import {parseFormDictionary,type FormDictionary,parseCharacterStyle,parseFrame,parseGridSettings,parseImageLink,parseLayoutArtifact,parseLayoutDrawingChild,parseLayer,parseLayoutRect,parsePage,parsePageOverride,parseParagraphStyle,parseParentPage,parseSpread,parseTextStory,parseTextStyleRun,type ArtifactLink,type CharacterStyle,type Frame,type GridSettings,type ImageLink,type Layer,type LayoutArtifact,type LayoutDrawingChild,type LayoutRect,type Page,type PageOverride,type ParagraphStyle,type ParentPage,type Spread,type TextStory,type TextStyleRun} from "../🟦️.ts";
 import { parseArtifactLink } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 export * from "../🟦️.ts";
 

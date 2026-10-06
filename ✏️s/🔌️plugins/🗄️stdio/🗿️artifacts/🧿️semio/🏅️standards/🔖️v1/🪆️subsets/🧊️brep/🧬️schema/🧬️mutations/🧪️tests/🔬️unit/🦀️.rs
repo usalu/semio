@@ -1,5 +1,7 @@
+use crate::standards::v1::subsets::drawing::io::text::snapshot::hex_decode;
+use crate::standards::v1::subsets::brep::io::text::mutations::decode_semio_brep_mutation_json;
 use super::*;
-use protocol::{DiffCodec, Mutation, MutationDiff, OpText, SemanticMutation};
+use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpText, SemanticMutation};
 
 /// 🔧️ All 6 collections are id-keyed SETS with no user-meaningful display order (this facet's
 /// own `🔺️diff` module doc comment; same shape `🕸️graph`'s `nodes`/`edges` already establish and
@@ -175,7 +177,7 @@ async fn language_neutral_tolerance_contract_matches_rust_decoder() {
 async fn language_neutral_delete_inverses_preserve_distinct_tolerances() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
     for test_case in fixture["inverseCases"].as_array().expect("inverse cases are an array") {
-        let base = crate::standards::v1::subsets::brep::schema::snapshot::decode_semio_brep_snapshot_json(&test_case["before"].to_string()).expect("inverse base decodes");
+        let base = crate::standards::v1::subsets::brep::io::text::snapshot::decode_semio_brep_snapshot_json(&test_case["before"].to_string()).expect("inverse base decodes");
         let mutation = decode_semio_brep_mutation_json(&test_case["mutation"].to_string()).expect("delete mutation decodes");
         let expected = test_case["expectedInverse"].as_array().expect("expected inverse is an array").iter().map(|operation| decode_semio_brep_mutation_json(&operation.to_string()).expect("expected inverse operation decodes")).collect::<Vec<_>>();
         let actual = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
@@ -195,7 +197,7 @@ async fn language_neutral_tolerance_codec_rejections_match_rust() {
         let accepted = match test_case["encoding"].as_str().expect("diff codec encoding is a string") {
             "text" => SemioBrepDiff::parse_diff(test_case["value"].as_str().expect("text diff case has a value")).is_ok(),
             "binary" => {
-                let bytes = crate::standards::v1::subsets::brep::schema::diff::hex_decode(test_case["bytesHex"].as_str().expect("binary diff case has bytes")).expect("binary diff fixture is hex");
+                let bytes = crate::value::io::text::diff::hex_decode(test_case["bytesHex"].as_str().expect("binary diff case has bytes")).expect("binary diff fixture is hex");
                 SemioBrepDiff::decode_diff(&bytes).is_ok()
             }
             other => panic!("unknown diff codec encoding {other:?}"),

@@ -1,0 +1,7 @@
+# Markdown Complete Held Semantic Provider
+
+Three guarded candidates preserve the actual handwritten27-table block/inline/body/relationship SQL visitor through RowWriter. Both its owned SQL and borrowed semantic walks pay every initial and growing WriteFrame frontier through the actual caller. The original prospective file forecast remains32768/4096/2048/text24 after full semantic admission via file_only; its traversal backing is likewise paid. Canonical schema3901/all27 tables/max4 columns and actual cells/NULL0 are checked before encoding.
+
+Before flat Snapshot construction, original NativeDecodeControl pays byte-per-block and byte-per-inline exclusive-owner frontiers, visits text in scoped256-byte workloads, validates every required derived slot, explicit Absent optional, ordinal enum and active/inactive field mask, and counts every authored entity/body/root/child/list-item row. Block-to-inline edges retain separate index spaces with no parent ordering; same-space child handles remain forward. Every graph node has exactly one owner. No private controller, SQL database, flat Snapshot or duplicated Record mirror. Actual original binder/tree reconstruction remains after borrowed admission.
+
+SQL Reader reconstruction currently retains its existing map/set/temp-vector backing; physical reconstruction/retirement are separate unqualified work. Providers stay held until genuine Native Before and independent review.

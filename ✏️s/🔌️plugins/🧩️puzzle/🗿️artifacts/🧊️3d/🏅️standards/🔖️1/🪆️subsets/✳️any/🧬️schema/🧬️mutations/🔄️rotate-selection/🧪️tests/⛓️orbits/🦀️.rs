@@ -1,4 +1,4 @@
-//! 🧪️ `rotate-selection` fixture — `⛓️orbits`.
+//! 🧪️ `rotate-selection` scene_snapshot — `⛓️orbits`.
 //!
 //! A quarter turn of the chain root `object-a` about +z: `object-b` and `object-d` are re-placed from the turned root by the placement kernel, the locked `object-c` stays and `attraction-bc` is re-derived.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "rotate-selection/orbits: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

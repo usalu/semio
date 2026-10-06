@@ -4,7 +4,8 @@ Validates `📡️spr/🧵️channel/🧫️fixtures/🧫️document-archive-loa
 `jsonschema` library, then replays every case through a Python model of the host protocol written from
 `📓️api-stepped-document-load.md` §2 alone (not from the Rust driver) and checks the scripted commands, operations and
 outcomes. A case the guest admitted itself (`admittedByGuest`, the media import of a whole document) starts admitted under
-`firstSequence`. `--negative` flips one scripted command and must exit 1.
+`firstSequence`. A `merging` case (design §22.22, session 5) admits with `mergeDocumentArchive` and its ready outcome carries
+a non-zero `ahead` of its terminal status. `--negative` flips one scripted command and must exit 1.
 """
 
 import json
@@ -19,8 +20,9 @@ TERMINAL = {"ready", "cancelled", "fault"}
 
 
 class Host:
-    def __init__(self, admitted=None):
+    def __init__(self, admitted=None, merging=False):
         self.operation = admitted
+        self.merging = merging
         self.cancel_wanted = False
         self.cancel_sent = False
         self.terminal = None
@@ -37,7 +39,7 @@ class Host:
             return None
         if self.operation is None:
             self.operation = seq
-            kind = "loadDocumentArchive"
+            kind = "mergeDocumentArchive" if self.merging else "loadDocumentArchive"
         elif self.terminal is not None:
             kind = "acknowledgeDocumentArchiveLoad"
         elif self.cancel_wanted and not self.cancel_sent:
@@ -57,12 +59,14 @@ class Host:
                 self.terminal = None
                 return None
             return {"kind": "refused", "fault": answer["fault"]}
-        if answer["kind"] == "done" and kind in ("loadDocumentArchive", "cancelDocumentArchiveLoad", "acknowledgeDocumentArchiveLoad"):
+        if answer["kind"] == "done" and kind in ("loadDocumentArchive", "mergeDocumentArchive", "cancelDocumentArchiveLoad", "acknowledgeDocumentArchiveLoad"):
             if kind == "cancelDocumentArchiveLoad":
                 self.cancel_sent = True
             if kind == "acknowledgeDocumentArchiveLoad":
                 state = self.terminal["state"]
                 self.outcome = {"kind": "fault", "fault": self.terminal.get("fault", "")} if state == "fault" else {"kind": state}
+                if state == "ready" and self.terminal.get("ahead", 0):
+                    self.outcome["ahead"] = self.terminal["ahead"]
             return None
         if answer["kind"] == "status" and kind == "pollDocumentArchiveLoad" and not foreign:
             if answer["state"] in TERMINAL:
@@ -75,7 +79,7 @@ def replay(law, flip):
     failures = []
     for number, case in enumerate(law["cases"]):
         admitted = case.get("admittedByGuest", False)
-        host = Host(law["firstSequence"] if admitted else None)
+        host = Host(law["firstSequence"] if admitted else None, case.get("merging", False))
         seq = law["firstSequence"] + (1 if admitted else 0)
         cancel = case["cancel"] or {}
         stopped = None

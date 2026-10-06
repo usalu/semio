@@ -748,6 +748,42 @@
       },
       "expectedError": { "code": "wordOnlyFloat", "pointer": "/dx" },
       "expectedFindings": [{ "code": "wordOnlyFloat", "pointer": "/dx" }, { "code": "wordOnlyFloat", "pointer": "/points/-/x" }]
+    },
+    {
+      "name": "multiline-text",
+      "leafSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text"],
+        "properties": {
+          "text": { "type": "string", "x-semio-ui": { "widget": "multiline", "label": { "en": "Text", "de": "Text" }, "description": { "en": "The paragraph's text; line breaks are kept.", "de": "Der Text des Absatzes; Zeilenumbrüche bleiben erhalten." } } },
+          "title": { "type": "string", "maxLength": 80, "x-semio-ui": { "widget": "text", "label": { "en": "Title", "de": "Titel" } } }
+        }
+      },
+      "expectedInputs": [
+        { "id": "/text", "label": { "native": { "en": "Text", "de": "Text" }, "reuse": { "en": "Text", "de": "Text" } }, "schema": { "kind": "string" }, "presentation": { "kind": "multiline" }, "required": true, "description": { "native": { "en": "The paragraph's text; line breaks are kept.", "de": "Der Text des Absatzes; Zeilenumbrüche bleiben erhalten." }, "reuse": { "en": "The paragraph's text; line breaks are kept.", "de": "Der Text des Absatzes; Zeilenumbrüche bleiben erhalten." } } },
+        { "id": "/title", "label": { "native": { "en": "Title", "de": "Titel" }, "reuse": { "en": "Title", "de": "Titel" } }, "schema": { "kind": "string", "maxLen": 80 }, "required": false }
+      ]
+    },
+    {
+      "name": "keyed-list-of-typed-values",
+      "leafSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["newFields"],
+        "properties": {
+          "newFields": { "anyOf": [{ "$ref": "#/$defs/Dictionary" }, { "type": "null" }], "x-semio-ui": { "role": "value", "label": { "en": "Data fields", "de": "Datenfelder" }, "description": { "en": "Typed question values; absence clears the dictionary.", "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch." }, "group": "data", "order": 10 } }
+        },
+        "$defs": {
+          "Dictionary": { "type": "object", "additionalProperties": false, "required": ["entries"], "properties": { "entries": { "type": "array", "x-semio-ui": { "label": { "en": "Entries", "de": "Einträge" } }, "items": { "type": "object", "additionalProperties": false, "required": ["questionId", "value"], "properties": { "questionId": { "type": "string", "x-semio-ui": { "widget": "text", "label": { "en": "Question", "de": "Frage" } } }, "value": { "$ref": "#/$defs/Literal", "x-semio-ui": { "label": { "en": "Value", "de": "Wert" } } } } } } } },
+          "Literal": { "oneOf": [{ "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "null" } } }, { "type": "object", "additionalProperties": false, "required": ["kind", "value"], "properties": { "kind": { "const": "text" }, "value": { "type": "string" } } }, { "type": "object", "additionalProperties": false, "required": ["kind", "items"], "properties": { "kind": { "const": "array" }, "items": { "type": "array", "items": { "$ref": "#/$defs/Literal" } } } }] }
+        }
+      },
+      "expectedInputs": [
+        { "id": "/newFields", "label": { "native": { "en": "Data fields", "de": "Datenfelder" }, "reuse": { "en": "Data fields", "de": "Datenfelder" } }, "schema": { "kind": "object", "fields": [{ "id": "/entries", "label": { "native": { "en": "Entries", "de": "Einträge" }, "reuse": { "en": "Entries", "de": "Einträge" } }, "schema": { "kind": "array", "items": { "kind": "object", "fields": [{ "id": "/questionId", "label": { "native": { "en": "Question", "de": "Frage" }, "reuse": { "en": "Question", "de": "Frage" } }, "schema": { "kind": "string" }, "required": true }, { "id": "/value", "label": { "native": { "en": "Value", "de": "Wert" }, "reuse": { "en": "Value", "de": "Wert" } }, "schema": { "kind": "any" }, "required": true }] } }, "required": true }] }, "required": true, "nullable": true, "description": { "native": { "en": "Typed question values; absence clears the dictionary.", "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch." }, "reuse": { "en": "Typed question values; absence clears the dictionary.", "de": "Typisierte Fragewerte; Abwesenheit entfernt das Wörterbuch." } }, "group": "data", "order": 10 }
+      ]
     }
   ],
   "referenceIds": [

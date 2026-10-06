@@ -98,6 +98,15 @@
       "mutations": 1
     },
     {
+      "query": "MATCH (a:Piece) WHERE a.name = 'capsule' DELETE a",
+      "oracle": {"cascade": "DELETE FROM edges WHERE source = 'child' OR target = 'child'", "mutate": "DELETE FROM nodes WHERE name = 'capsule'"},
+      "columns": [], "rows": [], "mutations": 1, "postNodeCount": 1, "postEdgeCount": 0
+    },
+    {
+      "query": "MERGE (a:Piece)-[:Connection]->(b:Piece)",
+      "oracle": {}, "columns": [], "rows": [], "mutations": 0, "postNodeCount": 2, "postEdgeCount": 1
+    },
+    {
       "query": "MATCH (a:Piece) WHERE a.name = 'missing' RETURN a.name",
       "oracle": {
         "select": "SELECT name FROM nodes WHERE kind = 'Piece' AND name = 'missing' ORDER BY id"
@@ -153,6 +162,14 @@
       "mutations": 0
     }
   ],
+  "resultOwnership": {
+    "maximumOwnedBytes": 512,
+    "maximumEncodedBytes": 1536,
+    "cellBytes": 256,
+    "texts": ["x", "\u0001"],
+    "typedAdmission": [true, true],
+    "textAdmission": [true, false]
+  },
   "interleaving": {
     "query": "MATCH (a:Piece) RETURN a.name",
     "selections": [

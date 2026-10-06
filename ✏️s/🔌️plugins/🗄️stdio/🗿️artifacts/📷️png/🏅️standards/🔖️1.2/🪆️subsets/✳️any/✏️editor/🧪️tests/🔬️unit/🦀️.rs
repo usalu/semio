@@ -1,7 +1,7 @@
 use super::*;
 
 fn rgba_snapshot(width: u32, height: u32, pixels: Vec<u8>) -> PngSnapshot {
-    let projection = crate::io::PngProjection {
+    let projection = crate::standards::v1_2::subsets::any::io::PngProjection {
         width,
         height,
         bit_depth: 8,
@@ -20,7 +20,7 @@ fn rgba_snapshot(width: u32, height: u32, pixels: Vec<u8>) -> PngSnapshot {
         chunk_order: vec![crate::schema::snapshot::PngChunkMarker::Ihdr, crate::schema::snapshot::PngChunkMarker::Idat, crate::schema::snapshot::PngChunkMarker::Iend],
         unknown_chunks: Vec::new(),
     };
-    crate::io::decode_png(&crate::io::author_png_projection(&projection).unwrap()).unwrap()
+    crate::standards::v1_2::subsets::any::io::decode_png(&crate::standards::v1_2::subsets::any::io::author_png_projection(&projection).unwrap()).unwrap()
 }
 
 fn pixel_region_command() -> PngEditCommand {
@@ -103,9 +103,9 @@ fn native_profile_action_parses_checked_samples_and_rejects_mismatch() {
     ]);
     let command = pngEditor_command_from_action(paint_native_region::GRAYSCALE_ACTION_ID, Some(&arguments)).unwrap();
     let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(command)) = command else { panic!("native PNG command") };
-    assert_eq!(command.paint, crate::io::PngNativePaint::grayscale(0x1234));
-    let indexed = crate::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png")).unwrap();
-    assert!(crate::io::validate_native_paint(&indexed, command.region, command.paint).unwrap_err().contains("profile"));
+    assert_eq!(command.paint, crate::standards::v1_2::subsets::any::io::PngNativePaint::grayscale(0x1234));
+    let indexed = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png")).unwrap();
+    assert!(crate::standards::v1_2::subsets::any::io::validate_native_paint(&indexed, command.region, command.paint).unwrap_err().contains("profile"));
 }
 
 #[test]
@@ -116,24 +116,24 @@ fn native_profile_action_defaults_are_valid_for_eight_and_sixteen_bit_sources() 
         semio_framework_value::DslValue::object(action.args.iter().map(|argument| (argument.id.clone(), argument.default.clone().expect("native paint argument default"))))
     };
     let rgba = pngEditor_command_from_action(paint_native_region::RGBA_ACTION_ID, Some(&arguments(paint_native_region::RGBA_ACTION_ID))).unwrap();
-    let rgba8 = crate::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-adam7.png")).unwrap();
+    let rgba8 = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-adam7.png")).unwrap();
     let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(rgba)) = rgba else { panic!("RGBA native paint") };
-    assert!(crate::io::validate_native_paint(&rgba8, rgba.region, rgba.paint).is_ok());
+    assert!(crate::standards::v1_2::subsets::any::io::validate_native_paint(&rgba8, rgba.region, rgba.paint).is_ok());
     assert_eq!(rgba.paint.fourth, u16::from(u8::MAX));
 
     let grayscale = pngEditor_command_from_action(paint_native_region::GRAYSCALE_ACTION_ID, Some(&arguments(paint_native_region::GRAYSCALE_ACTION_ID))).unwrap();
-    let grayscale16 = crate::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap();
+    let grayscale16 = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap();
     let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(grayscale)) = grayscale else { panic!("grayscale native paint") };
-    assert!(crate::io::validate_native_paint(&grayscale16, grayscale.region, grayscale.paint).is_ok());
+    assert!(crate::standards::v1_2::subsets::any::io::validate_native_paint(&grayscale16, grayscale.region, grayscale.paint).is_ok());
 }
 
 #[test]
 fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
     use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
-    let snapshot = crate::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap();
+    let snapshot = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap();
     let command = PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(paint_native_region::PaintNativeRegion {
-        region: crate::io::PngRegion { x: 1, y: 0, width: 1, height: 1 },
-        paint: crate::io::PngNativePaint::grayscale(0x1234),
+        region: crate::standards::v1_2::subsets::any::io::PngRegion { x: 1, y: 0, width: 1, height: 1 },
+        paint: crate::standards::v1_2::subsets::any::io::PngNativePaint::grayscale(0x1234),
     }));
     let config = NoConfig::default(); let history = semio_framework_plugin::HistoryView::empty(); let interaction = protocol::InteractionState::default(); let hover = Default::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-native-region".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "png-native".into() };
@@ -151,10 +151,10 @@ fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
     let mutations = mutations.expect("native PNG work completes");
     assert_eq!(mutations.len(), 1);
     let PngMutation::PaintNativeSamples(mutation) = &mutations[0] else { panic!("native PNG mutation") };
-    assert_eq!(mutation.revision, crate::io::png_revision(&snapshot));
+    assert_eq!(mutation.revision, crate::standards::v1_2::subsets::any::io::png_revision(&snapshot));
     use protocol::{Mutation, MutationDiff};
     let edited = mutations[0].diff(&snapshot).diff().apply(&snapshot).unwrap();
-    assert_eq!(crate::io::png_native_pixel(&edited, 1, 0).unwrap(), vec![0x1234]);
+    assert_eq!(crate::standards::v1_2::subsets::any::io::png_native_pixel(&edited, 1, 0).unwrap(), vec![0x1234]);
     work.begin_close();
     let probe = work.close_step(1, 1);
     assert!(matches!(probe, semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= 1));
@@ -172,11 +172,11 @@ fn retained_pixel_region_publishes_one_revision_guarded_edit_and_native_png() {
     let mutations = drive_pixel_region(&pixel_region_command(), &base);
     assert_eq!(mutations.len(), 1);
     let PngMutation::PatchPixels(patch) = &mutations[0] else { panic!("typed region mutation") };
-    assert_eq!(patch.revision, crate::io::png_revision(&base));
+    assert_eq!(patch.revision, crate::standards::v1_2::subsets::any::io::png_revision(&base));
     let edited = mutations[0].diff(&base).diff().apply(&base).unwrap();
-    let pixels = crate::io::project_png(&edited.bytes).unwrap().pixels;
+    let pixels = crate::standards::v1_2::subsets::any::io::project_png(&edited.bytes).unwrap().pixels;
     assert_eq!(&pixels[20..28], &[10, 20, 30, 128, 10, 20, 30, 128]);
-    assert_eq!(crate::io::decode_png(&crate::io::encode_png(&edited).unwrap()).unwrap(), edited);
+    assert_eq!(crate::standards::v1_2::subsets::any::io::decode_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap(), edited);
 }
 
 #[test]
@@ -191,7 +191,7 @@ fn natural_file_route_exports_edited_and_committed_native_profiles_exactly() {
     let reopened = <PngEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("PNG natural bytes reopen");
     assert_eq!(reopened, edited);
     let Some(PngMutation::SetSnapshot(set)) = <PngEditor as ArtifactEditor>::whole_document_operation(reopened) else { panic!("natural PNG opens through one event-sourced snapshot mutation") };
-    assert_eq!(crate::io::project_png(&set.snapshot.bytes).unwrap().pixels, vec![7, 8, 9, 255, 21, 22, 23, 128]);
+    assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&set.snapshot.bytes).unwrap().pixels, vec![7, 8, 9, 255, 21, 22, 23, 128]);
 
     let fixtures: &[(&str, &[u8], png::ColorType, png::BitDepth, bool)] = &[
         ("16-bit grayscale", include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png"), png::ColorType::Grayscale, png::BitDepth::Sixteen, false),
@@ -232,7 +232,7 @@ fn pixel_region_rejects_invalid_bounds_and_cancellation_publishes_nothing() {
     work.begin_close();
     assert!(matches!(work.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete));
     assert!(work.terminal_is_empty());
-    assert!(crate::io::project_png(&snapshot.bytes).unwrap().pixels.iter().all(|value| *value == 7));
+    assert!(crate::standards::v1_2::subsets::any::io::project_png(&snapshot.bytes).unwrap().pixels.iter().all(|value| *value == 7));
 }
 
 #[test]
@@ -301,7 +301,7 @@ async fn registered_pixel_region_refuses_an_equal_length_later_snapshot() {
     let revision = app.test_document_revision(); let number = |value| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value));
     let arguments = semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1_024)), ("height".into(), number(512)), ("red".into(), number(9)), ("green".into(), number(8)), ("blue".into(), number(7)), ("alpha".into(), number(6))]);
     let meta = artifact_app_laws::meta("local"); app.handle_action(patch_pixel_region::ACTION_ID, Some(&arguments), &meta).await.unwrap(); assert_eq!(app.test_document_revision(), revision);
-    let concurrent = crate::io::paint_rgba8_region_controlled(&expected, &crate::io::png_revision(&expected), crate::io::PngRegion { x: 0, y: 0, width: 1, height: 1 }, [31, 32, 33, 34], &mut |_, _| true).unwrap();
+    let concurrent = crate::standards::v1_2::subsets::any::io::paint_rgba8_region_controlled(&expected, &crate::standards::v1_2::subsets::any::io::png_revision(&expected), crate::standards::v1_2::subsets::any::io::PngRegion { x: 0, y: 0, width: 1, height: 1 }, [31, 32, 33, 34], &mut |_, _| true).unwrap();
     let mutation = PngMutation::SetSnapshot(crate::schema::mutations::SetSnapshot { snapshot: concurrent.clone() });
     app.ingest_operations_text(&mutation.print_op()).await.unwrap(); expected = concurrent;
     let fault = match artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await { Err(fault) => fault, Ok(_) => panic!("stale snapshot was accepted") };
@@ -312,11 +312,11 @@ async fn registered_pixel_region_refuses_an_equal_length_later_snapshot() {
 #[test]
 fn metadata_edit_and_inverse_preserve_exact_source_authority() {
     use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-    let base = crate::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png")).unwrap();
-    let mutation = PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation { revision: crate::io::png_revision(&base), gama: Some(50_000) });
+    let base = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-multi-idat-private.png")).unwrap();
+    let mutation = PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation { revision: crate::standards::v1_2::subsets::any::io::png_revision(&base), gama: Some(50_000) });
     assert_eq!(PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     assert_eq!(PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-    let edited = mutation.diff(&base).diff().apply(&base).unwrap(); assert_eq!(crate::io::project_png(&edited.bytes).unwrap().gama, Some(50_000));
+    let edited = mutation.diff(&base).diff().apply(&base).unwrap(); assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&edited.bytes).unwrap().gama, Some(50_000));
     let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&edited).diff().apply(&edited).unwrap(); assert_eq!(restored, base);
 }
 

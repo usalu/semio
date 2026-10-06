@@ -6,6 +6,12 @@
 # See ../../../../../../../../📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️bridge/Cargo.toml for the
 # same standalone-workspace pattern.
 [workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]
 
 [package]
 name = "semio-stdio-drawing-oracle-probe"

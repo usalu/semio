@@ -26,7 +26,7 @@ type goalDocumentFile struct {
 // region 🔖️Scenarios
 
 func storedDocumentsRoundTrip(ctx *host.Context) (host.Outcome, error) {
-	data, err := ctx.FixtureBytes("shared://🎯️goal-documents.json")
+	data, err := ctx.InputBytes("shared://🎯️goal-documents.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

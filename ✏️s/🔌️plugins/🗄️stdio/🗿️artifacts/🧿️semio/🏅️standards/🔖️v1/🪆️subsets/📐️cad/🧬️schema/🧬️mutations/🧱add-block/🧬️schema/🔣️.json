@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioCadMutation; absent when the payload stands alone."
     },
     "block": {
-      "$ref": "#/$defs/CadBlock"
+      "$ref": "#/$defs/CadBlock",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Block",
+          "de": "Block"
+        },
+        "description": {
+          "en": "Name, base point and entities of the block definition that is added.",
+          "de": "Name, Basispunkt und Entitäten der Blockdefinition, die hinzugefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

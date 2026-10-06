@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "native-text/paged-owner/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "payloadBytes",
+    "pageBytes",
+    "maximumCloseItems",
+    "maximumCloseBytes",
+    "maximumAllocationBytes",
+    "initialAllocationBytes",
+    "ascii",
+    "unicode",
+    "cancelAt",
+    "cases",
+    "invalidUtf8"
+  ],
+  "properties": {
+    "schema": {
+      "const": "native-text/paged-owner/v1"
+    },
+    "payloadBytes": {
+      "const": 8194
+    },
+    "pageBytes": {
+      "const": 4096
+    },
+    "maximumCloseItems": {
+      "const": 1
+    },
+    "maximumCloseBytes": {
+      "const": 4096
+    },
+    "maximumAllocationBytes": {
+      "const": 131072
+    },
+    "initialAllocationBytes": {
+      "const": 4096
+    },
+    "ascii": {
+      "const": {
+        "byte": 120,
+        "repetitions": 8194
+      }
+    },
+    "unicode": {
+      "const": {
+        "prefixByte": 120,
+        "prefixRepetitions": 4095,
+        "middle": "🧩",
+        "suffixByte": 120,
+        "suffixRepetitions": 4093,
+        "tail": "Ω"
+      }
+    },
+    "cancelAt": {
+      "const": 256
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "ascii",
+          "mode": "success",
+          "source": "ascii",
+          "error": null,
+          "logical": 8194
+        },
+        {
+          "id": "unicode-cross-page",
+          "mode": "success",
+          "source": "unicode",
+          "error": null,
+          "logical": 8194
+        },
+        {
+          "id": "initial4096",
+          "mode": "initial",
+          "source": "ascii",
+          "error": "ownership",
+          "logical": 0
+        },
+        {
+          "id": "cancel-validation",
+          "mode": "validate-cancel",
+          "source": "ascii",
+          "error": "canceled",
+          "logical": 0
+        },
+        {
+          "id": "cancel-partial8194",
+          "mode": "materialize-cancel",
+          "source": "ascii",
+          "error": "canceled",
+          "logical": 256
+        }
+      ]
+    },
+    "invalidUtf8": {
+      "const": [
+        [
+          192,
+          128
+        ],
+        [
+          237,
+          160,
+          128
+        ],
+        [
+          244,
+          144,
+          128,
+          128
+        ],
+        [
+          240,
+          159
+        ]
+      ]
+    }
+  }
+}
+

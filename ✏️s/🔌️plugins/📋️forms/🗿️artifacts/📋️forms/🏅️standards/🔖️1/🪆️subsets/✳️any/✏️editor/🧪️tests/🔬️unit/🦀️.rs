@@ -131,7 +131,7 @@ pub(crate) mod context {
     /// directly without going through a full document.
     pub fn building_component_question() -> FormQuestion {
         let mut question = crate::editor::forms::questions::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
-        question.fixture_slug = Some("hexagonal-mushroom-column".into());
+        question.example_id = Some("hexagonal-mushroom-column".into());
         question.params = Some(crate::schema::value_to_dsl(&semio_framework_pack_json::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
     }
@@ -314,7 +314,7 @@ pub(super) fn every_command() -> Vec<FormsCommand> {
         FormsCommand::DropQuestionKind(drop_question_kind::DropQuestionKind { kind: "slider".into(), target_id: "step:s1".into(), drop_position: "inside".into() }),
         FormsCommand::SetSpecJson(set_spec_json::SetSpecJson { json: "{}".into() }),
         FormsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }),
-        FormsCommand::ExportFixture(export_fixture::ExportFixture {}),
+        FormsCommand::ExportSnapshot(export_snapshot::ExportSnapshot {}),
         FormsCommand::SetTryValueStep(set_try_value_step::SetTryValueStep { app_id: "1".into(), document_id: "document".into(), operation_id: "1".into(), generation: 1, cursor: 64, target_index: 128, base_revision: "0".repeat(64), ..Default::default() }),
         FormsCommand::ExportResponses(export_responses::ExportResponses { format: "json".into() }),
         FormsCommand::DiscardResponse(discard_response::DiscardResponse { id: "response-1".into() }),

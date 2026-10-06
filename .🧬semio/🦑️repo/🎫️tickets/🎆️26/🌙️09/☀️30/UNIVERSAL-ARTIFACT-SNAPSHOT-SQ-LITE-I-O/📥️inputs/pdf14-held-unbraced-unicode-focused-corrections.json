@@ -1,0 +1,314 @@
+{
+  "qualification": "HELD correction instructions for held pair.after fields only; replace listed exact raw unbraced sequences; preserve \\0/\\n and \\u{...}; production not touched",
+  "providerInput": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/pdf14-own-domain-public-family-provider-held.json",
+  "rows": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🖼️page/🦀️.rs",
+      "field": "after",
+      "changes": [
+        {
+          "offset": 13,
+          "line": 1,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 1337,
+          "line": 23,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 1546,
+          "line": 28,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 1700,
+          "line": 31,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 2249,
+          "line": 37,
+          "before": "\\u00F6",
+          "after": "ö"
+        },
+        {
+          "offset": 2506,
+          "line": 40,
+          "before": "\\u00FC",
+          "after": "ü"
+        },
+        {
+          "offset": 2992,
+          "line": 43,
+          "before": "\\u00F6",
+          "after": "ö"
+        },
+        {
+          "offset": 3364,
+          "line": 49,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 3953,
+          "line": 58,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 4589,
+          "line": 64,
+          "before": "\\u00D7",
+          "after": "×"
+        },
+        {
+          "offset": 4745,
+          "line": 65,
+          "before": "\\u00D7",
+          "after": "×"
+        },
+        {
+          "offset": 4753,
+          "line": 65,
+          "before": "\\u00F6",
+          "after": "ö"
+        },
+        {
+          "offset": 5237,
+          "line": 73,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 5848,
+          "line": 82,
+          "before": "\\u270F",
+          "after": "✏"
+        },
+        {
+          "offset": 5854,
+          "line": 82,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 7472,
+          "line": 105,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 8411,
+          "line": 117,
+          "before": "\\u25B6",
+          "after": "▶"
+        },
+        {
+          "offset": 8417,
+          "line": 117,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 9306,
+          "line": 128,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 10176,
+          "line": 136,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 10197,
+          "line": 136,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 10217,
+          "line": 136,
+          "before": "\\uFE0F",
+          "after": "️"
+        }
+      ],
+      "regions": [
+        {
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "before": "\\u00F6",
+          "after": "ö"
+        },
+        {
+          "before": "\\u00FC",
+          "after": "ü"
+        },
+        {
+          "before": "\\u00D7",
+          "after": "×"
+        },
+        {
+          "before": "\\u270F",
+          "after": "✏"
+        },
+        {
+          "before": "\\u25B6",
+          "after": "▶"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+      "field": "after",
+      "changes": [
+        {
+          "offset": 13,
+          "line": 1,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 490,
+          "line": 11,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 636,
+          "line": 14,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 973,
+          "line": 20,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 994,
+          "line": 20,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 1014,
+          "line": 20,
+          "before": "\\uFE0F",
+          "after": "️"
+        }
+      ],
+      "regions": [
+        {
+          "before": "\\uFE0F",
+          "after": "️"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+      "field": "after",
+      "changes": [
+        {
+          "offset": 13,
+          "line": 1,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 490,
+          "line": 11,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 636,
+          "line": 14,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 973,
+          "line": 20,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 994,
+          "line": 20,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 1014,
+          "line": 20,
+          "before": "\\uFE0F",
+          "after": "️"
+        }
+      ],
+      "regions": [
+        {
+          "before": "\\uFE0F",
+          "after": "️"
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+      "field": "after",
+      "changes": [
+        {
+          "offset": 13,
+          "line": 1,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 490,
+          "line": 11,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 636,
+          "line": 14,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 973,
+          "line": 20,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 994,
+          "line": 20,
+          "before": "\\uFE0F",
+          "after": "️"
+        },
+        {
+          "offset": 1014,
+          "line": 20,
+          "before": "\\uFE0F",
+          "after": "️"
+        }
+      ],
+      "regions": [
+        {
+          "before": "\\uFE0F",
+          "after": "️"
+        }
+      ]
+    }
+  ]
+}

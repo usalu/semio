@@ -15,12 +15,40 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the records at which it is inserted, counted from 0.",
+          "de": "Position unter den Datensätzen, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "row": {
       "type": "array",
       "items": {
         "type": "string"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Fields",
+          "de": "Felder"
+        },
+        "description": {
+          "en": "Field values of the inserted record, in column order.",
+          "de": "Feldwerte des eingefügten Datensatzes in Spaltenreihenfolge."
+        },
+        "group": "value",
+        "order": 20
       }
     }
   }

@@ -1,0 +1,9 @@
+# Architect Complete Native Semantic Provider Preparation
+
+A fresh guarded three-path Native family is prepared in `inputs/architect-complete-native-semantic-provider-held.json`. It is held until the two existing-API complete semantic boundary laws execute against the current provider. Nothing in the production Native tree was changed by this preparation.
+
+The same typed row visitor supports real SQL projection and borrowed semantic admission. Independent SQLite inspection found 685 authored tables and a maximum of 32 columns, including each surrogate identity; typed scalar scratch and full-width unsigned decimal text therefore stay in bounded inline storage. Native borrowed-record admission computes actual storage-class byte extents from all 65 typed register declarations, shared headers, quantity entities, ordered relations and the custom Audit body, preserving optional TextField presence and exact IEEE companions.
+
+Reconstruction uses paid borrowed table/row indexes instead of estimated BTreeMap/BTreeSet grants. Each concrete Vec backing is admitted through NativeDecodeControl, while the outer SqliteSnapshotControl allocation_stage settles its cumulative ownership even after cancellation or refusal. Semantic cell limits remain separate from backing allocation ceilings. Dense ordinals, aliased identities, duplicate row ownership, literal table/register names, quantity ownership and leftover rows remain enforced. Controlled authored schema validation runs before typed reconstruction.
+
+The draft has not been compiled or executed. The original 22-law Architect Native gate had 21 passing and one genuine semantic native-admission failure before these stronger demands. Both complete 11-case Native laws, selected and whole owning gates, allocation/cancellation receipts and the current public file cohort remain pending.

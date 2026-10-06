@@ -1,5 +1,4 @@
 {
-  "$schema": "s.stdio.bmp.v3.canonical-byte-authority.fixture.v1",
   "accepted": [
     {
       "id": "direct-rgb24-padding-gap-trailer",

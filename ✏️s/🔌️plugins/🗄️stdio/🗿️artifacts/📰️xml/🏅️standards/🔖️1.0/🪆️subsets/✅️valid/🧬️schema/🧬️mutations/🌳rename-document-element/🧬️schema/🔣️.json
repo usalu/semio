@@ -14,7 +14,21 @@
       "description": "Aggregate discriminator spliced in by XmlValidMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Element name",
+          "de": "Elementname"
+        },
+        "description": {
+          "en": "Qualified name of the document element; the DOCTYPE name follows it.",
+          "de": "Qualifizierter Name des Dokumentelements; der DOCTYPE-Name folgt ihm."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

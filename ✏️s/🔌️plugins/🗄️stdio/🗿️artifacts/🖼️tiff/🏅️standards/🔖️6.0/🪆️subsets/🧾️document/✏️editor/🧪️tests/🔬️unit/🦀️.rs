@@ -139,7 +139,7 @@ fn retained_tiled_paint_captures_revision_round_trips_and_has_exact_inverse() {
     let mutations = drive_paint(&paint_command(), &before, &TiffEditorConfig::default());
     assert_eq!(mutations.len(), 1);
     let TiffMutation::PaintRegion(payload) = &mutations[0] else { panic!("addressed TIFF paint mutation") };
-    assert_eq!(payload.revision, crate::io::tiff_revision(&before));
+    assert_eq!(payload.revision, crate::standards::v6_0::subsets::document::io::tiff_revision(&before));
     assert_eq!(TiffMutation::parse_op(&mutations[0].print_op()).expect("text paint round trip"), mutations[0]);
     assert_eq!(TiffMutation::decode_op(&mutations[0].encode_op().expect("binary paint encode")).expect("binary paint decode"), mutations[0]);
     let after = mutations[0].diff(&before).diff().apply(&before).expect("apply TIFF paint");
@@ -213,9 +213,9 @@ fn large_raster_byte_order_edit_uses_compact_native_event() {
     let native_base = crate::schema::demo_tiff_snapshot();
     let native_emit = <TiffAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect("native byte-order edit emits");
     let native_edited = protocol::MutationDiff::apply(<TiffMutation as protocol::Mutation<TiffSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native byte-order mutation applies");
-    let native = crate::io::encode_tiff(&native_edited).expect("edited TIFF encodes");
+    let native = crate::standards::v6_0::subsets::document::io::encode_tiff(&native_edited).expect("edited TIFF encodes");
     assert_eq!(&native[..2], b"MM");
-    let reopened = crate::io::decode_tiff(&native).expect("edited native TIFF reopens");
+    let reopened = crate::standards::v6_0::subsets::document::io::decode_tiff(&native).expect("edited native TIFF reopens");
     assert_eq!(reopened.byte_order, crate::schema::snapshot::TiffByteOrder::BigEndian);
     assert_eq!(reopened.ifds[0].storage.chunks, native_edited.ifds[0].storage.chunks);
 }

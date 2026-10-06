@@ -1,0 +1,11 @@
+# Complementary Public Owner First Native Fixture Frontier
+
+The registered 48-project sequential native gate is running with all nine appended populated public owner demand families. The first actual FEM2d and FEM3d runs each executed 10 tests: the original eight passed and the two appended public laws failed before I/O because the authored test plugin identifiers did not own the actual declared artifact identities.
+
+The actual first-party admission contract checks the declaring plugin against the middle segment of the artifact identity. The concrete declarations are `s.fem.fem2d`, `s.fem.fem3d`, `s.trinity.rewriting`, `s.trinity.jack`, `s.puzzle.puzzle3d`, and `s.block.block2d`, `s.block.block3d`, `s.block.block5d`. The test fixtures used unique SQLite test plugin identifiers instead of those actual owning plugin identities. Layout already declares the correct `layout` plugin.
+
+Eight narrowly guarded test registration line corrections are held in `📥️inputs/eight-populated-public-owner-actual-plugin-fixture-closure-held.json`. They use the actual owning plugin identifier and package identifier and retain the actual closed app wrappers, semantic Snapshot declaration, mandatory public export/import, independent SQL inspection/edit, exact owner comparison, and retirement. No public admission rule or production codec is changed.
+
+The corrections will mount after the running native gate completes. The gate additionally found six compiler-only stale Energy test API calls and three stale GIS PNG field accesses. Four scoped test-file corrections are held in `📥️inputs/complementary-energy-gis-current-test-api-closure-held.json`: the existing first-party JSON reader with explicit Reject policy, the actual three-argument model edit seam, and PNG's actual derived preview dimensions and RGBA `bytes`. They retain all original predicates and introduce no compatibility API or dependency.
+
+Generation3d's original native semantic limit test has a genuine ownership failure from an unexpected successful Snapshot being dropped under a 16-byte semantic limit. The executor now owns the shared Generation2d/3d neutral semantic extent demand/provider; no caller limits or shared allocation controls are changed by Root. Subsequent codec or full-owner failures remain genuine independent work. No complete complementary gate success is claimed.

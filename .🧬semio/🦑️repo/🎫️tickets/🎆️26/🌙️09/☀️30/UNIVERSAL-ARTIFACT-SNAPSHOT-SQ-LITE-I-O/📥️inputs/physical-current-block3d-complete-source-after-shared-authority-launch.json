@@ -1,0 +1,14 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "nx",
+    "run",
+    "@semio-tech/block-3d-rs:test-snapshot-sqlite-source",
+    "--skip-nx-cache",
+    "--outputStyle=stream",
+    "--excludeTaskDependencies"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-block3d-complete-source-after-actual-shared-authority.log",
+  "status": "genuine owningSource65 after actual sharedroot imports+sharedJSONword reuse"
+}

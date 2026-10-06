@@ -71,7 +71,7 @@ fn expect(name: &str, field: &str, expected: &Json, produced: &Json) -> Result<(
 
 #[cfg(feature = "sut")]
 fn a_move_carries_the_subtree_and_the_docs(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🚚️file-folder-move-trees.json")?;
+    let file = ctx.input_json("shared://🚚️file-folder-move-trees.json")?;
     let mut moves = Vec::new();
     for vector in file.array("cases") {
         let name = vector.str("name");
@@ -88,7 +88,7 @@ fn a_move_carries_the_subtree_and_the_docs(ctx: &Context) -> Result<Outcome, Str
 
 #[cfg(feature = "sut")]
 fn moving_back_restores_the_tree(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🚚️file-folder-move-trees.json")?;
+    let file = ctx.input_json("shared://🚚️file-folder-move-trees.json")?;
     let mut round_trips = Vec::new();
     for vector in file.array("cases") {
         let name = vector.str("name");
@@ -108,7 +108,7 @@ fn moving_back_restores_the_tree(ctx: &Context) -> Result<Outcome, String> {
 
 #[cfg(feature = "sut")]
 fn an_occupied_target_is_refused(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🚚️file-folder-move-trees.json")?;
+    let file = ctx.input_json("shared://🚚️file-folder-move-trees.json")?;
     let first = file.array("cases").into_iter().next().ok_or_else(|| "the vector set carries no case".to_string())?;
     let workspace = workspace_of(first.get("before").unwrap_or(&Json::Null));
     let mut refusals = Vec::new();

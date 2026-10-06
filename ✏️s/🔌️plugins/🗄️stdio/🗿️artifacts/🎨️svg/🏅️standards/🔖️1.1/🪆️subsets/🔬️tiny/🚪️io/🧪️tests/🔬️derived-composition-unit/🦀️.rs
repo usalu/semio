@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v1_1::subsets::tiny::schema::SvgTinyBuilder;
+    use crate::standards::v1_1::subsets::tiny::io::SvgTinyBuilder;
     use crate::standards::v1_1::subsets::tiny::schema::{CODE_ATTRIBUTE, CODE_ELEMENT};
     use semio_framework_plugin::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;

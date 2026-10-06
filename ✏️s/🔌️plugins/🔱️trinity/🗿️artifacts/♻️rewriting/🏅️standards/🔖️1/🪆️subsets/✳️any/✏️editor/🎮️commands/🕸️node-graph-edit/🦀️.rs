@@ -13,7 +13,7 @@
 use crate::apply_rewrite_rule_mutation;
 use crate::content::{admit, read, working_child_emit, WORKING_CHILD_SLOT};
 use crate::standards::v1::subsets::any::schema::mutations::drag_rule_nodes;
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use semio_framework_plugin::app::ChildContentView;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
@@ -121,7 +121,7 @@ fn working_graph_edit(state: &RewritingSnapshot, children: &ChildContentView, ro
         records.extend(released);
     }
     let Some(gesture) = records.first().map(|record| record.gesture_id.clone()) else {
-        return Ok(working_child_emit(state, &leaves));
+        return Ok(working_child_emit(state, leaves));
     };
     Ok(Emit::node_drag_child::<SemioGraphSnapshot, SemioGraphMutation>(node_drag_emit(TRINITY_REWRITING_EDITOR_APP_ID, "nodeGraphEdit", authoring_seed, &gesture, leaves), WORKING_CHILD_SLOT, &state.working_graph.content.child_id))
 }

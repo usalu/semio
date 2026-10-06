@@ -17,17 +17,13 @@ pub struct PaintIndexedRegion {
     pub palette_index: u8,
 }
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 impl protocol::MutationKind<BmpSnapshot, BmpMutation> for PaintIndexedRegion {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "indexed-region", kind: "paint-indexed-region", record: "PaintIndexedRegion" };
 
     fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<BmpDiff> {
-        let region = crate::io::BmpRegion { x: self.x, y: self.y, width: self.width, height: self.height };
-        match crate::io::paint_indexed_region_controlled(base, &self.revision, region, self.palette_index, &mut |_, _| true) {
+        let region = crate::standards::v_v3::subsets::any::io::BmpRegion { x: self.x, y: self.y, width: self.width, height: self.height };
+        match crate::standards::v_v3::subsets::any::io::paint_indexed_region_controlled(base, &self.revision, region, self.palette_index, &mut |_, _| true) {
             Ok(next) => protocol::MutationOutcome::new(BmpDiff::between(base, &next)),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["indexed-region"]),
         }

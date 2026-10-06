@@ -27,6 +27,7 @@
           "en": "Stored byte: aspect = (value + 15) / 64; 0 means no information.",
           "de": "Gespeichertes Byte: Seitenverhältnis = (Wert + 15) / 64; 0 bedeutet keine Angabe."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 10

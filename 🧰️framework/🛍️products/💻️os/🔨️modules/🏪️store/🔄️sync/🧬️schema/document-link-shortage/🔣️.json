@@ -4,107 +4,183 @@
   "title": "Document Link Shortage V1",
   "description": "The one state machine every shell (native wgpu, wasm32 wgpu, React) drives for a hub document's link: a short connection shortage keeps the document mounted and local edits queued while the link reconnects with a capped doubling backoff; no retry is scheduled past the bound, so the last attempt of every shortage runs at the bound; a failed attempt at or past the bound expires the link, and an attempt that never answers expires it at the ceiling (bound plus one capped backoff) — long offline periods are refused, never silently absorbed; a hub that withdraws access revokes it. Terminal states admit no local edit and never relink.",
   "$defs": {
-    "Millis": { "type": "integer", "minimum": 0 },
+    "Millis": {
+      "type": "integer",
+      "minimum": 0
+    },
     "Policy": {
       "title": "Link Shortage Policy",
       "type": "object",
       "additionalProperties": false,
-      "required": ["reconnectMinMs", "reconnectMaxMs", "shortageBoundMs"],
+      "required": [
+        "reconnectMinMs",
+        "reconnectMaxMs",
+        "shortageBoundMs"
+      ],
       "properties": {
-        "reconnectMinMs": { "type": "integer", "minimum": 1 },
-        "reconnectMaxMs": { "type": "integer", "minimum": 1 },
-        "shortageBoundMs": { "type": "integer", "minimum": 1 }
+        "reconnectMinMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reconnectMaxMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "shortageBoundMs": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "State": {
       "title": "Link State",
       "oneOf": [
-        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "linked" } } },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "sinceMs", "backoffMs", "retryAtMs"],
-          "properties": { "kind": { "const": "unlinked" }, "sinceMs": { "$ref": "#/$defs/Millis" }, "backoffMs": { "$ref": "#/$defs/Millis" }, "retryAtMs": { "$ref": "#/$defs/Millis" } }
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "linked"
+            }
+          }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "sinceMs", "atMs"],
-          "properties": { "kind": { "const": "expired" }, "sinceMs": { "$ref": "#/$defs/Millis" }, "atMs": { "$ref": "#/$defs/Millis" } }
+          "required": [
+            "kind",
+            "sinceMs",
+            "backoffMs",
+            "retryAtMs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unlinked"
+            },
+            "sinceMs": {
+              "$ref": "#/$defs/Millis"
+            },
+            "backoffMs": {
+              "$ref": "#/$defs/Millis"
+            },
+            "retryAtMs": {
+              "$ref": "#/$defs/Millis"
+            }
+          }
         },
-        { "type": "object", "additionalProperties": false, "required": ["kind", "atMs"], "properties": { "kind": { "const": "revoked" }, "atMs": { "$ref": "#/$defs/Millis" } } }
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "sinceMs",
+            "atMs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "expired"
+            },
+            "sinceMs": {
+              "$ref": "#/$defs/Millis"
+            },
+            "atMs": {
+              "$ref": "#/$defs/Millis"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "atMs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "revoked"
+            },
+            "atMs": {
+              "$ref": "#/$defs/Millis"
+            }
+          }
+        }
       ]
     },
     "Event": {
       "title": "Link Event",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "nowMs"],
-      "properties": { "kind": { "enum": ["failed", "restored", "tick", "refused"] }, "nowMs": { "$ref": "#/$defs/Millis" } }
+      "required": [
+        "kind",
+        "nowMs"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "failed",
+            "restored",
+            "tick",
+            "refused"
+          ]
+        },
+        "nowMs": {
+          "$ref": "#/$defs/Millis"
+        }
+      }
     },
-    "Status": { "title": "Link Status Code", "enum": ["linked", "reconnecting", "link-expired", "access-revoked"] },
+    "Status": {
+      "title": "Link Status Code",
+      "enum": [
+        "linked",
+        "reconnecting",
+        "link-expired",
+        "access-revoked"
+      ]
+    },
     "Observation": {
       "title": "What A Shell Reads After One Event",
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "status", "admitsLocalEdits"],
+      "required": [
+        "state",
+        "status",
+        "admitsLocalEdits"
+      ],
       "properties": {
-        "state": { "$ref": "#/$defs/State" },
-        "status": { "$ref": "#/$defs/Status" },
-        "admitsLocalEdits": { "type": "boolean" },
-        "expiresAtMs": { "$ref": "#/$defs/Millis" }
-      }
-    },
-    "DocumentLinkShortage": {
-      "title": "Policy, Localized Terminal Texts And Transition Vectors",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["schema", "policy", "accessRefusedStatuses", "texts", "vectors"],
-      "properties": {
-        "schema": { "const": "semio.store.document-link-shortage/v1" },
-        "policy": { "$ref": "#/$defs/Policy" },
-        "accessRefusedStatuses": { "description": "HTTP statuses of a document admission that mean the hub withdrew access: the link is revoked, never retried.", "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "integer", "minimum": 400, "maximum": 499 } },
-        "texts": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["reconnecting", "link-expired", "access-revoked"],
-          "properties": {
-            "reconnecting": { "$ref": "#/$defs/LocalizedText" },
-            "link-expired": { "$ref": "#/$defs/LocalizedText" },
-            "access-revoked": { "$ref": "#/$defs/LocalizedText" }
-          }
+        "state": {
+          "$ref": "#/$defs/State"
         },
-        "vectors": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["id", "openedAtMs", "steps"],
-            "properties": {
-              "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-              "openedAtMs": { "$ref": "#/$defs/Millis" },
-              "steps": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": ["event", "expect"],
-                  "properties": { "event": { "$ref": "#/$defs/Event" }, "expect": { "$ref": "#/$defs/Observation" } }
-                }
-              }
-            }
-          }
+        "status": {
+          "$ref": "#/$defs/Status"
+        },
+        "admitsLocalEdits": {
+          "type": "boolean"
+        },
+        "expiresAtMs": {
+          "$ref": "#/$defs/Millis"
         }
       }
     },
     "LocalizedText": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["en", "de"],
-      "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
-  },
-  "allOf": [{ "$ref": "#/$defs/DocumentLinkShortage" }]
+  }
 }

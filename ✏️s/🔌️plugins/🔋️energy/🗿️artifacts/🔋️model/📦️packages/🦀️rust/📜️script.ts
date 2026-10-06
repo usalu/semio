@@ -2,4 +2,4 @@
 /** 📦️ energy model Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { runWeatherChecks } from "../../../../🧩️extensions/🌦️epw/🧪️tests/🔬️unit/🟦️.ts";
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-energy-model", { snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts","../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], twins: [{ name: "epw-weather", run: runWeatherChecks }] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-energy-model", { snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts","../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], twins: [{ name: "epw-weather", run: runWeatherChecks }] });

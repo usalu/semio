@@ -19,7 +19,7 @@
 // expectation it is measured against.
 //
 //   bun 📜️script.ts generate  [--only <fixture-id>]     # writes each declared emoji directory and leaf
-//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the fixtureManifests block (JSON)
+//   bun 📜️script.ts manifests [--only <fixture-id>]     # prints the testEvidence block (JSON)
 //
 // @see ../../../../💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🏭️generator/📜️script.ts — the sibling
 //      generator this file's CLI/recipe shape is mirrored from (both hand-author before/after
@@ -122,7 +122,6 @@ function generateOne(recipe: Recipe, outDir: string): Record<string, unknown> {
   }
 
   return {
-    schema: "semio.repository-test.fixture/v2",
     id: recipe.id,
     class: "third-party-generated",
     target: { artifact: "s.stdio.avi", standard: "1.0", subset: recipe.subset },

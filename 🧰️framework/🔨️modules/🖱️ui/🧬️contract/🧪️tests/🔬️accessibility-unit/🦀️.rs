@@ -147,6 +147,9 @@ pub(crate) fn assert_value_matches(node: &AccessibilityProjectionNode, row: &ser
     assert_eq!(node.value_now, row["valueNow"].as_f64(), "{} valueNow", node.key);
     assert_eq!(node.value_text.as_deref(), row["valueText"].as_str(), "{} valueText", node.key);
     assert_eq!(node.busy, row["busy"].as_bool().unwrap_or(false), "{} busy", node.key);
+    assert_eq!(node.value_step, row["valueStep"].as_f64(), "{} valueStep", node.key);
+    assert_eq!(node.tone.as_deref(), row["tone"].as_str(), "{} tone", node.key);
+    assert!(!node.invalid && node.set_size.is_none() && node.pos_in_set.is_none(), "{}: a draft's refusal and a window place are a renderer's live state", node.key);
 }
 
 /// 📶️ Every case of the shared progress law announces exactly the value attributes it declares:
@@ -167,6 +170,7 @@ fn every_progress_case_announces_the_value_the_shared_fixture_declares() {
         assert_eq!(value.now, expected["valueNow"].as_f64(), "{id}: valueNow");
         assert_eq!(value.text.as_deref(), expected["valueText"].as_str(), "{id}: valueText");
         assert_eq!(value.busy, expected["busy"].as_bool().expect("busy"), "{id}: busy");
+        assert_eq!(value.step, None, "{id}: a progress bar announces no step");
     }
     assert_eq!(accessibility_value(&crate::Component::Separator(crate::SeparatorProps {})), AccessibilityValue::default(), "a non-range component announces no value");
 }

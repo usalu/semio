@@ -1,7 +1,8 @@
 /** 🌳️ Complete framework-owned intrinsic variants, independent of JSON projection. */
 import{parseSchemaRecord}from"../../../🧬️schema/🧾️record/🟦️.ts";
-import{parseBinary64,type Binary64}from"../../../🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../🔢️ieee754/🟦️.ts";
 import type{NativeDecodeControl}from"../../🛬️decode/🟦️.ts";
+import {textScalarUtf8Width as scalarBytes,textUtf8ByteLength as textBytes} from "../../📝️text/🟦️.ts";
 export type IntrinsicValue=
  |{kind:"null"}|{kind:"boolean";value:boolean}|{kind:"unsigned";value:bigint}|{kind:"signed";value:bigint}
  |{kind:"float";value:Binary64}|{kind:"text";value:string}|{kind:"bytes";value:Uint8Array}
@@ -32,12 +33,6 @@ function* construct(source:unknown):Generator<Admission,IntrinsicValue,string|Ui
  }
  return result!;
 }
-function scalarBytes(text:string,index:number):[number,number]{
- const word=text.charCodeAt(index);if(word<0x80)return[1,1];if(word<0x800)return[2,1];
- if(word>=0xd800&&word<=0xdbff){const next=text.charCodeAt(index+1);if(!(next>=0xdc00&&next<=0xdfff))throw Error("intrinsic text has an unpaired surrogate");return[4,2];}
- if(word>=0xdc00&&word<=0xdfff)throw Error("intrinsic text has an unpaired surrogate");return[3,1];
-}
-function textBytes(text:string):number{let bytes=0;for(let i=0;i<text.length;){const[size,units]=scalarBytes(text,i);bytes+=size;i+=units;}return bytes;}
 /** 🛂️ Validate and own an acyclic intrinsic tree without recursive JavaScript calls. */
 export function parseIntrinsicValue(source:unknown):IntrinsicValue{
  const cursor=construct(source);let input:string|Uint8Array|undefined;

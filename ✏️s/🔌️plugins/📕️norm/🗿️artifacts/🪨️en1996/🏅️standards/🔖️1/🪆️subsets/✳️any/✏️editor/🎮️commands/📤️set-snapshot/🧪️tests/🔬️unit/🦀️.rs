@@ -1,5 +1,5 @@
 use super::*;
-use crate::op::En1996Mutation;
+use crate::standards::v1::subsets::any::schema::mutations::En1996Mutation;
 use semio_framework_plugin::HistoryView;
 
 #[semio_framework_async_macros::async_test]

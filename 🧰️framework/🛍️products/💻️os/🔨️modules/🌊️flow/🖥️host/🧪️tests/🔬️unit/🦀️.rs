@@ -1443,7 +1443,7 @@ async fn undo_redo_add_widget() {
     // never the validation that caused it. The flow host installs the same catalog on its own history
     // store (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     store.install_document_store_owners_exact(FlowHostSnapshot::member_store_owners());
-    store.dispatch(ArtifactCommand::Apply { mutations: operations, description: None, transaction: None }).await.expect("apply add-widget operations");
+    store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }).await.expect("apply add-widget operations");
     let applied = store.snapshot().expect("projection");
     assert_eq!(applied.widgets.len(), count_before + 1);
     applied.retire_cold();
@@ -2396,10 +2396,10 @@ fn apply_generation_values_to_host_snapshot_patches_slider_value() {
     let fixture = FlowHostSnapshot::default();
     let spec = flow_host_snapshot_to_form_spec(&fixture);
     let slider_id = spec.steps[0].blocks.iter().find(|question| question.kind == "slider").map(|question| question.id.clone()).expect("slider question");
-    let fixture_json = semio_framework_pack_json::to_json_string(&fixture);
+    let snapshot_json = semio_framework_pack_json::to_json_string(&fixture);
     let mut values = semio_framework_pack_json::Object::new();
     values.insert(slider_id.clone(), semio_framework_pack_json::Value::Number(8.0.into()));
-    let patched = apply_generation_values_to_host_snapshot(&fixture_json, &values);
+    let patched = apply_generation_values_to_host_snapshot(&snapshot_json, &values);
     let reparsed = semio_framework_pack_json::parse(&patched, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("patched json");
     let slider = reparsed.get("widgets").and_then(|widgets| widgets.as_array()).and_then(|widgets| widgets.iter().find(|widget| widget.get("id").and_then(|id| id.as_str()) == Some(slider_id.as_str()))).expect("slider widget");
     assert_eq!(slider.get("value").and_then(|value| value.as_f64()), Some(8.0));

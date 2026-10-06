@@ -547,8 +547,15 @@ fn carrier_projection(text: &str) -> Json {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::schema::mutations::{apply_en1993_mutation, decode_en1993_mutation_json, inverse_en1993_mutation, En1993Mutation};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::schema::snapshot::{decode_en1993_dsl, decode_en1993_pack, decode_en1993_snapshot_json, encode_en1993_dsl, encode_en1993_pack, encode_en1993_snapshot_json, En1993Snapshot};
+    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::schema::mutations::{apply_en1993_mutation, inverse_en1993_mutation, En1993Mutation};
+    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::mutations::{decode_en1993_mutation_json};
+    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::schema::snapshot::{En1993Snapshot};
+    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::binary::snapshot::{encode_en1993_pack};
+    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::binary::snapshot::{decode_en1993_pack};
+    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::snapshot::{encode_en1993_dsl};
+    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::snapshot::{decode_en1993_dsl};
+    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::snapshot::{decode_en1993_snapshot_json};
+    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::snapshot::{encode_en1993_snapshot_json};
     use semio_repo_test_host::law;
 
     //#region 🔖️FixtureDecode
@@ -654,7 +661,7 @@ mod subject {
     /// DSL grammar, the hand-written binary pack protocol, and the JSON projection. A shortcut that
     /// handed back its input bytes could not survive the pack leg.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let text = String::from_utf8(ctx.fixture_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed EN 1993 artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(super::DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed EN 1993 artifact is not UTF-8: {error}"))?;
         let parsed = decode_en1993_dsl(&text)?;
         let reprinted = encode_en1993_dsl(&parsed);
         law::carrier_is_exact(reprinted.as_bytes(), text.as_bytes())?;
@@ -670,7 +677,7 @@ mod subject {
         if rejson != parsed {
             return Err(disagreement("identity-round-trip: encoding the document to JSON and decoding it back lost content", &rejson, &parsed));
         }
-        let twin = decode_en1993_pack(&ctx.fixture_bytes(super::PACK_ASSET)?)?;
+        let twin = decode_en1993_pack(&ctx.input_bytes(super::PACK_ASSET)?)?;
         if twin != parsed {
             return Err(disagreement("identity-round-trip: the committed binary twin decodes to a different document than the committed text artifact", &twin, &parsed));
         }

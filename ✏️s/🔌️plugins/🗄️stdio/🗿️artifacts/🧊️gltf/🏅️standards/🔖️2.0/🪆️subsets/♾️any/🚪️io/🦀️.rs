@@ -599,7 +599,7 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v2_0::subsets::any::schema::GltfAnalyzer;
+    use crate::standards::v2_0::subsets::any::io::GltfAnalyzer;
     use crate::GltfSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -654,7 +654,7 @@ mod tests;
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
-    use crate::standards::v2_0::subsets::any::schema::GltfComposer as GltfRawAnyComposer;
+    use crate::standards::v2_0::subsets::any::io::GltfComposer as GltfRawAnyComposer;
     use semio_framework_plugin::{composer_entry_of, ComposerEntry};
     use std::sync::OnceLock;
 
@@ -677,3 +677,365 @@ pub mod deserializers_artifacts_json;
 #[path = "📥️import/🧩️deserializers/🗿️artifacts/🦀️.rs"]
 pub mod import_deserializers_artifacts;
 //#endregion 🪢️TaxonomyMounts
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::engine::{GltfAccessorType, GltfComponentType};
+    use crate::schema::mutations::GltfMutation;
+    use crate::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene};
+    use crate::{GltfDiff, GltfSnapshot};
+    use semio_framework_plugin::ArtifactBuilder;
+
+    //#region 🔖️Builder
+    /// 🏗️ Builds a `stdio.gltf` snapshot.
+    #[derive(Clone, Debug, Default)]
+    pub struct GltfBuilderConstruction {
+        snapshot: GltfSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for GltfBuilderConstruction {
+        type Snapshot = GltfSnapshot;
+        type Mutation = GltfMutation;
+        type Diff = GltfDiff;
+        fn empty() -> Self {
+            Self { snapshot: GltfSnapshot::default(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = protocol::Mutation::diff(&mutation, &self.snapshot);
+            if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
+                self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.gltf.mutation-rejected", semio_framework_diagnostic::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
+            }
+            match <GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => {
+                    self.snapshot = snapshot;
+                }
+                Err(error) => {
+                    self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.gltf.mutation-rejected", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string()));
+                }
+            }
+            (self, outcome)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            self.snapshot = <GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot)?;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+    //#endregion 🔖️Builder
+
+    //#region 🔖️AccessorSpec
+    /// 📐️ Everything `add_accessor` needs beyond the buffer-view-and-offset plumbing common to every
+    /// accessor. Built via `new` + chained `with_*` setters (values, not consuming-`Self` document
+    /// mutation -- this is a plain value type, not the builder itself).
+    #[derive(Clone, Debug)]
+    pub struct GltfAccessorSpec {
+        pub buffer_view: Option<usize>,
+        pub byte_offset: usize,
+        pub component_type: GltfComponentType,
+        pub accessor_type: GltfAccessorType,
+        pub count: usize,
+        pub normalized: bool,
+        pub min: Option<Vec<f64>>,
+        pub max: Option<Vec<f64>>,
+    }
+
+    impl GltfAccessorSpec {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn new(component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize) -> Self {
+            Self { buffer_view: None, byte_offset: 0, component_type, accessor_type, count, normalized: false, min: None, max: None }
+        }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_buffer_view(mut self, buffer_view: usize, byte_offset: usize) -> Self {
+            self.buffer_view = Some(buffer_view);
+            self.byte_offset = byte_offset;
+            self
+        }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_normalized(mut self, normalized: bool) -> Self {
+            self.normalized = normalized;
+            self
+        }
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn with_min_max(mut self, min: Vec<f64>, max: Vec<f64>) -> Self {
+            self.min = Some(min);
+            self.max = Some(max);
+            self
+        }
+    }
+    //#endregion 🔖️AccessorSpec
+
+    //#region 🔖️DocumentConstructors
+    impl GltfBuilderConstruction {
+        /// 🌱 Sets `asset.version` (the one glTF-mandatory field).
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_asset_version(&mut self, version: &str) -> &mut Self {
+            self.snapshot.document.asset.version = version.to_string();
+            self
+        }
+
+        /// 📦️ Appends a buffer, storing its real bytes on the snapshot's `buffers` (index-aligned with
+        /// `document.buffers`) and recording `byteLength` in the document. Returns the new index.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_buffer(&mut self, bytes: Vec<u8>) -> usize {
+            let byte_length = bytes.len();
+            let idx = self.snapshot.buffers.len();
+            self.snapshot.buffers.push(bytes);
+            self.snapshot.document.buffers.push(GltfBuffer { byte_length, uri: None, name: None, extensions: None, extras: None });
+            idx
+        }
+
+        /// 🪟️ Appends a `bufferView` (buffer index, byte offset/length, optional `byteStride` for
+        /// interleaved data, optional `target` -- 34962 `ARRAY_BUFFER` / 34963 `ELEMENT_ARRAY_BUFFER`).
+        /// Returns the new index.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_buffer_view(&mut self, buffer: usize, byte_offset: usize, byte_length: usize, byte_stride: Option<usize>, target: Option<u64>) -> usize {
+            let idx = self.snapshot.document.buffer_views.len();
+            self.snapshot.document.buffer_views.push(GltfBufferView { buffer, byte_offset, byte_length, byte_stride, target, name: None, extensions: None, extras: None });
+            idx
+        }
+
+        /// 🔢️ Appends an `accessor` from a typed [`GltfAccessorSpec`]. Returns the new index.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_accessor(&mut self, spec: GltfAccessorSpec) -> usize {
+            let idx = self.snapshot.document.accessors.len();
+            self.snapshot.document.accessors.push(GltfAccessor {
+                buffer_view: spec.buffer_view,
+                byte_offset: spec.byte_offset,
+                component_type: spec.component_type,
+                normalized: spec.normalized,
+                count: spec.count,
+                kind: spec.accessor_type,
+                max: spec.max,
+                min: spec.min,
+                sparse: None,
+                name: None,
+                extensions: None,
+                extras: None,
+            });
+            idx
+        }
+
+        /// 🎨️ Appends a fully typed `material`. Returns the new index.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_material(&mut self, material: GltfMaterial) -> usize {
+            let idx = self.snapshot.document.materials.len();
+            self.snapshot.document.materials.push(material);
+            idx
+        }
+
+        /// 🕸️ Appends an empty `mesh` (primitives added via [`Self::add_mesh_primitive`]). Returns the
+        /// new index.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_mesh(&mut self) -> usize {
+            let idx = self.snapshot.document.meshes.len();
+            self.snapshot.document.meshes.push(GltfMesh::default());
+            idx
+        }
+
+        /// 🔺️ Appends a primitive to `meshes[mesh]` -- `attributes` are `(semantic, accessor index)`
+        /// pairs (e.g. `("POSITION", 0)`), `indices`/`material` are optional accessor/material
+        /// indices, `mode` is the primitive topology (defaults to `4` TRIANGLES per spec when unset).
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_mesh_primitive(&mut self, mesh: usize, attributes: &[(&str, usize)], indices: Option<usize>, material: Option<usize>, mode: Option<u64>) {
+            let primitive = GltfPrimitive { attributes: attributes.iter().map(|(name, idx)| ((*name).to_string(), *idx)).collect(), indices, material, mode, targets: Vec::new(), extensions: None, extras: None };
+            let mesh_entry = self.snapshot.document.meshes.get_mut(mesh).expect("mesh index out of range -- call add_mesh first");
+            mesh_entry.primitives.push(primitive);
+        }
+
+        /// 🧍️ Appends a `node`, optionally referencing a mesh. Returns the new index.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_node(&mut self, mesh: Option<usize>) -> usize {
+            let idx = self.snapshot.document.nodes.len();
+            self.snapshot.document.nodes.push(GltfNode { mesh, ..GltfNode::default() });
+            idx
+        }
+
+        /// 🎬️ Appends a `scene` referencing `nodes` (root node indices), with an optional passthrough
+        /// `extensions` object (real documents sometimes carry a declared-but-empty `{}` here).
+        /// Returns the new index.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn add_scene(&mut self, nodes: Vec<usize>, extensions: Option<GltfJson>) -> usize {
+            let idx = self.snapshot.document.scenes.len();
+            self.snapshot.document.scenes.push(GltfScene { nodes, name: None, extensions, extras: None });
+            idx
+        }
+
+        /// 🎬️ Sets the document's default `scene` index.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_default_scene(&mut self, scene: usize) -> &mut Self {
+            self.snapshot.document.scene = Some(scene);
+            self
+        }
+
+        /// 🧩️ Sets `extensionsUsed` (declared, not necessarily applied -- mirrors real-world documents
+        /// that declare an extension namespace without every element using it).
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn set_extensions_used(&mut self, names: Vec<String>) -> &mut Self {
+            self.snapshot.document.extensions_used = names;
+            self
+        }
+
+        /// 📸️ Peeks the in-progress document -- used by tests/callers that need to inspect state
+        /// mid-construction without consuming the builder via `build()`.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn document(&self) -> &crate::schema::snapshot::GltfDocument {
+            &self.snapshot.document
+        }
+
+        /// 📦️ Peeks the in-progress resolved buffer bytes.
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+        pub fn buffers(&self) -> &[Vec<u8>] {
+            &self.snapshot.buffers
+        }
+    }
+    //#endregion 🔖️DocumentConstructors
+
+    //#region 🧪️Tests
+    #[cfg(test)]
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    //#endregion 🧪️Tests
+}
+pub use derived_construction::*;
+
+pub mod derived_analysis {
+    use crate::GltfSnapshot;
+    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
+
+    //#region 🔖️Parts
+    /// 🧩 Analyzed `stdio.gltf` parts.
+    #[derive(Clone, Debug, Default)]
+    pub struct GltfParts {
+        pub snapshot: Option<GltfSnapshot>,
+    }
+    //#endregion 🔖️Parts
+
+    //#region 🔖️Sniff
+    /// 👃️ `.glb` binary container magic: `glTF` + little-endian version `2`.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn looks_like_glb(bytes: &[u8]) -> bool {
+        bytes.len() >= 12 && &bytes[0..4] == b"glTF" && u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]) == 2
+    }
+
+    /// 👃️ `.gltf` JSON text: a JSON object whose top-level `asset` object carries a `version` string
+    /// -- the one field glTF 2.0 §3.9 makes universally mandatory, so this is a real (if cheap) probe
+    /// rather than a content-blind guess.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn looks_like_gltf_json(text: &str) -> bool {
+        let trimmed = text.trim_start();
+        if !trimmed.starts_with('{') {
+            return false;
+        }
+        match semio_framework_pack_json::parse(trimmed, semio_framework_pack_json::JsonMemberPolicy::Reject) {
+            Ok(value) => value.get("asset").and_then(|a| a.get("version")).and_then(|v| v.as_str()).is_some(),
+            Err(_) => false,
+        }
+    }
+    //#endregion 🔖️Sniff
+
+    //#region 🔖️Analyzer
+    /// 🧐️ Analyzes `stdio.gltf` (2.0/♾️any) sources.
+    pub struct GltfAnalyzerAnalysis;
+
+    impl ArtifactAnalysis for GltfAnalyzerAnalysis {
+        type Parts = GltfParts;
+        const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
+
+        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+            match source {
+                AnalyzeSource::Binary(bytes) => {
+                    if looks_like_glb(bytes) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Low
+                    }
+                }
+                AnalyzeSource::Text(text) => {
+                    if looks_like_gltf_json(text) {
+                        IoConfidence::High
+                    } else {
+                        IoConfidence::Medium
+                    }
+                }
+            }
+        }
+
+        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
+            let mut parts = GltfParts::default();
+            let mut diagnostics = Vec::new();
+            let mut confidence = IoConfidence::High;
+            for source in sources {
+                match source {
+                    AnalyzeSource::Text(text) => {
+                        // A genuine `.gltf` JSON document parses directly through the real codec; only
+                        // fall back to the SemioEnvelope-wrapped `ArtifactDsl` preamble form (used by
+                        // this crate's own internal store round-trips) when the text isn't bare JSON.
+                        let result = if looks_like_gltf_json(text) { crate::engine::parse_gltf_document(text.trim().as_bytes()) } else { <GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string()) };
+                        match result {
+                            Ok(snapshot) => parts.snapshot = Some(snapshot),
+                            Err(err) => {
+                                confidence = IoConfidence::Low;
+                                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err));
+                            }
+                        }
+                    }
+                    AnalyzeSource::Binary(bytes) => {
+                        // A genuine raw `.glb` container decodes directly through the real codec; only
+                        // fall back to the SemioEnvelope-wrapped `ArtifactPack` form (this crate's own
+                        // internal store round-trip encoding) when the bytes aren't a `.glb` container.
+                        let result = if looks_like_glb(bytes) { crate::engine::decode_glb(bytes) } else { <GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string()) };
+                        match result {
+                            Ok(snapshot) => parts.snapshot = Some(snapshot),
+                            Err(err) => {
+                                confidence = IoConfidence::Low;
+                                diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err));
+                            }
+                        }
+                    }
+                }
+            }
+            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
+        }
+    }
+    //#endregion 🔖️Analyzer
+
+    //#region 🧪️Tests
+    #[cfg(test)]
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    //#endregion 🧪️Tests
+}
+pub use derived_analysis::*;
+
+semio_framework_plugin::derive_artifact_facets!(
+    pub spec GltfBuilderFacets {
+        construction: GltfBuilderConstruction,
+        analysis: GltfAnalyzerAnalysis,
+        composition: crate::standards::v2_0::subsets::any::io::derived_composition::GltfComposerComposition,
+    }
+    builder: GltfBuilder,
+    analyzer: GltfAnalyzer,
+    composer: GltfComposer,
+);

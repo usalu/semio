@@ -1,0 +1,37 @@
+//! 💾️ Generic framing and descriptor roster for the transparent JsonMutation.
+use crate::schema::mutations::JsonMutation;
+pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
+pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
+pub const BINARY_TAGS: &[(&str, u32)] = &[("set-member", 1), ("remove-member", 2), ("insert-array-element", 3), ("remove-array-element", 4), ("set-scalar", 5), ("patch-snapshot", 6)];
+//#region 🏷️WireTags
+/// 🏷️ `JsonMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
+const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;
+//#endregion 🏷️WireTags
+
+impl protocol::OpBinary for JsonMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
+    }
+}
+
+#[path = "✏️set-member/🦀️.rs"]
+pub mod set_member;
+
+#[path = "📤️remove-array-element/🦀️.rs"]
+pub mod remove_array_element;
+
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
+
+#[path = "🗑️remove-member/🦀️.rs"]
+pub mod remove_member;
+
+#[path = "📥️insert-array-element/🦀️.rs"]
+pub mod insert_array_element;
+
+#[path = "🔢️set-scalar/🦀️.rs"]
+pub mod set_scalar;

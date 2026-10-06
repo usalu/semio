@@ -100,9 +100,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-editor-settings-applied",
       "class": "handcrafted",
       "target": {
@@ -167,7 +166,6 @@
       "notes": "Turning on line numbers with a larger font replaces the editor settings."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-applied",
       "class": "handcrafted",
       "target": {

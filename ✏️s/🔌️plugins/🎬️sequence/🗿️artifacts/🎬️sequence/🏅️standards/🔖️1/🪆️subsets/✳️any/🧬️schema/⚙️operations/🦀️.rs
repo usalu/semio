@@ -56,9 +56,5 @@ impl Drop for OwnedSequenceStore {
 //#endregion 🔖️Store
 
 //#region 🔖️CaseBridges
-/// ⚖️ The SEMANTIC PROJECTION a parent document is compared through: its own fields (`schema` and the composed `content`
-/// handle). The content lives in the child's store and is compared there, never read off the parent.
-pub fn encode_sequence_projection_json(snapshot: &SequenceSnapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
+
 //#endregion 🔖️CaseBridges

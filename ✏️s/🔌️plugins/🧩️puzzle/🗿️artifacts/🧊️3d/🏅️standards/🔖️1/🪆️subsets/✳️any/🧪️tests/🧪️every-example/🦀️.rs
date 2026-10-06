@@ -1,10 +1,10 @@
 //! 📚️ Every example the puzzle 3d subset registers builds its document. The descriptor probe and the example picker run
-//! each deferred body's producer (`ExampleSource::document_json`); a fixture the DSL grammar no longer reads panics
+//! each deferred body's producer (`ExampleSource::document_json`); a scene_snapshot the DSL grammar no longer reads panics
 //! there and traps the guest (ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`, S3-PUZZLE). Twins:
 //! `◻️2d/…/🧪️tests/🧪️every-example`, `🖐️5d/…/🧪️tests/🧪️every-example`.
 
 use super::examples;
-use crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
 use crate::Puzzle3dSnapshot;
 use semio_framework_plugin::ExampleSourceBody;
 

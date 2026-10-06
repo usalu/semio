@@ -69,17 +69,6 @@
       }
     }
   ],
-  "properties": {
-    "childId": "props-1",
-    "target": {
-      "artifactId": "props-1",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "value"
-      }
-    }
-  },
   "representations": [
     {
       "target": {
@@ -95,5 +84,16 @@
       },
       "role": "t1"
     }
-  ]
+  ],
+  "properties": {
+    "childId": "props-1",
+    "target": {
+      "artifactId": "props-1",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  }
 }

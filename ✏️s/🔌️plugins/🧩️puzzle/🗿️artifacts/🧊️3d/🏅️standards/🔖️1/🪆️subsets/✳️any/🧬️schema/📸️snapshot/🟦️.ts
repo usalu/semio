@@ -1,5 +1,5 @@
 /** 🧊️ Complete persisted Puzzle3d fields shared by its owned Source facets. */
-import {type Binary64,parseBinary64Transport} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type Puzzle3dObjectAnchor="fixed"|"derived";
 export type Puzzle3dCompatSpecificity="general"|"object"|"attraction"|"vortex"|"cable";
 export type Puzzle3dVector3=[Binary64,Binary64,Binary64];
@@ -37,7 +37,7 @@ const fail=(at:string,why:string):never=>{throw new puzzlePuzzle3dArtifactGuardR
 const object=(v:unknown,at:string):Record<string,unknown>=>v!==null&&typeof v==="object"&&!Array.isArray(v)?v as Record<string,unknown>:fail(at,"expected an object");
 const text=(v:unknown,at:string):string=>typeof v==="string"?v:fail(at,"expected text");
 const bool=(v:unknown,at:string):boolean=>typeof v==="boolean"?v:fail(at,"expected Boolean");
-const word=(v:unknown,at:string):Binary64=>{try{return parseBinary64Transport(v)}catch{return fail(at,"expected a binary64 word or number")}};
+const word=(v:unknown,at:string):Binary64=>{try{return parseBinary64(v)}catch{return fail(at,"expected a binary64 word or number")}};
 const int32=(v:unknown,at:string):number=>typeof v==="number"&&Number.isInteger(v)&&v>=-2147483648&&v<=2147483647?v:fail(at,"expected signed32");
 const list=<T>(v:unknown,at:string,parse:(v:unknown,at:string)=>T):T[]=>Array.isArray(v)?v.map((item,index)=>parse(item,at+"["+index+"]")):fail(at,"expected an array");
 const optional=<T>(v:unknown,at:string,parse:(v:unknown,at:string)=>T):T|null=>v===null?null:parse(v,at);

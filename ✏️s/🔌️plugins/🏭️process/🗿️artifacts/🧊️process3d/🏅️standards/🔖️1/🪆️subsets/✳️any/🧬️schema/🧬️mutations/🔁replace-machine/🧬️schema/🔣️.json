@@ -481,7 +481,20 @@
                   "type": "string"
                 },
                 "value": {
-                  "type": "number"
+                  "type": "number",
+                  "x-semio-ui": {
+                    "label": {
+                      "en": "Size",
+                      "de": "Maß"
+                    },
+                    "widget": "stepper",
+                    "role": "value",
+                    "unit": "m",
+                    "displayUnit": "mm",
+                    "displayFactor": 1000,
+                    "precision": 1,
+                    "step": 0.001
+                  }
                 }
               }
             },

@@ -147,7 +147,7 @@ async fn both_panes_paint_the_same_volume() {
     let envelope = scene_from_projection(&projection_of(&app), crate::editor::puzzle5d::config::Puzzle5dRuntime::default(), PUZZLE5D_DEFAULT_UTILITY);
     let world = world3d::world_target_volumes_json(&envelope.document);
     assert!(world.contains(id.as_str()), "the painted volume must reach the world pane's own target-volume lane, got {world}");
-    let board = board2d::puzzle5d_board_scene(&envelope).fixture_json;
+    let board = board2d::puzzle5d_board_scene(&envelope).snapshot_json;
     assert!(board.contains("targetRegions"), "the board scene must carry the projected regions");
     assert!(board.contains(id.as_str()), "the projected rectangle must reach the board scene, got {board}");
 }

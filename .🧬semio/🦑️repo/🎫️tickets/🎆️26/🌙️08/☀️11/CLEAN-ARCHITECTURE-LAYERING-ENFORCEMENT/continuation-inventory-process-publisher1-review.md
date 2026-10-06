@@ -1,0 +1,5 @@
+# Inventory Process Publisher 1 Review
+
+The current prospective publisher joins independent terminalHash to raw model5 terminal, proposalHash to raw proposal/deep-equal terminal authority, and sourceHash to the exact runner after body. It binds and repeatedly checks its current producer, model, proposal, independent admission, seven inputs and five defining providers. All seven destination preimages are guarded before the first write; each opened source uses wx+/r+, single-link regular-file/device/inode identity, full preimage, complete positional writes, truncation, fsync and readback. Final all-after and raw authority guards are explicit.
+
+The journal implementation currently truncates and rewrites journal.json for each event. A failure during the next rewrite can destroy earlier fsynced intent history. Successful-run fsync evidence is different from crash-resilient retained per-write intent history. Append-only records with full short-write/fsync loops are required before admitting the stronger durable-journal protocol; the seven-pair model observation remains Ready independently. No publication admission or production writes were performed by this lane.

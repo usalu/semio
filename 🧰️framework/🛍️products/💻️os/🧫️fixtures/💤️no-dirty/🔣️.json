@@ -1,0 +1,60 @@
+{
+  "name": "no-dirty",
+  "graph": {
+    "schema": "workflow.graph",
+    "nodes": [
+      {
+        "id": "node-1",
+        "pluginId": "draw",
+        "appId": "draw",
+        "label": "node-1",
+        "yields": "2d.drawing",
+        "artifactRef": "documents/node-1",
+        "configRef": "config/node-1",
+        "x": 0,
+        "y": 0,
+        "width": 160,
+        "height": 72,
+        "inputs": [],
+        "outputs": []
+      },
+      {
+        "id": "node-2",
+        "pluginId": "draw",
+        "appId": "draw",
+        "label": "node-2",
+        "yields": "2d.drawing",
+        "artifactRef": "documents/node-2",
+        "configRef": "config/node-2",
+        "x": 200,
+        "y": 0,
+        "width": 160,
+        "height": 72,
+        "inputs": [],
+        "outputs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge-1",
+        "sourceNodeId": "node-1",
+        "sourcePortId": "node-1:out",
+        "targetNodeId": "node-2",
+        "targetPortId": "node-2:in",
+        "contract": {
+          "kindId": "2d.drawing",
+          "mediaType": {
+            "class": "data",
+            "form": "value"
+          },
+          "wire": {
+            "kind": "document",
+            "schema": "2d.drawing"
+          }
+        }
+      }
+    ]
+  },
+  "dirtyNodeIds": [],
+  "expectedDeliveries": []
+}

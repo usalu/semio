@@ -1,7 +1,7 @@
 //! 🩹️ Fem2d play app command — `patch-section`: one-field edit of a cross-section (`name`, `area`, `iy`) → `ReplaceSection`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_section;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

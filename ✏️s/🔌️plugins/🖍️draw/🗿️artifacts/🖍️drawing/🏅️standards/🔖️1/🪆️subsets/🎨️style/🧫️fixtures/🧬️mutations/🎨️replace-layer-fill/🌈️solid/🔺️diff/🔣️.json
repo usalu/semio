@@ -15,16 +15,44 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "transformJson": null,
-          "fillJson": "{\"kind\":\"linearGradient\",\"x1\":0.0,\"y1\":0.0,\"x2\":120.0,\"y2\":0.0,\"stops\":[{\"offset\":0.0,\"color\":[1.0,0.0,0.0,1.0]},{\"offset\":1.0,\"color\":[0.0,0.0,1.0,1.0]}]}",
-          "strokeJson": null,
           "booleanOperation": null,
-          "traceParamsJson": null,
-          "layerJson": null,
           "pathSegments": null,
           "textContent": null,
           "textSize": null,
-          "fillRule": null
+          "fillRule": null,
+          "transform": null,
+          "fill": {
+            "value": {
+              "kind": "linearGradient",
+              "x1": 0,
+              "y1": 0,
+              "x2": 120,
+              "y2": 0,
+              "stops": [
+                {
+                  "offset": 0,
+                  "color": [
+                    1,
+                    0,
+                    0,
+                    1
+                  ]
+                },
+                {
+                  "offset": 1,
+                  "color": [
+                    0,
+                    0,
+                    1,
+                    1
+                  ]
+                }
+              ]
+            }
+          },
+          "stroke": null,
+          "traceParams": null,
+          "layer": null
         }
       }
     ],

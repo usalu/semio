@@ -220,9 +220,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-row-applied",
       "class": "handcrafted",
       "target": {
@@ -265,7 +264,6 @@
       "notes": "InsertRow{index:2,row:[\"2\",\"gadget\"]} appends a real tab-separated data row."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-row-applied",
       "class": "handcrafted",
       "target": {
@@ -308,7 +306,6 @@
       "notes": "RemoveRow{index:1} drops the data row, leaving the header."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "handcrafted",
       "target": {
@@ -351,7 +348,6 @@
       "notes": "SetSnapshot replaces the whole TsvSnapshot with a different, equally well-formed one."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-line-ending-applied",
       "class": "handcrafted",
       "target": {
@@ -394,7 +390,6 @@
       "notes": "SetLineEnding{lineEnding:crLf} switches the declared newline style, IANA TSV's own inherited text-line convention."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-trailing-newline-applied",
       "class": "handcrafted",
       "target": {
@@ -437,7 +432,6 @@
       "notes": "SetTrailingNewline{trailingNewline:false} drops the final trailing newline."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-cell-applied",
       "class": "handcrafted",
       "target": {

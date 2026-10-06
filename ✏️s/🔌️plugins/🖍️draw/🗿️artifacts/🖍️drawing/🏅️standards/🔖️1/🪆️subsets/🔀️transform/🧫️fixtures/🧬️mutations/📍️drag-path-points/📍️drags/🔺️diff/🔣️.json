@@ -15,39 +15,39 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "transformJson": null,
-          "fillJson": null,
-          "strokeJson": null,
           "booleanOperation": null,
-          "traceParamsJson": null,
-          "layerJson": null,
           "pathSegments": [
             {
               "kind": "move",
               "to": [
-                10.0,
-                10.0
+                10,
+                10
               ]
             },
             {
               "kind": "cubic",
               "ctrl1": [
-                20.0,
-                30.0
+                20,
+                30
               ],
               "ctrl2": [
-                40.0,
-                30.0
+                40,
+                30
               ],
               "to": [
-                50.0,
-                10.0
+                50,
+                10
               ]
             }
           ],
           "textContent": null,
           "textSize": null,
-          "fillRule": null
+          "fillRule": null,
+          "transform": null,
+          "fill": null,
+          "stroke": null,
+          "traceParams": null,
+          "layer": null
         }
       }
     ],

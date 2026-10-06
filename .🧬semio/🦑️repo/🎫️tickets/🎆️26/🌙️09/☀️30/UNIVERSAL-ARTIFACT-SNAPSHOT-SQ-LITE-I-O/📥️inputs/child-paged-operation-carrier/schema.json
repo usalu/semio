@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "wire",
+    "paddingByte",
+    "paddingBytes",
+    "wireBytes",
+    "maximumPayloadBytes",
+    "maximumAllocationBytes",
+    "maximumItems",
+    "maximumBytes",
+    "parentSlots",
+    "maximumTurns",
+    "laws"
+  ],
+  "properties": {
+    "schema": {
+      "const": "child-paged-operation-carrier/v1"
+    },
+    "wire": {
+      "const": "17"
+    },
+    "paddingByte": {
+      "const": 32
+    },
+    "paddingBytes": {
+      "const": 8192
+    },
+    "wireBytes": {
+      "const": 8194
+    },
+    "maximumPayloadBytes": {
+      "const": 8194
+    },
+    "maximumAllocationBytes": {
+      "const": 65536
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "const": 4096
+    },
+    "parentSlots": {
+      "const": 1
+    },
+    "maximumTurns": {
+      "const": 8322
+    },
+    "laws": {
+      "const": [
+        "original8194-octets",
+        "same-borrowed-source-references",
+        "zero-grants-unchanged",
+        "logical-pop-zero-physical-credit",
+        "actual-parent-page-transfer-zero-physical-credit",
+        "full-parent-retains-page",
+        "actual-global-allocation-release-only-under-full4096",
+        "outer-operation-collection-metadata-owned"
+      ]
+    }
+  }
+}
+

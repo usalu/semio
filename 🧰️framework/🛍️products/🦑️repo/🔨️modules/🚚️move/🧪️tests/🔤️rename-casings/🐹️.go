@@ -56,7 +56,7 @@ type renameVectors struct {
 
 // 📥️ vectors decodes the shared vector set of this case.
 func vectors(ctx *host.Context) (*renameVectors, error) {
-	raw, err := ctx.FixtureBytes("shared://🔤️rename-vectors.json")
+	raw, err := ctx.InputBytes("shared://🔤️rename-vectors.json")
 	if err != nil {
 		return nil, err
 	}

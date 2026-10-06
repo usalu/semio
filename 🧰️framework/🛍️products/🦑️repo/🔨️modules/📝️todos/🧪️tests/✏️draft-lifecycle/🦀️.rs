@@ -8,7 +8,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 #[cfg(feature = "sut")]
 fn the_draft_script_produces_one_history(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_todos as todos;
-    let file = ctx.fixture_json("shared://✏️draft-script.json")?;
+    let file = ctx.input_json("shared://✏️draft-script.json")?;
     let store = todos::MemoryDraftStore::new();
 
     let mut outcomes: Vec<Json> = Vec::new();

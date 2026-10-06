@@ -18,7 +18,22 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the declarations of the internal subset at which it is inserted, counted from 0.",
+          "de": "Position unter den Deklarationen der internen Teilmenge, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "parameter": {
       "type": "boolean",
@@ -35,10 +50,38 @@
       }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Entity name",
+          "de": "Entitätsname"
+        },
+        "description": {
+          "en": "Name the entity is referenced by (&name;).",
+          "de": "Name, über den die Entität referenziert wird (&name;)."
+        },
+        "group": "value",
+        "order": 30
+      }
     },
     "value": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Replacement text",
+          "de": "Ersetzungstext"
+        },
+        "description": {
+          "en": "Literal value the entity expands to.",
+          "de": "Literalwert, zu dem die Entität expandiert."
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

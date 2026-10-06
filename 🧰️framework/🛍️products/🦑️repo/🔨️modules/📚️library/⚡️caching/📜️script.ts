@@ -7,8 +7,6 @@ import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync,
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createCachePolicyTests, proveCachePolicy } from "./🧪️tests/⚡️cache-contracts/🟦️.ts";
-import { ArtifactPackageContractScript } from "./📦️artifacts/📋️package-orchestration/🟦️.ts";
 import { AuditScript, PolicyScript } from "./📇️inventory/📋️orchestration/🟦️.ts";
 import { GraphScript } from "./🕸️graph/✅️verification/🟦️.ts";
 import { DiskScript } from "./💾️storage/📊️report/🟦️.ts";
@@ -25,7 +23,9 @@ import { acquireQueuedResourceLease } from "../../../../../🔨️modules/🏃�
 import { repoCacheDirectory } from "./🟦️.ts";
 
 const SCRIPT_ROOT = dirname(fileURLToPath(import.meta.url));
-const createCachePolicyTestsInstance = createCachePolicyTests(
+export async function testCacheContracts(): Promise<void> {
+  const { createCachePolicyTests } = await import("./🧪️tests/⚡️cache-contracts/🟦️.ts");
+  const tests = createCachePolicyTests(
   {
     assert,
     cacheInternals,
@@ -57,13 +57,15 @@ const createCachePolicyTestsInstance = createCachePolicyTests(
   },
   { directory: import.meta.dir, url: import.meta.url },
 );
-export const testCacheContracts = createCachePolicyTestsInstance.testCacheContracts;
+  await tests.testCacheContracts();
+}
 
 /** 🧪️ Routes the full cache suite, the focused portable command-source contract or the build-dir provenance laws. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args[0] === "cache-policy") {
       if (args.length !== 1) throw new Error("Expected test cache-policy");
+      const { proveCachePolicy } = await import("./🧪️tests/⚡️cache-contracts/🟦️.ts");
       proveCachePolicy(this.repoRoot, cacheInternals);
       return;
     }
@@ -80,6 +82,14 @@ class TestScript extends BundleScript {
       if (!output) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
       mkdirSync(output, { recursive: true });
       await (await import("./🧪️tests/🔁️graph-revision/🟦️.ts")).testGraphRevision(this.repoRoot, output);
+      return;
+    }
+    if (args[0] === "native-dependencies") {
+      if (args.length !== 1) throw new Error("Expected test native-dependencies");
+      const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+      if (!output) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
+      mkdirSync(output, { recursive: true });
+      await (await import("./🧪️tests/📦️native-dependencies/🟦️.ts")).testNativeDependencies(this.repoRoot, output);
       return;
     }
     if (args[0] === "artifact-source") {
@@ -128,13 +138,21 @@ class LeaseScript extends BundleScript {
   }
 }
 
+/** 🧪️ Loads the artifact package proof only for its explicit verification command. */
+class ArtifactPackageVerificationScript extends BundleScript {
+  async run(): Promise<void> {
+    const { ArtifactPackageContractScript } = await import("./🧪️tests/📦️artifact-packages/🟦️.ts");
+    await new ArtifactPackageContractScript(this.root, this.repoRoot).run();
+  }
+}
+
 const router = new ScriptRouter(SCRIPT_ROOT)
   .register("test", TestScript)
   .register("lease", LeaseScript)
   .register("audit", AuditScript)
   .register("policy-check", PolicyScript)
   .register("artifact-check", PolicyScript)
-  .register("artifact-package-contract", ArtifactPackageContractScript)
+  .register("artifact-package-contract", ArtifactPackageVerificationScript)
   .register("graph-check", GraphScript)
   .register("doctor", DoctorScript)
   .register("disk-report", DiskScript)

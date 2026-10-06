@@ -80,7 +80,7 @@
     {
       "id": "semantic-svg-basic-1-1-v1",
       "description": "SVG Basic 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (attribute order is real writer freedom), and the viewBox/transform attribute values decomposed into typed numeric geometry rather than compared as raw strings, with a small absolute tolerance for cross-implementation float formatting. The clip-path attribute is deliberately NOT decomposed and NOT ignored: its exact url(#id) string is what the profile's clip-to-text rule is evaluated against, so it is compared verbatim. Self-closing versus explicit empty open/close tags are equivalent by construction and never distinguished by either side.",
-      "tolerance": 1e-09,
+      "tolerance": 1e-9,
       "ignoreKeys": []
     }
   ],
@@ -325,9 +325,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-basic-element-applied",
       "class": "third-party-generated",
       "target": {
@@ -378,7 +377,6 @@
       "notes": "A new <circle> element inserted as the last child of the root <svg>."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-clip-path-shape-applied",
       "class": "third-party-generated",
       "target": {
@@ -429,7 +427,6 @@
       "notes": "A clipping shape (<rect>) inserted as a child of the empty <clipPath>."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-element-applied",
       "class": "third-party-generated",
       "target": {
@@ -480,7 +477,6 @@
       "notes": "The <circle> element removed from the root, inverse of insert-basic-element."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-basic-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -531,7 +527,6 @@
       "notes": "The x presentation attribute of <rect id=\"r1\"> replaced, 10 -> 30."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-clip-path-reference-applied",
       "class": "third-party-generated",
       "target": {
@@ -582,7 +577,6 @@
       "notes": "The clip-path attribute of <rect id=\"r1\"> set to reference #cp1."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -633,7 +627,6 @@
       "notes": "Whole-document snapshot replace: an unrelated valid document substituted wholesale."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-text-applied",
       "class": "third-party-generated",
       "target": {
@@ -684,7 +677,6 @@
       "notes": "Character content of <text id=\"t1\"> replaced, Hello -> World."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-transform-applied",
       "class": "third-party-generated",
       "target": {
@@ -735,7 +727,6 @@
       "notes": "A transform attribute set on <rect id=\"r1\">, none -> translate(10,10)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-view-box-applied",
       "class": "third-party-generated",
       "target": {
@@ -786,7 +777,6 @@
       "notes": "The root <svg>'s viewBox replaced, \"0 0 100 100\" -> \"0 0 200 200\"."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "stamp-base-profile-applied",
       "class": "third-party-generated",
       "target": {

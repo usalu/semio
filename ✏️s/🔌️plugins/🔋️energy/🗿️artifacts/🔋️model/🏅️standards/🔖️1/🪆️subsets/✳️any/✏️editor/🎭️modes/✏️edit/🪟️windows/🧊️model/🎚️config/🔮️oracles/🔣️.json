@@ -81,9 +81,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-applied",
       "class": "handcrafted",
       "target": {
@@ -148,7 +147,6 @@
       "notes": "Orbiting the 3d model window to a new pose replaces the camera and nothing else."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-camera-no-op",
       "class": "handcrafted",
       "target": {

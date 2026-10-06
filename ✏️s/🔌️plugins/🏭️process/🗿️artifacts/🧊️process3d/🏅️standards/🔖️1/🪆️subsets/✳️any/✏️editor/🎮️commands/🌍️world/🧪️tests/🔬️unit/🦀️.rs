@@ -26,18 +26,18 @@ async fn a_face_drag_is_one_world_tool_transaction() {
     let document = crate::empty_process3d_snapshot();
     let step = process3d_step_from_face_drag(&document, [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], -0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
     let mutations = crate::schema::insert_step_mutations(&document, step, None);
-    let (reference, committed) = process3d_world_commit("worldFaceDragEnd", "seed-one", WorldToolRequest { mutations: mutations.clone() }).expect("the gesture commits");
+    let (reference, committed) = process3d_world_commit("worldFaceDragEnd", "seed-one", WorldToolRequest { mutations: mutations.clone() }).expect("the world tool accepts the gesture").expect("the gesture commits");
     assert!(reference.id.starts_with("tx-"), "{reference:?}");
     assert_eq!(reference.tool, "s.process.process3d@1/*#editor#worldFaceDragEnd");
     assert_eq!(committed, mutations, "the transaction holds exactly the placed step's leaf");
-    let (second, _) = process3d_world_commit("worldFaceDragEnd", "seed-two", WorldToolRequest { mutations }).expect("the second gesture commits");
+    let (second, _) = process3d_world_commit("worldFaceDragEnd", "seed-two", WorldToolRequest { mutations }).expect("the world tool accepts the gesture").expect("the second gesture commits");
     assert_ne!(second.id, reference.id, "two gestures are two transactions");
 }
 
 /// 🧹️ A gesture that places nothing leaves zero trace: no transaction, no edit.
 #[semio_framework_async_macros::async_test]
 async fn a_gesture_that_places_nothing_leaves_zero_trace() {
-    assert!(process3d_world_commit("worldFaceDragEnd", "seed", WorldToolRequest { mutations: Vec::new() }).is_none());
+    assert!(process3d_world_commit("worldFaceDragEnd", "seed", WorldToolRequest { mutations: Vec::new() }).expect("the world tool accepts the gesture").is_none());
 }
 
 /// 📤️ A placed world gesture is ONE edit stamped with its transaction, and the viewer's replay cursor (config, never
@@ -52,7 +52,7 @@ async fn a_world_gesture_emits_one_stamped_edit_and_moves_the_viewers_cursor() {
     let config = Process3dConfig { resolved_up_to: Some(0), ..Process3dConfig::default() };
     let cfg = ConfigView { snapshot: &config, window: None };
     let step = process3d_step_from_face_drag(&snapshot, [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], -0.5, None, &Process3dLabels::NATIVE_EN).expect("step");
-    let emit = world_emit("worldFaceDragEnd", &doc, &cfg, step, Vec::new());
+    let emit = world_emit("worldFaceDragEnd", &doc, &cfg, step, Vec::new()).expect("the gesture emits");
     let transaction = emit.transaction.as_ref().expect("the gesture is a tool transaction");
     assert_eq!(transaction.tool, "s.process.process3d@1/*#editor#worldFaceDragEnd");
     assert!(matches!(&emit.artifact_mutations[..], [Process3dMutation::CreateStep(create)] if create.index == 0), "the step lands at the viewer's cursor");

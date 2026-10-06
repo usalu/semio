@@ -17,3 +17,10 @@ async fn viewer_declares_the_main_window() {
     let def = create_pdf14_x_viewer();
     assert!(def.window_kinds.iter().any(|w| w.id == main::WINDOW_KIND_ID));
 }
+
+#[test]
+fn own14_declared_document_and_mutation_owners_are_exact() {
+    assert_eq!(<Pdf14XViewer as ArtifactViewer>::DOCUMENT_SCHEMA, crate::STDIO_PDF_DOCUMENT_SCHEMA);
+    assert_eq!(std::any::type_name::<<Pdf14XViewer as ArtifactViewer>::Snapshot>(), std::any::type_name::<crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot>());
+    assert_eq!(std::any::type_name::<<Pdf14XViewer as ArtifactViewer>::Mutation>(), std::any::type_name::<crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation>());
+}

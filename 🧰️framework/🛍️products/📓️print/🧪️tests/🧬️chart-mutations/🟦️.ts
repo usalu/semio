@@ -9,7 +9,8 @@ import resultSchema from "../../🧬️schema/💡️inferences/🔣️.json";
 import paintFixture from "../../🧫️fixtures/🧬️chart-mutations/🎨️paint.json";
 import { changeVizChartValue } from "../../🧬️schema/🧬️mutations/🟦️.ts";
 import { applyVizChartDiff, absorbVizChartDiff, inverseVizChartDiff, equalVizChartValue, type VizChartDiff } from "../../🧬️schema/🔀️diff/🟦️.ts";
-import { inferVizChart, validateVizChartSpecification } from "../../🧬️schema/💡️inferences/🟦️.ts";
+import {inferVizChart} from "../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";
+import { validateVizChartSpecification } from "../../🧬️schema/💡️inferences/🟦️.ts";
 import type { VizChartSnapshot } from "../../🧬️schema/📸️snapshot/🟦️.ts";
 
 type Check = { readonly module: string; readonly name: string; readonly subject: () => unknown; readonly oracle: () => unknown; readonly tolerance?: number };
@@ -29,7 +30,7 @@ function replay(): { snapshot: VizChartSnapshot; diff: VizChartDiff } {
 
 /** 🌐️ Exercises the real browser worker with first-party inference bundles and an independent timer. */
 async function browserInference(): Promise<readonly unknown[]> {
-  const entries = [new URL("../../🧬️schema/💡️inferences/🟦️.ts", import.meta.url).pathname, new URL("../../🧬️schema/💡️inferences/🧵️worker/🟦️.ts", import.meta.url).pathname];
+  const entries = [new URL("../../🔨️modules/🏠️host/💡️inferences/🟦️.ts", import.meta.url).pathname, new URL("../../🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts", import.meta.url).pathname];
   const bundles = await Promise.all(entries.map(entry => Bun.build({ entrypoints: [decodeURIComponent(entry).replace(/^\/(?=[A-Za-z]:)/, "")], target: "browser" })));
   for (const bundle of bundles) if (!bundle.success) throw new Error(bundle.logs.map(String).join("\n"));
   const [main, worker] = await Promise.all(bundles.map(bundle => bundle.outputs[0]!.text()));

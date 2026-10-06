@@ -1,0 +1,48 @@
+{
+  "name": "@semio-tech/block-catalog-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "tags": [
+    "language:rust",
+    "role:plugin",
+    "family:block"
+  ],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/🗂️catalog/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/🗂️catalog/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/🗂️catalog/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "conformance": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/🗂️catalog/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts conformance",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "qualification": "Genuine owning Source Before58/47/11: complete physical cell boundaries fail because reconstruction charges2048plus685table slots against maxValueBytes. Existing artifactSqliteTables owns semantic census. Only own reconstruction backing control adopts supplied maxAllocationBytes; all original budgets/assertions/callbacks retained.",
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts",
+      "regions": [
+        {
+          "before": "new NativeDecodeControl(settings.maxValueBytes??268435456,event=>",
+          "after": "new NativeDecodeControl(settings.maxAllocationBytes??536870912,event=>"
+        }
+      ]
+    }
+  ]
+}

@@ -164,3 +164,75 @@ Text refusals go through `text_refusal`. Other refusals project with `.under("na
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs`
 
 **Conversion scripts (inputs, kept):** `🧪️s4-packfix-{pair,convert,manual-value,manual-encode,port-value,port-encode,envelope-fix,errs}.py` in this ticket folder.
+
+## Session 5 — 2026-10-05
+
+Agent: S5-CHANNEL (successor of S4-PACKFIX + S4-BUMP). Scratch: `🗑️generated/s5-channel/`. Scope here: the kernel TEST target
+(`cargo check -p semio-framework-os-kernel --lib --tests`) and the pack-error follow-ups; channel work is in `📓️s4-bump-report.md` § Session 5.
+
+### S5.0 State at launch (00:18–00:25, landing lock HELD by COORDINATOR-ACTIVATION — no cargo, no saves under `🧰️framework/**`)
+
+- The "83 test-only errors" figure is the peer's 10-04 19:50 census (`UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📓️current-os-326-test-only-prerequisite-census.md`),
+  taken BEFORE the kernel lib was converted. Since then the Codex peer rewrote most of the listed test files (mtimes 20:36–20:55:
+  pack value unit/refusals, native-decoding/-encoding tests, materialize unit, protocol-laws, intrinsic-bytes, sync unit, store unit,
+  dsl unit) and moved the SPR io context to `crate::os_pack::control::CommandContext`.
+- Static census on today's tree (`s5-channel/stale-packerror-variants.txt`): only **2** retired `PackError::<variant>` uses remain in
+  the kernel-mounted trees, both in `🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧪️tests/🦀️.rs:19–20`. The real error count
+  is therefore unknown until the check runs — OWED at `landing: free`:
+  `cargo check -p semio-framework-os-kernel --lib --tests --message-format=short` (gate v3 first).
+
+### S5.1 First real measurements (gate v4, `CARGO_BUILD_JOBS=3`; logs `s5-channel/check-kernel-tests-{1,2}.txt`)
+
+| Time | Command | Result |
+| --- | --- | --- |
+| 01:23:34–01:23:55 | `cargo check -p semio-framework-os-kernel --lib --tests` | exit 101, **1 error in `semio-framework-replication` (lib)**: `📡️replication/🎮️mutation/📦️bytes/🦀️.rs:191:53` E0308 `expected &u8, found u8` — the Codex peer's new file (git `AM`, mtime 01:21); fixed by the peer at 01:24 |
+| 01:25:48–01:27:29 | same | exit 101, **kernel (lib) 1 error, kernel (lib test) the same 1 error, 871 warnings**: `💻️os/🔨️modules/🗣️dsl/🦀️.rs:219:71` E0308 `expected pack::record::EncodeOptions, found os_pack::value::EncodeOptions` |
+
+- **The 83 test-only errors are gone.** With the lib-test target type-checked far enough to emit 871 warnings, the only error left
+  is a LIB error the Codex peer introduced at 01:21:57 (new `encode_with_into` in `🗣️dsl/🦀️.rs`, its op-byte-pages wave): it
+  hands the kernel twin's `os_pack::value::EncodeOptions` to the framework `pack::record::encode_record_body_into`. Borrow-check
+  and later-phase errors may still hide behind it; the integration test target `sqlite_snapshot_native_admission` was not
+  reached (cargo stopped at the lib), so the 2 retired `PackError::Schema` sites in `🪶️native-retirement/🧪️tests` are still to fix.
+- **Why the twins disagree now.** The peer is moving the options type to the replication crate
+  (`protocol::codec::PackEncodeOptions`, re-exported by the framework twin at `🎒️pack/🌱️value/🦀️.rs:3057`; that file was being
+  written at 01:28 and held `crate::format::crate::format::VerificationLevel` at that moment), while the kernel twin
+  `💻️os/🔨️modules/🎒️pack/🌱️value/🦀️.rs` (PACKFIX's 10-04 20:41 state) still declares its own `EncodeOptions`/`DecodeOptions`.
+- **"Canonical mount consolidation" is NOT a mechanical follow-up any more** (correction of the PACKFIX remaining-work item):
+  the twins differ in behaviour, not only in mounts. The kernel twin sorts intrinsic `DslValue::Object` keys by key bytes
+  (`💻️os/…/🌱️value/🦀️.rs:568–571`, the coordinator's 20:41 fix for "emitted descriptor pack is not canonical"); the framework
+  twin preserves the authored order by the peer's explicit law `schema_map_keys_are_canonical_and_intrinsic_objects_preserve_occurrences`
+  (`🎒️pack/🌱️value/🧪️tests/🔬️unit/🦀️.rs:943`, neutral fixture `🌱️value/🧫️fixtures/🔃️ordering`), and the law
+  `object_keys_encode_in_canonical_key_byte_order` quoted in `📓️s5-resume.md` §1.21 no longer exists anywhere. Pointing
+  `os_pack::value` at `pack::record` would silently change every kernel-encoded intrinsic object's bytes (descriptors, `.spk`
+  values). That is a coordinator + peer decision (one ordering contract for both twins), not a PACKFIX edit.
+- Coordinator instruction (01:3x): re-check at ~01:40 with `--target wasm32-wasip2`; if the dsl:219 error persists, convert the
+  options at that one call site under the landing lock (no re-export, no shim), verify native + wasip2 + `--tests`.
+  Superseded 01:39: the peer finished its pack wave itself (foundation GREEN 01:43); no call-site edit by me.
+
+### S5.2 KERNEL TEST TARGET GREEN (landed 05:20–05:30 under the landing lock, after the 02:40–04:22 fleet cut)
+
+Coordinator decision recorded as design §22.19: no consolidation of the value twins by this ticket (the pack peer unifies the
+options type itself; the order policy is the peer's); the descriptor layer canonicalizes instead (see `📓️s4-bump-report.md` § S5.7).
+
+| Time | Command (gate v5, `CARGO_BUILD_JOBS=3`) | Result |
+| --- | --- | --- |
+| 05:26:46–05:28:25 | `cargo check -p semio-framework-plugin-describe -p semio-framework-os-kernel --lib --tests` | exit 101: kernel lib 425 warnings (0 errors); integration target `sqlite_snapshot_native_admission` **3 errors** E0432 (`semio_framework_os_kernel::native_decoding` — a path the kernel never exported, also not at HEAD) |
+| 05:29:30–05:30:00 | same + `--keep-going` | exit 101: **kernel lib-test 898 warnings, 0 errors**; describe lib + lib-test 2 warnings each; integration target **7 errors** E0433 (`DslValue` unresolved in the `🧬️octets` wrapper of the intrinsic-bytes law) |
+| 05:30:30–05:30:32 | same | **exit 0**: kernel lib 425, kernel lib-test 898, integration target 274, describe lib/lib-test 2/2 warnings |
+
+- The real count was **12 test-only errors, all in the integration test target** (the lib-test target had none left once the peer
+  finished): 2 retired `PackError::Schema` (invisible until the imports resolved), 3 imports, 7 unresolved `DslValue`.
+- Edits (5 kernel TEST files, no lib code, Edit tool):
+  `🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧪️tests/🦀️.rs` (2× `PackError::Schema(..)` →
+  `PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, ..))`, the mapping the peer used for the sibling fixtures);
+  `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🪆️binding/🦀️.rs`, `🧬️semio/🧪️tests/🚦️controlled/🦀️.rs`,
+  `🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🦀️.rs` (import `semio_framework_value::native_decoding::*` where the module lives);
+  `…/🪶️native-decoding/🧪️tests/🚪️public/🧬️octets/🦀️.rs` (`use semio_framework_value::DslValue;`).
+- Targeted tests RAN (rule 48, uplift dir `target-nde-s5-channel`, `CARGO_INCREMENTAL=0`):
+  `cargo test -p semio-framework-os-kernel --lib -- os_spr::channel::` → **91 passed / 0 failed** (05:54–05:55; includes
+  `a_host_admits_only_a_guest_of_its_own_channel_version` and the two wire-fixture laws).
+- Not run: the kernel's whole lib suite (1226 tests; needs a coordinator GO per rule 48) and the integration target
+  `cargo test -p semio-framework-os-kernel --test sqlite_snapshot_native_admission` (the peer's laws; compiles now — OWED to the
+  pack peer / S5-GATES, not a law of this ticket).
+- `TransportFailure` → `InvariantViolated`: recommendation in `📓️s4-bump-report.md` § S5.4 (keep for this ticket; narrow
+  `ArtifactPack::decode_pack_with` to `PackRefusal` in the pack owner's wave).

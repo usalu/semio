@@ -1,0 +1,5 @@
+# Revised Block Inventory Collector Review
+
+Reviewed current library SHA cfa3f9e91558651d78b1cbbaa55fea5ac506ec88414501a9e0debc7cb4a8314b and command SHA 8c26ac8bc290007820ad4f9fe8ec7f0782647d5773a86933e226a28cfa7fb325 as draft observations, not publication authority. Immutable borrowed leaf slices remove arbitrary trait callbacks and unstable rereads. Five-outcome stack fields prevent dynamic outcome-source work. Source equality/path/identifier/exclusion scans now charge and offer cancellation during byte traversal. A zero-owned callback precedes output capacity reservation; duplicate descriptor conflicts refuse. Command selection charges a cumulative budget and shares the monotonic deadline with encoding.
+
+Final command stdout publication still uses synchronous write_all on a potentially blocking pipe. No independently cancellable output I/O is established. Optional replication projection and artifact caller extraction remain unexecuted. Source1/model1 are historical evidence; the planned language-neutral control-corpus successor must seal before final source/publication admission. No production writes occurred in this lane.

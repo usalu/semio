@@ -968,13 +968,13 @@ def prepared(ctx: Context) -> tuple:
     """🧊️ The real committed solid, put into the state the scenario's verb is aimed at by the doc
     string's own `prepare` list, plus the verb itself."""
     plan = doc_json(ctx)
-    document = apply_all(parse_dsl(ctx.fixture_bytes(FOREST_DSL).decode("utf-8")), plan.get("prepare", []))
+    document = apply_all(parse_dsl(ctx.input_bytes(FOREST_DSL).decode("utf-8")), plan.get("prepare", []))
     return document, plan["mutation"]
 
 
-def fixture_json(ctx: Context, uri: str) -> dict:
+def snapshot_json(ctx: Context, uri: str) -> dict:
     """🧫️ One committed specification-vector file, decoded from the bytes the plan pinned."""
-    return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input
@@ -1003,10 +1003,10 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
-    before_uri, mutation_uri, after_uri = ctx.step_fixture_uris()[:3]
-    before = fixture_json(ctx, before_uri)
-    after = fixture_json(ctx, after_uri)
-    applied = apply_mutation(before, fixture_json(ctx, mutation_uri))
+    before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
+    before = snapshot_json(ctx, before_uri)
+    after = snapshot_json(ctx, after_uri)
+    applied = apply_mutation(before, snapshot_json(ctx, mutation_uri))
     if applied != after:
         raise AssertionError("%s: the applied snapshot does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(after)))
     return Outcome(applied)
@@ -1017,14 +1017,14 @@ def carrier_pair(ctx: Context, dsl_uri: str, pack_uri: str, what: str) -> dict:
     required to come back byte for byte. `.dsl.semio` is a fixed-layout record grammar and
     `.pack.semio` is its binary twin, so an exact re-emission is the CORRECT answer and the wave's
     must-differ tripwire would be backwards here."""
-    dsl_bytes = ctx.fixture_bytes(dsl_uri)
+    dsl_bytes = ctx.input_bytes(dsl_uri)
     document = parse_dsl(dsl_bytes.decode("utf-8"))
     printed = print_dsl(document).encode("utf-8")
     if printed != dsl_bytes:
         raise AssertionError("re-printing %s did not reproduce its committed DSL bytes (%d vs %d bytes)" % (what, len(printed), len(dsl_bytes)))
     if parse_dsl(printed.decode("utf-8")) != document:
         raise AssertionError("re-parsing the printed %s lost content" % what)
-    committed_pack = ctx.fixture_bytes(pack_uri)
+    committed_pack = ctx.input_bytes(pack_uri)
     unpacked = parse_pack(committed_pack)
     if unpacked != document:
         raise AssertionError("the binary twin of %s decodes to a different document than its text\n     got: %s\nexpected: %s" % (what, json.dumps(unpacked), json.dumps(document)))

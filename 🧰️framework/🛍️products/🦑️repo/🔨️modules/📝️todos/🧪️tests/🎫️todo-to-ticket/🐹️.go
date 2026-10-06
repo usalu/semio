@@ -50,7 +50,7 @@ func text(pointer *string) string {
 // region 🔖️Scenarios
 
 func theScriptProducesOneHistory(ctx *host.Context) (host.Outcome, error) {
-	data, err := ctx.FixtureBytes("shared://🔓️lifecycle-script.json")
+	data, err := ctx.InputBytes("shared://🔓️lifecycle-script.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

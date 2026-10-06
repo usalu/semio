@@ -11,11 +11,38 @@
   ],
   "properties": {
     "node_id": {
-      "$ref": "#/$defs/GraphNodeId"
+      "$ref": "#/$defs/GraphNodeId",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The node the mutation addresses.",
+          "de": "Der Knoten, den die Mutation adressiert."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the ports of the node at which it is inserted, counted from 0.",
+          "de": "Position unter den Anschlüssen des Knotens, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "port": {
       "$ref": "#/$defs/SemioGraphPort",
@@ -36,7 +63,20 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node id",
+              "de": "Knoten-ID"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "graph",
+              "granularity": "node"
+            }
+          }
         }
       }
     },
@@ -73,7 +113,18 @@
           }
         },
         "category": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Category",
+              "de": "Kategorie"
+            },
+            "description": {
+              "en": "Category of the port, as the graph's manifest names it.",
+              "de": "Kategorie des Anschlusses, wie sie das Manifest des Graphen benennt."
+            }
+          }
         },
         "properties": {
           "type": "array",

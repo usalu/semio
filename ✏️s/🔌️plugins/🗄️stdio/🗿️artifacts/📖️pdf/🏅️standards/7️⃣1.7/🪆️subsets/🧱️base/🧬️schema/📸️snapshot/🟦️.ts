@@ -1,15 +1,6 @@
 /** 🧬️ Canonical owned PDF1.7 domain with explicit admission from its native JSON schema. */
-import type { Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import { pdfCosFromNativeJson, pdfDictionaryFromNativeJson, pdfFunctionFromNativeJson, pdfColorFromNativeJson } from "./🪪️native-json/🟦️.ts";
-import { pdfOperationFromNativeJson, pdfPropertyFromNativeJson, pdfInlineFromNativeJson, pdfTextFromNativeJson, pdfTextItemFromNativeJson } from "./🪪️native-json/🖋️content/🟦️.ts";
-import { pdfFontFromNativeJson, pdfFontKindFromNativeJson, pdfCidFontFromNativeJson, pdfProgramFromNativeJson, pdfGidFromNativeJson, pdfWidthRunFromNativeJson, pdfVerticalRunFromNativeJson, pdfDescriptorFromNativeJson, pdfCMapFromNativeJson, pdfUnicodeFromNativeJson, pdfUnicodeMappingFromNativeJson, pdfCidMappingFromNativeJson, pdfCharProcFromNativeJson, pdfEncodingFromNativeJson } from "./🪪️native-json/🔤️font/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type { Binary64 };
-import { pdfImageFromNativeJson,pdfImageCodecFromNativeJson,pdfImageMaskFromNativeJson,pdfStateFromNativeJson,pdfSoftMaskFromNativeJson,pdfFormFromNativeJson,pdfGroupFromNativeJson,pdfShadingFromNativeJson,pdfShadingKindFromNativeJson,pdfPatternFromNativeJson,pdfPatternKindFromNativeJson,pdfCcittFromNativeJson } from "./🪪️native-json/🖼️resource/🟦️.ts";
-import { pdfDestinationFromNativeJson,pdfFitFromNativeJson,pdfFileFromNativeJson,pdfActionFromNativeJson,pdfActionKindFromNativeJson,pdfOutlineFromNativeJson,pdfOpenActionFromNativeJson,pdfNamedDestinationFromNativeJson } from "./🪪️native-json/🎯️navigation/🟦️.ts";
-import { pdfAnnotationFromNativeJson,pdfAnnotationKindFromNativeJson,pdfMarkupFromNativeJson,pdfAppearanceFromNativeJson,pdfAppearanceEntryFromNativeJson,pdfAppearanceStateFromNativeJson,pdfBorderFromNativeJson,pdfDateFromNativeJson } from "./🪪️native-json/📌️annotation/🟦️.ts";
-import { pdfFieldFromNativeJson,pdfFieldKindFromNativeJson,pdfAcroFromNativeJson,pdfOptionalFromNativeJson,pdfOptionalGroupFromNativeJson } from "./🪪️native-json/📝️form/🟦️.ts";
-import { pdfInfoFromNativeJson,pdfEmbeddedFromNativeJson,pdfIntentFromNativeJson,pdfEncryptionFromNativeJson,pdfPreferencesFromNativeJson,pdfMarkFromNativeJson } from "./🪪️native-json/📇️metadata/🟦️.ts";
-import { pdfSnapshotFromNativeJson,pdfPageFromNativeJson,pdfIndirectFromNativeJson,pdfNamedColorFromNativeJson,pdfNamedPropertiesFromNativeJson,pdfLabelFromNativeJson } from "./🪪️native-json/📄️document/🟦️.ts";
 
 export interface PdfSnapshot {
   schema: string;
@@ -1309,7 +1300,7 @@ export const schema = {
             "volume": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -1588,7 +1579,7 @@ export const schema = {
         "rect": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           },
           "minItems": 4,
           "maxItems": 4
@@ -1643,7 +1634,7 @@ export const schema = {
         "color": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           }
         },
         "appearance": {
@@ -1795,7 +1786,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             }
           },
@@ -1822,7 +1813,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -1866,7 +1857,7 @@ export const schema = {
             "points": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
@@ -1891,7 +1882,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -1902,7 +1893,7 @@ export const schema = {
             "leaderLength": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -1930,7 +1921,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -1943,7 +1934,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -1969,7 +1960,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -1982,7 +1973,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -2006,7 +1997,7 @@ export const schema = {
             "vertices": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "interiorColor": {
@@ -2014,7 +2005,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -2037,7 +2028,7 @@ export const schema = {
             "vertices": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "lineEndings": {
@@ -2060,7 +2051,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -2083,7 +2074,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             }
           },
@@ -2101,7 +2092,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             }
           },
@@ -2119,7 +2110,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             }
           },
@@ -2137,7 +2128,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             }
           },
@@ -2178,7 +2169,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -2214,7 +2205,7 @@ export const schema = {
               "items": {
                 "type": "array",
                 "items": {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 }
               }
             }
@@ -2233,8 +2224,8 @@ export const schema = {
             "parent": {
               "anyOf": [
                 {
-                  "type": "integer",
-                  "minimum": 0
+                  "minimum": 0,
+                  "semioPrimitive": "u64"
                 },
                 {
                   "type": "null"
@@ -2541,7 +2532,7 @@ export const schema = {
             "quadPoints": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "interiorColor": {
@@ -2549,7 +2540,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -2712,7 +2703,7 @@ export const schema = {
       "type": "object",
       "properties": {
         "width": {
-          "type": "number"
+          "semioPrimitive": "binary64"
         },
         "style": {
           "anyOf": [
@@ -2729,7 +2720,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             {
@@ -2742,7 +2733,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 2,
               "maxItems": 2
@@ -2857,7 +2848,7 @@ export const schema = {
           "$ref": "#/$defs/PdfFontDescriptor"
         },
         "defaultWidth": {
-          "type": "number"
+          "semioPrimitive": "binary64"
         },
         "widths": {
           "type": "array",
@@ -2870,7 +2861,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 2,
               "maxItems": 2
@@ -3036,7 +3027,7 @@ export const schema = {
           "items": {
             "type": "array",
             "items": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "minItems": 3,
             "maxItems": 3
@@ -3058,7 +3049,7 @@ export const schema = {
         "widths": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           }
         }
       },
@@ -3133,7 +3124,7 @@ export const schema = {
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 3,
               "maxItems": 3
@@ -3143,7 +3134,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3156,7 +3147,7 @@ export const schema = {
             "gamma": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -3178,7 +3169,7 @@ export const schema = {
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 3,
               "maxItems": 3
@@ -3188,7 +3179,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3203,7 +3194,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3218,7 +3209,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 9,
                   "maxItems": 9
@@ -3243,7 +3234,7 @@ export const schema = {
             "whitePoint": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 3,
               "maxItems": 3
@@ -3253,7 +3244,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 3,
                   "maxItems": 3
@@ -3268,7 +3259,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -3316,7 +3307,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -3590,7 +3581,7 @@ export const schema = {
             "left": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -3600,7 +3591,7 @@ export const schema = {
             "top": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -3610,7 +3601,7 @@ export const schema = {
             "zoom": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -3642,7 +3633,7 @@ export const schema = {
             "top": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -3663,7 +3654,7 @@ export const schema = {
             "left": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -3684,7 +3675,7 @@ export const schema = {
             "rect": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
@@ -3715,7 +3706,7 @@ export const schema = {
             "top": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -3736,7 +3727,7 @@ export const schema = {
             "left": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 },
                 {
                   "type": "null"
@@ -3941,7 +3932,7 @@ export const schema = {
         "lineWidth": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -3971,7 +3962,7 @@ export const schema = {
         "miterLimit": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -3986,11 +3977,11 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 }
               ],
               "minItems": 2,
@@ -4051,7 +4042,7 @@ export const schema = {
                   "type": "string"
                 },
                 {
-                  "type": "number"
+                  "semioPrimitive": "binary64"
                 }
               ],
               "minItems": 2,
@@ -4088,7 +4079,7 @@ export const schema = {
         "strokeAlpha": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4098,7 +4089,7 @@ export const schema = {
         "fillAlpha": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4128,7 +4119,7 @@ export const schema = {
         "flatness": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4138,7 +4129,7 @@ export const schema = {
         "smoothness": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4244,30 +4235,30 @@ export const schema = {
         "fontBbox": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           },
           "minItems": 4,
           "maxItems": 4
         },
         "italicAngle": {
-          "type": "number"
+          "semioPrimitive": "binary64"
         },
         "ascent": {
-          "type": "number"
+          "semioPrimitive": "binary64"
         },
         "descent": {
-          "type": "number"
+          "semioPrimitive": "binary64"
         },
         "capHeight": {
-          "type": "number"
+          "semioPrimitive": "binary64"
         },
         "stemV": {
-          "type": "number"
+          "semioPrimitive": "binary64"
         },
         "stemH": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4277,7 +4268,7 @@ export const schema = {
         "xHeight": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4287,7 +4278,7 @@ export const schema = {
         "leading": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4297,7 +4288,7 @@ export const schema = {
         "avgWidth": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4307,7 +4298,7 @@ export const schema = {
         "maxWidth": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4317,7 +4308,7 @@ export const schema = {
         "missingWidth": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4347,7 +4338,7 @@ export const schema = {
         "fontWeight": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -4396,7 +4387,7 @@ export const schema = {
             "widths": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "descriptor": {
@@ -4447,7 +4438,7 @@ export const schema = {
             "widths": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "descriptor": {
@@ -4488,7 +4479,7 @@ export const schema = {
             "fontMatrix": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 6,
               "maxItems": 6
@@ -4496,7 +4487,7 @@ export const schema = {
             "fontBbox": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
@@ -4511,7 +4502,7 @@ export const schema = {
             "widths": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "charProcs": {
@@ -4961,7 +4952,7 @@ export const schema = {
         "bbox": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           },
           "minItems": 4,
           "maxItems": 4
@@ -4969,7 +4960,7 @@ export const schema = {
         "matrix": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           },
           "minItems": 6,
           "maxItems": 6
@@ -5034,13 +5025,13 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "size": {
@@ -5070,7 +5061,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -5083,7 +5074,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -5117,7 +5108,7 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "range": {
@@ -5125,7 +5116,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -5136,17 +5127,17 @@ export const schema = {
             "c0": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "c1": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "n": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -5166,7 +5157,7 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "range": {
@@ -5174,7 +5165,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -5191,13 +5182,13 @@ export const schema = {
             "bounds": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "encode": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             }
           },
@@ -5218,13 +5209,13 @@ export const schema = {
             "domain": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "range": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "code": {
@@ -5292,7 +5283,7 @@ export const schema = {
         "decode": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           }
         },
         "interpolate": {
@@ -5344,7 +5335,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             {
@@ -5670,7 +5661,7 @@ export const schema = {
         "decode": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           }
         },
         "interpolate": {
@@ -5748,8 +5739,8 @@ export const schema = {
         "popup": {
           "anyOf": [
             {
-              "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "semioPrimitive": "u64"
             },
             {
               "type": "null"
@@ -5759,7 +5750,7 @@ export const schema = {
         "opacity": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -5789,8 +5780,8 @@ export const schema = {
         "inReplyTo": {
           "anyOf": [
             {
-              "type": "integer",
-              "minimum": 0
+              "minimum": 0,
+              "semioPrimitive": "u64"
             },
             {
               "type": "null"
@@ -5912,7 +5903,7 @@ export const schema = {
               "const": "int"
             },
             "value": {
-              "type": "integer"
+              "semioPrimitive": "i64"
             }
           },
           "required": [
@@ -6070,7 +6061,7 @@ export const schema = {
               "const": "setLineWidth"
             },
             "width": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6115,7 +6106,7 @@ export const schema = {
               "const": "setMiterLimit"
             },
             "limit": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6132,11 +6123,11 @@ export const schema = {
             "array": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "phase": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6167,7 +6158,7 @@ export const schema = {
               "const": "setFlatness"
             },
             "flatness": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6221,7 +6212,7 @@ export const schema = {
             "matrix": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 6,
               "maxItems": 6
@@ -6239,10 +6230,10 @@ export const schema = {
               "const": "moveTo"
             },
             "x": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6258,10 +6249,10 @@ export const schema = {
               "const": "lineTo"
             },
             "x": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6277,22 +6268,22 @@ export const schema = {
               "const": "curveTo"
             },
             "x1": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y1": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "x2": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y2": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "x3": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y3": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6312,16 +6303,16 @@ export const schema = {
               "const": "curveToInitial"
             },
             "x2": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y2": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "x3": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y3": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6339,16 +6330,16 @@ export const schema = {
               "const": "curveToFinal"
             },
             "x1": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y1": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "x3": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y3": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6377,16 +6368,16 @@ export const schema = {
               "const": "rectangle"
             },
             "x": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "width": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "height": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6547,7 +6538,7 @@ export const schema = {
               "const": "setCharSpacing"
             },
             "spacing": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6562,7 +6553,7 @@ export const schema = {
               "const": "setWordSpacing"
             },
             "spacing": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6577,7 +6568,7 @@ export const schema = {
               "const": "setHorizontalScale"
             },
             "scale": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6592,7 +6583,7 @@ export const schema = {
               "const": "setLeading"
             },
             "leading": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6610,7 +6601,7 @@ export const schema = {
               "type": "string"
             },
             "size": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6642,7 +6633,7 @@ export const schema = {
               "const": "setTextRise"
             },
             "rise": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6657,10 +6648,10 @@ export const schema = {
               "const": "moveText"
             },
             "tx": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "ty": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6676,10 +6667,10 @@ export const schema = {
               "const": "moveTextSetLeading"
             },
             "tx": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "ty": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6697,7 +6688,7 @@ export const schema = {
             "matrix": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 6,
               "maxItems": 6
@@ -6774,10 +6765,10 @@ export const schema = {
               "const": "nextLineShowTextSpaced"
             },
             "wordSpacing": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "charSpacing": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "text": {
               "$ref": "#/$defs/PdfTextString"
@@ -6797,10 +6788,10 @@ export const schema = {
               "const": "setGlyphWidth"
             },
             "wx": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "wy": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6816,22 +6807,22 @@ export const schema = {
               "const": "setGlyphWidthAndBox"
             },
             "wx": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "wy": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "llx": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "lly": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "urx": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "ury": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6883,7 +6874,7 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             }
           },
@@ -6901,7 +6892,7 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "pattern": {
@@ -6929,7 +6920,7 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             }
           },
@@ -6947,7 +6938,7 @@ export const schema = {
             "components": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "pattern": {
@@ -6973,7 +6964,7 @@ export const schema = {
               "const": "setStrokeGray"
             },
             "gray": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -6988,7 +6979,7 @@ export const schema = {
               "const": "setFillGray"
             },
             "gray": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -7003,13 +6994,13 @@ export const schema = {
               "const": "setStrokeRgb"
             },
             "r": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "g": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "b": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -7026,13 +7017,13 @@ export const schema = {
               "const": "setFillRgb"
             },
             "r": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "g": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "b": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -7049,16 +7040,16 @@ export const schema = {
               "const": "setStrokeCmyk"
             },
             "c": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "m": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "k": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -7076,16 +7067,16 @@ export const schema = {
               "const": "setFillCmyk"
             },
             "c": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "m": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "y": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "k": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -7406,7 +7397,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 3,
               "maxItems": 3
@@ -7507,7 +7498,7 @@ export const schema = {
         "mediaBox": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           },
           "minItems": 4,
           "maxItems": 4
@@ -7517,7 +7508,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
@@ -7532,7 +7523,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
@@ -7547,7 +7538,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
@@ -7562,7 +7553,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
@@ -7578,7 +7569,7 @@ export const schema = {
         "userUnit": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -7644,7 +7635,7 @@ export const schema = {
         "duration": {
           "anyOf": [
             {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             {
               "type": "null"
@@ -7755,7 +7746,7 @@ export const schema = {
         "matrix": {
           "type": "array",
           "items": {
-            "type": "number"
+            "semioPrimitive": "binary64"
           },
           "minItems": 6,
           "maxItems": 6
@@ -7794,16 +7785,16 @@ export const schema = {
             "bbox": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
             },
             "xStep": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "yStep": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             },
             "content": {
               "type": "array",
@@ -7930,7 +7921,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             {
@@ -7943,7 +7934,7 @@ export const schema = {
             {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
@@ -7982,7 +7973,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 4,
                   "maxItems": 4
@@ -7997,7 +7988,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 6,
                   "maxItems": 6
@@ -8025,7 +8016,7 @@ export const schema = {
             "coords": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 4,
               "maxItems": 4
@@ -8035,7 +8026,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -8073,7 +8064,7 @@ export const schema = {
             "coords": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               },
               "minItems": 6,
               "maxItems": 6
@@ -8083,7 +8074,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   },
                   "minItems": 2,
                   "maxItems": 2
@@ -8155,7 +8146,7 @@ export const schema = {
             "decode": {
               "type": "array",
               "items": {
-                "type": "number"
+                "semioPrimitive": "binary64"
               }
             },
             "function": {
@@ -8260,7 +8251,7 @@ export const schema = {
                 {
                   "type": "array",
                   "items": {
-                    "type": "number"
+                    "semioPrimitive": "binary64"
                   }
                 },
                 {
@@ -8506,7 +8497,7 @@ export const schema = {
               "const": "adjust"
             },
             "amount": {
-              "type": "number"
+              "semioPrimitive": "binary64"
             }
           },
           "required": [
@@ -8796,6 +8787,8 @@ const resolveRef = (ref: string, own: Schema): Schema => {
   return node as Schema;
 };
 const matches = (schema: Schema, value: unknown, own: Schema, at: string, errors: string[]): boolean => {
+  if (schema.semioPrimitive === "binary64") { try { parseBinary64(value); return true; } catch { return (errors.push(`${at}: expected owned binary64`), false); } }
+  if (schema.semioPrimitive === "i64" || schema.semioPrimitive === "u64") return typeof value === "bigint" && value >= (schema.semioPrimitive === "i64" ? -9223372036854775808n : 0n) && value <= (schema.semioPrimitive === "i64" ? 9223372036854775807n : 18446744073709551615n) || (errors.push(`${at}: expected owned integer word`), false);
   if (typeof schema["$ref"] === "string") return matches(resolveRef(schema["$ref"] as string, own), value, own, at, errors);
   if (schema["const"] !== undefined) return value === schema["const"] || (errors.push(`${at}: expected ${JSON.stringify(schema["const"])}`), false);
   if (Array.isArray(schema["enum"])) return (schema["enum"] as unknown[]).includes(value) || (errors.push(`${at}: not one of ${(schema["enum"] as unknown[]).join(", ")}`), false);
@@ -8832,86 +8825,86 @@ export const validateAgainst = <T,>(schema: Schema, pointer: string, value: unkn
 };
 //#endregion 🚪️Validation
 registerSchemaDocument(schema);
-export const parsePdfSnapshot = (value: unknown): PdfSnapshot => pdfSnapshotFromNativeJson(validateAgainst<unknown>(schema, "", value));
-export const parsePdfDictEntry = (value: unknown): PdfDictEntry => pdfDictionaryFromNativeJson([validateAgainst<unknown>(schema, "/$defs/PdfDictEntry", value)])[0]!;
-export const parsePdfObject = (value: unknown): PdfObject => pdfCosFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfObject", value));
+export const parsePdfSnapshot = (value: unknown): PdfSnapshot => validateAgainst<PdfSnapshot>(schema, "", value);
+export const parsePdfDictEntry = (value: unknown): PdfDictEntry => validateAgainst<PdfDictEntry>(schema, "/$defs/PdfDictEntry", value);
+export const parsePdfObject = (value: unknown): PdfObject => validateAgainst<PdfObject>(schema, "/$defs/PdfObject", value);
 export const parsePdfStreamFilter = (value: unknown): PdfStreamFilter => validateAgainst<PdfStreamFilter>(schema, "/$defs/PdfStreamFilter", value);
-export const parsePdfCcittParameters = (value: unknown): PdfCcittParameters => pdfCcittFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCcittParameters", value));
+export const parsePdfCcittParameters = (value: unknown): PdfCcittParameters => validateAgainst<PdfCcittParameters>(schema, "/$defs/PdfCcittParameters", value);
 export const parsePdfPredictor = (value: unknown): PdfPredictor => validateAgainst<PdfPredictor>(schema, "/$defs/PdfPredictor", value);
 export const parseObjRef = (value: unknown): ObjRef => validateAgainst<ObjRef>(schema, "/$defs/ObjRef", value);
 export const parsePdfDecimal = (value: unknown): PdfDecimal => validateAgainst<PdfDecimal>(schema, "/$defs/PdfDecimal", value);
-export const parsePdfIndirectObject = (value: unknown): PdfIndirectObject => pdfIndirectFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfIndirectObject", value));
-export const parsePdfInfo = (value: unknown): PdfInfo => pdfInfoFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfInfo", value));
-export const parsePdfDate = (value: unknown): PdfDate => pdfDateFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfDate", value));
-export const parsePdfEncryption = (value: unknown): PdfEncryption => pdfEncryptionFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfEncryption", value));
+export const parsePdfIndirectObject = (value: unknown): PdfIndirectObject => validateAgainst<PdfIndirectObject>(schema, "/$defs/PdfIndirectObject", value);
+export const parsePdfInfo = (value: unknown): PdfInfo => validateAgainst<PdfInfo>(schema, "/$defs/PdfInfo", value);
+export const parsePdfDate = (value: unknown): PdfDate => validateAgainst<PdfDate>(schema, "/$defs/PdfDate", value);
+export const parsePdfEncryption = (value: unknown): PdfEncryption => validateAgainst<PdfEncryption>(schema, "/$defs/PdfEncryption", value);
 export const parsePdfEncryptionAlgorithm = (value: unknown): PdfEncryptionAlgorithm => validateAgainst<PdfEncryptionAlgorithm>(schema, "/$defs/PdfEncryptionAlgorithm", value);
-export const parsePdfMarkInfo = (value: unknown): PdfMarkInfo => pdfMarkFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfMarkInfo", value));
-export const parsePdfOpenAction = (value: unknown): PdfOpenAction => pdfOpenActionFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOpenAction", value));
-export const parsePdfAction = (value: unknown): PdfAction => pdfActionFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAction", value));
-export const parsePdfActionKind = (value: unknown): PdfActionKind => pdfActionKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfActionKind", value));
-export const parsePdfFileSpecification = (value: unknown): PdfFileSpecification => pdfFileFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFileSpecification", value));
-export const parsePdfDestination = (value: unknown): PdfDestination => pdfDestinationFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfDestination", value));
-export const parsePdfDestinationFit = (value: unknown): PdfDestinationFit => pdfFitFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfDestinationFit", value));
-export const parsePdfViewerPreferences = (value: unknown): PdfViewerPreferences => pdfPreferencesFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfViewerPreferences", value));
+export const parsePdfMarkInfo = (value: unknown): PdfMarkInfo => validateAgainst<PdfMarkInfo>(schema, "/$defs/PdfMarkInfo", value);
+export const parsePdfOpenAction = (value: unknown): PdfOpenAction => validateAgainst<PdfOpenAction>(schema, "/$defs/PdfOpenAction", value);
+export const parsePdfAction = (value: unknown): PdfAction => validateAgainst<PdfAction>(schema, "/$defs/PdfAction", value);
+export const parsePdfActionKind = (value: unknown): PdfActionKind => validateAgainst<PdfActionKind>(schema, "/$defs/PdfActionKind", value);
+export const parsePdfFileSpecification = (value: unknown): PdfFileSpecification => validateAgainst<PdfFileSpecification>(schema, "/$defs/PdfFileSpecification", value);
+export const parsePdfDestination = (value: unknown): PdfDestination => validateAgainst<PdfDestination>(schema, "/$defs/PdfDestination", value);
+export const parsePdfDestinationFit = (value: unknown): PdfDestinationFit => validateAgainst<PdfDestinationFit>(schema, "/$defs/PdfDestinationFit", value);
+export const parsePdfViewerPreferences = (value: unknown): PdfViewerPreferences => validateAgainst<PdfViewerPreferences>(schema, "/$defs/PdfViewerPreferences", value);
 export const parsePdfPageMode = (value: unknown): PdfPageMode => validateAgainst<PdfPageMode>(schema, "/$defs/PdfPageMode", value);
 export const parsePdfPageLayout = (value: unknown): PdfPageLayout => validateAgainst<PdfPageLayout>(schema, "/$defs/PdfPageLayout", value);
-export const parsePdfOptionalContent = (value: unknown): PdfOptionalContent => pdfOptionalFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOptionalContent", value));
-export const parsePdfOptionalContentGroup = (value: unknown): PdfOptionalContentGroup => pdfOptionalGroupFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOptionalContentGroup", value));
-export const parsePdfAcroForm = (value: unknown): PdfAcroForm => pdfAcroFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAcroForm", value));
-export const parsePdfFormField = (value: unknown): PdfFormField => pdfFieldFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFormField", value));
-export const parsePdfFormFieldKind = (value: unknown): PdfFormFieldKind => pdfFieldKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFormFieldKind", value));
-export const parsePdfOutputIntent = (value: unknown): PdfOutputIntent => pdfIntentFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOutputIntent", value));
-export const parsePdfEmbeddedFile = (value: unknown): PdfEmbeddedFile => pdfEmbeddedFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfEmbeddedFile", value));
-export const parsePdfPageLabelRange = (value: unknown): PdfPageLabelRange => pdfLabelFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPageLabelRange", value));
+export const parsePdfOptionalContent = (value: unknown): PdfOptionalContent => validateAgainst<PdfOptionalContent>(schema, "/$defs/PdfOptionalContent", value);
+export const parsePdfOptionalContentGroup = (value: unknown): PdfOptionalContentGroup => validateAgainst<PdfOptionalContentGroup>(schema, "/$defs/PdfOptionalContentGroup", value);
+export const parsePdfAcroForm = (value: unknown): PdfAcroForm => validateAgainst<PdfAcroForm>(schema, "/$defs/PdfAcroForm", value);
+export const parsePdfFormField = (value: unknown): PdfFormField => validateAgainst<PdfFormField>(schema, "/$defs/PdfFormField", value);
+export const parsePdfFormFieldKind = (value: unknown): PdfFormFieldKind => validateAgainst<PdfFormFieldKind>(schema, "/$defs/PdfFormFieldKind", value);
+export const parsePdfOutputIntent = (value: unknown): PdfOutputIntent => validateAgainst<PdfOutputIntent>(schema, "/$defs/PdfOutputIntent", value);
+export const parsePdfEmbeddedFile = (value: unknown): PdfEmbeddedFile => validateAgainst<PdfEmbeddedFile>(schema, "/$defs/PdfEmbeddedFile", value);
+export const parsePdfPageLabelRange = (value: unknown): PdfPageLabelRange => validateAgainst<PdfPageLabelRange>(schema, "/$defs/PdfPageLabelRange", value);
 export const parsePdfPageLabelStyle = (value: unknown): PdfPageLabelStyle => validateAgainst<PdfPageLabelStyle>(schema, "/$defs/PdfPageLabelStyle", value);
-export const parsePdfNamedDestination = (value: unknown): PdfNamedDestination => pdfNamedDestinationFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfNamedDestination", value));
-export const parsePdfOutlineItem = (value: unknown): PdfOutlineItem => pdfOutlineFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOutlineItem", value));
-export const parsePdfNamedProperties = (value: unknown): PdfNamedProperties => pdfNamedPropertiesFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfNamedProperties", value));
-export const parsePdfNamedColorSpace = (value: unknown): PdfNamedColorSpace => pdfNamedColorFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfNamedColorSpace", value));
-export const parsePdfColorSpace = (value: unknown): PdfColorSpace => pdfColorFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfColorSpace", value));
-export const parsePdfFunction = (value: unknown): PdfFunction => pdfFunctionFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFunction", value));
-export const parsePdfPattern = (value: unknown): PdfPattern => pdfPatternFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPattern", value));
-export const parsePdfPatternKind = (value: unknown): PdfPatternKind => pdfPatternKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPatternKind", value));
-export const parsePdfOp = (value: unknown): PdfOp => pdfOperationFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfOp", value));
-export const parsePdfPropertyList = (value: unknown): PdfPropertyList => pdfPropertyFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPropertyList", value));
-export const parsePdfInlineImage = (value: unknown): PdfInlineImage => pdfInlineFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfInlineImage", value));
-export const parsePdfTextString = (value: unknown): PdfTextString => pdfTextFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfTextString", value));
-export const parsePdfTextArrayItem = (value: unknown): PdfTextArrayItem => pdfTextItemFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfTextArrayItem", value));
+export const parsePdfNamedDestination = (value: unknown): PdfNamedDestination => validateAgainst<PdfNamedDestination>(schema, "/$defs/PdfNamedDestination", value);
+export const parsePdfOutlineItem = (value: unknown): PdfOutlineItem => validateAgainst<PdfOutlineItem>(schema, "/$defs/PdfOutlineItem", value);
+export const parsePdfNamedProperties = (value: unknown): PdfNamedProperties => validateAgainst<PdfNamedProperties>(schema, "/$defs/PdfNamedProperties", value);
+export const parsePdfNamedColorSpace = (value: unknown): PdfNamedColorSpace => validateAgainst<PdfNamedColorSpace>(schema, "/$defs/PdfNamedColorSpace", value);
+export const parsePdfColorSpace = (value: unknown): PdfColorSpace => validateAgainst<PdfColorSpace>(schema, "/$defs/PdfColorSpace", value);
+export const parsePdfFunction = (value: unknown): PdfFunction => validateAgainst<PdfFunction>(schema, "/$defs/PdfFunction", value);
+export const parsePdfPattern = (value: unknown): PdfPattern => validateAgainst<PdfPattern>(schema, "/$defs/PdfPattern", value);
+export const parsePdfPatternKind = (value: unknown): PdfPatternKind => validateAgainst<PdfPatternKind>(schema, "/$defs/PdfPatternKind", value);
+export const parsePdfOp = (value: unknown): PdfOp => validateAgainst<PdfOp>(schema, "/$defs/PdfOp", value);
+export const parsePdfPropertyList = (value: unknown): PdfPropertyList => validateAgainst<PdfPropertyList>(schema, "/$defs/PdfPropertyList", value);
+export const parsePdfInlineImage = (value: unknown): PdfInlineImage => validateAgainst<PdfInlineImage>(schema, "/$defs/PdfInlineImage", value);
+export const parsePdfTextString = (value: unknown): PdfTextString => validateAgainst<PdfTextString>(schema, "/$defs/PdfTextString", value);
+export const parsePdfTextArrayItem = (value: unknown): PdfTextArrayItem => validateAgainst<PdfTextArrayItem>(schema, "/$defs/PdfTextArrayItem", value);
 export const parsePdfLineJoin = (value: unknown): PdfLineJoin => validateAgainst<PdfLineJoin>(schema, "/$defs/PdfLineJoin", value);
 export const parsePdfLineCap = (value: unknown): PdfLineCap => validateAgainst<PdfLineCap>(schema, "/$defs/PdfLineCap", value);
-export const parsePdfShading = (value: unknown): PdfShading => pdfShadingFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfShading", value));
-export const parsePdfShadingKind = (value: unknown): PdfShadingKind => pdfShadingKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfShadingKind", value));
-export const parsePdfExtGState = (value: unknown): PdfExtGState => pdfStateFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfExtGState", value));
-export const parsePdfSoftMask = (value: unknown): PdfSoftMask => pdfSoftMaskFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfSoftMask", value));
-export const parsePdfFormXObject = (value: unknown): PdfFormXObject => pdfFormFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFormXObject", value));
-export const parsePdfTransparencyGroup = (value: unknown): PdfTransparencyGroup => pdfGroupFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfTransparencyGroup", value));
-export const parsePdfImage = (value: unknown): PdfImage => pdfImageFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfImage", value));
-export const parsePdfImageMask = (value: unknown): PdfImageMask => pdfImageMaskFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfImageMask", value));
-export const parsePdfImageCodec = (value: unknown): PdfImageCodec => pdfImageCodecFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfImageCodec", value));
-export const parsePdfFont = (value: unknown): PdfFont => pdfFontFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFont", value));
-export const parsePdfToUnicode = (value: unknown): PdfToUnicode => pdfUnicodeFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfToUnicode", value));
-export const parsePdfToUnicodeMapping = (value: unknown): PdfToUnicodeMapping => pdfUnicodeMappingFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfToUnicodeMapping", value));
-export const parsePdfFontKind = (value: unknown): PdfFontKind => pdfFontKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFontKind", value));
-export const parsePdfCidFont = (value: unknown): PdfCidFont => pdfCidFontFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidFont", value));
-export const parsePdfFontProgram = (value: unknown): PdfFontProgram => pdfProgramFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFontProgram", value));
-export const parsePdfCidToGid = (value: unknown): PdfCidToGid => pdfGidFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidToGid", value));
-export const parsePdfCidVerticalRun = (value: unknown): PdfCidVerticalRun => pdfVerticalRunFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidVerticalRun", value));
-export const parsePdfCidWidthRun = (value: unknown): PdfCidWidthRun => pdfWidthRunFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidWidthRun", value));
-export const parsePdfFontDescriptor = (value: unknown): PdfFontDescriptor => pdfDescriptorFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfFontDescriptor", value));
+export const parsePdfShading = (value: unknown): PdfShading => validateAgainst<PdfShading>(schema, "/$defs/PdfShading", value);
+export const parsePdfShadingKind = (value: unknown): PdfShadingKind => validateAgainst<PdfShadingKind>(schema, "/$defs/PdfShadingKind", value);
+export const parsePdfExtGState = (value: unknown): PdfExtGState => validateAgainst<PdfExtGState>(schema, "/$defs/PdfExtGState", value);
+export const parsePdfSoftMask = (value: unknown): PdfSoftMask => validateAgainst<PdfSoftMask>(schema, "/$defs/PdfSoftMask", value);
+export const parsePdfFormXObject = (value: unknown): PdfFormXObject => validateAgainst<PdfFormXObject>(schema, "/$defs/PdfFormXObject", value);
+export const parsePdfTransparencyGroup = (value: unknown): PdfTransparencyGroup => validateAgainst<PdfTransparencyGroup>(schema, "/$defs/PdfTransparencyGroup", value);
+export const parsePdfImage = (value: unknown): PdfImage => validateAgainst<PdfImage>(schema, "/$defs/PdfImage", value);
+export const parsePdfImageMask = (value: unknown): PdfImageMask => validateAgainst<PdfImageMask>(schema, "/$defs/PdfImageMask", value);
+export const parsePdfImageCodec = (value: unknown): PdfImageCodec => validateAgainst<PdfImageCodec>(schema, "/$defs/PdfImageCodec", value);
+export const parsePdfFont = (value: unknown): PdfFont => validateAgainst<PdfFont>(schema, "/$defs/PdfFont", value);
+export const parsePdfToUnicode = (value: unknown): PdfToUnicode => validateAgainst<PdfToUnicode>(schema, "/$defs/PdfToUnicode", value);
+export const parsePdfToUnicodeMapping = (value: unknown): PdfToUnicodeMapping => validateAgainst<PdfToUnicodeMapping>(schema, "/$defs/PdfToUnicodeMapping", value);
+export const parsePdfFontKind = (value: unknown): PdfFontKind => validateAgainst<PdfFontKind>(schema, "/$defs/PdfFontKind", value);
+export const parsePdfCidFont = (value: unknown): PdfCidFont => validateAgainst<PdfCidFont>(schema, "/$defs/PdfCidFont", value);
+export const parsePdfFontProgram = (value: unknown): PdfFontProgram => validateAgainst<PdfFontProgram>(schema, "/$defs/PdfFontProgram", value);
+export const parsePdfCidToGid = (value: unknown): PdfCidToGid => validateAgainst<PdfCidToGid>(schema, "/$defs/PdfCidToGid", value);
+export const parsePdfCidVerticalRun = (value: unknown): PdfCidVerticalRun => validateAgainst<PdfCidVerticalRun>(schema, "/$defs/PdfCidVerticalRun", value);
+export const parsePdfCidWidthRun = (value: unknown): PdfCidWidthRun => validateAgainst<PdfCidWidthRun>(schema, "/$defs/PdfCidWidthRun", value);
+export const parsePdfFontDescriptor = (value: unknown): PdfFontDescriptor => validateAgainst<PdfFontDescriptor>(schema, "/$defs/PdfFontDescriptor", value);
 export const parsePdfCidSystemInfo = (value: unknown): PdfCidSystemInfo => validateAgainst<PdfCidSystemInfo>(schema, "/$defs/PdfCidSystemInfo", value);
-export const parsePdfCMap = (value: unknown): PdfCMap => pdfCMapFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCMap", value));
-export const parsePdfEmbeddedCMap = (value: unknown): PdfEmbeddedCMap => { const row = pdfCMapFromNativeJson({ kind:"embedded",cmap:validateAgainst<unknown>(schema,"/$defs/PdfEmbeddedCMap",value) });if(row.kind!=="embedded")throw new Error("Invalid native CMap owner");return row.cmap; };
-export const parsePdfCidMapping = (value: unknown): PdfCidMapping => pdfCidMappingFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCidMapping", value));
+export const parsePdfCMap = (value: unknown): PdfCMap => validateAgainst<PdfCMap>(schema, "/$defs/PdfCMap", value);
+export const parsePdfEmbeddedCMap = (value:unknown):PdfEmbeddedCMap=>validateAgainst<PdfEmbeddedCMap>(schema,"/$defs/PdfEmbeddedCMap",value);
+export const parsePdfCidMapping = (value: unknown): PdfCidMapping => validateAgainst<PdfCidMapping>(schema, "/$defs/PdfCidMapping", value);
 export const parsePdfCodespaceRange = (value: unknown): PdfCodespaceRange => validateAgainst<PdfCodespaceRange>(schema, "/$defs/PdfCodespaceRange", value);
-export const parsePdfCharProc = (value: unknown): PdfCharProc => pdfCharProcFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfCharProc", value));
-export const parsePdfSimpleEncoding = (value: unknown): PdfSimpleEncoding => pdfEncodingFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfSimpleEncoding", value));
+export const parsePdfCharProc = (value: unknown): PdfCharProc => validateAgainst<PdfCharProc>(schema, "/$defs/PdfCharProc", value);
+export const parsePdfSimpleEncoding = (value: unknown): PdfSimpleEncoding => validateAgainst<PdfSimpleEncoding>(schema, "/$defs/PdfSimpleEncoding", value);
 export const parsePdfEncodingDifference = (value: unknown): PdfEncodingDifference => validateAgainst<PdfEncodingDifference>(schema, "/$defs/PdfEncodingDifference", value);
 export const parsePdfBaseEncoding = (value: unknown): PdfBaseEncoding => validateAgainst<PdfBaseEncoding>(schema, "/$defs/PdfBaseEncoding", value);
-export const parsePdfPage = (value: unknown): PdfPage => pdfPageFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfPage", value));
-export const parsePdfAnnotation = (value: unknown): PdfAnnotation => pdfAnnotationFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAnnotation", value));
-export const parsePdfMarkupAnnotation = (value: unknown): PdfMarkupAnnotation => pdfMarkupFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfMarkupAnnotation", value));
-export const parsePdfAppearance = (value: unknown): PdfAppearance => pdfAppearanceFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAppearance", value));
-export const parsePdfAppearanceEntry = (value: unknown): PdfAppearanceEntry => pdfAppearanceEntryFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAppearanceEntry", value));
-export const parsePdfAppearanceState = (value: unknown): PdfAppearanceState => pdfAppearanceStateFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAppearanceState", value));
-export const parsePdfBorderStyle = (value: unknown): PdfBorderStyle => pdfBorderFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfBorderStyle", value));
-export const parsePdfAnnotationKind = (value: unknown): PdfAnnotationKind => pdfAnnotationKindFromNativeJson(validateAgainst<unknown>(schema, "/$defs/PdfAnnotationKind", value));
+export const parsePdfPage = (value: unknown): PdfPage => validateAgainst<PdfPage>(schema, "/$defs/PdfPage", value);
+export const parsePdfAnnotation = (value: unknown): PdfAnnotation => validateAgainst<PdfAnnotation>(schema, "/$defs/PdfAnnotation", value);
+export const parsePdfMarkupAnnotation = (value: unknown): PdfMarkupAnnotation => validateAgainst<PdfMarkupAnnotation>(schema, "/$defs/PdfMarkupAnnotation", value);
+export const parsePdfAppearance = (value: unknown): PdfAppearance => validateAgainst<PdfAppearance>(schema, "/$defs/PdfAppearance", value);
+export const parsePdfAppearanceEntry = (value: unknown): PdfAppearanceEntry => validateAgainst<PdfAppearanceEntry>(schema, "/$defs/PdfAppearanceEntry", value);
+export const parsePdfAppearanceState = (value: unknown): PdfAppearanceState => validateAgainst<PdfAppearanceState>(schema, "/$defs/PdfAppearanceState", value);
+export const parsePdfBorderStyle = (value: unknown): PdfBorderStyle => validateAgainst<PdfBorderStyle>(schema, "/$defs/PdfBorderStyle", value);
+export const parsePdfAnnotationKind = (value: unknown): PdfAnnotationKind => validateAgainst<PdfAnnotationKind>(schema, "/$defs/PdfAnnotationKind", value);

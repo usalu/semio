@@ -17,6 +17,6 @@ pub fn diff(payload: &super::CreateSolarThermalSystem, base: &EnergyModelSnapsho
         payload.index as usize,
         crate::model::SolarThermalConfig { id: payload.id, collector_area_m2: payload.collector_area_m2, efficiency: payload.efficiency, storage_volume_m3: payload.storage_volume_m3, tilt_deg: payload.tilt_deg, azimuth_deg: payload.azimuth_deg },
     );
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

@@ -240,7 +240,7 @@ def held_to(scenario, produced, expected):
 
 def learner_views(ctx):
     """🪞️ The learner view of every committed learner stream."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))["vectors"]
+    vectors = json.loads(ctx.input_bytes(VECTORS))["vectors"]
     produced = {vector["id"]: {state["learner"]: learner_view(state) for state in folded(vector)} for vector in vectors}
     return held_to("learner-views", produced, {vector["id"]: vector["expected"]["learnerViews"] for vector in vectors})
 
@@ -262,14 +262,14 @@ def boards(records, vector):
 
 def rankings(ctx):
     """🗃️ Every committed leaderboard of every committed set of learner streams, as every committed caller is answered."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))["vectors"]
+    vectors = json.loads(ctx.input_bytes(VECTORS))["vectors"]
     produced = {vector["id"]: boards(transcripts(vector), vector) for vector in vectors}
     return held_to("rankings", produced, {vector["id"]: vector["expected"]["leaderboards"] for vector in vectors})
 
 
 def windows(ctx):
     """🪟️ The window of every period around every committed instant; ``None`` for all-time."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))["windows"]
+    vectors = json.loads(ctx.input_bytes(VECTORS))["windows"]
     produced = {vector["id"]: {period: period_window(period, vector["at"]) for period in PERIODS} for vector in vectors}
     for identifier, answered in produced.items():
         at = next(vector["at"] for vector in vectors if vector["id"] == identifier)
@@ -286,7 +286,7 @@ def outline(board):
 
 def cuts(ctx):
     """🪜️ The outline of the committed board over the first transcripts of the committed crowd, per committed cut and caller: the top 100, the count of ranked learners and the caller's own row."""
-    crowd = json.loads(ctx.fixture_bytes(VECTORS))["crowd"]
+    crowd = json.loads(ctx.input_bytes(VECTORS))["crowd"]
     produced = {}
     for vector in crowd["cuts"]:
         records = crowd["transcripts"][: vector["learners"]]
@@ -299,7 +299,7 @@ def cuts(ctx):
 
 def catalog_views(ctx):
     """🗺️ The catalog view of every committed catalog with its quizzes."""
-    vectors = json.loads(ctx.fixture_bytes(VECTORS))["catalogs"]
+    vectors = json.loads(ctx.input_bytes(VECTORS))["catalogs"]
     produced = {vector["id"]: catalog_view(vector["catalog"], vector["quizzes"]) for vector in vectors}
     return held_to("catalog-views", produced, {vector["id"]: vector["expected"] for vector in vectors})
 

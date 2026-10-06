@@ -22,7 +22,7 @@
 // The JUDGE is `gif` 0.13, which reads 87a completely — see `../🔬️probes/📖️reader/📦️packages/🦀️rust`.
 //
 //   bun 📜️script.ts generate [--out <dir>]   # writes every fixture pair
-//   bun 📜️script.ts manifests                 # prints the fixtureManifests entries
+//   bun 📜️script.ts manifests                 # prints the testEvidence entries
 //
 // @see ../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️gif-87a-conformance-and-writer-limits.md
 
@@ -237,7 +237,6 @@ async function manifests(): Promise<void> {
       files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "image/gif", sha256: await sha256(path), bytes: readFileSync(path).length });
     }
     entries.push({
-      schema: "semio.repository-test.fixture/v2",
       id: `${kind}-${NO_OP.has(kind) ? "no-op" : "applied"}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.gif", standard: "87a", subset: "any" },
@@ -309,7 +308,6 @@ async function aspectMode(command: string): Promise<number> {
       files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "image/gif", sha256: `sha256:${[...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("")}`, bytes: bytes.length });
     }
     process.stdout.write(`${JSON.stringify([{
-      schema: "semio.repository-test.fixture/v2",
       id: `aspect-${kind}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.gif", standard: "87a", subset: "any" },

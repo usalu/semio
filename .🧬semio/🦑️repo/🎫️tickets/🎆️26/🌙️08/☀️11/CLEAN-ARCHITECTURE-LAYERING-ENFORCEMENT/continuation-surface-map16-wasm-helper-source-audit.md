@@ -1,0 +1,5 @@
+# Surface16 WASM Helper Source Review
+
+Frozen helper parses with no TypeScript diagnostics. It preserves original held before/after-import execution and library guards, complete cancellable snapshot checks, immediate Root/tool checks, five real output byte/hash/mtime pairs, exact GraphSession Uint8Array/number/number/number/Function→void AST admission and actual WASM export inspection. Five independent AST fixture cases agree. The genuine owning Viewport10/10 checkpoint and all three constructor/law/corpus endpoint bridges independently match. Surface16 whole checkpoint is still absent, so this finite source admission releases no WASM execution and observes no generated ABI. Actual output freshness and source guards require separate independent post-build admission.
+
+Separate dispatch admission2 now binds the genuine Surface16 whole272/272 checkpoint and unchanged frozen helper/codec. Historical finite admission1 dispatch=false is retained. This releases the exact WASM build only; generated ABI and publication remain unobserved.

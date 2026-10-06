@@ -37,8 +37,10 @@ const BASE_TILES: &str = "shared://🧭️mutate-presentation-1/🔣️.json";
 mod subject {
     use super::{BASE_TILES, DECK_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_animate_presentation::standards::v1::subsets::any::io::snapshot::text::{parse_dsl, print_dsl};
-    use semio_s_artifact_animate_presentation::mutations::{apply_presentation_mutation, decode_presentation_mutation_json, encode_presentation_projection_json, inverse_presentation_mutation, PresentationMutation};
+    use semio_s_artifact_animate_presentation::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
+    use semio_s_artifact_animate_presentation::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
+    use semio_s_artifact_animate_presentation::standards::v1::subsets::any::io::text::mutations::{encode_presentation_projection_json};
+    use semio_s_artifact_animate_presentation::standards::v1::subsets::any::io::text::mutations::{decode_presentation_mutation_json};
     use semio_s_artifact_animate_presentation::{presentation_snapshot_with_tiles, presentation_working_scene, FigureTileDraft, FigureTileFrame, PresentationSnapshot};
     use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
 
@@ -62,7 +64,7 @@ mod subject {
     }
 
     fn committed_tiles(ctx: &Context) -> Result<Vec<FigureTileDraft>, String> {
-        let fixture = ctx.fixture_json(BASE_TILES)?;
+        let fixture = ctx.input_json(BASE_TILES)?;
         let mut tiles = Vec::new();
         for entry in fixture.array("tiles") {
             let crop = entry.get("crop").ok_or_else(|| "a committed base tile carries no crop".to_string())?;
@@ -78,7 +80,7 @@ mod subject {
     /// presentation child re-minted around the committed base tiles. The SOURCE is never a literal
     /// here: it is whatever the committed artifact itself decodes to.
     fn base(ctx: &Context) -> Result<PresentationSnapshot, String> {
-        let bytes = ctx.fixture_bytes(DECK_ASSET)?;
+        let bytes = ctx.input_bytes(DECK_ASSET)?;
         let committed = String::from_utf8(bytes).map_err(|error| format!("the committed deck artifact is not UTF-8: {error}"))?;
         let decoded = parse_dsl(&committed).map_err(|error| format!("the committed deck artifact does not parse: {error:?}"))?;
         let (source, _) = presentation_working_scene(&decoded);
@@ -141,7 +143,7 @@ mod subject {
     /// and anything else is codec or fixture drift. That is why `carrier_is_exact` stands here in
     /// place of the wave's usual "output must differ from input" tripwire.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = ctx.fixture_bytes(DECK_ASSET)?;
+        let input = ctx.input_bytes(DECK_ASSET)?;
         let committed = String::from_utf8(input.clone()).map_err(|error| format!("the committed deck artifact is not UTF-8: {error}"))?;
         let decoded = parse_dsl(&committed).map_err(|error| format!("identity-round-trip: the committed deck artifact does not parse: {error:?}"))?;
         let printed = print_dsl(&decoded);

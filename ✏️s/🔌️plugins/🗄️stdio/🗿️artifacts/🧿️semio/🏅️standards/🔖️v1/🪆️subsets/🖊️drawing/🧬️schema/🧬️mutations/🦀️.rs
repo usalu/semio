@@ -114,16 +114,7 @@ pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &Se
     })
 }
 
-/// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
-/// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
-/// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors
-/// carry — into a real [`SemioDrawingMutation`]. Node-addressed payloads carry a `NodePath`
-/// (`{"layer": 0, "path": [0]}`) rather than a node id, because `DrawNode` is an anonymous
-/// recursive scene graph with no stable identity of its own.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_semio_drawing_mutation_json(text: &str) -> Result<SemioDrawingMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 //#endregion 🔖️Apply
 
 //#region 🔖️Demo

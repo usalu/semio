@@ -3,6 +3,10 @@
 semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the drawing app; one field per label makes every locale combination compile-checked.
     pub struct DrawingPlayLabels {
+        layer_count_one: native_en "{count} layer", native_de "{count} Ebene", reuse_en "{count} layer", reuse_de "{count} Ebene";
+        layer_count_many: native_en "{count} layers", native_de "{count} Ebenen", reuse_en "{count} layers", reuse_de "{count} Ebenen";
+        selection_count: native_en "{count} selected", native_de "{count} ausgewählt", reuse_en "{count} selected", reuse_de "{count} ausgewählt";
+        layer_name: native_en "Layer name", native_de "Ebenenname", reuse_en "Layer name", reuse_de "Ebenenname";
         nodes: native_en "Path Nodes", native_de "Pfadknoten", reuse_en "Path Nodes", reuse_de "Pfadknoten";
         anchor: native_en "Anchor", native_de "Anker", reuse_en "Anchor", reuse_de "Anker";
         control_one: native_en "First Handle", native_de "Erster Griff", reuse_en "First Handle", reuse_de "Erster Griff";

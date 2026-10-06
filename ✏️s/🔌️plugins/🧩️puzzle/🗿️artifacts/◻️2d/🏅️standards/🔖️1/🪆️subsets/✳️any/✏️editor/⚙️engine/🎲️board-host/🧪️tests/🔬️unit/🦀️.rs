@@ -52,7 +52,7 @@ pub(crate) mod context {
     }
     
     /// 🗂️ Board kind-catalog JSON for a compile-time manifest id — the catalogs live in the manifest
-    /// registry (`semio_framework_graph::manifest`), not in fixture `meta.kindCatalogs`, so tests that
+    /// registry (`semio_framework_graph::manifest`), not in snapshot `meta.kindCatalogs`, so tests that
     /// need real node/handle kinds read them from there. Each catalog row is the manifest row's
     /// `id`/`name` merged with its flattened `presentation` object.
     pub fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {

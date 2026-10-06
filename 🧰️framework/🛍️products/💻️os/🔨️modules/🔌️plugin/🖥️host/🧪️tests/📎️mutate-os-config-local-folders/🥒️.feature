@@ -34,8 +34,8 @@ Feature: Apply every typed local-folder binding mutation to its committed specif
     Then the resulting bindings match the committed after-snapshot, bind <document> exactly when <bound> says so, keep <sibling> untouched, and report the committed outcome
     Examples:
       | id                  | document            | bound | sibling           |
-      | attach-local-folder | cad.drawing.fixture | yes   | puzzle.2d.fixture |
-      | detach-local-folder | cad.drawing.fixture | no    | puzzle.2d.fixture |
+      | attach-local-folder | cad.drawing.fixture | yes   | board.ports.directed.v1 |
+      | detach-local-folder | cad.drawing.fixture | no    | board.ports.directed.v1 |
 
   @id-inverse
   @level-exhaustive
@@ -49,8 +49,8 @@ Feature: Apply every typed local-folder binding mutation to its committed specif
     Then the bindings equal the committed before-snapshot again, binding for binding, including every folder
     Examples:
       | id                  | document            | bound | sibling           |
-      | attach-local-folder | cad.drawing.fixture | yes   | puzzle.2d.fixture |
-      | detach-local-folder | cad.drawing.fixture | no    | puzzle.2d.fixture |
+      | attach-local-folder | cad.drawing.fixture | yes   | board.ports.directed.v1 |
+      | detach-local-folder | cad.drawing.fixture | no    | board.ports.directed.v1 |
 
   @id-unbound-detachment-has-no-undo
   @level-exhaustive

@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::schema::default_drawing_document;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_drawing_document;
 use crate::viewer::drawing::modes::view;
 use crate::viewer::drawing::modes::view::windows::canvas;
 use crate::{DrawingSnapshot, DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};

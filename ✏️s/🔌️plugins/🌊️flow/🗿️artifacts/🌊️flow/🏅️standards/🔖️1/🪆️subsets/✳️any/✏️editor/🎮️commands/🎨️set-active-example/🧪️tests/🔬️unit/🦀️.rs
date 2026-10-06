@@ -20,3 +20,30 @@ async fn set_active_example_demo_loads_the_published_demo_graph() {
     after.retire_cold();
     expected.retire_cold();
 }
+
+/// 📚️ LAW: every example the editor ships loads through its own `setActiveExample` route — the reducer accepts each
+/// published id on the genesis document, and its asset parses through the same boundary the route reads.
+#[test]
+fn every_shipped_example_loads_through_set_active_example() {
+    use semio_framework_plugin::ArtifactEditor;
+    let examples = crate::editor::flow::FlowPlayApp::examples();
+    assert!(!examples.is_empty(), "flow ships at least one example");
+    for example in &examples {
+        let loaded = demo::snapshot_from_text(&example.document_json()).unwrap_or_else(|error| panic!("example {:?} must parse through the route's own boundary: {error}", example.id()));
+        loaded.to_host_snapshot().retire_cold();
+        let composed = FlowSnapshot::default();
+        let mut emit = set_active_example_edit(&SetActiveExample { example_id: example.id().to_string() }, &composed).unwrap_or_else(|fault| panic!("setActiveExample {:?} must load its own shipped asset: {}", example.id(), fault.message));
+        let mut ready = false;
+        for _ in 0..4096 {
+            match emit.prepare_child_one(1, 65_536).expect("bounded child preparation") {
+                semio_framework_plugin::app::ChildEmitPreparationStep::Ready => {
+                    ready = true;
+                    break;
+                }
+                semio_framework_plugin::app::ChildEmitPreparationStep::Pending => {}
+                semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault) => panic!("example {:?} child edit refused: {}", example.id(), fault.message),
+            }
+        }
+        assert!(ready, "example {:?} prepares its content edit within its bound", example.id());
+    }
+}

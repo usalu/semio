@@ -1,6 +1,7 @@
 mod tests {
     use super::*;
-    use crate::schema::snapshot::{CommonAttrs, ViewBox, parse_view_box};
+    use crate::schema::snapshot::{CommonAttrs, ViewBox};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::{parse_view_box};
     use crate::standards::v1_1::subsets::base::schema::{ElementBuilder, GradientStopSpec, PathBuilder, SvgBuilderConstruction as SvgBuilder};
     use semio_framework_plugin::ArtifactBuilder;
 

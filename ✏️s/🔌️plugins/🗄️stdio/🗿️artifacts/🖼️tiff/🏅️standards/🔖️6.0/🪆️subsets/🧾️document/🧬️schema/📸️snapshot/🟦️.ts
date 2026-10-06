@@ -4,9 +4,7 @@
  * specially interpret, but whose typed value is still stored losslessly via this same
  * triple), plus canonical authored strip or tile chunks per directory. */
 
-import { parseBinary32, parseBinary64, type Binary32, type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-export {tiffSnapshotToSqliteDatabase,tiffSnapshotFromSqliteDatabase,tiffSnapshotToSqliteFile,tiffSnapshotFromSqliteFile} from "./🪶️sqlite/🟦️.ts";
-export type { Binary32, Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {parseBinary32,parseBinary64,type Binary32,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type TiffByteOrder = 'littleEndian' | 'bigEndian';
 
 /** 🏷️ TIFF6 §2 Table 2 — the 12 real IFD entry field types. */

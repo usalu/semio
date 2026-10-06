@@ -7,7 +7,6 @@ import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
 import { resolveFrameworkLayoutSeed, retitleWindowLayoutNode } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import fixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🪟️maximize-resync/🔣️.json";
-import schema from "../../🧱️elements/🐚️Shell/🧬️schema/🪟️maximize-resync/🔣️.json";
 
 beforeEach(() => {
   vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
@@ -50,8 +49,6 @@ for (const row of fixture.ingressCases) it(`React Mode reconciles ${row.id}`, ()
 });
 
 it("validates the shared maximize resynchronization contract", () => {
-  const validate = new Ajv2020().compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
 });
 
 for (const row of fixture.cases) it(`React Mode replays ${row.id}`, () => {

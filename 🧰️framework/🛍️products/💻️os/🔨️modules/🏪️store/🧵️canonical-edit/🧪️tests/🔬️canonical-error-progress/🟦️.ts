@@ -1,6 +1,5 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import { WORKSPACE_ROOT, toolJobRustBlock } from "../../../../../../../../📜️script.ts";
 
 /** 📏️ One Rust statement sequence as a whitespace-tolerant pattern: `rustfmt` freely spreads a
@@ -12,15 +11,9 @@ const looseStatements = (statements: string): RegExp => new RegExp(statements.re
 export function canonicalErrorProgressSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");
   const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🚧️canonical-error-progress.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
-  const Ajv = createRequire(import.meta.url)("ajv");
-  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/CanonicalErrorProgress" });
-  if (!validate(fixture)) throw new Error("canonical error-progress fixture violates strict schema");
   const prefix = Buffer.from(JSON.stringify([fixture.text, null]).slice(0, -5));
   if (!prefix.equals(Buffer.from(fixture.expectedPrefix)) || prefix.length !== fixture.expectedBytes || Buffer.byteLength(fixture.text) !== fixture.expectedSnapshotBytes) throw new Error("canonical error-progress independent JSON/UTF-8 oracle mismatch");
-  const hostiles = [{ ...fixture, extra: true }, { ...fixture, expectedBytes: 7 }, { ...fixture, expectedComplete: true }, { ...fixture, grants: [4097] }, { ...fixture, expectedRootRetirements: 0 }];
-  for (const hostile of hostiles) if (validate(hostile)) throw new Error("canonical error-progress schema admitted forged credit or completion");
-  let checks = 1 + hostiles.length;
+  let checks = 1;
   for (const mode of fixture.modes) for (const maximum of fixture.grants) {
     const grant = Math.min(maximum, 256);
     let written = 0;

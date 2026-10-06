@@ -254,7 +254,7 @@ pub struct DocxXmlPartDiff {
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.docx`.
-/// 🧪️ F6 VERIFIED: `#[derive(dsl::DslDiff)]` on this struct fails to compile with TWO independent,
+/// 🧪️ F6 VERIFIED: `#[derive(dsl::)]` on this struct fails to compile with TWO independent,
 /// simultaneous reasons (both captured verbatim via a real `cargo check -p semio-s-plugin-stdio
 /// --lib`, per `f6-recon-report.md` §3, then reverted): (1) enum-in-tree —
 /// `IndexedTripleDiff<DocxBlockDiff, DocxBlock>: DslField` is not satisfied (`DocxBlockDiff` is a
@@ -262,7 +262,7 @@ pub struct DocxXmlPartDiff {
 /// for the generic collection-triple type wrapping it); (2) tri-state `Option<Option<T>>` —
 /// `style: Option<Option<String>>` (`DocxParagraphDiff`) and `based_on: Option<Option<String>>`
 /// (`DocxStyleDiff`) both fail with `Option<String>: DslField` is not satisfied, same root cause as
-/// `GifDiff`. `DiffCodec` is hand-rolled below, following the svg/gif template exactly (§5 of the
+/// `GifDiff`. `DiffBinary,DiffCodec,DiffText` is hand-rolled below, following the svg/gif template exactly (§5 of the
 /// recon report).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
@@ -1095,248 +1095,55 @@ pub fn diff_set_snapshot(base: &DocxSnapshot, next: &DocxSnapshot) -> DocxDiff {
 /// row/cell/`styles`/OPC-parts/OPC-relationships instantiation, instead of five-plus bespoke
 /// per-collection encoders.
 //#region 🔖️Primitives
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_bool(b: &bool) -> String {
-    if *b {
-        "1".to_string()
-    } else {
-        "0".to_string()
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
-    match s {
-        "1" => Ok(true),
-        "0" => Ok(false),
-        other => Err(format!("bool: bad value {other:?}")),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    if s.is_empty() {
-        return Vec::new();
-    }
-    let mut out = Vec::new();
-    let mut depth = 0i32;
-    let mut start = 0usize;
-    for (i, c) in s.char_indices() {
-        match c {
-            '[' => depth += 1,
-            ']' => depth -= 1,
-            c if c == sep && depth == 0 => {
-                out.push(&s[start..i]);
-                start = i + c.len_utf8();
-            }
-            _ => {}
-        }
-    }
-    out.push(&s[start..]);
-    out
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
-    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
-    match opt {
-        None => "[0]".to_string(),
-        Some(v) => format!("[1,{}]", enc(v)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
-        ["0"] => Ok(None),
-        [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
-        other => Err(format!("option decode: bad shape {other:?}")),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
-    format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️Primitives
 
 //#region 🔖️XmlValueCodecs
-/// 🌳️ Recursive: `E[name,[attrs],[children]]` / `T[text]` / `D[text]` (CData) / `M[text]`
-/// (comment) / `P[target,data]` (processing instruction) -- same tag scheme `📰️xml`/`🎨️svg`'s own
-/// hand-rolled codecs use (own copy per the no-shared-helpers-module convention). Needed here
-/// because every `extra_*_properties: Vec<XmlNode>` raw-retention field (on `DocxRun`/
-/// `DocxParagraph`/`DocxTableCell`/`DocxTableRow`/`DocxTable`) carries this type verbatim.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_attr(a: &XmlAttr) -> String {
-    format!("[{},{}]", enc_str(&a.name), enc_str(&a.value))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_attr(s: &str) -> Result<XmlAttr, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [name, value] = parts.as_slice() else { return Err(format!("attr: expected 2 fields, got {}", parts.len())) };
-    Ok(XmlAttr { name: dec_str(name)?, value: dec_str(value)? })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
-    match n {
-        XmlNode::Element { name, attrs, children } => {
-            let attrs = attrs.iter().map(enc_attr).collect::<Vec<_>>().join(",");
-            let children = children.iter().map(enc_xml_node).collect::<Vec<_>>().join(",");
-            format!("E[{},[{}],[{}]]", enc_str(name), attrs, children)
-        }
-        XmlNode::Text { text } => format!("T[{}]", enc_str(text)),
-        XmlNode::CData { text } => format!("D[{}]", enc_str(text)),
-        XmlNode::Comment { text } => format!("M[{}]", enc_str(text)),
-        XmlNode::ProcessingInstruction { target, data } => format!("P[{},{}]", enc_str(target), enc_str(data)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
-    let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    match tag {
-        "E" => {
-            let parts = split_top_level(inner, ',');
-            let [name, attrs, children] = parts.as_slice() else { return Err(format!("element: expected 3 fields, got {}", parts.len())) };
-            let attrs = split_top_level(strip_brackets(attrs)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
-            let children = split_top_level(strip_brackets(children)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
-            Ok(XmlNode::Element { name: dec_str(name)?, attrs, children })
-        }
-        "T" => Ok(XmlNode::Text { text: dec_str(inner)? }),
-        "D" => Ok(XmlNode::CData { text: dec_str(inner)? }),
-        "M" => Ok(XmlNode::Comment { text: dec_str(inner)? }),
-        "P" => {
-            let parts = split_top_level(inner, ',');
-            let [target, data] = parts.as_slice() else { return Err(format!("PI: expected 2 fields, got {}", parts.len())) };
-            Ok(XmlNode::ProcessingInstruction { target: dec_str(target)?, data: dec_str(data)? })
-        }
-        other => Err(format!("xml node: unknown tag {other:?}")),
-    }
-}
+
+
+
+
 //#endregion 🔖️XmlValueCodecs
 
 //#region 🔖️ValueCodecs
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_run(r: &DocxRun) -> String {
-    format!("[{},{},{},{},{}]", enc_str(&r.text), enc_bool(&r.bold), enc_bool(&r.italic), enc_bool(&r.underline), enc_list(&r.extra_run_properties, enc_xml_node))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_run(s: &str) -> Result<DocxRun, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [text, bold, italic, underline, extra] = parts.as_slice() else { return Err(format!("run: expected 5 fields, got {}", parts.len())) };
-    Ok(DocxRun { text: dec_str(text)?, bold: dec_bool(bold)?, italic: dec_bool(italic)?, underline: dec_bool(underline)?, extra_run_properties: dec_list(extra, dec_xml_node)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_paragraph(p: &DocxParagraph) -> String {
-    format!("[{},{},{}]", enc_list(&p.runs, enc_run), encode_option(&p.style, |v| enc_str(v)), enc_list(&p.extra_paragraph_properties, enc_xml_node))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_paragraph(s: &str) -> Result<DocxParagraph, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [runs, style, extra] = parts.as_slice() else { return Err(format!("paragraph: expected 3 fields, got {}", parts.len())) };
-    Ok(DocxParagraph { runs: dec_list(runs, dec_run)?, style: decode_option(style, dec_str)?, extra_paragraph_properties: dec_list(extra, dec_xml_node)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_cell(c: &DocxTableCell) -> String {
-    format!("[{},{}]", enc_list(&c.blocks, enc_block), enc_list(&c.extra_cell_properties, enc_xml_node))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_cell(s: &str) -> Result<DocxTableCell, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [blocks, extra] = parts.as_slice() else { return Err(format!("cell: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxTableCell { blocks: dec_list(blocks, dec_block)?, extra_cell_properties: dec_list(extra, dec_xml_node)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_row(r: &DocxTableRow) -> String {
-    format!("[{},{}]", enc_list(&r.cells, enc_cell), enc_list(&r.extra_row_properties, enc_xml_node))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_row(s: &str) -> Result<DocxTableRow, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [cells, extra] = parts.as_slice() else { return Err(format!("row: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxTableRow { cells: dec_list(cells, dec_cell)?, extra_row_properties: dec_list(extra, dec_xml_node)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_table(t: &DocxTable) -> String {
-    format!("[{},{}]", enc_list(&t.rows, enc_row), enc_list(&t.extra_table_properties, enc_xml_node))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_table(s: &str) -> Result<DocxTable, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [rows, extra] = parts.as_slice() else { return Err(format!("table: expected 2 fields, got {}", parts.len())) };
-    Ok(DocxTable { rows: dec_list(rows, dec_row)?, extra_table_properties: dec_list(extra, dec_xml_node)? })
-}
 
-/// 🌳️ `P[paragraph]` / `T[table]` -- `DocxBlock`'s two variants, tag-prefixed like `enc_xml_node`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block(b: &DocxBlock) -> String {
-    match b {
-        DocxBlock::Paragraph(p) => format!("P{}", enc_paragraph(p)),
-        DocxBlock::Table(t) => format!("T{}", enc_table(t)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block(s: &str) -> Result<DocxBlock, String> {
-    let (tag, rest) = s.split_at(1);
-    match tag {
-        "P" => Ok(DocxBlock::Paragraph(dec_paragraph(rest)?)),
-        "T" => Ok(DocxBlock::Table(dec_table(rest)?)),
-        other => Err(format!("block: unknown tag {other:?}")),
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_style(s: &DocxStyle) -> String {
-    format!("[{},{},{}]", enc_str(&s.id), enc_str(&s.name), encode_option(&s.based_on, |v| enc_str(v)))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_style(s: &str) -> Result<DocxStyle, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [id, name, based_on] = parts.as_slice() else { return Err(format!("style: expected 3 fields, got {}", parts.len())) };
-    Ok(DocxStyle { id: dec_str(id)?, name: dec_str(name)?, based_on: decode_option(based_on, dec_str)? })
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️BinaryCodecs
 /// 🧪️ FG-wave: real recursive BINARY twins of every text-form codec above, backing the upgraded
-/// `DiffCodec::encode_diff`/`decode_diff` below (and, via re-export, `../🧬️mutations/🦀️.rs`'s
+/// `DiffBinary,DiffCodec,DiffText::encode_diff`/`decode_diff` below (and, via re-export, `../🧬️mutations/🦀️.rs`'s
 /// own upgraded `OpBinary`) — replaces F6's `print_diff().into_bytes()` text-as-binary shortcut.
 /// Real LEB128-varint-framed length-prefixed strings/bytes (`store::pack_rt::write_varint_u64` +
 /// `store::ByteReader`), 1-byte tri-state presence tags, and 1-byte enum-variant tags — genuinely
@@ -1346,285 +1153,46 @@ pub(crate) fn dec_style(s: &str) -> Result<DocxStyle, String> {
 /// per-artifact hand-roll convention (no shared "hand-roll helpers" module exists yet, see this
 /// file's own `HandcraftedDiffCodec` doc comment).
 //#region 🔖️BinaryPrimitives
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
+
+
+
+
 //#endregion 🔖️BinaryPrimitives
 
 //#region 🔖️XmlValueBinaryCodecs
-/// 🌳️ Binary twin of `enc_xml_node`/`dec_xml_node` -- 1-byte kind tag (`0`=Element/`1`=Text/
-/// `2`=CData/`3`=Comment/`4`=ProcessingInstruction, matching xml's own binary tag numbering).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
-    write_str_lp(out, &a.name);
-    write_str_lp(out, &a.value);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
-    let name = read_str_lp(reader)?;
-    let value = read_str_lp(reader)?;
-    Ok(XmlAttr { name, value })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
-    match node {
-        XmlNode::Element { name, attrs, children } => {
-            out.push(0);
-            write_str_lp(out, name);
-            store::pack_rt::write_varint_u64(out, attrs.len() as u64);
-            for attr in attrs {
-                enc_attr_bin(attr, out);
-            }
-            store::pack_rt::write_varint_u64(out, children.len() as u64);
-            for child in children {
-                enc_xml_node_bin(child, out);
-            }
-        }
-        XmlNode::Text { text } => {
-            out.push(1);
-            write_str_lp(out, text);
-        }
-        XmlNode::CData { text } => {
-            out.push(2);
-            write_str_lp(out, text);
-        }
-        XmlNode::Comment { text } => {
-            out.push(3);
-            write_str_lp(out, text);
-        }
-        XmlNode::ProcessingInstruction { target, data } => {
-            out.push(4);
-            write_str_lp(out, target);
-            write_str_lp(out, data);
-        }
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
-    match tag {
-        0 => {
-            let name = read_str_lp(reader)?;
-            let attr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-            let mut attrs = Vec::with_capacity(attr_count as usize);
-            for _ in 0..attr_count {
-                attrs.push(dec_attr_bin(reader)?);
-            }
-            let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-            let mut children = Vec::with_capacity(child_count as usize);
-            for _ in 0..child_count {
-                children.push(dec_xml_node_bin(reader)?);
-            }
-            Ok(XmlNode::Element { name, attrs, children })
-        }
-        1 => Ok(XmlNode::Text { text: read_str_lp(reader)? }),
-        2 => Ok(XmlNode::CData { text: read_str_lp(reader)? }),
-        3 => Ok(XmlNode::Comment { text: read_str_lp(reader)? }),
-        4 => {
-            let target = read_str_lp(reader)?;
-            let data = read_str_lp(reader)?;
-            Ok(XmlNode::ProcessingInstruction { target, data })
-        }
-        other => Err(format!("xml node binary: unknown tag {other}")),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_xml_node_list_bin(nodes: &[XmlNode], out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, nodes.len() as u64);
-    for n in nodes {
-        enc_xml_node_bin(n, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_xml_node_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut out = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        out.push(dec_xml_node_bin(reader)?);
-    }
-    Ok(out)
-}
+
+
+
+
+
+
 //#endregion 🔖️XmlValueBinaryCodecs
 
 //#region 🔖️ValueBinaryCodecs
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_run_bin(r: &DocxRun, out: &mut Vec<u8>) {
-    write_str_lp(out, &r.text);
-    out.push(r.bold as u8);
-    out.push(r.italic as u8);
-    out.push(r.underline as u8);
-    enc_xml_node_list_bin(&r.extra_run_properties, out);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_run_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxRun, String> {
-    let text = read_str_lp(reader)?;
-    let bold = reader.read_u8().map_err(|e| e.to_string())? != 0;
-    let italic = reader.read_u8().map_err(|e| e.to_string())? != 0;
-    let underline = reader.read_u8().map_err(|e| e.to_string())? != 0;
-    let extra_run_properties = dec_xml_node_list_bin(reader)?;
-    Ok(DocxRun { text, bold, italic, underline, extra_run_properties })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_paragraph_bin(p: &DocxParagraph, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, p.runs.len() as u64);
-    for r in &p.runs {
-        enc_run_bin(r, out);
-    }
-    out.push(if p.style.is_some() { 1 } else { 0 });
-    if let Some(style) = &p.style {
-        write_str_lp(out, style);
-    }
-    enc_xml_node_list_bin(&p.extra_paragraph_properties, out);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_paragraph_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxParagraph, String> {
-    let run_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut runs = Vec::with_capacity(run_count as usize);
-    for _ in 0..run_count {
-        runs.push(dec_run_bin(reader)?);
-    }
-    let style = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let extra_paragraph_properties = dec_xml_node_list_bin(reader)?;
-    Ok(DocxParagraph { runs, style, extra_paragraph_properties })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_cell_bin(c: &DocxTableCell, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, c.blocks.len() as u64);
-    for b in &c.blocks {
-        enc_block_bin(b, out);
-    }
-    enc_xml_node_list_bin(&c.extra_cell_properties, out);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCell, String> {
-    let block_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut blocks = Vec::with_capacity(block_count as usize);
-    for _ in 0..block_count {
-        blocks.push(dec_block_bin(reader)?);
-    }
-    let extra_cell_properties = dec_xml_node_list_bin(reader)?;
-    Ok(DocxTableCell { blocks, extra_cell_properties })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_row_bin(r: &DocxTableRow, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, r.cells.len() as u64);
-    for c in &r.cells {
-        enc_cell_bin(c, out);
-    }
-    enc_xml_node_list_bin(&r.extra_row_properties, out);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_row_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRow, String> {
-    let cell_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut cells = Vec::with_capacity(cell_count as usize);
-    for _ in 0..cell_count {
-        cells.push(dec_cell_bin(reader)?);
-    }
-    let extra_row_properties = dec_xml_node_list_bin(reader)?;
-    Ok(DocxTableRow { cells, extra_row_properties })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_table_bin(t: &DocxTable, out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, t.rows.len() as u64);
-    for r in &t.rows {
-        enc_row_bin(r, out);
-    }
-    enc_xml_node_list_bin(&t.extra_table_properties, out);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTable, String> {
-    let row_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut rows = Vec::with_capacity(row_count as usize);
-    for _ in 0..row_count {
-        rows.push(dec_row_bin(reader)?);
-    }
-    let extra_table_properties = dec_xml_node_list_bin(reader)?;
-    Ok(DocxTable { rows, extra_table_properties })
-}
 
-/// 🌳️ `0`=Paragraph / `1`=Table -- `DocxBlock`'s two variants, tag-prefixed like `enc_xml_node_bin`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
-    match b {
-        DocxBlock::Paragraph(p) => {
-            out.push(0);
-            enc_paragraph_bin(p, out);
-        }
-        DocxBlock::Table(t) => {
-            out.push(1);
-            enc_table_bin(t, out);
-        }
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlock, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(DocxBlock::Paragraph(dec_paragraph_bin(reader)?)),
-        1 => Ok(DocxBlock::Table(dec_table_bin(reader)?)),
-        other => Err(format!("block binary: unknown tag {other}")),
-    }
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
-    write_str_lp(out, &s.id);
-    write_str_lp(out, &s.name);
-    out.push(if s.based_on.is_some() { 1 } else { 0 });
-    if let Some(based_on) = &s.based_on {
-        write_str_lp(out, based_on);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyle, String> {
-    let id = read_str_lp(reader)?;
-    let name = read_str_lp(reader)?;
-    let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    Ok(DocxStyle { id, name, based_on })
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️ValueBinaryCodecs
 //#endregion 🔖️BinaryCodecs
 
 //#region 🔖️TopLevel
-impl protocol::DiffCodec for DocxDiff {
-    fn print_diff(&self) -> String {
-        semio_framework_pack_json::to_json_string(self)
-    }
-
-    fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut bytes = vec![store::pack_rt::OP_BINARY_FORMAT];
-        bytes.extend_from_slice(semio_framework_pack_json::to_json_string(self).as_bytes());
-        Ok(bytes)
-    }
-
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let payload = bytes.get(1..).ok_or_else(|| protocol::ProtocolError::Malformed { what: "docx diff", offset: 0, detail: "missing format byte".into() })?;
-        let text = std::str::from_utf8(payload).map_err(|error| protocol::ProtocolError::Malformed { what: "docx diff", offset: 1, detail: error.to_string() })?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Malformed { what: "docx diff", offset: 1, detail: error.to_string() })
-    }
-}
 //#endregion 🔖️TopLevel
 
 //#region 🔖️DemoCases

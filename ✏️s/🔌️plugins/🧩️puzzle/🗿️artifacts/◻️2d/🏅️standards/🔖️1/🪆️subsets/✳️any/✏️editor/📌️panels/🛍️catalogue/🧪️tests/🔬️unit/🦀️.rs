@@ -23,11 +23,11 @@ fn labels() -> &'static Puzzle2dLabels {
     crate::editor::puzzle2d::terminology::puzzle2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
-/// 🏗️ A synthetic fixture whose `meta.kindCatalogs.nodes` carries `kinds` rows.
+/// 🏗️ A synthetic snapshot whose `meta.kindCatalogs.nodes` carries `kinds` rows.
 fn scaled_scene(kinds: usize) -> Puzzle2dScene {
     let rows: Vec<Value> = (0..kinds).map(|index| json!({ "id": format!("kind-{index}"), "name": format!("Kind {index}") })).collect();
     Puzzle2dScene {
-        fixture: json!({ "schema": crate::editor::puzzle2d::PUZZLE2D_FIXTURE_SCHEMA, "nodes": [], "edges": [], "meta": { "kindCatalogs": { "nodes": rows, "handles": [], "edges": [] } } }),
+        board_snapshot: json!({ "schema": crate::editor::puzzle2d::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, "nodes": [], "edges": [], "meta": { "kindCatalogs": { "nodes": rows, "handles": [], "edges": [] } } }),
         runtime: crate::editor::puzzle2d::config::Puzzle2dPlayRuntime::default(),
         active_utility: String::new(),
         interaction: crate::editor::puzzle2d::Puzzle2dInteractionSnapshot::default(),

@@ -1,0 +1,235 @@
+{
+  "at": "2026-10-05T17:01:13.071Z",
+  "rows": [
+    {
+      "owner": "WriterSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/writer-writer-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "default",
+          "^default",
+          "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/**/*",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+          "forwardAllArgs": true
+        },
+        "dependsOn": [
+          "graph-generate"
+        ]
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ writer writer Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"writer-window-state\") {\n      const { testWriterWindowStateOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧪️tests/🔬️window-state/🟦️.ts\");\n      testWriterWindowStateOracle();\n      if (segments[1] === \"native\") {\n        const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n        await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"--lib\", \"writer_window_state_\", \"--\", \"--nocapture\"], join(this.repoRoot, \"✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust\"));\n      }\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\n\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-writer-writer\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { \"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });\n"
+    },
+    {
+      "owner": "EquationSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/mathematical-equation-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "inputs": [
+          "default",
+          "^default",
+          "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+          "forwardAllArgs": true
+        }
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\n/** 📦️ mathematical equation Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-mathematical-equation\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n"
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/wfc-grid3d-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+          "forwardAllArgs": true
+        }
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\n/** 📦️ wfc-grid3d Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-wfc-grid3d\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"],snapshotSqliteTestBudgetMs:120000});\n"
+    },
+    {
+      "owner": "FlowSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/flow-flow-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+          "forwardAllArgs": true
+        }
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\n/** 📦️ flow flow Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd, runCargo, runVitest, runRepositoryExactCargoLaws, runRepositoryTestCommand } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { strict as assert } from \"node:assert\";\nimport Ajv from \"ajv\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"flow-window-ownership\") {\n      const { testFlowWindowOwnershipOracle } = await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🟦️.ts\");\n      testFlowWindowOwnershipOracle();\n      if (segments[1] === \"check\" || segments[1] === \"native\") {\n        const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n        const mode = segments[1] === \"check\" ? [\"check\", \"--tests\"] : [\"test\", \"--lib\", \"flow_window_ownership_\", \"--\", \"--nocapture\"];\n        await runCargo([mode[0]!, \"--manifest-path\", resolve(this.root, \"Cargo.toml\"), \"-p\", \"semio-s-artifact-flow-flow\", ...mode.slice(1)], this.repoRoot);\n      }\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\nclass SourceTestScript extends BundleScript {\n  async run(): Promise<void> {\n    await runRepositoryTestCommand(process.execPath,[\"test\",resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\")],{cwd:this.repoRoot});\n    await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts\");\n  }\n}\n\nclass ChildIdentityCheckScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts\");\n    const receipts = await runRepositoryExactCargoLaws({\n      cwd: this.repoRoot,\n      cargoArgs: segments,\n      groups: [\n        {\n          package: \"semio-s-artifact-flow-flow\",\n          target: { kind: \"lib\" },\n          laws: [\n            \"command_ids_are_unique_and_match_the_declared_manifest_actions\",\n            \"every_command_round_trips_through_text_and_binary\",\n            \"every_printed_op_line_starts_with_the_rows_wire_keyword\",\n            \"scene_identity_matches_node_crypto_and_adopts_the_exact_root\",\n            \"every_artifact_variant_matches_serde_bytes_including_nested_chrome\",\n            \"large_unicode_key_and_label_scene_matches_serde_without_an_ordinal_map_scan\",\n            \"flow_parent_projection_and_child_identity_match_neutral_corpus\",\n            \"flow_store_owners_retire_all_durable_lanes_with_neutral_byte_grants\",\n            \"flow_presence_store_owners_preserve_readers_and_retire_neutral_byte_grants\",\n            \"flow_empty_transient_close_matches_neutral_trace_and_exact_owner\",\n            \"flow_viewer_member_factory_and_full_store_close_match_neutral_contract\",\n            \"flow_render_fixture_projection_retires_populated_and_rejected_pages\",\n          ],\n        },\n        { package: \"semio-hub-flow\", target: { kind: \"lib\" }, laws: [\"flow_actual_surface_factories_close_all_owners_under_neutral_grants\"] },\n      ],\n    });\n    console.log(`Flow child identity native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);\n  }\n}\n\nclass ChildEditCheckScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\n    await import(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts\");\n    const receipts = await runRepositoryExactCargoLaws({\n      cwd: this.repoRoot,\n      cargoArgs: segments,\n      groups: [\n        {\n          package: \"semio-s-artifact-flow-flow\",\n          target: { kind: \"lib\" },\n          laws: [\n            \"child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_default_payload\",\n            \"child_add_widget_preserves_every_descriptor_payload_and_neuron_port_default\",\n            \"child_add_widget_rejects_an_explicit_identity_collision\",\n            \"add_widget_dispatches_one_typed_child_edit_without_repointing_parent_content\",\n          ],\n        },\n      ],\n    });\n    console.log(`Flow typed child edit native law: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);\n  }\n}\n\nclass AddWidgetRetainedCheckScript extends BundleScript {\n  async oracle(): Promise<void> {\n    const root = new URL(\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor\", import.meta.url);\n    const fixture = await Bun.file(new URL(\"🧫️fixtures/🧵️add-widget-retained/🔣️.json\", root)).json();\n    const schemaModule = await Bun.file(new URL(\"🧫️fixtures/🧬️schema/🔣️.json\", root)).json();\n    const ajv = new Ajv({ strict: true, allErrors: true });\n    ajv.addKeyword({ keyword: \"x-semio-formats\", metaSchema: { type: \"array\", items: { type: \"string\" } } });\n    for (const keyword of [\"x-semio-state\", \"x-semio-child-kind\", \"x-semio-child-standard\", \"x-semio-child-subset\"]) ajv.addKeyword({ keyword, metaSchema: { type: \"string\" } });\n    for (const numeric of [\"double\", \"float\", \"int32\", \"int64\", \"uint32\", \"uint64\"]) ajv.addFormat(numeric, true);\n    for (const schema of [\"🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json\", \"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json\"]) ajv.addSchema(await Bun.file(join(this.repoRoot, schema)).json());\n    const validate = ajv.addSchema(schemaModule).compile({ $ref: `${schemaModule.$id}#/$defs/FlowAddWidgetRetained` });\n    assert(validate(fixture), JSON.stringify(validate.errors));\n    const deny = { accepted: false, sessionCalls: 0, parentMutations: 0, childGroups: 0, visibleGroups: 0 };\n    const model = (request: any) => {\n      const textBytes = Buffer.byteLength(request.command.kind) + Buffer.byteLength(request.command.neuronKind ?? \"\");\n      const finite = (value: unknown) => typeof value === \"number\" && Number.isFinite(value);\n      const dialect = request.child.dialect;\n      const admitted =\n        request.controller === fixture.registration.controller &&\n        request.tool === fixture.registration.tool &&\n        request.schema === fixture.registration.schema &&\n        request.rawBytes <= fixture.limits.rawBytes &&\n        request.checkpointBytes <= fixture.limits.checkpointBytes &&\n        request.wire === \"canonical\" &&\n        textBytes <= fixture.limits.textBytes &&\n        finite(request.command.x) &&\n        finite(request.command.y) &&\n        request.child.present &&\n        request.child.slot === \"content\" &&\n        request.child.id === request.parent.childId &&\n        dialect.artifactKind === \"s.stdio.semio\" &&\n        dialect.standard === \"v1\" &&\n        dialect.subset === \"flow\" &&\n        request.child.nodes <= fixture.limits.childItems &&\n        request.child.edges <= fixture.limits.childItems &&\n        request.owner === \"ready\" &&\n        request.cancel !== \"before-work\";\n      if (!admitted) return deny;\n      if (![\"neuron\", \"inputSlider\", \"inputNote\", \"inputImage\", \"outputPreview\", \"outputAction\", \"outputExport\", \"variable\"].includes(request.command.kind)) {\n        return { accepted: false, sessionCalls: 1, parentMutations: 0, childGroups: 0, visibleGroups: 0 };\n      }\n      const visible = request.cancel !== \"after-plan\" && request.parent.revisionCurrent && request.parent.rootCurrent && request.child.revisionCurrent && !request.duplicateTarget;\n      return { accepted: visible, sessionCalls: 1, parentMutations: 0, childGroups: 1, visibleGroups: visible ? 1 : 0 };\n    };\n    for (const row of fixture.accepted) {\n      assert.deepEqual(row.inserted, { kind: row.command.kind, x: row.command.x, y: row.command.y }, `${row.id}: typed inserted node`);\n      assert.deepEqual(model({ ...structuredClone(fixture.canonical), command: row.command }), row.expected, row.id);\n    }\n    const change = (request: any, kind: string): void => {\n      if (kind === \"wrong-controller\") request.controller = \"s.flow.other@1/*#editor\";\n      else if (kind === \"wrong-tool\") request.tool = \"removeWidget\";\n      else if (kind === \"wrong-schema\") request.schema = \"flow.other\";\n      else if (kind === \"oversize-raw\") request.rawBytes = fixture.limits.rawBytes + 1;\n      else if (kind === \"oversize-checkpoint\") request.checkpointBytes = fixture.limits.checkpointBytes + 1;\n      else if (kind === \"malformed-wire\") request.wire = \"malformed\";\n      else if (kind === \"trailing-wire\") request.wire = \"trailing\";\n      else if (kind === \"oversize-kind\") request.command.kind = \"k\".repeat(fixture.limits.textBytes + 1);\n      else if (kind === \"oversize-neuron-kind\") request.command.neuronKind = \"n\".repeat(fixture.limits.textBytes + 1);\n      else if (kind === \"unknown-descriptor\") request.command.kind = \"notAFlowWidget\";\n      else if (kind === \"nonfinite-x\") request.command.x = \"nan\";\n      else if (kind === \"nonfinite-y\") request.command.y = \"positive-infinity\";\n      else if (kind === \"missing-child\") request.child.present = false;\n      else if (kind === \"wrong-slot\") request.child.slot = \"preview\";\n      else if (kind === \"wrong-child-id\") request.child.id = \"other-child\";\n      else if (kind === \"wrong-dialect\") request.child.dialect.subset = \"text\";\n      else if (kind === \"stale-parent\") request.parent.revisionCurrent = false;\n      else if (kind === \"stale-root\") request.parent.rootCurrent = false;\n      else if (kind === \"stale-child\") request.child.revisionCurrent = false;\n      else if (kind === \"duplicate-target\") request.duplicateTarget = true;\n      else if (kind === \"owner-busy\") request.owner = \"busy\";\n      else if (kind === \"owner-closing\") request.owner = \"closing\";\n      else if (kind === \"cancel-before-work\") request.cancel = \"before-work\";\n      else if (kind === \"cancel-after-plan\") request.cancel = \"after-plan\";\n      else assert.fail(`unknown retained addWidget change ${kind}`);\n    };\n    assert.equal(new Set(fixture.denials.map((row: any) => row.change)).size, 24);\n    for (const row of fixture.denials) {\n      const request = structuredClone(fixture.canonical);\n      change(request, row.change);\n      assert.deepEqual(model(request), row.expected, row.id);\n    }\n    const source = await Bun.file(new URL(\"🦀️.rs\", root)).text();\n    for (const witness of [\n      'const FLOW_CHILD_GROUP_TOOL_IDS: &[&str] = &[\"addWidget\"]',\n      \"struct FlowChildGroupWork\",\n      \"impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowChildGroupWork\",\n      \"struct FlowChildGroupJobFactory\",\n      \"ArtifactToolPublicationLane::Child\",\n      \"FlowChildGroupJobFactoryProofs::bounded_first_step_tool_proofs()\",\n      \"registry.register(FlowChildGroupJobFactory::new(&controller))\",\n      \"ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES\",\n      \"FlowCommand::AddWidget(payload)\",\n      \"semio_framework_plugin::InteractiveJobClassification::Migrated\",\n    ])\n      assert(source.includes(witness), `missing retained addWidget source witness: ${witness}`);\n    assert(source.includes('dialect.artifact_kind != \"s.stdio.semio\"') && source.includes('dialect.standard != \"v1\"') && source.includes('dialect.subset != \"flow\"'), \"retained addWidget must bind the exact captured child dialect\");\n    assert(source.includes(\"add_widget::handle(payload, &view\") && source.includes(\"FlowInstanceOperationOwner\"), \"retained addWidget must reuse the typed child planner under the instance session owner\");\n    const retainedCommandSource = await Bun.file(join(this.repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs\")).text();\n    assert.deepEqual(fixture.progress, { en: \"Applying command\", de: \"Befehl wird angewendet\" });\n    assert(retainedCommandSource.includes('{\"en\":\"Applying command\",\"de\":\"Befehl wird angewendet\"}'), \"retained addWidget progress must bind the production bilingual preview\");\n    assert(source.includes('action_interactive_job(\"addWidget\", semio_framework_plugin::InteractiveJobClassification::Migrated)'), \"the manifest must expose one migrated addWidget route\");\n    assert(source.includes(\"FLOW_CHILD_GROUP_TOOL_IDS.contains(&command.command_id())\"), \"legacy addWidget dispatch must fail closed\");\n    console.log(`[TRACE] Flow retained addWidget oracle: ${fixture.accepted.length} accepted + ${fixture.denials.length} hostile cases; session/publication model is independent; runtimeClaims=0`);\n  }\n\n  async run(segments: string[]): Promise<void> {\n    await this.oracle();\n    if (segments.includes(\"--oracle-only\")) return;\n    const receipts = await runRepositoryExactCargoLaws({\n      cwd: this.repoRoot,\n      cargoArgs: segments,\n      groups: [{ package: \"semio-s-artifact-flow-flow\", target: { kind: \"lib\" }, laws: [\"retained_add_widget_factory_is_exact_child_only_and_legacy_closed\", \"retained_add_widget_dispatches_one_acknowledged_child_group_and_retires\"] }],\n    });\n    console.log(`Flow retained addWidget native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);\n  }\n}\n\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-flow-flow\", { snapshotSqliteTests: [\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"], commands: { verify: OwnedVerifyScript, \"test-source\": SourceTestScript, \"child-identity-check\": ChildIdentityCheckScript, \"child-edit-check\": ChildEditCheckScript, \"add-widget-retained-check\": AddWidgetRetainedCheckScript } });\n"
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/shooting-shooting-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+          "forwardAllArgs": true
+        }
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\n/** 📦️ shooting shooting Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport {BundleScript} from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport {runRepositoryCommand} from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts\";\nimport {resolve} from \"node:path\";\n/** 🛂️ Checks the actual public snapshot facade and independent neutral oracle types. */\nclass VerifyScript extends BundleScript{\n async run(segments:string[]):Promise<void>{\n  if(segments.length!==1||segments[0]!==\"snapshot-sqlite-source\")throw Error(\"Unknown Shooting owned verification\");\n  const snapshot=resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot\");\n  await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--target\",\"ESNext\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",\"--resolveJsonModule\",\"--skipLibCheck\",resolve(snapshot,\"🟦️.ts\"),resolve(snapshot,\"🧪️tests/🪶️sqlite/🟦️.ts\")],this.repoRoot,\"shooting-snapshot-sqlite-public-types\");\n }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-shooting-shooting\", {commands:{verify:VerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n"
+    },
+    {
+      "owner": "En1997Snapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/norm-en1997-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../🟦️.ts",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+          "forwardAllArgs": true
+        }
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\n/** 📦️ norm artifact Rust package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport {BundleScript} from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport {runRepositoryCommand} from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts\";\nimport {resolve} from \"node:path\";\n/** 🛂️ Checks the actual EN1997 facade and complete independent SQLite oracle types. */\nclass VerifyScript extends BundleScript{\n async run(segments:string[]):Promise<void>{\n  if(segments.length!==1||segments[0]!==\"snapshot-sqlite-source\")throw Error(\"Unknown EN1997 owned verification\");\n  const snapshot=resolve(this.root,\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot\");\n  await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,\"node_modules/typescript/bin/tsc\"),\"--noEmit\",\"--strict\",\"--target\",\"ESNext\",\"--module\",\"ESNext\",\"--moduleResolution\",\"bundler\",\"--allowImportingTsExtensions\",\"--resolveJsonModule\",\"--skipLibCheck\",resolve(snapshot,\"🟦️.ts\"),resolve(snapshot,\"🧪️tests/🪶️sqlite/🟦️.ts\")],this.repoRoot,\"en1997-snapshot-sqlite-public-types\");\n }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-norm-en1997\",{commands:{verify:VerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts\",\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n"
+    },
+    {
+      "owner": "RasterSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/raster-raster-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": true,
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🦀️.rs",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+        ],
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        }
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\n/** 📦️ raster raster Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-raster-raster\", {snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n"
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/puzzle-5d-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+          "forwardAllArgs": true
+        }
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\nimport { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from \"../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts\";\n/** 📦️ puzzle-5d Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { runCmd } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { BundleScript } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { readdirSync } from \"node:fs\";\nimport { resolve } from \"node:path\";\n\n/** 🛂️ Verify the exact canonical provider through every published owning Source consumer. */\nclass OwnedVerifyScript extends BundleScript {\n  run(args: string[]): void {\n    if (args.length !== 1 || args[0] !== \"snapshot-sqlite-source\") throw new Error(\"verify snapshot-sqlite-source\");\n    const roots: string[] = [];\n    const visit = (dir: string): void => {\n      for (const item of readdirSync(dir, { withFileTypes: true })) {\n        const path = resolve(dir, item.name);\n        if (item.isDirectory()) visit(path);\n        else if (item.name.endsWith(\".ts\")) roots.push(path);\n      }\n    };\n    visit(resolve(this.root, \"../../🏅️standards/🔖️1/🪆️subsets/✳️any\"));\n    runCmd(\"bun\", [resolve(this.repoRoot, \"node_modules/typescript/bin/tsc\"), \"--noEmit\", \"--strict\", \"--target\", \"ESNext\", \"--module\", \"ESNext\", \"--moduleResolution\", \"bundler\", \"--allowImportingTsExtensions\", \"--resolveJsonModule\", \"--esModuleInterop\", \"--skipLibCheck\", ...roots], { cwd: this.repoRoot });\n  }\n}\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-puzzle-5d\", {commands:{\"graph-generate\":GraphGenerateScript,\"graph-wire-check\":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n"
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/space-home-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\n/** 📦️ space-home Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport { BundleScript, ScriptRouter } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nimport { runScriptMain } from \"../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts\";\nimport { runCmd, runCargo, runVitest } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\";\nimport { existsSync, readFileSync, readdirSync } from \"node:fs\";\nimport { dirname, extname, join, relative, resolve } from \"node:path\";\n\n/** 🧪️ Executes the contracts owned by this component. */\nclass OwnedVerifyScript extends BundleScript {\n  async run(segments: string[]): Promise<void> {\nif (segments[0] === \"home-host-panel-owner\") {\n      const oracle = join(this.repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧬️schema/📌️panel-state/🧪️tests/🔬️unit/🟦️.ts\");\n      const directoryOracle = join(this.repoRoot, \"✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/📇️directory-projection/🧪️tests/🔬️unit/🟦️.ts\");\n      const { testHostPanelStateSchema } = await import(oracle);\n      const { testHomeDirectoryProjectionSchema } = await import(directoryOracle);\n      const { testResolvedHostContext } = await import(join(this.repoRoot, \"🧰️framework/🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🪟️resolved-host-context/🟦️.ts\"));\n      testHostPanelStateSchema();\n      testHomeDirectoryProjectionSchema(this.repoRoot);\n      testResolvedHostContext();\n      const homeRoot = join(this.repoRoot, \"✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home\");\n      const homeSources: string[] = [];\n      const collectHomeSources = (directory: string): void => {\n        for (const entry of readdirSync(directory, { withFileTypes: true })) {\n          const path = join(directory, entry.name);\n          if (entry.isDirectory()) collectHomeSources(path);\n          else if ([\".rs\", \".ts\", \".json\", \".graphql\", \".proto\", \".py\", \".feature\"].includes(extname(entry.name))) homeSources.push(path);\n        }\n      };\n      collectHomeSources(homeRoot);\n      const homePanelMirror = /active_panel_tab|activePanelTab|SetActivePanelTab|setActivePanelTab|active-panel-tab/;\n      const homePanelResidue = homeSources.filter((path) => homePanelMirror.test(readFileSync(path, \"utf8\"))).map((path) => relative(this.repoRoot, path));\n      if (homePanelResidue.length !== 0) throw new Error(`Home panel ownership still leaks into app sources: ${homePanelResidue.join(\", \")}`);\n      const homeSessionIdentityMirror = /\\bSetClient\\b|\\bsetClient\\b|\\bclient_id\\b|\\bclient_name\\b|\\bclientId\\b|\\bclientName\\b/;\n      const homeSessionIdentityResidue = homeSources.filter((path) => homeSessionIdentityMirror.test(readFileSync(path, \"utf8\"))).map((path) => relative(this.repoRoot, path));\n      if (homeSessionIdentityResidue.length !== 0) throw new Error(`Home session identity still leaks into app sources: ${homeSessionIdentityResidue.join(\", \")}`);\n      const spaceConfigRoot = join(this.repoRoot, \"✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config\");\n      const spaceConfigSources: string[] = [];\n      collectHomeSources(spaceConfigRoot);\n      for (const path of homeSources) if (path.startsWith(spaceConfigRoot)) spaceConfigSources.push(path);\n      const spaceIdentityResidue = spaceConfigSources.filter((path) => homeSessionIdentityMirror.test(readFileSync(path, \"utf8\"))).map((path) => relative(this.repoRoot, path));\n      if (spaceIdentityResidue.length !== 0) throw new Error(`Studio session identity still leaks into app config: ${spaceIdentityResidue.join(\", \")}`);\n      const spaceManifest = JSON.parse(readFileSync(join(this.repoRoot, \"🌎️hub/🧩️compositions/🪐️space/🔣️.json\"), \"utf8\")) as { manifest: { apps: { id: string; windowKinds: { actions: { id: string }[] }[] }[] } };\n      const panelActionCount = (appId: string): number => spaceManifest.manifest.apps.find((app) => app.id === appId)?.windowKinds.flatMap((window) => window.actions).filter((action) => action.id === \"setActivePanelTab\").length ?? 0;\n      if (panelActionCount(\"s.space.home@1/*#editor\") !== 0 || panelActionCount(\"s.space.home@1/*#viewer\") !== 0) throw new Error(\"generated Home apps still declare setActivePanelTab\");\n      if (panelActionCount(\"s.space.studio@1/*#editor\") !== 3) throw new Error(\"generated Studio panel actions changed during Home-only cleanup\");\n      const setClientActionCount = spaceManifest.manifest.apps.flatMap((app) => app.windowKinds).flatMap((window) => window.actions).filter((action) => action.id === \"setClient\").length;\n      if (setClientActionCount !== 0) throw new Error(\"generated Space manifest still declares the retired setClient action\");\n      const homeEditor = spaceManifest.manifest.apps.find((app) => app.id === \"s.space.home@1/*#editor\");\n      const generatedHomeActions = new Map(homeEditor?.windowKinds.flatMap((window) => window.actions).map((action) => [action.id, action]) ?? []);\n      for (const actionId of [\"bindSpaceFile\", \"importSpace\", \"deleteVirtualFileSystemNode\", \"renameSpace\"]) {\n        if ((generatedHomeActions.get(actionId) as { semantics?: { execution?: { interactiveJob?: string } } } | undefined)?.semantics?.execution?.interactiveJob !== \"migrated\") throw new Error(`generated Home action ${actionId} is not published as retained (migrated) execution`);\n      }\n      if (generatedHomeActions.has(\"foldDirectoryEvents\")) throw new Error(\"generated Home still declares the retired foldDirectoryEvents writer\");\n      runCmd(\n        \"bun\",\n        [\n          join(this.repoRoot, \"node_modules/typescript/bin/tsc\"),\n          \"--noEmit\",\n          \"--strict\",\n          \"--target\",\n          \"ESNext\",\n          \"--module\",\n          \"ESNext\",\n          \"--moduleResolution\",\n          \"bundler\",\n          \"--resolveJsonModule\",\n          \"--allowImportingTsExtensions\",\n          \"--esModuleInterop\",\n          \"--skipLibCheck\",\n          oracle,\n          directoryOracle,\n        ],\n        { cwd: this.repoRoot },\n      );\n      runCmd(\"bun\", [join(this.repoRoot, \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts\"), \"directory-home-bootstrap-check\"], { cwd: this.repoRoot });\n      if (segments[1] === \"native\") {\n        const { runCargo } = await import(\"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts\");\n        await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"-p\", \"semio-framework-plugin\", \"--lib\", \"view_context_capacity_tests\", \"--\", \"--nocapture\"], this.repoRoot);\n        await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"-p\", \"semio-framework-os-renderer-wgpu\", \"--lib\", \"host_panel_\", \"--\", \"--nocapture\"], this.repoRoot);\n        await runCargo([\"test\", \"--manifest-path\", \"Cargo.toml\", \"-p\", \"semio-s-artifact-space-home\", \"--features\", \"component-app-assembly\", \"--lib\", \"--\", \"--nocapture\"], this.repoRoot);\n      }\n      return;\n    }\n    throw new Error('Unknown owned verification '+segments.join(' '));\n  }\n}\n\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-space-home\", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"] });\n"
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/space-space-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+        },
+        "inputs": [
+          "production",
+          "^production",
+          "{projectRoot}/../../🏅️standards/**/*",
+          "{projectRoot}/../../🟦️.ts",
+          "{projectRoot}/../../🦀️.rs",
+          "{projectRoot}/../../📜️artifact-definition.json",
+          "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+          "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        ]
+      },
+      "router": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\n/** 📦️ space-space Rust artifact package router. */\nimport { runArtifactRustPackageMain } from \"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nawait runArtifactRustPackageMain(import.meta.dir, \"semio-s-artifact-space-space\",{snapshotSqliteTests:[\"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n"
+    },
+    {
+      "owner": "ChartSnapshot",
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/📋️project.json",
+      "project": "@semio-tech/print-rs",
+      "target": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
+          "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+          "forwardAllArgs": false
+        }
+      },
+      "router": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/📜️script.ts",
+      "routerSource": "#!/usr/bin/env bun\n/** 📊️ Print native and shared chart SQLite verification through the repository execution policy. */\nimport {runArtifactRustPackageMain} from \"../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport {runArtifactRustTests} from \"../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts\";\nimport {BundleScript} from \"../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts\";\nclass LogicalOwnerScript extends BundleScript {\n async run(segments:string[]):Promise<void>{const mode=segments[0];if(segments.length!==1||(mode!==\"produce\"&&mode!==\"check\"))throw Error(\"Expected logical-owner produce or check\");const prior=process.env.SEMIO_CHART_FIXTURE_PRODUCE;if(mode===\"produce\")process.env.SEMIO_CHART_FIXTURE_PRODUCE=\"1\";try{if(mode===\"check\"){const {default:Ajv}=await import(\"ajv/dist/2020\");const path=new URL(\"../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧠️logical-owner/\",import.meta.url);const manifest=await Bun.file(new URL(\"🔣️.json\",path)).json(),schema=await Bun.file(new URL(\"🧬️schema/🔣️.json\",path)).json();const validate=new Ajv({strict:true}).compile(schema);if(!validate(manifest)||validate({...manifest,unknown:true}))throw Error(\"Closed Chart asset manifest admission differs\");console.log(\"[DEBUG] Independent AJV validates the closed Chart four-owner native asset manifest\");}await runArtifactRustTests(\"semio-framework-print\",this.repoRoot,[\"--lib\",mode===\"produce\"?\"chart_logical_owner_fixture_producer\":\"sqlite_snapshot_chart_canonical_logical_owner_assets\", \"--no-fail-fast\",\"--\",\"--nocapture\"]);}finally{if(prior===undefined)delete process.env.SEMIO_CHART_FIXTURE_PRODUCE;else process.env.SEMIO_CHART_FIXTURE_PRODUCE=prior;}}\n}\nawait runArtifactRustPackageMain(import.meta.dir,\"semio-framework-print\",{commands:{\"logical-owner\":LogicalOwnerScript},snapshotSqliteTests:[\"../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts\"]});\n"
+    }
+  ],
+  "command": "CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current CARGO_BUILD_BUILD_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current SEMIO_TEST_LEVEL=quick SEMIO_TEST_ARTIFACT_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/outside11-native-artifacts bun run nx run-many --target=test-snapshot-sqlite-native --projects=@semio-tech/writer-writer-rs,@semio-tech/mathematical-equation-rs,@semio-tech/wfc-grid3d-rs,@semio-tech/flow-flow-rs,@semio-tech/shooting-shooting-rs,@semio-tech/norm-en1997-rs,@semio-tech/raster-raster-rs,@semio-tech/puzzle-5d-rs,@semio-tech/space-home-rs,@semio-tech/space-space-rs,@semio-tech/print-rs --parallel=1 --skip-nx-cache --outputStyle=stream --excludeTaskDependencies"
+}

@@ -1,0 +1,64 @@
+{
+  "actual": [
+    "id",
+    "artifact_kind",
+    "standard",
+    "subset",
+    "schema_version",
+    "native_encoding"
+  ],
+  "rows": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️public/🧬️schema/🔣️.json",
+      "jsonPath": "$.const.metadataColumns",
+      "columns": [
+        "id",
+        "artifact_kind",
+        "standard",
+        "subset",
+        "schema_version",
+        "native_encoding"
+      ],
+      "correct": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️public/🔣️.json",
+      "jsonPath": "$.metadataColumns",
+      "columns": [
+        "id",
+        "artifact_kind",
+        "standard",
+        "subset",
+        "schema_version",
+        "native_encoding"
+      ],
+      "correct": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️public/🧬️schema/🔣️.json",
+      "jsonPath": "$.properties.publicMetadata.const.columns",
+      "columns": [
+        "id",
+        "schema_version",
+        "artifact_kind",
+        "standard",
+        "subset",
+        "native_encoding"
+      ],
+      "correct": false
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🚦️public/🔣️.json",
+      "jsonPath": "$.publicMetadata.columns",
+      "columns": [
+        "id",
+        "schema_version",
+        "artifact_kind",
+        "standard",
+        "subset",
+        "native_encoding"
+      ],
+      "correct": false
+    }
+  ]
+}

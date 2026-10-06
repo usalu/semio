@@ -38,7 +38,7 @@ pub struct Block2dViewer;
 
 impl ArtifactViewer for Block2dViewer {
     type Snapshot = Block2dSnapshot;
-    type Mutation = schema::mutations::text::Block2dMutation;
+    type Mutation = io::text::mutations::Block2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

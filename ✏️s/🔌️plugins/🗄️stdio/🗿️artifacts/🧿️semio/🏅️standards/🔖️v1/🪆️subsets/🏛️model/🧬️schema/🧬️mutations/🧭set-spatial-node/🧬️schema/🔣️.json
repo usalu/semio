@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Spatial node",
+          "de": "Raumknoten"
+        },
+        "description": {
+          "en": "Id of the spatial node.",
+          "de": "Kennung des Raumknotens."
+        },
+        "ref": {
+          "kind": "spatialNode"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "kind": {
       "anyOf": [
@@ -54,7 +71,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Name",
+          "de": "Name"
+        },
+        "description": {
+          "en": "Display name of the spatial node.",
+          "de": "Anzeigename des Raumknotens."
+        },
+        "group": "value",
+        "order": 30
+      }
     },
     "parentId": {
       "anyOf": [
@@ -71,7 +102,24 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "Parent",
+          "de": "Übergeordneter Knoten"
+        },
+        "description": {
+          "en": "Id of the parent spatial node; cleared, the node becomes a root.",
+          "de": "Kennung des übergeordneten Raumknotens; geleert wird der Knoten zur Wurzel."
+        },
+        "ref": {
+          "kind": "spatialNode"
+        },
+        "group": "value",
+        "order": 40
+      }
     },
     "placement": {
       "anyOf": [
@@ -81,7 +129,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Placement",
+          "de": "Platzierung"
+        },
+        "description": {
+          "en": "Translation, rotation (unit quaternion) and scale of the local placement.",
+          "de": "Verschiebung, Drehung (Einheitsquaternion) und Skalierung der lokalen Platzierung."
+        },
+        "group": "value",
+        "order": 50
+      }
     }
   },
   "$defs": {

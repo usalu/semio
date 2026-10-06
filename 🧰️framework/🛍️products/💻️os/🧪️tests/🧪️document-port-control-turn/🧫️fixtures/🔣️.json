@@ -1,0 +1,235 @@
+{
+  "note": "Document-port bind and release (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault on build B1: attaching a fresh folder threw an unhandled `actor-document-control.receipt-count` out of the retirement of a binding that had failed to bind, the bind's own failure was lost, and every later bind of the program failed on that kept rejection). `answers` are what the program answers its control turns with, in order: `receipt` (the exact receipt, with a frame of the program's own riding beside it), `stale` (the refusal `plugin.document-backbone.stale-generation`: it holds no binding of that generation), `refused` (the refusal `plugin.document-backbone.binding-live`), `absent` (frames of its own, no receipt), `twice` (the receipt twice), `damaged` (a receipt with a byte after its end) and `transport` (the turn itself fails). `steps` are what the host does: `bind` (lets the predecessor go, then binds the next generation) and `retire` (retires the bound port). `outcomes` is how each step settles (`ok`, else the failure's message); `controls` are the control turns sent, as `<operation>:<generation>`; `told` are the retirement failures reported beside a failed bind.",
+  "cases": [
+    {
+      "id": "a-fresh-folder-is-attached-to-a-program-that-holds-a-bound-port",
+      "answers": [
+        "receipt",
+        "receipt",
+        "receipt"
+      ],
+      "steps": [
+        "bind",
+        "retire",
+        "bind"
+      ],
+      "outcomes": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "controls": [
+        "bind:1",
+        "retire:1",
+        "bind:2"
+      ],
+      "told": []
+    },
+    {
+      "id": "a-bind-without-a-receipt-fails-as-itself-although-its-retirement-fails-too",
+      "answers": [
+        "absent",
+        "absent"
+      ],
+      "steps": [
+        "bind"
+      ],
+      "outcomes": [
+        "actor-document-control.receipt-count:0"
+      ],
+      "controls": [
+        "bind:1",
+        "retire:1"
+      ],
+      "told": [
+        "actor-document-control.receipt-count:0"
+      ]
+    },
+    {
+      "id": "a-lost-transport-fails-as-itself-although-its-retirement-is-refused",
+      "answers": [
+        "transport",
+        "refused"
+      ],
+      "steps": [
+        "bind"
+      ],
+      "outcomes": [
+        "transport lost"
+      ],
+      "controls": [
+        "bind:1",
+        "retire:1"
+      ],
+      "told": [
+        "plugin.document-backbone.binding-live"
+      ]
+    },
+    {
+      "id": "a-binding-the-program-did-not-let-go-of-is-released-before-the-next-bind",
+      "answers": [
+        "absent",
+        "absent",
+        "stale",
+        "receipt"
+      ],
+      "steps": [
+        "bind",
+        "bind"
+      ],
+      "outcomes": [
+        "actor-document-control.receipt-count:0",
+        "ok"
+      ],
+      "controls": [
+        "bind:1",
+        "retire:1",
+        "retire:1",
+        "bind:2"
+      ],
+      "told": [
+        "actor-document-control.receipt-count:0"
+      ]
+    },
+    {
+      "id": "a-release-that-fails-fails-that-bind-and-is-tried-again-by-the-next",
+      "answers": [
+        "absent",
+        "absent",
+        "absent",
+        "receipt",
+        "receipt"
+      ],
+      "steps": [
+        "bind",
+        "bind",
+        "bind"
+      ],
+      "outcomes": [
+        "actor-document-control.receipt-count:0",
+        "actor-document-control.receipt-count:0",
+        "ok"
+      ],
+      "controls": [
+        "bind:1",
+        "retire:1",
+        "retire:1",
+        "retire:1",
+        "bind:2"
+      ],
+      "told": [
+        "actor-document-control.receipt-count:0"
+      ]
+    },
+    {
+      "id": "a-duplicated-receipt-is-refused-with-its-count-and-the-binding-let-go",
+      "answers": [
+        "twice",
+        "receipt",
+        "receipt"
+      ],
+      "steps": [
+        "bind",
+        "bind"
+      ],
+      "outcomes": [
+        "actor-document-control.receipt-count:2",
+        "ok"
+      ],
+      "controls": [
+        "bind:1",
+        "retire:1",
+        "bind:2"
+      ],
+      "told": []
+    },
+    {
+      "id": "a-damaged-receipt-fails-under-its-own-code",
+      "answers": [
+        "damaged",
+        "receipt"
+      ],
+      "steps": [
+        "bind"
+      ],
+      "outcomes": [
+        "actor-document-control.terminal"
+      ],
+      "controls": [
+        "bind:1",
+        "retire:1"
+      ],
+      "told": []
+    },
+    {
+      "id": "a-refused-bind-holds-nothing-to-retire",
+      "answers": [
+        "refused",
+        "receipt"
+      ],
+      "steps": [
+        "bind",
+        "bind"
+      ],
+      "outcomes": [
+        "plugin.document-backbone.binding-live",
+        "ok"
+      ],
+      "controls": [
+        "bind:1",
+        "bind:2"
+      ],
+      "told": []
+    },
+    {
+      "id": "a-retirement-the-program-answers-as-stale-is-a-retirement",
+      "answers": [
+        "receipt",
+        "stale",
+        "receipt"
+      ],
+      "steps": [
+        "bind",
+        "retire",
+        "bind"
+      ],
+      "outcomes": [
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "controls": [
+        "bind:1",
+        "retire:1",
+        "bind:2"
+      ],
+      "told": []
+    },
+    {
+      "id": "a-retirement-refused-for-another-reason-fails-and-the-next-bind-releases-it",
+      "answers": [
+        "receipt",
+        "refused",
+        "receipt",
+        "receipt"
+      ],
+      "steps": [
+        "bind",
+        "retire",
+        "bind"
+      ],
+      "outcomes": [
+        "ok",
+        "plugin.document-backbone.binding-live",
+        "ok"
+      ],
+      "controls": [
+        "bind:1",
+        "retire:1",
+        "retire:1",
+        "bind:2"
+      ],
+      "told": []
+    }
+  ]
+}

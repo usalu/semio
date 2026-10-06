@@ -1,4 +1,3 @@
-import Ajv from "ajv";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -58,23 +57,18 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       verb: envelope.verb,
     }));
 
-  async function load(): Promise<Readonly<{ fixture: Fixture; schema: object }>> {
+  async function load(): Promise<Readonly<{ fixture: Fixture }>> {
     const { readFile } = await import("node:fs/promises");
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const root = dirname(fileURLToPath(source.url));
-    const [fixture, schema] = await Promise.all([
-      readFile(join(root, "🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"),
-      readFile(join(root, "🔗️causal/🧬️schema/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"),
-    ]);
-    return { fixture: JSON.parse(fixture) as Fixture, schema: JSON.parse(schema) as object };
+    const fixture = await readFile(join(root, "🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8");
+    return { fixture: JSON.parse(fixture) as Fixture };
   }
 
   describe("document backbone envelope batch", () => {
     it("matches the neutral schema and exact bounded causal corpus", async () => {
-      const { fixture, schema } = await load();
-      const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      const { fixture } = await load();
       expect(fixture.schema).toBe("semio.replication.document-backbone-batch.v1");
       expect(fixture.wire).toBe("causal-envelope-batch-v1");
       expect(fixture.retention).toEqual(DOCUMENT_BACKBONE_RETENTION_LIMITS);

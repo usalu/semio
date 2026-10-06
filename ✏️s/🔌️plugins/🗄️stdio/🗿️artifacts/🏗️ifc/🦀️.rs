@@ -148,30 +148,18 @@ pub mod standards {
                         #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod diff {
                         #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod bounds {
                             #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
@@ -184,10 +172,6 @@ pub mod standards {
                         #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -301,30 +285,18 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod diff {
                         #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod bounds {
                             #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦bounds/🦀️.rs"]
@@ -337,10 +309,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -459,9 +427,7 @@ pub mod engine {
         super::standards::v2x3::engine::register();
     }
 }
-pub mod io {
-    pub use super::standards::v4::subsets::any::io::*;
-}
+
 
 #[path = "."]
 pub mod examples {
@@ -828,3 +794,13 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v2x3::subsets::cv20::io::{Ifc2x3Cv20BuilderConstruction, Ifc2x3Cv20AnalyzerAnalysis, Ifc2x3Cv20BuilderFacets, Ifc2x3Cv20Builder, Ifc2x3Cv20Analyzer, Ifc2x3Cv20Composer};
+
+pub use crate::standards::v2x3::subsets::base::io::{Ifc2x3BuilderConstruction, Ifc2x3Parts, Ifc2x3AnalyzerAnalysis, Ifc2x3BuilderFacets, Ifc2x3Builder, Ifc2x3Analyzer, Ifc2x3Composer};
+
+pub use crate::standards::v2x3::subsets::sav::io::{Ifc2x3SavBuilderConstruction, Ifc2x3SavAnalyzerAnalysis, Ifc2x3SavBuilderFacets, Ifc2x3SavBuilder, Ifc2x3SavAnalyzer, Ifc2x3SavComposer};
+
+pub use crate::standards::v2x3::subsets::cobie::io::{Ifc2x3CobieBuilderConstruction, Ifc2x3CobieAnalyzerAnalysis, Ifc2x3CobieBuilderFacets, Ifc2x3CobieBuilder, Ifc2x3CobieAnalyzer, Ifc2x3CobieComposer};
+
+pub use crate::standards::v4::subsets::any::io::{IfcBuilderConstruction, IfcParts, IfcAnalyzerAnalysis, IfcBuilderFacets, IfcBuilder, IfcAnalyzer, IfcComposer};

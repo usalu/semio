@@ -1,4 +1,5 @@
-import{binary64,type Binary64}from"../../../🟦️.ts";
+import { binary64 } from "../../../🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🚚️ generation3d direct `move-nodes` payload mirror of `MoveNodes`, with its closed-schema parser. */
 export interface MoveNodes {
   ids: string[];

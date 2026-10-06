@@ -1098,12 +1098,11 @@ pub struct DurableOwnedMapMemberAdmissionV1<Mutation> {
     pub expected_revision: [u8; 32],
     pub actor: String,
     mutation: Option<Mutation>,
-    description: Option<String>,
 }
 
 impl<Mutation> DurableOwnedMapMemberAdmissionV1<Mutation> {
-    pub fn new(operation: semio_framework_job::OperationId, expected_generation: u64, expected_revision: [u8; 32], actor: String, mutation: Mutation, description: Option<String>) -> Self {
-        Self { operation, expected_generation, expected_revision, actor, mutation: Some(mutation), description }
+    pub fn new(operation: semio_framework_job::OperationId, expected_generation: u64, expected_revision: [u8; 32], actor: String, mutation: Mutation) -> Self {
+        Self { operation, expected_generation, expected_revision, actor, mutation: Some(mutation) }
     }
 }
 
@@ -1306,10 +1305,9 @@ where
             DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingParent => {
                 let admission = self.parent_admission.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                let description = admission.description.take();
                 let store = self.parent.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.parent_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], description, super::HistoryLane::Document, Some(factory), None) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], super::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.parent_publication = Some(publication);
                         self.parent_admission = None;
@@ -1317,9 +1315,8 @@ where
                         self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingDrawing;
                     }
                     Err(rejected) => {
-                        let (reason, mut mutations, description) = rejected.into_owners();
+                        let (reason, mut mutations) = rejected.into_owners();
                         admission.mutation = mutations.pop();
-                        admission.description = description;
                         self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Admission { role: PARENT_ROLE, reason });
                     }
                 }
@@ -1327,10 +1324,9 @@ where
             DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingDrawing => {
                 let admission = self.drawing_admission.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                let description = admission.description.take();
                 let store = self.drawing.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.drawing_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], description, super::HistoryLane::Document, Some(factory), None) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], super::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.drawing_publication = Some(publication);
                         self.drawing_admission = None;
@@ -1338,9 +1334,8 @@ where
                         self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingValue;
                     }
                     Err(rejected) => {
-                        let (reason, mut mutations, description) = rejected.into_owners();
+                        let (reason, mut mutations) = rejected.into_owners();
                         admission.mutation = mutations.pop();
-                        admission.description = description;
                         self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Admission { role: DRAWING_ROLE, reason });
                     }
                 }
@@ -1348,10 +1343,9 @@ where
             DurableOwnedThreeStoreMapAssemblyPhaseV1::AdmittingValue => {
                 let admission = self.value_admission.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let mutation = admission.mutation.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                let description = admission.description.take();
                 let store = self.value.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
                 let factory = self.value_factory.as_ref().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], description, super::HistoryLane::Document, Some(factory), None) {
+                match store.begin_apply_batch(admission.operation, admission.expected_generation, admission.expected_revision, admission.actor.clone(), vec![mutation], super::HistoryLane::Document, Some(factory), None) {
                     Ok(publication) => {
                         *self.value_publication = Some(publication);
                         self.value_admission = None;
@@ -1359,9 +1353,8 @@ where
                         self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::PreparingParent;
                     }
                     Err(rejected) => {
-                        let (reason, mut mutations, description) = rejected.into_owners();
+                        let (reason, mut mutations) = rejected.into_owners();
                         admission.mutation = mutations.pop();
-                        admission.description = description;
                         self.fail(DurableOwnedThreeStoreMapAssemblyFailureV1::Admission { role: VALUE_ROLE, reason });
                     }
                 }
@@ -3328,8 +3321,8 @@ impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
 /// 🧪️ Builds the independently specified canonical journal record only for downstream
 /// package law suites; production callers must obtain records through Store-owned assembly.
 #[cfg(feature = "durable-group-testing")]
-pub fn durable_owned_group_journal_test_record(fixture_json: &str) -> DurableOwnedGroupJournalRecordV1 {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_json).expect("durable group fixture");
+pub fn durable_owned_group_journal_test_record(snapshot_json: &str) -> DurableOwnedGroupJournalRecordV1 {
+    let fixture: serde_json::Value = serde_json::from_str(snapshot_json).expect("durable group fixture");
     let hex = |value: &str| value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("fixture hex"), 16).expect("fixture byte")).collect::<Vec<_>>();
     let revision = |value: &str| -> [u8; 32] { hex(value).try_into().expect("fixed fixture revision") };
     let reference = |value: &serde_json::Value| semio_framework_pack_json::from_json_str(&serde_json::to_string(value).expect("fixture reference json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture reference");

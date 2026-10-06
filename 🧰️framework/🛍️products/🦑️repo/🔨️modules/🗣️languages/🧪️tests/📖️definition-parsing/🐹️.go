@@ -13,7 +13,7 @@ import (
 // #region 🔖️Projection
 
 func declarations(ctx *host.Context, uri string) ([]any, error) {
-	path, err := ctx.Fixture(uri)
+	path, err := ctx.Input(uri)
 	if err != nil {
 		return nil, err
 	}

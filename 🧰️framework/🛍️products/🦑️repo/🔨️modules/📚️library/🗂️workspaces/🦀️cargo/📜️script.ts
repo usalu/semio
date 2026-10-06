@@ -1,6 +1,4 @@
 #!/usr/bin/env bun
-import { randomUUID } from "node:crypto";
-import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { join, relative, isAbsolute } from "node:path";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { runtimeInputAdmissionV1 } from "../../🕸️dependencies/🧩️runtime/🟨️.mjs";
@@ -8,7 +6,8 @@ import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️pr
 import { runRepositoryCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { getWorkspaceRoot } from "../🟦️.ts";
-import { discoverCargoWorkspaces, publishCargoWorkspaceMembership, cargoWorkspaceForManifest, cargoRepositoryPackages, prepareCargoOwners } from "./🟦️.ts";
+import { discoverCargoWorkspaces, publishCargoWorkspaceMembership, cargoRepositoryPackages } from "./🟦️.ts";
+import {PreparationScript} from "./🛠️preparation/📜️script.ts";
 
 /** 📣️ Checks or publishes current native owner membership through its authored regular-manifest recipe. */
 class MembersScript extends Script {
@@ -21,17 +20,6 @@ class MembersScript extends Script {
   }
 }
 
-/** 🧪️ Executes schema, independent oracle and native owner-removal laws under the existing source-test budget. */
-class PreparationScript extends Script {
-  async run(args: string[]): Promise<void> {
-    if(args.length!==2 || args[0]!=="--manifest")throw new Error("prepare --manifest <selected-scope>");
-    const controller=new AbortController(), stop=():void=>controller.abort();process.once("SIGINT",stop);process.once("SIGTERM",stop);
-    let lease: Awaited<ReturnType<typeof acquireQueuedResourceLease>> | undefined;
-    try { lease=await acquireQueuedResourceLease({directory:join(this.root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),resource:`cargo-preparation:${this.root}`,mode:"exclusive",owner:randomUUID(),signal:controller.signal});
-    const scope=cargoWorkspaceForManifest(this.root,args[1]!);prepareCargoOwners(this.root,scope);publishCargoWorkspaceMembership(this.root,cargoWorkspaceForManifest(this.root,scope.manifest),"write"); }
-    finally { lease?.release();process.off("SIGINT",stop);process.off("SIGTERM",stop); }
-  }
-}
 
 class RuntimeInputScript extends Script {
   async run(args: string[]): Promise<void> {
@@ -58,7 +46,7 @@ class NativeInputScript extends Script {
 class ContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("contract-check accepts no overrides");
-    await runRepositoryCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🟦️.ts")], this.root, "cargo-workspace-contract", 15_000);
+    await runRepositoryCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🟦️.ts"), join(import.meta.dir,"🧪️tests/🪆️nested-owners/🟦️.ts")], this.root, "cargo-workspace-contract", 15_000);
   }
 }
 /** 🕰️ Verifies queued preparation with an independent owner holding the native lease. */

@@ -34,7 +34,7 @@ fn direct_command() -> BmpEditCommand {
 }
 
 fn direct_snapshot() -> BmpSnapshot {
-    crate::io::decode_bmp(include_bytes!("../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap()
+    crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp")).unwrap()
 }
 
 fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str) -> Vec<BmpMutation> {
@@ -62,10 +62,10 @@ fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str
 #[test]
 fn initial_bitmap_is_immediately_paintable_and_reopens() {
     let snapshot = <BmpEditor as ArtifactEditor>::initial_snapshot();
-    let layout = crate::io::bmp_layout(&snapshot).expect("initial BMP layout");
-    assert_eq!((layout.width, layout.height, layout.profile), (1, 1, crate::io::BmpProfile::DirectRgb24));
-    assert_eq!(crate::io::bmp_rgba8_preview(&snapshot).unwrap(), [255, 255, 255, 255]);
-    assert_eq!(crate::io::decode_bmp(&crate::io::encode_bmp(&snapshot).unwrap()).unwrap(), snapshot);
+    let layout = crate::standards::v_v3::subsets::any::io::bmp_layout(&snapshot).expect("initial BMP layout");
+    assert_eq!((layout.width, layout.height, layout.profile), (1, 1, crate::standards::v_v3::subsets::any::io::BmpProfile::DirectRgb24));
+    assert_eq!(crate::standards::v_v3::subsets::any::io::bmp_rgba8_preview(&snapshot).unwrap(), [255, 255, 255, 255]);
+    assert_eq!(crate::standards::v_v3::subsets::any::io::decode_bmp(&crate::standards::v_v3::subsets::any::io::encode_bmp(&snapshot).unwrap()).unwrap(), snapshot);
 }
 
 #[test]
@@ -78,8 +78,8 @@ fn natural_file_route_preserves_bmp_v3_bytes_and_opens_a_fresh_snapshot_event() 
     let exported = <BmpEditor as ArtifactEditor>::encode_natural_file(&imported).expect("BMP natural export");
     assert_eq!(exported, source, "canonical BMP bytes remain owned exactly");
     let independent = semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_identity_round_trip(&exported).expect("image crate reopens BMP export");
-    let independent = crate::io::decode_bmp(&independent).expect("independent BMP output reopens");
-    assert_eq!(crate::io::bmp_rgba8_preview(&independent).unwrap(), crate::io::bmp_rgba8_preview(&imported).unwrap());
+    let independent = crate::standards::v_v3::subsets::any::io::decode_bmp(&independent).expect("independent BMP output reopens");
+    assert_eq!(crate::standards::v_v3::subsets::any::io::bmp_rgba8_preview(&independent).unwrap(), crate::standards::v_v3::subsets::any::io::bmp_rgba8_preview(&imported).unwrap());
     let Some(BmpMutation::SetSnapshot(set)) = <BmpEditor as ArtifactEditor>::whole_document_operation(imported.clone()) else { panic!("natural BMP opens through one event-sourced snapshot mutation") };
     assert_eq!(set.snapshot, imported);
     assert_eq!(current, <BmpEditor as ArtifactEditor>::initial_snapshot(), "opening does not replace the selected owner before publication");
@@ -107,9 +107,9 @@ fn retained_direct_paint_captures_revision_and_preserves_unaddressed_bytes() {
     let mutations = drive(&direct_command(), &before, paint_region::DIRECT_ACTION_ID);
     assert_eq!(mutations.len(), 1);
     let BmpMutation::PaintDirectRegion(payload) = &mutations[0] else { panic!("addressed direct paint mutation") };
-    assert_eq!(payload.revision, crate::io::bmp_revision(&before));
+    assert_eq!(payload.revision, crate::standards::v_v3::subsets::any::io::bmp_revision(&before));
     let after = mutations[0].diff(&before).diff().apply(&before).expect("apply direct paint");
-    let layout = crate::io::bmp_layout(&before).unwrap();
+    let layout = crate::standards::v_v3::subsets::any::io::bmp_layout(&before).unwrap();
     for row in 0..2 {
         let sample = layout.data_offset + row * layout.row_stride + 3;
         assert_eq!(&after.bytes[sample..sample + 3], &[7, 8, 9]);
@@ -121,14 +121,14 @@ fn retained_direct_paint_captures_revision_and_preserves_unaddressed_bytes() {
 #[test]
 fn retained_indexed_paint_keeps_duplicate_color_indices_distinct() {
     use protocol::{Mutation, MutationDiff};
-    let before = crate::io::decode_bmp(include_bytes!("../../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")).unwrap();
+    let before = crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")).unwrap();
     let command =
         bmpEditor_command_from_action(paint_region::INDEXED_ACTION_ID, Some(&semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1)), ("height".into(), number(1)), ("paletteIndex".into(), number(1))])))
             .unwrap();
-    let preview = crate::io::bmp_rgba8_preview(&before).unwrap();
+    let preview = crate::standards::v_v3::subsets::any::io::bmp_rgba8_preview(&before).unwrap();
     let mutations = drive(&command, &before, paint_region::INDEXED_ACTION_ID);
     let after = mutations[0].diff(&before).diff().apply(&before).unwrap();
-    assert_eq!(crate::io::bmp_rgba8_preview(&after).unwrap(), preview);
+    assert_eq!(crate::standards::v_v3::subsets::any::io::bmp_rgba8_preview(&after).unwrap(), preview);
     assert_ne!(after.bytes, before.bytes, "the equal-color palette entry remains a distinct authored index");
 }
 

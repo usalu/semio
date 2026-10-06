@@ -1,6 +1,6 @@
 //! 🎨️ Revision-guarded exact native PNG sample paint.
 
-use crate::io::{PngNativePaint, PngRegion};
+use crate::standards::v1_2::subsets::any::io::{PngNativePaint, PngRegion};
 use crate::schema::diff::PngDiff;
 use crate::schema::mutations::{PngMutation, SetSnapshot};
 use crate::PngSnapshot;
@@ -16,19 +16,15 @@ pub struct PaintNativeSamplesMutation {
     pub result: PngSnapshot,
 }
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 impl protocol::MutationKind<PngSnapshot, PngMutation> for PaintNativeSamplesMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "paint", entity: "native-sample-region", kind: "paint-native-samples", record: "PaintNativeSamples" };
 
     fn diff(&self, base: &PngSnapshot) -> protocol::MutationOutcome<PngDiff> {
-        if crate::io::png_revision(base) != self.revision {
+        if crate::standards::v1_2::subsets::any::io::png_revision(base) != self.revision {
             return protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, "png: source revision changed", ["native-sample-region"]);
         }
-        match crate::io::validate_completed_native_paint(base, &self.result, self.region, self.paint) {
+        match crate::standards::v1_2::subsets::any::io::validate_completed_native_paint(base, &self.result, self.region, self.paint) {
             Ok(()) => protocol::MutationOutcome::new(PngDiff::between(base, &self.result)),
             Err(message) => protocol::MutationOutcome::refuse(protocol::OutcomeCode::TargetMismatch, message, ["native-sample-region"]),
         }
@@ -50,15 +46,15 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for PaintNativeSamplesMuta
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
     let base = PngSnapshot::default();
-    let revision = crate::io::png_revision(&base);
+    let revision = crate::standards::v1_2::subsets::any::io::png_revision(&base);
     let region = PngRegion { x: 0, y: 0, width: 1, height: 1 };
     let paint = PngNativePaint::rgba(0, 0, 0, 255);
-    let result = crate::io::paint_native_region_owned_controlled(
+    let result = crate::standards::v1_2::subsets::any::io::paint_native_region_owned_controlled(
         &base,
         &revision,
         region,
         paint,
-        crate::io::MAXIMUM_NATIVE_PAINT_OWNED_BYTES,
+        crate::standards::v1_2::subsets::any::io::MAXIMUM_NATIVE_PAINT_OWNED_BYTES,
         &mut |_| true,
     ).expect("default PNG native paint");
     PngMutation::PaintNativeSamples(PaintNativeSamplesMutation {

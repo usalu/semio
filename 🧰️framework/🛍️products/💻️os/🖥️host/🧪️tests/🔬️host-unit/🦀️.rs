@@ -25,6 +25,7 @@ mod tests {
                 modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
+                    initial_utility_id: None,
                     id: "composite".into(),
                     label: LocalizedLabel::data("Canvas"),
                     body_key: "composite".into(),
@@ -89,6 +90,7 @@ mod tests {
             modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
             default_mode_id: "edit".into(),
             window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
+                initial_utility_id: None,
                 id: "composite".into(),
                 label: LocalizedLabel::data("Canvas"),
                 body_key: "composite".into(),
@@ -137,6 +139,7 @@ mod tests {
             modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
             default_mode_id: "edit".into(),
             window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
+                initial_utility_id: None,
                 id: "composite".into(),
                 label: LocalizedLabel::data("Canvas"),
                 body_key: "composite".into(),
@@ -234,6 +237,7 @@ mod tests {
             modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
             default_mode_id: "edit".into(),
             window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
+                initial_utility_id: None,
                 id: "composite".into(),
                 label: LocalizedLabel::data("Canvas"),
                 body_key: "composite".into(),
@@ -398,6 +402,7 @@ mod tests {
             modes: semio_framework::Modes::one(ModeDefinition { id: "edit".into(), label: LocalizedLabel::data("Edit"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
             default_mode_id: "edit".into(),
             window_kinds: semio_framework::WindowKinds::one(WindowKindDefinition {
+                initial_utility_id: None,
                 id: id.into(),
                 label: LocalizedLabel::data(label),
                 body_key: id.into(),
@@ -640,7 +645,7 @@ mod tests {
             plugin_id: "puzzle".into(),
             app_id: "puzzle2d".into(),
             label: "Puzzle Board \"3D\"".into(),
-            yields: "puzzle.2d.fixture".into(),
+            yields: "board.ports.directed.v1".into(),
             artifact_ref: "artifacts/app-1".into(),
             config_ref: "config/app-1".into(),
             x: 0.0,
@@ -655,7 +660,7 @@ mod tests {
                     label: "Out".into(),
                     direction: semio_framework::MediaPortDirection::Out,
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                    kind_id: Some("puzzle.2d.fixture".into()),
+                    kind_id: Some("board.ports.directed.v1".into()),
                     required: false,
                     multiplicity: semio_framework::PortMultiplicity::One,
                 },
@@ -680,7 +685,7 @@ mod tests {
                     label: "In".into(),
                     direction: semio_framework::MediaPortDirection::In,
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
-                    kind_id: Some("puzzle.2d.fixture".into()),
+                    kind_id: Some("board.ports.directed.v1".into()),
                     required: false,
                     multiplicity: semio_framework::PortMultiplicity::One,
                 },
@@ -693,7 +698,7 @@ mod tests {
             source_port_id: "app-1:puzzle.out:out".into(),
             target_node_id: "app-2".into(),
             target_port_id: "app-2:draw.in:in".into(),
-            contract: MediaContract { kind_id: "puzzle.2d.fixture".into(), media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, wire: MediaWireFormat::Document { schema: "puzzle.2d.fixture".into() }, conversion: None },
+            contract: MediaContract { kind_id: "board.ports.directed.v1".into(), media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, wire: MediaWireFormat::Document { schema: "board.ports.directed.v1".into() }, conversion: None },
         };
         workflow::WorkflowSnapshot {
             schema: workflow::S_WORKFLOW_SCHEMA.into(),
@@ -732,7 +737,7 @@ mod tests {
                 plugin_id: "puzzle".into(),
                 app_id: "puzzle2d".into(),
                 label: "Puzzle Board".into(),
-                yields: "puzzle.2d.fixture".into(),
+                yields: "board.ports.directed.v1".into(),
                 artifact_ref: "artifacts/node-1".into(),
                 config_ref: "config/node-1".into(),
                 x: 10.0,
@@ -760,7 +765,7 @@ mod tests {
                 target_node_id: "node-2".into(),
                 target_port_id: "app-2:in:in".into(),
                 contract: MediaContract {
-                    kind_id: "puzzle.2d.fixture".into(),
+                    kind_id: "board.ports.directed.v1".into(),
                     media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
                     wire: MediaWireFormat::Binary { format_kind: "stl".into() },
                     conversion: Some((MediaForm::Brep, MediaForm::Mesh)),
@@ -830,7 +835,7 @@ mod tests {
     fn document_text_round_trips_store_with_applied_operation() {
         let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", resolve_kernel_future(workflow::empty_workflow_snapshot()), None);
         let mut store = resolve_kernel_future(ArtifactStore::new(envelope)).expect("valid artifact store fixture");
-        resolve_kernel_future(store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {})], description: None, transaction: None })).expect("apply");
+        resolve_kernel_future(store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {})], transaction: None })).expect("apply");
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }

@@ -1,0 +1,166 @@
+{
+  "schema": "forms.form",
+  "id": "form 世界 🧾️",
+  "version": "1",
+  "title": "",
+  "step": {
+    "id": "step",
+    "title": "Step 世界",
+    "description": ""
+  },
+  "question": {
+    "id": "question",
+    "label": "Literal question",
+    "kind": "extension.kind",
+    "description": "",
+    "required": false,
+    "placeholder": "",
+    "minimumBits": "8000000000000000",
+    "maximumBits": "4024000000000000",
+    "incrementBits": "3ff0000000000000",
+    "unit": "",
+    "text": "Some text",
+    "options": [
+      {
+        "value": "one",
+        "label": "One"
+      },
+      {
+        "value": "two",
+        "label": ""
+      }
+    ],
+    "fields": [
+      {
+        "key": "x",
+        "label": "",
+        "valueBits": "8000000000000000"
+      },
+      {
+        "key": "y",
+        "valueBits": "4004000000000000"
+      }
+    ],
+    "questionSchema": "shape.schema",
+    "src": "relative/image",
+    "accept": "image/*",
+    "exampleId": "owned-fixture"
+  },
+  "structure": {
+    "childId": "structure",
+    "artifactId": "structure",
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "value"
+  },
+  "results": {
+    "childId": "results",
+    "artifactId": "results",
+    "artifactKind": "s.stdio.semio",
+    "standard": "v1",
+    "subset": "table"
+  },
+  "values": [
+    {
+      "kind": "null"
+    },
+    {
+      "kind": "boolean",
+      "value": true
+    },
+    {
+      "kind": "unsigned",
+      "value": "18446744073709551615"
+    },
+    {
+      "kind": "signed",
+      "value": "-9223372036854775808"
+    },
+    {
+      "kind": "float",
+      "bits": "fff0000000000123"
+    },
+    {
+      "kind": "text",
+      "value": "Unicode 世界 🧾️\u0000"
+    },
+    {
+      "kind": "bytes",
+      "octets": [
+        0,
+        1,
+        127,
+        128,
+        255
+      ]
+    },
+    {
+      "kind": "array",
+      "items": [
+        {
+          "kind": "null"
+        },
+        {
+          "kind": "unsigned",
+          "value": "9007199254740993"
+        }
+      ]
+    },
+    {
+      "kind": "object",
+      "members": [
+        {
+          "name": "same",
+          "value": {
+            "kind": "signed",
+            "value": "-1"
+          }
+        },
+        {
+          "name": "same",
+          "value": {
+            "kind": "unsigned",
+            "value": "1"
+          }
+        },
+        {
+          "name": "",
+          "value": {
+            "kind": "text",
+            "value": ""
+          }
+        }
+      ]
+    },
+    {"kind":"float","bits":"0000000000000000"},
+    {"kind":"float","bits":"8000000000000000"},
+    {"kind":"float","bits":"0000000000000001"},
+    {"kind":"float","bits":"3ff0000000000000"},
+    {"kind":"float","bits":"7fefffffffffffff"},
+    {"kind":"float","bits":"7ff0000000000000"},
+    {"kind":"float","bits":"fff0000000000000"}
+  ],
+  "response": {
+    "id": "response",
+    "submittedAt": "9007199254740991",
+    "definitionVersion": "original"
+  },
+  "deepLevels": 1024,
+  "unicodeText": "世界 🧾️",
+  "unicodeRepeat": 10000,
+  "invalidDialects": [
+    "s.forms.forms@2/*",
+    "s.forms.forms@1/unknown",
+    "s.reasoning.wires@1/*"
+  ],
+  "editedTitle": "Independent SQLite 世界",
+  "wideOptionsCount": 1024,
+  "jsonTransportValue": {
+    "truth": true,
+    "number": 42,
+    "list": [
+      null,
+      "雪"
+    ]
+  }
+}

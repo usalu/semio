@@ -82,11 +82,7 @@ impl protocol::InferenceSpec<Process3dSnapshot> for Process3dInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️KernelReplay
-fn hash_value<T: ToValue>(value: &T) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    semio_framework_pack_json::to_json_string(value).hash(&mut hasher);
-    hasher.finish()
-}
+
 
 /// 🧠️ Kernel + prefix memo: `hash(stock, enabled steps[0..i])` → solid handle, so cursor scrubbing and
 /// step edits only recompute the suffix that actually changed.
@@ -135,13 +131,7 @@ impl ProcessKernelReplay {
     }
 }
 
-fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    stock_signature.hash(&mut hasher);
-    let value = semio_framework_value::DslValue::Array(steps.iter().map(|step| semio_framework_value::ToValue::to_value(*step)).collect());
-    semio_framework_pack_json::to_json_string(&value).hash(&mut hasher);
-    hasher.finish()
-}
+
 
 /// 📦️ Builds a posed kernel solid for a spec via `*_prim_sync` → centre → `rotate_sync` → `translate_sync`.
 ///

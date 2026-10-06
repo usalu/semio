@@ -18,7 +18,7 @@ fn trinity_rewriting_manifest_for_tests() -> App {
 
 semio_framework_plugin::history_edit_acceptance_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, "../..");
 semio_framework_plugin::composed_reload_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, "../..");
-semio_framework_plugin::composed_child_history_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, [("patchNodes", r#"{"nodeIds":["7dc5b737-3b6b-4068-b315-b7bacc91c2e1"],"field":"name","value":"Renamed core"}"#)]);
+semio_framework_plugin::composed_child_history_law!("trinity", TrinityRewritingPlayApp, trinity_rewriting_manifest_for_tests, [("addWorkingNode", r#"{"kind":"Piece","name":"core","x":0.0,"y":0.0}"#), ("patchNodes", r#"{"nodeIds":["n0"],"field":"name","value":"Renamed core"}"#)]);
 
 fn meta(actor: &str) -> semio_framework_plugin::ActionMeta {
     artifact_app_laws::meta(actor)
@@ -59,7 +59,38 @@ async fn trinity_rewriting_command_text_and_binary_round_trip() {
 async fn new_app() -> RewritingTestApp {
     let mut app = artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(trinity_rewriting_manifest_for_tests).await;
     app.bind_instance_id(REWRITING_TEST_INSTANCE).await;
+    load_rule_fixture(&mut app).await;
     RewritingTestApp(app)
+}
+
+/// 🧫️ Loads the independently selected composed test input after creating an empty runtime app.
+async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) {
+    let state = fixture_rule_state();
+    let files = store::ArtifactPackFiles { pack: store::ArtifactPack::encode_pack(&state), spr: store::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA).await, ops: String::new() };
+    let mut archive = PluginApp::document_load_archive(app, &files).expect("stamp test input");
+    let reference = state.working_graph.content.target.clone();
+    let owner = store::OwnerRef {
+        parent: store::os_io::ArtifactRef { artifact_id: PluginApp::document_identity(app).expect("runtime identity"), dialect: TRINITY_REWRITING_DIALECT.into() },
+        slot: crate::content::WORKING_CHILD_SLOT.into(), child_id: state.working_graph.content.child_id.clone(),
+    };
+    let pack = crate::content::genesis_working_child_pack(&state, &owner.slot, &owner.child_id).unwrap().unwrap();
+    let envelope_pack = store::genesis_member_envelope_pack("stdio.semio", &reference, &owner, &pack).await.expect("owned child envelope");
+    archive.members.push(protocol::OwnedDocumentMemberPackEntry {
+        ordinal: 0,
+        reference: protocol::DocumentArchiveArtifactRef { artifact_id: reference.artifact_id, artifact_kind: reference.dialect.artifact_kind, standard: reference.dialect.standard, subset: reference.dialect.subset },
+        owner: protocol::DocumentArchiveOwnerRef { parent: protocol::DocumentArchiveArtifactRef { artifact_id: owner.parent.artifact_id, artifact_kind: owner.parent.dialect.artifact_kind, standard: owner.parent.dialect.standard, subset: owner.parent.dialect.subset }, slot: owner.slot, child_id: owner.child_id },
+        envelope_pack,
+    });
+    PluginApp::begin_document_archive_load(app, artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION, archive).expect("admit composed test input");
+    loop {
+        let status = PluginApp::poll_document_archive_load(app, artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION).await.expect("poll test input");
+        match status.state {
+            protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running => {},
+            protocol::DocumentArchiveLoadState::Ready => break,
+            _ => panic!("test input load failed: {status:?}"),
+        }
+    }
+    PluginApp::acknowledge_document_archive_load(app, artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION).expect("acknowledge test input");
 }
 
 const REWRITING_TEST_INSTANCE: u32 = 1;
@@ -150,15 +181,15 @@ async fn renders_before_and_after_graphs() {
 
 #[semio_framework_async_macros::async_test]
 async fn compiles_jack_query_from_rule() {
-    let query = compiled_jack_query(&default_rule_state());
+    let query = compiled_jack_query(&fixture_rule_state());
     assert!(query.contains("MATCH"));
     assert!(query.contains("SET"));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn apply_rewriting_changes_after_fixture() {
-    let state = default_rule_state();
-    assert_ne!(state.working_graph, after_fixture(&state).expect("valid typed rule"));
+async fn apply_rewriting_changes_rewritten_graph() {
+    let state = fixture_rule_state();
+    assert_ne!(state.working_graph, rewritten_graph(&state).expect("valid typed rule"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -326,7 +357,7 @@ async fn export_media_graph_out_reflects_rule_applied_fixture() {
     let MediaPayload::Structured { json, .. } = graph_out.payload else { panic!("structured payload") };
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64");
     let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).expect("decode pack");
-    let expected = after_fixture(&composed_state(&app).await).expect("valid typed rule");
+    let expected = rewritten_graph(&composed_state(&app).await).expect("valid typed rule");
     assert_eq!(fixture.nodes().expect("valid retained Jack child").len(), expected.nodes().expect("valid retained Jack child").len());
 }
 
@@ -345,7 +376,7 @@ async fn rewriting_io_declares_graph_in_and_graph_out_ports() {
 async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_history() {
     use store::ArtifactPack;
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
-    let source = default_rule_state();
+    let source = fixture_rule_state();
     let before = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = reset_document_effect(&source) else { panic!("reset must load a document"); };
     let decoded = <RewritingSnapshot as ArtifactPack>::decode_pack(&pack).unwrap();
@@ -443,7 +474,7 @@ async fn patch_nodes_refuses_what_it_cannot_apply() {
 /// changed nothing).
 #[semio_framework_async_macros::async_test]
 async fn add_rule_clause_refuses_what_it_cannot_add() {
-    let state = default_rule_state();
+    let state = fixture_rule_state();
     let add = crate::editor::rewriting::commands::add_rule_clause_command;
     let code = |result: Result<Emit<RewriteRuleMutation, NoConfigMutation>, Fault>| result.err().expect("refused").code.0;
     assert_eq!(code(add(&state, "where")), "app.command.invalid-args", "the default rule already has a WHERE clause");
@@ -554,7 +585,7 @@ async fn a_released_working_graph_drag_is_one_tool_transaction_of_one_relative_l
 /// is cleared back to its slot).
 #[test]
 fn a_rule_node_drag_moves_each_clause_from_where_it_sits_and_undoes_in_one_row() {
-    let mut state = default_rule_state();
+    let mut state = fixture_rule_state();
     state.rule_layout.insert("lhs-where".into(), LayoutPoint { x: 300.0, y: 90.0 });
     let operations = semio_framework_pack_json::Value::Array(vec![drag_row("g-lhs", &["lhs-match", "lhs-where"], 30.0, 10.0)]).to_string();
     let emit = crate::editor::rewriting::commands::node_graph_edit(&state, &semio_framework_plugin::app::ChildContentView::EMPTY, TRINITY_REWRITING_PLAY_SURFACE_LHS, &operations, "seed").expect("a rule-node drag");
@@ -662,7 +693,7 @@ async fn the_add_node_verb_is_one_relative_leaf_and_canonical_graphs_undo_relati
     let again = live_working(&app).await;
     let second = again.nodes.iter().find(|node| added.nodes.iter().all(|held| held.id != node.id)).expect("the second node");
     assert!(second.id != first.id && second.label == "Second", "{second:?}");
-    let nan = crate::editor::rewriting::commands::add_working_node_command(&default_rule_state(), &semio_framework_plugin::app::ChildContentView::EMPTY, None, None, f64::NAN, 0.0);
+    let nan = crate::editor::rewriting::commands::add_working_node_command(&fixture_rule_state(), &semio_framework_plugin::app::ChildContentView::EMPTY, None, None, f64::NAN, 0.0);
     assert!(nan.is_err_and(|fault| fault.code.0 == "app.command.invalid-args"), "a non-finite position is refused by name");
     history(&mut app, "undo").await;
     assert_eq!(live_working(&app).await, added, "one undo removes the second node");
@@ -717,3 +748,18 @@ async fn a_history_edit_of_a_binary64_offset_validates_and_replays() {
 
 #[path = "../🪆️child-frame/🦀️.rs"]
 mod full_child_frame_laws;
+
+#[test]
+fn fresh_runtime_rule_matches_the_empty_document_and_independent_json_oracle() {
+    let state = super::default_rule_state();
+    assert_eq!(state, RewritingSnapshot::default());
+    let child = semio_s_artifact_trinity_jack::jack_content_for_handle(&state.working_graph.content).expect("empty child");
+    assert!(child.snapshot().nodes.is_empty());
+    assert!(child.snapshot().edges.is_empty());
+    assert!(state.parameter_bindings.is_empty());
+    assert!(state.rhs.set.is_empty());
+    let own_json = semio_framework_pack_json::to_json_string(&state);
+    let oracle: serde_json::Value = serde_json::from_str(&own_json).expect("independent document parser");
+    assert_eq!(oracle["workingGraph"]["name"], "");
+    assert_eq!(oracle["parameterBindings"], serde_json::json!({}));
+}

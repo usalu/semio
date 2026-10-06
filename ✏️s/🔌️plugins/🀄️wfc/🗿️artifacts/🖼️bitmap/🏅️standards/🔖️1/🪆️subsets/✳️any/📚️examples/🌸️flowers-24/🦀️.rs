@@ -4,7 +4,7 @@
 //! patterns are only taken from fully in-bounds windows, and a narrower symmetry group, because a
 //! flower that is upside down is not a flower.
 
-use crate::schema::snapshot::{encode_base64, BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel, BitmapPinnedPixel, BitmapSnapshot, WFC_BITMAP_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{BitmapColor, BitmapInput, BitmapOutputSpec, BitmapOverlappingModel, BitmapPinnedPixel, BitmapSnapshot, WFC_BITMAP_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 
@@ -69,7 +69,7 @@ pub fn snapshot() -> BitmapSnapshot {
             width: EDGE,
             height: EDGE,
             palette: vec![BitmapColor::opaque(148, 198, 232), BitmapColor::opaque(96, 120, 64), BitmapColor::opaque(62, 142, 78), BitmapColor::opaque(232, 108, 142)],
-            pixels: encode_base64(&indices()),
+            pixels: (indices().to_vec()),
         },
         output: BitmapOutputSpec { width: 32, height: 24, periodic: false },
         model: BitmapOverlappingModel { pattern_size: 3, symmetry: 2, periodic_input: false, ground: Some(u32::from(GROUND)) },

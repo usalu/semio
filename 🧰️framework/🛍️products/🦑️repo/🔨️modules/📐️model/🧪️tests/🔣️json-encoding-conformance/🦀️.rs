@@ -14,7 +14,7 @@ mod subject {
     /// 📦️ Decodes every golden into its own domain type and encodes it again.
     pub fn golden_documents_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let mut encoded = Vec::new();
-        for entry in ctx.fixture_json(GOLDENS)?.array("goldens") {
+        for entry in ctx.input_json(GOLDENS)?.array("goldens") {
             let type_name = entry.str("type");
             let golden = entry.str("json");
             let output = model::round_trip_json(&type_name, &golden)?;

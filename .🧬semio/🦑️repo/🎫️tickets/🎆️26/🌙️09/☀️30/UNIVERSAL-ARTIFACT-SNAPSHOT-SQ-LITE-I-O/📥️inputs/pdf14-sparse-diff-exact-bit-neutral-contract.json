@@ -1,0 +1,53 @@
+{
+  "codecSchema": "stdio.pdf",
+  "structuralSchema": "s.stdio.pdf",
+  "policy": "finite-only geometry; IEEE identity is exact",
+  "cases": [
+    {
+      "name": "positive-to-negative-zero-width",
+      "before": {
+        "widthBits": "0",
+        "heightBits": "4607182418800017408",
+        "text": "own14"
+      },
+      "after": {
+        "widthBits": "9223372036854775808",
+        "heightBits": "4607182418800017408",
+        "text": "own14"
+      },
+      "changed": [
+        "width"
+      ]
+    },
+    {
+      "name": "negative-to-positive-zero-height",
+      "before": {
+        "widthBits": "4607182418800017408",
+        "heightBits": "9223372036854775808",
+        "text": "own14"
+      },
+      "after": {
+        "widthBits": "4607182418800017408",
+        "heightBits": "0",
+        "text": "own14"
+      },
+      "changed": [
+        "height"
+      ]
+    },
+    {
+      "name": "identical-negative-zero",
+      "before": {
+        "widthBits": "9223372036854775808",
+        "heightBits": "9223372036854775808",
+        "text": "own14"
+      },
+      "after": {
+        "widthBits": "9223372036854775808",
+        "heightBits": "9223372036854775808",
+        "text": "own14"
+      },
+      "changed": []
+    }
+  ]
+}

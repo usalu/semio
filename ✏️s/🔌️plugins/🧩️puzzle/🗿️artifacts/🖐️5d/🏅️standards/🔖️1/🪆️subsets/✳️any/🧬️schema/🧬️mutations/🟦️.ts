@@ -2,7 +2,7 @@
  * sibling `🦀️.rs` union enum and each variant's `<slug>/🦠️mutation/🦀️.rs`
  * payload struct). */
 import type { Puzzle5dCompatSpecificity, Puzzle5dKindCatalogs, Puzzle5dPart, Puzzle5dPartAnchor, Puzzle5dTargetVolume, Puzzle5dGrip, Puzzle5dScale, Puzzle5dVector3, Puzzle5dVector4 } from "../📸️snapshot/🟦️.ts";
-import type { Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type { Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dGrip, Puzzle5dScale } from "../📸️snapshot/🟦️.ts";
 
 /** 🌱 `create-part` payload — full initial payload at an optional FINAL-state index (`null` appends). */

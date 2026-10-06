@@ -1,12 +1,7 @@
-//! 🪟️ PDF Document (1.4) viewer -- `main` window: a real, READ-ONLY per-page overview over the shared `PdfSnapshot`
-//! (canonically 1.7-shaped -- see the mutation-capable surface's own module doc comment), built from the framework
-//! `DocumentWindowKit` (contract §2.6). One `DocumentPage` per `PdfPage`: the page's real `MediaBox`/
-//! `CropBox` geometry (never fabricated) followed by its own `text` field -- a genuine field of
-//! `PdfPage` itself (populated by ToUnicode-aware content-stream extraction on decode, or authored
-//! directly on a fresh page), never a placeholder invented by this window.
+//! 🪟️ PDF 1.4 viewer page window over its own resolved width, height and text.
 
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
-use crate::PdfSnapshot;
+
+use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::WindowKindDefinition;
@@ -28,17 +23,18 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `PdfSnapshot -> BuiltNode` read: one summary line per page, no mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn page_summary(index: usize, page: &PdfPage) -> String {
-    let media = page.media_box;
-    let crop = page.crop_box.map(|c| format!(", CropBox [{:.1}, {:.1}, {:.1}, {:.1}]", c[0], c[1], c[2], c[3])).unwrap_or_default();
-    let text = if page.text().is_empty() { "(no extracted or authored text)".to_string() } else { page.text() };
-    format!("Page {} -- MediaBox [{:.1}, {:.1}, {:.1}, {:.1}]{}\n{}", index + 1, media[0], media[1], media[2], media[3], crop, text)
+fn page_summary(index: usize, page: &PageDoc) -> String {
+    format!("{} | {} × {}\n{}", index + 1, page.width, page.height, page.text)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &PdfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_windowed(document: &PdfSnapshot, windows: &semio_framework_plugin::TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+    DocumentWindowKit::render_windowed(&DocumentView { pages }, windows)
+}
+/// 🧪️ Renders an explicitly unhosted read-only fixture.
+pub fn render(document: &PdfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    render_windowed(document, &semio_framework_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

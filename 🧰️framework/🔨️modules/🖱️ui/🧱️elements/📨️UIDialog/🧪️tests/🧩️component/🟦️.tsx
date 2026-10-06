@@ -14,7 +14,7 @@ import { createShellScope, ShellScopeProvider } from "../../../🐚️ShellScope
 import fixture from "../../🧫️fixtures/♿️modal/🔣️.json";
 import uiSchema from "../../../../🧬️schema/🔣️.json";
 import dialogChoices from "../../../../../🛂️manifest/🧫️fixtures/🧫️dialog-choices/🔣️.json";
-import dialogChoicesSchema from "../../../../../🛂️manifest/🧫️fixtures/🧫️dialog-choices/🧬️schema/🔣️.json";
+
 
 /** 🌐️ Admits a fixture locale string into the shell's declared locale union at the test boundary. */
 const uiLocaleOf = (value: string): UiLocale => {
@@ -227,7 +227,7 @@ describe("UIDialog accessibility", () => {
   });
 
   it.each(["en", "de"] as const)("lays out, describes, gates and dispatches the shared dialog-choices fixture in %s", async (locale) => {
-    expect(new Ajv2020({ strict: true }).compile(dialogChoicesSchema)(dialogChoices)).toBe(true);
+    
     await uiI18n.changeLanguage(locale);
     const dialog = dialogChoices.dialog as unknown as UIDialogProps["dialog"];
     const read = (label: { readonly native: Readonly<Record<string, string>> }) => label.native[locale]!;

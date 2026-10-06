@@ -1,6 +1,7 @@
 //! 📥️ Bounded hydration of an exact persisted config history into a fresh config store.
 
-use super::{ArtifactEnvelope, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, OpBinary, OpText, SnapshotRetirementStep, ToValue, mutation_meta_from_history_op_meta};
+use super::{ArtifactEnvelope, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, Edit, ErasedSnapshotRetirement, FromValue, Mutation, SnapshotRetirementStep, ToValue, mutation_meta_from_history_op_meta};
+use crate::os_spr::io::{binary::OpBinary, text::OpText};
 use std::mem::ManuallyDrop;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -267,7 +268,6 @@ where
                     forwards: Vec::new(),
                     inverse: Vec::new(),
                     mutation_meta: Vec::new(),
-                    description: source.description,
                     verb: source.verb,
                     sequence_number: self.edit_index as i32 + 1,
                     started_at: source.started_at,

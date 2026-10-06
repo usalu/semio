@@ -47,7 +47,7 @@ func sortedKeys(values map[string]string) []string {
 // region 🔖️Scenarios
 
 func vectorsRankTheSameWay(ctx *host.Context) (host.Outcome, error) {
-	data, err := ctx.FixtureBytes("shared://📡️ranking-vectors.json")
+	data, err := ctx.InputBytes("shared://📡️ranking-vectors.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

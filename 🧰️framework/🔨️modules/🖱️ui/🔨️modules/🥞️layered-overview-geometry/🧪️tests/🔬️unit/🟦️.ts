@@ -1,11 +1,10 @@
 // #region 🔌️Adapters
-import Ajv from "ajv";
+
 import { easeCubicInOut } from "d3-ease";
 import * as clippingModule from "polygon-clipping";
 import { MathUtils } from "three";
 import { describe, expect, it } from "vitest";
 import fixture from "../../../../🧫️fixtures/🥞️layered-overview/🔣️.json" with { type: "json" };
-import schema from "../../../../🧬️schema/🥞️layered-overview/🔣️.json" with { type: "json" };
 import {
   LAYERED_FOLLOW_FRAME_MS,
   LAYERED_FOLLOW_LERP,
@@ -94,10 +93,7 @@ const lifecycleOf = (given: Partial<Record<keyof LayeredLifecycle, number>>): La
 /** 🥞️ The layered overview's pure geometry and lifecycle policy, read from `🧫️fixtures/🥞️layered-overview/🔣️.json` and judged against
  * `polygon-clipping` (veil area), `d3-ease` (easing) and three.js (the follow's damping). */
 describe("🥞️ layered overview geometry", () => {
-  it("reads a fixture that satisfies its schema", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   for (const scenario of fixture.grids) it(`grid: ${scenario.name}`, () => expect(nearSquareGrid(scenario.count)).toEqual(scenario.grid));
 

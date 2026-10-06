@@ -1,0 +1,13 @@
+{
+  "schema": "writer.parent-allocation-return.v1",
+  "slot": "member",
+  "childId": "writer-child",
+  "faultCode": "test.completion-rejected",
+  "faultMessage": "injected completion rejection",
+  "childItems": 1,
+  "childBytes": 4,
+  "parentBytes": 4096,
+  "childTurns": 128,
+  "parentTurns": 16,
+  "parentSlots": 16
+}

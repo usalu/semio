@@ -8,6 +8,7 @@
 
 // #region 🔌️Adapters
 import { describe, expect, it } from "vitest";
+import ts from "typescript";
 import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
 // #endregion 🔌️Adapters
 
@@ -15,7 +16,27 @@ import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw"
 describe("actor window actions", () => {
   it("hands every actor-rendered window and panel the shell's input funnel, never a handler that drops actions", () => {
     expect(shellSource).not.toContain("refuseBrowserActorActionDescriptor");
-    expect(shellSource).toMatch(/<InterpretedUiNode store=\{browserActorStore \?\? builtNodeStoreFor\([^)]*\)[^}]*\} onAction=\{onActionStable\}/u);
+    const tree = ts.createSourceFile("ShellHost.tsx", shellSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const windows: ts.JsxSelfClosingElement[] = [];
+    const visit = (node: ts.Node): void => {
+      if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(tree) === "InterpretedUiNode") windows.push(node);
+      ts.forEachChild(node, visit);
+    };
+    visit(tree);
+    expect(windows.length).toBeGreaterThan(0);
+    for (const window of windows) {
+      const action = window.attributes.properties.find((attribute) => ts.isJsxAttribute(attribute) && attribute.name.getText(tree) === "onAction");
+      expect(action && ts.isJsxAttribute(action) && action.initializer && ts.isJsxExpression(action.initializer) && action.initializer.expression?.getText(tree)).toBe("onActionStable");
+    }
+    const primaryStores = windows.flatMap((window) => window.attributes.properties.flatMap((attribute) => {
+      if (!ts.isJsxAttribute(attribute) || attribute.name.getText(tree) !== "store" || !attribute.initializer || !ts.isJsxExpression(attribute.initializer)) return [];
+      const expression = attribute.initializer.expression;
+      if (!expression || !ts.isBinaryExpression(expression) || expression.left.getText(tree) !== "browserActorStore") return [];
+      return [expression];
+    }));
+    expect(primaryStores).toHaveLength(1);
+    expect(primaryStores[0]!.operatorToken.kind).toBe(ts.SyntaxKind.QuestionQuestionToken);
+    expect(ts.isCallExpression(primaryStores[0]!.right) && primaryStores[0]!.right.expression.getText(tree)).toBe("builtNodeStoreFor");
     expect(shellSource).toContain("{ stores: new Map(currentBrowserActorUi.panels), onIntent: browserActorPanelIntent, onAction: onActionStable }");
   });
 

@@ -1,19 +1,19 @@
 #!/usr/bin/env bun
-import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { sourceFreshnessOracle } from "../../🧪️tests/🔬️source-freshness/🟦️.ts";
-import { schemaDocumentAuthorityOracle } from "../../🏗️builder/🧪️tests/🧾️document-authority/🟦️.ts";
-import { extensionRetirementOracle } from "../../🧪️tests/🔬️extension-retirement/🟦️.ts";
-import { createPluginRunnerTests } from "../../🧪️tests/🏃️runner-self-tests/🟦️.ts";
+
+
+
+
 /** 🦀️ Awaited plugin SDK checks and exact-filter native regression tests. */
 import { runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, runRepositoryTestCommand, nextestArtifactLocation } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+
+
 import { resolve } from "node:path";
-import { parseArgs } from "node:util";
-import Ajv from "ajv";
+
+
 
 //#region 🧪️RunnerSelection
 /** 🎯️ Selects explicit build inventory or the existing budgeted test runner without interpreting filters. */
@@ -25,16 +25,17 @@ export function pluginTestInvocation(segments: string[]): { mode: "inventory" | 
 }
 //#endregion 🧪️RunnerSelection
 
-import { artifactAdmissionOracle, completionRejectionOracle } from "../../🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts";
-import { coldDocumentPairIngressOracle, documentBackboneBindingOracle, guestLifecycleOracle, issuedPatchOracle } from "../../🧪️tests/🧪️reactor-contract-oracles/🟦️.ts";
-import { declaredVerbVerdictOracle, declaredBridgeArgumentOracle } from "../../🧪️tests/⚖️declared-verb-verdicts/🟦️.ts";
-import { mediaOwnerContextOracle } from "../../🧪️tests/🎞️media-owner-context/🟦️.ts";
-import { agentLaneCarriageOracle, agentLanePreviewVerdictOracle } from "../../🧪️tests/🤖️agent-lane-preview/🟦️.ts";
-import { timeTravelScenarioOracle } from "../../🧪️tests/🧪️time-travel/🟦️.ts";
-import { supersedeLedgerOracle } from "../../🧪️tests/🧪️supersede-ledger/🟦️.ts";
-import { historyAlternativesOracle } from "../../🧪️tests/🧪️history-alternatives/🟦️.ts";
-import { historyLabelReloadOracle } from "../../🧪️tests/🧪️history-label-reload/🟦️.ts";
-import { composedChildHistoryOracle } from "../../🧪️tests/🧪️composed-child-history/🟦️.ts";
+
+
+
+
+
+
+
+
+
+
+
 
 //#region 🎯️Tasks
 class CheckScript extends BundleScript {
@@ -45,7 +46,17 @@ class CheckScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    console.log(`plugin-runner-oracle cases=${pluginTestRunnerSelfTests()}`);
+    const { artifactAdmissionOracle, completionRejectionOracle } = await import("../../🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts");
+    const { declaredVerbVerdictOracle, declaredBridgeArgumentOracle } = await import("../../🧪️tests/⚖️declared-verb-verdicts/🟦️.ts");
+    const { mediaOwnerContextOracle } = await import("../../🧪️tests/🎞️media-owner-context/🟦️.ts");
+    const { agentLaneCarriageOracle, agentLanePreviewVerdictOracle } = await import("../../🧪️tests/🤖️agent-lane-preview/🟦️.ts");
+    const { timeTravelScenarioOracle } = await import("../../🧪️tests/🧪️time-travel/🟦️.ts");
+    const { supersedeLedgerOracle } = await import("../../🧪️tests/🧪️supersede-ledger/🟦️.ts");
+    const { historyAlternativesOracle } = await import("../../🧪️tests/🧪️history-alternatives/🟦️.ts");
+    const { historyLabelReloadOracle } = await import("../../🧪️tests/🧪️history-label-reload/🟦️.ts");
+    const { folderReloadRouteOracle } = await import("../../🧪️tests/🧪️folder-reload-route/🟦️.ts");
+    const { composedChildHistoryOracle } = await import("../../🧪️tests/🧪️composed-child-history/🟦️.ts");
+    console.log(`[DEBUG] plugin-runner-oracle cases=${await pluginTestRunnerSelfTests()}`);
     console.log(`artifact-admission-oracle cases=${artifactAdmissionOracle(this.repoRoot)} firstParty=39`);
     console.log(`completion-rejection-oracle assertions=${completionRejectionOracle(this.repoRoot)}`);
     console.log(`declared-verb-verdict-oracle cases=${declaredVerbVerdictOracle()}`);
@@ -57,6 +68,7 @@ class TestScript extends BundleScript {
     console.log(`supersede-ledger-oracle cases=${supersedeLedgerOracle(this.repoRoot)}`);
     console.log(`history-alternatives-oracle cases=${historyAlternativesOracle(this.repoRoot)}`);
     console.log(`history-label-reload-oracle cases=${historyLabelReloadOracle(this.repoRoot)}`);
+    console.log(`folder-reload-route-oracle steps=${folderReloadRouteOracle(this.repoRoot)}`);
     console.log(`composed-child-history-oracle cases=${composedChildHistoryOracle(this.repoRoot)}`);
     if (segments.length === 1 && segments[0] === "--retained-child-close-exact") {
       const receipts = await runRepositoryExactCargoLaws({
@@ -122,6 +134,7 @@ class CooperativeHostCheckScript extends BundleScript {
 /** 🧾️ Verifies explicit shared schema authority through the actual plugin assembly boundary. */
 class SchemaDocumentAuthorityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { schemaDocumentAuthorityOracle } = await import("../../🏗️builder/🧪️tests/🧾️document-authority/🟦️.ts");
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("Unsupported schema document authority argument");
     console.log(`schema-document-authority oracle=${schemaDocumentAuthorityOracle()}`);
     if (segments.includes("--oracle-only")) return;
@@ -137,11 +150,13 @@ class SchemaDocumentAuthorityCheckScript extends BundleScript {
 
 class ArtifactAdmissionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { artifactAdmissionOracle, completionRejectionOracle } = await import("../../🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts");
     assert(
       segments.every((segment) => segment === "--oracle-only"),
       "unsupported artifact admission check argument",
     );
     console.log(`artifact-admission-oracle cases=${artifactAdmissionOracle(this.repoRoot)} firstParty=39`);
+    console.log(`completion-rejection-oracle assertions=${completionRejectionOracle(this.repoRoot)}`);
     if (segments.includes("--oracle-only")) return;
     const laws = [
       "strict_artifact_identity_all_builder_channels_reject_before_publication",
@@ -164,6 +179,7 @@ class ArtifactAdmissionCheckScript extends BundleScript {
 
 class GuestLifecycleCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { coldDocumentPairIngressOracle, documentBackboneBindingOracle, guestLifecycleOracle, issuedPatchOracle } = await import("../../🧪️tests/🧪️reactor-contract-oracles/🟦️.ts");
     assert(
       segments.every((segment) => segment === "--native"),
       "guest-lifecycle-check accepts only --native",
@@ -214,6 +230,7 @@ class GuestLifecycleCheckScript extends BundleScript {
 
 class ColdDocumentPairIngressCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { coldDocumentPairIngressOracle, documentBackboneBindingOracle, guestLifecycleOracle, issuedPatchOracle } = await import("../../🧪️tests/🧪️reactor-contract-oracles/🟦️.ts");
     assert(segments.every((segment) => segment === "--native"), "cold-document-pair-ingress-check accepts only --native");
     const hostile = await coldDocumentPairIngressOracle(this.repoRoot);
     console.log(`cold-document-pair-ingress-oracle: ajv=1 sha256=3 webcrypto=3 hostile=${hostile} limits=64KiB/64/4MiB`);
@@ -257,6 +274,7 @@ class ColdDocumentPairIngressCheckScript extends BundleScript {
 
 class DocumentBackboneBindingCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { coldDocumentPairIngressOracle, documentBackboneBindingOracle, guestLifecycleOracle, issuedPatchOracle } = await import("../../🧪️tests/🧪️reactor-contract-oracles/🟦️.ts");
     assert(segments.every((segment) => segment === "--native"), "document-backbone-binding-check accepts only --native");
     const rows = documentBackboneBindingOracle(this.repoRoot);
     console.log(`document-backbone-binding-oracle: ajv=1 rows=${rows} hot=256KiB genesis=4MiB pending=64/1MiB`);
@@ -302,6 +320,10 @@ class DocumentBackboneBindingCheckScript extends BundleScript {
 /** 🏛️ Verifies worker-owned command publication and immutable presence authority. */
 class CanonicalArchitectureScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const { sourceFreshnessOracle } = await import("../../🧪️tests/🔬️source-freshness/🟦️.ts");
+    const { extensionRetirementOracle } = await import("../../🧪️tests/🔬️extension-retirement/🟦️.ts");
+    const { declaredVerbVerdictOracle, declaredBridgeArgumentOracle } = await import("../../🧪️tests/⚖️declared-verb-verdicts/🟦️.ts");
+    const { mediaOwnerContextOracle } = await import("../../🧪️tests/🎞️media-owner-context/🟦️.ts");
     if (segments.some((segment) => segment !== "--oracle-only")) throw new Error("canonical-architecture accepts only --oracle-only");
     console.log(`declared-bridge-argument-oracle assertions=${declaredBridgeArgumentOracle()}`);
     console.log(`media-owner-context-oracle assertions=${mediaOwnerContextOracle()}`);
@@ -387,8 +409,11 @@ const router = new ScriptRouter(import.meta.dir).register("test-snapshot-sqlite-
   .register("test-codec-send-source", CodecSendSourceScript)
   .register("artifact-admission-check", ArtifactAdmissionCheckScript)
   .register("schema-document-authority-check", SchemaDocumentAuthorityCheckScript);
-const createPluginRunnerTestsInstance = createPluginRunnerTests({ Ajv, assert, parseArgs, pluginTestInvocation, readFileSync }, { directory: import.meta.dir, url: import.meta.url });
-export const pluginTestRunnerSelfTests = createPluginRunnerTestsInstance.pluginTestRunnerSelfTests;
+export async function pluginTestRunnerSelfTests(): Promise<number> {
+  const { createPluginRunnerTests } = await import("../../🧪️tests/🏃️runner-self-tests/🟦️.ts");
+  const [{ default: Ajv }, { parseArgs }, { readFileSync }] = await Promise.all([import("ajv"), import("node:util"), import("node:fs")]);
+  return createPluginRunnerTests({ Ajv, assert, parseArgs, pluginTestInvocation, readFileSync }, { directory: import.meta.dir, url: import.meta.url }).pluginTestRunnerSelfTests();
+}
 
 
 if (import.meta.main) await runScriptMain(router, { defaultCommand: "check" });

@@ -248,6 +248,9 @@ fn command_from_action(action: &str, args: Option<&semio_framework_value::DslVal
 }
 //#endregion 🔖️ActionBridge
 
+/// 🪪️ The editor id every cell tool transaction is scoped by: `<appId>#<utility>`.
+pub const GRID3D_EDITOR_APP_ID: &str = "s.wfc.grid3d@1/*#editor";
+
 //#region 🔖️Reducer
 /// ✏️ Dispatches straight onto the schema tree's own mutation builders. `setActiveTile` and
 /// `setCamera` never touch the document — they address the exact window instance's own config — and a
@@ -294,7 +297,8 @@ pub fn grid3d_command_emit(
             let Some((x, y, z)) = parse_cell_id(cell_id) else {
                 return Err(Fault::from(format!("wfc.grid3d.cell.unknown-cell '{cell_id}'")));
             };
-            match grid3d_active_utility(view_state) {
+            let utility = grid3d_active_utility(view_state);
+            let leaf = match utility {
                 grid::UTILITY_PIN => {
                     if window_config.active_tile_id.is_empty() {
                         return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.tile.none-armed"), "wfc.grid3d.tile.none-armed"));
@@ -303,7 +307,8 @@ pub fn grid3d_command_emit(
                 }
                 grid::UTILITY_MASK => mask_cell(Grid3dCell { x, y, z }),
                 _ => return Ok(Emit::default()),
-            }
+            };
+            return Ok(Emit::tool_once(GRID3D_EDITOR_APP_ID, utility, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), vec![leaf]));
         }
         Grid3dEditorCommand::SetActiveTile { tile_id } => {
             let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;

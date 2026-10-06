@@ -79,16 +79,7 @@ pub fn sequence_artifact_schema_descriptor() -> semio_framework_schema_registry:
 //#endregion 🔖️Descriptor
 
 //#region 🔖️Example
-/// 📄️ JSON re-serialization of `default_snapshot()`, round-tripped through its own `.sequence` DSL
-/// first (see `crate::dsl`), to prove the fixture is fully expressible in text —
-/// for the framework-generic call site that contractually requires JSON (`App::example`'s manifest
-/// `document_json` is loaded via `serde_json::from_str` by `ArtifactApp::load_document`'s default impl)
-/// — out of scope to change, since both are defined in `framework/plugin`.
-pub fn sequence_example_json() -> String {
-    let seed = neural_engine::ColdOwner::new(default_snapshot());
-    let fixture = neural_engine::ColdOwner::new(<SequenceSnapshot as ArtifactDsl>::parse_dsl(&seed.print_dsl()).expect("default_snapshot round-trips through its own DSL"));
-    semio_framework_pack_json::to_json_string(&*fixture)
-}
+
 //#endregion 🔖️Example
 
 //#region 🏗️Construction

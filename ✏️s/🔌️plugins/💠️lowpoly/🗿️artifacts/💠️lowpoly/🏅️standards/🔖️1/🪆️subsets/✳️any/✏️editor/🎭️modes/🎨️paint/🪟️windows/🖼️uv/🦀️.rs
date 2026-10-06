@@ -23,6 +23,7 @@ pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintFill", "fillBuc
 /// 🧱️ Stitched into the app manifest by `crate::editor::lowpoly::create_lowpoly_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: LOWPOLY_PLAY_WINDOW_UV.into(),
         label: semio_framework_ui_locale::LocalizedLabel::native("UV", "UV"),
         body_key: LOWPOLY_PLAY_BODY_UV.into(),

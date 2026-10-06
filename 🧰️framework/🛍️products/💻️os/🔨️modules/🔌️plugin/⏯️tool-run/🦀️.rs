@@ -1112,7 +1112,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             let mut owner = Some(publication);
             return match store.handoff_batch_publication_close(&mut owner) {
                 Ok(true) => Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })),
-                Ok(false) => Err(plugin_sdk_fault("tool run publication handoff lost its exact retirement owner")),
+                Ok(false) => Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("toolRun.publication-handoff"), "tool run publication handoff lost its exact retirement owner")),
                 Err(error) => {
                     self.retired_publications.push(owner.expect("refused Store handoff preserves the tool run publication owner"));
                     Err(error.into_fault())
@@ -1120,7 +1120,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             };
         }
         if let Some(retirement) = self.snapshot_retirement.as_mut() {
-            return match retirement.close_step(maximum_items.max(1), maximum_bytes).map_err(|error| plugin_sdk_fault(error.into_message()))? {
+            return match retirement.close_step(maximum_items.max(1), maximum_bytes).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("toolRun.snapshot-retirement"), error.into_message()))? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                     self.snapshot_retirement = None;
                     Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }))
@@ -1215,21 +1215,27 @@ struct ToolRunMemberRun {
     owners: Option<Box<dyn ToolRunMemberOwners>>,
     children: Option<ChildContentView>,
     stale: Vec<ChildContentView>,
-    emit: Option<ChildEmit>,
+    emit:Option<ChildEmit>,
+    emission_owner:Option<Box<dyn ToolRunMemberEmissionOwner>>,
+    retired_emits:std::collections::VecDeque<ChildEmit>,
+    retired_emission_owners:std::collections::VecDeque<Box<dyn ToolRunMemberEmissionOwner>>,
+    retired_ops:std::collections::VecDeque<Vec<Vec<u8>>>,
 }
 
 impl ToolRunMemberRun {
-    /// 🏃️ Owed work: ops the overlay does not show yet, a refold from the member head, or reads and aliases to retire.
+    /// 🏃️ Owed work: ops the overlay does not show yet, a refold from the member head, or reads, aliases, released ops
+    /// and published emissions to retire.
     fn is_work(&self) -> bool {
-        self.rebase || self.shown != self.ops.len() || !self.stale.is_empty() || self.owners.as_deref().is_some_and(ToolRunMemberOwners::has_displaced)
+        self.rebase || self.shown != self.ops.len() || !self.stale.is_empty() || !self.retired_ops.is_empty() || !self.retired_emits.is_empty() || !self.retired_emission_owners.is_empty() || self.owners.as_deref().is_some_and(ToolRunMemberOwners::has_displaced)
     }
 
     /// 🧹️ Drops every provisional op: the composed read retires and the next refresh rests on the member head.
     fn release(&mut self) {
-        self.ops.clear();
+        if !self.ops.is_empty()||self.ops.capacity()!=0{self.retired_ops.push_back(std::mem::take(&mut self.ops));}
         self.shown = 0;
         self.rebase = true;
-        self.emit = None;
+        self.retired_emits.extend(self.emit.take());
+        self.retired_emission_owners.extend(self.emission_owner.take());
         self.stale.extend(self.children.take());
     }
 }
@@ -1260,7 +1266,7 @@ impl store::MemberStoreVisitor for ToolRunMemberFold<'_> {
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
         let owners = self.owners.get_or_insert_with(|| Box::new(ToolRunMemberState::<P> { base: Some(store.derived_snapshot_head()), overlay: None, displaced: Vec::new() }));
-        let state = owners.as_any_mut().downcast_mut::<ToolRunMemberState<P>>().ok_or_else(|| plugin_sdk_fault("a member tool run's owners belong to another store kind"))?;
+        let state = owners.as_any_mut().downcast_mut::<ToolRunMemberState<P>>().ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("toolRun.member-store-kind"), "a member tool run's owners belong to another store kind"))?;
         let mut shown = self.shown;
         if self.rebase {
             let previous = state.base.replace(store.derived_snapshot_head());
@@ -1271,7 +1277,7 @@ impl store::MemberStoreVisitor for ToolRunMemberFold<'_> {
         let mut conflicts = 0u32;
         while shown < self.ops.len() {
             let op = <Mu as ::protocol::OpBinary>::decode_op(&self.ops[shown]).map_err(|error| error.into_fault())?;
-            let source = state.overlay.as_ref().or(state.base.as_ref()).ok_or_else(|| plugin_sdk_fault("a member tool run lost its base"))?;
+            let source = state.overlay.as_ref().or(state.base.as_ref()).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("toolRun.member-base-lost"), "a member tool run lost its base"))?;
             let next = store.derive_provisional_snapshot(source, &op);
             <Mu as ::protocol::Mutation<P>>::retire_cold(op);
             match next.map_err(|error| error.into_fault())? {
@@ -1291,35 +1297,116 @@ impl store::MemberStoreVisitor for ToolRunMemberFold<'_> {
     }
 }
 
-/// 🧾️ Decodes a member run's ops through the member's own vocabulary into the one composite child emission its finalize
-/// publishes — the history row's mutations carry that member's leaf labels — resuming where the last turn stopped and
-/// yielding at the turn wall deadline. `true` once every op is in the emission.
-struct ToolRunMemberEmit<'a> {
-    slot: &'a str,
-    child_id: &'a str,
-    ops: &'a [Vec<u8>],
-    emit: &'a mut Option<ChildEmit>,
-    deadline_us: u64,
+trait ToolRunMemberEmissionOwner:Send{
+    fn as_any_mut(&mut self)->&mut dyn std::any::Any;
+    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<PluginCloseStep,Fault>;
+    fn is_empty(&self)->bool;
+}
+struct ToolRunMemberEmissionState<M>{
+    current:std::mem::ManuallyDrop<Option<M>>,
+    retirement:std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    schema:std::mem::ManuallyDrop<Option<String>>,
+    refusal:std::mem::ManuallyDrop<Option<::protocol::ProtocolError>>,
+    retirement_refusal:std::mem::ManuallyDrop<Option<semio_framework_value::ValueError>>,
+}
+impl<M> Default for ToolRunMemberEmissionState<M>{
+    fn default()->Self{Self{current:std::mem::ManuallyDrop::new(None),retirement:std::mem::ManuallyDrop::new(None),schema:std::mem::ManuallyDrop::new(None),refusal:std::mem::ManuallyDrop::new(None),retirement_refusal:std::mem::ManuallyDrop::new(None)}}
+}
+impl<M:Send+'static> ToolRunMemberEmissionOwner for ToolRunMemberEmissionState<M>{
+    fn as_any_mut(&mut self)->&mut dyn std::any::Any{self}
+    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->Result<PluginCloseStep,Fault>{
+        if maximum_items==0||maximum_bytes==0{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
+        if self.current.is_some(){return Ok(PluginCloseStep::AwaitingInput{reason:"decoded member mutation retains its exact Store retirement issuer"});}
+        if let Some(error)=self.retirement_refusal.as_ref(){
+            let bytes=error.message.capacity();
+            if bytes>maximum_bytes{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
+            self.retirement_refusal.take();return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
+        }
+        if let Some(schema)=self.schema.as_ref(){
+            let bytes=schema.capacity();
+            if bytes>maximum_bytes{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
+            self.schema.take();return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
+        }
+        if let Some(retirement)=self.retirement.as_mut(){
+            if retirement.terminal_is_empty(){
+                let bytes=std::mem::size_of_val(retirement.as_ref());
+                if bytes>maximum_bytes{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
+                self.retirement.take();return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
+            }
+            return match retirement.close_step(1,maximum_bytes){
+                Ok(store::SnapshotRetirementStep::Pending{released_items,released_bytes})=>Ok(PluginCloseStep::Pending{released_items,released_bytes}),
+                Ok(store::SnapshotRetirementStep::Complete)=>Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0}),
+                Ok(store::SnapshotRetirementStep::Blocked)=>Ok(PluginCloseStep::Blocked{reason:"decoded member mutation retirement retains its provider continuation"}),
+                Err(error)=>{let fault=super::super::child_emit_preparation::retirement_refusal_fault(&error);*self.retirement_refusal=Some(error);Err(fault)},
+            };
+        }
+        Ok(super::super::child_emit_preparation::close_protocol_owned_cause_one(&mut self.refusal,maximum_bytes))
+    }
+    fn is_empty(&self)->bool{self.current.is_none()&&self.retirement.is_none()&&self.schema.is_none()&&self.refusal.is_none()&&self.retirement_refusal.is_none()}
+}
+impl<M> Drop for ToolRunMemberEmissionState<M>{
+    fn drop(&mut self){
+        assert!(std::thread::panicking()||(self.current.is_none()&&self.retirement.is_none()&&self.schema.is_none()&&self.refusal.is_none()&&self.retirement_refusal.is_none()),"member emission dropped its decoded mutation or exact refusal before retirement");
+        unsafe{std::mem::ManuallyDrop::drop(&mut self.current);std::mem::ManuallyDrop::drop(&mut self.retirement);std::mem::ManuallyDrop::drop(&mut self.schema);std::mem::ManuallyDrop::drop(&mut self.refusal);std::mem::ManuallyDrop::drop(&mut self.retirement_refusal);}
+    }
 }
 
-impl store::MemberStoreVisitor for ToolRunMemberEmit<'_> {
-    type Output = Result<bool, Fault>;
-
-    fn visit<P, Mu>(self, _store: &ArtifactStore<P, Mu>) -> Self::Output
+struct ToolRunMemberEmit<'a>{
+    slot:&'a str,
+    child_id:&'a str,
+    ops:&'a [Vec<u8>],
+    emit:&'a mut Option<ChildEmit>,
+    owner:&'a mut Option<Box<dyn ToolRunMemberEmissionOwner>>,
+    maximum_bytes:usize,
+}
+impl store::MemberStoreVisitor for ToolRunMemberEmit<'_>{
+    type Output=Result<bool,Fault>;
+    fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
     where
-        P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+        P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
+        Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+protocol::SemanticMutation<P>+::protocol::OpBinary+::protocol::OpText+Send+'static,
     {
-        let emit = self.emit.get_or_insert_with(|| ChildEmit::open(self.slot, self.child_id, self.ops.len()));
-        while emit.ops.len() < self.ops.len() {
-            let op = <Mu as ::protocol::OpBinary>::decode_op(&self.ops[emit.ops.len()]).map_err(|error| error.into_fault())?;
-            emit.push::<P, Mu>(&op);
-            <Mu as ::protocol::Mutation<P>>::retire_cold(op);
-            if emit.ops.len() % TOOL_RUN_REFOLD_CHECK_OPS == 0 && emit.ops.len() < self.ops.len() && semio_framework_job::default_now_us().is_none_or(|now| now >= self.deadline_us) {
-                return Ok(false);
-            }
+        if self.maximum_bytes==0{return Ok(false);}
+        let owner=self.owner.get_or_insert_with(||Box::new(ToolRunMemberEmissionState::<Mu>::default()));
+        let typed=owner.as_any_mut().downcast_mut::<ToolRunMemberEmissionState<Mu>>().ok_or_else(||plugin_sdk_fault("member emission owns another exact mutation type"))?;
+        if let Some(refusal)=typed.refusal.as_ref(){return Err(refusal.to_fault());}
+        if typed.current.is_some(){
+            if std::mem::size_of::<Mu>().max(1)>self.maximum_bytes{return Ok(false);}
+            *typed.retirement=store.retire_owned_mutation(&mut typed.current).map_err(FaultFrom::into_fault)?;
+            return Ok(false);
         }
-        Ok(true)
+        if !typed.is_empty(){typed.close_step(1,self.maximum_bytes)?;return Ok(false);}
+        let emit=self.emit.get_or_insert_with(||ChildEmit::open(self.slot,self.child_id,0));
+        if emit.ops.len()==self.ops.len(){return Ok(true);}
+        if std::mem::size_of::<Mu>().max(1)>self.maximum_bytes{return Ok(false);}
+        match <Mu as ::protocol::OpBinary>::decode_op(&self.ops[emit.ops.len()]){
+            Ok(operation)=>*typed.current=Some(operation),
+            Err(refusal)=>{let fault=refusal.to_fault();*typed.refusal=Some(refusal);return Err(fault);},
+        }
+        match emit.push::<P,Mu>(typed.current.as_ref().expect("exact decoded mutation owner")){
+            Ok(schema)=>*typed.schema=schema.map(|schema|schema.0),
+            Err(refusal)=>{let fault=refusal.to_fault();*typed.refusal=Some(refusal);return Err(fault);},
+        }
+        Ok(false)
+    }
+}
+
+struct ToolRunMemberEmissionRetire<'a>{owner:&'a mut(dyn ToolRunMemberEmissionOwner+'static),maximum_bytes:usize}
+impl store::MemberStoreVisitor for ToolRunMemberEmissionRetire<'_>{
+    type Output=Result<PluginCloseStep,Fault>;
+    fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output
+    where
+        P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
+        Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+protocol::SemanticMutation<P>+::protocol::OpBinary+::protocol::OpText+Send+'static,
+    {
+        if self.maximum_bytes==0{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
+        let typed=self.owner.as_any_mut().downcast_mut::<ToolRunMemberEmissionState<Mu>>().ok_or_else(||plugin_sdk_fault("member retirement owns another exact mutation type"))?;
+        if typed.current.is_some(){
+            if std::mem::size_of::<Mu>().max(1)>self.maximum_bytes{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
+            *typed.retirement=store.retire_owned_mutation(&mut typed.current).map_err(FaultFrom::into_fault)?;
+            return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});
+        }
+        typed.close_step(1,self.maximum_bytes)
     }
 }
 
@@ -1353,7 +1440,7 @@ impl store::MemberStoreVisitor for ToolRunMemberRetire<'_> {
         P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
         Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
     {
-        let state = self.owners.as_any_mut().downcast_mut::<ToolRunMemberState<P>>().ok_or_else(|| plugin_sdk_fault("a member tool run's owners belong to another store kind"))?;
+        let state = self.owners.as_any_mut().downcast_mut::<ToolRunMemberState<P>>().ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("toolRun.member-store-kind"), "a member tool run's owners belong to another store kind"))?;
         let alias = match state.displaced.pop() {
             Some(alias) => Some(alias),
             None if self.everything => state.overlay.take().or_else(|| state.base.take()).map(store::ArtifactDerivedSnapshot::into_snapshot_owner),
@@ -1695,7 +1782,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         };
         let cursor = view_state.tool_run_trace_cursor_by_window_id.get(window_id).copied();
         let Some(lane) = self.tool_runs.trace_lane(window_id, body_key, cursor, TOOL_RUN_TRACE_DELTA_BYTES) else { return Ok(()) };
-        inject_tool_run_trace_lane_into(surface, &lane).map_err(|error| plugin_sdk_fault(error.to_string()))
+        inject_tool_run_trace_lane_into(surface, &lane).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("toolRun.trace-lane"), error.to_string()))
     }
 
     /// 👀️ Store and settings watch (§3.3): emits `baseChanged` / `settingsChanged` with their policies.
@@ -1806,19 +1893,24 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
-    /// ⏯️ One bounded driver turn (≤ `ToolRunDriver::turn_wall_us`): owed dirty scope, retirement, watch, refold,
-    /// job steps, finalize.
+    /// ⏯️ One bounded driver turn (≤ `ToolRunDriver::turn_wall_us`): owed dirty scope, the generation watch of every
+    /// run, retirement within the wall budget, then — while nothing retires — refold, job steps, finalize. The watch never
+    /// waits behind retirement: a settings or base change reaches its run in the turn it becomes visible.
     pub(crate) async fn drive_tool_run_turn(&mut self) -> Result<(), Fault> {
         self.flush_tool_run_ui_dirty();
         self.drain_tool_run_port();
         let started = semio_framework_job::default_now_us().unwrap_or(0);
         let deadline = started.saturating_add(self.tool_runs.driver.turn_wall_us);
-        if let Some(step) = self.tool_run_retire_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)? {
-            if !matches!(step, PluginCloseStep::Blocked { .. }) {
-                return Ok(());
+        let runs: Vec<u64> = self.tool_runs.entries.iter().map(|entry| entry.slot.run).collect();
+        for run in &runs {
+            if self.tool_runs.select_run(*run) {
+                self.watch_tool_run_generations();
             }
         }
-        let runs: Vec<u64> = self.tool_runs.entries.iter().map(|entry| entry.slot.run).collect();
+        self.tool_runs.select_primary();
+        if self.retire_tool_runs_until(deadline)? {
+            return Ok(());
+        }
         let mut outcome = Ok(());
         for run in runs {
             if !self.tool_runs.select_run(run) {
@@ -1831,6 +1923,22 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         self.tool_runs.select_primary();
         outcome
+    }
+
+    /// 🚰️ Retirement units until nothing retires, a retirement blocks or the turn deadline. `true` while owners still
+    /// retire or a unit released nothing: the runs wait for the next turn instead of displacing more.
+    fn retire_tool_runs_until(&mut self, deadline: u64) -> Result<bool, Fault> {
+        loop {
+            match self.tool_run_retire_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)? {
+                None | Some(PluginCloseStep::Blocked { .. }) => return Ok(false),
+                Some(PluginCloseStep::Pending { released_items, released_bytes }) if released_items > 0 || released_bytes > 0 => {
+                    if semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
+                        return Ok(true);
+                    }
+                }
+                Some(_) => return Ok(true),
+            }
+        }
     }
 
     /// ⏯️ The selected run's share of one driver turn.
@@ -1853,7 +1961,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             }
             ToolRunState::Starting => self.admit_tool_run_job().await,
             ToolRunState::Running | ToolRunState::Paused | ToolRunState::Complete => {
-                self.watch_tool_run_generations();
                 if self.refold_tool_run(deadline) || self.refresh_tool_run_member(deadline)? {
                     return Ok(());
                 }
@@ -1877,7 +1984,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 }
                 self.finalize_tool_run_turn(deadline).await
             }
-            ToolRunState::Finalized | ToolRunState::Aborted | ToolRunState::Faulted => Ok(()),
+            ToolRunState::Finalized | ToolRunState::Aborted | ToolRunState::Faulted => self.settle_tool_run_member(deadline),
         }
     }
 
@@ -2088,7 +2195,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             if let (Some(member), Some(generation)) = (entry.member.as_mut(), member_generation) {
                 member.base_generation = generation;
                 member.rebase = true;
-                member.emit = None;
+                member.retired_emits.extend(member.emit.take());
+                member.retired_emission_owners.extend(member.emission_owner.take());
             }
             entry.framework_step(ToolRunStepKind::Warning, TOOL_RUN_REASON_REBASING, &[]);
             if let Some(finalize) = entry.finalize.as_mut() {
@@ -2170,7 +2278,6 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.store.content_revision(),
                 entry.actor.clone(),
                 entry.provisional.clone(),
-                None,
                 self.artifact_one_item_factory.as_ref(),
                 Some(transaction),
             ) {
@@ -2224,7 +2331,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let (run, generation) = (entry.slot.run, entry.slot.generation);
         let finalize = entry.finalize.as_mut().expect("finalize owner");
         if let Some(publication) = finalize.publication.as_mut() {
-            match publication.close_step(TOOL_RUN_PUBLICATION_GRANT).map_err(|error| plugin_sdk_fault(error.into_message()))? {
+            match publication.close_step(TOOL_RUN_PUBLICATION_GRANT).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("toolRun.publication-retirement"), error.into_message()))? {
                 store::SnapshotRetirementStep::Complete if publication.terminal_is_empty() => finalize.publication = None,
                 store::SnapshotRetirementStep::Complete => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.publication-close"), "tool run publication closed without its terminal-empty witness")),
                 _ => return Ok(()),
@@ -2253,7 +2360,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// 🧩️ The member a run declaring `ToolRunDefinition::member` edits: the one live owned child composed under `slot`, with
     /// the member store generation the run rests on. No such child, or several, refuse the start by name.
     fn tool_run_member_target(&self, slot: &str) -> Result<ToolRunMemberRun, Fault> {
-        let mut candidates = self.children.entries().filter(|entry| entry.owner.slot == slot);
+        let mut candidates = self.children.keyed_entries().filter(|(key, _)| key.owner.is_empty() && key.slot == slot).map(|(_, entry)| entry);
         let (Some(entry), None) = (candidates.next(), candidates.next()) else {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.member-unavailable"), format!("a member tool run needs exactly one live owned child in slot '{slot}'")));
         };
@@ -2268,7 +2375,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             owners: None,
             children: None,
             stale: Vec::new(),
-            emit: None,
+            emit:None,emission_owner:None,
+            retired_emits:std::collections::VecDeque::new(),retired_emission_owners:std::collections::VecDeque::new(),retired_ops:std::collections::VecDeque::new(),
         })
     }
 
@@ -2280,8 +2388,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// 🔁️ Brings the selected member run's composed read up to its provisional ops within the turn wall budget: retires the
     /// reads it replaced, folds the ops the overlay does not show yet (all of them after a rebase) and leases the overlay in
-    /// the member's place once every op is shown. `true` while the fold still owns this turn; a fold that cannot apply its
-    /// ops (they do not decode as the member's vocabulary) faults the run.
+    /// the member's place once every op is shown. `true` while the fold still owns this turn — also while the retirement
+    /// of the reads it replaced is saturated (retryable), so the job waits instead of leasing more; a fold that cannot
+    /// apply its ops (they do not decode as the member's vocabulary) faults the run.
     fn refresh_tool_run_member(&mut self, deadline: u64) -> Result<bool, Fault> {
         let Some(mut member) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.member.take()) else { return Ok(false) };
         let outcome = self.refresh_member_overlay(&mut member, deadline);
@@ -2301,6 +2410,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 Ok(pending)
             }
             Ok(None) => Ok(false),
+            Err(fault) if fault.retryable => Ok(true),
             Err(_) => {
                 self.fault_tool_run(run, generation);
                 Ok(false)
@@ -2324,14 +2434,36 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let pending = folded.shown < member.ops.len();
         if !pending {
             let next = match folded.read {
-                Some((read, revision)) => Some(self.child_content_root.with_member_read(&member.slot, &member.child_id, &member.dialect, revision, read)?),
+                Some((read, revision)) => Some(self.child_content_root.with_member_read(MemberKeyRef::root(&member.slot, &member.child_id), &member.dialect, revision, read)?),
                 None => None,
             };
             if let Some(previous) = std::mem::replace(&mut member.children, next) {
-                self.retire_tool_run_views(vec![previous], &mut member.stale)?;
+                match self.retire_tool_run_views(vec![previous], &mut member.stale) {
+                    Err(fault) if !fault.retryable => return Err(fault),
+                    _ => {}
+                }
             }
         }
         Ok(Some((pending, folded.conflicts, rebased)))
+    }
+
+    /// 🪦️ A terminal member run holds no provisional op and shows none: the composed reads it replaced retire and its
+    /// overlay rests on the member head again, so the run owes nothing. A member that is gone has no head to rest on; a
+    /// saturated retirement ring (retryable) is retried on the next turn.
+    fn settle_tool_run_member(&mut self, deadline: u64) -> Result<(), Fault> {
+        let Some(mut member) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.member.take()) else { return Ok(()) };
+        let outcome = if self.children.get(&(member.slot.clone(), member.child_id.clone())).is_some() {
+            self.refresh_member_overlay(&mut member, deadline).map(|_| ())
+        } else {
+            member.rebase = false;
+            let stale = std::mem::take(&mut member.stale);
+            self.retire_tool_run_views(stale, &mut member.stale)
+        };
+        selected_entry_mut!(self.tool_runs).expect("a member run keeps its slot").member = Some(member);
+        match outcome {
+            Err(fault) if !fault.retryable => Err(fault),
+            _ => Ok(()),
+        }
     }
 
     /// 🧹️ Retires a member run's composed reads in order through the child-content retirements, one admitted generation
@@ -2368,7 +2500,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             entry.finalize.as_mut().expect("finalize owner").phase = ToolRunFinalizePhase::Closing;
             return Ok(());
         }
-        let decoded = self.children.get(&(member.slot.clone(), member.child_id.clone())).map(|child| child.member.visit_member(ToolRunMemberEmit { slot: &member.slot, child_id: &member.child_id, ops: &member.ops, emit: &mut member.emit, deadline_us: deadline }));
+        let decoded = self.children.get(&(member.slot.clone(), member.child_id.clone())).map(|child| child.member.visit_member(ToolRunMemberEmit { slot: &member.slot, child_id: &member.child_id, ops: &member.ops, emit: &mut member.emit, owner:&mut member.emission_owner, maximum_bytes:TYPED_OPERATION_RESULT_PAGE_BYTES }));
         match decoded {
             Some(Ok(true)) => {}
             Some(Ok(false)) => return Ok(()),
@@ -2379,9 +2511,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let transaction = tool_run_transaction(app_instance_id, &entry.tool_id, &entry.actor, run);
         let (tool_id, group_id) = (entry.tool_id.clone(), entry.identity.id.group_id());
         let meta = ActionMeta { actor: entry.actor.clone(), instance_id: self.live_runtime_instance_id.unwrap_or(1), view_state: None };
-        if self.dispatch_emit_group(&tool_id, &[], std::slice::from_ref(&emit), None, Vec::new(), Vec::new(), UiDirtyScope::Full, &meta, Some(group_id), Some(transaction)).await.is_err() {
-            return self.reject_tool_run_publication(run, generation);
-        }
+        let publication=self.dispatch_emit_group(&tool_id,&[],std::slice::from_ref(&emit),Vec::new(),Vec::new(),UiDirtyScope::Full,&meta,Some(group_id),Some(transaction)).await;
+        let member=selected_entry_mut!(self.tool_runs).and_then(|entry|entry.member.as_mut()).expect("member publication retains its exact run");
+        member.retired_emits.push_back(emit);
+        member.retired_emission_owners.extend(member.emission_owner.take());
+        if publication.is_err(){return self.reject_tool_run_publication(run,generation);}
         self.revalidate_interaction_state_after_document_change(&meta).await?;
         let finalize = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.finalize.as_mut()).expect("finalize owner");
         finalize.published = true;
@@ -2392,7 +2526,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// ♻️ One bounded unit of member-run retirement: one alias of a member run's typed owners handed to its member store's
     /// alias retirement (displaced aliases of live runs, every alias of a run that left its slot), else the composed reads of
     /// a fully retired member run. `None` when nothing member-owned is retiring or an alias retirement is still stepping.
-    fn tool_run_member_retire_step(&mut self) -> Result<Option<PluginCloseStep>, Fault> {
+    fn tool_run_member_retire_step(&mut self,maximum_items:usize,maximum_bytes:usize) -> Result<Option<PluginCloseStep>, Fault> {
         if self.tool_runs.snapshot_retirement.is_some() {
             return Ok(None);
         }
@@ -2400,7 +2534,56 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let live = tool_runs.entries.iter_mut().filter_map(|entry| entry.member.as_mut()).map(|member| (member, false));
         let retired = tool_runs.retired_members.iter_mut().map(|member| (member, true));
         for (member, everything) in live.chain(retired) {
-            let Some(child) = children.get(&(member.slot.clone(), member.child_id.clone())) else {
+            let queued_owner=!member.retired_emission_owners.is_empty();
+            let owner=if queued_owner{member.retired_emission_owners.front_mut()}else if everything{member.emission_owner.as_mut()}else{None};
+            if let Some(owner)=owner{
+                if maximum_items==0||maximum_bytes==0{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
+                if owner.is_empty(){
+                    let bytes=std::mem::size_of_val(owner.as_ref());
+                    if bytes>maximum_bytes{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
+                    if queued_owner{member.retired_emission_owners.pop_front();}else{member.emission_owner.take();}
+                    return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:bytes}));
+                }
+                let step=match children.get(&(member.slot.clone(),member.child_id.clone())){
+                    Some(child)=>child.member.visit_member(ToolRunMemberEmissionRetire{owner:owner.as_mut(),maximum_bytes})?,
+                    None=>owner.close_step(1,maximum_bytes)?,
+                };
+                return Ok(Some(step));
+            }
+            let queued_emit=!member.retired_emits.is_empty();
+            let emit=if queued_emit{member.retired_emits.front_mut()}else if everything{member.emit.as_mut()}else{None};
+            if let Some(emit)=emit{
+                let step=emit.close_one(maximum_items.min(1),maximum_bytes);
+                if step==PluginCloseStep::Complete{if queued_emit{member.retired_emits.pop_front();}else{member.emit.take();}return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:0}));}
+                return Ok(Some(step));
+            }
+            let queued_ops=!member.retired_ops.is_empty();
+            let ops=if queued_ops{member.retired_ops.front_mut()}else if everything&&(!member.ops.is_empty()||member.ops.capacity()!=0){Some(&mut member.ops)}else{None};
+            if let Some(ops)=ops{
+                if maximum_items==0||maximum_bytes==0{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
+                if let Some(operation)=ops.last(){
+                    let bytes=operation.capacity();
+                    if bytes>maximum_bytes{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
+                    ops.pop();return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:bytes}));
+                }
+                let bytes=ops.capacity().checked_mul(std::mem::size_of::<Vec<u8>>()).expect("allocated member operation layout");
+                if bytes>maximum_bytes{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
+                *ops=Vec::new();if queued_ops{member.retired_ops.pop_front();}return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:bytes}));
+            }
+            macro_rules! close_member_backing{
+                ($field:ident,$item:ty)=>{
+                    if member.$field.capacity()!=0{
+                        let bytes=member.$field.capacity().checked_mul(std::mem::size_of::<$item>()).expect("allocated member retirement queue layout");
+                        if maximum_items==0||bytes>maximum_bytes{return Ok(Some(PluginCloseStep::Pending{released_items:0,released_bytes:0}));}
+                        member.$field=std::collections::VecDeque::new();return Ok(Some(PluginCloseStep::Pending{released_items:1,released_bytes:bytes}));
+                    }
+                };
+            }
+            close_member_backing!(retired_emission_owners,Box<dyn ToolRunMemberEmissionOwner>);
+            close_member_backing!(retired_emits,ChildEmit);
+            close_member_backing!(retired_ops,Vec<Vec<u8>>);
+
+            let Some(child)=children.get(&(member.slot.clone(),member.child_id.clone()))else{
                 member.owners = None;
                 continue;
             };
@@ -2422,7 +2605,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
 
     /// ♻️ One bounded retirement unit of the tool run ledger, member-owned aliases and reads first.
     fn tool_run_retire_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
-        match self.tool_run_member_retire_step()? {
+        match self.tool_run_member_retire_step(maximum_items,maximum_bytes)? {
             Some(step) => Ok(Some(step)),
             None => self.tool_runs.retire_step(&mut self.store, maximum_items, maximum_bytes),
         }

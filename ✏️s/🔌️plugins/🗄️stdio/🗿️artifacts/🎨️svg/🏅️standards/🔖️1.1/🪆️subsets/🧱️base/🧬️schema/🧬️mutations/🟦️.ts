@@ -25,5 +25,5 @@ export type SvgMutation =
   | { readonly mutation: 'setText'; readonly payload: { readonly phase: 'apply'; readonly value: SetTextPayload } }
   | { readonly mutation: 'setViewBox'; readonly payload: { readonly phase: 'apply'; readonly value: SetViewBoxPayload } }
   | { readonly mutation: 'setTransform'; readonly payload: { readonly phase: 'apply'; readonly value: SetTransformPayload } }
-  | { readonly mutation: 'setSnapshot'; readonly payload: SetSnapshot };
+  | { readonly mutation: 'setSnapshot'; readonly payload: SetSnapshot }
   | { readonly mutation: 'patchSnapshot'; readonly payload: { readonly patch: SnapshotPatch } }

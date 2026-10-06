@@ -38,7 +38,7 @@ impl Leaves {
         let spec = ctx.doc_json()?;
         let text = |member: &str| -> Result<String, String> {
             let uri = spec.str(member);
-            String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("{uri}: {error}"))
+            String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("{uri}: {error}"))
         };
         Ok(Leaves { before: text("before")?, mutation: text("mutation")?, after: text("after")?, diff: text("diff")?, outcome: text("outcome")? })
     }

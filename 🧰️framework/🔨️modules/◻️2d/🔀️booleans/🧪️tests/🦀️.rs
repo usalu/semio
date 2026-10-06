@@ -1,6 +1,11 @@
 //! 🧪️ Neutral planar regions, grant limits, fill-rule semantics and private publication.
 use super::*;
 use serde_json::{Value,json};
+#[test]
+fn boolean_translated_stroke_junctions_preserve_endpoint_incidence(){
+ let rows:Vec<Value>=serde_json::from_str(include_str!("../🧫️fixtures/🔗️endpoints/🔣️.json")).unwrap();
+ for row in rows {let source=input(&row);let mut previous=None;for grant in [1,7,4096]{let (segments,_)=finish(source.clone(),grant);let rings=contours(&segments);assert_eq!(rings.len(),1,"{}",row["name"]);assert!(area(&rings[0])>0.0);for ring in &rings{for at in 0..ring.len(){assert!(length(ring[at],ring[(at+1)%ring.len()])>source.epsilon);}}if let Some(before)=&previous{assert_eq!(&segments,before);}previous=Some(segments);println!("[DEBUG] Native endpoint-preserving translated stroke junction {} grant={grant} contours=1",row["name"]);}}
+}
 fn rows()->Vec<Value> {serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn input(row:&Value)->BooleanInput {
  let v=&row["input"];BooleanInput {operation:BooleanOperation::parse(v["operation"].as_str().unwrap()).unwrap(),operands:v["operands"].as_array().unwrap().iter().map(|operand|BooleanOperand {fill_rule:match operand["fillRule"].as_str().unwrap() {"nonzero"=>BooleanFillRule::Nonzero,"evenodd"=>BooleanFillRule::Evenodd,_=>panic!("Invalid fixture rule")},contours:operand["contours"].as_array().unwrap().iter().map(|ring|ring.as_array().unwrap().iter().map(|p|[p[0].as_f64().unwrap(),p[1].as_f64().unwrap()]).collect()).collect()}).collect(),epsilon:v["epsilon"].as_f64().unwrap(),max_edges:v["maxEdges"].as_u64().unwrap() as usize,max_parameters:v["maxParameters"].as_u64().unwrap() as usize,max_atomic_edges:v["maxAtomicEdges"].as_u64().unwrap() as usize,max_segments:v["maxSegments"].as_u64().unwrap() as usize,max_work:v["maxWork"].as_u64().unwrap()}

@@ -18,7 +18,7 @@ import (
 
 // 📥️ vectors decodes the committed sorting vectors.
 func vectors(ctx *host.Context) ([]map[string]any, error) {
-	raw, err := ctx.FixtureBytes("shared://🔀️sort-vectors.json")
+	raw, err := ctx.InputBytes("shared://🔀️sort-vectors.json")
 	if err != nil {
 		return nil, err
 	}

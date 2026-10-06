@@ -59,30 +59,6 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/replace-references/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/create-object/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/delete-object/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/move-objects/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/rotate-objects/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/scale-objects/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/drag-selection/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/rotate-selection/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/mutation/scale-selection/schema.json"
     }
   ]
 }

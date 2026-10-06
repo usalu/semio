@@ -3,7 +3,7 @@ use super::*;
 /// 🧪️ Logical diff text and binary codecs retain every field.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::DiffCodec;
+    use protocol::{DiffBinary,DiffCodec,DiffText};
     for d in demo_diff_cases() {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

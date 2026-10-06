@@ -21,7 +21,7 @@ fn forest_object_panel(view_state: &ViewModel, ids: &[&str]) -> String {
 #[semio_framework_async_macros::async_test]
 async fn summary_counts_every_pane_object_without_a_selection() {
     let scene = forest_play_scene();
-    let expected: usize = CadPaneId::all().into_iter().map(|pane| edit::cad_pane_working_scene(&scene, pane).map_or(0, |working| edit::cad_pane_working_objects(&working, pane).0.len())).sum();
+    let expected: usize = CadPaneId::all().into_iter().map(|pane| forest_view().panes.pane(pane).objects.len()).sum();
     assert!(expected > 20, "the forest document lists objects in every pane");
     let json = projected(build_properties_panel(&view(scene, CadPlayRuntime::default()), cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), Some("dislocate"), &TreeWindows::unhosted()).expect("summary"));
     assert!(json.contains(&format!("Objects: {expected}")), "{json}");

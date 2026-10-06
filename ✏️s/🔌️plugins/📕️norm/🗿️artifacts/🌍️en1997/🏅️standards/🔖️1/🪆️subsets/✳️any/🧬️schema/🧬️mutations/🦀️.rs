@@ -213,10 +213,7 @@ impl En1997Mutation {
 //#endregion 🔖️FromSnapshot
 
 //#region 🌉️ExternalCodecBridge
-/// 📥️ Decodes one committed mutation JSON document into [`En1997Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
-pub fn decode_en1997_mutation_json(text: &str) -> Result<En1997Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 /// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
 pub fn apply_en1997_mutation(base: &En1997Snapshot, mutation: &En1997Mutation) -> Result<(En1997Snapshot, Vec<String>), String> {
     let raised = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(mutation, base);

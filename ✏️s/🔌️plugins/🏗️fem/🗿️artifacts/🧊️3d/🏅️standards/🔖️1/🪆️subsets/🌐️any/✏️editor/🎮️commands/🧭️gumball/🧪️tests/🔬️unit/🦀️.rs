@@ -6,7 +6,7 @@ use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel};
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
+    crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
 }
 
 fn translate(dx: f64, phase: Option<&str>) -> Fem3dCommand {

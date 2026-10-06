@@ -14,6 +14,7 @@ const PLAYBOOK_PLAY_SURFACE_ACTIVITY: &str = "playbook.play.activity";
 
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: PLAYBOOK_PLAY_WINDOW_ACTIVITY.into(),
         label: LocalizedLabel::native("Activity", "Aktivität"),
         body_key: PLAYBOOK_PLAY_BODY_ACTIVITY.into(),

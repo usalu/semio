@@ -1,6 +1,6 @@
 use super::*;
 use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 //#region 🔖️Fixtures
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

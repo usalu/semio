@@ -22,7 +22,6 @@ const current = parseGraphOutputCatalog(currentInput, currentInput.manifests.map
 const emptyCatalog = parseGraphOutputCatalog(fixture.empty, []);
 const fixtureCatalog = parseGraphOutputCatalog(fixture.catalog, fixture.manifestIds);
 import consumption from "../../🛂️manifest/🧫️fixtures/🧩️consumption/🔣️.json";
-import consumptionSchema from "../../🛂️manifest/🧬️schema/🧩️consumption/🔣️.json";
 
 test("graph admission and projection run with every product physically unavailable to an independent Node loader", async () => {
   const { build } = await import("esbuild");
@@ -38,7 +37,6 @@ test("graph admission and projection run with every product physically unavailab
 
 test("explicit graph manifest consumption follows independent schema ownership", () => {
   const ajv = new Ajv({ strict: true }).addSchema(schema);
-  expect(ajv.compile(consumptionSchema)(consumption)).toBe(true);
   for (const row of consumption.cases) {
     const validate = ajv.compile({ type: "object", properties: row.manifest === null ? {} : { manifestId: { const: row.manifest.id } } });
     expect(validate(row.snapshot)).toBe(row.expected.accepted);

@@ -200,6 +200,7 @@ pub fn window_definition() -> WindowKindDefinition {
         definition
     };
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Page", "Seite"),
         body_key: BODY_KEY.into(),
@@ -314,6 +315,7 @@ pub fn render_selected(snapshot: &PdfSnapshot, interaction: &semio_framework_plu
 /// 🪟 Fields for the object selected on the page. The canvas window stays a canvas.
 pub fn inspector_window_definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: INSPECTOR_WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Object", "Objekt"),
         body_key: INSPECTOR_BODY_KEY.into(),

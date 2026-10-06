@@ -1,0 +1,295 @@
+{
+  "changedPaths": [
+    "main",
+    "tests"
+  ],
+  "addedPaths": [
+    "fixture",
+    "schema"
+  ],
+  "cases": [
+    {
+      "id": "Exact",
+      "before": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source9main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source9tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source11main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source11tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        },
+        {
+          "path": "fixture",
+          "before": null,
+          "after": "eight vectors"
+        },
+        {
+          "path": "schema",
+          "before": null,
+          "after": "owned settings schema"
+        }
+      ],
+      "refused": false
+    },
+    {
+      "id": "ForeignDelta",
+      "before": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source9main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source9tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source11main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source11tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "foreign"
+        },
+        {
+          "path": "fixture",
+          "before": null,
+          "after": "eight vectors"
+        },
+        {
+          "path": "schema",
+          "before": null,
+          "after": "owned settings schema"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "WrongBefore",
+      "before": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source9main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source9tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "foreign",
+          "after": "source11main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source11tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        },
+        {
+          "path": "fixture",
+          "before": null,
+          "after": "eight vectors"
+        },
+        {
+          "path": "schema",
+          "before": null,
+          "after": "owned settings schema"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "MissingFixture",
+      "before": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source9main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source9tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source11main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source11tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        },
+        {
+          "path": "fixture",
+          "before": null,
+          "after": "eight vectors"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "AdditionHasBefore",
+      "before": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source9main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source9tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source11main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source11tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        },
+        {
+          "path": "fixture",
+          "before": "invented",
+          "after": "eight vectors"
+        },
+        {
+          "path": "schema",
+          "before": null,
+          "after": "owned settings schema"
+        }
+      ],
+      "refused": true
+    },
+    {
+      "id": "Duplicate",
+      "before": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source9main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source9tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        }
+      ],
+      "after": [
+        {
+          "path": "main",
+          "before": "rootmain",
+          "after": "source11main"
+        },
+        {
+          "path": "tests",
+          "before": "roottests",
+          "after": "source11tests"
+        },
+        {
+          "path": "scene",
+          "before": "rootscene",
+          "after": "source9scene"
+        },
+        {
+          "path": "fixture",
+          "before": null,
+          "after": "eight vectors"
+        },
+        {
+          "path": "fixture",
+          "before": null,
+          "after": "eight vectors"
+        }
+      ],
+      "refused": true
+    }
+  ]
+}

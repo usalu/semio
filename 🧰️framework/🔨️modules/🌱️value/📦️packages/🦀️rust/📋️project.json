@@ -81,7 +81,9 @@
     "test-refusal-codec": {
       "executor": "nx:run-commands",
       "cache": false,
-      "inputs": ["default"],
+      "inputs": [
+        "default"
+      ],
       "outputs": [],
       "dependsOn": [],
       "options": {
@@ -100,6 +102,19 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-refusal-portable"
+      }
+    },
+    "test-graphql-int64-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-graphql-int64-source"
       }
     }
   }

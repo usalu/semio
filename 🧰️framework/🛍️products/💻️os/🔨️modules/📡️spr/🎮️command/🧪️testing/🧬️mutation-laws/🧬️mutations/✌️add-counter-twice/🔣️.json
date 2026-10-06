@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice",
+  "semanticKind": "add-counter-twice",
+  "displayName": "Add Counter Twice",
+  "emoji": "✌️",
+  "aggregateVariant": "AddCounterTwice",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "add-counter-twice",
+  "binaryTag": 1,
+  "invertibility": "plan",
+  "diffParticipation": "plan",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "composite",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

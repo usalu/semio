@@ -16,10 +16,41 @@
     },
     "id": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "description": {
+          "en": "Instance name (#id) of the entity.",
+          "de": "Instanzname (#id) der Entität."
+        },
+        "ref": {
+          "kind": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Entity type",
+          "de": "Entitätstyp"
+        },
+        "description": {
+          "en": "Keyword of the entity, for example CARTESIAN_POINT.",
+          "de": "Schlüsselwort der Entität, zum Beispiel CARTESIAN_POINT."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

@@ -14,7 +14,20 @@
       "description": "Aggregate discriminator spliced in by SemioDocumentMutation; absent when the payload stands alone."
     },
     "style": {
-      "$ref": "#/$defs/DocStyle"
+      "$ref": "#/$defs/DocStyle",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Style",
+          "de": "Formatvorlage"
+        },
+        "description": {
+          "en": "Id, name and parent of the style that is inserted.",
+          "de": "Kennung, Name und übergeordnete Formatvorlage der Formatvorlage, die eingefügt wird."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   },
   "$defs": {

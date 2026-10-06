@@ -20,7 +20,7 @@ fn block(id: &str, condition: Option<FormExpr>) -> FormQuestion {
         schema: None,
         src: None,
         accept: None,
-        fixture_slug: None,
+        example_id: None,
         params: None,
         condition,
     }

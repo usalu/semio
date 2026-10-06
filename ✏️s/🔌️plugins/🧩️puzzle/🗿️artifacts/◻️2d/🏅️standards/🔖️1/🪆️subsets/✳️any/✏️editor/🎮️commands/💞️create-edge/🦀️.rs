@@ -18,26 +18,26 @@ pub fn create_edge(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
         ctx.effects.push(Effect::Notify { message: ctx.labels.connect_needs_two_handles.as_str().to_string() });
         return;
     }
-    let (Some(source_kind), Some(target_kind)) = (puzzle2d_handle_kind(&ctx.scene.fixture, &source), puzzle2d_handle_kind(&ctx.scene.fixture, &target)) else {
+    let (Some(source_kind), Some(target_kind)) = (puzzle2d_handle_kind(&ctx.scene.board_snapshot, &source), puzzle2d_handle_kind(&ctx.scene.board_snapshot, &target)) else {
         ctx.effects.push(Effect::Notify { message: ctx.labels.connect_unknown_handle.as_str().to_string() });
         return;
     };
-    let occupied = puzzle2d_occupied_handles(&ctx.scene.fixture);
+    let occupied = puzzle2d_occupied_handles(&ctx.scene.board_snapshot);
     if occupied.contains(&source) || occupied.contains(&target) {
         ctx.effects.push(Effect::Notify { message: ctx.labels.connect_handle_occupied.as_str().to_string() });
         return;
     }
-    if !puzzle2d_kinds_compatible(&ctx.scene.fixture, &source_kind, &target_kind) {
+    if !puzzle2d_kinds_compatible(&ctx.scene.board_snapshot, &source_kind, &target_kind) {
         ctx.effects.push(Effect::Notify { message: ctx.labels.connect_kind_incompatible.as_str().to_string() });
         return;
     }
-    let id = new_edge_id(&ctx.scene.fixture);
+    let id = new_edge_id(&ctx.scene.board_snapshot);
     let edge_kind = read("edgeKind");
     let mut edge = json!({ "id": id, "source": source, "target": target });
     if let Some(edge_kind) = edge_kind {
         edge["edgeKind"] = json!(edge_kind);
     }
-    crate::editor::puzzle2d::puzzle2d_push_edge(&mut ctx.scene.fixture, edge);
+    crate::editor::puzzle2d::puzzle2d_push_edge(&mut ctx.scene.board_snapshot, edge);
 }
 
 //#region 🧪️Tests

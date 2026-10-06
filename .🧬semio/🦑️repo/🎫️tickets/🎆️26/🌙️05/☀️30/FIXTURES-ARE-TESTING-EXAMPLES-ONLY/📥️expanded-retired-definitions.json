@@ -1,0 +1,239 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🔣️.json",
+    "definitions": [
+      "GisMapApprovalHistoryV1",
+      "GisMapInferencePortV1",
+      "GisMapInferencePortStep",
+      "GisMapInferencePortHostile",
+      "GisMapPeerRebootstrapV1"
+    ],
+    "delete": false,
+    "principal": "GisMapInferencePortStatus"
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🔣️.json",
+    "definitions": [
+      "CadPresenceRetirementLaws"
+    ],
+    "delete": false,
+    "principal": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧬️schema/🔣️.json",
+    "definitions": [],
+    "delete": false,
+    "principal": "hit"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧬️semantic.json",
+    "definitions": [],
+    "delete": true,
+    "principal": null
+  },
+  {
+    "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+    "definitions": [
+      "HomeRetainedCommandLimits"
+    ],
+    "delete": false,
+    "principal": null
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌍️gis/🧬️schema/🔣️.json",
+    "definitions": [
+      "GisArtifactIdentity",
+      "GisInferenceControl",
+      "GisComponentColdMapPatch",
+      "GisNativeCodecs"
+    ],
+    "delete": false,
+    "principal": "GisNativeCodecsReceipt"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/🔣️.json",
+    "definitions": [
+      "FlowBrowserStartupV1",
+      "FlowRetainedSessionCloseV1",
+      "FlowBrowserRuntimeLifetimeV1",
+      "FlowBrowserTypesV1"
+    ],
+    "delete": false,
+    "principal": "FlowEditorBrowserAbiV1"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧬️schema/🔣️.json",
+    "definitions": [
+      "FlowSessionRetirementV1"
+    ],
+    "delete": true,
+    "principal": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧬️schema/🔣️.json",
+    "definitions": [
+      "FlowTypedCopyV1"
+    ],
+    "delete": true,
+    "principal": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧬️schema/🔣️.json",
+    "definitions": [
+      "FlowRetirementV1"
+    ],
+    "delete": false,
+    "principal": "FlowCamera"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧬️schema/🔣️.json",
+    "definitions": [
+      "GenerationRootV1"
+    ],
+    "delete": false,
+    "principal": "GenerationValueV1"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧬️schema/🔣️.json",
+    "definitions": [
+      "VerbVocabularyV1",
+      "MutationLeafDescriptorVectorsV1"
+    ],
+    "delete": false,
+    "principal": "MutationLeafDescriptor"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🪪️id/🧬️schema/🔣️.json",
+    "definitions": [
+      "HistoryIdCursorV1"
+    ],
+    "delete": true,
+    "principal": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
+    "definitions": [
+      "AdmittedShellInstanceTransitionV1",
+      "DocumentOpeningTransitionV1",
+      "DocumentOpeningAdmissionV1",
+      "DocumentOpeningBackgroundSequenceV1",
+      "DocumentOpeningCloseFailureV1",
+      "SharedDocumentOpeningAccessV1",
+      "DocumentOpeningScopeResolutionV1",
+      "DocumentFirstOpenV1",
+      "TutorialRunTransitionV1",
+      "TutorialDriveTransitionV1",
+      "PausedTutorialSeekTransitionV1",
+      "SerialTutorialDriveTransitionV1",
+      "HostIdentityResolutionV1",
+      "PluginRuntimeLifecycleSchedulerV1",
+      "PluginRuntimeTypedOperationSettlementV1",
+      "PluginRuntimeTypedOperationRoutingV1",
+      "PluginRuntimeChannelCloseV1",
+      "TutorialInteractionCaptureV1",
+      "OpenArtifactRelayV1",
+      "ShellLabelResolutionV1"
+    ],
+    "delete": false,
+    "principal": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/🧬️schema/🔣️.json",
+    "definitions": [
+      "PendingAuthorityV1",
+      "PendingPatchReceiptV1"
+    ],
+    "delete": false,
+    "principal": "PendingPatchAcknowledgement"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
+    "definitions": [
+      "ArtifactDocumentIdV1",
+      "NativeCatalogSelectionV1",
+      "PluginRootOwnershipV1",
+      "RustTaxonomyMountsV1"
+    ],
+    "delete": false,
+    "principal": "CatalogDescriptorV1"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📥️ui-patch/🧬️schema/🔣️.json",
+    "definitions": [
+      "NativeUiPatchMarshallingV1"
+    ],
+    "delete": false,
+    "principal": "UiPatchOperationKind"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧬️schema/🔣️.json",
+    "definitions": [
+      "RelayLifecycleV1"
+    ],
+    "delete": false,
+    "principal": "RelayLane"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🧬️schema/🔣️.json",
+    "definitions": [
+      "MemoryCopyRangesV1"
+    ],
+    "delete": false,
+    "principal": "InterpreterAddress"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🚪️member-open/🧬️schema/🔣️.json",
+    "definitions": [
+      "CompositionMemberOpenV1"
+    ],
+    "delete": true,
+    "principal": null
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧬️schema/🔣️.json",
+    "definitions": [
+      "ArtifactCommandCheckpointV1",
+      "ChildPrepublicationCloseV1",
+      "MountedDispatchBindingV1",
+      "OwnerFactoryResolutionV1",
+      "RawAllocationCloseV1",
+      "ScalarConfigCohortV1",
+      "ScalarConfigMutation",
+      "ScalarConfigOwner",
+      "ScalarConfigOwnerId",
+      "ScalarConfigRoute",
+      "ToolFactoryProofV1",
+      "ToolLatestWinsIntegrationV1",
+      "ToolLatestWinsV1",
+      "RetainedCommandOracle",
+      "RetainedCommandCensus",
+      "RetainedCommandCohort"
+    ],
+    "delete": false,
+    "principal": "RetainedCommandStepBudget"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧬️schema/🔣️.json",
+    "definitions": [
+      "MutationTimestampV1",
+      "MandatoryMutationsV1",
+      "MacroExportsV1",
+      "MutationLeafDeriveV1",
+      "MutationAggregateSourceAuthorityV1",
+      "MutationLeafJsonV1",
+      "MutationSourceAuthorityV1"
+    ],
+    "delete": false,
+    "principal": "MutationSourceAuthorityProjectionV1"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🧬️schema/🔣️.json",
+    "definitions": [
+      "ValueRetirementV1",
+      "CacheRetirementV1",
+      "EvaluationOwnersV1"
+    ],
+    "delete": true,
+    "principal": null
+  }
+]

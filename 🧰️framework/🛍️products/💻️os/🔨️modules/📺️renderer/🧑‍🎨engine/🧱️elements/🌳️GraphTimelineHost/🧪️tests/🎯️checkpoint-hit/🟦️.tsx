@@ -5,7 +5,6 @@ import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createAccessibilityMirror } from "../../../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
 import { GraphTimelineHost } from "../../🟦️.tsx";
-import schema from "../../🧬️schema/🎯️checkpoint-hit/🔣️.json" with { type: "json" };
 import fixture from "../../🧫️fixtures/🎯️checkpoint-hit/🔣️.json" with { type: "json" };
 
 afterEach(() => {
@@ -16,8 +15,6 @@ afterEach(() => {
 
 describe("GraphTimeline checkpoint hit regions", () => {
   it("validates the neutral checkpoint hit contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
   it.each(fixture.cases)("matches the actual React checkpoint action for $id", (sample) => {

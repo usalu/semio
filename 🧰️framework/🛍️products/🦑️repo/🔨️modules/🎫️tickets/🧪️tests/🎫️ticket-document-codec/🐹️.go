@@ -23,7 +23,7 @@ type documentVectors struct {
 }
 
 func loadDocumentVectors(ctx *host.Context) (documentVectors, error) {
-	data, err := ctx.FixtureBytes("shared://📄️ticket-document-codec/📄️documents.json")
+	data, err := ctx.InputBytes("shared://📄️ticket-document-codec/📄️documents.json")
 	if err != nil {
 		return documentVectors{}, err
 	}

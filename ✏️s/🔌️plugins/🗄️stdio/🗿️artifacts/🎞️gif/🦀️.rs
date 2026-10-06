@@ -109,8 +109,8 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v87a::engine::io_registry as v87a;
-    use crate::standards::v89a::engine::io_registry as v89a;
+    use crate::subsets::any::io::io_registry as v87a;
+    use crate::subsets::any::io::io_registry as v89a;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -151,9 +151,7 @@ pub mod standards {
         // helpers); this stays an inline barrel so every existing
         // `standards::v87a::engine::*`/`gif::engine::*` path still resolves — including
         // 89a's own `standards::v87a::engine as codec` cross-standard reuse import.
-        pub mod engine {
-            pub use super::subsets::any::io::*;
-        }
+
         #[path = "."]
         pub mod subsets {
             #[path = "."]
@@ -168,20 +166,12 @@ pub mod standards {
                         #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod dimensions {
                             #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
@@ -194,20 +184,12 @@ pub mod standards {
                         #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -271,9 +253,7 @@ pub mod standards {
         // helpers); this stays an inline barrel so every existing
         // `standards::v89a::engine::*`/`gif::engine::*` path still resolves — including
         // `📚️examples/💃️dancing`'s own `standards::v89a::engine::decode_gif` call.
-        pub mod engine {
-            pub use super::subsets::any::io::*;
-        }
+
         #[path = "🏅️standards/9️⃣89a/🧬️migrations/🦀️.rs"]
         pub mod migrations;
         #[path = "."]
@@ -290,20 +270,12 @@ pub mod standards {
                         #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod dimensions {
                             #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
@@ -316,20 +288,12 @@ pub mod standards {
                         #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
                         #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -403,9 +367,7 @@ pub mod engine {
         super::standards::v89a::engine::register();
     }
 }
-pub mod io {
-    pub use super::standards::v89a::subsets::any::io::*;
-}
+
 
 #[path = "."]
 pub mod examples {
@@ -571,3 +533,7 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v87a::subsets::any::io::{GifBuilderConstruction, GifParts, GifAnalyzerAnalysis, GifBuilderFacets, GifBuilder, GifAnalyzer, GifComposer};
+
+pub use crate::standards::v89a::subsets::any::io::{GifBuilderConstruction, GifParts, GifAnalyzerAnalysis, GifBuilderFacets, GifBuilder, GifAnalyzer, GifComposer};

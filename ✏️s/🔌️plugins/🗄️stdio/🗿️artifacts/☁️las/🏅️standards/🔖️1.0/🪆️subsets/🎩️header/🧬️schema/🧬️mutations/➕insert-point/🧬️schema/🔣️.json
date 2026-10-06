@@ -16,10 +16,38 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the point records at which it is inserted, counted from 0.",
+          "de": "Position unter den Punktdatensätzen, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "point": {
-      "$ref": "#/$defs/LasPoint"
+      "$ref": "#/$defs/LasPoint",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Point record",
+          "de": "Punktdatensatz"
+        },
+        "description": {
+          "en": "The point record that is inserted.",
+          "de": "Der Punktdatensatz, der eingefügt wird."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

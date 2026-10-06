@@ -1,0 +1,460 @@
+{
+  "owner": "BCF 2.1 markup",
+  "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🦀️.rs",
+  "sourceFactory": "parseBcfSnapshotJson(original fixture)",
+  "nativeFactory": "fixture(): first-party pack_json from same JSON with Reject",
+  "cases": [
+    {
+      "id": "full",
+      "rows": 29,
+      "valueBytes": 1259,
+      "schemaBytes": 3920,
+      "tableCount": 15,
+      "maxColumns": 29,
+      "tables": [
+        {
+          "table": "bcf_camera",
+          "width": 29,
+          "rows": 2,
+          "semanticBytes": 433
+        },
+        {
+          "table": "bcf_coloring",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 56
+        },
+        {
+          "table": "bcf_coloring_component",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 62
+        },
+        {
+          "table": "bcf_comment",
+          "width": 8,
+          "rows": 2,
+          "semanticBytes": 105
+        },
+        {
+          "table": "bcf_components",
+          "width": 2,
+          "rows": 2,
+          "semanticBytes": 32
+        },
+        {
+          "table": "bcf_document",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "bcf_orthogonal_camera",
+          "width": 4,
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "bcf_perspective_camera",
+          "width": 4,
+          "rows": 1,
+          "semanticBytes": 30
+        },
+        {
+          "table": "bcf_raw_part",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 75
+        },
+        {
+          "table": "bcf_selection",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 64
+        },
+        {
+          "table": "bcf_snapshot_image",
+          "width": 2,
+          "rows": 2,
+          "semanticBytes": 22
+        },
+        {
+          "table": "bcf_topic",
+          "width": 10,
+          "rows": 2,
+          "semanticBytes": 98
+        },
+        {
+          "table": "bcf_topic_label",
+          "width": 4,
+          "rows": 3,
+          "semanticBytes": 78
+        },
+        {
+          "table": "bcf_viewpoint",
+          "width": 4,
+          "rows": 3,
+          "semanticBytes": 85
+        },
+        {
+          "table": "bcf_visibility_exception",
+          "width": 4,
+          "rows": 2,
+          "semanticBytes": 54
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "id": "empty",
+      "rows": 3,
+      "valueBytes": 110,
+      "schemaBytes": 3920,
+      "tableCount": 15,
+      "maxColumns": 29,
+      "tables": [
+        {
+          "table": "bcf_camera",
+          "width": 29,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_coloring",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_coloring_component",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_comment",
+          "width": 8,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_components",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_document",
+          "width": 3,
+          "rows": 1,
+          "semanticBytes": 35
+        },
+        {
+          "table": "bcf_orthogonal_camera",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_perspective_camera",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_raw_part",
+          "width": 5,
+          "rows": 2,
+          "semanticBytes": 75
+        },
+        {
+          "table": "bcf_selection",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_snapshot_image",
+          "width": 2,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_topic",
+          "width": 10,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_topic_label",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_viewpoint",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "bcf_visibility_exception",
+          "width": 4,
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    }
+  ],
+  "fullInput": {
+    "schema": "owned.bcf 世界\u0000",
+    "version": "2.1 custom",
+    "topics": [
+      {
+        "guid": "topic α",
+        "title": "Title 世界",
+        "description": "description\u0000",
+        "status": "Open",
+        "priority": "high",
+        "labels": [
+          "one",
+          "one",
+          ""
+        ],
+        "creationDate": "date",
+        "creationAuthor": "author",
+        "comments": [
+          {
+            "guid": "comment",
+            "date": "now",
+            "author": "me",
+            "text": "text\u0000世界",
+            "viewpointRef": "unresolved-native-reference"
+          },
+          {
+            "guid": "comment",
+            "date": "",
+            "author": "",
+            "text": "",
+            "viewpointRef": null
+          }
+        ],
+        "viewpoints": [
+          {
+            "guid": "view",
+            "camera": {
+              "kind": "perspective",
+              "viewPoint": {
+                "x": 1.5,
+                "y": 2.5,
+                "z": 3.5
+              },
+              "direction": {
+                "x": -1.5,
+                "y": -2.5,
+                "z": -3.5
+              },
+              "upVector": {
+                "x": 4.5,
+                "y": 5.5,
+                "z": 6.5
+              },
+              "fieldOfView": 60.5
+            },
+            "components": {
+              "selection": [
+                "selected",
+                "selected"
+              ],
+              "visibility": {
+                "defaultVisibility": false,
+                "exceptions": [
+                  "hidden",
+                  ""
+                ]
+              },
+              "coloring": [
+                {
+                  "color": "FFFF0000",
+                  "components": [
+                    "colored",
+                    "colored"
+                  ]
+                },
+                {
+                  "color": "",
+                  "components": []
+                }
+              ]
+            },
+            "snapshot": [
+              137,
+              80,
+              78,
+              71,
+              0,
+              255
+            ]
+          },
+          {
+            "guid": "view",
+            "camera": {
+              "kind": "orthogonal",
+              "viewPoint": {
+                "x": 7.5,
+                "y": 8.5,
+                "z": 9.5
+              },
+              "direction": {
+                "x": 0.5,
+                "y": -0.5,
+                "z": 0.25
+              },
+              "upVector": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+              },
+              "viewToWorldScale": 12.5
+            },
+            "components": {
+              "selection": [],
+              "visibility": {
+                "defaultVisibility": true,
+                "exceptions": []
+              },
+              "coloring": []
+            },
+            "snapshot": []
+          },
+          {
+            "guid": "empty",
+            "camera": null,
+            "components": null,
+            "snapshot": null
+          }
+        ]
+      },
+      {
+        "guid": "",
+        "title": "",
+        "description": "",
+        "status": "",
+        "priority": "",
+        "labels": [],
+        "creationDate": "",
+        "creationAuthor": "",
+        "comments": [],
+        "viewpoints": []
+      }
+    ],
+    "parts": [
+      {
+        "name": "project.bcfp",
+        "data": [
+          0,
+          255,
+          17
+        ]
+      },
+      {
+        "name": "project.bcfp",
+        "data": []
+      }
+    ]
+  },
+  "emptyInput": {
+    "schema": "owned.bcf 世界\u0000",
+    "version": "2.1 custom",
+    "topics": [],
+    "parts": [
+      {
+        "name": "project.bcfp",
+        "data": [
+          0,
+          255,
+          17
+        ]
+      },
+      {
+        "name": "project.bcfp",
+        "data": []
+      }
+    ]
+  },
+  "nativeRoles": {
+    "BcfSnapshot": [
+      "0 Text schema",
+      "1 Text version",
+      "2 List<Record Topic10>",
+      "3 List<Record RawPart2>"
+    ],
+    "BcfTopic": [
+      "0 Text guid",
+      "1 Text title",
+      "2 Text description",
+      "3 Text status",
+      "4 Text priority",
+      "5 List<Text> labels",
+      "6 Text creation_date",
+      "7 Text creation_author",
+      "8 List<Record Comment5>",
+      "9 List<Record Viewpoint4>"
+    ],
+    "BcfComment": [
+      "0 Text guid",
+      "1 Text date",
+      "2 Text author",
+      "3 Text text",
+      "4 Absent|Text viewpoint_ref"
+    ],
+    "BcfViewpoint": [
+      "0 Text guid",
+      "1 Absent|Block(Statements singleton camera)",
+      "2 Absent|Record Components3",
+      "3 Absent|List<UInt8> snapshot"
+    ],
+    "BcfCamera": [
+      "perspective singleton record: 0 Record Point3 view_point,1 Record Point3 direction,2 Record Point3 up_vector,3 Float field_of_view",
+      "orthogonal same fields with3 Float view_to_world_scale"
+    ],
+    "BcfPoint3": [
+      "0 Float x",
+      "1 Float y",
+      "2 Float z"
+    ],
+    "BcfComponents": [
+      "0 List<Text> selection",
+      "1 Record Visibility2",
+      "2 List<Record Coloring2>"
+    ],
+    "BcfVisibility": [
+      "0 Bool default_visibility",
+      "1 List<Text> exceptions"
+    ],
+    "BcfColoring": [
+      "0 Text color",
+      "1 List<Text> components"
+    ],
+    "BcfRawPart": [
+      "0 Text name",
+      "1 Bytes64 data"
+    ]
+  },
+  "rules": [
+    "all derived slots required including explicit Absent options and empty lists",
+    "camera requires actual outer Block and exactly one Statements choice",
+    "raw part Bytes64 differs from viewpoint List UInt8",
+    "SQL comment viewpoint_ref is literal optional text; unresolved literal remains valid",
+    "retain duplicate ordered labels/components and zero-length present image",
+    "NULL0; finite22/infinity32/NaN11 each IEEE cell",
+    "public registration is not native runtime qualification"
+  ]
+}

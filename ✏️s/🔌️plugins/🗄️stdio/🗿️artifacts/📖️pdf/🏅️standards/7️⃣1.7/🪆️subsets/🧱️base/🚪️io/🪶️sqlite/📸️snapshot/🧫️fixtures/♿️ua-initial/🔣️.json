@@ -1,0 +1,55 @@
+{
+  "dialect": {
+    "artifactKind": "s.stdio.pdf",
+    "standard": "1.7",
+    "subset": "ua"
+  },
+  "documentLanguage": "und",
+  "root": {
+    "num": 1,
+    "gen": 0
+  },
+  "pages": {
+    "num": 5,
+    "gen": 0,
+    "kids": [],
+    "count": 0
+  },
+  "references": {
+    "MarkInfo": 2,
+    "StructTreeRoot": 3,
+    "ViewerPreferences": 4
+  },
+  "typed": {
+    "language": "und",
+    "marked": true,
+    "userProperties": false,
+    "suspects": false,
+    "displayDocTitle": true
+  },
+  "objectNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "conformance": {
+    "subset": "ua",
+    "pageCount": 0,
+    "markInfo": true,
+    "structTreeRoot": true,
+    "lang": "und",
+    "displayDocTitle": true,
+    "infoTitle": null,
+    "fontPrograms": []
+  },
+  "nativeEncodings": [
+    "binary",
+    "text"
+  ],
+  "negativeCodes": [
+    "stdio.pdf.ua.missing-markinfo-marked",
+    "stdio.pdf.ua.missing-structtreeroot"
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "dialect": {
+    "artifactKind": "s.dag.dag",
+    "standard": "1",
+    "subset": "*"
+  },
+  "documentSchema": "dag.dag",
+  "before": {
+    "schema": "dag.dag",
+    "content": {
+      "childId": "\u0000!@/引用🌍",
+      "target": {
+        "artifactId": "distinct\u0000!@/😀",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "graph"
+        }
+      }
+    }
+  },
+  "edited": {
+    "schema": "dag.dag",
+    "content": {
+      "childId": "independent child",
+      "target": {
+        "artifactId": "independent target",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "graph"
+        }
+      }
+    }
+  },
+  "domainTables": {
+    "dag_document": [
+      "id",
+      "schema"
+    ],
+    "dag_content_child": [
+      "id",
+      "document_id",
+      "child_id",
+      "artifact_id",
+      "artifact_kind",
+      "standard",
+      "subset"
+    ]
+  },
+  "domainRowCounts": {
+    "dag_document": 1,
+    "dag_content_child": 1
+  },
+  "editSql": "UPDATE dag_content_child SET child_id='independent child',artifact_id='independent target'",
+  "publicMetadata": {
+    "columns": [
+      "id",
+      "artifact_kind",
+      "standard",
+      "subset",
+      "schema_version",
+      "native_encoding"
+    ],
+    "rowCount": 1,
+    "identity": [
+      1,
+      1,
+      "s.dag.dag",
+      "1",
+      "*"
+    ],
+    "encodings": [
+      "binary",
+      "text"
+    ]
+  },
+  "routes": {
+    "hops": 1,
+    "fidelity": "exact"
+  },
+  "foreignKeys": [
+    "dag_content_child.document_id=dag_document.id"
+  ],
+  "scope": "Complete real two-field persisted parent and literal child identity; no child graph capture/render/global-frame claim."
+}

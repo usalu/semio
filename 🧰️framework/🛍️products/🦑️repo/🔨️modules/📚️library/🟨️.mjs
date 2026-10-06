@@ -1046,7 +1046,7 @@ function componentTargets(root, workspaceRoot, commandInputs) {
     executor: DEFAULT_EXECUTOR,
     cache: true,
     dependsOn: [`component-${profile}`, `@semio-tech/framework-plugin-web:support-${profile}`, ...(profile === "release" ? ["workspace:deps-wasm-opt"] : [])],
-    inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${webRoot}/**/*.{ts,json}`, `{workspaceRoot}/${webSourceRoot}/**/*.ts`, `!{workspaceRoot}/${webSourceRoot}/**/🧪️tests/**/*.ts`, `{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🛂️actor-exports/🔣️.json`, `{workspaceRoot}/${deployment}/*.json`, `!{workspaceRoot}/${webRoot}/dist/**/*`],
+    inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${webRoot}/**/*.{ts,json}`, `{workspaceRoot}/${webSourceRoot}/**/*.ts`, `!{workspaceRoot}/${webSourceRoot}/**/🧪️tests/**/*.ts`, `{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit`, `{workspaceRoot}/${deployment}/*.json`, `!{workspaceRoot}/${webRoot}/dist/**/*`],
     outputs: [`{workspaceRoot}/${webRoot}/dist/${profile}/🔌️plugin-modules/${moduleDirectory}`],
     options: { cwd: ".", command: `bun ${JSON.stringify(`${webRoot}/📜️script.ts`)} materialize ${profile} --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, path)))}` },
   }]])])]);

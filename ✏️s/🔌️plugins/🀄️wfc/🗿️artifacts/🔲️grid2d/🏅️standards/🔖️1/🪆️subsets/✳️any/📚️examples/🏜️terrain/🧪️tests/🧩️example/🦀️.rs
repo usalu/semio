@@ -1,7 +1,8 @@
 //! 🧪️ The `terrain` example is a real, solvable bitmap tile set whose transition law holds.
 
 use super::*;
-use crate::schema::snapshot::{decode_palette_indices, Grid2dSnapshot, WfcDirection2d};
+use crate::schema::snapshot::{Grid2dSnapshot, WfcDirection2d};
+use crate::standards::v1::subsets::any::io::binary::snapshot::{decode_palette_indices};
 
 #[test]
 fn the_example_states_three_bitmap_tiles() {
@@ -41,7 +42,7 @@ fn the_example_source_prints_the_document_it_states() {
 #[test]
 fn the_example_solves_and_respects_its_pins() {
     let document = document();
-    let commit = crate::schema::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the bundled example solves");
+    let commit = crate::host::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the bundled example solves");
     assert!(!commit.contradiction);
     assert_eq!(commit.assignments.len(), 64);
     for pin in &document.pinned {

@@ -38,7 +38,7 @@ type ignoreVectorFile struct {
 // materializeTree writes the committed tree into a private directory, points the repository root at
 // it and drops every cache the global-root Go implementation keeps.
 func materializeTree(ctx *host.Context) (string, error) {
-	data, err := ctx.FixtureBytes("shared://📡️repo-tree.json")
+	data, err := ctx.InputBytes("shared://📡️repo-tree.json")
 	if err != nil {
 		return "", err
 	}
@@ -72,7 +72,7 @@ func everyVectorGetsTheSameThreeVerdicts(ctx *host.Context) (host.Outcome, error
 	if _, err := materializeTree(ctx); err != nil {
 		return host.Outcome{}, err
 	}
-	data, err := ctx.FixtureBytes("shared://📡️ignore-vectors.json")
+	data, err := ctx.InputBytes("shared://📡️ignore-vectors.json")
 	if err != nil {
 		return host.Outcome{}, err
 	}

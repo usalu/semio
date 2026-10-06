@@ -419,7 +419,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
             FieldKind::Scalar => (
                 quantity_shape_override.clone().unwrap_or_else(|| quote! { <#elem_ty as ::semio_framework_dsl_record::DslField>::shape() }),
                 quote! { ::semio_framework_dsl_record::DslField::to_value(&self.#ident) },
-                quote! { <#elem_ty as ::semio_framework_dsl_record::DslField>::from_value(value).map_err(|message|::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_diagnostic::TextSpan::at(1,1)))? },
+                quote! { <#elem_ty as ::semio_framework_dsl_record::DslField>::from_value(value).map_err(|message|::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_dsl_record::TextSpan::at(1,1)))? },
             ),
             FieldKind::Bytes64 => (
                 quote! { ::semio_framework_dsl_record::Shape::Bytes64 },
@@ -427,7 +427,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     match value {
                         ::semio_framework_dsl_record::FieldValue::Bytes64(bytes) => bytes.clone(),
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Bytes64, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Bytes64, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             ),
@@ -442,7 +442,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     match value {
                         ::semio_framework_dsl_record::FieldValue::Absent => None,
-                        other => Some(<#inner as ::semio_framework_dsl_record::DslField>::from_value(other).map_err(|message|::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_diagnostic::TextSpan::at(1,1)))?),
+                        other => Some(<#inner as ::semio_framework_dsl_record::DslField>::from_value(other).map_err(|message|::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_dsl_record::TextSpan::at(1,1)))?),
                     }
                 },
             ),
@@ -459,10 +459,10 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::semio_framework_dsl_record::FieldValue::List(items) => {
                             let mut __out = Vec::with_capacity(items.len());
-                            for v in items.iter() { __out.push(<#inner as ::semio_framework_dsl_record::DslField>::from_value(v).map_err(|message|::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_diagnostic::TextSpan::at(1,1)))?); }
+                            for v in items.iter() { __out.push(<#inner as ::semio_framework_dsl_record::DslField>::from_value(v).map_err(|message|::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_dsl_record::TextSpan::at(1,1)))?); }
                             __out
                         }
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected List, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected List, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             ),
@@ -482,10 +482,10 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::semio_framework_dsl_record::FieldValue::List(items) => {
                             let mut __out = Vec::with_capacity(items.len());
-                            for v in items.iter() { __out.push(<#inner as ::semio_framework_dsl_record::DslField>::from_value(v).map_err(|message|::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_diagnostic::TextSpan::at(1,1)))?); }
+                            for v in items.iter() { __out.push(<#inner as ::semio_framework_dsl_record::DslField>::from_value(v).map_err(|message|::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_dsl_record::TextSpan::at(1,1)))?); }
                             __out
                         }
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected List, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected List, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             ),
@@ -502,10 +502,10 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::semio_framework_dsl_record::FieldValue::Tuple(items) => {
                             let mut __out = Vec::with_capacity(items.len());
-                            for v in items.iter() { __out.push(<#inner as ::semio_framework_dsl_record::DslField>::from_value(v).map_err(|message|::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_diagnostic::TextSpan::at(1,1)))?); }
+                            for v in items.iter() { __out.push(<#inner as ::semio_framework_dsl_record::DslField>::from_value(v).map_err(|message|::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_dsl_record::TextSpan::at(1,1)))?); }
                             __out
                         }
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Tuple, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Tuple, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             ),
@@ -525,7 +525,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                             for (keyword, record) in items.iter() { __out.push(<#inner as ::semio_framework_dsl_record::DslVariants>::from_named_record(keyword, record)?); }
                             __out
                         }
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Statements, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Statements, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             ),
@@ -546,9 +546,9 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                                 for (keyword, record) in items.iter() { __out.push(<#inner as ::semio_framework_dsl_record::DslVariants>::from_named_record(keyword, record)?); }
                                 __out
                             }
-                            other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Statements inside Block, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                            other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Statements inside Block, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                         },
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Block, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Block, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             ),
@@ -565,10 +565,10 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::semio_framework_dsl_record::FieldValue::Map(entries) => {
                             let mut __out = ::std::collections::BTreeMap::new();
-                            for (k, v) in entries.iter() { __out.insert(k.clone(), <#inner as ::semio_framework_dsl_record::DslField>::from_value(v).map_err(|message|::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_diagnostic::TextSpan::at(1,1)))?); }
+                            for (k, v) in entries.iter() { __out.insert(k.clone(), <#inner as ::semio_framework_dsl_record::DslField>::from_value(v).map_err(|message|::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message,::semio_framework_dsl_record::TextSpan::at(1,1)))?); }
                             __out
                         }
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Map, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Map, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             ),
@@ -587,7 +587,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                         ::semio_framework_dsl_record::FieldValue::Statements(items) if items.len() == 1 => {
                             Some(<#inner as ::semio_framework_dsl_record::DslVariants>::from_named_record(&items[0].0, &items[0].1)?)
                         }
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected 0 or 1 tagged values, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected 0 or 1 tagged values, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             ),
@@ -599,7 +599,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                         ::semio_framework_dsl_record::FieldValue::Statements(items) if items.len() == 1 => {
                             Box::new(<#inner as ::semio_framework_dsl_record::DslVariants>::from_named_record(&items[0].0, &items[0].1)?)
                         }
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected exactly 1 tagged value, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected exactly 1 tagged value, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             ),
@@ -628,7 +628,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::semio_framework_dsl_record::FieldValue::Block(inner) => { let value = inner.as_ref(); #from_value_expr },
                         ::semio_framework_dsl_record::FieldValue::Absent => { let value = &::semio_framework_dsl_record::FieldValue::Absent; #from_value_expr },
-                        other => return Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Block, found {other:?}"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                        other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Block, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },
             )
@@ -645,7 +645,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
         let local = field_local(ident);
         from_value_stmts.push(quote! {
             let #local = {
-                let value = record.get(#id).ok_or_else(|| ::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("missing field '{}'", #key),::semio_framework_diagnostic::TextSpan::at(1,1)))?;
+                let value = record.get(#id).ok_or_else(|| ::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("missing field '{}'", #key),::semio_framework_dsl_record::TextSpan::at(1,1)))?;
                 #from_value_expr
             };
         });
@@ -753,11 +753,11 @@ fn controlled_statements(inner:&Type)->proc_macro2::TokenStream{
 
 
 /// 🔎️ Reads declared source slots directly for the retained native projection cursor.
-fn retained_record_codegen(fields:&Fields)->proc_macro2::TokenStream{
+fn retained_record_codegen(fields:&Fields,from_bindings:bool)->proc_macro2::TokenStream{
     let plans=plan_fields(fields);let ids=plans.iter().map(|plan|plan.id);
     let arms=plans.iter().enumerate().map(|(index,plan)|{
         let FieldPlan{ident,kind,elem_ty,block,..}=plan;
-        let value=quote!{&self.#ident};
+        let value=if from_bindings{let local=field_local(ident);quote!{#local}}else{quote!{&self.#ident}};
         let projection=match kind{
             FieldKind::Scalar=>quote!{<#elem_ty as ::semio_framework_dsl_record::DslField>::projection_view(value,path)},
             FieldKind::OptionScalar(inner)=>quote!{match value{Some(value)=><#inner as ::semio_framework_dsl_record::DslField>::projection_view(value,path),None if path.is_empty()=>Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Absent),None=>Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
@@ -765,6 +765,10 @@ fn retained_record_codegen(fields:&Fields)->proc_macro2::TokenStream{
             FieldKind::VecTuple(inner)=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Tuple(value.len()))}else{<#inner as ::semio_framework_dsl_record::DslField>::projection_view(value.get(path[0]).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..])}},
             FieldKind::Bytes64=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Bytes(value))}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             FieldKind::MapField(inner)=>quote!{<::std::collections::BTreeMap<String,#inner> as ::semio_framework_dsl_record::DslField>::projection_view(value,path)},
+            FieldKind::VecStatements(inner)=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Statements(value.len()))}else{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(value.get(path[0]).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..])}},
+            FieldKind::VecBlockStatements(inner)=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Block)}else if path[0]==0{let path=&path[1..];if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Statements(value.len()))}else{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(value.get(path[0]).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..])}}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
+            FieldKind::OptionStatements(inner)=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Statements(usize::from(value.is_some())))}else if path[0]==0{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(value.as_ref().ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..])}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
+            FieldKind::RequiredStatements(inner)=>quote!{if path.is_empty(){Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Statements(1))}else if path[0]==0{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(value.as_ref(),&path[1..])}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             _=>quote!{Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::UnsupportedOwner,"tagged source owner has no retained projection"))},
         };
         let projection=if *block{quote!{if path.is_empty(){match {#projection}?{::semio_framework_dsl_record::native_encoding::FieldProjectionView::Absent=>Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Absent),_=>Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Block)}}else if path[0]==0{let path=&path[1..];#projection}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}}}else{projection};
@@ -773,18 +777,23 @@ fn retained_record_codegen(fields:&Fields)->proc_macro2::TokenStream{
     quote!{if path.is_empty(){return Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Record(&[#(#ids),*]))}match path[0]{#(#arms,)*_=>Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}}
 }
 
-fn retained_record_key_codegen(fields:&Fields)->proc_macro2::TokenStream{
+fn retained_record_key_codegen(fields:&Fields,from_bindings:bool)->proc_macro2::TokenStream{
     let plans=plan_fields(fields);let arms=plans.iter().enumerate().map(|(ordinal,plan)|{
         let FieldPlan{ident,kind,elem_ty,block,..}=plan;
+        let value=if from_bindings{let local=field_local(ident);quote!{#local}}else{quote!{&self.#ident}};
         let projection=match kind{
             FieldKind::Scalar=>quote!{<#elem_ty as ::semio_framework_dsl_record::DslField>::projection_key(value,path,index)},
             FieldKind::OptionScalar(inner)=>quote!{match value{Some(value)=><#inner as ::semio_framework_dsl_record::DslField>::projection_key(value,path,index),None=>Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             FieldKind::VecList(inner)|FieldKind::VecTable(inner)|FieldKind::VecTuple(inner)=>quote!{let child=*path.first().ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?;<#inner as ::semio_framework_dsl_record::DslField>::projection_key(value.get(child).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..],index)},
             FieldKind::MapField(inner)=>quote!{<::std::collections::BTreeMap<String,#inner> as ::semio_framework_dsl_record::DslField>::projection_key(value,path,index)},
+            FieldKind::VecStatements(inner)=>quote!{if path.is_empty(){Ok(<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_identity(value.get(index).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?).0)}else{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(value.get(path[0]).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..],index)}},
+            FieldKind::VecBlockStatements(inner)=>quote!{if path.first()==Some(&0){let path=&path[1..];if path.is_empty(){Ok(<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_identity(value.get(index).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?).0)}else{<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(value.get(path[0]).ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?,&path[1..],index)}}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
+            FieldKind::OptionStatements(inner)=>quote!{let value=value.as_ref().ok_or_else(::semio_framework_dsl_record::native_encoding::projection_path_error)?;if path.is_empty()&&index==0{Ok(<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_identity(value).0)}else if path.first()==Some(&0){<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(value,&path[1..],index)}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
+            FieldKind::RequiredStatements(inner)=>quote!{if path.is_empty()&&index==0{Ok(<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_identity(value.as_ref()).0)}else if path.first()==Some(&0){<#inner as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(value.as_ref(),&path[1..],index)}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}},
             _=>quote!{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())},
         };
         let projection=if *block{quote!{if path.first()==Some(&0){let path=&path[1..];#projection}else{Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}}}else{projection};
-        quote!{#ordinal=>{let value=&self.#ident;let path=&path[1..];#projection}}
+        quote!{#ordinal=>{let value=#value;let path=&path[1..];#projection}}
     });quote!{if path.is_empty(){return Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}match path[0]{#(#arms,)*_=>Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}}
 }
 
@@ -800,8 +809,8 @@ fn emit_record(input: DeriveInput) -> proc_macro2::TokenStream {
     let schema_stmts=schema_record_codegen(&data.fields);let schema_count=schema_stmts.len();
     let encoding_stmts=encoding_record_codegen(&data.fields,false);
     let encoding_count=encoding_stmts.len();
-    let retained_projection=retained_record_codegen(&data.fields);
-    let retained_keys=retained_record_key_codegen(&data.fields);
+    let retained_projection=retained_record_codegen(&data.fields,false);
+    let retained_keys=retained_record_key_codegen(&data.fields,false);
     let controlled_fields=field_idents.iter().map(|ident|{let local=field_local(ident);quote!{#ident:#local.take()}});
     let retirement=record_retirement_codegen(&data.fields,container.retire_with.as_ref());
     let schema_keyword_expr=match &container.keyword{Some(keyword)=>quote!{Some(#keyword)},None=>quote!{None}};
@@ -838,7 +847,7 @@ fn emit_record(input: DeriveInput) -> proc_macro2::TokenStream {
             pub fn __dsl_to_record_controlled(&self,control:&mut ::semio_framework_value::NativeEncodeControl<'_>)->Result<::semio_framework_dsl_record::RecordValue,::semio_framework_value::ValueError>{
                 control.scoped_depth(64,|control|control.scoped_stage(|control|{control.begin_stage(#encoding_count)?;let mut record=::semio_framework_dsl_record::native_encoding::EncodedRecord::new(#encoding_count,control)?;#(#encoding_stmts)*Ok::<_,::semio_framework_value::ValueError>(record.take())}))
             }
-            pub fn __dsl_from_record(record: &::semio_framework_dsl_record::RecordValue) -> Result<Self, ::semio_framework_diagnostic::TextError> {
+            pub fn __dsl_from_record(record: &::semio_framework_dsl_record::RecordValue) -> Result<Self, ::semio_framework_dsl_record::TextError> {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_initializers),* })
             }
@@ -939,6 +948,7 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
     let mut from_named_arms = Vec::new();
     let mut controlled_arms=Vec::new();
     let mut retirement_arms=Vec::new();
+    let mut variant_identity_arms=Vec::new();let mut variant_projection_arms=Vec::new();let mut variant_key_arms=Vec::new();
 
     for (variant_index,variant) in data.variants.iter().enumerate() {
         let attrs = parse_field_attrs(&variant.attrs);
@@ -965,6 +975,10 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
                 encoding_arms.push(quote!{#name::#variant_ident(inner)=>{let keyword=control.copy_text(#keyword)?;let record=<#inner_ty as ::semio_framework_dsl_record::DslField>::to_record_controlled(inner,control)?;Ok((keyword,record))}});
                 controlled_arms.push(quote!{#keyword=>Ok(#name::#variant_ident(control.scoped_stage(|control|<#inner_ty as ::semio_framework_dsl_record::DslField>::from_record_controlled(record,control))?))});
                 retirement_arms.push(quote!{#name::#variant_ident(inner)=><#inner_ty as ::semio_framework_dsl_record::DslField>::retire_decoded(inner)});
+                variant_identity_arms.push(quote!{#name::#variant_ident(_)=>(#keyword,#variant_index,::semio_framework_dsl_record::__rt::newtype_variant_producer::<#inner_ty>())});
+                variant_projection_arms.push(quote!{#name::#variant_ident(inner)=>{if !matches!(<#inner_ty as ::semio_framework_dsl_record::DslField>::projection_view(inner,&[])?,::semio_framework_dsl_record::native_encoding::FieldProjectionView::Record(_)){return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"newtype variant requires an original Record source"));}<#inner_ty as ::semio_framework_dsl_record::DslField>::projection_view(inner,path)}});
+                variant_key_arms.push(quote!{#name::#variant_ident(inner)=>{if !matches!(<#inner_ty as ::semio_framework_dsl_record::DslField>::projection_view(inner,&[])?,::semio_framework_dsl_record::native_encoding::FieldProjectionView::Record(_)){return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"newtype variant requires an original Record source"));}<#inner_ty as ::semio_framework_dsl_record::DslField>::projection_key(inner,path,index)}});
+
                 continue;
             }
         }
@@ -1020,6 +1034,11 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
         controlled_arms.push(quote!{#keyword=>{#(#controlled_stmts)* Ok(#controlled_construct)}});
         let plans=plan_fields(fields);let retirements=plans.iter().map(|plan|{let ident=field_local(&plan.ident);retire_field_codegen(plan,quote!{#ident})});
         retirement_arms.push(quote!{#match_pattern=>{#(#retirements)*}});
+        let projected=retained_record_codegen(fields,true);let projected_key=retained_record_key_codegen(fields,true);
+        variant_identity_arms.push(quote!{#match_pattern=>(#keyword,#variant_index,Self::#producer_name())});
+        variant_projection_arms.push(quote!{#match_pattern=>{#projected}});
+        variant_key_arms.push(quote!{#match_pattern=>{#projected_key}});
+
     }
 
     let retirement=if let Some(owner)=retire_with{quote!{#owner(self);}}else{quote!{match self{#(#retirement_arms),*}}};
@@ -1029,6 +1048,9 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
         impl #name{#(#schema_methods)*}
         impl ::semio_framework_dsl_record::DslVariants for #name {
             fn retire_decoded_variant(self){#retirement}
+            fn projected_variant_identity(&self)->(&'static str,usize,::semio_framework_dsl_record::RecordSpecProducer){match self{#(#variant_identity_arms),*}}
+            fn projected_variant_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{match self{#(#variant_projection_arms),*}}
+            fn projected_variant_key(&self,path:&[usize],index:usize)->Result<&str,::semio_framework_value::ValueError>{match self{#(#variant_key_arms),*}}
             // 🚫️async: E4 — see `DslVariants::variants`'s tag on the trait.
             fn variants() -> Vec<(String, ::semio_framework_dsl_record::RecordSpecProducer)> {
                 vec![ #(#variants_exprs),* ]
@@ -1040,10 +1062,10 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
             fn to_named_record_controlled(&self,control:&mut ::semio_framework_value::NativeEncodeControl<'_>)->Result<(String,::semio_framework_dsl_record::RecordValue),::semio_framework_value::ValueError>{
                 control.scoped_depth(64,|control|control.scoped_stage(|control|match self{#(#encoding_arms),*}))
             }
-            fn from_named_record(keyword: &str, record: &::semio_framework_dsl_record::RecordValue) -> Result<Self, ::semio_framework_diagnostic::TextError> {
+            fn from_named_record(keyword: &str, record: &::semio_framework_dsl_record::RecordValue) -> Result<Self, ::semio_framework_dsl_record::TextError> {
                 match keyword {
                     #(#from_named_arms,)*
-                    other => Err(::semio_framework_diagnostic::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown keyword '{other}'"),::semio_framework_diagnostic::TextSpan::at(1,1))),
+                    other => Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown keyword '{other}'"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                 }
             }
             fn from_named_record_controlled(keyword:&str,record:&::semio_framework_dsl_record::RecordValue,control:&mut ::semio_framework_value::NativeDecodeControl<'_>)->Result<Self,::semio_framework_value::ValueError>{
@@ -1218,7 +1240,7 @@ fn emit_projection(input: DeriveInput, spec: syn::Ident, to: syn::Ident, from: s
                 #(#to_value_stmts)*
                 record
             }
-            pub fn #from(record: &::semio_framework_dsl_record::RecordValue) -> Result<Self, ::semio_framework_diagnostic::TextError> {
+            pub fn #from(record: &::semio_framework_dsl_record::RecordValue) -> Result<Self, ::semio_framework_dsl_record::TextError> {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_initializers),* })
             }

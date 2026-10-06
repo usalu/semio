@@ -379,8 +379,32 @@ export function sceneWithoutEchoedTextV1(scene: TextEditorScene): Record<string,
 
 /** 📦️ The pack the editor syncs for `scene`: the whole scene when it is external (another author's text), else the
  * scene without the echo of its own state (ticket 26/09/23 F3: the buffer's lane ref made every echo re-sync). */
-export function textEditorSyncPackV1(scene: TextEditorScene, external: boolean): Uint8Array {
-  return new Uint8Array(encodePackValue(external ? scene : sceneWithoutEchoedTextV1(scene)));
+export function textEditorScenePacket(scene: TextEditorScene, external: boolean): Uint8Array {
+  const source = external ? scene : sceneWithoutEchoedTextV1(scene);
+  const field = <T,>(raw: unknown): T | undefined => {
+    if (raw === undefined) return undefined;
+    if (typeof raw !== "string") throw new TypeError("Editor scene transport field must be encoded text");
+    return parseSceneJsonField<T>(raw);
+  };
+  const occurrences = field<{ readonly hover?: string; readonly selection?: string }>(source.occurrencesJson);
+  const hover = field<{ readonly start: number; readonly end: number } | null>(source.hoverJson);
+  const camera = field<{ readonly y: number }>(source.cameraJson);
+  const overlays = field<{ readonly deadLineY?: number }>(source.overlaysJson);
+  const input = {
+    buffer: source.buffer,
+    selection: field(source.selectionJson),
+    tokens: field(source.tokensJson),
+    diagnostics: field(source.diagnosticsJson),
+    placeholders: field(source.placeholdersJson),
+    occurrences: occurrences === undefined ? undefined : { hover: field(occurrences.hover), selection: field(occurrences.selection) },
+    extraCarets: field(source.extraCaretsJson),
+    selectableSpans: field(source.selectableSpansJson),
+    settings: field(source.settingsJson),
+    camera: camera === undefined ? undefined : { y: camera.y },
+    overlays: overlays === undefined ? undefined : { deadLineY: overlays.deadLineY },
+    hover: hover === undefined ? undefined : hover === null ? { kind: "clear" } : { kind: "range", start: hover.start, end: hover.end },
+  };
+  return new Uint8Array(encodePackValue(Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined))));
 }
 
 /** 🟰️ Whether two encoded scene packs carry the same bytes. */
@@ -761,21 +785,22 @@ function WasmEditorSurface({
         let show: TextEditorSpliceViewV1 = null;
         if (resync || spliceHostRef.current === null) {
           spliceHostRef.current = textEditorSpliceHostV1(scene.buffer, textEditorAppliedSpliceV1(scene.selectionJson));
-          reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, true) };
+          reconciledRef.current = { scene, pack: textEditorScenePacket(scene, true) };
         } else if (reconciledRef.current?.scene !== scene) {
           const local = session?.text() ?? scene.buffer;
           const received = receiveTextEditorSceneV1(spliceHostRef.current, scene.buffer, textEditorAppliedSpliceV1(scene.selectionJson), local, textEditorSessionSelectionV1(session, local));
           spliceHostRef.current = received.host;
-          reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, false) };
+          reconciledRef.current = { scene, pack: textEditorScenePacket(scene, false) };
           show = received.show;
         }
         const pack = reconciledRef.current.pack;
         if (session === null) return;
         if (resync || syncedRef.current?.session !== session || !sameScenePackV1(syncedRef.current.pack, pack)) {
-          syncedRef.current = { session, pack };
           try {
-            session.syncFromScenePack?.(pack);
+            session.synchronizeScene(pack, 0, 16_777_216, 16_777_216, () => sessionRef.current === session && !renameActiveRef.current);
+            syncedRef.current = { session, pack };
           } catch {
+            syncedRef.current = null;
             return;
           }
         }
@@ -784,20 +809,21 @@ function WasmEditorSurface({
       }
       if (resync) {
         echoStateRef.current = { pending: [], acknowledged: scene.buffer };
-        reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, true) };
+        reconciledRef.current = { scene, pack: textEditorScenePacket(scene, true) };
       } else if (reconciledRef.current?.scene !== scene) {
         const echo = reconcileTextEditorEchoV1(echoStateRef.current, scene.buffer);
         echoStateRef.current = { pending: echo.pending, acknowledged: echo.acknowledged };
-        reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, echo.external) };
+        reconciledRef.current = { scene, pack: textEditorScenePacket(scene, echo.external) };
       }
       const session = sessionRef.current;
       const pack = reconciledRef.current.pack;
       if (session === null) return;
       if (!resync && syncedRef.current?.session === session && sameScenePackV1(syncedRef.current.pack, pack)) return;
-      syncedRef.current = { session, pack };
       try {
-        session.syncFromScenePack?.(pack);
-      } catch (error) {
+        session.synchronizeScene(pack, 0, 16_777_216, 16_777_216, () => sessionRef.current === session && !renameActiveRef.current);
+        syncedRef.current = { session, pack };
+      } catch {
+        syncedRef.current = null;
       }
     },
     [scene],
@@ -950,8 +976,7 @@ function WasmEditorSurface({
       attachCanvas: async () => undefined,
       setSize: () => {},
       renderFrame: () => {},
-      syncFromSceneJson: () => {},
-      syncFromScenePack: () => {},
+      synchronizeScene: () => {},
       setText: () => {},
       text: () => scene.buffer,
       caret: () => scene.buffer.length,

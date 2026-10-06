@@ -1,0 +1,106 @@
+{
+  "rawDDLBytes": 281,
+  "storedSQLBytes": 279,
+  "tableNameBytes": 14,
+  "canonicalSchemaBytes": 293,
+  "columns": [
+    "id",
+    "artifact_kind",
+    "standard",
+    "subset",
+    "schema_version",
+    "native_encoding"
+  ],
+  "cases": [
+    {
+      "kind": "s.stdio.bcf",
+      "standard": "2.1",
+      "subset": "*",
+      "encoding": "binary",
+      "row": {
+        "id": 1,
+        "artifact_kind": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "*",
+        "schema_version": 1,
+        "native_encoding": "binary"
+      },
+      "valueBytes": 37
+    },
+    {
+      "kind": "s.stdio.bcf",
+      "standard": "2.1",
+      "subset": "*",
+      "encoding": "text",
+      "row": {
+        "id": 1,
+        "artifact_kind": "s.stdio.bcf",
+        "standard": "2.1",
+        "subset": "*",
+        "schema_version": 1,
+        "native_encoding": "text"
+      },
+      "valueBytes": 35
+    },
+    {
+      "kind": "s.stdio.deflate",
+      "standard": "rfc1950",
+      "subset": "*",
+      "encoding": "binary",
+      "row": {
+        "id": 1,
+        "artifact_kind": "s.stdio.deflate",
+        "standard": "rfc1950",
+        "subset": "*",
+        "schema_version": 1,
+        "native_encoding": "binary"
+      },
+      "valueBytes": 45
+    },
+    {
+      "kind": "s.stdio.deflate",
+      "standard": "rfc1950",
+      "subset": "*",
+      "encoding": "text",
+      "row": {
+        "id": 1,
+        "artifact_kind": "s.stdio.deflate",
+        "standard": "rfc1950",
+        "subset": "*",
+        "schema_version": 1,
+        "native_encoding": "text"
+      },
+      "valueBytes": 43
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "text",
+      "encoding": "binary",
+      "row": {
+        "id": 1,
+        "artifact_kind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "text",
+        "schema_version": 1,
+        "native_encoding": "binary"
+      },
+      "valueBytes": 41
+    },
+    {
+      "kind": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "text",
+      "encoding": "text",
+      "row": {
+        "id": 1,
+        "artifact_kind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "text",
+        "schema_version": 1,
+        "native_encoding": "text"
+      },
+      "valueBytes": 39
+    }
+  ]
+}

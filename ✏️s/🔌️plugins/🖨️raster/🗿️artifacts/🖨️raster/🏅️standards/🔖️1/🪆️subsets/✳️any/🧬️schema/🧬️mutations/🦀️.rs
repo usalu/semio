@@ -100,30 +100,9 @@ mod mask_tests;
 //#endregion 🧪️Tests
 
 //#region 🌉️ExternalCodecBridge
-/// 🧩️ Decodes one committed `📸️snapshot/⬅️before/🔣️.json` document together with the
-/// `🦠️mutation/🔣️.json` payload beside it — the same bytes the leaf's own fixture test
-/// reads — into real typed values.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RasterSnapshot, RasterMutation), String> {
-    let snapshot: RasterSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed raster snapshot JSON does not decode: {error}"))?;
-    // 🧹️ A decoded before-document owns two fixed-capacity maps (`assets`, every adjustment's
-    // `params`) whose `Drop` fails closed, so the snapshot cannot simply fall off this frame when
-    // the mutation beside it does not decode — every committed before-document of this artifact is
-    // populated.
-    match semio_framework_pack_json::from_json_str::<RasterMutation>(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-        Ok(mutation) => Ok((snapshot, mutation)),
-        Err(error) => {
-            retire_bridge_snapshot(snapshot);
-            Err(format!("the committed raster mutation JSON does not decode: {error}"))
-        }
-    }
-}
 
-/// 🧹️ The bridge's own retirement seam for a displaced document — the artifact's real
-/// `retire_raster_snapshot`, named once here so every bridge frame retires the same way.
-fn retire_bridge_snapshot(snapshot: RasterSnapshot) {
-    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
-}
+
+
 
 /// 🧹️ Cold-retires a batch of operations nobody will apply — a `create-layer` inverse can carry a
 /// whole subtree whose adjustment layers own populated `params` maps.
@@ -150,16 +129,7 @@ fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(
     }
 }
 
-/// 📤️ The bridge's answer shape: the resulting document beside the codes it raised, so a caller
-/// that cannot name `protocol::MutationOutcome` can still tell an application from a refusal.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) -> String {
-    let value = semio_framework_pack_json::object([
-        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(snapshot))),
-        ("messages".to_string(), semio_framework_pack_json::Value::Array(messages.into_iter().map(semio_framework_pack_json::Value::from).collect())),
-    ]);
-    semio_framework_pack_json::to_string(&value)
-}
+
 
 /// 🌉️ Applies one committed mutation payload to one committed before-document and answers
 /// `{"snapshot": …, "messages": [ … ]}`.
@@ -225,22 +195,7 @@ pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Re
     Ok(rendered)
 }
 
-/// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering
-/// `{"printed": …, "snapshot": …, "reparsed": …}` so a caller can weigh the identity law's two
-/// halves — the bytes against the committed artifact, and the projection against itself.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
-    use store::ArtifactDsl;
-    let parsed = <RasterSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed raster example does not parse: {error:?}"))?;
-    let printed = <RasterSnapshot as ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <RasterSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted raster document does not parse: {error:?}"))?;
-    let value = semio_framework_pack_json::object([
-        ("printed".to_string(), semio_framework_pack_json::Value::from(printed)),
-        ("snapshot".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&parsed))),
-        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&reparsed))),
-    ]);
-    Ok(semio_framework_pack_json::to_string(&value))
-}
+
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🔖️Kinds

@@ -1,0 +1,3 @@
+# Unified General Owner Selection
+
+The 117 UI, Graph and Collection rows match their admitted complete Board-layout origin exactly, including full binary/text before and after hashes. The 118th row preserves the entire actual current Value root and inserts only the declared collection module mount at its unique paged-text anchor. Removing that insertion reconstructs every current byte and therefore every current function. The historical-to-current Value advance remains a full unknown pair without equivalence. This is finite source input admission; native and publication readiness remain separate.

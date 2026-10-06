@@ -27,11 +27,11 @@ fn live_intrinsic_value(value:&serde_json::Value)->DslValue{
  }
 }
 fn live_question(id:String,value:DslValue)->FormQuestion{
- FormQuestion{id,label:"Literal configured value".into(),kind:"text".into(),description:None,required:None,placeholder:None,default:Some(value),min:None,max:None,step:None,unit:None,text:None,options:None,fields:None,schema:None,src:None,accept:None,fixture_slug:None,params:None,condition:None}
+ FormQuestion{id,label:"Literal configured value".into(),kind:"text".into(),description:None,required:None,placeholder:None,default:Some(value),min:None,max:None,step:None,unit:None,text:None,options:None,fields:None,schema:None,src:None,accept:None,example_id:None,params:None,condition:None}
 }
 #[semio_framework_async_macros::async_test]
 async fn live_vcs_forms_dictionary_out_to_layout_fields_in_retains_complete_intrinsic_owner(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🧾️dictionary/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🧾️dictionary/🔣️.json")).unwrap();
  let contract=&fixture["liveVcs"];
  let mut values:Vec<DslValue>=fixture["dictionary"]["entries"].as_array().unwrap().iter().map(|entry|live_intrinsic_value(&entry["value"])).collect();
  values.extend(fixture["floatWords"].as_array().unwrap().iter().map(|word|DslValue::Number(Number::Float(f64::from_bits(u64::from_str_radix(word.as_str().unwrap(),16).unwrap())))));

@@ -15,10 +15,41 @@
       "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Entry",
+          "de": "Eintrag"
+        },
+        "description": {
+          "en": "Name of the archive member that is renamed.",
+          "de": "Name des Archivmitglieds, das umbenannt wird."
+        },
+        "ref": {
+          "kind": "entry"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "newName": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "New name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "Name the member carries afterwards, with `/` as the path separator.",
+          "de": "Name, den das Mitglied danach trägt, mit `/` als Pfadtrenner."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

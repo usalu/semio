@@ -1,0 +1,96 @@
+[
+  {
+    "name": "object",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 7,
+        "valueBytes": 462,
+        "schemaBytes": 1851,
+        "tableCount": 5,
+        "maxColumns": 32,
+        "tables": [
+          {
+            "table": "semio_object_brep_child",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 34
+          },
+          {
+            "table": "semio_object_document",
+            "width": 32,
+            "rows": 1,
+            "semanticBytes": 246
+          },
+          {
+            "table": "semio_object_mesh_child",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 34
+          },
+          {
+            "table": "semio_object_reference",
+            "width": 5,
+            "rows": 3,
+            "semanticBytes": 113
+          },
+          {
+            "table": "semio_object_value_child",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 35
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 1,
+        "valueBytes": 246,
+        "schemaBytes": 1851,
+        "tableCount": 5,
+        "maxColumns": 32,
+        "tables": [
+          {
+            "table": "semio_object_brep_child",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_object_document",
+            "width": 32,
+            "rows": 1,
+            "semanticBytes": 246
+          },
+          {
+            "table": "semio_object_mesh_child",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_object_reference",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_object_value_child",
+            "width": 4,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  }
+]

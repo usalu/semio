@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "id": "host-component-fixture",
+  "source": "../../../🦀️.rs",
+  "manifest": "../../../📦️packages/🦀️rust/Cargo.toml",
+  "bindings": [
+    "EngineHandles"
+  ]
+}

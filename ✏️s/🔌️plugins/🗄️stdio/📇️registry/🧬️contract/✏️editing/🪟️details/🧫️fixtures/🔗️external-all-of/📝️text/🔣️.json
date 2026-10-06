@@ -1,10 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.test/text.json",
-  "type": "object",
-  "required": ["schema", "runs"],
-  "properties": {
-    "schema": { "const": "s.text" },
-    "runs": { "type": "array", "items": { "type": "string" } }
-  }
+  "inertSchemaData": [
+    "🧾️schema-input.json"
+  ]
 }

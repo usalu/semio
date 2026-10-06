@@ -9,8 +9,8 @@ export const SEQUENCE_MAX_IN_FLIGHT = 256;
 
 export const SequenceOperation = Object.freeze({
   open: 2300,
-  loadFixtureJson: 2301,
-  fixtureJson: 2302,
+  loadSnapshotJson: 2301,
+  snapshotJson: 2302,
   catalogueJson: 2303,
   addStep: 2304,
   addStepDropped: 2305,
@@ -350,8 +350,8 @@ export async function createSequenceFeatures(host) {
   let surface;
 
   const document = {
-    loadFixtureJson: (json) => task(SequenceOperation.loadFixtureJson, encoder.encode(json)),
-    fixtureJson: () => task(SequenceOperation.fixtureJson, undefined, text),
+    loadSnapshotJson: (json) => task(SequenceOperation.loadSnapshotJson, encoder.encode(json)),
+    snapshotJson: () => task(SequenceOperation.snapshotJson, undefined, text),
     catalogueJson: () => task(SequenceOperation.catalogueJson, undefined, text),
   };
   const editing = {

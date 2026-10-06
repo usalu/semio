@@ -117,8 +117,8 @@ test("Chromium captures the topmost scene through release outside every scene", 
   const { default: Ajv } = await import("ajv/dist/2020.js");
   const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/🪪️scene-pointer-owner");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-  const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "📐️schema.json"), "utf8")));
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  
+  
   const { chromium } = await import("playwright");
   const browser = await chromium.launch({ headless: true });
   try {

@@ -1,10 +1,22 @@
 {
-  "version": 1,
+  "version": 2,
   "checkout": {
     "root": "C:\\Users\\username\\source\\repos\\semio",
     "maxPathUnits": 259,
     "ticketRoot": ".🧬semio/🦑️repo/🎫️tickets"
   },
+  "checkoutRoots": [
+    {
+      "root": "C:\\Users\\username\\source\\repos\\semio",
+      "maxPathUnits": 260,
+      "scope": "ticket"
+    },
+    {
+      "root": "C:\\git\\semio",
+      "maxPathUnits": 259,
+      "scope": "all"
+    }
+  ],
   "components": [
     { "name": "", "illegal": true },
     { "name": ".", "illegal": false },

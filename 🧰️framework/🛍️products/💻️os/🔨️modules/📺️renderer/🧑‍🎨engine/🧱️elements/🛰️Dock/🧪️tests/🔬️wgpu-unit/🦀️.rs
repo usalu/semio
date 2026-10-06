@@ -31,6 +31,7 @@ fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinitio
             window_ids
                 .iter()
                 .map(|id| WindowKindDefinition {
+                    initial_utility_id: None,
                     id: (*id).into(),
                     label: LocalizedLabel::data(*id),
                     body_key: format!("{id}.body"),
@@ -786,12 +787,12 @@ fn staging_stage_and_reset_roundtrip() {
 #[test]
 fn utility_activation_toggles_and_switches() {
     let mut shell = shell();
-    shell.apply_set_active_utility("main", "utility.a");
+    shell.toggle_active_utility("main", "utility.a");
     assert_eq!(shell.active_utility_for_window("main"), Some("utility.a"));
-    shell.apply_set_active_utility("main", "utility.a");
+    shell.toggle_active_utility("main", "utility.a");
     assert_eq!(shell.active_utility_for_window("main"), None);
-    shell.apply_set_active_utility("main", "utility.a");
-    shell.apply_set_active_utility("main", "utility.b");
+    shell.toggle_active_utility("main", "utility.a");
+    shell.toggle_active_utility("main", "utility.b");
     assert_eq!(shell.active_utility_for_window("main"), Some("utility.b"));
 }
 
@@ -805,10 +806,10 @@ fn active_utility_gates_actions_unless_allowed() {
     let app = actions_utilities_app();
     let mut shell = shell();
     assert!(shell.actions_enabled_for_window(&app, "main"));
-    shell.apply_set_active_utility("main", "utility.a");
+    shell.toggle_active_utility("main", "utility.a");
     assert!(!shell.actions_enabled_for_window(&app, "main"));
-    shell.apply_set_active_utility("main", "utility.a");
-    shell.apply_set_active_utility("main", "utility.b");
+    shell.toggle_active_utility("main", "utility.a");
+    shell.toggle_active_utility("main", "utility.b");
     assert!(shell.actions_enabled_for_window(&app, "main"));
 }
 

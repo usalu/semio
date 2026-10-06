@@ -5,7 +5,8 @@ use crate::editor::writer::modes::edit::windows::main::options;
 use crate::editor::writer::modes::edit::windows::main::transient::WriterMainWindowTransient;
 use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::schema::inferences::{language_diagnostics_json, language_tokens_json};
-use crate::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, language_completions_json, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
+use crate::schema::{jack_editor_placeholders, jack_newline_gate_offsets, jack_symbol_at_offset, selectable_spans_for_jack, tokenize_language, JackSymbolKind};
+use crate::standards::v1::subsets::any::io::text::snapshot::{language_completions_json};
 use crate::{writer_text, WriterSnapshot};
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -36,6 +37,7 @@ const WRITER_PLAY_SURFACE_MAIN: &str = "writer.play";
 /// [`window_measures`], not frozen into the manifest.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WRITER_PLAY_WINDOW_KIND.into(),
         label: LocalizedLabel::native("Jack", "Jack"),
         body_key: WRITER_PLAY_BODY_MAIN.into(),

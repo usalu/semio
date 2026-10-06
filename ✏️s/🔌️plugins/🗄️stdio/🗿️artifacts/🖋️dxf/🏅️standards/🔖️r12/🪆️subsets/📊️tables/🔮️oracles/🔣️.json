@@ -5,9 +5,8 @@
   "oracles": [],
   "noOracleDecisions": [],
   "comparisonProfiles": [],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-layer-applied",
       "class": "third-party-generated",
       "target": {
@@ -58,7 +57,6 @@
       "notes": "A new named LAYER row is inserted at a valid index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-layer-rejected-duplicate",
       "class": "third-party-generated",
       "target": {
@@ -102,7 +100,6 @@
       "notes": "Target name already exists in the base layer table — invalid-add-target."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-layer-applied",
       "class": "third-party-generated",
       "target": {
@@ -153,7 +150,6 @@
       "notes": "The named LAYER row is removed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-layer-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -197,7 +193,6 @@
       "notes": "Target name is absent — invalid-remove-target."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-layer-applied",
       "class": "third-party-generated",
       "target": {
@@ -248,7 +243,6 @@
       "notes": "The named LAYER row's colour and linetype are whole-value replaced."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-layer-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -292,7 +286,6 @@
       "notes": "Target name is absent — invalid-modify-target (diff_set_layer always emits a modified entry, unlike set-header-var)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-style-applied",
       "class": "third-party-generated",
       "target": {
@@ -343,7 +336,6 @@
       "notes": "A new named STYLE row is inserted at a valid index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-style-rejected-duplicate",
       "class": "third-party-generated",
       "target": {
@@ -387,7 +379,6 @@
       "notes": "Target name already exists — invalid-add-target."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-style-applied",
       "class": "third-party-generated",
       "target": {
@@ -438,7 +429,6 @@
       "notes": "The named STYLE row is removed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-style-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -482,7 +472,6 @@
       "notes": "Target name is absent — invalid-remove-target."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-applied",
       "class": "third-party-generated",
       "target": {
@@ -533,7 +522,6 @@
       "notes": "The named STYLE row's font is whole-value replaced."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-style-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -577,7 +565,6 @@
       "notes": "Target name is absent — invalid-modify-target."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-linetype-applied",
       "class": "third-party-generated",
       "target": {
@@ -628,7 +615,6 @@
       "notes": "A new named LTYPE row is inserted at a valid index."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-linetype-rejected-duplicate",
       "class": "third-party-generated",
       "target": {
@@ -672,7 +658,6 @@
       "notes": "Target name already exists — invalid-add-target."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-linetype-applied",
       "class": "third-party-generated",
       "target": {
@@ -723,7 +708,6 @@
       "notes": "The named LTYPE row is removed."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-linetype-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -767,7 +751,6 @@
       "notes": "Target name is absent — invalid-remove-target."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-linetype-applied",
       "class": "third-party-generated",
       "target": {
@@ -818,7 +801,6 @@
       "notes": "The named LTYPE row's description is whole-value replaced."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-linetype-rejected-missing",
       "class": "third-party-generated",
       "target": {

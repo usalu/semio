@@ -5,7 +5,7 @@ use semio_framework_plugin::NoConfigMutation;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_plugin::app::ChildEmit;
+use semio_framework_plugin::app::{ChildEmit,ChildEmitPreparation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_node, SemioFlowMutation};
@@ -69,7 +69,7 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &
     let child_id = &doc.snapshot.content.child_id;
     let content = doc.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
     let mutation = child_add_widget_mutation(&content, &descriptor, x, y)?;
-    Ok(Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &[mutation])], ui_scope: UiDirtyScope::Full, ..Default::default() })
+    Ok(Emit { child_preparations: std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content", child_id, vec![mutation])]), ui_scope: UiDirtyScope::Full, ..Default::default() })
 }
 
 //#region 🧪️Tests

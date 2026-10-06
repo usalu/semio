@@ -663,3 +663,276 @@ is OWED (rule 44).
   - record the O(graph) clone per leaf as a follow-up.
 
   This is also stdio-semio, so stage it per rule 45.
+
+## Session 5 — 2026-10-05
+
+S5-GRAPHS-WIRES (Opus, successor of S4-GRAPHS and S4-WIRES-MATH; coordinator `⚪3f26aaa1…`). Scope: dag, sequence,
+imperative/procedure, space (+ home), wires, mathematical and their hub compositions; the stdio-semio `🕸️graph` child
+vocabulary and `⏯️tool-run` (both inside the landing closure, rule 51). Scratch: `🗑️generated/s5-graphs-wires/`.
+Companion sections: `📓️s3-wires-report.md` and `📓️s3-math-report.md` § Session 5.
+
+### S5.0 Status (kept current, newest last)
+
+- 01:10 started. Rule 46 repair-first: files in the owned trees newer than the 10-04 18:27 stash-pop are peer sweeps
+  (21:19 pack-error conversion, 23:19 command/root files) plus S4-WIRES-MATH's own 21:0x–22:55 wave; no half-edit found by
+  reading, the compile below is the real check.
+- 01:11–01:17 **first compile of the inherited trees** (`check-lib-1.txt`, gate v3, 6m29s, exit 101): one batched native
+  `--lib --keep-going` over all seven crates. Six crates type-check; procedure had 2 errors, both peer drift in my tree.
+- 01:2x procedure fixed in source (see S5.1). Build gate v4 (rule 55) in force from here on.
+- 01:26 `--lib --tests` batch attempt 1 (`check-tests-1.txt`): no verdict, the kernel was red from a peer
+  (`🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs:219` E0308 `EncodeOptions`). 01:31 attempt 2
+  (`check-tests-2.txt`): no verdict, `semio-framework-pack` red (13× E0308 `VerificationLevel`,
+  `🎒️pack/🌱️value/🦀️.rs:3125–3283`). Both reported to `main`; the Codex pack peer is mid-wave (rule 56). No cargo of mine
+  while `🗑️generated/coord/foundation.status` reads RED.
+- 01:3x **F3 staged** (S5.5) while the foundation is red; the Python half of its law is run and green on the staged oracle.
+- 01:3x design §22.8 input declarations applied and gate-verified (S5.6).
+- 01:43 foundation GREEN (rule 56). 01:48–01:52 **`--lib --tests` batch 3** (`check-tests-3.txt`): dag, sequence, space,
+  home, wires, mathematical type-check incl. their test targets; procedure lib green, its lib-test had 2 errors in my
+  tree, fixed in source (S5.1).
+- 01:57–02:00 **F3 landed** under the `stdio` lock (rule 58), verifying check green, lock released 02:00:41.
+- 02:0x sequence fault notices (S5.7) prepared and dry-run; applied together with the next seven-crate batch.
+- 02:13–02:16 **batch 4 GREEN** (`check-tests-4.txt`): all seven crates `--lib --tests`, 0 errors, with F3 in stdio-semio,
+  the two procedure test fixes and the sequence notices applied. The fault gate then shows sequence 88 → 1 (S5.7).
+- 02:25–02:30 hub wasip2 batch 1 (`check-hub-1.txt`): `semio-s-artifact-space-space` red on wasm only
+  (`🪐️space/🫀️core/🧫️fixtures/🦀️.rs:58–59` E0603 `store::DslValue` is private) — fixed in source
+  (`semio_framework_value::DslValue`; the crate already depends on it).
+- 02:33–02:38 hub wasip2 batch 2 (`check-hub-2.txt`, pre-wave-B tree): space-space 0 errors / 9 warnings, home 0 / 3;
+  the ONLY failing crate was `semio-hub-space` (189 errors, e.g. `semio_framework_plugin::{Label, LocalizedLabel,
+  app_labels}` unresolved in `🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/**`); dag, sequence, imperative, reasoning,
+  mathematical hubs raised no error in that run. No COMPOSITION GREEN was announced from it: the tree changed (wave B).
+- ~02:40 usage cut (whole fleet). **07:28 resumed** (rule 62). Repair-first: F3 is complete on disk (all four targets equal
+  their staged `*.after.*` copies; the `stdio` lock was released 02:00:41 after the green check); the Python law passes on
+  the tree (4/0); the sequence notices and the space fixture fix were compiled before the cut (batch 4, hub batch 2).
+  Peer edits in my trees since the cut: wave B / sweeps at 06:14 (dag editor root, space core + home config, equation editor
+  root + two codec tests, `PLG/⏯️tool-run`, both tool-run test files), a sqlite contract wave in dag at 05:49, and a
+  65-file conversion of the hub space engine at 04:58.
+- 07:35 batch 5 started (seven crates `--lib --tests` on the wave-B tree, cold after the 04:22 prune).
+- 07:35–~07:45 **batch 5 was cut by the 07:45 usage cut** (`check-tests-5.txt` ends without dag, sequence or wires ever being
+  checked). Verdicts it did reach on the wave-B tree: procedure lib 0 errors / 8 warnings and lib-test 0 / 18 (the two
+  S5.1 test fixes hold), home 0 / 1 and 0 / 2, space 0 / 4 and 0 / 5, mathematical lib 0 / 32; **mathematical lib-test 1
+  error** (wave-B shape: `✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs:546` passes 4 arguments to
+  `ArtifactStoreOneItemPreparationFactory::preflight`, which takes 3). dag, sequence, wires: NO VERDICT.
+- 16:46 resumed for the coordinator's tool-run job only (`tool_run` law family 33 / 9). Everything of that job is in
+  `📓️s3-wires-report.md` § T5: wave `tool-run-settle` landed 17:06:32 + 17:08:02, law run 39 / 3, follow-up staged.
+
+### S5.1 Changes
+
+- `…/📜️procedure/…/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️semantic-contract/🦀️.rs` (L11): the one test file the
+  §20.15 rewrite missed still built a `ProcedureSnapshot` for renders that take a `ProcedureScene`; it now derives the
+  default document's scene (`crate::procedure_derivable_scene(&crate::ProcedureSnapshot::default())`).
+- `…/📜️procedure/…/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs` (L5): the `restore` helper returns
+  `Result<_, semio_framework_value::ValueError>` (the sqlite snapshot ABI no longer yields `String`).
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs` (2 sites, L194 and
+  L212): `dsl::json::to_json_string` → `semio_framework_pack_json::to_json_string`. The JSON printer left the `dsl` crate;
+  the procedure crate already depends on `semio-framework-pack-json` and the same file already calls it elsewhere. A sweep
+  of all six plugin trees and the six hub compositions for `dsl::json::` finds no other site.
+
+### S5.2 Verification
+
+| Command | Result |
+|---|---|
+| `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-dag-dag -p semio-s-artifact-imperative-procedure -p semio-s-artifact-sequence-sequence -p semio-s-artifact-space-space -p semio-s-artifact-space-home -p semio-s-artifact-reasoning-wires -p semio-s-artifact-mathematical-equation --lib --keep-going --message-format=short` (01:11–01:17, `check-lib-1.txt`) | exit 101. Type-checked with warnings as proof: **dag 0 errors / 13 warnings** (first compile since the §20.15 conversion), **sequence 0 / 13**, **space 0 / 4**, **home 0 / 1**, **wires 0 / 161**, **mathematical 0 / 32**; **procedure 2 errors** (E0433 `dsl::json`, fixed in S5.1) / 8 warnings. Dependencies in the same run: stdio-semio 0 / 228, plugin 0 / 283, tool-run 0 / 91, kernel 0 / 425 |
+| same seven crates `--lib --tests --keep-going`, `CARGO_BUILD_JOBS=3` (01:48:56–01:52:20, `check-tests-3.txt`; includes the 39 input declarations of S5.6) | exit 101. 0 errors with warnings as proof (lib / lib-test): **dag 13 / 30**, **sequence 13 / 82**, **space 4 / 5**, **home 1 / 2**, **wires 161 / 259**, **mathematical 32 / 42**; **procedure lib 0 errors / 8 warnings**, procedure lib-test **2 errors** (E0433 `ProcedureSnapshot` in `🔬️semantic-contract`, E0308 sqlite `restore`), fixed in S5.1 |
+| same seven crates `--lib --tests --keep-going`, `CARGO_BUILD_JOBS=3`, gate v5 (02:13:24–02:16:43, `check-tests-4.txt`; after F3, the procedure test fixes and S5.7) | **exit 0, 0 errors, Finished in 3m18s**. Warnings as proof (lib / lib-test): dag 13 / 30, procedure 8 / 18, sequence 13 / 82, space 4 / 5, home 1 / 2, wires 161 / 259, mathematical 32 / 42. `stdio` was held by S5-TEXT-STDIO from 02:10:36 while this ran; their wave was not red for my crates |
+| hub `semio-hub-{dag,sequence,space,imperative,reasoning,mathematical}` `--target wasm32-wasip2 --lib` → COMPOSITION GREEN | OWED |
+
+### S5.3 Open items
+
+P2 laws (math fixture writer, `tool_run_tests::member`, composed reload/child-history laws, D6 one-row law), P3 audit
+residue (F3, F18, F7 verify, F6/F21), P4 sequence's 78 anonymous retained refusals, P5 follow-ups — none started yet.
+
+### S5.4 Coordinator actions
+
+None new yet; S4.6 stays in force (central `schema generate` for the graph leaf schemas, describe dag / imperative /
+sequence / space / stdio, `test inventory … --subset graph`, the `mutate-semio-graph` differential).
+
+### S5.5 Audit F3 — `delete-node` cascade bound (LANDED 01:57 under the `stdio` lock, lib green)
+
+**Decision (mine, read from code): the refusal code is `mutation.target-referenced`, not `mutation.too-large`.** The audit
+and the resume sheet prescribe "diff refuses degree > 1024 with `mutation.too-large`". That cannot be written as a leaf
+outcome:
+
+- The outcome vocabulary is frozen at nine codes plus `mutation.apply.<detail>` (`OutcomeCode`,
+  `🧫️fixtures/🧫️outcome-code/🔣️.json`). `verify mutation-outcome-law` fails any other code in a `MutationOutcome`, and the
+  store refuses to persist it (`validate_persisted_message`: "history carries unknown mutation message code").
+- `mutation.too-large` is a store FAULT (`VcsError::TooLarge`, a framework notice), raised when a staged edit's real rows
+  exceed the footprint declared from `inverse_rows()` (`STORE` ≈19870 and ≈20049). That generic backstop already exists,
+  so the audit's "nothing refuses it" no longer holds for the authoring path; it stays as the second line of defence.
+- `mutation.target-referenced` (Error, "the target is still referenced elsewhere in the document, state-dependent") is the
+  vocabulary's own code for exactly this refusal. It blocks finalize like every Error (design §16.1) and is labelled
+  en/de by the guest time-travel runtime (`TT:3631` "Target still referenced" / "Ziel wird noch referenziert"; React
+  `ShellHost:934` maps it too; I found no wgpu-side table, the wgpu shell renders the guest's words). Intended effect, not
+  yet run: a replayed `delete-node` whose degree grew past the bound after an upstream history edit reports the Error on
+  its own row.
+
+Adding a tenth outcome code would be a framework wave (enum, fixture, schema, TS twin, guest words, both hosts' labels,
+like §22.17); it is not needed here.
+
+**The wave** (four files, all under `GRAPH = ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph`,
+inside the landing closure):
+
+- `GRAPH/🧬️schema/🧬️mutations/🗑️delete-node/🔺️diff/🦀️.rs`: new `cascade_edges_maximum(payload)` =
+  `MutationLeaf::inverse_rows(payload) - 1`, so the bound is read from the schema's `x-semio-inverse-rows` (1025) and
+  never restated; `diff` refuses a larger degree with `MutationOutcome::refuse(OutcomeCode::TargetReferenced, …)` naming
+  the node. The `// 🚫️async` line comment became docstrings.
+- `…/🗑️delete-node/↩️inverse/🦀️.rs`: empty undo for a refused delete, so the rows never exceed `inverse_rows()` on any base.
+- `GRAPH/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`: law `delete_node_refuses_one_edge_above_its_declared_cascade_bound`
+  (at the bound: applies, undo = declared rows, exact restore; one above: one `mutation.target-referenced` Error naming
+  the node, empty diff, empty undo; the aggregate answers the leaf's declared rows).
+- `GRAPH/🧪️tests/🌳️mutate-semio-graph/🐍️.py` (independent oracle): `DELETE_NODE_CASCADE_EDGES_MAXIMUM`,
+  `severed_edges`, the same refusal in apply and inverse.
+
+Staging and landing: `python3 T/🧪️s5-graphs-f3-stage.py --stage | --land | --revert` (explicit targets, single-occurrence
+anchors, `--land` refuses when a target moved since staging). Copies: `🗑️generated/s5-graphs-wires/f3/*.{before,after}.*`.
+
+Language-agnostic law: `python3 T/🧪️s5-graphs-delete-node-cascade-bound.py [--oracle <path>]` reads the bound from the
+committed leaf schema and checks the oracle at the bound and one above.
+
+| Command | Result |
+|---|---|
+| `python3 T/🧪️s5-graphs-delete-node-cascade-bound.py --oracle T/🗑️generated/s5-graphs-wires/f3/oracle.after.py` | 4 passed, 0 failed (declared 1025, maximum 1024) |
+| same law on the oracle in the tree, before landing | 2 passed, 2 failed — expected: the law bites (no bound constant, a 1025-edge hub is deleted) |
+| `🧪️s4-graphs-python-oracle-rows.py` pointed at the staged oracle | 54 passed, 2 failed — identical to the tree's baseline (the two `patch-snapshot` rows need the real `semio_repo_test.patched_snapshot`) |
+| `python3 T/🧪️s5-graphs-f3-stage.py --land` (01:57, `stdio` lock held 01:57:05–02:00:41) | landed 4 targets (none had moved since staging) |
+| `python3 T/🧪️s5-graphs-delete-node-cascade-bound.py` on the oracle in the tree, after landing | 4 passed, 0 failed |
+| `CARGO_BUILD_JOBS=3 cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-stdio-semio --lib --message-format=short` (01:57:17–02:00:31, `check-f3-1.txt`) | exit 0, 0 errors, **228 warnings** (the count before the wave: no new warning), Finished in 3m13s |
+| Rust law: `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-stdio-semio --lib delete_node_refuses_one_edge_above_its_declared_cascade_bound` | OWED — the stdio-semio lib-test target has not been compiled this session |
+| wasip2: `semio-hub-*` compositions that embed stdio-semio | OWED with the hub batch |
+
+Not in this wave: the gate half of F3 (a bound + 1 property test for every `bounded` leaf, incl. the 55 patch leaves at
+128) is S5-GATES'.
+
+### S5.6 Design §22.8 — declared input metadata (DONE in source, gate-verified)
+
+Routing from S5-GATES through the coordinator (01:35). Measured with the gate in the tree at 01:36:
+`bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts schema mutation-inputs --under "✏️s/🔌️plugins/<plugin>" --inputs`
+listed **39 inferred inputs in 17 leaf payload schemas** of my trees (mathematical 25, reasoning 5, dag 3, imperative 3,
+space 3; sequence has no inputs). Each now declares `x-semio-ui`: widget, role, en + de label and description, and a
+`step` on every interactive number.
+
+- Script (input, kept): `python3 T/🧪️s5-graphs-input-declarations.py --check | --apply` — explicit file table, explicit
+  schema-node paths, refuses a missing node or a node that already declares a different control, rewrites a file only
+  when it round-trips byte for byte through the 2-space JSON form (16 of 17 do; the wires canvas `🎥️set-camera` schema
+  is the one named exception and is normalized to that form).
+- Conventions copied from declared siblings, none invented: `Pan X` / `Pan Y` steppers and the log `Zoom` slider
+  (`step 0.05`, `softMin 0.1`, `softMax 8`, snaps 0.25–4) of the trinity graph windows for the dag / wires / equation
+  cameras; `hidden` + `discriminator` "Position in set" for an undo-owned insert index (`create-node.at` of the shared
+  graph vocabulary) on equation `create-node.index` and `connect-nodes.index`; `reference` + `target` + `ref.kind: point`
+  for the index `remove-point` addresses (`move-points.indices`); `text` for minted identities and names; `multiline`
+  for the two imperative JSON-text config leaves.
+- In this report's trees: dag `✏️editor/🎚️config/…/🎥️change-camera` (3); imperative `✏️editor/🎚️config/…/{📸️replace-config,
+  🧩️set-contributions, 📤️set-run-output}` (3); space `🧬️mutations/{🌱create-artifact (row id, name), 🏷️rename-artifact
+  (newName)}` (3). Mathematical (25) and wires (5) are listed in their own reports.
+
+| Command | Result |
+|---|---|
+| `python3 T/🧪️s5-graphs-input-declarations.py --check` (before) | would apply 39 declarations in 17 files |
+| `… --apply`, then `--check` again | applied 39 in 17 files; second run: 0 to apply, 39 already declared (idempotent) |
+| gate `--inputs` per plugin, before → after | mathematical 17 declared + 17 inferred → **32 + 0**; reasoning 5 + 2 → **7 + 0**; dag 2 + 3 → **5 + 0**; imperative 0 + 3 → **3 + 0**; space 7 + 2 → **9 + 0**. (These are the gate's own summary lines. They count fewer inputs than the `--inputs` table has rows — 27 inferred in the summaries against 39 inferred table rows — and I did not trace the difference; the mathematical total moving 34 → 32 is consistent with the two inputs now declared `hidden`, which is my inference.) |
+| gate `--json` per plugin, after: residual findings by class | mathematical 3, reasoning 12, dag 17, imperative 4, space 0 — every one is a stale central-catalogue row (34× "malformed … is not JSON" for a leaf schema the §20.15 conversions deleted, 2× `leafUncatalogued` for `move-points` / `set-point-positions`); 0 input findings |
+| Rust: the schemas are embedded by `#[derive(dsl::MutationLeaf)]`, so the crates must re-compile | OWED with the next `--lib --tests` batch (foundation red) |
+
+S5-GATES re-measured at 01:47 (through the coordinator): input-gate count 0 for my trees.
+
+Not verified: how the two renderers draw these controls (no serve of these plugins exists this session; config-lane
+leaves never appear as history rows by L4, so their declarations only satisfy the gate).
+
+### S5.7 Sequence fault notices — P4 (DONE in source, compiled, gate-verified)
+
+The fault-notice gate (all scopes, `bun …/🧪️test/📜️script.ts schema fault-notices --json`) listed **88 findings** in the
+sequence plugin at 01:45: 85 anonymous `Fault::from(text)` refusals (code `app.message`, English only; 75 in the editor
+root, 3 in the main-window config, 3 in the script-window transient, 3 in the node-graph command, 1 in the example
+command), 2 coded refusals without a notice row (`sequence.retained.{config,example}-command`) and the two-segment
+`sequence.child-projection`. The census's "78" is the history-editing scope of the same set.
+
+- **One helper**: `pub(crate) fn sequence_fault(code, detail) -> Fault` in the editor root (`⚠️ Errors` region). Every
+  refusal goes through it; the English slug each site carried stays as the fault's detail, the person reads the notice.
+- **One table**: `sequence_fault_notices()` — 20 codes, en + de — published through `ArtifactEditor::fault_notices`
+  (new on `SequencePlayApp`).
+- **Codes group refusals by what the person can do**, not by which internal buffer refused (64 slugs → 20 codes + one
+  framework code): `sequence.content.{dialect, unavailable}`, `sequence.window.unavailable`, `sequence.editor.capacity`,
+  `sequence.run.{capacity, step-missing}`, `sequence.resume.invalid` (every checkpoint / replay-overrun refusal),
+  `sequence.publication.lane`, `sequence.retained.{artifact-command, config-command, example-command, close}`,
+  `sequence.node-graph.{malformed, unsupported}`, `sequence.import-media.{missing, undecoded}`,
+  `sequence.viewport.camera`, `sequence.action.unhandled`, `sequence.example.unparsable`, `sequence.child.projection`
+  (renamed from the two-segment code, editor + viewer). A retained step handed a command of another route (4 slugs)
+  raises the framework's `app.command.tool-mismatch`, as the dispatcher at the bottom of the file already did.
+- Files (6): `SUB/✏️editor/🦀️.rs`, `SUB/👁️viewer/🦀️.rs`, `SUB/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🦀️.rs`,
+  `…/🪟️windows/📜️script/🫧️transient/🦀️.rs`, `SUB/✏️editor/🎮️commands/📚️example/🦀️.rs`, `…/🎮️commands/🕸️node-graph/🦀️.rs`
+  (`SUB = ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any`).
+- Script (input, kept): `python3 T/🧪️s5-graphs-sequence-fault-notices.py --check | --apply` — six explicit files, every
+  literal refusal must be in the slug table, per-file site counts are pinned, the table and the raise sites must agree,
+  nothing is written unless all six convert and no `Fault::from(` survives.
+
+| Command | Result |
+|---|---|
+| `python3 T/🧪️s5-graphs-sequence-fault-notices.py --check` | would apply 88 sites in 6 files, 20 notice rows, 64 slugs mapped |
+| `… --apply` (02:13, immediately followed by batch 4) | applied 88 sites in 6 files |
+| batch 4 (`check-tests-4.txt`) | sequence lib 0 errors / 13 warnings, lib-test 0 errors / 82 warnings — the counts before the wave |
+| fault gate, sequence, before → after (`fault-notices-{before,after}.json`) | **88 → 1**. The one left is `faultNoticeDescriptor` "describe owed": the committed hub descriptor does not publish the 20 codes yet |
+| A law that raises a refusal and reads its notice in en / de through the shell | NOT written; the notices are proven declared and syntactically valid by the gate, not rendered |
+
+Not done (same mechanism, outside P4's sequence scope; counts from the same gate run, all scopes): mathematical 46
+(44 anonymous, 2 syntax), reasoning 21 (19 anonymous, 1 syntax, 1 descriptor), dag 15 (7 anonymous, 5 missing rows incl.
+`dag.node-graph-edit.{malformed,unsupported}`, 2 syntax `dag.unhandled-action` / `dag.child-projection`, 1 descriptor),
+imperative 7 (4 anonymous, 3 syntax), space 57 (11 anonymous, 46 missing rows).
+
+### S5.8 Owed at the 17:25 park (exact commands; all need build gate v6 and no activation flag)
+
+1. Tool-run follow-up: `zsh T/🔐️lock.sh acquire landing S5-GRAPHS-WIRES` → `python3 T/🧪️s5-graphs-tool-run-row-label.py --apply label`
+   → release → train line; `--apply diagnostic` only together with the rebuild
+   `zsh T/🚦️gate.sh 2 18 && CARGO_BUILD_JOBS=4 RUST_MIN_STACK=268435456 cargo test -p semio-framework-plugin --lib --features artifact-app-testing --no-run`,
+   then `cd 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust && RUST_MIN_STACK=268435456 <binary> --test-threads=4 tool_run`.
+2. Wave-B tree, my seven crates: fix mathematical `✏️editor/🧪️tests/🔬️unit/🦀️.rs:546` (drop the fourth `preflight`
+   argument), then `zsh T/🚦️gate.sh && CARGO_BUILD_JOBS=3 cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-dag-dag -p semio-s-artifact-imperative-procedure -p semio-s-artifact-sequence-sequence -p semio-s-artifact-space-space -p semio-s-artifact-space-home -p semio-s-artifact-reasoning-wires -p semio-s-artifact-mathematical-equation --lib --tests --keep-going --message-format=short`.
+3. Hubs on channel 23: `zsh T/🚦️gate.sh && CARGO_BUILD_JOBS=3 cargo check --manifest-path 🌎️hub/Cargo.toml -p semio-hub-dag -p semio-hub-sequence -p semio-hub-space -p semio-hub-imperative -p semio-hub-reasoning -p semio-hub-mathematical --target wasm32-wasip2 --lib --keep-going --message-format=short`
+   → one "COMPOSITION GREEN <plugin>" each. None announced yet. `semio-hub-space` had 189 errors at 02:38 (stale
+   `semio_framework_plugin::{Label, LocalizedLabel, app_labels}` imports); a peer converted 65 of its files at 04:58, not re-checked.
+4. Laws never run: math fixture writer then math / wires lib laws; `documents_reload_identically` and
+   `child_history_edits_end_to_end` for dag, sequence, procedure, wires; D6 `a_node_drag_record_is_one_child_transaction`;
+   the Rust F3 law `delete_node_refuses_one_edge_above_its_declared_cascade_bound` (stdio-semio lib-test never compiled).
+5. Fault notices not named yet: mathematical 46, reasoning 21, dag 15, imperative 7, space 57 (gate run of 01:45).
+
+### S5.9 dag `addNode` faults at publication — every-editor acceptance law (10-06, 02:02 →)
+
+Fault (S5-AGNOSTIC 10-05 19:13, `📓️s5-every-editor-faults.md` dag row): the seed gesture `addNode` of
+`child_history_edits_end_to_end` — and the same click in the product — ends in `plugin.internal` "typed-operation emitted a
+store lane absent from its exact factory publication contract".
+
+**Cause (read from code, both sides): my inherited §20.15 conversion, not N1.** The typed-operation route holds every
+emitted lane against the factory's contract before it publishes (`PLG` ≈32817–32828: `!emit.child_emits.is_empty() &&
+!publication_lanes.contains(&Child)` → that fault). Since the conversion all nine graph verbs of the dag editor publish
+leaves of the composed `content` child (`dag_child_emit`, `Emit::node_drag_child`) and `DagMutation` is uninhabited, but
+`DAG_RETAINED_PUBLICATION_CONTRACTS` still declared `Artifact` for all nine (and a `Config` lane `nodeGraphEdit` never
+writes). So not only `addNode`: `removeNode`, `deleteSelection`, `nodeGraphEdit`, `connectMediaPorts`, `disconnect`,
+`moveMediaNode`, `renameDagNode` and `patchDagNodes` would each have faulted the same way. sequence declares `Child` for
+the same verbs, which is why it passes.
+
+**Wave `dag-child-lane`** — `python3 T/🧪️s5-graphs-dag-child-lane.py --check | --apply | --restore`:
+
+- `…/🕸️dag/…/✳️any/✏️editor/🦀️.rs`: the nine graph verbs declare `[Child]`; docstring says why.
+- `…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`: new law `every_graph_verb_publishes_on_the_child_lane_and_none_on_the_artifact_lane`
+  (no contract names `Artifact`; each of the nine is exactly `[Child]`). The law that EXECUTES `addNode` through the
+  typed-operation route already exists and is the one that found this: `composed_child_history_law!("dag", …, addNode)`.
+- The lanes are not part of the committed hub descriptor (0 `publicationLanes` in `🌎️hub/🧩️compositions/🕸️dag/🔣️.json`),
+  so this change owes no describe.
+
+In the same `landing` hold (coordinator-approved, S5-RUNTIME's region): `python3 T/🧪️s5-graphs-tool-run-row-label.py --apply label`
+— the history row of a member tool run keeps the tool's label (`PLG` ≈28586, one match arm).
+
+| Step | Result |
+|---|---|
+| dry runs against the live tree (02:03) | dag: would apply 11 edits in 2 files; label: 1 edit in 1 file |
+| `landing` hold 02:04:20 (≈ 1 s): both applied; two train lines | applied |
+| coordinator train | `FRAMEWORK GREEN 02:05:12 through: 02:04:20 S5-GRAPHS-WIRES dag-child-lane` — the plugin lib compiles with the label arm. The dag tree is outside the train's closure. |
+| `zsh T/🚦️gate.sh 2 6 && CARGO_BUILD_JOBS=3 cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-dag-dag --lib --message-format=short` | **NOT RUN** — the gate stayed closed for its 15 minutes (`GATE CLOSED 02:19:36 shared-cargo=4 free=7GiB after 900s`, limit 2) and exited 5; no cargo of mine started. The dag lib and its test file are WRITTEN BUT UNVERIFIED by a compiler (the lib edit swaps one enum variant per row, `Child` exists and the import is unchanged) |
+
+Not verified: no law ran (no test build allowed at 6–7 GiB disk). Whether `addNode` now publishes, and whether the
+acceptance law has a second fault behind this one, is unknown until the family runs. The new contract law and the label
+arm's effect on the member finalize law are equally unrun.
+
+Owed, in order:
+1. `zsh T/🧪️s5-agnostic-run-family.sh dag semio-s-artifact-dag-dag` (acceptance family incl. `child_history_edits_end_to_end`).
+2. `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-dag-dag --lib every_graph_verb_publishes_on_the_child_lane_and_none_on_the_artifact_lane`
+   (same test binary as 1).
+3. Shared plugin test binary rebuild, then `tool_run` (expect 41 / 1: panel + finalize green, the cap law still red).

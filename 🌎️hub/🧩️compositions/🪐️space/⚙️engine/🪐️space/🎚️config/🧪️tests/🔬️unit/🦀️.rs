@@ -6,7 +6,7 @@ use protocol::Mutation;
 
 async fn round_trip(config: &SpaceConfig, operation: &SpaceConfigMutation) -> SpaceConfig {
     let (forward, _messages) = store::apply_mutation(config, operation).expect("valid mutation");
-    let backwards = operation.inverse(config);
+    let backwards = operation.inverse(config).expect("valid inverse config mutation");
     let mut restored = forward.clone();
     for back in &backwards {
         let (next, _messages) = store::apply_mutation(&restored, back).expect("valid inverse mutation");

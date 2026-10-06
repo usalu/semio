@@ -1,0 +1,29 @@
+{
+  "contract": "surface-node-graph-error/v1",
+  "cases": [
+    {
+      "kind": "Json",
+      "message": "unexpected token"
+    },
+    {
+      "kind": "Pack",
+      "message": "truncated frame"
+    },
+    {
+      "kind": "Dag",
+      "message": "unknown align mode: invalid"
+    },
+    {
+      "kind": "Json",
+      "message": ""
+    },
+    {
+      "kind": "Pack",
+      "message": "café 日本語 🧰"
+    },
+    {
+      "kind": "Dag",
+      "message": "a\u0000b"
+    }
+  ]
+}

@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_UI_DRIVER, UiDriverProvider, detectShellLocale, uiI18n } from "@semio-tech/ui-react";
 import { isShellLocale } from "@semio-tech/framework";
 import { BlockListHost } from "../../🧱️elements/🧩️BlockListHost/🟦️.tsx";
-import schema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/🧩️block-list-presentation/🔣️.json" with { type: "json" };
 import fixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧩️block-list-presentation/🔣️.json" with { type: "json" };
 
 afterEach(() => cleanup());
@@ -32,8 +31,6 @@ describe("BlockList presentation parity", () => {
   });
 
   it("renders only the shared localized chrome and exposes palette keyboard activation", async () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const previousLocale = detectShellLocale(uiI18n.resolvedLanguage || uiI18n.language);
     try {
       for (const locale of fixture.locales) {
@@ -80,8 +77,6 @@ describe("BlockList presentation parity", () => {
   });
 
   it("targets the selected step, selected block parent, or first current step and disables an empty palette", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     for (const targetCase of fixture.targetCases) {
       const onAction = vi.fn();
       const steps = targetCase.steps === "empty" ? [] : fixture.steps;

@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
-import { defineTestAdapter } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔮️Oracle
@@ -33,8 +33,8 @@ const snapshotOf = (entities: Entity[]) => {
   return { snapshot, inputIds: inputs.map((input) => `snapshot:${snapshot}:${input.id}`), inputs };
 };
 
-const readEntities = (ctx: { fixtureBytes(uri: string): Uint8Array }): Entity[] =>
-  JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://📤️export-vectors.json"))).entities;
+const readEntities = (ctx: { inputBytes(uri: string): Uint8Array }): Entity[] =>
+  JSON.parse(new TextDecoder().decode(ctx.inputBytes("shared://📤️export-vectors.json"))).entities;
 
 const countsOf = (entities: Entity[]): Record<string, number> => {
   const counts: Record<string, number> = {};

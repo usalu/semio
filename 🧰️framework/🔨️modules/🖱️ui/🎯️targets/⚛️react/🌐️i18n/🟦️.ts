@@ -10,19 +10,7 @@
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import { createBrowserStoragePort, ephemeralSet, type ShellLocale, type StoragePort } from "@semio-tech/framework";
-import {
-  resolveUiLabel,
-  type DeepUiTranslationKeys,
-  type UiI18nPort,
-  type UiLabelPair,
-  type UiLabelValue,
-  type UiLocale,
-  type UiRegisteredTranslationKey,
-  type UiRibbonParentEntries,
-  type UiTranslateFn,
-  type UiTranslationKey,
-  type UiTranslationSchema,
-} from "../../../🧱️elements/📚️I18n/🟦️.tsx";
+import { type DeepUiTranslationKeys, type UiI18nPort, type UiLocale, type UiRegisteredTranslationKey, type UiRibbonParentEntries, type UiTranslateFn, type UiTranslationSchema } from "../../../🧱️elements/📚️I18n/🟦️.tsx";
 
 export { resolveUiLabel };
 export type { DeepUiTranslationKeys, UiI18nPort, UiLabelPair, UiLabelValue, UiLocale, UiRegisteredTranslationKey, UiTranslateFn, UiTranslationKey, UiTranslationSchema };
@@ -816,6 +804,7 @@ export const uiChromeTranslationBundles = {
           backboneFile: { label: { normal: "Dateisynchronisierung", beginner: "Mit einer Datei synchronisieren" } },
           backboneFolder: { label: { normal: "Ordnersynchronisierung", beginner: "Mit einem Ordner synchronisieren" } },
           backboneRemote: { label: { normal: "Hub-Synchronisierung", beginner: "Mit dem Hub synchronisieren" } },
+          attachFailed: { label: { normal: "Das Dokument konnte nicht verbunden werden", beginner: "Das Dokument konnte nicht mit diesem Ordner, dieser Datei oder diesem Hub verbunden werden. Dort wird nichts gespeichert, bis das Verbinden gelingt." } },
           documentUnidentified: { label: { normal: "Dieses Programm hat kein Dokument zum Verbinden", beginner: "Das gewählte Programm hat kein eigenes Dokument, das mit einem Ordner, einer Datei oder einem Hub verbunden werden kann." } },
           reconnect: {
             label: { label: { normal: "Ordner dieses Dokuments", beginner: "Ordner, mit dem dieses Dokument auf diesem Gerät verbunden war" } },
@@ -879,8 +868,10 @@ export const uiChromeTranslationBundles = {
             noOp: { label: { normal: "Keine Änderung", beginner: "Der Zustand war bereits so — nichts wurde geändert." } },
             partial: { label: { normal: "Teilweise angewendet", beginner: "Nur ein Teil der Änderung konnte angewendet werden." } },
             clamped: { label: { normal: "Begrenzt", beginner: "Ein Wert wurde auf den zulässigen Bereich begrenzt." } },
+            preconditionDrifted: { label: { normal: "Vorbedingung nicht mehr erfüllt", beginner: "Die Änderung wurde angewendet, aber eine Bedingung, unter der sie aufgezeichnet wurde, gilt nicht mehr." } },
             duplicateId: { label: { normal: "ID bereits vergeben", beginner: "Es existiert bereits ein Element mit dieser ID." } },
             invariant: { label: { normal: "Ungültiger Zustand", beginner: "Diese Änderung würde einen ungültigen Zustand erzeugen." } },
+            inverseRefused: { label: { normal: "Nicht umkehrbar", beginner: "Diese Änderung lässt sich auf dem aktuellen Dokument nicht umkehren und wurde deshalb nicht angewendet." } },
             cascade: { label: { normal: "Folgeänderung", beginner: "Diese Änderung hat weitere Änderungen ausgelöst." } },
             apply: { label: { normal: "Nicht anwendbar", beginner: "Die Änderung ließ sich nicht auf das aktuelle Dokument anwenden." } },
           },
@@ -942,9 +933,9 @@ export const uiChromeTranslationBundles = {
           },
         },
         timeTravel: {
-          band: { label: { normal: "Zeitreise", beginner: "Zeitreise: Du bearbeitest den Verlauf" } },
-          indicator: { label: { normal: "Zeitreise", beginner: "Zeitreise" } },
-          indicatorTarget: { label: { normal: "Zeitreise: Dokument vor {{target}}", beginner: "Zeitreise: Dieses Fenster zeigt das Dokument vor {{target}}" } },
+          band: { label: { normal: "Verlaufsbearbeitung", beginner: "Verlaufsbearbeitung: Du änderst eine frühere Mutation" } },
+          indicator: { label: { normal: "Verlaufsbearbeitung", beginner: "Verlaufsbearbeitung" } },
+          indicatorTarget: { label: { normal: "Verlaufsbearbeitung: Dokument vor {{target}}", beginner: "Verlaufsbearbeitung: Dieses Fenster zeigt das Dokument vor {{target}}" } },
           stage: {
             editing: { label: { normal: "Mutation wird bearbeitet", beginner: "Mutation wird bearbeitet" } },
             replaying: { label: { normal: "Spätere Mutationen werden neu angewendet", beginner: "Spätere Mutationen werden neu angewendet" } },
@@ -964,15 +955,16 @@ export const uiChromeTranslationBundles = {
           accepted: { label: { normal: "Übernommene Änderungen: {{count}}", beginner: "Übernommene Änderungen: {{count}}" } },
           accept: { label: { normal: "Entwurf übernehmen", beginner: "Entwurf übernehmen und spätere Mutationen neu anwenden" } },
           discard: { label: { normal: "Entwurf verwerfen", beginner: "Entwurf verwerfen" } },
-          exit: { label: { normal: "Zeitreise beenden", beginner: "Zeitreise beenden und alle Entwürfe verwerfen" } },
+          exit: { label: { normal: "Verlaufsbearbeitung beenden", beginner: "Verlaufsbearbeitung beenden und alle Entwürfe verwerfen" } },
           finalize: { label: { normal: "Abschließen…", beginner: "Bearbeiteten Verlauf abschließen…" } },
           back: { label: { normal: "Zurück", beginner: "Zurück zur Prüfung" } },
           cancelReplay: { label: { normal: "Neuanwendung abbrechen", beginner: "Neuanwendung abbrechen" } },
           rerun: { label: { normal: "Erneut anwenden", beginner: "Erneut anwenden" } },
+          nextProblem: { label: { normal: "Nächstes Problem", beginner: "Zur nächsten Mutation mit einem Fehler" } },
           peer: {
-            editingRow: { label: { normal: "{{name}} bearbeitet dies in der Zeitreise", beginner: "{{name}} bearbeitet dies gerade in der Zeitreise" } },
-            editingTarget: { label: { normal: "{{name}} bearbeitet {{target}} in der Zeitreise", beginner: "{{name}} bearbeitet gerade {{target}} in der Zeitreise" } },
-            editingHistory: { label: { normal: "{{name}} bearbeitet den Verlauf in der Zeitreise", beginner: "{{name}} bearbeitet gerade den Verlauf in der Zeitreise" } },
+            editingRow: { label: { normal: "{{name}} bearbeitet dies im Verlauf", beginner: "{{name}} bearbeitet dies gerade im Verlauf" } },
+            editingTarget: { label: { normal: "{{name}} bearbeitet {{target}} im Verlauf", beginner: "{{name}} bearbeitet gerade {{target}} im Verlauf" } },
+            editingHistory: { label: { normal: "{{name}} bearbeitet den Verlauf", beginner: "{{name}} bearbeitet gerade den Verlauf" } },
           },
           refusal: {
             frozen: { label: { normal: "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird", beginner: "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird" } },
@@ -993,6 +985,9 @@ export const uiChromeTranslationBundles = {
             replayFaulted: { label: { normal: "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden", beginner: "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden" } },
             commitFailed: { label: { normal: "Abschließen fehlgeschlagen: Der Verlauf ist unverändert", beginner: "Abschließen fehlgeschlagen: Der Verlauf ist unverändert" } },
             memberGone: { label: { normal: "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen", beginner: "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen" } },
+            notWithdrawable: { label: { normal: "Diese Mutation kann hier nicht zurückgezogen werden", beginner: "Diese Mutation kann hier nicht zurückgezogen werden" } },
+            editorClosed: { label: { normal: "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen", beginner: "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen" } },
+            readOnly: { label: { normal: "Der Verlauf kann in einer schreibgeschützten Ansicht nicht bearbeitet werden", beginner: "Der Verlauf kann in einer schreibgeschützten Ansicht nicht bearbeitet werden" } },
           },
         },
         history: {
@@ -1839,6 +1834,7 @@ export const uiChromeTranslationBundles = {
           backboneFile: { label: { normal: "File sync", beginner: "Sync with a file" } },
           backboneFolder: { label: { normal: "Folder sync", beginner: "Sync with a folder" } },
           backboneRemote: { label: { normal: "Hub sync", beginner: "Sync with the hub" } },
+          attachFailed: { label: { normal: "The document could not be attached", beginner: "The document could not be attached to this folder, file or hub. Nothing is saved there until attaching works." } },
           documentUnidentified: { label: { normal: "This program has no document to attach", beginner: "The selected program has no document of its own that could be attached to a folder, a file or a hub." } },
           reconnect: {
             label: { label: { normal: "Folder of this document", beginner: "The folder this document was attached to on this device" } },
@@ -1902,8 +1898,10 @@ export const uiChromeTranslationBundles = {
             noOp: { label: { normal: "No change", beginner: "Nothing changed — the state already matched." } },
             partial: { label: { normal: "Partially applied", beginner: "Only part of the change could be applied." } },
             clamped: { label: { normal: "Clamped", beginner: "A value was clamped to its valid range." } },
+            preconditionDrifted: { label: { normal: "Precondition drifted", beginner: "The change was applied, but a condition it was recorded under no longer holds." } },
             duplicateId: { label: { normal: "Duplicate id", beginner: "An element with this id already exists." } },
             invariant: { label: { normal: "Invalid state", beginner: "This change would leave the document in an invalid state." } },
+            inverseRefused: { label: { normal: "Cannot be reversed", beginner: "This change cannot be reversed on the current document, so it was not applied." } },
             cascade: { label: { normal: "Cascaded", beginner: "This change triggered further changes." } },
             apply: { label: { normal: "Could not apply", beginner: "The change could not be applied to the current document." } },
           },
@@ -1965,9 +1963,9 @@ export const uiChromeTranslationBundles = {
           },
         },
         timeTravel: {
-          band: { label: { normal: "Time travel", beginner: "Time travel: you are editing the history" } },
-          indicator: { label: { normal: "Time travel", beginner: "Time travel" } },
-          indicatorTarget: { label: { normal: "Time travel: document before {{target}}", beginner: "Time travel: this window shows the document before {{target}}" } },
+          band: { label: { normal: "History editing", beginner: "History editing: you are changing an earlier mutation" } },
+          indicator: { label: { normal: "History editing", beginner: "History editing" } },
+          indicatorTarget: { label: { normal: "History editing: document before {{target}}", beginner: "History editing: this window shows the document before {{target}}" } },
           stage: {
             editing: { label: { normal: "Editing a mutation", beginner: "Editing a mutation" } },
             replaying: { label: { normal: "Replaying later mutations", beginner: "Replaying later mutations" } },
@@ -1987,15 +1985,16 @@ export const uiChromeTranslationBundles = {
           accepted: { label: { normal: "Accepted changes: {{count}}", beginner: "Accepted changes: {{count}}" } },
           accept: { label: { normal: "Accept draft", beginner: "Accept the draft and replay later mutations" } },
           discard: { label: { normal: "Discard draft", beginner: "Discard draft" } },
-          exit: { label: { normal: "Exit time travel", beginner: "Exit time travel and discard every draft" } },
+          exit: { label: { normal: "Exit history editing", beginner: "Exit history editing and discard every draft" } },
           finalize: { label: { normal: "Finalize…", beginner: "Finalize the edited history…" } },
           back: { label: { normal: "Back", beginner: "Back to reviewing" } },
           cancelReplay: { label: { normal: "Cancel replay", beginner: "Cancel replay" } },
           rerun: { label: { normal: "Replay again", beginner: "Replay again" } },
+          nextProblem: { label: { normal: "Next problem", beginner: "Go to the next mutation with an error" } },
           peer: {
-            editingRow: { label: { normal: "{{name}} is editing this in time travel", beginner: "{{name}} is editing this right now in time travel" } },
-            editingTarget: { label: { normal: "{{name}} is editing {{target}} in time travel", beginner: "{{name}} is editing {{target}} right now in time travel" } },
-            editingHistory: { label: { normal: "{{name}} is editing the history in time travel", beginner: "{{name}} is editing the history right now in time travel" } },
+            editingRow: { label: { normal: "{{name}} is editing this in the history", beginner: "{{name}} is editing this in the history right now" } },
+            editingTarget: { label: { normal: "{{name}} is editing {{target}} in the history", beginner: "{{name}} is editing {{target}} in the history right now" } },
+            editingHistory: { label: { normal: "{{name}} is editing the history", beginner: "{{name}} is editing the history right now" } },
           },
           refusal: {
             frozen: { label: { normal: "Editing is paused while history is being edited", beginner: "Editing is paused while history is being edited" } },
@@ -2016,6 +2015,9 @@ export const uiChromeTranslationBundles = {
             replayFaulted: { label: { normal: "Replay failed: later mutations could not be checked", beginner: "Replay failed: later mutations could not be checked" } },
             commitFailed: { label: { normal: "Finalizing failed: the history is unchanged", beginner: "Finalizing failed: the history is unchanged" } },
             memberGone: { label: { normal: "The part this history edit targets was closed", beginner: "The part this history edit targets was closed" } },
+            notWithdrawable: { label: { normal: "This mutation cannot be withdrawn here", beginner: "This mutation cannot be withdrawn here" } },
+            editorClosed: { label: { normal: "The draft editor is closed: open the mutation again", beginner: "The draft editor is closed: open the mutation again" } },
+            readOnly: { label: { normal: "History cannot be edited in a read-only view", beginner: "History cannot be edited in a read-only view" } },
           },
         },
         history: {

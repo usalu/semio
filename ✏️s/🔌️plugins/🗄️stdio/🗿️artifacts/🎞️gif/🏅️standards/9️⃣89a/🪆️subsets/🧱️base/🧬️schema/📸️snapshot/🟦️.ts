@@ -12,5 +12,3 @@ export interface GifAppExtension { identifier: [number,number,number,number,numb
 export interface GifFrame { left: number; top: number; width: number; height: number; interlace: boolean; lct: GifColorTable | null; indices: number[]; delayCs: number; disposal: GifDisposal; transparentIndex: number | null; userInput: boolean; plainText: GifPlainText | null }
 /** 📸️ Complete GIF89a owned semantic snapshot. */
 export interface GifSnapshot { schema: string; width: number; height: number; gct: GifColorTable | null; backgroundColorIndex: number; pixelAspectRatio: number; loopCount: number | null; frames: GifFrame[]; comments: string[]; appExtensions: GifAppExtension[] }
-
-export * from "./🪶️sqlite/🟦️.ts";

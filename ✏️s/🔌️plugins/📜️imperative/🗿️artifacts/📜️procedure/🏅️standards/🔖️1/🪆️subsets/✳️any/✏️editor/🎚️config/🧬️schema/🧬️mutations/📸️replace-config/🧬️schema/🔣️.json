@@ -42,7 +42,18 @@
         "runOutputJson",
         "contributionsJson"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Configuration",
+          "de": "Konfiguration"
+        },
+        "description": {
+          "en": "Whole view configuration of the imperative editor.",
+          "de": "Gesamte Ansichtskonfiguration des Imperativ-Editors."
+        }
+      }
     }
   },
   "required": [

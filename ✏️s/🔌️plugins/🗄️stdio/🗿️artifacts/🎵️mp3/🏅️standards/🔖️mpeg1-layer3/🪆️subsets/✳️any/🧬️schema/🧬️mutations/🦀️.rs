@@ -78,35 +78,11 @@ pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-id3v2", "set
 //#endregion 🔖️Kinds
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` via `pack::json` (one line of compact JSON per op) —
-/// deliberately NOT `#[derive(dsl::DslOps)]`: `Mp3Frame`/`Id3v2Tag` embed nested collections of
-/// named structs, the same generic-collection-diff shape `f6-final-summary.md` §4.4 documents as
-/// needing a hand-rolled bridge. This is a SEPARATE wire format from the subset's own
-/// `ArtifactDsl`/`ArtifactPack` envelope (which wraps real MP3 bytes, see that file's doc
-/// comment) — an op is always plain JSON here.
-impl OpText for Mp3Mutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let parsed = semio_framework_pack_json::parse(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e.into_value_error(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-        <Self as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|e| semio_framework_diagnostic::TextError::from_value_error(e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-    fn print_op(&self) -> String {
-        semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(self)))
-    }
-}
 
-//#region 🏷️WireTags
-/// 🏷️ `Mp3Mutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-//#endregion 🏷️WireTags
 
-impl OpBinary for Mp3Mutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::tagged_value_binary::encode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::tagged_value_binary::decode_op(WIRE_PROTOCOL, dsl::tagged_value_binary::VariantTag::Field("mutation"), bytes)
-    }
-}
+
+
+
 //#endregion OpCodecs
 
 //#region 🔖️MutationTrait

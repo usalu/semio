@@ -72,8 +72,7 @@ fn sqlite_snapshot_native_encoding_borrowed_object_occurrences_keep_payload_allo
     assert_eq!(node.get("wide").unwrap().as_u64(), Some(wide));
     assert_eq!(node.get("exceptional").unwrap().as_f64().unwrap().to_bits(), bits);
     assert_eq!(node.get("zPayload").unwrap().as_str().unwrap().len(), bytes);
-    let schema:serde_json::Value=serde_json::from_str(include_str!("🧬️schema/🔣️.json")).unwrap();
-    let output = std::process::Command::new("bun").args(["-e", "import Ajv from 'ajv/dist/2020.js';import {Database} from 'bun:sqlite';const x=JSON.parse(process.argv[1]);if(!new Ajv({strict:true}).validate(x.schema,x.fixture))throw Error('borrowed object occurrence fixture');const db=new Database(':memory:');try{db.run('CREATE TABLE keys(ordinal INTEGER PRIMARY KEY,value TEXT NOT NULL)');for(const [ordinal,key]of x.fixture.payloadKeys.entries())db.run('INSERT INTO keys VALUES(?,?)',[ordinal,key]);await Bun.write(Bun.stdout,JSON.stringify(db.query('SELECT value FROM keys ORDER BY ordinal').all().map(row=>row.value)));}finally{db.close();}",&serde_json::json!({"schema":schema,"fixture":fixture}).to_string()]).output().unwrap();
+    let output = std::process::Command::new("bun").args(["-e", "import {Database} from 'bun:sqlite';const x=JSON.parse(process.argv[1]);const db=new Database(':memory:');try{db.run('CREATE TABLE keys(ordinal INTEGER PRIMARY KEY,value TEXT NOT NULL)');for(const [ordinal,key]of x.fixture.payloadKeys.entries())db.run('INSERT INTO keys VALUES(?,?)',[ordinal,key]);await Bun.write(Bun.stdout,JSON.stringify(db.query('SELECT value FROM keys ORDER BY ordinal').all().map(row=>row.value)));}finally{db.close();}",&serde_json::json!({"fixture":fixture}).to_string()]).output().unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let ordered: Vec<String> = serde_json::from_slice(&output.stdout).unwrap();
     let positions = ordered.iter().map(|key| text.find(&format!("{key}=")).unwrap()).collect::<Vec<_>>();
@@ -110,4 +109,129 @@ fn sqlite_snapshot_native_encoding_record_denied_insert_reclaims_deep_owned_payl
   let(incoming,denied_leaf,mut denied_blocks)=payload();let((result,requests),reclaimed)=observe_rejected_payload_deallocation(denied_leaf,&mut denied_blocks,||observe_requests(||record.insert(denied_id,incoming)));let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::InvariantViolated);assert_eq!(reclaimed.leaves,fixture["expected"]["reclaimedLeaves"].as_u64().unwrap()as usize);assert_eq!(reclaimed.blocks,fixture["expected"]["reclaimedBlocks"].as_u64().unwrap()as usize);
   assert_eq!(record.as_record().fields.len(),fixture["expected"]["length"].as_u64().unwrap()as usize);assert_eq!(record.as_record().fields.capacity(),capacity);assert_eq!(record.as_record().get(id).unwrap()as *const FieldValue,position);assert!(matches!(record.as_record().get(id),Some(FieldValue::Int(value))if *value==fixture["expected"]["integer"].as_i64().unwrap()));assert!(record.as_record().get(denied_id).is_none());assert_eq!(control.owned_bytes(),paid);for layout in &requests.layouts[..requests.length]{assert!(!backing.layouts[..backing.length].contains(layout),"rejected insert requested record backing {layout:?}");}drop(record);assert_eq!(control.owned_bytes(),paid);
  }).unwrap().join().unwrap();
+}
+
+#[derive(semio_framework_dsl_record_derive::DslEnum)]
+enum TaggedCursorVariant { Document{text:String}, Blob{text:String} }
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
+struct TaggedCursorRecord {
+ #[dsl(statements)] many:Vec<TaggedCursorVariant>,
+ #[dsl(statements,block)] nested:Vec<TaggedCursorVariant>,
+ #[dsl(statements,block)] maybe:Option<TaggedCursorVariant>,
+ #[dsl(statements,block)] required:Box<TaggedCursorVariant>,
+}
+fn tagged_cursor_variant_spec(keyword:&'static str)->crate::BorrowedRecordSpec{use crate::{BorrowedFieldSpec as F,BorrowedShape as H};const FIELDS:&[F]=&[F::new(0,"text",H::Text)];crate::BorrowedRecordSpec{keyword:Some(keyword),layout:RecordLayout::Inline,fields:FIELDS}}
+fn tagged_cursor_document()->crate::BorrowedRecordSpec{tagged_cursor_variant_spec("document")}
+fn tagged_cursor_blob()->crate::BorrowedRecordSpec{tagged_cursor_variant_spec("blob")}
+fn tagged_cursor_statements()->crate::BorrowedShape{crate::BorrowedShape::Statements(&[("document",tagged_cursor_document),("blob",tagged_cursor_blob)])}
+#[test]
+fn sqlite_snapshot_native_borrowed_tagged_cursor_uses_actual_four_family_views_and_canonical_text(){
+ use crate::{DslField,native_encoding::FieldProjectionView as V,BorrowedFieldSpec as F,BorrowedShape as H};use semio_framework_value::NativeEncodeControl;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🏷️tagged/🔣️.json")).unwrap();let text=fixture["text"].as_str().unwrap();
+ let variant=|keyword:&str|match keyword{"document"=>TaggedCursorVariant::Document{text:text.into()},"blob"=>TaggedCursorVariant::Blob{text:text.into()},_=>panic!("closed tagged variant")};
+ let source=TaggedCursorRecord{many:vec![variant("document"),variant("blob")],nested:vec![variant("blob"),variant("document")],maybe:Some(variant("document")),required:Box::new(variant("blob"))};
+ let output=std::process::Command::new("bun").args(["-e",r#"import{Database}from"bun:sqlite";const f=JSON.parse(process.argv[1]);if(Buffer.byteLength(f.text,"utf8")!==f.textBytes)throw Error("closed tagged corpus");const db=new Database(":memory:");try{db.run("CREATE TABLE projection(slot INTEGER,ordinal INTEGER,tag TEXT,value TEXT)");for(const[slot,item]of f.slots.entries())for(const[ordinal,tag]of item.variants.entries())db.run("INSERT INTO projection VALUES(?,?,?,?)",[slot,ordinal,tag,f.text]);console.log(JSON.stringify(db.query("SELECT slot,ordinal,tag,value,length(CAST(value AS BLOB)) AS bytes FROM projection ORDER BY slot,ordinal").all()));}finally{db.close();}"#]).arg(fixture.to_string()).output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));let rows:serde_json::Value=serde_json::from_slice(&output.stdout).unwrap();
+ for row in rows.as_array().unwrap(){let slot=row["slot"].as_u64().unwrap()as usize;let ordinal=row["ordinal"].as_u64().unwrap()as usize;let block=fixture["slots"][slot]["block"].as_bool().unwrap();let mut path=vec![slot];if block{assert!(matches!(DslField::projection_view(&source,&path).unwrap(),V::Block));path.push(0);}assert!(matches!(DslField::projection_view(&source,&path).unwrap(),V::Statements(n)if n==fixture["slots"][slot]["variants"].as_array().unwrap().len()));assert_eq!(DslField::projection_key(&source,&path,ordinal).unwrap(),row["tag"].as_str().unwrap());path.push(ordinal);assert!(matches!(DslField::projection_view(&source,&path).unwrap(),V::Record(ids)if ids==[0]));path.push(0);let V::Text(projected)=DslField::projection_view(&source,&path).unwrap()else{panic!("actual variant text")};assert_eq!(projected,row["value"].as_str().unwrap());assert_eq!(projected.len(),row["bytes"].as_u64().unwrap()as usize);
+  let original=match slot{0=>&source.many[ordinal],1=>&source.nested[ordinal],2=>source.maybe.as_ref().unwrap(),3=>source.required.as_ref(),_=>unreachable!()};let original=match original{TaggedCursorVariant::Document{text}|TaggedCursorVariant::Blob{text}=>text};assert_eq!(projected.as_ptr(),original.as_ptr(),"tagged projection borrows the original backing");
+ }
+ const FIELDS:&[F]=&[F::new(0,"many",H::Statements(&[("document",tagged_cursor_document),("blob",tagged_cursor_blob)])),F::new(1,"nested",H::Block(tagged_cursor_statements)),F{optional:true,..F::new(2,"maybe",H::Block(tagged_cursor_statements))},F::new(3,"required",H::Block(tagged_cursor_statements))];let spec=crate::BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};let ordinary=print(&source.__dsl_to_record(),&TaggedCursorRecord::__dsl_spec(),JoinMode::Document);
+ let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);let(result,requests)=observe_requests(||crate::measure_print_borrowed(&source,&spec,ordinary.len(),&mut control));assert_eq!(result.unwrap(),ordinary.len());assert_eq!(requests.bytes,0);assert_eq!(control.owned_bytes(),0);
+ let mut accept=|_|true;let mut control=NativeEncodeControl::new(0,&mut accept);assert!(crate::measure_print_borrowed(&source,&spec,ordinary.len()-1,&mut control).is_err());let mut cancel=|_|false;let mut control=NativeEncodeControl::new(0,&mut cancel);assert!(crate::measure_print_borrowed(&source,&spec,ordinary.len(),&mut control).is_err());
+ let mut empty=source;empty.maybe=None;assert!(matches!(DslField::projection_view(&empty,&[2,0]).unwrap(),V::Statements(0)));assert!(DslField::projection_key(&empty,&[2,0],0).is_err());assert!(DslField::projection_view(&empty,&[3,0,1]).is_err());
+}
+
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
+struct BorrowedNumericCoordinates{
+ #[dsl(coord)]coord1:[f64;1],
+ #[dsl(coord)]coord2:[f64;2],
+ #[dsl(coord)]coord3:[f64;3],
+ #[dsl(dir)]dir3:[f64;3],
+}
+#[test]
+fn sqlite_snapshot_native_borrowed_coordinates_and_direction_keep_authored_sigils_and_every_word(){
+ use crate::{DslField,BorrowedFieldSpec as F,BorrowedShape as H,native_encoding::{FieldProjectionSource,FieldProjectionView as V}};use semio_framework_value::{NativeEncodeControl,ValueRefusalKind};
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📍️coordinates/🔣️.json")).unwrap();
+ const FIELDS:&[F]=&[F::new(0,"coord1",H::Coord(1)),F::new(1,"coord2",H::Coord(2)),F::new(2,"coord3",H::Coord(3)),F::new(3,"dir3",H::Dir)];let spec=crate::BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:FIELDS};
+ for case in fixture["cases"].as_array().unwrap(){let bits=u64::from_str_radix(case["word"].as_str().unwrap(),16).unwrap();let value=f64::from_bits(bits);let source=BorrowedNumericCoordinates{coord1:[value;1],coord2:[value;2],coord3:[value;3],dir3:[value;3]};let ordinary=print(&source.__dsl_to_record(),&BorrowedNumericCoordinates::__dsl_spec(),JoinMode::Document);assert_eq!(ordinary,case["text"].as_str().unwrap());assert_eq!(ordinary.len(),case["bytes"].as_u64().unwrap()as usize);
+ let out=std::process::Command::new("bun").args(["-e",r#"import{Database}from'bun:sqlite';const f=JSON.parse(process.argv[1]),word=process.argv[2],actual=process.argv[3];const c=f.cases.find(c=>c.word===word);if(actual!==c.text)throw Error('literal wire');let raw;if(c.atom.startsWith('nan64_'))raw=BigInt('0x'+c.atom.slice(6));else{const value=c.atom==='inf'?Infinity:c.atom==='-inf'?-Infinity:Number(c.atom);const b=new ArrayBuffer(8),v=new DataView(b);v.setFloat64(0,value,false);raw=v.getBigUint64(0,false)}if(raw!==BigInt('0x'+word))throw Error('independent IEEE word');const db=new Database(':memory:');try{db.run('CREATE TABLE emitted(word TEXT,wire TEXT)');db.run('INSERT INTO emitted VALUES(?,?)',[word,c.text]);console.log(JSON.stringify(db.query('SELECT wire,length(CAST(wire AS BLOB)) AS bytes FROM emitted WHERE word=?').get(word)))}finally{db.close()}"#]).arg(fixture.to_string()).arg(case["word"].as_str().unwrap()).arg(&ordinary).output().unwrap();assert!(out.status.success(),"{}",String::from_utf8_lossy(&out.stderr));let interpreted:serde_json::Value=serde_json::from_slice(&out.stdout).unwrap();assert_eq!(interpreted["wire"],case["text"]);assert_eq!(interpreted["bytes"],case["bytes"]);
+ for(slot,width)in[1usize,2,3,3].into_iter().enumerate(){assert!(matches!(DslField::projection_view(&source,&[slot]).unwrap(),V::Tuple(n)if n==width));for index in 0..width{assert!(matches!(DslField::projection_view(&source,&[slot,index]).unwrap(),V::Float(value)if value.to_bits()==bits));}}
+ let mut yes=|_|true;let mut control=NativeEncodeControl::new(0,&mut yes);let(result,requests)=observe_requests(||crate::measure_print_borrowed(&source,&spec,ordinary.len(),&mut control));assert_eq!(result.unwrap(),ordinary.len());assert_eq!(requests.bytes,0);assert_eq!(control.owned_bytes(),0);
+ let mut yes=|_|true;let mut control=NativeEncodeControl::new(0,&mut yes);assert_eq!(crate::measure_print_borrowed(&source,&spec,ordinary.len()-1,&mut control).unwrap_err().kind,ValueRefusalKind::WorkLimit);
+ let mut stop=|_|false;let mut control=NativeEncodeControl::new(0,&mut stop);assert_eq!(crate::measure_print_borrowed(&source,&spec,ordinary.len(),&mut control).unwrap_err().kind,ValueRefusalKind::Canceled);
+ struct Wrong<'a>{source:&'a BorrowedNumericCoordinates,arity:bool}
+ impl FieldProjectionSource for Wrong<'_>{fn projection_view(&self,path:&[usize])->Result<V<'_>,semio_framework_value::ValueError>{if path==[0]&&self.arity{return Ok(V::Tuple(2))}if path==[0,0]&&!self.arity{return Ok(V::Text("wrong"))}DslField::projection_view(self.source,path)}fn projection_key(&self,path:&[usize],index:usize)->Result<&str,semio_framework_value::ValueError>{DslField::projection_key(self.source,path,index)}}
+ for arity in[true,false]{let mut yes=|_|true;let mut control=NativeEncodeControl::new(0,&mut yes);assert_eq!(crate::measure_print_borrowed(&Wrong{source:&source,arity},&spec,usize::MAX,&mut control).unwrap_err().kind,ValueRefusalKind::InvalidValue);}
+ }
+}
+
+#[derive(semio_framework_dsl_record_derive::DslScalar)]
+enum AuthoredBorrowedScalar{Ready,#[dsl(key="finished")]Done}
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
+#[dsl(keyword="leaf")]
+struct AuthoredBorrowedLeaf{text:String}
+#[derive(semio_framework_dsl_record_derive::DslEnum)]
+enum AuthoredBorrowedVariant{Document{text:String},#[dsl(key="vacant")]Empty,#[dsl(key="alias")]Leaf(Box<AuthoredBorrowedLeaf>)}
+#[derive(semio_framework_dsl_record_derive::DslRecord)]
+#[dsl(keyword="owner",layout="lines")]
+struct AuthoredBorrowedOwner{
+ #[dsl(key="identity",positional,defines="owner")]id:String,
+ maybe:Option<i64>,
+ #[dsl(list)]list:Vec<u64>,
+ #[dsl(tuple)]tuple:Vec<f64>,
+ #[dsl(statements)]many:Vec<AuthoredBorrowedVariant>,
+ #[dsl(statements,block)]nested:Vec<AuthoredBorrowedVariant>,
+ map:std::collections::BTreeMap<String,bool>,
+ #[dsl(statements)]optional:Option<AuthoredBorrowedVariant>,
+ #[dsl(statements)]required:Box<AuthoredBorrowedVariant>,
+ #[dsl(base64)]bytes:Vec<u8>,
+ #[dsl(table)]rows:Vec<AuthoredBorrowedLeaf>,
+ #[dsl(unit="m")]length:f64,
+ #[dsl(angle="°")]rotation:f64,
+ #[dsl(refs="owner")]reference:String,
+ #[dsl(key="language-key")]language:String,
+ #[dsl(lang_from="language")]code:String,
+ #[dsl(lang="jack")]jack:String,
+ #[dsl(coord)]coord:[f64;3],
+ #[dsl(dir)]direction:[f64;3],
+ scalar:AuthoredBorrowedScalar,
+ recursive:std::collections::BTreeMap<String,AuthoredBorrowedOwner>,
+}
+fn authored_borrowed_kind(shape:crate::BorrowedShape)->&'static str{
+ use crate::BorrowedShape as H;
+ match shape{
+ H::Text=>"Text",H::Int=>"Int",H::UInt=>"UInt",H::Float=>"Float",H::Bool=>"Bool",
+ H::List(inner)=>{assert!(matches!(inner(),H::UInt));"List(UInt)"},
+ H::Tuple(inner,None)=>{assert!(matches!(inner(),H::Float));"Tuple(Float)"},
+ H::Statements(_)=>"Statements",
+ H::Block(inner)=>{assert!(matches!(inner(),H::Statements(_)));"Block(Statements)"},
+ H::Map(inner)=>match inner(){H::Bool=>"Map(Bool)",H::Record(make)=>{assert_eq!(make().keyword,Some("owner"));"Map(Record)"},_=>panic!("authored map shape")},
+ H::Bytes64=>"Bytes64",H::Table(make)=>{assert_eq!(make().keyword,Some("leaf"));"Table"},
+ H::Quantity(unit)=>{assert_eq!(unit.symbol,"m");"Quantity(m)"},H::Angle(unit)=>{assert_eq!(unit.symbol,"°");"Angle(°)"},
+ H::Ref("owner")=>"Ref(owner)",H::EmbedFrom("language-key")=>"EmbedFrom(language-key)",H::Embed("jack")=>"Embed(jack)",H::Coord(3)=>"Coord(3)",H::Dir=>"Dir",H::Enum(_)=>"Enum",
+ _=>panic!("closed authored schema shape"),
+ }
+}
+#[test]
+fn child_authored_borrowed_schema_preserves_static_metadata_and_lazy_owner_edges(){
+ use crate::{BorrowedDslField,BorrowedDslRecord,BorrowedDslVariants,BorrowedShape as H};
+ const SPEC:crate::BorrowedRecordSpec=<AuthoredBorrowedOwner as BorrowedDslRecord>::RECORD;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🏭️authored-static/🔣️.json")).unwrap();
+ assert_eq!(SPEC.keyword,fixture["record"]["keyword"].as_str());assert_eq!(SPEC.layout,RecordLayout::Lines);assert_eq!(SPEC.fields.len(),fixture["record"]["fields"].as_array().unwrap().len());
+ for(field,expected)in SPEC.fields.iter().zip(fixture["record"]["fields"].as_array().unwrap()){
+  assert_eq!(field.id as u64,expected["id"].as_u64().unwrap());assert_eq!(field.key,expected["key"].as_str().unwrap());assert_eq!(field.position.map(u64::from),expected["position"].as_u64());assert_eq!(field.optional,expected["optional"].as_bool().unwrap());assert_eq!(field.defines,expected["defines"].as_str());assert!(!field.flatten&&!field.is_call_name);assert_eq!(authored_borrowed_kind(field.shape),expected["kind"].as_str().unwrap());
+ }
+ let H::Quantity(length)=SPEC.fields[11].shape else{panic!("quantity owner")};let H::Angle(angle)=SPEC.fields[12].shape else{panic!("angle owner")};assert!(std::ptr::eq(length,semio_framework_dsl::unit_by_symbol("m").unwrap()));assert!(std::ptr::eq(angle,semio_framework_dsl::unit_by_symbol("°").unwrap()));
+ let H::Enum(labels)=<AuthoredBorrowedScalar as BorrowedDslField>::SHAPE else{panic!("scalar labels")};for((key,ordinal),expected)in labels.iter().zip(fixture["scalar"].as_array().unwrap()){assert_eq!(*key,expected["key"].as_str().unwrap());assert_eq!(*ordinal as u64,expected["ordinal"].as_u64().unwrap());}assert_eq!(labels.len(),2);
+ let variants=<AuthoredBorrowedVariant as BorrowedDslVariants>::VARIANTS;assert_eq!(variants.len(),3);
+ for((key,make),expected)in variants.iter().zip(fixture["variants"].as_array().unwrap()){assert_eq!(*key,expected["key"].as_str().unwrap());let spec=make();assert_eq!(spec.keyword,expected["recordKeyword"].as_str());assert_eq!(spec.fields.len(),expected["fields"].as_array().unwrap().len());for(field,expected)in spec.fields.iter().zip(expected["fields"].as_array().unwrap()){assert_eq!(field.id as u64,expected["id"].as_u64().unwrap());assert_eq!(field.key,expected["key"].as_str().unwrap());assert_eq!(authored_borrowed_kind(field.shape),expected["kind"].as_str().unwrap());}}
+ let values=[AuthoredBorrowedVariant::Document{text:String::new()},AuthoredBorrowedVariant::Empty,AuthoredBorrowedVariant::Leaf(Box::new(AuthoredBorrowedLeaf{text:String::new()}))];
+ let(_,requests)=observe_requests(||{
+  for _ in 0..fixture["readRepetitions"].as_u64().unwrap(){
+   let repeated=<AuthoredBorrowedOwner as BorrowedDslRecord>::RECORD;assert_eq!(repeated.fields.as_ptr(),SPEC.fields.as_ptr());for field in repeated.fields{std::hint::black_box(authored_borrowed_kind(field.shape));}
+   let H::Map(inner)=repeated.fields[20].shape else{panic!("recursive owner")};let H::Record(make)=inner()else{panic!("lazy record")};assert_eq!(make().fields.as_ptr(),SPEC.fields.as_ptr());
+   for(index,value)in values.iter().enumerate(){let(key,ordinal,spec)=value.projected_borrowed_variant_identity();assert_eq!(ordinal,index);assert_eq!(key,variants[index].0);assert_eq!(spec.fields.as_ptr(),variants[index].1().fields.as_ptr());}
+  }
+ });
+ assert_eq!(requests.bytes,fixture["expectedAllocatedBytes"].as_u64().unwrap()as usize);assert_eq!(requests.length,0);
+ eprintln!("[DEBUG] actual authored static schema fields21 kinds11 refinements7 variants3 repeated256 actual allocator requests0; recursive/source pointers preserved");
 }

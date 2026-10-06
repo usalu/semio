@@ -1,0 +1,8 @@
+{
+  "source": "{\"unicode\":\"ä🧩\\u0000\\ud83d\\ude00\",\"numbers\":[18446744073709551615,-9223372036854775808,-0.0,5e-324],\"nested\":[true,null,{\"key\":\"quoted\\\"\\\\\"}]}",
+  "duplicate": "{\"key\":1,\"key\":2}",
+  "invalidUtf8": [34, 237, 160, 128, 34],
+  "largeStringBytes": 8194,
+  "decodeAllocationBytes": 131072,
+  "stepUnits": 1
+}

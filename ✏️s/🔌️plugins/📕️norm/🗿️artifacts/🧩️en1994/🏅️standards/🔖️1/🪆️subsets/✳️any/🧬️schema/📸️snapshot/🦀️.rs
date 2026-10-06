@@ -4,12 +4,6 @@ use crate::document::AnnexChoice;
 use crate::{CompositeBeam, CompositeColumn, CompositeSlab};
 use framework_schema::ArtifactSchema;
 
-#[path="🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
 
 //#region 🔖️Snapshot
 
@@ -45,7 +39,7 @@ pub struct En1994Snapshot {
     pub fatigue_detail: String,
 }
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1994Snapshot, extension = "en1994", envelope_id = "norm.en1994", sqlite = sqlite::sqlite_codec);
+crate::impl_norm_artifact_record!(En1994Snapshot, extension = "en1994", envelope_id = "norm.en1994", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1994Snapshot {
@@ -115,33 +109,15 @@ impl En1994Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ Canonical JSON projection of [`En1994Snapshot`].
-pub fn encode_en1994_snapshot_json(snapshot: &En1994Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ Inverse of [`encode_en1994_snapshot_json`].
-pub fn decode_en1994_snapshot_json(text: &str) -> Result<En1994Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📖️ Parses committed `.dsl.semio` into [`En1994Snapshot`].
-pub fn decode_en1994_dsl(text: &str) -> Result<En1994Snapshot, String> {
-    <En1994Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-/// 🖨️ Prints [`En1994Snapshot`] to canonical `.dsl.semio`.
-pub fn encode_en1994_dsl(snapshot: &En1994Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
 
-/// 📦️ Decodes pack bytes.
-pub fn decode_en1994_pack(bytes: &[u8]) -> Result<En1994Snapshot, String> {
-    <En1994Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
 
-/// 📦️ Encodes pack bytes.
-pub fn encode_en1994_pack(snapshot: &En1994Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge

@@ -28,7 +28,7 @@ import diffSchema from "../../../🔺️diff/🔣️.json";
 import fieldCases from "../../🧫️fixtures/🎛️field-patch/🔣️.json";
 import blendSchema from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧬️schema/🔣️.json";
 import {diff as blendDiff} from "../../../../../🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🔺️diff/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseDrawingLayerNode} from "../../../🟦️.ts";
 import {parseDrawingLayerPatch} from "../../../🔺️diff/🟦️.ts";
 

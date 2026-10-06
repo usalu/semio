@@ -4,7 +4,7 @@
 //! entry, no `wasm` script target — see
 //! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
 
-use crate::op::Process3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 use store::{ArtifactEnvelope, ArtifactStore};
 

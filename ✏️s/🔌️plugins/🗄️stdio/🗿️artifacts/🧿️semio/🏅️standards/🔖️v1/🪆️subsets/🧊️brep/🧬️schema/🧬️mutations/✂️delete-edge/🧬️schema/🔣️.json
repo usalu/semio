@@ -10,7 +10,24 @@
   ],
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Edge",
+          "de": "Kante"
+        },
+        "description": {
+          "en": "Id of the edge that is deleted.",
+          "de": "Kennung der Kante, die gelöscht wird."
+        },
+        "ref": {
+          "kind": "edge"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

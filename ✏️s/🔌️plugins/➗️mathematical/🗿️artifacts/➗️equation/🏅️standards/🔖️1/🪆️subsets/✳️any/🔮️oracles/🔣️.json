@@ -56,5 +56,5 @@
   "comparisonProfiles": [],
   "toleranceProfiles": [],
   "mutationManifests": [],
-  "fixtureManifests": []
+  "testEvidence": []
 }

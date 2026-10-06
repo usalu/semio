@@ -24,7 +24,7 @@ const INPUT: &str = "shared://🌐️pattern-sphere/🧊️.ply";
 /// 🧫️ Copies the immutable committed document into the work directory and returns the mutable
 /// copy's bytes; the committed fixture itself is never written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("📥️input.ply"))?;
+    let copy = ctx.copy_input(INPUT, Some("📥️input.ply"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

@@ -458,9 +458,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-declaration-applied",
       "class": "third-party-generated",
       "target": {
@@ -511,7 +510,6 @@
       "notes": "The XML declaration gains a standalone=\"no\"; doctype/root untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-doctype-applied",
       "class": "third-party-generated",
       "target": {
@@ -562,7 +560,6 @@
       "notes": "The DOCTYPE is replaced with a simplified SYSTEM form; declaration/root untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-element-applied",
       "class": "third-party-generated",
       "target": {
@@ -613,7 +610,6 @@
       "notes": "A new <circle> is appended as the 3rd child of <g>."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-element-applied",
       "class": "third-party-generated",
       "target": {
@@ -664,7 +660,6 @@
       "notes": "The <text> child of <g> (index 1) is removed entirely."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-element-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -715,7 +710,6 @@
       "notes": "<rect> is renamed to <ellipse> in place; attributes/children untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -766,7 +760,6 @@
       "notes": "A new fill=\"red\" attribute is appended to <rect>."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-text-applied",
       "class": "third-party-generated",
       "target": {
@@ -817,7 +810,6 @@
       "notes": "The text node inside <text> changes from \"Hello\" to \"World\"."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-view-box-applied",
       "class": "third-party-generated",
       "target": {
@@ -868,7 +860,6 @@
       "notes": "Root <svg>'s own viewBox changes from \"0 0 100 100\" to \"0 0 200 200\" (raw string, not decomposed — see this subset's own reader-oracle rationale)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-transform-applied",
       "class": "third-party-generated",
       "target": {

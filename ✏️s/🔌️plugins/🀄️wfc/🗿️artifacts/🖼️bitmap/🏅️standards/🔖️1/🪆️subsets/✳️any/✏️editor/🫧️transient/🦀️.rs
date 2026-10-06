@@ -76,3 +76,6 @@ impl protocol::MutationDiff<BitmapTransient> for BitmapTransient {
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

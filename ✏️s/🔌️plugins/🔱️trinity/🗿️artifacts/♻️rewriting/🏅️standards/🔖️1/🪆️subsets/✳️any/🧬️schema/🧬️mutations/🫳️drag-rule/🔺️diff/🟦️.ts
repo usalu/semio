@@ -1,5 +1,5 @@
 /** 🔺️ rewriting drag-rule-nodes/🔺️diff — mirror of the per-key layout-point upserts. */
-import {binary64,binary64Value} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import type {LayoutPoint} from "../../../🟦️.ts";
 import type { DragRuleNodes } from "../🟦️.ts";
 

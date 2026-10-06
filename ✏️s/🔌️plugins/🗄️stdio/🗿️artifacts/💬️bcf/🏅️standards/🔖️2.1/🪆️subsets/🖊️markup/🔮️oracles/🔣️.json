@@ -625,9 +625,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-version-applied",
       "class": "third-party-generated",
       "target": {
@@ -678,7 +677,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-topic-applied",
       "class": "third-party-generated",
       "target": {
@@ -729,7 +727,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-topic-rejected-duplicate",
       "class": "third-party-generated",
       "target": {
@@ -773,7 +770,6 @@
       "notes": "Rejected-outcome recipe: carries only the ⬅️before.bcf state (the state a real subject would refuse to mutate further) — there is no legal after-state to author independently."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-topic-applied",
       "class": "third-party-generated",
       "target": {
@@ -824,7 +820,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-topic-rejected-missing",
       "class": "third-party-generated",
       "target": {
@@ -868,7 +863,6 @@
       "notes": "Rejected-outcome recipe: carries only the ⬅️before.bcf state (the state a real subject would refuse to mutate further) — there is no legal after-state to author independently."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-topic-markup-applied",
       "class": "third-party-generated",
       "target": {
@@ -919,7 +913,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-comment-applied",
       "class": "third-party-generated",
       "target": {
@@ -970,7 +963,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-comment-applied",
       "class": "third-party-generated",
       "target": {
@@ -1021,7 +1013,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-comment-applied",
       "class": "third-party-generated",
       "target": {
@@ -1072,7 +1063,6 @@
       "notes": ""
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {

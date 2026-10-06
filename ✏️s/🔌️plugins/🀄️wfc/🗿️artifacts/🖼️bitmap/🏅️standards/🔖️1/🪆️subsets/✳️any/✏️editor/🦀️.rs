@@ -29,9 +29,8 @@
 use crate::editor::bitmap::commands::{pin_solution, set_active_example};
 use crate::editor::bitmap::modes::edit;
 use crate::editor::bitmap::modes::edit::tools::fill as fill_tool;
-use crate::editor::bitmap::modes::edit::windows::input::transient::{self as input_transient, BitmapInputWindowTransient, BitmapInputWindowTransientOwner};
-use crate::editor::bitmap::modes::edit::windows::input::utilities::brush::{bitmap_brush_dispatch, bitmap_brush_pointer_stroke, bitmap_brush_preview, BitmapBrushPointer, BrushToolRequest};
-use semio_framework_tool_machine::GesturePhase;
+use crate::editor::bitmap::modes::edit::windows::input::utilities::brush::{bitmap_brush_pointer_stroke, BitmapBrush, BitmapBrushPointer, BrushToolRequest, BITMAP_PAINT_STROKE_VERB};
+use semio_framework_tool_machine::{GesturePhase, ToolAbortReason};
 use crate::editor::bitmap::modes::edit::windows::{input, output};
 use crate::editor::bitmap::transient::{BitmapTransient, BitmapTransientMutation, SetSolve};
 use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapStrokePoint};
@@ -88,7 +87,7 @@ pub enum BitmapEditorCommand {
     #[dsl(key = "resize-input")]
     ResizeInput { width: u32, height: u32 },
     #[dsl(key = "set-input-pixels")]
-    SetInputPixels { x: u32, y: u32, width: u32, height: u32, pixels: String },
+    SetInputPixels { x: u32, y: u32, width: u32, height: u32, #[value(with = "semio_framework_value::bytes")] pixels: Vec<u8> },
     #[dsl(key = "add-palette-color")]
     AddPaletteColor { index: usize, r: u32, g: u32, b: u32, a: u32 },
     #[dsl(key = "change-palette-color")]
@@ -296,7 +295,7 @@ mod args_bridge {
                 y: u32_or("y", 0),
                 width: u32_or("width", 1),
                 height: u32_or("height", 1),
-                pixels: text(args, "pixels").unwrap_or_default(),
+                pixels: crate::standards::v1::subsets::any::io::text::snapshot::decode_pixel_text(&text(args, "pixels").unwrap_or_default()).map_err(|error| Fault::from(error.to_string()))?,
             },
             "add-palette-color" => BitmapEditorCommand::AddPaletteColor { index: usize_or("index", 0), r: u32_or("r", 0), g: u32_or("g", 0), b: u32_or("b", 0), a: u32_or("a", 255) },
             "change-palette-color" => BitmapEditorCommand::ChangePaletteColor { index: usize_or("index", 0), r: u32_or("r", 0), g: u32_or("g", 0), b: u32_or("b", 0), a: u32_or("a", 255) },
@@ -433,19 +432,14 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         let view_state = input.context.and_then(|context| context.view_state.as_ref());
         let pointer = input.command.brush_pointer();
         if pointer.is_some() || matches!(input.command, BitmapEditorCommand::PaintStroke { .. }) {
-            let window = input_transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
+            let detached = semio_framework_plugin::app::GestureSlot::detached();
+            let slot = input.context.map_or(&detached, |context| context.gesture());
             let stroke = match &pointer {
-                Some(pointer) => BitmapEditor::pointer_stroke(pointer, doc.snapshot, &window),
-                None => Some((input.command.clone(), window.clone())),
+                Some(pointer) => BitmapEditor::pointer_stroke(pointer, doc.snapshot, slot.open().is_some()),
+                None => Some((input.command.clone(), false)),
             };
-            let Some((stroke, base)) = stroke else { return Ok(ArtifactCommandWorkStep::Complete(Emit::default())) };
-            let (emit, next) = BitmapEditor::paint_stroke(&stroke, &doc, &cfg, &base)?;
-            let window_transient = match view_state {
-                Some(view) if next != window => vec![input_transient::addressed(view, next)?],
-                None if next != window => return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.window.view-required"), "wfc.bitmap.window.view-required")),
-                _ => Vec::new(),
-            };
-            return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } });
+            let Some((stroke, interrupt)) = stroke else { return Ok(ArtifactCommandWorkStep::Complete(Emit::default())) };
+            return Ok(ArtifactCommandWorkStep::Complete(BitmapEditor::paint_stroke(&stroke, &doc, &cfg, slot, interrupt)?));
         }
         let emit = BitmapEditor::dispatch(input.command, &doc, &cfg, view_state)?;
         match input.command {
@@ -558,7 +552,6 @@ struct BitmapOneItemPreparation {
     maximum_bytes: usize,
     base: Option<store::SnapshotRead<BitmapSnapshot>>,
     mutation: Option<BitmapMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<BitmapSnapshot, BitmapMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -569,9 +562,9 @@ struct BitmapOneItemPreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<BitmapSnapshot, BitmapMutation> for BitmapOneItemPreparationFactory {
-    fn preflight(&self, mutation: &BitmapMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err(format!("{BITMAP_STORE_PREFIX}-lane-or-description-envelope"));
+    fn preflight(&self, mutation: &BitmapMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err(format!("{BITMAP_STORE_PREFIX}-lane"));
         }
         bitmap_one_item_footprint(mutation, self.maximum_bytes)
     }
@@ -594,7 +587,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<BitmapSnapshot, BitmapMutatio
             maximum_bytes: self.maximum_bytes,
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -656,7 +648,7 @@ impl store::ArtifactStoreOneItemPreparation<BitmapSnapshot, BitmapMutation> for 
         if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
-        if self.description.take().is_some() || self.failure.take().is_some() {
+        if self.failure.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -672,7 +664,7 @@ impl store::ArtifactStoreOneItemPreparation<BitmapSnapshot, BitmapMutation> for 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none() && self.failure.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none() && self.failure.is_none()
     }
 }
 
@@ -793,28 +785,6 @@ impl ArtifactEditor for BitmapEditor {
         registry.register::<output::config::BitmapOutputWindowConfigOwner>()
     }
 
-    /// 🫧️ The input window's transient partition — where its brush stroke in flight lives between dispatches.
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
-        input_transient::register(registry)
-    }
-
-    /// 📨️ Every host event ends the window's open brush stroke with zero trace under the reason the tool records: a
-    /// blur `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an opened
-    /// history edit `frozen`. A remote edit (`BaseMoved`) keeps the stroke: its leaf names absolute cells and replays
-    /// on any base. A window with no stroke in flight takes no write.
-    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<Self::Command> {
-        use semio_framework_plugin::HostEvent;
-        use semio_framework_tool_machine::ToolAbortReason;
-        let reason = match event {
-            HostEvent::WindowBlurred { .. } => ToolAbortReason::Blur,
-            HostEvent::PointerCaptureLost { .. } => ToolAbortReason::CaptureLost,
-            HostEvent::UtilityChanged { .. } | HostEvent::Retiring { .. } => ToolAbortReason::Retired,
-            HostEvent::TimeTravelFrozen { .. } => ToolAbortReason::Frozen,
-            HostEvent::BaseMoved { .. } => return None,
-        };
-        Some(BitmapEditorCommand::PaintStroke { xs: Vec::new(), ys: Vec::new(), color: None, phase: Some("abort".to_string()), reason: Some(reason.as_str().to_string()) })
-    }
-
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         BitmapCommandJobFactory::register(registry)
     }
@@ -930,7 +900,7 @@ impl ArtifactEditor for BitmapEditor {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_bodies(body_key, doc.snapshot, cfg, &BitmapTransient::default(), None, None)
+        Self::render_bodies(body_key, doc.snapshot, cfg, &BitmapTransient::default(), None)
     }
 
     /// 🧮️ The real render path: the same bodies, but reading the solve cache the `Solve` command published on the
@@ -944,7 +914,7 @@ impl ArtifactEditor for BitmapEditor {
         transient: &TransientView<'_, Self::Transient>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_bodies(body_key, doc.snapshot, cfg, transient.snapshot, transient.window::<BitmapInputWindowTransientOwner>(), doc.tool_run())
+        Self::render_bodies(body_key, doc.snapshot, cfg, transient.snapshot, doc.tool_run())
     }
 
     fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
@@ -978,8 +948,7 @@ impl BitmapEditor {
         let Some(mutation) = Self::command_mutation(command) else {
             return match command {
                 BitmapEditorCommand::SetActiveColor { index } => Self::set_active_color(doc, cfg, view_state, *index),
-                BitmapEditorCommand::PaintStroke { phase, .. } if phase.as_deref() == Some("stream") => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.window-required"), "wfc.bitmap.stroke.window-required")),
-                BitmapEditorCommand::PaintStroke { .. } => Self::paint_stroke(command, doc, cfg, &BitmapInputWindowTransient::default()).map(|(emit, _)| emit),
+                BitmapEditorCommand::PaintStroke { .. } => Self::paint_stroke(command, doc, cfg, &semio_framework_plugin::app::GestureSlot::detached(), false),
                 BitmapEditorCommand::SetActiveExample { example_id } => set_active_example::handle(&set_active_example::SetActiveExample { example_id: example_id.clone() }, doc),
                 BitmapEditorCommand::PinSolution { pixels, contradiction } => pin_solution::handle(&pin_solution::PinSolution { pixels: pixels.clone(), contradiction: *contradiction }, doc),
                 BitmapEditorCommand::Solve => Ok(Emit { effects: vec![fill_tool::start_fill_effect()], ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
@@ -1000,7 +969,7 @@ impl BitmapEditor {
     /// diagnostic anywhere in the shell.
     pub fn solve_transient(snapshot: &BitmapSnapshot) -> Result<BitmapTransientMutation, Fault> {
         let (pixels, contradiction) = match crate::inferences::solve_with_job(snapshot) {
-            Ok(commit) if !commit.contradiction && !commit.pixels.is_empty() => (Some(commit.pixels), false),
+            Ok(commit) if !commit.contradiction && !commit.pixels.is_empty() => (Some(crate::standards::v1::subsets::any::io::text::snapshot::encode_base64(&commit.pixels)), false),
             Ok(_) => (None, true),
             Err(error) => return Err(Fault::from(format!("wfc-bitmap-solve-failed:{error}"))),
         };
@@ -1036,29 +1005,28 @@ impl BitmapEditor {
         })
     }
 
-    fn render_bodies(body_key: &str, snapshot: &BitmapSnapshot, cfg: &ConfigView<'_, NoConfig>, transient: &BitmapTransient, input_transient: Option<&BitmapInputWindowTransient>, tool_run: Option<&semio_framework_plugin::ToolRunView>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render_bodies(body_key: &str, snapshot: &BitmapSnapshot, cfg: &ConfigView<'_, NoConfig>, transient: &BitmapTransient, tool_run: Option<&semio_framework_plugin::ToolRunView>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            input::BODY_KEY => {
-                let preview = input_transient.and_then(|window| bitmap_brush_preview(snapshot, window));
-                input::render(preview.as_ref().unwrap_or(snapshot), &input::config::current(cfg)).map(semio_framework_plugin::built_to_component_tree)
-            }
+            input::BODY_KEY => input::render(snapshot, &input::config::current(cfg)).map(semio_framework_plugin::built_to_component_tree),
             output::BODY_KEY => output::render(snapshot, transient, &output::config::current(cfg), tool_run).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 
-    /// 🖌️ One `paint-stroke` dispatch through the window's brush tool: the stroke's colour is the payload's, else the
-    /// window's armed colour, refused when the palette has no such entry; the committed stroke is ONE edit stamped
-    /// with its `TransactionRef` (plain without an admission seed — a render or test view), a stream tick or a
-    /// cancel publishes nothing on the document. Answers the emit and the window transient to publish.
-    pub fn paint_stroke(command: &BitmapEditorCommand, doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, window: &BitmapInputWindowTransient) -> Result<(Emit<BitmapMutation>, BitmapInputWindowTransient), Fault> {
+    /// 🖌️ One `paint-stroke` dispatch through the dispatching window's gesture `slot`: the stroke's colour is the
+    /// payload's, else the window's armed colour, refused when the palette has no such entry; the committed stroke is ONE
+    /// edit stamped with its `TransactionRef` (plain without an admission seed — a render or test view), a stream tick or
+    /// a cancel publishes nothing on the document. `interrupt` first drops a stroke a lost release left open
+    /// (`captureLost`, zero trace). A stroke left open outside a window is refused: nothing would hold it.
+    pub fn paint_stroke(command: &BitmapEditorCommand, doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, slot: &semio_framework_plugin::app::GestureSlot<BitmapMutation>, interrupt: bool) -> Result<Emit<BitmapMutation>, Fault> {
         let BitmapEditorCommand::PaintStroke { xs, ys, color, phase, reason } = command else { return Err(Fault::from("wfc-bitmap-command-unmapped")) };
         let phase = GesturePhase::parse(phase.as_deref(), reason.as_deref()).ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.phase-invalid"), "wfc.bitmap.stroke.phase-invalid"))?;
         if xs.len() != ys.len() {
             return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.points-invalid"), "wfc.bitmap.stroke.points-invalid"));
         }
         let color = color.unwrap_or_else(|| input::config::current(cfg).active_color);
-        let opens = matches!(phase, GesturePhase::Once) || (window.brush.is_none() && matches!(phase, GesturePhase::Stream | GesturePhase::Commit));
+        let open = !interrupt && slot.open().is_some();
+        let opens = matches!(phase, GesturePhase::Once) || (!open && matches!(phase, GesturePhase::Stream | GesturePhase::Commit));
         if opens && color as usize >= doc.snapshot.input.palette.len() {
             return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
         }
@@ -1067,20 +1035,21 @@ impl BitmapEditor {
         }
         let points = xs.iter().zip(ys).map(|(x, y)| BitmapStrokePoint { x: *x, y: *y }).collect();
         let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
-        let (committed, next) = bitmap_brush_dispatch(phase, BrushToolRequest::on(doc.snapshot, points, color), window, seed);
-        let emit = match committed {
-            Some((transaction, mutations)) if !seed.is_empty() => Emit::commit_transaction(transaction, mutations),
-            Some((_, mutations)) => Emit::mutations(mutations),
-            None => Emit::default(),
-        };
-        Ok((emit, next))
+        if interrupt {
+            slot.drive::<BitmapBrush>(BITMAP_PAINT_STROKE_VERB, GesturePhase::Abort(ToolAbortReason::CaptureLost), None, seed)?;
+        }
+        let committed = slot.drive::<BitmapBrush>(BITMAP_PAINT_STROKE_VERB, phase, Some(BrushToolRequest::on(doc.snapshot, points, color)), seed)?;
+        if slot.window().is_empty() && slot.open().is_some() {
+            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.window-required"), "wfc.bitmap.stroke.window-required"));
+        }
+        Ok(semio_framework_plugin::app::gesture_emit(committed, seed))
     }
 
-    /// 🖱️ The `paint-stroke` a canvas pointer event on the input surface means for a window holding `window`, in the
-    /// window's armed colour, with the transient the brush resumes from (at rest when a fresh press drops a stroke a
-    /// lost release left open). `None` when the event means nothing to the brush: zero trace, no write.
-    pub fn pointer_stroke(pointer: &BitmapBrushPointer, snapshot: &BitmapSnapshot, window: &BitmapInputWindowTransient) -> Option<(BitmapEditorCommand, BitmapInputWindowTransient)> {
-        let stroke = bitmap_brush_pointer_stroke(pointer, snapshot.input.width, snapshot.input.height, window.brush.is_some())?;
+    /// 🖱️ The `paint-stroke` a canvas pointer event on the input surface means for a window whose gesture slot holds an
+    /// `open` stroke or not, in the window's armed colour, and whether a stroke a lost release left open is dropped first
+    /// because a fresh press opens a new one. `None` when the event means nothing to the brush: zero trace, no write.
+    pub fn pointer_stroke(pointer: &BitmapBrushPointer, snapshot: &BitmapSnapshot, open: bool) -> Option<(BitmapEditorCommand, bool)> {
+        let stroke = bitmap_brush_pointer_stroke(pointer, snapshot.input.width, snapshot.input.height, open)?;
         let (xs, ys) = stroke.points.iter().map(|point| (point.x, point.y)).unzip();
         let (phase, reason) = match stroke.phase {
             GesturePhase::Once => (None, None),
@@ -1088,8 +1057,7 @@ impl BitmapEditor {
             GesturePhase::Commit => (Some("commit"), None),
             GesturePhase::Abort(reason) => (Some("abort"), Some(reason.as_str())),
         };
-        let base = if stroke.interrupt { BitmapInputWindowTransient::default() } else { window.clone() };
-        Some((BitmapEditorCommand::PaintStroke { xs, ys, color: None, phase: phase.map(str::to_string), reason: reason.map(str::to_string) }, base))
+        Some((BitmapEditorCommand::PaintStroke { xs, ys, color: None, phase: phase.map(str::to_string), reason: reason.map(str::to_string) }, stroke.interrupt))
     }
 
     /// 🎨️ The active brush colour is per-window-instance state: refused outright when the index is

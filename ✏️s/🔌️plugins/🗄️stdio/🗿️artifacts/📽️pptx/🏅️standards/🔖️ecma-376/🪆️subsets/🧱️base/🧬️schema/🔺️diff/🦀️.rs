@@ -72,32 +72,9 @@ pub fn diff_set_snapshot(base: &PptxSnapshot, next: &PptxSnapshot) -> PptxDiff {
     PptxDiff::between(base, next)
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-struct PptxDiffRecord {
-    value: semio_framework_value::DslValue,
-}
 
-impl protocol::DiffCodec for PptxDiff {
-    fn print_diff(&self) -> String {
-        let record = PptxDiffRecord { value: semio_framework_value::ToValue::to_value(self) };
-        semio_framework_dsl_record::print(&record.__dsl_to_record(), &PptxDiffRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Inline)
-    }
 
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let record = semio_framework_dsl_record::parse(line, &PptxDiffRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 64 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Inline })?;
-        let model = PptxDiffRecord::__dsl_from_record(&record)?;
-        semio_framework_value::FromValue::from_value(model.value).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
 
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
-    }
-
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail: error.to_string() })?;
-        semio_framework_value::FromValue::from_value(value).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx diff", offset: 0, detail: error.to_string() })
-    }
-}
 
 #[cfg(test)]
 pub(crate) fn demo_snapshot_a() -> PptxSnapshot {

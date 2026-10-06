@@ -3,7 +3,7 @@
 // Specs: Host the framework renderer's `🖥️Board2dHost` for the block2d app's `block2d-board` window, driven by
 // the REAL shipped example documents (`🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/*/🖼️assets/*/🗣️.dsl.semio`).
 // Summary: Mounts the host directly against a `UiComponentSceneNode` (`componentKind: "board-2d"`) whose
-// `fixtureJson`/`glyphCatalogsJson` are projected from a parsed `Block2dSnapshot` — the same shape
+// `snapshotJson`/`glyphCatalogsJson` are projected from a parsed `Block2dSnapshot` — the same shape
 // `../puzzle/2d/Board.stories.tsx` mounts puzzle's board with — and a story-local reducer
 // (`reduceBlock2dStoryAction`, `../scene.ts`) emulates block2d's own `app_commands!` set
 // (`patchNodeKind`/`addHandleKind`/`removeHandleKind`/`addHandle`/`removeHandle`/`setActiveExample`) so the

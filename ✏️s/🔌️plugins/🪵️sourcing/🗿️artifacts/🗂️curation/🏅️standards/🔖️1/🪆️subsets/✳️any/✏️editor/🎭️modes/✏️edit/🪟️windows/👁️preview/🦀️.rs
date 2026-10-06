@@ -30,6 +30,7 @@ const SOURCING_PREVIEW_FIT_PADDING: f64 = 1.25;
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SOURCING_CURATION_WINDOW_PREVIEW.into(),
         label: LocalizedLabel::native("Preview", "Vorschau"),
         body_key: SOURCING_CURATION_BODY_PREVIEW.into(),

@@ -1,0 +1,25 @@
+{
+  "schemaBytes": 5875,
+  "tableWidths": {
+    "las_document": 2,
+    "las_header": 50,
+    "las_point": 21,
+    "las_point_gps": 4,
+    "las_point_rgb": 4,
+    "las_return_histogram": 4,
+    "las_vlr": 6,
+    "las_vlr_octet": 4
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 21,
+      "valueBytes": 1509
+    },
+    {
+      "id": "metadataRetainingEmpty",
+      "rows": 7,
+      "valueBytes": 520
+    }
+  ]
+}

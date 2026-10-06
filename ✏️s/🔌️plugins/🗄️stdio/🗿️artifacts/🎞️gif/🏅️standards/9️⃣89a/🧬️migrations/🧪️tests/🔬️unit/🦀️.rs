@@ -5,7 +5,7 @@ use super::*;
 /// genuine on-disk GIF87a byte shape.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn real_87a_snapshot() -> Gif87aSnapshot {
-    let (palette, indices, _) = crate::standards::v87a::engine::quantize_rgba(&sample_rgba_2x2()).expect("quantize");
+    let (palette, indices, _) = crate::subsets::any::io::quantize_rgba(&sample_rgba_2x2()).expect("quantize");
     let source = Gif87aSnapshot {
         schema: crate::STDIO_GIF_DOCUMENT_SCHEMA.into(),
         width: 2,
@@ -13,11 +13,11 @@ fn real_87a_snapshot() -> Gif87aSnapshot {
         gct: None,
         background_color_index: 0,
         pixel_aspect_ratio: 0,
-        images: vec![GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(crate::standards::v87a::engine::color_table_from_bytes(palette, false)), indices }],
+        images: vec![GifImage { left: 0, top: 0, width: 2, height: 2, interlace: false, lct: Some(crate::subsets::any::io::color_table_from_bytes(palette, false)), indices }],
     };
-    let encoded = crate::standards::v87a::engine::encode_gif(&source).expect("real 87a encode of a small opaque image must succeed");
+    let encoded = crate::subsets::any::io::encode_gif(&source).expect("real 87a encode of a small opaque image must succeed");
     assert_eq!(&encoded[0..6], b"GIF87a", "sanity: this really is a GIF87a byte stream");
-    crate::standards::v87a::engine::decode_gif(&encoded).expect("real 87a decode of its own encoded bytes must succeed")
+    crate::subsets::any::io::decode_gif(&encoded).expect("real 87a decode of its own encoded bytes must succeed")
 }
 
 /// 🎨️ A real 2x2, 4-distinct-opaque-color RGBA image — small enough to hand-inspect, varied
@@ -64,9 +64,9 @@ async fn migrate_87a_to_89a_round_trips_through_real_89a_codec() {
     let snapshot_87a = real_87a_snapshot();
     let snapshot_89a = migrate_87a_to_89a(&snapshot_87a);
 
-    let encoded_89a = crate::standards::v89a::engine::encode_gif(&snapshot_89a).expect("real 89a encode of the migrated snapshot must succeed");
+    let encoded_89a = crate::subsets::any::io::encode_gif(&snapshot_89a).expect("real 89a encode of the migrated snapshot must succeed");
     assert_eq!(&encoded_89a[0..6], b"GIF89a", "sanity: this really is a GIF89a byte stream");
-    let redecoded_89a = crate::standards::v89a::engine::decode_gif(&encoded_89a).expect("real 89a decode of its own encoded bytes must succeed");
+    let redecoded_89a = crate::subsets::any::io::decode_gif(&encoded_89a).expect("real 89a decode of its own encoded bytes must succeed");
     assert_eq!(redecoded_89a.frames.len(), 1);
     assert_eq!(redecoded_89a.frames[0].indices, snapshot_87a.images[0].indices, "indices must still be identical after a real 89a encode/decode round trip");
 }

@@ -22,6 +22,6 @@ pub fn diff(payload: &super::RenameSpaceList, base: &EnergyModelSnapshot) -> pro
     if let Some(item) = model.space_lists.iter_mut().find(|item| item.id == payload.id) {
         item.name = payload.new_name.clone();
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

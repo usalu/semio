@@ -167,7 +167,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         }
       },
@@ -215,7 +216,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         }
       },
@@ -248,7 +250,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         }
       },
@@ -282,7 +285,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "importanceClass": {
@@ -355,7 +359,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "rdGeo": {
@@ -369,7 +374,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "rdEquStab": {
@@ -383,7 +389,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "rdEquDestab": {
@@ -397,7 +404,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "rdFat": {
@@ -411,7 +419,8 @@
             "unit": "N",
             "displayUnit": "kN",
             "displayFactor": 0.001,
-            "precision": 2
+            "precision": 2,
+            "step": 1000
           }
         },
         "span": {
@@ -423,7 +432,8 @@
             },
             "widget": "stepper",
             "unit": "m",
-            "precision": 3
+            "precision": 3,
+            "step": 0.01
           }
         },
         "deflectionW": {
@@ -437,7 +447,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "deflectionLimitRatio": {
@@ -452,7 +463,17 @@
               "de": "Nenner der zulässigen Durchbiegung l/n."
             },
             "widget": "stepper",
-            "precision": 0
+            "precision": 0,
+            "step": 50,
+            "snaps": [
+              150,
+              200,
+              250,
+              300,
+              350,
+              400,
+              500
+            ]
           }
         },
         "vibrationFrequency": {
@@ -464,7 +485,8 @@
             },
             "widget": "stepper",
             "unit": "Hz",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1
           }
         },
         "vibrationFrequencyMin": {
@@ -476,7 +498,8 @@
             },
             "widget": "stepper",
             "unit": "Hz",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1
           }
         }
       },
@@ -536,7 +559,8 @@
               "de": "Faktor, der die Größe der Einwirkung auf die Beanspruchung des Bauteils abbildet."
             },
             "widget": "stepper",
-            "precision": 3
+            "precision": 3,
+            "step": 0.001
           }
         }
       },
@@ -587,7 +611,8 @@
             },
             "widget": "stepper",
             "unit": "m/s²",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05
           }
         },
         "deckAccelerationLimit": {
@@ -599,7 +624,12 @@
             },
             "widget": "stepper",
             "unit": "m/s²",
-            "precision": 2
+            "precision": 2,
+            "step": 0.05,
+            "snaps": [
+              3.5,
+              5
+            ]
           }
         },
         "deckTwist": {
@@ -611,7 +641,8 @@
             },
             "widget": "stepper",
             "unit": "rad",
-            "precision": 4
+            "precision": 4,
+            "step": 0.0001
           }
         },
         "deckTwistLimit": {
@@ -623,7 +654,8 @@
             },
             "widget": "stepper",
             "unit": "rad",
-            "precision": 4
+            "precision": 4,
+            "step": 0.0001
           }
         },
         "bridgeDeflection": {
@@ -637,7 +669,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         },
         "bridgeDeflectionLimit": {
@@ -651,7 +684,8 @@
             "unit": "m",
             "displayUnit": "mm",
             "displayFactor": 1000,
-            "precision": 1
+            "precision": 1,
+            "step": 0.001
           }
         }
       },

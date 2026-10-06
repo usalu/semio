@@ -20,5 +20,5 @@ pub fn handle(payload: &RenameDagNode, doc: &ArtifactView<'_, DagSnapshot>, _cfg
     if trimmed.is_empty() || trimmed == payload.old_id.as_str() || scene.nodes.iter().any(|node| node.id == trimmed) || !scene.nodes.iter().any(|node| node.id == payload.old_id) {
         return Ok(Emit::default());
     }
-    Ok(crate::dag_child_emit(doc.snapshot, &[crate::rename_node_leaf(&payload.old_id, trimmed)]))
+    Ok(crate::dag_child_emit(doc.snapshot, vec![crate::rename_node_leaf(&payload.old_id, trimmed)]))
 }

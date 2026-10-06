@@ -1,7 +1,8 @@
 //! 📋️ Shared duplication vectors preserve sibling placement, metadata and inverse history.
 use super::*;
 use protocol::Mutation;
-use crate::standards::v1::subsets::any::schema::{empty_raster_snapshot,layer_node_id,snapshot::retire_raster_snapshot};
+use crate::standards::v1::subsets::any::schema::{layer_node_id, snapshot::retire_raster_snapshot};
+use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_snapshot};
 
 fn assert_copy(source:&crate::RasterLayerNode,copy:&crate::RasterLayerNode) {
     let source=semio_framework_pack_json::to_json_string(source);

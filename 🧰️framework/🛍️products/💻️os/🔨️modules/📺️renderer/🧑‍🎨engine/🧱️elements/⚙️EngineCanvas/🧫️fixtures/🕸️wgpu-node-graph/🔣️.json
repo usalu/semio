@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "what": "The flow fixture the generation3d Flow window (`procedural-main`, SurfaceKind::NodeGraph, body `procedural.play.main`) publishes as `NodeGraphScene.fixture_json` for the bundled `hexagonal-mushroom-column` example — 7 widgets, 6 synapses.",
+    "what": "The flow fixture the generation3d Flow window (`procedural-main`, SurfaceKind::NodeGraph, body `procedural.play.main`) publishes as `NodeGraphScene.snapshot_json` for the bundled `hexagonal-mushroom-column` example — 7 widgets, 6 synapses.",
     "source": "s/plugins/procedural/artifacts/generation3d/standards/1/subsets/any/examples/hexagonal-mushroom-column/assets/hexagonal-mushroom-column/dsl.semio",
     "producer": "Generation3dSnapshot::parse_dsl(example) -> snapshot.fixture -> dsl::json::to_json_string (schema/rs:426, flow window render)",
     "why_committed": "The framework renderer must not depend on a plugin crate; the payload is committed as data, and every field is re-validated by FlowHost::parse_host_snapshot_json in the lane that reads it.",

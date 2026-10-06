@@ -1,0 +1,274 @@
+[
+  {
+    "name": "Created Round Ellipse at Origin",
+    "radii": [
+      64,
+      48
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "evenodd",
+      "stroke": {
+        "width": 2,
+        "cap": "round",
+        "join": "round",
+        "dash": []
+      },
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        -65,
+        -49,
+        65,
+        49
+      ],
+      "queries": [
+        {
+          "point": [
+            0,
+            0
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            64,
+            0
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            66,
+            0
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ],
+      "fillContours": 1,
+      "strokeContours": 2
+    }
+  },
+  {
+    "name": "Created Round Ellipse Translated Horizontally",
+    "radii": [
+      64,
+      48
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        200,
+        0
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "evenodd",
+      "stroke": {
+        "width": 2,
+        "cap": "round",
+        "join": "round",
+        "dash": []
+      },
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        135,
+        -49,
+        265,
+        49
+      ],
+      "queries": [
+        {
+          "point": [
+            200,
+            0
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            264,
+            0
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            266,
+            0
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ],
+      "fillContours": 1,
+      "strokeContours": 2
+    }
+  },
+  {
+    "name": "Created Round Ellipse Translated Diagonally",
+    "radii": [
+      64,
+      48
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        200,
+        200
+      ],
+      "flatness": 0.001,
+      "fill": true,
+      "fillRule": "evenodd",
+      "stroke": {
+        "width": 2,
+        "cap": "round",
+        "join": "round",
+        "dash": []
+      },
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        135,
+        151,
+        265,
+        249
+      ],
+      "queries": [
+        {
+          "point": [
+            200,
+            200
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            264,
+            200
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            266,
+            200
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ],
+      "fillContours": 1,
+      "strokeContours": 2
+    }
+  },
+  {
+    "name": "Hollow Round Ellipse Translated Diagonally",
+    "radii": [
+      64,
+      48
+    ],
+    "input": {
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        200,
+        200
+      ],
+      "flatness": 0.001,
+      "fill": false,
+      "fillRule": "evenodd",
+      "stroke": {
+        "width": 2,
+        "cap": "round",
+        "join": "round",
+        "dash": []
+      },
+      "limits": {
+        "maxSegments": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxWork": 1000000000
+      }
+    },
+    "expected": {
+      "bounds": [
+        135,
+        151,
+        265,
+        249
+      ],
+      "queries": [
+        {
+          "point": [
+            200,
+            200
+          ],
+          "tolerance": 0,
+          "hit": false
+        },
+        {
+          "point": [
+            264,
+            200
+          ],
+          "tolerance": 0,
+          "hit": true
+        },
+        {
+          "point": [
+            266,
+            200
+          ],
+          "tolerance": 0,
+          "hit": false
+        }
+      ],
+      "fillContours": 0,
+      "strokeContours": 2
+    }
+  }
+]

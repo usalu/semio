@@ -1,5 +1,5 @@
 {
-  "description": "Language-neutral cases for the time-travel band and window indicator (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, design §10): every stage of HistoryPatch.timeTravel, the lines a shell shows in English and German, the controls in order with the refusal that disables one, the reserved verb each dispatches (args carry the session generation), the default remappable chords (never Escape) and the indicator's accessible name. Read by the React band test; the wgpu band reads the same cases. `transitions` are what one change of the focused program's session asks of either shell: reveal the History panel on the edge into a new session, and move keyboard focus to the draft editor's first input, the band or the finalize prompt.",
+  "description": "Language-neutral cases for the history-editing band and window indicator (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, design §10, §22): every stage of HistoryPatch.timeTravel, the lines a shell shows in English and German, the controls in order — each with the id both shells give it (`controlId`), the reserved verb it dispatches (args carry the session generation unless the row states its own `args`) and the refusal label that disables it — the default remappable chords (never Escape) and the indicator's accessible name. `labels` is the ONE copy of every text the band, the indicator, the peer notes and the refusal notices show: per label key (React's i18n key) the `normal` and the `beginner` tier in English and German, placeholders in single braces (`{target}`, `{done}`, `{total}`, `{level}`, `{count}`, `{name}`); the React catalogue is pinned to it by test, the wgpu shell embeds this file and resolves `label(key, tier, locale)`, and every `text` of this corpus (and of `🧫️time-travel-peers`) is a label of the table at the normal tier. `refusals` name the label key of each code. `transitions` are what one change of the focused program's session asks of either shell: reveal the History panel on the edge into a new session, move keyboard focus to the draft editor's first input, the band or the finalize prompt, and — when a replay completes blocked — reveal the panel again and scroll to the first blocking row (`scrollTo`, a node key of the guest's history body).",
   "controllerId": "toy.controller",
   "axes": {
     "terminology": "native"
@@ -19,6 +19,558 @@
       "controlId": "ui.timeTravel.exit",
       "keys": "alt+shift+backspace",
       "aria": "Alt+Shift+Backspace"
+    }
+  },
+  "labels": {
+    "ui.timeTravel.band": {
+      "normal": {
+        "en": "History editing",
+        "de": "Verlaufsbearbeitung"
+      },
+      "beginner": {
+        "en": "History editing: you are changing an earlier mutation",
+        "de": "Verlaufsbearbeitung: Du änderst eine frühere Mutation"
+      }
+    },
+    "ui.timeTravel.indicator": {
+      "normal": {
+        "en": "History editing",
+        "de": "Verlaufsbearbeitung"
+      },
+      "beginner": {
+        "en": "History editing",
+        "de": "Verlaufsbearbeitung"
+      }
+    },
+    "ui.timeTravel.indicatorTarget": {
+      "normal": {
+        "en": "History editing: document before {target}",
+        "de": "Verlaufsbearbeitung: Dokument vor {target}"
+      },
+      "beginner": {
+        "en": "History editing: this window shows the document before {target}",
+        "de": "Verlaufsbearbeitung: Dieses Fenster zeigt das Dokument vor {target}"
+      }
+    },
+    "ui.timeTravel.target": {
+      "normal": {
+        "en": "Editing: {target}",
+        "de": "Bearbeitet: {target}"
+      },
+      "beginner": {
+        "en": "Edited mutation: {target}",
+        "de": "Bearbeitete Mutation: {target}"
+      }
+    },
+    "ui.timeTravel.progress": {
+      "normal": {
+        "en": "Replaying {done} of {total} mutations",
+        "de": "{done} von {total} Mutationen werden neu angewendet"
+      },
+      "beginner": {
+        "en": "Replaying {done} of {total} mutations",
+        "de": "{done} von {total} Mutationen werden neu angewendet"
+      }
+    },
+    "ui.timeTravel.worst": {
+      "normal": {
+        "en": "Worst outcome: {level}",
+        "de": "Schwerstes Ergebnis: {level}"
+      },
+      "beginner": {
+        "en": "Worst outcome of the replayed mutations: {level}",
+        "de": "Schwerstes Ergebnis der neu angewendeten Mutationen: {level}"
+      }
+    },
+    "ui.timeTravel.accepted": {
+      "normal": {
+        "en": "Accepted changes: {count}",
+        "de": "Übernommene Änderungen: {count}"
+      },
+      "beginner": {
+        "en": "Accepted changes: {count}",
+        "de": "Übernommene Änderungen: {count}"
+      }
+    },
+    "ui.timeTravel.accept": {
+      "normal": {
+        "en": "Accept draft",
+        "de": "Entwurf übernehmen"
+      },
+      "beginner": {
+        "en": "Accept the draft and replay later mutations",
+        "de": "Entwurf übernehmen und spätere Mutationen neu anwenden"
+      }
+    },
+    "ui.timeTravel.discard": {
+      "normal": {
+        "en": "Discard draft",
+        "de": "Entwurf verwerfen"
+      },
+      "beginner": {
+        "en": "Discard draft",
+        "de": "Entwurf verwerfen"
+      }
+    },
+    "ui.timeTravel.exit": {
+      "normal": {
+        "en": "Exit history editing",
+        "de": "Verlaufsbearbeitung beenden"
+      },
+      "beginner": {
+        "en": "Exit history editing and discard every draft",
+        "de": "Verlaufsbearbeitung beenden und alle Entwürfe verwerfen"
+      }
+    },
+    "ui.timeTravel.finalize": {
+      "normal": {
+        "en": "Finalize…",
+        "de": "Abschließen…"
+      },
+      "beginner": {
+        "en": "Finalize the edited history…",
+        "de": "Bearbeiteten Verlauf abschließen…"
+      }
+    },
+    "ui.timeTravel.back": {
+      "normal": {
+        "en": "Back",
+        "de": "Zurück"
+      },
+      "beginner": {
+        "en": "Back to reviewing",
+        "de": "Zurück zur Prüfung"
+      }
+    },
+    "ui.timeTravel.cancelReplay": {
+      "normal": {
+        "en": "Cancel replay",
+        "de": "Neuanwendung abbrechen"
+      },
+      "beginner": {
+        "en": "Cancel replay",
+        "de": "Neuanwendung abbrechen"
+      }
+    },
+    "ui.timeTravel.rerun": {
+      "normal": {
+        "en": "Replay again",
+        "de": "Erneut anwenden"
+      },
+      "beginner": {
+        "en": "Replay again",
+        "de": "Erneut anwenden"
+      }
+    },
+    "ui.timeTravel.nextProblem": {
+      "normal": {
+        "en": "Next problem",
+        "de": "Nächstes Problem"
+      },
+      "beginner": {
+        "en": "Go to the next mutation with an error",
+        "de": "Zur nächsten Mutation mit einem Fehler"
+      }
+    },
+    "ui.timeTravel.stage.editing": {
+      "normal": {
+        "en": "Editing a mutation",
+        "de": "Mutation wird bearbeitet"
+      },
+      "beginner": {
+        "en": "Editing a mutation",
+        "de": "Mutation wird bearbeitet"
+      }
+    },
+    "ui.timeTravel.stage.replaying": {
+      "normal": {
+        "en": "Replaying later mutations",
+        "de": "Spätere Mutationen werden neu angewendet"
+      },
+      "beginner": {
+        "en": "Replaying later mutations",
+        "de": "Spätere Mutationen werden neu angewendet"
+      }
+    },
+    "ui.timeTravel.stage.reviewing": {
+      "normal": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      },
+      "beginner": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
+    },
+    "ui.timeTravel.stage.choosing": {
+      "normal": {
+        "en": "Choose how to finalize",
+        "de": "Art des Abschlusses wählen"
+      },
+      "beginner": {
+        "en": "Choose how to finalize",
+        "de": "Art des Abschlusses wählen"
+      }
+    },
+    "ui.timeTravel.stage.finalizing": {
+      "normal": {
+        "en": "Finalizing the history edit",
+        "de": "Verlaufsbearbeitung wird abgeschlossen"
+      },
+      "beginner": {
+        "en": "Finalizing the history edit",
+        "de": "Verlaufsbearbeitung wird abgeschlossen"
+      }
+    },
+    "ui.timeTravel.review.noChanges": {
+      "normal": {
+        "en": "No changes: showing the current history",
+        "de": "Keine Änderungen: aktueller Verlauf wird angezeigt"
+      },
+      "beginner": {
+        "en": "No changes: showing the current history",
+        "de": "Keine Änderungen: aktueller Verlauf wird angezeigt"
+      }
+    },
+    "ui.timeTravel.review.needsReplay": {
+      "normal": {
+        "en": "Replay needed: later mutations are not checked yet",
+        "de": "Neu anwenden nötig: spätere Mutationen sind noch nicht geprüft"
+      },
+      "beginner": {
+        "en": "Replay needed: later mutations are not checked yet",
+        "de": "Neu anwenden nötig: spätere Mutationen sind noch nicht geprüft"
+      }
+    },
+    "ui.timeTravel.review.blocked": {
+      "normal": {
+        "en": "Errors must be fixed or withdrawn before finalizing",
+        "de": "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden"
+      },
+      "beginner": {
+        "en": "Errors must be fixed or withdrawn before finalizing",
+        "de": "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden"
+      }
+    },
+    "ui.timeTravel.review.ready": {
+      "normal": {
+        "en": "Ready to finalize",
+        "de": "Bereit zum Abschließen"
+      },
+      "beginner": {
+        "en": "Ready to finalize",
+        "de": "Bereit zum Abschließen"
+      }
+    },
+    "ui.timeTravel.peer.editingRow": {
+      "normal": {
+        "en": "{name} is editing this in the history",
+        "de": "{name} bearbeitet dies im Verlauf"
+      },
+      "beginner": {
+        "en": "{name} is editing this in the history right now",
+        "de": "{name} bearbeitet dies gerade im Verlauf"
+      }
+    },
+    "ui.timeTravel.peer.editingTarget": {
+      "normal": {
+        "en": "{name} is editing {target} in the history",
+        "de": "{name} bearbeitet {target} im Verlauf"
+      },
+      "beginner": {
+        "en": "{name} is editing {target} in the history right now",
+        "de": "{name} bearbeitet gerade {target} im Verlauf"
+      }
+    },
+    "ui.timeTravel.peer.editingHistory": {
+      "normal": {
+        "en": "{name} is editing the history",
+        "de": "{name} bearbeitet den Verlauf"
+      },
+      "beginner": {
+        "en": "{name} is editing the history right now",
+        "de": "{name} bearbeitet gerade den Verlauf"
+      }
+    },
+    "ui.timeTravel.refusal.frozen": {
+      "normal": {
+        "en": "Editing is paused while history is being edited",
+        "de": "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird"
+      },
+      "beginner": {
+        "en": "Editing is paused while history is being edited",
+        "de": "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird"
+      }
+    },
+    "ui.timeTravel.refusal.illegal": {
+      "normal": {
+        "en": "Not possible right now",
+        "de": "Derzeit nicht möglich"
+      },
+      "beginner": {
+        "en": "Not possible right now",
+        "de": "Derzeit nicht möglich"
+      }
+    },
+    "ui.timeTravel.refusal.stale": {
+      "normal": {
+        "en": "Outdated request ignored",
+        "de": "Veraltete Anfrage ignoriert"
+      },
+      "beginner": {
+        "en": "Outdated request ignored",
+        "de": "Veraltete Anfrage ignoriert"
+      }
+    },
+    "ui.timeTravel.refusal.blocked": {
+      "normal": {
+        "en": "Blocked: resolve the pending change or the errors first",
+        "de": "Blockiert: zuerst die offene Änderung oder die Fehler auflösen"
+      },
+      "beginner": {
+        "en": "Blocked: resolve the pending change or the errors first",
+        "de": "Blockiert: zuerst die offene Änderung oder die Fehler auflösen"
+      }
+    },
+    "ui.timeTravel.refusal.empty": {
+      "normal": {
+        "en": "Nothing to finalize: no accepted changes",
+        "de": "Nichts abzuschließen: keine übernommenen Änderungen"
+      },
+      "beginner": {
+        "en": "Nothing to finalize: no accepted changes",
+        "de": "Nichts abzuschließen: keine übernommenen Änderungen"
+      }
+    },
+    "ui.timeTravel.refusal.cancelled": {
+      "normal": {
+        "en": "Replay cancelled",
+        "de": "Neu anwenden abgebrochen"
+      },
+      "beginner": {
+        "en": "Replay cancelled",
+        "de": "Neu anwenden abgebrochen"
+      }
+    },
+    "ui.timeTravel.refusal.nameInvalid": {
+      "normal": {
+        "en": "Invalid alternative name: use 1 to 256 characters",
+        "de": "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden"
+      },
+      "beginner": {
+        "en": "Invalid alternative name: use 1 to 256 characters",
+        "de": "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden"
+      }
+    },
+    "ui.timeTravel.refusal.busy": {
+      "normal": {
+        "en": "History editing is busy: finish the running tool or the other history edit first",
+        "de": "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen"
+      },
+      "beginner": {
+        "en": "History editing is busy: finish the running tool or the other history edit first",
+        "de": "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen"
+      }
+    },
+    "ui.timeTravel.refusal.unknownMutation": {
+      "normal": {
+        "en": "This mutation is no longer in the history",
+        "de": "Diese Mutation ist nicht mehr im Verlauf"
+      },
+      "beginner": {
+        "en": "This mutation is no longer in the history",
+        "de": "Diese Mutation ist nicht mehr im Verlauf"
+      }
+    },
+    "ui.timeTravel.refusal.notEditable": {
+      "normal": {
+        "en": "The inputs of this mutation cannot be edited",
+        "de": "Die Eingaben dieser Mutation können nicht bearbeitet werden"
+      },
+      "beginner": {
+        "en": "The inputs of this mutation cannot be edited",
+        "de": "Die Eingaben dieser Mutation können nicht bearbeitet werden"
+      }
+    },
+    "ui.timeTravel.refusal.unknownInput": {
+      "normal": {
+        "en": "This input does not exist in the mutation",
+        "de": "Diese Eingabe gibt es in der Mutation nicht"
+      },
+      "beginner": {
+        "en": "This input does not exist in the mutation",
+        "de": "Diese Eingabe gibt es in der Mutation nicht"
+      }
+    },
+    "ui.timeTravel.refusal.invalidInput": {
+      "normal": {
+        "en": "Invalid value: the input keeps its previous value",
+        "de": "Ungültiger Wert: Die Eingabe behält ihren bisherigen Wert"
+      },
+      "beginner": {
+        "en": "Invalid value: the input keeps its previous value",
+        "de": "Ungültiger Wert: Die Eingabe behält ihren bisherigen Wert"
+      }
+    },
+    "ui.timeTravel.refusal.noSelection": {
+      "normal": {
+        "en": "Nothing suitable is selected for this input",
+        "de": "Für diese Eingabe ist nichts Passendes ausgewählt"
+      },
+      "beginner": {
+        "en": "Nothing suitable is selected for this input",
+        "de": "Für diese Eingabe ist nichts Passendes ausgewählt"
+      }
+    },
+    "ui.timeTravel.refusal.nameRequired": {
+      "normal": {
+        "en": "Name the new alternative",
+        "de": "Einen Namen für die neue Alternative eingeben"
+      },
+      "beginner": {
+        "en": "Name the new alternative",
+        "de": "Einen Namen für die neue Alternative eingeben"
+      }
+    },
+    "ui.timeTravel.refusal.schemaUnavailable": {
+      "normal": {
+        "en": "The input schema of this mutation is unavailable",
+        "de": "Das Eingabeschema dieser Mutation ist nicht verfügbar"
+      },
+      "beginner": {
+        "en": "The input schema of this mutation is unavailable",
+        "de": "Das Eingabeschema dieser Mutation ist nicht verfügbar"
+      }
+    },
+    "ui.timeTravel.refusal.replayFaulted": {
+      "normal": {
+        "en": "Replay failed: later mutations could not be checked",
+        "de": "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden"
+      },
+      "beginner": {
+        "en": "Replay failed: later mutations could not be checked",
+        "de": "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden"
+      }
+    },
+    "ui.timeTravel.refusal.commitFailed": {
+      "normal": {
+        "en": "Finalizing failed: the history is unchanged",
+        "de": "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"
+      },
+      "beginner": {
+        "en": "Finalizing failed: the history is unchanged",
+        "de": "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"
+      }
+    },
+    "ui.timeTravel.refusal.memberGone": {
+      "normal": {
+        "en": "The part this history edit targets was closed",
+        "de": "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"
+      },
+      "beginner": {
+        "en": "The part this history edit targets was closed",
+        "de": "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"
+      }
+    },
+    "ui.timeTravel.refusal.notWithdrawable": {
+      "normal": {
+        "en": "This mutation cannot be withdrawn here",
+        "de": "Diese Mutation kann hier nicht zurückgezogen werden"
+      },
+      "beginner": {
+        "en": "This mutation cannot be withdrawn here",
+        "de": "Diese Mutation kann hier nicht zurückgezogen werden"
+      }
+    },
+    "ui.timeTravel.refusal.editorClosed": {
+      "normal": {
+        "en": "The draft editor is closed: open the mutation again",
+        "de": "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen"
+      },
+      "beginner": {
+        "en": "The draft editor is closed: open the mutation again",
+        "de": "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen"
+      }
+    },
+    "ui.timeTravel.refusal.readOnly": {
+      "normal": {
+        "en": "History cannot be edited in a read-only view",
+        "de": "Der Verlauf kann in einer schreibgeschützten Ansicht nicht bearbeitet werden"
+      },
+      "beginner": {
+        "en": "History cannot be edited in a read-only view",
+        "de": "Der Verlauf kann in einer schreibgeschützten Ansicht nicht bearbeitet werden"
+      }
+    },
+    "ui.mutation.level.info": {
+      "normal": {
+        "en": "Info",
+        "de": "Info"
+      },
+      "beginner": {
+        "en": "Info",
+        "de": "Info"
+      }
+    },
+    "ui.mutation.level.warning": {
+      "normal": {
+        "en": "Warning",
+        "de": "Warnung"
+      },
+      "beginner": {
+        "en": "Warning",
+        "de": "Warnung"
+      }
+    },
+    "ui.mutation.level.error": {
+      "normal": {
+        "en": "Error",
+        "de": "Fehler"
+      },
+      "beginner": {
+        "en": "Error",
+        "de": "Fehler"
+      }
+    },
+    "ui.mutation.level.fatal": {
+      "normal": {
+        "en": "Fatal",
+        "de": "Kritisch"
+      },
+      "beginner": {
+        "en": "Fatal error",
+        "de": "Kritischer Fehler"
+      }
+    },
+    "ui.history.refusal.malformedTransition": {
+      "normal": {
+        "en": "History edit refused: the change could not be read.",
+        "de": "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden."
+      },
+      "beginner": {
+        "en": "History edit refused: the change could not be read.",
+        "de": "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden."
+      }
+    },
+    "ui.history.refusal.unknownTarget": {
+      "normal": {
+        "en": "History edit refused: the edited mutation no longer exists.",
+        "de": "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr."
+      },
+      "beginner": {
+        "en": "History edit refused: the edited mutation no longer exists.",
+        "de": "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr."
+      }
+    },
+    "ui.history.refusal.transitionRefused": {
+      "normal": {
+        "en": "The hub refused a history edit; the step was withdrawn.",
+        "de": "Der Hub hat eine Verlaufsbearbeitung abgelehnt; der Schritt wurde zurückgenommen."
+      },
+      "beginner": {
+        "en": "The hub refused a history edit; the step was withdrawn.",
+        "de": "Der Hub hat eine Verlaufsbearbeitung abgelehnt; der Schritt wurde zurückgenommen."
+      }
     }
   },
   "cases": [
@@ -65,23 +617,26 @@
       "controls": [
         {
           "control": "accept",
+          "controlId": "ui.timeTravel.accept",
           "action": "historyEditAccept",
           "disabledBy": null
         },
         {
           "control": "discard",
+          "controlId": "ui.timeTravel.discard",
           "action": "historyEditDiscard",
           "disabledBy": null
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
       ],
       "indicator": {
-        "en": "Time travel: document before Drag selection",
-        "de": "Zeitreise: Dokument vor Auswahl ziehen"
+        "en": "History editing: document before Drag selection",
+        "de": "Verlaufsbearbeitung: Dokument vor Auswahl ziehen"
       }
     },
     {
@@ -129,11 +684,13 @@
       "controls": [
         {
           "control": "cancelReplay",
+          "controlId": "shell.time-travel.cancel-replay",
           "action": "historyEditCancelReplay",
           "disabledBy": null
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -177,16 +734,19 @@
       "controls": [
         {
           "control": "rerun",
+          "controlId": "shell.time-travel.rerun",
           "action": "historyEditRerun",
           "disabledBy": "ui.timeTravel.refusal.illegal"
         },
         {
           "control": "finalize",
+          "controlId": "shell.time-travel.finalize",
           "action": "historyEditFinalize",
           "disabledBy": null
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -231,16 +791,19 @@
       "controls": [
         {
           "control": "rerun",
+          "controlId": "shell.time-travel.rerun",
           "action": "historyEditRerun",
           "disabledBy": "ui.timeTravel.refusal.illegal"
         },
         {
           "control": "finalize",
+          "controlId": "shell.time-travel.finalize",
           "action": "historyEditFinalize",
           "disabledBy": "ui.timeTravel.refusal.blocked"
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -285,16 +848,19 @@
       "controls": [
         {
           "control": "rerun",
+          "controlId": "shell.time-travel.rerun",
           "action": "historyEditRerun",
           "disabledBy": "ui.timeTravel.refusal.illegal"
         },
         {
           "control": "finalize",
+          "controlId": "shell.time-travel.finalize",
           "action": "historyEditFinalize",
           "disabledBy": null
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -338,16 +904,19 @@
       "controls": [
         {
           "control": "rerun",
+          "controlId": "shell.time-travel.rerun",
           "action": "historyEditRerun",
           "disabledBy": "ui.timeTravel.refusal.illegal"
         },
         {
           "control": "finalize",
+          "controlId": "shell.time-travel.finalize",
           "action": "historyEditFinalize",
           "disabledBy": "ui.timeTravel.refusal.empty"
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -392,16 +961,19 @@
       "controls": [
         {
           "control": "rerun",
+          "controlId": "shell.time-travel.rerun",
           "action": "historyEditRerun",
           "disabledBy": null
         },
         {
           "control": "finalize",
+          "controlId": "shell.time-travel.finalize",
           "action": "historyEditFinalize",
           "disabledBy": "ui.timeTravel.refusal.blocked"
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -446,16 +1018,19 @@
       "controls": [
         {
           "control": "rerun",
+          "controlId": "shell.time-travel.rerun",
           "action": "historyEditRerun",
           "disabledBy": null
         },
         {
           "control": "finalize",
+          "controlId": "shell.time-travel.finalize",
           "action": "historyEditFinalize",
           "disabledBy": "ui.timeTravel.refusal.blocked"
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -498,16 +1073,19 @@
       "controls": [
         {
           "control": "rerun",
+          "controlId": "shell.time-travel.rerun",
           "action": "historyEditRerun",
           "disabledBy": "ui.timeTravel.refusal.illegal"
         },
         {
           "control": "finalize",
+          "controlId": "shell.time-travel.finalize",
           "action": "historyEditFinalize",
           "disabledBy": "ui.timeTravel.refusal.illegal"
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -550,16 +1128,19 @@
       "controls": [
         {
           "control": "accept",
+          "controlId": "ui.timeTravel.accept",
           "action": "historyEditAccept",
           "disabledBy": null
         },
         {
           "control": "discard",
+          "controlId": "ui.timeTravel.discard",
           "action": "historyEditDiscard",
           "disabledBy": null
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -601,11 +1182,13 @@
       "controls": [
         {
           "control": "back",
+          "controlId": "shell.time-travel.back",
           "action": "historyEditBack",
           "disabledBy": null
         },
         {
           "control": "exit",
+          "controlId": "ui.timeTravel.exit",
           "action": "historyEditExit",
           "disabledBy": null
         }
@@ -649,11 +1232,166 @@
         "en": "Finalizing the history edit",
         "de": "Verlaufsbearbeitung wird abgeschlossen"
       }
+    },
+    {
+      "name": "a blocked review offers the next problem first, opening the first blocking mutation the session names",
+      "session": {
+        "sessionId": "1",
+        "generation": 14,
+        "stage": "reviewing",
+        "worst": "error",
+        "blocking": true,
+        "acceptedCount": 2,
+        "review": "blocked",
+        "rerunnable": false,
+        "nextProblem": {
+          "mutationId": "m-5"
+        }
+      },
+      "text": {
+        "en": {
+          "stage": "Reviewing the edited history",
+          "target": null,
+          "progress": null,
+          "review": "Errors must be fixed or withdrawn before finalizing",
+          "outcome": "Worst outcome: Error",
+          "fault": null,
+          "accepted": "Accepted changes: 2"
+        },
+        "de": {
+          "stage": "Bearbeiteter Verlauf wird geprüft",
+          "target": null,
+          "progress": null,
+          "review": "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden",
+          "outcome": "Schwerstes Ergebnis: Fehler",
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 2"
+        }
+      },
+      "controls": [
+        {
+          "control": "nextProblem",
+          "controlId": "shell.time-travel.next-problem",
+          "action": "historyEditBegin",
+          "disabledBy": null,
+          "args": {
+            "mutationId": "m-5"
+          }
+        },
+        {
+          "control": "rerun",
+          "controlId": "shell.time-travel.rerun",
+          "action": "historyEditRerun",
+          "disabledBy": "ui.timeTravel.refusal.illegal"
+        },
+        {
+          "control": "finalize",
+          "controlId": "shell.time-travel.finalize",
+          "action": "historyEditFinalize",
+          "disabledBy": "ui.timeTravel.refusal.blocked"
+        },
+        {
+          "control": "exit",
+          "controlId": "ui.timeTravel.exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
+    },
+    {
+      "name": "the next problem of a composed part names the member store that holds it",
+      "session": {
+        "sessionId": "1",
+        "generation": 15,
+        "stage": "reviewing",
+        "worst": "error",
+        "blocking": true,
+        "acceptedCount": 2,
+        "review": "blocked",
+        "rerunnable": false,
+        "nextProblem": {
+          "mutationId": "m-7",
+          "store": "parts/p-1"
+        }
+      },
+      "text": {
+        "en": {
+          "stage": "Reviewing the edited history",
+          "target": null,
+          "progress": null,
+          "review": "Errors must be fixed or withdrawn before finalizing",
+          "outcome": "Worst outcome: Error",
+          "fault": null,
+          "accepted": "Accepted changes: 2"
+        },
+        "de": {
+          "stage": "Bearbeiteter Verlauf wird geprüft",
+          "target": null,
+          "progress": null,
+          "review": "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden",
+          "outcome": "Schwerstes Ergebnis: Fehler",
+          "fault": null,
+          "accepted": "Übernommene Änderungen: 2"
+        }
+      },
+      "controls": [
+        {
+          "control": "nextProblem",
+          "controlId": "shell.time-travel.next-problem",
+          "action": "historyEditBegin",
+          "disabledBy": null,
+          "args": {
+            "mutationId": "m-7",
+            "store": "parts/p-1"
+          }
+        },
+        {
+          "control": "rerun",
+          "controlId": "shell.time-travel.rerun",
+          "action": "historyEditRerun",
+          "disabledBy": "ui.timeTravel.refusal.illegal"
+        },
+        {
+          "control": "finalize",
+          "controlId": "shell.time-travel.finalize",
+          "action": "historyEditFinalize",
+          "disabledBy": "ui.timeTravel.refusal.blocked"
+        },
+        {
+          "control": "exit",
+          "controlId": "ui.timeTravel.exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
     }
   ],
+  "rowActions": {
+    "verbs": [
+      "historyEditBegin",
+      "historyEditWithdraw",
+      "historyEditRestore"
+    ],
+    "stages": {
+      "editing": null,
+      "replaying": "ui.timeTravel.refusal.illegal",
+      "reviewing": null,
+      "choosing": null,
+      "finalizing": "ui.timeTravel.refusal.illegal"
+    }
+  },
   "refusals": [
     {
       "code": "history.malformed-transition",
+      "label": "ui.history.refusal.malformedTransition",
       "text": {
         "en": "History edit refused: the change could not be read.",
         "de": "Verlaufsbearbeitung abgelehnt: Die Änderung konnte nicht gelesen werden."
@@ -662,6 +1400,7 @@
     },
     {
       "code": "history.unknown-target",
+      "label": "ui.history.refusal.unknownTarget",
       "text": {
         "en": "History edit refused: the edited mutation no longer exists.",
         "de": "Verlaufsbearbeitung abgelehnt: Die bearbeitete Mutation existiert nicht mehr."
@@ -670,6 +1409,7 @@
     },
     {
       "code": "history.transition-refused",
+      "label": "ui.history.refusal.transitionRefused",
       "text": {
         "en": "The hub refused a history edit; the step was withdrawn.",
         "de": "Der Hub hat eine Verlaufsbearbeitung abgelehnt; der Schritt wurde zurückgenommen."
@@ -678,6 +1418,7 @@
     },
     {
       "code": "timeTravel.frozen",
+      "label": "ui.timeTravel.refusal.frozen",
       "text": {
         "en": "Editing is paused while history is being edited",
         "de": "Bearbeiten ist pausiert, solange der Verlauf bearbeitet wird"
@@ -686,6 +1427,7 @@
     },
     {
       "code": "timeTravel.illegal",
+      "label": "ui.timeTravel.refusal.illegal",
       "text": {
         "en": "Not possible right now",
         "de": "Derzeit nicht möglich"
@@ -694,14 +1436,17 @@
     },
     {
       "code": "timeTravel.stale",
+      "label": "ui.timeTravel.refusal.stale",
       "text": {
         "en": "Outdated request ignored",
         "de": "Veraltete Anfrage ignoriert"
       },
-      "severity": "warning"
+      "severity": "warning",
+      "silent": true
     },
     {
       "code": "timeTravel.blocked",
+      "label": "ui.timeTravel.refusal.blocked",
       "text": {
         "en": "Blocked: resolve the pending change or the errors first",
         "de": "Blockiert: zuerst die offene Änderung oder die Fehler auflösen"
@@ -710,6 +1455,7 @@
     },
     {
       "code": "timeTravel.empty",
+      "label": "ui.timeTravel.refusal.empty",
       "text": {
         "en": "Nothing to finalize: no accepted changes",
         "de": "Nichts abzuschließen: keine übernommenen Änderungen"
@@ -718,6 +1464,7 @@
     },
     {
       "code": "timeTravel.cancelled",
+      "label": "ui.timeTravel.refusal.cancelled",
       "text": {
         "en": "Replay cancelled",
         "de": "Neu anwenden abgebrochen"
@@ -725,15 +1472,8 @@
       "severity": "warning"
     },
     {
-      "code": "timeTravel.name-invalid",
-      "text": {
-        "en": "Invalid alternative name: use 1 to 256 characters",
-        "de": "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden"
-      },
-      "severity": "warning"
-    },
-    {
       "code": "timeTravel.busy",
+      "label": "ui.timeTravel.refusal.busy",
       "text": {
         "en": "History editing is busy: finish the running tool or the other history edit first",
         "de": "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen"
@@ -742,6 +1482,7 @@
     },
     {
       "code": "timeTravel.unknown-mutation",
+      "label": "ui.timeTravel.refusal.unknownMutation",
       "text": {
         "en": "This mutation is no longer in the history",
         "de": "Diese Mutation ist nicht mehr im Verlauf"
@@ -750,6 +1491,7 @@
     },
     {
       "code": "timeTravel.not-editable",
+      "label": "ui.timeTravel.refusal.notEditable",
       "text": {
         "en": "The inputs of this mutation cannot be edited",
         "de": "Die Eingaben dieser Mutation können nicht bearbeitet werden"
@@ -758,6 +1500,7 @@
     },
     {
       "code": "timeTravel.unknown-input",
+      "label": "ui.timeTravel.refusal.unknownInput",
       "text": {
         "en": "This input does not exist in the mutation",
         "de": "Diese Eingabe gibt es in der Mutation nicht"
@@ -766,6 +1509,7 @@
     },
     {
       "code": "timeTravel.invalid-input",
+      "label": "ui.timeTravel.refusal.invalidInput",
       "text": {
         "en": "Invalid value: the input keeps its previous value",
         "de": "Ungültiger Wert: Die Eingabe behält ihren bisherigen Wert"
@@ -774,6 +1518,7 @@
     },
     {
       "code": "timeTravel.no-selection",
+      "label": "ui.timeTravel.refusal.noSelection",
       "text": {
         "en": "Nothing suitable is selected for this input",
         "de": "Für diese Eingabe ist nichts Passendes ausgewählt"
@@ -782,6 +1527,7 @@
     },
     {
       "code": "timeTravel.name-required",
+      "label": "ui.timeTravel.refusal.nameRequired",
       "text": {
         "en": "Name the new alternative",
         "de": "Einen Namen für die neue Alternative eingeben"
@@ -789,7 +1535,17 @@
       "severity": "warning"
     },
     {
+      "code": "timeTravel.name-invalid",
+      "label": "ui.timeTravel.refusal.nameInvalid",
+      "text": {
+        "en": "Invalid alternative name: use 1 to 256 characters",
+        "de": "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden"
+      },
+      "severity": "warning"
+    },
+    {
       "code": "timeTravel.schema-unavailable",
+      "label": "ui.timeTravel.refusal.schemaUnavailable",
       "text": {
         "en": "The input schema of this mutation is unavailable",
         "de": "Das Eingabeschema dieser Mutation ist nicht verfügbar"
@@ -798,6 +1554,7 @@
     },
     {
       "code": "timeTravel.replay-faulted",
+      "label": "ui.timeTravel.refusal.replayFaulted",
       "text": {
         "en": "Replay failed: later mutations could not be checked",
         "de": "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden"
@@ -806,6 +1563,7 @@
     },
     {
       "code": "timeTravel.commit-failed",
+      "label": "ui.timeTravel.refusal.commitFailed",
       "text": {
         "en": "Finalizing failed: the history is unchanged",
         "de": "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"
@@ -814,9 +1572,28 @@
     },
     {
       "code": "timeTravel.member-gone",
+      "label": "ui.timeTravel.refusal.memberGone",
       "text": {
         "en": "The part this history edit targets was closed",
         "de": "Der Teil, den diese Verlaufsbearbeitung betrifft, wurde geschlossen"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.not-withdrawable",
+      "label": "ui.timeTravel.refusal.notWithdrawable",
+      "text": {
+        "en": "This mutation cannot be withdrawn here",
+        "de": "Diese Mutation kann hier nicht zurückgezogen werden"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.editor-closed",
+      "label": "ui.timeTravel.refusal.editorClosed",
+      "text": {
+        "en": "The draft editor is closed: open the mutation again",
+        "de": "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen"
       },
       "severity": "warning"
     }
@@ -834,7 +1611,8 @@
         "acceptedCount": 0
       },
       "reveal": true,
-      "focus": "editor"
+      "focus": "editor",
+      "scrollTo": null
     },
     {
       "name": "accepting a draft moves focus to the band while the replay runs",
@@ -857,7 +1635,8 @@
         "acceptedCount": 1
       },
       "reveal": false,
-      "focus": "band"
+      "focus": "band",
+      "scrollTo": null
     },
     {
       "name": "a replay progress step moves nothing",
@@ -882,7 +1661,8 @@
         "acceptedCount": 1
       },
       "reveal": false,
-      "focus": null
+      "focus": null,
+      "scrollTo": null
     },
     {
       "name": "the review after a replay keeps focus on the band",
@@ -905,7 +1685,8 @@
         "acceptedCount": 1
       },
       "reveal": false,
-      "focus": "band"
+      "focus": "band",
+      "scrollTo": null
     },
     {
       "name": "Next problem from the review focuses the failing mutation's first input",
@@ -926,7 +1707,8 @@
         "acceptedCount": 0
       },
       "reveal": false,
-      "focus": "editor"
+      "focus": "editor",
+      "scrollTo": null
     },
     {
       "name": "switching the draft to another mutation focuses its first input",
@@ -947,7 +1729,8 @@
         "acceptedCount": 0
       },
       "reveal": false,
-      "focus": "editor"
+      "focus": "editor",
+      "scrollTo": null
     },
     {
       "name": "editing the same draft moves nothing",
@@ -968,7 +1751,8 @@
         "blocking": false
       },
       "reveal": false,
-      "focus": null
+      "focus": null,
+      "scrollTo": null
     },
     {
       "name": "the finalize prompt takes focus",
@@ -988,7 +1772,8 @@
         "acceptedCount": 1
       },
       "reveal": false,
-      "focus": "dialog"
+      "focus": "dialog",
+      "scrollTo": null
     },
     {
       "name": "going back from the prompt returns focus to the band",
@@ -1008,7 +1793,8 @@
         "acceptedCount": 1
       },
       "reveal": false,
-      "focus": "band"
+      "focus": "band",
+      "scrollTo": null
     },
     {
       "name": "the commit moves nothing",
@@ -1027,7 +1813,8 @@
         "acceptedCount": 1
       },
       "reveal": false,
-      "focus": null
+      "focus": null,
+      "scrollTo": null
     },
     {
       "name": "closing the session moves nothing",
@@ -1040,7 +1827,8 @@
       },
       "to": null,
       "reveal": false,
-      "focus": null
+      "focus": null,
+      "scrollTo": null
     },
     {
       "name": "a new session after another one reveals the panel again",
@@ -1061,7 +1849,8 @@
         "acceptedCount": 0
       },
       "reveal": true,
-      "focus": "editor"
+      "focus": "editor",
+      "scrollTo": null
     },
     {
       "name": "a session already open when the shell first sees it reveals the panel and focuses its band",
@@ -1076,7 +1865,89 @@
         "blocking": false
       },
       "reveal": true,
-      "focus": "band"
+      "focus": "band",
+      "scrollTo": null
+    },
+    {
+      "name": "a replay that completes blocked reveals the History panel again and scrolls to the first blocking row",
+      "from": {
+        "sessionId": "1",
+        "generation": 4,
+        "stage": "replaying",
+        "target": "m-2",
+        "done": 8,
+        "total": 8,
+        "blocking": false,
+        "acceptedCount": 1
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 5,
+        "stage": "reviewing",
+        "review": "blocked",
+        "blocking": true,
+        "acceptedCount": 1,
+        "nextProblem": {
+          "mutationId": "m-5"
+        }
+      },
+      "reveal": true,
+      "focus": "band",
+      "scrollTo": "framework.history.mutation.m-5"
+    },
+    {
+      "name": "a review that stays blocked moves nothing, whatever its next problem",
+      "from": {
+        "sessionId": "1",
+        "generation": 5,
+        "stage": "reviewing",
+        "review": "blocked",
+        "blocking": true,
+        "acceptedCount": 1,
+        "nextProblem": {
+          "mutationId": "m-5"
+        }
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 5,
+        "stage": "reviewing",
+        "review": "blocked",
+        "blocking": true,
+        "acceptedCount": 1,
+        "nextProblem": {
+          "mutationId": "m-5"
+        }
+      },
+      "reveal": false,
+      "focus": null,
+      "scrollTo": null
+    },
+    {
+      "name": "discarding a draft back into a blocked review reveals and scrolls to the first blocking row",
+      "from": {
+        "sessionId": "1",
+        "generation": 6,
+        "stage": "editing",
+        "target": "m-5",
+        "blocking": false,
+        "acceptedCount": 1
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 7,
+        "stage": "reviewing",
+        "review": "blocked",
+        "blocking": true,
+        "acceptedCount": 1,
+        "nextProblem": {
+          "mutationId": "m-9",
+          "store": "parts/p-1"
+        }
+      },
+      "reveal": true,
+      "focus": "band",
+      "scrollTo": "framework.history.mutation.m-9"
     }
   ],
   "editorKeys": {

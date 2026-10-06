@@ -31,6 +31,7 @@ const SURFACE_ID: &str = "flow.view.main";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::flow::create_flow_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Flow", "Flow"),
         body_key: BODY_KEY.into(),
@@ -94,7 +95,7 @@ pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
     let host = flow_host_with_session(&live, &session);
     let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.host_snapshot);
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
-    let fixture_json = Some(semio_framework_pack_json::to_json_string(document));
+    let snapshot_json = Some(semio_framework_pack_json::to_json_string(document));
     let flow_extras = flow_backed_node_graph_extras(&live, FLOW_LOD_MODE_AUTOMATIC, FLOW_DEFAULT_PROXIMITY_DISTANCE, true, false, FLOW_DEFAULT_GRID_FACTOR, Some(&session));
     // 🧹️ The host, its source projection and the throwaway session all refuse a bare drop (layout
     // `OrderedMap` roots and the session's close witness) — each is closed once the scene is read.
@@ -105,7 +106,7 @@ pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
         editable: Some(false),
         capabilities_json: flow_extras.capabilities_json,
         lod_json: flow_extras.lod_json,
-        host_snapshot_json: flow_extras.host_snapshot_json.or(fixture_json),
+        host_snapshot_json: flow_extras.host_snapshot_json.or(snapshot_json),
         eval_json: flow_extras.eval_json,
         status_json: flow_extras.status_json,
         selection: Vec::new(),

@@ -15,17 +15,17 @@
           "name": null,
           "opacity": null,
           "blendMode": null,
-          "transformJson": null,
-          "fillJson": null,
-          "strokeJson": null,
           "booleanOperation": null,
-          "traceParamsJson": null,
-          "layerJson": null,
           "pathSegments": null,
           "textContent": null,
           "textSize": null,
           "fillRule": null,
-          "isolation": true
+          "isolation": true,
+          "transform": null,
+          "fill": null,
+          "stroke": null,
+          "traceParams": null,
+          "layer": null
         }
       }
     ],

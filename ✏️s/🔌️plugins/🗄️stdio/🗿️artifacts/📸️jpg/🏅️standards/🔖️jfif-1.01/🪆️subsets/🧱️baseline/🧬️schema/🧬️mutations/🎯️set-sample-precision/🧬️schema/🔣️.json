@@ -18,7 +18,12 @@
           "en": "Sample precision",
           "de": "Abtastgenauigkeit"
         },
-        "unit": "bit"
+        "unit": "bit",
+        "step": 1,
+        "snaps": [
+          8,
+          12
+        ]
       }
     }
   }

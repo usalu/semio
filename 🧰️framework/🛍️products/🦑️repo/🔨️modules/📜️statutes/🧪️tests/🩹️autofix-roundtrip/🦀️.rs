@@ -11,7 +11,7 @@ fn the_fixable_source_becomes_the_expected_source(ctx: &Context) -> Result<Outco
     let fixable_uri = "shared://📁️some/📁️folder/🧪️file-fixable/🟦️.tsx";
     let expected_uri = "shared://📁️some/📁️folder/🧪️file-fixable-expected/🟦️.tsx";
     let read = |uri: &str| -> Result<String, String> {
-        let path = ctx.fixture(uri)?;
+        let path = ctx.input(uri)?;
         std::fs::read_to_string(&path).map_err(|error| format!("cannot read {uri}: {error}"))
     };
     let source = statutes::SourceFile { path: fixable_uri.trim_start_matches("shared://").to_string(), content: read(fixable_uri)? };

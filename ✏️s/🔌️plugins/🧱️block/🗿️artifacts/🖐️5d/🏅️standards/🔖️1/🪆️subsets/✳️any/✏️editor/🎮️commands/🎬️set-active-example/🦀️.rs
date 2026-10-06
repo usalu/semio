@@ -206,7 +206,7 @@ fn replace_document_operations(current: &Block5dSnapshot, next: &Block5dSnapshot
 }
 //#endregion 🔖️ReplaceDocument
 
-use crate::standards::v1::subsets::any::schema::mutations::text::Block5dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 use crate::Block5dSnapshot;
 use crate::editor::block5d::config::{Block5dConfig, Block5dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -220,8 +220,8 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
-        BLOCK5D_EXAMPLE_FOREST_LEFT => crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
-        BLOCK5D_EXAMPLE_CAPSULE => crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
+        BLOCK5D_EXAMPLE_FOREST_LEFT => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
+        BLOCK5D_EXAMPLE_CAPSULE => crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
         _ => None,
     };
     match example {

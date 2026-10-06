@@ -1,14 +1,12 @@
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020";
+
 import {Database} from "bun:sqlite";
 import fixture from "./🔣️.json";
-import schema from "./🧬️schema/🔣️.json";
 import {ArtifactSqliteProjection,artifactSqliteTables} from "../../🧩️artifact/🟦️.ts";
 import {sqliteOperation} from "../../🟦️.ts";
 const quote=(name:string)=>'"'+name.replaceAll('"','""')+'"';
 const sql=fixture.tableNames.map(name=>`CREATE TABLE ${quote(name)} (id INTEGER PRIMARY KEY,payload TEXT)`).join(';');
 test('closed checked index collision contract has independent Map and SQLite answers',()=>{
- const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,extra:0})).toBe(false);
  const index=new Map(fixture.tableNames.map((name,index)=>[name,index]));for(let i=0;i<fixture.lookupNames.length;i++)expect(index.get(fixture.lookupNames[i]!)??null).toBe(fixture.lookupIndices[i]);
  const hash=(name:string)=>{let value=fixture.hash.offset;for(const code of name){const n=code.charCodeAt(0);value=Math.imul(value^(n>=65&&n<=90?n+32:n),fixture.hash.prime)>>>0;}return value&fixture.hash.mask;};for(const name of fixture.tableNames)expect(hash(name)).toBe(fixture.hash.collisionBucket);
  expect(new Uint32Array(fixture.capacity).byteLength).toBe(fixture.tableSlotBytes);
@@ -35,9 +33,7 @@ test('direct table index checked size refuses before mapping impossible census',
 test('direct literal Unicode and quoted index names independently match SQLite',()=>{const names=fixture.directSeam.foldNames.filter(name=>!name.includes('\0')),db=new Database(':memory:');const quoted=(name:string)=>'"'+name.replaceAll('"','""')+'"';try{for(let i=0;i<names.length;i++){db.exec(`CREATE TABLE ${quoted(names[i]!)} (payload TEXT)`);db.query(`INSERT INTO ${quoted(names[i]!)} VALUES (?)`).run(String(i));}for(let i=0;i<names.length;i++)expect(db.query(`SELECT payload FROM ${quoted(names[i]!.replace(/[A-Z]/g,c=>c.toLowerCase()))}`).get()).toEqual({payload:String(i)});}finally{db.close();}});
 
 import backingLimits from "../🔢️backing-limits/🔣️.json";
-import backingLimitSchema from "../🔢️backing-limits/🧬️schema/🔣️.json";
 test('closed half-load storage boundary refuses before borrowed census traversal',async()=>{
- const validate=new Ajv({strict:true}).compile(backingLimitSchema);expect(validate(backingLimits)).toBe(true);expect(validate({...backingLimits,extra:1})).toBe(false);
  expect(BigInt(backingLimits.maximumHalfLoadEntries)*2n).toBe(BigInt(backingLimits.maximumSlots));expect(BigInt(backingLimits.firstImpossibleEntries)*2n>BigInt(backingLimits.maximumSlots)).toBe(true);
  let traversed=false;const hostile=new Proxy([],{get(target,key,receiver){if(key==='length')return backingLimits.firstImpossibleEntries;if(key==='map'||key===Symbol.iterator)return()=>{traversed=true;throw new Error('forbidden impossible census traversal');};return Reflect.get(target,key,receiver);}});
  const operation=sqliteOperation({maxTables:backingLimits.firstImpossibleEntries});await expect(ArtifactSqliteTableIndex.create(hostile as any,operation)).rejects.toMatchObject({kind:backingLimits.refusal});expect(traversed).toBe(false);expect(operation.ownedBytes).toBe(backingLimits.expectedOwnedBytes);

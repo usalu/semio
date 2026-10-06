@@ -6,7 +6,7 @@ import fixture from "../../🧫️fixtures/💰️frontiers/🔣️.json";
 import schema from "../../🧬️schema/💰️frontiers/🔣️.json";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {exportSqliteDatabase,SqliteOperation} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {tiffSnapshotToSqliteDatabase,tiffSnapshotToSqliteFile,tiffSnapshotFromSqliteFile} from "../../🟦️.ts";
+import { tiffSnapshotToSqliteDatabase, tiffSnapshotToSqliteFile, tiffSnapshotFromSqliteFile } from "../../../../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 const small={schema:"owned tiff\0世界😀",byteOrder:"littleEndian" as const,ifds:[]};
 const corpus={...small,ifds:[{entries:[{tag:65535,values:{kind:"long" as const,value:Array.from({length:fixture.domainValueCount},(_,i)=>i)}}],storage:{kind:"none" as const,offsetsKind:"long" as const,byteCountsKind:"long" as const,chunks:[]}}]};
 let corpusFile:Promise<Uint8Array>|undefined;

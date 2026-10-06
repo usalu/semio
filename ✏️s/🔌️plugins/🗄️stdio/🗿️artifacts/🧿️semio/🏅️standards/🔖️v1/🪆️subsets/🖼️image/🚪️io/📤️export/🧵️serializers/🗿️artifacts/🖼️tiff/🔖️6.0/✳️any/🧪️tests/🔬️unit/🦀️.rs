@@ -15,8 +15,8 @@ fn sample_semio() -> SemioImageSnapshot {
     }
 }
 
-/// 🧪️ Real round trip through tiff's own codec (drops alpha, per the engine's own documented
-/// encode scope — RGB channels and the description tag must survive).
+/// 🧪️ Real round trip through tiff's own codec: the four authored samples per pixel and the description tag survive, and
+/// the decoded page projects back to the frame's RGBA8.
 #[semio_framework_async_macros::async_test]
 async fn real_byte_round_trip_through_tiff_codec() {
     let semio = sample_semio();
@@ -25,8 +25,7 @@ async fn real_byte_round_trip_through_tiff_codec() {
     let decoded = semio_s_artifact_stdio_tiff::engine::decode_tiff(&bytes).expect("decode real tiff bytes");
     assert_eq!(decoded.width(), Some(2));
     assert_eq!(decoded.height(), Some(1));
-    for (a, b) in decoded.pixels.chunks_exact(4).zip(semio.frames[0].rgba8.chunks_exact(4)) {
-        assert_eq!(&a[0..3], &b[0..3], "RGB must survive exactly");
-    }
-    assert!(decoded.ifds[0].entries.iter().any(|t| t.tag == 270 && matches!(&t.values, TiffValues::Ascii(s) if s == "semio fixture")));
+    let page = semio_s_artifact_stdio_tiff::engine::decode_tiff_page_rgba(&decoded, 0).expect("project the decoded page");
+    assert_eq!(page.pixels, semio.frames[0].rgba8, "RGBA must survive exactly");
+    assert!(decoded.ifds[0].entries.iter().any(|t| t.tag == 270 && matches!(&t.values, TiffValues::Ascii(s) if s.strip_suffix(&[0]).unwrap_or(s) == b"semio fixture")));
 }

@@ -82,15 +82,7 @@ pub fn inverse_vcs_mutation(snapshot: &VcsSnapshot, mutation: &VcsDemoMutation) 
 //#endregion 🔖️Apply
 
 //#region 🌉️ExternalCodecBridge
-/// 📥️ Decodes this facet's internally-tagged (`{"mutation": "addTag", …}`, camelCase payload
-/// fields) JSON projection — exactly the shape the committed
-/// `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification vectors carry — into a real
-/// [`VcsDemoMutation`]. The `🌿️mutate-vcs-1` adapter cannot reach `serde_json` (the generated test
-/// host links only `semio-repo-test-host` and this crate) and cannot name this crate's private
-/// `protocol`/`store` extern-crate aliases either, so the bridge belongs here rather than there.
-pub fn decode_vcs_mutation_json(text: &str) -> Result<VcsDemoMutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 
 /// ▶️ [`apply_vcs_mutation`]'s reporting, non-async twin: applies `mutation` in place and returns
 /// the diagnostic CODES it raised, in order. [`apply_vcs_mutation`] discards them and is `async`,

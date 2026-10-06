@@ -44,7 +44,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::of::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA);
     codec.extension = "svg";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
 }
 
@@ -116,6 +116,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
         .schema(standards::v1_1::subsets::base::schema::svg_artifact_schema_descriptor())
         .formats(formats)
+        .schema_documents(semio_framework_schema_registry::ScopeSchemaExports { scope: "s.stdio.svg", exports: &[semio_framework_schema_registry::SchemaExport { id: "xml-document", leaves: semio_s_artifact_stdio_xml::schema::XML_DOCUMENT_SCHEMA_LEAVES }] })
         .inferences([standards::v1_1::subsets::base::schema::inferences::svg_artifact_inference_descriptor()])
         .composers(standards::v1_1::engine::io_registry::entries())
         .subset_validators(declared_subset_validators())
@@ -151,28 +152,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.svg",
                     extension: Some("svg"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v1_1::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1_1::subsets::base::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_1::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_1::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_1::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_1::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.svg"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.svg.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v1_1::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1_1::subsets::base::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1_1::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_1::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1_1::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_1::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.svg.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.svg.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v1_1::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v1_1::subsets::base::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1_1::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1_1::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.svg.diff"),
@@ -183,8 +184,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_1::subsets::base::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_1::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_1::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.svg.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -193,8 +194,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v1_1::subsets::base::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1_1::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1_1::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.svg.spr"),
                 },
             ]
@@ -205,7 +206,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v1_1::engine::io_registry as v1_1;
+    use crate::subsets::base::io::io_registry as v1_1;
     use semio_framework_plugin::{register_composer_entries, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -237,9 +238,7 @@ pub mod standards {
         // real code now lives in `subsets::base::io` (codecs/io_registry) and
         // `subsets::base::schema` (document helpers); this stays an inline barrel so every
         // existing `standards::v1_1::engine::*`/root `engine::*` path still resolves.
-        pub mod engine {
-            pub use super::subsets::base::io::*;
-        }
+
         #[path = "."]
         pub mod subsets {
             #[path = "."]
@@ -256,20 +255,12 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod inferences {
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/💡️inferences/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📝️text/🦀️.rs"]
-                        pub mod text;
                         #[path = "."]
                         pub mod dimensions {
                             #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📐dimensions/🦀️.rs"]
@@ -282,10 +273,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/💾️binary/🦀️.rs"]
-                        pub mod binary;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                     #[path = "."]
                     pub mod mutations {
@@ -296,8 +283,6 @@ pub mod standards {
                         pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
-                        pub mod binary;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📥️insert-element/🦀️.rs"]
                         pub mod insert_element;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗑️remove-element/🦀️.rs"]
@@ -316,8 +301,6 @@ pub mod standards {
                         pub mod set_transform;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🖼️set-view-box/🦀️.rs"]
                         pub mod set_view_box;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
-                        pub mod text;
                     }
                 }
                 #[path = "."]
@@ -401,9 +384,7 @@ pub mod schema {
 pub mod engine {
     pub use super::standards::v1_1::engine::*;
 }
-pub mod io {
-    pub use super::standards::v1_1::subsets::base::io::*;
-}
+
 
 #[path = "."]
 pub mod examples {
@@ -628,3 +609,9 @@ pub mod viewer {
         }
     }
 }
+
+pub use crate::standards::v1_1::subsets::tiny::io::{SvgTinyBuilderConstruction, SvgTinyAnalyzerAnalysis, SvgTinyBuilderFacets, SvgTinyBuilder, SvgTinyAnalyzer, SvgTinyComposer};
+
+pub use crate::standards::v1_1::subsets::base::io::{PathBuilder, GradientStopSpec, ElementBuilder, SvgBuilderConstruction, SvgParts, SvgAnalyzerAnalysis, SvgBuilderFacets, SvgBuilder, SvgAnalyzer, SvgComposer};
+
+pub use crate::standards::v1_1::subsets::basic::io::{SvgBasicBuilderConstruction, SvgBasicAnalyzerAnalysis, SvgBasicBuilderFacets, SvgBasicBuilder, SvgBasicAnalyzer, SvgBasicComposer};

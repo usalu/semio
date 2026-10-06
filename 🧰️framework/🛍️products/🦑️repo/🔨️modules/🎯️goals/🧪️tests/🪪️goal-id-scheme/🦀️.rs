@@ -8,7 +8,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 #[cfg(feature = "sut")]
 fn identifiers_resolve_to_one_place(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_goals as goals;
-    let file = ctx.fixture_json("shared://🪪️id-vectors.json")?;
+    let file = ctx.input_json("shared://🪪️id-vectors.json")?;
     let paths: Vec<Json> = file
         .array("paths")
         .iter()

@@ -60,12 +60,12 @@ Added to [taxonomy.json](🧰️framework/🛍️products/🦑️repo/🔨️mod
 
 ## Decision 2: Old-to-new path map (applies to all 54 artifacts)
 
-- `🗣️dsl/` to `🧬️schema/📸️snapshot/📝️text/`
-- `📸️snapshot/🎒️pack/` to `🧬️schema/📸️snapshot/💾️binary/`
+- `🗣️dsl/` to `🚪️io/📝️text/📸️snapshot/`
+- `📸️snapshot/🎒️pack/` to `🚪️io/💾️binary/📸️snapshot/`
 - `📸️snapshot/🧬️schema/` (5 leaves) to `🧬️schema/📸️snapshot/` root
-- `🔺️diff/` grammar+rs+ts to `🧬️schema/🔺️diff/📝️text/`; `🔺️diff/🧬️schema/` to `🧬️schema/🔺️diff/` root; `🧬️schema/🔺️diff/💾️binary/` is new
-- `🔧️op/` to `🧬️schema/🧬️mutations/📝️text/`
-- `📡️spr/` to `🧬️schema/🧬️mutations/💾️binary/`
+- `🔺️diff/` grammar+rs+ts to `🚪️io/📝️text/🔺️diff/`; `🔺️diff/🧬️schema/` to `🧬️schema/🔺️diff/` root; `🚪️io/💾️binary/🔺️diff/` is new
+- `🔧️op/` to `🚪️io/📝️text/🧬️mutations/`
+- `📡️spr/` to `🚪️io/💾️binary/🧬️mutations/`
 - `🧬️mutations/<m>/{🦠️mutation,🔺️diff,↩️inverse}/` to `🧬️schema/🧬️mutations/<m>/{…}/`
 - `🧬️schema/` 5 leaves stay as the artifact-level schema
 - `🚪️io/<format>/{📥️import,📤️export}/` to `🚪️io/📥️import/🧩️deserializers/🗿️artifacts/<stdio-artifact>/` and `🚪️io/📤️export/🧵️serializers/🗿️artifacts/<stdio-artifact>/`

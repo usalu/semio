@@ -22,7 +22,7 @@ const INPUT: &str = "asset://🧬️conformance-seed/🧬️conformance-seed.pdf
 
 /// 🧫️ Copies the immutable real asset into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("conformance-seed.pdf"))?;
+    let copy = ctx.copy_input(INPUT, Some("conformance-seed.pdf"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 

@@ -1,0 +1,86 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/📥️insert-line/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::InsertLinePayload;",
+    "constant": "pub const BINARY_TAG: u32 ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<Vec<u8>, String>> ",
+    "decode": "pub fn decode_mutation(value: &[u8]) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/✏️set-line/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::SetLinePayload;",
+    "constant": "pub const BINARY_TAG: u32 ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<Vec<u8>, String>> ",
+    "decode": "pub fn decode_mutation(value: &[u8]) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/📸️set-snapshot/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::SetSnapshotPayload;",
+    "constant": "pub const BINARY_TAG: u32 ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<Vec<u8>, String>> ",
+    "decode": "pub fn decode_mutation(value: &[u8]) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🔚️set-line-ending/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::SetLineEndingPayload;",
+    "constant": "pub const BINARY_TAG: u32 ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<Vec<u8>, String>> ",
+    "decode": "pub fn decode_mutation(value: &[u8]) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🗑️remove-line/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::RemoveLinePayload;",
+    "constant": "pub const BINARY_TAG: u32 ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<Vec<u8>, String>> ",
+    "decode": "pub fn decode_mutation(value: &[u8]) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/↩️set-trailing-newline/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::SetTrailingNewlinePayload;",
+    "constant": "pub const BINARY_TAG: u32 ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<Vec<u8>, String>> ",
+    "decode": "pub fn decode_mutation(value: &[u8]) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/📥️insert-line/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::InsertLinePayload;",
+    "constant": "pub const TEXT_OPCODE: &str ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<String, String>> ",
+    "decode": "pub fn decode_mutation(value: &str) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/✏️set-line/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::SetLinePayload;",
+    "constant": "pub const TEXT_OPCODE: &str ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<String, String>> ",
+    "decode": "pub fn decode_mutation(value: &str) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/📸️set-snapshot/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::SetSnapshotPayload;",
+    "constant": "pub const TEXT_OPCODE: &str ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<String, String>> ",
+    "decode": "pub fn decode_mutation(value: &str) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🔚️set-line-ending/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::SetLineEndingPayload;",
+    "constant": "pub const TEXT_OPCODE: &str ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<String, String>> ",
+    "decode": "pub fn decode_mutation(value: &str) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🗑️remove-line/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::RemoveLinePayload;",
+    "constant": "pub const TEXT_OPCODE: &str ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<String, String>> ",
+    "decode": "pub fn decode_mutation(value: &str) -> Result<TxtMutation, String> "
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/↩️set-trailing-newline/🦀️.rs",
+    "payloadImport": "use crate::standards::v_utf_8::subsets::any::schema::mutations::SetTrailingNewlinePayload;",
+    "constant": "pub const TEXT_OPCODE: &str ",
+    "encode": "pub fn try_encode(value: &TxtMutation) -> Option<Result<String, String>> ",
+    "decode": "pub fn decode_mutation(value: &str) -> Result<TxtMutation, String> "
+  }
+]

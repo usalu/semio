@@ -10,7 +10,22 @@
   "properties": {
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Point",
+          "de": "Punkt"
+        },
+        "description": {
+          "en": "The point this mutation removes, by base index.",
+          "de": "Der Punkt, den diese Mutation entfernt, nach Basisindex."
+        },
+        "ref": {
+          "kind": "point"
+        }
+      }
     }
   }
 }

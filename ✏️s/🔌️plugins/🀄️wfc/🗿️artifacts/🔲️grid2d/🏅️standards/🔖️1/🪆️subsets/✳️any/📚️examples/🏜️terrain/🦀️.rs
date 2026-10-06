@@ -5,9 +5,8 @@
 //! pixel-by-pixel rather than as a flat swatch. Compatibility is symmetric, so a rule is authored
 //! for BOTH ordered pairs of every compatible tile pair, in the two canonical directions.
 
-use crate::schema::snapshot::{
-    encode_palette_indices, Grid2dSnapshot, WfcAdjacencyRule2d, WfcColor, WfcDirection2d, WfcPinnedCell2d, WfcTile2d, WfcTileMedia2d, WFC_GRID2D_DOCUMENT_SCHEMA,
-};
+use crate::schema::snapshot::{Grid2dSnapshot, WfcAdjacencyRule2d, WfcColor, WfcDirection2d, WfcPinnedCell2d, WfcTile2d, WfcTileMedia2d, WFC_GRID2D_DOCUMENT_SCHEMA};
+use crate::standards::v1::subsets::any::io::binary::snapshot::{encode_palette_indices};
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 

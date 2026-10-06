@@ -1,0 +1,64 @@
+{
+  "source": "# untouched\n[workspace]\nmembers = [\"old\"]\nexclude = []\n[workspace.metadata.other]\nkeep = \"foreign\"\n",
+  "cases": [
+    {
+      "id": "write-stale",
+      "mode": "write",
+      "members": [
+        "a"
+      ],
+      "exclude": [
+        "child"
+      ],
+      "foreign": false,
+      "accepted": true,
+      "written": true
+    },
+    {
+      "id": "check-stale",
+      "mode": "check",
+      "members": [
+        "a"
+      ],
+      "exclude": [
+        "child"
+      ],
+      "foreign": false,
+      "accepted": false,
+      "written": false
+    },
+    {
+      "id": "check-current",
+      "mode": "check",
+      "members": [
+        "old"
+      ],
+      "exclude": [],
+      "foreign": false,
+      "accepted": true,
+      "written": false
+    },
+    {
+      "id": "write-current",
+      "mode": "write",
+      "members": [
+        "old"
+      ],
+      "exclude": [],
+      "foreign": false,
+      "accepted": true,
+      "written": false
+    },
+    {
+      "id": "preserve-foreign-preimage",
+      "mode": "write",
+      "members": [
+        "a"
+      ],
+      "exclude": [],
+      "foreign": true,
+      "accepted": false,
+      "written": false
+    }
+  ]
+}

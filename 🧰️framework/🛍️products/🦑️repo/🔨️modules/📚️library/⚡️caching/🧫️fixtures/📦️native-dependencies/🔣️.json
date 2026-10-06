@@ -169,11 +169,19 @@
   "cargo": {
     "package": "native-dependency-fixture",
     "files": {
-      "Cargo.toml": "[package]\nname=\"native-dependency-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n[workspace]\n",
+      "Cargo.toml": "[package]\nname=\"native-dependency-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n[workspace]\nmembers = [\".\"]\nexclude = []\n[workspace.metadata.semio.repository]\nschema-version = 1\nexclude-patterns = []\nowner-manifests = []\nmember-manifests = [\"Cargo.toml\"]\n",
       "Cargo.lock": "version = 4\n\n[[package]]\nname = \"native-dependency-fixture\"\nversion = \"0.1.0\"\n",
       "🦀️.rs": "pub fn answer() -> u32 { 42 }\n"
     },
-    "invalidLock": "version = 4\n"
+    "invalidLock": "version = 4\n",
+    "expectedMembers": [
+      {
+        "directory": ".",
+        "manifest": "Cargo.toml",
+        "name": "native-dependency-fixture",
+        "workspace": "."
+      }
+    ]
   },
   "bindgenLock": "[[package]]\nname = \"wasm-bindgen\"\nversion = \"0.2.126\"\n",
   "rejected": [
@@ -185,5 +193,15 @@
     [
       "unknown"
     ]
+  ],
+  "sourceEntrypoints": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs"
+  ],
+  "requiredPhysicalSources": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.cjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🏃️invocation/🔣️.json"
   ]
 }

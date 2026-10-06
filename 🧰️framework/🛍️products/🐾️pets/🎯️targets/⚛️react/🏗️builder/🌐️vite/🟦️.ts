@@ -13,16 +13,13 @@ const bundleRoot = resolve(target, "📦️packages/🟦️typescript");
 const product = resolve(target, "../..");
 const repoRoot = resolve(product, "../../..");
 
-/** 🧫️ The menagerie the gallery shows when `PETS_MENAGERIE` names none: the sample of the schema conformance vectors. */
-export const SAMPLE_MENAGERIE = "🧰️framework/🛍️products/🐾️pets/🧫️fixtures/🧬️schema-conformance/🔣️.json";
-
 /** 🏷️ The module the gallery's document imports its menagerie from. */
 export const MENAGERIE_MODULE = "pets-stories:menagerie";
 
 /** 🎪️ Vite: serves {@link MENAGERIE_MODULE} — `source`, every export of the file at `path` (relative to the repository root; a module or a JSON document), and `origin`, that path. A path that names no file yields `source = null`, so the gallery can say what is missing instead of failing to load. The file is imported statically, so an edit to it or to anything it imports reloads the page, and so does the file appearing or going away. */
-export function menagerieVitePlugin(path: string): Plugin {
+export function menagerieVitePlugin(path?: string): Plugin {
   const resolved = `\0${MENAGERIE_MODULE}`;
-  const file = resolve(repoRoot, path).replaceAll("\\", "/");
+  const file = path ? resolve(repoRoot, path).replaceAll("\\", "/") : undefined;
   return {
     name: "pets-stories-menagerie",
     resolveId(source) {
@@ -30,9 +27,10 @@ export function menagerieVitePlugin(path: string): Plugin {
     },
     load(id) {
       if (id !== resolved) return undefined;
-      return `${existsSync(file) ? `export * as source from ${JSON.stringify(file)};` : "export const source = null;"}\nexport const origin = ${JSON.stringify(path)};\n`;
+      return `${file && existsSync(file) ? `export * as source from ${JSON.stringify(file)};` : "export const source = null;"}\nexport const origin = ${JSON.stringify(path ?? "")};\n`;
     },
     configureServer(server) {
+      if (!file) return;
       const reload = (changed: string): void => {
         if (changed.replaceAll("\\", "/") !== file) return;
         const served = server.moduleGraph.getModuleById(resolved);
@@ -89,7 +87,7 @@ const port = process.env.PETS_STORIES_PORT || "6069";
 /** 📖️ Vite configuration of the stories gallery of `@semio-tech/pets-react`: a dev server only, never a release build.
  *
  * It serves `📖️stories/🌐️.html` for the menagerie `PETS_MENAGERIE` names (a path relative to the repository root to a
- * module exporting a `Menagerie` or to a JSON document holding one; default {@link SAMPLE_MENAGERIE}), with the
+ * module exporting a `Menagerie` or to a JSON document holding one; absent input leaves the gallery empty), with the
  * director of {@link directorVitePlugin} between the pet layer and the core. The dependency cache is kept per port, so
  * two galleries side by side never rewrite each other's.
  * @see ../../📖️stories/🟦️.tsx — the gallery
@@ -99,7 +97,7 @@ export default defineConfig({
   base: "/",
   publicDir: false,
   cacheDir: resolve(bundleRoot, `node_modules/.vite/stories-${port}`),
-  plugins: [semioServeCloseVitePlugin(), semioEmojiIndexHtmlVitePlugin(storiesRoot), menagerieVitePlugin(process.env.PETS_MENAGERIE || SAMPLE_MENAGERIE), directorVitePlugin(), react()],
+  plugins: [semioServeCloseVitePlugin(), semioEmojiIndexHtmlVitePlugin(storiesRoot), menagerieVitePlugin(process.env.PETS_MENAGERIE), directorVitePlugin(), react()],
   server: { fs: { allow: [repoRoot] } },
   resolve: {
     alias: [

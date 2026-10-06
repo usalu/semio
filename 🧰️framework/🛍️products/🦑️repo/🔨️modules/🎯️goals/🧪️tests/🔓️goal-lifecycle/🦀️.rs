@@ -16,7 +16,7 @@ fn optional(entry: &Json, key: &str) -> Option<String> {
 #[cfg(feature = "sut")]
 fn replay(ctx: &Context, force_no_management: bool) -> Result<(Vec<Json>, Vec<Json>, Vec<Json>, Vec<Json>), String> {
     use semio_framework_repo_goals as goals;
-    let file = ctx.fixture_json("shared://🔓️lifecycle-script.json")?;
+    let file = ctx.input_json("shared://🔓️lifecycle-script.json")?;
     let author = file.str("author");
     let repo_url = file.str("repoUrl");
     let first = match file.get("firstNumber") {

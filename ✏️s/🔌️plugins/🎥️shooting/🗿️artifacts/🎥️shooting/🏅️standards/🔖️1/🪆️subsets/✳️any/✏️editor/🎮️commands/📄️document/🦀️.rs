@@ -2,7 +2,7 @@
 
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;
-use crate::op::ShootingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -49,9 +49,9 @@ pub mod set_active_example {
         let next = if payload.example_id.is_empty() {
             Some(crate::empty_shooting_snapshot())
         } else if payload.example_id == SHOOTING_EXAMPLE_DEFAULT_ID || payload.example_id == "base" || payload.example_id == "demo" {
-            Some(crate::standards::v1::subsets::any::schema::default_snapshot())
+            Some(crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot())
         } else if payload.example_id == SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT || payload.example_id == "forest-left" {
-            crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::examples::hexagonal_cut_concrete_forest_left::PRIMARY_TEXT)
+            crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::hexagonal_cut_concrete_forest_left::PRIMARY_TEXT)
                 .ok()
         } else {
             None
@@ -73,7 +73,7 @@ pub mod reset_snapshot {
     pub struct ResetSnapshot {}
 
     pub fn handle(_payload: &ResetSnapshot, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&crate::standards::v1::subsets::any::schema::default_snapshot())], ..Default::default() })
+        Ok(Emit { effects: vec![crate::editor::shooting::reset_document_effect(&crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot())], ..Default::default() })
     }
 }
 //#endregion 🔖️ResetSnapshot

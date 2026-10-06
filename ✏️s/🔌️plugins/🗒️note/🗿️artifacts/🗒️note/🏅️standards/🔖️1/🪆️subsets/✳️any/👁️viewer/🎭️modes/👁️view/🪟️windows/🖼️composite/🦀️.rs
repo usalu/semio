@@ -23,6 +23,7 @@ pub const SURFACE_ID: &str = "note.view.composite";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::note::create_note_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Canvas", "Zeichenfläche"),
         body_key: BODY_KEY.into(),

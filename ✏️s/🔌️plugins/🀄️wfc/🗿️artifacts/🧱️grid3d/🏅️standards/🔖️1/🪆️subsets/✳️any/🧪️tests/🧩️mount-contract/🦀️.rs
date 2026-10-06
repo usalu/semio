@@ -2,7 +2,7 @@
 //! subset declaration the plugin root binds.
 
 use crate::examples::{blocks, pipes_3d};
-use crate::schema::snapshot::text::{parse_dsl, print_dsl};
+use crate::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{Grid3dSnapshot, WFC_GRID3D_DIALECT};
 use store::ArtifactPack;
 
@@ -54,6 +54,6 @@ fn the_subset_declares_its_native_codecs_and_its_solve_inference() {
     let io = crate::standards::v1::subsets::any::io();
     assert!(io.native.snapshot.text.is_some() && io.native.snapshot.binary.is_some());
     assert!(io.native.mutations.text.is_some() && io.native.mutations.binary.is_some());
-    let descriptor = crate::schema::inferences::grid3d_artifact_inference_descriptor();
+    let descriptor = crate::host::inferences::grid3d_artifact_inference_descriptor();
     assert_eq!(descriptor.id, "s.wfc.grid3d.solve");
 }

@@ -3,7 +3,7 @@
 //! JSON, and the TS/Python siblings replay it, so a drift shows up in three places at once.
 
 use crate::examples::{tower_stack, two_room_corridor, wall_roof_facade_strip};
-use crate::schema::snapshot::text::{parse_dsl, print_dsl};
+use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{Wfc3dSnapshot, WFC3D_DIALECT};
 use store::ArtifactPack;
 

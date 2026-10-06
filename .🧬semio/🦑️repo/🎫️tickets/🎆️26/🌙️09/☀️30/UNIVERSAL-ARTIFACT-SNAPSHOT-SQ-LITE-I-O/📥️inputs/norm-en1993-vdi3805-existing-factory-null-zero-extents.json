@@ -1,0 +1,718 @@
+[
+  {
+    "artifact": "🔩️en1993",
+    "case": "full",
+    "rows": 25,
+    "valueBytes": 3236,
+    "tables": [
+      {
+        "table": "en1993_bridge_fatigue",
+        "rows": 1,
+        "semanticBytes": 120,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_cold_formed_action",
+        "rows": 1,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_cold_formed_member",
+        "rows": 1,
+        "semanticBytes": 160,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_crane_action",
+        "rows": 1,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_crane_runway",
+        "rows": 1,
+        "semanticBytes": 146,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_document",
+        "rows": 1,
+        "semanticBytes": 10,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_fatigue_band",
+        "rows": 1,
+        "semanticBytes": 72,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_fatigue_detail",
+        "rows": 1,
+        "semanticBytes": 55,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_fire_exposure",
+        "rows": 1,
+        "semanticBytes": 198,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_joint",
+        "rows": 1,
+        "semanticBytes": 390,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_joint_action",
+        "rows": 1,
+        "semanticBytes": 87,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_load_case",
+        "rows": 1,
+        "semanticBytes": 52,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_material",
+        "rows": 1,
+        "semanticBytes": 148,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_member",
+        "rows": 1,
+        "semanticBytes": 240,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_member_action",
+        "rows": 1,
+        "semanticBytes": 176,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_pile",
+        "rows": 1,
+        "semanticBytes": 108,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_pile_action",
+        "rows": 1,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_plated_action",
+        "rows": 1,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_plated_panel",
+        "rows": 1,
+        "semanticBytes": 139,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_section",
+        "rows": 1,
+        "semanticBytes": 430,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_silo_shell",
+        "rows": 1,
+        "semanticBytes": 160,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_tension_action",
+        "rows": 1,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_tension_component",
+        "rows": 1,
+        "semanticBytes": 75,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_tower_action",
+        "rows": 1,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_tower_leg",
+        "rows": 1,
+        "semanticBytes": 80,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🔩️en1993",
+    "case": "empty",
+    "rows": 1,
+    "valueBytes": 10,
+    "tables": [
+      {
+        "table": "en1993_bridge_fatigue",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_cold_formed_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_cold_formed_member",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_crane_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_crane_runway",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_document",
+        "rows": 1,
+        "semanticBytes": 10,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_fatigue_band",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_fatigue_detail",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_fire_exposure",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_joint",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_joint_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_load_case",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_material",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_member",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_member_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_pile",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_pile_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_plated_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_plated_panel",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_section",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_silo_shell",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_tension_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_tension_component",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_tower_action",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "en1993_tower_leg",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🏭️vdi3805",
+    "case": "full",
+    "rows": 62,
+    "valueBytes": 2965,
+    "tables": [
+      {
+        "table": "vdi3805_accessory",
+        "rows": 2,
+        "semanticBytes": 100,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_building_system",
+        "rows": 1,
+        "semanticBytes": 30,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_catalogue",
+        "rows": 1,
+        "semanticBytes": 16,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_catalogue_extension",
+        "rows": 2,
+        "semanticBytes": 65,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_component",
+        "rows": 1,
+        "semanticBytes": 41,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_configuration",
+        "rows": 5,
+        "semanticBytes": 151,
+        "nullCells": 3
+      },
+      {
+        "table": "vdi3805_connection",
+        "rows": 2,
+        "semanticBytes": 397,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve",
+        "rows": 1,
+        "semanticBytes": 40,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve_point",
+        "rows": 2,
+        "semanticBytes": 136,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve_unit",
+        "rows": 2,
+        "semanticBytes": 139,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_document",
+        "rows": 1,
+        "semanticBytes": 32,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_edition",
+        "rows": 3,
+        "semanticBytes": 84,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_file",
+        "rows": 1,
+        "semanticBytes": 37,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_file_extension",
+        "rows": 3,
+        "semanticBytes": 78,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_function_ref",
+        "rows": 3,
+        "semanticBytes": 90,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_generic",
+        "rows": 1,
+        "semanticBytes": 16,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_generic_entry",
+        "rows": 3,
+        "semanticBytes": 103,
+        "nullCells": 2
+      },
+      {
+        "table": "vdi3805_geometry",
+        "rows": 1,
+        "semanticBytes": 162,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_geometry_parameter",
+        "rows": 2,
+        "semanticBytes": 85,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_heat_generator",
+        "rows": 1,
+        "semanticBytes": 89,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_index_entry",
+        "rows": 2,
+        "semanticBytes": 92,
+        "nullCells": 1
+      },
+      {
+        "table": "vdi3805_index_tag",
+        "rows": 3,
+        "semanticBytes": 79,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_limits",
+        "rows": 1,
+        "semanticBytes": 48,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_product",
+        "rows": 5,
+        "semanticBytes": 199,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_product_extension",
+        "rows": 2,
+        "semanticBytes": 52,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_pump",
+        "rows": 1,
+        "semanticBytes": 130,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_radiator",
+        "rows": 1,
+        "semanticBytes": 132,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record",
+        "rows": 1,
+        "semanticBytes": 37,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record_extension",
+        "rows": 1,
+        "semanticBytes": 28,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record_field",
+        "rows": 3,
+        "semanticBytes": 79,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_title",
+        "rows": 3,
+        "semanticBytes": 101,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_valve",
+        "rows": 1,
+        "semanticBytes": 97,
+        "nullCells": 0
+      }
+    ]
+  },
+  {
+    "artifact": "🏭️vdi3805",
+    "case": "empty",
+    "rows": 5,
+    "valueBytes": 163,
+    "tables": [
+      {
+        "table": "vdi3805_accessory",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_building_system",
+        "rows": 1,
+        "semanticBytes": 30,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_catalogue",
+        "rows": 1,
+        "semanticBytes": 16,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_catalogue_extension",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_component",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_configuration",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_connection",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve_point",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_curve_unit",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_document",
+        "rows": 1,
+        "semanticBytes": 32,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_edition",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_file",
+        "rows": 1,
+        "semanticBytes": 37,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_file_extension",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_function_ref",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_generic",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_generic_entry",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_geometry",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_geometry_parameter",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_heat_generator",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_index_entry",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_index_tag",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_limits",
+        "rows": 1,
+        "semanticBytes": 48,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_product",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_product_extension",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_pump",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_radiator",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record_extension",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_record_field",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_title",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      },
+      {
+        "table": "vdi3805_valve",
+        "rows": 0,
+        "semanticBytes": 0,
+        "nullCells": 0
+      }
+    ]
+  }
+]

@@ -5,7 +5,7 @@ import{parseCondition}from"../../../📝️definition/🟦️.ts";
 import{parseFormsValue,formsValueEqual,formsValueNumber}from"../../../🌱️value/🟦️.ts";
 import type { DslValue, FormExpr, FormQuestion, FormQuestionOption, FormVectorField } from "../../🟦️.ts";
 
-export const BLOCK_TEXT_FIELDS = ["description", "placeholder", "text", "unit", "schema", "src", "accept", "fixtureSlug"] as const;
+export const BLOCK_TEXT_FIELDS = ["description", "placeholder", "text", "unit", "schema", "src", "accept", "exampleId"] as const;
 export const BLOCK_NUMBER_FIELDS = ["min", "max", "step"] as const;
 export const BLOCK_FIELDS = ["label", ...BLOCK_TEXT_FIELDS, "required", ...BLOCK_NUMBER_FIELDS, "default", "params", "condition", "options", "fields"] as const;
 
@@ -60,7 +60,7 @@ export function parseChangeBlockField(value: unknown, at = "$"): ChangeBlockFiel
     case "schema":
     case "src":
     case "accept":
-    case "fixtureSlug":
+    case "exampleId":
       return { blockId, field, value: nullable(text) };
     case "required":
       return { blockId, field, value: nullable((item) => (typeof item === "boolean" ? item : fail(where, "is a boolean"))) };

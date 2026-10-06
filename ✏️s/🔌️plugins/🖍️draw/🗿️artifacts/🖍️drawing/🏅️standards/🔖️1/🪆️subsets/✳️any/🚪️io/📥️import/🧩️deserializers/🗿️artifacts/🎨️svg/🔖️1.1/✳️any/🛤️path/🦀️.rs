@@ -1,6 +1,7 @@
 //! 🛤️ Normalize the first-party SVG parser's commands to editable Draw geometry.
 use crate::PathSegment;
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{parse_path_data,PathCommand};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{PathCommand};
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_path_data};
 
 pub fn parse_editable_svg_path(source:&str)->Result<Vec<PathSegment>,String> {
     let commands=parse_path_data(source)?;

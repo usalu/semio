@@ -1,0 +1,140 @@
+{
+  "note": "🖊️ The text-control keyboard law every renderer shares (ticket 26/09/30 design §22.7), the text counterpart of the number-control keyboard law: for a text field that holds a draft (`commit: \"blur\"`), what a key does given the field's kind and the modifiers held (`primary` is Ctrl, ⌘ on macOS). `action` is `newline` (the field inserts a line break, nothing is dispatched), `commit` (the draft is dispatched without waiting for focus to leave), `revert` (the draft is dropped and the published value shown again) or null (the key is not the field's). Escape reverts; a single-line field commits on Enter; a multi-line field (`longText`) inserts a line on Enter, with or without Shift, and commits on Ctrl/⌘+Enter; a single-line Shift+Enter and every Alt chord are not the field's (Alt+Enter is a shell chord). Rust `text_input_key`, TypeScript `uiTextInputKey`.",
+  "keys": [
+    {
+      "case": "single-line-enter-commits",
+      "kind": "text",
+      "key": "enter",
+      "primary": false,
+      "shift": false,
+      "alt": false,
+      "action": "commit"
+    },
+    {
+      "case": "single-line-primary-enter-commits",
+      "kind": "text",
+      "key": "enter",
+      "primary": true,
+      "shift": false,
+      "alt": false,
+      "action": "commit"
+    },
+    {
+      "case": "single-line-shift-enter-is-not-the-fields",
+      "kind": "text",
+      "key": "enter",
+      "primary": false,
+      "shift": true,
+      "alt": false,
+      "action": null
+    },
+    {
+      "case": "single-line-escape-reverts",
+      "kind": "text",
+      "key": "escape",
+      "primary": false,
+      "shift": false,
+      "alt": false,
+      "action": "revert"
+    },
+    {
+      "case": "single-line-alt-enter-is-a-shell-chord",
+      "kind": "text",
+      "key": "enter",
+      "primary": false,
+      "shift": false,
+      "alt": true,
+      "action": null
+    },
+    {
+      "case": "multi-line-enter-inserts-a-line",
+      "kind": "longText",
+      "key": "enter",
+      "primary": false,
+      "shift": false,
+      "alt": false,
+      "action": "newline"
+    },
+    {
+      "case": "multi-line-shift-enter-inserts-a-line",
+      "kind": "longText",
+      "key": "enter",
+      "primary": false,
+      "shift": true,
+      "alt": false,
+      "action": "newline"
+    },
+    {
+      "case": "multi-line-primary-enter-commits",
+      "kind": "longText",
+      "key": "enter",
+      "primary": true,
+      "shift": false,
+      "alt": false,
+      "action": "commit"
+    },
+    {
+      "case": "multi-line-primary-shift-enter-commits",
+      "kind": "longText",
+      "key": "enter",
+      "primary": true,
+      "shift": true,
+      "alt": false,
+      "action": "commit"
+    },
+    {
+      "case": "multi-line-escape-reverts",
+      "kind": "longText",
+      "key": "escape",
+      "primary": false,
+      "shift": false,
+      "alt": false,
+      "action": "revert"
+    },
+    {
+      "case": "multi-line-shift-escape-reverts",
+      "kind": "longText",
+      "key": "escape",
+      "primary": false,
+      "shift": true,
+      "alt": false,
+      "action": "revert"
+    },
+    {
+      "case": "multi-line-alt-enter-is-a-shell-chord",
+      "kind": "longText",
+      "key": "enter",
+      "primary": false,
+      "shift": false,
+      "alt": true,
+      "action": null
+    },
+    {
+      "case": "multi-line-alt-escape-is-not-the-fields",
+      "kind": "longText",
+      "key": "escape",
+      "primary": false,
+      "shift": false,
+      "alt": true,
+      "action": null
+    },
+    {
+      "case": "number-field-enter-commits",
+      "kind": "number",
+      "key": "enter",
+      "primary": false,
+      "shift": false,
+      "alt": false,
+      "action": "commit"
+    },
+    {
+      "case": "number-field-escape-reverts",
+      "kind": "number",
+      "key": "escape",
+      "primary": false,
+      "shift": false,
+      "alt": false,
+      "action": "revert"
+    }
+  ]
+}

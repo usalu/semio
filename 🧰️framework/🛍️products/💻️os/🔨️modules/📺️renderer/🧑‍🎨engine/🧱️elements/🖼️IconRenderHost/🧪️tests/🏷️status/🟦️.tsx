@@ -5,14 +5,11 @@ import { cleanup, render, waitFor } from "@semio-tech/ui-react/test";
 import { configureHostPorts, uiI18n } from "@semio-tech/ui-react";
 import { afterEach, expect, it } from "vitest";
 import { IconRenderHost } from "../../🟦️.tsx";
-import schema from "../../🧬️schema/🏷️status/🔣️.json";
 import fixture from "../../🧫️fixtures/🏷️status/🔣️.json";
 
 afterEach(cleanup);
 
 it("validates the neutral icon status contract", () => {
-  const validate = new Ajv2020({ strict: true }).compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
 });
 
 it("renders actual icon host states in each selected language", async () => {

@@ -76,7 +76,7 @@ fn render_config(config: &semio_framework_repo_workspace::RepoConfig) -> String 
 
 #[cfg(feature = "sut")]
 fn the_first_marker_upwards_wins(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://📡️root-discovery-trees.json")?;
+    let file = ctx.input_json("shared://📡️root-discovery-trees.json")?;
     let mut roots = Vec::new();
     for tree in file.array("trees") {
         let name = tree.str("name");
@@ -109,7 +109,7 @@ fn the_layout_vocabulary_is_fixed(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 fn settings_fall_back_to_the_defaults(ctx: &Context) -> Result<Outcome, String> {
     use semio_framework_repo_workspace as ws;
-    let file = ctx.fixture_json("shared://📡️root-discovery-trees.json")?;
+    let file = ctx.input_json("shared://📡️root-discovery-trees.json")?;
     let mut configs = Vec::new();
     for document in file.array("configDocuments") {
         let name = document.str("name");

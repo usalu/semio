@@ -1,17 +1,17 @@
 //! 🖌️ Laws of the input window's brush tool: one stroke is ONE `ToolTransaction` holding ONE parametric
 //! `paint-input-stroke` leaf — one edit, one history row stamped with its `TransactionRef`, labelled from the leaf in
-//! English and German — whether it arrives in one dispatch or streams over many through the window transient; a
-//! cancel leaves zero trace; two strokes are two transactions; and a stroke edited in history replays its downstream
-//! exactly like a fresh fold of the edited log.
+//! English and German — whether it arrives in one dispatch or streams over many through the window's gesture slot
+//! (design §22.10: the runtime holds the open stroke, previews it and ends it on host facts); a cancel leaves zero
+//! trace; two strokes are two transactions; and a stroke edited in history replays its downstream exactly like a fresh
+//! fold of the edited log.
 
 use super::*;
-use crate::editor::bitmap::modes::edit::windows::input::transient::BitmapInputWindowTransient;
 use crate::editor::bitmap::modes::edit::windows::input::WFC_BITMAP_WINDOW_INPUT;
 use crate::editor::bitmap::{BitmapEditor, BitmapEditorCommand};
 use crate::mutations::{paint_input_stroke, set_input_pixels, BitmapMutation, BitmapStrokePoint};
-use crate::schema::snapshot::encode_base64;
 use crate::{BitmapSnapshot, WFC_BITMAP_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+use semio_framework_tool_machine::{drive_chart_gesture, GestureHostEvent, GestureLedger, ToolStep};
 
 fn point(x: u32, y: u32) -> BitmapStrokePoint {
     BitmapStrokePoint { x, y }
@@ -27,6 +27,12 @@ fn request(points: &[(u32, u32)], color: u32) -> BrushToolRequest {
 
 const SEED: &str = "authoring-seed-brush";
 
+/// 🗄️ One dispatch of the brush against `ledger`'s slot of the input window — what `GestureSlot::drive` does for a
+/// mounted dispatch that publishes.
+fn drive(ledger: &mut GestureLedger<BitmapMutation>, phase: GesturePhase, tick: Option<BrushToolRequest>, seed: &str) -> Option<(protocol::TransactionRef, Vec<BitmapMutation>)> {
+    ledger.drive::<BitmapBrush>(WFC_BITMAP_WINDOW_INPUT, BITMAP_PAINT_STROKE_VERB, phase, tick, seed, "").expect("the brush accepts the dispatch")
+}
+
 //#region 🛠️Tool
 #[test]
 fn the_phase_protocol_reads_every_host_spelling() {
@@ -40,92 +46,102 @@ fn the_phase_protocol_reads_every_host_spelling() {
 
 #[test]
 fn a_one_shot_stroke_is_one_committed_transaction_of_one_leaf() {
-    let (committed, transient) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(0, 0), (3, 2)], 1), &BitmapInputWindowTransient::default(), SEED);
-    let (reference, mutations) = committed.expect("the stroke commits");
+    let once = drive_chart_gesture::<brush_tool::BrushTool>(None, BITMAP_PAINT_STROKE_VERB, GesturePhase::Once, Some(request(&[(0, 0), (3, 2)], 1)), SEED, "").expect("the brush accepts the dispatch");
+    let (reference, mutations) = once.committed.expect("the stroke commits");
     assert!(reference.id.starts_with("tx-"), "{reference:?}");
     assert_eq!(reference.tool, "s.wfc.bitmap@1/*#editor#paint-stroke");
     assert_eq!(mutations, vec![paint_input_stroke(vec![point(0, 0), point(3, 2)], 1)]);
-    assert!(transient.brush.is_none(), "a one-shot leaves the window at rest");
+    assert!(once.next.is_none(), "a one-shot leaves the window at rest");
 }
 
 #[test]
 fn a_streamed_stroke_is_one_transaction_across_dispatches() {
-    let (none, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), SEED);
-    assert!(none.is_none(), "a tick publishes nothing");
-    let first = open.brush.as_ref().expect("the window holds the open stroke").transaction.clone();
-    let (none, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(2, 0), (2, 2)], 0), &open, SEED);
-    assert!(none.is_none());
-    assert_eq!(open.brush.as_ref().expect("still open").transaction, first, "every tick joins the transaction minted at the first");
-    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Commit, request(&[(3, 2)], 0), &open, SEED);
-    let (reference, mutations) = committed.expect("the release commits");
+    let mut ledger = GestureLedger::default();
+    assert!(drive(&mut ledger, GesturePhase::Stream, Some(request(&[(0, 0)], 1)), SEED).is_none(), "a tick publishes nothing");
+    let first = ledger.open(WFC_BITMAP_WINDOW_INPUT).expect("the window holds the open stroke").transaction.clone();
+    assert!(drive(&mut ledger, GesturePhase::Stream, Some(request(&[(2, 0), (2, 2)], 0)), SEED).is_none());
+    assert_eq!(ledger.open(WFC_BITMAP_WINDOW_INPUT).expect("still open").transaction, first, "every tick joins the transaction minted at the first");
+    let (reference, mutations) = drive(&mut ledger, GesturePhase::Commit, Some(request(&[(3, 2)], 0)), SEED).expect("the release commits");
     assert_eq!(reference, first, "the commit publishes under the ref minted at the first tick");
     assert_eq!(mutations, vec![paint_input_stroke(vec![point(0, 0), point(2, 0), point(2, 2), point(3, 2)], 1)], "ONE net leaf in the colour the stroke opened with");
-    assert!(rest.brush.is_none());
+    assert!(ledger.is_empty());
 }
 
 #[test]
 fn every_host_abort_leaves_zero_trace() {
     for reason in [ToolAbortReason::Blur, ToolAbortReason::CaptureLost, ToolAbortReason::Frozen, ToolAbortReason::Retired, ToolAbortReason::Tool] {
-        let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0), (1, 1)], 1), &BitmapInputWindowTransient::default(), SEED);
-        assert!(open.brush.is_some());
-        let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Abort(reason), request(&[], 1), &open, SEED);
-        assert!(committed.is_none() && rest.brush.is_none(), "{reason:?} must leave nothing");
+        let mut ledger = GestureLedger::default();
+        drive(&mut ledger, GesturePhase::Stream, Some(request(&[(0, 0), (1, 1)], 1)), SEED);
+        assert!(ledger.open(WFC_BITMAP_WINDOW_INPUT).is_some());
+        assert!(drive(&mut ledger, GesturePhase::Abort(reason), None, SEED).is_none() && ledger.is_empty(), "{reason:?} must leave nothing");
     }
-    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Abort(ToolAbortReason::Blur), request(&[], 1), &BitmapInputWindowTransient::default(), SEED);
-    assert!(committed.is_none() && rest == BitmapInputWindowTransient::default(), "an abort at rest is a silent no-op");
+    let mut ledger = GestureLedger::default();
+    assert!(drive(&mut ledger, GesturePhase::Abort(ToolAbortReason::Blur), None, SEED).is_none() && ledger.is_empty(), "an abort at rest is a silent no-op");
+}
+
+/// 📡️ The editor maps no host fact itself: the runtime's ledger ends the stroke on every fact but a moved base — the
+/// leaf names absolute cells and a colour, so it is pinned to no revision and repaints on any sample.
+#[test]
+fn host_facts_end_the_stroke_in_the_ledger_and_a_moved_base_keeps_it() {
+    for fact in [GestureHostEvent::Blur, GestureHostEvent::CaptureLost, GestureHostEvent::UtilityChanged, GestureHostEvent::Retiring, GestureHostEvent::TimeTravelFrozen] {
+        let mut ledger = GestureLedger::default();
+        drive(&mut ledger, GesturePhase::Stream, Some(request(&[(0, 0), (1, 1)], 1)), SEED);
+        assert!(matches!(ledger.host_event(WFC_BITMAP_WINDOW_INPUT, fact), ToolStep::Aborted(..)) && ledger.is_empty(), "{fact:?} ends the stroke");
+    }
+    let mut ledger = GestureLedger::default();
+    drive(&mut ledger, GesturePhase::Stream, Some(request(&[(0, 0)], 1)), SEED);
+    assert_eq!(ledger.host_event(WFC_BITMAP_WINDOW_INPUT, GestureHostEvent::BaseMoved), ToolStep::Idle, "a remote edit keeps the stroke");
+    let (_, mutations) = drive(&mut ledger, GesturePhase::Commit, Some(request(&[(1, 0)], 1)), SEED).expect("the kept stroke commits");
+    assert_eq!(mutations, vec![paint_input_stroke(vec![point(0, 0), point(1, 0)], 1)]);
 }
 
 #[test]
 fn two_strokes_are_two_transactions() {
-    let (first, _) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), "seed-one");
-    let (second, _) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(1, 1)], 1), &BitmapInputWindowTransient::default(), "seed-two");
-    assert_ne!(first.expect("first commits").0, second.expect("second commits").0);
+    let mut ledger = GestureLedger::default();
+    let first = drive(&mut ledger, GesturePhase::Once, Some(request(&[(0, 0)], 1)), "seed-one").expect("first commits");
+    let second = drive(&mut ledger, GesturePhase::Once, Some(request(&[(1, 1)], 1)), "seed-two").expect("second commits");
+    assert_ne!(first.0, second.0);
 }
 
 #[test]
 fn a_stroke_that_paints_no_cell_leaves_zero_trace() {
-    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(9, 9), (12, 9)], 1), &BitmapInputWindowTransient::default(), SEED);
-    assert!(committed.is_none() && rest.brush.is_none());
-    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(9, 9)], 1), &BitmapInputWindowTransient::default(), SEED);
-    assert!(open.brush.is_some(), "a stream may start outside the sample and enter it later");
-    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Commit, request(&[(10, 9)], 1), &open, SEED);
-    assert!(committed.is_none() && rest.brush.is_none(), "a released stroke that never entered the sample commits nothing");
+    let mut ledger = GestureLedger::default();
+    assert!(drive(&mut ledger, GesturePhase::Once, Some(request(&[(9, 9), (12, 9)], 1)), SEED).is_none() && ledger.is_empty());
+    drive(&mut ledger, GesturePhase::Stream, Some(request(&[(9, 9)], 1)), SEED);
+    assert!(ledger.open(WFC_BITMAP_WINDOW_INPUT).is_some(), "a stream may start outside the sample and enter it later");
+    assert!(drive(&mut ledger, GesturePhase::Commit, Some(request(&[(10, 9)], 1)), SEED).is_none() && ledger.is_empty(), "a released stroke that never entered the sample commits nothing");
 }
 
 #[test]
 fn a_one_shot_interrupts_an_open_stroke() {
-    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), SEED);
-    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Once, request(&[(3, 0)], 1), &open, SEED);
-    assert_eq!(committed.expect("the one-shot commits").1, vec![paint_input_stroke(vec![point(3, 0)], 1)], "the interrupted stroke contributes nothing");
-    assert!(rest.brush.is_none());
+    let mut ledger = GestureLedger::default();
+    drive(&mut ledger, GesturePhase::Stream, Some(request(&[(0, 0)], 1)), SEED);
+    let (_, mutations) = drive(&mut ledger, GesturePhase::Once, Some(request(&[(3, 0)], 1)), SEED).expect("the one-shot commits");
+    assert_eq!(mutations, vec![paint_input_stroke(vec![point(3, 0)], 1)], "the interrupted stroke contributes nothing");
+    assert!(ledger.is_empty());
 }
 
 #[test]
 fn a_tampered_persisted_stroke_is_dropped_with_zero_trace() {
-    let (_, mut open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0)], 1), &BitmapInputWindowTransient::default(), SEED);
-    open.brush.as_mut().expect("open").states = vec!["no-such-state".to_string()];
-    let (committed, rest) = bitmap_brush_dispatch(GesturePhase::Commit, request(&[(1, 0)], 1), &open, SEED);
-    assert_eq!(committed.expect("the commit runs from rest as a one-shot").1, vec![paint_input_stroke(vec![point(1, 0)], 1)]);
-    assert!(rest.brush.is_none());
+    let mut ledger = GestureLedger::default();
+    drive(&mut ledger, GesturePhase::Stream, Some(request(&[(0, 0)], 1)), SEED);
+    let mut tampered = ledger.open(WFC_BITMAP_WINDOW_INPUT).expect("open").clone();
+    tampered.states = vec!["no-such-state".to_string()];
+    ledger.settle(WFC_BITMAP_WINDOW_INPUT, Some(tampered));
+    let (_, mutations) = drive(&mut ledger, GesturePhase::Commit, Some(request(&[(1, 0)], 1)), SEED).expect("the commit runs from rest as a one-shot");
+    assert_eq!(mutations, vec![paint_input_stroke(vec![point(1, 0)], 1)]);
+    assert!(ledger.is_empty());
 }
 
+/// 🪞️ What the runtime folds over the committed sample while the stroke is open is the stroke's ONE net leaf — the
+/// editor owns no preview of its own.
 #[test]
-fn the_window_previews_committed_plus_the_open_stroke() {
-    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0), (3, 2)], 1), &BitmapInputWindowTransient::default(), SEED);
-    let preview = bitmap_brush_preview(&base(), &open).expect("an open stroke previews");
-    let mut expected = base();
-    crate::mutations::apply_bitmap_mutation(&mut expected, &paint_input_stroke(vec![point(0, 0), point(3, 2)], 1)).expect("the leaf applies");
-    assert_eq!(preview, expected);
-    assert!(bitmap_brush_preview(&base(), &BitmapInputWindowTransient::default()).is_none(), "a resting window previews nothing");
-}
-
-#[test]
-fn the_brush_state_round_trips_the_window_transient_codecs() {
-    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(0, 0), (1, 2)], 1), &BitmapInputWindowTransient::default(), SEED);
-    let text = <BitmapInputWindowTransient as store::ArtifactDsl>::print_dsl(&open);
-    assert_eq!(<BitmapInputWindowTransient as store::ArtifactDsl>::parse_dsl(&text).expect("text parses"), open);
-    let packed = <BitmapInputWindowTransient as store::ArtifactPack>::encode_pack(&open);
-    assert_eq!(<BitmapInputWindowTransient as store::ArtifactPack>::decode_pack(&packed).expect("pack decodes"), open);
+fn the_open_stroke_offers_its_one_net_leaf_as_the_provisional_overlay() {
+    let mut ledger = GestureLedger::default();
+    assert_eq!(ledger.provisional().count(), 0, "a resting window previews nothing");
+    drive(&mut ledger, GesturePhase::Stream, Some(request(&[(0, 0)], 1)), SEED);
+    drive(&mut ledger, GesturePhase::Stream, Some(request(&[(3, 2)], 1)), SEED);
+    assert_eq!(ledger.provisional().cloned().collect::<Vec<_>>(), vec![paint_input_stroke(vec![point(0, 0), point(3, 2)], 1)]);
 }
 //#endregion 🛠️Tool
 
@@ -155,10 +171,11 @@ fn pointer_samples_map_to_clamped_cells_with_repeats_collapsed() {
 
 #[test]
 fn a_streamed_stroke_never_repeats_a_cell_across_ticks() {
-    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(1, 1)], 1), &BitmapInputWindowTransient::default(), SEED);
-    let (_, open) = bitmap_brush_dispatch(GesturePhase::Stream, request(&[(1, 1), (1, 1), (2, 1)], 1), &open, SEED);
-    let (committed, _) = bitmap_brush_dispatch(GesturePhase::Commit, request(&[(2, 1)], 1), &open, SEED);
-    assert_eq!(committed.expect("the release commits").1, vec![paint_input_stroke(vec![point(1, 1), point(2, 1)], 1)]);
+    let mut ledger = GestureLedger::default();
+    drive(&mut ledger, GesturePhase::Stream, Some(request(&[(1, 1)], 1)), SEED);
+    drive(&mut ledger, GesturePhase::Stream, Some(request(&[(1, 1), (1, 1), (2, 1)], 1)), SEED);
+    let (_, mutations) = drive(&mut ledger, GesturePhase::Commit, Some(request(&[(2, 1)], 1)), SEED).expect("the release commits");
+    assert_eq!(mutations, vec![paint_input_stroke(vec![point(1, 1), point(2, 1)], 1)]);
 }
 //#endregion 🖱️Pointer
 
@@ -319,6 +336,22 @@ fn a_mounted_press_drag_release_paints_one_stroke_and_a_hover_or_a_cancel_leaves
     assert_eq!(app.snapshot().expect("projection"), committed, "a cancelled stroke leaves zero trace");
     close(&mut app);
 }
+/// 🛎️ The editor answers no host event, yet a blur ends the window's stroke: the runtime's slot drops it with zero
+/// trace, so the release that follows finds nothing open and paints nothing.
+#[test]
+fn a_mounted_blur_ends_the_open_stroke_with_zero_trace() {
+    let mut app = app();
+    let before = app.snapshot().expect("projection");
+    assert!(edit_rows(&pointer(&mut app, "canvasPointerDown", serde_json::json!({ "worldX": 0.25, "worldY": 0.75, "button": 0 }))).is_empty());
+    assert!(edit_rows(&pointer(&mut app, "canvasPointerMove", serde_json::json!({ "worldSamples": [[1.5, 0.5], [2.5, 0.5]] }))).is_empty());
+    let blur = semio_framework_value::DslValue::from(&serde_json::json!({ "windowId": WFC_BITMAP_WINDOW_INPUT, "kind": "blur" }));
+    let meta = input_meta();
+    let result = block_on(app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&blur), &meta));
+    assert!(edit_rows(&settle(&mut app, result)).is_empty(), "a host fact is no history");
+    assert!(edit_rows(&pointer(&mut app, "canvasPointerUp", serde_json::json!({ "worldX": 2.9, "worldY": 1.1, "cancelled": false }))).is_empty(), "the release finds no stroke");
+    assert_eq!(app.snapshot().expect("projection"), before, "the blurred stroke left zero trace");
+    close(&mut app);
+}
 //#endregion 🧩️MountedApp
 
 //#region ⏪️TimeTravel
@@ -331,9 +364,9 @@ fn a_stroke_edited_in_history_replays_its_downstream() {
     block_on(async {
         let mut store = store::ArtifactStore::<BitmapSnapshot, BitmapMutation>::new(store::create_document_envelope::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA, "brush-time-travel", base(), None)).await.expect("the store opens");
         store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<BitmapSnapshot, BitmapMutation>());
-        let log = [paint_input_stroke(vec![point(0, 0), point(3, 2)], 1), set_input_pixels(0, 0, 1, 1, encode_base64(&[0]))];
+        let log = [paint_input_stroke(vec![point(0, 0), point(3, 2)], 1), set_input_pixels(0, 0, 1, 1, ([0]).to_vec())];
         for mutation in &log {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the edit applies");
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let edited = paint_input_stroke(vec![point(0, 0), point(3, 2)], 0);

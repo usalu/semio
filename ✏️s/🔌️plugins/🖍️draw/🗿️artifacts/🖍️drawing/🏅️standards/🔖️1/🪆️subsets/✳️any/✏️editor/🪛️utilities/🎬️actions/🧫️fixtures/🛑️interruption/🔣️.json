@@ -1,0 +1,102 @@
+{
+ "documentAction": "addLayer",
+ "layerKind": "shape:ellipse",
+ "cases": [
+  {
+   "utility": "selectDirect",
+   "press": [
+    420,
+    320
+   ],
+   "move": [
+    450,
+    340
+   ],
+   "preview": "transform"
+  },
+  {
+   "utility": "selectMarquee",
+   "press": [
+    600,
+    450
+   ],
+   "move": [
+    630,
+    470
+   ],
+   "preview": "overlay:marquee"
+  },
+  {
+   "utility": "selectLasso",
+   "press": [
+    600,
+    450
+   ],
+   "move": [
+    630,
+    470
+   ],
+   "preview": "overlay:marquee"
+  },
+  {
+   "utility": "pen",
+   "press": [
+    600,
+    450
+   ],
+   "move": [
+    630,
+    470
+   ],
+   "preview": "overlay:preview"
+  },
+  {
+   "utility": "shapeRect",
+   "press": [
+    600,
+    450
+   ],
+   "move": [
+    630,
+    470
+   ],
+   "preview": "overlay:preview"
+  },
+  {
+   "utility": "shapeEllipse",
+   "press": [
+    600,
+    450
+   ],
+   "move": [
+    630,
+    470
+   ],
+   "preview": "overlay:preview"
+  },
+  {
+   "utility": "shapeLine",
+   "press": [
+    600,
+    450
+   ],
+   "move": [
+    630,
+    470
+   ],
+   "preview": "overlay:preview"
+  },
+  {
+   "utility": "shapePolygon",
+   "press": [
+    600,
+    450
+   ],
+   "move": [
+    630,
+    470
+   ],
+   "preview": "overlay:preview"
+  }
+ ]
+}

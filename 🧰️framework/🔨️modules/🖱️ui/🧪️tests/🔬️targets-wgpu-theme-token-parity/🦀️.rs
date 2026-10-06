@@ -4,8 +4,11 @@
 //! it fails here instead of at a screenshot diff.
 
 use super::*;
+#[path = "../../🧪️testing/🎨️paint-policy/🦀️.rs"]
+mod paint_policy;
+
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// 📂️ Repo root, five levels above `semio-framework-ui`'s manifest
 /// (`🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust`).
@@ -17,13 +20,11 @@ fn repo_root() -> PathBuf {
     root
 }
 
-/// 🔎️ Source trees whose `🧊️wgpu` files this law owns: the ui target itself (chrome/widgets/shell/
-/// draw/theme), the per-element wgpu targets, and the os renderer's Shell/Dock/Scenes wgpu targets.
-const SCAN_ROOTS: &[&str] = &["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu", "🧰️framework/🔨️modules/🖱️ui/🧱️elements", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer"];
+/// 🔎️ General UI target and element source trees owned by this package.
+const SCAN_ROOTS: &[&str] = &["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu", "🧰️framework/🔨️modules/🖱️ui/🧱️elements"];
 
 /// 🎨️ The two constructors that turn raw channels into paint. Every other colour must be a
 /// `Rgba::from_token` lift of a generated palette entry, or derived from an existing `Rgba`.
-const COLOR_CONSTRUCTORS: &[&str] = &["Rgba::new(", "Rgba::from_srgb8("];
 
 /// 🪪️ Renderer-internal paints that are deliberately not tokens, each with the reason it stays a
 /// literal. Anything not listed here must come from `ui_styling`.
@@ -33,143 +34,18 @@ const ALLOWLIST: &[(&str, &str, &str)] = &[
         "let white = Rgba::new(1.0, 1.0, 1.0, 1.0);",
         "🎭️ Scissor-mask identity in a `#[cfg(test)]` helper — opaque white is the stencil's \"keep\" value, not a colour anybody sees.",
     ),
-    (
-        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
-        "const CANVAS2D_SELECTION_RING",
-        "🟡️ Verbatim port of React `canvas-2d-host.tsx`'s own `rgba(251, 191, 36, …)` literal; the drift lives on the React side, so tokenising only this half would create the divergence it prevents.",
-    ),
-    (
-        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
-        "const CANVAS2D_SELECTION_GLOW",
-        "🟡️ Same literal as `CANVAS2D_SELECTION_RING`, at the glow alpha.",
-    ),
-    (
-        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
-        "fn canvas_color_channels",
-        "🧮️ Per-channel default of a pure `[f64]` → `Rgba` payload decoder: what a malformed scene packet gets, not theme paint. The decoder takes no `Theme`; plumbing one in is a Scenes packet, not a token one.",
-    ),
-    (
-        "🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
-        "fn canvas_gradient_color_at",
-        "🧮️ Empty-stop-list fallback of the same pure payload decoder — see `canvas_color_channels`.",
-    ),
-    (
-        "🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
-        "const LOGO_UNTINTED",
-        "⬜️ Identity TINT MULTIPLIER, not a paint: the brand mark is the one icon cell rasterised in its own four hues (`rasterize_svg(svg, tint_mask = id != \"semio-logo\")`), and React paints `<SemioLogo>` untinted. Any token here would multiply the mark down to a single hue — the black disc this const exists to prevent.",
-    ),
 ];
 
 /// 🔢️ True when the three COLOUR channels are plain numeric literals — i.e. the call writes a hue by
 /// hand rather than reading one. Alpha is excluded on purpose: `…, 0.9 * opacity)` is still a
 /// hand-written colour. `Rgba::new(tip.color.r, …)` and `Rgba::from_srgb8(r, g, b, 255)` (a parsed
 /// user hex) carry derived channels and pass.
-fn channels_are_hand_written(arguments: &str) -> bool {
-    let channels: Vec<&str> = arguments.split(',').take(3).collect();
-    if channels.len() < 3 {
-        return false;
-    }
-    channels.iter().all(|argument| {
-        let argument = argument.trim().trim_end_matches("_f32").trim_end_matches("_u8");
-        !argument.is_empty() && argument.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '_' || c == '-')
-    })
-}
-
-/// 🔍️ Argument text of the constructor call starting at `open` (the index just past its `(`), or
-/// `None` when the call spans past the end of the line.
-fn call_arguments(line: &str, open: usize) -> Option<&str> {
-    let rest = &line[open..];
-    let mut depth = 1_i32;
-    for (index, character) in rest.char_indices() {
-        match character {
-            '(' => depth += 1,
-            ')' => {
-                depth -= 1;
-                if depth == 0 {
-                    return Some(&rest[..index]);
-                }
-            }
-            _ => {}
-        }
-    }
-    None
-}
-
-fn rust_sources(directory: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(directory) else { return };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            let name = entry.file_name();
-            let name = name.to_string_lossy();
-            if name == "node_modules" || name == "target" || name.starts_with("🗑️") || name.starts_with('.') {
-                continue;
-            }
-            rust_sources(&path, out);
-        } else if path.extension().is_some_and(|extension| extension == "rs") {
-            out.push(path);
-        }
-    }
-}
-
-/// 🧭️ Nearest preceding `const`/`fn`/`static` item name, so an allowlist entry can name a symbol
-/// instead of a line number that every neighbouring edit invalidates.
-fn enclosing_item<'a>(lines: &'a [&'a str], index: usize) -> &'a str {
-    for line in lines[..=index].iter().rev() {
-        let trimmed = line.trim_start();
-        if trimmed.starts_with("fn ") || trimmed.starts_with("pub fn ") || trimmed.starts_with("const ") || trimmed.starts_with("pub const ") || trimmed.starts_with("pub(crate) fn ") || trimmed.starts_with("static ") {
-            return trimmed;
-        }
-    }
-    ""
-}
-
-fn is_allowlisted(relative: &str, line: &str, item: &str) -> bool {
-    ALLOWLIST.iter().any(|(path, marker, _)| relative.ends_with(path) && (line.contains(marker) || item.starts_with(marker)))
-}
-
 /// 🧪️ Test case directories build expected paints by hand on purpose — that is the oracle,
 /// not production paint.
 #[test]
 fn no_wgpu_target_paints_a_hand_written_colour_literal() {
     let root = repo_root();
-    let mut violations: Vec<String> = Vec::new();
-    let mut scanned = 0_usize;
-    for scan_root in SCAN_ROOTS {
-        let absolute = root.join(scan_root);
-        assert!(absolute.is_dir(), "scan root {scan_root} is missing — the law would pass vacuously");
-        let mut files = Vec::new();
-        rust_sources(&absolute, &mut files);
-        for file in files {
-            let relative = file.strip_prefix(&root).unwrap_or(&file).to_string_lossy().to_string();
-            if !relative.contains("🧊️wgpu") {
-                continue;
-            }
-            if relative.contains("🧪️tests") {
-                continue;
-            }
-            scanned += 1;
-            let text = fs::read_to_string(&file).expect("wgpu source reads as utf8");
-            let lines: Vec<&str> = text.lines().collect();
-            for (index, line) in lines.iter().enumerate() {
-                if line.trim_start().starts_with("//") {
-                    continue;
-                }
-                for constructor in COLOR_CONSTRUCTORS {
-                    let Some(at) = line.find(constructor) else { continue };
-                    let Some(arguments) = call_arguments(line, at + constructor.len()) else { continue };
-                    if !channels_are_hand_written(arguments) {
-                        continue;
-                    }
-                    let item = enclosing_item(&lines, index);
-                    if is_allowlisted(&relative, line, item) {
-                        continue;
-                    }
-                    violations.push(format!("{relative}:{}: {}", index + 1, line.trim()));
-                }
-            }
-        }
-    }
+    let (scanned, violations) = paint_policy::scan(&root, SCAN_ROOTS, ALLOWLIST);
     assert!(scanned > 0, "no wgpu sources were scanned — the walk is broken");
     assert!(
         violations.is_empty(),

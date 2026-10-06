@@ -840,3 +840,759 @@ no temporary-log tag.
 
 Pending: waiting for "SERVE UP: 6012" / "SERVE UP: 6112" from `main` (activation is blocked on a peer refactor; S4-INFRA).
 02:52 — `curl` 6012 → 000, 6112 → 000: Phase B not started. Resume S4-E2E (SendMessage) with "SERVE UP: <port>" to run the batches.
+
+---
+
+## Session 5 — 2026-10-05
+
+Successor S5-E2E (Opus). Repair-first check (rule 46): the probe `🧑‍💻dev/🧪️tests/🧪️time-travel/🟦️.ts` (4660 lines, mtime 10-04 18:27)
+has no diff against HEAD; no half-finished edit. Serve: React `http://127.0.0.1:6012/` UP since 00:58 (supervised, puzzle 2d,
+build **B0** = the tree as activated at 00:58, before any session-5 change). Task 1 = React Run 5 on B0 (batches A–J, `en` then `de`),
+Task 2 = adapt the probe to the session-5 contract (staged under `T/🗑️generated/s5-e2e/`, landed on "… LANDED"), Task 3 = wgpu arm on
+"SERVE UP: 6112". Outputs: `T/🗑️generated/s5-e2e/run5/` (probe files) and `T/🗑️generated/s5-e2e/run5-react-<locale>-<batch>.txt`.
+
+### S5.1 Status (kept current)
+
+- 01:01 — read rules 1–54, S4.1–S4.7, W.1–W.4, audit clause 13 and the parity gap list; `curl` 6012 → 200; load average 78–90.
+- 01:05 — first live run of the rewritten probe: 14/23, every FAIL a PROBE fault (S5.3 P1). 01:34 — **batch A `en` green 72/0**.
+- 01:37 — **batch B `en` green 67/0** — the Run-2 folder-reload failure (R2-2) is gone live.
+- 01:42–02:25 — batch C `en` 48/1 (F1). 02:33 — **batch D `en` green 44/0**. 02:40 — fleet cut by the usage limit (rule 62).
+- 04:22 — resumed; probe file intact, `tsc` clean. 04:27 — **batch E `en` green 35/0**. 04:28 — batch F 35/2 (F2).
+- 04:37 — batch G 19/1 (F3). 04:46 — batch H 18/4 (F4, two peers diverge; first live two-peer run). 04:55 — batch I 19/1 (F5; F6
+  candidate). 05:18 — batch J 19/1 (F7). Coordinator's change of plan: `en` only on this build, `de` + wgpu on build B1.
+- 05:22 — `REACT RUN 5 DONE (en only)` sent. 05:27 — Task 2 patch LANDED in the probe (S5.6); smoke on "B0 guest + s1 host":
+  A 76/0, C 52/2, F 35/5 (new F8). 05:41 — batch H on the `attach` wave: **27/0, all four F4 verdicts PASS**, peers converge.
+- 07:26 — "SERVE UP (B1)" (channel 22; React 6012 + wgpu 6112). Run 6 started; 07:45 fleet cut; 09:36 resumed (rules 64/65).
+- 09:52 — batch B diagnosed: folder persistence dead on React B1 (F9). 10:11 — the React serve is saved under my lock by a peer
+  outside the fleet; the probe now attributes every reload and `batch.sh` re-runs an invalidated batch.
+- 10:26 — FIRST wgpu contact: F10 (fresh-profile boot refused), F11 (empty board). 10:39 — wgpu `en` A 7/12.
+- 11:17 — React `en` on B1 done except I: PASS 380 / FAIL 23 (S5.8). React is off-limits from "WAVE C GO" until "SERVE UP (B2)".
+- 11:34 — the machine rebooted (every helper died); 15:39 activation B2 relaunched; 16:06 "SERVE UP (B2)" for React.
+- 16:10–16:18 — Run 7 React `en` A, B, E, H, I: **F9, F4, F6 closed live** (S5.10). 16:18 — "SERVE UP (B2 wgpu)".
+- 16:27–16:40 — wgpu `en` on B2: **F10, F11 closed live**; F14 (the first board click kills the renderer) blocks everything
+  behind the board; F15–F18 (S5.10). 16:40–16:50 — React `en` C, D, F, G, J, K, L: **goal sentence 9/9**, F12 closed, F3 open.
+- 16:50–17:15 — React `de` A–L: 447 PASS / 1 FAIL (F3); F13 and F5 closed live by host saves at 17:01 / 17:11.
+- 17:23–17:31 — new step 22 (§22.13 `mutation.precondition-drifted`): batch M 18/0 in `en` and `de`. React Σ 465 / 1 per locale.
+- 17:34 — "SERVE UP (B2w)" (waves 10 + 11). 17:36–18:25 — wgpu arm calibrated against the mirror DOM; **first live history edit
+  on wgpu**: goal sentence 5 PASS / 4 FAIL / 1 not reached (S5.11); every clause works functionally, each editor input takes
+  45–90 s to reach the preview (F22). 18:26 — React panel DOM saved for S5-WGPU (`react-panel-dom/`).
+- Next: wgpu `en` A–K and wgpu `de` — NOT RUN: not feasible inside the 10-minute cap until F22 is fixed or the machine is quiet.
+- 20:16 — "SERVE UP (B3)" for React (guest rebuilt: §22.32 (a) board tools on the gesture slot, F21 / F16 guest halves). 20:16–20:31
+  — Run 8 regression A–M `en`: **472 / 1** (only F3), no B3 regression. 20:35–21:10 — new step 23 "tools are machines"
+  (batch N): **27 / 0**, 17 `m32-*` verdicts (S5.12). wgpu not probed (B3w not announced).
+- 23:05 — both serves restarted (app quit ~23:00); `:6012` = B3 guest + hot host waves (S5-UI `f3` 21:33, S5-LOAD `f13` + `detach`).
+  23:35–23:46 — Run 9: G `en` 22 / 0 (**F3 CLOSED LIVE**), L `de` 20 / 0, N `de` 26 / 1 (the FAIL is a probe baseline fault,
+  S5.13). wgpu not probed (B3 wgpu lane not activated).
+- 2026-10-06 00:22 — new goal (design §23): the feature for every single editor. 00:27–00:40 — probe batch U, the universal live
+  journey (step 24, `--universal`), written and run: **puzzle 2d React 8 / 8, draw React (peer serve :6064) 8 / 8** (S5.14).
+- 02:03–02:34 — batch U extended (two rows, every control role, conflict clause, `de`, controls JSON): **puzzle 2d 21 / 0 in
+  `en` and `de`, draw 20 / 0 in `en` and `de`**; two product faults on draw's inputs (U1, U2) — S5.15.
+
+### S5.2 Run 5 — results (React :6012, locale `en`; `de` moved to build B1 by the coordinator)
+
+Build identity: guest wasm = **B0** (activated 00:58) for every run. Served TypeScript saved after 00:58 and hot-loaded (each batch
+log starts with the list): `⏪️time-travel/🟦️.ts` + `🎠️kernel/🟦️.ts` 01:16 / 02:26 (S5-RUNTIME twins), `🛠️tool-machine/🟦️.ts` 01:25,
+`🛂️manifest/🟦️.ts` 02:25, and from 04:56:38 `🏛️ShellHost`, `🐚️Shell`, `⚛️react` (a peer's refactor of the introduction auto-start,
+saved under my serve lock; band / Tree / Slider files unchanged since 10-04). Batch A's first green pass (01:10–01:16, steps 1–6)
+was pure B0.
+
+| Batch | `--only` | When | PASS | FAIL | uncaught | hard | Failing verdicts → finding | Output (`T/🗑️generated/s5-e2e/`) |
+|---|---|---|---|---|---|---|---|---|
+| A | `1,2,3,4,5,6,7,9` | 01:33 | **72** | 0 | 0 | 0 | — | `run5-react-en-A.final.txt`, `run5/probe-react-2026-10-04T23-33-12.md` |
+| B | `1,2,3,4,5,reload,9` | 01:35 | **67** | 0 | 0 | 0 | — | `run5-react-en-B.txt`, `run5/probe-react-2026-10-04T23-35-21.md` |
+| C | `1,8,10,9` | 02:23 | 48 | 1 | 0 | 0 | `g6-out-of-bounds-factor-is-refused-naming-the-bound` → F1 | `run5-react-en-C.final.txt` (step 10 alone: `run5-react-en-C10.txt`, 31/0) |
+| D | `1,2,11,12,9` | 02:31 | **44** | 0 | 0 | 0 | — | `run5-react-en-D.final.txt` |
+| E | `1,13,reload,9` | 04:26 | **35** | 0 | 0 | 0 | — | `run5-react-en-E.final.txt` |
+| F | `1,14,15,9` | 04:28 | 35 | 2 | 0 | 0 | `mobile-band-controls-are-touch-sized`, `tablet-band-controls-are-touch-sized` → F2 | `run5-react-en-F.final.txt` |
+| G | `1,16,9` | 04:36 | 19 | 1 | 0 | 0 | `n15-edit-is-disabled-while-replaying-naming-why` → F3 | `run5-react-en-G.final.txt` |
+| H | `1,17,9` | 04:43 (twice, identical) | 18 | 4 | 0 | 0 | `g10-a-remote-edit-arrives-while-editing`, `g10-the-remote-edit-stays-downstream-and-unapplied-while-editing`, `g10-accept-replays-the-remote-edit-too`, `g10-the-second-peer-sees-the-finalized-edit` → F4 | `run5-react-en-H.final.txt` |
+| I | `1,18,9` | 04:51 (reference run) | 19 | 1 | 0 | 0 | `reprojection-status-is-announced-outside-the-history-panel-load` → F5 (+ F6 candidate) | `run5/probe-react-2026-10-05T02-51-10.md` / `.ndjson`; later runs `run5-react-en-I.run4-reloaded.txt` |
+| J | `1,19,9` | 05:17 | 19 | 1 | 0 | 0 | `l4-camera-moves-are-never-history-rows` → F7 | `run5-react-en-J.final.txt` |
+| **Σ `en`** | | | **376** | **10** | 0 | 0 | 7 product findings (F1–F7) | |
+
+No uncaught page error, no hard guest fault, no temporary-log line and no channel mismatch in any batch.
+
+What is proven LIVE on React (`en`), by goal sentence (S4.3 numbering):
+
+| # | Goal sentence | Proven by (batch → steps) | Open |
+|---|---|---|---|
+| 1 | every mutation is editable | A 3, C 8/10, D 12, E 13, G 16 (the 374th mutation of one transaction opens), J 19 | — |
+| 2 | editing enters time-travel mode | A 3 (band, indicator ×3, focus, panel reveal), F 14/15 | F2 (control height), O1/O5 (band overlaps other text) |
+| 3 | edited mutation shown, downstream not applied | A 3 (preview = before + draft; downstream row "Not applied while editing"), C 8 | two-peer case: F4 |
+| 4 | accept or discard | A 4 (chord), D 11 (button, Discard chord), F (touch), G 16 (Exit zero trace) | — |
+| 5 | inputs carry UI metadata | A 3/4 (steppers, snap step), C 8 (hard minimum refusal, Home), C 10 (dial ticks/degrees/detents, log slider ticks), D 12 (reference list, Use selection, label chips), J 19 (list add/remove) | F1 (typed slider value lost when the control remounts) |
+| 6 | accept replays downstream | A 4, G 16 (progress over 766 mutations, Cancel, Replay again) | F3 (Edit disabled without a reason while replaying) |
+| 7 | each downstream mutation ok / warning / error | A 4 (ready), C 8 + D 12 (Error: Target missing), E 13 (Warning: Partially applied) | — |
+| 8 | new warnings visible in history | E 13 ("New since this edit", stays after finalize, survives the reload) | — |
+| 9 | fatal → edit first, repeat until clean | C 8 (blocked → Next problem → Withdraw → ready), D 12 (blocked → Next problem → Use selection → ready) | — |
+| 10 | final result; finalize or keep editing | A 4/5, D 11 (two accepted drafts → one overwrite row "2 mutations") | — |
+| 11 | prompt: new alternative vs overwrite | A 5 (Overwrite), A 7 (New alternative, switch both ways), B (reload restores rows, alternatives, current), I 18 | — |
+| 12 | puzzle 2d drag: selection AND offset editable | A 2–4, 7 (offset), D 12 (targets through Use selection) | — |
+| 13 | tools yield mutations in a transaction | A 2, C 10 (rotate/scale = one row from its leaf), J 19 | F7 (a middle-button pan logs "Apply Board Events") |
+| 14 | tools not editable, their mutations are | A 3, C 8, J 19 (undo skips the camera) | — |
+| 16 | end to end, accessible | ARIA oracle clean in A 3/5 and F; N15 reasons in A 4/5; phone + tablet journeys in F | wgpu, `de`; multi-user: F4; loads: F5/F6 |
+
+Not provable on this build / history size (notes in the runs): the N17 history STEP (switching alternatives over 766 mutations is
+adopted within one refresh in all four I runs → progress, `history.replaying` refusal and Cancel-zero-trace were never judged);
+`replay-stage-rendered` for two-mutation replays; presence (needs a hub); long option rows (no puzzle 2d leaf has > 32 options).
+
+### S5.3 Probe faults found by running it (fixed in the probe; none weakens a verdict)
+
+| # | Fault | Evidence | Fix |
+|---|---|---|---|
+| P1 | DOM ids of windowed GROUP rows: `<namespace>/<windowPath>␟<rowKey>` (U+241F, `TREE_WINDOW_PATH_SEPARATOR`); leaf rows keep `/`. The probe matched `/` only → no document row was ever read (first run 14/23). | `dom/dom-en-2-expanded.json` | every id matcher accepts `/` and `␟` (wgpu also U+001F) |
+| P2 | N1 total verdicts (steps 2, 19) expected `total + 1`; the Commands window also counts command rows without mutations (the gesture's "Apply Board Events", the probe's own "Toggle Panel"). | total 8 → 13 with one document row | `total` grows by exactly the rows newer than the read before the drag AND exactly one of them is a document row |
+| P3 | "Use selection" is an activatable ROW (`….targets.useSelection.row`). | step 3 inputs list | reader accepts the row |
+| P4 | Reads right after the History panel opens raced the windowed body (`total` set, `length` 0; an expanded row's child window materialises later; a body mid-refresh lists nothing). | failure dump `commands: {total: 2, length: 0}` | `openHistory` waits for `length > 0`; `pageHistory` waits until every expanded row shows a child; `allHistoryRows` re-reads an empty body; `findMutationRow` re-expands |
+| P5 | N15-while-choosing read the row behind the prompt before the body refreshed (286–446 ms). | A runs 3 vs 4 | ≤ 5 s settle, wait recorded |
+| P6 | The create-node `index` input sits below 22 rows of the windowed Inputs section. | step 8 inputs list | `revealWindowRow` first |
+| P7 | Rotate / Scale / Set Active Example are window ACTIONS reached through the window's Actions rail on both renderers; the probe drove the palette ("No results found."). | `dom/palette-en.json`, `dom/actions-en.json` | React arm: `framework.window.<id>.engagement.toggle` → `action.<id>` → `framework.window.<id>.action.<id>.execute`; wgpu arm to be calibrated in Task 3 |
+| P8 | The editor rows arrive with the History body 0.3–1.5 s after the band reads `editing`. | D run 1 (28/8) | every Begin waits for its editor (`editorArrived`) |
+| P9 | The Alternatives section sits at the top of the body and exists only once the document holds a checkpoint (automatic ≈ 20 s after an edit when folder-bound). | E runs 1–2 | read at the top after a settle; the reload check waits ≤ 40 s for the first listing, else a note |
+| P10 | Single reads of a state that settles a refresh later (review head, relabelled row after an overwrite, a peer's row, rows after Exit). | E, C, H, J | `waitUntil` with the wait in the detail |
+| P11 | On 374 mutations a Cancel pressed in the first rendered frame can arrive after the replay finished (≈ 430 ms). | G run 3 | the history grows by one example load and the round retries |
+| P12 | The mutation-row search stopped once all ENTRY rows were seen and never paged through a 374-row window. | G run 1 | `pageHistory(…, deep)` |
+| P13 | The body's Cancel replay / Replay again are button ROWS (`framework.history.reprojection.cancelReplay.row`). | I run 1 (`cancel: absent`), run 2 `ids` | selector accepts the row |
+| P14 | Step 19 counted the probe's own panel rows as camera rows. | J run 1 | shell chrome rows are told apart by their `monitor` icon; rows are read after each camera gesture |
+
+Added for diagnosis: failure dump with rows + Commands window; `diagnose(tag)`; typing refusals with the field's state; notices
+with run-clock time, attributed to their step; slider readout focus/refusal traces; the Edit action's state per frame through a
+replay (`how` it is disabled); both peers' final states + the folder PUT/GET timeline (step 17); the reprojection section's ids;
+navigations of fresh pages; the shell's restore alert as notice `shell.document-restore` + step-9 verdict
+`no-document-restore-fails`; post-cancel verdicts `n17-a-cancelled-load-clears-its-status` and
+`n17-the-document-is-editable-after-a-cancelled-load` (written, not yet judged — see F6).
+Strict `tsc` after every probe edit: `T/🗑️generated/s5-e2e/tsc-1…29.txt`, last exit 0 / 0 errors. Module: 4925 lines.
+
+### S5.4 Findings for owners (product)
+
+| # | Verdict(s) | Observed | Evidence | Owner (coordinator's routing) |
+|---|---|---|---|---|
+| F1 | `g6-out-of-bounds-factor-is-refused-naming-the-bound` (C 10) | The slider's typed readout editor does not stay open after step 8 ran in the same document: focus trace t0 on the Inputs section row → +84 ms editor open → +245 ms focus back on the section row, editor closed (3 double-clicks in a row); the typed value or its refusal is lost. Alone (step 10 only) the refusal is correct ("Must be greater than 0", `aria-invalid`). Root cause found by S5-UI: `🌳️Tree` renders a section's rows from a state copy one render behind, a body refresh renumbers node ids and React remounts the control. | `run5-react-en-C.final.txt` line 49 (`opening`), `run5/probe-react-2026-10-04T23-52-37-en-s10-factor-refused.png` (first observation; the final run's screenshots were pruned) | S5-UI (Tree fix staged) |
+| F2 | `mobile-…` / `tablet-band-controls-are-touch-sized` (F 14/15) | Band controls Accept / Discard / Exit are 22.39 px high (WCAG 2.5.8: ≥ 24 px). | `run5-react-en-F.final.txt` lines 17, 33 | S5-UI |
+| F3 | `n15-edit-is-disabled-while-replaying-naming-why` (G 16) | Band `replaying` at t0 with the row's Edit still enabled; +69 ms the pressed Edit is `disabled` (native attribute + `aria-disabled`) with NO `aria-describedby`; a press in the first frame is refused by the notice `timeTravel.illegal`. Per the coordinator: the host's pending state of the pressed button hides the guest's reason and is not cleared after `{rejected}`. | `run5-react-en-G.final.txt` line 21 (`target` samples) | S5-UI |
+| F4 | 4 × `g10-…` (H 17) | Two peers on one folder DIVERGE SILENTLY when one edits history: B's write is fetched by A (GET 200 0.2 s after the PUT) but A's read-back load is REJECTED — shell alert "Document restore failed: actor-document-control.receipt-count", no console line — A's body never lists B's edit, A's Accept replays without it (one `timeTravel.stale` notice), A's Finalize is never written (no PUT after it), B never sees it. Final: A = n1 +80 / n2 original; B = n1 +60 / n2 moved. | `run5-react-en-H.final.txt` (note `g10-final-states-of-both-peers`), `run5/probe-react-2026-10-05T02-43-27-en-s17-g10-peer-a-final.png` | S5-STORE (merge of a fetched pair), S5-LOAD (no PUT after a finalize; retired port), S5-RUNTIME (base move in a session) |
+| F5 | `reprojection-status-is-announced-outside-the-history-panel-load` (I 18) | While a folder archive loads, the History body shows "DOCUMENT LOAD / Loading document: 0 of 1" (19.8 s uncancelled; ≥ 180 s after a Cancel) but the shell status `[data-semio-history-reprojection]` is never rendered. | `run5/probe-react-2026-10-05T02-51-10.md`, `…T02-47-13.md` | S5-UI (host status) / S5-LOAD |
+| F6 (candidate, one run) | — (`n17-a-cancelled-load-clears-its-status` written after it) | After Cancel replay of a load the previous document stays (PASS) but the body's "Loading document: 0 of 1" section stayed for 180 s. Whether the document is editable afterwards is not judged yet: the two later I runs were reloaded at +196 s / +200 s (below). Also: an uncancelled load of the two-example archive takes 19.8 s as ONE step ("0 of 1"). | `run5/probe-react-2026-10-05T02-51-10.ndjson` (`document-load`) | S5-LOAD / S5-STORE |
+| F7 | `l4-camera-moves-are-never-history-rows` (J 19) | Wheel zoom adds no row (both directions); a MIDDLE-BUTTON PAN adds one Commands row "Apply Board Events" (no mutations). | `run5-react-en-J.final.txt` line 11 (`byGesture`) | S5-PUZZLE (board events) |
+
+Observations (no verdict): O1/O5 the band has no opaque surface — over the footer status text at 1600 px and over the merged
+panel's rows at 375 px (`run5/probe-react-2026-10-05T02-28-03-en-s14-mobile-editing.png`); O2/O3 transient notices on legal
+presses (`timeTravel.invalid-input` once in A; `timeTravel.illegal` + `timeTravel.stale` in D 11, probably a stepper's
+commit-on-blur after the Discard chord); O4 an automatic checkpoint fired against a retired document port after a detach
+(`commitCheckpoint refused … actor-document-port.retired`); O6 the Alternatives section is absent until the first checkpoint;
+O7 a Cancel that arrives after the replay finished answers "Not possible right now".
+
+Environment: page reloads under a batch — `🛠️tool-machine/🟦️.ts` 01:25:55 and an icon + `🔣️shortcodes.json` 02:01:08 saved
+without `serve` (rules 57 / 61 followed); in I runs 3 and 4 all pages of the batch reloaded 200 s / 196 s after the run started
+with no Vite invalidate line and no bundled non-Rust file saved in that minute (unexplained; the transform guard counts 485
+modules since the 04:56:38 host save).
+
+### S5.5 Owed
+
+- React `de` (all batches) and the whole wgpu arm — on build B1, after the Task-2 adaptation (coordinator's plan).
+- F6: the two post-cancel verdicts of step 18; the N17 history step needs a longer history than 766 mutations to show a frame.
+- wgpu arm of the Actions-rail runner (`runPaletteCommand`), wgpu labels of shell chrome rows, wgpu restore alert.
+
+### S5.6 Task 2 — probe adapted to the session-5 contract (LANDED 05:27, `tsc` clean)
+
+Staged first as an anchored patch script — `T/🗑️generated/s5-e2e/task2-apply.py` (every replacement must match exactly once) —
+applied to a staged copy (`probe-staged.ts`, strict `tsc` exit 0: `tsc-staged-1.txt`), then to the module on the coordinator's
+"S5-UI s1 ON DISK" relay (`tsc-30.txt` / `tsc-31.txt` exit 0; taxonomy report `clean=true errors=0 warnings=0`; module + router
+import; 189 docstrings, unique leading emojis; module 5.1 k lines). Pre-Task-2 copy: `probe-before-task2.ts`. Contract notes:
+`task2-contract-notes.md`.
+
+| Contract (owner) | Probe change | Verdicts (new or changed) | First live result |
+|---|---|---|---|
+| Band controls never `disabled`/`title` (S5-UI) | `reactBand` reads `aria-disabled`, the reason through `aria-describedby` → `[data-slot=row-action-reason]`, `native`, `id` | `refused-band-controls-stay-reachable-and-name-why` (8), `band-controls-carry-their-control-ids` (3; React id = corpus `controlId` = wgpu key) | PASS on s1 |
+| Bands in `[data-slot=layout-superfooter] > [data-semio-bottom-bands]`, in flow, opaque (S5-UI) | `bandOverlaps` (real geometry: the band's text on no other text; every band control and text box is the top element at its own points) | `band-overlaps-no-other-text` (3), `…-while-blocked` (8), `<device>-band-overlaps-no-other-text` (14/15), `band-sits-in-the-superfooter-bands` (3) | PASS desktop + phone on s1; tablet → F8 (covered controls; the check was tightened after it) |
+| `nextProblem` band control first in a blocked review (S5-UI + guest `session.nextProblem`) | reader + wgpu key `shell.time-travel.next-problem` | `band-offers-next-problem-first-while-blocked` (8) | FAIL on the B0 guest (no `nextProblem {mutationId}` on the wire) — expected until B1 |
+| Reveal + scroll to the first blocking row (S5-RUNTIME / host) | `mutationRowRevealed` (no probe scroll) | `the-first-blocking-row-is-revealed-on-a-blocked-review` (8) | FAIL on the B0 guest — expected until B1 |
+| "History editing" / "Verlaufsbearbeitung" copy (S5-UI corpus `labels`) | presence regex `bearbeitet .* im Verlauf|bearbeitet den Verlauf`; no other compared string used the old words | — | A 76/0 on s1 |
+| Busy / refused row action = `aria-disabled` + `aria-busy` (S5-UI) | `rowActionState` reads `native` + `busy`; N15 verdicts require `native !== true`; N15-while-replaying is judged on every sampled replay frame (aria-disabled with the reason, never the native attribute), the press before the body's refresh by `g9-edit-during-replay-is-refused` | `n15-*` (4, 5, 16) | steps 4/5 PASS on s1; batch G owed on B1 |
+| Row actions `[Edit, Withdraw | Restore]`, Edit disabled with its reason for a non-editable mutation (S5-RUNTIME wave C) | COPY `withdraw` / `restore` / `refusalNotEditable` / `refusalReadOnly`; new step 20 (batch K `1,20,9`) | `r22-every-mutation-row-offers-edit-and-withdraw`, `r22-withdraw-from-the-row-opens-a-session-with-a-withdrawn-draft`, `r22-the-review-shows-the-document-without-the-withdrawn-node`, `r22-a-row-with-an-accepted-draft-offers-restore-in-place-of-withdraw`, `r22-withdrawing-the-blocking-mutation-from-its-row-makes-the-review-ready`, `r22-restore-from-the-row-drops-the-accepted-draft`, `r22-exit-leaves-zero-trace` | WRITTEN, TYPE-CLEAN, NOT RUN (needs the B1 guest) |
+| Two peers by design §22.25 (S5-STORE / S5-LOAD) | convergence judged, the second peer's drag recorded | `g10-both-peers-converge-after-the-finalize`; note `g10-the-second-peers-drag-after-the-finalize` | PASS on the `attach` wave; the drag survives |
+| Restore alert (S5-LOAD) | notice `shell.document-restore` | `no-document-restore-fails` (9) | PASS |
+| wgpu mirror (S5-WGPU wave 1) | `MirrorNode` gains `invalid`, `setSize`, `posInSet`, `step`, `min`, `max`, `tone`; refusal = the CONTROL node's description when `aria-invalid`; typed slider values go to `<key>::editor`; band / arm progress from `shell.time-travel.progress`; Commands total = `aria-setsize` of the entry rows (N1 verdicts judge on wgpu too) | wgpu arm of `stepper-*`, `g6-*`, `n1-*`, `g9-*` | WRITTEN, TYPE-CLEAN, NOT RUN (needs 6112 on B1) |
+
+OWED in Task 2: the `mutation.precondition-drifted` step (S5-PUZZLE: edit a drag's offset far away → its recorded proximity connect
+shows a NEW warning → withdraw it → ready) — the probe needs a drag that records a proximity `connect-handles` (a node dropped
+beside a free handle), which must be calibrated on the live board (handle positions are not in the board vitals);
+`mutation.inverse-refused` (Fatal) has no user-visible step yet; the wgpu arm of the Actions-rail runner, of shell chrome rows
+and of the restore alert (Task 3 `--explore`).
+
+### S5.7 Runs on the hot-reloaded serve after `REACT RUN 5 DONE` ("B0 guest + s1 host", then + `attach`)
+
+| Batch | When | PASS | FAIL | Result |
+|---|---|---|---|---|
+| A | 05:27 | 76 | 0 | step 3 = 18/18 with the three new band verdicts; `run5-react-en-A-s1.txt` |
+| C | 05:29 | 52 | 2 | F1 CLOSED (step 10 after step 8 = 22/22: the readout editor stays open, refusal "Must be greater than 0"); the 2 FAILs are the two B1-guest verdicts above; `run5-react-en-C-s1.txt` |
+| F | 05:35 | 35 | 5 | F2 CLOSED (controls 28.8 px), O5 CLOSED on the phone (15/15); **F8 new**: at 768 px the bottom-right panel tab bar (Settings / Marketplace / History / Tasks) is painted over the band's first row, "Accept draft" / "Discard draft" cannot be tapped (`tablet-accept-by-touch-reviews-ready` + 4 follow-ons); `run5/probe-react-2026-10-05T03-35-29-en-s15-tablet-prompt.png` → S5-UI |
+| H | 05:39 | 27 | 0 | **F4 CLOSED on the `attach` wave**: A lists B's drag "Not applied while editing" (12.1 s), Accept replays it, A's finalize reaches B (11.1 s), both peers hold the same document and rows, B's drag survives, no restore alert, no `timeTravel.stale`; the shell announces the read-back ("Document load: Loading document: 377 of 377"); leftover O4: an automatic checkpoint refused by the load shows the person a `document.loading` notice; `run5-react-en-H-attach.final.txt` |
+
+### S5.8 Run 6 — build B1 (activation 07:19: channel 22, S5-RUNTIME waves A–E, S5-STORE, outcome codes, S5-WGPU waves 1–3; host = S5-UI s1 + r2 + r3, S5-LOAD attach)
+
+Outputs: `T/🗑️generated/s5-e2e/run6-<renderer>-<locale>-<batch>.txt` (+ `.invalidated-<n>.txt` for attempts a foreign save reloaded),
+`run6/probe-<renderer>-<stamp>.md|ndjson`, scratch dumps `wgpu/`. Each batch log starts with the served TypeScript saved since
+07:19 (the host half of the build under test): among them S5-STORE 09:37 (`🏪️store/👷️worker`, `💻️os/🟦️.ts`), S5-LOAD 09:53 +
+10:17 (`📡️backbone/🔗️binding`, `🏛️ShellHost`, `🔌️PluginRuntime`; wave `attach-told`), S5-PUZZLE 09:52 (mutation labels).
+
+**React `en` (valid runs)**
+
+| Batch | When | PASS | FAIL | Failing verdicts → finding |
+|---|---|---|---|---|
+| A | 07:27 | 75 | 1 | `no-uncaught-page-errors` (unhandled `actor-document-control.receipt-count` in the port retire at folder attach) → F9 |
+| B | 09:48 | 63 | 7 | `folder-attach-writes-the-document-archive`, `folder-reconnect-offered`, `positions-persist-after-reload`, `edit-ids-survive-the-reload`, `document-rows-survive-the-reload`, `overwrite-row-survives-the-reload`, `no-uncaught-page-errors` → F9 |
+| C | 09:57 | 52 | 2 | `the-first-blocking-row-is-revealed-on-a-blocked-review` → F12; `no-uncaught-page-errors` → F9 |
+| D | 10:47 | 45 | 0 | — |
+| E | 11:04 | 29 | 6 | 5 × reload check + `warning-row-survives-the-reload` → F9 (step 13 itself 13/14) |
+| F | 10:51 | 40 | 0 | — (F2, F8 closed) |
+| G | 10:59 | 20 | 1 | `n15-edit-is-disabled-while-replaying-naming-why` → F3 |
+| H | 11:08 | 18 | 6 | `g10-second-peer-opens-the-shared-document` + 5 × `g10-…` → F9 |
+| I | — | — | — | not recorded: 11:13 run invalidated by a foreign save (`🚪️io/🪶️sqlite-snapshot/🟦️.ts`), then the wave-C window |
+| J | 11:02 | 20 | 0 | — (F7 closed: wheel zoom, middle-button pan, zoom out add no row) |
+| K | 11:01 | 18 | 0 | — (step 20 = 8/8, first live run of the row actions) |
+| **Σ** | | **380** | **23** | F9 × 21, F3 × 1, F12 × 1 |
+
+**wgpu `en`**: A (10:37) PASS 7 / FAIL 12 — `wgpu-boots-in-a-fresh-browser-profile` (F10), `wgpu-loads-the-example-at-boot`,
+`wgpu-navbar-example-loads-the-board`, `board-has-nodes` (F11), `history-panel-speaks-the-locale` (probe key mismatch, fixed after
+the run: the open tab is the chrome button `framework.panel.history` with `aria-pressed=true`), 6 × `blocked-by-the-empty-board`,
+`no-uncaught-page-errors` (the boot fault). The probe's own folder attach PASSES on wgpu (`.semio/documents.db` written).
+
+**Findings of Run 6**
+
+| # | Owner | Finding | Evidence |
+|---|---|---|---|
+| F9 | S5-LOAD (cause: the peer's pack encoder stopped sorting object keys → the guest's control receipt is noncanonical for the TS grammar; guest fix on disk 10:18, live with B2) | Folder persistence is dead on React B1: Attach → 2 × GET 204 → the bind fails (`actor-document-control.noncanonical` in `decodeDocumentBackboneControlV1`, before LOAD's 09:53 save: unhandled `receipt-count` in `retire`) → no PUT ever, no reconnect offer after a reload, re-attach loads the plain example, two peers never share. Since `attach-told` (10:17) the person is told: console `[os-shell] sync attach failed Error: actor-document-control.noncanonical`, notice `sync.attach.failed` "The document could not be attached", 0 uncaught. The wgpu host attaches the same folder fine (GET 204 → PUT 200) — not guest-side on both hosts. | `run6-react-en-B.txt`, `run6-react-en-B-attach.txt`, `run6/probe-react-2026-10-05T08-34-29.md`, `run6/probe-react-2026-10-05T08-02-06-en-s1-sync-card-after-attach-probe-1.png`, `wgpu/wgpu-contact.json` |
+| F3 | S5-UI | Edit pressed while replaying: `aria-disabled` now (the native attribute is gone), 66 ms after the band reads `replaying`, but still without `aria-describedby` — no reason named. | `run6-react-en-G.txt` line 22 |
+| F12 | S5-UI / S5-RUNTIME | On the edge into a blocked review the History panel is open but the first blocking row is not in the DOM / viewport (one valid run, read at once; the 4 s settle was added afterwards and its two runs were invalidated). | `run6/probe-react-2026-10-05T07-57-58.md` |
+| F10 | S5-WGPU | The wgpu shell does not boot in a fresh browser profile: "worker-boot-failed: language-authority: missing explicit shell terminology authority" (`shell_language_axes`: terminology only from `SEMIO_LOCKED_TERMINOLOGY` or the stored preference). The probe continues as a returning visitor (a stored `setTerminology native` event). | `run6/probe-wgpu-2026-10-05T08-25-33.md`, `wgpu/wgpu-boot-console.txt` |
+| F11 | S5-WGPU / S5-PUZZLE | The wgpu board is empty: 0 nodes / 0 edges in all three windows after boot, no Commands row; choosing the example in the navbar (`shell.example.nakagin-capsule-tower`, `setActiveExample branch=catalog`, typed operation 1.2 s) leaves it empty; no console error. Every board step is blocked. | `wgpu/wgpu-contact.json`, `wgpu/wgpu-contact-after-example.png`, `wgpu/wgpu-contact-console.txt`, `run6-wgpu-en-A.final.txt` |
+| O-w1 | S5-WGPU | First ARIA-oracle pass over the mirror: `aria-expanded` on `role=group` section nodes (History ×2, Inspection), `aria-valuetext` on `role=combobox` (filter, search). | `run6/probe-wgpu-2026-10-05T08-25-33-en-s1-explore.json` (`aria`) |
+| O-w2 | S5-WGPU | Painted panels at the bottom anchors differ from React: History lists Commands first / Actions last, labels right-aligned, row-button icons drawn over their labels; the sync chip stays "Remote: detached" after a successful attach. | `wgpu/wgpu-contact-history.png` |
+| E1 | coordinator (a peer outside the fleet) | The React dev serve is saved without the `serve` lock (`🗣️Interpreter`, `🛠️ShellHelpers` incl. a temporary `[DEBUG] Draw Actions dispatch` log, `🔌️PluginRuntime` ×4, `🚪️io/🪶️sqlite-snapshot`): 8 batch attempts reloaded. `console-is-debug-free` FAILs from that log are FOREIGN, not product faults. | HMR frames in the `.invalidated-*.txt` logs |
+
+Closed live on B1 (React): F1 (C step 10 = 22/22), F2 + F8 + O1/O5 (F 40/0; `band-overlaps-no-other-text` on desktop, phone, tablet;
+band in `layout-subfooter`), F7 (J), `band-offers-next-problem-first-while-blocked`, `refused-band-controls-stay-reachable-and-name-why`,
+`band-controls-carry-their-control-ids`, the row actions of design §22.1 (K), O3 (`timeTravel.stale` no longer shown in D).
+F4 cannot be re-judged on B1 (no folder); it passed on the B0 guest + attach wave (S5.7). F5 / F6 not judgeable on B1.
+
+**Probe changes in Run 6** (strict `tsc` exit 0 after each: `tsc-32…42.txt`): `layout-subfooter` seat; HMR `full-reload` frames
+recorded → `navigationCause`; an unexpected reload aborts the batch (`INVALIDATED by …`) and `batch.sh` re-runs it (≤ 3, inside
+the 10-min call budget); step 9 notes `folder-requests-of-the-run` + `console-errors-in-full`; the sync card's text / alerts after
+Attach; `the-first-blocking-row…` with a 4 s settle + window evidence. wgpu arm: `wgpu-boots-in-a-fresh-browser-profile`
+(judged without any seed; `--wgpu-seed-terminology` skips the fresh attempt in later batches), stored-terminology seed,
+`wgpu-loads-the-example-at-boot`, `wgpu-navbar-example-loads-the-board`, `blocked-by-the-empty-board`, `mirrorAwait`
+(panel nodes reach the mirror up to ~3 s after the press; Attach enables 2.8 s after the path is typed), panel-open reader by
+`aria-pressed`, Actions-rail runner through the mirror (`<window>/framework.section.engagements/action.<id>`; the staged form's
+Execute key is still matched by suffix — no form opened on the empty board).
+
+**OWED after Run 6**: Run 7 on B2 (React `en` A–K incl. I, wgpu `en` A–K, `de` on both); the `mutation.precondition-drifted`
+step; wgpu calibration of everything behind the board (drag aim, editor keys, `::editor` readouts, the action form's Execute).
+
+### S5.9 Prepared for Run 7 (build B2, activation building since 11:21) — WRITTEN, TYPE-CLEAN, NOT RUN
+
+Order (coordinator): React `en` A–L (F9 must be green in B, E, H, I — H = two-peer convergence through the merge route, I = the
+stepped load) → wgpu `en` A–L WITHOUT the stored-terminology seed (`wgpu-boots-in-a-fresh-browser-profile`,
+`wgpu-loads-the-example-at-boot` are judged; the seed is taken only if the fresh boot is refused) → `de` on both.
+Command: `RUN=run7 zsh T/🗑️generated/s5-e2e/batch.sh <react|wgpu> <6012|6112> <en|de> <batch> <only> 510`.
+
+| Batch | `--only` | New since Run 5 |
+|---|---|---|
+| A…J | as S4.4 | Task-2 verdicts (S5.6), `no-document-restore-fails`, navigation attribution |
+| K | `1,20,9` | row actions (design §22.1) — green on React B1 |
+| L | `1,21,9` | **new step 21, the goal's own sentence as one verdict set**: `goal-one-drag-of-the-selection-is-one-history-row`, `goal-edit-opens-the-drag-mutation`, `goal-the-editor-offers-the-selection-as-a-reference-list` (Use selection + a chip with Remove per target), `goal-the-editor-offers-the-offset-as-steppers-with-the-grid-snap`, `goal-stepping-the-offset-previews-it-and-keeps-downstream-unapplied`, `goal-removing-a-target-previews-the-drag-without-it`, `goal-use-selection-replaces-the-targets`, `goal-accept-re-applies-the-downstream-drag`, `goal-exit-leaves-zero-trace` — same function on both renderers |
+
+To re-judge on B2: F3 (the sample now also records `aria-busy`), F12 (4 s settle + window evidence), F5 / F6 (batch I: load
+status outside the panel; `n17-a-cancelled-load-clears-its-status`, `n17-the-document-is-editable-after-a-cancelled-load`), F4
+(batch H: `g10-both-peers-converge-after-the-finalize`; the second peer's drag is recorded), F10 / F11 (wgpu boot + example).
+
+§22.13 (`mutation.precondition-drifted`) — NOT written yet, on purpose: the outcome needs a drag that RECORDS a proximity
+`connect-handles` with a `tolerance` (`🪢️connect-handles/🔺️diff`: warning when the two handles lie farther apart than the
+tolerance; runtime fixture `a-drifted-proximity-connect-warns-and-is-withdrawn`: translate → row = drag + connect → dx edited
+far away → the connect reads the NEW warning, review `ready`, worst warning → withdraw the connect → ready → overwrite "2
+mutations"). The live example has no free handle (358 handles = 2 × 179 edges); a duplicated node has one. Which pair of free
+handles the gesture auto-connects (kind compatibility, proximity radius) must be read from the live board first
+(`data-board-handle-positions-json`, React) — a one-minute scratch read on B2, then the step (words: "Warning: Precondition
+drifted" / "Warnung: Vorbedingung nicht mehr erfüllt").
+
+Verification of the probe after the last edit: strict `tsc` exit 0 (`tsc-45.txt`), taxonomy report `clean=true errors=0
+warnings=0`, module + router import, 193 docstrings with unique leading emojis, no temporary-log tag; module ≈ 5.3 k lines.
+
+### S5.10 Run 7 — build B2 (activation 15:39–16:02: channel 23, F9 guest fix + key-ordered typed-value funnel, merge route, RUNTIME H, PUZZLE §22.13, TOOLS press identity, STORE AA / renumber / CL, UI rows / icons; wgpu lane 16:18: waves 4–9)
+
+Logs: `T/🗑️generated/s5-e2e/run7-<renderer>-<locale>-<batch>.txt`; probe files `…/run7/probe-<renderer>-<stamp>.ndjson`
+(screenshots of passing React batches deleted). Batch command as S5.9 with `RUN=run7`.
+
+**React (`:6012`), 0 uncaught page errors, 0 hard guest faults in every batch**
+
+| Batch | `--only` | `en` | `de` | Notes |
+|---|---|---|---|---|
+| A | `1,2,3,4,5,6,7,9` | 76/0 | 76/0 | |
+| B | `1,2,3,4,5,reload,9` | 71/0 | 71/0 | F9 closed: GET 204 ×2 → PUT 200 → GET 200, 5 PUTs, `/.semio/documents.db`, reconnect offered + taken, drift 0, a detached folder is not offered |
+| C | `1,8,10,9` | 54/0 | 54/0 | F12 closed (`the-first-blocking-row-is-revealed-on-a-blocked-review`, 814 ms); `de` run 1 invalidated by a full-reload without a file (16:53) |
+| D | `1,2,11,12,9` | 45/0 | 45/0 | |
+| E | `1,13,reload,9` | 36/0 | 36/0 | reload keeps edit ids / rows / the overwrite row |
+| F | `1,14,15,9` | 40/0 | 40/0 | `de` run 1: 39/1 (`tablet-tap-selects-and-a-drag-moves-the-node`: the tap selected nothing in 10 s at load 47), re-run 40/0 — not reproduced |
+| G | `1,16,9` | 20/1 | 20/1 | **F3** |
+| H | `1,17,9` | 24/0 | 24/0 | F4 closed: both peers converge, the second peer's drag survives; `en` run 1 invalidated by the generated playgrounds registry (wgpu activation) |
+| I | `1,18,9` | 21/1 → 24/0 | 24/0 | pure B2: **F13**; after the host saves of 17:01 / 17:11: F13 + F5 closed |
+| J | `1,19,9` | 20/0 | 20/0 | |
+| K | `1,20,9` | 18/0 | 18/0 | row actions |
+| L | `1,21,9` | 19/0 | 19/0 | **the goal's own sentence, 9/9 in both locales, green on its first run** |
+| M | `1,22,9` | 18/0 | 18/0 | **new step 22, design §22.13 `mutation.precondition-drifted`, 8/8 in both locales** (17:28 / 17:30) |
+| **Σ** | | **465 / 1** (462 / 2 on pure B2) | **465 / 1** | |
+
+Build identity: `en` A–L and `de` A–G ran on pure B2; `de` H–L and the `en` I re-run ran on B2 + the React host saves of
+17:01:59 (`🏛️ShellHost`, `🗨️dialog-origin/🛂️admission/📄️document`, `os/🟦️.ts`) and 17:11:09 (+ `🛠️ShellHelpers`), landed
+under the serve lock.
+
+Goal sentence, clause → verdict (batch L unless named):
+
+| Clause | Verdict(s) | `en` | `de` |
+|---|---|---|---|
+| after a board drag History shows ONE drag row | `goal-one-drag-of-the-selection-is-one-history-row` ("Drag 2 items by (60, 40)" / "2 Elemente um (60; 40) ziehen", one mutation) | PASS | PASS |
+| Edit → time-travel band | `goal-edit-opens-the-drag-mutation` | PASS | PASS |
+| the editor offers the SELECTION as a reference list (Use selection / remove) | `goal-the-editor-offers-the-selection-as-a-reference-list`, `goal-removing-a-target-previews-the-drag-without-it`, `goal-use-selection-replaces-the-targets` | PASS | PASS |
+| dx / dy as steppers with the grid snap | `goal-the-editor-offers-the-offset-as-steppers-with-the-grid-snap` (60.00 / 40.00, + / −, step 1) | PASS | PASS |
+| preview = the document as of that mutation, downstream NOT applied | `goal-stepping-the-offset-previews-it-and-keeps-downstream-unapplied` | PASS | PASS |
+| Accept re-applies downstream | `goal-accept-re-applies-the-downstream-drag` (review "Ready to finalize") | PASS | PASS |
+| fatal → Next problem → resolve | batch C step 8: `replay-review-is-blocked`, `finalize-disabled-while-blocked`, `band-offers-next-problem-first-while-blocked`, `next-problem-control-reachable`, `the-first-blocking-row-is-revealed-on-a-blocked-review`, `withdrawing-the-failing-drag-makes-the-review-ready`; batch K step 20: `r22-withdrawing-the-blocking-mutation-from-its-row-makes-the-review-ready` | PASS | PASS |
+| warnings | batch E step 13: `g4-the-band-names-the-warning`, `g4-the-drag-row-reads-warning-partially-applied`, `g4-the-warning-is-marked-new-since-this-edit`, `g4-the-review-is-ready-not-blocked`, `g4-the-warning-stays-visible-after-finalize` | PASS | PASS |
+| Finalize prompts Overwrite vs New alternative | batch A step 5: `finalize-opens-the-dialog`, `dialog-offers-destructive-overwrite`, `dialog-offers-new-alternative-with-a-name-field`, `overwrite-closes-the-session`, `overwrite-row-appears`; step 7: `name-field-takes-the-alternative-name`, `new-alternative-closes-the-session`, `alternatives-section-lists-the-new-alternative` | PASS | PASS |
+| leaves no trace on Exit | `goal-exit-leaves-zero-trace` | PASS | PASS |
+
+**React findings**
+
+- **F9 CLOSED LIVE** (S5-LOAD): folder persistence works on B2 (batch B, E, H, I).
+- **F4 CLOSED LIVE**: two peers converge through the merge route; B's edit reaches A in 1.9 s while A edits, is listed "Not
+  applied while editing", Accept replays it, after A's finalize both peers hold the same two nodes and the same four rows.
+- **F12 CLOSED LIVE**, **F6 CLOSED LIVE** (a cancelled load clears its status in 1.6–2.7 s, the document is editable).
+- **F13** (S5-LOAD / S5-UI), found on pure B2 and **CLOSED LIVE by the 17:01 / 17:11 host saves**: a load the person cancelled
+  raised `[data-semio-bootstrap-status][role=alert]` "Document restore failed: AppChannelClient.loadDocumentArchive(…):
+  cancelled" + a console error (`run7-react-en-I.b2.txt` L27, L33, L39, L40). After the saves: notice
+  `shell.documentTransfer.load-cancelled` ("Laden von „Editor“ abgebrochen; das bisherige Dokument ist unverändert.", `de`
+  17:09) and, after the second save, `shell.documentTransfer.folder-detached` ("The folder was detached because its document
+  was not loaded; nothing is saved to it. Reconnect the folder to load its document.", `en` 17:12 — no PUT follows).
+- **F5 CLOSED LIVE** (same saves): the stepped load shows a shell status (`role=status`, polite, with Cancel) besides the
+  History body's section; batch I grew from 22 to 24 verdicts.
+- **F3 OPEN** (S5-UI / S5-RUNTIME), settled read: the band turns `replaying` at 157 ms; 166 ms later (`en`; 180 ms `de`) Edit on
+  a mutation row still reads ENABLED; the press is refused by the notice `timeTravel.illegal` ("Not possible right now" /
+  "Derzeit nicht möglich"); the row's own `aria-disabled` + reason reaches the DOM at 982 ms — after the 751 ms replay ended
+  and the band is back in `reviewing`. Frames in between read `aria-disabled` + `aria-busy` (the host's pending state of the
+  probe's own press; listed, not judged). Evidence: `run7/probe-react-2026-10-05T14-49-00.ndjson`, `run7-react-en-G.txt` L21.
+- **§22.13 PROVEN LIVE** (batch M, step 22, `d13-*`, 8/8 in `en` and `de`). The live example has no free handle, so the step
+  makes a compatible free pair: a one-handle capsule is duplicated (⌘D; `node-1:link`, kind "door capsule right", free), the
+  original is deleted from the Actions rail (its peer handle `f28b4ee5…:sl1_d0`, kind "door tambour right", is free again —
+  read as the one published handle row whose flag flipped), and the clone is dropped with its handle 7.49 world units beside
+  it. Result: ONE row "Drag 1 item by (-72, -50) (+1)" with the leaves "Drag 1 item by (-72, -50)" and "Connect "node-1:link"
+  to "f28b4ee5…:sl1_d0"". Edit the drag → dx 128 → Accept: review "Ready to finalize", "Worst outcome: Warning", the connect
+  row reads "New since this edit · Warning: Precondition drifted" ("Neu durch diese Bearbeitung · Warnung: Vorbedingung nicht
+  mehr erfüllt"), 179 edges kept. Withdraw on the connect's row → "Ready to finalize, Accepted changes: 2", no warning, 178
+  edges → Finalize overwrite → "History edited — overwrite: 2 mutations" / "Verlauf bearbeitet — überschrieben: 2 Mutationen".
+  A precondition the step cannot establish is a NOTE (`d13-not-provokable-*`), never a FAIL.
+- O6 (S5-PUZZLE / S5-UI, outside the goal) — running Delete Selection from the Actions rail resets the overview camera: (38.39,
+  77.58, zoom 1.4641) before, (0, 0, zoom 1) after; the duplicate and the re-select before it keep the camera (`cameras` in
+  `d13-a-drop-beside-a-free-handle-…`, both locales).
+- O7 — `data-board-handle-positions-json` is capped at 128 rows in id order while 178 handles are on screen at zoom 1, so a
+  clone's handle (`node-1:…` sorts last) is cut; the step zooms in until the cap no longer cuts (zoom 1.46–1.61).
+- Not judgeable: the history-step replay (switch of alternative) still finishes within one refresh
+  (`n17-the-history-step-adopted-within-one-refresh`), so its refusal and Cancel cannot be pressed.
+
+**wgpu (`:6112`), fresh browser profile, NO stored-terminology seed**
+
+| Run | Result |
+|---|---|
+| `en` A, attempt 1 (16:18) | 5/2 then cancelled at 510 s — PROBE faults P15, P16 (below) |
+| `en` steps 1, 2, 9 (16:31, `run7-wgpu-en-A12.txt`) | step 1 **7/1**, step 2 1/7 (F14), step 9 5/0 |
+
+- **F10 CLOSED LIVE** — `wgpu-boots-in-a-fresh-browser-profile` PASS (booted after 6–12 s, three board windows).
+- **F11 CLOSED LIVE** — `wgpu-loads-the-example-at-boot` PASS (180 nodes, 179 edges, navbar "Nakagin Capsule Tower");
+  History lists "Set Active Example" with its row action "Backwards: Set Active Example".
+- Green on wgpu B2 too: History panel in `en` ("Commands"), folder attach (card, path typed, Attach, `folder:///…`, drift 0).
+- **F14** (S5-WGPU, BLOCKER) — the first pointer click on a board node kills the renderer: "wgpu renderer fault:
+  worker-frame-failed: board retained authority faulted", surface quarantined. Deterministic, isolated repro: boot → move to
+  (480,465) (hover dispatches `applyBoardEvents`, fine) → click → PointerDown + PointerUp at 18.8 s → fault at 19.5 s. Text
+  recorded at `🧊️wgpu/🧊️renderer/🦀️.rs:15787`. Evidence: `wgpu/b2-click/wgpu-contact-console.txt` L183–259,
+  `wgpu-contact.json`, `run7-wgpu-en-A12.txt` L15–22.
+- **F15** (S5-WGPU) — `aria-pressed=true` on the chrome tabs Artifact and Inspection (also Display, Tool, Settings) at boot
+  while no panel is shown or mirrored (`wgpu-pressed-panel-tabs-show-their-panel` FAIL; `wgpu/b2-panels/wgpu-contact-booted.png`).
+- **F16** (S5-WGPU) — Actions rail → Select All selects nothing: the pointer click dispatches `action=selectAll` 2.2 s later,
+  `dumpBoard2d().selection` stays empty for 14 s, nothing is highlighted (`wgpu/b2-rail2/`).
+- **F17** (S5-WGPU) — Actions rail → Move… (and Rotate…) opens no form: no arg field, no Execute in the mirror or on the canvas.
+- **F18** (S5-WGPU) — rail rows cannot be activated by an assistive technology: `treeitem` without `data-actionable`; a mirror
+  click is not forwarded, focus + Enter dispatches the KeyDown and runs nothing (`wgpu/b2-rail/`).
+- O-w2 open — the History panel paints bottom-up and draws each action row's label twice, overlapping
+  (`wgpu/b2-panels/wgpu-contact-history-open.png`). O-w3 — 5 s after Select All the shell dispatched `commitCheckpoint` on its
+  own and History lists a "Commit Checkpoint" row nobody asked for (`wgpu/b2-rail2/wgpu-contact-console.txt` L231).
+- **No goal clause is proven on wgpu yet**: the bounded attempt to reach a history edit without a board click (rail: Select
+  All → Move…) ended at F16 / F17.
+
+**Probe faults found and fixed in Run 7 (none weakens a verdict)**
+
+- P15 — the wgpu boot wait answered before the mirror carried the chrome (boards at 6 s, chrome 3–6 s later), so the first tab
+  press found nothing. `waitForBoot` now also requires mirrored `shell.chrome` nodes.
+- P16 — open panels were read from `aria-pressed` (B1 calibration); on B2 five chrome buttons read pressed at boot, so
+  `closePanels` OPENED five panels. Open panels are now the tabs whose body window the mirror carries; the pressed state is
+  judged on its own (F15).
+- P17 — the Edit-during-replay press fired in the first frame the band read `replaying`. It is now a settled press (once Edit
+  reads disabled, else 160 ms after `replaying`, timer beside the observer); `aria-busy` frames are listed, not judged.
+- New evidence only: `slow page read` log for a page read over 5 s; `underTheTap` + `tapWaitedMs` on the tablet-tap verdict.
+- New step 22 (`step22`, `handleRows`), registered in `ORDER` after 21 and in `STEP_NUMBERS`; copy keys `drifted`,
+  `overwriteTwo` in both locales. Three probe faults on its way (no rows published right after the rail closes → wait; the
+  128-row cap → zoom in; the camera reset after the delete → zoom in again around the clone).
+- Scratch `wgpu-first-contact.ts` got the modes `click` and `rail` and no longer seeds a terminology unless asked.
+- Verification: strict `tsc` exit 0 (`tsc-56.txt`), 197 docstrings with unique leading emojis, no temporary-log tag.
+
+**Owed after Run 7**: wgpu `en` A–L after "SERVE UP (B2w)", wgpu `de`; calibration of everything behind the board on wgpu
+(drag aim, editor keys, `::editor` readouts, the action form's Execute — the rail route must use the pointer on
+`tree.label.<key>` hits, not the mirror); step 22 on wgpu needs handle positions from `dumpBoard2d` (it publishes none).
+
+### S5.11 wgpu on B2w (re-activation 17:34:39: S5-WGPU waves 10 + 11) — first live history edit on wgpu
+
+Logs: `run7-wgpu-en-L.txt` (last run 18:16, load average 50–56), earlier runs `run7-wgpu-en-L.run3.txt` (17:50, load ≈ 20) and
+`run7-wgpu-en-L.run5.txt` (18:06); screenshot of a wgpu session in review `run7/probe-wgpu-2026-10-05T15-50-41-en-s21-goal-reviewed.png`;
+mirror dumps `wgpu/b2w-aim/`, `wgpu/b2w-expand/`.
+
+Closed live on B2w: **F14** (a click selects a node, no renderer fault; a drag moves it by (80, 40)), **F18** part (the
+mutation row and its row actions are `data-actionable`).
+
+Goal sentence on wgpu `en` (batch L, 10 verdicts since the on-grid one was split out):
+
+| Verdict | wgpu | What the run shows |
+|---|---|---|
+| `goal-one-drag-of-the-selection-is-one-history-row` | PASS | "Drag 2 items by (60, 40)", one row, one mutation leaf (3 runs) |
+| `goal-edit-opens-the-drag-mutation` | PASS | band "Editing a mutation · Editing: Drag 2 items by (60, 40)" (3 runs) |
+| `goal-the-editor-offers-the-selection-as-a-reference-list` | PASS | chips t_f5_b_c1, t_f7_b_c1, each "Remove …", "Use selection" |
+| `goal-the-editor-offers-the-offset-as-steppers-with-the-grid-snap` | PASS | mirror: `<input type=number step=1>` "Offset X" / "Offset Y"; canvas "+ 60.00 −" |
+| `goal-the-recorded-drag-offset-lies-on-the-grid-snap` | **FAIL** | dx = 59.99996 (F21) |
+| `goal-stepping-the-offset-previews-it-and-keeps-downstream-unapplied` | **FAIL** | the step lands on 60 (a = 146.132) but later than the 45 s wait at load 56 (17 s at load 20); downstream stays unapplied |
+| `goal-removing-a-target-previews-the-drag-without-it` | **FAIL** | still two chips after 46 s; one chip at the next read ≈ 60 s later |
+| `goal-use-selection-replaces-the-targets` | **FAIL** | pressed; the new target is not moved in the preview within 45 s; it is at Accept |
+| `goal-accept-re-applies-the-downstream-drag` | PASS | review "Ready to finalize · Accepted changes: 1", downstream drag re-applied exactly, new target placed |
+| `goal-exit-leaves-zero-trace` | not reached | 520 s cap (one earlier run: band still `reviewing` 20 s after Exit) |
+
+Mirror DOM of the open editor (note `wgpu-editor-mirror-nodes`): `framework.history.timeTravel.status` "Editing a mutation:
+…", `framework.history.editor.target` "Draft: …", `…editor.accept|discard|withdraw` buttons, `…input.targets.row`,
+`…targets.useSelection` button, `…targets.chip.<n>.row` + `…chip.<n>` button "Remove <label>", `…input.dx|dy`
+`input[number] step=1`, band `ui.timeTravel.accept|discard|exit` + `shell.time-travel.status` (status).
+
+Findings (owner S5-WGPU unless named):
+
+- **F21** (S5-WGPU / S5-PUZZLE) — a 60-unit board drag records dx 59.99996 (a node dragged by 80 ends at 166.13196; React:
+  166.132): f32 pointer math and no grid snap on the recorded offset. The row label rounds it to "(60, 40)", the editor shows
+  59.99996, the first step snaps to 60. Caveat: the probe's pointer x is fractional (486.132); React is exact with it.
+- **F22** — while a session is open the page's main thread stalls: page reads of 5–44 s (15 in one run), growing through the
+  run, even for a plain `querySelectorAll` over the mirror; each editor input takes 45–90 s to reach the preview at load 56
+  (≈ 17 s at load 20). React at the same load: < 1.5 s per clause.
+- **F23** (was O-w2) — the History panel is unreadable while editing: the editor's steppers, Remove, Use selection, Withdraw /
+  Discard / Accept and the Actions buttons are painted over the Commands rows (screenshot above). For the diagnosis:
+  `react-panel-dom/react-panel-history-bottom-right.html` (panel root `data-anchor="bottom-right"`, `flex-direction:
+  column-reverse`, rect [1297, 708, 300, 288]) and `react-panel-inspection-top-right.html` (`data-anchor="top-right"`,
+  `column`, rect [1297, 3, 300, 144]), each with a `.png` and `react-panel-dom.json`.
+- **F20** — an expandable History row cannot be expanded through the mirror (click and focus + ArrowRight keep
+  `aria-expanded=false`); a pointer press on the row's right end expands it, the `tree.chevron.<row>` hit exists only once it
+  is open, and the mutation row with "Edit: …" / "Withdraw: …" reaches the mirror 4–6 s later.
+- F16 (rail Select All selects nothing) — a guest fault on every renderer per the coordinator; F15 — not a fault (matches
+  React); O-w3 — the automatic check-in, not judged.
+- Observations: `dumpBoard2d().rect` is window-local (page rect = the `ScrollRegion` hit of the window id); every hover /
+  select adds an "Apply Board Events" row to History (8 around one drag); the History mirror fills over > 4 s after opening.
+
+Probe faults fixed for wgpu (rule 49, none weakens a verdict): P18 aim through the page rect; P19 History read only once the
+mirrored rows are stable; P20 expand by the pointer; P21 no needless panel scroll when every row is mirrored; P22 a stepper is
+also `<input type=number>` with its `step`; P23 wgpu waits of 45 s on the editor, chips and previews, with the wait in the
+detail; P24 the off-grid step is judged to 1e-5 so 59.99996 does not pass for 60. New note `history-rows-at-the-missed-mutation`.
+`wgpu-pressed-panel-tabs-show-their-panel` became the note `wgpu-pressed-panel-tabs-without-a-mirrored-panel` (F15 is not a
+fault by the coordinator's decision). Verification: strict `tsc` exit 0 (`tsc-66.txt`), 198 unique docstring emojis, no
+temporary-log tag; React `en` L re-run 20/0 with the 10-verdict set (React `en` Σ 466 / 1, `de` Σ 465 / 1).
+
+### S5.12 Run 8 — build B3 (React recycled 20:16: S5-PUZZLE guest wave §22.32 (a) + F21 + F16, STORE LO, RUNTIME H2, LOAD f13 + detach, GRAPHS tool-run-settle); React `en` only
+
+Logs: `T/🗑️generated/s5-e2e/run8-react-en-<batch>.txt`, probe files `…/run8/probe-react-<stamp>.ndjson` (screenshots of passing
+batches deleted). wgpu was not probed (`:6112` still served B2w).
+
+**(a) Regression A–M — 472 PASS / 1 FAIL, 0 uncaught, 0 hard faults; no B3 regression**
+
+| A | B | C | D | E | F | G | H | I | J | K | L | M | Σ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 76/0 | 74/0 | 54/0 | 45/0 | 39/0 | 40/0 | 20/1 | 24/0 | 24/0 | 20/0 | 18/0 | 20/0 | 18/0 | **472 / 1** |
+
+Against the Run 7 baseline (466 / 1): B + 3 and E + 3 — more verdicts are judged, not fewer faults. L's first run was
+invalidated by a full-reload from `📐️Canvas2dHost/🟦️.tsx` (20:30, an outside peer's save) and re-run clean at 21:09.
+
+- **F3 OPEN, unchanged** (batch G, `n15-edit-is-disabled-while-replaying-naming-why`): band `replaying` at 194 ms; Edit pressed
+  167 ms later still reads enabled; refused by the notice `timeTravel.illegal`; the row's own `aria-disabled` + "Not possible
+  right now" reaches the DOM at 1039 ms, after the 770 ms replay ended. `run8/probe-react-2026-10-05T18-24-22.ndjson`.
+- **F21 guest half CLOSED LIVE**: the drop of step 22 records exactly "Drag 1 item by (-72, -50)" with offset `[-72, -50]`
+  (Run 7: `[-71.999985, -50]`); the row, the editor and the node position agree.
+- **O6 STILL PRESENT, and wider than Delete Selection** (S5-PUZZLE / board host): note `m32-camera-trace` of batch N — the probe
+  zooms to 1.331 to aim at handles; the camera is back at (0, 0) zoom 1 after the upstream history-edit session, after the
+  duplicate, after the wire, after the second delete and after the brush (not yet 2.5 s after a delete, but before the next
+  aim). Batch M shows the same after the rail's Delete Selection (`afterTheDelete`).
+
+**(b) New batch N (`1,23,9`) — step 23, design §22.32 (a) "tools are state machines that yield mutations within a transaction": 27 / 0**
+
+Figures are those of the final run, 21:07 (`run8/probe-react-2026-10-05T19-07-28.ndjson`); earlier runs of the step are kept
+as `run8-react-en-N.run2…run5.txt` and `.invalidated-1.txt`.
+
+| Verdict (`m32-…`) | Result | What the run shows |
+|---|---|---|
+| `a-streamed-drag-preview-paints-in-the-other-windows` | PASS | Detail AND Selection panes: pixel-stable before the press and while held, repaint once the node is dragged (mode `dragNodes`) |
+| `an-aborted-drag-leaves-no-row` | PASS | Escape mid-drag: node back, no document row |
+| `a-press-and-release-that-changes-nothing-leaves-no-row` | PASS | click on empty board, nothing selected: zero rows of any kind |
+| `a-history-edit-begun-mid-drag-leaves-no-row` | PASS | Edit pressed in page while the pointer holds a node: band `editing` after 132 ms, release commits nothing, node unmoved |
+| `select-all-from-the-actions-rail-selects-every-node` | PASS | 180 / 180 in 768 ms (F16 closed live) |
+| `use-selection-takes-the-select-all-selection` | PASS | the open edit of a drag takes all 180 as targets (47 chips materialised), preview drags the sampled nodes by the offset |
+| `deleting-a-node-with-its-edge-is-one-history-row` | PASS | Delete on a one-handle capsule: nodes 180 → 179, edges 179 → 178, ONE row "Delete node "…"", 1 mutation |
+| `an-upstream-edit-previews-without-the-later-delete` | PASS | editing the earlier drag shows the deleted node again |
+| `accept-of-the-upstream-edit-replays-the-delete` | PASS | Accept → review ready, node gone again, drag at its new offset |
+| `a-wire-dragged-handle-to-handle-is-one-history-row` | PASS | clone's free "door capsule left" handle → freed "door tambour left" handle (`linkDragSnap`): edges + 1, ONE row "Connect "node-1:link" to "…:sl0_d1"", 1 mutation |
+| `a-brush-placed-node-is-one-history-row` | PASS | brush armed, Alt + sweep over the freed handle: node + 1, edge + 1, ONE row "Create node "puzzle2d.brush.1" (+1)" holding 2 mutations (Create node + Connect; the Connect label was read in the 21:04 run) |
+| `a-placed-node-selected-at-once-stays-selected` | PASS | clicked 1037 ms after the placement, still selected 3.5 s later |
+| `edit-of-the-placed-node-offers-its-inputs` | PASS | editor lists 14 inputs (id, node kind, shape, x, y, radius, …) |
+| `withdraw-then-restore-of-the-placed-node-works` | PASS | Withdraw → review ready without the node; Restore → node back, session closes |
+| `withdraw-then-restore-leaves-the-document-as-it-was` | PASS | 180 nodes, no drift, 7 document rows before and after |
+| `creating-a-region-is-one-history-row` | PASS | area brush drag (`regionPaint`): region 90 × 70, ONE row "Create target region "…"", listed in the untouched open History panel within 4 ms of the first read |
+| `resizing-a-region-is-one-history-row` | PASS | grip drag (`regionDrag`): 90 × 70 → 131 × 101, ONE row "Resize target region "…"" |
+
+Not a verdict: `edgeDelete` (a wire cut) — no gesture found for it in the time; a node delete takes its edge with it (judged).
+
+Gestures, as found live (scratch `tools-explore.ts`, outputs `tools/`): utility bar = `#ui.utilities.2d-overview` with
+`button#select|brush|areaBrush` behind `…2dOverview.utilityBar.unfold`; delete = select + Delete key; brush = armed + Alt held
+over an open handle (ghost) and leaving the slot; area brush = armed + drag; region grip = select utility, drag the corner;
+wire = press on a free handle, drop on a compatible free handle; Select All = the rail row itself, no Execute.
+
+Observations (not judged):
+- Every selection / hover flush lists a non-expandable "Apply Board Events" command row; Delete pressed with nothing selected
+  lists a "Delete Selection" command row (seen in the explorations).
+- Not reproduced: in two exploration runs a painted region was on the board while the open History panel listed no row for
+  4–8 s, until the next board input (`tools/tools-explore.json`: `allRowsAfterCreate` has entries 1–3 only; rows 4 + 5 arrive
+  with the resize). In the four runs of step 23 that reached the region the row was listed untouched at once (4–80 ms after the first read).
+
+Probe faults on the way (rule 49, none weakens a verdict): the clone for the wire must share the deleted node's handle KIND
+(a "capsule right" clone does not connect to a freed "tambour left" handle — a correct refusal, zero rows); the placed node
+is aimed at by the board's own `hoveredId`; a row's mutation count is the tree window's `total`, not the materialised rows;
+document-row counts are read once two reads agree. Three runs were invalidated by outside saves (`📐️Canvas2dHost`).
+Probe: `step23` + helpers `boardInteraction`, `targetRegions`, `setUtility`, `revealHandles`, `documentRowsSince`, `paneShot`;
+strict `tsc` exit 0 (`tsc-72.txt`), 205 unique docstring emojis, no temporary-log tag.
+
+**Owed**: batch N in `de`; wgpu `en` A–N on B3w (not announced); `edgeDelete` gesture.
+
+### S5.13 Run 9 — React on B3 guest + hot host waves (S5-UI `f3`, S5-LOAD `f13` + `detach`), serves restarted 23:05
+
+Logs: `run9-react-en-G.txt`, `run9-react-de-N.txt` (+ `run9-react-de-N.cut-1.txt`), `run9-react-de-L.txt`; probe files
+`run9/probe-react-2026-10-05T21-35-26.ndjson` (G), `…T21-42-37.ndjson` (N), `…T21-40-47.ndjson` (L). Served files saved
+between the restart and the runs: `🐚️Shell`, `🛠️ShellHelpers`, `🛂️manifest`, `🏛️ShellHost/🪟️spawned-program`,
+`🛂️manifest/🪛️utilities/🌅️initial` (23:25–23:32); none saved under a run, no run was reloaded.
+
+| Batch | Locale | Result |
+|---|---|---|
+| G `1,16,9` | `en` | **22 / 0** |
+| N `1,23,9` | `de` | **26 / 1** — run 2; run 1 was cut by my own 215 s limit |
+| L `1,21,9` | `de` | **20 / 0** |
+
+- **F3 CLOSED LIVE** (S5-UI `f3`). Settled read `n15-edit-is-disabled-while-replaying-naming-why` PASS and the new unsettled
+  read `n15-edit-reads-disabled-with-its-reason-in-the-first-replaying-frame` PASS: in the DOM commit in which the band first
+  reads `replaying` (243 ms) the row's Edit reads `aria-disabled` with `aria-describedby` → "Not possible right now"; the
+  probe's press lands on the disabled action (`settledMs` 0) and nothing opens. Frames: 0 ms reviewing / enabled → 243 ms
+  replaying / disabled + reason → 1163 ms reviewing / enabled → 1236 ms reviewing / disabled + reason.
+- Observation O9 (not judged): 73 ms after the replay ended the same Edit reads disabled "Not possible right now" again while
+  the band is `reviewing` (last frame above; the trace stops there). It looks like the guest's late row publication of the
+  replay window arriving after the host re-enabled the action.
+- **Batch L `de` 20 / 0** — the goal sentence holds after `f3` (10 `goal-*` verdicts).
+- **Batch N `de`**: 16 of the 17 `m32-*` verdicts PASS in German ("Knoten "puzzle2d.brush.1" erstellen (+1)", "Zielregion
+  "target-region-2" erstellen", …). The one FAIL, `m32-creating-a-region-is-one-history-row`, is a PROBE fault, not a product
+  fault: the region's row was listed in the untouched History panel 19 ms after the first read with one mutation, but the
+  verdict counted the rows after a stale sequence baseline and so also counted the brush, delete and wire rows. The History
+  read that takes the baseline returned no entry rows for ≈ 12 s at that point in both `de` runs and in none of the `en` runs;
+  the cause is not found. Guard written (the baseline never goes below the last known sequence, and it is now in the
+  verdict's detail), type-clean, NOT RUN.
+- Not reproduced: in the cut first run, Withdraw pressed on the placed node's create row ≈ 2 s after leaving an edit session
+  opened no session within 20 s (`run9-react-de-N.cut-1.txt`); in run 2 it opened in 241 ms. The offer's state before the press
+  is now recorded (`withdraw.offered`, `bandBeforeThePress`).
+- Probe: new verdict above, `settledNewestSeq` + monotonic baseline in step 23. `tsc` over the probe's closure reports ONE
+  error, in a peer's file saved at 23:27 (`🧰️framework/🔨️modules/🛂️manifest/🟦️.ts(2003,83)` TS2322), none in the probe
+  (`tsc-74.txt`); 205 unique docstring emojis, no temporary-log tag.
+
+**Owed**: N `de` once more for the region verdict; wgpu `en` A–N on a B3 wgpu lane; `edgeDelete` gesture.
+
+### S5.14 Batch U — the universal live journey (design §23.3), 2026-10-06 00:27–00:40
+
+Step 24 (`stepU`), artifact-agnostic: framework selectors only — `[data-slot=window]`, the Actions rail (`[id$=".engagement.toggle"]`
+→ `[data-slot=window-action-pane]` → `action.<verb>` rows under `action.category.<name>` → `….action.<verb>.execute`), the History
+panel, the time-travel band, the history editor's `framework.history.editor.input.<pointer>.row` rows and the finalize prompt.
+No window id, verb name or fixture of an editor is named in it.
+
+**Command line (any React dev serve; the URL is opened verbatim, steps default to 24 + 9):**
+
+```
+cd 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript
+bun ./📜️script.ts verify time-travel --universal --serve "<url, e.g. http://127.0.0.1:6012/?plugin=puzzle2d>" --renderer react --locales en --out <dir>
+```
+
+or, with the serve lock and an automatic re-run after an outside reload: `zsh T/🗑️generated/s5-e2e/batch-u.sh "<url>" <tag> en [seconds]`.
+The routed command ran the journey at 00:30 and 00:32; from 00:33 to ≈ 00:39 it could not start (a peer's in-flight taxonomy
+edit: `loadCatalogTaxonomy` → "semanticDirectoryMemberKinds collide for owner "commands" and member "📄️load-document-json""),
+so the counted runs went through the scratch runner `run-universal.ts` (`RUNNER="bun …/run-universal.ts …/runU"`), which
+calls the same entry point; at 00:40 the routed script started again.
+
+How the journey takes each clause:
+
+| # | Verdict | How, without editor knowledge |
+|---|---|---|
+| u1 | `u1-boots-and-lists-its-actions-and-its-history` | ≥ 1 window; rail verbs listed with their categories; History opens |
+| u2 | `u2-one-mutation-row-without-editor-knowledge` | rail rows in manifest order (create, transform, then the rest; transfer / file / view / selection categories and clipboard / delete / import-like verbs skipped): open the row, read the staged args, press Execute when enabled, wait for a document row; else a row of the booted example |
+| u3 | `u3-edit-opens-an-editor-with-contract-controls` | first mutation whose Edit is offered enabled → band `editing` → inventory: role (slider, spinbutton, radiogroup, listbox, combobox, switch, textbox, reference list) + name + value + min / max / step / options |
+| u4 | `u4-changing-one-input-is-acknowledged-as-a-draft` | first changeable control by one step (ArrowRight / ArrowUp / next radio or option / click / one typed character + Tab); the editor republishes the value, band stays `editing`, later rows read "not applied" |
+| u5 | `u5-accept-replays-to-a-review-and-blockers-resolve` | Accept → review; while `blocked`: Next problem → the editor's Withdraw (else the blocker's row action) → Accept, up to four rounds; the path is recorded |
+| u6 | `u6-finalize-offers-overwrite-and-new-alternative-and-overwrites` | prompt has Overwrite AND New alternative with its name field → Overwrite → session closed, history-edit row listed |
+| u7 | `u7-withdraw-then-restore-then-exit-leaves-zero-trace` | Withdraw on a row (a second row is made by the same rail action when none is left) → Restore on it → Exit → same document rows |
+| u8 | `u8-no-faults-and-labels-in-the-locale` | 0 uncaught, 0 hard faults; History section and band speak the locale |
+
+What an editor does not offer is a NOTE `u<n>-NOT-OFFERED-…` / `u<n>-NOT-REACHED-…` with its evidence.
+
+**Results (`en`)**
+
+| Editor | Serve | u1 | u2 | u3 | u4 | u5 | u6 | u7 | u8 | Controls | Log |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| puzzle 2d | `http://127.0.0.1:6012/?plugin=puzzle2d` (B3 guest + hot host) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | 13 | `runU-puzzle2d-en.txt`, `runU/probe-react-2026-10-05T22-39-32.ndjson` |
+| draw ("semio · drawing", window `drawing-composite`) | `http://127.0.0.1:6064/` (a peer's build; boots the editor on the bare URL, no `?plugin=`) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | 9 | `runU-draw-en.txt`, `runU/probe-react-2026-10-05T22-38-53.ndjson` |
+
+Both runs: 14 PASS / 0 FAIL including step 9 (no uncaught error, no hard fault, no temporary-log line, no channel mismatch).
+
+- **puzzle 2d** — 32 rail verbs; route: "Add Node…" (`addNode`) executed with its staged defaults after seven verbs that produce
+  nothing without a selection (Duplicate, Connect… with Execute disabled, Connect Nearby, Move…, Rotate…, Scale…, Set
+  Selection Mode…); row "Create node "node-1"". Inventory 13: textbox × 4 (id, node kind, text, icon), combobox × 1 (shape),
+  spinbutton × 6 (x, y, radius, width, height with step 1; index with min 0), slider × 1 (scale 0.1–10), radiogroup × 1 (anchor,
+  2 options). Change: id "node-1" → "node-1x". Accept → `ready`. Overwrite → "History edited — overwrite: 1 mutation".
+  Withdraw → Restore on the create row → zero trace.
+- **draw** — 22 rail verbs, empty History at boot; route: "Add Layer…" (`addLayer`, staged `kind=Path`) after two forms whose
+  Execute is disabled without a domain (Set Selection Mode…, Set Granularity…); row "Create layer "layer-973a…"". Inventory 9:
+  reference list (parent group), spinbutton × 2 (index min 0 step 1; stroke width step 0.5), textbox × 2 (layer kind, blend
+  mode), slider × 1 (stroke colour, 0–1), radiogroup × 3 (line cap 3, line join 3, fill rule 2). Change: Index 1 → 2.
+  **Conflict path taken live:** Accept → review `blocked`, "Worst outcome: Fatal" (index 2 is beyond the one layer) → Next
+  problem → the editor opens on the create-layer mutation → the editor's Withdraw → Accept → `ready` → Finalize → Overwrite
+  AND New alternative offered → Overwrite → "History edited — overwrite: 1 mutation". Withdraw → Restore on a second layer
+  row (made by the same rail action) → row actions [Edit, Restore] → zero trace.
+
+Limits of what these two journeys prove (stated, not hidden):
+- In both the edited row is the NEWEST row, so u4's "later rows read not applied" is vacuous (0 downstream rows) and no
+  `replaying` stage frame was seen in u5. The journey should make a second row before the edit; not done yet.
+- u4 changes ONE control per editor (a textbox on puzzle, a spinbutton on draw); the other roles are inventoried, not operated.
+- A composite control is listed by its first primitive (draw's stroke colour appears as one slider 0–1).
+
+Observations for owners (from the inventories; none is a journey fault):
+- U-o1 (framework editor, both editors): the generic `index` spinbutton publishes min 0 but no max, so a step beyond the
+  collection is accepted as a draft and only the replay reports it — as Fatal, which the conflict path then resolves.
+- U-o2 (draw): `layer.kind` ("path") and `layer.blendMode` ("normal") are free textboxes although both are enumerations;
+  puzzle 2d's `node.nodeKind` and `node.iconKind` are free textboxes too (icon reads "null").
+
+Probe faults on the way (rule 49): draw's first run failed u5 and u7 — both probe timing (the editor's Withdraw and the row's
+Restore were read before the rows were materialised); after a settled read both pass and the DOM shows the controls. Two
+puzzle runs were invalidated by outside reloads (`Board2dHost`, `scene`, the Vite styling builder saved 00:31–00:32).
+Probe: `stepU`, `universalControls`, `universalVerbs`, `universalChange`, `--universal` (verbatim route, boot = ≥ 1 window,
+90 s boot cap); strict `tsc` exit 0 (`tsc-78.txt`), 209 unique docstring emojis, no temporary-log tag.
+
+**Owed**: a second row before the edit (downstream / replay); every control role operated once; the wgpu arm of batch U
+(through the ARIA mirror); `de`; further editors as their serves come up.
+
+### S5.15 Batch U, extended — two rows, every control role, the conflict clause, `en` + `de` (2026-10-06 02:03–02:34)
+
+Command (the `--editor` slug names the controls file; the URL is opened verbatim):
+`bun ./📜️script.ts verify time-travel --universal --editor <slug> --serve "<url>" --renderer react --locales en,de --out <dir>` —
+or `zsh T/🗑️generated/s5-e2e/batch-u.sh "<url>" <slug> <en|de> [seconds]`. Runs of this section went through
+`RUNNER="bun …/run-universal.ts …/runU"` (same entry point). Logs: `runU-puzzle2d-en.txt`, `runU-puzzle2d-de.txt`,
+`runU-draw-en.txt`, `runU-draw-de.txt` (earlier runs `*.run1…`, `*.cut-1`, `*.s15-run1`). Machine-readable inventories:
+`T/🗑️generated/s5-e2e/runU/puzzle2d-controls.json`, `…/runU/draw-controls.json` — per locale: route, second row, edited
+mutation, rail verbs (verb, category, label), controls (pointer, role, name, value, min, max, step, options, readOnly), what
+was operated per role (attempts with before / shown after / refusal notice), the conflict path.
+
+What changed in the journey: u2 makes TWO rows (the second by trying the other rail verbs after the first row, then after
+Select All, then the same action again) and the OLDER row is edited; one control of every inventoried role is operated on a
+clean draft (`u-control-<role>`; a change counts only when the value is republished, the band stays `editing` and no refusal
+notice is raised; up to three controls of a role are tried); u4 requires a later row reading "not applied"; u5 records the
+replay stage and its progress frames; `u-conflict-…` is the blocked → Next problem → Withdraw → ready path (taken in u5 when
+the edit itself blocks, else by withdrawing the older row); u8 also fails on a rail verb or control labelled by its raw key.
+
+**Verdicts** (step 24; totals include boot + the five console verdicts of step 9)
+
+| Verdict | puzzle 2d `en` | puzzle 2d `de` | draw `en` | draw `de` |
+|---|---|---|---|---|
+| u1 boot, rail verbs, History | PASS (32 verbs) | PASS | PASS (22 verbs) | PASS |
+| u2 two rows without editor knowledge | PASS | PASS | PASS | PASS |
+| u3 Edit → editor with contract controls | PASS (12) | PASS (12) | PASS (9) | PASS (9) |
+| u-control-textbox | PASS | PASS | PASS (2nd textbox; the 1st is refused — U1, U2) | PASS (same) |
+| u-control-combobox | PASS | PASS | not inventoried | not inventoried |
+| u-control-spinbutton | PASS | PASS | PASS | PASS |
+| u-control-slider | PASS | PASS | PASS | PASS |
+| u-control-radiogroup | PASS | PASS | PASS | PASS |
+| u-control-reference-list | not inventoried | not inventoried | PASS (Use selection 0 → 1 chip) | PASS |
+| u4 one input changed, later row "not applied" | PASS | PASS | PASS | PASS |
+| u5 Accept → review, blockers resolved | PASS | PASS | PASS | PASS |
+| u5 replay shown as a stage with progress | PASS ("61/182" … "182/182") | PASS | NOTE: ended within one refresh (1 later row) | NOTE (same) |
+| u-conflict blocked → Next problem → Withdraw → ready | PASS | PASS | PASS | PASS |
+| u6 Finalize: Overwrite AND New alternative → Overwrite | PASS | PASS | PASS | PASS |
+| u7 Withdraw → Restore → Exit, zero trace | PASS | PASS | PASS | PASS |
+| u8 no faults, labels in the locale, none a raw key | PASS | PASS | PASS | PASS |
+| **Total** | **21 / 0** | **21 / 0** | **20 / 0** | **20 / 0** |
+
+No switch and no listbox is inventoried by either edited mutation; puzzle's `index` spinbutton (13th control in S5.14) was not
+materialised at these reads, so 12 are recorded.
+
+- **puzzle 2d** — rows: "Add Node…" (`addNode`) → "Create node "node-1""; then "Force Layout" (`forceLayout`, 181 "Move node …"
+  mutations, found by trying the other verbs after the first row). Edit of the create: id "node-1" → "node-1x"; the later row
+  reads "Not applied while editing" / "Beim Bearbeiten nicht angewendet". **Conflict:** Accept → `replaying` (progress n / 182)
+  → review blocked, worst outcome Error (the layout's "Move node "node-1"" lost its node) → Next problem → the editor opens
+  on that mutation → its Withdraw → ready, "Accepted changes: 2" → Overwrite. In `de` the route reads "Knoten hinzufügen…" /
+  "Kraftbasiertes Layout".
+- **draw** — rows: "Add Layer…" twice (no other verb produces a row with its defaults: Combine Boolean… is refused with
+  `app.command.invalid-args`). Edit of the first create-layer: Index 1 → 2. **Conflict (a cascade):** Accept → blocked, worst
+  outcome Fatal → Next problem → Withdraw the first layer → blocked again (the second layer's index is now out of range) →
+  Next problem → Withdraw the second → ready, "Accepted changes: 2" → Overwrite.
+
+**Control inventories** (role, name `en` / `de`, UI metadata the DOM carries)
+
+| Editor · mutation | Pointer | Role | Name `en` | Name `de` | min / max / step / options |
+|---|---|---|---|---|---|
+| puzzle 2d · Create node | `node.id` | textbox | Node · ID | Knoten · ID | — |
+| | `node.nodeKind` | textbox | Node · Node kind | Knoten · Knotenart | — |
+| | `node.shape` | combobox | Node · Shape | Knoten · Form | (options not in the DOM until opened) |
+| | `node.x`, `node.y`, `node.radius`, `node.width`, `node.height` | spinbutton | Node · X / Y / Radius / Width / Height | Knoten · X / Y / Radius / Breite / Höhe | step 1 |
+| | `node.text` | textbox | Node · Text | Knoten · Text | — |
+| | `node.iconKind` | textbox | Node · Icon | Knoten · Symbol | — |
+| | `node.scale` | slider | Node · Scale | Knoten · Skalierung | min 0.1, max 10 |
+| | `node.anchor` | radiogroup | Node · Anchor | Knoten · Verankerung | 2 options |
+| draw · Create layer | `parentId` | reference list | Parent group | Übergeordnete Gruppe | — |
+| | `index` | spinbutton | Index | Index | min 0, step 1 (no max) |
+| | `layer.kind` | textbox | Layer · Kind | Ebene · Art | — |
+| | `layer.attributes.stroke.color` | slider (first primitive of the colour control) | Layer · Attributes · Stroke · Color | Ebene · Attribute · Kontur · Farbe | min 0, max 1 |
+| | `layer.attributes.stroke.width` | spinbutton | … Stroke · Width | … Kontur · Breite | step 0.5 |
+| | `layer.attributes.stroke.cap` | radiogroup | … Stroke · Line cap | … Kontur · Linienende | 3 options |
+| | `layer.attributes.stroke.join` | radiogroup | … Stroke · Line join | … Kontur · Linienverbindung | 3 options |
+| | `layer.attributes.fillRule` | radiogroup | Layer · Attributes · Fill rule | Ebene · Attribute · Füllregel | 2 options |
+| | `layer.blendMode` | textbox | Layer · Blend mode | Ebene · Füllmethode | — |
+
+`de` labels: every rail verb label and every control name differs from its `en` text on both editors, except draw's
+"Index" (the same word in German); no label is a raw key or empty.
+
+**Product faults**
+
+- **U1 draw / framework history editor (S5-UI, S5-RUNTIME)** — a text input the session REFUSES keeps showing the refused
+  text: "x" appended to `layer.kind` ("path" → "pathx") raises `timeTravel.invalid-input` "Invalid value: the input keeps
+  its previous value" / "Ungültiger Wert: Die Eingabe behält ihren bisherigen Wert", yet the field still reads "pathx" two
+  seconds later. Evidence: `runU/draw-controls.json` → `locales.en|de.operated.textbox.attempts[0]`
+  (`shownTwoSecondsAfterTheRefusal`).
+- **U2 draw (draw plugin owner; UI metadata)** — two enumerations are published as free text boxes: `layer.kind` refuses
+  everything but an exact literal (see U1), and `layer.blendMode` ACCEPTS "normalx" into the draft with no refusal
+  (`attempts[1]`, `en` and `de`). Both need their options published (combobox / radiogroup).
+- Observations carried from S5.14: the generic `index` spinbutton has no max; puzzle 2d's `node.nodeKind` and
+  `node.iconKind` are free text boxes for what looks like enumerations.
+
+Probe faults on the way (rule 49; each fixed with a settled read, none weakens a verdict): a control read right after the
+change found the row re-rendering (`settledControl`); a textbox's shown text was taken for a draft although the session had
+refused it (now the refusal notice decides — this is how U1 was found); a mutation row read before its actions rendered
+looked withdraw-only and sent the edit to the wrong row; the Restore offer was read before the row re-rendered. Verification:
+strict `tsc` exit 0 (`tsc-83.txt`), 209 unique docstring emojis, no temporary-log tag.
+
+**Owed**: a switch and a listbox (no edited mutation inventoried one — other mutations or editors will); the wgpu arm of
+batch U; further editors as their serves come up.
+

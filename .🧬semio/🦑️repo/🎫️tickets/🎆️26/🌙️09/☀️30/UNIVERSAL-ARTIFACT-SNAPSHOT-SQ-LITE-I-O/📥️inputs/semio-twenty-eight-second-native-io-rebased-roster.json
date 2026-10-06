@@ -1,0 +1,198 @@
+[
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": true
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/📏️native/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "text",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "audio",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "audio",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": true
+  },
+  {
+    "family": "audio",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "audio",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "video",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "video",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": true
+  },
+  {
+    "family": "video",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "video",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "object",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "object",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": true
+  },
+  {
+    "family": "object",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "object",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": true
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+    "moved": false,
+    "beforeMatches": true,
+    "newSemanticModule": true
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🛬️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  },
+  {
+    "family": "value-table",
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "moved": true,
+    "beforeMatches": true,
+    "newSemanticModule": false
+  }
+]

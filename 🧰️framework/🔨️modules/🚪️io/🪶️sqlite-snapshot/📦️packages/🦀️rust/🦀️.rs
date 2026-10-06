@@ -12,8 +12,10 @@ static TEST_ALLOCATION_OBSERVER: test_allocation::RequestedAllocator = test_allo
 mod component;
 
 pub use component::{
-    artifact, export_sqlite_database, import_sqlite_database, validate_sqlite_database_schema,
-    validate_sqlite_table_schema, SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow,
+    artifact, transfer, export_sqlite_database, export_sqlite_database_controlled,
+    import_sqlite_database, import_sqlite_database_controlled, validate_sqlite_database_schema,
+    validate_sqlite_database_schema_controlled, validate_sqlite_table_schema,
+    validate_sqlite_table_schema_controlled, SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteRow,
     SqliteSnapshotControl, SqliteSnapshotPhase, SqliteSnapshotProgress, SqliteTable, SqliteValue,
     ValueError, ValueRefusalKind, SQLITE_SNAPSHOT_APPLICATION_ID, SQLITE_SNAPSHOT_USER_VERSION,
 };

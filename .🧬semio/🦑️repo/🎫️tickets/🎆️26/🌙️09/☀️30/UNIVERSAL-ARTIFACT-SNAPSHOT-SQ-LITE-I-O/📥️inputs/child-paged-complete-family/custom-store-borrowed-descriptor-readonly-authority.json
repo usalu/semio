@@ -1,0 +1,26 @@
+[
+  {
+    "name": "artifact_child_spec",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "line": 3886,
+    "source": "fn artifact_child_spec() -> semio_framework_dsl_record::RecordSpec {\n    semio_framework_dsl_record::RecordSpec::new(\n        None,\n        semio_framework_dsl_record::RecordLayout::Inline,\n        vec![semio_framework_dsl_record::FieldSpec::new(0, \"child_id\", semio_framework_dsl_record::Shape::Text), semio_framework_dsl_record::FieldSpec::new(1, \"target\", <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::shape())],\n    )\n}"
+  },
+  {
+    "name": "owner_ref_spec",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "line": 4003,
+    "source": "fn owner_ref_spec() -> semio_framework_dsl_record::RecordSpec {\n    semio_framework_dsl_record::RecordSpec::new(\n        None,\n        semio_framework_dsl_record::RecordLayout::Inline,\n        vec![semio_framework_dsl_record::FieldSpec::new(0, \"parent\", semio_framework_dsl_record::Shape::Text), semio_framework_dsl_record::FieldSpec::new(1, \"slot\", semio_framework_dsl_record::Shape::Text), semio_framework_dsl_record::FieldSpec::new(2, \"child_id\", semio_framework_dsl_record::Shape::Text)],\n    )\n}"
+  },
+  {
+    "name": "link_pin_spec",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "line": 4071,
+    "source": "fn link_pin_spec() -> semio_framework_dsl_record::RecordSpec {\n    semio_framework_dsl_record::RecordSpec::new(\n        None,\n        semio_framework_dsl_record::RecordLayout::Inline,\n        vec![\n            semio_framework_dsl_record::FieldSpec::new(0, \"kind\", semio_framework_dsl_record::Shape::Enum(vec![(\"head\".to_string(), 0), (\"checkpoint\".to_string(), 1), (\"snapshot\".to_string(), 2)])),\n            semio_framework_dsl_record::FieldSpec::new(1, \"checkpoint_id\", semio_framework_dsl_record::Shape::Text).optional(),\n            semio_framework_dsl_record::FieldSpec::new(2, \"blob_hash\", semio_framework_dsl_record::Shape::Text).optional(),\n            semio_framework_dsl_record::FieldSpec::new(3, \"blob_size\", semio_framework_dsl_record::Shape::UInt).optional(),\n            semio_framework_dsl_record::FieldSpec::new(4, \"blob_media_type\", semio_framework_dsl_record::Shape::Text).optional(),\n        ],\n    )\n}"
+  },
+  {
+    "name": "artifact_link_spec",
+    "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+    "line": 4294,
+    "source": "fn artifact_link_spec() -> semio_framework_dsl_record::RecordSpec {\n    semio_framework_dsl_record::RecordSpec::new(\n        None,\n        semio_framework_dsl_record::RecordLayout::Inline,\n        vec![\n            semio_framework_dsl_record::FieldSpec::new(0, \"target\", <crate::os_io::ArtifactRef as semio_framework_dsl_record::DslField>::shape()),\n            semio_framework_dsl_record::FieldSpec::new(1, \"pin\", semio_framework_dsl_record::Shape::Record(link_pin_spec_producer())),\n            semio_framework_dsl_record::FieldSpec::new(2, \"role\", semio_framework_dsl_record::Shape::Text),\n        ],\n    )\n}"
+  }
+]

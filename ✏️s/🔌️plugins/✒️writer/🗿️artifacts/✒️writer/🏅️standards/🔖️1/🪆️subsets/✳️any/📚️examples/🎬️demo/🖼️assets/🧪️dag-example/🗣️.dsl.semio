@@ -1,2 +1,2 @@
 semio writer.writer.dsl v1
-schema=writer.document id=dag-jack language-id=jack uri="writer://dag-jack" text="MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a, b" document=child_id=document-21ed2f21032d3ec2 target="document-21ed2f21032d3ec2!s.stdio.semio@v1/document"
+schema=writer.document id=dag-jack language-id=jack uri="writer://dag-jack" text="MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a, b" document=child_id=document-21ed2f21032d3ec2 target=artifact-id=document-21ed2f21032d3ec2 artifact-kind=s.stdio.semio standard=v1 subset=document

@@ -43,3 +43,64 @@ fn snapshot_languages()->&'static[semio_framework_dsl::LanguageSpec]{
  semio_framework_dsl::LanguageSpec{id:"reasoning.wires.pack",extension:None,role:semio_framework_dsl::LanguageRole::Pack,grammar:None,grammar_path:None,protocol:Some(super::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),protocol_path:Some(super::snapshot::binary::COMPONENT_PROTOCOL_PATH),hooks:semio_framework_dsl::passthrough_hooks("reasoning.wires.pack")}
  ]).as_slice()
 }
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+pub mod derived_construction {
+    use crate::schema::diff::WiresDiff;
+    use crate::schema::mutations::WiresMutation;
+    use crate::schema::snapshot::WiresSnapshot;
+    use semio_framework_plugin::ArtifactBuilder;
+
+    #[derive(Clone, Debug)]
+    pub struct WiresBuilderConstruction {
+        snapshot: WiresSnapshot,
+        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
+    }
+
+    impl ArtifactBuilder for WiresBuilderConstruction {
+        type Snapshot = WiresSnapshot;
+        type Mutation = WiresMutation;
+        type Diff = WiresDiff;
+        fn empty() -> Self {
+            Self { snapshot: crate::empty_wires_snapshot(), diagnostics: Vec::new() }
+        }
+        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
+            Self { snapshot, diagnostics: Vec::new() }
+        }
+        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+            Ok(Self::from_snapshot(<WiresSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+        }
+        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
+            Ok(Self::from_snapshot(<WiresSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+        }
+        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
+            let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation, &self.snapshot);
+            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
+                Ok(snapshot) => self.snapshot = snapshot,
+                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
+            }
+            (self, outcome)
+        }
+        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
+            let snapshot = <WiresDiff as protocol::MutationDiff<WiresSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = snapshot;
+            Ok(self)
+        }
+        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
+            if self.diagnostics.is_empty() {
+                Ok(self.snapshot)
+            } else {
+                Err(self.diagnostics)
+            }
+        }
+    }
+}
+pub use derived_construction::*;

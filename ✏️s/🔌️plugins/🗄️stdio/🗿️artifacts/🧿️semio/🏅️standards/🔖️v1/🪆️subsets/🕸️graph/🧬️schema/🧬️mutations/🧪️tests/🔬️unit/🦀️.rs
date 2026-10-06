@@ -105,6 +105,46 @@ async fn delete_node_of_an_absent_id_has_an_empty_inverse() {
     assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
 }
 
+/// 🧱️ LAW (audit F3): `delete-node` severs at most the edges its schema-declared inverse rows cover. AT the bound the delete
+/// applies and its undo is exactly the declared rows, restoring the snapshot; ONE edge above it the delete is
+/// `mutation.target-referenced`, changes nothing and has nothing to undo — the recorded rows never exceed the footprint the
+/// store admitted from the declaration.
+#[semio_framework_async_macros::async_test]
+async fn delete_node_refuses_one_edge_above_its_declared_cascade_bound() {
+    let hub = delete_node::DeleteNode { id: GraphNodeId::new("hub") };
+    let declared = protocol::MutationLeaf::inverse_rows(&hub);
+    let maximum = delete_node::diff::cascade_edges_maximum(&hub);
+    assert_eq!(maximum + 1, declared, "the cascade bound is the declared inverse rows less the row that restores the node");
+    let node = |id: &str| SemioGraphNode { id: GraphNodeId::new(id), kind: "k".into(), label: id.into(), position: SemioPoint2 { x: 0.0, y: 0.0 }, width: 0.0, height: 0.0, ports: vec![], properties: vec![] };
+    let star = |degree: usize| SemioGraphSnapshot {
+        nodes: vec![node("hub"), node("rim")],
+        edges: (0..degree).map(|index| { let (source, target) = if index % 2 == 0 { ("hub", "rim") } else { ("rim", "hub") }; SemioGraphEdge { id: GraphEdgeId::new(format!("e{index}")), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: "flow".into(), label: String::new(), source_port: None, target_port: None, properties: Vec::new() } }).collect(),
+        ..Default::default()
+    };
+    let delete = SemioGraphMutation::DeleteNode(hub);
+    assert_eq!(<SemioGraphMutation as Mutation<SemioGraphSnapshot>>::inverse_rows(&delete), declared, "the aggregate answers the leaf's declared rows");
+
+    let at_bound = star(maximum);
+    let applied = delete.diff(&at_bound);
+    assert_eq!(applied.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), vec!["mutation.cascade"], "at the bound the delete applies with its cascade note only");
+    let undo = delete.inverse(&at_bound).expect("delete-node inverse at the bound");
+    assert_eq!(undo.len(), declared, "at the bound the undo is exactly the declared rows");
+    let mut restored = applied.diff().apply(&at_bound).expect("the delete at the bound applies");
+    assert_eq!((restored.nodes.len(), restored.edges.len()), (1, 0), "the hub and every incident edge are gone");
+    for back in &undo {
+        restored = back.diff(&restored).diff().apply(&restored).expect("each undo row applies");
+    }
+    assert_eq!(restored, at_bound, "the undo at the bound restores the exact snapshot");
+
+    let above = star(maximum + 1);
+    let refused = delete.diff(&above);
+    let messages = refused.messages();
+    assert_eq!(messages.len(), 1, "one edge above the bound is exactly one refusal");
+    assert_eq!((messages[0].code.0.as_str(), messages[0].level, messages[0].target.clone()), ("mutation.target-referenced", semio_framework_diagnostic::Severity::Error, vec!["hub".to_string()]), "the refusal names the node with the frozen outcome code");
+    assert_eq!(refused.diff().apply(&above).expect("a refused delete carries the empty diff"), above, "a refused delete changes nothing");
+    assert!(delete.inverse(&above).expect("delete-node inverse above the bound").is_empty(), "a refused delete has nothing to undo");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn delete_node_inverse_is_a_real_multi_mutation_cascade() {
     let base = fixture();

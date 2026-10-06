@@ -15,14 +15,56 @@
       "items": {
         "type": "integer",
         "minimum": 0
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Parent path",
+          "de": "Elternpfad"
+        },
+        "description": {
+          "en": "Child indices leading from the root element to the parent element, each counted from 0.",
+          "de": "Kindindizes vom Wurzelelement bis zum Elternelement, jeweils ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
       }
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Child position",
+          "de": "Kindposition"
+        },
+        "description": {
+          "en": "Position among the parent's children at which it is inserted, counted from 0.",
+          "de": "Position unter den Kindknoten des Elternelements, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "node": {
-      "$ref": "#/$defs/XmlNode"
+      "$ref": "#/$defs/XmlNode",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The element (with its attributes and children), text, CDATA section, comment or processing instruction that is inserted.",
+          "de": "Das Element (mit Attributen und Kindknoten), der Text, der CDATA-Abschnitt, der Kommentar oder die Verarbeitungsanweisung, die eingefügt wird."
+        },
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

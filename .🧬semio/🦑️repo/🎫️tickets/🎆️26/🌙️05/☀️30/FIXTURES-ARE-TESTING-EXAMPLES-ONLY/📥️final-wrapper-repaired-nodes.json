@@ -1,0 +1,143 @@
+[
+  {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "restored": [
+      "    const schema = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, \"🧬️schema/🔣️.json\"), \"utf8\"));"
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🌐️geometry-ownership/🟦️.ts",
+    "restored": [
+      "  const genericSchema=JSON.parse(read(fixture.sessionManifest.replace(\"📦️packages/🦀️rust/Cargo.toml\",\"🧬️schema/🔣️.json\")));",
+      "  const admitsOperations=new Ajv({strict:true}).addKeyword(\"x-semio-formats\").addSchema(genericSchema).compile(JSON.parse(read(`${fixture.formatOwner}/🌊️session/🧬️schema/🔣️.json`)));",
+      "  assert(admitsOperations(operations),JSON.stringify(admitsOperations.errors));"
+    ]
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "restored": [
+      "    const schema = JSON.parse(readFileSync(join(base, \"🧬️schema/🔣️.json\"), \"utf8\"));",
+      "    const validate = ajv.compile(schema.$defs.FlowRetainedSnapshot);",
+      "    assert(validate(fixture), ajv.errorsText(validate.errors));"
+    ]
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+    "restored": [
+      "    const validateLifecycle = ajv.compile(schema.$defs.FlowRetainedSnapshotLifecycle);",
+      "    assert(validateLifecycle(lifecycle), ajv.errorsText(validateLifecycle.errors));"
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🌊️flow/🧪️tests/🏷️ownership/🟦️.ts",
+    "restored": [
+      "  const schema = JSON.parse(readFileSync(join(owner, \"🧬️schema/🔣️.json\"), \"utf8\"));",
+      "  assert(ajv.getSchema(`${schema.$id}#/$defs/SFlowCompositionV1`)!(fixture));",
+      "  assert(ajv.getSchema(`${schema.$id}#/$defs/SFlowGeometryCompositionV1`)!(JSON.parse(readFileSync(join(owner,\"🧫️fixtures/🌐️geometry-composition/🔣️.json\"),\"utf8\"))));"
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/🧪️tests/🔬️ownership/🟦️.ts",
+    "restored": [
+      "  const schema = json(\"🧬️schema/🔣️.json\");",
+      "  const independent = ajv.compile({ ...schema.$defs.SFixtureSweepReportCaseWithExpected.properties.expected, const: fixture.valid.expected });",
+      "  assert(independent(evidence), JSON.stringify(independent.errors));"
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🟦️.ts",
+    "restored": [
+      "    const schemas = row.subsets.map((subset) => json(join(subsets, subset, '🧬️schema/🔣️.json')));",
+      "    const validators = [ajv.compile(schemas[0]), ...schemas.slice(1).map((schema) => ajv.compile(schema))];"
+    ]
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+    "restored": [
+      "  const module = JSON.parse(readFileSync(join(scopeRoot, \"🧬️schema/🔣️.json\"), \"utf8\"));"
+    ]
+  },
+  {
+    "path": "✏️s/🧑‍💻dev/🧩️composition/🧪️tests/🔬️ownership/🟦️.ts",
+    "restored": [
+      "  const schema = JSON.parse(read(\"🧬️schema/🔣️.json\"));"
+    ]
+  },
+  {
+    "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🏷️ownership/🟦️.ts",
+    "restored": [
+      "  const schema = JSON.parse(read(\"🧬️schema/🔣️.json\"));"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/📜️script.ts",
+    "restored": [
+      "    const module = JSON.parse(readFileSync(resolve(root, \"🧬️schema/🔣️.json\"), \"utf8\")) as { $id: string };"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/📜️script.ts",
+    "restored": [
+      "    const validateOracle = ajv.compile({ $ref: `${module.$id}#/$defs/LowpolyInteractiveJobPartition` });"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "restored": [
+      "  const schema = JSON.parse(readFileSync(join(base, \"🧬️schema/🔣️.json\"), \"utf8\"));"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "restored": [
+      "  const storeSchema = JSON.parse(readFileSync(join(storeBase, \"🧬️schema/🔣️.json\"), \"utf8\"));"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "restored": [
+      "  const commitSchema = JSON.parse(readFileSync(join(storeBase, \"🧬️schema/🔣️.json\"), \"utf8\"));"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+    "restored": [
+      "  const peerSchema = JSON.parse(readFileSync(join(storeBase, \"🧬️schema/🔣️.json\"), \"utf8\"));"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️frame-selection/🟦️.ts",
+    "restored": [
+      "    const schema = JSON.parse(readFileSync(join(mutations, leaf.directory, \"🧬️schema/🔣️.json\"), \"utf8\"));",
+      "    const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️frame-selection/🟦️.ts",
+    "restored": [
+      "      expect(validate(payload), `${folder}: Ajv`).toBe(!invariant);"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🧪️tests/🧬️semantic-wire/🟦️.ts",
+    "restored": [
+      "    const schema = JSON.parse(readFileSync(resolve(root, \"..\", row.source, \"🧬️schema/🔣️.json\"), \"utf8\"));",
+      "    const validate = ajv.getSchema(schema.$id) ?? ajv.compile(schema);",
+      "    assert(validate(row.mutation), JSON.stringify(validate.errors));",
+      "    assert.equal(validate(hostile), false, row.keyword);"
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🧪️tests/🧬️semantic-wire/🟦️.ts",
+    "restored": [
+      "    assert.equal(validate(outOfBounds), false, `${row.keyword}: Ajv refuses ${JSON.stringify(outOfBounds)}`);"
+    ]
+  },
+  {
+    "path": "🌎️hub/🧩️compositions/🌿️vcs/🧪️tests/🪪️native-openable-identity/🟦️.ts",
+    "restored": [
+      "module declaration",
+      "genuine Authority compile declaration"
+    ]
+  }
+]

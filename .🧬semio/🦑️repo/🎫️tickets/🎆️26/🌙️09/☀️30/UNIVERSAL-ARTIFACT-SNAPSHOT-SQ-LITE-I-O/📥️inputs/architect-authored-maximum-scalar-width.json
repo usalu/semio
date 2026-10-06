@@ -1,0 +1,11 @@
+{
+  "qualification": "Actual independent SQLite authored schema scalar width",
+  "tableCount": 685,
+  "maximum": 32,
+  "tables": [
+    {
+      "name": "architect_performance_criterion",
+      "width": 32
+    }
+  ]
+}

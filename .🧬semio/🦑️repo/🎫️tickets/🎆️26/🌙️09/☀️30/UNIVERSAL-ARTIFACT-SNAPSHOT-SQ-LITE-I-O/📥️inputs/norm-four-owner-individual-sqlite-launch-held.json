@@ -1,0 +1,89 @@
+{
+  "qualification": "HELD comment-preserving exact region insertions; no production edits/gates; Types omitted because actual target absent",
+  "authority": [
+    {
+      "owner": "en1992",
+      "project": "@semio-tech/norm-en1992-rs",
+      "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust/📋️project.json",
+      "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust/📜️script.ts",
+      "supportedTargets": {
+        "test-snapshot-sqlite": "bun ./📜️script.ts test-snapshot-sqlite",
+        "test-snapshot-sqlite-native": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "test-snapshot-sqlite-source": "bun ./📜️script.ts test-snapshot-sqlite source"
+      },
+      "typesTargetSupported": false
+    },
+    {
+      "owner": "iso16757",
+      "project": "@semio-tech/norm-iso16757-rs",
+      "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/📋️project.json",
+      "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/📜️script.ts",
+      "supportedTargets": {
+        "test-snapshot-sqlite": "bun ./📜️script.ts test-snapshot-sqlite",
+        "test-snapshot-sqlite-native": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "test-snapshot-sqlite-source": "bun ./📜️script.ts test-snapshot-sqlite source"
+      },
+      "typesTargetSupported": false
+    },
+    {
+      "owner": "en1993",
+      "project": "@semio-tech/norm-en1993-rs",
+      "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/📋️project.json",
+      "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/📜️script.ts",
+      "supportedTargets": {
+        "test-snapshot-sqlite": "bun ./📜️script.ts test-snapshot-sqlite",
+        "test-snapshot-sqlite-native": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "test-snapshot-sqlite-source": "bun ./📜️script.ts test-snapshot-sqlite source"
+      },
+      "typesTargetSupported": false
+    },
+    {
+      "owner": "en1999",
+      "project": "@semio-tech/norm-en1999-rs",
+      "projectPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/📋️project.json",
+      "scriptPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/📜️script.ts",
+      "supportedTargets": {
+        "test-snapshot-sqlite": "bun ./📜️script.ts test-snapshot-sqlite",
+        "test-snapshot-sqlite-native": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "test-snapshot-sqlite-source": "bun ./📜️script.ts test-snapshot-sqlite source"
+      },
+      "typesTargetSupported": false
+    }
+  ],
+  "presence": [
+    {
+      "path": "/Users/ueli/Documents/semio/.vscode/launch.json",
+      "exactIndividualCommandsPresent": 0,
+      "newEntries": 12,
+      "newNamesUnique": true,
+      "newOrdersUnique": true
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.vscode/🧩️launch.seed.jsonc",
+      "exactIndividualCommandsPresent": 0,
+      "newEntries": 12,
+      "newNamesUnique": true,
+      "newOrdersUnique": true
+    }
+  ],
+  "pairs": [
+    {
+      "path": "/Users/ueli/Documents/semio/.vscode/launch.json",
+      "regions": [
+        {
+          "before": "    {\n      \"name\": \"⚖️gate📕️norm🌍️en1997🪶️sqlite🧪️all\",",
+          "after": "    {\n      \"name\": \"⚖️gate📕️norm🏛️en1992🪶️sqlite🧪️all\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1992-rs:test-snapshot-sqlite\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.405\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🏛️en1992🪶️sqlite🦀️native\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1992-rs:test-snapshot-sqlite-native\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.406\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🏛️en1992🪶️sqlite🟦️source\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1992-rs:test-snapshot-sqlite-source\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.407\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm📇️iso16757🪶️sqlite🧪️all\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-iso16757-rs:test-snapshot-sqlite\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.423\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm📇️iso16757🪶️sqlite🦀️native\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.424\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm📇️iso16757🪶️sqlite🟦️source\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-iso16757-rs:test-snapshot-sqlite-source\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.425\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🔩️en1993🪶️sqlite🧪️all\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1993-rs:test-snapshot-sqlite\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.429\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🔩️en1993🪶️sqlite🦀️native\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1993-rs:test-snapshot-sqlite-native\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.43\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🔩️en1993🪶️sqlite🟦️source\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1993-rs:test-snapshot-sqlite-source\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.431\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🪶️en1999🪶️sqlite🧪️all\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1999-rs:test-snapshot-sqlite\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.441\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🪶️en1999🪶️sqlite🦀️native\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1999-rs:test-snapshot-sqlite-native\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.442\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🪶️en1999🪶️sqlite🟦️source\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1999-rs:test-snapshot-sqlite-source\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.443\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🌍️en1997🪶️sqlite🧪️all\","
+        }
+      ]
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/.vscode/🧩️launch.seed.jsonc",
+      "regions": [
+        {
+          "before": "    {\n      \"name\": \"⚖️gate📕️norm🌍️en1997🪶️sqlite🧪️all\",",
+          "after": "    {\n      \"name\": \"⚖️gate📕️norm🏛️en1992🪶️sqlite🧪️all\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1992-rs:test-snapshot-sqlite\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.405\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🏛️en1992🪶️sqlite🦀️native\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1992-rs:test-snapshot-sqlite-native\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.406\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🏛️en1992🪶️sqlite🟦️source\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1992-rs:test-snapshot-sqlite-source\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.407\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm📇️iso16757🪶️sqlite🧪️all\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-iso16757-rs:test-snapshot-sqlite\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.423\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm📇️iso16757🪶️sqlite🦀️native\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.424\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm📇️iso16757🪶️sqlite🟦️source\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-iso16757-rs:test-snapshot-sqlite-source\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.425\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🔩️en1993🪶️sqlite🧪️all\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1993-rs:test-snapshot-sqlite\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.429\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🔩️en1993🪶️sqlite🦀️native\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1993-rs:test-snapshot-sqlite-native\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.43\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🔩️en1993🪶️sqlite🟦️source\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1993-rs:test-snapshot-sqlite-source\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.431\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🪶️en1999🪶️sqlite🧪️all\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1999-rs:test-snapshot-sqlite\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.441\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🪶️en1999🪶️sqlite🦀️native\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1999-rs:test-snapshot-sqlite-native\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.442\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🪶️en1999🪶️sqlite🟦️source\",\n      \"type\": \"node-terminal\",\n      \"request\": \"launch\",\n      \"command\": \"bun nx run @semio-tech/norm-en1999-rs:test-snapshot-sqlite-source\",\n      \"cwd\": \"${workspaceFolder}\",\n      \"presentation\": {\n        \"group\": \"4_gate\",\n        \"order\": 408.443\n      }\n    },\n    {\n      \"name\": \"⚖️gate📕️norm🌍️en1997🪶️sqlite🧪️all\","
+        }
+      ]
+    }
+  ]
+}

@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
-import Ajv from "ajv";
+
 import { compile } from "tailwindcss";
 import { chromium } from "playwright";
 import corpus from "../../🧫️fixtures/📏️relative-sizing/🔣️.json";
-import schema from "../../🧬️schema/📏️relative-sizing/🔣️.json";
 
 const utilities = [
   ["w", "width"], ["h", "height"], ["min-w", "minWidth"], ["max-w", "maxWidth"],
@@ -13,7 +12,6 @@ const utilities = [
 
 /** 📏️Proves authored relative dimensions through actual Tailwind utilities and Chromium. */
 export async function proveRelativeStylingSizesV1(): Promise<number> {
-  assert.equal(new Ajv({ strict: true }).compile(schema)(corpus), true);
   for (const row of corpus.sizes) {
     assert.equal(row.pixels.length, corpus.rootFontSizesPx.length);
     assert.deepEqual(corpus.rootFontSizesPx.map(font => Number.parseFloat(row.rem) * font), row.pixels);

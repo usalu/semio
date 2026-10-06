@@ -108,3 +108,6 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️mutation-vectors/🦀️.rs"]
 mod mutation_vectors;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

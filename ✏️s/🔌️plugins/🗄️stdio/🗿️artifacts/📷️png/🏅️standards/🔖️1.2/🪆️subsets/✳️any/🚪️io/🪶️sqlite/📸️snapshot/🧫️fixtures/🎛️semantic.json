@@ -1,0 +1,63 @@
+{
+  "schemaBytes": 7206,
+  "tableWidths": {
+    "png_background": 4,
+    "png_chromaticity": 9,
+    "png_chunk": 4,
+    "png_deflate_block": 9,
+    "png_deflate_code": 4,
+    "png_deflate_length": 5,
+    "png_deflate_token": 7,
+    "png_document": 3,
+    "png_gamma": 2,
+    "png_idat": 3,
+    "png_ihdr": 8,
+    "png_inflated_tail": 4,
+    "png_literal_octet": 4,
+    "png_packed_remainder": 3,
+    "png_palette": 6,
+    "png_physical": 4,
+    "png_sample": 4,
+    "png_scanline": 9,
+    "png_srgb": 2,
+    "png_stream": 7,
+    "png_text": 7,
+    "png_time": 7,
+    "png_transparency": 4,
+    "png_unknown_octet": 4
+  },
+  "cases": [
+    {
+      "id": "nativeCanonicalAsset",
+      "rawBytes": 145,
+      "rows": 45,
+      "valueBytes": 1612,
+      "role": "native",
+      "sha256": "a9e37b14842b4e6c0413da868aa7214ce1cfceaa690bdc579119e997f5e5f392"
+    },
+    {
+      "id": "sourceJsonNativeImage",
+      "rawBytes": 120,
+      "rows": 28,
+      "valueBytes": 1079,
+      "role": "native",
+      "sha256": "a39b62ca21cda8572574a8d4c454c9d2f6f9eabd542b6ed44ef38b5f9e9d3a2f"
+    },
+    {
+      "id": "emptyLiteral",
+      "rawBytes": 0,
+      "rows": 1,
+      "valueBytes": 24,
+      "role": "literal",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "invalidRawLiteral",
+      "rawBytes": 3,
+      "rows": 4,
+      "valueBytes": 120,
+      "role": "literal",
+      "sha256": "47ffa3ea45a70b8a41c2c0825df323c00a8b7a01c1ea06083cc41dddcc001123"
+    }
+  ]
+}

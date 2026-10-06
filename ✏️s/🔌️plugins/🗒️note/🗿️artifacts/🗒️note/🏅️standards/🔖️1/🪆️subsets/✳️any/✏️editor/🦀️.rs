@@ -12,7 +12,7 @@ use crate::editor::note::commands::{add_block, delete_block, delete_selection, d
 use crate::editor::note::commands::{engagement_input, engagement_submit, navigator_engagement_input};
 use crate::editor::note::commands::save_download;
 use crate::editor::note::commands::{nudge_selection, nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
-use crate::editor::note::commands::{set_active_example, set_fixture_json};
+use crate::editor::note::commands::{set_active_example, load_document_json};
 use crate::editor::note::commands::{set_camera, set_camera_zoom};
 use crate::editor::note::commands::{set_eraser_radius, set_pencil_width};
 use crate::editor::note::commands::{set_grid_opacity, set_grid_spacing, set_grid_subdivisions, set_grid_visible};
@@ -23,7 +23,7 @@ use crate::editor::note::panels::{catalogue as catalogue_panel, document as docu
 use crate::editor::note::presence::{NotePresence, NotePresenceMutation};
 use crate::editor::note::terminology::note_play_labels;
 use crate::op::NoteMutation;
-use crate::schema::empty_note_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
 use crate::{NoteBlockNode, NoteSnapshot, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ActionArgDef;
@@ -95,7 +95,7 @@ fn note_app_schema_descriptor() -> semio_framework_schema_registry::AppSchemaDes
 
 //#region 🔖️ResetDocument
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (see
-/// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`setFixtureJson` build a
+/// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`loadDocumentJson` build a
 /// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry. The spr is a
 /// fresh, edit-free op-log (`store::empty_document_spr`) — never a live `ArtifactEnvelope` minted just to
 /// print it: dropping such an envelope trapped the guest (`artifact envelope terminal shell reached Drop
@@ -212,7 +212,7 @@ semio_framework_plugin::app_commands! {
         "duplicateSelection" as "duplicate-selection" => duplicate_selection::DuplicateSelection,
         "patchBlocks" as "patch-blocks" => patch_blocks::PatchBlocks,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
-        "setFixtureJson" as "set-fixture-json" => set_fixture_json::SetFixtureJson,
+        "loadDocumentJson" as "load-document-json" => load_document_json::LoadDocumentJson,
         "inkApplyEvents" as "ink-apply-events" => ink_apply_events::InkApplyEvents,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "nudgeSelection" as "nudge-selection" => nudge_selection::NudgeSelection,
@@ -383,10 +383,10 @@ mod args_bridge {
                 NoteCommand::PatchBlocks(decode(action, only(entries, &["block_ids", "field", "value"]))?)
             }
             "setActiveExample" => NoteCommand::SetActiveExample(decode(action, only(fold(args, &[("value", "example_id"), ("id", "example_id")], &[("example_id", string(crate::standards::v1::subsets::any::examples::demo::ID))]), &["example_id"]))?),
-            "setFixtureJson" => {
+            "loadDocumentJson" => {
                 let mut entries = fold(args, &[("value", "json"), ("text", "json")], &[]);
                 map(&mut entries, "json", text);
-                NoteCommand::SetFixtureJson(decode(action, only(entries, &["json"]))?)
+                NoteCommand::LoadDocumentJson(decode(action, only(entries, &["json"]))?)
             }
             "inkApplyEvents" => {
                 let mut entries = fold(args, &[("gesture", "gesture_json")], &[]);
@@ -499,7 +499,7 @@ impl ArtifactEditor for NotePlayApp {
             "duplicateSelection" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "patchBlocks" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "setActiveExample" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
-            "setFixtureJson" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
+            "loadDocumentJson" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "inkApplyEvents" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "engagementSubmit" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
             "nudgeSelection" => semio_framework::ToolExecutionContract::resumable(65_536, 4_096, 1, 262_144, 7_500, 1, 1),
@@ -761,7 +761,7 @@ pub fn create_note_app() -> AppDefinition {
             .action_with(note_internal_action("duplicateBlock", LocalizedLabel::native("Duplicate Block", "Block duplizieren"), ActionKind::Mutation))
             .action_with(note_internal_action("patchBlocks", LocalizedLabel::native("Patch Blocks", "Blöcke aktualisieren"), ActionKind::Mutation))
             .action_with(note_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
-            .action_with(note_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation))
+            .action_with(note_internal_action("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), ActionKind::Mutation))
             .action_with(note_internal_action("inkApplyEvents", LocalizedLabel::native("Apply Note Events", "Notiz-Ereignisse anwenden"), ActionKind::Mutation))
             .action_with(note_internal_action("nudgeSelection", LocalizedLabel::native("Nudge Selection", "Auswahl verschieben"), ActionKind::Mutation))
             .action_with(note_internal_action("nudgeSelectionUp", LocalizedLabel::native("Nudge Selection Up", "Auswahl nach oben verschieben"), ActionKind::Mutation))
@@ -796,7 +796,7 @@ pub fn create_note_app() -> AppDefinition {
                     ActionArgOption::new(crate::standards::v1::subsets::any::examples::demo::ID, crate::standards::v1::subsets::any::examples::demo::label()),
                 ]).required().default_value(&crate::standards::v1::subsets::any::examples::demo::ID),
             ])
-            .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
+            .action_args("loadDocumentJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
             .action_args("setGridSpacing", vec![ActionArgDef::number("value", LocalizedLabel::native("Grid spacing", "Rasterabstand")).required()])
             .action_args("setGridSubdivisions", vec![ActionArgDef::slider("value", LocalizedLabel::native("Subdivisions", "Unterteilungen"), 1.0, 16.0).required()])
             .action_args("setGridOpacity", vec![ActionArgDef::slider("value", LocalizedLabel::native("Grid opacity", "Rasterdeckkraft"), 0.05, 1.0).required()])
@@ -853,7 +853,7 @@ pub fn create_note_app() -> AppDefinition {
             .action_describe("patchBlocks", LocalizedLabel::native("Sets one named property on several blocks at once.", "Setzt eine benannte Eigenschaft auf mehreren Blöcken gleichzeitig."))
             .action_describe("nudgeSelection", LocalizedLabel::native("Shifts the selected blocks by a given offset.", "Verschiebt die ausgewählten Blöcke um einen angegebenen Versatz."))
             .action_use_when("nudgeSelection", vec!["move the selection a little".into(), "shift these blocks".into()])
-            .action_describe("setFixtureJson", LocalizedLabel::native("Loads a whole note document from JSON text.", "Lädt ein vollständiges Notizdokument aus JSON-Text."))
+            .action_describe("loadDocumentJson", LocalizedLabel::native("Loads a whole note document from JSON text.", "Lädt ein vollständiges Notizdokument aus JSON-Text."))
             .action_describe("setGridVisible", LocalizedLabel::native("Shows or hides the page grid.", "Blendet das Seitenraster ein oder aus."))
             .action_describe("setGridSpacing", LocalizedLabel::native("Sets the distance between page grid lines.", "Legt den Abstand zwischen den Rasterlinien fest."))
             .action_describe("setGridSubdivisions", LocalizedLabel::native("Sets how many minor lines the page grid draws between major ones.", "Legt fest, wie viele Nebenlinien das Raster zwischen Hauptlinien zeichnet."))
@@ -866,7 +866,7 @@ pub fn create_note_app() -> AppDefinition {
             .action_destructive("deleteSelection")
             .action_destructive("deleteBlock")
             .action_destructive("setActiveExample")
-            .action_destructive("setFixtureJson")
+            .action_destructive("loadDocumentJson")
             .action_destructive("saveDownload")
             // 🖱️ Raw input plumbing — the surface and the keyboard feed these, agents never do.
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
@@ -897,7 +897,7 @@ pub fn create_note_app() -> AppDefinition {
             .action_interactive_job("duplicateSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("patchBlocks", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("loadDocumentJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("inkApplyEvents", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("nudgeSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)

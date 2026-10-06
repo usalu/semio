@@ -36,6 +36,62 @@ impl Default for PackLimits {
 }
 //#endregion 🔖️Limits
 
+/// 🛡️ How much a read verifies as it goes: `Trusted` skips all checksums (fastest,
+/// for already-verified local data), `Standard` (default) verifies every segment's CRC-32C as
+/// it's read, `Full` additionally re-hashes chunk/document content against the blake3 hashes in
+/// the chunk table and footer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum PackVerificationLevel {
+    Trusted,
+    #[default]
+    Standard,
+    Full,
+}
+
+impl PackVerificationLevel {
+    pub fn checks_crc(self) -> bool {
+        !matches!(self, Self::Trusted)
+    }
+
+    pub fn checks_content_hash(self) -> bool {
+        matches!(self, Self::Full)
+    }
+}
+/// ⚙️ Knobs for [`encode_document`]. `canonical` gates only the `OPTIONAL_CANONICAL`
+/// header bit — the sorted-fields/omitted-Absent/sorted-map-keys/minimal-varint/exact-f64/
+/// interning/packed-numeric rules are applied unconditionally (the purity LAW demands determinism
+/// regardless of `HashMap` iteration order, so there is no looser "non-canonical" code path).
+#[derive(Clone, Debug)]
+pub struct PackEncodeOptions {
+    pub canonical: bool,
+    pub codec: CodecId,
+    pub chunk_threshold: u64,
+    pub chunk_size: u64,
+    pub frame_size: u64,
+    pub preserve_unknown: bool,
+    pub limits: PackLimits,
+}
+
+impl Default for PackEncodeOptions {
+    fn default() -> Self {
+        Self { canonical: true, codec: CodecId(1), chunk_threshold: 256 * 1024, chunk_size: 1024 * 1024, frame_size: 1024 * 1024, preserve_unknown: true, limits: PackLimits::default() }
+    }
+}
+
+/// ⚙️ Knobs for [`decode_document`].
+#[derive(Clone, Debug)]
+pub struct PackDecodeOptions {
+    pub verification: PackVerificationLevel,
+    pub preserve_unknown: bool,
+    pub limits: PackLimits,
+}
+
+impl Default for PackDecodeOptions {
+    fn default() -> Self {
+        Self { verification: PackVerificationLevel::Standard, preserve_unknown: true, limits: PackLimits::default() }
+    }
+}
+
 //#region 🔖️Varint
 /// ➡️ Zigzag-encodes an `i64` into the `u64` domain: small magnitudes stay small
 /// regardless of sign. See <https://protobuf.dev/programming-guides/encoding/#signed-ints>.
@@ -116,81 +172,82 @@ pub fn is_minimal_varint(bytes: &[u8]) -> bool {
 //#endregion 🔖️Varint
 
 //#region 🔖️Bytes
-/// 👓️ A bounds-checked cursor over a borrowed byte slice — every read either succeeds
-/// or returns `PackError` (`Truncated`), it never panics or reads out of bounds.
-pub struct ByteReader<'a> {
-    bytes: &'a [u8],
-    pos: usize,
+#[derive(Clone, Copy)]
+enum ByteStorage<'a> { Slice(&'a [u8]), Paged(&'a crate::io::binary::operation_bytes::OwnedOperationBytes) }
+
+/// 📏️ A checked finite range retains the exact borrowed source owner.
+#[derive(Clone, Copy)]
+pub struct ByteSpan<'a> { source: ByteStorage<'a>, offset: usize, length: usize }
+impl<'a> ByteSpan<'a> {
+    pub fn from_slice(bytes: &'a [u8]) -> Self { Self { source: ByteStorage::Slice(bytes), offset: 0, length: bytes.len() } }
+    pub fn from_source(source: &'a crate::io::binary::operation_bytes::OwnedOperationBytes) -> Self { Self { source: ByteStorage::Paged(source), offset: 0, length: source.len() } }
+    pub fn len(self) -> usize { self.length }
+    pub fn is_empty(self) -> bool { self.length == 0 }
+    pub fn get(self, offset: usize) -> Option<&'a u8> {
+        if offset >= self.length { return None; }
+        match self.source { ByteStorage::Slice(bytes) => bytes.get(self.offset + offset), ByteStorage::Paged(source) => source.byte_ref(self.offset + offset) }
+    }
+    pub fn slice(self, offset: usize, length: usize) -> Result<Self, PackRefusal> {
+        if offset.checked_add(length).is_none_or(|end| end > self.length) { return Err(PackRefusal::Truncated(offset as u64)); }
+        Ok(Self { source: self.source, offset: self.offset + offset, length })
+    }
+    pub fn contiguous(self) -> Option<&'a [u8]> { match self.source { ByteStorage::Slice(bytes) => Some(&bytes[self.offset..self.offset + self.length]), ByteStorage::Paged(_) => None } }
+    pub fn iter(self) -> impl Iterator<Item = u8> + ExactSizeIterator + 'a { (0..self.length).map(move |index| *self.get(index).expect("checked borrowed operation byte range")) }
+}
+impl std::ops::Index<usize> for ByteSpan<'_> {
+    type Output = u8;
+    fn index(&self, index: usize) -> &u8 { self.get(index).expect("checked borrowed operation byte offset") }
 }
 
+/// 👓️ One bounds-checked cursor borrows either a slice or the genuine paged operation owner.
+pub struct ByteReader<'a> { bytes: ByteSpan<'a>, pos: usize }
 impl<'a> ByteReader<'a> {
-    pub fn new(bytes: &'a [u8]) -> Self {
-        Self { bytes, pos: 0 }
+    pub fn new(bytes: &'a [u8]) -> Self { Self::from_span(ByteSpan::from_slice(bytes)) }
+    pub fn from_source(bytes: &'a crate::io::binary::operation_bytes::OwnedOperationBytes) -> Self { Self::from_span(ByteSpan::from_source(bytes)) }
+    pub fn from_span(bytes: ByteSpan<'a>) -> Self { Self { bytes, pos: 0 } }
+    pub fn fork(&self) -> Self { Self { bytes: self.bytes, pos: self.pos } }
+    pub fn remaining(&self) -> usize { self.bytes.len() - self.pos }
+    pub fn position(&self) -> usize { self.pos }
+    pub fn read_span(&mut self, length: usize) -> Result<ByteSpan<'a>, PackRefusal> {
+        if length > self.remaining() { return Err(PackRefusal::Truncated(self.pos as u64)); }
+        let span = self.bytes.slice(self.pos, length)?;
+        self.pos += length;
+        Ok(span)
     }
-
-    /// 🪞️ Forks a borrowed read position without owning a payload or advancing its source cursor.
-    pub fn fork(&self)->Self{Self{bytes:self.bytes,pos:self.pos}}
-
-    pub fn remaining(&self) -> usize {
-        self.bytes.len() - self.pos
+    pub fn read_bytes(&mut self, length: usize) -> Result<&'a [u8], PackRefusal> {
+        if length > self.remaining() { return Err(PackRefusal::Truncated(self.pos as u64)); }
+        let span = self.bytes.slice(self.pos, length)?;
+        let bytes = span.contiguous().ok_or(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::UnsupportedOwner, what: "operation byte source", offset: self.pos as u64, detail: "contiguous read requires a slice source; use the borrowed byte range" })?;
+        self.pos += length;
+        Ok(bytes)
     }
-
-    pub fn position(&self) -> usize {
-        self.pos
+    pub fn read_u8(&mut self) -> Result<u8, PackRefusal> { Ok(self.read_span(1)?[0]) }
+    fn array<const N: usize>(&mut self) -> Result<[u8; N], PackRefusal> {
+        let span = self.read_span(N)?;
+        let mut bytes = [0; N];
+        for (output, byte) in bytes.iter_mut().zip(span.iter()) { *output = byte; }
+        Ok(bytes)
     }
-
-    pub fn read_u8(&mut self) -> Result<u8, PackRefusal> {
-        Ok(self.read_bytes(1)?[0])
-    }
-
-    pub fn read_u16_le(&mut self) -> Result<u16, PackRefusal> {
-        let bytes = self.read_bytes(2)?;
-        Ok(u16::from_le_bytes([bytes[0], bytes[1]]))
-    }
-
-    pub fn read_u32_le(&mut self) -> Result<u32, PackRefusal> {
-        let bytes = self.read_bytes(4)?;
-        Ok(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
-    }
-
-    pub fn read_u64_le(&mut self) -> Result<u64, PackRefusal> {
-        let bytes = self.read_bytes(8)?;
-        let mut array = [0u8; 8];
-        array.copy_from_slice(bytes);
-        Ok(u64::from_le_bytes(array))
-    }
-
-    pub fn read_f64_le(&mut self) -> Result<f64, PackRefusal> {
-        let bytes = self.read_bytes(8)?;
-        let mut array = [0u8; 8];
-        array.copy_from_slice(bytes);
-        Ok(f64::from_le_bytes(array))
-    }
-
+    pub fn read_u16_le(&mut self) -> Result<u16, PackRefusal> { Ok(u16::from_le_bytes(self.array()?)) }
+    pub fn read_u32_le(&mut self) -> Result<u32, PackRefusal> { Ok(u32::from_le_bytes(self.array()?)) }
+    pub fn read_u64_le(&mut self) -> Result<u64, PackRefusal> { Ok(u64::from_le_bytes(self.array()?)) }
+    pub fn read_f64_le(&mut self) -> Result<f64, PackRefusal> { Ok(f64::from_le_bytes(self.array()?)) }
+    pub fn read_array32(&mut self) -> Result<[u8; 32], PackRefusal> { self.array() }
     pub fn read_varint_u64(&mut self) -> Result<u64, PackRefusal> {
-        read_varint_u64(self.bytes, &mut self.pos)
-    }
-
-    pub fn read_varint_i64(&mut self) -> Result<i64, PackRefusal> {
-        read_varint_i64(self.bytes, &mut self.pos)
-    }
-
-    pub fn read_bytes(&mut self, len: usize) -> Result<&'a [u8], PackRefusal> {
-        if len > self.remaining() {
-            return Err(PackRefusal::Truncated(self.pos as u64));
+        let start = self.pos;
+        let mut result = 0;
+        for index in 0..10 {
+            let byte = self.read_u8()?;
+            let payload = u64::from(byte & 127);
+            if index == 9 && (byte & 128 != 0 || payload > 1) { return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes / 64 bits)".into() }); }
+            result |= payload << (index * 7);
+            if byte & 128 == 0 { return Ok(result); }
         }
-        let slice = &self.bytes[self.pos..self.pos + len];
-        self.pos += len;
-        Ok(slice)
+        Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "varint", offset: start as u64, detail: "overlong varint (exceeds 10 bytes)".into() })
     }
-
-    pub fn read_array32(&mut self) -> Result<[u8; 32], PackRefusal> {
-        let slice = self.read_bytes(32)?;
-        let mut array = [0u8; 32];
-        array.copy_from_slice(slice);
-        Ok(array)
-    }
+    pub fn read_varint_i64(&mut self) -> Result<i64, PackRefusal> { self.read_varint_u64().map(zigzag_decode) }
 }
+
 
 /// ✍️ An append-only byte buffer with typed little-endian and varint writers.
 #[derive(Default)]

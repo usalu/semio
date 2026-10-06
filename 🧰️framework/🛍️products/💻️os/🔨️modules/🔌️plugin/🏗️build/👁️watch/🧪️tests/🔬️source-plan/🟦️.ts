@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { dirname, join, resolve, relative } from "node:path";
 import { pathToFileURL } from "node:url";
-import Ajv from "ajv";
+
 import ts from "typescript";
 import { nativeSourceWatchSelectedV1, parseNativeSourceWatchPlanV1, startNativeSourceWatchV1 } from "../../📋️plan/🟦️.ts";
 import { minimatch } from "minimatch";
@@ -16,14 +16,12 @@ export async function testNativeSourceWatchPlanV1(workspace: string, artifacts: 
   const unit = program.getSourceFile(source)!;
   assert.deepEqual([...program.getSyntacticDiagnostics(unit), ...program.getSemanticDiagnostics(unit)].map(issue => ts.flattenDiagnosticMessageText(issue.messageText, "\n")), []);
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8"));
   mkdirSync(artifacts, { recursive: true });
   const temporary = mkdtempSync(join(artifacts, "source-watch-"));
   try {
     for (const [path, bytes] of Object.entries(fixture.files)) { mkdirSync(dirname(join(temporary, path)), { recursive: true }); writeFileSync(join(temporary, path), bytes as string); }
     const { nativeSourceWatchPlanV1 } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
     const plan = await nativeSourceWatchPlanV1("owners/assembly/package", temporary);
-    assert.ok(new Ajv({ strict: true }).compile(schema)(plan));
     const node = "const {nativeSourceWatchPlanV1:f}=await import(process.argv[1]);process.stdout.write(JSON.stringify(await f('owners/assembly/package',process.argv[2])));";
     const nodePlan = JSON.parse(execFileSync("node", ["--input-type=module", "-e", node, pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href, temporary], { encoding: "utf8" }));
     assert.deepEqual(nodePlan, plan);

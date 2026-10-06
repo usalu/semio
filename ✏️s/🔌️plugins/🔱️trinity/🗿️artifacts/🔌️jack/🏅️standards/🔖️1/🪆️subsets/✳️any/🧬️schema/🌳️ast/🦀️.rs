@@ -80,7 +80,7 @@ pub struct QueryResult {
     /// inline owner metadata at 256 bytes (`ARTIFACT_EPHEMERAL_TRANSFER_MAXIMUM_INLINE_BYTES`) —
     /// the heap payload stays owned either way, only the inline footprint must fit.
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub graph_fixture: Option<Box<JackSnapshot>>,
+    pub graph_snapshot: Option<Box<JackSnapshot>>,
 }
 
 impl semio_framework_dsl_record::DslField for QueryResult {
@@ -102,11 +102,11 @@ impl semio_framework_dsl_record::DslField for QueryResult {
 
 impl QueryResult {
     pub fn table(columns: Vec<String>, rows: Vec<Vec<PropertyValue>>) -> Self {
-        Self { kind: QueryResultKind::Table, columns, rows, graph_fixture: None }
+        Self { kind: QueryResultKind::Table, columns, rows, graph_snapshot: None }
     }
 
-    pub fn graph(columns: Vec<String>, graph_fixture: JackSnapshot) -> Self {
-        Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_fixture: Some(Box::new(graph_fixture)) }
+    pub fn graph(columns: Vec<String>, graph_snapshot: JackSnapshot) -> Self {
+        Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_snapshot: Some(Box::new(graph_snapshot)) }
     }
 }
 // #endregion 🔖️Ast

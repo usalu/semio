@@ -5,7 +5,7 @@
 //! yet a dialog submit) `name` opens the declared `createSpace` dialog instead of relaying — the local-
 //! only "create ephemeral studio" path (`create-studio`) is untouched and still works with no hub.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};

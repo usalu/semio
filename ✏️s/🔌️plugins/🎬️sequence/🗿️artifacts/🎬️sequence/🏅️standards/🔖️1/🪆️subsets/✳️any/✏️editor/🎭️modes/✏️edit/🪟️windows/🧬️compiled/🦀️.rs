@@ -19,6 +19,7 @@ const SEQUENCE_PLAY_SURFACE_COMPILED: &str = "sequence.play.compiled-dag";
 //#region 🔖️Definition
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: SEQUENCE_PLAY_WINDOW_COMPILED.into(),
         label: LocalizedLabel::native("DSL", "DSL"),
         body_key: SEQUENCE_PLAY_BODY_COMPILED.into(),

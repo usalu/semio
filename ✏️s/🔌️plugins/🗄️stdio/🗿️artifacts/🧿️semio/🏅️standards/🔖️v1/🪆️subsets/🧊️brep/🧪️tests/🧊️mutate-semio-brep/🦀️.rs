@@ -65,8 +65,15 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::mutations::{apply_semio_brep_mutation, decode_semio_brep_mutation_json, inverse_semio_brep_mutation, SemioBrepMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::{decode_semio_brep_pack, decode_semio_brep_snapshot_json, encode_semio_brep_pack, encode_semio_brep_snapshot_json, parse_semio_brep_dsl, print_semio_brep_dsl, SemioBrepSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::mutations::{apply_semio_brep_mutation, inverse_semio_brep_mutation, SemioBrepMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::text::mutations::{decode_semio_brep_mutation_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::binary::snapshot::{encode_semio_brep_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::binary::snapshot::{decode_semio_brep_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::text::snapshot::{print_semio_brep_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::text::snapshot::{parse_semio_brep_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::text::snapshot::{decode_semio_brep_snapshot_json};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::text::snapshot::{encode_semio_brep_snapshot_json};
     use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Bridges
@@ -89,7 +96,7 @@ mod subject {
     /// the doc string's own `prepare` list.
     fn prepared(ctx: &Context) -> Result<(SemioBrepSnapshot, SemioBrepMutation), String> {
         let (prepare, mutation) = super::plan_mutations(ctx)?;
-        let text = String::from_utf8(ctx.fixture_bytes(super::FOREST_DSL)?).map_err(|error| format!("the concrete-forest artifact is not UTF-8: {error}"))?;
+        let text = String::from_utf8(ctx.input_bytes(super::FOREST_DSL)?).map_err(|error| format!("the concrete-forest artifact is not UTF-8: {error}"))?;
         let mut snapshot = parse_semio_brep_dsl(&text)?;
         for step in &prepare {
             let step = mutation_of(step, &ctx.scenario.id)?;
@@ -143,13 +150,13 @@ mod subject {
     /// checked against the committed after-snapshot in role — a THIRD statement of what the verb
     /// means, independent of both implementations, kept from the case this one replaces.
     pub fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
-        let assets = ctx.step_fixture_uris();
+        let assets = ctx.step_input_uris();
         if assets.len() < 3 {
             return Err(format!("{}: expected three committed vector assets, found {}", ctx.scenario.id, assets.len()));
         }
-        let before = String::from_utf8(ctx.fixture_bytes(&assets[0])?).map_err(|error| error.to_string())?;
-        let payload = String::from_utf8(ctx.fixture_bytes(&assets[1])?).map_err(|error| error.to_string())?;
-        let after = String::from_utf8(ctx.fixture_bytes(&assets[2])?).map_err(|error| error.to_string())?;
+        let before = String::from_utf8(ctx.input_bytes(&assets[0])?).map_err(|error| error.to_string())?;
+        let payload = String::from_utf8(ctx.input_bytes(&assets[1])?).map_err(|error| error.to_string())?;
+        let after = String::from_utf8(ctx.input_bytes(&assets[2])?).map_err(|error| error.to_string())?;
         let mut current = decode_semio_brep_snapshot_json(&before).map_err(|error| format!("{}: the committed before-snapshot must decode: {error}", ctx.scenario.id))?;
         let expected = decode_semio_brep_snapshot_json(&after).map_err(|error| format!("{}: the committed after-snapshot must decode: {error}", ctx.scenario.id))?;
         let mutation = decode_semio_brep_mutation_json(&payload).map_err(|error| format!("{}: the committed mutation payload must decode: {error}", ctx.scenario.id))?;
@@ -166,7 +173,7 @@ mod subject {
     /// input" tripwire would be exactly backwards and its MIRROR law is asserted in its place through
     /// `law::carrier_is_exact`, which fails with the offset of the first differing byte.
     fn carrier_pair(ctx: &Context, dsl_uri: &str, pack_uri: &str, what: &str) -> Result<(SemioBrepSnapshot, Json), String> {
-        let dsl_bytes = ctx.fixture_bytes(dsl_uri)?;
+        let dsl_bytes = ctx.input_bytes(dsl_uri)?;
         let text = String::from_utf8(dsl_bytes.clone()).map_err(|error| format!("identity-round-trip: {what} is not UTF-8: {error}"))?;
         let parsed = parse_semio_brep_dsl(&text)?;
         let printed = print_semio_brep_dsl(&parsed);
@@ -175,7 +182,7 @@ mod subject {
         if reparsed != parsed {
             return Err(disagreement(&format!("identity-round-trip: printing {what} back to DSL and reparsing it lost content"), &reparsed, &parsed));
         }
-        let pack_bytes = ctx.fixture_bytes(pack_uri)?;
+        let pack_bytes = ctx.input_bytes(pack_uri)?;
         let unpacked = decode_semio_brep_pack(&pack_bytes)?;
         if unpacked != parsed {
             return Err(disagreement(&format!("identity-round-trip: the binary twin of {what} decodes to a different document than its text"), &unpacked, &parsed));

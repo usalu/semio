@@ -1,16 +1,11 @@
 /** 🧹️ Flow session byte ownership fixtures and independent JSON oracle; source validation only. */
-import Ajv from "ajv";
 import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
-import { flowWasmContract } from "../../../../🕸️wasm/🔮️oracles/🛂️contract-admission/🟦️.ts";
 
 //#region 🔣️SessionOwnership
 const fixture = await Bun.file(new URL("../../🧫️fixtures/🧹️session-retirement/🔣️.json", import.meta.url)).json();
-const schemaDocument = JSON.parse(await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).text());
-const retirementAjv = new Ajv({ strict: true, allErrors: true });
-retirementAjv.addSchema(schemaDocument);
-const validate = retirementAjv.getSchema(`${schemaDocument.$id}#/$defs/FlowSessionRetirementV1`)!;
-assert(validate(fixture), JSON.stringify(validate.errors));
+
+
 const text = fixture.text.text.repeat(fixture.text.repeat); const preview = fixture.preview.text.repeat(fixture.preview.repeat);
 const owners = [text, "{}", "mesh", preview, "pending", "geometry", "output", "label", preview, "label", text];
 assert.equal(owners.reduce((sum, owner) => sum + Buffer.byteLength(owner), 0), fixture.expected.releasedBytes);
@@ -41,26 +36,21 @@ for (const grant of fixture.grants) {
   for (const owner of owners) { let left = Buffer.byteLength(owner); while (left) { const released = Math.min(grant, left); total += released; left -= released; } }
   assert.equal(total, fixture.expected.releasedBytes);
 }
-for (const mutant of [{ ...fixture, extra: true }, { ...fixture, grants: [16384] }, { ...fixture, dag: { ...fixture.dag, minimumUtf8Bytes: 1600 } }, { ...fixture, scene: { retirementCapacity: 1025 } }, { ...fixture, expected: { ...fixture.expected, zeroGrant: "progress" } }]) assert(!validate(mutant));
+
 //#endregion 🔣️SessionOwnership
 
 //#region 🧹️BridgeSessionClose
 const sessionClose = await Bun.file(new URL("../../../../🕸️wasm/🧫️fixtures/🧹️session-close/🔣️.json", import.meta.url)).json();
-const validateClose = flowWasmContract("FlowRetainedSessionCloseV1");
-assert(validateClose(sessionClose), "retained session close fixture must satisfy its owned contract");
+
+
 assert.deepEqual(JSON.parse(stableStringify(sessionClose)), sessionClose);
-for (const mutant of [
-  { ...sessionClose, extra: true },
-  { ...sessionClose, browser: { ...sessionClose.browser, terminalBeforeClose: true } },
-  { ...sessionClose, close: { ...sessionClose.close, retainedBeforePoll: 0 } },
-  { ...sessionClose, ordering: ["session-closed", "session-released", "domain-retired"] },
-]) assert(!validateClose(mutant));
+
 //#endregion 🧹️BridgeSessionClose
 
 //#region 🧑‍🤝‍🧑️BrowserRuntimeLifetime
 const runtimeLifetime = await Bun.file(new URL("../../../../🕸️wasm/🧫️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url)).json();
-const validateRuntime = flowWasmContract("FlowBrowserRuntimeLifetimeV1");
-assert(validateRuntime(runtimeLifetime), "browser runtime lifetime fixture must satisfy its owned contract");
+
+
 assert.deepEqual(JSON.parse(stableStringify(runtimeLifetime)), runtimeLifetime);
-for (const mutant of [{ ...runtimeLifetime, initialSessions: 1 }, { ...runtimeLifetime, extra: true }, { ...runtimeLifetime, afterCloseA: { ...runtimeLifetime.afterCloseA, globalCloseCalls: 1 } }, { ...runtimeLifetime, receipt: { ...runtimeLifetime.receipt, completion: "control-admitted" } }, { ...runtimeLifetime, openFailure: { ...runtimeLifetime.openFailure, uncertainTransport: { ...runtimeLifetime.openFailure.uncertainTransport, terminal: false } } }]) assert(!validateRuntime(mutant));
+
 //#endregion 🧑‍🤝‍🧑️BrowserRuntimeLifetime

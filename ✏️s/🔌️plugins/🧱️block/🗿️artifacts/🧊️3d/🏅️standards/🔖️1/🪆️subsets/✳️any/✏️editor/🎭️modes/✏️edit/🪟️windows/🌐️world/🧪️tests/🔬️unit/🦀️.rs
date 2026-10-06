@@ -18,7 +18,7 @@ async fn definition_declares_the_world_surface_and_body_key() {
 /// the one-shot fit, and it stages it for a document that really does carry the mesh.
 #[semio_framework_async_macros::async_test]
 async fn world_scene_stages_a_one_shot_fit_for_the_booted_example() {
-    let definition = crate::standards::v1::subsets::any::schema::snapshot::text::block3d_boot_snapshot();
+    let definition = crate::standards::v1::subsets::any::io::text::snapshot::block3d_boot_snapshot();
     assert!(!definition.representations.is_empty(), "the booted example must carry the representation whose mesh this window frames");
     let node = render(&definition, &Block3dConfig::default(), "block3d-window-1", "select", None).expect("the booted example assembles its world surface");
     let scene: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
@@ -37,7 +37,7 @@ async fn world_scene_stages_a_one_shot_fit_for_the_booted_example() {
 /// dragging a vortex must not yank the camera out from under the hand that is dragging it.
 #[semio_framework_async_macros::async_test]
 async fn fit_revision_tracks_document_identity_not_vortex_edits() {
-    use crate::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT, BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT};
+    use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT, BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT};
     let forest = parse_dsl(BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).expect("the concrete forest example parses");
     let capsule = parse_dsl(BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).expect("the nakagin capsule example parses");
     assert_ne!(crate::block3d_world_fit_revision(&forest), crate::block3d_world_fit_revision(&capsule), "two examples with different kinds and meshes must each get their own framing");

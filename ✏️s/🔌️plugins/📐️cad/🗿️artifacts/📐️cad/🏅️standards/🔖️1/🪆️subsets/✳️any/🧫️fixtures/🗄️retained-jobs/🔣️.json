@@ -1,5 +1,4 @@
 {
-  "$schema": "../🧬️schema/🔣️.json#/$defs/CadRetainedJobs",
   "owner": "CadPlayApp",
   "documentSchema": "cad.scene",
   "payloadSchema": "cad.scene.tool-command.v1",

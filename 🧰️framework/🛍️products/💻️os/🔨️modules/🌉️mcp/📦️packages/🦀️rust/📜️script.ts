@@ -168,8 +168,9 @@ class HubLiveCatalogOracleScript extends BundleScript {
   run(): void {
     const fixtureRoot = join(this.root, "..", "..", "🏠️workspace", "🧫️fixtures", "🔐️hub-live-catalog");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const validate = workspaceContract(this.root, "HubLiveCatalogContractV1");
-    if (!validate(fixture)) throw new Error("invalid Hub live-catalog fixture: " + JSON.stringify(validate.errors));
+    const validate = workspaceContract(this.root, "HubLiveCatalogSelectionV1");
+    const { expectedInferenceOwners, ...selection } = fixture.selection;
+    if (!validate(selection)) throw new Error("invalid Hub live-catalog selection: " + JSON.stringify(validate.errors));
     const project = (binding: string): string[] => (binding === "ready" ? [fixture.selection.package.pluginId] : []);
     for (const state of fixture.states) {
       deepStrictEqual(project(state.binding), state.selectedPlugins);
@@ -242,8 +243,8 @@ class CanonicalCheckpointResourceOracleScript extends BundleScript {
   run(): void {
     const fixtureRoot = join(this.root, "..", "..", "🏠️workspace", "🧫️fixtures", "🔐️canonical-checkpoint-resource");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-    const validate = workspaceContract(this.root, "CanonicalCheckpointResourceContractV1");
-    if (!validate(fixture)) throw new Error("invalid canonical checkpoint resource fixture: " + JSON.stringify(validate.errors));
+    const validate = workspaceContract(this.root, "CanonicalCheckpointResourceValueV1");
+    if (!validate(fixture.resource.value)) throw new Error("invalid canonical checkpoint resource: " + JSON.stringify(validate.errors));
     const digest = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
     const untrusted = fixture.resource.value.untrusted;
     const pack = Buffer.from(untrusted.content.packBase64, "base64");

@@ -132,6 +132,7 @@ typed_scalar!(
     Trigger,
     ContainerRole,
     InputKind,
+    SelectAppearance,
     ToggleAppearance,
     SliderAppearance,
     UiNumberScale,

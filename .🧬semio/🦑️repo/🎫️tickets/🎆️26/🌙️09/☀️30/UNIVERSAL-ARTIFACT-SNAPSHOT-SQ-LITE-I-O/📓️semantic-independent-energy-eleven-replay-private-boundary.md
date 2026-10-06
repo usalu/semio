@@ -1,0 +1,3 @@
+# Energy Eleven Replay Private Boundary
+
+The retained [eleven-owner replay log](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-eleven-native-owning-original-semantic-after.log:20932) reports E0603 before Energy runtime. Native sibling calls sqlite::semantic_cells::admit_record at native line17, while the census function is pub(super) at cells179, visible only to sqlite's parent scope. Scope the function to the Snapshot parent, for example pub(in super::super), rather than exporting a new public API. No later owning summary was present at this readback; no Energy runtime qualification is inferred.

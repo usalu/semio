@@ -185,8 +185,8 @@ test("keeps fixture provenance output isolated from committed expectations", () 
   const source = readFileSync(resolve(domainRoot, "🧾️provenance/📋️orchestration/🟦️.ts"), "utf8");
   expect(source).toContain('testCacheDir(this.repoRoot, "work")');
   expect(source).toContain("rmSync(outDir, { recursive: true, force: true })");
-  expect(source).toContain("publishFixtureManifest");
-  expect(source).toContain("installFixtureFile");
+  expect(source).toContain("publishTestEvidence");
+  expect(source).toContain("installEvidenceFile");
   expect(source).not.toMatch(/writeFileSync\([^\n]*fixture\.(?:before|after)/);
 });
 

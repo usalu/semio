@@ -1,0 +1,1479 @@
+{
+  "schemaBytes": 1155,
+  "tableCount": 4,
+  "maxColumns": 12,
+  "originalCases": [
+    {
+      "key": "nativeMatchedFull",
+      "rows": 6,
+      "semanticBytes": 320,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 176
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "nodesEdgesEmpty",
+      "rows": 1,
+      "semanticBytes": 24,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    }
+  ],
+  "wordCases": [
+    {
+      "key": "full-0000000000000000",
+      "word": "0000000000000000",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "0000000000000000"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 320,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 176
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-0000000000000000",
+      "word": "0000000000000000",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "0000000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 117,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 93
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "full-8000000000000000",
+      "word": "8000000000000000",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "8000000000000000"
+              },
+              "y": {
+                "bits": "8000000000000000"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 320,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 176
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-8000000000000000",
+      "word": "8000000000000000",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "8000000000000000"
+              },
+              "y": {
+                "bits": "8000000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 117,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 93
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "full-0000000000000001",
+      "word": "0000000000000001",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "0000000000000001"
+              },
+              "y": {
+                "bits": "0000000000000001"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 320,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 176
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-0000000000000001",
+      "word": "0000000000000001",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "0000000000000001"
+              },
+              "y": {
+                "bits": "0000000000000001"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 117,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 93
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "full-000fffffffffffff",
+      "word": "000fffffffffffff",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "000fffffffffffff"
+              },
+              "y": {
+                "bits": "000fffffffffffff"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 320,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 176
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-000fffffffffffff",
+      "word": "000fffffffffffff",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "000fffffffffffff"
+              },
+              "y": {
+                "bits": "000fffffffffffff"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 117,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 93
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "full-7ff0000000000000",
+      "word": "7ff0000000000000",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "7ff0000000000000"
+              },
+              "y": {
+                "bits": "7ff0000000000000"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 340,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 196
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-7ff0000000000000",
+      "word": "7ff0000000000000",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "7ff0000000000000"
+              },
+              "y": {
+                "bits": "7ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 137,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 113
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "full-fff0000000000000",
+      "word": "fff0000000000000",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "fff0000000000000"
+              },
+              "y": {
+                "bits": "fff0000000000000"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 340,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 196
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-fff0000000000000",
+      "word": "fff0000000000000",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "fff0000000000000"
+              },
+              "y": {
+                "bits": "fff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 137,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 113
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "full-7ff8000000000011",
+      "word": "7ff8000000000011",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "7ff8000000000011"
+              },
+              "y": {
+                "bits": "7ff8000000000011"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 298,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 154
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-7ff8000000000011",
+      "word": "7ff8000000000011",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "7ff8000000000011"
+              },
+              "y": {
+                "bits": "7ff8000000000011"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 95,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 71
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "full-7ff0000000000007",
+      "word": "7ff0000000000007",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "7ff0000000000007"
+              },
+              "y": {
+                "bits": "7ff0000000000007"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 298,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 154
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-7ff0000000000007",
+      "word": "7ff0000000000007",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "7ff0000000000007"
+              },
+              "y": {
+                "bits": "7ff0000000000007"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 95,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 71
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "full-fff8000000000011",
+      "word": "fff8000000000011",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "fff8000000000011"
+              },
+              "y": {
+                "bits": "fff8000000000011"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 298,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 154
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-fff8000000000011",
+      "word": "fff8000000000011",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "fff8000000000011"
+              },
+              "y": {
+                "bits": "fff8000000000011"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 95,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 71
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "full-fff0000000000007",
+      "word": "fff0000000000007",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "fff0000000000007"
+              },
+              "y": {
+                "bits": "fff0000000000007"
+              }
+            },
+            "params": [
+              {
+                "key": "same",
+                "value": "first"
+              },
+              {
+                "key": "same",
+                "value": "second"
+              }
+            ]
+          },
+          {
+            "id": "target",
+            "kind": "output",
+            "label": "end",
+            "position": {
+              "x": {
+                "bits": "0000000000000000"
+              },
+              "y": {
+                "bits": "3ff0000000000000"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge",
+            "kind": "data",
+            "from": {
+              "node": "source",
+              "port": "out"
+            },
+            "to": {
+              "node": "target",
+              "port": "in"
+            }
+          }
+        ]
+      },
+      "rows": 6,
+      "semanticBytes": 298,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 1,
+          "semanticBytes": 53
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 2,
+          "semanticBytes": 154
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 2,
+          "semanticBytes": 67
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    },
+    {
+      "key": "singleNodeEmptyRelations-fff0000000000007",
+      "word": "fff0000000000007",
+      "snapshot": {
+        "schema": "stdio.semio.flow",
+        "nodes": [
+          {
+            "id": "source",
+            "kind": "input",
+            "label": "Grüße\u0000世界",
+            "position": {
+              "x": {
+                "bits": "fff0000000000007"
+              },
+              "y": {
+                "bits": "fff0000000000007"
+              }
+            },
+            "params": []
+          }
+        ],
+        "edges": []
+      },
+      "rows": 2,
+      "semanticBytes": 95,
+      "tables": [
+        {
+          "table": "semio_flow_document",
+          "rows": 1,
+          "semanticBytes": 24
+        },
+        {
+          "table": "semio_flow_edge",
+          "rows": 0,
+          "semanticBytes": 0
+        },
+        {
+          "table": "semio_flow_node",
+          "rows": 1,
+          "semanticBytes": 71
+        },
+        {
+          "table": "semio_flow_parameter",
+          "rows": 0,
+          "semanticBytes": 0
+        }
+      ],
+      "integrity": {
+        "integrity_check": "ok"
+      },
+      "foreignKeys": []
+    }
+  ],
+  "publicMetadata": {
+    "binaryValueBytes": 41,
+    "textValueBytes": 39,
+    "rows": 1,
+    "schemaBytes": 293,
+    "maxColumns": 12,
+    "oneShortColumns": 11
+  }
+}

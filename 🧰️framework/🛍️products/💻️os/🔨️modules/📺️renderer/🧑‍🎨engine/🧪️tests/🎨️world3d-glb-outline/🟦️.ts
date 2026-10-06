@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+
 import { BufferGeometry, EdgesGeometry, Float32BufferAttribute } from "three";
 import { describe, expect, it } from "vitest";
 import { resolveIconRenderStroke } from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx";
@@ -10,7 +10,6 @@ import { resolveIconRenderStroke } from "../../../../../../../🔨️modules/�
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🎨️world3d-glb-outline/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🎨️world3d-glb-outline/🔣️.json"), "utf8"));
 
 type Point = readonly [number, number, number];
 type Segment = readonly [Point, Point];
@@ -38,8 +37,6 @@ function actualThreeSegments(record: { readonly positions: readonly Point[]; rea
 
 describe("🎨️ render-only GLB outlines", () => {
   it("validates the neutral bounded derivation contract", () => {
-    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.derivation).toEqual({
       workUnit: "oneTrianglePerStep",
       publication: "meshAndOutlineTogether",

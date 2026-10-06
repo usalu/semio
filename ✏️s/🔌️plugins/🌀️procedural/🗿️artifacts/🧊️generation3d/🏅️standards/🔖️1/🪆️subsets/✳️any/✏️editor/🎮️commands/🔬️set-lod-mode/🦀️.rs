@@ -1,7 +1,7 @@
 //! 👁️ 👁️ Generation3d play app commands command — `set-lod-mode`.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

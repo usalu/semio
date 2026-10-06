@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 6,
+  "maxItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "action",
+      "refused"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "action": {
+        "enum": [
+          "version",
+          "native-metadata",
+          "unbound",
+          "duplicate",
+          "zero",
+          "cancel"
+        ]
+      },
+      "refused": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@
 package adapter
 
 import (
+	json "encoding/json"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,14 +12,36 @@ import (
 	host "semio.tech/repo/test"
 )
 
+type planningVector struct {
+	// 🏷️ID is the scenario-local id.
+	ID string `json:"id"`
+	// 🔭️Scope is the scope to plan.
+	Scope testrunner.TestScope `json:"scope"`
+	// 🗺️Expected is the plan the scope must produce.
+	Expected *testrunner.InvocationPlan `json:"expected,omitempty"`
+}
+
+type planningVectors struct {
+	// 🌍️Snapshot is the world the scopes are planned against.
+	Snapshot testrunner.FilesystemSnapshot `json:"snapshot"`
+	// 🗺️Vectors are the vectors.
+	Vectors []planningVector `json:"vectors"`
+}
+
+func parsePlanningVectors(source []byte) (planningVectors, error) {
+	vectors := planningVectors{}
+	err := json.Unmarshal(source, &vectors)
+	return vectors, err
+}
+
 // region 🔖️Support
 
-func vectors(ctx *host.Context) (testrunner.PlanningVectors, error) {
-	source, err := ctx.FixtureBytes("shared://🗺️planning-vectors.json")
+func vectors(ctx *host.Context) (planningVectors, error) {
+	source, err := ctx.InputBytes("shared://🗺️planning-vectors.json")
 	if err != nil {
-		return testrunner.PlanningVectors{}, err
+		return planningVectors{}, err
 	}
-	return testrunner.ParsePlanningVectors(source)
+	return parsePlanningVectors(source)
 }
 
 func planJSON(plan testrunner.InvocationPlan) (any, error) {
@@ -29,7 +52,7 @@ func planJSON(plan testrunner.InvocationPlan) (any, error) {
 	return value, nil
 }
 
-func planOf(fixture *testrunner.PlanningVectors, id string) testrunner.InvocationPlan {
+func planOf(fixture *planningVectors, id string) testrunner.InvocationPlan {
 	for _, vector := range fixture.Vectors {
 		if vector.ID == id {
 			return fixture.Snapshot.PlanScope(vector.Scope)

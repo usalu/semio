@@ -14,7 +14,21 @@
       "description": "Aggregate discriminator spliced in by StlMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Solid name",
+          "de": "Körpername"
+        },
+        "description": {
+          "en": "Name written after the `solid` keyword.",
+          "de": "Name, der nach dem Schlüsselwort `solid` steht."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

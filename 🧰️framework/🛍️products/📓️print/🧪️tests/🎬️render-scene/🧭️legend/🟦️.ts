@@ -1,5 +1,5 @@
 /** 🧪️ Canonical legend controls measured against independent D3, Canvas and neutral geometry. */
-import {inferVizChart} from "../../../🧬️schema/💡️inferences/🟦️.ts";
+import {inferVizChart} from "../../../🔨️modules/🏠️host/💡️inferences/🟦️.ts";;
 import type {VizChartSpecification} from "../../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 import {scaleLinear,scaleOrdinal} from "d3-scale";
 import {format} from "d3-format";

@@ -454,8 +454,8 @@ pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) ->
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub async fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8]) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
 where
-    P: Clone + store::ToValue + store::FromValue + store::ArtifactPack + Send + 'static,
-    Mutation: Clone + store::ToValue + store::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + Send + 'static,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
     let parsed = store::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;
     store::ArtifactStore::new(parsed.envelope).await.map_err(|error| SpaceZipError::Pack(error.to_string()))

@@ -10,5 +10,5 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_d
 pub fn register() {}
 
 pub fn serialize_bytes(snapshot: &GisMapSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    encode_drawing(&gis_map_snapshot_to_drawing(snapshot), SemioDrawingFormat::Pdf { version: "1.4" }).map_err(|error| semio_framework_diagnostic::TextError::new(format!("gismap→pdf: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
+    encode_drawing(&gis_map_snapshot_to_drawing(snapshot), SemioDrawingFormat::Pdf { version: "1.4" }).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("gismap→pdf: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }

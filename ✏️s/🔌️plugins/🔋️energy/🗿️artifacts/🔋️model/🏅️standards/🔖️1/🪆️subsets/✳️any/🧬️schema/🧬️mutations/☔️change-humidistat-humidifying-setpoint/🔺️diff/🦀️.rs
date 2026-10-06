@@ -24,6 +24,6 @@ pub fn diff(payload: &super::ChangeHumidistatHumidifyingSetpointSchedule, base: 
     if let Some(item) = model.humidistats.iter_mut().find(|item| item.id == payload.id) {
         item.humidifying_setpoint_schedule_id = payload.new_humidifying_setpoint_schedule_id;
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

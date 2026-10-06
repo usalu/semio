@@ -17,11 +17,41 @@
     },
     "slide_index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Slide",
+          "de": "Folie"
+        },
+        "description": {
+          "en": "Index of the slide, counted from 0.",
+          "de": "Index der Folie, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "shape_index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the shapes of the slide at which it is inserted, counted from 0.",
+          "de": "Position unter den Formen der Folie, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
     },
     "shape": {
       "$ref": "#/$defs/SlideShape",

@@ -13,10 +13,39 @@
     "index": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Insert position",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Position among the lines at which it is inserted, counted from 0.",
+          "de": "Position unter den Zeilen, an der eingefügt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "text": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Line text",
+          "de": "Zeilentext"
+        },
+        "description": {
+          "en": "Text of the line without its line break.",
+          "de": "Text der Zeile ohne ihren Zeilenumbruch."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

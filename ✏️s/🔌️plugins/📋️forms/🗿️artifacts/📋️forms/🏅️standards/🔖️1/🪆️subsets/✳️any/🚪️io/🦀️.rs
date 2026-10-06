@@ -52,3 +52,12 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     }
 }
 //#endregion 🔖️IoDeclaration
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

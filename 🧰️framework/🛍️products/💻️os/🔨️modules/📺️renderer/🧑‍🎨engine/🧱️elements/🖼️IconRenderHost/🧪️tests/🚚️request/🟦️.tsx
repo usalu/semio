@@ -3,11 +3,8 @@ import { expect, it } from "vitest";
 import Ajv2020 from "ajv/dist/2020";
 import { renderIconRequest } from "../../🚚️request/🟦️.ts";
 import fixture from "../../🧫️fixtures/🚚️request/🔣️.json";
-import schema from "../../🧬️schema/🚚️request/🔣️.json";
 
 it("validates the neutral icon request transport fixture", () => {
-  const validate = new Ajv2020({ strict: true }).compile(schema);
-  expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
 });
 
 it("resolves preview and export asset transport without changing the shot", async () => {

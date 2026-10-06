@@ -24,6 +24,7 @@
           "en": "Target index in the list, counted from 0.",
           "de": "Zielindex in der Liste, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 10
@@ -42,6 +43,7 @@
           "en": "Index of the buffer, counted from 0.",
           "de": "Index des Puffers, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 20
@@ -57,6 +59,7 @@
           "de": "Byte-Versatz"
         },
         "unit": "B",
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 30
@@ -72,6 +75,7 @@
           "de": "Byte-Länge"
         },
         "unit": "B",
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 40

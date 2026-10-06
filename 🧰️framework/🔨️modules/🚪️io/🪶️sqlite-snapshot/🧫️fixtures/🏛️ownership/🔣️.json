@@ -1,0 +1,20 @@
+{
+  "owner": "semio-framework-io-sqlite-snapshot",
+  "definition": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🦀️.rs",
+  "requiredExports": [
+    "artifact",
+    "transfer",
+    "export_sqlite_database_controlled",
+    "import_sqlite_database_controlled",
+    "validate_sqlite_database_schema_controlled",
+    "validate_sqlite_table_schema_controlled"
+  ],
+  "cases": [
+    {
+      "id": "definition",
+      "kind": "definition",
+      "path": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/🦀️.rs",
+      "binding": "component"
+    }
+  ]
+}

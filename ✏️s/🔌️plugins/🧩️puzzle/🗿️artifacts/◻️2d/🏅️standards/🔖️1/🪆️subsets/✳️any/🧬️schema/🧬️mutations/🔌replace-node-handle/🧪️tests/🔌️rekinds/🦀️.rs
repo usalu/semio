@@ -1,4 +1,4 @@
-//! 🧪️ `replace-node-handle` fixture — `🔌️rekinds`.
+//! 🧪️ `replace-node-handle` snapshot — `🔌️rekinds`.
 //!
 //! The one vector that settles what `replace-node-handle` DOES: an unconnected door of the second tambour, re-kinded to a kind the compatibility relation admits, really replaces the addressed handle in place — it is not a no-op, and neither an attached edge nor an unadmitted kind is what a refusal would be about.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

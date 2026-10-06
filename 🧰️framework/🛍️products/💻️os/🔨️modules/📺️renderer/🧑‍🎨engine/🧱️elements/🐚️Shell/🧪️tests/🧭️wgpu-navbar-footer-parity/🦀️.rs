@@ -397,15 +397,15 @@ fn a_focused_world_window_does_not_retire_its_hidden_sibling() {
 /// `" · "` — React's `appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))` — never the
 /// artifact-dialect id.
 ///
-/// 🩸️ wgpu painted `session.app.id`, i.e. `s.puzzle.puzzle3d@1/*#editor`, where React paints
-/// `semio · puzzle · 3d` (`📓️audit-visual-parity-puzzle3d.md` §2).
+/// 🩸️ wgpu painted `session.app.id`, i.e. `fixture.scene@1/*#editor`, where React paints
+/// `workspace · examples · scene` (`📓️audit-visual-parity-puzzle3d.md` §2).
 #[test]
 fn the_navbar_title_is_the_apps_breadcrumb_not_its_dialect_id() {
     let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
-    app.id = "s.puzzle.puzzle3d@1/*#editor".into();
-    app.breadcrumb = vec!["semio".into(), "puzzle".into(), "3d".into()];
+    app.id = "fixture.scene@1/*#editor".into();
+    app.breadcrumb = vec!["workspace".into(), "examples".into(), "scene".into()];
     app.terminology_breadcrumbs = std::collections::HashMap::from([("reuse".to_string(), vec!["Entwerfen mit Bestand".to_string(), "Aggregator".to_string()])]);
-    assert_eq!(shell_navbar_title(&app, "native"), "semio · puzzle · 3d");
+    assert_eq!(shell_navbar_title(&app, "native"), "workspace · examples · scene");
     assert_eq!(shell_navbar_title(&app, "reuse"), "Entwerfen mit Bestand · Aggregator", "🗺️ a terminology override replaces the WHOLE breadcrumb, as React's `terminologyBreadcrumbs` does");
     assert!(!shell_navbar_title(&app, "native").contains(&app.id), "🗺️ the raw dialect id never reaches the navbar");
 
@@ -611,23 +611,15 @@ fn the_shared_band_fixture_and_custom_cap_metrics_hold_in_rust() {
 
 //#region 🎓️Introduction
 
-/// 🎓️ **The introduction-survives-the-manifest law.** The puzzle plugin AUTHORS an introduction for
-/// its 3d editor, and the `AppDefinition` this renderer deserialises keeps it — which is the one input
-/// `auto_start_introduction` gates on (`session.app.introduction.is_some()`). A schema drift that
-/// silently dropped the field would leave the wgpu shell with a tour that can never arm while React's
-/// still does, and nothing else in this crate would notice.
-///
-/// 🔍️ The live counter-evidence this law was written against: a `dumpChrome` of the running wgpu boot
-/// DID return `shell.tour.skip` / `shell.tour.next` rows (`📓️audit-visual-parity-puzzle3d.md` §1), so
-/// `has_introduction` was already true on this target — this pins that it stays true.
+/// 🎓️ Keeps a declared introduction available through the shell manifest boundary.
 #[test]
-fn the_puzzle3d_app_carries_the_introduction_the_tour_arms_on() {
-    let path = repo_root().join("✏️s/🔌️plugins/🧩️puzzle/🔣️.json");
-    let descriptor: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("the puzzle descriptor is JSON");
-    let apps = descriptor["manifest"]["apps"].as_array().expect("the puzzle descriptor declares apps");
-    let editor = apps.iter().find(|app| app["id"].as_str() == Some("s.puzzle.puzzle3d@1/*#editor")).expect("🎓️ the puzzle descriptor declares the puzzle3d editor");
+fn app_manifest_carries_the_introduction_the_tour_arms_on() {
+    let path = repo_root().join("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🎓️manifest/🔣️.json");
+    let descriptor: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("the owned descriptor is JSON");
+    let apps = descriptor["manifest"]["apps"].as_array().expect("the owned descriptor declares apps");
+    let editor = apps.iter().find(|app| app["id"].as_str() == Some("fixture.scene@1/*#editor")).expect("🎓️ the owned descriptor declares the scene editor");
     let authored = editor.get("introduction").cloned().unwrap_or(Value::Null);
-    assert!(!authored.is_null(), "🎓️ the puzzle3d editor authors an introduction");
+    assert!(!authored.is_null(), "🎓️ the scene editor authors an introduction");
     let introduction: semio_framework::IntroductionDefinition =
         serde_json::from_value(authored).expect("🎓️ it deserialises through the very `IntroductionDefinition` `AppDefinition::introduction` carries, so a schema drift that dropped the field fails here");
     assert!(!introduction.steps.is_empty(), "🎓️ the tour has steps to walk");
@@ -636,8 +628,8 @@ fn the_puzzle3d_app_carries_the_introduction_the_tour_arms_on() {
     app.id = editor["id"].as_str().expect("the authored id").to_string();
     app.breadcrumb = editor["breadcrumb"].as_array().expect("the authored breadcrumb").iter().map(|part| part.as_str().expect("breadcrumb part").to_string()).collect();
     app.introduction = Some(introduction);
-    assert_eq!(app.breadcrumb, vec!["semio".to_string(), "puzzle".to_string(), "3d".to_string()], "🎓️ and the navbar title law's own oracle is the authored breadcrumb");
-    assert_eq!(shell_navbar_title(&app, "native"), "semio · puzzle · 3d");
+    assert_eq!(app.breadcrumb, vec!["workspace".to_string(), "examples".to_string(), "scene".to_string()], "🎓️ and the navbar title law's own oracle is the authored breadcrumb");
+    assert_eq!(shell_navbar_title(&app, "native"), "workspace · examples · scene");
 
     assert!(should_auto_start_introduction(&app.id, app.introduction.is_some(), false, false, false, false), "🎓️ an unseen tour on a tutorial-free shell arms");
     assert!(!should_auto_start_introduction(&app.id, app.introduction.is_some(), false, true, false, false), "🎓️ an answered one never re-arms");

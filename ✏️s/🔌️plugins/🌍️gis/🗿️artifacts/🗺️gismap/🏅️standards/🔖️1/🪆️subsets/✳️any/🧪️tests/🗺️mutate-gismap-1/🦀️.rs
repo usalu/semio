@@ -181,8 +181,8 @@ fn canonical(text: &str) -> Json {
 mod subject {
     use super::{canonical, vector, COLLECTIONS, DERIVED_ASSET, DSL_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::mutations::gis_map_mutation_report_json;
-    use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::snapshot::gis_map_identity_report_json;
+    use semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::mutations::gis_map_mutation_report_json;
+    use semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::snapshot::gis_map_identity_report_json;
     use semio_repo_test_host::law;
 
     //#region 🔖️Report
@@ -279,7 +279,7 @@ mod subject {
     /// 📖️ The real committed carrier document, parsed by this subset's own DSL codec into the JSON
     /// text the mutation bridge takes.
     fn parsed_document(uri: &str, ctx: &Context) -> Result<String, String> {
-        let committed = String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("the declared document is not UTF-8: {error}"))?;
+        let committed = String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("the declared document is not UTF-8: {error}"))?;
         let report = parse_json(&gis_map_identity_report_json(&committed).map_err(|error| format!("the declared document did not reach this subset's own codec: {error}"))?)?;
         Ok(member(&report, "parsed")?.to_string())
     }
@@ -356,7 +356,7 @@ mod subject {
     /// binary codec, so agreeing on one snapshot cannot be reached by carrying text bytes across.
     /// The projection is what the Python reference read out of the SAME committed bytes.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let committed = String::from_utf8(ctx.fixture_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
+        let committed = String::from_utf8(ctx.input_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
         let report = parse_json(&gis_map_identity_report_json(&committed).map_err(|error| format!("identity-round-trip: the committed example did not reach this subset's own codec: {error}"))?)?;
         let parsed = member(&report, "parsed")?;
         law::round_trip_preserves(member(&report, "reparsed")?, parsed)?;

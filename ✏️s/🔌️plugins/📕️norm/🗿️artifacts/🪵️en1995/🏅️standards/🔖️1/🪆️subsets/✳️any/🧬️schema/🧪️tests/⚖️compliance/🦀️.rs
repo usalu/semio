@@ -13,7 +13,7 @@ fn bundled_examples() -> Vec<(String, En1995Snapshot)> {
     crate::examples()
         .into_iter()
         .map(|example| {
-            let snap = crate::artifact_schema::snapshot::decode_en1995_dsl(&example.document()).unwrap_or_else(|e| panic!("{}: {e}", example.id()));
+            let snap = crate::standards::v1::subsets::any::io::text::snapshot::decode_en1995_dsl(&example.document()).unwrap_or_else(|e| panic!("{}: {e}", example.id()));
             (example.id().to_string(), snap)
         })
         .collect()

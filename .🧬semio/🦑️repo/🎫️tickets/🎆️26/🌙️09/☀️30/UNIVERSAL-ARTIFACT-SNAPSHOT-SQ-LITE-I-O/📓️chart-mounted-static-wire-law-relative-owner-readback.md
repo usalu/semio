@@ -1,0 +1,5 @@
+# Chart Mounted Static Wire Law Relative Owner Readback
+
+Read-only current Chart native-fixtures law paths. Owning SQLite test78 mounts 📥️native-fixtures/🦀️.rs. Its eight direct include_str/include_bytes paths use ../../../ from that nested directory, correctly reaching snapshot/🧫️fixtures/🪶️sqlite/🧠️logical-owner. The four ordered corpus cases are compared to actual decoded Text and Pack via the parent exact variant/word helper, then ordinary reprinted Text and Pack bytes, controlled native output equality, exact total-file-byte preflight success and one-byte-short refusal for both encodings, and controlled decode exact owner equality.
+
+The producer checks actual ordinary decode/re-emit and independent Bun SQLite width/height/language plus integrity/FK checks before optionally writing to admitted SEMIO_TEST_ARTIFACT_DIR/chart-logical-owner. It does not write arbitrary production files directly. The mounted static assets become explicit Rust include dependencies, avoiding stale ticket-build files. This audit supplies source/path evidence only; the owner reports producer receipt separately and full owning eleven-law execution remains its separate gate.

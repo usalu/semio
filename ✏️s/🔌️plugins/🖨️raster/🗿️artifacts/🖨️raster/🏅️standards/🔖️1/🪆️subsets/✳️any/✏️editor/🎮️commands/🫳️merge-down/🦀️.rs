@@ -2,7 +2,7 @@
 use crate::editor::raster::config::{RasterConfig,RasterConfigMutation};
 use crate::standards::v1::subsets::any::schema::{find_layer,locate_layer,layer_node_id,layer_name,layer_visible,layer_blend_mode};
 use crate::{RasterLayerNode,RasterMutation,RasterSnapshot};
-use crate::io::RasterStackPreparation;
+use crate::standards::v1::subsets::any::io::RasterStackPreparation;
 use semio_framework_pixels::png_encoding::EncodedPngImage;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
 use semio_framework_value_derive::{FromValue,ToValue};

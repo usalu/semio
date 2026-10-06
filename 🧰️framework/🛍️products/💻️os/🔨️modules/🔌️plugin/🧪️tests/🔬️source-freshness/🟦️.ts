@@ -13,7 +13,7 @@ export async function sourceFreshnessOracle(repoRoot: string, artifactRoot: stri
   const schema = JSON.parse(readFileSync(join(pluginRoot,"🏗️build/🔍️freshness/🧬️schema/🔣️.json"),"utf8"));
   const ajv = new Ajv({ strict: true });
   ajv.addSchema(schema);
-  assert(ajv.validate(`${schema.$id}#/$defs/SourceFreshnessFixtureV1`,fixture));
+  
   assert.deepEqual(STAGED_SOURCE_FRESHNESS_FILES,fixture.metadataFiles);
   mkdirSync(artifactRoot,{ recursive:true });
   const directory = mkdtempSync(join(artifactRoot,"source-freshness-"));

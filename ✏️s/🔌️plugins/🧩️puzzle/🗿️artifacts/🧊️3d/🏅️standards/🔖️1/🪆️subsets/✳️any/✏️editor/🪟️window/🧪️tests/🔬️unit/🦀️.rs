@@ -193,7 +193,7 @@ use super::*;
             sun: WorldSunConfig { enabled: true, azimuth: 12.5, elevation: 33.0, intensity: 0.5, color: "#102030".into() },
             camera: Puzzle3dCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], zoom: 2.5, up: Some([0.0, 0.0, 1.0]), projection: Default::default() },
         };
-        assert_ne!(original, Puzzle3dWindowConfig::default(), "the fixture must differ from the default in every field it asserts");
+        assert_ne!(original, Puzzle3dWindowConfig::default(), "the scene_snapshot must differ from the default in every field it asserts");
         let bytes = store::ArtifactPack::encode_pack(&original);
         let decoded = <Puzzle3dWindowConfig as store::ArtifactPack>::decode_pack(&bytes).expect("window config pack decodes");
         assert_eq!(decoded, original, "one pack round trip must preserve every persisted window option");

@@ -529,7 +529,7 @@ mod subject {
     use super::{canonical, vector, DERIVED_ASSET, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::mutations::fem2d_mutation_report_json;
+    use semio_s_artifact_fem_2d::standards::v1::subsets::any::io::text::mutations::fem2d_mutation_report_json;
 
     //#region 🔖️Report
     /// 📋️ One member of the production bridge's report, named in the error when it is absent — never
@@ -608,7 +608,7 @@ mod subject {
     /// 🧫️ The declared fixture's bytes as UTF-8 text.
     fn fixture_text(ctx: &Context, needle: &str) -> Result<String, String> {
         let uri = uri_in(ctx, needle)?;
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
     }
 
     /// 🔀️ Each verb writes exactly ONE of the nine members. That is the check an after-snapshot

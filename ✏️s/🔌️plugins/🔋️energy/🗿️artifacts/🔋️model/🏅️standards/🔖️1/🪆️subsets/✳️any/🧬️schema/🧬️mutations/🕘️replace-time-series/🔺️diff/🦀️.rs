@@ -22,6 +22,6 @@ pub fn diff(payload: &super::ReplaceTimeSeriesScheduleValues, base: &EnergyModel
     if let Some(item) = model.schedules.time_series.iter_mut().find(|item| item.id == payload.id) {
         item.values = payload.new_values.clone();
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

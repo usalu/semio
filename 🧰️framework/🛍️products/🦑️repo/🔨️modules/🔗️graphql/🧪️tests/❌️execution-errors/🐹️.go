@@ -24,7 +24,7 @@ type refusal struct {
 
 // 🗄️ Builds the context every input runs against.
 func newContext(ctx *host.Context) (*graphql.RecordingContext, error) {
-	raw, err := ctx.FixtureBytes("shared://🔣️repo-records.json")
+	raw, err := ctx.InputBytes("shared://🔣️repo-records.json")
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func newContext(ctx *host.Context) (*graphql.RecordingContext, error) {
 
 // 📥️ Reads the refusal corpus.
 func readCorpus(ctx *host.Context) ([]refusal, error) {
-	raw, err := ctx.FixtureBytes("shared://❌️execution-errors/🔣️refusals.json")
+	raw, err := ctx.InputBytes("shared://❌️execution-errors/🔣️refusals.json")
 	if err != nil {
 		return nil, err
 	}

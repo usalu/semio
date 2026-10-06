@@ -1,0 +1,5 @@
+# Lowpoly Managed Mesh Original Fixture Assignment Readback
+
+The actual complementary Native gate executed six Lowpoly SQLite laws: five passed, one failed, with 369 tests outside selection. The managed-mesh law failed at its first construction assertion before codec or SQLite work. Current `fixture().to_value()` already declares `meshState` as null; the law appends a second identically named object member. Value-derived owning field lookup reads its existing declared member. The held correction assigns the neutral full seven-field mesh to that existing field, preserving the original expected state, both native forms, integer extrema, ordered duplicate members within the separate managed material value, independent SQLite edits and full re-export equality. No production implementation or assertion changes have been mounted. Actual Native AFTER remains pending until the root forty-eight-owner sequential gate completes.
+
+Held input: `📥️inputs/lowpoly-managed-mesh-single-owner-fixture-closure-held.json`. Registered root ticket script phase: `lowpoly-managed-mesh-single-owner-fixture-closure`.

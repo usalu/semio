@@ -309,9 +309,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-page-size",
       "class": "third-party-generated",
       "target": {
@@ -360,7 +359,6 @@
       "comparisonPipeline": "pdf-1-4-x-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "collapse-page-size",
       "class": "third-party-generated",
       "target": {

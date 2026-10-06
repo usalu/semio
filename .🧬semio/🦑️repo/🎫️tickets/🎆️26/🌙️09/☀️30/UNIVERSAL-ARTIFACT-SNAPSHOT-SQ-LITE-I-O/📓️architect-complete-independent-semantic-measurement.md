@@ -1,0 +1,3 @@
+# Architect Complete Independent Semantic Measurement
+
+The actual ticket-script phase reconstructed all 65 authored register fixtures through the existing typed Source facade, then inspected the real SQLite files through independent Bun SQLite. All 685 declared domain tables were visited; INTEGER and REAL cells contribute eight bytes, NULL zero and TEXT/BLOB their exact physical UTF-8/octet lengths. Each case independently passed integrity and foreign ownership checks. The measured cases are retained under generated/architect-complete-independent-semantic-measurement.json. These establish neutral closed-corpus expected costs for exact and one-below demands; no Native exact-budget or preconstruction boundary success is implied.

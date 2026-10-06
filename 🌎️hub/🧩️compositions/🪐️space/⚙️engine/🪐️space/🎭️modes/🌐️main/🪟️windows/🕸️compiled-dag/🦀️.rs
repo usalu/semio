@@ -4,7 +4,8 @@
 use crate::demo_space_projection;
 use crate::engine::space::engine::compiled_dag_wire_literal;
 use semio_framework_os::WorkflowSnapshot;
-use semio_framework_plugin::{InteractionRef, LocalizedLabel, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_locale::{LocalizedLabel};
+use semio_framework_plugin::{InteractionRef, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_scene::TextEditorScene;
 
 //#region 🔖️Constants
@@ -30,6 +31,7 @@ async fn compiled_dag_engagement(projection: &WorkflowSnapshot) -> WindowEngagem
 pub async fn definition() -> WindowKindDefinition {
     let engagement = compiled_dag_engagement(&demo_space_projection().await).await;
     WindowKindDefinition {
+        initial_utility_id: None,
         id: S_PLAY_WINDOW_COMPILED_DAG.into(),
         label: LocalizedLabel::native("Compiled DAG", "Kompilierter DAG"),
         body_key: S_PLAY_BODY_COMPILED_DAG.into(),

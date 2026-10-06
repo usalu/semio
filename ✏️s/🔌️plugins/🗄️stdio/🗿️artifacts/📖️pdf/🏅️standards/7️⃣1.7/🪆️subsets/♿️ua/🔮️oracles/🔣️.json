@@ -479,9 +479,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-set-mark-info",
       "class": "third-party-generated",
       "target": {
@@ -530,7 +529,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-remove-mark-info",
       "class": "third-party-generated",
       "target": {
@@ -579,7 +577,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-set-struct-tree-root",
       "class": "third-party-generated",
       "target": {
@@ -628,7 +625,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-remove-struct-tree-root",
       "class": "third-party-generated",
       "target": {
@@ -677,7 +673,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-set-lang",
       "class": "third-party-generated",
       "target": {
@@ -726,7 +721,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-remove-lang",
       "class": "third-party-generated",
       "target": {
@@ -775,7 +769,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-set-display-doc-title",
       "class": "third-party-generated",
       "target": {
@@ -824,7 +817,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-remove-display-doc-title",
       "class": "third-party-generated",
       "target": {
@@ -873,7 +865,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-set-info-title",
       "class": "third-party-generated",
       "target": {
@@ -922,7 +913,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-embed-font-file",
       "class": "third-party-generated",
       "target": {
@@ -971,7 +961,6 @@
       "comparisonPipeline": "pdf-1-7-ua-lopdf-compare-v1"
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "ua-remove-font-file",
       "class": "third-party-generated",
       "target": {

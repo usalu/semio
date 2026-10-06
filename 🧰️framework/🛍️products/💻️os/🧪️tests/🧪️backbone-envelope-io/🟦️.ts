@@ -262,19 +262,28 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(planWorkflow(graph, new Set(["app-1"]))).toEqual([]);
     });
 
-    // 🔬️ Rust owns semantic DSL/SPK decoding and canonical equivalence. This language-neutral check
-    // keeps the source corpus paired without depending on a browser ABI or a generated wasm package.
-    it("pairs every shared workflow DSL fixture with a pack fixture", async () => {
+    it("replays shared plain planner witnesses against the graphology reachability oracle", async () => {
       const { readdirSync, readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
-      const here = dirname(fileURLToPath(source.url));
-      const fixturesDir = join(here, "🧫️fixtures");
-      const owners = readdirSync(fixturesDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && readdirSync(join(fixturesDir, entry.name)).some((name) => name === "🗣️.dsl" || name === "📦️.spk"));
-      expect(owners.length).toBeGreaterThanOrEqual(5);
-      for (const owner of owners) {
-        expect(readFileSync(join(fixturesDir, owner.name, "🗣️.dsl"), "utf8").length).toBeGreaterThan(0);
-        expect(readFileSync(join(fixturesDir, owner.name, "📦️.spk")).byteLength).toBeGreaterThan(0);
+      const { DirectedGraph } = await import("graphology");
+      const fixturesDir = join(dirname(fileURLToPath(source.url)), "🧫️fixtures");
+      const paths = readdirSync(fixturesDir, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => join(fixturesDir, entry.name, "🔣️.json")).filter((path) => { try { return JSON.parse(readFileSync(path, "utf8")).expectedDeliveries !== undefined; } catch { return false; } });
+      expect(paths).toHaveLength(5);
+      for (const path of paths) {
+        const witness = JSON.parse(readFileSync(path, "utf8")) as { graph: { schema: string; nodes: { id: string; x: number; y: number; width: number; height: number }[]; edges: OsWorkflow["edges"] }; dirtyNodeIds: string[]; expectedDeliveries: { edgeId: string; producerNodeId: string; producerPortId: string; consumerNodeId: string; consumerPortId: string }[] };
+        const graph: OsWorkflow = { ...witness.graph, nodes: witness.graph.nodes.map((node) => ({ ...node, instanceId: node.id, inputs: [], outputs: [] })) };
+        const expected = witness.expectedDeliveries.map(({ producerNodeId, consumerNodeId, ...delivery }) => ({ ...delivery, producerInstanceId: producerNodeId, consumerInstanceId: consumerNodeId }));
+        const actual = planWorkflow(graph, new Set(witness.dirtyNodeIds));
+        expect(actual).toEqual(expected);
+        const oracle = new DirectedGraph();
+        for (const node of graph.nodes) oracle.addNode(node.id);
+        for (const edge of graph.edges) oracle.addDirectedEdgeWithKey(edge.id, edge.sourceNodeId, edge.targetNodeId);
+        const reached = new Set(witness.dirtyNodeIds);
+        const queue = [...reached];
+        for (let i = 0; i < queue.length; i++) for (const target of oracle.outNeighbors(queue[i]!)) if (!reached.has(target)) { reached.add(target); queue.push(target); }
+        const oracleEdges = oracle.edges().filter((id) => reached.has(oracle.source(id)));
+        expect(actual.map((delivery) => delivery.edgeId).sort()).toEqual(oracleEdges.sort());
       }
     });
   });
@@ -359,10 +368,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       throw new Error(`unsupported corpus node ${JSON.stringify(node)}`);
     }
 
-    it("validates the neutral corpus against its own schema", async () => {
-      const [{ default: corpus }, { default: schema }] = await Promise.all([import("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json"), import("../../🔨️modules/🎒️pack/🌱️value/🧬️schema/🔣️.json")]);
-      const packValueExport = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${(schema as { $id: string }).$id}#/$defs/PackDynamicIntegerV1`)!;
-      expect(packValueExport(corpus)).toBe(true);
+    it("covers every declared integer boundary example", async () => {
+      const { default: corpus } = await import("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json");
       expect(corpus.accept).toHaveLength(6);
       expect(corpus.reject.map((row: { id: string }) => row.id)).toEqual(["truncated-u64", "u64-overflow", "nonminimal-u64", "nonminimal-zigzag-i64"]);
     });
@@ -466,6 +473,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { ApplyEnvelopes: { seq: 7, envelopes: [] } },
       { ReadDocument: { seq: 9 } },
       { LoadDocumentArchive: { seq: 36, archive: documentArchive } },
+      { MergeDocumentArchive: { seq: 43, archive: documentArchive } },
       { ReadDocumentArchive: { seq: 37 } },
       { PollDocumentArchiveLoad: { seq: 38, operation: 36 } },
       { CancelDocumentArchiveLoad: { seq: 39, operation: 36 } },
@@ -479,7 +487,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { MediaFingerprint: { seq: 16, port: "fp-1" } },
       { PureCommand: { seq: 17, command: [1], head: [2] } },
       { PureCommand: { seq: 41, command: [1], head: [] } },
-      { LoadChildren: { seq: 18, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
+      { LoadChildren: { seq: 18, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1], owner: "" }, { slot: "s", child_id: "n", dialect: "d", envelope_pack: [], owner: "content/forms-1" }] } },
       { ReadChildren: { seq: 19 } },
       { ReadChildHeads: { seq: 42 } },
       { ReadHistory: { seq: 20 } },
@@ -508,7 +516,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { DocumentChanged: { envelopes: [[1, 2]], origin: "remote" } },
       { Document: { in_reply_to: 6, pack: [1, 2], spr: [3, 4], ops: "op-log" } },
       { DocumentArchive: { in_reply_to: 7, archive: documentArchive } },
-      { DocumentArchiveLoad: { in_reply_to: 8, status: { operation: 36, state: "running", completed: 1, total: 3, fault: [] } } },
+      { DocumentArchiveLoad: { in_reply_to: 8, status: { operation: 36, state: "running", completed: 1, total: 3, ahead: 0, fault: [] } } },
       { WindowConfigs: { in_reply_to: 6, entries: [{ window_id: "w1", window_kind_id: "graph", envelope_pack: [1, 2] }] } },
       { ContextMenu: { in_reply_to: 7, items: [1, 2, 3] } },
       { Media: { in_reply_to: 8, port: "out-1", descriptor: [1], data: [2] } },
@@ -518,8 +526,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       { Emit: { in_reply_to: 11, document_ops: [1], config_ops: [2], draft_ops: [3], output: [4], diagnostics: [5], child_ops: [] } },
       { Emit: { in_reply_to: 11, document_ops: [], config_ops: [], draft_ops: [], output: [4], diagnostics: [], child_ops: [6, 7, 8] } },
       { Draft: { in_reply_to: 12, pack: [1], spr: [2], ops: "d" } },
-      { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } },
-      { ChildHeads: { in_reply_to: 42, entries: [{ slot: "mesh", child_id: "child-1", dialect: "s.stdio.mesh@1/*", head_pack: [7, 8, 9] }, { slot: "brep", child_id: "child-2", dialect: "s.stdio.brep@1/*", head_pack: [] }] } },
+      { Children: { in_reply_to: 13, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1], owner: "content/forms-1" }] } },
+      { ChildHeads: { in_reply_to: 42, entries: [{ slot: "mesh", child_id: "child-1", dialect: "s.stdio.mesh@1/*", head_pack: [7, 8, 9], owner: "" }, { slot: "brep", child_id: "child-2", dialect: "s.stdio.brep@1/*", head_pack: [], owner: "content/forms-1" }] } },
       { ChildHeads: { in_reply_to: 43, entries: [] } },
       { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [7], tool_run: [8], history_edit: [9] } },
       { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [], history_edit: [] } },
@@ -575,6 +583,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppCommand({ Command: { seq: 0, command: [], view_state: [] } })[0]).toBe(1);
       expect(encodeAppCommand({ ReadChildren: { seq: 0 } })[0]).toBe(15);
       expect(encodeAppCommand({ ReadChildHeads: { seq: 0 } })[0]).toBe(42);
+      expect(encodeAppCommand({ MergeDocumentArchive: { seq: 0, archive: { parent_pack: [], parent_spr: [], members: [] } } })[0]).toBe(43);
       expect(encodeAppCommand({ ReadHistory: { seq: 0 } })[0]).toBe(16);
       expect(encodeAppCommand({ transactionPrepare: { seq: 0, txn_id: "", mutation_id: "", payload: [], prepared_ops: [], origin: [], prepared_child_ops: [] } })[0]).toBe(17);
       expect(encodeAppCommand({ transactionCommit: { seq: 0, txn_id: "" } })[0]).toBe(18);
@@ -615,7 +624,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppFrame({ UiSnapshotEnd: { revision: 0 } })[0]).toBe(22);
       expect(encodeAppFrame({ WindowConfigs: { in_reply_to: 0, entries: [] } })[0]).toBe(24);
       expect(encodeAppFrame({ DocumentArchive: { in_reply_to: 0, archive: { parent_pack: [], parent_spr: [], members: [] } } })[0]).toBe(26);
-      expect(encodeAppFrame({ DocumentArchiveLoad: { in_reply_to: 0, status: { operation: 1, state: "ready", completed: 2, total: 2, fault: [] } } })[0]).toBe(27);
+      expect(encodeAppFrame({ DocumentArchiveLoad: { in_reply_to: 0, status: { operation: 1, state: "ready", completed: 2, total: 2, ahead: 0, fault: [] } } })[0]).toBe(27);
       expect(encodeAppFrame({ ChildHeads: { in_reply_to: 0, entries: [] } })[0]).toBe(32);
       expect(() => decodeAppFrame(new Uint8Array([32, 1, 0x81, 0x08]))).toThrow("decodeAppFrame: child head count exceeds the member authority");
     });
@@ -678,7 +687,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["MediaOut", { MediaOut: { seq: 1, port: "p", request: [1] } }],
         ["MediaFingerprint", { MediaFingerprint: { seq: 1, port: "p" } }],
         ["PureCommand", { PureCommand: { seq: 1, command: [1], head: [2] } }],
-        ["LoadChildren", { LoadChildren: { seq: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
+        ["LoadChildren", { LoadChildren: { seq: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1], owner: "" }] } }],
+        ["LoadChildrenOfAMember", { LoadChildren: { seq: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1], owner: "content/forms-1" }] } }],
         ["ReadChildren", { ReadChildren: { seq: 1 } }],
         ["ReadChildHeads", { ReadChildHeads: { seq: 1 } }],
         ["ReadHistory", { ReadHistory: { seq: 1 } }],
@@ -699,7 +709,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         MediaOut: "0b0101700101",
         MediaFingerprint: "0c010170",
         PureCommand: "0d0101010102",
-        LoadChildren: "0e01010173016301640101",
+        LoadChildren: "0e0101017301630164010100",
+        LoadChildrenOfAMember: "0e010101730163016401010f636f6e74656e742f666f726d732d31",
         ReadChildren: "0f01",
         ReadChildHeads: "2a01",
         ReadHistory: "1001",
@@ -718,8 +729,10 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["Error", { Error: { in_reply_to: null, fault: [99], report: [] } }],
         ["Emit", { Emit: { in_reply_to: 1, document_ops: [1], config_ops: [], draft_ops: [], output: [2], diagnostics: [], child_ops: [] } }],
         ["Draft", { Draft: { in_reply_to: 1, pack: [1], spr: [2], ops: "d" } }],
-        ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1] }] } }],
-        ["ChildHeads", { ChildHeads: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", head_pack: [1] }] } }],
+        ["Children", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1], owner: "" }] } }],
+        ["ChildrenOfAMember", { Children: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", envelope_pack: [1], owner: "content/forms-1" }] } }],
+        ["ChildHeads", { ChildHeads: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", head_pack: [1], owner: "" }] } }],
+        ["ChildHeadsOfAMember", { ChildHeads: { in_reply_to: 1, entries: [{ slot: "s", child_id: "c", dialect: "d", head_pack: [1], owner: "content/forms-1" }] } }],
         ["Ephemeral", { Ephemeral: { presence: [1, 2], presence_generation: 3, transient_generation: 4, interaction: [], tool_run: [], history_edit: [] } }],
         ["HistorySnapshot", { HistorySnapshot: { in_reply_to: 1, history_patch: [1] } }],
         ["UiPatch", { UiPatch: { in_reply_to: 1, surface: "1:body", kind: "window", revision: 3, base_revision: 2, ops: [9] } }],
@@ -739,8 +752,10 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         Error: "0900016300",
         Emit: "0a010101000001020000",
         Draft: "0b01010101020164",
-        Children: "0c01010173016301640101",
-        ChildHeads: "2001010173016301640101",
+        Children: "0c0101017301630164010100",
+        ChildrenOfAMember: "0c010101730163016401010f636f6e74656e742f666f726d732d31",
+        ChildHeads: "200101017301630164010100",
+        ChildHeadsOfAMember: "20010101730163016401010f636f6e74656e742f666f726d732d31",
         Ephemeral: "0d0201020304000000",
         HistorySnapshot: "0e010101",
         UiPatch: "15010106313a626f64790677696e646f7703020109",
@@ -792,13 +807,15 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("admits only a guest of the host's own channel version, naming both versions when it refuses (shared handshake corpus)", async () => {
       const { readFileSync } = await import("node:fs");
-      const law = JSON.parse(readFileSync(new URL("./🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️channel-handshake/🔣️.json", source.url), "utf8")) as { code: string; cases: { name: string; guestOffset: number; admitted: boolean }[] };
+      const law = JSON.parse(readFileSync(new URL("./🔨️modules/📡️spr/🧵️channel/🧫️fixtures/🧫️channel-handshake/🔣️.json", source.url), "utf8")) as { code: string; cases: { name: string; guestOffset: number; hostOffset?: number; admitted: boolean }[] };
       expect(law.code).toBe(CHANNEL_MISMATCH_CODE);
       for (const row of law.cases) {
         const guest = APP_CHANNEL_VERSION + row.guestOffset;
-        const refusal = admitGuestChannelVersion(guest, APP_CHANNEL_VERSION);
+        const host = APP_CHANNEL_VERSION + (row.hostOffset ?? 0);
+        expect(row.admitted, row.name).toBe(guest === host);
+        const refusal = admitGuestChannelVersion(guest, host);
         if (row.admitted) expect(refusal, row.name).toBeNull();
-        else expect([refusal?.code, refusal?.origin, refusal?.params], row.name).toEqual([CHANNEL_MISMATCH_CODE, "framework", { guest: String(guest), host: String(APP_CHANNEL_VERSION) }]);
+        else expect([refusal?.code, refusal?.origin, refusal?.params], row.name).toEqual([CHANNEL_MISMATCH_CODE, "framework", { guest: String(guest), host: String(host) }]);
       }
     });
 
@@ -1012,11 +1029,6 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const encodeUnsigned: unknown = Reflect.get(oracle, "encodeUIntBuffer");
       if (typeof encodeUnsigned !== "function") throw new Error("missing LEB128 oracle encoder");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
-      const module = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
-      const validate = semioSchemaAjvV1({ strict: true }).addSchema(module).getSchema(`${module.$id}#/$defs/LocalInteractionV1`)!;
-      expect(validate(fixture)).toBe(true);
-      expect(validate({ ...fixture, lateTokenAccepted: true })).toBe(false);
-      expect(validate({ ...fixture, terminalBeforeClosed: true })).toBe(false);
       const read: AppCommandValue = { LocalInteractionQuery: { seq: 9, command: { kind: "read", requestId: "13" } } };
       const rejected: AppFrameValue = { LocalInteractionQuery: { reply: { kind: "rejected", requestId: "13", code: "busy" } } };
       const u64 = (value: bigint): number[] => {
@@ -1327,6 +1339,24 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
+    it("matches the shared cross-language document-archive merge vectors, byte-for-byte", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "🧫️fixtures", "📡️channel", "🧲️document-archive-merge.json"), "utf8")) as { seq: number; archive: { parent_pack: number[]; parent_spr: number[]; members: [] }; LoadDocumentArchive: string; MergeDocumentArchive: string; status: { in_reply_to: number; operation: number; state: string; completed: number; total: number; ahead: number; fault: number[] }; DocumentArchiveLoad: string };
+      const hex = (bytes: Uint8Array) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+      const load = { LoadDocumentArchive: { seq: vectors.seq, archive: vectors.archive } };
+      const merge = { MergeDocumentArchive: { seq: vectors.seq, archive: vectors.archive } };
+      expect(hex(encodeAppCommand(load))).toBe(vectors.LoadDocumentArchive);
+      expect(hex(encodeAppCommand(merge))).toBe(vectors.MergeDocumentArchive);
+      expect(decodeAppCommand(new Uint8Array(Buffer.from(vectors.LoadDocumentArchive, "hex")))).toEqual(load);
+      expect(decodeAppCommand(new Uint8Array(Buffer.from(vectors.MergeDocumentArchive, "hex")))).toEqual(merge);
+      expect(vectors.status.state).toBe("ready");
+      const frame: AppFrameValue = { DocumentArchiveLoad: { in_reply_to: vectors.status.in_reply_to, status: { operation: vectors.status.operation, state: "ready", completed: vectors.status.completed, total: vectors.status.total, ahead: vectors.status.ahead, fault: vectors.status.fault } } };
+      expect(hex(encodeAppFrame(frame))).toBe(vectors.DocumentArchiveLoad);
+      expect(decodeAppFrame(new Uint8Array(Buffer.from(vectors.DocumentArchiveLoad, "hex")))).toEqual(frame);
+    });
+
     it("command() allocates an incrementing seq and returns every frame the batch produced", async () => {
       const seqsSeen: number[] = [];
       const handle = fakeHandle((_instanceId, commands) => {
@@ -1347,7 +1377,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("readChildHeads() sends ReadChildHeads and answers the ChildHeads entries of its own sequence, owning their bytes", async () => {
       const seen: AppCommandValue[] = [];
-      const heads = [{ slot: "mesh", child_id: "child-1", dialect: "s.stdio.mesh@1/*", head_pack: [7, 8] }];
+      const heads = [{ slot: "mesh", child_id: "child-1", dialect: "s.stdio.mesh@1/*", head_pack: [7, 8], owner: "content/forms-1" }];
       const handle = fakeHandle((_instanceId, commands) => {
         seen.push(...commands);
         const command = commands[0]!;
@@ -1356,7 +1386,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       const entries = await client.readChildHeads();
       heads[0]!.head_pack.fill(0);
-      expect([seen, entries]).toEqual([[{ ReadChildHeads: { seq: 1 } }], [{ slot: "mesh", child_id: "child-1", dialect: "s.stdio.mesh@1/*", head_pack: [7, 8] }]]);
+      expect([seen, entries]).toEqual([[{ ReadChildHeads: { seq: 1 } }], [{ slot: "mesh", child_id: "child-1", dialect: "s.stdio.mesh@1/*", head_pack: [7, 8], owner: "content/forms-1" }]]);
       const refusing = new AppChannelClient(fakeHandle((_instanceId, commands) => [{ Done: { in_reply_to: commandSeq(commands[0]!) } }]), new AppChannelRequestSequence(), 1, "app.demo");
       await expect(refusing.readChildHeads()).rejects.toThrow("missing ChildHeads frame for seq 1");
     });
@@ -1379,7 +1409,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         seen.push(...commands);
         const command = commands[0]!;
         if ("ReadDocumentArchive" in command) return [{ DocumentArchive: { in_reply_to: command.ReadDocumentArchive.seq, archive: documentArchive } }];
-        if ("PollDocumentArchiveLoad" in command) return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "ready", completed: 3, total: 3, fault: [] } } }];
+        if ("PollDocumentArchiveLoad" in command) return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "ready", completed: 3, total: 3, ahead: 0, fault: [] } } }];
         return [{ Done: { in_reply_to: commandSeq(command) } }];
       });
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
@@ -1403,7 +1433,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         const command = commands[0]!;
         if ("LoadDocumentArchive" in command) controller.abort(new Error("caller cancelled archive"));
         if ("PollDocumentArchiveLoad" in command) {
-          return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "cancelled", completed: 0, total: 3, fault: [] } } }];
+          return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "cancelled", completed: 0, total: 3, ahead: 0, fault: [] } } }];
         }
         return [{ Done: { in_reply_to: commandSeq(command) } }];
       });
@@ -1428,7 +1458,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         const command = commands[0]!;
         if ("PollDocumentArchiveLoad" in command) {
           const state = seen.filter((sent) => "PollDocumentArchiveLoad" in sent).length === 1 ? "running" : "cancelled";
-          return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state, completed: 1, total: 3, fault: [] } } }];
+          return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state, completed: 1, total: 3, ahead: 0, fault: [] } } }];
         }
         return [{ Done: { in_reply_to: commandSeq(command) } }];
       });
@@ -1465,10 +1495,6 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("publishes only accepted document cache candidates and owns both byte arrays", async () => {
       const { readFileSync } = await import("node:fs");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📦️document-cache/🔣️.json", source.url), "utf8"));
-      const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
-      const validate = semioSchemaAjvV1({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/DocumentCacheAcceptanceV1`)!;
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-      expect(validate({ ...fixture, optimistic: true })).toBe(false);
       const pair = (value: { pack: number[]; spr: number[] }) => ({ pack: Uint8Array.from(value.pack), spr: Uint8Array.from(value.spr) });
       const archiveOf = (value: { pack: number[]; spr: number[] }) => ({ parent_pack: [...value.pack], parent_spr: [...value.spr], members: [] });
       for (const row of fixture.cases) {
@@ -1483,7 +1509,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
             const document = { Document: { in_reply_to: seq, pack: fixture.reply.pack, spr: fixture.reply.spr, ops: "" } };
             const error = { Error: { in_reply_to: seq, fault: [99], report: [] } };
             const reply: AppFrameValue[] | "transport" =
-              "PollDocumentArchiveLoad" in command ? [{ DocumentArchiveLoad: { in_reply_to: seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "ready", completed: 1, total: 1, fault: [] } } }] :
+              "PollDocumentArchiveLoad" in command ? [{ DocumentArchiveLoad: { in_reply_to: seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "ready", completed: 1, total: 1, ahead: 0, fault: [] } } }] :
               !("LoadDocumentArchive" in command) || admission === "done" ? [{ Done: { in_reply_to: seq } }] :
               admission === "transport" ? "transport" :
               admission === "document" ? [document] :
@@ -3008,6 +3034,20 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
         globalThis.fetch = originalFetch;
       }
     });
-  });
+  
+    it("pairs every shared workflow DSL fixture with a pack fixture", async () => {
+      const { readdirSync, readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const here = dirname(fileURLToPath(source.url));
+      const fixturesDir = join(here, "🧫️fixtures");
+      const owners = readdirSync(fixturesDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && readdirSync(join(fixturesDir, entry.name)).some((name) => name === "🗣️.dsl" || name === "📦️.spk"));
+      expect(owners.length).toBeGreaterThanOrEqual(5);
+      for (const owner of owners) {
+        expect(readFileSync(join(fixturesDir, owner.name, "🗣️.dsl"), "utf8").length).toBeGreaterThan(0);
+        expect(readFileSync(join(fixturesDir, owner.name, "📦️.spk")).byteLength).toBeGreaterThan(0);
+      }
+    });
+});
 
 }

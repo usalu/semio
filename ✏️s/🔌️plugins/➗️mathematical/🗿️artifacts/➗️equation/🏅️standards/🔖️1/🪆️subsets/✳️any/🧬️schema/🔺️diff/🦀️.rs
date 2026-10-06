@@ -62,3 +62,86 @@ impl FromValue for EquationDiff {
     }
 }
 //#endregion 🔖️Diff
+
+use crate::schema::EquationArtifact;
+use crate::EquationSnapshot;
+use protocol::MutationDiff;
+
+impl EquationDiff {
+    /// 🧬️ Applies sparse document fields onto a full artifact.
+    pub fn apply_to_artifact(&self, artifact: &EquationArtifact) -> protocol::MutationApplyResult<EquationArtifact> {
+        Ok({
+            let mut next = artifact.clone();
+            if let Some(graph) = &self.graph {
+                next.graph = graph.clone();
+            }
+            if let Some(geometry) = &self.geometry {
+                next.geometry = geometry.clone();
+            }
+            if let Some(notation) = &self.notation {
+                next.notation = notation.clone();
+            }
+            if let Some(results) = &self.results {
+                next.results = results.clone();
+            }
+            if let Some(computed) = &self.computed {
+                next.computed = computed.clone();
+            }
+            if let Some(equation) = &self.equation {
+                next.equation = equation.clone();
+            }
+            next
+        })
+    }
+}
+
+impl MutationDiff<EquationSnapshot> for EquationDiff {
+    fn apply(&self, snapshot: &EquationSnapshot) -> protocol::MutationApplyResult<EquationSnapshot> {
+        Ok({
+            let mut next = snapshot.clone();
+            if let Some(graph) = &self.graph {
+                next.graph = graph.clone();
+            }
+            if let Some(geometry) = &self.geometry {
+                next.geometry = geometry.clone();
+            }
+            if let Some(notation) = &self.notation {
+                next.notation = notation.clone();
+            }
+            if let Some(results) = &self.results {
+                next.results = results.clone();
+            }
+            if let Some(computed) = &self.computed {
+                next.computed = computed.clone();
+            }
+            if let Some(equation) = &self.equation {
+                next.equation = equation.clone();
+            }
+            next
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.graph.is_some() {
+            self.graph = other.graph;
+        }
+        if other.geometry.is_some() {
+            self.geometry = other.geometry;
+        }
+        if other.notation.is_some() {
+            self.notation = other.notation;
+        }
+        if other.results.is_some() {
+            self.results = other.results;
+        }
+        if other.computed.is_some() {
+            self.computed = other.computed;
+        }
+        if other.equation.is_some() {
+            self.equation = other.equation;
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

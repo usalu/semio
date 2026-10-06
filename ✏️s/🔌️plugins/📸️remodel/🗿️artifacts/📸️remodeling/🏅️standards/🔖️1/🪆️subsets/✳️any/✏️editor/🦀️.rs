@@ -16,7 +16,7 @@ use crate::editor::remodeling::panels::{calibration as calibration_panel, docume
 use crate::editor::remodeling::reconstruction_session::{ReconstructionRevalidateJob, ReconstructionRunJob};
 use crate::editor::remodeling::terminology::remodeling_labels;
 use crate::editor::remodeling::transient::{self, RemodelingWindowTransient};
-use crate::op::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;

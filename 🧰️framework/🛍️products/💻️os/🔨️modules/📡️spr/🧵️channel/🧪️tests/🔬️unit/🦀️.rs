@@ -110,6 +110,7 @@ async fn app_command_read_artifact_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn app_command_recursive_document_archive_round_trips() {
     assert_command_round_trips(&AppCommand::LoadDocumentArchive { seq: 10, archive: sample_document_archive() }).await;
+    assert_command_round_trips(&AppCommand::MergeDocumentArchive { seq: 13, archive: sample_document_archive() }).await;
     assert_command_round_trips(&AppCommand::ReadDocumentArchive { seq: 11 }).await;
     assert_command_round_trips(&AppCommand::PollDocumentArchiveLoad { seq: 12, operation: 10 }).await;
     assert_command_round_trips(&AppCommand::CancelDocumentArchiveLoad { seq: 13, operation: 10 }).await;
@@ -360,7 +361,7 @@ async fn app_frame_recursive_document_archive_round_trips() {
     assert_frame_round_trips(&AppFrame::DocumentArchive { in_reply_to: 6, archive: sample_document_archive() }).await;
     assert_frame_round_trips(&AppFrame::DocumentArchiveLoad {
         in_reply_to: 7,
-        status: DocumentArchiveLoadStatus { operation: 10, state: DocumentArchiveLoadState::Running, completed: 3, total: 9, fault: Vec::new() },
+        status: DocumentArchiveLoadStatus { operation: 10, state: DocumentArchiveLoadState::Running, completed: 3, total: 9, ahead: 4, fault: Vec::new() },
     })
     .await;
 }
@@ -456,8 +457,8 @@ async fn app_frame_draft_round_trips() {
 /// envelope has not been printed yet), so the list codec is exercised at both extremes.
 async fn sample_child_entries() -> Vec<ChildPackEntry> {
     vec![
-        ChildPackEntry { slot: "mesh".to_string(), child_id: "child-1".to_string(), dialect: "s.stdio.mesh@1/*".to_string(), envelope_pack: vec![7, 8, 9] },
-        ChildPackEntry { slot: "brep".to_string(), child_id: "child-2".to_string(), dialect: "s.stdio.brep@1/*".to_string(), envelope_pack: Vec::new() },
+        ChildPackEntry { slot: "mesh".to_string(), child_id: "child-1".to_string(), dialect: "s.stdio.mesh@1/*".to_string(), envelope_pack: vec![7, 8, 9], owner: String::new() },
+        ChildPackEntry { slot: "brep".to_string(), child_id: "child-2".to_string(), dialect: "s.stdio.brep@1/*".to_string(), envelope_pack: Vec::new(), owner: "content/forms-1".to_string() },
     ]
 }
 
@@ -476,8 +477,8 @@ async fn child_head_commands_and_frames_round_trip() {
     assert_command_round_trips(&AppCommand::ReadChildHeads { seq: 23 }).await;
     assert_paged_route_admits(&AppCommand::ReadChildHeads { seq: 24 }).await;
     let entries = vec![
-        ChildHeadPackEntry { slot: "mesh".to_string(), child_id: "child-1".to_string(), dialect: "s.stdio.mesh@1/*".to_string(), head_pack: vec![7, 8, 9] },
-        ChildHeadPackEntry { slot: "brep".to_string(), child_id: "child-2".to_string(), dialect: "s.stdio.brep@1/*".to_string(), head_pack: Vec::new() },
+        ChildHeadPackEntry { slot: "mesh".to_string(), child_id: "child-1".to_string(), dialect: "s.stdio.mesh@1/*".to_string(), head_pack: vec![7, 8, 9], owner: String::new() },
+        ChildHeadPackEntry { slot: "brep".to_string(), child_id: "child-2".to_string(), dialect: "s.stdio.brep@1/*".to_string(), head_pack: Vec::new(), owner: "content/forms-1".to_string() },
     ];
     assert_frame_round_trips(&AppFrame::ChildHeads { in_reply_to: 23, entries }).await;
     assert_frame_round_trips(&AppFrame::ChildHeads { in_reply_to: 24, entries: Vec::new() }).await;
@@ -655,6 +656,7 @@ async fn paged_generic_decoder_admits_document_config_and_projection_commands_us
     let commands = vec![
         (AppCommand::ReadDocument { seq: 2 }, 2),
         (AppCommand::LoadDocumentArchive { seq: 10, archive: sample_document_archive() }, 28),
+        (AppCommand::MergeDocumentArchive { seq: 13, archive: sample_document_archive() }, 28),
         (AppCommand::ReadDocumentArchive { seq: 11 }, 2),
         (AppCommand::LoadConfig { seq: 3, pack: vec![4], spr: vec![5, 6] }, 3),
         (AppCommand::ReadConfig { seq: 4 }, 2),
@@ -673,6 +675,47 @@ async fn paged_generic_decoder_admits_document_config_and_projection_commands_us
         assert_eq!(cursor.step().unwrap(), Some(expected));
         assert!(cursor.terminal_is_empty());
     }
+}
+
+/// 🧲️ `MergeDocumentArchive` (tag 43, CHANNEL_VERSION 22, design §22.22) carries its archive in exactly the
+/// `LoadDocumentArchive` encoding: the two commands differ in their tag byte alone, on the flat and on the paged route.
+#[semio_framework_async_macros::async_test]
+async fn a_merge_archive_command_is_the_load_encoding_under_its_own_tag() {
+    let load = encode_fixture_command(&AppCommand::LoadDocumentArchive { seq: 14, archive: sample_document_archive() }).await;
+    let merge = encode_fixture_command(&AppCommand::MergeDocumentArchive { seq: 14, archive: sample_document_archive() }).await;
+    assert_eq!((load[0], merge[0]), (32, 43));
+    assert_eq!(load[1..], merge[1..]);
+    assert_eq!(decode_app_command(&merge).await.unwrap(), AppCommand::MergeDocumentArchive { seq: 14, archive: sample_document_archive() });
+    let mut cursor = PagedAppCommandDecodeCursor::new(encode_app_command(&AppCommand::MergeDocumentArchive { seq: 14, archive: sample_document_archive() }).await.unwrap());
+    let mut decoded = None;
+    for _ in 0..64 {
+        decoded = cursor.step().unwrap();
+        if decoded.is_some() {
+            break;
+        }
+    }
+    assert_eq!(decoded, Some(AppCommand::MergeDocumentArchive { seq: 14, archive: sample_document_archive() }));
+    assert!(cursor.terminal_is_empty());
+}
+
+/// ⏭️ The shared cross-language vectors of the merge rider (`🧫️fixtures/📡️channel/🧲️document-archive-merge.json`): both
+/// archive commands and the load status with its `ahead` varint after `total`, byte for byte, in both directions.
+#[semio_framework_async_macros::async_test]
+async fn document_archive_merge_matches_shared_cross_language_json_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📡️channel/🧲️document-archive-merge.json")).expect("document archive merge fixture parses");
+    let bytes = |value: &serde_json::Value| value.as_array().expect("bytes").iter().map(|byte| byte.as_u64().expect("byte") as u8).collect::<Vec<u8>>();
+    let seq = fixture["seq"].as_u64().expect("seq");
+    let archive = || DocumentArchivePack { parent_pack: bytes(&fixture["archive"]["parent_pack"]), parent_spr: bytes(&fixture["archive"]["parent_spr"]), members: Vec::new() };
+    for (name, command) in [("LoadDocumentArchive", AppCommand::LoadDocumentArchive { seq, archive: archive() }), ("MergeDocumentArchive", AppCommand::MergeDocumentArchive { seq, archive: archive() })] {
+        let encoded = encode_fixture_command(&command).await;
+        assert_eq!(hex_encode(&encoded).await, fixture[name].as_str().expect("command fixture hex"), "{name}");
+        assert_eq!(decode_app_command(&encoded).await.expect("fixture command decodes"), command, "{name}");
+    }
+    let status = &fixture["status"];
+    assert_eq!(status["state"], "ready");
+    let frame = AppFrame::DocumentArchiveLoad { in_reply_to: status["in_reply_to"].as_u64().expect("in_reply_to"), status: DocumentArchiveLoadStatus { operation: status["operation"].as_u64().expect("operation"), state: DocumentArchiveLoadState::Ready, completed: status["completed"].as_u64().expect("completed"), total: status["total"].as_u64().expect("total"), ahead: status["ahead"].as_u64().expect("ahead"), fault: bytes(&status["fault"]) } };
+    assert_eq!(hex_encode(&encode_app_frame(&frame).await).await, fixture["DocumentArchiveLoad"].as_str().expect("frame fixture hex"));
+    assert_frame_round_trips(&frame).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -839,7 +882,8 @@ async fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
         ("MediaOut", AppCommand::MediaOut { seq: 1, port: "p".to_string(), request: vec![1] }),
         ("MediaFingerprint", AppCommand::MediaFingerprint { seq: 1, port: "p".to_string() }),
         ("PureCommand", AppCommand::PureCommand { seq: 1, command: vec![1], head: vec![2] }),
-        ("LoadChildren", AppCommand::LoadChildren { seq: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
+        ("LoadChildren", AppCommand::LoadChildren { seq: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1], owner: String::new() }] }),
+        ("LoadChildrenOfAMember", AppCommand::LoadChildren { seq: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1], owner: "content/forms-1".to_string() }] }),
         ("ReadChildren", AppCommand::ReadChildren { seq: 1 }),
         ("ReadChildHeads", AppCommand::ReadChildHeads { seq: 1 }),
         ("ReadHistory", AppCommand::ReadHistory { seq: 1 }),
@@ -886,7 +930,8 @@ async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         ("Error", AppFrame::Error { in_reply_to: None, fault: vec![99], report: vec![7] }),
         ("Emit", AppFrame::Emit { in_reply_to: 1, document_ops: vec![1], config_ops: vec![], draft_ops: vec![], output: vec![2], diagnostics: vec![], child_ops: vec![] }),
         ("Draft", AppFrame::Draft { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "d".to_string() }),
-        ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1] }] }),
+        ("Children", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1], owner: String::new() }] }),
+        ("ChildrenOfAMember", AppFrame::Children { in_reply_to: 1, entries: vec![ChildPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), envelope_pack: vec![1], owner: "content/forms-1".to_string() }] }),
         ("Ephemeral", AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![7], tool_run: vec![8], history_edit: vec![9] }),
         ("HistorySnapshot", AppFrame::HistorySnapshot { in_reply_to: 1, history_patch: vec![1] }),
         ("TransactionProposal", AppFrame::TransactionProposal { in_reply_to: 1, proposal_id: "p".to_string(), local_ops: vec![vec![1]], foreign: Vec::new() }),
@@ -898,7 +943,8 @@ async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         ("UiPatch", AppFrame::UiPatch { in_reply_to: Some(1), surface: "1:body".to_string(), kind: "window".to_string(), revision: 2, base_revision: 1, ops: vec![3] }),
         ("UiSnapshotEnd", AppFrame::UiSnapshotEnd { revision: 4 }),
         ("OperationCompleted", AppFrame::OperationCompleted { operation: 7, revision: 5, ui_scope: vec![1], history_patch: vec![2] }),
-        ("ChildHeads", AppFrame::ChildHeads { in_reply_to: 1, entries: vec![ChildHeadPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), head_pack: vec![1] }] }),
+        ("ChildHeads", AppFrame::ChildHeads { in_reply_to: 1, entries: vec![ChildHeadPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), head_pack: vec![1], owner: String::new() }] }),
+        ("ChildHeadsOfAMember", AppFrame::ChildHeads { in_reply_to: 1, entries: vec![ChildHeadPackEntry { slot: "s".to_string(), child_id: "c".to_string(), dialect: "d".to_string(), head_pack: vec![1], owner: "content/forms-1".to_string() }] }),
     ]
 }
 
@@ -923,7 +969,8 @@ async fn channel_command_fixture_hex(label: &str) -> &'static str {
         "MediaOut" => "0b0101700101",
         "MediaFingerprint" => "0c010170",
         "PureCommand" => "0d0101010102",
-        "LoadChildren" => "0e01010173016301640101",
+        "LoadChildren" => "0e0101017301630164010100",
+        "LoadChildrenOfAMember" => "0e010101730163016401010f636f6e74656e742f666f726d732d31",
         "ReadChildren" => "0f01",
         "ReadChildHeads" => "2a01",
         "ReadHistory" => "1001",
@@ -963,7 +1010,8 @@ async fn channel_frame_fixture_hex(label: &str) -> &'static str {
         "Error" => "090001630107",
         "Emit" => "0a010101000001020000",
         "Draft" => "0b01010101020164",
-        "Children" => "0c01010173016301640101",
+        "Children" => "0c0101017301630164010100",
+        "ChildrenOfAMember" => "0c010101730163016401010f636f6e74656e742f666f726d732d31",
         "Ephemeral" => "0d0201020304010701080109",
         "HistorySnapshot" => "0e010101",
         "TransactionProposal" => "0f01017001010100",
@@ -975,7 +1023,8 @@ async fn channel_frame_fixture_hex(label: &str) -> &'static str {
         "UiPatch" => "15010106313a626f64790677696e646f7702010103",
         "UiSnapshotEnd" => "1604",
         "OperationCompleted" => "19070501010102",
-        "ChildHeads" => "2001010173016301640101",
+        "ChildHeads" => "200101017301630164010100",
+        "ChildHeadsOfAMember" => "20010101730163016401010f636f6e74656e742f666f726d732d31",
         other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
     }
 }
@@ -1028,13 +1077,13 @@ async fn app_frame_fixture_corpus_matches_golden_hex_and_round_trips() {
     }
 }
 
-/// 📡️ The wire version is owned by `🧫️fixtures/📡️channel/🔖️channel-version.json`, not by
+/// 📡️ The wire version is owned by `🔨️modules/🧑‍💻dev/🔖️channel-version/📌️pin/🔣️.json`, not by
 /// either language's constant, so a bump that updates only one host fails here instead of at
 /// runtime — the drift this guard was added for was a live `APP_CHANNEL_VERSION = 8` in
 /// TypeScript against `CHANNEL_VERSION = 10` in Rust. The TS twin asserts the same file.
 #[semio_framework_async_macros::async_test]
 async fn channel_version_matches_the_shared_cross_language_pin() {
-    let json = include_str!("../../../../../🧫️fixtures/📡️channel/🔖️channel-version.json");
+    let json = include_str!("../../../../🧑‍💻dev/🔖️channel-version/📌️pin/🔣️.json");
     let pin: serde_json::Value = serde_json::from_str(json).expect("🔖️channel-version.json must parse");
     let pinned = pin.get("channelVersion").and_then(serde_json::Value::as_u64).expect("🔖️channel-version.json must carry channelVersion");
     assert_eq!(u64::from(CHANNEL_VERSION), pinned, "CHANNEL_VERSION and the shared cross-language pin disagree — bump both, plus APP_CHANNEL_VERSION in 🟦️.ts");
@@ -1049,14 +1098,17 @@ async fn a_host_admits_only_a_guest_of_its_own_channel_version() {
     assert_eq!(law["code"].as_str(), Some(CHANNEL_MISMATCH_CODE));
     for case in law["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
-        let guest = u32::try_from(i64::from(CHANNEL_VERSION) + case["guestOffset"].as_i64().unwrap()).unwrap();
-        match admit_guest_channel_version(guest, CHANNEL_VERSION) {
+        let (guest_offset, host_offset) = (case["guestOffset"].as_i64().unwrap(), case["hostOffset"].as_i64().unwrap_or(0));
+        assert_eq!(case["admitted"].as_bool().unwrap(), guest_offset == host_offset, "{name}: the corpus admits exactly a guest of its host's version");
+        let guest = u32::try_from(i64::from(CHANNEL_VERSION) + guest_offset).unwrap();
+        let host = u32::try_from(i64::from(CHANNEL_VERSION) + host_offset).unwrap();
+        match admit_guest_channel_version(guest, host) {
             Ok(()) => assert!(case["admitted"].as_bool().unwrap(), "{name}: admitted a guest the law refuses"),
             Err(fault) => {
                 assert!(!case["admitted"].as_bool().unwrap(), "{name}: refused a guest the law admits");
                 assert_eq!(fault.code.0, CHANNEL_MISMATCH_CODE, "{name}");
                 assert_eq!(fault.param("guest"), Some(guest.to_string().as_str()), "{name}");
-                assert_eq!(fault.param("host"), Some(CHANNEL_VERSION.to_string().as_str()), "{name}");
+                assert_eq!(fault.param("host"), Some(host.to_string().as_str()), "{name}");
             }
         }
     }
@@ -1240,7 +1292,15 @@ fn the_document_archive_load_host_sends_the_scripted_commands_and_ends_in_the_sc
         let cancel_before = case["cancel"]["beforeStep"].as_u64();
         let cancel_in_flight = case["cancel"]["whileStepInFlight"].as_u64();
         let admitted_by_guest = case["admittedByGuest"].as_bool().unwrap_or(false);
-        let mut host = if admitted_by_guest { DocumentArchiveLoadHost::admitted(first) } else { DocumentArchiveLoadHost::new(DocumentArchivePack { parent_pack: vec![7], parent_spr: vec![9], members: Vec::new() }) };
+        let merging = case["merging"].as_bool().unwrap_or(false);
+        let scripted = DocumentArchivePack { parent_pack: vec![7], parent_spr: vec![9], members: Vec::new() };
+        let mut host = if admitted_by_guest {
+            DocumentArchiveLoadHost::admitted(first)
+        } else if merging {
+            DocumentArchiveLoadHost::merging(scripted)
+        } else {
+            DocumentArchiveLoadHost::new(scripted)
+        };
         let mut seq = if admitted_by_guest { first + 1 } else { first };
         let mut refusal = None;
         let mut statuses: Vec<(u64, u64)> = Vec::new();
@@ -1259,6 +1319,10 @@ fn the_document_archive_load_host_sends_the_scripted_commands_and_ends_in_the_sc
                 AppCommand::LoadDocumentArchive { seq: sent, archive } => {
                     assert_eq!((*sent, archive.parent_pack.as_slice(), archive.parent_spr.as_slice(), archive.members.len()), (seq, &[7u8][..], &[9u8][..], 0), "{name}: the admission carries the archive under its own sequence");
                     ("loadDocumentArchive", first)
+                }
+                AppCommand::MergeDocumentArchive { seq: sent, archive } => {
+                    assert_eq!((*sent, archive.parent_pack.as_slice(), archive.parent_spr.as_slice(), archive.members.len(), merging), (seq, &[7u8][..], &[9u8][..], 0, true), "{name}: only a merge admits with the merge command, under its own sequence");
+                    ("mergeDocumentArchive", first)
                 }
                 AppCommand::PollDocumentArchiveLoad { seq: sent, operation } => {
                     assert_eq!(*sent, seq, "{name}");
@@ -1290,6 +1354,7 @@ fn the_document_archive_load_host_sends_the_scripted_commands_and_ends_in_the_sc
                         state: state(answer["state"].as_str().unwrap()),
                         completed: answer["completed"].as_u64().unwrap(),
                         total: answer["total"].as_u64().unwrap(),
+                        ahead: answer["ahead"].as_u64().unwrap_or(0),
                         fault: fault(answer),
                     },
                 },
@@ -1310,7 +1375,8 @@ fn the_document_archive_load_host_sends_the_scripted_commands_and_ends_in_the_sc
             host.request_cancel();
         }
         let outcome = refusal.unwrap_or_else(|| match host.step(|| panic!("{name}: a finished load mints no sequence")) {
-            DocumentArchiveLoadStep::Finished(DocumentArchiveLoadOutcome::Ready) => serde_json::json!({ "kind": "ready" }),
+            DocumentArchiveLoadStep::Finished(DocumentArchiveLoadOutcome::Ready) if host.ahead() == 0 => serde_json::json!({ "kind": "ready" }),
+            DocumentArchiveLoadStep::Finished(DocumentArchiveLoadOutcome::Ready) => serde_json::json!({ "kind": "ready", "ahead": host.ahead() }),
             DocumentArchiveLoadStep::Finished(DocumentArchiveLoadOutcome::Cancelled) => serde_json::json!({ "kind": "cancelled" }),
             DocumentArchiveLoadStep::Finished(DocumentArchiveLoadOutcome::Fault(bytes)) => serde_json::json!({ "kind": "fault", "fault": text(bytes) }),
             DocumentArchiveLoadStep::Send { command, .. } => panic!("{name}: the host still sends {command:?} after the script ended"),

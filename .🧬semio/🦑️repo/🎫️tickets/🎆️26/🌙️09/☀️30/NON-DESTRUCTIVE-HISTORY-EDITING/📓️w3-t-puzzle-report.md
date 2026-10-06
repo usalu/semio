@@ -599,3 +599,329 @@ prefix `CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.🧬se
 3. After "TESTS RESUMED": the OWED list S4.10 (3d/5d/2d suites, D7 re-measure with numbers to S4-STORE/S4-RUNTIME, wgpu board2d).
 4. Production follow-up (framework, not this WP): an artifact-instance close should release its puzzle 3d session slot — the instance
    operation owner does not know its instance id today (S4.5).
+
+## Session 5 — 2026-10-05
+
+Successor S5-PUZZLE (Opus executor, coordinator `⚪3f26aaa1…`), inherits S4-PUZZLE (this report). Scratch: `🗑️generated/s5-puzzle/`.
+Paths as in Session 4 (`P2`/`P3`/`P5`, `ED`, `BOARD`); `FW` = `🧰️framework/🔨️modules`, `OSM` = `🧰️framework/🛍️products/💻️os/🔨️modules`.
+Clock stamps are `date` readings.
+
+### S5.0 Status (updated at every milestone)
+
+- 00:20 started under the coordinator's `landing` + `serve` locks (activation s4-8 building): no saves, no cargo. Read rules 1–54, design
+  §5/§8/§22, audit clauses 10–12, resume §1.7/§5.
+- 00:25 rule 46 repair check: no owned source file is newer than S4's 22:50 test-drift wave (only the coordinator's describe output under
+  `🌎️hub/🧩️compositions/🧩️puzzle`). Nothing half-written.
+- 00:28 **finding 1 (S4's unrecorded last run)** — `🗑️generated/s4-puzzle/t3d-targeted.txt` (23:00): 17 targeted 3d laws, **12 passed / 5 failed**,
+  all five with `interactive-job.live-instance` (S5.1). The D7 re-measure never produced numbers.
+- 00:30 **finding 2** — design §22.13's `mutation.precondition-drifted` is a code of the closed FRAMEWORK outcome vocabulary (S5.2). Told `main`;
+  00:36 coordinator decision: S5-PUZZLE lands ONE vocabulary wave for `mutation.precondition-drifted` AND S5-STORE's `mutation.inverse-refused`.
+
+### S5.1 Puzzle 3d: five laws refused `interactive-job.live-instance` (root cause, fix staged)
+
+S4.5 gave every 3d fixture app a process-unique instance id (`next_fixture_instance_id()`, bound with `bind_instance_id`). The fixture's
+`meta("local")` is still `artifact_app_laws::meta` = `instance_id: 1`, and `dispatch_typed_command_inner` (`OSM/🔌️plugin/🦀️.rs:32657`) refuses a
+typed command whose `ActionMeta.instance_id` is not the bound live instance. Only the first fixture of a process (id 1) could dispatch. Failing
+laws: `one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns`, `b54_measures_the_turns_and_units_one_mutation_costs_per_document_size`
+(= the D7 re-measure), `an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes`, `every_maintenance_unit_stays_inside_the_interactive_step_budget`,
+`the_world3d_local_gumball_cases_land_as_their_guest_edits`.
+Fix (test-only, `P3/✏️editor/🧪️tests/🔬️unit/🦀️.rs`): the free `meta(actor)` becomes `Puzzle3dApp::meta(&self, actor)` stamping the fixture's own
+`instance_id`; its 7 call sites follow.
+Work-meter maxima of that run (the 12 passing laws include all four `[DEBUG]` printers): adversarial fill worst step **177** units, first candidate
+after **1490**; penetration flush pair worst step **221**, total **23 314** over 5095 steps; brush suggestions Nakagin worst step **2085** over 73
+steps (slice 1000); fill run Nakagin worst step **5305** at turn 211 of 2949, 1 appending tick, worst append **2** ops.
+
+### S5.2 §22.13 needs the framework outcome vocabulary (census)
+
+The outcome codes are closed (`OutcomeCode`, 9 codes; persistence refuses any other code through `protocol::outcome_code_level`). Complete
+non-test census of sites that enumerate them (`git grep`, tracked files): `FW/📡️replication/🎮️mutation/🦀️.rs` (enum, `ALL`, `as_str`, `level`,
+`OUTCOME_CODES`), `…/🎮️mutation/🧫️fixtures/🧫️outcome-code/🔣️.json`, `FW/📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json`,
+`FW/📡️replication/🟦️.ts` (`OUTCOME_CODES`), `OSM/🏪️store/🧬️schema/🔣️supersede-replay/🔣️.json`, `OSM/🔌️plugin/⏪️time-travel/🦀️.rs`
+(`history_code_text`), React `OSM/📺️renderer/…/🏛️ShellHost/🟦️.tsx` (`mutationCodeLabelKey`), `FW/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts` (en + de bundles),
+`FW/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx` (bundle type). The wgpu shell has no twin (it paints the guest's history body). Codes travel as strings: no
+wire layout change, no channel bump. Laws that read the fixture: Rust `🧪️outcome-code` (replication), TS `registerOutcomeCodeTests`, store
+unit `:7589`, UI `🔬️translation-totality` (every code needs `ui.mutation.code.<camel>.label.{normal,beginner}` in en and de, distinct).
+
+### S5.3 Staged while the locks were held (00:35–00:50, nothing saved in the trees)
+
+- `T/🧪️s5-puzzle-precondition-drifted.py` — the §22.13 puzzle half as 40 anchored changes in 16 files (all or nothing; `--check`,
+  `--stage <dir>`): leaf payload schema input `tolerance` (nullable number ≥ 0, stepper, en/de label + description, group `precondition`),
+  `ConnectHandles.tolerance: Option<f64>` (sparse: an explicit connection states none, so every committed JSON fixture stays canonical),
+  builder `connect_handles_in_proximity`, diff warning `mutation.precondition-drifted` (both handles as `target`, both named in the words;
+  farther apart than the tolerance, or a handle on no node), typed rim geometry `puzzle2d_handle_position` / `puzzle2d_handle_distance` in the
+  schema layer (the framework's `handle_position_on_circle|rectangle`, so `semio-framework-geometry` becomes a plain dependency — the graph
+  crate pulls it in anyway; lockfiles already list the edge), select tool stamps `max(radius, distance on the moved state)`, text grammar
+  mirrors (`.grammar.semio`, `.ebnf`, `.g4`), `🟦️.ts`, a leaf law, two select-tool law extensions, and the runtime corpus: schema
+  (`connectHandles` leaf, scenario `board`, head `edges` + folded `outcomes`, `mutation` index on rows, step `preview`), scenario
+  `a-drifted-proximity-connect-warns-and-is-withdrawn`, Rust law harness (scenario board, mutation index, edges in head equality, folded
+  outcomes of the fresh fold, painted review) and the rewritten Python oracle (shapely rim points + distance, drift outcomes per head).
+  The tolerance of a board-recorded pair is its measured distance when that exceeds the radius: the board pairs handles of OVERLAPPING
+  nodes (`node_drag_proximity_handle_pair`), not handles within the radius, so a bare radius would warn at the original commit.
+  Dry run in a scratch mirror: staged oracle → `6 scenarios, 26 head nodes agree, 1 drift outcomes agree` (exit 0).
+- `T/🧪️s5-puzzle-outcome-codes.py` — the vocabulary wave for BOTH new codes (coordinator decision 00:36): 17 hunks in 9 files, fixture and
+  schemas first; `--check` → 17 pending, every anchor resolves once (04:39, after the peer's 01:20 save of `🎮️mutation/🦀️.rs`).
+
+### S5.4 Resume after the 02:40 usage cut (04:24)
+
+- Rule 62 repair check: nothing of mine was in the trees at the cut (no owned source file newer than 00:20; both scripts still resolve
+  40/40 and 17/17). Baseline, no cargo: `python3 ED/🧪️tests/🧪️select-tool-history/🐍️.py` → 4 scenarios / 12 nodes agree;
+  `…/🧪️history-edit-runtime/🐍️.py` → 5 scenarios / 20 nodes agree; `schema mutation-inputs --under …` 2d 103 declared + 0 inferred / 36 leaves,
+  3d 92 / 38, 5d 99 / 39, 0 findings each; `schema mutation-payloads` 2d 115/115 (10 negative), 3d 58/58 (4), 5d 69/69 (4), 0 findings (04:40).
+- 04:26–04:28 **3d test-only fix SAVED** under the `puzzle` lock (S5.1): `Puzzle3dApp::meta(&self, actor)` stamps the fixture's instance,
+  the free `meta` is gone, 7 call sites follow (`P3/✏️editor/🧪️tests/🔬️unit/🦀️.rs`). Same save: `b54_measures_…` prints its two census rows
+  again (its docstring says it does; the print was gone), and two temporary `[DEBUG]` maxima prints in the two work-meter laws that had none
+  (`penetration_steps_stay_within_interaction_watchdog`, `empty_fill_transition_stays_below_watchdog_ceiling`) so the shared ceilings can be
+  pinned from measured numbers. Lock released after the save: the wave touches only files under `🧪️tests`, the lib is unchanged.
+  **WRITTEN, NOT YET COMPILED**: the test build waited in gate v5 for 12 min, then rule 63 (`foundation.status` = BUILDING → no cargo) —
+  my queued command was stopped before any cargo started.
+
+### S5.5 Puzzle 3d targeted laws + D7 re-measure (05:06–05:17)
+
+Private uplift dir `…/⚡️cache/cargo/target-nde-s5-puzzle`, `CARGO_BUILD_JOBS=3 CARGO_INCREMENTAL=0`, gate v5.
+- `cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib --no-run` → exit 0 (9m59s
+  cold, 156 warnings).
+- `… --lib -- one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns b54_measures_the_turns_and_units_one_mutation_costs_per_document_size
+  an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes every_maintenance_unit_stays_inside_the_interactive_step_budget
+  the_world3d_local_gumball_cases_land_as_their_guest_edits penetration empty_fill_transition adversarial_broad_phase brush_suggestions_run_step
+  fill_run_job_step --nocapture --test-threads=1` → **18 passed / 0 failed** (05:17; output `🗑️generated/s5-puzzle/t3d-run-1.txt`). The five
+  `interactive-job.live-instance` reds of S5.1 are green; Z4 (`the_world3d_local_gumball_cases_land_as_their_guest_edits`) and the
+  maintenance-grant law ran for the first time and pass.
+- **D7 numbers** (thread-local census, one `translateSelection` and one `deleteSelection` at `SETTLE_HOST_TURN_ITEMS`):
+
+  | document | objects | translate | delete | ladder turns |
+  |---|---|---|---|---|
+  | concrete-forest | 1 | 5 turns / 27 units (store 22, page 3, retirement 1, worker 1) | 7 turns / 29 units (store 23, page 3, retirement 1, worker 2) | 4 / 5 |
+  | nakagin | 180 | 5 turns / 27 units (store 22, page 3, retirement 1, worker 1) | 7 turns / 29 units (store 23, page 3, retirement 1, worker 2) | 4 / 5 |
+
+  The publication ladder is document-independent (store 22 = 22; ceiling 8 ladder turns). S3's "22 vs 1590 store units" was other threads'
+  units in the process-wide counter. Sent to `main` 05:22 for S5-STORE / S5-RUNTIME: no D7 root fix is owed in the store.
+  OWED: the same law under a parallel filter (expected identical, the census is per thread).
+- Work-meter maxima (deterministic): brush suggestions Nakagin 2085 units/step (73 steps, slice 1000); fill run Nakagin 5305 units/step
+  (turn 211 of 2949), 1 appending tick, 2 ops; adversarial fill 177/step, first candidate after 1490; empty fill 1/step; penetration flush
+  pair 221/step, 23 314 total over 5095 steps; penetration overlapping cubes 207/step.
+
+### S5.6 Outcome-code vocabulary wave — LANDED 05:31–05:35 (`landing` + `serve`)
+
+`python3 T/🧪️s5-puzzle-outcome-codes.py` (17 hunks, 9 files; pre-wave copies in `🗑️generated/s5-puzzle/pre-outcome-codes/`):
+`mutation.precondition-drifted` (Warning, `OutcomeCode::PreconditionDrifted`, en "Precondition drifted" / de "Vorbedingung nicht mehr
+erfüllt") and `mutation.inverse-refused` (Fatal, `OutcomeCode::InverseRefused`, en "Cannot be reversed" / de "Nicht umkehrbar") in the
+fixture `🧫️outcome-code`, the `replay-report` and `supersede-replay` schema enums, `🎮️mutation/🦀️.rs` (enum, `ALL`/`OUTCOME_CODES` `[..; 11]`,
+`as_str`, `level`, doc), replication `🟦️.ts`, TT `history_code_text`, ShellHost `mutationCodeLabelKey`, the I18n bundle type and the en/de
+bundles (`ui.mutation.code.{preconditionDrifted,inverseRefused}` with normal + beginner labels).
+
+| Run | Result |
+|---|---|
+| `cargo check -p semio-framework-replication -p semio-framework-os-kernel -p semio-framework-plugin --lib` (root) | exit 0, 1m35s (plugin lib 283 warnings) |
+| `cargo test -p semio-framework-replication --lib -- the_vocabulary_table_is_the_fixture apply_family_and_rejected_codes_follow_the_fixture the_typed_codes_are_the_vocabulary refuse_picks_the_vocabulary_level the_warning_builders_build_the_warning_level` | 5 passed / 0 failed |
+| replication TS law `bun ./📜️script.ts test -t "outcome code vocabulary"` | 2 passed (19 skipped) |
+| ui-react `bun ./📜️script.ts canonical-architecture` (label totality: every fixture code has distinct en/de labels) | 2 passed |
+| `bun ./📜️script.ts typecheck` in renderer-react and in ui-react | 0 errors each |
+
+Vitest runners need the repository policy: `cd 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript && SEMIO_TEST_BUDGET_MS=400000
+bun ./📜️script.ts owner-command --cwd <package dir> -- bun ./📜️script.ts test …`.
+Not touched (their owners' twins, no new code is emitted there): wfc `🧬️mutations/🟦️.ts`, remodel `🧬️mutations/🟦️.ts`, puzzle 3d/5d
+`🔣️selection-time-travel` corpus schemas (they enumerate the codes their own corpora may name).
+
+### S5.7 F7 — a camera move was a Commands row (React) — LANDED 05:52–06:01 (`landing` + `serve`)
+
+Live fault (probe batch J step 19): a middle-button pan added one row "Apply Board Events". Cause: `coalesceBoard2dEvents` kept the pan's
+latest `camera` row as the first row of the `applyBoardEvents` batch; `applyBoardEvents` is `ActionKind::Mutation`, so a camera-only flush is a
+command row. The wheel never showed it: it dispatches the view verb `setCamera` from its settle timer.
+Fix, schema first (`python3 T/🧪️s5-puzzle-f7-camera-lane.py`, 17 hunks, 6 files; pre-wave copies in `🗑️generated/s5-puzzle/pre-f7/`): the shared
+corpus states the camera beside the board rows (`expect.camera`, definitions `Camera` + `BoardRow`; a `camera` row among `events` is refused by
+the schema), React `coalesceBoard2dEvents` answers `{flushNow, eventsJson, camera}` and `dispatchBufferedEvents` dispatches
+`setCamera {camera}` (view lane, no row) and `applyBoardEvents` only when board rows remain.
+
+| Run | Result |
+|---|---|
+| renderer-react `test long board-event-coalescing float32-decimal` | 29 passed (2 files) |
+| renderer-react `test long engine-contract -t "puzzle 2d\|board 2d\|live mirror\|hover out of the board"` | 41 passed (660 skipped) |
+| renderer-react `test long pinch-gesture catalogue-drop Board2dHost` | 49 passed (7 files) |
+| renderer-react `typecheck` | 0 errors |
+| `RUST_MIN_STACK=67108864 cargo test -p semio-framework-os-renderer-wgpu --lib -- the_wgpu_coalescer_replays_the_shared_corpus transient_and_flush_now_tables_match_the_react_sets the_engine_offset_form_replays the_wgpu_board_pointer_replays` | 4 passed / 0 failed (06:01) |
+
+**wgpu half OPEN (S5-WGPU's file; told `main` 06:01):** wgpu still publishes a camera inside `applyBoardEvents` on (a) buffered batches —
+`coalesce_owned_board_events` leads `events_json` with the camera row (`🧊️wgpu/🦀️.rs:5197`), consumers `puzzle_board_flush_events_into` and
+`puzzle_board_direct_pointer_into`; (b) the retained pan — the board engine's `FinishPan` plan seals one `camera` event
+(`BOARD/🔌️ports/➡️directed/➕️normal/🦀️.rs:3602`) that `begin_board_pointer_commit` publishes as `applyBoardEvents`. The wgpu corpus law now states
+that divergence exactly (corpus camera row first, then the corpus rows). Follow-up once wgpu publishes `setCamera`: `FinishPan` seals no
+event; delete the `"camera"` arms of puzzle 2d and 5d `🎲️apply-board-events` (fold + dirty scope) and the two 2d unit laws that send camera
+rows (`ED/🧪️tests/🔬️unit/🦀️.rs:687, 742`); then `applyBoardEvents` no longer needs the `WindowConfig` publication lane.
+
+### S5.8 3d work-meter ceilings pinned, `[DEBUG]` prints removed — LANDED 06:03–06:09 (`puzzle` + `serve`)
+
+Test files and two test-only fixtures (both are `include_str!`ed by tests only; the fill-run fixture is also read by the root gate).
+Rule: the next power of two above the measured maximum, doubled (the counts are deterministic, so the headroom is for code changes).
+
+| Ceiling | Was | Measured | Now |
+|---|---|---|---|
+| `PENETRATION_STEP_WORK_CEILING` (`⏳️precompute/📐️geometry/🧪️tests/🔬️unit`) | 100 000 | 221 (flush pair), 207 (cubes) | 512 |
+| `PENETRATION_MEASURE_WORK_CEILING` | 100 000 000 | 23 314 | 65 536 |
+| `FILL_STEP_WORK_CEILING` (`⏳️precompute/🪣️fill/🧪️tests/🔬️unit`) | 100 000 | 177 (adversarial), 1 (empty) | 512 |
+| `FILL_FIRST_CANDIDATE_WORK_CEILING` | 10 000 000 | 1490 | 4 096 |
+| brush `laws.interactive.stepWorkCeiling` (`⏳️precompute/🖌️brush/🧫️fixtures/🎞️brush-suggestions-run.json`) | 100 000 | 2085 | 8 192 |
+| fill run `laws.interactive.stepWorkCeiling` (`⏳️precompute/🪣️fill/🧫️fixtures/🎞️fill-run.json`) | 100 000 | 5305 | 16 384 |
+| fill run `laws.interactive.appendOpsCeiling` | 4 096 | 2 | 16 |
+
+All six `[DEBUG]` lines are gone (the four S4 printers and my two temporary ones): `grep '[DEBUG]'` over the 3d tree → 0.
+- `cargo test … -p semio-s-artifact-puzzle-3d --features component-app-assembly --lib -- mutation_latency an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes
+  every_maintenance_unit_stays_inside_the_interactive_step_budget the_world3d_local_gumball_cases_land_as_their_guest_edits penetration empty_fill_transition
+  adversarial_broad_phase brush_suggestions_run_step fill_run_job_step --nocapture` (default threads = PARALLEL) → **25 passed / 0 failed** (06:09,
+  `🗑️generated/s5-puzzle/t3d-run-2.txt`).
+- **D7 under the parallel run**: concrete-forest translate 5 turns / 27 units (store 22), delete 8 turns / 29 units (store 23); nakagin translate
+  5 / 27 (store 22), delete 7 / 29 (store 23). Units and store units are identical to the sequential run; only the delete's turn count moves
+  by one with the worker poll (ladder 6 vs 5, ceiling 8). D7 is closed on the puzzle side.
+- `bun ./📜️script.ts verify puzzle-fill-policy-self-tests` (cwd `✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript`) → checks=73. The pinned fixture
+  satisfies the root gate's interactive clauses (`budgetWork === 1000`, `0 < stepWorkCeiling ≤ 100 000`, `appendOpsCeiling > 0`, `turns ≥ 1`).
+- Still open from S4 in the 3d unit file: the three `PUZZLE3D_INTERACTIVE_STEP_CEILING` wall-clock asserts (openVortexSuggestions /
+  acceptSuggestion / setActiveExample).
+
+### S5.9 Staged for after "LOCKS OPEN" (wave B + build B1 activation hold every lock since 06:12)
+
+Each script is all-or-nothing with `--check`; anchors re-validated 06:14 against the live tree.
+
+1. **F7, wgpu half** — `python3 T/🧪️s5-puzzle-f7-wgpu-camera-lane.py` (26 hunks, 6 files; **NOT COMPILED**; locks `landing` → `puzzle`):
+   - board engine `BOARD/🔌️ports/➡️directed/➕️normal/🦀️.rs`: `FinishPan` seals no event (`event_count` 0, `write_events_json` deleted,
+     `seal_events` seals `[]`), new `BoardPointerPlan::view_camera()` and `publishes()`;
+   - wgpu host `⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs`: `CoalescedBoardEvents.camera` + `has_rows()`, `coalesce_owned_board_events` takes the
+     camera out, `reserve_board_coalesced` / `write_board_coalesced_flat`, `board_peek_buffer_coalesced` returns the batch,
+     `puzzle_board_flush_events_into` + `puzzle_board_direct_pointer_into` publish `setCamera` + `applyBoardEvents`, the wheel keeps its plan
+     camera and drops a buffered one, `begin_board_pointer_commit` publishes `setCamera` when the plan has a view camera (published only if
+     the engine admits the commit), the three pointer handlers answer `plan.publishes()`;
+   - wgpu corpus law back to exactly the corpus (`events` and `camera`);
+   - guests: puzzle 2d and 5d `🎲️apply-board-events` lose their `"camera"` arm (2d: fold + dirty scope + import; 5d: fold + import + doc);
+     2d laws `apply_board_events_camera_event_commits` → `a_board_camera_move_commits_through_the_view_verb` and
+     `camera_event_declares_window_only_ui_scope` → `a_camera_move_declares_window_only_ui_scope` dispatch `setCamera`.
+   Checks and laws to run after applying are listed in the script's header. Expect to adapt: wgpu standalone laws that read a camera row
+   inside an `applyBoardEvents` action (`🧪️tests/🧊️wgpu-standalone/🦀️.rs` helpers `board_take_buffer_coalesced`,
+   `board_flush_events_action`, `board_drain_and_maybe_flush`), and engine laws around `pointer_pan_plan_…` if one reads the pan's event.
+2. **§22.13 puzzle half** — `python3 T/🧪️s5-puzzle-precondition-drifted.py` (40 changes, 16 files; locks `puzzle` → `serve`; S5.3). The
+   vocabulary it needs (`protocol::OutcomeCode::PreconditionDrifted`) is on disk since 05:35. After applying:
+   `cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d -p semio-s-artifact-puzzle-3d -p semio-s-artifact-puzzle-5d --lib
+   --features semio-s-artifact-puzzle-3d/component-app-assembly,semio-s-artifact-puzzle-2d/component-app-assembly,semio-s-artifact-puzzle-5d/component-app-assembly`,
+   `cargo check --manifest-path 🌎️hub/Cargo.toml --target wasm32-wasip2 -p semio-hub-puzzle`, then
+   `RUST_MIN_STACK=67108864 cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib --
+   a_recorded_proximity_connect select_tool history_edit_runtime_tests`, `python3 ED/🧪️tests/🧪️history-edit-runtime/🐍️.py`
+   (expects `6 scenarios, 26 head nodes agree, 1 drift outcomes agree`), `schema mutation-inputs` / `mutation-payloads --under …◻️2d`.
+   Risks to watch at the first compile: the `DslRecord` text form of the trailing `Option<f64>` (the text grammar mirrors say `number-opt`),
+   the wire-format guard round trip (covered by the new leaf law), and `words` on the review row (the history body must show
+   "Precondition drifted" / "Vorbedingung nicht mehr erfüllt" on the transaction row while reviewing).
+3. **Tool-mismatch codemod** (S5-GATES relay) — `python3 T/🧪️s5-gates-tool-mismatch.py --root "✏️s/🔌️plugins/🧩️puzzle"` → 4 sites / 3 files
+   (`P3/✏️editor/🦀️.rs:7360`, `P5/✏️editor/🦀️.rs:9045`, `ED/🦀️.rs:5196` → `app.command.tool-mismatch`; `ED/🦀️.rs:5208` →
+   `app.command.unsupported`); add `--apply` inside the next puzzle wave, same checks.
+
+### S5.10 State at 06:20 (parked for wave B + the B1 activation; resume at "LOCKS OPEN")
+
+**Landed and verified this session:** 3d fixture-meta fix (S5.4/S5.5), outcome-code vocabulary (S5.6), F7 React + shared corpus (S5.7),
+3d ceilings + `[DEBUG]` removal (S5.8). **Staged, not landed:** F7 wgpu half, §22.13 puzzle half, tool-mismatch codemod (S5.9).
+
+**OWED (exact commands; gate v5 `until [ "$(pgrep -x cargo | wc -l | tr -d ' ')" -lt 4 ]; do sleep 20; done`, `CARGO_BUILD_JOBS=3
+CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target-nde-s5-puzzle`, `PM` =
+`--manifest-path ✏️s/Cargo.toml`):**
+1. Land S5.9 items 1–3 with their listed checks and laws.
+2. Puzzle 2d suites (never run on this tree): `RUST_MIN_STACK=67108864 cargo test PM -p semio-s-artifact-puzzle-2d --features
+   component-app-assembly --lib -- select_tool`, then `-- history_edit_runtime_tests` (holds
+   `every_corpus_scenario_reaches_its_session_outcomes_rows_and_heads`), then `-- every_registered_example dsl_asset_parses`, then
+   `-- board_fill_job_large_host_has_no_step_at_or_above_eight_ms fill_run_job_drive_step_stays_below_the_interactive_ceiling_for_nakagin`.
+   Run `select_tool` + `history_edit_runtime_tests` BEFORE and AFTER any wave that changes the select tool (§22.13, §22.10).
+3. Puzzle 5d: `cargo test PM -p semio-s-artifact-puzzle-5d --features component-app-assembly --lib -- a_board_gesture_drag board_node_delete
+   apply_board_events language_neutral_fixtures`.
+4. wgpu board laws beyond the four that ran: `RUST_MIN_STACK=67108864 cargo test -p semio-framework-os-renderer-wgpu --lib -- board2d`.
+5. Three wall-clock asserts left in the 3d unit file (`PUZZLE3D_INTERACTIVE_STEP_CEILING`) → work-meter laws.
+6. §22.10 adoption of the select tool (recipe in the coordinator's 02:00 relay; sites `ED/🦀️.rs:1887-1937`, `:5035-5041`, `:2900`,
+   `🖱️select/🦀️.rs:337-…`, one-shots 2d `:408`, 3d `🔄️transform/🦀️.rs:337`, 5d `🔄️transform/🦀️.rs:286`) and §22.9 board contract
+   (classification into the `board-event-coalescing` schema per event kind, `PUZZLE2D_*` names and `Puzzle2dFixtureDropPayload` out of the
+   framework hosts): NOT STARTED.
+
+**Coordinator actions:** (a) after §22.13 lands: describe + activation of puzzle (the `connect-handles` leaf gains the input `tolerance`;
+central `schema generate` for its `x-semio-ui`); (b) the wgpu F7 half and the guests' camera-arm removal reach the browser only with the
+activation after they land; (c) live re-check of F7 on React: probe batch J step 19 (`l4-camera-moves-are-never-history-rows`) — the fix
+is TypeScript and hot-reloaded at 05:52.
+
+### S5.11 Resume 09:37 (after the 07:45 cut) — three staged waves APPLIED via the landing train (rule 67), compile verdict = the train's
+
+Repair-first: nothing of mine was half-applied (all three scripts still reported every hunk pending at 09:37).
+
+| Train line | Wave | Files | Restore |
+|---|---|---|---|
+| 10:04:19 | §22.13 puzzle half (`T/🧪️s5-puzzle-precondition-drifted.py`, 40 changes) | 16 | `python3 "T/🧪️s5-puzzle-restore.py" precondition-drifted` (`--check` → 40 restorable) |
+| 10:04:19 | tool-mismatch codemod (`T/🧪️s5-gates-tool-mismatch.py --root ✏️s/🔌️plugins/🧩️puzzle --apply`, 4 sites) | 3 | `python3 "T/🧪️s5-puzzle-restore.py" tool-mismatch` |
+| 10:07:34 | F7 wgpu half (`T/🧪️s5-puzzle-f7-wgpu-camera-lane.py`, 23 hunks) | 5 | copies in `🗑️generated/s5-puzzle/pre-f7-wgpu/` (command in the train line) |
+| 10:08:31 | wgpu corpus law compares the camera numerically (test file) | 1 | — |
+| 10:11:40 | corpus `select-tool-history`: the drag's `/dx` and `/dy` rows also state the rendered control (`numberStepper`, precision 2, step = the grid) | 1 | — |
+
+- Ran without cargo after applying: `python3 ED/🧪️tests/🧪️history-edit-runtime/🐍️.py` → `6 scenarios, 26 head nodes agree, 1 drift outcomes agree`;
+  `…/🧪️select-tool-history/🐍️.py` → 4 scenarios / 12 nodes agree (also after the corpus tightening); `schema mutation-inputs --under …◻️2d`
+  → **104 declared + 0 inferred of 104 inputs / 36 leaves, 0 findings** (the new `tolerance` input is the 104th);
+  `schema mutation-payloads` → 115/115, 36/36 leaves witnessed, 0 findings.
+- **NOT COMPILED BY ME.** My own featured lib check sat 900 s in gate v6 and closed (exit 5); my earlier 2d test build was one of three
+  cargos in a flock cycle (private target dir without a private build dir — rule 66) and was killed at 09:49, no verdict. The train's
+  `kernel + plugin + wgpu + ui --lib` + `-p semio-s-artifact-puzzle-2d --lib` is the verdict; `T/🗑️generated/coord/train.status` still read
+  `CHECKING … through: 10:09:16` at 10:15.
+- Changes against the 06:14 staging of the wgpu half: puzzle 5d is OUT of the wave (its retained board-events work carries the camera
+  through its own stages — `P5/✏️editor/🦀️.rs` field `camera2d` :7294, arm :7490, publication :7647, close/terminal :7737/:7763 — and its
+  retained-jobs vector `boardCameraPublishesWindowConfig`, `P5/🧫️fixtures/🗄️retained-jobs/🔣️.json:2041`); `seal_events` is test-only; the
+  retained pan answers the engine's own refusal when its commit is not admitted. Hosts no longer send a camera row, so the 5d arm is dead
+  code until its own wave removes it (work + command arm + fixture vector + `WindowConfig` lane of 5d `applyBoardEvents`).
+
+### S5.12 The goal's own example — what the drag mutation's descriptor carries and which law asserts it
+
+Leaf `drag-selection` (`P2/🧬️schema/🧬️mutations/✋️drag-selection/🧬️schema/🔣️.json`): `targets` = array of unique strings, `minItems 1`,
+`x-semio-ui { widget: reference, role: target, ref { kind: [node, targetRegion], domain: vortex, granularity: node }, label + description
+en/de, group target }`; `dx` and `dy` = number, `x-semio-ui { widget: stepper, role: value, step 1, precision 2, snapSource { config:
+gridFactor }, label en/de, group offset }`. An offset has no minimum or maximum by nature, so the leaf declares none (the diff refuses only a
+non-finite offset as `mutation.invariant`); the bounded selection inputs of the same family do declare them (`rotate-selection.angle`: dial
+−π…π, step 1°, quarter-turn detents; `scale-selection.factor`: log slider 0.1…10, step 0.01, detents, hard `exclusiveMinimum 0`).
+Law `every_corpus_scenario_edits_its_leaves_in_history_and_overwrites_to_a_fresh_fold` (`ED/🧪️tests/🧪️select-tool-history/🦀️.rs:282-320`)
+over corpus scenario `drag-offset-and-targets`: after a REAL board drag (one row, one transaction) the open editor must show `/targets` as
+a `Reference` control (domain `vortex`, granularity `node`, many), `/dx` and `/dy` as `Stepper` controls whose schema snaps to the
+`gridFactor` config and whose rendered component is `{ type: numberStepper, precision: 2, step: 5.0 }` (the window's grid; the component
+facets are new in the corpus since 10:11); then edits the offset AND replaces the targets through "Use selection" and requires the
+overwrite head. The rotate and scale scenarios assert min / max / step / unit / snaps / limits of their controls the same way.
+**RUN OWED** (the law has not run on today's tree): see S5.13.
+
+### S5.13 OWED after the train's GREEN that includes 10:11:40 (gate v6, shared target, `CARGO_BUILD_JOBS=3`)
+
+1. `zsh T/🚦️gate.sh && CARGO_BUILD_JOBS=3 cargo check --manifest-path 🌎️hub/Cargo.toml --target wasm32-wasip2 -p semio-hub-puzzle --message-format=short`
+   (guest code of all three waves; the activation gate) and `… cargo check --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-3d
+   -p semio-s-artifact-puzzle-5d --lib --features semio-s-artifact-puzzle-3d/component-app-assembly,semio-s-artifact-puzzle-5d/component-app-assembly`
+   (the codemod's 3d and 5d sites are outside the train's closure).
+2. ONE test build: `zsh T/🚦️gate.sh 3 25 && RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=3 cargo test --manifest-path ✏️s/Cargo.toml
+   -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib --message-format=short -- select_tool history_edit_runtime_tests
+   a_recorded_proximity_connect a_board_camera_move a_camera_move_declares connect_disconnect_handles every_bounded_leaf wire_format`
+   then `-- every_registered_example dsl_asset_parses` and the two fill laws.
+3. wgpu: `RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=3 cargo test -p semio-framework-os-renderer-wgpu --lib -- board2d` and
+   `cargo test -p semio-framework-os-infinite --lib -- pointer_pan pointer_plan selection_move`.
+4. Puzzle 5d filters (S5.10 item 3).
+
+### S5.14 Board host contract field list (design §22.31) — WRITTEN 10:15
+
+`T/📓️s5-board-contract.md`: (1) the one board event schema `BOARD/🧬️schema/🔣️board-event` with an `x-semio-board-event` row per kind
+(`delivery`, `coalesce`, `lane`, `awaits`, `mirror`), the generated Rust + TS tables, and the table of all 20 kinds with what React and
+wgpu encode by name today; the three verbs a host spells today become `Board2dScene.eventsAction` / `cameraAction` / `dropPayload.action`;
+(2) `DropPayload { mime, schema, action, position, args, ghost }` with the two payloads that exist (2d board, 3d world) as declared values;
+(3) declared selection domains (`primary`, `defaultGranularity`, `granularities`, `label`) and the scene's `granularityClassifier` +
+`granularityFallback`; `classifierKind: "shapeGlyph"`; (4) the rename table for all 52 `Board2dHost` hits, the Interpreter and the 16 wgpu
+functions with their caller counts; (5) proof + gate; (6) an implementation order that keeps both hosts on the same corpus.
+
+### S5.15 — 10:45 → 11:35 (usage stop; nothing half-applied, no lock held, no cargo running)
+- **F11 (wgpu board empty), guest side — read from code, accepted by `main`:** boot = host duty wgpu lacked (`apply_boot_example` returned without `?example=`; React `useInitialExampleReadiness` dispatches for every uninitialized session); manual choice = the wgpu bridge dropped `AppFrame::OperationCompleted` of any operation that outlives the host call (`shellFrameAnswersACaller` true for a frame without `in_reply_to`, no subscriber), the UI-progress scope waited in `pendingTurnEffects` for the next dispatch. No puzzle change; S5-WGPU landed waves 8 + 9.
+- **Landed 10:50:38 (train line written):** puzzle 3d `[dev-dependencies]` `semio-framework-dispatch-macros` + `✏️s/Cargo.lock` (one line, `cargo metadata --offline` exit 0). `PublicApps` is the enum the unresolved `dyn_enum_close!` declares — peer test file untouched. NOT compiled by me.
+- **2d test build: NO VERDICT twice, no cargo ever started** (10:53 gate script was rewritten while zsh read it → parse error exit 1; 11:09 gate closed 900 s by `activation.flag` → exit 5). OWED: `zsh T/🚦️gate.sh 3 18 && RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=3 cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib --message-format=short -- select_tool history_edit_runtime_tests a_recorded_proximity_connect a_board_camera_move a_camera_move_declares connect_disconnect_handles every_bounded_leaf wire_format every_registered_example dsl_asset_parses`.
+- **Finding for the train:** its puzzle check runs WITHOUT `--features component-app-assembly`; `pub mod editor` (2d crate root :1679) is gated by that feature, so `PUZZLE GREEN` never compiles the editor (select tool, `apply-board-events`, retained works). The only compile verdict for my editor edits is the hub wasip2 check (exit 0, 10:44:46).
+- **§22.31 puzzle half — DESIGNED, not on disk (no script yet):** declare by construction instead of new fields (73 `InteractionDefinition {…}` literals in 55 files would otherwise change): `interactions[0]` = primary domain, `granularities[0]` = default granularity (the type's documented rule; reproduces 3d's `"object"`, fixes 2d's undeclared one). Accessors to add: `InteractionDefinition::default_granularity()`, `primary_interaction(&[InteractionDefinition])` (`🕹️interaction/🦀️.rs`), `InteractionOutline::default_granularity()` + `primary_outline(&[InteractionOutline])` (`📡️replication/📡️wire/🦀️.rs` ≈ :3081, exported by `pub use crate::wire::*`), `AppDefinition::primary_interaction()` (`🛂️manifest/🦀️.rs` after :5885), TS `defaultGranularity` / `primaryInteraction` (`🕹️interaction/🟦️.ts`), schema description, fixture `🧫️fixtures/🥇️primary-domain.json` + Rust law + oracle. Board event schema + generated tables + `DropPayload`: not started.
+- **§22.32 (a) — DESIGNED, not on disk:** one `statechart!` chart `board_tool` in `🎲️apply-board-events/🦀️.rs` (event `Release(BoardToolRequest{base, rows})`, guard = the release yields something, action = `ToolYield::upsert` per leaf + `Commit`), driven per run of same-kind rows by `drive_chart_gesture::<board_tool::BoardTool>(None, <row name>, GesturePhase::Once, …)`; leaves = `puzzle2d_document_delta_operations(base, fold(base, rows))` through one shared `puzzle2d_fold_board_row`; `Puzzle2dPlaySnapshot::shared_value()` avoids the base copy; first committed transaction stamps the edit. Select onto the slot = 10 files / ~100 sites (two test files) and needs the job context threaded through `PuzzleCommandWork` (`request.context` in `build_tool_job`) — own wave after it; `TimeTravelFrozen` arm (`✏️editor/🦀️.rs:5035`) goes with it.
+- **Still owed from S5.13:** 3d + 5d `--lib` check with both `component-app-assembly` features, wgpu `-- board2d`, os-infinite `-- pointer_pan pointer_plan selection_move`, 5d filters, 5d board-camera removal wave.
+
+### S5.16 — 18:08 → 19:32, wave B3 guest (puzzle 2d) — on disk, no lock held, no cargo running
+- **Landed (train lines 18:30:33 b3-guest, fix1–3, 19:20:34 f16; scripts `🧪️s5-puzzle-b3-guest.py`, `…-fix1.py`, `…-f16.py`, staged inputs `🧪️s5-puzzle-b3/`):**
+  - §22.32 (a): `regionCreate`, `regionResize`, `brushPlace`, `edgeCreate`, `edgeDelete`, `nodeDelete` are ONE `statechart!` machine `board_tool` (`🎲️apply-board-events/🦀️.rs`): a run of rows of one kind = one release = ONE `ToolTransaction` of `<appId>#<kind>` driven `Once` on the window's framework gesture slot; leaves = the granular delta of the shared fold `puzzle2d_fold_board_row`; a release that changes nothing = zero trace. The select tool is a `GestureChart` on the same slot (`ctx.gesture.drive::<ChartGesture<…>>`): `Puzzle2dSelectTool`, `Puzzle2dSelectToolState` (+ window-transient field, JSON + TS twins), `Puzzle2dSelectPhase`, the preview fold, the utility-switch retire and the WHOLE `host_event` arm (`TimeTravelFrozen` included) are deleted. Slot reaches the action through `PuzzleCommandWork::bind_job_context` (shared retained layer) → `puzzle2d_dispatch_emit(…, gesture, …)` (text gate in `📜️script.ts` updated).
+  - F21: `puzzle2d_declared_precision` rounds a committed leaf's inputs to the `x-semio-ui.precision` of its own input schema (dx, dy, pivotX, pivotY, factor: 2 decimals; `angle` declares none → untouched; the gesture record carries no snap fact → no snap rounding); a motion that rounds to the identity is no edit.
+  - F16: `vortex` declares `HierarchyProvider::Topology`; `interaction_topology` = nodes (handles under them), edges, target regions (as node granularity).
+  - F24: law `a_flush_of_transient_rows_commits_nothing`. FINDING: for a hover-only `applyBoardEvents` the framework command log still upserts ONE row `(seq, applied=false, 0 op lines)` — the row wgpu lists and React hides; fix is the framework's (no row for a typed operation that published no lane) or the wgpu list's filter.
+- **Ran (final tree, 19:21):** `cargo test -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib -- <22 filters>` → **63 passed / 0 failed** (`🗑️generated/s5-puzzle/b3-laws-8.txt`); board-tools oracle 16/16 cases, select-tool-history oracle 4 scenarios / 12 nodes; `cargo check --manifest-path 🌎️hub/Cargo.toml --target wasm32-wasip2 -p semio-hub-puzzle` → exit 0 (8m16s, 19:22 → 19:30, after the last lib change).
+- **Red, not in the wave by reading (no pre-wave baseline was run):** `history_edit_runtime_tests::switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_trace` — `history_snapshot().active_alternative_id` is `None` after one seed drag ("the trunk line has an id", runs 1/2/6/7); `…::a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_board` — "the remote change is adopted never settled: None" (runs 1/2; >9 min in run 5, killed).
+- **Test-side repairs found on the way (stale against today's framework, all mine):** unit harness `drain_settled` now drains every `take_typed_operation_ui_progress` unit (a selection during an open history edit left one queued, so every later dispatch "did not settle" — this, not the topology, was why F16 looked broken in run 1); the history-editor reference row is read as `…input.<pointer>.row`; the chip of a withdrawn target reads its entity name ("Node extra"); `the_board_emit_carries…` dispatches from a view.
+- **Behaviour to prove live (S5-E2E):** an open stream's preview now paints in every window (framework overlay), not only the dragging one; a release whose fold does not decode is refused with zero trace and a `[TRACE]` line instead of faulting the dispatch; a node placed AND selected by one flush must stay selected under the topology (no law reads the selection).
+- **Not in:** press identity (`drive(None, …)` — the `gesture` argument is not read), 3d / 5d tools on the slot, 5d board-camera removal, §22.31 puzzle half (design only, S5.15). Left over: `Puzzle2dActionCtx.base_revision` and the `WindowTransient` lane of the three transform verbs' publication contracts are unused now.
+- **Owed:** the whole 2d suite `zsh T/🚦️gate.sh 2 12 && RUST_MIN_STACK=67108864 CARGO_BUILD_JOBS=4 cargo test --manifest-path ✏️s/Cargo.toml -p semio-s-artifact-puzzle-2d --features component-app-assembly --lib` (63 of 1102 tests ran on the final tree); S5.13 list (3d + 5d lib tests, wgpu `-- board2d`, os-infinite). Restore: `python3 T/🧪️s5-puzzle-b3-f16.py --restore`, then `python3 T/🧪️s5-puzzle-b3-guest.py --restore`.

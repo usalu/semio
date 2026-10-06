@@ -177,25 +177,25 @@ pub(crate) fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeom
 }
 
 //#region 🔖️MeshLaneCache
-/// 🗄️ The pane's mesh lane, remembered per materialized working scene. `world_meshes_json`
+/// 🗄️ The pane's mesh lane, remembered per genesis geometry and tessellated object set. `world_meshes_json`
 /// re-tessellates every kernel-backed object from the host snapshot on EVERY render — and a hover
 /// renders all four panes (the four scenes share one interaction domain), so one pointer move cost
 /// four full re-tessellations of the Concrete Forest (≈40–80 ms per pane inside the guest) for a
-/// lane whose bytes had not changed. The lane only changes when the pane's objects or its geometry
-/// change, and both live in the child's immutable `Arc<CadWorkingScene>` materialization: a scene is
-/// re-minted on every object edit (`cad_pane_rematerialized_child`), so the `Arc` allocation is the
-/// geometry's identity. The entry holds a `Weak` to that allocation — an `Arc` allocation is not
-/// freed while a `Weak` points at it, so its address cannot be reused by a later scene and a stale
-/// hit is impossible — plus a digest of every object field the tessellation reads.
+/// lane whose bytes had not changed. The lane is a function of two things only: the pane's raw geometry, which lives in
+/// the immutable genesis `Arc<CadWorkingScene>` its stable child id names (`crate::cad_bundled_pane_scene`), and the
+/// object fields the tessellation reads, which live in the composed child and change with every child-lane edit. The
+/// entry therefore holds a `Weak` to the genesis allocation — an `Arc` allocation is not freed while a `Weak` points at
+/// it, so its address cannot be reused by a later scene and a stale hit is impossible; a pane without a genesis scene
+/// has no raw geometry and is keyed by `None` — plus a digest of every object field the tessellation reads.
 struct MeshLaneCacheEntry {
     pane: CadPaneId,
-    scene: std::sync::Weak<CadWorkingScene>,
+    genesis: Option<std::sync::Weak<CadWorkingScene>>,
     objects_digest: u64,
     json: String,
 }
 
-/// 🗄️ Four panes, each with its live scene plus the one it just left (a commit re-mints the scene
-/// and the old one may still be rendered once by a lagging refresh).
+/// 🗄️ Four panes, each with the object set it shows plus the one it just left (an edit changes the digest and the old
+/// lane may still be rendered once by a lagging refresh).
 const MESH_LANE_CACHE_CAPACITY: usize = 8;
 
 static MESH_LANE_CACHE: std::sync::Mutex<Vec<MeshLaneCacheEntry>> = std::sync::Mutex::new(Vec::new());
@@ -219,26 +219,30 @@ fn mesh_lane_objects_digest(objects: &[CadObject]) -> u64 {
     hasher.finish()
 }
 
-/// 🗄️ `world_meshes_json` behind the per-scene cache. A pane without a materialized scene renders
-/// the fallback roster directly (it is one built-in mesh and never worth an entry).
-pub(crate) fn world_meshes_json_cached(pane: CadPaneId, scene: Option<&std::sync::Arc<CadWorkingScene>>, objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
-    let Some(scene) = scene else {
+/// 🗄️ `world_meshes_json` behind the cache, for the pane composed over `genesis`. A pane with no objects renders the
+/// fallback roster directly (it is one built-in mesh and never worth an entry).
+pub(crate) fn world_meshes_json_cached(pane: CadPaneId, genesis: Option<&std::sync::Arc<CadWorkingScene>>, objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
+    if objects.is_empty() {
         return world_meshes_json(objects, geometry);
-    };
+    }
     let objects_digest = mesh_lane_objects_digest(objects);
-    let scene_ptr = std::sync::Arc::as_ptr(scene);
+    let same_genesis = |entry: &MeshLaneCacheEntry| match (&entry.genesis, genesis) {
+        (Some(held), Some(scene)) => std::ptr::eq(held.as_ptr(), std::sync::Arc::as_ptr(scene)),
+        (None, None) => true,
+        _ => false,
+    };
     if let Ok(cache) = MESH_LANE_CACHE.lock() {
-        if let Some(entry) = cache.iter().find(|entry| entry.pane == pane && entry.objects_digest == objects_digest && std::ptr::eq(entry.scene.as_ptr(), scene_ptr)) {
+        if let Some(entry) = cache.iter().find(|entry| entry.pane == pane && entry.objects_digest == objects_digest && same_genesis(entry)) {
             return entry.json.clone();
         }
     }
     let json = world_meshes_json(objects, geometry);
     if let Ok(mut cache) = MESH_LANE_CACHE.lock() {
-        cache.retain(|entry| entry.pane != pane || entry.scene.strong_count() > 0);
+        cache.retain(|entry| entry.pane != pane || entry.genesis.as_ref().is_none_or(|scene| scene.strong_count() > 0));
         if cache.len() >= MESH_LANE_CACHE_CAPACITY {
             cache.remove(0);
         }
-        cache.push(MeshLaneCacheEntry { pane, scene: std::sync::Arc::downgrade(scene), objects_digest, json: json.clone() });
+        cache.push(MeshLaneCacheEntry { pane, genesis: genesis.map(std::sync::Arc::downgrade), objects_digest, json: json.clone() });
     }
     json
 }
@@ -334,27 +338,6 @@ pub fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<
         })
         .collect();
     Some(semio_framework_pack_json::to_json_string(&records))
-}
-
-/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3: a pane's object/geometry data
-/// lives inside its composed `s.stdio.semio.model` CHILD document now — no host-level child
-/// resolver exists yet (see `🔖️Composition` in `🏪️store/🦀️.rs`), but the handle's own
-/// `ArtifactChild::local_owner` (the same in-process materialization seam `flow`/`dag`/`jack`/
-/// `wires`/`sequence` already rely on) carries the `CadWorkingScene` a document builder such as
-/// `forest_play_document` attached when it minted the handle. `pane`'s objects/geometry come from
-/// there (through [`crate::cad_pane_local_scene`], which also resolves a wire-decoded bundled-example
-/// handle); an unresolvable handle (or none at all) renders an empty pane, never a fabricated one.
-pub(crate) fn cad_pane_working_scene(document: &CadSnapshot, pane: CadPaneId) -> Option<std::sync::Arc<CadWorkingScene>> {
-    crate::cad_pane_local_scene(document, pane)
-}
-
-pub(crate) fn cad_pane_working_objects(scene: &CadWorkingScene, pane: CadPaneId) -> (&[CadObject], Option<&CadGeometry>) {
-    match pane {
-        CadPaneId::Shape => (&scene.objects, scene.geometry.as_ref()),
-        CadPaneId::Building => (&scene.building_objects, scene.building_geometry.as_ref()),
-        CadPaneId::Energy => (&scene.energy_objects, scene.energy_geometry.as_ref()),
-        CadPaneId::StructureClassic => (&scene.structure_classic_objects, scene.structure_classic_geometry.as_ref()),
-    }
 }
 
 /// 🧲️ How many pick-target preview items one pane may publish per frame. The `engagementPreview`
@@ -482,13 +465,15 @@ pub(crate) fn pick_target_lane_items(view: &CadPlayView, objects: &[CadObject], 
         .collect()
 }
 
+/// 🌍️ One pane's world scene: its objects as the pane's composed `s.stdio.semio@v1/model` child holds them now and the
+/// raw geometry of the genesis scene its stable child id names (`envelope.panes`, design §20.15) — a pane without a
+/// handle renders empty, never a fabricated one.
 pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
-    let working_scene = cad_pane_working_scene(&envelope.document, pane);
-    let empty: &[CadObject] = &[];
-    let (objects, geometry) = working_scene.as_deref().map_or((empty, None), |scene| cad_pane_working_objects(scene, pane));
+    let composed = envelope.panes.pane(pane);
+    let (objects, geometry) = (composed.objects.as_slice(), composed.geometry(pane));
     let mut scene = World3dScene::base(
         camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
-        world_meshes_json_cached(pane, working_scene.as_ref(), objects, geometry),
+        world_meshes_json_cached(pane, composed.genesis.as_ref(), objects, geometry),
         world_instances_json(objects, envelope),
         world_selection_json(envelope, pane, objects, active_utility, options),
     );

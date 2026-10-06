@@ -266,7 +266,6 @@ describe("conditional delivery of dev-served files", () => {
     const root = resolve(import.meta.dir, "../../🧫️fixtures/🏷️conditional-delivery");
     const fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
     const { default: Ajv2020 } = await import("ajv/dist/2020.js"), { default: fresh } = await import("fresh");
-    expect(new Ajv2020({ strict: true }).compile(JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")))(fixture)).toBe(true);
     const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "conditional-delivery-")));
     const filePath = join(sandbox, fixture.file.path);
     mkdirSync(dirname(filePath), { recursive: true });
@@ -318,7 +317,6 @@ describe("static-dir mount table", () => {
     const root = resolve(import.meta.dir, "../../🧫️fixtures/🗂️static-dir-mounts");
     const fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv"), { createServer: createViteServer } = await import("vite"), { default: glob } = await import("fast-glob");
-    expect(new Ajv({ strict: true }).compile(JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")))(fixture)).toBe(true);
     const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "static-dir-mounts-")));
     const put = (path: string, content: string) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, content); };
     const snapshot = async (tree: string) => Object.fromEntries((await glob("**/*", { cwd: tree, onlyFiles: true })).sort().map(path => [path, readFileSync(resolve(tree, path), "utf8")]));

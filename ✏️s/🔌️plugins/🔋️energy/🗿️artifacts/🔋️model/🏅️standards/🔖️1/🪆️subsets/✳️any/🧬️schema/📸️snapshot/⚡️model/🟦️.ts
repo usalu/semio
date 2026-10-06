@@ -1,5 +1,5 @@
 /** ⚡️ Complete persisted Energy model scalar and relationship ownership. */
-import type {Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type EnergyFloat=Binary64;
 export type EnergyVertex=readonly[EnergyFloat,EnergyFloat,EnergyFloat];
 export interface EnergySite{latitude_deg:EnergyFloat;longitude_deg:EnergyFloat;elevation_m:EnergyFloat;time_zone_hours:EnergyFloat;north_axis_deg:EnergyFloat}

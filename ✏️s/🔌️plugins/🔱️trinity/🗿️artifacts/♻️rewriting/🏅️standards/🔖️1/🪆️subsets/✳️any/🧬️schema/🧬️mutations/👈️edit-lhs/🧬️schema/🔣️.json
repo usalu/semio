@@ -13,7 +13,20 @@
       "const": "editLhs"
     },
     "newLhs": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/lhs"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/lhs",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Left-hand side",
+          "de": "Linke Regelseite"
+        },
+        "description": {
+          "en": "Pattern and where-clause the rule matches.",
+          "de": "Muster und Where-Klausel, die die Regel abgleicht."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

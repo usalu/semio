@@ -1025,10 +1025,28 @@
       ],
       "properties": {
         "x": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Abscissa x",
+              "de": "Abszisse x"
+            },
+            "widget": "stepper",
+            "precision": 3,
+            "step": 0.1
+          }
         },
         "y": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ordinate y",
+              "de": "Ordinate y"
+            },
+            "widget": "stepper",
+            "precision": 3,
+            "step": 0.1
+          }
         }
       },
       "x-semio-formats": [

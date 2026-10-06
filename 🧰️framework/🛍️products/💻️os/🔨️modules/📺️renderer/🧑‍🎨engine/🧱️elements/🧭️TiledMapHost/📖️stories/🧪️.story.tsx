@@ -17,7 +17,7 @@ import type { ActionDescriptor, TiledMapScene, UiComponentSceneNode } from "@sem
 
 //#region SceneFixtures
 const VECTOR_SCENE: TiledMapScene = {
-  mapFixtureJson: JSON.stringify({ positions: [{ id: "hq", label: "HQ", name: "Headquarters" }] }),
+  mapDescriptorJson: JSON.stringify({ positions: [{ id: "hq", label: "HQ", name: "Headquarters" }] }),
   cameraJson: '{"x":0,"y":0,"zoom":1}',
   renderMode: "vector",
   vectorStyle: "colored",

@@ -23,7 +23,7 @@ use ::protocol::wire::command_ingress::{FixedCommandPage, CommandPageSet, PagedC
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
 /// frame; it exists purely as the drift guard the tests below assert against.
-pub const CHANNEL_VERSION: u32 = 21;
+pub const CHANNEL_VERSION: u32 = 23;
 //#endregion 🔖️Version
 
 //#region 🔖️ChannelHandshake
@@ -113,6 +113,8 @@ pub struct ChildPackEntry {
     pub dialect: String,
     /// 📦️ The child's full envelope pack (`encode_document_pack_bytes` framing: pack + spr).
     pub envelope_pack: Vec<u8>,
+    /// 🧭️ The owner path of the member that owns this entry (`slot/childId[/slot/childId]*`, `%25` / `%2F` escaped); empty for the document itself. CHANNEL_VERSION 23 wire addition.
+    pub owner: String,
 }
 
 /// 🪆️ One owned child's CURRENT content as its head snapshot pack (`ArtifactPack::encode_pack`), nested members included — what a
@@ -125,6 +127,8 @@ pub struct ChildHeadPackEntry {
     pub dialect: String,
     /// 📦️ The child's head snapshot pack.
     pub head_pack: Vec<u8>,
+    /// 🧭️ The owner path of the member that owns this entry, as [`ChildPackEntry::owner`]. CHANNEL_VERSION 23 wire addition.
+    pub owner: String,
 }
 //#endregion 🔖️ChildPackEntry
 
@@ -208,6 +212,8 @@ pub struct DocumentArchiveLoadStatus {
     pub state: DocumentArchiveLoadState,
     pub completed: u64,
     pub total: u64,
+    /// ⏭️ Events this program holds that the archive lacks: 0 for a replacement, the merge's own count otherwise.
+    pub ahead: u64,
     pub fault: Vec<u8>,
 }
 //#endregion 🔖️DocumentArchive
@@ -855,7 +861,7 @@ enum PagedAppCommandDecodeState {
     ReadDocumentArchive { seq: u64 },
     ReadDocumentIdentity { seq: u64 },
     ReadChildHeads { seq: u64 },
-    LoadDocumentArchive { seq: u64, decode: PagedDocumentArchiveDecode },
+    LoadDocumentArchive { seq: u64, merge: bool, decode: PagedDocumentArchiveDecode },
     DocumentArchiveOperation { seq: u64, kind: u8 },
     MediaExportSubmitPort { seq: u64 },
     MediaExportSubmitDocument { seq: u64, port: Option<String> },
@@ -897,7 +903,7 @@ impl DecodedAppCommandOwner {
         // was rebuilt again — so `LoadDocumentArchive` never reached the shell release below and no
         // decoded archive owner ever became terminal.
         if self.archive_close.is_none() && self.close_stage == 0 {
-            if let AppCommand::LoadDocumentArchive { archive, .. } = command {
+            if let AppCommand::LoadDocumentArchive { archive, .. } | AppCommand::MergeDocumentArchive { archive, .. } = command {
                 self.archive_close = Some(PagedDocumentArchiveDecode::closing(std::mem::take(archive)));
             }
         }
@@ -1034,7 +1040,7 @@ impl PagedAppCommandDecodeCursor {
                     29 => PagedAppCommandDecodeState::LocalInteractionQuery { seq },
                     30 => PagedAppCommandDecodeState::LoadWindowConfigWindowId { seq },
                     31 => PagedAppCommandDecodeState::ReadWindowConfigs { seq },
-                    32 => PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode: PagedDocumentArchiveDecode::new() },
+                    32 | 43 => PagedAppCommandDecodeState::LoadDocumentArchive { seq, merge: tag == 43, decode: PagedDocumentArchiveDecode::new() },
                     33 => PagedAppCommandDecodeState::ReadDocumentArchive { seq },
                     41 => PagedAppCommandDecodeState::ReadDocumentIdentity { seq },
                     42 => PagedAppCommandDecodeState::ReadChildHeads { seq },
@@ -1194,14 +1200,14 @@ impl PagedAppCommandDecodeCursor {
                 }
             },
             PagedAppCommandDecodeState::ReadDocumentArchive { seq } =>Some(AppCommand::ReadDocumentArchive { seq }),
-            PagedAppCommandDecodeState::LoadDocumentArchive { seq, mut decode } => match decode.step(&mut self.reader) {
-                Ok(Some(archive)) => Some(AppCommand::LoadDocumentArchive { seq, archive }),
+            PagedAppCommandDecodeState::LoadDocumentArchive { seq, merge, mut decode } => match decode.step(&mut self.reader) {
+                Ok(Some(archive)) => Some(if merge { AppCommand::MergeDocumentArchive { seq, archive } } else { AppCommand::LoadDocumentArchive { seq, archive } }),
                 Ok(None) => {
-                    self.state = PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode };
+                    self.state = PagedAppCommandDecodeState::LoadDocumentArchive { seq, merge, decode };
                     None
                 }
                 Err(fault) => {
-                    self.state = PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode };
+                    self.state = PagedAppCommandDecodeState::LoadDocumentArchive { seq, merge, decode };
                     return Err(fault);
                 }
             },
@@ -1296,7 +1302,7 @@ impl PagedAppCommandDecodeCursor {
                     | AppCommand::CancelDocumentArchiveLoad { .. }
                     | AppCommand::AcknowledgeDocumentArchiveLoad { .. } => Vec::new(),
                     AppCommand::ReadDocumentArchive { .. } => Vec::new(),
-                    AppCommand::LoadDocumentArchive { archive, .. } => document_archive_into_fields(archive),
+                    AppCommand::LoadDocumentArchive { archive, .. } | AppCommand::MergeDocumentArchive { archive, .. } => document_archive_into_fields(archive),
                     AppCommand::MediaIn { port, descriptor, data, .. } => vec![port.into_bytes(), descriptor, data],
                     AppCommand::MediaOut { port, request, .. } => vec![port.into_bytes(), request],
                     AppCommand::MediaFingerprint { port, .. } => vec![port.into_bytes()],
@@ -1674,6 +1680,14 @@ pub enum AppCommand {
     /// 🪆️ Reads every owned child's CURRENT head snapshot pack (nested members included) for a reader that composes
     /// parent + children on read (design §20.15). Reply `AppFrame::ChildHeads`. CHANNEL_VERSION 21 wire addition.
     ReadChildHeads { seq: u64 },
+    /// 🧲️ Merges an archive of the document this program already shows: the guest ingests the events its stores lack and
+    /// never replaces them or adopts the archive's viewed head (design §22.22). Same `archive` encoding and the same poll /
+    /// cancel / acknowledge exchange as `LoadDocumentArchive`; an archive of another document is refused with
+    /// `plugin.document-load.other-document`. CHANNEL_VERSION 22 wire addition.
+    MergeDocumentArchive {
+        seq: u64,
+        archive: DocumentArchivePack,
+    },
 }
 //#endregion 🔖️AppCommand
 
@@ -1962,6 +1976,8 @@ enum DocumentArchiveLoadSent {
 /// acknowledgement is refused still owns retained input, so it is polled again before the next acknowledgement.
 pub struct DocumentArchiveLoadHost {
     archive: Option<DocumentArchivePack>,
+    merge: bool,
+    ahead: u64,
     operation: Option<u64>,
     sent: Option<(u64, DocumentArchiveLoadSent)>,
     cancel_requested: bool,
@@ -1972,19 +1988,32 @@ pub struct DocumentArchiveLoadHost {
 
 impl DocumentArchiveLoadHost {
     pub fn new(archive: DocumentArchivePack) -> Self {
-        Self { archive: Some(archive), operation: None, sent: None, cancel_requested: false, cancel_sent: false, terminal: None, outcome: None }
+        Self { archive: Some(archive), merge: false, ahead: 0, operation: None, sent: None, cancel_requested: false, cancel_sent: false, terminal: None, outcome: None }
+    }
+
+    /// 🔀️ A read-back merge of the document the program already shows (design §22.22): admitted with
+    /// `AppCommand::MergeDocumentArchive`, then polled, cancelled and acknowledged exactly like a load. Its events join the
+    /// program's log and nothing is replaced; [`Self::ahead`] answers what the program then holds that the archive lacks.
+    pub fn merging(archive: DocumentArchivePack) -> Self {
+        Self { merge: true, ..Self::new(archive) }
     }
 
     /// 🎞️ A load the guest admitted itself under `operation`, the host sequence of the command that started it: a `MediaIn` of a whole
     /// document of the app's own schema answers `AppFrame::DocumentArchiveLoad` (pending) for its own sequence
     /// (`📓️api-stepped-document-load.md` §4). Driven from its first poll exactly like an admission this driver sent.
     pub fn admitted(operation: u64) -> Self {
-        Self { archive: None, operation: Some(operation), sent: None, cancel_requested: false, cancel_sent: false, terminal: None, outcome: None }
+        Self { archive: None, merge: false, ahead: 0, operation: Some(operation), sent: None, cancel_requested: false, cancel_sent: false, terminal: None, outcome: None }
     }
 
     /// 🔢️ The admitted operation, once the admission was sent.
     pub fn operation(&self) -> Option<u64> {
         self.operation
+    }
+
+    /// ⏭️ The events the program holds that the archive lacks, as its acknowledged `Ready` terminal counted them: what a
+    /// writer persists again for. 0 for a replacement and before the operation ended ready.
+    pub fn ahead(&self) -> u64 {
+        self.ahead
     }
 
     /// 🛑️ Asks for the load to stop; idempotent, and a no-op once a terminal status is known.
@@ -2003,6 +2032,7 @@ impl DocumentArchiveLoadHost {
         }
         let seq = next_seq();
         let (sent, command) = match (self.operation, &self.terminal) {
+            (None, _) if self.merge => (DocumentArchiveLoadSent::Admit, AppCommand::MergeDocumentArchive { seq, archive: self.archive.take().unwrap_or_default() }),
             (None, _) => (DocumentArchiveLoadSent::Admit, AppCommand::LoadDocumentArchive { seq, archive: self.archive.take().unwrap_or_default() }),
             (Some(operation), Some(_)) => (DocumentArchiveLoadSent::Acknowledge, AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation }),
             (Some(operation), None) if self.cancel_requested && !self.cancel_sent => (DocumentArchiveLoadSent::Cancel, AppCommand::CancelDocumentArchiveLoad { seq, operation }),
@@ -2035,6 +2065,9 @@ impl DocumentArchiveLoadHost {
             }
             (DocumentArchiveLoadSent::Acknowledge, AppFrame::Done { in_reply_to }) if *in_reply_to == seq => {
                 let terminal = self.terminal.take().ok_or(DocumentArchiveLoadRefusal::Unanswered)?;
+                if terminal.state == DocumentArchiveLoadState::Ready {
+                    self.ahead = terminal.ahead;
+                }
                 self.outcome = Some(match terminal.state {
                     DocumentArchiveLoadState::Ready => DocumentArchiveLoadOutcome::Ready,
                     DocumentArchiveLoadState::Cancelled => DocumentArchiveLoadOutcome::Cancelled,
@@ -2401,6 +2434,7 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, se
                 out.string(&entry.child_id)?;
                 out.string(&entry.dialect)?;
                 out.bytes(&entry.envelope_pack)?;
+                out.string(&entry.owner)?;
             }
         }
         AppCommand::ReadChildren { seq } => {
@@ -2493,11 +2527,11 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, se
             out.varint(*seq)?;
             out.bytes(&protocol::encode_local_interaction_query_command(command))?;
         }
-        AppCommand::LoadDocumentArchive { seq, archive } => {
+        AppCommand::LoadDocumentArchive { seq, archive } | AppCommand::MergeDocumentArchive { seq, archive } => {
             if archive.members.len() > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
                 return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, semio_framework_diagnostic::FaultCode::new("plugin.document-archive-members"), "document archive exceeds its fixed 1024-member authority"));
             }
-            out.byte(32)?;
+            out.byte(if matches!(command, AppCommand::MergeDocumentArchive { .. }) { 43 } else { 32 })?;
             out.varint(*seq)?;
             out.bytes(&archive.parent_pack)?;
             out.bytes(&archive.parent_spr)?;
@@ -2567,7 +2601,7 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, se
     out.finish()
 }
 
-/// 🧸️ `count varint | (slot, child_id, dialect, envelope_pack)*` — the shared list codec for
+/// 🧸️ `count varint | (slot, child_id, dialect, envelope_pack, owner)*` — the shared list codec for
 /// both `AppCommand::LoadChildren` and `AppFrame::Children`.
 async fn write_vec_child_pack(out: &mut Vec<u8>, entries: &[ChildPackEntry]) {
     crate::os_spr::write_varint_u64(out, entries.len() as u64);
@@ -2576,10 +2610,11 @@ async fn write_vec_child_pack(out: &mut Vec<u8>, entries: &[ChildPackEntry]) {
         crate::os_spr::write_str(out, &entry.child_id);
         crate::os_spr::write_str(out, &entry.dialect);
         crate::os_spr::write_bytes(out, &entry.envelope_pack);
+        crate::os_spr::write_str(out, &entry.owner);
     }
 }
 
-/// 🪆️ `count varint | (slot, child_id, dialect, head_pack)*` — `AppFrame::ChildHeads`' list codec.
+/// 🪆️ `count varint | (slot, child_id, dialect, head_pack, owner)*` — `AppFrame::ChildHeads`' list codec.
 fn write_vec_child_head(out: &mut Vec<u8>, entries: &[ChildHeadPackEntry]) {
     crate::os_spr::write_varint_u64(out, entries.len() as u64);
     for entry in entries {
@@ -2587,6 +2622,7 @@ fn write_vec_child_head(out: &mut Vec<u8>, entries: &[ChildHeadPackEntry]) {
         crate::os_spr::write_str(out, &entry.child_id);
         crate::os_spr::write_str(out, &entry.dialect);
         crate::os_spr::write_bytes(out, &entry.head_pack);
+        crate::os_spr::write_str(out, &entry.owner);
     }
 }
 
@@ -2598,7 +2634,7 @@ fn read_vec_child_head(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildHeadPac
     }
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        entries.push(ChildHeadPackEntry { slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)?, dialect: crate::os_spr::read_str(bytes, pos)?, head_pack: crate::os_spr::read_bytes(bytes, pos)? });
+        entries.push(ChildHeadPackEntry { slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)?, dialect: crate::os_spr::read_str(bytes, pos)?, head_pack: crate::os_spr::read_bytes(bytes, pos)?, owner: crate::os_spr::read_str(bytes, pos)? });
     }
     Ok(entries)
 }
@@ -2608,7 +2644,7 @@ async fn read_vec_child_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildP
     let count = crate::os_spr::read_varint_u64(bytes, pos)?;
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        entries.push(ChildPackEntry { slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)?, dialect: crate::os_spr::read_str(bytes, pos)?, envelope_pack: crate::os_spr::read_bytes(bytes, pos)? });
+        entries.push(ChildPackEntry { slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)?, dialect: crate::os_spr::read_str(bytes, pos)?, envelope_pack: crate::os_spr::read_bytes(bytes, pos)?, owner: crate::os_spr::read_str(bytes, pos)? });
     }
     Ok(entries)
 }
@@ -2852,6 +2888,7 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
         }
         41 => AppCommand::ReadDocumentIdentity { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
         42 => AppCommand::ReadChildHeads { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        43 => AppCommand::MergeDocumentArchive { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, archive: read_document_archive(bytes, &mut pos).await? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -3048,6 +3085,7 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             out.push(status.state.wire());
             crate::os_spr::write_varint_u64(&mut out, status.completed);
             crate::os_spr::write_varint_u64(&mut out, status.total);
+            crate::os_spr::write_varint_u64(&mut out, status.ahead);
             crate::os_spr::write_bytes(&mut out, &status.fault);
         }
         AppFrame::MediaExportSubmitted { in_reply_to, handle } => {
@@ -3185,8 +3223,9 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             pos += 1;
             let completed = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
             let total = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let ahead = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
             let fault = crate::os_spr::read_bytes(bytes, &mut pos)?;
-            AppFrame::DocumentArchiveLoad { in_reply_to, status: DocumentArchiveLoadStatus { operation, state, completed, total, fault } }
+            AppFrame::DocumentArchiveLoad { in_reply_to, status: DocumentArchiveLoadStatus { operation, state, completed, total, ahead, fault } }
         }
         28 => AppFrame::MediaExportSubmitted {
             in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,

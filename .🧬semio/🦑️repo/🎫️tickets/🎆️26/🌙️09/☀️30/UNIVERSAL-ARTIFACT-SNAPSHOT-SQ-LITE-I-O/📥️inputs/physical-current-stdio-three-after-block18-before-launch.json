@@ -1,0 +1,29 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "nx",
+    "run-many",
+    "--target=test-snapshot-sqlite-native",
+    "--projects=@semio-tech/stdio-binary-rs,@semio-tech/stdio-csv-rs,@semio-tech/stdio-tsv-rs,@semio-tech/block-3d-rs",
+    "--parallel=1",
+    "--skip-nx-cache",
+    "--outputStyle=stream",
+    "--excludeTaskDependencies"
+  ],
+  "env": {
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current",
+    "SEMIO_TEST_LEVEL": "quick",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/stdio-three-after-block18-before-artifacts"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-stdio-three-after-block18-before.log",
+  "expectedCounts": {
+    "binary": 11,
+    "csv": 15,
+    "tsv": 15,
+    "block3d": 18
+  },
+  "status": "corrected Stdio After; actual Block18 Before with all native providers/hooks held; unchanged original registered policies",
+  "startedAt": "2026-10-05T20:59:11.332Z"
+}

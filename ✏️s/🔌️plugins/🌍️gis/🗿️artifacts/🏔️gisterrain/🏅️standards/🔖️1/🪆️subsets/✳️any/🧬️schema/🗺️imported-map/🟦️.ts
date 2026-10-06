@@ -1,7 +1,7 @@
 /** 🗺️ Ordered complete feature objects and literal root properties. */
 import {parseSchemaRecord} from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import {parseIntrinsicValue,parseDslValue,type DslValue,type IntrinsicValue,type IntrinsicMember} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import {binary64,binary64Value} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 export type ImportedFeature=Extract<IntrinsicValue,{kind:"object"}>;
 export interface ImportedMap{positions:ImportedFeature[];routes:ImportedFeature[];regions:ImportedFeature[];properties:IntrinsicMember[]}
 /** 📥️ A typed map transport normalizes missing collections to empty while null refuses. */

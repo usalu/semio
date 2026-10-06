@@ -217,11 +217,8 @@ function must(condition: unknown, message: string): void {
 /** 💡️ Runs every source-level law and returns the counts a gate prints. It throws on the first
  * violation, so a zero-exit run is itself the receipt. */
 export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridgeReport {
-  const jobSchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🗳️job-pages/🔣️.json"), "utf8"));
   const jobVectors = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8"));
-  const jobAjv = new Ajv();
-  must(jobAjv.compile(jobSchema)(jobVectors), "owner job page fixture is schema valid");
-  const eventPage = jobAjv.compile(jobSchema.$defs.EventPage);
+  const eventPage = hubInferenceExport(repoRoot, "InferenceEventPageV1");
   for (const row of jobVectors.cases) must((eventPage(row.response) && row.response.jobId === row.requestedJobId) === (row.expectedError === null), "owner job page schema and requested identity agree");
   const fixtureRoot = resolve(repoRoot, "🌎️hub/🧫️fixtures/🗳️gis-map-proposal-approval-v1");
   const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🔣️.json"), "utf8"));

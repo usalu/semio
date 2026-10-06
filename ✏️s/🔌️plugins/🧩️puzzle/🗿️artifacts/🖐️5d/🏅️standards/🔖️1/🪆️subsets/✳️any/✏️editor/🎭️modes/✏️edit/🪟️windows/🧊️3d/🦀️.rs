@@ -45,6 +45,7 @@ pub const PUZZLE5D_FIT_PADDING: f64 = 1.25;
 /// duplicated here.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: puzzle5d_localized(|l| l.window_3d),
         body_key: BODY_KEY.into(),

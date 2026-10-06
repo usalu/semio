@@ -10,7 +10,7 @@ use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 fn tree(ctx: &Context, uris: &[&str]) -> Result<Vec<semio_framework_repo_statutes::SourceFile>, String> {
     let mut files = Vec::new();
     for uri in uris {
-        let path = ctx.fixture(uri)?;
+        let path = ctx.input(uri)?;
         let content = std::fs::read_to_string(&path).map_err(|error| format!("cannot read {uri}: {error}"))?;
         files.push(semio_framework_repo_statutes::SourceFile { path: uri.trim_start_matches("shared://").to_string(), content });
     }
@@ -50,7 +50,7 @@ fn the_golden_tree_breaches(ctx: &Context) -> Result<Outcome, String> {
     let files = tree(ctx, &uris.iter().map(String::as_str).collect::<Vec<_>>())?;
     let sources = statutes::SourceSet::new(files);
     let rendered: Vec<Json> = statutes::analyze(&sources).iter().map(|breach| Json::String(render(breach))).collect();
-    let golden = ctx.fixture_json("shared://🔍️analyze-breaches/🔣️breaches.json")?;
+    let golden = ctx.input_json("shared://🔍️analyze-breaches/🔣️breaches.json")?;
     let expected = golden.array("breachs");
     if expected != rendered {
         return Err(format!("analysis drifted from the reviewed golden: {} breaches produced, {} expected", rendered.len(), expected.len()));

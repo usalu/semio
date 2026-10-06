@@ -26,7 +26,7 @@ type sessionVectorFile struct {
 }
 
 func loadSessionSource(ctx *host.Context) (*contributors.MemorySessionSource, error) {
-	data, err := ctx.FixtureBytes("shared://📡️session-vectors.json")
+	data, err := ctx.InputBytes("shared://📡️session-vectors.json")
 	if err != nil {
 		return nil, err
 	}

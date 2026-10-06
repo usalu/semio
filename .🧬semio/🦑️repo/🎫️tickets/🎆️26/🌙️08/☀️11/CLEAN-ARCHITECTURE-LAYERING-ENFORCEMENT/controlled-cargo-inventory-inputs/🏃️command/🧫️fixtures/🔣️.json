@@ -1,0 +1,7 @@
+[
+  {"id":"version","kind":"version","refused":false,"state":"complete","code":0},
+  {"id":"literal-exit","kind":"exit","refused":false,"state":"complete","code":17},
+  {"id":"output-cancellation","kind":"cancel-output","refused":true,"state":"refused","code":null},
+  {"id":"finite-time","kind":"timeout","refused":true,"state":"refused","code":null},
+  {"id":"zero-budget","kind":"zero","refused":true,"state":null,"code":null}
+]

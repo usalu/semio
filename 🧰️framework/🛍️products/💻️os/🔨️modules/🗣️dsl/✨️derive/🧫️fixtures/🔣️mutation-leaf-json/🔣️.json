@@ -505,6 +505,27 @@
       "schemaAccepted": true,
       "parserAccepted": true,
       "diagnostic": "accepted"
+    },
+    {
+      "name": "valid-withdraw-only",
+      "raw": "{\"schemaVersion\":1,\"owner\":\"✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page\",\"semanticKind\":\"insert-page\",\"displayName\":\"Insert Page\",\"emoji\":\"➕️\",\"aggregateVariant\":\"InsertPage\",\"payloadSchema\":\"🔣️.schema.json\",\"textOpcode\":\"insert-page\",\"binaryTag\":7,\"invertibility\":\"explicit-mutation\",\"diffParticipation\":\"apply-only\",\"outcomeClasses\":[\"applied\",\"no-op\"],\"composition\":\"atomic\",\"requiredLanguageSurfaces\":[\"rust\",\"json-schema\"],\"editable\":false}",
+      "schemaAccepted": true,
+      "parserAccepted": true,
+      "diagnostic": "accepted"
+    },
+    {
+      "name": "valid-editable-true",
+      "raw": "{\"schemaVersion\":1,\"owner\":\"✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page\",\"semanticKind\":\"insert-page\",\"displayName\":\"Insert Page\",\"emoji\":\"➕️\",\"aggregateVariant\":\"InsertPage\",\"payloadSchema\":\"🔣️.schema.json\",\"textOpcode\":\"insert-page\",\"binaryTag\":7,\"invertibility\":\"explicit-mutation\",\"diffParticipation\":\"apply-only\",\"outcomeClasses\":[\"applied\",\"no-op\"],\"composition\":\"atomic\",\"requiredLanguageSurfaces\":[\"rust\",\"json-schema\"],\"editable\":true}",
+      "schemaAccepted": true,
+      "parserAccepted": true,
+      "diagnostic": "accepted"
+    },
+    {
+      "name": "wrong-editable-type",
+      "raw": "{\"schemaVersion\":1,\"owner\":\"✏️s/🔌️plugins/🧪️probe/🧬️mutations/➕️insert-page\",\"semanticKind\":\"insert-page\",\"displayName\":\"Insert Page\",\"emoji\":\"➕️\",\"aggregateVariant\":\"InsertPage\",\"payloadSchema\":\"🔣️.schema.json\",\"textOpcode\":\"insert-page\",\"binaryTag\":7,\"invertibility\":\"explicit-mutation\",\"diffParticipation\":\"apply-only\",\"outcomeClasses\":[\"applied\",\"no-op\"],\"composition\":\"atomic\",\"requiredLanguageSurfaces\":[\"rust\",\"json-schema\"],\"editable\":\"no\"}",
+      "schemaAccepted": false,
+      "parserAccepted": false,
+      "diagnostic": "editable"
     }
   ]
 }

@@ -10,10 +10,37 @@
   ],
   "properties": {
     "path": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Part name",
+          "de": "Name des Paketteils"
+        },
+        "description": {
+          "en": "Package part name the VML drawing is stored under.",
+          "de": "Name des Paketteils, unter dem die VML-Zeichnung gespeichert wird."
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "markup": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "VML markup",
+          "de": "VML-Markup"
+        },
+        "description": {
+          "en": "XML source of the legacy VML drawing part.",
+          "de": "XML-Quelltext des veralteten VML-Zeichnungsteils."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

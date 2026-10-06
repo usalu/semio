@@ -14,7 +14,21 @@
       "description": "Aggregate discriminator spliced in by PdfHMutation; absent when the payload stands alone."
     },
     "script": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "JavaScript",
+          "de": "JavaScript"
+        },
+        "description": {
+          "en": "Source of the script the action runs.",
+          "de": "Quelltext des Skripts, das die Aktion ausführt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

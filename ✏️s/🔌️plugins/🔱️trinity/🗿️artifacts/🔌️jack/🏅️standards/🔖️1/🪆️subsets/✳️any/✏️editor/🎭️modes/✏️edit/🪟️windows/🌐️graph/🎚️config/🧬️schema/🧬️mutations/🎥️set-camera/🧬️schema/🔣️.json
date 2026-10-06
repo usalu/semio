@@ -5,7 +5,18 @@
   "type": "object",
   "properties": {
     "kind": {
-      "const": "set-camera"
+      "const": "set-camera",
+      "x-semio-ui": {
+        "role": "discriminator",
+        "label": {
+          "en": "Change",
+          "de": "Änderung"
+        },
+        "description": {
+          "en": "Names the window setting this change writes; fixed for the leaf.",
+          "de": "Benennt die Fenstereinstellung, die diese Änderung schreibt; für das Blatt fest."
+        }
+      }
     },
     "camera": {
       "anyOf": [
@@ -16,14 +27,54 @@
           "type": "object",
           "properties": {
             "x": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Pan X",
+                  "de": "Verschiebung X"
+                },
+                "step": 1,
+                "precision": 1
+              }
             },
             "y": {
-              "type": "number"
+              "type": "number",
+              "x-semio-ui": {
+                "widget": "stepper",
+                "role": "value",
+                "label": {
+                  "en": "Pan Y",
+                  "de": "Verschiebung Y"
+                },
+                "step": 1,
+                "precision": 1
+              }
             },
             "zoom": {
               "type": "number",
-              "exclusiveMinimum": 0
+              "exclusiveMinimum": 0,
+              "x-semio-ui": {
+                "widget": "slider",
+                "role": "value",
+                "label": {
+                  "en": "Zoom",
+                  "de": "Zoom"
+                },
+                "step": 0.05,
+                "precision": 2,
+                "softMin": 0.1,
+                "softMax": 8,
+                "scale": "log",
+                "snaps": [
+                  0.25,
+                  0.5,
+                  1,
+                  2,
+                  4
+                ]
+              }
             }
           },
           "required": [
@@ -33,7 +84,20 @@
           ],
           "additionalProperties": false
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Camera",
+          "de": "Kamera"
+        },
+        "description": {
+          "en": "Pan offset and zoom factor of the view; cleared, the view fits its content.",
+          "de": "Verschiebung und Zoomfaktor der Ansicht; geleert passt sich die Ansicht ihrem Inhalt an."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "required": [

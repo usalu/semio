@@ -1,0 +1,2 @@
+semio os.workflow.dsl v1
+schema=os.workflow graph { schema=workflow.graph nodes=[] edges=[] } parameter-bindings=[] inputs=[] input-bindings=[] output-bindings=[]

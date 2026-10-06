@@ -10,7 +10,7 @@ mod subject {
     //#region 🔖️Helpers
     /// 📥️ The committed conversation every scenario reads.
     fn conversation(ctx: &Context) -> Result<Json, String> {
-        ctx.fixture_json("shared://🔌️mcp-verb-handshake/🤝️handshake.json")
+        ctx.input_json("shared://🔌️mcp-verb-handshake/🤝️handshake.json")
     }
 
     /// 📃️ The string members of an array.

@@ -1,6 +1,9 @@
 //! 🔗 Puzzle2d mutation — `ConnectHandles`: creates a directed link between two handles, full
 //! initial connection-parameterization payload included (rule 4: `connect-<nouns>{endpoints,
-//! payload}`).
+//! payload}`). A connection a drop records from proximity also states its precondition, the `tolerance` its two
+//! handles lay within: replayed on a base where they no longer do, it still connects and reports
+//! `mutation.precondition-drifted` (design
+//! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §22.13).
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
@@ -9,7 +12,7 @@ use crate::Puzzle2dSnapshot;
 //#region 🔖️Mutation
 /// 🔗 `connect-handles` payload — edge `id`, both endpoint handle ids, and the full initial
 /// connection-parameter payload (`edge_kind`/`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt`/`x`/`y`/
-/// `source_tip`/`target_tip`).
+/// `source_tip`/`target_tip`), and the proximity `tolerance` a drop recorded it under (`None`: no precondition).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
@@ -33,6 +36,9 @@ pub struct ConnectHandles {
     pub y: f64,
     pub source_tip: Option<String>,
     pub target_tip: Option<String>,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub tolerance: Option<f64>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
@@ -53,7 +59,13 @@ pub fn connect_handles(
     source_tip: Option<String>,
     target_tip: Option<String>,
 ) -> Puzzle2dMutation {
-    Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind, gap, shift, rise, rotation, turn, tilt, x, y, source_tip, target_tip })
+    Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind, gap, shift, rise, rotation, turn, tilt, x, y, source_tip, target_tip, tolerance: None })
+}
+
+/// 🧲️ Builder — the connection a drop records from proximity: the default geometry and the `tolerance` its two
+/// handles lay within when it was recorded.
+pub fn connect_handles_in_proximity(id: String, source: String, target: String, tolerance: f64) -> Puzzle2dMutation {
+    Puzzle2dMutation::ConnectHandles(ConnectHandles { id, source, target, edge_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, source_tip: None, target_tip: None, tolerance: Some(tolerance) })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectHandles {

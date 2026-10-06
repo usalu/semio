@@ -7,7 +7,19 @@
   "additionalProperties": false,
   "required": ["mutation","patch"],
   "properties": {
-    "patch": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/schema.json#/$defs/SnapshotPatch" },
+    "patch": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/registry/schema.json#/$defs/SnapshotPatch",
+      "x-semio-ui": {
+        "label": {
+          "en": "Snapshot edit",
+          "de": "Änderung der Momentaufnahme"
+        },
+        "description": {
+          "en": "One path-scoped edit of the snapshot; its value is typed by the snapshot schema at the path.",
+          "de": "Eine pfadbezogene Änderung der Momentaufnahme; ihr Wert ist durch das Schema der Momentaufnahme am Pfad typisiert."
+        }
+      }
+    },
     "mutation": { "const": "patchSnapshot", "description": "Aggregate discriminator spliced in by Mp4Mutation; absent when the payload stands alone." }
   }
 }

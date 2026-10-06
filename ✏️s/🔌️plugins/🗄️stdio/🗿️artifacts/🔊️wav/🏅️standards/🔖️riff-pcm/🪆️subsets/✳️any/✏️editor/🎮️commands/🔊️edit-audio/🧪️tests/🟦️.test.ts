@@ -43,7 +43,7 @@ describe("WAV natural audio editing", () => {
   });
 
   it("preserves every neutral IEEE word while inserting a silent channel", async () => {
-    const corpus = await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔢️float32.json", import.meta.url)).json() as {ieee754Binary32Bits: number[]};
+    const corpus = await Bun.file(new URL("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔢️float32.json", import.meta.url)).json() as {ieee754Binary32Bits: number[]};
     const source: WavSnapshot = {
       ...fixture.before,
       fmt: {...fixture.before.fmt, audioFormat: 3, channels: 2, bitsPerSample: 32, blockAlign: 8, byteRate: fixture.before.fmt.sampleRate * 8},

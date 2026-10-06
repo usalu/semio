@@ -27,7 +27,20 @@
       ],
       "license": "MIT",
       "testOnly": true,
-      "productionDebt": {"reachableFrom": ["package.json", "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json", "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json", "🌎️hub/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"], "owner": "🧰️framework/🛍️products/💻️os", "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."},
+      "productionDebt": {
+        "reachableFrom": [
+          "package.json",
+          "✏️s/🔌️plugins/➗️mathematical/📦️packages/🟦️typescript/package.json",
+          "✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript/package.json",
+          "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🟦️typescript/package.json",
+          "🌎️hub/📦️packages/🟦️typescript/package.json",
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/package.json",
+          "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os",
+        "plan": "The same reach print's `ajv` oracle records: these packages declare ajv as a runtime dependency for verification code in scripts and helpers outside this module. This module's own production never imports ajv, so the oracle stays independent of the subject. The debt shrinks as those owners move validation behind the framework's own schema layer or onto the test platform. No path may join."
+      },
       "productionReachable": false,
       "networkDuringExecution": false,
       "platforms": [
@@ -102,5 +115,5 @@
   "toleranceProfiles": [],
   "mutationCatalogs": [],
   "mutationManifests": [],
-  "fixtureManifests": []
+  "testEvidence": []
 }

@@ -697,13 +697,13 @@ pub trait FaultFrom {
         FaultParams::default()
     }
 
-    fn into_fault(self) -> Fault
-    where
-        Self: Sized,
-    {
+    /// 👁️ Builds a diagnostic while the original typed refusal remains with its owner.
+    fn to_fault(&self) -> Fault {
         let params = Some(self.fault_params()).filter(|params| !params.0.is_empty()).map(Box::new);
         Fault { origin: self.fault_origin(), code: self.fault_code(), severity: self.fault_severity(), message: self.fault_message(), scope: Box::new(self.fault_scope()), span: self.fault_span(), causes: self.fault_causes(), params, retryable: self.fault_retryable() }
     }
+
+    fn into_fault(self)->Fault where Self:Sized{self.to_fault()}
 }
 
 impl FaultFrom for TextError {
@@ -878,3 +878,7 @@ mod controlled_tests;
 #[cfg(test)]
 #[path = "🚧️text-error/🧪️tests/🦀️.rs"]
 mod text_error_refusal_tests;
+
+#[path="📦️close/🦀️.rs"]
+mod owned_close;
+pub use owned_close::{FaultCloseOwner,FaultCloseStep};

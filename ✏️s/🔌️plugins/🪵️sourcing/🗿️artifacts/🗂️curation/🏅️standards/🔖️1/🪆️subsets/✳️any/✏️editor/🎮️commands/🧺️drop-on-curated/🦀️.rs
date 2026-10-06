@@ -1,6 +1,6 @@
 //! 🧺️ 🧺️ Sourcing curation app commands command — `drop-on-curated`.
 
-use crate::op::SourcingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::schema::{curation_decision_for_delta, CurationDecision};
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};

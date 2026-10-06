@@ -1,0 +1,5 @@
+{
+  "cmd": "bun run nx exec --projects=@semio-tech/stdio-binary-rs --excludeTaskDependencies -- bun -e 'const{runBudgetedTestCommand}=await import('\\''/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts'\\'');await runBudgetedTestCommand(process.execPath,[Bun.resolveSync('\\''typescript/bin/tsc'\\'','\\''/Users/ueli/Documents/semio'\\''),'\\''--noEmit'\\'','\\''--strict'\\'','\\''--skipLibCheck'\\'','\\''--allowImportingTsExtensions'\\'','\\''--resolveJsonModule'\\'','\\''--esModuleInterop'\\'','\\''--target'\\'','\\''ESNext'\\'','\\''--module'\\'','\\''ESNext'\\'','\\''--moduleResolution'\\'','\\''bundler'\\'','\\''--types'\\'','\\''bun'\\'','\\''/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts'\\''],{cwd:'\\''/Users/ueli/Documents/semio'\\'',budgetMs:30000,throwOnFailure:true});'",
+  "budgetMs": 30000,
+  "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+}

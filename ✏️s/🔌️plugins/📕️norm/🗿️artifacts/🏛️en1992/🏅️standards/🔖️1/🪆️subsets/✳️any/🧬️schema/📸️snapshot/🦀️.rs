@@ -388,39 +388,17 @@ impl En1992Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ Canonical JSON projection of [`En1992Snapshot`].
-pub fn encode_en1992_snapshot_json(snapshot: &En1992Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-/// 📥️ Inverse of [`encode_en1992_snapshot_json`].
-pub fn decode_en1992_snapshot_json(text: &str) -> Result<En1992Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-/// 📖️ Parses committed `.dsl.semio` into [`En1992Snapshot`].
-pub fn decode_en1992_dsl(text: &str) -> Result<En1992Snapshot, String> {
-    <En1992Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-/// 🖨️ Prints [`En1992Snapshot`] to canonical `.dsl.semio`.
-pub fn encode_en1992_dsl(snapshot: &En1992Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
 
-/// 📦️ Decodes `.pack.semio` envelope.
-pub fn decode_en1992_pack(bytes: &[u8]) -> Result<En1992Snapshot, String> {
-    <En1992Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
 
-/// 📦️ Encodes `.pack.semio` envelope.
-pub fn encode_en1992_pack(snapshot: &En1992Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;
+

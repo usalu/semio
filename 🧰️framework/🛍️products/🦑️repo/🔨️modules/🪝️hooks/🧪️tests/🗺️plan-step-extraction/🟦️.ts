@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { readFileSync } from "node:fs";
-import { defineTestAdapter, type AdapterContext } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { defineTestAdapter, type AdapterContext } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🗺️Plans
@@ -117,7 +117,7 @@ type Merge = { id: string; second: string; existing: RecordedStep[]; incoming: P
 type Vectors = { payloads: Payload[]; merges: Merge[] };
 
 function vectors(ctx: AdapterContext): Vectors {
-  return JSON.parse(readFileSync(ctx.fixture("shared://🗺️plan-step-extraction/🗺️plans.json"), "utf8")) as Vectors;
+  return JSON.parse(readFileSync(ctx.input("shared://🗺️plan-step-extraction/🗺️plans.json"), "utf8")) as Vectors;
 }
 
 function sameRecord(left: readonly RecordedStep[], right: readonly RecordedStep[]): boolean {

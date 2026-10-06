@@ -1,0 +1,7 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/➕️create-asset/➕️appends/🦠️mutation/🔣️.json",
+    "before": "{\n  \"mutation\": \"createAsset\",\n  \"asset\": {\n    \"id\": \"asset-detail\",\n    \"name\": \"Detail\",\n    \"url\": \"/mesh/detail.glb\",\n    \"format\": \"glb\",\n    \"origin\": [\n      0.0,\n      4.0,\n      0.0\n    ],\n    \"orientation\": null,\n    \"scale\": null\n  },\n  \"index\": 0\n}\n",
+    "after": "{\n  \"mutation\": \"createAsset\",\n  \"asset\": {\n    \"id\": \"asset-detail\",\n    \"name\": \"Detail\",\n    \"url\": \"/mesh/detail.glb\",\n    \"format\": \"glb\",\n    \"origin\": [\n      0.0,\n      4.0,\n      0.0\n    ]\n  },\n  \"index\": 0\n}\n"
+  }
+]

@@ -1,0 +1,9 @@
+# Puzzle2d Held Complete Family
+
+Read-only review of [typed visitor](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/puzzle2d-complete-native-semantic/typed-visitor-held.rs) and [borrowed census](/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/📥️inputs/puzzle2d-complete-native-semantic/borrowed-census-held.rs). No definite source blocker found; no compiler/runtime qualification claimed.
+
+All20 authored tables and prior measured widths agree. Identity bases are document8, camera/meta16, ordered children24, catalogs16. The full17 declared role maps agree with retained field authority, including representation tags4 and handle compatible kinds4. Camera/meta require Block; optional catalogs require Absent or direct Record. Scalar validation uses actual controlled f64/bool/i32 and declared enum decoders. IEEE costs22/32/11 and optional NULL0 match typed insert_float semantics. NodeAnchor ordinal0/1 maps to SQL fixed/derived5/7; Specificity uses original SQL helper.
+
+Typed output and preflight share the actual visitor and original workload/checkpoint_total progress. Both typed and Play native decoders copy complete limits, validate schema extent20/max35 and full borrowed row/cell census before typed construction. Play encode delegates its real typed owner. Original42rows/43float fixtures, two original failures and caller grants remain authorities; owning14 and independent full-cell exact/one-short replays remain required.
+
+Related Physical request: actual DslScalar derive uses kebab variant spelling and declaration ordinal. SpaceKind atelier0/studio1/archive2; Visibility private0/public1; Role author0/spectator1. Static borrowed schema must use these lowercase labels, not serde variant names. [Derive authority](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🦀️.rs:898).

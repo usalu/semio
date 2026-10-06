@@ -12,7 +12,7 @@ todos:
    content: Move all panel trees to core sidePanelBodies factories + SideTabSpec declarations (puzzle3d pattern); delete PureSidePanelTabDefinition/CallbackTreePanelDefinition usage in apps
    status: completed
  - id: generic-bridges-hosts
-   content: Add createFixtureFileBridge and createOsInstanceHost factories; auto-derive examples from PlaygroundExampleHost when contribution omits them
+   content: Add createEvidenceFileBridge and createOsInstanceHost factories; auto-derive examples from PlaygroundExampleHost when contribution omits them
    status: completed
  - id: migrate-delete-playhosts
    content: "Migrate all 23 apps: move canvas surface hosts + orchestration into react index.tsx PlayHost region, update manifests, delete every play-host.tsx and ./play export"
@@ -68,7 +68,7 @@ Adopt the existing puzzle3d path for all apps:
 
 ## Part 4 — Generic bridges, instance hosts, examples
 
-- `createFixtureFileBridge({ filename, accept, getJson, applyJson })` in playground renderer replaces the identical `XxxPlayFileBridge` in draw/note/raster/shooting/procedural.
+- `createEvidenceFileBridge({ filename, accept, getJson, applyJson })` in playground renderer replaces the identical `XxxPlayFileBridge` in draw/note/raster/shooting/procedural.
 - `createOsInstanceHost({ Canvas, materialize, dispatch })` factory in [framework/product/os/renderer/react](framework/product/os/renderer/react) wraps the `useOsInstanceMaterialization` + `OsUpstreamBadge` boilerplate; apps supply pure callbacks (from core) + canvas component.
 - Examples auto-derived: when a contribution has no explicit `examples` and the app controller implements `PlaygroundExampleHost`, the framework wires `controllerBackedExampleContribution` automatically — apps stop declaring it.
 

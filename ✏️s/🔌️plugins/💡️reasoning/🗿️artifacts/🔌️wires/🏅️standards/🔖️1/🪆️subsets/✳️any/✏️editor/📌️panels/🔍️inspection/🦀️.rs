@@ -1,7 +1,8 @@
 //! 🔍️ Wires play app panel — the inspector: a document-wide summary (was field editors for the
 //! current selection; see `render`'s doc comment for why that's gone).
 
-use crate::schema::{fixture_json_string, fixture_nodes};
+use crate::schema::{board_snapshot_nodes};
+use crate::standards::v1::subsets::any::io::text::snapshot::{board_snapshot_json_string};
 use crate::MINDMAP_WIRES_SCHEMA;
 use semio_framework_pack_json::Value;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
@@ -42,13 +43,13 @@ pub fn definition() -> PanelTabDefinition {
 /// here (framework file, out of this crate's remit).
 pub fn render(composed: &crate::WiresComposed, labels: &crate::editor::wires::terminology::WiresLabels) -> UiAssemblyResult<BuiltNode> {
     let board = &composed.board;
-    let extension = DefaultWiresExtension::from_host_snapshot_json(&fixture_json_string(&composed.fixture)).ok();
+    let extension = DefaultWiresExtension::from_host_snapshot_json(&board_snapshot_json_string(&composed.identity_snapshot)).ok();
     let namespace = PanelTreeBuilder::new("wires-inspection")?;
     let rows = [
         format!("{}: {MINDMAP_WIRES_SCHEMA}", labels.schema.as_str()),
         format!("{}: {}", labels.identities.as_str(), extension.as_ref().map_or(0, |ext| ext.topics.len())),
         format!("{}: {}", labels.relationships.as_str(), extension.as_ref().map_or(0, |ext| ext.relationships.len())),
-        format!("{}: {}", labels.board_nodes.as_str(), fixture_nodes(board).len()),
+        format!("{}: {}", labels.board_nodes.as_str(), board_snapshot_nodes(board).len()),
     ];
     let nodes = ui_node_list(rows.iter().enumerate().map(|(index, row)| {
         semio_framework_ui_contract::text(crate::editor::wires::ui_label(row)?)
@@ -77,7 +78,7 @@ pub type TopicId = canvas::board::NodeId;
 #[derive(Debug)]
 pub enum WiresError {
     Json(semio_framework_pack_json::JsonError),
-    FixtureRootNotObject,
+    SnapshotRootNotObject,
     SchemaMismatch,
     IdentitiesMissing,
     RelationshipsMissing,
@@ -88,8 +89,8 @@ impl std::fmt::Display for WiresError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Json(error) => write!(formatter, "{error}"),
-            Self::FixtureRootNotObject => formatter.write_str("fixture root must be object"),
-            Self::SchemaMismatch => formatter.write_str("schema must be reasoning.wires.fixture"),
+            Self::SnapshotRootNotObject => formatter.write_str("fixture root must be object"),
+            Self::SchemaMismatch => formatter.write_str("schema must be reasoning.wires.identity.snapshot"),
             Self::IdentitiesMissing => formatter.write_str("identities array missing"),
             Self::RelationshipsMissing => formatter.write_str("relationships array missing"),
             Self::IdentityNotAllowed(identity) => write!(formatter, "identity {identity} is not in the fixed WIRES identity set"),
@@ -166,13 +167,13 @@ impl graph::GraphExtension for DefaultWiresExtension {}
 impl canvas::board::GraphExtension for DefaultWiresExtension {}
 
 impl DefaultWiresExtension {
-    /// 🔗️ Hydrate extension state from `reasoning.wires.fixture` JSON.
+    /// 🔗️ Hydrate extension state from `reasoning.wires.identity.snapshot` JSON.
     pub fn from_host_snapshot_json(json: &str) -> Result<Self, WiresError> {
         let root: Value = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
         let Some(obj) = root.as_object() else {
-            return Err(WiresError::FixtureRootNotObject);
+            return Err(WiresError::SnapshotRootNotObject);
         };
-        if obj.get("schema").and_then(|v| v.as_str()) != Some("reasoning.wires.fixture") {
+        if obj.get("schema").and_then(|v| v.as_str()) != Some("reasoning.wires.identity.snapshot") {
             return Err(WiresError::SchemaMismatch);
         }
         let mut ext = Self::default();

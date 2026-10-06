@@ -14,12 +14,21 @@
 //!   as ONE config edit in the very ledger step that commits the document leaves, a host abort drops them with zero
 //!   trace; config edits are never history rows.
 //!
-//! Every render seam reads the committed document (and config) overlaid with every open press's and run's provisional
-//! leaves; every committed transaction is published stamped with its `TransactionRef`. Domain-neutral machines:
-//! `semio_framework_tool_machine` (`ScrubMachine`, `TypingMachine`).
+//! - 🖐️ gestures (§5, §22.10): every window owns ONE gesture slot in the instance's [`GestureLedger`]. A dispatch drives its
+//!   window's streamed tool against a copy of the slot ([`GestureSlot::drive`]); the slot follows only when the dispatch
+//!   publishes. Host facts end a window's gesture here, never in an editor: a blur `blur`, a lost pointer capture
+//!   `captureLost`, a utility switch or a closing window `retired`, a moved base `baseMoved` (a gesture pinned to a revision),
+//!   and an opened history edit `frozen` for every window — zero trace each time.
+//!
+//! Every render seam reads the committed document (and config) overlaid with every open press's, gesture's and run's
+//! provisional leaves; every committed transaction is published stamped with its `TransactionRef`. Domain-neutral machines:
+//! `semio_framework_tool_machine` (`ScrubMachine`, `TypingMachine`, `ChartGesture`).
 
 use super::*;
-use semio_framework_tool_machine::{ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingCommit, TypingInput, TypingLedger, TypingPhase, SCRUB_ABORT_ARG, SCRUB_COMMIT_ARG, SCRUB_GESTURE_ARG, TYPING_BUFFER_ARG, TYPING_COMMIT_ARG};
+use semio_framework_tool_machine::{
+    GestureHostEvent, GestureLedger, GesturePhase, GestureState, GestureTool, ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingCommit, TypingInput, TypingLedger, TypingPhase, SCRUB_ABORT_ARG, SCRUB_COMMIT_ARG, SCRUB_GESTURE_ARG,
+    TYPING_BUFFER_ARG, TYPING_COMMIT_ARG,
+};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -94,6 +103,119 @@ pub(super) enum ToolDispatch {
 }
 //#endregion 🔖️Tag
 
+//#region 🖐️Gesture
+/// 🎰️ The dispatching window's gesture slot as ONE admitted dispatch sees it (design §22.10): the gesture the window held
+/// at admission with the press it last closed, the document revision the dispatch runs on, and what the dispatch decided — kept by the runtime only when
+/// the dispatch publishes, and only while the window still holds the gesture it was admitted on. Shared with the dispatch's
+/// retained job, so its state sits behind one lock.
+pub struct GestureSlot<M> {
+    window: String,
+    base_revision: String,
+    state: std::sync::Mutex<GestureSlotState<M>>,
+}
+
+struct GestureSlotState<M> {
+    admitted: Option<GestureState<M>>,
+    closed: Option<String>,
+    decided: Option<Option<GestureState<M>>>,
+    closing: Option<String>,
+    driven: bool,
+}
+
+/// 📮️ What a driven slot hands the runtime at publication: the gesture it was admitted on, the gesture it decided (when it
+/// changed) and the press it closed.
+struct GestureSlotDecision<M> {
+    admitted: Option<GestureState<M>>,
+    decided: Option<Option<GestureState<M>>>,
+    closing: Option<String>,
+}
+
+impl<M> GestureSlot<M> {
+    /// 🕳️ The slot of a dispatch outside a live window (a preview, a view without command authority): it holds no gesture
+    /// and nothing it decides is kept.
+    pub fn detached() -> Self {
+        Self::of(String::new(), String::new(), None, None)
+    }
+
+    fn of(window: String, base_revision: String, admitted: Option<GestureState<M>>, closed: Option<String>) -> Self {
+        Self { window, base_revision, state: std::sync::Mutex::new(GestureSlotState { admitted, closed, decided: None, closing: None, driven: false }) }
+    }
+
+    /// 🪟️ The window this slot belongs to.
+    pub fn window(&self) -> &str {
+        &self.window
+    }
+
+    fn take(&self) -> Option<GestureSlotDecision<M>> {
+        let mut state = self.state.lock().ok()?;
+        std::mem::take(&mut state.driven).then(|| GestureSlotDecision { admitted: state.admitted.take(), decided: state.decided.take(), closing: state.closing.take() })
+    }
+
+    /// 🔦️ The window's gesture as this dispatch sees it: what it decided so far, else the gesture the window held when the
+    /// dispatch was admitted.
+    pub fn open(&self) -> Option<GestureState<M>>
+    where
+        M: Clone,
+    {
+        let state = self.state.lock().ok()?;
+        match &state.decided {
+            Some(decided) => decided.clone(),
+            None => state.admitted.clone(),
+        }
+    }
+
+    /// 🚃️ Drives the window's streamed tool `T` through ONE dispatch of `verb` ([`semio_framework_tool_machine::drive_press`])
+    /// against this slot — a second drive of the same dispatch continues from the first — and answers the transaction it
+    /// committed (publish it as ONE edit: [`gesture_emit`]). `press` is the host press the dispatch names (the verb's
+    /// `gesture` argument; `None`: none): a dispatch of the press the window last closed is dropped with zero trace, a
+    /// dispatch of another press interrupts the open gesture first. A tool that is not base-bound pins its gesture to no revision. A
+    /// refused start or tick is the dispatch's fault (`toolTransaction.closed` | `toolTransaction.unclosed`) and decides nothing.
+    pub fn drive<T: GestureTool<Gesture = GestureState<M>, Mutation = M>>(&self, press: Option<&str>, verb: &str, phase: GesturePhase, tick: Option<T::Tick>, authoring_seed: &str) -> Result<Option<(protocol::TransactionRef, Vec<M>)>, Fault>
+    where
+        M: PartialEq,
+    {
+        let mut state = self.state.lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("toolTransaction.slot-poisoned"), format!("the gesture slot of window {:?} is poisoned", self.window)))?;
+        let held = match state.decided.as_ref() {
+            Some(decided) => decided.as_ref(),
+            None => state.admitted.as_ref(),
+        };
+        let closed = state.closing.as_deref().or(state.closed.as_deref());
+        let drive = semio_framework_tool_machine::drive_press::<T, M>(held, closed, press, verb, phase, tick, authoring_seed, if T::BASE_BOUND { self.base_revision.as_str() } else { "" })
+            .map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("gesture tool {verb:?} refused its dispatch")))?;
+        state.driven = true;
+        if let Some(decided) = drive.next {
+            state.decided = Some(decided);
+        }
+        if let Some(press) = drive.closed {
+            state.closing = Some(press);
+        }
+        Ok(drive.committed)
+    }
+}
+
+/// 📤️ What one gesture dispatch publishes: its committed transaction as ONE edit stamped with the ref — plainly when the
+/// dispatch carries no admission (`authoring_seed` empty: a render or test view without command authority) — or nothing.
+pub fn gesture_emit<Mutation, ConfigMutation, DraftMutation>(committed: Option<(protocol::TransactionRef, Vec<Mutation>)>, authoring_seed: &str) -> Emit<Mutation, ConfigMutation, DraftMutation> {
+    match committed {
+        Some((transaction, mutations)) if !authoring_seed.is_empty() => Emit::commit_transaction(transaction, mutations),
+        Some((_, mutations)) => Emit::mutations(mutations),
+        None => Emit::default(),
+    }
+}
+
+/// 📡️ The gesture fact a host event is (law table `hostEvents` of the tool-machine gesture-drive corpus).
+pub(super) fn gesture_host_event(event: &HostEvent) -> GestureHostEvent {
+    match event {
+        HostEvent::WindowBlurred { .. } => GestureHostEvent::Blur,
+        HostEvent::PointerCaptureLost { .. } => GestureHostEvent::CaptureLost,
+        HostEvent::UtilityChanged { .. } => GestureHostEvent::UtilityChanged,
+        HostEvent::Retiring { .. } => GestureHostEvent::Retiring,
+        HostEvent::TimeTravelFrozen { .. } => GestureHostEvent::TimeTravelFrozen,
+        HostEvent::BaseMoved { .. } => GestureHostEvent::BaseMoved,
+    }
+}
+//#endregion 🖐️Gesture
+
 //#region 🔖️Runtime
 /// 🎚️ One leaf of a press — every lane of its emit (design §13.1, §12, §20.1): an absolute document leaf, an owned child's
 /// share, an app-config or a window-config mutation. Every lane rides the window's ONE scrub, so ONE ledger step decides
@@ -130,12 +252,16 @@ impl<M, CM> PressLeaf<M, CM> {
     }
 }
 
-/// 🗂️ The instance's continuous-tool runtime: the per-window press ledger (every lane of a press as [`PressLeaf`]s) and
-/// [`TypingLedger`], the committed ⊕ provisional overlays every render seam reads while a press or run is open — the
+/// 🗂️ The instance's continuous-tool runtime: the per-window press ledger (every lane of a press as [`PressLeaf`]s),
+/// [`GestureLedger`] (each window's ONE gesture slot, the slots admitted dispatches hold until they publish, and whether a
+/// host fact ended a gesture since the last repaint) and [`TypingLedger`], the committed ⊕ provisional overlays every render seam reads while a press or run is open — the
 /// document, the app config and each window's config —, the tag of the dispatch being admitted, the tags of admitted
 /// operations until their completion publishes, and the logical tick that makes every typing clock unique.
 pub struct ToolMachineRuntime<P, M, C = NoConfig, CM = NoConfigMutation> {
     presses: ScrubLedger<PressLeaf<M, CM>>,
+    gestures: GestureLedger<M>,
+    gesture_operations: Vec<(u64, Arc<GestureSlot<M>>)>,
+    gesture_ended: bool,
     typing: TypingLedger<M>,
     overlay: Option<Arc<P>>,
     overlay_generation: u64,
@@ -154,6 +280,9 @@ impl<P, M, C, CM> Default for ToolMachineRuntime<P, M, C, CM> {
     fn default() -> Self {
         Self {
             presses: ScrubLedger::default(),
+            gestures: GestureLedger::default(),
+            gesture_operations: Vec::new(),
+            gesture_ended: false,
             typing: TypingLedger::default(),
             overlay: None,
             overlay_generation: 0,
@@ -176,7 +305,12 @@ impl<P, M: Mutation<P> + 'static, C, CM: Mutation<C> + 'static> ToolMachineRunti
         &self.typing
     }
 
-    /// 🪞️ The document every render seam reads: `committed` with every open press's and run's provisional leaves, else
+    /// 🖐️ Every window's open gesture.
+    pub fn gestures(&self) -> &GestureLedger<M> {
+        &self.gestures
+    }
+
+    /// 🪞️ The document every render seam reads: `committed` with every open press's, gesture's and run's provisional leaves, else
     /// `committed`. A command, a poll and a context menu keep deciding over what landed.
     pub fn overlay_or<'a>(&'a self, committed: &'a Arc<P>) -> &'a Arc<P> {
         self.overlay.as_ref().unwrap_or(committed)
@@ -186,7 +320,7 @@ impl<P, M: Mutation<P> + 'static, C, CM: Mutation<C> + 'static> ToolMachineRunti
     /// (a preview evaluated by a retained job) folds onto the committed document it reads; empty while nothing is open.
     pub fn provisional_values(&self) -> Vec<DslValue> {
         let typing = self.typing.windows().filter_map(|window| self.typing.open(window)).flat_map(|state| state.entries.iter().map(|(_, leaf)| leaf));
-        self.presses.provisional().filter_map(PressLeaf::member).chain(typing).map(semio_framework_value::ToValue::to_value).collect()
+        self.presses.provisional().filter_map(PressLeaf::member).chain(self.gestures.provisional()).chain(typing).map(semio_framework_value::ToValue::to_value).collect()
     }
 
     /// 🔢️ Bumped whenever the overlay is refolded or dropped (a tick, a release, a host abort, a moved base), so a derived
@@ -225,7 +359,7 @@ impl<P, M: Mutation<P> + 'static, C, CM: Mutation<C> + 'static> ToolMachineRunti
     /// whose leaves the moved base refuses is a conflict and aborts with zero trace (`baseMoved`). Answers every snapshot
     /// alias the refold displaced (the caller retires them through the store, never plainly) and every aborted run.
     fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) {
-        if self.presses.provisional().all(|leaf| leaf.member().is_none()) && self.typing.is_empty() {
+        if self.presses.provisional().all(|leaf| leaf.member().is_none()) && self.gestures.is_empty() && self.typing.is_empty() {
             let dropped: Vec<Arc<P>> = self.overlay.take().into_iter().collect();
             self.provisional_generation = self.provisional_generation.wrapping_add(u64::from(!dropped.is_empty()));
             return (dropped, Vec::new());
@@ -235,7 +369,7 @@ impl<P, M: Mutation<P> + 'static, C, CM: Mutation<C> + 'static> ToolMachineRunti
         }
         let mut displaced = Vec::new();
         let mut running: Option<Arc<P>> = None;
-        for leaf in self.presses.provisional().filter_map(PressLeaf::member) {
+        for leaf in self.presses.provisional().filter_map(PressLeaf::member).chain(self.gestures.provisional()) {
             fold_leaf(committed, &mut running, &mut displaced, leaf);
         }
         let mut conflicts = Vec::new();
@@ -436,12 +570,78 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
+    /// 🎟️ The gesture slot of the dispatch `meta` admits as `operation` on the document revision `base`: the gesture its
+    /// window holds now, bound to the operation until its completion publishes (the oldest slot of an operation that never
+    /// completed yields its place). Windows that left the dispatching view's roster retire their gestures first.
+    pub(super) fn admit_gesture_slot(&mut self, operation: u64, base: &[u8; 32], meta: &ActionMeta) -> Arc<GestureSlot<A::Mutation>> {
+        let view = meta.view_state.as_ref();
+        if let Some(view) = view.filter(|view| !view.window_instances.is_empty()) {
+            let retired = self.tool_machines.gestures.retain_windows(|window| window.is_empty() || view.window_instances.iter().any(|instance| instance.id == window));
+            if !retired.is_empty() {
+                self.tool_machines.gesture_ended = true;
+                self.follow_tool_machines(true);
+            }
+        }
+        let window = view.and_then(|view| view.window_id.clone()).unwrap_or_default();
+        let base_revision = base.iter().map(|byte| format!("{byte:02x}")).collect();
+        let open = self.tool_machines.gestures.open(&window).cloned();
+        let closed = self.tool_machines.gestures.closed(&window).map(str::to_string);
+        let slot = Arc::new(GestureSlot::of(window, base_revision, open, closed));
+        if self.tool_machines.gesture_operations.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
+            self.tool_machines.gesture_operations.remove(0);
+        }
+        self.tool_machines.gesture_operations.push((operation, Arc::clone(&slot)));
+        slot
+    }
+
+    /// 🖋️ Keeps what `operation`'s dispatch decided for its window's gesture, now that it publishes: only while no history
+    /// edit freezes the document and the window still holds the gesture the dispatch was admitted on (a host fact or another
+    /// dispatch that moved the slot since wins). Answers whether the dispatch drove its slot at all.
+    pub(super) fn settle_gesture_slot(&mut self, operation: u64, publishes: bool) -> bool {
+        let Some(index) = self.tool_machines.gesture_operations.iter().position(|(owner, _)| *owner == operation) else { return false };
+        let slot = self.tool_machines.gesture_operations.remove(index).1;
+        let Some(decision) = slot.take() else { return false };
+        if publishes && !self.time_travel.freezes_local_emits() && self.tool_machines.gestures.open(slot.window()) == decision.admitted.as_ref() {
+            if let Some(press) = decision.closing {
+                self.tool_machines.gestures.close(slot.window(), press);
+            }
+            if let Some(decided) = decision.decided {
+                self.tool_machines.gestures.settle(slot.window(), decided);
+                self.follow_tool_machines(true);
+            }
+        }
+        true
+    }
+
+    /// 🛎️ A host fact of one window: its open gesture ends with the fact's reason and zero trace — the ONE place a blur, a
+    /// lost capture, a utility switch, a closing window, a moved base or a history edit ends a gesture; no editor maps it.
+    pub(super) fn end_window_gesture(&mut self, event: &HostEvent) {
+        if matches!(self.tool_machines.gestures.host_event(event.window_id(), gesture_host_event(event)), ToolStep::Aborted(..)) {
+            self.tool_machines.gesture_ended = true;
+            self.follow_tool_machines(true);
+        }
+    }
+
+    /// 🌐️ An instance-wide host fact (a history edit froze the document, a remote edit moved the base): every window's
+    /// open gesture ends with the fact's reason and zero trace, whether or not a view lists the window.
+    pub(super) fn end_every_gesture(&mut self, event: &HostEvent) {
+        if !self.tool_machines.gestures.host_event_all(gesture_host_event(event)).is_empty() {
+            self.tool_machines.gesture_ended = true;
+            self.follow_tool_machines(true);
+        }
+    }
+
+    /// 🎨️ Whether a host fact ended a gesture since the last ask: the windows that previewed it owe a repaint.
+    pub(super) fn take_gesture_ended(&mut self) -> bool {
+        std::mem::take(&mut self.tool_machines.gesture_ended)
+    }
+
     /// 🪞️ Refolds the tool overlays — the document on the committed head, the app config on the committed config, every held
     /// window config on its window's committed partition — retires every displaced alias through its store (a snapshot with
     /// retire-owned roots panics on a plain drop of its last owner), and drops every run the moved head conflicts with.
     pub(super) fn follow_tool_machines(&mut self, changed: bool) {
         let machines = &self.tool_machines;
-        if machines.presses.is_empty() && machines.typing.is_empty() && machines.overlay.is_none() && machines.config_overlay.is_none() && machines.window_overlays.is_empty() {
+        if machines.presses.is_empty() && machines.gestures.is_empty() && machines.typing.is_empty() && machines.overlay.is_none() && machines.config_overlay.is_none() && machines.window_overlays.is_empty() {
             return;
         }
         let committed = self.store.snapshot_owner();
@@ -519,14 +719,22 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         Ok(true)
     }
 
-    /// 🛠️ The ONE point a tagged operation's completion becomes its publication. A press settles every lane of its emit on
+    /// 🛠️ The ONE point an operation's completion becomes its tools' publication. The gesture slot its dispatch drove follows
+    /// first ([`Self::settle_gesture_slot`]); a dispatch that only advanced or ended its gesture logs no history row. A tagged
+    /// operation then settles its press or run: a press settles every lane of its emit on
     /// the window's press ([`Self::settle_press`]) on the operation's document revision. A typed edit: its leaves fold into
     /// the window's run; nothing publishes while the run is open, and a run the edit ended (idle lapse, caret jump, another
     /// buffer) publishes in this emit as ONE edit stamped with its own `TransactionRef`. An emit that carries no transaction
     /// logs no history row; every other lane of the emit (effects, events, UI scope) publishes as usual.
     pub(super) fn settle_tool_operation(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, publication: &mut ArtifactToolCompletionValue<A>) -> Result<(), Fault> {
-        let Some(tag) = self.tool_machines.take_operation(mounted.operation.operation.0) else { return Ok(()) };
+        let operation = mounted.operation.operation.0;
+        let driven = self.settle_gesture_slot(operation, matches!(publication, ArtifactToolCompletionValue::Emit(Ok(_), _)));
+        let tag = self.tool_machines.take_operation(operation);
         let ArtifactToolCompletionValue::Emit(Ok(emit), _) = publication else { return Ok(()) };
+        if driven && emit.transaction.is_none() && emit.artifact_mutations.is_empty() {
+            mounted.command_logged = true;
+        }
+        let Some(tag) = tag else { return Ok(()) };
         match tag {
             ToolTag::Scrub(tag) => {
                 self.settle_press(&tag, &mounted.canonical_revision, &mounted.meta.actor, emit)?;

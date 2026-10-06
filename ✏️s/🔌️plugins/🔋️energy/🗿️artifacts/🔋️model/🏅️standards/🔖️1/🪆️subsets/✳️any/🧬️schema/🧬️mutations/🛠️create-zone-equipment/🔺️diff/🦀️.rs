@@ -30,6 +30,6 @@ pub fn diff(payload: &super::CreateZoneEquipment, base: &EnergyModelSnapshot) ->
         heating_capacity_w: payload.heating_capacity_w,
         cooling_capacity_w: payload.cooling_capacity_w,
     });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

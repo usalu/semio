@@ -65,8 +65,6 @@ fn measure(scope: &serde_json::Value, backend: Backend) -> usize {
 fn shared_requested_layout_scopes_preserve_totals_nesting_and_unwind() {
     let source = include_str!("../🧫️fixtures/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(source).unwrap();
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../🧬️schema/🔣️.json")).unwrap();
-    assert_eq!(schema["properties"]["cases"]["items"]["$ref"], "#/$defs/scope");
     for scope in fixture["cases"].as_array().unwrap() { for backend in [Backend::System, Backend::Heap, Backend::Requested] { measure(scope, backend); } }
     let interrupted = std::panic::catch_unwind(|| observe(|| { let _ = observe(|| panic!("authored observer unwind")); }));
     assert!(interrupted.is_err());

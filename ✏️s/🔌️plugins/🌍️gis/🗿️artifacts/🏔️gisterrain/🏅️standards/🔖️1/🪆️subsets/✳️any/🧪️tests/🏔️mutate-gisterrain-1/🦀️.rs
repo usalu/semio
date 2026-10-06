@@ -79,8 +79,8 @@ mod subject {
     use super::{canonical, vector, DERIVED_ASSET, DSL_ASSET, FIELDS, UNOBSERVABLE};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_gis_gisterrain::standards::v1::subsets::any::schema::mutations::gis_terrain_mutation_report_json;
-    use semio_s_artifact_gis_gisterrain::standards::v1::subsets::any::schema::snapshot::gis_terrain_identity_report_json;
+    use semio_s_artifact_gis_gisterrain::standards::v1::subsets::any::io::text::mutations::gis_terrain_mutation_report_json;
+    use semio_s_artifact_gis_gisterrain::standards::v1::subsets::any::io::text::snapshot::gis_terrain_identity_report_json;
 
     //#region 🔖️Report
     /// 📋️ One member of the production bridge's report, named in the error when it is absent — never
@@ -172,7 +172,7 @@ mod subject {
 
     /// 🧫️ The declared fixture's bytes as UTF-8 text.
     fn fixture_text(ctx: &Context, uri: &str) -> Result<String, String> {
-        String::from_utf8(ctx.fixture_bytes(uri)?).map_err(|error| format!("the declared fixture is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("the declared fixture is not UTF-8: {error}"))
     }
     //#endregion 🔖️Projection
 

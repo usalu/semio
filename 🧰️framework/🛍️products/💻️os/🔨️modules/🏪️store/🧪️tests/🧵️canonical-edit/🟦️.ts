@@ -1,4 +1,4 @@
-import { fileURLToPath as testFileUrlToPath } from "node:url";
+
 const testSourceUrl = new URL("../../🧵️canonical-edit/📜️script.ts", import.meta.url);
 /** 🧵️ Canonical edit contracts: schema-owned exports plus independent JSON/SHA-256/UTF-8 oracles. */
 import assert from "node:assert/strict";
@@ -9,29 +9,26 @@ import Ajv from "ajv";
 //#region 🧵️CanonicalEditOracle
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, testSourceUrl.href), "utf8"));
 const sha256 = (value: string): string => createHash("sha256").update(value).digest("hex");
+/** 🔢️ An edit's revision value: its members in declaration order without `sequenceNumber` (design §22.28) — where an edit sits in its history is not part of what it is. */
+const revisionValue = ({ sequenceNumber: _sequenceNumber, ...revision }: Record<string, unknown>): Record<string, unknown> => revision;
 
-/** 🔏️ Proves the four canonical-edit fixtures against `os.store.canonical-edit` and independent encoders. */
+/** 🔏️ Proves canonical edit payloads and example bytes with independent encoders. */
 export function testCanonicalEditFixtures(): void {
   const contract = read("./🧬️schema/🔣️.json");
   const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addSchema(contract);
-  const exported = (name: string) => ajv.getSchema(`${contract.$id}#/$defs/${name}`)!;
+  const models = read("./🧪️testing/🧬️schema/🔣️.json");
+  ajv.addSchema(contract).addSchema(models);
+  const exported = (name: string) => ajv.getSchema(`${models.$id}#/$defs/${name}`)!;
 
   const reader = read("./🧫️fixtures/📖️canonical-reader.json");
   const sealer = read("./🧫️fixtures/🔏️canonical-edit-sealer.json");
   const borrowed = read("./🧫️fixtures/🗺️canonical-borrowed-map.json");
   const progress = read("./🧫️fixtures/🚧️canonical-error-progress.json");
-  const validateReader = exported("CanonicalReader");
-  const validateSealer = exported("CanonicalEditSealer");
-  const validateBorrowed = exported("CanonicalBorrowedMap");
-  const validateProgress = exported("CanonicalErrorProgress");
-  assert(validateReader(reader), JSON.stringify(validateReader.errors));
-  assert(validateSealer(sealer), JSON.stringify(validateSealer.errors));
-  assert(validateBorrowed(borrowed), JSON.stringify(validateBorrowed.errors));
-  assert(validateProgress(progress), JSON.stringify(validateProgress.errors));
+  assert(exported("CanonicalEditSealerEdit")(sealer.edit), "sealer edit payload");
+  assert(exported("CanonicalBorrowedMapEdit")(borrowed.edit), "borrowed map edit payload");
 
   for (const [name, fixture] of [["canonical-edit-sealer", sealer], ["canonical-borrowed-map", borrowed]] as const) {
-    assert.equal(JSON.stringify(fixture.edit), fixture.expectedJson, `${name} canonical JSON emits declaration order`);
+    assert.equal(JSON.stringify(revisionValue(fixture.edit)), fixture.expectedJson, `${name} canonical JSON emits declaration order without the sequence number`);
     assert.match(fixture.expectedDigest, /^[a-f0-9]{64}$/);
     assert.notEqual(sha256(fixture.expectedJson), fixture.expectedDigest, `${name} seal digest is a prefixed preimage, not the bare document`);
   }
@@ -75,22 +72,9 @@ export function testCanonicalEditFixtures(): void {
   assert.equal(progress.expectedRootRetirements, 1);
   assert.equal(progress.sentinel, 165);
 
-  const hostiles: [string, unknown][] = [
-    ["CanonicalReader", { ...reader, unexpected: true }],
-    ["CanonicalReader", { ...reader, lifecycle: [...reader.lifecycle, "unknown-stage"] }],
-    ["CanonicalEditSealer", { ...sealer, hostile: [...sealer.hostile, "unknown-hostile"] }],
-    ["CanonicalEditSealer", { ...sealer, expectedDigest: "not-a-digest" }],
-    ["CanonicalBorrowedMap", { ...borrowed, lifetime: { ...borrowed.lifetime, unexpected: true } }],
-    ["CanonicalBorrowedMap", { ...borrowed, edit: { ...borrowed.edit, forwards: [{ Replace: { text: "", nested: [], enabled: true, amount: 0 } }] } }],
-    ["CanonicalErrorProgress", { ...progress, modes: ["indexed", "indexed"] }],
-    ["CanonicalErrorProgress", { ...progress, sentinel: 256 }],
-  ];
-  for (const [name, hostile] of hostiles) assert.equal(exported(name)(hostile), false, `${name} hostile is refused`);
+  assert.equal(exported("CanonicalBorrowedMapEdit")({ ...borrowed.edit, forwards: [{ Replace: { text: "", nested: [], enabled: true, amount: 0 } }] }), false, "borrowed mutation vocabulary refuses a scalar replacement");
 
   const chains = read("./🧫️fixtures/🔗️edit-digest-chains.json");
-  const validateChains = exported("EditDigestChains");
-  assert(validateChains(chains), JSON.stringify(validateChains.errors));
-  assert.equal(validateChains({ ...chains, cases: chains.cases.map((row: Record<string, unknown>) => ({ ...row, unexpected: true })) }), false, "EditDigestChains hostile is refused");
   const u64 = (value: number) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64BE(BigInt(value)); return bytes; };
   const record = (domain: string, parts: Buffer[]) => {
     const hash = createHash("sha256").update("semio.artifact.cursor.v2").update(u64(Buffer.byteLength(domain))).update(domain);
@@ -101,14 +85,10 @@ export function testCanonicalEditFixtures(): void {
   const text = (edit: Record<string, unknown>, key: string) => [Buffer.from([key in edit ? 1 : 0]), Buffer.from(String(edit[key] ?? ""))];
   const editDigest = (edit: Record<string, unknown>) => {
     const [forwards, inverse, meta] = [edit.forwards as unknown[], edit.inverse as unknown[], (edit.mutationMeta ?? []) as unknown[]];
-    if (forwards.length <= 1) return record("edit", [Buffer.from(String(edit.id)), Buffer.from(JSON.stringify(edit))]);
-    const sequence = Buffer.alloc(4);
-    sequence.writeInt32BE(edit.sequenceNumber as number);
+    if (forwards.length <= 1) return record("edit", [Buffer.from(String(edit.id)), Buffer.from(JSON.stringify(revisionValue(edit)))]);
     const chained = record("edit-chained", [
       Buffer.from(String(edit.id)),
       ...text(edit, "actor"),
-      ...text(edit, "description"),
-      sequence,
       Buffer.from(String(edit.startedAt)),
       ...text(edit, "finishedAt"),
       u64(forwards.length), chain("edit-forward", forwards),

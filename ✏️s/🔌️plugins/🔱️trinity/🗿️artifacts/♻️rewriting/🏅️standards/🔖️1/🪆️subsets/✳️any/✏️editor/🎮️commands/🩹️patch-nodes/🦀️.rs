@@ -1,7 +1,7 @@
 //! 🩹️ Trinity Rewriting app command — `patch-nodes`.
 
 use crate::content::{read, working_child_emit};
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use semio_framework_plugin::app::ChildContentView;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
@@ -39,5 +39,5 @@ pub(crate) fn patch_nodes(state: &RewritingSnapshot, children: &ChildContentView
         "name" => SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: GraphNodeId::new(id.clone()), new_label: value.into() }),
         _ => SemioGraphMutation::ChangeNodeKind(ChangeNodeKind { id: GraphNodeId::new(id.clone()), new_kind: value.into() }),
     };
-    Ok(working_child_emit(state, &targets.iter().map(leaf).collect::<Vec<_>>()))
+    Ok(working_child_emit(state, targets.iter().map(leaf).collect::<Vec<_>>()))
 }

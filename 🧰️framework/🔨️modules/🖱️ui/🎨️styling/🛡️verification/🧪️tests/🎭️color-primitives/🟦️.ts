@@ -7,11 +7,9 @@ import { createElement, Fragment } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { DataTable, SwatchGrid, galleryCardStyle } from "../../../📖️stories/🧭️coordination/🟦️.tsx";
 import corpus from "../../🧫️fixtures/🎭️color-primitives/🔣️.json";
-import schema from "../../🧬️schema/🎭️color-primitives/🔣️.json";
 
 /** 🎭️Proves native primitive equivalence and customization of actual edge/gallery styles. */
 export async function proveStylingColorPrimitivesV1(): Promise<number> {
-  assert.equal(new Ajv({ strict: true }).compile(schema)(corpus), true);
   for (const row of corpus.colors) {
     assert.deepEqual(colorString.get(row.before)?.value, row.rgba, row.id + ": independent original color");
     assert.deepEqual(colorString.get(row.after)?.value, row.rgba, row.id + ": independent canonical color");

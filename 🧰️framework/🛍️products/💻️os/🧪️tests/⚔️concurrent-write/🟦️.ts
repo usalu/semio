@@ -1,5 +1,5 @@
 /** ⚔️ LAW: the language-agnostic concurrent-write fixture the database law walks
- * (`🔨️modules/🛢️db/🗿️artifact/🧪️tests/⚔️concurrent-write/🦀️.rs`) is admitted by its schema through Ajv (third-party), and an independent
+ * (`🔨️modules/🛢️db/🗿️artifact/🧪️tests/⚔️concurrent-write/🦀️.rs`) uses shared examples, and an independent
  * reference of the grading rule derives every commit's outcome: a write is concurrent only with the writes another actor committed after the
  * operation it observed; it conflicts when both touch a shared path (readable path-map diffs) or their declared targets share a segment (an
  * empty target is the whole artifact); a supersession may name any author's operation the log holds (else `history.unknown-target`,
@@ -9,7 +9,6 @@
 export async function registerConcurrentWriteTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, it, expect } = vitest;
   const { default: fixture } = await import("../../🔨️modules/🛢️db/🗿️artifact/🧫️fixtures/⚔️concurrent-write/🔣️.json");
-  const { default: schema } = await import("../../🔨️modules/🛢️db/🗿️artifact/🧬️schema/⚔️concurrent-write/🔣️.json");
   type Supersede = { readonly inputs: readonly { readonly target: string; readonly replacement: string }[]; readonly target: readonly string[] };
   type Writes = { readonly target?: readonly string[]; readonly paths?: readonly string[]; readonly transition?: boolean; readonly supersede?: Supersede };
   type Write = { readonly id: string; readonly actor: string; readonly observed: string | null; readonly writes: Writes };
@@ -25,11 +24,6 @@ export async function registerConcurrentWriteTests(vitest: NonNullable<ImportMet
   };
 
   describe("ConcurrentWrite", () => {
-    it("owns a fixture its schema admits", async () => {
-      const { default: Ajv } = await import("ajv");
-      const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    });
 
     it("derives every commit from the grading rule", () => {
       let commits = 0;

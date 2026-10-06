@@ -15,4 +15,4 @@ if(process.argv[2]==="verify"&&process.argv[3]==="snapshot-sqlite-source"){
  await runRepositoryCommand(process.execPath,["x","tsc",...files,"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck"],workspace,"writer-equation-gis:all-published-consumers",120000);
  console.log(`[writer-equation-gis] checked published consumers=${files.length}`);
 }else
-await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/writer-writer",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts","📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts"]});
+await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/writer-writer",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts"]});

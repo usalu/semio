@@ -88,7 +88,7 @@ def adapter():
         return Outcome(projection, raw=json.dumps(projection, separators=(",", ":")).encode("utf-8"))
 
     def fixture(ctx):
-        return json.loads(ctx.fixture_bytes(FIXTURE).decode("utf-8"))
+        return json.loads(ctx.input_bytes(FIXTURE).decode("utf-8"))
 
     def projection(ctx):
         return answer("points", [dict(zip(("id", "worldX", "worldY"), (entry["id"], *world_xy(entry["lon"], entry["lat"])))) for entry in fixture(ctx)["projection"]])

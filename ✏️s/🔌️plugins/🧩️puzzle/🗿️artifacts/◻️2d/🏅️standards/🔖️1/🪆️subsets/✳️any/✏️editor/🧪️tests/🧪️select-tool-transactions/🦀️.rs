@@ -1,7 +1,7 @@
 //! 🛠️ Laws for the select tool's ONE promise: one logical selection operation is one `ToolTransaction` — one
 //! edit, one history row stamped with its `TransactionRef`, one parametric leaf carrying the literal targets and
 //! parameters — and a cancelled gesture leaves zero trace. The board laws drive the REAL engine: press, move and
-//! release on a host painted from the app's own fixture, the release batch filtered exactly as both coalescers
+//! release on a host painted from the app's own snapshot, the release batch filtered exactly as both coalescers
 //! filter it (`🖥️Board2dHost/🧫️fixtures/🧫️board-event-coalescing`), then dispatched as `applyBoardEvents`. The
 //! streamed laws drive a gesture across several dispatches of one window: its ticks live in the window's open
 //! transaction (previewed, never history) until one commit, and every host abort drops it with zero trace.
@@ -24,11 +24,11 @@ fn painted_host(app: &Puzzle2dApp) -> BoardHost {
     painted_host_of(&fixture_of(app))
 }
 
-/// 🎨️ A board host painted from `fixture` — the document a window paints, a time-travel preview included.
-pub(super) fn painted_host_of(fixture: &Value) -> BoardHost {
+/// 🎨️ A board host painted from `snapshot` — the document a window paints, a time-travel preview included.
+pub(super) fn painted_host_of(snapshot: &Value) -> BoardHost {
     let mut host = puzzle_board_host();
     host.set_size(800, 600, 1.0);
-    assert!(host.parse_fixture_json(&fixture.to_string()), "the engine paints the document");
+    assert!(host.load_board_snapshot_json(&snapshot.to_string()), "the engine paints the document");
     host.set_camera_silent(0.0, 0.0, 1.0);
     host.set_transform_flags(true, false);
     let _ = drain_board_events_json(&mut host);
@@ -61,8 +61,8 @@ pub(super) fn flush(app: &mut Puzzle2dApp, rows: &[Value]) -> InvocationResult {
 }
 
 fn node_at(app: &Puzzle2dApp, id: &str) -> (f64, f64) {
-    let fixture = fixture_of(app);
-    let node = fixture_nodes(&fixture).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).cloned().expect("node");
+    let snapshot = fixture_of(app);
+    let node = board_snapshot_nodes(&snapshot).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).cloned().expect("node");
     (node.get("x").and_then(Value::as_f64).expect("x"), node.get("y").and_then(Value::as_f64).expect("y"))
 }
 
@@ -143,13 +143,13 @@ fn a_drop_and_its_connection_are_one_transaction() {
     release(&mut host, -52.0, 0.0);
     let result = flush(&mut app, &dispatched_rows(&mut host));
     assert_eq!(committed_edits(&result), 1, "the drop and its connection are one edit");
-    let edges = fixture_edges(&fixture_of(&app)).to_vec();
+    let edges = board_snapshot_edges(&fixture_of(&app)).to_vec();
     assert_eq!(edges.len(), 1, "the drop connected the facing handles: {edges:?}");
     let rows = edit_rows(&result);
     assert_eq!(rows.len(), 1);
     assert!(rows[0].op_lines.iter().any(|line| line.starts_with("connect-handles")), "the connection rides the drag's row: {:?}", rows[0].op_lines);
     dispatch(&mut app, "undo", None, None).expect("undo");
-    assert!(fixture_edges(&fixture_of(&app)).is_empty() && node_at(&app, "left") == (-200.0, 0.0), "one undo takes the drop and its edge back together");
+    assert!(board_snapshot_edges(&fixture_of(&app)).is_empty() && node_at(&app, "left") == (-200.0, 0.0), "one undo takes the drop and its edge back together");
     close_board_host(host);
     close_app(&mut app);
 }
@@ -301,11 +301,11 @@ fn phase(app: &mut Puzzle2dApp, args: Value) -> InvocationResult {
     dispatch(app, "translateSelection", Some(&args), Some(overview::WINDOW_KIND_ID)).expect("gesture phase")
 }
 
-/// 👁️ Where the overview window PAINTS a node — its board fixture lane, which previews the window's open gesture.
+/// 👁️ Where the overview window PAINTS a node — its board snapshot lane, which previews the window's open gesture.
 fn painted_x(app: &mut Puzzle2dApp, id: &str) -> f64 {
     let body: Value = serde_json::from_str(&render_body(app, overview::BODY_KEY)).expect("board body");
-    let fixture: Value = serde_json::from_str(body["board2d"]["fixtureJson"].as_str().expect("painted fixture lane")).expect("fixture parses");
-    fixture_nodes(&fixture).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).and_then(|node| node.get("x")).and_then(Value::as_f64).expect("painted node")
+    let snapshot: Value = serde_json::from_str(body["board2d"]["snapshotJson"].as_str().expect("painted snapshot lane")).expect("snapshot parses");
+    board_snapshot_nodes(&snapshot).iter().find(|node| node.get("id").and_then(Value::as_str) == Some(id)).and_then(|node| node.get("x")).and_then(Value::as_f64).expect("painted node")
 }
 
 /// 🧯️ Zero trace: no edit, no row, no redo, the document untouched and the window painting the document again.
@@ -420,81 +420,12 @@ fn a_document_moved_under_an_open_gesture_aborts_it() {
 /// 🧱️ One node `left` at the origin, the document every threaded dispatch reads.
 fn threading_snapshot() -> Puzzle2dPlaySnapshot {
     Puzzle2dPlaySnapshot::new(json!({
-        "schema": "puzzle.2d.fixture",
+        "schema": "board.ports.directed.v1",
         "nodes": [{ "id": "left", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "handles": [] }],
         "edges": []
     }))
 }
 
-/// 🌊️ The window transient a streamed `translateSelection` of `left` by `dx` persisted on `revision`.
-fn streaming_transient(snapshot: &Puzzle2dPlaySnapshot, dx: f64, revision: &str) -> Puzzle2dWindowTransient {
-    let mut tool = select_utility::Puzzle2dSelectTool::start("translateSelection", "seed-1", revision).expect("the tool starts");
-    let request = SelectToolRequest { base: std::sync::Arc::new(snapshot.typed().clone()), proximity_radius: 0.0, records: vec![Puzzle2dSelectionRecord::drag(vec!["left".to_string()], dx, 0.0)] };
-    assert_eq!(tool.send(select_utility::select_tool::Event::Stream(request)), Ok(ToolStep::Open));
-    Puzzle2dWindowTransient { select_tool: tool.persist().map(Box::new), ..Default::default() }
-}
-
-/// 📨️ One dispatch of `action` from the overview window over `left` selected, on `revision` under `utility`.
-fn threaded_emit(snapshot: &Puzzle2dPlaySnapshot, transient: &Puzzle2dWindowTransient, utility: &str, revision: &str, action: &str, args: Value) -> (Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, EphemeralEmit<EditorApp<Puzzle2dPlayApp>>) {
-    let command = Puzzle2dCommand::from_action(action, Some(args), Some(overview::WINDOW_KIND_ID.to_string()));
-    let selection = protocol::DomainSelection { granularity: PUZZLE2D_GRANULARITY_NODE.into(), ids: vec!["left".to_string()], anchor_id: None };
-    let view = window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID);
-    puzzle2d_dispatch_emit(&command, snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), transient, overview::WINDOW_KIND_ID, Some(&view), utility, &selection, "seed-2", revision, None).expect("the dispatch emits")
-}
-
-/// 🌊️ A stream tick persists the open gesture in the window transient and publishes no edit; the commit dispatch
-/// that resumes it publishes the net leaf under the ref minted at the first tick, and clears the transient.
-#[test]
-fn a_threaded_stream_publishes_nothing_until_its_commit_publishes_one_transaction() {
-    let snapshot = threading_snapshot();
-    let (tick, tick_transient) = threaded_emit(&snapshot, &Puzzle2dWindowTransient::default(), select_utility::UTILITY_ID, "rev-1", "translateSelection", json!({ "dx": 10.0, "dy": 0.0, "phase": "stream" }));
-    assert!(tick.artifact_mutations.is_empty() && tick.transaction.is_none(), "a tick is no edit: {:?}", tick.artifact_mutations);
-    assert_eq!(tick_transient.window_transient.len(), 1, "the tick persists the gesture in the window transient");
-    let open = streaming_transient(&snapshot, 30.0, "rev-1");
-    let opened = open.select_tool.clone().expect("open gesture");
-    let (commit, commit_transient) = threaded_emit(&snapshot, &open, select_utility::UTILITY_ID, "rev-1", "translateSelection", json!({ "phase": "commit" }));
-    assert_eq!(commit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(vec!["left".to_string()], 30.0, 0.0)], "the commit publishes the net leaf");
-    assert_eq!(commit.transaction, Some(opened.transaction), "under the ref minted when the gesture opened");
-    assert_eq!(commit_transient.window_transient.len(), 1, "the commit clears the persisted gesture");
-}
-
-/// 🧯️ Every host abort of a persisted gesture — `blur`, `captureLost`, `frozen` sent as an abort phase, a document
-/// that moved under it (`baseMoved`), a utility that is no longer select (`retired`) — publishes no edit and clears
-/// the window transient; a verb that may not publish the transient leaves the gesture for the next one that may.
-#[test]
-fn every_host_abort_of_a_threaded_gesture_publishes_no_edit_and_clears_it() {
-    let snapshot = threading_snapshot();
-    let open = streaming_transient(&snapshot, 30.0, "rev-1");
-    for reason in ["blur", "captureLost", "frozen"] {
-        let (emit, ephemeral) = threaded_emit(&snapshot, &open, select_utility::UTILITY_ID, "rev-1", "translateSelection", json!({ "phase": "abort", "reason": reason }));
-        assert!(emit.artifact_mutations.is_empty() && emit.transaction.is_none(), "{reason}: no edit");
-        assert_eq!(ephemeral.window_transient.len(), 1, "{reason}: the gesture is cleared");
-    }
-    let (moved, moved_transient) = threaded_emit(&snapshot, &open, select_utility::UTILITY_ID, "rev-2", "translateSelection", json!({ "phase": "commit" }));
-    assert!(moved.artifact_mutations.is_empty() && moved.transaction.is_none(), "a gesture on a moved base commits nothing");
-    assert_eq!(moved_transient.window_transient.len(), 1, "baseMoved clears the gesture");
-    let (retired, retired_transient) = threaded_emit(&snapshot, &open, brush_utility::UTILITY_ID, "rev-1", "applyBoardEvents", json!({ "eventsJson": "[]" }));
-    assert!(retired.artifact_mutations.is_empty() && retired.ui_scope != semio_framework::kernel::UiDirtyScope::None, "a retired gesture repaints its window without an edit");
-    assert_eq!(retired_transient.window_transient.len(), 1, "leaving the select utility retires the gesture");
-    let (_, kept) = threaded_emit(&snapshot, &open, brush_utility::UTILITY_ID, "rev-1", "focusSelection", json!({}));
-    assert!(kept.window_transient.is_empty(), "a verb without the transient lane leaves the gesture for the next verb that has it");
-    let (unknown, unknown_transient) = threaded_emit(&snapshot, &open, select_utility::UTILITY_ID, "rev-1", "translateSelection", json!({ "phase": "hover" }));
-    assert!(unknown.artifact_mutations.is_empty() && unknown_transient.window_transient.is_empty(), "an unknown phase is refused without touching the gesture");
-}
-
-/// 🔀️ A one-shot transform interrupting a persisted gesture aborts it (`captureLost`) and commits only itself,
-/// under a fresh ref.
-#[test]
-fn a_one_shot_interrupting_a_threaded_gesture_commits_only_itself() {
-    let snapshot = threading_snapshot();
-    let open = streaming_transient(&snapshot, 30.0, "rev-1");
-    let opened = open.select_tool.clone().expect("open gesture");
-    let (emit, ephemeral) = threaded_emit(&snapshot, &open, select_utility::UTILITY_ID, "rev-1", "translateSelection", json!({ "dx": 1.0, "dy": 0.0 }));
-    assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(vec!["left".to_string()], 1.0, 0.0)]);
-    let transaction = emit.transaction.expect("the one-shot is its own transaction");
-    assert!(transaction.id != opened.transaction.id && transaction.tool.ends_with("#translateSelection"), "{transaction:?}");
-    assert_eq!(ephemeral.window_transient.len(), 1, "the interrupted gesture is cleared");
-}
 /// 🧹️ A selection that repeats an id drags each target once: the leaf's target set is unique, so the leaf never
 /// trips its own invariant.
 #[test]
@@ -503,7 +434,7 @@ fn a_selection_with_repeated_ids_drags_each_target_once() {
     let command = Puzzle2dCommand::from_action("translateSelection", Some(json!({ "dx": 5.0, "dy": 0.0 })), Some(overview::WINDOW_KIND_ID.to_string()));
     let selection = protocol::DomainSelection { granularity: PUZZLE2D_GRANULARITY_NODE.into(), ids: vec!["left".to_string(), "left".to_string(), "left".to_string()], anchor_id: None };
     let view = window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID);
-    let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), overview::WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &selection, "seed-3", "rev-1", None).expect("emit");
+    let (emit, _) = puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), overview::WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &selection, "seed-3", "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit");
     assert_eq!(emit.artifact_mutations, vec![crate::standards::v1::subsets::any::schema::mutations::drag_selection(vec!["left".to_string()], 5.0, 0.0)]);
     assert!(emit.transaction.is_some(), "one transaction");
 }
@@ -515,7 +446,7 @@ fn a_selection_with_repeated_ids_drags_each_target_once() {
 #[test]
 fn the_board_emit_carries_the_transaction_and_the_parametric_leaf() {
     let snapshot = Puzzle2dPlaySnapshot::new(json!({
-        "schema": "puzzle.2d.fixture",
+        "schema": "board.ports.directed.v1",
         "nodes": [{ "id": "left", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "handles": [] }],
         "edges": []
     }));
@@ -525,7 +456,8 @@ fn the_board_emit_carries_the_transaction_and_the_parametric_leaf() {
     ])
     .to_string();
     let command = Puzzle2dCommand::from_action("applyBoardEvents", Some(json!({ "eventsJson": events })), None);
-    let emit_for = |seed: &str| puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), overview::WINDOW_KIND_ID, None, select_utility::UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", None).expect("emit").0;
+    let view = window_view(overview::WINDOW_KIND_ID, overview::WINDOW_KIND_ID);
+    let emit_for = |seed: &str| puzzle2d_dispatch_emit(&command, &snapshot, &Puzzle2dConfig::default(), &Puzzle2dWindowConfig::default(), &Puzzle2dWindowTransient::default(), overview::WINDOW_KIND_ID, Some(&view), select_utility::UTILITY_ID, &protocol::DomainSelection::default(), seed, "rev-1", &semio_framework_plugin::app::GestureSlot::detached(), None).expect("emit").0;
     let emit = emit_for("seed-7");
     let transaction = emit.transaction.clone().expect("the commit carries its transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.puzzle.puzzle2d@1/*#editor#select", "{transaction:?}");

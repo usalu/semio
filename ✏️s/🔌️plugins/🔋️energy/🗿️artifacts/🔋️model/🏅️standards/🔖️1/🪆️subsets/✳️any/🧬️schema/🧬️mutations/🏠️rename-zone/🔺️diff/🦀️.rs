@@ -22,6 +22,6 @@ pub fn diff(payload: &super::RenameZone, base: &EnergyModelSnapshot) -> protocol
     if let Some(zone) = model.zones.iter_mut().find(|zone| zone.id == payload.id) {
         zone.name = payload.new_name.clone();
     }
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

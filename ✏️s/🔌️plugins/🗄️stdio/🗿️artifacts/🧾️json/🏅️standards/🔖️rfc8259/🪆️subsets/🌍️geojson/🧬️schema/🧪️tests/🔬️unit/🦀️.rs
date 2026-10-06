@@ -1,4 +1,8 @@
+use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::write_geojson;
+use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::right_handed_ring;
+use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::ring_signed_area2;
 use super::*;
+use crate::standards::v_rfc8259::subsets::geojson::io::text::snapshot::read_geojson_text;
 use crate::standards::v_rfc8259::subsets::geojson::io::{JsonGeoJsonComposerComposition, JsonGeoJsonValidator};
 use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeSource, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator};
 use std::str::FromStr;
@@ -149,10 +153,10 @@ const ANY: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: Standard
 #[semio_framework_async_macros::async_test]
 async fn composer_stamps_only_conforming_documents_and_carries_soft_findings() {
     let mercator = r#"{"type":"Feature","crs":{"type":"name","properties":{"name":"EPSG:3857"}},"geometry":{"type":"Point","coordinates":[0,0]},"properties":null}"#;
-    let composed = JsonGeoJsonComposerComposition::compose(&[ComposeSource { dialect: ANY, payload: AnalyzeSource::Text(&store::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::schema::snapshot::parse_json_text(mercator).unwrap()})) }]).expect("a GJ2008 Web Mercator document stamps geojson");
+    let composed = JsonGeoJsonComposerComposition::compose(&[ComposeSource { dialect: ANY, payload: AnalyzeSource::Text(&store::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(mercator).unwrap()})) }]).expect("a GJ2008 Web Mercator document stamps geojson");
     assert!(composed.diagnostics.iter().any(|d| d.code.0 == CODE_LEGACY_CRS && d.severity == semio_framework_diagnostic::Severity::Warning), "{:?}", composed.diagnostics);
     let projected = r#"{"type":"Point","coordinates":[621000,5600000]}"#;
-    let refused = JsonGeoJsonComposerComposition::compose(&[ComposeSource { dialect: ANY, payload: AnalyzeSource::Text(&store::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::schema::snapshot::parse_json_text(projected).unwrap()})) }]).expect_err("projected metres are not RFC 7946");
+    let refused = JsonGeoJsonComposerComposition::compose(&[ComposeSource { dialect: ANY, payload: AnalyzeSource::Text(&store::ArtifactDsl::print_dsl(&JsonSnapshot{schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(),value:crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(projected).unwrap()})) }]).expect_err("projected metres are not RFC 7946");
     assert!(refused.diagnostics.iter().any(|d| d.code.0 == CODE_NOT_GEOJSON && d.severity == semio_framework_diagnostic::Severity::Error), "{:?}", refused.diagnostics);
     let snapshot = JsonSnapshot::from_value(serde_json::json!({ "type": "FeatureCollection", "features": [] }));
     assert!(JsonGeoJsonValidator::validate(&IoPayload::Binary(<JsonSnapshot as store::ArtifactPack>::encode_pack(&snapshot))).await.is_empty());

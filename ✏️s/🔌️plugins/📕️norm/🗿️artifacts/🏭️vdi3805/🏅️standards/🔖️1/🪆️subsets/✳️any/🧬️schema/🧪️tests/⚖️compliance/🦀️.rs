@@ -1,3 +1,7 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::assert_native_round_trip;
+use crate::standards::v1::subsets::any::io::text::snapshot::assert_json_round_trip;
+use crate::standards::v1::subsets::any::io::text::snapshot::serialize_native_text;
+use crate::standards::v1::subsets::any::io::text::snapshot::parse_native_text;
 use super::*;
 
 #[semio_framework_async_macros::async_test]

@@ -9,7 +9,21 @@
   ],
   "properties": {
     "namespace": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Main namespace",
+          "de": "Hauptnamensraum"
+        },
+        "description": {
+          "en": "Namespace URI the conformance class prescribes for the PresentationML main vocabulary.",
+          "de": "Namensraum-URI, die die Konformitätsklasse für das PresentationML-Hauptvokabular vorschreibt."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

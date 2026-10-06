@@ -2599,13 +2599,14 @@ pub struct DomainSelection {
 /// on the derive macro's target crate).
 impl crate::value::ToValue for DomainSelection {
     fn to_value(&self) -> crate::value::DslValue {
-        let mut entries: Vec<(String, crate::value::DslValue)> = vec![
-            ("granularity".to_string(), crate::value::ToValue::to_value(&self.granularity)),
-            ("ids".to_string(), crate::value::ToValue::to_value(&self.ids)),
-        ];
+        let mut entries: Vec<(String, crate::value::DslValue)> = Vec::with_capacity(if self.anchor_id.is_some() { 3 } else { 2 });
         if self.anchor_id.is_some() {
             entries.push(("anchorId".to_string(), crate::value::ToValue::to_value(&self.anchor_id)));
         }
+        entries.extend([
+            ("granularity".to_string(), crate::value::ToValue::to_value(&self.granularity)),
+            ("ids".to_string(), crate::value::ToValue::to_value(&self.ids)),
+        ]);
         crate::value::DslValue::Object(entries)
     }
 }
@@ -2679,10 +2680,10 @@ pub struct InteractionState {
 impl crate::value::ToValue for InteractionState {
     fn to_value(&self) -> crate::value::DslValue {
         crate::value::DslValue::object([
-            ("selection".to_string(), crate::value::ToValue::to_value(&self.selection)),
-            ("hover".to_string(), crate::value::ToValue::to_value(&self.hover)),
-            ("activeMode".to_string(), crate::value::ToValue::to_value(&self.active_mode)),
             ("activeGranularity".to_string(), crate::value::ToValue::to_value(&self.active_granularity)),
+            ("activeMode".to_string(), crate::value::ToValue::to_value(&self.active_mode)),
+            ("hover".to_string(), crate::value::ToValue::to_value(&self.hover)),
+            ("selection".to_string(), crate::value::ToValue::to_value(&self.selection)),
         ])
     }
 }
@@ -3348,3 +3349,7 @@ mod assemble_presence_interaction_tests;
 #[path = "🧪️tests/🔬️interaction/🦀️.rs"]
 mod interaction_tests;
 //#endregion 🔖️Interaction
+
+#[cfg(test)]
+#[path = "🧪️tests/🖱️typed-field-order/🦀️.rs"]
+mod typed_field_order_tests;

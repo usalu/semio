@@ -6,8 +6,8 @@ use std::sync::Arc;
 
 impl RetireOwned for WiresSnapshot {
     fn retirement(self) -> Box<dyn RetirementCursor> {
-        let WiresSnapshot { wires_fixture, content, meta } = self;
-        semio_framework_value::retirement::sequence(vec![wires_fixture.retirement(), content.retirement(), meta.retirement()])
+        let WiresSnapshot { wires_snapshot, content, meta } = self;
+        semio_framework_value::retirement::sequence(vec![wires_snapshot.retirement(), content.retirement(), meta.retirement()])
     }
 }
 

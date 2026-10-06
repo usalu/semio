@@ -74,7 +74,8 @@ fn declared_code(kind: &str) -> Option<&'static str> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_raster_raster::standards::v1::subsets::any::schema::mutations::{apply_raster_mutation_json, round_trip_raster_dsl, undo_raster_mutation_json};
+    use semio_s_artifact_raster_raster::standards::v1::subsets::any::schema::mutations::{apply_raster_mutation_json, undo_raster_mutation_json};
+    use semio_s_artifact_raster_raster::standards::v1::subsets::any::io::text::snapshot::{round_trip_raster_dsl};
     use semio_repo_test_host::law;
 
     //#region 🔖️Plan
@@ -107,7 +108,7 @@ mod subject {
     /// 🧫️ The declared fixture's bytes as UTF-8 text.
     fn fixture_text(ctx: &Context, needle: &str) -> Result<String, String> {
         let uri = uri_in(ctx, needle)?;
-        String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
+        String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the declared fixture {uri} is not UTF-8: {error}"))
     }
 
     /// 🚨️ A declared no-op or refusal must raise exactly the code its leaf's committed outcome names.
@@ -204,7 +205,7 @@ mod subject {
     /// a `changeLayerVisible` payload naming the value the board ALREADY holds, which is the only way
     /// to reach the bridge's decode without applying an edit.
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let input = ctx.fixture_bytes(&uri_in(ctx, "📚️examples")?)?;
+        let input = ctx.input_bytes(&uri_in(ctx, "📚️examples")?)?;
         let text = String::from_utf8(input.clone()).map_err(|error| format!("identity-round-trip: the committed example is not UTF-8: {error}"))?;
         let value = parse_json(&round_trip_raster_dsl(&text)?)?;
         let parsed = value.get("snapshot").cloned().ok_or_else(|| "the bridge answer carries no snapshot".to_string())?;

@@ -1,0 +1,15 @@
+//! 🪵️ Complete timber members, actions and connections borrowed before typed ownership.
+use super::*;
+use semio_framework_dsl_record::RecordValue as R;
+use semio_framework_value::NativeDecodeControl;
+use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for(id,actions)in[(1,28),(2,18)]{let owners=n::list(n::field(root,id)?)?;rows=n::add(rows,owners.len())?;for owner in owners{rows=n::add(rows,n::list(n::field(n::record(owner)?,actions)?)?.len())?}}Ok(rows)}
+fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+ out.insert_key("en1995_document",1,&n::cells(root,[Enumeration(0,&["En","De"])])?)?;
+ for(index,m)in n::list(n::field(root,1)?)?.iter().enumerate(){let m=n::record(m)?;let parent=n::entity(out,"en1995_member",1,index,&n::cells(m,[Text(0),Text(1),Text(2),Enumeration(3,&["beam","column","floor","bridge"]),Text(4),Unsigned(5,u8::MAX as u64),Enumeration(6,&["simplySupported","cantilever","continuousTwoSpan"]),Real(7),Real(8),Real(9),Real(10),Real(11),Real(12),Real(13),Real(14),Real(15),Real(16),Real(17),Real(18),Real(19),Real(20),Real(21),Real(22),Real(23),Real(24),Real(25),Real(26),Real(27)])?,MEMBER_FLOATS)?;
+ for(index,a)in n::list(n::field(m,28)?)?.iter().enumerate(){n::entity(out,"en1995_member_action",parent,index,&n::cells(n::record(a)?,[Text(0),Text(1),Text(2),Text(3),Real(4),Real(5),Real(6),Real(7),Real(8),Real(9),Real(10)])?,MEMBER_ACTION_FLOATS)?;}}
+ for(index,c)in n::list(n::field(root,2)?)?.iter().enumerate(){let c=n::record(c)?;let parent=n::entity(out,"en1995_connection",1,index,&n::cells(c,[Text(0),Text(1),Text(2),Text(3),Text(4),Unsigned(5,u8::MAX as u64),Real(6),Unsigned(7,u32::MAX as u64),Unsigned(8,u32::MAX as u64),Real(9),Real(10),Real(11),Real(12),Real(13),Boolean(14),Real(15),Unsigned(16,u32::MAX as u64),Real(17)])?,CONNECTION_FLOATS)?;
+ for(index,a)in n::list(n::field(c,18)?)?.iter().enumerate(){n::entity(out,"en1995_connection_action",parent,index,&n::cells(n::record(a)?,[Text(0),Text(1),Text(2),Real(3)])?,CONNECTION_ACTION_FLOATS)?;}}Ok(())
+}
+/// 🛂️ Exact five-table physical rows and IEEE cell words under copied caller controls.
+pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1995Snapshot::SQLITE_SCHEMA,5,73,count(root)?,write)}

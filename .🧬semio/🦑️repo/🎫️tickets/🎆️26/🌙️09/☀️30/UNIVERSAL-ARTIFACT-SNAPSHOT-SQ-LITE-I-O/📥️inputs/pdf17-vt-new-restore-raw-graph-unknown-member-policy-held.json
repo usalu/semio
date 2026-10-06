@@ -1,0 +1,15 @@
+{
+  "qualification": "HELD new leaf/raw-frontier record strictness only. Actual value derive docs78-104 show internally tagged payload stripping and deny_unknown_fields opt-in; no global enum/old leaf policy change. Nested borrowed COS policy still requires separate parity review; no runtime.",
+  "pairs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🪢️restore-dpart-graph/🦀️.rs",
+      "before": "#[value(rename_all = \"camelCase\")]\npub struct RestoreDpartGraph",
+      "after": "#[value(rename_all = \"camelCase\", deny_unknown_fields)]\npub struct RestoreDpartGraph"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "before": "#[value(rename_all = \"camelCase\")]\npub struct PdfRawGraph",
+      "after": "#[value(rename_all = \"camelCase\", deny_unknown_fields)]\npub struct PdfRawGraph"
+    }
+  ]
+}

@@ -8,7 +8,7 @@
 //!
 //! The `serde_json::Value` bridge (`🔖️ValueBridge`) and the play app's `Puzzle2dPlaySnapshot`
 //! newtype (`🔖️PlaySnapshot`) live here too: `puzzle-plugin`'s scene-mutation helpers predate this
-//! typed projection and still mutate a bare `serde_json::Value` scratch fixture directly (out of
+//! typed projection and still mutate a bare `serde_json::Value` scratch snapshot directly (out of
 //! scope for this ticket — see `.🧬semio/🦑️repo/🎫️tickets/…/convertpuzzle2d3d5dtotypeddslderiveengine`), so
 //! the bridge round-trips through the typed `Puzzle2dSnapshot` (`serde_json::from_value`/
 //! `serde_json::to_value`) instead of hand-rolling per-field JSON splicing — the typed
@@ -133,7 +133,7 @@ pub use super::change_node_root::{change_node_root, ChangeNodeRoot};
 pub use super::change_node_visible::{change_node_visible, ChangeNodeVisible};
 pub use super::change_target_region_hidden::{change_target_region_hidden, ChangeTargetRegionHidden};
 pub use super::change_target_region_locked::{change_target_region_locked, ChangeTargetRegionLocked};
-pub use super::connect_handles::{connect_handles, ConnectHandles};
+pub use super::connect_handles::{connect_handles, connect_handles_in_proximity, ConnectHandles};
 pub use super::connect_kind_compatibility::{connect_kind_compatibility, ConnectKindCompatibility};
 pub use super::create_node::{create_node, CreateNode};
 pub use super::create_target_region::{create_target_region, CreateTargetRegion};
@@ -353,6 +353,34 @@ pub fn puzzle2d_catalogs_invariant(catalogs: &crate::Puzzle2dKindCatalogs) -> Re
 }
 //#endregion 🔖️Invariants
 
+//#region 🔖️HandleGeometry
+/// 📍️ The board position of the handle `handle_id` on `document`: its node's rim point at the handle's angle, the
+/// same rim geometry the board engine draws with and the editor's proximity search measures
+/// (`puzzle2d_handle_world_position`) — a circle's east-zero angle on the node's radius, a rectangle's north-zero
+/// angle on its outline. `None` when no node carries the handle.
+pub fn puzzle2d_handle_position(document: &Puzzle2dSnapshot, handle_id: &str) -> Option<(f64, f64)> {
+    let (node, handle) = document.nodes.iter().find_map(|node| node.handles.iter().find(|handle| handle.id == handle_id).map(|handle| (node, handle)))?;
+    let centre = semio_framework_geometry::Point::new(node.x, node.y);
+    let point = if node.shape.as_deref() == Some("rectangle") {
+        semio_framework_graph::drawing::routing::handle_position_on_rectangle(centre, node.width.unwrap_or(48.0), node.height.unwrap_or(48.0), handle.angle)
+    } else {
+        semio_framework_graph::drawing::routing::handle_position_on_circle(centre, node.radius.unwrap_or(24.0), handle.angle)
+    };
+    Some((point.x, point.y))
+}
+
+/// 📏️ The board distance between the handles `source` and `target` of `document` — what a recorded proximity
+/// tolerance is measured against. `None` when either handle is on no node.
+pub fn puzzle2d_handle_distance(document: &Puzzle2dSnapshot, source: &str, target: &str) -> Option<f64> {
+    let ((source_x, source_y), (target_x, target_y)) = (puzzle2d_handle_position(document, source)?, puzzle2d_handle_position(document, target)?);
+    Some((target_x - source_x).hypot(target_y - source_y))
+}
+//#endregion 🔖️HandleGeometry
+
+//#region 🎚️DeclaredPrecision
+
+//#endregion 🎚️DeclaredPrecision
+
 //#region 🔖️SnapshotDelta
 /// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
 /// both the VCS layer and the `serde_json::Value` scene bridge below replay through.
@@ -542,7 +570,7 @@ pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzl
 
 //#region 🔖️ValueBridge
 // 🌉️ `puzzle-plugin`'s scene-mutation helpers predate this typed projection and stay on a bare
-// `serde_json::Value` scratch fixture (out of scope for this ticket — see
+// `serde_json::Value` scratch snapshot (out of scope for this ticket — see
 // `.🧬semio/🦑️repo/🎫️tickets/…/convertpuzzle2d3d5dtotypeddslderiveengine`). Bridging `Puzzle2dMutation`/
 // `Puzzle2dDiff` onto that `Value` boundary round-trips through the typed `Puzzle2dSnapshot`
 // (`serde_json::from_value`/`to_value`) rather than hand-splicing JSON per mutation kind — the
@@ -619,10 +647,10 @@ impl Mutation<Value> for Puzzle2dMutation {
 }
 
 /// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
-/// bare fixture JSON `puzzle-plugin` mutates), by round-tripping through the typed
+/// bare snapshot JSON `puzzle-plugin` mutates), by round-tripping through the typed
 /// `Puzzle2dSnapshot` and delegating to [`puzzle2d_snapshot_mutations`]. The camera is deliberately
 /// not read here: it is session-only `Puzzle2dPlayRuntime` state (see `setCamera`'s
-/// `ActionKind::View`), never persisted on the document, so a fixture must never carry a top-level
+/// `ActionKind::View`), never persisted on the document, so a snapshot must never carry a top-level
 /// `"camera"` key at all — `Puzzle2dSnapshot::camera` simply defaults when absent.
 ///
 /// 🐛️ A side that does not decode is an ERROR, never an empty document: this used to
@@ -644,7 +672,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Resu
 //#endregion 🔖️ValueBridge
 
 //#region 🔖️PlaySnapshot
-/// 🌱️ The `Puzzle2dPlayApp` scene helpers still read the ad-hoc `serde_json::Value` fixture shape, while every
+/// 🌱️ The `Puzzle2dPlayApp` scene helpers still read the ad-hoc `serde_json::Value` snapshot shape, while every
 /// Store mutation is TYPED. This snapshot keeps the typed `Puzzle2dSnapshot` as the one authority and
 /// materializes the legacy `Value` projection lazily, at most once per immutable root — the shape `🧊️3d`'s
 /// `Puzzle3dPlaySnapshot` and `🖐️5d`'s `Puzzle5dPlaySnapshot` have, kept identical on purpose.
@@ -676,6 +704,16 @@ impl Puzzle2dPlaySnapshot {
     /// 👁️ The legacy play projection, materialized at most once per immutable snapshot.
     pub fn value(&self) -> &Value {
         self.value.get_or_init(|| std::sync::Arc::new(Value::from(semio_framework_value::ToValue::to_value(self.typed.as_ref())))).as_ref()
+    }
+
+    /// 🤝️ The legacy play projection as a shared root — what an owned tool event carries without copying the document.
+    pub fn shared_value(&self) -> std::sync::Arc<Value> {
+        std::sync::Arc::clone(self.value.get_or_init(|| std::sync::Arc::new(Value::from(semio_framework_value::ToValue::to_value(self.typed.as_ref())))))
+    }
+
+    /// 🫱️ The typed authority as a shared root, for the same reason.
+    pub fn shared_typed(&self) -> std::sync::Arc<Puzzle2dSnapshot> {
+        std::sync::Arc::clone(&self.typed)
     }
 
     /// 🧬️ The typed authority, without materializing the legacy projection.
@@ -715,21 +753,7 @@ impl semio_framework_value::FromValue for Puzzle2dPlaySnapshot {
     }
 }
 
-impl store::ArtifactDsl for Puzzle2dPlaySnapshot {
-    const EXTENSION: &'static str = "puzzle2d-play";
 
-    fn envelope_id() -> &'static str {
-        <Puzzle2dSnapshot as store::ArtifactDsl>::envelope_id()
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        <Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
-    }
-
-    fn print_dsl(&self) -> String {
-        <Puzzle2dSnapshot as store::ArtifactDsl>::print_dsl(self.typed())
-    }
-}
 
 /// 🧒️ Composition view of the play snapshot: a puzzle 2d document owns no child artifacts.
 impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle2dPlaySnapshot {
@@ -738,25 +762,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle2dP
     }
 }
 
-/// 📦️ Packs through the typed authority, so the play kind shares `Puzzle2dSnapshot`'s derived record
-/// layout and pack-schema identity.
-impl store::ArtifactPack for Puzzle2dPlaySnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
-    }
 
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        self.typed().encode_pack_with(options)
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        <Puzzle2dSnapshot as store::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
-    }
-
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Puzzle2dSnapshot as store::ArtifactPack>::record_spec()
-    }
-}
 
 impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
     fn apply(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle2dPlaySnapshot> {

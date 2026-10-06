@@ -1,4 +1,5 @@
 /** 🎯️ Picking follows path contours, with bounded incremental curve work. */
+import "../../🎨️paint/🧪️tests/🔬️unit/🟦️.ts";
 import {expect,test} from "bun:test";
 import {ShapeUtils,Vector2,Line3,Vector3,CubicBezierCurve,Matrix3} from "three";
 import {PathHitCursor} from "../../🟦️.ts";

@@ -1,6 +1,6 @@
 import { testLevelBudgetMs } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { parseFeature, type ParsedFeature } from "../../../../🔨️modules/🧪️test/🥒️gherkin/🟦️.ts";
-import { type AdapterContext, type TestCasePlan, type SubsetTarget, type ComparisonProfile, type SubjectRawInputs, type Implementation, type FeatureStep, type FeatureScenario, type TestMode, type ResolvedFixture, type FixtureManifest, type FixtureClass, type MutationOutcomeClass, type FixtureUnits, type FixtureFile, type FixtureGenerator, type PlatformId, type EngineFamily, type FixtureProvenance, type ToleranceOverride, type FixtureInvariants, type TestRole, type AdapterOutcome, type TestAdapter, IMPLEMENTATIONS, TEST_MODES, FIXTURE_CLASSES, MUTATION_OUTCOME_CLASSES, TEST_ROLES, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { type AdapterContext, type TestCasePlan, type SubsetTarget, type ComparisonProfile, type SubjectRawInputs, type Implementation, type FeatureStep, type FeatureScenario, type TestMode, type ResolvedTestInput, type TestEvidence, type EvidenceClass, type MutationOutcomeClass, type EvidenceUnits, type EvidenceFile, type EvidenceGenerator, type PlatformId, type EngineFamily, type EvidenceProvenance, type ToleranceOverride, type EvidenceInvariants, type TestRole, type AdapterOutcome, type TestAdapter, IMPLEMENTATIONS, TEST_MODES, EVIDENCE_CLASSES, MUTATION_OUTCOME_CLASSES, TEST_ROLES, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -17,7 +17,7 @@ import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } fr
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
-import { TEST_LEVELS, type TestLevel } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
+import { TEST_LEVELS, type TestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { type BreachRecord, getRepoMetaDir, getSemioRoot, runProbe } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { type Taxonomy, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath } from "../📚️library/🔍️discovery/🟦️.ts";
@@ -662,7 +662,7 @@ export type TestContribution = Readonly<{
   /** 🧬️ The authoritative subset-scoped mutation manifests this owner declares. */
   mutationManifests: readonly MutationManifest[];
   /** 🧫️ The provenance-carrying fixture manifests this owner commits. */
-  fixtureManifests: readonly FixtureManifest[];
+  testEvidence: readonly TestEvidence[];
   /** 🔬️ External measurement tools this owner contributes to the comparison pipeline. */
   probes: readonly ProbeEntry[];
   /** ⚖️ Multi-artifact comparison pipelines this owner contributes. */
@@ -686,7 +686,7 @@ export type OracleRegistry = Readonly<{
   oracleHostPackages: readonly OracleHostPackage[];
   mutationCatalogs: readonly MutationCatalog[];
   mutationManifests: readonly MutationManifest[];
-  fixtureManifests: readonly FixtureManifest[];
+  testEvidence: readonly TestEvidence[];
   contributions: readonly TestContribution[];
 }>;
 
@@ -701,7 +701,7 @@ const CONTRIBUTION_RECORD_DEFINITIONS: Readonly<Record<string, string>> = {
   oracleHostPackages: "OracleHostPackage",
   subjectFeatures: "SubjectFeatures",
   mutationManifests: "MutationManifest",
-  fixtureManifests: "FixtureManifest",
+  testEvidence: "TestEvidence",
 };
 
 /**
@@ -746,7 +746,7 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
     subjectFeatures: (parsed.subjectFeatures as SubjectFeatures[] | undefined) ?? [],
     mutationCatalogs,
     mutationManifests: (parsed.mutationManifests as MutationManifest[] | undefined) ?? [],
-    fixtureManifests: ((parsed.fixtureManifests as FixtureManifest[] | undefined) ?? []).map((fixture) => ({ ...fixture, manifestDir: fixture.manifestDir ?? manifestDir })),
+    testEvidence: ((parsed.testEvidence as TestEvidence[] | undefined) ?? []).map((fixture) => ({ ...fixture, manifestDir: fixture.manifestDir ?? manifestDir })),
     migrationStatus: (parsed.migrationStatus as Record<string, string> | undefined) ?? {},
   };
 }
@@ -819,7 +819,7 @@ export function loadOracleRegistry(repoRoot: string): OracleRegistry {
     oracleHostPackages: [...(core.oracleHostPackages ?? []), ...contributions.flatMap((entry) => entry.oracleHostPackages)],
     mutationCatalogs: [...(core.mutationCatalogs ?? []), ...contributions.flatMap((entry) => entry.mutationCatalogs)],
     mutationManifests: [...(core.mutationManifests ?? []), ...contributions.flatMap((entry) => entry.mutationManifests)],
-    fixtureManifests: [...(core.fixtureManifests ?? []), ...contributions.flatMap((entry) => entry.fixtureManifests)],
+    testEvidence: [...(core.testEvidence ?? []), ...contributions.flatMap((entry) => entry.testEvidence)],
     contributions,
   };
 }
@@ -849,19 +849,19 @@ export function subjectFeaturesFor(registry: OracleRegistry, owner: string, impl
 /** 🧫️ One resolved fixture — explicit scheme, never shadow-based, digest pinned at plan time. */
 
 
-const FIXTURE_URI_RE = /\b(shared|local|asset|schema):\/\/([^\s"'`,;)\]]+)/g;
+const TEST_INPUT_URI_RE = /\b(shared|local|asset|schema):\/\/([^\s"'`,;)\]]+)/g;
 
 /** 🧫️ Extracts every `shared://` / `local://` / `asset://` / `schema://` reference appearing anywhere in a feature's text. */
-export function fixtureUrisIn(feature: ParsedFeature): string[] {
+export function testInputUrisIn(feature: ParsedFeature): string[] {
   const haystack = [feature.description, ...feature.background.flatMap((step) => [step.text, step.docString ?? "", ...(step.dataTable ?? []).flat()]), ...feature.scenarios.flatMap((scenario) => scenario.steps.flatMap((step) => [step.text, step.docString ?? "", ...(step.dataTable ?? []).flat()]))].join("\n");
   const uris = new Set<string>();
-  for (const match of haystack.matchAll(FIXTURE_URI_RE)) uris.add(`${match[1]}://${match[2]}`);
+  for (const match of haystack.matchAll(TEST_INPUT_URI_RE)) uris.add(`${match[1]}://${match[2]}`);
   return [...uris].sort();
 }
 
 /** 🧭️ Resolves testing data under owner fixtures, static data under owner assets, and contracts by schema export. */
-export function resolveFixtures(repoRoot: string, discovered: DiscoveredCase, uris: readonly string[]): { fixtures: ResolvedFixture[]; missing: string[]; diagnostics: SchemaDiagnostic[] } {
-  const fixtures: ResolvedFixture[] = [];
+export function resolveTestInputs(repoRoot: string, discovered: DiscoveredCase, uris: readonly string[]): { inputs: ResolvedTestInput[]; missing: string[]; diagnostics: SchemaDiagnostic[] } {
+  const inputs: ResolvedTestInput[] = [];
   const missing: string[] = [];
   const diagnostics: SchemaDiagnostic[] = [];
   const taxonomy = testTaxonomy(repoRoot);
@@ -874,7 +874,7 @@ export function resolveFixtures(repoRoot: string, discovered: DiscoveredCase, ur
       const { resolved, diagnostics: found } = resolveSchemaExport(repoRoot, uri);
       diagnostics.push(...found);
       if (resolved === null) missing.push(uri);
-      else fixtures.push({ uri, scope: "schema", name, path: resolved.path, digest: resolved.digest });
+      else inputs.push({ uri, scope: "schema", name, path: resolved.path, digest: resolved.digest });
       continue;
     }
     if ((scheme !== "shared" && scheme !== "asset") || !name || name.includes("\\") || name.split("/").some(part => !part || part === "." || part === "..")) {
@@ -887,9 +887,9 @@ export function resolveFixtures(repoRoot: string, discovered: DiscoveredCase, ur
       missing.push(uri);
       continue;
     }
-    fixtures.push({ uri, scope: scheme, name, path: `${baseRel}/${name}`, digest: fileDigest(abs) });
+    inputs.push({ uri, scope: scheme, name, path: `${baseRel}/${name}`, digest: fileDigest(abs) });
   }
-  return { fixtures, missing, diagnostics };
+  return { inputs, missing, diagnostics };
 }
 
 /** 🧫️ Every file under a fixture directory, repo-relative, for orphan detection and immutability proofs. */
@@ -937,7 +937,7 @@ export function levelsUpTo(level: TestLevel): readonly TestLevel[] {
 export function buildCasePlan(repoRoot: string, discovered: DiscoveredCase, level: TestLevel, registry: OracleRegistry = loadOracleRegistry(repoRoot)): { plan: Omit<TestCasePlan, "role" | "implementation" | "workDir" | "resultsPath" | "outputDir" | "artifactDir">; feature: ParsedFeature; missingFixtures: string[] } {
   const source = readFileSync(join(repoRoot, discovered.featurePath), "utf8");
   const feature = parseFeature(source);
-  const { fixtures, missing } = resolveFixtures(repoRoot, discovered, fixtureUrisIn(feature));
+  const { inputs, missing } = resolveTestInputs(repoRoot, discovered, testInputUrisIn(feature));
   const selectable = new Set(levelsUpTo(level));
   // 🪆️A case is scoped by the manifest whose owner it lives under, walking up to the nearest one. A
   // case with no owning manifest gets a null target rather than a guessed artifact-wide one — that
@@ -949,9 +949,9 @@ export function buildCasePlan(repoRoot: string, discovered: DiscoveredCase, leve
   const profile = profileTable(registry).get(feature.comparison ?? "");
   const pipeline = profile?.pipeline ?? null;
   const toleranceProfile = pipeline === null ? null : (pipelineTable(registry).get(pipeline)?.toleranceProfile ?? null);
-  const fixtureManifests = registry.contributions
+  const testEvidence = registry.contributions
     .filter((entry) => discovered.owner === entry.owner || discovered.owner.startsWith(`${entry.owner}/`) || entry.owner.startsWith(`${discovered.owner}/`))
-    .flatMap((entry) => entry.fixtureManifests);
+    .flatMap((entry) => entry.testEvidence);
   return {
     feature,
     missingFixtures: missing,
@@ -976,8 +976,8 @@ export function buildCasePlan(repoRoot: string, discovered: DiscoveredCase, leve
       background: feature.background,
       scenarios: feature.scenarios.filter((scenario) => selectable.has(scenario.level)),
       adapters: discovered.adapters,
-      fixtures,
-      fixtureManifests,
+      inputs,
+      testEvidence,
       platform: currentPlatform(),
       level,
     },
@@ -1501,8 +1501,8 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
   breaches.push(...mutationCoverageBreaches(discovered, feature, registry));
   breaches.push(...caseAboveSubsetBreaches(discovered, feature, registry));
 
-  const uris = fixtureUrisIn(feature);
-  for (const uri of resolveFixtures(repoRoot, discovered, uris).missing) {
+  const uris = testInputUrisIn(feature);
+  for (const uri of resolveTestInputs(repoRoot, discovered, uris).missing) {
     breaches.push(breach("testing/fixture", "missing-fixture", discovered.featurePath, `Fixture ${uri} does not resolve`, "Fixture lookup is explicit, so an unresolved URI is a contract error rather than a runtime surprise.", `Add the file under ${uri.startsWith("shared://") ? `${discovered.owner}/${taxonomy.testFixturesDirName}` : uri.startsWith("asset://") ? `${discovered.owner}/${taxonomy.exampleAssetsDirName}` : `${discovered.owner}/${taxonomy.testFixturesDirName}`}.`));
   }
 
@@ -2829,9 +2829,9 @@ export function dotnetPackageReferences(repoRoot: string, csprojRel: string): { 
  * pipeline, with its URI and digest as the projection. A scenario naming no such fixture, or more than one, is an error.
  */
 export function committedArtifact(ctx: AdapterContext, leaf: string, role: string, mediaType: string): AdapterOutcome {
-  const uris = [...new Set(ctx.scenario.steps.flatMap((step) => [step.text, step.docString ?? ""]).flatMap((text) => [...text.matchAll(FIXTURE_URI_RE)].map((match) => match[0])))].filter((uri) => uri.endsWith(`/${leaf}`));
+  const uris = [...new Set(ctx.scenario.steps.flatMap((step) => [step.text, step.docString ?? ""]).flatMap((text) => [...text.matchAll(TEST_INPUT_URI_RE)].map((match) => match[0])))].filter((uri) => uri.endsWith(`/${leaf}`));
   if (uris.length !== 1) throw new Error(`scenario ${ctx.scenario.id} names ${uris.length} committed fixture(s) ending in /${leaf}; a reader oracle answers with exactly one`);
-  const bytes = ctx.fixtureBytes(uris[0]!);
+  const bytes = ctx.inputBytes(uris[0]!);
   const path = ctx.artifact(role, leaf);
   writeFileSync(path, bytes);
   return { projection: { role, uri: uris[0], sha256: digest(bytes) }, artifacts: [{ role, path, mediaType }] };
@@ -2862,7 +2862,7 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
   const workDir = isAbsolute(plan.workDir) ? plan.workDir : join(repoRoot, plan.workDir);
   mkdirSync(workDir, { recursive: true });
   const lookup = (uri: string): string => {
-    const fixture = plan.fixtures.find((entry) => entry.uri === uri);
+    const fixture = plan.inputs.find((entry) => entry.uri === uri);
     if (fixture === undefined) throw new Error(`fixture ${uri} is not part of this plan — declare it in the feature file`);
     return join(repoRoot, fixture.path);
   };
@@ -2885,14 +2885,14 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
       if (scenario.outlineOf === undefined || !scenario.id.startsWith(`${scenario.outlineOf}-`)) throw new Error(`scenario ${scenario.id} expands no Scenario Outline row`);
       return scenario.id.slice(scenario.outlineOf.length + 1);
     },
-    fixture: lookup,
-    fixtureBytes: (uri) => readFileSync(lookup(uri)),
+    input: lookup,
+    inputBytes: (uri) => readFileSync(lookup(uri)),
     subjectRawBytes: (implementation) => {
       const path = plan.subjectRawInputs?.[scenario.id]?.[implementation];
       if (path === undefined) throw new Error(`scenario ${scenario.id} has no raw subject output from ${implementation}; run its subject phase before this byte-decoding oracle`);
       return readFileSync(path);
     },
-    copyFixture: (uri, as) => {
+    copyInput: (uri, as) => {
       const source = lookup(uri);
       const target = join(workDir, as ?? basename(source));
       mkdirSync(dirname(target), { recursive: true });
@@ -2911,7 +2911,7 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
 /** 🏃️ Everything one execution of a case at a level needs, resolved to absolute cache paths. */
 export function planExecution(repoRoot: string, discovered: DiscoveredCase, level: TestLevel, role: TestRole, implementation: Implementation): { plan: TestCasePlan; feature: ParsedFeature; missingFixtures: string[]; planPath: string } {
   const { plan: base, feature, missingFixtures } = buildCasePlan(repoRoot, discovered, level);
-  const cacheKey = digest(`${discovered.projectName}|${base.featureHash}|${setDigest(base.fixtures.map((f) => [f.name, f.digest] as const))}|${level}|${role}|${implementation}`);
+  const cacheKey = digest(`${discovered.projectName}|${base.featureHash}|${setDigest(base.inputs.map((f) => [f.name, f.digest] as const))}|${level}|${role}|${implementation}`);
   const workDir = join(testCacheDir(repoRoot, "work"), `${discovered.projectName}-${role}-${implementation}`);
   const outputDir = join(testCacheDir(repoRoot, "results"), `${discovered.projectName}-${role}-${implementation}`);
   // 📦️Produced artifacts live BESIDE the mutable scratch copy, never inside it: a run that writes its
@@ -3346,7 +3346,7 @@ export type ManifestMutation = Readonly<{
   outcomes: readonly MutationOutcomeClass[];
   productionDispatch: Readonly<{ operation: string; bridgeVersion: number; variant?: string }>;
   oracleRequirements: readonly OracleRequirement[];
-  invariants?: FixtureInvariants;
+  invariants?: EvidenceInvariants;
   normativeTopologyCounts?: boolean;
   carriers?: readonly string[];
   notes?: string;
@@ -3582,12 +3582,12 @@ export function contentDigestOf(absPath: string): string {
  * 🎚️ A fixture whose target names a `surface` measures an editor or viewer state lane hosted by its subset rather
  * than a document scope, so the subset's siblings never make it a wildcard — the exemption its mutation manifest has.
  */
-export function fixtureManifestProblems(value: unknown, repoRoot?: string): string[] {
-  if (!isPlainObject(value)) return ["fixture manifest is not an object"];
+export function testEvidenceProblems(value: unknown, repoRoot?: string): string[] {
+  if (!isPlainObject(value)) return ["test evidence configuration is not an object"];
   const problems: string[] = [];
-  if (value.schema !== "semio.repository-test.fixture/v2") problems.push('schema must be "semio.repository-test.fixture/v2"');
+  if (Object.hasOwn(value, "schema")) problems.push("examples cannot declare a separate fixture schema");
   if (typeof value.id !== "string" || !MANIFEST_MUTATION_ID_RE.test(value.id)) problems.push("id must be kebab-case");
-  if (!(FIXTURE_CLASSES as readonly string[]).includes(String(value.class))) problems.push(`class must be one of ${FIXTURE_CLASSES.join("|")}`);
+  if (!(EVIDENCE_CLASSES as readonly string[]).includes(String(value.class))) problems.push(`class must be one of ${EVIDENCE_CLASSES.join("|")}`);
   if (!isPlainObject(value.target)) problems.push("target must name artifact, standard and subset");
   else {
     for (const key of ["artifact", "standard", "subset"] as const) if (typeof (value.target as Record<string, unknown>)[key] !== "string") problems.push(`target.${key} must be a string`);
@@ -3644,7 +3644,7 @@ export function fixtureManifestProblems(value: unknown, repoRoot?: string): stri
 }
 
 /** 🧫️ Absolute path of one role inside a fixture bundle. */
-export function fixtureFilePath(repoRoot: string, manifest: FixtureManifest, role: string): string {
+export function fixtureFilePath(repoRoot: string, manifest: TestEvidence, role: string): string {
   const file = manifest.files.find((entry) => entry.role === role);
   if (file === undefined) throw new Error(`fixture ${manifest.id} has no file for role ${JSON.stringify(role)}`);
   return isAbsolute(file.path) ? file.path : join(repoRoot, manifest.manifestDir ?? "", file.path);
@@ -3653,8 +3653,8 @@ export function fixtureFilePath(repoRoot: string, manifest: FixtureManifest, rol
 /** 🧾️ One verified fixture file. `expected`/`actual` differ exactly when the committed bytes changed. */
 export type FixtureVerification = Readonly<{ fixture: string; role: string; path: string; expected: string; actual: string; ok: boolean; missing: boolean }>;
 
-/** 🧾️ Re-hashes every file of a fixture against its manifest. Source fixtures are immutable after review. */
-export function verifyFixture(repoRoot: string, manifest: FixtureManifest): FixtureVerification[] {
+/** 🧾️ Compares current example bytes with the recorded test evidence digest. */
+export function verifyFixture(repoRoot: string, manifest: TestEvidence): FixtureVerification[] {
   return manifest.files.map((file) => {
     const abs = isAbsolute(file.path) ? file.path : join(repoRoot, manifest.manifestDir ?? "", file.path);
     if (!existsSync(abs)) return { fixture: manifest.id, role: file.role, path: file.path, expected: file.sha256, actual: "", ok: false, missing: true };
@@ -3664,7 +3664,7 @@ export function verifyFixture(repoRoot: string, manifest: FixtureManifest): Fixt
 }
 
 /** #⃣ Order-independent digest of every file in a fixture bundle — one component of the run key. */
-export function fixtureBundleDigest(manifest: FixtureManifest): string {
+export function fixtureBundleDigest(manifest: TestEvidence): string {
   return setDigest(manifest.files.map((file) => [file.role, file.sha256] as const));
 }
 //#endregion 🧫️Fixture
@@ -4280,7 +4280,7 @@ export const SCHEMA_DIAGNOSTIC_CODE_TABLE = {
   "schema-mutation-label": { emitters: ["harness"], description: "a history row could show something other than its leaf's label in every locale: a leaf label that is locale-invariant data, an empty locale, an operation's text line, a body the gate cannot read, or an app overriding the leaf label" },
   "schema-mutation-editability": { emitters: ["harness"], description: "a mutation aggregate the generic history editor cannot edit without a declared reason: a hand-written `impl Mutation` that neither forwards the payload accessors nor is a lane, fixture or uninhabited, a generic aggregate without an emitted payload law, or an aggregate variant without a leaf descriptor" },
   "schema-fault-notice": { emitters: ["harness"], description: "a fault a guest can refuse with could reach the person as a raw code or English text: a guest code no framework or app table labels in every locale, a code that cannot be an app notice code, an anonymous `Fault::from(text)`, an invalid, unreadable or stale `fault_notices` table, or a committed descriptor publishing other notices than the sources declare" },
-  "schema-fixture-defines-schema": { emitters: ["harness", "check"], description: "a schema DEFINITION lives inside a `🧪️*`/`🧫️*` tree without the enclosing case declaring `inertSchemaData`" },
+  "schema-fixture-defines-schema": { emitters: ["harness", "check"], description: "a contract facet lives inside examples, or an undeclared schema definition masquerades as example data; inert parser inputs never authorize contract facets" },
   "schema-fixture-local-schema-fallback": { emitters: ["harness"], description: "a fixture resolves its contract from a fixture-local copy instead of the owning scope" },
   "schema-fixture-metadata-invalid": { emitters: ["harness"], description: "a schema-bound fixture's declaration is not the shape the test protocol states" },
   "schema-fixture-parse-failed": { emitters: ["harness"], description: "a schema-bound fixture's payload could not be parsed in the format it was bound to" },
@@ -4739,6 +4739,7 @@ export function schemaPlacementDiagnostics(repoRoot: string, files: readonly str
       found.push(schemaDiagnostic("schema-placement-forbidden-filename", `${rel} uses a retired schema placement; a schema module writes JSON Schema as ${moduleDirName}/🔣️.json`, { path: rel }));
       continue;
     }
+    if (isFixtureOwnedPath(repoRoot, rel)) continue;
     const document = readSchemaDefinition(join(repoRoot, rel));
     if (document === undefined) continue;
     const moduleDir = schemaModuleDirOf(dirSegments, moduleDirName);
@@ -4827,11 +4828,17 @@ export function schemaOwnerEligibilityDiagnostics(repoRoot: string, files: reado
 export function schemaFixtureIsolationDiagnostics(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot), inert: ReadonlySet<string> = inertSchemaDataPaths(repoRoot, files)): SchemaDiagnostic[] {
   const found: SchemaDiagnostic[] = [];
   for (const rel of files) {
-    if (!rel.endsWith(".json") || !isFixtureOwnedPath(repoRoot, rel) || inert.has(rel)) continue;
-    if (readSchemaDefinition(join(repoRoot, rel)) === undefined) continue;
+    if (!isFixtureOwnedPath(repoRoot, rel)) continue;
+    if (!schemaCollectionContractPath(repoRoot, rel) && (!rel.endsWith(".json") || inert.has(rel) || readSchemaDefinition(join(repoRoot, rel)) === undefined)) continue;
     found.push(schemaDiagnostic("schema-fixture-defines-schema", `${rel} defines a schema inside a fixture or test collection; move the contract into the owning scope and bind the example to it with a schema:// target`, { path: rel }));
   }
   return found;
+}
+
+/** 🚧️ Contract facets below example collections cannot be declared as inert parser inputs. */
+function schemaCollectionContractPath(repoRoot: string, path: string): boolean {
+  const segments = path.split("/");
+  return segments.some((segment, index) => (segment === schemaModuleDirName(repoRoot) || segment === "🛂️schema") && isFixtureOwnedPath(repoRoot, segments.slice(0, index).join("/")));
 }
 
 /**
@@ -4849,7 +4856,7 @@ function inertSchemaDataPaths(repoRoot: string, files: readonly string[]): Set<s
     const names = (document as { inertSchemaData?: unknown } | undefined)?.inertSchemaData;
     if (!Array.isArray(names)) continue;
     const dir = rel.slice(0, rel.lastIndexOf("/"));
-    for (const name of names) if (typeof name === "string") declared.add(`${dir}/${name}`);
+    for (const name of names) if (typeof name === "string" && !schemaCollectionContractPath(repoRoot, `${dir}/${name}`)) declared.add(`${dir}/${name}`);
   }
   return declared;
 }
@@ -5409,7 +5416,7 @@ export type SchemaFixtureTarget = Readonly<{ scope: string; export: string; form
 export type SchemaStageExpectation = Readonly<{ stage: SchemaFixtureStage; result: "passed" | "failed"; code: string | null }>;
 
 /** 🧫️ One schema-bound fixture: an example that BINDS to an export and never defines one. */
-export type SchemaBoundFixture = Readonly<{
+export type SchemaTestExample = Readonly<{
   id: string;
   uri: string;
   target: SchemaFixtureTarget;
@@ -5438,7 +5445,7 @@ function stage(name: SchemaFixtureStage, result: "passed" | "failed" | "skipped"
  * Execution STOPS at the first failing stage and the rest are reported as `skipped` rather than
  * silently omitted: a report that lists four stages when six exist reads as four passes.
  */
-export function runSchemaFixture(repoRoot: string, fixture: SchemaBoundFixture, caseDirRel: string): SchemaFixtureReport {
+export function runSchemaFixture(repoRoot: string, fixture: SchemaTestExample, caseDirRel: string): SchemaFixtureReport {
   const stages: SchemaStageOutcome[] = [];
   const expected: SchemaStageExpectation = fixture.expect;
   const finish = (): SchemaFixtureReport => {
@@ -5513,7 +5520,7 @@ export function runSchemaFixture(repoRoot: string, fixture: SchemaBoundFixture, 
   return finish();
 }
 
-function schemaFixtureMetadataProblems(fixture: SchemaBoundFixture): string | null {
+function schemaFixtureMetadataProblems(fixture: SchemaTestExample): string | null {
   if (typeof fixture.id !== "string" || fixture.id.length === 0) return "the fixture declares no id";
   const parsed = parseSchemaUri(fixture.uri ?? "");
   if (parsed === null) return `${JSON.stringify(fixture.uri)} is not a schema://<scope id>/<ExportId> reference`;
@@ -5529,16 +5536,16 @@ function schemaFixtureMetadataProblems(fixture: SchemaBoundFixture): string | nu
 }
 
 /** 🧫️ Every schema-bound fixture in the tree, found by the DECLARATION key, never by shape. */
-export function discoverSchemaFixtures(repoRoot: string, under = ""): { caseDir: string; fixtures: readonly SchemaBoundFixture[] }[] {
+export function discoverSchemaFixtures(repoRoot: string, under = ""): { caseDir: string; fixtures: readonly SchemaTestExample[] }[] {
   const taxonomy = testTaxonomy(repoRoot);
   const caseFile = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
-  const found: { caseDir: string; fixtures: readonly SchemaBoundFixture[] }[] = [];
+  const found: { caseDir: string; fixtures: readonly SchemaTestExample[] }[] = [];
   for (const rel of schemaTreeFiles(repoRoot, under)) {
     if (!rel.endsWith(`/${caseFile}`)) continue;
     const document = readJson(join(repoRoot, rel));
     const declared = (document as Record<string, unknown> | undefined)?.[SCHEMA_FIXTURE_COLLECTION_KEY];
     if (!Array.isArray(declared) || declared.length === 0) continue;
-    found.push({ caseDir: rel.slice(0, rel.lastIndexOf("/")), fixtures: declared as SchemaBoundFixture[] });
+    found.push({ caseDir: rel.slice(0, rel.lastIndexOf("/")), fixtures: declared as SchemaTestExample[] });
   }
   return found;
 }
@@ -5609,7 +5616,7 @@ export function fixtureBlobRoot(repoRoot: string): string {
 }
 
 /** 🗄️ Where fixture manifests are cached by id, for GC's mark phase and for cross-run reuse. */
-export function fixtureManifestRoot(repoRoot: string): string {
+export function testEvidenceRoot(repoRoot: string): string {
   return join(testCacheRoot(repoRoot), "fixtures", "manifests");
 }
 
@@ -5642,7 +5649,7 @@ export function installFixtureBlob(repoRoot: string, bytes: Uint8Array): string 
 }
 
 /** 🗄️ Installs a file from disk under its digest without reading it twice into memory when possible. */
-export function installFixtureFile(repoRoot: string, absPath: string): string {
+export function installEvidenceFile(repoRoot: string, absPath: string): string {
   return installFixtureBlob(repoRoot, readFileSync(absPath));
 }
 
@@ -5678,8 +5685,8 @@ export function materializeFixtureBlob(repoRoot: string, sha256: string, targetP
 }
 
 /** 🗄️ Publishes a fixture manifest into the cache so GC can mark its blobs as referenced. */
-export function publishFixtureManifest(repoRoot: string, manifest: FixtureManifest): string {
-  const path = join(fixtureManifestRoot(repoRoot), `${manifest.id}.json`);
+export function publishTestEvidence(repoRoot: string, manifest: TestEvidence): string {
+  const path = join(testEvidenceRoot(repoRoot), `${manifest.id}.json`);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`);
   return path;
@@ -6110,7 +6117,7 @@ export function withAtomicRunDir<T>(absFinalDir: string, retention: RetentionCla
 export type RunKeyComponents = Readonly<{
   baselineSha: string;
   mutationManifestDigest: string;
-  fixtureManifestDigest: string;
+  testEvidenceDigest: string;
   fixtureFileDigests: string;
   oracleLockDigest: string;
   oracleEngineDigest: string;
@@ -6138,7 +6145,7 @@ export type RunManifest = Readonly<{ schema: "semio.repository-test.run-manifest
 export function computeRunKey(opts: {
   baselineSha: string;
   manifest: MutationManifest | null;
-  fixtures: readonly FixtureManifest[];
+  fixtures: readonly TestEvidence[];
   oracle: OracleEntry | undefined;
   probes: readonly ProbeEntry[];
   comparison: ComparisonProfileSpec | undefined;
@@ -6152,7 +6159,7 @@ export function computeRunKey(opts: {
   const components: RunKeyComponents = {
     baselineSha: opts.baselineSha,
     mutationManifestDigest: opts.manifest === null ? "" : mutationManifestDigest(opts.manifest),
-    fixtureManifestDigest: setDigest(opts.fixtures.map((fixture) => [fixture.id, digest(JSON.stringify(canonicalize(fixture)))] as const)),
+    testEvidenceDigest: setDigest(opts.fixtures.map((fixture) => [fixture.id, digest(JSON.stringify(canonicalize(fixture)))] as const)),
     fixtureFileDigests: setDigest(opts.fixtures.flatMap((fixture) => fixture.files.map((file) => [`${fixture.id}/${file.role}`, file.sha256] as const))),
     oracleLockDigest: opts.oracle === undefined ? "" : (opts.oracle.lockDigest ?? `${opts.oracle.package}@${opts.oracle.version ?? "*"}`),
     // ⚙️KIND and QUALIFICATION belong in the key, not beside it. Reclassifying an oracle from
@@ -6729,7 +6736,7 @@ export function fixtureWriterProvenanceBreaches(repoRoot: string, registry: Orac
   const breaches: BreachRecord[] = [];
   const disqualifyingAll = /\b(oracle_apply_mutation|oracle_apply|apply_mutation|project_conformance|oracle_inverse_spec|oracle_round_trip)\b/g;
   for (const contribution of registry.contributions) {
-    if (contribution.fixtureManifests.length === 0) continue;
+    if (contribution.testEvidence.length === 0) continue;
     const generator = join(repoRoot, contribution.owner, "🏭️generator");
     if (!existsSync(generator)) continue;
     const offenders = new Set<string>();
@@ -6762,7 +6769,7 @@ export function fixtureWriterProvenanceBreaches(repoRoot: string, registry: Orac
         "testing/fixture",
         "fixture-after-state-written-by-our-own-code",
         `${contribution.owner}/🏭️generator`,
-        `${contribution.fixtureManifests.length} committed fixture(s) obtain their mutated state from this repository's own engine (${[...offenders].sort().join(", ")})`,
+        `${contribution.testEvidence.length} committed fixture(s) obtain their mutated state from this repository's own engine (${[...offenders].sort().join(", ")})`,
         `The generator imports the mutation application and/or the expected projection from a semio crate, so the \`after\` half of every pair here is our own computation wearing a third-party crate's name. A reader registered over these fixtures would be judging a state we predicted, which is the exact substitution Protocol v2 exists to forbid.`,
         `Apply each mutation through the third-party library's OWN public API in the generator and drop the semio import, so the after bytes are written by something other than us; only then register a reader oracle over them. Writer and reader being the same third-party library is fine and is the established precedent.`,
         "high",
@@ -6920,10 +6927,10 @@ export function fixtureProvenanceBreaches(repoRoot: string, registry: OracleRegi
   const tolerances = toleranceProfileTable(registry);
   const profiles = profileTable(registry);
   for (const contribution of registry.contributions) {
-    for (const [index, fixture] of contribution.fixtureManifests.entries()) {
+    for (const [index, fixture] of contribution.testEvidence.entries()) {
       const scope = contribution.manifestPath;
-      for (const problem of fixtureManifestProblems(fixture, repoRoot)) {
-        breaches.push(breach("testing/fixture", "fixture-manifest-invalid", scope, `fixtureManifests[${index}] ${problem}`, "A fixture is evidence; evidence with incomplete provenance cannot be audited or reproduced.", "Complete the fixture manifest record."));
+      for (const problem of testEvidenceProblems(fixture, repoRoot)) {
+        breaches.push(breach("testing/fixture", "fixture-manifest-invalid", scope, `testEvidence[${index}] ${problem}`, "A fixture is evidence; evidence with incomplete provenance cannot be audited or reproduced.", "Complete the fixture manifest record."));
       }
       for (const verification of verifyFixture(repoRoot, fixture)) {
         if (verification.missing) breaches.push(breach("testing/fixture", "fixture-file-missing", `${scope}#${fixture.id}/${verification.role}`, `Fixture file ${verification.path} does not exist`, "A manifest that names a file nobody can read is a coverage claim with no artifact behind it.", "Restore the file or remove the role."));
@@ -6966,7 +6973,7 @@ export function fixtureProvenanceBreaches(repoRoot: string, registry: OracleRegi
  * function's own brief reads a v2 `mutationManifests` entry's fixture coverage at all.
  *
  * The minimum honest evidence this accepts is deliberately EITHER of the two forms already live in
- * this repository, not a mandate to adopt one: a v2 `FixtureManifest` (schema `fixture/v2`) whose
+ * this repository, not a mandate to adopt one: a `TestEvidence` configuration whose
  * `target` names this mutation's own artifact/standard/subset and whose `mutation` field names this
  * mutation's own id — exactly what the exemplar (`📷️png@1.2/✳️any`'s `change-background`) carries —
  * OR a v1 physical vector registered in a `mutationCatalogs[].vectors` entry sharing this mutation's
@@ -6993,7 +7000,7 @@ export function mutationFixtureBreaches(registry: OracleRegistry): BreachRecord[
   const breaches: BreachRecord[] = [];
   const fixturedMutations = new Set<string>();
   for (const contribution of registry.contributions) {
-    for (const fixture of contribution.fixtureManifests) {
+    for (const fixture of contribution.testEvidence) {
       if (fixture?.target?.artifact === undefined || fixture.mutation === undefined) continue;
       fixturedMutations.add(`${surfaceCoordinate(fixture.target)}::${fixture.mutation}`);
     }
@@ -7022,7 +7029,7 @@ export function mutationFixtureBreaches(registry: OracleRegistry): BreachRecord[
             contribution.manifestPath,
             `Mutation ${mutation.id} of ${subsetCoordinate(manifestTarget(manifest, mutation))} is declared with no fixture-backed vector`,
             "A mutation manifest declares what dispatch CLAIMS it can do; a fixture is the one thing that tests the claim against a real-world example, a handcrafted vector, or a qualifying-oracle-generated before/after pair, rather than the implementation grading its own homework.",
-            `Add a fixtureManifests entry (schema semio.repository-test.fixture/v2) with target ${JSON.stringify({ artifact: manifest.artifact, standard: manifest.standard, subset })} and mutation ${JSON.stringify(mutation.id)}, or register a physical vector for it in a mutationCatalogs[] entry sharing capability ${JSON.stringify(mutation.capability)} — either way, backed by real-world/handcrafted/oracle-generated evidence.`,
+            `Add a testEvidence entry with target ${JSON.stringify({ artifact: manifest.artifact, standard: manifest.standard, subset })} and mutation ${JSON.stringify(mutation.id)}, or register a physical vector for it in a mutationCatalogs[] entry sharing capability ${JSON.stringify(mutation.capability)} — either way, backed by real-world/handcrafted/oracle-generated evidence.`,
           ),
         );
       }
@@ -7149,13 +7156,13 @@ function directorySize(abs: string): { bytes: number; files: number } {
  */
 export function markReferencedBlobs(repoRoot: string, registry: OracleRegistry): Set<string> {
   const marked = new Set<string>();
-  for (const contribution of registry.contributions) for (const fixture of contribution.fixtureManifests) for (const file of fixture.files) marked.add(file.sha256);
-  const manifestRoot = fixtureManifestRoot(repoRoot);
+  for (const contribution of registry.contributions) for (const fixture of contribution.testEvidence) for (const file of fixture.files) marked.add(file.sha256);
+  const manifestRoot = testEvidenceRoot(repoRoot);
   if (existsSync(manifestRoot)) {
     for (const name of readdirSync(manifestRoot)) {
       if (!name.endsWith(".json")) continue;
       try {
-        const fixture = JSON.parse(readFileSync(join(manifestRoot, name), "utf8")) as FixtureManifest;
+        const fixture = JSON.parse(readFileSync(join(manifestRoot, name), "utf8")) as TestEvidence;
         for (const file of fixture.files ?? []) marked.add(file.sha256);
       } catch (cause) { throw new Error(`Cannot determine fixture reachability from ${join(manifestRoot, name)}`, { cause }); }
     }
@@ -7333,7 +7340,7 @@ export type CoverageRow = Readonly<{
   mutation: string;
   outcome: MutationOutcomeClass;
   fixture: string;
-  fixtureClass?: FixtureClass;
+  fixtureClass?: EvidenceClass;
   oracle: string;
   oracleKind?: OracleKind;
   oracleEngineFamily?: string;
@@ -7363,9 +7370,9 @@ export function buildCoverageMatrix(repoRoot: string, registry: OracleRegistry, 
   const rows: CoverageRow[] = [];
   const platform = currentPlatform();
   const oracles = new Map(registry.oracles.map((oracle) => [oracle.id, oracle]));
-  const fixturesByTarget = new Map<string, FixtureManifest[]>();
+  const fixturesByTarget = new Map<string, TestEvidence[]>();
   for (const contribution of registry.contributions) {
-    for (const fixture of contribution.fixtureManifests) {
+    for (const fixture of contribution.testEvidence) {
       // 🛡️A malformed fixture must not take the whole matrix down. Three fixtures registered without a
       // `target` threw here, and every caller that swallowed the throw reported coverage computed over a
       // silently smaller set — the provenance dimension read 300/300 against 303 registered fixtures,
@@ -7460,7 +7467,7 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
   const withoutOracle = manifestMutations
     .filter(({ mutation }) => !mutation.oracleRequirements.every((requirement) => registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(requirement.capability))))
     .map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
-  const fixtureSubsets = new Set(registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => fixture?.target?.artifact !== undefined).map((fixture) => surfaceCoordinate(fixture.target)));
+  const fixtureSubsets = new Set(registry.contributions.flatMap((contribution) => contribution.testEvidence).filter((fixture) => fixture?.target?.artifact !== undefined).map((fixture) => surfaceCoordinate(fixture.target)));
   // 🧪️EVIDENCE IS THE CONJUNCTION, not the fixture alone. Counting only "a fixture targets this subset"
   // let a mutation with NO discharged oracle — an `-uncarried` kind in a subset that happens to have
   // fixtures — count as measured, and evidence then exceeded registration: 213 against 210, which is
@@ -7476,8 +7483,8 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
   const subjectResults = results.filter((result) => result.role === "subject");
   const replaying = subjectResults.filter((result) => result.productionDispatch?.invoked !== true).map((result) => result.testId);
 
-  const fixtures = registry.contributions.flatMap((contribution) => contribution.fixtureManifests);
-  const withoutProvenance = fixtures.filter((fixture) => fixtureManifestProblems(fixture, repoRoot).length > 0).map((fixture) => fixture.id);
+  const fixtures = registry.contributions.flatMap((contribution) => contribution.testEvidence);
+  const withoutProvenance = fixtures.filter((fixture) => testEvidenceProblems(fixture, repoRoot).length > 0).map((fixture) => fixture.id);
   const notReproducible = fixtures.filter((fixture) => fixture.class === "third-party-generated" && !fixture.reproducible).map((fixture) => fixture.id);
   const outcomeCoordinates = manifestMutations.flatMap(({ manifest, mutation }) => mutation.outcomes.map((outcome) => `${manifest.artifact}::${mutation.id}::${outcome}`));
   const coveredOutcomes = new Set(rows.filter((row) => row.status === "passed").map((row) => `${row.artifact}::${row.mutation}::${row.outcome}`));
@@ -7506,7 +7513,7 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
     measure("oracleEvidenceCoverage", manifestMutations.length - withoutEvidence.length, manifestMutations.length, withoutEvidence),
     measure("oracleCapabilityCoverage", requiredCapabilities.length - unsupportedCapabilities.length, requiredCapabilities.length, unsupportedCapabilities),
     measure("productionBridgeCoverage", subjectResults.length - replaying.length, subjectResults.length, replaying),
-    measure("fixtureClassCoverage", FIXTURE_CLASSES.filter((klass) => fixtures.some((fixture) => fixture.class === klass)).length, FIXTURE_CLASSES.length, FIXTURE_CLASSES.filter((klass) => !fixtures.some((fixture) => fixture.class === klass))),
+    measure("fixtureClassCoverage", EVIDENCE_CLASSES.filter((klass) => fixtures.some((fixture) => fixture.class === klass)).length, EVIDENCE_CLASSES.length, EVIDENCE_CLASSES.filter((klass) => !fixtures.some((fixture) => fixture.class === klass))),
     measure("fixtureProvenanceCoverage", fixtures.length - withoutProvenance.length, fixtures.length, withoutProvenance),
     measure("expectedOutcomeCoverage", outcomeCoordinates.filter((coordinate) => coveredOutcomes.has(coordinate)).length, outcomeCoordinates.length, outcomeCoordinates.filter((coordinate) => !coveredOutcomes.has(coordinate))),
     measure("inverseCoverage", allIds.filter((id) => inverseIds.has(id)).length, allIds.length, allIds.filter((id) => !inverseIds.has(id))),
@@ -7548,7 +7555,7 @@ export function enforceReleaseGates(measurements: readonly DimensionMeasurement[
 
 /** 📊️ Renders the matrix as the report's own questions, each answered by an explicit list. */
 export function formatCoverageQuestions(registry: OracleRegistry, rows: readonly CoverageRow[], measurements: readonly DimensionMeasurement[]): string {
-  const fixtures = registry.contributions.flatMap((contribution) => contribution.fixtureManifests);
+  const fixtures = registry.contributions.flatMap((contribution) => contribution.testEvidence);
   const byDimension = new Map(measurements.map((measurement) => [measurement.dimension, measurement]));
   const untested = (byDimension.get("runtimeMutationCoverage")?.missing ?? []).join(", ") || "none";
   const noOracle = (byDimension.get("externalOracleCoverage")?.missing ?? []).join(", ") || "none";

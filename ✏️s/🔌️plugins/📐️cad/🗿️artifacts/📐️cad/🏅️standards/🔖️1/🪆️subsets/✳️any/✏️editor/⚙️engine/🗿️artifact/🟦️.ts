@@ -887,7 +887,7 @@ export async function runSelectionOperationInteraction(
 // #endregion 📜️Interaction
 
 // #region 📦️Interactions
-type ModelDefinitionInteractionFixture = InteractionSpec & { readonly key?: string };
+type ModelDefinitionInteractionRecord = InteractionSpec & { readonly key?: string };
 
 const SELECTION_INTERACTION_KEYS: Readonly<Record<string, string>> = {
   "selection.selectAll": "sa",
@@ -959,16 +959,16 @@ export function selectionSeedTargetsForOperation(operation: SelectionApplyOperat
   return operation === "invert" || operation === "deselectAll" ? [seedCell] : [];
 }
 
-function shippedInteractionJsons(): readonly ModelDefinitionInteractionFixture[] {
-  return modelDefinitionInteractionCatalog() as readonly ModelDefinitionInteractionFixture[];
+function shippedInteractionJsons(): readonly ModelDefinitionInteractionRecord[] {
+  return modelDefinitionInteractionCatalog() as readonly ModelDefinitionInteractionRecord[];
 }
 
-function interactionFixtureRow(spec: ModelDefinitionInteractionFixture): SpatialInteraction {
+function interactionCatalogRow(spec: ModelDefinitionInteractionRecord): SpatialInteraction {
   return { id: spec.id, label: spec.label ?? spec.id, key: typeof spec.key === "string" ? spec.key : (spec.id[0] ?? "?") };
 }
 
 function shippedSpatialInteractionCatalog(): readonly SpatialInteraction[] {
-  return shippedInteractionJsons().map(interactionFixtureRow);
+  return shippedInteractionJsons().map(interactionCatalogRow);
 }
 
 /** 🧭️ Resolves a typed token to an interaction in one model definition (`key`, `id`, or compact `label`). */

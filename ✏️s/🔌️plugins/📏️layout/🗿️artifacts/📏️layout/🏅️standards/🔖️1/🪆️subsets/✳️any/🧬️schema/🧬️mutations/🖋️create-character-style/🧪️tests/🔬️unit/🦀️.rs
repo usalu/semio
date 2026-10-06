@@ -4,7 +4,7 @@ use protocol::{Mutation, MutationDiff};
 
 #[test]
 fn create_character_style_appends_one_and_inverse_removes_it() {
-    let base = crate::standards::v1::subsets::any::schema::default_document();
+    let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let mutation = LayoutMutation::CreateCharacterStyle(CreateCharacterStyle { id: "character.emph".into(), name: Some("Emphasis".into()) });
     let next = mutation.diff(&base).diff().apply(&base).expect("create applies");
     assert_eq!(next.character_styles.len(), 1);

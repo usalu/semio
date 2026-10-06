@@ -13,7 +13,7 @@ use crate::editor::fem3d::interaction::{
 };
 use crate::editor::fem3d::modes::edit::windows::model::config::Fem3dGumballConfig;
 use crate::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::{element_id, Fem3dSnapshot, FemLoad};
 use machine::Command;
 use semio_framework_tool_machine::{GesturePhase, GestureTool, ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};

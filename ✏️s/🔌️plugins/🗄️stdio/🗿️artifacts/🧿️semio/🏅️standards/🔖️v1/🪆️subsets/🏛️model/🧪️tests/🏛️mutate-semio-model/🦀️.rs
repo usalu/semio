@@ -4,7 +4,7 @@
 //! **This file no longer serves the oracle role.** The reference for `semio-v1-model-mutate` is the
 //! registered oracle `semio-model-python-independent` (`../../🏅️standards/🔖️v1/🪆️subsets/🏛️model/
 //! 🔮️oracles/🔣️.json`) — an independent Python implementation of the semio model carrier and
-//! its eleven verbs, written from the committed grammar, protocol and specification vectors, living
+//! its fourteen verbs, written from the committed grammar, protocol and specification vectors, living
 //! beside this file as `🐍️component.py`. The runner dispatches the oracle role to that adapter and
 //! the subject role here, and compares the two projections under `@comparison-ordered-json-v1`.
 //! Registering oracle handlers here as well would put this repository's own answer on both sides of
@@ -38,11 +38,13 @@ mod subject {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::{
-        apply_semio_model_mutation, insert_element, insert_relation, insert_spatial_node, remove_element, remove_relation, remove_spatial_node, semio_model_mutation_inverse, set_element, set_relation, set_snapshot, set_spatial_node, SemioModelMutation,
+        apply_semio_model_mutation, drag_elements, insert_element, insert_relation, insert_spatial_node, remove_element, remove_relation, remove_spatial_node, rotate_elements, scale_elements, semio_model_mutation_inverse, set_element, set_relation, set_snapshot, set_spatial_node, SemioModelMutation,
     };
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{
-        decode_semio_model_pack, encode_semio_model_pack, parse_semio_model_dsl, print_semio_model_dsl, ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode,
-    };
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::io::binary::snapshot::{decode_semio_model_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::io::binary::snapshot::{encode_semio_model_pack};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::io::text::snapshot::{print_semio_model_dsl};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::io::text::snapshot::{parse_semio_model_dsl};
     use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️JsonReaders
@@ -69,6 +71,18 @@ mod subject {
     }
     fn present(json: &Json, key: &str) -> bool {
         !matches!(json.get(key), None | Some(Json::Null))
+    }
+    fn strings(json: &Json, key: &str) -> Vec<String> {
+        json.array(key).iter().map(|item| match item {
+            Json::String(value) => value.clone(),
+            other => panic!("mutate-semio-model: expected a string item in {key:?}, found {other:?}"),
+        }).collect()
+    }
+    fn triple(json: &Json, key: &str) -> [f64; 3] {
+        match json.array(key).as_slice() {
+            [Json::Number(x), Json::Number(y), Json::Number(z)] => [*x, *y, *z],
+            other => panic!("mutate-semio-model: expected three numbers in {key:?}, found {other:?}"),
+        }
     }
     //#endregion 🔖️JsonReaders
 
@@ -205,6 +219,9 @@ mod subject {
                 from: present(json, "from").then(|| json.str("from")),
                 to: present(json, "to").then(|| json.str("to")),
             }),
+            "dragElements" => SemioModelMutation::DragElements(drag_elements::DragElements { targets: strings(json, "targets"), offset: triple(json, "offset") }),
+            "rotateElements" => SemioModelMutation::RotateElements(rotate_elements::RotateElements { targets: strings(json, "targets"), axis: triple(json, "axis"), angle: number(json, "angle") }),
+            "scaleElements" => SemioModelMutation::ScaleElements(scale_elements::ScaleElements { targets: strings(json, "targets"), factors: triple(json, "factors") }),
             other => panic!("mutate-semio-model: no decoder for mutation variant {other:?}"),
         }
     }
@@ -335,7 +352,7 @@ mod subject {
 
     /// 🏗️ The real capsule tower model, parsed through this repository's own DSL codec.
     fn tower(ctx: &Context) -> Result<SemioModelSnapshot, String> {
-        parse_semio_model_dsl(&utf8(ctx.fixture_bytes(TOWER_DSL)?, "the committed capsule tower model")?)
+        parse_semio_model_dsl(&utf8(ctx.input_bytes(TOWER_DSL)?, "the committed capsule tower model")?)
     }
 
     /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector. `base`
@@ -373,7 +390,7 @@ mod subject {
 
     fn vector(ctx: &Context, position: usize, label: &str) -> Result<Json, String> {
         let uri = step_fixtures(ctx).into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no {label} fixture", ctx.scenario.id))?;
-        ctx.fixture_json(&uri)
+        ctx.input_json(&uri)
     }
 
     fn apply(current: &mut SemioModelSnapshot, step: &SemioModelMutation, what: &str) -> Result<(), String> {
@@ -454,18 +471,18 @@ mod subject {
     /// this codec has to reproduce THOSE — `OT` element classes, `M` mesh references and elements
     /// with no `spatialId` among them, three tags no committed pack had carried before.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let building_dsl = ctx.fixture_bytes(BUILDING_DSL)?;
+        let building_dsl = ctx.input_bytes(BUILDING_DSL)?;
         let building = parse_semio_model_dsl(&utf8(building_dsl.clone(), "the committed demo building")?)?;
         let building_printed = print_semio_model_dsl(&building);
         carrier_is_exact(building_printed.as_bytes(), &building_dsl)?;
-        let building_pack = ctx.fixture_bytes(BUILDING_PACK)?;
+        let building_pack = ctx.input_bytes(BUILDING_PACK)?;
         let building_unpacked = decode_semio_model_pack(&building_pack)?;
         if building_unpacked != building {
             return Err(disagreement("identity-round-trip: the demo building's binary twin decodes to a different model than its text", &building_unpacked, &building));
         }
         let building_repacked = encode_semio_model_pack(&building);
         carrier_is_exact(&building_repacked, &building_pack)?;
-        let tower_dsl = ctx.fixture_bytes(TOWER_DSL)?;
+        let tower_dsl = ctx.input_bytes(TOWER_DSL)?;
         let model = parse_semio_model_dsl(&utf8(tower_dsl.clone(), "the committed capsule tower model")?)?;
         let tower_printed = print_semio_model_dsl(&model);
         carrier_is_exact(tower_printed.as_bytes(), &tower_dsl)?;
@@ -473,7 +490,7 @@ mod subject {
         if reparsed != model {
             return Err(disagreement("identity-round-trip: printing the capsule tower back to DSL and reparsing it lost content", &reparsed, &model));
         }
-        let tower_pack = ctx.fixture_bytes(TOWER_PACK)?;
+        let tower_pack = ctx.input_bytes(TOWER_PACK)?;
         let tower_unpacked = decode_semio_model_pack(&tower_pack)?;
         if tower_unpacked != model {
             return Err(disagreement("identity-round-trip: the capsule tower's binary twin decodes to a different model than its text", &tower_unpacked, &model));

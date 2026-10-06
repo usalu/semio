@@ -7,7 +7,7 @@ import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../
 import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
-import {transformFixture} from "../../../../✉️base/🧬️schema/🧮️geometry/🧪️tests/🧫️fixtures/🟦️.ts";
+import {transformFixture} from "../../../../✉️base/🧬️schema/🧮️geometry/🧪️tests/🧰️support/🟦️.ts";
 import { testSchemaRecordOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🧪️tests/🔬️unit/🟦️.ts";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));

@@ -8,7 +8,7 @@ mod subject {
     //#region 🔖️Helpers
     /// ⏱️ The recorded stdout of every ecosystem, parsed in the report's column order.
     fn timings(ctx: &Context) -> Result<Vec<metrics::BenchmarkResult>, String> {
-        let outputs = parse_json(&String::from_utf8_lossy(&ctx.fixture_bytes("shared://⏱️benchmark-output.json")?))?;
+        let outputs = parse_json(&String::from_utf8_lossy(&ctx.input_bytes("shared://⏱️benchmark-output.json")?))?;
         Ok(metrics::BENCHMARK_LANGUAGES.iter().flat_map(|language| metrics::parse_benchmark_output(language, &outputs.str(language))).collect())
     }
     //#endregion 🔖️Helpers

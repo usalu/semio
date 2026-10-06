@@ -16,7 +16,7 @@ use semio_framework_ui_contract::SurfaceKind;
 // re-export list, mirroring the sibling editor module's own gap note about `Dialect`.
 use semio_framework_plugin::app::{MeshWindowKit, WindowKit};
 
-use semio_framework_pack_json::{to_string, Value};
+use semio_framework_pack_json::{json, to_string, Value};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;

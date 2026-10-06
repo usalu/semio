@@ -1,5 +1,4 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "note": "🎨️ The colour law of the `color_input` recipe every renderer shares: `hex` formats sRGB components in 0..1 (straight alpha; a missing component 0, a missing alpha 1, values clamped) as a lowercase `#rrggbb`, or `#rrggbbaa` with alpha, each channel round(c × 255); `parse` reads what a user types — an optional `#`, 3, 4, 6 or 8 hex digits in any case, surrounding space ignored, the short forms doubling each digit — as components channel / 255 with alpha 1 when absent, and refuses everything else. Answered by `ui_color_hex`/`parse_ui_color_hex` in Rust and `uiColorHex`/`parseUiColorHex` in TypeScript; color-string is the third-party oracle.",
   "hex": [
     {

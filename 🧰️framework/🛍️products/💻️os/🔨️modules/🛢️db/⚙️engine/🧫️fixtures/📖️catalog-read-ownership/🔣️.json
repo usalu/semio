@@ -1,5 +1,4 @@
 {
-  "schema": "semio.db.catalog-read-ownership/v1",
   "root": {
     "bytes": [
       3,

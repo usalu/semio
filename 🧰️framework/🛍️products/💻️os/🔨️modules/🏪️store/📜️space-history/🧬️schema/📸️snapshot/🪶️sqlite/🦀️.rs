@@ -5,7 +5,7 @@ use crate::os_store::{ArtifactSqliteSnapshot, S_SPACE_HISTORY_SCHEMA, SpaceAlter
 use crate::os_vcs::Author;
 use crate::sqlite_snapshot::{
     SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase,
-    artifact::{Cell, Projection},
+    artifact::{Cell, RowWriter},
     validate_sqlite_database_schema,
 };
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -13,6 +13,9 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 mod fields;
 #[path = "🚦️native/🦀️.rs"]
 mod native;
+pub(crate) use native::decode_with as decode_native_cst;
+#[path = "🛂️admission/🦀️.rs"]
+pub(crate) mod admission;
 /// 🚪️ The new explicitly authored SQLite coordinate of the real persisted history owner.
 pub const SQLITE_SNAPSHOT_DIALECT: crate::os_io::Dialect = crate::os_io::Dialect { artifact_kind: S_SPACE_HISTORY_SCHEMA, standard: crate::os_io::StandardId("1"), subset: crate::os_io::SubsetId("*") };
 /// 📣️ Explicit owner registration publishes the history factory and semantic capability atomically.
@@ -54,26 +57,10 @@ fn word(row: &crate::sqlite_snapshot::SqliteRow, index: usize) -> Result<u64, Va
 fn pair(value: u64) -> [Cell<'static>; 2] {
     [Cell::Integer((value >> 32) as i64), Cell::Integer((value & 0xffff_ffff) as i64)]
 }
-impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
-    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
-    fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<crate::io_schema::IoPayload, ValueError> {
-        schema(control)?;
-        rows(self, control, SqliteSnapshotPhase::EncodeNative)?;
-        native::encode(self, encoding, control)
-    }
-    fn decode_sqlite_snapshot_native(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
-        schema(control)?;
-        native::decode(payload, control)
-    }
-    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
-        let result = (|| -> Result<SqliteDatabase, ValueError> {
-            schema(control)?;
-            let total = rows(self, control, SqliteSnapshotPhase::ProjectSnapshot)?;
-            let mut p = Projection::new(Self::SQLITE_SCHEMA, control)?;
-            let document = p.insert("space_history_document", &[self.active_alternative_id.as_deref().map(Cell::Text).unwrap_or(Cell::Null)])?;
+fn write_rows(value:&SpaceHistorySnapshot,total:usize,p:&mut RowWriter<'_, '_>)->Result<(),ValueError>{
+            let document = p.insert("space_history_document", &[value.active_alternative_id.as_deref().map(Cell::Text).unwrap_or(Cell::Null)])?;
             p.checkpoint_total(total)?;
-            for (index, row) in self.checkpoints.iter().enumerate() {
+            for (index, row) in value.checkpoints.iter().enumerate() {
                 let checkpoint =
                     p.insert("space_history_checkpoint", &[Cell::Integer(document), Cell::Integer(fields::ordinal(index)?), Cell::Text(&row.id), row.parent_id.as_deref().map(Cell::Text).unwrap_or(Cell::Null), Cell::Text(&row.message)])?;
                 p.checkpoint_total(total)?;
@@ -91,7 +78,7 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
                     p.checkpoint_total(total)?;
                 }
             }
-            for (index, row) in self.alternatives.iter().enumerate() {
+            for (index, row) in value.alternatives.iter().enumerate() {
                 let alternative = p.insert("space_history_alternative", &[Cell::Integer(document), Cell::Integer(fields::ordinal(index)?), Cell::Text(&row.id), Cell::Text(&row.name)])?;
                 p.checkpoint_total(total)?;
                 for (index, id) in row.checkpoint_ids.iter().enumerate() {
@@ -99,6 +86,28 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
                     p.checkpoint_total(total)?;
                 }
             }
+    Ok(())
+}
+fn semantic(value:&SpaceHistorySnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
+ schema(control)?;let total=rows(value,control,phase)?;let mut writer=RowWriter::borrowed(control,phase)?;write_rows(value,total,&mut writer)?;writer.finish_borrowed()
+}
+impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
+    const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+    fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<crate::io_schema::IoPayload, ValueError> {
+        semantic(self,SqliteSnapshotPhase::EncodeNative,control)?;
+        native::encode(self, encoding, control)
+    }
+    fn decode_sqlite_snapshot_native(payload: &crate::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
+        schema(control)?;
+        native::decode(payload, control)
+    }
+    fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
+        let result = (|| -> Result<SqliteDatabase, ValueError> {
+            schema(control)?;
+            let total = rows(self, control, SqliteSnapshotPhase::ProjectSnapshot)?;
+            let mut p = RowWriter::new(Self::SQLITE_SCHEMA, control)?;
+            write_rows(self,total,&mut p)?;
             p.finish()
         })();
         result

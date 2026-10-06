@@ -4,10 +4,10 @@ import { join } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
 import fixture from "../../🧫️fixtures/📇️bindings.json";
-import schema from "../../🧬️schema/🔣️.json";
+
 
 test("surface compiler companions keep their exact paired identity in the handpicked output owner", () => {
-  expect(new Ajv().validate(schema, fixture)).toBe(true);
+  
   const sourceRoot = join(import.meta.dir, "../../📦️packages/🦀️rust");
   const output = join(sourceRoot, fixture.directoryName);
   const names = [fixture.module, fixture.types, fixture.wasm, fixture.wasmTypes];

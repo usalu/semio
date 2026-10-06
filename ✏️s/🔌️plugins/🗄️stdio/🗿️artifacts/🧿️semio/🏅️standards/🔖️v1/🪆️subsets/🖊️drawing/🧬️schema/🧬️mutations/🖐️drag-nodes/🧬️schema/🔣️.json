@@ -26,7 +26,20 @@
       }
     },
     "offset": {
-      "$ref": "#/$defs/SemioPoint2"
+      "$ref": "#/$defs/SemioPoint2",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Offset",
+          "de": "Versatz"
+        },
+        "description": {
+          "en": "Distance every dragged node moves by, as x and y.",
+          "de": "Strecke, um die jeder gezogene Knoten verschoben wird, als x und y."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {

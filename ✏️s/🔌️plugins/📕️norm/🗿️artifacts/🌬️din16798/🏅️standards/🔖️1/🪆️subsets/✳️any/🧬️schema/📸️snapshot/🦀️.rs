@@ -4,12 +4,6 @@ use crate::document::AnnexChoice;
 use crate::{VentSystemDocument, ZoneDocument};
 use framework_schema::ArtifactSchema;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
-
 //#region 🔖️Snapshot
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -46,7 +40,7 @@ pub struct Din16798Snapshot {
     pub night_setback_k: f64,
 }
 
-crate::impl_norm_artifact_record!(Din16798Snapshot, extension = "din16798", envelope_id = "norm.din16798", sqlite = sqlite::sqlite_codec);
+crate::impl_norm_artifact_record!(Din16798Snapshot, extension = "din16798", envelope_id = "norm.din16798", sqlite = crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
 
 impl Default for Din16798Snapshot {
     fn default() -> Self {
@@ -144,27 +138,15 @@ impl Din16798Snapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🌉️ExternalCodecBridge
-pub fn encode_din16798_snapshot_json(snapshot: &Din16798Snapshot) -> String {
-    semio_framework_pack_json::to_json_string(snapshot)
-}
 
-pub fn decode_din16798_snapshot_json(text: &str) -> Result<Din16798Snapshot, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
 
-pub fn decode_din16798_dsl(text: &str) -> Result<Din16798Snapshot, String> {
-    <Din16798Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-pub fn encode_din16798_dsl(snapshot: &Din16798Snapshot) -> String {
-    <Din16798Snapshot as store::ArtifactDsl>::print_dsl(snapshot)
-}
 
-pub fn encode_din16798_pack(snapshot: &Din16798Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
-}
 
-pub fn decode_din16798_pack(bytes: &[u8]) -> Result<Din16798Snapshot, String> {
-    <Din16798Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
-}
+
+
+
+
+
+
 //#endregion 🌉️ExternalCodecBridge

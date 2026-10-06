@@ -1,0 +1,55 @@
+{
+  "authority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔣️.json",
+  "sqlAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql",
+  "method": "Independent Bun SQLite insert of closed existing literal fields, PRAGMA widths and CASE typeof UTF8/storage costs; no provider invocation",
+  "schemaBytes": 2322,
+  "tables": [
+    {
+      "table": "epw_data_period",
+      "width": 7,
+      "rows": 2,
+      "semanticBytes": 77
+    },
+    {
+      "table": "epw_data_periods",
+      "width": 2,
+      "rows": 1,
+      "semanticBytes": 16
+    },
+    {
+      "table": "epw_document",
+      "width": 8,
+      "rows": 1,
+      "semanticBytes": 160
+    },
+    {
+      "table": "epw_location",
+      "width": 10,
+      "rows": 1,
+      "semanticBytes": 66
+    },
+    {
+      "table": "epw_record",
+      "width": 38,
+      "rows": 1,
+      "semanticBytes": 156
+    }
+  ],
+  "totalRows": 6,
+  "semanticBytes": 475,
+  "integrity": "ok",
+  "foreignKeys": [],
+  "proposedBoundaryCases": [
+    {
+      "id": "complete",
+      "rows": 6,
+      "semanticBytes": 475
+    },
+    {
+      "id": "same-literal-headers-empty-periods-records",
+      "rows": 3,
+      "semanticBytes": 242
+    }
+  ],
+  "runtimeQualification": "None; read-only independent authored SQL measurement"
+}

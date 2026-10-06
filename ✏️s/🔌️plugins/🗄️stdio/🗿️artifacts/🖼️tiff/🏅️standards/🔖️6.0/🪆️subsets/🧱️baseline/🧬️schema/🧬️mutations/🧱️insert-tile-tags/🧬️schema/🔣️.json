@@ -23,7 +23,8 @@
           "en": "TileWidth (tag 322) in pixels.",
           "de": "TileWidth (Tag 322) in Pixeln."
         },
-        "unit": "px"
+        "unit": "px",
+        "step": 16
       }
     },
     "tileLength": {
@@ -40,7 +41,8 @@
           "en": "TileLength (tag 323) in pixels.",
           "de": "TileLength (Tag 323) in Pixeln."
         },
-        "unit": "px"
+        "unit": "px",
+        "step": 16
       }
     }
   }

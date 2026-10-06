@@ -34,7 +34,21 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "SVG version",
+          "de": "SVG-Version"
+        },
+        "description": {
+          "en": "Value of the `version` attribute stamped with the profile, for example 1.1; cleared, the attribute is removed.",
+          "de": "Wert des Attributs `version`, das mit dem Profil gesetzt wird, zum Beispiel 1.1; geleert wird das Attribut entfernt."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 //! 🗺️ Trinity Jack app command — `delete-selection`.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
+use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::JackSnapshot;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{delete_edge::DeleteEdge, delete_node::DeleteNode, SemioGraphMutation};
@@ -15,5 +15,5 @@ pub(crate) fn delete_selection(snapshot: &JackSnapshot, children: &semio_framewo
     let doomed: Vec<_> = content.nodes.iter().filter(|node| selected_node_ids.contains(&node.id.value)).map(|node| node.id.clone()).collect();
     let mut leaves: Vec<SemioGraphMutation> = content.edges.iter().filter(|edge| doomed.contains(&edge.source) || doomed.contains(&edge.target)).map(|edge| SemioGraphMutation::DeleteEdge(DeleteEdge { id: edge.id.clone() })).collect();
     leaves.extend(doomed.into_iter().map(|id| SemioGraphMutation::DeleteNode(DeleteNode { id })));
-    Ok(crate::jack_child_emit(snapshot, &leaves))
+    Ok(crate::jack_child_emit(snapshot, leaves))
 }

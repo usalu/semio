@@ -1,6 +1,6 @@
-/** ⏭️ Trinity Rewriting editor — After window: typed twin of `render_fixture_graph`'s node-graph
- * scene boundary over `after_fixture_json` — the rule-applied result graph, read-only (`editable:
- * false` on the Rust call site), fixture-driven viewport. */
+/** ⏭️ Trinity Rewriting editor — After window: typed twin of `render_graph_snapshot`'s node-graph
+ * scene boundary over `rewritten_graph_json` — the rule-applied result graph, read-only (`editable:
+ * false` on the Rust call site), snapshot-driven viewport. */
 
 export interface TrinityRewritingEditAfterNode {
   id: string;

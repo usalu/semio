@@ -34,10 +34,10 @@ pub(crate) mod context {
     /// both precompute lanes.
     pub(crate) fn single_object_scene_json() -> String {
         let scene = SceneConfig {
-            fixture: Fixture {
+            scene_snapshot: EngineSceneSnapshot {
                 attractions: vec![],
                 target_volumes: vec![],
-                objects: vec![FixtureObject {
+                objects: vec![EngineSceneObject {
                     id: "host".to_string(),
                     object_kind: Some("Host".to_string()),
                     anchor: Default::default(),
@@ -71,12 +71,12 @@ pub(crate) mod context {
 
 use super::*;
 
-/// 🔗️ Keeps the example fixture's scene-authored kind catalog in sync with the compile-time
+/// 🔗️ Keeps the example scene_snapshot's scene-authored kind catalog in sync with the compile-time
 /// `puzzle3d-default` manifest.
 #[test]
 fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
-    let fixture = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest example parses as dsl");
-    let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&fixture.meta.kind_catalogs).unwrap()).unwrap();
+    let scene_snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest example parses as dsl");
+    let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&scene_snapshot.meta.kind_catalogs).unwrap()).unwrap();
     let manifest = crate::graph_manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
     let wire_kind_ids: std::collections::BTreeSet<_> = manifest.wire_kinds.iter().map(|row| row.id.as_str()).collect();
     let edge_kind_ids: std::collections::BTreeSet<_> = manifest.edge_kinds.iter().map(|row| row.id.as_str()).collect();

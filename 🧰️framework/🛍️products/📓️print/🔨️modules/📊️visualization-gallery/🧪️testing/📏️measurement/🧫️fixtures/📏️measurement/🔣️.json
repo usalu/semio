@@ -1,0 +1,16 @@
+{
+  "body": "chart marks: 1 2 3",
+  "canonicalPdf": "%PDF-1.7\n\nstream\nchart marks: 1 2 3\nendstream\n",
+  "metadata": ["D:20260101000000Z", "D:20261231235959Z"],
+  "report": {
+    "schemaVersion": 1,
+    "generatedBy": "independent-measurement-probe",
+    "variants": {
+      "bars/light/en": {
+        "pages": 1,
+        "kinds": {"bars": {"page": 1, "text": "Bars"}},
+        "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  }
+}

@@ -15,8 +15,25 @@
 
 use crate::schema::diff::navigate_container;
 pub use crate::schema::diff::MdPathStep;
-use crate::schema::diff::{dec_block, dec_block_list, dec_inline_list, dec_str, enc_block, enc_block_list, enc_inline_list, enc_str, parse_usize, split_top_level, strip_brackets};
-use crate::schema::diff::{dec_block_bin, dec_block_list_bin, dec_inline_list_bin, enc_block_bin, enc_block_list_bin, enc_inline_list_bin, read_str_bin, write_str_bin};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use crate::schema::diff::{diff_at_path, diff_set_snapshot, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
 use crate::schema::snapshot::{MdBlock, MdInline};
 use crate::MdSnapshot;
@@ -155,236 +172,31 @@ pub(crate) fn agg_inverse(this: &MdMutation, base: &MdSnapshot) -> Result<Vec<Md
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🧪️ F6: **hand-rolled** `OpText`/`OpBinary` for `MdMutation` (`#[derive(dsl::DslOps)]` confirmed
-/// rejected above) — reuses `MdDiff`'s `pub(crate)` grammar primitives (`enc_block`/
-/// `enc_inline_list`/`split_top_level`/...) rather than duplicating them a second time in this
-/// file, same intra-artifact-reuse pattern `SvgMutation` uses for `SvgDiff`'s primitives. Grammar:
-/// `keyword arg=value ...` (space-separated, same shape the derive's own handcrafted-wrapper
-/// convention uses), one match arm per variant (no `DslVariants` scaffolding available since
-/// nothing here derives it). `MdPathStep` gets tag range Y-Z (see `MdDiff`'s region doc comment for
-/// the full tag-vocabulary table).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_path_step(step: &MdPathStep) -> String {
-    match step {
-        MdPathStep::BlockQuote { index } => format!("Y[{index}]"),
-        MdPathStep::ListItem { index, item } => format!("Z[{index},{item}]"),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_path_step(s: &str) -> Result<MdPathStep, String> {
-    let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    match tag {
-        "Y" => Ok(MdPathStep::BlockQuote { index: parse_usize(inner)? }),
-        "Z" => {
-            let parts = split_top_level(inner, ',');
-            let [index, item] = parts.as_slice() else { return Err(format!("list item path step: expected 2 fields, got {}", parts.len())) };
-            Ok(MdPathStep::ListItem { index: parse_usize(index)?, item: parse_usize(item)? })
-        }
-        other => Err(format!("path step: unknown tag {other:?}")),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_path(path: &[MdPathStep]) -> String {
-    format!("[{}]", path.iter().map(enc_path_step).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_path(s: &str) -> Result<Vec<MdPathStep>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_step).collect()
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_md_snapshot(s: &MdSnapshot) -> String {
-    format!("[{},{}]", enc_str(&s.schema), enc_block_list(&s.blocks))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_md_snapshot(s: &str) -> Result<MdSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, blocks] = parts.as_slice() else { return Err(format!("md snapshot: expected 2 fields, got {}", parts.len())) };
-    Ok(MdSnapshot { schema: dec_str(schema)?, blocks: dec_block_list(blocks)? })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_md_mutation(m: &MdMutation) -> String {
-    match m {
-        MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_md_snapshot(snapshot)),
-        MdMutation::InsertBlock(insert_block::InsertBlock { path, index, block }) => format!("insert-block path={} index={index} block={}", enc_path(path), enc_block(block)),
-        MdMutation::RemoveBlock(remove_block::RemoveBlock { path, index }) => format!("remove-block path={} index={index}", enc_path(path)),
-        MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path, index, block }) => format!("replace-block path={} index={index} block={}", enc_path(path), enc_block(block)),
-        MdMutation::SetInlines(set_inlines::SetInlines { path, index, inlines }) => format!("set-inlines path={} index={index} inlines={}", enc_path(path), enc_inline_list(inlines)),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_md_mutation(line: &str) -> Result<MdMutation, String> {
-    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("md mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
-    let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("md mutation: missing arg '{k}' for '{keyword}'"));
-    let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
-    match keyword {
-        "set-snapshot" => Ok(MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_md_snapshot(arg("snapshot")?)? })),
-        "insert-block" => Ok(MdMutation::InsertBlock(insert_block::InsertBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")?, block: dec_block(arg("block")?)? })),
-        "remove-block" => Ok(MdMutation::RemoveBlock(remove_block::RemoveBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")? })),
-        "replace-block" => Ok(MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")?, block: dec_block(arg("block")?)? })),
-        "set-inlines" => Ok(MdMutation::SetInlines(set_inlines::SetInlines { path: dec_path(arg("path")?)?, index: usize_arg("index")?, inlines: dec_inline_list(arg("inlines")?)? })),
-        other => Err(format!("md mutation: unknown keyword {other:?}")),
-    }
-}
 
-impl OpText for MdMutation {
-    fn print_op(&self) -> String {
-        print_md_mutation(self)
-    }
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_md_mutation(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
-}
+
+
+
+
+
+
+
+
+
 
 //#region 🔖️OpBinaryCodec
-/// 🧪️ P2-FG1: mutation-specific real binary primitives backing the upgraded `OpBinary` impl below
-/// — reuses `MdDiff`'s `pub(crate)` recursive `enc_block_bin`/`enc_inline_list_bin`/`write_str_bin`/
-/// `write_option_bin` primitives (`../../🔺️diff/🦀️.rs`, imported above) for the SHARED
-/// `MdBlock`/`MdInline` shape (same intra-artifact-reuse split the TEXT codec above already uses),
-/// only `MdSnapshot`/`MdPathStep`'s own binary shape is genuinely new here.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_snapshot_bin(s: &MdSnapshot, out: &mut Vec<u8>) {
-    write_str_bin(out, &s.schema);
-    enc_block_list_bin(&s.blocks, out);
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<MdSnapshot, String> {
-    let schema = read_str_bin(reader)?;
-    let blocks = dec_block_list_bin(reader)?;
-    Ok(MdSnapshot { schema, blocks })
-}
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_path_step_bin(step: &MdPathStep, out: &mut Vec<u8>) {
-    match step {
-        MdPathStep::BlockQuote { index } => {
-            out.push(0);
-            store::pack_rt::write_varint_u64(out, *index as u64);
-        }
-        MdPathStep::ListItem { index, item } => {
-            out.push(1);
-            store::pack_rt::write_varint_u64(out, *index as u64);
-            store::pack_rt::write_varint_u64(out, *item as u64);
-        }
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_path_step_bin(reader: &mut store::ByteReader<'_>) -> Result<MdPathStep, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
-    match tag {
-        0 => Ok(MdPathStep::BlockQuote { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
-        1 => {
-            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-            let item = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-            Ok(MdPathStep::ListItem { index, item })
-        }
-        other => Err(format!("path step binary: unknown tag {other}")),
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_path_bin(path: &[MdPathStep], out: &mut Vec<u8>) {
-    store::pack_rt::write_varint_u64(out, path.len() as u64);
-    for step in path {
-        enc_path_step_bin(step, out);
-    }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdPathStep>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    (0..count).map(|_| dec_path_step_bin(reader)).collect()
-}
+
+
+
+
+
+
 //#endregion 🔖️OpBinaryCodec
 
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `MdMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("💾️binary/📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
-const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
-const TAG_REPLACE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-block");
-const TAG_SET_INLINES: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-inlines");
-//#endregion 🏷️WireTags
 
-/// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
-/// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
-/// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the `MdMutation`
-/// variant ordinal, same 1-5 order `print_md_mutation`'s own keyword match uses (0 was
-/// `NoMutation`'s, dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration; the remaining
-/// tags are left as they were rather than renumbered down, since nothing needs them contiguous).
-impl protocol::OpBinary for MdMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let tag: u8 = match self {
-            MdMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-            MdMutation::InsertBlock(_) => TAG_INSERT_BLOCK,
-            MdMutation::RemoveBlock(_) => TAG_REMOVE_BLOCK,
-            MdMutation::ReplaceBlock(_) => TAG_REPLACE_BLOCK,
-            MdMutation::SetInlines(_) => TAG_SET_INLINES,
-        };
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
-        match self {
-            MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_snapshot_bin(snapshot, &mut out),
-            MdMutation::InsertBlock(insert_block::InsertBlock { path, index, block }) => {
-                enc_path_bin(path, &mut out);
-                store::pack_rt::write_varint_u64(&mut out, *index as u64);
-                enc_block_bin(block, &mut out);
-            }
-            MdMutation::RemoveBlock(remove_block::RemoveBlock { path, index }) => {
-                enc_path_bin(path, &mut out);
-                store::pack_rt::write_varint_u64(&mut out, *index as u64);
-            }
-            MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path, index, block }) => {
-                enc_path_bin(path, &mut out);
-                store::pack_rt::write_varint_u64(&mut out, *index as u64);
-                enc_block_bin(block, &mut out);
-            }
-            MdMutation::SetInlines(set_inlines::SetInlines { path, index, inlines }) => {
-                enc_path_bin(path, &mut out);
-                store::pack_rt::write_varint_u64(&mut out, *index as u64);
-                enc_inline_list_bin(inlines, &mut out);
-            }
-        }
-        Ok(out)
-    }
 
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
-        match tag {
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ok(MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
-            TAG_INSERT_BLOCK => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
-                Ok(MdMutation::InsertBlock(insert_block::InsertBlock { path, index, block }))
-            }
-            TAG_REMOVE_BLOCK => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                Ok(MdMutation::RemoveBlock(remove_block::RemoveBlock { path, index }))
-            }
-            TAG_REPLACE_BLOCK => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
-                Ok(MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path, index, block }))
-            }
-            TAG_SET_INLINES => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                let inlines = dec_inline_list_bin(&mut reader).map_err(|e| malformed("op inlines", reader.position(), e))?;
-                Ok(MdMutation::SetInlines(set_inlines::SetInlines { path, index, inlines }))
-            }
-            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
-        }
-    }
-}
+
 //#endregion OpCodecs
 
 //#region 🔖️DemoCases

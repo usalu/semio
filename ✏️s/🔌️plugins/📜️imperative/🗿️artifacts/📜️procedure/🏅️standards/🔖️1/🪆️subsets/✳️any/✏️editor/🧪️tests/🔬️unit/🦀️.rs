@@ -235,7 +235,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
 pub(super) fn every_command() -> Vec<ImperativeCommand> {
     let mut params = BTreeMap::new();
-    params.insert("message".to_string(), crate::document_dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("updated".into()))));
+    params.insert("message".to_string(), crate::standards::v1::subsets::any::io::text::snapshot::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("updated".into()))));
     vec![
         ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: Some(1) }),
         ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some("step-if".into()), slot: Some("then".into()) }),
@@ -392,7 +392,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         (scene.path.steps.len(), scene.path.steps.iter().any(|step| step.params.get("key") == Some(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into())))))
     }
     let mut params = BTreeMap::new();
-    params.insert("key".to_string(), crate::document_dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
+    params.insert("key".to_string(), crate::standards::v1::subsets::any::io::text::snapshot::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
     let mut instance_a = imperative_app().await;
     let mut instance_b = imperative_app().await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://imperative-convergence", "mem://imperative-convergence").await;

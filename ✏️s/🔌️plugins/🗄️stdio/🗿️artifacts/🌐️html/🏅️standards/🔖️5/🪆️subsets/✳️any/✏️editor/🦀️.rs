@@ -370,12 +370,12 @@ impl ArtifactEditor for HtmlEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        Ok(crate::standards::v5::subsets::any::schema::snapshot::write_html_document(snapshot).into_bytes())
+        Ok(crate::standards::v5::subsets::any::io::text::snapshot::write_html_document(snapshot).into_bytes())
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
         let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
-        crate::standards::v5::subsets::any::schema::snapshot::parse_html_document(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+        crate::standards::v5::subsets::any::io::text::snapshot::parse_html_document(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
@@ -407,7 +407,7 @@ impl ArtifactEditor for HtmlEditor {
             return Ok(None);
         }
         if html_command_id(&request.command) != request.tool_id {
-            return Err(Fault::from("stdio-html-retained-command-tool-mismatch"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-html-retained-command-tool-mismatch"));
         }
         let tool_id = html_command_id(&request.command);
         let operation = AppOperationContext {

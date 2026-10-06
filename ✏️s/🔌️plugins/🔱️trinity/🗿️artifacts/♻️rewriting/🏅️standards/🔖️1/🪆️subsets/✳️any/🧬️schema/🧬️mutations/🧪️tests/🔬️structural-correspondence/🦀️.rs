@@ -108,11 +108,11 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
         assert!(vectors.iter().any(|vector| vector["mutationId"] == kind && vector["mutationDirectoryName"] == directory), "direct owner {directory} must correspond to the JSON catalog");
     }
     {
-        let kind = "edit-before-fixture";
-        let aggregate_variant = "EditBeforeFixture";
-        let directory = "🖼️edit-before-fixture";
+        let kind = "edit-working-graph";
+        let aggregate_variant = "EditWorkingGraph";
+        let directory = "🖼️edit-working-graph";
         let binary_tag = 0;
-        let owner = mutation_root.join("🖼️edit-before-fixture");
+        let owner = mutation_root.join("🖼️edit-working-graph");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
         let descriptor: semio_framework_pack_json::Value = semio_framework_pack_json::parse(&descriptor_source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("direct descriptor must be valid JSON");
@@ -450,15 +450,15 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
 fn rewriting_declared_json_mutations_and_sparse_deltas_preserve_roles(){
  let root=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any");
  let catalog:serde_json::Value=serde_json::from_str(&std::fs::read_to_string(root.join("🔮️oracles/🔣️.json")).unwrap()).unwrap();
- let vectors=catalog["mutationCatalogs"][0]["vectors"].as_array().unwrap();assert_eq!(vectors.len(),15);
+ let vectors=catalog["mutationCatalogs"][0]["vectors"].as_array().unwrap();assert_eq!(vectors.len(),9);
  let mut scenarios=0;
  for vector in vectors{
   let directory=vector["mutationDirectoryName"].as_str().unwrap();
   for scenario in vector["scenarios"].as_array().unwrap(){
    let case=root.join("🧫️fixtures/🧬️mutations").join(directory).join(scenario["directoryName"].as_str().unwrap());
    let mutation_json=std::fs::read_to_string(case.join("🦠️mutation/🔣️.json")).unwrap();
-   let mutation=crate::standards::v1::subsets::any::schema::mutations::text::decode_rewriting_mutation_json(&mutation_json).unwrap();
-   let encoded=crate::standards::v1::subsets::any::schema::mutations::text::encode_rewriting_mutation_json(&mutation).unwrap();
+   let mutation=crate::standards::v1::subsets::any::io::text::mutations::decode_rewriting_mutation_json(&mutation_json).unwrap();
+   let encoded=crate::standards::v1::subsets::any::io::text::mutations::encode_rewriting_mutation_json(&mutation).unwrap();
    assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).unwrap(),serde_json::from_str::<serde_json::Value>(&mutation_json).unwrap(),"{directory}: mutation declared roles");
    let diff_json=std::fs::read_to_string(case.join("🔺️diff/🔣️.json")).unwrap();
    let diff=crate::standards::v1::subsets::any::schema::diff::decode_rewriting_diff_json(&diff_json).unwrap();
@@ -467,9 +467,9 @@ fn rewriting_declared_json_mutations_and_sparse_deltas_preserve_roles(){
    scenarios+=1;
   }
  }
- assert_eq!(scenarios,15);
- for text in[r#"{"mutation":"editLhs","newLhs":"serialized carrier"}"#,r#"{"mutation":"editRhs","newRhs":"serialized carrier"}"#,r#"{"mutation":"editBeforeFixture","newWorkingGraph":"serialized carrier"}"#]{
-  let refusal=crate::standards::v1::subsets::any::schema::mutations::text::decode_rewriting_mutation_json(text).unwrap_err();
+ assert_eq!(scenarios,9);
+ for text in[r#"{"mutation":"editLhs","newLhs":"serialized carrier"}"#,r#"{"mutation":"editRhs","newRhs":"serialized carrier"}"#,r#"{"mutation":"editWorkingGraph","newWorkingGraph":"serialized carrier"}"#]{
+  let refusal=crate::standards::v1::subsets::any::io::text::mutations::decode_rewriting_mutation_json(text).unwrap_err();
   assert_eq!(refusal.kind,semio_framework_value::ValueRefusalKind::InvalidValue);
  }
 }

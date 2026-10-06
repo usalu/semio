@@ -3,20 +3,24 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 #[path = "🪆️owner/🦀️.rs"]
 mod owner;
-const KINDS: &[&str] = &["edit-before-fixture", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point", "drag-rule-nodes", "set-rule-layout-points"];
+const KINDS: &[&str] = &["edit-working-graph", "edit-lhs", "edit-rhs", "change-parameter-binding", "remove-parameter-binding", "change-rule-layout-point", "remove-rule-layout-point", "drag-rule-nodes", "set-rule-layout-points"];
 
 #[cfg(feature = "sut")]
 mod subject {
     use super::owner;
     use semio_framework_value::FromValue;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::schema::mutations::text::{apply_rewriting_mutation_reporting, decode_rewriting_mutation_json, inverse_rewriting_mutation_steps};
+    use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::mutations::{apply_rewriting_mutation_reporting, decode_rewriting_mutation_json, inverse_rewriting_mutation_steps};
     use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-    use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::schema::snapshot::{decode_rewriting_snapshot_json, encode_rewriting_snapshot_json, parse_rewriting_dsl, print_rewriting_dsl, RewritingSnapshot};
+    use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::schema::snapshot::{RewritingSnapshot};
+    use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::snapshot::{print_rewriting_dsl};
+    use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::snapshot::{parse_rewriting_dsl};
+    use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::snapshot::{decode_rewriting_snapshot_json};
+    use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::snapshot::{encode_rewriting_snapshot_json};
 
     fn written(kind: &str) -> &'static str {
         match kind {
-            "edit-before-fixture" => "workingGraph",
+            "edit-working-graph" => "workingGraph",
             "edit-lhs" => "lhs",
             "edit-rhs" => "rhs",
             "change-parameter-binding" | "remove-parameter-binding" => "parameterBindings",
@@ -28,7 +32,7 @@ mod subject {
         let mutation = decode_rewriting_mutation_json(text).map_err(|error| error.into_message())?.guard_decoded();
         let declared = semio_repo_test_host::parse_json(text)?;
         let expected = match kind {
-            "edit-before-fixture" => "editBeforeFixture", "edit-lhs" => "editLhs", "edit-rhs" => "editRhs",
+            "edit-working-graph" => "editWorkingGraph", "edit-lhs" => "editLhs", "edit-rhs" => "editRhs",
             "change-parameter-binding" => "changeParameterBinding", "remove-parameter-binding" => "removeParameterBinding",
             "change-rule-layout-point" => "changeRuleLayoutPoint", "remove-rule-layout-point" => "removeRuleLayoutPoint",
             "drag-rule-nodes" => "dragRuleNodes", "set-rule-layout-points" => "setRuleLayoutPoints",
@@ -41,8 +45,8 @@ mod subject {
     }
 
     fn bind_replacement(ctx: &Context, mutation: &mut RewriteRuleMutation, role: &str) -> Result<(), String> {
-        if let RewriteRuleMutation::EditBeforeFixture(edit) = mutation {
-            let child = semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::decode_semio_graph_snapshot_json(&owner::declared_text(ctx, role)?).map_err(|error| error.into_message())?;
+        if let RewriteRuleMutation::EditWorkingGraph(edit) = mutation {
+            let child = semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(&owner::declared_text(ctx, role)?).map_err(|error| error.into_message())?;
             semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut edit.new_working_graph.content, child);
         }
         Ok(())
@@ -70,7 +74,7 @@ mod subject {
         move |ctx| {
             let before = owner::declared_owner(ctx, "the real derived rule", "the real derived child")?.guard_decoded();
             let mut mutation = payload(ctx.doc_string()?, kind)?.guard_decoded();
-            if kind == "edit-before-fixture" { bind_replacement(ctx, mutation.get_mut(), "the replacement working child")?; }
+            if kind == "edit-working-graph" { bind_replacement(ctx, mutation.get_mut(), "the replacement working child")?; }
             let mut current = before.get().clone().guard_decoded();
             apply(current.get_mut(), mutation.get())?;
             if owner::full_projection(before.get())? == owner::full_projection(current.get())? { return Err("forward operation must move its declared member".into()); }
@@ -87,7 +91,7 @@ mod subject {
         move |ctx| {
             let before = owner::declared_owner(ctx, "the committed before-rule", "the committed before-child")?.guard_decoded();
             let mut mutation = payload(&owner::declared_text(ctx, "the committed mutation")?, kind)?.guard_decoded();
-            if kind == "edit-before-fixture" { bind_replacement(ctx, mutation.get_mut(), "the committed after-child")?; }
+            if kind == "edit-working-graph" { bind_replacement(ctx, mutation.get_mut(), "the committed after-child")?; }
             let mut current = before.get().clone().guard_decoded();
             apply(current.get_mut(), mutation.get())?;
             let expected = owner::declared_owner(ctx, "the committed after-rule", "the committed after-child")?.guard_decoded();

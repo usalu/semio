@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 #[semio_framework_async_macros::async_test]
 async fn apply_replaces_touched_fields_only() {

@@ -1,99 +1,39 @@
 {
-  "law": "Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.",
-  "provenance": ".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md",
+  "law": "The portable fixed-slot cases validate declared arithmetic, heap ownership and unchanged bounded-stack controls. Physical application table descriptors belong to the owner that can name and measure its private slot types.",
+  "provenance": "🧰️framework/🔨️modules/⏳️async/🧬️schema/🧱️boxed-fixed-slots/🔣️.json",
   "boundedThreadStackBytes": 1048576,
   "workerPoolStackBytes": 2097152,
   "conversionThresholdBytes": 65536,
   "tables": [
     {
-      "guard": "renderer::scenes",
-      "crate": "semio-framework-os-renderer-wgpu",
-      "owner": "scenes::AdmittedSurfaceMap<World3dState>",
-      "capacityConstant": "SCENE_SURFACE_CAPACITY",
-      "capacity": 256,
-      "elementType": "Option<AdmittedSurfaceEntry<World3dState>>",
-      "elementSizeBytes": 25872,
-      "ownerSizeBytes": 3136
+      "guard": "async::fixed_slots",
+      "crate": "semio-framework-async",
+      "owner": "fixed_slots::Small",
+      "capacityConstant": "FIXED_SLOT_CASE_CAPACITY",
+      "capacity": 65536,
+      "elementType": "[u8; 128]",
+      "elementSizeBytes": 128,
+      "ownerSizeBytes": 8
     },
     {
-      "guard": "renderer::engine_canvas",
-      "crate": "semio-framework-os-renderer-wgpu",
-      "owner": "engine_canvas::EngineSurfaceRegistry",
-      "capacityConstant": "ENGINE_SURFACE_CAPACITY",
-      "capacity": 256,
-      "elementType": "EngineSurfaceSlot",
-      "elementSizeBytes": 82656,
-      "ownerSizeBytes": 32
+      "guard": "async::fixed_slots",
+      "crate": "semio-framework-async",
+      "owner": "fixed_slots::Medium",
+      "capacityConstant": "FIXED_SLOT_CASE_CAPACITY",
+      "capacity": 65536,
+      "elementType": "[u8; 256]",
+      "elementSizeBytes": 256,
+      "ownerSizeBytes": 8
     },
     {
-      "guard": "renderer::engine_canvas",
-      "crate": "semio-framework-os-renderer-wgpu",
-      "owner": "engine_canvas::StagedEngineScenes",
-      "capacityConstant": "ENGINE_CANVAS_FRAME_PACKET_CAPACITY",
-      "capacity": 256,
-      "elementType": "Option<StagedEngineScene>",
-      "elementSizeBytes": 352,
-      "ownerSizeBytes": 24
-    },
-    {
-      "guard": "renderer::engine_canvas",
-      "crate": "semio-framework-os-renderer-wgpu",
-      "owner": "engine_canvas::EngineCanvasBuildContext",
-      "capacityConstant": "ENGINE_CANVAS_FRAME_PACKET_CAPACITY",
-      "capacity": 256,
-      "elementType": "Option<EngineCanvasPacket>",
-      "elementSizeBytes": 384,
-      "ownerSizeBytes": 72
-    },
-    {
-      "guard": "renderer::kernel_runtime",
-      "crate": "semio-framework-os-renderer-wgpu",
-      "owner": "kernel_runtime::RetainedSurfaceRegistry",
-      "capacityConstant": "RETAINED_SURFACE_CAPACITY",
-      "capacity": 64,
-      "elementType": "Option<RetainedSurfaceSlot>",
-      "elementSizeBytes": 23496,
-      "ownerSizeBytes": 32
-    },
-    {
-      "guard": "renderer::kernel_runtime",
-      "crate": "semio-framework-os-renderer-wgpu",
-      "owner": "kernel_runtime::CommandDocumentRetirementRegistry",
-      "capacityConstant": "COMMAND_DOCUMENT_RETIREMENT_CAPACITY",
-      "capacity": 512,
-      "elementType": "Option<CommandDocumentRetirementState>",
-      "elementSizeBytes": 584,
-      "ownerSizeBytes": 4112
-    },
-    {
-      "guard": "ui::wgpu_engine",
-      "crate": "semio-framework-ui",
-      "owner": "wgpu::engine::UiSurfaceRegistry",
-      "capacityConstant": "UI_LAYOUT_SURFACE_SLOTS",
-      "capacity": 64,
-      "elementType": "Option<UiSurfaceSlot>",
-      "elementSizeBytes": 165984,
-      "ownerSizeBytes": 520
-    },
-    {
-      "guard": "infinite::canvas",
-      "crate": "semio-framework-os-infinite",
-      "owner": "canvas::renderer::OpaqueSceneRetirementRegistry",
-      "capacityConstant": "OPAQUE_SCENE_RETIREMENT_CAPACITY",
-      "capacity": 1024,
-      "elementType": "OpaqueSceneRetirementSlot",
-      "elementSizeBytes": 312,
-      "ownerSizeBytes": 16
-    },
-    {
-      "guard": "infinite::world",
-      "crate": "semio-framework-os-infinite",
-      "owner": "world::WorldInteractionObjectRegistry",
-      "capacityConstant": "WORLD_INTERACTION_OBJECT_CAPACITY",
-      "capacity": 1024,
-      "elementType": "Option<WorldInteractionObjectSlot>",
-      "elementSizeBytes": 528,
-      "ownerSizeBytes": 168
+      "guard": "async::fixed_slots",
+      "crate": "semio-framework-async",
+      "owner": "fixed_slots::Large",
+      "capacityConstant": "FIXED_SLOT_CASE_CAPACITY",
+      "capacity": 65536,
+      "elementType": "[u8; 512]",
+      "elementSizeBytes": 512,
+      "ownerSizeBytes": 8
     }
   ]
 }

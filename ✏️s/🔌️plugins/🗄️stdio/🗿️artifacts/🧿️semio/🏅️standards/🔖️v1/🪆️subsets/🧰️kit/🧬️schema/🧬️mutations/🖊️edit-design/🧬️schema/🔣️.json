@@ -6,7 +6,26 @@
   "additionalProperties": false,
   "required": ["id", "pieces", "connections"],
   "properties": {
-    "id": { "type": "string" },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Design",
+          "de": "Entwurf"
+        },
+        "description": {
+          "en": "Id of the design.",
+          "de": "Kennung des Entwurfs."
+        },
+        "ref": {
+          "kind": "design"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
     "pieces": {
       "type": "array",
       "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/kit/snapshot.json#/$defs/SemioKitPiece" },

@@ -43,50 +43,18 @@ impl Default for GisTerrainSnapshot {
 //#endregion 🔹Snapshot
 
 //#region 🔖️CodecPrimitives
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if !s.len().is_multiple_of(2) {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-pub(crate) fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
 
-pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
-pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
 
-/// 🪪️ `[<hex child_id>,<hex target-uri>]` — the two-string handle, real and complete, never content.
-pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-pub(crate) fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
-    match c {
-        Some(c) => enc_child(c),
-        None => "[]".to_string(),
-    }
-}
-pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
-    if s == "[]" {
-        return Ok(None);
-    }
-    Ok(Some(dec_child(s)?))
-}
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️CodecPrimitives
 
 //#region 🔖️TextPrimitives
@@ -95,97 +63,30 @@ pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>
 //#endregion 🔖️TextPrimitives
 
 //#region 🔖️BinaryPrimitives
-fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
 
-pub(crate) fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
-}
-pub(crate) fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
-}
-pub(crate) fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
-    write_str_lp(out, &c.child_id);
-    write_ref(out, &c.target);
-}
-pub(crate) fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
-}
-pub(crate) fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
-    match c {
-        Some(c) => {
-            out.push(1);
-            write_child(out, c);
-        }
-        None => out.push(0),
-    }
-}
-pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
-    let presence = reader.read_u8().map_err(|e| e.to_string())?;
-    if presence == 0 {
-        Ok(None)
-    } else {
-        Ok(Some(read_child(reader)?))
-    }
-}
+
+
+
+
+
+
+
+
+
+
 
 
 
 //#endregion 🔖️BinaryPrimitives
 
-#[path="📦️pack/🦀️.rs"]
-mod owned_pack;
+
 
 //#region 🌉️IdentityBridge
-/// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
-/// language-neutral test adapter. Same reachability wall as `gis_terrain_mutation_report_json`:
-/// `store::ArtifactDsl`/`store::ArtifactPack` and their error types are unnameable outside this
-/// crate, so the identity law's evidence has to be produced here and handed over as text.
-///
-/// `canonicalText` is `print_dsl` of the parsed document and `canonicalTextAgain` is `print_dsl` of
-/// re-parsing that — [`store::ArtifactDsl`]'s own documented LAW is that canonical output is a
-/// `parse_dsl` fixpoint (hand-written text may normalize on the way in), so the two must be
-/// byte-identical while neither is required to equal the committed file. `packDecoded` comes back
-/// through a SEPARATE binary codec, so agreeing on one snapshot cannot be achieved by carrying text
-/// bytes across.
-pub fn gis_terrain_identity_report_json(dsl_text: &str) -> Result<String, String> {
-    let parsed = <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
-    let canonical = <GisTerrainSnapshot as store::ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <GisTerrainSnapshot as store::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
-    let canonical_again = <GisTerrainSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
-    let packed = <GisTerrainSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
-    let unpacked = <GisTerrainSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = semio_framework_pack_json::object([
-        ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&parsed.to_value())),
-        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&reparsed.to_value())),
-        ("packDecoded".to_string(), semio_framework_pack_json::from_dsl_value(&unpacked.to_value())),
-        ("canonicalText".to_string(), semio_framework_pack_json::Value::from(canonical.as_str())),
-        ("canonicalTextAgain".to_string(), semio_framework_pack_json::Value::from(canonical_again.as_str())),
-    ]);
-    Ok(semio_framework_pack_json::to_string(&report))
-}
+
 //#endregion 🌉️IdentityBridge
 
-#[path="🪶️sqlite/🦀️.rs"]
-mod sqlite;
 #[path="🧮️row-admission/🦀️.rs"]
 mod row_admission;
 #[path="🧮️value-admission/🦀️.rs"]
 mod value_admission;
-#[cfg(test)]
-#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_tests;
+

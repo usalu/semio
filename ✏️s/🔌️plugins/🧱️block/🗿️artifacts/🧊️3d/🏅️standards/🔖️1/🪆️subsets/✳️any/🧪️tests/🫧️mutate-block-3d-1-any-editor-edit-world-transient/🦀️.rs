@@ -45,7 +45,7 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::*;
     use semio_repo_test_host::law::vector;
-    use semio_s_artifact_block_3d::editor::block3d::modes::edit::windows::world::transient::block3d_world_window_transient_mutation_report_json;
+    use semio_s_artifact_block_3d::editor::block3d::modes::edit::windows::world::transient::component::io::text::mutations::block3d_world_window_transient_mutation_report_json;
 
     fn report(committed: &Vector) -> Result<String, String> {
         block3d_world_window_transient_mutation_report_json(committed.before, committed.mutation, committed.after)

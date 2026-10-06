@@ -1,5 +1,8 @@
 //! 🧪️ `Grid2dSnapshot` laws — the document's own addressing, geometry and palette-stream helpers.
 
+use crate::standards::v1::subsets::any::io::binary::snapshot::decode_palette_indices;
+use crate::standards::v1::subsets::any::io::binary::snapshot::encode_palette_indices;
+
 use super::*;
 
 fn scene() -> Grid2dSnapshot {

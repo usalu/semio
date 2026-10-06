@@ -14,7 +14,7 @@ fn results_view() -> ViewModel {
 /// configuration partition and never into the document.
 #[semio_framework_async_macros::async_test]
 async fn set_result_display_is_config_only() {
-    let snapshot = crate::standards::v1::subsets::any::schema::default_fem2d_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();

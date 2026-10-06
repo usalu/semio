@@ -24,6 +24,7 @@ pub const MATH_PLAY_BODY_GRAPH: &str = "equation.play.graph";
 /// 🧱️ Stitched into the app manifest by `crate::editor::equation::create_equation_app`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: MATH_PLAY_WINDOW_GRAPH.into(),
         label: LocalizedLabel::native("Graph", "Graph"),
         body_key: MATH_PLAY_BODY_GRAPH.into(),

@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by SemioModelMutation; absent when the payload stands alone."
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Relation",
+          "de": "Relation"
+        },
+        "description": {
+          "en": "Id of the relation.",
+          "de": "Kennung der Relation."
+        },
+        "ref": {
+          "kind": "relation"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "kind": {
       "anyOf": [
@@ -24,7 +41,20 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Kind",
+          "de": "Art"
+        },
+        "description": {
+          "en": "Kind of the relation between the two elements (aggregates, contained in, connects to, fills void, voids element or other) with its optional label.",
+          "de": "Art der Relation zwischen den beiden Elementen (aggregiert, enthalten in, verbunden mit, füllt Öffnung, öffnet Element oder sonstige) mit optionaler Beschriftung."
+        },
+        "group": "value",
+        "order": 20
+      }
     },
     "from": {
       "anyOf": [
@@ -34,7 +64,24 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "From",
+          "de": "Von"
+        },
+        "description": {
+          "en": "Id of the element the relation starts at.",
+          "de": "Kennung des Elements, an dem die Relation beginnt."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "value",
+        "order": 30
+      }
     },
     "to": {
       "anyOf": [
@@ -44,7 +91,24 @@
         {
           "type": "null"
         }
-      ]
+      ],
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "value",
+        "label": {
+          "en": "To",
+          "de": "Nach"
+        },
+        "description": {
+          "en": "Id of the element the relation ends at.",
+          "de": "Kennung des Elements, an dem die Relation endet."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "value",
+        "order": 40
+      }
     }
   },
   "$defs": {

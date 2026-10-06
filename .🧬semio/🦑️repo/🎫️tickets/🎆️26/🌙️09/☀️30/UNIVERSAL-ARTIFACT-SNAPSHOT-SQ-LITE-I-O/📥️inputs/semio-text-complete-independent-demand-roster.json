@@ -1,0 +1,29 @@
+{
+  "base": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot",
+  "contract": {
+    "schemaBytes": 578,
+    "tableWidths": {
+      "semio_text_document": 2,
+      "semio_text_run": 5,
+      "semio_text_mark": 5
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 8,
+        "valueBytes": 257
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 1,
+        "valueBytes": 26
+      }
+    ]
+  },
+  "owner": "@semio-tech/stdio-semio-rs",
+  "factory": "fixture()",
+  "empty": "source.runs.clear()",
+  "sourceFactory": "structuredClone(input)",
+  "nativeOracle": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts",
+  "sourceOracle": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔮️semantic-extent/🟦️.ts"
+}

@@ -1,0 +1,5 @@
+semio os.collection.dsl v1
+schema=os.collection name=OwnedCollection folders=[ { id=root name=Root } { id=children parent-id=root name=Children } ] entries=[
+ { id=document-entry folder-id=children name=Document kind-id=generic.document document schema=generic.document document-id=owned-document }
+ { id=blob-entry name=Image kind-id=file.blob blob hash=owned-blob size=42 media-type=image/png }
+]

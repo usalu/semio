@@ -1,0 +1,3 @@
+# General Conformance Source Nine
+
+All 38 full pairs, origins and lexical input bodies are hash-bound. Twenty-four ordered macro cuts reconstruct both full consumer after bodies exactly, retaining 179 and 536 assertions. Every emitted cut has actual macro syntax. Fifteen independent Ajv fixture admissions plus sixteen lexical TreeSitter and thirty-six live-integration/refusal cases are retained. Live integration seals distinct full current before/after/inverse bindings and refuses unsupported ticket includes; later development origins remain provenance-only unknown observations. Native execution, ticket deletion and atomic identity remain separate.

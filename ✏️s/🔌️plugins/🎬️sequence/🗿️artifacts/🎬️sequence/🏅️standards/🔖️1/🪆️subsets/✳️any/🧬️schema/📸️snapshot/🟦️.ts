@@ -8,4 +8,3 @@ export interface SequenceSnapshot {
 export interface SequenceStep { id: string; kind: string; params: Record<string, unknown>; x: number; y: number; slot?: SlotRef; collapsed: boolean; }
 export interface SequenceEdge { id: string; from: string; to: string; }
 export interface SlotRef { owner: string; name: string; }
-export {SEQUENCE_SQLITE_SCHEMA,sequenceSnapshotToSqliteDatabase,sequenceSnapshotFromSqliteDatabase} from "./🪶️sqlite/🟦️.ts";

@@ -1,5 +1,4 @@
 {
-  "schema": "semio.store.canonical-reader.v1",
   "sourceFixture": "canonical-borrowed-map",
   "grants": [
     0,
@@ -7,8 +6,8 @@
     7,
     4096
   ],
-  "expectedByteLength": 4976,
-  "expectedJsonSha256": "6fa976d6184bc9b931d2efdd6bcce0df1a99581823783eb4b6173c22820699ce",
+  "expectedByteLength": 4925,
+  "expectedJsonSha256": "ded598386f2cb6eb5b1af1fbcf5bc69ad2cc84b92661bc5fad1a16095f4fc610",
   "lifecycle": [
     "zero-grant",
     "before-poll-cancel",

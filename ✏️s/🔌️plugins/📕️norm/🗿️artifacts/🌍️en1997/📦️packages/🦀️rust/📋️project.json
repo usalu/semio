@@ -97,6 +97,23 @@
         "forwardAllArgs": true
       }
     },
+    "verify-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+        "forwardAllArgs": true
+      }
+    },
     "test-snapshot-sqlite-source": {
       "executor": "nx:run-commands",
       "inputs": [

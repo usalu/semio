@@ -30,7 +30,7 @@ fn expect(name: &str, field: &str, expected: &Json, produced: &Json) -> Result<(
 
 #[cfg(feature = "sut")]
 fn the_section_leaves_with_its_imports(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🧲️section-extract-trees.json")?;
+    let file = ctx.input_json("shared://🧲️section-extract-trees.json")?;
     let mut extracted = Vec::new();
     for vector in file.array("cases") {
         let name = vector.str("name");
@@ -51,7 +51,7 @@ fn the_section_leaves_with_its_imports(ctx: &Context) -> Result<Outcome, String>
 
 #[cfg(feature = "sut")]
 fn extraction_removes_exactly_the_section(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🧲️section-extract-trees.json")?;
+    let file = ctx.input_json("shared://🧲️section-extract-trees.json")?;
     let mut arithmetic = Vec::new();
     for vector in file.array("cases") {
         let name = vector.str("name");
@@ -73,7 +73,7 @@ fn extraction_removes_exactly_the_section(ctx: &Context) -> Result<Outcome, Stri
 
 #[cfg(feature = "sut")]
 fn a_missing_section_is_refused(ctx: &Context) -> Result<Outcome, String> {
-    let file = ctx.fixture_json("shared://🧲️section-extract-trees.json")?;
+    let file = ctx.input_json("shared://🧲️section-extract-trees.json")?;
     let sample = file
         .array("cases")
         .into_iter()

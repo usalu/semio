@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
+
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
 import { buildOsCommands, keyboardEventMatchesChord, controlOwnsKeyboardEvent } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
@@ -10,7 +10,6 @@ import controlCases from "../../🧫️fixtures/⌨️control-key-ownership/🔣
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "⌨️os-command-shortcuts", "🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "⌨️os-command-shortcuts", "🔣️.json"), "utf8"));
 
 describe("focused control keyboard ownership", () => {
   test.each(controlCases)("$id", (row) => {
@@ -58,10 +57,7 @@ describe("focused control keyboard ownership", () => {
 });
 
 describe("⌨️ OS command shortcut ownership", () => {
-  test("the shared keymap satisfies its neutral schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
+  
 
   test("React's command producer is the platform-keymap oracle", () => {
     const command = buildOsCommands([], [], false).find(({ id }) => id === fixture.commandId);

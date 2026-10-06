@@ -30,20 +30,20 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     id: "wfc.grid2d",
                     extension: Some("wfcgrid2d"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "wfc.grid2d.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d.op"),
                 },
                 semio_framework_dsl::LanguageSpec { id: "wfc.grid2d.diff", extension: None, role: semio_framework_dsl::LanguageRole::Diff, grammar: None, grammar_path: None, protocol: None, protocol_path: None, hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d.diff") },
@@ -53,8 +53,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -63,8 +63,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d.spr"),
                 },
             ]
@@ -98,3 +98,12 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     }
 }
 //#endregion 🔖️IoDeclaration
+
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

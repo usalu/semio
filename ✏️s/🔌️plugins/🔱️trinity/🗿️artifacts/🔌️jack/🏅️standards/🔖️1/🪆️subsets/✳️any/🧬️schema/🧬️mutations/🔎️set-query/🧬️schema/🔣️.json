@@ -13,7 +13,21 @@
       "const": "setQuery"
     },
     "value": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Query",
+          "de": "Abfrage"
+        },
+        "description": {
+          "en": "Source text of the Jack query.",
+          "de": "Quelltext der Jack-Abfrage."
+        },
+        "group": "value",
+        "order": 10
+      }
     }
   }
 }

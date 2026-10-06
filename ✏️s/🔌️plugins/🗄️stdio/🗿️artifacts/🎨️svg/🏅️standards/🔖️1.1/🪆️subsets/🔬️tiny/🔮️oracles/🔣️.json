@@ -79,7 +79,7 @@
     {
       "id": "semantic-svg-tiny-1-1-v1",
       "description": "SVG Tiny 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (attribute order is real writer freedom), and the viewBox/transform attribute values decomposed into typed numeric geometry rather than compared as raw strings, with a small absolute tolerance for cross-implementation float formatting. Self-closing versus explicit empty open/close tags are equivalent by construction — both parse to zero children — and are never distinguished by either side. Nothing about the PROFILE is narrowed away: the presence or absence of an excluded element or a forbidden presentation attribute is exactly what the tree comparison sees, so strip-non-tiny and the gated authoring kinds are compared on the ground the profile is defined on.",
-      "tolerance": 1e-09,
+      "tolerance": 1e-9,
       "ignoreKeys": []
     }
   ],
@@ -303,9 +303,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-tiny-element-applied",
       "class": "third-party-generated",
       "target": {
@@ -356,7 +355,6 @@
       "notes": "A new <line> element (a Tiny-profile-legal shape) inserted as the last child of the root <svg>."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-element-applied",
       "class": "third-party-generated",
       "target": {
@@ -407,7 +405,6 @@
       "notes": "The <line> element removed from the root, inverse of insert-tiny-element."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {
@@ -458,7 +455,6 @@
       "notes": "Whole-document snapshot replace: an unrelated valid document substituted wholesale."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-text-applied",
       "class": "third-party-generated",
       "target": {
@@ -509,7 +505,6 @@
       "notes": "Character content of <text id=\"t1\"> replaced, Hello -> World."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-tiny-attribute-applied",
       "class": "third-party-generated",
       "target": {
@@ -560,7 +555,6 @@
       "notes": "The x presentation attribute of <rect id=\"r1\"> replaced, 10 -> 30 (Tiny's own attribute vocabulary)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-transform-applied",
       "class": "third-party-generated",
       "target": {
@@ -611,7 +605,6 @@
       "notes": "A transform attribute set on <rect id=\"r1\">, none -> translate(10,10)."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-view-box-applied",
       "class": "third-party-generated",
       "target": {
@@ -662,7 +655,6 @@
       "notes": "The root <svg>'s viewBox replaced, \"0 0 100 100\" -> \"0 0 200 200\"."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "stamp-base-profile-applied",
       "class": "third-party-generated",
       "target": {
@@ -713,7 +705,6 @@
       "notes": "The root <svg>'s baseProfile attribute stamped, absent -> \"tiny\"."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "strip-non-tiny-applied",
       "class": "third-party-generated",
       "target": {

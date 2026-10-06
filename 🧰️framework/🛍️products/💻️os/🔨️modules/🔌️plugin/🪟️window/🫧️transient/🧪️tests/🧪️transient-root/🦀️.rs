@@ -36,7 +36,7 @@ fn probe() -> ProbeTransient {
 }
 
 /// ⚖️ LAW: the one mutation's wire is `{"kind":"snapshot","transient":…}` in text and binary alike, it parses back, installs
-/// its root over any base, and its inverse restores that base.
+/// its root over any base, and its inverse restores that base; a wire naming one member twice is refused.
 #[test]
 fn the_snapshot_mutation_replaces_the_whole_root_and_inverts_to_the_base() {
     use protocol::{Mutation, MutationDiff, OpBinary, OpText};
@@ -49,7 +49,7 @@ fn the_snapshot_mutation_replaces_the_whole_root_and_inverts_to_the_base() {
     assert_eq!(mutation.diff(&base).diff().apply(&base).expect("applies"), probe(), "the root is replaced whole");
     assert_eq!(mutation.inverse(&base).expect("inverts"), vec![ProbeTransientMutation::Snapshot { transient: base }], "the inverse restores the base");
     assert_eq!(mutation.descriptor().semantic_kind, "set-window-transient");
-    assert!(ProbeTransientMutation::parse_op(r#"{"kind":"snapshot","transient":{"label":"x","count":1,"extra":0}}"#).is_err(), "unknown members are refused");
+    assert!(ProbeTransientMutation::parse_op(r#"{"kind":"snapshot","transient":{"label":"x","count":1,"count":2}}"#).is_err(), "a repeated member is refused");
 }
 
 /// ⚖️ LAW: the root's DSL and pack round trip through its semio envelope, an empty body or pack reads the default root, and a

@@ -1,6 +1,6 @@
 //! 📄️ 📄️ Sourcing curation app commands command — `stock-from-catalogue`.
 
-use crate::op::SourcingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::schema::available_modules;
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};

@@ -1,0 +1,9 @@
+# Native Plan Bounded Projection Audit
+
+The retained prior Low scanner could not be located in ticket input scripts, shallow retained research inputs, or generated research scripts outside snapshots/targets. A separate ticket-only selector was staged at native-plan-projection-inputs/📜️script.ts; frozen native-json d4a codec remains unchanged.
+
+Current selector source SHA-256: e6cb22b86c7559752bd78d0e6fd9796b22959a9c39391d95a9acb88b710bd929. It retains full routes, rootWorkspace, executor, authority, sourceProof; assets retain only path, sha256, byteCount. All other JSON values are parsed and discarded. Skipped strings validate escaped quotes, escapes, Unicode hex and control bytes without retaining body strings. Raw full-plan hash guards before and after parsing, full scanner source capture/final hash guard, cancellation and progress, and immutable ticket generated output checks bind the resulting projection.
+
+Actual closed fixture schema/system JSON.parse/third-party JSON5 checks:18of18successful with chunk sizes1,2,7,65536, duplicate keys, Unicode, nested skipped data, invalid escapes/controls/trailing JSON and immediate cancellation. Exact evidence: generated/native-plan-projection/selector-laws-2.json. Independent integration against actual90,570,562-byte ToolRun plan full system JSON.parse matched all3865asset fields and all retained fields using same parser before main-only receipt/law epoch edits; evidence selector-system-original-plan-law-1.json retains earlier source hash.
+
+Initial Native projection process started before current CLI receipt guards were loaded. Its exact executing source preimage was not captured by this audit lane; its projection must remain qualified observation until independently compared with current source-bound projection2. No inferred scanner identity, source recapture, native API RED, compiler outcome or publication admission is claimed.

@@ -14,7 +14,7 @@ fn object(id: &str, origin: [f64; 3], anchor: Puzzle3dObjectAnchor, vortices: Ve
 
 fn chain_snapshot() -> Puzzle3dSnapshot {
     // root -A- mid -B- leaf: a 3-object chain — same shape as the flat-position slug's own
-    // fixture, kept independent per-file per this repo's inline-fixture convention.
+    // scene_snapshot, kept independent per-file per this repo's inline-scene_snapshot convention.
     let root = object("root", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Fixed, vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
     let mid = object("mid", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Derived, vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0]), vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
     let leaf = object("leaf", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Derived, vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0])]);
@@ -36,18 +36,18 @@ fn chain_snapshot() -> Puzzle3dSnapshot {
 #[test]
 fn inference_determinism_law() {
     let snapshot = chain_snapshot();
-    assert_eq!(Puzzle3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Puzzle3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
+    assert_eq!(Puzzle3dInference::infer(&snapshot).expect("valid materialized inference scene_snapshot"), Puzzle3dInference::infer(&snapshot).expect("valid materialized inference scene_snapshot"));
 }
 
 #[test]
 fn inference_default_law() {
-    assert_eq!(Puzzle3dInference::infer(&Puzzle3dSnapshot::default()).expect("valid materialized inference fixture"), Puzzle3dInference::default());
+    assert_eq!(Puzzle3dInference::infer(&Puzzle3dSnapshot::default()).expect("valid materialized inference scene_snapshot"), Puzzle3dInference::default());
 }
 
 #[test]
 fn inference_matches_flatten_snapshot_directly() {
     let snapshot = chain_snapshot();
-    let inferred = Puzzle3dInference::infer(&snapshot).expect("valid materialized inference fixture");
+    let inferred = Puzzle3dInference::infer(&snapshot).expect("valid materialized inference scene_snapshot");
     let direct = flatten_snapshot(&snapshot);
     for (id, pose) in &direct {
         assert_eq!(inferred.flat_positions.get(id), Some(pose), "inference must match flatten_snapshot exactly for {id}");

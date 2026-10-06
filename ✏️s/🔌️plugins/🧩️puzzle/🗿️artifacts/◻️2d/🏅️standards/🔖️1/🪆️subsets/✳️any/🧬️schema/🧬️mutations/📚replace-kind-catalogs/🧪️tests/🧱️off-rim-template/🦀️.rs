@@ -1,4 +1,4 @@
-//! 🧪️ `replace-kind-catalogs` fixture — `🧱️off-rim-template`.
+//! 🧪️ `replace-kind-catalogs` snapshot — `🧱️off-rim-template`.
 //!
 //! A handle template whose rim parameter `t` is 1.5 lies off the node outline; the schema bounds `t` to 0..1: a Fatal `mutation.invariant`, no catalogue is installed.
 //!

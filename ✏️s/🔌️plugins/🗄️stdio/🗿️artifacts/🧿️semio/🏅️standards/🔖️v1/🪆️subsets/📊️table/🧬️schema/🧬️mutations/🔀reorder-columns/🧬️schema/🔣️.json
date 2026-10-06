@@ -10,7 +10,24 @@
   ],
   "properties": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Column",
+          "de": "Spalte"
+        },
+        "description": {
+          "en": "Name of the column.",
+          "de": "Name der Spalte."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "to_index": {
       "type": "integer",
@@ -24,7 +41,8 @@
         "description": {
           "en": "Zero-based position the column moves to.",
           "de": "Nullbasierte Position, an die die Spalte verschoben wird."
-        }
+        },
+        "step": 1
       }
     }
   }

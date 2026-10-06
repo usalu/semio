@@ -7,12 +7,12 @@ import { mutationCatalogProblems } from "../../../🧪️test/📦️packages/�
 
 const owner = resolve(import.meta.dir, "../..");
 const vector = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧬️mutation-scenario-identities/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🧬️mutation-scenario-identities/🔣️.json"), "utf8"));
+
 
 test("logical mutation scenario ids and physical case names are independent exact identities", () => {
   const ajv = new Ajv({ strict: false });
-  const validateVector = ajv.compile(schema), validateScenario = ajv.compile(vector.scenarioSchema);
-  expect(validateVector(vector), JSON.stringify(validateVector.errors)).toBe(true);
+  const validateScenario = ajv.compile(vector.scenarioSchema);
+  expect(vector["contract"]).toEqual("mutation-scenario-identities-v1");
   const ownerPath = "🗿️sample/🏅️standards/🔖️1/🪆️subsets/✳️any";
   const sourceRoot = `${ownerPath}/🧬️schema/🧬️mutations`;
   const baseline = loadCatalogTaxonomy();

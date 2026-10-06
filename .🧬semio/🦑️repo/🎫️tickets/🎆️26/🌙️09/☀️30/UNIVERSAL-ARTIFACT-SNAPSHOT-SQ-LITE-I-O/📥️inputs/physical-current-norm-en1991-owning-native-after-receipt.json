@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-06T00:14:44.618Z",
+  "project": "@semio-tech/norm-en1991-rs",
+  "target": "test-snapshot-sqlite-native",
+  "profile": "quick",
+  "session": 7733,
+  "cohortTerminal": false,
+  "nextestRunId": "0b77c29e-54dc-40bd-b94d-2939c399fc50",
+  "run": 14,
+  "passed": 14,
+  "failed": 0,
+  "outside": 163,
+  "durationSeconds": 3.818,
+  "log": "🗑️generated/physical-current-vdi-duplicate-before-other-norm-after.log"
+}

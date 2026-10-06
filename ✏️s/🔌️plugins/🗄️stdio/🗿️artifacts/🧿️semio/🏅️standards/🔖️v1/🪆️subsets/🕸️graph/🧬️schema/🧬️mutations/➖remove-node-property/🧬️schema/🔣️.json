@@ -13,8 +13,6 @@
     "node_id": {
       "$ref": "#/$defs/GraphNodeId",
       "x-semio-ui": {
-        "widget": "reference",
-        "role": "target",
         "label": {
           "en": "Node",
           "de": "Knoten"
@@ -22,11 +20,6 @@
         "description": {
           "en": "Node the property is detached from.",
           "de": "Knoten, von dem die Eigenschaft gelöst wird."
-        },
-        "ref": {
-          "kind": "node",
-          "domain": "graph",
-          "granularity": "node"
         },
         "group": "target",
         "order": 10
@@ -37,7 +30,6 @@
       "minLength": 1,
       "x-semio-ui": {
         "widget": "text",
-        "role": "target",
         "label": {
           "en": "Property",
           "de": "Eigenschaft"
@@ -60,7 +52,20 @@
       ],
       "properties": {
         "value": {
-          "type": "string"
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Node id",
+              "de": "Knoten-ID"
+            },
+            "ref": {
+              "kind": "node",
+              "domain": "graph",
+              "granularity": "node"
+            }
+          }
         }
       }
     }

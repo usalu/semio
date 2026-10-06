@@ -574,60 +574,6 @@
         }
       }
     },
-    "SliderOverlay": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema",
-        "cases",
-        "keyboard"
-      ],
-      "properties": {
-        "schema": {
-          "const": "semio.dag.slider-overlay.v1"
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/SliderOverlayCase"
-          }
-        },
-        "keyboard": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/SliderOverlayKeyboardStep"
-          }
-        }
-      }
-    },
-    "SliderOverlayCase": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "locale",
-        "scopeId",
-        "row"
-      ],
-      "properties": {
-        "locale": {
-          "enum": [
-            "en",
-            "de"
-          ]
-        },
-        "scopeId": {
-          "type": "string",
-          "minLength": 1
-        },
-        "row": {
-          "$ref": "#/$defs/SliderOverlayRow"
-        }
-      }
-    },
     "SliderOverlayRow": {
       "type": "object",
       "additionalProperties": false,

@@ -1,6 +1,6 @@
 /** 🧪️ The staged-arg renderer draws every mutation-input control kind of the W1-D vocabulary with the W1-E recipe
  * semantics instead of an interim fallback: a stepper (named value field, named Increase/Decrease), a dial (a detented
- * slider read in display units), a segmented choice (pressed toggle buttons), vector axes (one named number field per
+ * slider read in display units), a segmented choice (a radio group), a multi-line text (a textarea), vector axes (one named number field per
  * axis carrying the unit) and a reference list (chips that remove, an empty line, "use current selection" from the
  * reference's own domain, capped at `maxItems`). The controls are derived by the manifest's own `argControl` from the
  * stored schema; `dom-accessibility-api` names every field, `@testing-library` drives it, and every vector axis follows the
@@ -33,6 +33,7 @@ function mount(def: Def, value: unknown, context: StagedArgContextV1 = {}, disab
 const quantity: Def = { id: "quantity", label: "Quantity", schema: { kind: "number", min: 1, max: 20, step: 1, integer: true }, required: true };
 const angle: Def = { id: "angle", label: "Angle", schema: { kind: "number", min: 0, max: 6.283, step: 0.01, integer: false, snaps: [0, 1.5708, 3.1416], precision: 0, displayUnit: "°", displayFactor: 57.29577951308232 }, presentation: { kind: "dial" }, required: true };
 const axis: Def = { id: "axis", label: "Axis", schema: { kind: "string", options: [{ value: "x", label: "X axis" }, { value: "y", label: "Y axis" }] }, presentation: { kind: "segmented" }, required: true };
+const note: Def = { id: "note", label: "Note", schema: { kind: "string", options: [] }, presentation: { kind: "multiline" }, required: false };
 const offset: Def = { id: "offset", label: "Offset", schema: { kind: "vector", dims: 3, unit: "mm", step: 0.5 }, required: true };
 const targets: Def = { id: "targets", label: "Targets", schema: { kind: "reference", kinds: ["node"], domain: "vortex", many: true, maxItems: 2 }, required: true };
 const pivot: Def = { id: "pivot", label: "Pivot", schema: { kind: "reference", kinds: ["node"], domain: "vortex", many: false }, required: true };
@@ -42,7 +43,7 @@ describe("🎛️ staged mutation-input controls", () => {
   afterAll(() => syncShellLabelLocale("en"));
 
   it("derives each case's control kind from the stored schema", () => {
-    expect([quantity, angle, axis, offset, targets, pivot].map((def) => argControl(def as Parameters<typeof argControl>[0]).kind)).toEqual(["stepper", "dial", "segmented", "vector", "reference", "reference"]);
+    expect([quantity, angle, axis, note, offset, targets, pivot].map((def) => argControl(def as Parameters<typeof argControl>[0]).kind)).toEqual(["stepper", "dial", "segmented", "multiline", "vector", "reference", "reference"]);
   });
 
   it("renders an integer as a named stepper whose Increase and Decrease step the value, and disables it whole", () => {
@@ -68,12 +69,22 @@ describe("🎛️ staged mutation-input controls", () => {
     expect(view.container.textContent).toContain("90 °");
   });
 
-  it("renders a segmented choice as pressed toggle buttons that stage the picked value", () => {
+  it("renders a segmented choice as a named radio group that stages the picked option and never presses the chosen one off", () => {
     const view = mount(axis, "x");
-    expect(computeAccessibleName(view.container.querySelector('[data-staged-control="segmented"]')!)).toBe("Axis");
-    expect([view.getByRole("button", { name: "X axis" }).getAttribute("aria-pressed"), view.getByRole("button", { name: "Y axis" }).getAttribute("aria-pressed")]).toEqual(["true", "false"]);
-    view.getByRole("button", { name: "Y axis" }).click();
+    const group = view.container.querySelector('[data-staged-control="segmented"]')!;
+    expect([group.getAttribute("role"), computeAccessibleName(group)]).toEqual(["radiogroup", "Axis"]);
+    expect([view.getByRole("radio", { name: "X axis" }).getAttribute("aria-checked"), view.getByRole("radio", { name: "Y axis" }).getAttribute("aria-checked")]).toEqual(["true", "false"]);
+    view.getByRole("radio", { name: "X axis" }).click();
+    view.getByRole("radio", { name: "Y axis" }).click();
     expect(view.changes).toEqual(["y"]);
+  });
+
+  it("renders a multi-line text as a named textarea that stages every line it holds", () => {
+    const view = mount(note, "one");
+    const area = view.container.querySelector<HTMLTextAreaElement>('textarea[data-staged-control="multiline"]')!;
+    expect([computeAccessibleName(area), area.value]).toEqual(["Note", "one"]);
+    fireEvent.change(area, { target: { value: "one\ntwo" } });
+    expect(view.changes).toEqual(["one\ntwo"]);
   });
 
   it("renders a vector as one named number field per axis carrying the unit and step", () => {

@@ -65,3 +65,6 @@ pub use semio_framework_pack_error::{PackError, PackRefusal, PackRetryDispositio
 
 #[path = "../../🌱️value/🦀️.rs"]
 pub mod record;
+
+#[path = "../../🌱️intrinsic/🦀️.rs"]
+pub mod intrinsic;

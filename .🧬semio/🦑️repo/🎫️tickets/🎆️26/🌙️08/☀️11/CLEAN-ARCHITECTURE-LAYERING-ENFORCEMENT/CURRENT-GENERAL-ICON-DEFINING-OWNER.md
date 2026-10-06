@@ -1,0 +1,11 @@
+# Current General Icon Defining Owner
+
+The genuine Surface11 compiler stopped at E0428: GeneralUI wgpu and Canvas each path-mounted the same generated General asset enum and its exported `icon_name` macro. The full diagnostic is retained in `🗑️generated/native-continuation/surface-original-whole-green-11.log`, lines 10077 and 10083. Neither native assertions nor browser behavior executed.
+
+The owner correction mounts the two existing General icon enums once at the GeneralUI crate root, gated by the actual wgpu or canvas feature. Both targets explicitly reexport that one local type. The existing Canvas first-party four-function value codec moves byte-exactly to the neutral UI icon-name/value provider. The old WGPU serde bridge and the former Canvas bridge path are retired; the original WGPU test assertion bodies remain mounted through the new provider. Generated enums, macro bodies, wire strings and public macro semantics are conserved.
+
+The independently evaluated language-neutral controls enumerate every actual generated serde wire attribute and compare it to the existing first-party codec using SQLite. The source predecessor RED completed with the intended exit 1 (session 90850): two defining mounts were present where one was required. The RED retains complete source bodies, two full generated defining frames and all portable controls in `🗑️generated/interface-port-owner/icon-owner-red-1.json`.
+
+Source3 completed with exit 0 (session 36413), retaining 3,065,980 bytes, six full current/predecessor/after rows, 224 full function associations, 279 exhaustive wire controls, and two full generated defining frames. Source1 refused an inherited tree-sitter GAT grammar limitation; the exact predecessor parser node is conserved in the corrected observation. Source2 refused unrelated current Product advancement, so Source3 owns only the six icon cuts and records four foreign advances as observations.
+
+No native, runtime, publication or deletion readiness is inferred. The correction is an exact successor over admitted Interface10 and must be narrowly composed onto the later Board6 closure before unified native input capture. The original Surface11 compiler attempt remains immutable.

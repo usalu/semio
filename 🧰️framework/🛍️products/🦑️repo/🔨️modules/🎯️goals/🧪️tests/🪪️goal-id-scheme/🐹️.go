@@ -24,7 +24,7 @@ type idVectorFile struct {
 }
 
 func loadIDVectors(ctx *host.Context) (idVectorFile, error) {
-	data, err := ctx.FixtureBytes("shared://🪪️id-vectors.json")
+	data, err := ctx.InputBytes("shared://🪪️id-vectors.json")
 	if err != nil {
 		return idVectorFile{}, err
 	}

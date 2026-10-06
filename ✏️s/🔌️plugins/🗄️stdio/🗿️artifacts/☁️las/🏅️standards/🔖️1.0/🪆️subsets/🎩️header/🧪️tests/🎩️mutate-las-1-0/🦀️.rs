@@ -26,7 +26,7 @@ const INPUT: &str = "shared://🧪️pattern-sphere/🧊️.las";
 
 /// 🧫️ Copies the immutable fixture into the work directory and returns the mutable copy's bytes.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_fixture(INPUT, Some("input.las"))?;
+    let copy = ctx.copy_input(INPUT, Some("input.las"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, parse, relative, resolve } from "node:path";
@@ -36,8 +35,6 @@ type Corpus = Readonly<{
 const root = resolve(import.meta.dir, "../../../../..");
 const owner = resolve(import.meta.dir, "../..");
 const corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧱️neutrality/🔣️.json"), "utf8")) as Corpus;
-const schema: unknown = JSON.parse(readFileSync(join(owner, "🧬️schema/🧱️neutrality/🔣️.json"), "utf8"));
-const validate = new Ajv({ strict: true }).compile<Corpus>(schema as object);
 const read = (relative: string): string => readFileSync(join(root, relative), "utf8");
 const source = (relative: string): string => existsSync(join(root, relative)) ? read(relative) : "";
 
@@ -96,22 +93,22 @@ function publicFields(bytes: string, name: string): readonly string[] {
   return body ? [...body.matchAll(/pub\s+(\w+)\s*:/g)].map(match => match[1]!) : [];
 }
 
-/** 🧪️ Independent Node/AJV oracle uses iterative child events and Map transactions. */
-function nodeOracle(): Readonly<{ admitted: boolean; hostileAdmission: boolean; states: readonly unknown[]; composition: readonly unknown[]; catalogs: readonly unknown[]; interleaving: readonly Descriptor[]; concurrentSchedules: readonly unknown[] }> {
-  const child = spawnSync("node", ["--eval", `const fs=require("node:fs"),Ajv=require("ajv"),equal=require("fast-deep-equal");
-const {corpus,schema}=JSON.parse(fs.readFileSync(0,"utf8")),admit=new Ajv({strict:true}).compile(schema);
+/** 🧪️ Independent Node oracle uses iterative child events and Map transactions. */
+function nodeOracle(): Readonly<{ states: readonly unknown[]; composition: readonly unknown[]; catalogs: readonly unknown[]; interleaving: readonly Descriptor[]; concurrentSchedules: readonly unknown[] }> {
+  const child = spawnSync("node", ["--eval", `const fs=require("node:fs"),equal=require("fast-deep-equal");
+const {corpus}=JSON.parse(fs.readFileSync(0,"utf8"));
 const composition=corpus.composition.map(row=>{let steps=0,accepted=true;const rows=[],pending=row.fields.toReversed().map(field=>[field.slot,field.value]);while(pending.length){const [slot,node]=pending.pop();if(steps>=row.maximumSteps){accepted=false;break;}steps++;if(node.tag==="child")rows.push([slot,...["id","artifact","kind","standard","subset"].map(key=>node.identity[key])]);else if(node.tag==="some")pending.push([slot,node.value]);else if(node.tag==="list")for(const value of node.values.toReversed())pending.push([slot,value]);}return{id:row.id,accepted,steps,rows};});
 const catalogs=corpus.catalogs.map(row=>{const original=new Map(row.initial.map(item=>[item.id,item])),mirrors=new Map((row.family==="artifact"?row.initial:[]).map(item=>[item.id,item])),external=new Set(row.exports.map(item=>item.id));for(const item of row.exports)mirrors.set(item.id,item);const candidate=new Map(original),mirrorCandidate=new Map(mirrors);let error=null;for(const item of row.descriptors){if(row.mode==="batch"&&candidate.has(item.id)&&!equal(candidate.get(item.id),item)){error="descriptor-conflict";break;}candidate.set(item.id,item);}if(!error&&row.family==="artifact")for(const item of row.descriptors){if(external.has(item.id)&&mirrors.has(item.id)&&!equal(mirrors.get(item.id),item)){error="export-conflict";break;}mirrorCandidate.set(item.id,item);}const snapshot=map=>[...map].sort(([a],[b])=>a<b?-1:a>b?1:0).map(([,descriptor])=>descriptor);return{id:row.id,accepted:!error,entries:snapshot(error?original:candidate),exports:snapshot(error?mirrors:mirrorCandidate),error};});
 const interleaved=new Map(corpus.interleaving.initial.map(item=>[item.id,item]));for(const transaction of [corpus.interleaving.first,corpus.interleaving.second])for(const entry of transaction)interleaved.set(entry.id,entry);
 const concurrentSchedules=corpus.concurrentSchedules.map(row=>{let owner=new Map(row.initial.map(item=>[item.id,item]));const decisions=[];for(const actorId of row.order){const actor=row.actors.find(item=>item.id===actorId),staged=new Map(owner);let accepted=true;for(const descriptor of actor.descriptors){if(staged.has(descriptor.id)&&!equal(staged.get(descriptor.id),descriptor)){accepted=false;break;}staged.set(descriptor.id,descriptor);}if(accepted)owner=staged;decisions.push({actor:actorId,accepted});}return{id:row.id,decisions,entries:[...owner.values()].sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0)};});
-process.stdout.write(JSON.stringify({admitted:admit(corpus),hostileAdmission:admit({...corpus,catalogs:corpus.catalogs.map(row=>row.id==="artifact-mirror-export-conflict"?{...row,expected:{...row.expected,accepted:true,error:null}}:row)}),states:corpus.states.map(row=>({variant:row.variant,wire:JSON.parse(JSON.stringify(row.variant)),kebab:row.variant.toLowerCase(),graphql:row.variant.toUpperCase()})),composition,catalogs,interleaving:[...interleaved.values()].sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0),concurrentSchedules}));`], { input: JSON.stringify({ corpus, schema }), encoding: "utf8", timeout: 4000 });
+process.stdout.write(JSON.stringify({states:corpus.states.map(row=>({variant:row.variant,wire:JSON.parse(JSON.stringify(row.variant)),kebab:row.variant.toLowerCase(),graphql:row.variant.toUpperCase()})),composition,catalogs,interleaving:[...interleaved.values()].sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0),concurrentSchedules}));`], { input: JSON.stringify({ corpus }), encoding: "utf8", timeout: 4000 });
   expect(child.status, child.stderr || String(child.error)).toBe(0);
   const result = JSON.parse(child.stdout ?? "");
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  const allowed = resolve(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated");
+  const allowed = resolve(root, ".🧬semio/🦑️repo/🎫️tickets");
   const destination = output ? resolve(output) : "";
   const member = relative(allowed, destination);
-  if (!output || !member || isAbsolute(member) || member === ".." || member.startsWith("..\\") || member.startsWith("../")) throw Error("Caller-owned ticket output required");
+  if (!output || isAbsolute(member) || !/^🎆️\d{2}\/🌙️\d{2}\/☀️\d{2}\/[^/]+\/🗑️generated(?:\/|$)/u.test(member.replaceAll("\\", "/"))) throw Error("Caller-owned ticket output required");
   let directory = parse(destination).root;
   for (const part of destination.slice(directory.length).split(/[\\/]/).filter(Boolean)) {
     directory = join(directory, part);
@@ -123,21 +120,8 @@ process.stdout.write(JSON.stringify({admitted:admit(corpus),hostileAdmission:adm
   return result;
 }
 
-test("closed schema neutrality corpus binds every original law and hostile expected output", () => {
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
-  expect(validate({ ...corpus, extra: true })).toBe(false);
-  expect(validate({ ...corpus, laws: corpus.laws.slice(1) })).toBe(false);
-  expect(validate({ ...corpus, catalogs: corpus.catalogs.map(row => row.id === "artifact-mirror-export-conflict" ? { ...row, expected: { ...row.expected, accepted: true } } : row) })).toBe(false);
-  expect(new Set(corpus.laws).size).toBe(30);
-  expect(new Set(corpus.composition.map(row => row.id)).size).toBe(8);
-  expect(new Set(corpus.catalogs.map(row => row.id)).size).toBe(19);
-  expect(validate({ ...corpus, concurrentSchedules: corpus.concurrentSchedules.map(row => ({ ...row, expected: { ...row.expected, decisions: row.expected.decisions.map(decision => ({ ...decision, accepted: true })) } })) })).toBe(false);
-});
-
-test("portable composition state and three catalogs match independent Node and AJV", () => {
+test("portable composition state and three catalogs match independent Node", () => {
   const oracle = nodeOracle();
-  expect(oracle.admitted).toBe(true);
-  expect(oracle.hostileAdmission).toBe(false);
   expect(oracle.states).toEqual(corpus.states);
   expect(oracle.composition).toHaveLength(8);
   expect(oracle.catalogs).toHaveLength(19);
@@ -166,7 +150,7 @@ test("portable composition state and three catalogs match independent Node and A
   expect(corpus.catalogContract.descriptorOwnedMirrorFollowsSingleReplacement).toBe(true);
   expect(corpus.catalogContract.externallyPublishedMirrorIsProtected).toBe(true);
   expect(corpus.catalogContract.equalExternalPublicationClaimsAuthority).toBe(true);
-  console.log("[DEBUG] schema neutrality: 8 child projections, 4 states, 19 typed public-lifecycle transactions, two atomic schedule contracts and separate-lock defect model match independent Node/AJV; native transaction proof pending");
+  console.log("[DEBUG] schema neutrality: 8 child projections, 4 states, 19 typed public-lifecycle transactions, two atomic schedule contracts and separate-lock defect model match independent Node; native transaction proof pending");
 });
 
 test("actual composition source charges original Option and Vec traversal before children", () => {

@@ -10,7 +10,24 @@
   ],
   "properties": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Column",
+          "de": "Spalte"
+        },
+        "description": {
+          "en": "Name of the column.",
+          "de": "Name der Spalte."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

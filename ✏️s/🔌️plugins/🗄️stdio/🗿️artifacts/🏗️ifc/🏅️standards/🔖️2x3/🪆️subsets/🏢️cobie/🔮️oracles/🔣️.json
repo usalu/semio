@@ -216,9 +216,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-facility-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -269,7 +268,6 @@
       "notes": "Set #IfcBuilding.Name (the COBie facility row's own name) via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-floor-elevation-applied",
       "class": "third-party-generated",
       "target": {
@@ -320,7 +318,6 @@
       "notes": "Set #145 IfcBuildingStorey ('Grond floor')'s Elevation to 999.0 via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-space-applied",
       "class": "third-party-generated",
       "target": {
@@ -371,7 +368,6 @@
       "notes": "Created a new #IfcSpace ('Room 101') via ifcopenshell.api.root.create_entity — this fixture's own real-world source has no IfcSpace, so COBie's set-space mutation is witnessed by a genuine third-party-constructed entity rather than an edit of a pre-existing one. GlobalId pinned to a fixed literal after creation so the fixture is byte-reproducible across regenerations."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-type-assignment-applied",
       "class": "third-party-generated",
       "target": {
@@ -422,7 +418,6 @@
       "notes": "Set #712585 IfcRelDefinesByType.Name via ifcopenshell."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-view-definition-applied",
       "class": "third-party-generated",
       "target": {
@@ -473,7 +468,6 @@
       "notes": "Replaced the header FILE_DESCRIPTION's view-definition text via ifcopenshell's own header object."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-snapshot-applied",
       "class": "third-party-generated",
       "target": {

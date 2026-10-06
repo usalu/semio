@@ -10,6 +10,7 @@
 //! history body the guest's REAL producer builds (paged transaction rows, Edit refused with its reason).
 
 use super::*;
+use crate::program_bridge::OperationPublication;
 use semio_framework::kernel::{HistoryEntry, HistoryPatch, HistoryReprojection, HistoryTimeTravel, HistoryTimeTravelStage, InvocationResult};
 use semio_framework::{ActionArgDef, ActionArgOption, ArgPresentation, ArgSchema, DialogDefinition, DomainSelection};
 use semio_framework_plugin::app::time_travel::{history_row_window_path, TimeTravelInputRow, TimeTravelList, TimeTravelListItem};
@@ -29,6 +30,7 @@ fn session(name: &str) -> HistoryTimeTravel {
 
 fn verb_name(verb: TimeTravelVerb) -> &'static str {
     match verb {
+        TimeTravelVerb::NextProblem => "nextProblem",
         TimeTravelVerb::Accept => "accept",
         TimeTravelVerb::Discard => "discard",
         TimeTravelVerb::CancelReplay => "cancelReplay",
@@ -44,7 +46,7 @@ fn refusal_key(label: TimeTravelLabel) -> String {
     format!("ui.timeTravel.refusal.{}", label.key().trim_start_matches("refusal").to_lowercase())
 }
 
-const ALL_VERBS: [TimeTravelVerb; 7] = [TimeTravelVerb::Accept, TimeTravelVerb::Discard, TimeTravelVerb::CancelReplay, TimeTravelVerb::Rerun, TimeTravelVerb::Finalize, TimeTravelVerb::Back, TimeTravelVerb::Exit];
+const ALL_VERBS: [TimeTravelVerb; 8] = [TimeTravelVerb::NextProblem, TimeTravelVerb::Accept, TimeTravelVerb::Discard, TimeTravelVerb::CancelReplay, TimeTravelVerb::Rerun, TimeTravelVerb::Finalize, TimeTravelVerb::Back, TimeTravelVerb::Exit];
 
 fn chord(chord: &str) -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
     let mut modifiers = PointerModifiers::default();
@@ -180,32 +182,49 @@ fn the_shared_band_corpus_holds_on_wgpu() {
             assert_eq!(&actual, expected, "{name} / {}", locale.as_str());
             assert_eq!(time_travel_indicator_text(&status, terminology, locale), case["indicator"][locale.as_str()].as_str().expect("indicator"), "{name} / {}", locale.as_str());
         }
-        let controls: Vec<Value> = time_travel_band_controls(&status).into_iter().map(|control| serde_json::json!({ "control": verb_name(control.verb), "action": control.verb.action_id(), "disabledBy": control.disabled_by.map(refusal_key) })).collect();
+        let controls: Vec<Value> = time_travel_band_controls(&status)
+            .into_iter()
+            .map(|control| {
+                let mut row = serde_json::json!({ "control": verb_name(control.verb), "controlId": control.verb.control_id(), "action": control.verb.action_id(), "disabledBy": control.disabled_by.map(refusal_key) });
+                if control.verb == TimeTravelVerb::NextProblem {
+                    row["args"] = control.verb.action(controller, &status).args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
+                }
+                row
+            })
+            .collect();
         assert_eq!(Value::from(controls), case["controls"], "{name}");
-        for control in time_travel_band_controls(&status) {
+        for control in time_travel_band_controls(&status).into_iter().filter(|control| control.verb != TimeTravelVerb::NextProblem) {
             let action = control.verb.action(controller, &status);
             assert_eq!((action.controller_id.as_str(), action.args.as_ref().map(dsl_value_as_json)), (controller, Some(serde_json::json!({ "generation": status.generation }))), "{name}: the dispatch carries the generation it was shown");
         }
     }
 }
 
-/// ⚖️ LAW: the band's live node speaks exactly the painted message, as a progress bar while a replay with a known total
-/// runs, politely, and busy while the runtime replays or finalizes; no session announces nothing.
+/// ⚖️ LAW: the band's live node speaks exactly the painted message as ONE polite status in every stage — its role never
+/// flips — busy while the runtime replays or finalizes; a replay with a known total adds its own progress bar under it,
+/// named and valued by the progress line; no session announces nothing.
 #[test]
 fn the_band_announces_its_message_politely() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     assert!(shell.time_travel_status_accessibility_node(1).is_none(), "no session, nothing announced");
-    for (name, role, busy) in [("editing a mutation", "status", false), ("a running replay", "progressbar", true), ("an error downstream", "status", false), ("finalizing offers", "status", true)] {
+    for (name, replaying, busy) in [("editing a mutation", false, false), ("a running replay", true, true), ("an error downstream", false, false), ("finalizing offers", false, true)] {
         let status = session(name);
         shell.locale_id = "de".into();
         shell.observe_history_time_travel(Some(&status));
         let node = shell.time_travel_status_accessibility_node(1).expect("an open session announces itself");
-        assert_eq!((node.role.as_str(), node.busy), (role, busy), "{name}");
-        assert_eq!(node.label, Some(time_travel_band_lines(&status, Terminology::Native, Locale::De).message()), "{name}");
+        assert_eq!((node.role.as_str(), node.busy, node.value_now, node.value_max), ("status", busy, None, None), "{name}: one stable status");
+        let lines = time_travel_band_lines(&status, Terminology::Native, Locale::De);
+        assert_eq!(node.label, Some(lines.message()), "{name}");
         assert_eq!(node.live, ui_contract::liveness_name(ui_contract::Liveness::Polite));
-        if role == "progressbar" {
-            assert_eq!((node.value_now, node.value_max), (Some(3.0), Some(8.0)));
+        let progress = shell.time_travel_progress_accessibility_node(2);
+        assert_eq!(progress.is_some(), replaying, "{name}: a progress bar only while a replay with a known total runs");
+        if let Some(progress) = progress {
+            assert_eq!((progress.key.as_str(), progress.role.as_str(), progress.depth, progress.value_min, progress.value_now, progress.value_max), (TIME_TRAVEL_BAND_PROGRESS_ID, "progressbar", 1, Some(0.0), Some(3.0), Some(8.0)), "{name}");
+            assert_eq!((progress.label.clone(), progress.value_text.clone()), (lines.progress.clone(), lines.progress.clone()), "{name}: named and valued by the progress line");
+            assert_eq!(progress.live, ui_contract::liveness_name(ui_contract::Liveness::Off), "{name}: the status is the one live region");
         }
+        let keys: Vec<String> = shell.band_accessibility_nodes(1).into_iter().map(|node| node.key).collect();
+        assert_eq!(keys, if replaying { vec![TIME_TRAVEL_BAND_STATUS_ID.to_string(), TIME_TRAVEL_BAND_PROGRESS_ID.to_string()] } else { vec![TIME_TRAVEL_BAND_STATUS_ID.to_string()] }, "{name}: the progress follows its status");
     }
     shell.observe_history_time_travel(None);
     assert!(shell.history_time_travel().is_none(), "an absent status closes the session");
@@ -216,20 +235,48 @@ fn the_band_announces_its_message_politely() {
 /// reserved `historyEdit*` action.
 #[test]
 fn every_control_reads_reacts_caption_and_names_its_reserved_action() {
-    let captions = [
-        (TimeTravelVerb::Accept, "Accept draft", "Entwurf übernehmen"),
-        (TimeTravelVerb::Discard, "Discard draft", "Entwurf verwerfen"),
-        (TimeTravelVerb::CancelReplay, "Cancel replay", "Neuanwendung abbrechen"),
-        (TimeTravelVerb::Rerun, "Replay again", "Erneut anwenden"),
-        (TimeTravelVerb::Finalize, "Finalize…", "Abschließen…"),
-        (TimeTravelVerb::Back, "Back", "Zurück"),
-        (TimeTravelVerb::Exit, "Exit time travel", "Zeitreise beenden"),
-    ];
-    for (verb, en, de) in captions {
-        assert_eq!((verb.label(Locale::En), verb.label(Locale::De)), (en, de));
+    let corpus = corpus();
+    for verb in ALL_VERBS {
+        let label = &corpus["labels"][verb.label_key()]["normal"];
+        assert_eq!((Some(verb.label(Locale::En)), Some(verb.label(Locale::De))), (label["en"].as_str(), label["de"].as_str()), "{}: the corpus caption", verb.label_key());
+        assert!(!verb.label(Locale::En).is_empty() && !verb.label(Locale::De).is_empty(), "{}: a caption in both languages", verb.label_key());
         assert!(verb.action_id().starts_with("historyEdit"));
     }
-    assert_eq!(ALL_VERBS.len(), captions.len());
+    for (key, tiers) in corpus["labels"].as_object().expect("the corpus's labels") {
+        assert_eq!((Some(band_label(key, Locale::En)), Some(band_label(key, Locale::De))), (tiers["normal"]["en"].as_str(), tiers["normal"]["de"].as_str()), "{key}: read from the corpus");
+        for locale in Locale::ALL {
+            assert_eq!(Some(band_label(key, BandTongue { locale, beginner: true })), tiers["beginner"][locale.as_str()].as_str(), "{key}: the beginner tier in {}", locale.as_str());
+            assert!(!band_label(key, BandTongue { locale, beginner: true }).is_empty(), "{key}: no tier is empty");
+        }
+    }
+    let mut shell = session_shell();
+    let editing = session("editing a mutation");
+    shell.observe_history_time_travel(Some(&editing));
+    let accept = |shell: &ShellState| shell.time_travel_band_plan_for(&editing, &Theme::light()).buttons.into_iter().find(|button| button.control.verb == TimeTravelVerb::Accept).expect("Accept is offered").label;
+    let terse = accept(&shell);
+    shell.chrome_build.driver.label_tier = ui_wgpu::wgpu::UiDriverLabelTier::Beginner;
+    let explaining = accept(&shell);
+    let caption = &corpus["labels"]["ui.timeTravel.accept"];
+    assert!(terse.contains(caption["normal"]["en"].as_str().expect("normal")) && explaining.contains(caption["beginner"]["en"].as_str().expect("beginner")) && terse != explaining, "the band reads the driver's label tier: {terse:?} / {explaining:?}");
+    assert_eq!(band_label("ui.timeTravel.unknown", Locale::En), BAND_LABEL_MISSING, "a key the corpus lacks never reads empty");
+    let stages = [HistoryTimeTravelStage::Editing, HistoryTimeTravelStage::Replaying, HistoryTimeTravelStage::Reviewing, HistoryTimeTravelStage::Choosing, HistoryTimeTravelStage::Finalizing].map(time_travel_stage_key);
+    let reviews = [HistoryTimeTravelReview::NoChanges, HistoryTimeTravelReview::NeedsReplay, HistoryTimeTravelReview::Blocked, HistoryTimeTravelReview::Ready].map(time_travel_review_key);
+    let severities = ["ui.mutation.level.info", "ui.mutation.level.warning", "ui.mutation.level.error", "ui.mutation.level.fatal"];
+    let mut read: Vec<String> = ALL_VERBS.iter().map(|verb| verb.label_key().to_string()).collect();
+    read.extend(stages.iter().chain(reviews.iter()).chain(severities.iter()).chain(BAND_FIXED_LABEL_KEYS.iter()).map(|key| key.to_string()));
+    read.extend(corpus["refusals"].as_array().expect("refusals").iter().map(|row| row["label"].as_str().expect("a refusal names its label").to_string()));
+    for key in &read {
+        for locale in Locale::ALL {
+            for beginner in [false, true] {
+                assert!(band_label_in_catalog(key, BandTongue { locale, beginner }).is_some(), "{key}: the corpus carries every key the shell reads ({} / beginner {beginner})", locale.as_str());
+            }
+        }
+    }
+    for (severity, key) in [(semio_framework::Severity::Info, severities[0]), (semio_framework::Severity::Warning, severities[1]), (semio_framework::Severity::Error, severities[2]), (semio_framework::Severity::Fatal, severities[3])] {
+        assert_eq!(Some(time_travel_severity_text(severity, Locale::En)), band_label_in_catalog(key, Locale::En), "{key}: the severity word is that corpus label");
+    }
+    let silent: Vec<&str> = corpus["refusals"].as_array().expect("refusals").iter().filter(|row| row["silent"] == true).filter_map(|row| row["code"].as_str()).collect();
+    assert!(!silent.is_empty() && silent.iter().all(|code| history_refusal_is_silent(code)) && !history_refusal_is_silent("timeTravel.blocked"), "exactly the corpus's silent refusals stay silent: {silent:?}");
 }
 //#endregion ⏪️BandLaw
 
@@ -321,12 +368,18 @@ fn the_band_lays_out_above_the_footer_with_its_buttons_in_stage_order() {
     let buttons = |status: &HistoryTimeTravel| time_travel_band_controls(status).into_iter().map(|control| (control, control.verb.label(Locale::En).to_string())).collect::<Vec<_>>();
     let reviewing = session("a ready review");
     let plan = time_travel_band_plan(&reviewing, "Reviewing the edited history".into(), buttons(&reviewing), 1280.0, 720.0, &theme);
-    assert!((plan.band.y + plan.band.h - (720.0 - theme.footer_height - TIME_TRAVEL_BAND_GAP)).abs() < 0.001);
+    assert!((plan.band.y + plan.band.h - 720.0).abs() < 0.001, "the band is the shell's last row, under the footer");
     assert!((plan.band.x + plan.band.w * 0.5 - 640.0).abs() < 0.001, "horizontally centred");
     assert_eq!(plan.buttons.iter().map(|button| button.control.verb).collect::<Vec<_>>(), [TimeTravelVerb::Rerun, TimeTravelVerb::Finalize, TimeTravelVerb::Exit]);
     assert!(plan.buttons.windows(2).all(|pair| pair[0].rect.x + pair[0].rect.w <= pair[1].rect.x));
     assert!(plan.buttons[2].rect.x + plan.buttons[2].rect.w <= plan.band.x + plan.band.w);
     assert_eq!(plan.lines.len(), 1, "a desktop band is one row");
+    assert!(plan.buttons.iter().all(|button| button.rect.w >= theme.size_large() && button.rect.h >= theme.size_large()), "every control is a `size-large` target: {:?}", plan.buttons);
+    let mut warned = reviewing.clone();
+    warned.worst = Some(semio_framework::Severity::Warning);
+    for status in [&reviewing, &warned] {
+        assert_eq!(time_travel_band_tone(status, &theme).1.a, 1.0, "the band is an opaque surface in every tone");
+    }
     assert!(plan.lines[0].rect.x + plan.lines[0].rect.w <= plan.buttons[0].rect.x);
     assert!(plan.progress.is_none());
     let replaying = session("a running replay");
@@ -340,7 +393,7 @@ fn the_band_lays_out_above_the_footer_with_its_buttons_in_stage_order() {
         let message = time_travel_band_lines(status, Terminology::Native, Locale::De).message();
         let compact = time_travel_band_plan(status, message.clone(), buttons(status), width, 812.0, &theme);
         assert!(compact.band.x >= 0.0 && compact.band.w <= width * 0.9 + 0.001 && compact.band.x + compact.band.w <= width, "{width}: within 90 % of the viewport");
-        assert!((compact.band.y + compact.band.h - (812.0 - theme.footer_height - TIME_TRAVEL_BAND_GAP)).abs() < 0.001, "{width}: still just above the footer");
+        assert!((compact.band.y + compact.band.h - 812.0).abs() < 0.001, "{width}: still the last row");
         assert!(compact.lines.len() > 1, "{width}: the message wraps: {:?}", compact.lines);
         let words = |text: &str| text.split_whitespace().filter(|word| *word != "·").map(str::to_string).collect::<Vec<_>>();
         assert_eq!(words(&compact.lines.iter().map(|line| line.text.as_str()).collect::<Vec<_>>().join(" ")), words(&message), "{width}: every word, in order, none lost");
@@ -349,9 +402,33 @@ fn the_band_lays_out_above_the_footer_with_its_buttons_in_stage_order() {
         let last_line = compact.lines.last().expect("a line");
         assert!(compact.buttons.iter().all(|button| button.rect.y >= last_line.rect.y + last_line.rect.h - 0.001), "{width}: the buttons flow below the message");
         assert!(compact.buttons.iter().enumerate().all(|(index, a)| compact.buttons[index + 1..].iter().all(|b| apart(a.rect, b.rect))), "{width}: no two buttons overlap");
+        assert!(compact.buttons.iter().all(|button| button.rect.w >= theme.size_large() && button.rect.h >= theme.size_large()), "{width}: every control is a `size-large` target");
         if let Some((track, _)) = compact.progress {
             assert!(inside(compact.band, track) && track.y + track.h >= compact.band.y + compact.band.h - TIME_TRAVEL_PROGRESS_TRACK - 1.001, "{width}: the track runs along the lower edge");
         }
+    }
+}
+
+/// ⚖️ LAW (React's `subfooter`): the bands are the shell's last layout row, under the footer — while a session is open the
+/// body and the footer end above the band, so nothing is covered (on a phone-width viewport either), and with no band the
+/// row is empty.
+#[test]
+fn the_bands_reserve_the_subfooter_row_under_the_footer() {
+    let theme = Theme::light();
+    for (width, height) in [(1280.0_f32, 720.0_f32), (375.0, 812.0)] {
+        let mut shell = session_shell();
+        (shell.screen_w, shell.screen_h) = (width, height);
+        assert_eq!(shell.subfooter_height(&theme), 0.0, "{width}: no band, no row");
+        let open = shell.body_rect(&theme);
+        assert!((open.y + open.h - (height - theme.footer_height)).abs() < 0.001, "{width}: the body ends at the footer");
+        let status = session("a ready review");
+        shell.observe_history_time_travel(Some(&status));
+        let band = shell.time_travel_band_plan_for(&status, &theme).band;
+        let reserved = shell.subfooter_height(&theme);
+        assert!((band.y + band.h - height).abs() < 0.001 && (reserved - band.h).abs() < 0.001 && reserved > 0.0, "{width}: the band fills the reserved row: {band:?} / {reserved}");
+        let body = shell.body_rect(&theme);
+        assert!((body.y + body.h + theme.footer_height - band.y).abs() < 0.001, "{width}: body, footer, band — nothing overlaps");
+        assert!((open.h - body.h - reserved).abs() < 0.001, "{width}: the body gives exactly the reserved row");
     }
 }
 
@@ -419,7 +496,7 @@ fn the_shared_band_transitions_hold_on_wgpu() {
         let status = |key: &str| (!row[key].is_null()).then(|| serde_json::from_value::<HistoryTimeTravel>(row[key].clone()).unwrap_or_else(|error| panic!("{name}: a kernel session: {error}")));
         let (from, to) = (status("from"), status("to"));
         let transition = time_travel_transition(from.as_ref(), to.as_ref());
-        assert_eq!((Value::Bool(transition.reveal), focus_name(transition.focus)), (row["reveal"].clone(), row["focus"].clone()), "{name}");
+        assert_eq!((Value::Bool(transition.reveal), focus_name(transition.focus), transition.scroll_to.clone().map_or(Value::Null, Value::String)), (row["reveal"].clone(), row["focus"].clone(), row["scrollTo"].clone()), "{name}");
         let mut shell = session_shell();
         shell.sync_dock_tabs();
         shell.observe_history_time_travel(from.as_ref());
@@ -586,7 +663,7 @@ fn a_session_reveals_the_history_tab_and_each_pane_wears_an_indicator() {
     let indicator = time_travel_indicator_control_id("side");
     assert!(indicator.starts_with("framework.window.") && indicator.ends_with(".timeTravel.indicator"));
     assert!(shell.window_pane_chip_target(&indicator).is_none(), "no pane chip claims the indicator");
-    assert_eq!((time_travel_indicator_caption(Locale::En), time_travel_indicator_caption(Locale::De)), ("Time travel", "Zeitreise"));
+    assert_eq!((time_travel_indicator_caption(Locale::En), time_travel_indicator_caption(Locale::De)), ("History editing", "Verlaufsbearbeitung"));
 }
 
 /// ⚖️ LAW (phone width): below the mobile breakpoint, where no anchor paints, the edge into a session opens the one
@@ -633,29 +710,114 @@ fn replies_carry_the_status_and_rows_fold_by_their_edit() {
 }
 
 thread_local! {
-    static PROGRESS: std::cell::RefCell<Vec<HistoryPatch>> = const { std::cell::RefCell::new(Vec::new()) };
+    static PUBLISHED: std::cell::RefCell<Vec<OperationPublication>> = const { std::cell::RefCell::new(Vec::new()) };
 }
 
-/// 📶️ A guest bridge whose uncorrelated progress frames are whatever the law queued, taken once.
-fn queued_progress(_instance_id: u32) -> Vec<HistoryPatch> {
-    PROGRESS.with(|queue| std::mem::take(&mut *queue.borrow_mut()))
+/// 📶️ A guest bridge whose publication lane is whatever the law queued, taken once.
+fn queued_publications(_instance_id: u32) -> Vec<OperationPublication> {
+    PUBLISHED.with(|queue| std::mem::take(&mut *queue.borrow_mut()))
+}
+
+/// 🎞️ A UI-progress publication that carries a history patch and no scope.
+fn progress_patch(patch: HistoryPatch) -> OperationPublication {
+    OperationPublication { completed: false, ui_scope: UiDirtyScope::None, history_patch: Some(patch), fault: None, resync: false }
+}
+
+/// 🏛️ The host fixture shell with its guest program's publication lane under the law's hand and nothing owed.
+fn publication_shell() -> ShellState {
+    let mut shell = panel_anchor_model_tests::host_test_shell();
+    shell.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_publications(queued_publications);
+    PUBLISHED.with(|queue| queue.borrow_mut().clear());
+    shell.owed_refresh_scope = UiDirtyScope::None;
+    shell
 }
 
 /// ⚖️ LAW (React's `subscribeOperationProgress` lane): the progress patches the guest pushed on uncorrelated
 /// `Invocation` frames move the band between two dispatches, oldest first through the reply's stale guard — a patch
-/// older than the one already folded rolls nothing back, and an empty take is no change.
+/// older than the one already folded rolls nothing back, an empty take is no change, and progress that carries a patch
+/// alone re-renders nothing.
 #[test]
 fn unsolicited_progress_patches_move_the_band_between_dispatches() {
-    let mut shell = panel_anchor_model_tests::host_test_shell();
-    shell.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_progress(queued_progress);
+    let mut shell = publication_shell();
     semio_framework_async::block_on(shell.observe_invocation_history(Some(&HistoryPatch { cursor: 5, time_travel: Some(session("editing a mutation")), ..Default::default() })));
-    assert!(!semio_framework_async::block_on(shell.drain_progress_history_patches()), "nothing queued is no change");
+    assert!(!semio_framework_async::block_on(shell.drain_operation_publications()), "nothing queued is no change");
     let replaying = session("a running replay");
-    PROGRESS.with(|queue| queue.borrow_mut().extend([HistoryPatch { cursor: 5, time_travel: Some(replaying.clone()), ..Default::default() }, HistoryPatch { cursor: 4, ..Default::default() }]));
-    assert!(semio_framework_async::block_on(shell.drain_progress_history_patches()), "the queued progress moved the band");
+    PUBLISHED.with(|queue| queue.borrow_mut().extend([progress_patch(HistoryPatch { cursor: 5, time_travel: Some(replaying.clone()), ..Default::default() }), progress_patch(HistoryPatch { cursor: 4, ..Default::default() })]));
+    assert!(semio_framework_async::block_on(shell.drain_operation_publications()), "the queued progress moved the band");
     assert_eq!(shell.history_time_travel(), Some(&replaying), "the stale patch after it closed nothing");
-    assert!(PROGRESS.with(|queue| queue.borrow().is_empty()), "the drain took the queue");
-    assert!(!semio_framework_async::block_on(shell.drain_progress_history_patches()));
+    assert!(shell.owed_refresh_scope.asks_for_nothing(), "a patch without a scope on a progress frame re-renders nothing");
+    assert!(PUBLISHED.with(|queue| queue.borrow().is_empty()), "the drain took the queue");
+    assert!(!semio_framework_async::block_on(shell.drain_operation_publications()));
+}
+
+/// ⚖️ LAW (live fault F11; React's `subscribeOperationCompletions` pass): a typed operation that ends AFTER the host
+/// call that started it — an example load of a few hundred steps, the replay behind an accepted history edit — reaches
+/// the shell on the publication lane alone. With no further dispatch its progress scope and its completion are owed to
+/// the settle lane as ONE refresh (the board's body and the History body whose row the completion minted), the row
+/// itself is folded into the projection, and the settle pump has work.
+#[test]
+fn a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_rows() {
+    let mut shell = publication_shell();
+    let before = history_rows_oldest_first(&shell.history_entries).len();
+    let board = UiDirtyScope::Partial { window_bodies: vec!["board".into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false };
+    let row = HistoryEntry { seq: 41, action_id: "setActiveExample".into(), label: LocalizedLabel::native("Load example", "Beispiel laden"), kind: "command".into(), applied: true, ..Default::default() };
+    PUBLISHED.with(|queue| {
+        queue.borrow_mut().extend([
+            OperationPublication { completed: false, ui_scope: board.clone(), history_patch: None, fault: None, resync: false },
+            OperationPublication { completed: true, ui_scope: UiDirtyScope::None, history_patch: Some(HistoryPatch { cursor: 41, upserts: vec![row], ..Default::default() }), fault: None, resync: false },
+        ])
+    });
+    assert!(semio_framework_async::block_on(shell.drain_operation_publications()), "the lane alone changed the shell");
+    let rows = history_rows_oldest_first(&shell.history_entries);
+    assert_eq!(rows.len(), before + 1, "the completion's row is in the projection");
+    assert!(rows.iter().any(|entry| entry.key() == "seq:41"));
+    assert!(shell.owed_refresh_scope.wants_window_body("board"), "the progress scope is owed: {:?}", shell.owed_refresh_scope);
+    assert!(shell.owed_refresh_scope.wants_panel_body(ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY), "the History body owes the minted row: {:?}", shell.owed_refresh_scope);
+    assert!(!shell.owed_refresh_scope.wants_window_body("another"), "one merged pass, never a full one");
+    assert!(shell.settle_pump_pending(), "the settle lane refreshes without a dispatch");
+    assert!(shell.transient_notice().is_none(), "a completion is told by its rows, not by a notice");
+}
+
+/// ⚖️ LAW (live fault F11): a typed-operation drain that stopped is never silence — its fault reaches the person
+/// through the dispatch-fault funnel as an error notice, and an answer of the bridge this host cannot read is told the
+/// same way and re-reads everything it may have hidden.
+#[test]
+fn a_refused_completion_is_told_as_a_notice() {
+    let mut shell = publication_shell();
+    PUBLISHED.with(|queue| queue.borrow_mut().push(OperationPublication { completed: false, ui_scope: UiDirtyScope::None, history_patch: None, fault: Some("browser-actor-publication: noncanonical bytes".into()), resync: false }));
+    assert!(semio_framework_async::block_on(shell.drain_operation_publications()), "a told fault repaints");
+    let notice = shell.transient_notice().expect("the refused completion is told");
+    assert!(notice.message.contains("noncanonical bytes"), "the notice names what was refused: {}", notice.message);
+    assert!(shell.owed_refresh_scope.asks_for_nothing(), "a fault alone re-renders nothing");
+    let unreadable = crate::program_bridge::operation_publications_from_json("{\"completed\":true}");
+    assert_eq!(unreadable.len(), 1);
+    assert!(unreadable[0].fault.as_deref().is_some_and(|fault| fault.starts_with("wgpu-bridge.operation-publication.unreadable")) && unreadable[0].resync, "an unreadable answer is a fault and a re-read: {unreadable:?}");
+    let mangled = crate::program_bridge::operation_publications_from_json("[{\"completed\":true,\"historyPatch\":{\"cursor\":\"seven\"}}]");
+    assert!(mangled[0].fault.as_deref().is_some_and(|fault| fault.contains("historyPatch")) && mangled[0].resync, "an unreadable entry names its member: {mangled:?}");
+    assert_eq!(operation_publication_refresh(&mangled[0]), UiDirtyScope::Full);
+}
+
+/// ⚖️ LAW (shared corpus `🧫️operation-publication`, the bridge's own producer reads the same rows): every publication
+/// the browser bridge hands over as JSON is read back exactly, owes exactly the refresh its row names, and carries a
+/// fault exactly when the row says it is told.
+#[test]
+fn every_operation_publication_owes_what_the_shared_corpus_says() {
+    let corpus: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json")).expect("the shared operation-publication corpus parses");
+    assert_eq!(corpus["historyBodyKey"].as_str(), Some(ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY));
+    let rows = corpus["rows"].as_array().expect("the corpus rows");
+    assert!(rows.len() >= 7, "the corpus covers completion, progress, fault and resync");
+    for row in rows {
+        let name = row["name"].as_str().expect("name");
+        let read = crate::program_bridge::operation_publications_from_json(&Value::Array(vec![row["publication"].clone()]).to_string());
+        assert_eq!(read.len(), 1, "{name}");
+        let publication = &read[0];
+        assert_eq!(publication.completed, row["publication"]["completed"].as_bool().expect("completed"), "{name}");
+        assert_eq!(publication.history_patch.is_some(), row["publication"].get("historyPatch").is_some(), "{name}: its patch is read");
+        assert_eq!(publication.fault.is_some(), row["told"].as_bool().expect("told"), "{name}: told exactly when it carries a fault");
+        let refresh = semio_framework_pack_json::from_json_str::<UiDirtyScope>(&row["refresh"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{name}: refresh scope: {error}"));
+        assert_eq!(operation_publication_refresh(publication), refresh, "{name}");
+        assert_eq!(row["queued"].as_bool().expect("queued"), publication.fault.is_some() || publication.history_patch.is_some() || publication.resync || !publication.ui_scope.asks_for_nothing(), "{name}: the bridge queues exactly what says something");
+    }
 }
 //#endregion 🪟️RevealAndIndicator
 
@@ -829,6 +991,7 @@ fn peer_rows(corpus: &Value) -> BTreeMap<String, HistoryEntry> {
                     superseded: false,
                     withdrawn: false,
                     editable: true,
+                    withdrawable: true,
                     pending: false,
                     edited: false,
                     introduced: false,
@@ -910,7 +1073,7 @@ fn the_roster_badges_and_announces_an_editing_peer_and_notes_its_rows() {
     assert_eq!(rows.iter().map(|row| (row.actor.as_str(), row.activity.as_ref().map(|activity| activity.badge.as_str()))).collect::<Vec<_>>(), [("actor-ada", Some("⏪")), ("actor-cy", None), ("actor-bo", Some("⏪"))]);
     assert_eq!(ui_wgpu::wgpu::presence_bar_chip_text(&rows, None, Locale::De), "Ada ⏪ · Cy · Bo ⏪");
     let announced = shell.footer_status_chips().into_iter().find(|(key, _)| *key == "s-presence-peers").expect("the roster is announced").1;
-    assert_eq!(announced, "Ada (Ada bearbeitet Skalieren in der Zeitreise) · Cy · Bo (Bo bearbeitet Drehen in der Zeitreise)");
+    assert_eq!(announced, "Ada (Ada bearbeitet Skalieren im Verlauf) · Cy · Bo (Bo bearbeitet Drehen im Verlauf)");
     let expected: Vec<(String, String)> = case["expect"]["de"]["notes"].as_array().expect("notes").iter().map(|note| (note["key"].as_str().expect("key").into(), note["text"].as_str().expect("text").into())).collect();
     assert_eq!(shell.peer_time_travel_presence().notes, expected, "a peer on another surface notes nothing");
 }
@@ -1301,7 +1464,7 @@ fn built_records(node: ui_contract::BuiltNode, records: &mut Vec<ui_contract::Ui
 
 /// ✏️ Operation `index` of the drag transaction, editable.
 fn drag_mutation(index: u32) -> MutationView {
-    MutationView { mutation_id: format!("m-{index}"), position: 0, op_index: index, label: LocalizedLabel::native("Drag selection", "Auswahl ziehen"), worst: None, messages: Vec::new(), superseded: false, withdrawn: false, editable: true, store: None }
+    MutationView { mutation_id: format!("m-{index}"), position: 0, op_index: index, label: LocalizedLabel::native("Drag selection", "Auswahl ziehen"), worst: None, messages: Vec::new(), superseded: false, withdrawn: false, editable: true, withdrawable: true, store: None }
 }
 
 /// ⏳️ A running replay: `Begin` is refused (`Illegal`), so every Edit is disabled with its reason.
@@ -1319,6 +1482,7 @@ fn replaying_panel() -> TimeTravelPanel {
         editor: None,
         outcomes: Default::default(),
         edited: Default::default(),
+        accepted: Default::default(),
     }
 }
 
@@ -1344,6 +1508,7 @@ fn list_editor_panel() -> TimeTravelPanel {
                 point(1, 2.0),
                 row("/targets", targets, serde_json::json!(["n1", "n2"]), None, None),
             ],
+            editable: true,
             inputs_refused: None,
             withdrawn: false,
             outcome: Vec::new(),
@@ -1512,7 +1677,7 @@ fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
         let node = |key: &str| history_mirror_node(key).unwrap_or_else(|| panic!("{locale:?}: `{key}` is in the mirror"));
         let add_button = node("framework.history.editor.input.points.add");
         assert!(add_button.role == "button" && add_button.disabled && add_button.label.as_deref() == Some(add), "{locale:?}: a full list's Add item is disabled: {add_button:?}");
-        assert!(node("framework.history.editor.input.points.row").description.as_deref().is_some_and(|description| description.contains(count)), "{locale:?}: the list row names its count and ceiling");
+        assert!(node("framework.history.editor.input.points.row").description.as_deref().is_some_and(|description| description.contains(count)), "{locale:?}: the list row names its count and ceiling: {:?}", node("framework.history.editor.input.points.row"));
         for index in 0..2 {
             let button = node(&format!("framework.history.editor.input.points.{index}.remove"));
             assert!(button.disabled && button.label.as_deref() == Some(remove), "{locale:?}: an item at the floor keeps a disabled Remove item: {button:?}");
@@ -1645,10 +1810,12 @@ fn every_history_reprojection_is_announced_outside_the_history_panel() {
             assert_eq!(node.label.as_deref(), Some(message.as_str()), "{name} {locale}: named by the kernel's title and status line");
             assert_eq!(node.live, ui_contract::liveness_name(ui_contract::Liveness::Polite), "{name} {locale}: politely");
             assert!(node.description.is_none() && case["fault"].as_str().map_or(true, |code| !message.contains(code)), "{name} {locale}: a refusal's raw code is never announced: {node:?}");
-            if running {
-                assert_eq!((node.role.as_str(), node.value_now, node.value_max, node.busy), ("progressbar", Some(f64::from(reprojection.done)), Some(f64::from(reprojection.total)), true), "{name} {locale}: a progress bar while it replays");
-            } else {
-                assert_eq!((node.role.as_str(), node.busy), ("status", false), "{name} {locale}: a status while paused or refused");
+            assert_eq!((node.role.as_str(), node.busy, node.value_now), ("status", running, None), "{name} {locale}: one stable status, busy while it replays");
+            let progress = nodes.iter().find(|node| node.key == HISTORY_REPROJECTION_PROGRESS_ID);
+            assert_eq!(progress.is_some(), running, "{name} {locale}: a progress bar only while it replays");
+            if let Some(progress) = progress {
+                assert_eq!((progress.role.as_str(), progress.value_min, progress.value_now, progress.value_max), ("progressbar", Some(0.0), Some(f64::from(reprojection.done)), Some(f64::from(reprojection.total))), "{name} {locale}");
+                assert_eq!((progress.label.as_deref(), progress.value_text.as_deref()), (case["title"][locale].as_str(), case["text"][locale].as_str()), "{name} {locale}: named by the title, valued by the status line");
             }
             let (_, plan) = shell.history_reprojection_band_plan_for(&theme).expect("a band");
             assert_eq!((plan.lines.iter().map(|line| line.text.as_str()).collect::<Vec<_>>().join(" "), plan.progress.is_some()), (message.clone(), running), "{name} {locale}: its lines read the message, a track while it replays");

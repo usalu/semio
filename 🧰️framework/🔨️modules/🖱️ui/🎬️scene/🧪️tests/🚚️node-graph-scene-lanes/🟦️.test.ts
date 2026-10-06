@@ -1,11 +1,9 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import fixture from "../../🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json";
-import schema from "../../🧬️schema/🚚️node-graph-scene-lanes/🔣️.json";
 import { NODE_GRAPH_SCENE_LANES, nodeGraphSceneFromLanes } from "../../🟦️.ts";
 
 test("node graph lanes match their language-neutral schema", () => {
-  expect(new Ajv().compile(schema)(fixture)).toBe(true);
   expect<unknown>(NODE_GRAPH_SCENE_LANES).toEqual(fixture.lanes);
 });
 

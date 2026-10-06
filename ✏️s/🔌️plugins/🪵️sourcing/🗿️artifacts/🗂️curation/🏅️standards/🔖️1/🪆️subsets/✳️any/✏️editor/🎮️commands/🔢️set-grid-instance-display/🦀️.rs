@@ -1,6 +1,6 @@
 //! 🔢️ Sourcing curation app command — `set-grid-instance-display`.
 
-use crate::op::SourcingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SourcingMutation;
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::{SourcingCurationConfig, SourcingCurationConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

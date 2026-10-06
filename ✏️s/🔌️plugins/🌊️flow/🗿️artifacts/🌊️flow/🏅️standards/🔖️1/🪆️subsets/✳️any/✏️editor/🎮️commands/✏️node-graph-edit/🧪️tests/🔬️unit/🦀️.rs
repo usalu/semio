@@ -325,7 +325,7 @@ async fn a_release_that_wires_and_drags_is_labelled_by_the_drag() {
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), 1, "one release is one row: {rows:?}");
     assert!(rows[0].op_lines.first().is_some_and(|line| line.starts_with("insert-edge")), "{:?}", rows[0].op_lines);
-    assert_eq!(rows[0].label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 1 node by (10, 0)");
+    assert_eq!(rows[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Drag 1 node by (10, 0)");
 }
 
 /// ⚖️ LAW (design §12): time travel on a composed child's mutation runs on that member store — editing the drag's `dx`

@@ -1,0 +1,266 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts",
+    "start": 691,
+    "before": "const validate = oracle.compile(schema.$defs.Generation3dIoAuthority);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts",
+    "start": 764,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts",
+    "start": 975,
+    "before": "assert(validate({ ...fixture, cases: [entry] }), entry.id);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts",
+    "start": 1039,
+    "before": "assert.equal(validate({ ...fixture, cases: [{ ...entry, allowed: \"true\" }] }), false);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts",
+    "start": 1132,
+    "before": "assert.equal(validate({ ...fixture, forbiddenSegments: [] }), false);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts",
+    "start": 1204,
+    "before": "assert.equal(validate({ ...fixture, unexpected: true }), false);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "start": 10635,
+    "before": "const validate = new Ajv({ strict: false }).compile(schema.$defs.Generation3dExportInputs);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "start": 11230,
+    "before": "const validateRegistry = new Ajv({ strict: false }).compile(schema.$defs.Generation3dRegistryTextRoundTrip);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "start": 10729,
+    "before": "assert.ok(validate(fixture.exportInputs), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "start": 10807,
+    "before": "assert.equal(validate({ ...fixture.exportInputs, document: [\"obj\"] }), false);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "start": 10888,
+    "before": "assert.equal(validate({ ...fixture.exportInputs, preparedGeometry: [\"txt\"] }), false);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "start": 11341,
+    "before": "assert.ok(validateRegistry(fixture.registryText), JSON.stringify(validateRegistry.errors));",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "start": 11435,
+    "before": "assert.equal(validateRegistry({ ...fixture.registryText, target: \"s.stdio.obj\" }), false);",
+    "after": ""
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts",
+    "start": 11528,
+    "before": "assert.equal(validateRegistry({ ...fixture.registryText, sourceKinds: [\"prepared-mesh\"] }), false);",
+    "after": ""
+  },
+  {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "start": 292704,
+    "before": "const validateBuilder = hubSchemaExport(repoRoot, \"schema://os.plugin.builder/TopicContributionsV1\");",
+    "after": ""
+  },
+  {
+    "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "start": 292808,
+    "before": "if (!validateBuilder(builderFixture)) throw new Error(\"builder topic fixture violates its owning scope contract\");",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 293197,
+    "before": "const validate = peerExport(flowParameterSchema, \"GraphParameterV1\");",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 293349,
+    "before": "expect(validate(graphParameterFixture), JSON.stringify(validate.errors)).toBe(true);",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
+    "start": 293651,
+    "before": "expect(validate(malformed)).toBe(false);",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🩺️window-fault/🟦️.ts",
+    "start": 2115,
+    "before": "const validate = ajv.addSchema(pluginLifetimeSchema).compile({ $ref: `${pluginLifetimeSchema.$id}#/$defs/RuntimeFaultVectorsV1` });",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🩺️window-fault/🟦️.ts",
+    "start": 2251,
+    "before": "expect(validate(faultVectors), JSON.stringify(validate.errors)).toBe(true);",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🩺️window-fault/🟦️.ts",
+    "start": 2777,
+    "before": "for (const candidate of hostile) expect(validate(candidate), JSON.stringify(candidate).slice(0, 80)).toBe(false);",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️tests/🌊️actor-import/🟦️.ts",
+    "start": 2979,
+    "before": "const validate = ajv.getSchema(`${schemaDocument.$id}#/$defs/ActorImportV1`)!;",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️tests/🌊️actor-import/🟦️.ts",
+    "start": 3060,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️tests/🌐️wasi-activation/🟦️.ts",
+    "start": 4187,
+    "before": "const validate = ajv.getSchema(`${schemaDocument.$id}#/$defs/WasiActivationV1`)!;",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧪️tests/🌐️wasi-activation/🟦️.ts",
+    "start": 4271,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts",
+    "start": 27225,
+    "before": "const validate = describeAjv.getSchema(`${describeSchema.$id}#/$defs/EmissionBudgetV1`)!;",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts",
+    "start": 27319,
+    "before": "expect(validate(cases)).toBe(true);",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "start": 9806,
+    "before": "const validate = moduleExportValidator(ajv, join(hostRoot, \"🔁️lifecycle\", \"🧬️schema\", \"🔣️.json\"), \"ReactorTurnLifecycleV1\");",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "start": 13319,
+    "before": "const validate = moduleExportValidator(ajv, join(root, \"🧬️schema\", \"🔣️.json\"), \"ActivationAdmissionV1\");",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "start": 9936,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts",
+    "start": 13428,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 1761,
+    "before": "const validate = await browserBundleValidator(\"ComponentFactoryV1\");",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 9629,
+    "before": "const validate = await browserBundleValidator(\"CompilerCapsuleV1\");",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 13063,
+    "before": "const validate = await browserBundleValidator(\"CompilerSourcesV1\");",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 22705,
+    "before": "const validate = await browserBundleValidator(\"ActorFactoryV1\");",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 39510,
+    "before": "const validate = await browserBundleValidator(\"HostActivationV1\");",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 1834,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 9701,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 13135,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 22774,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+    "start": 39581,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts",
+    "start": 1870,
+    "before": "const validate = ajv.compile<ArtifactAdmissionFixtureV1>({ $ref: `${schema.$id}#/$defs/ArtifactAdmissionV1` });",
+    "after": ""
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️artifact-admission-and-completion-oracles/🟦️.ts",
+    "start": 1984,
+    "before": "assert(validate(fixture), JSON.stringify(validate.errors));",
+    "after": ""
+  }
+]

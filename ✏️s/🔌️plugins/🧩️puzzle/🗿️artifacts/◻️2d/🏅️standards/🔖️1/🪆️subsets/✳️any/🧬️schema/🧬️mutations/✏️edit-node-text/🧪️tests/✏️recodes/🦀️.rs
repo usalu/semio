@@ -1,4 +1,4 @@
-//! 🧪️ `edit-node-text` fixture — `✏️recodes`.
+//! 🧪️ `edit-node-text` snapshot — `✏️recodes`.
 //!
 //! The `text` member carries the tower's own capsule id-code; this vector moves one capsule from core 1 to core 0.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

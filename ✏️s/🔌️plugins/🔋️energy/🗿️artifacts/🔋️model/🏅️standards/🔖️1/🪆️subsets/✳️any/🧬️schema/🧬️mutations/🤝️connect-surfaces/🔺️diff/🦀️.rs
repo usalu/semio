@@ -19,6 +19,6 @@ pub fn diff(payload: &super::ConnectSurfaces, base: &EnergyModelSnapshot) -> pro
     let pair = crate::model::AdjacencyPair { surface_a_id: payload.surface_a_id, surface_b_id: payload.surface_b_id };
     let position = model.adjacency_pairs.iter().position(|item| (item.surface_a_id, item.surface_b_id) > (pair.surface_a_id, pair.surface_b_id)).unwrap_or(model.adjacency_pairs.len());
     model.adjacency_pairs.insert(position, pair);
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

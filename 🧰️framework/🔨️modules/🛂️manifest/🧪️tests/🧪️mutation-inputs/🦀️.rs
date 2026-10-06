@@ -113,6 +113,13 @@ fn derived_controls_follow_the_annotation_and_the_inference_rules() {
     let sourced = inputs("option-source-from-the-previewed-document");
     assert!(matches!(&sourced[1].schema, ArgSchema::String { options, option_source: Some(OptionSource::Snapshot { pointer }), .. } if options.is_empty() && pointer == "/hostSnapshot/widgets/{id}/params"));
     assert_eq!(sourced[1].control(), ActionArgControl::Select { options: Vec::new() }, "a sourced choice is a select before its options resolve");
+    let text = inputs("multiline-text");
+    assert_eq!((text[0].control(), text[1].control()), (ActionArgControl::Multiline, ActionArgControl::Text { placeholder: None }), "a plain string is one line unless it is declared multiline");
+    let keyed = inputs("keyed-list-of-typed-values");
+    let ArgSchema::Object { fields } = &keyed[0].schema else { panic!("a keyed list is an object holding its entries") };
+    let ArgSchema::Array { items, .. } = &fields[0].schema else { panic!("the entries are a list") };
+    let ArgSchema::Object { fields: record } = &**items else { panic!("each entry is a record") };
+    assert_eq!((keyed[0].nullable, record.iter().map(ActionArgDef::key).collect::<Vec<_>>(), record[0].control(), record[1].control()), (true, vec!["questionId".to_string(), "value".to_string()], ActionArgControl::Text { placeholder: None }, ActionArgControl::Text { placeholder: None }), "a keyed list reads as declared records of text inputs, with no widget of its own");
 }
 
 #[test]

@@ -469,7 +469,7 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
             return Err(fault("stdio.wav.audio-route-mismatch", "WAV audio edit work received another command"));
         };
         if action_id(command) != self.tool_id() {
-            return Err(fault("stdio.wav.audio-tool-mismatch", "WAV audio command does not match its retained tool"));
+            return Err(fault("app.command.tool-mismatch", "WAV audio command does not match its retained tool"));
         }
         if self.plan.is_none() {
             let canonical = semio_s_artifact_stdio_contract::window_kit_canonical_revision(input.operation.canonical_base_revision);

@@ -1,9 +1,23 @@
 //! 📸️ Whole SemioBrepSnapshot replacement for schema-driven editing.
 
 use super::SemioBrepMutation;
-use crate::standards::v1::subsets::brep::schema::diff::{
-    dec_curve, dec_list, dec_point3, dec_shell_face, dec_solid_shell, dec_str, dec_surface, enc_bool, enc_curve, enc_list, enc_point3, enc_shell_face, enc_solid_shell, enc_str, enc_surface, parse_f64, SemioBrepDiff,
-};
+use crate::standards::v1::subsets::brep::schema::diff::{SemioBrepDiff};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use protocol::{DiffAlgebra, Mutation};
 

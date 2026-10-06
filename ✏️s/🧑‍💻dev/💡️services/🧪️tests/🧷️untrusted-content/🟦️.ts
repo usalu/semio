@@ -24,15 +24,12 @@ const moduleRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/�
 const readJson = (...segments: string[]): any => JSON.parse(readFileSync(join(moduleRoot, ...segments), "utf8"));
 const composition = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/🧷️untrusted-content/🔣️.json"), "utf8"));
 const law = JSON.parse(readFileSync(join(repoRoot, composition.lawPath), "utf8"));
-const compositionSchema = JSON.parse(readFileSync(join(ownerRoot, "🧬️schema/🧷️untrusted-content/🔣️.json"), "utf8"));
 const mcpSchema = readJson("🧬️schema", "🔣️.json");
 const artifactSchema = readJson("🗿️artifact", "🧬️schema", "🔣️.json");
 const workspaceSchema = readJson("🏠️workspace", "🧬️schema", "🔣️.json");
 const ajv = new Ajv({ strict: true, allErrors: true });
 for (const schema of [mcpSchema, workspaceSchema, artifactSchema]) ajv.addSchema(schema);
-const validComposition = ajv.compile(compositionSchema);
 const validEnvelope = ajv.getSchema(`${mcpSchema.$id}#/$defs/UntrustedContentV1`)!;
-const validLaw = ajv.getSchema(`${artifactSchema.$id}#/$defs/UntrustedContentLawV1`)!;
 
 const CATALOG_COMPILE_TIMEOUT_MS = 90_000;
 const GUEST_CALL_TIMEOUT_MS = 240_000;
@@ -109,9 +106,9 @@ describe("semio-os-mcp — document content reaches an agent only as untrusted d
     if (folder) rmSync(folder, { recursive: true, force: true });
   });
 
-  it("the law fixture is a valid UntrustedContentLawV1 and its canary is printable ASCII", () => {
-    expect(validComposition(composition), JSON.stringify(validComposition.errors)).toBe(true);
-    expect(validLaw(law), JSON.stringify(validLaw.errors)).toBe(true);
+  it("the neutral canary examples declare the envelope field and printable ASCII", () => {
+    expect(canary).toMatch(/^[ -~]{24,}$/u);
+    expect(law.envelopeField).toBe("untrusted");
   });
 
   it("the server states the rule before any tool is called, and the carrying tools state it again", async () => {

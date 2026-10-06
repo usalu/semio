@@ -3,7 +3,7 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/✅️validation/🟦️.ts
  */
-import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
+import { type AdapterContext, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type Answer, type SheetTask, answerComplete, answerRejection } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://✅️answer-validation/🔣️.json";
@@ -19,7 +19,7 @@ function verdict(sheetTask: SheetTask, answer: Answer | undefined): { rejection:
 
 /** 🗃️ Every committed answer judged against its sheet task. */
 function verdicts(ctx: AdapterContext): Record<string, unknown> {
-  const committed = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
+  const committed = JSON.parse(new TextDecoder().decode(ctx.inputBytes(VECTORS))) as Vectors;
   const tasks = new Map(committed.sheetTasks.map((task) => [task.id, task]));
   return Object.fromEntries([...committed.vectors, ...committed.malformed].map((vector) => [vector.id, verdict(tasks.get(vector.sheetTask)!, vector.answer)]));
 }

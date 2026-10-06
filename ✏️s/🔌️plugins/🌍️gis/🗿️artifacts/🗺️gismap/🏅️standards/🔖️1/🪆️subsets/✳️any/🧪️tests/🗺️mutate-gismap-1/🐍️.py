@@ -354,7 +354,7 @@ def uri_in(ctx, needle):
 
 def carrier_of(ctx, needle):
     """📖️ Parses the declared carrier document this scenario names."""
-    return parse_carrier(ctx.fixture_bytes(uri_in(ctx, needle)).decode("utf-8"))
+    return parse_carrier(ctx.input_bytes(uri_in(ctx, needle)).decode("utf-8"))
 
 
 def projection_of(document):
@@ -409,9 +409,9 @@ def spec_vector_handler(kind):
     """📐️ Replays the committed handcrafted `(before, mutation, after)` triple for one kind."""
 
     def handler(ctx):
-        before = document_of(json.loads(ctx.fixture_bytes(uri_in(ctx, "⬅️before")).decode("utf-8")))
-        mutation = json.loads(ctx.fixture_bytes(uri_in(ctx, "🦠️mutation")).decode("utf-8"))
-        after = document_of(json.loads(ctx.fixture_bytes(uri_in(ctx, "➡️after")).decode("utf-8")))
+        before = document_of(json.loads(ctx.input_bytes(uri_in(ctx, "⬅️before")).decode("utf-8")))
+        mutation = json.loads(ctx.input_bytes(uri_in(ctx, "🦠️mutation")).decode("utf-8"))
+        after = document_of(json.loads(ctx.input_bytes(uri_in(ctx, "➡️after")).decode("utf-8")))
         if kind_of(mutation) != kind:
             raise AssertionError("spec-vector-%s: the committed vector carries a %s payload" % (kind, kind_of(mutation)))
         applied = apply_mutation(before, mutation)
@@ -432,7 +432,7 @@ def identity_handler(ctx):
     The projection is the document itself, which is what lets the two languages be compared on what
     they each read out of the same real bytes.
     """
-    text = ctx.fixture_bytes(uri_in(ctx, "asset://")).decode("utf-8")
+    text = ctx.input_bytes(uri_in(ctx, "asset://")).decode("utf-8")
     document, tail = parse_carrier(text)
     printed = print_carrier(document, tail)
     if printed != text:

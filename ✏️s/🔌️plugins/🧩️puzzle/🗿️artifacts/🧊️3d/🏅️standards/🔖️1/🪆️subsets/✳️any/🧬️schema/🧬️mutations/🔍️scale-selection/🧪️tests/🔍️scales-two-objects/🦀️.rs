@@ -1,4 +1,4 @@
-//! 🧪️ `scale-selection` fixture — `🔍️scales-two-objects`.
+//! 🧪️ `scale-selection` scene_snapshot — `🔍️scales-two-objects`.
 //!
 //! Factors (2, 1, 0.5): `object-a`'s uniform scale becomes a per-axis triple, and `object-b`, which carries no scale, reads as one.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "scale-selection/scales-two-objects: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

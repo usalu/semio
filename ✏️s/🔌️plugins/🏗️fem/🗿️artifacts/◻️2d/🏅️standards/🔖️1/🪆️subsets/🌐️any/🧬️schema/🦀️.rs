@@ -113,151 +113,21 @@ pub fn fem2d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{Fem2dDiff, Fem2dMutation, Fem2dSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Fem2dBuilderConstruction {
-        snapshot: Fem2dSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for Fem2dBuilderConstruction {
-        type Snapshot = Fem2dSnapshot;
-        type Mutation = Fem2dMutation;
-        type Diff = Fem2dDiff;
-        fn empty() -> Self {
-            Self { snapshot: Fem2dSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { snapshot: <Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { snapshot: <Fem2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🌱️DerivedEmpty
-/// 🌱️ An empty `Fem2dSnapshot` — every test fixture's blank baseline and the fallback boot document.
-pub fn empty_fem2d_snapshot() -> crate::Fem2dSnapshot {
-    crate::Fem2dSnapshot::default()
-}
 
-/// 🌱️ The document every fresh fem2d surface boots on: the bundled `📚️examples/🎬️demo` DSL, so the
-/// editor and the viewer both paint a real structure at first frame instead of an empty canvas. A
-/// fixture that ever stops parsing degrades to `empty_fem2d_snapshot` rather than faulting the boot,
-/// and says so on the console.
-pub fn default_fem2d_snapshot() -> crate::Fem2dSnapshot {
-    match <crate::Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::FEM2D_EXAMPLE_TEXT) {
-        Ok(snapshot) => {
-            eprintln!(
-                "[TRACE] fem2d boot snapshot: loaded the bundled example — nodes={} elements={} regions={} materials={} sections={} supports={} loadCases={} combinations={}",
-                snapshot.nodes.len(),
-                snapshot.elements.len(),
-                snapshot.regions.len(),
-                snapshot.materials.len(),
-                snapshot.sections.len(),
-                snapshot.supports.len(),
-                snapshot.load_cases.len(),
-                snapshot.combinations.len()
-            );
-            snapshot
-        }
-        Err(error) => {
-            eprintln!("[TRACE] fem2d boot snapshot: the bundled example failed to parse, falling back to the empty document — {error}");
-            empty_fem2d_snapshot()
-        }
-    }
-}
+
+
 //#endregion 🌱️DerivedEmpty
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::Fem2dSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct Fem2dParts {
-        pub snapshot: Option<Fem2dSnapshot>,
-    }
-
-    pub struct Fem2dAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for Fem2dAnalyzerAnalysis {
-        type Parts = Fem2dParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.fem.fem2d", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = Fem2dParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <Fem2dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec Fem2dBuilderFacets {
-        construction: Fem2dBuilderConstruction,
-        analysis: Fem2dAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::Fem2dComposerComposition,
-    }
-    builder: Fem2dBuilder,
-    analyzer: Fem2dAnalyzer,
-    composer: Fem2dComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports

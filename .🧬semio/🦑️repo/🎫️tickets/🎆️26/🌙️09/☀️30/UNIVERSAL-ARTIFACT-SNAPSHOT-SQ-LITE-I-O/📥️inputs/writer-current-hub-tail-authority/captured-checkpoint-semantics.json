@@ -1,0 +1,95 @@
+[
+  {
+    "index": 4,
+    "mutationId": "transition-294f894cc3debed5",
+    "payloadBytes": 281,
+    "checkpoint": {
+      "checkpointId": "ck-bf830bbf11e475f5",
+      "parentId": null,
+      "changeId": "change-5c0e41ec5be6e917",
+      "mutationIds": [
+        "edit-1762b7b68494ca54#0",
+        "edit-ed5b813536dfaaa2#0",
+        "edit-ad96a23dd5e002ab#0",
+        "edit-b16bf1f3817b6c5b#0"
+      ],
+      "description": "collab check-in 1790622818469",
+      "savedAt": "1790622818532",
+      "authors": [
+        {
+          "id": "01a0e963-43d9-7e0a-80bf-97915d07db73",
+          "name": "User One",
+          "avatar": null
+        }
+      ],
+      "message": "collab check-in 1790622818469",
+      "timestamp": "1790622818532",
+      "lineId": null
+    },
+    "timestamp": {
+      "actor": 2557761449,
+      "physical_ms": 1790622818537,
+      "logical": 1
+    },
+    "dependencies": [
+      "edit-1762b7b68494ca54#0",
+      "edit-ed5b813536dfaaa2#0",
+      "edit-ad96a23dd5e002ab#0",
+      "edit-b16bf1f3817b6c5b#0"
+    ]
+  },
+  {
+    "index": 16,
+    "mutationId": "transition-adfa89d36bdda627",
+    "payloadBytes": 419,
+    "checkpoint": {
+      "checkpointId": "ck-dd9dc010a210f2bb",
+      "parentId": "ck-bf830bbf11e475f5",
+      "changeId": "change-46487b9542bbf840",
+      "mutationIds": [
+        "edit-08de5a6e0c22a384#0",
+        "edit-349ac2cdc7ce7934#0",
+        "edit-aa0a809379c463bc#0",
+        "edit-ada434f166043245#0",
+        "edit-32624fb36636d4b7#0",
+        "edit-1c305d24ed643d74#0",
+        "edit-18a27207bc3b3ebd#0",
+        "edit-b52d6b1f8df02f31#0",
+        "edit-2c69037da4bcef92#0",
+        "edit-20eb2c556eb23457#0",
+        "edit-5f7811497a7c0db5#0"
+      ],
+      "description": "auto",
+      "savedAt": "1790622911515",
+      "authors": [
+        {
+          "id": "01a0e963-4405-70df-b7fb-a94be3b4df8a",
+          "name": "User Two",
+          "avatar": null
+        }
+      ],
+      "message": "auto",
+      "timestamp": "1790622911515",
+      "lineId": null
+    },
+    "timestamp": {
+      "actor": 1329246894,
+      "physical_ms": 1790622911527,
+      "logical": 8
+    },
+    "dependencies": [
+      "edit-08de5a6e0c22a384#0",
+      "edit-349ac2cdc7ce7934#0",
+      "edit-aa0a809379c463bc#0",
+      "edit-ada434f166043245#0",
+      "edit-32624fb36636d4b7#0",
+      "edit-1c305d24ed643d74#0",
+      "edit-18a27207bc3b3ebd#0",
+      "edit-b52d6b1f8df02f31#0",
+      "edit-2c69037da4bcef92#0",
+      "edit-20eb2c556eb23457#0",
+      "edit-5f7811497a7c0db5#0",
+      "transition-294f894cc3debed5"
+    ]
+  }
+]

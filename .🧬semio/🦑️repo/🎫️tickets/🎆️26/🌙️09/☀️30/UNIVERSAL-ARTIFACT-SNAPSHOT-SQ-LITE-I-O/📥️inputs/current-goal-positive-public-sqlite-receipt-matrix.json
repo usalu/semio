@@ -1,0 +1,1194 @@
+{
+  "qualification": "Closed bounded retained-map reconciliation. No gates run; no universal denominator; not-reconciled means evidence unresolved, not missing capability. Current graph freshness and full-owning success differ from selected positive public IO.",
+  "complementaryRows": [
+    {
+      "owner": "WriterSnapshot",
+      "package": "semio-s-artifact-writer-writer",
+      "coordinates": [
+        {
+          "kind": "s.writer.writer",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "writer.document",
+      "artifactRoot": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "composed-census-pending",
+      "evidence": "Physical owns Writer/Curation actual generic builder census replay;no owning green located here",
+      "command": "bun nx run @semio-tech/writer-writer-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "EquationSnapshot",
+      "package": "semio-s-artifact-mathematical-equation",
+      "coordinates": [
+        {
+          "kind": "s.mathematical.equation",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.equation/v1",
+      "artifactRoot": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "older-selected-green-current-expansion-unreplayed",
+      "evidence": "fe0c22b7;5/5 vs expanded current11law source;public scope needs selected law inspection",
+      "command": "bun nx run @semio-tech/mathematical-equation-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Wfc2dSnapshot",
+      "package": "semio-s-artifact-wfc-2d",
+      "coordinates": [
+        {
+          "kind": "s.wfc.wfc2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.wfc2d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/wfc-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/wfc-2d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "package": "semio-s-artifact-wfc-grid2d",
+      "coordinates": [
+        {
+          "kind": "s.wfc.grid2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.grid2d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "package": "semio-s-artifact-wfc-bitmap",
+      "coordinates": [
+        {
+          "kind": "s.wfc.bitmap",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.bitmap",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/wfc-bitmap-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/wfc-bitmap-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "package": "semio-s-artifact-wfc-3d",
+      "coordinates": [
+        {
+          "kind": "s.wfc.wfc3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.wfc3d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/wfc-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/wfc-3d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "package": "semio-s-artifact-wfc-grid3d",
+      "coordinates": [
+        {
+          "kind": "s.wfc.grid3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.wfc.grid3d",
+      "artifactRoot": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "latest-whole-red",
+      "evidence": "7759751e;184run183pass1fail;original schema prohibition law remains",
+      "command": "bun nx run @semio-tech/wfc-grid3d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "package": "semio-s-artifact-procedural-generation2d",
+      "coordinates": [
+        {
+          "kind": "s.procedural.generation2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "generation.2d",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "package": "semio-s-artifact-procedural-generation3d",
+      "coordinates": [
+        {
+          "kind": "s.procedural.generation3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "generation.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "FlowSnapshot",
+      "package": "semio-s-artifact-flow-flow",
+      "coordinates": [
+        {
+          "kind": "s.flow.flow",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "flow.host_snapshot",
+      "artifactRoot": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/flow-flow-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "latest-joint-selected-red",
+      "evidence": "4555be8a;9run7pass2fail;distinct schema/value cap mounted after receipt;no new green inferred",
+      "command": "bun nx run @semio-tech/flow-flow-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "package": "semio-s-artifact-gis-gisterrain",
+      "coordinates": [
+        {
+          "kind": "s.gis.gisterrain",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "gis.terrain",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/gis-gisterrain-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/gis-gisterrain-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "package": "semio-s-artifact-gis-gismap",
+      "coordinates": [
+        {
+          "kind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "gis.map",
+      "artifactRoot": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/gis-gismap-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/gis-gismap-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "VcsSnapshot",
+      "package": "semio-s-artifact-vcs-vcs",
+      "coordinates": [
+        {
+          "kind": "s.vcs.vcs",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "vcs.vcs",
+      "artifactRoot": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/vcs-vcs-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/vcs-vcs-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "package": "semio-s-artifact-animate-presentation",
+      "coordinates": [
+        {
+          "kind": "s.animate.presentation",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "animate.presentation",
+      "artifactRoot": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/animate-presentation-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/animate-presentation-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "package": "semio-s-artifact-shooting-shooting",
+      "coordinates": [
+        {
+          "kind": "s.shooting.shooting",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "shooting.shooting",
+      "artifactRoot": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/shooting-shooting-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "new-full-row-native-pending",
+      "evidence": "complete222cell mounted;initial restore unwrap compiler prerequisite corrected;no new selected green located",
+      "command": "bun nx run @semio-tech/shooting-shooting-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "package": "semio-s-artifact-demonstrator-playground",
+      "coordinates": [
+        {
+          "kind": "s.demonstrator.playground",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "playground.playground",
+      "artifactRoot": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/demonstrator-playground-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "package": "semio-s-artifact-sequence-sequence",
+      "coordinates": [
+        {
+          "kind": "s.sequence.sequence",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "sequence.sequence",
+      "artifactRoot": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/sequence-sequence-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "package": "semio-s-artifact-fem-2d",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.2d",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/fem-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/fem-2d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "package": "semio-s-artifact-fem-3d",
+      "coordinates": [
+        {
+          "kind": "s.fem.fem3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "fem.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/fem-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/fem-3d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "package": "semio-s-artifact-architect-program",
+      "coordinates": [
+        {
+          "kind": "s.architect.program",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "architect.program",
+      "artifactRoot": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/architect-program-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/architect-program-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "package": "semio-s-artifact-process-process3d",
+      "coordinates": [
+        {
+          "kind": "s.process.process3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "process.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/process-process3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/process-process3d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "package": "semio-s-artifact-lowpoly-lowpoly",
+      "coordinates": [
+        {
+          "kind": "s.lowpoly.lowpoly",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "lowpoly.document",
+      "artifactRoot": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/lowpoly-lowpoly-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/lowpoly-lowpoly-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "WiresSnapshot",
+      "package": "semio-s-artifact-reasoning-wires",
+      "coordinates": [
+        {
+          "kind": "s.reasoning.wires",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "reasoning.wires.fixture",
+      "artifactRoot": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/reasoning-wires-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "FormsSnapshot",
+      "package": "semio-s-artifact-forms-forms",
+      "coordinates": [
+        {
+          "kind": "s.forms.forms",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "forms.form",
+      "artifactRoot": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/forms-forms-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/forms-forms-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "package": "semio-s-artifact-layout-layout",
+      "coordinates": [
+        {
+          "kind": "s.layout.layout",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "layout.layout",
+      "artifactRoot": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/layout-layout-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/layout-layout-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "CadSnapshot",
+      "package": "semio-s-artifact-cad-cad",
+      "coordinates": [
+        {
+          "kind": "s.cad.cad",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "cad.scene",
+      "artifactRoot": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/cad-cad-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/cad-cad-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1990Snapshot",
+      "package": "semio-s-artifact-norm-en1990",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1990",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1990/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1990-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1990-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "package": "semio-s-artifact-norm-din18599",
+      "coordinates": [
+        {
+          "kind": "s.norm.din18599",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.din18599/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-din18599-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-din18599-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1997Snapshot",
+      "package": "semio-s-artifact-norm-en1997",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1997",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1997/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1997-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "new-full-row-native-pending",
+      "evidence": "historical9/9 665b0c18;new two-annex210cell demand Source9/9 504expect reported by Root,Native not credited",
+      "command": "bun nx run @semio-tech/norm-en1997-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "package": "semio-s-artifact-norm-din16798",
+      "coordinates": [
+        {
+          "kind": "s.norm.din16798",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.din16798/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-din16798-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-din16798-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1991Snapshot",
+      "package": "semio-s-artifact-norm-en1991",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1991",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1991/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1991-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1991-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1992Snapshot",
+      "package": "semio-s-artifact-norm-en1992",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1992",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1992/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1992-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1992-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "package": "semio-s-artifact-norm-vdi3805",
+      "coordinates": [
+        {
+          "kind": "s.norm.vdi3805",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.vdi3805/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-vdi3805-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "package": "semio-s-artifact-norm-iso16757",
+      "coordinates": [
+        {
+          "kind": "s.norm.iso16757",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.iso16757/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-iso16757-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1993Snapshot",
+      "package": "semio-s-artifact-norm-en1993",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1993",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1993/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1993-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1993-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1994Snapshot",
+      "package": "semio-s-artifact-norm-en1994",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1994",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1994/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1994-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1994-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "package": "semio-s-artifact-norm-din4108",
+      "coordinates": [
+        {
+          "kind": "s.norm.din4108",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.din4108/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-din4108-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-din4108-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1996Snapshot",
+      "package": "semio-s-artifact-norm-en1996",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1996",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1996/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1996-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1996-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1995Snapshot",
+      "package": "semio-s-artifact-norm-en1995",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1995",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1995/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1995-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1995-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1999Snapshot",
+      "package": "semio-s-artifact-norm-en1999",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1999",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1999/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1999-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1999-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "En1998Snapshot",
+      "package": "semio-s-artifact-norm-en1998",
+      "coordinates": [
+        {
+          "kind": "s.norm.en1998",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "semio.norm.en1998/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/norm-en1998-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/norm-en1998-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "package": "semio-s-artifact-playbook-playbook",
+      "coordinates": [
+        {
+          "kind": "s.playbook.playbook",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "playbook.program",
+      "artifactRoot": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/playbook-playbook-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "package": "semio-s-artifact-imperative-procedure",
+      "coordinates": [
+        {
+          "kind": "s.imperative.procedure",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "procedure.document/v1",
+      "artifactRoot": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/imperative-procedure-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "package": "semio-s-artifact-remodel-remodeling",
+      "coordinates": [
+        {
+          "kind": "s.remodel.remodeling",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "remodeling.scene",
+      "artifactRoot": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/remodel-remodeling-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "package": "semio-s-artifact-energy-model",
+      "coordinates": [
+        {
+          "kind": "s.energy.model",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "energy.model",
+      "artifactRoot": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/energy-model-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/energy-model-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "package": "semio-s-artifact-trinity-rewriting",
+      "coordinates": [
+        {
+          "kind": "s.trinity.rewriting",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "trinity.rewrite.rule",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/trinity-rewriting-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "JackSnapshot",
+      "package": "semio-s-artifact-trinity-jack",
+      "coordinates": [
+        {
+          "kind": "s.trinity.jack",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.trinity.jack",
+      "artifactRoot": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/trinity-jack-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/trinity-jack-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "DagSnapshot",
+      "package": "semio-s-artifact-dag-dag",
+      "coordinates": [
+        {
+          "kind": "s.dag.dag",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "dag.dag",
+      "artifactRoot": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/dag-dag-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/dag-dag-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "package": "semio-s-artifact-draw-drawing",
+      "coordinates": [
+        {
+          "kind": "s.draw.drawing",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "drawing.document",
+      "artifactRoot": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/draw-drawing-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/draw-drawing-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "RasterSnapshot",
+      "package": "semio-s-artifact-raster-raster",
+      "coordinates": [
+        {
+          "kind": "s.raster.raster",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "raster.document",
+      "artifactRoot": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/raster-raster-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "positive-public-selected-green",
+      "evidence": "023bfed5-e70e-45a7-b7c9-3d173e243594;9/9,385outside;complete77row edited public Binary/Text oracle",
+      "command": "bun nx run @semio-tech/raster-raster-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "NoteSnapshot",
+      "package": "semio-s-artifact-note-note",
+      "coordinates": [
+        {
+          "kind": "s.note.note",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "note.document",
+      "artifactRoot": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/note-note-rs:verify-sqlite-snapshot-native",
+      "targetPresent": true,
+      "receiptState": "latest-selected-red",
+      "evidence": "0c887c4c;9run7pass2fail;current mounted repairs require replay",
+      "command": "bun nx run @semio-tech/note-note-rs:verify-sqlite-snapshot-native --skip-nx-cache"
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "package": "semio-s-artifact-puzzle-2d",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.2d.fixture",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/puzzle-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/puzzle-2d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "package": "semio-s-artifact-puzzle-5d",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle5d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.5d",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/puzzle-5d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "latest-factory-selected-red",
+      "evidence": "2ad1bb3c;12run9pass3fail;do not merge procedural/playbook receipts",
+      "command": "bun nx run @semio-tech/puzzle-5d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "package": "semio-s-artifact-puzzle-3d",
+      "coordinates": [
+        {
+          "kind": "s.puzzle.puzzle3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "puzzle.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/puzzle-3d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "package": "semio-s-artifact-block-2d",
+      "coordinates": [
+        {
+          "kind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.2d",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/block-2d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/block-2d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "package": "semio-s-artifact-block-5d",
+      "coordinates": [
+        {
+          "kind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.5d",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/block-5d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/block-5d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "package": "semio-s-artifact-block-3d",
+      "coordinates": [
+        {
+          "kind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "block.3d",
+      "artifactRoot": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/block-3d-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "receipt-scope-not-reconciled",
+      "evidence": "Existing per-owner reports may carry positive evidence; this bounded pass does not classify as absent or failed.",
+      "command": "bun nx run @semio-tech/block-3d-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "package": "semio-s-artifact-space-home",
+      "coordinates": [
+        {
+          "kind": "s.space.home",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.home",
+      "artifactRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/space-home-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "composed-census-pending",
+      "evidence": "Physical HubSpace two real builders replay",
+      "command": "bun nx run @semio-tech/space-home-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "package": "semio-s-artifact-space-space",
+      "coordinates": [
+        {
+          "kind": "s.space.space",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "s.space",
+      "artifactRoot": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/space-space-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "composed-census-pending",
+      "evidence": "Physical HubSpace two real builders replay",
+      "command": "bun nx run @semio-tech/space-space-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    },
+    {
+      "owner": "CurationSnapshot",
+      "package": "semio-s-artifact-sourcing-curation",
+      "coordinates": [
+        {
+          "kind": "s.sourcing.curation",
+          "standard": "1",
+          "subset": "*"
+        }
+      ],
+      "schema": "sourcing.curation/v1",
+      "artifactRoot": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🦀️.rs",
+      "testSource": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "target": "@semio-tech/sourcing-curation-rs:test-snapshot-sqlite-native",
+      "targetPresent": true,
+      "receiptState": "composed-census-pending",
+      "evidence": "Physical owns Writer/Curation replay;do not infer from provider",
+      "command": "bun nx run @semio-tech/sourcing-curation-rs:test-snapshot-sqlite-native --skip-nx-cache"
+    }
+  ],
+  "separateAuthorities": [
+    {
+      "owner": "ChartSnapshot",
+      "state": "positive-public-full-owning-green",
+      "evidence": "d9338eb6;23/23 zero skipped;12law complete assets/public/native selected scope d43ac041",
+      "report": "📓️chart-numeric-companion-and-native-asset-current-receipts.md"
+    },
+    {
+      "owner": "WorkflowSnapshot",
+      "state": "historical-public-selected-green-current-replay-required",
+      "evidence": "0e1be4ac;16/16 historical;current Root execution queue separate",
+      "report": "📓️workflow-semantic-snapshot-ownership.md"
+    },
+    {
+      "owner": "RunSnapshot",
+      "state": "historical-public-selected-green-current-source-budget-red-repaired",
+      "evidence": "7257c0b1;15/15 historical;new paid-table-index source demand requires current receipt",
+      "report": "📓️run-semantic-snapshot-ownership.md"
+    },
+    {
+      "owner": "FlowHostSnapshot",
+      "state": "joint-current-red-not-merged-with-plugin",
+      "evidence": "framework8 c17fd5b8 5pass3fail;plugin joint4555be8a2fail;distinct TypeIds retained"
+    },
+    {
+      "owner": "SpaceSnapshot",
+      "state": "positive-public-selected-green",
+      "evidence": "6a99a96d;14/14,6outside;ordinary init laws included"
+    },
+    {
+      "owner": "CollectionSnapshot",
+      "state": "positive-public-selected-green",
+      "evidence": "8af990af;13/13 one leaky,7outside;leak qualification retained"
+    },
+    {
+      "owner": "SpaceHistorySnapshot",
+      "state": "explicit-public-policy-preserved",
+      "evidence": "Existing explicit registration receipt retained;no constructor-global-publication requirement invented;current freshness not rechecked"
+    },
+    {
+      "owner": "InfiniteDagSnapshot",
+      "state": "current-public-receipt-scope-unreconciled",
+      "evidence": "Typed factory/source maps exist;initializer absence is not failure"
+    }
+  ],
+  "stdio": {
+    "authority": "actual selected36 definitions/57 hosted schema identities/89 declared coordinates",
+    "evidenceScope": "required registration/type/SQL/routes census distinct from88 editor payload laws;6 census green reported by Physical;full13 structural original failure XML ownership repair replay active;no universal semantic public completeness inferred"
+  }
+}

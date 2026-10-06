@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-10-05T23:59:57.788Z",
+  "scope": "Actual registered DIN4108 owning Native After",
+  "project": "@semio-tech/norm-din4108-rs",
+  "target": "test-snapshot-sqlite-native",
+  "session": 7733,
+  "cohortTerminal": false,
+  "profile": "quick",
+  "nextestRunId": "54717ccf-22f1-468e-b752-4ab2213b3099",
+  "run": 14,
+  "passed": 14,
+  "failed": 0,
+  "outside": 161,
+  "durationSeconds": 1.508,
+  "log": "🗑️generated/physical-current-vdi-duplicate-before-other-norm-after.log",
+  "provider": "26-path complete borrowed primitive provider; VDI duplicate-map provider still held"
+}

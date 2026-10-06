@@ -140,3 +140,6 @@ impl semio_framework_plugin::WindowTransientOwner for WiresCanvasTransientOwner 
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
 //#endregion 🪢️TaxonomyMounts
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

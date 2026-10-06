@@ -24,5 +24,8 @@ pub use apply::{apply_run_operation, apply_run_operation_checked};
 mod tests;
 
 #[cfg(test)]
-#[path = "🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
+#[path = "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_semantic_tests;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

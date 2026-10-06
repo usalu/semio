@@ -1,3 +1,6 @@
+use crate::standards::v1::subsets::any::io::text::snapshot::build_terrain_scene_json;
+use crate::standards::v1::subsets::any::io::text::snapshot::default_terrain_document;
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_gis_terrain_snapshot;
 use super::*;
 
 #[semio_framework_async_macros::async_test]

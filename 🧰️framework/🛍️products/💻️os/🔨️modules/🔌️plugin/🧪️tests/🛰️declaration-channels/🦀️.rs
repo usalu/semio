@@ -1,13 +1,13 @@
 //#region 📄️DeclarationChannelMutationOwners
 //! 📄️ Authored mutation owners for the declaration-channel fixtures.
 
-#[path = "../../🧫️fixtures/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testing/🛰️declaration-channels/1standard/🌐️any/🧬️mutations/🦀️.rs"]
 pub(crate) mod std1_any;
 
-#[path = "../../🧫️fixtures/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testing/🛰️declaration-channels/1standard/🔒️strict/🧬️mutations/🦀️.rs"]
 pub(crate) mod std1_strict;
 
-#[path = "../../🧫️fixtures/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/🦀️.rs"]
+#[path = "../../🧪️testing/🛰️declaration-channels/2standard/🌐️any/🧬️mutations/🦀️.rs"]
 pub(crate) mod std2_any;
 
 #[path = "../🛰️declaration-channels-unit/🦀️.rs"]

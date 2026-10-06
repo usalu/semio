@@ -229,7 +229,7 @@ async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutati
     store.install_document_store_owners_exact(::directory::os_store::bounded_artifact_store_owners());
     let mut applied = Ok(());
     for mutation in mutations {
-        if let Err(error) = store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], description: None, transaction: None }).await {
+        if let Err(error) = store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }).await {
             applied = Err(error);
             break;
         }

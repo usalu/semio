@@ -20,7 +20,7 @@ export interface DagPlayMainNode {
   outputs: DagPlayMainPort[];
 }
 
-/** 🕸️ One live node-graph edge, projected off `DagFixtureEdge` via `document_to_workflow`. */
+/** 🕸️ One live node-graph edge, projected off `DagSnapshotEdge` via `document_to_workflow`. */
 export interface DagPlayMainEdge {
   id: string;
   sourceNodeId: string;

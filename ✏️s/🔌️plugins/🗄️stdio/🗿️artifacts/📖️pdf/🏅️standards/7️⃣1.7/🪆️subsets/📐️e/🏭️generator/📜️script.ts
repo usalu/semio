@@ -24,7 +24,7 @@
 // that writes into `../🧫️fixtures/`, and its output is reviewed and committed before any test reads it.
 //
 //   bun 📜️script.ts generate [--out <dir>]   # (re)builds the engine, writes every recipe, prints digests
-//   bun 📜️script.ts manifests                 # prints the fixtureManifests entries for the committed corpus
+//   bun 📜️script.ts manifests                 # prints the testEvidence entries for the committed corpus
 //
 // @see ../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️pilot-playbook.md
 
@@ -108,7 +108,6 @@ async function manifests(): Promise<void> {
     const afterPath = join(dir, AFTER_FILENAME);
     if (!existsSync(beforePath) || !existsSync(afterPath)) throw new Error(`${dir} does not contain the generated pair — run "generate" first`);
     entries.push({
-      schema: "semio.repository-test.fixture/v2",
       id: `e-${kind}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.pdf", standard: "1.7", subset: SUBSET },
@@ -220,7 +219,6 @@ async function encryptionMode(emitManifests: boolean, root: string): Promise<num
       files.push({ role, path: `../🧫️fixtures/${directory}/${name}`, mediaType: "application/pdf", sha256: `sha256:${[...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("")}`, bytes: bytes.length });
     }
     entries.push({
-      schema: "semio.repository-test.fixture/v2",
       id: `encryption-${kind}`,
       class: "third-party-generated",
       target: { artifact: "s.stdio.pdf", standard: "1.7", subset: "e" },

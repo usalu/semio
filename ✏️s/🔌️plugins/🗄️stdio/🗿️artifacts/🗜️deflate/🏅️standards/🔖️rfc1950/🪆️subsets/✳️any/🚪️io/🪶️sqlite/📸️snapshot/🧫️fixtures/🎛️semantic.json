@@ -1,0 +1,45 @@
+{
+  "schemaBytes": 690,
+  "tableWidths": {
+    "deflate_document": 6,
+    "deflate_payload_byte": 4
+  },
+  "cases": [
+    {
+      "id": "full",
+      "rows": 1025,
+      "valueBytes": 32813
+    },
+    {
+      "id": "metadataRetainingEmpty",
+      "rows": 1,
+      "valueBytes": 45
+    }
+  ],
+  "publicIo": {
+    "schemaBytes": 983,
+    "tableWidths": {
+      "deflate_document": 6,
+      "deflate_payload_byte": 4,
+      "semio_snapshot": 6
+    },
+    "cases": [
+      {
+        "id": "full",
+        "rows": 1026,
+        "valueBytes": {
+          "binary": 32858,
+          "text": 32856
+        }
+      },
+      {
+        "id": "metadataRetainingEmpty",
+        "rows": 2,
+        "valueBytes": {
+          "binary": 90,
+          "text": 88
+        }
+      }
+    ]
+  }
+}

@@ -89,10 +89,6 @@ pub enum PdfVtMutation {
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 //#endregion 🔖️Codecs
 
 //#region 🔖️Delegation

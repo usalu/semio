@@ -1,4 +1,4 @@
-//! 🧪️ `connect-handles` fixture — `🪢️rewires`.
+//! 🧪️ `connect-handles` snapshot — `🪢️rewires`.
 //!
 //! The board carries the second tambour and the capsule it serves but not the wire between them; this vector restores the tower's own edge, id and pose included.
 //!
@@ -41,7 +41,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle2d_mutation(&base, &mutation).expect("valid retained mutation inverse snapshot");
     let mut snapshot = base.clone();
     apply_puzzle2d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

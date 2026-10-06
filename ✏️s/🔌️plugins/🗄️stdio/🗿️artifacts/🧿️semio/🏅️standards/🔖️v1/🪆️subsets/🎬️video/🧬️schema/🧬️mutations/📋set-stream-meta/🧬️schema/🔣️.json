@@ -20,7 +20,22 @@
     },
     "index": {
       "type": "integer",
-      "minimum": 0
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Stream",
+          "de": "Datenstrom"
+        },
+        "description": {
+          "en": "Index of the stream, counted from 0.",
+          "de": "Index des Datenstroms, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
     },
     "kind": {
       "$ref": "#/$defs/SemioVideoStreamKind",
@@ -54,12 +69,63 @@
     "width": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Width",
+          "de": "Breite"
+        },
+        "description": {
+          "en": "Frame width of the stream.",
+          "de": "Bildbreite des Datenstroms."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "softMax": 7680,
+        "snaps": [
+          640,
+          1280,
+          1920,
+          2560,
+          3840
+        ],
+        "group": "value",
+        "order": 40
+      }
     },
     "height": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 4294967295
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Height",
+          "de": "Höhe"
+        },
+        "description": {
+          "en": "Frame height of the stream.",
+          "de": "Bildhöhe des Datenstroms."
+        },
+        "unit": "px",
+        "step": 1,
+        "precision": 0,
+        "softMax": 4320,
+        "snaps": [
+          360,
+          480,
+          720,
+          1080,
+          1440,
+          2160
+        ],
+        "group": "value",
+        "order": 50
+      }
     },
     "rate": {
       "$ref": "#/$defs/SemioRational",

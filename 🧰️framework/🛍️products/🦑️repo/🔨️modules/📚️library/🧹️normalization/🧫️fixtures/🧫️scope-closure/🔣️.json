@@ -1,0 +1,58 @@
+{
+  "description": "🔐️ Scopes inside a subset's mutation facets close to the subset root; the facet roots close only when they hold mutations; everything else is closed already.",
+  "cases": [
+    {
+      "id": "a fixture scenario closes to its subset root",
+      "scope": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/🗑️delete-node/🧽️clears",
+      "holdsMutations": [],
+      "closed": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any"
+    },
+    {
+      "id": "an implementation leaf closes to its subset root",
+      "scope": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node",
+      "holdsMutations": [],
+      "closed": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any"
+    },
+    {
+      "id": "the mutations directory itself closes to its subset root",
+      "scope": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/",
+      "holdsMutations": [],
+      "closed": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any"
+    },
+    {
+      "id": "a fixtures root that holds mutations closes to its owner",
+      "scope": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+      "holdsMutations": [
+        "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures"
+      ],
+      "closed": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any"
+    },
+    {
+      "id": "a schema root without mutations is closed already",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema",
+      "holdsMutations": [],
+      "closed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema"
+    },
+    {
+      "id": "a schema module beside no mutations is closed already",
+      "scope": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-caps",
+      "holdsMutations": [],
+      "closed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-caps"
+    },
+    {
+      "id": "the subset root and an editor tree are closed already",
+      "scope": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+      "holdsMutations": [
+        "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
+        "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema"
+      ],
+      "closed": "✏️s/🔌️plugins/🧪️demo/🗿️artifacts/🅰️alpha/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands"
+    },
+    {
+      "id": "a framework module's mutation facet closes to the module",
+      "scope": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out",
+      "holdsMutations": [],
+      "closed": "🧰️framework/🛍️products/💻️os/🎚️config"
+    }
+  ]
+}

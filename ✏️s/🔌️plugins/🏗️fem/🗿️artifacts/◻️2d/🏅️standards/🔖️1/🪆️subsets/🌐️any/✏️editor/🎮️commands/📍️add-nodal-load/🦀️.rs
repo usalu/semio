@@ -1,7 +1,7 @@
 //! 🏋️ 🏋️ Fem2d play app commands command — `add-nodal-load`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{add_load, create_load_case};
 use crate::{FemDof, FemLoad, FemLoadCase};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

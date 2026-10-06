@@ -1,4 +1,4 @@
-//! 🧪️ `scale-selection` fixture — `⛓️stays`.
+//! 🧪️ `scale-selection` scene_snapshot — `⛓️stays`.
 //!
 //! Scaling moves no pose: only `object-a`'s scale doubles, nothing follows and no attraction is re-derived.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "scale-selection/stays: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

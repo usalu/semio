@@ -1,5 +1,5 @@
 semio puzzle.puzzle3d.dsl v1
-schema=puzzle.3d.fixture domain=architecture
+schema=puzzle.3d.scene.v1 domain=architecture
 meta {
   kind-catalogs=
   objects [id:TEXT name:TEXT label:TEXT description:TEXT icon:TEXT image:TEXT unit:TEXT is-abstract:BOOL base-kinds:LIST representations:LIST vortices:LIST attributes:LIST authors:LIST] {

@@ -1,0 +1,3 @@
+# Product Conformance 8 Preparer 3 Audit
+
+The separate helper retains historical publication pairs and captures all current endpoint bodies or nulls with full unknown forward/inverse qualifications. Current positive endpoints join captured full frames; final null and body guards remain mandatory. It invokes the existing compiler reference inspector and source-target resolver with before/after import guards, records lexical refusals, generated tokens and missing inputs explicitly, and guards appended true input frames before sealing. Package/module provenance omissions remain honest resolver refusals; this finite capture admission does not imply complete native closure, provider readiness, or restored historical schemas. TypeScript syntax diagnostics are empty.

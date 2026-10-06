@@ -63,13 +63,13 @@ async fn logical_snapshot_and_facets_have_no_shadow_state() {
         include_str!("../../../🧬️mutations/🔗️.graphql"),
         include_str!("../../../🧬️mutations/🔣️.json"),
         include_str!("../../../🧬️mutations/🛰️.proto"),
-        include_str!("../../💾️binary/🔠️.abnf"),
-        include_str!("../../💾️binary/📡️.protocol.semio"),
-        include_str!("../../../🧬️mutations/📝️text/📖️.grammar.semio"),
-        include_str!("../../../🧬️mutations/📝️text/🔤️.ebnf"),
-        include_str!("../../../🧬️mutations/📝️text/🅰️.g4"),
-        include_str!("../../../🧬️mutations/💾️binary/📡️.protocol.semio"),
-        include_str!("../../../🧬️mutations/💾️binary/🌶️.spicy"),
+        include_str!("../../../../🚪️io/💾️binary/📸️snapshot/🔠️.abnf"),
+        include_str!("../../../../🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/📖️.grammar.semio"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🔤️.ebnf"),
+        include_str!("../../../../🚪️io/📝️text/🧬️mutations/🅰️.g4"),
+        include_str!("../../../../🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio"),
+        include_str!("../../../../🚪️io/💾️binary/🧬️mutations/🌶️.spicy"),
     ] {
         for forbidden in ["unknownBoxes", "unknown_boxes", "Mp4CodecOther", "ADD_UNKNOWN_BOX", "addUnknownBox", "nativeArchive", "sourceBytes", "serde_json::", "json_line", "jsonLine", "json_utf8", "JSON bytes", "iso-bmff-box-stream"] {
             assert!(!facet.contains(forbidden), "facet contains forbidden shadow concept {forbidden}");

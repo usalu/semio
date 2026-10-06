@@ -1,5 +1,4 @@
 {
-  "$schema": "./🧬️schema/🔣️.json",
   "windowKey": "framework.window.image",
   "unavailableNodeKey": "framework.window.image.unavailable",
   "labels": {

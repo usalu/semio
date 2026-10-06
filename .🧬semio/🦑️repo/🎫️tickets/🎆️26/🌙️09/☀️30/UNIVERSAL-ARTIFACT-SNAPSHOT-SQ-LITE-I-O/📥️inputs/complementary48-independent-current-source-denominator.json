@@ -1,0 +1,1466 @@
+{
+  "qualification": "Exact48 input owners; current source registration readback including script registered Source paths and Native companions. No tests or gates executed; evidence presence is not runtime/public completion.",
+  "rows": [
+    {
+      "owner": "Wfc2dSnapshot",
+      "project": "@semio-tech/wfc-2d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 10,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 14,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 10,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Grid2dSnapshot",
+      "project": "@semio-tech/wfc-grid2d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 10,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 14,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 10,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "BitmapSnapshot",
+      "project": "@semio-tech/wfc-bitmap-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 10,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 6,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 10,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Wfc3dSnapshot",
+      "project": "@semio-tech/wfc-3d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 9,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 10,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 9,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Generation2dSnapshot",
+      "project": "@semio-tech/procedural-generation2d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 13,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 36,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 13,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Generation3dSnapshot",
+      "project": "@semio-tech/procedural-generation3d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 12,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 36,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 12,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "GisTerrainSnapshot",
+      "project": "@semio-tech/gis-gisterrain-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 15,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 17,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 16,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "GisMapSnapshot",
+      "project": "@semio-tech/gis-gismap-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 8,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 20,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 8,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "VcsSnapshot",
+      "project": "@semio-tech/vcs-vcs-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 12,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 2,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 12,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "PresentationSnapshot",
+      "project": "@semio-tech/animate-presentation-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 4,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "PlaygroundSnapshot",
+      "project": "@semio-tech/demonstrator-playground-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 8,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 1,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 8,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "SequenceSnapshot",
+      "project": "@semio-tech/sequence-sequence-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 12,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 2,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 12,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Fem2dSnapshot",
+      "project": "@semio-tech/fem-2d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": false,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 8,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 18,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 8,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Fem3dSnapshot",
+      "project": "@semio-tech/fem-3d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": false,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 8,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 19,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 8,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "ProgramSnapshot",
+      "project": "@semio-tech/architect-program-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 18,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 685,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 18,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Process3dSnapshot",
+      "project": "@semio-tech/process-process3d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 9,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 32,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 12,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚦️public/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "LowpolySnapshot",
+      "project": "@semio-tech/lowpoly-lowpoly-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 5,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 6,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 6,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🕸️mesh/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "WiresSnapshot",
+      "project": "@semio-tech/reasoning-wires-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 3,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 17,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 12,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️semantic/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧮️census/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "FormsSnapshot",
+      "project": "@semio-tech/forms-forms-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 10,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 30,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 13,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/📏️preflight/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "LayoutSnapshot",
+      "project": "@semio-tech/layout-layout-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": false,
+      "nativeIndependentSqlite": false,
+      "selectedLaws": 8,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 43,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 10,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/💰️backing/📏️preflight/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "CadSnapshot",
+      "project": "@semio-tech/cad-cad-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 14,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 6,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 14,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "En1990Snapshot",
+      "project": "@semio-tech/norm-en1990-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 9,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Din18599Snapshot",
+      "project": "@semio-tech/norm-din18599-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 12,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Din16798Snapshot",
+      "project": "@semio-tech/norm-din16798-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 3,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "En1991Snapshot",
+      "project": "@semio-tech/norm-en1991-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 8,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "En1992Snapshot",
+      "project": "@semio-tech/norm-en1992-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": false,
+      "launchSeed": false,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 12,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 13,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 12,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Vdi3805Snapshot",
+      "project": "@semio-tech/norm-vdi3805-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 17,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 32,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 17,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Iso16757Snapshot",
+      "project": "@semio-tech/norm-iso16757-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": false,
+      "launchSeed": false,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 16,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 55,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 16,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "En1993Snapshot",
+      "project": "@semio-tech/norm-en1993-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": false,
+      "launchSeed": false,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 25,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "En1994Snapshot",
+      "project": "@semio-tech/norm-en1994-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 11,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Din4108Snapshot",
+      "project": "@semio-tech/norm-din4108-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 7,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "En1996Snapshot",
+      "project": "@semio-tech/norm-en1996-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 5,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "En1995Snapshot",
+      "project": "@semio-tech/norm-en1995-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 5,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "En1999Snapshot",
+      "project": "@semio-tech/norm-en1999-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": false,
+      "launchSeed": false,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 13,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 16,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 13,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "En1998Snapshot",
+      "project": "@semio-tech/norm-en1998-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 16,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "PlaybookSnapshot",
+      "project": "@semio-tech/playbook-playbook-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 2,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "ProcedureSnapshot",
+      "project": "@semio-tech/imperative-procedure-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 9,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 3,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 9,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "RemodelingSnapshot",
+      "project": "@semio-tech/remodel-remodeling-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 7,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 35,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 16,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧬️owned/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "EnergyModelSnapshot",
+      "project": "@semio-tech/energy-model-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 13,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 69,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 13,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "RewritingSnapshot",
+      "project": "@semio-tech/trinity-rewriting-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": false,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 9,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 30,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/📋️contract/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 10,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚪️io/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "JackSnapshot",
+      "project": "@semio-tech/trinity-jack-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": false,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 13,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 13,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 14,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🚪️io/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "DagSnapshot",
+      "project": "@semio-tech/dag-dag-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 12,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 2,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/📋️contract/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 12,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "DrawingSnapshot",
+      "project": "@semio-tech/draw-drawing-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 4,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 32,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 4,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Puzzle2dSnapshot",
+      "project": "@semio-tech/puzzle-2d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": true,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 14,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 20,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 14,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Puzzle3dSnapshot",
+      "project": "@semio-tech/puzzle-3d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": false,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 10,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 23,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 17,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🧩️entities/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Block2dSnapshot",
+      "project": "@semio-tech/block-2d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": false,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 10,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Block5dSnapshot",
+      "project": "@semio-tech/block-5d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": false,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 11,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 15,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 11,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    },
+    {
+      "owner": "Block3dSnapshot",
+      "project": "@semio-tech/block-3d-rs",
+      "targetExists": true,
+      "correctRouterCommand": true,
+      "sourceTargetExists": true,
+      "launchMain": true,
+      "launchSeed": true,
+      "scriptSourceList": true,
+      "sourcePathExists": true,
+      "sourceIndependentSqlite": true,
+      "nativePublicIo": false,
+      "nativeIndependentSqlite": true,
+      "selectedLaws": 12,
+      "snapshotModuleRegistersSqliteTests": true,
+      "ownedImplExists": true,
+      "ownedTraitImpl": true,
+      "ownedToFrom": true,
+      "declaredTables": 13,
+      "suspectWholeJson": false,
+      "testSource": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs",
+      "implementation": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs",
+      "sourceRegisteredPaths": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+      ],
+      "selectedLawsIncludingCompanions": 12,
+      "testCompanionFiles": [
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"
+      ]
+    }
+  ]
+}

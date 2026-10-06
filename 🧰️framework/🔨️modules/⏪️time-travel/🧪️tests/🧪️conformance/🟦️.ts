@@ -4,7 +4,6 @@ import Ajv from "ajv";
 import fc from "fast-check";
 import { assign, createMachine, initialTransition, transition, type AnyMachineSnapshot } from "xstate";
 import lifecycle from "../../🧫️fixtures/🧫️lifecycle-law/🔣️.json";
-import replayReportSchema from "../../../📡️replication/⚔️conflict/🧬️schema/🔣️replay-report/🔣️.json";
 import { replayReportBlocksFinalize, type InputReplacement } from "@semio-tech/framework-replication";
 import schema from "../../🧬️schema/🔣️.json";
 import * as M from "../../🟦️.ts";
@@ -17,7 +16,6 @@ const kinds = (effects: readonly M.TimeTravelEffect[]): string[] => effects.map(
 
 describe("schema oracle (ajv)", () => {
   const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addSchema(replayReportSchema);
   ajv.addSchema(schema);
   const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`)!;
 
@@ -128,6 +126,45 @@ describe("lifecycle law", () => {
     }
   });
 
+  test("begin and beginWithdrawn are refused exactly where the reducer refuses them, in every context", () => {
+    for (const [name, json] of Object.entries(law.contexts)) {
+      const session = M.timeTravelSessionFromJson(json);
+      for (const key of ["begin", "beginWithdrawn"]) {
+        const result = M.applyTimeTravel(session, M.timeTravelEventFromJson(law.events[key]));
+        expect(M.timeTravelBeginRefusal(session), `${name} × ${key}`).toBe(result.ok ? null : result.rejection);
+      }
+    }
+  });
+
+  test("beginWithdrawn is begin with a withdrawn draft, in every context that admits it", () => {
+    for (const [name, json] of Object.entries(law.contexts)) {
+      const session = M.timeTravelSessionFromJson(json);
+      const begun = M.applyTimeTravel(session, M.timeTravelEventFromJson(law.events.begin));
+      if (!begun.ok) continue;
+      const withdrawn = M.applyTimeTravel(session, M.timeTravelEventFromJson(law.events.beginWithdrawn));
+      expect(withdrawn.ok, name).toBe(true);
+      if (!withdrawn.ok) continue;
+      const expected = M.timeTravelSessionToJson(begun.session);
+      expected.pending.replacement = { kind: "withdrawn" };
+      expect(M.timeTravelSessionToJson(withdrawn.session), name).toEqual(expected);
+      expect(withdrawn.effects.map(M.timeTravelEffectToJson), name).toEqual([{ type: "showPreview", target: expected.pending.target.mutation, replacement: { kind: "withdrawn" } }]);
+    }
+  });
+
+  test("restore is refused exactly where the reducer refuses it, for every mutation in every context", () => {
+    for (const [name, json] of Object.entries(law.contexts)) {
+      const session = M.timeTravelSessionFromJson(json);
+      for (const target of ["a", "b", "c"]) {
+        const result = M.applyTimeTravel(session, { type: "restore", generation: session.generation, target });
+        expect(M.timeTravelRestoreRefusal(session, target), `${name} × ${target}`).toBe(result.ok ? null : result.rejection);
+        if (!result.ok) continue;
+        const kept = session.accepted.map((draft) => draft.target.mutation).filter((mutation) => mutation !== target);
+        expect([result.session.accepted.map((draft) => draft.target.mutation), result.session.stage], `${name} × ${target}`).toEqual([kept, kept.length === 0 ? "inactive" : "replaying"]);
+      }
+    }
+  });
+
+  
   test("begin is refused exactly where the reducer refuses it, in every context", () => {
     for (const [name, json] of Object.entries(law.contexts)) {
       const session = M.timeTravelSessionFromJson(json);
@@ -135,8 +172,7 @@ describe("lifecycle law", () => {
       expect(M.timeTravelBeginRefusal(session), name).toBe(result.ok ? null : result.rejection);
     }
   });
-
-  test("stale generations are silent no-ops in every context", () => {
+test("stale generations are silent no-ops in every context", () => {
     for (const [name, json] of Object.entries(law.contexts)) {
       const before = M.timeTravelSessionFromJson(json);
       for (const key of M.TIME_TRAVEL_EVENT_KEYS) {
@@ -274,6 +310,8 @@ describe("state machine oracle (xstate + fast-check)", () => {
     needsReplay: (model) => model.accepted.length > 0 && (model.report === null || model.fault !== null),
     validCode: (_, event) => event.code!.length > 0 && fitsBytes(event.code!) && codePoints(event.code!).every((point) => !WHITE_SPACE.has(point)),
     validName: (_, event) => fitsBytes(event.name!) && codePoints(event.name!).some((point) => !WHITE_SPACE.has(point)),
+    restoreKeepsDrafts: (model, event) => model.accepted.length > 1 && model.accepted.some((draft) => draft.mutation === event.mutation),
+    restoreLastDraft: (model, event) => model.accepted.length === 1 && model.accepted[0]!.mutation === event.mutation,
   };
   const baseMovedGuard = (row: any) => (model: Model, event: OracleEvent) => (row.from === "inactive" || row.from === "editing" || row.from === "finalizing" ? event.base !== model.base : guards[row.when]!(model, event));
 
@@ -288,11 +326,17 @@ describe("state machine oracle (xstate + fast-check)", () => {
       pending: model.pending === null ? null : { ...model.pending, position: position(model.pending.mutation, model.pending.position) },
     };
   };
-  const begun = (model: Model, event: OracleEvent, returnStage: string, id: bigint): Model => ({
+  const begun = (model: Model, event: OracleEvent, row: any, draft: Key | null): Model => ({
     ...model,
-    id,
+    id: row.from === "inactive" ? model.id + 1n : model.id,
     generation: model.generation + 1,
-    pending: { mutation: event.mutation!, position: event.position!, original: event.original!, value: model.accepted.find((draft) => draft.mutation === event.mutation)?.value ?? event.original!, returnStage },
+    pending: {
+      mutation: event.mutation!,
+      position: event.position!,
+      original: event.original!,
+      value: draft ?? model.accepted.find((accepted) => accepted.mutation === event.mutation)?.value ?? event.original!,
+      returnStage: row.from === "editing" ? model.pending!.returnStage : row.from,
+    },
   });
   const resumed = (model: Model, returnStage: string): Model => {
     const next = { ...model, pending: null };
@@ -301,11 +345,16 @@ describe("state machine oracle (xstate + fast-check)", () => {
   };
 
   const assignments: Record<string, (model: Model, event: OracleEvent, row: any) => Model> = {
-    begin: (model, event, row) => begun(model, event, row.from === "editing" ? model.pending!.returnStage : row.from, row.from === "inactive" ? model.id + 1n : model.id),
+    begin: (model, event, row) => begun(model, event, row, null),
+    beginWithdrawn: (model, event, row) => begun(model, event, row, "withdrawn"),
     draft: (model, event) => ({ ...model, pending: { ...model.pending!, value: event.value! } }),
     withdraw: (model) => ({ ...model, pending: { ...model.pending!, value: "withdrawn" } }),
     accept: (model) => (unchanged(model) ? resumed(model, model.pending!.returnStage) : replayed({ ...model, accepted: acceptedAfter(model), pending: null })),
     discard: (model) => resumed(model, model.pending!.returnStage),
+    restore: (model, event) => {
+      const accepted = model.accepted.filter((draft) => draft.mutation !== event.mutation);
+      return accepted.length === 0 ? cleared(model) : replayed({ ...model, accepted });
+    },
     replayProgressed: (model, event) => ({ ...model, progress: event.value! }),
     replayCompleted: (model, event) => ({ ...model, report: event.report!, progress: null }),
     replayCancelled: (model) => ({ ...model, progress: null, fault: "timeTravel.cancelled" }),
@@ -336,7 +385,7 @@ describe("state machine oracle (xstate + fast-check)", () => {
   const initialModel = (session: M.TimeTravelSession): Model => ({
     id: session.id,
     generation: session.generation,
-    base: M.timeTravelBytesToHex(session.base.contentRevision) + `@${session.base.storeGeneration}`,
+    base: M.timeTravelBytesToHex(session.base.contentRevision),
     accepted: session.accepted.map((draft) => ({ mutation: draft.target.mutation, position: draft.target.position, value: keyOf(draft.replacement) })),
     pending:
       session.pending === null
@@ -352,9 +401,12 @@ describe("state machine oracle (xstate + fast-check)", () => {
     const type = M.timeTravelEventKey(event);
     switch (event.type) {
       case "begin":
+      case "beginWithdrawn":
         return { type, mutation: event.target.mutation, position: event.target.position, original: keyOf(event.original) };
       case "draft":
         return { type, generation: event.generation, value: keyOf(event.replacement) };
+      case "restore":
+        return { type, generation: event.generation, mutation: event.target };
       case "replayProgressed":
         return { type, generation: event.generation, value: `${event.done}/${event.total}` };
       case "replayCompleted":
@@ -363,7 +415,7 @@ describe("state machine oracle (xstate + fast-check)", () => {
       case "finalizeFaulted":
         return { type, generation: event.generation, code: event.code };
       case "baseMoved":
-        return { type, base: M.timeTravelBytesToHex(event.base.contentRevision) + `@${event.base.storeGeneration}`, positions: event.positions.map((target) => [target.mutation, target.position]) };
+        return { type, base: M.timeTravelBytesToHex(event.base.contentRevision), positions: event.positions.map((target) => [target.mutation, target.position]) };
       case "choose":
         return { type, generation: event.generation, ...(event.choice.kind === "alternative" ? { name: event.choice.name } : {}) };
       case "exit":
@@ -406,7 +458,7 @@ describe("state machine oracle (xstate + fast-check)", () => {
   const reports = { clean: law.contexts["reviewing.ready"].report, blocking: law.contexts["reviewing.blocking"].report };
   const codes = ["replay.targetMissing", "vcs.rejected", "", "vcs rejected", "x".repeat(257), "vcs\u0085rejected"];
   const names = ["Edited history", " padded ", "", " \u00a0", "\u0085", "ä".repeat(129), "ä".repeat(128)];
-  const bases = [0, 1, 2].map((index) => ({ storeGeneration: BigInt(10 + index), contentRevision: new Uint8Array(32).fill(index + 1) }));
+  const bases = [0, 1, 2].map((index) => ({ contentRevision: new Uint8Array(32).fill(index + 1) }));
 
   const pick = fc.record({
     key: fc.oneof(...M.TIME_TRAVEL_EVENT_KEYS.map((key) => ({ arbitrary: fc.constant(key), weight: key === "baseMoved" ? 3 : 1 }))),
@@ -434,12 +486,15 @@ describe("state machine oracle (xstate + fast-check)", () => {
         const generation = session.generation + choice.stale;
         const event: M.TimeTravelEvent = (() => {
           switch (choice.key) {
-            case "begin": {
+            case "begin":
+            case "beginWithdrawn": {
               const mutation = choice.mutation === "accepted" ? (session.accepted[0]?.target.mutation ?? "a") : choice.mutation;
-              return { type: "begin", target: { mutation, position: positions[mutation]! }, original: originals[mutation]! };
+              return { type: choice.key, target: { mutation, position: positions[mutation]! }, original: originals[mutation]! };
             }
             case "draft":
               return { type: "draft", generation, replacement: choice.value < 0 ? originals[session.pending?.target.mutation ?? "a"]! : values[choice.value]! };
+            case "restore":
+              return { type: "restore", generation, target: choice.mutation === "accepted" ? (session.accepted[0]?.target.mutation ?? "a") : choice.mutation };
             case "replayProgressed":
               return { type: "replayProgressed", generation, done: choice.done, total: 4 };
             case "replayCompleted":

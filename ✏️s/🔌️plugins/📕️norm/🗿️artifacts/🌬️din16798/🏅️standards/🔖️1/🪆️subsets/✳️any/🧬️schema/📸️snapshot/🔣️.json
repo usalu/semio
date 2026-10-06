@@ -496,7 +496,8 @@
             },
             "widget": "stepper",
             "unit": "kg/h",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1
           }
         },
         "humidificationProvidedKgH": {
@@ -508,7 +509,8 @@
             },
             "widget": "stepper",
             "unit": "kg/h",
-            "precision": 2
+            "precision": 2,
+            "step": 0.1
           }
         },
         "fanQVM3S": {
@@ -520,7 +522,8 @@
             },
             "widget": "stepper",
             "unit": "m³/s",
-            "precision": 3
+            "precision": 3,
+            "step": 0.01
           }
         },
         "fanTRunH": {
@@ -532,7 +535,8 @@
             },
             "widget": "stepper",
             "unit": "h",
-            "precision": 1
+            "precision": 1,
+            "step": 0.5
           }
         },
         "ductClass": {
@@ -558,7 +562,8 @@
             },
             "widget": "stepper",
             "unit": "Pa",
-            "precision": 0
+            "precision": 0,
+            "step": 50
           }
         },
         "ductLeakageM3SM2": {

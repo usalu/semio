@@ -10,10 +10,63 @@
   ],
   "properties": {
     "width": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Page width",
+          "de": "Seitenbreite"
+        },
+        "description": {
+          "en": "Width of the page in PDF points (1/72 inch); the snaps are A5, A4, Letter, A3 and A2.",
+          "de": "Breite der Seite in PDF-Punkten (1/72 Zoll); die Rastpunkte sind A5, A4, Letter, A3 und A2."
+        },
+        "unit": "pt",
+        "step": 1,
+        "precision": 2,
+        "softMin": 72,
+        "softMax": 3370,
+        "snaps": [
+          419.53,
+          595.28,
+          612,
+          841.89,
+          1190.55
+        ],
+        "group": "value",
+        "order": 10
+      }
     },
     "height": {
-      "type": "number"
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Page height",
+          "de": "Seitenhöhe"
+        },
+        "description": {
+          "en": "Height of the page in PDF points (1/72 inch); the snaps are A5, Letter, A4, Legal, A3 and A2.",
+          "de": "Höhe der Seite in PDF-Punkten (1/72 Zoll); die Rastpunkte sind A5, Letter, A4, Legal, A3 und A2."
+        },
+        "unit": "pt",
+        "step": 1,
+        "precision": 2,
+        "softMin": 72,
+        "softMax": 4768,
+        "snaps": [
+          595.28,
+          792,
+          841.89,
+          1008,
+          1190.55,
+          1683.78
+        ],
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

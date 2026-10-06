@@ -2,7 +2,7 @@ import {objSnapshotToSqliteDatabase,objSnapshotFromSqliteDatabase,objSnapshotVal
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import ieee from "../../../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🧫️fixtures/🪶️sqlite/🔢️ieee754/🔣️.json";
+import ieee from "../../../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔢️ieee754/🔣️.json";
 test("OBJ public package exposes typed queryable SQLite snapshot I/O",async()=>{
  const snapshot:ObjSnapshot={schema:"public OBJ",vertices:[],texcoords:[],normals:[],faces:[],groups:[],objects:[],usemtl:[],smoothingGroups:[],unknownStatements:[{lineIndex:18446744073709551615n,raw:"public source"}]};
  const database=await objSnapshotToSqliteDatabase(snapshot);

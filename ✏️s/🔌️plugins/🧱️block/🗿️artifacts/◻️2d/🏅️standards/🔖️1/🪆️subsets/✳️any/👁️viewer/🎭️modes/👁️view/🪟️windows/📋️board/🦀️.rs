@@ -27,6 +27,7 @@ pub const BODY_KEY: &str = "block2d.view.board";
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::block2d::create_block2d_viewer`.
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
+        initial_utility_id: None,
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Node Kind", "Knotenart"),
         body_key: BODY_KEY.into(),

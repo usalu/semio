@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::empty_block2d_snapshot;
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_block2d_snapshot;
 use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule};
 use protocol::MutationDiff;
 use protocol::SemanticMutation;

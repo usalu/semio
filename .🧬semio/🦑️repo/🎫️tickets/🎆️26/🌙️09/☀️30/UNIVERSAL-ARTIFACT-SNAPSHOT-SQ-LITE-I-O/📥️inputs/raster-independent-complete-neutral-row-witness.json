@@ -1,0 +1,772 @@
+{
+  "schema": "semio.raster.sqlite.independent-complete-domain.v1",
+  "qualification": "hand-authored semantic rows from actual neutral owner; no first-party projector or native execution",
+  "normalization": {
+    "ids": "semantic identities resolved by document/layer parent+ordinal and intrinsic edge ordinal joins; raw database surrogate IDs are not pinned",
+    "integers": "all SQLite INTEGER payloads normalize to decimal strings, except boolean/ordinal shown as safe integers",
+    "bytes": "octet arrays",
+    "real": "readable numeric value; exact IEEE bits decimal companion controls identity"
+  },
+  "tables": {
+    "raster_document": {
+      "columns": [
+        "id",
+        "schema",
+        "artifact_id",
+        "title"
+      ],
+      "rows": [
+        [
+          "document",
+          "raster-private-schema\u0000",
+          "",
+          ""
+        ]
+      ],
+      "count": 1
+    },
+    "raster_scalar64": {
+      "columns": [
+        "id",
+        "value",
+        "bits",
+        "class"
+      ],
+      "rows": [
+        [
+          "layer/0/mask/a",
+          4,
+          "4616189618054758400",
+          "finite"
+        ],
+        [
+          "layer/0/mask/b",
+          3,
+          "4613937818241073152",
+          "finite"
+        ],
+        [
+          "layer/0/mask/c",
+          2,
+          "4611686018427387904",
+          "finite"
+        ],
+        [
+          "layer/0/mask/d",
+          1,
+          "4607182418800017408",
+          "finite"
+        ],
+        [
+          "layer/0/mask/x",
+          6,
+          "4618441417868443648",
+          "finite"
+        ],
+        [
+          "layer/0/mask/y",
+          5,
+          "4617315517961601024",
+          "finite"
+        ],
+        [
+          "layer/0/transform/a",
+          3,
+          "4613937818241073152",
+          "finite"
+        ],
+        [
+          "layer/0/transform/b",
+          4,
+          "4616189618054758400",
+          "finite"
+        ],
+        [
+          "layer/0/transform/c",
+          5,
+          "4617315517961601024",
+          "finite"
+        ],
+        [
+          "layer/0/transform/d",
+          6,
+          "4618441417868443648",
+          "finite"
+        ],
+        [
+          "layer/0/transform/x",
+          1,
+          "4607182418800017408",
+          "finite"
+        ],
+        [
+          "layer/0/transform/y",
+          -2,
+          "-4611686018427387904",
+          "finite"
+        ],
+        [
+          "layer/1/0/transform/a",
+          3,
+          "4613937818241073152",
+          "finite"
+        ],
+        [
+          "layer/1/0/transform/b",
+          4,
+          "4616189618054758400",
+          "finite"
+        ],
+        [
+          "layer/1/0/transform/c",
+          5,
+          "4617315517961601024",
+          "finite"
+        ],
+        [
+          "layer/1/0/transform/d",
+          6,
+          "4618441417868443648",
+          "finite"
+        ],
+        [
+          "layer/1/0/transform/x",
+          1,
+          "4607182418800017408",
+          "finite"
+        ],
+        [
+          "layer/1/0/transform/y",
+          -2,
+          "-4611686018427387904",
+          "finite"
+        ],
+        [
+          "layer/1/transform/a",
+          3,
+          "4613937818241073152",
+          "finite"
+        ],
+        [
+          "layer/1/transform/b",
+          4,
+          "4616189618054758400",
+          "finite"
+        ],
+        [
+          "layer/1/transform/c",
+          5,
+          "4617315517961601024",
+          "finite"
+        ],
+        [
+          "layer/1/transform/d",
+          6,
+          "4618441417868443648",
+          "finite"
+        ],
+        [
+          "layer/1/transform/x",
+          1,
+          "4607182418800017408",
+          "finite"
+        ],
+        [
+          "layer/1/transform/y",
+          -2,
+          "-4611686018427387904",
+          "finite"
+        ],
+        [
+          "layer/2/transform/a",
+          3,
+          "4613937818241073152",
+          "finite"
+        ],
+        [
+          "layer/2/transform/b",
+          4,
+          "4616189618054758400",
+          "finite"
+        ],
+        [
+          "layer/2/transform/c",
+          5,
+          "4617315517961601024",
+          "finite"
+        ],
+        [
+          "layer/2/transform/d",
+          6,
+          "4618441417868443648",
+          "finite"
+        ],
+        [
+          "layer/2/transform/x",
+          1,
+          "4607182418800017408",
+          "finite"
+        ],
+        [
+          "layer/2/transform/y",
+          -2,
+          "-4611686018427387904",
+          "finite"
+        ],
+        [
+          "value/i4/scalar",
+          0,
+          "-9223372036854775808",
+          "finite"
+        ]
+      ],
+      "count": 31
+    },
+    "raster_scalar32": {
+      "columns": [
+        "id",
+        "value",
+        "bits",
+        "class"
+      ],
+      "rows": [
+        [
+          "layer/0/opacity",
+          0.5,
+          "1056964608",
+          "finite"
+        ],
+        [
+          "layer/1/0/opacity",
+          0.5,
+          "1056964608",
+          "finite"
+        ],
+        [
+          "layer/1/opacity",
+          0.5,
+          "1056964608",
+          "finite"
+        ],
+        [
+          "layer/2/opacity",
+          0.5,
+          "1056964608",
+          "finite"
+        ]
+      ],
+      "count": 4
+    },
+    "raster_asset": {
+      "columns": [
+        "id",
+        "document",
+        "ordinal",
+        "key",
+        "child_id",
+        "artifact_kind",
+        "standard",
+        "subset",
+        "artifact_id"
+      ],
+      "rows": [
+        [
+          "asset/0",
+          "document",
+          0,
+          "",
+          "",
+          "!@/",
+          "",
+          "?/#",
+          "\u0000"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_layer": {
+      "columns": [
+        "id",
+        "document",
+        "parent",
+        "ordinal",
+        "kind",
+        "layer_id",
+        "name",
+        "visible",
+        "locked",
+        "opacity",
+        "blend_mode"
+      ],
+      "rows": [
+        [
+          "layer/0",
+          "document",
+          null,
+          0,
+          "pixel",
+          "",
+          "literal name\u0000",
+          0,
+          1,
+          "layer/0/opacity",
+          "arbitrary!"
+        ],
+        [
+          "layer/1",
+          "document",
+          null,
+          1,
+          "group",
+          "",
+          "literal name\u0000",
+          0,
+          1,
+          "layer/1/opacity",
+          "arbitrary!"
+        ],
+        [
+          "layer/1/0",
+          null,
+          "layer/1",
+          0,
+          "group",
+          "",
+          "literal name\u0000",
+          0,
+          1,
+          "layer/1/0/opacity",
+          "arbitrary!"
+        ],
+        [
+          "layer/2",
+          "document",
+          null,
+          2,
+          "adjustment",
+          "",
+          "literal name\u0000",
+          0,
+          1,
+          "layer/2/opacity",
+          "arbitrary!"
+        ]
+      ],
+      "count": 4
+    },
+    "raster_transform": {
+      "columns": [
+        "id",
+        "x",
+        "y",
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "rows": [
+        [
+          "layer/0",
+          "layer/0/transform/x",
+          "layer/0/transform/y",
+          "layer/0/transform/a",
+          "layer/0/transform/b",
+          "layer/0/transform/c",
+          "layer/0/transform/d"
+        ],
+        [
+          "layer/1",
+          "layer/1/transform/x",
+          "layer/1/transform/y",
+          "layer/1/transform/a",
+          "layer/1/transform/b",
+          "layer/1/transform/c",
+          "layer/1/transform/d"
+        ],
+        [
+          "layer/1/0",
+          "layer/1/0/transform/x",
+          "layer/1/0/transform/y",
+          "layer/1/0/transform/a",
+          "layer/1/0/transform/b",
+          "layer/1/0/transform/c",
+          "layer/1/0/transform/d"
+        ],
+        [
+          "layer/2",
+          "layer/2/transform/x",
+          "layer/2/transform/y",
+          "layer/2/transform/a",
+          "layer/2/transform/b",
+          "layer/2/transform/c",
+          "layer/2/transform/d"
+        ]
+      ],
+      "count": 4
+    },
+    "raster_mask": {
+      "columns": [
+        "id",
+        "enabled",
+        "linked",
+        "invert",
+        "width",
+        "height",
+        "image_key"
+      ],
+      "rows": [
+        [
+          "layer/0",
+          0,
+          1,
+          1,
+          "4294967295",
+          "0",
+          "literal!@/mask"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_mask_transform": {
+      "columns": [
+        "id",
+        "x",
+        "y",
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "rows": [
+        [
+          "layer/0",
+          "layer/0/mask/x",
+          "layer/0/mask/y",
+          "layer/0/mask/a",
+          "layer/0/mask/b",
+          "layer/0/mask/c",
+          "layer/0/mask/d"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_pixel": {
+      "columns": [
+        "id",
+        "width",
+        "height",
+        "image_key"
+      ],
+      "rows": [
+        [
+          "layer/0",
+          "4294967295",
+          "0",
+          ""
+        ]
+      ],
+      "count": 1
+    },
+    "raster_group": {
+      "columns": [
+        "id"
+      ],
+      "rows": [
+        [
+          "layer/1"
+        ],
+        [
+          "layer/1/0"
+        ]
+      ],
+      "count": 2
+    },
+    "raster_adjustment": {
+      "columns": [
+        "id",
+        "adjustment_kind"
+      ],
+      "rows": [
+        [
+          "layer/2",
+          "private effect"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_parameter": {
+      "columns": [
+        "id",
+        "adjustment",
+        "ordinal",
+        "key",
+        "root"
+      ],
+      "rows": [
+        [
+          "parameter/0",
+          "layer/2",
+          0,
+          "",
+          "value/root"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_value": {
+      "columns": [
+        "id",
+        "kind"
+      ],
+      "rows": [
+        [
+          "value/i0",
+          "null"
+        ],
+        [
+          "value/i1",
+          "boolean"
+        ],
+        [
+          "value/i2",
+          "text"
+        ],
+        [
+          "value/i3",
+          "bytes"
+        ],
+        [
+          "value/i4",
+          "float"
+        ],
+        [
+          "value/m0",
+          "signed"
+        ],
+        [
+          "value/m1",
+          "unsigned"
+        ],
+        [
+          "value/m2",
+          "array"
+        ],
+        [
+          "value/root",
+          "object"
+        ]
+      ],
+      "count": 9
+    },
+    "raster_boolean": {
+      "columns": [
+        "id",
+        "value"
+      ],
+      "rows": [
+        [
+          "value/i1",
+          0
+        ]
+      ],
+      "count": 1
+    },
+    "raster_signed": {
+      "columns": [
+        "id",
+        "value"
+      ],
+      "rows": [
+        [
+          "value/m0",
+          "-9223372036854775808"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_unsigned": {
+      "columns": [
+        "id",
+        "high",
+        "low"
+      ],
+      "rows": [
+        [
+          "value/m1",
+          "4294967295",
+          "4294967295"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_float": {
+      "columns": [
+        "id",
+        "scalar"
+      ],
+      "rows": [
+        [
+          "value/i4",
+          "value/i4/scalar"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_text": {
+      "columns": [
+        "id",
+        "value"
+      ],
+      "rows": [
+        [
+          "value/i2",
+          "intrinsic text\u0000"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_bytes": {
+      "columns": [
+        "id",
+        "value"
+      ],
+      "rows": [
+        [
+          "value/i3",
+          [
+            0,
+            127,
+            255
+          ]
+        ]
+      ],
+      "count": 1
+    },
+    "raster_array": {
+      "columns": [
+        "id"
+      ],
+      "rows": [
+        [
+          "value/m2"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_item": {
+      "columns": [
+        "id",
+        "array",
+        "ordinal",
+        "value"
+      ],
+      "rows": [
+        [
+          "item/0",
+          "value/m2",
+          0,
+          "value/i0"
+        ],
+        [
+          "item/1",
+          "value/m2",
+          1,
+          "value/i1"
+        ],
+        [
+          "item/2",
+          "value/m2",
+          2,
+          "value/i2"
+        ],
+        [
+          "item/3",
+          "value/m2",
+          3,
+          "value/i3"
+        ],
+        [
+          "item/4",
+          "value/m2",
+          4,
+          "value/i4"
+        ]
+      ],
+      "count": 5
+    },
+    "raster_object": {
+      "columns": [
+        "id"
+      ],
+      "rows": [
+        [
+          "value/root"
+        ]
+      ],
+      "count": 1
+    },
+    "raster_member": {
+      "columns": [
+        "id",
+        "object",
+        "ordinal",
+        "key",
+        "value"
+      ],
+      "rows": [
+        [
+          "member/0",
+          "value/root",
+          0,
+          "duplicate",
+          "value/m0"
+        ],
+        [
+          "member/1",
+          "value/root",
+          1,
+          "duplicate",
+          "value/m1"
+        ],
+        [
+          "member/2",
+          "value/root",
+          2,
+          "",
+          "value/m2"
+        ]
+      ],
+      "count": 3
+    }
+  },
+  "emptyFamilies": [],
+  "edits": [
+    {
+      "path": "layer/0.name",
+      "expected": "independent pixel 日本"
+    },
+    {
+      "path": "layer/0.transform.x",
+      "expected": 8,
+      "bits": "4620693217682128896",
+      "class": "finite"
+    },
+    {
+      "path": "value/i3",
+      "expected": [
+        255,
+        0,
+        127
+      ]
+    }
+  ],
+  "expectedMutationPath": {
+    "pixel": "snapshot.layers[0] Pixel {name, transform.x}",
+    "bytes": "snapshot.layers[2] Adjustment.params empty key -> Object member index2 -> Array item index3 -> Bytes"
+  },
+  "holds": [
+    "global34 capture/frame publication",
+    "asset child content",
+    "allocator census"
+  ]
+}

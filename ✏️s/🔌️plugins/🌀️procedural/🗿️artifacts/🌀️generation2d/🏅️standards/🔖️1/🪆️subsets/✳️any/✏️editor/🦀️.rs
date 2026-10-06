@@ -18,7 +18,7 @@ use crate::editor::generation2d::modes::{edit, generate};
 use crate::editor::generation2d::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::generation2d::terminology::{generation2d_labels, Generation2dLabels};
 use crate::editor::generation2d::transient::{Generation2dTransient, Generation2dTransientMutation, SetGenerationPreview};
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation2dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::{artifact_kind, Generation2dSnapshot, GENERATION2D_DIALECT, GENERATION_2D_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
@@ -883,7 +883,6 @@ struct Generation2dArtifactStorePreparationFactory;
 struct Generation2dArtifactStorePreparation {
     base: Option<store::SnapshotRead<Generation2dSnapshot>>,
     mutation: Option<Generation2dMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -893,9 +892,9 @@ struct Generation2dArtifactStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparationFactory {
-    fn preflight(&self, mutation: &Generation2dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("generation2d-artifact-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &Generation2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("generation2d-artifact-lane".into());
         }
         admit_generation2d_artifact_mutation(mutation)
     }
@@ -917,7 +916,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generat
         Ok(Box::new(Generation2dArtifactStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -975,11 +973,8 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
         }
         if let Some(mutation) = self.mutation.take() {
-            crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_retire_mutation_cold(mutation);
+            crate::standards::v1::subsets::any::schema::mutations::generation2d_retire_mutation_cold(mutation);
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: self.retained_bytes });
-        }
-        if self.description.take().is_some() {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
@@ -994,7 +989,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ArtifactStorePreparation
@@ -1023,9 +1018,9 @@ fn generation2d_config_publication_bytes(mutation: &Generation2dConfigMutation) 
 struct Generation2dConfigPreparationFactory;
 
 impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparationFactory {
-    fn preflight(&self, mutation: &Generation2dConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > 64) {
-            return Err("generation2d-config-lane-or-description-envelope".into());
+    fn preflight(&self, mutation: &Generation2dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("generation2d-config-lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, generation2d_config_publication_bytes(mutation)?))
     }
@@ -1038,7 +1033,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
             || request.authority.actor().len() > 64
-            || self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+            || self.preflight(&request.mutation, request.lane).is_err()
             || generation2d_config_text_bytes(request.base.get()) > GENERATION2D_CONFIG_TEXT_MAXIMUM_BYTES
         {
             return Err(request);
@@ -1046,7 +1041,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
         Ok(Box::new(Generation2dConfigPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -1061,7 +1055,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
 struct Generation2dConfigPreparation {
     base: Option<store::SnapshotRead<Generation2dConfig>>,
     mutation: Option<Generation2dConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -1122,7 +1115,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
         if !self.closing || grant.maximum_items == 0 || grant.maximum_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES {
             return Ok(store::SnapshotRetirementStep::Blocked);
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES });
         }
         if let Some(base) = self.base.take() {
@@ -1138,7 +1131,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 🧵️Preparation
@@ -1202,7 +1195,7 @@ impl Generation2dImportJob {
 
     fn numeric_row(snapshot: &Generation2dSnapshot, key: &str, number: f64) -> Option<Generation2dMutation> {
         let semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. } = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == key)? else { return None };
-        Some(crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step }))
+        Some(crate::standards::v1::subsets::any::schema::mutations::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider { id: id.clone(), label: label.clone(), value: number, min: *min, max: *max, step: *step }))
     }
 
     fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
@@ -1316,7 +1309,7 @@ impl ArtifactReservedJob for Generation2dImportJob {
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(mutation) = self.mutations.pop() {
-            crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_retire_mutation_cold(mutation);
+            crate::standards::v1::subsets::any::schema::mutations::generation2d_retire_mutation_cold(mutation);
             return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if self.mutations.capacity() > 0 {
@@ -1437,7 +1430,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_envelope_decode_owner_bundle())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_envelope_decode_owner_bundle())
     }
 
     /// 🧠️ One retained `FlowEvalSession` per app instance — see [`Generation2dInstanceOperationOwner`].
@@ -1446,7 +1439,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
-        Some(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_document_store_owners())
+        Some(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_document_store_owners())
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1462,13 +1455,13 @@ impl ArtifactEditor for Generation2dPlayApp {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_document_store_initialization_job(envelope, operation, generation))
+        Ok(crate::standards::v1::subsets::any::io::binary::mutations::generation2d_document_store_initialization_job(envelope, operation, generation))
     }
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_validate_atomic_publication_authority(operation, generation, live_generation)
+        crate::standards::v1::subsets::any::io::binary::mutations::generation2d_validate_atomic_publication_authority(operation, generation, live_generation)
             .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation2d atomic publication authority is absent or stale"))?;
-        crate::standards::v1::subsets::any::schema::mutations::binary::generation2d_release_app_publication_authority(operation);
+        crate::standards::v1::subsets::any::io::binary::mutations::generation2d_release_app_publication_authority(operation);
         Ok(())
     }
 
@@ -1609,7 +1602,7 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
 
     fn initial_snapshot() -> Generation2dSnapshot {
-        crate::standards::v1::subsets::any::schema::default_snapshot()
+        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -1852,7 +1845,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         match port {
             "drawing:out" => {
                 let eval_json = crate::standards::v1::subsets::any::schema::evaluate_generation_preview(&doc.snapshot.host_snapshot, &semio_framework_artifact_playbook_playbook::PlaybookValues::new());
-                let layers_json = crate::standards::v1::subsets::any::schema::generation_output_layers(&doc.snapshot.host_snapshot, &eval_json);
+                let layers_json = crate::standards::v1::subsets::any::io::text::snapshot::generation_output_layers(&doc.snapshot.host_snapshot, &eval_json);
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
             "artifact:out" => {
@@ -1884,7 +1877,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             let Some(number) = value.as_f64() else { continue };
             let Some(widget) = doc.snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_key) else { continue };
             if let semio_framework_artifact_flow_flow::Widget::InputSlider { id, label, min, max, step, .. } = widget {
-                operations.push(crate::standards::v1::subsets::any::schema::mutations::text::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider {
+                operations.push(crate::standards::v1::subsets::any::schema::mutations::replace_widget(semio_framework_artifact_flow_flow::Widget::InputSlider {
                     id: id.clone(),
                     label: label.clone(),
                     value: number,

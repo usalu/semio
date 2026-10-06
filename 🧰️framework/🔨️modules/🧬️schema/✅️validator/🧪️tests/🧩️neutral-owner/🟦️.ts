@@ -3,7 +3,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync
 import { resolve, join, relative, dirname } from "node:path";
 import * as toml from "@iarna/toml";
 import { runOwnedCommand } from "../../../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { proveSchemaValidatorOwnershipV1 } from "../../📏️ownership/🟦️.ts";
+import { proveSchemaValidatorOwnershipV1 } from "../📏️ownership/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 const packagePath = "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust";

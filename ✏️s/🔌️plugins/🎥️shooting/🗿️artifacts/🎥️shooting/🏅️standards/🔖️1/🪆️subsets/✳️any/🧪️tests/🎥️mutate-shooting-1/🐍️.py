@@ -114,7 +114,7 @@ def _leaf_root(kind: str) -> str:
 
 
 def _read_json(ctx: Context, uri: str):
-    return json.loads(ctx.fixture_bytes(uri))
+    return json.loads(ctx.input_bytes(uri))
 
 
 def unwrap(wire):

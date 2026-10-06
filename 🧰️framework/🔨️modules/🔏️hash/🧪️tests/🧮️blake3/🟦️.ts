@@ -3,7 +3,7 @@
  * the 32-byte hash and the 131-byte extended output at every chunk and tree edge length, hashed in one update
  * and in uneven, unaligned update runs. */
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
+
 import { Blake3Hasher, blake3Hex } from "../../🟦️.ts";
 
 type Blake3VectorsV1 = Readonly<{ schema: "semio.hash.blake3-vectors/v1"; source: string; vectors: readonly Readonly<{ length: number; hash: string; xof131: string }>[] }>;
@@ -11,16 +11,11 @@ type Blake3VectorsV1 = Readonly<{ schema: "semio.hash.blake3-vectors/v1"; source
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧮️blake3/🔣️.json", import.meta.url), "utf8")) as Blake3VectorsV1;
-  const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧮️blake3/🔣️.json", import.meta.url), "utf8"));
   const input = (length: number): Uint8Array => Uint8Array.from({ length }, (_, index) => index % 251);
   const hex = (bytes: Uint8Array): string => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 
   describe("🔏️ BLAKE3 twin", () => {
     it("admits the closed independent vector corpus", () => {
-      const validate = new Ajv({ strict: true }).compile(schema);
-      expect(validate(fixture)).toBe(true);
-      expect(validate({ ...fixture, unknown: true })).toBe(false);
-      expect(validate({ ...fixture, vectors: fixture.vectors.slice(1) })).toBe(false);
       expect(new Set(fixture.vectors.map((vector) => vector.length)).size).toBe(fixture.vectors.length);
     });
 

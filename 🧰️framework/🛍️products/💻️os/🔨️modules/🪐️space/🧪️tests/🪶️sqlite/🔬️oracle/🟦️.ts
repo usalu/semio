@@ -2,6 +2,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync,existsSync} from "node:fs";
 import Ajv from "ajv";
+
 import {join} from "node:path";
 import {parseSqliteDatabaseSchema,exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 type Fixture={rows:Record<string,(string|number|null)[][]>;rowsTotal:number;identityOffset:number;edit:{table:string;column:string;value:string};blobSizes?:string[];clocks?:{actor:string;physicalMs:string;logical:string}[];interiorControl?:{textUnit:string;repeat:number;utf8Bytes:number}};
@@ -46,5 +47,52 @@ export function authoredSnapshotPreflightContract(directory:string):void{
    expect(database.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(database.query("PRAGMA foreign_key_check").all()).toEqual([]);
    const reopened=Database.deserialize(database.serialize());try{expect(reopened.query("SELECT "+quote(facet.column)+" AS literal FROM "+quote(facet.table)).all().every(row=>(row as {literal:string}).literal===text)).toBe(true);}finally{reopened.close();}
   }finally{database.close();}
+ });
+}
+
+/** 🛂️ Independently counts every authored scalar and literal text role using SQLite storage classes. */
+export function authoredSnapshotSemanticContract(directory:string):void{
+ test("closed complete semantic cells preserve every independently edited authored text role",async()=>{
+  const plan=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🪶️sqlite/🛂️semantic/🔣️.json"),"utf8")) as {schema:string;owner:string;rows:number;baselineBytes:number;tableRows:Record<string,number>;text:string;textBytes:number;cases:{id:string;table:string;column:number;row:number;path:(string|number)[];previous:string;semanticBytes:number}[]};
+  
+  
+  
+  
+  expect(Buffer.byteLength(plan.text,"utf8")).toBe(plan.textBytes);
+  const fixture=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🪶️sqlite/🔣️.json"),"utf8")) as Fixture;
+  const sql=readFileSync(join(directory,"🪶️sqlite/🗄️.sql"),"utf8");
+  const schema=parseSqliteDatabaseSchema(sql);
+  const original:SqliteDatabase={tables:schema.tables.map(table=>({...table,rows:fixture.rows[table.name]!.map(row=>({rowid:BigInt(row[0] as number),values:row.map(value=>typeof value==="number"?BigInt(value):value)}))}))};
+  function census(file:Uint8Array):{rows:number;bytes:number}{
+   const database=Database.deserialize(file);let rows=0,bytes=0;
+   try{
+    expect(database.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(database.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    for(const[table,count]of Object.entries(plan.tableRows)){
+     const names=(database.query("PRAGMA table_info("+quote(table)+")").all() as {name:string}[]).map(field=>field.name);
+     const cells=names.map(name=>{const field=quote(name);return "CASE typeof("+field+") WHEN 'integer' THEN 8 WHEN 'real' THEN 8 WHEN 'text' THEN length(CAST("+field+" AS BLOB)) WHEN 'blob' THEN length("+field+") ELSE 0 END";}).join("+");
+     const measured=database.query("SELECT COUNT(*) AS rows,COALESCE(SUM("+cells+"),0) AS bytes FROM "+quote(table)).get() as {rows:number;bytes:number};
+     expect(measured.rows).toBe(count);rows+=measured.rows;bytes+=measured.bytes;
+    }
+    return{rows,bytes};
+   }finally{database.close();}
+  }
+  expect(census(await exportSqliteDatabase(original))).toEqual({rows:plan.rows,bytes:plan.baselineBytes});
+  expect(new Set(plan.cases.map(sample=>sample.table+":"+sample.row+":"+sample.column)).size).toBe(plan.cases.length);
+  for(const sample of plan.cases){
+   const tables=original.tables.map(table=>({...table,rows:table.rows.map(row=>({...row,values:[...row.values]}))}));
+   const table=tables.find(table=>table.name===sample.table)!;const row=table.rows[sample.row]!;
+   expect(row.values[sample.column]).toBe(sample.previous);row.values[sample.column]=plan.text;
+   expect(sample.semanticBytes).toBe(plan.baselineBytes-Buffer.byteLength(sample.previous,"utf8")+plan.textBytes);
+   const value={tables};const file=await exportSqliteDatabase(value);
+   expect(census(file)).toEqual({rows:plan.rows,bytes:sample.semanticBytes});
+   expect(await importSqliteDatabase(file)).toEqual(value);
+   const independent=Database.deserialize(await exportSqliteDatabase(original));
+   try{
+    const field=(independent.query("PRAGMA table_info("+quote(sample.table)+")").all() as {name:string}[])[sample.column]!.name;
+    independent.query("UPDATE "+quote(sample.table)+" SET "+quote(field)+"=? WHERE id=?").run(plan.text,row.rowid);
+    expect(census(independent.serialize())).toEqual({rows:plan.rows,bytes:sample.semanticBytes});
+    expect(await importSqliteDatabase(independent.serialize())).toEqual(value);
+   }finally{independent.close();}
+  }
  });
 }

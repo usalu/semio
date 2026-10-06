@@ -6,7 +6,7 @@ async fn primary_asset_is_nonempty() {
 
 #[semio_framework_async_macros::async_test]
 async fn primary_asset_decodes_to_nonconforming_valve_dataset() {
-    use crate::standards::v1::subsets::any::schema::snapshot::decode_vdi3805_dsl;
+    use crate::standards::v1::subsets::any::io::text::snapshot::decode_vdi3805_dsl;
     use crate::nonconforming_valve_dataset;
     let text = include_str!("../../../../🖼️assets/🌶️nonconforming/🗣️.dsl.semio");
     let decoded = decode_vdi3805_dsl(text).expect("nonconforming dsl");

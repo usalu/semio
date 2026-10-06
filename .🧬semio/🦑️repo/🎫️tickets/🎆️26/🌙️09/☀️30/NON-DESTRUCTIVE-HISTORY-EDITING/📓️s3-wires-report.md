@@ -162,3 +162,118 @@ Not started / in progress, in order:
    `CanvasPointerUp.cancelled` (both hosts always send them: wgpu `sampled()`/`release()`, `Canvas2dHost` `samples`/`cancelled`),
    remove `samples_or_last` and the `[x, y]` fallback docs, delete the legacy laws at
    `🪟️windows/🕸️canvas/🫧️transient/🧪️tests/🔬️unit/🦀️.rs:417-436`.
+
+## Session 5 — 2026-10-05
+
+S5-GRAPHS-WIRES (successor of S4-WIRES-MATH; coordinator `⚪3f26aaa1…`). Main section: `📓️w3-t2-graphs-report.md`
+§ Session 5 (status log, foundation reds, F3, input declarations). Scratch `🗑️generated/s5-graphs-wires/`.
+
+### W5.0 Status (kept current)
+
+- 01:10 rule 46 repair-first: the wires files newer than S4's last section (21:50) are S4-WIRES-MATH's own 22:36–22:55
+  test/fixture wave and a 23:19 peer sweep over three command files and the crate root; no half-edit found by reading.
+- 01:11–01:17 wires `--lib` re-verified in the seven-crate batch: **0 errors, 161 warnings** (same count as 10-04 21:37).
+- 01:26 / 01:31 the `--lib --tests` batch gave no verdict twice (kernel, then `semio-framework-pack` red from the Codex
+  pack peer); cargo waits on `🗑️generated/coord/foundation.status`.
+- 01:3x design §22.8: the 5 inferred wires inputs declare `x-semio-ui` (W5.1).
+
+### W5.1 Changes
+
+- `A/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧬️schema/🧬️mutations/🖱️set-drag/🧬️schema/🔣️.json`: `zoom`
+  declares the log `Zoom` slider.
+- `A/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema/🔣️.json`: `camera`,
+  `camera.x`, `camera.y`, `camera.zoom` declare Camera / Pan X / Pan Y / Zoom. This file did not round-trip through the
+  2-space JSON form the other schemas use and is normalized to it (content otherwise unchanged).
+- Applied by `python3 T/🧪️s5-graphs-input-declarations.py --apply` (table and conventions in the graphs report §S5.6).
+
+### W5.2 Verification
+
+| Command | Result |
+| --- | --- |
+| seven-crate `cargo check … --lib --keep-going` (01:11–01:17, `check-lib-1.txt`) | wires 0 errors / 161 warnings |
+| `bun …/🧪️test/📜️script.ts schema mutation-inputs --under "✏️s/🔌️plugins/💡️reasoning" --inputs`, before → after | 5 declared + 2 inferred → **7 declared + 0 inferred**; residual 12 findings are all stale catalogue rows of the deleted parent leaves |
+| wires `--lib --tests` re-check (the schemas are embedded at compile time) | OWED (foundation red) |
+| `cargo test --lib` wires incl. F6 `child_history_edits_end_to_end`, F21 pointer-wire law; F4 `tool_run_tests::member` | OWED |
+| hub `semio-hub-reasoning` wasip2 | OWED (last green 10-04 21:49) |
+
+### T5. Tool-run law family — 9 reds of the shared plugin law run (10-05, 16:46 →)
+
+Coordinator job of the 16:50 resume: `tool_run` filter 33 passed / 9 failed on the shared plugin test binary
+(`📓️s5-plugin-law-run.md`). Scratch: `🗑️generated/s5-graphs-wires/tool-run/` and `…/tool-run-1.txt`.
+
+**Reproduced first, no build** (16:46:29–16:47:30, binary `…/semio-framework-plugin/b80951f2dbb7024a/out/semio_framework_plugin-b80951f2dbb7024a`
+of 16:38, `RUST_MIN_STACK=268435456 … --test-threads=4 tool_run`): **33 passed, 9 failed**, 60.6 s — the same nine.
+
+**None of the nine is a regression of wave B, N1, H / H2 or the press-identity wave.** `git diff HEAD` of the four tool-run
+files: the runtime's non-member logic is unchanged apart from fault-code literals; the two law files only lost
+`description: None`; the member region carries a peer rewrite (exact retirement of the member emission: `emission_owner`,
+`retired_emits`, `retired_emission_owners`, `retired_ops`).
+
+| Red(s) | Cause | Evidence |
+| --- | --- | --- |
+| `member_run_{ticks_compose…, pause_then_step…, abort_leaves…}` ("abort settles never settled; state Aborted"), `member_run_finalize_is_one_member_edit…` ("state Finalized") | **A terminal member run never settled — S4's own defect; these laws were written 10-04 and never run.** `release_provisional` → `ToolRunMemberRun::release` sets `rebase = true` and moves the composed read to `stale`; both make `is_work()` true and only `refresh_tool_run_member` clears them, but `drive_selected_tool_run` did nothing in `Finalized | Aborted | Faulted`. | Read from code. The first law passes every composition assertion (L198–205) and dies only at the abort pump; `pause_then_step` passes all three steps. |
+| `member_run_holds_at_most_the_member_ceiling_and_reports_the_cap` ("state Faulted" while running to the cap) | The run faults before it reaches the cap. `refresh_tool_run_member` turned EVERY refresh error into `fault_tool_run`, including the retryable `interactive-job.child-root-retirement-saturated`, which `admit_child_content_publication_span` documents as backpressure. A 2048-unit run retires one composed read per fold. **INFERRED, not observed**: the swallowed fault is not recorded anywhere (see "Not done"). | Read from code; a debugger attach was not possible (macOS Developer mode is disabled; I did not change it). |
+| `tool_run_settings_changed_fires_only…` (generation 0, expected 1), `tool_run_window_settings_reads_follow…` (0, expected 1), `tool_run_reconfigure_resume_retargets…` ("a resident job of a complete run is no work") | Baseline since 09-27 (`5bcb2da23da`), measured by W2A with temporary logs (`📓️w2-a-report.md` §6.4): one tick of n ops displaces n − 1 intermediate overlays, each alias retires over about 5 driver turns, and `drive_tool_run_turn` returned after ONE retirement unit and ran the generation watch only behind it. The watch starved past the laws' 8 turns; the complete run still had retirement work. | W2A's measurement (not re-measured by me); the code is unchanged since. |
+| `tool_run_panel_of_a_running_run_is_the_shell_fixture` | Stale fixture: `UiValue` serializes whole numbers as JSON integers (`json_integer`, in HEAD), the 09-15 fixture says `"generation": 0.0`. | Diff of the two values in `tool-run-1.txt`: exactly four `0` vs `0.0`. The wgpu panel law already expects `0`. |
+
+**Wave `tool-run-settle`** — `python3 T/🧪️s5-graphs-tool-run-settle.py --check | --apply | --restore [rust|fixture]`
+(explicit files, single-occurrence anchors, backups under `🗑️generated/s5-graphs-wires/tool-run/before/`):
+
+- `PLG/⏯️tool-run/🦀️.rs` (9 edits):
+  - `drive_tool_run_turn`: the generation watch of every run runs FIRST; `retire_tool_runs_until(deadline)` (new) retires
+    within the 4 ms turn wall budget instead of one unit per turn; the runs are driven only while nothing retires.
+  - `drive_selected_tool_run`: the watch call left the per-run share; the terminal arm calls `settle_tool_run_member`
+    (new): the terminal member's replaced reads retire and its overlay rests on the member head; a gone member clears.
+  - `refresh_tool_run_member`: a retryable refusal keeps the turn (`Ok(true)`) instead of faulting the run;
+    `refresh_member_overlay`: a replaced read that cannot retire yet waits in `stale`, the fold's result is kept.
+  - `ToolRunMemberRun::is_work`: released ops and published emissions queued for retirement are owed work.
+- `PLG/🧪️tests/🔬️tool-run/🦀️.rs` (1): the retarget law pumps until the run is complete AND quiet. The claim "a resident
+  job of a complete run is no work" still bites: a resident job that counted as work would never go quiet.
+- `PLG/🧪️tests/🧪️tool-run-member/🦀️.rs` (1): the member pump's failure names state, member op count, ledger work, step
+  reasons and a child-content admission refusal.
+- `PLG/🧫️fixtures/⏯️tool-run/🪧️panel-running.json` (4 lines): `0.0` → `0`. The text is byte-identical to what the law's
+  own writer emits (`SEMIO_TOOL_RUN_PANEL_OUT`, run with the existing binary into scratch at 17:02).
+
+| Step | Result |
+| --- | --- |
+| `… --check` against the live tree (17:05, 17:06) | would apply 12 edits in 4 files; fixture equals the writer's output |
+| `landing` hold 17:06:32 (≈ 1 s, apply-only, rule 67): `--apply rust` | applied 11 edits in 3 files; train line 17:06:32 |
+| `serve` hold 17:08:02 (rule 61): `--apply fixture` | applied 1 edit (4 lines) in 1 file; train line 17:08:02 |
+| Coordinator train (`train.status`) | `FRAMEWORK GREEN 17:12:07 through: 17:11:09 S5-LOAD detach` — a later line than both of mine, so the plugin lib compiles with the runtime change (non-test `--lib`; the train does not build the law files) |
+
+**Law run after the wave** (17:20:04–17:20:39). My own rebuild never started: build gate v6 stayed closed for 15 min (disk
+14–16 GiB under the 18 GiB test floor, 3+ shared cargos) and exited 5. S5-NESTED's rebuild of the SAME shared binary
+finished at 17:09 and contains the Rust part of the wave (symbols `retire_tool_runs_until` and `settle_tool_run_member`,
+both new law strings); it embeds the fixture as it was before 17:08. Run on a scratch copy of that binary (copy deleted):
+`RUST_MIN_STACK=268435456 <binary> --test-threads=4 tool_run` → **39 passed, 3 failed** (was 33 / 9), 31.3 s,
+`🗑️generated/s5-graphs-wires/tool-run-2.txt`.
+
+Green now (6 of the 9): three member laws that hung in `Aborted` (`ticks_compose…`, `pause_then_step…`,
+`abort_leaves…`) and the three watch / retarget laws (`tool_run_settings_changed…`, `tool_run_window_settings_reads…`,
+`tool_run_reconfigure_resume…`). The 33 laws that passed before still pass.
+
+| Remaining red (3) | Evidence from this run | Cause | State |
+| --- | --- | --- | --- |
+| `tool_run_panel_of_a_running_run_is_the_shell_fixture` | The embedded fixture still has 4× `0.0`; the rendered panel equals it as a JSON value once those are `0` (computed from `tool-run-2.txt`). | The 17:09 binary was compiled before the fixture landed (17:08:02 vs dep-info 17:07). | Fixture on disk since 17:08:02. **Green expected at the next rebuild, NOT observed.** |
+| `member_run_finalize_is_one_member_edit_carrying_the_run_transaction_and_one_undo_removes_it` | Now passes ONE member edit, the `TransactionRef` + group id on every op, the fresh-fold state, ONE history row, `op_count`, editable mutations; fails at the row label: `("Set count to 1 (+9)", "Anzahl auf 1 setzen (+9)")` instead of `("Toy member fill", "Spielfüllung im Mitglied")`. | History row label (`PLG` ≈28586): the arm that uses the already-resolved `tool_run_label` matches only rows with a parent edit (`(Some(_), _)`); a child-only row falls to the first-leaf arm, whose format is exactly the observed text. Design §21.1: the row keeps the tool label. | **STAGED, not landed** (activation flag back at 17:24): `python3 T/🧪️s5-graphs-tool-run-row-label.py --apply label` — one arm, `(Some(_), _)` → `_`; dry run clean. Undo assertion after it has never been reached. |
+| `member_run_holds_at_most_the_member_ceiling_and_reports_the_cap` | No longer faults: the run reaches the cap (4096 member ops, cap step reported). Fails at the final abort: `state Aborted; member ops 0; ledger work true; step reasons [65283]; child-content admission refusal Some("interactive-job.child-root-retirement-saturated")`, for 30 s. | NOT root-caused. After a 2048-unit run the 64-slot child-content retirement ring is full of retirements that release nothing, so the terminal run's last composed read can never be admitted for retirement. Which blocked state the ring's head is in is the missing fact. | Next evidence STAGED (test-only): `… --apply diagnostic` prints one ring step, whose `Blocked { reason }` names it. Owner: me, with the `ChildContentRetirement` owner (S5-NESTED / S5-RUNTIME). |
+
+**Not done / not verified**
+
+- No law run on a binary that embeds the new fixture or the label arm; `TOOL-RUN GREEN` is not reached: 39 / 3.
+- A faulted run still does not record WHY (`fault_tool_run` drops the fault at four sites): the "saturation faulted the
+  capped run" diagnosis above was inferred, then confirmed only indirectly (the run no longer faults and the same code
+  is what the admission probe reports). A run should carry its fault as a localized notice in the panel — follow-up.
+- A long member run still pays one composed read and two aliases per fold; throughput was not measured.
+- wires / dag Reorganize (the product member runs) were not exercised; no serve of these plugins exists this session.
+
+### W5.3 Open
+
+The 16 anonymous `wires-*` refusals the gates census lists (`wires-canvas-window-context-required`,
+`wires-command-payload-too-large`, `wires-drag-camera-invalid`, …) are not named yet. The empty `WiresDiff` placeholder
+waits for S5-INFRA's optional diff facet (§21.8).
+
+### W5.4 Coordinator actions
+
+Central `schema generate` (12 stale catalogue rows of deleted wires leaves; the two edited schemas change their catalogue
+hash); describe reasoning.

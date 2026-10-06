@@ -1,0 +1,17 @@
+{
+  "contract": "child-capture-ownership/v1",
+  "fixture": {
+    "from": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪆️child/👁️capture/🔣️.json",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/👁️capture/🧫️fixtures/🔣️.json"
+  },
+  "schema": {
+    "from": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧫️fixtures/🪆️child/👁️capture/🧬️schema/🔣️.json",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/👁️capture/🧬️schema/🔣️.json"
+  },
+  "law": {
+    "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️child-read-capture/🦀️.rs",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/👁️capture/🧪️tests/🦀️.rs"
+  },
+  "specificLaw": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts",
+  "privateOwningLaw": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"
+}

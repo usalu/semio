@@ -1,0 +1,17 @@
+import {existsSync,readFileSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import assert from "node:assert/strict";
+const repo="/Users/ueli/Documents/semio";
+const path=join(repo,"🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts");
+const before=readFileSync(path,"utf8");
+const old='{ appId: "s.space.studio@1/*#editor", owner: join(plugin, "⚙️engine/🪐️space"), scope: plugin, export: "SpacePlayRetainedCommandLimits"';
+const next=old.replace("scope: plugin,","scope: artifactPlugin,");
+assert.equal(before.split(old).length,2);
+const schema=join(repo,"✏️s/🔌️plugins/🪐️space/🧬️schema/🔣️.json");
+assert(existsSync(schema));
+assert(Object.hasOwn(JSON.parse(readFileSync(schema,"utf8")).$defs,"SpacePlayRetainedCommandLimits"));
+const after=before.replace(old,next);
+writeFileSync(join(import.meta.dir,"guarded-pairs.json"),JSON.stringify([{path,before,after}],null,2)+"\n");
+assert.equal(readFileSync(path,"utf8"),before);
+writeFileSync(path,after);
+console.log("[DEBUG] Hub actual retained-command schema authority joined paths=1 authored_export_preserved=true runtime_composer_owner_preserved=true");

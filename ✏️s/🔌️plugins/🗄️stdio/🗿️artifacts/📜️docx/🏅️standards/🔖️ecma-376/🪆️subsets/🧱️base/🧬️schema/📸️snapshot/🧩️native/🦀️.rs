@@ -5,7 +5,7 @@ use super::{docx_xml_parts_from_iter_controlled,DocxSnapshot,DocxXmlPart};
 use semio_framework_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,SqliteDatabaseLimits},io_schema::IoPayload};
 use semio_s_artifact_stdio_zip::opc::native::{OpcNativeWriter,OpcNativeReader};
 use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
-use semio_s_artifact_stdio_xml::schema::snapshot::sqlite::{XmlDocumentView,retire_xml_document};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{XmlDocumentView,retire_xml_document};
 #[path="💰️backing/🦀️.rs"] mod backing;
 struct Parts(Vec<DocxXmlPart>);
 struct Document(Option<semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument>);
@@ -16,9 +16,7 @@ fn write(snapshot:&DocxSnapshot,writer:&mut OpcNativeWriter<'_, '_, '_>)->Result
  writer.string(&snapshot.schema)?;writer.delimiter(b",")?;let package=snapshot.opc.materialize_package(writer.control)?;writer.package(&package)?;writer.delimiter(b",")?;
  writer.list_iter(snapshot.xml_parts.iter(),|writer,part|{writer.delimiter(b"[")?;writer.string(&part.path)?;writer.delimiter(b",")?;writer.string(&part.content_type)?;writer.delimiter(b",")?;let document=Document(Some(part.materialize_document(writer.control)?));writer.document(XmlDocumentView::from(document.0.as_ref().expect("owned DOCX native XML document")))?;writer.delimiter(b"]")})?;writer.delimiter(b"]")
 }
-pub(super) fn encode(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<IoPayload,ValueError>{
- backing::encode(snapshot,encoding,control)
-}
+
 pub(super) fn preflight(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{backing::preflight(snapshot,encoding,control)}
 fn read(reader:&mut OpcNativeReader<'_, '_, '_>)->Result<DocxSnapshot,ValueError>{
  reader.rows(1)?;if reader.binary{if reader.take(1)?!=[1]{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX native revision differs"));}}else{reader.delimiter(b'[')?;}
@@ -30,10 +28,8 @@ fn read(reader:&mut OpcNativeReader<'_, '_, '_>)->Result<DocxSnapshot,ValueError
  }
  reader.delimiter(b']')?;reader.delimiter(b']')?;if reader.position!=reader.bytes.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX native input has trailing fields"));}reader.control.checkpoint()?;let xml_parts=docx_xml_parts_from_iter_controlled(std::mem::take(&mut parts.0),reader.control)?;Ok(DocxSnapshot{schema,opc,xml_parts})
 }
-fn input(bytes:&[u8],binary:bool,control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{
- backing::input(bytes,binary,control)
-}
+
 pub(super) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{match payload{IoPayload::Binary(bytes)=>input(bytes,true,control),IoPayload::Text(text)=>input(text.as_bytes(),false,control)}}
-pub(super) fn decode_text(text:&str,control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{input(text.as_bytes(),false,control)}
-pub(super) fn decode_binary(bytes:&[u8],control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{input(bytes,true,control)}
-pub(super) fn pack_limits(limits:&store::mounted_pack_rt::PackLimits)->SqliteDatabaseLimits{SqliteDatabaseLimits{max_file_bytes:usize::try_from(limits.max_file_len).unwrap_or(usize::MAX),max_value_bytes:usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX),max_rows:usize::try_from(limits.max_items).unwrap_or(usize::MAX),..SqliteDatabaseLimits::default()}}
+
+
+

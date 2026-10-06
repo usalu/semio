@@ -1,0 +1,14 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "matches": [
+      "use crate::standards::v1::subsets::{base::schema::snapshot::native_encoding::{self,Writer},value::schema::snapshot::native_encoding as values};"
+    ]
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs",
+    "matches": [
+      "use crate::standards::v1::subsets::{base::schema::snapshot::native_encoding::{self,Writer},value::schema::snapshot::native_encoding as values};"
+    ]
+  }
+]

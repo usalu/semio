@@ -614,7 +614,7 @@ async fn toy_app(target: u64) -> ToyApp {
 }
 
 async fn set_target(app: &mut ToyApp, target: u64) {
-    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], description: None, transaction: None }).await.expect("toy target config applies");
+    app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some(target.to_string()) }.into()], transaction: None }).await.expect("toy target config applies");
 }
 
 fn toy_meta() -> ActionMeta {
@@ -822,12 +822,11 @@ async fn tool_run_finalize_is_one_transaction_labelled_by_its_tool_in_every_loca
     run_action(&mut app, "toolRunFinalize").await;
     pump_until(&mut app, "finalize publishes", |app| app.tool_runs.state() == Some(ToolRunState::Finalized) && !app.tool_runs.has_pending_work()).await;
     let edit = app.store.envelope().vcs.edits.last().expect("finalized edit");
-    let (edit_id, description) = (edit.id.clone(), edit.description.clone());
+    let edit_id = edit.id.clone();
     let transaction = edit.mutation_meta.first().and_then(|meta| meta.transaction.clone()).expect("the finalized edit is a tool transaction");
     assert!(edit.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&transaction)), "every op of the run carries the one ref");
     assert_eq!(transaction.tool, format!("{}#{}", ToyRunApp::APP_ID, text(&fixture["toolId"])));
     assert!(transaction.id.starts_with("tx-") && transaction.id.len() == "tx-".len() + 16, "a minted transaction id: {}", transaction.id);
-    assert_eq!(description, None, "the row label comes from the tool, never from a single-locale description");
     let history = app.build_history_view(None).await;
     let row = history.commands.iter().find(|row| row.edit_id.as_deref() == Some(edit_id.as_str())).expect("the run's history row");
     assert_eq!(row.transaction.as_ref(), Some(&transaction));
@@ -875,7 +874,7 @@ async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_c
     let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest()).await;
     let mut remote_probe = attach_probe(&mut remote, "tool-run-conflict-remote").await;
     remote.store.set_local_actor_id(Some("remote".into())).expect("remote actor");
-    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: number(&expected["remoteCount"]) as i32 }.into()], description: None, transaction: None }).await.expect("remote edit");
+    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: number(&expected["remoteCount"]) as i32 }.into()], transaction: None }).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }
@@ -1354,7 +1353,7 @@ async fn ingest_remote_count(app: &mut ToyApp, probe: &mut MemoryBackbone, chann
     let mut remote = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest()).await;
     let mut remote_probe = attach_probe(&mut remote, channel).await;
     remote.store.set_local_actor_id(Some("remote".into())).expect("remote actor");
-    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], description: None, transaction: None }).await.expect("remote edit");
+    remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: count as i32 }.into()], transaction: None }).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }
@@ -1464,8 +1463,7 @@ async fn tool_run_reconfigure_resume_retargets_a_retargetable_job_in_place() {
     let mut app = toy_app(number(&expected["initialTarget"])).await;
     let mut probe = attach_probe(&mut app, "tool-run-retarget").await;
     start(&mut app, text(&expected["toolId"])).await;
-    pump_until(&mut app, "initial target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete)).await;
-    assert!(!app.tool_runs.has_pending_work(), "a resident job of a complete run is no work");
+    pump_until(&mut app, "initial target completes and its resident job is no work", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.has_pending_work()).await;
     let run = app.tool_runs.slot().expect("slot").run;
     set_target(&mut app, number(&expected["raisedTarget"])).await;
     pump_until(&mut app, "raised target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["raisedTarget"]) * ops_per_unit).await;
@@ -1874,7 +1872,7 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
     for (bytes, rendered) in [(2_909usize, true), (3_706, true), (4_360, true), (16_384, true), (65_536, true), (3_820, false)] {
         let mut app = toy_app(1).await;
         app.config_store
-            .dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], description: None, transaction: None })
+            .dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], transaction: None })
             .await
             .expect("a retained config past one envelope page applies");
         if rendered {

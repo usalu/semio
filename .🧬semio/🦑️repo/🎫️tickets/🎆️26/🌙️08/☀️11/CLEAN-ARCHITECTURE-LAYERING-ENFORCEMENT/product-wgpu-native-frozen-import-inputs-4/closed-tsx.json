@@ -1,0 +1,7 @@
+{
+  "fileName": "control.tsx",
+  "source": "import item from \"./icon\"; export const view=<div>{item}</div>;",
+  "expected": [
+    "./icon"
+  ]
+}

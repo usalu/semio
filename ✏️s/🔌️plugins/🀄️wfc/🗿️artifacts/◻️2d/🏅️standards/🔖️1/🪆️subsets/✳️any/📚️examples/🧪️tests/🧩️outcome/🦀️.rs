@@ -27,7 +27,7 @@ fn every_example_keeps_its_collections_in_canonical_order() {
 #[test]
 fn every_example_solves_without_contradiction() {
     for document in crate::examples::documents() {
-        let commit = crate::schema::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("example solves");
+        let commit = crate::host::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("example solves");
         assert!(!commit.contradiction, "a bundled example must be satisfiable");
         assert_eq!(commit.assignments.len(), document.slots.len());
     }

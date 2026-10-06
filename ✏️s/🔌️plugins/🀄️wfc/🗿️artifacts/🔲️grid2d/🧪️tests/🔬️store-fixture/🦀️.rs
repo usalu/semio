@@ -2,7 +2,7 @@
 //! artifact store performs, and a decode-in-place hands back a bounded retirement that reaches its
 //! terminal state before it is dropped.
 
-use crate::schema::snapshot::binary::{decode_into, encode};
+use crate::io::binary::snapshot::{decode_into, encode};
 use crate::schema::snapshot::Grid2dSnapshot;
 
 fn examples() -> Vec<Grid2dSnapshot> {
@@ -14,7 +14,7 @@ fn every_example_survives_the_pack_envelope() {
     for document in examples() {
         let bytes = encode(&document);
         assert!(bytes.len() > 64);
-        assert_eq!(crate::schema::snapshot::binary::decode(&bytes).expect("pack decodes"), document);
+        assert_eq!(crate::io::binary::snapshot::decode(&bytes).expect("pack decodes"), document);
     }
 }
 

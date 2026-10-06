@@ -1,7 +1,7 @@
 //! 🧩️ Typed catalogue creation with deterministic automatic placement.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
 use crate::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;

@@ -22,16 +22,17 @@ async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
     let mut editor = Box::new(laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }).await);
     let mut viewer = Box::new(laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(|| App { definition: create_drawing_viewer(), examples: Vec::new() }).await);
     let mut reopened = Box::new(laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }).await);
-    let meta = laws::meta("drawing-role-archive");
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🕰️history/🔣️.json")).unwrap();
+    let meta = laws::meta(fixture["author"].as_str().unwrap());
     editor.bind_instance_id(meta.instance_id).await;
     viewer.bind_instance_id(meta.instance_id + 1).await;
     reopened.bind_instance_id(meta.instance_id + 2).await;
     let outcome: Result<(), String> = async {
         let before = editor.snapshot().map_err(|error| format!("{error:?}"))?.layers.len();
-        editor.dispatch_typed(DrawingCommand::AddLayer(AddLayer { kind: "shape:rect".into() }), &meta).await.map_err(|error| format!("{error:?}"))?;
+        editor.dispatch_typed(DrawingCommand::AddLayer(AddLayer { kind: fixture["kind"].as_str().unwrap().into() }), &meta).await.map_err(|error| format!("{error:?}"))?;
         laws::settle_registered_typed_operation(&mut *editor, meta.instance_id).await.map_err(|error| format!("{error:?}"))?;
         let created_id = crate::schema::layer_id(editor.snapshot().map_err(|error| format!("{error:?}"))?.layers.last().ok_or("created rectangle is missing")?).to_string();
-        editor.dispatch_typed(DrawingCommand::PatchLayers(crate::editor::drawing::commands::patch_layers::PatchLayers { layer_ids: vec![created_id.clone()], field: "name".into(), value: "Retained Drawing".into() }), &meta).await.map_err(|error| format!("{error:?}"))?;
+        editor.dispatch_typed(DrawingCommand::PatchLayers(crate::editor::drawing::commands::patch_layers::PatchLayers { layer_ids: vec![created_id.clone()], field: "name".into(), value: fixture["after"].as_str().unwrap().into() }), &meta).await.map_err(|error| format!("{error:?}"))?;
         laws::settle_registered_typed_operation(&mut *editor, meta.instance_id).await.map_err(|error| format!("{error:?}"))?;
         let expected = editor.document_archive().await.map_err(|error| format!("{error:?}"))?;
         restore_archive(&mut *viewer, 91, expected.clone()).await?;
@@ -40,14 +41,17 @@ async fn drawing_viewer_restores_edited_archive_and_preserves_history() {
         if !viewer.snapshot().map_err(|error| format!("{error:?}"))?.layers.iter().any(|layer| matches!(layer, crate::DrawingLayerNode::Shape(shape) if shape.shape_kind == "rect")) { return Err("restored viewer omitted the authored rectangle".into()); }
         restore_archive(&mut *reopened, 92, actual).await?;
         if reopened.document_archive().await.map_err(|error| format!("{error:?}"))? != expected { return Err("returning editor changed the transferred archive".into()); }
-        let history_meta = semio_framework_plugin::ActionMeta { instance_id: meta.instance_id + 2, ..laws::meta("drawing-role-archive") };
-        for (action, count, name) in [("undo", before + 1, Some("Rectangle")), ("undo", before, None), ("redo", before + 1, Some("Rectangle")), ("redo", before + 1, Some("Retained Drawing"))] {
+        for row in fixture["actions"].as_array().unwrap() {
+            let action=row["verb"].as_str().unwrap();let count=before+row["layerDelta"].as_u64().unwrap() as usize;let name=row["name"].as_str();
+            let history_meta = semio_framework_plugin::ActionMeta { instance_id: meta.instance_id + 2, ..laws::meta(fixture[row["actor"].as_str().unwrap()].as_str().unwrap()) };
             let admitted = reopened.handle_action(action, None, &history_meta).await.map_err(|error| format!("{error:?}"))?;
             semio_framework_plugin::app::settle_framework_reserved_admission(&mut *reopened, admitted).await.map_err(|error| format!("{error:?}"))?;
             laws::settle_registered_typed_operation(&mut *reopened, history_meta.instance_id).await.map_err(|error| format!("{error:?}"))?;
             let snapshot = reopened.snapshot().map_err(|error| format!("{error:?}"))?;
             if snapshot.layers.len() != count { return Err(format!("{action} lost the pre-switch rectangle history")); }
-            if crate::schema::find_drawing_layer(&snapshot, &created_id).map(|layer| crate::schema::layer_base(layer).name.as_str()) != name { return Err(format!("{action} lost the pre-switch rectangle name")); }
+            let actual_name=crate::schema::find_drawing_layer(&snapshot, &created_id).map(|layer| crate::schema::layer_base(layer).name.as_str());
+            if actual_name != name { return Err(format!("{action} lost the pre-switch rectangle name: expected {name:?}, received {actual_name:?}")); }
+            eprintln!("[DEBUG] Restored drawing history actor={} action={action} layers={count} name={actual_name:?}",row["actor"]);
         }
         Ok(())
     }.await;

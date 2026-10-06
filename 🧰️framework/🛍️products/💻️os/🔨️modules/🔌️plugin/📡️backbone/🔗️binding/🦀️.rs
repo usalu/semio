@@ -34,6 +34,20 @@ pub struct DocumentBackboneBindingCommandV1 {
     pub uri: String,
 }
 
+/// 🔤️ The control codec's canonical form: the flat control map with its members ordered by their key's bytes — the order
+/// the TypeScript closed grammar (`🟦️.ts`) writes and demands. The pack encoder writes an object's members as it is
+/// given them, so the control codec orders them itself: both encoders go through here, and both readers compare what
+/// they were handed against this form (golden bytes: `🧫️fixtures/🔣️.json` `codec.control`).
+fn canonical_control_bytes(value: semio_framework_value::DslValue) -> Vec<u8> {
+    match value {
+        semio_framework_value::DslValue::Object(mut members) => {
+            members.sort_by(|left, right| left.0.as_bytes().cmp(right.0.as_bytes()));
+            store::pack_rt::encode_wire_value(&semio_framework_value::DslValue::Object(members))
+        }
+        other => store::pack_rt::encode_wire_value(&other),
+    }
+}
+
 impl DocumentBackboneBindingCommandV1 {
     pub fn encode(&self) -> Result<Vec<u8>, String> {
         if self.uri.is_empty() || self.uri.len() > DOCUMENT_BACKBONE_BINDING_URI_MAXIMUM_BYTES {
@@ -43,9 +57,7 @@ impl DocumentBackboneBindingCommandV1 {
             DocumentBackboneBindingOperationV1::Bind => "bind",
             DocumentBackboneBindingOperationV1::Retire => "retire",
         };
-        let bytes = store::pack_rt::encode_wire_value(
-            &DocumentBackboneBindingWireV1 { schema: DOCUMENT_BACKBONE_BINDING_SCHEMA_V1.into(), operation: operation.into(), instance_id: self.instance_id, binding_generation: self.binding_generation, uri: self.uri.clone() }.to_value(),
-        );
+        let bytes = canonical_control_bytes(DocumentBackboneBindingWireV1 { schema: DOCUMENT_BACKBONE_BINDING_SCHEMA_V1.into(), operation: operation.into(), instance_id: self.instance_id, binding_generation: self.binding_generation, uri: self.uri.clone() }.to_value());
         if bytes.len() > DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES {
             return Err("plugin.document-backbone.binding-capacity".into());
         }
@@ -90,8 +102,8 @@ impl DocumentBackboneBindingReceiptV1 {
     }
 
     pub fn encode(&self) -> Vec<u8> {
-        store::pack_rt::encode_wire_value(
-            &DocumentBackboneBindingReceiptWireV1 {
+        canonical_control_bytes(
+            DocumentBackboneBindingReceiptWireV1 {
                 schema: DOCUMENT_BACKBONE_BINDING_RECEIPT_SCHEMA_V1.into(),
                 operation: self.operation.into(),
                 instance_id: self.instance_id,
@@ -128,7 +140,7 @@ pub fn decode_document_backbone_binding_command_v1(payload: &[u8]) -> Result<Opt
     if value.get("schema").and_then(semio_framework_value::DslValue::as_str) != Some(DOCUMENT_BACKBONE_BINDING_SCHEMA_V1) {
         return Ok(None);
     }
-    if store::pack_rt::encode_wire_value(&value) != payload {
+    if canonical_control_bytes(value.clone()) != payload {
         return Err("plugin.document-backbone.binding-noncanonical".into());
     }
     let wire = DocumentBackboneBindingWireV1::from_value(value).map_err(|error| error.to_string())?;
@@ -148,7 +160,7 @@ pub fn require_document_backbone_binding_receipt_v1(payload: &[u8], command: &Do
         return Err("plugin.document-backbone.receipt-bytes".into());
     }
     let value = store::pack_rt::decode_wire_value(payload).map_err(|_| "plugin.document-backbone.receipt-codec".to_string())?;
-    if store::pack_rt::encode_wire_value(&value) != payload {
+    if canonical_control_bytes(value.clone()) != payload {
         return Err("plugin.document-backbone.receipt-noncanonical".into());
     }
     let receipt = DocumentBackboneBindingReceiptWireV1::from_value(value).map_err(|error| error.to_string())?;

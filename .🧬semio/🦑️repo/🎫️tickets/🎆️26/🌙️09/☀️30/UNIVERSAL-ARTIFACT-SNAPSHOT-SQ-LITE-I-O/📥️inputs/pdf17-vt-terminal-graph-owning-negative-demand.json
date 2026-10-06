@@ -1,0 +1,40 @@
+{
+  "contract": {
+    "kind": "s.stdio.pdf",
+    "standard": "1.7",
+    "subset": "vt",
+    "cases": [
+      "root-node-missing",
+      "root-node-direct",
+      "root-type-wrong",
+      "leaf-parent-missing",
+      "leaf-parent-wrong",
+      "leaf-start-missing",
+      "leaf-start-dangling",
+      "leaf-start-outside-page-tree",
+      "child-cycle",
+      "duplicate-object-id"
+    ]
+  },
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "const": {
+      "kind": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "vt",
+      "cases": [
+        "root-node-missing",
+        "root-node-direct",
+        "root-type-wrong",
+        "leaf-parent-missing",
+        "leaf-parent-wrong",
+        "leaf-start-missing",
+        "leaf-start-dangling",
+        "leaf-start-outside-page-tree",
+        "child-cycle",
+        "duplicate-object-id"
+      ]
+    }
+  },
+  "law": "    #[test]\n    fn sqlite_snapshot_pdf17_vt_initial_graph_refuses_each_malformed_terminal_relation() {\n        let r=|num|ObjRef{num,gen:0};\n        let dictionary=|entries:Vec<(&str,PdfObject)>|PdfObject::Dict(entries.into_iter().map(|(key,value)|PdfDictEntry{key:key.into(),value}).collect());\n        let mut page=PdfPage::new(612.0,792.0);page.trim_box=Some(page.media_box);\n        let profile=include_bytes!(\"🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc\").to_vec();\n        let owner=PdfSnapshot{\n            pages:vec![page],output_intents:vec![PdfOutputIntent{subtype:\"GTS_PDFX\".into(),condition_identifier:\"sRGB2014\".into(),condition:None,registry_name:None,info:None,profile:Some(profile.clone())}],\n            catalog_extra:vec![PdfDictEntry{key:\"DPartRoot\".into(),value:PdfObject::Ref(r(10))}],\n            trailer:vec![PdfDictEntry{key:\"Root\".into(),value:PdfObject::Ref(r(1))}],\n            objects:vec![\n                PdfIndirectObject{id:r(1),value:dictionary(vec![(\"Type\",PdfObject::name(\"Catalog\")),(\"Pages\",PdfObject::Ref(r(4))),(\"OutputIntents\",PdfObject::Array(vec![PdfObject::Ref(r(2))])),(\"DPartRoot\",PdfObject::Ref(r(10)))])},\n                PdfIndirectObject{id:r(2),value:dictionary(vec![(\"Type\",PdfObject::name(\"OutputIntent\")),(\"S\",PdfObject::name(\"GTS_PDFX\")),(\"OutputConditionIdentifier\",PdfObject::Str(b\"sRGB2014\".to_vec())),(\"DestOutputProfile\",PdfObject::Ref(r(3)))])},\n                PdfIndirectObject{id:r(3),value:PdfObject::Stream{dict:vec![PdfDictEntry{key:\"N\".into(),value:PdfObject::Int(3)}],data:profile,filters:Vec::new()}},\n                PdfIndirectObject{id:r(4),value:dictionary(vec![(\"Type\",PdfObject::name(\"Pages\")),(\"Kids\",PdfObject::Array(vec![PdfObject::Ref(r(5))])),(\"Count\",PdfObject::Int(1))])},\n                PdfIndirectObject{id:r(5),value:dictionary(vec![(\"Type\",PdfObject::name(\"Page\")),(\"Parent\",PdfObject::Ref(r(4))),(\"MediaBox\",PdfObject::numbers(&[0.0,0.0,612.0,792.0])),(\"TrimBox\",PdfObject::numbers(&[0.0,0.0,612.0,792.0]))])},\n                PdfIndirectObject{id:r(10),value:dictionary(vec![(\"Type\",PdfObject::name(\"DPartRoot\")),(\"DPartRootNode\",PdfObject::Ref(r(11)))])},\n                PdfIndirectObject{id:r(11),value:dictionary(vec![(\"Type\",PdfObject::name(\"DPart\")),(\"Parent\",PdfObject::Ref(r(10))),(\"Start\",PdfObject::Ref(r(5))),(\"DPM\",dictionary(Vec::new()))])},\n            ],..PdfSnapshot::default()\n        };\n        let check=|snapshot:&PdfSnapshot|crate::standards::v1_7::subsets::vt::schema::check_vt_conformance(snapshot);\n        assert!(check(&owner).iter().all(|d|!matches!(d.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)));\n        let contract:serde_json::Value=serde_json::from_str(include_str!(\"🧫️fixtures/🌈️x-vt-initial/🧾️vt-negatives.json\")).unwrap();\n        for case in contract[\"cases\"].as_array().unwrap(){\n            let name=case.as_str().unwrap();let mut malformed=owner.clone();\n            let replace=|owner:&mut PdfSnapshot,num:u32,key:&str,value:Option<PdfObject>|{let object=owner.objects.iter_mut().find(|o|o.id.num==num).unwrap();let PdfObject::Dict(entries)=&mut object.value else{panic!(\"declared dictionary\")};entries.retain(|entry|entry.key!=key);if let Some(value)=value{entries.push(PdfDictEntry{key:key.into(),value});}};\n            match name {\n                \"root-node-missing\"=>replace(&mut malformed,10,\"DPartRootNode\",None),\n                \"root-node-direct\"=>replace(&mut malformed,10,\"DPartRootNode\",Some(dictionary(Vec::new()))),\n                \"root-type-wrong\"=>replace(&mut malformed,10,\"Type\",Some(PdfObject::name(\"DPart\"))),\n                \"leaf-parent-missing\"=>replace(&mut malformed,11,\"Parent\",None),\n                \"leaf-parent-wrong\"=>replace(&mut malformed,11,\"Parent\",Some(PdfObject::Ref(r(4)))),\n                \"leaf-start-missing\"=>replace(&mut malformed,11,\"Start\",None),\n                \"leaf-start-dangling\"=>replace(&mut malformed,11,\"Start\",Some(PdfObject::Ref(r(99)))),\n                \"leaf-start-outside-page-tree\"=>{replace(&mut malformed,11,\"Start\",Some(PdfObject::Ref(r(6))));malformed.objects.push(PdfIndirectObject{id:r(6),value:dictionary(vec![(\"Type\",PdfObject::name(\"Page\"))])});},\n                \"child-cycle\"=>replace(&mut malformed,11,\"DParts\",Some(PdfObject::Array(vec![PdfObject::Ref(r(11))]))),\n                \"duplicate-object-id\"=>malformed.objects.push(malformed.objects.last().unwrap().clone()),\n                other=>panic!(\"unknown neutral refusal {other}\")\n            }\n            assert!(check(&malformed).iter().any(|d|d.code.0==\"stdio.pdf.vt.invalid-dpart-graph\"&&d.severity==semio_framework_diagnostic::Severity::Error),\"genuine VT relation must refuse {name}\");\n        }\n        eprintln!(\"[DEBUG] VT ten independently authored terminal graph refusals\");\n    }\n"
+}

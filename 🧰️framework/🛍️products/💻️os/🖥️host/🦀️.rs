@@ -869,7 +869,7 @@ use semio_framework_value::ValueError;
         }
 
         pub fn dispatch_apply(&mut self, mutations: Vec<workflow::WorkflowMutation>) -> Result<(), VcsError> {
-            resolve_kernel_future(self.inner.dispatch(ArtifactCommand::Apply { mutations, description: None, transaction: None })).map(|_| ())
+            resolve_kernel_future(self.inner.dispatch(ArtifactCommand::Apply { mutations, transaction: None })).map(|_| ())
         }
 
         pub fn set_workflow_name(&mut self, name: &str) {
@@ -892,7 +892,7 @@ use semio_framework_value::ValueError;
                 node.label = label.into();
             }
             self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode(workflow::AddNode { node })])?;
-            resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], description: None, transaction: None }))?;
+            resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], transaction: None }))?;
             Ok(node_id)
         }
 
@@ -1859,41 +1859,6 @@ pub mod instance {
     //#endregion 🔖️Parameters
 
     //#region 🔖️Materialize
-    use std::sync::{Mutex, OnceLock};
-
-    static OS_FIXTURE_DOCUMENTS: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
-
-    fn os_fixture_document_registry() -> &'static Mutex<HashMap<String, String>> {
-        OS_FIXTURE_DOCUMENTS.get_or_init(|| Mutex::new(HashMap::new()))
-    }
-
-    /// 📎️ Validates every normalized snapshot before atomically admitting its opaque fixture identity.
-    pub fn register_os_fixture_documents(documents: Vec<(String, String)>) -> Result<(), String> {
-        if documents.is_empty() {
-            return Err("fixture documents are empty".into());
-        }
-        let mut slugs = std::collections::HashSet::new();
-        for (slug, document) in &documents {
-            if slug.trim().is_empty() || !slugs.insert(slug.as_str()) {
-                return Err("fixture slug is empty or repeated".into());
-            }
-            let value: Value = serde_json::from_str(document).map_err(|error| format!("fixture {slug} is invalid: {error}"))?;
-            if !value.as_object().is_some_and(|object| !object.is_empty()) {
-                return Err(format!("fixture {slug} is empty or is not an object"));
-            }
-        }
-        let mut registry = os_fixture_document_registry().lock().map_err(|_| "fixture document registry is poisoned".to_string())?;
-        for (slug, document) in documents {
-            registry.insert(slug, document);
-        }
-        Ok(())
-    }
-
-    /// 📄️ Resolves a previously admitted normalized snapshot by its opaque fixture identity.
-    pub fn os_fixture_document(slug: &str) -> Option<String> {
-        os_fixture_document_registry().lock().ok().and_then(|registry| registry.get(slug).cloned())
-    }
-
     /// 🎚️ Default config value seeded from `config_spec.fields[].default` — what a freshly
     /// spawned instance's config resolves to before any explicit `instance.config`/binding overlay.
     fn config_spec_default_value(config_spec: &ConfigSpec) -> Value {
@@ -2358,7 +2323,7 @@ pub mod workflow {
     //! 🎬️ Workflow, VFS snapshot types, and media export registry.
 
     // 🧬️ Kernel re-exports — the persisted graph model itself (`Workflow`/`WorkflowNode`/`WorkflowEdge`/
-    // `WorkflowMediaPort`/`WorkflowPosition`/`MediaContract`/`WorkflowDelivery`/`WorkflowFixture`/
+    // `WorkflowMediaPort`/`WorkflowPosition`/`MediaContract`/`WorkflowDelivery`/
     // `plan_workflow`/`workflow_node_for_app`/`placeholder_media_contract`/`empty_workflow`) lives in
     // the `semio-framework-os-kernel-workflow` crate (dependency name `workflow`) — see its
     // `🔖️InstanceIdentity` doc. Re-exported here so every existing `crate::workflow::X` call site in
@@ -2375,7 +2340,7 @@ pub mod workflow {
     pub use crate::workflow_kernel::{
         apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
         validate_workflow as kernel_validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
-        workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode,
+        workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode,
         WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot, WorkflowValidation, AddInput, AddNode, AddParameter, BindInput,
         BindOutput, BindParameterField, ChangeParameter, ConnectPorts, DisconnectEdge, MoveNode, RemoveInput, RemoveNode, RemoveParameter, RenameNode, UnbindInput, UnbindOutput, UnbindParameterField, UpdateNodePorts,
         S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
@@ -2574,13 +2539,13 @@ pub mod workflow {
         })
     }
 
-    /** 🔁️ Diffs a flow fixture back into workflow operations — inverse of [`os_workflow_to_flow_host_snapshot_json`]. */
-    pub fn apply_flow_host_snapshot_to_os_workflow(graph: &Workflow, fixture_json: &str) -> Vec<WorkflowMutation> {
-        let Ok(fixture) = serde_json::from_str::<Value>(fixture_json) else {
+    /** 🔁️ Diffs a flow snapshot back into workflow operations — inverse of [`os_workflow_to_flow_host_snapshot_json`]. */
+    pub fn apply_flow_host_snapshot_to_os_workflow(graph: &Workflow, snapshot_json: &str) -> Vec<WorkflowMutation> {
+        let Ok(flow_snapshot) = serde_json::from_str::<Value>(snapshot_json) else {
             return Vec::new();
         };
         let mut operations = Vec::new();
-        if let Some(layout) = fixture.get("layout").and_then(Value::as_object) {
+        if let Some(layout) = flow_snapshot.get("layout").and_then(Value::as_object) {
             for node in &graph.nodes {
                 let Some(position) = layout.get(&node.id) else { continue };
                 let (Some(center_x), Some(center_y)) = (position.get("x").and_then(Value::as_f64), position.get("y").and_then(Value::as_f64)) else {
@@ -2594,7 +2559,7 @@ pub mod workflow {
             }
         }
         let mut removed_node_ids = HashSet::new();
-        if let Some(widgets) = fixture.get("widgets").and_then(Value::as_array) {
+        if let Some(widgets) = flow_snapshot.get("widgets").and_then(Value::as_array) {
             let widget_ids: HashSet<&str> = widgets.iter().filter_map(|widget| widget.get("id").and_then(Value::as_str)).collect();
             for node in &graph.nodes {
                 if !widget_ids.contains(node.id.as_str()) {
@@ -2607,8 +2572,8 @@ pub mod workflow {
             Some((synapse.get("from").and_then(Value::as_str)?.into(), synapse.get("fromPort").and_then(Value::as_str)?.into(), synapse.get("to").and_then(Value::as_str)?.into(), synapse.get("toPort").and_then(Value::as_str)?.into()))
         };
         let edge_endpoints = |edge: &WorkflowEdge| (edge.source_node_id.clone(), edge.source_port_id.clone(), edge.target_node_id.clone(), edge.target_port_id.clone());
-        let synapses = fixture.get("synapses").and_then(Value::as_array).cloned().unwrap_or_default();
-        let fixture_endpoints: HashSet<_> = synapses.iter().filter_map(synapse_endpoints).collect();
+        let synapses = flow_snapshot.get("synapses").and_then(Value::as_array).cloned().unwrap_or_default();
+        let snapshot_endpoints: HashSet<_> = synapses.iter().filter_map(synapse_endpoints).collect();
         let graph_endpoints: HashSet<_> = graph.edges.iter().map(edge_endpoints).collect();
         let node_by_id: HashMap<&str, &WorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
         for synapse in &synapses {
@@ -2618,7 +2583,7 @@ pub mod workflow {
             }
             let (source_node_id, source_port_id, target_node_id, target_port_id) = endpoints;
             // 🤝️ Only wire the edge if the endpoints still negotiate a valid contract — a stale/hand-edited
-            // fixture referencing an incompatible or now-removed port silently drops the synapse instead of
+            // snapshot referencing an incompatible or now-removed port silently drops the synapse instead of
             // producing an untyped edge (see `negotiate_media_contract`).
             let Some(source_port) = node_by_id.get(source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id)) else { continue };
             let Some(target_port) = node_by_id.get(target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)) else { continue };
@@ -2626,9 +2591,9 @@ pub mod workflow {
             let id = synapse.get("id").and_then(Value::as_str).filter(|value| !value.is_empty()).map_or_else(|| create_os_id("edge"), str::to_string);
             operations.push(WorkflowMutation::ConnectPorts(ConnectPorts { edge: WorkflowEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract } }));
         }
-        if fixture.get("synapses").and_then(Value::as_array).is_some() {
+        if flow_snapshot.get("synapses").and_then(Value::as_array).is_some() {
             for edge in &graph.edges {
-                if fixture_endpoints.contains(&edge_endpoints(edge)) {
+                if snapshot_endpoints.contains(&edge_endpoints(edge)) {
                     continue;
                 }
                 if removed_node_ids.contains(&edge.source_node_id) || removed_node_ids.contains(&edge.target_node_id) {
@@ -2808,7 +2773,7 @@ pub mod workflow {
     }
     //#endregion 🔖️Workflow
 
-    // 🧷️ `WorkflowDelivery`/`WorkflowFixture`/`plan_workflow` now live in the kernel `workflow` crate
+    // 🧷️ `WorkflowDelivery`/`plan_workflow` now live in the kernel `workflow` crate
     // (re-exported above, `producer_node_id`/`consumer_node_id` field names). `WorkflowInstanceRegistry`
     // was confirmed dead (zero callers) and deleted outright.
 
@@ -3150,14 +3115,10 @@ pub mod codec_abi {
     pub const OS_HOST_CODEC_MAX_KIND_COUNT: usize = 256;
     pub const OS_HOST_CODEC_MAX_KIND_BYTES: usize = ABI_MAX_MESSAGE_BYTES;
     pub const OS_HOST_CODEC_PROGRESS_EVENT: u16 = 1;
-    const WORKFLOW_PACK_MAGIC: [u8; 4] = *b"WFP1";
-    const WORKFLOW_PACK_HEADER_BYTES: usize = 9;
 
     #[repr(u16)]
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum OsHostCodecOperation {
-        DecodeWorkflowFixturePack = 1537,
-        ParseWorkflowFixtureDsl = 1538,
         MediaAcceptFilterKinds = 1539,
         NormalizeStdioFormatKind = 1540,
     }
@@ -3165,8 +3126,6 @@ pub mod codec_abi {
     impl OsHostCodecOperation {
         pub fn from_abi(operation: AbiOperation) -> Result<Self, AbiErrorCode> {
             match operation.get() {
-                1537 => Ok(Self::DecodeWorkflowFixturePack),
-                1538 => Ok(Self::ParseWorkflowFixtureDsl),
                 1539 => Ok(Self::MediaAcceptFilterKinds),
                 1540 => Ok(Self::NormalizeStdioFormatKind),
                 _ => Err(AbiErrorCode::UnknownOperation),
@@ -3179,7 +3138,6 @@ pub mod codec_abi {
 
         const fn reply_kind(self) -> u8 {
             match self {
-                Self::DecodeWorkflowFixturePack | Self::ParseWorkflowFixtureDsl => 1,
                 Self::MediaAcceptFilterKinds => 2,
                 Self::NormalizeStdioFormatKind => 3,
             }
@@ -3190,8 +3148,6 @@ pub mod codec_abi {
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum OsHostCodecErrorCode {
         MalformedRequest = 1,
-        MalformedPack = 2,
-        MalformedDsl = 3,
         MissingKindArray = 4,
         UnknownKind = 5,
         InvalidUtf8 = 6,
@@ -3213,7 +3169,7 @@ pub mod codec_abi {
 
         fn abi_code(&self) -> AbiErrorCode {
             match self.code {
-                OsHostCodecErrorCode::MalformedRequest | OsHostCodecErrorCode::MalformedPack | OsHostCodecErrorCode::MalformedDsl | OsHostCodecErrorCode::InvalidState => AbiErrorCode::MalformedTag,
+                OsHostCodecErrorCode::MalformedRequest | OsHostCodecErrorCode::InvalidState => AbiErrorCode::MalformedTag,
                 OsHostCodecErrorCode::MissingKindArray => AbiErrorCode::MissingField,
                 OsHostCodecErrorCode::UnknownKind => AbiErrorCode::UnknownOperation,
                 OsHostCodecErrorCode::InvalidUtf8 => AbiErrorCode::InvalidUtf8,
@@ -3299,12 +3255,6 @@ pub mod codec_abi {
         retire_cursor: usize,
     }
 
-    #[derive(Clone, Copy)]
-    enum WorkflowStructuralKind {
-        Pack,
-        Dsl,
-    }
-
     struct Utf8Cursor {
         remaining: u8,
         next_minimum: u8,
@@ -3358,228 +3308,6 @@ pub mod codec_abi {
 
         fn complete(&self) -> bool {
             !self.invalid && self.remaining == 0
-        }
-    }
-
-    struct PatternCursor {
-        index: usize,
-        found: bool,
-    }
-
-    impl PatternCursor {
-        fn new() -> Self {
-            Self { index: 0, found: false }
-        }
-
-        fn feed(&mut self, byte: u8, pattern: &[u8]) {
-            if self.found {
-                return;
-            }
-            if byte == pattern[self.index] {
-                self.index += 1;
-                self.found = self.index == pattern.len();
-            } else {
-                self.index = usize::from(byte == pattern[0]);
-            }
-        }
-    }
-
-    struct WorkflowStructuralCursor {
-        kind: WorkflowStructuralKind,
-        declared_input_bytes: usize,
-        pack_header: [u8; WORKFLOW_PACK_HEADER_BYTES],
-        pack_header_cursor: usize,
-        declared_canonical_bytes: Option<usize>,
-        canonical_bytes: usize,
-        payload: Option<Vec<u8>>,
-        utf8: Utf8Cursor,
-        prefix_cursor: usize,
-        name_has_value: bool,
-        name_line_finished: bool,
-        braces: usize,
-        brackets: usize,
-        quoted: bool,
-        escaped: bool,
-        last_byte: Option<u8>,
-        graph: PatternCursor,
-        dirty: PatternCursor,
-        deliveries: PatternCursor,
-        failure: Option<OsHostCodecFailure>,
-    }
-
-    impl WorkflowStructuralCursor {
-        fn new(operation: OsHostCodecOperation, declared_input_bytes: usize) -> Self {
-            let kind = if operation == OsHostCodecOperation::DecodeWorkflowFixturePack { WorkflowStructuralKind::Pack } else { WorkflowStructuralKind::Dsl };
-            let mut cursor = Self {
-                kind,
-                declared_input_bytes,
-                pack_header: [0; WORKFLOW_PACK_HEADER_BYTES],
-                pack_header_cursor: 0,
-                declared_canonical_bytes: None,
-                canonical_bytes: 0,
-                payload: None,
-                utf8: Utf8Cursor::new(),
-                prefix_cursor: 0,
-                name_has_value: false,
-                name_line_finished: false,
-                braces: 0,
-                brackets: 0,
-                quoted: false,
-                escaped: false,
-                last_byte: None,
-                graph: PatternCursor::new(),
-                dirty: PatternCursor::new(),
-                deliveries: PatternCursor::new(),
-                failure: None,
-            };
-            if matches!(kind, WorkflowStructuralKind::Dsl) {
-                cursor.declared_canonical_bytes = Some(declared_input_bytes);
-                cursor.install_payload_header(declared_input_bytes);
-            }
-            cursor
-        }
-
-        fn malformed_code(&self) -> OsHostCodecErrorCode {
-            match self.kind {
-                WorkflowStructuralKind::Pack => OsHostCodecErrorCode::MalformedPack,
-                WorkflowStructuralKind::Dsl => OsHostCodecErrorCode::MalformedDsl,
-            }
-        }
-
-        fn fail(&mut self, code: OsHostCodecErrorCode, message: &'static str) {
-            if self.failure.is_none() {
-                self.failure = Some(OsHostCodecFailure::fixed(code, message));
-            }
-        }
-
-        fn install_payload_header(&mut self, canonical_bytes: usize) {
-            let Some(payload_bytes) = canonical_bytes.checked_add(6) else {
-                self.fail(OsHostCodecErrorCode::OutputLimit, "OS host codec reply exceeds output limit");
-                return;
-            };
-            if payload_bytes > OS_HOST_CODEC_MAX_OUTPUT_BYTES {
-                self.fail(OsHostCodecErrorCode::OutputLimit, "OS host codec reply exceeds output limit");
-                return;
-            }
-            let mut payload = Vec::with_capacity(payload_bytes);
-            payload.push(1);
-            payload.push(OsHostCodecOperation::ParseWorkflowFixtureDsl.reply_kind());
-            payload.extend_from_slice(&(canonical_bytes as u32).to_le_bytes());
-            self.payload = Some(payload);
-        }
-
-        fn feed(&mut self, byte: u8) {
-            if matches!(self.kind, WorkflowStructuralKind::Pack) && self.pack_header_cursor < WORKFLOW_PACK_HEADER_BYTES {
-                self.pack_header[self.pack_header_cursor] = byte;
-                self.pack_header_cursor += 1;
-                if self.pack_header_cursor == WORKFLOW_PACK_HEADER_BYTES {
-                    self.finish_pack_header();
-                }
-                return;
-            }
-            self.feed_dsl(byte);
-        }
-
-        fn finish_pack_header(&mut self) {
-            if self.pack_header[..4] != WORKFLOW_PACK_MAGIC || self.pack_header[4] != 1 {
-                self.fail(OsHostCodecErrorCode::MalformedPack, "malformed workflow fixture structural pack");
-                return;
-            }
-            let canonical_bytes = u32::from_le_bytes(self.pack_header[5..9].try_into().expect("fixed structural pack length")) as usize;
-            self.declared_canonical_bytes = Some(canonical_bytes);
-            if canonical_bytes.checked_add(WORKFLOW_PACK_HEADER_BYTES) != Some(self.declared_input_bytes) {
-                self.fail(OsHostCodecErrorCode::MalformedPack, "malformed workflow fixture structural pack length");
-                return;
-            }
-            self.install_payload_header(canonical_bytes);
-        }
-
-        fn feed_dsl(&mut self, byte: u8) {
-            self.canonical_bytes = self.canonical_bytes.saturating_add(1);
-            self.utf8.feed(byte);
-            if let Some(payload) = self.payload.as_mut() {
-                payload.push(byte);
-            }
-            const PREFIX: &[u8] = b"name=";
-            if self.prefix_cursor < PREFIX.len() {
-                if byte == PREFIX[self.prefix_cursor] {
-                    self.prefix_cursor += 1;
-                } else {
-                    self.fail(self.malformed_code(), "workflow fixture DSL is not canonical");
-                }
-            } else if !self.name_line_finished {
-                if byte == b'\n' {
-                    self.name_line_finished = true;
-                } else if !byte.is_ascii_whitespace() {
-                    self.name_has_value = true;
-                }
-            }
-            self.graph.feed(byte, b"\ngraph {");
-            self.dirty.feed(byte, b"\ndirty-node-ids=[");
-            self.deliveries.feed(byte, b"\nexpected-deliveries ");
-            if byte.is_ascii() {
-                self.feed_ascii_structure(byte);
-            }
-            self.last_byte = Some(byte);
-        }
-
-        fn feed_ascii_structure(&mut self, byte: u8) {
-            if self.quoted {
-                if self.escaped {
-                    self.escaped = false;
-                } else if byte == b'\\' {
-                    self.escaped = true;
-                } else if byte == b'"' {
-                    self.quoted = false;
-                }
-                return;
-            }
-            match byte {
-                b'"' => self.quoted = true,
-                b'{' => self.braces += 1,
-                b'}' if self.braces != 0 => self.braces -= 1,
-                b'}' => self.fail(self.malformed_code(), "workflow fixture DSL has an unmatched closing brace"),
-                b'[' => self.brackets += 1,
-                b']' if self.brackets != 0 => self.brackets -= 1,
-                b']' => self.fail(self.malformed_code(), "workflow fixture DSL has an unmatched closing bracket"),
-                b'\n' | b' '..=b'~' => {}
-                _ => self.fail(self.malformed_code(), "workflow fixture DSL contains a non-canonical control byte"),
-            }
-        }
-
-        fn finish(&mut self) -> Result<Vec<u8>, OsHostCodecFailure> {
-            if matches!(self.kind, WorkflowStructuralKind::Pack) && self.pack_header_cursor != WORKFLOW_PACK_HEADER_BYTES {
-                self.fail(OsHostCodecErrorCode::MalformedPack, "truncated workflow fixture structural pack header");
-            }
-            if !self.utf8.complete() {
-                self.fail(OsHostCodecErrorCode::InvalidUtf8, "workflow fixture DSL is not UTF-8");
-            }
-            if self.declared_canonical_bytes != Some(self.canonical_bytes) {
-                self.fail(self.malformed_code(), "truncated workflow fixture structural payload");
-            }
-            if self.prefix_cursor != 5 || !self.name_has_value || !self.graph.found || !self.dirty.found || !self.deliveries.found || self.braces != 0 || self.brackets != 0 || self.quoted || self.escaped || self.last_byte != Some(b'\n') {
-                self.fail(self.malformed_code(), "workflow fixture DSL is not canonical");
-            }
-            if let Some(failure) = self.failure.clone() {
-                return Err(failure);
-            }
-            self.payload.take().ok_or_else(|| OsHostCodecFailure::fixed(OsHostCodecErrorCode::InvalidState, "workflow fixture structural output is unavailable"))
-        }
-
-        fn close_one(&mut self) -> bool {
-            if self.payload.as_mut().is_some_and(|payload| payload.pop().is_some()) {
-                return false;
-            }
-            if self.pack_header_cursor != 0 {
-                self.pack_header_cursor -= 1;
-                self.pack_header[self.pack_header_cursor] = 0;
-                return false;
-            }
-            true
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            self.payload.as_ref().is_none_or(Vec::is_empty) && self.pack_header_cursor == 0
         }
     }
 
@@ -3857,7 +3585,6 @@ pub mod codec_abi {
     }
 
     enum OsHostCodecInput {
-        Workflow(WorkflowStructuralCursor),
         Filter(FilterKindsStructuralCursor),
         Normalize(NormalizeKindStructuralCursor),
     }
@@ -3865,7 +3592,6 @@ pub mod codec_abi {
     impl OsHostCodecInput {
         fn new(operation: OsHostCodecOperation, declared_input_bytes: usize) -> Self {
             match operation {
-                OsHostCodecOperation::DecodeWorkflowFixturePack | OsHostCodecOperation::ParseWorkflowFixtureDsl => Self::Workflow(WorkflowStructuralCursor::new(operation, declared_input_bytes)),
                 OsHostCodecOperation::MediaAcceptFilterKinds => Self::Filter(FilterKindsStructuralCursor::new()),
                 OsHostCodecOperation::NormalizeStdioFormatKind => Self::Normalize(NormalizeKindStructuralCursor::new(declared_input_bytes)),
             }
@@ -3873,16 +3599,8 @@ pub mod codec_abi {
 
         fn feed<R: OsHostFormatResolver>(&mut self, byte: u8, resolver: &mut R) {
             match self {
-                Self::Workflow(cursor) => cursor.feed(byte),
                 Self::Filter(cursor) => cursor.feed(byte, resolver),
                 Self::Normalize(cursor) => cursor.feed(byte, resolver),
-            }
-        }
-
-        fn workflow(&mut self) -> Option<&mut WorkflowStructuralCursor> {
-            match self {
-                Self::Workflow(cursor) => Some(cursor),
-                _ => None,
             }
         }
 
@@ -3902,7 +3620,6 @@ pub mod codec_abi {
 
         fn retire_one(&mut self) -> bool {
             match self {
-                Self::Workflow(cursor) => !cursor.close_one(),
                 Self::Filter(cursor) => !cursor.close_one(),
                 Self::Normalize(cursor) => !cursor.close_one(),
             }
@@ -3910,7 +3627,6 @@ pub mod codec_abi {
 
         fn terminal_is_empty(&self) -> bool {
             match self {
-                Self::Workflow(cursor) => cursor.terminal_is_empty(),
                 Self::Filter(cursor) => cursor.terminal_is_empty(),
                 Self::Normalize(cursor) => cursor.terminal_is_empty(),
             }
@@ -4082,10 +3798,6 @@ pub mod codec_abi {
 
         fn execute(&mut self) -> Result<(), OsHostCodecFailure> {
             match self.operation {
-                OsHostCodecOperation::DecodeWorkflowFixturePack | OsHostCodecOperation::ParseWorkflowFixtureDsl => {
-                    let payload = self.input.workflow().expect("workflow operation owns a structural cursor").finish()?;
-                    self.install_payload(payload)
-                }
                 OsHostCodecOperation::NormalizeStdioFormatKind => {
                     let output = self.input.normalize().expect("normalize operation owns a structural cursor").finish()?;
                     self.install_output(&output)
@@ -4789,6 +4501,7 @@ pub mod registry {
         let modes = semio_framework::Modes::try_from(registration.modes.clone()).ok()?;
         let default_mode_id = registration.default_mode_id.clone().unwrap_or_else(|| modes.first().id.clone());
         let window_kinds = semio_framework::WindowKinds::one(WindowKindDefinition {
+            initial_utility_id: None,
             id: registration.component_kind.clone(),
             label: registration.label.clone(),
             body_key: registration.component_kind.clone(),
@@ -4926,7 +4639,7 @@ pub use crate::workflow::{
     negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_host_snapshot_json, os_workflow_to_node_graph_payload, patch_workflow_parameter,
     placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports, validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id,
     workflow_parameter_id_from_port_id, workflow_parameter_name, workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, OsMediaCapability, OsWorkflowCamera, OsWorkflowNodeGraphPayload, OsWorkflowOperatorInfo, Workflow,
-    WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch,
+    WorkflowDelivery, WorkflowEdge, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode, WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch,
     WorkflowParameterType, WorkflowPosition, WorkflowSnapshot, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
@@ -4940,8 +4653,8 @@ pub use host::{
 };
 #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use instance::{
-    apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_document,
-    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, register_os_fixture_documents, resolve_parameter_values_for_instance, set_json_pointer_value, OsArtifactRef, OsInstanceState,
+    apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id,
+    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, resolve_parameter_values_for_instance, set_json_pointer_value, OsArtifactRef, OsInstanceState,
     OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OS_PARAMETER_PORT_PREFIX,
 };
 pub use media_export_raster::{

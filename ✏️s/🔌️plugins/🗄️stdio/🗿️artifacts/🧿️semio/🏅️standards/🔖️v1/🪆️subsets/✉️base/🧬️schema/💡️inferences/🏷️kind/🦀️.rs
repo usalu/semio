@@ -5,7 +5,9 @@
 //! wire dispatch. A pure O(1) tag read off an already-decoded enum discriminant — no
 //! `InferredField` needed.
 
-use crate::standards::v1::subsets::base::schema::snapshot::{subset_ordinal, subset_tag, SemioSnapshot};
+use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot};
+use crate::standards::v1::subsets::base::io::binary::snapshot::{subset_ordinal};
+use crate::standards::v1::subsets::base::io::text::snapshot::{subset_tag};
 
 //#region 🔖️Kind
 /// 🏷️ The envelope's wrapped-subset dispatch tag/ordinal.

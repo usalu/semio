@@ -1,4 +1,4 @@
-//! 🧪️ `create-node` fixture — `🧱️zero-width-node`.
+//! 🧪️ `create-node` snapshot — `🧱️zero-width-node`.
 //!
 //! A rectangle of zero width is what the node record's `exclusiveMinimum: 0` forbids: a Fatal `mutation.invariant`, no node is added.
 //!

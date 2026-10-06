@@ -1,5 +1,4 @@
 {
-  "$schema": "../../🧬️schema/🔣️fault-notices-gate/🔣️.json",
   "description": "📢️ The schema-fault-notice gate (design §20.12): Rust snippets with the fault code sites the token gate and the tree-sitter-rust oracle both read, and one planted plugin whose sources, committed descriptor and framework table yield exactly the listed findings in order, and exactly `scoped.findings` under `--scope history-editing` (the refusals of the history-editing and tool flows); the planted tool editor names its codes through `const`s and a refusal helper and chains a second notice table; the planted editor and plugin SDK exercise every `history-editing` rule: a tool-flow `fn` with a fixed-code helper called inside it, a `ChildEmit` source, a tool-flow text, a trait's default method, `#[cfg(test)]` items, the SDK's catch-all helper, its load and time-travel refusals and a framework code outside every flow.",
   "cases": [
     {

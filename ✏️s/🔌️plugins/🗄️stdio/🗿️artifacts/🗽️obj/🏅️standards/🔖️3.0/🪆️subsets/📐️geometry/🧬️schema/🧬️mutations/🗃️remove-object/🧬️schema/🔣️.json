@@ -14,7 +14,24 @@
       "description": "Aggregate discriminator spliced in by ObjMutation; absent when the payload stands alone."
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "Name of the object (`o` statement) that is removed.",
+          "de": "Name des Objekts (`o`-Anweisung), das entfernt wird."
+        },
+        "ref": {
+          "kind": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
     }
   }
 }

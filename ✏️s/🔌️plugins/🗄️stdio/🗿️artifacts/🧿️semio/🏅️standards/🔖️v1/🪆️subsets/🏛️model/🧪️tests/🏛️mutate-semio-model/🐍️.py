@@ -1,4 +1,4 @@
-"""🐍️ Independent Python implementation of the `stdio.semio.model` carrier and its eleven-verb
+"""🐍️ Independent Python implementation of the `stdio.semio.model` carrier and its fourteen-verb
 mutation vocabulary — the differential ORACLE this case is measured against.
 
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. `.dsl.semio`/`.pack.semio` is a semio-native carrier
@@ -54,6 +54,7 @@ from __future__ import annotations
 
 # region 🔖️Imports
 import json
+import math
 import struct
 
 from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
@@ -679,7 +680,12 @@ KINDS = (
     "insert-relation",
     "remove-relation",
     "set-relation",
+    "drag-elements",
+    "rotate-elements",
+    "scale-elements",
 )
+
+RELATIVE_PLACEMENT = ("dragElements", "rotateElements", "scaleElements")
 
 TAG_OF_KIND = {kind: kind.split("-")[0] + "".join(word.capitalize() for word in kind.split("-")[1:]) for kind in KINDS}
 
@@ -709,6 +715,46 @@ def touched(mutation: dict, key: str) -> bool:
     return mutation.get(key) is not None
 
 
+def placement_motion(mutation: dict):
+    """🧭️ The placement rewrite of one relative placement verb, or `None` for an identity motion. The verbs' own payload
+    invariants (the committed leaf schemas and `x-semio-invariant`) are refusals: a target list that is empty or names an
+    element twice, a non-finite number, a zero-length rotation axis, a scale factor that is not greater than zero."""
+    targets = mutation["targets"]
+    if not targets or len(set(targets)) != len(targets):
+        raise AssertionError("%s: targets must name at least one element and never one twice" % mutation["mutation"])
+    tag = mutation["mutation"]
+    if tag == "dragElements":
+        offset = mutation["offset"]
+        if not all(math.isfinite(value) for value in offset):
+            raise AssertionError("dragElements: the offset must be finite")
+        if offset == [0.0, 0.0, 0.0]:
+            return None
+        return lambda placement: {**placement, "translation": {axis: placement["translation"][axis] + delta for axis, delta in zip("xyz", offset)}}
+    if tag == "rotateElements":
+        axis, angle = mutation["axis"], mutation["angle"]
+        length = math.sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2])
+        if not (math.isfinite(length) and length != 0.0 and math.isfinite(angle)):
+            raise AssertionError("rotateElements: axis-nonzero")
+        if angle == 0.0:
+            return None
+        sin, cos = math.sin(angle * 0.5), math.cos(angle * 0.5)
+        lx, ly, lz, lw = axis[0] / length * sin, axis[1] / length * sin, axis[2] / length * sin, cos
+
+        def turn(placement):
+            r = placement["rotation"]
+            rx, ry, rz, rw = r["x"], r["y"], r["z"], r["w"]
+            rotation = {"x": lw * rx + lx * rw + ly * rz - lz * ry, "y": lw * ry - lx * rz + ly * rw + lz * rx, "z": lw * rz + lx * ry - ly * rx + lz * rw, "w": lw * rw - lx * rx - ly * ry - lz * rz}
+            return {**placement, "rotation": rotation}
+
+        return turn
+    factors = mutation["factors"]
+    if not all(math.isfinite(value) and value > 0.0 for value in factors):
+        raise AssertionError("scaleElements: scale factors must be finite and greater than 0")
+    if factors == [1.0, 1.0, 1.0]:
+        return None
+    return lambda placement: {**placement, "scale": {axis: placement["scale"][axis] * factor for axis, factor in zip("xyz", factors)}}
+
+
 def apply_mutation(document: dict, mutation: dict) -> dict:
     """🧬️ Applies one verb, returning a NEW document. An unaddressable member is a refusal, never a
     silent no-op — a quietly skipped mutation would report as a pass.
@@ -724,6 +770,15 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         return patched_snapshot(document, mutation["patch"])
     if tag == "setSnapshot":
         return clone(mutation["snapshot"])
+    if tag in RELATIVE_PLACEMENT:
+        motion = placement_motion(mutation)
+        addressed = [element for element in result["elements"] if element["id"] in mutation["targets"]]
+        if not addressed:
+            raise AssertionError("%s addresses none of its %d target(s) in this model" % (tag, len(mutation["targets"])))
+        for element in addressed:
+            if motion is not None:
+                element["placement"] = motion(element["placement"])
+        return result
     if tag == "insertSpatialNode":
         node = clone(mutation["node"])
         if any(existing["id"] == node["id"] for existing in result["spatial"]):
@@ -789,6 +844,10 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
         return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
     if tag == "setSnapshot":
         return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
+    if tag in RELATIVE_PLACEMENT:
+        if placement_motion(mutation) is None:
+            return []
+        return [{"mutation": "setElement", "id": element["id"], "placement": clone(element["placement"])} for element in document["elements"] if element["id"] in mutation["targets"]]
     if tag == "insertSpatialNode":
         return [{"mutation": "removeSpatialNode", "id": mutation["node"]["id"]}]
     if tag == "removeSpatialNode":
@@ -847,11 +906,11 @@ def doc_string(ctx: Context) -> str:
 
 def tower(ctx: Context) -> dict:
     """🏗️ The real 181-element capsule tower, read through this implementation's own DSL parser."""
-    return parse_dsl(ctx.fixture_bytes(TOWER_DSL).decode("utf-8"))
+    return parse_dsl(ctx.input_bytes(TOWER_DSL).decode("utf-8"))
 
 
-def fixture_json(ctx: Context, uri: str) -> dict:
-    return json.loads(ctx.fixture_bytes(uri).decode("utf-8"))
+def snapshot_json(ctx: Context, uri: str) -> dict:
+    return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
 # endregion 🔖️Scenario input
@@ -883,14 +942,14 @@ def inverse(ctx: Context) -> Outcome:
 def spec_vector(ctx: Context) -> Outcome:
     """🧫️ The same verb on its committed `(before, mutation, after)` vector, whose before-snapshot is
     the real committed building artifact decoded — a THIRD statement of what the verb means."""
-    before_uri, mutation_uri, after_uri = ctx.step_fixture_uris()[:3]
-    before = fixture_json(ctx, before_uri)
-    after = fixture_json(ctx, after_uri)
-    applied = apply_mutation(before, fixture_json(ctx, mutation_uri))
+    before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
+    before = snapshot_json(ctx, before_uri)
+    after = snapshot_json(ctx, after_uri)
+    applied = apply_mutation(before, snapshot_json(ctx, mutation_uri))
     if applied != after:
         raise AssertionError("%s: the applied model does not match the committed after-snapshot\n     got: %s\nexpected: %s" % (ctx.scenario["id"], json.dumps(applied), json.dumps(after)))
     restored = applied
-    for step in inverse_mutation(before, fixture_json(ctx, mutation_uri)):
+    for step in inverse_mutation(before, snapshot_json(ctx, mutation_uri)):
         restored = apply_mutation(restored, step)
     if restored != before:
         raise AssertionError("%s: undoing the committed mutation did not restore its before-snapshot" % ctx.scenario["id"])
@@ -908,23 +967,23 @@ def identity_round_trip(ctx: Context) -> Outcome:
     from the grammar alone, while the capsule tower's two files were written by this implementation
     and the Rust codec has to reproduce THOSE — including the `OT` element class, the `M` geometry
     reference and the absent `spatialId`, three tags no committed pack had exercised before."""
-    building_dsl = ctx.fixture_bytes(BUILDING_DSL)
+    building_dsl = ctx.input_bytes(BUILDING_DSL)
     building = parse_dsl(building_dsl.decode("utf-8"))
     printed = print_dsl(building).encode("utf-8")
     if printed != building_dsl:
         raise AssertionError("re-printing the demo building did not reproduce the committed DSL bytes (%d vs %d bytes)" % (len(printed), len(building_dsl)))
-    building_pack = ctx.fixture_bytes(BUILDING_PACK)
+    building_pack = ctx.input_bytes(BUILDING_PACK)
     if parse_pack(building_pack) != building:
         raise AssertionError("the demo building's binary twin decodes to a different model than its text")
     repacked = pack_bytes(building)
     if repacked != building_pack:
         raise AssertionError("re-encoding the demo building did not reproduce the committed pack bytes (%d vs %d bytes)" % (len(repacked), len(building_pack)))
-    tower_dsl = ctx.fixture_bytes(TOWER_DSL)
+    tower_dsl = ctx.input_bytes(TOWER_DSL)
     document = parse_dsl(tower_dsl.decode("utf-8"))
     tower_printed = print_dsl(document).encode("utf-8")
     if tower_printed != tower_dsl:
         raise AssertionError("re-printing the capsule tower did not reproduce its committed DSL bytes (%d vs %d bytes)" % (len(tower_printed), len(tower_dsl)))
-    committed_tower_pack = ctx.fixture_bytes(TOWER_PACK)
+    committed_tower_pack = ctx.input_bytes(TOWER_PACK)
     if parse_pack(committed_tower_pack) != document:
         raise AssertionError("the capsule tower's binary twin decodes to a different model than its text")
     tower_repacked = pack_bytes(document)

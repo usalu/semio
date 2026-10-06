@@ -4,10 +4,6 @@ use crate::schema::mutation_support::attribute_diff_at_path;
 use crate::schema::snapshot::{transform_list_to_string, NodePath, TransformOp};
 use crate::SvgSnapshot;
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]

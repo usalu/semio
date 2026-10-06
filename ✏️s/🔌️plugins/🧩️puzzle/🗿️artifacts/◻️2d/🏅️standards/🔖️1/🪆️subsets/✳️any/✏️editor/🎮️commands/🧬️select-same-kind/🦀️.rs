@@ -7,11 +7,11 @@ use semio_framework::kernel::UiDirtyScope;
 /// app-initiated selection write (`Emit::interaction_writes`), never a document operation.
 pub fn select_same_kind(ctx: &mut Puzzle2dActionCtx<'_>) {
     let selected_ids = ctx.selected_ids();
-    let widened = select_same_kind_ids(&ctx.scene.fixture, &selected_ids);
+    let widened = select_same_kind_ids(&ctx.scene.board_snapshot, &selected_ids);
     if widened.is_empty() {
         *ctx.ui_scope = UiDirtyScope::None;
         return;
     }
-    ctx.interaction_writes.push(puzzle2d_selection_write(&ctx.scene.fixture, &widened));
+    ctx.interaction_writes.push(puzzle2d_selection_write(&ctx.scene.board_snapshot, &widened));
     *ctx.ui_scope = crate::editor::puzzle2d::puzzle2d_select_scope();
 }

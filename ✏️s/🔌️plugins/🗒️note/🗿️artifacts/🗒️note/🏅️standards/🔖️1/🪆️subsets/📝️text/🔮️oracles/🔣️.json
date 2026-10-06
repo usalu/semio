@@ -62,9 +62,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "edits-the-intro-paragraph",
       "class": "third-party-generated",
       "target": {

@@ -1,4 +1,4 @@
-//! 🆔 Puzzle2d mutation — `ChangeManifestId`: changes the fixture's catalog-manifest reference.
+//! 🆔 Puzzle2d mutation — `ChangeManifestId`: changes the snapshot's catalog-manifest reference.
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;

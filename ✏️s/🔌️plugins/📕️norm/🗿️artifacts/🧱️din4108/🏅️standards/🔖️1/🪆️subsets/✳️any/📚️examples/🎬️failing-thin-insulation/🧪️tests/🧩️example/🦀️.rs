@@ -1,6 +1,6 @@
 use crate::document::CheckStatus;
 use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use crate::standards::v1::subsets::any::schema::snapshot::decode_din4108_dsl;
+use crate::standards::v1::subsets::any::io::text::snapshot::decode_din4108_dsl;
 
 #[semio_framework_async_macros::async_test]
 async fn failing_dsl_decodes_with_named_failures() {

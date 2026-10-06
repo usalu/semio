@@ -1,5 +1,5 @@
 /** 🧰 TXT mutation transport primitives. */
-export type TxtMutationDecodeErrorCode = 'record' | 'keys' | 'u32' | 'unicode' | 'protobuf-wire' | 'protobuf-utf8' | 'protobuf-unknown' | 'protobuf-duplicate' | 'protobuf-truncated' | 'protobuf-varint';
+export type TxtMutationDecodeErrorCode = 'record' | 'keys' | 'u32' | 'unicode';
 
 export class TxtMutationDecodeError extends Error {
   constructor(readonly code: TxtMutationDecodeErrorCode, readonly path: string) { super(`txt.mutation.${code}:${path}`); }
@@ -31,45 +31,4 @@ export const txtUnicode = (value: unknown, path: string): string => {
     } else if (code >= 0xdc00 && code <= 0xdfff) return failTxtMutationDecode('unicode', path);
   }
   return value;
-};
-
-export class TxtProtobufReader {
-  #offset = 0;
-  constructor(readonly bytes: Uint8Array) {}
-  get remaining() { return this.bytes.length - this.#offset; }
-  varint(path: string): bigint {
-    const start = this.#offset;
-    let value = 0n;
-    for (let index = 0; index < 10; index += 1) {
-      if (this.#offset >= this.bytes.length) return failTxtMutationDecode('protobuf-truncated', path);
-      const byte = this.bytes[this.#offset++]!;
-      if ((index === 9 && (byte & 0x80) !== 0) || (index === 9 && byte > 1)) return failTxtMutationDecode('protobuf-varint', path);
-      value |= BigInt(byte & 0x7f) << BigInt(index * 7);
-      if ((byte & 0x80) === 0) {
-        let width = 1;
-        for (let remainder = value; remainder >= 0x80n; remainder >>= 7n) width += 1;
-        return width === this.#offset - start ? value : failTxtMutationDecode('protobuf-varint', path);
-      }
-    }
-    return failTxtMutationDecode('protobuf-varint', path);
-  }
-  nested(path: string): Uint8Array {
-    const length = this.varint(`${path}.length`);
-    if (length > BigInt(Number.MAX_SAFE_INTEGER)) return failTxtMutationDecode('protobuf-wire', path);
-    const end = this.#offset + Number(length);
-    if (end > this.bytes.length) return failTxtMutationDecode('protobuf-truncated', path);
-    const value = this.bytes.slice(this.#offset, end);
-    this.#offset = end;
-    return value;
-  }
-  finish(path: string): void { if (this.remaining !== 0) failTxtMutationDecode('protobuf-wire', path); }
-}
-export const txtProtobufKey = (reader: TxtProtobufReader, path: string): [number, number] => {
-  const value = reader.varint(`${path}.tag`);
-  const field = value >> 3n;
-  if (field === 0n || field > BigInt(Number.MAX_SAFE_INTEGER)) return failTxtMutationDecode('protobuf-wire', path);
-  return [Number(field), Number(value & 7n)];
-};
-export const txtProtobufString = (bytes: Uint8Array, path: string): string => {
-  try { return txtUnicode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes), path); } catch { return failTxtMutationDecode('protobuf-utf8', path); }
 };

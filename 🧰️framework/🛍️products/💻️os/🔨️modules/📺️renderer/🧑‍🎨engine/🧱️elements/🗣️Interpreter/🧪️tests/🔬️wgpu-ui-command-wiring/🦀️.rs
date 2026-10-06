@@ -1413,7 +1413,14 @@ fn focused_text_editor_clipboard_composition_and_accessibility_share_the_accepte
     assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap()["text"], "日本");
 
     assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("a".into()), &chord, &mut input));
-    assert_eq!(collect_text_editor_actions_accepted(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textSelect"]);
+    let actions = collect_text_editor_actions_accepted(&mut input);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
+    assert_eq!(actions[0].controller_id, "ctrl");
+    let commit = serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap();
+    assert_eq!(commit, serde_json::json!({ "surfaceId": target.surface_id, "typing": target.surface_id, "typingCommit": "selectionJump" }));
+    assert!(commit.get("text").is_none());
+    assert_eq!(actions[1].controller_id, "ctrl");
+    assert_eq!(serde_json::to_value(actions[1].args.as_ref().unwrap()).unwrap(), serde_json::json!({ "surfaceId": target.surface_id, "start": 0, "end": 6 }));
     assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("x".into()), &chord, &mut input));
     assert_eq!(MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow().clone()), ["b", "日本"]);
     let actions = collect_text_editor_actions_accepted(&mut input);
@@ -1431,6 +1438,7 @@ fn focused_text_editor_clipboard_composition_and_accessibility_share_the_accepte
     FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = None);
     assert!(!commit_focused_text_editor_stream(701, &mut input), "a delayed stream cannot edit after focus retires");
     assert!(crate::collect_fixture_actions(&mut input).is_empty());
+    eprintln!("[DEBUG] Native text editor accessibility, composition and clipboard used canonical UTF-8 byte selection offsets");
 }
 
 fn table_stepper_scene_node(value: f64) -> UiNode {

@@ -1,4 +1,4 @@
-//! 🧪️ `drag-selection` fixture — `⏸️keeps-a-zero-offset`.
+//! 🧪️ `drag-selection` snapshot — `⏸️keeps-a-zero-offset`.
 //!
 //! A zero offset is a Warning-level `mutation.no-op`: the default diff, nothing to undo.
 //!
@@ -104,5 +104,5 @@ fn declared_outcome_holds() {
 /// ↩️ Nothing moved, so nothing is undone.
 #[test]
 fn inverse_is_empty() {
-    assert!(inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture").is_empty(), "drag-selection/keeps-a-zero-offset: a no-op must yield no inverse step");
+    assert!(inverse_puzzle2d_mutation(&before(), &mutation()).expect("valid retained mutation inverse snapshot").is_empty(), "drag-selection/keeps-a-zero-offset: a no-op must yield no inverse step");
 }

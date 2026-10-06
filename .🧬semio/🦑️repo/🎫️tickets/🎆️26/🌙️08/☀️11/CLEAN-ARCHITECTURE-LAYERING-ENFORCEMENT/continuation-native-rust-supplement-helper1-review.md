@@ -1,0 +1,5 @@
+# Rust Input Supplement Helper Review
+
+Preparation helper1 is not admitted yet. Direct append uses statSync and can read/copy a symlink literal target before a directory walker records refusal. It must lstat and refuse or explicitly qualify the linked input before reading/copying. Actual provider inventories have 32 Unified, 11 Value and 49 Kernel entries with zero nullable libraries; nullable queue handling is a generic input contract concern, not an observed blocker.
+
+The design binds actual first-party Rust lexical/resolver bodies before/after import and final seal, propagates manifest contexts through discovered literal module edges, retains immutable held sources and true nulls, and appends full current byte frames with readbacks/final guards. Directory-adjacent Rust files must not be assumed to share defining crate provenance across nested manifest boundaries. Prepared missing/generated/refusal observations and separate graph/source review remain mandatory; no full cfg or native closure is inferred from six path/TOML cases.

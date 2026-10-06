@@ -1,6 +1,6 @@
 use super::*;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec, MutationDiff};
+use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
 
 fn namespace_formatting_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧫️fixtures/🏷️namespace-formatting/🔣️.json")).unwrap()

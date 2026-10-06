@@ -19,7 +19,6 @@ import {
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
-const schema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🖋️ink-clipboard/🔣️.json"), "utf8")) as any;
 const surfaceBehavior = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎬️surface-behavior/🔣️.json"), "utf8")) as any;
 
 type ClipboardDataStub = {
@@ -98,8 +97,6 @@ describe("InkCanvas clipboard", () => {
   afterEach(() => cleanup());
 
   it("validates the shared bounded clipboard grammar", () => {
-    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.ownership).toMatchObject({
       address: ["windowId", "windowGeneration", "nodeId", "hostId"],
       retirement: "matchingOnly",

@@ -1,0 +1,306 @@
+[
+  {
+    "name": "audio",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 14,
+        "valueBytes": 514,
+        "schemaBytes": 966,
+        "tableCount": 4,
+        "maxColumns": 5,
+        "tables": [
+          {
+            "table": "semio_audio_channel",
+            "width": 3,
+            "rows": 2,
+            "semanticBytes": 48
+          },
+          {
+            "table": "semio_audio_document",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 36
+          },
+          {
+            "table": "semio_audio_sample",
+            "width": 5,
+            "rows": 9,
+            "semanticBytes": 352
+          },
+          {
+            "table": "semio_audio_tag",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 78
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 3,
+        "valueBytes": 114,
+        "schemaBytes": 966,
+        "tableCount": 4,
+        "maxColumns": 5,
+        "tables": [
+          {
+            "table": "semio_audio_channel",
+            "width": 3,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_audio_document",
+            "width": 4,
+            "rows": 1,
+            "semanticBytes": 36
+          },
+          {
+            "table": "semio_audio_sample",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_audio_tag",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 78
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "video",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 6,
+        "valueBytes": 318,
+        "schemaBytes": 865,
+        "tableCount": 3,
+        "maxColumns": 9,
+        "tables": [
+          {
+            "table": "semio_video_document",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 25
+          },
+          {
+            "table": "semio_video_sample",
+            "width": 6,
+            "rows": 2,
+            "semanticBytes": 88
+          },
+          {
+            "table": "semio_video_stream",
+            "width": 9,
+            "rows": 3,
+            "semanticBytes": 205
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 1,
+        "valueBytes": 25,
+        "schemaBytes": 865,
+        "tableCount": 3,
+        "maxColumns": 9,
+        "tables": [
+          {
+            "table": "semio_video_document",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 25
+          },
+          {
+            "table": "semio_video_sample",
+            "width": 6,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_video_stream",
+            "width": 9,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "text",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 8,
+        "valueBytes": 257,
+        "schemaBytes": 578,
+        "tableCount": 3,
+        "maxColumns": 5,
+        "tables": [
+          {
+            "table": "semio_text_document",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 26
+          },
+          {
+            "table": "semio_text_mark",
+            "width": 5,
+            "rows": 4,
+            "semanticBytes": 137
+          },
+          {
+            "table": "semio_text_run",
+            "width": 5,
+            "rows": 3,
+            "semanticBytes": 94
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 1,
+        "valueBytes": 26,
+        "schemaBytes": 578,
+        "tableCount": 3,
+        "maxColumns": 5,
+        "tables": [
+          {
+            "table": "semio_text_document",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 26
+          },
+          {
+            "table": "semio_text_mark",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_text_run",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  },
+  {
+    "name": "flow",
+    "base": "./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot",
+    "cases": [
+      {
+        "id": "full",
+        "rows": 6,
+        "valueBytes": 320,
+        "schemaBytes": 1155,
+        "tableCount": 4,
+        "maxColumns": 12,
+        "tables": [
+          {
+            "table": "semio_flow_document",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 24
+          },
+          {
+            "table": "semio_flow_edge",
+            "width": 9,
+            "rows": 1,
+            "semanticBytes": 53
+          },
+          {
+            "table": "semio_flow_node",
+            "width": 12,
+            "rows": 2,
+            "semanticBytes": 176
+          },
+          {
+            "table": "semio_flow_parameter",
+            "width": 5,
+            "rows": 2,
+            "semanticBytes": 67
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      },
+      {
+        "id": "emptyRetainedMetadata",
+        "rows": 1,
+        "valueBytes": 24,
+        "schemaBytes": 1155,
+        "tableCount": 4,
+        "maxColumns": 12,
+        "tables": [
+          {
+            "table": "semio_flow_document",
+            "width": 2,
+            "rows": 1,
+            "semanticBytes": 24
+          },
+          {
+            "table": "semio_flow_edge",
+            "width": 9,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_flow_node",
+            "width": 12,
+            "rows": 0,
+            "semanticBytes": 0
+          },
+          {
+            "table": "semio_flow_parameter",
+            "width": 5,
+            "rows": 0,
+            "semanticBytes": 0
+          }
+        ],
+        "integrity": {
+          "integrity_check": "ok"
+        },
+        "foreignKeys": []
+      }
+    ]
+  }
+]

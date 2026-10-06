@@ -92,7 +92,7 @@
     {
       "id": "semantic-step-v1",
       "description": "STEP (ISO 10303-21) exchange structures compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface `StepDiff`/`StepMutation` themselves operate over.",
-      "tolerance": 1e-06,
+      "tolerance": 0.000001,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",
@@ -345,9 +345,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-entity-applied",
       "class": "third-party-generated",
       "target": {
@@ -398,7 +397,6 @@
       "notes": "Inserted a new #99001 CARTESIAN_POINT entity with no prior referent — a genuine raw insert, produced and re-serialized by steputils' own writer."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "insert-entity-arg-applied",
       "class": "third-party-generated",
       "target": {
@@ -449,7 +447,6 @@
       "notes": "Inserted a new positional string argument at index 1 of #820 PRODUCT_DEFINITION_CONTEXT, growing its arity from 3 to 4."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-entity-applied",
       "class": "third-party-generated",
       "target": {
@@ -500,7 +497,6 @@
       "notes": "Removed #824 APPLICATION_PROTOCOL_DEFINITION outright. Confirmed zero inbound references in the source fixture, so no other instance is left dangling by this specific removal."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "remove-entity-arg-applied",
       "class": "third-party-generated",
       "target": {
@@ -551,7 +547,6 @@
       "notes": "Removed the empty description argument (index 2) of #827 PRODUCT, shrinking its arity from 4 to 3."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entity-arg-applied",
       "class": "third-party-generated",
       "target": {
@@ -602,7 +597,6 @@
       "notes": "Replaced argument index 0 of #827 PRODUCT ('Document' -> 'Renamed Document')."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-entity-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -653,7 +647,6 @@
       "notes": "Renamed the type keyword of #824 from APPLICATION_PROTOCOL_DEFINITION to APPLICATION_PROTOCOL_DEFINITION_RENAMED — a raw entity-name rewrite, args untouched."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-file-description-applied",
       "class": "third-party-generated",
       "target": {
@@ -704,7 +697,6 @@
       "notes": "Replaced the header FILE_DESCRIPTION's description list."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-file-name-applied",
       "class": "third-party-generated",
       "target": {
@@ -755,7 +747,6 @@
       "notes": "Replaced the header FILE_NAME's name/author/organization fields."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-file-schema-applied",
       "class": "third-party-generated",
       "target": {

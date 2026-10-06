@@ -1,0 +1,20 @@
+{
+  "asserted": [
+    "date",
+    "date-time",
+    "email",
+    "regex",
+    "time",
+    "uri",
+    "uuid"
+  ],
+  "annotation": [
+    "base64",
+    "double",
+    "float",
+    "int32",
+    "int64",
+    "uint32",
+    "uint64"
+  ]
+}

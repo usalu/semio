@@ -16,6 +16,36 @@ fn pane_fixture() -> Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🪟️window-pane-chrome/🔣️.json")).expect("window pane chrome fixture")
 }
 
+/// 🧰️ Guest assignments are idempotent while actual user presses retain their toggle behavior.
+#[test]
+fn guest_utility_assignments_preserve_armed_tools_and_window_scope() {
+    let fixture: Value = serde_json::from_str(include_str!("../../🧰️utility-assignment/🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut shell = split_pane_shell();
+        let session = shell.session.clone().unwrap();
+        for step in case["steps"].as_array().unwrap() {
+            let window = step["windowId"].as_str().unwrap();
+            let utility = step["utilityId"].as_str().unwrap();
+            if step["kind"] == "set" {
+                shell.queue_host_effects(&session.app.controller_id, vec![semio_framework::kernel::Effect::SetActiveUtility { window_id: window.into(), utility_id: utility.into() }]);
+            } else {
+                shell.toggle_active_utility(window, utility);
+            }
+            for window in fixture["windowIds"].as_array().unwrap() {
+                let window = window.as_str().unwrap();
+                let expected = step["expected"][window].as_str();
+                assert_eq!(shell.active_utility_for_window(window), expected, "{}: {} at {window}", case["id"], step["kind"]);
+                let pressed: Vec<_> = shell.derive_window_utility_nodes(&session, window).into_iter().filter_map(|node| match node {
+                    UtilityNode::Toggle { id, pressed: Some(true), .. } => Some(id),
+                    _ => None,
+                }).collect();
+                assert_eq!(pressed, expected.into_iter().map(String::from).collect::<Vec<_>>());
+            }
+        }
+    }
+    eprintln!("[DEBUG] Native guest utility assignments and user presses preserve eight neutral window-scoped cases");
+}
+
 fn chip_of(name: &str) -> WindowPaneChip {
     match name {
         "actions" => WindowPaneChip::Actions,
@@ -374,7 +404,7 @@ fn every_pane_chip_id_decodes_back_to_its_own_window_and_chip() {
 #[test]
 fn a_panes_utility_rail_is_derived_per_pane() {
     let mut shell = split_pane_shell();
-    shell.apply_set_active_utility("pane-top", "pane.brush");
+    shell.toggle_active_utility("pane-top", "pane.brush");
     let session = shell.session.clone().expect("fixture session");
     let pressed = |shell: &ShellState, window_id: &str| {
         shell

@@ -10,7 +10,7 @@ pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descript
 /// committed JSON: it is the canonical Rust wire of the leaf.
 #[test]
 fn committed_wire_witness_is_the_canonical_wire() {
-    crate::os_store::test_support::assert_wire_witness::<ValueMutation>(include_str!("../../🧫️fixtures/🧬️mutations/🔢️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    crate::os_store::test_support::assert_wire_witness::<ValueMutation>(include_str!("../../🧪️testing/🧬️mutations/🔢️set-value/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 
 #[test]

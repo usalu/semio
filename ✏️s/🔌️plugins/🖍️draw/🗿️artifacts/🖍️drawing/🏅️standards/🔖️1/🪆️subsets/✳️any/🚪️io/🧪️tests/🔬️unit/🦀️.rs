@@ -1,11 +1,13 @@
 use super::*;
-use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_drawing_document, default_layer_base};
+use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_layer_base};
+use crate::standards::v1::subsets::any::io::text::snapshot::{default_drawing_document};
 use crate::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
 
 /// 🎨️ The direct typed SVG route retains authored paint and positioned text.
 #[semio_framework_async_macros::async_test]
 async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes() {
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{parse_svg_xml, svg_element_from_xml_node, SvgElement};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{svg_element_from_xml_node, SvgElement};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_svg_xml};
 
     let mut rect = create_drawing_shape_layer_rect("Rect");
     if let DrawingLayerNode::Shape(shape) = &mut rect {

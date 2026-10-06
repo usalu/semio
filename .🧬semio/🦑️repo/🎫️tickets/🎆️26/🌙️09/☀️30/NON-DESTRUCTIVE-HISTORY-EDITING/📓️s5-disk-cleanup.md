@@ -1,0 +1,44 @@
+# 🧹️ Disk cleanup log (dev instruction 2026-10-06 02:2x: "Clean on your own")
+
+Every directory removed outside this ticket, with size and reason.
+
+- 2026-10-06 02:20:39 removed `.🧬semio/🌐hub/s14-p9-build` (8152 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:40 removed `.🧬semio/🌐hub/s14-p9-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:40 removed `.🧬semio/🌐hub/s14-u6-target` (237 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:40 removed `.🧬semio/🌐hub/s14-wg11-target` (123 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:41 removed `.🧬semio/🌐hub/s14-h14-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:41 removed `.🧬semio/🌐hub/s14-lw1-target` (6 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:53 removed `.🧬semio/🌐hub/s14-sh2-build` (3680 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:54 removed `.🧬semio/🌐hub/s14-cd1-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:54 removed `.🧬semio/🌐hub/s14-u6-r6target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:55 removed `.🧬semio/🌐hub/s14-sh2-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:56 removed `.🧬semio/🌐hub/s14-st2-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:20:57 removed `.🧬semio/🌐hub/s14-g12-target` (114 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:03 removed `.🧬semio/🌐hub/s14-cd1-build` (5633 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:04 removed `.🧬semio/🌐hub/s14-c13-target` (413 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:05 removed `.🧬semio/🌐hub/s14-h13-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:06 removed `.🧬semio/🌐hub/s14-lb2-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:08 removed `.🧬semio/🌐hub/s14-s20-overlay-build/target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:24 removed `.🧬semio/🌐hub/s14-s20-overlay-build/build` (6962 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:32 removed `.🧬semio/🌐hub/s14-c13-overlay/.venv` (564 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:33 removed `.🧬semio/🌐hub/s14-c13-overlay/.c13-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:34 removed `.🧬semio/🌐hub/s15-ex1-overlay/.ex1-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:34 removed `.🧬semio/🌐hub/s14-s20-overlay-build-p2/target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:52 removed `.🧬semio/🌐hub/s14-s20-overlay-build-p2/build` (5523 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:54 removed `.🧬semio/🌐hub/s14-c13-overlay/.c13-build/wasm32-wasip2` (72 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:56 removed `.🧬semio/🌐hub/rb1-prod/trusted-catalog/build-26d1e241a7760696f4c43819206627fe/stdio-target/wasm32-wasip2` (48 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:58 removed `.🧬semio/🌐hub/s15-ex1-overlay/.ex1-build/wasm32-wasip2` (216 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:21:59 removed `.🧬semio/🌐hub/jc1-boot/trusted-catalog/build-26d1e241a7760696f4c43819206627fe/stdio-target/wasm32-wasip2` (48 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:22:00 removed `.🧬semio/🌐hub/s15-ex1-overlay/.🧬semio/🦑️repo/⚡️cache/cargo/build` (35 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:22:02 removed `.🧬semio/🌐hub/s14-s20-overlay-faults/.🧬semio/🦑️repo/⚡️cache/cargo/build` (35 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:22:29 removed `.🧬semio/🌐hub/s15-rs1-overlay/.venv` (564 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:22:31 removed `.🧬semio/🌐hub/s15-rs1-overlay/.rs1-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:22:33 removed `.🧬semio/🌐hub/h4-cat/trusted-catalog/build-3b85542170c5290d3e96d5642680ac7b/stdio-target/wasm32-wasip2` (50 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:22:37 removed `.🧬semio/🌐hub/s15-rs1-overlay/.rs1-build/wasm32-wasip2` (56 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:22:39 removed `.🧬semio/🌐hub/h4-cat/trusted-catalog/build-3b85542170c5290d3e96d5642680ac7b/gis-target/wasm32-wasip2` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:22:41 removed `.🧬semio/🌐hub/s14-h14-overlay-r36/.h14-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:23:07 removed `.🧬semio/🌐hub/s14-h14-overlay-r36/.h14-build` (5066 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:23:08 removed `.🧬semio/🌐hub/s14-c12-overlay-order/.c12-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:23:31 removed `.🧬semio/🌐hub/s14-c12-overlay-order/.venv` (564 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:23:58 removed `.🧬semio/🌐hub/s14-lb2-scratch/.lb2-build` (14689 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process
+- 2026-10-06 02:24:00 removed `.🧬semio/🌐hub/s14-lb2-scratch/.lb2-target` (1 MB): cache dir marked by `CACHEDIR.TAG`, no file newer than 3 days, no process

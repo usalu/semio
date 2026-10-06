@@ -312,7 +312,7 @@ mod args_bridge {
         let value = field(args, "camera")?;
         let pose = <store::Viewport3dOrbit as semio_framework_value::FromValue>::from_value(value.clone()).ok()?;
         pose.validate().ok()?;
-        Some(dsl::json::to_json_string(&semio_framework_value::ToValue::to_value(&pose)))
+        Some(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&pose)))
     }
 
     fn unknown(action: &str) -> Fault {
@@ -1351,7 +1351,7 @@ fn camera_emit(command: &EnergyModelEditorCommand, view_state: Option<&semio_fra
         if camera.is_empty() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "setCamera carries no {position,target,zoom} pose"));
         }
-        let value = dsl::json::from_json_str::<semio_framework_value::DslValue>(camera).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
+        let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(camera, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
         let pose = <model_window::config::EnergyModelCameraPose as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is malformed: {error}")))?;
         if !pose.is_valid() {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the camera pose is not finite, or its zoom is not positive"));
@@ -1978,7 +1978,6 @@ struct EnergyModelStorePreparationFactory;
 struct EnergyModelStorePreparation {
     base: Option<store::SnapshotRead<EnergyModelSnapshot>>,
     mutation: Option<EnergyModelMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<EnergyModelSnapshot, EnergyModelMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
@@ -1987,9 +1986,9 @@ struct EnergyModelStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<EnergyModelSnapshot, EnergyModelMutation> for EnergyModelStorePreparationFactory {
-    fn preflight(&self, mutation: &EnergyModelMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
-            return Err("the energy model store preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &EnergyModelMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("the energy model store preparation rejected its lane".into());
         }
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
@@ -2012,7 +2011,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<EnergyModelSnapshot, EnergyMo
         Ok(Box::new(EnergyModelStorePreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
@@ -2067,7 +2065,7 @@ impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMuta
         if !self.closing || grant.maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.prepared.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() {
+        if self.prepared.take().is_some() || self.mutation.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(base) = self.base.take() {
@@ -2087,7 +2085,7 @@ impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMuta
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️StorePreparation

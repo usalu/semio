@@ -3,20 +3,57 @@
   "ownerTable": "provider_owner",
   "relationTable": "provider_relation",
   "owners": [
-    {"id": 1, "label": "", "blob": [], "binary64Bits": "8000000000000000", "numericClass": "finite"},
-    {"id": 2, "label": "世界🧬", "blob": [0, 255, 128, 1], "binary64Bits": "7ff8000000000011", "numericClass": "nan"}
+    {
+      "id": 1,
+      "label": "",
+      "blob": [],
+      "binary64Bits": "8000000000000000",
+      "numericClass": "finite"
+    },
+    {
+      "id": 2,
+      "label": "世界🧬",
+      "blob": [
+        0,
+        255,
+        128,
+        1
+      ],
+      "binary64Bits": "7ff8000000000011",
+      "numericClass": "nan"
+    }
   ],
-  "ordinalInput": [2, 0, 1],
-  "ordinalExpectedIds": [2, 3, 1],
-  "duplicateOrdinals": [0, 0, 2],
+  "ordinalInput": [
+    2,
+    0,
+    1
+  ],
+  "ordinalExpectedIds": [
+    2,
+    3,
+    1
+  ],
+  "duplicateOrdinals": [
+    0,
+    0,
+    2
+  ],
   "textUnit": "é",
   "textRepeats": 50000,
   "textBytes": 100000,
-  "blobUnit": [0, 255, 128, 1],
+  "blobUnit": [
+    0,
+    255,
+    128,
+    1
+  ],
   "blobRepeats": 25000,
   "blobBytes": 100000,
   "copyFrontier": 65536,
-  "tinyAllocationBytes": [0, 1],
+  "tinyAllocationBytes": [
+    0,
+    1
+  ],
   "repeatedText": "same",
   "repeatedAllocationBytes": 8,
   "orderedCancellationRows": 300,
@@ -26,5 +63,41 @@
   "schemaBytes": 4000000,
   "allocationBytes": 8000000,
   "expectedOwnershipKind": "ownershipLimit",
-  "expectedCancellationKind": "canceled"
+  "expectedCancellationKind": "canceled",
+  "cancellationDiagnostics": {
+    "parentMessage": "relational SQLite transfer cancelled",
+    "childMessage": "native encoding canceled",
+    "cases": [
+      {
+        "id": "parent-before-owned",
+        "parent": 1,
+        "child": 0,
+        "requestedBytes": 36
+      },
+      {
+        "id": "child-text-interior",
+        "parent": 0,
+        "child": 1,
+        "requestedBytes": 24
+      },
+      {
+        "id": "child-blob-interior",
+        "parent": 0,
+        "child": 1,
+        "requestedBytes": 24
+      },
+      {
+        "id": "child-ieee-text-interior",
+        "parent": 0,
+        "child": 1,
+        "requestedBytes": 24
+      },
+      {
+        "id": "child-ieee-blob-interior",
+        "parent": 0,
+        "child": 1,
+        "requestedBytes": 24
+      }
+    ]
+  }
 }

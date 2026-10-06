@@ -322,6 +322,7 @@ export interface TaxonomyScopeVerification {
   readonly scope: string;
   readonly violations: readonly TaxonomyViolation[];
   readonly clean: boolean;
+  readonly closure?: string;
 }
 
 export type TaxonomyJournalState = "prepared" | "staging" | "disposing" | "installing" | "retargeting" | "editing" | "regenerating" | "verifying" | "committed" | "rolling-back" | "rolled-back";
@@ -6289,6 +6290,34 @@ export function* verifyTaxonomyScopes(options: TaxonomyScopesOptions): Generator
   for (const [index, inventory] of inventories.entries()) if (!moving(inventory)) yield verdict(index);
   capture.incoming = incomingReferenceScan(inventories, capture.taxonomy, shared);
   for (const [index, inventory] of inventories.entries()) if (moving(inventory)) yield verdict(index);
+}
+
+/** 🫧️ The scope a verdict must be computed over for `scope` to be judged whole (verifier closure): a scope inside a mutation facet —
+ * below `<owner>/🧬️schema/🧬️mutations` or `<owner>/🧫️fixtures/🧬️mutations`, or a `🧬️schema` / `🧫️fixtures` directory that holds a
+ * `🧬️mutations` (`holdsMutations`) — widens to `<owner>`, the root that owns both the implementation cases and their fixture
+ * bundles, because the case-pairing rules read both sides; every other scope is closed already. */
+export function taxonomyClosedScope(scope: string, holdsMutations: (path: string) => boolean): string {
+  const segments = scope.replace(/\/+$/u, "").split("/");
+  const at = segments.findIndex((segment, index) => index > 0 && (segment === "🧬️schema" || segment === "🧫️fixtures") && (segments[index + 1] === "🧬️mutations" || (index === segments.length - 1 && holdsMutations(segments.join("/")))));
+  return at < 0 ? segments.join("/") : segments.slice(0, at).join("/");
+}
+
+/** 🧵️ {@link verifyTaxonomyScopes} under closure: every scope is verified over its {@link taxonomyClosedScope} — one verification per
+ * distinct closed scope — and answers only the violations at or below itself, clean when none of those is an error; a widened
+ * verdict names its `closure`. A scoped inventory that held only one side of a mutation case pairing reported the other side as
+ * missing; under closure such a finding is a finding of the tree. In the listed order. */
+export function verifyTaxonomyScopesClosed(options: TaxonomyScopesOptions): TaxonomyScopeVerification[] {
+  const { scopes, ...shared } = options;
+  const own = scopes.map((scope) => scope.replace(/\/+$/u, ""));
+  const closed = own.map((scope) => taxonomyClosedScope(scope, (path) => existsSync(join(shared.repoRoot, path, "🧬️mutations"))));
+  const verdicts = new Map<string, TaxonomyScopeVerification>();
+  for (const verification of verifyTaxonomyScopes({ ...shared, scopes: [...new Set(closed)] })) verdicts.set(verification.scope, verification);
+  return scopes.map((scope, index) => {
+    const whole = verdicts.get(closed[index]!)!;
+    if (closed[index] === own[index]) return { ...whole, scope };
+    const violations = whole.violations.filter((violation) => violation.path === own[index] || violation.path.startsWith(`${own[index]}/`));
+    return { scope, violations, clean: !violations.some((violation) => violation.severity === "error"), closure: closed[index]! };
+  });
 }
 
 /** ⚖️ A plan's verdict: its unresolved problems plus one violation per planned move, relocation, symlink retarget, evidence removal and

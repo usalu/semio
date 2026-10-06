@@ -25,7 +25,8 @@ function admitPolicy(value:unknown):CargoTestPolicyV1 { const errors=validateJso
 
 /** 🧪️ Preserves build selection on compilation and runtime filters on metadata execution. */
 export function partitionNextestExecutionFilters(args: readonly string[]): { buildArgs: string[]; executionArgs: string[]; libtestArgs: string[] } {
-  const valuedFilters = new Set(["-E", "--filter-expr", "--partition", "--run-ignored"]);
+  const reporterOptions = new Set(["--status-level", "--final-status-level"]), seenReporters = new Set<string>();
+  const valuedFilters = new Set(["-E", "--filter-expr", "--partition", "--run-ignored", ...reporterOptions]);
   const requiredBuildOptions = new Set([
     "-p",
     "--package",
@@ -74,6 +75,10 @@ export function partitionNextestExecutionFilters(args: readonly string[]): { bui
   for (let index = 0; index < cargoArgs.length; index += 1) {
     const arg = cargoArgs[index]!;
     const key = arg.split("=", 1)[0]!;
+    if (reporterOptions.has(key)) {
+      if (seenReporters.has(key)) throw Error(`Nextest reporter ${key} is repeated`);
+      seenReporters.add(key);
+    }
     if (arg === "--ignore-default-filter" || arg === "--no-fail-fast" || (arg.startsWith("-E") && arg.length > 2)) {
       executionArgs.push(arg);
     } else if (valuedFilters.has(key)) {
@@ -119,7 +124,7 @@ export function cargoTestPlanV1(request:CargoTestRequestV1, input:CargoTestPolic
     const operation=policy.nextest?"nextest":"test", args=["--release","--no-report",...(policy.nextest?["--no-tests","fail",...profile]:[]),...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip];
     return [step("build",policy.nextest?["llvm-cov",operation,"--no-run",...args]:["llvm-cov",operation,...args,"--list"]),step("assert",["llvm-cov",operation,"--no-clean",...args]),step("report",["llvm-cov","report","--release","--lcov",...packages,"--output-path",policy.coveragePath])];
   }
-  if(policy.nextest) return [step("build",["nextest","list","--list-type","binaries-only","--message-format","json",...profile,...packages,...split.buildArgs],true),step("assert",["nextest","run","--binaries-metadata",metadataPath,"--no-tests","fail","--status-level","fail","--final-status-level","fail",...(policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[]),...profile,"--manifest-path",request.manifestPath,...split.executionArgs,"--",...split.libtestArgs,...skip])];
+  if(policy.nextest) return [step("build",["nextest","list","--list-type","binaries-only","--message-format","json",...profile,...packages,...split.buildArgs],true),step("assert",["nextest","run","--binaries-metadata",metadataPath,"--no-tests","fail",...["--status-level","--final-status-level"].flatMap(option=>split.executionArgs.some(arg=>arg.split("=",1)[0]===option)?[]:[option,"fail"]),...(policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[]),...profile,"--manifest-path",request.manifestPath,...split.executionArgs,"--",...split.libtestArgs,...skip])];
   return [step("build",["build","--tests",...packages,...split.buildArgs]),step("assert",["test",...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip])];
 }
 

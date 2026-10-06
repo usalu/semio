@@ -1,4 +1,4 @@
-//! 🧪️ `drag-selection` fixture — `🪢️cross`.
+//! 🧪️ `drag-selection` scene_snapshot — `🪢️cross`.
 //!
 //! Drags the middle link `object-b` by (0, 1, 0): `object-d` is re-placed from it, while `attraction-ab` (from the unmoved `object-a`) and `attraction-bc` (to the locked `object-c`) are re-derived from the moved pose.
 //!
@@ -98,7 +98,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
     assert!(!inverse.is_empty(), "drag-selection/cross: a moving vector must have something to undo");
     let mut snapshot = base.clone();
     apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");

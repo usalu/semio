@@ -144,7 +144,7 @@ fn camera_emit(command: &EnergyModelViewCommand, view_state: Option<&semio_frame
     if camera.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "setCamera carries no {position,target,zoom} pose"));
     }
-    let value = dsl::json::from_json_str::<semio_framework_value::DslValue>(camera).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
+    let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(camera, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is not a value: {error}")))?;
     let pose = <model_window::config::EnergyModelViewerCameraPose as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("the camera pose is malformed: {error}")))?;
     if !pose.is_valid() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the camera pose is not finite, or its zoom is not positive"));
@@ -170,7 +170,7 @@ fn command_from_action(action: &str, args: Option<&semio_framework_value::DslVal
         .and_then(|value| {
             let pose = <store::Viewport3dOrbit as semio_framework_value::FromValue>::from_value(value.clone()).ok()?;
             pose.validate().ok()?;
-            Some(dsl::json::to_json_string(&semio_framework_value::ToValue::to_value(&pose)))
+            Some(semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&pose)))
         })
         .unwrap_or_default();
     Ok(EnergyModelViewCommand::SetCamera { camera })

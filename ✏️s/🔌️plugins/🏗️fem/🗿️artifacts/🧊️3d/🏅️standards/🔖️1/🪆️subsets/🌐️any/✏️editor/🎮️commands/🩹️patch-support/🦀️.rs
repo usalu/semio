@@ -2,7 +2,7 @@
 //! the six DOF toggles `tx`…`rz`) → `ReplaceSupport`.
 
 use crate::standards::v1::subsets::any::schema::mutations::replace_support;
-use crate::standards::v1::subsets::any::schema::mutations::text::Fem3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use crate::FemDof;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};

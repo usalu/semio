@@ -69,7 +69,7 @@ struct ArgumentCase {
 }
 
 #[derive(serde::Deserialize)]
-struct FileOpenImportFixture {
+struct FileOpenImportSnapshot {
     #[serde(rename = "importChunkBytes")]
     import_chunk_bytes: usize,
     #[serde(rename = "chunkCases")]
@@ -78,7 +78,7 @@ struct FileOpenImportFixture {
     argument_cases: Vec<ArgumentCase>,
 }
 
-fn fixture() -> FileOpenImportFixture {
+fn fixture() -> FileOpenImportSnapshot {
     serde_json::from_str(include_str!("../../🧫️fixtures/📤️file-open-import/🔣️.json")).expect("file-open-import fixture JSON")
 }
 

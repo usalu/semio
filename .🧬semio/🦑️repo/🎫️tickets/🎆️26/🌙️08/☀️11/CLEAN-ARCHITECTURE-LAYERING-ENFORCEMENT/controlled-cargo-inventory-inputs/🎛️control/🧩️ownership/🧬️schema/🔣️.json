@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "retirement",
+    "generation"
+  ],
+  "properties": {
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directories",
+        "maximumUnits",
+        "refusedIndex",
+        "refusedCompleted",
+        "resumedMaximumUnits",
+        "resumedIndex"
+      ],
+      "properties": {
+        "directories": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumUnits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refusedIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refusedCompleted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resumedMaximumUnits": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "resumedIndex": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "members",
+        "frames",
+        "oldReadRefused",
+        "oldSourceConserved",
+        "sameSignal",
+        "budgetReset"
+      ],
+      "properties": {
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "frames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "oldReadRefused": {
+          "type": "boolean"
+        },
+        "oldSourceConserved": {
+          "type": "boolean"
+        },
+        "sameSignal": {
+          "type": "boolean"
+        },
+        "budgetReset": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

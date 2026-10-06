@@ -2,7 +2,7 @@
 //! Event-sourced promotion of an ephemeral local-only studio onto the hub directory
 //! (`os.directory.create-space`). Share/collaboration stay blocked until the hub fold lands.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 use crate::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};

@@ -1,0 +1,11 @@
+# FEM3d Populated Public Owner Readiness
+
+HELD demand: `📥️inputs/fem3d-populated-public-owner-fresh-held.json`. No production edits, compiler or gates. Actual original Native file contains eight selected sqlite_snapshot_fem3d laws. Appending two assembly-gated public laws changes the selected denominator 8→10 only when the held router adds component-app-assembly. Existing guards/declarations/contracts remain.
+
+Distinct actual owner is Fem3dSnapshot, built by existing state() from the literal fixture: xyz nodes; bar/frame with roll; E/G/nu/rho materials; area/Iy/Iz/J sections; solids with outline, empty/nonempty holes, baseZ/height/layers/meshSize/axis; all six support DOFs; nodal/memberUdl/area loads; combinations; modal/buckling/deformation analysis. Existing TABLE roster has18 owner tables, public file adds semio_snapshot for19. Fixture tableRowCounts is authoritative; no FEM2d shape assumption is used. Actual root ArtifactApps bound at root:332–345 requires only Fem3d editor/viewer Vcs wrappers, matching hub FemApps:17–18. Held local enum closes exactly those two real wrappers and calls actual crate::artifact::<...>(). No NoPluginApp fallback.
+
+Demand uses actual public io_export_sqlite_snapshot/io_import_sqlite_snapshot, one-hop Exact routes both directions, both native Binary/Text for every literal IEEE word, full ToValue structural equality with f64 bits and exact derived Pack/Dsl payload comparison, and explicit owner retirement via ArtifactSqliteSnapshot Drop guard. Separate public raw Bun SQLite law checks actual19 tables, all fixture row counts, authored node literal id and public metadata, edits actual fem3d_solid.name id1 (distinct solid owner), then compares complete expected owner and both native payloads. Bun SQL is installed independent SQLite implementation. Test code is held and compilability/runtime remain unconfirmed.
+
+## Fresh Count Correction
+
+Fresh nine-owner audit independently counted19actual FEM3d domain tables; public metadata makes20. Earlier18/19count in this report is withdrawn. Apply only focused correction in `📥️inputs/nine-public-owner-current-focused-corrections.json`; original per-table fixture rows/fullowner predicates remain.

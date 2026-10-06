@@ -48,7 +48,3 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveEmbeddedFile {
 mod tests;
 //#endregion 🧪️Tests
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-#[path = "📝️text/🦀️.rs"]
-pub mod text;

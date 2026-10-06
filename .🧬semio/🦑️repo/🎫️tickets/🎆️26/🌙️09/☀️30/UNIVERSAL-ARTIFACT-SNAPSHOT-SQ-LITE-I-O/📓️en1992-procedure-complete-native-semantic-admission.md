@@ -1,0 +1,11 @@
+# EN1992 and Procedure Complete Native Semantic Admission
+
+The unchanged original registered native cohort reported EN1992 12 tests, 10 passed and 2 failed, and Procedure 9 tests, 7 passed and 2 failed. The failures accepted caller semantic byte limits that should refuse before native typed ownership. These genuine Before receipts remain in the retained complementary native log.
+
+EN1992 now mounts a shared owned/borrowed relational row visitor and a pretyped CST census for all 13 individually authored tables. The independent review verified all physical widths, exact parser record roles, declaration-based enum decoding and SQL spellings, all optional records, child actions and IEEE scalar costs. Both direct native directions and public encoding preflight copy and enforce the caller's schema, table, column, row and semantic byte limits. The prior speculative encoding forecast is removed.
+
+Procedure now admits its document and both five-field child handles with the same owned/borrowed row visitor and a complete pretyped record census. Its existing controlled record producer remains the paid native encoder.
+
+The shared language-neutral fixture demands cover every authored physical column. New Source and Native laws ask the independent SQLite engine for storage classes, UTF8 cell lengths and full table widths. EN1992 exercises the full authored document, all eight exact binary64 words across all 60 floating fields, and absence of all four optional member records plus tightness. Procedure exercises all eleven literal text fields and independent edits. Both demand exact and one-short row/semantic byte limits in both native forms and relational directions.
+
+The actual registered Source cohort completed with exit 0: EN1992 11 tests and Procedure 5 tests, zero failures, including the independent full-cell exact/one-short laws and both strict type checks. The retained owning log is generated/root-en1992-procedure-independent-semantic-source-after.log; Nx duration was 38.2 seconds. No fresh owning Native success has yet been claimed. The first rustfmt held-file check attempted module resolution against the retained input folder and refused its intentionally absent child path. Repeating with child resolution disabled produced formatting differences and no syntax diagnostic. Actual Rust compilation and runtime remain required.

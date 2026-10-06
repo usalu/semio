@@ -3,7 +3,7 @@
 
 use super::*;
 use crate::editor::grid2d::window::Grid2dWindowConfig;
-use crate::schema::inferences::solve_with_clock;
+use crate::host::inferences::solve_with_clock;
 
 fn layers(document: &Grid2dSnapshot, config: &Grid2dWindowConfig) -> Vec<Value> {
     serde_json::from_str(&layers_json(document, cached_commit(document, config).as_ref())).expect("layers are real json")

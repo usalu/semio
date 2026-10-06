@@ -1794,8 +1794,8 @@ function renderAuthoredSurfaceReference(input: any) {
 async function runAuthoredSurfaceOracle(repoRoot: string, output: string): Promise<void> {
   await mkdir(output, { recursive: true });
   const engine = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine");
-  const surface = JSON.parse(await readFile(join(engine, "🧫️fixtures/🎨️world3d-inline-surface/🔣️.json"), "utf8"));
-  const schema = JSON.parse(await readFile(join(engine, "🧬️schema/🎨️world3d-inline-surface/🔣️.json"), "utf8"));
+  const surface = JSON.parse(await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json"), "utf8"));
+  const schema = JSON.parse(await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🧬️schema/🎨️world3d-inline-surface/🔣️.json"), "utf8"));
   const validate = new Ajv2020({ allErrors: true }).compile(schema);
   if (!validate(surface)) throw new Error(JSON.stringify(validate.errors));
   const fixture = JSON.parse(await readFile(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎨️scene-shading/🔣️.json"), "utf8"));

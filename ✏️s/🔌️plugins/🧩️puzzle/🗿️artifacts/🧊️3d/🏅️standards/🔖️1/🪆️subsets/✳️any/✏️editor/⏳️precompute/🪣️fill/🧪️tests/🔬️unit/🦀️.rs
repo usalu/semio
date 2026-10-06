@@ -14,22 +14,24 @@ fn faulted(outcome: StepOutcome) -> bool {
 
 use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, precompute_work_clock, precompute_work_done, OwnerReservationLimit, DOCUMENT_CELL_MEMBER_SLOTS, DOCUMENT_CELL_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
 use semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES;
-use crate::standards::v1::subsets::any::schema::{BrushKindWeights, Fixture, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
+use crate::standards::v1::subsets::any::schema::{BrushKindWeights, EngineSceneSnapshot, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
 use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
 
 /// 🧮️ Primitive work one fill builder step may cost ([`precompute_work_done`]): one transition of the cursorized planner —
-/// one preparation item, one candidate, one broad-phase lookup or one collision probe.
-const FILL_STEP_WORK_CEILING: u64 = 100_000;
+/// one preparation item, one candidate, one broad-phase lookup or one collision probe. The measured maximum is 177 units
+/// (the adversarial broad-phase plan; an empty scene's steps cost 1).
+const FILL_STEP_WORK_CEILING: u64 = 512;
 
-/// 🧮️ Primitive work the adversarial broad-phase plan may spend before its first candidate is on screen.
-const FILL_FIRST_CANDIDATE_WORK_CEILING: u64 = 10_000_000;
+/// 🧮️ Primitive work the adversarial broad-phase plan may spend before its first candidate is on screen. It measures
+/// 1490 units.
+const FILL_FIRST_CANDIDATE_WORK_CEILING: u64 = 4_096;
 
 /// 🎯️ What a fresh editor asks for — the product default, never a planner ceiling.
 const TEST_REQUESTED_COUNT: usize = 100;
 
 fn empty_builder() -> FillBuilder {
     let scene = Arc::new(SceneConfig {
-        fixture: Fixture::default(),
+        scene_snapshot: EngineSceneSnapshot::default(),
         kind_catalogs: Some(KindCatalogBundle::default()),
         kind_compatibility: Vec::new(),
         contact_tolerance: 0.0,
@@ -51,9 +53,9 @@ fn test_context<'a>(builder: &FillBuilder, cancel: semio_framework_job::CancelTo
 fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
     #[derive(Clone, Copy)]
     enum HostileRoot {
-        FixtureObjects,
-        FixtureAttractions,
-        FixtureTargetVolumes,
+        EngineSceneObjects,
+        SceneAttractions,
+        SceneTargetVolumes,
         Meshes,
         CatalogObjects,
         CatalogVortices,
@@ -62,15 +64,15 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         ObjectWeights,
         VortexWeights,
     }
-    let object = |index| FixtureObject { id: format!("object-{index:02}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new() };
+    let object = |index| EngineSceneObject { id: format!("object-{index:02}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new() };
     let body = collision_body_from_buffers(&[0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 4.0, 0.0], &[0, 1, 2]).expect("body");
     let roots = |branch: HostileRoot, count| {
         let mut scene =
-            SceneConfig { fixture: Fixture::default(), kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), contact_tolerance: 0.0, seed: 31, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
+            SceneConfig { scene_snapshot: EngineSceneSnapshot::default(), kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), contact_tolerance: 0.0, seed: 31, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
         let mut meshes = HashMap::new();
         match branch {
-            HostileRoot::FixtureObjects => scene.fixture.objects.extend((0..count).map(object)),
-            HostileRoot::FixtureAttractions => scene.fixture.attractions.extend((0..count).map(|index| AttractionProps {
+            HostileRoot::EngineSceneObjects => scene.scene_snapshot.objects.extend((0..count).map(object)),
+            HostileRoot::SceneAttractions => scene.scene_snapshot.attractions.extend((0..count).map(|index| AttractionProps {
                 id: format!("attraction-{index:02}"),
                 attracting: format!("a-{index:02}"),
                 attracted: format!("b-{index:02}"),
@@ -83,7 +85,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
                 x: 0.0,
                 y: 0.0,
             })),
-            HostileRoot::FixtureTargetVolumes => scene.fixture.target_volumes.extend((0..count).map(|index| WorldVolumeProps { id: format!("volume-{index:02}"), origin: [0.0; 3], orientation: None, scale: None })),
+            HostileRoot::SceneTargetVolumes => scene.scene_snapshot.target_volumes.extend((0..count).map(|index| WorldVolumeProps { id: format!("volume-{index:02}"), origin: [0.0; 3], orientation: None, scale: None })),
             HostileRoot::Meshes => meshes.extend((0..count).map(|index| (format!("mesh-{index:02}"), body.clone()))),
             HostileRoot::CatalogObjects => scene.kind_catalogs.as_mut().expect("catalogs").objects.extend((0..count).map(|index| ObjectKind { id: format!("catalog-object-{index:02}"), ..Default::default() })),
             HostileRoot::CatalogVortices => scene.kind_catalogs.as_mut().expect("catalogs").vortices.extend((0..count).map(|index| VortexKindCatalog { id: format!("catalog-vortex-{index:02}"), ..Default::default() })),
@@ -97,9 +99,9 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         FillPreparationRoots::new(Arc::new(scene), Arc::new(meshes))
     };
     let branches = [
-        (HostileRoot::FixtureObjects, "fixture-objects", DOCUMENT_OBJECT_SLOTS),
-        (HostileRoot::FixtureAttractions, "fixture-attractions", DOCUMENT_ATTRACTION_SLOTS),
-        (HostileRoot::FixtureTargetVolumes, "fixture-target-volumes", DOCUMENT_VOLUME_SLOTS),
+        (HostileRoot::EngineSceneObjects, "scene_snapshot-objects", DOCUMENT_OBJECT_SLOTS),
+        (HostileRoot::SceneAttractions, "scene-attractions", DOCUMENT_ATTRACTION_SLOTS),
+        (HostileRoot::SceneTargetVolumes, "scene-target-volumes", DOCUMENT_VOLUME_SLOTS),
         (HostileRoot::Meshes, "meshes", DOCUMENT_KIND_SLOTS),
         (HostileRoot::CatalogObjects, "catalog-objects", DOCUMENT_KIND_SLOTS),
         (HostileRoot::CatalogVortices, "catalog-vortices", DOCUMENT_KIND_SLOTS),
@@ -363,7 +365,7 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
         vortices: Vec::new(),
         cables: Vec::new(),
     };
-    let host = FixtureObject {
+    let host = EngineSceneObject {
         id: "host".into(),
         object_kind: Some("Host".into()),
         anchor: Default::default(),
@@ -374,7 +376,7 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
         vortices: vec![VortexProps { id: "v0".into(), vortex_kind: Some("port-a".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
     };
     let mut objects = vec![host];
-    objects.extend((0..30).map(|index| FixtureObject {
+    objects.extend((0..30).map(|index| EngineSceneObject {
         id: format!("obstacle-{index:04}"),
         object_kind: Some("Obstacle".into()),
         anchor: Default::default(),
@@ -389,7 +391,7 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
     let body = collision_body_from_buffers(&positions, &indices).expect("stress body");
     let meshes = HashMap::from([("/stress/box.glb".to_string(), body)]);
     let scene = Arc::new(SceneConfig {
-        fixture: Fixture { objects, attractions: Vec::new(), target_volumes: Vec::new() },
+        scene_snapshot: EngineSceneSnapshot { objects, attractions: Vec::new(), target_volumes: Vec::new() },
         kind_catalogs: Some(catalogs),
         kind_compatibility: Vec::new(),
         contact_tolerance: 0.0,
@@ -400,13 +402,12 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
     let mut builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(meshes)), Operation::new(OperationId(29), RevisionId(1), Generation(1), 29), TEST_REQUESTED_COUNT);
     let mut sequence = 0;
     let started = precompute_work_done();
-    let (mut first_candidate, mut worst) = (None, 0_u64);
+    let mut first_candidate = None;
     for _ in 0..50_000 {
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
         let before = precompute_work_done();
         let outcome = builder.step(&mut context);
         let work = precompute_work_done() - before;
-        worst = worst.max(work);
         assert!(work <= FILL_STEP_WORK_CEILING, "stage {:?} cost {work} units of primitive work, over {FILL_STEP_WORK_CEILING}", builder.stage);
         if first_candidate.is_none() && builder.current_preview.is_some() {
             first_candidate = Some(precompute_work_done() - started);
@@ -415,7 +416,6 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
             break;
         }
     }
-    eprintln!("[DEBUG] adversarial broad-phase fill: worst step {worst} units, first candidate after {first_candidate:?} units");
     assert!(first_candidate.is_some_and(|work| work <= FILL_FIRST_CANDIDATE_WORK_CEILING), "adversarial fill did not publish its first candidate within {FILL_FIRST_CANDIDATE_WORK_CEILING} units: {first_candidate:?}");
     assert!(matches!(builder.stage, FillJobStage::Complete(_)));
     assert_eq!(builder.sequence.len(), 1);
@@ -432,7 +432,7 @@ fn document_capacities_match_the_language_neutral_capacity_law() {
         [DOCUMENT_OBJECT_SLOTS, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_VORTEX_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_CELL_SLOTS, DOCUMENT_CELL_MEMBER_SLOTS]
     );
     let nakagin = |field: &str| capacities["nakagin"][field].as_u64().unwrap_or_else(|| panic!("nakagin {field}")) as usize;
-    assert!(nakagin("objects") < DOCUMENT_OBJECT_SLOTS, "the flagship fixture leaves the object capacity room to plan into");
+    assert!(nakagin("objects") < DOCUMENT_OBJECT_SLOTS, "the flagship scene_snapshot leaves the object capacity room to plan into");
     assert!(nakagin("attractions") < DOCUMENT_ATTRACTION_SLOTS);
     assert!(nakagin("vortices") <= DOCUMENT_VORTEX_SLOTS && nakagin("objects") <= nakagin("vortices"), "the measured vortices-per-object ratio backs the vortex capacity");
     assert!(nakagin("objectKinds").max(nakagin("vortexKinds")).max(nakagin("compatibilityRows")) <= DOCUMENT_KIND_SLOTS);
@@ -445,7 +445,7 @@ const NAKAGIN_VORTEX_KINDS: usize = 18;
 const NAKAGIN_COMPATIBILITY_ROWS: usize = 14;
 const NAKAGIN_MESH_URL: &str = "/nakagin/capsule.glb";
 
-/// 🏢️ The flagship fixture at document scale — 180 capsules, 360 attractions, 12 object kinds, 18
+/// 🏢️ The flagship scene_snapshot at document scale — 180 capsules, 360 attractions, 12 object kinds, 18
 /// vortex kinds, 14 compatibility rows — as the fill lane's own preparation roots. Two laws drive
 /// it: one on an unconstrained guest, one under a fragmented guest's reservation ceiling.
 fn nakagin_scale_roots() -> FillPreparationRoots {
@@ -462,8 +462,8 @@ fn nakagin_scale_roots() -> FillPreparationRoots {
         vortices: (0..NAKAGIN_VORTEX_KINDS).map(|index| VortexKindCatalog { id: format!("port-{index:02}"), ..Default::default() }).collect(),
         cables: Vec::new(),
     };
-    let objects: Vec<FixtureObject> = (0..NAKAGIN_OBJECTS)
-        .map(|index| FixtureObject {
+    let objects: Vec<EngineSceneObject> = (0..NAKAGIN_OBJECTS)
+        .map(|index| EngineSceneObject {
             id: format!("capsule-{index:03}"),
             object_kind: Some(format!("capsule-kind-{:02}", index % NAKAGIN_OBJECT_KINDS)),
             anchor: Default::default(),
@@ -498,7 +498,7 @@ fn nakagin_scale_roots() -> FillPreparationRoots {
         .collect();
     let body = collision_body_from_buffers(&[-4.0, -4.0, 0.0, 4.0, -4.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 8.0], &[0, 1, 2, 0, 1, 3, 1, 2, 3, 2, 0, 3]).expect("capsule body");
     let scene = Arc::new(SceneConfig {
-        fixture: Fixture { objects, attractions, target_volumes: Vec::new() },
+        scene_snapshot: EngineSceneSnapshot { objects, attractions, target_volumes: Vec::new() },
         kind_catalogs: Some(catalogs),
         kind_compatibility,
         contact_tolerance: 0.0,
@@ -544,7 +544,7 @@ fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object() {
 /// 🧊️ A wasm guest runs on one linear memory that grows and never shrinks, served by `dlmalloc` with
 /// a 64 KiB granularity: the FIRST request a fragmented or nearly-full guest refuses is one larger
 /// than a granularity unit. The fill session's own owners used to be exactly that — one 432 KiB
-/// block for `FixedOwnerVec<FixtureObject, DOCUMENT_OBJECT_SLOTS>`, one 96 KiB block for the
+/// block for `FixedOwnerVec<EngineSceneObject, DOCUMENT_OBJECT_SLOTS>`, one 96 KiB block for the
 /// collision entry map — so ~44 s into a Nakagin fill run the guest refused them and the whole plan
 /// was abandoned (`CollisionMutationStep::Rejected(Capacity)`, ticket 26/09/02 build #29 and W-F6
 /// §8 item 2). A native suite cannot exhaust a 512 MiB linear memory, so the law installs the
@@ -687,7 +687,7 @@ fn lowering_the_requested_count_discards_the_planned_tail_and_raising_continues(
 }
 
 //#region ⏯️FillRunJob
-use crate::standards::v1::subsets::any::schema::mutations::text::Puzzle3dPlaySnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use semio_framework_tool_run::{ToolRunId, ToolRunTraceCursor, ToolRunTraceStore, TOOL_RUN_TRACE_PAGE_BYTES_MAX};
 
@@ -706,18 +706,18 @@ fn never() -> Option<u64> {
 /// app's scaled box fallback; answers the roots, the sorted mesh lane and each mesh's raw positions.
 fn example_fill_roots(document: &str, seed: u32) -> (FillPreparationRoots, Vec<String>, Vec<f32>) {
     let text = match document {
-        "nakagin" => crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT,
-        "concrete-forest" => crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT,
+        "nakagin" => crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT,
+        "concrete-forest" => crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT,
         other => panic!("unknown example document {other}"),
     };
-    let snapshot = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(text).expect("example parses");
+    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example parses");
     let envelope = crate::editor::puzzle3d::scene_from_snapshot(&snapshot, Default::default(), "fill");
     let mut scene: SceneConfig = semio_framework_value::FromValue::from_value(crate::editor::puzzle3d::scene_config_value(&envelope)).expect("scene config decodes");
     scene.seed = seed;
     let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND);
     let positions: Vec<f32> = fallback.positions.iter().map(|value| value * FILL_RUN_BOX_SCALE).collect();
     let body = collision_body_from_buffers(&positions, &fallback.indices).expect("fallback body");
-    let mut lane = crate::editor::puzzle3d::collect_mesh_urls(&envelope.fixture);
+    let mut lane = crate::editor::puzzle3d::collect_mesh_urls(&envelope.scene_snapshot);
     lane.push(crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND.to_string());
     lane.sort();
     lane.dedup();
@@ -860,15 +860,15 @@ fn fill_run_summary(job: &FillRunJob, mirror: &FillRunMirror, prefix: usize) -> 
     })
 }
 
-/// ⚖️ LAW (language-neutral fixture `🎞️fill-run.json`): a seeded shipped document and a requested count
+/// ⚖️ LAW (language-neutral scene_snapshot `🎞️fill-run.json`): a seeded shipped document and a requested count
 /// produce exactly the declared verdict prefix, counters, op and entity counts — and the laws that hold
 /// for every run: two ops and one entity per placement, one `success` per placement, one `danger` per
 /// collision, one `warning` per rule refusal, ops alternating `create_object` / `connect_vortices` whose
 /// entity is the created object's own id digest.
 #[test]
 fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
-    assert_eq!(fixture["laws"]["opsPerPlacement"].as_u64(), Some(u64::from(FILL_RUN_OPS_PER_PLACEMENT)));
+    let scene_snapshot: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run scene_snapshot");
+    assert_eq!(scene_snapshot["laws"]["opsPerPlacement"].as_u64(), Some(u64::from(FILL_RUN_OPS_PER_PLACEMENT)));
     let schema: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🔣️.json")).expect("schema");
     let vocabulary = &schema["$defs"]["Puzzle3dFillRun"]["x-semio-toolRun"];
     assert_eq!(vocabulary["stages"].as_array().map(|stages| stages.iter().filter_map(serde_json::Value::as_str).collect::<Vec<_>>()), Some(FillRunStage::ALL.iter().map(|stage| stage.id()).collect()));
@@ -877,7 +877,7 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
     assert_eq!(reasons, FillRunReason::ALL.iter().map(|reason| (u64::from(reason.code()), reason.id().to_string(), reason.verdict().as_str().to_string())).collect::<Vec<_>>());
     assert_eq!(vocabulary["checkpoint"]["bytes"].as_u64(), Some(FillRunCheckpoint::BYTES as u64));
     let mut disagreements = Vec::new();
-    for case in fixture["cases"].as_array().expect("cases") {
+    for case in scene_snapshot["cases"].as_array().expect("cases") {
         let document = case["document"].as_str().expect("document");
         let seed = case["seed"].as_u64().expect("seed");
         let requested = case["requested"].as_u64().expect("requested") as usize;
@@ -898,8 +898,8 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         let candidates = mirror.trace.len() as u64 - marked;
         assert!(mirror.trace.len() as u64 >= marked && candidates <= 1, "only the last tested candidate stays resident next to every marked vortex: {candidates} candidates, {marked} marked");
         for (index, pair) in mirror.ops.chunks(2).enumerate() {
-            let Ok(Puzzle3dMutation::CreateObject(create)) = crate::standards::v1::subsets::any::schema::mutations::binary::decode_op(&pair[0]) else { panic!("op {} is create_object", 2 * index) };
-            let Ok(Puzzle3dMutation::ConnectVortices(connect)) = crate::standards::v1::subsets::any::schema::mutations::binary::decode_op(&pair[1]) else { panic!("op {} is connect_vortices", 2 * index + 1) };
+            let Ok(Puzzle3dMutation::CreateObject(create)) = crate::standards::v1::subsets::any::io::binary::mutations::decode_op(&pair[0]) else { panic!("op {} is create_object", 2 * index) };
+            let Ok(Puzzle3dMutation::ConnectVortices(connect)) = crate::standards::v1::subsets::any::io::binary::mutations::decode_op(&pair[1]) else { panic!("op {} is connect_vortices", 2 * index + 1) };
             assert_eq!(mirror.entities[index], fill_run_entity(&create.object.id));
             assert_eq!(connect.attracted.split(':').next(), Some(create.object.id.as_str()), "the attraction docks the created object");
             assert_eq!(create.object.id, job.builder().appended_objects[index].id);
@@ -908,7 +908,7 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         assert_eq!((progress.state, progress.completed, progress.total), (ToolRunState::Complete, locked, Some(requested as u64)));
         assert_eq!(progress.counters.iter().map(|counter| counter.value).collect::<Vec<_>>(), vec![tested, locked, collisions, rejected, marked]);
     }
-    assert!(disagreements.is_empty(), "the fill run fixture disagrees:\n{}", disagreements.join("\n"));
+    assert!(disagreements.is_empty(), "the fill run scene_snapshot disagrees:\n{}", disagreements.join("\n"));
 }
 
 fn parry_hull(pose: &Pose3d, positions: &[f32]) -> parry3d::shape::ConvexPolyhedron {
@@ -931,7 +931,7 @@ const FILL_RUN_OWN_MESH_URL: &str = "/own-mesh/body.glb";
 fn own_mesh_fill_roots(document: &str, seed: u32, scale: f32) -> (FillPreparationRoots, Vec<String>, HashMap<String, Vec<f32>>) {
     let (roots, mut lane, positions) = example_fill_roots(document, seed);
     let mut scene = (*roots.scene).clone();
-    for object in scene.fixture.objects.iter_mut().step_by(2) {
+    for object in scene.scene_snapshot.objects.iter_mut().step_by(2) {
         object.mesh_url = Some(FILL_RUN_OWN_MESH_URL.into());
     }
     let own: Vec<f32> = positions.iter().map(|value| value * scale).collect();
@@ -970,11 +970,11 @@ fn fill_run_parry3d_tally(roots: FillPreparationRoots, lane: Vec<String>, positi
     mirror.drive(&mut job, u64::MAX, 1_000_000);
     let placed = &job.builder().placed;
     let base = placed.len() - job.builder().sequence.len();
-    assert_eq!(base, scene.fixture.objects.len(), "every document body is a collision body");
+    assert_eq!(base, scene.scene_snapshot.objects.len(), "every document body is a collision body");
     let box_positions = &positions[crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND];
     let rendered = |url: Option<&str>| url.map(str::trim).filter(|url| !url.is_empty()).and_then(|url| positions.get(url)).unwrap_or(box_positions);
     let bodies: Vec<(String, parry3d::shape::ConvexPolyhedron)> = scene
-        .fixture
+        .scene_snapshot
         .objects
         .iter()
         .map(|object| (object.id.clone(), parry_hull(&pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale), rendered(object.mesh_url.as_deref()))))
@@ -1018,8 +1018,8 @@ fn fill_run_parry3d_tally(roots: FillPreparationRoots, lane: Vec<String>, positi
 /// documents together decide both collisions and fits.
 #[test]
 fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
-    let oracle = &fixture["laws"]["parryOracle"];
+    let scene_snapshot: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run scene_snapshot");
+    let oracle = &scene_snapshot["laws"]["parryOracle"];
     let (mut collisions, mut fits) = (0, 0);
     let mut documents = vec![(oracle, false)];
     documents.extend(oracle["ownMeshVariants"].as_array().expect("own mesh variants").iter().map(|variant| (variant, true)));
@@ -1042,14 +1042,14 @@ fn fill_run_job_collision_verdicts_agree_with_the_parry3d_oracle() {
     assert!(collisions > 0 && fits > 0, "the oracle documents must decide both collisions ({collisions}) and fits ({fits})");
 }
 
-/// ⚖️ LAW: a long run (at least the fixture's `candidates` tested) delivers every trace record — the ledger's resident
+/// ⚖️ LAW: a long run (at least the scene_snapshot's `candidates` tested) delivers every trace record — the ledger's resident
 /// store and a renderer that only ever reads byte-budgeted deltas through its echoed cursor hold exactly the key set the
 /// job reported (every marked vortex and the ONE candidate still on screen — each newly tested candidate retires the
 /// previous one), with the verdict the job reported last.
 #[test]
 fn fill_run_job_delivers_every_trace_record_of_a_long_run() {
-    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
-    let law = &fixture["laws"]["delivery"];
+    let scene_snapshot: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run scene_snapshot");
+    let law = &scene_snapshot["laws"]["delivery"];
     let minimum = law["candidates"].as_u64().expect("candidates");
     let seed = law["seed"].as_u64().expect("seed");
     let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
@@ -1132,12 +1132,12 @@ fn fold_overlay_op(overlay: &Puzzle3dPlaySnapshot, bytes: &[u8]) -> Option<Puzzl
 /// deterministic: the same turns, ticks and costs on an idle and a saturated machine.
 #[test]
 fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_nakagin() {
-    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
-    let law = &fixture["laws"]["interactive"];
+    let scene_snapshot: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run scene_snapshot");
+    let law = &scene_snapshot["laws"]["interactive"];
     let number = |key: &str| law[key].as_u64().unwrap_or_else(|| panic!("interactive law {key}"));
     let (budget, ceiling, append_ceiling, minimum_turns, seed) = (number("budgetWork"), number("stepWorkCeiling"), number("appendOpsCeiling") as usize, number("turns") as usize, number("seed"));
     let (roots, lane, _) = example_fill_roots(law["document"].as_str().expect("document"), seed as u32);
-    let mut overlay = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses"))).into());
+    let mut overlay = Puzzle3dPlaySnapshot::new((&semio_framework_value::ToValue::to_value(&crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses"))).into());
     let mut job = fill_run_job(roots, lane, seed, number("requested") as usize);
     let operation = job.operation();
     let (mut sequence, mut verdict) = (0, None);
@@ -1163,7 +1163,6 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
         }
     }
     let counters = job.counters();
-    eprintln!("[DEBUG] fill run nakagin: worst step {worst} units at turn {worst_turn} of {turns}, {appends} appending ticks, worst append {worst_append} ops (slice {budget})");
     assert!(appends > 0, "the measured run appended at least one tick of provisional ops");
     assert!(worst_append <= append_ceiling, "one tick appended {worst_append} provisional ops, over {append_ceiling}");
     assert!(turns >= minimum_turns, "the law measures at least {minimum_turns} turns, the run took {turns}");
@@ -1216,7 +1215,7 @@ fn fill_run_job_step_with_one_unit_of_fuel_shows_each_candidate_before_its_verdi
 /// provisional document instance, never as a pile of past collision records.
 #[test]
 fn fill_run_job_keeps_only_the_current_candidate_on_screen() {
-    // 🧫️ The fixture's concrete-forest seed 3 run: 40 placements, collisions and marked vortices all occur.
+    // 🧫️ The scene_snapshot's concrete-forest seed 3 run: 40 placements, collisions and marked vortices all occur.
     let (roots, lane, _) = example_fill_roots("concrete-forest", 3);
     let mut job = fill_run_job(roots, lane, 3, 40);
     let mut mirror = FillRunMirror::new();
@@ -1361,8 +1360,8 @@ fn fill_run_job_rebuilt_from_a_checkpoint_replays_silently_and_continues_like_th
 /// refused capacity through the run's tick, and the next step faults the run — nothing was placed.
 #[test]
 fn fill_run_job_capacity_refusal_publishes_a_danger_step_before_faulting() {
-    let objects = (0..=DOCUMENT_OBJECT_SLOTS).map(|index| FixtureObject { id: format!("rejected-{index:04}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new() }).collect();
-    let scene = Arc::new(SceneConfig { fixture: Fixture { objects, attractions: Vec::new(), target_volumes: Vec::new() }, kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), contact_tolerance: 0.0, seed: 37, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() });
+    let objects = (0..=DOCUMENT_OBJECT_SLOTS).map(|index| EngineSceneObject { id: format!("rejected-{index:04}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new() }).collect();
+    let scene = Arc::new(SceneConfig { scene_snapshot: EngineSceneSnapshot { objects, attractions: Vec::new(), target_volumes: Vec::new() }, kind_catalogs: Some(KindCatalogBundle::default()), kind_compatibility: Vec::new(), contact_tolerance: 0.0, seed: 37, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() });
     let builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::new())), Operation::new(OperationId(37), RevisionId(9), Generation(11), 37), TEST_REQUESTED_COUNT);
     let mut job = FillRunJob::new(builder, fill_run_identity(), Vec::new(), [0; 32]);
     let mut sequence = 0;
@@ -1372,7 +1371,7 @@ fn fill_run_job_capacity_refusal_publishes_a_danger_step_before_faulting() {
     let operation = job.operation();
     let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), root_cancel_token(), never, &mut sequence);
     let StepOutcome::Fault(fault) = job.step(&mut context) else { panic!("the step after the danger step faults the run") };
-    assert_eq!(fault.detail.single_page(), Some(format!("preparation-capacity:fixture-objects:{DOCUMENT_OBJECT_SLOTS}").as_bytes()));
+    assert_eq!(fault.detail.single_page(), Some(format!("preparation-capacity:scene_snapshot-objects:{DOCUMENT_OBJECT_SLOTS}").as_bytes()));
     assert!(faulted(StepOutcome::Fault(fault)));
 }
 
@@ -1447,7 +1446,7 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     let mut intruder = placements[INTRUDED].object.clone();
     intruder.id = "intruder".into();
     intruder.vortices.clear();
-    scene.fixture.objects.push(intruder);
+    scene.scene_snapshot.objects.push(intruder);
     let mut intruded = FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(Arc::new(scene), head.meshes.clone()), placements.clone(), 1_000);
     let ticks = drive_revalidation(&mut intruded, operation);
     let conflicts = intruded.conflicts().to_vec();
@@ -1483,7 +1482,7 @@ fn own_mesh_kind(id: &str, url: &str, vortices: Vec<ObjectKindVortexTemplate>) -
 /// body of the host's kind carrying its own mesh where both candidates dock, while the kind's mesh is the same cube
 /// shifted `kind_offset` away.
 fn own_mesh_roots(blocker: bool, kind_offset: f32) -> FillPreparationRoots {
-    let host = FixtureObject {
+    let host = EngineSceneObject {
         id: "host".into(),
         object_kind: Some("Host".into()),
         anchor: Default::default(),
@@ -1495,11 +1494,11 @@ fn own_mesh_roots(blocker: bool, kind_offset: f32) -> FillPreparationRoots {
     };
     let mut objects = vec![host.clone()];
     if blocker {
-        objects.push(FixtureObject { id: "blocker".into(), mesh_url: Some("/test/blocker.glb".into()), vortices: Vec::new(), ..host });
+        objects.push(EngineSceneObject { id: "blocker".into(), mesh_url: Some("/test/blocker.glb".into()), vortices: Vec::new(), ..host });
     }
     let port = || vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".into()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]), ..Default::default() }];
     let scene = SceneConfig {
-        fixture: Fixture { attractions: Vec::new(), target_volumes: Vec::new(), objects },
+        scene_snapshot: EngineSceneSnapshot { attractions: Vec::new(), target_volumes: Vec::new(), objects },
         kind_catalogs: Some(KindCatalogBundle {
             objects: vec![own_mesh_kind("Host", "/test/host-kind.glb", Vec::new()), own_mesh_kind("Near", "/test/near.glb", port()), own_mesh_kind("Late", "/test/late.glb", port())],
             vortices: vec![VortexKindCatalog { id: "port-a".into(), default_cable_kind: None, ..Default::default() }, VortexKindCatalog { id: "port-b".into(), default_cable_kind: None, ..Default::default() }],
@@ -1526,13 +1525,13 @@ fn own_mesh_lane() -> Vec<String> {
 fn all_objects_roots(case: &serde_json::Value) -> FillPreparationRoots {
     let roots = own_mesh_roots(case["blocker"].as_bool().unwrap_or(false), case["kindMeshOffset"].as_f64().unwrap_or(100.0) as f32);
     let mut scene = (*roots.scene).clone();
-    let template = scene.fixture.objects[0].vortices[0].clone();
-    scene.fixture.objects[0].vortices = case["targets"].as_array().expect("targets").iter().enumerate().map(|(index, offset)| VortexProps {
+    let template = scene.scene_snapshot.objects[0].vortices[0].clone();
+    scene.scene_snapshot.objects[0].vortices = case["targets"].as_array().expect("targets").iter().enumerate().map(|(index, offset)| VortexProps {
         id: format!("v{index}"), position: [offset.as_f64().expect("offset"), 0.0, 0.0], ..template.clone()
     }).collect();
     for index in 0..case["farObjects"].as_u64().unwrap_or(0) {
-        let host = scene.fixture.objects[0].clone();
-        scene.fixture.objects.insert(1, FixtureObject { id: format!("far-{index}"), origin: [1000.0 + index as f64 * 20.0, 0.0, 0.0], vortices: Vec::new(), ..host });
+        let host = scene.scene_snapshot.objects[0].clone();
+        scene.scene_snapshot.objects.insert(1, EngineSceneObject { id: format!("far-{index}"), origin: [1000.0 + index as f64 * 20.0, 0.0, 0.0], vortices: Vec::new(), ..host });
     }
     let mut meshes = (*roots.meshes).clone();
     for missing in case["missing"].as_array().expect("missing meshes") {
@@ -1549,16 +1548,16 @@ fn all_objects_run(roots: FillPreparationRoots, requested: usize) -> FillRunJob 
 
 #[test]
 fn fill_checks_all_objects_before_each_placement() {
-    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill law");
-    for case in fixture["laws"]["allObjects"]["cases"].as_array().expect("cases") {
+    let scene_snapshot: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill law");
+    for case in scene_snapshot["laws"]["allObjects"]["cases"].as_array().expect("cases") {
         let roots = all_objects_roots(case);
         let scene = roots.scene.clone();
         let job = all_objects_run(roots, case["targets"].as_array().expect("targets").len());
         let placements = job.provisional_placements();
         assert_eq!(placements.len() as u64, case["expectedLocked"].as_u64().expect("locked"), "{}", case["name"]);
-        let mut peers = scene.fixture.objects.clone();
+        let mut peers = scene.scene_snapshot.objects.clone();
         for placement in placements {
-            let hull = |object: &FixtureObject| {
+            let hull = |object: &EngineSceneObject| {
                 let offset = if object.mesh_url.as_deref().unwrap_or("/test/host-kind.glb") == "/test/host-kind.glb" { case["kindMeshOffset"].as_f64().unwrap() as f32 } else { 0.0 };
                 parry_hull(&pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale), &own_mesh_cube(offset).0)
             };
@@ -1573,8 +1572,8 @@ fn fill_checks_all_objects_before_each_placement() {
 
 #[test]
 fn fill_revalidation_checks_all_objects_with_current_meshes() {
-    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill law");
-    let law = &fixture["laws"]["allObjects"];
+    let scene_snapshot: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill law");
+    let law = &scene_snapshot["laws"]["allObjects"];
     let roots = all_objects_roots(&law["cases"][0]);
     let placements = all_objects_run(FillPreparationRoots::new(roots.scene.clone(), roots.meshes.clone()), 2).provisional_placements();
     assert_eq!(placements.len(), 2);
@@ -1615,8 +1614,8 @@ fn fill_revalidation_checks_all_objects_with_current_meshes() {
 /// object's own mesh first, the renderer's law.
 #[test]
 fn fill_run_and_revalidation_collide_with_a_placed_body_carrying_its_own_mesh() {
-    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
-    let law = &fixture["laws"]["ownMesh"];
+    let scene_snapshot: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run scene_snapshot");
+    let law = &scene_snapshot["laws"]["ownMesh"];
     let kind_offset = law["kindMeshOffset"].as_f64().expect("kind mesh offset") as f32;
     let run = |blocker: bool, requested: usize| {
         let mut job = FillRunJob::new(FillBuilder::begin_preparation(own_mesh_roots(blocker, kind_offset), Operation::new(OperationId(97), RevisionId(1), Generation(1), 1), requested), fill_run_identity(), own_mesh_lane(), [0; 32]);
@@ -1650,7 +1649,7 @@ fn fill_run_and_revalidation_collide_with_a_placed_body_carrying_its_own_mesh() 
 fn fill_run_job_reports_rule_refusals_as_warnings_and_the_stall_as_a_warning_step() {
     let roots = nakagin_scale_roots();
     let mut scene = (*roots.scene).clone();
-    scene.fixture.target_volumes.push(WorldVolumeProps { id: "elsewhere".into(), origin: [1.0e6, 1.0e6, 1.0e6], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None });
+    scene.scene_snapshot.target_volumes.push(WorldVolumeProps { id: "elsewhere".into(), origin: [1.0e6, 1.0e6, 1.0e6], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None });
     let mut job = FillRunJob::new(FillBuilder::begin_preparation(FillPreparationRoots::new(Arc::new(scene), roots.meshes.clone()), Operation::new(OperationId(89), RevisionId(1), Generation(1), 43), 10), fill_run_identity(), vec![NAKAGIN_MESH_URL.to_string()], [0; 32]);
     let mut mirror = FillRunMirror::new();
     mirror.drive(&mut job, u64::MAX, 1_000_000);
@@ -1683,14 +1682,14 @@ fn fill_run_visible_end(name: &str, job: &FillRunJob, mirror: &FillRunMirror, re
     }
 }
 
-/// 🏁️ LAW (language-neutral fixture `🎞️fill-run.json` `laws.visibleEnd`, ticket lane W1-H): every fill run ends where the user
+/// 🏁️ LAW (language-neutral scene_snapshot `🎞️fill-run.json` `laws.visibleEnd`, ticket lane W1-H): every fill run ends where the user
 /// can see why — every shipped case and every own-mesh variant ends with `success:requested-reached` or a `warning` step
 /// naming a declared stall reason, never with zero verdicts and no reason. The own-mesh Nakagin variant packs more bodies
 /// into one spatial cell than one bookkeeping page holds; it must still be planned and match its declared outcome.
 #[test]
 fn fill_run_ends_visibly_with_a_declared_reason_for_every_case_and_own_mesh_variant() {
-    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run fixture");
-    for case in fixture["cases"].as_array().expect("cases") {
+    let scene_snapshot: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill run scene_snapshot");
+    for case in scene_snapshot["cases"].as_array().expect("cases") {
         let (document, seed, requested) = (case["document"].as_str().expect("document"), case["seed"].as_u64().expect("seed"), case["requested"].as_u64().expect("requested") as usize);
         let (roots, lane, _) = example_fill_roots(document, seed as u32);
         let mut job = fill_run_job(roots, lane, seed, requested);
@@ -1700,7 +1699,7 @@ fn fill_run_ends_visibly_with_a_declared_reason_for_every_case_and_own_mesh_vari
         assert_eq!(fill_run_visible_end(&name, &job, &mirror, requested), case["expected"]["stall"].as_str(), "{name}");
     }
     let mut disagreements = Vec::new();
-    for case in fixture["laws"]["visibleEnd"]["cases"].as_array().expect("visible end cases") {
+    for case in scene_snapshot["laws"]["visibleEnd"]["cases"].as_array().expect("visible end cases") {
         let (document, seed, requested, scale) = (case["document"].as_str().expect("document"), case["seed"].as_u64().expect("seed"), case["requested"].as_u64().expect("requested") as usize, case["ownMeshScale"].as_f64().expect("own mesh scale") as f32);
         let (roots, lane, _) = own_mesh_fill_roots(document, seed as u32, scale);
         let mut job = fill_run_job(roots, lane, seed, requested);

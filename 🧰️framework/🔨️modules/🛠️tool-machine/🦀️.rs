@@ -480,11 +480,15 @@ impl GesturePhase {
 }
 
 /// 🖐️ One window's streamed tool for ONE dispatch — a [`ToolMachineRunner`] started at rest, or resumed from the gesture
-/// its window persisted between dispatches (window or artifact transient, never history).
+/// its window persisted between dispatches (the runtime's [`GestureLedger`] slot, never history). A statechart tool is
+/// [`ChartGesture`] over its [`GestureChart`].
 pub trait GestureTool: Sized {
     type Gesture: PartialEq;
     type Tick;
     type Mutation;
+    /// 📌️ Whether a gesture is pinned to the document revision it opened on, so a moved base ends it `baseMoved`; a tool
+    /// whose leaves fold on any base says `false` and is driven with an empty base revision.
+    const BASE_BOUND: bool = true;
     fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal>;
     fn resume(gesture: &Self::Gesture) -> Result<Self, ToolRefusal>;
     fn verb(&self) -> &str;
@@ -494,46 +498,418 @@ pub trait GestureTool: Sized {
     fn persist(self) -> Option<Self::Gesture>;
 }
 
-/// 📬️ What one gesture dispatch did: the transaction it committed (publish it as ONE edit) and, when the window's
-/// persisted gesture changed, its next one (`Some(None)` clears it).
+/// 📬️ What one gesture dispatch did: the transaction it committed (publish it as ONE edit), the window's next persisted
+/// gesture when it changed (`Some(None)` clears it), and whether the dispatch `continued` the persisted gesture (resumed
+/// it, neither dropped nor interrupted).
 pub struct GestureDrive<G, M> {
     pub committed: Option<(TransactionRef, Vec<M>)>,
     pub next: Option<Option<G>>,
+    pub continued: bool,
 }
 
-/// 🚂️ Drives one window's streamed tool through ONE dispatch. `Once` commits `tick` as one transaction; `Stream` upserts
-/// it into the window's open transaction (opening it on the first tick), `Commit` folds it in and commits the whole
-/// gesture, `Abort` drops the open gesture with zero trace. An open gesture another verb or a one-shot interrupts is
-/// aborted `captureLost`; one whose base moved under it is aborted `baseMoved`, and a stream tick or commit that found
-/// it is dropped with it.
-pub fn drive_gesture<T: GestureTool>(persisted: Option<&T::Gesture>, verb: &str, phase: GesturePhase, tick: Option<T::Tick>, authoring_seed: &str, base_revision: &str) -> GestureDrive<T::Gesture, T::Mutation> {
-    let dropped = || GestureDrive { committed: None, next: persisted.map(|_| None) };
-    let open = match (persisted.and_then(|gesture| T::resume(gesture).ok()), phase) {
+/// 🚂️ Drives one window's streamed tool through ONE dispatch (law `🧫️fixtures/🧫️gesture-drive-law`). `Once` commits
+/// `tick` as one transaction; `Stream` upserts it into the window's open transaction (opening it on the first tick),
+/// `Commit` folds it in and commits the whole gesture, `Abort` drops the open gesture with zero trace. A gesture whose base
+/// moved under it is aborted `baseMoved` (a stream tick or commit that found it is dropped with it, a one-shot commits
+/// fresh); otherwise another verb or a one-shot interrupts it (`captureLost`). A gesture its tool cannot restore is dropped
+/// with zero trace and the dispatch runs from rest; a refused start or tick is the dispatch's refusal, with no effect at all.
+pub fn drive_gesture<T: GestureTool>(persisted: Option<&T::Gesture>, verb: &str, phase: GesturePhase, tick: Option<T::Tick>, authoring_seed: &str, base_revision: &str) -> Result<GestureDrive<T::Gesture, T::Mutation>, ToolRefusal> {
+    let dropped = || GestureDrive { committed: None, next: persisted.map(|_| None), continued: false };
+    let (open, interrupted) = match (persisted.and_then(|gesture| T::resume(gesture).ok()), phase) {
         (Some(mut tool), GesturePhase::Abort(reason)) => {
             tool.abort(reason);
-            return dropped();
+            return Ok(dropped());
         }
-        (None, GesturePhase::Abort(_)) => return dropped(),
-        (Some(mut tool), _) if tool.base_revision() != base_revision => {
+        (None, GesturePhase::Abort(_)) => return Ok(dropped()),
+        (Some(mut tool), _) if tool.base_revision() != base_revision && phase != GesturePhase::Once => {
             tool.abort(ToolAbortReason::BaseMoved);
-            if phase != GesturePhase::Once {
-                return dropped();
-            }
-            None
+            return Ok(dropped());
         }
-        (Some(mut tool), _) if tool.verb() != verb || phase == GesturePhase::Once => {
-            tool.abort(ToolAbortReason::CaptureLost);
-            None
-        }
-        (open, _) => open,
+        (Some(tool), _) if tool.base_revision() != base_revision => (None, Some((tool, ToolAbortReason::BaseMoved))),
+        (Some(tool), _) if tool.verb() != verb || phase == GesturePhase::Once => (None, Some((tool, ToolAbortReason::CaptureLost))),
+        (open, _) => (open, None),
     };
-    let Some(mut tool) = open.or_else(|| T::start(verb, authoring_seed, base_revision).ok()) else { return dropped() };
-    let step = tool.send(phase, tick);
+    let continued = open.is_some();
+    let mut tool = match open {
+        Some(tool) => tool,
+        None => T::start(verb, authoring_seed, base_revision)?,
+    };
+    let step = tool.send(phase, tick)?;
+    if let Some((mut interrupted, reason)) = interrupted {
+        interrupted.abort(reason);
+    }
     let gesture = tool.persist();
     let next = (gesture.as_ref() != persisted).then_some(gesture);
-    match step {
-        Ok(ToolStep::Committed(reference, mutations)) => GestureDrive { committed: Some((reference, mutations)), next },
-        Ok(_) | Err(_) => GestureDrive { committed: None, next },
+    let committed = match step {
+        ToolStep::Committed(reference, mutations) => Some((reference, mutations)),
+        ToolStep::Idle | ToolStep::Open | ToolStep::Aborted(..) | ToolStep::Empty(_) => None,
+    };
+    Ok(GestureDrive { committed, next, continued })
+}
+
+/// 📡️ A host fact that may end a window's open gesture (law table `hostEvents` of `🧫️fixtures/🧫️gesture-drive-law`): the
+/// window lost focus or its pointer capture, its utility switched, it is closing, a history edit froze the document, or a
+/// remote edit moved the base.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum GestureHostEvent {
+    Blur,
+    CaptureLost,
+    UtilityChanged,
+    Retiring,
+    TimeTravelFrozen,
+    BaseMoved,
+}
+
+impl GestureHostEvent {
+    pub const ALL: [Self; 6] = [Self::Blur, Self::CaptureLost, Self::UtilityChanged, Self::Retiring, Self::TimeTravelFrozen, Self::BaseMoved];
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Blur => "blur",
+            Self::CaptureLost => "captureLost",
+            Self::UtilityChanged => "utilityChanged",
+            Self::Retiring => "retiring",
+            Self::TimeTravelFrozen => "timeTravelFrozen",
+            Self::BaseMoved => "baseMoved",
+        }
+    }
+
+    pub fn parse(text: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|event| event.as_str() == text)
+    }
+
+    /// 🧨️ The reason this fact ends an open gesture with; `None` keeps the gesture: a moved base ends only a gesture pinned
+    /// to a base revision (`base_bound`), every other fact ends any gesture.
+    pub fn abort_reason(self, base_bound: bool) -> Option<ToolAbortReason> {
+        match self {
+            Self::Blur => Some(ToolAbortReason::Blur),
+            Self::CaptureLost => Some(ToolAbortReason::CaptureLost),
+            Self::UtilityChanged | Self::Retiring => Some(ToolAbortReason::Retired),
+            Self::TimeTravelFrozen => Some(ToolAbortReason::Frozen),
+            Self::BaseMoved => base_bound.then_some(ToolAbortReason::BaseMoved),
+        }
+    }
+}
+
+/// 🫧️ One window's open gesture between dispatches — the framework-owned persisted form of a streamed statechart tool
+/// (`$defs/GestureState`; window slot of the plugin runtime: ephemeral, local-only, never history): the configuration by
+/// stable ids, the verb, the host press that opened it (empty: none named; stamped by the slot — [`drive_press`] — never by
+/// the tool), the admission's authoring seed and the document revision it opened on (empty: pinned to none), the open
+/// transaction with its keyed provisional mutations, and the tool context its entries do not already say (`Null`: none).
+#[derive(Clone, Debug, PartialEq)]
+pub struct GestureState<M> {
+    pub states: Vec<String>,
+    pub verb: String,
+    pub press: String,
+    pub authoring_seed: String,
+    pub base_revision: String,
+    pub transaction: TransactionRef,
+    pub entries: Vec<(String, M)>,
+    pub context: protocol::DslValue,
+}
+
+/// 🧭️ A statechart tool on the shared gesture runner: the chart, its host, the event one dispatch sends and how a resumed
+/// gesture gets its chart context back. Starting, resuming, persisting and aborting are [`ChartGesture`]'s, the persisted
+/// form is [`GestureState`], the window slot is the runtime's [`GestureLedger`] — a plugin declares none of them.
+pub trait GestureChart: ToolMachine
+where
+    Self::Input: Clone,
+{
+    type Tick;
+    type Host: Host<Self>;
+
+    /// 🧲️ Whether a gesture is pinned to the document revision it opened on, so a moved base ends it `baseMoved`; `false`
+    /// for a tool whose leaves fold on any base.
+    const BASE_BOUND: bool = true;
+
+    /// 🪛️ The authoring tool id `<appId>#<verb>` every transaction of `verb` is stamped with.
+    fn tool(verb: &str) -> String;
+
+    /// 🏠️ The host the chart's timers, invokes and foreign effects go to.
+    fn host() -> Self::Host;
+
+    /// 🥚️ The input the chart starts from.
+    fn input() -> Self::Input;
+
+    /// 🧶️ The chart context of a resumed gesture, rebuilt from its open transaction's entries and the context it persisted;
+    /// `None` refuses the gesture (`Closed`), so the drive drops it with zero trace.
+    fn restore(entries: &[(String, Self::Mutation)], context: &protocol::DslValue) -> Option<Self::Context>;
+
+    /// 🎒️ The tool context a gesture persists beyond its entries.
+    fn context(_context: &Self::Context) -> protocol::DslValue {
+        protocol::DslValue::Null
+    }
+
+    /// 📣️ The event one dispatch sends (`at_rest`: no gesture is in flight); `None` sends nothing.
+    fn event(phase: GesturePhase, at_rest: bool, tick: Option<Self::Tick>) -> Option<Self::Event>;
+}
+
+static GESTURE_CLOCK_TICK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// 🎛️ The ONE [`GestureTool`] of every statechart tool: a [`ToolMachineRunner`] over a [`GestureChart`], started at rest
+/// or resumed from its window's [`GestureState`], each event on the host clock with a process-monotone tick (two gestures
+/// opened in one millisecond never mint one transaction id).
+pub struct ChartGesture<T: GestureChart>
+where
+    T::Input: Clone,
+{
+    runner: ToolMachineRunner<T, T::Host>,
+    verb: String,
+    authoring_seed: String,
+    base_revision: String,
+}
+
+impl<T: GestureChart> GestureTool for ChartGesture<T>
+where
+    T::Input: Clone,
+    T::Mutation: Clone + PartialEq,
+{
+    type Gesture = GestureState<T::Mutation>;
+    type Tick = T::Tick;
+    type Mutation = T::Mutation;
+
+    const BASE_BOUND: bool = T::BASE_BOUND;
+
+    fn start(verb: &str, authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
+        let runner = ToolMachineRunner::start(T::tool(verb), ActorId(authoring_seed.to_string()), T::input(), T::host())?;
+        Ok(Self { runner, verb: verb.to_string(), authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
+    }
+
+    fn resume(gesture: &GestureState<T::Mutation>) -> Result<Self, ToolRefusal> {
+        let context = T::restore(&gesture.entries, &gesture.context).ok_or(ToolRefusal::Closed)?;
+        let persisted = machine::PersistedSnapshot { version: 1, fingerprint: T::definition().fingerprint, states: gesture.states.clone(), history: Vec::new(), done: false };
+        let snapshot = machine::restore::<T, machine::NoMigrations>(&persisted, context, &[]).map_err(|_| ToolRefusal::Closed)?;
+        let transaction = ToolTransaction::resume(gesture.transaction.clone(), gesture.entries.clone());
+        let runner = ToolMachineRunner::resume(T::tool(&gesture.verb), ActorId(gesture.authoring_seed.clone()), T::input(), snapshot, Some(transaction), T::host())?;
+        Ok(Self { runner, verb: gesture.verb.clone(), authoring_seed: gesture.authoring_seed.clone(), base_revision: gesture.base_revision.clone() })
+    }
+
+    fn verb(&self) -> &str {
+        &self.verb
+    }
+
+    fn base_revision(&self) -> &str {
+        &self.base_revision
+    }
+
+    fn abort(&mut self, reason: ToolAbortReason) {
+        self.runner.abort(reason);
+    }
+
+    fn send(&mut self, phase: GesturePhase, tick: Option<T::Tick>) -> Result<ToolStep<T::Mutation>, ToolRefusal> {
+        match T::event(phase, self.runner.at_rest(), tick) {
+            Some(event) => self.runner.send(event, authoring_clock(GESTURE_CLOCK_TICK.fetch_add(1, std::sync::atomic::Ordering::Relaxed))),
+            None if self.runner.transaction().is_some() => Ok(ToolStep::Open),
+            None => Ok(ToolStep::Idle),
+        }
+    }
+
+    fn persist(self) -> Option<GestureState<T::Mutation>> {
+        let context = T::context(&self.runner.snapshot().context);
+        let (snapshot, transaction) = self.runner.into_parts();
+        let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
+        Some(GestureState {
+            states: machine::persist(&snapshot).states,
+            verb: self.verb,
+            press: String::new(),
+            authoring_seed: self.authoring_seed,
+            base_revision: self.base_revision,
+            transaction: transaction.reference().clone(),
+            entries: transaction.entries().to_vec(),
+            context,
+        })
+    }
+}
+
+/// 🎬️ Drives the statechart tool `T` through ONE dispatch from its window's persisted gesture ([`drive_gesture`] over
+/// [`ChartGesture`]); a tool that is not [`GestureChart::BASE_BOUND`] pins its gesture to no revision.
+pub fn drive_chart_gesture<T: GestureChart>(
+    persisted: Option<&GestureState<T::Mutation>>,
+    verb: &str,
+    phase: GesturePhase,
+    tick: Option<T::Tick>,
+    authoring_seed: &str,
+    base_revision: &str,
+) -> Result<GestureDrive<GestureState<T::Mutation>, T::Mutation>, ToolRefusal>
+where
+    T::Input: Clone,
+    T::Mutation: Clone + PartialEq,
+{
+    drive_gesture::<ChartGesture<T>>(persisted, verb, phase, tick, authoring_seed, if T::BASE_BOUND { base_revision } else { "" })
+}
+
+/// 🎫️ What one dispatch did to its window's slot: the transaction it committed (publish it as ONE edit), the slot's next
+/// gesture when it changed (`Some(None)` clears it) and the press the window closed with it.
+pub struct PressDrive<M> {
+    pub committed: Option<(TransactionRef, Vec<M>)>,
+    pub next: Option<Option<GestureState<M>>>,
+    pub closed: Option<String>,
+}
+
+/// 🪪️ Drives one window's slot through ONE dispatch that may name its host `press` (law `slots`): the slot owns the press
+/// identity, never the tool. A gesture belongs to the press that opened it. A dispatch of the press the window last
+/// `closed` is dropped with zero trace (a late release after a blur commits nothing); a dispatch of another press
+/// interrupts the open gesture first; a named gesture that ends — by anything — closes its press, and so does a named
+/// one-shot, commit or abort. A refused dispatch changes nothing.
+#[expect(clippy::too_many_arguments, reason = "One dispatch against one slot: the slot's two halves, the press, and drive_gesture's own inputs.")]
+pub fn drive_press<T: GestureTool<Gesture = GestureState<M>, Mutation = M>, M: PartialEq>(
+    held: Option<&GestureState<M>>,
+    closed: Option<&str>,
+    press: Option<&str>,
+    verb: &str,
+    phase: GesturePhase,
+    tick: Option<T::Tick>,
+    authoring_seed: &str,
+    base_revision: &str,
+) -> Result<PressDrive<M>, ToolRefusal> {
+    let press = press.filter(|press| !press.is_empty());
+    if press.is_some() && closed == press {
+        return Ok(PressDrive { committed: None, next: None, closed: None });
+    }
+    let owner = held.map(|open| open.press.as_str()).filter(|owner| !owner.is_empty());
+    let interrupts = matches!((press, owner), (Some(press), Some(owner)) if press != owner);
+    let drive = drive_gesture::<T>(held.filter(|_| !interrupts), verb, phase, tick, authoring_seed, base_revision)?;
+    let next = match drive.next {
+        Some(Some(mut gesture)) => {
+            gesture.press = if drive.continued { owner } else { press }.unwrap_or_default().to_string();
+            (Some(&gesture) != held).then_some(Some(gesture))
+        }
+        Some(None) => Some(None),
+        None => interrupts.then_some(None),
+    };
+    let after = match &next {
+        Some(next) => next.as_ref(),
+        None => held,
+    };
+    let ended = owner.filter(|owner| after.is_none_or(|after| after.press != *owner));
+    let closed = press.filter(|_| phase != GesturePhase::Stream).or(ended).map(str::to_string);
+    Ok(PressDrive { committed: drive.committed, next, closed })
+}
+
+/// 🗄️ Every window's open gesture, at most one per window, and the press each window last closed — the ONE framework-owned window slot of a persisted
+/// [`GestureTool`] (design §22.10, law `slots`). Pure: the runtime keeps one per app instance, overlays
+/// [`Self::provisional`] on the committed document for every render, and ends a window's gesture on its host facts
+/// ([`Self::host_event`]) — no editor maps a host fact to an abort of its own. A persisted gesture holds no host timer.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GestureLedger<M> {
+    windows: std::collections::BTreeMap<String, GestureState<M>>,
+    closed: std::collections::BTreeMap<String, String>,
+}
+
+impl<M> Default for GestureLedger<M> {
+    fn default() -> Self {
+        Self { windows: std::collections::BTreeMap::new(), closed: std::collections::BTreeMap::new() }
+    }
+}
+
+impl<M> GestureLedger<M> {
+    /// 🪹️ Whether no window holds an open gesture.
+    pub fn is_empty(&self) -> bool {
+        self.windows.is_empty()
+    }
+
+    /// 🔦️ The open gesture of `window`.
+    pub fn open(&self, window: &str) -> Option<&GestureState<M>> {
+        self.windows.get(window)
+    }
+
+    /// 🏘️ The windows holding an open gesture, in window id order.
+    pub fn windows(&self) -> impl Iterator<Item = &str> {
+        self.windows.keys().map(String::as_str)
+    }
+
+    /// 🪞️ Every open gesture's provisional mutations, window by window in window id order — the overlay a render applies
+    /// on the committed document; never history.
+    pub fn provisional(&self) -> impl Iterator<Item = &M> {
+        self.windows.values().flat_map(|gesture| gesture.entries.iter().map(|(_, mutation)| mutation))
+    }
+
+    /// 🚪️ The press `window` last closed: its late dispatches leave zero trace.
+    pub fn closed(&self, window: &str) -> Option<&str> {
+        self.closed.get(window).map(String::as_str)
+    }
+
+    /// 📕️ Every window's last closed press, in window id order.
+    pub fn closed_presses(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.closed.iter().map(|(window, press)| (window.as_str(), press.as_str()))
+    }
+
+    /// 🔏️ Records the press `window` closed.
+    pub fn close(&mut self, window: &str, press: String) {
+        self.closed.insert(window.to_string(), press);
+    }
+
+    /// 🖋️ Keeps the gesture a dispatch decided for `window` (`None` clears the slot).
+    pub fn settle(&mut self, window: &str, next: Option<GestureState<M>>) {
+        match next {
+            Some(gesture) => {
+                self.windows.insert(window.to_string(), gesture);
+            }
+            None => {
+                self.windows.remove(window);
+            }
+        }
+    }
+
+    /// 🚃️ Drives `window`'s tool through ONE dispatch of `press` (`None`: the host named none) against its slot
+    /// ([`drive_press`]): the slot and the closed press follow the drive and the committed transaction is answered; a
+    /// refused dispatch leaves the ledger exactly as it was.
+    #[expect(clippy::too_many_arguments, reason = "One dispatch of one window: the window, the press, and drive_gesture's own inputs.")]
+    pub fn drive<T: GestureTool<Gesture = GestureState<M>, Mutation = M>>(
+        &mut self,
+        window: &str,
+        press: Option<&str>,
+        verb: &str,
+        phase: GesturePhase,
+        tick: Option<T::Tick>,
+        authoring_seed: &str,
+        base_revision: &str,
+    ) -> Result<Option<(TransactionRef, Vec<M>)>, ToolRefusal>
+    where
+        M: PartialEq,
+    {
+        let drive = drive_press::<T, M>(self.windows.get(window), self.closed.get(window).map(String::as_str), press, verb, phase, tick, authoring_seed, base_revision)?;
+        if let Some(next) = drive.next {
+            self.settle(window, next);
+        }
+        if let Some(press) = drive.closed {
+            self.close(window, press);
+        }
+        Ok(drive.committed)
+    }
+
+    /// 🧹️ Host cancel of `window`'s open gesture: zero trace, and its press is closed. `Aborted(ref, reason)`, or `Idle`
+    /// when none was open.
+    pub fn abort(&mut self, window: &str, reason: ToolAbortReason) -> ToolStep<M> {
+        let Some(gesture) = self.windows.remove(window) else { return ToolStep::Idle };
+        if !gesture.press.is_empty() {
+            self.closed.insert(window.to_string(), gesture.press);
+        }
+        ToolStep::Aborted(gesture.transaction, reason)
+    }
+
+    /// 🛎️ A host fact of `window`: its open gesture ends with the fact's reason ([`GestureHostEvent::abort_reason`]; a
+    /// gesture pinned to no revision survives a moved base), `Idle` when it stays or none was open.
+    pub fn host_event(&mut self, window: &str, event: GestureHostEvent) -> ToolStep<M> {
+        match self.windows.get(window).and_then(|gesture| event.abort_reason(!gesture.base_revision.is_empty())) {
+            Some(reason) => self.abort(window, reason),
+            None => ToolStep::Idle,
+        }
+    }
+
+    /// 🌐️ A host fact of every window (a history edit freezing the document): one `(window, Aborted)` per gesture it ended,
+    /// in window id order.
+    pub fn host_event_all(&mut self, event: GestureHostEvent) -> Vec<(String, ToolStep<M>)> {
+        let windows: Vec<String> = self.windows.keys().cloned().collect();
+        windows.into_iter().map(|window| (self.host_event(&window, event), window)).filter(|(step, _)| !matches!(step, ToolStep::Idle)).map(|(step, window)| (window, step)).collect()
+    }
+
+    /// ⚰️ Host cancel (`retired`) of the open gesture of every window `keep` refuses; their closed presses are forgotten.
+    pub fn retain_windows(&mut self, keep: impl Fn(&str) -> bool) -> Vec<(String, ToolStep<M>)> {
+        let retired: Vec<String> = self.windows.keys().filter(|window| !keep(window)).cloned().collect();
+        let ended = retired.into_iter().map(|window| (self.abort(&window, ToolAbortReason::Retired), window)).map(|(step, window)| (window, step)).collect();
+        self.closed.retain(|window, _| keep(window));
+        ended
     }
 }
 //#endregion 🌊️Gesture
@@ -1022,6 +1398,17 @@ pub fn node_drag_emit<M: Clone + 'static>(app_id: &str, verb: &str, authoring_se
     }
 }
 //#endregion 🔖️NodeDrag
+
+//#region 🎯️Once
+/// 🎯️ The ONE one-step tool (design §22.32): a single dispatch — a click that places, a keyboard nudge — yields `leaves` and
+/// commits them as ONE tool transaction of `<app_id>#<verb>`, its ref minted from the admission's `authoring_seed` and
+/// [`authoring_clock`]: the continuous-control machine driven as a press that opens and releases in one event
+/// ([`node_drag_commit`]). Nothing yielded leaves zero trace; without an admission (a render or test view) the leaves publish
+/// plainly.
+pub fn tool_once_emit<M: Clone + 'static>(app_id: &str, verb: &str, authoring_seed: &str, leaves: Vec<M>) -> NodeDragEmit<M> {
+    node_drag_emit(app_id, verb, authoring_seed, verb, leaves)
+}
+//#endregion 🎯️Once
 
 //#region 🔖️NodeGraphEditRows
 /// 📏️ The most rows one `nodeGraphEdit` dispatch carries.
@@ -1578,4 +1965,7 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🧪️node-graph-edit-rows/🦀️.rs"]
 mod node_graph_edit_rows_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🧪️gesture-drive-law/🦀️.rs"]
+mod gesture_drive_law_tests;
 //#endregion 🧪️Tests

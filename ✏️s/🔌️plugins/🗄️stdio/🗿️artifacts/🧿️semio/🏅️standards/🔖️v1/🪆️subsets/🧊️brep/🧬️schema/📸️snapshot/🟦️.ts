@@ -3,7 +3,7 @@
 
 import type {SemioPoint3,SemioPoint2} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 export type {SemioPoint3,SemioPoint2} from "../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 
 export type BrepCurve2 =
   | { kind: "line"; origin: SemioPoint2; direction: SemioPoint2 }

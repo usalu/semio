@@ -96,124 +96,22 @@ impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
 /// snapshot facet's own real hex/bracket node/edge encoders (duplicated locally, same convention
 /// every sibling subset's `🔺️diff` facet already establishes — see that facet's own doc comment
 /// for why).
-use crate::standards::v1::subsets::base::schema::triples::{split_top_level,strip_brackets};
-use crate::standards::v1::subsets::graph::schema::snapshot::{enc_node,dec_node,enc_edge,dec_edge};
+use crate::audio::io::text::diff::{strip_brackets};
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_nodes(list: &SemioGraphNodeList) -> String {
-    format!("[{}]", list.values.iter().map(enc_node).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_nodes(s: &str) -> Result<SemioGraphNodeList, String> {
-    let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_node).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioGraphNodeList { values })
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_edges(list: &SemioGraphEdgeList) -> String {
-    format!("[{}]", list.values.iter().map(enc_edge).collect::<Vec<_>>().join(","))
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_edges(s: &str) -> Result<SemioGraphEdgeList, String> {
-    let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_edge).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioGraphEdgeList { values })
-}
 
-/// 🖇️ Joins present fields with `;` — ONE physical line, empty when neither field is present,
-/// `nodes=[...]`, `edges=[...]`, or `nodes=[...];edges=[...]`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn print_graph_diff(d: &SemioGraphDiff) -> String {
-    let mut parts = Vec::new();
-    if let Some(list) = &d.nodes {
-        parts.push(format!("nodes={}", enc_nodes(list)));
-    }
-    if let Some(list) = &d.edges {
-        parts.push(format!("edges={}", enc_edges(list)));
-    }
-    parts.join(";")
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_graph_diff(line: &str) -> Result<SemioGraphDiff, String> {
-    if line.is_empty() {
-        return Ok(SemioGraphDiff::default());
-    }
-    let mut diff = SemioGraphDiff::default();
-    for part in split_top_level(line, ';') {
-        if let Some(rest) = part.strip_prefix("nodes=") {
-            diff.nodes = Some(dec_nodes(rest)?);
-        } else if let Some(rest) = part.strip_prefix("edges=") {
-            diff.edges = Some(dec_edges(rest)?);
-        } else {
-            return Err(format!("graph diff: unknown token {part:?}"));
-        }
-    }
-    Ok(diff)
-}
 
-impl protocol::DiffCodec for SemioGraphDiff {
-    fn print_diff(&self) -> String {
-        print_graph_diff(self)
-    }
-    fn parse_diff(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        parse_graph_diff(line).map_err(|e| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
 
-    /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`nodes`, bit1=`edges`) are two
-    /// REAL fixed fields; when present, each list follows as a real varint count + per-record
-    /// binary encoding (reusing the snapshot facet's own `write_node`/`read_node`/`write_edge`/
-    /// `read_edge`) rather than a text-blob-in-binary shortcut.
-    fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::standards::v1::subsets::graph::schema::snapshot::{write_edge, write_node};
-        let presence: u8 = (if self.nodes.is_some() { 0b0000_0001 } else { 0 }) | (if self.edges.is_some() { 0b0000_0010 } else { 0 });
-        let mut out = vec![DIFF_BINARY_FORMAT, presence];
-        if let Some(list) = &self.nodes {
-            store::pack_rt::write_varint_u64(&mut out, list.values.len() as u64);
-            for n in &list.values {
-                write_node(&mut out, n);
-            }
-        }
-        if let Some(list) = &self.edges {
-            store::pack_rt::write_varint_u64(&mut out, list.values.len() as u64);
-            for e in &list.values {
-                write_edge(&mut out, e);
-            }
-        }
-        Ok(out)
-    }
-    fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const DIFF_BINARY_FORMAT: u8 = 1;
-        use crate::standards::v1::subsets::graph::schema::snapshot::{read_edge, read_node};
-        if bytes.len() < 2 {
-            return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });
-        }
-        if bytes[0] != DIFF_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
-        }
-        let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
-        let nodes = if presence & 0b0000_0001 != 0 {
-            let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff nodes count", offset: 2, detail: e.to_string() })?;
-            let mut values = Vec::with_capacity(count as usize);
-            for _ in 0..count {
-                values.push(read_node(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff node", offset: 2, detail: e })?);
-            }
-            Some(SemioGraphNodeList { values })
-        } else {
-            None
-        };
-        let edges = if presence & 0b0000_0010 != 0 {
-            let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges count", offset: 2, detail: e.to_string() })?;
-            let mut values = Vec::with_capacity(count as usize);
-            for _ in 0..count {
-                values.push(read_edge(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edge", offset: 2, detail: e })?);
-            }
-            Some(SemioGraphEdgeList { values })
-        } else {
-            None
-        };
-        Ok(SemioGraphDiff { nodes, edges })
-    }
-}
+
+
+
+
+
+
+
+
+
+
+
 //#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️Demo

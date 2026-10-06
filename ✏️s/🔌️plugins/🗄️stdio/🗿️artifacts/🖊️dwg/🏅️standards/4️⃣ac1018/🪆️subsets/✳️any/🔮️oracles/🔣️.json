@@ -86,9 +86,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "set-version-info-rejected-written-as-ac1024",
       "class": "handcrafted",
       "target": {

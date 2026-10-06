@@ -5,15 +5,17 @@
  * wears, and the remappable `ui.timeTravel.accept|discard|exit` chords. The history rows and the input editor are the
  * guest's own `framework.body.history`, rendered by the interpreter; this chrome only reads the session and dispatches
  * the reserved `historyEdit*` verbs, each stamped with the session generation it was shown, so a stale press is refused
- * `timeTravel.stale` instead of acting on a session that moved on.
+ * `timeTravel.stale` instead of acting on a session that moved on. Every text it shows is a row of the one `labels` table
+ * of the shared band corpus (`🧫️time-travel-band`), to which the i18n catalogue is pinned and which the wgpu shell embeds;
+ * the person reads "History editing" everywhere — the guest's section, the band, the indicator, the peer notes.
  * @see ../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts
  * @see ../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { FRAMEWORK_PANEL_TAB_HISTORY_ID, HISTORY_EDIT_ARG_GENERATION, historyEntryLabelText, historyReprojectionStatus, type ActionDescriptor, type HistoryEditActionId, type HistoryEntry, type HistoryReprojection, type HistoryTimeTravel, type HistoryTimeTravelReview, type HistoryTimeTravelStage, type ShellLocale } from "@semio-tech/framework";
+import { FRAMEWORK_PANEL_TAB_HISTORY_ID, HISTORY_EDIT_ARG_GENERATION, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_STORE, historyEntryLabelText, historyReprojectionStatus, type ActionDescriptor, type HistoryEditActionId, type HistoryEntry, type HistoryReprojection, type HistoryTimeTravel, type HistoryTimeTravelReview, type HistoryTimeTravelStage, type ShellLocale } from "@semio-tech/framework";
 import type { ArtifactPresenceHistoryEdit } from "@semio-tech/framework-replication";
-import { ariaKeyshortcutsText, findPanelTabInDock, findPanelTabPath, Icon, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useControlKeybinding, useUiKeybindingsByControlId, type PanelDock, type PanelTabNode, type PresencePeer, type UiTranslationKey } from "@semio-tech/ui-react";
+import { ariaKeyshortcutsText, DisabledReasonHint, findPanelTabInDock, findPanelTabPath, Icon, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, Surface, useControlKeybinding, useUiKeybindingsByControlId, type PanelDock, type PanelTabNode, type PresencePeer, type UiTranslationKey } from "@semio-tech/ui-react";
 import { useEffect, useId, useRef, type ReactElement } from "react";
 import type { ShellAction } from "../../🐚️Shell/🟦️.tsx";
 import { HISTORY_REFUSAL_LABEL_KEYS, historyRefusalCodeV1, shellLabel } from "../🟦️.tsx";
@@ -23,6 +25,7 @@ import type { UiPresenceOverlayEntry, UiPresenceOverlayValue } from "../../🗣�
 //#region ⏪️TimeTravelChrome
 /** 🎬️ The reserved `historyEdit*` verbs the chrome dispatches, by the control that dispatches them. */
 export const TIME_TRAVEL_VERBS = {
+  nextProblem: "historyEditBegin",
   accept: "historyEditAccept",
   discard: "historyEditDiscard",
   cancelReplay: "historyEditCancelReplay",
@@ -42,10 +45,23 @@ export const TIME_TRAVEL_CHORD_IDS = {
   exit: "ui.timeTravel.exit",
 } as const satisfies Partial<Record<TimeTravelControlV1, UiTranslationKey>>;
 
-/** 🔘️ One band control: what it dispatches, its label, and why it is disabled (`null` when it is not). */
-export type TimeTravelBandControlStateV1 = { readonly control: TimeTravelControlV1; readonly label: UiTranslationKey; readonly disabledBy: UiTranslationKey | null };
+/** 🆔️ The id of each control — the one the shared band corpus owns (`controls[].controlId`), the wgpu band mirrors and
+ * the React button wears as its DOM id: a control with a chord wears its keybinding id ({@link TIME_TRAVEL_CHORD_IDS}). */
+export const TIME_TRAVEL_CONTROL_IDS = {
+  accept: "ui.timeTravel.accept",
+  discard: "ui.timeTravel.discard",
+  cancelReplay: "shell.time-travel.cancel-replay",
+  rerun: "shell.time-travel.rerun",
+  finalize: "shell.time-travel.finalize",
+  back: "shell.time-travel.back",
+  exit: "ui.timeTravel.exit",
+  nextProblem: "shell.time-travel.next-problem",
+} as const satisfies Readonly<Record<TimeTravelControlV1, string>>;
 
-const bandControl = (id: TimeTravelControlV1, disabledBy: UiTranslationKey | null = null): TimeTravelBandControlStateV1 => ({ control: id, label: `ui.timeTravel.${id}`, disabledBy });
+/** 🔘️ One band control: its id, what it dispatches, its label, and why it is disabled (`null` when it is not). */
+export type TimeTravelBandControlStateV1 = { readonly control: TimeTravelControlV1; readonly controlId: string; readonly label: UiTranslationKey; readonly disabledBy: UiTranslationKey | null };
+
+const bandControl = (id: TimeTravelControlV1, disabledBy: UiTranslationKey | null = null): TimeTravelBandControlStateV1 => ({ control: id, controlId: TIME_TRAVEL_CONTROL_IDS[id], label: `ui.timeTravel.${id}`, disabledBy });
 
 /** 🚧️ Why Finalize is disabled in a review, read from the session's own `review` and never inferred from a missing
  * report: nothing accepted is `empty`, a replay still owed or a blocking report is `blocked`, a `ready` review is
@@ -57,9 +73,10 @@ function finalizeDisabledBy(session: HistoryTimeTravel): UiTranslationKey | null
 }
 
 /** 🚦️ The controls a stage offers, in band order: a draft is accepted or discarded while editing, a replay can be
- * cancelled while it runs, a review can replay again when the session says it would start a replay (`rerunnable`) and
- * finalize when its review is `ready` (else both stay visible and name what stops them), the finalize prompt can be
- * left for the review, and every stage but the commit itself can exit. */
+ * cancelled while it runs, a review leads with Next problem while the session names the first blocking mutation
+ * (`nextProblem` — the session's own answer, never computed here), can replay again when the session says it would start
+ * a replay (`rerunnable`) and finalize when its review is `ready` (else both stay visible and name what stops them), the
+ * finalize prompt can be left for the review, and every stage but the commit itself can exit. */
 export function timeTravelBandControlsV1(session: HistoryTimeTravel): readonly TimeTravelBandControlStateV1[] {
   switch (session.stage) {
     case "editing":
@@ -67,7 +84,7 @@ export function timeTravelBandControlsV1(session: HistoryTimeTravel): readonly T
     case "replaying":
       return [bandControl("cancelReplay"), bandControl("exit")];
     case "reviewing":
-      return [bandControl("rerun", session.rerunnable === true ? null : "ui.timeTravel.refusal.illegal"), bandControl("finalize", finalizeDisabledBy(session)), bandControl("exit")];
+      return [...(session.nextProblem === undefined ? [] : [bandControl("nextProblem")]), bandControl("rerun", session.rerunnable === true ? null : "ui.timeTravel.refusal.illegal"), bandControl("finalize", finalizeDisabledBy(session)), bandControl("exit")];
     case "choosing":
       return [bandControl("back"), bandControl("exit")];
     case "finalizing":
@@ -75,9 +92,34 @@ export function timeTravelBandControlsV1(session: HistoryTimeTravel): readonly T
   }
 }
 
-/** 🎯️ The action a control dispatches for `session` on the program `controllerId` names. */
+/** 🧱️ The reserved verbs a history row offers as its own actions: Edit (`historyEditBegin`), Withdraw and Restore — the shared
+ * band corpus's `rowActions.verbs`. */
+export const TIME_TRAVEL_ROW_ACTION_VERBS = ["historyEditBegin", "historyEditWithdraw", "historyEditRestore"] as const satisfies readonly HistoryEditActionId[];
+
+/** 🚥️ Per stage, the refusal every history row action names while the stage lasts; `null` where the rows' own published
+ * state rules — the shared band corpus's `rowActions.stages`. A running replay and a commit under way admit no Begin,
+ * Withdraw or Restore (the session answers `timeTravel.illegal`). The shell knows the stage from the session patch at
+ * once; the guest's refreshed History body, which says the same on every row, arrives only after the work (live fault F3:
+ * Edit read enabled for the first 170 ms of a replay and its reason reached the page after the replay had ended). */
+export const TIME_TRAVEL_ROW_ACTION_REFUSALS = { editing: null, replaying: "ui.timeTravel.refusal.illegal", reviewing: null, choosing: null, finalizing: "ui.timeTravel.refusal.illegal" } as const satisfies Readonly<Record<HistoryTimeTravel["stage"], UiTranslationKey | null>>;
+
+/** 🛑️ The row actions the shell itself refuses for `session`, by verb, each with the reason it names in the shell's
+ * current language ({@link TIME_TRAVEL_ROW_ACTION_REFUSALS}); `null` when it refuses none — no session, or a stage whose
+ * rows speak for themselves. */
+export function timeTravelRowActionRefusalsV1(session: Pick<HistoryTimeTravel, "stage"> | null): ReadonlyMap<string, string> | null {
+  const refusal = session === null ? null : TIME_TRAVEL_ROW_ACTION_REFUSALS[session.stage];
+  if (refusal === null) return null;
+  const reason = String(shellLabel(refusal));
+  return new Map(TIME_TRAVEL_ROW_ACTION_VERBS.map((verb) => [verb, reason]));
+}
+
+/** 🎯️ The action a control dispatches for `session` on the program `controllerId` names: its reserved verb stamped with the
+ * session generation — except Next problem, which opens (`historyEditBegin`) the mutation the session's `nextProblem` names,
+ * in the member store it names, exactly as the guest's own row does. */
 export function timeTravelControlActionV1(controllerId: string, session: HistoryTimeTravel, id: TimeTravelControlV1): ActionDescriptor {
-  return { controllerId, action: TIME_TRAVEL_VERBS[id], args: { [HISTORY_EDIT_ARG_GENERATION]: session.generation } };
+  if (id !== "nextProblem") return { controllerId, action: TIME_TRAVEL_VERBS[id], args: { [HISTORY_EDIT_ARG_GENERATION]: session.generation } };
+  const problem = session.nextProblem;
+  return { controllerId, action: TIME_TRAVEL_VERBS[id], args: problem === undefined ? {} : { [HISTORY_EDIT_ARG_MUTATION_ID]: problem.mutationId, ...(problem.store === undefined ? {} : { [HISTORY_EDIT_ARG_STORE]: problem.store }) } };
 }
 
 /** 📝️ The band's lines in the shell's current language; a line the session does not carry is `null`. */
@@ -146,7 +188,7 @@ const EMPTY_PEER_OVERLAY: UiPresenceOverlayValue = { byKey: new Map() };
 
 /** 👥️ Peers' open history edits, labelled from THIS replica's own history rows (the wire carries only the mutation id,
  * the stage and the draft count, never locale text): each editing peer's chip gets its activity ("Ada is editing Drag
- * selection in time travel", the history in general when the mutation is not among the local rows), and the affected
+ * selection in the history", the history in general when the mutation is not among the local rows), and the affected
  * mutation row and its history row get a note naming who edits it. */
 export function timeTravelPeerPresenceV1(
   peers: readonly (PresencePeer & { readonly historyEdit?: ArtifactPresenceHistoryEdit })[],
@@ -174,27 +216,32 @@ export function timeTravelPeerPresenceV1(
 export type TimeTravelFocusTargetV1 = "editor" | "band" | "dialog";
 
 /** 🗺️ What one change of the focused program's session asks of the chrome: `reveal` opens the History panel, `focus`
- * moves keyboard focus. */
-export type TimeTravelTransitionV1 = { readonly reveal: boolean; readonly focus: TimeTravelFocusTargetV1 | null };
+ * moves keyboard focus, `scrollTo` names the history-body row (a node key) to bring into view. */
+export type TimeTravelTransitionV1 = { readonly reveal: boolean; readonly focus: TimeTravelFocusTargetV1 | null; readonly scrollTo: string | null };
 
 /** 🧭️ The chrome's answer to the session moving from `previous` to `next` (`null` = no session): the edge into a new
  * session reveals the History panel (whoever began it — a person, a chord or an agent); a draft that starts (Begin, Next
- * problem, another mutation) puts focus on its first input; a replay or a review puts it on the band; the finalize
- * prompt takes it; a progress step, the commit and the close move nothing. */
+ * problem, another mutation) puts focus on its first input; a replay or a review puts it on the band; the edge into a
+ * review that names its first blocking mutation (`nextProblem` — a replay that completed blocked) reveals the panel again
+ * and scrolls to that mutation's row; the finalize prompt takes focus; a progress step, the commit and the close move
+ * nothing. */
 export function timeTravelTransitionV1(previous: HistoryTimeTravel | null, next: HistoryTimeTravel | null): TimeTravelTransitionV1 {
-  if (next === null) return { reveal: false, focus: null };
+  if (next === null) return { reveal: false, focus: null, scrollTo: null };
   const same = previous !== null && previous.sessionId === next.sessionId;
   const moved = !same || previous.stage !== next.stage;
   switch (next.stage) {
     case "editing":
-      return { reveal: !same, focus: moved || previous?.target !== next.target ? "editor" : null };
+      return { reveal: !same, focus: moved || previous?.target !== next.target ? "editor" : null, scrollTo: null };
     case "replaying":
-    case "reviewing":
-      return { reveal: !same, focus: moved ? "band" : null };
+      return { reveal: !same, focus: moved ? "band" : null, scrollTo: null };
+    case "reviewing": {
+      const problem = moved ? next.nextProblem : undefined;
+      return { reveal: !same || problem !== undefined, focus: moved ? "band" : null, scrollTo: problem === undefined ? null : `${HISTORY_MUTATION_ROW_KEY_PREFIX}${problem.mutationId}` };
+    }
     case "choosing":
-      return { reveal: !same, focus: moved ? "dialog" : null };
+      return { reveal: !same, focus: moved ? "dialog" : null, scrollTo: null };
     case "finalizing":
-      return { reveal: !same, focus: null };
+      return { reveal: !same, focus: null, scrollTo: null };
   }
 }
 
@@ -259,6 +306,31 @@ export function scheduleTimeTravelFocusV1(root: Element, target: TimeTravelFocus
   return () => cancelAnimationFrame(handle);
 }
 
+/** 🧷️ The element of the history-body node `key` under `root` — its DOM id is the node's path, ending `/<key>` — or
+ * `null` while it is not mounted. */
+export function timeTravelRowElementV1(root: ParentNode, key: string): HTMLElement | null {
+  for (const element of root.querySelectorAll<HTMLElement>('[id*="/framework.history."]')) if (element.id.endsWith(`/${key}`)) return element;
+  return null;
+}
+
+/** 🧲️ Brings the history row `key` into view under the shell's `root` once it is mounted, retried across animation frames
+ * while the panel opens and the guest's body arrives — the first blocking row after a replay that completed blocked. It
+ * moves no focus (the band keeps it). Answers the cancel. */
+export function scheduleTimeTravelScrollV1(root: Element, key: string, frames = 30): () => void {
+  let handle = 0;
+  let remaining = frames;
+  const attempt = () => {
+    const row = timeTravelRowElementV1(root, key);
+    if (row !== null) {
+      row.scrollIntoView?.({ block: "nearest" });
+      return;
+    }
+    if (remaining-- > 0) handle = requestAnimationFrame(attempt);
+  };
+  handle = requestAnimationFrame(attempt);
+  return () => cancelAnimationFrame(handle);
+}
+
 /** 🏠️ What the History reveal speaks to: the device, the dock (or the merged mobile panel's tabs), the shell's dispatch, the
  * root focus moves inside, and how many frames a focus waits for its target to mount. */
 export type TimeTravelRevealHostV1 = { readonly mobile: boolean; readonly dock: PanelDock; readonly mobilePanelTabs: readonly PanelTabNode[]; readonly dispatch: (action: ShellAction) => void; readonly root: Element | null; readonly frames?: number };
@@ -282,30 +354,43 @@ export function revealHistoryPanelV1(host: Pick<TimeTravelRevealHostV1, "mobile"
 }
 
 /** 🛰️ The shell's answer to each change of the focused program's session ({@link timeTravelTransitionV1}): the edge into a
- * session reveals the History panel ({@link revealHistoryPanelV1}) and every focus move is scheduled under the host's root;
- * a focus still waiting for its target yields only to a newer focus or to the close — never to a progress step — and the
- * unmount cancels it. The host is read at the change, so a dock or device change alone never re-runs the effect. */
+ * session — and into a review that names its first blocking mutation — reveals the History panel
+ * ({@link revealHistoryPanelV1}), that mutation's row is scrolled into view ({@link scheduleTimeTravelScrollV1}) and every
+ * focus move is scheduled under the host's root; a focus or a scroll still waiting for its target yields only to a newer
+ * one or to the close — never to a progress step — and the unmount cancels both. The host is read at the change, so a dock
+ * or device change alone never re-runs the effect. */
 export function useTimeTravelRevealV1(session: HistoryTimeTravel | null, host: TimeTravelRevealHostV1): void {
   const hostRef = useRef(host);
   hostRef.current = host;
   const seenRef = useRef<HistoryTimeTravel | null>(null);
   const cancelRef = useRef<(() => void) | null>(null);
+  const scrollCancelRef = useRef<(() => void) | null>(null);
   useEffect(() => {
     const transition = timeTravelTransitionV1(seenRef.current, session);
     seenRef.current = session;
     if (transition.reveal) revealHistoryPanelV1(hostRef.current);
+    const root = hostRef.current.root;
+    if (transition.scrollTo !== null || session === null) {
+      scrollCancelRef.current?.();
+      scrollCancelRef.current = transition.scrollTo === null || root === null ? null : scheduleTimeTravelScrollV1(root, transition.scrollTo, hostRef.current.frames ?? 120);
+    }
     if (transition.focus === null && session !== null) return;
     cancelRef.current?.();
-    const root = hostRef.current.root;
     cancelRef.current = transition.focus === null || root === null ? null : scheduleTimeTravelFocusV1(root, transition.focus, hostRef.current.frames ?? 120);
   }, [session]);
-  useEffect(() => () => cancelRef.current?.(), []);
+  useEffect(
+    () => () => {
+      cancelRef.current?.();
+      scrollCancelRef.current?.();
+    },
+    [],
+  );
 }
 
 /** 🏳️ The props both chrome pieces read: the live session, the program it edits and the shell's label axes. */
 export type TimeTravelChromePropsV1 = { readonly session: HistoryTimeTravel; readonly terminology: string; readonly locale: string };
 
-/** 🪟️ The chip every window of the editing program wears while a session is live — an icon and "Time travel" in words,
+/** 🪟️ The chip every window of the editing program wears while a session is live — an icon and "History editing" in words,
  * named by what the window shows ({@link timeTravelIndicatorTextV1}). It takes the stage and that text rather than the
  * session, so the window descriptors that carry it do not rebuild on every replay progress step. */
 export function TimeTravelWindowIndicator({ stage, description }: { readonly stage: HistoryTimeTravelStage; readonly description: string }): ReactElement {
@@ -317,13 +402,46 @@ export function TimeTravelWindowIndicator({ stage, description }: { readonly sta
   );
 }
 
-/** 📣️ The persistent time-travel band (`role=status`, polite): the stage, the edited mutation, the replay progress with
- * its Cancel, the review's own status, the worst outcome in words, and the stage's controls — a disabled one titled by
- * its reason and, for Finalize, described by the review line — with their chords published on `aria-keyshortcuts`. The
- * chords fire only while their control is offered and enabled, never from a form field. */
+/** 🕹️ One control of the band. A refused one is never `disabled`: it stays in the Tab order as `aria-disabled`, dispatches
+ * nothing, and names what stops it through {@link DisabledReasonHint} — always its description (`aria-describedby`), and
+ * visible text while it is hovered, keyboard-focused or pressed — exactly as a refused row action does and as the wgpu band
+ * mirrors it (parity audit gap 3: a `disabled` button with a `title` told neither a keyboard nor a screen-reader user why).
+ * Every control is a touch target of the `large` size token on both axes (`--size-large` = 9 × `--ui-spacing`: 28.8 px at
+ * compact density, 39.6 px at touch density — WCAG 2.5.8 asks 24 × 24; the control-height token `medium` is 22.4 px). */
+function TimeTravelBandControl({ entry, shortcut, onPress }: { readonly entry: TimeTravelBandControlStateV1; readonly shortcut: string | undefined; readonly onPress: () => void }): ReactElement {
+  const reasonId = `${useId()}-reason`;
+  const refused = entry.disabledBy !== null;
+  const button = (
+    <button
+      type="button"
+      id={entry.controlId}
+      className={refused ? "inline-flex min-h-large min-w-large cursor-not-allowed items-center justify-center px-tiny opacity-50" : "inline-flex min-h-large min-w-large items-center justify-center px-tiny underline"}
+      data-semio-time-travel-control={entry.control}
+      aria-disabled={refused ? true : undefined}
+      aria-describedby={refused ? reasonId : undefined}
+      aria-keyshortcuts={shortcut}
+      onClick={refused ? undefined : onPress}
+    >
+      {shellLabel(entry.label)}
+    </button>
+  );
+  return (
+    <DisabledReasonHint id={reasonId} reason={entry.disabledBy === null ? undefined : String(shellLabel(entry.disabledBy))}>
+      {button}
+    </DisabledReasonHint>
+  );
+}
+
+/** 📣️ The persistent history-editing band (`role=status`, polite): the stage, the edited mutation, the replay progress with
+ * its Cancel, the review's own status, the worst outcome in words, and the stage's controls ({@link TimeTravelBandControl})
+ * — a refused one focusable and telling its reason — with their chords published on `aria-keyshortcuts`. The controls sit
+ * in an `aria-live="off"` group, so a reason revealed or hidden by focus never re-announces the status. The chords fire only
+ * while their control is offered and enabled, never from a form field. The band paints its own opaque panel-level surface
+ * and the shell mounts it in the layout's `subfooter` row — in flow, the last row of the shell, under the footer — so it never
+ * lies over other text (live faults O1 / O5: an undefined `bg-menu` and an absolute overlay let it) nor under a docked panel's
+ * cap (live fault F8: a row above the footer lay under the bottom-right tab bar at tablet width). */
 export function TimeTravelBand({ session, terminology, locale, controllerId, onAction }: TimeTravelChromePropsV1 & { readonly controllerId: string; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
   const bindings = useUiKeybindingsByControlId();
-  const reviewId = useId();
   const text = timeTravelBandTextV1(session, { terminology, locale });
   const controls = timeTravelBandControlsV1(session);
   const dispatch = (id: TimeTravelControlV1) => onAction(timeTravelControlActionV1(controllerId, session, id));
@@ -333,7 +451,7 @@ export function TimeTravelBand({ session, terminology, locale, controllerId, onA
   useControlKeybinding(TIME_TRAVEL_CHORD_IDS.discard, () => dispatch("discard"), { enabled: offered("discard"), preventDefault: true }, [session, controllerId]);
   useControlKeybinding(TIME_TRAVEL_CHORD_IDS.exit, () => dispatch("exit"), { enabled: offered("exit"), preventDefault: true }, [session, controllerId]);
   return (
-    <div role="status" aria-live="polite" tabIndex={-1} aria-label={String(shellLabel("ui.timeTravel.band"))} data-semio-time-travel={session.stage} data-time-travel-generation={session.generation} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-accent bg-menu px-double py-single text-sm shadow-sm">
+    <Surface level="panel" role="status" aria-live="polite" tabIndex={-1} aria-label={String(shellLabel("ui.timeTravel.band"))} data-semio-time-travel={session.stage} data-time-travel-generation={session.generation} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-accent px-double py-single text-sm">
       <Icon icon="clock" size="small" />
       <strong data-semio-time-travel-stage="">{text.stage}</strong>
       {text.target === null ? null : <span data-semio-time-travel-target="">{text.target}</span>}
@@ -343,26 +461,16 @@ export function TimeTravelBand({ session, terminology, locale, controllerId, onA
           <span aria-hidden="true">{text.progress}</span>
         </>
       )}
-      {text.review === null ? null : <span id={reviewId} data-semio-time-travel-review={session.review}>{text.review}</span>}
+      {text.review === null ? null : <span data-semio-time-travel-review={session.review}>{text.review}</span>}
       {text.outcome === null ? null : <span data-semio-time-travel-outcome={session.worst}>{text.outcome}</span>}
       {text.accepted === null ? null : <span data-semio-time-travel-accepted="">{text.accepted}</span>}
       {text.fault === null ? null : <span data-semio-time-travel-fault={session.fault}>{text.fault}</span>}
-      {controls.map((entry) => (
-        <button
-          key={entry.control}
-          type="button"
-          className="min-h-medium px-tiny underline disabled:opacity-50 disabled:no-underline"
-          data-semio-time-travel-control={entry.control}
-          disabled={entry.disabledBy !== null}
-          title={entry.disabledBy === null ? undefined : String(shellLabel(entry.disabledBy))}
-          aria-describedby={entry.control === "finalize" && entry.disabledBy !== null && text.review !== null ? reviewId : undefined}
-          aria-keyshortcuts={ariaKeyshortcutsText(chord(entry.control))}
-          onClick={() => dispatch(entry.control)}
-        >
-          {shellLabel(entry.label)}
-        </button>
-      ))}
-    </div>
+      <span className="contents" aria-live="off" data-semio-time-travel-controls="">
+        {controls.map((entry) => (
+          <TimeTravelBandControl key={entry.control} entry={entry} shortcut={ariaKeyshortcutsText(chord(entry.control))} onPress={() => dispatch(entry.control)} />
+        ))}
+      </span>
+    </Surface>
   );
 }
 
@@ -389,7 +497,7 @@ export function HistoryReprojectionStatus({ reprojection, locale, sessionOpen, c
   if (announced.current?.key !== key) announced.current = { key, text: status.text };
   const control = historyReprojectionControlV1(reprojection, sessionOpen);
   return (
-    <div data-semio-history-reprojection={kind} data-semio-history-reprojection-phase={phase} data-notice-code={status.fault ?? undefined} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-normal bg-menu px-double py-single text-sm shadow-sm">
+    <Surface level="panel" data-semio-history-reprojection={kind} data-semio-history-reprojection-phase={phase} data-notice-code={status.fault ?? undefined} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-normal px-double py-single text-sm">
       <span role="status" aria-live="polite" aria-atomic="true" className="sr-only" data-semio-history-reprojection-announcement="">
         {`${status.title}: ${announced.current.text}`}
       </span>
@@ -400,11 +508,11 @@ export function HistoryReprojectionStatus({ reprojection, locale, sessionOpen, c
       </span>
       {phase === "progress" && status.total > 0 ? <progress data-semio-history-reprojection-progress="" value={status.done} max={status.total} aria-label={status.title} aria-valuetext={status.text} /> : null}
       {control === null ? null : (
-        <button type="button" className="min-h-medium px-tiny underline" data-semio-history-reprojection-control={control} onClick={() => onAction({ controllerId, action: TIME_TRAVEL_VERBS[control], args: {} })}>
+        <button type="button" className="inline-flex min-h-large min-w-large items-center justify-center px-tiny underline" data-semio-history-reprojection-control={control} onClick={() => onAction({ controllerId, action: TIME_TRAVEL_VERBS[control], args: {} })}>
           {shellLabel(`ui.timeTravel.${control}`)}
         </button>
       )}
-    </div>
+    </Surface>
   );
 }
 //#endregion ⏪️TimeTravelChrome

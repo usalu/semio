@@ -1,0 +1,9 @@
+# Current Published Editor And Graph Port Typing
+
+The unchanged original `types-current 7` invocation now completes with actual exit zero and zero TypeScript diagnostics against the genuinely published GraphSession and EditorSession declarations. Graph and Editor satisfy their separate mandatory proposed browser ports; Flow and the Canvas parent/type-separation assertions compile. This is structural consumer typing evidence, not full production port-source publication or runtime application evidence.
+
+The successor retains the exact original probe, compiler options and Source7 authority. All 286 original source rows were freshly captured from current physical bytes before compilation and checked again afterward, along with both genuine compiler-generated declaration files and the source authority hash. Twenty-five historical/current advances are recorded with unknown authorship and no semantic-equivalence claim. Neither generated declaration was substituted. No production source was restored.
+
+The full result is `🗑️generated/interface-port-owner/actual-generated-typing-current-7-observation-2.json`; raw actual Nx output is `🗑️generated/interface-typing-current-7-observation-2.log`. The earlier `actual-generated-typing-current-7.json` retains its one missing Graph method diagnostic and `actual-generated-typing-7.json` retains both original missing-method diagnostics. Fresh output selection preserves the original argument vector, probe, virtual owning source and compiler options while retaining every prior observation.
+
+Actual Graph publication is independently observed in `🗑️generated/surface-canonical-publication/epoch-17/independent-actual-publication-observation-1.json`: four generated writes and one package metadata no-op. The publisher did not publish the held Interface, Board or General Rust source candidates. Their native, application, deletion and publication gaps remain separately qualified.

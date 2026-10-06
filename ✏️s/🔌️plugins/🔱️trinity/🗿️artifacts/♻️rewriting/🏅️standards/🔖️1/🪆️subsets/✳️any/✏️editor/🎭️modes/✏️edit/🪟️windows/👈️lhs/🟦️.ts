@@ -1,5 +1,5 @@
-/** 👈️ Trinity Rewriting editor — LHS window: typed twin of `render_fixture_graph`'s node-graph scene
- * boundary over the rule's left-hand-side pattern (editable, fixture-driven viewport — no camera
+/** 👈️ Trinity Rewriting editor — LHS window: typed twin of `render_graph_snapshot`'s node-graph scene
+ * boundary over the rule's left-hand-side pattern (editable, snapshot-driven viewport — no camera
  * override). */
 
 export interface TrinityRewritingEditLhsNode {

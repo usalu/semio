@@ -1,4 +1,4 @@
-//! 🧪️ `drag-selection` fixture — `🧱️no-targets`.
+//! 🧪️ `drag-selection` snapshot — `🧱️no-targets`.
 //!
 //! An empty target set is what the schema's `minItems: 1` forbids: a Fatal `mutation.invariant`, nothing moves.
 //!

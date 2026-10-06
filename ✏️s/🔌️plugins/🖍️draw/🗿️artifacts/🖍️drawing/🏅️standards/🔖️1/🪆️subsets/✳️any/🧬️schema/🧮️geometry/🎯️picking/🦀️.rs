@@ -1,4 +1,6 @@
 //! 🎯️ Resumable contour winding and stroke proximity in world coordinates.
+#[path="🎨️paint/🦀️.rs"]
+pub mod paint;
 use crate::PathSegment;
 type Point=[f64;2];
 #[derive(Clone,Debug)]

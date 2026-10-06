@@ -178,7 +178,7 @@ async fn absorb_law_associativity() {
 //#region 🔖️diff_codec_text_binary_roundtrip_law
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::DiffCodec;
+    use protocol::{DiffBinary,DiffCodec,DiffText};
     let (a, b) = (sweep_a(), sweep_b());
     let cases = vec![SemioBrepDiff::default(), SemioBrepDiff::between(&a, &b), SemioBrepDiff::between(&b, &a)];
     for d in cases {

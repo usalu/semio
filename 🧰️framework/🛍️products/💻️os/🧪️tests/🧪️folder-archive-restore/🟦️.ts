@@ -6,7 +6,7 @@
  * nothing, and after the reload the one read-back is restored through `restoreDocumentArchiveV1`, which hands the fresh
  * program the saved head and re-reads its history rows before any surface paints again. A stale restore hydrates nothing. */
 import { encodeDocumentBackboneEnvelopeBatchExact } from "@semio-tech/framework-replication";
-import { decodeDocumentArchiveBytes, encodeBackboneMessage, encodeDocumentArchiveBytes, encodePackValue, type ArtifactActorConfig, type BackboneWorkerRequest, type BackboneWorkerResponse, type DocumentArchivePack } from "../../🟦️.ts";
+import { decodeBackboneWorkerResponse, decodeDocumentArchiveBytes, encodeBackboneMessage, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodePackValue, type ArtifactActorConfig, type BackboneWorkerRequest, type BackboneWorkerResponse, type DocumentArchivePack } from "../../🟦️.ts";
 import { restoreDocumentArchiveV1 } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts";
 import { commitLocalFoldersConfigMutationV1, localFolderReconnectOfferV1, readLocalFolderBindingsV1, readLocalFolderEventsV1 } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📎️local-folders/🟦️.tsx";
 import { attachLocalFolder, detachLocalFolder, LOCAL_FOLDERS_CONFIG_SCHEMA } from "../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
@@ -236,6 +236,66 @@ export async function registerFolderArchiveRestoreTests(
       let live = true;
       expect(await restoreDocumentArchiveV1("archive", () => live, { ...ports, load: async () => true, refresh: async () => { calls.push("refresh"); live = false; } })).toBe(false);
       expect(calls).toEqual(["history", "refresh"]);
+    });
+
+    it("the folder-archive-presence corpus: an absent archive is announced once and the same bytes are not written twice", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { default: Ajv } = await import("ajv");
+      const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
+      type PresenceCase = { readonly name: string; readonly bootstrap: string; readonly steps: readonly ({ readonly read: string } | { readonly write: string })[]; readonly expected: { readonly absent: number; readonly puts: number } };
+      const corpus = read("../../🔨️modules/🏪️store/🧫️fixtures/🧫️folder-archive-presence/🔣️.json") as { readonly cases: readonly PresenceCase[] };
+      const bytesOf = (name: string): Uint8Array => encodeDocumentArchiveBytes({ parent_pack: Array.from(new TextEncoder().encode(name)), parent_spr: [], members: [] });
+      const same = (left: Uint8Array | null, right: Uint8Array | null): boolean => (left === null || right === null ? left === right : left.length === right.length && left.every((byte, index) => byte === right[index]));
+      const originalFetch = globalThis.fetch;
+      worker.installStreamMuxEndpoint(null);
+      try {
+        for (const testCase of corpus.cases) {
+          let held: Uint8Array | null = testCase.bootstrap === "absent" ? null : bytesOf(testCase.bootstrap);
+          const counts = { reads: 0, puts: 0 };
+          const posted: BackboneWorkerResponse[] = [];
+          (globalThis as unknown as { fetch: unknown }).fetch = async (_url: string, init?: RequestInit) => {
+            if (init?.method === "PUT") {
+              counts.puts += 1;
+              held = new Uint8Array(init.body as Uint8Array);
+              return new Response(null, { status: 200 });
+            }
+            counts.reads += 1;
+            return held === null ? new Response(null, { status: 204 }) : new Response(held.slice(), { status: 200 });
+          };
+          worker.testSeams.workerPostTestSink = (message) => posted.push(message);
+          const client = crypto.randomUUID();
+          const program = new FolderProgram(documentId, "actor-1");
+          try {
+            worker.handleTsRequest(config(client));
+            await settle(() => counts.reads >= 1);
+            await worker.artifactState(documentId)!.revalidateFolder();
+            for (const step of testCase.steps) {
+              if ("read" in step) {
+                const content = step.read === "absent" ? null : bytesOf(step.read);
+                if (!same(held, content)) held = content;
+                await worker.artifactState(documentId)!.revalidateFolder();
+                continue;
+              }
+              worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: client, message: { kind: "documentBackbone", message: program.drag("A", [1, 1]) } });
+              await settle(() => (worker.artifactState(documentId)?.pendingMutations.length ?? 0) === 1);
+              worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: client, message: { kind: "localDocumentArchive", archive: Array.from(bytesOf(step.write)) } });
+              await settle(() => worker.artifactState(documentId)?.pendingMutations.length === 0);
+            }
+            expect({ absent: events(posted, "documentArchiveAbsent").length, puts: counts.puts }, testCase.name).toEqual(testCase.expected);
+            expect(events(posted, "commandOutcome"), testCase.name).toEqual([]);
+          } finally {
+            worker.closeArtifact(documentId, undefined, client);
+            worker.testSeams.workerPostTestSink = null;
+          }
+        }
+      } finally {
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+      }
+      const clientInstanceId = crypto.randomUUID();
+      const absent: BackboneWorkerResponse = { kind: "event", documentId, clientInstanceId, event: { kind: "documentArchiveAbsent" } };
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(absent))).toEqual(absent);
+      const malformed = { kind: "event", documentId, clientInstanceId, event: { kind: "documentArchiveAbsent", archive: [1] } } as unknown as BackboneWorkerResponse;
+      expect(() => decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(malformed))).toThrow("invalid document archive absence");
     });
   });
 }

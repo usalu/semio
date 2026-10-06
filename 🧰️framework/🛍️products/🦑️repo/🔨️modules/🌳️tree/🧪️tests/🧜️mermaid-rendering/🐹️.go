@@ -19,7 +19,7 @@ import (
 
 // 📥️ fixture decodes the committed Mermaid fixture.
 func fixture(ctx *host.Context) (map[string]any, error) {
-	raw, err := ctx.FixtureBytes("shared://🧜️mermaid-vectors.json")
+	raw, err := ctx.InputBytes("shared://🧜️mermaid-vectors.json")
 	if err != nil {
 		return nil, err
 	}

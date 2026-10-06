@@ -1,6 +1,6 @@
 {
   "schema": "semio.framework.tool-machine.gesture-drive-law.v1",
-  "note": "🌊️ The shared streamed-gesture runner (design §5 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): one dispatch of a window's streamed tool (a gumball drag, a paint stroke) from the gesture its window persisted. `phases` pins the wire `phase`/`reason` arguments (absent phase = one-shot, absent reason = `tool`, unknown words refused). Every row drives the counting `tool` from `persisted` through `dispatch` in Rust (`drive_gesture`) and TypeScript (`driveGesture`) and must report `expected`: the reason the open gesture was aborted with, the ticks committed as ONE transaction, the window's next gesture and the refusal that faulted the dispatch. A gesture its tool cannot restore is dropped with zero trace and the dispatch runs from rest; a refused start or tick has no effect at all. Authored by `🧪️s4-tools-a-gesture-drive-law.py`, an independent Python model.",
+  "note": "🌊️ The shared streamed-gesture runner (design §5 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): one dispatch of a window's streamed tool (a gumball drag, a paint stroke) from the gesture its window persisted. `phases` pins the wire `phase`/`reason` arguments (absent phase = one-shot, absent reason = `tool`, unknown words refused). Every row drives the counting `tool` from `persisted` through `dispatch` in Rust (`drive_gesture`) and TypeScript (`driveGesture`) and must report `expected`: the reason the open gesture was aborted with, the ticks committed as ONE transaction, the window's next gesture and the refusal that faulted the dispatch. A gesture its tool cannot restore is dropped with zero trace and the dispatch runs from rest; a refused start or tick has no effect at all. `hostEvents` pins the reason each host fact ends a window's open gesture with (`null`: the gesture stays; a moved base ends only a gesture pinned to a base revision). Every `slots` scenario runs its steps over the per-window ledger (`GestureLedger`) — a dispatch of a window, a host fact of one window or of all, the window roster, a tampered slot — and must report after each step the ticks committed, the refusal, the gestures host facts ended, every window's persisted gesture and the press each window last closed. A dispatch may name its host `press`: the gesture belongs to the press that opened it, a dispatch of the press a window last closed is dropped with zero trace, a dispatch of another press interrupts the open gesture first. Authored by `🧪️s4-tools-a-gesture-drive-law.py`, an independent Python model.",
   "tool": {
     "refuseStartVerb": "refuse-start",
     "startRefusal": "toolTransaction.closed",
@@ -829,6 +829,2384 @@
         "next": "unchanged",
         "refused": "toolTransaction.unclosed"
       }
+    }
+  ],
+  "hostEvents": [
+    {
+      "event": "blur",
+      "baseBound": true,
+      "reason": "blur"
+    },
+    {
+      "event": "blur",
+      "baseBound": false,
+      "reason": "blur"
+    },
+    {
+      "event": "captureLost",
+      "baseBound": true,
+      "reason": "captureLost"
+    },
+    {
+      "event": "captureLost",
+      "baseBound": false,
+      "reason": "captureLost"
+    },
+    {
+      "event": "utilityChanged",
+      "baseBound": true,
+      "reason": "retired"
+    },
+    {
+      "event": "utilityChanged",
+      "baseBound": false,
+      "reason": "retired"
+    },
+    {
+      "event": "retiring",
+      "baseBound": true,
+      "reason": "retired"
+    },
+    {
+      "event": "retiring",
+      "baseBound": false,
+      "reason": "retired"
+    },
+    {
+      "event": "timeTravelFrozen",
+      "baseBound": true,
+      "reason": "frozen"
+    },
+    {
+      "event": "timeTravelFrozen",
+      "baseBound": false,
+      "reason": "frozen"
+    },
+    {
+      "event": "baseMoved",
+      "baseBound": true,
+      "reason": "baseMoved"
+    },
+    {
+      "event": "baseMoved",
+      "baseBound": false,
+      "reason": null
+    }
+  ],
+  "slots": [
+    {
+      "name": "a-gesture-persists-between-dispatches-and-commits-once",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 3,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              1,
+              2,
+              3
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-history-edit-freezes-every-open-gesture-with-zero-trace",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w2",
+            "verb": "turn",
+            "phase": "stream",
+            "tick": 5,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              },
+              "w2": {
+                "verb": "turn",
+                "base": "r1",
+                "ticks": [
+                  5
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "hostAll": {
+            "event": "timeTravelFrozen"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "frozen"
+              },
+              {
+                "window": "w2",
+                "reason": "frozen"
+              }
+            ],
+            "open": {},
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": null,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-frozen-window-ends-only-its-own-gesture",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w2",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 7,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              },
+              "w2": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  7
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "host": {
+            "window": "w1",
+            "event": "timeTravelFrozen"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "frozen"
+              }
+            ],
+            "open": {
+              "w2": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  7
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w2",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 8,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              7,
+              8
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-blur-ends-the-windows-gesture",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "host": {
+            "window": "w1",
+            "event": "blur"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "blur"
+              }
+            ],
+            "open": {},
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": null,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-lost-pointer-capture-ends-the-windows-gesture",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "host": {
+            "window": "w1",
+            "event": "captureLost"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "captureLost"
+              }
+            ],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-utility-switch-retires-the-windows-gesture",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "host": {
+            "window": "w1",
+            "event": "utilityChanged"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "retired"
+              }
+            ],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-closing-window-retires-its-gesture",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "host": {
+            "window": "w1",
+            "event": "retiring"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "retired"
+              }
+            ],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-moved-base-ends-a-gesture-pinned-to-its-revision",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "host": {
+            "window": "w1",
+            "event": "baseMoved"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "baseMoved"
+              }
+            ],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-moved-base-keeps-a-gesture-pinned-to-no-revision",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "paint",
+            "phase": "stream",
+            "tick": 1,
+            "base": ""
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "paint",
+                "base": "",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "host": {
+            "window": "w1",
+            "event": "baseMoved"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "paint",
+                "base": "",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "paint",
+            "phase": "commit",
+            "tick": 2,
+            "base": ""
+          },
+          "expected": {
+            "committed": [
+              1,
+              2
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-host-fact-at-rest-changes-nothing",
+      "steps": [
+        {
+          "host": {
+            "window": "w1",
+            "event": "blur"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        },
+        {
+          "hostAll": {
+            "event": "timeTravelFrozen"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        },
+        {
+          "retain": [],
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "windows-never-share-a-slot",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w2",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 5,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              },
+              "w2": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  5
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              1,
+              2
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w2": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  5
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w2",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 6,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w2": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  5,
+                  6
+                ]
+              }
+            },
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-window-that-left-the-roster-retires-its-gesture",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w2",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 5,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              },
+              "w2": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  5
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w3",
+            "verb": "paint",
+            "phase": "stream",
+            "tick": 9,
+            "base": ""
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              },
+              "w2": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  5
+                ]
+              },
+              "w3": {
+                "verb": "paint",
+                "base": "",
+                "ticks": [
+                  9
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "retain": [
+            "w2"
+          ],
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "retired"
+              },
+              {
+                "window": "w3",
+                "reason": "retired"
+              }
+            ],
+            "open": {
+              "w2": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  5
+                ]
+              }
+            },
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "another-verb-takes-the-windows-slot",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "turn",
+            "phase": "stream",
+            "tick": 5,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "turn",
+                "base": "r1",
+                "ticks": [
+                  5
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "turn",
+            "phase": "commit",
+            "tick": 6,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              5,
+              6
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-refused-tick-keeps-the-windows-slot",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": -1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": "toolTransaction.unclosed",
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              1,
+              2
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "an-unrestorable-slot-is-dropped-by-the-next-dispatch",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "corrupt": "w1",
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "corrupt": true
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": null,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-host-fact-ends-an-unrestorable-slot-too",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "corrupt": "w1",
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "corrupt": true
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "host": {
+            "window": "w1",
+            "event": "timeTravelFrozen"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "frozen"
+              }
+            ],
+            "open": {},
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-moved-base-under-a-dispatch-drops-the-slot",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 2,
+            "base": "r2"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 3,
+            "base": "r2"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r2",
+                "ticks": [
+                  3
+                ]
+              }
+            },
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-late-tick-of-a-committed-press-is-dropped",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              1,
+              2
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 3,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 4,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-late-release-after-a-blur-commits-nothing",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "host": {
+            "window": "w1",
+            "event": "blur"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "blur"
+              }
+            ],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 9,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p2",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  2
+                ],
+                "press": "p2"
+              }
+            },
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-frozen-press-stays-ended",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "hostAll": {
+            "event": "timeTravelFrozen"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [
+              {
+                "window": "w1",
+                "reason": "frozen"
+              }
+            ],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 3,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "another-press-interrupts-the-open-one",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p2",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 5,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  5
+                ],
+                "press": "p2"
+              }
+            },
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 9,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  5
+                ],
+                "press": "p2"
+              }
+            },
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p2",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 6,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              5,
+              6
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p2"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-refused-tick-of-another-press-keeps-the-open-one",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p2",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": -1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": "toolTransaction.unclosed",
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              1,
+              2
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-press-that-opened-nothing-is-not-closed",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": null,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              1,
+              2
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-one-shot-closes-its-press",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "tick": 7,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              7
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-moved-base-ends-a-named-press-for-good",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 2,
+            "base": "r2"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 3,
+            "base": "r2"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an-unnamed-dispatch-rides-and-ends-a-named-gesture",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1,
+                  2
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 3,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              1,
+              2,
+              3
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 4,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-named-dispatch-rides-an-unnamed-gesture",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 3,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              1,
+              2,
+              3
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "another-verb-of-the-same-press-reopens-under-it",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "turn",
+            "phase": "stream",
+            "tick": 5,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "turn",
+                "base": "r1",
+                "ticks": [
+                  5
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "turn",
+            "phase": "commit",
+            "tick": 6,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              5,
+              6
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-retired-window-forgets-its-closed-press",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": [
+              1,
+              2
+            ],
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "retain": [],
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {},
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 3,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  3
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "an-unrestorable-named-slot-reopens-under-the-dispatching-press",
+      "steps": [
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 1,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1"
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "corrupt": "w1",
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  1
+                ],
+                "press": "p1",
+                "corrupt": true
+              }
+            },
+            "closed": {}
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "verb": "drag",
+            "phase": "stream",
+            "tick": 2,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  2
+                ]
+              }
+            },
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        },
+        {
+          "drive": {
+            "window": "w1",
+            "press": "p1",
+            "verb": "drag",
+            "phase": "commit",
+            "tick": 3,
+            "base": "r1"
+          },
+          "expected": {
+            "committed": null,
+            "refused": null,
+            "aborted": [],
+            "open": {
+              "w1": {
+                "verb": "drag",
+                "base": "r1",
+                "ticks": [
+                  2
+                ]
+              }
+            },
+            "closed": {
+              "w1": "p1"
+            }
+          }
+        }
+      ]
     }
   ]
 }

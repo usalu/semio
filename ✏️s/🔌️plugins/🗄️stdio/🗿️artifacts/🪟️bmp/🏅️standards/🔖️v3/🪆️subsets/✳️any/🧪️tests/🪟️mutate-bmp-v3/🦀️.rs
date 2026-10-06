@@ -24,8 +24,8 @@ use semio_repo_test_host::law;
 /// (`🏛️rathaus-ahlen-grundriss/🖼️.bmp`, derived once — see `🥒️.feature`'s own description), the small indexed
 /// document, or the direct-colour document. None is ever written to.
 fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
-    let input = ctx.step_fixture_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
-    let copy = ctx.copy_fixture(&input, Some("input.bmp"))?;
+    let input = ctx.step_input_uris().into_iter().next().ok_or_else(|| format!("scenario {} names no input document", ctx.scenario.id))?;
+    let copy = ctx.copy_input(&input, Some("input.bmp"))?;
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 //#endregion 🔖️Input

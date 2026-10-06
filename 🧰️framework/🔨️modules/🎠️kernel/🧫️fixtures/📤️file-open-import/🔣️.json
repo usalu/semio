@@ -96,7 +96,7 @@
             "readAs": {
               "tag": "none"
             },
-            "importAction": "importFixture",
+            "importAction": "importSnapshot",
             "multiple": true
           }
         }
@@ -105,7 +105,7 @@
         "requestFileOpen": {
           "req": 111,
           "accept": "application/json,.json",
-          "importAction": "importFixture",
+          "importAction": "importSnapshot",
           "multiple": true
         }
       },

@@ -13,7 +13,7 @@ import rasterSchema from "../../../📷️raster/🧬️schema/🔣️.json";
 import pathSchema from "../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
 import imageSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🧬️schema/🔣️.json";
 import {DocumentSceneJob,DocumentRasterJob,rasterizeDocument,prepareDocumentScene,resolvedSceneInput} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import {RasterSceneJob} from "../../../📷️raster/🟦️.ts";
 import booleanSchema from "../../../🔀️booleans/🧬️schema/🔣️.json";
 import flatSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧬️schema/🔣️.json";
@@ -114,3 +114,5 @@ test("prepared scene selection refuses invalid unused addresses and bounded capa
  for(const value of [NaN,Infinity,-1,.5])expect(()=>sceneSelectionRelation([0],value,[])).toThrow();
  console.log("[DEBUG] Prepared selection refuses all nine neutral invalid inputs, including invalid unused selections, and borrows immutable bounded source addresses");
 });
+
+import "../../../🎨️paint/🧪️tests/🔬️unit/🟦️.ts";

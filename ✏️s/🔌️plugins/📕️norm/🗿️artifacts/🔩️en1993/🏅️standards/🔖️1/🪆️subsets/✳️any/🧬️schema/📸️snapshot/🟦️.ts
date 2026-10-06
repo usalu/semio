@@ -283,5 +283,3 @@ export const parseForceAction: NormWireReader<ForceAction> = normWireObject<Forc
 export const parseJointForceAction: NormWireReader<JointForceAction> = normWireObject<JointForceAction>({ id: normWireRequired(normWireString), loadCaseId: normWireRequired(normWireString), shear: normWireRequired(normWireNumber), tension: normWireRequired(normWireNumber) });
 export const parseFatigueBand: NormWireReader<FatigueBand> = normWireObject<FatigueBand>({ id: normWireRequired(normWireString), deltaSigma: normWireRequired(normWireNumber), cycles: normWireRequired(normWireNumber) });
 export const parseEn1993AnnexChoice: NormWireReader<En1993AnnexChoice> = normWireLiteral("En", "De");
-
-export * from "./🪶️sqlite/🟦️.ts";

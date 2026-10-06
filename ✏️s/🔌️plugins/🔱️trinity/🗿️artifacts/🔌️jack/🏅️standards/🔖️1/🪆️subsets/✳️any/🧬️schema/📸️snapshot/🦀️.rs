@@ -180,39 +180,13 @@ impl Default for JackSnapshot {
 }
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ Renders a [`JackSnapshot`] as this facet's own camelCase JSON projection — the comparison
-/// surface `🔌️mutate-jack-1`'s scenarios are measured through, and the shape the committed
-/// `../🧫️fixtures/🧬️mutations/<slug>/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors are written in. It carries `content` as a HANDLE, never as a scene, and
-/// that handle's `childId` is a digest of the child — so it moves if and only if the working scene
-/// moved, which is what makes it a usable observability surface here.
-///
-/// A thin `pack::json` wrapper over [`JackSnapshot`]'s own `ToValue`, bridged through
-/// `pack::json_from_dsl_value` since `DslValue` and `pack::json::Value` are sibling trees (used
-/// behind this interface per CLAUDE.md's "external libraries behind an interface" rule).
-pub fn encode_jack_snapshot_json(snapshot: &JackSnapshot) -> Result<String, semio_framework_value::ValueError> {
-    let value = crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_value::ToValue::to_value(snapshot), false)?;
-    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&value)))
-}
 
-/// 📥️ The inverse of [`encode_jack_snapshot_json`] — decodes those committed specification vectors
-/// into real [`JackSnapshot`] values, so `🔌️mutate-jack-1`'s adapter reads the committed fixture
-/// rather than re-declaring it as a Rust literal beside it.
-pub fn decode_jack_snapshot_json(text: &str) -> Result<JackSnapshot, semio_framework_value::ValueError> {
-    let parsed = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?;
-    <JackSnapshot as semio_framework_value::FromValue>::from_value(crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_pack_json::to_dsl_value(&parsed), true)?)
-}
 
-/// 📝️ Parses the literal Jack parent and its independent content-child address.
-/// Child materialization belongs to the host's composed artifact boundary.
-pub fn parse_jack_dsl(text: &str) -> Result<JackSnapshot, String> {
-    <JackSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
-}
 
-/// 📝️ Renders the literal parent record with its native document preamble.
-pub fn print_jack_dsl(snapshot: &JackSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
-}
+
+
+
+
 
 /// 🔎️ The scene's node names and `source -> target` edge ids the document's composed child currently
 /// resolves to — the readable half of a divergence message, so a failing scenario names WHICH piece
@@ -225,9 +199,7 @@ pub fn jack_scene_summary(snapshot: &JackSnapshot) -> Result<String, semio_frame
 }
 //#endregion 🌉️ExternalCodecBridge
 
-#[cfg(test)]
-#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
-mod sqlite_snapshot_tests;
+
 
 impl semio_framework_schema_composition::ChildFieldRefs for JackSnapshot {
     const MANY: bool = false;

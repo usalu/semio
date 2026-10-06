@@ -247,10 +247,10 @@ async fn graph_to_host_snapshot_and_fixture_json() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn subgraph_fixture_filters_entities_and_keeps_root_when_included() {
+async fn subgraph_snapshot_filters_entities_and_keeps_root_when_included() {
     let g = Graph::from_snapshot(mini_fixture()).unwrap();
     let node_ids: BTreeSet<String> = ["root".to_string()].into_iter().collect();
-    let sub = g.subgraph_fixture(&node_ids, &BTreeSet::new());
+    let sub = g.subgraph_snapshot(&node_ids, &BTreeSet::new());
     assert_eq!(sub.nodes().expect("valid retained Jack child").len(), 1);
     assert!(sub.edges().expect("valid retained Jack child").is_empty());
     assert_eq!(sub.root_node_id.as_deref(), Some("root"));
@@ -258,10 +258,10 @@ async fn subgraph_fixture_filters_entities_and_keeps_root_when_included() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn subgraph_fixture_drops_root_when_not_included() {
+async fn subgraph_snapshot_drops_root_when_not_included() {
     let g = Graph::from_snapshot(mini_fixture()).unwrap();
     let node_ids: BTreeSet<String> = ["child".to_string()].into_iter().collect();
-    let sub = g.subgraph_fixture(&node_ids, &BTreeSet::new());
+    let sub = g.subgraph_snapshot(&node_ids, &BTreeSet::new());
     assert!(sub.root_node_id.is_none());
 }
 
@@ -280,7 +280,7 @@ async fn port_key_helpers_handle_malformed_keys() {
 /// before a decoded document may replace the store.
 #[test]
 fn the_child_restore_projection_names_every_declared_child_slot() {
-    let snapshot = crate::empty_trinity_graph_fixture();
+    let snapshot = crate::empty_trinity_graph_snapshot();
     let projection = crate::jack_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
     assert_eq!(projection.len(), <crate::JackSnapshot as semio_framework_schema_composition::ArtifactCompositionFields>::child_slots().len());
 }

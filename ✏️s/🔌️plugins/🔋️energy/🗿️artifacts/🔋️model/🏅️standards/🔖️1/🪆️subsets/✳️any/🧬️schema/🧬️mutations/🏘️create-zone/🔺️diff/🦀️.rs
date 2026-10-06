@@ -26,6 +26,6 @@ pub fn diff(payload: &super::CreateZone, base: &EnergyModelSnapshot) -> protocol
     model
         .zones
         .insert(position, crate::model::Zone { id: payload.id, name: payload.name.clone(), volume_m3: payload.volume_m3, multiplier: payload.multiplier, conditioned: payload.conditioned, part_of_total_floor_area: payload.part_of_total_floor_area });
-    protocol::MutationOutcome::new(crate::schema::diff::text::diff_from_model(model))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::diff_from_model(model))
 }
 //#endregion 🔖️Diff

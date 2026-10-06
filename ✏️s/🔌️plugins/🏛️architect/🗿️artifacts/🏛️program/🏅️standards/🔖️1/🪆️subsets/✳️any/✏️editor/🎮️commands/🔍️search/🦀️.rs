@@ -3,7 +3,7 @@
 
 pub mod query {
     use crate::editor::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigMutation};
-    use crate::op::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::inferences::{search_plugin, SearchQuery};
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;

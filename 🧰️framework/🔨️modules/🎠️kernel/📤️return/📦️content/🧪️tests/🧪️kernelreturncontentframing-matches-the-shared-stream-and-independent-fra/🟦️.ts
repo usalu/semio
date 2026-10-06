@@ -38,7 +38,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(pageSchema).addSchema(lifetimeSchema).addSchema(patchSchema);
     expect(ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/Content`)!(wire)).toBe(true);
-    expect(ajv.getSchema(`${schema.$id}#/$defs/ContentFixture`)!(fixture)).toBe(true);
     const { frame } = await oracle();
     const chunks = fixture.recordVectors.map(row => {
       const body = Buffer.from(row.bodyHex, "hex");
@@ -161,10 +160,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
   };
   it("KernelReturnUiOperationHeader selects all eleven grammar fields without reading payload", async () => {
     const { default: fixture } = await import("../../📥️input/🧫️fixtures/🔣️.json");
-    const { default: schema } = await import("../../📥️input/🧬️schema/🔣️.json");
     const { default: wire } = await import("../../🔌️wire/🔣️.json");
     const { default: Ajv } = await import("ajv");
-    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     const uint = await oracle();
     for (const row of fixture.vectors) {
       const payload = Buffer.from(row.payloadHex, "hex");

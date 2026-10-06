@@ -1,79 +1,589 @@
 {
-  "$schema": "../../🧬️schema/🔣️tool-transaction/🔣️.json",
   "family": "demo",
   "tool": "demo#import",
   "codec": [
-    { "command": { "append": "tx-x" }, "hex": "01130474782d780b64656d6f23696d706f727400" },
-    { "command": { "commit": "tx-x" }, "hex": "01140474782d78" },
-    { "command": { "abort": "tx-x" }, "hex": "01150474782d78" }
+    {
+      "command": {
+        "append": "tx-x"
+      },
+      "hex": "01130474782d780b64656d6f23696d706f727400"
+    },
+    {
+      "command": {
+        "commit": "tx-x"
+      },
+      "hex": "01140474782d78"
+    },
+    {
+      "command": {
+        "abort": "tx-x"
+      },
+      "hex": "01150474782d78"
+    }
   ],
   "cases": [
     {
       "name": "ticks-and-a-commit-are-one-edit-and-one-undo-step",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "steps": [
-        { "apply": [{ "operation": "setN", "n": 1 }], "expect": { "refused": null, "n": 1, "edits": 1, "open": null, "openOperations": 0, "announced": 1, "persisted": 1 } },
-        { "append": { "transaction": "tx-a", "operations": [{ "operation": "addN", "delta": 2 }] }, "expect": { "refused": null, "n": 3, "edits": 2, "open": "tx-a", "openOperations": 1, "announced": 0, "persisted": 1 } },
-        { "append": { "transaction": "tx-a", "operations": [{ "operation": "addN", "delta": 3 }, { "operation": "addN", "delta": 4 }] }, "expect": { "refused": null, "n": 10, "edits": 2, "open": "tx-a", "openOperations": 3, "announced": 0, "persisted": 1 } },
-        { "commit": "tx-a", "expect": { "refused": null, "n": 10, "edits": 2, "open": null, "openOperations": 0, "announced": 3, "persisted": 10 } },
-        { "undo": true, "expect": { "refused": null, "n": 1, "edits": 2, "open": null, "openOperations": 0, "announced": 0, "persisted": 1 } }
+        {
+          "apply": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "expect": {
+            "refused": null,
+            "n": 1,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 1,
+            "persisted": 1
+          }
+        },
+        {
+          "append": {
+            "transaction": "tx-a",
+            "operations": [
+              {
+                "operation": "addN",
+                "delta": 2
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 3,
+            "edits": 2,
+            "open": "tx-a",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 1
+          }
+        },
+        {
+          "append": {
+            "transaction": "tx-a",
+            "operations": [
+              {
+                "operation": "addN",
+                "delta": 3
+              },
+              {
+                "operation": "addN",
+                "delta": 4
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 10,
+            "edits": 2,
+            "open": "tx-a",
+            "openOperations": 3,
+            "announced": 0,
+            "persisted": 1
+          }
+        },
+        {
+          "commit": "tx-a",
+          "expect": {
+            "refused": null,
+            "n": 10,
+            "edits": 2,
+            "open": null,
+            "openOperations": 0,
+            "announced": 3,
+            "persisted": 10
+          }
+        },
+        {
+          "undo": true,
+          "expect": {
+            "refused": null,
+            "n": 1,
+            "edits": 2,
+            "open": null,
+            "openOperations": 0,
+            "announced": 0,
+            "persisted": 1
+          }
+        }
       ]
     },
     {
       "name": "an-abort-leaves-no-trace",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "steps": [
-        { "apply": [{ "operation": "setN", "n": 5 }], "expect": { "refused": null, "n": 5, "edits": 1, "open": null, "openOperations": 0, "announced": 1, "persisted": 5 } },
-        { "append": { "transaction": "tx-b", "operations": [{ "operation": "setN", "n": 9 }] }, "expect": { "refused": null, "n": 9, "edits": 2, "open": "tx-b", "openOperations": 1, "announced": 0, "persisted": 5 } },
-        { "append": { "transaction": "tx-b", "operations": [{ "operation": "addN", "delta": 1 }] }, "expect": { "refused": null, "n": 10, "edits": 2, "open": "tx-b", "openOperations": 2, "announced": 0, "persisted": 5 } },
-        { "abort": "tx-b", "expect": { "refused": null, "n": 5, "edits": 1, "open": null, "openOperations": 0, "announced": 0, "persisted": 5 } },
-        { "apply": [{ "operation": "addN", "delta": 1 }], "expect": { "refused": null, "n": 6, "edits": 2, "open": null, "openOperations": 0, "announced": 1, "persisted": 6 } }
+        {
+          "apply": [
+            {
+              "operation": "setN",
+              "n": 5
+            }
+          ],
+          "expect": {
+            "refused": null,
+            "n": 5,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 1,
+            "persisted": 5
+          }
+        },
+        {
+          "append": {
+            "transaction": "tx-b",
+            "operations": [
+              {
+                "operation": "setN",
+                "n": 9
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 9,
+            "edits": 2,
+            "open": "tx-b",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 5
+          }
+        },
+        {
+          "append": {
+            "transaction": "tx-b",
+            "operations": [
+              {
+                "operation": "addN",
+                "delta": 1
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 10,
+            "edits": 2,
+            "open": "tx-b",
+            "openOperations": 2,
+            "announced": 0,
+            "persisted": 5
+          }
+        },
+        {
+          "abort": "tx-b",
+          "expect": {
+            "refused": null,
+            "n": 5,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 0,
+            "persisted": 5
+          }
+        },
+        {
+          "apply": [
+            {
+              "operation": "addN",
+              "delta": 1
+            }
+          ],
+          "expect": {
+            "refused": null,
+            "n": 6,
+            "edits": 2,
+            "open": null,
+            "openOperations": 0,
+            "announced": 1,
+            "persisted": 6
+          }
+        }
       ]
     },
     {
       "name": "an-open-transaction-refuses-every-other-command",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "steps": [
-        { "append": { "transaction": "tx-c", "operations": [{ "operation": "setN", "n": 2 }] }, "expect": { "refused": null, "n": 2, "edits": 1, "open": "tx-c", "openOperations": 1, "announced": 0, "persisted": 0 } },
-        { "apply": [{ "operation": "setN", "n": 7 }], "expect": { "refused": "transactionOpen", "n": 2, "edits": 1, "open": "tx-c", "openOperations": 1, "announced": 0, "persisted": 0 } },
-        { "undo": true, "expect": { "refused": "transactionOpen", "n": 2, "edits": 1, "open": "tx-c", "openOperations": 1, "announced": 0, "persisted": 0 } },
-        { "append": { "transaction": "tx-d", "operations": [{ "operation": "setN", "n": 3 }] }, "expect": { "refused": "transactionOpen", "n": 2, "edits": 1, "open": "tx-c", "openOperations": 1, "announced": 0, "persisted": 0 } },
-        { "commit": "tx-d", "expect": { "refused": "unknownTransaction", "n": 2, "edits": 1, "open": "tx-c", "openOperations": 1, "announced": 0, "persisted": 0 } },
-        { "append": { "transaction": "tx-c", "operations": [] }, "expect": { "refused": "emptyApply", "n": 2, "edits": 1, "open": "tx-c", "openOperations": 1, "announced": 0, "persisted": 0 } },
-        { "commit": "tx-c", "expect": { "refused": null, "n": 2, "edits": 1, "open": null, "openOperations": 0, "announced": 1, "persisted": 2 } },
-        { "commit": "tx-c", "expect": { "refused": "unknownTransaction", "n": 2, "edits": 1, "open": null, "openOperations": 0, "announced": 0, "persisted": 2 } },
-        { "abort": "tx-c", "expect": { "refused": "unknownTransaction", "n": 2, "edits": 1, "open": null, "openOperations": 0, "announced": 0, "persisted": 2 } }
+        {
+          "append": {
+            "transaction": "tx-c",
+            "operations": [
+              {
+                "operation": "setN",
+                "n": 2
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 2,
+            "edits": 1,
+            "open": "tx-c",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 0
+          }
+        },
+        {
+          "apply": [
+            {
+              "operation": "setN",
+              "n": 7
+            }
+          ],
+          "expect": {
+            "refused": "transactionOpen",
+            "n": 2,
+            "edits": 1,
+            "open": "tx-c",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 0
+          }
+        },
+        {
+          "undo": true,
+          "expect": {
+            "refused": "transactionOpen",
+            "n": 2,
+            "edits": 1,
+            "open": "tx-c",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 0
+          }
+        },
+        {
+          "append": {
+            "transaction": "tx-d",
+            "operations": [
+              {
+                "operation": "setN",
+                "n": 3
+              }
+            ]
+          },
+          "expect": {
+            "refused": "transactionOpen",
+            "n": 2,
+            "edits": 1,
+            "open": "tx-c",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 0
+          }
+        },
+        {
+          "commit": "tx-d",
+          "expect": {
+            "refused": "unknownTransaction",
+            "n": 2,
+            "edits": 1,
+            "open": "tx-c",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 0
+          }
+        },
+        {
+          "append": {
+            "transaction": "tx-c",
+            "operations": []
+          },
+          "expect": {
+            "refused": "emptyApply",
+            "n": 2,
+            "edits": 1,
+            "open": "tx-c",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 0
+          }
+        },
+        {
+          "commit": "tx-c",
+          "expect": {
+            "refused": null,
+            "n": 2,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 1,
+            "persisted": 2
+          }
+        },
+        {
+          "commit": "tx-c",
+          "expect": {
+            "refused": "unknownTransaction",
+            "n": 2,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 0,
+            "persisted": 2
+          }
+        },
+        {
+          "abort": "tx-c",
+          "expect": {
+            "refused": "unknownTransaction",
+            "n": 2,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 0,
+            "persisted": 2
+          }
+        }
       ]
     },
     {
       "name": "a-later-remote-edit-lands-under-the-open-transaction",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "steps": [
-        { "apply": [{ "operation": "setN", "n": 1 }], "expect": { "refused": null, "n": 1, "edits": 1, "open": null, "openOperations": 0, "announced": 1, "persisted": 1 } },
-        { "append": { "transaction": "tx-e", "operations": [{ "operation": "addN", "delta": 1 }] }, "expect": { "refused": null, "n": 2, "edits": 2, "open": "tx-e", "openOperations": 1, "announced": 0, "persisted": 1 } },
-        { "remote": { "clock": "after", "operation": { "operation": "setN", "n": 10 } }, "expect": { "refused": null, "n": 11, "edits": 3, "open": "tx-e", "openOperations": 1, "announced": 0, "persisted": 10 } },
-        { "append": { "transaction": "tx-e", "operations": [{ "operation": "addN", "delta": 2 }] }, "expect": { "refused": null, "n": 13, "edits": 3, "open": "tx-e", "openOperations": 2, "announced": 0, "persisted": 10 } },
-        { "commit": "tx-e", "expect": { "refused": null, "n": 13, "edits": 3, "open": null, "openOperations": 0, "announced": 2, "persisted": 13 } }
+        {
+          "apply": [
+            {
+              "operation": "setN",
+              "n": 1
+            }
+          ],
+          "expect": {
+            "refused": null,
+            "n": 1,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 1,
+            "persisted": 1
+          }
+        },
+        {
+          "append": {
+            "transaction": "tx-e",
+            "operations": [
+              {
+                "operation": "addN",
+                "delta": 1
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 2,
+            "edits": 2,
+            "open": "tx-e",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 1
+          }
+        },
+        {
+          "remote": {
+            "clock": "after",
+            "operation": {
+              "operation": "setN",
+              "n": 10
+            }
+          },
+          "expect": {
+            "refused": null,
+            "n": 11,
+            "edits": 3,
+            "open": "tx-e",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 10
+          }
+        },
+        {
+          "append": {
+            "transaction": "tx-e",
+            "operations": [
+              {
+                "operation": "addN",
+                "delta": 2
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 13,
+            "edits": 3,
+            "open": "tx-e",
+            "openOperations": 2,
+            "announced": 0,
+            "persisted": 10
+          }
+        },
+        {
+          "commit": "tx-e",
+          "expect": {
+            "refused": null,
+            "n": 13,
+            "edits": 3,
+            "open": null,
+            "openOperations": 0,
+            "announced": 2,
+            "persisted": 13
+          }
+        }
       ]
     },
     {
       "name": "an-earlier-remote-edit-lands-under-the-open-transaction",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "steps": [
-        { "append": { "transaction": "tx-f", "operations": [{ "operation": "addN", "delta": 5 }] }, "expect": { "refused": null, "n": 5, "edits": 1, "open": "tx-f", "openOperations": 1, "announced": 0, "persisted": 0 } },
-        { "remote": { "clock": "before", "operation": { "operation": "setN", "n": 20 } }, "expect": { "refused": null, "n": 25, "edits": 2, "open": "tx-f", "openOperations": 1, "announced": 0, "persisted": 20 } },
-        { "commit": "tx-f", "expect": { "refused": null, "n": 25, "edits": 2, "open": null, "openOperations": 0, "announced": 1, "persisted": 25 } }
+        {
+          "append": {
+            "transaction": "tx-f",
+            "operations": [
+              {
+                "operation": "addN",
+                "delta": 5
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 5,
+            "edits": 1,
+            "open": "tx-f",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 0
+          }
+        },
+        {
+          "remote": {
+            "clock": "before",
+            "operation": {
+              "operation": "setN",
+              "n": 20
+            }
+          },
+          "expect": {
+            "refused": null,
+            "n": 25,
+            "edits": 2,
+            "open": "tx-f",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 20
+          }
+        },
+        {
+          "commit": "tx-f",
+          "expect": {
+            "refused": null,
+            "n": 25,
+            "edits": 2,
+            "open": null,
+            "openOperations": 0,
+            "announced": 1,
+            "persisted": 25
+          }
+        }
       ]
     },
     {
       "name": "a-committed-transaction-is-history-like-any-edit",
-      "initial": { "n": 0 },
+      "initial": {
+        "n": 0
+      },
       "steps": [
-        { "append": { "transaction": "tx-g", "operations": [{ "operation": "setN", "n": 4 }] }, "expect": { "refused": null, "n": 4, "edits": 1, "open": "tx-g", "openOperations": 1, "announced": 0, "persisted": 0 } },
-        { "commit": "tx-g", "expect": { "refused": null, "n": 4, "edits": 1, "open": null, "openOperations": 0, "announced": 1, "persisted": 4 } },
-        { "append": { "transaction": "tx-h", "operations": [{ "operation": "addN", "delta": 1 }] }, "expect": { "refused": null, "n": 5, "edits": 2, "open": "tx-h", "openOperations": 1, "announced": 0, "persisted": 4 } },
-        { "abort": "tx-h", "expect": { "refused": null, "n": 4, "edits": 1, "open": null, "openOperations": 0, "announced": 0, "persisted": 4 } },
-        { "undo": true, "expect": { "refused": null, "n": 0, "edits": 1, "open": null, "openOperations": 0, "announced": 0, "persisted": 0 } }
+        {
+          "append": {
+            "transaction": "tx-g",
+            "operations": [
+              {
+                "operation": "setN",
+                "n": 4
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 4,
+            "edits": 1,
+            "open": "tx-g",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 0
+          }
+        },
+        {
+          "commit": "tx-g",
+          "expect": {
+            "refused": null,
+            "n": 4,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 1,
+            "persisted": 4
+          }
+        },
+        {
+          "append": {
+            "transaction": "tx-h",
+            "operations": [
+              {
+                "operation": "addN",
+                "delta": 1
+              }
+            ]
+          },
+          "expect": {
+            "refused": null,
+            "n": 5,
+            "edits": 2,
+            "open": "tx-h",
+            "openOperations": 1,
+            "announced": 0,
+            "persisted": 4
+          }
+        },
+        {
+          "abort": "tx-h",
+          "expect": {
+            "refused": null,
+            "n": 4,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 0,
+            "persisted": 4
+          }
+        },
+        {
+          "undo": true,
+          "expect": {
+            "refused": null,
+            "n": 0,
+            "edits": 1,
+            "open": null,
+            "openOperations": 0,
+            "announced": 0,
+            "persisted": 0
+          }
+        }
       ]
     }
   ]

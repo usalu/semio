@@ -5,7 +5,8 @@
 //! no hand-rolled bridge needed here.
 use crate::RasterSnapshot;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_json::schema::snapshot::{write_json_pretty, JsonSnapshot};
+use semio_s_artifact_stdio_json::schema::snapshot::{JsonSnapshot};
+use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{write_json_pretty};
 use semio_s_artifact_stdio_json::STDIO_JSON_DOCUMENT_SCHEMA;
 pub fn register() {}
 

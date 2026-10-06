@@ -235,19 +235,21 @@ const DAG_RETAINED_TOOL_IDS: &[&str] = &[
     "graphPointerDown",
 ];
 
-/// 🚦️ The config verb's lane in front of the document verbs' lanes, in `DAG_RETAINED_TOOL_IDS` order.
+/// 🚦️ The config verb's lane in front of the document verbs' lanes, in `DAG_RETAINED_TOOL_IDS` order. Every verb that
+/// edits the graph publishes leaves of the composed `content` child (design §20.15: the parent vocabulary is
+/// uninhabited), so its lane is `Child`; an `Artifact` lane could never carry anything.
 const DAG_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
-    ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "removeNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "disconnect", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "renameDagNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "patchDagNodes", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "removeNode", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "disconnect", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "renameDagNode", lanes: &[ArtifactToolPublicationLane::Child] },
+    ArtifactToolPublicationContract { tool_id: "patchDagNodes", lanes: &[ArtifactToolPublicationLane::Child] },
     ArtifactToolPublicationContract { tool_id: "graphPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
@@ -451,7 +453,6 @@ struct DagConfigPreparationFactory;
 struct DagConfigPreparation {
     base: Option<store::SnapshotRead<DagConfig>>,
     mutation: Option<DagConfigMutation>,
-    description: Option<String>,
     authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     candidate: Option<(DagConfig, Vec<DagConfigMutation>, DagConfigMutation)>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<DagConfig, DagConfigMutation>>,
@@ -485,9 +486,9 @@ fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<DagConfig, DagConfigMutation> for DagConfigPreparationFactory {
-    fn preflight(&self, mutation: &DagConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > DAG_CONFIG_METADATA_BYTES) {
-            return Err("DAG Config preparation rejected its lane or description envelope".into());
+    fn preflight(&self, mutation: &DagConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::HistoryLane::Document {
+            return Err("DAG Config preparation rejected its lane".into());
         }
         dag_config_footprint(mutation)
     }
@@ -496,7 +497,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<DagConfig, DagConfigMutation>
         &self,
         request: store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>,
     ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation>> {
-        if self.preflight(&request.mutation, request.description.as_deref(), request.lane).is_err()
+        if self.preflight(&request.mutation, request.lane).is_err()
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
@@ -507,7 +508,6 @@ impl store::ArtifactStoreOneItemPreparationFactory<DagConfig, DagConfigMutation>
         Ok(Box::new(DagConfigPreparation {
             base: Some(request.base),
             mutation: Some(request.mutation),
-            description: request.description,
             authority: Some(request.authority),
             candidate: None,
             prepared: None,
@@ -584,14 +584,6 @@ impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for Da
             self.mutation = None;
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: DAG_CONFIG_STORE_MAXIMUM_BYTES });
         }
-        if let Some(description) = self.description.as_ref() {
-            let bytes = description.len();
-            if grant.maximum_bytes < bytes {
-                return Ok(store::SnapshotRetirementStep::Blocked);
-            }
-            self.description = None;
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
-        }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() {
                 return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "DAG Config preparation could not return its exact base root"));
@@ -608,7 +600,7 @@ impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for Da
         Ok(store::SnapshotRetirementStep::Complete)
     }
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
+        self.closing && self.base.is_none() && self.mutation.is_none() && self.authority.is_none() && self.candidate.is_none() && self.prepared.is_none()
     }
 }
 //#endregion 📬️ConfigStorePreparation

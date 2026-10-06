@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution. Since ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION split every s.note.note mutation out to a real, non-wildcard owning subset (ink/text/math/table/asset/block/canvas/document — see ../🔣️.json), this subset owns zero mutations of its own and declares no mutationManifests/mutationCatalogs/fixtureManifests here. What DOES stay here is the shared, artifact-wide oracle registry those eight subsets' fixtureManifests cite by id: the whole-document note-python-independent cross-implementation oracle, and the three carrier-family third-party-library oracles (dxf/quick-xml/lopdf) — semio.repository-test's loadOracleRegistry merges every subset's contribution into one flat registry, so a fixture anywhere can reference an oracle declared here without redeclaring it.",
+  "_comment": "🧩️ This subset's own contribution. Since ticket 26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION split every s.note.note mutation out to a real, non-wildcard owning subset (ink/text/math/table/asset/block/canvas/document — see ../🔣️.json), this subset owns zero mutations of its own and declares no mutationManifests/mutationCatalogs/testEvidence here. What DOES stay here is the shared, artifact-wide oracle registry those eight subsets' testEvidence cite by id: the whole-document note-python-independent cross-implementation oracle, and the three carrier-family third-party-library oracles (dxf/quick-xml/lopdf) — semio.repository-test's loadOracleRegistry merges every subset's contribution into one flat registry, so a fixture anywhere can reference an oracle declared here without redeclaring it.",
   "oracles": [
     {
       "id": "note-python-independent",
@@ -454,6 +454,6 @@
     }
   ],
   "mutationManifests": [],
-  "fixtureManifests": [],
+  "testEvidence": [],
   "oracleHostPackages": []
 }

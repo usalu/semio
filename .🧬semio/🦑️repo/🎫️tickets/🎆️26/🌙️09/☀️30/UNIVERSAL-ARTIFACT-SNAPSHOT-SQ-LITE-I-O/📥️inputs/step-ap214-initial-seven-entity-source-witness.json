@@ -1,0 +1,212 @@
+{
+  "qualification": "Independently hand-authored source witness, not runtime pass or first-party generated owner. Header remaining fields retain actual StepHeader::default source; no fake geometry.",
+  "fileSchema": [
+    "AUTOMOTIVE_DESIGN"
+  ],
+  "entities": [
+    {
+      "id": 1,
+      "name": "APPLICATION_CONTEXT",
+      "args": [
+        {
+          "String": "automotive_design"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "APPLICATION_PROTOCOL_DEFINITION",
+      "args": [
+        {
+          "String": "international standard"
+        },
+        {
+          "String": "automotive_design"
+        },
+        {
+          "Integer": 1994
+        },
+        {
+          "Reference": 1
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "PRODUCT_CONTEXT",
+      "args": [
+        {
+          "String": ""
+        },
+        {
+          "Reference": 1
+        },
+        {
+          "String": "mechanical"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "PRODUCT",
+      "args": [
+        {
+          "String": ""
+        },
+        {
+          "String": ""
+        },
+        {
+          "String": ""
+        },
+        {
+          "Aggregate": [
+            {
+              "Reference": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "PRODUCT_DEFINITION_FORMATION",
+      "args": [
+        {
+          "String": ""
+        },
+        {
+          "String": ""
+        },
+        {
+          "Reference": 4
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "PRODUCT_DEFINITION_CONTEXT",
+      "args": [
+        {
+          "String": "part definition"
+        },
+        {
+          "Reference": 1
+        },
+        {
+          "String": "design"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "PRODUCT_DEFINITION",
+      "args": [
+        {
+          "String": ""
+        },
+        {
+          "String": ""
+        },
+        {
+          "Reference": 5
+        },
+        {
+          "Reference": 6
+        }
+      ]
+    }
+  ],
+  "references": [
+    [
+      2,
+      1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      4,
+      3
+    ],
+    [
+      5,
+      4
+    ],
+    [
+      6,
+      1
+    ],
+    [
+      7,
+      5
+    ],
+    [
+      7,
+      6
+    ]
+  ],
+  "joins": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/👁️viewer/🦀️.rs",
+      "line": 75,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc1::schema::StepCc1BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc1::schema::StepCc1BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc1 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/🦀️.rs",
+      "line": 256,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc1::schema::StepCc1BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc1::schema::StepCc1BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc1 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/👁️viewer/🦀️.rs",
+      "line": 75,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc5::schema::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc5::schema::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc5 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/🦀️.rs",
+      "line": 256,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc5::schema::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc5::schema::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc5 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/👁️viewer/🦀️.rs",
+      "line": 75,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc4::schema::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc4::schema::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc4 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/🦀️.rs",
+      "line": 256,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc4::schema::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc4::schema::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc4 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/👁️viewer/🦀️.rs",
+      "line": 75,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc3::schema::StepCc3BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc3::schema::StepCc3BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc3 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/🦀️.rs",
+      "line": 256,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc3::schema::StepCc3BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc3::schema::StepCc3BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc3 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/👁️viewer/🦀️.rs",
+      "line": 75,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc6::schema::StepCc6BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc6::schema::StepCc6BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc6 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/🦀️.rs",
+      "line": 256,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc6::schema::StepCc6BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc6::schema::StepCc6BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc6 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/👁️viewer/🦀️.rs",
+      "line": 75,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc2::schema::StepCc2BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc2::schema::StepCc2BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc2 initial owner\")"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/🦀️.rs",
+      "line": 256,
+      "exactSource": "        <crate::standards::v_ap214::subsets::cc2::schema::StepCc2BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc2::schema::StepCc2BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect(\"valid authored AP214 cc2 initial owner\")"
+    }
+  ]
+}

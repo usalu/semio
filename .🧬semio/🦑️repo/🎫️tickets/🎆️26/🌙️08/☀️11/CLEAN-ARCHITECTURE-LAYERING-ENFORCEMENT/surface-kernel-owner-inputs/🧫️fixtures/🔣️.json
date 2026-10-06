@@ -1,0 +1,11 @@
+{
+ "contract":"framework.surface.provider-owner/v1",
+ "cases":[
+  {"id":"general-record-and-value","normalProviders":["semio-framework-pack","semio-framework-value"],"imports":["pack","semio_framework_value"],"accepted":true},
+  {"id":"specific-kernel-provider","normalProviders":["semio-framework-os-kernel"],"imports":[],"accepted":false},
+  {"id":"specific-kernel-alias","normalProviders":[],"imports":["semio_framework_os_kernel"],"accepted":false},
+  {"id":"specific-store-facade","normalProviders":["semio-framework-pack"],"imports":["store"],"accepted":false},
+  {"id":"neutral-interaction-and-viewport","normalProviders":["semio-framework-replication","semio-framework-ui-viewport"],"imports":["protocol","semio_framework_ui_viewport"],"accepted":true},
+  {"id":"pending-engine-is-qualified","normalProviders":["semio-framework-os-infinite"],"imports":["infinite_canvas"],"accepted":true}
+ ]
+}

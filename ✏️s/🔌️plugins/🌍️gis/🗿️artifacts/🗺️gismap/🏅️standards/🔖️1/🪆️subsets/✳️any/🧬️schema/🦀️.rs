@@ -7,9 +7,9 @@ pub mod feature;
 #[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;
 
-use crate::document_dsl::REUSE_MAP_EXAMPLE_TEXT;
+use crate::standards::v1::subsets::any::io::text::snapshot::REUSE_MAP_EXAMPLE_TEXT;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, replace_position_data, replace_region_data, replace_route_data};
-use crate::op::GisMapMutation;
+use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapSnapshot, GisMapValueChild, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
@@ -119,156 +119,27 @@ pub fn gismap_artifact_schema_descriptor() -> ::semio_framework_schema_registry:
 }
 //#endregion 🔹Descriptor
 //#region 🏗️DerivedConstruction
-pub mod derived_construction {
-    use crate::{GisMapDiff, GisMapMutation, GisMapSnapshot};
-    use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
-    pub struct GismapBuilderConstruction {
-        snapshot: GisMapSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for GismapBuilderConstruction {
-        type Snapshot = GisMapSnapshot;
-        type Mutation = GisMapMutation;
-        type Diff = GisMapDiff;
-        fn empty() -> Self {
-            Self { snapshot: GisMapSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<GisMapSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <GisMapDiff as protocol::MutationDiff<GisMapSnapshot>>::apply(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 //#endregion 🏗️DerivedConstruction
 
 //#region 🧐️DerivedAnalysis
-pub mod derived_analysis {
-    use crate::GisMapSnapshot;
-    use semio_framework_plugin::{Analysis, AnalyzeSource, ArtifactAnalysis, Dialect, IoConfidence, StandardId, SubsetId};
 
-    #[derive(Clone, Debug, Default)]
-    pub struct GisMapParts {
-        pub snapshot: Option<GisMapSnapshot>,
-    }
-
-    pub struct GisMapAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for GisMapAnalyzerAnalysis {
-        type Parts = GisMapParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.gis.gismap", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = GisMapParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <GisMapSnapshot as store::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = IoConfidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
 //#endregion 🧐️DerivedAnalysis
 
 //#region 🧬️DerivedArtifactFacets
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec GismapBuilderFacets {
-        construction: GismapBuilderConstruction,
-        analysis: GisMapAnalyzerAnalysis,
-        composition: super::super::io::derived_composition::GisMapComposerComposition,
-    }
-    builder: GismapBuilder,
-    analyzer: GisMapAnalyzer,
-    composer: GisMapComposer,
-);
+
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
-/// 🧭️ Relocated from the artifact's `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): pure document helpers over
-/// `GisMapSnapshot`/`MapFeature`, no app-state dependency — an artifact must never depend on an app.
-pub(crate) fn value_to_dsl(value: &Value) -> semio_framework_value::DslValue {
-    semio_framework_value::DslValue::from(value)
-}
+
 
 pub(crate) fn dsl_to_value(value: &semio_framework_value::DslValue) -> Value {
     Value::from(value)
 }
 
-pub fn empty_gis_map_snapshot() -> GisMapSnapshot {
-    GisMapSnapshot::default()
-}
 
-/// 📥️ Parses a `{ positions, routes, regions }` map-descriptor JSON into a `GisMapSnapshot` — each
-/// array entry becomes a `MapFeature` keyed by its `id`, keeping the full object as the payload.
-pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapSnapshot {
-    let value: Value = serde_json::from_str(json).unwrap_or_else(|_| serde_json::json!({}));
-    let features = |key: &str| -> Vec<MapFeature> {
-        value
-            .get(key)
-            .and_then(|entry| entry.as_array())
-            .map(|entries| {
-                entries
-                    .iter()
-                    .filter_map(|item| {
-                        let id = item.get("id").and_then(|value| value.as_str())?.to_string();
-                        Some(MapFeature { id, data: value_to_dsl(item) })
-                    })
-                    .collect()
-            })
-            .unwrap_or_default()
-    };
-    gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: features("positions"), routes: features("routes"), regions: features("regions"), ..Default::default() })
-}
+
+
 
 /// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
 /// emitting each feature's opaque payload.
@@ -282,12 +153,7 @@ pub fn gis_map_descriptor_json(document: &GisMapSnapshot) -> String {
     .to_string()
 }
 
-/// 🗺️ The default map document, seeded from the bundled reuse example (see
-/// `crate::GisMapSnapshot`'s derive-generated `.gismap` DSL).
-pub fn default_document() -> GisMapSnapshot {
-    let parsed = <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_snapshot());
-    gis_map_snapshot_with_derived_children(parsed)
-}
+
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️CollectionDiffing
@@ -511,40 +377,9 @@ pub fn gis_map_snapshot_from_drawing(drawing: &SemioDrawingSnapshot) -> GisMapSn
     gis_map_snapshot_with_derived_children(document)
 }
 
-/// 🔑️ The `s.stdio.semio/v1/drawing` → `s.stdio.svg/1.1/*` `IoKey`, derived from
-/// `SemioDrawingToSvg`'s own `FROM`/`INTO` dialect constants (no hardcoded coordinate strings —
-/// stays correct if stdio ever renames the dialect).
-fn drawing_to_svg_io_key() -> IoKey {
-    let from = SemioDrawingToSvg::FROM;
-    let into = SemioDrawingToSvg::INTO;
-    IoKey {
-        artifact_kind: from.artifact_kind.to_string(),
-        standard: from.standard.0.to_string(),
-        subset: from.subset.0.to_string(),
-        direction: IoDirection::Export,
-        format_kind: into.artifact_kind.to_string(),
-        format_standard: into.standard.0.to_string(),
-        format_subset: into.subset.0.to_string(),
-    }
-}
 
-/// 🌉️ Renders a `SemioDrawingSnapshot` to real SVG text + dimensions through stdio's registered
-/// `s.stdio.semio/v1/drawing` → `s.stdio.svg` bridge — the ONLY svg-producing call in this plugin
-/// (no hand-rolled `<svg>` string emission left in gis).
-fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String, u32, u32), String> {
-    let width = drawing.canvas.width.round().max(1.0) as u32;
-    let height = drawing.canvas.height.round().max(1.0) as u32;
-    let pack_bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing);
-    let source = ErasedComposeSource { dialect: SemioDrawingToSvg::FROM, payload: IoPayload::Binary(pack_bytes) };
-    let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&drawing_to_svg_io_key(), std::slice::from_ref(&source))).map_err(|error| error.message)?;
-    let svg_bytes = match composed.payload {
-        IoPayload::Binary(bytes) => bytes,
-        IoPayload::Text(_) => return Err("drawing->svg bridge returned Text, expected an ArtifactPack-encoded SvgSnapshot".into()),
-    };
-    let svg_snapshot = <SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| error.to_string())?;
-    let svg_text = String::from_utf8(svg_snapshot.export_utf8()?).map_err(|error| error.to_string())?;
-    Ok((svg_text, width, height))
-}
+
+
 //#endregion 🔖️DrawingBridge
 
 //#region 🔖️MediaExport

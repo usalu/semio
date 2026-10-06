@@ -81,9 +81,8 @@
       ]
     }
   ],
-  "fixtureManifests": [
+  "testEvidence": [
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-presence-applied",
       "class": "handcrafted",
       "target": {
@@ -148,7 +147,6 @@
       "notes": "The owner's committed contract vector for `replace-presence` (🧫️fixtures/🔁️mutation-contracts.json), now a fixture bundle of its own."
     },
     {
-      "schema": "semio.repository-test.fixture/v2",
       "id": "replace-presence-no-op",
       "class": "handcrafted",
       "target": {

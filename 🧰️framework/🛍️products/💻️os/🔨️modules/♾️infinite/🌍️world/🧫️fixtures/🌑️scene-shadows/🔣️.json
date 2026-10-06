@@ -1,13 +1,35 @@
 {
-  "$schema": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/World3dShadowFixture",
   "schemaVersion": 1,
   "worldEnvironment": {
-    "ambient": { "intensity": 0.42, "color": "#336699" },
-    "sun": { "enabled": true, "azimuth": 120, "elevation": 25, "intensity": 1.7, "color": "#ffd080" },
-    "shadow": { "enabled": true, "opacity": 0.65, "softness": 1.75 },
-    "material": { "color": "#587ca8", "metalness": 0.63, "roughness": 0.27, "emissive": "#2a1048", "emissiveIntensity": 2.4 }
+    "ambient": {
+      "intensity": 0.42,
+      "color": "#336699"
+    },
+    "sun": {
+      "enabled": true,
+      "azimuth": 120,
+      "elevation": 25,
+      "intensity": 1.7,
+      "color": "#ffd080"
+    },
+    "shadow": {
+      "enabled": true,
+      "opacity": 0.65,
+      "softness": 1.75
+    },
+    "material": {
+      "color": "#587ca8",
+      "metalness": 0.63,
+      "roughness": 0.27,
+      "emissive": "#2a1048",
+      "emissiveIntensity": 2.4
+    }
   },
-  "iconRender": { "shadowEnabled": true, "materialPresent": true, "mapSize": 1024 },
+  "iconRender": {
+    "shadowEnabled": true,
+    "materialPresent": true,
+    "mapSize": 1024
+  },
   "oracle": {
     "shadowMatrix": [
       0.0682037565680259,
@@ -27,6 +49,10 @@
       0.23923923923923923,
       0.9999999999999999
     ],
-    "sampleWorldPosition": [1.25, -0.75, 0.5]
+    "sampleWorldPosition": [
+      1.25,
+      -0.75,
+      0.5
+    ]
   }
 }

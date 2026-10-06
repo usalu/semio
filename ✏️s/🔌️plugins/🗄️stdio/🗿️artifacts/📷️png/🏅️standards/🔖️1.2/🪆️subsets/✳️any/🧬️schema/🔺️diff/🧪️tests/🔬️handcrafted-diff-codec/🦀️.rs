@@ -1,5 +1,5 @@
 use super::*;
-use protocol::DiffCodec;
+use protocol::{DiffBinary,DiffCodec,DiffText};
 
 /// 🧪️ `DiffCodec` round-trip laws over the hand-rolled `PngDiff` grammar AND the real binary
 /// frame (`demo_diff_cases()` above — `snap_a`/`snap_b` differ in every mutable field,

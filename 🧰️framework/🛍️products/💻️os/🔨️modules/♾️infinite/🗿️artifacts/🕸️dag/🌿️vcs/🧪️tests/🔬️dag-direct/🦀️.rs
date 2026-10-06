@@ -168,7 +168,7 @@ fn direct_delete_inverse_declares_descending_edges_before_node() {
 async fn direct_store_undo_restores_incident_edge_order() {
     let before = base();
     let mut store = create_dag_store("dag", before.clone()).await.expect("store");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::DeleteNode(DeleteNode { id: "a".into() })], description: None, transaction: None }).await.expect("delete");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::DeleteNode(DeleteNode { id: "a".into() })], transaction: None }).await.expect("delete");
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("restored projection"), before);
     store.dispatch(ArtifactCommand::Redo).await.expect("redo");

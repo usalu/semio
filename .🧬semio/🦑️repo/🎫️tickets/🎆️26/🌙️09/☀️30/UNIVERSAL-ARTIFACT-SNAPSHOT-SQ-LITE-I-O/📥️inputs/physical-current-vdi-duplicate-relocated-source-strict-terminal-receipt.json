@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-06T01:45:51.079Z",
+  "session": 10763,
+  "terminal": true,
+  "exitCode": 0,
+  "budgetMs": 30000,
+  "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/physical-current-vdi-duplicate-relocated-source-strict.log",
+  "markers": [
+    "[DEBUG] VDI actual owning Source strict completed original30000ms grant"
+  ],
+  "scope": "Actual original isolated strict check at current canonical owning Source path; no Native inference"
+}

@@ -1,0 +1,4 @@
+import {readdirSync,readFileSync,statSync} from "node:fs";
+import {join} from "node:path";
+const root="/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/cargo-physical-current/debug/build/semio-s-artifact-procedural-generation3d";
+for(const hash of readdirSync(root)){const out=join(root,hash,"out");try{for(const name of readdirSync(out)){const path=join(out,name);if(name.startsWith("semio_s_artifact_procedural_generation3d-")&&!name.includes(".")&&statSync(path).isFile()){const result=Bun.spawnSync([path,"--list"],{stdout:"pipe",stderr:"pipe"});if(result.exitCode!==0)throw Error(new TextDecoder().decode(result.stderr));console.log(new TextDecoder().decode(result.stdout).split("\n").filter(line=>line.includes("sqlite_snapshot_")).join("\n"));}}}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}

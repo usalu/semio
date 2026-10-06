@@ -1,0 +1,295 @@
+{
+  "qualification": "In-flight no full48 qualification",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/UNIVERSAL-ARTIFACT-SNAPSHOT-SQ-LITE-I-O/🗑️generated/root-complementary-forty-eight-native-complete-current-after-provider-and-public-closures.log",
+  "observedLines": 937080,
+  "rows": [
+    {
+      "project": "@semio-tech/fem-2d-rs",
+      "line": 24207,
+      "receipt": "Summary [   0.859s] 10 tests run: 10 passed, 1299 skipped"
+    },
+    {
+      "project": "@semio-tech/fem-3d-rs",
+      "line": 48168,
+      "receipt": "Summary [   0.653s] 10 tests run: 10 passed, 1147 skipped"
+    },
+    {
+      "project": "@semio-tech/draw-drawing-rs",
+      "line": 71463,
+      "receipt": "Summary [   2.458s] 4 tests run: 4 passed, 575 skipped"
+    },
+    {
+      "project": "@semio-tech/trinity-jack-rs",
+      "line": 95938,
+      "receipt": "Summary [   2.364s] 16 tests run: 16 passed, 178 skipped"
+    },
+    {
+      "project": "@semio-tech/procedural-generation3d-rs",
+      "line": 123210,
+      "receipt": "Summary [   2.504s] 13 tests run: 13 passed, 323 skipped"
+    },
+    {
+      "project": "@semio-tech/energy-model-rs",
+      "line": 145038,
+      "receipt": "Summary [   2.454s] 13 tests run: 12 passed, 1 failed, 6511 skipped"
+    },
+    {
+      "project": "@semio-tech/gis-gismap-rs",
+      "line": 167487,
+      "receipt": "Summary [   2.977s] 8 tests run: 6 passed, 2 failed, 174 skipped"
+    },
+    {
+      "project": "@semio-tech/cad-cad-rs",
+      "line": 194329,
+      "receipt": "Summary [   1.665s] 14 tests run: 14 passed, 437 skipped"
+    },
+    {
+      "project": "@semio-tech/forms-forms-rs",
+      "line": 219048,
+      "receipt": "Summary [   0.452s] 13 tests run: 13 passed, 254 skipped"
+    },
+    {
+      "project": "@semio-tech/block-2d-rs",
+      "line": 236899,
+      "receipt": "Summary [   0.428s] 13 tests run: 13 passed, 264 skipped"
+    },
+    {
+      "project": "@semio-tech/architect-program-rs",
+      "line": 258953,
+      "receipt": "Summary [   9.082s] 24 tests run: 24 passed, 2096 skipped"
+    },
+    {
+      "project": "@semio-tech/lowpoly-lowpoly-rs",
+      "line": 282617,
+      "receipt": "Summary [   1.953s] 6 tests run: 5 passed, 1 failed, 369 skipped"
+    },
+    {
+      "project": "@semio-tech/animate-presentation-rs",
+      "line": 306027,
+      "receipt": "Summary [   1.009s] 12 tests run: 12 passed, 339 skipped"
+    },
+    {
+      "project": "@semio-tech/wfc-3d-rs",
+      "line": 324870,
+      "receipt": "Summary [   2.483s] 9 tests run: 9 passed, 212 skipped"
+    },
+    {
+      "project": "@semio-tech/wfc-bitmap-rs",
+      "line": 340507,
+      "receipt": "Summary [   0.208s] 10 tests run: 10 passed, 179 skipped"
+    },
+    {
+      "project": "@semio-tech/puzzle-3d-rs",
+      "line": 362793,
+      "receipt": "Summary [  10.300s] 12 tests run: 12 passed, 911 skipped"
+    },
+    {
+      "project": "@semio-tech/wfc-2d-rs",
+      "line": 382089,
+      "receipt": "Summary [   6.503s] 10 tests run: 10 passed, 169 skipped"
+    },
+    {
+      "project": "@semio-tech/procedural-generation2d-rs",
+      "line": 407086,
+      "receipt": "Summary [   3.817s] 14 tests run: 14 passed, 289 skipped"
+    },
+    {
+      "project": "@semio-tech/reasoning-wires-rs",
+      "line": 431980,
+      "receipt": "Summary [   2.956s] 12 tests run: 12 passed, 101 skipped"
+    },
+    {
+      "project": "@semio-tech/playbook-playbook-rs",
+      "line": 454794,
+      "receipt": "Summary [   0.220s] 11 tests run: 8 passed, 3 failed, 102 skipped"
+    },
+    {
+      "project": "@semio-tech/gis-gisterrain-rs",
+      "line": 500578,
+      "receipt": "Summary [   2.031s] 16 tests run: 16 passed, 56 skipped"
+    },
+    {
+      "project": "@semio-tech/dag-dag-rs",
+      "line": 524363,
+      "receipt": "Summary [   0.200s] 12 tests run: 12 passed, 117 skipped"
+    },
+    {
+      "project": "@semio-tech/demonstrator-playground-rs",
+      "line": 560285,
+      "receipt": "Summary [   1.563s] 8 tests run: 7 passed, 1 failed, 45 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-din16798-rs",
+      "line": 577754,
+      "receipt": "Summary [   0.266s] 11 tests run: 11 passed, 94 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-en1991-rs",
+      "line": 595181,
+      "receipt": "Summary [   1.054s] 11 tests run: 11 passed, 162 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-vdi3805-rs",
+      "line": 611885,
+      "receipt": "Summary [   1.002s] 17 tests run: 17 passed, 229 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-en1994-rs",
+      "line": 629263,
+      "receipt": "Summary [   0.419s] 11 tests run: 11 passed, 181 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-din4108-rs",
+      "line": 646687,
+      "receipt": "Summary [   0.285s] 11 tests run: 11 passed, 160 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-en1996-rs",
+      "line": 664305,
+      "receipt": "Summary [   0.589s] 11 tests run: 11 passed, 149 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-en1995-rs",
+      "line": 681521,
+      "receipt": "Summary [   0.253s] 11 tests run: 11 passed, 378 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-en1999-rs",
+      "line": 699062,
+      "receipt": "Summary [   2.008s] 13 tests run: 13 passed, 156 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-en1998-rs",
+      "line": 716634,
+      "receipt": "Summary [   0.792s] 11 tests run: 11 passed, 224 skipped"
+    },
+    {
+      "project": "@semio-tech/wfc-grid2d-rs",
+      "line": 735531,
+      "receipt": "Summary [   1.893s] 10 tests run: 10 passed, 149 skipped"
+    },
+    {
+      "project": "@semio-tech/sequence-sequence-rs",
+      "line": 759348,
+      "receipt": "Summary [   1.032s] 13 tests run: 13 passed, 126 skipped"
+    },
+    {
+      "project": "@semio-tech/process-process3d-rs",
+      "line": 784746,
+      "receipt": "Summary [   4.492s] 12 tests run: 12 passed, 363 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-din18599-rs",
+      "line": 805400,
+      "receipt": "Summary [   0.307s] 11 tests run: 11 passed, 125 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-en1992-rs",
+      "line": 823059,
+      "receipt": "Summary [   0.850s] 12 tests run: 10 passed, 2 failed, 221 skipped"
+    },
+    {
+      "project": "@semio-tech/norm-en1993-rs",
+      "line": 838921,
+      "receipt": "Summary [   1.579s] 11 tests run: 11 passed, 357 skipped"
+    },
+    {
+      "project": "@semio-tech/imperative-procedure-rs",
+      "line": 859914,
+      "receipt": "Summary [   0.162s] 9 tests run: 7 passed, 2 failed, 110 skipped"
+    },
+    {
+      "project": "@semio-tech/remodel-remodeling-rs",
+      "line": 885592,
+      "receipt": "Summary [   0.530s] 16 tests run: 15 passed, 1 failed, 1329 skipped"
+    },
+    {
+      "project": "@semio-tech/puzzle-2d-rs",
+      "line": 911218,
+      "receipt": "Summary [   0.633s] 14 tests run: 12 passed, 2 failed, 1088 skipped"
+    },
+    {
+      "project": "@semio-tech/trinity-rewriting-rs",
+      "line": 937053,
+      "receipt": "Summary [   1.448s] 13 tests run: 12 passed, 1 failed, 166 skipped"
+    }
+  ],
+  "errors": [
+    {
+      "project": "@semio-tech/energy-model-rs",
+      "line": 145025,
+      "text": "thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::sqlite_snapshot_energy_four_copy_phases_have_real_interior_cancellation_and_limits' (812807) panicked at 🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:49:244:",
+      "assertion": "    assertion failed: source.encode_sqlite_snapshot_native(encoding,"
+    },
+    {
+      "project": "@semio-tech/gis-gismap-rs",
+      "line": 167430,
+      "text": "thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_map_explicit_native_schema_and_row_admission_precedes_work' (824408) panicked at 🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:74:28:",
+      "assertion": "    assertion failed: !native_work"
+    },
+    {
+      "project": "@semio-tech/gis-gismap-rs",
+      "line": 167464,
+      "text": "thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_tests::sqlite_snapshot_gis_map_whole_native_control_preserves_exact_fields_and_interior_cancellation' (824407) panicked at 🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs:46:113:",
+      "assertion": "    assertion failed: GisMapSnapshot::decode_sqlite_snapshot_native(&payload,"
+    },
+    {
+      "project": "@semio-tech/lowpoly-lowpoly-rs",
+      "line": 282578,
+      "text": "thread 'standards::v1::subsets::any::schema::snapshot::component::sqlite_snapshot_tests::managed_mesh::sqlite_snapshot_lowpoly_managed_mesh_complete_owner_and_independent_sql_edits' (876011) panicked at 🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/../../././././././🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🕸️mesh/🦀️.rs:11:2:",
+      "assertion": "    assertion `left == right` failed: actual owning construction must preserve all seven managed mesh fields"
+    }
+  ],
+  "compilerOnly": [
+    {
+      "project": "@semio-tech/block-3d-rs",
+      "errors": [
+        {
+          "line": 475642,
+          "code": "E0603",
+          "detail": "private DslValue world/options/brush rs51"
+        },
+        {
+          "line": 475665,
+          "code": "E0603",
+          "detail": "private DslValue world/options/brush rs51"
+        }
+      ],
+      "runtimeQualification": null,
+      "macroErrors": {
+        "count": 12,
+        "identity": "cannot find macro json",
+        "lines": [
+          475486,
+          475499,
+          475512,
+          475525,
+          475538,
+          475551,
+          475564,
+          475577,
+          475590,
+          475603,
+          475616,
+          475629
+        ]
+      }
+    },
+    {
+      "project": "@semio-tech/vcs-vcs-rs",
+      "errors": [
+        {
+          "line": 542407,
+          "code": "E0061",
+          "detail": "editor unit rs813 4 arguments supplied, 3 required"
+        },
+        {
+          "line": 542424,
+          "code": "E0061",
+          "detail": "editor unit rs818 4 arguments supplied, 3 required"
+        }
+      ],
+      "runtimeQualification": null
+    }
+  ]
+}

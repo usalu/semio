@@ -214,8 +214,8 @@ mod tests {
     #[test]
     fn board_host_parses_mindmap_fixture_without_handles() {
         let mut h = BoardHost::new_normal();
-        let fixture = json!({
-            "schema": "reasoning.mindmap.fixture",
+        let snapshot = json!({
+            "schema": "board.normal.undirected.v1",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "a", "x": 0.0, "y": 0.0, "width": 48.0, "height": 48.0, "shape": "rectangle", "root": true },
@@ -225,7 +225,7 @@ mod tests {
                 { "id": "e1", "source": "a", "target": "b", "edgeKind": "wires.owns" }
             ]
         });
-        assert!(h.parse_fixture_json(&fixture.to_string()));
+        assert!(h.load_board_snapshot_json(&snapshot.to_string()));
         assert_eq!(h.port_mode, GraphPortMode::Normal);
         assert!(h.handles.is_empty());
         assert_eq!(h.edges.len(), 1);
@@ -336,8 +336,8 @@ mod tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
-        let fixture = json!({
-            "schema": "puzzle.2d.fixture",
+        let snapshot = json!({
+            "schema": "board.ports.directed.v1",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -357,7 +357,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!(h.parse_fixture_json(&fixture.to_string()));
+        assert!(h.load_board_snapshot_json(&snapshot.to_string()));
         let _ = h.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
@@ -379,8 +379,8 @@ mod tests {
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
-        let fixture = json!({
-            "schema": "puzzle.2d.fixture",
+        let snapshot = json!({
+            "schema": "board.ports.directed.v1",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -401,7 +401,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!(h.parse_fixture_json(&fixture.to_string()));
+        assert!(h.load_board_snapshot_json(&snapshot.to_string()));
         let _ = h.drain_events_json();
         h.set_selection_ids(&["a".into()]);
         let inside_a = h.world_to_screen(Point::new(0.0, 0.0));
@@ -433,8 +433,8 @@ mod tests {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
-        let fixture = json!({
-            "schema": "puzzle.2d.fixture",
+        let snapshot = json!({
+            "schema": "board.ports.directed.v1",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -454,7 +454,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!(h.parse_fixture_json(&fixture.to_string()));
+        assert!(h.load_board_snapshot_json(&snapshot.to_string()));
         let _ = h.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);

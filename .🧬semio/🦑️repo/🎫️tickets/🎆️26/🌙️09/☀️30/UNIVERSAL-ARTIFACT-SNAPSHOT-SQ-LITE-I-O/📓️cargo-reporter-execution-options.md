@@ -1,0 +1,7 @@
+# Cargo Reporter Execution Options
+
+The existing registered test-cargo-driver route produced genuine Before: two original laws passed and the new reporter authority law failed. Reporter flag/value pairs previously leaked into Cargo build arguments. The language-neutral closed corpus covers separate/equal syntax, defaults, individual overrides, libtest separation, missing values and duplicate combinations; AJV validates its schema and independent Node util.parseArgs reads actual option tokens.
+
+The provider now treats status-level and final-status-level as valued execution options, refuses duplicates, and supplies each quiet fail default only when that option is absent. Build/assertion budgets, manifest selection, runtime filters and no-tests fail remain unchanged. The genuine registered owning After completed with exit 0: all three laws passed, zero failures, 153 expectations, 10.85 seconds inside the unchanged owning policy. Nx completed in 11.2 seconds. The intentional real zero-selection Nextest failure remained correctly refused; its owning law passed. Retained log: generated/root-cargo-reporter-original-policy-after.log.
+
+Installed cargo nextest run --help confirms status-level supports leak, while final-status-level accepts all but does not accept leak. The bounded PDF leak diagnostic must use status-level leak and final-status-level all through its existing registered route.

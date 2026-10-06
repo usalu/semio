@@ -12,7 +12,7 @@ pub struct Puzzle3dConfig {
     #[state(config)] pub vortex_kind_weights: HashMap<String, f64>,
     /// 🏷️ The example id the document was last loaded from (`concrete-forest`,
     /// `nakagin-capsule-tower`, empty for a blank document) — document identity, not a preference, and
-    /// the only thing `export_fixture` can name its download after.
+    /// the only thing `export_snapshot` can name its download after.
     #[state(config)] pub active_example_id: String,
 }
 

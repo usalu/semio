@@ -1,4 +1,4 @@
-use crate::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes;
+use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes;
 use crate::RasterLayerNode;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_drawing, SemioDrawingFormat};
@@ -37,7 +37,7 @@ async fn imports_real_dwg_bytes_into_a_page_of_the_drawing_bounds() {
     let (width, height, asset) = only_pixel_layer(&document);
     assert_eq!((width, height), (30, 10), "the page is the world bounds, not the file's canvas or origin");
     assert_eq!(asset.mime, "image/png");
-    let image = crate::io::semio_image_from_png_bytes(&asset.data).expect("canonical png");
+    let image = crate::standards::v1::subsets::any::io::semio_image_from_png_bytes(&asset.data).expect("canonical png");
     assert!(image.frames[0].rgba8.chunks(4).any(|px| px[3] > 0), "the rectangle outline is painted");
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
 }

@@ -1,0 +1,354 @@
+{
+  "qualification": "Read-only actual package target definitions; no gate executed",
+  "rows": [
+    {
+      "owner": "WriterSnapshot",
+      "project": "@semio-tech/writer-writer-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": true,
+          "inputs": [
+            "default",
+            "^default",
+            "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/**/*",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+          ],
+          "options": {
+            "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+            "forwardAllArgs": true
+          },
+          "dependsOn": [
+            "graph-generate"
+          ]
+        }
+      }
+    },
+    {
+      "owner": "EquationSnapshot",
+      "project": "@semio-tech/mathematical-equation-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": false,
+          "inputs": [
+            "default",
+            "^default",
+            "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+          ],
+          "options": {
+            "cwd": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+            "forwardAllArgs": true
+          }
+        }
+      }
+    },
+    {
+      "owner": "Grid3dSnapshot",
+      "project": "@semio-tech/wfc-grid3d-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+            "forwardAllArgs": true
+          }
+        }
+      }
+    },
+    {
+      "owner": "FlowSnapshot",
+      "project": "@semio-tech/flow-flow-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": true,
+          "inputs": [
+            "production",
+            "^production",
+            "{projectRoot}/../../🏅️standards/**/*",
+            "{projectRoot}/../../🦀️.rs",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+          ],
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+            "forwardAllArgs": true
+          }
+        }
+      }
+    },
+    {
+      "owner": "ShootingSnapshot",
+      "project": "@semio-tech/shooting-shooting-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "verify-snapshot-sqlite-source",
+        "test-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "verify-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": false,
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+            "forwardAllArgs": true
+          }
+        },
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": false,
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+            "forwardAllArgs": true
+          }
+        }
+      }
+    },
+    {
+      "owner": "En1997Snapshot",
+      "project": "@semio-tech/norm-en1997-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "verify-snapshot-sqlite-source",
+        "test-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "verify-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "inputs": [
+            "production",
+            "^production",
+            "{projectRoot}/../../🏅️standards/**/*",
+            "{projectRoot}/../../🦀️.rs",
+            "{projectRoot}/../../🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+          ],
+          "options": {
+            "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+            "forwardAllArgs": true
+          }
+        },
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "inputs": [
+            "production",
+            "^production",
+            "{projectRoot}/../../🏅️standards/**/*",
+            "{projectRoot}/../../🦀️.rs",
+            "{projectRoot}/../../🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+          ],
+          "options": {
+            "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+            "forwardAllArgs": true
+          }
+        }
+      }
+    },
+    {
+      "owner": "RasterSnapshot",
+      "project": "@semio-tech/raster-raster-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": true,
+          "inputs": [
+            "production",
+            "^production",
+            "{projectRoot}/../../🏅️standards/**/*",
+            "{projectRoot}/../../🦀️.rs",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+          ],
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+          }
+        }
+      }
+    },
+    {
+      "owner": "NoteSnapshot",
+      "project": "@semio-tech/note-note-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite"
+      ],
+      "sourceDefinitions": {
+        "verify-sqlite-snapshot-guest": {
+          "executor": "nx:run-commands",
+          "cache": false,
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts verify sqlite-snapshot-guest",
+            "forwardAllArgs": true
+          },
+          "metadata": {
+            "semio": {
+              "workspaceCommand": [
+                "verify",
+                "note-sqlite-snapshot-guest"
+              ]
+            }
+          },
+          "dependsOn": [
+            {
+              "projects": [
+                "@semio-tech/note-plugin"
+              ],
+              "target": "component-dev"
+            }
+          ]
+        }
+      },
+      "nativeGuestTarget": "verify-sqlite-snapshot-guest",
+      "qualification": "Existing Source route in TypeScript package; Rust guest separately Native. Prior Rust-package-only absent-route inference corrected.",
+      "sourceProject": "@semio-tech/note-note-js",
+      "sourceProjectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/📋️project.json",
+      "sourceScriptAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/📜️script.ts"
+    },
+    {
+      "owner": "Puzzle5dSnapshot",
+      "project": "@semio-tech/puzzle-5d-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite-source",
+        "verify-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": false,
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+            "forwardAllArgs": true
+          }
+        },
+        "verify-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": false,
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts verify snapshot-sqlite-source"
+          }
+        }
+      }
+    },
+    {
+      "owner": "SHomeSnapshot",
+      "project": "@semio-tech/space-home-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+          },
+          "inputs": [
+            "production",
+            "^production",
+            "{projectRoot}/../../🏅️standards/**/*",
+            "{projectRoot}/../../🟦️.ts",
+            "{projectRoot}/../../🦀️.rs",
+            "{projectRoot}/../../📜️artifact-definition.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+          ]
+        }
+      }
+    },
+    {
+      "owner": "SSpaceSnapshot",
+      "project": "@semio-tech/space-space-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+          },
+          "inputs": [
+            "production",
+            "^production",
+            "{projectRoot}/../../🏅️standards/**/*",
+            "{projectRoot}/../../🟦️.ts",
+            "{projectRoot}/../../🦀️.rs",
+            "{projectRoot}/../../📜️artifact-definition.json",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+          ]
+        }
+      }
+    },
+    {
+      "owner": "CurationSnapshot",
+      "project": "@semio-tech/sourcing-curation-rs",
+      "projectAuthority": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/📋️project.json",
+      "sourceTargets": [
+        "test-snapshot-sqlite-source",
+        "verify-snapshot-sqlite-source"
+      ],
+      "sourceDefinitions": {
+        "test-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": false,
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+            "forwardAllArgs": true
+          }
+        },
+        "verify-snapshot-sqlite-source": {
+          "executor": "nx:run-commands",
+          "cache": false,
+          "options": {
+            "cwd": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+            "command": "bun ./📜️script.ts verify snapshot-sqlite-source",
+            "forwardAllArgs": true
+          }
+        }
+      }
+    }
+  ]
+}

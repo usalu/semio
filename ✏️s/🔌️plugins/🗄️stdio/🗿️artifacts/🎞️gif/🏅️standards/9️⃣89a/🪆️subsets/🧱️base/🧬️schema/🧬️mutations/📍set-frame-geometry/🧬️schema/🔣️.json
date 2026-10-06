@@ -30,6 +30,7 @@
           "en": "Index of the frame, counted from 0.",
           "de": "Index des Einzelbildes, ab 0 gezählt."
         },
+        "step": 1,
         "precision": 0,
         "group": "target",
         "order": 10
@@ -46,6 +47,7 @@
           "de": "Abstand links"
         },
         "unit": "px",
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 20
@@ -62,6 +64,7 @@
           "de": "Abstand oben"
         },
         "unit": "px",
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 30
@@ -78,6 +81,7 @@
           "de": "Breite"
         },
         "unit": "px",
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 40
@@ -94,6 +98,7 @@
           "de": "Höhe"
         },
         "unit": "px",
+        "step": 1,
         "precision": 0,
         "group": "value",
         "order": 50

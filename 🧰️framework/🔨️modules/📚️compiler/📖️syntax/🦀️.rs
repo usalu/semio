@@ -554,3 +554,6 @@ pub fn canonicalize(text: &str) -> Result<String, TextError> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "🦀️rust/🦀️.rs"]
+pub mod rust;

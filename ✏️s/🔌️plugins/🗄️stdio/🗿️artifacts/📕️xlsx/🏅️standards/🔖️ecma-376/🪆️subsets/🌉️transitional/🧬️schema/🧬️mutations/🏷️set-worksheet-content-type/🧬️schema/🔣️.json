@@ -10,10 +10,41 @@
   ],
   "properties": {
     "path": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Part",
+          "de": "Paketteil"
+        },
+        "description": {
+          "en": "Package part name of the worksheet, for example /xl/worksheets/sheet1.xml.",
+          "de": "Name des Paketteils des Arbeitsblatts, zum Beispiel /xl/worksheets/sheet1.xml."
+        },
+        "ref": {
+          "kind": "part"
+        },
+        "group": "target",
+        "order": 10
+      }
     },
     "content_type": {
-      "type": "string"
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Content type",
+          "de": "Inhaltstyp"
+        },
+        "description": {
+          "en": "Media type registered for the part in [Content_Types].xml.",
+          "de": "Medientyp, der für den Paketteil in [Content_Types].xml eingetragen ist."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

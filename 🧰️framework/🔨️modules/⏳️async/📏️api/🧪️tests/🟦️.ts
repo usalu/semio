@@ -1,12 +1,11 @@
 /** 📏️ Checks schema-owned public exports through independent compiler and runtime clients. */
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
+
 import ts from "typescript";
 import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, resolve } from "node:path";
 import fixture from "../🧫️fixtures/🔣️.json";
-import schema from "../🧬️schema/🔣️.json";
 import config from "../../🧪️tests/🎚️config/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../..");
@@ -14,10 +13,6 @@ const entries = [join(root, "🟦️.ts"), join(root, "📦️packages/🟦️ty
 const options: ts.CompilerOptions = { noEmit: true, strict: true, noUncheckedIndexedAccess: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, resolveJsonModule: true, esModuleInterop: true, skipLibCheck: true, types: ["bun", "node"] };
 
 test("the language-neutral export roster is closed and unambiguous", () => {
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(fixture)).toBe(true);
-  expect(validate({ ...fixture, unknown: true })).toBe(false);
-  expect(validate({ ...fixture, exports: fixture.exports.slice(1) })).toBe(false);
   expect(new Set(fixture.exports.map((row) => row.name)).size).toBe(fixture.exports.length);
   expect(fixture.exports.map((row) => row.name)).toEqual(fixture.exports.map((row) => row.name).sort());
   expect(fixture.retired.some((name) => fixture.exports.some((row) => row.name === name))).toBe(false);

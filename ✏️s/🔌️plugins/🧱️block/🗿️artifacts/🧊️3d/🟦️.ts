@@ -11,6 +11,6 @@ export interface Block3dWindowView {
   spacing: number;
 }
 
-import * as scalar from "../◻️2d/🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
+import * as scalar from "../../🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
 /** 🔘️ Admit each literal composed catalog kind field. */
 export function parseBlock3dVortexKind(v:unknown):Block3dVortexKind{const r=scalar.row(v);return{id:scalar.text(r.id),name:scalar.text(r.name),label:scalar.text(r.label),color:scalar.text(r.color),defaultCableKind:scalar.text(r.defaultCableKind)}}

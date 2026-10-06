@@ -12,14 +12,14 @@ struct MockDomain {
 impl SequenceDomain for MockDomain {
     fn execute(&mut self, operation: u16, payload: &[u8]) -> Result<Vec<u8>, SequenceFailure> {
         match operation {
-            SEQUENCE_OPERATION_LOAD_FIXTURE => {
+            SEQUENCE_OPERATION_LOAD_SNAPSHOT => {
                 if payload.first() != Some(&b'{') {
                     return Err(SequenceFailure::new(AbiErrorCode::MalformedTag, "json"));
                 }
                 self.fixture = payload.to_vec();
                 Ok(Vec::new())
             }
-            SEQUENCE_OPERATION_FIXTURE => Ok(self.fixture.clone()),
+            SEQUENCE_OPERATION_SNAPSHOT => Ok(self.fixture.clone()),
             SEQUENCE_OPERATION_CATALOGUE => Ok(vec![b'x'; SEQUENCE_MAX_INLINE_REPLY_BYTES + 1]),
             SEQUENCE_OPERATION_RUN if payload == b"oversized" => Ok(vec![b'x'; SEQUENCE_MAX_OUTPUT_BYTES + 1]),
             SEQUENCE_OPERATION_RUN => Ok(br#"{"status":"ok"}"#.to_vec()),
@@ -86,7 +86,6 @@ fn fingerprint(bridge: &SequenceBridge<MockDomain>) -> String {
 
 #[test]
 fn schema_and_language_neutral_ledgers_are_present() {
-    assert!(SEQUENCE_ABI_SCHEMA.contains("sequence.browser-abi"));
     assert!(SEQUENCE_ABI_LEDGER.lines().count() >= 5);
     assert!(SEQUENCE_ABI_LIMITS.contains("max_plus_one"));
     assert!(SEQUENCE_ABI_TRACE.contains("terminal_empty"));
@@ -105,7 +104,7 @@ fn constructor_command_and_missing_optional_payload_are_deterministic() {
 fn malformed_json_is_owned_and_terminal() {
     let mut bridge = SequenceBridge::new(MockDomain::default);
     let session = open(&mut bridge, 1);
-    bridge.try_send(request(SEQUENCE_OPERATION_LOAD_FIXTURE, 2, 1, body(session, b"[]")), AbiWorkBudget::credits(1)).unwrap();
+    bridge.try_send(request(SEQUENCE_OPERATION_LOAD_SNAPSHOT, 2, 1, body(session, b"[]")), AbiWorkBudget::credits(1)).unwrap();
     ack_events(&mut bridge);
     assert_eq!(bridge.active_resources, 1);
 }

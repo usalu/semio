@@ -208,6 +208,24 @@ fn number_stepper_builder_carries_bounds_precision_and_mixed_state() {
 }
 
 #[test]
+fn select_builder_is_a_menu_unless_it_is_declared_segmented() {
+    let menu = select(ui_text("a")).try_item(ui_text("a"), label("A")).unwrap_or_else(|_| panic!("bounded option")).try_build().unwrap_or_else(|_| panic!("select build"));
+    let crate::Component::Select(props) = &menu.component else { panic!("a select") };
+    assert_eq!(props.appearance, crate::SelectAppearance::Menu);
+    let segmented = select(ui_text("a")).appearance(crate::SelectAppearance::Segmented).try_build().unwrap_or_else(|_| panic!("select build"));
+    assert_eq!(serde_json::to_value(&segmented.component).expect("wire")["appearance"], "segmented");
+}
+
+#[test]
+fn icon_select_builder_carries_its_icon_its_classifier_and_a_mixed_state() {
+    let node = icon_select(ui_text("circle"), ui_text("icon")).try_build().unwrap_or_else(|_| panic!("icon select build"));
+    assert_eq!(node.component, crate::Component::IconSelect(crate::IconSelectProps { value: ui_text("circle"), uniform: true, classifier_kind: ui_text("icon") }));
+    let mixed = icon_select(ui_text(""), ui_text("icon")).mixed().try_build().unwrap_or_else(|_| panic!("icon select build"));
+    let crate::Component::IconSelect(props) = &mixed.component else { panic!("an icon select") };
+    assert!(!props.uniform);
+}
+
+#[test]
 fn number_input_prints_its_value_at_its_precision() {
     let node = input(crate::InputKind::Number).precision(2).number(2.5).try_build().unwrap_or_else(|_| panic!("input build"));
     let crate::Component::Input(props) = &node.component else { panic!("an input") };

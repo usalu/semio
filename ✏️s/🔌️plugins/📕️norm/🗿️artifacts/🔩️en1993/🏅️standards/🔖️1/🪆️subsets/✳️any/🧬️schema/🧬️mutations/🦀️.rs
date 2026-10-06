@@ -311,9 +311,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🌉️ExternalCodecBridge
-pub fn decode_en1993_mutation_json(text: &str) -> Result<En1993Mutation, String> {
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
+
 pub fn apply_en1993_mutation(base: &En1993Snapshot, mutation: &En1993Mutation) -> Result<(En1993Snapshot, Vec<String>), String> {
     let raised = <En1993Mutation as protocol::Mutation<En1993Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();

@@ -129,3 +129,6 @@ impl semio_framework_plugin::WindowTransientOwner for Block3dWorldWindowTransien
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path = "🚪️io/🦀️.rs"]
+pub mod io;

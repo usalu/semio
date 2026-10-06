@@ -217,7 +217,7 @@ use super::*;
             selectable_handles: false,
             selectable_edges: false,
         };
-        assert_ne!(original, Puzzle2dWindowConfig::default(), "the fixture must differ from the default in every field it asserts");
+        assert_ne!(original, Puzzle2dWindowConfig::default(), "the snapshot must differ from the default in every field it asserts");
         let bytes = store::ArtifactPack::encode_pack(&original);
         let decoded = <Puzzle2dWindowConfig as store::ArtifactPack>::decode_pack(&bytes).expect("window config pack decodes");
         assert_eq!(decoded, original, "one pack round trip must preserve every persisted pane option");

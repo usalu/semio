@@ -225,7 +225,7 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_optional_json_payload(&format!("{scene_label} vfs.selectedRowIds"), &vfs.selected_row_ids_json, limits)?;
     }
     if let Some(map) = &scene.tiled_map {
-        check_json_payload(&format!("{scene_label} gisMap.fixture"), &map.map_fixture_json, limits)?;
+        check_json_payload(&format!("{scene_label} gisMap.fixture"), &map.map_descriptor_json, limits)?;
         check_json_payload(&format!("{scene_label} gisMap.camera"), &map.camera_json, limits)?;
         check_json_payload(&format!("{scene_label} gisMap.layerVisibility"), &map.layer_visibility_json, limits)?;
         check_json_payload(&format!("{scene_label} gisMap.layerStrokeScale"), &map.layer_stroke_scale_json, limits)?;
@@ -233,7 +233,7 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_json_payload(&format!("{scene_label} gisMap.hover"), &map.hover_json, limits)?;
     }
     if let Some(board) = &scene.board2d {
-        check_json_payload(&format!("{scene_label} board2d.fixture"), &board.fixture_json, limits)?;
+        check_json_payload(&format!("{scene_label} board2d.fixture"), &board.snapshot_json, limits)?;
         check_json_payload(&format!("{scene_label} board2d.camera"), &board.camera_json, limits)?;
         check_json_payload(&format!("{scene_label} board2d.glyphCatalogs"), &board.glyph_catalogs_json, limits)?;
         check_json_payload(&format!("{scene_label} board2d.selection"), &board.selection_json, limits)?;
@@ -4992,6 +4992,11 @@ fn append_table_stepper_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgp
         }
         let focused = focus.as_ref().is_some_and(|focus| focus.0 == window_id && focus.1 == entry.scene_node && focus.2 == entry.host_id && focus.3 == entry.cell.target.row_id && focus.4 == entry.cell.target.column_id);
         nodes.push(ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
             node_id: scene_virtual_accessibility_node_id(&entry.cell.key),
             key: entry.cell.key,
             role: "spinbutton".into(),
@@ -5068,6 +5073,11 @@ fn append_table_editable_text_accessibility_nodes(window_id: &str, tree: &ui_wgp
         }
         let focused = focus.as_ref().is_some_and(|focus| focus.0 == window_id && focus.2 == entry.scene_node && focus.3 == entry.host_id && focus.4 == entry.cell.target.row_id && focus.5 == entry.cell.target.column_id);
         nodes.push(ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
             node_id: scene_virtual_accessibility_node_id(&entry.cell.key),
             key: entry.cell.key,
             role: "textbox".into(),
@@ -5142,6 +5152,11 @@ fn append_table_button_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes: 
             break;
         }
         nodes.push(ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
             node_id: scene_virtual_accessibility_node_id(&entry.cell.key),
             key: entry.cell.key,
             role: "button".into(),
@@ -5213,6 +5228,11 @@ fn append_vfs_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu::UiTree,
         }
         let focused = focus.as_ref().is_some_and(|focus| focus.0 == window_id && focus.2 == entry.scene_node && focus.3 == entry.host_id && focus.4.row_id == entry.control.row_id && focus.4.kind == entry.control.kind);
         nodes.push(ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
             node_id: scene_virtual_accessibility_node_id(&entry.control.key),
             key: entry.control.key,
             role: "button".into(),
@@ -5287,6 +5307,11 @@ fn append_block_list_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes: &m
             break;
         }
         nodes.push(ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
             node_id: scene_virtual_accessibility_node_id(&entry.control.key),
             key: entry.control.key,
             role: "button".into(),
@@ -5362,6 +5387,11 @@ fn append_event_feed_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes: &m
         }
         let actionable = entry.control.action.is_some();
         nodes.push(ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
             node_id: scene_virtual_accessibility_node_id(&entry.control.key),
             key: entry.control.key,
             role: if actionable { "button" } else { "paragraph" }.into(),
@@ -5436,6 +5466,11 @@ fn append_graph_timeline_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes
             break;
         }
         nodes.push(ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
             node_id: scene_virtual_accessibility_node_id(&entry.control.key),
             key: entry.control.key,
             role: "button".into(),
@@ -5524,6 +5559,11 @@ fn append_text_editor_accessibility_nodes(window_id: &str, tree: &ui_wgpu::wgpu:
         }
         let focused = focus.as_ref().is_some_and(|focus| focus.window_id == window_id && focus.node == entry.scene_node && focus.host_id == entry.host_id);
         nodes.push(ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
             node_id: scene_virtual_accessibility_node_id(&entry.key),
             key: entry.key,
             role: "textbox".into(),
@@ -5792,7 +5832,7 @@ struct DumpBoard2dCamera {
 
 /// 🎲️ One `Board2d` surface's published board — the wgpu twin of React's Board2dHost `data-board-*` vitals
 /// (`board2dVitals`, `data-board-camera-json`, `data-board-selection-json`, `data-board-highlighted-ids-json`,
-/// `data-board-fixture-parsed`): where the pane sits on the page, the camera, every node's world position, the selection,
+/// `data-board-snapshot-parsed`): where the pane sits on the page, the camera, every node's world position, the selection,
 /// the ids a time-travel draft references (highlighted), and the fixture's node, edge and handle counts. A fixture that does not parse reads `parsed: false` with `-1` counts and no positions, as React's
 /// vitals do.
 #[cfg(any(target_arch = "wasm32", test))]
@@ -5822,7 +5862,7 @@ struct DumpBoard2d {
 /// 🎲️ One board scene's dump row at `rect` (page CSS px) inside `window_id`.
 #[cfg(any(target_arch = "wasm32", test))]
 fn board2d_surface(surface_id: &str, window_id: &str, board: &ui_wgpu::wgpu::Board2dScene, rect: [f32; 4]) -> DumpBoard2dSurface {
-    let fixture = serde_json::from_str::<Value>(&board.fixture_json).ok().filter(Value::is_object);
+    let fixture = serde_json::from_str::<Value>(&board.snapshot_json).ok().filter(Value::is_object);
     let nodes = fixture.as_ref().and_then(|fixture| fixture.get("nodes")).and_then(Value::as_array);
     let positions = nodes.into_iter().flatten().filter_map(|node| Some((node.get("id")?.as_str()?.to_string(), [node.get("x")?.as_f64()?, node.get("y")?.as_f64()?]))).collect();
     let camera = serde_json::from_str::<Value>(&board.camera_json).ok().and_then(|camera| Some(DumpBoard2dCamera { x: camera.get("x")?.as_f64()?, y: camera.get("y")?.as_f64()?, zoom: camera.get("zoom")?.as_f64()? }));
